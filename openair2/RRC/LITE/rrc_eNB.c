@@ -1607,7 +1607,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
                                                      = CALLOC(1, sizeof(struct CQI_ReportAperiodic_r10__setup__aperiodicCSI_Trigger_r10));
     t1.buf                                           = CALLOC(1, 1); t1.size = 1; t1.bits_unused = 0;
     t2.buf                                           = CALLOC(1, 1); t2.size = 1; t2.bits_unused = 0;
-    t1.buf[0] = 0x40;
+    t1.buf[0] = 0x80;
     t2.buf[0] = 0xc0;
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger1_r10 = t1;
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger2_r10 = t2;
