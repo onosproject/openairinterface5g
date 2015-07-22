@@ -6564,7 +6564,7 @@ int generate_eNB_ulsch_params_from_dci(void *dci_pdu,
       } else {
 #if Rel10
         /* DCI0 for a UE configured with more than 1 DL cell is different, see 36.212 5.3.3.1.1 */
-        if (phy_vars_eNB->CA_configured[UE_id] == 0) {
+        if (1 || phy_vars_eNB->CA_configured[UE_id] == 0) {
 #endif
           cqi_req = ((DCI0_5MHz_FDD_t *)dci_pdu)->cqi_req;
           cshift  = ((DCI0_5MHz_FDD_t *)dci_pdu)->cshift;
@@ -7024,7 +7024,7 @@ printf("!!new DCI format0!!\n");
       if (phy_vars_eNB->dlsch_eNB[UE_id][0]->subframe_tx[dl_subframe]>0) { // we have downlink transmission
 #if Rel10
         /* set O_ACK to 2 for decoding 2 bits if 2 CCs configured */
-        if (phy_vars_eNB->CA_configured[UE_id] == 0) {
+        if (1 || phy_vars_eNB->CA_configured[UE_id] == 0) {
 #endif
           ulsch->harq_processes[harq_pid]->O_ACK = 1;
 #if Rel10

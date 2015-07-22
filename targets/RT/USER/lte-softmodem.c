@@ -1282,8 +1282,8 @@ static void* eNB_thread_rx( void* param )
 
   /* This creates a 2ms reservation every 10ms period*/
   attr.sched_policy = SCHED_DEADLINE;
-  attr.sched_runtime  = 1   *  1000000; // each rx thread must finish its job in the worst case in 2ms
-  attr.sched_deadline = .9   *  1000000; // each rx thread will finish within 2ms
+  attr.sched_runtime  = .9   *  1000000; // each rx thread must finish its job in the worst case in 2ms
+  attr.sched_deadline = 1   *  1000000; // each rx thread will finish within 2ms
   attr.sched_period   = 1   * 10000000; // each rx thread has a period of 10ms from the starting point
 
   if (sched_setattr(0, &attr, flags) < 0 ) {
