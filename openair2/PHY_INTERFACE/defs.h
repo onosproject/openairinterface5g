@@ -134,6 +134,13 @@ typedef struct {
   int16_t (*estimate_ue_tx_power)(uint32_t tbs, uint32_t nb_rb, uint8_t control_only, lte_prefix_type_t ncp, uint8_t use_srs);
 
 
+#if Rel10
+  /// set/unset Carrier Aggregation configuration of an UE
+  void (*ca_config)(uint8_t  Mod_id,
+                    uint16_t rnti,
+                    int      ca_configured);
+#endif
+
   /// UE functions
 
   /// reset the ue phy

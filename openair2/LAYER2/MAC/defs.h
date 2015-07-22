@@ -264,28 +264,33 @@ typedef struct {
 } __attribute__((__packed__))BCCH_PDU;
 
 #ifdef Rel10
+
 /*! \brief MCCH payload */
 typedef struct {
   uint8_t payload[MCCH_PAYLOAD_SIZE_MAX] ;
 } __attribute__((__packed__))MCCH_PDU;
+
 /*!< \brief MAC control element for activation and deactivation of component carriers */
 typedef struct {
-  uint8_t C7:1;/*!< \brief Component carrier 7 */
-  uint8_t C6:1;/*!< \brief Component carrier 6 */
-  uint8_t C5:1;/*!< \brief Component carrier 5 */
-  uint8_t C4:1;/*!< \brief Component carrier 4 */
-  uint8_t C3:1;/*!< \brief Component carrier 3 */
-  uint8_t C2:1;/*!< \brief Component carrier 2 */
-  uint8_t C1:1;/*!< \brief Component carrier 1 */
-  uint8_t R:1;/*!< \brief Reserved  */
-} __attribute__((__packed__))CC_ELEMENT;
+  uint8_t R:1;      /*!< \brief Reserved  */
+  uint8_t C1:1;     /*!< \brief Component carrier 1 */
+  uint8_t C2:1;     /*!< \brief Component carrier 2 */
+  uint8_t C3:1;     /*!< \brief Component carrier 3 */
+  uint8_t C4:1;     /*!< \brief Component carrier 4 */
+  uint8_t C5:1;     /*!< \brief Component carrier 5 */
+  uint8_t C6:1;     /*!< \brief Component carrier 6 */
+  uint8_t C7:1;     /*!< \brief Component carrier 7 */
+} __attribute__((__packed__)) CC_ELEMENT;
+
 /*! \brief MAC control element: MCH Scheduling Information */
 typedef struct {
   uint8_t stop_sf_MSB:3; // octet 1 LSB
   uint8_t lcid:5;        // octet 2 MSB
   uint8_t stop_sf_LSB:8;
 } __attribute__((__packed__))MSI_ELEMENT;
-#endif
+
+#endif /* Rel10 */
+
 /*! \brief Values of CCCH LCID for DLSCH */ 
 #define CCCH_LCHANID 0
 /*!\brief Values of BCCH logical channel */
@@ -319,7 +324,7 @@ typedef struct {
 /*!\brief LCID of MCH scheduling info for DL */
 #define MCH_SCHDL_INFO 3
 /*!\brief LCID of Carrier component activation/deactivation */
-#define CC_ACT_DEACT 27
+#define CC_ACTIVATE_DEACTIVATE 27
 #endif
 
 // ULSCH LCHAN IDs
@@ -785,6 +790,30 @@ typedef struct {
   uint8_t sb_size;
   uint8_t nb_active_sb;
 } SBMAP_CONF;
+
+#ifdef Rel10
+
+#define NUMBER_OF_SCELL_MAX 4
+
+typedef struct {
+  int       CC_id;           /* which CC_id corresponds to this SCell */
+  int       bitmap_bit;      /* which bit in the bitmap (see 36321 6.1.3.8)
+                              * corresponds to this SCell
+                              */
+  boolean_t active;          /* current state of this SCell */
+} SCell_config_t;
+
+typedef struct {
+  SCell_config_t scell[NUMBER_OF_SCELL_MAX];
+  int            scell_count;
+  boolean_t      to_configure;    /* set to 1 to indicate that a MAC Control
+                                   * Element with the current configuration
+                                   * has to be sent to the UE
+                                   */
+} UE_SCell_config_t;
+
+#endif /* Rel10 */
+
 /*! \brief UE list used by eNB to order UEs/CC for scheduling*/ 
 typedef struct {
   /// DLSCH pdu 
@@ -801,8 +830,10 @@ typedef struct {
   int ordered_ULCCids[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
   /// number of uplink active component carrier 
   int numactiveULCCs[NUMBER_OF_UE_MAX];
-  /// number of downlink active component carrier 
-  uint8_t dl_CC_bitmap[NUMBER_OF_UE_MAX];
+#ifdef Rel10
+  /// scell configuration
+  UE_SCell_config_t scell_config[NUMBER_OF_UE_MAX];
+#endif
   /// eNB to UE statistics
   eNB_UE_STATS eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
   /// scheduling control info

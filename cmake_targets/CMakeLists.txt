@@ -42,6 +42,8 @@ set (OPENAIR_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY})
 
 project (OpenAirInterface)
 
+#add_definitions("-DEMIT_ASN_DEBUG=1")
+
 ###########################################
 # macros to define options as there is numerous options in oai
 ################################################
@@ -119,6 +121,7 @@ endmacro(add_list_string_option)
 ####################################################
 # compilation flags
 #############################################
+#set(CMAKE_BUILD_TYPE "Debug")
 if (CMAKE_BUILD_TYPE STREQUAL "")
    set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
@@ -173,7 +176,7 @@ add_boolean_option(RRC_MSG_PRINT False "print RRC messages")
 add_boolean_option(PDCP_MSG_PRINT False "print PDCP messages")
 add_boolean_option(TEST_OMG False "???")
 add_boolean_option(DEBUG_OMG False "???")
-add_boolean_option(XFORMS False "This adds the possibility to see the signal oscilloscope")
+add_boolean_option(XFORMS True "This adds the possibility to see the signal oscilloscope")
 add_boolean_option(PRINT_STATS False "This adds the possibility to see the status")
 
 add_boolean_option(DEBUG_CONSOLE False "makes debugging easier, disables stdout/stderr buffering")
@@ -1605,14 +1608,14 @@ target_link_libraries (mme_gw
   -Wl,--start-group
    LIB_NAS_MME S1AP_LIB S1AP_EPC GTPV1U GTPV2C SCTP_SERVER UDP_SERVER SECU_CN SECU_OSA S6A SGW MME_APP LFDS MSC ${ITTI_LIB} CN_UTILS HASHTABLE
   -Wl,--end-group
-  pthread m sctp  rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES} fdproto fdcore
+  pthread m sctp  rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES} fdproto fdcore gnutls
   )
 else (MESSAGE_CHART_GENERATOR)
 target_link_libraries (mme_gw
   -Wl,--start-group
    LIB_NAS_MME S1AP_LIB S1AP_EPC GTPV1U GTPV2C SCTP_SERVER UDP_SERVER SECU_CN SECU_OSA S6A SGW MME_APP LFDS ${ITTI_LIB} CN_UTILS HASHTABLE
   -Wl,--end-group
-  pthread m sctp  rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES} fdproto fdcore
+  pthread m sctp  rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES} fdproto fdcore gnutls
   )
 endif(MESSAGE_CHART_GENERATOR)
 

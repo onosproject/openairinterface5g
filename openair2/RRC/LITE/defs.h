@@ -296,10 +296,38 @@ typedef struct HANDOVER_INFO_UE_s {
   uint8_t measFlag;
 } HANDOVER_INFO_UE;
 
+#ifdef Rel10
+
+typedef struct {
+  int band;
+} ue_ca_band;
+
+typedef struct {
+  ue_ca_band dl_band[maxSimultaneousBands_r10];
+  ue_ca_band ul_band[maxSimultaneousBands_r10];
+  int        dl_band_count;
+  int        ul_band_count;
+} ue_ca_band_combination;
+
+typedef struct {
+  int CC_id;         /* the CC_id of this secondary cell */
+  int bitmap_bit;    /* the bitmap_bit of this secondary cell (see 36321 6.1.3.8) */
+} ue_ca_scell_config;
+
+typedef struct {
+  ue_ca_band_combination combination[maxBandComb_r10];
+  int                    combination_count;
+  ue_ca_scell_config     scell[7];          /* up to 7 secondary cells may be configured for an UE */
+  int                    scell_count;
+} ue_ca_capabilities;
+
+#endif /* Rel10 */
+
 typedef struct eNB_RRC_UE_s {
   uint8_t                            primaryCC_id;
 #ifdef Rel10
   SCellToAddMod_r10_t                sCell_config[2];
+  ue_ca_capabilities                 ca;
 #endif
   SRB_ToAddModList_t*                SRB_configList;
   DRB_ToAddModList_t*                DRB_configList;

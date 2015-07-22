@@ -365,6 +365,39 @@ struct DCI0_5MHz_FDD {
 typedef struct DCI0_5MHz_FDD DCI0_5MHz_FDD_t;
 #define sizeof_DCI0_5MHz_FDD_t 25
 
+#if Rel10
+
+///  DCI Format Type 0 Rel10 UE with Carrier Aggregation configured (5 MHz,FDD, 27 bits)
+struct DCI0_5MHz_FDD_R10_CA_UEspec_RAT {
+  /// Padding
+  uint32_t padding:6;
+  /// Resource allocation type
+  uint32_t rat:1;
+  /// SRS Request
+  uint32_t srs_req:1;
+  /// CQI Request
+  uint32_t cqi_req:2;
+  /// DRS Cyclic Shift
+  uint32_t cshift:3;
+  /// Power Control
+  uint32_t TPC:2;
+  /// New Data Indicator
+  uint32_t ndi:1;
+  /// Modulation and Coding Scheme and Redundancy Version
+  uint32_t mcs:5;
+  /// RB Assignment (ceil(log2(N_RB_UL*(N_RB_UL+1)/2)) bits)
+  uint32_t rballoc:9;
+  /// Hopping flag
+  uint32_t hopping:1;
+  /// type = 0 => DCI Format 0, type = 1 => DCI Format 1A
+  uint32_t type:1;
+} __attribute__ ((__packed__));
+
+typedef struct DCI0_5MHz_FDD_R10_CA_UEspec_RAT DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t;
+#define sizeof_DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t 27
+
+#endif /* Rel10 */
+
 struct DCI1A_5MHz_FDD {
   /// padding
   uint32_t padding:8;
@@ -389,7 +422,35 @@ struct DCI1A_5MHz_FDD {
 typedef struct DCI1A_5MHz_FDD DCI1A_5MHz_FDD_t;
 #define sizeof_DCI1A_5MHz_FDD_t 25
 
+#if Rel10
 
+struct DCI1A_5MHz_FDD_R10_UEspec {
+  /// padding
+  uint32_t padding:7;
+  /// SRS Request
+  uint32_t srs_req:1;
+  /// Power Control
+  uint32_t TPC:2;
+  /// Redundancy version
+  uint32_t rv:2;
+  /// New Data Indicator
+  uint32_t ndi:1;
+  /// HARQ Process
+  uint32_t harq_pid:3;
+  /// Modulation and Coding Scheme and Redundancy Version
+  uint32_t mcs:5;
+  /// RB Assignment (ceil(log2(N_RB_DL(N_RB_DL+1)/2)) bits)
+  uint32_t rballoc:9;
+  /// Localized/Distributed VRB
+  uint32_t vrb_type:1;
+  /// type = 0 => DCI Format 0, type = 1 => DCI Format 1A
+  uint32_t type:1;
+} __attribute__ ((__packed__));
+
+typedef struct DCI1A_5MHz_FDD_R10_UEspec DCI1A_5MHz_FDD_R10_UEspec_t;
+#define sizeof_DCI1A_5MHz_FDD_R10_UEspec_t 27
+
+#endif /* Rel10 */
 
 ///  DCI Format Type 0 (10 MHz,FDD, 25 bits)
 struct DCI0_10MHz_FDD {

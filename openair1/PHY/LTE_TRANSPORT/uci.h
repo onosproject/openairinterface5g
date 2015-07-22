@@ -143,6 +143,17 @@ HLC_subband_cqi_nopmi_5MHz;
 
 typedef struct __attribute__((packed))
 {
+  uint32_t padding:28;
+  uint32_t diffcqi2:14;
+  uint32_t cqi2:4;
+  uint32_t diffcqi1:14;
+  uint32_t cqi1:4;
+}
+HLC_subband_cqi_nopmi_2CC_5MHz;
+#define sizeof_HLC_subband_cqi_nopmi_2CC_5MHz 36
+
+typedef struct __attribute__((packed))
+{
   uint32_t padding:12;
   uint32_t pmi:2;
   uint32_t diffcqi1:14;

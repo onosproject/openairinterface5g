@@ -604,7 +604,11 @@ int schedule_MBMS(module_id_t module_idP, uint8_t CC_id, frame_t frameP, sub_fra
                                    0,  // no timing advance
                                    NULL,  // no contention res id
                                    padding,
-                                   post_padding);
+                                   post_padding
+#ifdef Rel10
+                                   , 0, 0  /* no scell config */
+#endif
+                                  );
 
     eNB_mac_inst[module_idP].common_channels[CC_id].MCH_pdu.Pdu_size=TBS;
     eNB_mac_inst[module_idP].common_channels[CC_id].MCH_pdu.sync_area=i;

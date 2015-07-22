@@ -132,6 +132,10 @@ generate_dlsch_header(
   unsigned char *ue_cont_res_id,
   unsigned char short_padding,
   unsigned short post_padding
+#ifdef Rel10
+  , uint8_t scell_bitmap,
+  int     scell_bitmap_cmd
+#endif
 )
 //------------------------------------------------------------------------------
 {
@@ -160,6 +164,33 @@ generate_dlsch_header(
     mac_header_ptr->LCID = SHORT_PADDING;
     last_size=1;
   }
+
+#ifdef Rel10
+  if (scell_bitmap_cmd != 0) {
+    if (first_element>0) {
+      mac_header_ptr->E = 1;
+      mac_header_ptr++;
+    } else {
+      first_element=1;
+    }
+
+    mac_header_ptr->R    = 0;
+    mac_header_ptr->E    = 0;
+    mac_header_ptr->LCID = CC_ACTIVATE_DEACTIVATE;
+    last_size=1;
+
+    ((CC_ELEMENT*)ce_ptr)->R = 0;
+    ((CC_ELEMENT*)ce_ptr)->C1 = (scell_bitmap >> 1) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C2 = (scell_bitmap >> 2) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C3 = (scell_bitmap >> 3) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C4 = (scell_bitmap >> 4) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C5 = (scell_bitmap >> 5) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C6 = (scell_bitmap >> 6) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C7 = (scell_bitmap >> 7) & 1;
+    ce_ptr += sizeof(CC_ELEMENT);
+LOG_E(MAC,"MAC CE scell bitmap sent to UE: bitmap is 0x%2.2x\n", scell_bitmap);
+  }
+#endif /* Rel10 */
 
   if (drx_cmd != 255) {
     if (first_element>0) {
@@ -458,6 +489,10 @@ schedule_ue_spec(
   int32_t                 normalized_rx_power, target_rx_power;
   int32_t                 tpc=1;
   static int32_t          tpc_accumulated=0;
+#ifdef Rel10
+  uint8_t               scell_bitmap = 0;
+#endif
+  int                   scell_activation_len = 0; /* not into #ifdef Rel10 to ease code readability below */
 
 
   if (UE_list->head==-1) {
@@ -829,11 +864,40 @@ schedule_ue_spec(
           break;
         }
 
+#ifdef Rel10
+        /* check if SCells reconfiguration has to be done */
+UE_list->scell_config[UE_id].to_configure=0;
+        if (UE_list->scell_config[UE_id].to_configure) {
+          UE_SCell_config_t *sconf = &UE_list->scell_config[UE_id];
+          int s;
+          /* compute the scell bitmap */
+          scell_bitmap = 0;
+          for (s = 0; s < sconf->scell_count; s++)
+            if (sconf->scell[s].active)
+              scell_bitmap |= 1 << sconf->scell[s].bitmap_bit;
+          scell_activation_len = 2;
+          /* where and when do that? */
+          UE_list->scell_config[UE_id].to_configure = 0;
+          /* !!THE FOLLOWING MUST NOT BE DONE HERE!!
+           * (secondary cell's scheduling becomes active at subframe x+4
+           * after receiving ACK for MAC PDU with scell CE at subframe x)
+           */
+          /* add secondary cells for scheduling (should we order them?) */
+          UE_list->numactiveCCs[UE_id] = 1;
+          for (s = 0; s < sconf->scell_count; s++)
+            if (sconf->scell[s].active) {
+              UE_list->ordered_CCids[UE_list->numactiveCCs[UE_id]][UE_id] = sconf->scell[s].CC_id;
+              UE_list->numactiveCCs[UE_id]++;
+            }
+        } else
+          scell_activation_len = 0;
+#endif /* Rel10 */
+
         ta_len = ((eNB_UE_stats->timing_advance_update/update_TA)!=0) ? 2 : 0;
 
         header_len_dcch = 2; // 2 bytes DCCH SDU subheader
 
-        if ( TBS-ta_len-header_len_dcch > 0 ) {
+        if ( TBS-ta_len-header_len_dcch-scell_activation_len > 0 ) {
           rlc_status = mac_rlc_status_ind(
                          module_idP,
                          rnti,
@@ -842,7 +906,7 @@ schedule_ue_spec(
                          ENB_FLAG_YES,
                          MBMS_FLAG_NO,
                          DCCH,
-                         (TBS-ta_len-header_len_dcch)); // transport block set size
+                         (TBS-ta_len-header_len_dcch-scell_activation_len)); // transport block set size
 
           sdu_lengths[0]=0;
 
@@ -881,7 +945,7 @@ schedule_ue_spec(
         }
 
         // check for DCCH1 and update header information (assume 2 byte sub-header)
-        if (TBS-ta_len-header_len_dcch-sdu_length_total > 0 ) {
+        if (TBS-ta_len-header_len_dcch-scell_activation_len-sdu_length_total > 0 ) {
           rlc_status = mac_rlc_status_ind(
                          module_idP,
                          rnti,
@@ -890,7 +954,7 @@ schedule_ue_spec(
                          ENB_FLAG_YES,
                          MBMS_FLAG_NO,
                          DCCH+1,
-                         (TBS-ta_len-header_len_dcch-sdu_length_total)); // transport block set size less allocations for timing advance and
+                         (TBS-ta_len-header_len_dcch-scell_activation_len-sdu_length_total)); // transport block set size less allocations for timing advance and
           // DCCH SDU
 
           if (rlc_status.bytes_in_buffer > 0) {
@@ -923,9 +987,9 @@ schedule_ue_spec(
 
         LOG_D(MAC,"[eNB %d], Frame %d, DTCH->DLSCH, CC_id %d, Checking RLC status (rab %d, tbs %d, len %d)\n",
               module_idP,frameP,CC_id,DTCH,TBS,
-              TBS-ta_len-header_len_dcch-sdu_length_total-header_len_dtch);
+              TBS-ta_len-header_len_dcch-scell_activation_len-sdu_length_total-header_len_dtch);
 
-        if (TBS-ta_len-header_len_dcch-sdu_length_total-header_len_dtch > 0 ) {
+        if (TBS-ta_len-header_len_dcch-scell_activation_len-sdu_length_total-header_len_dtch > 0 ) {
           rlc_status = mac_rlc_status_ind(
                          module_idP,
                          rnti,
@@ -934,7 +998,7 @@ schedule_ue_spec(
                          ENB_FLAG_YES,
                          MBMS_FLAG_NO,
                          DTCH,
-                         TBS-ta_len-header_len_dcch-sdu_length_total-header_len_dtch);
+                         TBS-ta_len-header_len_dcch-scell_activation_len-sdu_length_total-header_len_dtch);
 
           if (rlc_status.bytes_in_buffer > 0) {
 
@@ -993,7 +1057,7 @@ schedule_ue_spec(
 
           TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
 
-          while (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len))  {
+          while (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len + scell_activation_len))  {
             nb_rb += min_rb_unit[CC_id];  //
 
             if (nb_rb>nb_available_rb) { // if we've gone beyond the maximum number of RBs
@@ -1040,13 +1104,13 @@ schedule_ue_spec(
           }
 
           // decrease mcs until TBS falls below required length
-          while ((TBS > (sdu_length_total + header_len_dcch + header_len_dtch + ta_len)) && (mcs>0)) {
+          while ((TBS > (sdu_length_total + header_len_dcch + header_len_dtch + ta_len + scell_activation_len)) && (mcs>0)) {
             mcs--;
             TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
           }
 
           // if we have decreased too much or we don't have enough RBs, increase MCS
-          while ((TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len)) && ((( dl_pow_off[CC_id][UE_id]>0) && (mcs<28))
+          while ((TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len + scell_activation_len)) && ((( dl_pow_off[CC_id][UE_id]>0) && (mcs<28))
                  || ( (dl_pow_off[CC_id][UE_id]==0) && (mcs<=15)))) {
             mcs++;
             TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
@@ -1061,8 +1125,8 @@ schedule_ue_spec(
           //  TBS, sdu_length_total, offset, TBS-sdu_length_total-offset);
 #endif
 
-          if ((TBS - header_len_dcch - header_len_dtch - sdu_length_total - ta_len) <= 2) {
-            padding = (TBS - header_len_dcch - header_len_dtch - sdu_length_total - ta_len);
+          if ((TBS - header_len_dcch - header_len_dtch - sdu_length_total - ta_len - scell_activation_len) <= 2) {
+            padding = (TBS - header_len_dcch - header_len_dtch - sdu_length_total - ta_len - scell_activation_len);
             post_padding = 0;
           } else {
             padding = 0;
@@ -1074,7 +1138,7 @@ schedule_ue_spec(
               header_len_dtch = header_len_dtch_tmp;
             }
 
-            post_padding = TBS - sdu_length_total - header_len_dcch - header_len_dtch - ta_len ; // 1 is for the postpadding header
+            post_padding = TBS - sdu_length_total - header_len_dcch - header_len_dtch - ta_len - scell_activation_len; // 1 is for the postpadding header
           }
 
           //#ifndef EXMIMO_IOT
@@ -1092,7 +1156,12 @@ schedule_ue_spec(
                                          ta_update, // timing advance
                                          NULL,                                  // contention res id
                                          padding,
-                                         post_padding);
+                                         post_padding
+#ifdef Rel10
+                                         , scell_bitmap,
+                                         scell_activation_len
+#endif
+                                        );
 
           //#ifdef DEBUG_eNB_SCHEDULER
           if (ta_update) {
@@ -2229,6 +2298,8 @@ fill_DLSCH_dci(
               ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rah = 0;
               size_bytes=sizeof(DCI1_5MHz_FDD_t);
               size_bits=sizeof_DCI1_5MHz_FDD_t;
+//if (UE_list->scell_config[UE_id].scell_count) size_bits++;
+printf("!!!!!!!!!!!!!!!!!!!! %s\n", __FILE__);
               break;
 
             case 50:

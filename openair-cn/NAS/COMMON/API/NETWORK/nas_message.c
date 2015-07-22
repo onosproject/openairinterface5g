@@ -321,7 +321,7 @@ int nas_message_decrypt(
                 header->message_authentication_code,header->message_authentication_code,
                 mac,mac, (emm_security_context!=NULL)?emm_security_context->type:88);
 #if defined(NAS_MME)
-      LOG_FUNC_RETURN (TLV_DECODE_MAC_MISMATCH);
+      //LOG_FUNC_RETURN (TLV_DECODE_MAC_MISMATCH);
 #else
 #warning "added test on integrity algorithm because of SECURITY_MODE_COMMAND not correctly handled in UE (check integrity)"
 

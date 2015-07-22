@@ -466,6 +466,10 @@ typedef struct {
 } MBSFN_config_t;
 
 typedef struct {
+  /// EUTRA Band
+  int      eutra_band;
+  /// Dowlink frequency
+  uint32_t downlink_frequency;
   /// Number of resource blocks (RB) in DL
   uint8_t N_RB_DL;
   /// Number of resource blocks (RB) in UL

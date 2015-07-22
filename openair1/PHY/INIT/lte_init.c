@@ -1477,6 +1477,9 @@ int phy_init_lte_eNB(PHY_VARS_eNB *phy_vars_eNB,
 
   init_prach_tables(839);
 
+  for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++)
+    phy_vars_eNB->CA_configured[UE_id] = 0;
+
   return (0);
 }
 

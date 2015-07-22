@@ -519,6 +519,55 @@ rrc_mac_config_req(
 
   return(0);
 }
+
+#ifdef Rel10
+
+//------------------------------------------------------------------------------
+void
+rrc_mac_config_scell_req(
+        module_id_t     module_id,
+        rnti_t          rnti,
+        int             SCell_CC_id,
+        int             bitmap_bit)
+//------------------------------------------------------------------------------
+{
+  int               UE_id;
+  eNB_MAC_INST      *eNB=&eNB_mac_inst[module_id];
+  UE_SCell_config_t *sconf;
+  int               s;
+
+  UE_id = find_UE_id(module_id, rnti);
+  if (UE_id == -1) {
+    LOG_E(MAC,"[eNB %d][rrc_mac_config_scell_req] UE rnti %x not found\n", module_id, rnti);
+    return;
+  }
+
+  sconf = &eNB->UE_list.scell_config[UE_id];
+
+  if (sconf->scell_count == MAX_NUM_CCs) {
+    LOG_E(MAC,"[eNB %d][rnti %x][rrc_mac_config_scell_req] cannot configure more than %d SCells\n",
+          module_id, rnti, MAX_NUM_CCs);
+    return;
+  }
+
+  /* add the SCell, not active */
+  s = sconf->scell_count;
+  sconf->scell[s].CC_id      = SCell_CC_id;
+  sconf->scell[s].bitmap_bit = bitmap_bit;
+  sconf->scell[s].active     = FALSE;
+  sconf->scell_count++;
+
+  /* inform the PHY layer that this UE has scell configured */
+  mac_xface->ca_config(module_id, rnti, 1);
+
+  /* !!TO REMOVE!! */
+  sconf->to_configure = 1;
+  sconf->scell[s].active     = TRUE;
+  LOG_E(MAC,"[eNB %d][rrc_mac_config_scell_req] UE rnti %x scell id %d bitmap_bit %d\n", module_id, rnti, SCell_CC_id, bitmap_bit);
+}
+
+#endif /* Rel10 */
+
 #ifdef LOCALIZATION
 //------------------------------------------------------------------------------
 double

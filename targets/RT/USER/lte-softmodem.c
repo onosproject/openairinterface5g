@@ -1031,6 +1031,8 @@ static struct {
   volatile uint8_t phy_proc_CC_id;
 } sync_phy_proc[NUM_ENB_THREADS];
 
+int FRAME_TX;
+int SUBFRAME_TX;
 /*!
  * \brief The transmit thread of eNB.
  * \ref NUM_ENB_THREADS threads of this type are active at the same time.
@@ -1158,6 +1160,8 @@ static void* eNB_thread_tx( void* param )
       if (oai_exit)
         break;
 
+FRAME_TX = proc->frame_tx;
+SUBFRAME_TX = proc->subframe;
       phy_procedures_eNB_TX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay, NULL );
 
       /* we're done, let the next one proceed */
@@ -1222,6 +1226,8 @@ static void* eNB_thread_tx( void* param )
 }
 
 
+int FRAME_RX;
+int SUBFRAME_RX;
 /*!
  * \brief The receive thread of eNB.
  * \ref NUM_ENB_THREADS threads of this type are active at the same time.
@@ -1277,7 +1283,7 @@ static void* eNB_thread_rx( void* param )
   /* This creates a 2ms reservation every 10ms period*/
   attr.sched_policy = SCHED_DEADLINE;
   attr.sched_runtime  = 1   *  1000000; // each rx thread must finish its job in the worst case in 2ms
-  attr.sched_deadline = 1   *  1000000; // each rx thread will finish within 2ms
+  attr.sched_deadline = .9   *  1000000; // each rx thread will finish within 2ms
   attr.sched_period   = 1   * 10000000; // each rx thread has a period of 10ms from the starting point
 
   if (sched_setattr(0, &attr, flags) < 0 ) {
@@ -1328,6 +1334,8 @@ static void* eNB_thread_rx( void* param )
     if ((((PHY_vars_eNB_g[0][proc->CC_id]->lte_frame_parms.frame_type == TDD )&&(subframe_select(&PHY_vars_eNB_g[0][proc->CC_id]->lte_frame_parms,proc->subframe_rx)==SF_UL)) ||
          (PHY_vars_eNB_g[0][proc->CC_id]->lte_frame_parms.frame_type == FDD))) {
 
+FRAME_RX = proc->frame_rx;
+SUBFRAME_RX = proc->subframe;
       phy_procedures_eNB_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
     }
 
@@ -2359,6 +2367,13 @@ static void get_options (int argc, char **argv)
         frame_parms[CC_id]->nb_antennas_tx_eNB  =  enb_properties->properties[i]->nb_antennas_tx[CC_id];
         frame_parms[CC_id]->nb_antennas_rx      =  enb_properties->properties[i]->nb_antennas_rx[CC_id];
         //} // j
+
+        frame_parms[CC_id]->eutra_band          =  enb_properties->properties[i]->eutra_band[CC_id];
+        frame_parms[CC_id]->downlink_frequency  =  enb_properties->properties[i]->downlink_frequency[CC_id];
+        frame_parms[CC_id]->phich_config_common.phich_duration = enb_properties->properties[i]->phich_duration[CC_id];
+        frame_parms[CC_id]->phich_config_common.phich_resource = enb_properties->properties[i]->phich_resource[CC_id];
+        frame_parms[CC_id]->pdsch_config_common.referenceSignalPower = enb_properties->properties[i]->pdsch_referenceSignalPower[CC_id];
+        frame_parms[CC_id]->pdsch_config_common.p_b = enb_properties->properties[i]->pdsch_p_b[CC_id];
       }
 
 

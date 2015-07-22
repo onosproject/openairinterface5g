@@ -53,4 +53,10 @@
 #include "udp_messages_types.h"
 #include "gtpv1_u_messages_types.h"
 
+#define CROUX_HACK(ptr) (ptr)->ittiMsg.croux
+
+typedef struct {
+  int x;
+} croux_struct;
+
 #endif /* MESSAGES_TYPES_H_ */

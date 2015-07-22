@@ -346,6 +346,17 @@ void ra_failed(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
  */
 void ra_succeeded(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
 
+#if Rel10
+/** \brief Function to set/unset Carrier Aggregation configuration of an UE.
+    @param Mod_id           Index of eNB
+    @param rnti             RNTI of UE
+    @param ca_configured    pass 1 to activate CA config, 0 to deactivate
+ */
+void ca_config(uint8_t  Mod_id,
+               uint16_t rnti,
+               int      ca_configured);
+#endif
+
 uint8_t phich_subframe_to_harq_pid(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe);
 
 /* \brief Get PDSCH subframe (n+k) from PDCCH subframe n using relationship from Table 8-2 from 36.213

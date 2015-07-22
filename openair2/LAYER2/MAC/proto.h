@@ -692,6 +692,8 @@ in the DLSCH buffer.
 @param ue_cont_res_id Pointer to contention resolution identifier (NULL means not present in payload)
 @param short_padding Number of bytes for short padding (0,1,2)
 @param post_padding number of bytes for padding at the end of MAC PDU
+@param scell_bitmap bitmap of the scell config, valid if scell_bitmap_cmd != 0
+@param scell_bitmap_cmd pass a value != 0 to put the scell config in the PDU
 @returns Number of bytes used for header
 */
 unsigned char generate_dlsch_header(unsigned char *mac_header,
@@ -702,7 +704,12 @@ unsigned char generate_dlsch_header(unsigned char *mac_header,
                                     short timing_advance_cmd,
                                     unsigned char *ue_cont_res_id,
                                     unsigned char short_padding,
-                                    unsigned short post_padding);
+                                    unsigned short post_padding
+#ifdef Rel10
+                                    , uint8_t scell_bitmap,
+                                    int scell_bitmap_cmd
+#endif
+);
 
 /** \brief RRC Configuration primitive for PHY/MAC.  Allows configuration of PHY/MAC resources based on System Information (SI), RRCConnectionSetup and RRCConnectionReconfiguration messages.
 @param Mod_id Instance ID of eNB
@@ -763,6 +770,25 @@ int rrc_mac_config_req(module_id_t     module_idP,
                        uint16_t cba_rnti
 #endif
                       );
+
+#ifdef Rel10
+/** \brief RRC Secondary cell Configuration.
+ *
+ * Allows configuration of a secondary cell for a given UE.
+ * To be called several times to add more secondary cells (up to 4).
+ *
+ * @param module_id Module ID of eNB
+ * @param rnti id of UE to configure
+ * @param CC_id Component Carrier to add as a secondary cell
+ * @param
+ */
+void
+rrc_mac_config_scell_req(
+        module_id_t     module_id,
+        rnti_t          rnti,
+        int             CC_id,
+        int             bitmap_bit);
+#endif
 
 /** \brief get the estimated UE distance from the PHY->MAC layer.
 @param Mod_id Instance ID of eNB

@@ -972,24 +972,53 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
 
               ULSCH_dci          = UE_template->ULSCH_DCI[harq_pid];
 
-              ((DCI0_5MHz_FDD_t *)ULSCH_dci)->type     = 0;
-              ((DCI0_5MHz_FDD_t *)ULSCH_dci)->hopping  = 0;
-              ((DCI0_5MHz_FDD_t *)ULSCH_dci)->rballoc  = rballoc;
-              ((DCI0_5MHz_FDD_t *)ULSCH_dci)->mcs      = mcs;
-              ((DCI0_5MHz_FDD_t *)ULSCH_dci)->ndi      = ndi;
-              ((DCI0_5MHz_FDD_t *)ULSCH_dci)->TPC      = tpc;
-              ((DCI0_5MHz_FDD_t *)ULSCH_dci)->cshift   = cshift;
-              ((DCI0_5MHz_FDD_t *)ULSCH_dci)->padding  = 0;
-              ((DCI0_5MHz_FDD_t *)ULSCH_dci)->cqi_req  = cqi_req;
+#if Rel10
+              /* rel10 UE with configured scells has a different DCI0 format, see 36.212 5.3.3.1.1 */
+              if (UE_list->scell_config[UE_id].scell_count == 0) {
+#endif
+                ((DCI0_5MHz_FDD_t *)ULSCH_dci)->type     = 0;
+                ((DCI0_5MHz_FDD_t *)ULSCH_dci)->hopping  = 0;
+                ((DCI0_5MHz_FDD_t *)ULSCH_dci)->rballoc  = rballoc;
+                ((DCI0_5MHz_FDD_t *)ULSCH_dci)->mcs      = mcs;
+                ((DCI0_5MHz_FDD_t *)ULSCH_dci)->ndi      = ndi;
+                ((DCI0_5MHz_FDD_t *)ULSCH_dci)->TPC      = tpc;
+                ((DCI0_5MHz_FDD_t *)ULSCH_dci)->cshift   = cshift;
+                ((DCI0_5MHz_FDD_t *)ULSCH_dci)->padding  = 0;
+                ((DCI0_5MHz_FDD_t *)ULSCH_dci)->cqi_req  = cqi_req;
 
-              add_ue_spec_dci(DCI_pdu,
-                              ULSCH_dci,
-                              rnti,
-                              sizeof(DCI0_5MHz_FDD_t),
-                              aggregation,
-                              sizeof_DCI0_5MHz_FDD_t,
-                              format0,
-                              0);
+                add_ue_spec_dci(DCI_pdu,
+                                ULSCH_dci,
+                                rnti,
+                                sizeof(DCI0_5MHz_FDD_t),
+                                aggregation,
+                                sizeof_DCI0_5MHz_FDD_t,
+                                format0,
+                                0);
+#if Rel10
+              } else {
+printf("!! generate DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t with cqi_req != 3 (var cqi_req %d)\n", cqi_req);
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->type     = 0;
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->hopping  = 0;
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->rballoc  = rballoc;
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->mcs      = mcs;
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->ndi      = ndi;
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->TPC      = tpc;
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->cshift   = cshift;
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->cqi_req  = cqi_req ? 1 : 0; //3 : 0;
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->srs_req  = 0; /* TBC CROUX */
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->rat      = 0; /* TBC CROUX */
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->padding  = 0;
+
+                add_ue_spec_dci(DCI_pdu,
+                                ULSCH_dci,
+                                rnti,
+                                sizeof(DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t),
+                                aggregation,
+                                sizeof_DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t,
+                                format0,
+                                0);
+              }
+#endif /* Rel10 */
               break;
 
             case 6:

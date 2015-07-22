@@ -833,11 +833,11 @@ int s1ap_eNB_handle_ue_context_release_command(uint32_t               assoc_id,
                  "existing UE context 0x%06x\n",
                  assoc_id,
                  enb_ue_s1ap_id);
-      /*MessageDef *msg_complete_p;
+      MessageDef *msg_complete_p;
       msg_complete_p = itti_alloc_new_message(TASK_RRC_ENB, S1AP_UE_CONTEXT_RELEASE_COMPLETE);
       S1AP_UE_CONTEXT_RELEASE_COMPLETE(msg_complete_p).eNB_ue_s1ap_id = enb_ue_s1ap_id;
-      itti_send_msg_to_task(TASK_S1AP, ue_desc_p->eNB_instance->instance <=> 0, msg_complete_p);
-      */
+      itti_send_msg_to_task(TASK_S1AP, 0, msg_complete_p);
+      
       return -1;
     } else {
       MSC_LOG_TX_MESSAGE(

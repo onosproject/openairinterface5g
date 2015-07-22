@@ -219,6 +219,11 @@ typedef struct PHY_VARS_eNB_s {
   LTE_eNB_UE_stats     eNB_UE_stats[NUMBER_OF_UE_MAX];
   LTE_eNB_UE_stats    *eNB_UE_stats_ptr[NUMBER_OF_UE_MAX];
 
+#if Rel10
+  /// indicator set to 1 if the UE is configured with multiple DL cells
+  int                  CA_configured[NUMBER_OF_UE_MAX];
+#endif
+
   /// cell-specific reference symbols
   uint32_t         lte_gold_table[20][2][14];
 

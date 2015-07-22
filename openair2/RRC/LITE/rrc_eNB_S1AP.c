@@ -99,6 +99,7 @@ rrc_eNB_S1AP_get_ue_ids(
 
   // we assume that a rrc_ue_s1ap_ids_s is initially inserted in initial_id2_s1ap_ids
   if (eNB_ue_s1ap_id > 0) {
+LOG_E(S1AP, "CROUX: I'm not sure of this...\n");
 	h_rc = hashtable_get(rrc_instance_pP->s1ap_id2_s1ap_ids, (hash_key_t)eNB_ue_s1ap_id, (void**)&result);
   }
   if (ue_initial_id != UE_INITIAL_ID_INVALID) {
@@ -635,7 +636,7 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
     		               rrc_ue_s1ap_ids_p);
     if (h_rc != HASH_TABLE_OK) {
       LOG_E(S1AP, "[eNB %d] Error while hashtable_insert in initial_id2_s1ap_ids ue_initial_id %u\n",
-    		  ctxt_pP->module_id, ue_context_pP->ue_context.ue_initial_id);
+            ctxt_pP->module_id, ue_context_pP->ue_context.ue_initial_id);
     }
 
     /* Assume that cause is coded in the same way in RRC and S1ap, just check that the value is in S1ap range */
@@ -1023,6 +1024,7 @@ int rrc_eNB_process_S1AP_UE_CTXT_MODIFICATION_REQ(MessageDef *msg_p, const char 
 /*------------------------------------------------------------------------------*/
 int rrc_eNB_process_S1AP_UE_CONTEXT_RELEASE_REQ (MessageDef *msg_p, const char *msg_name, instance_t instance)
 {
+printf("\n\n\nrrc_eNB_process_S1AP_UE_CONTEXT_RELEASE_REQ\n\n\n");
   uint32_t eNB_ue_s1ap_id;
   struct rrc_eNB_ue_context_s* ue_context_p = NULL;
 

@@ -136,6 +136,7 @@ uint8_t is_SR_subframe(PHY_VARS_eNB *phy_vars_eNB,uint8_t UE_id,uint8_t sched_su
   return(0);
 }
 
+#if 0
 int32_t add_ue(int16_t rnti, PHY_VARS_eNB *phy_vars_eNB)
 {
   uint8_t i;
@@ -174,7 +175,65 @@ int32_t add_ue(int16_t rnti, PHY_VARS_eNB *phy_vars_eNB)
   }
   return(-1);
 }
+#else
+int32_t add_ue(int16_t rnti, PHY_VARS_eNB *phy_vars_eNB)
+{
+  int i;
+  int ret = -1;
+  int CC;
 
+#ifdef DEBUG_PHY_PROC
+  LOG_I(PHY,"[eNB %d/%d] Adding UE with rnti %x\n",
+        phy_vars_eNB->Mod_id,
+        phy_vars_eNB->CC_id,
+        (uint16_t)rnti);
+#endif
+
+  for (CC = 0; CC < MAX_NUM_CCs; CC++) {
+    phy_vars_eNB = PHY_vars_eNB_g[0][CC];
+    for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+      if ((phy_vars_eNB->dlsch_eNB[i]==NULL) || (phy_vars_eNB->ulsch_eNB[i]==NULL)) {
+        MSC_LOG_EVENT(MSC_PHY_ENB, "0 Failed add ue %"PRIx16" (ENOMEM)", rnti);
+        LOG_E(PHY,"Can't add UE, not enough memory allocated\n");
+abort();
+        return -1;
+      } else {
+        if (phy_vars_eNB->eNB_UE_stats[i].crnti==0) {
+          MSC_LOG_EVENT(MSC_PHY_ENB, "0 Add ue %"PRIx16" ", rnti);
+          LOG_I(PHY,"UE_id %d associated with rnti %x\n",i, (uint16_t)rnti);
+          phy_vars_eNB->dlsch_eNB[i][0]->rnti = rnti;
+          phy_vars_eNB->ulsch_eNB[i]->rnti = rnti;
+          phy_vars_eNB->eNB_UE_stats[i].crnti = rnti;
+
+  	  phy_vars_eNB->eNB_UE_stats[i].Po_PUCCH1_below = 0;
+	  phy_vars_eNB->eNB_UE_stats[i].Po_PUCCH1_above = (int32_t)pow(10.0,.1*(phy_vars_eNB->lte_frame_parms.ul_power_control_config_common.p0_NominalPUCCH+phy_vars_eNB->rx_total_gain_eNB_dB));
+	  phy_vars_eNB->eNB_UE_stats[i].Po_PUCCH        = (int32_t)pow(10.0,.1*(phy_vars_eNB->lte_frame_parms.ul_power_control_config_common.p0_NominalPUCCH+phy_vars_eNB->rx_total_gain_eNB_dB));
+	  LOG_I(PHY,"Initializing Po_PUCCH: p0_NominalPUCCH %d, gain %d => %d\n",
+	        phy_vars_eNB->lte_frame_parms.ul_power_control_config_common.p0_NominalPUCCH,
+	        phy_vars_eNB->rx_total_gain_eNB_dB,
+	        phy_vars_eNB->eNB_UE_stats[i].Po_PUCCH);
+          if (ret != -1 && i != ret) {
+            printf("bad in add_ue\n");
+            abort();
+          }
+          ret = i;
+          break;
+        }
+      }
+    }
+  }
+
+#if Rel10
+  /* intially, the UE is not configured with multiple DL cells */
+  if (ret != -1)
+    ca_config(phy_vars_eNB->Mod_id, rnti, 0);
+#endif
+
+  return ret;
+}
+#endif
+
+#if 0
 int32_t remove_ue(uint16_t rnti, PHY_VARS_eNB *phy_vars_eNB, uint8_t abstraction_flag)
 {
   uint8_t i;
@@ -204,6 +263,50 @@ int32_t remove_ue(uint16_t rnti, PHY_VARS_eNB *phy_vars_eNB, uint8_t abstraction
   MSC_LOG_EVENT(MSC_PHY_ENB, "0 Failed remove ue %"PRIx16" (not found)", rnti);
   return(-1);
 }
+#else
+int32_t remove_ue(uint16_t rnti, PHY_VARS_eNB *phy_vars_eNB, uint8_t abstraction_flag)
+{
+  int i;
+  int ret = -1;
+  int CC;
+
+  for (CC = 0; CC < MAX_NUM_CCs; CC++) {
+    phy_vars_eNB = PHY_vars_eNB_g[0][CC];
+    for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+      if ((phy_vars_eNB->dlsch_eNB[i]==NULL) || (phy_vars_eNB->ulsch_eNB[i]==NULL)) {
+        MSC_LOG_EVENT(MSC_PHY_ENB, "0 Failed remove ue %"PRIx16" (ENOMEM)", rnti);
+        LOG_E(PHY,"Can't remove UE, not enough memory allocated\n");
+abort();
+        return -1;
+      } else {
+        if (phy_vars_eNB->eNB_UE_stats[i].crnti==rnti) {
+          MSC_LOG_EVENT(MSC_PHY_ENB, "0 Removed ue %"PRIx16" ", rnti);
+#ifdef DEBUG_PHY_PROC
+          LOG_I(PHY,"eNB %d removing UE %d with rnti %x\n",phy_vars_eNB->Mod_id,i,rnti);
+#endif
+          //msg("[PHY] UE_id %d\n",i);
+          clean_eNb_dlsch(phy_vars_eNB->dlsch_eNB[i][0], abstraction_flag);
+          clean_eNb_ulsch(phy_vars_eNB->ulsch_eNB[i],abstraction_flag);
+          //phy_vars_eNB->eNB_UE_stats[i].crnti = 0;
+          memset(&phy_vars_eNB->eNB_UE_stats[i],0,sizeof(LTE_eNB_UE_stats));
+          //  mac_exit_wrapper("Removing UE");
+          if (ret != -1 && i != ret) {
+            printf("bad in remove_ue\n");
+            abort();
+          }
+          ret = i;
+          break;
+        }
+      }
+    }
+  }
+
+  if (ret == -1) {
+    MSC_LOG_EVENT(MSC_PHY_ENB, "0 Failed remove ue %"PRIx16" (not found)", rnti);
+  }
+  return ret;
+}
+#endif
 
 int8_t find_next_ue_index(PHY_VARS_eNB *phy_vars_eNB)
 {
@@ -249,6 +352,11 @@ int get_ue_active_harq_pid(const uint8_t Mod_id,const uint8_t CC_id,const uint16
     #endif
     */
     // switch on TDD or FDD configuration here later
+//PHY_VARS_eNB *phy_vars_eNB = PHY_vars_eNB_g[Mod_id][CC_id];
+//*harq_pid = /* subframe & 1; // */subframe2harq_pid( &phy_vars_eNB->lte_frame_parms,frame,subframe);
+//if (DLSCH_ptr->harq_processes[*harq_pid]->status != ACTIVE) { *round = 0; }
+//else *round = DLSCH_ptr->harq_processes[*harq_pid]->round;
+//return 0;
     *harq_pid = DLSCH_ptr->harq_ids[subframe];
 
     if ((*harq_pid<DLSCH_ptr->Mdlharq) &&
@@ -390,6 +498,30 @@ int get_nCCE_offset(const unsigned char L, const int nCCE, const int common_dci,
     return(-1);
   }
 }
+
+#if Rel10
+
+void ca_config(uint8_t  Mod_id,
+               uint16_t rnti,
+               int      ca_configured)
+{
+  int CC_id;
+  int8_t UE_id;
+
+  LOG_I(PHY,"[eNB %d] UE %x CA configured %d\n", Mod_id, rnti, ca_configured);
+
+  /* configure the UE on all the CCs */
+  for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
+    UE_id = find_ue(rnti, PHY_vars_eNB_g[Mod_id][CC_id]);
+    if (UE_id == -1) {
+      LOG_E(PHY, "ca_config: cannot find UE with rnti %x (Mod_id %d, CC_id %d)\n", rnti, Mod_id, CC_id);
+      continue;
+    }
+    PHY_vars_eNB_g[Mod_id][CC_id]->CA_configured[UE_id] = ca_configured;
+  }
+}
+
+#endif /* Rel10 */
 
 int16_t get_target_pusch_rx_power(const module_id_t module_idP, const uint8_t CC_id)
 {
@@ -625,6 +757,7 @@ void fill_dci(DCI_PDU *DCI_pdu, uint8_t sched_subframe, PHY_VARS_eNB *phy_vars_e
         ((DCI1A_5MHz_FDD_t*)&bcch_pdu)->harq_pid          = 0;
         ((DCI1A_5MHz_FDD_t*)&bcch_pdu)->TPC               = 1;      // set to 3 PRB
         memcpy((void*)&DCI_pdu->dci_alloc[0].dci_pdu[0],&bcch_pdu,sizeof(DCI1A_5MHz_TDD_1_6_t));
+printf("!!!!!!!!!!!!!!!!!!!! %s CC %d\n", __FILENAME__, phy_vars_eNB->CC_id);
       } else {
         DCI_pdu->dci_alloc[0].dci_length = sizeof_DCI1A_5MHz_TDD_1_6_t;
         ((DCI1A_5MHz_TDD_1_6_t*)&bcch_pdu)->type              = 1;
@@ -2680,6 +2813,7 @@ void process_HARQ_feedback(uint8_t UE_id,
     else
       dlsch_ACK[0] = pucch_payload[0];
 
+printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, subframe, dlsch_ACK[0], phy_vars_eNB->CC_id);
     LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d for subframe %d\n",phy_vars_eNB->Mod_id,
           frame,dlsch_ACK[0],subframe_m4);
 
@@ -2820,6 +2954,7 @@ void process_HARQ_feedback(uint8_t UE_id,
 
           //    msg("[PHY] eNB %d Process %d is active (%d)\n",phy_vars_eNB->Mod_id,dl_harq_pid[m],dlsch_ACK[m]);
           if ( dlsch_ACK[mp]==0) {
+printf("got a NAK! CC %d\n", phy_vars_eNB->CC_id);
             // Received NAK
 #ifdef DEBUG_PHY_PROC
             LOG_D(PHY,"[eNB %d][PDSCH %x/%d] M = %d, m= %d, mp=%d NAK Received in round %d, requesting retransmission\n",phy_vars_eNB->Mod_id,
@@ -2838,8 +2973,8 @@ void process_HARQ_feedback(uint8_t UE_id,
             if (dlsch_harq_proc->round == dlsch->Mdlharq) {
               // This was the last round for DLSCH so reset round and increment l2_error counter
 #ifdef DEBUG_PHY_PROC
-              LOG_W(PHY,"[eNB %d][PDSCH %x/%d] DLSCH retransmissions exhausted, dropping packet\n",phy_vars_eNB->Mod_id,
-                    dlsch->rnti,dl_harq_pid[m]);
+              LOG_W(PHY,"[eNB %d/%d][PDSCH %x/%d] DLSCH retransmissions exhausted, dropping packet\n",phy_vars_eNB->Mod_id,
+                    phy_vars_eNB->CC_id, dlsch->rnti,dl_harq_pid[m]);
 #endif
 #if defined(MESSAGE_CHART_GENERATOR_PHY)
               MSC_LOG_EVENT(MSC_PHY_ENB, "0 HARQ DLSCH Failed RNTI %"PRIx16" round %u",
@@ -2859,6 +2994,7 @@ void process_HARQ_feedback(uint8_t UE_id,
 #endif
             ue_stats->dlsch_ACK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
 
+printf("got an ACK! CC %d\n", phy_vars_eNB->CC_id);
             // Received ACK so set round to 0 and set dlsch_harq_pid IDLE
             dlsch_harq_proc->round  = 0;
             dlsch_harq_proc->status = SCH_IDLE;
@@ -3438,6 +3574,7 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
       start_meas(&phy_vars_eNB->ulsch_demodulation_stats);
 
       if (abstraction_flag==0) {
+printf("**** fr/subfr %d %d call rx_ulsch CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
         rx_ulsch(phy_vars_eNB,
                  sched_subframe,
                  phy_vars_eNB->eNB_UE_stats[i].sector,  // this is the effective sector id
@@ -3528,6 +3665,7 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
 #endif
       phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->subframe_scheduling_flag=0;
 
+printf("phy_vars_eNB->ulsch_eNB[%d]->harq_processes[%d]->cqi_crc_status == %d\n", i, harq_pid, phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->cqi_crc_status);
       if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->cqi_crc_status == 1) {
 #ifdef DEBUG_PHY_PROC
         //if (((phy_vars_eNB->proc[sched_subframe].frame_tx%10) == 0) || (phy_vars_eNB->proc[sched_subframe].frame_tx < 50))
@@ -3537,7 +3675,9 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
                     phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->uci_format,
                     &phy_vars_eNB->eNB_UE_stats[i],
                     phy_vars_eNB->lte_frame_parms.N_RB_DL,
-                    &rnti, &access_mode);
+                    &rnti, &access_mode,
+                    /* for the moment, maximum 2 CCs supported */
+                    phy_vars_eNB->CA_configured[i] == 1 ? 2 : 1);
         phy_vars_eNB->eNB_UE_stats[i].rank = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_RI[0];
       }
 
@@ -3793,6 +3933,7 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
 
 #ifdef OPENAIR2
           //    if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->calibration_flag == 0) {
+printf("**** fr/subfr %d %d call mac_xface->rx_sdu CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
           mac_xface->rx_sdu(phy_vars_eNB->Mod_id,
                             phy_vars_eNB->CC_id,
                             frame,subframe,
@@ -3845,6 +3986,7 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
             frame,subframe,
             i);
 #endif
+printf("**** fr/subfr %d %d call process_HARQ_feedback CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
       process_HARQ_feedback(i,
                             sched_subframe,
                             phy_vars_eNB,
@@ -3980,6 +4122,7 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
                 pucch_payload0[0],metric0);
 #endif
 
+printf("**** fr/subfr %d %d call process_HARQ_feedback 2 CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
           process_HARQ_feedback(i,sched_subframe,phy_vars_eNB,
                                 0,// pusch_flag
                                 pucch_payload0,
@@ -4173,6 +4316,7 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
             i, (uint16_t)phy_vars_eNB->ulsch_eNB[i]->cba_rnti[i%num_active_cba_groups],mode_string[phy_vars_eNB->eNB_UE_stats[i].mode]);
 #endif
 
+printf("**** fr/subfr %d %d call rx_ulsch (2nd) CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
       if (abstraction_flag==0) {
         rx_ulsch(phy_vars_eNB,
                  sched_subframe,
@@ -4221,7 +4365,9 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
                     phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->uci_format,
                     &phy_vars_eNB->eNB_UE_stats[i],
                     phy_vars_eNB->lte_frame_parms.N_RB_DL,
-                    &rnti, &access_mode);
+                    &rnti, &access_mode,
+                    /* TODO more than one CC for this case? */
+                    1);
         phy_vars_eNB->eNB_UE_stats[i].rank = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_RI[0];
       }
 

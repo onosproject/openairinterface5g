@@ -1042,8 +1042,11 @@ rrc_eNB_generate_RRCConnectionRelease(
 void
 rrc_eNB_generate_defaultRRCConnectionReconfiguration(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_t*          const ue_context_pP,
+  rrc_eNB_ue_context_t*  const ue_context_pP,
   const uint8_t                ho_state
+#ifdef Rel10
+  , SCellToAddMod_r10_t       *scell
+#endif
 )
 //-----------------------------------------------------------------------------
 {
@@ -1054,6 +1057,9 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
   // configure SRB1/SRB2, PhysicalConfigDedicated, MAC_MainConfig for UE
   eNB_RRC_INST*                       rrc_inst = &eNB_rrc_inst[ctxt_pP->module_id];
   struct PhysicalConfigDedicated**    physicalConfigDedicated = &ue_context_pP->ue_context.physicalConfigDedicated;
+#if Rel10
+  struct PhysicalConfigDedicated     *r10_physicalConfigDedicated = NULL;
+#endif
 
   struct SRB_ToAddMod                *SRB2_config                      = NULL;
   struct SRB_ToAddMod__rlc_Config    *SRB2_rlc_config                  = NULL;
@@ -1575,6 +1581,61 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
 
 #endif
 
+#if Rel10
+  /* if an scell is configured, send a special physicalConfigDedicated */
+  if (scell != NULL) {
+    struct PhysicalConfigDedicated       *ph;
+    struct CQI_ReportConfig_r10          *cqi;
+    struct PUCCH_ConfigDedicated_v1020   *pucch;
+    BIT_STRING_t                         t1;
+    BIT_STRING_t                         t2;
+    struct PUCCH_ConfigDedicated_v1020__pucch_Format_r10__channelSelection_r10 *cs;
+    struct N1PUCCH_AN_CS_r10             *n1pucch_1;
+    struct N1PUCCH_AN_CS_r10             *n1pucch_2;
+    long                                 *val;
+
+    ph       = r10_physicalConfigDedicated           = CALLOC(1, sizeof(*r10_physicalConfigDedicated));
+    ph->ext2                                         = CALLOC(1, sizeof(struct PhysicalConfigDedicated__ext2));
+    cqi      = ph->ext2->cqi_ReportConfig_r10        = CALLOC(1, sizeof(struct CQI_ReportConfig_r10));
+    pucch    = ph->ext2->pucch_ConfigDedicated_v1020 = CALLOC(1, sizeof(struct PUCCH_ConfigDedicated_v1020));
+
+    cqi->cqi_ReportAperiodic_r10                     = CALLOC(1, sizeof(struct CQI_ReportAperiodic_r10));
+    cqi->cqi_ReportAperiodic_r10->present = CQI_ReportAperiodic_r10_PR_setup;
+    cqi->cqi_ReportAperiodic_r10->choice.setup.cqi_ReportModeAperiodic_r10 = CQI_ReportAperiodic_r10__setup__cqi_ReportModeAperiodic_r10_rm30; /* TBC CROUX */
+    cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10
+                                                     = CALLOC(1, sizeof(struct CQI_ReportAperiodic_r10__setup__aperiodicCSI_Trigger_r10));
+    t1.buf                                           = CALLOC(1, 1); t1.size = 1; t1.bits_unused = 0;
+    t2.buf                                           = CALLOC(1, 1); t2.size = 1; t2.bits_unused = 0;
+    t1.buf[0] = 0x40;
+    t2.buf[0] = 0xc0;
+    cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger1_r10 = t1;
+    cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger2_r10 = t2;
+
+    pucch->pucch_Format_r10                          = CALLOC(1, sizeof(struct PUCCH_ConfigDedicated_v1020__pucch_Format_r10));
+    pucch->pucch_Format_r10->present = PUCCH_ConfigDedicated_v1020__pucch_Format_r10_PR_channelSelection_r10;
+    cs = &pucch->pucch_Format_r10->choice.channelSelection_r10;
+    cs->n1PUCCH_AN_CS_r10                            = CALLOC(1, sizeof(struct PUCCH_ConfigDedicated_v1020__pucch_Format_r10__channelSelection_r10__n1PUCCH_AN_CS_r10));
+    cs->n1PUCCH_AN_CS_r10->present = PUCCH_ConfigDedicated_v1020__pucch_Format_r10__channelSelection_r10__n1PUCCH_AN_CS_r10_PR_setup;
+    n1pucch_1                                        = CALLOC(1, sizeof(struct N1PUCCH_AN_CS_r10));
+    n1pucch_2                                        = CALLOC(1, sizeof(struct N1PUCCH_AN_CS_r10));
+    /* values here are TBC CROUX, 0 for the moment */
+    val = CALLOC(1, sizeof(long)); *val = 16; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 18; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 20; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 22; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 17; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 19; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 21; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 23; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
+    ASN_SEQUENCE_ADD(&cs->n1PUCCH_AN_CS_r10->choice.setup.n1PUCCH_AN_CS_List_r10.list, n1pucch_1);
+    ASN_SEQUENCE_ADD(&cs->n1PUCCH_AN_CS_r10->choice.setup.n1PUCCH_AN_CS_List_r10.list, n1pucch_2);
+//ph->ext2->cqi_ReportConfig_r10=NULL;
+//ph->ext2->pucch_ConfigDedicated_v1020=NULL;
+//ph->ext2=NULL;
+//r10_physicalConfigDedicated=NULL;
+  }
+#endif
+
   memset(buffer, 0, RRC_BUF_SIZE);
 
   size = do_RRCConnectionReconfiguration(ctxt_pP,
@@ -1585,9 +1646,20 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
                                          (DRB_ToReleaseList_t*)NULL,  // DRB2_list,
                                          (struct SPS_Config*)NULL,    // *sps_Config,
 #ifdef EXMIMO_IOT
-                                         NULL, NULL, NULL, NULL,NULL,
+#  if Rel10
+                                         (scell == NULL) ? NULL
+                                                         : (struct PhysicalConfigDedicated*)r10_physicalConfigDedicated,
+#  else
+                                         NULL,
+#  endif
+                                         NULL, NULL, NULL,NULL,
 #else
+#  if Rel10
+                                         (scell == NULL) ? (struct PhysicalConfigDedicated*)*physicalConfigDedicated
+                                                         : (struct PhysicalConfigDedicated*)r10_physicalConfigDedicated,
+#  else
                                          (struct PhysicalConfigDedicated*)*physicalConfigDedicated,
+#  endif
                                          (MeasObjectToAddModList_t*)MeasObj_list,
                                          (ReportConfigToAddModList_t*)ReportConfig_list,
                                          (QuantityConfig_t*)quantityConfig,
@@ -1601,7 +1673,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
                                          (C_RNTI_t*)cba_RNTI,
                                          (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
 #ifdef Rel10
-                                         , (SCellToAddMod_r10_t*)NULL
+                                         , scell
 #endif
                                         );
 
@@ -1658,7 +1730,437 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
     PDCP_TRANSMISSION_MODE_CONTROL);
 }
 
+#ifdef Rel10
 
+typedef enum { BAND_TYPE_FDD, BAND_TYPE_TDD } band_type;
+
+typedef struct {
+  band_type t;
+  int band;
+  unsigned long ul_minfreq, ul_maxfreq;
+  unsigned long dl_minfreq, dl_maxfreq;
+} band_freq;
+
+static band_freq bands[] = {
+  { BAND_TYPE_FDD, 1, 1920000000UL, 1980000000UL, 2110000000UL, 2170000000UL },
+  { BAND_TYPE_FDD, 2, 1850000000UL, 1910000000UL, 1930000000UL, 1990000000UL },
+  { BAND_TYPE_FDD, 3, 1710000000UL, 1785000000UL, 1805000000UL, 1880000000UL },
+  { BAND_TYPE_FDD, 4, 1710000000UL, 1755000000UL, 2110000000UL, 2155000000UL },
+  { BAND_TYPE_FDD, 5, 824000000UL, 849000000UL, 869000000UL, 894000000UL },
+    /* to remove? */{ BAND_TYPE_FDD, 6, 830000000UL, 840000000UL, 875000000UL, 885000000UL },
+  { BAND_TYPE_FDD, 7, 2500000000UL, 2570000000UL, 2620000000UL, 2690000000UL },
+  { BAND_TYPE_FDD, 8, 880000000UL, 915000000UL, 925000000UL, 960000000UL },
+  { BAND_TYPE_FDD, 9, 1749900000UL, 1784900000UL, 1844900000UL, 1879900000UL },
+  { BAND_TYPE_FDD, 10, 1710000000UL, 1770000000UL, 2110000000UL, 2170000000UL },
+  { BAND_TYPE_FDD, 11, 1427900000UL, 1447900000UL, 1475900000UL, 1495900000UL },
+  { BAND_TYPE_FDD, 12, 699000000UL, 716000000UL, 729000000UL, 746000000UL },
+  { BAND_TYPE_FDD, 13, 777000000UL, 787000000UL, 746000000UL, 756000000UL },
+  { BAND_TYPE_FDD, 14, 788000000UL, 798000000UL, 758000000UL, 768000000UL },
+  { BAND_TYPE_FDD, 17, 704000000UL, 716000000UL, 734000000UL, 746000000UL },
+  { BAND_TYPE_FDD, 18, 815000000UL, 830000000UL, 860000000UL, 875000000UL },
+  { BAND_TYPE_FDD, 19, 830000000UL, 845000000UL, 875000000UL, 890000000UL },
+  { BAND_TYPE_FDD, 20, 832000000UL, 862000000UL, 791000000UL, 821000000UL },
+  { BAND_TYPE_FDD, 21, 1447900000UL, 1462900000UL, 1495900000UL, 1510900000UL },
+  { BAND_TYPE_FDD, 22, 3410000000UL, 3490000000UL, 3510000000UL, 3590000000UL },
+  { BAND_TYPE_FDD, 23, 2000000000UL, 2020000000UL, 2180000000UL, 2200000000UL },
+  { BAND_TYPE_FDD, 24, 1626500000UL, 1660500000UL, 1525000000UL, 1559000000UL },
+  { BAND_TYPE_FDD, 25, 1850000000UL, 1915000000UL, 1930000000UL, 1995000000UL },
+
+  { BAND_TYPE_TDD, 33, 1900000000UL, 1920000000UL, 1900000000UL, 1920000000UL },
+  { BAND_TYPE_TDD, 34, 2010000000UL, 2025000000UL, 2010000000UL, 2025000000UL },
+  { BAND_TYPE_TDD, 35, 1850000000UL, 1910000000UL, 1850000000UL, 1910000000UL },
+  { BAND_TYPE_TDD, 36, 1930000000UL, 1990000000UL, 1930000000UL, 1990000000UL },
+  { BAND_TYPE_TDD, 37, 1910000000UL, 1930000000UL, 1910000000UL, 1930000000UL },
+  { BAND_TYPE_TDD, 38, 2570000000UL, 2620000000UL, 2570000000UL, 2620000000UL },
+  { BAND_TYPE_TDD, 39, 1880000000UL, 1920000000UL, 1880000000UL, 1920000000UL },
+  { BAND_TYPE_TDD, 40, 2300000000UL, 2400000000UL, 2300000000UL, 2400000000UL },
+  { BAND_TYPE_TDD, 41, 2496000000UL, 2690000000UL, 2496000000UL, 2690000000UL },
+  { BAND_TYPE_TDD, 42, 3400000000UL, 3600000000UL, 3400000000UL, 3600000000UL },
+  { BAND_TYPE_TDD, 43, 3600000000UL, 3800000000UL, 3600000000UL, 3800000000UL },
+};
+
+typedef struct {
+  int band;
+  unsigned long dl_flow;
+  int dl_off;
+  int dl_offmin, dl_offmax;
+  unsigned long ul_flow;
+  int ul_off;
+  int ul_offmin, ul_offmax;
+} earfcn;
+
+static earfcn earfcn_table[] = {
+  { 1, 2110000000UL, 0, 0, 599, 1920000000UL, 18000, 18000, 18599 },
+  { 2, 1930000000UL, 600, 600, 1199, 1850000000UL, 18600, 18600, 19199 },
+  { 3, 1805000000UL, 1200, 1200, 1949, 1710000000UL, 19200, 19200, 19949 },
+  { 4, 2110000000UL, 1950, 1950, 2399, 1710000000UL, 19950, 19950, 20399 },
+  { 5, 869000000UL, 2400, 2400, 2649, 824000000UL, 20400, 20400, 20649 },
+  { 6, 875000000UL, 2650, 2650, 2749, 830000000UL, 20650, 20650, 20749 },
+  { 7, 2620000000UL, 2750, 2750, 3449, 2500000000UL, 20750, 20750, 21449 },
+  { 8, 925000000UL, 3450, 3450, 3799, 880000000UL, 21450, 21450, 21799 },
+  { 9, 1844900000UL, 3800, 3800, 4149, 1749900000UL, 21800, 21800, 22149 },
+  { 10, 2110000000UL, 4150, 4150, 4749, 1710000000UL, 22150, 22150, 22749 },
+  { 11, 1475900000UL, 4750, 4750, 4949, 1427900000UL, 22750, 22750, 22949 },
+  { 12, 729000000UL, 5010, 5010, 5179, 699000000UL, 23010, 23010, 23179 },
+  { 13, 746000000UL, 5180, 5180, 5279, 777000000UL, 23180, 23180, 23279 },
+  { 14, 758000000UL, 5280, 5280, 5379, 788000000UL, 23280, 23280, 23379 },
+  { 17, 734000000UL, 5730, 5730, 5849, 704000000UL, 23730, 23730, 23849 },
+  { 18, 860000000UL, 5850, 5850, 5999, 815000000UL, 23850, 23850, 23999 },
+  { 19, 875000000UL, 6000, 6000, 6149, 830000000UL, 24000, 24000, 24149 },
+  { 20, 791000000UL, 6150, 6150, 6449, 832000000UL, 24150, 24150, 24449 },
+  { 21, 1495900000UL, 6450, 6450, 6599, 1447900000UL, 24450, 24450, 24599 },
+  { 22, 3510000000UL, 6600, 6600, 7399, 3410000000UL, 24600, 24600, 25399 },
+  { 23, 2180000000UL, 7500, 7500, 7699, 2000000000UL, 25500, 25500, 25699 },
+  { 24, 1525000000UL, 7700, 7700, 8039, 1626500000UL, 25700, 25700, 26039 },
+  { 25, 1930000000UL, 8040, 8040, 8689, 1850000000UL, 26040, 26040, 26689 },
+  { 33, 1900000000UL, 36000, 36000, 36199, 1900000000UL, 36000, 36000, 36199 },
+  { 34, 2010000000UL, 36200, 36200, 36349, 2010000000UL, 36200, 36200, 36349 },
+  { 35, 1850000000UL, 36350, 36350, 36949, 1850000000UL, 36350, 36350, 36949 },
+  { 36, 1930000000UL, 36950, 36950, 37549, 1930000000UL, 36950, 36950, 37549 },
+  { 37, 1910000000UL, 37550, 37550, 37749, 1910000000UL, 37550, 37550, 37749 },
+  { 38, 2570000000UL, 37750, 37750, 38249, 2570000000UL, 37750, 37750, 38249 },
+  { 39, 1880000000UL, 38250, 38250, 38649, 1880000000UL, 38250, 38250, 38649 },
+  { 40, 2300000000UL, 38650, 38650, 39649, 2300000000UL, 38650, 38650, 39649 },
+  { 41, 2496000000UL, 39650, 39650, 41589, 2496000000UL, 39650, 39650, 41589 },
+  { 42, 3400000000UL, 41590, 41590, 43589, 3400000000UL, 41590, 41590, 43589 },
+  { 43, 3600000000UL, 43590, 43590, 45589, 3600000000UL, 43590, 43590, 45589 },
+};
+
+int freq_to_arfcn10(int band, unsigned long freq)
+{
+  int N = sizeof(earfcn_table) / sizeof(earfcn_table[0]);
+  int i;
+
+  for (i = 0; i < N; i++) if (bands[i].band == band) break;
+  if (i == N) return -1;
+
+  if (!(bands[i].dl_minfreq < freq && freq < bands[i].dl_maxfreq))
+    return -1;
+
+  return (freq - earfcn_table[i].dl_flow) / 100000UL + earfcn_table[i].dl_off;
+}
+
+void *CALLOC_OR_DIE(size_t nmemb, size_t size)
+{
+  void *r = calloc(nmemb, size);
+  if (r == NULL) abort();
+  return r;
+}
+
+static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
+{
+  SCellToAddMod_r10_t *scell;
+  RadioResourceConfigCommonSCell_r10_t *rcommon;
+  AntennaInfoCommon_t *antenna;
+  PHICH_Config_t *phich;
+  PDSCH_ConfigCommon_t *pdsch;
+  RadioResourceConfigDedicatedSCell_r10_t *rdedi;
+  PhysicalConfigDedicatedSCell_r10_t *phy_scell;
+  struct PhysicalConfigDedicatedSCell_r10__nonUL_Configuration_r10 *snu;
+  BIT_STRING_t *bt;
+  struct PhysicalConfigDedicatedSCell_r10__ul_Configuration_r10 *su;
+  LTE_DL_FRAME_PARMS *frame_parms;
+  int transmission_mode;
+  PA_t p_a;
+
+  frame_parms = mac_xface->get_lte_frame_parms(eNB_id, CC);
+
+  scell = CALLOC_OR_DIE(1, sizeof(SCellToAddMod_r10_t));
+
+  scell->sCellIndex_r10 = scell_index;
+
+  scell->cellIdentification_r10 = CALLOC_OR_DIE(1, sizeof(struct SCellToAddMod_r10__cellIdentification_r10));
+
+  scell->cellIdentification_r10->physCellId_r10 = frame_parms->Nid_cell;
+  scell->cellIdentification_r10->dl_CarrierFreq_r10 = freq_to_arfcn10(frame_parms->eutra_band, frame_parms->downlink_frequency);
+
+  scell->radioResourceConfigCommonSCell_r10 = CALLOC_OR_DIE(1, sizeof(RadioResourceConfigCommonSCell_r10_t));
+  rcommon = scell->radioResourceConfigCommonSCell_r10;
+
+  switch (frame_parms->N_RB_DL) {
+    default: /* default to 25 */ /* fallthrough */
+    case 25: rcommon->nonUL_Configuration_r10.dl_Bandwidth_r10 = RadioResourceConfigCommonSCell_r10__nonUL_Configuration_r10__dl_Bandwidth_r10_n25; break;
+    case 6: rcommon->nonUL_Configuration_r10.dl_Bandwidth_r10 = RadioResourceConfigCommonSCell_r10__nonUL_Configuration_r10__dl_Bandwidth_r10_n6; break;
+    case 15: rcommon->nonUL_Configuration_r10.dl_Bandwidth_r10 = RadioResourceConfigCommonSCell_r10__nonUL_Configuration_r10__dl_Bandwidth_r10_n15; break;
+    case 50: rcommon->nonUL_Configuration_r10.dl_Bandwidth_r10 = RadioResourceConfigCommonSCell_r10__nonUL_Configuration_r10__dl_Bandwidth_r10_n50; break;
+    case 75: rcommon->nonUL_Configuration_r10.dl_Bandwidth_r10 = RadioResourceConfigCommonSCell_r10__nonUL_Configuration_r10__dl_Bandwidth_r10_n75; break;
+    case 100: rcommon->nonUL_Configuration_r10.dl_Bandwidth_r10 = RadioResourceConfigCommonSCell_r10__nonUL_Configuration_r10__dl_Bandwidth_r10_n100; break;
+  }
+  antenna = &rcommon->nonUL_Configuration_r10.antennaInfoCommon_r10;
+
+  switch (frame_parms->nb_antennas_tx) {
+    default: /* default to 1 */ /* fallthrough */
+    case 1: antenna->antennaPortsCount = AntennaInfoCommon__antennaPortsCount_an1; break;
+    case 2: antenna->antennaPortsCount = AntennaInfoCommon__antennaPortsCount_an2; break;
+    case 4: antenna->antennaPortsCount = AntennaInfoCommon__antennaPortsCount_an4; break;
+  }
+
+  /* no mbsfn-SubframeConfigList-r10 */
+
+  phich = &rcommon->nonUL_Configuration_r10.phich_Config_r10;
+
+  switch (frame_parms->phich_config_common.phich_duration) {
+  case normal: phich->phich_Duration = PHICH_Config__phich_Duration_normal; break;
+  case extended: phich->phich_Duration = PHICH_Config__phich_Duration_extended; break;
+  }
+
+  switch (frame_parms->phich_config_common.phich_resource) {
+  case oneSixth: phich->phich_Resource = PHICH_Config__phich_Resource_oneSixth; break;
+  case half: phich->phich_Resource = PHICH_Config__phich_Resource_half; break;
+  case one: phich->phich_Resource = PHICH_Config__phich_Resource_one; break;
+  case two: phich->phich_Resource = PHICH_Config__phich_Resource_two; break;
+  }
+
+  pdsch = &rcommon->nonUL_Configuration_r10.pdsch_ConfigCommon_r10;
+
+  pdsch->referenceSignalPower = frame_parms->pdsch_config_common.referenceSignalPower;
+  pdsch->p_b = frame_parms->pdsch_config_common.p_b;
+
+  if (frame_parms->frame_type == TDD) {
+    struct TDD_Config *tdd_Config_r10;
+    rcommon->nonUL_Configuration_r10.tdd_Config_r10 = CALLOC_OR_DIE(1, sizeof(struct TDD_Config));
+    tdd_Config_r10 = rcommon->nonUL_Configuration_r10.tdd_Config_r10;
+    switch (frame_parms->tdd_config) {
+      default: /* default to 0 */ /* fallthrough */
+      case 0: tdd_Config_r10->subframeAssignment = TDD_Config__subframeAssignment_sa0; break;
+      case 1: tdd_Config_r10->subframeAssignment = TDD_Config__subframeAssignment_sa1; break;
+      case 2: tdd_Config_r10->subframeAssignment = TDD_Config__subframeAssignment_sa2; break;
+      case 3: tdd_Config_r10->subframeAssignment = TDD_Config__subframeAssignment_sa3; break;
+      case 4: tdd_Config_r10->subframeAssignment = TDD_Config__subframeAssignment_sa4; break;
+      case 5: tdd_Config_r10->subframeAssignment = TDD_Config__subframeAssignment_sa5; break;
+      case 6: tdd_Config_r10->subframeAssignment = TDD_Config__subframeAssignment_sa6; break;
+    }
+    switch (frame_parms->tdd_config_S) {
+      default: /* default to 0 */ /* fallthrough */
+      case 0: tdd_Config_r10->specialSubframePatterns = TDD_Config__specialSubframePatterns_ssp0; break;
+      case 1: tdd_Config_r10->specialSubframePatterns = TDD_Config__specialSubframePatterns_ssp1; break;
+      case 2: tdd_Config_r10->specialSubframePatterns = TDD_Config__specialSubframePatterns_ssp2; break;
+      case 3: tdd_Config_r10->specialSubframePatterns = TDD_Config__specialSubframePatterns_ssp3; break;
+      case 4: tdd_Config_r10->specialSubframePatterns = TDD_Config__specialSubframePatterns_ssp4; break;
+      case 5: tdd_Config_r10->specialSubframePatterns = TDD_Config__specialSubframePatterns_ssp5; break;
+      case 6: tdd_Config_r10->specialSubframePatterns = TDD_Config__specialSubframePatterns_ssp6; break;
+      case 7: tdd_Config_r10->specialSubframePatterns = TDD_Config__specialSubframePatterns_ssp7; break;
+      case 8: tdd_Config_r10->specialSubframePatterns = TDD_Config__specialSubframePatterns_ssp8; break;
+    }
+  }
+
+  scell->radioResourceConfigDedicatedSCell_r10 = CALLOC_OR_DIE(1, sizeof(RadioResourceConfigDedicatedSCell_r10_t));
+  rdedi = scell->radioResourceConfigDedicatedSCell_r10;
+
+  rdedi->physicalConfigDedicatedSCell_r10 = CALLOC_OR_DIE(1, sizeof(PhysicalConfigDedicatedSCell_r10_t));
+  phy_scell = rdedi->physicalConfigDedicatedSCell_r10;
+
+  phy_scell->nonUL_Configuration_r10 = CALLOC_OR_DIE(1, sizeof(struct PhysicalConfigDedicatedSCell_r10__nonUL_Configuration_r10));
+  snu = phy_scell->nonUL_Configuration_r10;
+
+  snu->antennaInfo_r10 = CALLOC_OR_DIE(1, sizeof(AntennaInfoDedicated_r10_t));
+
+  /* TO FIX: get correct transmission mode's value from where it is */
+  transmission_mode = frame_parms->mode1_flag ? 1 : 2;
+  switch (transmission_mode) {
+    default: /* default to tm1 */ /* fallthrough */
+    case 1: snu->antennaInfo_r10->transmissionMode_r10 = AntennaInfoDedicated_r10__transmissionMode_r10_tm1; break;
+    case 2: snu->antennaInfo_r10->transmissionMode_r10 = AntennaInfoDedicated_r10__transmissionMode_r10_tm2; break;
+    case 3: snu->antennaInfo_r10->transmissionMode_r10 = AntennaInfoDedicated_r10__transmissionMode_r10_tm3; break;
+    case 4: snu->antennaInfo_r10->transmissionMode_r10 = AntennaInfoDedicated_r10__transmissionMode_r10_tm4; break;
+    case 5: snu->antennaInfo_r10->transmissionMode_r10 = AntennaInfoDedicated_r10__transmissionMode_r10_tm5; break;
+    case 6: snu->antennaInfo_r10->transmissionMode_r10 = AntennaInfoDedicated_r10__transmissionMode_r10_tm6; break;
+    case 7: snu->antennaInfo_r10->transmissionMode_r10 = AntennaInfoDedicated_r10__transmissionMode_r10_tm7; break;
+    case 8: snu->antennaInfo_r10->transmissionMode_r10 = AntennaInfoDedicated_r10__transmissionMode_r10_tm8_v920; break;
+    case 9: snu->antennaInfo_r10->transmissionMode_r10 = AntennaInfoDedicated_r10__transmissionMode_r10_tm9_v1020; break;
+  }
+
+  /* codebookSubsetRestriction-r10 absent because we (currently) do TM1 or TM2 only */
+
+  snu->antennaInfo_r10->ue_TransmitAntennaSelection.present = AntennaInfoDedicated_r10__ue_TransmitAntennaSelection_PR_release;
+  /* should we set snu->antennaInfo_r10->ue_TransmitAntennaSelection.choice.release here? */
+
+  snu->crossCarrierSchedulingConfig_r10 = CALLOC_OR_DIE(1, sizeof(CrossCarrierSchedulingConfig_r10_t));
+
+  snu->crossCarrierSchedulingConfig_r10->schedulingCellInfo_r10.present = CrossCarrierSchedulingConfig_r10__schedulingCellInfo_r10_PR_own_r10;
+  snu->crossCarrierSchedulingConfig_r10->schedulingCellInfo_r10.choice.own_r10.cif_Presence_r10 = 0;
+
+  snu->csi_RS_Config_r10 = CALLOC_OR_DIE(1, sizeof(CSI_RS_Config_r10_t));
+
+  snu->csi_RS_Config_r10->csi_RS_r10 = CALLOC_OR_DIE(1, sizeof(struct CSI_RS_Config_r10__csi_RS_r10));
+
+  snu->csi_RS_Config_r10->csi_RS_r10->present = CSI_RS_Config_r10__csi_RS_r10_PR_release;
+
+  snu->csi_RS_Config_r10->zeroTxPowerCSI_RS_r10 = CALLOC_OR_DIE(1, sizeof(struct CSI_RS_Config_r10__zeroTxPowerCSI_RS_r10));
+
+  snu->csi_RS_Config_r10->zeroTxPowerCSI_RS_r10->present = CSI_RS_Config_r10__zeroTxPowerCSI_RS_r10_PR_release;
+
+  snu->pdsch_ConfigDedicated_r10 = CALLOC_OR_DIE(1, sizeof(PDSCH_ConfigDedicated_t));
+
+  /* TO FIX: get p_a from its real place (hint: might be in pdsch_config_dedicated) */
+  p_a = dB0;
+  switch (p_a) {
+    default: /* default to 0 dB */
+    case dB0: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB0; break;
+    case dB1: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB1; break;
+    case dB2: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB2; break;
+    case dB3: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB3; break;
+    case dBm6: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB_6; break;
+    case dBm477: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB_4dot77; break;
+    case dBm3: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB_3; break;
+    case dBm177: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB_1dot77; break;
+  }
+
+  /* no uplink config */
+#if 0
+  phy_scell->ul_Configuration_r10 = CALLOC_OR_DIE(1, sizeof(struct PhysicalConfigDedicatedSCell_r10__ul_Configuration_r10));
+  su = phy_scell->ul_Configuration_r10;
+
+  su->antennaInfoUL_r10 = CALLOC_OR_DIE(1, sizeof(AntennaInfoUL_r10_t));
+
+  su->antennaInfoUL_r10->transmissionModeUL_r10 = CALLOC_OR_DIE(1, sizeof(long));
+
+  *su->antennaInfoUL_r10->transmissionModeUL_r10 = AntennaInfoUL_r10__transmissionModeUL_r10_tm1;
+
+  /* maybe this one should not be set */
+  su->antennaInfoUL_r10->fourAntennaPortActivated_r10 = CALLOC_OR_DIE(1, sizeof(long));
+
+  *su->antennaInfoUL_r10->fourAntennaPortActivated_r10 = AntennaInfoUL_r10__fourAntennaPortActivated_r10_setup;
+
+  su->pusch_ConfigDedicatedSCell_r10 = CALLOC_OR_DIE(1, sizeof(PUSCH_ConfigDedicatedSCell_r10_t));
+  /* we add nothing into it */
+
+  su->uplinkPowerControlDedicatedSCell_r10 = CALLOC_OR_DIE(1, sizeof(UplinkPowerControlDedicatedSCell_r10_t));
+
+  su->uplinkPowerControlDedicatedSCell_r10->p0_UE_PUSCH_r10 = -1;
+  su->uplinkPowerControlDedicatedSCell_r10->deltaMCS_Enabled_r10 = UplinkPowerControlDedicatedSCell_r10__deltaMCS_Enabled_r10_en0;
+  su->uplinkPowerControlDedicatedSCell_r10->accumulationEnabled_r10 = 0;
+  su->uplinkPowerControlDedicatedSCell_r10->pSRS_Offset_r10 = 7;
+  su->uplinkPowerControlDedicatedSCell_r10->pSRS_OffsetAp_r10 = CALLOC_OR_DIE(1, sizeof(long));
+  *su->uplinkPowerControlDedicatedSCell_r10->pSRS_OffsetAp_r10 = 8;
+  su->uplinkPowerControlDedicatedSCell_r10->filterCoefficient_r10 = CALLOC_OR_DIE(1, sizeof(FilterCoefficient_t));
+  *su->uplinkPowerControlDedicatedSCell_r10->filterCoefficient_r10 = FilterCoefficient_fc0;
+  su->uplinkPowerControlDedicatedSCell_r10->pathlossReferenceLinking_r10 = UplinkPowerControlDedicatedSCell_r10__pathlossReferenceLinking_r10_sCell;
+
+  su->cqi_ReportConfigSCell_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportConfigSCell_r10_t));
+
+  /* this one not done (todo?) */
+  //su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportModeAperiodic_t));
+su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportModeAperiodic_t));
+*su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CQI_ReportModeAperiodic_rm31;
+
+  su->cqi_ReportConfigSCell_r10->nomPDSCH_RS_EPRE_Offset_r10 = 0;
+
+  /* cqi_ReportPeriodicSCell_r10 and pmi_RI_Report_r10 not set in su->cqi_ReportConfigSCell_r10 */
+
+  /* rest of su not done (soundingXXX) */
+#endif
+
+  return scell;
+}
+
+//-----------------------------------------------------------------------------
+void
+rrc_eNB_generate_CA_conf(
+  const protocol_ctxt_t* const ctxt_pP,
+  rrc_eNB_ue_context_t*          const ue_context_pP,
+  const uint8_t                ho_state
+)
+//-----------------------------------------------------------------------------
+{
+  uint8_t                             buffer[RRC_BUF_SIZE];
+  uint16_t                            size;
+  int                                 i;
+
+  // configure SRB1/SRB2, PhysicalConfigDedicated, MAC_MainConfig for UE
+  eNB_RRC_INST*                       rrc_inst = &eNB_rrc_inst[ctxt_pP->module_id];
+#if Rel10
+  long                               *sr_ProhibitTimer_r9              = NULL;
+  //     uint8_t sCellIndexToAdd = rrc_find_free_SCell_index(enb_mod_idP, ue_mod_idP, 1);
+  uint8_t                            sCellIndexToAdd = 0;
+  //SCellToAddMod_r10_t                *scell = generate_scell(4, 2112500000UL);
+  //SCellToAddMod_r10_t                *scell = generate_scell(13, 748500000UL);
+  SCellToAddMod_r10_t                *scell = NULL; abort(); //generate_scell(2, 1960000000UL);
+#endif
+  long                               *logicalchannelgroup, *logicalchannelgroup_drb;
+  long                               *maxHARQ_Tx, *periodicBSR_Timer;
+
+  RSRP_Range_t                       *rsrp                             = NULL;
+  struct MeasConfig__speedStatePars  *Sparams                          = NULL;
+  QuantityConfig_t                   *quantityConfig                   = NULL;
+  CellsToAddMod_t                    *CellToAdd                        = NULL;
+  CellsToAddModList_t                *CellsToAddModList                = NULL;
+  struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList *dedicatedInfoNASList = NULL;
+  DedicatedInfoNAS_t                 *dedicatedInfoNas                 = NULL;
+
+  C_RNTI_t                           *cba_RNTI                         = NULL;
+
+  memset(buffer, 0, RRC_BUF_SIZE);
+
+  size = do_RRCConnectionReconfiguration(ctxt_pP,
+                                         buffer,
+                                         rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),   //Transaction_id,
+                                         (SRB_ToAddModList_t*)NULL, /// NN: do not reconfig srb1: SRB_configList2,
+                                         (DRB_ToAddModList_t*)NULL,
+                                         (DRB_ToReleaseList_t*)NULL,  // DRB2_list,
+                                         (struct SPS_Config*)NULL,    // *sps_Config,
+#ifdef EXMIMO_IOT
+                                         NULL, NULL, NULL, NULL,NULL,
+#else
+                                         (struct PhysicalConfigDedicated*)NULL,
+                                         (MeasObjectToAddModList_t*)NULL,
+                                         (ReportConfigToAddModList_t*)NULL,
+                                         (QuantityConfig_t*)NULL,
+                                         (MeasIdToAddModList_t*)NULL,
+#endif
+                                         (MAC_MainConfig_t*)NULL,
+                                         (MeasGapConfig_t*)NULL,
+                                         (MobilityControlInfo_t*)NULL,
+                                         (struct MeasConfig__speedStatePars*)NULL,
+                                         (RSRP_Range_t*)NULL,
+                                         (C_RNTI_t*)NULL,
+                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL
+#ifdef Rel10
+                                         , (SCellToAddMod_r10_t*)scell
+#endif
+                                        );
+
+#ifdef RRC_MSG_PRINT
+  LOG_F(RRC,"[MSG] RRC Connection Reconfiguration\n");
+
+  for (i = 0; i < size; i++) {
+    LOG_F(RRC,"%02x ", ((uint8_t*)buffer)[i]);
+  }
+
+  LOG_F(RRC,"\n");
+  ////////////////////////////////////////
+#endif
+
+  LOG_I(RRC,
+        "[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration (bytes %d, UE id %x)\n",
+        ctxt_pP->module_id, ctxt_pP->frame, size, ue_context_pP->ue_context.rnti);
+
+  LOG_D(RRC,
+        "[FRAME %05d][RRC_eNB][MOD %u][][--- PDCP_DATA_REQ/%d Bytes (rrcConnectionReconfiguration to UE %x MUI %d) --->][PDCP][MOD %u][RB %u]\n",
+        ctxt_pP->frame, ctxt_pP->module_id, size, ue_context_pP->ue_context.rnti, rrc_eNB_mui, ctxt_pP->module_id, DCCH);
+
+  MSC_LOG_TX_MESSAGE(
+    MSC_RRC_ENB,
+    MSC_RRC_UE,
+    buffer,
+    size,
+    MSC_AS_TIME_FMT" rrcConnectionReconfiguration UE %x MUI %d size %u",
+    MSC_AS_TIME_ARGS(ctxt_pP),
+    ue_context_pP->ue_context.rnti,
+    rrc_eNB_mui,
+    size);
+
+  pdcp_rrc_data_req(
+    ctxt_pP,
+    DCCH,
+    rrc_eNB_mui++,
+    SDU_CONFIRM_NO,
+    size,
+    buffer,
+    PDCP_TRANSMISSION_MODE_CONTROL);
+}
+
+#endif /* Rel10 */
 
 //-----------------------------------------------------------------------------
 int
@@ -2977,6 +3479,17 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
     itti_send_msg_to_task(TASK_RAL_ENB, ctxt_pP->instance, message_ral_p);
   }
 #endif
+
+#ifdef Rel10
+  /* !!!THIS SHOULD NOT BE HERE!!! */
+  /* open scell 1 if any */
+  if (ue_context_pP->ue_context.ca.scell_count != 0)
+    rrc_mac_config_scell_req(ctxt_pP->module_id,
+            ue_context_pP->ue_context.rnti,
+            ue_context_pP->ue_context.ca.scell[0].CC_id,
+            ue_context_pP->ue_context.ca.scell[0].bitmap_bit);
+#endif /* Rel10 */
+
   // Refresh SRBs/DRBs
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
@@ -3315,6 +3828,7 @@ openair_rrc_lite_eNB_init(
 {
   protocol_ctxt_t ctxt;
   int             CC_id;
+  int             ue;
 
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, enb_mod_idP, ENB_FLAG_YES, NOT_A_RNTI, 0, 0,enb_mod_idP);
   LOG_I(RRC,
@@ -3323,6 +3837,14 @@ openair_rrc_lite_eNB_init(
 
   AssertFatal(eNB_rrc_inst != NULL, "eNB_rrc_inst not initialized!");
   AssertFatal(NUMBER_OF_UE_MAX < (module_id_t)0xFFFFFFFFFFFFFFFF, " variable overflow");
+
+#if CEDRIC_ROUX
+  /* this init is done nowhere in r7503, maybe it's not the right place
+   * but it must be done somewhere
+   */
+  for (ue = 0; ue < NUMBER_OF_UE_MAX; ue++)
+    oai_emulation.info.eNB_ue_local_uid_to_ue_module_id[ctxt.module_id][ue] = -1;
+#endif
 
   //    for (j = 0; j < NUMBER_OF_UE_MAX; j++)
   //        eNB_rrc_inst[ctxt.module_id].Info.UE[j].Status = RRC_IDLE;  //CH_READY;
@@ -3676,6 +4198,17 @@ rrc_eNB_decode_ccch(
 #endif
           eNB_rrc_inst[ctxt_pP->module_id].Nb_ue++;
 
+#if CEDRIC_ROUX
+#if !defined(ENABLE_USE_MME)
+          rrc_eNB_emulation_notify_ue_module_id(
+            ue_context_p->local_uid,
+            ue_context_p->ue_context.rnti,
+            eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[0],
+            eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[1],
+            eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[2],
+            eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[3]);
+#endif
+#endif
         } else {
           // no context available
           LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Can't create new context for UE random UE identity (0x%" PRIx64 ")\n",
@@ -3769,6 +4302,122 @@ rrc_eNB_decode_ccch(
   return rval;
 }
 
+#ifdef Rel10
+//-----------------------------------------------------------------------------
+void
+rrc_get_UE_CA_capabilities(
+  const protocol_ctxt_t* const ctxt_pP,
+  eNB_RRC_UE_t          *ue,
+  UE_EUTRA_Capability_t *cap
+)
+//-----------------------------------------------------------------------------
+{
+  struct RF_Parameters_v1020            *rf;
+  struct BandCombinationParameters_r10 **comb;
+  struct BandParameters_r10            **params;
+  ue_ca_band_combination                *cur;
+  int                                    i, j;
+
+  ue->ca.combination_count = 0;
+
+  if (cap->nonCriticalExtension == NULL ||
+      cap->nonCriticalExtension->nonCriticalExtension == NULL ||
+      cap->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension == NULL ||
+      cap->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->rf_Parameters_v1020 == NULL) {
+    LOG_W(RRC, PROTOCOL_RRC_CTXT_UE_FMT" UE %x has no Carrier Aggregation capabilities\n",
+          PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+          ue->rnti);
+    return;
+  }
+
+  rf = cap->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->rf_Parameters_v1020;
+  comb = rf->supportedBandCombination_r10.list.array;
+
+  LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" UE %x Carrier Aggregation capabilities (count %d)\n",
+        PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+        ue->rnti,
+        rf->supportedBandCombination_r10.list.count);
+
+  for (i = 0; i < rf->supportedBandCombination_r10.list.count; i++) {
+    LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT"    Carrier Aggregation configuration %d:\n",
+          PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+          i);
+    params = comb[i]->list.array;
+    cur = &ue->ca.combination[i];
+    for (j = 0; j < comb[i]->list.count; j++) {
+      if (params[j]->bandParametersDL_r10 != NULL) {
+        cur->dl_band[cur->dl_band_count].band = params[j]->bandEUTRA_r10;
+        cur->dl_band_count++;
+        LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT"        DL band %d\n",
+              PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+              params[j]->bandEUTRA_r10);
+      }
+      if (params[j]->bandParametersUL_r10 != NULL) {
+        cur->ul_band[cur->ul_band_count].band = params[j]->bandEUTRA_r10;
+        cur->ul_band_count++;
+        LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT"        UL band %d\n",
+              PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+              params[j]->bandEUTRA_r10);
+      }
+    }
+    if (cur->dl_band_count == 0 && cur->ul_band_count == 1) {
+      LOG_W(RRC, PROTOCOL_RRC_CTXT_UE_FMT"        [no DL or UL band]\n",
+            PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
+    }
+    ue->ca.combination_count++;
+  }
+
+  ue->ca.scell_count = 0;
+
+#  if MAX_NUM_CCs >= 2
+  /* create scell 1 config if there is something compatible with the eNB in the UE capabilities */
+  {
+    int comb;
+    int scell_CC_id;
+    LTE_DL_FRAME_PARMS *frame_parms_pCC;
+    LTE_DL_FRAME_PARMS *frame_parms_sCC;
+
+    /* we only deal with CC 0 and 1 for the moment */
+    if (ue->primaryCC_id == 0)
+      scell_CC_id = 1;
+    else
+      scell_CC_id = 0;
+
+    frame_parms_pCC = mac_xface->get_lte_frame_parms(ctxt_pP->module_id, ue->primaryCC_id);
+    frame_parms_sCC = mac_xface->get_lte_frame_parms(ctxt_pP->module_id, scell_CC_id);
+
+    /* look for the combination:
+     * (uplink primary CC, downlink primary CC), (downlink secondary CC)
+     * in the UE config
+     */
+    for (comb = 0; comb < ue->ca.combination_count; comb++) {
+      ue_ca_band_combination *cb = &ue->ca.combination[comb];
+      if (cb->dl_band_count != 2) continue;
+      if (cb->ul_band_count != 1) continue;
+      if (!((cb->dl_band[0].band == frame_parms_pCC->eutra_band &&
+             cb->dl_band[1].band == frame_parms_sCC->eutra_band) ||
+            (cb->dl_band[0].band == frame_parms_sCC->eutra_band &&
+             cb->dl_band[1].band == frame_parms_pCC->eutra_band))) continue;
+      if (cb->ul_band[0].band != frame_parms_pCC->eutra_band) continue;
+      /* all tests passed, we have the good combination */
+      break;
+    }
+    /* if we have the good combination, configure an scell for it
+     * (for the moment we default the bitmap_bit to 1)
+     */
+    if (comb != ue->ca.combination_count) {
+      int bitmap_bit = 1;
+      ue->ca.scell[0].CC_id = scell_CC_id;
+      ue->ca.scell[0].bitmap_bit = bitmap_bit;
+      ue->ca.scell_count = 1;
+      LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Adding secondary cell (CC_id %d, bitmap_bit %d) to the UE %x\n",
+            PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP), scell_CC_id, bitmap_bit, ue->rnti);
+    }
+  }
+#  endif /* MAX_NUM_CCs >= 2 */
+}
+#endif /* Rel10 */
+
 //-----------------------------------------------------------------------------
 int
 rrc_eNB_decode_dcch(
@@ -3786,6 +4435,9 @@ rrc_eNB_decode_dcch(
   UE_EUTRA_Capability_t              *UE_EUTRA_Capability = NULL;
   int i;
   struct rrc_eNB_ue_context_s*        ue_context_p = NULL;
+#ifdef Rel10
+  SCellToAddMod_r10_t                *scell = NULL;
+#endif
 
   if ((Srb_id != 1) && (Srb_id != 2)) {
     LOG_E(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Received message on SRB%d, should not have ...\n",
@@ -4143,9 +4795,24 @@ rrc_eNB_decode_dcch(
 
 #endif
 
+#ifdef Rel10
+      rrc_get_UE_CA_capabilities(ctxt_pP, &ue_context_p->ue_context, UE_EUTRA_Capability);
+      /* configure scell 1 if there is one */
+/* NO SCELL */
+//ue_context_p->ue_context.ca.scell_count = 0;
+      if (ue_context_p->ue_context.ca.scell_count >= 1)
+        scell = generate_scell(ctxt_pP->module_id,
+                               ue_context_p->ue_context.ca.scell[0].CC_id,
+                               ue_context_p->ue_context.ca.scell[0].bitmap_bit);
+#endif /* Rel10 */
+
       rrc_eNB_generate_defaultRRCConnectionReconfiguration(ctxt_pP,
           ue_context_p,
-          eNB_rrc_inst[ctxt_pP->module_id].HO_flag);
+          eNB_rrc_inst[ctxt_pP->module_id].HO_flag
+#ifdef Rel10
+          , scell
+#endif
+      );
       break;
 
     case UL_DCCH_MessageType__c1_PR_ulHandoverPreparationTransfer:
@@ -4222,6 +4889,66 @@ rrc_eNB_decode_dcch(
 
 }
 
+#include <sys/socket.h>
+#include <netinet/ip.h>
+
+static void *th(void *_)
+{
+  char c;
+  int sock;
+  int fd;
+  struct sockaddr_in addr;
+  MessageDef                         *msg;
+  socklen_t len;
+
+  sock = socket(AF_INET, SOCK_STREAM, 0);
+  if (sock == -1) abort();
+
+  fd = 1;
+
+  if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &fd, sizeof(int))) abort();
+
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(4012);
+  addr.sin_addr.s_addr = 0;
+
+  if (bind(sock, (struct sockaddr *)&addr, sizeof(addr))) abort();
+
+  if (listen(sock, 5)) abort();
+
+  len = sizeof(addr);
+  fd = accept(sock, (struct sockaddr *)&addr, &len); if (fd == -1) abort();
+
+  while (1) {
+    if (read(fd, &c, 1) != 1) abort();
+    if (c != '\n') continue;
+    msg = itti_alloc_new_message(TASK_RRC_ENB, CROUX_HACK);
+    CROUX_HACK(msg).x = 10;
+    itti_send_msg_to_task(TASK_RRC_ENB, 0, msg);
+  }
+
+  return 0;
+}
+
+static pthread_t new_thread(void *(*f)(void *), void *b)
+{
+  pthread_t t;
+  pthread_attr_t att;
+
+  if (pthread_attr_init(&att))
+    { fprintf(stderr, "pthread_attr_init err\n"); exit(1); }
+#if 0
+  if (pthread_attr_setdetachstate(&att, PTHREAD_CREATE_DETACHED))
+    { fprintf(stderr, "pthread_attr_setdetachstate err\n"); exit(1); }
+#endif
+  if (pthread_create(&t, &att, f, b))
+    { fprintf(stderr, "pthread_create err\n"); exit(1); }
+  if (pthread_attr_destroy(&att))
+    { fprintf(stderr, "pthread_attr_destroy err\n"); exit(1); }
+
+  return t;
+}
+
 #if defined(ENABLE_ITTI)
 //-----------------------------------------------------------------------------
 void*
@@ -4240,6 +4967,8 @@ rrc_enb_task(
   protocol_ctxt_t                     ctxt;
   itti_mark_task_ready(TASK_RRC_ENB);
 
+  new_thread(th, 0);
+
   while (1) {
     // Wait for a message
     itti_receive_msg(TASK_RRC_ENB, &msg_p);
@@ -4248,6 +4977,17 @@ rrc_enb_task(
     instance = ITTI_MSG_INSTANCE(msg_p);
 
     switch (ITTI_MSG_ID(msg_p)) {
+case CROUX_HACK:
+  printf("yoyo!! %p %p rnti %x\n", eNB_rrc_inst, eNB_rrc_inst[0].rrc_ue_head, eNB_rrc_inst[0].rrc_ue_head.rbh_root->ue_context.rnti);
+      PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt,
+                                    instance,
+                                    ENB_FLAG_YES,
+                                    eNB_rrc_inst[0].rrc_ue_head.rbh_root->ue_context.rnti,
+                                    msg_p->ittiMsgHeader.lte_time.frame,
+                                    msg_p->ittiMsgHeader.lte_time.slot);
+    rrc_eNB_generate_CA_conf(&ctxt, &eNB_rrc_inst[0].rrc_ue_head.rbh_root->ue_context, 0);
+  break;
+
     case TERMINATE_MESSAGE:
       itti_exit_task();
       break;
