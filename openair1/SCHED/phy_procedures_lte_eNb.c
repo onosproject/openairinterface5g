@@ -430,7 +430,6 @@ int get_nCCE_offset(const unsigned char L, const int nCCE, const int common_dci,
 
     for (m = nb_candidates-1 ; m >=0 ; m--) {
       search_space_free = 1;
-      printf("Checking m %d\n",m);
       for (l=0; l<L; l++) {
         if (CCE_table[(m*L) + l] == 1) {
           search_space_free = 0;
@@ -441,7 +440,6 @@ int get_nCCE_offset(const unsigned char L, const int nCCE, const int common_dci,
       if (search_space_free == 1) {
         for (l=0; l<L; l++)
           CCE_table[(m*L)+l]=1;
-	printf("OK");
         return(m*L);
       }
     }
@@ -1135,6 +1133,8 @@ printf("!!!!!!!!!!!!!!!!!!!! %s CC %d\n", __FILENAME__, phy_vars_eNB->CC_id);
     else
       DCI_pdu->dci_alloc[0].dci_length = sizeof_DCI0_5MHz_TDD_1_6_t ;
 
+printf("%s:%d abort for debug\n", __FILE__, __LINE__);
+abort();
     DCI_pdu->dci_alloc[0].L          = 2;
     DCI_pdu->dci_alloc[0].rnti       = 0x1235;
     DCI_pdu->dci_alloc[0].format     = format0;

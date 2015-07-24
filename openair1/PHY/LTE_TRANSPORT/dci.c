@@ -2872,6 +2872,8 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *phy_vars_ue,
     } else {
       format1A_size_bits  = sizeof_DCI1A_5MHz_FDD_t;
       format1A_size_bytes = sizeof(DCI1A_5MHz_FDD_t);
+printf("%s:%d: abort for debug\n", __FILE__, __LINE__);
+abort();
       format0_size_bits  = sizeof_DCI0_5MHz_FDD_t;
       format0_size_bytes = sizeof(DCI0_5MHz_FDD_t);
       format1_size_bits  = sizeof_DCI1_5MHz_FDD_t;

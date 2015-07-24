@@ -47,7 +47,7 @@
 #endif
 #include "assertions.h"
 
-#define DEBUG_DCI
+//#define DEBUG_DCI
 
 uint32_t  localRIV2alloc_LUT6[32];
 uint32_t  distRIV2alloc_LUT6[32];
@@ -5682,6 +5682,8 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
         //  hopping = ((DCI0_1_5MHz_TDD_1_6_t *)dci_pdu)->hopping;
         //  type    = ((DCI0_1_5MHz_TDD_1_6_t *)dci_pdu)->type;
       } else {
+printf("%s:%d CROUX abort for debug\n", __FILE__, __LINE__);
+abort();
         cqi_req = ((DCI0_1_5MHz_FDD_t *)dci_pdu)->cqi_req;
         cshift  = ((DCI0_1_5MHz_FDD_t *)dci_pdu)->cshift;
         TPC     = ((DCI0_1_5MHz_FDD_t *)dci_pdu)->TPC;
@@ -5710,6 +5712,8 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
         //  hopping = ((DCI0_5MHz_TDD_1_6_t *)dci_pdu)->hopping;
         //  type    = ((DCI0_5MHz_TDD_1_6_t *)dci_pdu)->type;
       } else {
+printf("%s:%d CROUX abort for debug\n", __FILE__, __LINE__);
+abort();
         cqi_req = ((DCI0_5MHz_FDD_t *)dci_pdu)->cqi_req;
         cshift  = ((DCI0_5MHz_FDD_t *)dci_pdu)->cshift;
         TPC     = ((DCI0_5MHz_FDD_t *)dci_pdu)->TPC;
@@ -6564,7 +6568,7 @@ int generate_eNB_ulsch_params_from_dci(void *dci_pdu,
       } else {
 #if Rel10
         /* DCI0 for a UE configured with more than 1 DL cell is different, see 36.212 5.3.3.1.1 */
-        if (1 || phy_vars_eNB->CA_configured[UE_id] == 0) {
+        if (phy_vars_eNB->CA_configured[UE_id] == 0) {
 #endif
           cqi_req = ((DCI0_5MHz_FDD_t *)dci_pdu)->cqi_req;
           cshift  = ((DCI0_5MHz_FDD_t *)dci_pdu)->cshift;

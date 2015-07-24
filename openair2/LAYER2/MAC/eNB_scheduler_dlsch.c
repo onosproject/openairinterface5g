@@ -2298,7 +2298,7 @@ fill_DLSCH_dci(
               ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rah = 0;
               size_bytes=sizeof(DCI1_5MHz_FDD_t);
               size_bits=sizeof_DCI1_5MHz_FDD_t;
-//if (UE_list->scell_config[UE_id].scell_count) size_bits++;
+if (UE_list->scell_config[UE_id].scell_count) size_bits++;
 printf("!!!!!!!!!!!!!!!!!!!! %s\n", __FILE__);
               break;
 
