@@ -1636,8 +1636,8 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
                                                      = CALLOC(1, sizeof(struct CQI_ReportAperiodic_r10__setup__aperiodicCSI_Trigger_r10));
     t1.buf                                           = CALLOC(1, 1); t1.size = 1; t1.bits_unused = 0;
     t2.buf                                           = CALLOC(1, 1); t2.size = 1; t2.bits_unused = 0;
-    t1.buf[0] = 0x80;
-    t2.buf[0] = 0x80;
+    t1.buf[0] = 0x00;   /* unused for the moment */
+    t2.buf[0] = 0xc0;   /* report CQI for PCell and Scell */
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger1_r10 = t1;
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger2_r10 = t2;
 
@@ -2035,6 +2035,14 @@ static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
     case dBm3: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB_3; break;
     case dBm177: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB_1dot77; break;
   }
+
+  /* configure uplink CQI reporting */
+  phy_scell->ul_Configuration_r10 = CALLOC_OR_DIE(1, sizeof(struct PhysicalConfigDedicatedSCell_r10__ul_Configuration_r10));
+  su = phy_scell->ul_Configuration_r10;
+  su->cqi_ReportConfigSCell_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportConfigSCell_r10_t));
+  su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportModeAperiodic_t));
+  *su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CQI_ReportModeAperiodic_rm30;
+  su->cqi_ReportConfigSCell_r10->nomPDSCH_RS_EPRE_Offset_r10 = 0;
 
   /* no uplink config */
 #if 0
