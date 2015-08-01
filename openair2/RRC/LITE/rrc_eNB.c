@@ -1274,7 +1274,8 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
 #ifdef Rel10
   sr_ProhibitTimer_r9 = CALLOC(1, sizeof(long));
   *sr_ProhibitTimer_r9 = 0;   // SR tx on PUCCH, Value in number of SR period(s). Value 0 = no timer for SR, Value 2= 2*SR
-  mac_MainConfig->sr_ProhibitTimer_r9 = sr_ProhibitTimer_r9;
+  mac_MainConfig->ext1 = CALLOC(1, sizeof(struct MAC_MainConfig__ext1));
+  mac_MainConfig->ext1->sr_ProhibitTimer_r9 = sr_ProhibitTimer_r9;
   //sps_RA_ConfigList_rlola = NULL;
 #endif
 
@@ -1599,6 +1600,35 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
     cqi      = ph->ext2->cqi_ReportConfig_r10        = CALLOC(1, sizeof(struct CQI_ReportConfig_r10));
     pucch    = ph->ext2->pucch_ConfigDedicated_v1020 = CALLOC(1, sizeof(struct PUCCH_ConfigDedicated_v1020));
 
+    /* add SRS config */
+    {
+      //struct SoundingRS_UL_ConfigDedicated              *sr;
+      //struct SoundingRS_UL_ConfigDedicated_v1020        *sr10;
+      struct SoundingRS_UL_ConfigDedicatedAperiodic_r10 *sra10;
+      SRS_ConfigAp_r10_t                                *f0;
+      SRS_ConfigAp_r10_t                                *f1;
+
+      //sr       = ph->soundingRS_UL_ConfigDedicated     = CALLOC(1, sizeof(struct SoundingRS_UL_ConfigDedicated));
+      //sr10     = ph->ext2->soundingRS_UL_ConfigDedicated_v1020        = CALLOC(1, sizeof(struct SoundingRS_UL_ConfigDedicated_v1020));
+      sra10    = ph->ext2->soundingRS_UL_ConfigDedicatedAperiodic_r10 = CALLOC(1, sizeof(struct SoundingRS_UL_ConfigDedicatedAperiodic_r10));
+
+      sra10->present = SoundingRS_UL_ConfigDedicatedAperiodic_r10_PR_setup;
+      sra10->choice.setup.srs_ConfigIndexAp_r10 = 0;
+      sra10->choice.setup.srs_ActivateAp_r10           = CALLOC(1, sizeof(struct SoundingRS_UL_ConfigDedicatedAperiodic_r10__setup__srs_ActivateAp_r10));
+      sra10->choice.setup.srs_ActivateAp_r10->present = SoundingRS_UL_ConfigDedicatedAperiodic_r10__setup__srs_ActivateAp_r10_PR_setup;
+      f0 = &sra10->choice.setup.srs_ActivateAp_r10->choice.setup.srs_ConfigApDCI_Format0_r10;
+      f1 = &sra10->choice.setup.srs_ActivateAp_r10->choice.setup.srs_ConfigApDCI_Format1a2b2c_r10;
+      f0->srs_AntennaPortAp_r10    = SRS_ConfigAp_r10__srs_AntennaPortAp_r10_an1;
+      f0->srs_BandwidthAp_r10      = SRS_ConfigAp_r10__srs_BandwidthAp_r10_bw0;
+      f0->freqDomainPositionAp_r10 = 0;
+      f0->transmissionCombAp_r10   = 0;
+      f0->cyclicShiftAp_r10        = SRS_ConfigAp_r10__cyclicShiftAp_r10_cs0;
+    }
+
+    /* cif presence necessary? */
+    ph->ext2->cif_Presence_r10                       = CALLOC(1, sizeof(BOOLEAN_t));
+    *ph->ext2->cif_Presence_r10 = 0;
+
     cqi->cqi_ReportAperiodic_r10                     = CALLOC(1, sizeof(struct CQI_ReportAperiodic_r10));
     cqi->cqi_ReportAperiodic_r10->present = CQI_ReportAperiodic_r10_PR_setup;
     cqi->cqi_ReportAperiodic_r10->choice.setup.cqi_ReportModeAperiodic_r10 = CQI_ReportAperiodic_r10__setup__cqi_ReportModeAperiodic_r10_rm30; /* TBC CROUX */
@@ -1606,8 +1636,8 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
                                                      = CALLOC(1, sizeof(struct CQI_ReportAperiodic_r10__setup__aperiodicCSI_Trigger_r10));
     t1.buf                                           = CALLOC(1, 1); t1.size = 1; t1.bits_unused = 0;
     t2.buf                                           = CALLOC(1, 1); t2.size = 1; t2.bits_unused = 0;
-    t1.buf[0] = 0x40;
-    t2.buf[0] = 0xc0;
+    t1.buf[0] = 0x00;   /* unused for the moment */
+    t2.buf[0] = 0xc0;   /* report CQI for PCell and Scell */
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger1_r10 = t1;
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger2_r10 = t2;
 
@@ -2005,6 +2035,14 @@ static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
     case dBm3: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB_3; break;
     case dBm177: snu->pdsch_ConfigDedicated_r10->p_a = PDSCH_ConfigDedicated__p_a_dB_1dot77; break;
   }
+
+  /* configure uplink CQI reporting */
+  phy_scell->ul_Configuration_r10 = CALLOC_OR_DIE(1, sizeof(struct PhysicalConfigDedicatedSCell_r10__ul_Configuration_r10));
+  su = phy_scell->ul_Configuration_r10;
+  su->cqi_ReportConfigSCell_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportConfigSCell_r10_t));
+  su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportModeAperiodic_t));
+  *su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CQI_ReportModeAperiodic_rm30;
+  su->cqi_ReportConfigSCell_r10->nomPDSCH_RS_EPRE_Offset_r10 = 0;
 
   /* no uplink config */
 #if 0
@@ -2910,7 +2948,8 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
 #ifdef Rel10
   sr_ProhibitTimer_r9 = CALLOC(1, sizeof(long));
   *sr_ProhibitTimer_r9 = 0;   // SR tx on PUCCH, Value in number of SR period(s). Value 0 = no timer for SR, Value 2= 2*SR
-  mac_MainConfig->sr_ProhibitTimer_r9 = sr_ProhibitTimer_r9;
+  mac_MainConfig->ext1 = CALLOC(1, sizeof(struct MAC_MainConfig__ext1));
+  mac_MainConfig->ext1->sr_ProhibitTimer_r9 = sr_ProhibitTimer_r9;
   //sps_RA_ConfigList_rlola = NULL;
 #endif
   // Measurement ID list
@@ -4781,6 +4820,18 @@ rrc_eNB_decode_dcch(
                              ul_dcch_msg->message.choice.c1.choice.ueCapabilityInformation.criticalExtensions.
                              choice.c1.choice.ueCapabilityInformation_r8.ue_CapabilityRAT_ContainerList.list.
                              array[0]->ueCapabilityRAT_Container.size, 0, 0);
+{
+  char x[4096];
+  unsigned char *in = ul_dcch_msg->message.choice.c1.choice.ueCapabilityInformation.criticalExtensions.
+                             choice.c1.choice.ueCapabilityInformation_r8.ue_CapabilityRAT_ContainerList.list.
+                             array[0]->ueCapabilityRAT_Container.buf;
+  int size = ul_dcch_msg->message.choice.c1.choice.ueCapabilityInformation.criticalExtensions.
+                             choice.c1.choice.ueCapabilityInformation_r8.ue_CapabilityRAT_ContainerList.list.
+                             array[0]->ueCapabilityRAT_Container.size;
+  int i;
+  for (i = 0; i < size; i++) sprintf(x+i*3, "%2.2x ", in[i]);
+  printf("%s\n", x);
+}
       //#ifdef XER_PRINT
       xer_fprint(stdout, &asn_DEF_UE_EUTRA_Capability, (void *)UE_EUTRA_Capability);
       //#endif

@@ -1364,6 +1364,7 @@ void schedule_ulsch_cba_rnti(module_id_t module_idP, unsigned char cooperation_f
               ((DCI0_5MHz_FDD_t *)ULSCH_dci)->TPC      = 1;//tpc;
               ((DCI0_5MHz_FDD_t *)ULSCH_dci)->cshift   = cba_group;
               ((DCI0_5MHz_FDD_t *)ULSCH_dci)->cqi_req  = 1;
+printf("%s:%d abort for debug\n", __FILE__, __LINE__);
 
               //add_ue_spec_dci
               add_common_dci(DCI_pdu,
