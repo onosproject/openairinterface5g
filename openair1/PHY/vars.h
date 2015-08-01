@@ -48,6 +48,10 @@ int16_t *primary_synch0_time;
 int16_t *primary_synch1_time;
 int16_t *primary_synch2_time;
 
+int FRAME_TX;
+int SUBFRAME_TX;
+int FRAME_RX;
+int SUBFRAME_RX;
 
 #include "PHY/CODING/vars.h"
 

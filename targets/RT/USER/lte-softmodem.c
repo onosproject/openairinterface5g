@@ -1031,8 +1031,6 @@ static struct {
   volatile uint8_t phy_proc_CC_id;
 } sync_phy_proc[NUM_ENB_THREADS];
 
-int FRAME_TX;
-int SUBFRAME_TX;
 /*!
  * \brief The transmit thread of eNB.
  * \ref NUM_ENB_THREADS threads of this type are active at the same time.
@@ -1226,8 +1224,6 @@ SUBFRAME_TX = proc->subframe;
 }
 
 
-int FRAME_RX;
-int SUBFRAME_RX;
 /*!
  * \brief The receive thread of eNB.
  * \ref NUM_ENB_THREADS threads of this type are active at the same time.

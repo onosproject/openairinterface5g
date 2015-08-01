@@ -2806,16 +2806,21 @@ void process_HARQ_feedback(uint8_t UE_id,
     subframe_m4 = (subframe<4) ? subframe+6 : subframe-4;
 
     dl_harq_pid[0] = dlsch->harq_ids[subframe_m4];
-    M=1;
-
-    if (pusch_flag == 1)
-      dlsch_ACK[0] = phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
+    if (0/*two cells configured*/) 
+      M=2;
     else
-      dlsch_ACK[0] = pucch_payload[0];
+      M=1;
 
-printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, subframe, dlsch_ACK[0], phy_vars_eNB->CC_id);
-    LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d for subframe %d\n",phy_vars_eNB->Mod_id,
-          frame,dlsch_ACK[0],subframe_m4);
+    for (m=0;m<M;m++) {
+      if (pusch_flag == 1)
+	dlsch_ACK[m] = phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[m];
+      else
+	dlsch_ACK[m] = pucch_payload[m];
+
+      printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, subframe, dlsch_ACK[0], phy_vars_eNB->CC_id);
+      LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK (%d/%d) %d for subframe %d\n",phy_vars_eNB->Mod_id,
+	    frame,m,M,dlsch_ACK[0],subframe_m4);
+    }
 
 #if defined(MESSAGE_CHART_GENERATOR_PHY)
     MSC_LOG_RX_MESSAGE(
@@ -2851,6 +2856,8 @@ printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, su
 
     else {  // PUCCH ACK/NAK
       if ((SR_payload == 1)&&(pucch_sel!=2)) {  // decode Table 7.3 if multiplexing and SR=1
+	// handle case where positive SR was transmitted with multiplexing
+	// this case is not properly tested!
         nb_ACK = 0;
 
         if (M == 2) {
@@ -2866,6 +2873,29 @@ printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, su
           else if ((pucch_payload[0] == 0) && (pucch_payload[1] == 1))
             nb_ACK = 3;
         }
+
+	nb_alloc = 0;
+
+	for (m=0; m<M; m++) {
+	  dl_subframe = ul_ACK_subframe2_dl_subframe(&phy_vars_eNB->lte_frame_parms,
+						     subframe,
+						     m);
+
+	  if (dlsch->subframe_tx[dl_subframe]==1)
+	    nb_alloc++;
+	}
+
+	if (nb_alloc == nb_ACK) {
+	  //all_ACKed = 1;
+	  for (m=0; m<M; m++) 
+	    dlsch_ACK[m] = 1;
+	}
+	else {
+	  //all_ACKed = 0;
+	  for (m=0; m<M; m++) 
+	    dlsch_ACK[m] = 0;
+	}
+
       } else if (pucch_sel == 2) { // bundling or M=1
         //  printf("*** (%d,%d)\n",pucch_payload[0],pucch_payload[1]);
         dlsch_ACK[0] = pucch_payload[0];
@@ -2890,28 +2920,8 @@ printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, su
     }
   }
 
-  // handle case where positive SR was transmitted with multiplexing
-  if ((SR_payload == 1)&&(pucch_sel!=2)&&(pusch_flag == 0)) {
-    nb_alloc = 0;
-
-    for (m=0; m<M; m++) {
-      dl_subframe = ul_ACK_subframe2_dl_subframe(&phy_vars_eNB->lte_frame_parms,
-                    subframe,
-                    m);
-
-      if (dlsch->subframe_tx[dl_subframe]==1)
-        nb_alloc++;
-    }
-
-    if (nb_alloc == nb_ACK)
-      all_ACKed = 1;
-    else
-      all_ACKed = 0;
-
-    //    printf("nb_alloc %d, all_ACKed %d\n",nb_alloc,all_ACKed);
-  }
-
-
+  //this loop takes finally processes the dlsch_ACK[m]. it is for both TDD and FDD.
+  //process_dlsch_ACK(phy_vars,subframe,dlsch_ACK,dlsch,ue_stats);
   for (m=0,mp=-1; m<M; m++) {
 
     dl_subframe = ul_ACK_subframe2_dl_subframe(&phy_vars_eNB->lte_frame_parms,
@@ -2925,13 +2935,6 @@ printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, su
         mp = m;
 
       dl_harq_pid[m]     = dlsch->harq_ids[dl_subframe];
-
-      if ((pucch_sel != 2)&&(pusch_flag == 0)) { // multiplexing
-        if ((SR_payload == 1)&&(all_ACKed == 1))
-          dlsch_ACK[m] = 1;
-        else
-          dlsch_ACK[m] = 0;
-      }
 
       if (dl_harq_pid[m]<dlsch->Mdlharq) {
         dlsch_harq_proc = dlsch->harq_processes[dl_harq_pid[m]];

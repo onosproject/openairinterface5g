@@ -6387,7 +6387,12 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
       int dl_subframe = (subframe<4) ? (subframe+6) : (subframe-4);
 
       if (phy_vars_ue->dlsch_ue[eNB_id][0]->harq_ack[dl_subframe].send_harq_status>0) { // we have downlink transmission
-        ulsch->harq_processes[harq_pid]->O_ACK = 1;
+#if Rel10
+        if (1/*phy_vars_ue_SCell->dlsch_eNB[eNB_id][0]->harq_ack[dl_subframe].send_harq_status>0*/) 
+	  ulsch->harq_processes[harq_pid]->O_ACK = 2;
+	else
+#endif
+	  ulsch->harq_processes[harq_pid]->O_ACK = 1;
       } else {
         ulsch->harq_processes[harq_pid]->O_ACK = 0;
       }
@@ -7024,14 +7029,12 @@ printf("!!new DCI format0!!\n");
       if (phy_vars_eNB->dlsch_eNB[UE_id][0]->subframe_tx[dl_subframe]>0) { // we have downlink transmission
 #if Rel10
         /* set O_ACK to 2 for decoding 2 bits if 2 CCs configured */
-        if (phy_vars_eNB->CA_configured[UE_id] == 0) {
+        if (1/*phy_vars_eNB_SCell->dlsch_eNB[UE_id][0]->subframe_tx[dl_subframe]>0*/) 
+          ulsch->harq_processes[harq_pid]->O_ACK = 2;
+	else 
 #endif
           ulsch->harq_processes[harq_pid]->O_ACK = 1;
-#if Rel10
-        } else {
-          ulsch->harq_processes[harq_pid]->O_ACK = 2;
-        }
-#endif
+        
       } else {
         ulsch->harq_processes[harq_pid]->O_ACK = 0;
       }
