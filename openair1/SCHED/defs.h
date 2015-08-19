@@ -355,6 +355,16 @@ void ra_succeeded(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
 void ca_config(uint8_t  Mod_id,
                uint16_t rnti,
                int      ca_configured);
+
+/** \brief Function to set Carrier Aggregation activation bitfield of an UE.
+    @param Mod_id              Index of eNB
+    @param rnti                RNTI of UE
+    @param activation_bitfield activation bitfield
+                               (bit 0 is for secondary cell 0, ...)
+ */
+void ca_activate(uint8_t  Mod_id,
+                 uint16_t rnti,
+                 uint8_t  activation_bitfield);
 #endif
 
 uint8_t phich_subframe_to_harq_pid(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe);

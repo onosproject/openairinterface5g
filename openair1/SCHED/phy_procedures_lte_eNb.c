@@ -178,6 +178,7 @@ int32_t add_ue(int16_t rnti, PHY_VARS_eNB *phy_vars_eNB)
 #else
 int32_t add_ue(int16_t rnti, PHY_VARS_eNB *phy_vars_eNB)
 {
+  PHY_VARS_eNB *eNB_pCC = phy_vars_eNB;
   int i;
   int ret = -1;
   int CC;
@@ -216,6 +217,8 @@ abort();
             printf("bad in add_ue\n");
             abort();
           }
+          /* hack - mark the pCC phy structure of the UE, to be changed */
+          if (phy_vars_eNB == eNB_pCC) phy_vars_eNB->pCCflag[i] = 1; else phy_vars_eNB->pCCflag[i] = 0;
           ret = i;
           break;
         }
@@ -225,8 +228,10 @@ abort();
 
 #if Rel10
   /* intially, the UE is not configured with multiple DL cells */
-  if (ret != -1)
+  if (ret != -1) {
     ca_config(phy_vars_eNB->Mod_id, rnti, 0);
+    ca_activate(phy_vars_eNB->Mod_id, rnti, 0);
+  }
 #endif
 
   return ret;
@@ -516,6 +521,26 @@ void ca_config(uint8_t  Mod_id,
       continue;
     }
     PHY_vars_eNB_g[Mod_id][CC_id]->CA_configured[UE_id] = ca_configured;
+  }
+}
+
+void ca_activate(uint8_t  Mod_id,
+                 uint16_t rnti,
+                 uint8_t  activation_bitfield)
+{
+  int CC_id;
+  int8_t UE_id;
+
+  LOG_I(PHY,"[eNB %d] UE %x CA activate 0x%2.2x\n", Mod_id, rnti, activation_bitfield);
+
+  /* set the activation bitfield of the UE on all the CCs */
+  for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
+    UE_id = find_ue(rnti, PHY_vars_eNB_g[Mod_id][CC_id]);
+    if (UE_id == -1) {
+      LOG_E(PHY, "ca_activate: cannot find UE with rnti %x (Mod_id %d, CC_id %d)\n", rnti, Mod_id, CC_id);
+      continue;
+    }
+    PHY_vars_eNB_g[Mod_id][CC_id]->CA_activated[UE_id] = activation_bitfield;
   }
 }
 
@@ -2603,6 +2628,10 @@ void phy_procedures_eNB_TX(unsigned char sched_subframe,PHY_VARS_eNB *phy_vars_e
 
 #endif
 
+printf("eNB DLSCH SDU (len %d bits): \n", (int)phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[harq_pid]->TBS);
+for (i=0; i<phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[harq_pid]->TBS>>3; i++)
+printf("%"PRIx8".",DLSCH_pdu[i]);
+printf("\n");
 
 #ifdef DEBUG_PHY_PROC
 #ifdef DEBUG_DLSCH
@@ -2957,7 +2986,7 @@ void process_HARQ_feedback(uint8_t UE_id,
 
           //    msg("[PHY] eNB %d Process %d is active (%d)\n",phy_vars_eNB->Mod_id,dl_harq_pid[m],dlsch_ACK[m]);
           if ( dlsch_ACK[mp]==0) {
-printf("got a NAK! CC %d\n", phy_vars_eNB->CC_id);
+printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_flag);
             // Received NAK
 #ifdef DEBUG_PHY_PROC
             LOG_D(PHY,"[eNB %d][PDSCH %x/%d] M = %d, m= %d, mp=%d NAK Received in round %d, requesting retransmission\n",phy_vars_eNB->Mod_id,
@@ -2997,7 +3026,277 @@ printf("got a NAK! CC %d\n", phy_vars_eNB->CC_id);
 #endif
             ue_stats->dlsch_ACK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
 
-printf("got an ACK! CC %d\n", phy_vars_eNB->CC_id);
+printf("ACKNACK got an ACK! CC %d\n", phy_vars_eNB->CC_id);
+            // Received ACK so set round to 0 and set dlsch_harq_pid IDLE
+            dlsch_harq_proc->round  = 0;
+            dlsch_harq_proc->status = SCH_IDLE;
+            dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
+
+            ue_stats->total_TBS = ue_stats->total_TBS +
+                                  phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[dl_harq_pid[m]]->TBS;
+            /*
+              ue_stats->total_transmitted_bits = ue_stats->total_transmitted_bits +
+              phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[dl_harq_pid[m]]->TBS;
+            */
+          }
+
+          // Do fine-grain rate-adaptation for DLSCH
+          if (ue_stats->dlsch_NAK_round0 > dlsch->error_threshold) {
+            if (ue_stats->dlsch_mcs_offset == 1)
+              ue_stats->dlsch_mcs_offset=0;
+            else
+              ue_stats->dlsch_mcs_offset=-1;
+          }
+
+#ifdef DEBUG_PHY_PROC
+          LOG_D(PHY,"[process_HARQ_feedback] Frame %d Setting round to %d for pid %d (subframe %d)\n",frame,
+                dlsch_harq_proc->round,dl_harq_pid[m],subframe);
+#endif
+
+          // Clear NAK stats and adjust mcs offset
+          // after measurement window timer expires
+          if (ue_stats->dlsch_sliding_cnt == dlsch->ra_window_size) {
+            if ((ue_stats->dlsch_mcs_offset == 0) && (ue_stats->dlsch_NAK_round0 < 2))
+              ue_stats->dlsch_mcs_offset = 1;
+
+            if ((ue_stats->dlsch_mcs_offset == 1) && (ue_stats->dlsch_NAK_round0 > 2))
+              ue_stats->dlsch_mcs_offset = 0;
+
+            if ((ue_stats->dlsch_mcs_offset == 0) && (ue_stats->dlsch_NAK_round0 > 2))
+              ue_stats->dlsch_mcs_offset = -1;
+
+            if ((ue_stats->dlsch_mcs_offset == -1) && (ue_stats->dlsch_NAK_round0 < 2))
+              ue_stats->dlsch_mcs_offset = 0;
+
+            ue_stats->dlsch_NAK_round0 = 0;
+            ue_stats->dlsch_sliding_cnt = 0;
+          }
+
+
+        }
+      }
+    }
+  }
+}
+
+void process_HARQ_feedback_hack(uint8_t UE_id,
+                           uint8_t sched_subframe,
+                           PHY_VARS_eNB *phy_vars_eNB,
+                           uint8_t pusch_flag,
+                           uint8_t *pucch_payload,
+                           uint8_t pucch_sel,
+                           uint8_t SR_payload,
+                           int ack)
+{
+
+  uint8_t dl_harq_pid[8],dlsch_ACK[8],dl_subframe;
+  LTE_eNB_DLSCH_t *dlsch             =  phy_vars_eNB->dlsch_eNB[(uint32_t)UE_id][0];
+  LTE_eNB_UE_stats *ue_stats         =  &phy_vars_eNB->eNB_UE_stats[(uint32_t)UE_id];
+  LTE_DL_eNB_HARQ_t *dlsch_harq_proc;
+  uint8_t subframe_m4,M,m;
+  int mp;
+  int all_ACKed=1,nb_alloc=0,nb_ACK=0;
+  int frame = phy_vars_eNB->proc[sched_subframe].frame_rx;
+  int subframe = phy_vars_eNB->proc[sched_subframe].subframe_rx;
+  int harq_pid = subframe2harq_pid( &phy_vars_eNB->lte_frame_parms,frame,subframe);
+
+  if (phy_vars_eNB->lte_frame_parms.frame_type == FDD) { //FDD
+    subframe_m4 = (subframe<4) ? subframe+6 : subframe-4;
+
+    dl_harq_pid[0] = dlsch->harq_ids[subframe_m4];
+    M=1;
+
+#if 0
+    if (pusch_flag == 1)
+      dlsch_ACK[0] = phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
+    else
+      dlsch_ACK[0] = pucch_payload[0];
+#endif
+
+    dlsch_ACK[0] = ack;
+
+printf("ACKNACK process_HARQ_feedback_hack fr/subfr %d %d ack %d dlsch_ACK[0] %d _eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1] %d CC %d\n", frame, subframe, ack, dlsch_ACK[0], phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1], phy_vars_eNB->CC_id);
+    LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d for subframe %d\n",phy_vars_eNB->Mod_id,
+          frame,dlsch_ACK[0],subframe_m4);
+
+#if defined(MESSAGE_CHART_GENERATOR_PHY)
+    MSC_LOG_RX_MESSAGE(
+      MSC_PHY_ENB,MSC_PHY_UE,
+      NULL,0,
+      "%05u:%02u %s received %s  rnti %x harq id %u  tx SF %u",
+      frame,subframe,
+      (pusch_flag == 1)?"PUSCH":"PUCCH",
+      (dlsch_ACK[0])?"ACK":"NACK",
+      dlsch->rnti,
+      dl_harq_pid[0],
+      subframe_m4
+      );
+#endif
+  } else { // TDD Handle M=1,2 cases only
+
+    M=ul_ACK_subframe2_M(&phy_vars_eNB->lte_frame_parms,
+                         subframe);
+
+    // Now derive ACK information for TDD
+    if (pusch_flag == 1) { // Do PUSCH ACK/NAK first
+      // detect missing DAI
+      //FK: this code is just a guess
+      //RK: not exactly, yes if scheduled from PHICH (i.e. no DCI format 0)
+      //    otherwise, it depends on how many of the PDSCH in the set are scheduled, we can leave it like this,
+      //    but we have to adapt the code below.  For example, if only one out of 2 are scheduled, only 1 bit o_ACK is used
+
+      dlsch_ACK[0] = phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
+      dlsch_ACK[1] = (phy_vars_eNB->pucch_config_dedicated[UE_id].tdd_AckNackFeedbackMode == bundling)
+                     ?phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0]:phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1];
+      //      printf("UE %d: ACK %d,%d\n",UE_id,dlsch_ACK[0],dlsch_ACK[1]);
+    }
+
+    else {  // PUCCH ACK/NAK
+      if ((SR_payload == 1)&&(pucch_sel!=2)) {  // decode Table 7.3 if multiplexing and SR=1
+        nb_ACK = 0;
+
+        if (M == 2) {
+          if ((pucch_payload[0] == 1) && (pucch_payload[1] == 1)) // b[0],b[1]
+            nb_ACK = 1;
+          else if ((pucch_payload[0] == 1) && (pucch_payload[1] == 0))
+            nb_ACK = 2;
+        } else if (M == 3) {
+          if ((pucch_payload[0] == 1) && (pucch_payload[1] == 1))
+            nb_ACK = 1;
+          else if ((pucch_payload[0] == 1) && (pucch_payload[1] == 0))
+            nb_ACK = 2;
+          else if ((pucch_payload[0] == 0) && (pucch_payload[1] == 1))
+            nb_ACK = 3;
+        }
+      } else if (pucch_sel == 2) { // bundling or M=1
+        //  printf("*** (%d,%d)\n",pucch_payload[0],pucch_payload[1]);
+        dlsch_ACK[0] = pucch_payload[0];
+        dlsch_ACK[1] = pucch_payload[0];
+      } else { // multiplexing with no SR, this is table 10.1
+        if (M==1)
+          dlsch_ACK[0] = pucch_payload[0];
+        else if (M==2) {
+          if (((pucch_sel == 1) && (pucch_payload[0] == 1) && (pucch_payload[1] == 1)) ||
+              ((pucch_sel == 0) && (pucch_payload[0] == 0) && (pucch_payload[1] == 1)))
+            dlsch_ACK[0] = 1;
+          else
+            dlsch_ACK[0] = 0;
+
+          if (((pucch_sel == 1) && (pucch_payload[0] == 1) && (pucch_payload[1] == 1)) ||
+              ((pucch_sel == 1) && (pucch_payload[0] == 0) && (pucch_payload[1] == 0)))
+            dlsch_ACK[1] = 1;
+          else
+            dlsch_ACK[1] = 0;
+        }
+      }
+    }
+  }
+
+  // handle case where positive SR was transmitted with multiplexing
+  if ((SR_payload == 1)&&(pucch_sel!=2)&&(pusch_flag == 0)) {
+    nb_alloc = 0;
+
+    for (m=0; m<M; m++) {
+      dl_subframe = ul_ACK_subframe2_dl_subframe(&phy_vars_eNB->lte_frame_parms,
+                    subframe,
+                    m);
+
+      if (dlsch->subframe_tx[dl_subframe]==1)
+        nb_alloc++;
+    }
+
+    if (nb_alloc == nb_ACK)
+      all_ACKed = 1;
+    else
+      all_ACKed = 0;
+
+    //    printf("nb_alloc %d, all_ACKed %d\n",nb_alloc,all_ACKed);
+  }
+
+
+  for (m=0,mp=-1; m<M; m++) {
+
+    dl_subframe = ul_ACK_subframe2_dl_subframe(&phy_vars_eNB->lte_frame_parms,
+                  subframe,
+                  m);
+
+    if (dlsch->subframe_tx[dl_subframe]==1) {
+      if (pusch_flag == 1)
+        mp++;
+      else
+        mp = m;
+
+      dl_harq_pid[m]     = dlsch->harq_ids[dl_subframe];
+
+      if ((pucch_sel != 2)&&(pusch_flag == 0)) { // multiplexing
+        if ((SR_payload == 1)&&(all_ACKed == 1))
+          dlsch_ACK[m] = 1;
+        else
+          dlsch_ACK[m] = 0;
+      }
+
+      if (dl_harq_pid[m]<dlsch->Mdlharq) {
+        dlsch_harq_proc = dlsch->harq_processes[dl_harq_pid[m]];
+#ifdef DEBUG_PHY_PROC
+        LOG_D(PHY,"[eNB %d][PDSCH %x/%d] subframe %d, status %d, round %d (mcs %d, rv %d, TBS %d)\n",phy_vars_eNB->Mod_id,
+              dlsch->rnti,dl_harq_pid[m],dl_subframe,
+              dlsch_harq_proc->status,dlsch_harq_proc->round,
+              dlsch->harq_processes[dl_harq_pid[m]]->mcs,
+              dlsch->harq_processes[dl_harq_pid[m]]->rvidx,
+              dlsch->harq_processes[dl_harq_pid[m]]->TBS);
+
+        if (dlsch_harq_proc->status==DISABLED)
+          LOG_E(PHY,"dlsch_harq_proc is disabled? \n");
+
+#endif
+
+        if ((dl_harq_pid[m]<dlsch->Mdlharq) &&
+            (dlsch_harq_proc->status == ACTIVE)) {
+          // dl_harq_pid of DLSCH is still active
+
+          //    msg("[PHY] eNB %d Process %d is active (%d)\n",phy_vars_eNB->Mod_id,dl_harq_pid[m],dlsch_ACK[m]);
+          if ( dlsch_ACK[mp]==0) {
+printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_flag);
+            // Received NAK
+#ifdef DEBUG_PHY_PROC
+            LOG_D(PHY,"[eNB %d][PDSCH %x/%d] M = %d, m= %d, mp=%d NAK Received in round %d, requesting retransmission\n",phy_vars_eNB->Mod_id,
+                  dlsch->rnti,dl_harq_pid[m],M,m,mp,dlsch_harq_proc->round);
+#endif
+
+            if (dlsch_harq_proc->round == 0)
+              ue_stats->dlsch_NAK_round0++;
+
+            ue_stats->dlsch_NAK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
+
+
+            // then Increment DLSCH round index
+            dlsch_harq_proc->round++;
+
+            if (dlsch_harq_proc->round == dlsch->Mdlharq) {
+              // This was the last round for DLSCH so reset round and increment l2_error counter
+#ifdef DEBUG_PHY_PROC
+              LOG_W(PHY,"[eNB %d/%d][PDSCH %x/%d] DLSCH retransmissions exhausted, dropping packet\n",phy_vars_eNB->Mod_id,
+                    phy_vars_eNB->CC_id, dlsch->rnti,dl_harq_pid[m]);
+#endif
+#if defined(MESSAGE_CHART_GENERATOR_PHY)
+              MSC_LOG_EVENT(MSC_PHY_ENB, "0 HARQ DLSCH Failed RNTI %"PRIx16" round %u",
+                            dlsch->rnti,
+                            dlsch_harq_proc->round);
+#endif
+
+              dlsch_harq_proc->round = 0;
+              ue_stats->dlsch_l2_errors[dl_harq_pid[m]]++;
+              dlsch_harq_proc->status = SCH_IDLE;
+              dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
+            }
+          } else {
+#ifdef DEBUG_PHY_PROC
+            LOG_D(PHY,"[eNB %d][PDSCH %x/%d] ACK Received in round %d, resetting process\n",phy_vars_eNB->Mod_id,
+                  dlsch->rnti,dl_harq_pid[m],dlsch_harq_proc->round);
+#endif
+            ue_stats->dlsch_ACK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
+
+printf("ACKNACK got an ACK! CC %d\n", phy_vars_eNB->CC_id);
             // Received ACK so set round to 0 and set dlsch_harq_pid IDLE
             dlsch_harq_proc->round  = 0;
             dlsch_harq_proc->status = SCH_IDLE;
@@ -3071,6 +3370,7 @@ void get_n1_pucch_eNB(PHY_VARS_eNB *phy_vars_eNB,
 
     if (phy_vars_eNB->dlsch_eNB[(uint32_t)UE_id][0]->subframe_tx[sf]>0) {
       *n1_pucch0 = frame_parms->pucch_config_common.n1PUCCH_AN + phy_vars_eNB->dlsch_eNB[(uint32_t)UE_id][0]->nCCE[sf];
+*n1_pucch1 = (*n1_pucch0) + 1;
       *n1_pucch1 = -1;
     } else {
       *n1_pucch0 = -1;
@@ -3510,7 +3810,9 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
 
     if ((phy_vars_eNB->ulsch_eNB[i]) &&
         (phy_vars_eNB->ulsch_eNB[i]->rnti>0) &&
-        (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->subframe_scheduling_flag==1)) {
+        (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->subframe_scheduling_flag==1) &&
+        /* for the moment, the UE transmits only on its primary CC */
+        (phy_vars_eNB->pCCflag[i] == 1)) {
 
       pusch_active = 1;
       round = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round;
@@ -3549,10 +3851,29 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
       if (frame_parms->frame_type == FDD ) {
         int sf = (subframe<4) ? (subframe+6) : (subframe-4);
 
+#if 0
         if (phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sf]>0) { // we have downlink transmission
-          phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 1;
+//          phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 1;
+if (phy_vars_eNB->CA_configured[i] == 0)
+phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 1;
+else
+phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
         } else {
           phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 0;
+        }
+#endif
+
+        /* get the number of ack bits according to the number of downlink transmissions */
+        phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 0;
+        if (phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sf]>0)
+          phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK++;
+        if (phy_vars_eNB->CA_configured[i] == 1) {
+          /* hack - get the secondary CC */
+          PHY_VARS_eNB *eNB_CC2;
+          if (phy_vars_eNB->CC_id == 0) eNB_CC2 = PHY_vars_eNB_g[0][1];
+          else                          eNB_CC2 = PHY_vars_eNB_g[0][0];
+          if (eNB_CC2->dlsch_eNB[i][0]->subframe_tx[sf]>0)
+            phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK++;
         }
       }
 
@@ -3680,7 +4001,14 @@ printf("phy_vars_eNB->ulsch_eNB[%d]->harq_processes[%d]->cqi_crc_status == %d\n"
                     phy_vars_eNB->lte_frame_parms.N_RB_DL,
                     &rnti, &access_mode,
                     /* for the moment, maximum 2 CCs supported */
-                    phy_vars_eNB->CA_configured[i] == 1 ? 2 : 1);
+                    phy_vars_eNB->CA_activated[i] ? 2 : 1);
+        /* if 2 CCs are activated, we must update stats of 2nd CC */
+        if (phy_vars_eNB->CA_activated[i]) {
+          /* hack! one should get the phy_var depending on the UE */
+          PHY_VARS_eNB *cc2 = PHY_vars_eNB_g[0][1];
+          cc2->eNB_UE_stats[i].DL_cqi[0] = phy_vars_eNB->eNB_UE_stats[i].DL_cqi[1];
+          memcpy(cc2->eNB_UE_stats[i].DL_subband_cqi[0], phy_vars_eNB->eNB_UE_stats[i].DL_subband_cqi[1], 13);
+        }
         phy_vars_eNB->eNB_UE_stats[i].rank = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_RI[0];
       }
 
@@ -3989,7 +4317,7 @@ printf("**** fr/subfr %d %d call mac_xface->rx_sdu CC %d\n", frame, subframe, ph
             frame,subframe,
             i);
 #endif
-printf("**** fr/subfr %d %d call process_HARQ_feedback CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
+#if 0
       process_HARQ_feedback(i,
                             sched_subframe,
                             phy_vars_eNB,
@@ -3997,6 +4325,32 @@ printf("**** fr/subfr %d %d call process_HARQ_feedback CC %d\n", frame, subframe
                             0,
                             0,
                             0);
+#endif
+      {
+        /* hack - call process_HARQ_feedback for all CCs with ack/nack waiting with the right ack/nack bit */
+        int sf = (subframe<4) ? (subframe+6) : (subframe-4);
+        int ack, z, ack_bit = 0;
+        int harq_pid = subframe2harq_pid( &phy_vars_eNB->lte_frame_parms,frame,subframe);
+        PHY_VARS_eNB *cc;
+printf("ACKNACK before call process_HARQ_feedback_hack O_ACK %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK);
+        for (z = 0; z < 2; z++) {
+          /* we suppose UE pCC id 0 and secondary CC id 1 */
+          cc = PHY_vars_eNB_g[0][z];
+          if (cc->dlsch_eNB[i][0]->subframe_tx[sf]>0) {
+            ack = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[ack_bit];
+            ack_bit++;
+printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d\n", frame, subframe, cc->CC_id);
+            process_HARQ_feedback_hack(i,
+                                  sched_subframe,
+                                  cc,
+                                  1, // pusch_flag
+                                  0,
+                                  0,
+                                  0, ack);
+          }
+        }
+printf("ACKNACK after call process_HARQ_feedback_hack ack_bit %d\n", ack_bit);
+      }
 
 #ifdef DEBUG_PHY_PROC
       LOG_D(PHY,"[eNB %d] Frame %d subframe %d, sect %d: received ULSCH harq_pid %d for UE %d, ret = %d, CQI CRC Status %d, ACK %d,%d, ulsch_errors %d/%d\n",
@@ -4016,7 +4370,9 @@ printf("**** fr/subfr %d %d call process_HARQ_feedback CC %d\n", frame, subframe
 
 #ifdef PUCCH
     else if ((phy_vars_eNB->dlsch_eNB[i][0]) &&
-             (phy_vars_eNB->dlsch_eNB[i][0]->rnti>0)) { // check for PUCCH
+             (phy_vars_eNB->dlsch_eNB[i][0]->rnti>0) &&
+             /* for the moment the UE only transmits on its primary CC */
+             (phy_vars_eNB->pCCflag[i] == 1)) { // check for PUCCH
 
       // check SR availability
       do_SR = is_SR_subframe(phy_vars_eNB,i,sched_subframe);
@@ -4097,6 +4453,53 @@ printf("**** fr/subfr %d %d call process_HARQ_feedback CC %d\n", frame, subframe
           // if SR was detected, use the n1_pucch from SR, else use n1_pucch0
           n1_pucch0 = (SR_payload==1) ? phy_vars_eNB->scheduling_request_config[i].sr_PUCCH_ResourceIndex:n1_pucch0;
 
+printf("ACKNACK call rx_pucch CC_id %d frame %d subframe %d pucch_format1a n1_pucch0 %d\n", phy_vars_eNB->CC_id, frame, subframe, n1_pucch0);
+{ int j;
+char s[4096];
+char *t = s;
+for (j = 0; j < 20; j++) {
+pucch_payload0[0] = pucch_payload0[1] = 0xa5;
+t += sprintf(t, "ACKNACK n1_pucch0 (= %d) format1b (j %d) ret %d",
+       n1_pucch0, j,
+       rx_pucch(phy_vars_eNB,
+                   pucch_format1b,
+                   i,
+                   (uint16_t)j, //n1_pucch0,
+                   0, //n2_pucch
+                   1, // shortened format
+                   pucch_payload0,
+                   subframe,
+                   PUCCH1a_THRES));
+t += sprintf(t, " [%d %d] CC_id %d\n", pucch_payload0[0], pucch_payload0[1], phy_vars_eNB->CC_id);
+}
+#if 0
+pucch_payload0[0] = pucch_payload0[1] = 0xa5;
+printf("ACKNACK n1_pucch0+1 ret %d\n",
+       rx_pucch(phy_vars_eNB,
+                   pucch_format1b,
+                   i,
+                   (uint16_t)n1_pucch0+1,
+                   0, //n2_pucch
+                   1, // shortened format
+                   pucch_payload0,
+                   subframe,
+                   PUCCH1a_THRES));
+printf("ACKNACK payload %d %d\n", pucch_payload0[0], pucch_payload0[1]);
+#endif
+pucch_payload0[0] = pucch_payload0[1] = 0xa5;
+t += sprintf(t, "ACKNACK format 1a ret %d\n",
+       rx_pucch(phy_vars_eNB,
+                   pucch_format1a,
+                   i,
+                   (uint16_t)n1_pucch0,
+                   0, //n2_pucch
+                   1, // shortened format
+                   pucch_payload0,
+                   subframe,
+                   PUCCH1a_THRES));
+t += sprintf(t, "ACKNACK payload %d %d\n", pucch_payload0[0], pucch_payload0[1]);
+printf(s);
+}
           if (abstraction_flag == 0)
             metric0 = rx_pucch(phy_vars_eNB,
                                pucch_format1a,

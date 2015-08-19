@@ -854,7 +854,7 @@ int32_t rx_pucch(PHY_VARS_eNB *phy_vars_eNB,
     // Do detection now
     stat_re=0;
     stat_im=0;
-    LOG_D(PHY,"PUCCH1A : Po_PUCCH before %d (%d) dB",dB_fixed(*Po_PUCCH),*Po_PUCCH);
+    LOG_D(PHY,"PUCCH1A : Po_PUCCH before %d (%d) dB\n",dB_fixed(*Po_PUCCH),*Po_PUCCH);
     *Po_PUCCH = ((*Po_PUCCH<<9) + (stat_max<<9)+1024)>>10;
     *Po_PUCCH_dBm = dB_fixed(*Po_PUCCH) - phy_vars_eNB->rx_total_gain_eNB_dB;
     *Po_PUCCH_update = 1;

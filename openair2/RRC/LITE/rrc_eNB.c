@@ -1636,7 +1636,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
                                                      = CALLOC(1, sizeof(struct CQI_ReportAperiodic_r10__setup__aperiodicCSI_Trigger_r10));
     t1.buf                                           = CALLOC(1, 1); t1.size = 1; t1.bits_unused = 0;
     t2.buf                                           = CALLOC(1, 1); t2.size = 1; t2.bits_unused = 0;
-    t1.buf[0] = 0x00;   /* unused for the moment */
+    t1.buf[0] = 0x80;   /* report CQI for PCell only */
     t2.buf[0] = 0xc0;   /* report CQI for PCell and Scell */
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger1_r10 = t1;
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger2_r10 = t2;
@@ -1649,14 +1649,14 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
     n1pucch_1                                        = CALLOC(1, sizeof(struct N1PUCCH_AN_CS_r10));
     n1pucch_2                                        = CALLOC(1, sizeof(struct N1PUCCH_AN_CS_r10));
     /* values here are TBC CROUX, 0 for the moment */
-    val = CALLOC(1, sizeof(long)); *val = 16; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
-    val = CALLOC(1, sizeof(long)); *val = 18; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
-    val = CALLOC(1, sizeof(long)); *val = 20; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
-    val = CALLOC(1, sizeof(long)); *val = 22; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
-    val = CALLOC(1, sizeof(long)); *val = 17; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
-    val = CALLOC(1, sizeof(long)); *val = 19; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
-    val = CALLOC(1, sizeof(long)); *val = 21; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
-    val = CALLOC(1, sizeof(long)); *val = 23; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 30; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 31; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 32; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 33; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 30; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 31; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 32; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
+    val = CALLOC(1, sizeof(long)); *val = 33; ASN_SEQUENCE_ADD(&n1pucch_2->list, val);
     ASN_SEQUENCE_ADD(&cs->n1PUCCH_AN_CS_r10->choice.setup.n1PUCCH_AN_CS_List_r10.list, n1pucch_1);
     ASN_SEQUENCE_ADD(&cs->n1PUCCH_AN_CS_r10->choice.setup.n1PUCCH_AN_CS_List_r10.list, n1pucch_2);
 //ph->ext2->cqi_ReportConfig_r10=NULL;
@@ -2010,6 +2010,8 @@ static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
   snu->crossCarrierSchedulingConfig_r10->schedulingCellInfo_r10.present = CrossCarrierSchedulingConfig_r10__schedulingCellInfo_r10_PR_own_r10;
   snu->crossCarrierSchedulingConfig_r10->schedulingCellInfo_r10.choice.own_r10.cif_Presence_r10 = 0;
 
+  /* CSI RS set to release or not set at all? */
+#if 0
   snu->csi_RS_Config_r10 = CALLOC_OR_DIE(1, sizeof(CSI_RS_Config_r10_t));
 
   snu->csi_RS_Config_r10->csi_RS_r10 = CALLOC_OR_DIE(1, sizeof(struct CSI_RS_Config_r10__csi_RS_r10));
@@ -2019,6 +2021,7 @@ static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
   snu->csi_RS_Config_r10->zeroTxPowerCSI_RS_r10 = CALLOC_OR_DIE(1, sizeof(struct CSI_RS_Config_r10__zeroTxPowerCSI_RS_r10));
 
   snu->csi_RS_Config_r10->zeroTxPowerCSI_RS_r10->present = CSI_RS_Config_r10__zeroTxPowerCSI_RS_r10_PR_release;
+#endif
 
   snu->pdsch_ConfigDedicated_r10 = CALLOC_OR_DIE(1, sizeof(PDSCH_ConfigDedicated_t));
 
@@ -5029,6 +5032,7 @@ rrc_enb_task(
 
     switch (ITTI_MSG_ID(msg_p)) {
 case CROUX_HACK:
+#if 0
   printf("yoyo!! %p %p rnti %x\n", eNB_rrc_inst, eNB_rrc_inst[0].rrc_ue_head, eNB_rrc_inst[0].rrc_ue_head.rbh_root->ue_context.rnti);
       PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt,
                                     instance,
@@ -5037,6 +5041,12 @@ case CROUX_HACK:
                                     msg_p->ittiMsgHeader.lte_time.frame,
                                     msg_p->ittiMsgHeader.lte_time.slot);
     rrc_eNB_generate_CA_conf(&ctxt, &eNB_rrc_inst[0].rrc_ue_head.rbh_root->ue_context, 0);
+#endif
+  printf("let's activate/disactivate the 2nd CC!\n");
+  eNB_MAC_INST *eNB=&eNB_mac_inst[0];
+  UE_SCell_config_t *sconf = &eNB->UE_list.scell_config[0];
+  sconf->scell[0].active = 1 - sconf->scell[0].active;
+  sconf->to_configure = 1;
   break;
 
     case TERMINATE_MESSAGE:

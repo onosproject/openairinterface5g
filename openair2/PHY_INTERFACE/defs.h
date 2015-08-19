@@ -139,6 +139,11 @@ typedef struct {
   void (*ca_config)(uint8_t  Mod_id,
                     uint16_t rnti,
                     int      ca_configured);
+  /// activate/deactivate scells
+  /// bit 0 of activation_bitfield is scell 0, ...
+  void (*ca_activate)(uint8_t  Mod_id,
+                      uint16_t rnti,
+                      uint8_t  activation_bitfield);
 #endif
 
   /// UE functions

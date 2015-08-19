@@ -540,6 +540,11 @@ void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP
   UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
 
   if (UE_id  != -1) {
+    /* no SR indication if the CC is not the primary CC
+     * (the UE currently can only tranmit on the primary CC)
+     */
+    if (cc_idP != UE_PCCID(mod_idP, UE_id))
+      return;
     LOG_D(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d on CC_id %d\n",mod_idP,rntiP,frameP,subframeP, UE_id,cc_idP);
     UE_list->UE_template[cc_idP][UE_id].ul_SR = 1;
     UE_list->UE_template[cc_idP][UE_id].ul_active = TRUE;

@@ -603,6 +603,7 @@ schedule_ue_spec(
       DevCheck(((eNB_UE_stats->DL_cqi[0] < MIN_CQI_VALUE) || (eNB_UE_stats->DL_cqi[0] > MAX_CQI_VALUE)),
       eNB_UE_stats->DL_cqi[0], MIN_CQI_VALUE, MAX_CQI_VALUE);
       */
+//eNB_UE_stats->DL_cqi[0] = 14;
       eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[eNB_UE_stats->DL_cqi[0]];
       eNB_UE_stats->dlsch_mcs1 = cmin(eNB_UE_stats->dlsch_mcs1, openair_daq_vars.target_ue_dl_mcs);
 
@@ -616,6 +617,7 @@ schedule_ue_spec(
 #endif
 
       // store stats
+//eNB_UE_stats->DL_cqi[0] = 14;
       UE_list->eNB_UE_stats[CC_id][UE_id].dl_cqi= eNB_UE_stats->DL_cqi[0];
 
       // initializing the rb allocation indicator for each UE
@@ -815,6 +817,7 @@ schedule_ue_spec(
             break;
           }
 
+printf("ACKNACK add_ue_dlsch_info RETRANSMIT CC_id %d UE_id %d subframeP %d nb_rb %d mcs %d num_retransmission %d\n", CC_id, UE_id, subframeP, nb_rb, eNB_UE_stats->dlsch_mcs1, UE_list->eNB_UE_stats[CC_id][UE_id].num_retransmission+1);
           add_ue_dlsch_info(module_idP,
                             CC_id,
                             UE_id,
@@ -866,8 +869,10 @@ schedule_ue_spec(
 
 #ifdef Rel10
         /* check if SCells reconfiguration has to be done */
-UE_list->scell_config[UE_id].to_configure=0;
+/*NO SCELL*/
+//UE_list->scell_config[UE_id].to_configure=0;
         if (UE_list->scell_config[UE_id].to_configure) {
+printf("to_configure!!\n");
           UE_SCell_config_t *sconf = &UE_list->scell_config[UE_id];
           int s;
           /* compute the scell bitmap */
@@ -875,6 +880,12 @@ UE_list->scell_config[UE_id].to_configure=0;
           for (s = 0; s < sconf->scell_count; s++)
             if (sconf->scell[s].active)
               scell_bitmap |= 1 << sconf->scell[s].bitmap_bit;
+
+          /* notify the PHY layer of the new bitmap
+           * (we should do it only at subframe x+4)
+           */
+          mac_xface->ca_activate(module_idP, rnti, scell_bitmap);
+
           scell_activation_len = 2;
           /* where and when do that? */
           UE_list->scell_config[UE_id].to_configure = 0;
@@ -883,12 +894,15 @@ UE_list->scell_config[UE_id].to_configure=0;
            * after receiving ACK for MAC PDU with scell CE at subframe x)
            */
           /* add secondary cells for scheduling (should we order them?) */
+#if 1
           UE_list->numactiveCCs[UE_id] = 1;
+          UE_list->ordered_CCids[0][UE_id] = UE_list->pCC_id[UE_id];
           for (s = 0; s < sconf->scell_count; s++)
             if (sconf->scell[s].active) {
               UE_list->ordered_CCids[UE_list->numactiveCCs[UE_id]][UE_id] = sconf->scell[s].CC_id;
               UE_list->numactiveCCs[UE_id]++;
             }
+#endif
         } else
           scell_activation_len = 0;
 #endif /* Rel10 */
@@ -1164,7 +1178,9 @@ UE_list->scell_config[UE_id].to_configure=0;
                                         );
 
           //#ifdef DEBUG_eNB_SCHEDULER
-          if (ta_update) {
+          /* CROUX: let's get always the log, to remove (reactivate the if) */
+          //if (ta_update) {
+          if (1) {
             LOG_I(MAC,
                   "[eNB %d][DLSCH] Frame %d Generate header for UE_id %d on CC_id %d: sdu_length_total %d, num_sdus %d, sdu_lengths[0] %d, sdu_lcids[0] %d => payload offset %d,timing advance value : %d, padding %d,post_padding %d,(mcs %d, TBS %d, nb_rb %d),header_dcch %d, header_dtch %d\n",
                   module_idP,frameP, UE_id, CC_id, sdu_length_total,num_sdus,sdu_lengths[0],sdu_lcids[0],offset,
@@ -1204,6 +1220,7 @@ UE_list->scell_config[UE_id].to_configure=0;
           nCCE_used[CC_id]+=(1<<aggregation); // adjust the remaining nCCE
           UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid] = nb_rb;
 
+printf("ACKNACK add_ue_dlsch_info CC_id %d UE_id %d subframeP %d nb_rb %d mcs1 %d mcs2 %d\n", CC_id, UE_id, subframeP, nb_rb, eNB_UE_stats->dlsch_mcs1, mcs);
           add_ue_dlsch_info(module_idP,
                             CC_id,
                             UE_id,
@@ -2524,6 +2541,7 @@ get_dlsch_sdu(
 
   if (UE_id != -1) {
     LOG_D(MAC,"[eNB %d] Frame %d:  CC_id %d Get DLSCH sdu for rnti %x => UE_id %d\n",module_idP,frameP,CC_id,rntiP,UE_id);
+printf("get_dlsch_sdu pdu size %d\n", eNB->UE_list.DLSCH_pdu[CC_id][TBindex][UE_id].Pdu_size[0]);
     return((unsigned char *)&eNB->UE_list.DLSCH_pdu[CC_id][TBindex][UE_id].payload[0]);
   } else {
     LOG_E(MAC,"[eNB %d] Frame %d: CC_id %d UE with RNTI %x does not exist\n", module_idP,frameP,CC_id,rntiP);
