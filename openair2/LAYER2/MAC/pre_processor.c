@@ -220,6 +220,9 @@ void assign_rbs_required (module_id_t Mod_id,
 
         TBS = mac_xface->get_TBS_DL(eNB_UE_stats[CC_id]->dlsch_mcs1,nb_rbs_required[CC_id][UE_id]);
 
+LOG_E(MAC,"[preprocessor] start RB assignement for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
+UE_id, CC_id, UE_list->UE_template[pCCid][UE_id].dl_buffer_total,
+nb_rbs_required[CC_id][UE_id],eNB_UE_stats[CC_id]->dlsch_mcs1,TBS);
         LOG_D(MAC,"[preprocessor] start RB assignement for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
               UE_id, CC_id, UE_list->UE_template[pCCid][UE_id].dl_buffer_total,
               nb_rbs_required[CC_id][UE_id],eNB_UE_stats[CC_id]->dlsch_mcs1,TBS);
@@ -237,6 +240,8 @@ void assign_rbs_required (module_id_t Mod_id,
           TBS = mac_xface->get_TBS_DL(eNB_UE_stats[CC_id]->dlsch_mcs1,nb_rbs_required[CC_id][UE_id]);
         } // end of while
 
+LOG_E(MAC,"[eNB %d] Frame %d: UE %d on CC %d: RB unit %d,  nb_required RB %d (TBS %d, mcs %d)\n",
+Mod_id, frameP,UE_id, CC_id,  min_rb_unit[CC_id], nb_rbs_required[CC_id][UE_id], TBS, eNB_UE_stats[CC_id]->dlsch_mcs1);
         LOG_D(MAC,"[eNB %d] Frame %d: UE %d on CC %d: RB unit %d,  nb_required RB %d (TBS %d, mcs %d)\n",
               Mod_id, frameP,UE_id, CC_id,  min_rb_unit[CC_id], nb_rbs_required[CC_id][UE_id], TBS, eNB_UE_stats[CC_id]->dlsch_mcs1);
       }
@@ -694,7 +699,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
       //PHY_vars_eNB_g[Mod_id]->mu_mimo_mode[UE_id].dl_pow_off = dl_pow_off[UE_id];
 
       if (pre_nb_available_rbs[CC_id][UE_id] > 0 ) {
-        LOG_D(MAC,"******************DL Scheduling Information for UE%d ************************\n",UE_id);
+        LOG_D(MAC,"******************DL Scheduling Information for UE%d CC %d************************\n",UE_id, CC_id);
         LOG_D(MAC,"dl power offset UE%d = %d \n",UE_id,dl_pow_off[CC_id][UE_id]);
         LOG_D(MAC,"***********RB Alloc for every subband for UE%d ***********\n",UE_id);
 

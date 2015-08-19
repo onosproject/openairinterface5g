@@ -7028,7 +7028,7 @@ printf("!!new DCI format0!!\n");
       if (phy_vars_eNB->dlsch_eNB[UE_id][0]->subframe_tx[dl_subframe]>0) { // we have downlink transmission
 #if Rel10
         /* set O_ACK to 2 for decoding 2 bits if 2 CCs configured */
-        if (1 || phy_vars_eNB->CA_configured[UE_id] == 0) {
+        if (phy_vars_eNB->CA_configured[UE_id] == 0) {
 #endif
           ulsch->harq_processes[harq_pid]->O_ACK = 1;
 #if Rel10

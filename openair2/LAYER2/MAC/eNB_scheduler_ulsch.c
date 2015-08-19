@@ -996,7 +996,18 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
                                 0);
 #if Rel10
               } else {
-printf("!! generate DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t with cqi_req != 3 (var cqi_req %d)\n", cqi_req);
+                unsigned int cqi_req_CA;
+                /* if there is a CQI requestm then:
+                 * - no secondary CC activated -> CQI request 2
+                 * - one secondary CC activated -> CQI request 3
+                 */
+                if (cqi_req == 0)
+                  cqi_req_CA = 0;
+                else if (UE_list->numactiveCCs[UE_id] == 1)
+                  cqi_req_CA = 2;
+                else
+                  cqi_req_CA = 3;
+printf("!! generate DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t with cqi_req == 3 (var cqi_req %d)\n", cqi_req);
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->type     = 0;
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->hopping  = 0;
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->rballoc  = rballoc;
@@ -1004,7 +1015,7 @@ printf("!! generate DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t with cqi_req != 3 (var cqi
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->ndi      = ndi;
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->TPC      = tpc;
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->cshift   = cshift;
-                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->cqi_req  = cqi_req ? 1 : 0; //3 : 0;
+                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->cqi_req  = cqi_req_CA;
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->srs_req  = 0; /* TBC CROUX */
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->rat      = 0; /* TBC CROUX */
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->padding  = 0;

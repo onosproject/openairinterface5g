@@ -845,6 +845,7 @@ static void wait_system_ready (char *message, volatile int *start_flag)
 
     while ((!oai_exit) && (*start_flag == 0)) {
       LOG_N(EMU, message, indicator[i]);
+      fflush(stdout);
       i = (i + 1) % (sizeof(indicator) / sizeof(indicator[0]));
       usleep(200000);
     }
@@ -933,11 +934,11 @@ void *l2l1_task(void *arg)
 #endif
 
 
+  int dummy_tx_b[7680*4] __attribute__((aligned(16)));
 void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 {
 
   unsigned int aa,slot_offset, slot_offset_F;
-  int dummy_tx_b[7680*4] __attribute__((aligned(16)));
   int i, tx_offset;
   int slot_sizeF = (phy_vars_eNB->lte_frame_parms.ofdm_symbol_size)*
                    ((phy_vars_eNB->lte_frame_parms.Ncp==1) ? 6 : 7);
@@ -947,6 +948,7 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 
   slot_offset = subframe*phy_vars_eNB->lte_frame_parms.samples_per_tti;
 
+printf("slot_offset_F %d slot_offset %d slot_sizeF %d subframe %d\n", slot_offset_F, slot_offset, slot_sizeF, subframe);
   if ((subframe_select(&phy_vars_eNB->lte_frame_parms,subframe)==SF_DL)||
       ((subframe_select(&phy_vars_eNB->lte_frame_parms,subframe)==SF_S))) {
     //    LOG_D(HW,"Frame %d: Generating slot %d\n",frame,next_slot);
@@ -1041,6 +1043,7 @@ int SUBFRAME_TX;
  */
 static void* eNB_thread_tx( void* param )
 {
+while(1) pause();
   static int eNB_thread_tx_status[NUM_ENB_THREADS];
 
   eNB_proc_t *proc = (eNB_proc_t*)param;
@@ -1236,6 +1239,7 @@ int SUBFRAME_RX;
  */
 static void* eNB_thread_rx( void* param )
 {
+while(1) pause();
   static int eNB_thread_rx_status[NUM_ENB_THREADS];
 
   eNB_proc_t *proc = (eNB_proc_t*)param;
@@ -1475,6 +1479,7 @@ void init_eNB_proc(void)
  */
 void kill_eNB_proc(void)
 {
+exit(0);
   int *status;
 
   for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++)
@@ -1544,7 +1549,19 @@ void kill_eNB_proc(void)
     }
 }
 
-
+static unsigned long daclock(void)
+{
+  static unsigned long old=0;
+  unsigned long new;
+  unsigned long ret;
+  struct timespec t;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &t);
+  new = (unsigned long)t.tv_sec * (unsigned long)1000000000 + (unsigned long)t.tv_nsec;
+if (new < old) { printf("that cant be %ld %ld new %ld old %ld %ld\n", (unsigned long)t.tv_sec, (unsigned long)t.tv_nsec, new, old, sizeof(unsigned long)); fflush(stdout); abort(); }
+  ret = new - old;
+  old = new;
+  return ret;
+}
 
 
 
@@ -1599,9 +1616,10 @@ static void* eNB_thread( void* arg )
   attr.sched_nice = 0;
   attr.sched_priority = 0;
 
+#if 0
   /* This creates a .5 ms  reservation */
   attr.sched_policy = SCHED_DEADLINE;
-  attr.sched_runtime  = 0.2 * 1000000;
+  attr.sched_runtime  = 0.9 * 1000000;
   attr.sched_deadline = 0.9 * 1000000;
   attr.sched_period   = 1.0 * 1000000;
 
@@ -1618,6 +1636,19 @@ static void* eNB_thread( void* arg )
     LOG_I(HW,"[SCHED][eNB] eNB main deadline thread %ld started on CPU %d\n",
           gettid(),sched_getcpu());
   }
+#endif
+
+attr.sched_policy = SCHED_FIFO;
+attr.sched_nice = -20;
+attr.sched_priority = sched_get_priority_max(SCHED_FIFO);
+if (sched_setattr(0, &attr, flags) < 0 ) {
+  perror("[SCHED] main eNB thread: sched_setattr failed\n");
+  exit(0);
+}
+cpu_set_t cpuset;
+CPU_ZERO(&cpuset);
+CPU_SET(0, &cpuset);
+if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset)) abort();
 
 #endif
 #endif
@@ -1901,6 +1932,7 @@ static void* eNB_thread( void* arg )
       int sf = hw_subframe;
 #endif
 
+#if 0
       for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 #ifdef EXMIMO
 
@@ -1946,6 +1978,37 @@ static void* eNB_thread( void* arg )
           break;
         }
       }
+#endif
+
+      /* do TX */
+      int CC_id;
+      for (CC_id=0; CC_id < MAX_NUM_CCs; CC_id++) {
+        eNB_proc_t *proc = &PHY_vars_eNB_g[0][CC_id]->proc[sf];
+        printf("call phy_procedures_eNB_TX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+        phy_procedures_eNB_TX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay, NULL );
+        printf("done phy_procedures_eNB_TX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+        printf("call do_OFDM_mod_rt CC_id %d sf %d %ld\n", proc->CC_id, sf, daclock());
+        do_OFDM_mod_rt( proc->subframe_tx, PHY_vars_eNB_g[0][proc->CC_id] );
+        printf("done do_OFDM_mod_rt CC_id %d sf %d %ld\n", proc->CC_id, sf, daclock());
+        proc->frame_tx++;
+        if (proc->frame_tx==1024)
+          proc->frame_tx=0;
+      }
+
+      /* do RX */
+      for (CC_id=0; CC_id < MAX_NUM_CCs; CC_id++) {
+        eNB_proc_t *proc = &PHY_vars_eNB_g[0][CC_id]->proc[sf];
+        printf("call phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+        phy_procedures_eNB_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
+        if ((subframe_select(&PHY_vars_eNB_g[0][proc->CC_id]->lte_frame_parms,proc->subframe_rx) == SF_S)) {
+          phy_procedures_eNB_S_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
+        }
+        printf("done phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+        proc->frame_rx++;
+        if (proc->frame_rx==1024)
+          proc->frame_rx=0;
+      }
+
     }
 
 #ifdef EXMIMO
@@ -2361,6 +2424,7 @@ static void get_options (int argc, char **argv)
 
         //for (j=0; j < enb_properties->properties[i]->nb_cc; j++ ){
         frame_parms[CC_id]->Nid_cell            =  enb_properties->properties[i]->Nid_cell[CC_id];
+fprintf(stderr, "CC %d ID %d\n", CC_id, frame_parms[CC_id]->Nid_cell);
         frame_parms[CC_id]->N_RB_DL             =  enb_properties->properties[i]->N_RB_DL[CC_id];
         frame_parms[CC_id]->N_RB_UL             =  enb_properties->properties[i]->N_RB_DL[CC_id];
         frame_parms[CC_id]->nb_antennas_tx      =  enb_properties->properties[i]->nb_antennas_tx[CC_id];
@@ -2782,7 +2846,7 @@ int main( int argc, char **argv )
     PHY_vars_eNB_g[0] = malloc(sizeof(PHY_VARS_eNB*));
 
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-      PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,Nid_cell,cooperation_flag,transmission_mode,abstraction_flag);
+      PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,frame_parms[CC_id]->Nid_cell,cooperation_flag,transmission_mode,abstraction_flag);
       PHY_vars_eNB_g[0][CC_id]->CC_id = CC_id;
 
 #ifndef OPENAIR2
@@ -3285,6 +3349,8 @@ int main( int argc, char **argv )
 #ifdef RTAI
     main_eNB_thread = rt_thread_create(eNB_thread, NULL, PTHREAD_STACK_MIN);
 #else
+    if (pthread_attr_setstacksize( &attr_dlsch_threads, 1024*PTHREAD_STACK_MIN ) != 0) abort();
+
     error_code = pthread_create( &main_eNB_thread, &attr_dlsch_threads, eNB_thread, NULL );
 
     if (error_code!= 0) {

@@ -222,6 +222,15 @@ typedef struct PHY_VARS_eNB_s {
 #if Rel10
   /// indicator set to 1 if the UE is configured with multiple DL cells
   int                  CA_configured[NUMBER_OF_UE_MAX];
+  /// bitfield describing which secondary DL cell is activated
+  /// "activated" and "configured" are two different concepts
+  /// an UE may have some secondary cells "configured" which are not "activated",
+  /// that is there is no traffic scheduled on them, and no MAC CE has been sent
+  /// (bit 0 is for scell 0, ...)
+  uint8_t              CA_activated[NUMBER_OF_UE_MAX];
+  /// indicator of the pCell of the UE
+  /// set to 1 if this cell is the primary cell of the UE
+  int                  pCCflag[NUMBER_OF_UE_MAX];
 #endif
 
   /// cell-specific reference symbols
