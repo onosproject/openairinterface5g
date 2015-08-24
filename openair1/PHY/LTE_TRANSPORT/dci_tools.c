@@ -5721,8 +5721,8 @@ abort();
         //  hopping = ((DCI0_5MHz_TDD_1_6_t *)dci_pdu)->hopping;
         //  type    = ((DCI0_5MHz_TDD_1_6_t *)dci_pdu)->type;
       } else {
-printf("%s:%d CROUX abort for debug\n", __FILE__, __LINE__);
-abort();
+	//printf("%s:%d CROUX abort for debug\n", __FILE__, __LINE__);
+	//abort();
         cqi_req = ((DCI0_5MHz_FDD_t *)dci_pdu)->cqi_req;
         cshift  = ((DCI0_5MHz_FDD_t *)dci_pdu)->cshift;
         TPC     = ((DCI0_5MHz_FDD_t *)dci_pdu)->TPC;

@@ -271,8 +271,8 @@ int main(int argc, char **argv)
 
   printf("Detected cpu_freq %f GHz\n",cpu_freq_GHz);
 
-
   logInit();
+  set_comp_log(PHY,LOG_DEBUG,LOG_MED,1);
 
   while ((c = getopt (argc, argv, "hapZbm:n:Y:X:x:s:w:e:q:d:D:O:c:r:i:f:y:c:oA:C:R:g:N:l:S:T:QB:PI:L")) != -1) {
     switch (c) {
@@ -1066,7 +1066,7 @@ int main(int argc, char **argv)
             if ((cqi_flag == 1) && (n_frames == 1) ) {
               printf("CQI information (O %d) %d %d\n",PHY_vars_UE->ulsch_ue[0]->O,
                      PHY_vars_UE->ulsch_ue[0]->o[0],PHY_vars_UE->ulsch_ue[0]->o[1]);
-              print_CQI(PHY_vars_UE->ulsch_ue[0]->o,PHY_vars_UE->ulsch_ue[0]->uci_format,PHY_vars_UE->lte_frame_parms.N_RB_DL,0);
+              print_CQI(PHY_vars_UE->ulsch_ue[0]->o,PHY_vars_UE->ulsch_ue[0]->uci_format,eNB_id,PHY_vars_UE->lte_frame_parms.N_RB_DL);
             }
 
             PHY_vars_UE->ulsch_ue[0]->o_ACK[0] = taus()&1;
