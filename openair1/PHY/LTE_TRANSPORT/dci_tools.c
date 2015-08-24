@@ -842,12 +842,14 @@ int generate_eNB_dlsch_params_from_dci(uint8_t subframe,
         rballoc   = ((DCI1_1_5MHz_TDD_t *)dci_pdu)->rballoc;
         rah       = ((DCI1_1_5MHz_TDD_t *)dci_pdu)->rah;
         rv        = ((DCI1_1_5MHz_TDD_t *)dci_pdu)->rv;
+        TPC       = ((DCI1_1_5MHz_TDD_t *)dci_pdu)->TPC;
         harq_pid  = ((DCI1_1_5MHz_TDD_t *)dci_pdu)->harq_pid;
       } else {
         mcs      = ((DCI1_1_5MHz_FDD_t *)dci_pdu)->mcs;
         rah      = ((DCI1_1_5MHz_FDD_t *)dci_pdu)->rah;
         rballoc  = ((DCI1_1_5MHz_FDD_t *)dci_pdu)->rballoc;
         rv       = ((DCI1_1_5MHz_FDD_t *)dci_pdu)->rv;
+        TPC      = ((DCI1_1_5MHz_FDD_t *)dci_pdu)->TPC;
         harq_pid = ((DCI1_1_5MHz_FDD_t *)dci_pdu)->harq_pid;
       }
 
@@ -860,6 +862,7 @@ int generate_eNB_dlsch_params_from_dci(uint8_t subframe,
         rballoc   = ((DCI1_5MHz_TDD_t *)dci_pdu)->rballoc;
         rah       = ((DCI1_5MHz_TDD_t *)dci_pdu)->rah;
         rv        = ((DCI1_5MHz_TDD_t *)dci_pdu)->rv;
+        TPC       = ((DCI1_5MHz_TDD_t *)dci_pdu)->TPC;
         harq_pid  = ((DCI1_5MHz_TDD_t *)dci_pdu)->harq_pid;
         LOG_D(PHY,"eNB: subframe %d UE %x, Format1 DCI: ndi %d, harq_pid %d\n",subframe,rnti,((DCI1_5MHz_TDD_t *)dci_pdu)->ndi,harq_pid);
       } else {
@@ -867,6 +870,7 @@ int generate_eNB_dlsch_params_from_dci(uint8_t subframe,
         rah      = ((DCI1_5MHz_FDD_t *)dci_pdu)->rah;
         rballoc  = ((DCI1_5MHz_FDD_t *)dci_pdu)->rballoc;
         rv       = ((DCI1_5MHz_FDD_t *)dci_pdu)->rv;
+        TPC      = ((DCI1_5MHz_FDD_t *)dci_pdu)->TPC;
         harq_pid = ((DCI1_5MHz_FDD_t *)dci_pdu)->harq_pid;
         LOG_D(PHY,"eNB: subframe %d UE %x, Format1 DCI: ndi %d, harq_pid %d\n",subframe,rnti,((DCI1_5MHz_FDD_t *)dci_pdu)->ndi,harq_pid);
 
@@ -880,12 +884,14 @@ int generate_eNB_dlsch_params_from_dci(uint8_t subframe,
         rballoc   = ((DCI1_10MHz_TDD_t *)dci_pdu)->rballoc;
         rah       = ((DCI1_10MHz_TDD_t *)dci_pdu)->rah;
         rv        = ((DCI1_10MHz_TDD_t *)dci_pdu)->rv;
+        TPC       = ((DCI1_10MHz_TDD_t *)dci_pdu)->TPC;
         harq_pid  = ((DCI1_10MHz_TDD_t *)dci_pdu)->harq_pid;
       } else {
         mcs      = ((DCI1_10MHz_FDD_t *)dci_pdu)->mcs;
         rah      = ((DCI1_10MHz_FDD_t *)dci_pdu)->rah;
         rballoc  = ((DCI1_10MHz_FDD_t *)dci_pdu)->rballoc;
         rv       = ((DCI1_10MHz_FDD_t *)dci_pdu)->rv;
+        TPC      = ((DCI1_10MHz_FDD_t *)dci_pdu)->TPC;
         harq_pid = ((DCI1_10MHz_FDD_t *)dci_pdu)->harq_pid;
       }
 
@@ -897,12 +903,14 @@ int generate_eNB_dlsch_params_from_dci(uint8_t subframe,
         rballoc   = ((DCI1_20MHz_TDD_t *)dci_pdu)->rballoc;
         rah       = ((DCI1_20MHz_TDD_t *)dci_pdu)->rah;
         rv        = ((DCI1_20MHz_TDD_t *)dci_pdu)->rv;
+        TPC       = ((DCI1_20MHz_TDD_t *)dci_pdu)->TPC;
         harq_pid  = ((DCI1_20MHz_TDD_t *)dci_pdu)->harq_pid;
       } else {
         mcs      = ((DCI1_20MHz_FDD_t *)dci_pdu)->mcs;
         rah      = ((DCI1_20MHz_FDD_t *)dci_pdu)->rah;
         rballoc  = ((DCI1_20MHz_FDD_t *)dci_pdu)->rballoc;
         rv       = ((DCI1_20MHz_FDD_t *)dci_pdu)->rv;
+        TPC      = ((DCI1_20MHz_FDD_t *)dci_pdu)->TPC;
         harq_pid = ((DCI1_20MHz_FDD_t *)dci_pdu)->harq_pid;
       }
 
@@ -919,6 +927,7 @@ int generate_eNB_dlsch_params_from_dci(uint8_t subframe,
 
     // msg("DCI: Setting subframe_tx for subframe %d\n",subframe);
     dlsch[0]->subframe_tx[subframe] = 1;
+    dlsch0_harq->TPC = TPC;
 
     conv_rballoc(rah,
                  rballoc,frame_parms->N_RB_DL,

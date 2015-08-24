@@ -252,6 +252,7 @@
 #define PUCCH1_THRES 3
 /// Threshold for PUCCH Format 1a/1b detection
 #define PUCCH1a_THRES 2
+#define PUCCH1b_THRES 2
 
 #ifndef OPENAIR_LTE
 ///

@@ -134,6 +134,8 @@ typedef struct {
   uint32_t cqi_alloc2;
   /// Current Number of RBs
   uint16_t nb_rb;
+  /// Current PUCCH TPC command
+  uint8_t TPC;
   /// downlink power offset field
   uint8_t dl_power_off;
   /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
@@ -231,11 +233,13 @@ typedef struct {
   //  int calibration_flag;
 } LTE_UL_UE_HARQ_t;
 
-typedef struct {
+typedef struct LTE_eNB_DLSCH_s {
   /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
   uint32_t *txdataF[8];
   /// Allocated RNTI (0 means DLSCH_t is not currently used)
   uint16_t rnti;
+  /// pointers to secondary DLSCH
+  struct LTE_eNB_DLSCH_s *dlsch_s[5][2];
   /// Active flag for baseband transmitter processing
   uint8_t active;
   /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
@@ -715,6 +719,9 @@ typedef enum {
   pucch_format1=0,
   pucch_format1a,
   pucch_format1b,
+  pucch_format1b_cs2,
+  pucch_format1b_cs3,
+  pucch_format1b_cs4,
   pucch_format2,
   pucch_format2a,
   pucch_format2b
