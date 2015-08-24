@@ -371,6 +371,7 @@ int main(int argc, char **argv)
   //signal(SIGABRT, handler);
 
   logInit();
+  set_comp_log(PHY,LOG_DEBUG,LOG_MED,1);
 
   // default parameters
   n_frames = 1000;
