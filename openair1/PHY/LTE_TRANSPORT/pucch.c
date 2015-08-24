@@ -772,7 +772,12 @@ int32_t rx_pucch(PHY_VARS_eNB *phy_vars_eNB,
     }
     *Po_PUCCH_update = 1;
 
-  } else if ((fmt == pucch_format1a)||(fmt == pucch_format1b)) {
+  } else if ((fmt == pucch_format1a)||
+	     (fmt == pucch_format1b)||
+	     (fmt == pucch_format1b_cs2)||
+	     (fmt == pucch_format1b_cs3)||
+	     (fmt == pucch_format1b_cs4))
+    {
     stat_max = 0;
 #ifdef DEBUG_PUCCH_RX
     LOG_I(PHY,"Doing PUCCH detection for format 1a/1b\n");
@@ -975,18 +980,36 @@ int32_t rx_pucch(PHY_VARS_eNB *phy_vars_eNB,
 #ifdef DEBUG_PUCCH_RX
       LOG_I(PHY,"stat %d,%d\n",stat_re,stat_im);
 #endif
-      *payload = (stat_re<0) ? 1 : 0;
-
-      if (fmt==pucch_format1b)
+      switch (fmt) {
+      case pucch_format1a:
+	*payload = (stat_re<0) ? 1 : 0;
+	break;
+      case pucch_format1b:
+	*payload = (stat_re<0) ? 1 : 0;
         *(1+payload) = (stat_im<0) ? 1 : 0;
-    } else { // insufficient energy on PUCCH so NAK
+	break;
+      case pucch_format1b_cs2: // all possibilities are such that b0b1=(00,11)
+	*payload = ((stat_re+stat_im) < 0) ? 1 : 0;
+	break;
+      case pucch_format1b_cs3:
+	AssertFatal(1==0,"Channel section for A=3 not implemented yet\n");
+	break;
+      case pucch_format1b_cs4:
+	AssertFatal(1==0,"Channel section for A=4 not implemented yet\n");
+	break;
+      default:
+	AssertFatal(1==0,"Impossible pucch format %d, should be 1a/1b/1b_cs2/1b_cs3/1b_cs4\n",fmt);
+	break;
+      }
+    } else { // insufficient energy on PUCCH so NAK/DTX
       *payload = 0;
 
       if (fmt==pucch_format1b)
         *(1+payload) = 0;
-    }
-  } else {
-    LOG_E(PHY,"[eNB] PUCCH fmt2/2a/2b not supported\n");
+      }
+
+    } else {
+    LOG_E(PHY,"[eNB] PUCCH fmt2/2a/2b/3 not supported\n");
   }
 
   return((int32_t)stat_max);

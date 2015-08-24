@@ -190,6 +190,8 @@ int main(int argc, char **argv)
         pucch_format = pucch_format1a;
       else if (atoi(optarg)==2)
         pucch_format = pucch_format1b;
+      else if (atoi(optarg)==3)
+	pucch_format = pucch_format1b_cs2;
       else {
         printf("Unsupported pucch_format %d\n",atoi(optarg));
         exit(-1);

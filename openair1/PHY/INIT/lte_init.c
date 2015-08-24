@@ -505,6 +505,20 @@ void phy_config_dedicated_eNB_step2(PHY_VARS_eNB *phy_vars_eNB)
 
       phy_vars_eNB->physicalConfigDedicated[UE_id] = NULL;
     }
+
+    /* To be done properly! for the moment we force it to 1 CROUX */
+    phy_vars_eNB->pucch_config_dedicated[UE_id].channel_selection = 1;
+
+    /* to be done properly, for the moment same values as in RRC CROUX */
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[0][0] = 30;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[1][0] = 31;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[2][0] = 32;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[3][0] = 33;
+
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[0][1] = 30;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[1][1] = 31;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[2][1] = 32;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[3][1] = 33;
   }
 }
 
