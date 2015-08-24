@@ -202,6 +202,7 @@ typedef struct PHY_VARS_eNB_s {
   uint8_t              local_flag;
   uint32_t             rx_total_gain_eNB_dB;
   LTE_DL_FRAME_PARMS   lte_frame_parms;
+  uint32_t             n_configured_SCCs[NUMBER_OF_UE_MAX];
   PHY_MEASUREMENTS_eNB PHY_measurements_eNB[NUMBER_OF_eNB_SECTORS_MAX]; /// Measurement variables
   LTE_eNB_COMMON       lte_eNB_common_vars;
   LTE_eNB_SRS          lte_eNB_srs_vars[NUMBER_OF_UE_MAX];
