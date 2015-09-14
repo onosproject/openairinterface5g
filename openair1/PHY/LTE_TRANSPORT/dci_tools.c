@@ -6593,7 +6593,7 @@ int generate_eNB_ulsch_params_from_dci(void *dci_pdu,
           //  type    = ((DCI0_5MHz_FDD_t *)dci_pdu)->type;
 #if Rel10
         } else {
-printf("!!new DCI format0!!\n");
+//printf("!!new DCI format0!!\n");
           cqi_req = ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->cqi_req;
           cshift  = ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->cshift;
           TPC     = ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->TPC;

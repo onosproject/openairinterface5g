@@ -307,7 +307,7 @@ void extract_CQI(void *o,UCI_format_t uci_format,LTE_eNB_UE_stats *stats, uint8_
           stats->DL_cqi[1] = 24;
         do_diff_cqi(N_RB_DL,stats->DL_subband_cqi[1],stats->DL_cqi[1],((HLC_subband_cqi_nopmi_2CC_5MHz *)o)->diffcqi2);
 
-printf("special CQI!!\n");
+//printf("special CQI!!\n");
       }
       break;
 
@@ -596,8 +596,8 @@ printf("special CQI!!\n");
   }
   */
 
-extern int FRAME_RX, SUBFRAME_RX, FRAME_TX, SUBFRAME_TX;
-printf("cqi %d %d (RX fr/subfr %d %d) (TX fr/subfr %d %d)\n", stats->DL_cqi[0], stats->DL_cqi[1], FRAME_RX, SUBFRAME_RX, FRAME_TX, SUBFRAME_TX);
+//extern int FRAME_RX, SUBFRAME_RX, FRAME_TX, SUBFRAME_TX;
+//printf("cqi %d %d (RX fr/subfr %d %d) (TX fr/subfr %d %d)\n", stats->DL_cqi[0], stats->DL_cqi[1], FRAME_RX, SUBFRAME_RX, FRAME_TX, SUBFRAME_TX);
 }
 
 

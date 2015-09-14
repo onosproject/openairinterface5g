@@ -948,7 +948,7 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 
   slot_offset = subframe*phy_vars_eNB->lte_frame_parms.samples_per_tti;
 
-printf("slot_offset_F %d slot_offset %d slot_sizeF %d subframe %d\n", slot_offset_F, slot_offset, slot_sizeF, subframe);
+//printf("slot_offset_F %d slot_offset %d slot_sizeF %d subframe %d\n", slot_offset_F, slot_offset, slot_sizeF, subframe);
   if ((subframe_select(&phy_vars_eNB->lte_frame_parms,subframe)==SF_DL)||
       ((subframe_select(&phy_vars_eNB->lte_frame_parms,subframe)==SF_S))) {
     //    LOG_D(HW,"Frame %d: Generating slot %d\n",frame,next_slot);
@@ -1980,12 +1980,12 @@ if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset)) abort();
       int CC_id;
       for (CC_id=0; CC_id < MAX_NUM_CCs; CC_id++) {
         eNB_proc_t *proc = &PHY_vars_eNB_g[0][CC_id]->proc[sf];
-        printf("call phy_procedures_eNB_TX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+//        printf("call phy_procedures_eNB_TX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
         phy_procedures_eNB_TX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay, NULL );
-        printf("done phy_procedures_eNB_TX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
-        printf("call do_OFDM_mod_rt CC_id %d sf %d %ld\n", proc->CC_id, sf, daclock());
+//        printf("done phy_procedures_eNB_TX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+//        printf("call do_OFDM_mod_rt CC_id %d sf %d %ld\n", proc->CC_id, sf, daclock());
         do_OFDM_mod_rt( proc->subframe_tx, PHY_vars_eNB_g[0][proc->CC_id] );
-        printf("done do_OFDM_mod_rt CC_id %d sf %d %ld\n", proc->CC_id, sf, daclock());
+//        printf("done do_OFDM_mod_rt CC_id %d sf %d %ld\n", proc->CC_id, sf, daclock());
         proc->frame_tx++;
         if (proc->frame_tx==1024)
           proc->frame_tx=0;
@@ -1994,12 +1994,12 @@ if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset)) abort();
       /* do RX */
       for (CC_id=0; CC_id < MAX_NUM_CCs; CC_id++) {
         eNB_proc_t *proc = &PHY_vars_eNB_g[0][CC_id]->proc[sf];
-        printf("call phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+//        printf("call phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
         phy_procedures_eNB_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
         if ((subframe_select(&PHY_vars_eNB_g[0][proc->CC_id]->lte_frame_parms,proc->subframe_rx) == SF_S)) {
           phy_procedures_eNB_S_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
         }
-        printf("done phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+//        printf("done phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
         proc->frame_rx++;
         if (proc->frame_rx==1024)
           proc->frame_rx=0;

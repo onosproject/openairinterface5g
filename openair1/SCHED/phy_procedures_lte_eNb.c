@@ -49,7 +49,7 @@
 #include "SCHED/phy_procedures_emos.h"
 #endif
 
-#define DEBUG_PHY_PROC
+//#define DEBUG_PHY_PROC
 //#define DEBUG_ULSCH
 
 //#ifdef OPENAIR2
@@ -823,7 +823,7 @@ void fill_dci(DCI_PDU *DCI_pdu, uint8_t sched_subframe, PHY_VARS_eNB *phy_vars_e
         ((DCI1A_5MHz_FDD_t*)&bcch_pdu)->harq_pid          = 0;
         ((DCI1A_5MHz_FDD_t*)&bcch_pdu)->TPC               = 1;      // set to 3 PRB
         memcpy((void*)&DCI_pdu->dci_alloc[0].dci_pdu[0],&bcch_pdu,sizeof(DCI1A_5MHz_TDD_1_6_t));
-printf("!!!!!!!!!!!!!!!!!!!! %s CC %d\n", __FILENAME__, phy_vars_eNB->CC_id);
+//printf("!!!!!!!!!!!!!!!!!!!! %s CC %d\n", __FILENAME__, phy_vars_eNB->CC_id);
       } else {
         DCI_pdu->dci_alloc[0].dci_length = sizeof_DCI1A_5MHz_TDD_1_6_t;
         ((DCI1A_5MHz_TDD_1_6_t*)&bcch_pdu)->type              = 1;
@@ -2669,10 +2669,10 @@ void phy_procedures_eNB_TX(unsigned char sched_subframe,PHY_VARS_eNB *phy_vars_e
 
 #endif
 
-printf("eNB DLSCH SDU (len %d bits): \n", (int)phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[harq_pid]->TBS);
-for (i=0; i<phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[harq_pid]->TBS>>3; i++)
-printf("%"PRIx8".",DLSCH_pdu[i]);
-printf("\n");
+//printf("eNB DLSCH SDU (len %d bits): \n", (int)phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[harq_pid]->TBS);
+//for (i=0; i<phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[harq_pid]->TBS>>3; i++)
+//printf("%"PRIx8".",DLSCH_pdu[i]);
+//printf("\n");
 
 #ifdef DEBUG_PHY_PROC
 #ifdef DEBUG_DLSCH
@@ -3027,7 +3027,7 @@ void process_HARQ_feedback(uint8_t UE_id,
 
           //    msg("[PHY] eNB %d Process %d is active (%d)\n",phy_vars_eNB->Mod_id,dl_harq_pid[m],dlsch_ACK[m]);
           if ( dlsch_ACK[mp]==0) {
-printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_flag);
+//printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_flag);
             // Received NAK
 #ifdef DEBUG_PHY_PROC
             LOG_D(PHY,"[eNB %d][PDSCH %x/%d] M = %d, m= %d, mp=%d NAK Received in round %d, requesting retransmission\n",phy_vars_eNB->Mod_id,
@@ -3067,7 +3067,7 @@ printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_fl
 #endif
             ue_stats->dlsch_ACK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
 
-printf("ACKNACK got an ACK! CC %d\n", phy_vars_eNB->CC_id);
+//printf("ACKNACK got an ACK! CC %d\n", phy_vars_eNB->CC_id);
             // Received ACK so set round to 0 and set dlsch_harq_pid IDLE
             dlsch_harq_proc->round  = 0;
             dlsch_harq_proc->status = SCH_IDLE;
@@ -3156,7 +3156,7 @@ void process_HARQ_feedback_hack(uint8_t UE_id,
 
     dlsch_ACK[0] = ack;
 
-printf("ACKNACK process_HARQ_feedback_hack fr/subfr %d %d ack %d dlsch_ACK[0] %d _eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1] %d CC %d\n", frame, subframe, ack, dlsch_ACK[0], phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1], phy_vars_eNB->CC_id);
+//printf("ACKNACK process_HARQ_feedback_hack fr/subfr %d %d ack %d dlsch_ACK[0] %d _eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1] %d CC %d\n", frame, subframe, ack, dlsch_ACK[0], phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1], phy_vars_eNB->CC_id);
     LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d for subframe %d\n",phy_vars_eNB->Mod_id,
           frame,dlsch_ACK[0],subframe_m4);
 
@@ -3297,7 +3297,7 @@ printf("ACKNACK process_HARQ_feedback_hack fr/subfr %d %d ack %d dlsch_ACK[0] %d
 
           //    msg("[PHY] eNB %d Process %d is active (%d)\n",phy_vars_eNB->Mod_id,dl_harq_pid[m],dlsch_ACK[m]);
           if ( dlsch_ACK[mp]==0) {
-printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_flag);
+//printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_flag);
             // Received NAK
 #ifdef DEBUG_PHY_PROC
             LOG_D(PHY,"[eNB %d][PDSCH %x/%d] M = %d, m= %d, mp=%d NAK Received in round %d, requesting retransmission\n",phy_vars_eNB->Mod_id,
@@ -3337,7 +3337,7 @@ printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_fl
 #endif
             ue_stats->dlsch_ACK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
 
-printf("ACKNACK got an ACK! CC %d\n", phy_vars_eNB->CC_id);
+//printf("ACKNACK got an ACK! CC %d\n", phy_vars_eNB->CC_id);
             // Received ACK so set round to 0 and set dlsch_harq_pid IDLE
             dlsch_harq_proc->round  = 0;
             dlsch_harq_proc->status = SCH_IDLE;
@@ -4032,7 +4032,7 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
       start_meas(&phy_vars_eNB->ulsch_demodulation_stats);
 
       if (abstraction_flag==0) {
-printf("**** fr/subfr %d %d call rx_ulsch CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
+//printf("**** fr/subfr %d %d call rx_ulsch CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
         rx_ulsch(phy_vars_eNB,
                  sched_subframe,
                  phy_vars_eNB->eNB_UE_stats[i].sector,  // this is the effective sector id
@@ -4123,7 +4123,7 @@ printf("**** fr/subfr %d %d call rx_ulsch CC %d\n", frame, subframe, phy_vars_eN
 #endif
       phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->subframe_scheduling_flag=0;
 
-printf("phy_vars_eNB->ulsch_eNB[%d]->harq_processes[%d]->cqi_crc_status == %d\n", i, harq_pid, phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->cqi_crc_status);
+//printf("phy_vars_eNB->ulsch_eNB[%d]->harq_processes[%d]->cqi_crc_status == %d\n", i, harq_pid, phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->cqi_crc_status);
       if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->cqi_crc_status == 1) {
 #ifdef DEBUG_PHY_PROC
         //if (((phy_vars_eNB->proc[sched_subframe].frame_tx%10) == 0) || (phy_vars_eNB->proc[sched_subframe].frame_tx < 50))
@@ -4398,7 +4398,7 @@ printf("phy_vars_eNB->ulsch_eNB[%d]->harq_processes[%d]->cqi_crc_status == %d\n"
 
 #ifdef OPENAIR2
           //    if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->calibration_flag == 0) {
-printf("**** fr/subfr %d %d call mac_xface->rx_sdu CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
+//printf("**** fr/subfr %d %d call mac_xface->rx_sdu CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
           mac_xface->rx_sdu(phy_vars_eNB->Mod_id,
                             phy_vars_eNB->CC_id,
                             frame,subframe,
@@ -4466,14 +4466,14 @@ printf("**** fr/subfr %d %d call mac_xface->rx_sdu CC %d\n", frame, subframe, ph
         int ack, z, ack_bit = 0;
         int harq_pid = subframe2harq_pid( &phy_vars_eNB->lte_frame_parms,frame,subframe);
         PHY_VARS_eNB *cc;
-printf("ACKNACK before call process_HARQ_feedback_hack O_ACK %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK);
+//printf("ACKNACK before call process_HARQ_feedback_hack O_ACK %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK);
         for (z = 0; z < 2; z++) {
           /* we suppose UE pCC id 0 and secondary CC id 1 */
           cc = PHY_vars_eNB_g[0][z];
           if (cc->dlsch_eNB[i][0]->subframe_tx[sf]>0) {
             ack = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[ack_bit];
             ack_bit++;
-printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d\n", frame, subframe, cc->CC_id);
+//printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d\n", frame, subframe, cc->CC_id);
             process_HARQ_feedback_hack(i,
                                   sched_subframe,
                                   cc,
@@ -4483,7 +4483,7 @@ printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d\n", fr
                                   0, ack);
           }
         }
-printf("ACKNACK after call process_HARQ_feedback_hack ack_bit %d\n", ack_bit);
+//printf("ACKNACK after call process_HARQ_feedback_hack ack_bit %d\n", ack_bit);
       }
 
 #ifdef DEBUG_PHY_PROC
@@ -4902,7 +4902,7 @@ printf("ACKNACK after call process_HARQ_feedback_hack ack_bit %d\n", ack_bit);
             i, (uint16_t)phy_vars_eNB->ulsch_eNB[i]->cba_rnti[i%num_active_cba_groups],mode_string[phy_vars_eNB->eNB_UE_stats[i].mode]);
 #endif
 
-printf("**** fr/subfr %d %d call rx_ulsch (2nd) CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
+//printf("**** fr/subfr %d %d call rx_ulsch (2nd) CC %d\n", frame, subframe, phy_vars_eNB->CC_id);
       if (abstraction_flag==0) {
         rx_ulsch(phy_vars_eNB,
                  sched_subframe,

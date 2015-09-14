@@ -1007,7 +1007,7 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
                   cqi_req_CA = 2;
                 else
                   cqi_req_CA = 3;
-printf("!! generate DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t with cqi_req == 3 (var cqi_req %d)\n", cqi_req);
+//printf("!! generate DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t with cqi_req == 3 (var cqi_req %d)\n", cqi_req);
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->type     = 0;
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->hopping  = 0;
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->rballoc  = rballoc;
@@ -1376,6 +1376,7 @@ void schedule_ulsch_cba_rnti(module_id_t module_idP, unsigned char cooperation_f
               ((DCI0_5MHz_FDD_t *)ULSCH_dci)->cshift   = cba_group;
               ((DCI0_5MHz_FDD_t *)ULSCH_dci)->cqi_req  = 1;
 printf("%s:%d abort for debug\n", __FILE__, __LINE__);
+abort();
 
               //add_ue_spec_dci
               add_common_dci(DCI_pdu,
