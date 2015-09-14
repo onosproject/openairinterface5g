@@ -26,6 +26,16 @@
    Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
 
  *******************************************************************************/
+/*! \file oaisim_functions.c
+* \brief function primitives of oaisim
+* \author Navid Nikaein 
+* \date 2013-2015
+* \version 1.0
+* \company Eurecom
+* \email: openair_tech@eurecom.fr
+* \note
+* \warning
+*/
 
 
 #include <stdlib.h>
@@ -59,7 +69,7 @@
 #include "UTIL/OPT/opt.h"
 #include "UTIL/OTG/otg_config.h"
 #include "UTIL/OTG/otg_tx.h"
-#if defined (ENABLE_RAL)
+#if ENABLE_RAL
 #include "lteRALenb.h"
 #include "lteRALue.h"
 #endif
@@ -271,7 +281,7 @@ void get_simulation_options(int argc, char *argv[])
       printf("setting CBA backoff to %d\n", cba_backoff);
       break;
 
-#if defined(ENABLE_RAL)
+#if ENABLE_RAL
 
     case LONG_OPTION_ENB_RAL_LISTENING_PORT:
       if (optarg) {
@@ -890,7 +900,7 @@ void init_openair1(void)
 {
   module_id_t UE_id, eNB_id;
   uint8_t CC_id;
-#if defined(ENABLE_RAL)
+#if ENABLE_RAL
   int list_index;
 #endif
 
@@ -986,7 +996,7 @@ void init_openair1(void)
       PHY_vars_UE_g[UE_id][CC_id]->current_dlsch_cqi[0] = 10;
 
       LOG_I(EMU, "UE %d mode is initialized to %d\n", UE_id, PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] );
-#if defined(ENABLE_RAL)
+#if ENABLE_RAL
       PHY_vars_UE_g[UE_id][CC_id]->ral_thresholds_timed = hashtable_create (64, NULL, NULL);
 
       for (list_index = 0; list_index < RAL_LINK_PARAM_GEN_MAX; list_index++) {

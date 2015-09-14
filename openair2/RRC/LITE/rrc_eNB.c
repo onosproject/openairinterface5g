@@ -93,7 +93,7 @@
 #   include "intertask_interface.h"
 #endif
 
-#ifdef ENABLE_RAL
+#if ENABLE_RAL
 #   include "rrc_eNB_ral.h"
 #endif
 
@@ -538,6 +538,23 @@ rrc_eNB_get_next_transaction_identifier(
 //        return (i);
 //}
 
+
+//-----------------------------------------------------------------------------
+// return 1 if there is already an UE with ue_identityP, 0 otherwise
+static int
+rrc_eNB_ue_context_random_exist(
+  const protocol_ctxt_t* const ctxt_pP,
+  const uint64_t               ue_identityP
+)
+//-----------------------------------------------------------------------------
+{
+  struct rrc_eNB_ue_context_s*        ue_context_p = NULL;
+  RB_FOREACH(ue_context_p, rrc_ue_tree_s, &(eNB_rrc_inst[ctxt_pP->module_id].rrc_ue_head)) {
+    if (ue_context_p->ue_context.random_ue_identity == ue_identityP)
+      return 1;
+  }
+  return 0;
+}
 
 //-----------------------------------------------------------------------------
 // return a new ue context structure if ue_identityP, ctxt_pP->rnti not found in collection
@@ -3489,7 +3506,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
                      ue_context_pP->ue_context.kenb, &kRRCint);
 
 #endif
-#ifdef ENABLE_RAL
+#if ENABLE_RAL
   {
     MessageDef                         *message_ral_p = NULL;
     rrc_ral_connection_reconfiguration_ind_t connection_reconfiguration_ind;
@@ -4172,10 +4189,23 @@ rrc_eNB_decode_ccch(
       } else {
         rrcConnectionRequest = &ul_ccch_msg->message.choice.c1.choice.rrcConnectionRequest.criticalExtensions.choice.rrcConnectionRequest_r8;
         {
+          AssertFatal(rrcConnectionRequest->ue_Identity.present == InitialUE_Identity_PR_randomValue,
+                      "unsupported InitialUE-Identity in RRCConnectionRequest");
+          AssertFatal(rrcConnectionRequest->ue_Identity.choice.randomValue.size == 5,
+                      "wrong InitialUE-Identity randomValue size, expected 5, provided %d",
+                      rrcConnectionRequest->ue_Identity.choice.randomValue.size);
           memcpy(((uint8_t*) & random_value) + 3,
                  rrcConnectionRequest->ue_Identity.choice.randomValue.buf,
                  rrcConnectionRequest->ue_Identity.choice.randomValue.size);
-          ue_context_p = rrc_eNB_get_next_free_ue_context(ctxt_pP, random_value);
+          /* if there is already a registered UE (with another RNTI) with this random_value,
+           * the current one must be removed from MAC/PHY (zombie UE)
+           */
+          if (rrc_eNB_ue_context_random_exist(ctxt_pP, random_value)) {
+            AssertFatal(0 == 1, "TODO: remove UE fro MAC/PHY (how?)");
+            ue_context_p = NULL;
+          } else {
+            ue_context_p = rrc_eNB_get_next_free_ue_context(ctxt_pP, random_value);
+          }
         }
         LOG_D(RRC,
               PROTOCOL_RRC_CTXT_UE_FMT" UE context: %X\n",
@@ -5152,12 +5182,11 @@ case CROUX_HACK:
       openair_rrc_lite_eNB_configuration(ENB_INSTANCE_TO_MODULE_ID(instance), &RRC_CONFIGURATION_REQ(msg_p));
       break;
 
-#   ifdef ENABLE_RAL
+#   if ENABLE_RAL
 
     case RRC_RAL_CONFIGURE_THRESHOLD_REQ:
       rrc_enb_ral_handle_configure_threshold_request(instance, msg_p);
       break;
-#   endif
 
       //SPECTRA: Add the RRC connection reconfiguration with Second cell configuration
     case RRC_RAL_CONNECTION_RECONFIGURATION_REQ:
@@ -5171,13 +5200,11 @@ case CROUX_HACK:
                                     msg_p->ittiMsgHeader.lte_time.slot);
       LOG_I(RRC, "[eNB %d] Send RRC_RAL_CONNECTION_RECONFIGURATION_REQ to UE %s\n", instance, msg_name_p);
       //Method RRC connection reconfiguration command with Second cell configuration
-#   ifdef ENABLE_RAL
       //rrc_eNB_generate_RRCConnectionReconfiguration_SCell(instance, 0/* TODO put frameP number ! */, /*ue_mod_id force ue_mod_id to first UE*/0, 36126);
-#   else
       //rrc_eNB_generate_defaultRRCConnectionReconfiguration(instance, 0/* TODO put frameP number ! */, /*ue_mod_id force ue_mod_id to first UE*/0,
       //                                                     eNB_rrc_inst[instance].HO_flag);
-#   endif
       break;
+#   endif
 
     default:
       LOG_E(RRC, "[eNB %d] Received unexpected message %s\n", instance, msg_name_p);

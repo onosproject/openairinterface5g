@@ -75,7 +75,7 @@
 #include "RRC/NAS/nas_config.h"
 #include "RRC/NAS/rb_config.h"
 #endif
-#ifdef ENABLE_RAL
+#if ENABLE_RAL
 #include "rrc_UE_ral.h"
 #endif
 
@@ -189,7 +189,7 @@ static int rrc_set_state (module_id_t ue_mod_idP, Rrc_State_t state)
 //-----------------------------------------------------------------------------
 static int rrc_set_sub_state( module_id_t ue_mod_idP, Rrc_Sub_State_t subState )
 {
-#if (defined(ENABLE_ITTI) && (defined(ENABLE_USE_MME) || defined(ENABLE_RAL)))
+#if (defined(ENABLE_ITTI) && (defined(ENABLE_USE_MME) || ENABLE_RAL))
 
   switch (UE_rrc_inst[ue_mod_idP].RrcState) {
   case RRC_STATE_INACTIVE:
@@ -1061,7 +1061,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #endif
                            );
 
-#ifdef ENABLE_RAL
+#if ENABLE_RAL
     // first msg that includes srb config
     UE_rrc_inst[ctxt_pP->module_id].num_srb=radioResourceConfigDedicated->srb_ToAddModList->list.count;
 #endif
@@ -1613,7 +1613,7 @@ rrc_ue_process_rrcConnectionReconfiguration(
         free (rrcConnectionReconfiguration_r8->dedicatedInfoNASList);
       }
 
-#ifdef ENABLE_RAL
+#if ENABLE_RAL
       {
         MessageDef                                 *message_ral_p = NULL;
         rrc_ral_connection_reestablishment_ind_t    connection_reestablishment_ind;
@@ -1975,7 +1975,7 @@ rrc_ue_decode_dcch(
           LOG_I(RRC, "[UE %d] State = RRC_RECONFIGURED during HO (eNB %d)\n",
                 ctxt_pP->module_id, target_eNB_index);
 #if defined(ENABLE_ITTI)
-#ifdef ENABLE_RAL
+#if ENABLE_RAL
           {
             MessageDef                                 *message_ral_p = NULL;
             rrc_ral_connection_reconfiguration_ho_ind_t connection_reconfiguration_ho_ind;
@@ -2032,7 +2032,7 @@ rrc_ue_decode_dcch(
                 ctxt_pP->module_id,
                 eNB_indexP);
 #if defined(ENABLE_ITTI)
-#ifdef ENABLE_RAL
+#if ENABLE_RAL
           {
             MessageDef                                 *message_ral_p = NULL;
             rrc_ral_connection_reconfiguration_ind_t    connection_reconfiguration_ind;
@@ -2097,7 +2097,7 @@ rrc_ue_decode_dcch(
         }
 
         itti_send_msg_to_task(TASK_NAS_UE, ctxt_pP->instance, msg_p);
-#if defined(ENABLE_RAL)
+#if ENABLE_RAL
         msg_p = itti_alloc_new_message(TASK_RRC_UE, RRC_RAL_CONNECTION_RELEASE_IND);
         RRC_RAL_CONNECTION_RELEASE_IND(msg_p).ue_id = ctxt_pP->module_id;
         itti_send_msg_to_task(TASK_RAL_UE, ctxt_pP->instance, msg_p);
@@ -3026,19 +3026,19 @@ uint64_t arfcn_to_freq(long arfcn) {
   else if (arfcn <6000) // Band 18
     return((uint64_t)860000000 + ((arfcn-5850)*100000));
   else if (arfcn <6150) // Band 19
-    return((uint64_t)875000000 + ((arfcn-5850)*100000));
+    return((uint64_t)875000000 + ((arfcn-6000)*100000));
   else if (arfcn <6450) // Band 20
-    return((uint64_t)791000000 + ((arfcn-5850)*100000));
+    return((uint64_t)791000000 + ((arfcn-6150)*100000));
   else if (arfcn <6600) // Band 21
-    return((uint64_t)1495900000 + ((arfcn-5850)*100000));
+    return((uint64_t)1495900000 + ((arfcn-6450)*100000));
   else if (arfcn <7500) // Band 22
-    return((uint64_t)351000000 + ((arfcn-5850)*100000));
+    return((uint64_t)351000000 + ((arfcn-6600)*100000));
   else if (arfcn <7700) // Band 23
-    return((uint64_t)2180000000 + ((arfcn-5850)*100000));
+    return((uint64_t)2180000000 + ((arfcn-7500)*100000));
   else if (arfcn <8040) // Band 24
-    return((uint64_t)1525000000 + ((arfcn-5850)*100000));
+    return((uint64_t)1525000000 + ((arfcn-7700)*100000));
   else if (arfcn <8690) // Band 25
-    return((uint64_t)1930000000 + ((arfcn-5850)*100000));
+    return((uint64_t)1930000000 + ((arfcn-8040)*100000));
   else if (arfcn <36200) // Band 33
     return((uint64_t)1900000000 + ((arfcn-36000)*100000));
   else if (arfcn <36350) // Band 34
@@ -3068,7 +3068,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 static void dump_sib5( SystemInformationBlockType5_t *sib5 )
 {
   InterFreqCarrierFreqList_t interFreqCarrierFreqList = sib5->interFreqCarrierFreqList;
-  int i;
+  int i,j;
   InterFreqCarrierFreqInfo_t *ifcfInfo;
 
   LOG_I( RRC, "Dumping SIB5 (see TS36.331 V8.21.0)\n" );
@@ -3118,27 +3118,28 @@ static void dump_sib5( SystemInformationBlockType5_t *sib5 )
 	    *ifcfInfo->cellReselectionPriority);
     }
     LOG_I(RRC,"   NeighCellConfig  : ");
-    for (i=0;i<ifcfInfo->neighCellConfig.size;i++) {
-      LOG_T(RRC,"%2x ",ifcfInfo->neighCellConfig.buf[i]);
+    for (j=0;j<ifcfInfo->neighCellConfig.size;j++) {
+      printf("%2x ",ifcfInfo->neighCellConfig.buf[j]);
     }
+    printf("\n");
     if (ifcfInfo->q_OffsetFreq)
-      LOG_I(RRC,"   Q_OffsetFreq : %d",Qoffsettab[*ifcfInfo->q_OffsetFreq]);
+      LOG_I(RRC,"   Q_OffsetFreq : %d\n",Qoffsettab[*ifcfInfo->q_OffsetFreq]);
     if (ifcfInfo->interFreqNeighCellList) {
       
-      for (i=0;i<ifcfInfo->interFreqNeighCellList->list.count;i++) {
+      for (j=0;j<ifcfInfo->interFreqNeighCellList->list.count;j++) {
 	LOG_I(RRC,"   Cell %d\n");
-	LOG_I(RRC,"      PhysCellId : %d",ifcfInfo->interFreqNeighCellList->list.array[i]->physCellId);
-	LOG_I(RRC,"      Q_OffsetRange : %d",ifcfInfo->interFreqNeighCellList->list.array[i]->q_OffsetCell);
+	LOG_I(RRC,"      PhysCellId : %d\n",ifcfInfo->interFreqNeighCellList->list.array[j]->physCellId);
+	LOG_I(RRC,"      Q_OffsetRange : %d\n",ifcfInfo->interFreqNeighCellList->list.array[j]->q_OffsetCell);
 	
       }
     }
     if (ifcfInfo->interFreqBlackCellList) {
       
-      for (i=0;i<ifcfInfo->interFreqBlackCellList->list.count;i++) {
+      for (j=0;j<ifcfInfo->interFreqBlackCellList->list.count;j++) {
 	LOG_I(RRC,"   Cell %d\n");
-	LOG_I(RRC,"      PhysCellId start: %d\n",ifcfInfo->interFreqBlackCellList->list.array[i]->start);
+	LOG_I(RRC,"      PhysCellId start: %d\n",ifcfInfo->interFreqBlackCellList->list.array[j]->start);
 	if (ifcfInfo->interFreqBlackCellList->list.array[i]->range) {
-	  LOG_I(RRC,"      PhysCellId Range : %d\n",ifcfInfo->interFreqBlackCellList->list.array[i]->range);
+	  LOG_I(RRC,"      PhysCellId Range : %d\n",ifcfInfo->interFreqBlackCellList->list.array[j]->range);
 	}
       }
     }
@@ -3242,7 +3243,7 @@ static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_in
 	if (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State == RRC_IDLE) {
 	  LOG_I( RRC, "[UE %d] Received SIB1/SIB2/SIB3 Switching to RRC_SI_RECEIVED\n", ctxt_pP->module_id );
 	  UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State = RRC_SI_RECEIVED;
-#ifdef ENABLE_RAL
+#if ENABLE_RAL
 	  {
 	    MessageDef                            *message_ral_p = NULL;
 	    rrc_ral_system_information_ind_t       ral_si_ind;
@@ -4170,7 +4171,7 @@ void *rrc_ue_task( void *args_p )
 
 # endif
 
-# if defined(ENABLE_RAL)
+# if ENABLE_RAL
 
     case RRC_RAL_SCAN_REQ:
       LOG_D(RRC, "[UE %d] Received %s: state %d\n", ue_mod_id, msg_name);

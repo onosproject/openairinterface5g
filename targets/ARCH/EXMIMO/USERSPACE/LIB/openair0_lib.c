@@ -482,6 +482,10 @@ int openair0_set_frequencies(openair0_device* device, openair0_config_t *openair
   
 }
 
+int openair0_set_gains(openair0_device* device, openair0_config_t *openair0_cfg){
+  return(0);
+}
+
 unsigned int *openair0_daq_cnt(void) {
 
   return((unsigned int *)openair0_exmimo_pci[0].rxcnt_ptr[0]);

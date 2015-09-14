@@ -114,6 +114,10 @@ typedef struct {
   uint8_t *c[MAX_NUM_DLSCH_SEGMENTS];
   /// RTC values for each segment (for definition see 36-212 V8.6 2009-03, p.15)
   uint32_t RTC[MAX_NUM_DLSCH_SEGMENTS];
+  /// Frame where current HARQ round was sent
+  uint32_t frame;
+  /// Subframe where current HARQ round was sent
+  uint32_t subframe;
   /// Index of current HARQ round for this DLSCH
   uint8_t round;
   /// MCS format for this DLSCH
@@ -124,6 +128,8 @@ typedef struct {
   MIMO_mode_t mimo_mode;
   /// Current RB allocation
   uint32_t rb_alloc[4];
+  /// distributed/localized flag
+  vrb_t vrb_type;
   /// Current subband PMI allocation
   uint16_t pmi_alloc;
   /// Current subband RI allocation
@@ -553,8 +559,12 @@ typedef struct {
   uint16_t nb_rb;
   /// Current subband PMI allocation
   uint16_t pmi_alloc;
-  /// Current RB allocation
-  uint32_t rb_alloc[4];
+  /// Current RB allocation (even slots)
+  uint32_t rb_alloc_even[4];
+  /// Current RB allocation (odd slots)
+  uint32_t rb_alloc_odd[4];
+  /// distributed/localized flag
+  vrb_t vrb_type;
   /// downlink power offset field
   uint8_t dl_power_off;
 } LTE_DL_UE_HARQ_t;

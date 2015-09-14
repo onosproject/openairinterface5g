@@ -29,8 +29,8 @@
 
 /*! \file oaisim_config.c
 * \brief Configuration of oaisim
-* \author Navid Nikaein & Andre Gomes (One source)
-* \date 2014
+* \author Navid Nikaein 
+* \date 2013-2015
 * \version 1.0
 * \company Eurecom
 * \email: openair_tech@eurecom.fr
@@ -55,7 +55,7 @@
 #include "UTIL/OTG/otg_externs.h"
 #include "oml.h"
 #include "msc.h"
-#ifdef ENABLE_RAL
+#if ENABLE_RAL
 #include "lteRALenb.h"
 #include "lteRALue.h"
 #endif
@@ -353,7 +353,7 @@ void oaisim_config(void)
   }
 
 
-#ifdef ENABLE_RAL
+#if ENABLE_RAL
   mRAL_init_default_values();
   eRAL_init_default_values();
 #endif
@@ -432,7 +432,7 @@ int olg_config(void)
   set_comp_log(SCTP,  LOG_DEBUG, LOG_MED,1);
 #endif
 
-#if defined(ENABLE_RAL)
+#if ENABLE_RAL
   set_comp_log(RAL_ENB, LOG_TRACE, LOG_MED,1);
   set_comp_log(RAL_UE,  LOG_TRACE, LOG_MED,1);
   set_log(RAL_ENB,  LOG_DEBUG, 1);

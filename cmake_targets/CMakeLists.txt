@@ -131,14 +131,33 @@ Message("Architecture is ${CMAKE_SYSTEM_PROCESSOR}")
 if (CMAKE_SYSTEM_PROCESSOR STREQUAL "armv7l")
   set(C_FLAGS_PROCESSOR "-gdwarf-2 -mfloat-abi=hard -mfpu=neon -lgcc -lrt")
 else (CMAKE_SYSTEM_PROCESSOR STREQUAL "armv7l")
-  set(C_FLAGS_PROCESSOR "-msse4.2")
+  file(STRINGS "/proc/cpuinfo" CPUINFO REGEX flags LIMIT_COUNT 1)
+  #Message("CPUINFO is ${CPUINFO}")
+  if (CPUINFO MATCHES "avx2")
+    set(C_FLAGS_PROCESSOR "${C_FLAGS_PROCESSOR} -mavx2")
+  endif()
+  if (CPUINFO MATCHES "sse4_2")
+    set(C_FLAGS_PROCESSOR "${C_FLAGS_PROCESSOR} -msse4.2")
+  endif()
+  if (CPUINFO MATCHES "sse4_1")
+    set(C_FLAGS_PROCESSOR "${C_FLAGS_PROCESSOR} -msse4.1")
+  endif()
+  if (CPUINFO MATCHES "ssse3")
+    set(C_FLAGS_PROCESSOR "${C_FLAGS_PROCESSOR} -mssse3")
+  endif()
 endif()
+Message("C_FLAGS_PROCESSOR is ${C_FLAGS_PROCESSOR}")
+
+
 #
 set(CMAKE_C_FLAGS
   "${CMAKE_C_FLAGS} ${C_FLAGS_PROCESSOR} -std=gnu99 -Wall -Wstrict-prototypes -fno-strict-aliasing -rdynamic -funroll-loops -Wno-packed-bitfield-compat -fPIC ")
 # add autotools definitions that were maybe used!
 set(CMAKE_C_FLAGS
   "${CMAKE_C_FLAGS} -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_FCNTL_H=1 -DHAVE_ARPA_INET_H=1 -DHAVE_SYS_TIME_H=1 -DHAVE_SYS_SOCKET_H=1 -DHAVE_STRERROR=1 -DHAVE_SOCKET=1 -DHAVE_MEMSET=1 -DHAVE_GETTIMEOFDAY=1 -DHAVE_STDLIB_H=1 -DHAVE_MALLOC=1 -DHAVE_LIBSCTP"
+)
+set(CMAKE_CXX_FLAGS
+  "${CMAKE_CXX_FLAGS} ${C_FLAGS_PROCESSOR}"
 )
 # set a flag for changes in the source code
 # these changes are related to hardcoded path to include .h files
@@ -173,7 +192,10 @@ add_boolean_option(MSG_PRINT  False "print debug messages")
 add_boolean_option(DISABLE_XER_PRINT False "print XER Format")
 add_boolean_option(XER_PRINT False "print XER Format")
 add_boolean_option(RRC_MSG_PRINT False "print RRC messages")
-add_boolean_option(PDCP_MSG_PRINT False "print PDCP messages")
+add_boolean_option(PDCP_MSG_PRINT False "print PDCP messages to /tmp/pdcp.log")
+add_boolean_option(DEBUG_PDCP_PAYLOAD False "print PDCP PDU to stdout")  # if true, make sure that global and PDCP log levels are trace 
+add_boolean_option(DEBUG_MAC_INTERFACE False "print MAC-RLC PDU exchange to stdout") # if true, make sure that global and PDCP log levels are trace 
+add_boolean_option(TRACE_RLC_PAYLOAD False "print RLC PDU to stdout") # if true, make sure that global and PDCP log levels are trace 
 add_boolean_option(TEST_OMG False "???")
 add_boolean_option(DEBUG_OMG False "???")
 add_boolean_option(XFORMS True "This adds the possibility to see the signal oscilloscope")
@@ -364,15 +386,17 @@ elseif (${RF_BOARD} STREQUAL "OAI_BLADERF")
   set(HW_SOURCE ${HW_SOURCE}
     ${OPENAIR_TARGETS}/ARCH/BLADERF/USERSPACE/LIB/bladerf_lib.c
     )
-  LINK_DIRECTORIES("/usr/lib/x86_64-linux-gnu/")
+  LINK_DIRECTORIES("/usr/lib/x86_64-linux-gnu")
   set(option_HW_lib "bladeRF")
+#set(LOWLATENCY False)
 
 elseif (${RF_BOARD} STREQUAL "ETHERNET")
   include_directories ("${OPENAIR_TARGETS}/ARCH/ETHERNET/USERSPACE/LIB")
   set(HW_SOURCE ${HW_SOURCE}
-     ${OPENAIR_TARGETS}/ARCH/ETHERNET/USERSPACE/LIB/ethernet_lib.c
-  )
-
+    ${OPENAIR_TARGETS}/ARCH/ETHERNET/USERSPACE/LIB/ethernet_lib.c
+    )
+  set(LOWLATENCY False)
+  
 elseif (${RF_BOARD} STREQUAL "CPRIGW")
   set(HW_SOURCE ${HW_SOURCE}
     ${OPENAIR_TARGETS}/ARCH/CPRIGW/USERSPACE/LIB/cprigw_lib.c
@@ -396,7 +420,7 @@ add_boolean_option(OAI_NW_DRIVER_TYPE_ETHERNET False "????")
 add_boolean_option(DISABLE_USE_NAS False "???")
 add_boolean_option(ENABLE_STANDALONE_EPC True "Compile MME, SGW and PGW in a single executable")
 add_boolean_option(EPC_BUILD False "???")
-add_boolean_option(LOWLATENCY  True "Use the Linux scheduler SCHED_DEADLINE: kernel >= 3.14")
+add_boolean_option(LOWLATENCY True "Use the Linux scheduler SCHED_DEADLINE: kernel >= 3.14")
 add_boolean_option(NAS_ADDRESS_FIX False "specific to oaisim: for nasmesh driver")
 add_boolean_option(NAS_NETLINK False "???? Must be True to compile nasmesh driver without rtai")
 add_boolean_option(OAISIM False "specific to oaisim")
@@ -530,7 +554,7 @@ add_boolean_option(RRC_DEFAULT_RAB_IS_AM       False  "Otherwise it is UM, confi
 # SPECIFIC OPTIONS
 ##########################
 add_boolean_option(SPECTRA False "???")
-add_boolean_option(MIH_C_MEDIEVAL_EXTENSIONS True "EXTENSIONS TO MIH 802.21 IN CONTEXT OF IST PROJECT CALLED MEDIEVAL")
+add_boolean_option(MIH_C_MEDIEVAL_EXTENSIONS False "EXTENSIONS TO MIH 802.21 IN CONTEXT OF IST PROJECT CALLED MEDIEVAL")
 
 
 
@@ -631,7 +655,8 @@ include_directories(${OPENAIR_DIR}/common/utils/collection/hashtable)
 if (MESSAGE_CHART_GENERATOR)
   add_library(MSC  
     ${OPENAIR_DIR}/common/utils/msc/msc.c
-  )
+  )  
+  set(MSC_LIB MSC)
 endif()
 include_directories(${OPENAIR_DIR}/common/utils/msc)
 
@@ -904,7 +929,7 @@ if (${ENABLE_RAL})
   set(RAL_LIB RAL)
 endif()
 
-if(MIH_C_MEDIEVAL_EXTENSIONS)
+if(${MIH_C_MEDIEVAL_EXTENSIONS})
   set(MIH_SRC
     ${RAL_LTE_DIR}INTERFACE-802.21/C/MIH_C_header_codec.c
     ${RAL_LTE_DIR}INTERFACE-802.21/C/MIH_C_msg_codec.c
@@ -1158,6 +1183,7 @@ set(libnas_ies_OBJS
   ${NAS_SRC}COMMON/IES/MobileStationClassmark2.c
   ${NAS_SRC}COMMON/IES/MobileStationClassmark3.c
   ${NAS_SRC}COMMON/IES/MsNetworkCapability.c
+  ${NAS_SRC}COMMON/IES/MsNetworkFeatureSupport.c
   ${NAS_SRC}COMMON/IES/NasKeySetIdentifier.c
   ${NAS_SRC}COMMON/IES/NasMessageContainer.c
   ${NAS_SRC}COMMON/IES/NasRequestType.c
@@ -1206,7 +1232,7 @@ set (libnas_utils_OBJS
   ${NAS_SRC}COMMON/UTIL/OctetString.c
 )
 
-if(NAS_UE)
+if(NAS_UE) 
   set(libnas_ue_api_OBJS
     ${NAS_SRC}UE/API/USER/at_command.c
     ${NAS_SRC}UE/API/USER/at_error.c
@@ -1294,6 +1320,8 @@ if(NAS_UE)
     ${libnas_ue_esm_OBJS}
     ${libnas_ue_esm_sap_OBJS}
   )
+  set(NAS_UE_LIB LIB_NAS_UE)
+
   include_directories(${NAS_SRC}UE)
   include_directories(${NAS_SRC}UE/API/USER)
   include_directories(${NAS_SRC}UE/API/USIM)
@@ -1541,17 +1569,13 @@ add_executable(lte-softmodem
   ${XFORMS_SOURCE}
   ${XFORMS_SOURCE_SOFTMODEM}
   )
-if (MESSAGE_CHART_GENERATOR)
+
 target_link_libraries (lte-softmodem
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS MSC L2 ${RAL_LIB} LIB_NAS_UE ${ITTI_LIB} ${MIH_LIB}
+  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${MIH_LIB}
   -Wl,--end-group )
-else (MESSAGE_CHART_GENERATOR)
-target_link_libraries (lte-softmodem
-  -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${RAL_LIB} LIB_NAS_UE ${ITTI_LIB} ${MIH_LIB}
-  -Wl,--end-group )
-endif(MESSAGE_CHART_GENERATOR)
+
+
 target_link_libraries (lte-softmodem ${LIBXML2_LIBRARIES})
 target_link_libraries (lte-softmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp ${option_HW_lib} ${XFORMS_LIBRARIES} )
 target_link_libraries (lte-softmodem ${LIBBOOST_LIBRARIES})
@@ -1570,23 +1594,19 @@ add_executable(lte-softmodem-nos1
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
   ${OPENAIR_TARGETS}/SIMU/USER/init_lte.c
   ${OPENAIR_TARGETS}/COMMON/create_tasks.c
+  #${OPENAIR2_DIR}/RRC/NAS/nas_config.c # enable if you want rrc to mount ip interface
+  #${OPENAIR2_DIR}/RRC/NAS/rb_config.c
   ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c
   ${HW_SOURCE}
   ${RTAI_SOURCE}
   ${XFORMS_SOURCE}
   ${XFORMS_SOURCE_SOFTMODEM}
   )
-if (MESSAGE_CHART_GENERATOR)
 target_link_libraries (lte-softmodem-nos1
   -Wl,--start-group
-  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCHED_LIB PHY LFDS MSC L2 ${RAL_LIB} ${ITTI_LIB} ${MIH_LIB}
+  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} ${MIH_LIB}
   -Wl,--end-group )
-else (MESSAGE_CHART_GENERATOR)
-target_link_libraries (lte-softmodem-nos1
-  -Wl,--start-group
-  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCHED_LIB PHY LFDS L2 ${RAL_LIB}  ${ITTI_LIB} ${MIH_LIB}
-  -Wl,--end-group )
-endif(MESSAGE_CHART_GENERATOR)
+
 target_link_libraries (lte-softmodem-nos1 ${LIBXML2_LIBRARIES})
 target_link_libraries (lte-softmodem-nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES}  ${option_HW_lib} ${XFORMS_LIBRARIES} )
 target_link_libraries (lte-softmodem-nos1 ${LIBBOOST_LIBRARIES})
@@ -1603,21 +1623,13 @@ add_executable(mme_gw
   ${OPENAIRCN_DIR}/SCTP/sctp_primitives_server.c
   ${OPENAIRCN_DIR}/NAS/MME/nas_mme_task.c
   )
-if (MESSAGE_CHART_GENERATOR)
 target_link_libraries (mme_gw
   -Wl,--start-group
-   LIB_NAS_MME S1AP_LIB S1AP_EPC GTPV1U GTPV2C SCTP_SERVER UDP_SERVER SECU_CN SECU_OSA S6A SGW MME_APP LFDS MSC ${ITTI_LIB} CN_UTILS HASHTABLE
+   LIB_NAS_MME S1AP_LIB S1AP_EPC GTPV1U GTPV2C SCTP_SERVER UDP_SERVER SECU_CN SECU_OSA S6A SGW MME_APP LFDS ${MSC_LIB} ${ITTI_LIB} CN_UTILS HASHTABLE
   -Wl,--end-group
   pthread m sctp  rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES} fdproto fdcore gnutls
   )
-else (MESSAGE_CHART_GENERATOR)
-target_link_libraries (mme_gw
-  -Wl,--start-group
-   LIB_NAS_MME S1AP_LIB S1AP_EPC GTPV1U GTPV2C SCTP_SERVER UDP_SERVER SECU_CN SECU_OSA S6A SGW MME_APP LFDS ${ITTI_LIB} CN_UTILS HASHTABLE
-  -Wl,--end-group
-  pthread m sctp  rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES} fdproto fdcore gnutls
-  )
-endif(MESSAGE_CHART_GENERATOR)
+
 
 # Default parameters
 # Does not work on simple install (fqdn in /etc/hosts 127.0.1.1)
@@ -1698,21 +1710,41 @@ add_executable(oai_sgw
   ${OPENAIRCN_DIR}/OAI_SGW/oai_sgw_log.c
   ${OPENAIRCN_DIR}/OAI_SGW/oai_sgw.c
   )
-if (MESSAGE_CHART_GENERATOR)
 target_link_libraries (oai_sgw
   -Wl,--start-group
-  GTPV1U SECU_CN SECU_OSA S6A SGW CN_UTILS LFDS MSC ${ITTI_LIB}
+  GTPV1U SECU_CN SECU_OSA S6A SGW CN_UTILS LFDS ${MSC_LIB} ${ITTI_LIB}
   -Wl,--end-group
   pthread m sctp  rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES} fdproto fdcore
   )
-else (MESSAGE_CHART_GENERATOR)
-target_link_libraries (oai_sgw
-  -Wl,--start-group
-  GTPV1U SECU_CN SECU_OSA S6A SGW CN_UTILS LFDS ${ITTI_LIB}
-  -Wl,--end-group
-  pthread m sctp  rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES} fdproto fdcore
+
+
+
+# rrh
+################################
+set(DRIVER2013)
+
+#Note: only on RF type is currently supported for RRH
+add_executable(rrh_gw
+  ${OPENAIR_TARGETS}/RT/USER/rrh_gw.c
+  ${OPENAIR_TARGETS}/RT/USER/eNB_transport_IQ.c
+  ${OPENAIR_TARGETS}/RT/USER/UE_transport_IQ.c
+  ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c	
+  ${OPENAIR_TARGETS}/ARCH/ETHERNET/USERSPACE/LIB/ethernet_lib.c 
+  ${HW_SOURCE}
   )
-endif(MESSAGE_CHART_GENERATOR)
+# assert and common_lib.h
+target_include_directories(rrh_gw PRIVATE  ${OPENAIR_DIR}/common/utils/itti ${OPENAIR_TARGETS}/ARCH/COMMON ${OPENAIR_TARGETS}/ARCH/ETHERNET/USERSPACE/LIB/ )
+
+target_link_libraries(rrh_gw
+  -Wl,--start-group
+  UTIL LFDS  
+  -Wl,--end-group )
+target_link_libraries (rrh_gw rt pthread m )
+target_link_libraries (rrh_gw ${option_HW_lib} ${LIBBOOST_LIBRARIES} )
+
+#Message("-- default_HW_lib=ETHERNET") # only in case of RRH
+Message("-- option_HW_lib=${option_HW_lib}")
+Message("-- HW_SOURCE=${HW_SOURCE}")
 
 # USIM process
 #################
@@ -1764,18 +1796,14 @@ add_executable(oaisim
   ${HW_SOURCE}
   ${XFORMS_SOURCE}
 )
+
+
 target_include_directories(oaisim PUBLIC  ${OPENAIR_TARGETS}/SIMU/USER)
-if (MESSAGE_CHART_GENERATOR)
 target_link_libraries (oaisim
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS MSC L2 ${RAL_LIB} LIB_NAS_UE SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
+  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} LIB_NAS_UE SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
   -Wl,--end-group )
-else(MESSAGE_CHART_GENERATOR)
-target_link_libraries (oaisim
-  -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${RAL_LIB} LIB_NAS_UE SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
-  -Wl,--end-group )
-endif(MESSAGE_CHART_GENERATOR)
+
 target_link_libraries (oaisim ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})
 target_link_libraries (oaisim pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES}  ${NETTLE_LIBRARIES} sctp ${option_HW_lib}
   ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${OPENPGM_LIBRARIES})
@@ -1806,17 +1834,11 @@ add_executable(oaisim_nos1
   ${XFORMS_SOURCE}
 )
 target_include_directories(oaisim_nos1 PUBLIC  ${OPENAIR_TARGETS}/SIMU/USER)
-if (MESSAGE_CHART_GENERATOR)
 target_link_libraries (oaisim_nos1
   -Wl,--start-group
-  RRC_LIB    SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS MSC L2 ${RAL_LIB} SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
+  RRC_LIB    SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
   -Wl,--end-group )
-else(MESSAGE_CHART_GENERATOR)
-target_link_libraries (oaisim_nos1
-  -Wl,--start-group
-  RRC_LIB    SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS L2 ${RAL_LIB} SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
-  -Wl,--end-group )
-endif(MESSAGE_CHART_GENERATOR)
+
 target_link_libraries (oaisim_nos1 ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})
 target_link_libraries (oaisim_nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES}  ${NETTLE_LIBRARIES}  ${option_HW_lib}
   ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${OPENPGM_LIBRARIES})
@@ -1829,6 +1851,7 @@ target_link_libraries (oaisim_nos1 forms)
 
 foreach(myExe dlsim ulsim pbchsim scansim mbmssim pdcchsim pucchsim prachsim syncsim)
   add_executable(${myExe}
+    ${OPENAIR_BIN_DIR}/messages_xml.h
     ${OPENAIR1_DIR}/SIMULATION/LTE_PHY/${myExe}.c
     ${XFORMS_SOURCE}
     )
@@ -2072,3 +2095,37 @@ ADD_CUSTOM_TARGET(oarf
    DEPENDS ${OCT_FILES}
 )
  
+#CMAKE INSTALL and CPACK
+
+#INSTALL(PROGRAMS lte-softmodem ${OPENAIR_DIR}/targets DESTINATION bin)
+#INSTALL(PROGRAMS oaisim ${OPENAIR_DIR}/targets DESTINATION bin)
+
+
+#SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OpenAirInterface")
+#SET(CPACK_PACKAGE_VENDOR "Eurecom")
+#SET(CPACK_PACKAGE_DESCRIPTION_FILE "${OPENAIR_DIR}/README.txt")
+#SET(CPACK_RESOURCE_FILE_LICENSE "${OPENAIR_DIR}/COPYING")
+#SET(CPACK_PACKAGE_VERSION_MAJOR "1")
+#SET(CPACK_PACKAGE_VERSION_MINOR "1")
+#SET(CPACK_PACKAGE_VERSION_PATCH "1")
+
+#SET(CPACK_PACKAGE_INSTALL_DIRECTORY "CMake ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}")
+#SET(CPACK_STRIP_FILES "${OPENAIR_TARGETS}/bin")
+#SET(CPACK_SOURCE_STRIP_FILES "")
+
+##debian specific 
+#SET(CPACK_DEBIAN_PACKAGE_NAME "OAI") 
+#SET(CPACK_DEBIAN_PACKAGE_VERSION "${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}")
+##dpkg --print-architecture (do not use i686
+#SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+
+#SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.1-6), libgcc1 (>= 1:3.4.2-12)")
+#SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libpthread.so.0  libm.so.6 libconfig.so.9 librt.so.1 libcrypt.so.1 libcrypto.so.1.0.0  libnettle.so.4 libsctp.so.1 libc.so.6")
+#SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "EURECOM-OSA")
+
+#SET(CPACK_PACKAGE_EXECUTABLES "lte-softmodem" "mme_gw.Rel10" "openair-hss")
+
+#SET(CPACK_DEBIAN_PACKAGE_DESCRIPTION "OpenAirInterface")
+#SET(CPACK_DEBIAN_PACKAGE_Section "Beta-Release")
+
+#INCLUDE(CPack)

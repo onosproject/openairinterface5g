@@ -126,25 +126,37 @@ void rx_sdu(
       break;
 
     case CRNTI:
-      LOG_D(MAC, "[eNB %d] CC_id %d MAC CE_LCID %d : Received CRNTI %d \n",
-            enb_mod_idP, CC_idP, rx_ces[i], payload_ptr[0]);
-      payload_ptr+=1;
+      LOG_D(MAC, "[eNB %d] CC_id %d MAC CE_LCID %d (ce %d/%d): Received CRNTI %2.2x%2.2x\n",
+            enb_mod_idP, CC_idP, rx_ces[i], i,num_ce, payload_ptr[0], payload_ptr[1]);
+      UE_id = find_UE_id(enb_mod_idP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
+      LOG_I(MAC, "[eNB %d] CC_id %d MAC CE_LCID %d : CRNTI %x (UE_id %d) in Msg3\n",enb_mod_idP, CC_idP, rx_ces[i], (((uint16_t)payload_ptr[0])<<8) + payload_ptr[1],UE_id);
+
+      payload_ptr+=2;
+      /* we don't process this CE yet */
+      if (msg3_flagP != NULL) {
+	*msg3_flagP = 0;
+      }
       break;
 
     case TRUNCATED_BSR:
     case SHORT_BSR: {
+      uint8_t lcgid;
+      lcgid = (payload_ptr[0] >> 6);
+
+      LOG_D(MAC, "[eNB %d] CC_id %d MAC CE_LCID %d : Received short BSR LCGID = %u bsr = %d\n",
+	    enb_mod_idP, CC_idP, rx_ces[i], lcgid, payload_ptr[0] & 0x3f);
+
       if (UE_id  != -1) {
-        uint8_t lcgid;
-        lcgid = (payload_ptr[0] >> 6);
-        LOG_D(MAC, "[eNB %d] CC_id %d MAC CE_LCID %d : Received short BSR LCGID = %u bsr = %d\n",
-              enb_mod_idP, CC_idP, rx_ces[i], lcgid, payload_ptr[0] & 0x3f);
+
         UE_list->UE_template[CC_idP][UE_id].bsr_info[lcgid] = (payload_ptr[0] & 0x3f);
 
         if (UE_list->UE_template[CC_idP][UE_id].ul_buffer_creation_time[lcgid] == 0 ) {
           UE_list->UE_template[CC_idP][UE_id].ul_buffer_creation_time[lcgid]=frameP;
         }
       }
+      else {
 
+      }
       payload_ptr += 1;//sizeof(SHORT_BSR); // fixme
     }
     break;
@@ -278,26 +290,28 @@ void rx_sdu(
       LOG_T(MAC,"\n");
 #endif
 
-      //  This check is just to make sure we didn't get a bogus SDU length, to be removed ...
-      if (rx_lengths[i]<CCCH_PAYLOAD_SIZE_MAX) {
-        LOG_D(MAC,"[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DCCH, received %d bytes form UE %d on LCID %d \n",
-              enb_mod_idP,CC_idP,frameP, rx_lengths[i], UE_id, rx_lcids[i]);
+      if (UE_id != -1) {
+        //  This check is just to make sure we didn't get a bogus SDU length, to be removed ...
+        if (rx_lengths[i]<CCCH_PAYLOAD_SIZE_MAX) {
+          LOG_D(MAC,"[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DCCH, received %d bytes form UE %d on LCID %d \n",
+                enb_mod_idP,CC_idP,frameP, rx_lengths[i], UE_id, rx_lcids[i]);
 
-        mac_rlc_data_ind(
-          enb_mod_idP,
-          rntiP,
+          mac_rlc_data_ind(
+            enb_mod_idP,
+            rntiP,
 	      enb_mod_idP,
-          frameP,
-          ENB_FLAG_YES,
-          MBMS_FLAG_NO,
-          rx_lcids[i],
-          (char *)payload_ptr,
-          rx_lengths[i],
-          1,
-          NULL);//(unsigned int*)crc_status);
-        UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]]+=1;
-        UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]]+=rx_lengths[i];
-      }
+            frameP,
+            ENB_FLAG_YES,
+            MBMS_FLAG_NO,
+            rx_lcids[i],
+            (char *)payload_ptr,
+            rx_lengths[i],
+            1,
+            NULL);//(unsigned int*)crc_status);
+          UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]]+=1;
+          UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]]+=rx_lengths[i];
+        }
+      } /* UE_id != -1 */
 
       //      }
       break;
@@ -318,28 +332,31 @@ void rx_sdu(
       LOG_D(MAC,"[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DTCH, received %d bytes from UE %d for lcid %d\n",
             enb_mod_idP,CC_idP,frameP, rx_lengths[i], UE_id,rx_lcids[i]);
 
-      if ((rx_lengths[i] <SCH_PAYLOAD_SIZE_MAX) &&  (rx_lengths[i] > 0) ) {   // MAX SIZE OF transport block
-        mac_rlc_data_ind(
-          enb_mod_idP,
-          rntiP,
-          enb_mod_idP,
-          frameP,
-          ENB_FLAG_YES,
-          MBMS_FLAG_NO,
-          DTCH,
-          (char *)payload_ptr,
-          rx_lengths[i],
-          1,
-          NULL);//(unsigned int*)crc_status);
-        UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]]+=1;
-        UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]]+=rx_lengths[i];
-      }
+      if (UE_id != -1) {
+        if ((rx_lengths[i] <SCH_PAYLOAD_SIZE_MAX) &&  (rx_lengths[i] > 0) ) {   // MAX SIZE OF transport block
+          mac_rlc_data_ind(
+            enb_mod_idP,
+            rntiP,
+            enb_mod_idP,
+            frameP,
+            ENB_FLAG_YES,
+            MBMS_FLAG_NO,
+            DTCH,
+            (char *)payload_ptr,
+            rx_lengths[i],
+            1,
+            NULL);//(unsigned int*)crc_status);
+          UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]]+=1;
+          UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]]+=rx_lengths[i];
+        }
+      } /* UE_id != -1 */
 
       //      }
       break;
 
     default :  //if (rx_lcids[i] >= DTCH) {
-      UE_list->eNB_UE_stats[CC_idP][UE_id].num_errors_rx+=1;
+      if (UE_id != -1)
+        UE_list->eNB_UE_stats[CC_idP][UE_id].num_errors_rx+=1;
       LOG_E(MAC,"[eNB %d] CC_id %d Frame %d : received unsupported or unknown LCID %d from UE %d ",
             enb_mod_idP, CC_idP, frameP, rx_lcids[i], UE_id);
       break;
@@ -350,7 +367,8 @@ void rx_sdu(
 
   /* NN--> FK: we could either check the payload, or use a phy helper to detect a false msg3 */
   if ((num_sdu == 0) && (num_ce==0)) {
-    UE_list->eNB_UE_stats[CC_idP][UE_id].total_num_errors_rx+=1;
+    if (UE_id != -1)
+      UE_list->eNB_UE_stats[CC_idP][UE_id].total_num_errors_rx+=1;
 
     if (msg3_flagP != NULL) {
       if( *msg3_flagP == 1 ) {
@@ -359,9 +377,11 @@ void rx_sdu(
       }
     }
   } else {
-    UE_list->eNB_UE_stats[CC_idP][UE_id].pdu_bytes_rx=sdu_lenP;
-    UE_list->eNB_UE_stats[CC_idP][UE_id].total_pdu_bytes_rx+=sdu_lenP;
-    UE_list->eNB_UE_stats[CC_idP][UE_id].total_num_pdus_rx+=1;
+    if (UE_id != -1) {
+      UE_list->eNB_UE_stats[CC_idP][UE_id].pdu_bytes_rx=sdu_lenP;
+      UE_list->eNB_UE_stats[CC_idP][UE_id].total_pdu_bytes_rx+=sdu_lenP;
+      UE_list->eNB_UE_stats[CC_idP][UE_id].total_num_pdus_rx+=1;
+    }
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RX_SDU,0);
@@ -729,8 +749,6 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
         } else
           LOG_T(MAC,"[eNB %d] Frame %d, subframeP %d, UE %d CC %d : got harq pid %d  round %d (nCCE %d, rnti %x,mode %s)\n",
                 module_idP,frameP,subframeP,UE_id,CC_id, harq_pid, round,nCCE[CC_id],rnti,mode_string[eNB_UE_stats->mode]);
-
-
 
 #ifndef EXMIMO_IOT
 
