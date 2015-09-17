@@ -560,7 +560,8 @@ void ca_config(uint8_t  Mod_id,
     pcc->dlsch_eNB[UE_id][0]->dlsch_s[0][0] = scc->dlsch_eNB[UE_id][0];
     pcc->dlsch_eNB[UE_id][0]->dlsch_s[0][1] = scc->dlsch_eNB[UE_id][1];
 
-    PHY_vars_eNB_g[Mod_id][CC_id]->n_configured_SCCs[UE_id] = 1;
+    for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++)
+      PHY_vars_eNB_g[Mod_id][CC_id]->n_configured_SCCs[UE_id] = 1;
   }
 }
 
