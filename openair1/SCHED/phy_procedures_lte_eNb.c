@@ -4662,8 +4662,8 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
               } // abstraction flag
             }
             else { // No SR so use channel selection procedure
-              if ((n1_pucch0 > 0) &&
-                  (n1_pucch1 > 0) &&
+              if ((n1_pucch0 != -1) &&
+                  (n1_pucch1 != -1) &&
                   (n1_pucch2 == -1) &&
                   (n1_pucch3 == -1) )  { // A = 2 case
 
@@ -4696,10 +4696,10 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
                   pucch_payload0[1] = 1;   // ACK
                 }
               }
-              else if ((n1_pucch2 > 0) &&
+              else if ((n1_pucch2 != -1) &&
                        (n1_pucch3 == -1) ) { //A = 3 case
               }
-              else if (n1_pucch3 > 0) {
+              else if (n1_pucch3 != -1) {
 
               }
               else {
