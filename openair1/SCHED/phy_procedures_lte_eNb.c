@@ -529,6 +529,8 @@ void ca_config(uint8_t  Mod_id,
       PHY_vars_eNB_g[Mod_id][CC_id]->dlsch_eNB[UE_id][1]->dlsch_s[i][0] = NULL;
       PHY_vars_eNB_g[Mod_id][CC_id]->dlsch_eNB[UE_id][1]->dlsch_s[i][1] = NULL;
     }
+    /* for the moment only one secondary CC configured */
+    PHY_vars_eNB_g[Mod_id][CC_id]->n_configured_SCCs[UE_id] = ca_configured ? 1 : 0;
   }
 
   /* setup dlsch_s if CA is configured */
@@ -560,8 +562,6 @@ void ca_config(uint8_t  Mod_id,
     pcc->dlsch_eNB[UE_id][0]->dlsch_s[0][0] = scc->dlsch_eNB[UE_id][0];
     pcc->dlsch_eNB[UE_id][0]->dlsch_s[0][1] = scc->dlsch_eNB[UE_id][1];
 
-    for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++)
-      PHY_vars_eNB_g[Mod_id][CC_id]->n_configured_SCCs[UE_id] = 1;
   }
 }
 
@@ -2892,7 +2892,7 @@ void process_HARQ_feedback(uint8_t UE_id,
       else
 	dlsch_ACK[m] = pucch_payload[m];
 
-      printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, subframe, dlsch_ACK[0], phy_vars_eNB->CC_id);
+printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, subframe, dlsch_ACK[0], phy_vars_eNB->CC_id);
       LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK (%d/%d) %d for subframe %d\n",phy_vars_eNB->Mod_id,
 	    frame,m,M,dlsch_ACK[0],subframe_m4);
     }
@@ -3417,7 +3417,7 @@ void get_n1_pucch_eNB(PHY_VARS_eNB *phy_vars_eNB,
 
     sfm4 = (subframe+6)%10;
 
-    AssertFatal(n_configured_SCCs < 2, "No support for more than 1 CC yet");
+    AssertFatal(n_configured_SCCs < 2, "No support for more than 1 secondary CC yet");
 
     if ((n_configured_SCCs == 0) &&
         ((dlsch[0]->subframe_tx[sfm4]>0)||
@@ -3430,6 +3430,24 @@ void get_n1_pucch_eNB(PHY_VARS_eNB *phy_vars_eNB,
       *n1_pucch3 = -1;
     } // The remaining cases implement Table 10.1.2.2.1-1 in 36.213 for A=2,3,4
 #ifdef Rel10
+    /* CROUX: I'm not sure of this whole section, TBC with RK */
+    /* for the moment, let's make it simple (might be wrong) */
+    else if (n_configured_SCCs == 1) {
+if (dlsch[0]->subframe_tx[sfm4]==0 && dlsch[0]->dlsch_s[0][0]->subframe_tx[sfm4]==0) {
+  *n1_pucch0 = -1;
+  *n1_pucch1 = -1;
+} else {
+      *n1_pucch0 = frame_parms->pucch_config_common.n1PUCCH_AN + phy_vars_eNB->dlsch_eNB[(uint32_t)UE_id][0]->nCCE[sfm4];
+      harq_pid = dlsch[0]->dlsch_s[0][0]->harq_ids[sfm4];
+if (harq_pid == 8) *n1_pucch1 = -1; else {
+      dlsch0_harq = dlsch[0]->dlsch_s[0][0]->harq_processes[harq_pid];
+      *n1_pucch1 = phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[dlsch0_harq->TPC][0];
+}
+*n1_pucch1 = 31;
+printf("n1_pucch0 %d n1_pucch1 %d\n", *n1_pucch0, *n1_pucch1);
+}
+    }
+
     else if ((n_configured_SCCs == 1) && // A=2 primary only
                ((dlsch[0]->subframe_tx[sfm4]>0)||
                 (dlsch[1]->subframe_tx[sfm4]>0))&&
@@ -4003,6 +4021,8 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
         }
 #endif
 
+#if 0
+/* old version of CA - pre RK work */
         /* get the number of ack bits according to the number of downlink transmissions */
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 0;
         if (phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sf]>0)
@@ -4015,6 +4035,28 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
           if (eNB_CC2->dlsch_eNB[i][0]->subframe_tx[sf]>0)
             phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK++;
         }
+      }
+#endif
+        /* get the number of ack bits according to the number of downlink transmissions */
+        phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 0;
+        if (phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sf]>0)
+          phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK++;
+        /* for the moment, check only dlsch_s[0][0] */
+        if (phy_vars_eNB->n_configured_SCCs[i] == 1 &&
+            phy_vars_eNB->dlsch_eNB[i][0]->dlsch_s[0][0]->subframe_tx[sf] > 0) {
+          /* hack - get the secondary CC */
+          PHY_VARS_eNB *eNB_CC2;
+          if (phy_vars_eNB->CC_id == 0) eNB_CC2 = PHY_vars_eNB_g[0][1];
+          else                          eNB_CC2 = PHY_vars_eNB_g[0][0];
+          if (eNB_CC2->dlsch_eNB[i][0]->subframe_tx[sf]>0)
+            phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK++;
+        }
+phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[0]=0;
+phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[1]=0;
+if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK)
+printf("pusch f/sf %d/%d O_ACK %d (%d %d)\n", frame, subframe, phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK,
+       phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sf]>0,
+       phy_vars_eNB->n_configured_SCCs[i] == 1 && phy_vars_eNB->dlsch_eNB[i][0]->dlsch_s[0][0]->subframe_tx[sf] > 0);
       }
 
 #ifdef DEBUG_PHY_PROC
@@ -4116,6 +4158,8 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
       else {
       */
 
+if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK)
+printf("o_ACK %d %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[0], phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[1]);
       //compute the expected ULSCH RX power (for the stats)
       phy_vars_eNB->ulsch_eNB[(uint32_t)i]->harq_processes[harq_pid]->delta_TF =
         get_hundred_times_delta_IF_eNB(phy_vars_eNB,i,harq_pid, 0); // 0 means bw_factor is not considered
@@ -4479,7 +4523,7 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
           if (cc->dlsch_eNB[i][0]->subframe_tx[sf]>0) {
             ack = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[ack_bit];
             ack_bit++;
-//printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d\n", frame, subframe, cc->CC_id);
+printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d ack %d\n", frame, subframe, cc->CC_id, ack);
             process_HARQ_feedback_hack(i,
                                   sched_subframe,
                                   cc,
@@ -4520,6 +4564,10 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
 
       // Now ACK/NAK
 
+      n1_pucch0 = -1;
+      n1_pucch1 = -1;
+      n1_pucch2 = -1;
+      n1_pucch3 = -1;
       get_n1_pucch_eNB(phy_vars_eNB,
                        i,
                        sched_subframe,
@@ -4551,7 +4599,7 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
                                i,
                                phy_vars_eNB->scheduling_request_config[i].sr_PUCCH_ResourceIndex,
                                0, // n2_pucch
-                               1, // shortened format
+                               0, // shortened format
                                &SR_payload,
                                subframe,
                                PUCCH1_THRES);
@@ -4597,6 +4645,7 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
         }
         else if (phy_vars_eNB->lte_frame_parms.frame_type==FDD) { // FDD
 
+printf("FDD? n_configured_SCCs %d\n", phy_vars_eNB->n_configured_SCCs[i]);
           sfm4 = (subframe+6)%10;
 
           if (phy_vars_eNB->n_configured_SCCs[i] == 0) { // use Rel8 procedure for SR/PUCCH multiplexing
@@ -4618,7 +4667,7 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
                                  i,
                                  (uint16_t)n1_pucch0,
                                  0, //n2_pucch
-                                 1, // shortened format
+                                 0, // shortened format
                                  pucch_payload0,
                                  subframe,
                                  thres);
@@ -4639,6 +4688,7 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
 
             // if SR was detected, use the n1_pucch from SR, else use n1_pucch0
             // (second paragraph from Section 7.3.1 from 36.213)
+printf("SR_payload %d\n", SR_payload);
             if (SR_payload == 1) {
               n1_pucch0 = phy_vars_eNB->scheduling_request_config[i].sr_PUCCH_ResourceIndex;
               if (abstraction_flag == 0)
@@ -4647,7 +4697,7 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
                                    i,
                                    (uint16_t)n1_pucch0,
                                    0, //n2_pucch
-                                   1, // shortened format
+                                   0, // shortened format
                                    pucch_payload0,
                                    subframe,
                                    PUCCH1b_THRES);
@@ -4660,8 +4710,10 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
                                         subframe);
 #endif
               } // abstraction flag
+printf("pucch detect on SR (%d) payload %d %d\n", n1_pucch0, pucch_payload0[0], pucch_payload0[1]);
             }
             else { // No SR so use channel selection procedure
+printf("!!! n1_pucch0 %d n1_pucch1 %d n1_pucch2 %d n1_pucch3 %d\n", n1_pucch0, n1_pucch1, n1_pucch2, n1_pucch3);
               if ((n1_pucch0 != -1) &&
                   (n1_pucch1 != -1) &&
                   (n1_pucch2 == -1) &&
@@ -4673,7 +4725,7 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
                                    i,
                                    (uint16_t)n1_pucch0,
                                    0, //n2_pucch
-                                   1, // shortened format
+                                   0, // shortened format
                                    &cs0,
                                    subframe,
                                    PUCCH1b_THRES);
@@ -4682,7 +4734,7 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
                                    i,
                                    (uint16_t)n1_pucch1,
                                    0, //n2_pucch
-                                   1, // shortened format
+                                   0, // shortened format
                                    &cs1,
                                    subframe,
                                    PUCCH1b_THRES);
@@ -4695,6 +4747,7 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
                   pucch_payload0[0] = cs1;
                   pucch_payload0[1] = 1;   // ACK
                 }
+printf("pucch detect on pucch %d payload %d %d (metric %d/%d)\n", metric0 > metric1 ? n1_pucch0 : n1_pucch1, pucch_payload0[0], pucch_payload0[1], metric0, metric1);
               }
               else if ((n1_pucch2 != -1) &&
                        (n1_pucch3 == -1) ) { //A = 3 case
@@ -4716,11 +4769,39 @@ phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
                 pucch_payload0[0],metric0);
 #endif
 
+#if 0
           process_HARQ_feedback(i,sched_subframe,phy_vars_eNB,
                                 0,// pusch_flag
                                 pucch_payload0,
                                 2,
                                 SR_payload);
+#endif
+      {
+        /* hack - call process_HARQ_feedback for all CCs with ack/nack waiting with the right ack/nack bit */
+        int sf = (subframe<4) ? (subframe+6) : (subframe-4);
+        int ack, z, ack_bit = 0;
+        int harq_pid = subframe2harq_pid( &phy_vars_eNB->lte_frame_parms,frame,subframe);
+        PHY_VARS_eNB *cc;
+//printf("ACKNACK before call process_HARQ_feedback_hack O_ACK %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK);
+        for (z = 0; z < 2; z++) {
+          /* we suppose UE pCC id 0 and secondary CC id 1 */
+          cc = PHY_vars_eNB_g[0][z];
+          if (cc->dlsch_eNB[i][0]->subframe_tx[sf]>0) {
+            ack = pucch_payload0[ack_bit];
+printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d ack %d\n", frame, subframe, cc->CC_id, ack);
+            process_HARQ_feedback_hack(i,
+                                  sched_subframe,
+                                  cc,
+                                  1, // pusch_flag
+                                  0,
+                                  0,
+                                  0, ack);
+          }
+          /* ack_bit has to be increased... I think... */
+          ack_bit++;
+        }
+//printf("ACKNACK after call process_HARQ_feedback_hack ack_bit %d\n", ack_bit);
+      }
         } // FDD
         else {  //TDD
 

@@ -830,6 +830,7 @@ schedule_ue_spec(
           UE_list->eNB_UE_stats[CC_id][UE_id].ncce_used_retx=nCCE[CC_id];
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs1=eNB_UE_stats->dlsch_mcs1;
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs2=eNB_UE_stats->dlsch_mcs1;
+printf("\x1b[34;43mDTCH CC_id %d retrans? #rb %d mcs %d harq_pid %d round %d f/sf %d/%d\x1b[0m\n", CC_id, nb_rb, eNB_UE_stats->dlsch_mcs1, harq_pid, round, frameP, subframeP);
         } else {
           LOG_D(MAC,"[eNB %d] Frame %d CC_id %d : don't schedule UE %d, its retransmission takes more resources than we have\n",
                 module_idP, frameP, CC_id, UE_id);
@@ -1012,6 +1013,8 @@ printf("to_configure!!\n");
                          MBMS_FLAG_NO,
                          DTCH,
                          TBS-ta_len-header_len_dcch-scell_activation_len-sdu_length_total-header_len_dtch);
+printf("DTCH CC_id %d mcs %d tbs %d #avail rb %d harq_pid %d buf %d avail %d f/sf %d/%d\n", CC_id, eNB_UE_stats->dlsch_mcs1, TBS, nb_available_rb, harq_pid, rlc_status.bytes_in_buffer, TBS-ta_len-header_len_dcch-sdu_length_total-header_len_dtch, frameP, subframeP);
+
 
           if (rlc_status.bytes_in_buffer > 0) {
 
