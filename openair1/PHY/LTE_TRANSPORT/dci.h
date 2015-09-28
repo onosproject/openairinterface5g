@@ -440,6 +440,8 @@ struct DCI1A_5MHz_FDD_R10_UEspec {
   /// SRS Request
   uint32_t srs_req:1;
 #endif
+  /// padding
+  uint32_t padding:8;
   /// Power Control
   uint32_t TPC:2;
   /// Redundancy version
