@@ -1661,9 +1661,11 @@ if (0)
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger1_r10 = t1;
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger2_r10 = t2;
 
+#if 0
     /* cqi_ReportPeriodic_r10 necessary? */
     cqi->cqi_ReportPeriodic_r10                     = CALLOC(1, sizeof(struct CQI_ReportPeriodic_r10));
     cqi->cqi_ReportPeriodic_r10->present = CQI_ReportPeriodic_r10_PR_release;
+#endif
 
     pucch->pucch_Format_r10                          = CALLOC(1, sizeof(struct PUCCH_ConfigDedicated_v1020__pucch_Format_r10));
     pucch->pucch_Format_r10->present = PUCCH_ConfigDedicated_v1020__pucch_Format_r10_PR_channelSelection_r10;
