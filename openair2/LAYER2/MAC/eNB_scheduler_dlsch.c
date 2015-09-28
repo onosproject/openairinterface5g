@@ -2318,6 +2318,8 @@ fill_DLSCH_dci(
               ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rah = 0;
               size_bytes=sizeof(DCI1_5MHz_FDD_t);
               size_bits=sizeof_DCI1_5MHz_FDD_t;
+/* no size change because no sounding rs */
+#if 0
 /* size does not change on a CC without uplink */
 /* for the moment, the UE starts to connect on CC 0, so we test CC_id == 0
  * in the future (if things stay here) we have to compare with UE primary CC
@@ -2325,6 +2327,7 @@ fill_DLSCH_dci(
  */
 if (CC_id == 0 && UE_list->scell_config[UE_id].scell_count) size_bits++;
 //printf("!!!!!!!!!!!!!!!!!!!! %s\n", __FILE__);
+#endif
               break;
 
             case 50:

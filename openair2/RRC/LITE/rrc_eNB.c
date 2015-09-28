@@ -1618,6 +1618,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
     pucch    = ph->ext2->pucch_ConfigDedicated_v1020 = CALLOC(1, sizeof(struct PUCCH_ConfigDedicated_v1020));
 
     /* add SRS config */
+if (0)
     {
       //struct SoundingRS_UL_ConfigDedicated              *sr;
       //struct SoundingRS_UL_ConfigDedicated_v1020        *sr10;
@@ -1642,9 +1643,11 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
       f0->cyclicShiftAp_r10        = SRS_ConfigAp_r10__cyclicShiftAp_r10_cs0;
     }
 
+#if 0
     /* cif presence necessary? */
     ph->ext2->cif_Presence_r10                       = CALLOC(1, sizeof(BOOLEAN_t));
     *ph->ext2->cif_Presence_r10 = 0;
+#endif
 
     cqi->cqi_ReportAperiodic_r10                     = CALLOC(1, sizeof(struct CQI_ReportAperiodic_r10));
     cqi->cqi_ReportAperiodic_r10->present = CQI_ReportAperiodic_r10_PR_setup;
@@ -1657,6 +1660,10 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
     t2.buf[0] = 0xc0;   /* report CQI for PCell and Scell */
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger1_r10 = t1;
     cqi->cqi_ReportAperiodic_r10->choice.setup.aperiodicCSI_Trigger_r10->trigger2_r10 = t2;
+
+    /* cqi_ReportPeriodic_r10 necessary? */
+    cqi->cqi_ReportPeriodic_r10                     = CALLOC(1, sizeof(struct CQI_ReportPeriodic_r10));
+    cqi->cqi_ReportPeriodic_r10->present = CQI_ReportPeriodic_r10_PR_release;
 
     pucch->pucch_Format_r10                          = CALLOC(1, sizeof(struct PUCCH_ConfigDedicated_v1020__pucch_Format_r10));
     pucch->pucch_Format_r10->present = PUCCH_ConfigDedicated_v1020__pucch_Format_r10_PR_channelSelection_r10;
@@ -2022,10 +2029,13 @@ static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
   snu->antennaInfo_r10->ue_TransmitAntennaSelection.present = AntennaInfoDedicated_r10__ue_TransmitAntennaSelection_PR_release;
   /* should we set snu->antennaInfo_r10->ue_TransmitAntennaSelection.choice.release here? */
 
+/* no cross carrier scheduling */
+#if 0
   snu->crossCarrierSchedulingConfig_r10 = CALLOC_OR_DIE(1, sizeof(CrossCarrierSchedulingConfig_r10_t));
 
   snu->crossCarrierSchedulingConfig_r10->schedulingCellInfo_r10.present = CrossCarrierSchedulingConfig_r10__schedulingCellInfo_r10_PR_own_r10;
   snu->crossCarrierSchedulingConfig_r10->schedulingCellInfo_r10.choice.own_r10.cif_Presence_r10 = 0;
+#endif
 
   /* CSI RS set to release or not set at all? */
 #if 0

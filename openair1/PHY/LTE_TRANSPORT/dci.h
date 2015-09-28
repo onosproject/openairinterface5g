@@ -369,12 +369,19 @@ typedef struct DCI0_5MHz_FDD DCI0_5MHz_FDD_t;
 
 ///  DCI Format Type 0 Rel10 UE with Carrier Aggregation configured (5 MHz,FDD, 27 bits)
 struct DCI0_5MHz_FDD_R10_CA_UEspec_RAT {
+/* no sounding rs configured, so no srs bit */
+#if 0
   /// Padding
   uint32_t padding:6;
+#endif
+  /// Padding
+  uint32_t padding:7;
   /// Resource allocation type
   uint32_t rat:1;
+#if 0
   /// SRS Request
   uint32_t srs_req:1;
+#endif
   /// CQI Request
   uint32_t cqi_req:2;
   /// DRS Cyclic Shift
@@ -394,7 +401,8 @@ struct DCI0_5MHz_FDD_R10_CA_UEspec_RAT {
 } __attribute__ ((__packed__));
 
 typedef struct DCI0_5MHz_FDD_R10_CA_UEspec_RAT DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t;
-#define sizeof_DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t 27
+//#define sizeof_DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t 27
+#define sizeof_DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t 25
 
 #endif /* Rel10 */
 
@@ -425,10 +433,13 @@ typedef struct DCI1A_5MHz_FDD DCI1A_5MHz_FDD_t;
 #if Rel10
 
 struct DCI1A_5MHz_FDD_R10_UEspec {
+/* there is sounding RS config, so no srs bit */
+#if 0
   /// padding
   uint32_t padding:7;
   /// SRS Request
   uint32_t srs_req:1;
+#endif
   /// Power Control
   uint32_t TPC:2;
   /// Redundancy version
@@ -448,7 +459,8 @@ struct DCI1A_5MHz_FDD_R10_UEspec {
 } __attribute__ ((__packed__));
 
 typedef struct DCI1A_5MHz_FDD_R10_UEspec DCI1A_5MHz_FDD_R10_UEspec_t;
-#define sizeof_DCI1A_5MHz_FDD_R10_UEspec_t 27
+//#define sizeof_DCI1A_5MHz_FDD_R10_UEspec_t 27
+#define sizeof_DCI1A_5MHz_FDD_R10_UEspec_t 25
 
 #endif /* Rel10 */
 

@@ -2040,6 +2040,14 @@ do_RRCConnectionReconfiguration(
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
 
+{
+int i;
+for(i=0;i<(enc_rval.encoded+7)/8;i++)
+printf("%2.2x ", (unsigned char)buffer[i]);
+printf("\n");
+}
+xer_fprint(stdout,&asn_DEF_DL_DCCH_Message,(void*)&dl_dcch_msg);
+
 #ifdef XER_PRINT
   xer_fprint(stdout,&asn_DEF_DL_DCCH_Message,(void*)&dl_dcch_msg);
 #endif

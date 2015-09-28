@@ -1034,7 +1034,7 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->TPC      = tpc;
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->cshift   = cshift;
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->cqi_req  = cqi_req_CA;
-                ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->srs_req  = 0; /* TBC CROUX */
+                //((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->srs_req  = 0; /* TBC CROUX */
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->rat      = 0; /* TBC CROUX */
                 ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)ULSCH_dci)->padding  = 0;
 
