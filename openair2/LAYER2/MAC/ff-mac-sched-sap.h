@@ -43,6 +43,9 @@
 
 #include "ff-mac-common.h"
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
 
 /**
  * Parameters of the API primitives
@@ -178,7 +181,7 @@ struct SchedUlMacCtrlInfoReqParameters
 {
   uint16_t  sfnSf;
   uint8_t   nr_macCEUL_List;
-  struct MacCeUlListElement_s macCeUlList;
+  struct MacCeUlListElement_s *macCeUlList;
   uint8_t   nr_vendorSpecificList;
   struct VendorSpecificListElement_s *vendorSpecificList;
 };
@@ -190,7 +193,8 @@ struct SchedUlMacCtrlInfoReqParameters
 struct SchedUlCqiInfoReqParameters
 {
   uint16_t  sfnSf;
-  struct UlCqi_s ulCqi;
+  uint8_t	nr_ulCqiList;
+  struct UlCqi_s* ulCqiList;
   uint8_t   nr_vendorSpecificList;
   struct VendorSpecificListElement_s *vendorSpecificList;
 };
@@ -270,5 +274,9 @@ struct SchedUlConfigIndParameters
 void SchedDlConfigInd (const struct SchedDlConfigIndParameters* params);
 
 void SchedUlConfigInd (const struct SchedUlConfigIndParameters* params);
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif /* FF_MAC_SCHED_SAP_H */

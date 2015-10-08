@@ -43,6 +43,10 @@
 
 #include "ff-mac-common.h"
 
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
 /**
  * Parameters of the API primitives
  */
@@ -187,6 +191,7 @@ struct CschedUeConfigReqParameters
     } tddAckNackFeedbackMode;
 
   uint8_t   ackNackRepetitionFactor;
+  bool		extendedBSRSizes;
 
   bool      caSupport;
   bool		crossCarrierSchedSupport;
@@ -385,5 +390,9 @@ void CschedUeReleaseCnf (const struct CschedUeReleaseCnfParameters *params);
 void CschedUeConfigUpdateInd (const struct CschedUeConfigUpdateIndParameters *params);
 
 void CschedCellConfigUpdateInd (const struct CschedCellConfigUpdateIndParameters *params);
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif /* FF_MAC_CSCHED_SAP_H */

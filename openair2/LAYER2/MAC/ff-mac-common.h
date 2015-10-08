@@ -41,7 +41,11 @@
 
 #include <stdint.h>
 #include <stdbool.h>
- 
+
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
 /**
  * Constants. See section 4.4
  */
@@ -64,8 +68,8 @@
 #define MAX_SI_MSG_SIZE       65535
 
 #define MAX_CQI_LIST          30
-#define MAX_UE_SELECTED_SB    6
-#define MAX_HL_SB             25
+#define MAX_UE_SELECTED_SB    6		//comes from Table 7.2.1-5, 36.213
+#define MAX_HL_SB             13	//comes from Table 7.2.1-3, 36.213
 #define MAX_SINR_RB_LIST      100
 #define MAX_SR_LIST           30
 #define MAX_MAC_CE_LIST       30
@@ -170,7 +174,7 @@ struct UlDciListElement_s
   bool      cifPresent;
   uint8_t   cif;
   /// this is the carrier index where the DCI will be transmitted on
-  uint8_t   carrierIndex;
+  uint8_t   servCellIndex;	//definition according to 36.331 'ServCellIndex'
 };
 
 /**
@@ -240,7 +244,7 @@ struct PhichListElement_s
   {
     ACK, NACK
   } phich;
-  uint8_t   carrierIndex;
+  uint8_t   servCellIndex;	//definition according to 36.331 'ServCellIndex'
 };
 
 /**
@@ -264,7 +268,7 @@ struct BuildDataListElement_s
   uint8_t ceBitmap[MAX_TB_LIST];
   uint8_t   nr_rlcPDU_List;
   struct RlcPduListElement_s *rlcPduList[MAX_TB_LIST];
-  uint8_t   carrierIndex;
+  uint8_t   servCellIndex;	//definition according to 36.331 'ServCellIndex'
   /* Hex content of Activation/Deactivation MAC CE */
   uint8_t	activationDeactivationCE;
 };
@@ -306,7 +310,7 @@ struct UlInfoListElement_s
     Ok, NotOk, NotValid
   } receptionStatus;
   uint8_t   tpc;
-  uint8_t   carrierIndex;
+  uint8_t   servCellIndex;	//definition according to 36.331 'ServCellIndex'
 };
 
 /**
@@ -449,75 +453,112 @@ struct DlInfoListElement_s
 {
   uint16_t  rnti;
   uint8_t   harqProcessId;
+  uint8_t nr_harqStatus;
   enum HarqStatus_e
     {
       ff_ACK, ff_NACK, ff_DTX
     } harqStatus[MAX_TB_LIST];
-  uint8_t   carrierIndex;
+  uint8_t   servCellIndex;	//definition according to 36.331 'ServCellIndex'
 };
 
+
 /**
- * \brief See section 4.3.28 bwPart
+ * \brief Represents types of SCI reports for all CSI reporting modes. \a mode indicates which structure is held in \a report union.
  */
-struct BwPart_s
+struct CsiReport_s
 {
-  uint8_t   bwPartIndex;
-  uint8_t   sb;
-  uint8_t   cqi;
+	uint8_t ri;
+
+	enum CsiRepMode_e
+	{
+		P10, P11, P20, P21, A12, A22, A20, A30, A31
+	} mode;
+
+	union
+	{
+		struct A12Csi_s
+		{
+			uint8_t wbCqi[MAX_TB_LIST];
+			uint8_t sbPmi[MAX_HL_SB];
+		} A12Csi;
+
+		struct A30Csi_s
+		{
+			uint8_t wbCqi;
+			uint8_t sbCqi[MAX_HL_SB];
+		} A30Csi;
+
+		struct A31Csi_s
+		{
+			uint8_t wbCqi[MAX_TB_LIST];
+			uint8_t sbCqi[MAX_HL_SB][MAX_TB_LIST];
+			uint8_t wbPmi;
+		} A31Csi;
+
+		struct A20Csi_s
+		{
+			uint8_t wbCqi;
+			uint8_t sbCqi;
+			uint8_t sbList[MAX_UE_SELECTED_SB];
+		} A20Csi;
+
+		struct A22Csi_s
+		{
+			uint8_t wbCqi[MAX_TB_LIST];
+			uint8_t sbCqi[MAX_TB_LIST];
+			uint8_t wbPmi;
+			uint8_t sbPmi;
+			uint8_t sbList[MAX_UE_SELECTED_SB];
+		} A22Csi;
+
+		struct P10Csi_s
+		{
+			uint8_t wbCqi;
+		} P10Csi;
+
+		struct P11Csi_s
+		{
+			uint8_t wbCqi[MAX_TB_LIST];
+			uint8_t wbPmi;
+		} P11Csi;
+
+		struct P20Csi_s
+		{
+			uint8_t wbCqi;
+			uint8_t sbCqi;
+			uint8_t bwPartIndex;	//range 0-3; to cover maximum number of BW parts (J)
+			uint8_t sbIndex;		//range 0-3; to cover maximum number of subbands inside BW part (Nj)
+		} P20Csi;
+
+		struct P21Csi_s
+		{
+			uint8_t wbCqi[MAX_TB_LIST];
+			uint8_t wbPmi;
+			uint8_t sbCqi[MAX_TB_LIST];
+			uint8_t bwPartIndex;	//range 0-3; to cover maximum number of BW parts (J)
+			uint8_t sbIndex;		//range 0-3; to cover maximum number of subbands inside BW part (Nj)
+		} P21Csi;
+	} report;
 };
 
-/**
- * \brief See section 4.3.27 higherLayerSelected
- */
-struct HigherLayerSelected_s
-{
-  uint8_t   sbPmi;
-  uint8_t   sbCqi[MAX_TB_LIST];
-};
 
 /**
- * \brief See section 4.3.26 ueSelected
- */
-struct UeSelected_s
-{
-  uint8_t   sbList[MAX_UE_SELECTED_SB];
-  uint8_t   sbPmi;
-  uint8_t   sbCqi[MAX_TB_LIST];
-};
-
-/**
- * \brief See section 4.3.25 sbMeasResult
- */
-struct SbMeasResult_s
-{
-  struct UeSelected_s           ueSelected;
-  struct HigherLayerSelected_s  higherLayerSelected[MAX_HL_SB];
-  struct BwPart_s               bwPart;
-};
-
-/**
- * \brief See section 4.3.24 cqiListElement
+ * \brief Modified structure holding CSI report for single UE (for original structure see section 4.3.24 cqiListElement).
  */
 struct CqiListElement_s
 {
   uint16_t  rnti;
-  uint8_t   ri;
-  enum CqiType_e
-  {
-    P10, P11, P20, P21, A12, A22, A20, A30, A31
-  } cqiType;
-  uint8_t   wbCqi[MAX_TB_LIST];
-  uint8_t   wbPmi;
-
-  struct SbMeasResult_s sbMeasResult;
-  uint8_t   carrierIndex;
+  struct CsiReport_s csiReport;
+  uint8_t   servCellIndex;	//definition according to 36.331 'ServCellIndex'
 };
+
 
 /**
  * \brief See section 4.3.29 ulCQI
  */
 struct UlCqi_s
 {
+  uint16_t rnti;
   uint16_t sinr[MAX_SINR_RB_LIST];
   enum UlCqiType_e
     {
@@ -527,7 +568,7 @@ struct UlCqi_s
       ff_PUCCH_2,
       ff_PRACH
     } type;
-    uint8_t carrierIndex;
+    uint8_t servCellIndex;	//definition according to 36.331 'ServCellIndex'
 };
 
 /**
@@ -565,5 +606,9 @@ struct PdcchOfdmSymbolCountListElement_s
 	/* Size of PDCCH in OFDM symbols */
 	uint8_t pdcchOfdmSymbolCount;
 };
+
+#if defined (__cplusplus)
+}
+#endif
 
 #endif /* FF_MAC_COMMON_H */
