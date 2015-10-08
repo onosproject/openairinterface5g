@@ -938,7 +938,22 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 	len = phy_vars_eNB->lte_frame_parms.samples_per_tti>>1;
       else
 	len = phy_vars_eNB->lte_frame_parms.samples_per_tti;
- 
+
+#ifdef EXMIMO
+      /* check that we don't write too late
+       * note: this test has only been tried for a 5MHz bandwidth
+       */
+      {
+        volatile unsigned int *DAQ_MBOX = openair0_daq_cnt();
+        unsigned int current = *DAQ_MBOX;
+        unsigned int target_min = (subframe+9)%10 * 15;
+        unsigned int target_max = target_min + 15 - 6;
+        if (!(current >= target_min && current <= target_max))
+          LOG_E(PHY, "[eNB %d/%d] writing subframe %d is done too late! (current %d min %d max %d)\n",
+                phy_vars_eNB->Mod_id, phy_vars_eNB->CC_id, subframe, current, target_min, target_max);
+      }
+#endif
+
      for (i=0; i<len; i++) {
         tx_offset = (int)slot_offset+time_offset[aa]+i;
 
