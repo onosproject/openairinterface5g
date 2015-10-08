@@ -21,7 +21,7 @@
   Contact Information
   OpenAirInterface Admin: openair_admin@eurecom.fr
   OpenAirInterface Tech : openair_tech@eurecom.fr
-  OpenAirInterface Dev  : openair4g-devel@eurecom.fr
+  OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
 
   Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
 
@@ -5168,16 +5168,6 @@ case CROUX_HACK:
 
     case S1AP_UE_CONTEXT_RELEASE_COMMAND:
       rrc_eNB_process_S1AP_UE_CONTEXT_RELEASE_COMMAND(msg_p, msg_name_p, instance);
-      break;
-
-    case GTPV1U_ENB_CREATE_TUNNEL_RESP:
-      PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt,
-                                    instance,
-                                    ENB_FLAG_YES,
-                                    GTPV1U_ENB_CREATE_TUNNEL_RESP(msg_p).rnti,
-                                    msg_p->ittiMsgHeader.lte_time.frame,
-                                    msg_p->ittiMsgHeader.lte_time.slot);
-      rrc_eNB_process_GTPV1U_CREATE_TUNNEL_RESP(&ctxt, msg_p, msg_name_p);
       break;
 
     case GTPV1U_ENB_DELETE_TUNNEL_RESP:

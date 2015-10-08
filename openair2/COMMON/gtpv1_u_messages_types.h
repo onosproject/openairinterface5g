@@ -21,7 +21,7 @@
   Contact Information
   OpenAirInterface Admin: openair_admin@eurecom.fr
   OpenAirInterface Tech : openair_tech@eurecom.fr
-  OpenAirInterface Dev  : openair4g-devel@eurecom.fr
+  OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
 
   Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
 
@@ -35,8 +35,6 @@
 
 #define GTPV1U_MAX_BEARERS_PER_UE max_val_DRB_Identity
 
-#define GTPV1U_ENB_CREATE_TUNNEL_REQ(mSGpTR)  (mSGpTR)->ittiMsg.Gtpv1uCreateTunnelReq
-#define GTPV1U_ENB_CREATE_TUNNEL_RESP(mSGpTR) (mSGpTR)->ittiMsg.Gtpv1uCreateTunnelResp
 #define GTPV1U_ENB_UPDATE_TUNNEL_REQ(mSGpTR)  (mSGpTR)->ittiMsg.Gtpv1uUpdateTunnelReq
 #define GTPV1U_ENB_UPDATE_TUNNEL_RESP(mSGpTR) (mSGpTR)->ittiMsg.Gtpv1uUpdateTunnelResp
 #define GTPV1U_ENB_DELETE_TUNNEL_REQ(mSGpTR)  (mSGpTR)->ittiMsg.Gtpv1uDeleteTunnelReq

@@ -21,7 +21,7 @@
    Contact Information
    OpenAirInterface Admin: openair_admin@eurecom.fr
    OpenAirInterface Tech : openair_tech@eurecom.fr
-   OpenAirInterface Dev  : openair4g-devel@eurecom.fr
+   OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
 
    Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
 
@@ -3079,23 +3079,7 @@ openair0_cfg[card].num_rb_dl=frame_parms[0]->N_RB_DL;
 
   openair0.func_type = BBU_FUNC;
   openair0_cfg[0].log_level = glog_level;
-  
-#ifdef ETHERNET 
-  openair0.type=ETH_IF; // not used for the moment
-  openair0.func_type = BBU_FUNC;
-  openair0_dev_init_eth(&openair0, &openair0_cfg[0]);
-#else 
-#ifdef EXMIMO
-  openair0.type=EXMIMO_IF;
-  printf("Setting the HW to EXMIMO and initializing openair0 ...\n");
-#elif OAI_USRP
-  openair0.type=USRP_IF;
-  printf("Setting the HW to USRP and initializing openair0 ...\n");
-#elif OAI_BLADERF  
-  openair0.type=BLADERF_IF;	
-  printf("Setting the HW to BLADERF and initializing openair0 ...\n");   
-#endif 
- 
+
   if ((mode!=loop_through_memory) && 
       (openair0_device_init(&openair0, &openair0_cfg[0]) <0)) {
     printf("Exiting, cannot initialize device\n");
@@ -3103,8 +3087,7 @@ openair0_cfg[card].num_rb_dl=frame_parms[0]->N_RB_DL;
   }
   else if (mode==loop_through_memory) {    
   }
-#endif 
-
+ 
   printf("Done\n");
 
   mac_xface = malloc(sizeof(MAC_xface));

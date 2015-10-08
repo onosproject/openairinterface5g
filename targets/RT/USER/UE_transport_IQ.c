@@ -21,7 +21,7 @@
    Contact Information
    OpenAirInterface Admin: openair_admin@eurecom.fr
    OpenAirInterface Tech : openair_tech@eurecom.fr
-   OpenAirInterface Dev  : openair4g-devel@eurecom.fr
+   OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
 
    Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
 
@@ -89,15 +89,8 @@ void 			*rrh_UE_thread_status;
 void *rx_ue[2]; // FIXME hard coded array size; indexed by lte_frame_parms.nb_antennas_rx
 void *tx_ue[2]; // FIXME hard coded array size; indexed by lte_frame_parms.nb_antennas_tx
 
-/*! \fn void create_UE_trx_threads( openair0_device *dev_ue, uint8_t RT_flag,uint8_t NRT_flag)
-* \brief this function
-* \param[in]
-* \param[out]
-* \return
-* \note
-* @ingroup  _oai
-*/
-void create_UE_trx_threads( rrh_module_t *dev_ue, uint8_t RT_flag,uint8_t NRT_flag) {
+
+void config_UE_mod( rrh_module_t *dev_ue, uint8_t RT_flag,uint8_t NRT_flag) {
 
   int 	  i;
   int 	  error_code_UE, error_code_proc_UE;

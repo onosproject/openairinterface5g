@@ -7,29 +7,40 @@ else
    exit 1
 fi
 
+tdir=$OPENAIR_DIR/cmake_targets/autotests
+
+results_file=$tdir/log/compilation_autotests.xml
+
 # include the jUnit-like logging functions
 source $OPENAIR_DIR/cmake_targets/tools/test_helper
 
 test_compile() {
     xUnit_start
+    test_name=$1.$2
+    compile_prog=$2
+    exec_prog=$3
+    build_dir=$tdir/$1/build
+    log_file=$tdir/log/test.$1.txt
+    target=$5
+    echo "Compiling test case $test_name. Log file = $log_file"
+    rm -fr $build_dir
     mkdir -p $tdir/$1/build
-    cd $tdir/$1/build
+    cd $build_dir
     {
         cmake ..
-        rm -f $3
-        make -j4 $2
-    } > $tdir/log/$1.txt 2>&1
-    if [ -s $3 ] ; then
-        cp $3 $tdir/bin/`basename $3`.$5.$1
-        echo_success "$1 $3 $5 compiled"
-        xUnit_success "compilation" $1
+        rm -f $exec_prog
+        make -j`nproc` $compile_prog
+    } >> $log_file 2>&1
+    if [ -s $exec_prog ] ; then
+        cp $exec_prog $tdir/bin/`basename $exec_prog`.$target.$test_name
+        echo_success "$test_name $exec_prog $target compiled"
+        xUnit_success "compilation" $test_name "PASS" 1
     else
-        echo_error "$1 $3 $5 compilation failed"
-        xUnit_fail "compilation" $1
+        echo_error "$test_name $exec_prog $target compilation failed"
+        xUnit_fail "compilation" $test_name "FAIL" 1
     fi
 }
 
-tdir=$OPENAIR_DIR/cmake_targets/autotests
 mkdir -p $tdir/bin $tdir/log
 
 updated=$(svn st -q $OPENAIR_DIR)
@@ -40,46 +51,106 @@ fi
 cd $tdir 
 
 test_compile \
-    test.0101 oaisim_nos1 \
+    010101 oaisim_nos1 \
     oaisim_nos1  $tdir/bin/oaisim.r8 rel8.nos1
 
 test_compile \
-    test.0102 oaisim_nos1 \
+    010102 oaisim_nos1 \
     oaisim_nos1  $tdir/bin/oaisim.r8.nas rel8.nos1.nas
 
-cp $tdir/test.0103/CMakeLists.txt.Rel8  $tdir/test.0103/CMakeLists.txt 
+cp $tdir/010103/CMakeLists.txt.Rel8  $tdir/010103/CMakeLists.txt 
 test_compile \
-    test.0103 lte-softmodem \
+    010103 lte-softmodem \
     lte-softmodem  $tdir/bin/lte-softmodem.r8.rf Rel8.EXMIMO
 
-cp $tdir/test.0103/CMakeLists.txt.Rel10  $tdir/test.0103/CMakeLists.txt   
+cp $tdir/010103/CMakeLists.txt.Rel10  $tdir/010103/CMakeLists.txt   
 test_compile \
-    test.0103 lte-softmodem \
+    010103 lte-softmodem \
     lte-softmodem  $tdir/bin/lte-softmodem.r10.rf Rel10.EXMIMO
 
-cp $tdir/test.0103/CMakeLists.txt.USRP  $tdir/test.0103/CMakeLists.txt   
+cp $tdir/010103/CMakeLists.txt.USRP  $tdir/010103/CMakeLists.txt   
 test_compile \
-    test.0103 lte-softmodem \
+    010103 lte-softmodem \
     lte-softmodem  $tdir/bin/lte-softmodem.r10.rf Rel10.USRP
 
 test_compile \
-    test.0104 dlsim \
+    010104 dlsim \
     dlsim  $tdir/bin/dlsim dlsim.Rel8
 
 test_compile \
-    test.0104 ulsim \
+    010104 ulsim \
     ulsim  $tdir/bin/ulsim ulsim.Rel8
 
 test_compile \
-    test.0106 oaisim \
+    010104 pucchsim \
+    pucchsim  $tdir/bin/pucchsim pucchsim.Rel8
+
+test_compile \
+    010104 prachsim \
+    prachsim  $tdir/bin/prachsim prachsim.Rel8
+
+test_compile \
+    010104 pdcchsim \
+    pdcchsim  $tdir/bin/pdcchsim pdcchsim.Rel8
+
+test_compile \
+    010104 pbchsim \
+    pbchsim  $tdir/bin/pbchim pbchsim.Rel8
+
+test_compile \
+    010104 mbmssim \
+    mbmssim  $tdir/bin/mbmssim mbmssim.Rel8
+
+test_compile \
+    010104 test_secu_knas_encrypt_eia1 \
+    test_secu_knas_encrypt_eia1  $tdir/bin/test_secu_knas_encrypt_eia1 test_secu_knas_encrypt_eia1.Rel10
+
+test_compile \
+    010104 test_secu_kenb \
+    test_secu_kenb  $tdir/bin/test_secu_kenb test_secu_kenb.Rel10
+
+test_compile \
+    010104 test_aes128_ctr_encrypt \
+    test_aes128_ctr_encrypt  $tdir/bin/test_aes128_ctr_encrypt test_aes128_ctr_encrypt.Rel10
+
+test_compile \
+    010104 test_aes128_ctr_decrypt \
+    test_aes128_ctr_decrypt  $tdir/bin/test_aes128_ctr_decrypt test_aes128_ctr_decrypt.Rel10
+
+test_compile \
+    010104 test_secu_knas_encrypt_eea2 \
+    test_secu_knas_encrypt_eea2  $tdir/bin/test_secu_knas_encrypt_eea2 test_secu_knas_encrypt_eea2.Rel10
+
+test_compile \
+    010104 test_secu_knas \
+    test_secu_knas  $tdir/bin/test_secu_knas test_secu_knas.Rel10
+
+test_compile \
+    010104 test_secu_knas_encrypt_eea1 \
+    test_secu_knas_encrypt_eea1  $tdir/bin/test_secu_knas_encrypt_eea1 test_secu_knas_encrypt_eea1.Rel10
+
+test_compile \
+    010104 test_kdf \
+    test_kdf  $tdir/bin/test_kdf test_kdf.Rel10
+
+test_compile \
+    010104 test_aes128_cmac_encrypt \
+    test_aes128_cmac_encrypt  $tdir/bin/test_aes128_cmac_encrypt test_aes128_cmac_encrypt.Rel10
+
+test_compile \
+    010104 test_secu_knas_encrypt_eia2 \
+    test_secu_knas_encrypt_eia2  $tdir/bin/test_secu_knas_encrypt_eia2 test_secu_knas_encrypt_eia2.Rel10
+
+test_compile \
+    010106 oaisim \
     oaisim  $tdir/bin/oaisim.r8.itti Rel8.itti
 
 test_compile \
-    test.0107 oaisim_nos1 \
+    010107 oaisim_nos1 \
     oaisim_nos1  $tdir/bin/oaisim.r10 Rel10.nos1
 
 test_compile \
-    test.0108 oaisim \
+    010108 oaisim \
     oaisim  $tdir/bin/oaisim.r10.itti rel10.itti
 
 #test_compile \  LG: RAL REMOVED
@@ -91,12 +162,14 @@ test_compile \
 #    oaisim  $tdir/bin/oaisim.r10.itti.ral rel10.itti.ral 
 
 test_compile \
-    test.0120 nasmesh \
+    010120 nasmesh \
     CMakeFiles/nasmesh/nasmesh.ko $tdir/bin/nasmesh.ko 
 
 test_compile \
-    test.0130 rrh_gw \
+    010130 rrh_gw \
     rrh_gw $tdir/bin/rrh_gw
 
 # write the test results into a file
-xUnit_write "$tdir/log/compilation_autotests.xml"
+xUnit_write "$results_file"
+
+echo "Test Results are written to $results_file"

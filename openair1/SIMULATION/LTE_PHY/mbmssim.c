@@ -21,7 +21,7 @@
   Contact Information
   OpenAirInterface Admin: openair_admin@eurecom.fr
   OpenAirInterface Tech : openair_tech@eurecom.fr
-  OpenAirInterface Dev  : openair4g-devel@eurecom.fr
+  OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
 
   Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
 
@@ -554,7 +554,7 @@ int main(int argc, char **argv)
 
       PHY_vars_UE->dlsch_ue_MCH[0]->harq_processes[0]->G = get_G(&PHY_vars_UE->lte_frame_parms,
           PHY_vars_UE->dlsch_ue_MCH[0]->harq_processes[0]->nb_rb,
-          PHY_vars_UE->dlsch_ue_MCH[0]->harq_processes[0]->rb_alloc,
+          PHY_vars_UE->dlsch_ue_MCH[0]->harq_processes[0]->rb_alloc_even,
           get_Qm(PHY_vars_UE->dlsch_ue_MCH[0]->harq_processes[0]->mcs),
           1,2,
           PHY_vars_UE->frame_tx,subframe);

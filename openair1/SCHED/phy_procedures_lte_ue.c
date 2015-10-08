@@ -21,7 +21,7 @@
   Contact Information
   OpenAirInterface Admin: openair_admin@eurecom.fr
   OpenAirInterface Tech : openair_tech@eurecom.fr
-  OpenAirInterface Dev  : openair4g-devel@eurecom.fr
+  OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
 
   Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
 
@@ -649,7 +649,9 @@ PRACH_RESOURCES_t prach_resources_local;
 void phy_procedures_UE_TX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstraction_flag,runmode_t mode,relaying_type_t r_type)
 {
 
-  //  int i_d;
+#ifndef OPENAIR2
+  int i;
+#endif
   uint16_t first_rb, nb_rb;
   uint8_t harq_pid;
   unsigned int input_buffer_length;
@@ -2824,7 +2826,7 @@ int phy_procedures_UE_RX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstrac
 
 #ifdef DEBUG_PHY_PROC
 
-            for (i=0; i<11; i++)
+            for (int i=0; i<11; i++)
               LOG_D(PHY,"dlsch_output_buffer[%d]=%x\n",i,phy_vars_ue->dlsch_ue_SI[eNB_id]->harq_processes[0]->c[0][i]);
 
 #endif
@@ -3377,7 +3379,7 @@ int phy_procedures_UE_RX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstrac
           dump_mch(phy_vars_ue,0,phy_vars_ue->dlsch_ue_MCH[0]->harq_processes[0]->G,subframe_rx);
 #ifdef DEBUG_DLSCH
 
-          for (i=0; i<phy_vars_ue->dlsch_ue_MCH[0]->harq_processes[0]->TBS>>3; i++) {
+          for (int i=0; i<phy_vars_ue->dlsch_ue_MCH[0]->harq_processes[0]->TBS>>3; i++) {
             LOG_T(PHY,"%02x.",phy_vars_ue->dlsch_ue_MCH[0]->harq_processes[0]->c[0][i]);
           }
 
@@ -3432,7 +3434,7 @@ int phy_procedures_UE_RX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstrac
                   phy_vars_rn->dlsch_rn_MCH[subframe_rx]->harq_processes[0]->TBS>>3);
 #ifdef DEBUG_PHY
 
-            for (i=0; i<phy_vars_rn->dlsch_rn_MCH[subframe_rx]->harq_processes[0]->TBS>>3; i++)
+            for (int i=0; i<phy_vars_rn->dlsch_rn_MCH[subframe_rx]->harq_processes[0]->TBS>>3; i++)
               msg("%02x ",phy_vars_rn->dlsch_rn_MCH[subframe_rx]->harq_processes[0]->b[i]);
 
             msg("\n");
