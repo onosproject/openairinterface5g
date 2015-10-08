@@ -3790,7 +3790,7 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
   int16_t n1_pucch0,n1_pucch1,n1_pucch2,n1_pucch3;
   uint8_t do_SR = 0;
   uint8_t pucch_sel = 0;
-  int16_t metric0=0,metric1=0;
+  int32_t metric0=0,metric1=0,metric2=0;
   ANFBmode_t bundling_flag;
   PUCCH_FMT_t format;
   int thres;
@@ -4589,9 +4589,20 @@ printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d ack %d
       } else {
         // otherwise we have some PUCCH detection to do
 
-        if (do_SR == 1) {
+        if (do_SR == 1)
           phy_vars_eNB->eNB_UE_stats[i].sr_total++;
 
+        if (do_SR == 1
+#ifdef Rel10
+              /* SR detection is different when 2 CCs and channel selection are active
+               * (this special case is done below)
+               */
+               &&
+              !(phy_vars_eNB->lte_frame_parms.frame_type == FDD &&
+                phy_vars_eNB->n_configured_SCCs[i] == 1 &&
+                phy_vars_eNB->pucch_config_dedicated[i].channel_selection == 1)
+#endif
+                      ) {
           // get metric for SR only
           if (abstraction_flag == 0)
             metric0 = rx_pucch(phy_vars_eNB,
@@ -4617,35 +4628,12 @@ printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d ack %d
           }
 
 #endif
-
-          if (SR_payload == 1) {
-            LOG_D(PHY,"[eNB %d][SR %x] Frame %d subframe %d Got SR for PUSCH, transmitting to MAC\n",phy_vars_eNB->Mod_id,
-                  phy_vars_eNB->ulsch_eNB[i]->rnti,frame,subframe);
-            phy_vars_eNB->eNB_UE_stats[i].sr_received++;
-
-            if (phy_vars_eNB->first_sr[i] == 1) { // this is the first request for uplink after Connection Setup, so clear HARQ process 0 use for Msg4
-              phy_vars_eNB->first_sr[i] = 0;
-              phy_vars_eNB->dlsch_eNB[i][0]->harq_processes[0]->round=0;
-              phy_vars_eNB->dlsch_eNB[i][0]->harq_processes[0]->status=SCH_IDLE;
-              LOG_D(PHY,"[eNB %d][SR %x] Frame %d subframe %d First SR\n",
-                    phy_vars_eNB->Mod_id,
-                    phy_vars_eNB->ulsch_eNB[i]->rnti,frame,subframe);
-            }
-
-#ifdef OPENAIR2
-            mac_xface->SR_indication(phy_vars_eNB->Mod_id,
-                                     phy_vars_eNB->CC_id,
-                                     frame,
-                                     phy_vars_eNB->dlsch_eNB[i][0]->rnti,subframe);
-#endif
-          }
         }// do_SR==1
 
         if ((n1_pucch0==-1) && (n1_pucch1==-1)) { // just check for SR
         }
         else if (phy_vars_eNB->lte_frame_parms.frame_type==FDD) { // FDD
 
-printf("FDD? n_configured_SCCs %d\n", phy_vars_eNB->n_configured_SCCs[i]);
           sfm4 = (subframe+6)%10;
 
           if (phy_vars_eNB->n_configured_SCCs[i] == 0) { // use Rel8 procedure for SR/PUCCH multiplexing
@@ -4686,14 +4674,56 @@ printf("FDD? n_configured_SCCs %d\n", phy_vars_eNB->n_configured_SCCs[i]);
                    (phy_vars_eNB->pucch_config_dedicated[i].channel_selection==1)){
             // use Rel10 procedure for SR/PUCCH multiplexing with Channel Selection
 
+#if 0
             // if SR was detected, use the n1_pucch from SR, else use n1_pucch0
             // (second paragraph from Section 7.3.1 from 36.213)
 printf("SR_payload %d\n", SR_payload);
             if (SR_payload == 1) {
+{
+  int m0, m1, m2;
+  int p0[2], p1[2], p2[2];
+  n1_pucch0 = phy_vars_eNB->scheduling_request_config[i].sr_PUCCH_ResourceIndex;
+  m0 = rx_pucch(phy_vars_eNB,
+                                   pucch_format1b,
+                                   i,
+                                   (uint16_t)n1_pucch0,
+                                   0, //n2_pucch
+                                   0, // shortened format
+                                   pucch_payload0,
+                                   subframe,
+                                   PUCCH1b_THRES);
+  p0[0] = pucch_payload0[0]; p0[1] = pucch_payload0[1];
+
+  n1_pucch0 = 0;
+  m1 = rx_pucch(phy_vars_eNB,
+                                   pucch_format1b_cs2,
+                                   i,
+                                   (uint16_t)n1_pucch0,
+                                   0, //n2_pucch
+                                   0, // shortened format
+                                   pucch_payload0,
+                                   subframe,
+                                   PUCCH1b_THRES);
+  p1[0] = pucch_payload0[0]; p1[1] = pucch_payload0[1];
+
+  n1_pucch0 = 31;
+  m2 = rx_pucch(phy_vars_eNB,
+                                   pucch_format1b_cs2,
+                                   i,
+                                   (uint16_t)n1_pucch0,
+                                   0, //n2_pucch
+                                   0, // shortened format
+                                   pucch_payload0,
+                                   subframe,
+                                   PUCCH1b_THRES);
+  p2[0] = pucch_payload0[0]; p2[1] = pucch_payload0[1];
+  printf("SR: m0/m1/m2 %d/%d/%d p0 %d%d p1 %d%d p2 %d%d\n",
+         m0, m1, m2, p0[0], p0[1], p1[0], p1[1], p2[0], p2[1]);
+}
               n1_pucch0 = phy_vars_eNB->scheduling_request_config[i].sr_PUCCH_ResourceIndex;
               if (abstraction_flag == 0)
                 metric0 = rx_pucch(phy_vars_eNB,
-                                   pucch_format1b,
+                                   pucch_format1b_cs2,
                                    i,
                                    (uint16_t)n1_pucch0,
                                    0, //n2_pucch
@@ -4756,9 +4786,63 @@ printf("pucch detect on pucch %d payload %d %d (metric %d/%d)\n", metric0 > metr
 
               }
               else {
-                AssertFatal (1==0, "Impossible HARQ channel selection condition n1_pucch (%d,%d,%d,%d)",n1_pucch0,n1_pucch1,n1_pucch2,n1_pucch3);
+                AssertFatal(0, "Impossible HARQ channel selection condition n1_pucch (%d,%d,%d,%d)",n1_pucch0,n1_pucch1,n1_pucch2,n1_pucch3);
               }
             }
+#endif
+/* REPLACEMENT CODE STARTS HERE */
+            if ((n1_pucch0 != -1) &&
+                (n1_pucch1 != -1) &&
+                (n1_pucch2 == -1) &&
+                (n1_pucch3 == -1) )  { // A = 2 case
+              if (do_SR == 1)
+                metric0 = rx_pucch(phy_vars_eNB,
+                                   pucch_format1b,
+                                   i,
+                                   phy_vars_eNB->scheduling_request_config[i].sr_PUCCH_ResourceIndex,
+                                   0, //n2_pucch
+                                   0, // shortened format
+                                   pucch_payload0,
+                                   subframe,
+                                   PUCCH1b_THRES);
+              metric1 = rx_pucch(phy_vars_eNB,
+                                 pucch_format1b_cs2,
+                                 i,
+                                 (uint16_t)n1_pucch0,
+                                 0, //n2_pucch
+                                 0, // shortened format
+                                 &cs0,
+                                 subframe,
+                                 PUCCH1b_THRES);
+              metric2 = rx_pucch(phy_vars_eNB,
+                                 pucch_format1b_cs2,
+                                 i,
+                                 (uint16_t)n1_pucch1,
+                                 0, //n2_pucch
+                                 0, // shortened format
+                                 &cs1,
+                                 subframe,
+                                 PUCCH1b_THRES);
+printf("SR: do_SR %d m0/m1/m2 %d/%d/%d p0 %d%d cs0 %d cs1 %d\n",
+       do_SR, metric0, metric1, metric2, pucch_payload0[0], pucch_payload0[1], cs0, cs1);
+              if (do_SR == 1 && metric0 > metric1 && metric0 > metric2) {
+                SR_payload = 1;
+              } else if (metric1 > metric2) {
+                pucch_payload0[0] = cs0;
+                pucch_payload0[1] = 0;   // NACK/DTX
+              } else {
+                pucch_payload0[0] = cs1;
+                pucch_payload0[1] = 1;   // ACK
+              }
+            } else if ((n1_pucch2 != -1) &&
+                       (n1_pucch3 == -1) ) { //A = 3 case
+              AssertFatal(0, "case A=3 TODO");
+            } else if (n1_pucch3 != -1) {
+              AssertFatal(0, "case A=4 TODO");
+            } else {
+              AssertFatal(0, "Impossible HARQ channel selection condition n1_pucch (%d,%d,%d,%d)",n1_pucch0,n1_pucch1,n1_pucch2,n1_pucch3);
+            }
+/* REPLACEMENT CODE ENDS HERE */
           }
 #endif /* Rel10 */
 #ifdef DEBUG_PHY_PROC
@@ -4935,6 +5019,28 @@ printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d ack %d
                                 pucch_sel,
                                 SR_payload);
         }
+      }
+
+      if (SR_payload == 1) {
+        LOG_D(PHY,"[eNB %d][SR %x] Frame %d subframe %d Got SR for PUSCH, transmitting to MAC\n",phy_vars_eNB->Mod_id,
+              phy_vars_eNB->ulsch_eNB[i]->rnti,frame,subframe);
+        phy_vars_eNB->eNB_UE_stats[i].sr_received++;
+
+        if (phy_vars_eNB->first_sr[i] == 1) { // this is the first request for uplink after Connection Setup, so clear HARQ process 0 use for Msg4
+          phy_vars_eNB->first_sr[i] = 0;
+          phy_vars_eNB->dlsch_eNB[i][0]->harq_processes[0]->round=0;
+          phy_vars_eNB->dlsch_eNB[i][0]->harq_processes[0]->status=SCH_IDLE;
+          LOG_D(PHY,"[eNB %d][SR %x] Frame %d subframe %d First SR\n",
+                phy_vars_eNB->Mod_id,
+                phy_vars_eNB->ulsch_eNB[i]->rnti,frame,subframe);
+        }
+
+#ifdef OPENAIR2
+        mac_xface->SR_indication(phy_vars_eNB->Mod_id,
+                                 phy_vars_eNB->CC_id,
+                                 frame,
+                                 phy_vars_eNB->dlsch_eNB[i][0]->rnti,subframe);
+#endif
       }
     } // PUCCH processing
 
