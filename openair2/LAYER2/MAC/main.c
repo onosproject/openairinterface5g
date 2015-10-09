@@ -70,6 +70,10 @@
 
 #include "SCHED/defs.h"
 
+#include "ff-mac-common.h"
+#include "ff-mac-csched-sap.h"
+#include "ff-mac-sched-sap.h"
+
 void dl_phy_sync_success(module_id_t   module_idP,
                          frame_t       frameP,
                          unsigned char eNB_index,
