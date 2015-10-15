@@ -3977,6 +3977,8 @@ printf("o_ACK %d %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_
                     &rnti, &access_mode,
                     /* for the moment, maximum 2 CCs supported */
                     phy_vars_eNB->CA_activated[i] ? 2 : 1);
+#if 0
+/* no need to update because in openair1/PHY/LTE_TRANSPORT/uci_tools.c it is now correctly done */
         /* if 2 CCs are activated, we must update stats of 2nd CC */
         if (phy_vars_eNB->CA_activated[i]) {
           /* hack! one should get the phy_var depending on the UE */
@@ -3984,6 +3986,7 @@ printf("o_ACK %d %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_
           cc2->eNB_UE_stats[i].DL_cqi[0] = phy_vars_eNB->eNB_UE_stats[i].DL_cqi[1];
           memcpy(cc2->eNB_UE_stats[i].DL_subband_cqi[0], phy_vars_eNB->eNB_UE_stats[i].DL_subband_cqi[1], 13);
         }
+#endif
         phy_vars_eNB->eNB_UE_stats[i].rank = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_RI[0];
       }
 
