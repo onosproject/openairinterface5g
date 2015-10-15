@@ -1641,7 +1641,7 @@ if (sched_setattr(0, &attr, flags) < 0 ) {
 }
 cpu_set_t cpuset;
 CPU_ZERO(&cpuset);
-CPU_SET(0, &cpuset);
+CPU_SET(3, &cpuset);
 if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset)) abort();
 
 #endif

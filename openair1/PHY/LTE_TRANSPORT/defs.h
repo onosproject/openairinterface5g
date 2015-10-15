@@ -576,7 +576,11 @@ typedef struct {
   double power_based;
 } eNB_UE_estimated_distances;
 
-typedef struct {
+typedef struct LTE_eNB_UE_stats {
+#ifdef Rel10
+  /// pointers to secondary CC ue_stats
+  struct LTE_eNB_UE_stats *ue_stats_s[5];
+#endif
   /// UL RSSI per receive antenna
   int32_t UL_rssi[NB_ANTENNAS_RX];
   /// PUCCH1a/b power (digital linear)

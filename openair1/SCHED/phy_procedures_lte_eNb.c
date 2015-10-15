@@ -528,12 +528,16 @@ void ca_config(uint8_t  Mod_id,
       PHY_vars_eNB_g[Mod_id][CC_id]->dlsch_eNB[UE_id][0]->dlsch_s[i][1] = NULL;
       PHY_vars_eNB_g[Mod_id][CC_id]->dlsch_eNB[UE_id][1]->dlsch_s[i][0] = NULL;
       PHY_vars_eNB_g[Mod_id][CC_id]->dlsch_eNB[UE_id][1]->dlsch_s[i][1] = NULL;
+
+      PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].ue_stats_s[i] = NULL;
+
+      PHY_vars_eNB_g[Mod_id][CC_id]->sCC_id[UE_id][i] = -1;
     }
     /* for the moment only one secondary CC configured */
     PHY_vars_eNB_g[Mod_id][CC_id]->n_configured_SCCs[UE_id] = ca_configured ? 1 : 0;
   }
 
-  /* setup dlsch_s if CA is configured */
+  /* setup dlsch_s, ue_stats_s and sCC_id if CA is configured */
   /* for the moment, we deal with only one secondary CC */
   if (ca_configured) {
     PHY_VARS_eNB *pcc = NULL;
@@ -561,7 +565,10 @@ void ca_config(uint8_t  Mod_id,
     /* fill dlsch_s (two TBs) of pcc with scc, only for first TB of pcc for the moment */
     pcc->dlsch_eNB[UE_id][0]->dlsch_s[0][0] = scc->dlsch_eNB[UE_id][0];
     pcc->dlsch_eNB[UE_id][0]->dlsch_s[0][1] = scc->dlsch_eNB[UE_id][1];
-
+    /* fill ue_stats_s */
+    pcc->eNB_UE_stats[UE_id].ue_stats_s[0] = &scc->eNB_UE_stats[UE_id];
+    /* set sCC_id */
+    pcc->sCC_id[UE_id][0] = scc->CC_id;
   }
 }
 
@@ -2854,6 +2861,106 @@ void process_Msg3(PHY_VARS_eNB *phy_vars_eNB,uint8_t sched_subframe,uint8_t UE_i
   }
 }
 
+/* process a single ACK/NACK bit
+ * also perform the fine-grain rate-adaptation based on the error statistics
+ * derived from the ACK/NAK process
+ */
+void process_HARQ_ACK(
+        int               Mod_id,
+        int               CC_id,
+        int               UE_id,
+        int               dl_subframe,
+        int               ack,
+        LTE_eNB_DLSCH_t  *dlsch,
+        LTE_eNB_UE_stats *ue_stats,
+        int               dl_harq_pid)
+{
+  LTE_DL_eNB_HARQ_t *dlsch_harq_proc;
+
+  dlsch_harq_proc = dlsch->harq_processes[dl_harq_pid];
+
+  //    msg("[PHY] eNB %d Process %d is active (%d)\n",phy_vars_eNB->Mod_id,dl_harq_pid[m],dlsch_ACK[m]);
+  if (ack == 0) {
+//printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_flag);
+    // Received NAK
+#ifdef DEBUG_PHY_PROC
+    LOG_D(PHY,"[eNB %d][PDSCH %x/%d] NAK Received in round %d, requesting retransmission\n",
+          Mod_id, dlsch->rnti, dl_harq_pid, dlsch_harq_proc->round);
+#endif
+
+    if (dlsch_harq_proc->round == 0)
+      ue_stats->dlsch_NAK_round0++;
+
+    ue_stats->dlsch_NAK[dl_harq_pid][dlsch_harq_proc->round]++;
+
+    // then Increment DLSCH round index
+    dlsch_harq_proc->round++;
+
+    if (dlsch_harq_proc->round == dlsch->Mdlharq) {
+      // This was the last round for DLSCH so reset round and increment l2_error counter
+#ifdef DEBUG_PHY_PROC
+      LOG_W(PHY,"[eNB %d/%d][PDSCH %x/%d] DLSCH retransmissions exhausted, dropping packet\n",
+            Mod_id, CC_id, dlsch->rnti, dl_harq_pid);
+#endif
+#if defined(MESSAGE_CHART_GENERATOR_PHY)
+      MSC_LOG_EVENT(MSC_PHY_ENB, "0 HARQ DLSCH Failed RNTI %"PRIx16" round %u",
+                    dlsch->rnti,
+                    dlsch_harq_proc->round);
+#endif
+
+      dlsch_harq_proc->round = 0;
+      ue_stats->dlsch_l2_errors[dl_harq_pid]++;
+      dlsch_harq_proc->status = SCH_IDLE;
+      dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
+    }
+  } else {
+#ifdef DEBUG_PHY_PROC
+    LOG_D(PHY,"[eNB %d][PDSCH %x/%d] ACK Received in round %d, resetting process\n",
+          Mod_id, dlsch->rnti, dl_harq_pid, dlsch_harq_proc->round);
+#endif
+    ue_stats->dlsch_ACK[dl_harq_pid][dlsch_harq_proc->round]++;
+
+//printf("ACKNACK got an ACK! CC %d\n", phy_vars_eNB->CC_id);
+    // Received ACK so set round to 0 and set dlsch_harq_pid IDLE
+    dlsch_harq_proc->round  = 0;
+    dlsch_harq_proc->status = SCH_IDLE;
+    dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
+
+    ue_stats->total_TBS = ue_stats->total_TBS +
+                          dlsch->harq_processes[dl_harq_pid]->TBS;
+    /*
+      ue_stats->total_transmitted_bits = ue_stats->total_transmitted_bits +
+      phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[dl_harq_pid[m]]->TBS;
+    */
+  }
+
+  // Do fine-grain rate-adaptation for DLSCH
+  if (ue_stats->dlsch_NAK_round0 > dlsch->error_threshold) {
+    if (ue_stats->dlsch_mcs_offset == 1)
+      ue_stats->dlsch_mcs_offset=0;
+    else
+      ue_stats->dlsch_mcs_offset=-1;
+  }
+
+  // Clear NAK stats and adjust mcs offset
+  // after measurement window timer expires
+  if (ue_stats->dlsch_sliding_cnt == dlsch->ra_window_size) {
+    if ((ue_stats->dlsch_mcs_offset == 0) && (ue_stats->dlsch_NAK_round0 < 2))
+      ue_stats->dlsch_mcs_offset = 1;
+
+    if ((ue_stats->dlsch_mcs_offset == 1) && (ue_stats->dlsch_NAK_round0 > 2))
+      ue_stats->dlsch_mcs_offset = 0;
+
+    if ((ue_stats->dlsch_mcs_offset == 0) && (ue_stats->dlsch_NAK_round0 > 2))
+      ue_stats->dlsch_mcs_offset = -1;
+
+    if ((ue_stats->dlsch_mcs_offset == -1) && (ue_stats->dlsch_NAK_round0 < 2))
+      ue_stats->dlsch_mcs_offset = 0;
+
+    ue_stats->dlsch_NAK_round0 = 0;
+    ue_stats->dlsch_sliding_cnt = 0;
+  }
+}
 
 // This function retrieves the harq_pid of the corresponding DLSCH process
 // and updates the error statistics of the DLSCH based on the received ACK
@@ -2880,6 +2987,47 @@ void process_HARQ_feedback(uint8_t UE_id,
   int subframe = phy_vars_eNB->proc[sched_subframe].subframe_rx;
   int harq_pid = subframe2harq_pid( &phy_vars_eNB->lte_frame_parms,frame,subframe);
 
+#ifdef Rel10
+  /* special case: FDD with 2 CCs configured and channel selection */
+  if (phy_vars_eNB->lte_frame_parms.frame_type == FDD &&
+      phy_vars_eNB->n_configured_SCCs[UE_id] == 1 &&
+      phy_vars_eNB->pucch_config_dedicated[UE_id].channel_selection == 1) {
+    int pcarrier = 0, scarrier = 0;
+    int ack0 = 0, ack1 = 0;
+    subframe_m4 = (subframe-4 + 10) % 10;
+    /* is there an ACK/NACK on the primary CC? */
+    if (dlsch->subframe_tx[subframe_m4] > 0) {
+      pcarrier = 1;
+      if (pusch_flag == 1)
+        ack0 = phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
+      else
+        ack0 = pucch_payload[0];
+printf("ACKNACK **** fr/subfr %d/%d pCC %d ack %d\n", frame, subframe, phy_vars_eNB->CC_id, ack0);
+    }
+    /* is there an ACK/NACK on the secondary CC? */
+    if (dlsch->dlsch_s[0][0]->subframe_tx[subframe_m4] > 0) {
+      int i = 0;
+      if (pcarrier) i++;
+      scarrier = 1;
+      if (pusch_flag == 1)
+        ack1 = phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[i];
+      else
+        ack1 = pucch_payload[1];  /* this is 1, not i */
+printf("ACKNACK **** fr/subfr %d/%d sCC %d ack %d\n", frame, subframe, phy_vars_eNB->sCC_id[UE_id][0], ack1);
+    }
+    /* process ACK/NACK for primary CC */
+    if (pcarrier)
+      process_HARQ_ACK(phy_vars_eNB->Mod_id, phy_vars_eNB->CC_id, UE_id, subframe_m4,
+                       ack0, dlsch, ue_stats, dlsch->harq_ids[subframe_m4]);
+    /* process ACK/NACK for secondary CC */
+    if (scarrier)
+      process_HARQ_ACK(phy_vars_eNB->Mod_id, phy_vars_eNB->sCC_id[UE_id][0], UE_id, subframe_m4,
+                       ack1, dlsch->dlsch_s[0][0], ue_stats->ue_stats_s[0],
+                       dlsch->dlsch_s[0][0]->harq_ids[subframe_m4]);
+    return;
+  }
+#endif /* Rel10 */
+
   if (phy_vars_eNB->lte_frame_parms.frame_type == FDD) { //FDD
     subframe_m4 = (subframe<4) ? subframe+6 : subframe-4;
 
@@ -2895,7 +3043,7 @@ void process_HARQ_feedback(uint8_t UE_id,
       else
 	dlsch_ACK[m] = pucch_payload[m];
 
-printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, subframe, dlsch_ACK[0], phy_vars_eNB->CC_id);
+//printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, subframe, dlsch_ACK[0], phy_vars_eNB->CC_id);
       LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK (%d/%d) %d for subframe %d\n",phy_vars_eNB->Mod_id,
 	    frame,m,M,dlsch_ACK[0],subframe_m4);
     }
@@ -3026,372 +3174,12 @@ printf("process_HARQ_feedback fr/subfr %d %d dlsch_ACK[0] %d CC %d\n", frame, su
 
         if (dlsch_harq_proc->status==DISABLED)
           LOG_E(PHY,"dlsch_harq_proc is disabled? \n");
-
 #endif
-
         if ((dl_harq_pid[m]<dlsch->Mdlharq) &&
             (dlsch_harq_proc->status == ACTIVE)) {
           // dl_harq_pid of DLSCH is still active
-
-          //    msg("[PHY] eNB %d Process %d is active (%d)\n",phy_vars_eNB->Mod_id,dl_harq_pid[m],dlsch_ACK[m]);
-          if ( dlsch_ACK[mp]==0) {
-//printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_flag);
-            // Received NAK
-#ifdef DEBUG_PHY_PROC
-            LOG_D(PHY,"[eNB %d][PDSCH %x/%d] M = %d, m= %d, mp=%d NAK Received in round %d, requesting retransmission\n",phy_vars_eNB->Mod_id,
-                  dlsch->rnti,dl_harq_pid[m],M,m,mp,dlsch_harq_proc->round);
-#endif
-
-            if (dlsch_harq_proc->round == 0)
-              ue_stats->dlsch_NAK_round0++;
-
-            ue_stats->dlsch_NAK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
-
-
-            // then Increment DLSCH round index
-            dlsch_harq_proc->round++;
-
-            if (dlsch_harq_proc->round == dlsch->Mdlharq) {
-              // This was the last round for DLSCH so reset round and increment l2_error counter
-#ifdef DEBUG_PHY_PROC
-              LOG_W(PHY,"[eNB %d/%d][PDSCH %x/%d] DLSCH retransmissions exhausted, dropping packet\n",phy_vars_eNB->Mod_id,
-                    phy_vars_eNB->CC_id, dlsch->rnti,dl_harq_pid[m]);
-#endif
-#if defined(MESSAGE_CHART_GENERATOR_PHY)
-              MSC_LOG_EVENT(MSC_PHY_ENB, "0 HARQ DLSCH Failed RNTI %"PRIx16" round %u",
-                            dlsch->rnti,
-                            dlsch_harq_proc->round);
-#endif
-
-              dlsch_harq_proc->round = 0;
-              ue_stats->dlsch_l2_errors[dl_harq_pid[m]]++;
-              dlsch_harq_proc->status = SCH_IDLE;
-              dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
-            }
-          } else {
-#ifdef DEBUG_PHY_PROC
-            LOG_D(PHY,"[eNB %d][PDSCH %x/%d] ACK Received in round %d, resetting process\n",phy_vars_eNB->Mod_id,
-                  dlsch->rnti,dl_harq_pid[m],dlsch_harq_proc->round);
-#endif
-            ue_stats->dlsch_ACK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
-
-//printf("ACKNACK got an ACK! CC %d\n", phy_vars_eNB->CC_id);
-            // Received ACK so set round to 0 and set dlsch_harq_pid IDLE
-            dlsch_harq_proc->round  = 0;
-            dlsch_harq_proc->status = SCH_IDLE;
-            dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
-
-            ue_stats->total_TBS = ue_stats->total_TBS +
-                                  phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[dl_harq_pid[m]]->TBS;
-            /*
-              ue_stats->total_transmitted_bits = ue_stats->total_transmitted_bits +
-              phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[dl_harq_pid[m]]->TBS;
-            */
-          }
-
-          // Do fine-grain rate-adaptation for DLSCH
-          if (ue_stats->dlsch_NAK_round0 > dlsch->error_threshold) {
-            if (ue_stats->dlsch_mcs_offset == 1)
-              ue_stats->dlsch_mcs_offset=0;
-            else
-              ue_stats->dlsch_mcs_offset=-1;
-          }
-
-#ifdef DEBUG_PHY_PROC
-          LOG_D(PHY,"[process_HARQ_feedback] Frame %d Setting round to %d for pid %d (subframe %d)\n",frame,
-                dlsch_harq_proc->round,dl_harq_pid[m],subframe);
-#endif
-
-          // Clear NAK stats and adjust mcs offset
-          // after measurement window timer expires
-          if (ue_stats->dlsch_sliding_cnt == dlsch->ra_window_size) {
-            if ((ue_stats->dlsch_mcs_offset == 0) && (ue_stats->dlsch_NAK_round0 < 2))
-              ue_stats->dlsch_mcs_offset = 1;
-
-            if ((ue_stats->dlsch_mcs_offset == 1) && (ue_stats->dlsch_NAK_round0 > 2))
-              ue_stats->dlsch_mcs_offset = 0;
-
-            if ((ue_stats->dlsch_mcs_offset == 0) && (ue_stats->dlsch_NAK_round0 > 2))
-              ue_stats->dlsch_mcs_offset = -1;
-
-            if ((ue_stats->dlsch_mcs_offset == -1) && (ue_stats->dlsch_NAK_round0 < 2))
-              ue_stats->dlsch_mcs_offset = 0;
-
-            ue_stats->dlsch_NAK_round0 = 0;
-            ue_stats->dlsch_sliding_cnt = 0;
-          }
-
-
-        }
-      }
-    }
-  }
-}
-
-void process_HARQ_feedback_hack(uint8_t UE_id,
-                           uint8_t sched_subframe,
-                           PHY_VARS_eNB *phy_vars_eNB,
-                           uint8_t pusch_flag,
-                           uint8_t *pucch_payload,
-                           uint8_t pucch_sel,
-                           uint8_t SR_payload,
-                           int ack)
-{
-
-  uint8_t dl_harq_pid[8],dlsch_ACK[8],dl_subframe;
-  LTE_eNB_DLSCH_t *dlsch             =  phy_vars_eNB->dlsch_eNB[(uint32_t)UE_id][0];
-  LTE_eNB_UE_stats *ue_stats         =  &phy_vars_eNB->eNB_UE_stats[(uint32_t)UE_id];
-  LTE_DL_eNB_HARQ_t *dlsch_harq_proc;
-  uint8_t subframe_m4,M,m;
-  int mp;
-  int all_ACKed=1,nb_alloc=0,nb_ACK=0;
-  int frame = phy_vars_eNB->proc[sched_subframe].frame_rx;
-  int subframe = phy_vars_eNB->proc[sched_subframe].subframe_rx;
-  int harq_pid = subframe2harq_pid( &phy_vars_eNB->lte_frame_parms,frame,subframe);
-
-  if (phy_vars_eNB->lte_frame_parms.frame_type == FDD) { //FDD
-    subframe_m4 = (subframe<4) ? subframe+6 : subframe-4;
-
-    dl_harq_pid[0] = dlsch->harq_ids[subframe_m4];
-    M=1;
-
-#if 0
-    if (pusch_flag == 1)
-      dlsch_ACK[0] = phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
-    else
-      dlsch_ACK[0] = pucch_payload[0];
-#endif
-
-    dlsch_ACK[0] = ack;
-
-//printf("ACKNACK process_HARQ_feedback_hack fr/subfr %d %d ack %d dlsch_ACK[0] %d _eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1] %d CC %d\n", frame, subframe, ack, dlsch_ACK[0], phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1], phy_vars_eNB->CC_id);
-    LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d for subframe %d\n",phy_vars_eNB->Mod_id,
-          frame,dlsch_ACK[0],subframe_m4);
-
-#if defined(MESSAGE_CHART_GENERATOR_PHY)
-    MSC_LOG_RX_MESSAGE(
-      MSC_PHY_ENB,MSC_PHY_UE,
-      NULL,0,
-      "%05u:%02u %s received %s  rnti %x harq id %u  tx SF %u",
-      frame,subframe,
-      (pusch_flag == 1)?"PUSCH":"PUCCH",
-      (dlsch_ACK[0])?"ACK":"NACK",
-      dlsch->rnti,
-      dl_harq_pid[0],
-      subframe_m4
-      );
-#endif
-  } else { // TDD Handle M=1,2 cases only
-
-    M=ul_ACK_subframe2_M(&phy_vars_eNB->lte_frame_parms,
-                         subframe);
-
-    // Now derive ACK information for TDD
-    if (pusch_flag == 1) { // Do PUSCH ACK/NAK first
-      // detect missing DAI
-      //FK: this code is just a guess
-      //RK: not exactly, yes if scheduled from PHICH (i.e. no DCI format 0)
-      //    otherwise, it depends on how many of the PDSCH in the set are scheduled, we can leave it like this,
-      //    but we have to adapt the code below.  For example, if only one out of 2 are scheduled, only 1 bit o_ACK is used
-
-      dlsch_ACK[0] = phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
-      dlsch_ACK[1] = (phy_vars_eNB->pucch_config_dedicated[UE_id].tdd_AckNackFeedbackMode == bundling)
-                     ?phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0]:phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1];
-      //      printf("UE %d: ACK %d,%d\n",UE_id,dlsch_ACK[0],dlsch_ACK[1]);
-    }
-
-    else {  // PUCCH ACK/NAK
-      if ((SR_payload == 1)&&(pucch_sel!=2)) {  // decode Table 7.3 if multiplexing and SR=1
-        nb_ACK = 0;
-
-        if (M == 2) {
-          if ((pucch_payload[0] == 1) && (pucch_payload[1] == 1)) // b[0],b[1]
-            nb_ACK = 1;
-          else if ((pucch_payload[0] == 1) && (pucch_payload[1] == 0))
-            nb_ACK = 2;
-        } else if (M == 3) {
-          if ((pucch_payload[0] == 1) && (pucch_payload[1] == 1))
-            nb_ACK = 1;
-          else if ((pucch_payload[0] == 1) && (pucch_payload[1] == 0))
-            nb_ACK = 2;
-          else if ((pucch_payload[0] == 0) && (pucch_payload[1] == 1))
-            nb_ACK = 3;
-        }
-      } else if (pucch_sel == 2) { // bundling or M=1
-        //  printf("*** (%d,%d)\n",pucch_payload[0],pucch_payload[1]);
-        dlsch_ACK[0] = pucch_payload[0];
-        dlsch_ACK[1] = pucch_payload[0];
-      } else { // multiplexing with no SR, this is table 10.1
-        if (M==1)
-          dlsch_ACK[0] = pucch_payload[0];
-        else if (M==2) {
-          if (((pucch_sel == 1) && (pucch_payload[0] == 1) && (pucch_payload[1] == 1)) ||
-              ((pucch_sel == 0) && (pucch_payload[0] == 0) && (pucch_payload[1] == 1)))
-            dlsch_ACK[0] = 1;
-          else
-            dlsch_ACK[0] = 0;
-
-          if (((pucch_sel == 1) && (pucch_payload[0] == 1) && (pucch_payload[1] == 1)) ||
-              ((pucch_sel == 1) && (pucch_payload[0] == 0) && (pucch_payload[1] == 0)))
-            dlsch_ACK[1] = 1;
-          else
-            dlsch_ACK[1] = 0;
-        }
-      }
-    }
-  }
-
-  // handle case where positive SR was transmitted with multiplexing
-  if ((SR_payload == 1)&&(pucch_sel!=2)&&(pusch_flag == 0)) {
-    nb_alloc = 0;
-
-    for (m=0; m<M; m++) {
-      dl_subframe = ul_ACK_subframe2_dl_subframe(&phy_vars_eNB->lte_frame_parms,
-                    subframe,
-                    m);
-
-      if (dlsch->subframe_tx[dl_subframe]==1)
-        nb_alloc++;
-    }
-
-    if (nb_alloc == nb_ACK)
-      all_ACKed = 1;
-    else
-      all_ACKed = 0;
-
-    //    printf("nb_alloc %d, all_ACKed %d\n",nb_alloc,all_ACKed);
-  }
-
-
-  for (m=0,mp=-1; m<M; m++) {
-
-    dl_subframe = ul_ACK_subframe2_dl_subframe(&phy_vars_eNB->lte_frame_parms,
-                  subframe,
-                  m);
-
-    if (dlsch->subframe_tx[dl_subframe]==1) {
-      if (pusch_flag == 1)
-        mp++;
-      else
-        mp = m;
-
-      dl_harq_pid[m]     = dlsch->harq_ids[dl_subframe];
-
-      if ((pucch_sel != 2)&&(pusch_flag == 0)) { // multiplexing
-        if ((SR_payload == 1)&&(all_ACKed == 1))
-          dlsch_ACK[m] = 1;
-        else
-          dlsch_ACK[m] = 0;
-      }
-
-      if (dl_harq_pid[m]<dlsch->Mdlharq) {
-        dlsch_harq_proc = dlsch->harq_processes[dl_harq_pid[m]];
-#ifdef DEBUG_PHY_PROC
-        LOG_D(PHY,"[eNB %d][PDSCH %x/%d] subframe %d, status %d, round %d (mcs %d, rv %d, TBS %d)\n",phy_vars_eNB->Mod_id,
-              dlsch->rnti,dl_harq_pid[m],dl_subframe,
-              dlsch_harq_proc->status,dlsch_harq_proc->round,
-              dlsch->harq_processes[dl_harq_pid[m]]->mcs,
-              dlsch->harq_processes[dl_harq_pid[m]]->rvidx,
-              dlsch->harq_processes[dl_harq_pid[m]]->TBS);
-
-        if (dlsch_harq_proc->status==DISABLED)
-          LOG_E(PHY,"dlsch_harq_proc is disabled? \n");
-
-#endif
-
-        if ((dl_harq_pid[m]<dlsch->Mdlharq) &&
-            (dlsch_harq_proc->status == ACTIVE)) {
-          // dl_harq_pid of DLSCH is still active
-
-          //    msg("[PHY] eNB %d Process %d is active (%d)\n",phy_vars_eNB->Mod_id,dl_harq_pid[m],dlsch_ACK[m]);
-          if ( dlsch_ACK[mp]==0) {
-//printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_flag);
-            // Received NAK
-#ifdef DEBUG_PHY_PROC
-            LOG_D(PHY,"[eNB %d][PDSCH %x/%d] M = %d, m= %d, mp=%d NAK Received in round %d, requesting retransmission\n",phy_vars_eNB->Mod_id,
-                  dlsch->rnti,dl_harq_pid[m],M,m,mp,dlsch_harq_proc->round);
-#endif
-
-            if (dlsch_harq_proc->round == 0)
-              ue_stats->dlsch_NAK_round0++;
-
-            ue_stats->dlsch_NAK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
-
-
-            // then Increment DLSCH round index
-            dlsch_harq_proc->round++;
-
-            if (dlsch_harq_proc->round == dlsch->Mdlharq) {
-              // This was the last round for DLSCH so reset round and increment l2_error counter
-#ifdef DEBUG_PHY_PROC
-              LOG_W(PHY,"[eNB %d/%d][PDSCH %x/%d] DLSCH retransmissions exhausted, dropping packet\n",phy_vars_eNB->Mod_id,
-                    phy_vars_eNB->CC_id, dlsch->rnti,dl_harq_pid[m]);
-#endif
-#if defined(MESSAGE_CHART_GENERATOR_PHY)
-              MSC_LOG_EVENT(MSC_PHY_ENB, "0 HARQ DLSCH Failed RNTI %"PRIx16" round %u",
-                            dlsch->rnti,
-                            dlsch_harq_proc->round);
-#endif
-
-              dlsch_harq_proc->round = 0;
-              ue_stats->dlsch_l2_errors[dl_harq_pid[m]]++;
-              dlsch_harq_proc->status = SCH_IDLE;
-              dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
-            }
-          } else {
-#ifdef DEBUG_PHY_PROC
-            LOG_D(PHY,"[eNB %d][PDSCH %x/%d] ACK Received in round %d, resetting process\n",phy_vars_eNB->Mod_id,
-                  dlsch->rnti,dl_harq_pid[m],dlsch_harq_proc->round);
-#endif
-            ue_stats->dlsch_ACK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
-
-//printf("ACKNACK got an ACK! CC %d\n", phy_vars_eNB->CC_id);
-            // Received ACK so set round to 0 and set dlsch_harq_pid IDLE
-            dlsch_harq_proc->round  = 0;
-            dlsch_harq_proc->status = SCH_IDLE;
-            dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
-
-            ue_stats->total_TBS = ue_stats->total_TBS +
-                                  phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[dl_harq_pid[m]]->TBS;
-            /*
-              ue_stats->total_transmitted_bits = ue_stats->total_transmitted_bits +
-              phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[dl_harq_pid[m]]->TBS;
-            */
-          }
-
-          // Do fine-grain rate-adaptation for DLSCH
-          if (ue_stats->dlsch_NAK_round0 > dlsch->error_threshold) {
-            if (ue_stats->dlsch_mcs_offset == 1)
-              ue_stats->dlsch_mcs_offset=0;
-            else
-              ue_stats->dlsch_mcs_offset=-1;
-          }
-
-#ifdef DEBUG_PHY_PROC
-          LOG_D(PHY,"[process_HARQ_feedback] Frame %d Setting round to %d for pid %d (subframe %d)\n",frame,
-                dlsch_harq_proc->round,dl_harq_pid[m],subframe);
-#endif
-
-          // Clear NAK stats and adjust mcs offset
-          // after measurement window timer expires
-          if (ue_stats->dlsch_sliding_cnt == dlsch->ra_window_size) {
-            if ((ue_stats->dlsch_mcs_offset == 0) && (ue_stats->dlsch_NAK_round0 < 2))
-              ue_stats->dlsch_mcs_offset = 1;
-
-            if ((ue_stats->dlsch_mcs_offset == 1) && (ue_stats->dlsch_NAK_round0 > 2))
-              ue_stats->dlsch_mcs_offset = 0;
-
-            if ((ue_stats->dlsch_mcs_offset == 0) && (ue_stats->dlsch_NAK_round0 > 2))
-              ue_stats->dlsch_mcs_offset = -1;
-
-            if ((ue_stats->dlsch_mcs_offset == -1) && (ue_stats->dlsch_NAK_round0 < 2))
-              ue_stats->dlsch_mcs_offset = 0;
-
-            ue_stats->dlsch_NAK_round0 = 0;
-            ue_stats->dlsch_sliding_cnt = 0;
-          }
-
-
+          process_HARQ_ACK(phy_vars_eNB->Mod_id, phy_vars_eNB->CC_id, UE_id, dl_subframe,
+                           dlsch_ACK[mp], dlsch, ue_stats, dl_harq_pid[m]);
         }
       }
     }
@@ -4504,7 +4292,6 @@ printf("o_ACK %d %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_
             frame,subframe,
             i);
 #endif
-#if 0
       process_HARQ_feedback(i,
                             sched_subframe,
                             phy_vars_eNB,
@@ -4512,32 +4299,6 @@ printf("o_ACK %d %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_
                             0,
                             0,
                             0);
-#endif
-      {
-        /* hack - call process_HARQ_feedback for all CCs with ack/nack waiting with the right ack/nack bit */
-        int sf = (subframe<4) ? (subframe+6) : (subframe-4);
-        int ack, z, ack_bit = 0;
-        int harq_pid = subframe2harq_pid( &phy_vars_eNB->lte_frame_parms,frame,subframe);
-        PHY_VARS_eNB *cc;
-//printf("ACKNACK before call process_HARQ_feedback_hack O_ACK %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK);
-        for (z = 0; z < 2; z++) {
-          /* we suppose UE pCC id 0 and secondary CC id 1 */
-          cc = PHY_vars_eNB_g[0][z];
-          if (cc->dlsch_eNB[i][0]->subframe_tx[sf]>0) {
-            ack = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[ack_bit];
-            ack_bit++;
-printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d ack %d\n", frame, subframe, cc->CC_id, ack);
-            process_HARQ_feedback_hack(i,
-                                  sched_subframe,
-                                  cc,
-                                  1, // pusch_flag
-                                  0,
-                                  0,
-                                  0, ack);
-          }
-        }
-//printf("ACKNACK after call process_HARQ_feedback_hack ack_bit %d\n", ack_bit);
-      }
 
 #ifdef DEBUG_PHY_PROC
       LOG_D(PHY,"[eNB %d] Frame %d subframe %d, sect %d: received ULSCH harq_pid %d for UE %d, ret = %d, CQI CRC Status %d, ACK %d,%d, ulsch_errors %d/%d\n",
@@ -4856,39 +4617,11 @@ printf("SR: do_SR %d m0/m1/m2 %d/%d/%d p0 %d%d cs0 %d cs1 %d\n",
                 pucch_payload0[0],metric0);
 #endif
 
-#if 0
           process_HARQ_feedback(i,sched_subframe,phy_vars_eNB,
                                 0,// pusch_flag
                                 pucch_payload0,
                                 2,
                                 SR_payload);
-#endif
-      {
-        /* hack - call process_HARQ_feedback for all CCs with ack/nack waiting with the right ack/nack bit */
-        int sf = (subframe<4) ? (subframe+6) : (subframe-4);
-        int ack, z, ack_bit = 0;
-        int harq_pid = subframe2harq_pid( &phy_vars_eNB->lte_frame_parms,frame,subframe);
-        PHY_VARS_eNB *cc;
-//printf("ACKNACK before call process_HARQ_feedback_hack O_ACK %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK);
-        for (z = 0; z < 2; z++) {
-          /* we suppose UE pCC id 0 and secondary CC id 1 */
-          cc = PHY_vars_eNB_g[0][z];
-          if (cc->dlsch_eNB[i][0]->subframe_tx[sf]>0) {
-            ack = pucch_payload0[ack_bit];
-printf("ACKNACK **** fr/subfr %d %d call process_HARQ_feedback_hack CC %d ack %d\n", frame, subframe, cc->CC_id, ack);
-            process_HARQ_feedback_hack(i,
-                                  sched_subframe,
-                                  cc,
-                                  1, // pusch_flag
-                                  0,
-                                  0,
-                                  0, ack);
-          }
-          /* ack_bit has to be increased... I think... */
-          ack_bit++;
-        }
-//printf("ACKNACK after call process_HARQ_feedback_hack ack_bit %d\n", ack_bit);
-      }
         } // FDD
         else {  //TDD
 

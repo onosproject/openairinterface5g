@@ -240,6 +240,8 @@ typedef struct PHY_VARS_eNB_s {
   /// indicator of the pCell of the UE
   /// set to 1 if this cell is the primary cell of the UE
   int                  pCCflag[NUMBER_OF_UE_MAX];
+  /// CC_id of secondary configured cells (int for it can be == -1)
+  int                  sCC_id[NUMBER_OF_UE_MAX][5];
 #endif
 
   /// cell-specific reference symbols
