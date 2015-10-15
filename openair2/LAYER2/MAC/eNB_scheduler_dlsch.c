@@ -188,7 +188,7 @@ generate_dlsch_header(
     ((CC_ELEMENT*)ce_ptr)->C6 = (scell_bitmap >> 6) & 1;
     ((CC_ELEMENT*)ce_ptr)->C7 = (scell_bitmap >> 7) & 1;
     ce_ptr += sizeof(CC_ELEMENT);
-LOG_E(MAC,"MAC CE scell bitmap sent to UE: bitmap is 0x%2.2x\n", scell_bitmap);
+    LOG_I(MAC,"MAC CE scell bitmap sent to UE. Bitmap is 0x%2.2x\n", scell_bitmap);
   }
 #endif /* Rel10 */
 

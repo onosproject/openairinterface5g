@@ -560,13 +560,8 @@ rrc_mac_config_scell_req(
   /* inform the PHY layer that this UE has scell configured */
   mac_xface->ca_config(module_id, rnti, 1);
 
-#if 0
-  /* !!TO REMOVE!! */
-  sconf->to_configure = 1;
-  sconf->scell[s].active     = TRUE;
-  mac_xface->ca_activate(module_id, rnti, 1);
-#endif
-  LOG_E(MAC,"[eNB %d][rrc_mac_config_scell_req] UE rnti %x scell id %d bitmap_bit %d\n", module_id, rnti, SCell_CC_id, bitmap_bit);
+  LOG_I(MAC,"[eNB %d][rrc_mac_config_scell_req] UE rnti %x configuring scell id %d bitmap_bit %d\n",
+        module_id, rnti, SCell_CC_id, bitmap_bit);
 }
 
 #endif /* Rel10 */

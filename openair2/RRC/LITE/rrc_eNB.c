@@ -1674,7 +1674,7 @@ if (0)
     cs->n1PUCCH_AN_CS_r10->present = PUCCH_ConfigDedicated_v1020__pucch_Format_r10__channelSelection_r10__n1PUCCH_AN_CS_r10_PR_setup;
     n1pucch_1                                        = CALLOC(1, sizeof(struct N1PUCCH_AN_CS_r10));
     n1pucch_2                                        = CALLOC(1, sizeof(struct N1PUCCH_AN_CS_r10));
-    /* values here are TBC CROUX, 0 for the moment */
+    /* values here are TBD CROUX, forced for the moment */
     val = CALLOC(1, sizeof(long)); *val = 30; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
     val = CALLOC(1, sizeof(long)); *val = 31; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
     val = CALLOC(1, sizeof(long)); *val = 32; ASN_SEQUENCE_ADD(&n1pucch_1->list, val);
@@ -1896,13 +1896,6 @@ int freq_to_arfcn10(int band, unsigned long freq)
   return (freq - earfcn_table[i].dl_flow) / 100000UL + earfcn_table[i].dl_off;
 }
 
-void *CALLOC_OR_DIE(size_t nmemb, size_t size)
-{
-  void *r = calloc(nmemb, size);
-  if (r == NULL) abort();
-  return r;
-}
-
 static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
 {
   SCellToAddMod_r10_t *scell;
@@ -1921,16 +1914,16 @@ static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
 
   frame_parms = mac_xface->get_lte_frame_parms(eNB_id, CC);
 
-  scell = CALLOC_OR_DIE(1, sizeof(SCellToAddMod_r10_t));
+  scell = CALLOC(1, sizeof(SCellToAddMod_r10_t));
 
   scell->sCellIndex_r10 = scell_index;
 
-  scell->cellIdentification_r10 = CALLOC_OR_DIE(1, sizeof(struct SCellToAddMod_r10__cellIdentification_r10));
+  scell->cellIdentification_r10 = CALLOC(1, sizeof(struct SCellToAddMod_r10__cellIdentification_r10));
 
   scell->cellIdentification_r10->physCellId_r10 = frame_parms->Nid_cell;
   scell->cellIdentification_r10->dl_CarrierFreq_r10 = freq_to_arfcn10(frame_parms->eutra_band, frame_parms->downlink_frequency);
 
-  scell->radioResourceConfigCommonSCell_r10 = CALLOC_OR_DIE(1, sizeof(RadioResourceConfigCommonSCell_r10_t));
+  scell->radioResourceConfigCommonSCell_r10 = CALLOC(1, sizeof(RadioResourceConfigCommonSCell_r10_t));
   rcommon = scell->radioResourceConfigCommonSCell_r10;
 
   switch (frame_parms->N_RB_DL) {
@@ -1974,7 +1967,7 @@ static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
 
   if (frame_parms->frame_type == TDD) {
     struct TDD_Config *tdd_Config_r10;
-    rcommon->nonUL_Configuration_r10.tdd_Config_r10 = CALLOC_OR_DIE(1, sizeof(struct TDD_Config));
+    rcommon->nonUL_Configuration_r10.tdd_Config_r10 = CALLOC(1, sizeof(struct TDD_Config));
     tdd_Config_r10 = rcommon->nonUL_Configuration_r10.tdd_Config_r10;
     switch (frame_parms->tdd_config) {
       default: /* default to 0 */ /* fallthrough */
@@ -2000,16 +1993,16 @@ static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
     }
   }
 
-  scell->radioResourceConfigDedicatedSCell_r10 = CALLOC_OR_DIE(1, sizeof(RadioResourceConfigDedicatedSCell_r10_t));
+  scell->radioResourceConfigDedicatedSCell_r10 = CALLOC(1, sizeof(RadioResourceConfigDedicatedSCell_r10_t));
   rdedi = scell->radioResourceConfigDedicatedSCell_r10;
 
-  rdedi->physicalConfigDedicatedSCell_r10 = CALLOC_OR_DIE(1, sizeof(PhysicalConfigDedicatedSCell_r10_t));
+  rdedi->physicalConfigDedicatedSCell_r10 = CALLOC(1, sizeof(PhysicalConfigDedicatedSCell_r10_t));
   phy_scell = rdedi->physicalConfigDedicatedSCell_r10;
 
-  phy_scell->nonUL_Configuration_r10 = CALLOC_OR_DIE(1, sizeof(struct PhysicalConfigDedicatedSCell_r10__nonUL_Configuration_r10));
+  phy_scell->nonUL_Configuration_r10 = CALLOC(1, sizeof(struct PhysicalConfigDedicatedSCell_r10__nonUL_Configuration_r10));
   snu = phy_scell->nonUL_Configuration_r10;
 
-  snu->antennaInfo_r10 = CALLOC_OR_DIE(1, sizeof(AntennaInfoDedicated_r10_t));
+  snu->antennaInfo_r10 = CALLOC(1, sizeof(AntennaInfoDedicated_r10_t));
 
   /* TO FIX: get correct transmission mode's value from where it is */
   transmission_mode = frame_parms->mode1_flag ? 1 : 2;
@@ -2033,7 +2026,7 @@ static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
 
 /* no cross carrier scheduling */
 #if 0
-  snu->crossCarrierSchedulingConfig_r10 = CALLOC_OR_DIE(1, sizeof(CrossCarrierSchedulingConfig_r10_t));
+  snu->crossCarrierSchedulingConfig_r10 = CALLOC(1, sizeof(CrossCarrierSchedulingConfig_r10_t));
 
   snu->crossCarrierSchedulingConfig_r10->schedulingCellInfo_r10.present = CrossCarrierSchedulingConfig_r10__schedulingCellInfo_r10_PR_own_r10;
   snu->crossCarrierSchedulingConfig_r10->schedulingCellInfo_r10.choice.own_r10.cif_Presence_r10 = 0;
@@ -2041,18 +2034,18 @@ static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
 
   /* CSI RS set to release or not set at all? */
 #if 0
-  snu->csi_RS_Config_r10 = CALLOC_OR_DIE(1, sizeof(CSI_RS_Config_r10_t));
+  snu->csi_RS_Config_r10 = CALLOC(1, sizeof(CSI_RS_Config_r10_t));
 
-  snu->csi_RS_Config_r10->csi_RS_r10 = CALLOC_OR_DIE(1, sizeof(struct CSI_RS_Config_r10__csi_RS_r10));
+  snu->csi_RS_Config_r10->csi_RS_r10 = CALLOC(1, sizeof(struct CSI_RS_Config_r10__csi_RS_r10));
 
   snu->csi_RS_Config_r10->csi_RS_r10->present = CSI_RS_Config_r10__csi_RS_r10_PR_release;
 
-  snu->csi_RS_Config_r10->zeroTxPowerCSI_RS_r10 = CALLOC_OR_DIE(1, sizeof(struct CSI_RS_Config_r10__zeroTxPowerCSI_RS_r10));
+  snu->csi_RS_Config_r10->zeroTxPowerCSI_RS_r10 = CALLOC(1, sizeof(struct CSI_RS_Config_r10__zeroTxPowerCSI_RS_r10));
 
   snu->csi_RS_Config_r10->zeroTxPowerCSI_RS_r10->present = CSI_RS_Config_r10__zeroTxPowerCSI_RS_r10_PR_release;
 #endif
 
-  snu->pdsch_ConfigDedicated_r10 = CALLOC_OR_DIE(1, sizeof(PDSCH_ConfigDedicated_t));
+  snu->pdsch_ConfigDedicated_r10 = CALLOC(1, sizeof(PDSCH_ConfigDedicated_t));
 
   /* TO FIX: get p_a from its real place (hint: might be in pdsch_config_dedicated) */
   p_a = dB0;
@@ -2069,49 +2062,49 @@ static SCellToAddMod_r10_t *generate_scell(int eNB_id, int CC, int scell_index)
   }
 
   /* configure uplink CQI reporting */
-  phy_scell->ul_Configuration_r10 = CALLOC_OR_DIE(1, sizeof(struct PhysicalConfigDedicatedSCell_r10__ul_Configuration_r10));
+  phy_scell->ul_Configuration_r10 = CALLOC(1, sizeof(struct PhysicalConfigDedicatedSCell_r10__ul_Configuration_r10));
   su = phy_scell->ul_Configuration_r10;
-  su->cqi_ReportConfigSCell_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportConfigSCell_r10_t));
-  su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportModeAperiodic_t));
+  su->cqi_ReportConfigSCell_r10 = CALLOC(1, sizeof(CQI_ReportConfigSCell_r10_t));
+  su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CALLOC(1, sizeof(CQI_ReportModeAperiodic_t));
   *su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CQI_ReportModeAperiodic_rm30;
   su->cqi_ReportConfigSCell_r10->nomPDSCH_RS_EPRE_Offset_r10 = 0;
 
   /* no uplink config */
 #if 0
-  phy_scell->ul_Configuration_r10 = CALLOC_OR_DIE(1, sizeof(struct PhysicalConfigDedicatedSCell_r10__ul_Configuration_r10));
+  phy_scell->ul_Configuration_r10 = CALLOC(1, sizeof(struct PhysicalConfigDedicatedSCell_r10__ul_Configuration_r10));
   su = phy_scell->ul_Configuration_r10;
 
-  su->antennaInfoUL_r10 = CALLOC_OR_DIE(1, sizeof(AntennaInfoUL_r10_t));
+  su->antennaInfoUL_r10 = CALLOC(1, sizeof(AntennaInfoUL_r10_t));
 
-  su->antennaInfoUL_r10->transmissionModeUL_r10 = CALLOC_OR_DIE(1, sizeof(long));
+  su->antennaInfoUL_r10->transmissionModeUL_r10 = CALLOC(1, sizeof(long));
 
   *su->antennaInfoUL_r10->transmissionModeUL_r10 = AntennaInfoUL_r10__transmissionModeUL_r10_tm1;
 
   /* maybe this one should not be set */
-  su->antennaInfoUL_r10->fourAntennaPortActivated_r10 = CALLOC_OR_DIE(1, sizeof(long));
+  su->antennaInfoUL_r10->fourAntennaPortActivated_r10 = CALLOC(1, sizeof(long));
 
   *su->antennaInfoUL_r10->fourAntennaPortActivated_r10 = AntennaInfoUL_r10__fourAntennaPortActivated_r10_setup;
 
-  su->pusch_ConfigDedicatedSCell_r10 = CALLOC_OR_DIE(1, sizeof(PUSCH_ConfigDedicatedSCell_r10_t));
+  su->pusch_ConfigDedicatedSCell_r10 = CALLOC(1, sizeof(PUSCH_ConfigDedicatedSCell_r10_t));
   /* we add nothing into it */
 
-  su->uplinkPowerControlDedicatedSCell_r10 = CALLOC_OR_DIE(1, sizeof(UplinkPowerControlDedicatedSCell_r10_t));
+  su->uplinkPowerControlDedicatedSCell_r10 = CALLOC(1, sizeof(UplinkPowerControlDedicatedSCell_r10_t));
 
   su->uplinkPowerControlDedicatedSCell_r10->p0_UE_PUSCH_r10 = -1;
   su->uplinkPowerControlDedicatedSCell_r10->deltaMCS_Enabled_r10 = UplinkPowerControlDedicatedSCell_r10__deltaMCS_Enabled_r10_en0;
   su->uplinkPowerControlDedicatedSCell_r10->accumulationEnabled_r10 = 0;
   su->uplinkPowerControlDedicatedSCell_r10->pSRS_Offset_r10 = 7;
-  su->uplinkPowerControlDedicatedSCell_r10->pSRS_OffsetAp_r10 = CALLOC_OR_DIE(1, sizeof(long));
+  su->uplinkPowerControlDedicatedSCell_r10->pSRS_OffsetAp_r10 = CALLOC(1, sizeof(long));
   *su->uplinkPowerControlDedicatedSCell_r10->pSRS_OffsetAp_r10 = 8;
-  su->uplinkPowerControlDedicatedSCell_r10->filterCoefficient_r10 = CALLOC_OR_DIE(1, sizeof(FilterCoefficient_t));
+  su->uplinkPowerControlDedicatedSCell_r10->filterCoefficient_r10 = CALLOC(1, sizeof(FilterCoefficient_t));
   *su->uplinkPowerControlDedicatedSCell_r10->filterCoefficient_r10 = FilterCoefficient_fc0;
   su->uplinkPowerControlDedicatedSCell_r10->pathlossReferenceLinking_r10 = UplinkPowerControlDedicatedSCell_r10__pathlossReferenceLinking_r10_sCell;
 
-  su->cqi_ReportConfigSCell_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportConfigSCell_r10_t));
+  su->cqi_ReportConfigSCell_r10 = CALLOC(1, sizeof(CQI_ReportConfigSCell_r10_t));
 
   /* this one not done (todo?) */
-  //su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportModeAperiodic_t));
-su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CALLOC_OR_DIE(1, sizeof(CQI_ReportModeAperiodic_t));
+  //su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CALLOC(1, sizeof(CQI_ReportModeAperiodic_t));
+su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CALLOC(1, sizeof(CQI_ReportModeAperiodic_t));
 *su->cqi_ReportConfigSCell_r10->cqi_ReportModeAperiodic_r10 = CQI_ReportModeAperiodic_rm31;
 
   su->cqi_ReportConfigSCell_r10->nomPDSCH_RS_EPRE_Offset_r10 = 0;
@@ -3552,8 +3545,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
 #endif
 
 #ifdef Rel10
-  /* !!!THIS SHOULD NOT BE HERE!!! */
-  /* open scell 1 if any */
+  /* configure scell 1 if any */
   if (ue_context_pP->ue_context.ca.scell_count != 0)
     rrc_mac_config_scell_req(ctxt_pP->module_id,
             ue_context_pP->ue_context.rnti,
