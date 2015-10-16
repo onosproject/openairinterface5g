@@ -5076,12 +5076,14 @@ case CROUX_HACK:
                                     msg_p->ittiMsgHeader.lte_time.slot);
     rrc_eNB_generate_CA_conf(&ctxt, &eNB_rrc_inst[0].rrc_ue_head.rbh_root->ue_context, 0);
 #endif
-  printf("let's activate/disactivate the 2nd CC!\n");
+{
   eNB_MAC_INST *eNB=&eNB_mac_inst[0];
   UE_SCell_config_t *sconf = &eNB->UE_list.scell_config[0];
+  printf("let's %s the 2nd CC for UE 0!\n", sconf->scell[0].active ? "deactivate" : "activate");
   sconf->scell[0].active = 1 - sconf->scell[0].active;
   sconf->to_configure = 1;
   break;
+}
 
     case TERMINATE_MESSAGE:
       itti_exit_task();
