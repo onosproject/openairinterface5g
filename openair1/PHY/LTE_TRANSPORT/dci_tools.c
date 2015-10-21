@@ -7584,20 +7584,10 @@ int generate_eNB_ulsch_params_from_dci(void *dci_pdu,
     }
 
     if (frame_parms->frame_type == FDD) {
-      int dl_subframe = (subframe<4) ? (subframe+6) : (subframe-4);
-
-      if (phy_vars_eNB->dlsch_eNB[UE_id][0]->subframe_tx[dl_subframe]>0) { // we have downlink transmission
-#if Rel10
-        /* set O_ACK to 2 for decoding 2 bits if 2 CCs configured */
-        if (1/*phy_vars_eNB_SCell->dlsch_eNB[UE_id][0]->subframe_tx[dl_subframe]>0*/) 
-          ulsch->harq_processes[harq_pid]->O_ACK = 2;
-	else 
-#endif
-          ulsch->harq_processes[harq_pid]->O_ACK = 1;
-        
-      } else {
-        ulsch->harq_processes[harq_pid]->O_ACK = 0;
-      }
+      /* we can't set O_ACK here in case of multiple CCs because
+       * all the TX harq processes must have been allocated
+       * and this function may be called before that
+       */
     } else {
       if (ulsch->bundling)
         ulsch->harq_processes[harq_pid]->O_ACK = (dai == 3)? 0 : 1;

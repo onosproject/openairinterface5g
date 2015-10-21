@@ -3800,52 +3800,20 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
       if (frame_parms->frame_type == FDD ) {
         int sf = (subframe<4) ? (subframe+6) : (subframe-4);
 
-#if 0
-        if (phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sf]>0) { // we have downlink transmission
-//          phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 1;
-if (phy_vars_eNB->CA_configured[i] == 0)
-phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 1;
-else
-phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
-        } else {
-          phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 0;
-        }
-#endif
-
-#if 0
-/* old version of CA - pre RK work */
         /* get the number of ack bits according to the number of downlink transmissions */
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 0;
         if (phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sf]>0)
           phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK++;
-        if (phy_vars_eNB->CA_configured[i] == 1) {
-          /* hack - get the secondary CC */
-          PHY_VARS_eNB *eNB_CC2;
-          if (phy_vars_eNB->CC_id == 0) eNB_CC2 = PHY_vars_eNB_g[0][1];
-          else                          eNB_CC2 = PHY_vars_eNB_g[0][0];
-          if (eNB_CC2->dlsch_eNB[i][0]->subframe_tx[sf]>0)
-            phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK++;
-        }
-      }
-#endif
-        /* get the number of ack bits according to the number of downlink transmissions */
-        phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 0;
-        if (phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sf]>0)
-          phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK++;
+#ifdef Rel10
         /* for the moment, check only dlsch_s[0][0] */
         if (phy_vars_eNB->n_configured_SCCs[i] == 1 &&
-            phy_vars_eNB->dlsch_eNB[i][0]->dlsch_s[0][0]->subframe_tx[sf] > 0) {
-          /* hack - get the secondary CC */
-          PHY_VARS_eNB *eNB_CC2;
-          if (phy_vars_eNB->CC_id == 0) eNB_CC2 = PHY_vars_eNB_g[0][1];
-          else                          eNB_CC2 = PHY_vars_eNB_g[0][0];
-          if (eNB_CC2->dlsch_eNB[i][0]->subframe_tx[sf]>0)
-            phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK++;
-        }
+            phy_vars_eNB->dlsch_eNB[i][0]->dlsch_s[0][0]->subframe_tx[sf] > 0)
+          phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK++;
+#endif
 phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[0]=0;
 phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[1]=0;
 if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK)
-printf("pusch f/sf %d/%d O_ACK %d (%d %d)\n", frame, subframe, phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK,
+printf("pusch f/sf %d/%d harq_pid %d ulsch %p O_ACK %d (%d %d)\n", frame, subframe, harq_pid, phy_vars_eNB->ulsch_eNB[i], phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK,
        phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sf]>0,
        phy_vars_eNB->n_configured_SCCs[i] == 1 && phy_vars_eNB->dlsch_eNB[i][0]->dlsch_s[0][0]->subframe_tx[sf] > 0);
       }
