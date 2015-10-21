@@ -1,6 +1,6 @@
 /*******************************************************************************
     OpenAirInterface
-    Copyright(c) 1999 - 2014 Eurecom
+    Copyright(c) 1999 - 2015 Eurecom
 
     OpenAirInterface is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,7 +56,11 @@
 #   include "sctp_eNB_task.h"
 #   include "gtpv1u_eNB_task.h"
 # endif
-
+# if defined(ENABLE_USE_X2)
+#   include "x2ap.h"
+//#   include "sctp_eNB_task.h"
+//#   include "gtpv1u_eNB_task.h"
+#endif 
 extern unsigned char NB_eNB_INST;
 #endif
 
@@ -194,7 +198,7 @@ static void configure_rrc(uint32_t enb_id, const Enb_properties_array_t *enb_pro
 
 /*------------------------------------------------------------------------------*/
 # if defined(ENABLE_USE_MME)
-static uint32_t eNB_app_register(uint32_t enb_id_start, uint32_t enb_id_end, const Enb_properties_array_t *enb_properties)
+static uint32_t eNB_app_register_s1(uint32_t enb_id_start, uint32_t enb_id_end, const Enb_properties_array_t *enb_properties)
 {
   uint32_t         enb_id;
   uint32_t         mme_id;
@@ -264,6 +268,81 @@ static uint32_t eNB_app_register(uint32_t enb_id_start, uint32_t enb_id_end, con
   return register_enb_pending;
 }
 # endif
+
+/*------------------------------------------------------------------------------*/
+# if defined(ENABLE_USE_X2)
+static uint32_t eNB_app_register_x2(uint32_t enb_id_start, uint32_t enb_id_end, const Enb_properties_array_t *enb_properties)
+{
+  uint32_t         enb_id;
+  uint32_t         x2_id;
+  MessageDef      *msg_p;
+  uint32_t         register_enb_x2_pending = 0;
+  char            *str                  = NULL;
+  struct in_addr   addr;
+
+#   if defined(OAI_EMU)
+
+#   endif
+
+  for (enb_id = enb_id_start; (enb_id < enb_id_end) ; enb_id++) {
+#   if defined(OAI_EMU)
+
+    if (oai_emulation.info.cli_start_enb[enb_id] == 1)
+#   endif
+    {
+      x2ap_register_enb_req_t *x2ap_register_eNB;
+
+      msg_p = itti_alloc_new_message (TASK_ENB_APP, X2AP_REGISTER_ENB_REQ);
+
+      x2ap_register_eNB = &X2AP_REGISTER_ENB_REQ(msg_p);
+
+      /* Some default/random parameters */
+      x2ap_register_eNB->eNB_id           = enb_properties->properties[enb_id]->eNB_id;
+      x2ap_register_eNB->cell_type        = enb_properties->properties[enb_id]->cell_type;
+      x2ap_register_eNB->eNB_name         = enb_properties->properties[enb_id]->eNB_name;
+      x2ap_register_eNB->tac              = enb_properties->properties[enb_id]->tac;
+      x2ap_register_eNB->mcc              = enb_properties->properties[enb_id]->mcc;
+      x2ap_register_eNB->mnc              = enb_properties->properties[enb_id]->mnc;
+      x2ap_register_eNB->mnc_digit_length = enb_properties->properties[enb_id]->mnc_digit_length;
+     
+
+      x2ap_register_eNB->nb_x2 =         enb_properties->properties[enb_id]->nb_x2;
+      AssertFatal (x2ap_register_eNB->nb_x2 <= X2AP_MAX_NB_ENB_IP_ADDRESS, "Too many X2 interfaces for eNB %d (%d/%d)!", 
+		   enb_id, x2ap_register_eNB->nb_x2,
+                   X2AP_MAX_NB_ENB_IP_ADDRESS);
+      
+      for (x2_id = 0; x2_id < x2ap_register_eNB->nb_x2; x2_id++) {
+        x2ap_register_eNB->target_enb_x2_ip_address[x2_id].ipv4 = enb_properties->properties[enb_id]->target_enb_x2_ip_address[x2_id].ipv4;
+        x2ap_register_eNB->target_enb_x2_ip_address[x2_id].ipv6 = enb_properties->properties[enb_id]->target_enb_x2_ip_address[x2_id].ipv6;
+        
+	strncpy (x2ap_register_eNB->target_enb_x2_ip_address[x2_id].ipv4_address,
+                 enb_properties->properties[enb_id]->target_enb_x2_ip_address[x2_id].ipv4_address,
+                 sizeof(x2ap_register_eNB->target_enb_x2_ip_address[0].ipv4_address));
+        strncpy (x2ap_register_eNB->target_enb_x2_ip_address[x2_id].ipv6_address,
+                 enb_properties->properties[enb_id]->target_enb_x2_ip_address[x2_id].ipv6_address,
+                 sizeof(x2ap_register_eNB->target_enb_x2_ip_address[0].ipv6_address));
+      }
+
+      x2ap_register_eNB->sctp_in_streams       = enb_properties->properties[enb_id]->sctp_in_streams;
+      x2ap_register_eNB->sctp_out_streams      = enb_properties->properties[enb_id]->sctp_out_streams;
+
+
+      x2ap_register_eNB->enb_x2_ip_address.ipv6 = 0;
+      x2ap_register_eNB->enb_x2_ip_address.ipv4 = 1;
+      addr.s_addr = enb_properties->properties[enb_id]->enb_ipv4_address_for_X2C;
+      str = inet_ntoa(addr);
+      strcpy(x2ap_register_eNB->enb_x2_ip_address.ipv4_address, str);
+
+      itti_send_msg_to_task (TASK_X2AP, ENB_MODULE_ID_TO_INSTANCE(enb_id), msg_p);
+
+      register_enb_x2_pending++;
+    }
+  }
+
+  return register_enb_x2_pending;
+}
+# endif
+
 #endif
 
 /*------------------------------------------------------------------------------*/
@@ -275,9 +354,14 @@ void *eNB_app_task(void *args_p)
   uint32_t                        enb_id_start = 0;
   uint32_t                        enb_id_end = enb_id_start + enb_nb;
 # if defined(ENABLE_USE_MME)
-  uint32_t                        register_enb_pending;
+  uint32_t                        register_enb_pending; // s1ap 
   uint32_t                        registered_enb;
   long                            enb_register_retry_timer_id;
+# endif
+# if defined(ENABLE_USE_X2)
+  uint32_t                        x2ap_register_enb_pending;
+  uint32_t                        x2ap_registered_enb;
+  long                            x2ap_enb_register_retry_timer_id;
 # endif
   uint32_t                        enb_id;
   MessageDef                     *msg_p           = NULL;
@@ -311,14 +395,24 @@ void *eNB_app_task(void *args_p)
   }
 
 # if defined(ENABLE_USE_MME)
-  /* Try to register each eNB */
+  /* Try to register each eNB with MME*/
   registered_enb = 0;
-  register_enb_pending = eNB_app_register (enb_id_start, enb_id_end, enb_properties_p);
+  register_enb_pending = eNB_app_register_s1 (enb_id_start, enb_id_end, enb_properties_p);
 # else
   /* Start L2L1 task */
   msg_p = itti_alloc_new_message(TASK_ENB_APP, INITIALIZE_MESSAGE);
   itti_send_msg_to_task(TASK_L2L1, INSTANCE_DEFAULT, msg_p);
 # endif
+
+# if defined(ENABLE_USE_X2)
+  /* Try to register each eNB with each other */
+  registered_enb_x2 = 0;
+  register_enb_x2_pending = eNB_app_register_x2 (enb_id_start, enb_id_end, enb_properties_p);
+# else
+
+# endif
+
+
 
   do {
     // Wait for a message
@@ -383,7 +477,7 @@ void *eNB_app_task(void *args_p)
             sleep(ENB_REGISTER_RETRY_DELAY);
             /* Restart the registration process */
             registered_enb = 0;
-            register_enb_pending = eNB_app_register (enb_id_start, enb_id_end, enb_properties_p);
+            register_enb_pending = eNB_app_register_s1 (enb_id_start, enb_id_end, enb_properties_p);
           }
         }
       }
@@ -403,12 +497,48 @@ void *eNB_app_task(void *args_p)
       if (TIMER_HAS_EXPIRED (msg_p).timer_id == enb_register_retry_timer_id) {
         /* Restart the registration process */
         registered_enb = 0;
-        register_enb_pending = eNB_app_register (enb_id_start, enb_id_end, enb_properties_p);
+        register_enb_pending = eNB_app_register_s1 (enb_id_start, enb_id_end, enb_properties_p);
       }
 
       break;
-# endif
+# endif 
+#ifdef ENABLE_USE_X2
+    case X2AP_DEREGISTERED_ENB_IND:
+      LOG_W(ENB_APP, "[eNB %d] Received %s: associated eNB %d\n", instance, msg_name,
+            X2AP_DEREGISTERED_ENB_IND(msg_p).nb_x2);
 
+      /* TODO handle recovering of registration */
+      break;
+    
+    case S1AP_REGISTER_ENB_CNF:
+      LOG_I(ENB_APP, "[eNB %d] Received %s: associated eNB %d\n", instance, msg_name,
+            X2AP_REGISTER_ENB_CNF(msg_p).nb_x2);
+
+      DevAssert(register_enb_x2_pending > 0);
+      register_enb_x2_pending--;
+
+      /* Check if at least eNB is registered with one target eNB */
+      if (X2AP_REGISTER_ENB_CNF(msg_p).nb_x2 > 0) {
+        registered_enb_x2++;
+      }
+      
+      /* Check if all register eNB requests have been processed */
+      if (register_enb_x2_pending == 0) {
+        if (registered_enb_x2 == enb_nb) {
+          /* If all eNB are registered, start L2L1 task */
+	
+	}else {
+          uint32_t not_associated_x2 = enb_nb - registered_enb;
+
+          LOG_W(ENB_APP, " %d eNB %s not associated with the target\n",
+                not_associated, not_associated > 1 ? "are" : "is");
+	  // timer to retry 
+        }
+      }
+
+      break;
+
+#endif 
     default:
       LOG_E(ENB_APP, "Received unexpected message %s\n", msg_name);
       break;

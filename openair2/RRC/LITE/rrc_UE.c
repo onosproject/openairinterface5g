@@ -3564,7 +3564,7 @@ static void rrc_ue_generate_MeasurementReport( const protocol_ctxt_t* const ctxt
             UE_rrc_inst[ctxt_pP->module_id].rsrq_db_filtered[target_eNB_offset]);
 
       //  if (measFlag == 1) {
-      cellId = get_adjacent_cell_id(ctxt_pP->module_id, eNB_index); //PhycellId of serving cell
+      cellId = eNB_index; //get_adjacent_cell_id(ctxt_pP->module_id, eNB_index); //PhycellId of serving cell
       targetCellId = UE_rrc_inst[ctxt_pP->module_id].HandoverInfoUe.targetCellId ;//get_adjacent_cell_id(ue_mod_idP,target_eNB_offset); //PhycellId of target cell
 
       if (pframe!=ctxt_pP->frame) {
@@ -3628,7 +3628,7 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
               ttt_ms = timeToTrigger_ms[UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId
                                         -1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger];
               // Freq specific offset of neighbor cell freq
-              ofn = 5;//((UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq != NULL) ?
+              ofn = 15;//((UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq != NULL) ?
               // *UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq : 15); //  /* 15 is the Default */
               // cellIndividualOffset of neighbor cell - not defined yet
               ocn = 0;

@@ -203,7 +203,7 @@ void s1ap_eNB_handle_register_eNB(instance_t instance, s1ap_register_enb_req_t *
   /* Trying to connect to provided list of MME ip address */
   for (index = 0; index < s1ap_register_eNB->nb_mme; index++) {
     s1ap_eNB_register_mme(new_instance,
-    		              &s1ap_register_eNB->mme_ip_address[index],
+			  &s1ap_register_eNB->mme_ip_address[index],
                           &s1ap_register_eNB->enb_ip_address,
                           s1ap_register_eNB->sctp_in_streams,
                           s1ap_register_eNB->sctp_out_streams);

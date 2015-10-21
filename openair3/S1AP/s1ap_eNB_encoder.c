@@ -30,6 +30,7 @@
 /*! \file s1ap_eNB_encoder.c
  * \brief s1ap pdu encode procedures for eNB
  * \author Sebastien ROUX <sebastien.roux@eurecom.fr>
+ * \maintainer Navid Nikaein
  * \date 2013
  * \version 0.1
  */

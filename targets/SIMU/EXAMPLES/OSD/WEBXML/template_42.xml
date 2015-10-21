@@ -46,7 +46,7 @@
       <eNB_MOBILITY>
 	<eNB_INITIAL_DISTRIBUTION>random</eNB_INITIAL_DISTRIBUTION> <!-- use random here and trace for the mobility to define your own positions --> 
 	<RANDOM_eNB_DISTRIBUTION>
-	  <NUMBER_OF_CELLS>3</NUMBER_OF_CELLS>
+	  <NUMBER_OF_CELLS>2</NUMBER_OF_CELLS>
 	</RANDOM_eNB_DISTRIBUTION>
 	<eNB_MOBILITY_TYPE>TRACE</eNB_MOBILITY_TYPE> 
 	<TRACE_MOBILITY_FILE>hexagonal_eNBs.tr</TRACE_MOBILITY_FILE> <!-- file should be located at $(OPENAIR2)/UTIL/OMG/TRACE/, see README there-->

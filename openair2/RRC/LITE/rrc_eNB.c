@@ -1839,7 +1839,7 @@ rrc_eNB_generate_HandoverPreparationInformation(
   memcpy((void *)&handoverInfo->as_config.sourceMasterInformationBlock,
          (void*)&eNB_rrc_inst[ctxt_pP->module_id].carrier[0] /* CROUX TBC */.mib, sizeof(MasterInformationBlock_t));
   memcpy((void *)&handoverInfo->as_config.sourceMeasConfig,
-         (void*)ue_context_pP->ue_context.measConfig, sizeof(MeasConfig_t));
+         (void*)&ue_context_pP->ue_context.measConfig, sizeof(MeasConfig_t));
 
   // FIXME handoverInfo not used...
   free( handoverInfo );
@@ -1861,7 +1861,7 @@ rrc_eNB_generate_HandoverPreparationInformation(
   ue_context_pP->ue_context.handover_info->as_context.reestablishmentInfo->targetCellShortMAC_I.size = 0;
   ue_context_pP->ue_context.handover_info->as_context.reestablishmentInfo->targetCellShortMAC_I.bits_unused = 0;
   ue_context_pP->ue_context.handover_info->as_context.reestablishmentInfo->additionalReestabInfoList = NULL;
-  ue_context_pP->ue_context.handover_info->ho_prepare = 0xFF;    //0xF0;
+  ue_context_pP->ue_context.handover_info->ho_prepare = 0xFF;
   ue_context_pP->ue_context.handover_info->ho_complete = 0;
 
   if (mod_id_target != 0xFF) {
@@ -1950,7 +1950,7 @@ check_handovers(
     if (ue_context_p->ue_context.handover_info != NULL) {
       if (ue_context_p->ue_context.handover_info->ho_prepare == 0xFF) {
         LOG_D(RRC,
-              "[eNB %d] Frame %d: Incoming handover detected for new UE_idx %d (source eNB %d->target eNB %d) \n",
+              "[eNB %d] Frame %d: Incoming handover detected for new UE_id %x (source eNB %d->target eNB %d) \n",
               ctxt_pP->module_id,
               ctxt_pP->frame,
               ctxt_pP->rnti,
@@ -1960,29 +1960,29 @@ check_handovers(
         rrc_eNB_process_handoverPreparationInformation(
           ctxt_pP,
           ue_context_p);
-        ue_context_p->ue_context.handover_info->ho_prepare = 0xF1;
+        ue_context_p->ue_context.handover_info->ho_prepare = 0xF0;
       }
 
-      if (ue_context_p->ue_context.handover_info->ho_complete == 0xF1) {
-        LOG_D(RRC,
-              "[eNB %d] Frame %d: handover Command received for new UE_id  %x current eNB %d target eNB: %d \n",
-              ctxt_pP->module_id,
-              ctxt_pP->frame,
-              ctxt_pP->rnti,
-              ctxt_pP->module_id,
-              ue_context_p->ue_context.handover_info->modid_t);
+      //if (ue_context_p->ue_context.handover_info->ho_complete == 0xF1) {
+        //LOG_D(RRC,
+             // "[eNB %d] Frame %d: handover Command received for new UE_id  %x current eNB %d target eNB: %d \n",
+              //ctxt_pP->module_id,
+              //ctxt_pP->frame,
+              //ctxt_pP->rnti,
+              //ctxt_pP->module_id,
+              //ue_context_p->ue_context.handover_info->modid_t);
         //rrc_eNB_process_handoverPreparationInformation(enb_mod_idP,frameP,i);
-        result = pdcp_data_req(ctxt_pP,
-                               SRB_FLAG_YES,
-                               DCCH,
-                               rrc_eNB_mui++,
-                               SDU_CONFIRM_NO,
-                               ue_context_p->ue_context.handover_info->size,
-                               ue_context_p->ue_context.handover_info->buf,
-                               PDCP_TRANSMISSION_MODE_CONTROL);
-        AssertFatal(result == TRUE, "PDCP data request failed!\n");
-        ue_context_p->ue_context.handover_info->ho_complete = 0xF2;
-      }
+        //result = pdcp_data_req(ctxt_pP,
+                               //SRB_FLAG_YES,
+                               //DCCH,
+                               //rrc_eNB_mui++,
+                               //SDU_CONFIRM_NO,
+                               //ue_context_p->ue_context.handover_info->size,
+                               //ue_context_p->ue_context.handover_info->buf,
+                               //PDCP_TRANSMISSION_MODE_CONTROL);
+        //AssertFatal(result == TRUE, "PDCP data request failed!\n");
+        //ue_context_p->ue_context.handover_info->ho_complete = 0xF2;
+      //}
     }
   }
 }
@@ -2277,6 +2277,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   LOG_D(RRC,
         "handover_config [FRAME %05d][RRC_eNB][MOD %02d][][--- MAC_CONFIG_REQ  (SRB1 UE %x) --->][MAC_eNB][MOD %02d][]\n",
         ctxt_pP->frame, ctxt_pP->module_id, ue_context_pP->ue_context.rnti, ctxt_pP->module_id);
+
   rrc_mac_config_req(
     ctxt_pP->module_id,
     ue_context_pP->ue_context.primaryCC_id,
@@ -2780,7 +2781,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   //      rrc_pdcp_config_req (enb_mod_idP, frameP, 1, CONFIG_ACTION_ADD, idx, UNDEF_SECURITY_MODE);
   //      rrc_rlc_config_req(enb_mod_idP,frameP,1,CONFIG_ACTION_ADD,Idx,SIGNALLING_RADIO_BEARER,Rlc_info_am_config);
 
-  rrc_pdcp_config_asn1_req(&ctxt,
+  rrc_pdcp_config_asn1_req(ctxt_pP,
                            ue_context_pP->ue_context.SRB_configList,
                            (DRB_ToAddModList_t *) NULL, (DRB_ToReleaseList_t *) NULL, 0xff, NULL, NULL, NULL
 #ifdef Rel10
@@ -2788,7 +2789,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
 #endif
                           );
 
-  rrc_rlc_config_asn1_req(&ctxt,
+  rrc_rlc_config_asn1_req(ctxt_pP,
                           ue_context_pP->ue_context.SRB_configList,
                           (DRB_ToAddModList_t *) NULL, (DRB_ToReleaseList_t *) NULL
 #ifdef Rel10
@@ -2849,6 +2850,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
         ctxt_pP->frame, ctxt_pP->module_id, size, ue_context_pP->ue_context.rnti, rrc_eNB_mui, ctxt_pP->module_id, DCCH);
   //rrc_rlc_data_req(ctxt_pP->module_id,frameP, 1,(ue_mod_idP*NB_RB_MAX)+DCCH,rrc_eNB_mui++,0,size,(char*)buffer);
   //pdcp_data_req (ctxt_pP->module_id, frameP, 1, (ue_mod_idP * NB_RB_MAX) + DCCH,rrc_eNB_mui++, 0, size, (char *) buffer, 1);
+
   rrc_mac_config_req(
     ctxt_pP->module_id,
     ue_context_pP->ue_context.primaryCC_id,
@@ -2906,6 +2908,9 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
           ctxt_pP->module_id, ctxt_pP->frame);
 
 #endif
+
+  pdcp_rrc_data_req(ctxt_pP,DCCH,rrc_eNB_mui++,SDU_CONFIRM_NO,size,buffer,PDCP_TRANSMISSION_MODE_CONTROL);
+
 }
 
 /*

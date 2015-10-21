@@ -220,7 +220,7 @@ int s1ap_eNB_decode_pdu(s1ap_message *message, const uint8_t * const buffer,
                         0);
 
   if (dec_ret.code != RC_OK) {
-    S1AP_ERROR("Failed to decode pdu\n");
+    S1AP_ERROR("Failed to S1AP decode pdu\n");
     return -1;
   }
 

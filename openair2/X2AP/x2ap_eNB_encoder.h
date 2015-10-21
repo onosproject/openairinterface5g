@@ -15,44 +15,22 @@
 
     You should have received a copy of the GNU General Public License
     along with OpenAirInterface.The full GNU General Public License is
-    included in this distribution in the file called "COPYING". If not,
-    see <http://www.gnu.org/licenses/>.
+   included in this distribution in the file called "COPYING". If not,
+   see <http://www.gnu.org/licenses/>.
 
   Contact Information
   OpenAirInterface Admin: openair_admin@eurecom.fr
   OpenAirInterface Tech : openair_tech@eurecom.fr
   OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
 
-  Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
+  Address      : Eurecom, Compus SophiaTech 450, route des chappes, 06451 Biot, France.
 
-*******************************************************************************/
+ *******************************************************************************/
 
-#include <stdio.h>
-#include <stdint.h>
+#ifndef X2AP_ENB_ENCODER_H_
+#define X2AP_ENB_ENCODER_H_
 
-/** @defgroup _x2ap_impl_ X2AP Layer Reference Implementation
- * @ingroup _ref_implementation_
- * @{
- */
+int x2ap_eNB_encode_pdu(s1ap_message *message, uint8_t **buffer, uint32_t *len)
+__attribute__ ((warn_unused_result));
 
-#ifndef X2AP_H_
-#define X2AP_H_
-
-#define X2AP_PORT_NUMBER (36422) ///< X2AP SCTP IANA ASSIGNED Port Number
-#define X2AP_SCTP_PPID   (27)    ///< X2AP SCTP Payload Protocol Identifier (PPID)
-
-typedef struct x2ap_config_s {
-} x2ap_config_t;
-
-#if defined(OAI_EMU)
-#else
-extern x2ap_config_t x2ap_config;
-#endif
-
-void *x2ap_task(void *arg);
-
-#endif /* X2AP_H_ */
-
-/**
- * @}
- */
+#endif /* X2AP_ENB_ENCODER_H_ */

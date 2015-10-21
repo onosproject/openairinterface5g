@@ -30,7 +30,7 @@
 ################################################################################
 # file build_helper
 # brief
-# author Laurent Thomas
+# author Laurent Thomas and Navid Nikaein
 #
 #######################################
 SUDO='sudo -E'
@@ -276,6 +276,23 @@ install_asn1c_from_source(){
     ./configure
     make > /tmp/log_compile_asn1c 2>&1
     $SUDO make install
+}
+	
+check_install_syscom_software () {
+    $SUDO apt-get update
+    $SUDO apt-get install -y pcscd pcsc-tools libccid  
+    $SUDO apt-get install python-setuptools libpcsclite-dev # pyscard dependancies
+    echo_info "mkdir -p syscom_scripts"
+    mkdir -p syscom_scripts
+    cd  syscom_scripts
+    wget http://sourceforge.net/projects/pyscard/files/latest/pyscard-1.7.0.tar.gz
+    tar -xzvf pyscard-1.7.0.tar.gz 
+    cd pyscard-1.7.0/
+    echo_info "installing pyscard"
+    $SUDO python setup.py build_ext install
+    cd ..
+    git clone http://cgit.osmocom.org/pysim pysim
+    git clone -b zecke/tmp http://cgit.osmocom.org/pysim pysim-zecke
 }
 
 #################################################

@@ -33,8 +33,8 @@
 #include <stdint.h>
 
 typedef enum {
-	MIN_MSC_ENV = 0,
-    MSC_E_UTRAN = MIN_MSC_ENV,
+  MIN_MSC_ENV = 0,
+  MSC_E_UTRAN = MIN_MSC_ENV,
     MSC_E_UTRAN_LIPA,
     MSC_MME_GW,
     MSC_MME,
@@ -70,6 +70,8 @@ typedef enum {
     MSC_S11_MME,
     MSC_S6A_MME,
     MSC_HSS,
+    MSC_X2AP_SRC_ENB,
+    MSC_X2AP_TARGET_ENB,
     MAX_MSC_PROTOS,
 } msc_proto_t;
 
