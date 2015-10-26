@@ -129,3 +129,90 @@ int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p,
   return ret;
 
 }
+
+int x2ap_eNB_generate_x2_setup_failure ( uint32_t assoc_id,
+					 X2ap_Cause_PR cause_type,
+					 long cause_value,
+					 long time_to_waitx){ 
+  
+  uint8_t                                *buffer_p;
+  uint32_t                                length;
+  x2ap_message                            message;
+  X2SetupFailure_IEs_t                    *x2_setup_failure_p;
+
+  memset (&message, 0, sizeof (x2ap_message));
+  x2_setup_failure_p = &message.msg.x2SetupFailure_IEs;
+  message.procedureCode = X2ap_ProcedureCode_id_X2Setup;
+  message.direction = X2AP_PDU_PR_unsuccessfulOutcome;
+  x2ap_eNB_set_cause (&x2_setup_failure_p->cause, cause_type, cause_value);
+  
+  if (time_to_wait > -1) {
+    x2_setup_failure_p->presenceMask |= X2SETUPFAILURE_IES_TIMETOWAIT_PRESENT;
+    x2_setup_failure_p->timeToWait = time_to_wait;
+  }
+ 
+  if (x2ap_eNB_encode_pdu (&message, &buffer_p, &length) < 0) {
+    X2AP_ERROR ("Failed to encode x2 setup failure\n");
+    return -1;
+  } 
+  MSC_LOG_TX_MESSAGE (MSC_X2AP_SRC_ENB, 
+		      MSC_X2AP_TARGET_ENB, NULL, 0, 
+		      "0 X2Setup/unsuccessfulOutcome  assoc_id %u cause %u value %u", 
+		      assoc_id, cause_type, cause_value);
+  return x2ap_eNB_itti_send_sctp_request (buffer_p, length, assoc_id, 0);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int x2ap_eB_set_cause (S1ap_Cause_t * cause_p,
+		       S1ap_Cause_PR cause_type,
+		       long cause_value)
+{
+
+  DevAssert (cause_p != NULL);
+  cause_p->present = cause_type;
+
+  switch (cause_type) {
+  case X2ap_Cause_PR_radioNetwork:
+    cause_p->choice.misc = cause_value;
+    break;
+    
+  case X2ap_Cause_PR_transport:
+    cause_p->choice.transport = cause_value;
+    break;
+    
+  case X2ap_Cause_PR_protocol:
+    cause_p->choice.protocol = cause_value;
+    break;
+    
+  case X2ap_Cause_PR_misc:
+    cause_p->choice.misc = cause_value;
+    break;
+    
+  default:
+    return -1;
+  }
+  
+  return 0;
+}

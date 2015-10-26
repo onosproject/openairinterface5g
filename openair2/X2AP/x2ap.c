@@ -83,7 +83,7 @@ int x2ap_eNB_generate_x2_setup_failure(x2ap_eNB_instance_t *instance_p,
 
 
 static
-void x2ap_eNB_handle_sctp_data_ind(sctp_data_ind_t *sctp_data_ind) {
+void x2ap_eNB_handle_sctp_data_ind(instance_t instance, sctp_data_ind_t *sctp_data_ind) {
 
   int result;
 
@@ -118,7 +118,7 @@ void x2ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
               instance,
               sctp_new_association_resp->ulp_cnx_id);
 
-    //x2ap_handle_x2_setup_message(x2ap_enb_data_p, sctp_new_association_resp->sctp_state == SCTP_STATE_SHUTDOWN);
+    x2ap_handle_x2_setup_message(x2ap_enb_data_p, sctp_new_association_resp->sctp_state == SCTP_STATE_SHUTDOWN);
 
     return;
   }
@@ -279,7 +279,8 @@ void *x2ap_task(void *arg)
 					    &received_msg->ittiMsg.sctp_new_association_resp);
       
     case SCTP_DATA_IND: {
-      x2ap_eNB_handle_sctp_data_ind(&received_msg->ittiMsg.sctp_data_ind);
+      x2ap_eNB_handle_sctp_data_ind(ITTI_MESSAGE_GET_INSTANCE(received_msg),
+				    &received_msg->ittiMsg.sctp_data_ind);
     } 
       
     break;

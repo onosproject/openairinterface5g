@@ -160,7 +160,7 @@ void x2ap_handle_x2_setup_message(x2ap_enb_data_t *enb_desc_p, int sctp_shutdown
         enb_desc_p->x2ap_eNB_instance->x2ap_enb_associated_nb --;
       }
       
-      /* If there are no more associated MME, inform eNB app */
+      /* If there are no more associated eNB, inform eNB app */
       if (enb_desc_p->x2ap_eNB_instance->x2ap_enb_associated_nb == 0) {
         MessageDef                 *message_p;
 	
@@ -195,10 +195,11 @@ void x2ap_handle_x2_setup_message(x2ap_enb_data_t *enb_desc_p, int sctp_shutdown
 int
 x2ap_eNB_handle_x2_setup_request (uint32_t assoc_id,
 				  uint32_t stream,
-				  struct s1ap_message_s *message)
+				  struct x2ap_message_s *message)
+
 {
- 
-  X2SetupRequestIEs_t               *x2SetupRequest_p;
+  
+  X2SetupRequest_IEs_t               *x2SetupRequest_p;
   eNB_description_t                      *eNB_association;
   uint32_t                                eNB_id = 0;
   char                                   *eNB_name = NULL;
@@ -211,130 +212,112 @@ x2ap_eNB_handle_x2_setup_request (uint32_t assoc_id,
      * We received a new valid X2 Setup Request on a stream != 0.
      * * * * This should not happen -> reject eNB s1 setup request.
      */
-    MSC_LOG_RX_MESSAGE (MSC_X2AP_TARGET_ENB, MSC_X2AP_SRC_ENB, NULL, 0, "0 X2Setup/%s assoc_id %u stream %u", x2ap_direction2String[message->direction], assoc_id, stream);
-
-    if (stream != 0) {
-      X2AP_ERROR ("Received new x2 setup request on stream != 0\n");
+  MSC_LOG_RX_MESSAGE (MSC_X2AP_TARGET_ENB, 
+		      MSC_X2AP_SRC_ENB, NULL, 0, 
+		      "0 X2Setup/%s assoc_id %u stream %u", 
+		      x2ap_direction2String[message->direction], 
+		      assoc_id, stream);
+  
+  if (stream != 0) {
+    X2AP_ERROR ("Received new x2 setup request on stream != 0\n");
       /*
        * Send a x2 setup failure with protocol cause unspecified
        */
+    return x2ap_eNB_generate_x2_setup_failure (assoc_id, 
+					       X2ap_Cause_PR_protocol, 
+					       X2ap_CauseProtocol_unspecified, 
+					       -1);
+  }
+  
+  X2AP_DEBUG ("Received a new X2 setup request\n");
+  
+  if (x2SetupRequest_p->global_ENB_ID.eNB_ID.present == X2ap_ENB_ID_PR_homeENB_ID) {
+    // Home eNB ID = 28 bits
+    uint8_t  *eNB_id_buf = x2SetupRequest_p->global_ENB_ID.eNB_ID.choice.homeENB_ID.buf;
+    
+    if (x2SetupRequest_p->global_ENB_ID.eNB_ID.choice.macroENB_ID.size != 28) {
+      //TODO: handle case were size != 28 -> notify ? reject ?
+    }
+    
+    eNB_id = (eNB_id_buf[0] << 20) + (eNB_id_buf[1] << 12) + (eNB_id_buf[2] << 4) + ((eNB_id_buf[3] & 0xf0) >> 4);
+    X2AP_DEBUG ("Home eNB id: %07x\n", eNB_id);
+  } else {
+    // Macro eNB = 20 bits
+    uint8_t *eNB_id_buf = x2SetupRequest_p->global_ENB_ID.eNB_ID.choice.macroENB_ID.buf;
+    
+    if (x2SetupRequest_p->global_ENB_ID.eNB_ID.choice.macroENB_ID.size != 20) {
+      //TODO: handle case were size != 20 -> notify ? reject ?
+    }
+    
+    eNB_id = (eNB_id_buf[0] << 12) + (eNB_id_buf[1] << 4) + ((eNB_id_buf[2] & 0xf0) >> 4);
+    X2AP_DEBUG ("macro eNB id: %05x\n", eNB_id);
+  }
+  
+  /*
+   * If none of the provided PLMNs/TAC match the one configured in MME,
+   * * * * the s1 setup should be rejected with a cause set to Unknown PLMN.
+   */
+  // ta_ret = x2ap_eNB_compare_ta_lists (&x2SetupRequest_p->supportedTAs);
+  
+  /*
+   * Source and Target eNBs have no common PLMN
+   */
+  /*
+  if (ta_ret != TA_LIST_RET_OK) {
+    X2AP_ERROR ("No Common PLMN with the target eNB, generate_x2_setup_failure\n");
       return x2ap_eNB_generate_x2_setup_failure (assoc_id, 
-						 X2ap_Cause_PR_protocol, 
-						 X2ap_CauseProtocol_unspecified, 
-						 -1);
-    }
-
-    X2AP_DEBUG ("Received a new X2 setup request\n");
-
-    if (x2SetupRequest_p->global_ENB_ID.eNB_ID.present == X2ap_ENB_ID_PR_homeENB_ID) {
-      // Home eNB ID = 28 bits
-      uint8_t  *eNB_id_buf = x2SetupRequest_p->global_ENB_ID.eNB_ID.choice.homeENB_ID.buf;
-
-      if (x2SetupRequest_p->global_ENB_ID.eNB_ID.choice.macroENB_ID.size != 28) {
-        //TODO: handle case were size != 28 -> notify ? reject ?
-      }
-      
-      eNB_id = (eNB_id_buf[0] << 20) + (eNB_id_buf[1] << 12) + (eNB_id_buf[2] << 4) + ((eNB_id_buf[3] & 0xf0) >> 4);
-      X2AP_DEBUG ("eNB id: %07x\n", eNB_id);
-    } else {
-      // Macro eNB = 20 bits
-      uint8_t                                *eNB_id_buf = s1SetupRequest_p->global_ENB_ID.eNB_ID.choice.macroENB_ID.buf;
-
-      if (s1SetupRequest_p->global_ENB_ID.eNB_ID.choice.macroENB_ID.size != 20) {
-        //TODO: handle case were size != 20 -> notify ? reject ?
-      }
-
-      eNB_id = (eNB_id_buf[0] << 12) + (eNB_id_buf[1] << 4) + ((eNB_id_buf[2] & 0xf0) >> 4);
-      S1AP_DEBUG ("macro eNB id: %05x\n", eNB_id);
-    }
-
-    config_read_lock (&mme_config);
-    max_enb_connected = mme_config.max_eNBs;
-    config_unlock (&mme_config);
-
-    if (nb_eNB_associated == max_enb_connected) {
-      S1AP_ERROR ("There is too much eNB connected to MME, rejecting the association\n");
-      S1AP_DEBUG ("Connected = %d, maximum allowed = %d\n", nb_eNB_associated, max_enb_connected);
-      /*
-       * Send an overload cause...
-       */
-      return s1ap_mme_generate_s1_setup_failure (assoc_id, S1ap_Cause_PR_misc, S1ap_CauseMisc_control_processing_overload, S1ap_TimeToWait_v20s);
-    }
-
-    /*
-     * If none of the provided PLMNs/TAC match the one configured in MME,
-     * * * * the s1 setup should be rejected with a cause set to Unknown PLMN.
-     */
-    ta_ret = s1ap_mme_compare_ta_lists (&s1SetupRequest_p->supportedTAs);
-
-    /*
-     * eNB and MME have no common PLMN
-     */
-    if (ta_ret != TA_LIST_RET_OK) {
-      S1AP_ERROR ("No Common PLMN with eNB, generate_s1_setup_failure\n");
-      return s1ap_mme_generate_s1_setup_failure (assoc_id, S1ap_Cause_PR_misc, S1ap_CauseMisc_unknown_PLMN, S1ap_TimeToWait_v20s);
-    }
-
-    S1AP_DEBUG ("Adding eNB to the list of served eNBs\n");
-
-    if ((eNB_association = s1ap_is_eNB_id_in_list (eNB_id)) == NULL) {
+						 X2ap_Cause_PR_misc, 
+						 X2ap_CauseMisc_unknown_PLMN, 
+						 X2ap_TimeToWait_v20s);
+  }
+  */
+  X2AP_DEBUG ("Adding eNB to the list of associated eNBs\n");
+  
+  if ((eNB_association = x2ap_is_eNB_id_in_list (eNB_id)) == NULL) {
       /*
        * eNB has not been fount in list of associated eNB,
        * * * * Add it to the tail of list and initialize data
        */
-      if ((eNB_association = s1ap_is_eNB_assoc_id_in_list (assoc_id)) == NULL) {
-        /*
-         * ??
-         */
-        return -1;
-      } else {
-        eNB_association->s1_state = S1AP_RESETING;
-        eNB_association->eNB_id = eNB_id;
-        eNB_association->default_paging_drx = s1SetupRequest_p->defaultPagingDRX;
-
-        if (eNB_name != NULL) {
-          memcpy (eNB_association->eNB_name, s1SetupRequest_p->eNBname.buf, s1SetupRequest_p->eNBname.size);
-          eNB_association->eNB_name[s1SetupRequest_p->eNBname.size] = '\0';
-        }
-      }
+    if ((eNB_association = s1ap_is_eNB_assoc_id_in_list (assoc_id)) == NULL) {
+      /*
+       * ??
+       */
+      return -1;
     } else {
-      eNB_association->s1_state = S1AP_RESETING;
-
-      /*
-       * eNB has been fount in list, consider the s1 setup request as a reset connection,
-       * * * * reseting any previous UE state if sctp association is != than the previous one
-       */
-      if (eNB_association->sctp_assoc_id != assoc_id) {
-        S1ap_S1SetupFailureIEs_t                s1SetupFailure;
-
-        memset (&s1SetupFailure, 0, sizeof (s1SetupFailure));
-        /*
-         * Send an overload cause...
-         */
-        s1SetupFailure.cause.present = S1ap_Cause_PR_misc;      //TODO: send the right cause
-        s1SetupFailure.cause.choice.misc = S1ap_CauseMisc_control_processing_overload;
-        S1AP_ERROR ("Rejeting s1 setup request as eNB id %d is already associated to an active sctp association" "Previous known: %d, new one: %d\n", eNB_id, eNB_association->sctp_assoc_id, assoc_id);
-        //             s1ap_mme_encode_s1setupfailure(&s1SetupFailure,
-        //                                            receivedMessage->msg.s1ap_sctp_new_msg_ind.assocId);
-        return -1;
-      }
-
-      /*
-       * TODO: call the reset procedure
-       */
+      eNB_association->x2_state = X2AP_RESETING;
+      eNB_association->eNB_id = eNB_id;
     }
-
-    s1ap_dump_eNB (eNB_association);
-    return s1ap_generate_s1_setup_response (eNB_association);
+    
   } else {
+    eNB_association->s1_state = X2AP_RESETING;
+    
     /*
-     * Can not process the request, MME is not connected to HSS
+     * eNB has been fount in list, consider the s1 setup request as a reset connection,
+     * * * * reseting any previous UE state if sctp association is != than the previous one
      */
-    S1AP_ERROR ("Rejecting s1 setup request Can not process the request, MME is not connected to HSS\n");
-    return s1ap_mme_generate_s1_setup_failure (assoc_id, S1ap_Cause_PR_misc, S1ap_CauseMisc_unspecified, -1);
+    if (eNB_association->sctp_assoc_id != assoc_id) {
+      X2SetupFailureIEs_t                x2SetupFailure;
+      
+      memset (&x2SetupFailure, 0, sizeof (x2SetupFailure));
+      /*
+       * Send an overload cause...
+       */
+      s1SetupFailure.cause.present = X2ap_Cause_PR_misc;      //TODO: send the right cause
+      s1SetupFailure.cause.choice.misc = X2ap_CauseMisc_control_processing_overload;
+      X2AP_ERROR ("Rejeting x2 setup request as eNB id %d is already associated to an active sctp association" "Previous known: %d, new one: %d\n", eNB_id, eNB_association->sctp_assoc_id, assoc_id);
+      // x2ap_enb_encode_x2setupfailure(&x2SetupFailure,
+      //                                receivedMessage->msg.s1ap_sctp_new_msg_ind.assocId);
+      return -1;
+    }
+    
+    /*
+     * TODO: call the reset procedure
+     */
   }
+  
+  return x2ap_generate_x2_setup_response (eNB_association);
+  
 }
-
 
 static
 int x2ap_eNB_handle_x2_setup_failure(uint32_t               assoc_id,
