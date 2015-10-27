@@ -305,6 +305,8 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
     return(-1);
   }
 
+openair0_cfg[0].rx_freq[1] = 0;
+
   for (card=0; card<openair0_num_detected_cards; card++) {
 
     p_exmimo_config = openair0_exmimo_pci[card].exmimo_config_ptr;
@@ -354,6 +356,9 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
 #endif
 
     for (ant=0; ant<4; ant++) {
+      p_exmimo_config->rf.rf_mode[ant] = 0;
+      p_exmimo_config->rf.rf_freq_tx[ant] = (unsigned int)openair0_cfg[card].tx_freq[ant];
+      p_exmimo_config->rf.rf_freq_rx[ant] = (unsigned int)openair0_cfg[card].rx_freq[ant];
       if (openair0_cfg[card].rx_freq[ant] || openair0_cfg[card].tx_freq[ant]) {
         p_exmimo_config->rf.rf_mode[ant] = RF_MODE_BASE;
         p_exmimo_config->rf.do_autocal[ant] = 1;//openair0_cfg[card].autocal[ant];
@@ -388,10 +393,13 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
           p_exmimo_config->rf.rf_mode[ant] += LNAByp;
           break;
         }
-      } else {
+      }
+#if 0
+ else {
         p_exmimo_config->rf.rf_mode[ant] = 0;
         p_exmimo_config->rf.do_autocal[ant] = 0;
       }
+#endif
 
       p_exmimo_config->rf.rf_local[ant]   = rf_local[ant];
       p_exmimo_config->rf.rf_rxdc[ant]    = rf_rxdc[ant];
