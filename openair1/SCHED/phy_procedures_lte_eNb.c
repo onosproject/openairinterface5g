@@ -4558,8 +4558,8 @@ printf("pucch detect on pucch %d payload %d %d (metric %d/%d)\n", metric0 > metr
                                  &cs1,
                                  subframe,
                                  PUCCH1b_THRES);
-printf("SR: do_SR %d m0/m1/m2 %d/%d/%d p0 %d%d cs0 %d cs1 %d\n",
-       do_SR, metric0, metric1, metric2, pucch_payload0[0], pucch_payload0[1], cs0, cs1);
+printf("SR: do_SR %d (n1 %d/%d/%d) m0/m1/m2 %d/%d/%d p0 %d%d cs0 %d cs1 %d\n",
+       do_SR, phy_vars_eNB->scheduling_request_config[i].sr_PUCCH_ResourceIndex, n1_pucch0, n1_pucch1, metric0, metric1, metric2, pucch_payload0[0], pucch_payload0[1], cs0, cs1);
               if (do_SR == 1 && metric0 > metric1 && metric0 > metric2) {
                 SR_payload = 1;
               } else if (metric1 > metric2) {
