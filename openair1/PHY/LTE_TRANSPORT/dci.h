@@ -367,21 +367,13 @@ typedef struct DCI0_5MHz_FDD DCI0_5MHz_FDD_t;
 
 #if Rel10
 
-///  DCI Format Type 0 Rel10 UE with Carrier Aggregation configured (5 MHz,FDD, 27 bits)
+///  DCI Format Type 0 Rel10 UE with Carrier Aggregation configured (5 MHz, FDD, 25 bits)
+///  Note: no SRS request because we don't configure it for the moment
 struct DCI0_5MHz_FDD_R10_CA_UEspec_RAT {
-/* no sounding rs configured, so no srs bit */
-#if 0
-  /// Padding
-  uint32_t padding:6;
-#endif
   /// Padding
   uint32_t padding:7;
   /// Resource allocation type
   uint32_t rat:1;
-#if 0
-  /// SRS Request
-  uint32_t srs_req:1;
-#endif
   /// CQI Request
   uint32_t cqi_req:2;
   /// DRS Cyclic Shift
@@ -401,7 +393,6 @@ struct DCI0_5MHz_FDD_R10_CA_UEspec_RAT {
 } __attribute__ ((__packed__));
 
 typedef struct DCI0_5MHz_FDD_R10_CA_UEspec_RAT DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t;
-//#define sizeof_DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t 27
 #define sizeof_DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t 25
 
 #endif /* Rel10 */
@@ -432,14 +423,8 @@ typedef struct DCI1A_5MHz_FDD DCI1A_5MHz_FDD_t;
 
 #if Rel10
 
+/* for the moment there is sounding RS config, so no srs bit */
 struct DCI1A_5MHz_FDD_R10_UEspec {
-/* there is sounding RS config, so no srs bit */
-#if 0
-  /// padding
-  uint32_t padding:7;
-  /// SRS Request
-  uint32_t srs_req:1;
-#endif
   /// padding
   uint32_t padding:8;
   /// Power Control
@@ -461,7 +446,6 @@ struct DCI1A_5MHz_FDD_R10_UEspec {
 } __attribute__ ((__packed__));
 
 typedef struct DCI1A_5MHz_FDD_R10_UEspec DCI1A_5MHz_FDD_R10_UEspec_t;
-//#define sizeof_DCI1A_5MHz_FDD_R10_UEspec_t 27
 #define sizeof_DCI1A_5MHz_FDD_R10_UEspec_t 25
 
 #endif /* Rel10 */
@@ -492,6 +476,38 @@ struct DCI0_10MHz_FDD {
 typedef struct DCI0_10MHz_FDD DCI0_10MHz_FDD_t;
 #define sizeof_DCI0_10MHz_FDD_t 27
 
+#if Rel10
+
+///  DCI Format Type 0 Rel10 UE with Carrier Aggregation configured (10 MHz, FDD, 27 bits)
+///  Note: no SRS request because we don't configure it for the moment
+struct DCI0_10MHz_FDD_R10_CA_UEspec_RAT {
+  /// Padding
+  uint32_t padding:5;
+  /// Resource allocation type
+  uint32_t rat:1;
+  /// CQI Request
+  uint32_t cqi_req:2;
+  /// DRS Cyclic Shift
+  uint32_t cshift:3;
+  /// Power Control
+  uint32_t TPC:2;
+  /// New Data Indicator
+  uint32_t ndi:1;
+  /// Modulation and Coding Scheme and Redundancy Version
+  uint32_t mcs:5;
+  /// RB Assignment (ceil(log2(N_RB_UL*(N_RB_UL+1)/2)) bits)
+  uint32_t rballoc:11;
+  /// Hopping flag
+  uint32_t hopping:1;
+  /// type = 0 => DCI Format 0, type = 1 => DCI Format 1A
+  uint32_t type:1;
+} __attribute__ ((__packed__));
+
+typedef struct DCI0_10MHz_FDD_R10_CA_UEspec_RAT DCI0_10MHz_FDD_R10_CA_UEspec_RAT_t;
+#define sizeof_DCI0_10MHz_FDD_R10_CA_UEspec_RAT_t 27
+
+#endif /* Rel10 */
+
 struct DCI1A_10MHz_FDD {
   /// padding
   uint32_t padding:6;
@@ -516,7 +532,36 @@ struct DCI1A_10MHz_FDD {
 typedef struct DCI1A_10MHz_FDD DCI1A_10MHz_FDD_t;
 #define sizeof_DCI1A_10MHz_FDD_t 27
 
-///  DCI Format Type 0 (20 MHz,FDD, 25 bits)
+#if Rel10
+
+/* for the moment there is sounding RS config, so no srs bit */
+struct DCI1A_10MHz_FDD_R10_UEspec {
+  /// padding
+  uint32_t padding:6;
+  /// Power Control
+  uint32_t TPC:2;
+  /// Redundancy version
+  uint32_t rv:2;
+  /// New Data Indicator
+  uint32_t ndi:1;
+  /// HARQ Process
+  uint32_t harq_pid:3;
+  /// Modulation and Coding Scheme and Redundancy Version
+  uint32_t mcs:5;
+  /// RB Assignment (ceil(log2(N_RB_DL(N_RB_DL+1)/2)) bits)
+  uint32_t rballoc:11;
+  /// Localized/Distributed VRB
+  uint32_t vrb_type:1;
+  /// type = 0 => DCI Format 0, type = 1 => DCI Format 1A
+  uint32_t type:1;
+} __attribute__ ((__packed__));
+
+typedef struct DCI1A_10MHz_FDD_R10_UEspec DCI1A_10MHz_FDD_R10_UEspec_t;
+#define sizeof_DCI1A_10MHz_FDD_R10_UEspec_t 27
+
+#endif /* Rel10 */
+
+///  DCI Format Type 0 (20 MHz,FDD, 27 bits)
 struct DCI0_20MHz_FDD {
   /// Padding
   uint32_t padding:5;
@@ -542,6 +587,38 @@ struct DCI0_20MHz_FDD {
 typedef struct DCI0_20MHz_FDD DCI0_20MHz_FDD_t;
 #define sizeof_DCI0_20MHz_FDD_t 28
 
+#if Rel10
+
+///  DCI Format Type 0 Rel10 UE with Carrier Aggregation configured (20 MHz, FDD, 29 bits)
+///  Note: no SRS request because we don't configure it for the moment
+struct DCI0_20MHz_FDD_R10_CA_UEspec_RAT {
+  /// Padding
+  uint32_t padding:3;
+  /// Resource allocation type
+  uint32_t rat:1;
+  /// CQI Request
+  uint32_t cqi_req:2;
+  /// DRS Cyclic Shift
+  uint32_t cshift:3;
+  /// Power Control
+  uint32_t TPC:2;
+  /// New Data Indicator
+  uint32_t ndi:1;
+  /// Modulation and Coding Scheme and Redundancy Version
+  uint32_t mcs:5;
+  /// RB Assignment (ceil(log2(N_RB_UL*(N_RB_UL+1)/2)) bits)
+  uint32_t rballoc:13;
+  /// Hopping flag
+  uint32_t hopping:1;
+  /// type = 0 => DCI Format 0, type = 1 => DCI Format 1A
+  uint32_t type:1;
+} __attribute__ ((__packed__));
+
+typedef struct DCI0_20MHz_FDD_R10_CA_UEspec_RAT DCI0_20MHz_FDD_R10_CA_UEspec_RAT_t;
+#define sizeof_DCI0_20MHz_FDD_R10_CA_UEspec_RAT_t 29
+
+#endif /* Rel10 */
+
 struct DCI1A_20MHz_FDD {
   /// padding
   uint32_t padding:4;
@@ -565,6 +642,35 @@ struct DCI1A_20MHz_FDD {
 
 typedef struct DCI1A_20MHz_FDD DCI1A_20MHz_FDD_t;
 #define sizeof_DCI1A_20MHz_FDD_t 28
+
+#if Rel10
+
+/* for the moment there is sounding RS config, so no srs bit */
+struct DCI1A_20MHz_FDD_R10_UEspec {
+  /// padding
+  uint32_t padding:4;
+  /// Power Control
+  uint32_t TPC:2;
+  /// Redundancy version
+  uint32_t rv:2;
+  /// New Data Indicator
+  uint32_t ndi:1;
+  /// HARQ Process
+  uint32_t harq_pid:3;
+  /// Modulation and Coding Scheme and Redundancy Version
+  uint32_t mcs:5;
+  /// RB Assignment (ceil(log2(N_RB_DL*(N_RB_DL+1)/2)) bits)
+  uint32_t rballoc:13;
+  /// Localized/Distributed VRB
+  uint32_t vrb_type:1;
+  /// type = 0 => DCI Format 0, type = 1 => DCI Format 1A
+  uint32_t type:1;
+} __attribute__ ((__packed__));
+
+typedef struct DCI1A_20MHz_FDD_R10_UEspec DCI1A_20MHz_FDD_R10_UEspec_t;
+#define sizeof_DCI1A_20MHz_FDD_R10_UEspec_t 29
+
+#endif /* Rel10 */
 
 /// DCI Format Type 1 (1.5 MHz, TDD, 23 bits)
 struct DCI1_1_5MHz_TDD {

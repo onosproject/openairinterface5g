@@ -7140,7 +7140,6 @@ int generate_eNB_ulsch_params_from_dci(void *dci_pdu,
           //  type    = ((DCI0_5MHz_FDD_t *)dci_pdu)->type;
 #if Rel10
         } else {
-//printf("!!new DCI format0!!\n");
           cqi_req = ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->cqi_req;
           cshift  = ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->cshift;
           TPC     = ((DCI0_5MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->TPC;
@@ -7167,13 +7166,26 @@ int generate_eNB_ulsch_params_from_dci(void *dci_pdu,
         //  hopping = ((DCI0_10MHz_TDD_1_6_t *)dci_pdu)->hopping;
         //  type    = ((DCI0_10MHz_TDD_1_6_t *)dci_pdu)->type;
       } else {
-        cqi_req = ((DCI0_10MHz_FDD_t *)dci_pdu)->cqi_req;
-        cshift  = ((DCI0_10MHz_FDD_t *)dci_pdu)->cshift;
-        TPC     = ((DCI0_10MHz_FDD_t *)dci_pdu)->TPC;
-        mcs     = ((DCI0_10MHz_FDD_t *)dci_pdu)->mcs;
-        rballoc = ((DCI0_10MHz_FDD_t *)dci_pdu)->rballoc;
-        //  hopping = ((DCI0_10MHz_FDD_t *)dci_pdu)->hopping;
-        //  type    = ((DCI0_10MHz_FDD_t *)dci_pdu)->type;
+#if Rel10
+        /* DCI0 for a UE configured with more than 1 DL cell is different, see 36.212 5.3.3.1.1 */
+        if (phy_vars_eNB->CA_configured[UE_id] == 0) {
+#endif
+          cqi_req = ((DCI0_10MHz_FDD_t *)dci_pdu)->cqi_req;
+          cshift  = ((DCI0_10MHz_FDD_t *)dci_pdu)->cshift;
+          TPC     = ((DCI0_10MHz_FDD_t *)dci_pdu)->TPC;
+          mcs     = ((DCI0_10MHz_FDD_t *)dci_pdu)->mcs;
+          rballoc = ((DCI0_10MHz_FDD_t *)dci_pdu)->rballoc;
+          //  hopping = ((DCI0_10MHz_FDD_t *)dci_pdu)->hopping;
+          //  type    = ((DCI0_10MHz_FDD_t *)dci_pdu)->type;
+#if Rel10
+        } else {
+          cqi_req = ((DCI0_10MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->cqi_req;
+          cshift  = ((DCI0_10MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->cshift;
+          TPC     = ((DCI0_10MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->TPC;
+          mcs     = ((DCI0_10MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->mcs;
+          rballoc = ((DCI0_10MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->rballoc;
+        }
+#endif /* Rel10 */
       }
 
       RIV_max = RIV_max50;
@@ -7193,13 +7205,26 @@ int generate_eNB_ulsch_params_from_dci(void *dci_pdu,
         //  hopping = ((DCI0_20MHz_TDD_1_6_t *)dci_pdu)->hopping;
         //  type    = ((DCI0_20MHz_TDD_1_6_t *)dci_pdu)->type;
       } else {
-        cqi_req = ((DCI0_20MHz_FDD_t *)dci_pdu)->cqi_req;
-        cshift  = ((DCI0_20MHz_FDD_t *)dci_pdu)->cshift;
-        TPC     = ((DCI0_20MHz_FDD_t *)dci_pdu)->TPC;
-        mcs     = ((DCI0_20MHz_FDD_t *)dci_pdu)->mcs;
-        rballoc = ((DCI0_20MHz_FDD_t *)dci_pdu)->rballoc;
-        //  hopping = ((DCI0_20MHz_FDD_t *)dci_pdu)->hopping;
-        //  type    = ((DCI0_20MHz_FDD_t *)dci_pdu)->type;
+#if Rel10
+        /* DCI0 for a UE configured with more than 1 DL cell is different, see 36.212 5.3.3.1.1 */
+        if (phy_vars_eNB->CA_configured[UE_id] == 0) {
+#endif
+          cqi_req = ((DCI0_20MHz_FDD_t *)dci_pdu)->cqi_req;
+          cshift  = ((DCI0_20MHz_FDD_t *)dci_pdu)->cshift;
+          TPC     = ((DCI0_20MHz_FDD_t *)dci_pdu)->TPC;
+          mcs     = ((DCI0_20MHz_FDD_t *)dci_pdu)->mcs;
+          rballoc = ((DCI0_20MHz_FDD_t *)dci_pdu)->rballoc;
+          //  hopping = ((DCI0_20MHz_FDD_t *)dci_pdu)->hopping;
+          //  type    = ((DCI0_20MHz_FDD_t *)dci_pdu)->type;
+#if Rel10
+        } else {
+          cqi_req = ((DCI0_20MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->cqi_req;
+          cshift  = ((DCI0_20MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->cshift;
+          TPC     = ((DCI0_20MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->TPC;
+          mcs     = ((DCI0_20MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->mcs;
+          rballoc = ((DCI0_20MHz_FDD_R10_CA_UEspec_RAT_t *)dci_pdu)->rballoc;
+        }
+#endif /* Rel10 */
       }
 
       RIV_max = RIV_max100;
@@ -7283,11 +7308,29 @@ int generate_eNB_ulsch_params_from_dci(void *dci_pdu,
             break;
 
           case 50:
-            ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_10MHz;
+#if Rel10
+            /* set correct size if 2 CCs configured */
+            if (cqi_req != 3) {
+#endif
+              ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_10MHz;
+#if Rel10
+            } else {
+              ulsch->harq_processes[harq_pid]->Or1                                 = sizeof_HLC_subband_cqi_nopmi_2CC_10MHz;
+            }
+#endif
             break;
 
           case 100:
-            ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_20MHz;
+#if Rel10
+            /* set correct size if 2 CCs configured */
+            if (cqi_req != 3) {
+#endif
+              ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_20MHz;
+#if Rel10
+            } else {
+              ulsch->harq_processes[harq_pid]->Or1                                 = sizeof_HLC_subband_cqi_nopmi_2CC_20MHz;
+            }
+#endif
             break;
           }
 
