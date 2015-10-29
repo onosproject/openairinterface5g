@@ -2003,6 +2003,7 @@ if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset)) abort();
 
       /* do RX */
       for (CC_id=0; CC_id < MAX_NUM_CCs; CC_id++) {
+if (CC_id != 0) continue;
         eNB_proc_t *proc = &PHY_vars_eNB_g[0][CC_id]->proc[sf];
 //        printf("call phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
         phy_procedures_eNB_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
@@ -3203,6 +3204,7 @@ openair0_cfg[card].num_rb_dl=frame_parms[0]->N_RB_DL;
   }
 
 #ifdef EXMIMO
+openair0_cfg[0].rx_freq[1] = 0;
   openair0_config(&openair0_cfg[0],UE_flag);
 #endif
 
@@ -3702,5 +3704,3 @@ void print_opp_meas(void) {
     print_meas(&softmodem_stats_rx_sf[sfn],"[eNB][total_phy_proc_rx]",NULL,NULL);
   }
 }
-
-

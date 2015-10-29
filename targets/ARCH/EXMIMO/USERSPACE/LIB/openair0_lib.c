@@ -305,8 +305,6 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
     return(-1);
   }
 
-openair0_cfg[0].rx_freq[1] = 0;
-
   for (card=0; card<openair0_num_detected_cards; card++) {
 
     p_exmimo_config = openair0_exmimo_pci[card].exmimo_config_ptr;
