@@ -3016,14 +3016,20 @@ printf("ACKNACK **** fr/subfr %d/%d pCC %d ack %d\n", frame, subframe, phy_vars_
 printf("ACKNACK **** fr/subfr %d/%d sCC %d ack %d\n", frame, subframe, phy_vars_eNB->sCC_id[UE_id][0], ack1);
     }
     /* process ACK/NACK for primary CC */
-    if (pcarrier)
+    if (pcarrier) {
       process_HARQ_ACK(phy_vars_eNB->Mod_id, phy_vars_eNB->CC_id, UE_id, subframe_m4,
                        ack0, dlsch, ue_stats, dlsch->harq_ids[subframe_m4]);
+      /* clear subframe_tx in case of a later missed slot */
+      dlsch->subframe_tx[subframe_m4] = 0;
+    }
     /* process ACK/NACK for secondary CC */
-    if (scarrier)
+    if (scarrier) {
       process_HARQ_ACK(phy_vars_eNB->Mod_id, phy_vars_eNB->sCC_id[UE_id][0], UE_id, subframe_m4,
                        ack1, dlsch->dlsch_s[0][0], ue_stats->ue_stats_s[0],
                        dlsch->dlsch_s[0][0]->harq_ids[subframe_m4]);
+      /* clear subframe_tx in case of a later missed slot */
+      dlsch->dlsch_s[0][0]->subframe_tx[subframe_m4] = 0;
+    }
     return;
   }
 #endif /* Rel10 */
@@ -4376,7 +4382,7 @@ printf("o_ACK %d %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_
             // if SR was detected, use the n1_pucch from SR, else use n1_pucch0
             // (first paragraph from Section 7.3.1 from 36.213)
             n1_pucch0 = (SR_payload==1) ? phy_vars_eNB->scheduling_request_config[i].sr_PUCCH_ResourceIndex:n1_pucch0;
-            if (phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sfm4]==0) {  // TB2 is not active
+            if (phy_vars_eNB->dlsch_eNB[i][1]->subframe_tx[sfm4]==0) {  // TB2 is not active
               format = pucch_format1a;
               thres  = PUCCH1a_THRES;
             }
@@ -4403,6 +4409,9 @@ printf("o_ACK %d %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_
                                       subframe);
 #endif
             } // abstraction flag
+printf("NO CC SR f/sf %d/%d: do_SR %d/pl %d (n1 SR %d/noSR %d) m %d pucch payload %d format %d (1a %d 1b %d) (tb1 %d 2 %d)\n", frame, subframe,
+       do_SR, SR_payload, phy_vars_eNB->scheduling_request_config[i].sr_PUCCH_ResourceIndex, n1_pucch0, metric0, pucch_payload0[0], format,
+       pucch_format1a, pucch_format1b, phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sfm4], phy_vars_eNB->dlsch_eNB[i][1]->subframe_tx[sfm4]);
           } // active_SCCs=0
 #ifdef Rel10
           else if ((phy_vars_eNB->n_configured_SCCs[i] == 1)&&
