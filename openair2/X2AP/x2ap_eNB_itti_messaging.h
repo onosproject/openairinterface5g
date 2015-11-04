@@ -26,14 +26,15 @@
   Address      : Eurecom, Compus SophiaTech 450, route des chappes, 06451 Biot, France.
 
  *******************************************************************************/
+#ifndef X2AP_ENB_ITTI_MESSAGING_H_
+#define X2AP_ENB_ITTI_MESSAGING_H_
 
-#ifndef X2AP_ENB_ENCODER_H_
-#define X2AP_ENB_ENCODER_H_
+void x2ap_eNB_itti_send_sctp_data_req(instance_t instance, int32_t assoc_id, uint8_t *buffer,
+                                      uint32_t buffer_length, uint16_t stream);
 
-#include "x2ap_common.h"
-#include "x2ap_ies_defs.h"
 
-int x2ap_eNB_encode_pdu(x2ap_message *x2ap_message_p, uint8_t **buffer, uint32_t *len)
-__attribute__ ((warn_unused_result));
+void x2ap_eNB_itti_send_sctp_close_association(instance_t instance,
+    int32_t assoc_id);
 
-#endif /* X2AP_ENB_ENCODER_H_ */
+
+#endif /* X2AP_ENB_ITTI_MESSAGING_H_ */

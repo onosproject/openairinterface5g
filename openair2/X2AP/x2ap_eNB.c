@@ -27,8 +27,8 @@
 
 *******************************************************************************/
 
-/*! \file x2ap.c
- * \brief x2ap protocol
+/*! \file x2ap_eNB.c
+ * \brief x2ap protocol for eNB
  * \author Navid Nikaein 
  * \date 2014 - 2015
  * \version 1.0
@@ -44,13 +44,21 @@
 
 #include "intertask_interface.h"
 
-#include "x2ap.h"
+#include "assertions.h"
+#include "queue.h"
+
+#include "x2ap_eNB.h"
+#include "x2ap_eNB_defs.h"
+#include "x2ap_eNB_decoder.h"
+#include "x2ap_eNB_handler.h"
+#include "x2ap_ies_defs.h"
+#include "x2ap_eNB_management_procedures.h"
 
 #include "msc.h"
 
-
 #include "assertions.h"
 #include "conversions.h"
+
 
 static
 void x2ap_eNB_handle_register_eNB(instance_t instance, 
@@ -69,21 +77,22 @@ void x2ap_eNB_handle_sctp_association_resp(instance_t instance,
 
 static 
 int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p, 
-				       x2ap_enb_data_t *x2ap_enb_data_p);
+				       x2ap_eNB_data_t *x2ap_enb_data_p);
 
 static 
 int x2ap_eNB_generate_x2_setup_response(x2ap_eNB_instance_t *instance_p, 
-				       x2ap_enb_data_t *x2ap_enb_data_p);
+				       x2ap_eNB_data_t *x2ap_enb_data_p);
 
 static 
 int x2ap_eNB_generate_x2_setup_failure(x2ap_eNB_instance_t *instance_p, 
-				       x2ap_enb_data_t *x2ap_enb_data_p);
+				       x2ap_eNB_data_t *x2ap_enb_data_p);
 
 
 
 
 static
-void x2ap_eNB_handle_sctp_data_ind(instance_t instance, sctp_data_ind_t *sctp_data_ind) {
+void x2ap_eNB_handle_sctp_data_ind(instance_t instance, 
+				   sctp_data_ind_t *sctp_data_ind) {
 
   int result;
 
@@ -101,14 +110,14 @@ static
 void x2ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_association_resp_t *sctp_new_association_resp)
 {
   x2ap_eNB_instance_t *instance_p;
-  x2ap_eNB_mme_data_t *x2ap_enb_data_p;
+  x2ap_eNB_data_t *x2ap_enb_data_p;
 
   DevAssert(sctp_new_association_resp != NULL);
 
   instance_p = x2ap_eNB_get_instance(instance);
   DevAssert(instance_p != NULL);
 
-  x2ap_enb_data_p = x2ap_eNB_get_eNB(instance_p, -1,
+  x2ap_enb_data_p = x2ap_get_eNB(instance_p, -1,
                                      sctp_new_association_resp->ulp_cnx_id);
   DevAssert(x2ap_enb_data_p != NULL);
 
@@ -118,7 +127,8 @@ void x2ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
               instance,
               sctp_new_association_resp->ulp_cnx_id);
 
-    x2ap_handle_x2_setup_message(x2ap_enb_data_p, sctp_new_association_resp->sctp_state == SCTP_STATE_SHUTDOWN);
+    x2ap_handle_x2_setup_message(x2ap_enb_data_p, 
+				 sctp_new_association_resp->sctp_state == SCTP_STATE_SHUTDOWN);
 
     return;
   }
@@ -132,6 +142,38 @@ void x2ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
   x2ap_eNB_generate_x2_setup_request(instance_p, x2ap_enb_data_p);
 }
 
+int x2ap_eNB_init_sctp (x2ap_eNB_instance_t *instance_p,
+			net_ip_address_t    *local_ip_addr)
+{
+  // Create and alloc new message
+  MessageDef                             *message;
+  sctp_init_t                            *sctp_init  = NULL;
+  
+  DevAssert(instance_p != NULL);
+  DevAssert(local_ip_addr != NULL);
+  
+  message = itti_alloc_new_message (TASK_X2AP, SCTP_INIT_MSG);
+  sctp_init = &message->ittiMsg.sctp_init;
+  
+  sctp_init->port = X2AP_PORT_NUMBER;
+  sctp_init->ppid = X2AP_SCTP_PPID;
+  sctp_init->ipv4 = 1;
+  sctp_init->ipv6 = 0;
+  sctp_init->nb_ipv4_addr = 1;
+
+  memcpy(&sctp_init->ipv4_address,
+         local_ip_addr,
+         sizeof(*local_ip_addr));
+  /*
+   * SR WARNING: ipv6 multi-homing fails sometimes for localhost.
+   * * * * Disable it for now.
+   */
+  sctp_init->nb_ipv6_addr = 0;
+  sctp_init->ipv6_address[0] = "0:0:0:0:0:0:0:1";
+  
+  return itti_send_msg_to_task (TASK_SCTP, instance_p->instance, message);
+  
+}
   
 static void x2ap_eNB_register_eNB(x2ap_eNB_instance_t *instance_p,
                                   net_ip_address_t    *target_eNB_ip_address,
@@ -140,54 +182,55 @@ static void x2ap_eNB_register_eNB(x2ap_eNB_instance_t *instance_p,
                                   uint16_t             out_streams)
 {
 
-  MessageDef                 *message_p                   = NULL;
-  sctp_new_association_req_t *sctp_new_association_req_p  = NULL;
-  x2ap_eNB_data_t            *x2ap_enb_data_p             = NULL;
+  MessageDef                 *message                   = NULL;
+  sctp_new_association_req_t *sctp_new_association_req  = NULL;
+  x2ap_eNB_data_t            *x2ap_enb_data             = NULL;
 
   DevAssert(instance_p != NULL);
   DevAssert(target_eNB_ip_address != NULL);
 
-  message_p = itti_alloc_new_message(TASK_X2AP, SCTP_NEW_ASSOCIATION_REQ);
+  message = itti_alloc_new_message(TASK_X2AP, SCTP_NEW_ASSOCIATION_REQ);
 
-  sctp_new_association_req_p = &message_p->ittiMsg.sctp_new_association_req;
+  sctp_new_association_req = &message->ittiMsg.sctp_new_association_req;
 
-  sctp_new_association_req_p->port = X2AP_PORT_NUMBER;
-  sctp_new_association_req_p->ppid = X2AP_SCTP_PPID;
+  sctp_new_association_req->port = X2AP_PORT_NUMBER;
+  sctp_new_association_req->ppid = X2AP_SCTP_PPID;
 
-  sctp_new_association_req_p->in_streams  = in_streams;
-  sctp_new_association_req_p->out_streams = out_streams;
+  sctp_new_association_req->in_streams  = in_streams;
+  sctp_new_association_req->out_streams = out_streams;
 
-  memcpy(&sctp_new_association_req_p->remote_address,
+  memcpy(&sctp_new_association_req->remote_address,
          target_eNB_ip_address,
          sizeof(*target_eNB_ip_address));
 
-  memcpy(&sctp_new_association_req_p->local_address,
+  memcpy(&sctp_new_association_req->local_address,
          local_ip_addr,
          sizeof(*local_ip_addr));
 
-  /* Create new MME descriptor */
-  x2ap_enb_data_p = calloc(1, sizeof(*x2ap_enb_data_p));
-  DevAssert(x2ap_enb_data_p != NULL);
+  /* Create new eNB descriptor */
+  x2ap_enb_data = calloc(1, sizeof(*x2ap_enb_data));
+  DevAssert(x2ap_enb_data != NULL);
 
-  x2ap_enb_data_p->cnx_id                = x2ap_eNB_fetch_add_global_cnx_id();
-  sctp_new_association_req_p->ulp_cnx_id = x2ap_enb_data_p->cnx_id;
+  x2ap_enb_data->cnx_id                = x2ap_eNB_fetch_add_global_cnx_id();
+  sctp_new_association_req->ulp_cnx_id = x2ap_enb_data->cnx_id;
 
-  x2ap_enb_data_p->assoc_id          = -1;
-  x2ap_enb_data_p->x2ap_eNB_instance = instance_p;
+  x2ap_enb_data->assoc_id          = -1;
+  x2ap_enb_data->x2ap_eNB_instance = instance_p;
 
   /* Insert the new descriptor in list of known eNB
    * but not yet associated.
    */
-  RB_INSERT(x2ap_enb_map, &instance_p->x2ap_enb_head, x2ap_enb_data_p);
-  s1ap_mme_data_p->state = X2AP_ENB_STATE_WAITING;
-  instance_p->x2ap_enb_nb ++;
-  instance_p->x2ap_enb_pending_nb ++;
+  RB_INSERT(x2ap_enb_map, &instance_p->x2ap_enb_head, x2ap_enb_data);
+  x2ap_enb_data->state = X2AP_ENB_STATE_WAITING;
+  instance_p->x2_target_enb_nb ++;
+  instance_p->x2_target_enb_pending_nb ++;
 
-  itti_send_msg_to_task(TASK_SCTP, instance_p->instance, message_p);
+  itti_send_msg_to_task(TASK_SCTP, instance_p->instance, message);
 }
 
 static
-void x2ap_eNB_handle_register_eNB(instance_t instance, x2ap_register_enb_req_t *x2ap_register_eNB)
+void x2ap_eNB_handle_register_eNB(instance_t instance, 
+				  x2ap_register_enb_req_t *x2ap_register_eNB)
 {
 
   x2ap_eNB_instance_t *new_instance;
@@ -233,16 +276,32 @@ void x2ap_eNB_handle_register_eNB(instance_t instance, x2ap_register_enb_req_t *
                x2ap_register_eNB->eNB_id);
   }
 
-  DevCheck(x2ap_register_eNB->nb_mme <= X2AP_MAX_NB_ENB_IP_ADDRESS,
+  DevCheck(x2ap_register_eNB->nb_x2 <= X2AP_MAX_NB_ENB_IP_ADDRESS,
            X2AP_MAX_NB_ENB_IP_ADDRESS, x2ap_register_eNB->nb_x2, 0);
 
+  
   /* Trying to connect to the provided list of eNB ip address */
+ 
   for (index = 0; index < x2ap_register_eNB->nb_x2; index++) {
-    x2ap_eNB_register_eNB(new_instance,
-			  &x2ap_register_eNB->target_enb_x2_ip_address[index],
-                          &x2ap_register_eNB->enb_x2_ip_address,
-                          x2ap_register_eNB->sctp_in_streams,
-                          x2ap_register_eNB->sctp_out_streams);
+      
+    if (x2ap_register_eNB->target_enb_x2_ip_address[index].active == 1 ){
+      X2AP_INFO("eNB[%d] eNB id %u acting as an initiator\n",
+		instance, x2ap_register_eNB->eNB_id);
+      x2ap_eNB_register_eNB(new_instance,
+			    &x2ap_register_eNB->target_enb_x2_ip_address[index],
+			    &x2ap_register_eNB->enb_x2_ip_address,
+			    x2ap_register_eNB->sctp_in_streams,
+			    x2ap_register_eNB->sctp_out_streams);
+    }
+    else {
+      /* initiate the SCTP listener */ 
+      if (x2ap_eNB_init_sctp(new_instance,&x2ap_register_eNB->enb_x2_ip_address) <  0 ) {
+	X2AP_ERROR ("Error while sending SCTP_INIT_MSG to SCTP \n");
+	return -1;
+      }
+      X2AP_INFO("eNB[%d] eNB id %u acting as a listner\n",
+		instance, x2ap_register_eNB->eNB_id);
+    }
   }
 
 }

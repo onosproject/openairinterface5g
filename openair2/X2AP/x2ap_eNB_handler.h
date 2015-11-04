@@ -30,6 +30,8 @@
 #ifndef X2AP_ENB_HANDLERS_H_
 #define X2AP_ENB_HANDLERS_H_
 
+#include "x2ap_eNB_defs.h"
+
 void x2ap_handle_x2_setup_message(x2ap_eNB_data_t *mme_desc_p, int sctp_shutdown);
 
 int x2ap_eNB_handle_message(uint32_t assoc_id, int32_t stream,

@@ -27,13 +27,23 @@
 
  *******************************************************************************/
 
-#ifndef X2AP_ENB_ENCODER_H_
-#define X2AP_ENB_ENCODER_H_
+#ifndef X2AP_ENB_MANAGEMENT_PROCEDURES_H_
+#define X2AP_ENB_MANAGEMENT_PROCEDURES_H_
+/*
+struct x2ap_eNB_mme_data_s *s1ap_eNB_get_MME(
+  s1ap_eNB_instance_t *instance_p,
+  int32_t assoc_id, uint16_t cnx_id);
+*/
+void x2ap_eNB_insert_new_instance(x2ap_eNB_instance_t *new_instance_p);
 
-#include "x2ap_common.h"
-#include "x2ap_ies_defs.h"
+x2ap_eNB_instance_t *x2ap_eNB_get_instance(uint8_t mod_id);
 
-int x2ap_eNB_encode_pdu(x2ap_message *x2ap_message_p, uint8_t **buffer, uint32_t *len)
-__attribute__ ((warn_unused_result));
+uint16_t x2ap_eNB_fetch_add_global_cnx_id(void);
 
-#endif /* X2AP_ENB_ENCODER_H_ */
+void x2ap_eNB_prepare_internal_data(void);
+
+x2ap_eNB_data_t* x2ap_is_eNB_id_in_list(uint32_t eNB_id);
+
+x2ap_eNB_data_t* x2ap_is_eNB_assoc_id_in_list(uint32_t sctp_assoc_id);
+
+#endif /* X2AP_ENB_MANAGEMENT_PROCEDURES_H_ */

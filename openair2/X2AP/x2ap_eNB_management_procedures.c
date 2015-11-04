@@ -38,7 +38,20 @@
 
 #include "x2ap_common.h"
 #include "x2ap_eNB_defs.h"
-#include "x2ap.h"
+#include "x2ap_eNB.h"
+
+
+#define X2AP_DEBUG_LIST
+#ifdef X2AP_DEBUG_LIST
+#  define X2AP_eNB_LIST_OUT(x, args...) X2AP_DEBUG("[eNB]%*s"x"\n", 4*indent, "", ##args)
+#else
+#  define X2AP_eNB_LIST_OUT(x, args...)
+#endif 
+
+STAILQ_HEAD (x2ap_eNB_list_s, x2ap_eNB_data_s) 
+x2ap_eNB_list_head;
+static int                  indent = 0;
+
 
 x2ap_eNB_internal_data_t x2ap_eNB_internal_data;
 
@@ -88,9 +101,9 @@ void x2ap_eNB_insert_new_instance(x2ap_eNB_instance_t *new_instance_p)
                      new_instance_p, x2ap_eNB_entries);
 }
 
-struct s1ap_eNB_mme_data_s *x2ap_eNB_get_taregt_eNB(
-  x2ap_eNB_instance_t *instance_p,
-  int32_t assoc_id, uint16_t cnx_id)
+struct x2ap_eNB_data_s *x2ap_get_eNB(x2ap_eNB_instance_t *instance_p,
+				     int32_t assoc_id, 
+				     uint16_t cnx_id)
 {
   struct x2ap_eNB_data_s  temp;
   struct x2ap_eNB_data_s *found;
@@ -116,6 +129,7 @@ struct s1ap_eNB_mme_data_s *x2ap_eNB_get_taregt_eNB(
   return NULL;
 }
 
+
 x2ap_eNB_instance_t *x2ap_eNB_get_instance(instance_t instance)
 {
   x2ap_eNB_instance_t *temp = NULL;
@@ -130,3 +144,58 @@ x2ap_eNB_instance_t *x2ap_eNB_get_instance(instance_t instance)
 
   return NULL;
 }
+
+
+/// utility functions 
+
+void
+x2ap_dump_eNB_list (void) {
+  x2ap_eNB_data_t       *eNB_ref;
+  
+  STAILQ_FOREACH (eNB_ref, &x2ap_eNB_list_head,  x2ap_eNB_entries) {
+    x2ap_dump_eNB (eNB_ref);
+  }
+}
+
+void x2ap_dump_eNB ( x2ap_eNB_data_t * eNB_ref)
+{
+  if (eNB_ref == NULL) {
+    return;
+  }
+  
+  eNB_LIST_OUT ("");
+  eNB_LIST_OUT ("eNB name:          %s", eNB_ref->eNB_name == NULL ? "not present" : eNB_ref->eNB_name);
+  eNB_LIST_OUT ("eNB ID:            %07x", eNB_ref->eNB_id);
+  indent++; 
+  eNB_LIST_OUT ("SCTP assoc id:     %d", eNB_ref->assoc_id);
+  eNB_LIST_OUT ("SCTP instreams:    %d", eNB_ref->instreams);
+  eNB_LIST_OUT ("SCTP outstreams:   %d", eNB_ref->outstreams);
+  indent--;
+}
+
+x2ap_eNB_data_t  * x2ap_is_eNB_id_in_list (const uint32_t eNB_id)
+{
+  x2ap_eNB_data_t                     *eNB_ref;
+
+  STAILQ_FOREACH (eNB_ref, &x2ap_eNB_list_head,  x2ap_eNB_entries) {
+    if (eNB_ref->eNB_id == eNB_id) {
+
+      return eNB_ref;
+    }
+  }
+  return NULL;
+}
+
+x2ap_eNB_data_t  * x2ap_is_eNB_assoc_id_in_list (const uint32_t sctp_assoc_id)
+{
+  x2ap_eNB_data_t                       *eNB_ref;
+
+  STAILQ_FOREACH (eNB_ref, &x2ap_eNB_list_head,  x2ap_eNB_entries) {
+    if (eNB_ref->sctp_assoc_id == sctp_assoc_id) {
+
+      return eNB_ref;
+    }
+  }
+  return NULL;
+}
+

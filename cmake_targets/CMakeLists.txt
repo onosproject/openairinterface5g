@@ -403,13 +403,15 @@ include_directories ("${X2AP_DIR}")
 
 add_library(X2AP_ENB
   ${X2AP_C_DIR}/x2ap_ies_defs.h
-  ${X2AP_DIR}/x2ap.c
+  ${X2AP_DIR}/x2ap_eNB.c
   ${X2AP_DIR}/x2ap_eNB_decoder.c
   ${X2AP_DIR}/x2ap_eNB_encoder.c
-  ${X2AP_DIR}/x2ap_eNB_handlers.c
+  ${X2AP_DIR}/x2ap_eNB_handler.c
   ${X2AP_DIR}/x2ap_eNB_itti_messaging.c
   ${X2AP_DIR}/x2ap_eNB_management_procedures.c
+  ${X2AP_DIR}/x2ap_eNB_generate_messages.c
   )
+
 # Hardware dependant options
 ###################################
 add_list1_option(NB_ANTENNAS_RX "2" "Number of antennas in reception" "1" "2" "4")
@@ -469,7 +471,7 @@ include_directories ("${OPENAIR_TARGETS}/ARCH/COMMON")
 ##############################################################
 add_boolean_option(ENABLE_SECURITY         True  "Enable LTE integrity and ciphering between RRC UE and eNB")
 add_boolean_option(ENABLE_USE_MME          True  "eNB connected to MME (INTERFACE S1-C), not standalone eNB")
-add_boolean_option(ENABLE_USE_X2           True  "eNB connected to eNB (INTERFACE X2)")
+add_boolean_option(ENABLE_USE_X2           False  "eNB connected to eNB (INTERFACE X2)")
 
 add_boolean_option(NO_RRM                  True  "DO WE HAVE A RADIO RESSOURCE MANAGER: NO")
 add_boolean_option(USER_MODE True "????")
@@ -1604,7 +1606,7 @@ add_executable(oaisim_nos1
 target_include_directories(oaisim_nos1 PUBLIC  ${OPENAIR_TARGETS}/SIMU/USER)
 target_link_libraries (oaisim_nos1
   -Wl,--start-group
-  RRC_LIB X2AP_LIB SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
+  RRC_LIB X2AP_LIB  X2AP_ENB SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
   -Wl,--end-group )
 
 target_link_libraries (oaisim_nos1 ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})

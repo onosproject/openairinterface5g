@@ -44,10 +44,11 @@
 #include "x2ap_ies_defs.h"
 // #include "s1ap_eNB.h"
 #include "x2ap_eNB_defs.h"
-#include "x2ap_eNB_handlers.h"
+#include "x2ap_eNB_handler.h"
 #include "x2ap_eNB_decoder.h"
 
 #include "x2ap_eNB_management_procedures.h"
+#include "x2ap_eNB_generate_messages.h"
 
 //#include "x2ap_eNB_default_values.h"
 
@@ -55,6 +56,10 @@
 #include "conversions.h"
 #include "msc.h"
 
+static 
+int x2ap_eNB_handle_x2_setup_request (uint32_t assoc_id,
+				      uint32_t stream,
+				      struct x2ap_message_s *message);
 static
 int x2ap_eNB_handle_x2_setup_response(uint32_t               assoc_id,
                                       uint32_t               stream,
@@ -123,7 +128,7 @@ int x2ap_eNB_handle_message(uint32_t assoc_id, int32_t stream,
   }
 
   /* Checking procedure Code and direction of message */
-  if (message.procedureCode > sizeof(messages_callback) / (3 * sizeof(x2ap_message_decoded_callback))
+  if (message.procedureCode > sizeof(x2ap_messages_callback) / (3 * sizeof(x2ap_message_decoded_callback))
       || (message.direction > X2AP_PDU_PR_unsuccessfulOutcome)) {
     X2AP_ERROR("[SCTP %d] Either procedureCode %d or direction %d exceed expected\n",
                assoc_id, message.procedureCode, message.direction);
@@ -134,9 +139,9 @@ int x2ap_eNB_handle_message(uint32_t assoc_id, int32_t stream,
    * This can mean not implemented or no procedure for eNB (wrong direction).
    */
   if (x2ap_messages_callback[message.procedureCode][message.direction-1] == NULL) {
-    S1AP_ERROR("[SCTP %d] No handler for procedureCode %d in %s\n",
+    X2AP_ERROR("[SCTP %d] No handler for procedureCode %d in %s\n",
                assoc_id, message.procedureCode,
-               s1ap_direction2String[message.direction]);
+               x2ap_direction2String[message.direction]);
     return -1;
   }
 
@@ -146,7 +151,7 @@ int x2ap_eNB_handle_message(uint32_t assoc_id, int32_t stream,
 }
 
 
-void x2ap_handle_x2_setup_message(x2ap_enb_data_t *enb_desc_p, int sctp_shutdown)
+void x2ap_handle_x2_setup_message(x2ap_eNB_data_t *enb_desc_p, int sctp_shutdown)
 {
   if (sctp_shutdown) {
     /* A previously connected eNB has been shutdown */
@@ -155,13 +160,13 @@ void x2ap_handle_x2_setup_message(x2ap_enb_data_t *enb_desc_p, int sctp_shutdown
     if (enb_desc_p->state == X2AP_ENB_STATE_CONNECTED) {
       enb_desc_p->state = X2AP_ENB_STATE_DISCONNECTED;
 
-      if (enb_desc_p->x2ap_eNB_instance->x2ap_enb_associated_nb > 0) {
+      if (enb_desc_p->x2ap_eNB_instance-> x2_target_enb_associated_nb > 0) {
         /* Decrease associated eNB number */
-        enb_desc_p->x2ap_eNB_instance->x2ap_enb_associated_nb --;
+        enb_desc_p->x2ap_eNB_instance-> x2_target_enb_associated_nb --;
       }
       
       /* If there are no more associated eNB, inform eNB app */
-      if (enb_desc_p->x2ap_eNB_instance->x2ap_enb_associated_nb == 0) {
+      if (enb_desc_p->x2ap_eNB_instance->x2_target_enb_associated_nb == 0) {
         MessageDef                 *message_p;
 	
         message_p = itti_alloc_new_message(TASK_X2AP, X2AP_DEREGISTERED_ENB_IND);
@@ -171,21 +176,21 @@ void x2ap_handle_x2_setup_message(x2ap_enb_data_t *enb_desc_p, int sctp_shutdown
     }
   } else {
     /* Check that at least one setup message is pending */
-    DevCheck(enb_desc_p->x2ap_eNB_instance->x2ap_enb_pending_nb > 0, 
+    DevCheck(enb_desc_p->x2ap_eNB_instance->x2_target_enb_pending_nb > 0, 
 	     enb_desc_p->x2ap_eNB_instance->instance,
-             enb_desc_p->x2ap_eNB_instance->x2ap_enb_pending_nb, 0);
+             enb_desc_p->x2ap_eNB_instance->x2_target_enb_pending_nb, 0);
 
-    if (enb_desc_p->x2ap_eNB_instance->x2ap_enb_pending_nb > 0) {
+    if (enb_desc_p->x2ap_eNB_instance->x2_target_enb_pending_nb > 0) {
       /* Decrease pending messages number */
-      enb_desc_p->x2ap_eNB_instance->x2ap_enb_pending_nb --;
+      enb_desc_p->x2ap_eNB_instance->x2_target_enb_pending_nb --;
     }
     
     /* If there are no more pending messages, inform eNB app */
-    if (enb_desc_p->x2ap_eNB_instance->x2ap_enb_pending_nb == 0) {
+    if (enb_desc_p->x2ap_eNB_instance->x2_target_enb_pending_nb == 0) {
       MessageDef                 *message_p;
 
       message_p = itti_alloc_new_message(TASK_X2AP, X2AP_REGISTER_ENB_CNF);
-      X2AP_REGISTER_ENB_CNF(message_p).nb_x2 = enb_desc_p->x2ap_eNB_instance->x2ap_enb_associated_nb;
+      X2AP_REGISTER_ENB_CNF(message_p).nb_x2 = enb_desc_p->x2ap_eNB_instance->x2_target_enb_associated_nb;
       itti_send_msg_to_task(TASK_ENB_APP, enb_desc_p->x2ap_eNB_instance->instance, message_p);
     }
   }
@@ -199,15 +204,14 @@ x2ap_eNB_handle_x2_setup_request (uint32_t assoc_id,
 
 {
   
-  X2SetupRequest_IEs_t               *x2SetupRequest_p;
-  eNB_description_t                      *eNB_association;
-  uint32_t                                eNB_id = 0;
-  char                                   *eNB_name = NULL;
-  int                                     ta_ret;
-  uint16_t                                max_enb_connected;
+  X2SetupRequest_IEs_t               *x2SetupRequest;
+  x2ap_eNB_data_t                    *x2ap_eNB_data;
+  uint32_t                           eNB_id = 0;
+  int                                ta_ret;
+  //uint16_t                                max_enb_connected;
 
   DevAssert (message != NULL);
-  x2SetupRequest_p = &message->msg.X2SetupRequestIEs;
+  x2SetupRequest = &message->msg.x2SetupRequest_IEs;
     /*
      * We received a new valid X2 Setup Request on a stream != 0.
      * * * * This should not happen -> reject eNB s1 setup request.
@@ -231,11 +235,11 @@ x2ap_eNB_handle_x2_setup_request (uint32_t assoc_id,
   
   X2AP_DEBUG ("Received a new X2 setup request\n");
   
-  if (x2SetupRequest_p->global_ENB_ID.eNB_ID.present == X2ap_ENB_ID_PR_homeENB_ID) {
+  if (x2SetupRequest->globalENB_ID.eNB_ID.present == X2ap_ENB_ID_PR_home_eNB_ID) {
     // Home eNB ID = 28 bits
-    uint8_t  *eNB_id_buf = x2SetupRequest_p->global_ENB_ID.eNB_ID.choice.homeENB_ID.buf;
+    uint8_t  *eNB_id_buf = x2SetupRequest->globalENB_ID.eNB_ID.choice.home_eNB_ID.buf;
     
-    if (x2SetupRequest_p->global_ENB_ID.eNB_ID.choice.macroENB_ID.size != 28) {
+    if (x2SetupRequest->globalENB_ID.eNB_ID.choice.macro_eNB_ID.size != 28) {
       //TODO: handle case were size != 28 -> notify ? reject ?
     }
     
@@ -243,9 +247,9 @@ x2ap_eNB_handle_x2_setup_request (uint32_t assoc_id,
     X2AP_DEBUG ("Home eNB id: %07x\n", eNB_id);
   } else {
     // Macro eNB = 20 bits
-    uint8_t *eNB_id_buf = x2SetupRequest_p->global_ENB_ID.eNB_ID.choice.macroENB_ID.buf;
+    uint8_t *eNB_id_buf = x2SetupRequest->globalENB_ID.eNB_ID.choice.macro_eNB_ID.buf;
     
-    if (x2SetupRequest_p->global_ENB_ID.eNB_ID.choice.macroENB_ID.size != 20) {
+    if (x2SetupRequest->globalENB_ID.eNB_ID.choice.macro_eNB_ID.size != 20) {
       //TODO: handle case were size != 20 -> notify ? reject ?
     }
     
@@ -272,50 +276,51 @@ x2ap_eNB_handle_x2_setup_request (uint32_t assoc_id,
   }
   */
   X2AP_DEBUG ("Adding eNB to the list of associated eNBs\n");
-  
-  if ((eNB_association = x2ap_is_eNB_id_in_list (eNB_id)) == NULL) {
+
+  if ((x2ap_eNB_data = x2ap_is_eNB_id_in_list (eNB_id)) == NULL) {
       /*
        * eNB has not been fount in list of associated eNB,
        * * * * Add it to the tail of list and initialize data
        */
-    if ((eNB_association = s1ap_is_eNB_assoc_id_in_list (assoc_id)) == NULL) {
+    if ((x2ap_eNB_data = x2ap_is_eNB_assoc_id_in_list (assoc_id)) == NULL) {
       /*
        * ??
        */
       return -1;
     } else {
-      eNB_association->x2_state = X2AP_RESETING;
-      eNB_association->eNB_id = eNB_id;
-    }
-    
+      x2ap_eNB_data->state = X2AP_ENB_STATE_RESETTING;
+      x2ap_eNB_data->eNB_id = eNB_id;
+    } 
+
+
   } else {
-    eNB_association->s1_state = X2AP_RESETING;
+    x2ap_eNB_data->state = X2AP_ENB_STATE_RESETTING;
     
     /*
      * eNB has been fount in list, consider the s1 setup request as a reset connection,
      * * * * reseting any previous UE state if sctp association is != than the previous one
      */
-    if (eNB_association->sctp_assoc_id != assoc_id) {
-      X2SetupFailureIEs_t                x2SetupFailure;
+    if (x2ap_eNB_data->assoc_id != assoc_id) {
+      X2SetupFailure_IEs_t                x2SetupFailure;
       
       memset (&x2SetupFailure, 0, sizeof (x2SetupFailure));
       /*
        * Send an overload cause...
        */
-      s1SetupFailure.cause.present = X2ap_Cause_PR_misc;      //TODO: send the right cause
-      s1SetupFailure.cause.choice.misc = X2ap_CauseMisc_control_processing_overload;
-      X2AP_ERROR ("Rejeting x2 setup request as eNB id %d is already associated to an active sctp association" "Previous known: %d, new one: %d\n", eNB_id, eNB_association->sctp_assoc_id, assoc_id);
-      // x2ap_enb_encode_x2setupfailure(&x2SetupFailure,
-      //                                receivedMessage->msg.s1ap_sctp_new_msg_ind.assocId);
+      X2AP_ERROR ("Rejeting x2 setup request as eNB id %d is already associated to an active sctp association" "Previous known: %d, new one: %d\n", eNB_id, x2ap_eNB_data->assoc_id, assoc_id);
+      x2ap_eNB_generate_x2_setup_failure (assoc_id, 
+					  X2ap_Cause_PR_protocol, 
+					  X2ap_CauseProtocol_unspecified, 
+					  -1);
       return -1;
     }
-    
+ 
     /*
      * TODO: call the reset procedure
      */
-  }
+  } 
   
-  return x2ap_generate_x2_setup_response (eNB_association);
+  return x2ap_generate_x2_setup_response (x2ap_eNB_data);
   
 }
 
@@ -324,36 +329,37 @@ int x2ap_eNB_handle_x2_setup_failure(uint32_t               assoc_id,
                                      uint32_t               stream,
                                      struct x2ap_message_s *message_p)
 {
-#ifdef 0 
-  X2SetupFailureIEs_t   *s1_setup_failure_p;
-  x2ap_eNB_data_t        *enb_desc_p;
+
+  X2SetupFailure_IEs_t   *x2_setup_failure;
+  x2ap_eNB_data_t        *enb_desc;
 
   DevAssert(message_p != NULL);
 
-  s1_setup_failure_p = &message_p->msg.s1ap_S1SetupFailureIEs;
+  x2_setup_failure = &message_p->msg.x2SetupFailure_IEs;
 
   /* S1 Setup Failure == Non UE-related procedure -> stream 0 */
   if (stream != 0) {
-    S1AP_WARN("[SCTP %d] Received s1 setup failure on stream != 0 (%d)\n",
-              assoc_id, stream);
+    X2AP_WARN("[SCTP %d] Received s1 setup failure on stream != 0 (%d)\n",
+    assoc_id, stream);
   }
 
-  if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
-    S1AP_ERROR("[SCTP %d] Received S1 setup response for non existing "
-               "MME context\n", assoc_id);
+  if ((enb_desc = x2ap_get_eNB (NULL, assoc_id, 0)) == NULL) {
+    X2AP_ERROR("[SCTP %d] Received X2 setup response for non existing "
+    "eNB context\n", assoc_id);
     return -1;
-  }
-
-  if ((s1_setup_failure_p->cause.present == S1ap_Cause_PR_misc) &&
-      (s1_setup_failure_p->cause.choice.misc == S1ap_CauseMisc_unspecified)) {
-    S1AP_WARN("Received s1 setup failure for MME... MME is not ready\n");
+}
+  
+  // need a FSM to handle all cases 
+  if ((x2_setup_failure->cause.present == X2ap_Cause_PR_misc) &&
+      (x2_setup_failure->cause.choice.misc == X2ap_CauseMisc_unspecified)) {
+    X2AP_WARN("Received X2 setup failure for eNB ... eNB is not ready\n");
   } else {
-    S1AP_ERROR("Received s1 setup failure for MME... please check your parameters\n");
+    S1AP_ERROR("Received x2 setup failure for eNB... please check your parameters\n");
   }
 
-  mme_desc_p->state = S1AP_ENB_STATE_WAITING;
-  s1ap_handle_s1_setup_message(mme_desc_p, 0);
-#endif 
+  enb_desc->state = X2AP_ENB_STATE_WAITING;
+  x2ap_handle_x2_setup_message(enb_desc, 0);
+ 
   return 0;
 }
 
@@ -362,8 +368,8 @@ int x2ap_eNB_handle_x2_setup_response(uint32_t               assoc_id,
                                       uint32_t               stream,
                                       struct x2ap_message_s *message_p)
 {
-#ifdef 0 
-  S1ap_S1SetupResponseIEs_t *s1SetupResponse_p;
+#ifdef TBD
+  S1ap_S1SetupResponseIEs_t *s1SetupResponse;
   s1ap_eNB_mme_data_t       *mme_desc_p;
   int i;
 
@@ -479,7 +485,7 @@ int x2ap_eNB_handle_error_indication(uint32_t               assoc_id,
 {
 
 
-#ifdef 0
+#ifdef TBD
   X2ap_ErrorIndicationIEs_t   *x2_error_indication_p;
   x2ap_eNB_data_t        *enb_desc_p;
 
@@ -493,7 +499,7 @@ int x2ap_eNB_handle_error_indication(uint32_t               assoc_id,
               assoc_id, stream);
   }
 
-  if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
+  if ((mme_desc_p = x2ap_get_eNB(NULL, assoc_id, 0)) == NULL) {
     S1AP_ERROR("[SCTP %d] Received S1 Error indication for non existing "
                "MME context\n", assoc_id);
     return -1;
@@ -730,4 +736,6 @@ int x2ap_eNB_handle_error_indication(uint32_t               assoc_id,
 #endif 
   return 0;
 }
+
+
 

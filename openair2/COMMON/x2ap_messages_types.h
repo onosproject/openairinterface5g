@@ -34,6 +34,8 @@
 // Defines to access message fields.
 
 #define X2AP_REGISTER_ENB_REQ(mSGpTR)           (mSGpTR)->ittiMsg.x2ap_register_enb_req
+#define X2AP_REGISTER_ENB_CNF(mSGpTR)           (mSGpTR)->ittiMsg.x2ap_register_enb_cnf
+#define X2AP_DEREGISTERED_ENB_IND(mSGpTR)       (mSGpTR)->ittiMsg.x2ap_deregistered_enb_ind
 
 
 #define X2AP_MAX_NB_ENB_IP_ADDRESS 2
@@ -90,5 +92,17 @@ typedef struct x2ap_register_enb_req_s {
   uint16_t sctp_in_streams;
   uint16_t sctp_out_streams;
 } x2ap_register_enb_req_t;
+
+//-------------------------------------------------------------------------------------------//
+// X2AP -> eNB application layer messages
+typedef struct x2ap_register_enb_cnf_s {
+  /* Nb of connected eNBs*/
+  uint8_t          nb_x2;
+} x2ap_register_enb_cnf_t;
+
+typedef struct x2ap_deregistered_enb_ind_s {
+  /* Nb of connected eNBs */
+  uint8_t          nb_x2;
+} x2ap_deregistered_enb_ind_t;
 
 #endif /* X2AP_MESSAGES_TYPES_H_ */

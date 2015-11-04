@@ -54,10 +54,15 @@ typedef enum {
   /* 
    */
 
-  X2AP_ENB_OVERLOAD          = 0x3,
+  X2AP_ENB_STATE_OVERLOAD          = 0x3,
+
+  X2AP_ENB_STATE_RESETTING         = 0x4,
+  
+  X2AP_ENB_STATE_READY             = 0x5,
+
   /* Max number of states available */
   X2AP_ENB_STATE_MAX,
-} s1ap_eNB_state_t;
+} x2ap_eNB_state_t;
 
 
 /* Served PLMN identity element */
@@ -89,7 +94,10 @@ typedef struct x2ap_eNB_data_s {
 
   /* This is the optional name provided by the MME */
   char *eNB_name;
-
+  
+  /*  target eNB ID */ 
+  uint32_t eNB_id;
+  
   /* Current eNB load information (if any). */
   //x2ap_load_state_t overload_state;
   
@@ -103,7 +111,7 @@ typedef struct x2ap_eNB_data_s {
   uint16_t in_streams;
   uint16_t out_streams;
 
-  /* Connexion id used between SCTP/S1AP */
+  /* Connexion id used between SCTP/X2AP */
   uint16_t cnx_id;
 
   /* SCTP association id */
@@ -114,17 +122,15 @@ typedef struct x2ap_eNB_data_s {
 } x2ap_eNB_data_t;
 
 typedef struct x2ap_eNB_instance_s {
-  /* Next s1ap eNB association.
-   * Only used for virtual mode.
-   */
+ 
   STAILQ_ENTRY(x2ap_eNB_instance_s) x2ap_eNB_entries;
 
   /* Number of target eNBs requested by eNB (tree size) */
-  uint32_t x2ap_enb_nb;
+  uint32_t x2_target_enb_nb;
   /* Number of target eNBs for which association is pending */
-  uint32_t x2ap_target_enb_pending_nb;
+  uint32_t x2_target_enb_pending_nb;
   /* Number of target eNB successfully associated to eNB */
-  uint32_t x2ap_target_enb_associated_nb;
+  uint32_t x2_target_enb_associated_nb;
   /* Tree of X2AP eNB associations ordered by association ID */
   RB_HEAD(x2ap_enb_map, x2ap_eNB_data_s) x2ap_enb_head;
 
@@ -166,15 +172,15 @@ typedef struct {
   /* Nb of registered eNBs */
   uint8_t nb_registered_eNBs;
 
-  /* Generate a unique connexion id used between S1AP and SCTP */
+  /* Generate a unique connexion id used between X2AP and SCTP */
   uint16_t global_cnx_id;
 } x2ap_eNB_internal_data_t;
 
-int x2ap_eNB_compare_assoc_id(
-  struct x2ap_eNB_data_s *p1, struct x2ap_eNB_data_s *p2);
+int x2ap_eNB_compare_assoc_id(struct x2ap_eNB_data_s *p1, struct x2ap_eNB_data_s *p2);
 
 /* Generate the tree management functions */
-RB_PROTOTYPE(x2ap_eNB_map, x2ap_eNB_data_s, entry,
+RB_PROTOTYPE(x2ap_eNB_map, x2ap_eNB_data_s, 0entry,
              x2ap_eNB_compare_assoc_id);
 
-#endif /* S1AP_ENB_DEFS_H_ */
+
+#endif /* X2AP_ENB_DEFS_H_ */

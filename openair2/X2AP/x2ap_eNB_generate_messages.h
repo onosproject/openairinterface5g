@@ -15,44 +15,28 @@
 
     You should have received a copy of the GNU General Public License
     along with OpenAirInterface.The full GNU General Public License is
-    included in this distribution in the file called "COPYING". If not,
-    see <http://www.gnu.org/licenses/>.
+   included in this distribution in the file called "COPYING". If not,
+   see <http://www.gnu.org/licenses/>.
 
   Contact Information
   OpenAirInterface Admin: openair_admin@eurecom.fr
   OpenAirInterface Tech : openair_tech@eurecom.fr
   OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
 
-  Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
+  Address      : Eurecom, Compus SophiaTech 450, route des chappes, 06451 Biot, France.
 
-*******************************************************************************/
+ *******************************************************************************/
+#ifndef X2AP_ENB_GENERATE_MESSAGES_H_
+#define X2AP_ENB_GENERATE_MESSAGES_H_
 
-#include <stdio.h>
-#include <stdint.h>
+int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p, 
+				       x2ap_eNB_data_t *x2ap_enb_data_p);
 
-/** @defgroup _x2ap_impl_ X2AP Layer Reference Implementation
- * @ingroup _ref_implementation_
- * @{
- */
+int 
+x2ap_generate_x2_setup_response (x2ap_eNB_data_t * eNB_association);
 
-#ifndef X2AP_H_
-#define X2AP_H_
-
-#define X2AP_PORT_NUMBER (36422) ///< X2AP SCTP IANA ASSIGNED Port Number
-#define X2AP_SCTP_PPID   (27)    ///< X2AP SCTP Payload Protocol Identifier (PPID)
-
-typedef struct x2ap_config_s {
-} x2ap_config_t;
-
-#if defined(OAI_EMU)
-#else
-extern x2ap_config_t x2ap_config;
-#endif
-
-void *x2ap_task(void *arg);
-
-#endif /* X2AP_H_ */
-
-/**
- * @}
- */
+int x2ap_eNB_generate_x2_setup_failure ( uint32_t assoc_id,
+					 X2ap_Cause_PR cause_type,
+					 long cause_value,
+					 long time_to_waitx);
+#endif /*  X2AP_ENB_GENERATE_MESSAGES_H_ */

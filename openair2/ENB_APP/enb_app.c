@@ -71,6 +71,10 @@ extern unsigned char NB_eNB_INST;
 #   define ENB_REGISTER_RETRY_DELAY 10
 # endif
 
+# if defined(ENABLE_USE_X2)
+#   define X2AP_ENB_REGISTER_RETRY_DELAY   10
+#endif 
+
 /*------------------------------------------------------------------------------*/
 static void configure_phy(module_id_t enb_id, const Enb_properties_array_t* enb_properties)
 {
@@ -271,7 +275,8 @@ static uint32_t eNB_app_register_s1(uint32_t enb_id_start, uint32_t enb_id_end, 
 
 /*------------------------------------------------------------------------------*/
 # if defined(ENABLE_USE_X2)
-static uint32_t eNB_app_register_x2(uint32_t enb_id_start, uint32_t enb_id_end, const Enb_properties_array_t *enb_properties)
+static uint32_t eNB_app_register_x2(uint32_t enb_id_start, uint32_t enb_id_end, 
+				    const Enb_properties_array_t *enb_properties)
 {
   uint32_t         enb_id;
   uint32_t         x2_id;
@@ -307,7 +312,8 @@ static uint32_t eNB_app_register_x2(uint32_t enb_id_start, uint32_t enb_id_end, 
      
 
       x2ap_register_eNB->nb_x2 =         enb_properties->properties[enb_id]->nb_x2;
-      AssertFatal (x2ap_register_eNB->nb_x2 <= X2AP_MAX_NB_ENB_IP_ADDRESS, "Too many X2 interfaces for eNB %d (%d/%d)!", 
+      AssertFatal (x2ap_register_eNB->nb_x2 <= X2AP_MAX_NB_ENB_IP_ADDRESS, 
+		   "Too many X2 interfaces for eNB %d (%d/%d)!", 
 		   enb_id, x2ap_register_eNB->nb_x2,
                    X2AP_MAX_NB_ENB_IP_ADDRESS);
       
@@ -321,6 +327,9 @@ static uint32_t eNB_app_register_x2(uint32_t enb_id_start, uint32_t enb_id_end, 
         strncpy (x2ap_register_eNB->target_enb_x2_ip_address[x2_id].ipv6_address,
                  enb_properties->properties[enb_id]->target_enb_x2_ip_address[x2_id].ipv6_address,
                  sizeof(x2ap_register_eNB->target_enb_x2_ip_address[0].ipv6_address));
+	
+	// this is used to identify whether this eNb is acting as an initiator (client) or listener (server)
+	x2ap_register_eNB->target_enb_x2_ip_address[x2_id].active = enb_properties->properties[enb_id]->target_enb_x2_ip_address[x2_id].active;
       }
 
       x2ap_register_eNB->sctp_in_streams       = enb_properties->properties[enb_id]->sctp_in_streams;
@@ -329,6 +338,7 @@ static uint32_t eNB_app_register_x2(uint32_t enb_id_start, uint32_t enb_id_end, 
 
       x2ap_register_eNB->enb_x2_ip_address.ipv6 = 0;
       x2ap_register_eNB->enb_x2_ip_address.ipv4 = 1;
+      
       addr.s_addr = enb_properties->properties[enb_id]->enb_ipv4_address_for_X2C;
       str = inet_ntoa(addr);
       strcpy(x2ap_register_eNB->enb_x2_ip_address.ipv4_address, str);
@@ -359,9 +369,9 @@ void *eNB_app_task(void *args_p)
   long                            enb_register_retry_timer_id;
 # endif
 # if defined(ENABLE_USE_X2)
-  uint32_t                        x2ap_register_enb_pending;
-  uint32_t                        x2ap_registered_enb;
-  long                            x2ap_enb_register_retry_timer_id;
+  uint32_t                        x2_register_enb_pending;
+  uint32_t                        x2_registered_enb;
+  long                            x2_enb_register_retry_timer_id;
 # endif
   uint32_t                        enb_id;
   MessageDef                     *msg_p           = NULL;
@@ -406,8 +416,8 @@ void *eNB_app_task(void *args_p)
 
 # if defined(ENABLE_USE_X2)
   /* Try to register each eNB with each other */
-  registered_enb_x2 = 0;
-  register_enb_x2_pending = eNB_app_register_x2 (enb_id_start, enb_id_end, enb_properties_p);
+  x2_registered_enb = 0;
+  x2_register_enb_pending = eNB_app_register_x2 (enb_id_start, enb_id_end, enb_properties_p);
 # else
 
 # endif
@@ -510,29 +520,41 @@ void *eNB_app_task(void *args_p)
       /* TODO handle recovering of registration */
       break;
     
-    case S1AP_REGISTER_ENB_CNF:
+    case X2AP_REGISTER_ENB_CNF:
       LOG_I(ENB_APP, "[eNB %d] Received %s: associated eNB %d\n", instance, msg_name,
             X2AP_REGISTER_ENB_CNF(msg_p).nb_x2);
 
-      DevAssert(register_enb_x2_pending > 0);
-      register_enb_x2_pending--;
+      DevAssert(x2_register_enb_pending > 0);
+      x2_register_enb_pending--;
 
       /* Check if at least eNB is registered with one target eNB */
       if (X2AP_REGISTER_ENB_CNF(msg_p).nb_x2 > 0) {
-        registered_enb_x2++;
+        x2_registered_enb++;
       }
       
       /* Check if all register eNB requests have been processed */
-      if (register_enb_x2_pending == 0) {
-        if (registered_enb_x2 == enb_nb) {
-          /* If all eNB are registered, start L2L1 task */
+      if (x2_register_enb_pending == 0) {
+        if (x2_registered_enb == enb_nb) {
+          /* If all eNB are registered, start RRC HO task */
 	
 	}else {
-          uint32_t not_associated_x2 = enb_nb - registered_enb;
+          uint32_t x2_not_associated = enb_nb - x2_registered_enb;
 
           LOG_W(ENB_APP, " %d eNB %s not associated with the target\n",
-                not_associated, not_associated > 1 ? "are" : "is");
+                x2_not_associated, x2_not_associated > 1 ? "are" : "is");
 	  // timer to retry 
+	  /* Restart the eNB registration process in ENB_REGISTER_RETRY_DELAY seconds */
+          if (timer_setup (X2AP_ENB_REGISTER_RETRY_DELAY, 0, TASK_ENB_APP, 
+			   INSTANCE_DEFAULT, TIMER_ONE_SHOT, NULL, 
+			   &x2_enb_register_retry_timer_id) < 0) {
+            LOG_E(ENB_APP, " Can not start eNB X2AP register: retry timer, use \"sleep\" instead!\n");
+
+            sleep(X2AP_ENB_REGISTER_RETRY_DELAY);
+            /* Restart the registration process */
+            x2_registered_enb = 0;
+            x2_register_enb_pending = eNB_app_register_x2 (enb_id_start, enb_id_end, enb_properties_p);
+          }
+	  
         }
       }
 

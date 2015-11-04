@@ -47,28 +47,8 @@ void x2ap_eNB_itti_send_sctp_data_req(instance_t instance, int32_t assoc_id, uin
 
   itti_send_msg_to_task(TASK_SCTP, instance, message_p);
 }
-/*
-void x2ap_eNB_itti_send_nas_downlink_ind(instance_t instance,
-    uint16_t ue_initial_id,
-    uint32_t eNB_ue_s1ap_id,
-    uint8_t *nas_pdu,
-    uint32_t nas_pdu_length)
-{
-  MessageDef          *message_p;
-  x2ap_rrc_t          *x2ap_rrc;
 
-  message_p = itti_alloc_new_message(TASK_X2AP, X2AP_RRC);
 
-  x2ap_rrc = &message_p->ittiMsg.x2ap_rrc;
-
-  x2ap_rrc->ue_initial_id  = ue_initial_id;
-  x2ap_rrc->eNB_ue_x2ap_id = eNB_ue_x2ap_id;
-  x2ap_rrc->rrc_pdu.buffer = rrc_pdu;
-  x2ap_rrc->rrc_pdu.length = rrc_pdu_length;
-
-  itti_send_msg_to_task(TASK_RRC_ENB, instance, message_p);
-}
-*/
 void x2ap_eNB_itti_send_sctp_close_association(instance_t instance, int32_t assoc_id)
 {
   MessageDef               *message_p = NULL;
