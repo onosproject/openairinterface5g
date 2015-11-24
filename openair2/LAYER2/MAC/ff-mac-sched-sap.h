@@ -204,27 +204,17 @@ struct SchedUlCqiInfoReqParameters
 // (See 4.2 for description of the primitives)
 //
 
-void SchedDlRlcBufferReq (const struct SchedDlRlcBufferReqParameters *params);
-
-void SchedDlPagingBufferReq (const struct SchedDlPagingBufferReqParameters *params);
-
-void SchedDlMacBufferReq (const struct SchedDlMacBufferReqParameters *params);
-
-void SchedDlTriggerReq (const struct SchedDlTriggerReqParameters *params);
-
-void SchedDlRachInfoReq (const struct SchedDlRachInfoReqParameters *params);
-
-void SchedDlCqiInfoReq (const struct SchedDlCqiInfoReqParameters *params);
-
-void SchedUlTriggerReq (const struct SchedUlTriggerReqParameters *params);
-
-void SchedUlNoiseInterferenceReq (const struct SchedUlNoiseInterferenceReqParameters *params);
-
-void SchedUlSrInfoReq (const struct SchedUlSrInfoReqParameters *params);
-
-void SchedUlMacCtrlInfoReq (const struct SchedUlMacCtrlInfoReqParameters *params);
-
-void SchedUlCqiInfoReq (const struct SchedUlCqiInfoReqParameters *params);
+void SchedDlRlcBufferReq(void *, const struct SchedDlRlcBufferReqParameters *params);
+void SchedDlPagingBufferReq(void *, const struct SchedDlPagingBufferReqParameters *params);
+void SchedDlMacBufferReq(void *, const struct SchedDlMacBufferReqParameters *params);
+void SchedDlTriggerReq(void *, const struct SchedDlTriggerReqParameters *params);
+void SchedDlRachInfoReq(void *, const struct SchedDlRachInfoReqParameters *params);
+void SchedDlCqiInfoReq(void *, const struct SchedDlCqiInfoReqParameters *params);
+void SchedUlTriggerReq(void *, const struct SchedUlTriggerReqParameters *params);
+void SchedUlNoiseInterferenceReq(void *, const struct SchedUlNoiseInterferenceReqParameters *params);
+void SchedUlSrInfoReq(void *, const struct SchedUlSrInfoReqParameters *params);
+void SchedUlMacCtrlInfoReq(void *, const struct SchedUlMacCtrlInfoReqParameters *params);
+void SchedUlCqiInfoReq(void *, const struct SchedUlCqiInfoReqParameters *params);
 
 /**
  * Parameters of the API primitives
@@ -271,9 +261,11 @@ struct SchedUlConfigIndParameters
 // (See 4.2 for description of the primitives)
 //
 
-void SchedDlConfigInd (const struct SchedDlConfigIndParameters* params);
-
-void SchedUlConfigInd (const struct SchedUlConfigIndParameters* params);
+#if 0
+/* not used - the scheduler has callbacks for those */
+void SchedDlConfigInd(const struct SchedDlConfigIndParameters* params);
+void SchedUlConfigInd(const struct SchedUlConfigIndParameters* params);
+#endif
 
 #if defined (__cplusplus)
 }

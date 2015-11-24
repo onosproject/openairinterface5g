@@ -74,7 +74,11 @@ extern "C" {
 #define MAX_SR_LIST           30
 #define MAX_MAC_CE_LIST       30
 
-#define MAX_NUM_CCs           2
+#ifndef MAX_NUM_CCs
+#error MAX_NUM_CCs not defined
+#endif
+
+//#define MAX_NUM_CCs           2
 
 enum Result_e
 {

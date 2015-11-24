@@ -255,16 +255,11 @@ struct CschedUeReleaseReqParameters
 /**
  * \brief CSCHED_CELL_CONFIG_REQ
  */
-void CschedCellConfigReq (const struct CschedCellConfigReqParameters *params);
-
-void CschedUeConfigReq (const struct CschedUeConfigReqParameters *params);
-
-void CschedLcConfigReq (const struct CschedLcConfigReqParameters *params);
-
-void CschedLcReleaseReq (const struct CschedLcReleaseReqParameters *params);
-
-void CschedUeReleaseReq (const struct CschedUeReleaseReqParameters *params);
-
+void CschedCellConfigReq(void *, const struct CschedCellConfigReqParameters *params);
+void CschedUeConfigReq(void *, const struct CschedUeConfigReqParameters *params);
+void CschedLcConfigReq(void *, const struct CschedLcConfigReqParameters *params);
+void CschedLcReleaseReq(void *, const struct CschedLcReleaseReqParameters *params);
+void CschedUeReleaseReq(void *, const struct CschedUeReleaseReqParameters *params);
 
 /**
  * Parameters of the API primitives
@@ -377,19 +372,16 @@ struct CschedCellConfigUpdateIndParameters
 // (See 4.1 for description of the primitives)
 //
 
-void CschedCellConfigCnf (const struct CschedCellConfigCnfParameters *params);
-
-void CschedUeConfigCnf (const struct CschedUeConfigCnfParameters *params);
-
-void CschedLcConfigCnf (const struct CschedLcConfigCnfParameters *params);
-
-void CschedLcReleaseCnf (const struct CschedLcReleaseCnfParameters *params);
-
-void CschedUeReleaseCnf (const struct CschedUeReleaseCnfParameters *params);
-
-void CschedUeConfigUpdateInd (const struct CschedUeConfigUpdateIndParameters *params);
-
-void CschedCellConfigUpdateInd (const struct CschedCellConfigUpdateIndParameters *params);
+#if 0
+/* not used - the scheduler has callbacks for those */
+void CschedCellConfigCnf(const struct CschedCellConfigCnfParameters *params);
+void CschedUeConfigCnf(const struct CschedUeConfigCnfParameters *params);
+void CschedLcConfigCnf(const struct CschedLcConfigCnfParameters *params);
+void CschedLcReleaseCnf(const struct CschedLcReleaseCnfParameters *params);
+void CschedUeReleaseCnf(const struct CschedUeReleaseCnfParameters *params);
+void CschedUeConfigUpdateInd(const struct CschedUeConfigUpdateIndParameters *params);
+void CschedCellConfigUpdateInd(const struct CschedCellConfigUpdateIndParameters *params);
+#endif
 
 #if defined (__cplusplus)
 }
