@@ -12,29 +12,29 @@
 #include <stdio.h>
 
 struct scheduler {
-  void *callback_data;
-  SchedDlConfigInd_callback          *SchedDlConfigInd;
-  SchedUlConfigInd_callback          *SchedUlConfigInd;
-  CschedCellConfigCnf_callback       *CschedCellConfigCnf;
-  CschedUeConfigCnf_callback         *CschedUeConfigCnf;
-  CschedLcConfigCnf_callback         *CschedLcConfigCnf;
-  CschedLcReleaseCnf_callback        *CschedLcReleaseCnf;
-  CschedUeReleaseCnf_callback        *CschedUeReleaseCnf;
-  CschedUeConfigUpdateInd_callback   *CschedUeConfigUpdateInd;
-  CschedCellConfigUpdateInd_callback *CschedCellConfigUpdateInd;
+  void                                 *callback_data;
+  SchedDlConfigInd_callback_t          *SchedDlConfigInd;
+  SchedUlConfigInd_callback_t          *SchedUlConfigInd;
+  CschedCellConfigCnf_callback_t       *CschedCellConfigCnf;
+  CschedUeConfigCnf_callback_t         *CschedUeConfigCnf;
+  CschedLcConfigCnf_callback_t         *CschedLcConfigCnf;
+  CschedLcReleaseCnf_callback_t        *CschedLcReleaseCnf;
+  CschedUeReleaseCnf_callback_t        *CschedUeReleaseCnf;
+  CschedUeConfigUpdateInd_callback_t   *CschedUeConfigUpdateInd;
+  CschedCellConfigUpdateInd_callback_t *CschedCellConfigUpdateInd;
 };
 
 void *SchedInit(
-    void                               *callback_data,
-    SchedDlConfigInd_callback          *SchedDlConfigInd,
-    SchedUlConfigInd_callback          *SchedUlConfigInd,
-    CschedCellConfigCnf_callback       *CschedCellConfigCnf,
-    CschedUeConfigCnf_callback         *CschedUeConfigCnf,
-    CschedLcConfigCnf_callback         *CschedLcConfigCnf,
-    CschedLcReleaseCnf_callback        *CschedLcReleaseCnf,
-    CschedUeReleaseCnf_callback        *CschedUeReleaseCnf,
-    CschedUeConfigUpdateInd_callback   *CschedUeConfigUpdateInd,
-    CschedCellConfigUpdateInd_callback *CschedCellConfigUpdateInd)
+    void                                 *callback_data,
+    SchedDlConfigInd_callback_t          *SchedDlConfigInd,
+    SchedUlConfigInd_callback_t          *SchedUlConfigInd,
+    CschedCellConfigCnf_callback_t       *CschedCellConfigCnf,
+    CschedUeConfigCnf_callback_t         *CschedUeConfigCnf,
+    CschedLcConfigCnf_callback_t         *CschedLcConfigCnf,
+    CschedLcReleaseCnf_callback_t        *CschedLcReleaseCnf,
+    CschedUeReleaseCnf_callback_t        *CschedUeReleaseCnf,
+    CschedUeConfigUpdateInd_callback_t   *CschedUeConfigUpdateInd,
+    CschedCellConfigUpdateInd_callback_t *CschedCellConfigUpdateInd)
 {
   struct scheduler *ret;
 
@@ -52,7 +52,7 @@ void *SchedInit(
   ret->CschedCellConfigCnf       = CschedCellConfigCnf;
   ret->CschedUeConfigCnf         = CschedUeConfigCnf;
   ret->CschedLcConfigCnf         = CschedLcConfigCnf;
-  ret-> CschedLcReleaseCnf       = CschedLcReleaseCnf;
+  ret->CschedLcReleaseCnf        = CschedLcReleaseCnf;
   ret->CschedUeReleaseCnf        = CschedUeReleaseCnf;
   ret->CschedUeConfigUpdateInd   = CschedUeConfigUpdateInd;
   ret->CschedCellConfigUpdateInd = CschedCellConfigUpdateInd;
