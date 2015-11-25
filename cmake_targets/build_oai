@@ -49,6 +49,7 @@ REL="Rel10"
 HW="EXMIMO"
 EPC=0
 VERBOSE_COMPILE=0
+FAPI="False"
 
 function print_help() {
   echo_info '
@@ -105,6 +106,8 @@ Options
    Compiles oaisim or lte-softmodem without S1 interface, using direct link to IP instead
 --verbose-compile
    Shows detailed compilation instructions in makefile
+--fapi
+   Compiles using the FAPI scheduler
 Usage (first build):
  oaisim (eNB + UE): ./build_oai -I -g --oaisim -x --install-system-files
  Eurecom EXMIMO + COTS UE : ./build_oai -I -g --eNB --EPC -x --install-system-files
@@ -207,6 +210,10 @@ function main() {
 	    NOS1=1
             echo_info "Will compile without S1 interface"
             shift;;
+       --fapi)
+	    FAPI="True"
+            echo_info "Will compile with FAPI scheduler"
+            shift;;
        --verbose-compile)
 	    VERBOSE_COMPILE=1
             echo_info "Will compile with verbose instructions"
@@ -308,6 +315,7 @@ function main() {
     echo "set ( RRC_ASN1_VERSION \"${REL}\")"      >>  $cmake_file
     echo "set ( ENABLE_VCD_FIFO $VCD_TIMING )"     >>  $cmake_file
     echo "set ( RF_BOARD \"${HW}\")"               >>  $cmake_file
+    echo "set ( FAPI $FAPI )"                  >>  $cmake_file
     echo "set(PACKAGE_NAME \"${lte_exec}\")"     >>  $cmake_file
     echo 'include(${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)' >> $cmake_file
     cd  $DIR/$lte_build_dir/build
@@ -436,6 +444,7 @@ function main() {
     echo "set ( PRINT_STATS $PRINT_STATS )" >>  $cmake_file
     echo "set ( RRC_ASN1_VERSION \"${REL}\")" >>  $cmake_file
     echo "set ( ENABLE_VCD_FIFO $VCD_TIMING )" >>  $cmake_file
+    echo "set ( FAPI $FAPI )"                  >>  $cmake_file
     echo 'include(${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)' >> $cmake_file
     [ "$CLEAN" = "1" ] && rm -rf $DIR/$oaisim_build_dir/build
     mkdir -p $DIR/$oaisim_build_dir/build
@@ -501,6 +510,7 @@ function main() {
     echo "set(XFORMS $XFORMS )" >>  $cmake_file
     echo "set(RRC_ASN1_VERSION \"${REL}\")" >>  $cmake_file
     echo "set(ENABLE_VCD_FIFO $VCD_TIMING )" >>  $cmake_file
+    echo "set ( FAPI $FAPI )"                  >>  $cmake_file
     echo 'include(${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)' >> $cmake_file
     #[ "$CLEAN" = "1" ] && rm -rf $DIR/oaisim_mme_build_oai/build
     #mkdir -p $DIR/oaisim_mme_build_oai/build

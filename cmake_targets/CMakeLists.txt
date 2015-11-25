@@ -227,6 +227,8 @@ if (${RTAI})
   set(RTAI_SOURCE sched_dlsch.c sched_rx_pdsch.c rt_wrapper.c vcd_signal_dumper.c log.c)
 endif (${RTAI})
 
+add_boolean_option(FAPI False "Use FAPI scheduler")
+
 #############################
 # ASN.1 grammar C code generation & dependancies
 ################################
@@ -922,9 +924,13 @@ set (MAC_SRC
   ${MAC_DIR}/eNB_scheduler_RA.c
   ${MAC_DIR}/pre_processor.c
   ${MAC_DIR}/config.c
+  )
+if (${FAPI})
+set (MAC_SRC ${MAC_SRC}
   ${MAC_DIR}/ff-mac.c
   ${MAC_DIR}/minifapi.c
   )
+endif (${FAPI})
 
 set (ENB_APP_SRC
   ${OPENAIR2_DIR}/ENB_APP/enb_app.c
