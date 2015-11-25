@@ -352,6 +352,22 @@ int mac_top_init(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active, ui
 #endif
   //end ALU's algo
 
+#ifdef FAPI
+  /// setup FAPI interface
+  for (i=0; i<NB_eNB_INST; i++) {
+    eNB_mac_inst[i].fapi = init_fapi();
+    AssertFatal(eNB_mac_inst[i].fapi != NULL, "error calling init_fapi()\n");
+  }
+
+  /* test code, to remove */
+  struct CschedCellConfigReqParameters p;
+  struct CschedCellConfigCnfParameters r;
+  CschedCellConfigReq(eNB_mac_inst[0].fapi->sched, &p);
+  CschedCellConfigCnf(eNB_mac_inst[0].fapi, &r);
+  if (r.result != ff_SUCCESS) abort();
+
+#endif
+
   LOG_I(MAC,"[MAIN][INIT] Init function finished\n");
 
   return(0);

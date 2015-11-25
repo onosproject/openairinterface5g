@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define LOG(...) do { printf("minifapi:%s:%d: ", __FUNCTION__, __LINE__); printf(__VA_ARGS__); printf("\n"); } while (0)
+
 struct scheduler {
   void                                 *callback_data;
   SchedDlConfigInd_callback_t          *SchedDlConfigInd;
@@ -38,7 +40,7 @@ void *SchedInit(
 {
   struct scheduler *ret;
 
-  printf("minifapi:%s:%d: start\n", __FUNCTION__, __LINE__);
+  LOG("enter");
 
   ret = calloc(1, sizeof(struct scheduler));
   if (ret == NULL) {
@@ -57,7 +59,7 @@ void *SchedInit(
   ret->CschedUeConfigUpdateInd   = CschedUeConfigUpdateInd;
   ret->CschedCellConfigUpdateInd = CschedCellConfigUpdateInd;
 
-  printf("minifapi:%s:%d: done\n", __FUNCTION__, __LINE__);
+  LOG("leave");
 
   return ret;
 }
@@ -112,6 +114,17 @@ void SchedUlCqiInfoReq(void *_sched, const struct SchedUlCqiInfoReqParameters *p
 
 void CschedCellConfigReq(void *_sched, const struct CschedCellConfigReqParameters *params)
 {
+  struct scheduler *sched = _sched;
+  struct CschedCellConfigCnfParameters conf;
+
+  LOG("enter");
+
+  conf.result = ff_SUCCESS;
+  conf.nr_vendorSpecificList = 0;
+
+  sched->CschedCellConfigCnf(sched->callback_data, &conf);
+
+  LOG("leave");
 }
 
 void CschedUeConfigReq(void *_sched, const struct CschedUeConfigReqParameters *params)

@@ -71,6 +71,10 @@
 #include "SCellToAddMod-r10.h"
 #endif
 
+#ifdef FAPI
+#include "ff-mac.h"
+#endif
+
 //#ifdef PHY_EMUL
 //#include "SIMULATION/PHY_EMULATION/impl_defs.h"
 //#endif
@@ -910,6 +914,10 @@ typedef struct {
   /// processing time of eNB ULSCH reception
   time_stats_t rx_ulsch_sdu; // include rlc_data_ind
 
+#ifdef FAPI
+  /// fapi interface handler
+  fapi_interface_t *fapi;
+#endif
 } eNB_MAC_INST;
 
 /* 
