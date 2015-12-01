@@ -5,8 +5,8 @@
 #include "log.h"
 #include "assertions.h"
 
-#undef LOG_D
-#define LOG_D LOG_I
+//#undef LOG_D
+//#define LOG_D LOG_I
 
 #include <stdlib.h>
 #include <pthread.h>
@@ -23,6 +23,7 @@ struct fapi {
   volatile int req_id[N];
   volatile int rsp_id[N];
   struct CschedCellConfigCnfParameters CschedCellConfigCnfParameters;
+  struct SchedDlConfigIndParameters SchedDlConfigIndParameters;
 };
 
 #define LOCK(fi, fn) do { \
@@ -63,7 +64,19 @@ struct fapi {
 
 void SchedDlConfigInd(fapi_interface_t *_fi, struct SchedDlConfigIndParameters *params)
 {
+  struct fapi *fi = (struct fapi *)_fi;
   int fn = 0;
+  LOG_D(MAC, "SchedDlConfigInd enter\n");
+
+  LOCK(fi, fn);
+  WAIT(fi, fn);
+
+  *params = fi->SchedDlConfigIndParameters;
+
+  DONE_wrapper(fi, fn);
+  UNLOCK(fi, fn);
+
+  LOG_D(MAC, "SchedDlConfigInd leave\n");
 }
 
 void SchedUlConfigInd(fapi_interface_t *_fi, struct SchedUlConfigIndParameters *params)
@@ -124,7 +137,19 @@ void CschedCellConfigUpdateInd(fapi_interface_t *_fi, struct CschedCellConfigUpd
 
 void SchedDlConfigInd_callback(void *callback_data, const struct SchedDlConfigIndParameters *params)
 {
+  struct fapi *fi = callback_data;
   int fn = 0;
+  LOG_D(MAC, "SchedDlConfigInd_callback enter\n");
+
+  LOCK(fi, fn);
+  CHECK(fi, fn);
+
+  fi->SchedDlConfigIndParameters = *params;
+
+  DONE_callback(fi, fn);
+  UNLOCK(fi, fn);
+
+  LOG_D(MAC, "SchedDlConfigInd_callback leave\n");
 }
 
 void SchedUlConfigInd_callback(void *callback_data, const struct SchedUlConfigIndParameters *params)

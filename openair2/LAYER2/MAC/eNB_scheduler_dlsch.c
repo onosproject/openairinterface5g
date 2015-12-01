@@ -65,6 +65,10 @@
 # include "intertask_interface.h"
 #endif
 
+#ifdef FAPI
+#include "ff-mac.h"
+#endif
+
 #define ENABLE_MAC_PAYLOAD_DEBUG
 //#define DEBUG_eNB_SCHEDULER 1
 
@@ -415,6 +419,154 @@ set_ul_DAI(
   }
 }
 
+#ifdef FAPI
+
+//------------------------------------------------------------------------------
+void schedule_ue_spec(
+  module_id_t   module_idP,
+  frame_t       frameP,
+  sub_frame_t   subframeP,
+  unsigned int  *nb_rb_used0,
+  unsigned int  *nCCE_used,
+  int*           mbsfn_flag)
+//------------------------------------------------------------------------------
+{
+  fapi_interface_t                     *fapi = eNB_mac_inst[module_idP].fapi;
+  struct SchedDlRlcBufferReqParameters rlc;
+  struct SchedDlTriggerReqParameters   req;
+  struct SchedDlConfigIndParameters    ind;
+  int                                  UE_id;
+  mac_rlc_status_resp_t                rlc_status;
+  eNB_MAC_INST                         *eNB      = &eNB_mac_inst[module_idP];
+  UE_list_t                            *UE_list  = &eNB->UE_list;
+  uint16_t                             sdu_length;
+  uint8_t                              sdu_lcid;
+  struct BuildDataListElement_s        *d;
+  unsigned char                        dlsch_buffer[MAX_DLSCH_PAYLOAD_BYTES];
+  int                                  offset;
+  void                                 *DLSCH_dci;
+  DCI_PDU                              *DCI_pdu = &eNB->common_channels[0 /* CC_id */].DCI_pdu;
+
+  /* let's only schedule subframe 2 for the moment */
+  if (subframeP != 2) return;
+
+  /* hack to set has_ue == 1 in the scheduler */
+  {
+    void has_ue(void *, int);
+    if (UE_list->head != -1) has_ue(fapi->sched, UE_RNTI(module_idP, UE_list->head));
+  }
+
+  /* update RLC buffers status in the scheduler */
+  for (UE_id = UE_list->head; UE_id >= 0; UE_id = UE_list->next[UE_id]) {
+    memset(&rlc, 0, sizeof(rlc));
+    rlc.rnti = UE_RNTI(module_idP, UE_id);
+
+    /* this code is wrong. We should have an RLC function "get_buffer_occupancy" */
+    /* in the meantime let's pretend we ask for 20 bytes */
+    /* plus we should loop over all configured RaB */
+
+    /* DCCH   (srb 1, lcid 1) */
+    rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, 0 /* eNB_index */,
+        frameP, 1 /* enb_flagP */, 0 /* MBMS_flagP */, DCCH, 20);
+    rlc.logicalChannelIdentity = DCCH;
+    rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
+    SchedDlRlcBufferReq(fapi->sched, &rlc);
+
+    /* DCCH+1 (srb 2, lcid 2) */
+    rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, 0 /* eNB_index */,
+        frameP, 1 /* enb_flagP */, 0 /* MBMS_flagP */, DCCH+1, 20);
+    rlc.logicalChannelIdentity = DCCH+1;
+    rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
+    SchedDlRlcBufferReq(fapi->sched, &rlc);
+
+    /* DTCH   (drb 1, lcid 3) */
+    rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, 0 /* eNB_index */,
+        frameP, 1 /* enb_flagP */, 0 /* MBMS_flagP */, DTCH, 20);
+    rlc.logicalChannelIdentity = DTCH;
+    rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
+    SchedDlRlcBufferReq(fapi->sched, &rlc);
+  }
+
+  SchedDlTriggerReq(fapi->sched, &req);
+  SchedDlConfigInd(fapi, &ind);
+
+  if (ind.nr_buildDataList == 0) return;
+
+  /*LOG_D*/LOG_I(MAC, "we have something to schedule!!\n");
+
+  /* let's process only UE_id == 0 for the moment */
+  UE_id = 0;
+
+  d = &ind.buildDataList[0];
+  /* we suppose 1 RLC PDU - let's crash if it's not the case */
+  if (d->nr_rlcPDU_List != 1) { LOG_E(MAC, "this should not happen\n"); abort(); }
+
+  sdu_lcid = d->rlcPduList[0][0].logicalChannelIdentity;
+  sdu_length = mac_rlc_data_req(
+      module_idP,
+      d->rnti,
+      module_idP,
+      frameP,
+      ENB_FLAG_YES,
+      MBMS_FLAG_NO,
+      d->rlcPduList[0][0].logicalChannelIdentity,
+      (char *)dlsch_buffer);
+  /*LOG_D*/LOG_I(MAC, "got sdu length %d\n", sdu_length);
+
+  offset = generate_dlsch_header(
+      (unsigned char*)UE_list->DLSCH_pdu[0][0][UE_id].payload[0],
+      1,              /* num sdu */
+      &sdu_length,
+      &sdu_lcid,
+      255,            /* no rdx */
+      0,              /* timing advance */
+      NULL,           /* contention res id */
+      0,              /* padding */
+      32-2-1-sdu_length); /* post padding */
+
+  /*LOG_D*/LOG_I(MAC, "offset %d\n", offset);
+
+  memcpy(&UE_list->DLSCH_pdu[0 /* CC_id */][0][UE_id].payload[0][offset],
+      dlsch_buffer,
+      sdu_length);
+
+  add_ue_dlsch_info(module_idP,
+      0,  /* CC_id */
+      UE_id,
+      subframeP,
+      S_DL_SCHEDULED);
+
+  DLSCH_dci = (void *)UE_list->UE_template[0 /*CC_id*/][UE_id].DLSCH_DCI[d->dci.harqProcess];
+
+  /* only 5MHz FDD format1 for the moment */
+  if (d->dci.format != ONE) { LOG_E(MAC, "bad dci format\n"); abort(); }
+  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->mcs      = d->dci.mcs[0];
+  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->harq_pid = d->dci.harqProcess;
+  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->ndi      = d->dci.ndi[0];
+  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rv       = d->dci.rv[0];
+  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->TPC      = d->dci.tpc;
+
+  nCCE_used[0] = 1;
+
+  /* let's do the job of fill_DLSCH_dci */
+
+  eNB_dlsch_info[module_idP][0 /* CC_id */][UE_id].status = S_DL_WAITING;
+
+  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rballoc = d->dci.rbBitmap;
+  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rah = 0;
+
+  add_ue_spec_dci(DCI_pdu,
+      DLSCH_dci,
+      d->rnti,
+      sizeof(DCI1_5MHz_FDD_t),
+      d->dci.aggrLevel,            /* process_ue_cqi (module_idP,UE_id),//aggregation, */
+      sizeof_DCI1_5MHz_FDD_t,
+      format1,
+      0);
+
+}
+
+#else /* FAPI */
 
 //------------------------------------------------------------------------------
 void
@@ -1506,9 +1658,15 @@ schedule_ue_spec(
 
 }
 
+#endif /* FAPI */
+
 //------------------------------------------------------------------------------
 void
+#ifdef FAPI
+fill_DLSCH_dci_old(
+#else
 fill_DLSCH_dci(
+#endif
   module_id_t module_idP,
   frame_t frameP,
   sub_frame_t subframeP,
@@ -2422,6 +2580,26 @@ fill_DLSCH_dci(
   stop_meas(&eNB->fill_DLSCH_dci);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_FILL_DLSCH_DCI,VCD_FUNCTION_OUT);
 }
+
+#ifdef FAPI
+
+//------------------------------------------------------------------------------
+void
+fill_DLSCH_dci(
+  module_id_t module_idP,
+  frame_t frameP,
+  sub_frame_t subframeP,
+  uint32_t* RBallocP,
+  uint8_t RA_scheduledP,
+  int* mbsfn_flagP
+)
+//------------------------------------------------------------------------------
+{
+  if (subframeP != 2) return fill_DLSCH_dci_old(module_idP, frameP, subframeP, RBallocP, RA_scheduledP, mbsfn_flagP);
+  /* in subframe 2, nothing to do, schedule_spec_ue already called add_ue_spec_dci */
+}
+
+#endif /* FAPI */
 
 //------------------------------------------------------------------------------
 unsigned char*
