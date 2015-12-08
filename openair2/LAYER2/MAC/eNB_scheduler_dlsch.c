@@ -559,7 +559,10 @@ void schedule_ue_spec(
       DLSCH_dci,
       d->rnti,
       sizeof(DCI1_5MHz_FDD_t),
-      d->dci.aggrLevel,            /* process_ue_cqi (module_idP,UE_id),//aggregation, */
+      d->dci.aggrLevel == 1 ? 0:            /* process_ue_cqi (module_idP,UE_id),//aggregation, */
+      d->dci.aggrLevel == 2 ? 1:
+      d->dci.aggrLevel == 4 ? 2:
+                              3,
       sizeof_DCI1_5MHz_FDD_t,
       format1,
       0);
