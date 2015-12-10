@@ -1606,9 +1606,9 @@ add_executable(oaisim_nos1
 target_include_directories(oaisim_nos1 PUBLIC  ${OPENAIR_TARGETS}/SIMU/USER)
 target_link_libraries (oaisim_nos1
   -Wl,--start-group
-  RRC_LIB X2AP_LIB  X2AP_ENB SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
+  RRC_LIB X2AP_LIB SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
   -Wl,--end-group )
-
+#ENB_X2AP
 target_link_libraries (oaisim_nos1 ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})
 target_link_libraries (oaisim_nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES}  ${NETTLE_LIBRARIES}  ${option_HW_lib}
   ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${OPENPGM_LIBRARIES})
