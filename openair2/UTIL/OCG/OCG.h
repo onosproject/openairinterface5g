@@ -735,6 +735,11 @@ typedef struct {
 } Info;
 /* @}*/
 
+typedef struct {
+	long hys;
+	long ttt_ms;
+}Handover_info;
+
 /** @defgroup  _OSD_basic Basic OpenAirInterface Scenario Descriptor
  *  @ingroup _OCG
  *  @brief OAI Emulation struct for OSD_basic
@@ -747,6 +752,7 @@ typedef struct {
   Emulation_Config emulation_config;  /*!< \brief Emulation configuration */
   Protocol_Config protocol_config;  /* specific protocol configuration*/
   Info info;      /*!< \brief Some important information which should be able to be reached by OAISIM */
+  Handover_info ho_info; // Information for handover
   char *profile;
 } OAI_Emulation;
 /* @}*/

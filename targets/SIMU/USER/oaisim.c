@@ -94,6 +94,7 @@ char smbv_ip[16];
 
 #include "oaisim.h"
 #include "oaisim_config.h"
+#include "RRC/LITE/rrc_eNB_primitives.h"
 #include "UTIL/OCG/OCG_extern.h"
 #include "cor_SF_sim.h"
 #include "UTIL/OMG/omg_constants.h"
@@ -1325,6 +1326,8 @@ main (int argc, char **argv)
   init_openair2 ();
 
   init_ocm ();
+
+  init_HO(&oai_emulation.ho_info);
 
 #ifdef SMBV
   // Rohde&Schwarz SMBV100A vector signal generator

@@ -206,6 +206,10 @@ void get_simulation_options(int argc, char *argv[])
     LONG_OPTION_MALLOC_TRACE_ENABLED,
 
     LONG_OPTION_CBA_BACKOFF_TIMER,
+
+	LONG_OPTION_HYS,
+
+	LONG_OPTION_TTT_MS,
   };
 
   static struct option long_options[] = {
@@ -237,11 +241,42 @@ void get_simulation_options(int argc, char *argv[])
 
     {"cba-backoff",            required_argument, 0, LONG_OPTION_CBA_BACKOFF_TIMER},
 
+	{"hys", 				   required_argument, 0, LONG_OPTION_HYS},
+
+	{"ttt_ms", 				   required_argument, 0, LONG_OPTION_TTT_MS},
+
     {NULL, 0, NULL, 0}
   };
 
+  oai_emu_ho_init(&oai_emulation.ho_info);
+
   while ((option = getopt_long (argc, argv, "aA:b:B:c:C:D:d:eE:f:FGg:hHi:IJ:j:k:K:l:L:m:M:n:N:oO:p:P:qQ:rR:s:S:t:T:u:U:vV:w:W:x:X:y:Y:z:Z:", long_options, NULL)) != -1) {
     switch (option) {
+
+    case LONG_OPTION_HYS:
+      if (optarg) {
+    	oai_emulation.ho_info.hys = atoi(optarg);
+        //printf("Hysteresis is %ld \n",oai_emulation.ho_info.hys);
+      }
+      if(oai_emulation.ho_info.hys<0){
+    	  printf("Unsupported hysteresis value-Hysteresis should be non-negative\n");
+    	  exit(-1);
+      }
+
+      break;
+
+    case LONG_OPTION_TTT_MS:
+      if (optarg) {
+    	oai_emulation.ho_info.ttt_ms = atoi(optarg);
+        //printf("Time to trigger is %ld \n",oai_emulation.ho_info.ttt_ms);
+      }
+      if(oai_emulation.ho_info.ttt_ms<0){
+    	  printf("Unsupported time to trigger value-Time to trigger should be non-negative\n");
+    	  exit(-1);
+      }
+
+      break;
+
     case LONG_OPTION_ENB_CONF:
       if (optarg) {
         free(conf_config_file_name); // prevent memory leak if option is used multiple times
@@ -1537,3 +1572,7 @@ void init_time()
   td_avg        = TARGET_SF_TIME_NS;
 }
 
+void oai_emu_ho_init(Handover_info* ho_info){
+	ho_info->hys=-1;
+	ho_info->ttt_ms=-1;
+}
