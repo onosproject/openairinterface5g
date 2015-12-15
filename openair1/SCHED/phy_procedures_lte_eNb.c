@@ -2944,7 +2944,7 @@ void process_HARQ_ACK(
       dlsch_harq_proc->round = 0;
       ue_stats->dlsch_l2_errors[dl_harq_pid]++;
       dlsch_harq_proc->status = SCH_IDLE;
-      put_harq_pid_in_freelist(dlsch, dl_harq_pid[m]);
+      put_harq_pid_in_freelist(dlsch, dl_harq_pid);
       dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
     }
   } else {
@@ -2958,7 +2958,7 @@ void process_HARQ_ACK(
     // Received ACK so set round to 0 and set dlsch_harq_pid IDLE
     dlsch_harq_proc->round  = 0;
     dlsch_harq_proc->status = SCH_IDLE;
-    put_harq_pid_in_freelist(dlsch, dl_harq_pid[m]);
+    put_harq_pid_in_freelist(dlsch, dl_harq_pid);
     dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
 
     ue_stats->total_TBS = ue_stats->total_TBS +
