@@ -541,7 +541,7 @@ void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP
 
   if (UE_id  != -1) {
     /* no SR indication if the CC is not the primary CC
-     * (the UE currently can only tranmit on the primary CC)
+     * (the UE currently can only transmit on the primary CC)
      */
     if (cc_idP != UE_PCCID(mod_idP, UE_id))
       return;
