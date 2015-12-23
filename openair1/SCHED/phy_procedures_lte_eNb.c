@@ -4376,7 +4376,9 @@ printf("o_ACK %d %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_
                &&
               !(phy_vars_eNB->lte_frame_parms.frame_type == FDD &&
                 phy_vars_eNB->n_configured_SCCs[i] == 1 &&
-                phy_vars_eNB->pucch_config_dedicated[i].channel_selection == 1)
+                phy_vars_eNB->pucch_config_dedicated[i].channel_selection == 1
+                /* we still have to detect SR here if there is no n1_pucch valid */
+                && (n1_pucch0 != -1 || n1_pucch1 != -1 || n1_pucch2 != -1 || n1_pucch3 != -1))
 #endif
                       ) {
           // get metric for SR only
