@@ -38,9 +38,15 @@ FL_COLOR rx_antenna_colors[4] = {FL_RED,FL_BLUE,FL_GREEN,FL_YELLOW};
 
 float tput_time_enb[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
 float tput_enb[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
+/*
 float tput_time_ue[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
 float tput_ue[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
 float tput_ue_max[NUMBER_OF_UE_MAX] = {0};
+*/
+float rsrp_time_ue[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
+float rsrp0_ue[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
+float rsrp1_ue[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
+float rsrp2_ue[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
 
 static void ia_receiver_on_off( FL_OBJECT *button, long arg)
 {
@@ -450,11 +456,18 @@ FD_lte_phy_scope_ue *create_lte_phy_scope_ue( void )
   fl_set_object_lcolor( fdui->pdsch_comp, FL_WHITE ); // Label color
   fl_set_xyplot_symbolsize( fdui->pdsch_comp,2);
 
+  /*
   // Throughput on PDSCH
   fdui->pdsch_tput = fl_add_xyplot( FL_NORMAL_XYPLOT, 20, 720, 500, 100, "PDSCH Throughput [frame]/[kbit/s]" );
   fl_set_object_boxtype( fdui->pdsch_tput, FL_EMBOSSED_BOX );
   fl_set_object_color( fdui->pdsch_tput, FL_BLACK, FL_WHITE );
   fl_set_object_lcolor( fdui->pdsch_tput, FL_WHITE ); // Label color
+  */
+  // RSRP
+  fdui->rsrp = fl_add_xyplot( FL_NORMAL_XYPLOT, 20, 720, 500, 100, "RSRP [frame]/[kbit/s]" );
+  fl_set_object_boxtype( fdui->rsrp, FL_EMBOSSED_BOX );
+  fl_set_object_color( fdui->rsrp, FL_BLACK, FL_WHITE );
+  fl_set_object_lcolor( fdui->rsrp, FL_WHITE ); // Label color
 
   // Generic UE Button
   fdui->button_0 = fl_add_button( FL_PUSH_BUTTON, 540, 720, 240, 40, "" );
@@ -502,9 +515,14 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
   float freq[nsymb_ce*nb_antennas_rx*nb_antennas_tx];
   int frame = phy_vars_ue->frame_rx;
   uint32_t total_dlsch_bitrate = phy_vars_ue->bitrate[eNB_id];
+  double rsrp0 = 10*log10(1+phy_vars_ue->PHY_measurements.rsrp[0])-phy_vars_ue->rx_total_gain_dB;
+  double rsrp1 = 10*log10(1+phy_vars_ue->PHY_measurements.rsrp[1])-phy_vars_ue->rx_total_gain_dB;
+  double rsrp2 = 10*log10(1+phy_vars_ue->PHY_measurements.rsrp[2])-phy_vars_ue->rx_total_gain_dB;
   int coded_bits_per_codeword = 0;
   int mcs = 0;
+
   unsigned char harq_pid = 0;
+ 
 
 
   if (phy_vars_ue->dlsch_ue[eNB_id][0]!=NULL) {
@@ -733,7 +751,7 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
 
     fl_set_xyplot_data(form->pdsch_comp,I,Q,ind,"","","");
   }
-
+/*
   // PDSCH Throughput
   memmove( tput_time_ue[UE_id], &tput_time_ue[UE_id][1], (TPUT_WINDOW_LENGTH-1)*sizeof(float) );
   memmove( tput_ue[UE_id],      &tput_ue[UE_id][1],      (TPUT_WINDOW_LENGTH-1)*sizeof(float) );
@@ -748,6 +766,24 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
   fl_set_xyplot_data(form->pdsch_tput,tput_time_ue[UE_id],tput_ue[UE_id],TPUT_WINDOW_LENGTH,"","","");
 
   fl_set_xyplot_ybounds(form->pdsch_tput,0,tput_ue_max[UE_id]);
+ */
+
+  // RSRP 
+  memmove( rsrp_time_ue[UE_id], &rsrp_time_ue[UE_id][1], (TPUT_WINDOW_LENGTH-1)*sizeof(float) );
+  memmove( rsrp0_ue[UE_id],      &rsrp0_ue[UE_id][1],      (TPUT_WINDOW_LENGTH-1)*sizeof(float) );
+  memmove( rsrp1_ue[UE_id],      &rsrp1_ue[UE_id][1],      (TPUT_WINDOW_LENGTH-1)*sizeof(float) );
+  memmove( rsrp2_ue[UE_id],      &rsrp2_ue[UE_id][1],      (TPUT_WINDOW_LENGTH-1)*sizeof(float) );
+
+  rsrp_time_ue[UE_id][TPUT_WINDOW_LENGTH-1]  = (float) frame;
+  rsrp0_ue[UE_id][TPUT_WINDOW_LENGTH-1] = (float)rsrp0;
+  rsrp1_ue[UE_id][TPUT_WINDOW_LENGTH-1] = (float)rsrp1;
+  rsrp2_ue[UE_id][TPUT_WINDOW_LENGTH-1] = (float)rsrp2;
+
+  fl_set_xyplot_data(form->rsrp,rsrp_time_ue[UE_id],rsrp0_ue[UE_id],TPUT_WINDOW_LENGTH,"","","");
+  fl_add_xyplot_overlay(form->rsrp,1,rsrp_time_ue[UE_id],rsrp1_ue[UE_id],TPUT_WINDOW_LENGTH,FL_BLUE);
+  fl_add_xyplot_overlay(form->rsrp,2,rsrp_time_ue[UE_id],rsrp2_ue[UE_id],TPUT_WINDOW_LENGTH,FL_GREEN);
+
+  fl_set_xyplot_ybounds(form->rsrp,-130,-60);
 
   fl_check_forms();
 

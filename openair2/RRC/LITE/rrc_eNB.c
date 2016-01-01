@@ -2664,7 +2664,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   for (i = 0; i < 6; i++) {
     CellToAdd = (CellsToAddMod_t *) CALLOC(1, sizeof(*CellToAdd));
     CellToAdd->cellIndex = i + 1;
-    CellToAdd->physCellId = get_adjacent_cell_id(ctxt_pP->module_id, i);
+    CellToAdd->physCellId = get_adjacent_cell_id(ue_context_pP->ue_context.handover_info->modid_t, i);
     CellToAdd->cellIndividualOffset = Q_OffsetRange_dB0;
 
     ASN_SEQUENCE_ADD(&CellsToAddModList->list, CellToAdd);
@@ -2834,7 +2834,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
         ctxt_pP->module_id,
         ctxt_pP->frame,
         mobilityInfo->targetPhysCellId,
-        ctxt_pP->module_id,
+        get_adjacent_cell_mod_id(mobilityInfo->targetPhysCellId),
         ue_context_pP->ue_context.rnti);
 
   mobilityInfo->additionalSpectrumEmission = CALLOC(1, sizeof(*mobilityInfo->additionalSpectrumEmission));
