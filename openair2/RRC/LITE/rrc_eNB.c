@@ -4988,6 +4988,8 @@ static void *th(void *_)
   struct sockaddr_in addr;
   MessageDef                         *msg;
   socklen_t len;
+  char s[256];
+  int r;
 
   sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == -1) abort();
@@ -5007,9 +5009,21 @@ static void *th(void *_)
   len = sizeof(addr);
   fd = accept(sock, (struct sockaddr *)&addr, &len); if (fd == -1) abort();
 
+  sprintf(s, "press enter to activate 2nd CC of UE 0\n");
+  r = strlen(s);
+  if (write(fd, s, r) != r) { printf("error writing to 4012 socket\n"); abort(); }
+
   while (1) {
     if (read(fd, &c, 1) != 1) abort();
     if (c != '\n') continue;
+    {
+      /* some feedback sent to the socket */
+      eNB_MAC_INST *eNB=&eNB_mac_inst[0];
+      UE_SCell_config_t *sconf = &eNB->UE_list.scell_config[0];
+      sprintf(s, "let's %s the 2nd CC for UE 0!\n", sconf->scell[0].active ? "deactivate" : "activate");
+      r = strlen(s);
+      if (write(fd, s, r) != r) { printf("error writing to 4012 socket\n"); abort(); }
+    }
     msg = itti_alloc_new_message(TASK_RRC_ENB, CROUX_HACK);
     CROUX_HACK(msg).x = 10;
     itti_send_msg_to_task(TASK_RRC_ENB, 0, msg);
