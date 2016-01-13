@@ -450,11 +450,13 @@ void schedule_ue_spec(
   /* let's only schedule subframe 2 for the moment */
   if (subframeP != 2) return;
 
+#if 0
   /* hack to set has_ue == 1 in the scheduler */
   {
     void has_ue(void *, int);
     if (UE_list->head != -1) has_ue(fapi->sched, UE_RNTI(module_idP, UE_list->head));
   }
+#endif
 
   /* update RLC buffers status in the scheduler */
   for (UE_id = UE_list->head; UE_id >= 0; UE_id = UE_list->next[UE_id]) {
@@ -470,6 +472,7 @@ void schedule_ue_spec(
         frameP, 1 /* enb_flagP */, 0 /* MBMS_flagP */, DCCH, 20);
     rlc.logicalChannelIdentity = DCCH;
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
+    LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
 
     /* DCCH+1 (srb 2, lcid 2) */
@@ -477,6 +480,7 @@ void schedule_ue_spec(
         frameP, 1 /* enb_flagP */, 0 /* MBMS_flagP */, DCCH+1, 20);
     rlc.logicalChannelIdentity = DCCH+1;
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
+    LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH+1 rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
 
     /* DTCH   (drb 1, lcid 3) */
@@ -484,11 +488,21 @@ void schedule_ue_spec(
         frameP, 1 /* enb_flagP */, 0 /* MBMS_flagP */, DTCH, 20);
     rlc.logicalChannelIdentity = DTCH;
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
+    LOG_I(MAC, "calling SchedDlRlcBufferReq on DTCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
   }
 
+  req.sfnSf                 = frameP * 16 + subframeP;
+  req.nr_dlInfoList         = 0;
+  req.dlInfoList            = NULL;
+  req.nr_vendorSpecificList = 0;
+  req.vendorSpecificList    = NULL;
+
+  LOG_I(MAC, "calling SchedDlTriggerReq\n");
   SchedDlTriggerReq(fapi->sched, &req);
+  LOG_I(MAC, "calling SchedDlConfigInd\n");
   SchedDlConfigInd(fapi, &ind);
+  LOG_I(MAC, "SchedDlConfigInd returns ind.nr_buildDataList %d\n", ind.nr_buildDataList);
 
   if (ind.nr_buildDataList == 0) return;
 
