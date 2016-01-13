@@ -229,7 +229,7 @@ struct SchedDlConfigIndParameters
   uint8_t nr_buildDataList;
   uint8_t nr_buildRARList;
   uint8_t nr_buildBroadcastList;
-  struct BuildDataListElement_s      buildDataList[MAX_BUILD_DATA_LIST];
+  struct BuildDataListElement_s      *buildDataList;
   struct BuildRarListElement_s       *buildRarList;
   struct BuildBroadcastListElement_s *buildBroadcastList;
 
