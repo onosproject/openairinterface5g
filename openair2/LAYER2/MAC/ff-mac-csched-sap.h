@@ -58,7 +58,8 @@ extern "C" {
 struct CschedCellConfigReqParameters
 {
   uint8_t   nr_carriers;
-  struct CschedCellConfigReqParametersListElement* ccConfigList[MAX_NUM_CCs];
+#warning [31;46mMAX_NUM_CCs forced to 2 in structure CschedCellConfigReqParameters!![0m
+  struct CschedCellConfigReqParametersListElement* ccConfigList[2 /*MAX_NUM_CCs*/];
   uint8_t   nr_vendorSpecificList;
   struct VendorSpecificListElement_s *vendorSpecificList;
 };
@@ -198,7 +199,8 @@ struct CschedUeConfigReqParameters
   bool		crossCarrierSchedSupport;
   uint8_t   pcellCarrierIndex;
   uint8_t   nr_scells;
-  struct 	ScellConfig_s* scellConfigList[MAX_NUM_CCs-1];
+#warning [31;46mMAX_NUM_CCs forced to 2 in structure CschedUeConfigReqParameters!![0m
+  struct 	ScellConfig_s* scellConfigList[2 /* MAX_NUM_CCs */ -1];
   uint8_t	scellDeactivationTimer;
 
   uint8_t   nr_vendorSpecificList;

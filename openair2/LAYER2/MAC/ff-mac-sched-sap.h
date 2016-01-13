@@ -235,7 +235,8 @@ struct SchedDlConfigIndParameters
 
   /* mind: this is just number of elems in the next array (not actual number of PDCCH OFDM symbols) */
   uint8_t nr_ofdmSymbolsCount;
-  struct PdcchOfdmSymbolCountListElement_s* nrOfPdcchOfdmSymbols[MAX_NUM_CCs];
+#warning [31;46mMAX_NUM_CCs forced to 2 in structure SchedDlConfigIndParameters!![0m
+  struct PdcchOfdmSymbolCountListElement_s* nrOfPdcchOfdmSymbols[2 /* MAX_NUM_CCs */];
 
   uint8_t   nr_vendorSpecificList;
   struct VendorSpecificListElement_s *vendorSpecificList;
