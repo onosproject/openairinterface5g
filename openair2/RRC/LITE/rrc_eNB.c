@@ -208,6 +208,13 @@ init_SI(
     mac_xface->macphy_exit("[RRC][init_SI] FATAL, no memory for SIB1 allocated");
   }
 
+#if FAPI
+  if (eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1 != 15) {
+    LOG_E(RRC, "sib1 is not 15 bytes but %d, we have to quit\n", eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1);
+    abort();
+  }
+#endif
+
   /*
      printf ("after SIB1 init : Nid_cell %d\n", mac_xface->lte_frame_parms->Nid_cell);
      printf ("after SIB1 init : frame_type %d,tdd_config %d\n",
@@ -237,6 +244,12 @@ init_SI(
           , configuration
 #endif
         );
+#if FAPI
+    if (eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23 != 30) {
+      LOG_E(RRC, "sib2/3 is not 30 bytes but %d, we have to quit\n", eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23);
+      abort();
+    }
+#endif
 
     /*
        eNB_rrc_inst[ctxt_pP->module_id].sizeof_SIB23 = do_SIB2_AT4(ctxt_pP->module_id,
