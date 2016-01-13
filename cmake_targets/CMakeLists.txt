@@ -937,7 +937,7 @@ set (MAC_SRC
 if (${FAPI})
 set (MAC_SRC ${MAC_SRC}
   ${MAC_DIR}/ff-mac.c
-  ${MAC_DIR}/minifapi.c
+  #${MAC_DIR}/minifapi.c
   )
 endif (${FAPI})
 
@@ -951,6 +951,11 @@ add_library(L2
   ${MAC_SRC}
   ${ENB_APP_SRC}
   ${OPENAIR2_DIR}/RRC/L2_INTERFACE/openair_rrc_L2_interface.c)
+
+if (${FAPI})
+  target_link_libraries(L2
+    ${MAC_DIR}/libscheduler.a)
+endif (${FAPI})
 
 # L3 Libs
 ##########################
