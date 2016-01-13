@@ -107,6 +107,7 @@ struct CschedCellConfigReqParametersListElement
   uint8_t subframeAssignment;
   uint8_t specialSubframePatterns;
 
+#warning [31;46mmbsfn_SubframeConfigPresent is missing in the structure CschedCellConfigReqParametersListElement[0m
   uint8_t mbsfnSubframeConfigRfPeriod[MAX_MBSFN_CONFIG];
   uint8_t mbsfnSubframeConfigRfOffset[MAX_MBSFN_CONFIG];
   uint8_t mbsfnSubframeConfigSfAllocation[MAX_MBSFN_CONFIG];
