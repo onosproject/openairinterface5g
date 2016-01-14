@@ -11,17 +11,26 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-/* number of callbacks */
-#define N 9
+/* callback IDs */
+#define SCHED_DL_CONFIG_IND           0
+#define SCHED_UL_CONFIG_IND           1
+#define CSCHED_CELL_CONFIG_CNF        2
+#define CSCHED_UE_CONFIG_CNF          3
+#define CSCHED_LC_CONFIG_CNF          4
+#define CSCHED_LC_RELEASE_CNF         5
+#define CSCHED_UE_RELEASE_CNF         6
+#define CSCHED_UE_CONFIG_UPDATE_IND   7
+#define CSCHED_CELL_CONFIG_UPDATE_IND 8
+#define N_IDs 9
 
 /* this structure stores required data for OAI to work with FAPI */
 /* it is the private version of fapi_interface_t */
 struct fapi {
   fapi_interface_t fi;   /* the start of the structure matches fapi_interface_t */
-  pthread_mutex_t mutex[N];
-  pthread_cond_t cond[N];
-  volatile int req_id[N];
-  volatile int rsp_id[N];
+  pthread_mutex_t mutex[N_IDs];
+  pthread_cond_t cond[N_IDs];
+  volatile int req_id[N_IDs];
+  volatile int rsp_id[N_IDs];
   struct CschedCellConfigCnfParameters CschedCellConfigCnfParameters;
   struct SchedDlConfigIndParameters SchedDlConfigIndParameters;
 };
@@ -65,7 +74,7 @@ struct fapi {
 void SchedDlConfigInd(fapi_interface_t *_fi, struct SchedDlConfigIndParameters *params)
 {
   struct fapi *fi = (struct fapi *)_fi;
-  int fn = 0;
+  int fn = SCHED_DL_CONFIG_IND;
   LOG_D(MAC, "SchedDlConfigInd enter\n");
 
   LOCK(fi, fn);
@@ -81,7 +90,7 @@ void SchedDlConfigInd(fapi_interface_t *_fi, struct SchedDlConfigIndParameters *
 
 void SchedUlConfigInd(fapi_interface_t *_fi, struct SchedUlConfigIndParameters *params)
 {
-  int fn = 1;
+  int fn = SCHED_UL_CONFIG_IND;
 }
 
 /* CSCHED "wrappers" */
@@ -89,7 +98,7 @@ void SchedUlConfigInd(fapi_interface_t *_fi, struct SchedUlConfigIndParameters *
 void CschedCellConfigCnf(fapi_interface_t *_fi, struct CschedCellConfigCnfParameters *params)
 {
   struct fapi *fi = (struct fapi *)_fi;
-  int fn = 2;
+  int fn = CSCHED_CELL_CONFIG_CNF;
   LOG_D(MAC, "CschedCellConfigCnf enter\n");
 
   LOCK(fi, fn);
@@ -105,32 +114,32 @@ void CschedCellConfigCnf(fapi_interface_t *_fi, struct CschedCellConfigCnfParame
 
 void CschedUeConfigCnf(fapi_interface_t *_fi, struct CschedUeConfigCnfParameters *params)
 {
-  int fn = 3;
+  int fn = CSCHED_UE_CONFIG_CNF;
 }
 
 void CschedLcConfigCnf(fapi_interface_t *_fi, struct CschedLcConfigCnfParameters *params)
 {
-  int fn = 4;
+  int fn = CSCHED_LC_CONFIG_CNF;
 }
 
 void CschedLcReleaseCnf(fapi_interface_t *_fi, struct CschedLcReleaseCnfParameters *params)
 {
-  int fn = 5;
+  int fn = CSCHED_LC_RELEASE_CNF;
 }
 
 void CschedUeReleaseCnf(fapi_interface_t *_fi, struct CschedUeReleaseCnfParameters *params)
 {
-  int fn = 6;
+  int fn = CSCHED_UE_RELEASE_CNF;
 }
 
 void CschedUeConfigUpdateInd(fapi_interface_t *_fi, struct CschedUeConfigUpdateIndParameters *params)
 {
-  int fn = 7;
+  int fn = CSCHED_UE_CONFIG_UPDATE_IND;
 }
 
 void CschedCellConfigUpdateInd(fapi_interface_t *_fi, struct CschedCellConfigUpdateIndParameters *params)
 {
-  int fn = 8;
+  int fn = CSCHED_CELL_CONFIG_UPDATE_IND;
 }
 
 /* SCHED callbacks */
@@ -138,7 +147,7 @@ void CschedCellConfigUpdateInd(fapi_interface_t *_fi, struct CschedCellConfigUpd
 void SchedDlConfigInd_callback(void *callback_data, const struct SchedDlConfigIndParameters *params)
 {
   struct fapi *fi = callback_data;
-  int fn = 0;
+  int fn = SCHED_DL_CONFIG_IND;
   LOG_D(MAC, "SchedDlConfigInd_callback enter\n");
 
   LOCK(fi, fn);
@@ -154,7 +163,7 @@ void SchedDlConfigInd_callback(void *callback_data, const struct SchedDlConfigIn
 
 void SchedUlConfigInd_callback(void *callback_data, const struct SchedUlConfigIndParameters *params)
 {
-  int fn = 1;
+  int fn = SCHED_UL_CONFIG_IND;
 }
 
 /* CSCHED callbacks */
@@ -162,7 +171,7 @@ void SchedUlConfigInd_callback(void *callback_data, const struct SchedUlConfigIn
 void CschedCellConfigCnf_callback(void *callback_data, const struct CschedCellConfigCnfParameters *params)
 {
   struct fapi *fi = callback_data;
-  int fn = 2;
+  int fn = CSCHED_CELL_CONFIG_CNF;
   LOG_D(MAC, "CschedCellConfigCnf_callback enter\n");
 
   LOCK(fi, fn);
@@ -178,32 +187,32 @@ void CschedCellConfigCnf_callback(void *callback_data, const struct CschedCellCo
 
 void CschedUeConfigCnf_callback(void *callback_data, const struct CschedUeConfigCnfParameters *params)
 {
-  int fn = 3;
+  int fn = CSCHED_UE_CONFIG_CNF;
 }
 
 void CschedLcConfigCnf_callback(void *callback_data, const struct CschedLcConfigCnfParameters *params)
 {
-  int fn = 4;
+  int fn = CSCHED_LC_CONFIG_CNF;
 }
 
 void CschedLcReleaseCnf_callback(void *callback_data, const struct CschedLcReleaseCnfParameters *params)
 {
-  int fn = 5;
+  int fn = CSCHED_LC_RELEASE_CNF;
 }
 
 void CschedUeReleaseCnf_callback(void *callback_data, const struct CschedUeReleaseCnfParameters *params)
 {
-  int fn = 6;
+  int fn = CSCHED_UE_RELEASE_CNF;
 }
 
 void CschedUeConfigUpdateInd_callback(void *callback_data, const struct CschedUeConfigUpdateIndParameters *params)
 {
-  int fn = 7;
+  int fn = CSCHED_UE_CONFIG_UPDATE_IND;
 }
 
 void CschedCellConfigUpdateInd_callback(void *callback_data, const struct CschedCellConfigUpdateIndParameters *params)
 {
-  int fn = 8;
+  int fn = CSCHED_CELL_CONFIG_UPDATE_IND;
 }
 
 fapi_interface_t *init_fapi(void)
