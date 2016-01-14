@@ -228,7 +228,7 @@ fapi_interface_t *init_fapi(void)
     return NULL;
   }
 
-  for (i = 0; i < N; i++) {
+  for (i = 0; i < N_IDs; i++) {
     if (pthread_mutex_init(&ret->mutex[i], NULL)) {
       LOG_E(MAC, "init_fapi: mutex init error\n");
       exit(1);
