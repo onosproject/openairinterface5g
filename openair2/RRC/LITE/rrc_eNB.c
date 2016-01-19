@@ -2840,7 +2840,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   mobilityInfo->additionalSpectrumEmission = CALLOC(1, sizeof(*mobilityInfo->additionalSpectrumEmission));
   *mobilityInfo->additionalSpectrumEmission = 1;  //Check this value!
 
-  mobilityInfo->t304 = MobilityControlInfo__t304_ms50;    // need to configure an appropriate value here
+  mobilityInfo->t304 = MobilityControlInfo__t304_ms500;    // need to configure an appropriate value here
 
   // New UE Identity (C-RNTI) to identify an UE uniquely in a cell
   mobilityInfo->newUE_Identity.size = 2;
