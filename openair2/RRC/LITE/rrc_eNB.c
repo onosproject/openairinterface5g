@@ -38,6 +38,7 @@
 #define RRC_ENB
 #define RRC_ENB_C
 
+#include "PHY/extern.h"
 #include "defs.h"
 #include "extern.h"
 #include "assertions.h"
@@ -2146,8 +2147,8 @@ rrc_eNB_configure_rbs_handover(struct rrc_eNB_ue_context_s* ue_context_p, protoc
 void
 rrc_eNB_target_add_ue_handover(protocol_ctxt_t* const ctxt_pP){
 	// Add a new user (called during the HO procedure)
-	//add_new_ue(ctxt_pP->module_id, 0, ctxt_pP->rnti, -1); // UE allocation MAC
-	//add_ue(ctxt_pP->rnti,get_phy_vars(ctxt_pP->module_id,0));
+	add_new_ue(ctxt_pP->module_id, 0, ctxt_pP->rnti, -1); // UE allocation MAC
+	add_ue(ctxt_pP->rnti,PHY_vars_eNB_g[ctxt_pP->module_id][0]);
 }
 
 // 5.3.5.4 RRCConnectionReconfiguration including the mobilityControlInfo to prepare the UE handover
