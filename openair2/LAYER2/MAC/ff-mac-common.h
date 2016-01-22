@@ -271,7 +271,7 @@ struct BuildDataListElement_s
    * ceBitmap[0] = ff_TA;  ceBitmap[1] = ff_DRX | ff_AD; */
   uint8_t ceBitmap[MAX_TB_LIST];
   uint8_t   nr_rlcPDU_List;
-  struct RlcPduListElement_s *rlcPduList[MAX_TB_LIST];
+  struct RlcPduListElement_s (*rlcPduList)[MAX_TB_LIST];
   uint8_t   servCellIndex;	//definition according to 36.331 'ServCellIndex'
   /* Hex content of Activation/Deactivation MAC CE */
   uint8_t	activationDeactivationCE;
