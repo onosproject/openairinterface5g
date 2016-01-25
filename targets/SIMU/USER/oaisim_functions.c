@@ -253,8 +253,6 @@ void get_simulation_options(int argc, char *argv[])
     {NULL, 0, NULL, 0}
   };
 
-  oai_emu_ho_init(&oai_emulation.ho_info);
-
   while ((option = getopt_long (argc, argv, "aA:b:B:c:C:D:d:eE:f:FGg:hHi:IJ:j:k:K:l:L:m:M:n:N:oO:p:P:qQ:rR:s:S:t:T:u:U:vV:w:W:x:X:y:Y:z:Z:", long_options, NULL)) != -1) {
     switch (option) {
 
@@ -1580,12 +1578,6 @@ void init_time()
   sleep_time_us = SLEEP_STEP_US;
   td_avg        = TARGET_SF_TIME_NS;
 }
- 
- void oai_emu_ho_init(Handover_info* ho_info){
-	ho_info->hys=-1;
-	ho_info->ttt_ms=-1;
-}
-
 
 int user_control_interface(int sfn) {
 

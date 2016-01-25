@@ -3624,12 +3624,19 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
                 (UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.present==ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA) &&
                 (UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.present ==
                  ReportConfigEUTRA__triggerType_PR_event)) {
-              hys = UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis;
+              if(!((hys=get_hys(ctxt_pP->module_id))>=0))
+            	  hys = UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis;
+              //LOG_D(RRC,"Hysteresis for eNB %d is set to %ld\n",ctxt_pP->module_id,hys);
               //LOG_N(RRC,"[UE%d] Frame %d Check below lines for segfault :), Fix me \n",ctxt_pP->module_id, frameP);
-              ttt_ms = timeToTrigger_ms[UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId
-                                        -1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger];
+              if(!((ttt_ms=get_ttt_ms(ctxt_pP->module_id))>=0))
+            	  ttt_ms = timeToTrigger_ms[UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger];
+              //LOG_D(RRC,"Time to trigger for eNB %d is set to %d\n",ctxt_pP->module_id,ttt_ms);
               // Freq specific offset of neighbor cell freq
-              ofn = 5;//((UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq != NULL) ?
+              if(!((ofn=get_ofn(ctxt_pP->module_id))>=0))
+            	  ofn=5;
+              //LOG_D(RRC,"OFN for eNB %d is set to %d\n",ctxt_pP->module_id,ofn);
+              //((UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq != NULL) ?
+
               // *UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq : 15); //  /* 15 is the Default */
               // cellIndividualOffset of neighbor cell - not defined yet
               ocn = 0;

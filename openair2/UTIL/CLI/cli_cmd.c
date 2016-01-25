@@ -43,6 +43,7 @@
 #include "OCG_extern.h"
 #include "log.h"
 #include "log_extern.h"
+#include "rrc_eNB_primitives.h"
 
 extern cli_config *cli_cfg;
 
@@ -223,6 +224,7 @@ int process_argument(int optc, char* optv[])
 
   int index;
   int state;
+  int value;
   int comp=0, level=0, flag=0x34, interval=0;
 
   while (optc > 0) {
@@ -256,6 +258,25 @@ int process_argument(int optc, char* optv[])
         state = atoi (*optv);
         printf("[CLI] eNB %d state %d\n", index, state);
         oai_emulation.info.cli_start_enb[index]= state;
+      } else
+        return ERR;
+    }
+
+    // Handover CLI
+
+    // Set ofn value
+    if ((strcmp(*optv, "ofn") == 0) || (strcmp(*optv, "OFN") == 0) ) {
+
+      NEXT_OPT;
+      CHECK_OPTC;
+      index = atoi (*optv);
+
+      if (optc > 0) {
+        NEXT_OPT;
+        CHECK_OPTC;
+        value = atoi (*optv);
+        printf("[CLI] OFN is set to %d for eNB %d\n",value,index);
+        set_ofn(index,value);
       } else
         return ERR;
     }

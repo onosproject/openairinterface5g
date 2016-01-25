@@ -827,6 +827,7 @@ typedef struct {
 typedef struct {
 long hys;
 long ttt_ms;
+long ofn;
 }Handover_eNB_info;
 
 /*! \brief eNB common channels */ 

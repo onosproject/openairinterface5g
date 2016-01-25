@@ -322,6 +322,9 @@ void init_oai_emulation(void)
     oai_emulation.info.transmission_mode[CC_id]=2;
   }
 
+  // Handover initialization parameters
+  oai_emu_ho_init(&oai_emulation.ho_info);
+
   oai_emulation.profile = "EURECOM";
 }
 
@@ -1354,3 +1357,9 @@ void  ocg_config_proto(void)
 
 }
 
+
+void oai_emu_ho_init(Handover_info* ho_info){
+	ho_info->hys=-1;
+	ho_info->ttt_ms=-1;
+	ho_info->ofn=-1;
+}

@@ -46,3 +46,7 @@ long get_hys(int enb_module_id);
 void set_ttt_ms(int enb_module_id,long ttt_ms);
 
 long get_ttt_ms(int enb_module_id);
+
+void set_ofn(int enb_module_id,long ofn);
+
+long get_ofn(int enb_module_id);

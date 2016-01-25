@@ -738,6 +738,7 @@ typedef struct {
 typedef struct {
 	long hys;
 	long ttt_ms;
+	long ofn;
 }Handover_info;
 
 /** @defgroup  _OSD_basic Basic OpenAirInterface Scenario Descriptor

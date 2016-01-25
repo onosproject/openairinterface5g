@@ -67,8 +67,6 @@ void exit_fun(const char* s);
 
 void init_time(void);
 
-void oai_emu_ho_init(Handover_info* ho_info);
-
 void init_pad(void);
 
 void help(void);

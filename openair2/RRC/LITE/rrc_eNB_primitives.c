@@ -46,9 +46,8 @@ void init_HO(Handover_info* ho_info)
 	for(enb_module_id=0; enb_module_id<NUMBER_OF_eNB_MAX; enb_module_id++) {
 		// Set ofn parameter
 		set_hys(enb_module_id,ho_info->hys);
-		printf("Hysteresis for eNB %d is set to %ld\n",enb_module_id,get_hys(enb_module_id));
 		set_ttt_ms(enb_module_id,ho_info->ttt_ms);
-		printf("Time to trigger for eNB %d is set to %ld\n",enb_module_id,get_ttt_ms(enb_module_id));
+		set_ofn(enb_module_id,ho_info->ofn);
 	}
 }
 
@@ -58,6 +57,7 @@ void init_HO(Handover_info* ho_info)
 void set_hys(int enb_module_id,long hys){
 	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
 	eNB_mac_inst->ho_info.hys=hys;
+	printf("Hysteresis for eNB %d is set to %ld\n",enb_module_id,eNB_mac_inst->ho_info.hys);
 }
 
 long get_hys(int enb_module_id){
@@ -69,6 +69,7 @@ long get_hys(int enb_module_id){
 void set_ttt_ms(int enb_module_id,long ttt_ms){
 	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
 	eNB_mac_inst->ho_info.ttt_ms=ttt_ms;
+	printf("Time to trigger for eNB %d is set to %ld\n",enb_module_id,eNB_mac_inst->ho_info.ttt_ms);
 }
 
 long get_ttt_ms(int enb_module_id){
@@ -76,8 +77,17 @@ long get_ttt_ms(int enb_module_id){
 	return eNB_mac_inst->ho_info.ttt_ms;
 }
 
+// OFN
+void set_ofn(int enb_module_id,long ofn){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	eNB_mac_inst->ho_info.ofn=ofn;
+	printf("OFN for eNB %d is set to %ld\n",enb_module_id,eNB_mac_inst->ho_info.ofn);
+}
 
-
+long get_ofn(int enb_module_id){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	return eNB_mac_inst->ho_info.ofn;
+}
 
 
 
