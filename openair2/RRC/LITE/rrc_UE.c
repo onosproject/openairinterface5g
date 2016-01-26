@@ -44,6 +44,7 @@
 #include "PHY/TOOLS/dB_routines.h"
 #include "extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
+#include "RRC/LITE/rrc_eNB_primitives.h"
 #include "LAYER2/RLC/rlc.h"
 #include "COMMON/mac_rrc_primitives.h"
 #include "UTIL/LOG/log.h"
@@ -3438,10 +3439,16 @@ static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_in
 //-----------------------------------------------------------------------------
 void ue_meas_filtering( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
-  float a  = UE_rrc_inst[ctxt_pP->module_id].filter_coeff_rsrp; // 'a' in 36.331 Sec. 5.5.3.2
-  float a1 = UE_rrc_inst[ctxt_pP->module_id].filter_coeff_rsrq;
+  float a;
+  float a1;
   //float rsrp_db, rsrq_db;
   uint8_t    eNB_offset;
+
+  if(!((a=get_rsrp_filter_coeff(ctxt_pP->module_id))>=0))
+	  a  = UE_rrc_inst[ctxt_pP->module_id].filter_coeff_rsrp; // 'a' in 36.331 Sec. 5.5.3.2
+
+  if(!((a1=get_rsrq_filter_coeff(ctxt_pP->module_id))>=0))
+	  a1 = UE_rrc_inst[ctxt_pP->module_id].filter_coeff_rsrq;
 
   if(UE_rrc_inst[ctxt_pP->module_id].QuantityConfig[0] != NULL) { // Only consider 1 serving cell (index: 0)
     if (UE_rrc_inst[ctxt_pP->module_id].QuantityConfig[0]->quantityConfigEUTRA != NULL) {
@@ -3602,8 +3609,8 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
   TimeToTrigger_t  ttt_ms;
   Q_OffsetRange_t  ofn;
   Q_OffsetRange_t  ocn;
-  Q_OffsetRange_t  ofs = 0;
-  Q_OffsetRange_t  ocs = 0;
+  Q_OffsetRange_t  ofs;
+  Q_OffsetRange_t  ocs;
   long             a3_offset;
   MeasObjectId_t   measObjId;
   ReportConfigId_t reportConfigId;
@@ -3639,9 +3646,14 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
 
               // *UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq : 15); //  /* 15 is the Default */
               // cellIndividualOffset of neighbor cell - not defined yet
-              ocn = 0;
-              a3_offset = UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId
-                          -1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset;
+              if(!((ocn=get_ocn(ctxt_pP->module_id))>=0))
+            	  ocn = 0;
+              if(!((ofs=get_ofs(ctxt_pP->module_id))>=0))
+            	  ofs = 0;
+              if(!((ocs=get_ocs(ctxt_pP->module_id))>=0))
+            	  ocs = 0;
+              if(!((a3_offset=get_off(ctxt_pP->module_id))>=0))
+            	  a3_offset = UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset;
 
               switch (UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present) {
               case ReportConfigEUTRA__triggerType__event__eventId_PR_eventA1:

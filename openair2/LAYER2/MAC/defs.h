@@ -828,6 +828,12 @@ typedef struct {
 long hys;
 long ttt_ms;
 long ofn;
+long ocn;
+long ofs;
+long ocs;
+long off;
+float rsrp_filter_coeff;
+float rsrq_filter_coeff;
 }Handover_eNB_info;
 
 /*! \brief eNB common channels */ 

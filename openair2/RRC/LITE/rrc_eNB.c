@@ -48,6 +48,7 @@
 #include "LAYER2/MAC/proto.h"
 #include "UTIL/LOG/log.h"
 #include "COMMON/mac_rrc_primitives.h"
+#include "RRC/LITE/rrc_eNB_primitives.h"
 #include "RRC/LITE/MESSAGES/asn1_msg.h"
 #include "RRCConnectionRequest.h"
 #include "RRCConnectionReestablishmentRequest.h"

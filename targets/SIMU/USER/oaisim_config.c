@@ -1362,4 +1362,10 @@ void oai_emu_ho_init(Handover_info* ho_info){
 	ho_info->hys=-1;
 	ho_info->ttt_ms=-1;
 	ho_info->ofn=-1;
+	ho_info->ocn=-1;
+	ho_info->ofs=-1;
+	ho_info->ocs=-1;
+	ho_info->off=-1;
+	ho_info->rsrp_filter_coeff=-1;
+	ho_info->rsrq_filter_coeff=-1;
 }

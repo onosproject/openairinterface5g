@@ -224,7 +224,8 @@ int process_argument(int optc, char* optv[])
 
   int index;
   int state;
-  int value;
+  long value;
+  float value1;
   int comp=0, level=0, flag=0x34, interval=0;
 
   while (optc > 0) {
@@ -264,6 +265,40 @@ int process_argument(int optc, char* optv[])
 
     // Handover CLI
 
+    // Set hysteresis value
+    if ((strcmp(*optv, "hys") == 0) || (strcmp(*optv, "HYS") == 0) ) {
+
+      NEXT_OPT;
+      CHECK_OPTC;
+      index = atoi (*optv);
+
+      if (optc > 0) {
+        NEXT_OPT;
+        CHECK_OPTC;
+        value = atoi (*optv);
+        printf("[CLI] Hysteresis is set to %ld for eNB %d\n",value,index);
+        set_hys(index,value);
+      } else
+        return ERR;
+    }
+
+    // Set time to trigger value
+    if ((strcmp(*optv, "ttt_ms") == 0) || (strcmp(*optv, "TTT_ms") == 0) ) {
+
+      NEXT_OPT;
+      CHECK_OPTC;
+      index = atoi (*optv);
+
+      if (optc > 0) {
+        NEXT_OPT;
+        CHECK_OPTC;
+        value = atoi (*optv);
+        printf("[CLI] Time to trigger is set to %ld for eNB %d\n",value,index);
+        set_ttt_ms(index,value);
+      } else
+        return ERR;
+    }
+
     // Set ofn value
     if ((strcmp(*optv, "ofn") == 0) || (strcmp(*optv, "OFN") == 0) ) {
 
@@ -275,8 +310,109 @@ int process_argument(int optc, char* optv[])
         NEXT_OPT;
         CHECK_OPTC;
         value = atoi (*optv);
-        printf("[CLI] OFN is set to %d for eNB %d\n",value,index);
+        printf("[CLI] OFN is set to %ld for eNB %d\n",value,index);
         set_ofn(index,value);
+      } else
+        return ERR;
+    }
+    // Set ocn value
+    if ((strcmp(*optv, "ocn") == 0) || (strcmp(*optv, "OCN") == 0) ) {
+
+      NEXT_OPT;
+      CHECK_OPTC;
+      index = atoi (*optv);
+
+      if (optc > 0) {
+        NEXT_OPT;
+        CHECK_OPTC;
+        value = atoi (*optv);
+        printf("[CLI] OCN is set to %ld for eNB %d\n",value,index);
+        set_ocn(index,value);
+      } else
+        return ERR;
+    }
+
+    // Set ofs value
+    if ((strcmp(*optv, "ofs") == 0) || (strcmp(*optv, "OFS") == 0) ) {
+
+      NEXT_OPT;
+      CHECK_OPTC;
+      index = atoi (*optv);
+
+      if (optc > 0) {
+        NEXT_OPT;
+        CHECK_OPTC;
+        value = atoi (*optv);
+        printf("[CLI] OFS is set to %ld for eNB %d\n",value,index);
+        set_ofs(index,value);
+      } else
+        return ERR;
+    }
+
+    // Set ocs value
+    if ((strcmp(*optv, "ocs") == 0) || (strcmp(*optv, "OCS") == 0) ) {
+
+      NEXT_OPT;
+      CHECK_OPTC;
+      index = atoi (*optv);
+
+      if (optc > 0) {
+        NEXT_OPT;
+        CHECK_OPTC;
+        value = atoi (*optv);
+        printf("[CLI] OCS is set to %ld for eNB %d\n",value,index);
+        set_ocs(index,value);
+      } else
+        return ERR;
+    }
+
+    // Set off value
+    if ((strcmp(*optv, "off") == 0) || (strcmp(*optv, "OFF") == 0) ) {
+
+      NEXT_OPT;
+      CHECK_OPTC;
+      index = atoi (*optv);
+
+      if (optc > 0) {
+        NEXT_OPT;
+        CHECK_OPTC;
+        value = atoi (*optv);
+        printf("[CLI] OFF is set to %ld for eNB %d\n",value,index);
+        set_off(index,value);
+      } else
+        return ERR;
+    }
+
+    // Set L3 filtering coefficient RSRP value
+    if ((strcmp(*optv, "rsrp_filter_coeff") == 0) || (strcmp(*optv, "RSRP_FILTER_COEFF") == 0) ) {
+
+      NEXT_OPT;
+      CHECK_OPTC;
+      index = atoi (*optv);
+
+      if (optc > 0) {
+        NEXT_OPT;
+        CHECK_OPTC;
+        value1 = atoi (*optv);
+        printf("[CLI] L3 RSRP filtering coefficient is set to %f for eNB %d\n",value1,index);
+        set_rsrp_filter_coeff(index,value);
+      } else
+        return ERR;
+    }
+
+    // Set L3 filtering coefficient RSRQ value
+    if ((strcmp(*optv, "rsrq_filter_coeff") == 0) || (strcmp(*optv, "RSRQ_FILTER_COEFF") == 0) ) {
+
+      NEXT_OPT;
+      CHECK_OPTC;
+      index = atoi (*optv);
+
+      if (optc > 0) {
+        NEXT_OPT;
+        CHECK_OPTC;
+        value1 = atoi (*optv);
+        printf("[CLI] L3 RSRQ filtering coefficient is set to %f for eNB %d\n",value1,index);
+        set_rsrq_filter_coeff(index,value);
       } else
         return ERR;
     }

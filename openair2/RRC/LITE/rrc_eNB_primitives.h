@@ -37,8 +37,10 @@
 
 #include "UTIL/OCG/OCG.h"
 
+// HO parameters initialization
 void init_HO(Handover_info* ho_info);
 
+// Getters/setters for HO parameters
 void set_hys(int enb_module_id,long hys);
 
 long get_hys(int enb_module_id);
@@ -50,3 +52,27 @@ long get_ttt_ms(int enb_module_id);
 void set_ofn(int enb_module_id,long ofn);
 
 long get_ofn(int enb_module_id);
+
+void set_ocn(int enb_module_id,long ocn);
+
+long get_ocn(int enb_module_id);
+
+void set_ofs(int enb_module_id,long ofs);
+
+long get_ofs(int enb_module_id);
+
+void set_ocs(int enb_module_id,long ocs);
+
+long get_ocs(int enb_module_id);
+
+void set_off(int enb_module_id,long off);
+
+long get_off(int enb_module_id);
+
+void set_rsrp_filter_coeff(int enb_module_id,float rsrp_filter_coeff);
+
+float get_rsrp_filter_coeff(int enb_module_id);
+
+void set_rsrq_filter_coeff(int enb_module_id,float rsrq_filter_coeff);
+
+float get_rsrq_filter_coeff(int enb_module_id);

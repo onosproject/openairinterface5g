@@ -39,6 +39,7 @@
 #include "rrc_eNB_primitives.h"
 #include "UTIL/OCG/OCG.h"
 
+// HO parameters initialization
 void init_HO(Handover_info* ho_info)
 {
 	int enb_module_id=0;
@@ -48,6 +49,12 @@ void init_HO(Handover_info* ho_info)
 		set_hys(enb_module_id,ho_info->hys);
 		set_ttt_ms(enb_module_id,ho_info->ttt_ms);
 		set_ofn(enb_module_id,ho_info->ofn);
+		set_ocn(enb_module_id,ho_info->ocn);
+		set_ofs(enb_module_id,ho_info->ofs);
+		set_ocs(enb_module_id,ho_info->ocs);
+		set_off(enb_module_id,ho_info->off);
+		set_rsrp_filter_coeff(enb_module_id,ho_info->rsrp_filter_coeff);
+		set_rsrq_filter_coeff(enb_module_id,ho_info->rsrq_filter_coeff);
 	}
 }
 
@@ -89,5 +96,74 @@ long get_ofn(int enb_module_id){
 	return eNB_mac_inst->ho_info.ofn;
 }
 
+// OCN
+void set_ocn(int enb_module_id,long ocn){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	eNB_mac_inst->ho_info.ocn=ocn;
+	printf("OCN for eNB %d is set to %ld\n",enb_module_id,eNB_mac_inst->ho_info.ocn);
+}
 
+long get_ocn(int enb_module_id){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	return eNB_mac_inst->ho_info.ocn;
+}
 
+// OFS
+void set_ofs(int enb_module_id,long ofs){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	eNB_mac_inst->ho_info.ofs=ofs;
+	printf("OFS for eNB %d is set to %ld\n",enb_module_id,eNB_mac_inst->ho_info.ofs);
+}
+
+long get_ofs(int enb_module_id){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	return eNB_mac_inst->ho_info.ofs;
+}
+
+// OCS
+void set_ocs(int enb_module_id,long ocs){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	eNB_mac_inst->ho_info.ocs=ocs;
+	printf("OCS for eNB %d is set to %ld\n",enb_module_id,eNB_mac_inst->ho_info.ocs);
+}
+
+long get_ocs(int enb_module_id){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	return eNB_mac_inst->ho_info.ocs;
+}
+
+// OFF (a3_offset)
+void set_off(int enb_module_id,long off){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	eNB_mac_inst->ho_info.off=off;
+	printf("OFF for eNB %d is set to %ld\n",enb_module_id,eNB_mac_inst->ho_info.off);
+}
+
+long get_off(int enb_module_id){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	return eNB_mac_inst->ho_info.off;
+}
+
+// L3 filtering coefficient RSRP
+void set_rsrp_filter_coeff(int enb_module_id,float rsrp_filter_coeff){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	eNB_mac_inst->ho_info.rsrp_filter_coeff=rsrp_filter_coeff;
+	printf("L3 RSRP filtering coefficient for eNB %d is set to %f\n",enb_module_id,eNB_mac_inst->ho_info.rsrp_filter_coeff);
+}
+
+float get_rsrp_filter_coeff(int enb_module_id){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	return eNB_mac_inst->ho_info.rsrp_filter_coeff;
+}
+
+// L3 filtering coefficient RSRP
+void set_rsrq_filter_coeff(int enb_module_id,float rsrq_filter_coeff){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	eNB_mac_inst->ho_info.rsrq_filter_coeff=rsrq_filter_coeff;
+	printf("L3 RSRQ filtering coefficient for eNB %d is set to %f\n",enb_module_id,eNB_mac_inst->ho_info.rsrq_filter_coeff);
+}
+
+float get_rsrq_filter_coeff(int enb_module_id){
+	eNB_MAC_INST *eNB_mac_inst = get_eNB_mac_inst(enb_module_id);
+	return eNB_mac_inst->ho_info.rsrq_filter_coeff;
+}
