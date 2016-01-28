@@ -49,7 +49,7 @@
 #include "SCHED/phy_procedures_emos.h"
 #endif
 
-//#define DEBUG_PHY_PROC (Already defined in cmake)
+#define DEBUG_PHY_PROC (Already defined in cmake)
 //#define DEBUG_ULSCH
 
 //#ifdef OPENAIR2
@@ -295,7 +295,6 @@ int get_ue_active_harq_pid(const uint8_t Mod_id,const uint8_t CC_id,const uint16
 
   return(0);
 }
-
 
 int CCE_table[800];
 
@@ -3132,7 +3131,7 @@ void prach_procedures(PHY_VARS_eNB *phy_vars_eNB,uint8_t sched_subframe,uint8_t 
         preamble_delay_list[preamble_max]);
 #endif
 
-  if (preamble_energy_list[preamble_max] > 580) {
+  if (preamble_energy_list[preamble_max] >= 580) {
     /*
     write_output("prach_ifft0.m","prach_t0",prach_ifft[0],2048,1,1);
     write_output("prach_rx0.m","prach_rx0",&phy_vars_eNB->lte_eNB_common_vars.rxdata[0][0][subframe*phy_vars_eNB->lte_frame_parms.samples_per_tti],6144+792,1,1);

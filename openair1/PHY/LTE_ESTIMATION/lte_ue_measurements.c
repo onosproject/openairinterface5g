@@ -39,7 +39,7 @@
 #define k1 ((long long int) 1000)
 #define k2 ((long long int) (1024-k1))
 
-//#define DEBUG_MEAS
+#define DEBUG_MEAS
 
 #ifdef USER_MODE
 void print_shorts(char *s,short *x)
@@ -276,7 +276,7 @@ void ue_rrc_measurements(PHY_VARS_UE *phy_vars_ue,
     }
     // recompute nushift with eNB_offset corresponding to adjacent eNB on which to perform channel estimation
     //    printf("[PHY][UE %d] Frame %d slot %d Doing ue_rrc_measurements rsrp/rssi (Nid_cell %d, Nid2 %d, nushift %d, eNB_offset %d)\n",phy_vars_ue->Mod_id,phy_vars_ue->frame,slot,Nid_cell,Nid2,nushift,eNB_offset);
-    if (eNB_offset > 0)
+    if (eNB_offset >0)
       Nid_cell = phy_vars_ue->PHY_measurements.adj_cell_id[eNB_offset-1];
 
 
