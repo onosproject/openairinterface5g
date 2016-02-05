@@ -1977,6 +1977,7 @@ rrc_eNB_process_handoverPreparationInformation(
 
     //rrc_create_new_crnti(ctxt_pP,ue_context_target_p->ue_context.handover_info->modid_t,0, ue_context_target_p->ue_id_rnti);
     //rrc_create_old_crnti(ctxt_pP,ue_context_target_p->ue_context.handover_info->modid_s,0, ue_context_pP->ue_id_rnti);
+
 }
 
 //-----------------------------------------------------------------------------
@@ -2842,7 +2843,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   mobilityInfo->additionalSpectrumEmission = CALLOC(1, sizeof(*mobilityInfo->additionalSpectrumEmission));
   *mobilityInfo->additionalSpectrumEmission = 1;  //Check this value!
 
-  mobilityInfo->t304 = MobilityControlInfo__t304_ms500;    // need to configure an appropriate value here
+  mobilityInfo->t304 = MobilityControlInfo__t304_ms1000;    // need to configure an appropriate value here
 
   // New UE Identity (C-RNTI) to identify an UE uniquely in a cell
   mobilityInfo->newUE_Identity.size = 2;

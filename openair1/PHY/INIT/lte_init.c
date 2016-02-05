@@ -609,6 +609,7 @@ void phy_config_afterHO_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_id, Mobility
 
     //Target CellId
     lte_frame_parms->Nid_cell = mobilityControlInfo->targetPhysCellId;
+    lte_gold(lte_frame_parms,PHY_vars_UE_g[Mod_id][CC_id]->lte_gold_table[0],lte_frame_parms->Nid_cell);
     lte_frame_parms->nushift  = lte_frame_parms->Nid_cell%6;
 
     // PUCCH
