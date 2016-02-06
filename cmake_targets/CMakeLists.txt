@@ -351,6 +351,8 @@ add_library(S1AP_ENB
 # Same limitation as described in RRC/S1AP: unknown generated file list
 # so we generate it at cmake time
 ##############
+if (${ENABLE_X2_IF})
+
 add_list1_option(X2AP_VERSION R11 "X2AP Asn.1 grammar version" R10 R11)
 set(X2AP_DIR ${OPENAIR2_DIR}/X2AP)
 if (${X2AP_VERSION} STREQUAL "R11")
@@ -389,16 +391,17 @@ add_custom_command (
   DEPENDS ${X2AP_ASN_FILES}
   )
 
-add_library(X2AP_LIB
+add_library(X2AP_MSG_LIB
   ${X2AP_OAI_generated}
   ${X2AP_source}
   ${X2AP_DIR}/x2ap_common.c
   )
+set(X2AP_LIB X2AP_MSG_LIB)
 
 include_directories ("${X2AP_C_DIR}")
 include_directories ("${X2AP_DIR}")
 
-add_library(X2AP_ENB
+add_library(X2AP_ENB_LIB
   ${X2AP_C_DIR}/x2ap_ies_defs.h
   ${X2AP_DIR}/x2ap_eNB.c
   ${X2AP_DIR}/x2ap_eNB_decoder.c
@@ -408,6 +411,8 @@ add_library(X2AP_ENB
   ${X2AP_DIR}/x2ap_eNB_management_procedures.c
   ${X2AP_DIR}/x2ap_eNB_generate_messages.c
   )
+set(X2AP_ENB X2AP_ENB_LIB)
+endif()
 
 # Hardware dependant options
 ###################################
@@ -468,7 +473,6 @@ include_directories ("${OPENAIR_TARGETS}/ARCH/COMMON")
 ##############################################################
 add_boolean_option(ENABLE_SECURITY         True  "Enable LTE integrity and ciphering between RRC UE and eNB")
 add_boolean_option(ENABLE_USE_MME          True  "eNB connected to MME (INTERFACE S1-C), not standalone eNB")
-add_boolean_option(ENABLE_USE_X2           False  "eNB connected to eNB (INTERFACE X2)")
 
 add_boolean_option(NO_RRM                  True  "DO WE HAVE A RADIO RESSOURCE MANAGER: NO")
 add_boolean_option(USER_MODE True "????")
@@ -605,6 +609,11 @@ add_boolean_option(RRC_DEFAULT_RAB_IS_AM       False  "Otherwise it is UM, confi
 # S1AP LAYER OPTIONS
 ##########################
 # none
+
+##########################
+# X2AP LAYER OPTIONS
+##########################
+add_boolean_option(ENABLE_X2_IF                False  "Enable X2 interface for X2 hanodover")
 
 ##########################
 # PROJECTS (IST, FRENCH COLL., etc)
@@ -1442,7 +1451,7 @@ add_executable(lte-softmodem
 
 target_link_libraries (lte-softmodem
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${MIH_LIB}
+  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${MIH_LIB} ${X2AP_LIB} ${X2AP_ENB}
   -Wl,--end-group )
 
 
@@ -1475,7 +1484,7 @@ add_executable(lte-softmodem-nos1
   )
 target_link_libraries (lte-softmodem-nos1
   -Wl,--start-group
-  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} ${MIH_LIB}
+  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} ${MIH_LIB} ${X2AP_LIB} ${X2AP_ENB}
   -Wl,--end-group )
 
 target_link_libraries (lte-softmodem-nos1 ${LIBXML2_LIBRARIES})
@@ -1568,7 +1577,7 @@ add_executable(oaisim
 target_include_directories(oaisim PUBLIC  ${OPENAIR_TARGETS}/SIMU/USER)
 target_link_libraries (oaisim
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB GTPV1U SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} LIB_NAS_UE SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
+  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} LIB_NAS_UE SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB} ${X2AP_LIB} ${X2AP_ENB}
   -Wl,--end-group )
 
 target_link_libraries (oaisim ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})
@@ -1604,9 +1613,9 @@ add_executable(oaisim_nos1
 target_include_directories(oaisim_nos1 PUBLIC  ${OPENAIR_TARGETS}/SIMU/USER)
 target_link_libraries (oaisim_nos1
   -Wl,--start-group
-  RRC_LIB X2AP_LIB SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
+  RRC_LIB SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}  ${X2AP_LIB}  ${X2AP_ENB}
   -Wl,--end-group )
-#ENB_X2AP
+
 target_link_libraries (oaisim_nos1 ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})
 target_link_libraries (oaisim_nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES}  ${NETTLE_LIBRARIES}  ${option_HW_lib}
   ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${OPENPGM_LIBRARIES})
