@@ -931,6 +931,7 @@ set(L2_SRC
   ${RRC_DIR}/rrc_eNB.c
   ${RRC_DIR}/rrc_eNB_S1AP.c
   ${RRC_DIR}/rrc_eNB_UE_context.c
+  ${RRC_DIR}/rrc_eNB_primitives.c
   ${RRC_DIR}/rrc_common.c
   ${RRC_DIR}/L2_interface.c
   )

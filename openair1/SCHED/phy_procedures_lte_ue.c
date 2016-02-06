@@ -59,7 +59,7 @@ extern int card;
 #endif
 #endif
 
-//#define DEBUG_PHY_PROC
+#define DEBUG_PHY_PROC
 #define UE_TX_POWER (-10)
 
 //#ifdef OPENAIR2
@@ -2062,7 +2062,7 @@ int lte_ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *phy_vars_ue,uint8_t abst
 #endif
 
 #ifdef DEBUG_PHY_PROC
-  LOG_D(PHY,"[UE  %d] Frame %d, slot %d, Mode %s: DCI found %i\n",phy_vars_ue->Mod_id,frame_rx,slot_rx,mode_string[phy_vars_ue->UE_mode[eNB_id]],dci_cnt);
+  LOG_D(PHY,"[UE  %d/%d] Frame %d, slot %d, Mode %s: DCI found %i\n",phy_vars_ue->Mod_id,phy_vars_ue->lte_frame_parms.Nid_cell,frame_rx,slot_rx,mode_string[phy_vars_ue->UE_mode[eNB_id]],dci_cnt);
 #endif
 
   phy_vars_ue->lte_ue_pdcch_vars[eNB_id]->dci_received += dci_cnt;

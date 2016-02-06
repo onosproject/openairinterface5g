@@ -44,6 +44,7 @@
 #include "PHY/TOOLS/dB_routines.h"
 #include "extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
+#include "RRC/LITE/rrc_eNB_primitives.h"
 #include "LAYER2/RLC/rlc.h"
 #include "COMMON/mac_rrc_primitives.h"
 #include "UTIL/LOG/log.h"
@@ -463,7 +464,7 @@ static void rrc_ue_generate_RRCConnectionReconfigurationComplete( const protocol
   size = do_RRCConnectionReconfigurationComplete(ctxt_pP, buffer, Transaction_id);
   LOG_I(RRC,PROTOCOL_RRC_CTXT_UE_FMT" Logical Channel UL-DCCH (SRB1), Generating RRCConnectionReconfigurationComplete (bytes %d, eNB_index %d)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP), size, eNB_index);
-  LOG_D(RLC,
+  LOG_D(RRC,
         "[FRAME %05d][RRC_UE][INST %02d][][--- PDCP_DATA_REQ/%d Bytes (RRCConnectionReconfigurationComplete to eNB %d MUI %d) --->][PDCP][INST %02d][RB %02d]\n",
         ctxt_pP->frame,
         UE_MODULE_ID_TO_INSTANCE(ctxt_pP->module_id),
@@ -1695,13 +1696,13 @@ rrc_ue_process_mobilityControlInfo(
   }
    */
   //Removing SRB1 and SRB2 and DRB0
-  LOG_N(RRC,"[UE %d] : Update needed for rrc_pdcp_config_req (deprecated) and rrc_rlc_config_req commands(deprecated)\n", ctxt_pP->module_id);
-  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH,UNDEF_SECURITY_MODE);
-  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, CONFIG_ACTION_REMOVE,ctxt_pP->module_id+DCCH,Rlc_info_am_config);
-  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH1,UNDEF_SECURITY_MODE);
-  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DCCH1,Rlc_info_am_config);
-  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_NO, CONFIG_ACTION_REMOVE, DTCH,UNDEF_SECURITY_MODE);
-  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_NO,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DTCH,Rlc_info_um);
+  //LOG_N(RRC,"[UE %d] : Update needed for rrc_pdcp_config_req (deprecated) and rrc_rlc_config_req commands(deprecated)\n", ctxt_pP->module_id);
+  //rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH,UNDEF_SECURITY_MODE);
+  //rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, CONFIG_ACTION_REMOVE,ctxt_pP->module_id+DCCH,Rlc_info_am_config);
+  //rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH1,UNDEF_SECURITY_MODE);
+  //rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DCCH1,Rlc_info_am_config);
+  //rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_NO, CONFIG_ACTION_REMOVE, DTCH,UNDEF_SECURITY_MODE);
+  //rrc_rlc_config_req(ctxt_pP, SRB_FLAG_NO,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DTCH,Rlc_info_um);
   /*
   rrc_pdcp_config_asn1_req(NB_eNB_INST+ue_mod_idP,frameP, 0,eNB_index,
          NULL, // SRB_ToAddModList
@@ -1795,6 +1796,7 @@ rrc_ue_process_mobilityControlInfo(
   // rrc_rlc_config_req(ue_mod_idP+NB_eNB_INST,frameP,0,CONFIG_ACTION_ADD,ue_mod_idP+DCCH,SIGNALLING_RADIO_BEARER,Rlc_info_am_config);
   // rrc_rlc_config_req(ue_mod_idP+NB_eNB_INST,frameP,0,CONFIG_ACTION_ADD,ue_mod_idP+DCCH1,SIGNALLING_RADIO_BEARER,Rlc_info_am_config);
   // rrc_rlc_config_req(ue_mod_idP+NB_eNB_INST,frameP,0,CONFIG_ACTION_ADD,ue_mod_idP+DTCH,RADIO_ACCESS_BEARER,Rlc_info_um);
+  rrc_mac_get_new_crnti(ctxt_pP,eNB_index);
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State = RRC_SI_RECEIVED;
 }
 
@@ -3437,10 +3439,16 @@ static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_in
 //-----------------------------------------------------------------------------
 void ue_meas_filtering( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
-  float a  = UE_rrc_inst[ctxt_pP->module_id].filter_coeff_rsrp; // 'a' in 36.331 Sec. 5.5.3.2
-  float a1 = UE_rrc_inst[ctxt_pP->module_id].filter_coeff_rsrq;
+  float a;
+  float a1;
   //float rsrp_db, rsrq_db;
   uint8_t    eNB_offset;
+
+  if(!((a=get_rsrp_filter_coeff(ctxt_pP->module_id))>=0))
+	  a  = UE_rrc_inst[ctxt_pP->module_id].filter_coeff_rsrp; // 'a' in 36.331 Sec. 5.5.3.2
+
+  if(!((a1=get_rsrq_filter_coeff(ctxt_pP->module_id))>=0))
+	  a1 = UE_rrc_inst[ctxt_pP->module_id].filter_coeff_rsrq;
 
   if(UE_rrc_inst[ctxt_pP->module_id].QuantityConfig[0] != NULL) { // Only consider 1 serving cell (index: 0)
     if (UE_rrc_inst[ctxt_pP->module_id].QuantityConfig[0]->quantityConfigEUTRA != NULL) {
@@ -3601,8 +3609,8 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
   TimeToTrigger_t  ttt_ms;
   Q_OffsetRange_t  ofn;
   Q_OffsetRange_t  ocn;
-  Q_OffsetRange_t  ofs = 0;
-  Q_OffsetRange_t  ocs = 0;
+  Q_OffsetRange_t  ofs;
+  Q_OffsetRange_t  ocs;
   long             a3_offset;
   MeasObjectId_t   measObjId;
   ReportConfigId_t reportConfigId;
@@ -3623,17 +3631,29 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
                 (UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.present==ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA) &&
                 (UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.present ==
                  ReportConfigEUTRA__triggerType_PR_event)) {
-              hys = UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis;
+              if(!((hys=get_hys(ctxt_pP->module_id))>=0))
+            	  hys = UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis;
+              //LOG_D(RRC,"Hysteresis for eNB %d is set to %ld\n",ctxt_pP->module_id,hys);
               //LOG_N(RRC,"[UE%d] Frame %d Check below lines for segfault :), Fix me \n",ctxt_pP->module_id, frameP);
-              ttt_ms = timeToTrigger_ms[UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId
-                                        -1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger];
+              if(!((ttt_ms=get_ttt_ms(ctxt_pP->module_id))>=0))
+            	  ttt_ms = timeToTrigger_ms[UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger];
+              //LOG_D(RRC,"Time to trigger for eNB %d is set to %d\n",ctxt_pP->module_id,ttt_ms);
               // Freq specific offset of neighbor cell freq
-              ofn = 15;//((UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq != NULL) ?
+              if(!((ofn=get_ofn(ctxt_pP->module_id))>=0))
+            	  ofn=5;
+              //LOG_D(RRC,"OFN for eNB %d is set to %d\n",ctxt_pP->module_id,ofn);
+              //((UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq != NULL) ?
+
               // *UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq : 15); //  /* 15 is the Default */
               // cellIndividualOffset of neighbor cell - not defined yet
-              ocn = 0;
-              a3_offset = UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId
-                          -1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset;
+              if(!((ocn=get_ocn(ctxt_pP->module_id))>=0))
+            	  ocn = 0;
+              if(!((ofs=get_ofs(ctxt_pP->module_id))>=0))
+            	  ofs = 0;
+              if(!((ocs=get_ocs(ctxt_pP->module_id))>=0))
+            	  ocs = 0;
+              if(!((a3_offset=get_off(ctxt_pP->module_id))>=0))
+            	  a3_offset = UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset;
 
               switch (UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present) {
               case ReportConfigEUTRA__triggerType__event__eventId_PR_eventA1:

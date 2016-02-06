@@ -94,6 +94,7 @@ char smbv_ip[16];
 
 #include "oaisim.h"
 #include "oaisim_config.h"
+#include "RRC/LITE/rrc_eNB_primitives.h"
 #include "UTIL/OCG/OCG_extern.h"
 #include "cor_SF_sim.h"
 #include "UTIL/OMG/omg_constants.h"
@@ -160,7 +161,7 @@ extern uint8_t target_ul_mcs;
 extern uint8_t abstraction_flag;
 extern uint8_t ethernet_flag;
 extern uint16_t Nid_cell;
-
+extern uint8_t use_user_control_interface;
 extern LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs];
 
 #ifdef XFORMS
@@ -210,6 +211,7 @@ help (void)
   printf ("-g Set multicast group ID (0,1,2,3) - valid if M is set\n");
   printf ("-G Enable background traffic \n");
   printf ("-H Enable handover operation (default disabled) \n");
+  printf ("-i Run with user control interface"); 
   printf ("-I Enable CLI interface (to connect use telnet localhost 1352)\n");
   printf ("-k Set the Ricean factor (linear)\n");
   printf ("-K [log_file] Enable ITTI logging into log_file\n");
@@ -446,6 +448,7 @@ l2l1_task (void *args_p)
   char fname[64], vname[64];
   int sf;
   protocol_ctxt_t  ctxt;
+  int ret;
 #ifdef XFORMS
   // current status is that every UE has a DL scope for a SINGLE eNB (eNB_id=0)
   // at eNB 0, an UL scope for every UE
@@ -1125,8 +1128,14 @@ l2l1_task (void *args_p)
          */
       } // if Channel_Flag==0
 
-      if (slot % 2 == 1)
+      if (slot % 2 == 1) {
         stop_meas (&oaisim_stats_f);
+	if (use_user_control_interface && (frame > 5))
+	  if ( (ret = user_control_interface(10*frame + (slot>>1)))==-1) {
+	    frame=oai_emulation.info.n_frames; // exit main loop
+	    break;
+	  }
+      }
     } //end of slot
 
     if ((frame >= 10) && (frame <= 11) && (abstraction_flag == 0)
@@ -1204,7 +1213,7 @@ l2l1_task (void *args_p)
 #endif
 
   }
-
+  
   //end of frame
 
   stop_meas (&oaisim_stats);
@@ -1325,6 +1334,8 @@ main (int argc, char **argv)
   init_openair2 ();
 
   init_ocm ();
+
+  init_HO(&oai_emulation.ho_info);
 
 #ifdef SMBV
   // Rohde&Schwarz SMBV100A vector signal generator

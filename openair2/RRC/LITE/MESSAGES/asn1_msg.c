@@ -2396,6 +2396,12 @@ uint8_t do_MeasurementReport(uint8_t Mod_id, uint8_t *buffer,int measid,int phy_
 
   measurementReport->criticalExtensions.choice.c1.choice.measurementReport_r8.measResults.measResultNeighCells->choice.measResultListEUTRA=*(measResultListEUTRA2);
 
+  #ifdef Rel10
+  measurementReport->criticalExtensions.choice.c1.choice.measurementReport_r8.measResults.ext1=NULL;
+  measurementReport->criticalExtensions.choice.c1.choice.measurementReport_r8.measResults.ext2=NULL;
+  #endif
+
+
   enc_rval = uper_encode_to_buffer(&asn_DEF_UL_DCCH_Message,
                                    (void*)&ul_dcch_msg,
                                    buffer,

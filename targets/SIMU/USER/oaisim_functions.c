@@ -46,6 +46,7 @@
 #include <time.h>
 #include <mcheck.h>
 #include <sys/timerfd.h>
+#include <string.h>
 
 #include "assertions.h"
 #include "oaisim_functions.h"
@@ -118,6 +119,8 @@ uint8_t            beta_ACK              = 0;
 uint8_t            beta_RI               = 0;
 uint8_t            beta_CQI              = 2;
 uint8_t            target_ul_mcs         = 16;
+uint8_t       use_user_control_interface = 0;
+
 LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs];
 int           map1,map2;
 double      **ShaF                  = NULL;
@@ -206,6 +209,12 @@ void get_simulation_options(int argc, char *argv[])
     LONG_OPTION_MALLOC_TRACE_ENABLED,
 
     LONG_OPTION_CBA_BACKOFF_TIMER,
+
+    LONG_OPTION_HYS,
+    
+    LONG_OPTION_TTT_MS,
+
+    LONG_OPTION_USER_CONTROL_INTERFACE
   };
 
   static struct option long_options[] = {
@@ -237,11 +246,40 @@ void get_simulation_options(int argc, char *argv[])
 
     {"cba-backoff",            required_argument, 0, LONG_OPTION_CBA_BACKOFF_TIMER},
 
+	{"hys", 				   required_argument, 0, LONG_OPTION_HYS},
+
+	{"ttt_ms", 				   required_argument, 0, LONG_OPTION_TTT_MS},
+    {"user-control-interface",no_argument,0,LONG_OPTION_USER_CONTROL_INTERFACE},
     {NULL, 0, NULL, 0}
   };
 
   while ((option = getopt_long (argc, argv, "aA:b:B:c:C:D:d:eE:f:FGg:hHi:IJ:j:k:K:l:L:m:M:n:N:oO:p:P:qQ:rR:s:S:t:T:u:U:vV:w:W:x:X:y:Y:z:Z:", long_options, NULL)) != -1) {
     switch (option) {
+
+    case LONG_OPTION_HYS:
+      if (optarg) {
+    	oai_emulation.ho_info.hys = atoi(optarg);
+        //printf("Hysteresis is %ld \n",oai_emulation.ho_info.hys);
+      }
+      if(oai_emulation.ho_info.hys<0){
+    	  printf("Unsupported hysteresis value-Hysteresis should be non-negative\n");
+    	  exit(-1);
+      }
+
+      break;
+
+    case LONG_OPTION_TTT_MS:
+      if (optarg) {
+    	oai_emulation.ho_info.ttt_ms = atoi(optarg);
+        //printf("Time to trigger is %ld \n",oai_emulation.ho_info.ttt_ms);
+      }
+      if(oai_emulation.ho_info.ttt_ms<0){
+    	  printf("Unsupported time to trigger value-Time to trigger should be non-negative\n");
+    	  exit(-1);
+      }
+
+      break;
+
     case LONG_OPTION_ENB_CONF:
       if (optarg) {
         free(conf_config_file_name); // prevent memory leak if option is used multiple times
@@ -395,6 +433,10 @@ void get_simulation_options(int argc, char *argv[])
 
       break;
 #endif
+      
+    case LONG_OPTION_USER_CONTROL_INTERFACE:
+      use_user_control_interface=1;
+      break;
 
     case 'a':
       abstraction_flag = 1;
@@ -1537,3 +1579,88 @@ void init_time()
   td_avg        = TARGET_SF_TIME_NS;
 }
 
+int user_control_interface(int sfn) {
+
+  static int wait_sfn = 1<<31;
+  int wait_sfn_new=0,not_done=1;
+  char string[100],cp[100],*token;
+  PHY_VARS_UE *UE;
+  int UEid,ret;
+
+  while (not_done) {
+    if (sfn < wait_sfn) {
+      not_done=0;
+      return(0);
+    }
+    else {
+      printf("oaisim (%d)> ",sfn);
+      ret=fgets(string, sizeof(string), stdin);
+    }      
+    token = strtok (string, " \n");
+    
+    if (token && (strcmp(token,"run")==0)) {
+      token = strtok(NULL," \n");
+      if (token) {
+	wait_sfn_new = atoi(token);
+      }
+      else 
+	wait_sfn_new = sfn+1;
+
+      if (wait_sfn_new <= sfn)
+	printf("Illegal sfn %d\n",wait_sfn_new);
+      else {
+	wait_sfn = wait_sfn_new;
+	not_done=0;
+	return(0);
+      }
+    }
+    else if (token && (strcmp(token,"quit")==0)) {
+      
+      not_done=0;
+      return(-1);
+    }
+    else if (token && (strcmp(token,"step")==0)) {
+      wait_sfn_new = sfn+1;
+      not_done=0;
+      return(0);
+    }
+    else if (token && (strcmp(token,"dump")==0)) {
+
+      token = strtok(NULL," \n");
+      if (token && (strcmp(token,"UEPHY")==0)) {
+	token = strtok(NULL," \n");
+	if (token)
+	  UEid=atoi(token);
+	else
+	  UEid=0;
+	UE = PHY_vars_UE_g[UEid][0];  // fix to CCid 0
+	printf("UE %d Frame %3d Subframe %2d\n----------------------\n",UEid,sfn/10,sfn%10);
+	printf("N_id_Cell %d\t",UE->lte_frame_parms.Nid_cell);
+	printf("N_RB_DL %d\t",UE->lte_frame_parms.N_RB_DL);
+	printf("RX Gain %d\t",UE->rx_total_gain_dB);
+	printf("N0 %d dBm/RE\t",UE->PHY_measurements.n0_power_tot_dBm);
+	printf("RSSI %f dBm/RE\t",10*log10(UE->PHY_measurements.rssi)-UE->rx_total_gain_dB);
+	printf("\n");
+	printf("RSRP 0 (%d) %f dBm/RE\t",UE->lte_frame_parms.Nid_cell,10*log10(1+UE->PHY_measurements.rsrp[0])-UE->rx_total_gain_dB);
+	printf("RSRP 1 (%d) %f dBm/RE\t",UE->PHY_measurements.adj_cell_id[0],10*log10(1+UE->PHY_measurements.rsrp[1])-UE->rx_total_gain_dB);
+	printf("RSRP 2 (%d) %f dBm/RE\t",UE->PHY_measurements.adj_cell_id[1],10*log10(1+UE->PHY_measurements.rsrp[2])-UE->rx_total_gain_dB);
+	printf("\n");
+	printf("RSRP 3 (%d) %f dBm/RE\t",UE->PHY_measurements.adj_cell_id[2],10*log10(1+UE->PHY_measurements.rsrp[3])-UE->rx_total_gain_dB);
+	printf("RSRP 4 (%d) %f dBm/RE\t",UE->PHY_measurements.adj_cell_id[3],10*log10(1+UE->PHY_measurements.rsrp[4])-UE->rx_total_gain_dB);
+	printf("RSRP 5 (%d) %f dBm/RE\t",UE->PHY_measurements.adj_cell_id[4],10*log10(1+UE->PHY_measurements.rsrp[5])-UE->rx_total_gain_dB);
+	printf("\n");
+      }
+      else {
+	printf("Frame %3d Subframe %2d\n-----------------",sfn/10,sfn%10);
+      }
+    }
+    else {
+      printf("Commands \n\n");
+      printf("run sfn\t\t\t run until subframe number\n");
+      printf("step\t\t\t run one subframe\n");
+      printf("dump [UEPHY] index\t dump UE information\n");
+      printf("quit\t\t\t quit oaisim\n");
+    }
+  }
+  return(0);
+}

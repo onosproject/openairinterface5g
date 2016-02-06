@@ -528,8 +528,10 @@ void phy_config_afterHO_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_id, Mobility
     //     uint8_t prach_fmt;
     //     int u;
 
-    LOG_I(PHY,"[UE%d] Frame %d: Handover triggered: Applying radioResourceConfigCommon from eNB %d\n",
-          Mod_id,PHY_vars_UE_g[Mod_id][CC_id]->frame_rx,eNB_id);
+    LOG_I(PHY,"[UE%d] Frame %d: Handover triggered: Applying radioResourceConfigCommon from eNB %d, new RNTI %x, new Nid_cell %d\n",
+          Mod_id,PHY_vars_UE_g[Mod_id][CC_id]->frame_rx,eNB_id,
+	  mobilityControlInfo->newUE_Identity.buf[0]|(mobilityControlInfo->newUE_Identity.buf[1]<<8),
+	  mobilityControlInfo->targetPhysCellId);
 
     lte_frame_parms->prach_config_common.rootSequenceIndex                           =radioResourceConfigCommon->prach_Config.rootSequenceIndex;
     lte_frame_parms->prach_config_common.prach_Config_enabled=1;
@@ -607,6 +609,7 @@ void phy_config_afterHO_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_id, Mobility
 
     //Target CellId
     lte_frame_parms->Nid_cell = mobilityControlInfo->targetPhysCellId;
+    lte_gold(lte_frame_parms,PHY_vars_UE_g[Mod_id][CC_id]->lte_gold_table[0],lte_frame_parms->Nid_cell);
     lte_frame_parms->nushift  = lte_frame_parms->Nid_cell%6;
 
     // PUCCH

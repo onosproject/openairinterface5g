@@ -279,6 +279,10 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   const uint32_t                nas_length
 );
 
+void rrc_eNB_configure_rbs_handover(struct rrc_eNB_ue_context_s* ue_context_p, protocol_ctxt_t* const ctxt_pP);
+
+void rrc_eNB_target_add_ue_handover(protocol_ctxt_t* const ctxt_pP);
+
 //L2_interface.c
 int8_t
 mac_rrc_lite_data_req(

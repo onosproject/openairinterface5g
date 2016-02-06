@@ -1,6 +1,6 @@
 /*******************************************************************************
     OpenAirInterface
-    Copyright(c) 1999 - 2014 Eurecom
+    Copyright(c) 1999 - 2015 Eurecom
 
     OpenAirInterface is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,54 +27,52 @@
 
  *******************************************************************************/
 
-#include "oaisim.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <getopt.h>
+/*! \file event_handler.h
+* \brief primitives to handle event acting on oai
+* \author Konstantinos Alexandris,
+* \date 2015
+* \version 0.5
+* @ingroup _oai
+*/
 
-#include "UTIL/FIFO/pad_list.h"
+#include "UTIL/OCG/OCG.h"
 
-#ifndef OAISIM_FUNCTIONS_H_
-#define OAISIM_FUNCTIONS_H_
+// HO parameters initialization
+void init_HO(Handover_info* ho_info);
 
-void get_simulation_options(int argc, char *argv[]);
+// Getters/setters for HO parameters
+void set_hys(int enb_module_id,long hys);
 
-void check_and_adjust_params(void);
+long get_hys(int enb_module_id);
 
-void init_omv(void);
+void set_ttt_ms(int enb_module_id,long ttt_ms);
 
-void init_seed(uint8_t set_seed);
+long get_ttt_ms(int enb_module_id);
 
-void init_openair1(void);
+void set_ofn(int enb_module_id,long ofn);
 
-void init_openair2(void);
+long get_ofn(int enb_module_id);
 
-void init_ocm(void);
+void set_ocn(int enb_module_id,long ocn);
 
-void init_otg_pdcp_buffer(void);
+long get_ocn(int enb_module_id);
 
-void update_omg(frame_t frameP);
+void set_ofs(int enb_module_id,long ofs);
 
-void update_omg_ocm(void);
+long get_ofs(int enb_module_id);
 
-void update_ocm(void);
+void set_ocs(int enb_module_id,long ocs);
 
-void update_otg_eNB(module_id_t module_idP, unsigned int ctime);
+long get_ocs(int enb_module_id);
 
-void update_otg_UE(module_id_t module_idP, unsigned int ctime);
+void set_off(int enb_module_id,long off);
 
-void exit_fun(const char* s);
+long get_off(int enb_module_id);
 
-void init_time(void);
+void set_rsrp_filter_coeff(int enb_module_id,float rsrp_filter_coeff);
 
-void init_pad(void);
+float get_rsrp_filter_coeff(int enb_module_id);
 
-void help(void);
+void set_rsrq_filter_coeff(int enb_module_id,float rsrq_filter_coeff);
 
-int init_slot_isr(void);
-
-void wait_for_slot_isr(void);
-
-int user_control_interface(int);
-
-#endif /* OAISIM_FUNCTIONS_H_ */
+float get_rsrq_filter_coeff(int enb_module_id);

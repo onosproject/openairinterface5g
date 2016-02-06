@@ -239,8 +239,8 @@ typedef struct HANDOVER_INFO_s {
   uint8_t ho_complete;
   uint8_t modid_s; //module_idP of serving cell
   uint8_t modid_t; //module_idP of target cell
-  uint8_t ueid_s; //UE index in serving cell
-  uint8_t ueid_t; //UE index in target cell
+  uint16_t ueid_s; //UE index in serving cell
+  uint16_t ueid_t; //UE index in target cell
   AS_Config_t as_config; /* these two parameters are taken from 36.331 section 10.2.2: HandoverPreparationInformation-r8-IEs */
   AS_Context_t as_context; /* They are mandatory for HO */
   uint8_t buf[RRC_BUF_SIZE];  /* ASN.1 encoded handoverCommandMessage */

@@ -39,7 +39,7 @@
 #define k1 ((long long int) 1000)
 #define k2 ((long long int) (1024-k1))
 
-//#define DEBUG_MEAS
+#define DEBUG_MEAS
 
 #ifdef USER_MODE
 void print_shorts(char *s,short *x)
@@ -276,7 +276,7 @@ void ue_rrc_measurements(PHY_VARS_UE *phy_vars_ue,
     }
     // recompute nushift with eNB_offset corresponding to adjacent eNB on which to perform channel estimation
     //    printf("[PHY][UE %d] Frame %d slot %d Doing ue_rrc_measurements rsrp/rssi (Nid_cell %d, Nid2 %d, nushift %d, eNB_offset %d)\n",phy_vars_ue->Mod_id,phy_vars_ue->frame,slot,Nid_cell,Nid2,nushift,eNB_offset);
-    if (eNB_offset > 0)
+    if (eNB_offset >0)
       Nid_cell = phy_vars_ue->PHY_measurements.adj_cell_id[eNB_offset-1];
 
 
@@ -376,7 +376,7 @@ void ue_rrc_measurements(PHY_VARS_UE *phy_vars_ue,
     //    if (slot == 0) {
 
       if (eNB_offset == 0)
-        LOG_I(PHY,"[UE %d] Frame %d, slot %d RRC Measurements => rssi %3.1f dBm (digital: %3.1f dB, gain %d), N0 %d dBm\n",phy_vars_ue->Mod_id,
+        LOG_I(PHY,"[UE %d] Frame %d, slot %d RRC Measurements => rssi %3.1f dBm (digital: %3.1f dB, gain %d), N0 %d dBm/RE\n",phy_vars_ue->Mod_id,
               phy_vars_ue->frame_rx,slot,10*log10(phy_vars_ue->PHY_measurements.rssi)-phy_vars_ue->rx_total_gain_dB,
               10*log10(phy_vars_ue->PHY_measurements.rssi),
               phy_vars_ue->rx_total_gain_dB,
@@ -386,9 +386,9 @@ void ue_rrc_measurements(PHY_VARS_UE *phy_vars_ue,
             phy_vars_ue->Mod_id,
             phy_vars_ue->frame_rx,slot,eNB_offset,
             (eNB_offset>0) ? phy_vars_ue->PHY_measurements.adj_cell_id[eNB_offset-1] : phy_vars_ue->lte_frame_parms.Nid_cell,
-            10*log10(phy_vars_ue->PHY_measurements.rsrp[eNB_offset])-phy_vars_ue->rx_total_gain_dB,
+            10*log10(1+phy_vars_ue->PHY_measurements.rsrp[eNB_offset])-phy_vars_ue->rx_total_gain_dB,
             phy_vars_ue->PHY_measurements.rsrp[eNB_offset],
-            (10*log10(phy_vars_ue->PHY_measurements.rsrq[eNB_offset])));
+            (10*log10(1+phy_vars_ue->PHY_measurements.rsrq[eNB_offset])));
       //LOG_D(PHY,"RSRP_total_dB: %3.2f \n",(dB_fixed_times10(phy_vars_ue->PHY_measurements.rsrp[eNB_offset])/10.0)-phy_vars_ue->rx_total_gain_dB-dB_fixed(phy_vars_ue->lte_frame_parms.N_RB_DL*12));
 
       //LOG_D(PHY,"RSRP_dB: %3.2f \n",(dB_fixed_times10(phy_vars_ue->PHY_measurements.rsrp[eNB_offset])/10.0));

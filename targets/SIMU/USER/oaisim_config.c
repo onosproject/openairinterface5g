@@ -322,6 +322,9 @@ void init_oai_emulation(void)
     oai_emulation.info.transmission_mode[CC_id]=2;
   }
 
+  // Handover initialization parameters
+  oai_emu_ho_init(&oai_emulation.ho_info);
+
   oai_emulation.profile = "EURECOM";
 }
 
@@ -458,7 +461,7 @@ int olg_config(void)
    set_comp_log(RRC,  LOG_DEBUG, 0x15,1);
    set_comp_log(OCM,  LOG_ERR, 0x15,20);
    set_comp_log(OTG,  LOG_DEBUG, 0x15,1);
-   set_comp_log(OMG,  LOG_NOTICE, 0x15,1);
+   set_comp_log(OMG,  LOG_DEBUG, 0x15,1);
    set_comp_log(OPT,  LOG_ERR, 0x15,1);
 
 
@@ -1354,3 +1357,15 @@ void  ocg_config_proto(void)
 
 }
 
+
+void oai_emu_ho_init(Handover_info* ho_info){
+	ho_info->hys=-1;
+	ho_info->ttt_ms=-1;
+	ho_info->ofn=-1;
+	ho_info->ocn=-1;
+	ho_info->ofs=-1;
+	ho_info->ocs=-1;
+	ho_info->off=-1;
+	ho_info->rsrp_filter_coeff=-1;
+	ho_info->rsrq_filter_coeff=-1;
+}
