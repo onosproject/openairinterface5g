@@ -26,6 +26,13 @@
   Address      : Eurecom, Compus SophiaTech 450, route des chappes, 06451 Biot, France.
 
  *******************************************************************************/
+/*! \file x2ap_eNB_itti_messaging.c
+ * \brief itti interface between x2ap and  sctp
+ * \author Navid Nikaein
+ * \date 2016
+ * \version 0.1
+ */
+
 #include "intertask_interface.h"
 
 #include "x2ap_eNB_itti_messaging.h"

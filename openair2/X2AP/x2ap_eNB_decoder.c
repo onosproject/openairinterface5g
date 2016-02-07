@@ -120,7 +120,7 @@ x2ap_eNB_decode_initiating(x2ap_message *x2ap_message_p, X2ap_InitiatingMessage_
     x2ap_xer_print_x2setuprequest_(x2ap_xer__print2sp,message_string,message);
     message_id          = X2AP_SETUP_REQUEST_LOG;
     message_string_size = strlen(message_string);
-    message           = itti_alloc_new_message_sized(TASK_S1AP,
+    message           = itti_alloc_new_message_sized(TASK_X2AP,
 						       message_id,
 						       message_string_size + sizeof (IttiMsgText));
     message->ittiMsg.x2ap_setup_request_log.size = message_string_size;

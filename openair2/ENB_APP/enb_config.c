@@ -270,7 +270,7 @@ static void enb_config_display(void)
   int i,j;
 
   printf( "\n----------------------------------------------------------------------\n");
-  printf( " ENB CONFIG FILE CONTENT LOADED (TBC):\n");
+  printf( " ENB CONFIG FILE CONTENT LOADED for %d eNBs (TBC):\n",enb_properties.number);
   printf( "----------------------------------------------------------------------\n");
 
   for (i = 0; i < enb_properties.number; i++) {

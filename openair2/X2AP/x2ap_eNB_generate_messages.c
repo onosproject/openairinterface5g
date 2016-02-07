@@ -39,11 +39,9 @@
 #include "intertask_interface.h"
 
 #include "x2ap_eNB.h"
-
 #include "x2ap_eNB_generate_messages.h"
 
 #include "msc.h"
-
 #include "assertions.h"
 
 
@@ -60,7 +58,7 @@ int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p,
   X2ap_PLMN_Identity_t       broadcast_plmnIdentity_2;
   X2ap_PLMN_Identity_t       broadcast_plmnIdentity_3;
   
-  ServedCellItem_t *served_cell= malloc(sizeof(ServedCellItem_t));;
+  X2ap_ServedCellItem_t *served_cell= malloc(sizeof(X2ap_ServedCellItem_t));
   
   uint8_t  *buffer;
   uint32_t  len;
@@ -72,7 +70,7 @@ int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p,
   memset(&message, 0, sizeof(x2ap_message));
 
   message.direction     = X2AP_PDU_PR_initiatingMessage;
-  message.procedureCode = X2ap_ProcedureCode_id_X2Setup;
+  message.procedureCode = X2ap_ProcedureCode_id_x2Setup;
   message.criticality   = X2ap_Criticality_reject;
 
   x2SetupRequest = &message.msg.x2SetupRequest_IEs;
@@ -86,34 +84,34 @@ int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p,
   x2ap_enb_data_p->state = X2AP_ENB_STATE_WAITING;
 
   //----globalENB_ID------
-  x2SetupRequest->global_ENB_ID.eNB_ID.present = X2ap_ENB_ID_PR_macro_eNB_ID;
+  x2SetupRequest->globalENB_ID.eNB_ID.present = X2ap_ENB_ID_PR_macro_eNB_ID ;
   MACRO_ENB_ID_TO_BIT_STRING(instance_p->eNB_id,
-                             &x2SetupRequest->global_ENB_ID.eNB_ID.choice.macroENB_ID);
+                             &x2SetupRequest->globalENB_ID.eNB_ID.choice.macro_eNB_ID);
   MCC_MNC_TO_PLMNID(instance_p->mcc, instance_p->mnc, instance_p->mnc_digit_length,
-                    &x2SetupRequest->global_ENB_ID.pLMNidentity);
+                    &x2SetupRequest->globalENB_ID.pLMN_Identity);
 
   X2AP_INFO("%d -> %02x%02x%02x\n", instance_p->eNB_id, 
-	    x2SetupRequest->global_ENB_ID.eNB_ID.choice.macroENB_ID.buf[0], 
-	    x2SetupRequest->global_ENB_ID.eNB_ID.choice.macroENB_ID.buf[1],
-            x2SetupRequest->global_ENB_ID.eNB_ID.choice.macroENB_ID.buf[2]);
+	    x2SetupRequest->globalENB_ID.eNB_ID.choice.macro_eNB_ID.buf[0], 
+	    x2SetupRequest->globalENB_ID.eNB_ID.choice.macro_eNB_ID.buf[1],
+            x2SetupRequest->globalENB_ID.eNB_ID.choice.macro_eNB_ID.buf[2]);
 
  //----served cells------
 #warning update the value of the message
   served_cell->servedCellInfo.pCI = 6;
-  served_cell->servedCellInfo.eUTRA_Mode_Info.present = EUTRA_Mode_Info_PR_fDD; 
+  served_cell->servedCellInfo.eUTRA_Mode_Info.present = X2ap_EUTRA_Mode_Info_PR_fDD; 
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.uL_EARFCN = 3350; 
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.dL_EARFCN = 3350;
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.uL_Transmission_Bandwidth = 0;
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.dL_Transmission_Bandwidth = 0;
 
   MCC_MNC_TO_PLMNID(instance_p->mcc,instance_p->mnc,&served_cell->servedCellInfo.cellId.pLMN_Identity);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnid_1);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnid_2);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnid_3);
+  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_1);
+  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_2);
+  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_3);
 
-  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnid_1);
-  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnid_2);
-  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnid_3);
+  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnIdentity_1);
+  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnIdentity_2);
+  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnIdentity_3);
 
   ECI_TO_BIT_STRING(instance_p->eNB_id, &served_cell->servedCellInfo.cellId.eUTRANcellIdentifier);
   TAC_TO_OCTET_STRING(instance_p->tac, &served_cell->servedCellInfo.tAC);
@@ -143,16 +141,16 @@ x2ap_generate_x2_setup_response (x2ap_eNB_data_t * eNB_association)
   
   X2SetupResponse_IEs_t    *x2SetupResponse;
   
-  X2ap_PLMN_Identity_t       plmnIdentity;
+  //  X2ap_PLMN_Identity_t       plmnIdentity;
 
   X2ap_PLMN_Identity_t       broadcast_plmnIdentity_1;
   X2ap_PLMN_Identity_t       broadcast_plmnIdentity_2;
   X2ap_PLMN_Identity_t       broadcast_plmnIdentity_3;
   
-  ServedCellItem_t *served_cell= malloc(sizeof(ServedCellItem_t));;
+  X2ap_ServedCellItem_t *served_cell= malloc(sizeof(X2ap_ServedCellItem_t));;
   
   uint8_t                                *buffer;
-  uint32_t                                length;
+  uint32_t                                len;
   int                                      ret = 0;
   // get the eNB instance 
   // 
@@ -161,70 +159,71 @@ x2ap_generate_x2_setup_response (x2ap_eNB_data_t * eNB_association)
   
   // Generating response
   memset (&message, 0, sizeof (x2ap_message));
-  message.direction     = X2AP_PDU_PR_successfulOutcome
-  message.procedureCode = X2ap_ProcedureCode_id_X2Setup;
+  message.direction     = X2AP_PDU_PR_successfulOutcome;
+  message.procedureCode = X2ap_ProcedureCode_id_x2Setup;
   message.criticality   = X2ap_Criticality_reject;
 
   x2SetupResponse = &message.msg.x2SetupResponse_IEs;
  
-  memset((void *)&plmnIdentity, 0, sizeof(X2ap_PLMN_Identity_t));
+  //  memset((void *)&plmnIdentity, 0, sizeof(X2ap_PLMN_Identity_t));
 
   memset((void *)&broadcast_plmnIdentity_1, 0, sizeof(X2ap_PLMN_Identity_t));
   memset((void *)&broadcast_plmnIdentity_2, 0, sizeof(X2ap_PLMN_Identity_t));
   memset((void *)&broadcast_plmnIdentity_3, 0, sizeof(X2ap_PLMN_Identity_t));
   
   //----globalENB_ID------
-  x2SetupResponse->global_ENB_ID.eNB_ID.present = X2ap_ENB_ID_PR_macro_eNB_ID;
-  MACRO_ENB_ID_TO_BIT_STRING(instance_p->eNB_id,
-                             &x2SetupResponse->global_ENB_ID.eNB_ID.choice.macroENB_ID);
+  x2SetupResponse->globalENB_ID.eNB_ID.present = X2ap_ENB_ID_PR_macro_eNB_ID;
+  MACRO_ENB_ID_TO_BIT_STRING(instance->eNB_id,
+                             &x2SetupResponse->globalENB_ID.eNB_ID.choice.macro_eNB_ID);
   MCC_MNC_TO_PLMNID(instance->mcc, instance->mnc, instance->mnc_digit_length,
-                    &x2SetupResponse->global_ENB_ID.pLMNidentity);
+                    &x2SetupResponse->globalENB_ID.pLMN_Identity);
 
   X2AP_INFO("%d -> %02x%02x%02x\n", instance->eNB_id, 
-	    x2SetupResponse->global_ENB_ID.eNB_ID.choice.macroENB_ID.buf[0], 
-	    x2SetupResponse->global_ENB_ID.eNB_ID.choice.macroENB_ID.buf[1],
-            x2SetupResponse->global_ENB_ID.eNB_ID.choice.macroENB_ID.buf[2]);
+	    x2SetupResponse->globalENB_ID.eNB_ID.choice.macro_eNB_ID.buf[0], 
+	    x2SetupResponse->globalENB_ID.eNB_ID.choice.macro_eNB_ID.buf[1],
+            x2SetupResponse->globalENB_ID.eNB_ID.choice.macro_eNB_ID.buf[2]);
 
   //----served cells------
 #warning update the value of the message
   served_cell->servedCellInfo.pCI = 6;
-  served_cell->servedCellInfo.eUTRA_Mode_Info.present = EUTRA_Mode_Info_PR_fDD; 
+  served_cell->servedCellInfo.eUTRA_Mode_Info.present = X2ap_EUTRA_Mode_Info_PR_fDD; 
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.uL_EARFCN = 3350; 
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.dL_EARFCN = 3350;
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.uL_Transmission_Bandwidth = 0;
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.dL_Transmission_Bandwidth = 0;
 
   MCC_MNC_TO_PLMNID(instance->mcc,instance->mnc,&served_cell->servedCellInfo.cellId.pLMN_Identity);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnid_1);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnid_2);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnid_3);
+  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_1);
+  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_2);
+  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_3);
 
-  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnid_1);
-  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnid_2);
-  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnid_3);
+  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnIdentity_1);
+  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnIdentity_2);
+  ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnIdentity_3);
 
   ECI_TO_BIT_STRING(instance->eNB_id, &served_cell->servedCellInfo.cellId.eUTRANcellIdentifier);
   TAC_TO_OCTET_STRING(instance->tac, &served_cell->servedCellInfo.tAC);
-  ASN_SEQUENCE_ADD(&x2SetupRequest->servedCells.list, served_cell);
+  ASN_SEQUENCE_ADD(&x2SetupResponse->servedCells.list, served_cell);
 
   if (x2ap_eNB_encode_pdu(&message, &buffer, &len) < 0) {
     X2AP_ERROR("Failed to encode X2 setup request\n");
     return -1;
   }
   
+  eNB_association->state = X2AP_ENB_STATE_READY;
 
    MSC_LOG_TX_MESSAGE (MSC_X2AP_TARGET_ENB, MSC_X2AP_SRC_ENB, NULL, 0, "0 X2Setup/successfulOutcome assoc_id %u", eNB_association->assoc_id);
   /*
    * Non-UE signalling -> stream 0
    */
-  return x2ap_eNB_itti_send_sctp_req (buffer, length, eNB_association->assoc_id, 0);
+  return x2ap_eNB_itti_send_sctp_req (buffer, len, eNB_association->assoc_id, 0);
 }
 
 
 int x2ap_eNB_generate_x2_setup_failure ( uint32_t assoc_id,
 					 X2ap_Cause_PR cause_type,
 					 long cause_value,
-					 long time_to_waitx){ 
+					 long time_to_wait){ 
   
   uint8_t                                *buffer_p;
   uint32_t                                length;
@@ -233,7 +232,7 @@ int x2ap_eNB_generate_x2_setup_failure ( uint32_t assoc_id,
 
   memset (&message, 0, sizeof (x2ap_message));
   x2_setup_failure_p = &message.msg.x2SetupFailure_IEs;
-  message.procedureCode = X2ap_ProcedureCode_id_X2Setup;
+  message.procedureCode = X2ap_ProcedureCode_id_x2Setup;
   message.direction = X2AP_PDU_PR_unsuccessfulOutcome;
   x2ap_eNB_set_cause (&x2_setup_failure_p->cause, cause_type, cause_value);
   
@@ -253,31 +252,8 @@ int x2ap_eNB_generate_x2_setup_failure ( uint32_t assoc_id,
   return x2ap_eNB_itti_send_sctp_request (buffer_p, length, assoc_id, 0);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-int x2ap_eB_set_cause (S1ap_Cause_t * cause_p,
-		       S1ap_Cause_PR cause_type,
+int x2ap_eB_set_cause (X2ap_Cause_t * cause_p,
+		       X2ap_Cause_PR cause_type,
 		       long cause_value)
 {
 

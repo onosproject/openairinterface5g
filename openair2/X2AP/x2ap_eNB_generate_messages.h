@@ -29,6 +29,9 @@
 #ifndef X2AP_ENB_GENERATE_MESSAGES_H_
 #define X2AP_ENB_GENERATE_MESSAGES_H_
 
+#include "x2ap_eNB_defs.h"
+#include "x2ap_ies_defs.h"
+
 int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p, 
 				       x2ap_eNB_data_t *x2ap_enb_data_p);
 

@@ -75,21 +75,6 @@ void x2ap_eNB_handle_sctp_association_resp(instance_t instance,
 					   sctp_new_association_resp_t *sctp_new_association_resp);
 
 
-static 
-int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p, 
-				       x2ap_eNB_data_t *x2ap_enb_data_p);
-
-static 
-int x2ap_eNB_generate_x2_setup_response(x2ap_eNB_instance_t *instance_p, 
-				       x2ap_eNB_data_t *x2ap_enb_data_p);
-
-static 
-int x2ap_eNB_generate_x2_setup_failure(x2ap_eNB_instance_t *instance_p, 
-				       x2ap_eNB_data_t *x2ap_enb_data_p);
-
-
-
-
 static
 void x2ap_eNB_handle_sctp_data_ind(instance_t instance, 
 				   sctp_data_ind_t *sctp_data_ind) {
@@ -122,7 +107,7 @@ void x2ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
   DevAssert(x2ap_enb_data_p != NULL);
 
   if (sctp_new_association_resp->sctp_state != SCTP_STATE_ESTABLISHED) {
-    S1AP_WARN("Received unsuccessful result for SCTP association (%u), instance %d, cnx_id %u\n",
+    X2AP_WARN("Received unsuccessful result for SCTP association (%u), instance %d, cnx_id %u\n",
               sctp_new_association_resp->sctp_state,
               instance,
               sctp_new_association_resp->ulp_cnx_id);
@@ -255,7 +240,6 @@ void x2ap_eNB_handle_register_eNB(instance_t instance,
     DevAssert(new_instance != NULL);
 
     RB_INIT(&new_instance->x2ap_enb_head);
-    //RB_INIT(&new_instance->x2ap_ue_head);
 
     /* Copy usefull parameters */
     new_instance->instance         = instance;
@@ -314,7 +298,7 @@ void *x2ap_task(void *arg)
 
   X2AP_DEBUG("Starting X2AP layer\n");
 
-  x2ap_prepare_internal_data();
+  x2ap_eNB_prepare_internal_data();
 
   itti_mark_task_ready(TASK_X2AP);
 

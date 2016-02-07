@@ -57,7 +57,7 @@
 #   include "gtpv1u_eNB_task.h"
 # endif
 # if defined(ENABLE_USE_X2)
-#   include "x2ap.h"
+#   include "x2ap_eNB.h"
 //#   include "sctp_eNB_task.h"
 //#   include "gtpv1u_eNB_task.h"
 #endif 

@@ -51,15 +51,16 @@ typedef enum {
   /* The eNB is successfully connected to another eNB. */
   X2AP_ENB_STATE_CONNECTED   = 0x2,
   
+  /* X2AP is ready, and the eNB is successfully connected to another eNB. */
+  X2AP_ENB_STATE_READY             = 0x3,
+
   /* 
    */
 
-  X2AP_ENB_STATE_OVERLOAD          = 0x3,
+  X2AP_ENB_STATE_OVERLOAD          = 0x4,
 
-  X2AP_ENB_STATE_RESETTING         = 0x4,
+  X2AP_ENB_STATE_RESETTING         = 0x5,
   
-  X2AP_ENB_STATE_READY             = 0x5,
-
   /* Max number of states available */
   X2AP_ENB_STATE_MAX,
 } x2ap_eNB_state_t;
@@ -122,7 +123,7 @@ typedef struct x2ap_eNB_data_s {
 } x2ap_eNB_data_t;
 
 typedef struct x2ap_eNB_instance_s {
- 
+  /* used in simulation to store multiple eNB instances*/
   STAILQ_ENTRY(x2ap_eNB_instance_s) x2ap_eNB_entries;
 
   /* Number of target eNBs requested by eNB (tree size) */
@@ -149,7 +150,7 @@ typedef struct x2ap_eNB_instance_s {
    */
   uint32_t eNB_id;
   /* The type of the cell */
-  enum cell_type_e cell_type;
+  cell_type_t cell_type;
 
   /* Tracking area code */
   uint16_t tac;
@@ -179,8 +180,7 @@ typedef struct {
 int x2ap_eNB_compare_assoc_id(struct x2ap_eNB_data_s *p1, struct x2ap_eNB_data_s *p2);
 
 /* Generate the tree management functions */
-RB_PROTOTYPE(x2ap_eNB_map, x2ap_eNB_data_s, 0entry,
-             x2ap_eNB_compare_assoc_id);
+RB_PROTOTYPE(x2ap_eNB_map, x2ap_eNB_data_s, entry, x2ap_eNB_compare_assoc_id);
 
 
 #endif /* X2AP_ENB_DEFS_H_ */

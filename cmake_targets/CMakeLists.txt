@@ -351,7 +351,9 @@ add_library(S1AP_ENB
 # Same limitation as described in RRC/S1AP: unknown generated file list
 # so we generate it at cmake time
 ##############
-if (${ENABLE_X2_IF})
+if (${ENABLE_USE_X2})
+
+message("-- X2AP = enabled")
 
 add_list1_option(X2AP_VERSION R11 "X2AP Asn.1 grammar version" R10 R11)
 set(X2AP_DIR ${OPENAIR2_DIR}/X2AP)
@@ -412,6 +414,7 @@ add_library(X2AP_ENB_LIB
   ${X2AP_DIR}/x2ap_eNB_generate_messages.c
   )
 set(X2AP_ENB X2AP_ENB_LIB)
+
 endif()
 
 # Hardware dependant options
@@ -613,7 +616,7 @@ add_boolean_option(RRC_DEFAULT_RAB_IS_AM       False  "Otherwise it is UM, confi
 ##########################
 # X2AP LAYER OPTIONS
 ##########################
-add_boolean_option(ENABLE_X2_IF                False  "Enable X2 interface for X2 hanodover")
+add_boolean_option(ENABLE_USE_X2                False  "Enable X2 interface for X2 hanodover")
 
 ##########################
 # PROJECTS (IST, FRENCH COLL., etc)
