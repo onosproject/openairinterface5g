@@ -43,6 +43,7 @@
 
 #include "msc.h"
 #include "assertions.h"
+#include "conversions.h"
 
 
 int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p, 
@@ -104,10 +105,11 @@ int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p,
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.uL_Transmission_Bandwidth = 0;
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.dL_Transmission_Bandwidth = 0;
 
-  MCC_MNC_TO_PLMNID(instance_p->mcc,instance_p->mnc,&served_cell->servedCellInfo.cellId.pLMN_Identity);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_1);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_2);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_3);
+  MCC_MNC_TO_PLMNID(instance_p->mcc,instance_p->mnc,instance_p->mnc_digit_length,
+		    &served_cell->servedCellInfo.cellId.pLMN_Identity);
+  MCC_MNC_TO_PLMNID(instance_p->mcc, instance_p->mnc,instance_p->mnc_digit_length,&broadcast_plmnIdentity_1);
+  MCC_MNC_TO_PLMNID(instance_p->mcc, instance_p->mnc,instance_p->mnc_digit_length,&broadcast_plmnIdentity_2);
+  MCC_MNC_TO_PLMNID(instance_p->mcc, instance_p->mnc,instance_p->mnc_digit_length,&broadcast_plmnIdentity_3);
 
   ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnIdentity_1);
   ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnIdentity_2);
@@ -192,10 +194,10 @@ x2ap_generate_x2_setup_response (x2ap_eNB_data_t * eNB_association)
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.uL_Transmission_Bandwidth = 0;
   served_cell->servedCellInfo.eUTRA_Mode_Info.choice.fDD.dL_Transmission_Bandwidth = 0;
 
-  MCC_MNC_TO_PLMNID(instance->mcc,instance->mnc,&served_cell->servedCellInfo.cellId.pLMN_Identity);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_1);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_2);
-  MCC_MNC_TO_PLMNID(0,0,&broadcast_plmnIdentity_3);
+  MCC_MNC_TO_PLMNID(instance->mcc,instance->mnc,instance->mnc_digit_length,&served_cell->servedCellInfo.cellId.pLMN_Identity);
+  MCC_MNC_TO_PLMNID(instance->mcc, instance->mnc, instance->mnc_digit_length,&broadcast_plmnIdentity_1);
+  MCC_MNC_TO_PLMNID(instance->mcc, instance->mnc, instance->mnc_digit_length,&broadcast_plmnIdentity_2);
+  MCC_MNC_TO_PLMNID(instance->mcc, instance->mnc, instance->mnc_digit_length,&broadcast_plmnIdentity_3);
 
   ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnIdentity_1);
   ASN_SEQUENCE_ADD(&served_cell->servedCellInfo.broadcastPLMNs.list, &broadcast_plmnIdentity_2);
@@ -216,7 +218,7 @@ x2ap_generate_x2_setup_response (x2ap_eNB_data_t * eNB_association)
   /*
    * Non-UE signalling -> stream 0
    */
-  return x2ap_eNB_itti_send_sctp_req (buffer, len, eNB_association->assoc_id, 0);
+  return x2ap_eNB_itti_send_sctp_data_req (buffer, len, eNB_association->assoc_id, 0);
 }
 
 
@@ -249,10 +251,10 @@ int x2ap_eNB_generate_x2_setup_failure ( uint32_t assoc_id,
 		      MSC_X2AP_TARGET_ENB, NULL, 0, 
 		      "0 X2Setup/unsuccessfulOutcome  assoc_id %u cause %u value %u", 
 		      assoc_id, cause_type, cause_value);
-  return x2ap_eNB_itti_send_sctp_request (buffer_p, length, assoc_id, 0);
+  return x2ap_eNB_itti_send_sctp_data_req (buffer_p, length, assoc_id, 0);
 }
 
-int x2ap_eB_set_cause (X2ap_Cause_t * cause_p,
+int x2ap_eNB_set_cause (X2ap_Cause_t * cause_p,
 		       X2ap_Cause_PR cause_type,
 		       long cause_value)
 {

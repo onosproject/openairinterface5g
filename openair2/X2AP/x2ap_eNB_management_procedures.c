@@ -173,15 +173,15 @@ void x2ap_dump_eNB (x2ap_eNB_data_t  * eNB_ref) {
     return;
   }
   
-  eNB_LIST_OUT ("");
-  eNB_LIST_OUT ("eNB name:          %s", eNB_ref->eNB_name == NULL ? "not present" : eNB_ref->eNB_name);
-  eNB_LIST_OUT ("eNB STATE:         %07x", eNB_ref->state);
-  eNB_LIST_OUT ("eNB ID:            %07x", eNB_ref->eNB_id);
+  X2AP_eNB_LIST_OUT ("");
+  X2AP_eNB_LIST_OUT ("eNB name:          %s", eNB_ref->eNB_name == NULL ? "not present" : eNB_ref->eNB_name);
+  X2AP_eNB_LIST_OUT ("eNB STATE:         %07x", eNB_ref->state);
+  X2AP_eNB_LIST_OUT ("eNB ID:            %07x", eNB_ref->eNB_id);
   indent++; 
-  eNB_LIST_OUT ("SCTP cnx id:     %d", eNB_ref->cnx_id);
-  eNB_LIST_OUT ("SCTP assoc id:     %d", eNB_ref->assoc_id);
-  eNB_LIST_OUT ("SCTP instreams:    %d", eNB_ref->in_streams);
-  eNB_LIST_OUT ("SCTP outstreams:   %d", eNB_ref->out_streams);
+  X2AP_eNB_LIST_OUT ("SCTP cnx id:     %d", eNB_ref->cnx_id);
+  X2AP_eNB_LIST_OUT ("SCTP assoc id:     %d", eNB_ref->assoc_id);
+  X2AP_eNB_LIST_OUT ("SCTP instreams:    %d", eNB_ref->in_streams);
+  X2AP_eNB_LIST_OUT ("SCTP outstreams:   %d", eNB_ref->out_streams);
   indent--;
 }
 

@@ -40,6 +40,9 @@
 #     include "udp_eNB_task.h"
 #     include "gtpv1u_eNB_task.h"
 #   endif
+#   if defined (ENABLE_USE_X2)
+#     include "x2ap_eNB.h"
+#   endif 
 #   if ENABLE_RAL
 #     include "lteRALue.h"
 #     include "lteRALenb.h"
@@ -87,6 +90,12 @@ int create_tasks(uint32_t enb_nb, uint32_t ue_nb)
 #      endif
     }
 #   endif
+#if defined(ENABLE_USE_X2)	
+	if (itti_create_task (TASK_X2AP, x2ap_task, NULL) < 0) {
+          LOG_E(X2AP, "Create task for X2AP failed\n");
+          return -1;
+        }
+#endif 
 
     if (enb_nb > 0) {
       if (itti_create_task (TASK_RRC_ENB, rrc_enb_task, NULL) < 0) {

@@ -353,7 +353,7 @@ add_library(S1AP_ENB
 ##############
 if (${ENABLE_USE_X2})
 
-message("-- X2AP = enabled")
+message("-- X2AP = ${ENABLE_USE_X2}")
 
 add_list1_option(X2AP_VERSION R11 "X2AP Asn.1 grammar version" R10 R11)
 set(X2AP_DIR ${OPENAIR2_DIR}/X2AP)

@@ -49,9 +49,9 @@
 
 #include "assertions.h"
 
-int x2ap_decode_initiating(x2ap_message *x2ap_message_p, X2ap_InitiatingMessage_t *initiating_p);
-int x2ap_decode_successful(x2ap_message *x2ap_message_p, X2ap_SuccessfulOutcome_t *successful_p);
-int x2ap_decode_unsuccessful(x2ap_message *x2ap_message_p, X2ap_UnsuccessfulOutcome_t *unsuccessful_p);
+int x2ap_eNB_decode_initiating(x2ap_message *x2ap_message_p, X2ap_InitiatingMessage_t *initiating_p);
+int x2ap_eNB_decode_successful(x2ap_message *x2ap_message_p, X2ap_SuccessfulOutcome_t *successful_p);
+int x2ap_eNB_decode_unsuccessful(x2ap_message *x2ap_message_p, X2ap_UnsuccessfulOutcome_t *unsuccessful_p);
 
 int x2ap_eNB_decode_pdu(x2ap_message *x2ap_message_p, uint8_t *buffer, uint32_t len) {
   X2AP_PDU_t  pdu;
@@ -227,7 +227,7 @@ x2ap_eNB_decode_successful(x2ap_message *x2ap_message_p, X2ap_SuccessfulOutcome_
 }
 
 int 
-x2ap_decode_unsuccessful(x2ap_message *x2ap_message_p, X2ap_UnsuccessfulOutcome_t *unsuccessful_p) {
+x2ap_eNB_decode_unsuccessful(x2ap_message *x2ap_message_p, X2ap_UnsuccessfulOutcome_t *unsuccessful_p) {
 
   int         ret = -1;
   MessageDef *message;

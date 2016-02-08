@@ -197,6 +197,26 @@ do {                                                                           \
     (oCTETsTRING)->size = 3;                                                   \
 } while(0)
 
+#define ECI_TO_BIT_STRING(eci, bitstring)	\
+do {						\
+	(bitstring)->size=4;				\
+	(bitstring)->bits_unused=4;			\
+	(bitstring)->buf=calloc (4, sizeof (uint8_t));	\
+	(bitstring)->buf[0] = (eci) >> 20;			\
+	(bitstring)->buf[1] = (eci) >> 12;			\
+	(bitstring)->buf[2] = (eci) >> 4;			\
+	(bitstring)->buf[3] = (eci) << 4;		\
+}while(0)   
+
+
+#define TAC_TO_OCTET_STRING(tac, octetstring)\
+do {						\
+	(octetstring)->size=2;				\
+	(octetstring)->buf=calloc (2, sizeof (uint8_t));	\
+	(octetstring)->buf[0] = (tac) >> 8; 			\
+	(octetstring)->buf[1] = (tac);			\
+}while(0)
+
 #define MCC_MNC_TO_TBCD(mCC, mNC, mNCdIGITlENGTH, tBCDsTRING)        \
 do {                                                                 \
     char _buf[3];                                                    \
