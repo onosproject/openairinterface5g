@@ -145,7 +145,8 @@ ue_process_rar(
   const frame_t frameP,
   uint8_t* const dlsch_buffer,
   rnti_t* const t_crnti,
-  const uint8_t preamble_index
+  const uint8_t preamble_index,
+  uint8_t prach_state
 )
 //------------------------------------------------------------------------------
 {
@@ -181,7 +182,10 @@ ue_process_rar(
 
   if (preamble_index == rarh->RAPID) {
     *t_crnti = (uint16_t)rar[5]+(rar[4]<<8);//rar->t_crnti;
-    UE_mac_inst[module_idP].crnti = *t_crnti;//rar->t_crnti;
+    if(prach_state==0){
+    	UE_mac_inst[module_idP].crnti = *t_crnti;//rar->t_crnti;
+    	LOG_D(MAC,"Update the c-rnti (not HO case)\n");
+    }
     //return(rar->Timing_Advance_Command);
     return((((uint16_t)(rar[0]&0x7f))<<4) + (rar[1]>>4));
   } else {

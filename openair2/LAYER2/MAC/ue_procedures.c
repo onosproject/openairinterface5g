@@ -1019,8 +1019,12 @@ unsigned char generate_ulsch_header(uint8_t *mac_header,
     mac_header_ptr->E    = 0;
     mac_header_ptr->LCID = CRNTI;
     last_size=1;
-    *((uint16_t *)ce_ptr)=(*crnti);
-    ce_ptr+=sizeof(uint16_t);
+    //*((uint16_t *)ce_ptr)=(*crnti);
+    //ce_ptr+=sizeof(uint16_t);
+    *ce_ptr = ((*crnti) >> 8) & 255;
+    ce_ptr++;
+    *ce_ptr = (*crnti) & 255;
+    ce_ptr++;
     //    printf("offset %d\n",ce_ptr-mac_header_control_elements);
   }
 
@@ -1188,6 +1192,7 @@ unsigned char generate_ulsch_header(uint8_t *mac_header,
 
   LOG_T(MAC,"\n");
 #endif
+printf("header %d bytes\n", (unsigned char*)mac_header_ptr - mac_header);
   return((unsigned char*)mac_header_ptr - mac_header);
 
 }

@@ -283,7 +283,7 @@ void Msg1_tx(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id
 }
 
 
-void Msg3_tx(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id)
+void Msg3_tx(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id,UE_MODE_t UE_mode)
 {
 
   if (CC_id>0) {
@@ -295,8 +295,13 @@ void Msg3_tx(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id
   // start contention resolution timer
   LOG_D(MAC,"[UE %d][RAPROC] Frame %d : Msg3_tx: Setting contention resolution timer\n",module_idP,frameP);
   UE_mac_inst[module_idP].RA_contention_resolution_cnt = 0;
-  UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 1;
-
+  if(UE_mode==PUSCH){
+	  // Call rrc to update the HO status
+	  mac_ue_rrc_ue_update_ho_status(module_idP);
+  }
+  else{
+	  UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 1;
+  }
   if (opt_enabled) { // msg3
     trace_pdu(0, &UE_mac_inst[module_idP].CCCH_pdu.payload[0], UE_mac_inst[module_idP].RA_Msg3_size,
               module_idP, 3, UE_mac_inst[module_idP].crnti, UE_mac_inst[module_idP].subframe, 0, 0);
@@ -320,7 +325,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
   mac_rlc_status_resp_t     rlc_status;
   uint8_t                        dcch_header_len=0;
   uint16_t                       sdu_lengths[8];
-  uint8_t                        ulsch_buff[MAX_ULSCH_PAYLOAD_BYTES];
+  static uint8_t                        ulsch_buff[MAX_ULSCH_PAYLOAD_BYTES];
 
   if (CC_id>0) {
     LOG_E(MAC,"Transmission on secondary CCs is not supported yet\n");
@@ -339,6 +344,9 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
 
       if (UE_mac_inst[module_idP].RA_active == 0) {
         LOG_D(MAC,"RA not active\n");
+printf("DCCH LEN %d\n", UE_mac_inst[module_idP].scheduling_info.BSR_bytes[UE_mac_inst[module_idP].scheduling_info.LCGID[DCCH]]);
+if (UE_mac_inst[module_idP].scheduling_info.BSR_bytes[UE_mac_inst[module_idP].scheduling_info.LCGID[DCCH]] == 9)
+  printf("yo\n");
         // check if RRC is ready to initiate the RA procedure
         Size = mac_rrc_data_req(module_idP,
                                 CC_id,
@@ -399,11 +407,12 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
           dcch_header_len = 2 + 2;  /// SHORT Subheader + C-RNTI control element
           rlc_status = mac_rlc_status_ind(module_idP,UE_mac_inst[module_idP].crnti, eNB_indexP,frameP,ENB_FLAG_NO,MBMS_FLAG_NO,
                                           DCCH,
-                                          6);
+                                          9);
 
+if (rlc_status.bytes_in_buffer == 0) abort();
           if (UE_mac_inst[module_idP].crnti_before_ho)
             LOG_D(MAC,
-                  "[UE %d] Frame %d : UL-DCCH -> ULSCH, HO RRCConnectionReconfigurationComplete (%x, %x), RRC message has %d bytes to send throug PRACH (mac header len %d)\n",
+                  "[UE %d] Frame %d : UL-DCCH -> ULSCH, HO RRCConnectionReconfigurationComplete (%x, %x), RRC message has %d bytes to send through PRACH (mac header len %d)\n",
                   module_idP,frameP, UE_mac_inst[module_idP].crnti,UE_mac_inst[module_idP].crnti_before_ho, rlc_status.bytes_in_buffer,dcch_header_len);
           else
             LOG_D(MAC,"[UE %d] Frame %d : UL-DCCH -> ULSCH, RRC message has %d bytes to send through PRACH(mac header len %d)\n",
@@ -412,14 +421,23 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
           sdu_lengths[0] = mac_rlc_data_req(module_idP, UE_mac_inst[module_idP].crnti,
                                             eNB_indexP, frameP,ENB_FLAG_NO, MBMS_FLAG_NO,
                                             DCCH,
-                                            (char *)&ulsch_buff[0]);
+                                            (char *)&ulsch_buff[4]);
+
+/*
+ulsch_buff[0] = 0x01;
+ulsch_buff[1] = 0x02;
+ulsch_buff[2] = 0x03;
+ulsch_buff[3] = 0x04;
+ulsch_buff[4] = 0x05;
+ulsch_buff[5] = 0x06;
+*/
 
           LOG_D(MAC,"[UE %d] TX Got %d bytes for DCCH\n",module_idP,sdu_lengths[0]);
           update_bsr(module_idP, frameP, eNB_indexP,DCCH,UE_mac_inst[module_idP].scheduling_info.LCGID[DCCH]);
           //header_len +=2;
           UE_mac_inst[module_idP].RA_active                        = 1;
           UE_mac_inst[module_idP].RA_PREAMBLE_TRANSMISSION_COUNTER = 1;
-          UE_mac_inst[module_idP].RA_Msg3_size                     = Size+dcch_header_len;
+          UE_mac_inst[module_idP].RA_Msg3_size                     = sdu_lengths[0]+dcch_header_len;
           UE_mac_inst[module_idP].RA_prachMaskIndex                = 0;
           UE_mac_inst[module_idP].RA_prach_resources.Msg3          = ulsch_buff;
           UE_mac_inst[module_idP].RA_backoff_cnt                   = 0;  // add the backoff condition here if we have it from a previous RA reponse which failed (i.e. backoff indicator)
@@ -441,6 +459,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
           UE_mac_inst[module_idP].RA_backoff_subframe = subframeP;
           // Fill in preamble and PRACH resource
           get_prach_resources(module_idP,CC_id,eNB_indexP,subframeP,1,NULL);
+          lcid = DCCH;
           generate_ulsch_header((uint8_t*)ulsch_buff,  // mac header
                                 1,      // num sdus
                                 0,            // short pading
@@ -453,6 +472,13 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
                                 NULL, // long_bsr
                                 0); //post_padding
 
+printf("length %d\n", sdu_lengths[0]);
+{
+  int i;
+  for (i = 0; i < 13; i++)
+    printf("%2.2x ", (unsigned int)ulsch_buff[i]);
+  printf("\n");
+}
           return(&UE_mac_inst[module_idP].RA_prach_resources);
         }
       } else { // RACH is active

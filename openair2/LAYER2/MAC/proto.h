@@ -425,7 +425,8 @@ ue_process_rar(
   const frame_t frameP,
   uint8_t * const dlsch_buffer,
   rnti_t * const t_crnti,
-  const uint8_t preamble_index
+  const uint8_t preamble_index,
+  uint8_t prach_state
 );
 
 
@@ -635,7 +636,7 @@ void update_phr (module_id_t module_idP,int CC_id);
 \param[in] Mod_id Instance index of UE
 \param[in] eNB_id Index of eNB
 */
-void Msg3_tx(module_id_t module_idP,uint8_t CC_id,frame_t frameP,uint8_t eNB_id);
+void Msg3_tx(module_id_t module_idP,uint8_t CC_id,frame_t frameP,uint8_t eNB_id,UE_MODE_t UE_mode);
 
 
 /*! \brief Function to indicate the transmission of msg1/rach

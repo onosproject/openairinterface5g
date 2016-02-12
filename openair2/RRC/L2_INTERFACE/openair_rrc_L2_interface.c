@@ -288,3 +288,7 @@ openair_rrc_eNB_init(
 {
   return openair_rrc_lite_eNB_init(module_idP);
 }
+
+void mac_ue_rrc_ue_update_ho_status(const module_id_t   module_idP){
+	return (rrc_lite_ue_update_ho_status(module_idP));
+}

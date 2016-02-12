@@ -438,7 +438,7 @@ void initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t
       RA_template[i].timing_offset=timing_offset;
       // Put in random rnti (to be replaced with proper procedure!!)
       RA_template[i].rnti = taus();
-      RA_template[i].RA_rnti = 1+subframeP+(10*f_id);
+	  RA_template[i].RA_rnti = 1+subframeP+(10*f_id);
       RA_template[i].preamble_index = preamble_index;
       LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Activating RAR generation for process %d, rnti %x, RA_active %d\n",
             module_idP,CC_id,frameP,i,RA_template[i].rnti,

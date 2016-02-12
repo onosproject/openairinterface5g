@@ -359,6 +359,8 @@ ue_measurement_report_triggering(
   const uint8_t                 eNB_index
 );
 
+void rrc_lite_ue_update_ho_status(module_id_t Mod_idP);
+
 int
 mac_eNB_get_rrc_lite_status(
   const module_id_t Mod_idP,

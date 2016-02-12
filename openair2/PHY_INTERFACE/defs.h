@@ -164,7 +164,7 @@ typedef struct {
   PRACH_RESOURCES_t* (*ue_get_rach)(module_id_t Mod_id,int CC_id,frame_t frameP,uint8_t Msg3_flag,sub_frame_t subframe);
 
   /// Process Random-Access Response
-  uint16_t (*ue_process_rar)(module_id_t Mod_id,int CC_id,frame_t frameP,uint8_t *dlsch_buffer,uint16_t *t_crnti,uint8_t preamble_index);
+  uint16_t (*ue_process_rar)(module_id_t Mod_id,int CC_id,frame_t frameP,uint8_t *dlsch_buffer,uint16_t *t_crnti,uint8_t preamble_index,uint8_t prach_state);
 
   /// Get SR payload (0,1) from UE MAC
   uint32_t (*ue_get_SR)(module_id_t Mod_id,int CC_id,frame_t frameP,uint8_t eNB_id,rnti_t rnti,sub_frame_t subframe);
@@ -218,7 +218,7 @@ typedef struct {
   void (*Msg1_transmitted)(module_id_t Mod_id,uint8_t CC_id,frame_t frameP,uint8_t eNB_id);
 
   /// Function to indicate Msg3 transmission/retransmission which initiates/reset Contention Resolution Timer
-  void (*Msg3_transmitted)(module_id_t Mod_id,uint8_t CC_id,frame_t frameP,uint8_t eNB_id);
+  void (*Msg3_transmitted)(module_id_t Mod_id,uint8_t CC_id,frame_t frameP,uint8_t eNB_id,UE_MODE_t UE_mode);
 
   /// Function to pass inter-cell measurement parameters to PHY (cell Ids)
   void (*phy_config_meas_ue)(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index,uint8_t n_adj_cells,uint32_t *adj_cell_id);

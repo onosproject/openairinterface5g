@@ -3147,11 +3147,11 @@ void prach_procedures(PHY_VARS_eNB *phy_vars_eNB,uint8_t sched_subframe,uint8_t 
       //phy_vars_eNb->eNB_UE_stats[(uint32_t)UE_id].mode = PRACH;
       phy_vars_eNB->eNB_UE_stats[(uint32_t)UE_id].sector = 0;
       LOG_I(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure (UE_id %d) with preamble %d, energy %d.%d dB, delay %d\n",
-            phy_vars_eNB->Mod_id,
-            phy_vars_eNB->CC_id,
+    		phy_vars_eNB->Mod_id,
+			phy_vars_eNB->CC_id,
             frame,
             subframe,
-	    UE_id,
+			UE_id,
             preamble_max,
             preamble_energy_max/10,
             preamble_energy_max%10,

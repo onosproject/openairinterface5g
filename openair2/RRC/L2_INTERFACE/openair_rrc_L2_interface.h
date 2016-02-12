@@ -138,4 +138,6 @@ void mac_in_sync_ind(
   const frame_t frameP,
   const uint16_t eNB_indexP);
 
+void mac_ue_rrc_ue_update_ho_status(const module_id_t   module_idP);
+
 #endif

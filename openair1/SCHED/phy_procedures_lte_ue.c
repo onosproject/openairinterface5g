@@ -856,13 +856,16 @@ void phy_procedures_UE_TX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstra
 #endif
           stop_meas(&phy_vars_ue->ulsch_encoding_stats);
 
-
+          if(phy_vars_ue->prach_ho){
+        	  phy_vars_ue->UE_mode[eNB_id] = PUSCH;
+        	  phy_vars_ue->prach_ho = 0;
+          }
 #ifdef OPENAIR2
           // signal MAC that Msg3 was sent
           mac_xface->Msg3_transmitted(Mod_id,
                                       CC_id,
                                       frame_tx,
-                                      eNB_id);
+                                      eNB_id,phy_vars_ue->UE_mode[eNB_id]);
 #endif
         } else {
           input_buffer_length = phy_vars_ue->ulsch_ue[eNB_id]->harq_processes[harq_pid]->TBS/8;
@@ -3026,7 +3029,7 @@ int phy_procedures_UE_RX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstrac
                              frame_rx-((subframe_prev==0) ? 1 : 0),
                              phy_vars_ue->dlsch_ue_ra[eNB_id]->harq_processes[0]->b,
                              &phy_vars_ue->lte_ue_pdcch_vars[eNB_id]->crnti,
-                             phy_vars_ue->prach_resources[eNB_id]->ra_PreambleIndex);
+                             phy_vars_ue->prach_resources[eNB_id]->ra_PreambleIndex,phy_vars_ue->prach_ho);
 
 
             if (timing_advance!=0xffff) {
@@ -3861,17 +3864,20 @@ void phy_procedures_UE_lte(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstr
       LOG_E(PHY,"[UE %d] Frame %d, subframe %d RRC Connection lost, returning to PRACH\n",phy_vars_ue->Mod_id,
             frame_rx,subframe_tx);
       phy_vars_ue->UE_mode[eNB_id] = PRACH;
+      phy_vars_ue->prach_ho = 0;
       //      mac_xface->macphy_exit("Connection lost");
     } else if (ret == PHY_RESYNCH) {
       LOG_E(PHY,"[UE %d] Frame %d, subframe %d RRC Connection lost, trying to resynch\n",
             phy_vars_ue->Mod_id,
             frame_rx,subframe_tx);
       phy_vars_ue->UE_mode[eNB_id] = RESYNCH;
+      phy_vars_ue->prach_ho = 0;
       //     mac_xface->macphy_exit("Connection lost");
     } else if (ret == PHY_HO_PRACH) {
       LOG_I(PHY,"[UE %d] Frame %d, subframe %d, return to PRACH and perform a contention-free access\n",
             phy_vars_ue->Mod_id,frame_rx,subframe_tx);
       phy_vars_ue->UE_mode[eNB_id] = PRACH;
+      phy_vars_ue->prach_ho = 1;
     }
   }
 

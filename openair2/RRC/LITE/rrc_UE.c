@@ -1958,7 +1958,7 @@ rrc_ue_decode_dcch(
                   "[UE% d] Frame %d: Received rrcConnectionReconfiguration with mobilityControlInfo \n",
                   ctxt_pP->module_id,
                   ctxt_pP->frame);
-            UE_rrc_inst[ctxt_pP->module_id].HandoverInfoUe.measFlag = 1; // Ready to send more MeasReports if required
+            //UE_rrc_inst[ctxt_pP->module_id].HandoverInfoUe.measFlag = 1; // Ready to send more MeasReports if required
           }
         }
 
@@ -3669,7 +3669,6 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
               case ReportConfigEUTRA__triggerType__event__eventId_PR_eventA3:
                 LOG_D(RRC,"[UE %d] Frame %d : A3 event: check if a neighboring cell becomes offset better than serving to trigger a measurement event \n",
                       ctxt_pP->module_id, ctxt_pP->frame);
-
                 if ((check_trigger_meas_event(
                        ctxt_pP->module_id,
                        ctxt_pP->frame,
@@ -3688,7 +3687,7 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
                   rrc_ue_generate_MeasurementReport(
                     ctxt_pP,
                     eNB_index);
-                  UE_rrc_inst[ctxt_pP->module_id].HandoverInfoUe.measFlag = 1;
+                  //UE_rrc_inst[ctxt_pP->module_id].HandoverInfoUe.measFlag = 1;
                   LOG_I(RRC,"[UE %d] Frame %d: A3 event detected, state: %d \n",
                         ctxt_pP->module_id, ctxt_pP->frame, UE_rrc_inst[ctxt_pP->module_id].Info[0].State);
                 } else {
