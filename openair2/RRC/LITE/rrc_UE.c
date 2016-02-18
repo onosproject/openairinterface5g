@@ -961,7 +961,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 
   long SRB_id,DRB_id;
   int i,cnt;
-  LogicalChannelConfig_t *SRB1_logicalChannelConfig,*SRB2_logicalChannelConfig;
+  LogicalChannelConfig_t *SRB1_logicalChannelConfig = NULL,*SRB2_logicalChannelConfig = NULL;
 #ifdef CBA
   uint8_t cba_found = 0;
   uint16_t cba_RNTI;
