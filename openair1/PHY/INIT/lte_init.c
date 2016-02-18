@@ -612,6 +612,9 @@ void phy_config_afterHO_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_id, Mobility
     lte_gold(lte_frame_parms,PHY_vars_UE_g[Mod_id][CC_id]->lte_gold_table[0],lte_frame_parms->Nid_cell);
     lte_frame_parms->nushift  = lte_frame_parms->Nid_cell%6;
 
+    generate_pcfich_reg_mapping(lte_frame_parms);
+    generate_phich_reg_mapping(lte_frame_parms);
+
     // PUCCH
     init_ncs_cell(lte_frame_parms,PHY_vars_UE_g[Mod_id][CC_id]->ncs_cell);
 
