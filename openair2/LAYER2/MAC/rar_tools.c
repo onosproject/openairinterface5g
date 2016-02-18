@@ -181,8 +181,8 @@ ue_process_rar(
 
 
   if (preamble_index == rarh->RAPID) {
-    *t_crnti = (uint16_t)rar[5]+(rar[4]<<8);//rar->t_crnti;
     if(prach_state==0){
+        *t_crnti = (uint16_t)rar[5]+(rar[4]<<8);//rar->t_crnti;
     	UE_mac_inst[module_idP].crnti = *t_crnti;//rar->t_crnti;
     	LOG_D(MAC,"Update the c-rnti (not HO case)\n");
     }
