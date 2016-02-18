@@ -2311,6 +2311,8 @@ uint8_t do_MeasurementReport(uint8_t Mod_id, uint8_t *buffer,int measid,int phy_
 
   UL_DCCH_Message_t ul_dcch_msg;
 
+  memset(&ul_dcch_msg, 0, sizeof(ul_dcch_msg));
+
   MeasurementReport_t  *measurementReport;
 
   ul_dcch_msg.message.present                     = UL_DCCH_MessageType_PR_c1;
@@ -2384,6 +2386,9 @@ uint8_t do_MeasurementReport(uint8_t Mod_id, uint8_t *buffer,int measid,int phy_
   measresulteutra2->cgi_Info=measresult_cgi2;
 
   struct MeasResultEUTRA__measResult meas2;
+
+  memset(&meas2, 0, sizeof(meas2));
+
   //    int rsrp_va=10;
 
   meas2.rsrpResult=&(rsrp_t);
