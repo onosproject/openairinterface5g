@@ -53,9 +53,39 @@
       </eNB_MOBILITY>
     </MOBILITY>
   </TOPOLOGY_CONFIG>
- 
+
+  <APPLICATION_CONFIG>
+     <CUSTOMIZED_TRAFFIC>
+      <SOURCE_ID>2</SOURCE_ID>
+      <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
+      <FLOW_START_ms>1600</FLOW_START_ms>
+      <FLOW_DURATION_ms>3000</FLOW_DURATION_ms>
+      <IP_VERSION>ipv4</IP_VERSION>
+      <DESTINATION_ID>0</DESTINATION_ID>
+      <IDT_DIST>uniform</IDT_DIST>
+      <IDT_MIN_ms>10</IDT_MIN_ms>
+      <IDT_MAX_ms>50</IDT_MAX_ms>
+      <SIZE_DIST>uniform</SIZE_DIST>
+      <SIZE_MIN_byte>850</SIZE_MIN_byte>
+      <SIZE_MAX_byte>1408</SIZE_MAX_byte>
+    </CUSTOMIZED_TRAFFIC>
+  </APPLICATION_CONFIG>
+
   <EMULATION_CONFIG>
-    <EMULATION_TIME_ms>10000</EMULATION_TIME_ms> 
+    <EMULATION_TIME_ms>3000</EMULATION_TIME_ms> 
+
+    <CURVE>disable</CURVE> <!-- option: enabled, disabled. If CURVE is enabled, graphes
+are ploted in real time (UL and DL) of WOD and throughput measurement for each packet -->
+    <BACKGROUND_STATS>enable</BACKGROUND_STATS> <!-- option: enable, disable. If enable,
+it allows to ptrint BACKGROUND statistics: Nb packets, throughputs,etc-->
+    <PERFORMANCE_METRICS>
+              <THROUGHPUT>enable</THROUGHPUT>        <!-- option: enable, disable. If enable,
+throughput measurements are plotted in real time-->
+              <LATENCY>enable</LATENCY>        <!-- option: enable, disable. If enable, latency
+measurements are plotted in real time-->
+               <OWD_RADIO_ACCESS>enable</OWD_RADIO_ACCESS>  <!-- option: enable, disable. If
+enable owd curve shows the one way radio access delay, else it shows end to end owd -->
+    </PERFORMANCE_METRICS>
     
     <LOG>  <!-- set the global log level -->
       <LEVEL>debug</LEVEL>

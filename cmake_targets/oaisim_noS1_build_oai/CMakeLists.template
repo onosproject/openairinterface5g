@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+set (ENABLE_USE_X2 True)
+
 set (  CMAKE_BUILD_TYPE "RelWithDebInfo" )
 set (  ADDR_CONF False )
 set (  DEBUG_OMG False )
@@ -19,7 +21,7 @@ set (  ENABLE_USE_MME False )
 set (  ENABLE_USE_RAW_SOCKET_FOR_SGI False)
 set (  ENABLE_VCD_FIFO False )
 set (  ENB_MODE True )
-set (  EXMIMO_IOT True )
+set (  EXMIMO_IOT False )
 set (  HARD_RT False )
 set (  JUMBO_FRAME True )
 set (  LARGE_SCALE False )

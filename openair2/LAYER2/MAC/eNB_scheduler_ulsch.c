@@ -130,13 +130,17 @@ void rx_sdu(
             enb_mod_idP, CC_idP, rx_ces[i], i,num_ce, payload_ptr[0], payload_ptr[1]);
       UE_id = find_UE_id(enb_mod_idP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
       /* TODO: maybe check that the CRNTI is in handover mode? */
-      if (UE_id != -1) rntiP = (((uint16_t)payload_ptr[0])<<8) + payload_ptr[1];
+      if (UE_id != -1) {
+    	  rntiP = (((uint16_t)payload_ptr[0])<<8) + payload_ptr[1];
+    	  phy_config_ue_state_ho(enb_mod_idP,CC_idP,rntiP);
+    	  eNB_mac_inst[enb_mod_idP].UE_list.UE_template[UE_PCCID(enb_mod_idP,UE_id)][UE_id].configured = 1;
+      }
       LOG_I(MAC, "[eNB %d] CC_id %d MAC CE_LCID %d : CRNTI %x (UE_id %d) in Msg3\n",enb_mod_idP, CC_idP, rx_ces[i], (((uint16_t)payload_ptr[0])<<8) + payload_ptr[1],UE_id);
 
       payload_ptr+=2;
       /* we don't process this CE yet */
       if (msg3_flagP != NULL) {
-	*msg3_flagP = 0;
+    	  *msg3_flagP = 0;
       }
       break;
 

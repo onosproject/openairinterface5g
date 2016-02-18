@@ -3751,6 +3751,7 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
                                       phy_vars_eNB->eNB_UE_stats[i].crnti);
             remove_ue(phy_vars_eNB->eNB_UE_stats[i].crnti,phy_vars_eNB,abstraction_flag);
             phy_vars_eNB->ulsch_eNB[(uint32_t)i]->Msg3_active = 0;
+            /*this is a bug: we have to break here*/
           }
 
           /*

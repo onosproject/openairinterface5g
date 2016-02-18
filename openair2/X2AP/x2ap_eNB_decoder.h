@@ -40,6 +40,6 @@
 #ifndef X2AP_ENB_DECODER_H_
 #define X2AP_ENB_DECODER_H_
 
-int x2ap_eNB_decode_pdu(x2ap_message *x2ap_message, uint8_t *buffer, uint32_t len);
+int x2ap_eNB_decode_pdu(x2ap_message *x2ap_message, const uint8_t * const buffer, uint32_t len);
 
 #endif /* X2AP_ENB_DECODER_H_ */

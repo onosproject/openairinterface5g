@@ -34,12 +34,12 @@
 
 # ifdef OPENAIR2
 #   if defined(ENABLE_USE_MME)
-#     include "sctp_eNB_task.h"
 #     include "s1ap_eNB.h"
 #     include "nas_ue_task.h"
 #     include "udp_eNB_task.h"
 #     include "gtpv1u_eNB_task.h"
 #   endif
+#     include "sctp_eNB_task.h"
 #   if defined (ENABLE_USE_X2)
 #     include "x2ap_eNB.h"
 #   endif 
@@ -59,11 +59,6 @@ int create_tasks(uint32_t enb_nb, uint32_t ue_nb)
 #   if defined(ENABLE_USE_MME)
     {
       if (enb_nb > 0) {
-        if (itti_create_task (TASK_SCTP, sctp_eNB_task, NULL) < 0) {
-          LOG_E(SCTP, "Create task for SCTP failed\n");
-          return -1;
-        }
-
         if (itti_create_task (TASK_S1AP, s1ap_eNB_task, NULL) < 0) {
           LOG_E(S1AP, "Create task for S1AP failed\n");
           return -1;
@@ -90,12 +85,18 @@ int create_tasks(uint32_t enb_nb, uint32_t ue_nb)
 #      endif
     }
 #   endif
-#if defined(ENABLE_USE_X2)	
+#if ENABLE_USE_X2
 	if (itti_create_task (TASK_X2AP, x2ap_task, NULL) < 0) {
           LOG_E(X2AP, "Create task for X2AP failed\n");
           return -1;
         }
 #endif 
+
+        if (itti_create_task (TASK_SCTP, sctp_eNB_task, NULL) < 0) {
+          LOG_E(SCTP, "Create task for SCTP failed\n");
+          return -1;
+        }
+
 
     if (enb_nb > 0) {
       if (itti_create_task (TASK_RRC_ENB, rrc_enb_task, NULL) < 0) {

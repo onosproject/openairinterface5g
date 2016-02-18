@@ -374,7 +374,7 @@ int x2ap_eNB_handle_x2_setup_response(uint32_t               assoc_id,
   uint32_t                           eNB_id = 0;
   
   DevAssert(message != NULL);
-  x2SetupResponse = &message->msg.x2SetupRequest_IEs;
+  x2SetupResponse = &message->msg.x2SetupResponse_IEs;
  
   MSC_LOG_RX_MESSAGE (MSC_X2AP_TARGET_ENB, 
 		      MSC_X2AP_SRC_ENB, NULL, 0, 

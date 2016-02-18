@@ -180,6 +180,8 @@ typedef struct {
 int x2ap_eNB_compare_assoc_id(struct x2ap_eNB_data_s *p1, struct x2ap_eNB_data_s *p2);
 
 /* Generate the tree management functions */
+struct x2ap_eNB_map;
+struct x2ap_eNB_data_s;
 RB_PROTOTYPE(x2ap_eNB_map, x2ap_eNB_data_s, entry, x2ap_eNB_compare_assoc_id);
 
 

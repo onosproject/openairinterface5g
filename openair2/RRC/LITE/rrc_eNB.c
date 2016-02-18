@@ -2874,7 +2874,10 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
          (void *)&rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.pdsch_ConfigCommon, sizeof(PDSCH_ConfigCommon_t));
   memcpy((void *)&mobilityInfo->radioResourceConfigCommon.pusch_ConfigCommon,
          (void *)&rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.pusch_ConfigCommon, sizeof(PUSCH_ConfigCommon_t));
-  mobilityInfo->radioResourceConfigCommon.phich_Config = NULL;
+  mobilityInfo->radioResourceConfigCommon.phich_Config =
+    CALLOC(1, sizeof(*mobilityInfo->radioResourceConfigCommon.phich_Config));
+  mobilityInfo->radioResourceConfigCommon.phich_Config->phich_Duration = (long)mac_xface->lte_frame_parms->phich_config_common.phich_duration;
+  mobilityInfo->radioResourceConfigCommon.phich_Config->phich_Resource = (long)mac_xface->lte_frame_parms->phich_config_common.phich_resource;
   mobilityInfo->radioResourceConfigCommon.pucch_ConfigCommon =
     CALLOC(1, sizeof(*mobilityInfo->radioResourceConfigCommon.pucch_ConfigCommon));
   memcpy((void *)mobilityInfo->radioResourceConfigCommon.pucch_ConfigCommon,

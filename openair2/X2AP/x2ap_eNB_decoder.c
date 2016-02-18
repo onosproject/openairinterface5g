@@ -53,7 +53,7 @@ int x2ap_eNB_decode_initiating(x2ap_message *x2ap_message_p, X2ap_InitiatingMess
 int x2ap_eNB_decode_successful(x2ap_message *x2ap_message_p, X2ap_SuccessfulOutcome_t *successful_p);
 int x2ap_eNB_decode_unsuccessful(x2ap_message *x2ap_message_p, X2ap_UnsuccessfulOutcome_t *unsuccessful_p);
 
-int x2ap_eNB_decode_pdu(x2ap_message *x2ap_message_p, uint8_t *buffer, uint32_t len) {
+int x2ap_eNB_decode_pdu(x2ap_message *x2ap_message_p, const uint8_t * const buffer, uint32_t len) {
   X2AP_PDU_t  pdu;
   X2AP_PDU_t *pdu_p = &pdu;
   asn_dec_rval_t dec_ret;
@@ -117,7 +117,7 @@ x2ap_eNB_decode_initiating(x2ap_message *x2ap_message_p, X2ap_InitiatingMessage_
   switch(x2ap_message_p->procedureCode) {
   case X2ap_ProcedureCode_id_x2Setup :
     ret = x2ap_decode_x2setuprequest_ies(&x2ap_message_p->msg.x2SetupRequest_IEs, &initiating_p->value);
-    x2ap_xer_print_x2setuprequest_(x2ap_xer__print2sp,message_string,message);
+    x2ap_xer_print_x2setuprequest_(x2ap_xer__print2sp,message_string,x2ap_message_p);
     message_id          = X2AP_SETUP_REQUEST_LOG;
     message_string_size = strlen(message_string);
     message           = itti_alloc_new_message_sized(TASK_X2AP,
@@ -200,24 +200,31 @@ x2ap_eNB_decode_successful(x2ap_message *x2ap_message_p, X2ap_SuccessfulOutcome_
   switch(x2ap_message_p->procedureCode) {
   case X2ap_ProcedureCode_id_x2Setup:
     ret = x2ap_decode_x2setupresponse_ies(&x2ap_message_p->msg.x2SetupResponse_IEs, &successful_p->value);
+    break;
 
   case X2ap_ProcedureCode_id_reset:
     ret =  x2ap_decode_x2ap_resetresponse_ies(&x2ap_message_p->msg.x2ap_ResetResponse_IEs, &successful_p->value);
+    break;
 
   case X2ap_ProcedureCode_id_resourceStatusReportingInitiation:
     ret =  x2ap_decode_x2ap_resourcestatusresponse_ies(&x2ap_message_p->msg.x2ap_ResourceStatusResponse_IEs, &successful_p->value);
+    break;
     
   case X2ap_ProcedureCode_id_mobilitySettingsChange:
     ret = x2ap_decode_x2ap_mobilitychangeacknowledge_ies(&x2ap_message_p->msg.x2ap_MobilityChangeAcknowledge_IEs, &successful_p->value);
+    break;
     
   case X2ap_ProcedureCode_id_eNBConfigurationUpdate:
     ret =  x2ap_decode_x2ap_enbconfigurationupdateacknowledge_ies(&x2ap_message_p->msg.x2ap_ENBConfigurationUpdateAcknowledge_IEs, &successful_p->value);
+    break;
     
   case X2ap_ProcedureCode_id_handoverPreparation:
     ret = x2ap_decode_x2ap_handoverrequestacknowledge_ies(&x2ap_message_p->msg.x2ap_HandoverRequestAcknowledge_IEs, &successful_p->value);
+    break;
 
   case X2ap_ProcedureCode_id_cellActivation:
     ret =  x2ap_decode_x2ap_cellactivationresponse_ies(&x2ap_message_p->msg.x2ap_CellActivationResponse_IEs, &successful_p->value);
+    break;
     
   default:
     X2AP_DEBUG("Unknown procedure (%d) or not implemented", (int)x2ap_message_p->procedureCode);
@@ -248,21 +255,28 @@ x2ap_eNB_decode_unsuccessful(x2ap_message *x2ap_message_p, X2ap_UnsuccessfulOutc
   switch(x2ap_message_p->procedureCode) {
   case X2ap_ProcedureCode_id_x2Setup:
     ret =  x2ap_decode_x2setupfailure_ies(&x2ap_message_p->msg.x2SetupFailure_IEs, &unsuccessful_p->value);
+    break;
 
   case X2ap_ProcedureCode_id_resourceStatusReportingInitiation:
     ret =  x2ap_decode_x2ap_resourcestatusfailure_ies(&x2ap_message_p->msg.x2ap_ResourceStatusFailure_IEs, &unsuccessful_p->value);
+    break;
     
   case X2ap_ProcedureCode_id_mobilitySettingsChange:
     ret =  x2ap_decode_x2ap_mobilitychangefailure_ies(&x2ap_message_p->msg.x2ap_MobilityChangeFailure_IEs, &unsuccessful_p->value);
+    break;
     
   case X2ap_ProcedureCode_id_eNBConfigurationUpdate:
     ret =  x2ap_decode_x2ap_enbconfigurationupdatefailure_ies(&x2ap_message_p->msg.x2ap_ENBConfigurationUpdateFailure_IEs, &unsuccessful_p->value);
+    break;
     
   case X2ap_ProcedureCode_id_handoverPreparation:
     ret = x2ap_decode_x2ap_handoverpreparationfailure_ies(&x2ap_message_p->msg.x2ap_HandoverPreparationFailure_IEs, &unsuccessful_p->value);
+    break;
 
   case X2ap_ProcedureCode_id_cellActivation:
     ret = x2ap_decode_x2ap_cellactivationfailure_ies(&x2ap_message_p->msg.x2ap_CellActivationFailure_IEs, &unsuccessful_p->value);			
+    break;
+
   default:
     X2AP_DEBUG("Unknown procedure (%d) or not implemented", (int)x2ap_message_p->procedureCode);
     break;

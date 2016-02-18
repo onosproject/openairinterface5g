@@ -207,7 +207,7 @@ typedef struct {
   void (*phy_config_afterHO_ue)(module_id_t Mod_id,uint8_t CC_id,uint8_t CH_index,
                                 MobilityControlInfo_t *mobilityControlInfo,
                                 uint8_t ho_failed);
-
+  void (*phy_config_ue_state_ho)(uint8_t Mod_id,uint8_t CC_id,uint16_t rnti);
   /// Function to indicate failure of contention resolution or RA procedure
   void (*ra_failed)(module_id_t Mod_id, uint8_t CC_id,uint8_t eNB_index);
 

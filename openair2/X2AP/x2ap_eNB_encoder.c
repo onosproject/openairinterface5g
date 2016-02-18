@@ -48,9 +48,9 @@
 
 #include "assertions.h"
 
-int x2ap_encode_initiating(x2ap_message *x2ap_message_p, uint8_t **buf, uint32_t *length);
-int x2ap_encode_successful(x2ap_message *x2ap_message_p, uint8_t **buf, uint32_t *length);
-int x2ap_encode_unsuccessful(x2ap_message *x2ap_message_p, uint8_t **buf, uint32_t *length);
+int x2ap_eNB_encode_initiating(x2ap_message *x2ap_message_p, uint8_t **buf, uint32_t *length);
+int x2ap_eNB_encode_successful(x2ap_message *x2ap_message_p, uint8_t **buf, uint32_t *length);
+int x2ap_eNB_encode_unsuccessful(x2ap_message *x2ap_message_p, uint8_t **buf, uint32_t *length);
 
 static inline int x2ap_reset_request_encoder(X2ap_ResetRequest_IEs_t *resetRequest_IEs, uint8_t **buf, uint32_t *length);
 static inline int x2_setup_response_encoder(X2SetupResponse_IEs_t *x2SetupResponse_IEs, uint8_t **buf, uint32_t *length);
@@ -122,6 +122,7 @@ x2ap_eNB_encode_initiating(x2ap_message *x2ap_message_p, uint8_t **buf, uint32_t
   
 #warning "do the same for the other messages" 
     x2ap_xer_print_x2ap_resetrequest_(x2ap_xer__print2sp, message_string, x2ap_message_p);
+    message_string_size = strlen(message_string) + 1;
     message_id = X2AP_RESET_REQUST_LOG;
     message = itti_alloc_new_message_sized(TASK_X2AP, message_id, message_string_size + sizeof (IttiMsgText));
     message->ittiMsg.x2ap_reset_request_log.size = message_string_size;
@@ -206,6 +207,7 @@ x2ap_eNB_encode_successful(x2ap_message *x2ap_message_p, uint8_t **buf, uint32_t
 
 #warning "do the same for the other messages" 
     x2ap_xer_print_x2ap_resourcestatusresponse_(x2ap_xer__print2sp, message_string, x2ap_message_p);
+    message_string_size = strlen(message_string) + 1;
     message_id = X2AP_RESOURCE_STATUS_RESPONSE_LOG;
     message = itti_alloc_new_message_sized(TASK_X2AP, message_id, message_string_size + sizeof (IttiMsgText));
     message->ittiMsg.x2ap_resource_status_response_log.size = message_string_size;
@@ -258,6 +260,7 @@ x2ap_eNB_encode_unsuccessful(x2ap_message *x2ap_message_p, uint8_t **buf, uint32
     ret = x2ap_resource_status_failure_encoder(&x2ap_message_p->msg.x2ap_ResourceStatusFailure_IEs,  buf, length);
 #warning "do the same for the other messages" 
     x2ap_xer_print_x2ap_resourcestatusfailure_(x2ap_xer__print2sp, message_string, x2ap_message_p);
+    message_string_size = strlen(message_string) + 1;
     message_id = X2AP_RESOURCE_STATUS_FAILURE_LOG;
     message = itti_alloc_new_message_sized(TASK_X2AP, message_id, message_string_size + sizeof (IttiMsgText));
     message->ittiMsg.x2ap_resource_status_failure_log.size = message_string_size;

@@ -758,6 +758,8 @@ int rrc_mac_config_req(module_id_t     module_idP,
 // Assign the new c-rnti in the UE context (during HO)
 void rrc_mac_get_new_crnti(protocol_ctxt_t* ctxt_pP,uint8_t eNB_index);
 
+void phy_config_ue_state_ho(uint8_t Mod_id,uint8_t CC_id,uint16_t rnti);
+
 /** \brief get the estimated UE distance from the PHY->MAC layer.
 @param Mod_id Instance ID of eNB
 @param UE_id Index of UE if this is an eNB configuration

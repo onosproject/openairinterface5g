@@ -261,8 +261,10 @@ rrc_mac_config_req(
 
   if (physicalConfigDedicated != NULL) {
     if (eNB_flagP==1) {
+    	printf("PHY-config-debug-enb\n");
       mac_xface->phy_config_dedicated_eNB(Mod_id, CC_id, UE_RNTI(Mod_id, UE_id), physicalConfigDedicated);
     } else {
+    	printf("PHY-config-debug-ue\n");
       mac_xface->phy_config_dedicated_ue(Mod_id,0,eNB_index,physicalConfigDedicated);
       UE_mac_inst[Mod_id].physicalConfigDedicated=physicalConfigDedicated; // for SR proc
     }

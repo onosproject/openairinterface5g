@@ -381,7 +381,7 @@ void *eNB_app_task(void *args_p)
 
   itti_mark_task_ready (TASK_ENB_APP);
 
-# if defined(ENABLE_USE_MME)
+# if defined(ENABLE_ITTI)
 #   if defined(OAI_EMU)
   enb_nb =        oai_emulation.info.nb_enb_local;
   enb_id_start =  oai_emulation.info.first_enb_local;
@@ -415,6 +415,9 @@ void *eNB_app_task(void *args_p)
 # endif
 
 # if defined(ENABLE_USE_X2)
+  enb_nb =        oai_emulation.info.nb_enb_local;
+  enb_id_start =  oai_emulation.info.first_enb_local;
+  enb_id_end =    oai_emulation.info.first_enb_local + enb_nb;
   /* Try to register each eNB with each other */
   x2_registered_enb = 0;
   x2_register_enb_pending = eNB_app_register_x2 (enb_id_start, enb_id_end, enb_properties_p);

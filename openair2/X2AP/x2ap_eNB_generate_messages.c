@@ -40,6 +40,8 @@
 
 #include "x2ap_eNB.h"
 #include "x2ap_eNB_generate_messages.h"
+#include "x2ap_eNB_encoder.h"
+#include "x2ap_eNB_itti_messaging.h"
 
 #include "msc.h"
 #include "assertions.h"
@@ -123,7 +125,7 @@ int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p,
     X2AP_ERROR("Failed to encode X2 setup request\n");
     return -1;
   }
-  
+
   MSC_LOG_TX_MESSAGE (MSC_X2AP_SRC_ENB, MSC_X2AP_TARGET_ENB, NULL, 0, "0 X2Setup/initiatingMessage assoc_id %u", x2ap_enb_data_p->assoc_id);
 
   /* Non UE-Associated signalling -> stream = 0 */
@@ -149,7 +151,7 @@ x2ap_generate_x2_setup_response (x2ap_eNB_data_t * eNB_association)
   X2ap_PLMN_Identity_t       broadcast_plmnIdentity_2;
   X2ap_PLMN_Identity_t       broadcast_plmnIdentity_3;
   
-  X2ap_ServedCellItem_t *served_cell= malloc(sizeof(X2ap_ServedCellItem_t));;
+  X2ap_ServedCellItem_t *served_cell = calloc(1, sizeof(X2ap_ServedCellItem_t));;
   
   uint8_t                                *buffer;
   uint32_t                                len;
@@ -218,9 +220,14 @@ x2ap_generate_x2_setup_response (x2ap_eNB_data_t * eNB_association)
   /*
    * Non-UE signalling -> stream 0
    */
-  return x2ap_eNB_itti_send_sctp_data_req (buffer, len, eNB_association->assoc_id, 0);
+  x2ap_eNB_itti_send_sctp_data_req (instance->instance, eNB_association->assoc_id, buffer, len, 0);
+
+  return ret;
 }
 
+int x2ap_eNB_set_cause (X2ap_Cause_t * cause_p,
+		       X2ap_Cause_PR cause_type,
+		       long cause_value);
 
 int x2ap_eNB_generate_x2_setup_failure ( uint32_t assoc_id,
 					 X2ap_Cause_PR cause_type,
@@ -231,6 +238,7 @@ int x2ap_eNB_generate_x2_setup_failure ( uint32_t assoc_id,
   uint32_t                                length;
   x2ap_message                            message;
   X2SetupFailure_IEs_t                    *x2_setup_failure_p;
+  int                                     ret = 0;
 
   memset (&message, 0, sizeof (x2ap_message));
   x2_setup_failure_p = &message.msg.x2SetupFailure_IEs;
@@ -251,7 +259,10 @@ int x2ap_eNB_generate_x2_setup_failure ( uint32_t assoc_id,
 		      MSC_X2AP_TARGET_ENB, NULL, 0, 
 		      "0 X2Setup/unsuccessfulOutcome  assoc_id %u cause %u value %u", 
 		      assoc_id, cause_type, cause_value);
-  return x2ap_eNB_itti_send_sctp_data_req (buffer_p, length, assoc_id, 0);
+
+  x2ap_eNB_itti_send_sctp_data_req (/* instance? */ 0, assoc_id, buffer_p, length, 0);
+
+  return ret;
 }
 
 int x2ap_eNB_set_cause (X2ap_Cause_t * cause_p,

@@ -407,6 +407,14 @@ int logInit (void)
   g_log->log_component[RRH].filelog = 0;
   g_log->log_component[RRH].filelog_name = "";
   
+  g_log->log_component[X2AP].name = "X2AP";
+  g_log->log_component[X2AP].level = LOG_EMERG;
+  g_log->log_component[X2AP].flag = LOG_FULL;
+  g_log->log_component[X2AP].interval = 1;
+  g_log->log_component[X2AP].fd = 0;
+  g_log->log_component[X2AP].filelog = 0;
+  g_log->log_component[X2AP].filelog_name = "";
+
   g_log->level2string[LOG_EMERG]         = "G"; //EMERG
   g_log->level2string[LOG_ALERT]         = "A"; // ALERT
   g_log->level2string[LOG_CRIT]          = "C"; // CRITIC

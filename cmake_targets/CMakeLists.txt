@@ -119,6 +119,7 @@ endmacro(add_list_string_option)
 ####################################################
 # compilation flags
 #############################################
+#set(CMAKE_BUILD_TYPE "Debug")
 if (CMAKE_BUILD_TYPE STREQUAL "")
    set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
@@ -616,7 +617,7 @@ add_boolean_option(RRC_DEFAULT_RAB_IS_AM       False  "Otherwise it is UM, confi
 ##########################
 # X2AP LAYER OPTIONS
 ##########################
-add_boolean_option(ENABLE_USE_X2                False  "Enable X2 interface for X2 hanodover")
+add_boolean_option(ENABLE_USE_X2                False "Enable X2 interface for X2 hanodover")
 
 ##########################
 # PROJECTS (IST, FRENCH COLL., etc)
@@ -1617,11 +1618,11 @@ add_executable(oaisim_nos1
 target_include_directories(oaisim_nos1 PUBLIC  ${OPENAIR_TARGETS}/SIMU/USER)
 target_link_libraries (oaisim_nos1
   -Wl,--start-group
-  RRC_LIB SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}  ${X2AP_LIB}  ${X2AP_ENB}
+  RRC_LIB SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} SIMU SIMU_ETH SECU_OSA ${ITTI_LIB}  ${MIH_LIB}  ${X2AP_LIB}  ${X2AP_ENB} SCTP_CLIENT
   -Wl,--end-group )
 
 target_link_libraries (oaisim_nos1 ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})
-target_link_libraries (oaisim_nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES}  ${NETTLE_LIBRARIES}  ${option_HW_lib}
+target_link_libraries (oaisim_nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES}  ${NETTLE_LIBRARIES}  ${option_HW_lib} sctp
   ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${OPENPGM_LIBRARIES})
 #Force link with forms, regardless XFORMS option
 target_link_libraries (oaisim_nos1 forms)

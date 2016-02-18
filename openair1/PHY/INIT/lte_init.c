@@ -601,8 +601,8 @@ void phy_config_afterHO_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_id, Mobility
     else
       lte_frame_parms->nb_antennas_tx                     = 1;
 
-    //PHICH
-    if (radioResourceConfigCommon->antennaInfoCommon) {
+    //PHICH (check if long to enum conversion is valid)
+    if (radioResourceConfigCommon->phich_Config){
       lte_frame_parms->phich_config_common.phich_resource = radioResourceConfigCommon->phich_Config->phich_Resource;
       lte_frame_parms->phich_config_common.phich_duration = radioResourceConfigCommon->phich_Config->phich_Duration;
     }
@@ -621,6 +621,9 @@ void phy_config_afterHO_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_id, Mobility
 
     PHY_vars_UE_g[Mod_id][CC_id]->lte_ue_pdcch_vars[eNB_id]->crnti = mobilityControlInfo->newUE_Identity.buf[0]|(mobilityControlInfo->newUE_Identity.buf[1]<<8);
 
+    // Update channels
+    PHY_vars_UE_g[Mod_id][CC_id]->dlsch_ue[eNB_id][CC_id]->rnti = mobilityControlInfo->newUE_Identity.buf[0]|(mobilityControlInfo->newUE_Identity.buf[1]<<8);
+    PHY_vars_UE_g[Mod_id][CC_id]->ulsch_ue[eNB_id]->rnti = mobilityControlInfo->newUE_Identity.buf[0]|(mobilityControlInfo->newUE_Identity.buf[1]<<8);
   }
 
   if(ho_failed) {
@@ -1481,3 +1484,39 @@ int phy_init_lte_eNB(PHY_VARS_eNB *phy_vars_eNB,
   return (0);
 }
 
+// Configure ue state in case of handover
+void phy_config_ue_state_ho(uint8_t Mod_id,uint8_t CC_id,uint16_t rnti){
+	uint32_t k,j;
+	int UE_id = find_UE_id(Mod_id,rnti);
+	if(UE_id==-1){
+		printf("Program exited: phy_config_ue_state_ho: UE does not exist\n");
+		exit(-1);
+	}
+	LOG_I(PHY, "ho called for eNB %d CC %d rnti %x UE_id %d\n", Mod_id, CC_id, rnti, UE_id);
+	PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].mode = PUSCH;
+	PHY_vars_eNB_g[Mod_id][CC_id]->ulsch_eNB[UE_id]->Msg3_flag = 0;
+
+	// HARQ processes
+    for (k=0; k<8; k++){ //harq_processes
+      for (j=0; j<PHY_vars_eNB_g[Mod_id][CC_id]->dlsch_eNB[UE_id][0]->Mdlharq; j++) {
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].dlsch_NAK[k][j]=0;
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].dlsch_ACK[k][j]=0;
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].dlsch_trials[k][j]=0;
+      }
+
+      PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].dlsch_l2_errors[k]=0;
+      PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].ulsch_errors[k]=0;
+      PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].ulsch_consecutive_errors=0;
+
+      for (j=0; j<PHY_vars_eNB_g[Mod_id][CC_id]->ulsch_eNB[UE_id]->Mdlharq; j++) {
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].ulsch_decoding_attempts[k][j]=0;
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].ulsch_decoding_attempts_last[k][j]=0;
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].ulsch_round_errors[k][j]=0;
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].ulsch_round_fer[k][j]=0;
+      }
+    }
+
+    PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].dlsch_sliding_cnt=0;
+    PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].dlsch_NAK_round0=0;
+    PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats[UE_id].dlsch_mcs_offset=0;
+}
