@@ -625,6 +625,9 @@ void rrc_eNB_emulation_notify_ue_module_id(
 
   // find enb_module_id
   for (enb_module_id = 0; enb_module_id < NUMBER_OF_eNB_MAX; enb_module_id++) {
+	    if(enb_module_id>1){ /*FIX LATER*/
+	    	return;
+	    }
     for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
       if (eNB_rrc_inst[enb_module_id].carrier[CC_id].sib1 != NULL) {
         if (
@@ -633,7 +636,7 @@ void rrc_eNB_emulation_notify_ue_module_id(
           (eNB_rrc_inst[enb_module_id].carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[2] == cell_identity_byte2P) &&
           (eNB_rrc_inst[enb_module_id].carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[3] == cell_identity_byte3P)
         ) {
-          oai_emulation.info.eNB_ue_module_id_to_rnti[enb_module_id][ue_module_idP] = rntiP;
+          //oai_emulation.info.eNB_ue_module_id_to_rnti[enb_module_id][ue_module_idP] = rntiP;
           ue_context_p = rrc_eNB_get_ue_context(
                            &eNB_rrc_inst[enb_module_id],
                            rntiP
@@ -643,10 +646,11 @@ void rrc_eNB_emulation_notify_ue_module_id(
             oai_emulation.info.eNB_ue_local_uid_to_ue_module_id[enb_module_id][ue_context_p->local_uid] = ue_module_idP;
           }
 
-          return;
+          //return;
         }
       }
     }
+    oai_emulation.info.eNB_ue_module_id_to_rnti[enb_module_id][ue_module_idP] = rntiP;
   }
 
   AssertFatal(enb_module_id == NUMBER_OF_eNB_MAX,

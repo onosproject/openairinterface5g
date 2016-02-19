@@ -1333,11 +1333,10 @@ void update_otg_eNB(module_id_t enb_module_idP, unsigned int ctime)
 
     for (dst_id = 0; dst_id < NUMBER_OF_UE_MAX; dst_id++) {
       for_times += 1;
-
       // generate traffic if the ue is rrc reconfigured state
       //if ((rrc_state=mac_eNB_get_rrc_status(enb_module_idP, dst_id)) > 2 /*RRC_CONNECTED*/ ) {
       if (mac_eNB_get_rrc_status(enb_module_idP, oai_emulation.info.eNB_ue_module_id_to_rnti[enb_module_idP][dst_id]) > 2 ){ 
-	
+
 	if_times += 1;
 	
         for (app_id=0; app_id<MAX_NUM_APPLICATION; app_id++) {

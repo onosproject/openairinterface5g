@@ -270,9 +270,10 @@ unsigned char *packet_gen(
   char *header=NULL;
   int header_size = 0;
 
-
+  //LOG_I(OTG,"Src: %d - Dest: %d - before exit\n",src_instance,dst_instance);
   // check if the app is configured
   if (app >= g_otg->application_idx[src_instance][dst_instance]) {
+	//LOG_I(OTG,"Src: %d - Dest: %d - no packet to generate - no application\n",src_instance,dst_instance);
     return NULL;
   }
 

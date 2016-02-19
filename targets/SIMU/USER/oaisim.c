@@ -453,7 +453,7 @@ l2l1_task (void *args_p)
   // current status is that every UE has a DL scope for a SINGLE eNB (eNB_id=0)
   // at eNB 0, an UL scope for every UE
   FD_lte_phy_scope_ue *form_ue[NUMBER_OF_UE_MAX];
-  FD_lte_phy_scope_enb *form_enb[NUMBER_OF_UE_MAX];
+  FD_lte_phy_scope_enb *form_enb[NUMBER_OF_eNB_MAX];
   char title[255];
   char xname[32] = "oaisim";
   int xargc = 1;
@@ -491,27 +491,26 @@ l2l1_task (void *args_p)
 #ifdef XFORMS
   xargv[0] = xname;
   fl_initialize (&xargc, xargv, NULL, 0, 0);
-  eNB_inst = 0;
+  for (eNB_inst = 0; eNB_inst < NB_eNB_INST; eNB_inst++){
+  	  for (UE_inst = 0; UE_inst < NB_UE_INST; UE_inst++){
+  		  // DL scope at UEs
+  		  if (eNB_inst == 0){
+  			  form_ue[UE_inst] = create_lte_phy_scope_ue();
+  			  sprintf (title, "LTE DL SCOPE eNB %d to UE %d", eNB_inst, UE_inst);
+  			  fl_show_form (form_ue[UE_inst]->lte_phy_scope_ue, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
+  		  }
+  		  // UL scope at eNB 0
+  		  form_enb[eNB_inst] = create_lte_phy_scope_enb();
+  		  sprintf (title, "LTE UL SCOPE UE %d to eNB %d", UE_inst, eNB_inst);
+  		  fl_show_form (form_enb[eNB_inst]->lte_phy_scope_enb, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
 
-  for (UE_inst = 0; UE_inst < NB_UE_INST; UE_inst++) {
-    // DL scope at UEs
-    form_ue[UE_inst] = create_lte_phy_scope_ue();
-    sprintf (title, "LTE DL SCOPE eNB %d to UE %d", eNB_inst, UE_inst);
-    fl_show_form (form_ue[UE_inst]->lte_phy_scope_ue, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
-
-    // UL scope at eNB 0
-    form_enb[UE_inst] = create_lte_phy_scope_enb();
-    sprintf (title, "LTE UL SCOPE UE %d to eNB %d", UE_inst, eNB_inst);
-    fl_show_form (form_enb[UE_inst]->lte_phy_scope_enb, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
-
-    if (openair_daq_vars.use_ia_receiver == 1) {
-      fl_set_button(form_ue[UE_inst]->button_0,1);
-      fl_set_object_label(form_ue[UE_inst]->button_0, "IA Receiver ON");
-      fl_set_object_color(form_ue[UE_inst]->button_0, FL_GREEN, FL_GREEN);
-    }
-
+  		  if (openair_daq_vars.use_ia_receiver == 1) {
+  			  fl_set_button(form_ue[UE_inst]->button_0,1);
+  			  fl_set_object_label(form_ue[UE_inst]->button_0, "IA Receiver ON");
+  			  fl_set_object_color(form_ue[UE_inst]->button_0, FL_GREEN, FL_GREEN);
+  		  }
+  	  }
   }
-
 #endif
 
 #ifdef PRINT_STATS
@@ -1186,21 +1185,20 @@ l2l1_task (void *args_p)
     }
 
 #ifdef XFORMS
-    eNB_inst = 0;
-
-    for (UE_inst = 0; UE_inst < NB_UE_INST; UE_inst++) {
-      phy_scope_UE(form_ue[UE_inst],
-                   PHY_vars_UE_g[UE_inst][0],
-                   eNB_inst,
-                   UE_inst,
-                   7);
-
-      phy_scope_eNB(form_enb[UE_inst],
-                    PHY_vars_eNB_g[eNB_inst][0],
-                    UE_inst);
-
+    for (eNB_inst = 0; eNB_inst< NB_eNB_INST; eNB_inst++){
+    	for (UE_inst = 0; UE_inst < NB_UE_INST; UE_inst++) {
+    		if(eNB_inst == 0){
+    			phy_scope_UE(form_ue[UE_inst],
+    					PHY_vars_UE_g[UE_inst][0],
+						eNB_inst,
+						UE_inst,
+						7);
+    		}
+    		phy_scope_eNB(form_enb[eNB_inst],
+                    	PHY_vars_eNB_g[eNB_inst][0],
+						UE_inst);
+    	}
     }
-
 #endif
 
 #ifdef SMBV
