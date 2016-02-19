@@ -1812,6 +1812,31 @@ rrc_eNB_process_MeasurementReport(
   LOG_I(RRC, "RSRQ of Source %d\n", measResults2->measResultServCell.rsrqResult);
 #endif
 
+  /* if the UE is not in handover mode, start handover procedure */
+  if (ue_context_pP->ue_context.Status != RRC_HO_EXECUTION) {
+    MessageDef      *msg;
+
+    ue_context_pP->ue_context.Status = RRC_HO_EXECUTION;
+    ue_context_pP->ue_context.handover_info->state = HO_REQUEST;
+
+    rrc_eNB_generate_HandoverPreparationInformation(ctxt_pP,
+        ue_context_pP,
+        measResults2->measResultNeighCells->choice.
+        measResultListEUTRA.list.array[0]->physCellId);
+
+    msg = itti_alloc_new_message(TASK_RRC_ENB, X2AP_HANDOVER_REQ);
+    X2AP_HANDOVER_REQ(msg).source_rnti = ctxt_pP->rnti;
+    X2AP_HANDOVER_REQ(msg).target_physCellId = measResults2->measResultNeighCells->choice.
+                                               measResultListEUTRA.list.array[0]->physCellId;
+    /* TODO: don't do that, X2AP should find the target by itself */
+    X2AP_HANDOVER_REQ(msg).target_mod_id = get_adjacent_cell_mod_id(X2AP_HANDOVER_REQ(msg).target_physCellId);
+    itti_send_msg_to_task(TASK_X2AP, ENB_MODULE_ID_TO_INSTANCE(ctxt_pP->module_id), msg);
+  } else {
+    LOG_D(RRC, "[eNB %d] Frame %d: Ignoring MeasReport from UE %x as Handover is in progress... \n", ctxt_pP->module_id, ctxt_pP->frame,
+          ctxt_pP->rnti);
+  }
+
+#if 0
   if (ue_context_pP->ue_context.handover_info->ho_prepare != 0xF0) {
     rrc_eNB_generate_HandoverPreparationInformation(ctxt_pP,
         ue_context_pP,
@@ -1821,6 +1846,7 @@ rrc_eNB_process_MeasurementReport(
     LOG_D(RRC, "[eNB %d] Frame %d: Ignoring MeasReport from UE %x as Handover is in progress... \n", ctxt_pP->module_id, ctxt_pP->frame,
           ctxt_pP->rnti);
   }
+#endif
 
   //Look for IP address of the target eNB
   //Send Handover Request -> target eNB
@@ -1899,6 +1925,46 @@ rrc_eNB_generate_HandoverPreparationInformation(
   }
 }
 
+static int global_rnti;
+
+void rrc_eNB_process_handoverPreparationInformation(int mod_id, x2ap_handover_req_t *m)
+{
+  struct rrc_eNB_ue_context_s*        ue_context_target_p = NULL;
+  /* TODO: get proper UE rnti */
+  int rnti = taus() & 0xffff;
+
+global_rnti = rnti;
+
+  ue_context_target_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id], rnti);
+  if (ue_context_target_p != NULL) {
+    LOG_E(RRC, "\nError in obtaining free UE id in target eNB for handover \n");
+    return;
+  }
+
+  ue_context_target_p = rrc_eNB_allocate_new_UE_context(&eNB_rrc_inst[mod_id]);
+  if (ue_context_target_p == NULL) {
+    LOG_E(RRC, "Cannot create new UE context\n");
+    return;
+  }
+
+  ue_context_target_p->ue_id_rnti = rnti;
+  ue_context_target_p->ue_context.rnti = rnti;
+
+  RB_INSERT(rrc_ue_tree_s, &eNB_rrc_inst[mod_id].rrc_ue_head, ue_context_target_p);
+  LOG_D(RRC, "eNB %d: Created new UE context uid %u\n", mod_id, ue_context_target_p->local_uid);
+
+  ue_context_target_p->ue_context.handover_info = CALLOC(1, sizeof(*(ue_context_target_p->ue_context.handover_info)));
+  ue_context_target_p->ue_context.handover_info->source_x2id = m->source_x2id;
+  ue_context_target_p->ue_context.Status = RRC_HO_EXECUTION;
+  ue_context_target_p->ue_context.handover_info->state = HO_ACK;
+
+  /* TODO: remove this hack */
+  ue_context_target_p->ue_context.handover_info->modid_t = mod_id;
+  ue_context_target_p->ue_context.handover_info->modid_s = 1-mod_id;
+  ue_context_target_p->ue_context.handover_info->ueid_s= m->source_rnti;
+}
+
+#if 0
 //-----------------------------------------------------------------------------
 void
 rrc_eNB_process_handoverPreparationInformation(
@@ -1983,6 +2049,7 @@ rrc_eNB_process_handoverPreparationInformation(
     //rrc_create_old_crnti(ctxt_pP,ue_context_target_p->ue_context.handover_info->modid_s,0, ue_context_pP->ue_id_rnti);
 
 }
+#endif
 
 //-----------------------------------------------------------------------------
 void
@@ -1994,12 +2061,12 @@ check_handovers(
   int                                 result;
   struct rrc_eNB_ue_context_s*        ue_context_p;
 
-
   RB_FOREACH(ue_context_p, rrc_ue_tree_s, &eNB_rrc_inst[ctxt_pP->module_id].rrc_ue_head) {
     ctxt_pP->rnti  = ue_context_p->ue_id_rnti;
 
-    if (ue_context_p->ue_context.handover_info != NULL) {
-      if (ue_context_p->ue_context.handover_info->ho_prepare == 0xFF) {
+    if (ue_context_p->ue_context.Status == RRC_HO_EXECUTION && ue_context_p->ue_context.handover_info != NULL) {
+      /* in the source, UE in HO_PREPARE mode */
+      if (ue_context_p->ue_context.handover_info->state == HO_PREPARE /*ho_prepare == 0xFF*/) {
         LOG_D(RRC,
               "[eNB %d] Frame %d: Incoming handover detected for new UE_id %x (source eNB %d->target eNB %d) \n",
               ctxt_pP->module_id,
@@ -2008,19 +2075,45 @@ check_handovers(
               ctxt_pP->module_id,
               ue_context_p->ue_context.handover_info->modid_t);
         // source eNB generates rrcconnectionreconfiguration to prepare the HO
+        LOG_I(RRC,
+                "[eNB %d] Frame %d : Logical Channel UL-DCCH, processing RRCHandoverPreparationInformation, sending RRCConnectionReconfiguration to UE %d \n",
+                ctxt_pP->module_id, ctxt_pP->frame, ue_context_p->ue_context.rnti);
+
+/* TODO: remove this hack, this call has to be done here I think but we must do
+ *       it before rrc_eNB_configure_rbs_handover because the SRBs are copied
+ *       instead of coming from the X2AP message as should be done
+ */
+//        rrc_eNB_generate_RRCConnectionReconfiguration_handover(
+//            ctxt_pP,
+//            ue_context_p,
+//            NULL,
+//            0);
+#if 0
         rrc_eNB_process_handoverPreparationInformation(
           ctxt_pP,
           ue_context_p);
-        ue_context_p->ue_context.handover_info->ho_prepare = 0xF0;
+#endif
+        //ue_context_p->ue_context.handover_info->ho_prepare = 0xF0;
+        ue_context_p->ue_context.handover_info->state = HO_COMPLETE;
       }
 
-      if (ue_context_p->ue_context.handover_info->ho_prepare == 0xF2) {
-    	  // Configure target
-    	 rrc_eNB_configure_rbs_handover(ue_context_p,ctxt_pP);
-	 	 ue_context_p->ue_context.handover_info->ho_prepare = 0x00;
+      /* in the target, UE in HO_ACK mode */
+      if (ue_context_p->ue_context.handover_info->state == HO_ACK /*ho_prepare == 0xF2*/) {
+        MessageDef *msg;
+        // Configure target
+        rrc_eNB_configure_rbs_handover(ue_context_p,ctxt_pP);
+//	 	 ue_context_p->ue_context.handover_info->ho_prepare = 0x00;
+        ue_context_p->ue_context.handover_info->state = HO_CONFIGURED;
+
+        msg = itti_alloc_new_message(TASK_RRC_ENB, X2AP_HANDOVER_RESP);
+        /* TODO: remove this hack */
+        X2AP_HANDOVER_RESP(msg).target_mod_id = 1 - ctxt_pP->module_id;
+        X2AP_HANDOVER_RESP(msg).source_x2id = ue_context_p->ue_context.handover_info->source_x2id;
+        itti_send_msg_to_task(TASK_X2AP, ENB_MODULE_ID_TO_INSTANCE(ctxt_pP->module_id), msg);
       }
 
 
+      /* THIS CODE IS NOT RUN */
       if (ue_context_p->ue_context.handover_info->ho_complete == 0xF1) {
         LOG_D(RRC,
              "[eNB %d] Frame %d: handover Command received for new UE_id  %x current eNB %d target eNB: %d \n",
@@ -2057,6 +2150,21 @@ rrc_eNB_configure_rbs_handover(struct rrc_eNB_ue_context_s* ue_context_p, protoc
 	    	        &eNB_rrc_inst[ue_context_p->ue_context.handover_info->modid_s],
 	    			ue_context_p->ue_context.handover_info->ueid_s);
 			if(ue_source_context!=NULL){
+  /* HACK - we have to call rrc_eNB_generate_RRCConnectionReconfiguration_handover before for the SRBs to be okay */
+  /* to be removed when X2 messages are done */
+  {
+    protocol_ctxt_t c = *ctxt_pP;
+    c.module_id = 0;
+    c.enb_flag = 1;
+    c.instance = 0;
+    c.rnti = ue_source_context->ue_context.rnti;
+    c.eNB_index = 0;
+    rrc_eNB_generate_RRCConnectionReconfiguration_handover(
+          &c,
+          ue_source_context,
+           NULL,
+           0);
+  }
 		    	  LOG_D(RRC,"Frame: %d-Entering target: C-RNTI %x-eNB: %d-MOD_ID: %d\n",ctxt_pP->frame,ctxt_pP->rnti,ctxt_pP->eNB_index,ctxt_pP->module_id);
 	    	     // E-RABS
 	    	     // Emulating transmission/reception (just a memory copy)
@@ -2235,6 +2343,8 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
     rv[i] = taus() & 0xff;
     LOG_D(RRC, " %x.", rv[i]);
   }
+rv[0] = global_rnti&255;
+rv[1] = (global_rnti>>8) & 255;
 
   LOG_D(RRC, "[eNB %d] Frame %d : handover reparation: add target eNB SRB1 and PHYConfigDedicated reconfiguration\n",
         ctxt_pP->module_id, ctxt_pP->frame);
@@ -2276,6 +2386,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   *logicalchannelgroup = 0;
   SRB1_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup;
 
+  ASN_SEQUENCE_ADD(&SRB_configList->list, SRB1_config);
   ASN_SEQUENCE_ADD(&SRB_configList2->list, SRB1_config);
 
   //2nd: now reconfigure phy config dedicated
@@ -2484,8 +2595,8 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   // Configure target eNB SRB2
   /// SRB2
   SRB2_config = CALLOC(1, sizeof(*SRB2_config));
-  SRB_configList2 = CALLOC(1, sizeof(*SRB_configList2));
-  memset(SRB_configList2, 0, sizeof(*SRB_configList2));
+  //SRB_configList2 = CALLOC(1, sizeof(*SRB_configList2));
+  //memset(SRB_configList2, 0, sizeof(*SRB_configList2));
 
   SRB2_config->srb_Identity = 1;
   SRB2_rlc_config = CALLOC(1, sizeof(*SRB2_rlc_config));
@@ -4547,6 +4658,20 @@ rrc_enb_task(
       break;
 
 #   endif
+
+    case X2AP_HANDOVER_REQ:
+      LOG_I(RRC, "[eNB %d] Received %s\n", instance, msg_name_p);
+      rrc_eNB_process_handoverPreparationInformation(instance, &X2AP_HANDOVER_REQ(msg_p));
+      break;
+
+    case X2AP_HANDOVER_RESP: {
+      struct rrc_eNB_ue_context_s *ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[instance], X2AP_HANDOVER_RESP(msg_p).source_rnti);
+      LOG_I(RRC, "[eNB %d] Received %s\n", instance, msg_name_p);
+      DevAssert(ue_context_p != NULL);
+      if (ue_context_p->ue_context.handover_info->state != HO_REQUEST) abort();
+      ue_context_p->ue_context.handover_info->state = HO_PREPARE;
+      break;
+    }
 
       /* Messages from eNB app */
     case RRC_CONFIGURATION_REQ:

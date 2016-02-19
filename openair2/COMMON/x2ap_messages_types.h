@@ -30,10 +30,14 @@
 #ifndef X2AP_MESSAGES_TYPES_H_
 #define X2AP_MESSAGES_TYPES_H_
 
+#include "PhysCellId.h"
+
 //-------------------------------------------------------------------------------------------//
 // Defines to access message fields.
 
 #define X2AP_REGISTER_ENB_REQ(mSGpTR)           (mSGpTR)->ittiMsg.x2ap_register_enb_req
+#define X2AP_HANDOVER_REQ(mSGpTR)               (mSGpTR)->ittiMsg.x2ap_handover_req
+#define X2AP_HANDOVER_RESP(mSGpTR)               (mSGpTR)->ittiMsg.x2ap_handover_resp
 #define X2AP_REGISTER_ENB_CNF(mSGpTR)           (mSGpTR)->ittiMsg.x2ap_register_enb_cnf
 #define X2AP_DEREGISTERED_ENB_IND(mSGpTR)       (mSGpTR)->ittiMsg.x2ap_deregistered_enb_ind
 
@@ -104,5 +108,23 @@ typedef struct x2ap_deregistered_enb_ind_s {
   /* Nb of connected eNBs */
   uint8_t          nb_x2;
 } x2ap_deregistered_enb_ind_t;
+
+//-------------------------------------------------------------------------------------------//
+// X2AP <-> RRC
+
+typedef struct x2ap_handover_req_s {
+  int source_rnti;                       /* TODO: to be fixed/remove */
+  int source_x2id;                       /* TODO: to be fixed/remove */
+  PhysCellId_t target_physCellId;
+  /* TODO: this parameter has to be removed */
+  int target_mod_id;
+} x2ap_handover_req_t;
+
+typedef struct x2ap_handover_resp_s {
+  int source_rnti;                       /* TODO: to be fixed/remove */
+  int source_x2id;                       /* TODO: to be fixed/remove */
+  /* TODO: this parameter has to be removed */
+  int target_mod_id;
+} x2ap_handover_resp_t;
 
 #endif /* X2AP_MESSAGES_TYPES_H_ */

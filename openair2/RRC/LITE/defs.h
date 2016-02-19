@@ -166,7 +166,11 @@ typedef enum HO_STATE_e {
   HO_MEASURMENT,
   HO_PREPARE,
   HO_CMD, // initiated by the src eNB
-  HO_COMPLETE // initiated by the target eNB
+  HO_COMPLETE, // initiated by the target eNB
+
+  HO_REQUEST,
+  HO_ACK,
+  HO_CONFIGURED,
 } HO_STATE_t;
 
 //#define NUMBER_OF_UE_MAX MAX_MOBILES_PER_RG
@@ -235,8 +239,8 @@ typedef struct e_rab_param_s {
 
 /* Intermediate structure for Handover management. Associated per-UE in eNB_RRC_INST */
 typedef struct HANDOVER_INFO_s {
-  uint8_t ho_prepare;
-  uint8_t ho_complete;
+int ho_prepare, ho_complete;
+  HO_STATE_t state; //current state of handover
   uint8_t modid_s; //module_idP of serving cell
   uint8_t modid_t; //module_idP of target cell
   uint16_t ueid_s; //UE index in serving cell
@@ -245,6 +249,8 @@ typedef struct HANDOVER_INFO_s {
   AS_Context_t as_context; /* They are mandatory for HO */
   uint8_t buf[RRC_BUF_SIZE];  /* ASN.1 encoded handoverCommandMessage */
   int size;   /* size of above message in bytes */
+  /* TODO: to remove or not? */
+  int source_x2id;
 } HANDOVER_INFO;
 
 #define RRC_HEADER_SIZE_MAX 64

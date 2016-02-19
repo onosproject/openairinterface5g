@@ -42,4 +42,13 @@ int x2ap_eNB_generate_x2_setup_failure ( uint32_t assoc_id,
 					 X2ap_Cause_PR cause_type,
 					 long cause_value,
 					 long time_to_waitx);
+
+int x2ap_eNB_generate_x2_handover_request(x2ap_eNB_instance_t *instance_p, 
+				          x2ap_eNB_data_t *x2ap_enb_data_p,
+                                          int source_x2id);
+
+int x2ap_eNB_generate_x2_handover_response(x2ap_eNB_instance_t *instance_p, 
+				           x2ap_eNB_data_t *x2ap_enb_data_p,
+                                           int source_x2id);
+
 #endif /*  X2AP_ENB_GENERATE_MESSAGES_H_ */

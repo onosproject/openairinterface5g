@@ -206,8 +206,91 @@ do {						\
 	(bitstring)->buf[1] = (eci) >> 12;			\
 	(bitstring)->buf[2] = (eci) >> 4;			\
 	(bitstring)->buf[3] = (eci) << 4;		\
-}while(0)   
+}while(0)
 
+#define MMEGID_TO_OCTET_STRING(mmegid,octetstring)        \
+do {                                \
+    (octetstring)->size=2;                    \
+    (octetstring)->buf=calloc (2, sizeof (uint8_t));    \
+    (octetstring)->buf[0] = (mmegid) >> 8;             \
+    (octetstring)->buf[1] = (mmegid);            \
+}while(0)
+
+#define MMEC_TO_OCTET_STRING(mmec, octetstring)        \
+do {                            \
+    (octetstring)->size=1;                \
+    (octetstring)->buf=calloc (1, sizeof (uint8_t));\
+    (octetstring)->buf[0] = (mmec);            \
+}while(0)
+
+#define ENCRALG_TO_BIT_STRING(encralg, bitstring)    \
+    do {                        \
+    (bitstring)->size=2;                \
+    (bitstring)->bits_unused=0;            \
+    (bitstring)->buf=calloc (1, sizeof (uint8_t));    \
+    (bitstring)->buf[0] = (encralg) >> 8;         \
+    (bitstring)->buf[1] = (encralg);        \
+    }while(0)
+
+#define INTPROTALG_TO_BIT_STRING(intprotalg, bitstring)    \
+do {                                \
+    (bitstring)->size=2;                    \
+    (bitstring)->bits_unused=0;                \
+    (bitstring)->buf=calloc (2, sizeof (uint8_t));        \
+    (bitstring)->buf[0] = (intprotalg) >> 8;         \
+    (bitstring)->buf[1] = (intprotalg);            \
+}while(0)
+
+#define KENB_STAR_TO_BIT_STRING(kenbstar, bitstring)    \
+do {                            \
+    (bitstring)->size=32;                \
+    (bitstring)->bits_unused=0;            \
+    (bitstring)->buf= calloc (32, sizeof (uint8_t));\
+    memcpy((bitstring)->buf, kenbstar, 32*sizeof(uint8_t));            \
+}while(0)
+
+#define UEAGMAXBITRTD_TO_ASN_PRIMITIVES(uegmaxbitrtd, asnprimitives)        \
+do {                                         \
+    (asnprimitives)->size=5;                        \
+    (asnprimitives)->buf=calloc (5, sizeof (uint8_t));            \
+    (asnprimitives)->buf[0] = (uegmaxbitrtd) >> 32;                \
+    (asnprimitives)->buf[1] = (uegmaxbitrtd) >> 24;                \
+    (asnprimitives)->buf[2] = (uegmaxbitrtd) >> 16;                \
+    (asnprimitives)->buf[3] = (uegmaxbitrtd) >> 8;                \
+    (asnprimitives)->buf[4] = (uegmaxbitrtd);                \
+ }while(0)
+
+#define UEAGMAXBITRTU_TO_ASN_PRIMITIVES(uegmaxbitrtu, asnprimitives)        \
+do {                                         \
+    (asnprimitives)->size=5;                        \
+    (asnprimitives)->buf=calloc (5, sizeof (uint8_t));            \
+    (asnprimitives)->buf[0] = (uegmaxbitrtu) >> 32;                \
+    (asnprimitives)->buf[1] = (uegmaxbitrtu) >> 24;                \
+    (asnprimitives)->buf[2] = (uegmaxbitrtu) >> 16;                \
+    (asnprimitives)->buf[3] = (uegmaxbitrtu) >> 8;                \
+    (asnprimitives)->buf[4] = (uegmaxbitrtu);                \
+ }while(0)
+
+#define TRLA_TO_BIT_STRING(trla, bitstring)        \
+do {                            \
+    (bitstring)->size=4;                \
+    (bitstring)->bits_unused=0;            \
+    (bitstring)->buf=calloc (4, sizeof (uint8_t));  \
+    (bitstring)->buf[0] = (trla)>>24;              \
+    (bitstring)->buf[1] = (trla)>>16;           \
+    (bitstring)->buf[2] = (trla)>>8;           \
+    (bitstring)->buf[3] = (trla);           \
+}while(0)
+
+#define GTP_TEID_TO_OCTET_STRING(gtpteid, octetstring)    \
+do {                            \
+    (octetstring)->size=4;                \
+    (octetstring)->buf=calloc (4, sizeof (uint8_t));\
+    (octetstring)->buf[0] = (gtpteid)>>24;          \
+    (octetstring)->buf[1] = (gtpteid)>>16;       \
+    (octetstring)->buf[2] = (gtpteid)>>8;       \
+    (octetstring)->buf[3] = (gtpteid);           \
+}while(0)
 
 #define TAC_TO_OCTET_STRING(tac, octetstring)\
 do {						\

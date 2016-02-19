@@ -165,7 +165,7 @@ int xer_sprint (char *string, size_t string_size, asn_TYPE_descriptor_t *td, voi
     er.encoded = string_buffer.string_size;
   } else {
     if (er.encoded > string_buffer.string_size) {
-      LOG_E(RRC, "xer_sprint string buffer too small, got %d need %d!", string_buffer.string_size, er.encoded);
+      //LOG_E(RRC, "xer_sprint string buffer too small, got %d need %d!", string_buffer.string_size, er.encoded);
       er.encoded = string_buffer.string_size;
     }
   }
