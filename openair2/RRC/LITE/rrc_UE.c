@@ -947,7 +947,7 @@ rrc_ue_process_measConfig(
     LOG_I(RRC,"[UE %d] Configuring mobility optimization params for UE %d \n",
           ctxt_pP->module_id,UE_rrc_inst[ctxt_pP->module_id].Info[0].UE_index);
   }
-}
+ }
 
 //-----------------------------------------------------------------------------
 void
@@ -1967,6 +1967,7 @@ rrc_ue_decode_dcch(
           eNB_indexP);
 
         if (target_eNB_index != 0xFF) {
+          init_meas_timers(ctxt_pP); // Initialize handover measurement timers
           rrc_ue_generate_RRCConnectionReconfigurationComplete(
             ctxt_pP,
             target_eNB_index,
@@ -3636,10 +3637,10 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
               //LOG_N(RRC,"[UE%d] Frame %d Check below lines for segfault :), Fix me \n",ctxt_pP->module_id, frameP);
               if(!((ttt_ms=get_ttt_ms(ctxt_pP->module_id))>=0))
             	  ttt_ms = timeToTrigger_ms[UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger];
-              //LOG_D(RRC,"Time to trigger for eNB %d is set to %d\n",ctxt_pP->module_id,ttt_ms);
+              //LOG_D(RRC,"i: %d, j= %d, reportConfigId: %d:Time to trigger for eNB %d is set to %d-index: %d\n",i,j,reportConfigId,ctxt_pP->module_id,ttt_ms,UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger);
               // Freq specific offset of neighbor cell freq
               if(!((ofn=get_ofn(ctxt_pP->module_id))>=0))
-            	  ofn=5;
+            	  ofn=2;
               //LOG_D(RRC,"OFN for eNB %d is set to %d\n",ctxt_pP->module_id,ofn);
               //((UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq != NULL) ?
 
@@ -3739,8 +3740,10 @@ static uint8_t check_trigger_meas_event(
   TimeToTrigger_t ttt )
 {
   uint8_t eNB_offset;
-  uint8_t currentCellIndex = mac_xface->lte_frame_parms->Nid_cell;
+  uint8_t currentCellIndex = mac_xface->get_nid_cell(ue_mod_idP,0);
   uint8_t tmp_offset;
+
+  //LOG_I(RRC,"Frame: %d-Currentcell-debug: %d-Num_Cells: %d\n",frameP,currentCellIndex,mac_xface->get_n_adj_cells(ue_mod_idP,0));
 
   LOG_I(RRC,"[UE %d] ofn(%d) ocn(%d) hys(%d) ofs(%d) ocs(%d) a3_offset(%d) ttt(%d) rssi %3.1f\n",
         ue_mod_idP,
@@ -3750,7 +3753,7 @@ static uint8_t check_trigger_meas_event(
   for (eNB_offset = 0; eNB_offset<1+mac_xface->get_n_adj_cells(ue_mod_idP,0); eNB_offset++) {
     //for (eNB_offset = 1;(eNB_offset<1+mac_xface->get_n_adj_cells(ue_mod_idP,0));eNB_offset++) {
     /* RHS: Verify that idx 0 corresponds to currentCellIndex in rsrp array */
-    if((eNB_offset!=eNB_index)&&(eNB_offset<NB_eNB_INST)) {
+    if(eNB_offset!=eNB_index){//NB_eNB_INST
       if(eNB_offset<eNB_index) {
         tmp_offset = eNB_offset;
       } else {
@@ -3768,10 +3771,10 @@ static uint8_t check_trigger_meas_event(
       }
 
       if (UE_rrc_inst->measTimer[ue_cnx_index][meas_index][tmp_offset] >= ttt) {
-        UE_rrc_inst->HandoverInfoUe.targetCellId = get_adjacent_cell_id(ue_mod_idP,tmp_offset); //WARNING!!!...check this!
+        UE_rrc_inst->HandoverInfoUe.targetCellId = get_adjacent_cell_id(currentCellIndex,tmp_offset); //WARNING!!!...check this!
         LOG_D(RRC,"[UE %d] Frame %d eNB %d: Handover triggered: targetCellId: %d currentCellId: %d eNB_offset: %d rsrp source: %3.1f rsrp target: %3.1f\n", \
               ue_mod_idP, frameP, eNB_index,
-              UE_rrc_inst->HandoverInfoUe.targetCellId,ue_cnx_index,eNB_offset,
+              UE_rrc_inst->HandoverInfoUe.targetCellId,currentCellIndex,eNB_offset,
               (dB_fixed_times10(UE_rrc_inst[ue_mod_idP].rsrp_db[0])/10.0)-mac_xface->get_rx_total_gain_dB(ue_mod_idP,0)-dB_fixed(mac_xface->lte_frame_parms->N_RB_DL*12),
               (dB_fixed_times10(UE_rrc_inst[ue_mod_idP].rsrp_db[eNB_offset])/10.0)-mac_xface->get_rx_total_gain_dB(ue_mod_idP,
                   0)-dB_fixed(mac_xface->lte_frame_parms->N_RB_DL*12));
@@ -3789,6 +3792,18 @@ static uint8_t check_trigger_meas_event(
   return 0;
 }
 
+// Initialize the handover measurement timers
+void init_meas_timers(const protocol_ctxt_t* const ctxt_pP){
+	uint8_t               i,j,eNB_offset;
+
+	  for(i=0 ; i<NB_CNX_UE ; i++) {
+	    for(j=0 ; j<MAX_MEAS_ID ; j++) {
+	    	for (eNB_offset = 0; eNB_offset<1+mac_xface->get_n_adj_cells(ctxt_pP->module_id,0); eNB_offset++) {
+	    		UE_rrc_inst->measTimer[i][j][eNB_offset]=0;
+	    	}
+	     }
+	   }
+}
 #ifdef Rel10
 //-----------------------------------------------------------------------------
 int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, const uint8_t* const Sdu, const uint8_t Sdu_len, const uint8_t mbsfn_sync_area )

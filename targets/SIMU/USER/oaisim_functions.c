@@ -1647,6 +1647,7 @@ int user_control_interface(int sfn) {
 	printf("RSRP 3 (%d) %f dBm/RE\t",UE->PHY_measurements.adj_cell_id[2],10*log10(1+UE->PHY_measurements.rsrp[3])-UE->rx_total_gain_dB);
 	printf("RSRP 4 (%d) %f dBm/RE\t",UE->PHY_measurements.adj_cell_id[3],10*log10(1+UE->PHY_measurements.rsrp[4])-UE->rx_total_gain_dB);
 	printf("RSRP 5 (%d) %f dBm/RE\t",UE->PHY_measurements.adj_cell_id[4],10*log10(1+UE->PHY_measurements.rsrp[5])-UE->rx_total_gain_dB);
+	printf("RSRP 6 (%d) %f dBm/RE\t",UE->PHY_measurements.adj_cell_id[5],10*log10(1+UE->PHY_measurements.rsrp[6])-UE->rx_total_gain_dB);
 	printf("\n");
       }
       else {

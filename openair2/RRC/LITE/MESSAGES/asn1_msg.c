@@ -120,7 +120,7 @@ extern unsigned char NB_eNB_INST;
 
 uint16_t two_tier_hexagonal_cellIds[7] = {0,1,2,4,5,7,8};
 uint16_t two_tier_hexagonal_adjacent_cellIds[7][6] = {{1,2,4,5,7,8},    // CellId 0
-  {11,18,2,0,8,15}, // CellId 1
+  {11,0,2,18,8,15}, // CellId 1
   {18,13,3,4,0,1},  // CellId 2
   {2,3,14,6,5,0},   // CellId 4
   {0,4,6,16,9,7},   // CellId 5

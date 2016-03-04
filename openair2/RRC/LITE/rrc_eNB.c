@@ -2336,6 +2336,10 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList *dedicatedInfoNASList;
   protocol_ctxt_t                     ctxt;
 
+  // HO parameters
+  Hysteresis_t  hys;
+  TimeToTrigger_t ttt_ms;
+
   LOG_D(RRC, "[eNB %d] Frame %d: handover preparation: get the newSourceUEIdentity (C-RNTI): ",
         ctxt_pP->module_id, ctxt_pP->frame);
 
@@ -2874,6 +2878,24 @@ rv[1] = (global_rnti>>8) & 255;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+
+  if((hys=get_hys(ctxt_pP->module_id))>=0){
+  	ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = hys;
+  	LOG_D(RRC,"Hysteresis for eNB %d is set to %ld\n",ctxt_pP->module_id,hys);
+  }
+  else{
+  	ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = 0.5; // FIXME ...hysteresis is of type long!
+  	//LOG_D(RRC,"Hysteresis for eNB %d is set to %d\n",ctxt_pP->module_id,0);
+  }
+  if((ttt_ms=get_ttt_ms(ctxt_pP->module_id))>=0){
+  	ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger = ttt_ms;
+  	LOG_D(RRC,"Time to trigger for eNB %d is set to %d\n",ctxt_pP->module_id,ttt_ms);
+  }
+  else{
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger =
+    TimeToTrigger_ms40;
+  	//LOG_D(RRC,"Time to trigger for eNB %d is set to %d\n",ctxt_pP->module_id,TimeToTrigger_ms40);
+  }
 
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A3);
 

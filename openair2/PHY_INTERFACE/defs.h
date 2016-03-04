@@ -279,6 +279,9 @@ typedef struct {
   /// Function for UE MAC to set the layer3 filtered RSRP/RSRQ measurements
   uint8_t (*set_RSRQ_filtered)(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index,float rsrp);
 
+  // Function to get the Nid cell
+  uint16_t (*get_nid_cell) (uint8_t Mod_id,uint8_t CC_id);
+
   /// Function for UE/eNB MAC to retrieve number of PRACH in TDD
   uint8_t (*get_num_prach_tdd)(LTE_DL_FRAME_PARMS *frame_parms);
 

@@ -499,6 +499,7 @@ int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,ui
   mac_xface->get_RSRQ               = get_RSRQ;
   mac_xface->get_RSSI               = get_RSSI;
   mac_xface->get_n_adj_cells        = get_n_adj_cells;
+  mac_xface->get_nid_cell			= get_nid_cell;
   mac_xface->get_rx_total_gain_dB   = get_rx_total_gain_dB;
   mac_xface->get_Po_NOMINAL_PUSCH   = get_Po_NOMINAL_PUSCH;
   mac_xface->get_num_prach_tdd      = get_num_prach_tdd;

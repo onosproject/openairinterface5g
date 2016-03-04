@@ -171,6 +171,11 @@ int8_t set_RSRQ_filtered(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index,float rs
 
 }
 
+uint16_t get_nid_cell(uint8_t Mod_id,uint8_t CC_id){
+	LTE_DL_FRAME_PARMS *lte_frame_parms = &PHY_vars_UE_g[Mod_id][CC_id]->lte_frame_parms;
+	return lte_frame_parms->Nid_cell;
+}
+
 void ue_rrc_measurements(PHY_VARS_UE *phy_vars_ue,
                          uint8_t slot,
                          uint8_t abstraction_flag)
