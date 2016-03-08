@@ -1561,6 +1561,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
     *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP = FilterCoefficient_fc4;
     *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ = FilterCoefficient_fc4;
 
+#if 0
     LOG_I(RRC,
           "[eNB %d] Frame %d: potential handover preparation: store the information in an intermediate structure in case of failure\n",
           ctxt_pP->module_id, ctxt_pP->frame);
@@ -1582,6 +1583,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
            (void*)ue_context_pP->ue_context.physicalConfigDedicated, sizeof(PhysicalConfigDedicated_t));
     ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.sps_Config = NULL;
     //memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.sps_Config,(void *)rrc_inst->sps_Config[ue_mod_idP],sizeof(SPS_Config_t));
+#endif
 
   }
 
@@ -1816,6 +1818,8 @@ rrc_eNB_process_MeasurementReport(
   if (ue_context_pP->ue_context.Status != RRC_HO_EXECUTION) {
     MessageDef      *msg;
 
+    ue_context_pP->ue_context.handover_info = CALLOC(1, sizeof(*(ue_context_pP->ue_context.handover_info)));
+
     ue_context_pP->ue_context.Status = RRC_HO_EXECUTION;
     ue_context_pP->ue_context.handover_info->state = HO_REQUEST;
 
@@ -1830,6 +1834,28 @@ rrc_eNB_process_MeasurementReport(
                                                measResultListEUTRA.list.array[0]->physCellId;
     /* TODO: don't do that, X2AP should find the target by itself */
     X2AP_HANDOVER_REQ(msg).target_mod_id = get_adjacent_cell_mod_id(X2AP_HANDOVER_REQ(msg).target_physCellId);
+
+    LOG_I(RRC,
+          "[eNB %d] Frame %d: potential handover preparation: store the information in an intermediate structure in case of failure\n",
+          ctxt_pP->module_id, ctxt_pP->frame);
+    // store the information in an intermediate structure for Hanodver management
+    //rrc_inst->handover_info.as_config.sourceRadioResourceConfig.srb_ToAddModList = CALLOC(1,sizeof());
+//    ue_context_pP->ue_context.handover_info = CALLOC(1, sizeof(*(ue_context_pP->ue_context.handover_info)));
+    //memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.srb_ToAddModList,(void *)SRB_list,sizeof(SRB_ToAddModList_t));
+    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.srb_ToAddModList = ue_context_pP->ue_context.SRB_configList; //SRB_configList2;
+    //memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.drb_ToAddModList,(void *)DRB_list,sizeof(DRB_ToAddModList_t));
+    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.drb_ToAddModList = ue_context_pP->ue_context.DRB_configList; //*DRB_configList;
+    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.drb_ToReleaseList = NULL;
+    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.mac_MainConfig =
+      CALLOC(1, sizeof(*ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.mac_MainConfig));
+    memcpy((void*)ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.mac_MainConfig,
+           (void *)ue_context_pP->ue_context.mac_MainConfig /* mac_MainConfig */, sizeof(MAC_MainConfig_t));
+    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.physicalConfigDedicated =
+      CALLOC(1, sizeof(PhysicalConfigDedicated_t));
+    memcpy((void*)ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.physicalConfigDedicated,
+           (void*)ue_context_pP->ue_context.physicalConfigDedicated, sizeof(PhysicalConfigDedicated_t));
+    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.sps_Config = NULL;
+    //memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.sps_Config,(void *)rrc_inst->sps_Config[ue_mod_idP],sizeof(SPS_Config_t));
     itti_send_msg_to_task(TASK_X2AP, ENB_MODULE_ID_TO_INSTANCE(ctxt_pP->module_id), msg);
   } else {
     LOG_D(RRC, "[eNB %d] Frame %d: Ignoring MeasReport from UE %x as Handover is in progress... \n", ctxt_pP->module_id, ctxt_pP->frame,
@@ -2140,8 +2166,8 @@ check_handovers(
 
 
 void
-rrc_eNB_configure_rbs_handover(struct rrc_eNB_ue_context_s* ue_context_p, protocol_ctxt_t* const ctxt_pP){
-
+rrc_eNB_configure_rbs_handover(struct rrc_eNB_ue_context_s* ue_context_p, protocol_ctxt_t* const ctxt_pP)
+{
 	  struct rrc_eNB_ue_context_s* 		  ue_source_context;
 	  uint16_t                            Idx;
 
@@ -2154,11 +2180,11 @@ rrc_eNB_configure_rbs_handover(struct rrc_eNB_ue_context_s* ue_context_p, protoc
   /* to be removed when X2 messages are done */
   {
     protocol_ctxt_t c = *ctxt_pP;
-    c.module_id = 0;
+    c.module_id = 1 - c.module_id;
     c.enb_flag = 1;
-    c.instance = 0;
+    c.instance = 1 - c.instance;
     c.rnti = ue_source_context->ue_context.rnti;
-    c.eNB_index = 0;
+    c.eNB_index = 1 - c.eNB_index;
     rrc_eNB_generate_RRCConnectionReconfiguration_handover(
           &c,
           ue_source_context,
@@ -2347,6 +2373,8 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
     rv[i] = taus() & 0xff;
     LOG_D(RRC, " %x.", rv[i]);
   }
+  LOG_D(RRC, "\n");
+
 rv[0] = global_rnti&255;
 rv[1] = (global_rnti>>8) & 255;
 
