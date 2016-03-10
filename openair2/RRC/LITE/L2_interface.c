@@ -752,5 +752,6 @@ void rrc_lite_ue_update_ho_status(module_id_t Mod_idP){
 	LOG_D(RRC,"Reset HO timer in RRC\n");
 	UE_rrc_inst[Mod_idP].Info[0].T304_active = 0; // Stop the timer (MAC procedure was successful)
 	//UE_rrc_inst[Mod_idP].HandoverInfoUe.measFlag = 0; // Stop the measurements
+	UE_mac_inst[Mod_idP].RA_active = 0;
 	UE_rrc_inst[Mod_idP].Info[0].State = RRC_RECONFIGURED;
 }
