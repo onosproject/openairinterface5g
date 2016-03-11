@@ -1468,16 +1468,17 @@ void update_otg_eNB(module_id_t enb_module_idP, unsigned int ctime)
 void update_otg_UE(module_id_t ue_mod_idP, unsigned int ctime)
 {
 #if defined(USER_MODE) && defined(OAI_EMU)
-
-  if (oai_emulation.info.otg_enabled ==1 ) {
+	int app_id;
+ if (oai_emulation.info.otg_enabled ==1 ) {
     module_id_t dst_id, src_id; //dst_id = eNB_index
     module_id_t module_id = ue_mod_idP+NB_eNB_INST;
 
     src_id = module_id;
 
-    for (dst_id=0; dst_id<NB_SIG_CNX_UE; dst_id++) {
+   for (dst_id=0; dst_id<NB_SIG_CNX_UE; dst_id++) {
       // only consider the first attached eNB
-      if (mac_UE_get_rrc_status(ue_mod_idP, dst_id ) > 2 /*RRC_CONNECTED*/) {
+     if (mac_UE_get_rrc_status(ue_mod_idP, dst_id ) > 2 /*RRC_CONNECTED*/) {
+      for (app_id=0; app_id<MAX_NUM_APPLICATION; app_id++) {
         Packet_otg_elt_t *otg_pkt = malloc (sizeof(Packet_otg_elt_t));
 
         if (otg_pkt!=NULL)
@@ -1487,7 +1488,7 @@ void update_otg_UE(module_id_t ue_mod_idP, unsigned int ctime)
           exit(-1);
         }// Manage to add this packet to the tail of your list
 
-        (otg_pkt->otg_pkt).sdu_buffer = (uint8_t*) packet_gen(src_id, dst_id, 0, ctime, &((otg_pkt->otg_pkt).sdu_buffer_size));
+        (otg_pkt->otg_pkt).sdu_buffer = (uint8_t*) packet_gen(src_id, dst_id, app_id, ctime, &((otg_pkt->otg_pkt).sdu_buffer_size));
 
         if ((otg_pkt->otg_pkt).sdu_buffer != NULL) {
           (otg_pkt->otg_pkt).rb_id     = DTCH-2;
@@ -1503,6 +1504,7 @@ void update_otg_UE(module_id_t ue_mod_idP, unsigned int ctime)
           free(otg_pkt);
           otg_pkt=NULL;
         }
+       }
       }
     }
   }

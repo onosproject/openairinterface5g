@@ -754,4 +754,5 @@ void rrc_lite_ue_update_ho_status(module_id_t Mod_idP){
 	//UE_rrc_inst[Mod_idP].HandoverInfoUe.measFlag = 0; // Stop the measurements
 	UE_mac_inst[Mod_idP].RA_active = 0;
 	UE_rrc_inst[Mod_idP].Info[0].State = RRC_RECONFIGURED;
+	LOG_D(RRC,"UE is updated: Mod_id: %d/State: %d\n",Mod_idP,UE_rrc_inst[Mod_idP].Info[0].State);
 }
