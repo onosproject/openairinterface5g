@@ -2131,6 +2131,10 @@ check_handovers(
 //	 	 ue_context_p->ue_context.handover_info->ho_prepare = 0x00;
         ue_context_p->ue_context.handover_info->state = HO_CONFIGURED;
 
+        /* HACK HACK!! "works" only for one UE */
+        memcpy(UE_rrc_inst[0].sib1[0]->cellAccessRelatedInfo.cellIdentity.buf,
+               eNB_rrc_inst[ctxt_pP->module_id].carrier[0].sib1->cellAccessRelatedInfo.cellIdentity.buf,
+               4);
         msg = itti_alloc_new_message(TASK_RRC_ENB, X2AP_HANDOVER_RESP);
         /* TODO: remove this hack */
         X2AP_HANDOVER_RESP(msg).target_mod_id = 1 - ctxt_pP->module_id;
