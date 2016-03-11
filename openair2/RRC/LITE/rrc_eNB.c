@@ -2627,8 +2627,8 @@ rv[1] = (global_rnti>>8) & 255;
   // Configure target eNB SRB2
   /// SRB2
   SRB2_config = CALLOC(1, sizeof(*SRB2_config));
-  //SRB_configList2 = CALLOC(1, sizeof(*SRB_configList2));
-  //memset(SRB_configList2, 0, sizeof(*SRB_configList2));
+  SRB_configList2 = CALLOC(1, sizeof(*SRB_configList2));
+  memset(SRB_configList2, 0, sizeof(*SRB_configList2));
 
   SRB2_config->srb_Identity = 1;
   SRB2_rlc_config = CALLOC(1, sizeof(*SRB2_rlc_config));

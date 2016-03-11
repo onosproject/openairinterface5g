@@ -5,7 +5,7 @@
       <FREE_SPACE_MODEL_PARAMETERS>
 	<PATHLOSS_EXPONENT>3.67</PATHLOSS_EXPONENT>
 	<!-- <PATHLOSS_0_dB>-100</PATHLOSS_0_dB> --> <!--pathloss at 1km -->
-    <PATHLOSS_0_dB>-120</PATHLOSS_0_dB><!--pathloss at 1km -->
+    <PATHLOSS_0_dB>-122</PATHLOSS_0_dB><!--pathloss at 1km -->
       </FREE_SPACE_MODEL_PARAMETERS>
       <SMALL_SCALE>AWGN</SMALL_SCALE>
     </FADING>
@@ -30,8 +30,8 @@
   
   <TOPOLOGY_CONFIG>	
     <AREA>			
-      <X_m>10000</X_m> //2400
-      <Y_m>10000</Y_m> //2400	
+      <X_m>10000</X_m> <!--//2400-->
+      <Y_m>10000</Y_m> <!-- //2400-->	
     </AREA>
     <MOBILITY> 
       <UE_MOBILITY>
@@ -71,7 +71,7 @@
       <SIZE_MAX_byte>1408</SIZE_MAX_byte>
     </CUSTOMIZED_TRAFFIC>
 
-     <CUSTOMIZED_TRAFFIC>
+    <CUSTOMIZED_TRAFFIC>
       <SOURCE_ID>2</SOURCE_ID>
       <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
       <FLOW_START_ms>1600</FLOW_START_ms>
@@ -86,10 +86,40 @@
       <SIZE_MAX_byte>1408</SIZE_MAX_byte>
     </CUSTOMIZED_TRAFFIC>
 
-     <CUSTOMIZED_TRAFFIC>
+    <CUSTOMIZED_TRAFFIC>
       <SOURCE_ID>2</SOURCE_ID>
       <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
       <FLOW_START_ms>4800</FLOW_START_ms>
+      <FLOW_DURATION_ms>100</FLOW_DURATION_ms>
+      <IP_VERSION>ipv4</IP_VERSION>
+      <DESTINATION_ID>0</DESTINATION_ID>
+      <IDT_DIST>uniform</IDT_DIST>
+      <IDT_MIN_ms>10</IDT_MIN_ms>
+      <IDT_MAX_ms>50</IDT_MAX_ms>
+      <SIZE_DIST>uniform</SIZE_DIST>
+      <SIZE_MIN_byte>850</SIZE_MIN_byte>
+      <SIZE_MAX_byte>1408</SIZE_MAX_byte>
+    </CUSTOMIZED_TRAFFIC>
+
+    <CUSTOMIZED_TRAFFIC>
+      <SOURCE_ID>2</SOURCE_ID>
+      <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
+      <FLOW_START_ms>7800</FLOW_START_ms>
+      <FLOW_DURATION_ms>100</FLOW_DURATION_ms>
+      <IP_VERSION>ipv4</IP_VERSION>
+      <DESTINATION_ID>1</DESTINATION_ID>
+      <IDT_DIST>uniform</IDT_DIST>
+      <IDT_MIN_ms>10</IDT_MIN_ms>
+      <IDT_MAX_ms>50</IDT_MAX_ms>
+      <SIZE_DIST>uniform</SIZE_DIST>
+      <SIZE_MIN_byte>850</SIZE_MIN_byte>
+      <SIZE_MAX_byte>1408</SIZE_MAX_byte>
+    </CUSTOMIZED_TRAFFIC>
+
+    <CUSTOMIZED_TRAFFIC>
+      <SOURCE_ID>2</SOURCE_ID>
+      <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
+      <FLOW_START_ms>10800</FLOW_START_ms>
       <FLOW_DURATION_ms>100</FLOW_DURATION_ms>
       <IP_VERSION>ipv4</IP_VERSION>
       <DESTINATION_ID>0</DESTINATION_ID>
@@ -120,7 +150,7 @@
       <SIZE_MAX_byte>1408</SIZE_MAX_byte>
     </CUSTOMIZED_TRAFFIC>
 
-     <CUSTOMIZED_TRAFFIC>
+    <CUSTOMIZED_TRAFFIC>
       <SOURCE_ID>1</SOURCE_ID>
       <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
       <FLOW_START_ms>1600</FLOW_START_ms>
@@ -135,10 +165,40 @@
       <SIZE_MAX_byte>1408</SIZE_MAX_byte>
     </CUSTOMIZED_TRAFFIC>
 
-     <CUSTOMIZED_TRAFFIC>
+    <CUSTOMIZED_TRAFFIC>
       <SOURCE_ID>0</SOURCE_ID>
       <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
       <FLOW_START_ms>4800</FLOW_START_ms>
+      <FLOW_DURATION_ms>100</FLOW_DURATION_ms>
+      <IP_VERSION>ipv4</IP_VERSION>
+      <DESTINATION_ID>2</DESTINATION_ID>
+      <IDT_DIST>uniform</IDT_DIST>
+      <IDT_MIN_ms>10</IDT_MIN_ms>
+      <IDT_MAX_ms>50</IDT_MAX_ms>
+      <SIZE_DIST>uniform</SIZE_DIST>
+      <SIZE_MIN_byte>850</SIZE_MIN_byte>
+      <SIZE_MAX_byte>1408</SIZE_MAX_byte>
+    </CUSTOMIZED_TRAFFIC>
+
+    <CUSTOMIZED_TRAFFIC>
+      <SOURCE_ID>1</SOURCE_ID>
+      <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
+      <FLOW_START_ms>7800</FLOW_START_ms>
+      <FLOW_DURATION_ms>100</FLOW_DURATION_ms>
+      <IP_VERSION>ipv4</IP_VERSION>
+      <DESTINATION_ID>2</DESTINATION_ID>
+      <IDT_DIST>uniform</IDT_DIST>
+      <IDT_MIN_ms>10</IDT_MIN_ms>
+      <IDT_MAX_ms>50</IDT_MAX_ms>
+      <SIZE_DIST>uniform</SIZE_DIST>
+      <SIZE_MIN_byte>850</SIZE_MIN_byte>
+      <SIZE_MAX_byte>1408</SIZE_MAX_byte>
+    </CUSTOMIZED_TRAFFIC>
+
+    <CUSTOMIZED_TRAFFIC>
+      <SOURCE_ID>0</SOURCE_ID>
+      <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
+      <FLOW_START_ms>10800</FLOW_START_ms>
       <FLOW_DURATION_ms>100</FLOW_DURATION_ms>
       <IP_VERSION>ipv4</IP_VERSION>
       <DESTINATION_ID>2</DESTINATION_ID>
@@ -161,7 +221,7 @@
   </APPLICATION_CONFIG>
 
   <EMULATION_CONFIG>
-    <EMULATION_TIME_ms>10000</EMULATION_TIME_ms> 
+    <EMULATION_TIME_ms>20000</EMULATION_TIME_ms> 
 
     <CURVE>disable</CURVE> <!-- option: enabled, disabled. If CURVE is enabled, graphes
 are ploted in real time (UL and DL) of WOD and throughput measurement for each packet -->
