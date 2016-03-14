@@ -131,6 +131,36 @@
       <SIZE_MAX_byte>1408</SIZE_MAX_byte>
     </CUSTOMIZED_TRAFFIC>
 
+    <CUSTOMIZED_TRAFFIC>
+      <SOURCE_ID>2</SOURCE_ID>
+      <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
+      <FLOW_START_ms>13800</FLOW_START_ms>
+      <FLOW_DURATION_ms>100</FLOW_DURATION_ms>
+      <IP_VERSION>ipv4</IP_VERSION>
+      <DESTINATION_ID>1</DESTINATION_ID>
+      <IDT_DIST>uniform</IDT_DIST>
+      <IDT_MIN_ms>10</IDT_MIN_ms>
+      <IDT_MAX_ms>50</IDT_MAX_ms>
+      <SIZE_DIST>uniform</SIZE_DIST>
+      <SIZE_MIN_byte>850</SIZE_MIN_byte>
+      <SIZE_MAX_byte>1408</SIZE_MAX_byte>
+    </CUSTOMIZED_TRAFFIC>
+
+    <CUSTOMIZED_TRAFFIC>
+      <SOURCE_ID>2</SOURCE_ID>
+      <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
+      <FLOW_START_ms>16800</FLOW_START_ms>
+      <FLOW_DURATION_ms>100</FLOW_DURATION_ms>
+      <IP_VERSION>ipv4</IP_VERSION>
+      <DESTINATION_ID>0</DESTINATION_ID>
+      <IDT_DIST>uniform</IDT_DIST>
+      <IDT_MIN_ms>10</IDT_MIN_ms>
+      <IDT_MAX_ms>50</IDT_MAX_ms>
+      <SIZE_DIST>uniform</SIZE_DIST>
+      <SIZE_MIN_byte>850</SIZE_MIN_byte>
+      <SIZE_MAX_byte>1408</SIZE_MAX_byte>
+    </CUSTOMIZED_TRAFFIC>
+
   <!--</APPLICATION_CONFIG> -->
 
 <!-- DL -->
@@ -210,6 +240,36 @@
       <SIZE_MAX_byte>1408</SIZE_MAX_byte>
     </CUSTOMIZED_TRAFFIC>
 
+    <CUSTOMIZED_TRAFFIC>
+      <SOURCE_ID>1</SOURCE_ID>
+      <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
+      <FLOW_START_ms>13800</FLOW_START_ms>
+      <FLOW_DURATION_ms>100</FLOW_DURATION_ms>
+      <IP_VERSION>ipv4</IP_VERSION>
+      <DESTINATION_ID>2</DESTINATION_ID>
+      <IDT_DIST>uniform</IDT_DIST>
+      <IDT_MIN_ms>10</IDT_MIN_ms>
+      <IDT_MAX_ms>50</IDT_MAX_ms>
+      <SIZE_DIST>uniform</SIZE_DIST>
+      <SIZE_MIN_byte>850</SIZE_MIN_byte>
+      <SIZE_MAX_byte>1408</SIZE_MAX_byte>
+    </CUSTOMIZED_TRAFFIC>
+
+    <CUSTOMIZED_TRAFFIC>
+      <SOURCE_ID>0</SOURCE_ID>
+      <TRANSPORT_PROTOCOL>udp</TRANSPORT_PROTOCOL>
+      <FLOW_START_ms>16800</FLOW_START_ms>
+      <FLOW_DURATION_ms>100</FLOW_DURATION_ms>
+      <IP_VERSION>ipv4</IP_VERSION>
+      <DESTINATION_ID>2</DESTINATION_ID>
+      <IDT_DIST>uniform</IDT_DIST>
+      <IDT_MIN_ms>10</IDT_MIN_ms>
+      <IDT_MAX_ms>50</IDT_MAX_ms>
+      <SIZE_DIST>uniform</SIZE_DIST>
+      <SIZE_MIN_byte>850</SIZE_MIN_byte>
+      <SIZE_MAX_byte>1408</SIZE_MAX_byte>
+    </CUSTOMIZED_TRAFFIC>
+
 <!--<PREDEFINED_TRAFFIC>
       <SOURCE_ID>1</SOURCE_ID> 
       <FLOW_START_ms>200</FLOW_START_ms> 
@@ -221,7 +281,7 @@
   </APPLICATION_CONFIG>
 
   <EMULATION_CONFIG>
-    <EMULATION_TIME_ms>20000</EMULATION_TIME_ms> 
+    <EMULATION_TIME_ms>17000</EMULATION_TIME_ms> 
 
     <CURVE>disable</CURVE> <!-- option: enabled, disabled. If CURVE is enabled, graphes
 are ploted in real time (UL and DL) of WOD and throughput measurement for each packet -->
