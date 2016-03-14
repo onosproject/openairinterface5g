@@ -82,7 +82,9 @@ openair_rrc_on(
   } else {
     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" OPENAIR RRC IN....\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
-
+    reset_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb);
+    reset_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb);
+    
     for (i = 0; i < NB_eNB_INST; i++) {
       LOG_D(RRC, PROTOCOL_RRC_CTXT_FMT" Activating CCCH (eNB %d)\n",
             PROTOCOL_RRC_CTXT_ARGS(ctxt_pP), i);
@@ -94,6 +96,7 @@ openair_rrc_on(
     }
   }
 }
+
 
 //-----------------------------------------------------------------------------
 int
@@ -356,7 +359,30 @@ rrc_top_cleanup(
 
   if (NB_eNB_INST > 0) {
     free (eNB_rrc_inst);
+  } 
+  uint8_t module_id=0;
 
+  LOG_I(RRC,"[SRC]median;q1;q3;min;max;\n");
+  for (module_id = 0; module_id < NB_UE_INST; module_id++) {
+    double x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size];
+    totable(x2_src_table, &UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list); 
+    qsort (x2_src_table, UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size, sizeof(double), &compare);
+    // create stats 
+    double x2_src_median = x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/2];
+    double x2_src_q1 = x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/4]; // Q1
+    double x2_src_q3 = x2_src_table[3*UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/4]; // Q3
+    LOG_I(RRC,"%lf;%lf;%lf;%d;%d;\n",x2_src_median,x2_src_q1,x2_src_q3,UE_rrc_inst[module_id].rrc_ue_x2_src_enb.min, UE_rrc_inst[module_id].rrc_ue_x2_src_enb.max);
+  }
+  LOG_I(RRC,"[DST]median;q1;q3;min;max;\n");
+  for (module_id = 0; module_id < NB_UE_INST; module_id++) {
+    double x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size];
+    totable(x2_target_table, &UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list); 
+    qsort (x2_target_table, UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size, sizeof(double), &compare);
+    // create stats 
+    double x2_target_median = x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/2];
+    double x2_target_q1 = x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/4]; // Q1
+    double x2_target_q3 = x2_target_table[3*UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/4]; // Q3
+    LOG_I(RRC,"%lf;%lf;%lf;%d;%d;\n",x2_target_median,x2_target_q1,x2_target_q3,UE_rrc_inst[module_id].rrc_ue_x2_target_enb.min, UE_rrc_inst[module_id].rrc_ue_x2_target_enb.max);
   }
 }
 

@@ -48,6 +48,7 @@ typedef struct {
   long long p_time; /*!< \brief absolute process duration */
   long long diff_square; /*!< \brief process duration square */
   long long max;
+  long long min;
   int trials;
 } time_stats_t;
 #elif defined(__arm__)
@@ -58,6 +59,7 @@ typedef struct {
   uint32_t p_time; /*!< \brief absolute process duration */
   uint32_t diff_square; /*!< \brief process duration square */
   uint32_t max;
+  uint32_t min;
   int trials;
 } time_stats_t;
 
@@ -124,9 +126,11 @@ static inline void stop_meas(time_stats_t *ts)
     
     if ((out-ts->in) > ts->max)
       ts->max = out-ts->in;
-    
+
+    if ((out-ts->in) < ts->min)
+      ts->min = out-ts->in;
   }
-}
+} 
 
 static inline void reset_meas(time_stats_t *ts) {
 
@@ -136,7 +140,7 @@ static inline void reset_meas(time_stats_t *ts) {
   ts->p_time=0;
   ts->diff_square=0;
   ts->max=0;
-  
+  ts->min=0xFFFFFFFF;
 }
 
 static inline void copy_meas(time_stats_t *dst_ts,time_stats_t *src_ts)

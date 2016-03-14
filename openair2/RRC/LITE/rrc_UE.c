@@ -1967,14 +1967,19 @@ rrc_ue_decode_dcch(
           eNB_indexP);
 
         if (target_eNB_index != 0xFF) {
-          init_meas_timers(ctxt_pP); // Initialize handover measurement timers
+	  UE_rrc_inst[ctxt_pP->module_id].rrc_ue_do_meas=0;
+	  stop_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb);
+	  double t_x2_src_enb = (double)UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb.p_time/get_cpu_freq_GHz()/1000.0;
+	  push_front(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_list, t_x2_src_enb);
+	  start_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb);
+	  init_meas_timers(ctxt_pP); // Initialize handover measurement timers
           rrc_ue_generate_RRCConnectionReconfigurationComplete(
             ctxt_pP,
             target_eNB_index,
             dl_dcch_msg->message.choice.c1.choice.rrcConnectionReconfiguration.rrc_TransactionIdentifier);
           UE_rrc_inst[ctxt_pP->module_id].Info[eNB_indexP].State = RRC_HO_EXECUTION;
           if(eNB_indexP!=target_eNB_index){
-        	  UE_rrc_inst[ctxt_pP->module_id].Info[target_eNB_index].State = RRC_RECONFIGURED;
+	    UE_rrc_inst[ctxt_pP->module_id].Info[target_eNB_index].State = RRC_RECONFIGURED;
           }
           LOG_I(RRC, "[UE %d] State = RRC_RECONFIGURED during HO (eNB %d)\n",
                 ctxt_pP->module_id, target_eNB_index);
@@ -3686,9 +3691,14 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
 
                   UE_rrc_inst[ctxt_pP->module_id].measReportList[i][j]->measId = UE_rrc_inst[ctxt_pP->module_id].MeasId[i][j]->measId;
                   UE_rrc_inst[ctxt_pP->module_id].measReportList[i][j]->numberOfReportsSent = 0;
-                  rrc_ue_generate_MeasurementReport(
-                    ctxt_pP,
-                    eNB_index);
+                  
+		  if (UE_rrc_inst[ctxt_pP->module_id].rrc_ue_do_meas == 0 ){
+		    UE_rrc_inst[ctxt_pP->module_id].rrc_ue_do_meas = 1;
+		    start_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb);
+		  }
+		  rrc_ue_generate_MeasurementReport(
+						    ctxt_pP,
+						    eNB_index);
                   //UE_rrc_inst[ctxt_pP->module_id].HandoverInfoUe.measFlag = 1;
                   LOG_I(RRC,"[UE %d] Frame %d: A3 event detected, state: %d \n",
                         ctxt_pP->module_id, ctxt_pP->frame, UE_rrc_inst[ctxt_pP->module_id].Info[0].State);

@@ -433,7 +433,11 @@ void mac_top_cleanup(void)
     free(eNB_mac_inst);
   }
 
+  rrc_top_cleanup();
+  
   free( Mac_rlc_xface);
+
+  
 }
 
 int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,uint8_t cba_group_active, uint8_t HO_active)
