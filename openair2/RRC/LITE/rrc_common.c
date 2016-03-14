@@ -371,7 +371,10 @@ rrc_top_cleanup(
     double x2_src_median = x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/2];
     double x2_src_q1 = x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/4]; // Q1
     double x2_src_q3 = x2_src_table[3*UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/4]; // Q3
-    LOG_I(RRC,"%lf;%lf;%lf;%d;%d;\n",x2_src_median,x2_src_q1,x2_src_q3,UE_rrc_inst[module_id].rrc_ue_x2_src_enb.min, UE_rrc_inst[module_id].rrc_ue_x2_src_enb.max);
+    double x2_src_min = x2_src_table[0]; // Q3
+    double x2_src_max = x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size-1]; // Q3
+    
+    LOG_I(RRC,"%lf;%lf;%lf;%d;%d;\n",x2_src_median,x2_src_q1,x2_src_q3,x2_src_min,x2_src_max);
   }
   LOG_I(RRC,"[DST]median;q1;q3;min;max;\n");
   for (module_id = 0; module_id < NB_UE_INST; module_id++) {
@@ -382,7 +385,9 @@ rrc_top_cleanup(
     double x2_target_median = x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/2];
     double x2_target_q1 = x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/4]; // Q1
     double x2_target_q3 = x2_target_table[3*UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/4]; // Q3
-    LOG_I(RRC,"%lf;%lf;%lf;%d;%d;\n",x2_target_median,x2_target_q1,x2_target_q3,UE_rrc_inst[module_id].rrc_ue_x2_target_enb.min, UE_rrc_inst[module_id].rrc_ue_x2_target_enb.max);
+    double x2_target_min = x2_target_table[0]; // MIN
+    double x2_target_max = x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size-1]; // mAX
+    LOG_I(RRC,"%lf;%lf;%lf;%d;%d;\n",x2_target_median,x2_target_q1,x2_target_q3,x2_target_min, x2_target_max);
   }
 }
 

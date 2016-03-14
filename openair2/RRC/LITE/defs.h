@@ -534,8 +534,10 @@ typedef struct UE_RRC_INST_s {
   // X2 HO stats and measurments 
   uint8_t                            rrc_ue_do_meas; // flag to start the meas only once
   time_stats_t                       rrc_ue_x2_src_enb; // form connected to idle : include x2 delay
+  uint32_t                           rrc_ue_x2_src_enb_ms; // form connected to idle : include x2 delay
   struct list                        rrc_ue_x2_src_enb_list;
   time_stats_t                       rrc_ue_x2_target_enb; // from idle to connected
+  uint32_t                           rrc_ue_x2_target_enb_ms; // from idle to connected
   struct list                        rrc_ue_x2_target_enb_list;
 } UE_RRC_INST;
 
