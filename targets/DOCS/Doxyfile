@@ -772,6 +772,12 @@ INPUT                  = $(OPENAIR1_DIR)/PHY/defs.h \
                          $(OPENAIR1_DIR)/MAC_INTERFACE/defs.h \
                          $(OPENAIR2_DIR)/LAYER2/MAC/defs.h \
                          $(OPENAIR2_DIR)/LAYER2/MAC/proto.h \
+                         $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac-callback.h \
+                         $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac-common.h \
+                         $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac-csched-sap.h \
+                         $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac-sched-sap.h \
+                         $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac.h \
+                         $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac-init.h \
                          $(OPENAIR2_DIR)/LAYER2/RLC/rlc.h \
                          $(OPENAIR2_DIR)/LAYER2/RLC/AM_v9.3.0/rlc_am.h \
                          $(OPENAIR2_DIR)/LAYER2/RLC/AM_v9.3.0/rlc_am_constants.h \

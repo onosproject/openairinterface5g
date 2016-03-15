@@ -1,6 +1,12 @@
 #ifndef FF_MAC_H
 #define FF_MAC_H
 
+/** @defgroup _fapi  FAPI
+ * @ingroup _mac
+ * @{
+ */
+
+
 /* this file contains OAI related FAPI definitions */
 
 /* this is the public view of the FAPI's OAI interface */
@@ -34,5 +40,7 @@ void CschedLcReleaseCnf(fapi_interface_t *, struct CschedLcReleaseCnfParameters 
 void CschedUeReleaseCnf(fapi_interface_t *, struct CschedUeReleaseCnfParameters *params);
 void CschedUeConfigUpdateInd(fapi_interface_t *, struct CschedUeConfigUpdateIndParameters *params);
 void CschedCellConfigUpdateInd(fapi_interface_t *, struct CschedCellConfigUpdateIndParameters *params);
+
+/*@}*/
 
 #endif /* FF_MAC_H */

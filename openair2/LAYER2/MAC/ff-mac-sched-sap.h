@@ -32,7 +32,7 @@
  * \date March 2015
  * \version 1.0
  * \email: florian.kaltenberger@eurecom.fr
- * @ingroup _mac
+ * @ingroup _fapi
  */
 
 #ifndef FF_MAC_SCHED_SAP_H
