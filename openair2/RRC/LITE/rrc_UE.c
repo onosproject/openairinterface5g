@@ -1968,10 +1968,13 @@ rrc_ue_decode_dcch(
 
         if (target_eNB_index != 0xFF) {
 	  UE_rrc_inst[ctxt_pP->module_id].rrc_ue_do_meas=0;
+	  // Stop to measure (delay to the UE-->source)
 	  //stop_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb);
 	  //double t_x2_src_enb = (double)UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb.p_time/get_cpu_freq_GHz()/1000.0;
 	  double t_x2_src_enb = (double)ctxt_pP->frame*10+ctxt_pP->subframe - UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms; 
 	  push_front(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_list, t_x2_src_enb);
+
+	  // Start to measure (delay to the UE-->target)
 	  //start_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb);
 	  UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_ms = ctxt_pP->frame*10+ctxt_pP->subframe ;
 	  init_meas_timers(ctxt_pP); // Initialize handover measurement timers
@@ -3696,8 +3699,9 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
                   
 		  if (UE_rrc_inst[ctxt_pP->module_id].rrc_ue_do_meas == 0 ){
 		    UE_rrc_inst[ctxt_pP->module_id].rrc_ue_do_meas = 1;
+		    // Start to measure (delay to the UE-->source)
 		    //start_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb);
-		    UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms = ctxt_pP->frame*10+ctxt_pP->subframe ;
+		    UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms = ctxt_pP->frame*10+ctxt_pP->subframe;
 		  }
 		  rrc_ue_generate_MeasurementReport(
 						    ctxt_pP,

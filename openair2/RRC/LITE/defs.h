@@ -439,6 +439,10 @@ typedef struct eNB_RRC_INST_s {
   /// localization list for aggregated measurements from PHY
   struct list loc_list;
 #endif
+
+  // X2 HO stats and measurements
+  uint32_t                           rrc_enb_x2_ms; // from idle to connected
+  struct list                        rrc_enb_x2_list;
 } eNB_RRC_INST;
 
 #define MAX_UE_CAPABILITY_SIZE 255
@@ -531,12 +535,10 @@ typedef struct UE_RRC_INST_s {
   e_SecurityAlgorithmConfig__cipheringAlgorithm     ciphering_algorithm;
   e_SecurityAlgorithmConfig__integrityProtAlgorithm integrity_algorithm;
 
-  // X2 HO stats and measurments 
+  // X2 HO stats and measurements
   uint8_t                            rrc_ue_do_meas; // flag to start the meas only once
-  time_stats_t                       rrc_ue_x2_src_enb; // form connected to idle : include x2 delay
   uint32_t                           rrc_ue_x2_src_enb_ms; // form connected to idle : include x2 delay
   struct list                        rrc_ue_x2_src_enb_list;
-  time_stats_t                       rrc_ue_x2_target_enb; // from idle to connected
   uint32_t                           rrc_ue_x2_target_enb_ms; // from idle to connected
   struct list                        rrc_ue_x2_target_enb_list;
 } UE_RRC_INST;

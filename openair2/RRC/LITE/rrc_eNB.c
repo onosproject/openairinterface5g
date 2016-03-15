@@ -1485,7 +1485,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
     }
     else{
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger =
-      TimeToTrigger_ms40;
+      TimeToTrigger_ms80;
     	//LOG_D(RRC,"Time to trigger for eNB %d is set to %d\n",ctxt_pP->module_id,TimeToTrigger_ms40);
     }
     ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A3);
@@ -2140,6 +2140,9 @@ check_handovers(
         X2AP_HANDOVER_RESP(msg).target_mod_id = 1 - ctxt_pP->module_id;
         X2AP_HANDOVER_RESP(msg).source_x2id = ue_context_p->ue_context.handover_info->source_x2id;
         itti_send_msg_to_task(TASK_X2AP, ENB_MODULE_ID_TO_INSTANCE(ctxt_pP->module_id), msg);
+        // Stop to measure (x2 delay)
+        double t_x2_enb = (double)ctxt_pP->frame*10+ctxt_pP->subframe - eNB_rrc_inst[ue_context_p->ue_context.handover_info->modid_s].rrc_enb_x2_ms;
+        push_front(&eNB_rrc_inst[ctxt_pP->module_id].rrc_enb_x2_list, t_x2_enb);
       }
 
 
@@ -2925,7 +2928,7 @@ rv[1] = (global_rnti>>8) & 255;
   }
   else{
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger =
-    TimeToTrigger_ms40;
+    TimeToTrigger_ms80;
   	//LOG_D(RRC,"Time to trigger for eNB %d is set to %d\n",ctxt_pP->module_id,TimeToTrigger_ms40);
   }
 
@@ -4248,6 +4251,8 @@ rrc_eNB_decode_dcch(
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
             DCCH,
             sdu_sizeP);
+      // Start to measure (x2 delay)
+      eNB_rrc_inst[ctxt_pP->module_id].rrc_enb_x2_ms = ctxt_pP->frame*10+ctxt_pP->subframe;
       rrc_eNB_process_MeasurementReport(
         ctxt_pP,
         ue_context_p,
@@ -4294,6 +4299,7 @@ rrc_eNB_decode_dcch(
           rrcConnectionReconfigurationComplete_r8);
 	
         if (ue_context_p->ue_context.Status == RRC_HO_EXECUTION){
+      // Stop to measure (delay to the UE-->target)
 	  //stop_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb);
 	  //double t_x2_target_enb = (double)UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb.p_time/get_cpu_freq_GHz()/1000.0;
 	  double t_x2_target_enb = (double)ctxt_pP->frame*10+ctxt_pP->subframe - UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_ms; 

@@ -82,9 +82,7 @@ openair_rrc_on(
   } else {
     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" OPENAIR RRC IN....\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
-    reset_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb);
-    reset_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb);
-    
+
     for (i = 0; i < NB_eNB_INST; i++) {
       LOG_D(RRC, PROTOCOL_RRC_CTXT_FMT" Activating CCCH (eNB %d)\n",
             PROTOCOL_RRC_CTXT_ARGS(ctxt_pP), i);
@@ -361,33 +359,74 @@ rrc_top_cleanup(
     free (eNB_rrc_inst);
   } 
   uint8_t module_id=0;
+  uint8_t i=0;
+  double x2_src_avg;
+  double x2_src_median=0.0;
+  double x2_src_q1=0.0;
+  double x2_src_q3=0.0;
+  double x2_src_min=0.0;
+  double x2_src_max=0.0;
 
-  LOG_I(RRC,"[SRC]median;q1;q3;min;max;\n");
+  double x2_target_avg;
+  double x2_target_median=0.0;
+  double x2_target_q1=0.0;
+  double x2_target_q3=0.0;
+  double x2_target_min=0.0;
+  double x2_target_max=0.0;
+
+
+  LOG_I(RRC,"[SRC]median;q1;q3;min;max;avg;\n");
   for (module_id = 0; module_id < NB_UE_INST; module_id++) {
+	x2_src_avg=0.0;
     double x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size];
     totable(x2_src_table, &UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list); 
     qsort (x2_src_table, UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size, sizeof(double), &compare);
     // create stats 
-    double x2_src_median = x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/2];
-    double x2_src_q1 = x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/4]; // Q1
-    double x2_src_q3 = x2_src_table[3*UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/4]; // Q3
-    double x2_src_min = x2_src_table[0]; // Q3
-    double x2_src_max = x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size-1]; // Q3
+    x2_src_median = x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/2];
+    x2_src_q1 = x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/4]; // Q1
+    x2_src_q3 = x2_src_table[3*UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size/4]; // Q3
+    x2_src_min = x2_src_table[0]; // Q3
+    x2_src_max = x2_src_table[UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size-1]; // Q3
     
-    LOG_I(RRC,"%lf;%lf;%lf;%d;%d;\n",x2_src_median,x2_src_q1,x2_src_q3,x2_src_min,x2_src_max);
+    for (i=0;i<UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size;i++){
+    	x2_src_avg+=x2_src_table[i];
+    }
+    x2_src_avg/=UE_rrc_inst[module_id].rrc_ue_x2_src_enb_list.size;
+    LOG_I(RRC,"[SRC]%lf;%lf;%lf;%lf;%lf;%lf\n",x2_src_median,x2_src_q1,x2_src_q3,x2_src_min,x2_src_max,x2_src_avg);
   }
+
   LOG_I(RRC,"[DST]median;q1;q3;min;max;\n");
   for (module_id = 0; module_id < NB_UE_INST; module_id++) {
+	x2_target_avg=0.0;
     double x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size];
     totable(x2_target_table, &UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list); 
     qsort (x2_target_table, UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size, sizeof(double), &compare);
     // create stats 
-    double x2_target_median = x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/2];
-    double x2_target_q1 = x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/4]; // Q1
-    double x2_target_q3 = x2_target_table[3*UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/4]; // Q3
-    double x2_target_min = x2_target_table[0]; // MIN
-    double x2_target_max = x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size-1]; // mAX
-    LOG_I(RRC,"%lf;%lf;%lf;%d;%d;\n",x2_target_median,x2_target_q1,x2_target_q3,x2_target_min, x2_target_max);
+    x2_target_median = x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/2];
+    x2_target_q1 = x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/4]; // Q1
+    x2_target_q3 = x2_target_table[3*UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size/4]; // Q3
+    x2_target_min = x2_target_table[0]; // MIN
+    x2_target_max = x2_target_table[UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size-1]; // mAX
+
+    for (i=0;i<UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size;i++){
+        	x2_target_avg+=x2_target_table[i];
+        }
+        x2_target_avg/=UE_rrc_inst[module_id].rrc_ue_x2_target_enb_list.size;
+
+    LOG_I(RRC,"[DST]%lf;%lf;%lf;%lf;%lf;%lf\n",x2_target_median,x2_target_q1,x2_target_q3,x2_target_min,x2_target_max,x2_target_avg);
+  }
+  LOG_I(RRC,"[X2]median;q1;q3;min;max;\n");
+  for (module_id = 0; module_id < NB_eNB_INST; module_id++) {
+    double x2_table[eNB_rrc_inst[module_id].rrc_enb_x2_list.size];
+    totable(x2_table, &eNB_rrc_inst[module_id].rrc_enb_x2_list);
+    qsort (x2_table, eNB_rrc_inst[module_id].rrc_enb_x2_list.size, sizeof(double), &compare);
+    // create stats
+    double x2_median = x2_table[eNB_rrc_inst[module_id].rrc_enb_x2_list.size/2];
+    double x2_q1 = x2_table[eNB_rrc_inst[module_id].rrc_enb_x2_list.size/4]; // Q1
+    double x2_q3 = x2_table[3*eNB_rrc_inst[module_id].rrc_enb_x2_list.size/4]; // Q3
+    double x2_min = x2_table[0]; // MIN
+    double x2_max = x2_table[eNB_rrc_inst[module_id].rrc_enb_x2_list.size-1]; // mAX
+    LOG_I(RRC,"[X2]%lf;%lf;%lf;%d;%d;\n",x2_median,x2_q1,x2_q3,x2_min,x2_max);
   }
 }
 
