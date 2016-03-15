@@ -4302,8 +4302,8 @@ rrc_eNB_decode_dcch(
       // Stop to measure (delay to the UE-->target)
 	  //stop_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb);
 	  //double t_x2_target_enb = (double)UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb.p_time/get_cpu_freq_GHz()/1000.0;
-	  double t_x2_target_enb = (double)ctxt_pP->frame*10+ctxt_pP->subframe - UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_ms; 
-	  push_front(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_list, t_x2_target_enb);
+	  double t_x2_target_enb = (double)ctxt_pP->frame*10+ctxt_pP->subframe - UE_rrc_inst[0].rrc_ue_x2_target_enb_ms;
+	  push_front(&UE_rrc_inst[0].rrc_ue_x2_target_enb_list, t_x2_target_enb);
 	}
 	ue_context_p->ue_context.Status = RRC_RECONFIGURED;
         LOG_I(RRC,
@@ -4727,13 +4727,13 @@ rrc_enb_task(
 #   endif
 
     case X2AP_HANDOVER_REQ:
-      LOG_I(RRC, "[eNB %d] Received %s\n", instance, msg_name_p);
+      LOG_I(RRC, "[eNB %d] X2-Received %s\n", instance, msg_name_p);
       rrc_eNB_process_handoverPreparationInformation(instance, &X2AP_HANDOVER_REQ(msg_p));
       break;
 
     case X2AP_HANDOVER_RESP: {
       struct rrc_eNB_ue_context_s *ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[instance], X2AP_HANDOVER_RESP(msg_p).source_rnti);
-      LOG_I(RRC, "[eNB %d] Received %s\n", instance, msg_name_p);
+      LOG_I(RRC, "[eNB %d] X2-Received %s\n", instance, msg_name_p);
       DevAssert(ue_context_p != NULL);
       if (ue_context_p->ue_context.handover_info->state != HO_REQUEST) abort();
       ue_context_p->ue_context.handover_info->state = HO_PREPARE;
