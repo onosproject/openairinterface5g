@@ -524,7 +524,6 @@ rrc_mac_config_req(
 // Assign the new c-rnti in the UE context (during HO)
 void rrc_mac_get_new_crnti(protocol_ctxt_t* ctxt_pP,uint8_t eNB_index){
 	PROTOCOL_CTXT_SET_BY_MODULE_ID(ctxt_pP, ctxt_pP->module_id, ENB_FLAG_NO,UE_mac_inst[ctxt_pP->module_id].crnti, ctxt_pP->frame, ctxt_pP->subframe, eNB_index);
-	LOG_D(RRC,"Context-debug: %d/%d\n",ctxt_pP->frame,ctxt_pP->subframe);
 }
 #ifdef LOCALIZATION
 //------------------------------------------------------------------------------

@@ -4304,6 +4304,7 @@ rrc_eNB_decode_dcch(
 	  //double t_x2_target_enb = (double)UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb.p_time/get_cpu_freq_GHz()/1000.0;
 	  double t_x2_target_enb = (double)ctxt_pP->frame*10+ctxt_pP->subframe - UE_rrc_inst[0].rrc_ue_x2_target_enb_ms;
 	  push_front(&UE_rrc_inst[0].rrc_ue_x2_target_enb_list, t_x2_target_enb);
+	  LOG_D(RRC,"Stop-Time-debug: %d/%lf/%d/%d\n", ctxt_pP->frame*10+ctxt_pP->subframe, (double) UE_rrc_inst[0].rrc_ue_x2_target_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
 	}
 	ue_context_p->ue_context.Status = RRC_RECONFIGURED;
         LOG_I(RRC,
@@ -4675,12 +4676,13 @@ rrc_enb_task(
                                     instance,
                                     ENB_FLAG_YES,
                                     RRC_DCCH_DATA_IND(msg_p).rnti,
-                                    msg_p->ittiMsgHeader.lte_time.frame,
-                                    msg_p->ittiMsgHeader.lte_time.slot);
+                                    RRC_DCCH_DATA_IND (msg_p).frame,
+                                    RRC_DCCH_DATA_IND (msg_p).subframe);
       LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Received on DCCH %d %s\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(&ctxt),
             RRC_DCCH_DATA_IND(msg_p).dcch_index,
             msg_name_p);
+
       rrc_eNB_decode_dcch(&ctxt,
                           RRC_DCCH_DATA_IND(msg_p).dcch_index,
                           RRC_DCCH_DATA_IND(msg_p).sdu_p,

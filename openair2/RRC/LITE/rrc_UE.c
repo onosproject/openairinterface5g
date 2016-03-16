@@ -1961,7 +1961,6 @@ rrc_ue_decode_dcch(
           }
         }
 
-
         rrc_ue_process_rrcConnectionReconfiguration(
           ctxt_pP,
           &dl_dcch_msg->message.choice.c1.choice.rrcConnectionReconfiguration,
@@ -1977,7 +1976,9 @@ rrc_ue_decode_dcch(
 	  LOG_D(RRC,"Stop-Time-debug: %d/%lf/%d/%d\n", ctxt_pP->frame*10+ctxt_pP->subframe, (double) UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
 	  // Start to measure (delay to the UE-->target)
 	  //start_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb);
-	  UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_ms = ctxt_pP->frame*10+ctxt_pP->subframe ;
+	  UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_ms = ctxt_pP->frame*10+ctxt_pP->subframe;
+	  LOG_D(RRC,"Start-Time-debug: %lf/%d/%d\n", (double) UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
+
 	  init_meas_timers(ctxt_pP); // Initialize handover measurement timers
           rrc_ue_generate_RRCConnectionReconfigurationComplete(
             ctxt_pP,
@@ -4077,7 +4078,7 @@ void *rrc_ue_task( void *args_p )
 
       /* PDCP messages */
     case RRC_DCCH_DATA_IND:
-      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, RRC_DCCH_DATA_IND (msg_p).module_id, ENB_FLAG_NO, RRC_DCCH_DATA_IND (msg_p).rnti, RRC_DCCH_DATA_IND (msg_p).frame, 0,RRC_DCCH_DATA_IND (msg_p).eNB_index);
+      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, RRC_DCCH_DATA_IND (msg_p).module_id, ENB_FLAG_NO, RRC_DCCH_DATA_IND (msg_p).rnti, RRC_DCCH_DATA_IND (msg_p).frame, RRC_DCCH_DATA_IND (msg_p).subframe, RRC_DCCH_DATA_IND (msg_p).eNB_index);
       LOG_D(RRC, "[UE %d] Received %s: frameP %d, DCCH %d, eNB %d\n",
             RRC_DCCH_DATA_IND (msg_p).module_id,
             msg_name,

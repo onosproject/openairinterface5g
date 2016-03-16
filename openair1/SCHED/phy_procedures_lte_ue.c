@@ -2710,6 +2710,7 @@ int phy_procedures_UE_RX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstrac
             mac_xface->ue_send_sdu(phy_vars_ue->Mod_id,
                                    CC_id,
                                    frame_rx,
+                                   subframe_prev,
                                    phy_vars_ue->dlsch_ue[eNB_id][0]->harq_processes[phy_vars_ue->dlsch_ue[eNB_id][0]->current_harq_pid]->b,
                                    phy_vars_ue->dlsch_ue[eNB_id][0]->harq_processes[phy_vars_ue->dlsch_ue[eNB_id][0]->current_harq_pid]->TBS>>3,
                                    eNB_id);
@@ -2892,7 +2893,7 @@ int phy_procedures_UE_RX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstrac
               */
             mac_xface->ue_decode_si(phy_vars_ue->Mod_id,
                                     CC_id,
-                                    frame_rx,
+                                    frame_rx, subframe_prev,
                                     eNB_id,
                                     phy_vars_ue->dlsch_ue_SI[eNB_id]->harq_processes[0]->b,
                                     phy_vars_ue->dlsch_ue_SI[eNB_id]->harq_processes[0]->TBS>>3);
@@ -3855,7 +3856,7 @@ void phy_procedures_UE_lte(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstr
 
     ret = mac_xface->ue_scheduler(phy_vars_ue->Mod_id,
                                   frame_tx,
-                                  subframe_rx,
+                                  subframe_tx,
                                   subframe_select(&phy_vars_ue->lte_frame_parms,subframe_tx),
                                   eNB_id,
                                   0/*FIXME CC_id*/);

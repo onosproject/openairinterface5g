@@ -143,10 +143,10 @@ typedef struct {
   void (*out_of_sync_ind)(module_id_t Mod_id,frame_t frameP,uint16_t eNB_index);
 
   ///  Send a received SI sdu
-  void (*ue_decode_si)(module_id_t Mod_id,int CC_id,frame_t frameP, uint8_t CH_index, void *pdu, uint16_t len);
+  void (*ue_decode_si)(module_id_t Mod_id,int CC_id,frame_t frameP, sub_frame_t subframeP, uint8_t CH_index, void *pdu, uint16_t len);
 
   /// Send a received DLSCH sdu to MAC
-  void (*ue_send_sdu)(module_id_t Mod_id,uint8_t CC_id,frame_t frameP,uint8_t *sdu,uint16_t sdu_len,uint8_t CH_index);
+  void (*ue_send_sdu)(module_id_t Mod_id,uint8_t CC_id,frame_t frameP, sub_frame_t subframeP, uint8_t *sdu,uint16_t sdu_len,uint8_t CH_index);
 
 #ifdef Rel10
   /// Send a received MCH sdu to MAC

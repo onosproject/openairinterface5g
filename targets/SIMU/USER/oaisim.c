@@ -822,13 +822,16 @@ l2l1_task (void *args_p)
               if (PHY_vars_UE_g[UE_inst][0]->UE_mode[0]
                   != NOT_SYNCHED) {
                 if (frame > 0) {
-                  PHY_vars_UE_g[UE_inst][0]->frame_rx = frame;
+                  if (last_slot < 18) // 0 - 18
+                	  PHY_vars_UE_g[UE_inst][0]->frame_rx = frame;
+                  else // 19
+                	  PHY_vars_UE_g[UE_inst][0]->frame_rx = frame + 1 ;
                   PHY_vars_UE_g[UE_inst][0]->slot_rx =  last_slot;
                   PHY_vars_UE_g[UE_inst][0]->slot_tx = next_slot;
 
-                  if (next_slot > 1)
+                 if (next_slot > 1) // all except SF0
                     PHY_vars_UE_g[UE_inst][0]->frame_tx = frame;
-                  else
+                  else // slot 0 or 1
                     PHY_vars_UE_g[UE_inst][0]->frame_tx = frame + 1;
 
 #ifdef OPENAIR2
@@ -836,7 +839,7 @@ l2l1_task (void *args_p)
                   update_otg_UE (UE_inst, oai_emulation.info.time_ms);
 
                   //Access layer
-		  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, UE_inst, 0, ENB_FLAG_NO, NOT_A_RNTI, frame, next_slot);
+                  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, UE_inst, ENB_FLAG_NO, NOT_A_RNTI, frame, next_slot>>1,0);
                   pdcp_run (&ctxt);
 #endif
 

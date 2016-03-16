@@ -60,6 +60,7 @@ typedef struct RrcDcchDataReq_s {
 
 typedef struct RrcDcchDataInd_s {
   uint32_t frame;
+  uint32_t subframe;
   uint8_t dcch_index;
   uint32_t sdu_size;
   uint8_t *sdu_p;

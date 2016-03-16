@@ -306,6 +306,7 @@ ue_send_sdu(
   module_id_t module_idP,
   uint8_t CC_id,
   frame_t frameP,
+  sub_frame_t subframeP,
   uint8_t* sdu,
   uint16_t sdu_len,
   uint8_t eNB_index
@@ -404,10 +405,10 @@ ue_send_sdu(
 
     if (rx_lcids[i] == CCCH) {
 
-      LOG_D(MAC,"[UE %d] rnti %x Frame %d : DLSCH -> DL-CCCH, RRC message (eNB %d, %d bytes)\n",
+      LOG_D(MAC,"[UE %d] rnti %x Frame %d subframe %d: DLSCH -> DL-CCCH, RRC message (eNB %d, %d bytes)\n",
             module_idP,
             UE_mac_inst[module_idP].crnti,
-            frameP,
+            frameP, subframeP,
             eNB_index,
             rx_lengths[i]);
 
@@ -422,7 +423,7 @@ ue_send_sdu(
 #endif
       mac_rrc_data_ind(module_idP,
                        CC_id,
-                       frameP,0, // unknown subframe
+                       frameP,subframeP, // unknown subframe
                        UE_mac_inst[module_idP].crnti,
                        CCCH,
                        (uint8_t*)payload_ptr,
@@ -435,7 +436,7 @@ ue_send_sdu(
       LOG_D(MAC,"[UE %d] Frame %d : DLSCH -> DL-DCCH%d, RRC message (eNB %d, %d bytes)\n", module_idP, frameP, rx_lcids[i],eNB_index,rx_lengths[i]);
       mac_rlc_data_ind(module_idP,
                        UE_mac_inst[module_idP].crnti,
-		       eNB_index,
+                       eNB_index,
                        frameP,
                        ENB_FLAG_NO,
                        MBMS_FLAG_NO,
@@ -448,8 +449,8 @@ ue_send_sdu(
       LOG_D(MAC,"[UE %d] Frame %d : DLSCH -> DL-DCCH%d, RRC message (eNB %d, %d bytes)\n", module_idP, frameP, rx_lcids[i], eNB_index,rx_lengths[i]);
       mac_rlc_data_ind(module_idP,
                        UE_mac_inst[module_idP].crnti,
-		       eNB_index,
-		       frameP,
+		               eNB_index,
+		               frameP,
                        ENB_FLAG_NO,
                        MBMS_FLAG_NO,
                        DCCH1,
@@ -490,7 +491,7 @@ ue_send_sdu(
   stop_meas(&UE_mac_inst[module_idP].rx_dlsch_sdu);
 }
 
-void ue_decode_si(module_id_t module_idP,int CC_id,frame_t frameP, uint8_t eNB_index, void *pdu,uint16_t len)
+void ue_decode_si(module_id_t module_idP,int CC_id,frame_t frameP, sub_frame_t subframeP, uint8_t eNB_index, void *pdu,uint16_t len)
 {
 
   start_meas(&UE_mac_inst[module_idP].rx_si);
@@ -500,7 +501,7 @@ void ue_decode_si(module_id_t module_idP,int CC_id,frame_t frameP, uint8_t eNB_i
 
   mac_rrc_data_ind(module_idP,
                    CC_id,
-                   frameP,0, // unknown subframe
+                   frameP,subframeP,
                    SI_RNTI,
                    BCCH,
                    (uint8_t *)pdu,

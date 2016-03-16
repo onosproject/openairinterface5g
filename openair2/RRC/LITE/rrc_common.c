@@ -582,7 +582,7 @@ rrc_rx_tx(
     ue_measurement_report_triggering(ctxt_pP,enb_indexP);
 
     if (UE_rrc_inst[ctxt_pP->module_id].Info[0].handoverTarget > 0) {
-      LOG_I(RRC,"[UE %d] Frame %d : RRC handover initiated\n", ctxt_pP->module_id, ctxt_pP->frame);
+      LOG_I(RRC,"[UE %d] Frame %d - subframe: %d: RRC handover initiated\n", ctxt_pP->module_id, ctxt_pP->frame, ctxt_pP->subframe);
     }
 
     if((UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].State == RRC_HO_EXECUTION)   &&

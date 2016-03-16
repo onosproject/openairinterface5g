@@ -593,12 +593,12 @@ rrc_lite_data_ind(
   rb_id_t    DCCH_index = Srb_id;
 
   if (ctxt_pP->enb_flag == ENB_FLAG_NO) {
-    LOG_N(RRC, "[UE %x] Frame %d: received a DCCH %d message on SRB %d with Size %d from eNB ???\n",
-          ctxt_pP->module_id, ctxt_pP->frame, DCCH_index,Srb_id-1,sdu_sizeP);
+    LOG_N(RRC, "[UE %x] Frame %d - subframe %d: received a DCCH %d message on SRB %d with Size %d from eNB ???\n",
+          ctxt_pP->module_id, ctxt_pP->frame, ctxt_pP->subframe,DCCH_index,Srb_id-1,sdu_sizeP);
   } else {
-    LOG_N(RRC, "[eNB %d] Frame %d: received a DCCH %d message on SRB %d with Size %d from UE %x\n",
+    LOG_N(RRC, "[eNB %d] Frame %d - subframe %d: received a DCCH %d message on SRB %d with Size %d from UE %x\n",
           ctxt_pP->module_id,
-          ctxt_pP->frame,
+          ctxt_pP->frame,ctxt_pP->subframe,
           DCCH_index,
           Srb_id-1,
           sdu_sizeP,
@@ -616,6 +616,7 @@ rrc_lite_data_ind(
 
     message_p = itti_alloc_new_message (ctxt_pP->enb_flag ? TASK_PDCP_ENB : TASK_PDCP_UE, RRC_DCCH_DATA_IND);
     RRC_DCCH_DATA_IND (message_p).frame      = ctxt_pP->frame;
+    RRC_DCCH_DATA_IND (message_p).subframe   = ctxt_pP->subframe;
     RRC_DCCH_DATA_IND (message_p).dcch_index = DCCH_index;
     RRC_DCCH_DATA_IND (message_p).sdu_size   = sdu_sizeP;
     RRC_DCCH_DATA_IND (message_p).sdu_p      = message_buffer;
@@ -634,7 +635,7 @@ rrc_lite_data_ind(
       buffer_pP,
       sdu_sizeP);
   } else {
-#warning "LG put 0 to arg4 that is eNB index"
+	#warning "LG put 0 to arg4 that is eNB index"
     rrc_ue_decode_dcch(
       ctxt_pP,
       DCCH_index,
