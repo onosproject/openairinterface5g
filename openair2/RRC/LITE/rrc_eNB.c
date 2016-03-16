@@ -673,58 +673,58 @@ rrc_eNB_free_mem_UE_context(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
         ue_context_pP);
 #ifdef Rel10
-  ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SCellToAddMod_r10, &ue_context_pP->ue_context.sCell_config[0]);
-  ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SCellToAddMod_r10, &ue_context_pP->ue_context.sCell_config[1]);
+  //ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SCellToAddMod_r10, &ue_context_pP->ue_context.sCell_config[0]);
+  //ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SCellToAddMod_r10, &ue_context_pP->ue_context.sCell_config[1]);
 #endif
 
   if (ue_context_pP->ue_context.SRB_configList) {
-    ASN_STRUCT_FREE(asn_DEF_SRB_ToAddModList, ue_context_pP->ue_context.SRB_configList);
+    //ASN_STRUCT_FREE(asn_DEF_SRB_ToAddModList, ue_context_pP->ue_context.SRB_configList);
     ue_context_pP->ue_context.SRB_configList = NULL;
   }
 
   if (ue_context_pP->ue_context.DRB_configList) {
-    ASN_STRUCT_FREE(asn_DEF_DRB_ToAddModList, ue_context_pP->ue_context.DRB_configList);
+    //ASN_STRUCT_FREE(asn_DEF_DRB_ToAddModList, ue_context_pP->ue_context.DRB_configList);
     ue_context_pP->ue_context.DRB_configList = NULL;
   }
 
   memset(ue_context_pP->ue_context.DRB_active, 0, sizeof(ue_context_pP->ue_context.DRB_active));
 
   if (ue_context_pP->ue_context.physicalConfigDedicated) {
-    ASN_STRUCT_FREE(asn_DEF_PhysicalConfigDedicated, ue_context_pP->ue_context.physicalConfigDedicated);
+    //ASN_STRUCT_FREE(asn_DEF_PhysicalConfigDedicated, ue_context_pP->ue_context.physicalConfigDedicated);
     ue_context_pP->ue_context.physicalConfigDedicated = NULL;
   }
 
   if (ue_context_pP->ue_context.sps_Config) {
-    ASN_STRUCT_FREE(asn_DEF_SPS_Config, ue_context_pP->ue_context.sps_Config);
+    //ASN_STRUCT_FREE(asn_DEF_SPS_Config, ue_context_pP->ue_context.sps_Config);
     ue_context_pP->ue_context.sps_Config = NULL;
   }
 
   for (i=0; i < MAX_MEAS_OBJ; i++) {
     if (ue_context_pP->ue_context.MeasObj[i] != NULL) {
-      ASN_STRUCT_FREE(asn_DEF_MeasObjectToAddMod, ue_context_pP->ue_context.MeasObj[i]);
+      //ASN_STRUCT_FREE(asn_DEF_MeasObjectToAddMod, ue_context_pP->ue_context.MeasObj[i]);
       ue_context_pP->ue_context.MeasObj[i] = NULL;
     }
   }
 
   for (i=0; i < MAX_MEAS_CONFIG; i++) {
     if (ue_context_pP->ue_context.ReportConfig[i] != NULL) {
-      ASN_STRUCT_FREE(asn_DEF_ReportConfigToAddMod, ue_context_pP->ue_context.ReportConfig[i]);
+      //ASN_STRUCT_FREE(asn_DEF_ReportConfigToAddMod, ue_context_pP->ue_context.ReportConfig[i]);
       ue_context_pP->ue_context.ReportConfig[i] = NULL;
     }
   }
 
   if (ue_context_pP->ue_context.QuantityConfig) {
-    ASN_STRUCT_FREE(asn_DEF_QuantityConfig, ue_context_pP->ue_context.QuantityConfig);
+    //ASN_STRUCT_FREE(asn_DEF_QuantityConfig, ue_context_pP->ue_context.QuantityConfig);
     ue_context_pP->ue_context.QuantityConfig = NULL;
   }
 
   if (ue_context_pP->ue_context.mac_MainConfig) {
-    ASN_STRUCT_FREE(asn_DEF_MAC_MainConfig, ue_context_pP->ue_context.mac_MainConfig);
+    //ASN_STRUCT_FREE(asn_DEF_MAC_MainConfig, ue_context_pP->ue_context.mac_MainConfig);
     ue_context_pP->ue_context.mac_MainConfig = NULL;
   }
 
   if (ue_context_pP->ue_context.measGapConfig) {
-    ASN_STRUCT_FREE(asn_DEF_MeasGapConfig, ue_context_pP->ue_context.measGapConfig);
+    //ASN_STRUCT_FREE(asn_DEF_MeasGapConfig, ue_context_pP->ue_context.measGapConfig);
     ue_context_pP->ue_context.measGapConfig = NULL;
   }
 
@@ -733,12 +733,12 @@ rrc_eNB_free_mem_UE_context(
   //SRB_INFO_TABLE_ENTRY               Srb1;
   //SRB_INFO_TABLE_ENTRY               Srb2;
   if (ue_context_pP->ue_context.measConfig) {
-    ASN_STRUCT_FREE(asn_DEF_MeasConfig, ue_context_pP->ue_context.measConfig);
+    //ASN_STRUCT_FREE(asn_DEF_MeasConfig, ue_context_pP->ue_context.measConfig);
     ue_context_pP->ue_context.measConfig = NULL;
   }
 
   if (ue_context_pP->ue_context.measConfig) {
-    ASN_STRUCT_FREE(asn_DEF_MeasConfig, ue_context_pP->ue_context.measConfig);
+    //ASN_STRUCT_FREE(asn_DEF_MeasConfig, ue_context_pP->ue_context.measConfig);
     ue_context_pP->ue_context.measConfig = NULL;
   }
 
@@ -1485,7 +1485,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
     }
     else{
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger =
-      TimeToTrigger_ms80;
+      TimeToTrigger_ms100;
     	//LOG_D(RRC,"Time to trigger for eNB %d is set to %d\n",ctxt_pP->module_id,TimeToTrigger_ms40);
     }
     ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A3);
@@ -2928,7 +2928,7 @@ rv[1] = (global_rnti>>8) & 255;
   }
   else{
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger =
-    TimeToTrigger_ms80;
+    TimeToTrigger_ms100;
   	//LOG_D(RRC,"Time to trigger for eNB %d is set to %d\n",ctxt_pP->module_id,TimeToTrigger_ms40);
   }
 
