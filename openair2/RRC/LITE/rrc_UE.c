@@ -3654,7 +3654,7 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
               //LOG_D(RRC,"i: %d, j= %d, reportConfigId: %d:Time to trigger for eNB %d is set to %d-index: %d\n",i,j,reportConfigId,ctxt_pP->module_id,ttt_ms,UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger);
               // Freq specific offset of neighbor cell freq
               if(!((ofn=get_ofn(ctxt_pP->module_id))>=0))
-            	  ofn=2;
+            	  ofn=5;
               //LOG_D(RRC,"OFN for eNB %d is set to %d\n",ctxt_pP->module_id,ofn);
               //((UE_rrc_inst[ctxt_pP->module_id].MeasObj[i][measObjId-1]->measObject.choice.measObjectEUTRA.offsetFreq != NULL) ?
 
