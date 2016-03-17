@@ -2142,7 +2142,8 @@ check_handovers(
         itti_send_msg_to_task(TASK_X2AP, ENB_MODULE_ID_TO_INSTANCE(ctxt_pP->module_id), msg);
         // Stop to measure (x2 delay)
         double t_x2_enb = (double)ctxt_pP->frame*10+ctxt_pP->subframe - eNB_rrc_inst[ue_context_p->ue_context.handover_info->modid_s].rrc_enb_x2_ms;
-        push_front(&eNB_rrc_inst[ctxt_pP->module_id].rrc_enb_x2_list, t_x2_enb);
+        push_front(&eNB_rrc_inst[0].rrc_enb_x2_list, t_x2_enb);
+        LOG_D(RRC,"eNB-Stop-Time-debug: %d/%lf/%d/%d\n", ctxt_pP->frame*10+ctxt_pP->subframe, (double) eNB_rrc_inst[ue_context_p->ue_context.handover_info->modid_s].rrc_enb_x2_ms,ctxt_pP->frame,ctxt_pP->subframe);
       }
 
 
@@ -4253,6 +4254,7 @@ rrc_eNB_decode_dcch(
             sdu_sizeP);
       // Start to measure (x2 delay)
       eNB_rrc_inst[ctxt_pP->module_id].rrc_enb_x2_ms = ctxt_pP->frame*10+ctxt_pP->subframe;
+      LOG_D(RRC,"eNB-Start-Time-debug: %lf/%d/%d\n", (double) eNB_rrc_inst[ctxt_pP->module_id].rrc_enb_x2_ms,ctxt_pP->frame,ctxt_pP->subframe);
       rrc_eNB_process_MeasurementReport(
         ctxt_pP,
         ue_context_p,
@@ -4304,7 +4306,7 @@ rrc_eNB_decode_dcch(
 	  //double t_x2_target_enb = (double)UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb.p_time/get_cpu_freq_GHz()/1000.0;
 	  double t_x2_target_enb = (double)ctxt_pP->frame*10+ctxt_pP->subframe - UE_rrc_inst[0].rrc_ue_x2_target_enb_ms;
 	  push_front(&UE_rrc_inst[0].rrc_ue_x2_target_enb_list, t_x2_target_enb);
-	  LOG_D(RRC,"Stop-Time-debug: %d/%lf/%d/%d\n", ctxt_pP->frame*10+ctxt_pP->subframe, (double) UE_rrc_inst[0].rrc_ue_x2_target_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
+	  LOG_D(RRC,"UE-Stop-Time-debug: %d/%lf/%d/%d\n", ctxt_pP->frame*10+ctxt_pP->subframe, (double) UE_rrc_inst[0].rrc_ue_x2_target_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
 	}
 	ue_context_p->ue_context.Status = RRC_RECONFIGURED;
         LOG_I(RRC,

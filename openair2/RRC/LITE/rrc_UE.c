@@ -1973,11 +1973,11 @@ rrc_ue_decode_dcch(
 	  //double t_x2_src_enb = (double)UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb.p_time/get_cpu_freq_GHz()/1000.0;
 	  double t_x2_src_enb = (double)ctxt_pP->frame*10+ctxt_pP->subframe - UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms; 
 	  push_front(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_list, t_x2_src_enb);
-	  LOG_D(RRC,"Stop-Time-debug: %d/%lf/%d/%d\n", ctxt_pP->frame*10+ctxt_pP->subframe, (double) UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
+	  LOG_D(RRC,"UE-Stop-Time-debug: %d/%lf/%d/%d\n", ctxt_pP->frame*10+ctxt_pP->subframe, (double) UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
 	  // Start to measure (delay to the UE-->target)
 	  //start_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb);
 	  UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_ms = ctxt_pP->frame*10+ctxt_pP->subframe;
-	  LOG_D(RRC,"Start-Time-debug: %lf/%d/%d\n", (double) UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
+	  LOG_D(RRC,"UE-Start-Time-debug: %lf/%d/%d\n", (double) UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
 
 	  init_meas_timers(ctxt_pP); // Initialize handover measurement timers
           rrc_ue_generate_RRCConnectionReconfigurationComplete(
@@ -3704,7 +3704,7 @@ void ue_measurement_report_triggering( const protocol_ctxt_t* const ctxt_pP, con
 		    // Start to measure (delay to the UE-->source)
 		    //start_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb);
 		    UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms = ctxt_pP->frame*10+ctxt_pP->subframe;
-		    LOG_D(RRC,"Start-Time-debug: %lf/%d/%d\n", (double) UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
+		    LOG_D(RRC,"UE-Start-Time-debug: %lf/%d/%d\n", (double) UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
 		  }
 		  rrc_ue_generate_MeasurementReport(
 						    ctxt_pP,

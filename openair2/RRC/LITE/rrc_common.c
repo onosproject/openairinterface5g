@@ -415,8 +415,8 @@ rrc_top_cleanup(
 
     LOG_I(RRC,"[DST]%lf;%lf;%lf;%lf;%lf;%lf\n",x2_target_median,x2_target_q1,x2_target_q3,x2_target_min,x2_target_max,x2_target_avg);
   }
-  /*LOG_I(RRC,"[X2]median;q1;q3;min;max;\n");
-  for (module_id = 0; module_id < NB_eNB_INST; module_id++) {
+  LOG_I(RRC,"[X2]median;q1;q3;min;max;\n");
+  for (module_id = 0; module_id < NB_UE_INST; module_id++) {
     double x2_table[eNB_rrc_inst[module_id].rrc_enb_x2_list.size];
     totable(x2_table, &eNB_rrc_inst[module_id].rrc_enb_x2_list);
     qsort (x2_table, eNB_rrc_inst[module_id].rrc_enb_x2_list.size, sizeof(double), &compare);
@@ -427,7 +427,7 @@ rrc_top_cleanup(
     double x2_min = x2_table[0]; // MIN
     double x2_max = x2_table[eNB_rrc_inst[module_id].rrc_enb_x2_list.size-1]; // mAX
     LOG_I(RRC,"[X2]%lf;%lf;%lf;%d;%d;\n",x2_median,x2_q1,x2_q3,x2_min,x2_max);
-  }*/
+  }
 
   if (NB_UE_INST > 0) {
     free (UE_rrc_inst);
