@@ -47,6 +47,11 @@
 extern "C" {
 #endif
 
+/** @defgroup _fapi  FAPI
+ * @ingroup _mac
+ * @{
+ */
+
 /**
  * Parameters of the API primitives
  */
@@ -268,6 +273,8 @@ struct SchedUlConfigIndParameters
 void SchedDlConfigInd(const struct SchedDlConfigIndParameters* params);
 void SchedUlConfigInd(const struct SchedUlConfigIndParameters* params);
 #endif
+
+/*@}*/
 
 #if defined (__cplusplus)
 }

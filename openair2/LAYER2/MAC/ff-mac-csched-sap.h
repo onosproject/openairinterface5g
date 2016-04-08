@@ -47,6 +47,11 @@
 extern "C" {
 #endif
 
+/** @defgroup _fapi  FAPI
+ * @ingroup _mac
+ * @{
+ */
+
 /**
  * Parameters of the API primitives
  */
@@ -386,6 +391,8 @@ void CschedUeReleaseCnf(const struct CschedUeReleaseCnfParameters *params);
 void CschedUeConfigUpdateInd(const struct CschedUeConfigUpdateIndParameters *params);
 void CschedCellConfigUpdateInd(const struct CschedCellConfigUpdateIndParameters *params);
 #endif
+
+/*@}*/
 
 #if defined (__cplusplus)
 }
