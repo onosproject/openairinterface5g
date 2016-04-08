@@ -115,7 +115,9 @@ struct DlDciListElement_s
   uint16_t  rnti;
   uint32_t  rbBitmap;
   uint8_t   rbShift;
+  uint8_t   rbgSubset;      //resource allocation type1 field
   uint8_t   resAlloc;
+  uint8_t   nr_of_tbs;
   uint16_t  tbsSize[MAX_TB_LIST];
   uint8_t   mcs[MAX_TB_LIST];
   uint8_t   ndi[MAX_TB_LIST];
@@ -270,8 +272,8 @@ struct BuildDataListElement_s
   /* This is an array of CeBitmap_e enum flags. If one wants for example to signal TA in 1st TB and DRX and AD in 2nd one should:
    * ceBitmap[0] = ff_TA;  ceBitmap[1] = ff_DRX | ff_AD; */
   uint8_t ceBitmap[MAX_TB_LIST];
-  uint8_t   nr_rlcPDU_List;
-  struct RlcPduListElement_s (*rlcPduList)[MAX_TB_LIST];
+  uint8_t   nr_rlcPDU_List[MAX_TB_LIST];
+  struct RlcPduListElement_s* rlcPduList[MAX_TB_LIST];
   uint8_t   servCellIndex;	//definition according to 36.331 'ServCellIndex'
   /* Hex content of Activation/Deactivation MAC CE */
   uint8_t	activationDeactivationCE;

@@ -20,6 +20,8 @@ void *SchedInit(
     CschedUeConfigUpdateInd_callback_t   *CschedUeConfigUpdateInd,
     CschedCellConfigUpdateInd_callback_t *CschedCellConfigUpdateInd);
 
+void SchedShutdown(void* scheduler);
+
 #if defined (__cplusplus)
 }
 #endif

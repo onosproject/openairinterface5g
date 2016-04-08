@@ -261,6 +261,7 @@ struct SchedUlConfigIndParameters
 // SCHED - MAC Scheduler SAP primitives
 // (See 4.2 for description of the primitives)
 //
+// Primitives defined as callbacks in separate file ff-mac-callback.h
 
 #if 0
 /* not used - the scheduler has callbacks for those */

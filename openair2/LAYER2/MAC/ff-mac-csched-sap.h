@@ -374,6 +374,7 @@ struct CschedCellConfigUpdateIndParameters
 // CSCHED - MAC Scheduler Control SAP primitives
 // (See 4.1 for description of the primitives)
 //
+// Primitives defined as callbacks in separate file ff-mac-callback.h
 
 #if 0
 /* not used - the scheduler has callbacks for those */
