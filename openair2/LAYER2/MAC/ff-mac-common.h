@@ -32,7 +32,7 @@
  * \date March 2015
  * \version 1.0
  * \email: florian.kaltenberger@eurecom.fr
- * @ingroup _mac
+ * @ingroup _fapi
  */
 
 
@@ -45,6 +45,11 @@
 #if defined (__cplusplus)
 extern "C" {
 #endif
+
+/** @defgroup _fapi  FAPI
+ * @ingroup _mac
+ * @{
+ */
 
 /**
  * Constants. See section 4.4
@@ -612,6 +617,8 @@ struct PdcchOfdmSymbolCountListElement_s
 	/* Size of PDCCH in OFDM symbols */
 	uint8_t pdcchOfdmSymbolCount;
 };
+
+/*@}*/
 
 #if defined (__cplusplus)
 }

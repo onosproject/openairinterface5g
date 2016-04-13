@@ -233,7 +233,7 @@ if (${RTAI})
   set(RTAI_SOURCE sched_dlsch.c sched_rx_pdsch.c rt_wrapper.c vcd_signal_dumper.c log.c)
 endif (${RTAI})
 
-add_boolean_option(FAPI False "Use FAPI scheduler")
+add_boolean_option(FAPI True "Use FAPI scheduler")
 
 #############################
 # ASN.1 grammar C code generation & dependancies

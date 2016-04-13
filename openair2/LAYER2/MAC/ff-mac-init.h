@@ -1,6 +1,11 @@
 #ifndef FF_MAC_INIT_H
 #define FF_MAC_INIT_H
 
+/*! 
+ * @ingroup _fapi
+ */
+
+
 #if defined (__cplusplus)
 extern "C" {
 #endif

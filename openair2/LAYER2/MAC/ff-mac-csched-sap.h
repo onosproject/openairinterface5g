@@ -32,7 +32,7 @@
  * \date March 2015
  * \version 1.0
  * \email: florian.kaltenberger@eurecom.fr
- * @ingroup _mac
+ * @ingroup _fapi
  */
 
 #ifndef FF_MAC_CSCHED_SAP_H
@@ -46,6 +46,11 @@
 #if defined (__cplusplus)
 extern "C" {
 #endif
+
+/** @defgroup _fapi  FAPI
+ * @ingroup _mac
+ * @{
+ */
 
 /**
  * Parameters of the API primitives
@@ -386,6 +391,8 @@ void CschedUeReleaseCnf(const struct CschedUeReleaseCnfParameters *params);
 void CschedUeConfigUpdateInd(const struct CschedUeConfigUpdateIndParameters *params);
 void CschedCellConfigUpdateInd(const struct CschedCellConfigUpdateIndParameters *params);
 #endif
+
+/*@}*/
 
 #if defined (__cplusplus)
 }

@@ -1,6 +1,11 @@
 #ifndef FF_MAC_H
 #define FF_MAC_H
 
+/** @defgroup _fapi  FAPI
+ * @ingroup _mac
+ * @{
+ */
+
 /* this file contains OAI related FAPI definitions */
 
 /* this is the public view of the FAPI's OAI interface */
@@ -45,5 +50,7 @@ void fapi_ul_lc_length(int frame, int subframe, int lcid, int length, int rnti);
 
 /* signal downlink ACKs/NACKs */
 void fapi_dl_ack_nack(int rnti, int harq_pid, int transport_block, int ack);
+
+/*@}*/
 
 #endif /* FF_MAC_H */
