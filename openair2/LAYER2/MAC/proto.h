@@ -764,6 +764,12 @@ int rrc_mac_config_req(module_id_t     module_idP,
 #endif
                       );
 
+#if FAPI
+
+void rrc_mac_fapi_configure_srb12(int module_id, int CC_id, int rnti);
+
+#endif
+
 /** \brief get the estimated UE distance from the PHY->MAC layer.
 @param Mod_id Instance ID of eNB
 @param UE_id Index of UE if this is an eNB configuration

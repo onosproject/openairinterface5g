@@ -119,6 +119,7 @@ endmacro(add_list_string_option)
 ####################################################
 # compilation flags
 #############################################
+set(CMAKE_BUILD_TYPE "Debug")
 if (CMAKE_BUILD_TYPE STREQUAL "")
    set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
@@ -557,7 +558,7 @@ add_boolean_option(TRACE_RLC_PAYLOAD       False "Fatal assert in this case")
 add_boolean_option(RLC_STOP_ON_LOST_PDU    False "Fatal assert in this case")
 
 add_boolean_option(TRACE_RLC_MUTEX         True  "TRACE for RLC, possible problem in thread scheduling")
-add_boolean_option(TRACE_RLC_AM_BO         False "TRACE for RLC AM, TO BE CHANGED IN A MORE GENERAL FLAG")
+add_boolean_option(TRACE_RLC_AM_BO         True "TRACE for RLC AM, TO BE CHANGED IN A MORE GENERAL FLAG")
 add_boolean_option(TRACE_RLC_AM_FREE_SDU   False "TRACE for RLC AM, TO BE CHANGED IN A MORE GENERAL FLAG")
 add_boolean_option(TRACE_RLC_AM_HOLE       False "TRACE for RLC AM, TO BE CHANGED IN A MORE GENERAL FLAG")
 add_boolean_option(TRACE_RLC_AM_PDU        False "TRACE for RLC AM, TO BE CHANGED IN A MORE GENERAL FLAG")
@@ -566,7 +567,7 @@ add_boolean_option(TRACE_RLC_AM_RX         False "TRACE for RLC AM, TO BE CHANGE
 add_boolean_option(TRACE_RLC_AM_RX_DECODE  False "TRACE for RLC AM, TO BE CHANGED IN A MORE GENERAL FLAG")
 add_boolean_option(TRACE_RLC_AM_TX         False "TRACE for RLC AM, TO BE CHANGED IN A MORE GENERAL FLAG")
 add_boolean_option(TRACE_RLC_AM_TX_STATUS  False "TRACE for RLC AM, TO BE CHANGED IN A MORE GENERAL FLAG")
-add_boolean_option(TRACE_RLC_AM_STATUS_CREATION   False "TRACE for RLC AM, TO BE CHANGED IN A MORE GENERAL FLAG")
+add_boolean_option(TRACE_RLC_AM_STATUS_CREATION   True "TRACE for RLC AM, TO BE CHANGED IN A MORE GENERAL FLAG")
 
 add_boolean_option(STOP_ON_IP_TRAFFIC_OVERLOAD      False "")
 add_boolean_option(TRACE_RLC_UM_DAR        False "TRACE for RLC UM, TO BE CHANGED IN A MORE GENERAL FLAG")

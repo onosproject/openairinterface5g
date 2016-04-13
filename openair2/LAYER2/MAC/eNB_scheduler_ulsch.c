@@ -227,6 +227,11 @@ void rx_sdu(
   for (i=0; i<num_sdu; i++) {
     LOG_D(MAC,"SDU Number %d MAC Subheader SDU_LCID %d, length %d\n",i,rx_lcids[i],rx_lengths[i]);
 
+#if FAPI
+    if (UE_id != -1)
+      fapi_ul_lc_length(frameP, subframeP, rx_lcids[i], rx_lengths[i], rntiP);
+#endif
+
     switch (rx_lcids[i]) {
     case CCCH :
       LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, Received CCCH:  %x.%x.%x.%x.%x.%x, Terminating RA procedure for UE rnti %x\n",
@@ -252,9 +257,56 @@ void rx_sdu(
             if ((UE_id=add_new_ue(enb_mod_idP,CC_idP,eNB->common_channels[CC_idP].RA_template[ii].rnti,harq_pidP)) == -1 ) {
               mac_xface->macphy_exit("[MAC][eNB] Max user count reached\n");
 	      // kill RA procedure
-            } else
+            } else {
+#if FAPI
+              fapi_interface_t                         *fapi = eNB->fapi;
+              struct SchedDlMacBufferReqParameters     p;
+              struct MacCeDlListElement_s              ce;
+#if 0
+              struct CschedLcConfigReqParameters       lc;
+              struct LogicalChannelConfigListElement_s lc0;
+              struct CschedLcConfigCnfParameters       lcr;
+#endif
+
+              /* inform FAPI that we want to send contention resolution Control Element */
+              p.rnti                  = eNB->common_channels[CC_idP].RA_template[ii].rnti;
+              p.nr_macCEDL_List       = 1;
+              p.macCeDlList           = &ce;
+              p.nr_vendorSpecificList = 0;
+              p.vendorSpecificList    = NULL;
+              ce.rnti                 = eNB->common_channels[CC_idP].RA_template[ii].rnti;
+              ce.macCeType            = ff_CR;
+              SchedDlMacBufferReq(fapi->sched, &p);
+
+#if 0
+              /* configure LC 0 (this is a bug of libscheduler.a, FAPI says this channel is preconfigured) */
+              lc.rnti                        = eNB->common_channels[CC_idP].RA_template[ii].rnti;
+              lc.reconfigureFlag             = false;
+              lc.nr_logicalChannelConfigList = 1;
+              lc.logicalChannelConfigList    = &lc0;
+              lc.nr_vendorSpecificList       = 0;
+              lc.vendorSpecificList          = NULL;
+              lc0.logicalChannelIdentity     = 0;            /* this is not possible according to FAPI */
+              lc0.logicalChannelGroup        = 0;            /* TBC */
+              lc0.direction                  = DIR_BOTH;
+              lc0.qosBearerType              = QBT_NON_GBR;
+              lc0.qci                        = 5;            /* what to put? see 23.203 table 6.1.7 */
+              /* bitrates not used - we are in non GBR */
+              CschedLcConfigReq(fapi->sched, &lc);
+              CschedLcConfigCnf(fapi, &lcr);
+              if (lcr.rnti != eNB->common_channels[CC_idP].RA_template[ii].rnti)
+                { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+              if (lcr.result != ff_SUCCESS)
+                { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+              if (lcr.nr_logicalChannelIdendity != 1)
+                { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+              if (lcr.logicalChannelIdentity[0] != 0)
+                { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+#endif
+#endif /* FAPI */
               LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Added user with rnti %x => UE %d\n",
                     enb_mod_idP,CC_idP,frameP,eNB->common_channels[CC_idP].RA_template[ii].rnti,UE_id);
+            }
           } else {
             LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d CCCH: Received Msg3 from already registered UE %d: length %d, offset %d\n",
                   enb_mod_idP,CC_idP,frameP,UE_id,rx_lengths[i],payload_ptr-sduP);

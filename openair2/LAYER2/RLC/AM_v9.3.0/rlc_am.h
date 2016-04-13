@@ -280,6 +280,10 @@ protected_rlc_am( void     rlc_am_rx (const protocol_ctxt_t* const ctxtP,void * 
 */
 public_rlc_am(    struct mac_status_resp rlc_am_mac_status_indication (const protocol_ctxt_t* const ctxtP, void * const rlc_pP, uint16_t tbs_sizeP, struct mac_status_ind tx_statusP);)
 
+#if FAPI
+public_rlc_am(    struct mac_status_resp rlc_am_mac_get_buffer_occupancy(const protocol_ctxt_t* const ctxtP, void * const rlc_pP);)
+#endif
+
 /*! \fn struct mac_data_req rlc_am_mac_data_request (const protocol_ctxt_t* const ctxtP,void * const rlc_pP)
 * \brief    Gives PDUs to lower layer MAC.
 * \param[in]  ctxt_pP          Running context.

@@ -2040,7 +2040,11 @@ void phy_procedures_eNB_TX(unsigned char sched_subframe,PHY_VARS_eNB *phy_vars_e
                                          AMP,
                                          &phy_vars_eNB->lte_frame_parms,
                                          phy_vars_eNB->lte_eNB_common_vars.txdataF[0],
-                                         subframe);
+                                         subframe
+#if FAPI
+                                         , DCI_pdu->num_pdcch_symbols
+#endif
+                                         );
 
 #ifdef DEBUG_PHY_PROC
     //  LOG_I(PHY,"[eNB %d] Frame %d, subframe %d: num_pdcch_symbols %d)\n",phy_vars_eNB->Mod_id,phy_vars_eNB->proc[sched_subframe].frame_tx, next_slot>>1,num_pdcch_symbols);
@@ -2051,7 +2055,11 @@ void phy_procedures_eNB_TX(unsigned char sched_subframe,PHY_VARS_eNB *phy_vars_e
 #ifdef PHY_ABSTRACTION // FIXME this ifdef seems suspicious
   else {
     LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top_emul\n",phy_vars_eNB->Mod_id,phy_vars_eNB->proc[sched_subframe].frame_tx, subframe);
-    num_pdcch_symbols = generate_dci_top_emul(phy_vars_eNB,DCI_pdu->Num_ue_spec_dci,DCI_pdu->Num_common_dci,DCI_pdu->dci_alloc,subframe);
+    num_pdcch_symbols = generate_dci_top_emul(phy_vars_eNB,DCI_pdu->Num_ue_spec_dci,DCI_pdu->Num_common_dci,DCI_pdu->dci_alloc,subframe
+#if FAPI
+                                              , DCI_pdu->num_pdcch_symbols
+#endif
+                                              );
   }
 
 #endif
@@ -2736,6 +2744,11 @@ void process_HARQ_feedback(uint8_t UE_id,
 
         if ((dl_harq_pid[m]<dlsch->Mdlharq) &&
             (dlsch_harq_proc->status == ACTIVE)) {
+#if FAPI
+          /* TODO: handle transport block != 0 */
+printf("SEND ack %d harq pid %d rnti %d f/sf %d/%d\n", dlsch_ACK[mp], dl_harq_pid[m], dlsch->rnti, frame, subframe);
+          mac_xface->fapi_dl_ack_nack(dlsch->rnti, dl_harq_pid[m], 0 /* transport block */, dlsch_ACK[mp]);
+#endif
           // dl_harq_pid of DLSCH is still active
 
           //    msg("[PHY] eNB %d Process %d is active (%d)\n",phy_vars_eNB->Mod_id,dl_harq_pid[m],dlsch_ACK[m]);
@@ -3489,6 +3502,10 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->phich_ACK = 0;
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round++;
 
+#if FAPI
+        mac_xface->fapi_ul_ack_nack(frame, subframe, phy_vars_eNB->ulsch_eNB[i]->rnti, 0);
+#endif
+
         LOG_D(PHY,"[eNB][PUSCH %d] Increasing to round %d\n",harq_pid,phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round);
 
         if (phy_vars_eNB->ulsch_eNB[i]->Msg3_flag == 1) {
@@ -3647,6 +3664,10 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->phich_ACK = 1;
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round = 0;
         phy_vars_eNB->eNB_UE_stats[i].ulsch_consecutive_errors = 0;
+
+#if FAPI
+        mac_xface->fapi_ul_ack_nack(frame, subframe, phy_vars_eNB->ulsch_eNB[i]->rnti, 1);
+#endif
 
         if (phy_vars_eNB->ulsch_eNB[i]->Msg3_flag == 1) {
 #ifdef OPENAIR2
@@ -4240,6 +4261,10 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->phich_active = 1;
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->phich_ACK = 0;
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round++;
+
+#if FAPI
+        mac_xface->fapi_ul_ack_nack(frame, subframe, phy_vars_eNB->ulsch_eNB[i]->rnti, 0);
+#endif
       } // ulsch in error
       else {
         LOG_D(PHY,"[eNB %d][PUSCH %d] Frame %d subframe %d ULSCH received, setting round to 0, PHICH ACK\n",
@@ -4250,6 +4275,11 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->phich_ACK = 1;
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round = 0;
         phy_vars_eNB->eNB_UE_stats[i].ulsch_consecutive_errors = 0;
+
+#if FAPI
+        mac_xface->fapi_ul_ack_nack(frame, subframe, phy_vars_eNB->ulsch_eNB[i]->rnti, 1);
+#endif
+
 #ifdef DEBUG_PHY_PROC
 #ifdef DEBUG_ULSCH
         LOG_D(PHY,"[eNB] Frame %d, Subframe %d : ULSCH SDU (RX harq_pid %d) %d bytes:",

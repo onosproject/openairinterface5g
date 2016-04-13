@@ -244,6 +244,10 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP)
 {
   int UE_id;
   int j;
+#if FAPI
+  struct CschedUeConfigReqParameters p;
+  struct CschedUeConfigCnfParameters r;
+#endif
 
   UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
 
@@ -278,6 +282,56 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP)
     eNB_dlsch_info[mod_idP][cc_idP][UE_id].status = S_DL_WAITING;
     LOG_D(MAC,"[eNB %d] Add UE_id %d on Primary CC_id %d: rnti %x\n",mod_idP,UE_id,cc_idP,rntiP);
     dump_ue_list(UE_list,0);
+
+#if FAPI
+    LOG_W(MAC, "%s:%d:%s: set correct values in CschedUeConfigReqParameters\n", __FILE__, __LINE__, __FUNCTION__);
+    p.rnti                               = rntiP;
+    p.reconfigureFlag                    = false;
+    p.drxConfigPresent                   = false;
+    p.timeAlignmentTimer                 = 0;                       /* TBC */
+    p.measGapConfigPattern               = OFF;                     /* TBC */
+    p.spsConfigPresent                   = false;
+    p.srConfigPresent                    = false;                   /* TODO? */
+    p.cqiConfigPresent                   = false;                   /* TODO? */
+    p.transmissionMode                   = 1;                       /* get real one */
+    p.ueAggregatedMaximumBitrateUl       = 900000000L;              /* TODO */
+    p.ueAggregatedMaximumBitrateDl       = 900000000L;              /* TODO */
+    /* initial UE capabilities - let's pretend to be cat3 */
+    p.ueCapabilities.halfDuplex          = false;
+    p.ueCapabilities.intraSfHopping      = false;
+    p.ueCapabilities.type2Sb1            = false;
+    p.ueCapabilities.ueCategory          = 3;
+    p.ueCapabilities.resAllocType1       = true;                    /* TBC */
+    p.ueTransmitAntennaSelection         = noneloop;                /* TBC */
+    p.ttiBundling                        = false;                   /* TBC */
+    p.maxHarqTx                          = 8;                       /* get real one */
+    p.betaOffsetAckIndex                 = 0;                       /* TODO */
+    p.betaOffsetRiIndex                  = 0;                       /* TODO */
+    p.betaOffsetCqiIndex                 = 0;                       /* TODO */
+    p.ackNackSrsSimultaneousTransmission = false;                   /* get real one */
+    p.simultaneousAckNackAndCqi          = true;                    /* get real one */
+    p.aperiodicCqiRepMode                = ff_rm30;                 /* get real one */
+    p.tddAckNackFeedbackMode             = ff_bundling;             /* get real one */
+    p.ackNackRepetitionFactor            = 0;                       /* get real one */
+    p.extendedBSRSizes                   = false;
+    p.caSupport                          = false;
+    p.crossCarrierSchedSupport           = false;
+    p.pcellCarrierIndex                  = 0;                       /* TBC */
+    p.nr_scells                          = 0;
+    p.scellConfigList[0]                 = NULL;
+    p.scellDeactivationTimer             = 0;
+
+    LOG_I(MAC, "calling CschedUeConfigReq\n");
+    CschedUeConfigReq(eNB_mac_inst[mod_idP].fapi->sched, &p);
+    LOG_I(MAC, "calling CschedUeConfigCnf\n");
+    CschedUeConfigCnf(eNB_mac_inst[mod_idP].fapi, &r);
+    if (r.rnti != rntiP || r.result != ff_SUCCESS) {
+      LOG_E(MAC, "FAPI fatal error: rnti is %x (expected %x); result is %s (expected ff_SUCCESS)\n",
+            r.rnti, rntiP, r.result == ff_SUCCESS ? "ff_SUCCESS" : "ff_FAILURE");
+      abort();
+    }
+#endif
+
     return(UE_id);
   }
 
@@ -365,6 +419,11 @@ int mac_remove_ue(module_id_t mod_idP, int ue_idP, int frameP, sub_frame_t subfr
 
     prev=i;
   }
+
+#if FAPI
+printf("FAPI: remove UE: TODO\n");
+abort();
+#endif
 
   if (ret == 0) {
     return (0);
@@ -530,6 +589,37 @@ void swap_UEs(UE_list_t *listP,int nodeiP, int nodejP, int ul_flag)
   dump_ue_list(listP,ul_flag);
 }
 
+#if FAPI
+
+void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP, sub_frame_t subframeP)
+{
+  fapi_interface_t                  *fapi;
+  int                               UE_id;
+  struct SchedUlSrInfoReqParameters p;
+  struct SrListElement_s            sr;
+
+  UE_id = find_UE_id(mod_idP, rntiP);
+  if (UE_id == -1) {
+    LOG_E(MAC, "%s:%d:%s: rnti %x: no such UE\n", __FILE__, __LINE__, __FUNCTION__, rntiP);
+    abort();
+  }
+
+  fapi = eNB_mac_inst[mod_idP].fapi;
+
+  p.sfnSf = frameP * 16 + subframeP;
+  p.nr_srList = 1;
+  p.srList    = &sr;
+  p.nr_vendorSpecificList = 0;
+  p.vendorSpecificList    = NULL;
+
+  sr.rnti = rntiP;
+
+  LOG_I(MAC, "eNB %d/%d f/sf %d/%d calling SchedUlSrInfoReq for rnti %x\n", mod_idP, cc_idP, frameP, subframeP, rntiP);
+  SchedUlSrInfoReq(fapi->sched, &p);
+}
+
+#else /* FAPI */
+
 void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP, sub_frame_t subframeP)
 {
 
@@ -547,6 +637,7 @@ void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP
   }
 }
 
+#endif /* FAPI */
 
 
 
@@ -1101,8 +1192,10 @@ boolean_t CCE_allocation_infeasible(int module_idP,
     DCI_pdu->Num_ue_spec_dci++;
     ret = allocate_CCEs(module_idP,CC_idP,subframe,1);
     if (ret==-1)
-      res = FALSE;
+      res = TRUE;
     DCI_pdu->Num_ue_spec_dci--;
   }
+
+  return res;
 }
 

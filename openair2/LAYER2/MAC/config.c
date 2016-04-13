@@ -56,6 +56,10 @@
 #include "PMCH-InfoList-r9.h"
 #endif
 
+#if FAPI
+#include "ff-mac-csched-sap.h"
+#endif
+
 /* sec 5.9, 36.321: MAC Reset Procedure */
 void ue_mac_reset(module_id_t module_idP,uint8_t eNB_index)
 {
@@ -560,6 +564,64 @@ rrc_get_estimated_ue_distance(
 
   //    LOG_D(LOCALIZE, "DEBUG ME, dist = %d\n", &eNB_mac_inst[ctxt_pP->module_id].UE_list.UE_template[CC_id][UE_id].distance.power_based);
 
+}
+
+#endif
+
+#if FAPI
+
+void rrc_mac_fapi_configure_srb12(int module_id, int CC_id, int rnti)
+{
+  struct CschedLcConfigReqParameters       lc;
+  struct LogicalChannelConfigListElement_s lcs[2];
+  struct CschedLcConfigCnfParameters       lcr;
+  fapi_interface_t                         *fapi;
+
+  LOG_I(MAC, "eNB %d/%d: FAPI: configure SRB 1 and 2 for UE %x\n", module_id, CC_id, rnti);
+
+  fapi = eNB_mac_inst[module_id].fapi;
+
+  lc.rnti = rnti;
+  lc.reconfigureFlag = false;
+  lc.nr_logicalChannelConfigList = 2;
+  lc.logicalChannelConfigList = lcs;
+  lc.nr_vendorSpecificList = 0;
+  lc.vendorSpecificList = NULL;
+
+  /* SRB 1 */
+  lcs[0].logicalChannelIdentity = 1;
+  lcs[0].logicalChannelGroup    = 0;            /* TBC */
+  lcs[0].direction              = DIR_BOTH;
+  lcs[0].qosBearerType          = QBT_NON_GBR;
+  lcs[0].qci                    = 5;            /* what to put? see 23.203 table 6.1.7 */
+  /* bitrates not used - we are in non GBR */
+
+  /* SRB 2 */
+  lcs[1].logicalChannelIdentity = 2;
+  lcs[1].logicalChannelGroup    = 0;            /* TBC */
+  lcs[1].direction              = DIR_BOTH;
+  lcs[1].qosBearerType          = QBT_NON_GBR;
+  lcs[1].qci                    = 5;            /* what to put? see 23.203 table 6.1.7 */
+  /* bitrates not used - we are in non GBR */
+
+  CschedLcConfigReq(fapi->sched, &lc);
+  CschedLcConfigCnf(fapi, &lcr);
+
+  if (lcr.rnti != rnti)
+    { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (lcr.result != ff_SUCCESS)
+    { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (lcr.nr_logicalChannelIdendity != 2)
+    { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  /* libscheduler.a does not set those values as of v7 */
+#if 0
+  if (lcr.logicalChannelIdentity[0] != 1 && lcr.logicalChannelIdentity[0] != 2)
+    { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (lcr.logicalChannelIdentity[1] != 2 && lcr.logicalChannelIdentity[1] != 1)
+    { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (lcr.logicalChannelIdentity[0] == lcr.logicalChannelIdentity[1])
+    { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+#endif
 }
 
 #endif

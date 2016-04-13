@@ -463,6 +463,11 @@ public_rlc_mac(void                  mac_rlc_data_ind     (const module_id_t, co
 * \return     The maximum number of bytes that the RLC instance can send in the next transmission sequence.
 */
 public_rlc_mac(mac_rlc_status_resp_t mac_rlc_status_ind   (const module_id_t, const rnti_t, const eNB_index_t, const frame_t, const  eNB_flag_t, const  MBMS_flag_t, logical_chan_id_t, tb_size_t );)
+
+#if FAPI
+public_rlc_mac(mac_rlc_status_resp_t mac_rlc_get_buffer_occupancy(const module_id_t, const rnti_t, const frame_t, logical_chan_id_t);)
+#endif
+
 //-----------------------------------------------------------------------------
 //   RLC methods
 //-----------------------------------------------------------------------------

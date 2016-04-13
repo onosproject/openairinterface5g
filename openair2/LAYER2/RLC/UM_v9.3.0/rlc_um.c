@@ -513,6 +513,32 @@ rlc_um_mac_status_indication (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP
   return status_resp;
 }
 
+#if FAPI
+
+//-----------------------------------------------------------------------------
+struct mac_status_resp
+rlc_um_mac_get_buffer_occupancy(const protocol_ctxt_t* const ctxt_pP, void *rlc_pP)
+{
+  struct mac_status_resp status_resp;
+  rlc_um_entity_t   *rlc_p = NULL;
+
+  status_resp.buffer_occupancy_in_pdus         = 0;
+  status_resp.buffer_occupancy_in_bytes        = 0;
+  status_resp.head_sdu_remaining_size_to_send  = 0;
+  status_resp.head_sdu_creation_time           = 0;
+  status_resp.head_sdu_is_segmented            = 0;
+
+  if (rlc_pP) {
+    rlc_p = (rlc_um_entity_t *) rlc_pP;
+    status_resp.rlc_info.rlc_protocol_state      = rlc_p->protocol_state;
+    status_resp.buffer_occupancy_in_bytes = rlc_um_get_buffer_occupancy (rlc_p);
+  }
+
+  return status_resp;
+}
+
+#endif /* FAPI */
+
 //-----------------------------------------------------------------------------
 struct mac_data_req
 rlc_um_mac_data_request (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP)

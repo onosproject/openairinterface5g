@@ -68,6 +68,9 @@
 
 #include "SIMULATION/TOOLS/defs.h" // for taus
 
+#if FAPI
+#include "ff-mac-csched-sap.h"
+#endif
 
 void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP,unsigned char Msg3_subframe)
 {
@@ -730,6 +733,81 @@ void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP,un
   stop_meas(&eNB->schedule_ra);
 }
 
+#if FAPI
+
+void initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t preamble_index,int16_t timing_offset,uint8_t sect_id,sub_frame_t subframeP,
+                      uint8_t f_id)
+{
+  fapi_interface_t                    *fapi = eNB_mac_inst[module_idP].fapi;
+  struct SchedDlRachInfoReqParameters p;
+  struct RachListElement_s            r;
+  int                                 i;
+  RA_TEMPLATE                         *RA_template = &eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[0];
+
+  LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Initiating RA procedure for preamble index %d\n",module_idP,CC_id,frameP,preamble_index);
+
+  p.sfnSf                 = frameP * 16 + subframeP;
+  p.nrrachList            = 1;
+  p.rachList              = &r;
+  p.nr_vendorSpecificList = 0;
+  p.vendorSpecificList    = NULL;
+
+  /* we should have a proper way for this rnti */
+  r.rnti          = taus();  LOG_W(MAC, "%s:%s:%d: C-RNTI generation is wrong (rnti %d|0x%x)\n", __FILE__, __FUNCTION__, __LINE__, r.rnti, r.rnti);
+  r.estimatedSize = 144;     LOG_W(MAC, "initiate_ra_proc: estimated minimum size of first UL message set to 144 bits, what value put?\n");
+  r.carrierIndex  = CC_id;
+
+  for (i=0; i<NB_RA_PROC_MAX; i++) {
+    if (RA_template[i].RA_active==FALSE) {
+      RA_template[i].RA_active=TRUE;
+      RA_template[i].generate_rar=0;
+      RA_template[i].generate_Msg4=0;
+      RA_template[i].wait_ack_Msg4=0;
+      RA_template[i].timing_offset=timing_offset;
+      RA_template[i].rnti = r.rnti;
+      RA_template[i].RA_rnti = 1+subframeP+(10*f_id);
+      RA_template[i].preamble_index = preamble_index;
+      LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Activating RAR generation for process %d, rnti %x, RA_active %d\n",
+            module_idP,CC_id,frameP,i,RA_template[i].rnti,
+            RA_template[i].RA_active);
+      break;
+    }
+  }
+  if (i == NB_RA_PROC_MAX) { printf("%s:%d:%s: handle this case\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+
+  LOG_I(MAC, "calling SchedDlRachInfoReq\n");
+  SchedDlRachInfoReq(fapi->sched, &p);
+
+#if 0
+  while (1) {
+    struct SchedDlTriggerReqParameters req;
+    struct SchedDlConfigIndParameters  ind;
+    req.sfnSf                 = frameP * 16 + subframeP;
+    req.nr_dlInfoList         = 0;
+    req.dlInfoList            = NULL;
+    req.nr_vendorSpecificList = 0;
+    req.vendorSpecificList    = NULL;
+
+    LOG_I(MAC, "calling SchedDlTriggerReq\n");
+    SchedDlTriggerReq(fapi->sched, &req);
+    LOG_I(MAC, "calling SchedDlConfigInd\n");
+    SchedDlConfigInd(fapi, &ind);
+    LOG_I(MAC, "SchedDlConfigInd returns ind.nr_buildDataList %d f/sf %d/%d\n", ind.nr_buildDataList, frameP, subframeP);
+    LOG_I(MAC, "SchedDlConfigInd returns ind.nr_buildRARList %d f/sf %d/%d\n", ind.nr_buildRARList, frameP, subframeP);
+    LOG_I(MAC, "SchedDlConfigInd returns ind.nr_buildBroadcastList %d f/sf %d/%d\n", ind.nr_buildBroadcastList, frameP, subframeP);
+    subframeP++; if (subframeP == 10) { frameP++; subframeP = 0; } if (frameP >= 1024) frameP = 0;
+    if (ind.nr_buildRARList) {
+      printf("yo\n");
+    }
+    if (ind.nr_buildBroadcastList) {
+      printf("yu\n");
+    }
+  }
+#endif
+}
+
+#else /* FAPI */
+
 void initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t preamble_index,int16_t timing_offset,uint8_t sect_id,sub_frame_t subframeP,
                       uint8_t f_id)
 {
@@ -758,6 +836,8 @@ void initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t
     }
   }
 }
+
+#endif /* FAPI */
 
 void cancel_ra_proc(module_id_t module_idP, int CC_id, frame_t frameP, rnti_t rnti)
 {

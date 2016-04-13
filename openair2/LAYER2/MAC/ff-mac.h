@@ -35,4 +35,15 @@ void CschedUeReleaseCnf(fapi_interface_t *, struct CschedUeReleaseCnfParameters 
 void CschedUeConfigUpdateInd(fapi_interface_t *, struct CschedUeConfigUpdateIndParameters *params);
 void CschedCellConfigUpdateInd(fapi_interface_t *, struct CschedCellConfigUpdateIndParameters *params);
 
+/* those functions are called by the PHY layer to inform FAPI of events */
+
+/* signal uplink ACKs/NACKs */
+void fapi_ul_ack_nack(int frame, int subframe, int rnti, int ack);
+
+/* signal uplink LC data length received */
+void fapi_ul_lc_length(int frame, int subframe, int lcid, int length, int rnti);
+
+/* signal downlink ACKs/NACKs */
+void fapi_dl_ack_nack(int rnti, int harq_pid, int transport_block, int ack);
+
 #endif /* FF_MAC_H */

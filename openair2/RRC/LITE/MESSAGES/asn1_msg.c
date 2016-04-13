@@ -1698,6 +1698,7 @@ do_RRCConnectionSetup(
 #ifdef XER_PRINT
   xer_fprint(stdout, &asn_DEF_DL_CCCH_Message, (void*)&dl_ccch_msg);
 #endif
+  xer_fprint(stdout, &asn_DEF_DL_CCCH_Message, (void*)&dl_ccch_msg);
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_CCCH_Message,
                                    (void*)&dl_ccch_msg,
                                    buffer,

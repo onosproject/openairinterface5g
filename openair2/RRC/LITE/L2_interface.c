@@ -65,6 +65,56 @@ extern UE_MAC_INST *UE_mac_inst;
 
 mui_t mui=0;
 
+#if FAPI
+
+int mac_rrc_get_SIB1(
+    const module_id_t mod_id,
+    const int         CC_id,
+    uint8_t *   const buffer)
+{
+  if (eNB_rrc_inst[mod_id].carrier[CC_id].SI.Active == 0)
+    return 0;
+
+  if (eNB_rrc_inst[mod_id].carrier[CC_id].sizeof_SIB1 == 255) {
+    LOG_E(RRC,"[eNB %d] MAC Request for SIB1 and SIB1 not initialized\n", mod_id);
+    mac_xface->macphy_exit("mac_rrc_lite_data_req:  MAC Request for SIB1 and SIB1 not initialized");
+  }
+
+  memcpy(buffer,
+         eNB_rrc_inst[mod_id].carrier[CC_id].SIB1,
+         eNB_rrc_inst[mod_id].carrier[CC_id].sizeof_SIB1);
+
+  return eNB_rrc_inst[mod_id].carrier[CC_id].sizeof_SIB1;
+}
+
+int mac_rrc_get_SIB23(
+    const module_id_t mod_id,
+    const int         CC_id,
+    uint8_t *   const buffer)
+{
+  if (eNB_rrc_inst[mod_id].carrier[CC_id].SI.Active == 0)
+    return 0;
+
+  if (eNB_rrc_inst[mod_id].carrier[CC_id].sizeof_SIB23 == 255) {
+    LOG_E(RRC,"[eNB %d] MAC Request for SIB23 and SIB23 not initialized\n", mod_id);
+    mac_xface->macphy_exit("mac_rrc_lite_data_req:  MAC Request for SIB23 and SIB23 not initialized");
+  }
+
+  memcpy(buffer,
+         eNB_rrc_inst[mod_id].carrier[CC_id].SIB23,
+         eNB_rrc_inst[mod_id].carrier[CC_id].sizeof_SIB23);
+
+  return eNB_rrc_inst[mod_id].carrier[CC_id].sizeof_SIB23;
+}
+
+int mac_rrc_get_ccch_size(const module_id_t Mod_idP, const int CC_id)
+{
+  if(eNB_rrc_inst[Mod_idP].carrier[CC_id].Srb0.Active == 0) return 0;
+  return eNB_rrc_inst[Mod_idP].carrier[CC_id].Srb0.Tx_buffer.payload_size;
+}
+
+#endif /* FAPI */
+
 //------------------------------------------------------------------------------
 int8_t
 mac_rrc_lite_data_req(
@@ -95,6 +145,7 @@ mac_rrc_lite_data_req(
         return 0;
       }
 
+printf("XX frame %d %%2 %d %%8 %d\n", frameP, frameP % 2, frameP % 8);
       // All even frames transmit SIB in SF 5
       if (eNB_rrc_inst[Mod_idP].carrier[CC_id].sizeof_SIB1 == 255) {
         LOG_E(RRC,"[eNB %d] MAC Request for SIB1 and SIB1 not initialized\n",Mod_idP);
@@ -102,6 +153,7 @@ mac_rrc_lite_data_req(
       }
 
       if ((frameP%2) == 0) {
+printf("XX throw SIB1\n");
         memcpy(&buffer_pP[0],
                eNB_rrc_inst[Mod_idP].carrier[CC_id].SIB1,
                eNB_rrc_inst[Mod_idP].carrier[CC_id].sizeof_SIB1);
@@ -143,6 +195,7 @@ mac_rrc_lite_data_req(
         return (eNB_rrc_inst[Mod_idP].carrier[CC_id].sizeof_SIB1);
       } // All RFN mod 8 transmit SIB2-3 in SF 5
       else if ((frameP%8) == 1) {
+printf("XX throw SIB2/3\n");
         memcpy(&buffer_pP[0],
                eNB_rrc_inst[Mod_idP].carrier[CC_id].SIB23,
                eNB_rrc_inst[Mod_idP].carrier[CC_id].sizeof_SIB23);

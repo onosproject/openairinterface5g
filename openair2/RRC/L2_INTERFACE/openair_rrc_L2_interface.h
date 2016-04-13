@@ -41,6 +41,24 @@
 #include "COMMON/mac_rrc_primitives.h"
 #include "COMMON/platform_types.h"
 
+#if FAPI
+
+int mac_rrc_get_SIB1(
+    const module_id_t mod_id,
+    const int         CC_id,
+    uint8_t *   const buffer);
+
+int mac_rrc_get_SIB23(
+    const module_id_t mod_id,
+    const int         CC_id,
+    uint8_t *   const buffer);
+
+int mac_rrc_get_ccch_size(
+    const module_id_t Mod_idP,
+    const int         CC_id);
+
+#endif /* FAPI */
+
 int8_t
 mac_rrc_data_req(
   const module_id_t     module_idP,

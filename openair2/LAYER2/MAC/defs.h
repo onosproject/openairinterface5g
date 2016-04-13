@@ -785,6 +785,10 @@ typedef struct {
   int16_t timing_offset;
   /// Timeout for RRC connection
   int16_t RRC_timer;
+#if FAPI
+  /// UL grant as returned by FAPI scheduler
+  uint32_t UL_grant;
+#endif
 } RA_TEMPLATE;
 
 

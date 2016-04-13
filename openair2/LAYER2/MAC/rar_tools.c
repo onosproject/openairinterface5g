@@ -54,6 +54,74 @@ extern unsigned int  distRIV2alloc_LUT25[512];
 extern unsigned short RIV2nb_rb_LUT25[512];
 extern unsigned short RIV2first_rb_LUT25[512];
 
+#if FAPI
+
+//------------------------------------------------------------------------------
+unsigned short fill_rar(
+  const module_id_t module_idP,
+  const int         CC_id,
+  const frame_t     frameP,
+  uint8_t* const    dlsch_buffer,
+  const uint16_t    N_RB_UL,
+  const uint8_t     input_buffer_length
+)
+//------------------------------------------------------------------------------
+{
+  RA_HEADER_RAPID *rarh = (RA_HEADER_RAPID *)dlsch_buffer;
+  uint8_t         *rar = (uint8_t *)(dlsch_buffer+1);
+  int             i;
+  int             ra_idx = -1;
+  uint32_t        ul_grant;
+
+  AssertFatal(CC_id < MAX_NUM_CCs, "CC_id %u < MAX_NUM_CCs %u", CC_id, MAX_NUM_CCs);
+
+  for (i=0; i<NB_RA_PROC_MAX; i++) {
+    if (eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar == 1) {
+      ra_idx=i;
+      eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar = 0;
+      break;
+    }
+  }
+
+  if (ra_idx==-1)
+    return(0);
+
+  ul_grant = eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].UL_grant;
+
+  // subheader fixed
+  rarh->E                     = 0; // First and last RAR
+  rarh->T                     = 1; // 0 for E/T/R/R/BI subheader, 1 for E/T/RAPID subheader
+  rarh->RAPID                 = eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].preamble_index; // Respond to Preamble 0 only for the moment
+  rar[4] = (uint8_t)(eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti>>8);
+  rar[5] = (uint8_t)(eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti&0xff);
+  eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset /= 16; //T_A = N_TA/16, where N_TA should be on a 30.72Msps
+  rar[0] = (uint8_t)(eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset>>(2+4)); // 7 MSBs of timing advance + divide by 4
+  rar[1] = (uint8_t)(eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset<<(4-2))&0xf0; // 4 LSBs of timing advance + divide by 4
+  rar[1] |= (ul_grant >> 16) & 0x0f;
+  rar[2] = (ul_grant >> 8) & 0xff;
+  rar[3] = ul_grant & 0xff;
+  LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Generating RAR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for ra_idx %d, CRNTI %x,preamble %d/%d,TIMING OFFSET %d\n",
+        module_idP, CC_id,
+        frameP,
+        *(uint8_t*)rarh,rar[0],rar[1],rar[2],rar[3],rar[4],rar[5],
+        ra_idx,
+        eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti,
+        rarh->RAPID,eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[0].preamble_index,
+        eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset);
+
+  if (opt_enabled) {
+    trace_pdu(1, dlsch_buffer, input_buffer_length, module_idP, 2, 1,
+              eNB_mac_inst[module_idP].subframe, 0, 0);
+    LOG_D(OPT,"[eNB %d][RAPROC] CC_id %d RAR Frame %d trace pdu for rnti %x and  rapid %d size %d\n",
+          module_idP, CC_id, frameP, eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti,
+          rarh->RAPID, input_buffer_length);
+  }
+
+  return(eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti);
+}
+
+#else /* FAPI */
+
 //------------------------------------------------------------------------------
 unsigned short fill_rar(
   const module_id_t module_idP,
@@ -107,7 +175,7 @@ unsigned short fill_rar(
   eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset /= 16; //T_A = N_TA/16, where N_TA should be on a 30.72Msps
   rar[0] = (uint8_t)(eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset>>(2+4)); // 7 MSBs of timing advance + divide by 4
   rar[1] = (uint8_t)(eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset<<(4-2))&0xf0; // 4 LSBs of timing advance + divide by 4
-  rballoc = mac_xface->computeRIV(N_RB_UL,1,1); // first PRB only for UL Grant
+  rballoc = mac_xface->computeRIV(N_RB_UL,0,1); // first PRB only for UL Grant
   rar[1] |= (rballoc>>7)&7; // Hopping = 0 (bit 3), 3 MSBs of rballoc
   rar[2] = ((uint8_t)(rballoc&0xff))<<1; // 7 LSBs of rballoc
   mcs = 10;
@@ -136,6 +204,8 @@ unsigned short fill_rar(
 
   return(eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti);
 }
+
+#endif /* FAPI */
 
 //------------------------------------------------------------------------------
 uint16_t

@@ -3819,6 +3819,10 @@ rrc_eNB_decode_ccch(
              &DCCH_LCHAN_DESC,
              LCHAN_DESC_SIZE);
 
+#if FAPI
+      rrc_mac_fapi_configure_srb12(ctxt_pP->module_id, CC_id, ue_context_p->ue_context.rnti);
+#endif
+
       rrc_eNB_generate_RRCConnectionSetup(ctxt_pP, ue_context_p, CC_id);
       LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT"CALLING RLC CONFIG SRB1 (rbid %d)\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),

@@ -1149,13 +1149,21 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
                          int16_t amp,
                          LTE_DL_FRAME_PARMS *frame_parms,
                          mod_sym_t **txdataF,
-                         uint32_t sub_frame_offset);
+                         uint32_t sub_frame_offset
+#if FAPI
+                         , int num_pdcch_symbols_from_fapi
+#endif
+                         );
 
 uint8_t generate_dci_top_emul(PHY_VARS_eNB *phy_vars_eNB,
                               uint8_t num_ue_spec_dci,
                               uint8_t num_common_dci,
                               DCI_ALLOC_t *dci_alloc,
-                              uint8_t subframe);
+                              uint8_t subframe
+#if FAPI
+                              , int num_pdcch_symbols_from_fapi
+#endif
+                              );
 
 
 void generate_64qam_table(void);

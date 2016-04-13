@@ -667,6 +667,10 @@ int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,ui
   //Mac_rlc_xface->Is_cluster_head[0] = 1;
   //Mac_rlc_xface->Is_cluster_head[1] = 0;
 
+#if FAPI
+  mac_xface->fapi_ul_ack_nack = fapi_ul_ack_nack;
+  mac_xface->fapi_dl_ack_nack = fapi_dl_ack_nack;
+#endif
 
   return(1);
 }

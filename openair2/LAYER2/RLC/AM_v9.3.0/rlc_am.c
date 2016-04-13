@@ -65,7 +65,7 @@ rlc_am_get_buffer_occupancy_in_bytes (
 #if TRACE_RLC_AM_BO
 
       if (((15  +  rlc_pP->num_nack_sn*(10+1)  +  rlc_pP->num_nack_so*(15+15+1) + 7) >> 3) > 0) {
-        LOG_D(RLC, PROTOCOL_CTXT_FMT RB_AM_FMT" BO : CONTROL PDU %d bytes \n",
+        LOG_D(RLC, PROTOCOL_RLC_AM_CTXT_FMT" BO : CONTROL PDU %d bytes \n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
               ((15  +  rlc_pP->num_nack_sn*(10+1)  +  rlc_pP->num_nack_so*(15+15+1) + 7) >> 3));
       }
@@ -90,7 +90,6 @@ rlc_am_get_buffer_occupancy_in_bytes (
 
 
 #if TRACE_RLC_AM_BO
-
   if ((rlc_pP->status_buffer_occupancy + rlc_pP->retransmission_buffer_occupancy + rlc_pP->sdu_buffer_occupancy + max_li_overhead + header_overhead) > 0) {
     LOG_D(RLC, PROTOCOL_RLC_AM_CTXT_FMT" BO : STATUS  BUFFER %d bytes \n", PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP), rlc_pP->status_buffer_occupancy);
     LOG_D(RLC, PROTOCOL_RLC_AM_CTXT_FMT" BO : RETRANS BUFFER %d bytes \n", PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP), rlc_pP->retransmission_buffer_occupancy);
@@ -659,6 +658,33 @@ rlc_am_mac_status_indication (
 #endif
   return status_resp;
 }
+
+#if FAPI
+
+//-----------------------------------------------------------------------------
+struct mac_status_resp
+rlc_am_mac_get_buffer_occupancy(
+  const protocol_ctxt_t* const ctxt_pP,
+  void * const                 rlc_pP)
+{
+  struct mac_status_resp  status_resp;
+  uint16_t  sdu_size = 0;
+  uint16_t  sdu_remaining_size = 0;
+  int32_t diff_time=0;
+  rlc_am_entity_t *rlc = (rlc_am_entity_t *) rlc_pP;
+
+  status_resp.buffer_occupancy_in_bytes        = 0;
+  status_resp.buffer_occupancy_in_pdus         = 0;
+  status_resp.head_sdu_remaining_size_to_send  = 0;
+  status_resp.head_sdu_creation_time           = 0;
+  status_resp.head_sdu_is_segmented            = 0;
+
+  status_resp.buffer_occupancy_in_bytes = rlc_am_get_buffer_occupancy_in_bytes(ctxt_pP, rlc);
+  return status_resp;
+}
+
+#endif /* FAPI */
+
 //-----------------------------------------------------------------------------
 struct mac_data_req
 rlc_am_mac_data_request (

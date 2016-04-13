@@ -336,6 +336,11 @@ typedef struct {
   uint8_t (*get_SB_size)(uint8_t n_rb_dl);
   ///end ALU's algo
 
+#if FAPI
+  void (*fapi_ul_ack_nack)(int frame, int subframe, int rnti, int ack);
+  void (*fapi_dl_ack_nack)(int rnti, int harq_pid, int transport_block, int ack);
+#endif
+
 } MAC_xface;
 
 

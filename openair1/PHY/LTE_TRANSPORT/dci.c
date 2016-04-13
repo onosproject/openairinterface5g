@@ -2028,7 +2028,11 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
                          int16_t amp,
                          LTE_DL_FRAME_PARMS *frame_parms,
                          mod_sym_t **txdataF,
-                         uint32_t subframe)
+                         uint32_t subframe
+#if FAPI
+                         , int num_pdcch_symbols_from_fapi
+#endif
+                         )
 {
 
   uint8_t *e_ptr,num_pdcch_symbols;
@@ -2078,7 +2082,11 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
     break;
   }
 
+#if FAPI
+  num_pdcch_symbols = num_pdcch_symbols_from_fapi;
+#else
   num_pdcch_symbols = get_num_pdcch_symbols(num_ue_spec_dci+num_common_dci,dci_alloc,frame_parms,subframe);
+#endif
   //   printf("subframe %d in generate_dci_top num_pdcch_symbols = %d, num_dci %d\n",
   //       subframe,num_pdcch_symbols,num_ue_spec_dci+num_common_dci);
   generate_pcfich(num_pdcch_symbols,
@@ -2349,7 +2357,11 @@ uint8_t generate_dci_top_emul(PHY_VARS_eNB *phy_vars_eNB,
                               uint8_t num_ue_spec_dci,
                               uint8_t num_common_dci,
                               DCI_ALLOC_t *dci_alloc,
-                              uint8_t subframe)
+                              uint8_t subframe
+#if FAPI
+                              , int num_pdcch_symbols_from_fapi
+#endif
+                              )
 {
   int n_dci, n_dci_dl;
   uint8_t ue_id;
@@ -2358,6 +2370,9 @@ uint8_t generate_dci_top_emul(PHY_VARS_eNB *phy_vars_eNB,
                               dci_alloc,
                               &phy_vars_eNB->lte_frame_parms,
                               subframe);
+#if FAPI
+  num_pdcch_symbols = num_pdcch_symbols_from_fapi;
+#endif
   eNB_transport_info[phy_vars_eNB->Mod_id][phy_vars_eNB->CC_id].cntl.cfi=num_pdcch_symbols;
 
   memcpy(phy_vars_eNB->dci_alloc[subframe&1],dci_alloc,sizeof(DCI_ALLOC_t)*(num_ue_spec_dci+num_common_dci));
