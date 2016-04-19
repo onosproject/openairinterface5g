@@ -569,6 +569,20 @@ static void fapi_schedule_uplink(int module_idP, int CC_id, struct UlDciListElem
   fapi_convert_ul_dci(module_idP, CC_id, dci, a);
 }
 
+char *binary(unsigned x)
+{
+  static char r[33];
+  char *s = r+31;
+  int i;
+  r[32] = 0;
+  for (i = 0; i < 32; i++) {
+    *s = '0' + (x&1);
+    s--;
+    x >>= 1;
+  }
+  return r;
+}
+
 void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP)  //, int calibration_flag) {
 {
   int                                 CC_id;
@@ -588,6 +602,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
   struct UlInfoListElement_s          ulinfo[MAX_UL_INFO_LIST];
   int                                 ulsf;
 
+printf("SCHEDULER called for f/sf %d/%d\n", frameP, subframeP);
 #if defined(ENABLE_ITTI)
   while (1) {
     // Checks if a message has been sent to MAC sub-task
@@ -664,6 +679,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
         rlc.logicalChannelIdentity = CCCH;
         rlc.rlcTransmissionQueueSize = mac_rrc_get_ccch_size(module_idP, CC_id);
         LOG_I(MAC, "calling SchedDlRlcBufferReq on CCCH rnti %x queue_size %d\n", rlc.rnti, rlc.rlcTransmissionQueueSize);
+printf("MAC to FAPI downlink BUF CCCH %d\n", rlc.rlcTransmissionQueueSize);
         SchedDlRlcBufferReq(fapi->sched, &rlc);
         /* let's report only once, so put generate_Msg4 to 2
          * (we will generate later on, when FAPI tells us to do so)
@@ -689,7 +705,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
     LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
-printf("BUF %d\n", rlc_status.bytes_in_buffer);
+printf("MAC to FAPI downlink BUF DCCH %d\n", rlc_status.bytes_in_buffer);
 
     /* DCCH+1 (srb 2, lcid 2) */
     rlc_status = mac_rlc_get_buffer_occupancy(module_idP, rlc.rnti, frameP, DCCH+1);
@@ -697,7 +713,7 @@ printf("BUF %d\n", rlc_status.bytes_in_buffer);
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
     LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH+1 rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
-printf("BUF %d\n", rlc_status.bytes_in_buffer);
+printf("MAC to FAPI downlink BUF DCCH+1 %d\n", rlc_status.bytes_in_buffer);
 
     /* DTCH   (drb 1, lcid 3) */
     rlc_status = mac_rlc_get_buffer_occupancy(module_idP, rlc.rnti, frameP, DTCH);
@@ -705,7 +721,7 @@ printf("BUF %d\n", rlc_status.bytes_in_buffer);
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
     LOG_I(MAC, "calling SchedDlRlcBufferReq on DTCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
-printf("BUF %d\n", rlc_status.bytes_in_buffer);
+printf("MAC to FAPI downlink BUF DTCH %d\n", rlc_status.bytes_in_buffer);
   }
 
   dlreq.sfnSf                 = frameP * 16 + subframeP;
@@ -722,7 +738,7 @@ printf("BUF %d\n", rlc_status.bytes_in_buffer);
     dlinfo[i].nr_harqStatus = 1;                                      /* TODO: deal with more than 1 TB */
     dlinfo[i].harqStatus[0] = fapi_dl_ack_nack_data.ack[i].ack[0];    /* TODO: more than 1 TB */
     dlinfo[i].servCellIndex = 0;                                      /* TODO: get real value for the servCellIndex */
-printf("FILL feedback f/sf %d/%d rnti %x harq %d ack %d\n", frameP, subframeP, dlinfo[i].rnti, dlinfo[i].harqProcessId, dlinfo[i].harqStatus[0]);
+printf("MAC to FAPI downlink ack/nack from PHY f/sf %d/%d rnti %x harq %d ack %d\n", frameP, subframeP, dlinfo[i].rnti, dlinfo[i].harqProcessId, dlinfo[i].harqStatus[0]);
   }
   if (fapi_dl_ack_nack_data.count) {
     dlreq.nr_dlInfoList = fapi_dl_ack_nack_data.count;
@@ -744,6 +760,7 @@ printf("FILL feedback f/sf %d/%d rnti %x harq %d ack %d\n", frameP, subframeP, d
   for (i = 0; i < dlind.nr_buildDataList; i++) {
     if (dlind.buildDataList[i].ceBitmap[1] != 0 || dlind.buildDataList[i].nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
     if (dlind.buildDataList[i].nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+printf("FAPI to MAC downlink schedule ue %x channel %d f/sf %d/%d\n", dlind.buildDataList[i].rnti, dlind.buildDataList[i].rlcPduList[0][0].logicalChannelIdentity, frameP, subframeP);
     switch (dlind.buildDataList[i].rlcPduList[0][0].logicalChannelIdentity) {
     case 0: /* CCCH */
       /* TODO: get the right CC_id from servCellIndex, depending on the UE rnti/pcell/scell settings */
@@ -780,6 +797,7 @@ printf("FILL feedback f/sf %d/%d rnti %x harq %d ack %d\n", frameP, subframeP, d
      * this is for contention-based RA
      * maybe we will need to review that if/when we do contention-free RA
      */
+printf("FAPI to MAC downlink schedule RAR ue %x f/sf %d/%d\n", dlind.buildRarList[0].rnti, frameP, subframeP);
     dlind.buildRarList[0].grant &= ~1;
     fapi_schedule_RAR(module_idP, dlind.buildRarList[0].carrierIndex, frameP, subframeP,
         dlind.buildRarList[0].rnti, dlind.buildRarList[0].grant, &dlind.buildRarList[0].dci);
@@ -789,6 +807,7 @@ printf("FILL feedback f/sf %d/%d rnti %x harq %d ack %d\n", frameP, subframeP, d
     if (dlind.nr_buildBroadcastList != 1) { printf("%s:%d: more than 1 broadcast SI, todo\n", __FUNCTION__, __LINE__); exit(0); }
     if (dlind.buildBroadcastList[0].type == ff_PCCH) { printf("%s:%d: PCCH: todo\n", __FUNCTION__, __LINE__); exit(0); }
     if (dlind.buildBroadcastList[0].carrierIndex != 0) { printf("%s:%d: 2nd CC: todo properly\n", __FUNCTION__, __LINE__); exit(0); }
+printf("FAPI to MAC downlink schedule SI %d f/sf %d/%d\n", dlind.buildBroadcastList[0].index, frameP, subframeP);
     fapi_schedule_SI(module_idP, dlind.buildBroadcastList[0].carrierIndex, frameP, subframeP,
         dlind.buildBroadcastList[0].index,
         &dlind.buildBroadcastList[0].dci);
@@ -801,6 +820,7 @@ printf("FILL feedback f/sf %d/%d rnti %x harq %d ack %d\n", frameP, subframeP, d
       if (dlind.nrOfPdcchOfdmSymbols[CC_id] != NULL) {
         int cc = dlind.nrOfPdcchOfdmSymbols[CC_id]->carrierIndex;
         DCI_pdu[cc]->num_pdcch_symbols = dlind.nrOfPdcchOfdmSymbols[CC_id]->pdcchOfdmSymbolCount;
+printf("FAPI to MAC downlink DCI_pdu[%d]->num_pdcch_symbols %d f/sf %d/%d\n", cc, DCI_pdu[cc]->num_pdcch_symbols, frameP, subframeP);
       }
     }
   }
@@ -823,18 +843,22 @@ printf("FILL feedback f/sf %d/%d rnti %x harq %d ack %d\n", frameP, subframeP, d
 
   /* fill ulInfoList */
   ulsf = (subframeP + 6) % 10;
+  ulsf = (subframeP + 6) % 10;
   if (fapi_ul_ack_nack_data[ulsf].count) {
     ulreq.nr_ulInfoList = fapi_ul_ack_nack_data[ulsf].count;
     ulreq.ulInfoList    = ulinfo;
     for (i = 0; i < ulreq.nr_ulInfoList; i++) {
-printf("MAC to FAPI uplink acknack to send to ue %x ack %d\n", fapi_ul_ack_nack_data[ulsf].ack[i].rnti, fapi_ul_ack_nack_data[ulsf].ack[i].ack);
+printf("MAC to FAPI uplink acknack ue %x ulsf %d ack %d\n", fapi_ul_ack_nack_data[ulsf].ack[i].rnti, ulsf, fapi_ul_ack_nack_data[ulsf].ack[i].ack);
       ulinfo[i].rnti            = fapi_ul_ack_nack_data[ulsf].ack[i].rnti;
       ulinfo[i].receptionStatus = fapi_ul_ack_nack_data[ulsf].ack[i].ack == 1 ? Ok : NotOk;
       ulinfo[i].tpc             = 0;           /* TODO */
       ulinfo[i].servCellIndex   = 0;           /* TODO: get correct value */
-      for (j = 0; j < MAX_LC_LIST+1; j++)
+      for (j = 0; j < MAX_LC_LIST+1; j++) {
         ulinfo[i].ulReception[j] = fapi_ul_ack_nack_data[ulsf].ack[i].length[j];
+printf("MAC to FAPI uplink ue %x lcid %d size acked %d\n", fapi_ul_ack_nack_data[ulsf].ack[i].rnti, j, fapi_ul_ack_nack_data[ulsf].ack[i].length[j]);
+}
     }
+    fapi_ul_ack_nack_data[ulsf].count = 0;
   }
 
   LOG_I(MAC, "calling SchedUlTriggerReq\n");
@@ -843,13 +867,22 @@ printf("MAC to FAPI uplink acknack to send to ue %x ack %d\n", fapi_ul_ack_nack_
   LOG_I(MAC, "calling SchedUlConfigInd\n");
   SchedUlConfigInd(fapi, &ulind);
 
-printf("yo nr_dclList %d nr_phichList %d\n", ulind.nr_dciList, ulind.nr_phichList);
+printf("FAPI to MAC uplink nr_dclList %d nr_phichList %d\n", ulind.nr_dciList, ulind.nr_phichList);
   for (i = 0; i < ulind.nr_dciList; i++) {
     /* TODO: get the right CC_id from servCellIndex, depending on the UE rnti/pcell/scell settings */
     CC_id = ulind.dciList[i].servCellIndex;
-printf("FAPI to MAC schedule uplink ue %x ndi %d (fsf %d %d)\n", ulind.dciList[i].rnti, ulind.dciList[i].ndi, frameP, subframeP);
+printf("FAPI to MAC uplink schedule ue %x ndi %d (fsf %d %d)\n", ulind.dciList[i].rnti, ulind.dciList[i].ndi, frameP, subframeP);
     fapi_schedule_uplink(module_idP, CC_id, &ulind.dciList[i]);
   }
+
+printf("RECAP dci pdu count %d\n", eNB_mac_inst[0].common_channels[0].DCI_pdu.Num_common_dci);
+for (i = 0; i < eNB_mac_inst[0].common_channels[0].DCI_pdu.Num_common_dci; i++) {
+printf("    RECAP %i rnti %x format %d dci pdu %s\n", i,
+  eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].rnti,
+  eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].format,
+  binary(*(uint32_t *)eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].dci_pdu)
+  );
+}
 }
 
 #else /* FAPI */
