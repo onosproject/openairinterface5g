@@ -163,9 +163,9 @@ extern uint16_t Nid_cell;
 
 extern LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs];
 
-#ifdef XFORMS
+//#ifdef XFORMS
 int otg_enabled;
-#endif
+//#endif
 
 time_stats_t oaisim_stats;
 time_stats_t oaisim_stats_f;
