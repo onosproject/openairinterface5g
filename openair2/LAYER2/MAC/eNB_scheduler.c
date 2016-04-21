@@ -80,6 +80,91 @@
 
 #if FAPI
 
+/* global variables to deal with TPC command - we send one only once per frame maximum */
+static long global_subframe;                        /* global subframe - incremented at each TTI */
+static long ue_last_pucch_tpc[NUMBER_OF_UE_MAX];    /* last global subframe where a PUCCH TPC was sent to the UE */
+static long ue_last_pusch_tpc[NUMBER_OF_UE_MAX];    /* last global subframe where a PUSCH TPC was sent to the UE */
+
+static void fapi_dl_tpc(int module_id, int CC_id, struct DlDciListElement_s *dci)
+{
+  int              UE_id                = find_UE_id(module_id, dci->rnti);
+  LTE_eNB_UE_stats *eNB_UE_stats        = NULL;
+  int32_t          normalized_rx_power;
+  int32_t          target_rx_power;
+  static int       tpc_accumulated = 0;
+
+  if (UE_id == -1) { printf("%s:%d: rnti %x not found\n", __FILE__, __LINE__, dci->rnti); abort(); }
+
+  // this assumes accumulated tpc
+  // make sure that we are only sending a tpc update once a frame, otherwise the control loop will freak out
+  if (global_subframe < ue_last_pucch_tpc[UE_id] + 10) {
+printf("TPC PUCCH global sf %ld (%ld/%ld) UE %x: no TPC, last one is too recent (accumulated %d)\n", global_subframe, global_subframe/10, global_subframe%10, dci->rnti, tpc_accumulated);
+    dci->tpc = 0;
+    return;
+  }
+
+  eNB_UE_stats        = mac_xface->get_eNB_UE_stats(module_id, CC_id, dci->rnti);
+  if (eNB_UE_stats == NULL) { printf("%s:%d: stats for rnti %x not found\n", __FILE__, __LINE__, dci->rnti); abort(); }
+  normalized_rx_power = eNB_UE_stats->Po_PUCCH_dBm;
+  target_rx_power     = mac_xface->get_target_pucch_rx_power(module_id, CC_id) + 20;
+
+  if (eNB_UE_stats->Po_PUCCH_update == 1) {
+    eNB_UE_stats->Po_PUCCH_update = 0;
+
+    ue_last_pucch_tpc[UE_id] = global_subframe;
+
+    if (normalized_rx_power > target_rx_power + 1) {
+      dci->tpc = -1;
+      tpc_accumulated--;
+    } else if (normalized_rx_power < target_rx_power - 1) {
+      dci->tpc = 1;
+      tpc_accumulated++;
+    } else {
+      dci->tpc = 0;
+    }
+  }
+printf("TPC PUCCH global sf %ld (%ld/%ld) UE %x: TPC %d (accumulated %d)\n", global_subframe, global_subframe/10, global_subframe%10, dci->rnti, dci->tpc, tpc_accumulated);
+}
+
+static void fapi_ul_tpc(int module_id, int CC_id, struct UlDciListElement_s *dci)
+{
+  int              UE_id                = find_UE_id(module_id, dci->rnti);
+  LTE_eNB_UE_stats *eNB_UE_stats        = NULL;
+  int32_t          normalized_rx_power;
+  int32_t          target_rx_power;
+  static int       tpc_accumulated = 0;
+
+  if (UE_id == -1) { printf("%s:%d: rnti %x not found\n", __FILE__, __LINE__, dci->rnti); abort(); }
+
+  // this assumes accumulated tpc
+  // make sure that we are only sending a tpc update once a frame, otherwise the control loop will freak out
+  if (global_subframe < ue_last_pusch_tpc[UE_id] + 10) {
+printf("TPC PUSCH global sf %ld (%ld/%ld) UE %x: no TPC, last one is too recent (accumulated %d)\n", global_subframe, global_subframe/10, global_subframe%10, dci->rnti, tpc_accumulated);
+    dci->tpc = 0;
+    return;
+  }
+
+  eNB_UE_stats        = mac_xface->get_eNB_UE_stats(module_id, CC_id, dci->rnti);
+  if (eNB_UE_stats == NULL) { printf("%s:%d: stats for rnti %x not found\n", __FILE__, __LINE__, dci->rnti); abort(); }
+  normalized_rx_power = eNB_UE_stats->UL_rssi[0];
+  target_rx_power     = mac_xface->get_target_pusch_rx_power(module_id, CC_id);
+
+  if (normalized_rx_power > target_rx_power + 1) {
+    dci->tpc = -1;
+    tpc_accumulated--;
+  } else if (normalized_rx_power < target_rx_power - 1) {
+    dci->tpc = 1;
+    tpc_accumulated++;
+  } else {
+    dci->tpc = 0;
+  }
+
+  if (dci->tpc != 0) {
+    ue_last_pusch_tpc[UE_id] = global_subframe;
+  }
+printf("TPC PUSCH global sf %ld (%ld/%ld) UE %x: TPC %d (accumulated %d)\n", global_subframe, global_subframe/10, global_subframe%10, dci->rnti, dci->tpc, tpc_accumulated);
+}
+
 /* this structure is used to store downlink ack/nack information
  * to be sent to FAPI by SchedDlTriggerReq
  */
@@ -192,7 +277,11 @@ static void fapi_convert_dl_1A_5MHz_FDD(struct DlDciListElement_s *dci, DCI_ALLO
   d->harq_pid   = dci->harqProcess;
   d->ndi        = dci->ndi[0];        /* TODO: take care of transport block index */
   d->rv         = dci->rv[0];         /* TODO: take care of transport block index */
-  d->TPC        = dci->tpc;
+  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.2.1-1 */
+                  dci->tpc ==  0 ? 1 :
+                  dci->tpc ==  1 ? 2 :
+                  dci->tpc ==  3 ? 3 :
+                  (printf("%s:%d: error\n", __FUNCTION__, __LINE__), abort(), 0);
   d->padding    = 0;
 
   a->dci_length = sizeof_DCI1A_5MHz_FDD_t;
@@ -225,15 +314,25 @@ static void fapi_convert_dl_1_5MHz_FDD(struct DlDciListElement_s *dci, DCI_ALLOC
   d->harq_pid   = dci->harqProcess;
   d->ndi        = dci->ndi[0];        /* TODO: take care of transport block index */
   d->rv         = dci->rv[0];         /* TODO: take care of transport block index */
-  d->TPC        = dci->tpc;
+  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.2.1-1 */
+                  dci->tpc ==  0 ? 1 :
+                  dci->tpc ==  1 ? 2 :
+                  dci->tpc ==  3 ? 3 :
+                  (printf("%s:%d: error (dci->tpc = %d)\n", __FUNCTION__, __LINE__, dci->tpc), abort(), 0);
   d->dummy      = 0;
 
   a->dci_length = sizeof_DCI1_5MHz_FDD_t;
   a->format     = format1;
 }
 
-static void fapi_convert_dl_dci(struct DlDciListElement_s *dci, DCI_ALLOC_t *a)
+static void fapi_convert_dl_dci(int module_id, int CC_id,
+    struct DlDciListElement_s *dci, DCI_ALLOC_t *a)
 {
+  /* set TPC in the DCI */
+  /* TODO: remove it if/when the scheduler does it */
+  if (dci->rnti != 0)
+    fapi_dl_tpc(module_id, CC_id, dci);
+
   /* 5MHz FDD supposed, not checked */
   switch (dci->format) {
   case ONE_A:
@@ -264,7 +363,11 @@ static void fapi_convert_ul_5MHz_FDD(module_id_t module_idP, int CC_id,
   d->rballoc    = mac_xface->computeRIV(PHY_vars_eNB_g[module_idP][CC_id]->lte_frame_parms.N_RB_DL, dci->rbStart, dci->rbLen);
   d->mcs        = dci->mcs;
   d->ndi        = dci->ndi;
-  d->TPC        = dci->tpc;
+  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.1.1-2, accumulated case supposed */
+                  dci->tpc ==  0 ? 1 :
+                  dci->tpc ==  1 ? 2 :
+                  dci->tpc ==  3 ? 3 :
+                  (printf("%s:%d: error (tpc = %d)\n", __FUNCTION__, __LINE__, dci->tpc), abort(), 0);
   d->cshift     = dci->n2Dmrs;
   d->cqi_req    = dci->cqiRequest;
   d->padding    = 0;
@@ -276,6 +379,10 @@ static void fapi_convert_ul_5MHz_FDD(module_id_t module_idP, int CC_id,
 static void fapi_convert_ul_dci(module_id_t module_idP, int CC_id,
     struct UlDciListElement_s *dci, DCI_ALLOC_t *a)
 {
+  /* set TPC in the DCI */
+  /* TODO: remove it if/when the scheduler does it */
+  fapi_ul_tpc(module_idP, CC_id, dci);
+
   /* 5MHz FDD supposed, not checked */
   fapi_convert_ul_5MHz_FDD(module_idP, CC_id, dci, a);
 
@@ -303,7 +410,7 @@ static void fapi_schedule_SI(module_id_t module_idP, int CC_id, frame_t frameP,
   /* we can increment Num_common_dci or Num_ue_spec_dci, there is no difference */
   dci_pdu->Num_common_dci++;
 
-  fapi_convert_dl_dci(dci, a);
+  fapi_convert_dl_dci(module_idP, CC_id, dci, a);
 
   /* bug in libscheduler.a? rnti is 0 */
   a->rnti = SI_RNTI;
@@ -346,7 +453,7 @@ static void fapi_schedule_RAR(int module_idP, int CC_id, frame_t frameP,
   /* we can increment Num_common_dci or Num_ue_spec_dci, there is no difference */
   dci_pdu->Num_common_dci++;
 
-  fapi_convert_dl_dci(dci, a);
+  fapi_convert_dl_dci(module_idP, CC_id, dci, a);
   a->ra_flag = 1;
 
   /* bug in libscheduler.a? rnti is 0 */
@@ -427,7 +534,7 @@ static void fapi_schedule_RA_Msg4(int module_idP, int CC_id, int RA,
   /* we can increment Num_common_dci or Num_ue_spec_dci, there is no difference */
   dci_pdu->Num_common_dci++;
 
-  fapi_convert_dl_dci(dci, a);
+  fapi_convert_dl_dci(module_idP, CC_id, dci, a);
 }
 
 /* returns 1 if the given LCID has a MAC header of fixed size (for DL-SCH) */
@@ -465,7 +572,7 @@ static void fapi_schedule_ue(int module_id, int CC_id, int frame, int subframe, 
   /* we can increment Num_common_dci or Num_ue_spec_dci, there is no difference */
   dci_pdu->Num_common_dci++;
 
-  fapi_convert_dl_dci(&d->dci, a);
+  fapi_convert_dl_dci(module_id, CC_id, &d->dci, a);
 printf("RUN fapi_schedule_ue\n");
 
   if (d->nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
@@ -885,6 +992,8 @@ printf("    RECAP %i rnti %x format %d dci pdu %s\n", i,
   binary(*(uint32_t *)eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].dci_pdu)
   );
 }
+
+  global_subframe++;
 }
 
 #else /* FAPI */
