@@ -134,7 +134,7 @@ struct DlDciListElement_s
   {
     ONE, ONE_A, ONE_B, ONE_C, ONE_D, TWO, TWO_A, TWO_B
   } format;
-  uint8_t   tpc;
+  int8_t    tpc;
   uint8_t   harqProcess;
   uint8_t   dai;
   enum VrbFormat_e
@@ -321,7 +321,7 @@ struct UlInfoListElement_s
   {
     Ok, NotOk, NotValid
   } receptionStatus;
-  uint8_t   tpc;
+  int8_t    tpc;
   uint8_t   servCellIndex;	//definition according to 36.331 'ServCellIndex'
 };
 
