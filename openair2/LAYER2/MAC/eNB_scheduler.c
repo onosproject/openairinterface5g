@@ -844,10 +844,10 @@ printf("MAC to FAPI downlink BUF DTCH %d\n", rlc_status.bytes_in_buffer);
   for (i = 0; i < fapi_dl_ack_nack_data.count; i++) {
     dlinfo[i].rnti          = fapi_dl_ack_nack_data.ack[i].rnti;
     dlinfo[i].harqProcessId = fapi_dl_ack_nack_data.ack[i].harq_pid;
-    dlinfo[i].nr_harqStatus = 1;                                      /* TODO: deal with more than 1 TB */
-    dlinfo[i].harqStatus[0] = fapi_dl_ack_nack_data.ack[i].ack[0];    /* TODO: more than 1 TB */
-    dlinfo[i].servCellIndex = 0;                                      /* TODO: get real value for the servCellIndex */
-printf("MAC to FAPI downlink ack/nack from PHY f/sf %d/%d rnti %x harq %d ack %d\n", frameP, subframeP, dlinfo[i].rnti, dlinfo[i].harqProcessId, dlinfo[i].harqStatus[0]);
+    dlinfo[i].nr_harqStatus = 1;                                                         /* TODO: deal with more than 1 TB */
+    dlinfo[i].harqStatus[0] = fapi_dl_ack_nack_data.ack[i].ack[0] ? ff_ACK : ff_NACK;    /* TODO: more than 1 TB */
+    dlinfo[i].servCellIndex = 0;                                                         /* TODO: get real value for the servCellIndex */
+printf("MAC to FAPI downlink ack/nack from PHY f/sf %d/%d rnti %x harq %d ack %d\n", frameP, subframeP, dlinfo[i].rnti, dlinfo[i].harqProcessId, fapi_dl_ack_nack_data.ack[i].ack[0]);
   }
   if (fapi_dl_ack_nack_data.count) {
     dlreq.nr_dlInfoList = fapi_dl_ack_nack_data.count;
