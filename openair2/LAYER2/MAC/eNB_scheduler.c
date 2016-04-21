@@ -248,7 +248,7 @@ printf("GOT lcid %d length %d (f/sf %d/%d)\n", lcid, length, frame, subframe);
   int pos = fapi_ul_ack_nack_data[subframe].count - 1;
   if (pos < 0) { printf("%s:%d:%s: fatal error\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 
-  /* TODO: remove this check (and the rnti paramete)? */
+  /* TODO: remove this check (and the rnti parameter)? */
   if (rnti != fapi_ul_ack_nack_data[subframe].ack[pos].rnti) {
     printf("%s:%d:%s: fatal error: LCID %d wrong RNTI %x (expected %x)\n",
            __FILE__, __LINE__, __FUNCTION__, lcid,
