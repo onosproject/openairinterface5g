@@ -692,6 +692,27 @@ char *binary(unsigned x)
   return r;
 }
 
+static char *dci_format_to_string(DCI_format_t f)
+{
+  switch (f) {
+    case format0: return "format 0";
+    case format1: return "format 1";
+    case format1A: return "format 1A";
+    case format1B: return "format 1B";
+    case format1C: return "format 1C";
+    case format1D: return "format 1D";
+    case format1E_2A_M10PRB: return "format 1E_2A_M10PRB";
+    case format2: return "format 2";
+    case format2A: return "format 2A";
+    case format2B: return "format 2B";
+    case format2C: return "format 2C";
+    case format2D: return "format 2D";
+    case format3: return "format 3";
+  }
+  printf("%s:%d: unhandled DCI format\n", __FILE__, __LINE__);
+  abort();
+}
+
 void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP)  //, int calibration_flag) {
 {
   int                                 CC_id;
@@ -986,9 +1007,9 @@ printf("FAPI to MAC uplink schedule ue %x ndi %d (fsf %d %d)\n", ulind.dciList[i
 
 printf("RECAP dci pdu count %d\n", eNB_mac_inst[0].common_channels[0].DCI_pdu.Num_common_dci);
 for (i = 0; i < eNB_mac_inst[0].common_channels[0].DCI_pdu.Num_common_dci; i++) {
-printf("    RECAP %i rnti %x format %d dci pdu %s\n", i,
+printf("    RECAP %i rnti %x %s dci pdu %s\n", i,
   eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].rnti,
-  eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].format,
+  dci_format_to_string(eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].format),
   binary(*(uint32_t *)eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].dci_pdu)
   );
 }
