@@ -775,6 +775,7 @@ void initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t
   }
   if (i == NB_RA_PROC_MAX) { printf("%s:%d:%s: handle this case\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 
+printf("MAC to FAPI initiate RA procedure new rnti %x f/sf %d/%d\n", r.rnti, frameP, subframeP);
   LOG_I(MAC, "calling SchedDlRachInfoReq\n");
   SchedDlRachInfoReq(fapi->sched, &p);
 

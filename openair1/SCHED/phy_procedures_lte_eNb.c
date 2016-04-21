@@ -1329,6 +1329,7 @@ void phy_procedures_eNB_TX(unsigned char sched_subframe,PHY_VARS_eNB *phy_vars_e
   int frame = phy_vars_eNB->proc[sched_subframe].frame_tx;
   int subframe = phy_vars_eNB->proc[sched_subframe].subframe_tx;
 
+printf("PHY TX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_TX,1);
   start_meas(&phy_vars_eNB->phy_proc_tx);
 
@@ -3149,6 +3150,7 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
   const int subframe = phy_vars_eNB->proc[sched_subframe].subframe_rx;
   const int frame = phy_vars_eNB->proc[sched_subframe].frame_rx;
 
+printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
   AssertFatal(sched_subframe < NUM_ENB_THREADS, "Bad sched_subframe %d", sched_subframe);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX,1);

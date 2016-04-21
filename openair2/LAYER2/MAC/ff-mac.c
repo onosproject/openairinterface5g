@@ -93,7 +93,9 @@ struct fapi {
     fi->rsp_id[fn]++; \
   } while (0)
 
-/* SCHED "wrappers" */
+/************************************************************************/
+/*                          SCHED "wrappers"                            */
+/************************************************************************/
 
 void SchedDlConfigInd(fapi_interface_t *_fi, struct SchedDlConfigIndParameters *params)
 {
@@ -142,7 +144,9 @@ void SchedUlConfigInd(fapi_interface_t *_fi, struct SchedUlConfigIndParameters *
   LOG_D(MAC, "%s leave\n", __FUNCTION__);
 }
 
-/* CSCHED "wrappers" */
+/************************************************************************/
+/*                         CSCHED "wrappers"                            */
+/************************************************************************/
 
 void CschedCellConfigCnf(fapi_interface_t *_fi, struct CschedCellConfigCnfParameters *params)
 {
@@ -215,18 +219,53 @@ void CschedCellConfigUpdateInd(fapi_interface_t *_fi, struct CschedCellConfigUpd
   int fn = CSCHED_CELL_CONFIG_UPDATE_IND;
 }
 
-/* SCHED callbacks */
+/************************************************************************/
+/*                          SCHED callbacks                             */
+/************************************************************************/
 
 void SchedDlConfigInd_callback(void *callback_data, const struct SchedDlConfigIndParameters *params)
 {
   struct fapi *fi = callback_data;
   int fn = SCHED_DL_CONFIG_IND;
+  int i, j, k;
   LOG_D(MAC, "%s enter\n", __FUNCTION__);
 
   LOCK(fi, fn);
   CHECK(fi, fn);
 
-  fi->SchedDlConfigIndParameters = *params;
+  /* copy from params to local structure */
+  fi->SchedDlConfigIndParameters.nr_buildDataList = params->nr_buildDataList;
+  fi->SchedDlConfigIndParameters.nr_buildRARList = params->nr_buildRARList;
+  fi->SchedDlConfigIndParameters.nr_buildBroadcastList = params->nr_buildBroadcastList;
+
+  for (i = 0; i < params->nr_buildDataList; i++) {
+    fi->SchedDlConfigIndParameters.buildDataList[i].rnti = params->buildDataList[i].rnti;
+    fi->SchedDlConfigIndParameters.buildDataList[i].dci = params->buildDataList[i].dci;
+    for (j = 0; j < MAX_TB_LIST; j++)
+      fi->SchedDlConfigIndParameters.buildDataList[i].ceBitmap[j] = params->buildDataList[i].ceBitmap[j];
+    for (j = 0; j < MAX_TB_LIST; j++) {
+      fi->SchedDlConfigIndParameters.buildDataList[i].nr_rlcPDU_List[j] = params->buildDataList[i].nr_rlcPDU_List[j];
+      for (k = 0; k < params->buildDataList[i].nr_rlcPDU_List[j]; k++)
+        fi->SchedDlConfigIndParameters.buildDataList[i].rlcPduList[j][k] = params->buildDataList[i].rlcPduList[j][k];
+    }
+    fi->SchedDlConfigIndParameters.buildDataList[i].servCellIndex = params->buildDataList[i].servCellIndex;
+    fi->SchedDlConfigIndParameters.buildDataList[i].activationDeactivationCE = params->buildDataList[i].activationDeactivationCE;
+  }
+
+  for (i = 0; i < params->nr_buildRARList; i++) {
+    fi->SchedDlConfigIndParameters.buildRarList[i] = params->buildRarList[i];
+  }
+
+  for (i = 0; i < params->nr_buildBroadcastList; i++) {
+    fi->SchedDlConfigIndParameters.buildBroadcastList[i] = params->buildBroadcastList[i];
+  }
+
+  /* TODO: be sure of this */
+  if (params->nr_ofdmSymbolsCount != 1) { printf("%s:%d: what to do?\n", __FILE__, __LINE__); abort(); }
+  fi->SchedDlConfigIndParameters.nr_ofdmSymbolsCount = params->nr_ofdmSymbolsCount;
+  for (i = 0; i < MAX_NUM_CCs; i++) {
+    *fi->SchedDlConfigIndParameters.nrOfPdcchOfdmSymbols[i] = *params->nrOfPdcchOfdmSymbols[i];
+  }
 
   DONE_callback(fi, fn);
   UNLOCK(fi, fn);
@@ -238,12 +277,23 @@ void SchedUlConfigInd_callback(void *callback_data, const struct SchedUlConfigIn
 {
   struct fapi *fi = callback_data;
   int fn = SCHED_UL_CONFIG_IND;
+  int i;
   LOG_D(MAC, "%s enter\n", __FUNCTION__);
 
   LOCK(fi, fn);
   CHECK(fi, fn);
 
-  fi->SchedUlConfigIndParameters = *params;
+  /* copy from params to local structure */
+  fi->SchedUlConfigIndParameters.nr_dciList = params->nr_dciList;
+  fi->SchedUlConfigIndParameters.nr_phichList = params->nr_phichList;
+
+  for (i = 0; i < params->nr_dciList; i++) {
+    fi->SchedUlConfigIndParameters.dciList[i] = params->dciList[i];
+  }
+
+  for (i = 0; i < params->nr_phichList; i++) {
+    fi->SchedUlConfigIndParameters.phichList[i] = params->phichList[i];
+  }
 
   DONE_callback(fi, fn);
   UNLOCK(fi, fn);
@@ -251,7 +301,9 @@ void SchedUlConfigInd_callback(void *callback_data, const struct SchedUlConfigIn
   LOG_D(MAC, "%s leave\n", __FUNCTION__);
 }
 
-/* CSCHED callbacks */
+/************************************************************************/
+/*                           CSCHED callbacks                           */
+/************************************************************************/
 
 void CschedCellConfigCnf_callback(void *callback_data, const struct CschedCellConfigCnfParameters *params)
 {
@@ -262,6 +314,7 @@ void CschedCellConfigCnf_callback(void *callback_data, const struct CschedCellCo
   LOCK(fi, fn);
   CHECK(fi, fn);
 
+  /* copy from params to local structure */
   fi->CschedCellConfigCnfParameters = *params;
 
   DONE_callback(fi, fn);
@@ -279,6 +332,7 @@ void CschedUeConfigCnf_callback(void *callback_data, const struct CschedUeConfig
   LOCK(fi, fn);
   CHECK(fi, fn);
 
+  /* copy from params to local structure */
   fi->CschedUeConfigCnfParameters = *params;
 
   DONE_callback(fi, fn);
@@ -291,12 +345,21 @@ void CschedLcConfigCnf_callback(void *callback_data, const struct CschedLcConfig
 {
   struct fapi *fi = callback_data;
   int fn = CSCHED_LC_CONFIG_CNF;
+  int i;
   LOG_D(MAC, "%s enter\n", __FUNCTION__);
 
   LOCK(fi, fn);
   CHECK(fi, fn);
 
-  fi->CschedLcConfigCnfParameters = *params;
+  /* copy from params to local structure */
+  fi->CschedLcConfigCnfParameters.rnti = params->rnti;
+  fi->CschedLcConfigCnfParameters.result = params->result;
+
+  fi->CschedLcConfigCnfParameters.nr_logicalChannelIdendity = params->nr_logicalChannelIdendity;
+
+  for (i = 0; i < params->nr_logicalChannelIdendity; i++) {
+    fi->CschedLcConfigCnfParameters.logicalChannelIdentity[i] = params->logicalChannelIdentity[i];
+  }
 
   DONE_callback(fi, fn);
   UNLOCK(fi, fn);
@@ -328,6 +391,10 @@ void CschedCellConfigUpdateInd_callback(void *callback_data, const struct Csched
 abort();
 }
 
+/************************************************************************/
+/*                           init function                              */
+/************************************************************************/
+
 fapi_interface_t *init_fapi(void)
 {
   struct fapi *ret;
@@ -353,6 +420,57 @@ fapi_interface_t *init_fapi(void)
     ret->req_id[i] = 0;
     ret->rsp_id[i] = 0;
   }
+
+  /* allocate memory (max size) to copy messages coming from FAPI */
+
+  /*********** CschedCellConfigCnfParameters is ok */
+
+  /*********** SchedDlConfigIndParameters */
+
+  /*********************     buildDataList */
+  ret->SchedDlConfigIndParameters.buildDataList = calloc(MAX_BUILD_DATA_LIST, sizeof(struct BuildDataListElement_s));
+  if (ret->SchedDlConfigIndParameters.buildDataList == NULL) abort();
+  for (i = 0; i < MAX_BUILD_DATA_LIST; i++) {
+    struct BuildDataListElement_s *b = &ret->SchedDlConfigIndParameters.buildDataList[i];
+    int j;
+    for (j = 0; j < MAX_TB_LIST; j++) {
+      b->rlcPduList[j] = calloc(MAX_RLC_PDU_LIST, sizeof(struct RlcPduListElement_s));
+      if (b->rlcPduList[j] == NULL) abort();
+    }
+  }
+
+  /*********************    buildRarList */
+  ret->SchedDlConfigIndParameters.buildRarList = calloc(MAX_BUILD_RAR_LIST, sizeof(struct BuildRarListElement_s));
+  if (ret->SchedDlConfigIndParameters.buildRarList == NULL) abort();
+
+  /*********************    buildBroadcastList */
+  ret->SchedDlConfigIndParameters.buildBroadcastList = calloc(MAX_BUILD_BC_LIST, sizeof(struct BuildBroadcastListElement_s));
+  if (ret->SchedDlConfigIndParameters.buildBroadcastList == NULL) abort();
+
+  /*********************    nrOfPdcchOfdmSymbols */
+  for (i = 0; i < MAX_NUM_CCs; i++) {
+    /* TODO: not sure about 1 there */
+    ret->SchedDlConfigIndParameters.nrOfPdcchOfdmSymbols[i] = calloc(1, sizeof(struct PdcchOfdmSymbolCountListElement_s));
+    if (ret->SchedDlConfigIndParameters.nrOfPdcchOfdmSymbols[i] == NULL) abort();
+  }
+
+  /*********** SchedUlConfigIndParameters */
+
+  /*********************    dciList */
+  ret->SchedUlConfigIndParameters.dciList = calloc(MAX_DCI_LIST, sizeof(struct UlDciListElement_s));
+  if (ret->SchedUlConfigIndParameters.dciList == NULL) abort();
+
+  /*********************    phichList */
+  ret->SchedUlConfigIndParameters.phichList = calloc(MAX_PHICH_LIST, sizeof(struct PhichListElement_s));
+  if (ret->SchedUlConfigIndParameters.phichList == NULL) abort();
+
+  /*********** CschedUeConfigCnfParameters is ok */
+
+  /*********** CschedLcConfigCnfParameters */
+
+  /*********************    logicalChannelIdentity */
+  ret->CschedLcConfigCnfParameters.logicalChannelIdentity = calloc(MAX_LC_LIST, sizeof(uint8_t));
+  if (ret->CschedLcConfigCnfParameters.logicalChannelIdentity == NULL) abort();
 
   ret->fi.sched = SchedInit(ret,
                       SchedDlConfigInd_callback,
