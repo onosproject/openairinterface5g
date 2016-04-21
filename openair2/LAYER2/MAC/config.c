@@ -178,6 +178,51 @@ rrc_mac_config_req(
 
   // SRB2_lchan_config->choice.explicitValue.ul_SpecificParameters->logicalChannelGroup
   if (logicalChannelConfig!= NULL) {
+
+#if FAPI
+
+    if (eNB_flagP == 1) {
+printf("MAC CONFIG lcid %d group %d\n", (int)logicalChannelIdentity, (int)*logicalChannelConfig->ul_SpecificParameters->logicalChannelGroup);
+      /* only configure DRBs, SRBs are already configured */
+      if (logicalChannelIdentity > 2) {
+        struct CschedLcConfigReqParameters       lc;
+        struct LogicalChannelConfigListElement_s lcs;
+        struct CschedLcConfigCnfParameters       lcr;
+        fapi_interface_t                         *fapi;
+
+        LOG_I(MAC, "eNB %d/%d: FAPI: configure DRB %d for UE %x\n", Mod_id, CC_id, logicalChannelIdentity, rntiP);
+
+        fapi = eNB_mac_inst[Mod_id].fapi;
+
+        lc.rnti = rntiP;
+        lc.reconfigureFlag = false;
+        lc.nr_logicalChannelConfigList = 1;
+        lc.logicalChannelConfigList = &lcs;
+        lc.nr_vendorSpecificList = 0;
+        lc.vendorSpecificList = NULL;
+
+        lcs.logicalChannelIdentity = 1;
+        lcs.logicalChannelGroup    = *logicalChannelConfig->ul_SpecificParameters->logicalChannelGroup;
+        lcs.direction              = DIR_BOTH;              /* TODO: not necessarily */
+        lcs.qosBearerType          = QBT_NON_GBR;           /* TODO: not necessarily */
+        lcs.qci                    = 5;                     /* what to put? see 23.203 table 6.1.7 */
+        /* TODO: bitrates not used - let's suppose we are in non GBR */
+
+        CschedLcConfigReq(fapi->sched, &lc);
+        CschedLcConfigCnf(fapi, &lcr);
+
+        if (lcr.rnti != rntiP)
+          { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+        if (lcr.result != ff_SUCCESS)
+          { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+        if (lcr.nr_logicalChannelIdendity != 1)
+          { LOG_E(MAC, "%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+        /* TODO: check other return values (see rrc_mac_fapi_configure_srb12 for why it's not done) */
+      }
+    }
+
+#endif /* FAPI */
+
     if (eNB_flagP==0) {
       LOG_I(MAC,"[CONFIG][UE %d] Applying RRC logicalChannelConfig from eNB%d\n",Mod_id,eNB_index);
       UE_mac_inst[Mod_id].logicalChannelConfig[logicalChannelIdentity]=logicalChannelConfig;
