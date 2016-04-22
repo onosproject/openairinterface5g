@@ -65,7 +65,7 @@
 # include "intertask_interface.h"
 #endif
 
-#ifdef FAPI
+#if FAPI
 #include "ff-mac.h"
 #endif
 
@@ -419,7 +419,7 @@ set_ul_DAI(
   }
 }
 
-#ifdef FAPI
+#if FAPI
 
 //------------------------------------------------------------------------------
 void
@@ -1650,7 +1650,7 @@ schedule_ue_spec(
 
 //------------------------------------------------------------------------------
 void
-#ifdef FAPI
+#if FAPI
 fill_DLSCH_dci_old(
 #else
 fill_DLSCH_dci(
@@ -1971,7 +1971,7 @@ fill_DLSCH_dci(
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_FILL_DLSCH_DCI,VCD_FUNCTION_OUT);
 }
 
-#ifdef FAPI
+#if FAPI
 
 //------------------------------------------------------------------------------
 void
