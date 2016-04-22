@@ -447,30 +447,6 @@ schedule_ue_spec(
   void                                 *DLSCH_dci;
   DCI_PDU                              *DCI_pdu = &eNB->common_channels[0 /* CC_id */].DCI_pdu;
 
-int loop = 10 * 20;
-while (loop) {
-  req.sfnSf                 = frameP * 16 + subframeP;
-  req.nr_dlInfoList         = 0;
-  req.dlInfoList            = NULL;
-  req.nr_vendorSpecificList = 0;
-  req.vendorSpecificList    = NULL;
-  LOG_I(MAC, "calling SchedDlTriggerReq\n");
-  SchedDlTriggerReq(fapi->sched, &req);
-  LOG_I(MAC, "calling SchedDlConfigInd\n");
-  SchedDlConfigInd(fapi, &ind);
-  LOG_I(MAC, "SchedDlConfigInd returns ind.nr_buildDataList %d\n", ind.nr_buildDataList);
-  LOG_I(MAC, "SchedDlConfigInd returns ind.nr_buildRARList %d\n", ind.nr_buildRARList);
-  LOG_I(MAC, "SchedDlConfigInd returns ind.nr_buildBroadcastList %d\n", ind.nr_buildBroadcastList);
-  subframeP++;
-  if (subframeP == 10) {
-    subframeP = 0;
-    frameP++;
-    if (frameP == 1024) frameP = 0;
-  }
-  loop--;
-}
-exit(0);
-
   /* let's only schedule subframe 2 for the moment */
   if (subframeP != 2) return;
 
