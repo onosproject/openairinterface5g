@@ -187,6 +187,7 @@ static struct {
 /* TODO: do it per CC */
 static struct {
   struct {
+    int reception_frame;          /* the frame where the ACK/NACK has been received */
     int reception_subframe;       /* the subframe where the ACK/NACK has been received */
     int rnti;
     int ack;
@@ -229,6 +230,7 @@ printf("GOT UPLINK ack %d for rnti %x (f/sf %d/%d)\n", ack, rnti, frame, subfram
     LOG_E(MAC, "fapi_ul_ack_nack: full! (f/sf %d/%d)\n", frame, subframe);
     abort();
   }
+  fapi_ul_ack_nack_data[subframe].ack[pos].reception_frame    = frame;
   fapi_ul_ack_nack_data[subframe].ack[pos].reception_subframe = subframe;
   fapi_ul_ack_nack_data[subframe].ack[pos].rnti               = rnti;
   fapi_ul_ack_nack_data[subframe].ack[pos].ack                = ack;
@@ -978,7 +980,8 @@ printf("FAPI to MAC downlink DCI_pdu[%d]->num_pdcch_symbols %d f/sf %d/%d\n", cc
     ulreq.ulInfoList    = ulinfo;
     for (i = 0; i < ulreq.nr_ulInfoList; i++) {
 printf("MAC to FAPI uplink acknack ue %x f/sf %d/%d ulsf %d [reception_subframe %d] ack %d\n", fapi_ul_ack_nack_data[ulsf].ack[i].rnti, frameP, subframeP, ulsf, fapi_ul_ack_nack_data[ulsf].ack[i].reception_subframe, fapi_ul_ack_nack_data[ulsf].ack[i].ack);
-      ulinfo[i].puschTransmissionTimestamp = fapi_ul_ack_nack_data[ulsf].ack[i].reception_subframe;
+      ulinfo[i].puschTransmissionTimestamp = fapi_ul_ack_nack_data[ulsf].ack[i].reception_frame * 16
+                                             + fapi_ul_ack_nack_data[ulsf].ack[i].reception_subframe;
       ulinfo[i].rnti                       = fapi_ul_ack_nack_data[ulsf].ack[i].rnti;
       ulinfo[i].receptionStatus            = fapi_ul_ack_nack_data[ulsf].ack[i].ack == 1 ? Ok : NotOk;
       ulinfo[i].tpc                        = 0;           /* TODO */
