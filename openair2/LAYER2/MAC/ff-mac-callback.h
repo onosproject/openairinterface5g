@@ -1,7 +1,7 @@
 #ifndef FF_MAC_CALLBACK_H
 #define FF_MAC_CALLBACK_H
 
-/*! 
+/*!
  * @ingroup _fapi
  */
 

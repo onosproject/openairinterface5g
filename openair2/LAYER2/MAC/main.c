@@ -356,7 +356,7 @@ int mac_top_init(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active, ui
 #endif
   //end ALU's algo
 
-#ifdef FAPI
+#if FAPI
   /* setup FAPI interface */
   /* this should be done differently/somewhere else */
   const Enb_properties_array_t *conf = enb_config_get();

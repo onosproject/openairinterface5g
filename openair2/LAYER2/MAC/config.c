@@ -201,7 +201,7 @@ printf("MAC CONFIG lcid %d group %d\n", (int)logicalChannelIdentity, (int)*logic
         lc.nr_vendorSpecificList = 0;
         lc.vendorSpecificList = NULL;
 
-        lcs.logicalChannelIdentity = 1;
+        lcs.logicalChannelIdentity = logicalChannelIdentity;
         lcs.logicalChannelGroup    = *logicalChannelConfig->ul_SpecificParameters->logicalChannelGroup;
         lcs.direction              = DIR_BOTH;              /* TODO: not necessarily */
         lcs.qosBearerType          = QBT_NON_GBR;           /* TODO: not necessarily */

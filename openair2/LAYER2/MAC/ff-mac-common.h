@@ -314,7 +314,9 @@ struct BuildBroadcastListElement_s
  */
 struct UlInfoListElement_s
 {
-  uint16_t  puschTransmissionTimestamp;	//this timestamp identifies PUSCH transmission to which below information relates to
+  uint16_t  puschTransmissionTimestamp;	//this timestamp identifies PUSCH transmission
+                                        //to which below information relates to
+                                        //format is frame*16+subframe
   uint16_t  rnti;
   uint16_t  ulReception[MAX_LC_LIST+1];
   enum ReceptionStatus_e

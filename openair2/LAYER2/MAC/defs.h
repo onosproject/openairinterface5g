@@ -71,7 +71,7 @@
 #include "SCellToAddMod-r10.h"
 #endif
 
-#ifdef FAPI
+#if FAPI
 #include "ff-mac.h"
 #endif
 
@@ -920,7 +920,7 @@ typedef struct {
   /// processing time of eNB ULSCH reception
   time_stats_t rx_ulsch_sdu; // include rlc_data_ind
 
-#ifdef FAPI
+#if FAPI
   /// fapi interface handler
   fapi_interface_t *fapi;
 #endif
