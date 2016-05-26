@@ -773,7 +773,11 @@ void initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t
       break;
     }
   }
-  if (i == NB_RA_PROC_MAX) { printf("%s:%d:%s: handle this case\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (i == NB_RA_PROC_MAX) {
+    LOG_E(MAC, "[eNB %d][RAPROC] CC_id %d Frame %d no more free RA PROC\n",
+          module_idP, CC_id, frameP);
+    return;
+  }
 
 printf("MAC to FAPI initiate RA procedure new rnti %x f/sf %d/%d\n", r.rnti, frameP, subframeP);
   LOG_I(MAC, "calling SchedDlRachInfoReq\n");
