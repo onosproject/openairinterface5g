@@ -261,7 +261,6 @@ void rx_sdu(
 #if FAPI
               fapi_interface_t                         *fapi = eNB->fapi;
               struct SchedDlMacBufferReqParameters     p;
-              struct MacCeDlListElement_s              ce;
 #if 0
               struct CschedLcConfigReqParameters       lc;
               struct LogicalChannelConfigListElement_s lc0;
@@ -270,12 +269,9 @@ void rx_sdu(
 
               /* inform FAPI that we want to send contention resolution Control Element */
               p.rnti                  = eNB->common_channels[CC_idP].RA_template[ii].rnti;
-              p.nr_macCEDL_List       = 1;
-              p.macCeDlList           = &ce;
+              p.ceBitmap              = ff_CR;
               p.nr_vendorSpecificList = 0;
               p.vendorSpecificList    = NULL;
-              ce.rnti                 = eNB->common_channels[CC_idP].RA_template[ii].rnti;
-              ce.macCeType            = ff_CR;
               SchedDlMacBufferReq(fapi->sched, &p);
 
 #if 0

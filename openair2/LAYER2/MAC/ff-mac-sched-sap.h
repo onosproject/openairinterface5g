@@ -1,38 +1,11 @@
-/*******************************************************************************
-    OpenAirInterface
-    Copyright(c) 1999 - 2015 Eurecom
-
-    OpenAirInterface is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-
-    OpenAirInterface is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenAirInterface.The full GNU General Public License is
-    included in this distribution in the file called "COPYING". If not,
-    see <http://www.gnu.org/licenses/>.
-
-  Contact Information
-  OpenAirInterface Admin: openair_admin@eurecom.fr
-  OpenAirInterface Tech : openair_tech@eurecom.fr
-  OpenAirInterface Dev  : openair4g-devel@eurecom.fr
-
-  Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
-
-*******************************************************************************/
-/*! \file ff-mac-sched-sap.h
- * \brief this is the implementation of the Femto Forum LTE MAC Scheduler Interface Specification v1.11 
- * \author Florian Kaltenberger
- * \date March 2015
- * \version 1.0
- * \email: florian.kaltenberger@eurecom.fr
- * @ingroup _fapi
+/**
+ * @file ff-mac-sched-sap.h
+ * @brief Implementation of the Femto Forum LTE MAC Scheduler Interface Specification v1.11 with extensions.
+ * @details Contains SCHED SAP MAC->scheduler primitive declarations and all primitives data structures definitions.
+ * @author Florian Kaltenberger, Maciej Wewior
+ * @date March 2015
+ * @email: florian.kaltenberger@eurecom.fr, m.wewior@is-wireless.com
+ * @ingroup _mac
  */
 
 #ifndef FF_MAC_SCHED_SAP_H
@@ -47,234 +20,568 @@
 extern "C" {
 #endif
 
-/** @defgroup _fapi  FAPI
- * @ingroup _mac
- * @{
- */
+//forward declarations
+struct SchedDlRlcBufferReqParameters;
+struct SchedDlPagingBufferReqParameters;
+struct SchedDlMacBufferReqParameters;
+struct SchedDlTriggerReqParameters;
+struct SchedDlRachInfoReqParameters;
+struct SchedDlCqiInfoReqParameters;
+struct SchedUlTriggerReqParameters;
+struct SchedUlNoiseInterferenceReqParameters;
+struct SchedUlSrInfoReqParameters;
+struct SchedUlMacCtrlInfoReqParameters;
+struct SchedUlCqiInfoReqParameters;
+
+//SCHED SAP MAC->scheduler primitives
 
 /**
- * Parameters of the API primitives
+ * Update buffer status of logical channel data in RLC. The update rate with which the buffer status is updated in the scheduler is outside of the scope of the document.
+ * @param scheduler Scheduler context pointer, see SchedInit()
+ * @param params RLC buffer status
  */
+void SchedDlRlcBufferReq (void * scheduler, const struct SchedDlRlcBufferReqParameters *params);
 
 /**
- * Parameters of the SCHED_DL_RLC_BUFFER_REQ primitive.
- * See section 4.2.1 for a detailed description of the parameters.
+ * Update buffer status of paging messages.
+ * @param scheduler Scheduler context pointer, see SchedInit()
+ * @param params Paging buffer status
+ */
+void SchedDlPagingBufferReq (void * scheduler, const struct SchedDlPagingBufferReqParameters *params);
+
+/**
+ * Update buffer status of MAC control elements. The update rate with which the buffer status is updated in the scheduler is outside of the scope of the document.
+ * @param scheduler Scheduler context pointer, see SchedInit()
+ * @param params MAC buffer status
+ */
+void SchedDlMacBufferReq (void * scheduler, const struct SchedDlMacBufferReqParameters *params);
+
+/**
+ * Starts the DL MAC scheduler for this subframe.
+ * @param scheduler Scheduler context pointer, see SchedInit()
+ * @param params DL HARQ information
+ */
+void SchedDlTriggerReq (void * scheduler, const struct SchedDlTriggerReqParameters *params);
+
+/**
+ * Provides RACH reception information to the scheduler.
+ * @param scheduler Scheduler context pointer, see SchedInit()
+ * @param params RACH reception information
+ */
+void SchedDlRachInfoReq (void * scheduler, const struct SchedDlRachInfoReqParameters *params);
+
+/**
+ * Provides CQI measurement report information to the scheduler.
+ * @param scheduler Scheduler context pointer, see SchedInit()
+ * @param params DL CQI information
+ */
+void SchedDlCqiInfoReq (void * scheduler, const struct SchedDlCqiInfoReqParameters *params);
+
+/**
+ * Starts the UL MAC scheduler for this subframe.
+ * @param scheduler Scheduler context pointer, see SchedInit()
+ * @param params  UL HARQ information
+ */
+void SchedUlTriggerReq (void * scheduler, const struct SchedUlTriggerReqParameters *params);
+
+/**
+ * Provides noise and interference measurement information to the scheduler.
+ * @param scheduler Scheduler context pointer, see SchedInit()
+ * @param params Noise and interference measurements
+ */
+void SchedUlNoiseInterferenceReq (void * scheduler, const struct SchedUlNoiseInterferenceReqParameters *params);
+
+/**
+ * Provides scheduling request reception information to the scheduler.
+ * @param scheduler Scheduler context pointer, see SchedInit()
+ * @param params Scheduling request information.
+ */
+void SchedUlSrInfoReq (void * scheduler, const struct SchedUlSrInfoReqParameters *params);
+
+/**
+ * Provides mac control information (power headroom, ul buffer status) to the scheduler.
+ * @param scheduler Scheduler context pointer, see SchedInit()
+ * @param params MAC control information received
+ */
+void SchedUlMacCtrlInfoReq (void * scheduler, const struct SchedUlMacCtrlInfoReqParameters *params);
+
+/**
+ * Provides UL CQI measurement information to the scheduler.
+ * @param scheduler Scheduler context pointer, see SchedInit()
+ * @param params UL CQI information
+ */
+void SchedUlCqiInfoReq (void * scheduler, const struct SchedUlCqiInfoReqParameters *params);
+
+//SCHED primitives parameters
+
+/**
+ * RLC buffer status.
  */
 struct SchedDlRlcBufferReqParameters
 {
-  uint16_t  rnti;
-  uint8_t   logicalChannelIdentity;
-  uint32_t  rlcTransmissionQueueSize;
-  uint16_t  rlcTransmissionQueueHolDelay;
-  uint32_t  rlcRetransmissionQueueSize;
-  uint16_t  rlcRetransmissionHolDelay;
-  uint16_t  rlcStatusPduSize;
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The RNTI identifying the UE.
+	 */
+	uint16_t rnti;
+
+	/**
+	 * The logical channel ID, see \ref ref1 "[1]".
+	 * \n Range: 0..10
+	 */
+	uint8_t logicalChannelIdentity;
+
+	/**
+	 * The current size of the transmission queue in byte.
+	 */
+	uint32_t  rlcTransmissionQueueSize;
+
+	/**
+	 * Head of line delay of new transmissions in ms.
+	 */
+	uint16_t rlcTransmissionQueueHolDelay;
+
+	/**
+	 * The current size of the retransmission queue in byte.
+	 */
+	uint32_t rlcRetransmissionQueueSize;
+
+	/**
+	 * Head of line delay of retransmissions in ms.
+	 */
+	uint16_t rlcRetransmissionHolDelay;
+
+	/**
+	 * The current size of the pending STATUS message in byte.
+	 */
+	uint16_t rlcStatusPduSize;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
 /**
- * Parameters of the SCHED_DL_PAGING_BUFFER_REQ primitive.
- * See section 4.2.2 for a detailed description of the parameters.
+ * Paging buffer status.
  */
 struct SchedDlPagingBufferReqParameters
 {
-  uint16_t  rnti;
-  uint8_t   nr_pagingInfoList;
-  struct PagingInfoListElement_s *pagingInfoList;
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The number of elements in \ref pagingInfoList.
+	 * \n Range: 0..#MAX_PAGING_LIST
+	 */
+	uint8_t nr_pagingInfoList;
+
+	/**
+	 * List holding paging information to be sent.
+	 */
+	struct PagingInfoListElement_s *pagingInfoList;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
 /**
- * Parameters of the SCHED_DL_MAC_BUFFER_REQ primitive.
- * See section 4.2.3 for a detailed description of the parameters.
+ * MAC buffer status.
  */
 struct SchedDlMacBufferReqParameters
 {
-  uint16_t  rnti;
-  uint8_t   nr_macCEDL_List;
-  struct MacCeDlListElement_s *macCeDlList;
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The RNTI identifying the UE.
+	 */
+	uint16_t  rnti;
+
+	/**
+	 * The CE element which is scheduled to be sent by the MAC. Can be Timing Advance CE, DRX Command CE and Contention Resolution CE (Activation/Deactivation CE is generated by the scheduler itself).
+	 * This bitmap holds \ref CeBitmap_e enum flags.
+	 */
+	uint8_t ceBitmap;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
 /**
- * Parameters of the SCHED_DL_TRIGGER_REQ primitive.
- * See section 4.2.4 for a detailed description of the parameters.
+ *
  */
 struct SchedDlTriggerReqParameters
 {
-  uint16_t  sfnSf;
-  uint8_t   nr_dlInfoList;
-  struct DlInfoListElement_s *dlInfoList;
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The SFN and SF for which the scheduling is to be done, see \ref fapiExtDoc_timing_sec "Scheduler timing" and \ref fapiExtDoc_timestamp_sec "Timestamp coding".
+	 */
+	uint16_t sfnSf;
+
+	/**
+	 * Number of elements in \ref dlInfoList array.
+	 * \n Range: 0..#MAX_DL_INFO_LIST
+	 */
+	uint8_t nr_dlInfoList;
+
+	/**
+	 * The list of UE DL information.
+	 */
+	struct DlInfoListElement_s *dlInfoList;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
 /**
- * Parameters of the SCHED_DL_RACH_INFO_REQ primitive.
- * See section 4.2.5 for a detailed description of the parameters.
+ * RACH reception information.
  */
 struct SchedDlRachInfoReqParameters
 {
-  uint16_t  sfnSf;
-  uint8_t   nrrachList;
-  struct RachListElement_s *rachList;
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The SFN and SF in which the information was received, see \ref fapiExtDoc_timestamp_sec "Timestamp coding".
+	 */
+	uint16_t sfnSf;
+
+	/**
+	 * The number of elements in \ref rachList array.
+	 * \n Range: 0..#MAX_RACH_LIST
+	 */
+	uint8_t nrrachList;
+
+	/**
+	 * The list of detected RACHs.
+	 */
+	struct RachListElement_s *rachList;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
 /**
- * Parameters of the SCHED_DL_CQI_INFO_REQ primitive.
- * See section 4.2.6 for a detailed description of the parameters.
+ * DL CQI information.
  */
 struct SchedDlCqiInfoReqParameters
 {
-  uint16_t  sfnSf;
-  uint8_t   nrcqiList;
-  struct CqiListElement_s *cqiList;
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The SFN and SF in which the information was received, see \ref fapiExtDoc_timestamp_sec "Timestamp coding".
+	 */
+	uint16_t sfnSf;
+
+	/**
+	 * The number of elements in \ref cqiList array.
+	 * \n Range: 0..#MAX_CQI_LIST
+	 */
+	uint8_t nrcqiList;
+
+	/**
+	 * The list of DL CQI reports received in one subframe.
+	 */
+	struct CqiListElement_s *cqiList;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
 /**
- * Parameters of the SCHED_UL_TRIGGER_REQ primitive.
- * See section 4.2.8 for a detailed description of the parameters.
+ * UL HARQ information.
  */
 struct SchedUlTriggerReqParameters
 {
-  uint16_t  sfnSf;
-  uint8_t   nr_ulInfoList;
-  struct UlInfoListElement_s *ulInfoList;
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The SFN and SF for which the scheduling is to be done, see \ref fapiExtDoc_timing_sec "Scheduler timing" and \ref fapiExtDoc_timestamp_sec "Timestamp coding".
+	 */
+	uint16_t sfnSf;
+
+	/**
+	 * The number of elements in \ref ulInfoList array.
+	 * \n Range: 0..#MAX_UL_INFO_LIST
+	 */
+	uint8_t nr_ulInfoList;
+
+	/**
+	 * The list of UL information for the scheduler.
+	 */
+	struct UlInfoListElement_s *ulInfoList;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
 /**
- * Parameters of the SCHED_UL_NOISE_INTERFERENCE_REQ primitive.
- * See section 4.2.9 for a detailed description of the parameters.
+ * Noise and interference measurements.
  */
 struct SchedUlNoiseInterferenceReqParameters
 {
-  uint8_t	carrierIndex;
-  uint16_t  sfnSf;
-  uint16_t  rip;
-  uint16_t  tnp;
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * Component carrier identifier, uniquely identifies carrier in the eNB, see \ref fapiExtDoc_indices_sec "PcellIndex/ScellIndex’ing".
+	 */
+	uint8_t	carrierIndex;
+
+	/**
+	 * The SFN and SF in which the information was received, see \ref fapiExtDoc_timestamp_sec "Timestamp coding".
+	 */
+	uint16_t sfnSf;
+
+	/**
+	 * Received Interference Power, see \ref ref9 "[9]". In dBm.
+	 * \n Range: -126.0..-75.0
+	 * In fixed point format Q7.8.
+	 */
+	int16_t rip;
+
+	/**
+	 * Thermal Noise Power, see \ref ref9 "[9]". In dBm.
+	 * \n Range: -146.0..-75
+	 * In fixed point format Q7.8.
+	 */
+	int16_t tnp;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
 /**
- * Parameters of the SCHED_UL_SR_INFO_REQ primitive.
- * See section 4.2.10 for a detailed description of the parameters.
+ * Scheduling request information.
  */
 struct SchedUlSrInfoReqParameters
 {
-  uint16_t  sfnSf;
-  uint8_t   nr_srList;
-  struct SrListElement_s *srList;
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The SFN and SF in which the information was received, see \ref fapiExtDoc_timestamp_sec "Timestamp coding".
+	 */
+	uint16_t sfnSf;
+
+	/**
+	 * The number of elements on \ref srList array.
+	 * \n Range: 0..#MAX_SR_LIST
+	 */
+	uint8_t nr_srList;
+
+	/**
+	 * The list of SRs received in one subframe.
+	 */
+	struct SrListElement_s *srList;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
 /**
- * Parameters of the SCHED_UL_MAC_CTRL_INFO_REQ primitive.
- * See section 4.2.11 for a detailed description of the parameters.
+ * MAC control information received.
  */
 struct SchedUlMacCtrlInfoReqParameters
 {
-  uint16_t  sfnSf;
-  uint8_t   nr_macCEUL_List;
-  struct MacCeUlListElement_s *macCeUlList;
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The SFN and SF in which the information was received, see \ref fapiExtDoc_timestamp_sec "Timestamp coding".
+	 */
+	uint16_t sfnSf;
+
+	/**
+	 * Number of elements in \ref macCeUlList array.
+	 * \n Range: 0..#MAX_MAC_CE_LIST
+	 */
+	uint8_t nr_macCEUL_List;
+
+	/**
+	 * The list of MAC control elements received in one subframe.
+	 */
+	struct MacCeUlListElement_s *macCeUlList;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
 /**
- * Parameters of the SCHED_UL_CQI_INFO_REQ primitive.
- * See section 4.2.12 for a detailed description of the parameters.
+ * UL CQI information.
  */
 struct SchedUlCqiInfoReqParameters
 {
-  uint16_t  sfnSf;
-  uint8_t	nr_ulCqiList;
-  struct UlCqi_s* ulCqiList;
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The SFN and SF in which the information was received, see \ref fapiExtDoc_timestamp_sec "Timestamp coding".
+	 */
+	uint16_t sfnSf;
+
+	/**
+	 * The number of elements in \ref ulCqiList array.
+	 */
+	uint8_t	nr_ulCqiList;
+
+	/**
+	 * List of UL CQI information received in one subframe.
+	 */
+	struct UlCqi_s* ulCqiList;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
-//
-// SCHED - MAC Scheduler SAP primitives
-// (See 4.2 for description of the primitives)
-//
-
-void SchedDlRlcBufferReq(void *, const struct SchedDlRlcBufferReqParameters *params);
-void SchedDlPagingBufferReq(void *, const struct SchedDlPagingBufferReqParameters *params);
-void SchedDlMacBufferReq(void *, const struct SchedDlMacBufferReqParameters *params);
-void SchedDlTriggerReq(void *, const struct SchedDlTriggerReqParameters *params);
-void SchedDlRachInfoReq(void *, const struct SchedDlRachInfoReqParameters *params);
-void SchedDlCqiInfoReq(void *, const struct SchedDlCqiInfoReqParameters *params);
-void SchedUlTriggerReq(void *, const struct SchedUlTriggerReqParameters *params);
-void SchedUlNoiseInterferenceReq(void *, const struct SchedUlNoiseInterferenceReqParameters *params);
-void SchedUlSrInfoReq(void *, const struct SchedUlSrInfoReqParameters *params);
-void SchedUlMacCtrlInfoReq(void *, const struct SchedUlMacCtrlInfoReqParameters *params);
-void SchedUlCqiInfoReq(void *, const struct SchedUlCqiInfoReqParameters *params);
 
 /**
- * Parameters of the API primitives
- */
-
-/**
- * Parameters of the SCHED_DL_CONFIG_IND primitive.
- * See section 4.2.7 for a detailed description of the parameters.
+ * DL scheduling decision.
  */
 struct SchedDlConfigIndParameters
 {
-  uint8_t nr_buildDataList;
-  uint8_t nr_buildRARList;
-  uint8_t nr_buildBroadcastList;
-  struct BuildDataListElement_s      *buildDataList;
-  struct BuildRarListElement_s       *buildRarList;
-  struct BuildBroadcastListElement_s *buildBroadcastList;
+	/**
+	 * The number of elements in \ref buildDataList array.
+	 * \n Range: 0..#MAX_BUILD_DATA_LIST
+	 */
+	uint8_t nr_buildDataList;
 
-  /* mind: this is just number of elems in the next array (not actual number of PDCCH OFDM symbols) */
-  uint8_t nr_ofdmSymbolsCount;
-#warning [31;46mMAX_NUM_CCs forced to 2 in structure SchedDlConfigIndParameters!![0m
-  struct PdcchOfdmSymbolCountListElement_s* nrOfPdcchOfdmSymbols[2 /* MAX_NUM_CCs */];
+	/**
+	 * The number of elements in \ref buildRarList array.
+	 * \n Range: 0..#MAX_BUILD_RAR_LIST
+	 */
+	uint8_t nr_buildRARList;
 
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The number of elements in \ref buildBroadcastList array.
+	 * \n Range: 0..#MAX_BUILD_BC_LIST
+	 */
+	uint8_t nr_buildBroadcastList;
+
+	/**
+	 * The list of resource allocation for UEs and LCs.
+	 */
+	struct BuildDataListElement_s *buildDataList;
+
+	/**
+	 * The list of resource allocation for RAR.
+	 */
+	struct BuildRarListElement_s *buildRarList;
+
+	/**
+	 * The list of resource allocation for BCCH, PCCH.
+	 */
+	struct BuildBroadcastListElement_s *buildBroadcastList;
+
+	/**
+	 * The number of elements in \ref nrOfPdcchOfdmSymbols array.
+	 */
+	uint8_t nr_ofdmSymbolsCount;
+
+	/**
+	 * Current size of PDCCH for each CC.
+	 */
+	struct PdcchOfdmSymbolCountListElement_s* nrOfPdcchOfdmSymbols[2 /*MAX_NUM_CCs*/];
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
 /**
- * Parameters of the SCHED_UL_CONFIG_IND primitive.
- * See section 4.2.13 for a detailed description of the parameters.
+ * UL scheduling decision.
  */
 struct SchedUlConfigIndParameters
 {
-  uint8_t nr_dciList;
-  uint8_t nr_phichList;
-  struct UlDciListElement_s *dciList;
-  struct PhichListElement_s *phichList;
+	/**
+	 * The number of elements in \ref dciList array.
+	 * \n Range: 0..MAX_DCI_LIST
+	 */
+	uint8_t nr_dciList;
 
-  uint8_t   nr_vendorSpecificList;
-  struct VendorSpecificListElement_s *vendorSpecificList;
+	/**
+	 * The number of elements in \ref phichList array.
+	 * \n Range: 0..MAX_PHICH_LIST
+	 */
+	uint8_t nr_phichList;
+
+	/**
+	 * The list of UL DCI (Format 0) elements.
+	 */
+	struct UlDciListElement_s *dciList;
+
+	/**
+	 * The list of PHICH elements.
+	 */
+	struct PhichListElement_s *phichList;
+
+	/**
+	 * The number of elements in the \ref vendorSpecificList array.
+	 */
+	uint8_t nr_vendorSpecificList;
+
+	/**
+	 * Contains scheduler specific configuration received from the OAM subsystem for use by a specific scheduler.
+	 */
+	struct VendorSpecificListElement_s *vendorSpecificList;
 };
 
-//
-// SCHED - MAC Scheduler SAP primitives
-// (See 4.2 for description of the primitives)
-//
 // Primitives defined as callbacks in separate file ff-mac-callback.h
-
-#if 0
-/* not used - the scheduler has callbacks for those */
-void SchedDlConfigInd(const struct SchedDlConfigIndParameters* params);
-void SchedUlConfigInd(const struct SchedUlConfigIndParameters* params);
-#endif
-
-/*@}*/
 
 #if defined (__cplusplus)
 }
