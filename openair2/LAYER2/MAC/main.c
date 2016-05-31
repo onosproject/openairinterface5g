@@ -378,6 +378,7 @@ int mac_top_init(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active, ui
     p.nr_vendorSpecificList = 0;
 
     l.puschHoppingOffset                = conf->properties[i]->pusch_hoppingOffset[0];
+    l.NcellID                           = conf->properties[i]->Nid_cell[0];
     l.hoppingMode                       = conf->properties[i]->pusch_hoppingMode[0];
     l.nSb                               = conf->properties[i]->pusch_n_SB[0];
     switch (conf->properties[i]->phich_resource[0]) {
@@ -423,7 +424,7 @@ int mac_top_init(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active, ui
     }
     l.subframeAssignment                = conf->properties[i]->tdd_config[0];
     l.specialSubframePatterns           = conf->properties[i]->tdd_config_s[0];
-#warning [31;46mTODO: mbsfn stuff (when mbsfn_SubframeConfigPresent will be added to the structure CschedCellConfigReqParametersListElement)[0m
+    l.mbsfn_SubframeConfigPresent       = false;
     l.prachConfigurationIndex           = conf->properties[i]->prach_config_index[0];
     l.prachFreqOffset                   = conf->properties[i]->prach_freq_offset[0];
     l.raResponseWindowSize              = conf->properties[i]->rach_raResponseWindowSize[0];
