@@ -10,12 +10,14 @@
 
 /**
  * @mainpage LTE MAC Scheduler Interface
- * This is an implementation of FemtoForum (today <a href="http://www.smallcellforum.org">Small Cell Forum</a>) originated LTE MAC Scheduler Interface v1.11.
- * Current version of the API was developed by <a href="http://www.is-wireless.com">IS-Wireless</a> and <a href="http://www.eurecom.fr/en">Eurecom</a> and is an extension of original FAPI. Extensions are:
+ * This document specifies the SOLDER FAPI 2.0, which is an extension of the LTE MAC Scheduler Interface v1.11 originally defined by the FemtoForum (today <a href="http://www.smallcellforum.org">Small Cell Forum</a>).  
+ * The current version of the API was developed by <a href="http://www.is-wireless.com">IS-Wireless</a> and <a href="http://www.eurecom.fr/en">Eurecom</a> in the context of the EU FP7 project <a href="http://ict-solder.eu">SOLDER</a>. Extensions are:
  * @li support for Carrier Aggregation
  * @li improved CQI report structures
  * @li bug fixes
  *
+ * This document is an executable specification, meaning that it has been generated automatically from source code. The source code is open-source and is available from the <a href="http://www.openairinterface.org">OpenAirInterface.org</a> project availiable from the <a href="https://gitlab.eurecom.fr/oai/openairinterface5g">Eurecom gitlab server</a> (branch feature-31-ff-scheduler-api). 
+ * An example scheduler that works with this FAPI is available from <a href="https://www.is-wireless.com/protocols/lte-enb-scheduler">IS-Wireless</a>.
  * <hr>
  * @section fapiOrigDoc_sec Original FAPI documentation
  * This section contains the copy of FAPI documentation that was included in the original "LTE MAC Scheduler Interface v1.11" document by FemtoForum (Document number: FF_Tech_001_v1.11
