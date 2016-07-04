@@ -3488,6 +3488,18 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
                     phy_vars_eNB->lte_frame_parms.N_RB_DL,
                     &rnti, &access_mode);
         phy_vars_eNB->eNB_UE_stats[i].rank = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_RI[0];
+#if FAPI
+        {
+          /* TODO: 2 TBs, other reporting modes - we suppose 3-0 (see 36.213 7.2.1) */
+          /* 13 is MAX_HL_SB */
+          int cqi_subband[13];
+          int k;
+          for (k = 0; k < 13; k++)
+            cqi_subband[k] = phy_vars_eNB->eNB_UE_stats[i].DL_subband_cqi[0][k];
+          mac_xface->fapi_dl_cqi_report(phy_vars_eNB->Mod_id, phy_vars_eNB->ulsch_eNB[i]->rnti, frame, subframe,
+              phy_vars_eNB->eNB_UE_stats[i].DL_cqi[0], cqi_subband, phy_vars_eNB->eNB_UE_stats[i].rank);
+        }
+#endif
       }
 
       if (ret == (1+MAX_TURBO_ITERATIONS)) {
@@ -4234,6 +4246,18 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
                     phy_vars_eNB->lte_frame_parms.N_RB_DL,
                     &rnti, &access_mode);
         phy_vars_eNB->eNB_UE_stats[i].rank = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_RI[0];
+#if FAPI
+        {
+          /* TODO: 2 TBs, other reporting modes - we suppose 3-0 (see 36.213 7.2.1) */
+          /* 13 is MAX_HL_SB */
+          int cqi_subband[13];
+          int k;
+          for (k = 0; k < 13; k++)
+            cqi_subband[k] = phy_vars_eNB->eNB_UE_stats[i].DL_subband_cqi[0][k];
+          mac_xface->fapi_dl_cqi_report(phy_vars_eNB->Mod_id, phy_vars_eNB->ulsch_eNB[i]->rnti, frame, subframe,
+              phy_vars_eNB->eNB_UE_stats[i].DL_cqi[0], cqi_subband, phy_vars_eNB->eNB_UE_stats[i].rank);
+        }
+#endif
       }
 
       /*  LOG_D(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d UE %d harq_pid %d resetting the sched_subframeuling_flag, total cba groups %d %d\n",

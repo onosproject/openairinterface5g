@@ -264,6 +264,33 @@ printf("GOT lcid %d length %d (f/sf %d/%d)\n", lcid, length, frame, subframe);
   fapi_ul_ack_nack_data[subframe].ack[pos].length[lcid] = length;
 }
 
+void fapi_dl_cqi_report(int module_id, int rnti, int frame, int subframe, int cqi_wideband, int *cqi_subband, int rank_indication)
+{
+  /* TODO: 2 TBs, other reporting modes - we suppose 3-0 (see 36.213 7.2.1) */
+  fapi_interface_t                   *fapi;
+  struct SchedDlCqiInfoReqParameters params;
+  struct CqiListElement_s            cqi;
+  int                                i;
+
+  fapi = eNB_mac_inst[module_id].fapi;
+
+  cqi.rnti                          = rnti;
+  cqi.csiReport.ri                  = rank_indication;
+  cqi.csiReport.mode                = A30;          /* TODO: get real value */
+  cqi.csiReport.report.A30Csi.wbCqi = cqi_wideband;
+  for (i = 0; i < MAX_HL_SB; i++)
+    cqi.csiReport.report.A30Csi.sbCqi[i] = cqi_subband[i];
+  cqi.servCellIndex                 = 0;         /* TODO: get correct value */
+
+  params.sfnSf                 = frame * 16 + subframe;
+  params.nrcqiList             = 1;
+  params.cqiList               = &cqi;
+  params.nr_vendorSpecificList = 0;
+  params.vendorSpecificList    = NULL;
+
+  SchedDlCqiInfoReq(fapi->sched, &params);
+}
+
 static void fapi_convert_dl_1A_5MHz_FDD(struct DlDciListElement_s *dci, DCI_ALLOC_t *a)
 {
   DCI1A_5MHz_FDD_t *d = (DCI1A_5MHz_FDD_t *)a->dci_pdu;

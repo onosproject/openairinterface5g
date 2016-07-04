@@ -671,6 +671,7 @@ int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,ui
 #if FAPI
   mac_xface->fapi_ul_ack_nack = fapi_ul_ack_nack;
   mac_xface->fapi_dl_ack_nack = fapi_dl_ack_nack;
+  mac_xface->fapi_dl_cqi_report = fapi_dl_cqi_report;
 #endif
 
   return(1);
