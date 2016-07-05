@@ -89,6 +89,11 @@ void rx_sdu(
   eNB_MAC_INST *eNB = &eNB_mac_inst[enb_mod_idP];
   UE_list_t *UE_list= &eNB->UE_list;
   int crnti_rx=0;
+#if FAPI
+  fapi_interface_t *fapi = eNB->fapi;
+  struct SchedUlMacCtrlInfoReqParameters params;
+  struct MacCeUlListElement_s celist;
+#endif
 
   start_meas(&eNB->rx_ulsch_sdu);
 
@@ -123,6 +128,17 @@ void rx_sdu(
         UE_list->UE_template[CC_idP][UE_id].phr_info_configured=1;
       }
 
+#if FAPI
+      params.sfnSf                 = frameP * 16 + subframeP;
+      params.nr_macCEUL_List       = 1;
+      params.macCeUlList           = &celist;
+      params.nr_vendorSpecificList = 0;
+      params.vendorSpecificList    = NULL;
+      celist.rnti                  = rntiP;
+      celist.macCeType             = ff_PHR;
+      celist.macCeValue.phr        = UE_list->UE_template[CC_idP][UE_id].phr_info;
+      SchedUlMacCtrlInfoReq(fapi->sched, &params);
+#endif
       payload_ptr+=sizeof(POWER_HEADROOM_CMD);
       break;
 
@@ -135,6 +151,17 @@ void rx_sdu(
       if (msg3_flagP != NULL) {
 	*msg3_flagP = 0;
       }
+#if FAPI
+      params.sfnSf                 = frameP * 16 + subframeP;
+      params.nr_macCEUL_List       = 1;
+      params.macCeUlList           = &celist;
+      params.nr_vendorSpecificList = 0;
+      params.vendorSpecificList    = NULL;
+      celist.rnti                  = rntiP;
+      celist.macCeType             = ff_CRNTI;
+      celist.macCeValue.crnti      = 0;    /* doc says it's unused */
+      SchedUlMacCtrlInfoReq(fapi->sched, &params);
+#endif
       break;
 
     case TRUNCATED_BSR:
@@ -159,6 +186,21 @@ void rx_sdu(
       else {
 
       }
+#if FAPI
+      params.sfnSf                 = frameP * 16 + subframeP;
+      params.nr_macCEUL_List       = 1;
+      params.macCeUlList           = &celist;
+      params.nr_vendorSpecificList = 0;
+      params.vendorSpecificList    = NULL;
+      celist.rnti                  = rntiP;
+      celist.macCeType             = ff_BSR;
+      celist.macCeValue.bufferStatus[0] = 64;
+      celist.macCeValue.bufferStatus[1] = 64;
+      celist.macCeValue.bufferStatus[2] = 64;
+      celist.macCeValue.bufferStatus[3] = 64;
+      celist.macCeValue.bufferStatus[lcgid] = UE_list->UE_template[CC_idP][UE_id].bsr_info[lcgid];
+      SchedUlMacCtrlInfoReq(fapi->sched, &params);
+#endif
       payload_ptr += 1;//sizeof(SHORT_BSR); // fixme
     }
     break;
@@ -215,6 +257,20 @@ void rx_sdu(
         }
       }
 
+#if FAPI
+      params.sfnSf                 = frameP * 16 + subframeP;
+      params.nr_macCEUL_List       = 1;
+      params.macCeUlList           = &celist;
+      params.nr_vendorSpecificList = 0;
+      params.vendorSpecificList    = NULL;
+      celist.rnti                  = rntiP;
+      celist.macCeType             = ff_BSR;
+      celist.macCeValue.bufferStatus[0] = UE_list->UE_template[CC_idP][UE_id].bsr_info[LCGID0];
+      celist.macCeValue.bufferStatus[1] = UE_list->UE_template[CC_idP][UE_id].bsr_info[LCGID1];
+      celist.macCeValue.bufferStatus[2] = UE_list->UE_template[CC_idP][UE_id].bsr_info[LCGID2];
+      celist.macCeValue.bufferStatus[3] = UE_list->UE_template[CC_idP][UE_id].bsr_info[LCGID3];
+      SchedUlMacCtrlInfoReq(fapi->sched, &params);
+#endif
       payload_ptr += 3;////sizeof(LONG_BSR);
       break;
 
