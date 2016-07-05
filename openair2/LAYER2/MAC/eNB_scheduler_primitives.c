@@ -344,6 +344,10 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP)
 int mac_remove_ue(module_id_t mod_idP, int ue_idP, int frameP, sub_frame_t subframeP)
 //------------------------------------------------------------------------------
 {
+#if FAPI
+  struct CschedUeReleaseReqParameters p;
+  struct CschedUeReleaseCnfParameters r;
+#endif
 
   int prev,i, ret=-1;
 
@@ -421,8 +425,18 @@ int mac_remove_ue(module_id_t mod_idP, int ue_idP, int frameP, sub_frame_t subfr
   }
 
 #if FAPI
-printf("FAPI: remove UE: TODO\n");
-abort();
+    p.rnti                  = rnti;
+    p.nr_vendorSpecificList = 0;
+    p.vendorSpecificList    = NULL;
+    LOG_I(MAC, "calling CschedUeReleaseReq\n");
+    CschedUeReleaseReq(eNB_mac_inst[mod_idP].fapi->sched, &p);
+    LOG_I(MAC, "calling CschedUeReleaseCnf\n");
+    CschedUeReleaseCnf(eNB_mac_inst[mod_idP].fapi, &r);
+    if (r.rnti != rnti || r.result != ff_SUCCESS) {
+      LOG_E(MAC, "FAPI fatal error: rnti is %x (expected %x); result is %s (expected ff_SUCCESS)\n",
+            r.rnti, rnti, r.result == ff_SUCCESS ? "ff_SUCCESS" : "ff_FAILURE");
+      abort();
+    }
 #endif
 
   if (ret == 0) {
