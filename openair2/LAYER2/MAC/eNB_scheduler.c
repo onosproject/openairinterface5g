@@ -581,8 +581,13 @@ static int fixed_size(int lcid)
   return lcid >= 27;
 }
 
+/* TODO: deal with MCS 29-31 in the PHY layer
+ * in the meantime, this array stores the latest mcs used for each rnti/harq_pid
+ */
+static unsigned char latest_mcs[65536][10];
+
 /* TODO: deal with more than one transport block */
-static void fapi_schedule_ue(int module_id, int CC_id, int frame, int subframe, struct BuildDataListElement_s *d)
+static void fapi_schedule_retransmission_ue(int module_id, int CC_id, int frame, int subframe, struct BuildDataListElement_s *d)
 {
   int header_size;
   int payload_size;
@@ -609,6 +614,63 @@ static void fapi_schedule_ue(int module_id, int CC_id, int frame, int subframe, 
   /* we can increment Num_common_dci or Num_ue_spec_dci, there is no difference */
   dci_pdu->Num_common_dci++;
 
+  /* TODO: deal with MCS 29-31 in the PHY layer
+   * in the meantime, let's replace with the last used MCS
+   */
+  d->dci.mcs[0] = latest_mcs[d->rnti][d->dci.harqProcess];
+
+  fapi_convert_dl_dci(module_id, CC_id, &d->dci, a);
+printf("RUN fapi_schedule_retransmission_ue\n");
+
+  if (d->nr_rlcPDU_List[0] != 0) { printf("%s:%d:%s: error?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (d->nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (d->ceBitmap[0])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (d->ceBitmap[1])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (d->servCellIndex != 0)     { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+
+  UE_id = find_UE_id(module_id, d->rnti);
+
+  add_ue_dlsch_info(module_id,
+      CC_id,
+      UE_id,
+      subframe,
+      /* S_DL_SCHEDULED */ S_DL_WAITING);
+}
+
+/* TODO: deal with more than one transport block */
+static void fapi_schedule_ue(int module_id, int CC_id, int frame, int subframe, struct BuildDataListElement_s *d)
+{
+  int header_size;
+  int payload_size;
+  int padding_size;
+  int tbs;
+  int i;
+  mac_rlc_status_resp_t rlc_status;
+  unsigned char         dlsch_buffer[MAX_DLSCH_PAYLOAD_BYTES];
+  int                   dlsch_filled = 0;
+  int                   output_length;
+  int                   UE_id;
+  eNB_MAC_INST          *eNB      = &eNB_mac_inst[module_id];
+  UE_list_t             *UE_list  = &eNB->UE_list;
+  int                   num_sdus;
+  unsigned short        sdu_lengths[MAX_RLC_PDU_LIST];
+  unsigned char         sdu_lcids[MAX_RLC_PDU_LIST];
+  int                   offset;
+  DCI_PDU               *dci_pdu = &eNB->common_channels[CC_id].DCI_pdu;
+  DCI_ALLOC_t           *a = &dci_pdu->dci_alloc[dci_pdu->Num_common_dci];
+
+  /* retransmission? */
+  if (d->dci.mcs[0] >= 29 && d->dci.mcs[0] <= 31) {
+    fapi_schedule_retransmission_ue(module_id, CC_id, frame, subframe, d);
+    return;
+  }
+
+  /* generate DCI */
+  if (dci_pdu->Num_common_dci >= NUM_DCI_MAX) { printf("%s:%d:%s: too much DCIs\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+
+  /* we can increment Num_common_dci or Num_ue_spec_dci, there is no difference */
+  dci_pdu->Num_common_dci++;
+
   fapi_convert_dl_dci(module_id, CC_id, &d->dci, a);
 printf("RUN fapi_schedule_ue\n");
 
@@ -617,6 +679,11 @@ printf("RUN fapi_schedule_ue\n");
   if (d->ceBitmap[0])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->ceBitmap[1])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->servCellIndex != 0)     { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+
+  /* TODO: deal with MCS 29-31
+   * in the meantime, we store the latest used mcs for each rnti/harq_pid
+   */
+  latest_mcs[d->rnti][d->dci.harqProcess] = d->dci.mcs[0];
 
   tbs = d->dci.tbsSize[0] / 8;
 
