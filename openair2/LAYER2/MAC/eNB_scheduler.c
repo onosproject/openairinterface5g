@@ -859,7 +859,7 @@ printf("MAC to FAPI downlink BUF CCCH %d\n", rlc.rlcTransmissionQueueSize);
     /* this code is wrong: we should loop over all configured RaB */
 
     /* DCCH   (srb 1, lcid 1) */
-    rlc_status = mac_rlc_get_buffer_occupancy(module_idP, rlc.rnti, frameP, DCCH);
+    rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH, 0);
     rlc.logicalChannelIdentity = DCCH;
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
     LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
@@ -867,7 +867,7 @@ printf("MAC to FAPI downlink BUF CCCH %d\n", rlc.rlcTransmissionQueueSize);
 printf("MAC to FAPI downlink BUF DCCH %d\n", rlc_status.bytes_in_buffer);
 
     /* DCCH+1 (srb 2, lcid 2) */
-    rlc_status = mac_rlc_get_buffer_occupancy(module_idP, rlc.rnti, frameP, DCCH+1);
+    rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH+1, 0);
     rlc.logicalChannelIdentity = DCCH+1;
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
     LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH+1 rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
@@ -875,7 +875,7 @@ printf("MAC to FAPI downlink BUF DCCH %d\n", rlc_status.bytes_in_buffer);
 printf("MAC to FAPI downlink BUF DCCH+1 %d\n", rlc_status.bytes_in_buffer);
 
     /* DTCH   (drb 1, lcid 3) */
-    rlc_status = mac_rlc_get_buffer_occupancy(module_idP, rlc.rnti, frameP, DTCH);
+    rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, DTCH, 0);
     rlc.logicalChannelIdentity = DTCH;
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
     LOG_I(MAC, "calling SchedDlRlcBufferReq on DTCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);

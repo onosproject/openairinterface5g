@@ -124,10 +124,6 @@ public_rlc_tm( struct mac_status_resp rlc_tm_mac_status_indication (
                  const uint16_t tb_sizeP,
                  struct mac_status_ind tx_statusP);)
 
-#if FAPI
-public_rlc_tm( struct mac_status_resp rlc_tm_mac_get_buffer_occupancy( const protocol_ctxt_t* const  ctxt_pP, void * const rlcP);)
-#endif
-
 /*! \fn struct mac_data_req rlc_tm_mac_data_request (const protocol_ctxt_t* const  ctxt_pP, void * const rlcP)
 * \brief    Gives PDUs to lower layer MAC.
 * \param[in]  ctxtP                     Running context.

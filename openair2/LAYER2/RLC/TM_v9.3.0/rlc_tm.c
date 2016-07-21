@@ -171,21 +171,6 @@ rlc_tm_mac_status_indication (
   return status_resp;
 }
 
-#if FAPI
-
-//-----------------------------------------------------------------------------
-struct mac_status_resp
-rlc_tm_mac_get_buffer_occupancy(
-  const protocol_ctxt_t* const  ctxt_pP,
-  void * const                  rlc_pP)
-{
-  struct mac_status_resp status_resp;
-  status_resp.buffer_occupancy_in_bytes = ((rlc_tm_entity_t *) rlc_pP)->buffer_occupancy;
-  return status_resp;
-}
-
-#endif /* FAPI */
-
 //-----------------------------------------------------------------------------
 struct mac_data_req
 rlc_tm_mac_data_request (
