@@ -993,10 +993,10 @@ printf("MAC to FAPI downlink ack/nack from PHY f/sf %d/%d rnti %x harq %d ack %d
   /* TODO: rewrite. All should go into fapi_schedule_ue where special cases should be handled */
   for (i = 0; i < dlind.nr_buildDataList; i++) {
     if (dlind.buildDataList[i].ceBitmap[1] != 0 || dlind.buildDataList[i].nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
-    if (dlind.buildDataList[i].nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 printf("FAPI to MAC downlink schedule ue %x channel %d f/sf %d/%d\n", dlind.buildDataList[i].rnti, dlind.buildDataList[i].rlcPduList[0][0].logicalChannelIdentity, frameP, subframeP);
     switch (dlind.buildDataList[i].rlcPduList[0][0].logicalChannelIdentity) {
     case 0: /* CCCH */
+      if (dlind.buildDataList[i].nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
       /* TODO: get the right CC_id from servCellIndex, depending on the UE rnti/pcell/scell settings */
       CC_id = dlind.buildDataList[i].servCellIndex;
       /* look for an active RA with generate_Msg4 == 2 for this rnti */
