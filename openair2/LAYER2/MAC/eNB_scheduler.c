@@ -280,6 +280,14 @@ void fapi_dl_cqi_report(int module_id, int rnti, int frame, int subframe, int cq
   cqi.csiReport.report.A30Csi.wbCqi = cqi_wideband;
   for (i = 0; i < MAX_HL_SB; i++)
     cqi.csiReport.report.A30Csi.sbCqi[i] = cqi_subband[i];
+
+  /* TODO: remove this oaisim fix
+   * value 0 is not allowed in wideband CQI reporting,
+   * see 36.213 7.2.3 table 7.2.3-1
+   * but we get value 0 in oaisim
+   */
+  if (cqi.csiReport.report.A30Csi.wbCqi == 0) cqi.csiReport.report.A30Csi.wbCqi++;
+
   cqi.servCellIndex                 = 0;         /* TODO: get correct value */
 
   params.sfnSf                 = frame * 16 + subframe;
