@@ -337,7 +337,7 @@ typedef struct {
   ///end ALU's algo
 
 #if FAPI
-  void (*fapi_ul_ack_nack)(int frame, int subframe, int rnti, int ack);
+  void (*fapi_ul_ack_nack)(int frame, int subframe, int harq_pid, int rnti, int ack);
   void (*fapi_dl_ack_nack)(int rnti, int harq_pid, int transport_block, int ack);
   void (*fapi_dl_cqi_report)(int module_id, int rnti, int frame, int subframe, int cqi_wideband, int *cqi_subband, int rank_indication);
 #endif

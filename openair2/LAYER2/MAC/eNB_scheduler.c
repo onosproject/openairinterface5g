@@ -222,9 +222,9 @@ printf("GOT DOWNLINK ack %d for rnti %x harq_pid %d transport_block %d\n", ack, 
  * reception by the eNodeB of an uplink UE transmission
  */
 /* TODO: do it per CC */
-void fapi_ul_ack_nack(int frame, int subframe, int rnti, int ack)
+void fapi_ul_ack_nack(int frame, int subframe, int harq_pid, int rnti, int ack)
 {
-printf("GOT UPLINK ack %d for rnti %x (f/sf %d/%d)\n", ack, rnti, frame, subframe);
+printf("GOT UPLINK ack %d for rnti %x harq_pid %d (f/sf %d/%d)\n", ack, rnti, harq_pid, frame, subframe);
   int pos = fapi_ul_ack_nack_data[subframe].count;
   if (pos == MAX_UL_INFO_LIST) {
     LOG_E(MAC, "fapi_ul_ack_nack: full! (f/sf %d/%d)\n", frame, subframe);

@@ -3521,7 +3521,7 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round++;
 
 #if FAPI
-        mac_xface->fapi_ul_ack_nack(frame, subframe, phy_vars_eNB->ulsch_eNB[i]->rnti, 0);
+        mac_xface->fapi_ul_ack_nack(frame, subframe, harq_pid, phy_vars_eNB->ulsch_eNB[i]->rnti, 0);
 #endif
 
         LOG_D(PHY,"[eNB][PUSCH %d] Increasing to round %d\n",harq_pid,phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round);
@@ -3684,7 +3684,7 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
         phy_vars_eNB->eNB_UE_stats[i].ulsch_consecutive_errors = 0;
 
 #if FAPI
-        mac_xface->fapi_ul_ack_nack(frame, subframe, phy_vars_eNB->ulsch_eNB[i]->rnti, 1);
+        mac_xface->fapi_ul_ack_nack(frame, subframe, harq_pid, phy_vars_eNB->ulsch_eNB[i]->rnti, 1);
 #endif
 
         if (phy_vars_eNB->ulsch_eNB[i]->Msg3_flag == 1) {
@@ -4293,7 +4293,7 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
         phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round++;
 
 #if FAPI
-        mac_xface->fapi_ul_ack_nack(frame, subframe, phy_vars_eNB->ulsch_eNB[i]->rnti, 0);
+        mac_xface->fapi_ul_ack_nack(frame, subframe, harq_pid, phy_vars_eNB->ulsch_eNB[i]->rnti, 0);
 #endif
       } // ulsch in error
       else {
@@ -4307,7 +4307,7 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
         phy_vars_eNB->eNB_UE_stats[i].ulsch_consecutive_errors = 0;
 
 #if FAPI
-        mac_xface->fapi_ul_ack_nack(frame, subframe, phy_vars_eNB->ulsch_eNB[i]->rnti, 1);
+        mac_xface->fapi_ul_ack_nack(frame, subframe, harq_pid, phy_vars_eNB->ulsch_eNB[i]->rnti, 1);
 #endif
 
 #ifdef DEBUG_PHY_PROC
