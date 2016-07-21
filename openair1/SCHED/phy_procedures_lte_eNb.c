@@ -137,12 +137,15 @@ uint8_t is_SR_subframe(PHY_VARS_eNB *phy_vars_eNB,uint8_t UE_id,uint8_t sched_su
 
 void put_harq_pid_in_freelist(LTE_eNB_DLSCH_t *DLSCH_ptr, int harq_pid)
 {
+#ifndef FAPI
   DLSCH_ptr->harq_pid_freelist[DLSCH_ptr->tail_freelist] = harq_pid;
   DLSCH_ptr->tail_freelist = (DLSCH_ptr->tail_freelist + 1) % 10;
+#endif /* #ifndef FAPI */
 }
 
 void remove_harq_pid_from_freelist(LTE_eNB_DLSCH_t *DLSCH_ptr, int harq_pid)
 {
+#ifndef FAPI
   if (DLSCH_ptr->head_freelist == DLSCH_ptr->tail_freelist) {
     LOG_E(PHY, "%s:%d: you cannot read this!\n", __FILE__, __LINE__);
     abort();
@@ -157,6 +160,7 @@ void remove_harq_pid_from_freelist(LTE_eNB_DLSCH_t *DLSCH_ptr, int harq_pid)
     abort();
   }
   DLSCH_ptr->head_freelist = (DLSCH_ptr->head_freelist + 1) % 10;
+#endif /* #ifndef FAPI */
 }
 
 int32_t add_ue(int16_t rnti, PHY_VARS_eNB *phy_vars_eNB)
