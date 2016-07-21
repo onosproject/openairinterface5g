@@ -37,6 +37,7 @@ struct fapi {
   struct SchedUlConfigIndParameters SchedUlConfigIndParameters;
   struct CschedUeConfigCnfParameters CschedUeConfigCnfParameters;
   struct CschedLcConfigCnfParameters CschedLcConfigCnfParameters;
+  struct CschedUeReleaseCnfParameters CschedUeReleaseCnfParameters;
 };
 
 #define LOCK(fi, fn) do { \
@@ -202,21 +203,36 @@ void CschedLcConfigCnf(fapi_interface_t *_fi, struct CschedLcConfigCnfParameters
 void CschedLcReleaseCnf(fapi_interface_t *_fi, struct CschedLcReleaseCnfParameters *params)
 {
   int fn = CSCHED_LC_RELEASE_CNF;
+abort();
 }
 
 void CschedUeReleaseCnf(fapi_interface_t *_fi, struct CschedUeReleaseCnfParameters *params)
 {
+  struct fapi *fi = (struct fapi *)_fi;
   int fn = CSCHED_UE_RELEASE_CNF;
+  LOG_D(MAC, "%s enter\n", __FUNCTION__);
+
+  LOCK(fi, fn);
+  WAIT(fi, fn);
+
+  *params = fi->CschedUeReleaseCnfParameters;
+
+  DONE_wrapper(fi, fn);
+  UNLOCK(fi, fn);
+
+  LOG_D(MAC, "%s leave\n", __FUNCTION__);
 }
 
 void CschedUeConfigUpdateInd(fapi_interface_t *_fi, struct CschedUeConfigUpdateIndParameters *params)
 {
   int fn = CSCHED_UE_CONFIG_UPDATE_IND;
+abort();
 }
 
 void CschedCellConfigUpdateInd(fapi_interface_t *_fi, struct CschedCellConfigUpdateIndParameters *params)
 {
   int fn = CSCHED_CELL_CONFIG_UPDATE_IND;
+abort();
 }
 
 /************************************************************************/
@@ -377,8 +393,21 @@ abort();
 
 void CschedUeReleaseCnf_callback(void *callback_data, const struct CschedUeReleaseCnfParameters *params)
 {
+  struct fapi *fi = callback_data;
   int fn = CSCHED_UE_RELEASE_CNF;
-abort();
+  LOG_D(MAC, "%s enter\n", __FUNCTION__);
+
+  LOCK(fi, fn);
+  CHECK(fi, fn);
+
+  /* copy from params to local structure */
+  fi->CschedUeReleaseCnfParameters.rnti = params->rnti;
+  fi->CschedUeReleaseCnfParameters.result = params->result;
+
+  DONE_callback(fi, fn);
+  UNLOCK(fi, fn);
+
+  LOG_D(MAC, "%s leave\n", __FUNCTION__);
 }
 
 void CschedUeConfigUpdateInd_callback(void *callback_data, const struct CschedUeConfigUpdateIndParameters *params)
