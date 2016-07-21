@@ -1025,14 +1025,7 @@ printf("FAPI to MAC downlink schedule ue %x channel %d f/sf %d/%d\n", dlind.buil
   if (dlind.nr_buildRARList) {
     if (dlind.nr_buildRARList != 1) { printf("%s:%d: more than 1 RAR, todo\n", __FUNCTION__, __LINE__); exit(0); }
     if (dlind.buildRarList[0].carrierIndex != 0) { printf("%s:%d: 2nd CC: todo properly\n", __FUNCTION__, __LINE__); exit(0); }
-    /* force bit 0 of grant to 0
-     * according to 36.213 6.2 the value
-     * is reserved but openair needs it to be 0
-     * this is for contention-based RA
-     * maybe we will need to review that if/when we do contention-free RA
-     */
 printf("FAPI to MAC downlink schedule RAR ue %x f/sf %d/%d\n", dlind.buildRarList[0].rnti, frameP, subframeP);
-    dlind.buildRarList[0].grant &= ~1;
     fapi_schedule_RAR(module_idP, dlind.buildRarList[0].carrierIndex, frameP, subframeP,
         dlind.buildRarList[0].rnti, dlind.buildRarList[0].grant, &dlind.buildRarList[0].dci);
   }
