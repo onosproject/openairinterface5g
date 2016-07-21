@@ -1099,7 +1099,7 @@ printf("FAPI to MAC uplink nr_dclList %d nr_phichList %d\n", ulind.nr_dciList, u
   for (i = 0; i < ulind.nr_dciList; i++) {
     /* TODO: get the right CC_id from servCellIndex, depending on the UE rnti/pcell/scell settings */
     CC_id = ulind.dciList[i].servCellIndex;
-printf("FAPI to MAC uplink schedule ue %x ndi %d (fsf %d %d)\n", ulind.dciList[i].rnti, ulind.dciList[i].ndi, frameP, subframeP);
+printf("FAPI to MAC uplink schedule ue %x ndi %d (fsf %d %d) rbstart %d rblen %d tbsize %d mcs %d\n", ulind.dciList[i].rnti, ulind.dciList[i].ndi, frameP, subframeP, ulind.dciList[i].rbStart, ulind.dciList[i].rbLen, ulind.dciList[i].tbSize, ulind.dciList[i].mcs);
     fapi_schedule_uplink(module_idP, CC_id, &ulind.dciList[i]);
   }
 
@@ -1110,6 +1110,12 @@ printf("    RECAP %i rnti %x %s dci pdu %s\n", i,
   dci_format_to_string(eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].format),
   binary(*(uint32_t *)eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].dci_pdu)
   );
+}
+printf("RECAP phich count %d\n", ulind.nr_phichList);
+for (i = 0; i < ulind.nr_phichList; i++) {
+printf("    RECAP %i rnti %x %s\n", i,
+  ulind.phichList[i].rnti,
+  ulind.phichList[i].phich == ACK ? "ACK" : "NACK");
 }
 
   global_subframe++;

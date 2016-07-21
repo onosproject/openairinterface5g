@@ -97,6 +97,9 @@ void rx_sdu(
 
   start_meas(&eNB->rx_ulsch_sdu);
 
+printf("GOT UPLINK rnti %x packet; size = %d [", rntiP, sdu_lenP);
+for (ii = 0; ii < sdu_lenP; ii++) printf(" %2.2x", sduP[ii]);
+printf(" ]\n");
   if ((UE_id >  NUMBER_OF_UE_MAX) || (UE_id == -1)  )
     for(ii=0; ii<NB_RB_MAX; ii++) {
       rx_lengths[ii] = 0;

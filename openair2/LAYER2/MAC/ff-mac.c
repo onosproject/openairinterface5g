@@ -283,6 +283,8 @@ void SchedUlConfigInd_callback(void *callback_data, const struct SchedUlConfigIn
   LOCK(fi, fn);
   CHECK(fi, fn);
 
+printf("SchedUlConfigInd_callback nr_dciList %d\n", params->nr_dciList);
+
   /* copy from params to local structure */
   fi->SchedUlConfigIndParameters.nr_dciList = params->nr_dciList;
   fi->SchedUlConfigIndParameters.nr_phichList = params->nr_phichList;

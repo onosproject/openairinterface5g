@@ -881,6 +881,10 @@ void phy_procedures_UE_TX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstra
                                   ulsch_input_buffer,
                                   input_buffer_length,
                                   &access_mode);
+printf("GOT UPLINK in the UE tx [%p] (fsf %d/%d pid %d round %d) size %d [ ", phy_vars_ue->ulsch_ue[eNB_id], frame_tx, subframe_tx, harq_pid, phy_vars_ue->ulsch_ue[eNB_id]->harq_processes[harq_pid]->round, input_buffer_length);
+int zaza;
+for (zaza = 0; zaza < input_buffer_length; zaza++) printf("%2.2x ", ulsch_input_buffer[zaza]);
+printf(" ]\n");
 
             //}
             /*

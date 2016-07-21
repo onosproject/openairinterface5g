@@ -440,6 +440,10 @@ static void rrc_ue_generate_RRCConnectionSetupComplete( const protocol_ctxt_t* c
 
   size = do_RRCConnectionSetupComplete(ctxt_pP->module_id, buffer, Transaction_id, nas_msg_length, nas_msg);
 
+printf("GOT UPLINK ue generated connection setup complete size %d [", (int)size);
+int i;
+for (i = 0; i < size; i++) printf(" %2.2x", buffer[i]);
+printf(" ]\n");
   LOG_I(RRC,"[UE %d][RAPROC] Frame %d : Logical Channel UL-DCCH (SRB1), Generating RRCConnectionSetupComplete (bytes%d, eNB %d)\n",
         ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
   LOG_D(RLC,

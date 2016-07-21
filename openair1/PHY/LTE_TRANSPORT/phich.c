@@ -1343,6 +1343,8 @@ void rx_phich(PHY_VARS_UE *phy_vars_ue,
   LOG_D(PHY,"HI16 %d\n",HI16);
 #endif
 
+printf("GOT UPLINK UE PHICH fsf %d/%d pid %d HI16 %d (>0 means NACK)\n", phy_vars_ue->frame_rx, subframe, harq_pid, HI16);
+
   if (HI16>0) {   //NACK
     if (phy_vars_ue->ulsch_ue_Msg3_active[eNB_id] == 1) {
       LOG_D(PHY,"[UE  %d][PUSCH %d][RAPROC] Frame %d subframe %d Msg3 PHICH, received NAK (%d) nseq %d, ngroup %d\n",
@@ -1360,6 +1362,7 @@ void rx_phich(PHY_VARS_UE *phy_vars_ue,
       ulsch->harq_processes[harq_pid]->subframe_scheduling_flag = 1;
       //      ulsch->harq_processes[harq_pid]->Ndi = 0;
       ulsch->harq_processes[harq_pid]->round++;
+printf("GOT UPLINK UE PHICH msg3 pid %d round %d\n", harq_pid, ulsch->harq_processes[harq_pid]->round);
       ulsch->harq_processes[harq_pid]->rvidx = rv_table[ulsch->harq_processes[harq_pid]->round&3];
 
       if (ulsch->harq_processes[harq_pid]->round>=phy_vars_ue->lte_frame_parms.maxHARQ_Msg3Tx) {
@@ -1381,6 +1384,7 @@ void rx_phich(PHY_VARS_UE *phy_vars_ue,
       ulsch->harq_processes[harq_pid]->subframe_scheduling_flag = 1;
       //      ulsch->harq_processes[harq_pid]->Ndi = 0;
       ulsch->harq_processes[harq_pid]->round++;
+printf("GOT UPLINK UE PHICH [%p] pid %d round %d\n", ulsch, harq_pid, ulsch->harq_processes[harq_pid]->round);
       ulsch->harq_processes[harq_pid]->rvidx = rv_table[ulsch->harq_processes[harq_pid]->round&3];
       ulsch->O_RI = 0;
       ulsch->O    = 0;
