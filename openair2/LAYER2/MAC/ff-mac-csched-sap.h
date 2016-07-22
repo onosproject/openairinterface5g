@@ -874,6 +874,16 @@ struct CschedCellConfigUpdateIndParameters
 
 //CSCHED SAP MAC->scheduler primitives are defined as callbacks in separate file ff-mac-callback.h
 
+#if FAPI_TRACER
+
+#define CschedCellConfigReq _CschedCellConfigReq
+#define CschedUeConfigReq _CschedUeConfigReq
+#define CschedLcConfigReq _CschedLcConfigReq
+#define CschedLcReleaseReq _CschedLcReleaseReq
+#define CschedUeReleaseReq _CschedUeReleaseReq
+
+#endif /* FAPI_TRACER */
+
 #if defined (__cplusplus)
 }
 #endif

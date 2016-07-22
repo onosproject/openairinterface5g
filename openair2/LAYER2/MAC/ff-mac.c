@@ -426,6 +426,10 @@ abort();
 /*                           init function                              */
 /************************************************************************/
 
+#if FAPI_TRACER
+FILE *Q;
+#endif
+
 fapi_interface_t *init_fapi(void)
 {
   struct fapi *ret;
@@ -519,6 +523,10 @@ fapi_interface_t *init_fapi(void)
     free(ret);
     return NULL;
   }
+
+#if FAPI_TRACER
+  Q = fopen("/tmp/fapi.c", "w"); if (Q == NULL) abort();
+#endif
 
   return (fapi_interface_t *)ret;
 }

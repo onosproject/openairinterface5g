@@ -583,6 +583,22 @@ struct SchedUlConfigIndParameters
 
 // Primitives defined as callbacks in separate file ff-mac-callback.h
 
+#if FAPI_TRACER
+
+#define SchedDlRlcBufferReq _SchedDlRlcBufferReq
+#define SchedDlPagingBufferReq _SchedDlPagingBufferReq
+#define SchedDlMacBufferReq _SchedDlMacBufferReq
+#define SchedDlTriggerReq _SchedDlTriggerReq
+#define SchedDlRachInfoReq _SchedDlRachInfoReq
+#define SchedDlCqiInfoReq _SchedDlCqiInfoReq
+#define SchedUlTriggerReq _SchedUlTriggerReq
+#define SchedUlNoiseInterferenceReq _SchedUlNoiseInterferenceReq
+#define SchedUlSrInfoReq _SchedUlSrInfoReq
+#define SchedUlMacCtrlInfoReq _SchedUlMacCtrlInfoReq
+#define SchedUlCqiInfoReq _SchedUlCqiInfoReq
+
+#endif /* FAPI_TRACER */
+
 #if defined (__cplusplus)
 }
 #endif

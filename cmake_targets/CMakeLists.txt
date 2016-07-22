@@ -234,6 +234,7 @@ if (${RTAI})
 endif (${RTAI})
 
 add_boolean_option(FAPI True "Use FAPI scheduler")
+add_boolean_option(FAPI_TRACER False "Activate FAPI tracer (generates /tmp/fapi.c that can be used for replay)")
 
 #############################
 # ASN.1 grammar C code generation & dependancies
@@ -934,12 +935,19 @@ set (MAC_SRC
   ${MAC_DIR}/pre_processor.c
   ${MAC_DIR}/config.c
   )
+
 if (${FAPI})
 set (MAC_SRC ${MAC_SRC}
   ${MAC_DIR}/ff-mac.c
   #${MAC_DIR}/minifapi.c
   )
 endif (${FAPI})
+
+if (${FAPI_TRACER})
+set (MAC_SRC ${MAC_SRC}
+  ${MAC_DIR}/ffdebug.c
+  )
+endif (${FAPI_TRACER})
 
 set (ENB_APP_SRC
   ${OPENAIR2_DIR}/ENB_APP/enb_app.c
