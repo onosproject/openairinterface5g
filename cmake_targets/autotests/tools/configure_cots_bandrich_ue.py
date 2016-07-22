@@ -1,8 +1,39 @@
 #!/usr/bin/python 
+#******************************************************************************
+
+#    OpenAirInterface 
+#    Copyright(c) 1999 - 2014 Eurecom
+
+#    OpenAirInterface is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+
+
+#    OpenAirInterface is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+
+#   You should have received a copy of the GNU General Public License
+#   along with OpenAirInterface.The full GNU General Public License is 
+#   included in this distribution in the file called "COPYING". If not, 
+#   see <http://www.gnu.org/licenses/>.
+
+#  Contact Information
+#  OpenAirInterface Admin: openair_admin@eurecom.fr
+#  OpenAirInterface Tech : openair_tech@eurecom.fr
+#  OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
+  
+#  Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
+
+# *******************************************************************************/
+# \author Navid Nikaein, Rohit Gupta
 
 import time
 import serial
 import os
+from socket import AF_INET
 from pyroute2 import IPRoute
 import sys
 import re
@@ -21,20 +52,29 @@ if openair_dir == None:
   print "Error getting OPENAIR_DIR environment variable"
   sys.exit(1)
 
+sys.path.append(os.path.expandvars('$OPENAIR_DIR/cmake_targets/autotests/tools/'))
+
+from lib_autotest import *
+
 def find_open_port():
    global serial_port, ser
    max_ports=100
-   if os.path.exists(serial_port) == True:
-     return serial_port
-   for port in range(2,100):
-      serial_port = '/dev/ttyUSB'+str(port)
-      if os.path.exists(serial_port) == True:
-         print 'New Serial Port : ' + serial_port
-         break
-
-   ser = serial.Serial(port=serial_port)
-   return
-
+   serial_port=''
+   while True:
+     if os.path.exists(serial_port) == True:
+       return serial_port
+     for port in range(0,100):
+        serial_port_tmp = '/dev/ttyUSB'+str(port)
+        if os.path.exists(serial_port_tmp) == True:
+           print 'New Serial Port : ' + serial_port_tmp
+           serial_port = serial_port_tmp
+           break
+     if serial_port == '':
+        print" Not able to detect valid serial ports. Resetting the modem now..."
+        reset_ue()
+     else :
+        ser = serial.Serial(port=serial_port)
+        return
 
     
 #serial_port = '/dev/ttyUSB2'
@@ -58,11 +98,12 @@ signal.signal(signal.SIGINT, signal_handler)
 #ser.isOpen()
 
 class pppThread (threading.Thread):
-    def __init__(self, threadID, name, counter):
+    def __init__(self, threadID, name, counter,port):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
         self.counter = counter
+        self.port=port
     def run(self):
         print "Starting " + self.name
         #Here we keep running pppd thread in indefinite loop as this script terminates sometimes
@@ -72,6 +113,10 @@ class pppThread (threading.Thread):
            print "Starting wvdial now..."
            print 'exit_flag = ' + str(exit_flag)
            send_command('AT+CGATT=1','OK', 300)
+           
+           #Now we do search and replace on wvdial config file
+           cmd="sed -i \"s%Modem = .*%Modem = " + self.port + "%g\" " +  bandrich_ppd_config
+           os.system(cmd)
            os.system('wvdial -C ' + bandrich_ppd_config + '' )
            if exit_flag == 1:
               print "Exit flag set to true. Exiting pppThread now"
@@ -102,10 +147,12 @@ def send_command (cmd, response, timeout):
         error = error + ' In function: ' + sys._getframe().f_code.co_name + ': *** Caught exception: '  + str(e.__class__) + " : " + str( e)
         error = error + traceback.format_exc()
         print error
+        time.sleep(1)
         
 
 def start_ue () :
    #print 'Enter your commands below.\r\nInsert "exit" to leave the application.'
+   global serial_port
    timeout=60 #timeout in seconds
    send_command('AT', 'OK' , timeout)
    send_command('AT+CFUN=1' , 'OK' , timeout)
@@ -113,22 +160,33 @@ def start_ue () :
    send_command('AT+CGATT=1','OK', 300)
    #os.system('wvdial -C ' + bandrich_ppd_config + ' &' )
    
-   thread_ppp = pppThread(1, "ppp_thread", 1)
+   thread_ppp = pppThread(1, "ppp_thread", 1,port=serial_port)
    thread_ppp.start()
 
-   iface='ppp0'
+   #iface='ppp0'
    
    while 1:
      time.sleep ( 2)
+     iface=''
      #Now we check if ppp0 interface is up and running
      try:
         if exit_flag == 1:
           break
+        cmd="ifconfig -a | sed 's/[ \t].*//;/^$/d' | grep ppp"
+        status, out = commands.getstatusoutput(cmd)
+        iface=out
         ip = IPRoute()
         idx = ip.link_lookup(ifname=iface)[0]
-        os.system ('route add ' + gw + ' ppp0')
-        os.system ('ping ' + gw)
-        break
+        print "iface = " + iface
+        print " Setting route now..."
+        #os.system("status=1; while [ \"$status\" -ne \"0\" ]; do route add -host " + gw + ' ' + iface + " ; status=$? ;sleep 1; echo \"status = $status\"  ; sleep 2; done ")
+        os.system ('route add -host ' + gw + ' ' + iface + ' 2> /dev/null')
+        #ip.route('add', dst=gw, oif=iface)
+        
+        os.system('sleep 5')
+        #print "Starting ping now..."
+        os.system ('ping -c 1 ' + gw)
+        #break
      except Exception, e:
         error = ' Interface ' + iface + 'does not exist...'
         error = error + ' In function: ' + sys._getframe().f_code.co_name + ': *** Caught exception: '  + str(e.__class__) + " : " + str( e)
@@ -159,48 +217,32 @@ def reset_ue():
   VendorId=res[0][2]
   ProductId=res[0][3]
   usb_dir= find_usb_path(VendorId, ProductId)
-  print usb_dir
+  print "Bandrich 4G LTE Adapter found in..." + usb_dir
+  print "Sleeping now for 45 seconds...please wait..."
   cmd = "sudo sh -c \"echo 0 > " + usb_dir + "/authorized\""
-  os.system(cmd + " ; sleep 5" )
+  os.system(cmd + " ; sleep 15" )
   cmd = "sudo sh -c \"echo 1 > " + usb_dir + "/authorized\""
-  os.system(cmd + " ; sleep 5" )
-
-def read_file(filename):
-  try:
-    file = open(filename, 'r')
-    return file.read()
-  except Exception, e:
-    #error = ' Filename ' + filename 
-    #error = error + ' In function: ' + sys._getframe().f_code.co_name + ': *** Caught exception: '  + str(e.__class__) + " : " + str( e)
-    #error = error + traceback.format_exc()
-    #print error
-    return ''
-
-
-def find_usb_path(idVendor, idProduct):
-  for root, dirs, files in os.walk("/sys/bus/usb/devices", topdown=False):
-    for name in dirs:
-        tmpdir= os.path.join(root, name)
-        tmpidVendor = read_file(tmpdir+'/idVendor').replace("\n","")
-        tmpidProduct = read_file(tmpdir+'/idProduct').replace("\n","")
-        #print "tmpdir = " + tmpdir + " tmpidVendor = " + tmpidVendor + " tmpidProduct = " + tmpidProduct
-        if tmpidVendor == idVendor and tmpidProduct == idProduct:
-            return tmpdir
-  return ''
+  os.system(cmd + " ; sleep 30" )
+  find_open_port()
+  stop_ue()
 
 i=1
 gw='192.172.0.1'
 while i <  len(sys.argv):
     arg=sys.argv[i]
     if arg == '--start-ue' :
+        print "Turning on UE..."
         find_open_port()
         print 'Using Serial port : ' + serial_port  
         start_ue()
     elif arg == '--stop-ue' :
+        print "Turning off UE..."
         find_open_port()
         print 'Using Serial port : ' + serial_port  
         stop_ue()
     elif arg == '--reset-ue' :
+        print "Resetting UE..."
+        find_open_port()
         reset_ue()
     elif arg == '-gw' :
         gw = sys.argv[i+1]

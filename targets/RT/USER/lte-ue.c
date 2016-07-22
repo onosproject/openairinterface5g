@@ -53,6 +53,7 @@
 #include <execinfo.h>
 #include <getopt.h>
 #include <syscall.h>
+#include <sys/sysinfo.h>
 
 #include "rt_wrapper.h"
 #include "assertions.h"
@@ -75,13 +76,9 @@
 #endif
 
 #include "PHY/extern.h"
-#include "MAC_INTERFACE/extern.h"
-//#include "SCHED/defs.h"
 #include "SCHED/extern.h"
-#ifdef OPENAIR2
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/proto.h"
-#endif
 
 #include "UTIL/LOG/log_extern.h"
 #include "UTIL/OTG/otg_tx.h"
@@ -214,6 +211,76 @@ static void *UE_thread_synch(void *arg)
   UE->is_synchronized = 0;
   printf("UE_thread_sync in with PHY_vars_UE %p\n",arg);
   printf("waiting for sync (UE_thread_synch) \n");
+
+#ifndef DEADLINE_SCHEDULER
+  int policy, s, j;
+  struct sched_param sparam;
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+
+  /* Set affinity mask to include CPUs 1 to MAX_CPUS */
+  /* CPU 0 is reserved for UHD threads */
+  CPU_ZERO(&cpuset);
+
+  #ifdef CPU_AFFINITY
+  if (get_nprocs() >2)
+  {
+    for (j = 1; j < get_nprocs(); j++)
+      CPU_SET(j, &cpuset);
+
+    s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+    if (s != 0)
+    {
+      perror( "pthread_setaffinity_np");
+      exit_fun("Error setting processor affinity");
+    }
+  }
+  #endif
+
+  /* Check the actual affinity mask assigned to the thread */
+
+  s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    perror( "pthread_getaffinity_np");
+    exit_fun("Error getting processor affinity ");
+  }
+  memset(cpu_affinity, 0 , sizeof(cpu_affinity));
+  for (j = 0; j < CPU_SETSIZE; j++)
+  if (CPU_ISSET(j, &cpuset))
+  {  
+     char temp[1024];
+     sprintf(temp, " CPU_%d ", j);    
+     strcat(cpu_affinity, temp);
+  }
+
+  memset(&sparam, 0 , sizeof (sparam));
+  sparam.sched_priority = sched_get_priority_max(SCHED_FIFO)-1;
+  policy = SCHED_FIFO ; 
+  
+  s = pthread_setschedparam(pthread_self(), policy, &sparam);
+  if (s != 0)
+     {
+     perror("pthread_setschedparam : ");
+     exit_fun("Error setting thread priority");
+     }
+  s = pthread_getschedparam(pthread_self(), &policy, &sparam);
+  if (s != 0)
+   {
+     perror("pthread_getschedparam : ");
+     exit_fun("Error getting thread priority");
+
+   }
+
+  LOG_I( HW, "[SCHED][UE] Started UE synch thread on CPU %d TID %ld , sched_policy = %s, priority = %d, CPU Affinity = %s \n", (int)sched_getcpu(), gettid(),
+                   (policy == SCHED_FIFO)  ? "SCHED_FIFO" :
+                   (policy == SCHED_RR)    ? "SCHED_RR" :
+                   (policy == SCHED_OTHER) ? "SCHED_OTHER" :
+                   "???",
+                   (int) sparam.sched_priority, cpu_affinity);
+
+#endif
+
 
   pthread_mutex_lock(&sync_mutex);
   printf("Locked sync_mutex, waiting (UE_sync_thread)\n");
@@ -447,8 +514,8 @@ static void *UE_thread_synch(void *arg)
 	  }
 #ifndef EXMIMO
 	  openair0.trx_set_freq_func(&openair0,&openair0_cfg[0],0);
-	  openair0.trx_set_gains_func(&openair0,&openair0_cfg[0]);
-	  openair0.trx_stop_func(0);	  
+	  //openair0.trx_set_gains_func(&openair0,&openair0_cfg[0]);
+	  //openair0.trx_stop_func(0);	  
 #else
 	  openair0_set_frequencies(&openair0,&openair0_cfg[0],0);
 	  openair0_set_gains(&openair0,&openair0_cfg[0]);
@@ -463,7 +530,7 @@ static void *UE_thread_synch(void *arg)
 	 if( UE->mode == rx_dump_frame ){
 	   FILE *fd;
 	   if ((UE->frame_rx&1) == 0) {  // this guarantees SIB1 is present 
-	     if (fd = fopen("rxsig_frame0.dat","w")) {
+	     if ((fd = fopen("rxsig_frame0.dat","w")) != NULL) {
 	       fwrite((void*)&UE->lte_ue_common_vars.rxdata[0][0],
 		      sizeof(int32_t),
 		      10*UE->lte_frame_parms.samples_per_tti,
@@ -504,6 +571,16 @@ static void *UE_thread_synch(void *arg)
 	
 	  if (abs(freq_offset) > 7500) {
 	    LOG_I( PHY, "[initial_sync] No cell synchronization found, abandoning\n" );
+	    FILE *fd;
+	    if ((fd = fopen("rxsig_frame0.dat","w"))!=NULL) {
+	      fwrite((void*)&UE->lte_ue_common_vars.rxdata[0][0],
+		     sizeof(int32_t),
+		     10*UE->lte_frame_parms.samples_per_tti,
+		     fd);
+	      LOG_I(PHY,"Dummping Frame ... bye bye \n");
+	      fclose(fd);
+	      exit(0);
+	    }
 	    mac_xface->macphy_exit("No cell synchronization found, abandoning");
 	    return &UE_thread_synch_retval; // not reached
 	  }
@@ -529,11 +606,11 @@ static void *UE_thread_synch(void *arg)
 	    
 #endif
 
-#ifdef OAI_USRP
+#if defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
             openair0_cfg[card].rx_gain[i] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
 	    
 	    
-
+#if 0
             switch(UE->lte_frame_parms.N_RB_DL) {
             case 6:
               openair0_cfg[card].rx_gain[i] -= 12;
@@ -555,7 +632,7 @@ static void *UE_thread_synch(void *arg)
               printf("Unknown number of RBs %d\n",UE->lte_frame_parms.N_RB_DL);
               break;
             }
-	    
+#endif	    
 #endif
           }
         }
@@ -607,7 +684,7 @@ static void *UE_thread_synch(void *arg)
 static void *UE_thread_tx(void *arg)
 {
   static int UE_thread_tx_retval;
-  int ret;
+  //int ret;
 
   PHY_VARS_UE *UE = (PHY_VARS_UE*)arg;
 
@@ -624,7 +701,7 @@ static void *UE_thread_tx(void *arg)
   LOG_D(HW,"Started UE TX thread (id %p)\n",task);
 #else
 
-#ifdef LOWLATENCY
+#ifdef DEADLINE_SCHEDULER
   struct sched_attr attr;
   unsigned int flags = 0;
 
@@ -646,9 +723,72 @@ static void *UE_thread_tx(void *arg)
   }
 
 #else
-  struct sched_param sp;
-  sp.sched_priority = sched_get_priority_max(SCHED_FIFO)-1;
-  pthread_setschedparam(pthread_self(),SCHED_FIFO,&sp);
+  int policy, s, j;
+  struct sched_param sparam;
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+
+  /* Set affinity mask to include CPUs 1 to MAX_CPUS */
+  /* CPU 0 is reserved for UHD threads */
+  CPU_ZERO(&cpuset);
+
+  #ifdef CPU_AFFINITY
+  if (get_nprocs() >2)
+  {
+    for (j = 1; j < get_nprocs(); j++)
+      CPU_SET(j, &cpuset);
+
+    s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+    if (s != 0)
+    {
+      perror( "pthread_setaffinity_np");
+      exit_fun("Error setting processor affinity");
+    }
+  }
+  #endif
+
+  /* Check the actual affinity mask assigned to the thread */
+
+  s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    perror( "pthread_getaffinity_np");
+    exit_fun("Error getting processor affinity ");
+  }
+  memset(cpu_affinity, 0 , sizeof(cpu_affinity));
+  for (j = 0; j < CPU_SETSIZE; j++)
+  if (CPU_ISSET(j, &cpuset))
+  {  
+     char temp[1024];
+     sprintf(temp, " CPU_%d ", j);    
+     strcat(cpu_affinity, temp);
+  }
+
+  memset(&sparam, 0 , sizeof (sparam));
+  sparam.sched_priority = sched_get_priority_max(SCHED_FIFO)-1;
+  policy = SCHED_FIFO ; 
+  
+  s = pthread_setschedparam(pthread_self(), policy, &sparam);
+  if (s != 0)
+     {
+     perror("pthread_setschedparam : ");
+     exit_fun("Error setting thread priority");
+     }
+  s = pthread_getschedparam(pthread_self(), &policy, &sparam);
+  if (s != 0)
+   {
+     perror("pthread_getschedparam : ");
+     exit_fun("Error getting thread priority");
+
+   }
+
+  LOG_I( HW, "[SCHED][UE] Started UE thread TX on CPU %d TID %ld , sched_policy = %s, priority = %d, CPU Affinity = %s \n", (int)sched_getcpu(), gettid(),
+                   (policy == SCHED_FIFO)  ? "SCHED_FIFO" :
+                   (policy == SCHED_RR)    ? "SCHED_RR" :
+                   (policy == SCHED_OTHER) ? "SCHED_OTHER" :
+                   "???",
+                   (int) sparam.sched_priority, cpu_affinity);
+
 
 #endif
 #endif
@@ -780,7 +920,7 @@ static void *UE_thread_rx(void *arg)
   LOG_D(HW,"Started UE RX thread (id %p)\n",task);
 #else
 
-#ifdef LOWLATENCY
+#ifdef DEADLINE_SCHEDULER
   struct sched_attr attr;
   unsigned int flags = 0;
 
@@ -801,9 +941,72 @@ static void *UE_thread_rx(void *arg)
   }
 
 #else
-  struct sched_param sp;
-  sp.sched_priority = sched_get_priority_max(SCHED_FIFO)-1;
-  pthread_setschedparam(pthread_self(),SCHED_FIFO,&sp);
+  int policy, s, j;
+  struct sched_param sparam;
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+
+  /* Set affinity mask to include CPUs 1 to MAX_CPUS */
+  /* CPU 0 is reserved for UHD threads */
+  CPU_ZERO(&cpuset);
+
+  #ifdef CPU_AFFINITY
+  if (get_nprocs() >2)
+  {
+    for (j = 1; j < get_nprocs(); j++)
+      CPU_SET(j, &cpuset);
+
+    s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+    if (s != 0)
+    {
+      perror( "pthread_setaffinity_np");
+      exit_fun("Error setting processor affinity");
+    }
+  }
+  #endif
+
+  /* Check the actual affinity mask assigned to the thread */
+
+  s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    perror( "pthread_getaffinity_np");
+    exit_fun("Error getting processor affinity ");
+  }
+  memset(cpu_affinity, 0 , sizeof(cpu_affinity));
+  for (j = 0; j < CPU_SETSIZE; j++)
+  if (CPU_ISSET(j, &cpuset))
+  {  
+     char temp[1024];
+     sprintf(temp, " CPU_%d ", j);    
+     strcat(cpu_affinity, temp);
+  }
+
+  memset(&sparam, 0 , sizeof (sparam));
+  sparam.sched_priority = sched_get_priority_max(SCHED_FIFO)-1;
+  policy = SCHED_FIFO ; 
+  
+  s = pthread_setschedparam(pthread_self(), policy, &sparam);
+  if (s != 0)
+     {
+     perror("pthread_setschedparam : ");
+     exit_fun("Error setting thread priority");
+     }
+  s = pthread_getschedparam(pthread_self(), &policy, &sparam);
+  if (s != 0)
+   {
+     perror("pthread_getschedparam : ");
+     exit_fun("Error getting thread priority");
+
+   }
+
+  LOG_I( HW, "[SCHED][UE] Started UE RX thread on CPU %d TID %ld , sched_policy = %s, priority = %d, CPU Affinity = %s \n", (int)sched_getcpu(), gettid(),
+                   (policy == SCHED_FIFO)  ? "SCHED_FIFO" :
+                   (policy == SCHED_RR)    ? "SCHED_RR" :
+                   (policy == SCHED_OTHER) ? "SCHED_OTHER" :
+                   "???",
+                   (int) sparam.sched_priority, cpu_affinity);
+
 
 #endif
 #endif
@@ -925,9 +1128,7 @@ static void *UE_thread_rx(void *arg)
         phy_procedures_UE_RX( UE, 0, 0, UE->mode, no_relay, NULL );
       }
 
-#ifdef OPENAIR2
-
-      if (i==0) {
+      if ((UE->mac_enabled==1) && (i==0)) {
         ret = mac_xface->ue_scheduler(UE->Mod_id,
                                       UE->frame_tx,
                                       UE->slot_rx>>1,
@@ -950,7 +1151,6 @@ static void *UE_thread_rx(void *arg)
         }
       }
 
-#endif
       UE->slot_rx++;
 
       if (UE->slot_rx == 20) {
@@ -1037,7 +1237,7 @@ void *UE_thread(void *arg)
 
 #else
 
-#ifdef LOWLATENCY
+#ifdef DEADLINE_SCHEDULER
   struct sched_attr attr;
   unsigned int flags = 0;
 
@@ -1229,7 +1429,7 @@ void *UE_thread(void *arg)
           }
         } else {
           LOG_E( PHY, "[SCHED][UE] UE RX thread busy (IC %d)!!\n", instance_cnt_rx);
-	  if (instance_cnt_rx > 1) {
+	  if (instance_cnt_rx > 2) {
 	    exit_fun("instance_cnt_rx > 1");
 	    return &UE_thread_retval;
 	  }
@@ -1265,7 +1465,7 @@ void *UE_thread(void *arg)
 
           } else {
             LOG_E( PHY, "[SCHED][UE] UE TX thread busy (IC %d)!!\n" );
-	    if (instance_cnt_tx>1) {
+	    if (instance_cnt_tx>2) {
 	      exit_fun("instance_cnt_tx > 1");
 	      return &UE_thread_retval;
 	    }
@@ -1404,19 +1604,19 @@ void *UE_thread(void *arg)
   RT_TASK *task;
 #endif
   // RTIME in, out, diff;
-  int slot=0,frame=0,hw_slot,last_slot,next_slot;
+  int slot=0,frame=0,hw_slot;
   // unsigned int aa;
   int delay_cnt;
   RTIME time_in;
-  int hw_slot_offset=0,rx_offset_mbox=0,mbox_target=0,mbox_current=0;
+  int /* hw_slot_offset=0, */ rx_offset_mbox=0,mbox_target=0,mbox_current=0;
   int diff2;
-  int i, ret;
-  int CC_id,card;
+  int /* i, */ ret;
+  int /* CC_id, */ card;
   volatile unsigned int *DAQ_MBOX = openair0_daq_cnt();
 
   int wait_sync_cnt = 0;
   int first_synch = 1;
-#ifdef LOWLATENCY
+#ifdef DEADLINE_SCHEDULER
   struct sched_attr attr;
   unsigned int flags = 0;
   //  unsigned long mask = 1; // processor 0
@@ -1440,7 +1640,7 @@ void *UE_thread(void *arg)
 #endif
 
 
-#ifdef LOWLATENCY
+#ifdef DEADLINE_SCHEDULER
   attr.size = sizeof(attr);
   attr.sched_flags = 0;
   attr.sched_nice = 0;
@@ -1691,7 +1891,7 @@ void *UE_thread(void *arg)
         frame++;
       }
     } else if (UE->is_synchronized == 0) { // we are not yet synchronized
-      hw_slot_offset = 0;
+      //hw_slot_offset = 0;
       first_synch = 1;
       slot = 0;
 

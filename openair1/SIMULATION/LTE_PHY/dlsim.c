@@ -48,7 +48,6 @@
 #include "PHY/types.h"
 #include "PHY/defs.h"
 #include "PHY/vars.h"
-#include "MAC_INTERFACE/vars.h"
 
 #include "SCHED/defs.h"
 #include "SCHED/vars.h"
@@ -61,25 +60,7 @@
 extern unsigned int dlsch_tbs25[27][25],TBStable[27][110];
 extern unsigned char offset_mumimo_llr_drange_fix;
 
-#ifdef XFORMS
 #include "PHY/TOOLS/lte_phy_scope.h"
-#endif
-
-
-
-//#define AWGN
-//#define NO_DCI
-
-
-
-//#define ABSTRACTION
-
-/*
-  #define RBmask0 0x00fc00fc
-  #define RBmask1 0x0
-  #define RBmask2 0x0
-  #define RBmask3 0x0
-*/
 
 PHY_VARS_eNB *PHY_vars_eNB;
 PHY_VARS_UE *PHY_vars_UE;
@@ -118,7 +99,7 @@ uint64_t DLSCH_alloc_pdu_1[2];
 #define CCCH_RB_ALLOC computeRIV(PHY_vars_eNB->lte_frame_parms.N_RB_UL,0,2)
 //#define DLSCH_RB_ALLOC 0x1fbf // igore DC component,RB13
 //#define DLSCH_RB_ALLOC 0x0001
-void do_OFDM_mod_l(mod_sym_t **txdataF, int32_t **txdata, uint16_t next_slot, LTE_DL_FRAME_PARMS *frame_parms)
+void do_OFDM_mod_l(int32_t **txdataF, int32_t **txdata, uint16_t next_slot, LTE_DL_FRAME_PARMS *frame_parms)
 {
 
   int aa, slot_offset, slot_offset_F;
@@ -233,14 +214,13 @@ int main(int argc, char **argv)
   // void *data;
   // int ii;
   //  int bler;
-  double blerr[4],uncoded_ber;//,avg_ber;
+  double blerr[4],uncoded_ber,avg_ber;
   short *uncoded_ber_bit=NULL;
   uint8_t N_RB_DL=25,osf=1;
   frame_t frame_type = FDD;
-#ifdef XFORMS
-  FD_lte_phy_scope_ue *form_ue;
+  int xforms=0;
+  FD_lte_phy_scope_ue *form_ue = NULL;
   char title[255];
-#endif
   uint32_t DLSCH_RB_ALLOC = 0x1fff;
   int numCCE=0;
   int dci_length_bytes=0,dci_length=0;
@@ -305,7 +285,7 @@ int main(int argc, char **argv)
   //  num_layers = 1;
   perfect_ce = 0;
 
-  while ((c = getopt (argc, argv, "ahdpZDe:Em:n:o:s:f:t:c:g:r:F:x:y:z:AM:N:I:i:O:R:S:C:T:b:u:v:w:B:PLl:Y")) != -1) {
+  while ((c = getopt (argc, argv, "ahdpZDe:Em:n:o:s:f:t:c:g:r:F:x:y:z:AM:N:I:i:O:R:S:C:T:b:u:v:w:B:PLl:XY")) != -1) {
     switch (c) {
     case 'a':
       awgn_flag = 1;
@@ -557,6 +537,10 @@ int main(int argc, char **argv)
 
       break;
 
+    case 'X':
+      xforms=1;
+      break;
+
     case 'Y':
       perfect_ce=1;
       break;
@@ -636,27 +620,36 @@ int main(int argc, char **argv)
   if ((transmission_mode > 1) && (n_tx != 2))
     printf("n_tx must be >1 for transmission_mode %d\n",transmission_mode);
 
-#ifdef XFORMS
-  fl_initialize (&argc, argv, NULL, 0, 0);
-  form_ue = create_lte_phy_scope_ue();
-  sprintf (title, "LTE PHY SCOPE eNB");
-  fl_show_form (form_ue->lte_phy_scope_ue, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
-
-  if (!dual_stream_UE==0) {
-    openair_daq_vars.use_ia_receiver = 1;
-    fl_set_button(form_ue->button_0,1);
-    fl_set_object_label(form_ue->button_0, "IA Receiver ON");
-    fl_set_object_color(form_ue->button_0, FL_GREEN, FL_GREEN);
+  if (xforms==1) {
+    fl_initialize (&argc, argv, NULL, 0, 0);
+    form_ue = create_lte_phy_scope_ue();
+    sprintf (title, "LTE PHY SCOPE eNB");
+    fl_show_form (form_ue->lte_phy_scope_ue, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
+    
+    if (!dual_stream_UE==0) {
+      openair_daq_vars.use_ia_receiver = 1;
+      fl_set_button(form_ue->button_0,1);
+      fl_set_object_label(form_ue->button_0, "IA Receiver ON");
+      fl_set_object_color(form_ue->button_0, FL_GREEN, FL_GREEN);
+    }
   }
-
-#endif
 
   if (transmission_mode==5) {
     n_users = 2;
     printf("dual_stream_UE=%d\n", dual_stream_UE);
   }
 
-  lte_param_init(n_tx,n_rx,transmission_mode,extended_prefix_flag,frame_type,Nid_cell,tdd_config,N_RB_DL,threequarter_fs,osf,perfect_ce);
+  lte_param_init(n_tx,
+		 n_rx,
+		 transmission_mode,
+		 extended_prefix_flag,
+		 frame_type,
+		 Nid_cell,
+		 tdd_config,
+		 N_RB_DL,
+		 threequarter_fs,
+		 osf,
+		 perfect_ce);
 
 
     
@@ -2118,7 +2111,7 @@ PMI_FEEDBACK:
 
           //  printf("Trial %d : Round %d, pmi_feedback %d \n",trials,round,pmi_feedback);
           for (aa=0; aa<PHY_vars_eNB->lte_frame_parms.nb_antennas_tx; aa++) {
-            memset(&PHY_vars_eNB->lte_eNB_common_vars.txdataF[eNB_id][aa][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(mod_sym_t));
+            memset(&PHY_vars_eNB->lte_eNB_common_vars.txdataF[eNB_id][aa][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(int32_t));
           }
 
           if (input_fd==NULL) {
@@ -2630,6 +2623,8 @@ PMI_FEEDBACK:
                                               num_pdcch_symbols,
                                               PHY_vars_eNB->dlsch_eNB[k][0],
                                               PHY_vars_eNB->dlsch_eNB[k][1]);	      
+              /* avoid gcc warnings */
+              (void)re_allocated;
 
               stop_meas(&PHY_vars_eNB->dlsch_modulation_stats);
               /*
@@ -3296,7 +3291,7 @@ PMI_FEEDBACK:
             PHY_vars_UE->dlsch_ue[0][cw]->harq_processes[PHY_vars_UE->dlsch_ue[0][cw]->current_harq_pid]->G = coded_bits_per_codeword;
 
 
-            /*
+	                
             // calculate uncoded BLER
             uncoded_ber=0;
             for (i=0;i<coded_bits_per_codeword;i++)
@@ -3312,7 +3307,7 @@ PMI_FEEDBACK:
 
             if (n_frames==1)
               write_output("uncoded_ber_bit.m","uncoded_ber_bit",uncoded_ber_bit,coded_bits_per_codeword,1,0);
-            */
+            
 
             start_meas(&PHY_vars_UE->dlsch_unscrambling_stats);
             dlsch_unscrambling(&PHY_vars_UE->lte_frame_parms,
@@ -3423,12 +3418,12 @@ PMI_FEEDBACK:
               }
 
               sprintf(fname,"rxsig0_r%d.m",round);
-              sprintf(vname,"rxs0_r%d.m",round);
+              sprintf(vname,"rxs0_r%d",round);
               write_output(fname,vname, &PHY_vars_UE->lte_ue_common_vars.rxdata[0][0],10*PHY_vars_UE->lte_frame_parms.samples_per_tti,1,1);
               sprintf(fname,"rxsigF0_r%d.m",round);
-              sprintf(vname,"rxs0F_r%d.m",round);
+              sprintf(vname,"rxs0F_r%d",round);
               write_output(fname,vname, &PHY_vars_UE->lte_ue_common_vars.rxdataF[0][0],2*PHY_vars_UE->lte_frame_parms.ofdm_symbol_size*nsymb,2,1);
-
+	     
               if (PHY_vars_UE->lte_frame_parms.nb_antennas_rx>1) {
                 sprintf(fname,"rxsig1_r%d.m",round);
                 sprintf(vname,"rxs1_r%d.m",round);
@@ -3439,14 +3434,14 @@ PMI_FEEDBACK:
               }
 
               sprintf(fname,"dlsch00_r%d.m",round);
-              sprintf(vname,"dl00_r%d.m",round);
+              sprintf(vname,"dl00_r%d",round);
               write_output(fname,vname,
                            &(PHY_vars_UE->lte_ue_common_vars.dl_ch_estimates[eNB_id][0][0]),
                            PHY_vars_UE->lte_frame_parms.ofdm_symbol_size*nsymb,1,1);
 
               if (PHY_vars_UE->lte_frame_parms.nb_antennas_rx>1) {
                 sprintf(fname,"dlsch01_r%d.m",round);
-                sprintf(vname,"dl01_r%d.m",round);
+                sprintf(vname,"dl01_r%d",round);
                 write_output(fname,vname,
                              &(PHY_vars_UE->lte_ue_common_vars.dl_ch_estimates[eNB_id][1][0]),
                              PHY_vars_UE->lte_frame_parms.ofdm_symbol_size*nsymb/2,1,1);
@@ -3454,7 +3449,7 @@ PMI_FEEDBACK:
 
               if (PHY_vars_eNB->lte_frame_parms.nb_antennas_tx>1) {
                 sprintf(fname,"dlsch10_r%d.m",round);
-                sprintf(vname,"dl10_r%d.m",round);
+                sprintf(vname,"dl10_r%d",round);
                 write_output(fname,vname,
                              &(PHY_vars_UE->lte_ue_common_vars.dl_ch_estimates[eNB_id][2][0]),
                              PHY_vars_UE->lte_frame_parms.ofdm_symbol_size*nsymb/2,1,1);
@@ -3462,7 +3457,7 @@ PMI_FEEDBACK:
 
               if ((PHY_vars_UE->lte_frame_parms.nb_antennas_rx>1) && (PHY_vars_eNB->lte_frame_parms.nb_antennas_tx>1)) {
                 sprintf(fname,"dlsch11_r%d.m",round);
-                sprintf(vname,"dl11_r%d.m",round);
+                sprintf(vname,"dl11_r%d",round);
                 write_output(fname,vname,
                              &(PHY_vars_UE->lte_ue_common_vars.dl_ch_estimates[eNB_id][3][0]),
                              PHY_vars_UE->lte_frame_parms.ofdm_symbol_size*nsymb/2,1,1);
@@ -3486,13 +3481,13 @@ PMI_FEEDBACK:
             //      PHY_vars_UE->dlsch_ue[0][0]->harq_processes[0]->round++;
           }
 
-#ifdef XFORMS
-          phy_scope_UE(form_ue,
-                       PHY_vars_UE,
-                       eNB_id,
-                       0,// UE_id
-                       subframe);
-#endif
+	  if (xforms==1) {
+	    phy_scope_UE(form_ue,
+			 PHY_vars_UE,
+			 eNB_id,
+			 0,// UE_id
+			 subframe);
+	  }
 
         }  //round
 
@@ -3993,7 +3988,7 @@ PMI_FEEDBACK:
         printf("[continue] effective rate : %f  (%2.1f%%,%f)): increase snr \n",rate*effective_rate, 100*effective_rate, rate);
       }
 
-      if (((double)errs[0]/(round_trials[0]))<1e-2)
+      if (((double)errs[0]/(round_trials[0]))<(10.0/n_frames))
         break;
     }// SNR
 

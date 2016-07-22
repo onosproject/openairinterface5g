@@ -1,4 +1,34 @@
 #!/bin/bash
+#******************************************************************************
+
+#    OpenAirInterface 
+#    Copyright(c) 1999 - 2014 Eurecom
+
+#    OpenAirInterface is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+
+
+#    OpenAirInterface is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+
+#   You should have received a copy of the GNU General Public License
+#   along with OpenAirInterface.The full GNU General Public License is 
+#   included in this distribution in the file called "COPYING". If not, 
+#   see <http://www.gnu.org/licenses/>.
+
+#  Contact Information
+#  OpenAirInterface Admin: openair_admin@eurecom.fr
+#  OpenAirInterface Tech : openair_tech@eurecom.fr
+#  OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
+  
+#  Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
+
+# *******************************************************************************/
+# \author Navid Nikaein, Rohit Gupta
 
 if [ -s $OPENAIR_DIR/cmake_targets/tools/build_helper ] ; then
    source $OPENAIR_DIR/cmake_targets/tools/build_helper
@@ -12,7 +42,7 @@ trap handle_ctrl_c INT
 source $OPENAIR_DIR/cmake_targets/tools/test_helper
 
 
-#SUDO="sudo -E "
+SUDO="sudo -E -S"
 tdir=$OPENAIR_DIR/cmake_targets/autotests
 rm -fr $tdir/bin 
 mkdir -p $tdir/bin
@@ -111,6 +141,8 @@ function test_compile() {
           compile_log_dir=`eval echo \"$OPENAIR_DIR/cmake_targets/log/\"`
           echo "Removing compilation log files in $compile_log_dir"
           rm -frv $compile_log_dir
+          echo "Executing $pre_exec_file $pre_exe_args ...."
+          eval $pre_exec_file  $pre_exec_args
           echo "Executing $compile_prog $compile_prog_args ...."
           eval $compile_prog  $compile_prog_args
           echo "Copying compilation log files to test case log directory: $log_dir"
@@ -175,6 +207,7 @@ function test_compile() {
 #\param $13 -> output of compilation program that needs to be found for test case to pass
 #\param $14 -> tags to help identify the test case for readability in output xml file
 #\param $15 => password for the user to run certain commands as sudo
+#\param $16 => test config file params to be modified
 
 function test_compile_and_run() {
     xUnit_start
@@ -195,12 +228,14 @@ function test_compile_and_run() {
     compile_prog_out=${13}
     tags=${14}
     mypassword=${15}
+    test_config_file=${16}
+
     build_dir=$tdir/$1/build
     #exec_file=$build_dir/$6
     xmlfile_testcase=$log_dir/test.$1.xml
     #Temporary log file where execution log is stored.
     temp_exec_log=$log_dir/temp_log.txt
-    
+    export OPENAIR_LOGDIR=$log_dir
     rm -fr $log_dir
     mkdir -p $log_dir
     
@@ -219,6 +254,10 @@ function test_compile_and_run() {
     
     #compile_prog_array=()
     #read -a compile_prog_array <<<"$compile_prog"
+
+    #test_config_file=`eval "echo \"$test_config_file\" "`
+
+    #echo "test_config_file = $test_config_file"
   
     tags_array=()
     read -a tags_array <<<"$tags"
@@ -238,17 +277,21 @@ function test_compile_and_run() {
        cd $log_dir
        {   
           uname -a
-          #eval $pre_compile_prog
-          #cmake ..
-          #rm -fv $exec_file
-          echo "Executing $compile_prog $compile_args" >> $log_file
+          echo "Executing $pre_compile_prog"
+          eval $pre_compile_prog
+ 
+          if [ "$test_config_file" != "" ]; then
+            echo "Modifying test_config_file parameters..."
+            echo "$test_config_file" |xargs -L 1 $OPENAIR_DIR/cmake_targets/autotests/tools/search_repl.py 
+          fi
+          echo "Executing $compile_prog $compile_args"
           eval "$compile_prog $compile_args"
           echo "Copying compilation log files to test case log directory: $log_dir"
           cp -fvr $OPENAIR_DIR/cmake_targets/log/ $log_dir/compile_log
        }>> $log_file 2>&1
        echo "</COMPILATION LOG>" >> $log_file 2>&1
     #done
-
+    
     #process the test case if it is that of execution
     if [ "$class" == "execution" ]; then
       tags_array_index=0
@@ -269,7 +312,7 @@ function test_compile_and_run() {
            
           if [ -n "$pre_exec_file" ]; then
             {  echo " Executing $pre_exec_file $pre_exec_args " 
-               eval " echo '$mypassword' |sudo -S -E $pre_exec_file $pre_exec_args " ; }>> $temp_exec_log  2>&1
+               eval " $pre_exec_file $pre_exec_args " ; }>> $temp_exec_log  2>&1
 
           fi
           echo "Executing $main_exec $main_exec_args_array_index "
@@ -377,6 +420,7 @@ until [ -z "$1" ]
        -g | --run-group)
             RUN_GROUP=1
             test_case_group=$2
+            test_case_group=`sed "s/\+/\*/g" <<<  "${test_case_group}"` # Replace + with * for bash string substituion
             echo_info "Will execute test cases only in group $test_case_group"
             shift 2;;
         -p)
@@ -393,14 +437,12 @@ until [ -z "$1" ]
    esac
   done
 
-if [ "$SET_PASSWORD" == "1" ]; then
-   mypassword=$passwd
-else
-   read -s -p "Enter Password: " mypassword
+if [ "$SET_PASSWORD" != "1" ]; then
+   read -s -p "Enter Password: " passwd
 fi
 
 tmpfile=`mktemp`
-echo \'$passwd\' | $SUDO echo $HOME >& $tmpfile
+echo $passwd | $SUDO echo $HOME > $tmpfile
 tstsudo=`cat $tmpfile`
 if [ "$tstsudo" != "$HOME" ]; then
   echo "$USER might not have sudo privileges. Exiting" 
@@ -414,8 +456,16 @@ rm -fr $tmpfile
 xml_conf="$OPENAIR_DIR/cmake_targets/autotests/test_case_list.xml"
 
 test_case_list=`xmlstarlet sel -T -t -m /testCaseList/testCase -s A:N:- "@id" -v "@id" -n $xml_conf`
+test_case_excl_list=`xmlstarlet sel -t -v "/testCaseList/TestCaseExclusionList" $xml_conf`
+echo "Test Case Exclusion List = $test_case_excl_list "
+
+test_case_excl_list=`sed "s/\+/\*/g" <<< "$test_case_excl_list" ` # Replace + with * for bash string substituion
+
+read -a test_case_excl_array <<< "$test_case_excl_list"
 
 echo "test_case_list = $test_case_list"
+
+echo "Test Case Exclusion List = $test_case_excl_list \n"
 
 readarray -t test_case_array <<<"$test_case_list"
 
@@ -437,7 +487,17 @@ for search_expr in "${test_case_array[@]}"
     else
        flag_run_test_case=1
     fi
-       
+
+    for search_excl in "${test_case_excl_array[@]}"
+       do  
+          if [[ $search_expr == $search_excl ]];then
+             flag_run_test_case=0
+             echo_info "Test case $search_expr match found in test case excl group. Will skip the test case for execution..."
+             break
+          fi
+       done
+
+
     #We skip this test case if it is not in the group list
     if [ "$flag_run_test_case" -ne "1" ]; then
       continue
@@ -458,6 +518,7 @@ for search_expr in "${test_case_array[@]}"
     nruns=`xmlstarlet sel -t -v "/testCaseList/testCase[@id='$search_expr']/nruns" $xml_conf`
     compile_prog_out=`xmlstarlet sel -t -v "/testCaseList/testCase[@id='$search_expr']/compile_prog_out" $xml_conf`
     tags=`xmlstarlet sel -t -v "/testCaseList/testCase[@id='$search_expr']/tags" $xml_conf`
+    test_config_file=`xmlstarlet sel -t -v "/testCaseList/testCase[@id='$search_expr']/test_config_file" $xml_conf`
 
     echo "class = $class"
     echo "name = $name"
@@ -473,6 +534,7 @@ for search_expr in "${test_case_array[@]}"
     echo "search_expr_true = $search_expr_true"
     echo "search_expr_false = $search_expr_false"
     echo "nruns = $nruns"
+
 
     #eval $pre_exec
     compile_prog_out=`eval echo \"$compile_prog_out\"`
@@ -496,8 +558,8 @@ for search_expr in "${test_case_array[@]}"
     if [ "$class" == "compilation" ]; then
         test_compile "$name" "$compile_prog" "$compile_prog_args" "$pre_exec" "$pre_exec_args" "$main_exec" "$main_exec_args" "search_array_true[@]" "$search_expr_false" "$nruns" "$pre_compile_prog" "$class" "$compile_prog_out" "$tags"
     elif  [ "$class" == "execution" ]; then
-        $SUDO killall -q oaisim_nos1
-        test_compile_and_run "$name" "$compile_prog" "$compile_prog_args" "$pre_exec" "$pre_exec_args" "$main_exec" "$main_exec_args" "search_array_true[@]" "$search_expr_false" "$nruns" "$pre_compile_prog" "$class" "$compile_prog_out" "$tags" "$mypassword" 
+        echo \'passwd\' | $SUDO killall -q oaisim_nos1
+        test_compile_and_run "$name" "$compile_prog" "$compile_prog_args" "$pre_exec" "$pre_exec_args" "$main_exec" "$main_exec_args" "search_array_true[@]" "$search_expr_false" "$nruns" "$pre_compile_prog" "$class" "$compile_prog_out" "$tags" "$mypassword" "$test_config_file"
     else
         echo "Unexpected class of test case...Skipping the test case $name ...."
     fi

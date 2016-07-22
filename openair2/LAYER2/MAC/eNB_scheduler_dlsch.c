@@ -69,6 +69,8 @@
 #include "ff-mac.h"
 #endif
 
+#include "T.h"
+
 #define ENABLE_MAC_PAYLOAD_DEBUG
 //#define DEBUG_eNB_SCHEDULER 1
 
@@ -1004,6 +1006,9 @@ schedule_ue_spec(
                                 DCCH,
                                 (char *)&dlsch_buffer[sdu_lengths[0]]);
 
+            T(T_ENB_MAC_UE_DL_SDU, T_INT(module_idP), T_INT(CC_id), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
+              T_INT(harq_pid), T_INT(DCCH), T_INT(sdu_lengths[0]));
+
             LOG_D(MAC,"[eNB %d][DCCH] CC_id %d Got %d bytes from RLC\n",module_idP,CC_id,sdu_lengths[0]);
             sdu_length_total = sdu_lengths[0];
             sdu_lcids[0] = DCCH;
@@ -1051,6 +1056,9 @@ schedule_ue_spec(
                                        DCCH+1,
                                        (char *)&dlsch_buffer[sdu_lengths[0]]);
 
+            T(T_ENB_MAC_UE_DL_SDU, T_INT(module_idP), T_INT(CC_id), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
+              T_INT(harq_pid), T_INT(DCCH+1), T_INT(sdu_lengths[num_sdus]));
+
             sdu_lcids[num_sdus] = DCCH1;
             sdu_length_total += sdu_lengths[num_sdus];
             header_len_dcch += 2;
@@ -1094,6 +1102,9 @@ schedule_ue_spec(
                                       MBMS_FLAG_NO,
                                       DTCH,
                                       (char*)&dlsch_buffer[sdu_length_total]);
+
+            T(T_ENB_MAC_UE_DL_SDU, T_INT(module_idP), T_INT(CC_id), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
+              T_INT(harq_pid), T_INT(DTCH), T_INT(sdu_lengths[num_sdus]));
 
             LOG_D(MAC,"[eNB %d][USER-PLANE DEFAULT DRB] CC_id %d Got %d bytes for DTCH %d \n",
                   module_idP,CC_id,sdu_lengths[num_sdus],DTCH);
@@ -1296,7 +1307,7 @@ schedule_ue_spec(
           if (frame_parms[CC_id]->frame_type == TDD) {
             UE_list->UE_template[CC_id][UE_id].DAI++;
             //  printf("DAI update: subframeP %d: UE %d, DAI %d\n",subframeP,UE_id,UE_list->UE_template[CC_id][UE_id].DAI);
-#warning only for 5MHz channel
+//#warning only for 5MHz channel
             update_ul_dci(module_idP,CC_id,rnti,UE_list->UE_template[CC_id][UE_id].DAI);
           }
 
@@ -1665,23 +1676,23 @@ fill_DLSCH_dci(
 
   // loop over all allocated UEs and compute frequency allocations for PDSCH
   int   UE_id = -1;
-  uint8_t            first_rb,nb_rb=3;
+  uint8_t            /* first_rb, */ nb_rb=3;
   rnti_t        rnti;
-  unsigned char *vrb_map;
+  //unsigned char *vrb_map;
   uint8_t            rballoc_sub[25];
   //uint8_t number_of_subbands=13;
 
-  unsigned char round;
+  //unsigned char round;
   unsigned char harq_pid;
   void         *DLSCH_dci=NULL;
   DCI_PDU      *DCI_pdu;
   int           i;
-  void         *BCCH_alloc_pdu;
+  //void         *BCCH_alloc_pdu;
   int           size_bits,size_bytes;
   int CC_id;
   eNB_MAC_INST *eNB  =&eNB_mac_inst[module_idP];
   UE_list_t    *UE_list = &eNB->UE_list;
-  RA_TEMPLATE  *RA_template;
+  //RA_TEMPLATE  *RA_template;
 
   start_meas(&eNB->fill_DLSCH_dci);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_FILL_DLSCH_DCI,VCD_FUNCTION_IN);

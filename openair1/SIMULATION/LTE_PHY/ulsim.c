@@ -45,16 +45,13 @@
 #include "PHY/types.h"
 #include "PHY/defs.h"
 #include "PHY/vars.h"
-#include "MAC_INTERFACE/vars.h"
 
 #include "SCHED/defs.h"
 #include "SCHED/vars.h"
 #include "LAYER2/MAC/vars.h"
 #include "OCG_vars.h"
 
-#ifdef XFORMS
 #include "PHY/TOOLS/lte_phy_scope.h"
-#endif
 
 extern unsigned short dftsizes[33];
 extern short *ul_ref_sigs[30][2][33];
@@ -74,12 +71,9 @@ node_desc_t *ue_data[NUMBER_OF_UE_MAX];
 extern uint16_t beta_ack[16],beta_ri[16],beta_cqi[16];
 //extern  char* namepointer_chMag ;
 
-
-
-#ifdef XFORMS
+int xforms=0;
 FD_lte_phy_scope_enb *form_enb;
 char title[255];
-#endif
 
 /*the following parameters are used to control the processing times*/
 double t_tx_max = -1000000000; /*!< \brief initial max process time for tx */
@@ -194,6 +188,7 @@ int main(int argc, char **argv)
   int nb_rb_set = 0;
   int sf;
 
+  int threequarter_fs=0;
   opp_enabled=1; // to enable the time meas
 
   cpu_freq_GHz = (double)get_cpu_freq_GHz();
@@ -203,7 +198,7 @@ int main(int argc, char **argv)
 
   logInit();
 
-  while ((c = getopt (argc, argv, "hapZbm:n:Y:X:x:s:w:e:q:d:D:O:c:r:i:f:y:c:oA:C:R:g:N:l:S:T:QB:PI:L")) != -1) {
+  while ((c = getopt (argc, argv, "hapZEbm:n:Y:X:x:s:w:e:q:d:D:O:c:r:i:f:y:c:oA:C:R:g:N:l:S:T:QB:PI:LF")) != -1) {
     switch (c) {
     case 'a':
       channel_model = AWGN;
@@ -313,7 +308,7 @@ int main(int argc, char **argv)
         break;
 
       default:
-        msg("Unsupported channel model!\n");
+        printf("Unsupported channel model!\n");
         exit(-1);
         break;
       }
@@ -337,7 +332,7 @@ int main(int argc, char **argv)
 
       if ((transmission_mode!=1) &&
           (transmission_mode!=2)) {
-        msg("Unsupported transmission mode %d\n",transmission_mode);
+        printf("Unsupported transmission mode %d\n",transmission_mode);
         exit(-1);
       }
 
@@ -373,6 +368,10 @@ int main(int argc, char **argv)
       cyclic_shift = atoi(optarg);
       break;
 
+    case 'E':
+      threequarter_fs=1;
+      break;
+
     case 'N':
       N0 = atoi(optarg);
       break;
@@ -383,10 +382,10 @@ int main(int argc, char **argv)
 
     case 'i':
       input_fdUL = fopen(optarg,"r");
-      msg("Reading in %s (%p)\n",optarg,input_fdUL);
+      printf("Reading in %s (%p)\n",optarg,input_fdUL);
 
       if (input_fdUL == (FILE*)NULL) {
-        msg("Unknown file %s\n",optarg);
+        printf("Unknown file %s\n",optarg);
         exit(-1);
       }
 
@@ -449,6 +448,10 @@ int main(int argc, char **argv)
       max_turbo_iterations=atoi(optarg);
       break;
 
+    case 'F':
+      xforms=1;
+      break;
+
     case 'Z':
       dump_table = 1;
       break;
@@ -470,6 +473,7 @@ int main(int argc, char **argv)
 		 0,
 		 tdd_config,
 		 N_RB_DL,
+		 threequarter_fs,
 		 osf,
 		 0);
 
@@ -505,13 +509,8 @@ int main(int argc, char **argv)
   //  r_re0 = malloc(2*sizeof(double*));
   //  r_im0 = malloc(2*sizeof(double*));
 
-  nsymb = (PHY_vars_eNB->lte_frame_parms.Ncp == 0) ? 14 : 12;
+  nsymb = (PHY_vars_eNB->lte_frame_parms.Ncp == NORMAL) ? 14 : 12;
 
-  coded_bits_per_codeword = nb_rb * (12 * get_Qm(mcs)) * nsymb;
-
-  rate = (double)dlsch_tbs25[get_I_TBS(mcs)][nb_rb-1]/(coded_bits_per_codeword);
-
-  printf("Rate = %f (mod %d), coded bits %d\n",rate,get_Qm(mcs),coded_bits_per_codeword);
 
   sprintf(bler_fname,"ULbler_mcs%d_nrb%d_ChannelModel%d_nsim%d.csv",mcs,nb_rb,chMod,n_frames);
   bler_fd = fopen(bler_fname,"w");
@@ -588,12 +587,12 @@ int main(int argc, char **argv)
   }
 
 
-#ifdef XFORMS
-  fl_initialize (&argc, argv, NULL, 0, 0);
-  form_enb = create_lte_phy_scope_enb();
-  sprintf (title, "LTE PHY SCOPE eNB");
-  fl_show_form (form_enb->lte_phy_scope_enb, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
-#endif
+  if (xforms==1) {
+    fl_initialize (&argc, argv, NULL, 0, 0);
+    form_enb = create_lte_phy_scope_enb();
+    sprintf (title, "LTE PHY SCOPE eNB");
+    fl_show_form (form_enb->lte_phy_scope_enb, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
+  }
 
   PHY_vars_UE->lte_ue_pdcch_vars[0]->crnti = 14;
 
@@ -636,8 +635,8 @@ int main(int argc, char **argv)
   UE2eNB->max_Doppler = maxDoppler;
 
   // NN: N_RB_UL has to be defined in ulsim
-  PHY_vars_eNB->ulsch_eNB[0] = new_eNB_ulsch(8,max_turbo_iterations,N_RB_DL,0);
-  PHY_vars_UE->ulsch_ue[0]   = new_ue_ulsch(8,N_RB_DL,0);
+  PHY_vars_eNB->ulsch_eNB[0] = new_eNB_ulsch(max_turbo_iterations,N_RB_DL,0);
+  PHY_vars_UE->ulsch_ue[0]   = new_ue_ulsch(N_RB_DL,0);
 
   // Create transport channel structures for 2 transport blocks (MIMO)
   for (i=0; i<2; i++) {
@@ -761,9 +760,9 @@ int main(int argc, char **argv)
     PHY_vars_eNB->proc[sf].subframe_rx=sf;
   }
 
-  msg("Init UL hopping UE\n");
+  printf("Init UL hopping UE\n");
   init_ul_hopping(&PHY_vars_UE->lte_frame_parms);
-  msg("Init UL hopping eNB\n");
+  printf("Init UL hopping eNB\n");
   init_ul_hopping(&PHY_vars_eNB->lte_frame_parms);
 
   PHY_vars_eNB->proc[subframe].frame_rx = PHY_vars_UE->frame_tx;
@@ -803,6 +802,13 @@ int main(int argc, char **argv)
                                      CBA_RNTI,
                                      srs_flag);
 
+  coded_bits_per_codeword = nb_rb * (12 * get_Qm_ul(mcs)) * nsymb;
+
+  if (cqi_flag == 1) coded_bits_per_codeword-=PHY_vars_UE->ulsch_ue[0]->O;
+
+  rate = (double)dlsch_tbs25[get_I_TBS(mcs)][nb_rb-1]/(coded_bits_per_codeword);
+
+  printf("Rate = %f (mod %d), coded bits %d\n",rate,get_Qm_ul(mcs),coded_bits_per_codeword);
 
 
   PHY_vars_UE->frame_tx = (PHY_vars_UE->frame_tx+1)&1023;
@@ -1057,7 +1063,7 @@ int main(int argc, char **argv)
             start_meas(&PHY_vars_UE->ofdm_mod_stats);
 
             for (aa=0; aa<1; aa++) {
-              if (frame_parms->Ncp == 1)
+              if (frame_parms->Ncp == EXTENDED)
                 PHY_ofdm_mod(&PHY_vars_UE->lte_ue_common_vars.txdataF[aa][subframe*nsymb*OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES_NO_PREFIX],        // input
                              &txdata[aa][PHY_vars_eNB->lte_frame_parms.samples_per_tti*subframe],         // output
                              PHY_vars_UE->lte_frame_parms.ofdm_symbol_size,
@@ -1251,6 +1257,7 @@ int main(int argc, char **argv)
 	  */
 
           start_meas(&PHY_vars_eNB->ulsch_decoding_stats);
+
           ret= ulsch_decoding(PHY_vars_eNB,
                               0, // UE_id
                               subframe,
@@ -1287,7 +1294,7 @@ int main(int argc, char **argv)
           if (PHY_vars_eNB->ulsch_eNB[0]->harq_processes[harq_pid]->o_ACK[0] != PHY_vars_UE->ulsch_ue[0]->o_ACK[0])
             ack_errors++;
 
-          //    msg("ulsch_coding: O[%d] %d\n",i,o_flip[i]);
+          //    printf("ulsch_coding: O[%d] %d\n",i,o_flip[i]);
 
 
           if (ret <= PHY_vars_eNB->ulsch_eNB[0]->max_turbo_iterations) {
@@ -1348,9 +1355,9 @@ int main(int argc, char **argv)
         if ((errs[0]>=100) && (trials>(n_frames/2)))
           break;
 
-#ifdef XFORMS
-        phy_scope_eNB(form_enb,PHY_vars_eNB,0);
-#endif
+	if (xforms==1)
+	  phy_scope_eNB(form_enb,PHY_vars_eNB,0);
+
         /*calculate the total processing time for each packet, get the max, min, and number of packets that exceed t>3000us*/
 
         double t_tx = (double)PHY_vars_UE->phy_proc_tx.p_time/cpu_freq_GHz/1000.0;
@@ -1510,7 +1517,7 @@ int main(int argc, char **argv)
              rate*effective_rate,
              100*effective_rate,
              rate,
-             rate*get_Qm(mcs),
+             rate*get_Qm_ul(mcs),
              (1.0*(round_trials[0]-errs[0])+2.0*(round_trials[1]-errs[1])+3.0*(round_trials[2]-errs[2])+4.0*(round_trials[3]-errs[3]))/((double)round_trials[0])/
              (double)PHY_vars_eNB->ulsch_eNB[0]->harq_processes[harq_pid]->TBS,
              (1.0*(round_trials[0]-errs[0])+2.0*(round_trials[1]-errs[1])+3.0*(round_trials[2]-errs[2])+4.0*(round_trials[3]-errs[3]))/((double)round_trials[0]));

@@ -51,7 +51,6 @@
 #include "oaisim_functions.h"
 
 #include "PHY/extern.h"
-#include "MAC_INTERFACE/extern.h"
 #include "LAYER2/MAC/extern.h"
 #ifdef OPENAIR2
 #include "LAYER2/MAC/proto.h"
@@ -136,6 +135,8 @@ int             td                  = 0;
 int             td_avg              = 0;
 int             sleep_time_us       = 0;
 
+int phy_test = 0;
+
 #ifdef OPENAIR2
 // omv related info
 //pid_t omv_pid;
@@ -169,6 +170,8 @@ extern pdcp_mbms_t pdcp_mbms_array_eNB[NUMBER_OF_eNB_MAX][maxServiceCount][maxSe
 
 extern time_stats_t dl_chan_stats;
 extern time_stats_t ul_chan_stats;
+
+extern int xforms;
 
 void get_simulation_options(int argc, char *argv[])
 {
@@ -206,6 +209,15 @@ void get_simulation_options(int argc, char *argv[])
     LONG_OPTION_MALLOC_TRACE_ENABLED,
 
     LONG_OPTION_CBA_BACKOFF_TIMER,
+
+    LONG_OPTION_PHYTEST,
+    LONG_OPTION_XFORMS,
+
+#if T_TRACER
+    LONG_OPTION_T_PORT,
+    LONG_OPTION_T_NOWAIT,
+    LONG_OPTION_T_DONT_FORK,
+#endif
   };
 
   static struct option long_options[] = {
@@ -237,11 +249,24 @@ void get_simulation_options(int argc, char *argv[])
 
     {"cba-backoff",            required_argument, 0, LONG_OPTION_CBA_BACKOFF_TIMER},
 
+    {"phy-test", no_argument, NULL, LONG_OPTION_PHYTEST},
+    {"xforms",                 no_argument,       0, LONG_OPTION_XFORMS},
+
+#if T_TRACER
+    {"T_port",                 required_argument, 0, LONG_OPTION_T_PORT},
+    {"T_nowait",               no_argument,       0, LONG_OPTION_T_NOWAIT},
+    {"T_dont_fork",            no_argument,       0, LONG_OPTION_T_DONT_FORK},
+#endif
+
     {NULL, 0, NULL, 0}
   };
 
   while ((option = getopt_long (argc, argv, "aA:b:B:c:C:D:d:eE:f:FGg:hHi:IJ:j:k:K:l:L:m:M:n:N:oO:p:P:qQ:rR:s:S:t:T:u:U:vV:w:W:x:X:y:Y:z:Z:", long_options, NULL)) != -1) {
     switch (option) {
+    case LONG_OPTION_PHYTEST:
+      phy_test = 1;
+      break;
+
     case LONG_OPTION_ENB_CONF:
       if (optarg) {
         free(conf_config_file_name); // prevent memory leak if option is used multiple times
@@ -394,6 +419,31 @@ void get_simulation_options(int argc, char *argv[])
       }
 
       break;
+#endif
+
+    case LONG_OPTION_XFORMS:
+      xforms=1;
+      break;
+
+#if T_TRACER
+    case LONG_OPTION_T_PORT: {
+      extern int T_port;
+      if (optarg == NULL) abort();  /* should not happen */
+      T_port = atoi(optarg);
+      break;
+    }
+
+    case LONG_OPTION_T_NOWAIT: {
+      extern int T_wait;
+      T_wait = 0;
+      break;
+    }
+
+    case LONG_OPTION_T_DONT_FORK: {
+      extern int T_dont_fork;
+      T_dont_fork = 1;
+      break;
+    }
 #endif
 
     case 'a':
@@ -939,7 +989,7 @@ void init_openair1(void)
   openair_daq_vars.rx_gain_mode = DAQ_AGC_ON;
 
   openair_daq_vars.dlsch_transmission_mode = oai_emulation.info.transmission_mode[0];
-#warning "NN->FK: OAI EMU channel abstraction does not work for MCS higher than"
+//#warning "NN->FK: OAI EMU channel abstraction does not work for MCS higher than"
   openair_daq_vars.target_ue_dl_mcs = cmin(target_dl_mcs,16);
   openair_daq_vars.target_ue_ul_mcs = target_ul_mcs;
   openair_daq_vars.ue_dl_rb_alloc=0x1fff;
@@ -976,13 +1026,21 @@ void init_openair1(void)
     }
   }
 
+  for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++)
+    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+      if (phy_test==1)
+	PHY_vars_eNB_g[eNB_id][CC_id]->mac_enabled=0;
+      else
+	PHY_vars_eNB_g[eNB_id][CC_id]->mac_enabled=1;
+    }
+
   // init_ue_status();
   for (UE_id=0; UE_id<NB_UE_INST; UE_id++)
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
       PHY_vars_UE_g[UE_id][CC_id]->tx_power_max_dBm=23;
 
-      PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB=130;
+      PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB=100;
 
       // update UE_mode for each eNB_id not just 0
       if (abstraction_flag == 0)
@@ -991,6 +1049,11 @@ void init_openair1(void)
         // 0 is the index of the connected eNB
         PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] = PRACH;
       }
+
+      if (phy_test==1)
+	PHY_vars_UE_g[UE_id][CC_id]->mac_enabled=0;
+      else
+	PHY_vars_UE_g[UE_id][CC_id]->mac_enabled=1;
 
       PHY_vars_UE_g[UE_id][CC_id]->lte_ue_pdcch_vars[0]->crnti = 0x1235 + UE_id;
       PHY_vars_UE_g[UE_id][CC_id]->current_dlsch_cqi[0] = 10;
@@ -1018,7 +1081,7 @@ void init_openair2(void)
   module_id_t enb_id;
   module_id_t UE_id;
   int CC_id;
-#warning "eNB index is hard coded to zero"
+//#warning "eNB index is hard coded to zero"
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++)
     l2_init (&PHY_vars_eNB_g[0][CC_id]->lte_frame_parms,
@@ -1239,10 +1302,10 @@ void update_ocm()
           LOG_I(OCM,"Path loss (CCid %d) between eNB %d at (%f,%f) and UE %d at (%f,%f) is %f, angle %f\n",
                 CC_id,eNB_id,enb_data[eNB_id]->x,enb_data[eNB_id]->y,UE_id,ue_data[UE_id]->x,ue_data[UE_id]->y,
                 eNB2UE[eNB_id][UE_id][CC_id]->path_loss_dB, eNB2UE[eNB_id][UE_id][CC_id]->aoa);
-          double dx, dy, distance;
-          dx = enb_data[eNB_id]->x - ue_data[UE_id]->x;
-          dy = enb_data[eNB_id]->y - ue_data[UE_id]->y;
-          distance = sqrt(dx * dx + dy * dy);
+          //double dx, dy, distance;
+          //dx = enb_data[eNB_id]->x - ue_data[UE_id]->x;
+          //dy = enb_data[eNB_id]->y - ue_data[UE_id]->y;
+          //distance = sqrt(dx * dx + dy * dy);
           /*LOG_D(LOCALIZE, " OCM distance between eNB %d at (%f,%f) and UE %d at (%f,%f) is %f \n",
                   eNB_id, enb_data[eNB_id]->x,enb_data[eNB_id]->y,
                   UE_id, ue_data[UE_id]->x,ue_data[UE_id]->y,
@@ -1260,8 +1323,7 @@ void update_ocm()
           //pathloss: -132.24 dBm/15kHz RE + target SNR - eNB TX power per RE
           if (eNB_id == (UE_id % NB_eNB_INST)) {
             eNB2UE[eNB_id][UE_id][CC_id]->path_loss_dB = -132.24 + snr_dB - PHY_vars_eNB_g[eNB_id][CC_id]->lte_frame_parms.pdsch_config_common.referenceSignalPower;
-            UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB = -132.24 + snr_dB -
-                PHY_vars_eNB_g[eNB_id][CC_id]->lte_frame_parms.pdsch_config_common.referenceSignalPower; //+20 to offset the difference in tx power of the UE wrt eNB
+            UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB = -132.24 + snr_dB - PHY_vars_eNB_g[eNB_id][CC_id]->lte_frame_parms.pdsch_config_common.referenceSignalPower; 
           } else {
             eNB2UE[eNB_id][UE_id][CC_id]->path_loss_dB = -132.24 + sinr_dB - PHY_vars_eNB_g[eNB_id][CC_id]->lte_frame_parms.pdsch_config_common.referenceSignalPower;
             UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB = -132.24 + sinr_dB - PHY_vars_eNB_g[eNB_id][CC_id]->lte_frame_parms.pdsch_config_common.referenceSignalPower;
@@ -1280,9 +1342,10 @@ void update_ocm()
 #ifdef OPENAIR2
 void update_otg_eNB(module_id_t enb_module_idP, unsigned int ctime)
 {
+
 #if defined(USER_MODE) && defined(OAI_EMU)
 
-  int rrc_state=0; 
+  //int rrc_state=0;
 
   if (oai_emulation.info.otg_enabled ==1 ) {
 

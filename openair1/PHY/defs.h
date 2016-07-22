@@ -65,16 +65,25 @@
 //use msg in the real-time thread context
 #define msg_nrt printf
 //use msg_nrt in the non real-time context (for initialization, ...)
-#ifdef __AVX2__
-#define malloc16(x) memalign(32,x)
-#else
-#define malloc16(x) memalign(16,x)
+#ifndef malloc16
+#  ifdef __AVX2__
+#    define malloc16(x) memalign(32,x)
+#  else
+#    define malloc16(x) memalign(16,x)
+#  endif
 #endif
 #define free16(y,x) free(y)
 #define bigmalloc malloc
 #define bigmalloc16 malloc16
 #define openair_free(y,x) free((y))
 #define PAGE_SIZE 4096
+
+//#ifdef SHRLIBDEV
+//extern int rxrescale;
+//#define RX_IQRESCALELEN rxrescale
+//#else
+//#define RX_IQRESCALELEN 15
+//#endif
 
 //! \brief Allocate \c size bytes of memory on the heap with alignment 16 and zero it afterwards.
 //! If no more memory is available, this function will terminate the program with an assertion error.
@@ -113,7 +122,6 @@ static inline void* malloc16_clear( size_t size )
 #define UNUSED(x) (void)x;
 
 
-#include "spec_defs_top.h"
 #include "impl_defs_top.h"
 #include "impl_defs_lte.h"
 
@@ -271,6 +279,9 @@ typedef struct PHY_VARS_eNB_s {
   int              **dl_precoder_SeNB[3];
   char             log2_maxp; /// holds the maximum channel/precoder coefficient
 
+  /// if ==0 enables phy only test mode
+  int mac_enabled;
+
   /// For emulation only (used by UE abstraction to retrieve DCI)
   uint8_t num_common_dci[2];                         // num_dci in even/odd subframes
   uint8_t num_ue_spec_dci[2];                         // num_dci in even/odd subframes
@@ -383,7 +394,11 @@ typedef struct PHY_VARS_eNB_s {
   int32_t pucch1_stats_thres[NUMBER_OF_UE_MAX][10*1024];
   int32_t pucch1ab_stats_cnt[NUMBER_OF_UE_MAX][10];
   int32_t pucch1ab_stats[NUMBER_OF_UE_MAX][2*10*1024];
-
+  int32_t pusch_stats_rb[NUMBER_OF_UE_MAX][10240];
+  int32_t pusch_stats_round[NUMBER_OF_UE_MAX][10240];
+  int32_t pusch_stats_mcs[NUMBER_OF_UE_MAX][10240];
+  int32_t pusch_stats_bsr[NUMBER_OF_UE_MAX][10240];
+  int32_t pusch_stats_BO[NUMBER_OF_UE_MAX][10240];
 #if ENABLE_RAL
   hash_table_t    *ral_thresholds_timed;
   SLIST_HEAD(ral_thresholds_gen_poll_enb_s, ral_threshold_phy_t) ral_thresholds_gen_polled[RAL_LINK_PARAM_GEN_MAX];
@@ -571,6 +586,9 @@ typedef struct {
   int              **ul_precoder_S_UE;
   /// holds the maximum channel/precoder coefficient
   char             log2_maxp;
+
+  /// if ==0 enables phy only test mode
+  int mac_enabled;
 
   /// Flag to initialize averaging of PHY measurements
   int init_averaging;

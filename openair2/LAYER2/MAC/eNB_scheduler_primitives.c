@@ -193,7 +193,7 @@ uint8_t find_active_UEs(module_id_t module_idP,int CC_id){
 // get aggregatiob form phy for a give UE
 unsigned char process_ue_cqi (module_id_t module_idP, int ue_idP)
 {
-  unsigned char aggregation=2;
+  unsigned char aggregation=1;
   // check the MCS and SNR and set the aggregation accordingly
   return aggregation;
 }
@@ -341,7 +341,7 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP)
 }
 
 //------------------------------------------------------------------------------
-int mac_remove_ue(module_id_t mod_idP, int ue_idP, int frameP, sub_frame_t subframeP)
+int rrc_mac_remove_ue(module_id_t mod_idP,rnti_t rntiP) 
 //------------------------------------------------------------------------------
 {
 #if FAPI
@@ -351,40 +351,39 @@ int mac_remove_ue(module_id_t mod_idP, int ue_idP, int frameP, sub_frame_t subfr
 
   int prev,i, ret=-1;
 
-  rnti_t  rnti;
-  UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
-  int pCC_id = UE_PCCID(mod_idP,ue_idP);
 
-  rnti = UE_list->UE_template[pCC_id][ue_idP].rnti;
-  LOG_I(MAC,"Removing UE %d from Primary CC_id %d (rnti %x)\n",ue_idP,pCC_id, rnti);
+  UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
+  int UE_id = find_UE_id(mod_idP,rntiP);
+  int pCC_id = UE_PCCID(mod_idP,UE_id);
+
+  if (UE_id == -1) {
+    LOG_W(MAC,"rrc_mac_remove_ue: UE %x not found\n", rntiP);
+    mac_phy_remove_ue(mod_idP,rntiP);
+    return 0;
+  }
+
+  LOG_I(MAC,"Removing UE %d from Primary CC_id %d (rnti %x)\n",UE_id,pCC_id, rntiP);
   dump_ue_list(UE_list,0);
 
   // clear all remaining pending transmissions
-  UE_list->UE_template[pCC_id][ue_idP].bsr_info[LCGID0]  = 0;
-  UE_list->UE_template[pCC_id][ue_idP].bsr_info[LCGID1]  = 0;
-  UE_list->UE_template[pCC_id][ue_idP].bsr_info[LCGID2]  = 0;
-  UE_list->UE_template[pCC_id][ue_idP].bsr_info[LCGID3]  = 0;
+  UE_list->UE_template[pCC_id][UE_id].bsr_info[LCGID0]  = 0;
+  UE_list->UE_template[pCC_id][UE_id].bsr_info[LCGID1]  = 0;
+  UE_list->UE_template[pCC_id][UE_id].bsr_info[LCGID2]  = 0;
+  UE_list->UE_template[pCC_id][UE_id].bsr_info[LCGID3]  = 0;
 
-  UE_list->UE_template[pCC_id][ue_idP].ul_SR             = 0;
-  UE_list->UE_template[pCC_id][ue_idP].rnti              = NOT_A_RNTI;
-  UE_list->UE_template[pCC_id][ue_idP].ul_active         = FALSE;
-  eNB_ulsch_info[mod_idP][pCC_id][ue_idP].rnti                        = NOT_A_RNTI;
-  eNB_ulsch_info[mod_idP][pCC_id][ue_idP].status                      = S_UL_NONE;
-  eNB_dlsch_info[mod_idP][pCC_id][ue_idP].rnti                        = NOT_A_RNTI;
-  eNB_dlsch_info[mod_idP][pCC_id][ue_idP].status                      = S_DL_NONE;
-
-  rrc_eNB_free_UE(
-    mod_idP,
-    rnti,
-    frameP,
-    subframeP);
+  UE_list->UE_template[pCC_id][UE_id].ul_SR             = 0;
+  UE_list->UE_template[pCC_id][UE_id].rnti              = NOT_A_RNTI;
+  UE_list->UE_template[pCC_id][UE_id].ul_active         = FALSE;
+  eNB_ulsch_info[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
+  eNB_ulsch_info[mod_idP][pCC_id][UE_id].status                      = S_UL_NONE;
+  eNB_dlsch_info[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
+  eNB_dlsch_info[mod_idP][pCC_id][UE_id].status                      = S_DL_NONE;
 
   prev = UE_list->head;
 
   for (i=UE_list->head; i>=0; i=UE_list->next[i]) {
-    if (i == ue_idP) {
+    if (i == UE_id) {
       // link prev to next in Active list
-      //if (prev==UE_list->head)
       if (i==UE_list->head) {
         UE_list->head = UE_list->next[i];
       } else {
@@ -407,9 +406,9 @@ int mac_remove_ue(module_id_t mod_idP, int ue_idP, int frameP, sub_frame_t subfr
   prev = UE_list->head_ul;
 
   for (i=UE_list->head_ul; i>=0; i=UE_list->next_ul[i]) {
-    if (i == ue_idP) {
+    if (i == UE_id) {
       // link prev to next in Active list
-      if (prev==UE_list->head_ul) {
+      if (i==UE_list->head_ul) {
         UE_list->head_ul = UE_list->next_ul[i];
       } else {
         UE_list->next_ul[prev] = UE_list->next_ul[i];
@@ -425,25 +424,27 @@ int mac_remove_ue(module_id_t mod_idP, int ue_idP, int frameP, sub_frame_t subfr
   }
 
 #if FAPI
-    p.rnti                  = rnti;
+    p.rnti                  = rntiP;
     p.nr_vendorSpecificList = 0;
     p.vendorSpecificList    = NULL;
     LOG_I(MAC, "calling CschedUeReleaseReq\n");
     CschedUeReleaseReq(eNB_mac_inst[mod_idP].fapi->sched, &p);
     LOG_I(MAC, "calling CschedUeReleaseCnf\n");
     CschedUeReleaseCnf(eNB_mac_inst[mod_idP].fapi, &r);
-    if (r.rnti != rnti || r.result != ff_SUCCESS) {
+    if (r.rnti != rntiP || r.result != ff_SUCCESS) {
       LOG_E(MAC, "FAPI fatal error: rnti is %x (expected %x); result is %s (expected ff_SUCCESS)\n",
-            r.rnti, rnti, r.result == ff_SUCCESS ? "ff_SUCCESS" : "ff_FAILURE");
+            r.rnti, rntiP, r.result == ff_SUCCESS ? "ff_SUCCESS" : "ff_FAILURE");
       abort();
     }
 #endif
+
+  mac_phy_remove_ue(mod_idP,rntiP);
 
   if (ret == 0) {
     return (0);
   }
 
-  LOG_E(MAC,"error in mac_remove_ue(), could not find previous to %d in UE_list, should never happen, Dumping UE list\n",ue_idP);
+  LOG_E(MAC,"error in mac_remove_ue(), could not find previous to %d in UE_list, should never happen, Dumping UE list\n",UE_id);
   dump_ue_list(UE_list,0);
   mac_xface->macphy_exit("mac_remove_ue: Problem in UE_list");
   return(-1);
@@ -603,59 +604,6 @@ void swap_UEs(UE_list_t *listP,int nodeiP, int nodejP, int ul_flag)
   dump_ue_list(listP,ul_flag);
 }
 
-#if FAPI
-
-void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP, sub_frame_t subframeP)
-{
-  fapi_interface_t                  *fapi;
-  int                               UE_id;
-  struct SchedUlSrInfoReqParameters p;
-  struct SrListElement_s            sr;
-
-  UE_id = find_UE_id(mod_idP, rntiP);
-  if (UE_id == -1) {
-    LOG_E(MAC, "%s:%d:%s: rnti %x: no such UE\n", __FILE__, __LINE__, __FUNCTION__, rntiP);
-    abort();
-  }
-
-  fapi = eNB_mac_inst[mod_idP].fapi;
-
-  p.sfnSf = frameP * 16 + subframeP;
-  p.nr_srList = 1;
-  p.srList    = &sr;
-  p.nr_vendorSpecificList = 0;
-  p.vendorSpecificList    = NULL;
-
-  sr.rnti = rntiP;
-
-  LOG_I(MAC, "eNB %d/%d f/sf %d/%d calling SchedUlSrInfoReq for rnti %x\n", mod_idP, cc_idP, frameP, subframeP, rntiP);
-printf("MAC to FAPI SR indication rnti %x f/sf %d/%d\n", rntiP, frameP, subframeP);
-  SchedUlSrInfoReq(fapi->sched, &p);
-}
-
-#else /* FAPI */
-
-void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP, sub_frame_t subframeP)
-{
-
-  int UE_id = find_UE_id(mod_idP, rntiP);
-  UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
-
-  if (UE_id  != -1) {
-    LOG_D(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d on CC_id %d\n",mod_idP,rntiP,frameP,subframeP, UE_id,cc_idP);
-    UE_list->UE_template[cc_idP][UE_id].ul_SR = 1;
-    UE_list->UE_template[cc_idP][UE_id].ul_active = TRUE;
-  } else {
-    //     AssertFatal(0, "find_UE_id(%u,rnti %d) not found", enb_mod_idP, rntiP);
-    //    AssertError(0, 0, "Frame %d: find_UE_id(%u,rnti %d) not found\n", frameP, enb_mod_idP, rntiP);
-    LOG_D(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d (unknown UEid) on CC_id %d\n",mod_idP,rntiP,frameP,subframeP, UE_id,cc_idP);
-  }
-}
-
-#endif /* FAPI */
-
-
-
 /*
   #ifdef Rel10
   unsigned char generate_mch_header( unsigned char *mac_header,
@@ -813,16 +761,31 @@ void add_ue_spec_dci(DCI_PDU *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_si
 uint8_t UE_is_to_be_scheduled(module_id_t module_idP,int CC_id,uint8_t UE_id)
 {
 
-  UE_TEMPLATE *UE_template = &eNB_mac_inst[module_idP].UE_list.UE_template[CC_id][UE_id];
+  UE_TEMPLATE *UE_template    = &eNB_mac_inst[module_idP].UE_list.UE_template[CC_id][UE_id];
+  UE_sched_ctrl *UE_sched_ctl = &eNB_mac_inst[module_idP].UE_list.UE_sched_ctrl[UE_id];
 
-  //  LOG_D(MAC,"[eNB %d][PUSCH] Frame %d subframeP %d Scheduling UE %d\n",module_idP,rnti,frameP,subframeP,
-  //  UE_id);
+
+  // do not schedule UE if UL is not working
+  if (UE_sched_ctl->ul_failure_timer>0)
+    return(0);
+  if (UE_sched_ctl->ul_out_of_sync>0)
+    return(0);
+
+  LOG_D(MAC,"[eNB %d][PUSCH] Checking UL requirements UE %d/%x\n",module_idP,UE_id,UE_RNTI(module_idP,UE_id));
 
   if ((UE_template->bsr_info[LCGID0]>0) ||
       (UE_template->bsr_info[LCGID1]>0) ||
       (UE_template->bsr_info[LCGID2]>0) ||
       (UE_template->bsr_info[LCGID3]>0) ||
-      (UE_template->ul_SR>0)) { // uplink scheduling request
+      (UE_template->ul_SR>0) || // uplink scheduling request
+      ((UE_sched_ctl->ul_inactivity_timer>20)&&
+       (UE_sched_ctl->ul_scheduled==0))||  // every 2 frames when RRC_CONNECTED
+      ((UE_sched_ctl->ul_inactivity_timer>10)&&
+       (UE_sched_ctl->ul_scheduled==0)&&
+       (mac_eNB_get_rrc_status(module_idP,UE_RNTI(module_idP,UE_id)) < RRC_CONNECTED))) // every Frame when not RRC_CONNECTED
+    { 
+
+    LOG_D(MAC,"[eNB %d][PUSCH] UE %d/%x should be scheduled\n",module_idP,UE_id,UE_RNTI(module_idP,UE_id));
     return(1);
   } else {
     return(0);
@@ -1101,82 +1064,74 @@ int allocate_CCEs(int module_idP,
 
   int *CCE_table = eNB_mac_inst[module_idP].CCE_table[CC_idP];
   DCI_PDU *DCI_pdu = &eNB_mac_inst[module_idP].common_channels[CC_idP].DCI_pdu;
-  int nCCE_max = mac_xface->get_nCCE_max(module_idP,CC_idP,DCI_pdu->num_pdcch_symbols,subframeP);
+  int nCCE_max = mac_xface->get_nCCE_max(module_idP,CC_idP,1,subframeP);
   int fCCE;
   int i,j;
-  int allocation_is_feasible = 1;
   DCI_ALLOC_t *dci_alloc;
-
+  int nCCE=0;
 
   LOG_D(MAC,"Allocate CCEs subframe %d, test %d : (common %d,uspec %d)\n",subframeP,test_onlyP,DCI_pdu->Num_common_dci,DCI_pdu->Num_ue_spec_dci);
+  DCI_pdu->num_pdcch_symbols=1;
 
+try_again:
   init_CCE_table(module_idP,CC_idP);
-  DCI_pdu->nCCE=0;
+  nCCE=0;
 
-  while (allocation_is_feasible == 1) {
+  for (i=0;i<DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci;i++) {
+    dci_alloc = &DCI_pdu->dci_alloc[i];
+    LOG_D(MAC,"Trying to allocate DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
+          i,DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci,
+          DCI_pdu->Num_common_dci,DCI_pdu->Num_ue_spec_dci,
+          dci_alloc->rnti,1<<dci_alloc->L,
+          nCCE,nCCE_max,DCI_pdu->num_pdcch_symbols);
 
-    for (i=0;i<DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci;i++) {
-      dci_alloc = &DCI_pdu->dci_alloc[i];
-      LOG_D(MAC,"Trying to allocate DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
-	    i,DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci,
-	    DCI_pdu->Num_common_dci,DCI_pdu->Num_ue_spec_dci,
-	    dci_alloc->rnti,1<<dci_alloc->L,
-	    DCI_pdu->nCCE,nCCE_max,DCI_pdu->num_pdcch_symbols);
+    if (nCCE + (1<<dci_alloc->L) > nCCE_max) {
+      if (DCI_pdu->num_pdcch_symbols == 3)
+        goto failed;
+      DCI_pdu->num_pdcch_symbols++;
+      nCCE_max = mac_xface->get_nCCE_max(module_idP,CC_idP,DCI_pdu->num_pdcch_symbols,subframeP);
+      goto try_again;
+    }
 
-      if (DCI_pdu->nCCE + (1<<dci_alloc->L) > nCCE_max) {
-	if (DCI_pdu->num_pdcch_symbols == 3)
-	  allocation_is_feasible = 0;
-	else {
-	  DCI_pdu->num_pdcch_symbols++;
-	  nCCE_max = mac_xface->get_nCCE_max(module_idP,CC_idP,DCI_pdu->num_pdcch_symbols,subframeP);
-	}
-	break;
+    // number of CCEs left can potentially hold this allocation
+    fCCE = get_nCCE_offset(CCE_table,
+                           1<<(dci_alloc->L),
+                           nCCE_max,
+                           (i<DCI_pdu->Num_common_dci) ? 1 : 0,
+                           dci_alloc->rnti,
+                           subframeP);
+    if (fCCE == -1) {
+      if (DCI_pdu->num_pdcch_symbols == 3) {
+        LOG_I(MAC,"subframe %d: Dropping Allocation for RNTI %x\n",
+              subframeP,dci_alloc->rnti);
+        for (j=0;j<=i;j++){
+          LOG_I(MAC,"DCI %d/%d (%d,%d) : rnti %x dci format %d, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
+                i,DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci,
+                DCI_pdu->Num_common_dci,DCI_pdu->Num_ue_spec_dci,
+                DCI_pdu->dci_alloc[j].rnti,DCI_pdu->dci_alloc[j].format,
+                1<<DCI_pdu->dci_alloc[j].L,
+                nCCE,nCCE_max,DCI_pdu->num_pdcch_symbols);
+        }
+        goto failed;
       }
-      else { // number of CCEs left can potentially hold this allocation
-	if ((fCCE = get_nCCE_offset(CCE_table,
-				    1<<(dci_alloc->L), 
-				    nCCE_max,
-				    (i<DCI_pdu->Num_common_dci) ? 1 : 0, 
-				    dci_alloc->rnti, 
-				    subframeP))>=0) {// the allocation is feasible, rnti rule passes
+      DCI_pdu->num_pdcch_symbols++;
+      nCCE_max = mac_xface->get_nCCE_max(module_idP,CC_idP,DCI_pdu->num_pdcch_symbols,subframeP);
+      goto try_again;
+    } // fCCE==-1
 
-	  LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
-	  if (test_onlyP == 0) {
-	    DCI_pdu->nCCE += (1<<dci_alloc->L);
-	    dci_alloc->firstCCE=fCCE;
-	    LOG_D(MAC,"Allocate CCEs subframe %d, test %d\n",subframeP,test_onlyP);
-	  }
-	} // fCCE>=0
-	else {
-	  if (DCI_pdu->num_pdcch_symbols == 3) {
-	    allocation_is_feasible = 0;
-	    LOG_I(MAC,"subframe %d: Dropping Allocation for RNTI %x\n",
-		  subframeP,dci_alloc->rnti);
-	    for (j=0;j<=i;j++){
-	     
-	      LOG_I(MAC,"DCI %d/%d (%d,%d) : rnti %x dci format %d, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
-		    i,DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci,
-		    DCI_pdu->Num_common_dci,DCI_pdu->Num_ue_spec_dci,
-		    DCI_pdu->dci_alloc[j].rnti,DCI_pdu->dci_alloc[j].format,
-		    1<<DCI_pdu->dci_alloc[j].L,
-		    DCI_pdu->nCCE,nCCE_max,DCI_pdu->num_pdcch_symbols);
-	    }
-	  }
-	  else {
-	    DCI_pdu->num_pdcch_symbols++;
-	    nCCE_max = mac_xface->get_nCCE_max(module_idP,CC_idP,DCI_pdu->num_pdcch_symbols,subframeP);
-	  }
-	  break;
-	} // fCCE==-1
-      } // nCCE <= nCCE_max
-    } // for i = 0 ... num_dcis  
-    if (allocation_is_feasible==1)
-      return (0);
-  } // allocation_is_feasible == 1
+    // the allocation is feasible, rnti rule passes
+    nCCE += (1<<dci_alloc->L);
+    LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
+    if (test_onlyP == 0) {
+      dci_alloc->firstCCE=fCCE;
+      LOG_D(MAC,"Allocate CCEs subframe %d, test %d\n",subframeP,test_onlyP);
+    }
+  } // for i = 0 ... num_dcis
 
-  return(-1);
-  
+  return 0;
 
+failed:
+  return -1;
 }
 
 boolean_t CCE_allocation_infeasible(int module_idP,
@@ -1188,7 +1143,7 @@ boolean_t CCE_allocation_infeasible(int module_idP,
 
 
   DCI_PDU *DCI_pdu = &eNB_mac_inst[module_idP].common_channels[CC_idP].DCI_pdu;
-  DCI_ALLOC_t *dci_alloc;
+  //DCI_ALLOC_t *dci_alloc;
   int ret;
   boolean_t res=FALSE;
 
@@ -1210,7 +1165,78 @@ boolean_t CCE_allocation_infeasible(int module_idP,
       res = TRUE;
     DCI_pdu->Num_ue_spec_dci--;
   }
-
-  return res;
+  return(res);
 }
 
+#if FAPI
+
+void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP, sub_frame_t subframeP)
+{
+  fapi_interface_t                  *fapi;
+  int                               UE_id;
+  struct SchedUlSrInfoReqParameters p;
+  struct SrListElement_s            sr;
+
+  UE_id = find_UE_id(mod_idP, rntiP);
+  if (UE_id == -1) {
+    LOG_E(MAC, "%s:%d:%s: rnti %x: no such UE\n", __FILE__, __LINE__, __FUNCTION__, rntiP);
+    abort();
+  }
+
+  fapi = eNB_mac_inst[mod_idP].fapi;
+
+  p.sfnSf = frameP * 16 + subframeP;
+  p.nr_srList = 1;
+  p.srList    = &sr;
+  p.nr_vendorSpecificList = 0;
+  p.vendorSpecificList    = NULL;
+
+  sr.rnti = rntiP;
+
+  LOG_I(MAC, "eNB %d/%d f/sf %d/%d calling SchedUlSrInfoReq for rnti %x\n", mod_idP, cc_idP, frameP, subframeP, rntiP);
+printf("MAC to FAPI SR indication rnti %x f/sf %d/%d\n", rntiP, frameP, subframeP);
+  SchedUlSrInfoReq(fapi->sched, &p);
+}
+
+#else /* FAPI */
+
+void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP, sub_frame_t subframeP)
+{
+ 
+  int UE_id = find_UE_id(mod_idP, rntiP);
+  UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
+ 
+  if (UE_id  != -1) {
+    if (mac_eNB_get_rrc_status(mod_idP,UE_RNTI(mod_idP,UE_id)) < RRC_CONNECTED)
+      LOG_I(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d on CC_id %d\n",mod_idP,rntiP,frameP,subframeP, UE_id,cc_idP);
+    UE_list->UE_template[cc_idP][UE_id].ul_SR = 1;
+    UE_list->UE_template[cc_idP][UE_id].ul_active = TRUE;
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_SR_INDICATION,1);
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_SR_INDICATION,0);
+  } else {
+    //     AssertFatal(0, "find_UE_id(%u,rnti %d) not found", enb_mod_idP, rntiP);
+    //    AssertError(0, 0, "Frame %d: find_UE_id(%u,rnti %d) not found\n", frameP, enb_mod_idP, rntiP);
+    LOG_D(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d (unknown UEid) on CC_id %d\n",mod_idP,rntiP,frameP,subframeP, UE_id,cc_idP);
+  }
+}
+
+#endif /* FAPI */
+
+void UL_failure_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP, sub_frame_t subframeP)
+{
+
+  int UE_id = find_UE_id(mod_idP, rntiP);
+  UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
+
+  if (UE_id  != -1) {
+    LOG_I(MAC,"[eNB %d][UE %d/%x] Frame %d subframeP %d Signaling UL Failure for UE %d on CC_id %d (timer %d)\n",
+	  mod_idP,UE_id,rntiP,frameP,subframeP, UE_id,cc_idP,
+	  UE_list->UE_sched_ctrl[UE_id].ul_failure_timer);
+    if (UE_list->UE_sched_ctrl[UE_id].ul_failure_timer == 0)
+      UE_list->UE_sched_ctrl[UE_id].ul_failure_timer=1;
+  } else {
+    //     AssertFatal(0, "find_UE_id(%u,rnti %d) not found", enb_mod_idP, rntiP);
+    //    AssertError(0, 0, "Frame %d: find_UE_id(%u,rnti %d) not found\n", frameP, enb_mod_idP, rntiP);
+    LOG_W(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling UL Failure for UE %d (unknown UEid) on CC_id %d\n",mod_idP,rntiP,frameP,subframeP, UE_id,cc_idP);
+  }
+}
