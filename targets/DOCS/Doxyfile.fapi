@@ -747,7 +747,6 @@ INPUT                  = $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac-callback.h \
                          $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac-common.h \
                          $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac-csched-sap.h \
                          $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac-sched-sap.h \
-                         $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac.h \
                          $(OPENAIR2_DIR)/LAYER2/MAC/ff-mac-init.h
 
 # This tag can be used to specify the character encoding of the source files
