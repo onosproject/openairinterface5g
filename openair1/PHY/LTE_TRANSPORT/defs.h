@@ -262,21 +262,18 @@ typedef struct LTE_eNB_DLSCH_s {
   uint8_t error_threshold;
   /// Pointers to 8 HARQ processes for the DLSCH
   LTE_DL_eNB_HARQ_t *harq_processes[8];
-  /// circular list of free harq PIDs (the oldest come first)
-  /// (10 is arbitrary value, must be > to max number of DL HARQ processes in LTE)
-  int harq_pid_freelist[10];
-  /// the head position of the free list (if list is free then head=tail)
-  int head_freelist;
-  /// the tail position of the free list
-  int tail_freelist;
   /// Number of soft channel bits
   uint32_t G;
   /// Codebook index for this dlsch (0,1,2,3)
   uint8_t codebook_index;
-  /// Maximum number of HARQ rounds (for definition see 36-212 V8.6 2009-03, p.17)
+  /// Maximum number of HARQ processes (for definition see 36-212 V8.6 2009-03, p.17)
   uint8_t Mdlharq;
+  /// Maximum number of HARQ rounds
+  uint8_t Mlimit;
   /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
   uint8_t Kmimo;
+  /// Nsoft parameter related to UE Category
+  uint32_t Nsoft;
   /// amplitude of PDSCH (compared to RS) in symbols without pilots
   int16_t sqrt_rho_a;
   /// amplitude of PDSCH (compared to RS) in symbols containing pilots
@@ -317,11 +314,9 @@ typedef struct {
   /// Scrambled "b"-sequences (for definition see 36-211 V8.6 2009-03, p.14)
   uint8_t b_tilde[MAX_NUM_CHANNEL_BITS];
   /// Modulated "d"-sequences (for definition see 36-211 V8.6 2009-03, p.14)
-  mod_sym_t d[MAX_NUM_RE];
+  int32_t d[MAX_NUM_RE];
   /// Transform-coded "z"-sequences (for definition see 36-211 V8.6 2009-03, p.14-15)
-  mod_sym_t z[MAX_NUM_RE];
-  /// Maximum number of HARQ rounds (for definition see 36-212 V8.6 2009-03, p.17)
-  uint8_t Mdlharq;
+  int32_t z[MAX_NUM_RE];
   /// "q" sequences for CQI/PMI (for definition see 36-212 V8.6 2009-03, p.27)
   uint8_t q[MAX_CQI_PAYLOAD];
   /// coded and interleaved CQI bits
@@ -470,8 +465,8 @@ typedef struct {
 typedef struct {
   /// Pointers to 8 HARQ processes for the ULSCH
   LTE_UL_eNB_HARQ_t *harq_processes[8];
-  /// Maximum number of HARQ rounds (for definition see 36-212 V8.6 2009-03, p.17)
-  uint8_t Mdlharq;
+  /// Maximum number of HARQ rounds
+  uint8_t Mlimit;
   /// Maximum number of iterations used in eNB turbo decoder
   uint8_t max_turbo_iterations;
   /// ACK/NAK Bundling flag
@@ -574,6 +569,10 @@ typedef struct {
   vrb_t vrb_type;
   /// downlink power offset field
   uint8_t dl_power_off;
+  /// trials per round statistics
+  uint32_t trials[8];
+  /// error statistics per round
+  uint32_t errors[8];
 } LTE_DL_UE_HARQ_t;
 
 typedef struct {
@@ -591,13 +590,13 @@ typedef struct LTE_eNB_UE_stats {
   /// UL RSSI per receive antenna
   int32_t UL_rssi[NB_ANTENNAS_RX];
   /// PUCCH1a/b power (digital linear)
-  int32_t Po_PUCCH;
+  uint32_t Po_PUCCH;
   /// PUCCH1a/b power (dBm)
   int32_t Po_PUCCH_dBm;
   /// PUCCH1 power (digital linear), conditioned on below threshold
-  int32_t Po_PUCCH1_below;
+  uint32_t Po_PUCCH1_below;
   /// PUCCH1 power (digital linear), conditioned on above threshold
-  int32_t Po_PUCCH1_above;
+  uint32_t Po_PUCCH1_above;
   /// Indicator that Po_PUCCH has been updated by PHY
   int32_t Po_PUCCH_update;
   /// DL Wideband CQI index (2 TBs)
@@ -704,10 +703,12 @@ typedef struct {
   harq_status_t harq_ack[10];
   /// Pointers to up to 8 HARQ processes
   LTE_DL_UE_HARQ_t *harq_processes[8];
-  /// Maximum number of HARQ rounds (for definition see 36-212 V8.6 2009-03, p.17
+  /// Maximum number of HARQ processes(for definition see 36-212 V8.6 2009-03, p.17
   uint8_t Mdlharq;
   /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
   uint8_t Kmimo;
+  /// Nsoft parameter related to UE Category
+  uint32_t Nsoft;
   /// Maximum number of Turbo iterations
   uint8_t max_turbo_iterations;
   /// accumulated tx power adjustment for PUCCH
@@ -755,7 +756,7 @@ typedef struct {
   /// Aggregation level
   uint8_t L;
   /// Position of first CCE of the dci
-  int nCCE;
+  int firstCCE;
   /// flag to indicate that this is a RA response
   boolean_t ra_flag;
   /// rnti

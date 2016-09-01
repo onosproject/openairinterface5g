@@ -43,7 +43,6 @@
 
 
 #include "types.h"
-#include "spec_defs_top.h"
 //#include "defs.h"
 
 #define LTE_NUMBER_OF_SUBFRAMES_PER_FRAME 10
@@ -529,10 +528,10 @@ typedef struct {
   uint8_t dual_tx;
   /// flag to indicate SISO transmission
   uint8_t mode1_flag;
+  /// Indicator that 20 MHz channel uses 3/4 sampling frequency
+  uint8_t threequarter_fs;
   /// Size of FFT
   uint16_t ofdm_symbol_size;
-  /// log2(Size of FFT)
-  uint8_t log2_symbol_size;
   /// Number of prefix samples in all but first symbol of slot
   uint16_t nb_prefix_samples;
   /// Number of prefix samples in first symbol of slot
@@ -618,7 +617,7 @@ typedef struct {
   /// - first index: eNB id [0..2] (hard coded)
   /// - second index: tx antenna [0..nb_antennas_tx[
   /// - third index: sample [0..]
-  mod_sym_t **txdataF[3];
+  int32_t **txdataF[3];
   /// \brief Holds the received data in time domain.
   /// Should point to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER.
   /// - first index: eNB id [0..2] (hard coded)
@@ -762,7 +761,7 @@ typedef struct {
   /// For IFFT_FPGA this points to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER.
   /// - first index: tx antenna [0..nb_antennas_tx[
   /// - second index: sample [0..FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX[
-  mod_sym_t **txdataF;
+  int32_t **txdataF;
   /// \brief Holds the received data in time domain.
   /// Should point to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER.
   /// - first index: rx antenna [0..nb_antennas_rx[

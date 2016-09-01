@@ -39,8 +39,6 @@
 */
 #include "PHY/defs.h"
 #include "PHY/extern.h"
-#include "MAC_INTERFACE/defs.h"
-#include "MAC_INTERFACE/extern.h"
 #include "SCHED/defs.h"
 #include "SCHED/extern.h"
 
@@ -405,8 +403,8 @@ uint8_t get_ack(LTE_DL_FRAME_PARMS *frame_parms,
 
           if (harq_ack[0].send_harq_status == 1)
             o_ACK[1] = harq_ack[0].ack;
-        } else if (harq_ack[8].send_harq_status == 1)
-          o_ACK[0] = harq_ack[8].ack;
+        } else if (harq_ack[0].send_harq_status == 1)
+          o_ACK[0] = harq_ack[0].ack;
 
         status = harq_ack[9].send_harq_status + (harq_ack[0].send_harq_status<<1);
         //printf("Subframe 4, TDD config 3: harq_ack[9] = %d,harq_ack[0] = %d\n",harq_ack[9].ack,harq_ack[0].ack);

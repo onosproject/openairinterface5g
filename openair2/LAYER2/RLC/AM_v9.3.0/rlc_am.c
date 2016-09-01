@@ -103,7 +103,7 @@ rlc_am_get_buffer_occupancy_in_bytes (
   }
 
 #endif
-  return rlc_pP->status_buffer_occupancy + rlc_pP->retransmission_buffer_occupancy + rlc_pP->sdu_buffer_occupancy + max_li_overhead + header_overhead;
+  return rlc_pP->status_buffer_occupancy + rlc_pP->retrans_num_bytes_to_retransmit + rlc_pP->sdu_buffer_occupancy + max_li_overhead + header_overhead;
 }
 //-----------------------------------------------------------------------------
 void
@@ -599,6 +599,7 @@ rlc_am_mac_status_indication (
 			  rlc_sn_t             sn_end       = (rlc->vt_a - 1) & RLC_AM_SN_MASK;
 			  int                  found_pdu    = 0;
 			  rlc_sn_t             found_pdu_sn = 0; // avoid warning
+                          (void)found_pdu_sn; /* avoid gcc warning "set but not used" */
 
 
 			  while (sn != sn_end) {
@@ -681,6 +682,12 @@ rlc_am_mac_data_request (
   MessageDef         *msg_p;
 #   endif
   int                 octet_index, index;
+  /* for no gcc warnings */
+  (void)num_nack;
+  (void)message_string;
+  (void)message_string_size;
+  (void)octet_index;
+  (void)index;
 #endif
 
   list_init (&data_req.data, NULL);
@@ -915,7 +922,15 @@ rlc_am_mac_data_indication (
   MessageDef         *msg_p;
 #   endif
   int                 octet_index, index;
+  /* for no gcc warnings */
+  (void)num_nack;
+  (void)message_string;
+  (void)message_string_size;
+  (void)octet_index;
+  (void)index;
 #endif
+
+  (void)l_rlc_p; /* avoid gcc warning "unused variable" */
 
 #if TRACE_RLC_AM_PDU || MESSAGE_CHART_GENERATOR
 

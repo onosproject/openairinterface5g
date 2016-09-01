@@ -34,10 +34,6 @@
 #include "PHY/types.h"
 #include "PHY/defs.h"
 #include "PHY/vars.h"
-#include "MAC_INTERFACE/vars.h"
-#ifdef IFFT_FPGA
-#include "PHY/LTE_REFSIG/mod_table.h"
-#endif
 #ifdef EMOS
 #include "SCHED/phy_procedures_emos.h"
 #endif
@@ -56,59 +52,9 @@ PHY_VARS_UE *PHY_vars_UE;
 
 
 
-void lte_param_init(unsigned char N_tx, unsigned char N_rx,unsigned char transmission_mode,unsigned char extended_prefix_flag,uint16_t Nid_cell,uint8_t N_RB_DL,uint8_t osf)
-{
-
-  LTE_DL_FRAME_PARMS *lte_frame_parms;
-
-  printf("Start lte_param_init\n");
-  PHY_vars_eNB = malloc(sizeof(PHY_VARS_eNB));
-
-  PHY_vars_UE = malloc(sizeof(PHY_VARS_UE));
-  //PHY_config = malloc(sizeof(PHY_CONFIG));
-  mac_xface = malloc(sizeof(MAC_xface));
-
-  randominit(0);
-  set_taus_seed(0);
-
-  lte_frame_parms = &(PHY_vars_eNB->lte_frame_parms);
-
-  lte_frame_parms->N_RB_DL            = N_RB_DL;   //50 for 10MHz and 25 for 5 MHz
-  lte_frame_parms->N_RB_UL            = N_RB_DL;
-  lte_frame_parms->Ncp                = extended_prefix_flag;
-  lte_frame_parms->Nid_cell           = Nid_cell;
-  lte_frame_parms->nushift            = 0;
-  lte_frame_parms->nb_antennas_tx     = N_tx;
-  lte_frame_parms->nb_antennas_rx     = N_rx;
-  //  lte_frame_parms->Csrs = 2;
-  //  lte_frame_parms->Bsrs = 0;
-  //  lte_frame_parms->kTC = 0;
-  //  lte_frame_parms->n_RRC = 0;
-  lte_frame_parms->mode1_flag = (transmission_mode == 1)? 1 : 0;
-  lte_frame_parms->tdd_config = 1;
-  lte_frame_parms->frame_type = 1;
-  init_frame_parms(lte_frame_parms,osf);
-
-  //copy_lte_parms_to_phy_framing(lte_frame_parms, &(PHY_config->PHY_framing));
-
-
-  PHY_vars_UE->lte_frame_parms = *lte_frame_parms;
-
-  phy_init_lte_top(lte_frame_parms);
-
-  phy_init_lte_ue(PHY_vars_UE,1,0);
-
-  phy_init_lte_eNB(PHY_vars_eNB,0,0,0);
-
-
-
-
-
-  printf("Done lte_param_init\n");
-
-}
-
 extern uint16_t prach_root_sequence_map0_3[838];
+
+void dump_prach_config(LTE_DL_FRAME_PARMS *frame_parms,uint8_t subframe);
 
 int main(int argc, char **argv)
 {
@@ -120,13 +66,10 @@ int main(int argc, char **argv)
   uint8_t snr1set=0;
   uint8_t ue_speed1set=0;
   //mod_sym_t **txdataF;
-#ifdef IFFT_FPGA
-  int **txdataF2;
-#endif
   int **txdata;
   double **s_re,**s_im,**r_re,**r_im;
   double iqim=0.0;
-  int trial, ntrials=1;
+  int trial; //, ntrials=1;
   uint8_t transmission_mode = 1,n_tx=1,n_rx=1;
   uint16_t Nid_cell=0;
 
@@ -134,7 +77,7 @@ int main(int argc, char **argv)
   uint8_t hs_flag=0;
   int n_frames=1;
   channel_desc_t *UE2eNB;
-  uint32_t nsymb,tx_lev,tx_lev_dB;
+  uint32_t nsymb,tx_lev; //,tx_lev_dB;
   uint8_t extended_prefix_flag=0;
   //  int8_t interf1=-19,interf2=-19;
   LTE_DL_FRAME_PARMS *frame_parms;
@@ -153,8 +96,8 @@ int main(int argc, char **argv)
   uint16_t preamble_energy_list[64],preamble_tx=99,preamble_delay_list[64];
   uint16_t preamble_max,preamble_energy_max;
   PRACH_RESOURCES_t prach_resources;
-  uint8_t prach_fmt;
-  int N_ZC;
+  //uint8_t prach_fmt;
+  //int N_ZC;
   int delay = 0;
   double delay_avg=0;
   double ue_speed = 0;
@@ -178,7 +121,8 @@ int main(int argc, char **argv)
     case 'a':
       printf("Running AWGN simulation\n");
       awgn_flag = 1;
-      ntrials=1;
+      /* ntrials not used later, no need to set */
+      //ntrials=1;
       break;
 
     case 'd':
@@ -370,7 +314,17 @@ int main(int argc, char **argv)
   if (transmission_mode==2)
     n_tx=2;
 
-  lte_param_init(n_tx,n_rx,transmission_mode,extended_prefix_flag,Nid_cell,N_RB_DL,osf);
+  lte_param_init(n_tx,
+		 n_rx,
+		 transmission_mode,
+		 extended_prefix_flag,
+		 FDD,
+		 Nid_cell,
+		 3,
+		 N_RB_DL,
+		 0,
+		 osf,
+		 0);
 
 
   if (snr1set==0) {
@@ -447,9 +401,11 @@ int main(int argc, char **argv)
   PHY_vars_eNB->lte_frame_parms.prach_config_common.prach_ConfigInfo.highSpeedFlag=hs_flag;
   PHY_vars_eNB->lte_frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset=0;
 
-  prach_fmt = get_prach_fmt(PHY_vars_eNB->lte_frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex,
-                            PHY_vars_eNB->lte_frame_parms.frame_type);
-  N_ZC = (prach_fmt <4)?839:139;
+  /* N_ZC not used later, so prach_fmt is also useless, don't set */
+  //prach_fmt = get_prach_fmt(PHY_vars_eNB->lte_frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex,
+  //                          PHY_vars_eNB->lte_frame_parms.frame_type);
+  /* N_ZC not used later, no need to set */
+  //N_ZC = (prach_fmt <4)?839:139;
 
   compute_prach_seq(&PHY_vars_eNB->lte_frame_parms.prach_config_common,PHY_vars_eNB->lte_frame_parms.frame_type,PHY_vars_eNB->X_u);
 
@@ -473,7 +429,8 @@ int main(int argc, char **argv)
                           subframe,
                           0); //Nf
 
-  tx_lev_dB = (unsigned int) dB_fixed(tx_lev);
+  /* tx_lev_dB not used later, no need to set */
+  //tx_lev_dB = (unsigned int) dB_fixed(tx_lev);
 
   write_output("txsig0_new.m","txs0", &txdata[0][subframe*frame_parms->samples_per_tti],frame_parms->samples_per_tti,1,1);
   //write_output("txsig1.m","txs1", txdata[1],FRAME_LENGTH_COMPLEX_SAMPLES,1,1);
@@ -590,14 +547,6 @@ int main(int argc, char **argv)
     //  printf("(%f,%f)\n",SNR,(double)prach_errors/(double)n_frames);
   } //SNR loop
 
-#ifdef IFFT_FPGA
-  free(txdataF2[0]);
-  free(txdataF2[1]);
-  free(txdataF2);
-  free(txdata[0]);
-  free(txdata[1]);
-  free(txdata);
-#endif
 
   for (i=0; i<2; i++) {
     free(s_re[i]);

@@ -44,7 +44,15 @@
 /** @defgroup _ref_implementation_ OpenAirInterface LTE Implementation
  * @{
 
- * @defgroup _PHY_RF_INTERFACE_ Generic PHY - RF Interface
+ * @defgroup _PHY_RF_INTERFACE_ PHY - RF Interface
+ * @ingroup _PHY_RF_INTERFACE_
+ * @{
+ * @defgroup _GENERIC_PHY_RF_INTERFACE_ Generic PHY - RF Interface
+ * @defgroup _USRP_PHY_RF_INTERFACE_    PHY - USRP RF Interface
+ * @defgroup _BLADERF_PHY_RF_INTERFACE_    PHY - BLADERF RF Interface
+ * @defgroup _LMSSDR_PHY_RF_INTERFACE_    PHY - LMSSDR RF Interface
+ * @}
+ *
  * @ingroup _ref_implementation_
  * @{
  * This module is responsible for defining the generic interface between PHY and RF Target
@@ -108,7 +116,6 @@
  */
 
 #include "types.h"
-#include "spec_defs_top.h"
 
 
 
@@ -117,18 +124,13 @@
 */
 #define NUMBER_OF_OFDM_CARRIERS (frame_parms->ofdm_symbol_size)
 #define NUMBER_OF_SYMBOLS_PER_FRAME (frame_parms->symbols_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)
-#define LOG2_NUMBER_OF_OFDM_CARRIERS (frame_parms->log2_symbol_size)
 #define NUMBER_OF_USEFUL_CARRIERS (12*frame_parms->N_RB_DL)
 #define NUMBER_OF_ZERO_CARRIERS (NUMBER_OF_OFDM_CARRIERS-NUMBER_OF_USEFUL_CARRIERS)
 #define NUMBER_OF_USEFUL_CARRIERS_BYTES (NUMBER_OF_USEFUL_CARRIERS>>2)
 #define HALF_NUMBER_OF_USEFUL_CARRIERS (NUMBER_OF_USEFUL_CARRIERS>>1)
 #define HALF_NUMBER_OF_USEFUL_CARRIERS_BYTES (HALF_NUMBER_OF_USEFUL_CARRIERS>>2)
 #define FIRST_CARRIER_OFFSET (HALF_NUMBER_OF_USEFUL_CARRIERS+NUMBER_OF_ZERO_CARRIERS)
-#ifdef OPENAIR_LTE
 #define NUMBER_OF_OFDM_SYMBOLS_PER_SLOT (NUMBER_OF_SYMBOLS_PER_FRAME/LTE_SLOTS_PER_FRAME)
-#else
-#define NUMBER_OF_OFDM_SYMBOLS_PER_SLOT 16
-#endif
 
 #ifdef EMOS
 #define EMOS_SCH_INDEX 1
@@ -257,70 +259,10 @@
 #define AMP_OVER_2 (AMP>>1)
 
 /// Threshold for PUCCH Format 1 detection
-#define PUCCH1_THRES 10
+#define PUCCH1_THRES 0
 /// Threshold for PUCCH Format 1a/1b detection
 #define PUCCH1a_THRES 4
 #define PUCCH1b_THRES 4
-
-#ifndef OPENAIR_LTE
-///
-/// PHY-MAC Interface Defs
-///
-
-/// Maximum number of parallel streams per slot
-#define NB_STREAMS_MAX 4
-
-/// Maximum number of frequency groups per slot
-#define NB_GROUPS_MAX 16
-
-/// Maximum number of control bytes per slot
-#define NB_CNTL_BYTES_MAX 8
-
-/// Maximum number of data bytes per slot
-#define NB_DATA_BYTES_MAX 256
-
-#define MAX_NUM_TB 32
-#define MAX_TB_SIZE_BYTES 128
-
-/// Size of SACCH PDU in Bytes
-#define SACCH_SIZE_BYTES (sizeof(UL_SACCH_PDU)+4)
-/// Size of SACCH PDU in Bytes
-#define SACCH_SIZE_BITS  (SACCH_SIZE_BYTES<<3)
-
-#define MAX_SACH_SIZE_BYTES 1024
-
-
-#define SACH_ERROR 1
-#define SACCH_ERROR 2
-#define SACH_MISSING 3
-#define SACH_PARAM_INVALID 10
-
-#endif //OPENAIR_LTE
-
-/*
-enum STATUS_RX {STATUS_RX_OFF,
-    STATUS_RX_ON,
-    STATUS_RX_SYNCING,
-    STATUS_RX_CANNOT_SYNC,
-    STATUS_RX_DATA_PROBLEM,
-    STATUS_RX_LOST_SYNC,
-    STATUS_RX_ABORT,
-    STATUS_RX_TOO_LATE,
-    STATUS_RX_CLOCK_STOPPED};
-
-enum STATUS_TX {
-  STATUS_TX_OFF,
-  STATUS_TX_ON,
-  STATUS_TX_INPUT_CORRUPT,
-  STATUS_TX_ABORT,
-  STATUS_TX_TOO_LATE,
-  STATUS_TX_CLOCK_STOPPED};
-
-enum MODE {
-  SYNCHED,
-  SYNCHING,
-  NOT_SYNCHED};
-*/
 
 /// Data structure for transmission.
 typedef struct {
@@ -336,18 +278,25 @@ typedef struct {
   int *RX_DMA_BUFFER[2];
 } TX_RX_VARS;
 
+/*! \brief Extension Type */
+typedef enum {
+  CYCLIC_PREFIX,
+  CYCLIC_SUFFIX,
+  ZEROS,
+  NONE
+} Extension_t;
+	
 /// Measurement Variables
 
 #define NUMBER_OF_SUBBANDS_MAX 13
 #define NUMBER_OF_HARQ_PID_MAX 8
 
-#if defined(CBMIMO1) || defined(EXMIMO) || defined(OAI_USRP)
 #define MAX_FRAME_NUMBER 0x400
+#if defined(CBMIMO1) || defined(EXMIMO) || defined(OAI_USRP)
 #define NUMBER_OF_eNB_MAX 1
-#define NUMBER_OF_UE_MAX 4
+#define NUMBER_OF_UE_MAX 16
 #define NUMBER_OF_CONNECTED_eNB_MAX 3
 #else
-#define MAX_FRAME_NUMBER 0xFFFF
 #ifdef LARGE_SCALE
 #define NUMBER_OF_eNB_MAX 2
 #define NUMBER_OF_UE_MAX 120
@@ -472,13 +421,13 @@ typedef struct {
   //! estimated avg noise power (dB)
   short n0_power_tot_dBm;
   //! estimated avg noise power per RB per RX ant (lin)
-  unsigned short n0_subband_power[NB_ANTENNAS_RX][25];
+  unsigned short n0_subband_power[NB_ANTENNAS_RX][100];
   //! estimated avg noise power per RB per RX ant (dB)
-  unsigned short n0_subband_power_dB[NB_ANTENNAS_RX][25];
+  unsigned short n0_subband_power_dB[NB_ANTENNAS_RX][100];
   //! estimated avg noise power per RB (dB)
-  short n0_subband_power_tot_dB[25];
+  short n0_subband_power_tot_dB[100];
   //! estimated avg noise power per RB (dBm)
-  short n0_subband_power_tot_dBm[25];
+  short n0_subband_power_tot_dBm[100];
   // eNB measurements (per user)
   //! estimated received spatial signal power (linear)
   unsigned int   rx_spatial_power[NUMBER_OF_UE_MAX][2][2];
@@ -498,13 +447,13 @@ typedef struct {
   /// Wideband CQI (sum of all RX antennas, in dB)
   char           wideband_cqi_tot[NUMBER_OF_UE_MAX];
   /// Subband CQI per RX antenna and RB (= SINR)
-  int            subband_cqi[NUMBER_OF_UE_MAX][NB_ANTENNAS_RX][25];
+  int            subband_cqi[NUMBER_OF_UE_MAX][NB_ANTENNAS_RX][100];
   /// Total Subband CQI and RB (= SINR)
-  int            subband_cqi_tot[NUMBER_OF_UE_MAX][25];
+  int            subband_cqi_tot[NUMBER_OF_UE_MAX][100];
   /// Subband CQI in dB and RB (= SINR dB)
-  int            subband_cqi_dB[NUMBER_OF_UE_MAX][NB_ANTENNAS_RX][25];
+  int            subband_cqi_dB[NUMBER_OF_UE_MAX][NB_ANTENNAS_RX][100];
   /// Total Subband CQI and RB
-  int            subband_cqi_tot_dB[NUMBER_OF_UE_MAX][25];
+  int            subband_cqi_tot_dB[NUMBER_OF_UE_MAX][100];
 
 } PHY_MEASUREMENTS_eNB;
 

@@ -31,6 +31,7 @@
 #include "PHY/sse_intrin.h"
 //#define DEBUG_CH
 
+#include "T.h"
 
 // For Channel Estimation in Distributed Alamouti Scheme
 //static int16_t temp_out_ifft[2048*4] __attribute__((aligned(16)));
@@ -40,8 +41,8 @@ static int16_t temp_out_ifft_0[2048*4] __attribute__((aligned(16)));
 static int16_t temp_out_ifft_1[2048*4] __attribute__((aligned(16)));
 
 
-static int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(16)));
-static int32_t temp_in_ifft_1[2048*2] __attribute__((aligned(16)));
+static int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
+static int32_t temp_in_ifft_1[2048*2] __attribute__((aligned(32)));
 static int32_t temp_in_fft_0[2048*2] __attribute__((aligned(16)));
 static int32_t temp_in_fft_1[2048*2] __attribute__((aligned(16)));
 
@@ -331,6 +332,13 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *phy_vars_eNB,
 	break;
       }
 
+#if T_TRACER
+      if (aa == 0)
+        T(T_ENB_PHY_UL_CHANNEL_ESTIMATE, T_INT(eNB_id), T_INT(UE_id),
+          T_INT(phy_vars_eNB->proc[sched_subframe].frame_rx), T_INT(subframe),
+          T_INT(0), T_BUFFER(ul_ch_estimates_time[0], 512  * 4));
+#endif
+
 #ifdef DEBUG_CH
 
       if (aa==0) {
@@ -432,7 +440,7 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *phy_vars_eNB,
         in_fft_ptr_0 = &temp_in_fft_0[0];
         in_fft_ptr_1 = &temp_in_fft_1[0];
 
-        for(j=0; j<(1<<(frame_parms->log2_symbol_size))/12; j++) {
+        for(j=0; j<(frame_parms->ofdm_symbol_size)/12; j++) {
           if (j>19) {
             ((int16_t*)in_fft_ptr_0)[-40+(2*j)] = ((int16_t*)temp_out_ifft_0)[-80+(2*j)]*rx_power_correction;
             ((int16_t*)in_fft_ptr_0)[-40+(2*j)+1] = ((int16_t*)temp_out_ifft_0)[-80+(2*j+1)]*rx_power_correction;

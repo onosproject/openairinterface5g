@@ -272,12 +272,12 @@ uint32_t Y;
 //#define Mquad (Msymb/4)
 
 static uint32_t bitrev_cc_dci[32] = {1,17,9,25,5,21,13,29,3,19,11,27,7,23,15,31,0,16,8,24,4,20,12,28,2,18,10,26,6,22,14,30};
-static mod_sym_t wtemp[2][Msymb];
+static int32_t wtemp[2][Msymb];
 
-void pdcch_interleaving(LTE_DL_FRAME_PARMS *frame_parms,mod_sym_t **z, mod_sym_t **wbar,uint8_t n_symbols_pdcch,uint8_t mi)
+void pdcch_interleaving(LTE_DL_FRAME_PARMS *frame_parms,int32_t **z, int32_t **wbar,uint8_t n_symbols_pdcch,uint8_t mi)
 {
 
-  mod_sym_t *wptr,*wptr2,*zptr;
+  int32_t *wptr,*wptr2,*zptr;
   uint32_t Mquad = get_nquad(n_symbols_pdcch,frame_parms,mi);
   uint32_t RCC = (Mquad>>5), ND;
   uint32_t row,col,Kpi,index;
@@ -2027,7 +2027,7 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
                          uint32_t n_rnti,
                          int16_t amp,
                          LTE_DL_FRAME_PARMS *frame_parms,
-                         mod_sym_t **txdataF,
+                         int32_t **txdataF,
                          uint32_t subframe)
 {
 
@@ -2038,10 +2038,10 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
   int16_t re_offset;
   uint8_t mi = get_mi(frame_parms,subframe);
   static uint8_t e[DCI_BITS_MAX];
-  static mod_sym_t yseq0[Msymb],yseq1[Msymb],wbar0[Msymb],wbar1[Msymb];
+  static int32_t yseq0[Msymb],yseq1[Msymb],wbar0[Msymb],wbar1[Msymb];
 
-  mod_sym_t *y[2];
-  mod_sym_t *wbar[2];
+  int32_t *y[2];
+  int32_t *wbar[2];
 
   int nushiftmod3 = frame_parms->nushift%3;
 
@@ -2108,14 +2108,14 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
       if (dci_alloc[i].L == (uint8_t)L) {
 
 #ifdef DEBUG_DCI_ENCODING
-        LOG_I(PHY,"Generating common DCI %d/%d (nCCE %d) of length %d, aggregation %d (%x)\n",i,num_common_dci,dci_alloc[i].nCCE,dci_alloc[i].dci_length,1<<dci_alloc[i].L,
+        LOG_I(PHY,"Generating common DCI %d/%d (nCCE %d) of length %d, aggregation %d (%x)\n",i,num_common_dci,dci_alloc[i].firstCCE,dci_alloc[i].dci_length,1<<dci_alloc[i].L,
               *(unsigned int*)dci_alloc[i].dci_pdu);
         dump_dci(frame_parms,&dci_alloc[i]);
 #endif
 
-        if (dci_alloc[i].nCCE>=0) {
+        if (dci_alloc[i].firstCCE>=0) {
           e_ptr = generate_dci0(dci_alloc[i].dci_pdu,
-                                e+(72*dci_alloc[i].nCCE),
+                                e+(72*dci_alloc[i].firstCCE),
                                 dci_alloc[i].dci_length,
                                 dci_alloc[i].L,
                                 dci_alloc[i].rnti);
@@ -2133,9 +2133,9 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
         dump_dci(frame_parms,&dci_alloc[i]);
 #endif
 
-        if (dci_alloc[i].nCCE >= 0) {
+        if (dci_alloc[i].firstCCE >= 0) {
           e_ptr = generate_dci0(dci_alloc[i].dci_pdu,
-                                e+(72*dci_alloc[i].nCCE),
+                                e+(72*dci_alloc[i].firstCCE),
                                 dci_alloc[i].dci_length,
                                 dci_alloc[i].L,
                                 dci_alloc[i].rnti);
@@ -2537,12 +2537,115 @@ uint16_t get_nquad(uint8_t num_pdcch_symbols,LTE_DL_FRAME_PARMS *frame_parms,uin
   return(Nreg - 4 - (3*Ngroup_PHICH));
 }
 
-uint16_t get_nCCE_max(uint8_t Mod_id,uint8_t CC_id)
+uint16_t get_nCCE_mac(uint8_t Mod_id,uint8_t CC_id,int num_pdcch_symbols,int subframe)
 {
 
   // check for eNB only !
-  return(get_nCCE(3,&PHY_vars_eNB_g[Mod_id][CC_id]->lte_frame_parms,1)); // 5, 15,21
+  return(get_nCCE(num_pdcch_symbols,
+		  &PHY_vars_eNB_g[Mod_id][CC_id]->lte_frame_parms,
+		  get_mi(&PHY_vars_eNB_g[Mod_id][CC_id]->lte_frame_parms,subframe))); 
 }
+
+
+int get_nCCE_offset_l1(int *CCE_table,
+		       const unsigned char L, 
+		       const int nCCE, 
+		       const int common_dci, 
+		       const unsigned short rnti, 
+		       const unsigned char subframe)
+{
+
+  int search_space_free,m,nb_candidates = 0,l,i;
+  unsigned int Yk;
+   /*
+    printf("CCE Allocation: ");
+    for (i=0;i<nCCE;i++)
+    printf("%d.",CCE_table[i]);
+    printf("\n");
+  */
+  if (common_dci == 1) {
+    // check CCE(0 ... L-1)
+    nb_candidates = (L==4) ? 4 : 2;
+    nb_candidates = min(nb_candidates,nCCE/L);
+
+    //    printf("Common DCI nb_candidates %d, L %d\n",nb_candidates,L);
+
+    for (m = nb_candidates-1 ; m >=0 ; m--) {
+
+      search_space_free = 1;
+      for (l=0; l<L; l++) {
+
+	//	printf("CCE_table[%d] %d\n",(m*L)+l,CCE_table[(m*L)+l]);
+        if (CCE_table[(m*L) + l] == 1) {
+          search_space_free = 0;
+          break;
+        }
+      }
+     
+      if (search_space_free == 1) {
+
+	//	printf("returning %d\n",m*L);
+
+        for (l=0; l<L; l++)
+          CCE_table[(m*L)+l]=1;
+        return(m*L);
+      }
+    }
+
+    return(-1);
+
+  } else { // Find first available in ue specific search space
+    // according to procedure in Section 9.1.1 of 36.213 (v. 8.6)
+    // compute Yk
+    Yk = (unsigned int)rnti;
+
+    for (i=0; i<=subframe; i++)
+      Yk = (Yk*39827)%65537;
+
+    Yk = Yk % (nCCE/L);
+
+
+    switch (L) {
+    case 1:
+    case 2:
+      nb_candidates = 6;
+      break;
+
+    case 4:
+    case 8:
+      nb_candidates = 2;
+      break;
+
+    default:
+      DevParam(L, nCCE, rnti);
+      break;
+    }
+
+
+    LOG_D(MAC,"rnti %x, Yk = %d, nCCE %d (nCCE/L %d),nb_cand %d\n",rnti,Yk,nCCE,nCCE/L,nb_candidates);
+
+    for (m = 0 ; m < nb_candidates ; m++) {
+      search_space_free = 1;
+
+      for (l=0; l<L; l++) {
+        if (CCE_table[(((Yk+m)%(nCCE/L))*L) + l] == 1) {
+          search_space_free = 0;
+          break;
+        }
+      }
+
+      if (search_space_free == 1) {
+        for (l=0; l<L; l++)
+          CCE_table[(((Yk+m)%(nCCE/L))*L)+l]=1;
+
+        return(((Yk+m)%(nCCE/L))*L);
+      }
+    }
+
+    return(-1);
+  }
+}
+
 
 void dci_decoding_procedure0(LTE_UE_PDCCH **lte_ue_pdcch_vars,
 			     int do_common,
@@ -2691,7 +2794,7 @@ void dci_decoding_procedure0(LTE_UE_PDCCH **lte_ue_pdcch_vars,
         dci_alloc[*dci_cnt].dci_length = sizeof_bits;
         dci_alloc[*dci_cnt].rnti       = crc;
         dci_alloc[*dci_cnt].L          = L;
-        dci_alloc[*dci_cnt].nCCE       = CCEind;
+        dci_alloc[*dci_cnt].firstCCE   = CCEind;
 
         if (sizeof_bytes<=4) {
           dci_alloc[*dci_cnt].dci_pdu[3] = dci_decoded_output[0];

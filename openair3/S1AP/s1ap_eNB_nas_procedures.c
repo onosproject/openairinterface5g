@@ -191,7 +191,7 @@ int s1ap_eNB_handle_nas_first_req(
    * The cell identity is defined on 28 bits but as we use macro enb id,
    * we have to pad.
    */
-#warning "TODO get cell id from RRC"
+//#warning "TODO get cell id from RRC"
   MACRO_ENB_ID_TO_CELL_IDENTITY(instance_p->eNB_id,
 		  0, // Cell ID
           &initial_ue_message_p->eutran_cgi.cell_ID);
@@ -400,7 +400,7 @@ int s1ap_eNB_nas_uplink(instance_t instance, s1ap_uplink_nas_t *s1ap_uplink_nas_
     s1ap_eNB_instance_p->mnc_digit_length,
     &uplink_NAS_transport_p->eutran_cgi.pLMNidentity);
 
-#warning "TODO get cell id from RRC"
+//#warning "TODO get cell id from RRC"
   MACRO_ENB_ID_TO_CELL_IDENTITY(s1ap_eNB_instance_p->eNB_id,
           0,
           &uplink_NAS_transport_p->eutran_cgi.cell_ID);
@@ -667,6 +667,8 @@ int s1ap_eNB_ue_capabilities(instance_t instance,
     S1AP_ERROR("Failed to encode UE capabilities indication\n");
     return -1;
   }
+
+  free(ue_cap_info_ind_p->ue_radio_cap.buffer);
 
   MSC_LOG_TX_MESSAGE(
     MSC_S1AP_ENB,

@@ -29,8 +29,6 @@
 #include "PHY/types.h"
 #include "PHY/defs.h"
 #include "PHY/extern.h"
-#include "MAC_INTERFACE/defs.h"
-#include "MAC_INTERFACE/extern.h"
 
 #ifdef EXMIMO
 #include "openair0_lib.h"
@@ -38,23 +36,16 @@ extern int card;
 #endif
 
 void
-phy_adjust_gain (PHY_VARS_UE *phy_vars_ue, uint8_t eNB_id)
+phy_adjust_gain (PHY_VARS_UE *phy_vars_ue, uint32_t rx_power_fil_dB, uint8_t eNB_id)
 {
 
-  uint16_t rx_power_fil_dB;
 #ifdef EXMIMO
   exmimo_config_t *p_exmimo_config = openair0_exmimo_pci[card].exmimo_config_ptr;
   uint16_t i;
 #endif
-  int rssi;
-
-  rssi = dB_fixed(phy_vars_ue->PHY_measurements.rssi);
-
-  if (rssi>0) rx_power_fil_dB = rssi;
-  else rx_power_fil_dB = phy_vars_ue->PHY_measurements.rx_power_avg_dB[eNB_id];
 
   LOG_D(PHY,"Gain control: rssi %d (%d,%d)\n",
-         rssi,
+         rx_power_fil_dB,
          phy_vars_ue->PHY_measurements.rssi,
          phy_vars_ue->PHY_measurements.rx_power_avg_dB[eNB_id]
         );

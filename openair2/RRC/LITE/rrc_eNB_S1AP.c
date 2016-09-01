@@ -43,6 +43,7 @@
 # include "RRC/LITE/defs.h"
 # include "rrc_eNB_UE_context.h"
 # include "rrc_eNB_S1AP.h"
+# include "enb_config.h"
 
 # if defined(ENABLE_ITTI)
 #   include "asn1_conversions.h"
@@ -58,6 +59,11 @@
 #   include "UTIL/OSA/osa_defs.h"
 #endif
 #include "msc.h"
+
+#include "UERadioAccessCapabilityInformation.h"
+
+#include "gtpv1u_eNB_task.h"
+#include "RRC/LITE/rrc_eNB_GTPV1U.h"
 
 /* Value to indicate an invalid UE initial id */
 static const uint16_t UE_INITIAL_ID_INVALID = 0;
@@ -233,7 +239,7 @@ rrc_eNB_get_ue_context_from_s1ap_ids(
 static e_SecurityAlgorithmConfig__cipheringAlgorithm rrc_eNB_select_ciphering(uint16_t algorithms)
 {
 
-#warning "Forced   return SecurityAlgorithmConfig__cipheringAlgorithm_eea0, to be deleted in future"
+//#warning "Forced   return SecurityAlgorithmConfig__cipheringAlgorithm_eea0, to be deleted in future"
   return SecurityAlgorithmConfig__cipheringAlgorithm_eea0;
 
   if (algorithms & S1AP_ENCRYPTION_EEA2_MASK) {
@@ -392,6 +398,7 @@ rrc_pdcp_config_security(
 #define DEBUG_SECURITY 1
 
 #if defined (DEBUG_SECURITY)
+#undef msg
 #define msg printf
 
   if (print_keys ==1 ) {
@@ -580,29 +587,42 @@ void rrc_eNB_send_S1AP_UE_CAPABILITIES_IND(
 //------------------------------------------------------------------------------
 {
   UECapabilityInformation_t *ueCapabilityInformation = &ul_dcch_msg->message.choice.c1.choice.ueCapabilityInformation;
+  /* 4096 is arbitrary, should be big enough */
+  unsigned char buf[4096];
+  unsigned char *buf2;
+  UERadioAccessCapabilityInformation_t rac;
 
-  if ((ueCapabilityInformation->criticalExtensions.present == UECapabilityInformation__criticalExtensions_PR_c1)
-      && (ueCapabilityInformation->criticalExtensions.choice.c1.present
-          == UECapabilityInformation__criticalExtensions__c1_PR_ueCapabilityInformation_r8)
-      && (ueCapabilityInformation->criticalExtensions.choice.c1.choice.ueCapabilityInformation_r8.ue_CapabilityRAT_ContainerList.list.count > 0)) {
-    UE_CapabilityRAT_ContainerList_t* ue_CapabilityRAT_ContainerList =
-      &ueCapabilityInformation->criticalExtensions.choice.c1.choice.ueCapabilityInformation_r8.ue_CapabilityRAT_ContainerList;
-    MessageDef *msg_p;
-
-    msg_p = itti_alloc_new_message (TASK_RRC_ENB, S1AP_UE_CAPABILITIES_IND);
-    S1AP_UE_CAPABILITIES_IND (msg_p).eNB_ue_s1ap_id = ue_context_pP->ue_context.eNB_ue_s1ap_id;
-    S1AP_UE_CAPABILITIES_IND (msg_p).ue_radio_cap.length = ue_CapabilityRAT_ContainerList->list.array[0]->ueCapabilityRAT_Container.size;
-    S1AP_UE_CAPABILITIES_IND (msg_p).ue_radio_cap.buffer = ue_CapabilityRAT_ContainerList->list.array[0]->ueCapabilityRAT_Container.buf;
-
-    itti_send_msg_to_task (TASK_S1AP, ctxt_pP->instance, msg_p);
-
-    if (ue_CapabilityRAT_ContainerList->list.count > 1) {
-      LOG_W (RRC,"[eNB %d][UE %x] can only handle 1 UE capability RAT item for now (%d)\n",
-             ctxt_pP->module_id,
-             ue_context_pP->ue_context.rnti,
-             ue_CapabilityRAT_ContainerList->list.count);
-    }
+  if (ueCapabilityInformation->criticalExtensions.present != UECapabilityInformation__criticalExtensions_PR_c1
+      || ueCapabilityInformation->criticalExtensions.choice.c1.present != UECapabilityInformation__criticalExtensions__c1_PR_ueCapabilityInformation_r8) {
+    LOG_E(RRC, "[eNB %d][UE %x] bad UE capabilities\n", ctxt_pP->module_id, ue_context_pP->ue_context.rnti);
+    return;
   }
+
+  asn_enc_rval_t ret = uper_encode_to_buffer(&asn_DEF_UECapabilityInformation, ueCapabilityInformation, buf, 4096);
+  if (ret.encoded == -1) abort();
+
+  memset(&rac, 0, sizeof(UERadioAccessCapabilityInformation_t));
+
+  rac.criticalExtensions.present = UERadioAccessCapabilityInformation__criticalExtensions_PR_c1;
+  rac.criticalExtensions.choice.c1.present = UERadioAccessCapabilityInformation__criticalExtensions__c1_PR_ueRadioAccessCapabilityInformation_r8;
+  rac.criticalExtensions.choice.c1.choice.ueRadioAccessCapabilityInformation_r8.ue_RadioAccessCapabilityInfo.buf = buf;
+  rac.criticalExtensions.choice.c1.choice.ueRadioAccessCapabilityInformation_r8.ue_RadioAccessCapabilityInfo.size = (ret.encoded+7)/8;
+  rac.criticalExtensions.choice.c1.choice.ueRadioAccessCapabilityInformation_r8.nonCriticalExtension = NULL;
+
+  /* 8192 is arbitrary, should be big enough */
+  buf2 = malloc16(8192);
+  if (buf2 == NULL) abort();
+  ret = uper_encode_to_buffer(&asn_DEF_UERadioAccessCapabilityInformation, &rac, buf2, 8192);
+  if (ret.encoded == -1) abort();
+
+  MessageDef *msg_p;
+
+  msg_p = itti_alloc_new_message (TASK_RRC_ENB, S1AP_UE_CAPABILITIES_IND);
+  S1AP_UE_CAPABILITIES_IND (msg_p).eNB_ue_s1ap_id = ue_context_pP->ue_context.eNB_ue_s1ap_id;
+  S1AP_UE_CAPABILITIES_IND (msg_p).ue_radio_cap.length = (ret.encoded+7)/8;
+  S1AP_UE_CAPABILITIES_IND (msg_p).ue_radio_cap.buffer = buf2;
+
+  itti_send_msg_to_task (TASK_S1AP, ctxt_pP->instance, msg_p);
 }
 
 //------------------------------------------------------------------------------
@@ -662,15 +682,16 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
         S1AP_NAS_FIRST_REQ (message_p).ue_identity.s_tmsi.mme_code = s_TMSI->mme_code;
         S1AP_NAS_FIRST_REQ (message_p).ue_identity.s_tmsi.m_tmsi = s_TMSI->m_tmsi;
         LOG_I(S1AP, "[eNB %d] Build S1AP_NAS_FIRST_REQ with s_TMSI: MME code %u M-TMSI %u ue %x\n",
-        ctxt_pP->module_id,
-        S1AP_NAS_FIRST_REQ (message_p).ue_identity.s_tmsi.mme_code,
-        S1AP_NAS_FIRST_REQ (message_p).ue_identity.s_tmsi.m_tmsi,
-        ue_context_pP->ue_context.rnti);
+            ctxt_pP->module_id,
+            S1AP_NAS_FIRST_REQ (message_p).ue_identity.s_tmsi.mme_code,
+            S1AP_NAS_FIRST_REQ (message_p).ue_identity.s_tmsi.m_tmsi,
+            ue_context_pP->ue_context.rnti);
       }
 
       if (rrcConnectionSetupComplete->registeredMME != NULL) {
         /* Fill GUMMEI */
         struct RegisteredMME *r_mme = rrcConnectionSetupComplete->registeredMME;
+        //int selected_plmn_identity = rrcConnectionSetupComplete->selectedPLMN_Identity;
 
         S1AP_NAS_FIRST_REQ (message_p).ue_identity.presenceMask |= UE_IDENTITIES_gummei;
 
@@ -679,9 +700,9 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
             /* Use first indicated PLMN MCC if it is defined */
             S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc = *r_mme->plmn_Identity->mcc->list.array[0];
             LOG_I(S1AP, "[eNB %d] Build S1AP_NAS_FIRST_REQ adding in s_TMSI: GUMMEI MCC %u ue %x\n",
-            ctxt_pP->module_id,
-            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc,
-            ue_context_pP->ue_context.rnti);
+                ctxt_pP->module_id,
+                S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc,
+                ue_context_pP->ue_context.rnti);
           }
 
           if (r_mme->plmn_Identity->mnc.list.count > 0) {
@@ -692,6 +713,14 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
                   S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc,
                   ue_context_pP->ue_context.rnti);
           }
+        } else {
+          const Enb_properties_array_t   *enb_properties_p  = NULL;
+          enb_properties_p = enb_config_get();
+
+          // actually the eNB configuration contains only one PLMN (can be up to 6)
+          S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc = enb_properties_p->properties[ctxt_pP->module_id]->mcc;
+          S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc = enb_properties_p->properties[ctxt_pP->module_id]->mnc;
+          S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc_len = enb_properties_p->properties[ctxt_pP->module_id]->mnc_digit_length;
         }
 
         S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mme_code     = BIT_STRING_to_uint8 (&r_mme->mmec);
@@ -831,15 +860,15 @@ rrc_eNB_process_S1AP_DOWNLINK_NAS(
     LOG_F(RRC,"\n");
 #endif
     /* Transfer data to PDCP */
-    pdcp_rrc_data_req (
-      &ctxt,
-      DCCH,
-      *rrc_eNB_mui++,
-      SDU_CONFIRM_NO,
-      length,
-      buffer,
-      PDCP_TRANSMISSION_MODE_CONTROL);
-
+    rrc_data_req (
+		  &ctxt,
+		  DCCH,
+		  *rrc_eNB_mui++,
+		  SDU_CONFIRM_NO,
+		  length,
+		  buffer,
+		  PDCP_TRANSMISSION_MODE_CONTROL);
+    
     return (0);
   }
 }
@@ -849,7 +878,7 @@ int rrc_eNB_process_S1AP_INITIAL_CONTEXT_SETUP_REQ(MessageDef *msg_p, const char
 {
   uint16_t                        ue_initial_id;
   uint32_t                        eNB_ue_s1ap_id;
-  MessageDef                     *message_gtpv1u_p = NULL;
+  //MessageDef                     *message_gtpv1u_p = NULL;
   gtpv1u_enb_create_tunnel_req_t  create_tunnel_req;
   gtpv1u_enb_create_tunnel_resp_t create_tunnel_resp;
 
@@ -1161,7 +1190,7 @@ int rrc_eNB_process_S1AP_UE_CONTEXT_RELEASE_COMMAND (MessageDef *msg_p, const ch
     */
     {
       int      e_rab;
-      int      mod_id = 0;
+      //int      mod_id = 0;
       MessageDef *msg_delete_tunnels_p = NULL;
 
       MSC_LOG_TX_MESSAGE(
@@ -1180,7 +1209,7 @@ int rrc_eNB_process_S1AP_UE_CONTEXT_RELEASE_COMMAND (MessageDef *msg_p, const ch
       GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).rnti = ue_context_p->ue_context.rnti;
 
       for (e_rab = 0; e_rab < ue_context_p->ue_context.nb_of_e_rabs; e_rab++) {
-        GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).eps_bearer_id[GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_p).num_erab++] =
+        GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).eps_bearer_id[GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).num_erab++] =
           ue_context_p->ue_context.enb_gtp_ebi[e_rab];
         // erase data
         ue_context_p->ue_context.enb_gtp_teid[e_rab] = 0;

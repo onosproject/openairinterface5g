@@ -34,10 +34,6 @@
 #include "PHY/types.h"
 #include "PHY/defs.h"
 #include "PHY/vars.h"
-#include "MAC_INTERFACE/vars.h"
-#ifdef IFFT_FPGA
-#include "PHY/LTE_REFSIG/mod_table.h"
-#endif
 #ifdef EMOS
 #include "SCHED/phy_procedures_emos.h"
 #endif
@@ -58,60 +54,6 @@ PHY_VARS_UE *PHY_vars_UE;
 
 
 
-void lte_param_init(unsigned char N_tx, unsigned char N_rx,unsigned char transmission_mode,unsigned char extended_prefix_flag,uint16_t Nid_cell,uint8_t N_RB_DL,uint8_t osf)
-{
-
-  LTE_DL_FRAME_PARMS *lte_frame_parms;
-
-  printf("Start lte_param_init\n");
-  PHY_vars_eNB = malloc(sizeof(PHY_VARS_eNB));
-
-  PHY_vars_UE = malloc(sizeof(PHY_VARS_UE));
-  //PHY_config = malloc(sizeof(PHY_CONFIG));
-  mac_xface = malloc(sizeof(MAC_xface));
-
-  randominit(0);
-  set_taus_seed(0);
-
-  lte_frame_parms = &(PHY_vars_eNB->lte_frame_parms);
-
-  lte_frame_parms->N_RB_DL            = N_RB_DL;   //50 for 10MHz and 25 for 5 MHz
-  lte_frame_parms->N_RB_UL            = N_RB_DL;
-  lte_frame_parms->Ncp                = extended_prefix_flag;
-  lte_frame_parms->Nid_cell           = Nid_cell;
-  lte_frame_parms->nushift            = 0;
-  lte_frame_parms->nb_antennas_tx     = N_tx;
-  lte_frame_parms->nb_antennas_rx     = N_rx;
-  //  lte_frame_parms->Csrs = 2;
-  //  lte_frame_parms->Bsrs = 0;
-  //  lte_frame_parms->kTC = 0;
-  //  lte_frame_parms->n_RRC = 0;
-  lte_frame_parms->mode1_flag = (transmission_mode == 1)? 1 : 0;
-  lte_frame_parms->tdd_config = 3;
-  lte_frame_parms->frame_type = 0;
-  init_frame_parms(lte_frame_parms,osf);
-
-  //copy_lte_parms_to_phy_framing(lte_frame_parms, &(PHY_config->PHY_framing));
-
-//  phy_init_top(lte_frame_parms); //allocation
-
-  PHY_vars_UE->lte_frame_parms = *lte_frame_parms;
-
-
-  phy_init_lte_ue(PHY_vars_UE,1,0);
-
-  phy_init_lte_eNB(PHY_vars_eNB,0,0,0);
-
-  phy_init_lte_top(lte_frame_parms);
-
-
-
-
-  printf("Done lte_param_init\n");
-
-}
-
-
 int main(int argc, char **argv)
 {
 
@@ -121,9 +63,6 @@ int main(int argc, char **argv)
   double sigma2, sigma2_dB=0,SNR,snr0=-2.0,snr1=0.0;
   uint8_t snr1set=0;
   //mod_sym_t **txdataF;
-#ifdef IFFT_FPGA
-  int **txdataF2;
-#endif
   int **txdata;
   double **s_re,**s_im,**r_re,**r_im;
   double ricean_factor=0.0000005,iqim=0.0;
@@ -248,7 +187,7 @@ int main(int argc, char **argv)
         break;
 
       default:
-        msg("Unsupported channel model!\n");
+        printf("Unsupported channel model!\n");
         exit(-1);
       }
 
@@ -260,13 +199,13 @@ int main(int argc, char **argv)
 
     case 's':
       snr0 = atof(optarg);
-      msg("Setting SNR0 to %f\n",snr0);
+      printf("Setting SNR0 to %f\n",snr0);
       break;
 
     case 'S':
       snr1 = atof(optarg);
       snr1set=1;
-      msg("Setting SNR1 to %f\n",snr1);
+      printf("Setting SNR1 to %f\n",snr1);
       break;
 
     case 'p':
@@ -289,7 +228,7 @@ int main(int argc, char **argv)
       if ((transmission_mode!=1) &&
           (transmission_mode!=2) &&
           (transmission_mode!=6)) {
-        msg("Unsupported transmission mode %d\n",transmission_mode);
+        printf("Unsupported transmission mode %d\n",transmission_mode);
         exit(-1);
       }
 
@@ -299,7 +238,7 @@ int main(int argc, char **argv)
       n_tx=atoi(optarg);
 
       if ((n_tx==0) || (n_tx>2)) {
-        msg("Unsupported number of tx antennas %d\n",n_tx);
+        printf("Unsupported number of tx antennas %d\n",n_tx);
         exit(-1);
       }
 
@@ -309,7 +248,7 @@ int main(int argc, char **argv)
       n_rx=atoi(optarg);
 
       if ((n_rx==0) || (n_rx>2)) {
-        msg("Unsupported number of rx antennas %d\n",n_rx);
+        printf("Unsupported number of rx antennas %d\n",n_rx);
         exit(-1);
       }
 
@@ -370,7 +309,16 @@ int main(int argc, char **argv)
   if (transmission_mode==2)
     n_tx=2;
 
-  lte_param_init(n_tx,n_rx,transmission_mode,extended_prefix_flag,Nid_cell,N_RB_DL,osf);
+  lte_param_init(n_tx,
+		 n_rx,
+		 transmission_mode,
+		 extended_prefix_flag,
+		 Nid_cell,
+		 FDD,
+		 3,
+		 N_RB_DL,
+		 osf,
+		 0);
 
 
   if (snr1set==0) {
@@ -385,23 +333,7 @@ int main(int argc, char **argv)
   frame_parms = &PHY_vars_eNB->lte_frame_parms;
 
 
-#ifdef IFFT_FPGA
-  txdata    = (int **)malloc16(2*sizeof(int*));
-  txdata[0] = (int *)malloc16(FRAME_LENGTH_BYTES);
-  txdata[1] = (int *)malloc16(FRAME_LENGTH_BYTES);
-
-  bzero(txdata[0],FRAME_LENGTH_BYTES);
-  bzero(txdata[1],FRAME_LENGTH_BYTES);
-
-  txdataF2    = (int **)malloc16(2*sizeof(int*));
-  txdataF2[0] = (int *)malloc16(FRAME_LENGTH_BYTES_NO_PREFIX);
-  txdataF2[1] = (int *)malloc16(FRAME_LENGTH_BYTES_NO_PREFIX);
-
-  bzero(txdataF2[0],FRAME_LENGTH_BYTES_NO_PREFIX);
-  bzero(txdataF2[1],FRAME_LENGTH_BYTES_NO_PREFIX);
-#else
   txdata = PHY_vars_eNB->lte_eNB_common_vars.txdata[eNB_id];
-#endif
 
   s_re = malloc(2*sizeof(double*));
   s_im = malloc(2*sizeof(double*));
@@ -414,7 +346,7 @@ int main(int argc, char **argv)
 
 
 
-  msg("[SIM] Using SCM/101\n");
+  printf("[SIM] Using SCM/101\n");
   UE2eNB = new_channel_desc_scm(PHY_vars_eNB->lte_frame_parms.nb_antennas_tx,
                                 PHY_vars_UE->lte_frame_parms.nb_antennas_rx,
                                 channel_model,
@@ -426,7 +358,7 @@ int main(int argc, char **argv)
 
 
   if (UE2eNB==NULL) {
-    msg("Problem generating channel model. Exiting.\n");
+    printf("Problem generating channel model. Exiting.\n");
     exit(-1);
   }
 
@@ -454,7 +386,7 @@ int main(int argc, char **argv)
   PHY_vars_UE->lte_frame_parms.pucch_config_common.nRB_CQI          = 0;
   PHY_vars_UE->lte_frame_parms.pucch_config_common.nCS_AN           = 0;
 
-  pucch_payload = 1;
+  pucch_payload = 0;
 
   generate_pucch(PHY_vars_UE->lte_ue_common_vars.txdataF,
                  frame_parms,
@@ -467,27 +399,6 @@ int main(int argc, char **argv)
                  &pucch_payload,
                  AMP, //amp,
                  subframe); //subframe
-#ifdef IFFT_FPGA_UE
-  tx_lev=0;
-
-  for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-
-    if (frame_parms->Ncp == 1)
-      PHY_ofdm_mod(txdataF2[aa],        // input
-                   txdata[aa],         // output
-                   frame_parms->log2_symbol_size,                // log2_fft_size
-                   2*nsymb,                 // number of symbols
-                   frame_parms->nb_prefix_samples,               // number of prefix samples
-                   CYCLIC_PREFIX);
-    else
-      normal_prefix_mod(txdataF2[aa],txdata[aa],2*nsymb,frame_parms);
-  }
-
-  tx_lev += signal_energy(&txdata[aa][OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES],
-                          OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES);
-
-#else
-
   write_output("txsigF0.m","txsF0", &PHY_vars_UE->lte_ue_common_vars.txdataF[0][2*subframe*nsymb*OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES_NO_PREFIX],OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES_NO_PREFIX*nsymb,1,1);
 
   tx_lev = 0;
@@ -498,7 +409,7 @@ int main(int argc, char **argv)
     if (frame_parms->Ncp == 1)
       PHY_ofdm_mod(&PHY_vars_UE->lte_ue_common_vars.txdataF[aa][2*subframe*nsymb*OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES_NO_PREFIX],        // input,
                    &txdata[aa][PHY_vars_eNB->lte_frame_parms.samples_per_tti*subframe],         // output
-                   frame_parms->log2_symbol_size,                // log2_fft_size
+                   frame_parms->ofdm_symbol_size,
                    nsymb,                 // number of symbols
                    frame_parms->nb_prefix_samples,               // number of prefix samples
                    CYCLIC_PREFIX);
@@ -519,7 +430,6 @@ int main(int argc, char **argv)
                             OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES);
   }
 
-#endif
 
 
   write_output("txsig0.m","txs0", txdata[0], FRAME_LENGTH_COMPLEX_SAMPLES,1,1);
@@ -597,9 +507,7 @@ int main(int argc, char **argv)
           }
         }
 
-        lte_eNB_I0_measurements(PHY_vars_eNB,
-                                0,
-                                1);
+
 
         for (i=0; i<2*nsymb*OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES; i++) {
           for (aa=0; aa<PHY_vars_eNB->lte_frame_parms.nb_antennas_rx; aa++) {
@@ -647,6 +555,10 @@ int main(int argc, char **argv)
 
         //      if (sig == 1)
         //    printf("*");
+        lte_eNB_I0_measurements(PHY_vars_eNB,
+                                subframe,
+				0,
+                                1);
         PHY_vars_eNB->PHY_measurements_eNB[0].n0_power_tot_dB = N0;//(int8_t)(sigma2_dB-10*log10(PHY_vars_eNB->lte_frame_parms.ofdm_symbol_size/(12*NB_RB)));
         stat = rx_pucch(PHY_vars_eNB,
                         pucch_format,
@@ -655,6 +567,7 @@ int main(int argc, char **argv)
                         n2_pucch,
                         0, //shortened_format,
                         &pucch_payload_rx, //payload,
+                        0 /* frame not defined, let's pass 0 */,
                         subframe,
                         pucch1_thres);
 
@@ -699,15 +612,6 @@ int main(int argc, char **argv)
     write_output("rxsigF0.m","rxsF0", &PHY_vars_eNB->lte_eNB_common_vars.rxdataF[0][0][0],512*nsymb*2,2,1);
   }
 
-
-#ifdef IFFT_FPGA
-  free(txdataF2[0]);
-  free(txdataF2[1]);
-  free(txdataF2);
-  free(txdata[0]);
-  free(txdata[1]);
-  free(txdata);
-#endif
 
   for (i=0; i<2; i++) {
     free(s_re[i]);

@@ -212,9 +212,9 @@ typedef struct UE_RRC_INFO_s {
 } __attribute__ ((__packed__)) UE_RRC_INFO;
 
 typedef struct UE_S_TMSI_s {
-  uint8_t  presence;
-  uint8_t  mme_code;
-  uint32_t m_tmsi;
+  boolean_t  presence;
+  mme_code_t mme_code;
+  m_tmsi_t   m_tmsi;
 } __attribute__ ((__packed__)) UE_S_TMSI;
 
 #if defined(ENABLE_ITTI)
@@ -385,6 +385,8 @@ typedef struct eNB_RRC_UE_s {
   transport_layer_addr_t             enb_gtp_addrs[S1AP_MAX_E_RAB];
   rb_id_t                            enb_gtp_ebi[S1AP_MAX_E_RAB];
 #endif
+  uint32_t                           ul_failure_timer;
+  uint32_t                           ue_release_timer;
 } eNB_RRC_UE_t;
 
 typedef uid_t ue_uid_t;

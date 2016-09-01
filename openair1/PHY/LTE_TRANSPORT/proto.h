@@ -54,17 +54,18 @@
 */
 void free_eNB_dlsch(LTE_eNB_DLSCH_t *dlsch);
 
-void clean_eNb_dlsch(LTE_eNB_DLSCH_t *dlsch, uint8_t abstraction_flag);
+void clean_eNb_dlsch(LTE_eNB_DLSCH_t *dlsch);
 
-/** \fn new_eNB_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint8_t abstraction_flag)
+/** \fn new_eNB_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_t abstraction_flag)
     \brief This function allocates structures for a particular DLSCH at eNB
     @returns Pointer to DLSCH to be removed
     @param Kmimo Kmimo factor from 36-212/36-213
     @param Mdlharq Maximum number of HARQ rounds (36-212/36-213)
+    @param Nsoft Soft-LLR buffer size from UE-Category
     @params N_RB_DL total number of resource blocks (determine the operating BW)
     @param abstraction_flag Flag to indicate abstracted interface
 */
-LTE_eNB_DLSCH_t *new_eNB_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint8_t N_RB_DL, uint8_t abstraction_flag);
+LTE_eNB_DLSCH_t *new_eNB_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_t N_RB_DL, uint8_t abstraction_flag);
 
 /** \fn free_ue_dlsch(LTE_UE_DLSCH_t *dlsch)
     \brief This function frees memory allocated for a particular DLSCH at UE
@@ -72,20 +73,25 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint8_t N_RB_DL, ui
 */
 void free_ue_dlsch(LTE_UE_DLSCH_t *dlsch);
 
-LTE_eNB_ULSCH_t *new_eNB_ulsch(uint8_t Mdlharq,uint8_t max_turbo_iterations,uint8_t N_RB_UL, uint8_t abstraction_flag);
+/** \fn new_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_t abstraction_flag)
+    \brief This function allocates structures for a particular DLSCH at eNB
+    @returns Pointer to DLSCH to be removed
+    @param Kmimo Kmimo factor from 36-212/36-213
+    @param Mdlharq Maximum number of HARQ rounds (36-212/36-213)
+    @param Nsoft Soft-LLR buffer size from UE-Category
+    @params N_RB_DL total number of resource blocks (determine the operating BW)
+    @param abstraction_flag Flag to indicate abstracted interface
+*/
+LTE_UE_DLSCH_t *new_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_t max_turbo_iterations,uint8_t N_RB_DL, uint8_t abstraction_flag);
 
-LTE_UE_DLSCH_t *new_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint8_t max_turbo_iterations,uint8_t N_RB_DL, uint8_t abstraction_flag);
 
-LTE_UE_ULSCH_t *new_ue_ulsch(unsigned char Mdlharq,unsigned char N_RB_UL, uint8_t abstraction_flag);
-
-
-void clean_eNb_ulsch(LTE_eNB_ULSCH_t *ulsch, uint8_t abstraction_flag);
+void clean_eNb_ulsch(LTE_eNB_ULSCH_t *ulsch);
 
 void free_ue_ulsch(LTE_UE_ULSCH_t *ulsch);
 
-LTE_eNB_ULSCH_t *new_eNB_ulsch(uint8_t Mdlharq,uint8_t max_turbo_iterations,uint8_t N_RB_UL, uint8_t abstraction_flag);
+LTE_eNB_ULSCH_t *new_eNB_ulsch(uint8_t max_turbo_iterations,uint8_t N_RB_UL, uint8_t abstraction_flag);
 
-LTE_UE_ULSCH_t *new_ue_ulsch(uint8_t Mdlharq, unsigned char N_RB_UL, uint8_t abstraction_flag);
+LTE_UE_ULSCH_t *new_ue_ulsch(unsigned char N_RB_UL, uint8_t abstraction_flag);
 
 /** \fn dlsch_encoding(uint8_t *input_buffer,
     LTE_DL_FRAME_PARMS *frame_parms,
@@ -127,7 +133,7 @@ void dlsch_encoding_emul(PHY_VARS_eNB *phy_vars_eNB,
 
 // Functions below implement 36-211
 
-/** \fn allocate_REs_in_RB(mod_sym_t **txdataF,
+/** \fn allocate_REs_in_RB(int32_t **txdataF,
     uint32_t *jj,
     uint32_t *jj2,
     uint16_t re_offset,
@@ -163,7 +169,7 @@ void dlsch_encoding_emul(PHY_VARS_eNB *phy_vars_eNB,
 */
 
 int32_t allocate_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
-                           mod_sym_t **txdataF,
+                           int32_t **txdataF,
                            uint32_t *jj,
                            uint32_t *jj2,
                            uint16_t re_offset,
@@ -180,7 +186,7 @@ int32_t allocate_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
                            uint8_t skip_half);
 
 
-/** \fn int32_t dlsch_modulation(mod_sym_t **txdataF,
+/** \fn int32_t dlsch_modulation(int32_t **txdataF,
     int16_t amp,
     uint32_t sub_frame_offset,
     LTE_DL_FRAME_PARMS *frame_parms,
@@ -197,7 +203,7 @@ int32_t allocate_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
     @param dlsch1 Pointer to Transport Block 0 DLSCH descriptor for this allocation
 
 */
-int32_t dlsch_modulation(mod_sym_t **txdataF,
+int32_t dlsch_modulation(int32_t **txdataF,
                          int16_t amp,
                          uint32_t sub_frame_offset,
                          LTE_DL_FRAME_PARMS *frame_parms,
@@ -212,7 +218,7 @@ int32_t dlsch_modulation(mod_sym_t **txdataF,
   @param frame_parms Pointer to frame descriptor
   @param dlsch Pointer to DLSCH descriptor for this allocation
 */
-int mch_modulation(mod_sym_t **txdataF,
+int mch_modulation(int32_t **txdataF,
                    int16_t amp,
                    uint32_t subframe_offset,
                    LTE_DL_FRAME_PARMS *frame_parms,
@@ -273,7 +279,7 @@ void dump_mch(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint16_t coded_bits_per_co
     @param N Number of sub-frames to generate
 */
 void generate_pilots(PHY_VARS_eNB *phy_vars_eNB,
-                     mod_sym_t **txdataF,
+                     int32_t **txdataF,
                      int16_t amp,
                      uint16_t N);
 
@@ -286,17 +292,17 @@ void generate_pilots(PHY_VARS_eNB *phy_vars_eNB,
    @param first_pilot_only (0 no)
 */
 int32_t generate_pilots_slot(PHY_VARS_eNB *phy_vars_eNB,
-                             mod_sym_t **txdataF,
+                             int32_t **txdataF,
                              int16_t amp,
                              uint16_t slot,
                              int first_pilot_only);
 
 int32_t generate_mbsfn_pilot(PHY_VARS_eNB *phy_vars_eNB,
-                             mod_sym_t **txdataF,
+                             int32_t **txdataF,
                              int16_t amp,
                              uint16_t subframe);
 
-int32_t generate_pss(mod_sym_t **txdataF,
+int32_t generate_pss(int32_t **txdataF,
                      int16_t amp,
                      LTE_DL_FRAME_PARMS *frame_parms,
                      uint16_t l,
@@ -304,14 +310,14 @@ int32_t generate_pss(mod_sym_t **txdataF,
 
 int32_t generate_pss_emul(PHY_VARS_eNB *phy_vars_eNB,uint8_t sect_id);
 
-int32_t generate_sss(mod_sym_t **txdataF,
+int32_t generate_sss(int32_t **txdataF,
                      short amp,
                      LTE_DL_FRAME_PARMS *frame_parms,
                      unsigned short symbol,
                      unsigned short slot_offset);
 
 int32_t generate_pbch(LTE_eNB_PBCH *eNB_pbch,
-                      mod_sym_t **txdataF,
+                      int32_t **txdataF,
                       int32_t amp,
                       LTE_DL_FRAME_PARMS *frame_parms,
                       uint8_t *pbch_pdu,
@@ -1142,7 +1148,7 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
                          uint32_t n_rnti,
                          int16_t amp,
                          LTE_DL_FRAME_PARMS *frame_parms,
-                         mod_sym_t **txdataF,
+                         int32_t **txdataF,
                          uint32_t sub_frame_offset);
 
 uint8_t generate_dci_top_emul(PHY_VARS_eNB *phy_vars_eNB,
@@ -1233,10 +1239,19 @@ uint32_t get_TBS_DL(uint8_t mcs, uint16_t nb_rb);
 uint32_t get_TBS_UL(uint8_t mcs, uint16_t nb_rb);
 
 /* \brief Return bit-map of resource allocation for a given DCI rballoc (RIV format) and vrb type
+   @param N_RB_DL number of PRB on DL
+   @param indicator for even/odd slot
+   @param vrb vrb index
+   @param Ngap Gap indicator
+*/
+uint32_t get_prb(int N_RB_DL,int odd_slot,int vrb,int Ngap);
+
+/* \brief Return prb for a given vrb index 
    @param vrb_type VRB type (0=localized,1=distributed)
    @param rb_alloc_dci rballoc field from DCI
 */
 uint32_t get_rballoc(vrb_t vrb_type,uint16_t rb_alloc_dci);
+
 
 /* \brief Return bit-map of resource allocation for a given DCI rballoc (RIV format) and vrb type
    @returns Transmission mode (1-7)
@@ -1326,7 +1341,7 @@ void init_ul_hopping(LTE_DL_FRAME_PARMS *frame_parms);
 int32_t compareints (const void * a, const void * b);
 
 
-void ulsch_modulation(mod_sym_t **txdataF,
+void ulsch_modulation(int32_t **txdataF,
                       int16_t amp,
                       frame_t frame,
                       uint32_t subframe,
@@ -1435,7 +1450,7 @@ void pcfich_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
 void generate_pcfich(uint8_t num_pdcch_symbols,
                      int16_t amp,
                      LTE_DL_FRAME_PARMS *frame_parms,
-                     mod_sym_t **txdataF,
+                     int32_t **txdataF,
                      uint8_t subframe);
 
 uint8_t rx_pcfich(LTE_DL_FRAME_PARMS *frame_parms,
@@ -1577,6 +1592,12 @@ uint16_t computeRIV(uint16_t N_RB_DL,uint16_t RBstart,uint16_t Lcrbs);
 
 uint32_t pmi_extend(LTE_DL_FRAME_PARMS *frame_parms,uint8_t wideband_pmi);
 
+int get_nCCE_offset_l1(int *CCE_table,
+		       const unsigned char L, 
+		       const int nCCE, 
+		       const int common_dci, 
+		       const unsigned short rnti, 
+		       const unsigned char subframe);
 
 uint16_t get_nCCE(uint8_t num_pdcch_symbols,LTE_DL_FRAME_PARMS *frame_parms,uint8_t mi);
 
@@ -1584,11 +1605,11 @@ uint16_t get_nquad(uint8_t num_pdcch_symbols,LTE_DL_FRAME_PARMS *frame_parms,uin
 
 uint8_t get_mi(LTE_DL_FRAME_PARMS *frame,uint8_t subframe);
 
-uint16_t get_nCCE_max(uint8_t Mod_id,uint8_t CC_id);
+uint16_t get_nCCE_mac(uint8_t Mod_id,uint8_t CC_id,int num_pdcch_symbols,int subframe);
 
 uint8_t get_num_pdcch_symbols(uint8_t num_dci,DCI_ALLOC_t *dci_alloc,LTE_DL_FRAME_PARMS *frame_parms,uint8_t subframe);
 
-void pdcch_interleaving(LTE_DL_FRAME_PARMS *frame_parms,mod_sym_t **z, mod_sym_t **wbar,uint8_t n_symbols_pdcch,uint8_t mi);
+void pdcch_interleaving(LTE_DL_FRAME_PARMS *frame_parms,int32_t **z, int32_t **wbar,uint8_t n_symbols_pdcch,uint8_t mi);
 
 void pdcch_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
                         uint8_t subframe,
@@ -1617,7 +1638,7 @@ void dlsch_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
 
 void init_ncs_cell(LTE_DL_FRAME_PARMS *frame_parms,uint8_t ncs_cell[20][7]);
 
-void generate_pucch(mod_sym_t **txdataF,
+void generate_pucch(int32_t **txdataF,
                     LTE_DL_FRAME_PARMS *frame_parms,
                     uint8_t ncs_cell[20][7],
                     PUCCH_FMT_t fmt,
@@ -1637,22 +1658,23 @@ void generate_pucch_emul(PHY_VARS_UE *phy_vars_ue,
                          uint8_t subframe);
 
 
-int32_t rx_pucch(PHY_VARS_eNB *phy_vars_eNB,
-                 PUCCH_FMT_t fmt,
-                 uint8_t UE_id,
-                 uint16_t n1_pucch,
-                 uint16_t n2_pucch,
-                 uint8_t shortened_format,
-                 uint8_t *payload,
-                 uint8_t subframe,
-                 uint8_t pucch1_thres);
+uint32_t rx_pucch(PHY_VARS_eNB *phy_vars_eNB,
+		  PUCCH_FMT_t fmt,
+		  uint8_t UE_id,
+		  uint16_t n1_pucch,
+		  uint16_t n2_pucch,
+		  uint8_t shortened_format,
+		  uint8_t *payload,
+		  int     frame,
+		  uint8_t subframe,
+		  uint8_t pucch1_thres);
 
 int32_t rx_pucch_emul(PHY_VARS_eNB *phy_vars_eNB,
-                      uint8_t UE_index,
-                      PUCCH_FMT_t fmt,
-                      uint8_t n1_pucch_sel,
-                      uint8_t *payload,
-                      uint8_t subframe);
+		       uint8_t UE_index,
+		       PUCCH_FMT_t fmt,
+		       uint8_t n1_pucch_sel,
+		       uint8_t *payload,
+		       uint8_t subframe);
 
 
 /*!

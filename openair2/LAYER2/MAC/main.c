@@ -84,7 +84,7 @@ void dl_phy_sync_success(module_id_t   module_idP,
   } else
 #endif
   {
-    mac_in_sync_ind(module_idP,frameP,eNB_index);
+    rrc_in_sync_ind(module_idP,frameP,eNB_index);
   }
 
 }
@@ -382,7 +382,7 @@ int mac_init_global_param(void)
   //  mac_xface->macphy_data_ind=macphy_data_ind;
   mac_xface->mrbch_phy_sync_failure=mrbch_phy_sync_failure;
   mac_xface->dl_phy_sync_success=dl_phy_sync_success;
-  mac_xface->out_of_sync_ind=mac_out_of_sync_ind;
+  mac_xface->out_of_sync_ind=rrc_out_of_sync_ind;
 
   //  Mac_rlc_xface->macphy_exit=  mac_xface->macphy_exit;
   //  Mac_rlc_xface->frame = 0;
@@ -462,12 +462,14 @@ int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,ui
   mac_xface->initiate_ra_proc          = initiate_ra_proc;
   mac_xface->cancel_ra_proc            = cancel_ra_proc;
   mac_xface->SR_indication             = SR_indication;
+  mac_xface->UL_failure_indication     = UL_failure_indication;
   mac_xface->rx_sdu                    = rx_sdu;
   mac_xface->get_dlsch_sdu             = get_dlsch_sdu;
   mac_xface->get_eNB_UE_stats          = get_eNB_UE_stats;
   mac_xface->get_transmission_mode     = get_transmission_mode;
   mac_xface->get_rballoc               = get_rballoc;
   mac_xface->get_nb_rb                 = conv_nprb;
+  mac_xface->get_prb                   = get_prb;
   //  mac_xface->get_SB_size               = Get_SB_size;
   mac_xface->get_subframe_direction    = get_subframe_direction;
   mac_xface->Msg3_transmitted          = Msg3_tx;
@@ -478,6 +480,7 @@ int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,ui
   mac_xface->ca_config                 = ca_config;
   mac_xface->ca_activate               = ca_activate;
 #endif
+  mac_xface->mac_phy_remove_ue         = mac_phy_remove_ue;
 
   LOG_I(MAC,"[MAIN] init UE MAC functions \n");
   mac_xface->ue_decode_si              = ue_decode_si;
@@ -511,7 +514,7 @@ int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,ui
   mac_xface->computeRIV             = computeRIV;
   mac_xface->get_TBS_DL             = get_TBS_DL;
   mac_xface->get_TBS_UL             = get_TBS_UL;
-  mac_xface->get_nCCE_max           = get_nCCE_max;
+  mac_xface->get_nCCE_max           = get_nCCE_mac;
   mac_xface->get_nCCE_offset        = get_nCCE_offset;
   mac_xface->get_ue_mode            = get_ue_mode;
   mac_xface->phy_config_sib1_eNB    = phy_config_sib1_eNB;
