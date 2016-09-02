@@ -525,7 +525,11 @@ fapi_interface_t *init_fapi(void)
   }
 
 #if FAPI_TRACER
-  Q = fopen("/tmp/fapi.c", "w"); if (Q == NULL) abort();
+  Q = fopen("/tmp/fapi.c", "w");
+  if (Q == NULL) {
+    printf("%s:%d: error with /tmp/fapi.c: %s", __FILE__, __LINE__, strerror(errno));
+    abort();
+  }
 #endif
 
   return (fapi_interface_t *)ret;
