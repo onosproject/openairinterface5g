@@ -4,6 +4,13 @@
 #include "ff-mac-sched-sap.h"
 #include "ff-mac-csched-sap.h"
 
+#include <pthread.h>
+
+static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+
+#define LOCK() if (pthread_mutex_lock(&m)) abort()
+#define UNLOCK() if (pthread_mutex_unlock(&m)) abort()
+
 extern FILE *Q;
 
 #define fp(l, Q, ...) do { \
@@ -530,6 +537,7 @@ static void dump_CschedCellConfigReqParameters(const struct CschedCellConfigReqP
 #undef CschedCellConfigReq
 void _CschedCellConfigReq(void *x, const struct CschedCellConfigReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct CschedCellConfigReqParameters *p = &\n");
   dump_CschedCellConfigReqParameters(params, 2+4);
@@ -537,12 +545,14 @@ void _CschedCellConfigReq(void *x, const struct CschedCellConfigReqParameters *p
   fp(2, Q, "  CschedCellConfigReq(x, p);\n");
   fp(2, Q, "  CschedCellConfigCnf(NULL, NULL);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   CschedCellConfigReq(x, params);
 }
 
 #undef CschedUeConfigReq
 void _CschedUeConfigReq(void *x, const struct CschedUeConfigReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct CschedUeConfigReqParameters *p = &\n");
   dump_CschedUeConfigReqParameters(params, 2+4);
@@ -550,12 +560,14 @@ void _CschedUeConfigReq(void *x, const struct CschedUeConfigReqParameters *param
   fp(2, Q, "  CschedUeConfigReq(x, p);\n");
   fp(2, Q, "  CschedUeConfigCnf(NULL, NULL);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   CschedUeConfigReq(x, params);
 }
 
 #undef CschedLcConfigReq
 void _CschedLcConfigReq(void *x, const struct CschedLcConfigReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct CschedLcConfigReqParameters *p = &\n");
   dump_CschedLcConfigReqParameters(params, 2+4);
@@ -563,6 +575,7 @@ void _CschedLcConfigReq(void *x, const struct CschedLcConfigReqParameters *param
   fp(2, Q, "  CschedLcConfigReq(x, p);\n");
   fp(2, Q, "  CschedLcConfigCnf(NULL, NULL);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   CschedLcConfigReq(x, params);
 }
 
@@ -575,6 +588,7 @@ void _CschedLcReleaseReq(void *x, const struct CschedLcReleaseReqParameters *par
 #undef CschedUeReleaseReq
 void _CschedUeReleaseReq(void *x, const struct CschedUeReleaseReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct CschedUeReleaseReqParameters *p = &\n");
   dump_CschedUeReleaseReqParameters(params, 2+4);
@@ -582,18 +596,21 @@ void _CschedUeReleaseReq(void *x, const struct CschedUeReleaseReqParameters *par
   fp(2, Q, "  CschedUeReleaseReq(x, p);\n");
   fp(2, Q, "  CschedUeReleaseInd(NULL, NULL);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   CschedUeReleaseReq(x, params);
 }
 
 #undef SchedDlRlcBufferReq
 void _SchedDlRlcBufferReq(void *x, const struct SchedDlRlcBufferReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct SchedDlRlcBufferReqParameters *p = &\n");
   dump_SchedDlRlcBufferReqParameters(params, 2+4);
   fp(0, Q, ";\n");
   fp(2, Q, "  SchedDlRlcBufferReq(x, p);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   SchedDlRlcBufferReq(x, params);
 }
 
@@ -606,18 +623,21 @@ void _SchedDlPagingBufferReq(void *x, const struct SchedDlPagingBufferReqParamet
 #undef SchedDlMacBufferReq
 void _SchedDlMacBufferReq(void *x, const struct SchedDlMacBufferReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct SchedDlMacBufferReqParameters *p = &\n");
   dump_SchedDlMacBufferReqParameters(params, 2+4);
   fp(0, Q, ";\n");
   fp(2, Q, "  SchedDlMacBufferReq(x, p);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   SchedDlMacBufferReq(x, params);
 }
 
 #undef SchedDlTriggerReq
 void _SchedDlTriggerReq(void *x, const struct SchedDlTriggerReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct SchedDlTriggerReqParameters *p = &\n");
   dump_SchedDlTriggerReqParameters(params, 2+4);
@@ -625,36 +645,42 @@ void _SchedDlTriggerReq(void *x, const struct SchedDlTriggerReqParameters *param
   fp(2, Q, "  SchedDlTriggerReq(x, p);\n");
   fp(2, Q, "  SchedDlConfigInd(NULL, NULL);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   SchedDlTriggerReq(x, params);
 }
 
 #undef SchedDlRachInfoReq
 void _SchedDlRachInfoReq(void *x, const struct SchedDlRachInfoReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct SchedDlRachInfoReqParameters *p = &\n");
   dump_SchedDlRachInfoReqParameters(params, 2+4);
   fp(0, Q, ";\n");
   fp(2, Q, "  SchedDlRachInfoReq(x, p);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   SchedDlRachInfoReq(x, params);
 }
 
 #undef SchedDlCqiInfoReq
 void _SchedDlCqiInfoReq(void *x, const struct SchedDlCqiInfoReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct SchedDlCqiInfoReqParameters *p = &\n");
   dump_SchedDlCqiInfoReqParameters(params, 2+4);
   fp(0, Q, ";\n");
   fp(2, Q, "  SchedDlCqiInfoReq(x, p);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   SchedDlCqiInfoReq(x, params);
 }
 
 #undef SchedUlTriggerReq
 void _SchedUlTriggerReq(void *x, const struct SchedUlTriggerReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct SchedUlTriggerReqParameters *p = &\n");
   dump_SchedUlTriggerReqParameters(params, 2+4);
@@ -662,6 +688,7 @@ void _SchedUlTriggerReq(void *x, const struct SchedUlTriggerReqParameters *param
   fp(2, Q, "  SchedUlTriggerReq(x, p);\n");
   fp(2, Q, "  SchedUlConfigInd(NULL, NULL);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   SchedUlTriggerReq(x, params);
 }
 
@@ -674,24 +701,28 @@ void _SchedUlNoiseInterferenceReq(void *x, const struct SchedUlNoiseInterference
 #undef SchedUlSrInfoReq
 void _SchedUlSrInfoReq(void *x, const struct SchedUlSrInfoReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct SchedUlSrInfoReqParameters *p = &\n");
   dump_SchedUlSrInfoReqParameters(params, 2+4);
   fp(0, Q, ";\n");
   fp(2, Q, "  SchedUlSrInfoReq(x, p);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   SchedUlSrInfoReq(x, params);
 }
 
 #undef SchedUlMacCtrlInfoReq
 void _SchedUlMacCtrlInfoReq(void *x, const struct SchedUlMacCtrlInfoReqParameters *params)
 {
+  LOCK();
   fp(2, Q, "{\n");
   fp(2, Q, "  struct SchedUlMacCtrlInfoReqParameters *p = &\n");
   dump_SchedUlMacCtrlInfoReqParameters(params, 2+4);
   fp(0, Q, ";\n");
   fp(2, Q, "  SchedUlMacCtrlInfoReq(x, p);\n");
   fp(2, Q, "}\n");
+  UNLOCK();
   SchedUlMacCtrlInfoReq(x, params);
 }
 
