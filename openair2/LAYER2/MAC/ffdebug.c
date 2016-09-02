@@ -22,7 +22,6 @@ extern FILE *Q;
 
 static void dump_CschedUeReleaseReqParameters(const struct CschedUeReleaseReqParameters *p, int l)
 {
-  int i;
   fp(l, Q, "(struct CschedUeReleaseReqParameters){\n");
   fp(l, Q, "  .rnti= %d,\n", p->rnti);
   fp(l, Q, "  .nr_vendorSpecificList= 0,\n");
