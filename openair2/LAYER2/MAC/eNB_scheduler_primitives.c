@@ -304,7 +304,7 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP)
     p.ueCapabilities.resAllocType1       = true;                    /* TBC */
     p.ueTransmitAntennaSelection         = noneloop;                /* TBC */
     p.ttiBundling                        = false;                   /* TBC */
-    p.maxHarqTx                          = 8;                       /* get real one */
+    p.maxHarqTx                          = 4;                       /* get real one */
     p.betaOffsetAckIndex                 = 0;                       /* TODO */
     p.betaOffsetRiIndex                  = 0;                       /* TODO */
     p.betaOffsetCqiIndex                 = 0;                       /* TODO */
