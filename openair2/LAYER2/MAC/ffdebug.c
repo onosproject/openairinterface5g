@@ -593,7 +593,7 @@ void _CschedUeReleaseReq(void *x, const struct CschedUeReleaseReqParameters *par
   dump_CschedUeReleaseReqParameters(params, 2+4);
   fp(0, Q, ";\n");
   fp(2, Q, "  CschedUeReleaseReq(x, p);\n");
-  fp(2, Q, "  CschedUeReleaseInd(NULL, NULL);\n");
+  fp(2, Q, "  CschedUeReleaseCnf(NULL, NULL);\n");
   fp(2, Q, "}\n");
   UNLOCK();
   CschedUeReleaseReq(x, params);
