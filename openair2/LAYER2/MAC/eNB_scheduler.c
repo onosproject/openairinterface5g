@@ -405,7 +405,10 @@ static void fapi_convert_ul_5MHz_FDD(module_id_t module_idP, int CC_id,
                   dci->tpc ==  1 ? 2 :
                   dci->tpc ==  3 ? 3 :
                   (printf("%s:%d: error (tpc = %d)\n", __FUNCTION__, __LINE__, dci->tpc), abort(), 0);
-  d->cshift     = dci->n2Dmrs;
+  d->cshift     = dci->n2Dmrs;    /* TODO: this may be wrong,
+                                   * see openair1/PHY/LTE_TRANSPORT/dci_tools.c:generate_eNB_ulsch_params_from_dci
+                                   * there is a translation between those
+                                   */
   d->cqi_req    = dci->cqiRequest;
   d->padding    = 0;
 
