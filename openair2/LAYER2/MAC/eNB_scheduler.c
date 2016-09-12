@@ -299,57 +299,36 @@ void fapi_dl_cqi_report(int module_id, int rnti, int frame, int subframe, int cq
   SchedDlCqiInfoReq(fapi->sched, &params);
 }
 
-static void fapi_convert_dl_1A_5MHz_FDD(struct DlDciListElement_s *dci, DCI_ALLOC_t *a)
-{
-  DCI1A_5MHz_FDD_t *d = (DCI1A_5MHz_FDD_t *)a->dci_pdu;
-
-  if (dci->nr_of_tbs != 1) { printf("%s:%d: TODO\n", __FUNCTION__, __LINE__); exit(1); }
-
-  d->type       = 1;    /* type = 0 => DCI Format 0, type = 1 => DCI Format 1A */
-  d->vrb_type   = dci->vrbFormat == VRB_LOCALIZED ? 0 :
-                  dci->vrbFormat == VRB_DISTRIBUTED ? 1 :
-                  (printf("%s:%d: error\n", __FUNCTION__, __LINE__), abort(), 0);
-  d->rballoc    = dci->rbBitmap;
-  d->mcs        = dci->mcs[0];        /* TODO: take care of transport block index */
-  d->harq_pid   = dci->harqProcess;
-  d->ndi        = dci->ndi[0];        /* TODO: take care of transport block index */
-  d->rv         = dci->rv[0];         /* TODO: take care of transport block index */
-  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.2.1-1 */
-                  dci->tpc ==  0 ? 1 :
-                  dci->tpc ==  1 ? 2 :
-                  dci->tpc ==  3 ? 3 :
-                  (printf("%s:%d: error\n", __FUNCTION__, __LINE__), abort(), 0);
-  d->padding    = 0;
-
-  a->dci_length = sizeof_DCI1A_5MHz_FDD_t;
-  a->format     = format1A;
+#define CONVERT_DL_1A_FDD(bandwidth)                                                                    \
+static void fapi_convert_dl_1A_ ## bandwidth ## MHz_FDD(struct DlDciListElement_s *dci, DCI_ALLOC_t *a) \
+{                                                                                                       \
+  DCI1A_ ## bandwidth ## MHz_FDD_t *d = (DCI1A_ ## bandwidth ## MHz_FDD_t *)a->dci_pdu;                 \
+                                                                                                        \
+  if (dci->nr_of_tbs != 1) { printf("%s:%d: TODO\n", __FUNCTION__, __LINE__); exit(1); }                \
+                                                                                                        \
+  d->type       = 1;    /* type = 0 => DCI Format 0, type = 1 => DCI Format 1A */                       \
+  d->vrb_type   = dci->vrbFormat == VRB_LOCALIZED ? 0 :                                                 \
+                  dci->vrbFormat == VRB_DISTRIBUTED ? 1 :                                               \
+                  (printf("%s:%d: error\n", __FUNCTION__, __LINE__), abort(), 0);                       \
+  d->rballoc    = dci->rbBitmap;                                                                        \
+  d->mcs        = dci->mcs[0];        /* TODO: take care of transport block index */                    \
+  d->harq_pid   = dci->harqProcess;                                                                     \
+  d->ndi        = dci->ndi[0];        /* TODO: take care of transport block index */                    \
+  d->rv         = dci->rv[0];         /* TODO: take care of transport block index */                    \
+  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.2.1-1 */                              \
+                  dci->tpc ==  0 ? 1 :                                                                  \
+                  dci->tpc ==  1 ? 2 :                                                                  \
+                  dci->tpc ==  3 ? 3 :                                                                  \
+                  (printf("%s:%d: error\n", __FUNCTION__, __LINE__), abort(), 0);                       \
+  d->padding    = 0;                                                                                    \
+                                                                                                        \
+  a->dci_length = sizeof_DCI1A_ ## bandwidth ## MHz_FDD_t;                                              \
+  a->format     = format1A;                                                                             \
 }
 
-static void fapi_convert_dl_1A_10MHz_FDD(struct DlDciListElement_s *dci, DCI_ALLOC_t *a)
-{
-  DCI1A_10MHz_FDD_t *d = (DCI1A_10MHz_FDD_t *)a->dci_pdu;
-
-  if (dci->nr_of_tbs != 1) { printf("%s:%d: TODO\n", __FUNCTION__, __LINE__); exit(1); }
-
-  d->type       = 1;    /* type = 0 => DCI Format 0, type = 1 => DCI Format 1A */
-  d->vrb_type   = dci->vrbFormat == VRB_LOCALIZED ? 0 :
-                  dci->vrbFormat == VRB_DISTRIBUTED ? 1 :
-                  (printf("%s:%d: error\n", __FUNCTION__, __LINE__), abort(), 0);
-  d->rballoc    = dci->rbBitmap;
-  d->mcs        = dci->mcs[0];        /* TODO: take care of transport block index */
-  d->harq_pid   = dci->harqProcess;
-  d->ndi        = dci->ndi[0];        /* TODO: take care of transport block index */
-  d->rv         = dci->rv[0];         /* TODO: take care of transport block index */
-  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.2.1-1 */
-                  dci->tpc ==  0 ? 1 :
-                  dci->tpc ==  1 ? 2 :
-                  dci->tpc ==  3 ? 3 :
-                  (printf("%s:%d: error\n", __FUNCTION__, __LINE__), abort(), 0);
-  d->padding    = 0;
-
-  a->dci_length = sizeof_DCI1A_10MHz_FDD_t;
-  a->format     = format1A;
-}
+CONVERT_DL_1A_FDD(5);      /* defines fapi_convert_dl_1A_5MHz_FDD */
+CONVERT_DL_1A_FDD(10);     /* defines fapi_convert_dl_1A_10MHz_FDD */
+CONVERT_DL_1A_FDD(20);     /* defines fapi_convert_dl_1A_20MHz_FDD */
 
 static uint32_t revert(uint32_t x, int len)
 {
@@ -363,55 +342,35 @@ static uint32_t revert(uint32_t x, int len)
   return ret;
 }
 
-static void fapi_convert_dl_1_5MHz_FDD(struct DlDciListElement_s *dci, DCI_ALLOC_t *a)
-{
-  DCI1_5MHz_FDD_t *d = (DCI1_5MHz_FDD_t *)a->dci_pdu;
-
-  if (dci->nr_of_tbs != 1) { printf("%s:%d: TODO\n", __FUNCTION__, __LINE__); exit(1); }
-
-  d->rah        = dci->resAlloc == 0 ? 0 :
-                  dci->resAlloc == 1 ? 1 :
-                  (printf("%s:%d: error\n", __FUNCTION__, __LINE__), abort(), 0);
-  d->rballoc    = revert(dci->rbBitmap, 13);
-  d->mcs        = dci->mcs[0];        /* TODO: take care of transport block index */
-  d->harq_pid   = dci->harqProcess;
-  d->ndi        = dci->ndi[0];        /* TODO: take care of transport block index */
-  d->rv         = dci->rv[0];         /* TODO: take care of transport block index */
-  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.2.1-1 */
-                  dci->tpc ==  0 ? 1 :
-                  dci->tpc ==  1 ? 2 :
-                  dci->tpc ==  3 ? 3 :
-                  (printf("%s:%d: error (dci->tpc = %d)\n", __FUNCTION__, __LINE__, dci->tpc), abort(), 0);
-  d->dummy      = 0;
-
-  a->dci_length = sizeof_DCI1_5MHz_FDD_t;
-  a->format     = format1;
+#define CONVERT_DL_1_FDD(bandwidth)                                                                    \
+static void fapi_convert_dl_1_ ## bandwidth ## MHz_FDD(struct DlDciListElement_s *dci, DCI_ALLOC_t *a) \
+{                                                                                                      \
+  DCI1_ ## bandwidth ## MHz_FDD_t *d = (DCI1_ ## bandwidth ## MHz_FDD_t *)a->dci_pdu;                  \
+                                                                                                       \
+  if (dci->nr_of_tbs != 1) { printf("%s:%d: TODO\n", __FUNCTION__, __LINE__); exit(1); }               \
+                                                                                                       \
+  d->rah        = dci->resAlloc == 0 ? 0 :                                                             \
+                  dci->resAlloc == 1 ? 1 :                                                             \
+                  (printf("%s:%d: error\n", __FUNCTION__, __LINE__), abort(), 0);                      \
+  d->rballoc    = revert(dci->rbBitmap, 13);                                                           \
+  d->mcs        = dci->mcs[0];        /* TODO: take care of transport block index */                   \
+  d->harq_pid   = dci->harqProcess;                                                                    \
+  d->ndi        = dci->ndi[0];        /* TODO: take care of transport block index */                   \
+  d->rv         = dci->rv[0];         /* TODO: take care of transport block index */                   \
+  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.2.1-1 */                             \
+                  dci->tpc ==  0 ? 1 :                                                                 \
+                  dci->tpc ==  1 ? 2 :                                                                 \
+                  dci->tpc ==  3 ? 3 :                                                                 \
+                  (printf("%s:%d: error (dci->tpc = %d)\n", __FUNCTION__, __LINE__, dci->tpc), abort(), 0); \
+  d->dummy      = 0;                                                                                   \
+                                                                                                       \
+  a->dci_length = sizeof_DCI1_ ## bandwidth ## MHz_FDD_t;                                              \
+  a->format     = format1;                                                                             \
 }
 
-static void fapi_convert_dl_1_10MHz_FDD(struct DlDciListElement_s *dci, DCI_ALLOC_t *a)
-{
-  DCI1_10MHz_FDD_t *d = (DCI1_10MHz_FDD_t *)a->dci_pdu;
-
-  if (dci->nr_of_tbs != 1) { printf("%s:%d: TODO\n", __FUNCTION__, __LINE__); exit(1); }
-
-  d->rah        = dci->resAlloc == 0 ? 0 :
-                  dci->resAlloc == 1 ? 1 :
-                  (printf("%s:%d: error\n", __FUNCTION__, __LINE__), abort(), 0);
-  d->rballoc    = revert(dci->rbBitmap, 13);
-  d->mcs        = dci->mcs[0];        /* TODO: take care of transport block index */
-  d->harq_pid   = dci->harqProcess;
-  d->ndi        = dci->ndi[0];        /* TODO: take care of transport block index */
-  d->rv         = dci->rv[0];         /* TODO: take care of transport block index */
-  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.2.1-1 */
-                  dci->tpc ==  0 ? 1 :
-                  dci->tpc ==  1 ? 2 :
-                  dci->tpc ==  3 ? 3 :
-                  (printf("%s:%d: error (dci->tpc = %d)\n", __FUNCTION__, __LINE__, dci->tpc), abort(), 0);
-  d->dummy      = 0;
-
-  a->dci_length = sizeof_DCI1_10MHz_FDD_t;
-  a->format     = format1;
-}
+CONVERT_DL_1_FDD(5);     /* defines fapi_convert_dl_1_5MHz_FDD */
+CONVERT_DL_1_FDD(10);    /* defines fapi_convert_dl_1_10MHz_FDD */
+CONVERT_DL_1_FDD(20);    /* defines fapi_convert_dl_1_20MHz_FDD */
 
 static void fapi_convert_dl_dci(int module_id, int CC_id,
     struct DlDciListElement_s *dci, DCI_ALLOC_t *a)
@@ -437,6 +396,13 @@ static void fapi_convert_dl_dci(int module_id, int CC_id,
     default: printf("%s:%d: TODO\n", __FUNCTION__, __LINE__); abort();
     }
     break;
+  case 100:
+    switch (dci->format) {
+    case ONE_A: fapi_convert_dl_1A_20MHz_FDD(dci, a); break;
+    case ONE:   fapi_convert_dl_1_20MHz_FDD(dci, a);  break;
+    default: printf("%s:%d: TODO\n", __FUNCTION__, __LINE__); abort();
+    }
+    break;
   default: printf("%s:%d: TODO\n", __FUNCTION__, __LINE__); abort();
   }
   a->L = dci->aggrLevel == 1 ? 0 :
@@ -449,57 +415,35 @@ static void fapi_convert_dl_dci(int module_id, int CC_id,
   a->rnti     = dci->rnti;
 }
 
-static void fapi_convert_ul_5MHz_FDD(module_id_t module_idP, int CC_id,
-    struct UlDciListElement_s *dci, DCI_ALLOC_t *a)
-{
-  DCI0_5MHz_FDD_t *d = (DCI0_5MHz_FDD_t *)a->dci_pdu;
-
-  d->type       = 0;    /* type = 0 => DCI Format 0, type = 1 => DCI Format 1A */
-  d->hopping    = dci->hopping;
-  d->rballoc    = mac_xface->computeRIV(PHY_vars_eNB_g[module_idP][CC_id]->lte_frame_parms.N_RB_DL, dci->rbStart, dci->rbLen);
-  d->mcs        = dci->mcs;
-  d->ndi        = dci->ndi;
-  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.1.1-2, accumulated case supposed */
-                  dci->tpc ==  0 ? 1 :
-                  dci->tpc ==  1 ? 2 :
-                  dci->tpc ==  3 ? 3 :
-                  (printf("%s:%d: error (tpc = %d)\n", __FUNCTION__, __LINE__, dci->tpc), abort(), 0);
-  d->cshift     = dci->n2Dmrs;    /* TODO: this may be wrong,
-                                   * see openair1/PHY/LTE_TRANSPORT/dci_tools.c:generate_eNB_ulsch_params_from_dci
-                                   * there is a translation between those
-                                   */
-  d->cqi_req    = dci->cqiRequest;
-  d->padding    = 0;
-
-  a->dci_length = sizeof_DCI0_5MHz_FDD_t;
-  a->format     = format0;
+#define CONVERT_UL_FDD(bandwidth)                                                                       \
+static void fapi_convert_ul_ ## bandwidth ## MHz_FDD(module_id_t module_idP, int CC_id,                 \
+    struct UlDciListElement_s *dci, DCI_ALLOC_t *a)                                                     \
+{                                                                                                       \
+  DCI0_ ## bandwidth ## MHz_FDD_t *d = (DCI0_ ## bandwidth ## MHz_FDD_t *)a->dci_pdu;                   \
+                                                                                                        \
+  d->type       = 0;    /* type = 0 => DCI Format 0, type = 1 => DCI Format 1A */                       \
+  d->hopping    = dci->hopping;                                                                         \
+  d->rballoc    = mac_xface->computeRIV(PHY_vars_eNB_g[module_idP][CC_id]->lte_frame_parms.N_RB_DL, dci->rbStart, dci->rbLen); \
+  d->mcs        = dci->mcs;                                                                             \
+  d->ndi        = dci->ndi;                                                                             \
+  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.1.1-2, accumulated case supposed */   \
+                  dci->tpc ==  0 ? 1 :                                                                  \
+                  dci->tpc ==  1 ? 2 :                                                                  \
+                  dci->tpc ==  3 ? 3 :                                                                  \
+                  (printf("%s:%d: error (tpc = %d)\n", __FUNCTION__, __LINE__, dci->tpc), abort(), 0);  \
+  d->cshift     = dci->n2Dmrs;    /* TODO: this may be wrong, */                                        \
+                                  /* see openair1/PHY/LTE_TRANSPORT/dci_tools.c:generate_eNB_ulsch_params_from_dci */ \
+                                  /* there is a translation between those */                            \
+  d->cqi_req    = dci->cqiRequest;                                                                      \
+  d->padding    = 0;                                                                                    \
+                                                                                                        \
+  a->dci_length = sizeof_DCI0_ ## bandwidth ## MHz_FDD_t;                                               \
+  a->format     = format0;                                                                              \
 }
 
-static void fapi_convert_ul_10MHz_FDD(module_id_t module_idP, int CC_id,
-    struct UlDciListElement_s *dci, DCI_ALLOC_t *a)
-{
-  DCI0_10MHz_FDD_t *d = (DCI0_10MHz_FDD_t *)a->dci_pdu;
-
-  d->type       = 0;    /* type = 0 => DCI Format 0, type = 1 => DCI Format 1A */
-  d->hopping    = dci->hopping;
-  d->rballoc    = mac_xface->computeRIV(PHY_vars_eNB_g[module_idP][CC_id]->lte_frame_parms.N_RB_DL, dci->rbStart, dci->rbLen);
-  d->mcs        = dci->mcs;
-  d->ndi        = dci->ndi;
-  d->TPC        = dci->tpc == -1 ? 0 :    /* see 36.213 table 5.1.1.1-2, accumulated case supposed */
-                  dci->tpc ==  0 ? 1 :
-                  dci->tpc ==  1 ? 2 :
-                  dci->tpc ==  3 ? 3 :
-                  (printf("%s:%d: error (tpc = %d)\n", __FUNCTION__, __LINE__, dci->tpc), abort(), 0);
-  d->cshift     = dci->n2Dmrs;    /* TODO: this may be wrong,
-                                   * see openair1/PHY/LTE_TRANSPORT/dci_tools.c:generate_eNB_ulsch_params_from_dci
-                                   * there is a translation between those
-                                   */
-  d->cqi_req    = dci->cqiRequest;
-  d->padding    = 0;
-
-  a->dci_length = sizeof_DCI0_10MHz_FDD_t;
-  a->format     = format0;
-}
+CONVERT_UL_FDD(5);      /* defines fapi_convert_ul_5MHz_FDD */
+CONVERT_UL_FDD(10);     /* defines fapi_convert_ul_10MHz_FDD */
+CONVERT_UL_FDD(20);     /* defines fapi_convert_ul_20MHz_FDD */
 
 static void fapi_convert_ul_dci(module_id_t module_idP, int CC_id,
     struct UlDciListElement_s *dci, DCI_ALLOC_t *a)
@@ -510,8 +454,9 @@ static void fapi_convert_ul_dci(module_id_t module_idP, int CC_id,
 
   /* TODO: handle all bandwidths */
   switch (PHY_vars_eNB_g[module_idP][CC_id]->lte_frame_parms.N_RB_UL) {
-  case 25: fapi_convert_ul_5MHz_FDD(module_idP, CC_id, dci, a);  break;
-  case 50: fapi_convert_ul_10MHz_FDD(module_idP, CC_id, dci, a); break;
+  case 25:  fapi_convert_ul_5MHz_FDD(module_idP, CC_id, dci, a);  break;
+  case 50:  fapi_convert_ul_10MHz_FDD(module_idP, CC_id, dci, a); break;
+  case 100: fapi_convert_ul_20MHz_FDD(module_idP, CC_id, dci, a); break;
   default: printf("%s:%d: TODO\n", __FUNCTION__, __LINE__); abort();
   }
 
