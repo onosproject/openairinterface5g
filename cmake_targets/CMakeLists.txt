@@ -42,6 +42,7 @@ set (OPENAIR_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY})
 
 project (OpenAirInterface)
 
+#add_definitions("-DEMIT_ASN_DEBUG=1")
 add_subdirectory(${OPENAIR_TARGETS}/ARCH/LMSSDR/USERSPACE/LIB/lms7002m lms7002m)
 add_subdirectory(${OPENAIR_TARGETS}/ARCH/LMSSDR/USERSPACE/LIB/lmsSDR lmsSDR)
 add_subdirectory(${OPENAIR_TARGETS}/ARCH/LMSSDR/USERSPACE/LIB/Si5351C Si5351C)
@@ -127,6 +128,7 @@ set(CMAKE_BUILD_TYPE "Debug")
 if (CMAKE_BUILD_TYPE STREQUAL "")
    set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
+message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 add_list_string_option(CMAKE_BUILD_TYPE "RelWithDebInfo" "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." Debug Release RelWithDebInfo MinSizeRel)
 
 Message("Architecture is ${CMAKE_SYSTEM_PROCESSOR}")
@@ -558,7 +560,7 @@ elseif (${RF_BOARD} STREQUAL "OAI_USRP")
   set(HW_SOURCE ${HW_SOURCE}
     ${OPENAIR_TARGETS}/ARCH/USRP/USERSPACE/LIB/usrp_lib.cpp)
   LINK_DIRECTORIES("/opt/lib")
-  set(option_HW_lib "-luhd -rdynamic -ldl")
+  set(option_HW_lib "-luhd -rdynamic -ldl -lboost_system")
 
 elseif (${RF_BOARD} STREQUAL "OAI_BLADERF")
   include_directories("${OPENAIR_TARGETS}/ARCH/BLADERF/USERSPACE/LIB/")
@@ -933,7 +935,14 @@ add_library(SECU_CN ${SECU_CN_SRC})
 
 # Scheduler
 ################################"
-file(GLOB SCHED_SRC ${OPENAIR1_DIR}/SCHED/*.c)
+set(SCHED_SRC 
+  ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_eNb.c
+  ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_ue.c
+  ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common.c
+  ${OPENAIR1_DIR}/SCHED/phy_mac_stub.c
+  ${OPENAIR1_DIR}/SCHED/pucch_pc.c
+  ${OPENAIR1_DIR}/SCHED/pusch_pc.c
+)
 add_library(SCHED_LIB ${SCHED_SRC})
 
 # Layer 1
@@ -1652,10 +1661,8 @@ target_link_libraries (lte-softmodem -ldl
   RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${MIH_LIB} 
   -Wl,--end-group )
 
-
 target_link_libraries (lte-softmodem ${LIBXML2_LIBRARIES})
 target_link_libraries (lte-softmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp ${option_HW_lib} ${option_TP_lib} ${XFORMS_LIBRARIES} ) 
-target_link_libraries (lte-softmodem ${LIBBOOST_LIBRARIES})
 target_link_libraries (lte-softmodem ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-softmodem ${T_LIB})
 
@@ -1691,7 +1698,6 @@ target_link_libraries (lte-softmodem-nos1
 
 target_link_libraries (lte-softmodem-nos1 ${LIBXML2_LIBRARIES})
 target_link_libraries (lte-softmodem-nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES}  ${option_HW_lib}  ${option_TP_lib} ${XFORMS_LIBRARIES} )
-target_link_libraries (lte-softmodem-nos1 ${LIBBOOST_LIBRARIES})
 target_link_libraries (lte-softmodem-nos1  ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-softmodem-nos1 ${T_LIB})
 
@@ -1714,7 +1720,7 @@ target_link_libraries(rrh_gw
   UTIL LFDS  
   -Wl,--end-group )
 target_link_libraries (rrh_gw rt pthread m )
-target_link_libraries (rrh_gw  ${option_HW_lib} ${option_TP_lib} ${LIBBOOST_LIBRARIES} )
+target_link_libraries (rrh_gw  ${option_HW_lib} ${option_TP_lib})
 target_link_libraries (rrh_gw ${LIB_LMS_LIBRARIES})
 target_link_libraries (rrh_gw ${T_LIB})
 
