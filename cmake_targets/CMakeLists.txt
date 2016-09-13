@@ -124,7 +124,7 @@ endmacro(add_list_string_option)
 ####################################################
 # compilation flags
 #############################################
-set(CMAKE_BUILD_TYPE "Debug")
+#set(CMAKE_BUILD_TYPE "Debug")
 if (CMAKE_BUILD_TYPE STREQUAL "")
    set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
@@ -1106,12 +1106,23 @@ set (MAC_SRC
   ${MAC_DIR}/config.c
   )
 
+set_source_files_properties(${RLC_DIR}/rlc_mac.c PROPERTIES COMPILE_FLAGS "-g -O0")
+set_source_files_properties(${RLC_AM_DIR}/rlc_am.c PROPERTIES COMPILE_FLAGS "-g -O0")
+set_source_files_properties(${RLC_AM_DIR}/rlc_am_status_report.c PROPERTIES COMPILE_FLAGS "-g -O0")
+set_source_files_properties(${RLC_AM_DIR}/rlc_am_receiver.c PROPERTIES COMPILE_FLAGS "-g -O0")
+set_source_files_properties(${RLC_AM_DIR}/rlc_am_retransmit.c PROPERTIES COMPILE_FLAGS "-g -O0")
+set_source_files_properties(${MAC_DIR}/ue_procedures.c PROPERTIES COMPILE_FLAGS "-g -O0")
+set_source_files_properties(${MAC_DIR}/eNB_scheduler.c PROPERTIES COMPILE_FLAGS "-g -O0")
+set_source_files_properties(${MAC_DIR}/eNB_scheduler_primitives.c PROPERTIES COMPILE_FLAGS "-g -O0")
+
 if (${FAPI})
 set (MAC_SRC ${MAC_SRC}
   ${MAC_DIR}/ff-mac.c
   #${MAC_DIR}/minifapi.c
   )
 endif (${FAPI})
+
+set_source_files_properties(${MAC_DIR}/ff-mac.c PROPERTIES COMPILE_FLAGS "-g -O0")
 
 if (${FAPI_TRACER})
 set (MAC_SRC ${MAC_SRC}
@@ -1699,7 +1710,7 @@ target_link_libraries (lte-softmodem-nos1
 target_link_libraries (lte-softmodem-nos1 ${LIBXML2_LIBRARIES})
 target_link_libraries (lte-softmodem-nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES}  ${option_HW_lib}  ${option_TP_lib} ${XFORMS_LIBRARIES} )
 target_link_libraries (lte-softmodem-nos1  ${LIB_LMS_LIBRARIES})
-target_link_libraries (lte-softmodem-nos1 ${T_LIB})
+target_link_libraries (lte-softmodem ${T_LIB})
 
 # rrh
 ################################

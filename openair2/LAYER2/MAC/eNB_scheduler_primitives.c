@@ -1180,7 +1180,8 @@ void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP
   UE_id = find_UE_id(mod_idP, rntiP);
   if (UE_id == -1) {
     LOG_E(MAC, "%s:%d:%s: rnti %x: no such UE\n", __FILE__, __LINE__, __FUNCTION__, rntiP);
-    abort();
+    return;
+    //abort();
   }
 
   fapi = eNB_mac_inst[mod_idP].fapi;

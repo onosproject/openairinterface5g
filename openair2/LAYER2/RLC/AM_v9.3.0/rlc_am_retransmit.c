@@ -653,6 +653,7 @@ mem_block_t* rlc_am_retransmit_get_subsegment(
       // fill the segment pdu_p with Lis and data
       //---------------------------------------------------------------
       LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[RE-SEGMENT] fill the segment pdu_p with Lis and data, test_num_li %d\n",
+            PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
             test_num_li);
 
       if (test_num_li > 0) {

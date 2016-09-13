@@ -3445,6 +3445,9 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
 )
 //-----------------------------------------------------------------------------
 {
+#ifdef FAPI
+extern int cqi_ready[65536]; cqi_ready[ctxt_pP->rnti] = 1;
+#endif
   int                                 i;
 #ifdef PDCP_USE_NETLINK
   int                                 oip_ifup = 0;

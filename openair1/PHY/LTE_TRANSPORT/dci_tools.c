@@ -194,6 +194,7 @@ void conv_rballoc(uint8_t ra_header,uint32_t rb_alloc,uint32_t N_RB_DL,uint32_t 
       if ((rb_alloc&1) != 0)
         rb_alloc2[0] |= (1<<24);
     } else {
+#if 0
       subset = rb_alloc&1;
       shift  = (rb_alloc>>1)&1;
 
@@ -203,6 +204,14 @@ void conv_rballoc(uint8_t ra_header,uint32_t rb_alloc,uint32_t N_RB_DL,uint32_t 
 
         //printf("rb_alloc2 (type 1) %x\n",rb_alloc2);
       }
+#endif
+      subset = (rb_alloc>>12)&1;
+      shift  = (rb_alloc>>11)&1;
+
+      for (i=0; i<11; i++) {
+        if ((rb_alloc&(1<<(10-i))) != 0)
+          rb_alloc2[0] |= (1<<(2*i));
+      }
 
       if ((shift == 0) && (subset == 1))
         rb_alloc2[0]<<=1;
@@ -210,6 +219,7 @@ void conv_rballoc(uint8_t ra_header,uint32_t rb_alloc,uint32_t N_RB_DL,uint32_t 
         rb_alloc2[0]<<=4;
       else if ((shift == 1) && (subset == 1))
         rb_alloc2[0]<<=3;
+printf("YOYO rb_alloc2 %x (from %x)\n", rb_alloc2[0], rb_alloc);
     }
 
     break;
@@ -7223,7 +7233,9 @@ int generate_eNB_ulsch_params_from_dci(void *dci_pdu,
 
 
     if (cqi_req == 1) {
+fprintf(stderr, "cqi_req = 1 in dci_tools!\n");
       ulsch->harq_processes[harq_pid]->O_RI = 1; //we only support 2 antenna ports, so this is always 1 according to 3GPP 36.213 Table
+      ulsch->harq_processes[harq_pid]->O_RI = 0; //we only support 2 antenna ports, so this is always 1 according to 3GPP 36.213 Table
 
       switch(transmission_mode) {
         // The aperiodic CQI reporting mode is fixed for every transmission mode instead of being configured by higher layer signaling

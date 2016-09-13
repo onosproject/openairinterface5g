@@ -18,6 +18,7 @@ static void append(view *_this, char *s)
   struct stdout *this = (struct stdout *)_this;
   if (pthread_mutex_lock(&this->lock)) abort();
   printf("%s\n", s);
+  fflush(stdout);
   if (pthread_mutex_unlock(&this->lock)) abort();
 }
 

@@ -63,6 +63,8 @@
 # include "intertask_interface.h"
 #endif
 
+#include "T.h"
+
 #define ENABLE_MAC_PAYLOAD_DEBUG
 #define DEBUG_eNB_SCHEDULER 1
 //#define DEBUG_HEADER_PARSING 1
@@ -73,7 +75,6 @@
   #define msg debug_msg
   #endif
  */
-
 
 
 
@@ -92,6 +93,12 @@ static void fapi_dl_tpc(int module_id, int CC_id, struct DlDciListElement_s *dci
   int32_t          normalized_rx_power;
   int32_t          target_rx_power;
   static int       tpc_accumulated = 0;
+
+if (UE_id == -1) {
+printf("SCHEDULER fapi_dl_tpc rnti %x (%d) not existing in MAC\n", dci->rnti, dci->rnti);
+dci->tpc = 0;
+return;
+}
 
   if (UE_id == -1) { printf("%s:%d: rnti %x not found\n", __FILE__, __LINE__, dci->rnti); abort(); }
 
@@ -133,6 +140,12 @@ static void fapi_ul_tpc(int module_id, int CC_id, struct UlDciListElement_s *dci
   int32_t          normalized_rx_power;
   int32_t          target_rx_power;
   static int       tpc_accumulated = 0;
+
+if (UE_id == -1) {
+printf("SCHEDULER fapi_ul_tpc rnti %x (%d) not existing in MAC\n", dci->rnti, dci->rnti);
+dci->tpc = 0;
+return;
+}
 
   if (UE_id == -1) { printf("%s:%d: rnti %x not found\n", __FILE__, __LINE__, dci->rnti); abort(); }
 
@@ -218,6 +231,12 @@ printf("GOT DOWNLINK ack %d for rnti %x harq_pid %d transport_block %d\n", ack, 
   fapi_dl_ack_nack_data.count++;
 }
 
+/* this array is used to deal with Msg4 ack/nack
+ * once we get an ACK, the UE is considered configured
+ * if we get a NACK, we have to deal with retransmission of Msg4 (TODO)
+ */
+unsigned char waiting_for_msg4_ack[65536];
+
 /* this function is called by the PHY to inform about correct or wrong
  * reception by the eNodeB of an uplink UE transmission
  */
@@ -234,6 +253,27 @@ printf("GOT UPLINK ack %d for rnti %x harq_pid %d (f/sf %d/%d)\n", ack, rnti, ha
   fapi_ul_ack_nack_data[subframe].ack[pos].reception_subframe = subframe;
   fapi_ul_ack_nack_data[subframe].ack[pos].rnti               = rnti;
   fapi_ul_ack_nack_data[subframe].ack[pos].ack                = ack;
+
+  if (waiting_for_msg4_ack[rnti] == 1) {
+    /* TODO: deal with module_id != 0, CC_id != 0 */
+    eNB_MAC_INST  *eNB = &eNB_mac_inst[0 /*module_idP*/];
+    RA_TEMPLATE   *RA_template;
+    int i, UE_id;
+    waiting_for_msg4_ack[rnti] = 0;
+    for (i = 0; i < NB_RA_PROC_MAX; i++) {
+      RA_template = (RA_TEMPLATE *)&eNB->common_channels[0 /* CC_id */].RA_template[i];
+      if (RA_template->RA_active != TRUE) continue;
+      if (RA_template->rnti != rnti) continue;
+      break;
+    }
+    if (i == NB_RA_PROC_MAX) { printf("%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+    RA_template->RA_active = FALSE;
+    RA_template->wait_ack_Msg4=0;
+    fprintf(stderr, "f/sf %d/%d got ack value %d for RA Msg4 for UE %d\n", frame, subframe, ack, rnti);
+     UE_id = find_UE_id(0 /*module_idP */,RA_template->rnti);
+     if (UE_id == -1) abort();
+     eNB_mac_inst[0 /* module_idP */].UE_list.UE_template[UE_PCCID(0 /* module_idP */,UE_id)][UE_id].configured=TRUE;
+  }
 
   /* the values in length are set later in the function fapi_ul_lc_length */
   memset(fapi_ul_ack_nack_data[subframe].ack[pos].length, 0, sizeof(int) * MAX_LC_LIST+1);
@@ -296,6 +336,9 @@ void fapi_dl_cqi_report(int module_id, int rnti, int frame, int subframe, int cq
   params.nr_vendorSpecificList = 0;
   params.vendorSpecificList    = NULL;
 
+fprintf(stderr, "fsf %d/%d CQI wideband %d rank_indication %d\n", frame, subframe, cqi_wideband, rank_indication);
+for (i = 0; i < MAX_HL_SB; i++)
+fprintf(stderr, "  subband %d: %d\n", i, cqi_subband[i]);
   SchedDlCqiInfoReq(fapi->sched, &params);
 }
 
@@ -331,7 +374,7 @@ CONVERT_DL_1A_FDD(10);     /* defines fapi_convert_dl_1A_10MHz_FDD */
 CONVERT_DL_1A_FDD(20);     /* defines fapi_convert_dl_1A_20MHz_FDD */
 
 static uint32_t revert(uint32_t x, int len)
-{
+{return x;
   int i;
   int ret = 0;
   for (i = 0; i < len; i++) {
@@ -341,6 +384,8 @@ static uint32_t revert(uint32_t x, int len)
   }
   return ret;
 }
+
+int cqi_ready[65536];
 
 #define CONVERT_DL_1_FDD(bandwidth)                                                                    \
 static void fapi_convert_dl_1_ ## bandwidth ## MHz_FDD(struct DlDciListElement_s *dci, DCI_ALLOC_t *a) \
@@ -379,6 +424,8 @@ static void fapi_convert_dl_dci(int module_id, int CC_id,
   /* TODO: remove it if/when the scheduler does it */
   if (dci->rnti != 0)
     fapi_dl_tpc(module_id, CC_id, dci);
+
+//  if (dci->format == ONE && dci->resAlloc != 0) { printf("ERROR: resAlloc must be 0\n"); abort(); }
 
   /* TODO: handle all bandwidths */
   switch (PHY_vars_eNB_g[module_id][CC_id]->lte_frame_parms.N_RB_DL) {
@@ -435,6 +482,9 @@ static void fapi_convert_ul_ ## bandwidth ## MHz_FDD(module_id_t module_idP, int
                                   /* see openair1/PHY/LTE_TRANSPORT/dci_tools.c:generate_eNB_ulsch_params_from_dci */ \
                                   /* there is a translation between those */                            \
   d->cqi_req    = dci->cqiRequest;                                                                      \
+if (!cqi_ready[dci->rnti]) d->cqi_req = 0;                                                              \
+d->cqi_req = 0;                                                                                         \
+if (dci->cqiRequest) fprintf(stderr, "cqi req (ready %d) (d->cqi_req %d)!!\n", cqi_ready[dci->rnti], d->cqi_req); \
   d->padding    = 0;                                                                                    \
                                                                                                         \
   a->dci_length = sizeof_DCI0_ ## bandwidth ## MHz_FDD_t;                                               \
@@ -452,6 +502,8 @@ static void fapi_convert_ul_dci(module_id_t module_idP, int CC_id,
   /* TODO: remove it if/when the scheduler does it */
   fapi_ul_tpc(module_idP, CC_id, dci);
 
+  if (dci->hopping != 0) { printf("ERROR: hopping must be 0\n"); abort(); }
+
   /* TODO: handle all bandwidths */
   switch (PHY_vars_eNB_g[module_idP][CC_id]->lte_frame_parms.N_RB_UL) {
   case 25:  fapi_convert_ul_5MHz_FDD(module_idP, CC_id, dci, a);  break;
@@ -468,6 +520,8 @@ static void fapi_convert_ul_dci(module_id_t module_idP, int CC_id,
   a->firstCCE = dci->cceIndex;
   a->ra_flag  = 0;
   a->rnti     = dci->rnti;
+printf("FAPI to MAC ul DCI ue %d rbStart %d rbLen %d tbs %d CCE %d mcs %d ndi %d tpc %d cshift %d cqi_req %d aggrLevel %d\n",
+    dci->rnti, dci->rbStart, dci->rbLen, dci->tbSize, dci->cceIndex, dci->mcs, dci->ndi, dci->tpc, dci->n2Dmrs, dci->cqiRequest, dci->aggrLevel);
 }
 
 /* index 0 for SIB1, 1 for SIB23 */
@@ -521,6 +575,12 @@ static void fapi_schedule_RAR(int module_idP, int CC_id, frame_t frameP,
   }
   if (i == NB_RA_PROC_MAX) { printf("%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 
+  if (grant & 0x80000) {
+    LOG_E(MAC, "uplink grant has hopping flag set (0x%x)\n", grant);
+exit(1);
+    grant &= ~0x80000;
+  }
+
   RA_template->generate_rar = 1;
   RA_template->UL_grant = grant;
 
@@ -553,6 +613,7 @@ static void fapi_schedule_RA_Msg4(int module_idP, int CC_id, int RA,
 
   RA_template = (RA_TEMPLATE *)&eNB->common_channels[CC_id].RA_template[RA];
   UE_id = find_UE_id(module_idP,RA_template->rnti);
+  if (UE_id == -1) abort();
   rrc_sdu_length = mac_rrc_data_req(module_idP,
                                     CC_id,
                                     frameP,
@@ -568,12 +629,14 @@ static void fapi_schedule_RA_Msg4(int module_idP, int CC_id, int RA,
   }
   if (rrc_sdu_length > pdu_maxsize) {
     LOG_E(MAC, "fapi_schedule_RA_Msg4: rrc_sdu_length (%d) > pdu_maxsize (%d)\n", rrc_sdu_length, pdu_maxsize);
-    abort();
+//    abort();
   }
 
   msg4_header_length = 1+6+1;  // CR header, CR CE, SDU header
 
   TBsize = dci->tbsSize[CC_id] / 8;
+
+if (TBsize < msg4_header_length+rrc_sdu_length) abort();
 
   if ((TBsize - rrc_sdu_length - msg4_header_length) <= 2) {
     msg4_padding = TBsize - rrc_sdu_length - msg4_header_length;
@@ -583,7 +646,7 @@ static void fapi_schedule_RA_Msg4(int module_idP, int CC_id, int RA,
     msg4_post_padding = TBsize - rrc_sdu_length - msg4_header_length -1;
   }
 
-  LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d subframeP %d Msg4 : TBS %d, sdu_len %d, msg4_header %d, msg4_padding %d, msg4_post_padding %d\n",
+  LOG_I(RRC,"[eNB %d][RAPROC] CC_id %d Frame %d subframeP %d Msg4 : TBS %d, sdu_len %d, msg4_header %d, msg4_padding %d, msg4_post_padding %d\n",
         module_idP, CC_id, frameP, subframeP, TBsize, rrc_sdu_length, msg4_header_length, msg4_padding, msg4_post_padding);
 
   lcid = 0;
@@ -601,12 +664,17 @@ static void fapi_schedule_RA_Msg4(int module_idP, int CC_id, int RA,
          &eNB->common_channels[CC_id].CCCH_pdu.payload[0],
          rrc_sdu_length);
 
+  T(T_ENB_MAC_UE_DL_PDU_WITH_DATA, T_INT(module_idP), T_INT(CC_id), T_INT(RA_template->rnti), T_INT(frameP), T_INT(subframeP),
+    T_INT(0), T_BUFFER(&eNB->UE_list.DLSCH_pdu[CC_id][0][UE_id].payload[0], TBsize));
+
   RA_template->generate_Msg4=0;
   RA_template->wait_ack_Msg4=1;
-  RA_template->RA_active = FALSE;
+  //RA_template->RA_active = FALSE;
 
   /* we can increment Num_common_dci or Num_ue_spec_dci, there is no difference */
   dci_pdu->Num_common_dci++;
+
+  waiting_for_msg4_ack[RA_template->rnti] = 1;
 
   fapi_convert_dl_dci(module_idP, CC_id, dci, a);
 }
@@ -659,13 +727,17 @@ static void fapi_schedule_retransmission_ue(int module_id, int CC_id, int frame,
   fapi_convert_dl_dci(module_id, CC_id, &d->dci, a);
 printf("RUN fapi_schedule_retransmission_ue\n");
 
-  if (d->nr_rlcPDU_List[0] != 0) { printf("%s:%d:%s: error?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (d->nr_rlcPDU_List[0] != 0) { printf("%s:%d:%s: error?\n", __FILE__, __LINE__, __FUNCTION__); /*abort();*/ }
   if (d->nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->ceBitmap[0])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->ceBitmap[1])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->servCellIndex != 0)     { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 
   UE_id = find_UE_id(module_id, d->rnti);
+if (UE_id == -1) {
+printf("SCHEDULER fapi_schedule_retransmission_ue rnti %x (%d) not existing in MAC\n", d->rnti, d->rnti);
+abort();
+}
 
   add_ue_dlsch_info(module_id,
       CC_id,
@@ -701,6 +773,8 @@ static void fapi_schedule_ue(int module_id, int CC_id, int frame, int subframe, 
     fapi_schedule_retransmission_ue(module_id, CC_id, frame, subframe, d);
     return;
   }
+
+if (d->nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); return; }
 
   /* generate DCI */
   if (dci_pdu->Num_common_dci >= NUM_DCI_MAX) { printf("%s:%d:%s: too much DCIs\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
@@ -738,12 +812,15 @@ printf("RUN fapi_schedule_ue\n");
         d->rlcPduList[0][i].logicalChannelIdentity,
         d->rlcPduList[0][i].size);
 printf("RLC_SIZE in fapi_schedule_ue %d (asked %d) lcid %d rnti %x f/sf %d/%d\n", rlc_status.bytes_in_buffer, d->rlcPduList[0][i].size, d->rlcPduList[0][i].logicalChannelIdentity, d->rnti, frame, subframe);
-    if (rlc_status.bytes_in_buffer <= 0) { printf("%s:%d:%s: error\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
-    if (rlc_status.bytes_in_buffer > d->rlcPduList[0][i].size) abort(); /* that can't happen */
+    if (rlc_status.bytes_in_buffer < 0) { printf("%s:%d:%s: error\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+//    if (rlc_status.bytes_in_buffer > d->rlcPduList[0][i].size) abort(); /* that can't happen */
     if (dlsch_filled + d->rlcPduList[0][i].size > MAX_DLSCH_PAYLOAD_BYTES) {
       printf("dlsch buffer filled too much\n");
       abort();
     }
+if (d->rlcPduList[0][i].size == 2) {
+  printf("yo\n");
+}
     output_length = mac_rlc_data_req(
         module_id,
         d->rnti,
@@ -753,7 +830,11 @@ printf("RLC_SIZE in fapi_schedule_ue %d (asked %d) lcid %d rnti %x f/sf %d/%d\n"
         MBMS_FLAG_NO,
         d->rlcPduList[0][i].logicalChannelIdentity,
         (char *)&dlsch_buffer[dlsch_filled]);
-    if (output_length <= 0 || output_length > d->rlcPduList[0][i].size) abort();
+    if (output_length == 0)
+      LOG_W(MAC, "FAPI f/sf %d/%d: RLC returned length 0 while asked %d for channel ID %d\n",
+            frame, subframe,
+            d->rlcPduList[0][i].size, d->rlcPduList[0][i].logicalChannelIdentity);
+    if (output_length < 0 || output_length > d->rlcPduList[0][i].size) abort();
     d->rlcPduList[0][i].size = output_length;
     dlsch_filled += output_length;
     sdu_lengths[num_sdus] = output_length;
@@ -784,6 +865,10 @@ printf("FILLED %d bytes\n", output_length);
 printf("PADDING_SIZE %d\n", padding_size);
 
   UE_id = find_UE_id(module_id, d->rnti);
+if (UE_id == -1) {
+printf("SCHEDULER fapi_schedule_ue rnti %x (%d) not existing in MAC\n", d->rnti, d->rnti);
+abort();
+}
 
   /* generate dlsch header */
   offset = generate_dlsch_header((unsigned char*)UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0],
@@ -798,6 +883,9 @@ printf("PADDING_SIZE %d\n", padding_size);
 
   /* fill payload */
   memcpy(&UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][offset], dlsch_buffer, dlsch_filled);
+
+  T(T_ENB_MAC_UE_DL_PDU_WITH_DATA, T_INT(module_id), T_INT(CC_id), T_INT(d->rnti), T_INT(frame), T_INT(subframe),
+    T_INT(d->dci.harqProcess), T_BUFFER(UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0], tbs));
 
   add_ue_dlsch_info(module_id,
       CC_id,
@@ -854,8 +942,16 @@ static char *dci_format_to_string(DCI_format_t f)
   abort();
 }
 
+static int next_frame = 0;
+static int next_subframe = 0;
+static pthread_mutex_t fmut = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t fcond = PTHREAD_COND_INITIALIZER;
+
 void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP)  //, int calibration_flag) {
 {
+
+if (pthread_mutex_lock(&fmut)) abort();
+
   int                                 CC_id;
   int                                 i, j;
   DCI_PDU                             *DCI_pdu[MAX_NUM_CCs];
@@ -951,7 +1047,7 @@ printf("SCHEDULER called for f/sf %d/%d\n", frameP, subframeP);
         memset(&rlc, 0, sizeof(rlc));
         rlc.rnti = eNB->common_channels[CC_id].RA_template[i].rnti;
         rlc.logicalChannelIdentity = CCCH;
-        rlc.rlcTransmissionQueueSize = mac_rrc_get_ccch_size(module_idP, CC_id);
+        rlc.rlcTransmissionQueueSize = mac_rrc_get_ccch_size(module_idP, CC_id) + 1;
         LOG_I(MAC, "calling SchedDlRlcBufferReq on CCCH rnti %x queue_size %d\n", rlc.rnti, rlc.rlcTransmissionQueueSize);
 printf("MAC to FAPI downlink BUF CCCH %d\n", rlc.rlcTransmissionQueueSize);
         SchedDlRlcBufferReq(fapi->sched, &rlc);
@@ -977,6 +1073,7 @@ printf("MAC to FAPI downlink BUF CCCH %d\n", rlc.rlcTransmissionQueueSize);
     rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH, 0);
     rlc.logicalChannelIdentity = DCCH;
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
+if (rlc.rlcTransmissionQueueSize == 2) rlc.rlcTransmissionQueueSize = 10;
     LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
 printf("MAC to FAPI downlink BUF DCCH %d\n", rlc_status.bytes_in_buffer);
@@ -1050,7 +1147,7 @@ printf("FAPI to MAC downlink schedule ue %x channel %d f/sf %d/%d\n", dlind.buil
           break;
         }
       }
-      if (j == NB_RA_PROC_MAX) { printf("%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+      if (j == NB_RA_PROC_MAX) { printf("%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); /*abort();*/ }
       break;
     case 1: /* DCCH   (SRB1) */
     case 2: /* DCCH+1 (SRB2) */
@@ -1066,6 +1163,7 @@ printf("FAPI to MAC downlink schedule ue %x channel %d f/sf %d/%d\n", dlind.buil
     if (dlind.nr_buildRARList != 1) { printf("%s:%d: more than 1 RAR, todo\n", __FUNCTION__, __LINE__); exit(0); }
     if (dlind.buildRarList[0].carrierIndex != 0) { printf("%s:%d: 2nd CC: todo properly\n", __FUNCTION__, __LINE__); exit(0); }
 printf("FAPI to MAC downlink schedule RAR ue %x f/sf %d/%d\n", dlind.buildRarList[0].rnti, frameP, subframeP);
+dlind.buildRarList[0].grant &= ~1;
     fapi_schedule_RAR(module_idP, dlind.buildRarList[0].carrierIndex, frameP, subframeP,
         dlind.buildRarList[0].rnti, dlind.buildRarList[0].grant, &dlind.buildRarList[0].dci);
   }
@@ -1114,7 +1212,7 @@ printf("FAPI to MAC downlink DCI_pdu[%d]->num_pdcch_symbols %d f/sf %d/%d\n", cc
     ulreq.nr_ulInfoList = fapi_ul_ack_nack_data[ulsf].count;
     ulreq.ulInfoList    = ulinfo;
     for (i = 0; i < ulreq.nr_ulInfoList; i++) {
-printf("MAC to FAPI uplink acknack ue %x f/sf %d/%d ulsf %d [reception_subframe %d] ack %d\n", fapi_ul_ack_nack_data[ulsf].ack[i].rnti, frameP, subframeP, ulsf, fapi_ul_ack_nack_data[ulsf].ack[i].reception_subframe, fapi_ul_ack_nack_data[ulsf].ack[i].ack);
+printf("MAC to FAPI uplink acknack ue %x f/sf %d/%d ulsf %d [reception frame/subframe %d/%d] ack %d\n", fapi_ul_ack_nack_data[ulsf].ack[i].rnti, frameP, subframeP, ulsf, fapi_ul_ack_nack_data[ulsf].ack[i].reception_frame, fapi_ul_ack_nack_data[ulsf].ack[i].reception_subframe, fapi_ul_ack_nack_data[ulsf].ack[i].ack);
       ulinfo[i].puschTransmissionTimestamp = fapi_ul_ack_nack_data[ulsf].ack[i].reception_frame * 16
                                              + fapi_ul_ack_nack_data[ulsf].ack[i].reception_subframe;
       ulinfo[i].rnti                       = fapi_ul_ack_nack_data[ulsf].ack[i].rnti;
@@ -1134,6 +1232,18 @@ printf("MAC to FAPI uplink ue %x f/sf %d/%d lcid %d size acked %d\n", fapi_ul_ac
 
   LOG_I(MAC, "calling SchedUlConfigInd\n");
   SchedUlConfigInd(fapi, &ulind);
+
+  /* a hack to report nice CQI all the time it's asked */
+  for (i = 0; i < ulind.nr_dciList; i++) {
+    struct UlDciListElement_s *dci = &ulind.dciList[i];
+    if (dci->cqiRequest) {
+      int cqi_subband[13];
+      int k;
+      for (k = 0; k < 13; k++)
+        cqi_subband[k] = 14;
+      fapi_dl_cqi_report(0, dci->rnti, frameP + (subframeP > 6 ? 1 : 0), (subframeP + 4) % 10, 14, cqi_subband, 0);
+    }
+  }
 
 printf("FAPI to MAC uplink nr_dclList %d nr_phichList %d\n", ulind.nr_dciList, ulind.nr_phichList);
   for (i = 0; i < ulind.nr_dciList; i++) {
@@ -1159,6 +1269,9 @@ printf("    RECAP %i rnti %x %s\n", i,
 }
 
   global_subframe++;
+
+if (pthread_mutex_unlock(&fmut)) abort();
+
 }
 
 #else /* FAPI */

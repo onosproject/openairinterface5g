@@ -423,6 +423,8 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *phy_vars_eNB,
       Qprime = Qprime/(8*sumKr);
   }
 
+if (Qprime > nb_rb * 12 * ulsch_harq->Nsymb_pusch) { fprintf(stderr, "reduce Qprime %d -> %d\n", Qprime, nb_rb * 12 * ulsch_harq->Nsymb_pusch); Qprime = nb_rb * 12 * ulsch_harq->Nsymb_pusch; }
+
   G = nb_rb * (12 * Q_m) * (ulsch_harq->Nsymb_pusch);
 
 
@@ -431,6 +433,8 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *phy_vars_eNB,
 #ifdef DEBUG_ULSCH_DECODING
   msg("ulsch_decoding: G %d, Q_RI %d, Q_CQI %d (L %d, Or1 %d) O_ACK %d\n",G,Q_RI,Q_CQI,L,ulsch_harq->Or1,ulsch_harq->O_ACK);
 #endif
+
+if (Q_CQI) fprintf(stderr, "G %d Q_CQI %d Q_RI %d\n", G, Q_CQI, Q_RI);
 
   G = G - Q_RI - Q_CQI;
 
@@ -919,6 +923,7 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *phy_vars_eNB,
   // CQI
 
   //  printf("before cqi c[%d] = %p\n",0,ulsch_harq->c[0]);
+  ulsch_harq->cqi_crc_status = 0;
   if (Q_CQI>0) {
     memset((void *)&dummy_w_cc[0],0,3*(ulsch_harq->Or1+8+32));
 

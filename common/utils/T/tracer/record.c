@@ -80,6 +80,7 @@ int main(int n, char **v)
       { on_off_name[on_off_n]=NULL; on_off_action[on_off_n++]=1; continue; }
     if (!strcmp(v[i], "-OFF"))
       { on_off_name[on_off_n]=NULL; on_off_action[on_off_n++]=0; continue; }
+printf("unknown option %s\n", v[i]);
     usage();
   }
 

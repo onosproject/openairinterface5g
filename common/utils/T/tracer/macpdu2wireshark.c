@@ -51,7 +51,7 @@ void ul(void *_d, event e)
   /* for newer version of wireshark? */
   fsf = (e.e[d->ul_frame].i << 4) + e.e[d->ul_subframe].i;
   /* for older version? */
-  fsf = e.e[d->ul_subframe].i;
+  //fsf = e.e[d->ul_subframe].i;
   PUTC(&d->buf, MAC_LTE_FRAME_SUBFRAME_TAG);
   PUTC(&d->buf, (fsf>>8) & 255);
   PUTC(&d->buf, fsf & 255);
@@ -86,7 +86,7 @@ void dl(void *_d, event e)
   /* for newer version of wireshark? */
   fsf = (e.e[d->dl_frame].i << 4) + e.e[d->dl_subframe].i;
   /* for older version? */
-  fsf = e.e[d->dl_subframe].i;
+  //fsf = e.e[d->dl_subframe].i;
   PUTC(&d->buf, MAC_LTE_FRAME_SUBFRAME_TAG);
   PUTC(&d->buf, (fsf>>8) & 255);
   PUTC(&d->buf, fsf & 255);
@@ -177,7 +177,7 @@ void usage(void)
   printf(
 "options:\n"
 "    -d <database file>        this option is mandatory\n"
-"    -in <dump file>           read events from this dump file\n"
+"    -i <dump file>            read events from this dump file\n"
 "    -ip <IP address>          send packets to this IP address (default %s)\n"
 "    -p <port>                 send packets to this port (default %d)\n",
   DEFAULT_IP,
@@ -205,7 +205,7 @@ int main(int n, char **v)
     if (!strcmp(v[i], "-h") || !strcmp(v[i], "--help")) usage();
     if (!strcmp(v[i], "-d"))
       { if (i > n-2) usage(); database_filename = v[++i]; continue; }
-    if (!strcmp(v[i], "-in"))
+    if (!strcmp(v[i], "-i"))
       { if (i > n-2) usage(); input_filename = v[++i]; continue; }
     if (!strcmp(v[i], "-ip")) { if (i > n-2) usage(); ip = v[++i]; continue; }
     if (!strcmp(v[i], "-p")) {if(i>n-2)usage(); port=atoi(v[++i]); continue; }
@@ -231,6 +231,7 @@ int main(int n, char **v)
   h = new_handler(database);
 
   ul_id = event_id_from_name(database, "ENB_MAC_UE_UL_PDU_WITH_DATA");
+  //dl_id = event_id_from_name(database, "UE_MAC_UE_DL_PDU_WITH_DATA");
   dl_id = event_id_from_name(database, "ENB_MAC_UE_DL_PDU_WITH_DATA");
   setup_data(&d, database, ul_id, dl_id);
 

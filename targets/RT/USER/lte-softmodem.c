@@ -2210,6 +2210,7 @@ static void* eNB_thread( void* arg )
 #endif
       /* TODO: is it the right place for master tick? */
       T(T_ENB_MASTER_TICK, T_INT(0), T_INT(frame % 1024), T_INT(sf));
+#if 0
       if (frame>50) {
 	for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 #ifdef EXMIMO
@@ -2258,6 +2259,38 @@ static void* eNB_thread( void* arg )
 	  }
 	}
       }
+#endif
+
+      /* do TX */
+      int CC_id;
+      for (CC_id=0; CC_id < MAX_NUM_CCs; CC_id++) {
+        eNB_proc_t *proc = &PHY_vars_eNB_g[0][CC_id]->proc[sf];
+//        printf("call phy_procedures_eNB_TX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+        phy_procedures_eNB_TX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay, NULL );
+//        printf("done phy_procedures_eNB_TX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+//        printf("call do_OFDM_mod_rt CC_id %d sf %d %ld\n", proc->CC_id, sf, daclock());
+        do_OFDM_mod_rt( proc->subframe_tx, PHY_vars_eNB_g[0][proc->CC_id] );
+//        printf("done do_OFDM_mod_rt CC_id %d sf %d %ld\n", proc->CC_id, sf, daclock());
+        proc->frame_tx++;
+        if (proc->frame_tx==1024)
+          proc->frame_tx=0;
+      }
+
+      /* do RX */
+      for (CC_id=0; CC_id < MAX_NUM_CCs; CC_id++) {
+if (CC_id != 0) continue;
+        eNB_proc_t *proc = &PHY_vars_eNB_g[0][CC_id]->proc[sf];
+//        printf("call phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+        phy_procedures_eNB_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
+        if ((subframe_select(&PHY_vars_eNB_g[0][proc->CC_id]->lte_frame_parms,proc->subframe_rx) == SF_S)) {
+          phy_procedures_eNB_S_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
+        }
+//        printf("done phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+        proc->frame_rx++;
+        if (proc->frame_rx==1024)
+          proc->frame_rx=0;
+      }
+
     }
 
 #ifdef EXMIMO
@@ -3747,6 +3780,8 @@ int main( int argc, char **argv )
 #ifdef RTAI
     main_eNB_thread = rt_thread_create(eNB_thread, NULL, PTHREAD_STACK_MIN);
 #else
+    if (pthread_attr_setstacksize( &attr_dlsch_threads, 1024*PTHREAD_STACK_MIN ) != 0) abort();
+
     error_code = pthread_create( &main_eNB_thread, &attr_dlsch_threads, eNB_thread, NULL );
 
     if (error_code!= 0) {

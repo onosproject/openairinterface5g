@@ -172,6 +172,7 @@ static void trx_usrp_end(openair0_device *device)
 */ 
 static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps, int cc, int flags)
 {
+  int ret;
   usrp_state_t *s = (usrp_state_t*)device->priv;
   s->tx_md.time_spec = uhd::time_spec_t::from_ticks(timestamp, s->sample_rate);
   if(flags)
@@ -182,13 +183,13 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
   if (cc>1) {
     std::vector<void *> buff_ptrs;
     for (int i=0;i<cc;i++) buff_ptrs.push_back(buff[i]);
-    s->tx_stream->send(buff_ptrs, nsamps, s->tx_md);
+    ret = s->tx_stream->send(buff_ptrs, nsamps, s->tx_md);
   }
   else
-    s->tx_stream->send(buff[0], nsamps, s->tx_md);
+    ret = s->tx_stream->send(buff[0], nsamps, s->tx_md);
   s->tx_md.start_of_burst = false;
 
-  return 0;
+  return ret;
 }
 
 /*! \brief Receive samples from hardware.

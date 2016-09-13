@@ -326,7 +326,7 @@ rlc_am_get_pdus (
   case RLC_DATA_TRANSFER_READY_STATE:
 
     // TRY TO SEND CONTROL PDU FIRST
-    if ((rlc_pP->nb_bytes_requested_by_mac > 2) && (rlc_pP->status_requested)) {
+    if ((rlc_pP->nb_bytes_requested_by_mac >= 2) && (rlc_pP->status_requested)) {
       // When STATUS reporting has been triggered, the receiving side of an AM RLC entity shall:
       // - if t-StatusProhibit is not running:
       //     - at the first transmission opportunity indicated by lower layer, construct a STATUS PDU and deliver it to lower layer;

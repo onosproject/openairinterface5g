@@ -190,6 +190,7 @@ int mac_phy_remove_ue(module_id_t Mod_idP,rnti_t rntiP) {
 #ifdef DEBUG_PHY_PROC
 	  LOG_I(PHY,"eNB %d removing UE %d with rnti %x\n",phy_vars_eNB->Mod_id,i,rnti);
 #endif
+	  LOG_I(PHY,"eNB %d removing UE %d with rnti %x\n",phy_vars_eNB->Mod_id,i,rntiP);
 	  //msg("[PHY] UE_id %d\n",i);
 	  clean_eNb_dlsch(phy_vars_eNB->dlsch_eNB[i][0]);
 	  clean_eNb_ulsch(phy_vars_eNB->ulsch_eNB[i]);
@@ -2143,7 +2144,7 @@ void prach_procedures(PHY_VARS_eNB *phy_vars_eNB,uint8_t sched_subframe,uint8_t 
       phy_vars_eNB->eNB_UE_stats[(uint32_t)UE_id].UE_timing_offset = preamble_delay_list[preamble_max]&0x1FFF; //limit to 13 (=11+2) bits
 
       phy_vars_eNB->eNB_UE_stats[(uint32_t)UE_id].sector = 0;
-      LOG_D(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure (UE_id %d) with preamble %d, energy %d.%d dB, delay %d\n",
+      LOG_E(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure (UE_id %d) with preamble %d, energy %d.%d dB, delay %d\n",
             phy_vars_eNB->Mod_id,
             phy_vars_eNB->CC_id,
             frame,
@@ -2944,7 +2945,18 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
 #endif
       phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->subframe_scheduling_flag=0;
 
+#if FAPI
+        /* a hack to report nice CQI all the time it's asked */
+        if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->Or1) {
+          int cqi_subband[13];
+          int k;
+          for (k = 0; k < 13; k++)
+            cqi_subband[k] = 15;
+          mac_xface->fapi_dl_cqi_report(phy_vars_eNB->Mod_id, phy_vars_eNB->ulsch_eNB[i]->rnti, frame, subframe, 15, cqi_subband, 0);
+        }
+#endif
       if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->cqi_crc_status == 1) {
+fprintf(stderr, "extract CQI! Or1 = %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->Or1);
 #ifdef DEBUG_PHY_PROC
         //if (((phy_vars_eNB->proc[sched_subframe].frame_tx%10) == 0) || (phy_vars_eNB->proc[sched_subframe].frame_tx < 50))
         print_CQI(phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o,phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->uci_format,0,phy_vars_eNB->lte_frame_parms.N_RB_DL);
@@ -2988,7 +3000,7 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
         LOG_D(PHY,"[eNB][PUSCH %d] Increasing to round %d\n",harq_pid,phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round);
 
         if (phy_vars_eNB->ulsch_eNB[i]->Msg3_flag == 1) {
-          LOG_D(PHY,"[eNB %d/%d][RAPROC] frame %d, subframe %d, UE %d: Error receiving ULSCH (Msg3), round %d/%d\n",
+          LOG_E(PHY,"[eNB %d/%d][RAPROC] frame %d, subframe %d, UE %d: Error receiving ULSCH (Msg3), round %d/%d\n",
                 phy_vars_eNB->Mod_id,
                 phy_vars_eNB->CC_id,
                 frame,subframe, i,
@@ -3011,7 +3023,7 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
 
           if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round ==
               phy_vars_eNB->lte_frame_parms.maxHARQ_Msg3Tx) {
-            LOG_D(PHY,"[eNB %d][RAPROC] maxHARQ_Msg3Tx reached, abandoning RA procedure for UE %d\n",
+            LOG_E(PHY,"[eNB %d][RAPROC] maxHARQ_Msg3Tx reached, abandoning RA procedure for UE %d\n",
                   phy_vars_eNB->Mod_id, i);
             phy_vars_eNB->eNB_UE_stats[i].mode = PRACH;
 	    if (phy_vars_eNB->mac_enabled==1) {
@@ -3259,6 +3271,17 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
                             0,
                             0);
 
+      LOG_I(PHY,"[eNB %d] Frame %d subframe %d, sect %d: received ULSCH harq_pid %d for UE %d, ret = %d, CQI CRC Status %d, ACK %d,%d, ulsch_errors %d/%d\n",
+            phy_vars_eNB->Mod_id,frame,subframe,
+            phy_vars_eNB->eNB_UE_stats[i].sector,
+            harq_pid,
+            i,
+            ret,
+            phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->cqi_crc_status,
+            phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[0],
+            phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[1],
+            phy_vars_eNB->eNB_UE_stats[i].ulsch_errors[harq_pid],
+            phy_vars_eNB->eNB_UE_stats[i].ulsch_decoding_attempts[harq_pid][0]);
 #ifdef DEBUG_PHY_PROC
       LOG_D(PHY,"[eNB %d] Frame %d subframe %d, sect %d: received ULSCH harq_pid %d for UE %d, ret = %d, CQI CRC Status %d, ACK %d,%d, ulsch_errors %d/%d\n",
             phy_vars_eNB->Mod_id,frame,subframe,

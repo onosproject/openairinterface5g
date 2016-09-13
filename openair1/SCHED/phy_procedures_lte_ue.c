@@ -38,6 +38,8 @@
  * \warning
  */
 
+#include "T.h"
+
 #include "assertions.h"
 #include "defs.h"
 #include "PHY/defs.h"
@@ -2690,6 +2692,10 @@ int phy_procedures_UE_RX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstrac
 #endif
 #endif
 	    if (phy_vars_ue->mac_enabled == 1) {
+		T(T_UE_MAC_UE_DL_PDU_WITH_DATA, T_INT(phy_vars_ue->Mod_id), T_INT(phy_vars_ue->dlsch_ue[eNB_id][0]->rnti),
+                  T_INT(frame_rx), T_INT(subframe_prev), T_INT(phy_vars_ue->dlsch_ue[eNB_id][0]->current_harq_pid),
+                  T_BUFFER(phy_vars_ue->dlsch_ue[eNB_id][0]->harq_processes[phy_vars_ue->dlsch_ue[eNB_id][0]->current_harq_pid]->b,
+                           phy_vars_ue->dlsch_ue[eNB_id][0]->harq_processes[phy_vars_ue->dlsch_ue[eNB_id][0]->current_harq_pid]->TBS>>3));
 	      mac_xface->ue_send_sdu(phy_vars_ue->Mod_id,
 				     CC_id,
 				     frame_rx,
