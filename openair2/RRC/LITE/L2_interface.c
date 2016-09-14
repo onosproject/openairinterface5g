@@ -145,7 +145,9 @@ mac_rrc_data_req(
         return 0;
       }
 
+#if MEGALOG
 printf("XX frame %d %%2 %d %%8 %d\n", frameP, frameP % 2, frameP % 8);
+#endif
       // All even frames transmit SIB in SF 5
       if (eNB_rrc_inst[Mod_idP].carrier[CC_id].sizeof_SIB1 == 255) {
         LOG_E(RRC,"[eNB %d] MAC Request for SIB1 and SIB1 not initialized\n",Mod_idP);
@@ -153,7 +155,9 @@ printf("XX frame %d %%2 %d %%8 %d\n", frameP, frameP % 2, frameP % 8);
       }
 
       if ((frameP%2) == 0) {
+#if MEGALOG
 printf("XX throw SIB1\n");
+#endif
         memcpy(&buffer_pP[0],
                eNB_rrc_inst[Mod_idP].carrier[CC_id].SIB1,
                eNB_rrc_inst[Mod_idP].carrier[CC_id].sizeof_SIB1);
@@ -195,7 +199,9 @@ printf("XX throw SIB1\n");
         return (eNB_rrc_inst[Mod_idP].carrier[CC_id].sizeof_SIB1);
       } // All RFN mod 8 transmit SIB2-3 in SF 5
       else if ((frameP%8) == 1) {
+#if MEGALOG
 printf("XX throw SIB2/3\n");
+#endif
         memcpy(&buffer_pP[0],
                eNB_rrc_inst[Mod_idP].carrier[CC_id].SIB23,
                eNB_rrc_inst[Mod_idP].carrier[CC_id].sizeof_SIB23);

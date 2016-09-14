@@ -786,7 +786,9 @@ void initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t
     return;
   }
 
+#if MEGALOG
 printf("MAC to FAPI initiate RA procedure new rnti %x f/sf %d/%d\n", r.rnti, frameP, subframeP);
+#endif
   LOG_I(MAC, "calling SchedDlRachInfoReq\n");
   SchedDlRachInfoReq(fapi->sched, &p);
 

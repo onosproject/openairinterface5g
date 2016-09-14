@@ -185,7 +185,9 @@ rrc_mac_config_req(
 #if FAPI
 
     if (eNB_flagP == 1) {
+#if MEGALOG
 printf("MAC CONFIG lcid %d group %d\n", (int)logicalChannelIdentity, (int)*logicalChannelConfig->ul_SpecificParameters->logicalChannelGroup);
+#endif
       /* only configure DRBs, SRBs are already configured */
       if (logicalChannelIdentity > 2) {
         struct CschedLcConfigReqParameters       lc;

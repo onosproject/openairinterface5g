@@ -299,7 +299,9 @@ void SchedUlConfigInd_callback(void *callback_data, const struct SchedUlConfigIn
   LOCK(fi, fn);
   CHECK(fi, fn);
 
+#if MEGALOG
 printf("SchedUlConfigInd_callback nr_dciList %d\n", params->nr_dciList);
+#endif
 
   /* copy from params to local structure */
   fi->SchedUlConfigIndParameters.nr_dciList = params->nr_dciList;

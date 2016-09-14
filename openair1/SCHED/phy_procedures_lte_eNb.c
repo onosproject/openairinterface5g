@@ -544,7 +544,9 @@ void phy_procedures_eNB_TX(unsigned char sched_subframe,PHY_VARS_eNB *phy_vars_e
   int frame = phy_vars_eNB->proc[sched_subframe].frame_tx;
   int subframe = phy_vars_eNB->proc[sched_subframe].subframe_tx;
 
+#if MEGALOG
 printf("PHY TX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
+#endif
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_TX,1);
   start_meas(&phy_vars_eNB->phy_proc_tx);
 
@@ -1828,7 +1830,9 @@ void process_HARQ_feedback(uint8_t UE_id,
             (dlsch_harq_proc->status == ACTIVE)) {
 #if FAPI
           /* TODO: handle transport block != 0 */
+#if MEGALOG
 printf("SEND ack %d harq pid %d rnti %d f/sf %d/%d\n", dlsch_ACK[mp], dl_harq_pid[m], dlsch->rnti, frame, subframe);
+#endif
           mac_xface->fapi_dl_ack_nack(dlsch->rnti, dl_harq_pid[m], 0 /* transport block */, dlsch_ACK[mp]);
 #endif
           // dl_harq_pid of DLSCH is still active
@@ -2718,7 +2722,9 @@ void phy_procedures_eNB_RX(const unsigned char sched_subframe,PHY_VARS_eNB *phy_
   const int subframe = phy_vars_eNB->proc[sched_subframe].subframe_rx;
   const int frame = phy_vars_eNB->proc[sched_subframe].frame_rx;
 
+#if MEGALOG
 printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
+#endif
   AssertFatal(sched_subframe < NUM_ENB_THREADS, "Bad sched_subframe %d", sched_subframe);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX,1);

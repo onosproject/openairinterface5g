@@ -95,7 +95,9 @@ static void fapi_dl_tpc(int module_id, int CC_id, struct DlDciListElement_s *dci
   static int       tpc_accumulated = 0;
 
 if (UE_id == -1) {
+#if MEGALOG
 printf("SCHEDULER fapi_dl_tpc rnti %x (%d) not existing in MAC\n", dci->rnti, dci->rnti);
+#endif
 dci->tpc = 0;
 return;
 }
@@ -105,7 +107,9 @@ return;
   // this assumes accumulated tpc
   // make sure that we are only sending a tpc update once a frame, otherwise the control loop will freak out
   if (global_subframe < ue_last_pucch_tpc[UE_id] + 10) {
+#if MEGALOG
 printf("TPC PUCCH global sf %ld (%ld/%ld) UE %x: no TPC, last one is too recent (accumulated %d)\n", global_subframe, global_subframe/10, global_subframe%10, dci->rnti, tpc_accumulated);
+#endif
     dci->tpc = 0;
     return;
   }
@@ -130,7 +134,9 @@ printf("TPC PUCCH global sf %ld (%ld/%ld) UE %x: no TPC, last one is too recent 
       dci->tpc = 0;
     }
   }
+#if MEGALOG
 printf("TPC PUCCH global sf %ld (%ld/%ld) UE %x: TPC %d (accumulated %d)\n", global_subframe, global_subframe/10, global_subframe%10, dci->rnti, dci->tpc, tpc_accumulated);
+#endif
 }
 
 static void fapi_ul_tpc(int module_id, int CC_id, struct UlDciListElement_s *dci)
@@ -142,7 +148,9 @@ static void fapi_ul_tpc(int module_id, int CC_id, struct UlDciListElement_s *dci
   static int       tpc_accumulated = 0;
 
 if (UE_id == -1) {
+#if MEGALOG
 printf("SCHEDULER fapi_ul_tpc rnti %x (%d) not existing in MAC\n", dci->rnti, dci->rnti);
+#endif
 dci->tpc = 0;
 return;
 }
@@ -152,7 +160,9 @@ return;
   // this assumes accumulated tpc
   // make sure that we are only sending a tpc update once a frame, otherwise the control loop will freak out
   if (global_subframe < ue_last_pusch_tpc[UE_id] + 10) {
+#if MEGALOG
 printf("TPC PUSCH global sf %ld (%ld/%ld) UE %x: no TPC, last one is too recent (accumulated %d)\n", global_subframe, global_subframe/10, global_subframe%10, dci->rnti, tpc_accumulated);
+#endif
     dci->tpc = 0;
     return;
   }
@@ -175,7 +185,9 @@ printf("TPC PUSCH global sf %ld (%ld/%ld) UE %x: no TPC, last one is too recent 
   if (dci->tpc != 0) {
     ue_last_pusch_tpc[UE_id] = global_subframe;
   }
+#if MEGALOG
 printf("TPC PUSCH global sf %ld (%ld/%ld) UE %x: TPC %d (accumulated %d)\n", global_subframe, global_subframe/10, global_subframe%10, dci->rnti, dci->tpc, tpc_accumulated);
+#endif
 }
 
 /* this structure is used to store downlink ack/nack information
@@ -214,7 +226,9 @@ static struct {
 void fapi_dl_ack_nack(int rnti, int harq_pid, int transport_block, int ack)
 {
   int pos = fapi_dl_ack_nack_data.count;
+#if MEGALOG
 printf("GOT DOWNLINK ack %d for rnti %x harq_pid %d transport_block %d\n", ack, rnti, harq_pid, transport_block);
+#endif
   /* TODO: handle more than 1 TB */
   if (transport_block) { printf("%s:%d:%s: TODO: tb != 0\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 
@@ -243,7 +257,9 @@ unsigned char waiting_for_msg4_ack[65536];
 /* TODO: do it per CC */
 void fapi_ul_ack_nack(int frame, int subframe, int harq_pid, int rnti, int ack)
 {
+#if MEGALOG
 printf("GOT UPLINK ack %d for rnti %x harq_pid %d (f/sf %d/%d)\n", ack, rnti, harq_pid, frame, subframe);
+#endif
   int pos = fapi_ul_ack_nack_data[subframe].count;
   if (pos == MAX_UL_INFO_LIST) {
     LOG_E(MAC, "fapi_ul_ack_nack: full! (f/sf %d/%d)\n", frame, subframe);
@@ -286,7 +302,9 @@ printf("GOT UPLINK ack %d for rnti %x harq_pid %d (f/sf %d/%d)\n", ack, rnti, ha
  */
 void fapi_ul_lc_length(int frame, int subframe, int lcid, int length, int rnti)
 {
+#if MEGALOG
 printf("GOT lcid %d length %d (f/sf %d/%d)\n", lcid, length, frame, subframe);
+#endif
   int pos = fapi_ul_ack_nack_data[subframe].count - 1;
   if (pos < 0) { printf("%s:%d:%s: fatal error\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 
@@ -520,8 +538,10 @@ static void fapi_convert_ul_dci(module_id_t module_idP, int CC_id,
   a->firstCCE = dci->cceIndex;
   a->ra_flag  = 0;
   a->rnti     = dci->rnti;
+#if MEGALOG
 printf("FAPI to MAC ul DCI ue %d rbStart %d rbLen %d tbs %d CCE %d mcs %d ndi %d tpc %d cshift %d cqi_req %d aggrLevel %d\n",
     dci->rnti, dci->rbStart, dci->rbLen, dci->tbSize, dci->cceIndex, dci->mcs, dci->ndi, dci->tpc, dci->n2Dmrs, dci->cqiRequest, dci->aggrLevel);
+#endif
 }
 
 /* index 0 for SIB1, 1 for SIB23 */
@@ -725,7 +745,9 @@ static void fapi_schedule_retransmission_ue(int module_id, int CC_id, int frame,
   d->dci.mcs[0] = latest_mcs[d->rnti][d->dci.harqProcess];
 
   fapi_convert_dl_dci(module_id, CC_id, &d->dci, a);
+#if MEGALOG
 printf("RUN fapi_schedule_retransmission_ue\n");
+#endif
 
   if (d->nr_rlcPDU_List[0] != 0) { printf("%s:%d:%s: error?\n", __FILE__, __LINE__, __FUNCTION__); /*abort();*/ }
   if (d->nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
@@ -735,7 +757,9 @@ printf("RUN fapi_schedule_retransmission_ue\n");
 
   UE_id = find_UE_id(module_id, d->rnti);
 if (UE_id == -1) {
+#if MEGALOG
 printf("SCHEDULER fapi_schedule_retransmission_ue rnti %x (%d) not existing in MAC\n", d->rnti, d->rnti);
+#endif
 abort();
 }
 
@@ -783,7 +807,9 @@ if (d->nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, 
   dci_pdu->Num_common_dci++;
 
   fapi_convert_dl_dci(module_id, CC_id, &d->dci, a);
+#if MEGALOG
 printf("RUN fapi_schedule_ue\n");
+#endif
 
   if (d->nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
@@ -811,7 +837,9 @@ printf("RUN fapi_schedule_ue\n");
         MBMS_FLAG_NO,
         d->rlcPduList[0][i].logicalChannelIdentity,
         d->rlcPduList[0][i].size);
+#if MEGALOG
 printf("RLC_SIZE in fapi_schedule_ue %d (asked %d) lcid %d rnti %x f/sf %d/%d\n", rlc_status.bytes_in_buffer, d->rlcPduList[0][i].size, d->rlcPduList[0][i].logicalChannelIdentity, d->rnti, frame, subframe);
+#endif
     /* TODO: what if we get 0? */
     if (rlc_status.bytes_in_buffer < 0) { printf("%s:%d:%s: error\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 //    if (rlc_status.bytes_in_buffer > d->rlcPduList[0][i].size) abort(); /* that can't happen */
@@ -841,7 +869,9 @@ if (d->rlcPduList[0][i].size == 2) {
     sdu_lengths[num_sdus] = output_length;
     sdu_lcids[num_sdus]   = d->rlcPduList[0][i].logicalChannelIdentity;
     num_sdus++;
+#if MEGALOG
 printf("FILLED %d bytes\n", output_length);
+#endif
   }
 
   /* get size of header and payload */
@@ -863,11 +893,15 @@ printf("FILLED %d bytes\n", output_length);
   }
 
   padding_size = tbs - header_size - payload_size;
+#if MEGALOG
 printf("PADDING_SIZE %d\n", padding_size);
+#endif
 
   UE_id = find_UE_id(module_id, d->rnti);
 if (UE_id == -1) {
+#if MEGALOG
 printf("SCHEDULER fapi_schedule_ue rnti %x (%d) not existing in MAC\n", d->rnti, d->rnti);
+#endif
 abort();
 }
 
@@ -970,7 +1004,9 @@ if (pthread_mutex_lock(&fmut)) abort();
   struct UlInfoListElement_s          ulinfo[MAX_UL_INFO_LIST];
   int                                 ulsf;
 
+#if MEGALOG
 printf("SCHEDULER called for f/sf %d/%d\n", frameP, subframeP);
+#endif
 #if defined(ENABLE_ITTI)
   while (1) {
     // Checks if a message has been sent to MAC sub-task
@@ -1050,7 +1086,9 @@ printf("SCHEDULER called for f/sf %d/%d\n", frameP, subframeP);
         rlc.logicalChannelIdentity = CCCH;
         rlc.rlcTransmissionQueueSize = mac_rrc_get_ccch_size(module_idP, CC_id) + 1;
         LOG_I(MAC, "calling SchedDlRlcBufferReq on CCCH rnti %x queue_size %d\n", rlc.rnti, rlc.rlcTransmissionQueueSize);
+#if MEGALOG
 printf("MAC to FAPI downlink BUF CCCH %d\n", rlc.rlcTransmissionQueueSize);
+#endif
         SchedDlRlcBufferReq(fapi->sched, &rlc);
         /* let's report only once, so put generate_Msg4 to 2
          * (we will generate later on, when FAPI tells us to do so)
@@ -1077,7 +1115,9 @@ printf("MAC to FAPI downlink BUF CCCH %d\n", rlc.rlcTransmissionQueueSize);
 if (rlc.rlcTransmissionQueueSize == 2) rlc.rlcTransmissionQueueSize = 10;
     LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
+#if MEGALOG
 printf("MAC to FAPI downlink BUF DCCH %d\n", rlc_status.bytes_in_buffer);
+#endif
 
     /* DCCH+1 (srb 2, lcid 2) */
     rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH+1, 0);
@@ -1085,7 +1125,9 @@ printf("MAC to FAPI downlink BUF DCCH %d\n", rlc_status.bytes_in_buffer);
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
     LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH+1 rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
+#if MEGALOG
 printf("MAC to FAPI downlink BUF DCCH+1 %d\n", rlc_status.bytes_in_buffer);
+#endif
 
     /* DTCH   (drb 1, lcid 3) */
     rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, DTCH, 0);
@@ -1093,7 +1135,9 @@ printf("MAC to FAPI downlink BUF DCCH+1 %d\n", rlc_status.bytes_in_buffer);
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
     LOG_I(MAC, "calling SchedDlRlcBufferReq on DTCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
+#if MEGALOG
 printf("MAC to FAPI downlink BUF DTCH %d\n", rlc_status.bytes_in_buffer);
+#endif
   }
 
   dlreq.sfnSf                 = frameP * 16 + subframeP;
@@ -1110,7 +1154,9 @@ printf("MAC to FAPI downlink BUF DTCH %d\n", rlc_status.bytes_in_buffer);
     dlinfo[i].nr_harqStatus = 1;                                                         /* TODO: deal with more than 1 TB */
     dlinfo[i].harqStatus[0] = fapi_dl_ack_nack_data.ack[i].ack[0] ? ff_ACK : ff_NACK;    /* TODO: more than 1 TB */
     dlinfo[i].servCellIndex = 0;                                                         /* TODO: get real value for the servCellIndex */
+#if MEGALOG
 printf("MAC to FAPI downlink ack/nack from PHY f/sf %d/%d rnti %x harq %d ack %d\n", frameP, subframeP, dlinfo[i].rnti, dlinfo[i].harqProcessId, fapi_dl_ack_nack_data.ack[i].ack[0]);
+#endif
   }
   if (fapi_dl_ack_nack_data.count) {
     dlreq.nr_dlInfoList = fapi_dl_ack_nack_data.count;
@@ -1131,7 +1177,9 @@ printf("MAC to FAPI downlink ack/nack from PHY f/sf %d/%d rnti %x harq %d ack %d
   /* TODO: rewrite. All should go into fapi_schedule_ue where special cases should be handled */
   for (i = 0; i < dlind.nr_buildDataList; i++) {
     if (dlind.buildDataList[i].ceBitmap[1] != 0 || dlind.buildDataList[i].nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+#if MEGALOG
 printf("FAPI to MAC downlink schedule ue %x channel %d f/sf %d/%d\n", dlind.buildDataList[i].rnti, dlind.buildDataList[i].rlcPduList[0][0].logicalChannelIdentity, frameP, subframeP);
+#endif
     switch (dlind.buildDataList[i].rlcPduList[0][0].logicalChannelIdentity) {
     case 0: /* CCCH */
       if (dlind.buildDataList[i].nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
@@ -1163,7 +1211,9 @@ printf("FAPI to MAC downlink schedule ue %x channel %d f/sf %d/%d\n", dlind.buil
   if (dlind.nr_buildRARList) {
     if (dlind.nr_buildRARList != 1) { printf("%s:%d: more than 1 RAR, todo\n", __FUNCTION__, __LINE__); exit(0); }
     if (dlind.buildRarList[0].carrierIndex != 0) { printf("%s:%d: 2nd CC: todo properly\n", __FUNCTION__, __LINE__); exit(0); }
+#if MEGALOG
 printf("FAPI to MAC downlink schedule RAR ue %x f/sf %d/%d\n", dlind.buildRarList[0].rnti, frameP, subframeP);
+#endif
 dlind.buildRarList[0].grant &= ~1;
     fapi_schedule_RAR(module_idP, dlind.buildRarList[0].carrierIndex, frameP, subframeP,
         dlind.buildRarList[0].rnti, dlind.buildRarList[0].grant, &dlind.buildRarList[0].dci);
@@ -1173,7 +1223,9 @@ dlind.buildRarList[0].grant &= ~1;
     if (dlind.nr_buildBroadcastList != 1) { printf("%s:%d: more than 1 broadcast SI, todo\n", __FUNCTION__, __LINE__); exit(0); }
     if (dlind.buildBroadcastList[0].type == ff_PCCH) { printf("%s:%d: PCCH: todo\n", __FUNCTION__, __LINE__); exit(0); }
     if (dlind.buildBroadcastList[0].carrierIndex != 0) { printf("%s:%d: 2nd CC: todo properly\n", __FUNCTION__, __LINE__); exit(0); }
+#if MEGALOG
 printf("FAPI to MAC downlink schedule SI %d f/sf %d/%d\n", dlind.buildBroadcastList[0].index, frameP, subframeP);
+#endif
     fapi_schedule_SI(module_idP, dlind.buildBroadcastList[0].carrierIndex, frameP, subframeP,
         dlind.buildBroadcastList[0].index,
         &dlind.buildBroadcastList[0].dci);
@@ -1186,7 +1238,9 @@ printf("FAPI to MAC downlink schedule SI %d f/sf %d/%d\n", dlind.buildBroadcastL
       if (dlind.nrOfPdcchOfdmSymbols[CC_id] != NULL) {
         int cc = dlind.nrOfPdcchOfdmSymbols[CC_id]->carrierIndex;
         DCI_pdu[cc]->num_pdcch_symbols = dlind.nrOfPdcchOfdmSymbols[CC_id]->pdcchOfdmSymbolCount;
+#if MEGALOG
 printf("FAPI to MAC downlink DCI_pdu[%d]->num_pdcch_symbols %d f/sf %d/%d\n", cc, DCI_pdu[cc]->num_pdcch_symbols, frameP, subframeP);
+#endif
       }
     }
   }
@@ -1213,7 +1267,9 @@ printf("FAPI to MAC downlink DCI_pdu[%d]->num_pdcch_symbols %d f/sf %d/%d\n", cc
     ulreq.nr_ulInfoList = fapi_ul_ack_nack_data[ulsf].count;
     ulreq.ulInfoList    = ulinfo;
     for (i = 0; i < ulreq.nr_ulInfoList; i++) {
+#if MEGALOG
 printf("MAC to FAPI uplink acknack ue %x f/sf %d/%d ulsf %d [reception frame/subframe %d/%d] ack %d\n", fapi_ul_ack_nack_data[ulsf].ack[i].rnti, frameP, subframeP, ulsf, fapi_ul_ack_nack_data[ulsf].ack[i].reception_frame, fapi_ul_ack_nack_data[ulsf].ack[i].reception_subframe, fapi_ul_ack_nack_data[ulsf].ack[i].ack);
+#endif
       ulinfo[i].puschTransmissionTimestamp = fapi_ul_ack_nack_data[ulsf].ack[i].reception_frame * 16
                                              + fapi_ul_ack_nack_data[ulsf].ack[i].reception_subframe;
       ulinfo[i].rnti                       = fapi_ul_ack_nack_data[ulsf].ack[i].rnti;
@@ -1222,7 +1278,9 @@ printf("MAC to FAPI uplink acknack ue %x f/sf %d/%d ulsf %d [reception frame/sub
       ulinfo[i].servCellIndex              = 0;           /* TODO: get correct value */
       for (j = 0; j < MAX_LC_LIST+1; j++) {
         ulinfo[i].ulReception[j] = fapi_ul_ack_nack_data[ulsf].ack[i].length[j];
+#if MEGALOG
 printf("MAC to FAPI uplink ue %x f/sf %d/%d lcid %d size acked %d\n", fapi_ul_ack_nack_data[ulsf].ack[i].rnti, frameP, subframeP, j, fapi_ul_ack_nack_data[ulsf].ack[i].length[j]);
+#endif
 }
     }
     fapi_ul_ack_nack_data[ulsf].count = 0;
@@ -1246,14 +1304,19 @@ printf("MAC to FAPI uplink ue %x f/sf %d/%d lcid %d size acked %d\n", fapi_ul_ac
     }
   }
 
+#if MEGALOG
 printf("FAPI to MAC uplink nr_dclList %d nr_phichList %d\n", ulind.nr_dciList, ulind.nr_phichList);
+#endif
   for (i = 0; i < ulind.nr_dciList; i++) {
     /* TODO: get the right CC_id from servCellIndex, depending on the UE rnti/pcell/scell settings */
     CC_id = ulind.dciList[i].servCellIndex;
+#if MEGALOG
 printf("FAPI to MAC uplink schedule ue %x ndi %d (fsf %d %d) rbstart %d rblen %d tbsize %d mcs %d\n", ulind.dciList[i].rnti, ulind.dciList[i].ndi, frameP, subframeP, ulind.dciList[i].rbStart, ulind.dciList[i].rbLen, ulind.dciList[i].tbSize, ulind.dciList[i].mcs);
+#endif
     fapi_schedule_uplink(module_idP, CC_id, &ulind.dciList[i]);
   }
 
+#if MEGALOG
 printf("RECAP dci pdu count %d\n", eNB_mac_inst[0].common_channels[0].DCI_pdu.Num_common_dci);
 for (i = 0; i < eNB_mac_inst[0].common_channels[0].DCI_pdu.Num_common_dci; i++) {
 printf("    RECAP %i rnti %x %s dci pdu %s\n", i,
@@ -1268,6 +1331,7 @@ printf("    RECAP %i rnti %x %s\n", i,
   ulind.phichList[i].rnti,
   ulind.phichList[i].phich == ACK ? "ACK" : "NACK");
 }
+#endif
 
   global_subframe++;
 
