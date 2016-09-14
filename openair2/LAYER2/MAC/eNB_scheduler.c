@@ -336,9 +336,9 @@ void fapi_dl_cqi_report(int module_id, int rnti, int frame, int subframe, int cq
   params.nr_vendorSpecificList = 0;
   params.vendorSpecificList    = NULL;
 
-fprintf(stderr, "fsf %d/%d CQI wideband %d rank_indication %d\n", frame, subframe, cqi_wideband, rank_indication);
-for (i = 0; i < MAX_HL_SB; i++)
-fprintf(stderr, "  subband %d: %d\n", i, cqi_subband[i]);
+//fprintf(stderr, "fsf %d/%d CQI wideband %d rank_indication %d\n", frame, subframe, cqi_wideband, rank_indication);
+//for (i = 0; i < MAX_HL_SB; i++)
+//fprintf(stderr, "  subband %d: %d\n", i, cqi_subband[i]);
   SchedDlCqiInfoReq(fapi->sched, &params);
 }
 
@@ -425,7 +425,7 @@ static void fapi_convert_dl_dci(int module_id, int CC_id,
   if (dci->rnti != 0)
     fapi_dl_tpc(module_id, CC_id, dci);
 
-//  if (dci->format == ONE && dci->resAlloc != 0) { printf("ERROR: resAlloc must be 0\n"); abort(); }
+  if (dci->format == ONE && dci->resAlloc != 0) { printf("ERROR: resAlloc must be 0\n"); abort(); }
 
   /* TODO: handle all bandwidths */
   switch (PHY_vars_eNB_g[module_id][CC_id]->lte_frame_parms.N_RB_DL) {
@@ -484,7 +484,7 @@ static void fapi_convert_ul_ ## bandwidth ## MHz_FDD(module_id_t module_idP, int
   d->cqi_req    = dci->cqiRequest;                                                                      \
 if (!cqi_ready[dci->rnti]) d->cqi_req = 0;                                                              \
 d->cqi_req = 0;                                                                                         \
-if (dci->cqiRequest) fprintf(stderr, "cqi req (ready %d) (d->cqi_req %d)!!\n", cqi_ready[dci->rnti], d->cqi_req); \
+/*if (dci->cqiRequest) fprintf(stderr, "cqi req (ready %d) (d->cqi_req %d)!!\n", cqi_ready[dci->rnti], d->cqi_req);*/ \
   d->padding    = 0;                                                                                    \
                                                                                                         \
   a->dci_length = sizeof_DCI0_ ## bandwidth ## MHz_FDD_t;                                               \
@@ -812,6 +812,7 @@ printf("RUN fapi_schedule_ue\n");
         d->rlcPduList[0][i].logicalChannelIdentity,
         d->rlcPduList[0][i].size);
 printf("RLC_SIZE in fapi_schedule_ue %d (asked %d) lcid %d rnti %x f/sf %d/%d\n", rlc_status.bytes_in_buffer, d->rlcPduList[0][i].size, d->rlcPduList[0][i].logicalChannelIdentity, d->rnti, frame, subframe);
+    /* TODO: what if we get 0? */
     if (rlc_status.bytes_in_buffer < 0) { printf("%s:%d:%s: error\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 //    if (rlc_status.bytes_in_buffer > d->rlcPduList[0][i].size) abort(); /* that can't happen */
     if (dlsch_filled + d->rlcPduList[0][i].size > MAX_DLSCH_PAYLOAD_BYTES) {
