@@ -134,7 +134,20 @@ typedef struct {
   /// get delta mcs for fast UL AMC
   int16_t (*estimate_ue_tx_power)(uint32_t tbs, uint32_t nb_rb, uint8_t control_only, lte_prefix_type_t ncp, uint8_t use_srs);
 
+#if Rel10
+  /// set/unset Carrier Aggregation configuration of an UE
+  void (*ca_config)(uint8_t  Mod_id,
+                    uint16_t rnti,
+                    int      ca_configured);
+  /// activate/deactivate scells
+  /// bit 0 of activation_bitfield is scell 0, ...
+  void (*ca_activate)(uint8_t  Mod_id,
+                      uint16_t rnti,
+                      uint8_t  activation_bitfield);
+#endif
+
   int (*mac_phy_remove_ue)(module_id_t Mod_idP,rnti_t rntiP);
+
   /// UE functions
 
   /// reset the ue phy

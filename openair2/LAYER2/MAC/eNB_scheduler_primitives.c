@@ -267,6 +267,10 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP)
     UE_list->numactiveCCs[UE_id]                   = 1;
     UE_list->numactiveULCCs[UE_id]                 = 1;
     UE_list->pCC_id[UE_id]                         = cc_idP;
+#ifdef Rel10
+    UE_list->scell_config[UE_id].scell_count       = 0;
+    UE_list->scell_config[UE_id].to_configure      = 0;
+#endif
     UE_list->ordered_CCids[0][UE_id]               = cc_idP;
     UE_list->ordered_ULCCids[0][UE_id]             = cc_idP;
     UE_list->num_UEs++;
@@ -740,7 +744,31 @@ void add_common_dci(DCI_PDU *DCI_pdu,
 
 void add_ue_spec_dci(DCI_PDU *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_size_bytes,unsigned char aggregation,unsigned char dci_size_bits,unsigned char dci_fmt,uint8_t ra_flag)
 {
+extern int FRAME_RX, SUBFRAME_RX, FRAME_TX, SUBFRAME_TX;
+static char *ff[] = { "format0", "format1",
+              "format1A",
+              "format1B",
+              "format1C",
+              "format1D",
+              "format1E_2A_M10PRB",
+              "format2",
+              "format2A",
+              "format2B",
+              "format2C",
+              "format2D",
+              "format3",
+"UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN" };
 
+//printf("add_ue_spec_dci rnti %x dci_fmt %s len %d (RX fr/subfr %d %d) (TX fr/subfr %d %d)\n", rnti, ff[dci_fmt], dci_size_bits, FRAME_RX, SUBFRAME_RX, FRAME_TX, SUBFRAME_TX);
+//int i;
+//char v[64];
+//unsigned int val = *(unsigned int*)pdu;
+//for (i = 0; i < dci_size_bits; i++) {
+//  v[i] = val&0x80000000?'1':'0';
+//  val <<= 1;
+//}
+//v[i]=0;
+//printf("%s\n", v);
   memcpy(&DCI_pdu->dci_alloc[DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci].dci_pdu[0],pdu,dci_size_bytes);
   DCI_pdu->dci_alloc[DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci].dci_length = dci_size_bits;
   DCI_pdu->dci_alloc[DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci].L          = aggregation;
@@ -1210,6 +1238,11 @@ void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP
   UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
  
   if (UE_id  != -1) {
+    /* no SR indication if the CC is not the primary CC
+     * (the UE currently can only transmit on the primary CC)
+     */
+    if (cc_idP != UE_PCCID(mod_idP, UE_id))
+      return;
     if (mac_eNB_get_rrc_status(mod_idP,UE_RNTI(mod_idP,UE_id)) < RRC_CONNECTED)
       LOG_I(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d on CC_id %d\n",mod_idP,rntiP,frameP,subframeP, UE_id,cc_idP);
     UE_list->UE_template[cc_idP][UE_id].ul_SR = 1;

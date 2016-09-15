@@ -678,7 +678,9 @@ if (TBsize < msg4_header_length+rrc_sdu_length) abort();
                                  0,                           // no timing advance
                                  RA_template->cont_res_id,  // contention res id
                                  msg4_padding,                // no padding
-                                 msg4_post_padding);
+                                 msg4_post_padding,
+                                 /* TODO: scell bitmap command */
+                                 0, 0);
 
   memcpy((void*)&eNB->UE_list.DLSCH_pdu[CC_id][0][UE_id].payload[0][offset],
          &eNB->common_channels[CC_id].CCCH_pdu.payload[0],
@@ -914,7 +916,9 @@ abort();
       0,                                     /* TODO: timing advance */
       NULL,                                  // contention res id
       padding_size <= 2 ? padding_size : 0,
-      padding_size > 2 ? padding_size : 0);
+      padding_size > 2 ? padding_size : 0,
+      /* TODO: scell bitmap command */
+      0, 0);
 
   /* fill payload */
   memcpy(&UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][offset], dlsch_buffer, dlsch_filled);

@@ -2021,12 +2021,42 @@ do_RRCConnectionReconfiguration(
   rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.dedicatedInfoNASList = dedicatedInfoNASList;
   rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.securityConfigHO     = NULL;
 
+  if (SCell_config != NULL) {
+    RRCConnectionReconfiguration_r8_IEs_t *r8;
+    RRCConnectionReconfiguration_v890_IEs_t *v890;
+    RRCConnectionReconfiguration_v920_IEs_t *v920;
+    RRCConnectionReconfiguration_v1020_IEs_t *v1020;
+    SCellToAddModList_r10_t *addlist;
+    r8 = &rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8;
+    if (r8->nonCriticalExtension == NULL)
+      r8->nonCriticalExtension = CALLOC(1, sizeof(RRCConnectionReconfiguration_v890_IEs_t));
+    v890 = r8->nonCriticalExtension;
+    if (v890->nonCriticalExtension == NULL)
+      v890->nonCriticalExtension = CALLOC(1, sizeof(RRCConnectionReconfiguration_v920_IEs_t));
+    v920 = v890->nonCriticalExtension;
+    if (v920->nonCriticalExtension == NULL)
+      v920->nonCriticalExtension = CALLOC(1, sizeof(RRCConnectionReconfiguration_v1020_IEs_t));
+    v1020 = v920->nonCriticalExtension;
+    if (v1020->sCellToAddModList_r10 == NULL)
+      v1020->sCellToAddModList_r10 = CALLOC(1, sizeof(SCellToAddModList_r10_t));
+    addlist = v1020->sCellToAddModList_r10;
+    if (ASN_SEQUENCE_ADD(&addlist->list, SCell_config)) abort();
+  }
+
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message,
                                    (void*)&dl_dcch_msg,
                                    buffer,
                                    RRC_BUF_SIZE);
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %l)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
+
+{
+int i;
+for(i=0;i<(enc_rval.encoded+7)/8;i++)
+printf("%2.2x ", (unsigned char)buffer[i]);
+printf("\n");
+}
+xer_fprint(stdout,&asn_DEF_DL_DCCH_Message,(void*)&dl_dcch_msg);
 
 #ifdef XER_PRINT
   xer_fprint(stdout,&asn_DEF_DL_DCCH_Message,(void*)&dl_dcch_msg);

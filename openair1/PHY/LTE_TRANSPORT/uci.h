@@ -143,6 +143,17 @@ HLC_subband_cqi_nopmi_5MHz;
 
 typedef struct __attribute__((packed))
 {
+  uint32_t padding:28;
+  uint32_t diffcqi2:14;
+  uint32_t cqi2:4;
+  uint32_t diffcqi1:14;
+  uint32_t cqi1:4;
+}
+HLC_subband_cqi_nopmi_2CC_5MHz;
+#define sizeof_HLC_subband_cqi_nopmi_2CC_5MHz 36
+
+typedef struct __attribute__((packed))
+{
   uint32_t padding:12;
   uint32_t pmi:2;
   uint32_t diffcqi1:14;
@@ -212,6 +223,17 @@ HLC_subband_cqi_nopmi_10MHz;
 
 typedef struct __attribute__((packed))
 {
+  uint32_t padding:20;
+  uint32_t diffcqi2:18;
+  uint32_t cqi2:4;
+  uint32_t diffcqi1:18;
+  uint32_t cqi1:4;
+}
+HLC_subband_cqi_nopmi_2CC_10MHz;
+#define sizeof_HLC_subband_cqi_nopmi_2CC_10MHz 44
+
+typedef struct __attribute__((packed))
+{
   uint32_t padding:8;
   uint32_t pmi:2;
   uint32_t diffcqi1:18;
@@ -278,6 +300,17 @@ typedef struct __attribute__((packed))
 }
 HLC_subband_cqi_nopmi_20MHz;
 #define sizeof_HLC_subband_cqi_nopmi_20MHz 30
+
+typedef struct __attribute__((packed))
+{
+  uint32_t padding:4;
+  uint32_t diffcqi2:26;
+  uint32_t cqi2:4;
+  uint32_t diffcqi1:26;
+  uint32_t cqi1:4;
+}
+HLC_subband_cqi_nopmi_2CC_20MHz;
+#define sizeof_HLC_subband_cqi_nopmi_2CC_20MHz 60
 
 typedef struct __attribute__((packed))
 {

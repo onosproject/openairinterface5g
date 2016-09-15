@@ -588,6 +588,10 @@ int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,ui
   mac_xface->Msg1_transmitted          = Msg1_tx;
   mac_xface->ra_failed                 = ra_failed;
   mac_xface->ra_succeeded              = ra_succeeded;
+#if Rel10
+  mac_xface->ca_config                 = ca_config;
+  mac_xface->ca_activate               = ca_activate;
+#endif
   mac_xface->mac_phy_remove_ue         = mac_phy_remove_ue;
 
   LOG_I(MAC,"[MAIN] init UE MAC functions \n");

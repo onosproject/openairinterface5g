@@ -402,8 +402,12 @@ void phy_config_sib13_eNB(uint8_t Mod_id,int CC_id,int mbsfn_Area_idx,
 void phy_config_dedicated_eNB_step2(PHY_VARS_eNB *phy_vars_eNB)
 {
 
-  uint8_t UE_id;
+  uint8_t UE_id,i,j;
   struct PhysicalConfigDedicated *physicalConfigDedicated;
+  struct PUCCH_ConfigDedicated_v1020__pucch_Format_r10__channelSelection_r10 *cs;
+  struct PUCCH_ConfigDedicated_v1020__pucch_Format_r10__channelSelection_r10__n1PUCCH_AN_CS_r10__setup__n1PUCCH_AN_CS_List_r10 *list1;
+  struct N1PUCCH_AN_CS_r10 *list2;
+
 
   for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++) {
     physicalConfigDedicated = phy_vars_eNB->physicalConfigDedicated[UE_id];
@@ -492,8 +496,45 @@ void phy_config_dedicated_eNB_step2(PHY_VARS_eNB *phy_vars_eNB)
 
       }
 
+#ifdef Rel10
+      if (physicalConfigDedicated->ext2) {
+	if (physicalConfigDedicated->ext2->pucch_ConfigDedicated_v1020) {
+	  if (physicalConfigDedicated->ext2->pucch_ConfigDedicated_v1020->pucch_Format_r10) {
+	    if (physicalConfigDedicated->ext2->pucch_ConfigDedicated_v1020->pucch_Format_r10->present==PUCCH_ConfigDedicated_v1020__pucch_Format_r10_PR_channelSelection_r10) {
+	      phy_vars_eNB->pucch_config_dedicated[UE_id].channel_selection = 1;
+	      cs = &(physicalConfigDedicated->ext2->pucch_ConfigDedicated_v1020->pucch_Format_r10->choice.channelSelection_r10);
+	      if (cs->n1PUCCH_AN_CS_r10) {
+		if (cs->n1PUCCH_AN_CS_r10->present==PUCCH_ConfigDedicated_v1020__pucch_Format_r10__channelSelection_r10__n1PUCCH_AN_CS_r10_PR_setup) {
+		  list1 = &(cs->n1PUCCH_AN_CS_r10->choice.setup.n1PUCCH_AN_CS_List_r10);
+		  for (i=0;i<list1->list.count;i++) {
+		    list2 = list1->list.array[i];
+		    for (j=0;j<list2->list.count;j++) {
+		      phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[j][i]=*(list2->list.array[j]);
+		    }
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+#endif
       phy_vars_eNB->physicalConfigDedicated[UE_id] = NULL;
     }
+
+    /* To be done properly! for the moment we force it to 1 CROUX */
+    phy_vars_eNB->pucch_config_dedicated[UE_id].channel_selection = 1;
+
+    /* to be done properly, for the moment same values as in RRC CROUX */
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[0][0] = 30;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[1][0] = 31;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[2][0] = 32;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[3][0] = 33;
+
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[0][1] = 30;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[1][1] = 31;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[2][1] = 32;
+    phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[3][1] = 33;
   }
 }
 
@@ -1529,6 +1570,9 @@ int phy_init_lte_eNB(PHY_VARS_eNB *phy_vars_eNB,
   phy_vars_eNB->pdsch_config_dedicated->p_a = dB0; //defaul value until overwritten by RRCConnectionReconfiguration
 
   init_prach_tables(839);
+
+  for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++)
+    phy_vars_eNB->CA_configured[UE_id] = 0;
 
   return (0);
 }

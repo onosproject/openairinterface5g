@@ -529,6 +529,7 @@ void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP,un
                   TBsize = 57;
                 }
 
+printf("Msg4 MCS %d\n", ((DCI1A_5MHz_TDD_1_6_t*)&RA_template[i].RA_alloc_pdu2[0])->mcs);
 		((DCI1A_5MHz_FDD_t*)&RA_template->RA_alloc_pdu2[0])->type=1;
 		((DCI1A_5MHz_FDD_t*)&RA_template->RA_alloc_pdu2[0])->vrb_type=0;
 		((DCI1A_5MHz_FDD_t*)&RA_template->RA_alloc_pdu2[0])->rv=0;
@@ -643,7 +644,11 @@ void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP,un
 					     0,                           // no timing advance
 					     RA_template->cont_res_id,  // contention res id
 					     msg4_padding,                // no padding
-					     msg4_post_padding);
+					     msg4_post_padding
+#ifdef Rel10
+                                             , 0, 0  /* no scell config */
+#endif
+                                            );
 	      
 	      memcpy((void*)&eNB->UE_list.DLSCH_pdu[CC_id][0][(unsigned char)UE_id].payload[0][(unsigned char)offset],
 		     &eNB->common_channels[CC_id].CCCH_pdu.payload[0],

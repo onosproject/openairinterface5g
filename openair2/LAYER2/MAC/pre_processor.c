@@ -724,7 +724,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
       //PHY_vars_eNB_g[Mod_id]->mu_mimo_mode[UE_id].dl_pow_off = dl_pow_off[UE_id];
 
       if (ue_sched_ctl->pre_nb_available_rbs[CC_id] > 0 ) {
-        LOG_D(MAC,"******************DL Scheduling Information for UE%d ************************\n",UE_id);
+        LOG_D(MAC,"******************DL Scheduling Information for UE%d CC %d************************\n",UE_id, CC_id);
         LOG_D(MAC,"dl power offset UE%d = %d \n",UE_id,ue_sched_ctl->dl_pow_off[CC_id]);
         LOG_D(MAC,"***********RB Alloc for every subband for UE%d ***********\n",UE_id);
 

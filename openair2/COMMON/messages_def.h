@@ -47,3 +47,4 @@
 #include "udp_messages_def.h"
 #include "gtpv1_u_messages_def.h"
 
+MESSAGE_DEF(CROUX_HACK, MESSAGE_PRIORITY_MED, croux_struct, croux)

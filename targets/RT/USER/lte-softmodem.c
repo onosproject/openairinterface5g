@@ -958,6 +958,7 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 
   slot_offset = subframe*phy_vars_eNB->lte_frame_parms.samples_per_tti;
 
+//printf("slot_offset_F %d slot_offset %d slot_sizeF %d subframe %d\n", slot_offset_F, slot_offset, slot_sizeF, subframe);
   if ((subframe_select(&phy_vars_eNB->lte_frame_parms,subframe)==SF_DL)||
       ((subframe_select(&phy_vars_eNB->lte_frame_parms,subframe)==SF_S))) {
     //    LOG_D(HW,"Frame %d: Generating slot %d\n",frame,next_slot);
@@ -995,6 +996,27 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 	len = phy_vars_eNB->lte_frame_parms.samples_per_tti>>1;
       else
 	len = phy_vars_eNB->lte_frame_parms.samples_per_tti;
+
+#ifdef EXMIMO
+      /* check that we don't write too late
+       * note: this test has only been tried for 5MHz and 10MHz bandwidths
+       */
+      {
+        volatile unsigned int *DAQ_MBOX = openair0_daq_cnt();
+        unsigned int current = *DAQ_MBOX;
+        unsigned int target_min = (subframe+9)%10 * 15;
+        unsigned int target_max;
+        switch (phy_vars_eNB->lte_frame_parms.N_RB_DL) {
+          case 25: target_max = target_min + 15 - 6; break;
+          case 50: target_max = target_min + 15 - 3; break; /* test code always fail at -1 so may fail at -2 so -3 max */
+          default: printf("N_RB_DL %d not handled, exit\n", phy_vars_eNB->lte_frame_parms.N_RB_DL); exit(1);
+        }
+        if (!(current >= target_min && current <= target_max))
+          LOG_E(PHY, "[eNB %d/%d] writing subframe %d is done too late! (current %d min %d max %d)\n",
+                phy_vars_eNB->Mod_id, phy_vars_eNB->CC_id, subframe, current, target_min, target_max);
+      }
+#endif
+
       /*
       for (i=0;i<len;i+=4) {
 	dummy_tx_b[i] = 0x100;
@@ -1005,7 +1027,6 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
       for (i=0; i<len; i++) {
         tx_offset = (int)slot_offset+time_offset[aa]+i;
 
-	
         if (tx_offset<0)
           tx_offset += LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->lte_frame_parms.samples_per_tti;
 
@@ -1063,6 +1084,7 @@ static struct {
  */
 static void* eNB_thread_tx( void* param )
 {
+while(1) pause();
   static int eNB_thread_tx_status[NUM_ENB_THREADS];
 
   eNB_proc_t *proc = (eNB_proc_t*)param;
@@ -1252,6 +1274,8 @@ static void* eNB_thread_tx( void* param )
       if (oai_exit)
         break;
 
+FRAME_TX = proc->frame_tx;
+SUBFRAME_TX = proc->subframe;
       phy_procedures_eNB_TX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay, NULL );
 
       /* we're done, let the next one proceed */
@@ -1366,6 +1390,7 @@ static void* eNB_thread_tx( void* param )
  */
 static void* eNB_thread_rx( void* param )
 {
+while(1) pause();
   static int eNB_thread_rx_status[NUM_ENB_THREADS];
 
   eNB_proc_t *proc = (eNB_proc_t*)param;
@@ -1538,6 +1563,8 @@ LOG_I( HW, "[SCHED][eNB] RX thread %d started on CPU %d TID %ld, sched_policy = 
     if ((((PHY_vars_eNB_g[0][proc->CC_id]->lte_frame_parms.frame_type == TDD )&&(subframe_select(&PHY_vars_eNB_g[0][proc->CC_id]->lte_frame_parms,proc->subframe_rx)==SF_UL)) ||
          (PHY_vars_eNB_g[0][proc->CC_id]->lte_frame_parms.frame_type == FDD))) {
 
+FRAME_RX = proc->frame_rx;
+SUBFRAME_RX = proc->subframe;
       phy_procedures_eNB_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
     }
 
@@ -1688,6 +1715,7 @@ void init_eNB_proc(void)
  */
 void kill_eNB_proc(void)
 {
+exit(0);
   int *status;
 
   for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++)
@@ -1757,7 +1785,19 @@ void kill_eNB_proc(void)
     }
 }
 
-
+static unsigned long daclock(void)
+{
+  static unsigned long old=0;
+  unsigned long new;
+  unsigned long ret;
+  struct timespec t;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &t);
+  new = (unsigned long)t.tv_sec * (unsigned long)1000000000 + (unsigned long)t.tv_nsec;
+if (new < old) { printf("that cant be %ld %ld new %ld old %ld %ld\n", (unsigned long)t.tv_sec, (unsigned long)t.tv_nsec, new, old, sizeof(unsigned long)); fflush(stdout); abort(); }
+  ret = new - old;
+  old = new;
+  return ret;
+}
 
 
 
@@ -1818,6 +1858,7 @@ static void* eNB_thread( void* arg )
   attr.sched_nice = 0;
   attr.sched_priority = 0;
 
+#if 0
   /* This creates a .2 ms  reservation */
   attr.sched_policy = SCHED_DEADLINE;
   attr.sched_runtime  = (0.3 * 100) * 10000;
@@ -1831,8 +1872,21 @@ static void* eNB_thread( void* arg )
     LOG_I(HW,"[SCHED][eNB] eNB main deadline thread %ld started on CPU %d\n",
           gettid(),sched_getcpu());
   }
+#endif
 
-#else
+attr.sched_policy = SCHED_FIFO;
+attr.sched_nice = -20;
+attr.sched_priority = sched_get_priority_max(SCHED_FIFO);
+if (sched_setattr(0, &attr, flags) < 0 ) {
+  perror("[SCHED] main eNB thread: sched_setattr failed\n");
+  exit(0);
+}
+cpu_set_t cpuset;
+CPU_ZERO(&cpuset);
+CPU_SET(3, &cpuset);
+if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset)) abort();
+
+#else //DEADLINE_SCHEDULER
 
   int policy, s, j;
   struct sched_param sparam;
@@ -2208,6 +2262,7 @@ static void* eNB_thread( void* arg )
 #else
       int sf = hw_subframe;
 #endif
+
       /* TODO: is it the right place for master tick? */
       T(T_ENB_MASTER_TICK, T_INT(0), T_INT(frame % 1024), T_INT(sf));
 #if 0
@@ -2810,12 +2865,20 @@ static void get_options (int argc, char **argv)
 
         //for (j=0; j < enb_properties->properties[i]->nb_cc; j++ ){
         frame_parms[CC_id]->Nid_cell            =  enb_properties->properties[i]->Nid_cell[CC_id];
+fprintf(stderr, "CC %d ID %d\n", CC_id, frame_parms[CC_id]->Nid_cell);
         frame_parms[CC_id]->N_RB_DL             =  enb_properties->properties[i]->N_RB_DL[CC_id];
         frame_parms[CC_id]->N_RB_UL             =  enb_properties->properties[i]->N_RB_DL[CC_id];
         frame_parms[CC_id]->nb_antennas_tx      =  enb_properties->properties[i]->nb_antennas_tx[CC_id];
         frame_parms[CC_id]->nb_antennas_tx_eNB  =  enb_properties->properties[i]->nb_antenna_ports[CC_id];
         frame_parms[CC_id]->nb_antennas_rx      =  enb_properties->properties[i]->nb_antennas_rx[CC_id];
         //} // j
+
+        frame_parms[CC_id]->eutra_band          =  enb_properties->properties[i]->eutra_band[CC_id];
+        frame_parms[CC_id]->downlink_frequency  =  enb_properties->properties[i]->downlink_frequency[CC_id];
+        frame_parms[CC_id]->phich_config_common.phich_duration = enb_properties->properties[i]->phich_duration[CC_id];
+        frame_parms[CC_id]->phich_config_common.phich_resource = enb_properties->properties[i]->phich_resource[CC_id];
+        frame_parms[CC_id]->pdsch_config_common.referenceSignalPower = enb_properties->properties[i]->pdsch_referenceSignalPower[CC_id];
+        frame_parms[CC_id]->pdsch_config_common.p_b = enb_properties->properties[i]->pdsch_p_b[CC_id];
       }
 
 
@@ -3606,6 +3669,7 @@ int main( int argc, char **argv )
   }
 
 #ifdef EXMIMO
+openair0_cfg[0].rx_freq[1] = 0;
   openair0_config(&openair0_cfg[0],UE_flag);
 #endif
 
@@ -4087,5 +4151,3 @@ void print_opp_meas(void) {
     print_meas(&softmodem_stats_rx_sf[sfn],"[eNB][total_phy_proc_rx]",NULL,NULL);
   }
 }
-
-

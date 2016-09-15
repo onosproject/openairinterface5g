@@ -3005,6 +3005,9 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *phy_vars_ue,
       format0_size_bytes = sizeof(DCI0_5MHz_FDD_t);
       format1_size_bits  = sizeof_DCI1_5MHz_FDD_t;
       format1_size_bytes = sizeof(DCI1_5MHz_FDD_t);
+//printf("!!!!!!!!!!!!!!!!!!!! %s\n", __FILE__);
+printf("%s:%d: abort for debug\n", __FILE__, __LINE__);
+abort();
 
       if (frame_parms->nb_antennas_tx_eNB == 2) {
         format2_size_bits  = sizeof_DCI2_5MHz_2A_FDD_t;

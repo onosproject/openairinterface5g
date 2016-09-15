@@ -138,6 +138,10 @@ generate_dlsch_header(
   unsigned char *ue_cont_res_id,
   unsigned char short_padding,
   unsigned short post_padding
+#ifdef Rel10
+  , uint8_t scell_bitmap,
+  int     scell_bitmap_cmd
+#endif
 )
 //------------------------------------------------------------------------------
 {
@@ -166,6 +170,33 @@ generate_dlsch_header(
     mac_header_ptr->LCID = SHORT_PADDING;
     last_size=1;
   }
+
+#ifdef Rel10
+  if (scell_bitmap_cmd != 0) {
+    if (first_element>0) {
+      mac_header_ptr->E = 1;
+      mac_header_ptr++;
+    } else {
+      first_element=1;
+    }
+
+    mac_header_ptr->R    = 0;
+    mac_header_ptr->E    = 0;
+    mac_header_ptr->LCID = CC_ACTIVATE_DEACTIVATE;
+    last_size=1;
+
+    ((CC_ELEMENT*)ce_ptr)->R = 0;
+    ((CC_ELEMENT*)ce_ptr)->C1 = (scell_bitmap >> 1) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C2 = (scell_bitmap >> 2) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C3 = (scell_bitmap >> 3) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C4 = (scell_bitmap >> 4) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C5 = (scell_bitmap >> 5) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C6 = (scell_bitmap >> 6) & 1;
+    ((CC_ELEMENT*)ce_ptr)->C7 = (scell_bitmap >> 7) & 1;
+    ce_ptr += sizeof(CC_ELEMENT);
+    LOG_I(MAC,"MAC CE scell bitmap sent to UE. Bitmap is 0x%2.2x\n", scell_bitmap);
+  }
+#endif /* Rel10 */
 
   if (drx_cmd != 255) {
     if (first_element>0) {
@@ -421,174 +452,6 @@ set_ul_DAI(
   }
 }
 
-#if FAPI
-
-//------------------------------------------------------------------------------
-void
-schedule_ue_spec(
-  module_id_t   module_idP,
-  frame_t       frameP,
-  sub_frame_t   subframeP,
-  int*          mbsfn_flag
-)
-//------------------------------------------------------------------------------
-{
-  fapi_interface_t                     *fapi = eNB_mac_inst[module_idP].fapi;
-  struct SchedDlRlcBufferReqParameters rlc;
-  struct SchedDlTriggerReqParameters   req;
-  struct SchedDlConfigIndParameters    ind;
-  int                                  UE_id;
-  mac_rlc_status_resp_t                rlc_status;
-  eNB_MAC_INST                         *eNB      = &eNB_mac_inst[module_idP];
-  UE_list_t                            *UE_list  = &eNB->UE_list;
-  uint16_t                             sdu_length;
-  uint8_t                              sdu_lcid;
-  struct BuildDataListElement_s        *d;
-  unsigned char                        dlsch_buffer[MAX_DLSCH_PAYLOAD_BYTES];
-  int                                  offset;
-  void                                 *DLSCH_dci;
-  DCI_PDU                              *DCI_pdu = &eNB->common_channels[0 /* CC_id */].DCI_pdu;
-
-  /* let's only schedule subframe 2 for the moment */
-  if (subframeP != 2) return;
-
-#if 0
-  /* hack to set has_ue == 1 in the scheduler */
-  {
-    void has_ue(void *, int);
-    if (UE_list->head != -1) has_ue(fapi->sched, UE_RNTI(module_idP, UE_list->head));
-  }
-#endif
-
-  /* update RLC buffers status in the scheduler */
-  for (UE_id = UE_list->head; UE_id >= 0; UE_id = UE_list->next[UE_id]) {
-    memset(&rlc, 0, sizeof(rlc));
-    rlc.rnti = UE_RNTI(module_idP, UE_id);
-
-    /* this code is wrong. We should have an RLC function "get_buffer_occupancy" */
-    /* in the meantime let's pretend we ask for 20 bytes */
-    /* plus we should loop over all configured RaB */
-
-    /* DCCH   (srb 1, lcid 1) */
-    rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, 0 /* eNB_index */,
-        frameP, 1 /* enb_flagP */, 0 /* MBMS_flagP */, DCCH, 20);
-    rlc.logicalChannelIdentity = DCCH;
-    rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
-    LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
-    SchedDlRlcBufferReq(fapi->sched, &rlc);
-
-    /* DCCH+1 (srb 2, lcid 2) */
-    rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, 0 /* eNB_index */,
-        frameP, 1 /* enb_flagP */, 0 /* MBMS_flagP */, DCCH+1, 20);
-    rlc.logicalChannelIdentity = DCCH+1;
-    rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
-    LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH+1 rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
-    SchedDlRlcBufferReq(fapi->sched, &rlc);
-
-    /* DTCH   (drb 1, lcid 3) */
-    rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, 0 /* eNB_index */,
-        frameP, 1 /* enb_flagP */, 0 /* MBMS_flagP */, DTCH, 20);
-    rlc.logicalChannelIdentity = DTCH;
-    rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
-    LOG_I(MAC, "calling SchedDlRlcBufferReq on DTCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
-    SchedDlRlcBufferReq(fapi->sched, &rlc);
-  }
-
-  req.sfnSf                 = frameP * 16 + subframeP;
-  req.nr_dlInfoList         = 0;
-  req.dlInfoList            = NULL;
-  req.nr_vendorSpecificList = 0;
-  req.vendorSpecificList    = NULL;
-
-  LOG_I(MAC, "calling SchedDlTriggerReq\n");
-  SchedDlTriggerReq(fapi->sched, &req);
-  LOG_I(MAC, "calling SchedDlConfigInd\n");
-  SchedDlConfigInd(fapi, &ind);
-  LOG_I(MAC, "SchedDlConfigInd returns ind.nr_buildDataList %d\n", ind.nr_buildDataList);
-  LOG_I(MAC, "SchedDlConfigInd returns ind.nr_buildRARList %d\n", ind.nr_buildRARList);
-  LOG_I(MAC, "SchedDlConfigInd returns ind.nr_buildBroadcastList %d\n", ind.nr_buildBroadcastList);
-
-  if (ind.nr_buildDataList == 0) return;
-
-  /*LOG_D*/LOG_I(MAC, "we have something to schedule!!\n");
-
-  /* let's process only UE_id == 0 for the moment */
-  UE_id = 0;
-
-  d = &ind.buildDataList[0];
-  /* we suppose 1 RLC PDU - let's crash if it's not the case */
-  if (d->nr_rlcPDU_List != 1) { LOG_E(MAC, "this should not happen\n"); abort(); }
-
-  sdu_lcid = d->rlcPduList[0][0].logicalChannelIdentity;
-  sdu_length = mac_rlc_data_req(
-      module_idP,
-      d->rnti,
-      module_idP,
-      frameP,
-      ENB_FLAG_YES,
-      MBMS_FLAG_NO,
-      d->rlcPduList[0][0].logicalChannelIdentity,
-      (char *)dlsch_buffer);
-  /*LOG_D*/LOG_I(MAC, "got sdu length %d\n", sdu_length);
-
-  offset = generate_dlsch_header(
-      (unsigned char*)UE_list->DLSCH_pdu[0][0][UE_id].payload[0],
-      1,              /* num sdu */
-      &sdu_length,
-      &sdu_lcid,
-      255,            /* no rdx */
-      0,              /* timing advance */
-      NULL,           /* contention res id */
-      0,              /* padding */
-      32-2-1-sdu_length); /* post padding */
-
-  /*LOG_D*/LOG_I(MAC, "offset %d\n", offset);
-
-  memcpy(&UE_list->DLSCH_pdu[0 /* CC_id */][0][UE_id].payload[0][offset],
-      dlsch_buffer,
-      sdu_length);
-
-  add_ue_dlsch_info(module_idP,
-      0,  /* CC_id */
-      UE_id,
-      subframeP,
-      S_DL_SCHEDULED);
-
-  DLSCH_dci = (void *)UE_list->UE_template[0 /*CC_id*/][UE_id].DLSCH_DCI[d->dci.harqProcess];
-
-  /* only 5MHz FDD format1 for the moment */
-  if (d->dci.format != ONE) { LOG_E(MAC, "bad dci format\n"); abort(); }
-  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->mcs      = d->dci.mcs[0];
-  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->harq_pid = d->dci.harqProcess;
-  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->ndi      = d->dci.ndi[0];
-  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rv       = d->dci.rv[0];
-  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->TPC      = d->dci.tpc;
-
-  //nCCE_used[0] = 1;
-
-  /* let's do the job of fill_DLSCH_dci */
-
-  eNB_dlsch_info[module_idP][0 /* CC_id */][UE_id].status = S_DL_WAITING;
-
-  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rballoc = d->dci.rbBitmap;
-  ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rah = 0;
-
-  add_ue_spec_dci(DCI_pdu,
-      DLSCH_dci,
-      d->rnti,
-      sizeof(DCI1_5MHz_FDD_t),
-      d->dci.aggrLevel == 1 ? 0:            /* process_ue_cqi (module_idP,UE_id),//aggregation, */
-      d->dci.aggrLevel == 2 ? 1:
-      d->dci.aggrLevel == 4 ? 2:
-                              3,
-      sizeof_DCI1_5MHz_FDD_t,
-      format1,
-      0);
-
-}
-
-#else /* FAPI */
-
 //------------------------------------------------------------------------------
 void
 schedule_ue_spec(
@@ -630,6 +493,10 @@ schedule_ue_spec(
   int32_t                 tpc=1;
   static int32_t          tpc_accumulated=0;
   UE_sched_ctrl           *ue_sched_ctl;
+#ifdef Rel10
+  uint8_t               scell_bitmap = 0;
+#endif
+  int                   scell_activation_len = 0; /* not into #ifdef Rel10 to ease code readability below */
   int i;
 
   if (UE_list->head==-1) {
@@ -743,6 +610,7 @@ schedule_ue_spec(
       DevCheck(((eNB_UE_stats->DL_cqi[0] < MIN_CQI_VALUE) || (eNB_UE_stats->DL_cqi[0] > MAX_CQI_VALUE)),
       eNB_UE_stats->DL_cqi[0], MIN_CQI_VALUE, MAX_CQI_VALUE);
       */
+//eNB_UE_stats->DL_cqi[0] = 14;
       eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[eNB_UE_stats->DL_cqi[0]];
       eNB_UE_stats->dlsch_mcs1 = cmin(eNB_UE_stats->dlsch_mcs1, openair_daq_vars.target_ue_dl_mcs);
 
@@ -756,6 +624,7 @@ schedule_ue_spec(
 #endif
 
       // store stats
+//eNB_UE_stats->DL_cqi[0] = 14;
       UE_list->eNB_UE_stats[CC_id][UE_id].dl_cqi= eNB_UE_stats->DL_cqi[0];
 
       // initializing the rb allocation indicator for each UE
@@ -952,6 +821,7 @@ schedule_ue_spec(
             break;
           }
 
+//printf("ACKNACK add_ue_dlsch_info RETRANSMIT CC_id %d UE_id %d subframeP %d nb_rb %d mcs %d num_retransmission %d\n", CC_id, UE_id, subframeP, nb_rb, eNB_UE_stats->dlsch_mcs1, UE_list->eNB_UE_stats[CC_id][UE_id].num_retransmission+1);
           add_ue_dlsch_info(module_idP,
                             CC_id,
                             UE_id,
@@ -964,6 +834,7 @@ schedule_ue_spec(
           UE_list->eNB_UE_stats[CC_id][UE_id].total_rbs_used_retx+=nb_rb;
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs1=eNB_UE_stats->dlsch_mcs1;
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs2=eNB_UE_stats->dlsch_mcs1;
+printf("\x1b[34;43mDTCH CC_id %d retrans? #rb %d mcs %d harq_pid %d round %d f/sf %d/%d\x1b[0m\n", CC_id, nb_rb, eNB_UE_stats->dlsch_mcs1, harq_pid, round, frameP, subframeP);
         } else {
           LOG_D(MAC,"[eNB %d] Frame %d CC_id %d : don't schedule UE %d, its retransmission takes more resources than we have\n",
                 module_idP, frameP, CC_id, UE_id);
@@ -978,11 +849,51 @@ schedule_ue_spec(
         // check first for RLC data on DCCH
         // add the length for  all the control elements (timing adv, drx, etc) : header + payload
 
+#ifdef Rel10
+        /* check if SCells reconfiguration has to be done */
+/*NO SCELL*/
+//UE_list->scell_config[UE_id].to_configure=0;
+        if (UE_list->scell_config[UE_id].to_configure) {
+printf("to_configure!!\n");
+          UE_SCell_config_t *sconf = &UE_list->scell_config[UE_id];
+          int s;
+          /* compute the scell bitmap */
+          scell_bitmap = 0;
+          for (s = 0; s < sconf->scell_count; s++)
+            if (sconf->scell[s].active)
+              scell_bitmap |= 1 << sconf->scell[s].bitmap_bit;
+
+          /* notify the PHY layer of the new bitmap
+           * (we should do it only at subframe x+4)
+           */
+          mac_xface->ca_activate(module_idP, rnti, scell_bitmap);
+
+          scell_activation_len = 2;
+          /* where and when do that? */
+          UE_list->scell_config[UE_id].to_configure = 0;
+          /* !!THE FOLLOWING MUST NOT BE DONE HERE!!
+           * (secondary cell's scheduling becomes active at subframe x+4
+           * after receiving ACK for MAC PDU with scell CE at subframe x)
+           */
+          /* add secondary cells for scheduling (should we order them?) */
+#if 1
+          UE_list->numactiveCCs[UE_id] = 1;
+          UE_list->ordered_CCids[0][UE_id] = UE_list->pCC_id[UE_id];
+          for (s = 0; s < sconf->scell_count; s++)
+            if (sconf->scell[s].active) {
+              UE_list->ordered_CCids[UE_list->numactiveCCs[UE_id]][UE_id] = sconf->scell[s].CC_id;
+              UE_list->numactiveCCs[UE_id]++;
+            }
+#endif
+        } else
+          scell_activation_len = 0;
+#endif /* Rel10 */
+
         ta_len = (ue_sched_ctl->ta_update!=0) ? 2 : 0;
 
         header_len_dcch = 2; // 2 bytes DCCH SDU subheader
 
-        if ( TBS-ta_len-header_len_dcch > 0 ) {
+        if ( TBS-ta_len-header_len_dcch-scell_activation_len > 0 ) {
           rlc_status = mac_rlc_status_ind(
                          module_idP,
                          rnti,
@@ -991,7 +902,7 @@ schedule_ue_spec(
                          ENB_FLAG_YES,
                          MBMS_FLAG_NO,
                          DCCH,
-                         (TBS-ta_len-header_len_dcch)); // transport block set size
+                         (TBS-ta_len-header_len_dcch-scell_activation_len)); // transport block set size
 
           sdu_lengths[0]=0;
 
@@ -1033,7 +944,7 @@ schedule_ue_spec(
         }
 
         // check for DCCH1 and update header information (assume 2 byte sub-header)
-        if (TBS-ta_len-header_len_dcch-sdu_length_total > 0 ) {
+        if (TBS-ta_len-header_len_dcch-scell_activation_len-sdu_length_total > 0 ) {
           rlc_status = mac_rlc_status_ind(
                          module_idP,
                          rnti,
@@ -1042,7 +953,7 @@ schedule_ue_spec(
                          ENB_FLAG_YES,
                          MBMS_FLAG_NO,
                          DCCH+1,
-                         (TBS-ta_len-header_len_dcch-sdu_length_total)); // transport block set size less allocations for timing advance and
+                         (TBS-ta_len-header_len_dcch-scell_activation_len-sdu_length_total)); // transport block set size less allocations for timing advance and
           // DCCH SDU
 
           if (rlc_status.bytes_in_buffer > 0) {
@@ -1167,7 +1078,7 @@ schedule_ue_spec(
 
           TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
 
-          while (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len))  {
+          while (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len + scell_activation_len))  {
             nb_rb += min_rb_unit[CC_id];  //
 
             if (nb_rb>nb_available_rb) { // if we've gone beyond the maximum number of RBs
@@ -1214,13 +1125,13 @@ schedule_ue_spec(
           }
 
           // decrease mcs until TBS falls below required length
-          while ((TBS > (sdu_length_total + header_len_dcch + header_len_dtch + ta_len)) && (mcs>0)) {
+          while ((TBS > (sdu_length_total + header_len_dcch + header_len_dtch + ta_len + scell_activation_len)) && (mcs>0)) {
             mcs--;
             TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
           }
 
           // if we have decreased too much or we don't have enough RBs, increase MCS
-          while ((TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len)) && ((( ue_sched_ctl->dl_pow_off[CC_id]>0) && (mcs<28))
+          while ((TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len + scell_activation_len)) && ((( ue_sched_ctl->dl_pow_off[CC_id]>0) && (mcs<28))
                  || ( (ue_sched_ctl->dl_pow_off[CC_id]==0) && (mcs<=15)))) {
             mcs++;
             TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
@@ -1235,8 +1146,8 @@ schedule_ue_spec(
           //  TBS, sdu_length_total, offset, TBS-sdu_length_total-offset);
 #endif
 
-          if ((TBS - header_len_dcch - header_len_dtch - sdu_length_total - ta_len) <= 2) {
-            padding = (TBS - header_len_dcch - header_len_dtch - sdu_length_total - ta_len);
+          if ((TBS - header_len_dcch - header_len_dtch - sdu_length_total - ta_len - scell_activation_len) <= 2) {
+            padding = (TBS - header_len_dcch - header_len_dtch - sdu_length_total - ta_len - scell_activation_len);
             post_padding = 0;
           } else {
             padding = 0;
@@ -1248,7 +1159,7 @@ schedule_ue_spec(
               header_len_dtch = header_len_dtch_tmp;
             }
 
-            post_padding = TBS - sdu_length_total - header_len_dcch - header_len_dtch - ta_len ; // 1 is for the postpadding header
+            post_padding = TBS - sdu_length_total - header_len_dcch - header_len_dtch - ta_len - scell_activation_len; // 1 is for the postpadding header
           }
 
 
@@ -1261,7 +1172,12 @@ schedule_ue_spec(
                                          ue_sched_ctl->ta_update, // timing advance
                                          NULL,                                  // contention res id
                                          padding,
-                                         post_padding);
+                                         post_padding
+#ifdef Rel10
+                                         , scell_bitmap,
+                                         scell_activation_len
+#endif
+                                        );
 
           //#ifdef DEBUG_eNB_SCHEDULER
           if (ue_sched_ctl->ta_update) {
@@ -1304,6 +1220,7 @@ schedule_ue_spec(
           aggregation = process_ue_cqi(module_idP,UE_id);
           UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid] = nb_rb;
 
+//printf("ACKNACK add_ue_dlsch_info CC_id %d UE_id %d subframeP %d nb_rb %d mcs1 %d mcs2 %d\n", CC_id, UE_id, subframeP, nb_rb, eNB_UE_stats->dlsch_mcs1, mcs);
           add_ue_dlsch_info(module_idP,
                             CC_id,
                             UE_id,
@@ -1677,8 +1594,6 @@ schedule_ue_spec(
 
 }
 
-#endif /* FAPI */
-
 //------------------------------------------------------------------------------
 void
 #if FAPI
@@ -1808,6 +1723,16 @@ fill_DLSCH_dci(
               ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rah = 0;
               size_bytes=sizeof(DCI1_5MHz_FDD_t);
               size_bits=sizeof_DCI1_5MHz_FDD_t;
+/* no size change because no sounding rs */
+#if 0
+/* size does not change on a CC without uplink */
+/* for the moment, the UE starts to connect on CC 0, so we test CC_id == 0
+ * in the future (if things stay here) we have to compare with UE primary CC
+ * or even better check if the CC has an uplink configured for the UE or not
+ */
+if (CC_id == 0 && UE_list->scell_config[UE_id].scell_count) size_bits++;
+//printf("!!!!!!!!!!!!!!!!!!!! %s\n", __FILE__);
+#endif
               break;
 
             case 50:
@@ -2045,6 +1970,7 @@ get_dlsch_sdu(
 
   if (UE_id != -1) {
     LOG_D(MAC,"[eNB %d] Frame %d:  CC_id %d Get DLSCH sdu for rnti %x => UE_id %d\n",module_idP,frameP,CC_id,rntiP,UE_id);
+//printf("get_dlsch_sdu pdu size %d\n", eNB->UE_list.DLSCH_pdu[CC_id][TBindex][UE_id].Pdu_size[0]);
     return((unsigned char *)&eNB->UE_list.DLSCH_pdu[CC_id][TBindex][UE_id].payload[0]);
   } else {
     LOG_E(MAC,"[eNB %d] Frame %d: CC_id %d UE with RNTI %x does not exist\n", module_idP,frameP,CC_id,rntiP);

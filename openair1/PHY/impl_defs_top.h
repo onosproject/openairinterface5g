@@ -262,6 +262,7 @@
 #define PUCCH1_THRES 0
 /// Threshold for PUCCH Format 1a/1b detection
 #define PUCCH1a_THRES 4
+#define PUCCH1b_THRES 4
 
 /// Data structure for transmission.
 typedef struct {

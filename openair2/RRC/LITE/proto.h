@@ -259,6 +259,9 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_t*          const ue_context_pP,
   const uint8_t                ho_state
+#ifdef Rel10
+  , SCellToAddMod_r10_t       *scell
+#endif
 );
 
 void

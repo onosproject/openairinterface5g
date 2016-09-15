@@ -218,6 +218,7 @@ typedef struct PHY_VARS_eNB_s {
   uint8_t              local_flag;
   uint32_t             rx_total_gain_eNB_dB;
   LTE_DL_FRAME_PARMS   lte_frame_parms;
+  uint32_t             n_configured_SCCs[NUMBER_OF_UE_MAX];
   PHY_MEASUREMENTS_eNB PHY_measurements_eNB[NUMBER_OF_eNB_SECTORS_MAX]; /// Measurement variables
   LTE_eNB_COMMON       lte_eNB_common_vars;
   LTE_eNB_SRS          lte_eNB_srs_vars[NUMBER_OF_UE_MAX];
@@ -234,6 +235,22 @@ typedef struct PHY_VARS_eNB_s {
   LTE_eNB_DLSCH_t     *dlsch_eNB_MCH;
   LTE_eNB_UE_stats     eNB_UE_stats[NUMBER_OF_UE_MAX];
   LTE_eNB_UE_stats    *eNB_UE_stats_ptr[NUMBER_OF_UE_MAX];
+
+#if Rel10
+  /// indicator set to 1 if the UE is configured with multiple DL cells
+  int                  CA_configured[NUMBER_OF_UE_MAX];
+  /// bitfield describing which secondary DL cell is activated
+  /// "activated" and "configured" are two different concepts
+  /// an UE may have some secondary cells "configured" which are not "activated",
+  /// that is there is no traffic scheduled on them, and no MAC CE has been sent
+  /// (bit 0 is for scell 0, ...)
+  uint8_t              CA_activated[NUMBER_OF_UE_MAX];
+  /// indicator of the pCell of the UE
+  /// set to 1 if this cell is the primary cell of the UE
+  int                  pCCflag[NUMBER_OF_UE_MAX];
+  /// CC_id of secondary configured cells (int for it can be == -1)
+  int                  sCC_id[NUMBER_OF_UE_MAX][5];
+#endif
 
   /// cell-specific reference symbols
   uint32_t         lte_gold_table[20][2][14];

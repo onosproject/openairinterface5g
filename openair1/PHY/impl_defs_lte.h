@@ -136,6 +136,15 @@ typedef struct {
   uint16_t n1PUCCH_AN_Rep;
   /// Feedback mode, see TS 36.213 (7.3). \details Applied to both PUCCH and PUSCH feedback. For TDD, should always be set to bundling.
   ANFBmode_t tdd_AckNackFeedbackMode;
+#ifdef Rel10
+  uint8_t channel_selection;
+  uint16_t n3PUCCH_AN_list[4];
+  uint16_t n1PUCCH_AN_CS_list[4][2];
+#endif
+#ifdef Rel11
+  uint16_t n3PUCCH_AN_list_p1[4];
+  uint16_t n1PUCCH_AN_CS_list_p1[4][2];
+#endif
 } PUCCH_CONFIG_DEDICATED;
 
 /// PUCCH-ConfigCommon from 36.331 RRC spec
@@ -467,6 +476,10 @@ typedef struct {
 } MBSFN_config_t;
 
 typedef struct {
+  /// EUTRA Band
+  int      eutra_band;
+  /// Dowlink frequency
+  uint32_t downlink_frequency;
   /// Number of resource blocks (RB) in DL
   uint8_t N_RB_DL;
   /// Number of resource blocks (RB) in UL
