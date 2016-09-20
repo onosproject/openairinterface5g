@@ -754,7 +754,7 @@ printf("PHY TX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_TX,1);
   start_meas(&phy_vars_eNB->phy_proc_tx);
 
-  T(T_ENB_PHY_DL_TICK, T_INT(phy_vars_eNB->Mod_id), T_INT(frame), T_INT(subframe));
+  T(T_ENB_PHY_DL_TICK, T_INT(phy_vars_eNB->Mod_id), T_INT(phy_vars_eNB->CC_id), T_INT(frame), T_INT(subframe));
 
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     // If we've dropped the UE, go back to PRACH mode for this UE
@@ -1252,7 +1252,7 @@ printf("PHY TX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
               phy_vars_eNB->Mod_id,DCI_pdu->dci_alloc[i].rnti,phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->current_harq_pid,phy_vars_eNB->proc[sched_subframe].frame_tx,subframe);
 
 
-        T(T_ENB_PHY_DLSCH_UE_DCI, T_INT(phy_vars_eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(UE_id),
+        T(T_ENB_PHY_DLSCH_UE_DCI, T_INT(phy_vars_eNB->Mod_id), T_INT(phy_vars_eNB->CC_id), T_INT(frame), T_INT(subframe), T_INT(UE_id),
           T_INT(DCI_pdu->dci_alloc[i].rnti), T_INT(DCI_pdu->dci_alloc[i].format),
           T_INT(phy_vars_eNB->dlsch_eNB[(int)UE_id][0]->current_harq_pid));
 
@@ -1306,7 +1306,7 @@ printf("PHY TX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
       else
 	UE_id = i;
 
-      T(T_ENB_PHY_ULSCH_UE_DCI, T_INT(phy_vars_eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(UE_id),
+      T(T_ENB_PHY_ULSCH_UE_DCI, T_INT(phy_vars_eNB->Mod_id), T_INT(phy_vars_eNB->CC_id), T_INT(frame), T_INT(subframe), T_INT(UE_id),
         T_INT(DCI_pdu->dci_alloc[i].rnti), T_INT(harq_pid));
 
       if (UE_id<0) {
@@ -1887,7 +1887,7 @@ printf("SEND ack %d harq pid %d rnti %d f/sf %d/%d\n", dlsch_ACK[mp], dl_harq_pi
           Mod_id, dlsch->rnti, dl_harq_pid, dlsch_harq_proc->round);
 #endif
 
-    T(T_ENB_PHY_DLSCH_UE_NACK, T_INT(Mod_id), T_INT(frame), T_INT(subframe), T_INT(UE_id), T_INT(dlsch->rnti),
+    T(T_ENB_PHY_DLSCH_UE_NACK, T_INT(Mod_id), T_INT(CC_id), T_INT(frame), T_INT(subframe), T_INT(UE_id), T_INT(dlsch->rnti),
       T_INT(dl_harq_pid));
 
     if (dlsch_harq_proc->round == 0)
@@ -1921,7 +1921,7 @@ printf("SEND ack %d harq pid %d rnti %d f/sf %d/%d\n", dlsch_ACK[mp], dl_harq_pi
           Mod_id, dlsch->rnti, dl_harq_pid, dlsch_harq_proc->round);
 #endif
 
-    T(T_ENB_PHY_DLSCH_UE_ACK, T_INT(Mod_id), T_INT(frame), T_INT(subframe), T_INT(UE_id), T_INT(dlsch->rnti),
+    T(T_ENB_PHY_DLSCH_UE_ACK, T_INT(Mod_id), T_INT(CC_id), T_INT(frame), T_INT(subframe), T_INT(UE_id), T_INT(dlsch->rnti),
       T_INT(dl_harq_pid));
 
     ue_stats->dlsch_ACK[dl_harq_pid][dlsch_harq_proc->round]++;
@@ -3337,9 +3337,9 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
   LOG_D(PHY,"[eNB %d] Frame %d: Doing phy_procedures_eNB_RX(%d)\n",phy_vars_eNB->Mod_id,frame, subframe);
 #endif
 
-  T(T_ENB_PHY_UL_TICK, T_INT(phy_vars_eNB->Mod_id), T_INT(frame), T_INT(subframe));
+  T(T_ENB_PHY_UL_TICK, T_INT(phy_vars_eNB->Mod_id), T_INT(phy_vars_eNB->CC_id), T_INT(frame), T_INT(subframe));
 
-  T(T_ENB_PHY_INPUT_SIGNAL, T_INT(phy_vars_eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
+  T(T_ENB_PHY_INPUT_SIGNAL, T_INT(phy_vars_eNB->Mod_id), T_INT(phy_vars_eNB->CC_id), T_INT(frame), T_INT(subframe), T_INT(0),
     T_BUFFER(&phy_vars_eNB->lte_eNB_common_vars.rxdata[0][0][subframe*phy_vars_eNB->lte_frame_parms.samples_per_tti],
              phy_vars_eNB->lte_frame_parms.samples_per_tti * 4));
 
@@ -3622,7 +3622,7 @@ fprintf(stderr, "extract CQI! Or1 = %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_proc
 	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_ULSCH_MSG3,0);
 
       if (ret == (1+MAX_TURBO_ITERATIONS)) {
-        T(T_ENB_PHY_ULSCH_UE_NACK, T_INT(phy_vars_eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(i), T_INT(phy_vars_eNB->ulsch_eNB[i]->rnti),
+        T(T_ENB_PHY_ULSCH_UE_NACK, T_INT(phy_vars_eNB->Mod_id), T_INT(phy_vars_eNB->CC_id), T_INT(frame), T_INT(subframe), T_INT(i), T_INT(phy_vars_eNB->ulsch_eNB[i]->rnti),
           T_INT(harq_pid));
 
         phy_vars_eNB->eNB_UE_stats[i].ulsch_round_errors[harq_pid][phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->round]++;
@@ -3731,7 +3731,7 @@ fprintf(stderr, "extract CQI! Or1 = %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_proc
         }
       }  // ulsch in error
       else {
-        T(T_ENB_PHY_ULSCH_UE_ACK, T_INT(phy_vars_eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(i), T_INT(phy_vars_eNB->ulsch_eNB[i]->rnti),
+        T(T_ENB_PHY_ULSCH_UE_ACK, T_INT(phy_vars_eNB->Mod_id), T_INT(phy_vars_eNB->CC_id), T_INT(frame), T_INT(subframe), T_INT(i), T_INT(phy_vars_eNB->ulsch_eNB[i]->rnti),
           T_INT(harq_pid));
 
         if (phy_vars_eNB->ulsch_eNB[i]->Msg3_flag == 1) {
