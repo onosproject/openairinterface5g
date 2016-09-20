@@ -2264,7 +2264,7 @@ if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset)) abort();
 #endif
 
       /* TODO: is it the right place for master tick? */
-      T(T_ENB_MASTER_TICK, T_INT(0), T_INT(frame % 1024), T_INT(sf));
+      T(T_ENB_MASTER_TICK, T_INT(frame % 1024), T_INT(sf));
 #if 0
       if (frame>50) {
 	for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
