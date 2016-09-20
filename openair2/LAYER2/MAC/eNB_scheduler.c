@@ -1223,21 +1223,19 @@ dlind.buildRarList[0].grant &= ~1;
         dlind.buildRarList[0].rnti, dlind.buildRarList[0].grant, &dlind.buildRarList[0].dci);
   }
 
-  if (dlind.nr_buildBroadcastList) {
-    if (dlind.nr_buildBroadcastList != 1) { printf("%s:%d: more than 1 broadcast SI, todo\n", __FUNCTION__, __LINE__); exit(0); }
-    if (dlind.buildBroadcastList[0].type == ff_PCCH) { printf("%s:%d: PCCH: todo\n", __FUNCTION__, __LINE__); exit(0); }
-    if (dlind.buildBroadcastList[0].carrierIndex != 0) { printf("%s:%d: 2nd CC: todo properly\n", __FUNCTION__, __LINE__); exit(0); }
+  for (i = 0; i < dlind.nr_buildBroadcastList; i++) {
+    if (dlind.buildBroadcastList[i].type == ff_PCCH) { printf("%s:%d: PCCH: todo\n", __FUNCTION__, __LINE__); exit(0); }
 #if MEGALOG
-printf("FAPI to MAC downlink schedule SI %d f/sf %d/%d\n", dlind.buildBroadcastList[0].index, frameP, subframeP);
+printf("FAPI to MAC downlink schedule SI %d CC %d f/sf %d/%d\n", dlind.buildBroadcastList[i].index, dlind.buildBroadcastList[i].carrierIndex, frameP, subframeP);
 #endif
-    fapi_schedule_SI(module_idP, dlind.buildBroadcastList[0].carrierIndex, frameP, subframeP,
-        dlind.buildBroadcastList[0].index,
-        &dlind.buildBroadcastList[0].dci);
+    fapi_schedule_SI(module_idP, dlind.buildBroadcastList[i].carrierIndex, frameP, subframeP,
+        dlind.buildBroadcastList[i].index,
+        &dlind.buildBroadcastList[i].dci);
   }
 
   /* TODO: do it correctly */
   if (dlind.nr_ofdmSymbolsCount != 0) {
-    if (dlind.nr_ofdmSymbolsCount != 1) { printf("%s:%d:%s: what to do?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+    if (dlind.nr_ofdmSymbolsCount != MAX_NUM_CCs) { printf("%s:%d:%s: what to do?\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       if (dlind.nrOfPdcchOfdmSymbols[CC_id] != NULL) {
         int cc = dlind.nrOfPdcchOfdmSymbols[CC_id]->carrierIndex;

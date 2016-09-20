@@ -365,90 +365,94 @@ int mac_top_init(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active, ui
     eNB_mac_inst[i].fapi = init_fapi();
     AssertFatal(eNB_mac_inst[i].fapi != NULL, "error calling init_fapi()\n");
 
+    int CC;
     struct CschedCellConfigReqParameters            p;
     struct CschedCellConfigCnfParameters            r;
-    struct CschedCellConfigReqParametersListElement l;
-    struct SiMessageListElement_s                   sib23;
-#if MAX_NUM_CCs > 1
-#error we do not work with FAPI with more than 1 CC yet
+    struct CschedCellConfigReqParametersListElement l[MAX_NUM_CCs];
+    struct SiMessageListElement_s                   sib23;          /* TODO: one per CC? */
+#if MAX_NUM_CCs > 2
+#error we do not work with FAPI with more than 2 CCs
 #endif
 
-    p.nr_carriers = 1;
-    p.ccConfigList[0] = &l;
+    p.nr_carriers = MAX_NUM_CCs;
     p.nr_vendorSpecificList = 0;
 
-    l.puschHoppingOffset                = conf->properties[i]->pusch_hoppingOffset[0];
-    l.NcellID                           = conf->properties[i]->Nid_cell[0];
-    l.hoppingMode                       = conf->properties[i]->pusch_hoppingMode[0];
-    l.nSb                               = conf->properties[i]->pusch_n_SB[0];
-    switch (conf->properties[i]->phich_resource[0]) {
-    case oneSixth: l.phichResource      = PHICH_R_ONE_SIXTH; break;
-    case half:     l.phichResource      = PHICH_R_HALF;      break;
-    case one:      l.phichResource      = PHICH_R_ONE;       break;
-    case two:      l.phichResource      = PHICH_R_TWO;       break;
-    }
-    switch (conf->properties[i]->phich_duration[0]) {
-    case normal:   l.phichDuration      = ff_normal;   break;
-    case extended: l.phichDuration      = ff_extended; break;
-    }
-    l.initialNrOfPdcchOfdmSymbols       = 0;        LOG_W(MAC, "set initialNrOfPdcchOfdmSymbols to its real value\n");
-    l.siConfiguration.sfn               = 0;        LOG_W(MAC, "what to set for siConfiguration.sfn?\n");
-    /* when mac_top_init is called, the SIBs are not generated yet, so we don't
-       know their sizes. As a quick and dirty hack, let's hardcode them.
-       It's "safe" though because in openair2/RRC/LITE/rrc_eNB.c we crash
-       if the values are not the ones we put here */
-    /* the length of sib1 is hardcoded to 15, see also openair2/RRC/LITE/rrc_eNB.c */
-    l.siConfiguration.sib1Length        = 15;       LOG_W(MAC, "get the real siConfiguration.sib1Length\n");
-    l.siConfiguration.siWindowLength    = 1;        LOG_W(MAC, "get the real siConfiguration.siWindowLength\n");
-    l.siConfiguration.nrSI_Message_List = 1;
-    l.siConfiguration.siMessageList     = &sib23;
-    sib23.periodicity                   = 8;        LOG_W(MAC, "get the real sib23.periodicity\n");
-    /* the length of sib2/3 is hardcoded to 30, see also openair2/RRC/LITE/rrc_eNB.c */
-    sib23.length                        = 30;       LOG_W(MAC, "get the real sib23.length\n");
-    l.ulBandwidth                       = conf->properties[i]->N_RB_DL[0];
-    l.dlBandwidth                       = conf->properties[i]->N_RB_DL[0];
-    switch (conf->properties[i]->prefix_type[0]) {
-    case NORMAL:
-      l.ulCyclicPrefixLength            = ff_normal;
-      l.dlCyclicPrefixLength            = ff_normal;
-      break;
-    case EXTENDED:
-      l.ulCyclicPrefixLength            = ff_extended;
-      l.dlCyclicPrefixLength            = ff_extended;
-      break;
-    }
-    l.antennaPortsCount                 = conf->properties[i]->nb_antennas_tx[0];   LOG_W(MAC, "is antennaPortsCount equal to nb_antennas_tx?\n");
-    switch (conf->properties[i]->frame_type[0]) {
-    case FDD:  l.duplexMode             = DFDD; break;
-    case TDD:  l.duplexMode             = DTDD; break;
-    }
-    l.subframeAssignment                = conf->properties[i]->tdd_config[0];
-    l.specialSubframePatterns           = conf->properties[i]->tdd_config_s[0];
-    l.mbsfn_SubframeConfigPresent       = false;
-    l.prachConfigurationIndex           = conf->properties[i]->prach_config_index[0];
-    l.prachFreqOffset                   = conf->properties[i]->prach_freq_offset[0];
-    l.raResponseWindowSize              = conf->properties[i]->rach_raResponseWindowSize[0];
-    l.macContentionResolutionTimer      = conf->properties[i]->rach_macContentionResolutionTimer[0];
-    l.maxHarqMsg3Tx                     = conf->properties[i]->rach_maxHARQ_Msg3Tx[0];
+    for (CC = 0; CC < MAX_NUM_CCs; CC++) {
+      p.ccConfigList[CC] = &l[CC];
+
+      l[CC].puschHoppingOffset                = conf->properties[i]->pusch_hoppingOffset[CC];
+      l[CC].NcellID                           = conf->properties[i]->Nid_cell[CC];
+      l[CC].hoppingMode                       = conf->properties[i]->pusch_hoppingMode[CC];
+      l[CC].nSb                               = conf->properties[i]->pusch_n_SB[CC];
+      switch (conf->properties[i]->phich_resource[CC]) {
+      case oneSixth: l[CC].phichResource      = PHICH_R_ONE_SIXTH; break;
+      case half:     l[CC].phichResource      = PHICH_R_HALF;      break;
+      case one:      l[CC].phichResource      = PHICH_R_ONE;       break;
+      case two:      l[CC].phichResource      = PHICH_R_TWO;       break;
+      }
+      switch (conf->properties[i]->phich_duration[CC]) {
+      case normal:   l[CC].phichDuration      = ff_normal;   break;
+      case extended: l[CC].phichDuration      = ff_extended; break;
+      }
+      l[CC].initialNrOfPdcchOfdmSymbols       = 0;        LOG_W(MAC, "set initialNrOfPdcchOfdmSymbols to its real value\n");
+      l[CC].siConfiguration.sfn               = 0;        LOG_W(MAC, "what to set for siConfiguration.sfn?\n");
+      /* when mac_top_init is called, the SIBs are not generated yet, so we don't
+         know their sizes. As a quick and dirty hack, let's hardcode them.
+         It's "safe" though because in openair2/RRC/LITE/rrc_eNB.c we crash
+         if the values are not the ones we put here */
+      /* the length of sib1 is hardcoded to 15, see also openair2/RRC/LITE/rrc_eNB.c */
+      l[CC].siConfiguration.sib1Length        = 15;       LOG_W(MAC, "get the real siConfiguration.sib1Length\n");
+      l[CC].siConfiguration.siWindowLength    = 1;        LOG_W(MAC, "get the real siConfiguration.siWindowLength\n");
+      l[CC].siConfiguration.nrSI_Message_List = 1;
+      l[CC].siConfiguration.siMessageList     = &sib23;
+      sib23.periodicity                   = 8;        LOG_W(MAC, "get the real sib23.periodicity\n");
+      /* the length of sib2/3 is hardcoded to 30, see also openair2/RRC/LITE/rrc_eNB.c */
+      sib23.length                        = 30;       LOG_W(MAC, "get the real sib23.length\n");
+      l[CC].ulBandwidth                       = conf->properties[i]->N_RB_DL[CC];
+      l[CC].dlBandwidth                       = conf->properties[i]->N_RB_DL[CC];
+      switch (conf->properties[i]->prefix_type[CC]) {
+      case NORMAL:
+        l[CC].ulCyclicPrefixLength            = ff_normal;
+        l[CC].dlCyclicPrefixLength            = ff_normal;
+        break;
+      case EXTENDED:
+        l[CC].ulCyclicPrefixLength            = ff_extended;
+        l[CC].dlCyclicPrefixLength            = ff_extended;
+        break;
+      }
+      l[CC].antennaPortsCount                 = conf->properties[i]->nb_antennas_tx[CC];   LOG_W(MAC, "is antennaPortsCount equal to nb_antennas_tx?\n");
+      switch (conf->properties[i]->frame_type[0]) {
+      case FDD:  l[CC].duplexMode             = DFDD; break;
+      case TDD:  l[CC].duplexMode             = DTDD; break;
+      }
+      l[CC].subframeAssignment                = conf->properties[i]->tdd_config[CC];
+      l[CC].specialSubframePatterns           = conf->properties[i]->tdd_config_s[CC];
+      l[CC].mbsfn_SubframeConfigPresent       = false;
+      l[CC].prachConfigurationIndex           = conf->properties[i]->prach_config_index[CC];
+      l[CC].prachFreqOffset                   = conf->properties[i]->prach_freq_offset[CC];
+      l[CC].raResponseWindowSize              = conf->properties[i]->rach_raResponseWindowSize[CC];
+      l[CC].macContentionResolutionTimer      = conf->properties[i]->rach_macContentionResolutionTimer[CC];
+      l[CC].maxHarqMsg3Tx                     = conf->properties[i]->rach_maxHARQ_Msg3Tx[CC];
 #warning [31;46mTODO: get real n1PucchAn (fix pucch_n1_AN thing for Rel10, remove #ifndefs)[0m
-    l.n1PucchAn                         = 0; //conf->properties[i]->pucch_n1_AN[0];
-    l.deltaPucchShift                   = conf->properties[i]->pucch_delta_shift[0];
-    l.nrbCqi                            = conf->properties[i]->pucch_nRB_CQI[0];
-    l.ncsAn                             = conf->properties[i]->pucch_nCS_AN[0];
+      l[CC].n1PucchAn                         = 0; //conf->properties[i]->pucch_n1_AN[CC];
+      l[CC].deltaPucchShift                   = conf->properties[i]->pucch_delta_shift[CC];
+      l[CC].nrbCqi                            = conf->properties[i]->pucch_nRB_CQI[CC];
+      l[CC].ncsAn                             = conf->properties[i]->pucch_nCS_AN[CC];
 #warning [31;46mTODO: what about srs_enable of the config file (it's not in FAPI)?[0m
-    l.srsSubframeConfiguration          = conf->properties[i]->srs_SubframeConfig[0];
-    l.srsSubframeOffset                 = 0;        LOG_W(MAC, "what value for srsSubframeOffset?\n");
-    l.srsBandwidthConfiguration         = conf->properties[i]->srs_BandwidthConfig[0];
-    switch (conf->properties[i]->srs_MaxUpPts[0]) {
-    case TRUE:  l.srsMaxUpPts           = true;  break;
-    case FALSE: l.srsMaxUpPts           = false; break;
-    }
+      l[CC].srsSubframeConfiguration          = conf->properties[i]->srs_SubframeConfig[CC];
+      l[CC].srsSubframeOffset                 = 0;        LOG_W(MAC, "what value for srsSubframeOffset?\n");
+      l[CC].srsBandwidthConfiguration         = conf->properties[i]->srs_BandwidthConfig[CC];
+      switch (conf->properties[i]->srs_MaxUpPts[CC]) {
+      case TRUE:  l[CC].srsMaxUpPts           = true;  break;
+      case FALSE: l[CC].srsMaxUpPts           = false; break;
+      }
 #warning [31;46mTODO: what about srs_ackNackST of the config file (it's not in FAPI)?[0m
-    switch (conf->properties[i]->pusch_enable64QAM[0]) {
-    case TRUE:  l.enable64Qam           = true;  break;
-    case FALSE: l.enable64Qam           = false; break;
+      switch (conf->properties[i]->pusch_enable64QAM[CC]) {
+      case TRUE:  l[CC].enable64Qam           = true;  break;
+      case FALSE: l[CC].enable64Qam           = false; break;
+      }
+      l[CC].carrierIndex                      = CC;
     }
-    l.carrierIndex                      = 0;
 
     LOG_I(MAC, "calling CschedCellConfigReq\n");
     CschedCellConfigReq(eNB_mac_inst[i].fapi->sched, &p);

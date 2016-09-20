@@ -277,7 +277,7 @@ void SchedDlConfigInd_callback(void *callback_data, const struct SchedDlConfigIn
   }
 
   /* TODO: be sure of this */
-  if (params->nr_ofdmSymbolsCount != 1) { printf("%s:%d: what to do?\n", __FILE__, __LINE__); abort(); }
+  if (params->nr_ofdmSymbolsCount != MAX_NUM_CCs) { printf("%s:%d: what to do?\n", __FILE__, __LINE__); abort(); }
   fi->SchedDlConfigIndParameters.nr_ofdmSymbolsCount = params->nr_ofdmSymbolsCount;
   for (i = 0; i < MAX_NUM_CCs; i++) {
     *fi->SchedDlConfigIndParameters.nrOfPdcchOfdmSymbols[i] = *params->nrOfPdcchOfdmSymbols[i];
