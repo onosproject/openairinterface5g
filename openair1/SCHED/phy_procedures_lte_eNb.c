@@ -1870,6 +1870,14 @@ void process_HARQ_ACK(
 
   dlsch_harq_proc = dlsch->harq_processes[dl_harq_pid];
 
+#if FAPI
+  /* TODO: handle transport block != 0 */
+#if MEGALOG
+printf("SEND ack %d harq pid %d rnti %d f/sf %d/%d\n", dlsch_ACK[mp], dl_harq_pid[m], dlsch->rnti, frame, subframe);
+#endif
+  mac_xface->fapi_dl_ack_nack(dlsch->rnti, dl_harq_pid, 0 /* transport block */, ack);
+#endif
+
   //    msg("[PHY] eNB %d Process %d is active (%d)\n",phy_vars_eNB->Mod_id,dl_harq_pid[m],dlsch_ACK[m]);
   if (ack == 0) {
 //printf("ACKNACK got a NAK! CC %d pusch_flag %d\n", phy_vars_eNB->CC_id, pusch_flag);
@@ -2191,13 +2199,6 @@ printf("ACKNACK **** fr/subfr %d/%d sCC %d ack %d\n", frame, subframe, phy_vars_
 #endif
         if ((dl_harq_pid[m]<dlsch->Mdlharq) &&
             (dlsch_harq_proc->status == ACTIVE)) {
-#if FAPI
-          /* TODO: handle transport block != 0 */
-#if MEGALOG
-printf("SEND ack %d harq pid %d rnti %d f/sf %d/%d\n", dlsch_ACK[mp], dl_harq_pid[m], dlsch->rnti, frame, subframe);
-#endif
-          mac_xface->fapi_dl_ack_nack(dlsch->rnti, dl_harq_pid[m], 0 /* transport block */, dlsch_ACK[mp]);
-#endif
           // dl_harq_pid of DLSCH is still active
           process_HARQ_ACK(phy_vars_eNB->Mod_id, phy_vars_eNB->CC_id, UE_id, dl_subframe,
                            dlsch_ACK[mp], dlsch, ue_stats, dl_harq_pid[m],
