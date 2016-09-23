@@ -712,6 +712,7 @@ static int fixed_size(int lcid)
  * in the meantime, this array stores the latest mcs used for each rnti/harq_pid
  */
 static unsigned char latest_mcs[65536][10];
+static unsigned int latest_rbbitmap[65536][10];
 
 /* TODO: deal with more than one transport block */
 static void fapi_schedule_retransmission_ue(int module_id, int CC_id, int frame, int subframe, struct BuildDataListElement_s *d)
@@ -773,6 +774,7 @@ printf("RETR rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %
    * in the meantime, let's replace with the last used MCS
    */
   d->dci.mcs[0] = latest_mcs[d->rnti][d->dci.harqProcess];
+  d->dci.rbBitmap = latest_rbbitmap[d->rnti][d->dci.harqProcess];
 
   fapi_convert_dl_dci(module_id, CC_id, &d->dci, a);
 #if MEGALOG
@@ -879,6 +881,7 @@ printf("RUN fapi_schedule_ue\n");
    * in the meantime, we store the latest used mcs for each rnti/harq_pid
    */
   latest_mcs[d->rnti][d->dci.harqProcess] = d->dci.mcs[0];
+  latest_rbbitmap[d->rnti][d->dci.harqProcess] = d->dci.rbBitmap;
 
   tbs = d->dci.tbsSize[0] / 8;
 
