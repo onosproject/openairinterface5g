@@ -382,6 +382,39 @@ static void dump_SchedDlCqiInfoReqParameters(const struct SchedDlCqiInfoReqParam
   fp(l, Q, "}");
 }
 
+static void dump_UlCqi_s(struct UlCqi_s s, int l)
+{
+  int i;
+  fp(l, Q, "(struct UlCqi_s){\n");
+  fp(l, Q, "  .rnti= %d,\n", s.rnti);
+  fp(l, Q, "  .sinr= {\n");
+  for (i = 0; i < 100; i++) fp(0, Q, "%d,", s.sinr[i]);
+  fp(0, Q, "},\n");
+  fp(l, Q, "  .type= %d,\n", s.type);
+  fp(l, Q, "  .servCellIndex= %d,\n", s.servCellIndex);
+  fp(l, Q, "}");
+}
+
+static void dump_SchedUlCqiInfoReqParameters(const struct SchedUlCqiInfoReqParameters*p, int l)
+{
+  int i;
+  fp(l, Q, "(struct SchedUlCqiInfoReqParameters){\n");
+  fp(l, Q, "  .sfnSf= %d,\n", p->sfnSf);
+  fp(l, Q, "  .nr_ulCqiList= %d,\n", p->nr_ulCqiList);
+  if (p->nr_ulCqiList != 0) {
+    fp(l, Q, "  .ulCqiList= (struct UlCqi_s[]){\n");
+    for (i = 0; i < p->nr_ulCqiList; i++) {
+      dump_UlCqi_s(p->ulCqiList[i], l+4);
+      fp(0, Q, ",\n");
+    }
+    fp(l, Q, "  },\n");
+  } else
+    fp(l, Q, "  .ulCqiList= NULL,\n");
+  fp(l, Q, "  .nr_vendorSpecificList= 0,\n");
+  fp(l, Q, "  .vendorSpecificList= NULL\n");
+  fp(l, Q, "}");
+}
+
 static void dump_UlInfoListElement_s(struct UlInfoListElement_s s, int l)
 {
   int i;
@@ -746,5 +779,13 @@ void _SchedUlMacCtrlInfoReq(void *x, const struct SchedUlMacCtrlInfoReqParameter
 #undef SchedUlCqiInfoReq
 void _SchedUlCqiInfoReq(void *x, const struct SchedUlCqiInfoReqParameters *params)
 {
-  abort();
+  LOCK();
+  fp(2, Q, "{\n");
+  fp(2, Q, "  struct SchedUlCqiInfoReqParameters *p = &\n");
+  dump_SchedUlCqiInfoReqParameters(params, 2+4);
+  fp(0, Q, ";\n");
+  fp(2, Q, "  SchedUlCqiInfoReq(x, p);\n");
+  fp(2, Q, "}\n");
+  UNLOCK();
+  SchedUlCqiInfoReq(x, params);
 }
