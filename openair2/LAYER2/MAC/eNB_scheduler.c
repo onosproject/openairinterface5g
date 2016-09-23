@@ -741,6 +741,34 @@ static void fapi_schedule_retransmission_ue(int module_id, int CC_id, int frame,
   /* we can increment Num_common_dci or Num_ue_spec_dci, there is no difference */
   dci_pdu->Num_common_dci++;
 
+static char *X[] = {"ONE", "ONE_A", "ONE_B", "ONE_C", "ONE_D", "TWO", "TWO_A", "TWO_B"};
+static char *Y[] = {"VRB_DISTRIBUTED", "VRB_LOCALIZED"};
+printf("RETR rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %d tbsSize[0] %d mcs[0] %d (latest %d) ndi[0] %d rv[0] %d cceIndex %d aggrLevel %d precodingInfo %d format %s tpc %d harqProcess %d vrbFormat %s tbSwap %d spsRelease %d preambleIndex %d prachMaskIndex %d nGap %d dlPowerOffset %d pdcchPowerOffset %d cifPresent %d\n",
+  d->dci.rnti,
+  d->dci.rbBitmap,
+  d->dci.rbShift,
+  d->dci.rbgSubset,
+  d->dci.resAlloc,
+  d->dci.nr_of_tbs,
+  d->dci.tbsSize[0],
+  d->dci.mcs[0],
+  latest_mcs[d->rnti][d->dci.harqProcess],
+  d->dci.ndi[0],
+  d->dci.rv[0],
+  d->dci.cceIndex,
+  d->dci.aggrLevel,
+  d->dci.precodingInfo,
+  X[d->dci.format],
+  d->dci.tpc,
+  d->dci.harqProcess,
+  Y[d->dci.vrbFormat],
+  d->dci.tbSwap,
+  d->dci.spsRelease,
+  d->dci.preambleIndex,
+  d->dci.prachMaskIndex,
+  d->dci.nGap+1,
+  d->dci.dlPowerOffset,
+  d->dci.cifPresent);
   /* TODO: deal with MCS 29-31 in the PHY layer
    * in the meantime, let's replace with the last used MCS
    */
@@ -801,6 +829,34 @@ static void fapi_schedule_ue(int module_id, int CC_id, int frame, int subframe, 
   }
 
 if (d->nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); return; }
+
+static char *X[] = {"ONE", "ONE_A", "ONE_B", "ONE_C", "ONE_D", "TWO", "TWO_A", "TWO_B"};
+static char *Y[] = {"VRB_DISTRIBUTED", "VRB_LOCALIZED"};
+printf("rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %d tbsSize[0] %d mcs[0] %d ndi[0] %d rv[0] %d cceIndex %d aggrLevel %d precodingInfo %d format %s tpc %d harqProcess %d vrbFormat %s tbSwap %d spsRelease %d preambleIndex %d prachMaskIndex %d nGap %d dlPowerOffset %d pdcchPowerOffset %d cifPresent %d\n",
+  d->dci.rnti,
+  d->dci.rbBitmap,
+  d->dci.rbShift,
+  d->dci.rbgSubset,
+  d->dci.resAlloc,
+  d->dci.nr_of_tbs,
+  d->dci.tbsSize[0],
+  d->dci.mcs[0],
+  d->dci.ndi[0],
+  d->dci.rv[0],
+  d->dci.cceIndex,
+  d->dci.aggrLevel,
+  d->dci.precodingInfo,
+  X[d->dci.format],
+  d->dci.tpc,
+  d->dci.harqProcess,
+  Y[d->dci.vrbFormat],
+  d->dci.tbSwap,
+  d->dci.spsRelease,
+  d->dci.preambleIndex,
+  d->dci.prachMaskIndex,
+  d->dci.nGap+1,
+  d->dci.dlPowerOffset,
+  d->dci.cifPresent);
 
   /* generate DCI */
   if (dci_pdu->Num_common_dci >= NUM_DCI_MAX) { printf("%s:%d:%s: too much DCIs\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
@@ -926,6 +982,9 @@ abort();
   T(T_ENB_MAC_UE_DL_PDU_WITH_DATA, T_INT(module_id), T_INT(CC_id), T_INT(d->rnti), T_INT(frame), T_INT(subframe),
     T_INT(d->dci.harqProcess), T_BUFFER(UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0], tbs));
 
+printf("BLOCK (%d)", tbs);
+for (i = 0; i < tbs; i++) printf(" %2.2x", (unsigned char)UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][i]);
+printf("\n");
   add_ue_dlsch_info(module_id,
       CC_id,
       UE_id,
