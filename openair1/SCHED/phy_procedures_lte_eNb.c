@@ -3463,8 +3463,9 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
 #ifdef Rel10
         /* for the moment, check only dlsch_s[0][0] */
         if (phy_vars_eNB->n_configured_SCCs[i] == 1 &&
-            phy_vars_eNB->dlsch_eNB[i][0]->dlsch_s[0][0]->subframe_tx[sf] > 0)
-          phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK++;
+            (phy_vars_eNB->dlsch_eNB[i][0]->dlsch_s[0][0]->subframe_tx[sf] > 0 ||
+             phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sf]>0))
+          phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK = 2;
 #endif
 phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[0]=0;
 phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[1]=0;
