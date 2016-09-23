@@ -295,6 +295,28 @@ printf("GOT UPLINK ack %d for rnti %x harq_pid %d (f/sf %d/%d)\n", ack, rnti, ha
   memset(fapi_ul_ack_nack_data[subframe].ack[pos].length, 0, sizeof(int) * MAX_LC_LIST+1);
 
   fapi_ul_ack_nack_data[subframe].count++;
+
+  /* TODO: get proper SINR information
+   * for the moment: let's report a sinr of 20 (arbitrary)
+   * for every RBs
+   */
+  fapi_interface_t                   *fapi = eNB_mac_inst[0 /* TODO: get correct module_id*/].fapi;
+  struct SchedUlCqiInfoReqParameters params;
+  struct UlCqi_s                     cqi;
+  int                                i;
+
+  cqi.rnti          = rnti;
+  for (i = 0; i < 100; i++)
+    cqi.sinr[i]     = 20<<3;
+  cqi.type          = ff_PUSCH;
+  cqi.servCellIndex = 0;         /* TODO: get correct cell index */
+
+  params.sfnSf                 = frame * 16 + subframe;
+  params.nr_ulCqiList          = 1;
+  params.ulCqiList             = &cqi;
+  params.nr_vendorSpecificList = 0;
+  params.vendorSpecificList    = NULL;
+  SchedUlCqiInfoReq(fapi->sched, &params);
 }
 
 /* this function is called by rx_sdu to indicate the number of
