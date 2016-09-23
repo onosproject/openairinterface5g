@@ -224,6 +224,17 @@ static void dump_UeCapabilities_s(struct UeCapabilities_s s, int l)
   fp(l, Q, "}");
 }
 
+static void dump_ScellConfig_s(struct  ScellConfig_s *s, int l)
+{
+  fp(l, Q, "(struct ScellConfig_s){\n");
+  fp(l, Q, "  .carrierIndex= %d,\n", s->carrierIndex);
+  fp(l, Q, "  .scellIndex= %d,\n", s->scellIndex);
+  fp(l, Q, "  .useCrossCarrierScheduling= %d,\n", s->useCrossCarrierScheduling);
+  fp(l, Q, "  .schedulingCellIndex= %d,\n", s->schedulingCellIndex);
+  fp(l, Q, "  .pdschStart= %d,\n", s->pdschStart);
+  fp(l, Q, "}");
+}
+
 static void dump_CschedUeConfigReqParameters(const struct CschedUeConfigReqParameters *p, int l)
 {
   int i;
@@ -271,13 +282,20 @@ static void dump_CschedUeConfigReqParameters(const struct CschedUeConfigReqParam
   fp(l, Q, "  .crossCarrierSchedSupport= %d,\n", p->crossCarrierSchedSupport);
   fp(l, Q, "  .pcellCarrierIndex= %d,\n", p->pcellCarrierIndex);
   fp(l, Q, "  .nr_scells= %d,\n", p->nr_scells);
-  if (p->nr_scells != 0) { printf("%s:%d:%s: TODO!!\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
-  else {
-    fp(l, Q, "  .scellConfigList= {");
+  fp(l, Q, "  .scellConfigList= {\n");
+  if (p->nr_scells != 0) {
+    for (i = 0; i < p->nr_scells; i++) {
+      fp(l+4, Q, "&\n");
+      dump_ScellConfig_s(p->scellConfigList[i], l+4);
+      fp(0, Q, ",\n");
+    }
+    for (; i < 2 /* MAX_NUM_CCs */ - 1; i++)
+      fp(l+4, Q, " NULL,\n");
+  } else {
     for (i = 0; i < 2 /* MAX_NUM_CCs */ - 1; i++)
-      fp(0, Q, " NULL,");
-    fp(0, Q, " },\n");
+      fp(l+4, Q, " NULL,\n");
   }
+  fp(l, Q, "  },\n");
   fp(l, Q, "  .scellDeactivationTimer= %d,\n", p->scellDeactivationTimer);
   fp(l, Q, "  .nr_vendorSpecificList= 0,\n");
   fp(l, Q, "  .vendorSpecificList= NULL\n");
