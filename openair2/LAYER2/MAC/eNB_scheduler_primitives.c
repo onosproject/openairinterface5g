@@ -240,6 +240,74 @@ void dump_ue_list(UE_list_t *listP, int ul_flag)
   }
 }
 
+#if FAPI
+
+/* TODO: clean this function */
+void fapi_activate_carrier_aggregation(module_id_t mod_idP, int cc_idP, rnti_t rntiP)
+{
+  struct CschedUeConfigReqParameters p;
+  struct CschedUeConfigCnfParameters r;
+  struct ScellConfig_s scell;
+
+  if (cc_idP != 0) { fprintf(stderr, "%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+
+  LOG_W(MAC, "%s:%d:%s: set correct values in CschedUeConfigReqParameters\n", __FILE__, __LINE__, __FUNCTION__);
+  p.rnti                               = rntiP;
+  p.reconfigureFlag                    = true;
+  p.drxConfigPresent                   = false;
+  p.timeAlignmentTimer                 = 0;                       /* TBC */
+  p.measGapConfigPattern               = OFF;                     /* TBC */
+  p.spsConfigPresent                   = false;
+  p.srConfigPresent                    = false;                   /* TODO? */
+  p.cqiConfigPresent                   = false;                   /* TODO? */
+  p.transmissionMode                   = 1;                       /* get real one */
+  p.ueAggregatedMaximumBitrateUl       = 900000000L;              /* TODO */
+  p.ueAggregatedMaximumBitrateDl       = 900000000L;              /* TODO */
+  /* initial UE capabilities - let's pretend to be cat3 */
+  p.ueCapabilities.halfDuplex          = false;
+  p.ueCapabilities.intraSfHopping      = false;
+  p.ueCapabilities.type2Sb1            = false;
+  p.ueCapabilities.ueCategory          = 6;                       /* use real value */
+  p.ueCapabilities.resAllocType1       = true;                    /* TBC */
+  p.ueTransmitAntennaSelection         = noneloop;                /* TBC */
+  p.ttiBundling                        = false;                   /* TBC */
+  p.maxHarqTx                          = 4;                       /* get real one */
+  p.betaOffsetAckIndex                 = 0;                       /* TODO */
+  p.betaOffsetRiIndex                  = 0;                       /* TODO */
+  p.betaOffsetCqiIndex                 = 0;                       /* TODO */
+  p.ackNackSrsSimultaneousTransmission = false;                   /* get real one */
+  p.simultaneousAckNackAndCqi          = true;                    /* get real one */
+  p.aperiodicCqiRepMode                = ff_rm30;                 /* get real one */
+  p.tddAckNackFeedbackMode             = ff_bundling;             /* get real one */
+  p.ackNackRepetitionFactor            = 0;                       /* get real one */
+  p.extendedBSRSizes                   = false;
+  p.caSupport                          = false;
+  p.crossCarrierSchedSupport           = false;
+  p.pcellCarrierIndex                  = 0;                       /* TBC */
+  p.nr_scells                          = 1;                       /* use real value */
+  p.scellConfigList[0]                 = &scell;
+  p.scellDeactivationTimer             = 0;
+
+  scell.carrierIndex              = 1;            /* use real value */
+  scell.scellIndex                = 1;            /* use real value */
+  scell.useCrossCarrierScheduling = false;
+  scell.schedulingCellIndex       = 1;            /* use real value */
+  scell.pdschStart                = 1;            /* what to put? scheduler should decide */
+
+
+  LOG_I(MAC, "calling CschedUeConfigReq\n");
+  CschedUeConfigReq(eNB_mac_inst[mod_idP].fapi->sched, &p);
+  LOG_I(MAC, "calling CschedUeConfigCnf\n");
+  CschedUeConfigCnf(eNB_mac_inst[mod_idP].fapi, &r);
+  if (r.rnti != rntiP || r.result != ff_SUCCESS) {
+    LOG_E(MAC, "FAPI fatal error: rnti is %x (expected %x); result is %s (expected ff_SUCCESS)\n",
+          r.rnti, rntiP, r.result == ff_SUCCESS ? "ff_SUCCESS" : "ff_FAILURE");
+    abort();
+  }
+}
+
+#endif
+
 int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP)
 {
   int UE_id;

@@ -621,6 +621,13 @@ rrc_mac_config_scell_req(
   /* inform the PHY layer that this UE has scell configured */
   mac_xface->ca_config(module_id, rnti, 1);
 
+#if FAPI
+  int primary_cc = UE_PCCID(module_id, UE_id);
+  void fapi_activate_carrier_aggregation(module_id_t mod_idP, int cc_idP, rnti_t rntiP);
+  if (s != 0 || SCell_CC_id != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  fapi_activate_carrier_aggregation(module_id, primary_cc, rnti);
+#endif
+
   LOG_I(MAC,"[eNB %d][rrc_mac_config_scell_req] UE rnti %x configuring scell id %d bitmap_bit %d\n",
         module_id, rnti, SCell_CC_id, bitmap_bit);
 }
