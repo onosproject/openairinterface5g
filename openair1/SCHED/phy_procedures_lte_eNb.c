@@ -3909,17 +3909,6 @@ fprintf(stderr, "extract CQI! Or1 = %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_proc
                             0,
                             0);
 
-      LOG_I(PHY,"[eNB %d] Frame %d subframe %d, sect %d: received ULSCH harq_pid %d for UE %d, ret = %d, CQI CRC Status %d, ACK %d,%d, ulsch_errors %d/%d\n",
-            phy_vars_eNB->Mod_id,frame,subframe,
-            phy_vars_eNB->eNB_UE_stats[i].sector,
-            harq_pid,
-            i,
-            ret,
-            phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->cqi_crc_status,
-            phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[0],
-            phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[1],
-            phy_vars_eNB->eNB_UE_stats[i].ulsch_errors[harq_pid],
-            phy_vars_eNB->eNB_UE_stats[i].ulsch_decoding_attempts[harq_pid][0]);
 #ifdef DEBUG_PHY_PROC
       LOG_D(PHY,"[eNB %d] Frame %d subframe %d, sect %d: received ULSCH harq_pid %d for UE %d, ret = %d, CQI CRC Status %d, ACK %d,%d, ulsch_errors %d/%d\n",
             phy_vars_eNB->Mod_id,frame,subframe,
