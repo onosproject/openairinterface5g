@@ -766,7 +766,9 @@ static void fapi_schedule_retransmission_ue(int module_id, int CC_id, int frame,
 
 static char *X[] = {"ONE", "ONE_A", "ONE_B", "ONE_C", "ONE_D", "TWO", "TWO_A", "TWO_B"};
 static char *Y[] = {"VRB_DISTRIBUTED", "VRB_LOCALIZED"};
-printf("RETR rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %d tbsSize[0] %d mcs[0] %d (latest %d) ndi[0] %d rv[0] %d cceIndex %d aggrLevel %d precodingInfo %d format %s tpc %d harqProcess %d vrbFormat %s tbSwap %d spsRelease %d preambleIndex %d prachMaskIndex %d nGap %d dlPowerOffset %d pdcchPowerOffset %d cifPresent %d\n",
+printf("RETR fsf %d/%d rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %d tbsSize[0] %d mcs[0] %d (latest %d) ndi[0] %d rv[0] %d cceIndex %d aggrLevel %d precodingInfo %d format %s tpc %d harqProcess %d vrbFormat %s tbSwap %d spsRelease %d preambleIndex %d prachMaskIndex %d nGap %d dlPowerOffset %d pdcchPowerOffset %d cifPresent %d\n",
+  frame,
+  subframe,
   d->dci.rnti,
   d->dci.rbBitmap,
   d->dci.rbShift,
@@ -791,6 +793,7 @@ printf("RETR rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %
   d->dci.prachMaskIndex,
   d->dci.nGap+1,
   d->dci.dlPowerOffset,
+  d->dci.pdcchPowerOffset,
   d->dci.cifPresent);
   /* TODO: deal with MCS 29-31 in the PHY layer
    * in the meantime, let's replace with the last used MCS
@@ -863,7 +866,9 @@ if (d->nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, 
 
 static char *X[] = {"ONE", "ONE_A", "ONE_B", "ONE_C", "ONE_D", "TWO", "TWO_A", "TWO_B"};
 static char *Y[] = {"VRB_DISTRIBUTED", "VRB_LOCALIZED"};
-printf("rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %d tbsSize[0] %d mcs[0] %d ndi[0] %d rv[0] %d cceIndex %d aggrLevel %d precodingInfo %d format %s tpc %d harqProcess %d vrbFormat %s tbSwap %d spsRelease %d preambleIndex %d prachMaskIndex %d nGap %d dlPowerOffset %d pdcchPowerOffset %d cifPresent %d\n",
+printf("fsf %d/%d rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %d tbsSize[0] %d mcs[0] %d ndi[0] %d rv[0] %d cceIndex %d aggrLevel %d precodingInfo %d format %s tpc %d harqProcess %d vrbFormat %s tbSwap %d spsRelease %d preambleIndex %d prachMaskIndex %d nGap %d dlPowerOffset %d pdcchPowerOffset %d cifPresent %d\n",
+  frame,
+  subframe,
   d->dci.rnti,
   d->dci.rbBitmap,
   d->dci.rbShift,
@@ -887,6 +892,7 @@ printf("rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %d tbs
   d->dci.prachMaskIndex,
   d->dci.nGap+1,
   d->dci.dlPowerOffset,
+  d->dci.pdcchPowerOffset,
   d->dci.cifPresent);
 
   /* generate DCI */
