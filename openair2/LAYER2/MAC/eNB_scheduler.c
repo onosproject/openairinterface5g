@@ -931,6 +931,7 @@ printf("RUN fapi_schedule_ue\n");
 
   /* get DLSCH buffer and adjust size according to what RLC says */
   for (i = 0; i < d->nr_rlcPDU_List[0]; i++) {
+    if (d->rlcPduList[0][i].logicalChannelIdentity > 3) { printf("%s:%d:%s: bad lcid %d\n", __FILE__, __LINE__, __FUNCTION__, d->rlcPduList[0][i].logicalChannelIdentity); abort(); }
     rlc_status = mac_rlc_status_ind(
         module_id,
         d->rnti,
@@ -999,6 +1000,7 @@ printf("FILLED %d bytes\n", output_length);
 #if MEGALOG
 printf("PADDING_SIZE %d\n", padding_size);
 #endif
+  if (padding_size == 3) { printf("padding size 3\n"); abort(); }
 
   UE_id = find_UE_id(module_id, d->rnti);
 if (UE_id == -1) {
