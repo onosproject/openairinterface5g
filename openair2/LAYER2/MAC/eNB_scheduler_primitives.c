@@ -281,7 +281,7 @@ void fapi_activate_carrier_aggregation(module_id_t mod_idP, int cc_idP, rnti_t r
   p.tddAckNackFeedbackMode             = ff_bundling;             /* get real one */
   p.ackNackRepetitionFactor            = 0;                       /* get real one */
   p.extendedBSRSizes                   = false;
-  p.caSupport                          = false;
+  p.caSupport                          = true;
   p.crossCarrierSchedSupport           = false;
   p.pcellCarrierIndex                  = 0;                       /* TBC */
   p.nr_scells                          = 1;                       /* use real value */

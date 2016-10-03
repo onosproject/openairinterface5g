@@ -805,9 +805,16 @@ printf("RUN fapi_schedule_retransmission_ue\n");
 
   if (d->nr_rlcPDU_List[0] != 0) { printf("%s:%d:%s: error?\n", __FILE__, __LINE__, __FUNCTION__); /*abort();*/ }
   if (d->nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
-  if (d->ceBitmap[0])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->ceBitmap[1])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->servCellIndex != 0)     { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+
+  /* activate/deactive 2nd cell
+   * TODO: do it better, only activate at subframe+8 if ACK received at subframe +4
+   */
+  if (d->ceBitmap[0]) {
+    if (d->ceBitmap[0] != ff_AD) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+    mac_xface->ca_activate(module_id, d->rnti, d->activationDeactivationCE);
+  }
 
   UE_id = find_UE_id(module_id, d->rnti);
 if (UE_id == -1) {
@@ -895,9 +902,16 @@ printf("RUN fapi_schedule_ue\n");
 
   if (d->nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
-  if (d->ceBitmap[0])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->ceBitmap[1])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->servCellIndex != 0)     { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+
+  /* activate/deactive 2nd cell
+   * TODO: do it better, only activate at subframe+8 if ACK received at subframe +4
+   */
+  if (d->ceBitmap[0]) {
+    if (d->ceBitmap[0] != ff_AD) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+    mac_xface->ca_activate(module_id, d->rnti, d->activationDeactivationCE);
+  }
 
   /* TODO: deal with MCS 29-31
    * in the meantime, we store the latest used mcs for each rnti/harq_pid
