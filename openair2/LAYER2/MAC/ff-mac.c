@@ -5,8 +5,8 @@
 #include "log.h"
 #include "assertions.h"
 
-#undef LOG_D
-#define LOG_D LOG_I
+//#undef LOG_D
+//#define LOG_D LOG_I
 
 #include <stdlib.h>
 #include <pthread.h>

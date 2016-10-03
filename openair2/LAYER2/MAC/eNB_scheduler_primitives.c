@@ -1290,7 +1290,7 @@ void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, rnti_t rntiP
 
   sr.rnti = rntiP;
 
-  LOG_I(MAC, "eNB %d/%d f/sf %d/%d calling SchedUlSrInfoReq for rnti %x\n", mod_idP, cc_idP, frameP, subframeP, rntiP);
+  LOG_D(MAC, "eNB %d/%d f/sf %d/%d calling SchedUlSrInfoReq for rnti %x\n", mod_idP, cc_idP, frameP, subframeP, rntiP);
 #if MEGALOG
 printf("MAC to FAPI SR indication rnti %x f/sf %d/%d\n", rntiP, frameP, subframeP);
 #endif

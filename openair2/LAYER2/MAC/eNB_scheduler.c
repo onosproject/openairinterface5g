@@ -1195,7 +1195,7 @@ printf("SCHEDULER called for f/sf %d/%d\n", frameP, subframeP);
         rlc.rnti = eNB->common_channels[CC_id].RA_template[i].rnti;
         rlc.logicalChannelIdentity = CCCH;
         rlc.rlcTransmissionQueueSize = mac_rrc_get_ccch_size(module_idP, CC_id) + 1;
-        LOG_I(MAC, "calling SchedDlRlcBufferReq on CCCH rnti %x queue_size %d\n", rlc.rnti, rlc.rlcTransmissionQueueSize);
+        LOG_D(MAC, "calling SchedDlRlcBufferReq on CCCH rnti %x queue_size %d\n", rlc.rnti, rlc.rlcTransmissionQueueSize);
 #if MEGALOG
 printf("MAC to FAPI downlink BUF CCCH %d\n", rlc.rlcTransmissionQueueSize);
 #endif
@@ -1223,7 +1223,7 @@ printf("MAC to FAPI downlink BUF CCCH %d\n", rlc.rlcTransmissionQueueSize);
     rlc.logicalChannelIdentity = DCCH;
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
 if (rlc.rlcTransmissionQueueSize == 2) rlc.rlcTransmissionQueueSize = 10;
-    LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
+    LOG_D(MAC, "calling SchedDlRlcBufferReq on DCCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
 #if MEGALOG
 printf("MAC to FAPI downlink BUF DCCH %d\n", rlc_status.bytes_in_buffer);
@@ -1233,7 +1233,7 @@ printf("MAC to FAPI downlink BUF DCCH %d\n", rlc_status.bytes_in_buffer);
     rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH+1, 0);
     rlc.logicalChannelIdentity = DCCH+1;
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
-    LOG_I(MAC, "calling SchedDlRlcBufferReq on DCCH+1 rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
+    LOG_D(MAC, "calling SchedDlRlcBufferReq on DCCH+1 rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
 #if MEGALOG
 printf("MAC to FAPI downlink BUF DCCH+1 %d\n", rlc_status.bytes_in_buffer);
@@ -1243,7 +1243,7 @@ printf("MAC to FAPI downlink BUF DCCH+1 %d\n", rlc_status.bytes_in_buffer);
     rlc_status = mac_rlc_status_ind(module_idP, rlc.rnti, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, DTCH, 0);
     rlc.logicalChannelIdentity = DTCH;
     rlc.rlcTransmissionQueueSize = rlc_status.bytes_in_buffer;
-    LOG_I(MAC, "calling SchedDlRlcBufferReq on DTCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
+    LOG_D(MAC, "calling SchedDlRlcBufferReq on DTCH rnti %x queue_size %d\n", rlc.rnti, rlc_status.bytes_in_buffer);
     SchedDlRlcBufferReq(fapi->sched, &rlc);
 #if MEGALOG
 printf("MAC to FAPI downlink BUF DTCH %d\n", rlc_status.bytes_in_buffer);
@@ -1274,15 +1274,15 @@ printf("MAC to FAPI downlink ack/nack from PHY f/sf %d/%d rnti %x harq %d ack %d
   }
   fapi_dl_ack_nack_data.count = 0;
 
-  LOG_I(MAC, "calling SchedDlTriggerReq\n");
+  LOG_D(MAC, "calling SchedDlTriggerReq\n");
   SchedDlTriggerReq(fapi->sched, &dlreq);
 
-  LOG_I(MAC, "calling SchedDlConfigInd\n");
+  LOG_D(MAC, "calling SchedDlConfigInd\n");
   SchedDlConfigInd(fapi, &dlind);
 
-  LOG_I(MAC, "SchedDlConfigInd returns dlind.nr_buildDataList %d f/sf %d/%d\n", dlind.nr_buildDataList, frameP, subframeP);
-  LOG_I(MAC, "SchedDlConfigInd returns dlind.nr_buildRARList %d f/sf %d/%d\n", dlind.nr_buildRARList, frameP, subframeP);
-  LOG_I(MAC, "SchedDlConfigInd returns dlind.nr_buildBroadcastList %d f/sf %d/%d\n", dlind.nr_buildBroadcastList, frameP, subframeP);
+  LOG_D(MAC, "SchedDlConfigInd returns dlind.nr_buildDataList %d f/sf %d/%d\n", dlind.nr_buildDataList, frameP, subframeP);
+  LOG_D(MAC, "SchedDlConfigInd returns dlind.nr_buildRARList %d f/sf %d/%d\n", dlind.nr_buildRARList, frameP, subframeP);
+  LOG_D(MAC, "SchedDlConfigInd returns dlind.nr_buildBroadcastList %d f/sf %d/%d\n", dlind.nr_buildBroadcastList, frameP, subframeP);
 
   /* TODO: rewrite. All should go into fapi_schedule_ue where special cases should be handled */
   for (i = 0; i < dlind.nr_buildDataList; i++) {
@@ -1394,10 +1394,10 @@ printf("MAC to FAPI uplink ue %x f/sf %d/%d lcid %d size acked %d\n", fapi_ul_ac
     fapi_ul_ack_nack_data[ulsf].count = 0;
   }
 
-  LOG_I(MAC, "calling SchedUlTriggerReq\n");
+  LOG_D(MAC, "calling SchedUlTriggerReq\n");
   SchedUlTriggerReq(fapi->sched, &ulreq);
 
-  LOG_I(MAC, "calling SchedUlConfigInd\n");
+  LOG_D(MAC, "calling SchedUlConfigInd\n");
   SchedUlConfigInd(fapi, &ulind);
 
   /* a hack to report nice CQI all the time it's asked */
