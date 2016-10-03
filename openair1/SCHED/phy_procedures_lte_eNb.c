@@ -1750,6 +1750,13 @@ printf("PHY TX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
                                         phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][1]);
 
         stop_meas(&phy_vars_eNB->dlsch_modulation_stats);
+
+        if ((double)phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[harq_pid]->TBS >
+              (double)re_allocated * (double)get_Qm(phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[harq_pid]->mcs) * 0.93)
+          LOG_E(PHY, "TBS too big for allocated REs (TBS %d bits, REs allocated %d, modulation order %d)\n",
+                phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[harq_pid]->TBS,
+                re_allocated,
+                get_Qm(phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->harq_processes[harq_pid]->mcs));
       }
 
 #ifdef PHY_ABSTRACTION
