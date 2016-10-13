@@ -1759,7 +1759,7 @@ void process_HARQ_feedback(uint8_t UE_id,
 #endif
 
             T(T_ENB_PHY_DLSCH_UE_NACK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(UE_id), T_INT(dlsch->rnti),
-              T_INT(dl_harq_pid[m]));
+              T_INT(dl_harq_pid[m]),T_INT(tb));
 
             if (dlsch_harq_proc->round == 0)
               ue_stats->dlsch_NAK_round0++;
@@ -1795,7 +1795,7 @@ void process_HARQ_feedback(uint8_t UE_id,
 #endif
 
             T(T_ENB_PHY_DLSCH_UE_ACK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(UE_id), T_INT(dlsch->rnti),
-              T_INT(dl_harq_pid[m]));
+              T_INT(dl_harq_pid[m]),T_INT(tb));
 
 	    // TODO: add TB to stats
             ue_stats->dlsch_ACK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
