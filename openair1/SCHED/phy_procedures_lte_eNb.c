@@ -1883,9 +1883,9 @@ void process_HARQ_ACK(
 #if FAPI
   /* TODO: handle transport block != 0 */
 #if MEGALOG
-printf("SEND ack %d harq pid %d rnti %d f/sf %d/%d\n", dlsch_ACK[mp], dl_harq_pid[m], dlsch->rnti, frame, subframe);
+printf("SEND ack %d harq pid %d rnti %d cc %d f/sf %d/%d\n", ack, dl_harq_pid, dlsch->rnti, CC_id, frame, subframe);
 #endif
-  mac_xface->fapi_dl_ack_nack(dlsch->rnti, dl_harq_pid, 0 /* transport block */, ack);
+  mac_xface->fapi_dl_ack_nack(CC_id, dlsch->rnti, dl_harq_pid, 0 /* transport block */, ack);
 #endif
 
   //    msg("[PHY] eNB %d Process %d is active (%d)\n",phy_vars_eNB->Mod_id,dl_harq_pid[m],dlsch_ACK[m]);
@@ -3616,6 +3616,8 @@ fprintf(stderr, "extract CQI! Or1 = %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_proc
 #endif
         phy_vars_eNB->eNB_UE_stats[i].rank = phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_RI[0];
 #if FAPI
+/* TODO: let's not do it for the moment, the hack above is enough */
+#if 0
         {
           /* TODO: 2 TBs, other reporting modes - we suppose 3-0 (see 36.213 7.2.1) */
           /* 13 is MAX_HL_SB */
@@ -3626,6 +3628,7 @@ fprintf(stderr, "extract CQI! Or1 = %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_proc
           mac_xface->fapi_dl_cqi_report(phy_vars_eNB->Mod_id, phy_vars_eNB->ulsch_eNB[i]->rnti, frame, subframe,
               phy_vars_eNB->eNB_UE_stats[i].DL_cqi[0], cqi_subband, phy_vars_eNB->eNB_UE_stats[i].rank);
         }
+#endif
 #endif
       }
 

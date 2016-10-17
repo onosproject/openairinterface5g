@@ -194,10 +194,10 @@ printf("TPC PUSCH global sf %ld (%ld/%ld) UE %x: TPC %d (accumulated %d)\n", glo
  * to be sent to FAPI by SchedDlTriggerReq
  */
 /* TODO: lock access to it or not? */
-/* TODO: do it per CC */
 static struct {
   struct {
     int rnti;
+    int CC_id;
     int harq_pid;
     int ack[MAX_TB_LIST];
     int ack_count;
@@ -222,12 +222,11 @@ static struct {
 } fapi_ul_ack_nack_data[10];
 
 /* this function is called by the PHY to signal UE's ACK/NACK */
-/* TODO: do it per CC */
-void fapi_dl_ack_nack(int rnti, int harq_pid, int transport_block, int ack)
+void fapi_dl_ack_nack(int CC_id, int rnti, int harq_pid, int transport_block, int ack)
 {
   int pos = fapi_dl_ack_nack_data.count;
 #if MEGALOG
-printf("GOT DOWNLINK ack %d for rnti %x harq_pid %d transport_block %d\n", ack, rnti, harq_pid, transport_block);
+printf("GOT DOWNLINK ack %d for rnti %x harq_pid %d cc %d transport_block %d\n", ack, rnti, harq_pid, CC_id, transport_block);
 #endif
   /* TODO: handle more than 1 TB */
   if (transport_block) { printf("%s:%d:%s: TODO: tb != 0\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
@@ -238,6 +237,7 @@ printf("GOT DOWNLINK ack %d for rnti %x harq_pid %d transport_block %d\n", ack, 
   }
 
   fapi_dl_ack_nack_data.ack[pos].rnti      = rnti;
+  fapi_dl_ack_nack_data.ack[pos].CC_id     = CC_id;
   fapi_dl_ack_nack_data.ack[pos].harq_pid  = harq_pid;
   fapi_dl_ack_nack_data.ack[pos].ack[0]    = ack;       /* TODO: use transport_block here */
   fapi_dl_ack_nack_data.ack[pos].ack_count = 1;         /* TODO: take care of transport block */
@@ -380,6 +380,22 @@ void fapi_dl_cqi_report(int module_id, int rnti, int frame, int subframe, int cq
 //for (i = 0; i < MAX_HL_SB; i++)
 //fprintf(stderr, "  subband %d: %d\n", i, cqi_subband[i]);
   SchedDlCqiInfoReq(fapi->sched, &params);
+
+/* TODO: get rid of this hack */
+cqi.rnti                          = rnti;
+cqi.csiReport.ri                  = rank_indication;
+cqi.csiReport.mode                = A30;          /* TODO: get real value */
+cqi.csiReport.report.A30Csi.wbCqi = cqi_wideband;
+for (i = 0; i < MAX_HL_SB; i++)
+  cqi.csiReport.report.A30Csi.sbCqi[i] = cqi_subband[i];
+if (cqi.csiReport.report.A30Csi.wbCqi == 0) cqi.csiReport.report.A30Csi.wbCqi++;
+cqi.servCellIndex                 = 1;         /* TODO: get correct value */
+params.sfnSf                 = frame * 16 + subframe;
+params.nrcqiList             = 1;
+params.cqiList               = &cqi;
+params.nr_vendorSpecificList = 0;
+params.vendorSpecificList    = NULL;
+SchedDlCqiInfoReq(fapi->sched, &params);
 }
 
 #define CONVERT_DL_1A_FDD(bandwidth)                                                                    \
@@ -523,6 +539,7 @@ static void fapi_convert_ul_ ## bandwidth ## MHz_FDD(module_id_t module_idP, int
                                   /* there is a translation between those */                            \
   d->cqi_req    = dci->cqiRequest;                                                                      \
 if (!cqi_ready[dci->rnti]) d->cqi_req = 0;                                                              \
+/* TODO: do not disable CQI request */                                                                  \
 d->cqi_req = 0;                                                                                         \
 /*if (dci->cqiRequest) fprintf(stderr, "cqi req (ready %d) (d->cqi_req %d)!!\n", cqi_ready[dci->rnti], d->cqi_req);*/ \
   d->padding    = 0;                                                                                    \
@@ -731,10 +748,10 @@ static int fixed_size(int lcid)
 }
 
 /* TODO: deal with MCS 29-31 in the PHY layer
- * in the meantime, this array stores the latest mcs used for each rnti/harq_pid
+ * in the meantime, this array stores the latest mcs used for each rnti/servcell/harq_pid
  */
-static unsigned char latest_mcs[65536][10];
-static unsigned int latest_rbbitmap[65536][10];
+static unsigned char latest_mcs[65536][2][10];
+static unsigned int latest_rbbitmap[65536][2][10];
 
 /* TODO: deal with more than one transport block */
 static void fapi_schedule_retransmission_ue(int module_id, int CC_id, int frame, int subframe, struct BuildDataListElement_s *d)
@@ -764,6 +781,9 @@ static void fapi_schedule_retransmission_ue(int module_id, int CC_id, int frame,
   /* we can increment Num_common_dci or Num_ue_spec_dci, there is no difference */
   dci_pdu->Num_common_dci++;
 
+  /* TODO: handle the case where CC_id != servCellIndex */
+  if (CC_id != d->servCellIndex) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+
 static char *X[] = {"ONE", "ONE_A", "ONE_B", "ONE_C", "ONE_D", "TWO", "TWO_A", "TWO_B"};
 static char *Y[] = {"VRB_DISTRIBUTED", "VRB_LOCALIZED"};
 printf("RETR fsf %d/%d rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %d tbsSize[0] %d mcs[0] %d (latest %d) ndi[0] %d rv[0] %d cceIndex %d aggrLevel %d precodingInfo %d format %s tpc %d harqProcess %d vrbFormat %s tbSwap %d spsRelease %d preambleIndex %d prachMaskIndex %d nGap %d dlPowerOffset %d pdcchPowerOffset %d cifPresent %d\n",
@@ -777,7 +797,7 @@ printf("RETR fsf %d/%d rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d n
   d->dci.nr_of_tbs,
   d->dci.tbsSize[0],
   d->dci.mcs[0],
-  latest_mcs[d->rnti][d->dci.harqProcess],
+  latest_mcs[d->rnti][CC_id][d->dci.harqProcess],
   d->dci.ndi[0],
   d->dci.rv[0],
   d->dci.cceIndex,
@@ -798,8 +818,9 @@ printf("RETR fsf %d/%d rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d n
   /* TODO: deal with MCS 29-31 in the PHY layer
    * in the meantime, let's replace with the last used MCS
    */
-  d->dci.mcs[0] = latest_mcs[d->rnti][d->dci.harqProcess];
-  d->dci.rbBitmap = latest_rbbitmap[d->rnti][d->dci.harqProcess];
+  d->dci.mcs[0] = latest_mcs[d->rnti][CC_id][d->dci.harqProcess];
+  /* TODO: remove this terrible hack! */
+  d->dci.rbBitmap = latest_rbbitmap[d->rnti][CC_id][d->dci.harqProcess];
 
   fapi_convert_dl_dci(module_id, CC_id, &d->dci, a);
 #if MEGALOG
@@ -809,14 +830,18 @@ printf("RUN fapi_schedule_retransmission_ue\n");
   if (d->nr_rlcPDU_List[0] != 0) { printf("%s:%d:%s: error?\n", __FILE__, __LINE__, __FUNCTION__); /*abort();*/ }
   if (d->nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->ceBitmap[1])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
-  if (d->servCellIndex != 0)     { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (d->servCellIndex != 0 &&
+      d->servCellIndex != 1)     { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 
   /* activate/deactive 2nd cell
    * TODO: do it better, only activate at subframe+8 if ACK received at subframe +4
    */
   if (d->ceBitmap[0]) {
     if (d->ceBitmap[0] != ff_AD) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
-    mac_xface->ca_activate(module_id, d->rnti, d->activationDeactivationCE);
+    LOG_I(MAC, "FAPI: f/sf %d/%d rnti %d ca_activate %2.2x\n", frame, subframe, d->rnti, d->activationDeactivationCE);
+    //mac_xface->ca_activate(module_id, d->rnti, d->activationDeactivationCE);
+/* TODO: remove this hack */
+mac_xface->ca_activate(module_id, d->rnti, 2);
   }
 
   UE_id = find_UE_id(module_id, d->rnti);
@@ -909,21 +934,28 @@ printf("RUN fapi_schedule_ue\n");
   if (d->nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->ceBitmap[1])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
-  if (d->servCellIndex != 0)     { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  if (d->servCellIndex != 0 &&
+      d->servCellIndex != 1)     { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+
+  /* TODO: handle the case where CC_id != servCellIndex */
+  if (CC_id != d->servCellIndex) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 
   /* activate/deactive 2nd cell
    * TODO: do it better, only activate at subframe+8 if ACK received at subframe +4
    */
   if (d->ceBitmap[0]) {
     if (d->ceBitmap[0] != ff_AD) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
-    mac_xface->ca_activate(module_id, d->rnti, d->activationDeactivationCE);
+    LOG_I(MAC, "FAPI: f/sf %d/%d rnti %d ca_activate %2.2x\n", frame, subframe, d->rnti, d->activationDeactivationCE);
+    //mac_xface->ca_activate(module_id, d->rnti, d->activationDeactivationCE);
+/* TODO: remove this hack */
+mac_xface->ca_activate(module_id, d->rnti, 2);
   }
 
   /* TODO: deal with MCS 29-31
    * in the meantime, we store the latest used mcs for each rnti/harq_pid
    */
-  latest_mcs[d->rnti][d->dci.harqProcess] = d->dci.mcs[0];
-  latest_rbbitmap[d->rnti][d->dci.harqProcess] = d->dci.rbBitmap;
+  latest_mcs[d->rnti][CC_id][d->dci.harqProcess] = d->dci.mcs[0];
+  latest_rbbitmap[d->rnti][CC_id][d->dci.harqProcess] = d->dci.rbBitmap;
 
   tbs = d->dci.tbsSize[0] / 8;
 
@@ -982,6 +1014,12 @@ printf("FILLED %d bytes\n", output_length);
   header_size = 0;
   payload_size = 0;
 
+  /* TODO: 2nd TB */
+  if (d->ceBitmap[0] & ff_AD) {
+    header_size++;
+    payload_size++;
+  }
+
   if (d->nr_rlcPDU_List[0]) {
     header_size++;
     payload_size += d->rlcPduList[0][0].size;
@@ -1020,8 +1058,8 @@ abort();
       NULL,                                  // contention res id
       padding_size <= 2 ? padding_size : 0,
       padding_size > 2 ? padding_size : 0,
-      /* TODO: scell bitmap command */
-      0, 0);
+      /* TODO: remove this hack */
+      2 /*d->activationDeactivationCE*/, (d->ceBitmap[0] & ff_AD) != 0);
 
   /* fill payload */
   memcpy(&UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][offset], dlsch_buffer, dlsch_filled);
@@ -1263,9 +1301,9 @@ printf("MAC to FAPI downlink BUF DTCH %d\n", rlc_status.bytes_in_buffer);
     dlinfo[i].harqProcessId = fapi_dl_ack_nack_data.ack[i].harq_pid;
     dlinfo[i].nr_harqStatus = 1;                                                         /* TODO: deal with more than 1 TB */
     dlinfo[i].harqStatus[0] = fapi_dl_ack_nack_data.ack[i].ack[0] ? ff_ACK : ff_NACK;    /* TODO: more than 1 TB */
-    dlinfo[i].servCellIndex = 0;                                                         /* TODO: get real value for the servCellIndex */
+    dlinfo[i].servCellIndex = fapi_dl_ack_nack_data.ack[i].CC_id;                        /* TODO: get real value for the servCellIndex */
 #if MEGALOG
-printf("MAC to FAPI downlink ack/nack from PHY f/sf %d/%d rnti %x harq %d ack %d\n", frameP, subframeP, dlinfo[i].rnti, dlinfo[i].harqProcessId, fapi_dl_ack_nack_data.ack[i].ack[0]);
+printf("MAC to FAPI downlink ack/nack from PHY CC %d f/sf %d/%d rnti %x harq %d ack %d\n", dlinfo[i].servCellIndex, frameP, subframeP, dlinfo[i].rnti, dlinfo[i].harqProcessId, fapi_dl_ack_nack_data.ack[i].ack[0]);
 #endif
   }
   if (fapi_dl_ack_nack_data.count) {
@@ -1425,13 +1463,16 @@ printf("FAPI to MAC uplink schedule ue %x ndi %d (fsf %d %d) rbstart %d rblen %d
   }
 
 #if MEGALOG
-printf("RECAP dci pdu count %d\n", eNB_mac_inst[0].common_channels[0].DCI_pdu.Num_common_dci);
-for (i = 0; i < eNB_mac_inst[0].common_channels[0].DCI_pdu.Num_common_dci; i++) {
-printf("    RECAP %i rnti %x %s dci pdu %s\n", i,
-  eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].rnti,
-  dci_format_to_string(eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].format),
-  binary(*(uint32_t *)eNB_mac_inst[0].common_channels[0].DCI_pdu.dci_alloc[i].dci_pdu)
-  );
+int cc;
+for (cc = 0; cc < 2; cc++) {
+  printf("RECAP dci pdu count %d cc %d\n", eNB_mac_inst[0].common_channels[cc].DCI_pdu.Num_common_dci, cc);
+  for (i = 0; i < eNB_mac_inst[0].common_channels[cc].DCI_pdu.Num_common_dci; i++) {
+  printf("    RECAP %i rnti %x %s dci pdu %s\n", i,
+    eNB_mac_inst[0].common_channels[cc].DCI_pdu.dci_alloc[i].rnti,
+    dci_format_to_string(eNB_mac_inst[0].common_channels[cc].DCI_pdu.dci_alloc[i].format),
+    binary(*(uint32_t *)eNB_mac_inst[0].common_channels[cc].DCI_pdu.dci_alloc[i].dci_pdu)
+    );
+  }
 }
 printf("RECAP phich count %d\n", ulind.nr_phichList);
 for (i = 0; i < ulind.nr_phichList; i++) {

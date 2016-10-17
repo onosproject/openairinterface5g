@@ -49,7 +49,7 @@ void fapi_ul_ack_nack(int frame, int subframe, int harq_pid, int rnti, int ack);
 void fapi_ul_lc_length(int frame, int subframe, int lcid, int length, int rnti);
 
 /* signal downlink ACKs/NACKs */
-void fapi_dl_ack_nack(int rnti, int harq_pid, int transport_block, int ack);
+void fapi_dl_ack_nack(int CC_id, int rnti, int harq_pid, int transport_block, int ack);
 
 /* signal DL CQI (mode 3-0 only, see 36.213 7.2.1) */
 void fapi_dl_cqi_report(int module_id, int rnti, int frame, int subframe, int cqi_wideband, int *cqi_subband, int rank_indication);
