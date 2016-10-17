@@ -829,7 +829,7 @@ printf("RETR fsf %d/%d rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d n
 printf("RUN fapi_schedule_retransmission_ue\n");
 #endif
 
-  if (d->nr_rlcPDU_List[0] != 0) { printf("%s:%d:%s: error?\n", __FILE__, __LINE__, __FUNCTION__); /*abort();*/ }
+  if (d->nr_rlcPDU_List[0] != 0) { /*printf("%s:%d:%s: error?\n", __FILE__, __LINE__, __FUNCTION__);*/ /*abort();*/ }
   if (d->nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->ceBitmap[1])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->servCellIndex != 0 &&
@@ -949,7 +949,7 @@ printf("RUN fapi_schedule_ue\n");
    * TODO: do it better, only activate at subframe+8 if ACK received at subframe +4
    */
   if (d->ceBitmap[0]) {
-    if (d->ceBitmap[0] != ff_AD) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+    if (d->ceBitmap[0] != ff_AD) { printf("%s:%d:%s: TODO (bitmap %d)\n", __FILE__, __LINE__, __FUNCTION__, d->ceBitmap[0]); abort(); }
     LOG_I(MAC, "FAPI: f/sf %d/%d rnti %d ca_activate %2.2x\n", frame, subframe, d->rnti, d->activationDeactivationCE);
     //mac_xface->ca_activate(module_id, d->rnti, d->activationDeactivationCE);
 /* TODO: remove this hack */
@@ -988,9 +988,9 @@ printf("RLC_SIZE in fapi_schedule_ue %d (asked %d) lcid %d rnti %x f/sf %d/%d\n"
       printf("dlsch buffer filled too much\n");
       abort();
     }
-if (d->rlcPduList[0][i].size == 2) {
-  printf("yo\n");
-}
+//if (d->rlcPduList[0][i].size == 2) {
+//  printf("yo\n");
+//}
     output_length = mac_rlc_data_req(
         module_id,
         d->rnti,
@@ -1043,7 +1043,7 @@ printf("FILLED %d bytes\n", output_length);
 #if MEGALOG
 printf("PADDING_SIZE %d\n", padding_size);
 #endif
-  if (padding_size == 3) { printf("padding size 3\n"); abort(); }
+  //if (padding_size == 3) { printf("padding size 3\n"); abort(); }
 
   UE_id = find_UE_id(module_id, d->rnti);
 if (UE_id == -1) {
