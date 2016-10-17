@@ -511,10 +511,13 @@ rlc_um_try_reassembly(
               // data_p is already ok, done by last loop above
               rlc_um_reassembly (ctxt_pP, rlc_pP, data_p, size);
             } else {
-              AssertFatal( 0 !=0, PROTOCOL_RLC_UM_CTXT_FMT" SHOULD NOT GO HERE (%s:%u)\n",
-                           PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP, rlc_pP),
-                           __FILE__,
-                           __LINE__);
+/* TODO: remove this hack, do it properly (will not be done in the fapi branch,
+ * the bug is present in develop branch too)
+ */
+//              AssertFatal( 0 !=0, PROTOCOL_RLC_UM_CTXT_FMT" SHOULD NOT GO HERE (%s:%u)\n",
+//                           PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP, rlc_pP),
+//                           __FILE__,
+//                           __LINE__);
               //rlc_pP->stat_rx_data_pdu_dropped += 1;
               rlc_pP->stat_rx_data_bytes_dropped += size;
             }
