@@ -784,6 +784,7 @@ static void fapi_schedule_retransmission_ue(int module_id, int CC_id, int frame,
   /* TODO: handle the case where CC_id != servCellIndex */
   if (CC_id != d->servCellIndex) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 
+#if MEGALOG
 static char *X[] = {"ONE", "ONE_A", "ONE_B", "ONE_C", "ONE_D", "TWO", "TWO_A", "TWO_B"};
 static char *Y[] = {"VRB_DISTRIBUTED", "VRB_LOCALIZED"};
 printf("RETR fsf %d/%d rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %d tbsSize[0] %d mcs[0] %d (latest %d) ndi[0] %d rv[0] %d cceIndex %d aggrLevel %d precodingInfo %d format %s tpc %d harqProcess %d vrbFormat %s tbSwap %d spsRelease %d preambleIndex %d prachMaskIndex %d nGap %d dlPowerOffset %d pdcchPowerOffset %d cifPresent %d\n",
@@ -815,6 +816,7 @@ printf("RETR fsf %d/%d rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d n
   d->dci.dlPowerOffset,
   d->dci.pdcchPowerOffset,
   d->dci.cifPresent);
+#endif
   /* TODO: deal with MCS 29-31 in the PHY layer
    * in the meantime, let's replace with the last used MCS
    */
@@ -889,6 +891,7 @@ static void fapi_schedule_ue(int module_id, int CC_id, int frame, int subframe, 
 
 if (d->nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); return; }
 
+#if MEGALOG
 static char *X[] = {"ONE", "ONE_A", "ONE_B", "ONE_C", "ONE_D", "TWO", "TWO_A", "TWO_B"};
 static char *Y[] = {"VRB_DISTRIBUTED", "VRB_LOCALIZED"};
 printf("fsf %d/%d rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_tbs %d tbsSize[0] %d mcs[0] %d ndi[0] %d rv[0] %d cceIndex %d aggrLevel %d precodingInfo %d format %s tpc %d harqProcess %d vrbFormat %s tbSwap %d spsRelease %d preambleIndex %d prachMaskIndex %d nGap %d dlPowerOffset %d pdcchPowerOffset %d cifPresent %d\n",
@@ -919,6 +922,7 @@ printf("fsf %d/%d rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_
   d->dci.dlPowerOffset,
   d->dci.pdcchPowerOffset,
   d->dci.cifPresent);
+#endif
 
   /* generate DCI */
   if (dci_pdu->Num_common_dci >= NUM_DCI_MAX) { printf("%s:%d:%s: too much DCIs\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
@@ -1067,9 +1071,11 @@ abort();
   T(T_ENB_MAC_UE_DL_PDU_WITH_DATA, T_INT(module_id), T_INT(CC_id), T_INT(d->rnti), T_INT(frame), T_INT(subframe),
     T_INT(d->dci.harqProcess), T_BUFFER(UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0], tbs));
 
+#if MEGALOG
 printf("BLOCK (%d)", tbs);
 for (i = 0; i < tbs; i++) printf(" %2.2x", (unsigned char)UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][i]);
 printf("\n");
+#endif
   add_ue_dlsch_info(module_id,
       CC_id,
       UE_id,

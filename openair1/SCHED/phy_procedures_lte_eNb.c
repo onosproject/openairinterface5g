@@ -2018,7 +2018,9 @@ void process_HARQ_feedback(uint8_t UE_id,
         ack0 = phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
       else
         ack0 = pucch_payload[0];
+#if MEGALOG
 printf("ACKNACK **** fr/subfr %d/%d pCC %d ack %d\n", frame, subframe, phy_vars_eNB->CC_id, ack0);
+#endif
     }
     /* is there an ACK/NACK on the secondary CC? */
     if (dlsch->dlsch_s[0][0]->subframe_tx[subframe_m4] > 0) {
@@ -2029,7 +2031,9 @@ printf("ACKNACK **** fr/subfr %d/%d pCC %d ack %d\n", frame, subframe, phy_vars_
         ack1 = phy_vars_eNB->ulsch_eNB[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[i];
       else
         ack1 = pucch_payload[1];  /* this is 1, not i */
+#if MEGALOG
 printf("ACKNACK **** fr/subfr %d/%d sCC %d ack %d\n", frame, subframe, phy_vars_eNB->sCC_id[UE_id][0], ack1);
+#endif
     }
     /* process ACK/NACK for primary CC */
     if (pcarrier) {
@@ -2268,7 +2272,9 @@ if (harq_pid == 8) *n1_pucch1 = -1; else {
       *n1_pucch1 = phy_vars_eNB->pucch_config_dedicated[UE_id].n1PUCCH_AN_CS_list[dlsch0_harq->TPC][0];
 }
 *n1_pucch1 = 31;
+#if MEGALOG
 printf("n1_pucch0 %d n1_pucch1 %d\n", *n1_pucch0, *n1_pucch1);
+#endif
 }
     }
 
@@ -2774,9 +2780,11 @@ void pucch_procedures(const unsigned char sched_subframe,PHY_VARS_eNB *phy_vars_
                                     subframe);
 #endif
           } // abstraction flag
+#if MEGALOG
 printf("NO CC SR f/sf %d/%d: do_SR %d/pl %d (n1 SR %d/noSR %d) m %d pucch payload %d format %d (1a %d 1b %d) (tb1 %d 2 %d)\n", frame, subframe,
        do_SR, SR_payload, phy_vars_eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex, n1_pucch0, metric0, pucch_payload0[0], format,
        pucch_format1a, pucch_format1b, phy_vars_eNB->dlsch_eNB[UE_id][0]->subframe_tx[sfm4], phy_vars_eNB->dlsch_eNB[UE_id][1]->subframe_tx[sfm4]);
+#endif
         } // active_SCCs=0
 #ifdef Rel10
         else if ((phy_vars_eNB->n_configured_SCCs[UE_id] == 1) &&
@@ -2941,8 +2949,10 @@ printf("pucch detect on pucch %d payload %d %d (metric %d/%d)\n", metric0 > metr
                                frame,
                                subframe,
                                PUCCH1b_THRES);
+#if MEGALOG
 printf("SR: do_SR %d (n1 %d/%d/%d) m0/m1/m2 %d/%d/%d p0 %d%d cs0 %d cs1 %d\n",
        do_SR, phy_vars_eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex, n1_pucch0, n1_pucch1, metric0, metric1, metric2, pucch_payload0[0], pucch_payload0[1], cs0, cs1);
+#endif
             if (do_SR == 1 && metric0 > metric1 && metric0 > metric2) {
               SR_payload = 1;
             } else if (metric1 > metric2) {
@@ -3479,10 +3489,12 @@ printf("PHY RX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
 #endif
 phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[0]=0;
 phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[1]=0;
+#if MEGALOG
 if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK)
 printf("pusch f/sf %d/%d harq_pid %d ulsch %p O_ACK %d (%d %d)\n", frame, subframe, harq_pid, phy_vars_eNB->ulsch_eNB[i], phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK,
        phy_vars_eNB->dlsch_eNB[i][0]->subframe_tx[sf]>0,
        phy_vars_eNB->n_configured_SCCs[i] == 1 && phy_vars_eNB->dlsch_eNB[i][0]->dlsch_s[0][0]->subframe_tx[sf] > 0);
+#endif
       }
 
       LOG_D(PHY,
@@ -3565,8 +3577,10 @@ printf("pusch f/sf %d/%d harq_pid %d ulsch %p O_ACK %d (%d %d)\n", frame, subfra
             ret);
 
 
+#if MEGALOG
 if (phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->O_ACK)
 printf("o_ACK %d %d\n", phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[0], phy_vars_eNB->ulsch_eNB[i]->harq_processes[harq_pid]->o_ACK[1]);
+#endif
       //compute the expected ULSCH RX power (for the stats)
       phy_vars_eNB->ulsch_eNB[(uint32_t)i]->harq_processes[harq_pid]->delta_TF =
         get_hundred_times_delta_IF_eNB(phy_vars_eNB,i,harq_pid, 0); // 0 means bw_factor is not considered
