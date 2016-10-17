@@ -889,7 +889,7 @@ static void fapi_schedule_ue(int module_id, int CC_id, int frame, int subframe, 
     return;
   }
 
-if (d->nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); return; }
+if (d->nr_rlcPDU_List[0] > 1) { printf("%s:%d:%s: TODO (d->nr_rlcPDU_List[0] %d)\n", __FILE__, __LINE__, __FUNCTION__, d->nr_rlcPDU_List[0]); return; }
 
 #if MEGALOG
 static char *X[] = {"ONE", "ONE_A", "ONE_B", "ONE_C", "ONE_D", "TWO", "TWO_A", "TWO_B"};
@@ -935,7 +935,8 @@ printf("fsf %d/%d rnti %d rbBitmap %x rbShift %d rbgSubset %d resAlloc %d nr_of_
 printf("RUN fapi_schedule_ue\n");
 #endif
 
-  if (d->nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+  /* TODO: support more than one RLC PDU */
+  if (d->nr_rlcPDU_List[0] > 1)  { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->nr_rlcPDU_List[1] != 0) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->ceBitmap[1])            { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
   if (d->servCellIndex != 0 &&
