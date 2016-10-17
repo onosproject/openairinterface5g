@@ -43,6 +43,7 @@ set (OPENAIR_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY})
 project (OpenAirInterface)
 
 #add_definitions("-DEMIT_ASN_DEBUG=1")
+#add_definitions("-DMEGALOG=1")
 
 add_subdirectory(${OPENAIR_TARGETS}/ARCH/LMSSDR/USERSPACE/LIB/lms7002m lms7002m)
 add_subdirectory(${OPENAIR_TARGETS}/ARCH/LMSSDR/USERSPACE/LIB/lmsSDR lmsSDR)
@@ -1107,14 +1108,14 @@ set (MAC_SRC
   ${MAC_DIR}/config.c
   )
 
-set_source_files_properties(${RLC_DIR}/rlc_mac.c PROPERTIES COMPILE_FLAGS "-g -O0")
-set_source_files_properties(${RLC_AM_DIR}/rlc_am.c PROPERTIES COMPILE_FLAGS "-g -O0")
-set_source_files_properties(${RLC_AM_DIR}/rlc_am_status_report.c PROPERTIES COMPILE_FLAGS "-g -O0")
-set_source_files_properties(${RLC_AM_DIR}/rlc_am_receiver.c PROPERTIES COMPILE_FLAGS "-g -O0")
-set_source_files_properties(${RLC_AM_DIR}/rlc_am_retransmit.c PROPERTIES COMPILE_FLAGS "-g -O0")
-set_source_files_properties(${MAC_DIR}/ue_procedures.c PROPERTIES COMPILE_FLAGS "-g -O0")
-set_source_files_properties(${MAC_DIR}/eNB_scheduler.c PROPERTIES COMPILE_FLAGS "-g -O0")
-set_source_files_properties(${MAC_DIR}/eNB_scheduler_primitives.c PROPERTIES COMPILE_FLAGS "-g -O0")
+#set_source_files_properties(${RLC_DIR}/rlc_mac.c PROPERTIES COMPILE_FLAGS "-g -O0")
+#set_source_files_properties(${RLC_AM_DIR}/rlc_am.c PROPERTIES COMPILE_FLAGS "-g -O0")
+#set_source_files_properties(${RLC_AM_DIR}/rlc_am_status_report.c PROPERTIES COMPILE_FLAGS "-g -O0")
+#set_source_files_properties(${RLC_AM_DIR}/rlc_am_receiver.c PROPERTIES COMPILE_FLAGS "-g -O0")
+#set_source_files_properties(${RLC_AM_DIR}/rlc_am_retransmit.c PROPERTIES COMPILE_FLAGS "-g -O0")
+#set_source_files_properties(${MAC_DIR}/ue_procedures.c PROPERTIES COMPILE_FLAGS "-g -O0")
+#set_source_files_properties(${MAC_DIR}/eNB_scheduler.c PROPERTIES COMPILE_FLAGS "-g -O0")
+#set_source_files_properties(${MAC_DIR}/eNB_scheduler_primitives.c PROPERTIES COMPILE_FLAGS "-g -O0")
 
 if (${FAPI})
 set (MAC_SRC ${MAC_SRC}
@@ -1123,7 +1124,7 @@ set (MAC_SRC ${MAC_SRC}
   )
 endif (${FAPI})
 
-set_source_files_properties(${MAC_DIR}/ff-mac.c PROPERTIES COMPILE_FLAGS "-g -O0")
+#set_source_files_properties(${MAC_DIR}/ff-mac.c PROPERTIES COMPILE_FLAGS "-g -O0")
 
 if (${FAPI_TRACER})
 set (MAC_SRC ${MAC_SRC}
