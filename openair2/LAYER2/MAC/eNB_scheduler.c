@@ -1158,6 +1158,8 @@ if (pthread_mutex_lock(&fmut)) abort();
   struct UlInfoListElement_s          ulinfo[MAX_UL_INFO_LIST];
   int                                 ulsf;
 
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER,VCD_FUNCTION_IN);
+
 #if MEGALOG
 printf("SCHEDULER called for f/sf %d/%d\n", frameP, subframeP);
 #endif
@@ -1491,6 +1493,8 @@ printf("    RECAP %i rnti %x %s\n", i,
   global_subframe++;
 
 if (pthread_mutex_unlock(&fmut)) abort();
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER,VCD_FUNCTION_OUT);
 
 }
 
