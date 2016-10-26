@@ -96,7 +96,7 @@ Options
    default is Rel10,
    Rel8 limits the implementation to 3GPP Release 8 version
 -w | --hardware
-   EXMIMO, USRP, BLADERF, ETHERNET, LMSSDR, None (Default)
+   EXMIMO, USRP, SDIQ, BLADERF, ETHERNET, LMSSDR, None (Default)
    Adds this RF board support (in external packages installation and in compilation)
 -t | --transport protocol
    ETHERNET , None
@@ -193,7 +193,7 @@ function main() {
        -w | --hardware)
             HW="$2" #"${i#*=}"
             # Use OAI_USRP  as the key word USRP is used inside UHD driver           
-	    if [ "$HW" != "BLADERF" -a  "$HW" != "USRP" -a "$HW" != "LMSSDR" -a  "$HW" != "None" -a  "$HW" != "EXMIMO"  ] ; then 
+	    if [ "$HW" != "SDIQ" -a "$HW" != "BLADERF" -a  "$HW" != "USRP" -a "$HW" != "LMSSDR" -a  "$HW" != "None" -a  "$HW" != "EXMIMO"  ] ; then 
 		echo_fatal "Unknown HW type $HW will exit..."		
 	    else
 		if [ "$HW" == "USRP" ] ; then 
@@ -201,6 +201,9 @@ function main() {
 		fi 
 		if [ "$HW" == "BLADERF" ] ; then 
 		    HW="OAI_BLADERF"
+		fi
+		if [ "$HW" == "SDIQ" ] ; then 
+		    HW="OAI_SDIQ"
 		fi
 		if [ "$HW" == "LMSSDR" ] ; then 
 		    HW="OAI_LMSSDR"
@@ -327,6 +330,7 @@ function main() {
   #Now we set flags to enable deadline scheduler settings
   #By default: USRP: disable, 
   #By default: BLADERF: enable,
+  #By default: SDIQ: enable,
   #By default: EXMIMO: enable
   if [ "$FORCE_DEADLINE_SCHEDULER_FLAG_USER" = "" ]; then
      if [ "$HW" = "EXMIMO" ] ; then 
@@ -336,7 +340,9 @@ function main() {
      elif [ "$HW" = "OAI_USRP" ] ; then 
         DEADLINE_SCHEDULER_FLAG_USER="False"
      elif [ "$HW" = "OAI_BLADERF" ] ; then 
-        DEADLINE_SCHEDULER_FLAG_USER="False"
+         DEADLINE_SCHEDULER_FLAG_USER="False"
+     elif [ "$HW" = "OAI_SDIQ" ] ; then 
+         DEADLINE_SCHEDULER_FLAG_USER="False"
      elif [ "$HW" = "OAI_LMSSDR" ] ; then 
         DEADLINE_SCHEDULER_FLAG_USER="False"
      elif [ "$HW" = "None" ] ; then 
@@ -403,6 +409,13 @@ function main() {
       if [ ! "$DISABLE_HARDWARE_DEPENDENCY" == "True" ]; then
         flash_firmware_bladerf
       fi
+    fi
+    if [ "$HW" == "OAI_SDIQ" ] ; then
+	echo_info "installing packages for SDIQ support"
+	check_install_sdiq_driver
+	if [ ! "$DISABLE_HARDWARE_DEPENDENCY" == "True" ]; then
+            install_usrp_uhd_driver
+	fi
     fi
   fi
 
@@ -745,7 +758,17 @@ function main() {
 
 	      ln -s liboai_bladerfdevif.so liboai_device.so
 	      ln -s $dbin/liboai_bladerfdevif.so.$REL $dbin/liboai_device.so
-	      echo_info "liboai_device.so is linked to BLADERF device library"	 
+	      echo_info "liboai_device.so is linked to BLADERF device library"
+	  elif [ "$HW" == "OAI_SDIQ" ] ; then
+	      if [ -f $(SDIQ_SDK)/sidekiq_core/inc ] ; then
+		  compilations \
+		      $build_dir oai_sidekiqdevif \
+		      liboai_sidekiqdevif.so $dbin/liboai_sidekiqdevif.so.$REL
+	      fi
+
+	      ln -s liboai_sidekiqdevif.so liboai_device.so
+	      ln -s $dbin/liboai_sidekiqdevif.so.$REL $dbin/liboai_device.so
+	      echo_info "liboai_device.so is linked to SIDEKIQ device library"	 	      
 	  elif [ "$HW" == "OAI_LMSSDR" ] ; then
 #	      if [ -f "/usr/include/libbladeRF.h" ] ; then
 		  compilations \

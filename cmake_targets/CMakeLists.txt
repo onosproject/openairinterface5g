@@ -484,7 +484,7 @@ add_list1_option(NB_ANTENNAS_RX "2" "Number of antennas in reception" "1" "2" "4
 add_list1_option(NB_ANTENNAS_TX "2" "Number of antennas in transmission" "1" "2" "4")
 add_list1_option(NB_ANTENNAS_TXRX "2" "Number of antennas in ????" "1" "2" "4")
 
-add_list2_option(RF_BOARD "EXMIMO" "RF head type" "None" "EXMIMO" "OAI_USRP" "OAI_BLADERF" "CPRIGW" "OAI_LMSSDR")
+add_list2_option(RF_BOARD "EXMIMO" "RF head type" "None" "EXMIMO" "OAI_USRP" "OAI_BLADERF" "OAI_SDIQ" "CPRIGW" "OAI_LMSSDR")
 
 add_list2_option(TRANSP_PRO "None" "Transport protocol type" "None" "ETHERNET")
 
@@ -514,6 +514,13 @@ set(HWLIB_BLADERF_SOURCE
   ${OPENAIR_TARGETS}/ARCH/BLADERF/USERSPACE/LIB/bladerf_lib.c
   )
 add_library(oai_bladerfdevif MODULE ${HWLIB_BLADERF_SOURCE} )
+
+include_directories("${OPENAIR_TARGETS}/ARCH/SDIQ/USERSPACE/LIB/")
+set (option_HWSDIQLIB_lib "-L $(SDK)/lib/support/$(BUILD_CONFIG)/usr/lib/epiq -lglib-2.0 -Wl,--enable-new-dtags -Wl,-rpath,/usr/lib/epiq ")
+set(HWLIB_SDIQ_SOURCE 
+  ${OPENAIR_TARGETS}/ARCH/SDIQ/USERSPACE/LIB/sdiq_lib.c
+  )
+add_library(oai_sdiqdevif MODULE ${HWLIB_SDIQ_SOURCE} )
 
 include_directories("${OPENAIR_TARGETS}/ARCH/LMSSDR/USERSPACE/LIB/")
 set (option_HWLMSSDRLIB_lib "-l LMS_SDR -l LMS7002M -l Si5351C")
