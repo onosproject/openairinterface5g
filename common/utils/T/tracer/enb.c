@@ -274,6 +274,30 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database)
   logger_add_view(l, v);
   e->ul_mcs_logger = l;
 
+  /* UE x DL mcs */
+  line = new_container(g, HORIZONTAL);
+  widget_add_child(g, top_container, line, -1);
+  w = new_xy_plot(g, 128, 55, "", 20);
+  xy_plot_set_range(g, w, 0, 1024*10, -1, 29);
+  e->dl_mcs_xy_plot = w;
+  widget_add_child(g, line, w, -1);
+  l = new_ticked_ttilog(h, database, "ENB_PHY_DL_TICK", "frame", "subframe",
+      "ENB_PHY_DLSCH_UE_DCI", "mcs", 0, -1);
+  v = new_view_tti(10, g, w, new_color(g, "#0c0c72"));
+  logger_add_view(l, v);
+  e->dl_mcs_logger = l;
+
+  /* UE x UL mcs */
+  w = new_xy_plot(g, 128, 55, "", 20);
+  xy_plot_set_range(g, w, 0, 1024*10, -1, 29);
+  e->ul_mcs_xy_plot = w;
+  widget_add_child(g, line, w, -1);
+  l = new_ticked_ttilog(h, database, "ENB_PHY_DL_TICK", "frame", "subframe",
+      "ENB_PHY_ULSCH_UE_DCI", "mcs", 0, -1);
+  v = new_view_tti(10, g, w, new_color(g, "#0c0c72"));
+  logger_add_view(l, v);
+  e->ul_mcs_logger = l;
+
   /* downlink/uplink UE DCIs */
   widget_add_child(g, top_container,
       new_label(g,"DL/UL TICK/DCI/ACK/NACK [all UEs]"), -1);
