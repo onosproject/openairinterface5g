@@ -632,7 +632,7 @@ extern "C" {
     
     // do not explicitly set the clock to "internal", because this will disable the gpsdo
     //    // lock mboard clocks
-    //    s->usrp->set_clock_source("internal");
+    //s->usrp->set_clock_source("external");
     // set master clock rate and sample rate for tx & rx for streaming
 
     device->type = USRP_B200_DEV;
