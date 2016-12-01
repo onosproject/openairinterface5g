@@ -122,6 +122,7 @@ static inline void* malloc16_clear( size_t size )
 #include "PHY/TOOLS/time_meas.h"
 #include "PHY/CODING/defs.h"
 #include "PHY/TOOLS/defs.h"
+#include "PHY/TOOLS/thread_pool.h"
 #include "platform_types.h"
 
 #ifdef OPENAIR_LTE
@@ -411,6 +412,7 @@ typedef struct PHY_VARS_eNB_s {
   eNB_func_t           node_function;
   eNB_timing_t         node_timing;
   int                  single_thread_flag;
+  thread_pool          *pool;
   openair0_rf_map      rf_map;
   int                  abstraction_flag;
   void                 (*do_prach)(struct PHY_VARS_eNB_s *eNB);

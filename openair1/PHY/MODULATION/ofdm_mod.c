@@ -29,9 +29,11 @@ This section deals with basic functions for OFDM Modulation.
 
 */
 
+#include <sys/syscall.h> 
 #include "PHY/defs.h"
 #include "UTIL/LOG/log.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
+#include "PHY/TOOLS/thread_pool.h"
 
 //static short temp2[2048*4] __attribute__((aligned(16)));
 
@@ -285,7 +287,7 @@ void do_OFDM_mod(int32_t **txdataF, int32_t **txdata, uint32_t frame,uint16_t ne
 }
 
 // OFDM modulation for each symbol
-void do_OFDM_mod_symbol(LTE_eNB_COMMON *eNB_common_vars, int eNB_id, uint16_t next_slot, LTE_DL_FRAME_PARMS *frame_parms)
+void do_OFDM_mod_symbol(LTE_eNB_COMMON *eNB_common_vars, int eNB_id, uint16_t next_slot, LTE_DL_FRAME_PARMS *frame_parms, int antenna)
 {
 
   int aa, l, slot_offset;
@@ -293,19 +295,80 @@ void do_OFDM_mod_symbol(LTE_eNB_COMMON *eNB_common_vars, int eNB_id, uint16_t ne
   int32_t **txdataF_BF = eNB_common_vars->txdataF_BF[eNB_id];
   int32_t **txdata = eNB_common_vars->txdata[eNB_id];
 
+  aa = antenna;
   slot_offset = (next_slot)*(frame_parms->samples_per_tti>>1);
 
   //printf("Thread %d starting ... aa %d (%llu)\n",omp_get_thread_num(),aa,rdtsc());
+
+
   for (l=0; l<frame_parms->symbols_per_tti>>1; l++) {
+
+    //printf("do_OFDM_mod_l, slot=%d, l=%d, NUMBER_OF_OFDM_CARRIERS=%d,OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES=%d\n",next_slot, l,NUMBER_OF_OFDM_CARRIERS,OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES);
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_BEAM_PRECODING,1);
+    beam_precoding(txdataF,txdataF_BF,frame_parms,eNB_common_vars->beam_weights[eNB_id],next_slot,l,aa);
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_BEAM_PRECODING,0);
+
+    //PMCH case not implemented...
+
+    if (frame_parms->Ncp == 1)
+      PHY_ofdm_mod(txdataF_BF[aa],         // input
+                   &txdata[aa][slot_offset+l*OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES],            // output
+                   frame_parms->ofdm_symbol_size,
+                   1,                                   // number of symbols
+                   frame_parms->nb_prefix_samples,      // number of prefix samples
+                   CYCLIC_PREFIX);
+    else {
+      if (l==0) {
+        PHY_ofdm_mod(txdataF_BF[aa],        // input
+                     &txdata[aa][slot_offset],           // output
+                     frame_parms->ofdm_symbol_size,
+                     1,                                  // number of symbols
+                     frame_parms->nb_prefix_samples0,    // number of prefix samples
+                     CYCLIC_PREFIX);
+      } else {
+        PHY_ofdm_mod(txdataF_BF[aa],        // input
+                     &txdata[aa][slot_offset+OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES0+(l-1)*OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES],           // output
+                     frame_parms->ofdm_symbol_size,
+                     1,                                  // number of symbols
+                     frame_parms->nb_prefix_samples,     // number of prefix samples
+                     CYCLIC_PREFIX);
+
+        /* printf("txdata[%d][%d]=%d\n",aa,slot_offset+OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES0+(l-1)*OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES,txdata[aa][slot_offset+OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES0+(l-1)*OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES]);
+ * */
+      }
+    }
+  }
+
+}
+
+// OFDM modulation thread
+void *do_OFDM_mod_thread(PHY_VARS_eNB *eNB)
+{
+  thread_pool *pool = eNB->pool;
+  int eNB_id = 0;
+  LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
+
+  int32_t **txdataF = eNB->common_vars.txdataF[eNB_id];
+  int32_t **txdataF_BF = eNB->common_vars.txdataF_BF[eNB_id];
+  int32_t **txdata = eNB->common_vars.txdata[eNB_id];
+  int aa, l, slot_offset;
+
+
+  //printf("Thread %d starting ... aa %d (%llu)\n",omp_get_thread_num(),aa,rdtsc());
+
+  while(1) {
+
+    aa = thread_pool_wait(pool);
+    slot_offset = (pool->next_slot)*(frame_parms->samples_per_tti>>1);
   
-    for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
+    printf("OFDM mod thread %ld starts processing antenna %d slot %d\n", syscall(SYS_gettid), aa, pool->next_slot);
+    for (l=0; l<frame_parms->symbols_per_tti>>1; l++) {
 
-      //printf("do_OFDM_mod_l, slot=%d, l=%d, NUMBER_OF_OFDM_CARRIERS=%d,OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES=%d\n",next_slot, l,NUMBER_OF_OFDM_CARRIERS,OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES);
-      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_BEAM_PRECODING,1);
-      beam_precoding(txdataF,txdataF_BF,frame_parms,eNB_common_vars->beam_weights[eNB_id],next_slot,l,aa);
-      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_BEAM_PRECODING,0);
+      //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_BEAM_PRECODING,1);
+      beam_precoding(txdataF,txdataF_BF,frame_parms,eNB->common_vars.beam_weights[eNB_id],pool->next_slot,l,aa);
+      //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_BEAM_PRECODING,0);
 
-      //PMCH case not implemented... 
+      //PMCH case not implemented...
 
       if (frame_parms->Ncp == 1)
         PHY_ofdm_mod(txdataF_BF[aa],         // input
@@ -331,11 +394,13 @@ void do_OFDM_mod_symbol(LTE_eNB_COMMON *eNB_common_vars, int eNB_id, uint16_t ne
                        frame_parms->nb_prefix_samples,     // number of prefix samples
                        CYCLIC_PREFIX);
 
-          /* printf("txdata[%d][%d]=%d\n",aa,slot_offset+OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES0+(l-1)*OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES,txdata[aa][slot_offset+OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES0+(l-1)*OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES]);
- * */
         }
       }
     }
-  }
 
+    printf("OFDM mod thread %ld finished processing antenna %d slot %d\n", syscall(SYS_gettid), aa, pool->next_slot);
+
+    /* signal end of computation to thread pool */
+    thread_pool_done(pool);
+  }
 }

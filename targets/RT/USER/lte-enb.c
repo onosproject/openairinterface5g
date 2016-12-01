@@ -295,17 +295,21 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_OFDM_MODULATION,1);
 
-    do_OFDM_mod_symbol(&phy_vars_eNB->common_vars,
-                  0,
-                  subframe<<1,
-                  &phy_vars_eNB->frame_parms);
- 
-    // if S-subframe generate first slot only 
-    if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_DL) {
+    for (aa=0; aa<phy_vars_eNB->frame_parms.nb_antennas_tx; aa++) {
       do_OFDM_mod_symbol(&phy_vars_eNB->common_vars,
-                    0,
-                    1+(subframe<<1),
-                    &phy_vars_eNB->frame_parms);
+                         0,
+                         subframe<<1,
+                         &phy_vars_eNB->frame_parms,
+                         aa);
+
+      // if S-subframe generate first slot only
+      if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_DL) {
+        do_OFDM_mod_symbol(&phy_vars_eNB->common_vars,
+                           0,
+                           1+(subframe<<1),
+                           &phy_vars_eNB->frame_parms,
+                           aa);
+      }
     }
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_OFDM_MODULATION,0);

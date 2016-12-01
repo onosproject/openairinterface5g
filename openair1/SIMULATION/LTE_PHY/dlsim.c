@@ -53,6 +53,7 @@
 
 
 #include "PHY/TOOLS/lte_phy_scope.h"
+#include "PHY/TOOLS/thread_pool.h"
 
 PHY_VARS_eNB *eNB;
 PHY_VARS_UE *UE;
@@ -1331,6 +1332,8 @@ int main(int argc, char **argv)
   //int len;
   uint8_t num_rounds = 4;//,fix_rounds=0;
 
+  int thread_pool_active = 0;
+
   int u;
   int n=0;
   int abstx=0;
@@ -1419,7 +1422,7 @@ int main(int argc, char **argv)
   //  num_layers = 1;
   perfect_ce = 0;
 
-  while ((c = getopt (argc, argv, "ahdpZDe:Em:n:o:s:f:t:c:g:r:F:x:q:y:z:AM:N:I:i:O:R:S:C:T:b:u:v:w:B:Pl:WXY")) != -1) {
+  while ((c = getopt (argc, argv, "ahdpZDe:Em:n:o:s:f:t:c:g:r:F:x:q:y:z:AM:N:I:i:O:R:S:C:T:b:u:v:w:B:Pl:WXYU")) != -1) {
     switch (c) {
     case 'a':
       awgn_flag = 1;
@@ -1486,6 +1489,7 @@ int main(int argc, char **argv)
     case 'W':
       two_thread_flag = 1;
       break;
+
     case 'l':
       offset_mumimo_llr_drange_fix=atoi(optarg);
       break;
@@ -1627,6 +1631,10 @@ int main(int argc, char **argv)
 
       break;
 
+    case 'U':
+      thread_pool_active = 1;
+      break;
+
     case 'v':
       i_mod = atoi(optarg);
 
@@ -1745,6 +1753,7 @@ int main(int argc, char **argv)
       printf("-O Set the percenatge of effective rate to testbench the modem performance (typically 30 and 70, range 1-100) \n");
       printf("-I Input filename for TrCH data (binary)\n");
       printf("-u Enables the Interference Aware Receiver for TM5 (default is normal receiver)\n");
+      printf("-U Enable thread pool for beam precoding and OFDM modulation\n");
       exit(1);
       break;
     }
@@ -2406,15 +2415,37 @@ int main(int argc, char **argv)
 			  &eNB->frame_parms);
 	    */
 
-            do_OFDM_mod_symbol(&eNB->common_vars,
-                               eNB_id,
-                               (subframe*2),
-                               &eNB->frame_parms);
+            if (thread_pool_active == 0) {
+              for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++) {
+                do_OFDM_mod_symbol(&eNB->common_vars,
+                                   eNB_id,
+                                   (subframe*2),
+                                   &eNB->frame_parms,
+                                   aa);
 
-            do_OFDM_mod_symbol(&eNB->common_vars,
-                               eNB_id,
-                               (subframe*2)+1,
-                               &eNB->frame_parms);
+                do_OFDM_mod_symbol(&eNB->common_vars,
+                                   eNB_id,
+                                   (subframe*2)+1,
+                                   &eNB->frame_parms,
+                                   aa);
+              }
+            } else {
+              eNB->pool->next_slot = 2*subframe;
+              //printf("dlsim:slot=%d\n", eNB->pool->next_slot);
+
+              while (eNB->pool->next_slot < subframe*2+2) {
+                /* start all threads */
+                thread_pool_start(eNB->pool);
+
+                ///* wait all threads finishes */
+                thread_pool_join(eNB->pool);
+                //usleep(1000*1000);
+
+                /* set next_slot */
+                eNB->pool->next_slot++;
+                //pool->next_slot %= 20;
+              }
+            }
 
 
 	    stop_meas(&eNB->ofdm_mod_stats);
@@ -2453,8 +2484,9 @@ int main(int argc, char **argv)
 	        write_output("txsigF0.m","txsF0", &eNB->common_vars.txdataF[eNB_id][0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
               } else if (transmission_mode == 7) {
                 write_output("txsigF0.m","txsF0", &eNB->common_vars.txdataF[eNB_id][5][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
-                write_output("txsigF0_BF.m","txsF0_BF", &eNB->common_vars.txdataF_BF[eNB_id][0][0],eNB->frame_parms.ofdm_symbol_size,1,1);
               }
+
+              write_output("txsigF0_BF.m","txsF0_BF", &eNB->common_vars.txdataF_BF[eNB_id][0][0],eNB->frame_parms.ofdm_symbol_size,1,1);
             }
 	  }
 

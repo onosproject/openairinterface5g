@@ -22,6 +22,8 @@
 #include "defs.h"
 #include "SCHED/defs.h"
 #include "PHY/extern.h"
+#include "PHY/TOOLS/thread_pool.h"
+#include "PHY/MODULATION/defs.h"
 #include "SIMULATION/TOOLS/defs.h"
 #include "RadioResourceConfigCommonSIB.h"
 #include "RadioResourceConfigDedicated.h"
@@ -1308,8 +1310,10 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
       eNB->sinr_dB = (double*) malloc16_clear( fp->N_RB_DL*12*sizeof(double) );
     }
   } //eNB_id
-  
-  
+
+  /* Create thread pool */
+  eNB->pool = new_thread_pool(do_OFDM_mod_thread, eNB);
+  sleep(1);
   
   if (abstraction_flag==0) {
     if (eNB->node_function != NGFI_RRU_IF4p5) {
