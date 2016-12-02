@@ -327,15 +327,9 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB) {
 	len = phy_vars_eNB->frame_parms.samples_per_tti>>1;
       else
 	len = phy_vars_eNB->frame_parms.samples_per_tti;
-      /*
-      for (i=0;i<len;i+=4) {
-	dummy_tx_b[i] = 0x100;
-	dummy_tx_b[i+1] = 0x01000000;
-	dummy_tx_b[i+2] = 0xff00;
-	dummy_tx_b[i+3] = 0xff000000;
-	}*/
       
-      if (slot_offset+time_offset[aa]<0) {
+      tx_offset = (int)slot_offset+time_offset[aa];
+      if (tx_offset<0) {
 	txdata = (int16_t*)&phy_vars_eNB->common_vars.txdata[0][aa][(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti)+tx_offset];
         len2 = -(slot_offset+time_offset[aa]);
 	len2 = (len2>len) ? len : len2;
@@ -349,8 +343,7 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB) {
 	  }
 	}
       }  
-      else if ((slot_offset+time_offset[aa]+len)>(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti)) {
-	tx_offset = (int)slot_offset+time_offset[aa];
+      else if ((tx_offset+len)>(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti)) {
 	txdata = (int16_t*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset];
 	len2 = -tx_offset+LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti;
 	for (i=0; i<(len2<<1); i++) {
@@ -362,7 +355,6 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB) {
 	}
       }
       else {
-	tx_offset = (int)slot_offset+time_offset[aa];
 	txdata = (int16_t*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset];
 
 	for (i=0; i<(len<<1); i++) {
@@ -1320,7 +1312,7 @@ void init_eNB_proc(int inst) {
   PHY_VARS_eNB *eNB;
   eNB_proc_t *proc;
   eNB_rxtx_proc_t *proc_rxtx;
-  pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_FH=NULL,*attr_prach=NULL,*attr_asynch=NULL,*attr_single=NULL,*attr_fep=NULL,*attr_td=NULL,*attr_te;
+  pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_FH=NULL,*attr_prach=NULL,*attr_asynch=NULL,*attr_single=NULL,*attr_fep=NULL,*attr_td=NULL,*attr_te=NULL;
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     eNB = PHY_vars_eNB_g[inst][CC_id];

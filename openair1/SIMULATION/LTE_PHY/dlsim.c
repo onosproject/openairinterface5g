@@ -91,35 +91,6 @@ uint64_t DLSCH_alloc_pdu_1[2];
 #define CCCH_RB_ALLOC computeRIV(eNB->frame_parms.N_RB_UL,0,2)
 //#define DLSCH_RB_ALLOC 0x1fbf // igore DC component,RB13
 //#define DLSCH_RB_ALLOC 0x0001
-void do_OFDM_mod_l(int32_t **txdataF, int32_t **txdata, uint16_t next_slot, LTE_DL_FRAME_PARMS *frame_parms)
-{
-
-  int aa, slot_offset, slot_offset_F;
-
-  slot_offset_F = (next_slot)*(frame_parms->ofdm_symbol_size)*((frame_parms->Ncp==1) ? 6 : 7);
-  slot_offset = (next_slot)*(frame_parms->samples_per_tti>>1);
-
-  for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-    //    printf("Thread %d starting ... aa %d (%llu)\n",omp_get_thread_num(),aa,rdtsc());
-
-    if (frame_parms->Ncp == 1)
-      PHY_ofdm_mod(&txdataF[aa][slot_offset_F],        // input
-                   &txdata[aa][slot_offset],         // output
-                   frame_parms->ofdm_symbol_size,
-                   6,                 // number of symbols
-                   frame_parms->nb_prefix_samples,               // number of prefix samples
-                   CYCLIC_PREFIX);
-    else {
-      normal_prefix_mod(&txdataF[aa][slot_offset_F],
-                        &txdata[aa][slot_offset],
-                        7,
-                        frame_parms);
-    }
-
-
-  }
-  
-}
 
 void DL_channel(PHY_VARS_eNB *eNB,PHY_VARS_UE *UE,int subframe,int awgn_flag,double SNR, int tx_lev,int hold_channel,int abstx, int num_rounds, int trials, int round, channel_desc_t *eNB2UE[4], 
 		double *s_re[2],double *s_im[2],double *r_re[2],double *r_im[2],FILE *csv_fd) {
@@ -2354,15 +2325,17 @@ int main(int argc, char **argv)
 	    
 	    start_meas(&eNB->ofdm_mod_stats);
 	    
-	    do_OFDM_mod_l(eNB->common_vars.txdataF[eNB_id],
-			  eNB->common_vars.txdata[eNB_id],
-			  (subframe*2),
-			  &eNB->frame_parms);
+	    do_OFDM_mod(eNB->common_vars.txdataF[eNB_id],
+			eNB->common_vars.txdata[eNB_id],
+			proc_eNB->frame_tx,
+			(subframe*2),
+			&eNB->frame_parms);
 	    
-	    do_OFDM_mod_l(eNB->common_vars.txdataF[eNB_id],
-			  eNB->common_vars.txdata[eNB_id],
-			  (subframe*2)+1,
-			  &eNB->frame_parms);
+	    do_OFDM_mod(eNB->common_vars.txdataF[eNB_id],
+			eNB->common_vars.txdata[eNB_id],
+			proc_eNB->frame_tx,
+			(subframe*2)+1,
+			&eNB->frame_parms);
 	    
 	    stop_meas(&eNB->ofdm_mod_stats);
 	    
@@ -2372,10 +2345,11 @@ int main(int argc, char **argv)
 	    
 	    phy_procedures_eNB_TX(eNB,proc_eNB,no_relay,NULL,0);
 	    
-	    do_OFDM_mod_l(eNB->common_vars.txdataF[eNB_id],
-			  eNB->common_vars.txdata[eNB_id],
-			  (subframe*2)+2,
-			  &eNB->frame_parms);
+	    do_OFDM_mod(eNB->common_vars.txdataF[eNB_id],
+			eNB->common_vars.txdata[eNB_id],
+			proc_eNB->frame_tx,
+			(subframe*2)+2,
+			&eNB->frame_parms);
 
 	    
 	    proc_eNB->frame_tx++;
