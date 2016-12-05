@@ -14,7 +14,7 @@ typedef struct thread_pool {
   volatile int running;
   volatile int done;
   /* processing data */
-  volatile int subframe;
+  volatile int next_slot;
 } thread_pool;
 
 thread_pool *new_thread_pool(
