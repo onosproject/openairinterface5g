@@ -1254,7 +1254,9 @@ printf("PHY TX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
 
         T(T_ENB_PHY_DLSCH_UE_DCI, T_INT(phy_vars_eNB->Mod_id), T_INT(phy_vars_eNB->CC_id), T_INT(frame), T_INT(subframe), T_INT(UE_id),
           T_INT(DCI_pdu->dci_alloc[i].rnti), T_INT(DCI_pdu->dci_alloc[i].format),
-          T_INT(phy_vars_eNB->dlsch_eNB[(int)UE_id][0]->current_harq_pid));
+          T_INT(phy_vars_eNB->dlsch_eNB[(int)UE_id][0]->current_harq_pid),
+          T_INT(phy_vars_eNB->dlsch_eNB[(int)UE_id][0]->harq_processes[phy_vars_eNB->dlsch_eNB[(int)UE_id][0]->current_harq_pid]->mcs),
+          T_INT(phy_vars_eNB->dlsch_eNB[(int)UE_id][0]->harq_processes[phy_vars_eNB->dlsch_eNB[(int)UE_id][0]->current_harq_pid]->TBS));
 
         phy_vars_eNB->dlsch_eNB[(uint8_t)UE_id][0]->nCCE[subframe] = DCI_pdu->dci_alloc[i].firstCCE;
 
