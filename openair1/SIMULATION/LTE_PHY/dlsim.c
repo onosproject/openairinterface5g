@@ -2431,19 +2431,15 @@ int main(int argc, char **argv)
               }
             } else {
               eNB->pool->next_slot = 2*subframe;
-              //printf("dlsim:slot=%d\n", eNB->pool->next_slot);
-
               while (eNB->pool->next_slot < subframe*2+2) {
                 /* start all threads */
                 thread_pool_start(eNB->pool);
 
                 ///* wait all threads finishes */
                 thread_pool_join(eNB->pool);
-                //usleep(1000*1000);
 
                 /* set next_slot */
                 eNB->pool->next_slot++;
-                //pool->next_slot %= 20;
               }
             }
 
@@ -2456,10 +2452,17 @@ int main(int argc, char **argv)
 	    
 	    phy_procedures_eNB_TX(eNB,proc_eNB,no_relay,NULL,0);
 	    
-	    do_OFDM_mod_l(eNB->common_vars.txdataF[eNB_id],
+	    /*do_OFDM_mod_l(eNB->common_vars.txdataF[eNB_id],
 			  eNB->common_vars.txdata[eNB_id],
 			  (subframe*2)+2,
-			  &eNB->frame_parms);
+			  &eNB->frame_parms);*/
+
+            for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++)
+              do_OFDM_mod_symbol(&eNB->common_vars,
+                                 eNB_id,
+                                 (subframe*2)+2,
+                                 &eNB->frame_parms,
+                                 aa);
 
 	    
 	    proc_eNB->frame_tx++;
