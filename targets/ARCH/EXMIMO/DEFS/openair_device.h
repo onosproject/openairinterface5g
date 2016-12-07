@@ -24,9 +24,10 @@
 
 
 // Maximum number of concurrently supported cards
+#ifndef MAX_CARDS
 #define MAX_CARDS  16 
 #define INIT_ZEROS {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
+#endif
 
 /** PCIe subsystem configuration Space
  */

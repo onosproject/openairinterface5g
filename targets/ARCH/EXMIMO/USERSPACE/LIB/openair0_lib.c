@@ -801,6 +801,7 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
   }
 
   for (card=0; card<openair0_num_detected_cards; card++) {
+    ACTIVE_RF=0;
 
     p_exmimo_config = openair0_exmimo_pci[card].exmimo_config_ptr;
     p_exmimo_id     = openair0_exmimo_pci[card].exmimo_id_ptr;
