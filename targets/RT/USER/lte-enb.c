@@ -1442,7 +1442,7 @@ int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_c
 	phy_vars_eNB[CC_id]->common_vars.rxdata[0][i] = openair0_cfg[CC_id].rxbase[i];
 
 	printf("rxdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
-
+	memset(phy_vars_eNB[CC_id]->common_vars.rxdata[0][i],0,LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_tti*sizeof(int32_t));
 	/*for (j=0; j<16; j++) {
 	  printf("rxbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j]);
 	  phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j] = 16-j;
@@ -1455,6 +1455,7 @@ int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_c
 	phy_vars_eNB[CC_id]->common_vars.txdata[0][i] = openair0_cfg[CC_id].txbase[i];//(int32_t*) openair0_exmimo_pci[rf_map[CC_id].card].dac_head[rf_map[CC_id].chain+i];
 	
 	printf("txdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
+	memset(phy_vars_eNB[CC_id]->common_vars.txdata[0][i],0,LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_tti*sizeof(int32_t));
 	
 	/*for (j=0; j<16; j++) {
 	  printf("txbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.txdata[0][i][j]);
