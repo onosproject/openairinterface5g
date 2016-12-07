@@ -1814,8 +1814,6 @@ int main( int argc, char **argv )
   rt_sleep_ns(10*100000000ULL);
 
 
-
-  // start the main thread
   if (UE_flag == 1) {
     init_UE(1);
     number_of_cards = 1;
@@ -1823,7 +1821,28 @@ int main( int argc, char **argv )
     for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       PHY_vars_UE_g[0][CC_id]->rf_map.card=0;
       PHY_vars_UE_g[0][CC_id]->rf_map.chain=CC_id+chain_offset;
+
+#ifdef OAI_USRP
+      PHY_vars_UE_g[0][CC_id]->hw_timing_advance = timing_advance;
+#else
+      PHY_vars_UE_g[0][CC_id]->hw_timing_advance = 160;
+#endif
     }
+
+    if (setup_ue_buffers(UE,&openair0_cfg[0])!=0) {
+      printf("Error setting up eNB buffer\n");
+      exit(-1);
+    }
+
+    if (input_fd) {
+      printf("Reading in from file to antenna buffer %d\n",0);
+      if (fread(PHY_vars_UE_g[0][0]->common_vars.rxdata[0],
+	        sizeof(int32_t),
+	        frame_parms[0]->samples_per_tti*10,
+	        input_fd) != frame_parms[0]->samples_per_tti*10)
+        printf("error reading from file\n");
+    }
+
   }
   else { 
     init_eNB(node_function,node_timing,1,eth_params,single_thread_flag);
@@ -1837,52 +1856,7 @@ int main( int argc, char **argv )
     }
   }
 
-  // connect the TX/RX buffers
-  if (UE_flag==1) {
-
-    for (CC_id=0;CC_id<MAX_NUM_CCs; CC_id++) {
-
-    
-#ifdef OAI_USRP
-      UE[CC_id]->hw_timing_advance = timing_advance;
-#else
-      UE[CC_id]->hw_timing_advance = 160;
-#endif
-    }
-    if (setup_ue_buffers(UE,&openair0_cfg[0])!=0) {
-      printf("Error setting up eNB buffer\n");
-      exit(-1);
-    }
-
-
-
-    if (input_fd) {
-      printf("Reading in from file to antenna buffer %d\n",0);
-      if (fread(UE[0]->common_vars.rxdata[0],
-	        sizeof(int32_t),
-	        frame_parms[0]->samples_per_tti*10,
-	        input_fd) != frame_parms[0]->samples_per_tti*10)
-        printf("error reading from file\n");
-    }
-    //p_exmimo_config->framing.tdd_config = TXRXSWITCH_TESTRX;
-  } else {
-
-
-
-
-
-    printf("Setting eNB buffer to all-RX\n");
-
-    // Set LSBs for antenna switch (ExpressMIMO)
-    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-      PHY_vars_eNB_g[0][CC_id]->hw_timing_advance = 0;
-      for (i=0; i<frame_parms[CC_id]->samples_per_tti*10; i++)
-        for (aa=0; aa<frame_parms[CC_id]->nb_antennas_tx; aa++)
-          PHY_vars_eNB_g[0][CC_id]->common_vars.txdata[0][aa][i] = 0x00010001;
-    }
-  }
   sleep(3);
-
 
   printf("Sending sync to all threads\n");
 
