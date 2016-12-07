@@ -295,6 +295,37 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_OFDM_MODULATION,1);
 
+
+    /*for (aa=0; aa<phy_vars_eNB->frame_parms.nb_antennas_tx; aa++) {
+      if (phy_vars_eNB->frame_parms.Ncp == EXTENDED) {
+        PHY_ofdm_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F],
+                     dummy_tx_b,
+                     phy_vars_eNB->frame_parms.ofdm_symbol_size,
+                     6,
+                     phy_vars_eNB->frame_parms.nb_prefix_samples,
+                     CYCLIC_PREFIX);
+	if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_DL) 
+	  PHY_ofdm_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F+slot_sizeF],
+		       dummy_tx_b+(phy_vars_eNB->frame_parms.samples_per_tti>>1),
+		       phy_vars_eNB->frame_parms.ofdm_symbol_size,
+		       6,
+		       phy_vars_eNB->frame_parms.nb_prefix_samples,
+		       CYCLIC_PREFIX);
+      } else {
+        normal_prefix_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F],
+                          dummy_tx_b,
+                          7,
+                          &(phy_vars_eNB->frame_parms));
+	// if S-subframe generate first slot only
+	if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_DL)
+	  normal_prefix_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F+slot_sizeF],
+			    dummy_tx_b+(phy_vars_eNB->frame_parms.samples_per_tti>>1),
+			    7,
+			    &(phy_vars_eNB->frame_parms));
+      }
+    }*/
+
+
     /*for (aa=0; aa<phy_vars_eNB->frame_parms.nb_antennas_tx; aa++) {
       do_OFDM_mod_symbol(&phy_vars_eNB->common_vars,
                          0,
@@ -329,36 +360,6 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_OFDM_MODULATION,0);
     
-
-/*
-    for (aa=0; aa<phy_vars_eNB->frame_parms.nb_antennas_tx; aa++) {
-      if (phy_vars_eNB->frame_parms.Ncp == EXTENDED) {
-        PHY_ofdm_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F],
-                     dummy_tx_b,
-                     phy_vars_eNB->frame_parms.ofdm_symbol_size,
-                     6,
-                     phy_vars_eNB->frame_parms.nb_prefix_samples,
-                     CYCLIC_PREFIX);
-	if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_DL) 
-	  PHY_ofdm_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F+slot_sizeF],
-		       dummy_tx_b+(phy_vars_eNB->frame_parms.samples_per_tti>>1),
-		       phy_vars_eNB->frame_parms.ofdm_symbol_size,
-		       6,
-		       phy_vars_eNB->frame_parms.nb_prefix_samples,
-		       CYCLIC_PREFIX);
-      } else {
-        normal_prefix_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F],
-                          dummy_tx_b,
-                          7,
-                          &(phy_vars_eNB->frame_parms));
-	// if S-subframe generate first slot only
-	if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_DL)
-	  normal_prefix_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F+slot_sizeF],
-			    dummy_tx_b+(phy_vars_eNB->frame_parms.samples_per_tti>>1),
-			    7,
-			    &(phy_vars_eNB->frame_parms));
-      }
-    } */
 
     for (aa=0; aa<phy_vars_eNB->frame_parms.nb_antennas_tx; aa++) {
       // if S-subframe generate first slot only

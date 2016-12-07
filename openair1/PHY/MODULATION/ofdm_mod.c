@@ -347,10 +347,10 @@ void *do_OFDM_mod_thread(PHY_VARS_eNB *eNB)
   while(1) {
     aa = thread_pool_wait(pool);
   
-    printf("OFDM mod thread %ld starts processing antenna %d slot %d\n", syscall(SYS_gettid), aa, pool->next_slot);
+    //printf("OFDM mod thread %ld starts processing antenna %d slot %d\n", syscall(SYS_gettid), aa, pool->next_slot);
     do_OFDM_mod_symbol(&eNB->common_vars, eNB_id, eNB->pool->next_slot, &eNB->frame_parms, aa);
 
-    printf("OFDM mod thread %ld finished processing antenna %d slot %d\n", syscall(SYS_gettid), aa, pool->next_slot);
+    //printf("OFDM mod thread %ld finished processing antenna %d slot %d\n", syscall(SYS_gettid), aa, pool->next_slot);
 
     /* signal end of computation to thread pool */
     thread_pool_done(pool);
