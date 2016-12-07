@@ -295,7 +295,7 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_OFDM_MODULATION,1);
 
-    for (aa=0; aa<phy_vars_eNB->frame_parms.nb_antennas_tx; aa++) {
+    /*for (aa=0; aa<phy_vars_eNB->frame_parms.nb_antennas_tx; aa++) {
       do_OFDM_mod_symbol(&phy_vars_eNB->common_vars,
                          0,
                          subframe<<1,
@@ -310,6 +310,21 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
                            &phy_vars_eNB->frame_parms,
                            aa);
       }
+    }*/
+
+    phy_vars_eNB->pool->next_slot = subframe<<1;
+    /* start all threads */
+    thread_pool_start(phy_vars_eNB->pool);
+    /* wait all threads finishes */
+    thread_pool_join(phy_vars_eNB->pool);
+
+    if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_DL) {
+      /* set next_slot */
+      phy_vars_eNB->pool->next_slot++;
+      /* start all threads */
+      thread_pool_start(phy_vars_eNB->pool);
+      /* wait all threads finishes */
+      thread_pool_join(phy_vars_eNB->pool);
     }
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_OFDM_MODULATION,0);
