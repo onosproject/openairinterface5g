@@ -174,6 +174,20 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
   int ret=0, ret_i=0;
   usrp_state_t *s = (usrp_state_t*)device->priv;
 
+   int nsamps2;  // aligned to upper 32 or 16 byte boundary
+#if defined(__x86_64) || defined(__i386__)
+#ifdef __AVX2__
+   nsamps2 = (nsamps+7)>>3;
+   __m256i buff_tmp[2][nsamps2];
+#else
+   nsamps2 = (nsamps+3)>>2;
+   __m128i buff_tmp[2][nsamps2];
+#endif
+#elif defined(__arm__)
+   nsamps2 = (nsamps+3)>>2;
+   int16x8_t buff_tmp[2][nsamps2];
+#endif
+
   s->tx_md.time_spec = uhd::time_spec_t::from_ticks(timestamp, s->sample_rate);
 
   
@@ -181,14 +195,28 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
     s->tx_md.has_time_spec = true;
   else
     s->tx_md.has_time_spec = false;
-  
+
+    for (int i=0;i<cc;i++) {
+      for (int j=0; j<nsamps2; j++) {      
+#if defined(__x86_64__) || defined(__i386__)
+#ifdef __AVX2__
+        buff_tmp[i][j] = _mm256_slli_epi16(((__m256i *)buff[i])[j],device->openair0_cfg[0].iq_txshift);
+#else
+        buff_tmp[i][j] = _mm_slli_epi16(((__m128i *)buff[i])[j],device->openair0_cfg[0].iq_txshift);
+#endif
+#elif defined(__arm__)
+        buff_tmp[i][j] = vshlq_n_s16(((int16x8_t*)buff[i])[j],device->openair0_cfg[0].iq_txshift);
+#endif
+      }
+    }
+
   if (cc>1) {
     std::vector<void *> buff_ptrs;
-    for (int i=0;i<cc;i++) buff_ptrs.push_back(buff[i]);
+    for (int i=0;i<cc;i++) buff_ptrs.push_back(buff_tmp[i]);
     ret = (int)s->tx_stream->send(buff_ptrs, nsamps, s->tx_md,1e-3);
   }
   else
-    ret = (int)s->tx_stream->send(buff[0], nsamps, s->tx_md,1e-3);
+    ret = (int)s->tx_stream->send(buff_tmp[0], nsamps, s->tx_md,1e-3);
 
   s->tx_md.start_of_burst = false;
 
