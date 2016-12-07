@@ -1243,9 +1243,9 @@ static void* eNB_thread_prach( void* param ) {
 
   while (!oai_exit) {
     
-    if (oai_exit) break;
-
     if (wait_on_condition(&proc->mutex_prach,&proc->cond_prach,&proc->instance_cnt_prach,"eNB_prach_thread") < 0) break;
+
+    if (oai_exit) break;
     
     prach_procedures(eNB);
     
