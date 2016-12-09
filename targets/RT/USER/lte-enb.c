@@ -375,7 +375,7 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 	dummy_tx_b[i+3] = 0xff000000;
 	}*/
       for (i=0; i<len; i++) {
-        tx_offset = (int)slot_offset+time_offset[aa]+i;
+        tx_offset = (int)slot_offset+time_offset[aa%4]+i;
 
 	
         if (tx_offset<0)
@@ -407,7 +407,7 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
        // turn on tx switch N_TA_offset before
        //LOG_D(HW,"subframe %d, time to switch to tx (N_TA_offset %d, slot_offset %d) \n",subframe,phy_vars_eNB->N_TA_offset,slot_offset);
        for (i=0; i<phy_vars_eNB->N_TA_offset; i++) {
-         tx_offset = (int)slot_offset+time_offset[aa]+i-phy_vars_eNB->N_TA_offset;
+         tx_offset = (int)slot_offset+time_offset[aa%4]+i-phy_vars_eNB->N_TA_offset;
          if (tx_offset<0)
            tx_offset += LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti;
 	 
