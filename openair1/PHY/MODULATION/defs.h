@@ -121,11 +121,11 @@ int beam_precoding(int32_t **txdataF,
                    int symbol,
                    int aa);
 
-int f_read(char *calibF_fname, int nb_ant, int nb_freq, int32_t **tdd_calib_coeffs);
+int read_calibration_matrix(int32_t **tdd_calib_coeffs, char *calibF_fname, LTE_DL_FRAME_PARMS *frame_parms);
 
-int estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, int32_t **ul_ch_estimates, int32_t **tdd_calib_coeffs, int nb_ant, int nb_freq);
+int estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, int32_t **ul_ch_estimates, int32_t **tdd_calib_coeffs, LTE_DL_FRAME_PARMS *frame_parms);
 
-int compute_BF_weights(int32_t **beam_weights, int32_t **calib_dl_ch_estimates, PRECODE_TYPE_t precode_type, int nb_ant, int nb_freq);
+int compute_BF_weights(int32_t **beam_weights, int32_t **calib_dl_ch_estimates, PRECODE_TYPE_t precode_type, LTE_DL_FRAME_PARMS *frame_parms);
 
 
 #endif

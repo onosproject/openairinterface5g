@@ -121,8 +121,9 @@ int main(int argc, char **argv)
 
   uint8_t extended_prefix_flag=0,transmission_mode=1,n_tx_port=1,n_tx_phy=1,n_rx=1;
   uint16_t Nid_cell=0;
-  int32_t **cell_spec_bf_weights;
+  //int32_t **cell_spec_bf_weights;
   int32_t *ue_spec_bf_weights;
+  uint8_t tdd_calib=0;
 
   int eNB_id = 0, eNB_id_i = 1;
   unsigned char mcs1=0,mcs2=0,mcs_i=0,dual_stream_UE = 0,awgn_flag=0,round,dci_flag=0;
@@ -261,7 +262,7 @@ int main(int argc, char **argv)
   //  num_layers = 1;
   perfect_ce = 0;
 
-  while ((c = getopt (argc, argv, "ahdpZDe:Em:n:o:s:f:t:c:g:r:F:x:p:y:z:AM:N:I:i:O:R:S:C:T:b:u:v:w:B:PLl:XY")) != -1) {
+  while ((c = getopt (argc, argv, "ahdpZDe:Em:n:o:s:f:t:c:g:r:F:x:p:y:z:AM:N:I:i:O:R:S:C:T:b:u:v:w:B:PLl:WXY")) != -1) {
     switch (c) {
     case 'a':
       awgn_flag = 1;
@@ -529,6 +530,10 @@ int main(int argc, char **argv)
         exit(-1);
       }
 
+      break;
+
+    case 'W':
+      tdd_calib=1;
       break;
 
     case 'X':
@@ -987,9 +992,10 @@ int main(int argc, char **argv)
       eNB->UE_stats[1].DL_pmi_single = 0;
   }
 
-  //TODO: allocate memory for calibration matrix and calib_dl_ch_estimates in init_lte.c
-  //for first tests initialze calibration matrix with idendity
-  //read_calibration_matrix(calib_fname, nb_ant, nb_freq, eNB->common_vars.tdd_calib_coeffs[0]);
+  printf("tdd_calib = %d\n", tdd_calib);
+  if (tdd_calib ==  1)
+    //for first tests initialze calibration matrix with idendity
+    read_calibration_matrix(eNB->common_vars.tdd_calib_coeffs[0], "calibF.m", frame_parms);
 
   if (input_fd==NULL) {
 
@@ -2140,32 +2146,33 @@ int main(int argc, char **argv)
             hold_channel = 0;//(round==0) ? 0 : 1;
 
 PMI_FEEDBACK:
-
-	  //make sure dlsim is called with perfect channel estimation option (for freq_channel)
-	  //fill drs_ch_estimates with data from eNB2UE->chF
-	  for(aa=0; aa<frame_parms->nb_antenna_ports_eNB; aa++) {
-	    for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
-	      for (i=0; i<frame_parms->N_RB_DL*12; i++) {
-		for (l=0; l<frame_parms->symbols_per_tti; l++) {
-		  ((int16_t *) eNB->pusch_vars[0]->drs_ch_estimates[0][(aa<<1)+aarx])[2*i+(l*frame_parms->ofdm_symbol_size)*2]=(int16_t)(eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x*AMP);
-                          //printf("x=%d,AMP=%d\n",eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x,AMP);
-		  ((int16_t *) eNB->pusch_vars[0]->drs_ch_estimates[0][(aa<<1)+aarx])[2*i+1+(l*frame_parms->ofdm_symbol_size)*2]=(int16_t)(eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].y*AMP);
-		}
+          
+          if (tdd_calib == 1) {
+	    //make sure dlsim is called with perfect channel estimation option (for freq_channel)
+	    //fill drs_ch_estimates with data from eNB2UE->chF
+	    for(aa=0; aa<frame_parms->nb_antenna_ports_eNB; aa++) {
+	      for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
+	        for (i=0; i<frame_parms->N_RB_DL*12; i++) {
+	  	  for (l=0; l<frame_parms->symbols_per_tti; l++) {
+		    ((int16_t *) eNB->pusch_vars[0]->drs_ch_estimates[0][(aa<<1)+aarx])[2*i+(l*frame_parms->ofdm_symbol_size)*2]=(int16_t)(eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x*AMP);
+                    //printf("x=%d,AMP=%d\n",eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x,AMP);
+		    ((int16_t *) eNB->pusch_vars[0]->drs_ch_estimates[0][(aa<<1)+aarx])[2*i+1+(l*frame_parms->ofdm_symbol_size)*2]=(int16_t)(eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].y*AMP);
+		  }
+	        }
 	      }
 	    }
-	  }
 
-	  estimate_DLCSI_from_ULCSI(eNB->dlsch[0][0]->calib_dl_ch_estimates,
-					 &eNB->pusch_vars[0]->drs_ch_estimates[0][0/*position of second DMRS*/],
-					 eNB->common_vars.tdd_calib_coeffs[0],
-					 frame_parms->nb_antennas_tx,
-					 frame_parms->N_RB_DL*12);
+          
+	    estimate_DLCSI_from_ULCSI(eNB->dlsch[0][0]->calib_dl_ch_estimates,
+	  			      &eNB->pusch_vars[0]->drs_ch_estimates[0][0],//position of second DMRS
+			              eNB->common_vars.tdd_calib_coeffs[0],
+				      frame_parms);
 	  
-	  compute_BF_weights(eNB->dlsch[0][0]->ue_spec_bf_weights[0],
-			     eNB->dlsch[0][0]->calib_dl_ch_estimates,
-			     MRT,
-			     frame_parms->nb_antennas_tx,
-			     frame_parms->N_RB_DL*12);
+	    /*compute_BF_weights(eNB->dlsch[0][0]->ue_spec_bf_weights[0],
+			       eNB->dlsch[0][0]->calib_dl_ch_estimates,
+	  		       MRT,
+			       frame_parms);*/
+          }
 
           //printf("Trial %d : Round %d, pmi_feedback %d \n",trials,round,pmi_feedback);
           for (aa=0; aa<NB_ANTENNA_PORTS_ENB; aa++) {
@@ -2831,15 +2838,19 @@ PMI_FEEDBACK:
  	      } 
 
 */
-            do_OFDM_mod_symbol(&eNB->common_vars,
-                          eNB_id,
-                          (subframe*2),
-                          &eNB->frame_parms);
+            for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++) {
+              do_OFDM_mod_symbol(&eNB->common_vars,
+                                 eNB_id,
+                                 (subframe*2),
+                                 &eNB->frame_parms,
+                                 aa);
 
-            do_OFDM_mod_symbol(&eNB->common_vars,
-                          eNB_id,
-                          (subframe*2)+1,
-                          &eNB->frame_parms);
+              do_OFDM_mod_symbol(&eNB->common_vars,
+                                 eNB_id,
+                                 (subframe*2)+1,
+                                 &eNB->frame_parms,
+                                 aa);
+            }
 
             stop_meas(&eNB->ofdm_mod_stats);
             stop_meas(&eNB->phy_proc_tx);
@@ -2848,6 +2859,13 @@ PMI_FEEDBACK:
                           eNB_id,
                           (subframe*2)+2,
                           &eNB->frame_parms); */
+
+            for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++)
+              do_OFDM_mod_symbol(&eNB->common_vars,
+                                 eNB_id,
+                                 (subframe*2)+2,
+                                 &eNB->frame_parms,
+                                 aa);
 
             if (n_frames==1) {
               if (transmission_mode<7)

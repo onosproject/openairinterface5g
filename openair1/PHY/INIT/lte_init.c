@@ -1226,6 +1226,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
 	common_vars->txdata[eNB_id]  = (int32_t**)malloc16(fp->nb_antennas_tx*sizeof(int32_t*));
       common_vars->txdataF[eNB_id] = (int32_t **)malloc16(NB_ANTENNA_PORTS_ENB*sizeof(int32_t*));
       common_vars->txdataF_BF[eNB_id] = (int32_t **)malloc16(fp->nb_antennas_tx*sizeof(int32_t*));
+      common_vars->tdd_calib_coeffs[eNB_id] = (int32_t **)malloc16(fp->nb_antennas_tx*sizeof(int32_t*));
 
       for (i=0; i<14; i++) {
         common_vars->txdataF[eNB_id][i] = (int32_t*)malloc16_clear(fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t) );
@@ -1238,6 +1239,8 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
 
       for (i=0; i<fp->nb_antennas_tx; i++) {
 	common_vars->txdataF_BF[eNB_id][i] = (int32_t*)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t) );
+	common_vars->tdd_calib_coeffs[eNB_id][i] = (int32_t*)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t) );
+
 	if (eNB->node_function != NGFI_RCC_IF4p5)
 	  common_vars->txdata[eNB_id][i]  = (int32_t*)malloc16_clear(fp->samples_per_tti*10*sizeof(int32_t) );
 
