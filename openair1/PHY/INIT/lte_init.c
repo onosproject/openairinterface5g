@@ -1244,6 +1244,10 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
 	if (eNB->node_function != NGFI_RCC_IF4p5)
 	  common_vars->txdata[eNB_id][i]  = (int32_t*)malloc16_clear(fp->samples_per_tti*10*sizeof(int32_t) );
 
+        // initialze calibration matrix with idendity matrix
+        for (re=0; re<fp->ofdm_symbol_size; re++)
+          common_vars->tdd_calib_coeffs[eNB_id][i][re] = 0x00007fff;
+
 #ifdef DEBUG_PHY
         msg("[openair][LTE_PHY][INIT] lte_common_vars->txdataF_BF[%d][%d] = %p (%d bytes)\n",
             eNB_id,i,common_vars->txdataF_BF[eNB_id][i],
@@ -1265,7 +1269,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
 	  }
 	  else if (i>4) {
 	    for (re=0; re<fp->ofdm_symbol_size; re++) 
-	      common_vars->beam_weights[eNB_id][i][j][re] = 0x00007fff/fp->nb_antennas_tx; 
+	      common_vars->beam_weights[eNB_id][i][j][re] = 0x00007fff/sqrt(fp->nb_antennas_tx);
 	  }  
 #ifdef DEBUG_PHY
 	  msg("[openair][LTE_PHY][INIT] lte_common_vars->beam_weights[%d][%d][%d] = %p (%d bytes)\n",
@@ -1314,7 +1318,10 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
     }
   } //eNB_id
 
-  /* Create thread pool */
+  // Read TDD calibration coefficients
+  read_calibration_matrix(eNB->common_vars.tdd_calib_coeffs[0], "PROJECTS/TDDREC/results/calibF.m", fp);
+
+  // Create thread pool
   eNB->pool = new_thread_pool(do_OFDM_mod_thread, eNB);
   sleep(1);
   

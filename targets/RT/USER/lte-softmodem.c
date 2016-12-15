@@ -1627,7 +1627,8 @@ int main( int argc, char **argv )
       if ((transmission_mode==1) || (transmission_mode==7)) {
 	  for (j=0; j<frame_parms[CC_id]->nb_antennas_tx; j++) 
 	    for (re=0; re<frame_parms[CC_id]->ofdm_symbol_size; re++) 
-	      PHY_vars_eNB_g[0][CC_id]->common_vars.beam_weights[0][0][j][re] = 0x00007fff/frame_parms[CC_id]->nb_antennas_tx; 
+              //In softmodem: the power constraint is on each antenna, so we do not norm the beam weights
+	      PHY_vars_eNB_g[0][CC_id]->common_vars.beam_weights[0][0][j][re] = 0x00007fff;///sqrt(frame_parms[CC_id]->nb_antennas_tx); 
       }
       if (phy_test==1) PHY_vars_eNB_g[0][CC_id]->mac_enabled = 0;
       else PHY_vars_eNB_g[0][CC_id]->mac_enabled = 1;

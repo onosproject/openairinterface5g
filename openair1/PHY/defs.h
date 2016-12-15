@@ -580,6 +580,7 @@ typedef struct PHY_VARS_eNB_s {
   time_stats_t dlsch_rate_matching_stats;
   time_stats_t dlsch_turbo_encoding_stats;
   time_stats_t dlsch_interleaving_stats;
+  time_stats_t dl_ch_calib_stats;
 
   time_stats_t ofdm_demod_stats;
   time_stats_t rx_dft_stats;

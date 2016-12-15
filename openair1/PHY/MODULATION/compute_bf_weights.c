@@ -7,13 +7,13 @@ int read_calibration_matrix(int32_t **tdd_calib_coeffs, char *calibF_fname, LTE_
 
   FILE *calibF_fd ;
   int aa,re,calibF_e ;
-  printf("Number of antennas = %d\n", frame_parms->nb_antennas_tx) ;
-  printf("OFDM symbol size = %d\n", frame_parms->ofdm_symbol_size) ;
+  //printf("Number of antennas = %d\n", frame_parms->nb_antennas_tx) ;
+  //printf("OFDM symbol size = %d\n", frame_parms->ofdm_symbol_size) ;
 
   calibF_fd = fopen(calibF_fname,"r") ;
   if (calibF_fd == NULL) {
    printf("ERR: %s not found, running with defaults\n", calibF_fname);
-   return 1;
+   return(1);
   }
 
   printf("Loading Calibration matrix from %s\n", calibF_fname);
@@ -21,33 +21,37 @@ int read_calibration_matrix(int32_t **tdd_calib_coeffs, char *calibF_fname, LTE_
   for (aa=0;aa<frame_parms->nb_antennas_tx;aa++) {
     for(re=0;re<frame_parms->ofdm_symbol_size;re++) {
       fscanf(calibF_fd, "%d", &calibF_e) ;
-      printf("aa=%d, re=%d, tdd_calib[0]=%d\n", aa, re, calibF_e);
+      //printf("aa=%d, re=%d, tdd_calib[0]=%d\n", aa, re, calibF_e);
       ((int16_t*)(&tdd_calib_coeffs[aa][re]))[0] = calibF_e;
       fscanf(calibF_fd, "%d", &calibF_e) ;
-      printf("aa=%d, re=%d, tdd_calib[1]=%d\n", aa, re, calibF_e);
+      //printf("aa=%d, re=%d, tdd_calib[1]=%d\n", aa, re, calibF_e);
       ((int16_t*)(&tdd_calib_coeffs[aa][re]))[1] = calibF_e;
       //printf("aa=%d, re=%d, tdd_calib=%d+i%d\n", aa, re, (int16_t*)(&tdd_calib_coeffs[aa][re])[0],(int16_t*)(&tdd_calib_coeffs[aa][re])[1]);
     }
   }
 }
 
-void estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, int32_t **ul_ch_estimates, int32_t **tdd_calib_coeffs, LTE_DL_FRAME_PARMS *frame_parms) {
+int estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, int32_t **ul_ch_estimates, int32_t **tdd_calib_coeffs, LTE_DL_FRAME_PARMS *frame_parms) {
   int aa,re;
 
+  if (frame_parms->nb_antennas_tx != frame_parms->nb_antennas_rx) {
+    printf("ERR : Tx and Rx antennas should be the same for TDD calibration!");
+    return(1);
+  }
   for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-    /*multadd_cpx_vector((int16_t*)(&tdd_calib_coeffs[aa][0]),(int16_t*)(&ul_ch_estimates[aa][0]),(int16_t*)(&calib_dl_ch_estimates[aa][0]),1,nb_freq,15);*/
-    for (re=0; re<frame_parms->ofdm_symbol_size; re++) {
+    multadd_cpx_vector((int16_t*)(&tdd_calib_coeffs[aa][0]),(int16_t*)(&ul_ch_estimates[aa][0]),(int16_t*)(&calib_dl_ch_estimates[aa][0]),1,frame_parms->ofdm_symbol_size,15);
+    /*for (re=0; re<frame_parms->ofdm_symbol_size; re++) {
       ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0] += (((int16_t*)(&tdd_calib_coeffs[aa][re]))[0]*((int16_t*)(&ul_ch_estimates[aa][re]))[0])>>15;
       ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0] -= (((int16_t*)(&tdd_calib_coeffs[aa][re]))[1]*((int16_t*)(&ul_ch_estimates[aa][re]))[1])>>15;
       ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1] += (((int16_t*)(&tdd_calib_coeffs[aa][re]))[0]*((int16_t*)(&ul_ch_estimates[aa][re]))[1])>>15;
-      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1] += (((int16_t*)(&tdd_calib_coeffs[aa][re]))[1]*((int16_t*)(&ul_ch_estimates[aa][re]))[0])>>15;
+      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1] += (((int16_t*)(&tdd_calib_coeffs[aa][re]))[1]*((int16_t*)(&ul_ch_estimates[aa][re]))[0])>>15;*/
 
       /*printf("aa=%d, re=%d tdd_calib_coeffs= (%d, %d), ul_ch_estimates = (%d, %d), calib_dl_ch_estimates = (%d, %d)\n",
              aa, re,
              ((int16_t*)&tdd_calib_coeffs[aa][re])[0], ((int16_t*)&tdd_calib_coeffs[aa][re])[1],
              ((int16_t*)&ul_ch_estimates[aa][re])[0], ((int16_t*)&ul_ch_estimates[aa][re])[1],
              ((int16_t*)&calib_dl_ch_estimates[aa][re])[0], ((int16_t*)&calib_dl_ch_estimates[aa][re])[1]);*/
-    }
+    //}
   }
 }
 
@@ -89,31 +93,31 @@ void main() {
   printf("Test Compute BF weights.\n");
 
   int32_t **tdd_calib_coeffs, **calib_dl_ch_estimates, **ul_ch_estimates, **beam_weights;
-  int nb_ant, nb_freq, aa, re;  
+  int nb_ant, nb_freq, aa, re;
   char calibF_fname[] = "calibF.m";
   char BF_fname[] = "BF_weights.m";
   FILE *BF_weights_fd;
- 
+
   nb_ant = 8;
   nb_freq = 300;
 
-  // memory allocation 
+  // memory allocation
   tdd_calib_coeffs = (int32_t **)malloc(nb_ant*sizeof(int32_t *));
   calib_dl_ch_estimates = (int32_t **)malloc(nb_ant*sizeof(int32_t *));
   ul_ch_estimates = (int32_t **)malloc(nb_ant*sizeof(int32_t *));
   beam_weights = (int32_t **)malloc(nb_ant*sizeof(int32_t *));
 
   for (aa=0; aa<nb_ant; aa++) {
-    tdd_calib_coeffs[aa] = (int32_t *)malloc(nb_freq*sizeof(int32_t)); 
-    calib_dl_ch_estimates[aa] = (int32_t *)malloc(nb_freq*sizeof(int32_t)); 
-    ul_ch_estimates[aa] = (int32_t *)malloc(nb_freq*sizeof(int32_t)); 
-    beam_weights[aa] = (int32_t *)malloc(nb_freq*sizeof(int32_t)); 
+    tdd_calib_coeffs[aa] = (int32_t *)malloc(nb_freq*sizeof(int32_t));
+    calib_dl_ch_estimates[aa] = (int32_t *)malloc(nb_freq*sizeof(int32_t));
+    ul_ch_estimates[aa] = (int32_t *)malloc(nb_freq*sizeof(int32_t));
+    beam_weights[aa] = (int32_t *)malloc(nb_freq*sizeof(int32_t));
   }
 
   // ul channel estimation initilisation
   for (aa=0; aa<nb_ant; aa++)
     for (re=0; re<nb_freq; re++)
-      ul_ch_estimates[aa][re] = 0x7fff7fff; 
+      ul_ch_estimates[aa][re] = 0x7fff7fff;
 
   // calibration coefficients loading
   read_calibration_matrix(calibF_fname, nb_ant, nb_freq, tdd_calib_coeffs);

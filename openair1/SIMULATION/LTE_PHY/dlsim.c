@@ -1818,7 +1818,7 @@ int main(int argc, char **argv)
   if ((transmission_mode==1) || (transmission_mode==7)) {
     for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++) 
      for (re=0; re<eNB->frame_parms.ofdm_symbol_size; re++) 
-       eNB->common_vars.beam_weights[0][0][aa][re] = 0x00007fff/eNB->frame_parms.nb_antennas_tx; 
+       eNB->common_vars.beam_weights[0][0][aa][re] = 0x00007fff/sqrt(eNB->frame_parms.nb_antennas_tx); 
   }
 
   eNB->mac_enabled=1;
@@ -2320,7 +2320,7 @@ int main(int argc, char **argv)
 	  //PMI_FEEDBACK:
 
           //  printf("Trial %d : Round %d, pmi_feedback %d \n",trials,round,pmi_feedback);
-          for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++) {
+          for (aa=0; aa<eNB->frame_parms.nb_antenna_ports_eNB; aa++) {
             memset(&eNB->common_vars.txdataF[eNB_id][aa][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(int32_t));
           }
 

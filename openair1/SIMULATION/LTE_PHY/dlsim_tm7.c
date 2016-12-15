@@ -992,10 +992,6 @@ int main(int argc, char **argv)
       eNB->UE_stats[1].DL_pmi_single = 0;
   }
 
-  printf("tdd_calib = %d\n", tdd_calib);
-  if (tdd_calib ==  1)
-    //for first tests initialze calibration matrix with idendity
-    read_calibration_matrix(eNB->common_vars.tdd_calib_coeffs[0], "calibF.m", frame_parms);
 
   if (input_fd==NULL) {
 
@@ -2108,6 +2104,8 @@ int main(int argc, char **argv)
       initialize(&time_vector_tx_mod);
       struct list time_vector_tx_enc;
       initialize(&time_vector_tx_enc);
+      struct list time_vector_tx_calib;
+      initialize(&time_vector_tx_calib);
 
       struct list time_vector_rx;
       initialize(&time_vector_rx);
@@ -2148,6 +2146,7 @@ int main(int argc, char **argv)
 PMI_FEEDBACK:
           
           if (tdd_calib == 1) {
+            start_meas(&eNB->dl_ch_calib_stats);
 	    //make sure dlsim is called with perfect channel estimation option (for freq_channel)
 	    //fill drs_ch_estimates with data from eNB2UE->chF
 	    for(aa=0; aa<frame_parms->nb_antenna_ports_eNB; aa++) {
@@ -2168,10 +2167,12 @@ PMI_FEEDBACK:
 			              eNB->common_vars.tdd_calib_coeffs[0],
 				      frame_parms);
 	  
-	    /*compute_BF_weights(eNB->dlsch[0][0]->ue_spec_bf_weights[0],
+	    compute_BF_weights(eNB->dlsch[0][0]->ue_spec_bf_weights[0],
 			       eNB->dlsch[0][0]->calib_dl_ch_estimates,
 	  		       MRT,
-			       frame_parms);*/
+			       frame_parms);
+
+            stop_meas(&eNB->dl_ch_calib_stats);
           }
 
           //printf("Trial %d : Round %d, pmi_feedback %d \n",trials,round,pmi_feedback);
@@ -3795,6 +3796,7 @@ PMI_FEEDBACK:
         double t_tx_ifft = (double)eNB->ofdm_mod_stats.p_time/cpu_freq_GHz/1000.0;
         double t_tx_mod = (double)eNB->dlsch_modulation_stats.p_time/cpu_freq_GHz/1000.0;
         double t_tx_enc = (double)eNB->dlsch_encoding_stats.p_time/cpu_freq_GHz/1000.0;
+        double t_tx_calib = (double)eNB->dl_ch_calib_stats.p_time/cpu_freq_GHz/1000.0;
 
 
         double t_rx = (double)UE->phy_proc_rx.p_time/cpu_freq_GHz/1000.0;
@@ -3824,6 +3826,7 @@ PMI_FEEDBACK:
         push_front(&time_vector_tx_ifft, t_tx_ifft);
         push_front(&time_vector_tx_mod, t_tx_mod);
         push_front(&time_vector_tx_enc, t_tx_enc);
+        push_front(&time_vector_tx_calib, t_tx_calib);
 
         push_front(&time_vector_rx, t_rx);
         push_front(&time_vector_rx_fft, t_rx_fft);
@@ -3842,6 +3845,8 @@ PMI_FEEDBACK:
       totable(table_tx_mod, &time_vector_tx_mod);
       double table_tx_enc[time_vector_tx_enc.size];
       totable(table_tx_enc, &time_vector_tx_enc);
+      double table_tx_calib[time_vector_tx_calib.size];
+      totable(table_tx_calib, &time_vector_tx_calib);
 
       double table_rx[time_vector_rx.size];
       totable(table_rx, &time_vector_rx);
@@ -3894,6 +3899,10 @@ PMI_FEEDBACK:
       double tx_enc_q1 = table_tx_enc[time_vector_tx_enc.size/4];
       double tx_enc_q3 = table_tx_enc[3*time_vector_tx_enc.size/4];
 
+      double tx_calib_median = table_tx_calib[time_vector_tx_calib.size/2];
+      double tx_calib_q1 = table_tx_calib[time_vector_tx_calib.size/4];
+      double tx_calib_q3 = table_tx_calib[3*time_vector_tx_calib.size/4];
+
       double rx_median = table_rx[time_vector_rx.size/2];
       double rx_q1 = table_rx[time_vector_rx.size/4];
       double rx_q3 = table_rx[3*time_vector_rx.size/4];
@@ -3914,6 +3923,7 @@ PMI_FEEDBACK:
       double std_phy_proc_tx_ifft=0;
       double std_phy_proc_tx_mod=0;
       double std_phy_proc_tx_enc=0;
+      double std_phy_proc_tx_calib=0;
 
       double std_phy_proc_rx=0;
       double std_phy_proc_rx_fft=0;
@@ -3984,6 +3994,10 @@ PMI_FEEDBACK:
         printf("|__ DLSCH sub-block interleaving time :%f us (%d trials)\n",
                ((double)eNB->dlsch_interleaving_stats.trials/eNB->dlsch_encoding_stats.trials)*(double)
                eNB->dlsch_interleaving_stats.diff/eNB->dlsch_interleaving_stats.trials/cpu_freq_GHz/1000.0,eNB->dlsch_interleaving_stats.trials);
+        std_phy_proc_tx_calib = sqrt((double)eNB->dl_ch_calib_stats.diff_square/pow(cpu_freq_GHz,2)/pow(1000,
+                                   2)/eNB->dl_ch_calib_stats.trials - pow((double)eNB->dl_ch_calib_stats.diff/eNB->dl_ch_calib_stats.trials/cpu_freq_GHz/1000,2));
+        printf("TDD_DL_calib time                     :%f us (%d trials)\n",(double)eNB->dl_ch_calib_stats.diff/eNB->dl_ch_calib_stats.trials/cpu_freq_GHz/1000.0,eNB->dl_ch_calib_stats.trials);
+        printf("|__ Statistcs                           std: %fus median %fus q1 %fus q3 %fus \n",std_phy_proc_tx_calib, tx_calib_median, tx_calib_q1, tx_calib_q3);
 
         printf("\n\nUE RX function statistics (per 1ms subframe)\n\n");
         std_phy_proc_rx = sqrt((double)UE->phy_proc_rx.diff_square/pow(cpu_freq_GHz,2)/pow(1000,

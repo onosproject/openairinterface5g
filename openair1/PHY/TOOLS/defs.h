@@ -124,6 +124,25 @@ int mult_cpx_conj_vector(int16_t *x1,
                          uint32_t N,
                          int output_shift);
 
+/*!
+  Element-wise multiplication and accumulation of two complex vectors x1 and x2.
+  @param x1       - input 1    in the format  |Re0 Im0 Re1 Im1|,......,|Re(N-2)  Im(N-2) Re(N-1) Im(N-1)|
+              We assume x1 with a dinamic of 15 bit maximum
+  @param x2       - input 2    in the format  |Re0 Im0 Re1 Im1|,......,|Re(N-2)  Im(N-2) Re(N-1) Im(N-1)|
+              We assume x2 with a dinamic of 14 bit maximum
+  @param y        - output     in the format  |Re0 Im0 Re1 Im1|,......,|Re(N-2)  Im(N-2) Re(N-1) Im(N-1)|
+  @param zero_flag Set output (y) to zero prior to accumulation
+  @param N        - the size f the vectors (this function does N cpx mpy. WARNING: N>=4;
+  @param output_shift  - shift to be applied to generate output
+*/
+
+int multiadd_cpx_vector(int16_t *x1,
+                         int16_t *x2,
+                         int16_t *y,
+                         uint32_t N,
+                         int output_shift);
+
+
 // lte_dfts.c
 void init_fft(uint16_t size,
               uint8_t logsize,
