@@ -1126,6 +1126,9 @@ void pdcch_extract_rbs_dual(int32_t **rxdataF,
   int nushiftmod3 = frame_parms->nushift%3;
 
   symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
+#ifdef DEBUG_DCI_DECODING
+  LOG_I(PHY, "extract_rbs_dual: symbol_mod %d\n",symbol_mod);
+#endif
 
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
 
@@ -2679,11 +2682,15 @@ void dci_decoding_procedure0(LTE_UE_PDCCH **pdcch_vars,
 
   nCCE = get_nCCE(pdcch_vars[eNB_id]->num_pdcch_symbols,frame_parms,mi);
 
-  if (nCCE > get_nCCE(3,frame_parms,1))
+  if (nCCE > get_nCCE(3,frame_parms,1)) {
+    LOG_D(PHY,"skip DCI decoding: nCCE=%d > get_nCCE(3,frame_parms,1)=%d\n", nCCE, get_nCCE(3,frame_parms,1));
     return;
+  }
 
-  if (nCCE<L2)
+  if (nCCE<L2) {
+    LOG_D(PHY,"skip DCI decoding: nCCE=%d < L2=%d\n", nCCE, L2);
     return;
+  }
 
   if (do_common == 1) {
     nb_candidates = (L2==4) ? 4 : 2;
@@ -2857,7 +2864,7 @@ void dci_decoding_procedure0(LTE_UE_PDCCH **pdcch_vars,
           }
         }
 
-        LOG_D(PHY,"DCI decoding CRNTI  [format_c: %d, nCCE[subframe: %d]: %d ]\n",format_c, subframe, pdcch_vars[eNB_id]->nCCE[subframe]);
+        LOG_D(PHY,"DCI decoding CRNTI  [format: %d, nCCE[subframe: %d]: %d ], AggregationLevel %d \n",format_c, subframe, pdcch_vars[eNB_id]->nCCE[subframe],L2);
         //  memcpy(&dci_alloc[*dci_cnt].dci_pdu[0],dci_decoded_output,sizeof_bytes);
 
 
@@ -3248,7 +3255,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                           SI_RNTI,
                           ra_rnti,
 			  P_RNTI,
-			  3,
+			  0,
                           format1A,
                           format1A,
                           format1A,
@@ -3277,7 +3284,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                           SI_RNTI,
                           ra_rnti,
 			  P_RNTI,
-			  2,
+			  1,
                           format1A,
                           format1A,
                           format1A,
@@ -3310,7 +3317,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                           SI_RNTI,
                           ra_rnti,
 			  P_RNTI,
-                          1,
+                          2,
                           format1A,
                           format1A,
                           format1A,
@@ -3339,7 +3346,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                           SI_RNTI,
                           ra_rnti,
 			  P_RNTI,
-                          0,
+                          3,
                           format1A,
                           format1A,
                           format1A,

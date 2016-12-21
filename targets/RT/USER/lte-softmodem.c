@@ -204,6 +204,7 @@ char   rf_config_file[1024];
 
 int chain_offset=0;
 int phy_test = 0;
+uint8_t usim_test = 0;
 
 
 char ref[128] = "internal";
@@ -378,6 +379,7 @@ void help (void) {
   printf("  --ue-scan_carrier set UE to scan around carrier\n");
   printf("  --loop-memory get softmodem (UE) to loop through memory instead of acquiring from HW\n");
   printf("  --mmapped-dma sets flag for improved EXMIMO UE performance\n");  
+  printf("  --usim-test use XOR autentication algo in case of test usim mode\n"); 
   printf("  --single-thread-disable. Disables single-thread mode in lte-softmodem\n"); 
   printf("  -C Set the downlink frequency for all component carriers\n");
   printf("  -d Enable soft scope and L1 and L2 stats (Xforms)\n");
@@ -685,6 +687,7 @@ static void get_options (int argc, char **argv)
     LONG_OPTION_DUMP_FRAME,
     LONG_OPTION_LOOPMEMORY,
     LONG_OPTION_PHYTEST,
+    LONG_OPTION_USIMTEST,
     LONG_OPTION_MMAPPED_DMA,
     LONG_OPTION_SINGLE_THREAD_DISABLE,
 #if T_TRACER
@@ -711,6 +714,7 @@ static void get_options (int argc, char **argv)
     {"ue-dump-frame", no_argument, NULL, LONG_OPTION_DUMP_FRAME},
     {"loop-memory", required_argument, NULL, LONG_OPTION_LOOPMEMORY},
     {"phy-test", no_argument, NULL, LONG_OPTION_PHYTEST},
+    {"usim-test", no_argument, NULL, LONG_OPTION_USIMTEST},
     {"mmapped-dma", no_argument, NULL, LONG_OPTION_MMAPPED_DMA},
     {"single-thread-disable", no_argument, NULL, LONG_OPTION_SINGLE_THREAD_DISABLE},
 #if T_TRACER
@@ -810,6 +814,9 @@ static void get_options (int argc, char **argv)
       phy_test = 1;
       break;
 
+    case LONG_OPTION_USIMTEST:
+        usim_test = 1;
+      break;
     case LONG_OPTION_MMAPPED_DMA:
       mmapped_dma = 1;
       break;
@@ -1651,17 +1658,8 @@ int main( int argc, char **argv )
 
       PHY_vars_eNB_g[0][CC_id]->rx_total_gain_dB = (int)rx_gain[CC_id][0];
 
-      if (frame_parms[CC_id]->frame_type==FDD) {
-	PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 0;
-      }
-      else {
-	if (frame_parms[CC_id]->N_RB_DL == 100)
-	  PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624;
-	else if (frame_parms[CC_id]->N_RB_DL == 50)
-	  PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624/2;
-	else if (frame_parms[CC_id]->N_RB_DL == 25)
-	  PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624/4;
-      }
+      PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 0;
+
     }
 
 
