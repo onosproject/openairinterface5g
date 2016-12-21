@@ -1239,7 +1239,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
 
       for (i=0; i<fp->nb_antennas_tx; i++) {
 	common_vars->txdataF_BF[eNB_id][i] = (int32_t*)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t) );
-	common_vars->tdd_calib_coeffs[eNB_id][i] = (int32_t*)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t) );
+	common_vars->tdd_calib_coeffs[eNB_id][i] = (int32_t*)malloc16_clear(fp->N_RB_DL*12*sizeof(int32_t) );
 
 	if (eNB->node_function != NGFI_RCC_IF4p5)
 	  common_vars->txdata[eNB_id][i]  = (int32_t*)malloc16_clear(fp->samples_per_tti*10*sizeof(int32_t) );

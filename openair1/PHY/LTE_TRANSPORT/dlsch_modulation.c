@@ -1392,6 +1392,12 @@ x0[1+*jj]);
 
         }
 
+        // mapping ue specific beamforming weights from UE specified DLSCH structure to common space
+        for (aa=0;aa<frame_parms->nb_antennas_tx;aa++) {
+          phy_vars_eNB->common_vars.beam_weights[0][5][aa][re_offset+re] = dlsch0->ue_spec_bf_weights[0][aa][re_offset+re];
+        }
+ 
+
       } else if (mimo_mode >= TM8) { //TM8,TM9,TM10
 	//uint8_t is_not_UEspecRS(int8_t lprime, uint8_t re, uint8_t nushift, uint8_t Ncp, uint8_t beamforming_mode)
 
@@ -1985,7 +1991,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
 
       // mapping ue specific beamforming weights from UE specified DLSCH structure to common space
       // TO DO: this doesn't have to be done here since we do it once in one frame
-      for (aa=0;aa<frame_parms->nb_antennas_tx;aa++){
+      for (aa=0;aa<frame_parms->nb_antennas_tx;aa++) {
         memcpy(phy_vars_eNB->common_vars.beam_weights[0][5][aa],dlsch0->ue_spec_bf_weights[0][aa],frame_parms->ofdm_symbol_size*sizeof(int32_t));
       }
  

@@ -2149,14 +2149,12 @@ PMI_FEEDBACK:
             start_meas(&eNB->dl_ch_calib_stats);
 	    //make sure dlsim is called with perfect channel estimation option (for freq_channel)
 	    //fill drs_ch_estimates with data from eNB2UE->chF
-	    for(aa=0; aa<frame_parms->nb_antenna_ports_eNB; aa++) {
-	      for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
+	    for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
+	      for (l=0; l<frame_parms->symbols_per_tti; l++) {
 	        for (i=0; i<frame_parms->N_RB_DL*12; i++) {
-	  	  for (l=0; l<frame_parms->symbols_per_tti; l++) {
-		    ((int16_t *) eNB->pusch_vars[0]->drs_ch_estimates[0][(aa<<1)+aarx])[2*i+(l*frame_parms->ofdm_symbol_size)*2]=(int16_t)(eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x*AMP);
-                    //printf("x=%d,AMP=%d\n",eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x,AMP);
-		    ((int16_t *) eNB->pusch_vars[0]->drs_ch_estimates[0][(aa<<1)+aarx])[2*i+1+(l*frame_parms->ofdm_symbol_size)*2]=(int16_t)(eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].y*AMP);
-		  }
+	          ((int16_t *)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2]=(int16_t)(eNB2UE[round]->chF[aarx][i].x*AMP);
+	          ((int16_t *)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2+1]=(int16_t)(eNB2UE[round]->chF[aarx][i].y*AMP);
+                  printf("x=%d, y=%d,AMP=%d\n",eNB2UE[round]->chF[aarx][i].x,eNB2UE[round]->chF[aarx][i].y,AMP);
 	        }
 	      }
 	    }
