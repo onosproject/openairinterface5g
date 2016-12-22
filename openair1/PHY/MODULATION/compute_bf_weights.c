@@ -1,22 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h> // contains the header information or prototype of the malloc
+#include <string.h>
 #include "UTIL/LOG/log.h"
 #include "PHY/impl_defs_lte.h"
 
 int read_calibration_matrix(int32_t **tdd_calib_coeffs, char *calibF_fname, LTE_DL_FRAME_PARMS *frame_parms) {
 
-  FILE *calibF_fd ;
+  FILE *calibF_fd;
+  char calibF_file_name[1024];
   int aa,re,calibF_e ;
+  char* openair_dir = getenv("OPENAIR_DIR");
+
   //printf("Number of antennas = %d\n", frame_parms->nb_antennas_tx) ;
   //printf("OFDM symbol size = %d\n", frame_parms->ofdm_symbol_size) ;
 
-  calibF_fd = fopen(calibF_fname,"r") ;
+  if (openair_dir == NULL) {
+   printf("ERR: OPENAIR_DIR not defined (did you source oaienv?)\n");
+   exit(1);
+  }
+
+  sprintf(calibF_file_name, "%s/targets/PROJECTS/TDDREC/results/%s", openair_dir, calibF_fname);
+  calibF_fd = fopen(calibF_file_name,"r") ;
+
   if (calibF_fd == NULL) {
-   printf("ERR: %s not found, running with defaults\n", calibF_fname);
+   printf("Warning: %s not found, running with defaults\n", calibF_fname);
    return(1);
   }
 
-  printf("Loading Calibration matrix from %s\n", calibF_fname);
+  printf("Loading Calibration matrix from %s\n", calibF_file_name);
   
   for (aa=0;aa<frame_parms->nb_antennas_tx;aa++) {
     for(re=0;re<frame_parms->N_RB_DL*12;re++) {
@@ -31,7 +42,7 @@ int read_calibration_matrix(int32_t **tdd_calib_coeffs, char *calibF_fname, LTE_
   }
 }
 
-int estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, int32_t **ul_ch_estimates, int32_t **tdd_calib_coeffs, LTE_DL_FRAME_PARMS *frame_parms) {
+void estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, int32_t **ul_ch_estimates, int32_t **tdd_calib_coeffs, LTE_DL_FRAME_PARMS *frame_parms) {
   int aa,re;
 
   for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {

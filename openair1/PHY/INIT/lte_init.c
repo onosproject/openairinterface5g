@@ -1398,7 +1398,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
   } //eNB_id
 
   // Read TDD calibration coefficients
-  read_calibration_matrix(eNB->common_vars.tdd_calib_coeffs[0], "PROJECTS/TDDREC/results/calibF.m", fp);
+  read_calibration_matrix(eNB->common_vars.tdd_calib_coeffs[0], "calibF.m", fp);
 
   // Create thread pool
   eNB->pool = new_thread_pool(do_OFDM_mod_thread, eNB);

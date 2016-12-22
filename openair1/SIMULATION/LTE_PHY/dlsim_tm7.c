@@ -2160,7 +2160,7 @@ PMI_FEEDBACK:
                   if (awgn_flag == 0) {
 	            ((int16_t *)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2]=(int16_t)(eNB2UE[round]->chF[aarx][i].x*AMP);
 	            ((int16_t *)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2+1]=(int16_t)(eNB2UE[round]->chF[aarx][i].y*AMP);
-                    printf("x=%d, y=%d,AMP=%d\n",eNB2UE[round]->chF[aarx][i].x,eNB2UE[round]->chF[aarx][i].y,AMP);
+                    //printf("x=%d, y=%d,AMP=%d\n",eNB2UE[round]->chF[aarx][i].x,eNB2UE[round]->chF[aarx][i].y,AMP);
                   } else {
 	            ((int16_t *)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2]= (short)(AMP);
 	            ((int16_t*)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2+1]= 0/2;
