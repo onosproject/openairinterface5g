@@ -1324,7 +1324,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
 	  common_vars->txdata[eNB_id][i]  = (int32_t*)malloc16_clear(fp->samples_per_tti*10*sizeof(int32_t) );
 
         // initialze calibration matrix with idendity matrix
-        for (re=0; re<fp->ofdm_symbol_size; re++)
+        for (re=0; re<fp->N_RB_DL*12; re++)
           common_vars->tdd_calib_coeffs[eNB_id][i][re] = 0x00007fff;
 
 #ifdef DEBUG_PHY

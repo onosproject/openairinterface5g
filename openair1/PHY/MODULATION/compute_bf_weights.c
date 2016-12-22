@@ -34,24 +34,21 @@ int read_calibration_matrix(int32_t **tdd_calib_coeffs, char *calibF_fname, LTE_
 int estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, int32_t **ul_ch_estimates, int32_t **tdd_calib_coeffs, LTE_DL_FRAME_PARMS *frame_parms) {
   int aa,re;
 
-  if (frame_parms->nb_antennas_tx != frame_parms->nb_antennas_rx) {
-    printf("ERR : Tx and Rx antennas should be the same for TDD calibration!");
-    return(1);
-  }
   for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-    /*multadd_cpx_vector((int16_t*)(&tdd_calib_coeffs[aa][0]),(int16_t*)(&ul_ch_estimates[aa][0]),(int16_t*)(&calib_dl_ch_estimates[aa][0]),1,frame_parms->N_RB_DL*12,15);*/
+    multadd_cpx_vector((int16_t*)(&tdd_calib_coeffs[aa][0]),(int16_t*)(&ul_ch_estimates[aa][0]),(int16_t*)(&calib_dl_ch_estimates[aa][0]),1,frame_parms->N_RB_DL*12,15);
+/*
     for (re=0; re<frame_parms->N_RB_DL*12; re++) {
-      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0] += (((int16_t*)(&tdd_calib_coeffs[aa][re]))[0]*((int16_t*)(&ul_ch_estimates[aa][re]))[0])>>15;
+      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0] = (((int16_t*)(&tdd_calib_coeffs[aa][re]))[0]*((int16_t*)(&ul_ch_estimates[aa][re]))[0])>>15;
       ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0] -= (((int16_t*)(&tdd_calib_coeffs[aa][re]))[1]*((int16_t*)(&ul_ch_estimates[aa][re]))[1])>>15;
-      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1] += (((int16_t*)(&tdd_calib_coeffs[aa][re]))[0]*((int16_t*)(&ul_ch_estimates[aa][re]))[1])>>15;
+      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1] = (((int16_t*)(&tdd_calib_coeffs[aa][re]))[0]*((int16_t*)(&ul_ch_estimates[aa][re]))[1])>>15;
       ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1] += (((int16_t*)(&tdd_calib_coeffs[aa][re]))[1]*((int16_t*)(&ul_ch_estimates[aa][re]))[0])>>15;
-
+*/
       /*printf("aa=%d, re=%d tdd_calib_coeffs= (%d, %d), ul_ch_estimates = (%d, %d), calib_dl_ch_estimates = (%d, %d)\n",
              aa, re,
              ((int16_t*)&tdd_calib_coeffs[aa][re])[0], ((int16_t*)&tdd_calib_coeffs[aa][re])[1],
              ((int16_t*)&ul_ch_estimates[aa][re])[0], ((int16_t*)&ul_ch_estimates[aa][re])[1],
              ((int16_t*)&calib_dl_ch_estimates[aa][re])[0], ((int16_t*)&calib_dl_ch_estimates[aa][re])[1]);*/
-    }
+    //}
   }
 }
 
@@ -64,13 +61,13 @@ void compute_BF_weights(int32_t **beam_weights, int32_t **calib_dl_ch_estimates,
   case MRT :
   for (aa=0 ; aa<frame_parms->nb_antennas_tx ; aa++) {
     for (re=0; re<frame_parms->N_RB_DL*6; re++) {
-      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0];
-      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1];
+      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<6;
+      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<6;
       //Normalisation not implemented
     }
     for (re=frame_parms->N_RB_DL*6; re<frame_parms->N_RB_DL*12; re++) {
-      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0];
-      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1];
+      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<6;
+      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<6;
       //Normalisation not implemented
     }
   }

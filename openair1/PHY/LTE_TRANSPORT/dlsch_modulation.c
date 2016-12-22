@@ -552,6 +552,7 @@ int allocate_REs_in_RB_pilots_64QAM_siso(PHY_VARS_eNB* phy_vars_eNB,
   return(0);
 }
 
+// TODO: The input paramters of this function should be optimised. Should we include UE_id, necessry for TM7...
 int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
                        int32_t **txdataF,
                        uint32_t *jj,
@@ -1394,7 +1395,8 @@ x0[1+*jj]);
 
         // mapping ue specific beamforming weights from UE specified DLSCH structure to common space
         for (aa=0;aa<frame_parms->nb_antennas_tx;aa++) {
-          phy_vars_eNB->common_vars.beam_weights[0][5][aa][re_offset+re] = dlsch0->ue_spec_bf_weights[0][aa][re_offset+re];
+          phy_vars_eNB->common_vars.beam_weights[0][5][aa][re_off+re] = phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa][re_off+re];
+          //printf("allocate_REs_in_RB: phy_vars_eNB->common_vars.beam_weights[0][5][%d][%d,%d]=%d, phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][%d][%d]=%d\n", aa, re_off,re, phy_vars_eNB->common_vars.beam_weights[0][5][aa][re_off+re], aa, re_off+re, phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa][re_off+re]);
         }
  
 
@@ -1989,12 +1991,6 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
           lprime=-1;
       }
 
-      // mapping ue specific beamforming weights from UE specified DLSCH structure to common space
-      // TO DO: this doesn't have to be done here since we do it once in one frame
-      for (aa=0;aa<frame_parms->nb_antennas_tx;aa++) {
-        memcpy(phy_vars_eNB->common_vars.beam_weights[0][5][aa],dlsch0->ue_spec_bf_weights[0][aa],frame_parms->ofdm_symbol_size*sizeof(int32_t));
-      }
- 
     }
   
     Ns = 2*subframe_offset+(l>=(nsymb>>1));

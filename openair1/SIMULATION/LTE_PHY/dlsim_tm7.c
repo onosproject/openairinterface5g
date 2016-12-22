@@ -2148,13 +2148,23 @@ PMI_FEEDBACK:
           if (tdd_calib == 1) {
             start_meas(&eNB->dl_ch_calib_stats);
 	    //make sure dlsim is called with perfect channel estimation option (for freq_channel)
+            if (awgn_flag == 0) {
+              random_channel(eNB2UE[round],0);
+              freq_channel(eNB2UE[round],UE->frame_parms.N_RB_DL,12*UE->frame_parms.N_RB_DL + 1);
+            }
+
 	    //fill drs_ch_estimates with data from eNB2UE->chF
 	    for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
 	      for (l=0; l<frame_parms->symbols_per_tti; l++) {
 	        for (i=0; i<frame_parms->N_RB_DL*12; i++) {
-	          ((int16_t *)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2]=(int16_t)(eNB2UE[round]->chF[aarx][i].x*AMP);
-	          ((int16_t *)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2+1]=(int16_t)(eNB2UE[round]->chF[aarx][i].y*AMP);
-                  printf("x=%d, y=%d,AMP=%d\n",eNB2UE[round]->chF[aarx][i].x,eNB2UE[round]->chF[aarx][i].y,AMP);
+                  if (awgn_flag == 0) {
+	            ((int16_t *)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2]=(int16_t)(eNB2UE[round]->chF[aarx][i].x*AMP);
+	            ((int16_t *)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2+1]=(int16_t)(eNB2UE[round]->chF[aarx][i].y*AMP);
+                    printf("x=%d, y=%d,AMP=%d\n",eNB2UE[round]->chF[aarx][i].x,eNB2UE[round]->chF[aarx][i].y,AMP);
+                  } else {
+	            ((int16_t *)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2]= (short)(AMP);
+	            ((int16_t*)(eNB->pusch_vars[0]->drs_ch_estimates[0][aarx]))[(l*frame_parms->N_RB_DL*12+i)*2+1]= 0/2;
+                  }
 	        }
 	      }
 	    }
@@ -2946,6 +2956,9 @@ PMI_FEEDBACK:
 
           // Multipath channel
           if (awgn_flag == 0) {
+            if (tdd_calib == 1)
+              hold_channel = 1;
+
             multipath_channel(eNB2UE[round],s_re,s_im,r_re,r_im,
                               2*frame_parms->samples_per_tti,hold_channel);
 
