@@ -1476,7 +1476,9 @@ void ue_measurement_procedures(uint16_t l, PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,
 #ifndef OAI_USRP
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
+#ifndef OAI_SKIQ    
     phy_adjust_gain (ue,dB_fixed(ue->measurements.rssi),0);
+#endif
 #endif
 #endif
 #endif

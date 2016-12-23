@@ -568,8 +568,8 @@ static void *UE_thread_synch(void *arg)
 	    
 
             openair0_cfg[card].rx_gain[i] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
-	        UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
-	    
+	    UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
+	    //	    usleep(1000);
           }
         }
 
@@ -869,11 +869,11 @@ void *UE_thread(void *arg) {
   attr.sched_nice = 0;
   attr.sched_priority = 0;//sched_get_priority_max(SCHED_DEADLINE);
 
-  // This creates a .5 ms  reservation
+  // This creates a .5 ms  reservation every 1ms
   attr.sched_policy = SCHED_DEADLINE;
-  attr.sched_runtime  = 100000;
+  attr.sched_runtime  = 500000;
   attr.sched_deadline = 500000;
-  attr.sched_period   = 500000;
+  attr.sched_period   = 1000000;
 
   if (sched_setattr(0, &attr, flags) < 0 ) {
     perror("[SCHED] main eNB thread: sched_setattr failed\n");
@@ -926,18 +926,19 @@ void *UE_thread(void *arg) {
 	exit_fun("nothing to add");
 	return &UE_thread_retval;
       }
-      
       if (instance_cnt_synch < 0) {  // we can invoke the synch
 	// grab 10 ms of signal and wakeup synch thread
 	for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
 	  rxp[i] = (void*)&rxdata[i][0];
       
 	if (UE->mode != loop_through_memory) {
+	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
 	  rxs = UE->rfdevice.trx_read_func(&UE->rfdevice,
 					   &timestamp,
 					   rxp,
 					   UE->frame_parms.samples_per_tti*10,
 					   UE->frame_parms.nb_antennas_rx);
+	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
 
 	  
 	  if (rxs!=UE->frame_parms.samples_per_tti*10) {
@@ -945,7 +946,7 @@ void *UE_thread(void *arg) {
 	    return &UE_thread_retval;
 	  }
 	}
-
+	
 	instance_cnt_synch = ++UE->proc.instance_cnt_synch;
 	if (instance_cnt_synch == 0) {
 	  if (pthread_cond_signal(&UE->proc.cond_synch) != 0) {
@@ -958,6 +959,7 @@ void *UE_thread(void *arg) {
 	  exit_fun("nothing to add");
 	  return &UE_thread_retval;
 	}
+	
       } // 
       else {
 	// grab 10 ms of signal into dummy buffer
@@ -967,11 +969,14 @@ void *UE_thread(void *arg) {
 	    rxp[i] = (void*)&dummy_rx[i][0];
 	  for (int sf=0;sf<10;sf++) {
 	    //	    printf("Reading dummy sf %d\n",sf);
+	    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
+
 	    rxs = UE->rfdevice.trx_read_func(&UE->rfdevice,
 					     &timestamp,
 					     rxp,
 					     UE->frame_parms.samples_per_tti,
 					     UE->frame_parms.nb_antennas_rx);
+	    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
 
 	    if (rxs!=UE->frame_parms.samples_per_tti){
 	      exit_fun("problem in rx");
@@ -1005,11 +1010,14 @@ void *UE_thread(void *arg) {
 	  UE->proc.proc_rxtx[1].frame_rx++;
 
 	  // read in first symbol
+	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
 	  rxs = UE->rfdevice.trx_read_func(&UE->rfdevice,
 					   &timestamp,
 					   (void**)rxdata,
 					   UE->frame_parms.ofdm_symbol_size+UE->frame_parms.nb_prefix_samples0,
 					   UE->frame_parms.nb_antennas_rx);
+	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
+
 	  slot_fep(UE,
 		   0,
 		   0,
@@ -1033,14 +1041,16 @@ void *UE_thread(void *arg) {
 	  for (i=0; i<UE->frame_parms.nb_antennas_rx; i++) 
 	    rxp[i] = (void*)&rxdata[i][UE->frame_parms.ofdm_symbol_size+UE->frame_parms.nb_prefix_samples0+(sf*UE->frame_parms.samples_per_tti)];
 	  // grab signal for subframe
-	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
+
 	  if (UE->mode != loop_through_memory) {
 	    if (sf<9) {
+	      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
 	      rxs = UE->rfdevice.trx_read_func(&UE->rfdevice,
 					       &timestamp,
 					       rxp,
 					       UE->frame_parms.samples_per_tti,
 					       UE->frame_parms.nb_antennas_rx);
+	      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0);
 	      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
 	      // prepare tx buffer pointers
 	      
@@ -1066,11 +1076,13 @@ void *UE_thread(void *arg) {
 	    }
 	    
 	    else {
+	      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
 	      rxs = UE->rfdevice.trx_read_func(&UE->rfdevice,
 					       &timestamp,
 					       rxp,
 					       UE->frame_parms.samples_per_tti-UE->frame_parms.ofdm_symbol_size-UE->frame_parms.nb_prefix_samples0,
 					       UE->frame_parms.nb_antennas_rx);
+	      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
 	      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
 	      // prepare tx buffer pointers
 	      
@@ -1092,16 +1104,17 @@ void *UE_thread(void *arg) {
               }
 	      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
 
+	      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
 	      // read in first symbol of next frame and adjust for timing drift
 	      rxs = UE->rfdevice.trx_read_func(&UE->rfdevice,
 					       &timestamp1,
 					       (void**)rxdata,
 					       UE->frame_parms.ofdm_symbol_size+UE->frame_parms.nb_prefix_samples0 - rx_off_diff,
 					       UE->frame_parms.nb_antennas_rx);
+	      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
 	      rx_off_diff = 0;
 	    }
 	  }
-	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
 	  // operate on thread sf mod 2
 	  UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[sf&1];
 

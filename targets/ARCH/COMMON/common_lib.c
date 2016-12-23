@@ -56,6 +56,9 @@ case USRP_X300_DEV:
   case LMSSDR_DEV:
     printf("[%s] has loaded LMSSDR device.\n",((device->host_type == BBU_HOST) ? "BBU": "RRH")); 
     break;
+  case SKIQ_DEV:
+    printf("[%s] has loaded Sidekiq device.\n",((device->host_type == BBU_HOST) ? "BBU": "RRH")); 
+    break;    
   case NONE_DEV:
     printf("[%s] has not loaded a HW device.\n",((device->host_type == BBU_HOST) ? "BBU": "RRH"));
     break;    

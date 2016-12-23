@@ -704,7 +704,7 @@ static void get_options (int argc, char **argv)
     {"no-L2-connect",   no_argument,        NULL, LONG_OPTION_NO_L2_CONNECT},
     {"calib-prach-tx",   no_argument,        NULL, LONG_OPTION_CALIB_PRACH_TX},
     {"ue-rxgain",   required_argument,  NULL, LONG_OPTION_RXGAIN},
-	{"ue-rxgain-off",   required_argument,  NULL, LONG_OPTION_RXGAINOFF},
+    {"ue-rxgain-off",   required_argument,  NULL, LONG_OPTION_RXGAINOFF},
     {"ue-txgain",   required_argument,  NULL, LONG_OPTION_TXGAIN},
     {"ue-scan-carrier",   no_argument,  NULL, LONG_OPTION_SCANCARRIER},
     {"ue-max-power",   required_argument,  NULL, LONG_OPTION_MAXPOWER},

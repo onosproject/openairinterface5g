@@ -478,7 +478,7 @@ add_list1_option(NB_ANTENNAS_RX "2" "Number of antennas in reception" "1" "2" "4
 add_list1_option(NB_ANTENNAS_TX "2" "Number of antennas in transmission" "1" "2" "4")
 add_list1_option(NB_ANTENNAS_TXRX "2" "Number of antennas in ????" "1" "2" "4")
 
-add_list2_option(RF_BOARD "EXMIMO" "RF head type" "None" "EXMIMO" "OAI_USRP" "OAI_BLADERF" "OAI_SDIQ" "CPRIGW" "OAI_LMSSDR")
+add_list2_option(RF_BOARD "EXMIMO" "RF head type" "None" "EXMIMO" "OAI_USRP" "OAI_BLADERF" "OAI_SKIQ" "CPRIGW" "OAI_LMSSDR")
 
 add_list2_option(TRANSP_PRO "None" "Transport protocol type" "None" "ETHERNET")
 
@@ -509,12 +509,14 @@ set(HWLIB_BLADERF_SOURCE
   )
 add_library(oai_bladerfdevif MODULE ${HWLIB_BLADERF_SOURCE} )
 
-include_directories("${OPENAIR_TARGETS}/ARCH/SDIQ/USERSPACE/LIB/")
-set (option_HWSDIQLIB_lib "-L $(SDK)/lib/support/$(BUILD_CONFIG)/usr/lib/epiq -lglib-2.0 -Wl,--enable-new-dtags -Wl,-rpath,/usr/lib/epiq ")
-set(HWLIB_SDIQ_SOURCE 
-  ${OPENAIR_TARGETS}/ARCH/SDIQ/USERSPACE/LIB/sdiq_lib.c
+set (SKIQ_SDK     $ENV{SKIQ_SDK})
+
+include_directories("${OPENAIR_TARGETS}/ARCH/SKIQ/USERSPACE/LIB/")
+set (option_HWSKIQLIB_lib "-L ${SKIQ_SDK}/lib/support/x86_64.gcc/usr/lib/epiq ${SKIQ_SDK}/lib/libsidekiq__x86_64.gcc.a ${SKIQ_SDK}/arg_parser/lib/arg_parser__x86_64.gcc.a -lglib-2.0 -Wl,--enable-new-dtags -Wl,-rpath,/usr/lib/epiq ")
+set(HWLIB_SKIQ_SOURCE 
+  ${OPENAIR_TARGETS}/ARCH/SKIQ/USERSPACE/LIB/skiq_lib.c
   )
-add_library(oai_sdiqdevif MODULE ${HWLIB_SDIQ_SOURCE} )
+add_library(oai_skiqdevif MODULE ${HWLIB_SKIQ_SOURCE}  )
 
 include_directories("${OPENAIR_TARGETS}/ARCH/LMSSDR/USERSPACE/LIB/")
 set (option_HWLMSSDRLIB_lib "-l LMS_SDR -l LMS7002M -l Si5351C")
@@ -561,6 +563,21 @@ elseif (${RF_BOARD} STREQUAL "OAI_BLADERF")
   LINK_DIRECTORIES("/usr/lib/x86_64-linux-gnu")
 
   set(option_HW_lib "bladeRF -rdynamic -ldl")
+
+elseif (${RF_BOARD} STREQUAL "OAI_SKIQ")
+  include_directories("${OPENAIR_TARGETS}/ARCH/SKIQ/USERSPACE/LIB/")
+  include_directories("${OPENAIR2_DIR}/UTIL/LOG")
+  include_directories("/usr/include")
+  include_directories("${SKIQ_SDK}/sidekiq_core/inc")
+  set(HW_SOURCE ${HW_SOURCE}
+    ${OPENAIR_TARGETS}/ARCH/SKIQ/USERSPACE/LIB/skiq_lib.c
+    )
+  LINK_DIRECTORIES("/usr/lib/x86_64-linux-gnu")
+
+  set(option_HW_lib "-L ${SKIQ_SDK}/lib/support/x86_64.gcc/usr/lib/epiq ${SKIQ_SDK}/lib/libsidekiq__x86_64.gcc.a ${SKIQ_SDK}/arg_parser/lib/arg_parser__x86_64.gcc.a \
+-lglib-2.0 \
+-Wl,--enable-new-dtags \
+-Wl,-rpath,/usr/lib/epiq")  
 
 elseif (${RF_BOARD} STREQUAL "OAI_LMSSDR")
   include_directories("${OPENAIR_TARGETS}/ARCH/LMSSDR/USERSPACE/LIB")
