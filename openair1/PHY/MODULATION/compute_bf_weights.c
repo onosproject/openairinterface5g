@@ -19,11 +19,11 @@ int read_calibration_matrix(int32_t **tdd_calib_coeffs, char *calibF_fname, LTE_
    exit(1);
   }
 
-  sprintf(calibF_file_name, "%s/targets/PROJECTS/TDDREC/results/%s", openair_dir, calibF_fname);
+  sprintf(calibF_file_name, "%s/targets/PROJECTS/TDDREC/result/%s", openair_dir, calibF_fname);
   calibF_fd = fopen(calibF_file_name,"r") ;
 
   if (calibF_fd == NULL) {
-   printf("Warning: %s not found, running with defaults\n", calibF_fname);
+   printf("Warning: %s not found, running with defaults\n", calibF_file_name);
    return(1);
   }
 
@@ -72,14 +72,15 @@ void compute_BF_weights(int32_t **beam_weights, int32_t **calib_dl_ch_estimates,
   case MRT :
   for (aa=0 ; aa<frame_parms->nb_antennas_tx ; aa++) {
     for (re=0; re<frame_parms->N_RB_DL*6; re++) {
-      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<6;
-      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<6;
-      //Normalisation not implemented
+      //normalisation simplied by a constent shift
+      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<4;
+      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<4;
     }
+
     for (re=frame_parms->N_RB_DL*6; re<frame_parms->N_RB_DL*12; re++) {
-      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<6;
-      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<6;
-      //Normalisation not implemented
+      //normalisation simplied by a constent shift
+      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<4;
+      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<4;
     }
   }
   break ;
