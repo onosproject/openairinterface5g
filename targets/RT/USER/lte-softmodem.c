@@ -1509,14 +1509,14 @@ int main( int argc, char **argv )
     if (init_opt(in_path, in_ip, NULL, radio_type) == -1)
       LOG_E(OPT,"failed to run OPT \n");
   }
-
+/*
 #ifdef PDCP_USE_NETLINK
   netlink_init();
 #if defined(PDCP_USE_NETLINK_QUEUES)
   pdcp_netlink_init();
 #endif
 #endif
-
+*/
 #if !defined(ENABLE_ITTI)
   // to make a graceful exit when ctrl-c is pressed
   signal(SIGSEGV, signal_handler);

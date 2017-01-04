@@ -906,7 +906,8 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
       exit_fun("Exiting");
     }
   } else {
-    proc->first_rx = 0;
+    //    proc->first_rx = 0;
+    proc->first_rx--;
     *frame = proc->frame_rx;
     *subframe = proc->subframe_rx;        
   }
@@ -1300,7 +1301,7 @@ static void* eNB_thread_single( void* param ) {
     // If this proc is to provide synchronization, do so
     wakeup_slaves(proc);
 
-    if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
+    //    if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
   }
   
 
@@ -1339,7 +1340,7 @@ void init_eNB_proc(int inst) {
     proc->instance_cnt_asynch_rxtx = -1;
     proc->CC_id = CC_id;    
     
-    proc->first_rx=1;
+    proc->first_rx=100;
     proc->first_tx=1;
 
     pthread_mutex_init( &proc_rxtx[0].mutex_rxtx, NULL);
