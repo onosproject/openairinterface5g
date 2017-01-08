@@ -621,6 +621,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
   int16_t tmp_amp=amp;
   int s=1;
   int mprime2 = mprime,ind,ind_dword,ind_qpsk_symb;
+  int mprime_half = 0;
 
   gain_lin_QPSK = (int16_t)((amp*ONE_OVER_SQRT2_Q15)>>15);
   //  if (mimo_mode == LARGE_CDD) gain_lin_QPSK>>=1;
@@ -1383,12 +1384,20 @@ x0[1+*jj]);
         } else {
           //precoding UE spec RS
           //printf("precoding UE spec RS\n");
+          //printf("lprime=%d, nb_rb=%d, mprime2=%d\n", lprime, dlsch0_harq->nb_rb, mprime2);
+          if ((skip_half==2) && ((lprime==0) || (lprime==2)))
+             mprime_half = 2;
+          else if ((skip_half==2) && ((lprime==1) || (lprime==3)))
+             mprime_half = 1 + frame_parms->Ncp;
+          else
+             mprime_half = 0;
 
-          ind = 3*lprime*dlsch0_harq->nb_rb+mprime2;
+          ind = 3*lprime*dlsch0_harq->nb_rb+mprime2+mprime_half;
           ind_dword = ind>>4;
           ind_qpsk_symb = ind&0xf;
 
           txdataF[5][tti_offset] = qpsk[(phy_vars_eNB->lte_gold_uespec_port5_table[0][Ns][ind_dword]>>(2*ind_qpsk_symb))&3];
+	  //printf("qpsk[(phy_vars_eNB->lte_gold_uespec_port5_table[0][%d][%d]>>(2*%d))&3]=%d\n",Ns,ind_dword,ind_qpsk_symb,qpsk[(phy_vars_eNB->lte_gold_uespec_port5_table[0][Ns][ind_dword]>>(2*ind_qpsk_symb))&3]);
           mprime2++;
 
         }
@@ -1711,7 +1720,7 @@ inline int check_skip(int rb,int subframe_offset,LTE_DL_FRAME_PARMS *frame_parms
       return(1);
     }
     if (frame_parms->frame_type == TDD) { // TDD
-            //SSS TDD
+      //SSS TDD
       if (((subframe_offset==0)||(subframe_offset==5)) && (rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==(nsymb-1)) ) {
 	return(1);
       } 
@@ -2148,16 +2157,15 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
       		       P1_SHIFT,
       		       P2_SHIFT);
 
-          if ((mimo_mode == TM7) && (lprime>=0))
-            mprime +=3+frame_parms->Ncp;
-
       }
       else {
 	//	printf("Unallocated rb %d/symbol %d, re_offset %d, jj %d\n",rb,l,re_offset,jj);
       }
       re_offset+=12; // go to next RB
 
-      
+      if ((mimo_mode == TM7) && (lprime>=0))
+        mprime += 3 + frame_parms->Ncp;
+
       // check if we crossed the symbol boundary and skip DCs
       if (re_offset >= frame_parms->ofdm_symbol_size) {
         if (skip_dc == 0)  //even number of RBs (doesn't straddle DC)
