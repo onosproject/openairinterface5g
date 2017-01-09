@@ -655,11 +655,11 @@ int main(int argc, char **argv)
         cell_spec_bf_weights[aa][re] = 0x00007fff>>4;
     }
   } 
-
+ */
   if (transmission_mode==7){
     lte_gold_ue_spec_port5(eNB->lte_gold_uespec_port5_table[0],Nid_cell,n_rnti);
     lte_gold_ue_spec_port5(UE->lte_gold_uespec_port5_table,Nid_cell,n_rnti);
-  }*/
+  }
 
     
   eNB_id_i = UE->n_connected_eNB;
@@ -2877,14 +2877,13 @@ PMI_FEEDBACK:
                                  aa);
 
             if (n_frames==1) {
-              if (transmission_mode<7)
-                write_output("txsigF0.m","txsF0", &eNB->common_vars.txdataF[eNB_id][0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],
+              write_output("txsigF0.m","txsF0", &eNB->common_vars.txdataF[eNB_id][0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],
                              nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
-              else if (transmission_mode==7)
-                write_output("txsigF0.m","txsF0", &eNB->common_vars.txdataF[eNB_id][5][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],
+              if (transmission_mode==7)
+                write_output("txsigF5.m","txsF5", &eNB->common_vars.txdataF[eNB_id][5][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],
                              nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
-              write_output("txsigF0_BF.m","txsF0_BF", &eNB->common_vars.txdataF_BF[eNB_id][0][0],
-                           eNB->frame_parms.ofdm_symbol_size,1,1);
+              //write_output("txsigF0_BF.m","txsF0_BF", &eNB->common_vars.txdataF_BF[eNB_id][0][0],
+              //             eNB->frame_parms.ofdm_symbol_size,1,1);
 
               if (eNB->frame_parms.nb_antennas_tx>1)// to be updated
                 write_output("txsigF1.m","txsF1", &eNB->common_vars.txdataF[eNB_id][1][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],

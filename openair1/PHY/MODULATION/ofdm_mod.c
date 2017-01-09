@@ -294,6 +294,8 @@ void do_OFDM_mod_symbol(LTE_eNB_COMMON *eNB_common_vars, int eNB_id, uint16_t ne
   int32_t **txdataF = eNB_common_vars->txdataF[eNB_id];
   int32_t **txdataF_BF = eNB_common_vars->txdataF_BF[eNB_id];
   int32_t **txdata = eNB_common_vars->txdata[eNB_id];
+  char txsigF0_BF_fname[20];
+  char txsF0_BF_value[20];
 
   aa = antenna;
   slot_offset = (next_slot)*(frame_parms->samples_per_tti>>1);
@@ -305,6 +307,10 @@ void do_OFDM_mod_symbol(LTE_eNB_COMMON *eNB_common_vars, int eNB_id, uint16_t ne
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_BEAM_PRECODING,1);
     beam_precoding(txdataF,txdataF_BF,frame_parms,eNB_common_vars->beam_weights[eNB_id],next_slot,l,aa);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_BEAM_PRECODING,0);
+
+    /*sprintf(txsigF0_BF_fname, "txsigF0_BF%d.m",l);
+    sprintf(txsF0_BF_value, "txsF0_BF%d",l);
+    write_output(txsigF0_BF_fname, txsF0_BF_value, txdataF_BF[0], frame_parms->ofdm_symbol_size,1,1);*/
 
     //PMCH case not implemented...
 

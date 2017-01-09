@@ -233,12 +233,12 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
                 ch[1] = (short)(((int)pil[0]*rxF[1] + (int)pil[1]*rxF[0])>>15);
                 multadd_real_vector_complex_scalar(fl,ch,dl_bf_ch,16);
                 
-                ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
-                ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
+                ch[0] = (short)(((int)pil[2]*rxF[8] - (int)pil[3]*rxF[9])>>15);
+                ch[1] = (short)(((int)pil[2]*rxF[9] + (int)pil[3]*rxF[8])>>15);
                 multadd_real_vector_complex_scalar(fm,ch,dl_bf_ch,16);
 
-                ch[0] = (short)(((int)pil[0]*rxF[16] - (int)pil[1]*rxF[17])>>15);
-                ch[1] = (short)(((int)pil[0]*rxF[17] + (int)pil[1]*rxF[16])>>15);
+                ch[0] = (short)(((int)pil[4]*rxF[16] - (int)pil[5]*rxF[17])>>15);
+                ch[1] = (short)(((int)pil[4]*rxF[17] + (int)pil[5]*rxF[16])>>15);
                 multadd_real_vector_complex_scalar(fr,ch,dl_bf_ch,16);
               } else {
                 msg("lte_dl_bf_channel_estimation(lte_dl_bf_channel_estimation.c):TM7 beamgforming channel estimation not supported for extented CP\n");
@@ -251,6 +251,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
           nb_rb++;
         }
 
+        pil+=6;
         rxF+=24;
         dl_bf_ch+=24;
       }
@@ -321,7 +322,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
             skip_half=2;
         }
 
-        //printf("symbol=%d,pil_offset=%d\ni,rb_alloc_ind=%d,uespec_pilots=%d,beamforming_mode=%d,Ncp=%d,skip_half=%d\n",symbol,pil_offset,rb_alloc_ind,uespec_pilots,beamforming_mode,frame_parms->Ncp,skip_half);
+        //printf("symbol=%d,rb=%d,pil_offset=%d\ni,rb_alloc_ind=%d,uespec_pilots=%d,beamforming_mode=%d,Ncp=%d,skip_half=%d\n",symbol,rb,pil_offset,rb_alloc_ind,uespec_pilots,beamforming_mode,frame_parms->Ncp,skip_half);
         if (rb_alloc_ind==1) {
           if (uespec_pilots==1) {
             if (beamforming_mode==7) {
@@ -332,42 +333,27 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
                     ch[0] = (short)(((int)pil[0]*rxF[0] - (int)pil[1]*rxF[1])>>15);
                     ch[1] = (short)(((int)pil[0]*rxF[1] + (int)pil[1]*rxF[0])>>15);
                     multadd_real_vector_complex_scalar(f2l,ch,dl_bf_ch,16); 
-                    pil+=2;
+#ifdef DEBUG_BF_CH
+                    printf("symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[0],rxF[1],pil[0],pil[1],ch[0],ch[1]);
+#endif
                     
-                    ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
-                    ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
+                    ch[0] = (short)(((int)pil[2]*rxF[8] - (int)pil[3]*rxF[9])>>15);
+                    ch[1] = (short)(((int)pil[2]*rxF[9] + (int)pil[3]*rxF[8])>>15);
                     multadd_real_vector_complex_scalar(f2r,ch,dl_bf_ch,16); 
-                    pil+=2;
+#ifdef DEBUG_BF_CH
+                    printf("symbol=%d,rxF[4]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[8],rxF[9],pil[2],pil[3],ch[0],ch[1]);
+#endif
 
                   } else {
 
                     ch[0] = (short)(((int)pil[0]*rxF[0] - (int)pil[1]*rxF[1])>>15);
                     ch[1] = (short)(((int)pil[0]*rxF[1] + (int)pil[1]*rxF[0])>>15);
                     multadd_real_vector_complex_scalar(f1,ch,dl_bf_ch,16);
-                    pil+=2;
                   }
                 } else if (skip_half==2) {
-                  if (pil_offset<2) {
+                  printf("ERR: skip_half==2 happens in the first half band.\n");
 
-                    ch[0] = (short)(((int)pil[0]*rxF[16] - (int)pil[1]*rxF[17])>>15);
-                    ch[1] = (short)(((int)pil[0]*rxF[17] + (int)pil[1]*rxF[16])>>15);
-                    multadd_real_vector_complex_scalar(f1,ch,dl_bf_ch,16); 
-                    pil+=2;
-                    
-                  } else {
-
-                    ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
-                    ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
-                    multadd_real_vector_complex_scalar(f2l,ch,dl_bf_ch,16);
-                    pil+=2;
-
-                    ch[0] = (short)(((int)pil[0]*rxF[16] - (int)pil[1]*rxF[17])>>15);
-                    ch[1] = (short)(((int)pil[0]*rxF[17] + (int)pil[1]*rxF[16])>>15);
-                    multadd_real_vector_complex_scalar(f2r,ch,dl_bf_ch,16); 
-                    pil+=2;
-
-                  }
-                } else {
+                } else { // no need to consider the case skip_half == 2
 
                   ch[0] = (short)(((int)pil[0]*rxF[0] - (int)pil[1]*rxF[1])>>15);
                   ch[1] = (short)(((int)pil[0]*rxF[1] + (int)pil[1]*rxF[0])>>15);
@@ -375,23 +361,20 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
 #ifdef DEBUG_BF_CH
                   printf("symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[0],rxF[1],pil[0],pil[1],ch[0],ch[1]);
 #endif
-                  pil+=2;
                   
-                  ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
-                  ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
+                  ch[0] = (short)(((int)pil[2]*rxF[8] - (int)pil[3]*rxF[9])>>15);
+                  ch[1] = (short)(((int)pil[2]*rxF[9] + (int)pil[3]*rxF[8])>>15);
                   multadd_real_vector_complex_scalar(fm,ch,dl_bf_ch,16);
 #ifdef DEBUG_BF_CH
-                  printf("symbol=%d,rxF[4]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[8],rxF[9],pil[0],pil[1],ch[0],ch[1]);
+                  printf("symbol=%d,rxF[4]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[8],rxF[9],pil[2],pil[3],ch[0],ch[1]);
 #endif
-                  pil+=2;
 
-                  ch[0] = (short)(((int)pil[0]*rxF[16] - (int)pil[1]*rxF[17])>>15);
-                  ch[1] = (short)(((int)pil[0]*rxF[17] + (int)pil[1]*rxF[16])>>15);
+                  ch[0] = (short)(((int)pil[4]*rxF[16] - (int)pil[5]*rxF[17])>>15);
+                  ch[1] = (short)(((int)pil[4]*rxF[17] + (int)pil[5]*rxF[16])>>15);
                   multadd_real_vector_complex_scalar(fr,ch,dl_bf_ch,16);
 #ifdef DEBUG_BF_CH
-                  printf("symbol=%d,rxF[8]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[16],rxF[17],pil[0],pil[1],ch[0],ch[1]);
+                  printf("symbol=%d,rxF[8]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[16],rxF[17],pil[4],pil[5],ch[0],ch[1]);
 #endif
-                  pil+=2;
 
                }  
              } else {
@@ -406,6 +389,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
          nb_rb++;
        }
 
+        pil+=6;
         rxF+=24;
         dl_bf_ch+=24;
       } // first half loop
@@ -453,59 +437,54 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
           ch[1] = (short)(((int)pil[0]*rxF[1] + (int)pil[1]*rxF[0])>>15);
           multadd_real_vector_complex_scalar(fl_dc,ch,dl_bf_ch,16);
 #ifdef DEBUG_BF_CH
-          //printf("symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[0],rxF[1],pil[0],pil[1],ch[0],ch[1]);
+          printf("**symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[0],rxF[1],pil[0],pil[1],ch[0],ch[1]);
 #endif
-          pil+=2;;
                   
-          ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
-          ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
+          ch[0] = (short)(((int)pil[2]*rxF[8] - (int)pil[3]*rxF[9])>>15);
+          ch[1] = (short)(((int)pil[2]*rxF[9] + (int)pil[3]*rxF[8])>>15);
           multadd_real_vector_complex_scalar(fm_dc,ch,dl_bf_ch,16);
 #ifdef DEBUG_BF_CH
-          //printf("symbol=%d,rxF[4]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[8],rxF[9],pil[0],pil[1],ch[0],ch[1]);
+          printf("**symbol=%d,rxF[4]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[8],rxF[9],pil[2],pil[3],ch[0],ch[1]);
 #endif
-          pil+=2;;
 
           rxF   = (short *)&rxdataF[aarx][symbol*(frame_parms->ofdm_symbol_size)];
 
-          ch[0] = (short)(((int)pil[0]*rxF[6] - (int)pil[1]*rxF[7])>>15);
-          ch[1] = (short)(((int)pil[0]*rxF[7] + (int)pil[1]*rxF[6])>>15);
+          ch[0] = (short)(((int)pil[4]*rxF[6] - (int)pil[5]*rxF[7])>>15);
+          ch[1] = (short)(((int)pil[4]*rxF[7] + (int)pil[5]*rxF[6])>>15);
           multadd_real_vector_complex_scalar(fr_dc,ch,dl_bf_ch,16);
 #ifdef DEBUG_BF_CH
-          //printf("symbol=%d,rxF[3]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[6],rxF[7],pil[0],pil[1],ch[0],ch[1]);
+          printf("**symbol=%d,rxF[3]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[6],rxF[7],pil[4],pil[5],ch[0],ch[1]);
 #endif
-          pil+=2;;
         } else {
           ch[0] = (short)(((int)pil[0]*rxF[0] - (int)pil[1]*rxF[1])>>15);
           ch[1] = (short)(((int)pil[0]*rxF[1] + (int)pil[1]*rxF[0])>>15);
           multadd_real_vector_complex_scalar(fl_dc,ch,dl_bf_ch,16);
 #ifdef DEBUG_BF_CH
-          //printf("symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[0],rxF[1],pil[0],pil[1],ch[0],ch[1]);
+          printf("**symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[0],rxF[1],pil[0],pil[1],ch[0],ch[1]);
 #endif
-          pil+=2;;
                   
           rxF   = (short *)&rxdataF[aarx][symbol*(frame_parms->ofdm_symbol_size)];
 
-          ch[0] = (short)(((int)pil[0]*rxF[2] - (int)pil[1]*rxF[3])>>15);
-          ch[1] = (short)(((int)pil[0]*rxF[3] + (int)pil[1]*rxF[2])>>15);
+          ch[0] = (short)(((int)pil[2]*rxF[2] - (int)pil[3]*rxF[3])>>15);
+          ch[1] = (short)(((int)pil[2]*rxF[3] + (int)pil[3]*rxF[2])>>15);
           multadd_real_vector_complex_scalar(fm_dc,ch,dl_bf_ch,16);
 #ifdef DEBUG_BF_CH
-          //printf("symbol=%d,rxF[1]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[2],rxF[3],pil[0],pil[1],ch[0],ch[1]);
+          printf("**symbol=%d,rxF[1]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[2],rxF[3],pil[2],pil[3],ch[0],ch[1]);
 #endif
-          pil+=2;;
 
-          ch[0] = (short)(((int)pil[0]*rxF[10] - (int)pil[1]*rxF[11])>>15);
-          ch[1] = (short)(((int)pil[0]*rxF[11] + (int)pil[1]*rxF[10])>>15);
+          ch[0] = (short)(((int)pil[4]*rxF[10] - (int)pil[5]*rxF[11])>>15);
+          ch[1] = (short)(((int)pil[4]*rxF[11] + (int)pil[5]*rxF[10])>>15);
           multadd_real_vector_complex_scalar(fr_dc,ch,dl_bf_ch,16);
 #ifdef DEBUG_BF_CH
-          //printf("symbol=%d,rxF[5]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[10],rxF[11],pil[0],pil[1],ch[0],ch[1]);
+          printf("**symbol=%d,rxF[5]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[10],rxF[11],pil[4],pil[5],ch[0],ch[1]);
 #endif
-          pil+=2;;
         }
       } // rballoc==1
       else {
-        rxF       = (short *)&rxdataF[aarx][pil_offset+((symbol*(frame_parms->ofdm_symbol_size)))];
+        rxF       = (short *)&rxdataF[aarx][symbol*(frame_parms->ofdm_symbol_size)];
       }
 
+      pil+=6+2*frame_parms->Ncp;
       rxF+=14+2*pil_offset;
       dl_bf_ch+=24;
       rb++;
@@ -574,46 +553,31 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
           if (uespec_pilots==1) {
             if (beamforming_mode==7) {
               if (frame_parms->Ncp==0) {
-                if (skip_half==1) {
-                  if (pil_offset<2) {
-
-                    ch[0] = (short)(((int)pil[0]*rxF[0] - (int)pil[1]*rxF[1])>>15);
-                    ch[1] = (short)(((int)pil[0]*rxF[1] + (int)pil[1]*rxF[0])>>15);
-                    multadd_real_vector_complex_scalar(f2l,ch,dl_bf_ch,16); 
-                    pil+=2;
-                    
-                    ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
-                    ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
-                    multadd_real_vector_complex_scalar(f2r,ch,dl_bf_ch,16); 
-                    pil+=2;
-          
-
-                  } else {
-
-                    ch[0] = (short)(((int)pil[0]*rxF[0] - (int)pil[1]*rxF[1])>>15);
-                    ch[1] = (short)(((int)pil[0]*rxF[1] + (int)pil[1]*rxF[0])>>15);
-                    multadd_real_vector_complex_scalar(f1,ch,dl_bf_ch,16);
-                    pil+=2;
-                  }
-                } else if (skip_half==2) {
+                if (skip_half==2) {
                    if (pil_offset<2) {
 
-                     ch[0] = (short)(((int)pil[0]*rxF[16] - (int)pil[1]*rxF[17])>>15);
-                     ch[1] = (short)(((int)pil[0]*rxF[17] + (int)pil[1]*rxF[16])>>15);
+                     ch[0] = (short)(((int)pil[4]*rxF[16] - (int)pil[5]*rxF[17])>>15);
+                     ch[1] = (short)(((int)pil[4]*rxF[17] + (int)pil[5]*rxF[16])>>15);
                      multadd_real_vector_complex_scalar(f1,ch,dl_bf_ch,16); 
-                     pil+=2;
+#ifdef DEBUG_BF_CH
+                     printf("++symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[16],rxF[17],pil[4],pil[5],ch[0],ch[1]);
+#endif
                      
                    } else {
 
-                     ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
-                     ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
+                     ch[0] = (short)(((int)pil[2]*rxF[8] - (int)pil[3]*rxF[9])>>15);
+                     ch[1] = (short)(((int)pil[2]*rxF[9] + (int)pil[3]*rxF[8])>>15);
                      multadd_real_vector_complex_scalar(f2l,ch,dl_bf_ch,16);
-                     pil+=2;
+#ifdef DEBUG_BF_CH
+                     printf("++symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[8],rxF[9],pil[2],pil[3],ch[0],ch[1]);
+#endif
 
-                     ch[0] = (short)(((int)pil[0]*rxF[16] - (int)pil[1]*rxF[17])>>15);
-                     ch[1] = (short)(((int)pil[0]*rxF[17] + (int)pil[1]*rxF[16])>>15);
+                     ch[0] = (short)(((int)pil[4]*rxF[16] - (int)pil[5]*rxF[17])>>15);
+                     ch[1] = (short)(((int)pil[4]*rxF[17] + (int)pil[5]*rxF[16])>>15);
                      multadd_real_vector_complex_scalar(f2r,ch,dl_bf_ch,16); 
-                     pil+=2;
+#ifdef DEBUG_BF_CH
+                     printf("++symbol=%d,rxF[4]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[16],rxF[17],pil[4],pil[5],ch[0],ch[1]);
+#endif
 
                    }
                 } else {
@@ -624,23 +588,20 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
 #ifdef DEBUG_BF_CH
                   printf("symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[0],rxF[1],pil[0],pil[1],ch[0],ch[1]);
 #endif
-                  pil+=2;
                   
-                  ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
-                  ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
+                  ch[0] = (short)(((int)pil[2]*rxF[8] - (int)pil[3]*rxF[9])>>15);
+                  ch[1] = (short)(((int)pil[2]*rxF[9] + (int)pil[3]*rxF[8])>>15);
                   multadd_real_vector_complex_scalar(fm,ch,dl_bf_ch,16);
 #ifdef DEBUG_BF_CH
-                  printf("symbol=%d,rxF[4]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[8],rxF[9],pil[0],pil[1],ch[0],ch[1]);
+                  printf("symbol=%d,rxF[4]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[8],rxF[9],pil[2],pil[3],ch[0],ch[1]);
 #endif
-                  pil+=2;
 
-                  ch[0] = (short)(((int)pil[0]*rxF[16] - (int)pil[1]*rxF[17])>>15);
-                  ch[1] = (short)(((int)pil[0]*rxF[17] + (int)pil[1]*rxF[16])>>15);
+                  ch[0] = (short)(((int)pil[4]*rxF[16] - (int)pil[5]*rxF[17])>>15);
+                  ch[1] = (short)(((int)pil[4]*rxF[17] + (int)pil[5]*rxF[16])>>15);
                   multadd_real_vector_complex_scalar(fr,ch,dl_bf_ch,16);
 #ifdef DEBUG_BF_CH
-                  printf("symbol=%d,rxF[8]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[16],rxF[17],pil[0],pil[1],ch[0],ch[1]);
+                  printf("symbol=%d,rxF[8]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[16],rxF[17],pil[4],pil[5],ch[0],ch[1]);
 #endif
-                  pil+=2;
 
                 }
               } else {
@@ -655,6 +616,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
           nb_rb++;
         }
 
+        pil+=6+frame_parms->Ncp*2;
         rxF+=24;
         dl_bf_ch+=24;
       } // second half of RBs
@@ -669,6 +631,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
 #endif
 
       if (phy_vars_ue->high_speed_flag == 0) {
+        //TODO:the time average does not work well for subframe 0 where some resources are allocated to common channels 
         multadd_complex_vector_real_scalar(dl_bf_ch,
                                            32767-phy_vars_ue->ch_est_alpha,
                                            dl_bf_ch-(frame_parms->ofdm_symbol_size<<1),0,frame_parms->ofdm_symbol_size);
@@ -742,7 +705,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
   } //aarx
  
 #ifdef DEBUG_BF_CH  
-    printf("[dlsch_bf_ch_est.c]: dl_bf_estimates[0][600] %d, %d \n",*(short *)&dl_bf_ch_estimates[0][600],*(short*)&phy_vars_ue->lte_ue_pdsch_vars[eNB_id]->dl_bf_ch_estimates[0][600]);
+    printf("[dlsch_bf_ch_est.c]: dl_bf_estimates[0][600] %d, %d \n",*(short *)&dl_bf_ch_estimates[0][600],*(short*)&phy_vars_ue->ue_pdsch_vars[eNB_id]->dl_bf_ch_estimates[0][600]);
 #endif
 
   return(0);

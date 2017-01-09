@@ -16,7 +16,7 @@ int read_calibration_matrix(int32_t **tdd_calib_coeffs, char *calibF_fname, LTE_
 
   if (openair_dir == NULL) {
    printf("ERR: OPENAIR_DIR not defined (did you source oaienv?)\n");
-   exit(1);
+   return(1);
   }
 
   sprintf(calibF_file_name, "%s/targets/PROJECTS/TDDREC/result/%s", openair_dir, calibF_fname);
