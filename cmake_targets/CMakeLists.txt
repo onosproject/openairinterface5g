@@ -1071,6 +1071,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep_mbsfn.c
   ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep_ul.c
   ${OPENAIR1_DIR}/PHY/MODULATION/ul_7_5_kHz.c
+  ${OPENAIR1_DIR}/PHY/MODULATION/ul_1_4_fs.c
   ${OPENAIR1_DIR}/PHY/MODULATION/beamforming.c
   ${OPENAIR1_DIR}/PHY/MODULATION/compute_bf_weights.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/freq_equalization.c

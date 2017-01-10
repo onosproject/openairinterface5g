@@ -640,6 +640,11 @@ typedef struct {
   /// - second index: rx antenna [0..nb_antennas_rx[
   /// - third index: sample [0..]
   int32_t **rxdata[3];
+  /// \brief Holds the last subframe of received data in time domain after removal of 1/4fs + 7.5kHz frequency offset.
+  /// - first index: secotr id [0..2] (hard coded)
+  /// - second index: rx antenna [0..nb_antennas_rx[
+  /// - third index: sample [0..samples_per_tti[
+  int32_t **rxdata_1_4fs[3];
   /// \brief Holds the last subframe of received data in time domain after removal of 7.5kHz frequency offset.
   /// - first index: secotr id [0..2] (hard coded)
   /// - second index: rx antenna [0..nb_antennas_rx[
