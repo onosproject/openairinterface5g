@@ -66,6 +66,7 @@ void estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, int32_t **ul_ch_
 void compute_BF_weights(int32_t **beam_weights, int32_t **calib_dl_ch_estimates, PRECODE_TYPE_t precode_type, LTE_DL_FRAME_PARMS *frame_parms) {
 
   int aa, re;
+  int norm_factor = 5;
 
   switch (precode_type) {
   //case MRT
@@ -73,14 +74,14 @@ void compute_BF_weights(int32_t **beam_weights, int32_t **calib_dl_ch_estimates,
   for (aa=0 ; aa<frame_parms->nb_antennas_tx ; aa++) {
     for (re=0; re<frame_parms->N_RB_DL*6; re++) {
       //normalisation simplied by a constent shift
-      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<4;
-      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<4;
+      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<norm_factor;
+      ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<norm_factor;
     }
 
     for (re=frame_parms->N_RB_DL*6; re<frame_parms->N_RB_DL*12; re++) {
       //normalisation simplied by a constent shift
-      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<4;
-      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<4;
+      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<norm_factor;
+      ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<norm_factor;
     }
   }
   break ;

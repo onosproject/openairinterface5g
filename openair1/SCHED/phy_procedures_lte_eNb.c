@@ -2994,6 +2994,34 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 #endif
       stop_meas(&eNB->ulsch_demodulation_stats);
 
+      // TDD reciprocity DL CSIT estimation based on calibraton
+      start_meas(&eNB->dl_ch_calib_stats);
+ 
+      if ((fp->frame_type == TDD) && 
+          (((fp->tdd_config == 0) && ((subframe == 4) || (subframe == 9))) ||
+          ((fp->tdd_config == 1) && ((subframe == 3) || (subframe == 8))) ||
+          ((fp->tdd_config == 2) && ((subframe == 2) || (subframe == 7))) ||
+          ((fp->tdd_config == 3) && (subframe == 4)) ||
+          ((fp->tdd_config == 4) && (subframe == 3)) ||
+          ((fp->tdd_config == 5) && (subframe == 2)) ||
+          ((fp->tdd_config == 6) && ((subframe == 4) || (subframe == 8))))) {
+         
+          //LOG_I(PHY, "UE %d: Estimating DLSCI from ULCSI based on TDD reciprocity calibration: Estimating DLSCI from ULCSI based on TDD reciprocity calibration\n", i);
+          printf(PHY, "UE %d: Estimating DLSCI from ULCSI based on TDD reciprocity calibration: Estimating DLSCI from ULCSI based on TDD reciprocity calibration\n", i);
+        
+	  estimate_DLCSI_from_ULCSI(eNB->dlsch[i][0]->calib_dl_ch_estimates,
+                                    &eNB->pusch_vars[i]->drs_ch_estimates[eNB->UE_stats[i].sector][0],
+                                    eNB->common_vars.tdd_calib_coeffs[eNB->UE_stats[i].sector],
+                                    fp);
+	 
+          // only calculate for port 5 
+          compute_BF_weights(eNB->dlsch[i][0]->ue_spec_bf_weights[0],
+                             eNB->dlsch[i][0]->calib_dl_ch_estimates,
+                             MRT,
+                             fp);
+
+      }
+      stop_meas(&eNB->dl_ch_calib_stats);
 
       start_meas(&eNB->ulsch_decoding_stats);
 
