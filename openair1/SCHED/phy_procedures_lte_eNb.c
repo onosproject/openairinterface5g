@@ -2727,7 +2727,7 @@ void eNB_fep_full(PHY_VARS_eNB *eNB) {
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_SLOT_FEP,1);
   start_meas(&eNB->ofdm_demod_stats);
   
-  if ((eNB->rfdevice.type == EXMIMO_DEV) && (fp->frame_type == TDD))
+  if ((eNB->rfdevice.type == EXMIMO_DEV) && (fp->frame_type == TDD)) {
     remove_1_4_fs(eNB,proc->subframe_rx<<1); // TDD workaround for EXMIMO2 card
     remove_1_4_fs(eNB,1+(proc->subframe_rx<<1));
   } else {
