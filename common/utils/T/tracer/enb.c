@@ -139,7 +139,7 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database)
   widget *text;
   view *textview;
   int i;
-  widget *w;
+  widget *w, *w2;
   view *v;
   logger *l;
   int cc;
