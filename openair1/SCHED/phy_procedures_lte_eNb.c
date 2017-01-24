@@ -1309,7 +1309,12 @@ printf("PHY TX f/sf %d/%d sched_sf %d\n", frame, subframe, sched_subframe);
 	UE_id = i;
 
       T(T_ENB_PHY_ULSCH_UE_DCI, T_INT(phy_vars_eNB->Mod_id), T_INT(phy_vars_eNB->CC_id), T_INT(frame), T_INT(subframe), T_INT(UE_id),
-        T_INT(DCI_pdu->dci_alloc[i].rnti), T_INT(harq_pid));
+        T_INT(DCI_pdu->dci_alloc[i].rnti), T_INT(harq_pid),
+        T_INT(phy_vars_eNB->ulsch_eNB[(uint32_t)UE_id]->harq_processes[harq_pid]->mcs),
+        T_INT(phy_vars_eNB->ulsch_eNB[(uint32_t)UE_id]->harq_processes[harq_pid]->round),
+        T_INT(phy_vars_eNB->ulsch_eNB[(uint32_t)UE_id]->harq_processes[harq_pid]->first_rb),
+        T_INT(phy_vars_eNB->ulsch_eNB[(uint32_t)UE_id]->harq_processes[harq_pid]->nb_rb),
+        T_INT(phy_vars_eNB->ulsch_eNB[(uint32_t)UE_id]->harq_processes[harq_pid]->TBS));
 
       if (UE_id<0) {
         LOG_E(PHY,"[eNB %"PRIu8"] Frame %d: Unknown UE_id for rnti %"PRIx16"\n",phy_vars_eNB->Mod_id,phy_vars_eNB->proc[sched_subframe].frame_tx,DCI_pdu->dci_alloc[i].rnti);
