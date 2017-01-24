@@ -556,7 +556,7 @@ static void *scope_thread(void *arg)
   int len = 0;
   struct sched_param sched_param;
   int UE_id, CC_id;
-  int ue_cnt=0;
+  //int ue_cnt=0;
 
   sched_param.sched_priority = sched_get_priority_min(SCHED_FIFO)+1;
   sched_setscheduler(0, SCHED_FIFO,&sched_param);
@@ -593,21 +593,21 @@ static void *scope_thread(void *arg)
       }
       len = dump_eNB_stats (PHY_vars_eNB_g[0][0], stats_buffer, 0);
 
-      if (MAX_NUM_CCs>1)
-        len += dump_eNB_stats (PHY_vars_eNB_g[0][1], &stats_buffer[len], 0);
+      /*if (MAX_NUM_CCs>1)
+        len += dump_eNB_stats (PHY_vars_eNB_g[0][1], &stats_buffer[len], 0);*/
 
       //fl_set_object_label(form_stats->stats_text, stats_buffer);
       fl_clear_browser(form_stats->stats_text);
       fl_add_browser_line(form_stats->stats_text, stats_buffer);
 
-      ue_cnt=0;
-      for(UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++) {
-	for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-	  if ((PHY_vars_eNB_g[0][CC_id]->dlsch_eNB[UE_id][0]->rnti>0) && (ue_cnt<scope_enb_num_ue)) {
-	    phy_scope_eNB(form_enb[CC_id][ue_cnt],
+      //ue_cnt=0;
+      for(UE_id=0; UE_id<scope_enb_num_ue/*NUMBER_OF_UE_MAX*/; UE_id++) {
+	for(CC_id=0; CC_id<1/*MAX_NUM_CCs*/; CC_id++) {
+	  if (PHY_vars_eNB_g[0][CC_id]->dlsch_eNB[UE_id][0]->rnti>0) {
+	    phy_scope_eNB(form_enb[CC_id][UE_id],
 			  PHY_vars_eNB_g[0][CC_id],
 			  UE_id);
-	    ue_cnt++;
+	    //ue_cnt++;
 	  }
 	}
       }
@@ -2338,19 +2338,31 @@ if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset)) abort();
 
       /* do RX */
       for (CC_id=0; CC_id < MAX_NUM_CCs; CC_id++) {
-if (CC_id != 0) continue;
-        eNB_proc_t *proc = &PHY_vars_eNB_g[0][CC_id]->proc[sf];
-//        printf("call phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
-        phy_procedures_eNB_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
-        if ((subframe_select(&PHY_vars_eNB_g[0][proc->CC_id]->lte_frame_parms,proc->subframe_rx) == SF_S)) {
-          phy_procedures_eNB_S_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
-        }
-//        printf("done phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
-        proc->frame_rx++;
-        if (proc->frame_rx==1024)
-          proc->frame_rx=0;
-      }
+        eNB_proc_t *proc = &PHY_vars_eNB_g[0][0]->proc[sf];
+	if (CC_id != 0) {
+	  // only update some measurements
+	  if ((proc->frame_rx % 100 == 0) && (proc->subframe_rx==4)) {
+	    int i;
+	    for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+	      PHY_vars_eNB_g[0][CC_id]->eNB_UE_stats[i].dlsch_bitrate = (PHY_vars_eNB_g[0][CC_id]->eNB_UE_stats[i].total_TBS -
+									 PHY_vars_eNB_g[0][CC_id]->eNB_UE_stats[i].total_TBS_last);
 
+	      PHY_vars_eNB_g[0][CC_id]->eNB_UE_stats[i].total_TBS_last = PHY_vars_eNB_g[0][CC_id]->eNB_UE_stats[i].total_TBS;
+	    }
+	  }
+	}
+	else {
+	  //        printf("call phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+	  phy_procedures_eNB_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
+	  if ((subframe_select(&PHY_vars_eNB_g[0][proc->CC_id]->lte_frame_parms,proc->subframe_rx) == SF_S)) {
+	    phy_procedures_eNB_S_RX( proc->subframe, PHY_vars_eNB_g[0][proc->CC_id], 0, no_relay );
+	  }
+	  //        printf("done phy_procedures_eNB_RX CC_id %d sf %d %lu\n", proc->CC_id, sf, daclock());
+	  proc->frame_rx++;
+	  if (proc->frame_rx==1024)
+	    proc->frame_rx=0;
+	}
+      }
     }
 
 #ifdef EXMIMO
@@ -3734,7 +3746,7 @@ openair0_cfg[0].rx_freq[1] = 0;
       fl_show_form (form_stats->stats_form, FL_PLACE_HOTSPOT, FL_FULLBORDER, "stats");
 
       for(UE_id=0; UE_id<scope_enb_num_ue; UE_id++) {
-	for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+	for(CC_id=0; CC_id<1/*MAX_NUM_CCs*/; CC_id++) {
 	  form_enb[CC_id][UE_id] = create_lte_phy_scope_enb();
 	  sprintf (title, "LTE UL SCOPE eNB for CC_id %d, UE %d",CC_id,UE_id);
 	  fl_show_form (form_enb[CC_id][UE_id]->lte_phy_scope_enb, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
@@ -3919,7 +3931,7 @@ openair0_cfg[0].rx_freq[1] = 0;
       fl_free_form(form_stats_l2->stats_form);
 
       for(UE_id=0; UE_id<scope_enb_num_ue; UE_id++) {
-	for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+	for(CC_id=0; CC_id<1/*MAX_NUM_CCs*/; CC_id++) {
 	  fl_hide_form(form_enb[CC_id][UE_id]->lte_phy_scope_enb);
 	  fl_free_form(form_enb[CC_id][UE_id]->lte_phy_scope_enb);
 	}
