@@ -37,4 +37,6 @@ void logger_add_view(logger *l, view *v);
 void logger_set_filter(logger *l, void *filter);
 void ticked_ttilog_set_tick_filter(logger *l, void *filter);
 
+void throughputlog_set_tick_filter(logger *_l, void *filter);
+
 #endif /* _LOGGER_H_ */

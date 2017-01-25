@@ -171,6 +171,7 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database)
         filter_evarg(database, "ENB_PHY_INPUT_SIGNAL", "CC_id"),
         filter_int(0)));
 
+#if 0
   /* input signal CC 1 */
   input_signal_plot = new_xy_plot(g, 256, 55, "input signal CC 1", 20);
   widget_add_child(g, line, input_signal_plot, -1);
@@ -188,6 +189,7 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database)
       filter_eq(
         filter_evarg(database, "ENB_PHY_INPUT_SIGNAL", "CC_id"),
         filter_int(1)));
+#endif
 
   /* UE 0 PUSCH IQ data */
   w = new_xy_plot(g, 55, 55, "PUSCH IQ [UE 0]", 50);
@@ -250,30 +252,7 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database)
         filter_evarg(database, "ENB_PHY_PUCCH_1AB_IQ", "UE_ID"),
         filter_int(0)));
 
-  /* UE x DL mcs */
-  line = new_container(g, HORIZONTAL);
-  widget_add_child(g, top_container, line, -1);
-  w = new_xy_plot(g, 128, 55, "", 20);
-  xy_plot_set_range(g, w, 0, 1024*10, -1, 29);
-  e->dl_mcs_xy_plot = w;
-  widget_add_child(g, line, w, -1);
-  l = new_ticked_ttilog(h, database, "ENB_PHY_DL_TICK", "frame", "subframe",
-      "ENB_PHY_DLSCH_UE_DCI", "mcs", 0, -1);
-  v = new_view_tti(10, g, w, new_color(g, "#0c0c72"));
-  logger_add_view(l, v);
-  e->dl_mcs_logger = l;
-
-  /* UE x UL mcs */
-  w = new_xy_plot(g, 128, 55, "", 20);
-  xy_plot_set_range(g, w, 0, 1024*10, -1, 29);
-  e->ul_mcs_xy_plot = w;
-  widget_add_child(g, line, w, -1);
-  l = new_ticked_ttilog(h, database, "ENB_PHY_DL_TICK", "frame", "subframe",
-      "ENB_PHY_ULSCH_UE_DCI", "mcs", 0, -1);
-  v = new_view_tti(10, g, w, new_color(g, "#0c0c72"));
-  logger_add_view(l, v);
-  e->ul_mcs_logger = l;
-
+#if 0
   /* UE x DL mcs */
   line = new_container(g, HORIZONTAL);
   widget_add_child(g, top_container, line, -1);
@@ -297,36 +276,102 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database)
   v = new_view_tti(10, g, w, new_color(g, "#0c0c72"));
   logger_add_view(l, v);
   e->ul_mcs_logger = l;
+#endif
 
-  /* UE x DL PHY (truly: DCI) throughput */
-  col = new_container(g, VERTICAL);
-  widget_add_child(g, line, col, -1);
-  w = new_xy_plot(g, 70, 10, "DL PHY [0]", 35);
-  w2 = new_textarea(g, 70, 11, 64);
-  xy_plot_set_range(g, w, 0, 1000, 0, 100000);
-  xy_plot_set_tick_type(g, w, XY_PLOT_SCROLL_TICK);
-  widget_add_child(g, col, w2, -1);
-  widget_add_child(g, col, w, -1);
-  container_set_child_growable(g, col, w, 1);
-  l = new_throughputlog(h, database, "ENB_PHY_DL_TICK", "frame", "subframe",
-      "ENB_PHY_DLSCH_UE_DCI", "TBS");
-  v = new_view_scrolltti(10, g, w, new_color(g, "#0c0c72"), w2);
-  logger_add_view(l, v);
+  line = new_container(g, HORIZONTAL);
+  widget_add_child(g, top_container, line, -1);
 
-  /* UE x UL PHY (truly: DCI) throughput */
-  col = new_container(g, VERTICAL);
-  widget_add_child(g, line, col, -1);
-  w = new_xy_plot(g, 70, 10, "UL PHY [0]", 35);
-  w2 = new_textarea(g, 70, 11, 64);
-  xy_plot_set_range(g, w, 0, 1000, 0, 100000);
-  xy_plot_set_tick_type(g, w, XY_PLOT_SCROLL_TICK);
-  widget_add_child(g, col, w2, -1);
-  widget_add_child(g, col, w, -1);
-  container_set_child_growable(g, col, w, 1);
-  l = new_throughputlog(h, database, "ENB_PHY_DL_TICK", "frame", "subframe",
-      "ENB_PHY_ULSCH_UE_DCI", "TBS");
-  v = new_view_scrolltti(10, g, w, new_color(g, "#0c0c72"), w2);
-  logger_add_view(l, v);
+  for (i = 0; i < 2; i++) {
+    char s[64];
+    /* UE x DL PHY (truly: DCI) throughput CC 0 */
+    col = new_container(g, VERTICAL);
+    widget_add_child(g, line, col, -1);
+    sprintf(s, "          DL [CC 0 UE %d]", i);
+    w = new_xy_plot(g, 80, 50, s, 35);
+    w2 = new_textarea(g, 70, 11, 64);
+    xy_plot_set_range(g, w, 0, 1000, 0, 100000);
+    xy_plot_set_tick_type(g, w, XY_PLOT_SCROLL_TICK);
+    widget_add_child(g, col, w2, -1);
+    widget_add_child(g, col, w, -1);
+    container_set_child_growable(g, col, w, 1);
+    l = new_throughputlog(h, database, "ENB_PHY_DL_TICK", "frame", "subframe",
+        "ENB_PHY_DLSCH_UE_DCI", "TBS");
+    v = new_view_scrolltti(10, g, w, new_color(g, "#0c0c72"), w2);
+    logger_add_view(l, v);
+    throughputlog_set_tick_filter(l,
+        filter_eq(
+          filter_evarg(database, "ENB_PHY_DL_TICK", "CC_id"),
+          filter_int(0)));
+    logger_set_filter(l,
+      filter_and(
+        filter_eq(
+          filter_evarg(database, "ENB_PHY_DLSCH_UE_DCI", "CC_id"),
+          filter_int(0)),
+        filter_eq(
+          filter_evarg(database, "ENB_PHY_DLSCH_UE_DCI", "UE_id"),
+          filter_int(i))));
+
+    /* UE x DL PHY (truly: DCI) throughput CC 1 */
+    col = new_container(g, VERTICAL);
+    widget_add_child(g, line, col, -1);
+    sprintf(s, "          DL [CC 1 UE %d]", i);
+    w = new_xy_plot(g, 80, 50, s, 35);
+    w2 = new_textarea(g, 70, 11, 64);
+    xy_plot_set_range(g, w, 0, 1000, 0, 100000);
+    xy_plot_set_tick_type(g, w, XY_PLOT_SCROLL_TICK);
+    widget_add_child(g, col, w2, -1);
+    widget_add_child(g, col, w, -1);
+    container_set_child_growable(g, col, w, 1);
+    l = new_throughputlog(h, database, "ENB_PHY_DL_TICK", "frame", "subframe",
+        "ENB_PHY_DLSCH_UE_DCI", "TBS");
+    v = new_view_scrolltti(10, g, w, new_color(g, "#0c0c72"), w2);
+    logger_add_view(l, v);
+    throughputlog_set_tick_filter(l, 
+        filter_eq(
+          filter_evarg(database, "ENB_PHY_DL_TICK", "CC_id"),
+          filter_int(1)));
+    logger_set_filter(l,
+      filter_and(
+        filter_eq(
+          filter_evarg(database, "ENB_PHY_DLSCH_UE_DCI", "CC_id"),
+          filter_int(1)),
+        filter_eq(
+          filter_evarg(database, "ENB_PHY_DLSCH_UE_DCI", "UE_id"),
+          filter_int(i))));
+
+    /* UE x UL PHY (truly: DCI) throughput CC 0 */
+    col = new_container(g, VERTICAL);
+    widget_add_child(g, line, col, -1);
+    sprintf(s, "          UL [CC 0 UE %d]", i);
+    w = new_xy_plot(g, 80, 50, s, 35);
+    w2 = new_textarea(g, 70, 11, 64);
+    xy_plot_set_range(g, w, 0, 1000, 0, 100000);
+    xy_plot_set_tick_type(g, w, XY_PLOT_SCROLL_TICK);
+    widget_add_child(g, col, w2, -1);
+    widget_add_child(g, col, w, -1);
+    container_set_child_growable(g, col, w, 1);
+    l = new_throughputlog(h, database, "ENB_PHY_DL_TICK", "frame", "subframe",
+        "ENB_PHY_ULSCH_UE_DCI", "TBS");
+    v = new_view_scrolltti(10, g, w, new_color(g, "#0c0c72"), w2);
+    logger_add_view(l, v);
+    throughputlog_set_tick_filter(l, 
+        filter_eq(
+          filter_evarg(database, "ENB_PHY_DL_TICK", "CC_id"),
+          filter_int(0)));
+    logger_set_filter(l,
+      filter_and(
+        filter_eq(
+          filter_evarg(database, "ENB_PHY_ULSCH_UE_DCI", "CC_id"),
+          filter_int(0)),
+        filter_eq(
+          filter_evarg(database, "ENB_PHY_ULSCH_UE_DCI", "UE_id"),
+          filter_int(i))));
+
+    if (i == 0) {
+      w = new_space(g, 50, 2);
+      widget_add_child(g, line, w, -1);
+    }
+  }
 
   /* downlink/uplink UE DCIs */
   widget_add_child(g, top_container,
@@ -339,7 +384,7 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database)
   for (i = 0; i < 8; i++)
     timeline_set_subline_background_color(g, timeline_plot, i,
         new_color(g, i==0 || i==4 ? "#aaf" : "#eee"));
-  timeview = new_view_time(3600, 10, g, timeline_plot);
+  timeview = new_view_time(3600, 1, g, timeline_plot);
   /* DL tick logging */
   timelog = new_timelog(h, database, "ENB_PHY_DL_TICK");
   subview = new_subview_time(timeview, 0, new_color(g, "#77c"), 600*1000);
@@ -394,7 +439,7 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database)
       timeline_set_subline_background_color(g, timeline_plot, i,
           new_color(g, i >= 9 && i <= 16 ? (i%8)&1 ? "#e6e6bb" : "#eeb" :
               i==0 || i==9+8 ? "#ddd" : (i%9)&1 ? "#e6e6e6" : "#eee"));
-    timeview = new_view_ticktime(10, g, timeline_plot);
+    timeview = new_view_ticktime(2, g, timeline_plot);
     ticktime_set_tick(timeview,
         new_ticklog(h, database, "ENB_MASTER_TICK", "frame", "subframe"));
     /* tick */
@@ -647,8 +692,8 @@ int main(int n, char **v)
     free(desc);
   }
 
-  on_off(database, "ENB_PHY_INPUT_SIGNAL", is_on, 1);
-  on_off(database, "ENB_PHY_UL_CHANNEL_ESTIMATE", is_on, 1);
+  //on_off(database, "ENB_PHY_INPUT_SIGNAL", is_on, 1);
+  //on_off(database, "ENB_PHY_UL_CHANNEL_ESTIMATE", is_on, 1);
   on_off(database, "ENB_PHY_DL_TICK", is_on, 1);
   on_off(database, "ENB_PHY_DLSCH_UE_DCI", is_on, 1);
   on_off(database, "ENB_PHY_DLSCH_UE_ACK", is_on, 1);
