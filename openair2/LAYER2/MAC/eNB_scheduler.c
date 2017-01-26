@@ -839,11 +839,12 @@ printf("RUN fapi_schedule_retransmission_ue\n");
    * TODO: do it better, only activate at subframe+8 if ACK received at subframe +4
    */
   if (d->ceBitmap[0]) {
-    if (d->ceBitmap[0] != ff_AD) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+    if (d->ceBitmap[0] != ff_AD) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); /*abort();*/ }
     LOG_I(MAC, "FAPI: f/sf %d/%d rnti %d ca_activate %2.2x\n", frame, subframe, d->rnti, d->activationDeactivationCE);
     //mac_xface->ca_activate(module_id, d->rnti, d->activationDeactivationCE);
-/* TODO: remove this hack */
-mac_xface->ca_activate(module_id, d->rnti, 2);
+    /* TODO: remove this hack */
+    if (d->ceBitmap[0] == ff_AD)
+      mac_xface->ca_activate(module_id, d->rnti, 2);
   }
 
   UE_id = find_UE_id(module_id, d->rnti);
@@ -949,11 +950,12 @@ printf("RUN fapi_schedule_ue\n");
    * TODO: do it better, only activate at subframe+8 if ACK received at subframe +4
    */
   if (d->ceBitmap[0]) {
-    if (d->ceBitmap[0] != ff_AD) { printf("%s:%d:%s: TODO (bitmap %d)\n", __FILE__, __LINE__, __FUNCTION__, d->ceBitmap[0]); abort(); }
+    if (d->ceBitmap[0] != ff_AD) { printf("%s:%d:%s: TODO (bitmap %d)\n", __FILE__, __LINE__, __FUNCTION__, d->ceBitmap[0]); /*abort();*/ }
     LOG_I(MAC, "FAPI: f/sf %d/%d rnti %d ca_activate %2.2x\n", frame, subframe, d->rnti, d->activationDeactivationCE);
     //mac_xface->ca_activate(module_id, d->rnti, d->activationDeactivationCE);
-/* TODO: remove this hack */
-mac_xface->ca_activate(module_id, d->rnti, 2);
+    /* TODO: remove this hack */
+    if (d->ceBitmap[0] == ff_AD)
+      mac_xface->ca_activate(module_id, d->rnti, 2);
   }
 
   /* TODO: deal with MCS 29-31
@@ -1339,7 +1341,7 @@ printf("FAPI to MAC downlink schedule ue %x channel %d f/sf %d/%d\n", dlind.buil
 #endif
     switch (dlind.buildDataList[i].rlcPduList[0][0].logicalChannelIdentity) {
     case 0: /* CCCH */
-      if (dlind.buildDataList[i].nr_rlcPDU_List[0] != 1) { printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+      if (dlind.buildDataList[i].nr_rlcPDU_List[0] == 1) { 
       /* TODO: get the right CC_id from servCellIndex, depending on the UE rnti/pcell/scell settings */
       CC_id = dlind.buildDataList[i].servCellIndex;
       /* look for an active RA with generate_Msg4 == 2 for this rnti */
@@ -1354,6 +1356,9 @@ printf("FAPI to MAC downlink schedule ue %x channel %d f/sf %d/%d\n", dlind.buil
         }
       }
       if (j == NB_RA_PROC_MAX) { printf("%s:%d:%s: possible?\n", __FILE__, __LINE__, __FUNCTION__); /*abort();*/ }
+      }
+      else
+	printf("%s:%d:%s: TODO\n", __FILE__, __LINE__, __FUNCTION__);
       break;
     case 1: /* DCCH   (SRB1) */
     case 2: /* DCCH+1 (SRB2) */
