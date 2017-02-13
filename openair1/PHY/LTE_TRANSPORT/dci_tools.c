@@ -882,6 +882,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
   uint8_t rah=0;
   uint8_t TPC=0;
   LTE_DL_eNB_HARQ_t *dlsch0_harq=NULL,*dlsch1_harq=NULL;
+  int pdcch_order=0;
 
   //   printf("Generate eNB DCI, format %d, rnti %x (pdu %p)\n",dci_format,rnti,dci_pdu);
 
@@ -933,6 +934,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
       dlsch0_harq->nb_rb          = RIV2nb_rb_LUT6[rballoc];//NPRB;
       RIV_max = RIV_max6;
 
+      pdcch_order=31;
 
       break;
 
@@ -970,6 +972,9 @@ int generate_eNB_dlsch_params_from_dci(int frame,
       dlsch0_harq->vrb_type       = vrb_type;
       dlsch0_harq->nb_rb          = RIV2nb_rb_LUT25[rballoc];//NPRB;
       RIV_max                     = RIV_max25;
+
+      pdcch_order=511;
+
       break;
 
     case 50:
@@ -1006,6 +1011,9 @@ int generate_eNB_dlsch_params_from_dci(int frame,
       dlsch0_harq->vrb_type        = vrb_type;
       dlsch0_harq->nb_rb                               = RIV2nb_rb_LUT50[rballoc];//NPRB;
       RIV_max = RIV_max50;
+
+      pdcch_order=2047;
+
       break;
 
     case 100:
@@ -1045,6 +1053,9 @@ int generate_eNB_dlsch_params_from_dci(int frame,
 
       dlsch0_harq->nb_rb                               = RIV2nb_rb_LUT100[rballoc];//NPRB;
       RIV_max = RIV_max100;
+
+      pdcch_order=8191;
+
       break;
 
     default:
@@ -1066,7 +1077,8 @@ int generate_eNB_dlsch_params_from_dci(int frame,
         return(-1);
       }
 
-      if (rballoc>RIV_max) {
+      if ((rballoc>RIV_max)&&
+	  (rballoc!=pdcch_order))
         LOG_E(PHY,"ERROR: Format 1A: rb_alloc (%x) > RIV_max (%x)\n",rballoc,RIV_max);
         return(-1);
       }

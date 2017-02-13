@@ -506,6 +506,7 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
     }
   }
 
+
   // Fill in the "e"-sequence from 36-212, V8.6 2009-03, p. 16-17 (for each "e") and concatenate the
   // outputs for each code segment, see Section 5.1.5 p.20
 
@@ -543,10 +544,10 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
     }
   }
 
+
   // wait for worker to finish
 
   wait_on_busy_condition(&proc->mutex_te,&proc->cond_te,&proc->instance_cnt_te,"te thread");  
-
   
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_OUT);
 

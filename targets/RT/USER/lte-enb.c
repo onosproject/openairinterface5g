@@ -1743,12 +1743,15 @@ void init_eNB_proc(int inst) {
     }
     else {
       pthread_create(&proc->pthread_single, attr_single, eNB_thread_single, &eNB->proc);
-      init_fep_thread(eNB,attr_fep);
+      /*      init_fep_thread(eNB,attr_fep);
       init_td_thread(eNB,attr_td);
-      init_te_thread(eNB,attr_te);
+      init_te_thread(eNB,attr_te);*/
     }
     pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, &eNB->proc );
-    pthread_create( &proc->pthread_synch, attr_synch, eNB_thread_synch, eNB);
+    if ((eNB->is_slave) &&
+	((eNB->node_function >= NGFI_RRU_IF5)))
+	pthread_create( &proc->pthread_synch, attr_synch, eNB_thread_synch, eNB);
+
     if ((eNB->node_timing == synch_to_other) ||
 	(eNB->node_function == NGFI_RRU_IF5) ||
 	(eNB->node_function == NGFI_RRU_IF4p5))
