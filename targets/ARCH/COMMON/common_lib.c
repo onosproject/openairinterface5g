@@ -59,6 +59,9 @@ case USRP_X300_DEV:
   case NONE_DEV:
     printf("[%s] has not loaded a HW device.\n",((device->host_type == BBU_HOST) ? "BBU": "RRH"));
     break;    
+  case UED_DEV:
+    printf("[%s] has loaded UED device.\n",((device->host_type == BBU_HOST) ? "BBU": "RRH"));
+    break;
   default:
     printf("[%s] invalid HW device.\n",((device->host_type == BBU_HOST) ? "BBU": "RRH")); 
     return -1;
@@ -140,7 +143,7 @@ int openair0_device_load(openair0_device *device, openair0_config_t *openair0_cf
   
   int rc=0;
   //ToDo: EXMIMO harmonization is not complete. That is the reason for this ifdef
-  #ifdef EXMIMO
+#ifdef EXMIMO
   int device_init(openair0_device *device, openair0_config_t *openair0_cfg);
   rc = device_init(device, openair0_cfg);
   #else
@@ -151,7 +154,19 @@ int openair0_device_load(openair0_device *device, openair0_config_t *openair0_cf
       return -1;		   
     }   
   }
-  #endif
+#endif
+#ifdef UED
+  int openair0_dev_init_exmimo(openair0_device *device, openair0_config_t *openair0_cfg);
+  rc = openair0_dev_init_exmimo(device, openair0_cfg);
+  #else
+  rc=load_lib(device, openair0_cfg, NULL,BBU_LOCAL_RADIO_HEAD );
+  if ( rc >= 0) {       
+    if ( set_device(device) < 0) {
+      fprintf(stderr, "%s %d:Unsupported radio head\n",__FILE__, __LINE__);
+      return -1;		   
+    }   
+  }
+#endif
   return rc;
 }
 

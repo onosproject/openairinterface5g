@@ -5,6 +5,7 @@
 This directory contains different targets for OpenAirInterface.org implementations
 
 ARCH/EXMIMO - Kernel driver for EXMIMO1+2 
+ARCH/UED    - Kernel driver for UED
 RTAI/USER   - Target to run .11p (uses openairITS) or LTE modem (uses openair1 and openair2) for x86 in RTAI user-space
 SIMU    - Simulator/Emulator target for x86
 DOCS    - Doxygen documentation generation for openair1/openair2

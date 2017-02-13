@@ -524,7 +524,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 	  phich_string[ue->frame_parms.phich_config_common.phich_resource],
 	  ue->frame_parms.nb_antenna_ports_eNB);
 
-#if defined(OAI_USRP) || defined(EXMIMO) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(OAI_USRP) || defined(EXMIMO) || defined(UED) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
     LOG_I(PHY,"[UE %d] Frame %d Measured Carrier Frequency %.0f Hz (offset %d Hz)\n",
 	  ue->Mod_id,
 	  ue->proc.proc_rxtx[0].frame_rx,

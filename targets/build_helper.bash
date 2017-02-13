@@ -763,6 +763,12 @@ compile_exmimo2_driver() {
     # TO DO CHECKS...
 }
 
+compile_ued_driver() {
+    cd $OPENAIR_TARGETS/ARCH/UED/DRIVER/eurecom && make clean && make   || exit 1
+    cd $OPENAIR_TARGETS/ARCH/UED/USERSPACE/OAI_FW_INIT && make clean && make   || exit 1
+    # TO DO CHECKS...
+}
+
 
 compile_ltesoftmodem() {
     cd $OPENAIR_TARGETS/RT/USER
@@ -998,10 +1004,26 @@ install_ltesoftmodem() {
 	cd $OPENAIR_TARGETS/RT/USER
 	. ./init_exmimo2.sh
     else 
-	if [ $2 = "USRP" ]; then
-	    echo_info "  8.2 [USRP] "
-	fi
-
+	    if [ $2 = "UED" ]; then 
+		echo_info "  8.2 [UED] creating RTAI fifos"
+		for i in `seq 0 64`; do 
+		    have_rtfX=`ls /dev/ |grep -c rtf$i`;
+		    if [ "$have_rtfX" -eq 0 ] ; then 
+			$SUDO mknod -m 666 /dev/rtf$i c 150 $i; 
+		    fi;
+		done
+		echo_info "  8.3 [EXMIMO] Build lte-softmodemdrivers"
+		cd $OPENAIR_TARGETS/ARCH/UED/DRIVER/eurecom && make clean && make  # || exit 1
+		cd $OPENAIR_TARGETS/ARCH/UED/USERSPACE/OAI_FW_INIT && make clean && make  # || exit 1
+		
+		echo_info "  8.4 [UED] Setup RF card"
+		cd $OPENAIR_TARGETS/ARCH/UED
+		. ./inituedtools.sh
+	    else 
+		if [ $2 = "USRP" ]; then
+		    echo_info "  8.2 [USRP] "
+		fi
+	    fi
     fi
     
     # ENB_S1
@@ -1156,7 +1178,7 @@ print_help(){
     echo_success "-s | --check                            : Enable OAI testing and sanity check (default disabled)"
     echo_success "-t | --enb-build-target                 : Set the eNB build target: ALL, SOFTMODEM,OAISIM,UNISIM (default ALL)"
     echo_success "-V | --vcd                              : Log vcd events"
-    echo_success "-w | --hardware                         : Set the hardware platform: EXMIMO, USRP (also installs UHD driver), ETHERNET, NONE, (default EXMIMO)"
+    echo_success "-w | --hardware                         : Set the hardware platform: EXMIMO, USRP (also installs UHD driver), ETHERNET, NONE, UED (default EXMIMO)"
     echo_success "-x | --xforms                           : Enable xforms (default disabled)"
     echo_success "-z | --defaults                         : Set the default build options"
 }

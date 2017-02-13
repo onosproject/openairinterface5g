@@ -42,7 +42,7 @@
 #endif
 
 extern int mac_get_rrc_status(uint8_t Mod_id,uint8_t eNB_flag,uint8_t index);
-#if defined(OAI_USRP) || defined(EXMIMO) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(OAI_USRP) || defined(EXMIMO) || defined(UED) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
 #include "common_lib.h"
 extern openair0_config_t openair0_cfg[];
 #endif
@@ -90,10 +90,13 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
 #ifdef EXMIMO
     len += sprintf(&buffer[len], "[UE PROC] RX Gain %d dB (LNA %d, vga %d dB)\n",ue->rx_total_gain_dB, openair0_cfg[0].rxg_mode[0],(int)openair0_cfg[0].rx_gain[0]);
 #endif
+#ifdef UED
+    len += sprintf(&buffer[len], "[UE PROC] RX Gain %d dB (LNA %d, vga %d dB)\n",ue->rx_total_gain_dB, openair0_cfg[0].rxg_mode[0],(int)openair0_cfg[0].rx_gain[0]);
+#endif
 #if defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
     len += sprintf(&buffer[len], "[UE PROC] RX Gain %d dB\n",ue->rx_total_gain_dB);
 #endif
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(UED) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
     len += sprintf(&buffer[len], "[UE_PROC] Frequency offset %d Hz, estimated carrier frequency %f Hz\n",ue->common_vars.freq_offset,openair0_cfg[0].rx_freq[0]-ue->common_vars.freq_offset);
 #endif
     len += sprintf(&buffer[len], "[UE PROC] UE mode = %s (%d)\n",mode_string[ue->UE_mode[0]],ue->UE_mode[0]);
@@ -535,6 +538,15 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
                    ue->measurements.n0_power_dB[0],
                    ue->measurements.n0_power_dB[1]);
 #ifdef EXMIMO
+    ue->rx_total_gain_dB = ((int)(10*log10(ue->measurements.rssi)))-input_level_dBm;
+    len += sprintf(&buffer[len], "[UE PROC] rxg_mode %d, input level (set by user) %d dBm, VGA gain %d dB ==> total gain %3.2f dB, noise figure %3.2f dB\n",
+                   openair0_cfg[0].rxg_mode[0],
+                   input_level_dBm,
+                   (int)openair0_cfg[0].rx_gain[0],
+                   10*log10(ue->measurements.rssi)-input_level_dBm,
+                   10*log10(ue->measurements.n0_power_tot)-ue->rx_total_gain_dB+105);
+#endif
+#ifdef UED
     ue->rx_total_gain_dB = ((int)(10*log10(ue->measurements.rssi)))-input_level_dBm;
     len += sprintf(&buffer[len], "[UE PROC] rxg_mode %d, input level (set by user) %d dBm, VGA gain %d dB ==> total gain %3.2f dB, noise figure %3.2f dB\n",
                    openair0_cfg[0].rxg_mode[0],

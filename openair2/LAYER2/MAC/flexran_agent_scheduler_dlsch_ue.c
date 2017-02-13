@@ -1169,6 +1169,12 @@ flexran_schedule_ue_spec_common(mid_t   mod_id,
        }
 
 #endif
+#ifdef UED
+       if (mac_xface->get_transmission_mode(mod_id, CC_id, rnti) == 5) {
+	  mcs = cqi_to_mcs[flexran_get_ue_wcqi(mod_id, UE_id)];
+	  mcs =  cmin(mcs,16);
+       }
+#endif
 
       // initializing the rb allocation indicator for each UE
        for(j = 0; j < flexran_get_N_RBG(mod_id, CC_id); j++) {

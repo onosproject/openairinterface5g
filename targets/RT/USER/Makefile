@@ -20,6 +20,14 @@ endif
 #endif 
 endif
 
+#ifdef UED
+#ifdef DEADLINE_SCHEDULER # this ifdef is to be removed after the debugging
+#ifeq ($(DEADLINE_SCHEDULER_KERNEL),1)
+#CFLAGS+=-DDEADLINE_SCHEDULER
+#endif 
+#endif 
+#endif
+
 ifndef USRP
 USRP=0
 endif
@@ -41,6 +49,10 @@ endif
 
 ifeq ($(EXMIMO),1)
   CFLAGS += -I$(OPENAIR_TARGETS)/ARCH/EXMIMO/USERSPACE/LIB/ -I$(OPENAIR_TARGETS)/ARCH/EXMIMO/DEFS -DENABLE_VCD_FIFO
+endif
+
+ifeq ($(UED),1)
+  CFLAGS += -I$(OPENAIR_TARGETS)/ARCH/UED/USERSPACE/LIB/ -I$(OPENAIR_TARGETS)/ARCH/UED/DEFS -DENABLE_VCD_FIFO
 endif
 
 ifeq ($(ETHERNET),1)
@@ -88,6 +100,11 @@ OBJ += $(OPENAIR1_DIR)/SIMULATION/TOOLS/taus.o $(OPENAIR_TARGETS)/SIMU/USER/init
 ifeq ($(EXMIMO),1)
 OBJ += $(OPENAIR_TARGETS)/ARCH/EXMIMO/USERSPACE/LIB/openair0_lib.o $(OPENAIR_TARGETS)/ARCH/EXMIMO/USERSPACE/LIB/gain_control.o
 CFLAGS += -DDRIVER2013 -I$(OPENAIR_TARGETS)/ARCH/EXMIMO/USERSPACE/LIB/ -I$(OPENAIR_TARGETS)/ARCH/EXMIMO/DEFS 
+endif
+
+ifeq ($(UED),1)
+OBJ += $(OPENAIR_TARGETS)/ARCH/UED/USERSPACE/LIB/openair0_lib.o $(OPENAIR_TARGETS)/ARCH/UED/USERSPACE/LIB/gain_control.o
+CFLAGS += -DDRIVER2013 -I$(OPENAIR_TARGETS)/ARCH/UED/USERSPACE/LIB/ -I$(OPENAIR_TARGETS)/ARCH/UED/DEFS 
 endif
 
 CFLAGS += -DENABLE_VCD_FIFO
@@ -172,7 +189,11 @@ OBJ += $(OPENAIR1_DIR)/PHY/TOOLS/lte_phy_scope.o
 OBJ += stats.o
 endif
 
+ifeq ($(UED),1)
+OBJ_SYNC = $(OPENAIR_TARGETS)/ARCH/UED/USERSPACE/LIB/openair0_lib.o rt_wrapper.o $(OPENAIR2_DIR)/UTIL/LOG/log.o $(OPENAIR2_DIR)/UTIL/LOG/vcd_signal_dumper.o 
+else()
 OBJ_SYNC = $(OPENAIR_TARGETS)/ARCH/EXMIMO/USERSPACE/LIB/openair0_lib.o rt_wrapper.o $(OPENAIR2_DIR)/UTIL/LOG/log.o $(OPENAIR2_DIR)/UTIL/LOG/vcd_signal_dumper.o 
+endif()
 
 ifdef SMBV
 CFLAGS += -DSMBV
@@ -186,6 +207,10 @@ ifeq ($(EXMIMO),1)
 CFLAGS += -DEXMIMO
 #CFLAGS += -DEXMIMO -DTIMING_ADVANCE_HW=138 #this is for ExpressMIMO 1
 #CFLAGS += -DEXMIMO -DTIMING_ADVANCE_HW=45 #this is for ExpressMIMO 2
+endif
+
+ifeq ($(UED),1)
+CFLAGS += -DUED
 endif
 
 ifeq ($(HARD_RT),1)
@@ -284,7 +309,12 @@ rrh.o: %.o : %.c
 	sed -e 's/^ *//' -e 's/$$/:/' >> $*.d
 	@rm -f $*.d.tmp
 
-OBJ_EMOS = $(OPENAIR_TARGETS)/ARCH/EXMIMO/USERSPACE/LIB/openair0_lib.o $(OPENAIR_TARGETS)/ARCH/EXMIMO/USERSPACE/LIB/gain_control.o rt_wrapper.o $(OPENAIR2_DIR)/UTIL/LOG/log.o $(OPENAIR2_DIR)/UTIL/LOG/vcd_signal_dumper.o $(OPENAIR1_DIR)/PHY/TOOLS/signal_energy.o $(OPENAIR1_DIR)/PHY/TOOLS/dB_routines.o
+ifeq ($(UED),1)
+OBJ_EMOS = $(OPENAIR_TARGETS)/ARCH/UED/USERSPACE/LIB/openair0_lib.o $(OPENAIR_TARGETS)/ARCH/UED/USERSPACE/LIB/gain_control.o rt_wrapper.o $(OPENAIR2_DIR)/
+else()
+OBJ_EMOS = $(OPENAIR_TARGETS)/ARCH/EXMIMO/USERSPACE/LIB/openair0_lib.o $(OPENAIR_TARGETS)/ARCH/EXMIMO/USERSPACE/LIB/gain_control.o rt_wrapper.o $(OPENAIR2_DIR)/
+endif()
+UTIL/LOG/log.o $(OPENAIR2_DIR)/UTIL/LOG/vcd_signal_dumper.o $(OPENAIR1_DIR)/PHY/TOOLS/signal_energy.o $(OPENAIR1_DIR)/PHY/TOOLS/dB_routines.o
 ifeq ($(XFORMS),1)
 OBJ_EMOS+=lte_scope.o
 endif
@@ -318,9 +348,15 @@ synctest_UE: synctest
 drivers:
 #	cd $(OPENAIR2_DIR) && make clean && make nasmesh_netlink.ko
 #	cd $(OPENAIR2_DIR)/NAS/DRIVER/MESH/RB_TOOL && make clean && make
+ifeq ($(UED),1)
+	cd $(OPENAIR_TARGETS)/ARCH/UED/DRIVER/eurecom && make clean && make 
+	cd $(OPENAIR_TARGETS)/ARCH/UED/USERSPACE/OAI_FW_INIT && make clean && make 
+	cp $(OPENAIR_TARGETS)/ARCH/UED/USERSPACE/OAI_FW_INIT/updatefw $(OPENAIR_TARGETS)/bin/.
+else()
 	cd $(OPENAIR_TARGETS)/ARCH/EXMIMO/DRIVER/eurecom && make clean && make 
 	cd $(OPENAIR_TARGETS)/ARCH/EXMIMO/USERSPACE/OAI_FW_INIT && make clean && make 
 	cp $(OPENAIR_TARGETS)/ARCH/EXMIMO/USERSPACE/OAI_FW_INIT/updatefw $(OPENAIR_TARGETS)/bin/.
+endif()
 
 run: condtest
 	rtai-load condtest --verbose

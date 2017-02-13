@@ -97,6 +97,8 @@ typedef enum {
   LMSSDR_DEV,
   /*!\brief device is NONE*/
   NONE_DEV,
+  /*!\brief device is UED */
+  UED_DEV,
   MAX_RF_DEV_TYPE
 
 } dev_type_t;
@@ -242,7 +244,7 @@ typedef struct {
   uint8_t iq_txshift;
   //! transport type preference  (RAW/UDP)
   uint8_t transp_preference;
-  //! radio front end preference (EXMIMO,USRP, BALDERF,LMSSDR)
+  //! radio front end preference (EXMIMO,USRP, BALDERF,LMSSDR,UED)
   uint8_t rf_preference;
 } eth_params_t;
 
@@ -350,7 +352,7 @@ struct openair0_device_t {
   /*! \brief Set RX feaquencies 
    * \param device the hardware to use
    * \param openair0_cfg RF frontend parameters set by application
-   * \param exmimo_dump_config  dump EXMIMO configuration 
+   * \param exmimo_dump_config  dump EXMIMO or UED configuration 
    * \returns 0 in success 
    */
   int (*trx_set_freq_func)(openair0_device* device, openair0_config_t *openair0_cfg,int exmimo_dump_config);

@@ -627,7 +627,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
   int i, prach_len;
   uint16_t first_nonzero_root_idx=0;
 
-#if defined(EXMIMO) || defined(OAI_USRP)
+#if defined(EXMIMO) || defined(UED) || defined(OAI_USRP)
   prach_start =  (ue->rx_offset+subframe*ue->frame_parms.samples_per_tti-ue->hw_timing_advance-ue->N_TA_offset);
 #ifdef PRACH_DEBUG
     LOG_I(PHY,"[UE %d] prach_start %d, rx_offset %d, hw_timing_advance %d, N_TA_offset %d\n", ue->Mod_id,
@@ -1035,7 +1035,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
     mac_xface->macphy_exit("prach_fmt4 not fully implemented");
     return 0; // not reached
   } else {
-#if defined(EXMIMO) || defined(OAI_USRP)
+#if defined(EXMIMO) || defined(UED) || defined(OAI_USRP)
     int j;
     int overflow = prach_start + prach_len - LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*ue->frame_parms.samples_per_tti;
     LOG_D( PHY, "prach_start=%d, overflow=%d\n", prach_start, overflow );
@@ -1049,7 +1049,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
       ((int16_t*)ue->common_vars.txdata[0])[2*i] = prach[2*j]<<4;
       ((int16_t*)ue->common_vars.txdata[0])[2*i+1] = prach[2*j+1]<<4;
     }
-#if defined(EXMIMO)
+#if defined(EXMIMO) || defined(UED)
     // handle switch before 1st TX subframe, guarantee that the slot prior to transmission is switch on
     for (k=prach_start - (ue->frame_parms.samples_per_tti>>1) ; k<prach_start ; k++) {
       if (k<0)

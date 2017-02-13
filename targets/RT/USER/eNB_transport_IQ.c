@@ -151,7 +151,7 @@ void config_BBU_mod( rrh_module_t *mod_enb, uint8_t RT_flag, uint8_t NRT_flag) {
   } else {   
     if (mod_enb->devs->type != NONE_DEV) {
       /* start RF device */
-      if (mod_enb->devs->type == EXMIMO_DEV) {
+      if ((mod_enb->devs->type == EXMIMO_DEV)||(mod_enb->devs->type == UED_DEV)) {
 	//call start function for exmino
       } else {
 

@@ -348,6 +348,10 @@ build_enb(){
         SOFTMODEM_DIRECTIVES="$SOFTMODEM_DIRECTIVES EXMIMO=1 "
     fi
     
+    if [ $HW = "UED" ]; then 
+        SOFTMODEM_DIRECTIVES="$SOFTMODEM_DIRECTIVES UED=1 "
+    fi
+    
     if [ $HW = "ETHERNET" ]; then 
         SOFTMODEM_DIRECTIVES="$SOFTMODEM_DIRECTIVES ETHERNET=1 "
     fi 
@@ -463,6 +467,9 @@ build_enb(){
             
             if [ $HW == "EXMIMO" ]; then 
                 output=$(compile_exmimo2_driver   >> bin/install_log.txt  2>&1)
+            fi
+            if [ $HW == "UED" ]; then 
+                output=$(compile_ued_driver   >> bin/install_log.txt  2>&1)
             fi
         fi
         if [ $TARGET = "OAISIM" ]; then 
@@ -734,6 +741,10 @@ if [ $RUN -ne 0 ]; then
                 if [ $HW == "EXMIMO" ]; then 
                     $SUDO chmod 777 $OPENAIR_TARGETS/RT/USER/init_exmimo2.sh
                     $SUDO $OPENAIR_TARGETS/RT/USER/init_exmimo2.sh
+                fi
+                if [ $HW == "UED" ]; then 
+                    $SUDO chmod 777 $OPENAIR_TARGETS/ARCH/UED/inituedtools.sh
+                    $SUDO $OPENAIR_TARGETS/ARCH/UED/inituedtools.sh
                 fi
 		if [ $WIRESHARK -eq 1 ]; then 
 		    EXE_ARGUMENTS="$EXE_ARGUMENTS -W"

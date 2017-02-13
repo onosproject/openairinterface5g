@@ -368,7 +368,9 @@ rlc_um_segment_10 (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t *rlc_pP
               pdu_remaining_size - sdu_mngt_p->sdu_remaining_size);
 #endif
 #if USER_MODE
-#if !EXMIMO
+#if EXMIMO
+#elif UED
+#else
         assert(1!=1);
 #endif
 #endif

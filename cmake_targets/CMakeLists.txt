@@ -475,14 +475,23 @@ add_list1_option(NB_ANTENNAS_RX "2" "Number of antennas in reception" "1" "2" "4
 add_list1_option(NB_ANTENNAS_TX "4" "Number of antennas in transmission" "1" "2" "4")
 add_list1_option(NB_ANTENNAS_TXRX "2" "Number of antennas in ????" "1" "2" "4")
 
-add_list2_option(RF_BOARD "EXMIMO" "RF head type" "None" "EXMIMO" "OAI_USRP" "OAI_BLADERF" "CPRIGW" "OAI_LMSSDR")
+add_list2_option(RF_BOARD "EXMIMO" "RF head type" "None" "EXMIMO" "OAI_USRP" "OAI_BLADERF" "CPRIGW" "OAI_LMSSDR" "UED")
 
 add_list2_option(TRANSP_PRO "None" "Transport protocol type" "None" "ETHERNET")
 
 
 # include RF devices / transport protocols library modules
 ######################################################################
-
+if (${RF_BOARD} STREQUAL "UED")
+include_directories("${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/LIB/")
+include_directories ("${OPENAIR_TARGETS}/ARCH/UED/DEFS/")
+#set (option_HWUEDLIB_lib "-l ")
+set(HWLIB_UED_SOURCE 
+  ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/LIB/openair0_lib.c
+#  ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/LIB/gain_control.c
+  )
+add_library(oai_ueddevif MODULE ${HWLIB_UED_SOURCE} )
+else()
 include_directories("${OPENAIR_TARGETS}/ARCH/EXMIMO/USERSPACE/LIB/")
 include_directories ("${OPENAIR_TARGETS}/ARCH/EXMIMO/DEFS/")
 #set (option_HWEXMIMOLIB_lib "-l ")
@@ -491,6 +500,7 @@ set(HWLIB_EXMIMO_SOURCE
 #  ${OPENAIR_TARGETS}/ARCH/EXMIMO/USERSPACE/LIB/gain_control.c
   )
 add_library(oai_exmimodevif MODULE ${HWLIB_EXMIMO_SOURCE} )
+endif()
 
 include_directories("${OPENAIR_TARGETS}/ARCH/USRP/USERSPACE/LIB/")
 set (option_HWUSRPLIB_lib "-l uhd")
@@ -531,6 +541,15 @@ if (${RF_BOARD} STREQUAL "EXMIMO")
   set(HW_SOURCE ${HW_SOURCE}
     ${OPENAIR_TARGETS}/ARCH/EXMIMO/USERSPACE/LIB/openair0_lib.c)
 #    ${OPENAIR_TARGETS}/ARCH/EXMIMO/USERSPACE/LIB/gain_control.c)
+  set(option_HW_lib "-rdynamic -ldl")
+
+elseif (${RF_BOARD} STREQUAL "UED")
+  set(DRIVER2013)
+  include_directories ("${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/LIB/")
+  include_directories ("${OPENAIR_TARGETS}/ARCH/UED/DEFS/")
+  set(HW_SOURCE ${HW_SOURCE}
+    ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/LIB/openair0_lib.c)
+#    ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/LIB/gain_control.c)
   set(option_HW_lib "-rdynamic -ldl")
 
 elseif (${RF_BOARD} STREQUAL "OAI_USRP")
@@ -809,8 +828,13 @@ include_directories("${OPENAIR3_DIR}/UDP")
 include_directories("${OPENAIR3_DIR}/GTPV1-U")
 include_directories("${OPENAIR_DIR}/targets/COMMON")
 include_directories("${OPENAIR_DIR}/targets/ARCH/COMMON")
+if (${RF_BOARD} STREQUAL "UED")
+include_directories("${OPENAIR_DIR}/targets/ARCH/UED/USERSPACE/LIB/")
+include_directories("${OPENAIR_DIR}/targets/ARCH/UED/DEFS")
+else()
 include_directories("${OPENAIR_DIR}/targets/ARCH/EXMIMO/USERSPACE/LIB/")
 include_directories("${OPENAIR_DIR}/targets/ARCH/EXMIMO/DEFS")
+endif()
 include_directories("${OPENAIR2_DIR}/ENB_APP")
 include_directories("${OPENAIR2_DIR}/ENB_APP/CONTROL_MODULES/MAC")
 include_directories("${OPENAIR2_DIR}/UTIL/OSA")
@@ -1615,9 +1639,15 @@ ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/emu_transport.c
 ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/pgm_link.c
 )
 
+if (${RF_BOARD} STREQUAL "UED")
+add_library(OPENAIR0_LIB
+  ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/LIB/openair0_lib.c
+)
+else()
 add_library(OPENAIR0_LIB
   ${OPENAIR_TARGETS}/ARCH/EXMIMO/USERSPACE/LIB/openair0_lib.c
 )
+endif()
 
 # System packages that are required
 # We use either the cmake buildin, in ubuntu are in: /usr/share/cmake*/Modules/
@@ -2164,6 +2194,25 @@ if(OAI_NW_DRIVER_USE_NETLINK)
 endif()
 make_driver(oai_nw_drv ${OPENAIR2_DIR}/NETWORK_DRIVER/LITE ${oai_nw_drv_src})
 
+if (${RF_BOARD} STREQUAL "UED")
+# UED drivers
+#########################
+list(APPEND openair_rf_src module_main.c irq.c fileops.c exmimo_fw.c)
+make_driver(openair_rf ${OPENAIR_TARGETS}/ARCH/UED/DRIVER/eurecom ${openair_rf_src})
+
+add_executable(updatefw
+  ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/OAI_FW_INIT/updatefw.c
+)
+add_executable(lime_calib
+  ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/CALIB/lime_calib.c
+  ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/CALIB/openair0_lib.c
+  ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/CALIB/lime_spi_cmd.c
+  ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/CALIB/lime_reg_cmd.c
+  ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/CALIB/lime_cfg_cmd.c
+  ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/CALIB/lime_cal_cmd.c
+)
+
+else()
 # Exmimo board drivers
 #########################
 list(APPEND openair_rf_src module_main.c irq.c fileops.c exmimo_fw.c)
@@ -2172,6 +2221,7 @@ make_driver(openair_rf ${OPENAIR_TARGETS}/ARCH/EXMIMO/DRIVER/eurecom ${openair_r
 add_executable(updatefw
   ${OPENAIR_TARGETS}/ARCH/EXMIMO/USERSPACE/OAI_FW_INIT/updatefw.c
 )
+endif()
 
 # ue_ip: purpose ???
 ###############
@@ -2184,6 +2234,21 @@ make_driver(ue_ip ${OPENAIR2_DIR}/NETWORK_DRIVER/UE_IP ${ue_ip_src})
 
 # OCTAVE tools
 ###############
+if (${RF_BOARD} STREQUAL "UED")
+set(OCT_INCL -I${OPENAIR_TARGETS}/ARCH/UED/DEFS -I${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/LIB -I${OPENAIR_TARGETS}/ARCH/COMMON)
+set(OCT_LIBS -L${CMAKE_CURRENT_BINARY_DIR} -lm -lOPENAIR0_LIB) 
+set(OCT_FLAGS -DUED)
+set(OCT_DIR ${OPENAIR_TARGETS}/ARCH/UED/USERSPACE/OCTAVE)
+set(OCT_FILES
+  oarf_config_exmimo.oct
+  oarf_config_exmimo.oct 
+  oarf_get_frame.oct 
+  oarf_stop.oct 
+  oarf_send_frame.oct 
+  oarf_get_num_detected_cards.oct 
+  oarf_stop_without_reset.oct
+)
+else()
 set(OCT_INCL -I${OPENAIR_TARGETS}/ARCH/EXMIMO/DEFS -I${OPENAIR_TARGETS}/ARCH/EXMIMO/USERSPACE/LIB -I${OPENAIR_TARGETS}/ARCH/COMMON)
 set(OCT_LIBS -L${CMAKE_CURRENT_BINARY_DIR} -lm -lOPENAIR0_LIB) 
 set(OCT_FLAGS -DEXMIMO)
@@ -2197,6 +2262,7 @@ set(OCT_FILES
   oarf_get_num_detected_cards.oct 
   oarf_stop_without_reset.oct
 )
+endif()
 
 foreach(file IN ITEMS ${OCT_FILES})
   string(REGEX REPLACE "oct *$" "cc" src ${file})

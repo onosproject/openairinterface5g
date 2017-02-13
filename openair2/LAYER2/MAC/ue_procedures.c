@@ -32,6 +32,9 @@
 #ifdef EXMIMO
 #include <pthread.h>
 #endif
+#ifdef UED
+#include <pthread.h>
+#endif
 
 #include "extern.h"
 #include "defs.h"

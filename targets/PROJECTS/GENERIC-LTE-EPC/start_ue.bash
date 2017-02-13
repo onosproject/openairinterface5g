@@ -148,6 +148,8 @@ else
     # 2 lines below replace the line above
     cd $OPENAIR_TARGETS/ARCH/EXMIMO/DRIVER/eurecom && make clean && make   || exit 1
     cd $OPENAIR_TARGETS/ARCH/EXMIMO/USERSPACE/OAI_FW_INIT && make clean && make   || exit 1
+    cd $OPENAIR_TARGETS/ARCH/UED/DRIVER/eurecom && make clean && make   || exit 1
+    cd $OPENAIR_TARGETS/ARCH/UED/USERSPACE/OAI_FW_INIT && make clean && make   || exit 1
     cd $THIS_SCRIPT_PATH
 
     make --directory=$OPENAIR_TARGETS/RT/USER $MAKE_LTE_ACCESS_STRATUM_TARGET_RT -j`grep -c ^processor /proc/cpuinfo ` || exit 1
@@ -177,6 +179,8 @@ else
     
     cd $OPENAIR_TARGETS/RT/USER
     bash ./init_exmimo2.sh
+    cd $OPENAIR_TARGETS/ARCH/UED
+    bash ./inituedtools.sh
     echo_warning "STARTING SOFTMODEM..."
     ./lte-softmodem -K $ITTI_LOG_FILE -O $CONFIG_FILE_ENB 2>&1
     #cat /dev/rtf62 > $STDOUT_LOG_FILE

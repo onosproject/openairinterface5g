@@ -101,6 +101,8 @@ int dump_eNB_l2_stats(char *buffer, int length)
 
 #ifdef EXMIMO
   number_of_cards=1;
+#elif UED
+  number_of_cards=1;
 #else
   number_of_cards=NB_eNB_INST;
 #endif

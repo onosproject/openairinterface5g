@@ -183,6 +183,10 @@
 #define TARGET_RX_POWER 55    // Target digital power for the AGC
 #define TARGET_RX_POWER_MAX 55    // Maximum digital power, such that signal does not saturate (value found by simulation)
 #define TARGET_RX_POWER_MIN 50    // Minimum digital power, anything below will be discarded (value found by simulation)
+#elif UED
+#define TARGET_RX_POWER 55    // Target digital power for the AGC
+#define TARGET_RX_POWER_MAX 55    // Maximum digital power, such that signal does not saturate (value found by simulation)
+#define TARGET_RX_POWER_MIN 50    // Minimum digital power, anything below will be discarded (value found by simulation)
 #else
 #define TARGET_RX_POWER 50    // Target digital power for the AGC
 #define TARGET_RX_POWER_MAX 65    // Maximum digital power, such that signal does not saturate (value found by simulation)
@@ -284,7 +288,7 @@ typedef enum {
 #define NUMBER_OF_HARQ_PID_MAX 8
 
 #define MAX_FRAME_NUMBER 0x400
-#if defined(CBMIMO1) || defined(EXMIMO) || defined(OAI_USRP)
+#if defined(CBMIMO1) || defined(EXMIMO) || defined(UED) || defined(OAI_USRP)
 #define NUMBER_OF_eNB_MAX 1
 #define NUMBER_OF_UE_MAX 16
 #define NUMBER_OF_CONNECTED_eNB_MAX 3

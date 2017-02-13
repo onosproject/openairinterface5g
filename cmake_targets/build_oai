@@ -91,7 +91,7 @@ Options
    default is Rel10,
    Rel8 limits the implementation to 3GPP Release 8 version
 -w | --hardware
-   EXMIMO, USRP, BLADERF, ETHERNET, LMSSDR, None (Default)
+   EXMIMO, USRP, BLADERF, ETHERNET, LMSSDR, UED, None (Default)
    Adds this RF board support (in external packages installation and in compilation)
 -t | --transport protocol
    ETHERNET , None
@@ -194,7 +194,7 @@ function main() {
        -w | --hardware)
             HW="$2" #"${i#*=}"
             # Use OAI_USRP  as the key word USRP is used inside UHD driver           
-	    if [ "$HW" != "BLADERF" -a  "$HW" != "USRP" -a "$HW" != "LMSSDR" -a  "$HW" != "None" -a  "$HW" != "EXMIMO"  ] ; then 
+	    if [ "$HW" != "BLADERF" -a  "$HW" != "USRP" -a "$HW" != "LMSSDR" -a  "$HW" != "None" -a  "$HW" != "EXMIMO" -a  "$HW" != "UED"  ] ; then 
 		echo_fatal "Unknown HW type $HW will exit..."		
 	    else
 		if [ "$HW" == "USRP" ] ; then 
@@ -346,6 +346,8 @@ function main() {
         DEADLINE_SCHEDULER_FLAG_USER="False"
      elif [ "$HW" = "None" ] ; then 
         DEADLINE_SCHEDULER_FLAG_USER="False"
+     elif [ "$HW" = "UED" ] ; then 
+        DEADLINE_SCHEDULER_FLAG_USER="False"
      else 
         echo_error "Unknown HW type $HW. Exiting now..."
         exit 
@@ -440,7 +442,7 @@ function main() {
   fi
 
   # first generate the CMakefile in the right directory
-  if [ "$eNB" = "1" -o "$UE" = "1" -o "$HW" = "EXMIMO" ] ; then
+  if [ "$eNB" = "1" -o "$UE" = "1" -o "$HW" = "EXMIMO" -o "$HW" = "UED" ] ; then
 
     # LTE softmodem compilation
     [ "$CLEAN" = "1" ] && rm -rf $DIR/$lte_build_dir/build
@@ -584,6 +586,39 @@ function main() {
 	echo_error "oarf tools compilation failed"
     fi
     cp $OPENAIR_DIR/cmake_targets/tools/init_exmimo2 $dbin
+  fi
+
+  # UED drivers & firmware loader
+  ###############
+  if [ "$HW" = "UED" ] ; then
+    
+    echo_info "Compiling UED drivers"
+    compilations \
+        $lte_build_dir openair_rf \
+        CMakeFiles/openair_rf/openair_rf.ko $dbin/openair_rf.ko
+    compilations \
+	  $lte_build_dir updatefw \
+	  updatefw $dbin/updatefw
+#    compilations \
+#	  $lte_build_dir lime_calib \
+#	  lime_calib $dbin/lime_calib
+    echo_info "Compiling LIME Calib. The logfile for compilation is here: $dlog/lime_calib.txt"
+    make -C $OPENAIR_DIR/targets/ARCH/UED/USERSPACE/CALIB all > $dlog/lime_calib.txt 2>&1
+    cp $OPENAIR_DIR/targets/ARCH/UED/USERSPACE/CALIB/lime_calib $dbin
+    if [ -s $dbin/lime_calib ] ; then
+	echo_success "lime_calib tool compiled"
+    else
+	echo_error "lime_calib tool compilation failed"
+    fi
+    echo_info "Compiling OARF tools. The logfile for compilation is here: $dlog/oarf.txt"
+    make -C $OPENAIR_DIR/cmake_targets/$lte_build_dir/build oarf > $dlog/oarf.txt 2>&1
+    cp $OPENAIR_DIR/cmake_targets/$lte_build_dir/build/*.oct $dbin
+    if [ -s $dbin/oarf_config_exmimo.oct ] ; then
+	echo_success "oarf tools compiled"
+    else
+	echo_error "oarf tools compilation failed"
+    fi
+    cp $OPENAIR_DIR/targets/ARCH/UED/inituedtools.sh $dbin
   fi
 
   # oaisim compilation
@@ -777,6 +812,13 @@ function main() {
 	      ln -s liboai_lmssdrdevif.so liboai_device.so
 	      ln -s $dbin/liboai_lmssdrdevif.so.$REL $dbin/liboai_device.so
 	      echo_info "liboai_device.so is linked to LMSSDR device library"	 
+	  elif [ "$HW" == "UED" ] ; then
+	      #add ued compilation
+	      #TODO UED library support
+	      compilations \
+		  $build_dir oai_ueddevif \
+		  liboai_ueddevif.so $dbin/liboai_ueddevif.so.$REL
+	      echo_info "liboai_device.so is linked to UED device library"       
 	  else 
 	      echo_info "liboai_device.so is not linked to any device library"	    
 	  fi
