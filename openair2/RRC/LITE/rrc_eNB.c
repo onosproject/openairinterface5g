@@ -1781,35 +1781,35 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
   MeasId0->reportConfigId = 1;
   ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId0);
 
-  MeasId1 = CALLOC(1, sizeof(*MeasId1));
-  MeasId1->measId = 2;
-  MeasId1->measObjectId = 1;
-  MeasId1->reportConfigId = 2;
-  ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId1);
+  // MeasId1 = CALLOC(1, sizeof(*MeasId1));
+  // MeasId1->measId = 2;
+  // MeasId1->measObjectId = 1;
+  // MeasId1->reportConfigId = 2;
+  // ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId1);
 
-  MeasId2 = CALLOC(1, sizeof(*MeasId2));
-  MeasId2->measId = 3;
-  MeasId2->measObjectId = 1;
-  MeasId2->reportConfigId = 3;
-  ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId2);
+  // MeasId2 = CALLOC(1, sizeof(*MeasId2));
+  // MeasId2->measId = 3;
+  // MeasId2->measObjectId = 1;
+  // MeasId2->reportConfigId = 3;
+  // ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId2);
 
-  MeasId3 = CALLOC(1, sizeof(*MeasId3));
-  MeasId3->measId = 4;
-  MeasId3->measObjectId = 1;
-  MeasId3->reportConfigId = 4;
-  ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId3);
+  // MeasId3 = CALLOC(1, sizeof(*MeasId3));
+  // MeasId3->measId = 4;
+  // MeasId3->measObjectId = 1;
+  // MeasId3->reportConfigId = 4;
+  // ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId3);
 
-  MeasId4 = CALLOC(1, sizeof(*MeasId4));
-  MeasId4->measId = 5;
-  MeasId4->measObjectId = 1;
-  MeasId4->reportConfigId = 5;
-  ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId4);
+  // MeasId4 = CALLOC(1, sizeof(*MeasId4));
+  // MeasId4->measId = 5;
+  // MeasId4->measObjectId = 1;
+  // MeasId4->reportConfigId = 5;
+  // ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId4);
 
-  MeasId5 = CALLOC(1, sizeof(*MeasId5));
-  MeasId5->measId = 6;
-  MeasId5->measObjectId = 1;
-  MeasId5->reportConfigId = 6;
-  ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId5);
+  // MeasId5 = CALLOC(1, sizeof(*MeasId5));
+  // MeasId5->measId = 6;
+  // MeasId5->measObjectId = 1;
+  // MeasId5->reportConfigId = 6;
+  // ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId5);
 
   //  rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->measIdToAddModList = MeasId_list;
 
@@ -1857,15 +1857,15 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 
   ReportConfig_per = CALLOC(1, sizeof(*ReportConfig_per));
 
-  ReportConfig_A1 = CALLOC(1, sizeof(*ReportConfig_A1));
+  // ReportConfig_A1 = CALLOC(1, sizeof(*ReportConfig_A1));
 
-  ReportConfig_A2 = CALLOC(1, sizeof(*ReportConfig_A2));
+  // ReportConfig_A2 = CALLOC(1, sizeof(*ReportConfig_A2));
 
-  ReportConfig_A3 = CALLOC(1, sizeof(*ReportConfig_A3));
+  // ReportConfig_A3 = CALLOC(1, sizeof(*ReportConfig_A3));
 
-  ReportConfig_A4 = CALLOC(1, sizeof(*ReportConfig_A4));
+  // ReportConfig_A4 = CALLOC(1, sizeof(*ReportConfig_A4));
 
-  ReportConfig_A5 = CALLOC(1, sizeof(*ReportConfig_A5));
+  // ReportConfig_A5 = CALLOC(1, sizeof(*ReportConfig_A5));
 
   ReportConfig_per->reportConfigId = 1;
   ReportConfig_per->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
@@ -1877,131 +1877,131 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
-  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_r1;
 
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_per);
 
-  ReportConfig_A1->reportConfigId = 2;
-  ReportConfig_A1->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.present =
-    ReportConfigEUTRA__triggerType_PR_event;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
-    ReportConfigEUTRA__triggerType__event__eventId_PR_eventA1;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
-  a1_Threshold.present = ThresholdEUTRA_PR_threshold_RSRP;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
-  a1_Threshold.choice.threshold_RSRP = 10;
+  // ReportConfig_A1->reportConfigId = 2;
+  // ReportConfig_A1->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
+  // ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.present =
+  //   ReportConfigEUTRA__triggerType_PR_event;
+  // ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
+  //   ReportConfigEUTRA__triggerType__event__eventId_PR_eventA1;
+  // ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
+  // a1_Threshold.present = ThresholdEUTRA_PR_threshold_RSRP;
+  // ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
+  // a1_Threshold.choice.threshold_RSRP = 10;
 
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerQuantity = ReportConfigEUTRA__triggerQuantity_rsrp;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+  // ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerQuantity = ReportConfigEUTRA__triggerQuantity_rsrp;
+  // ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
+  // ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
+  // ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
+  // ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
 
-  ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A1);
+  // ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A1);
 
-  if (ho_state == 1 /*HO_MEASURMENT */ ) {
-    LOG_I(RRC, "[eNB %d] frame %d: requesting A2, A3, A4, A5, and A6 event reporting\n",
-          ctxt_pP->module_id, ctxt_pP->frame);
-    ReportConfig_A2->reportConfigId = 3;
-    ReportConfig_A2->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
-    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.present =
-      ReportConfigEUTRA__triggerType_PR_event;
-    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
-      ReportConfigEUTRA__triggerType__event__eventId_PR_eventA2;
-    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA2.a2_Threshold.present = ThresholdEUTRA_PR_threshold_RSRP;
-    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA2.a2_Threshold.choice.threshold_RSRP = 10;
+  // if (ho_state == 1 /*HO_MEASURMENT */ ) {
+  //   LOG_I(RRC, "[eNB %d] frame %d: requesting A2, A3, A4, A5, and A6 event reporting\n",
+  //         ctxt_pP->module_id, ctxt_pP->frame);
+  //   ReportConfig_A2->reportConfigId = 3;
+  //   ReportConfig_A2->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
+  //   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.present =
+  //     ReportConfigEUTRA__triggerType_PR_event;
+  //   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
+  //     ReportConfigEUTRA__triggerType__event__eventId_PR_eventA2;
+  //   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  //   eventA2.a2_Threshold.present = ThresholdEUTRA_PR_threshold_RSRP;
+  //   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  //   eventA2.a2_Threshold.choice.threshold_RSRP = 10;
 
-    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
-      ReportConfigEUTRA__triggerQuantity_rsrp;
-    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
-    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
-    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+  //   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
+  //     ReportConfigEUTRA__triggerQuantity_rsrp;
+  //   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
+  //   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
+  //   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
+  //   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
 
-    ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A2);
+  //   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A2);
 
-    ReportConfig_A3->reportConfigId = 4;
-    ReportConfig_A3->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.present =
-      ReportConfigEUTRA__triggerType_PR_event;
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
-      ReportConfigEUTRA__triggerType__event__eventId_PR_eventA3;
+  //   ReportConfig_A3->reportConfigId = 4;
+  //   ReportConfig_A3->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
+  //   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.present =
+  //     ReportConfigEUTRA__triggerType_PR_event;
+  //   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
+  //     ReportConfigEUTRA__triggerType__event__eventId_PR_eventA3;
 
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset = 1;   //10;
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA3.reportOnLeave = 1;
+  //   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset = 1;   //10;
+  //   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  //   eventA3.reportOnLeave = 1;
 
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
-      ReportConfigEUTRA__triggerQuantity_rsrp;
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+  //   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
+  //     ReportConfigEUTRA__triggerQuantity_rsrp;
+  //   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
+  //   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
+  //   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
+  //   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
 
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = 0.5; // FIXME ...hysteresis is of type long!
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger =
-      TimeToTrigger_ms40;
-    ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A3);
+  //   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = 0.5; // FIXME ...hysteresis is of type long!
+  //   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger =
+  //     TimeToTrigger_ms40;
+  //   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A3);
 
-    ReportConfig_A4->reportConfigId = 5;
-    ReportConfig_A4->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
-    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.present =
-      ReportConfigEUTRA__triggerType_PR_event;
-    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
-      ReportConfigEUTRA__triggerType__event__eventId_PR_eventA4;
-    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA4.a4_Threshold.present = ThresholdEUTRA_PR_threshold_RSRP;
-    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA4.a4_Threshold.choice.threshold_RSRP = 10;
+  //   ReportConfig_A4->reportConfigId = 5;
+  //   ReportConfig_A4->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
+  //   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.present =
+  //     ReportConfigEUTRA__triggerType_PR_event;
+  //   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
+  //     ReportConfigEUTRA__triggerType__event__eventId_PR_eventA4;
+  //   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  //   eventA4.a4_Threshold.present = ThresholdEUTRA_PR_threshold_RSRP;
+  //   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  //   eventA4.a4_Threshold.choice.threshold_RSRP = 10;
 
-    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
-      ReportConfigEUTRA__triggerQuantity_rsrp;
-    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
-    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
-    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+  //   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
+  //     ReportConfigEUTRA__triggerQuantity_rsrp;
+  //   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
+  //   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
+  //   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
+  //   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
 
-    ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A4);
+  //   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A4);
 
-    ReportConfig_A5->reportConfigId = 6;
-    ReportConfig_A5->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.present =
-      ReportConfigEUTRA__triggerType_PR_event;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
-      ReportConfigEUTRA__triggerType__event__eventId_PR_eventA5;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA5.a5_Threshold1.present = ThresholdEUTRA_PR_threshold_RSRP;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA5.a5_Threshold2.present = ThresholdEUTRA_PR_threshold_RSRP;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA5.a5_Threshold1.choice.threshold_RSRP = 10;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA5.a5_Threshold2.choice.threshold_RSRP = 10;
+  //   ReportConfig_A5->reportConfigId = 6;
+  //   ReportConfig_A5->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
+  //   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.present =
+  //     ReportConfigEUTRA__triggerType_PR_event;
+  //   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
+  //     ReportConfigEUTRA__triggerType__event__eventId_PR_eventA5;
+  //   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  //   eventA5.a5_Threshold1.present = ThresholdEUTRA_PR_threshold_RSRP;
+  //   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  //   eventA5.a5_Threshold2.present = ThresholdEUTRA_PR_threshold_RSRP;
+  //   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  //   eventA5.a5_Threshold1.choice.threshold_RSRP = 10;
+  //   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  //   eventA5.a5_Threshold2.choice.threshold_RSRP = 10;
 
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
-      ReportConfigEUTRA__triggerQuantity_rsrp;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+  //   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
+  //     ReportConfigEUTRA__triggerQuantity_rsrp;
+  //   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
+  //   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
+  //   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
+  //   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
 
-    ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A5);
-    //  rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->reportConfigToAddModList = ReportConfig_list;
+  //   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A5);
+  //   //  rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->reportConfigToAddModList = ReportConfig_list;
 
-    rsrp = CALLOC(1, sizeof(RSRP_Range_t));
-    *rsrp = 20;
+  //   rsrp = CALLOC(1, sizeof(RSRP_Range_t));
+  //   *rsrp = 20;
 
-    Sparams = CALLOC(1, sizeof(*Sparams));
-    Sparams->present = MeasConfig__speedStatePars_PR_setup;
-    Sparams->choice.setup.timeToTrigger_SF.sf_High = SpeedStateScaleFactors__sf_Medium_oDot75;
-    Sparams->choice.setup.timeToTrigger_SF.sf_Medium = SpeedStateScaleFactors__sf_High_oDot5;
-    Sparams->choice.setup.mobilityStateParameters.n_CellChangeHigh = 10;
-    Sparams->choice.setup.mobilityStateParameters.n_CellChangeMedium = 5;
-    Sparams->choice.setup.mobilityStateParameters.t_Evaluation = MobilityStateParameters__t_Evaluation_s60;
-    Sparams->choice.setup.mobilityStateParameters.t_HystNormal = MobilityStateParameters__t_HystNormal_s120;
+  //   Sparams = CALLOC(1, sizeof(*Sparams));
+  //   Sparams->present = MeasConfig__speedStatePars_PR_setup;
+  //   Sparams->choice.setup.timeToTrigger_SF.sf_High = SpeedStateScaleFactors__sf_Medium_oDot75;
+  //   Sparams->choice.setup.timeToTrigger_SF.sf_Medium = SpeedStateScaleFactors__sf_High_oDot5;
+  //   Sparams->choice.setup.mobilityStateParameters.n_CellChangeHigh = 10;
+  //   Sparams->choice.setup.mobilityStateParameters.n_CellChangeMedium = 5;
+  //   Sparams->choice.setup.mobilityStateParameters.t_Evaluation = MobilityStateParameters__t_Evaluation_s60;
+  //   Sparams->choice.setup.mobilityStateParameters.t_HystNormal = MobilityStateParameters__t_HystNormal_s120;
 
     quantityConfig = CALLOC(1, sizeof(*quantityConfig));
     memset((void *)quantityConfig, 0, sizeof(*quantityConfig));
@@ -2017,29 +2017,29 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
     *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP = FilterCoefficient_fc4;
     *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ = FilterCoefficient_fc4;
 
-    LOG_I(RRC,
-          "[eNB %d] Frame %d: potential handover preparation: store the information in an intermediate structure in case of failure\n",
-          ctxt_pP->module_id, ctxt_pP->frame);
-    // store the information in an intermediate structure for Hanodver management
-    //rrc_inst->handover_info.as_config.sourceRadioResourceConfig.srb_ToAddModList = CALLOC(1,sizeof());
-    ue_context_pP->ue_context.handover_info = CALLOC(1, sizeof(*(ue_context_pP->ue_context.handover_info)));
-    //memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.srb_ToAddModList,(void *)SRB_list,sizeof(SRB_ToAddModList_t));
-    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.srb_ToAddModList = *SRB_configList2;
-    //memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.drb_ToAddModList,(void *)DRB_list,sizeof(DRB_ToAddModList_t));
-    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.drb_ToAddModList = *DRB_configList;
-    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.drb_ToReleaseList = NULL;
-    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.mac_MainConfig =
-      CALLOC(1, sizeof(*ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.mac_MainConfig));
-    memcpy((void*)ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.mac_MainConfig,
-           (void *)mac_MainConfig, sizeof(MAC_MainConfig_t));
-    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.physicalConfigDedicated =
-      CALLOC(1, sizeof(PhysicalConfigDedicated_t));
-    memcpy((void*)ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.physicalConfigDedicated,
-           (void*)ue_context_pP->ue_context.physicalConfigDedicated, sizeof(PhysicalConfigDedicated_t));
-    ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.sps_Config = NULL;
-    //memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.sps_Config,(void *)rrc_inst->sps_Config[ue_mod_idP],sizeof(SPS_Config_t));
+  //   LOG_I(RRC,
+  //         "[eNB %d] Frame %d: potential handover preparation: store the information in an intermediate structure in case of failure\n",
+  //         ctxt_pP->module_id, ctxt_pP->frame);
+  //   // store the information in an intermediate structure for Hanodver management
+  //   //rrc_inst->handover_info.as_config.sourceRadioResourceConfig.srb_ToAddModList = CALLOC(1,sizeof());
+  //   ue_context_pP->ue_context.handover_info = CALLOC(1, sizeof(*(ue_context_pP->ue_context.handover_info)));
+  //   //memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.srb_ToAddModList,(void *)SRB_list,sizeof(SRB_ToAddModList_t));
+  //   ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.srb_ToAddModList = *SRB_configList2;
+  //   //memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.drb_ToAddModList,(void *)DRB_list,sizeof(DRB_ToAddModList_t));
+  //   ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.drb_ToAddModList = *DRB_configList;
+  //   ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.drb_ToReleaseList = NULL;
+  //   ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.mac_MainConfig =
+  //     CALLOC(1, sizeof(*ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.mac_MainConfig));
+  //   memcpy((void*)ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.mac_MainConfig,
+  //          (void *)mac_MainConfig, sizeof(MAC_MainConfig_t));
+  //   ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.physicalConfigDedicated =
+  //     CALLOC(1, sizeof(PhysicalConfigDedicated_t));
+  //   memcpy((void*)ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.physicalConfigDedicated,
+  //          (void*)ue_context_pP->ue_context.physicalConfigDedicated, sizeof(PhysicalConfigDedicated_t));
+  //   ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.sps_Config = NULL;
+  //   //memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.sps_Config,(void *)rrc_inst->sps_Config[ue_mod_idP],sizeof(SPS_Config_t));
 
-  }
+  // }
 
 #if defined(ENABLE_ITTI)
   /* Initialize NAS list */
@@ -2087,14 +2087,14 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
                                          (DRB_ToReleaseList_t*)NULL,  // DRB2_list,
                                          (struct SPS_Config*)NULL,    // *sps_Config,
                                          (struct PhysicalConfigDedicated*)*physicalConfigDedicated,
-#ifdef EXMIMO_IOT
-                                         NULL, NULL, NULL,NULL,
-#else
+// #ifdef EXMIMO_IOT
+//                                          NULL, NULL, NULL,NULL,
+// #else
                                          (MeasObjectToAddModList_t*)MeasObj_list,
                                          (ReportConfigToAddModList_t*)ReportConfig_list,
                                          (QuantityConfig_t*)quantityConfig,
                                          (MeasIdToAddModList_t*)MeasId_list,
-#endif
+// #endif
                                          (MAC_MainConfig_t*)mac_MainConfig,
                                          (MeasGapConfig_t*)NULL,
                                          (MobilityControlInfo_t*)NULL,
@@ -2253,34 +2253,34 @@ rrc_eNB_process_MeasurementReport(
   LOG_I(RRC, "[eNB %d] Frame %d: Process Measurement Report From UE %x (Measurement Id %d)\n",
         ctxt_pP->module_id, ctxt_pP->frame, ctxt_pP->rnti, (int)measResults2->measId);
 
-  if (measResults2->measResultNeighCells->choice.measResultListEUTRA.list.count > 0) {
-    LOG_I(RRC, "Physical Cell Id %d\n",
-          (int)measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->physCellId);
-    LOG_I(RRC, "RSRP of Target %d\n",
-          (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
-                 measResult.rsrpResult));
-    LOG_I(RRC, "RSRQ of Target %d\n",
-          (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
-                 measResult.rsrqResult));
-  }
+  // if (measResults2->measResultNeighCells->choice.measResultListEUTRA.list.count > 0) {
+  //   LOG_I(RRC, "Physical Cell Id %d\n",
+  //         (int)measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->physCellId);
+  //   LOG_I(RRC, "RSRP of Target %d\n",
+  //         (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
+  //                measResult.rsrpResult));
+  //   LOG_I(RRC, "RSRQ of Target %d\n",
+  //         (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
+  //                measResult.rsrqResult));
+  // }
 
 #ifdef Rel10
-  LOG_I(RRC, "RSRP of Source %ld\n", measResults2->measResultPCell.rsrpResult);
-  LOG_I(RRC, "RSRQ of Source %ld\n", measResults2->measResultPCell.rsrqResult);
+  LOG_I(RRC, "RSRP of Source %d dbm\n", measResults2->measResultPCell.rsrpResult -140);
+  LOG_I(RRC, "RSRQ of Source %d dbm\n", (measResults2->measResultPCell.rsrqResult)/2 -20);
 #else
   LOG_I(RRC, "RSRP of Source %d\n", measResults2->measResultServCell.rsrpResult);
   LOG_I(RRC, "RSRQ of Source %d\n", measResults2->measResultServCell.rsrqResult);
 #endif
 
-  if (ue_context_pP->ue_context.handover_info->ho_prepare != 0xF0) {
-    rrc_eNB_generate_HandoverPreparationInformation(ctxt_pP,
-        ue_context_pP,
-        measResults2->measResultNeighCells->choice.
-        measResultListEUTRA.list.array[0]->physCellId);
-  } else {
-    LOG_D(RRC, "[eNB %d] Frame %d: Ignoring MeasReport from UE %x as Handover is in progress... \n", ctxt_pP->module_id, ctxt_pP->frame,
-          ctxt_pP->rnti);
-  }
+  // if (ue_context_pP->ue_context.handover_info->ho_prepare != 0xF0) {
+  //   rrc_eNB_generate_HandoverPreparationInformation(ctxt_pP,
+  //       ue_context_pP,
+  //       measResults2->measResultNeighCells->choice.
+  //       measResultListEUTRA.list.array[0]->physCellId);
+  // } else {
+  //   LOG_D(RRC, "[eNB %d] Frame %d: Ignoring MeasReport from UE %x as Handover is in progress... \n", ctxt_pP->module_id, ctxt_pP->frame,
+  //         ctxt_pP->rnti);
+  // }
 
   //Look for IP address of the target eNB
   //Send Handover Request -> target eNB
