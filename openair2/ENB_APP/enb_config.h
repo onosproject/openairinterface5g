@@ -207,6 +207,10 @@ typedef struct Enb_properties_s {
    RrcConfigurationReq    RrcReq;
 #endif
   long                    ue_TransmissionMode[1+MAX_NUM_CCs];
+
+  long                    rrc_report_amount;
+  long                    rrc_report_interval;
+
   long                    srb1_timer_poll_retransmit;
   long                    srb1_timer_reordering;
   long                    srb1_timer_status_prohibit;

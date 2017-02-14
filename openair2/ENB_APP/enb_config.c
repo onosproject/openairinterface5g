@@ -166,6 +166,10 @@
 #define ENB_CONFIG_STRING_UETIMERS_N311                                 "ue_TimersAndConstants_n311"
 #define ENB_CONFIG_STRING_UE_TRANSMISSION_MODE                          "ue_TransmissionMode"
 
+#define ENB_CONFIG_STRING_RRC_CONFIG                                   "rrc_config"
+#define ENB_CONFIG_STRING_RRC_REPORT_CONFIG_AMOUNT                     "report_amount"
+#define ENB_CONFIG_STRING_RRC_REPORT_CONFIG_INTERVAL                   "report_interval"
+
 #define ENB_CONFIG_STRING_SRB1                                          "srb1_parameters"
 #define ENB_CONFIG_STRING_SRB1_TIMER_POLL_RETRANSMIT                    "timer_poll_retransmit"
 #define ENB_CONFIG_STRING_SRB1_TIMER_REORDERING                         "timer_reordering"
@@ -173,6 +177,8 @@
 #define ENB_CONFIG_STRING_SRB1_POLL_PDU                                 "poll_pdu"
 #define ENB_CONFIG_STRING_SRB1_POLL_BYTE                                "poll_byte"
 #define ENB_CONFIG_STRING_SRB1_MAX_RETX_THRESHOLD                       "max_retx_threshold"
+
+
 #define ENB_CONFIG_STRING_MME_IP_ADDRESS                "mme_ip_address"
 #define ENB_CONFIG_STRING_MME_IPV4_ADDRESS              "ipv4"
 #define ENB_CONFIG_STRING_MME_IPV6_ADDRESS              "ipv6"
@@ -456,6 +462,11 @@ void enb_config_display(void)
 
     }
 
+    printf( "\n\tRRC Report Config:  \n");
+    printf( "\n\t Report interval \t%ld: ", enb_properties.properties[i]->rrc_report_interval);
+    printf( "\n\t Report amount  \t%ld: \n", enb_properties.properties[i]->rrc_report_amount);
+    
+ 
     for (j=0; j < enb_properties.properties[i]->num_otg_elements; j++) {
       printf( "\n\tOTG Destination UE ID:  \t%"PRIu16, enb_properties.properties[i]->otg_ue_id[j]);
       printf( "\n\tOTG App Type:  \t%"PRIu8, enb_properties.properties[i]->otg_app_type[j]);
@@ -535,6 +546,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   config_setting_t *subsetting                    = NULL;
   config_setting_t *setting_component_carriers    = NULL;
   config_setting_t *component_carrier             = NULL;
+  config_setting_t *setting_rrc                   = NULL;
   config_setting_t *setting_srb1                  = NULL;
   config_setting_t *setting_mme_addresses         = NULL;
   config_setting_t *setting_mme_address           = NULL;
@@ -640,7 +652,9 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   libconfig_int     ue_TimersAndConstants_n311    = 0;
   libconfig_int     ue_TransmissionMode           = 0;
 
-
+  const char*       rrc_report_amount             = NULL;
+  const char*       rrc_report_interval           = NULL;
+  
   libconfig_int     srb1_timer_poll_retransmit    = 0;
   libconfig_int     srb1_timer_reordering         = 0;
   libconfig_int     srb1_timer_status_prohibit    = 0;
@@ -1965,6 +1979,74 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
             }
           }
 
+	  setting_rrc = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_RRC_CONFIG);
+	  if (setting_rrc != NULL) {
+
+	    if (!(config_setting_lookup_string(setting_rrc, ENB_CONFIG_STRING_RRC_REPORT_CONFIG_AMOUNT, &rrc_report_amount)
+                  && config_setting_lookup_string(setting_rrc, ENB_CONFIG_STRING_RRC_REPORT_CONFIG_INTERVAL,      &rrc_report_interval)))
+              AssertFatal (0,
+                           "Failed to parse eNB configuration file %s, enb %d, rrc_report_amount and rrc_reporyt_interval !\n",
+                           lib_config_file_name_pP, i);
+	    
+	    if (strcmp(rrc_report_amount, "r1") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_amount = ReportConfigEUTRA__reportAmount_r1;
+	    } else if (strcmp(rrc_report_amount, "r2") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_amount = ReportConfigEUTRA__reportAmount_r2;
+	    }else if (strcmp(rrc_report_amount, "r4") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_amount = ReportConfigEUTRA__reportAmount_r4;
+	    }else if (strcmp(rrc_report_amount, "r8") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_amount = ReportConfigEUTRA__reportAmount_r8;
+	    }else if (strcmp(rrc_report_amount, "r16") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_amount = ReportConfigEUTRA__reportAmount_r16;
+	    }else if (strcmp(rrc_report_amount, "r32") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_amount = ReportConfigEUTRA__reportAmount_r32;
+	    }else if (strcmp(rrc_report_amount, "r64") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_amount = ReportConfigEUTRA__reportAmount_r64;
+	    }else if (strcmp(rrc_report_amount, "infinity") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_amount = ReportConfigEUTRA__reportAmount_infinity;
+	    }else{
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for report_amount choice: r1, r2, r4, r8, r16, r32, r64, infinity !\n",
+                             lib_config_file_name_pP, i,rrc_report_amount);
+	    }
+	    
+	    if (strcmp(rrc_report_interval, "120ms") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_ms120;
+	    } else if (strcmp(rrc_report_interval, "240ms") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_ms240;
+	    }else if (strcmp(rrc_report_interval, "480ms") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_ms480;
+	    }else if (strcmp(rrc_report_interval, "640ms") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_ms640;
+	    }else if (strcmp(rrc_report_interval, "1024ms") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_ms1024;
+	    }else if (strcmp(rrc_report_interval, "2048ms") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_ms2048;
+	    }else if (strcmp(rrc_report_interval, "5120ms") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_ms5120;
+	    }else if (strcmp(rrc_report_interval, "10240ms") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_ms10240;
+	    }else if (strcmp(rrc_report_interval, "1min") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_min1;
+	    }else if (strcmp(rrc_report_interval, "6min") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_min6;
+	    }else if (strcmp(rrc_report_interval, "12min") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_min12;
+	    }else if (strcmp(rrc_report_interval, "30min") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_min30;
+	    } else if (strcmp(rrc_report_interval, "60min") == 0) {
+	      enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_min60;
+	    } else {
+	      AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for report_interval choice: 120ms, 240ms, 480ms, 640ms, 1024ms, 2048ms, 5120ms, 10240ms, 1min, 6min, 12min, 30min, 60min !\n",
+                             lib_config_file_name_pP, i,rrc_report_interval);
+	    }
+	    	    
+	  } else {
+	    enb_properties.properties[enb_properties_index]->rrc_report_interval = ReportInterval_ms120;
+	    enb_properties.properties[enb_properties_index]->rrc_report_amount =  ReportConfigEUTRA__reportAmount_r1;
+	  }
+	  
           setting_srb1 = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_SRB1);
 
           if (setting_srb1 != NULL) {
