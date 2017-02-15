@@ -2161,6 +2161,8 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
       		       P1_SHIFT,
       		       P2_SHIFT);
 
+          // Problem observed in subframe 0 in rodez and schwaz FSQ TM7 software, since for PBCH, the UE spec pilot index
+          // should increase as well; To check again
           if ((mimo_mode == TM7) && (lprime>=0))
             mprime += 3 + frame_parms->Ncp;
 

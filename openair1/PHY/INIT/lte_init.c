@@ -400,7 +400,7 @@ void phy_config_dedicated_eNB_step2(PHY_VARS_eNB *eNB)
     physicalConfigDedicated = eNB->physicalConfigDedicated[UE_id];
 
     if (physicalConfigDedicated != NULL) {
-      LOG_I(PHY,"[eNB %d] Frame %d: Sent physicalConfigDedicated=%p for UE %d\n",eNB->Mod_id,physicalConfigDedicated,UE_id);
+      LOG_I(PHY,"[eNB %d] Frame %d: Sent physicalConfigDedicated=%p for UE %d\n",eNB->Mod_id,eNB->proc.proc_rxtx[0].frame_tx,physicalConfigDedicated,UE_id);
       LOG_D(PHY,"------------------------------------------------------------------------\n");
 
       if (physicalConfigDedicated->pdsch_ConfigDedicated) {
@@ -1362,7 +1362,6 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
       if (eNB->node_function != NGFI_RCC_IF4p5) {
 	common_vars->rxdata[eNB_id]        = (int32_t**)malloc16(fp->nb_antennas_rx*sizeof(int32_t*) );
 	common_vars->rxdata_7_5kHz[eNB_id] = (int32_t**)malloc16(fp->nb_antennas_rx*sizeof(int32_t*) );
-	common_vars->rxdata_1_4fs[eNB_id] = (int32_t**)malloc16(fp->nb_antennas_rx*sizeof(int32_t*) ); //TDD workaround for EXMIMO2 card
       }
       common_vars->rxdataF[eNB_id]       = (int32_t**)malloc16(fp->nb_antennas_rx*sizeof(int32_t*) );
 
@@ -1370,11 +1369,9 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
 	if (eNB->node_function != NGFI_RCC_IF4p5) {
 	  common_vars->rxdata[eNB_id][i] = (int32_t*)malloc16_clear( fp->samples_per_tti*10*sizeof(int32_t) );
 	  common_vars->rxdata_7_5kHz[eNB_id][i] = (int32_t*)malloc16_clear( fp->samples_per_tti*sizeof(int32_t) );
-	  common_vars->rxdata_1_4fs[eNB_id][i] = (int32_t*)malloc16_clear( fp->samples_per_tti*sizeof(int32_t) );
 #ifdef DEBUG_PHY
 	  printf("[openair][LTE_PHY][INIT] common_vars->rxdata[%d][%d] = %p\n",eNB_id,i,common_vars->rxdata[eNB_id][i]);
 	  printf("[openair][LTE_PHY][INIT] common_vars->rxdata_7_5kHz[%d][%d] = %p\n",eNB_id,i,common_vars->rxdata_7_5kHz[eNB_id][i]);
-	  printf("[openair][LTE_PHY][INIT] common_vars->rxdata_1_4fs[%d][%d] = %p\n",eNB_id,i,common_vars->rxdata_1_4fs[eNB_id][i]);
 #endif
 	}
         common_vars->rxdataF[eNB_id][i] = (int32_t*)malloc16_clear(sizeof(int32_t)*(fp->ofdm_symbol_size*fp->symbols_per_tti) );

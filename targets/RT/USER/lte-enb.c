@@ -326,7 +326,7 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
     }*/
 
 
-    /*for (aa=0; aa<phy_vars_eNB->frame_parms.nb_antennas_tx; aa++) {
+    for (aa=0; aa<phy_vars_eNB->frame_parms.nb_antennas_tx; aa++) {
       do_OFDM_mod_symbol(&phy_vars_eNB->common_vars,
                          0,
                          subframe<<1,
@@ -341,23 +341,24 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
                            &phy_vars_eNB->frame_parms,
                            aa);
       }
-    }*/
+    }
 
+/*
     phy_vars_eNB->pool->next_slot = subframe<<1;
-    /* start all threads */
+    // start all threads
     thread_pool_start(phy_vars_eNB->pool);
-    /* wait all threads finishes */
+    // wait all threads finishes
     thread_pool_join(phy_vars_eNB->pool);
 
     if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_DL) {
-      /* set next_slot */
+      // set next_slot
       phy_vars_eNB->pool->next_slot++;
-      /* start all threads */
+      // start all threads
       thread_pool_start(phy_vars_eNB->pool);
-      /* wait all threads finishes */
+      // wait all threads finishes
       thread_pool_join(phy_vars_eNB->pool);
     }
-
+*/
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_OFDM_MODULATION,0);
     
 
@@ -398,7 +399,7 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 	 phy_vars_eNB->common_vars.txdata[0][aa][tx_offset++] = 0x00010001;
        }
      }
-
+    
      if ((((phy_vars_eNB->frame_parms.tdd_config==0) ||
 	  (phy_vars_eNB->frame_parms.tdd_config==1) ||
 	  (phy_vars_eNB->frame_parms.tdd_config==2) ||
@@ -571,7 +572,13 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
   start_meas(&softmodem_stats_rxtx_sf);
 
-// ****************************************
+  // ****************************************
+  // TDD workaround
+  //if ((eNB->rfdevice.type == EXMIMO_DEV) && (eNB->frame_parms.frame_type == TDD)) {
+  //  remove_1_4_fs(eNB,proc->subframe_rx<<1); // TDD workaround for EXMIMO2 card
+  //  remove_1_4_fs(eNB,1+(proc->subframe_rx<<1));
+  //}
+
   // Common RX procedures subframe n
   phy_procedures_eNB_common_RX(eNB);
   

@@ -825,20 +825,32 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
 
     if (openair0_cfg[card].sample_rate==30.72e6) {
       resampling_factor = 0;
+      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD) {
+        printf("Warning: TDD workaround may not work for bw 20");
+      }
       rx_filter = RXLPF10;
       tx_filter = TXLPF10;
     } else if (openair0_cfg[card].sample_rate==15.36e6) {
       resampling_factor = 1;
-      rx_filter = RXLPF5;
+      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD)
+        rx_filter = RXLPF10;
+      else
+        rx_filter = RXLPF5;
       tx_filter = TXLPF5;
     } else if (openair0_cfg[card].sample_rate==7.68e6) {
       resampling_factor = 2;
-      rx_filter = RXLPF25;
+      //if (openair0_cfg[card].duplex_mode==duplex_mode_TDD) // TDD workaround for EXMIMO
+      //  rx_filter = RXLPF5;
+      //else 
+        rx_filter = RXLPF25;
       tx_filter = TXLPF25;
     } else {
       printf("Sampling rate not supported, using default 7.68MHz");
       resampling_factor = 2;
-      rx_filter = RXLPF25;
+      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD)
+        rx_filter = RXLPF5;
+      else
+        rx_filter = RXLPF25;
       tx_filter = TXLPF25;
 
     }
@@ -885,6 +897,10 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
       if (openair0_cfg[card].rx_freq[ant]>0) {
         p_exmimo_config->rf.rf_mode[ant] += (RXEN + DMAMODE_RX + RXLPFNORM + RXLPFEN + rx_filter);
         p_exmimo_config->rf.rf_freq_rx[ant] = (unsigned int)openair0_cfg[card].rx_freq[ant];
+       
+        // TDD workaround
+        //if (openair0_cfg[card].duplex_mode==duplex_mode_TDD)
+        //  p_exmimo_config->rf.rf_freq_rx[ant] += openair0_cfg[card].sample_rate/4; 
 
         switch (openair0_cfg[card].rxg_mode[ant]) {
         default:
@@ -948,7 +964,9 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
       printf("!!!!!setting FDD (tdd_config=%d)\n",p_exmimo_config->framing.tdd_config);
     } 
     else {
-      p_exmimo_config->framing.tdd_config = DUPLEXMODE_TDD + TXRXSWITCH_LSB + ACTIVE_RF;
+      // TDD workaround
+      //p_exmimo_config->framing.tdd_config = DUPLEXMODE_TDD + TXRXSWITCH_LSB + ACTIVE_RF;
+      p_exmimo_config->framing.tdd_config = DUPLEXMODE_FDD + TXRXSWITCH_LSB;
       printf("!!!!!setting TDD (tdd_config=%d)\n",p_exmimo_config->framing.tdd_config);
     }
 

@@ -38,7 +38,7 @@ short conjugate14_2[8]__attribute__((aligned(16))) = {1,-1,1,-1,1,-1,1,-1} ;
 void remove_1_4_fs(PHY_VARS_eNB *eNB,uint8_t slot)
 {
   int32_t **rxdata=eNB->common_vars.rxdata[0];
-  int32_t **rxdata_1_4fs=eNB->common_vars.rxdata_1_4fs[0];
+  int32_t **rxdata_1_4fs=eNB->common_vars.rxdata_7_5kHz[0];
   uint16_t len;
   uint32_t *fs1_4ptr;
 #if defined(__x86_64__) || defined(__i386__)

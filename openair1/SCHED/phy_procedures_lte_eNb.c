@@ -1352,7 +1352,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	UE_id = i;
       
       if (UE_id<0) { // should not happen, log an error and exit, this is a fatal error
-	LOG_E(PHY,"[eNB %"PRIu8"] Frame %d: Unknown UE_id for rnti %"PRIx16"\n",eNB->Mod_id,frame,dci_alloc->rnti);
+	LOG_E(PHY,"[eNB %"PRIu8"] Frame %d: Unknown_Access UE_id for rnti %"PRIx16"\n",eNB->Mod_id,frame,dci_alloc->rnti);
 	mac_xface->macphy_exit("FATAL\n"); 
       }
       generate_eNB_ulsch_params(eNB,proc,dci_alloc,UE_id);
@@ -1432,11 +1432,11 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 #endif
     
     
-    LOG_D(PHY,"[eNB %"PRIu8"][RAPROC] Frame %d, subframe %d: Calling generate_dlsch (RA),Msg3 frame %"PRIu32", Msg3 subframe %"PRIu8"\n",
+    LOG_D(PHY,"[eNB %"PRIu8"][RAPROC] Frame %d, subframe %d: Calling generate_dlsch (RA, Msg3)\n",
 	  eNB->Mod_id,
-	  frame, subframe,
-	  eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
-	  eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
+	  frame, subframe);
+	  //eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
+	  //eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
     
     pdsch_procedures(eNB,proc,eNB->dlsch_ra,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,1,num_pdcch_symbols);
     
@@ -2583,10 +2583,7 @@ void fep0(PHY_VARS_eNB *eNB,int slot) {
   int l;
 
   //  printf("fep0: slot %d\n",slot);
-  if ((eNB->rfdevice.type == EXMIMO_DEV) && (fp->frame_type == TDD))
-    remove_1_4_fs(eNB,(slot&1)+(proc->subframe_rx<<1));  // TDD workaround for EXMIMO2 card
-  else
-    remove_7_5_kHz(eNB,(slot&1)+(proc->subframe_rx<<1));
+  remove_7_5_kHz(eNB,(slot&1)+(proc->subframe_rx<<1));
   for (l=0; l<fp->symbols_per_tti/2; l++) {
     slot_fep_ul(fp,
 		&eNB->common_vars,
@@ -2727,13 +2724,9 @@ void eNB_fep_full(PHY_VARS_eNB *eNB) {
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_SLOT_FEP,1);
   start_meas(&eNB->ofdm_demod_stats);
   
-  if ((eNB->rfdevice.type == EXMIMO_DEV) && (fp->frame_type == TDD)) {
-    remove_1_4_fs(eNB,proc->subframe_rx<<1); // TDD workaround for EXMIMO2 card
-    remove_1_4_fs(eNB,1+(proc->subframe_rx<<1));
-  } else {
-    remove_7_5_kHz(eNB,proc->subframe_rx<<1);
-    remove_7_5_kHz(eNB,1+(proc->subframe_rx<<1));
-  }
+  remove_7_5_kHz(eNB,proc->subframe_rx<<1);
+  remove_7_5_kHz(eNB,1+(proc->subframe_rx<<1));
+
   for (l=0; l<fp->symbols_per_tti/2; l++) {
     slot_fep_ul(fp,
 		&eNB->common_vars,
@@ -2997,7 +2990,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
       // TDD reciprocity DL CSIT estimation based on calibraton
       start_meas(&eNB->dl_ch_calib_stats);
  
-      if ((fp->frame_type == TDD) && 
+     /* if ((fp->frame_type == TDD) && 
           (((fp->tdd_config == 0) && ((subframe == 4) || (subframe == 9))) ||
           ((fp->tdd_config == 1) && ((subframe == 3) || (subframe == 8))) ||
           ((fp->tdd_config == 2) && ((subframe == 2) || (subframe == 7))) ||
@@ -3020,7 +3013,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
                              MRT,
                              fp);
 
-      }
+      } */
       stop_meas(&eNB->dl_ch_calib_stats);
 
       start_meas(&eNB->ulsch_decoding_stats);
