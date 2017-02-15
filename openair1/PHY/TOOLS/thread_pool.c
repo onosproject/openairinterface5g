@@ -55,10 +55,12 @@ void thread_pool_start(thread_pool *pool)
     abort();
   }
 
+  if (pthread_mutex_lock(pool->mutex)) abort();
   pool->done = 0;
   pool->running = pool->number_of_threads;
 
   if (pthread_cond_broadcast(pool->cond)) abort();
+  if (pthread_mutex_unlock(pool->mutex)) abort();
 }
 
 void thread_pool_done(thread_pool *pool)
