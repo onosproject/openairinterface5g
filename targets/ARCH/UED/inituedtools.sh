@@ -47,7 +47,8 @@ load_module() {
   sudo insmod $1
 }
 
-load_module $OPENAIR_TARGETS/bin/updatefw/openair_rf.ko
+#load_module $OPENAIR_TARGETS/bin/updatefw/openair_rf.ko
+load_module $OPENAIR_TARGETS/bin/openair_rf.ko
 sleep 1
 
 if [ ! -e /dev/openair0 ]; then 
