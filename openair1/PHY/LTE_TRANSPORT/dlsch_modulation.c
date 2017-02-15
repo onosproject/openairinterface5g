@@ -1385,14 +1385,18 @@ x0[1+*jj]);
           //precoding UE spec RS
           //printf("precoding UE spec RS\n");
           //printf("lprime=%d, nb_rb=%d, mprime2=%d\n", lprime, dlsch0_harq->nb_rb, mprime2);
-          if ((skip_half==2) && ((lprime==0) || (lprime==2)))
+          
+          // PHY Test passed using rodez schwarz FSQ TM7 software
+          /* if ((skip_half==2) && ((lprime==0) || (lprime==2)))
              mprime_half = 2;
           else if ((skip_half==2) && ((lprime==1) || (lprime==3)))
              mprime_half = 1 + frame_parms->Ncp;
           else
              mprime_half = 0;
 
-          ind = 3*lprime*dlsch0_harq->nb_rb+mprime2+mprime_half;
+          ind = 3*lprime*dlsch0_harq->nb_rb+mprime2+mprime_half;*/
+
+          ind = 3*lprime*dlsch0_harq->nb_rb+mprime2;
           ind_dword = ind>>4;
           ind_qpsk_symb = ind&0xf;
 
@@ -2157,14 +2161,18 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
       		       P1_SHIFT,
       		       P2_SHIFT);
 
+          if ((mimo_mode == TM7) && (lprime>=0))
+            mprime += 3 + frame_parms->Ncp;
+
       }
       else {
 	//	printf("Unallocated rb %d/symbol %d, re_offset %d, jj %d\n",rb,l,re_offset,jj);
       }
       re_offset+=12; // go to next RB
 
-      if ((mimo_mode == TM7) && (lprime>=0))
-        mprime += 3 + frame_parms->Ncp;
+      // PHY Test passed using rodez schwarz FSQ TM7 software
+      /*if ((mimo_mode == TM7) && (lprime>=0))
+        mprime += 3 + frame_parms->Ncp;*/
 
       // check if we crossed the symbol boundary and skip DCs
       if (re_offset >= frame_parms->ofdm_symbol_size) {
