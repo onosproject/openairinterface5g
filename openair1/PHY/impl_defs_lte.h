@@ -590,7 +590,7 @@ typedef enum {
   ALAMOUTI=1,
   /// TM3
   LARGE_CDD=2,
-  /// the next 6 entries are for TM5
+  /// the next 6 entries are for TM5 & TM6
   UNIFORM_PRECODING11=3,
   UNIFORM_PRECODING1m1=4,
   UNIFORM_PRECODING1j=5,
