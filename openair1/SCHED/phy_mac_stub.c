@@ -196,14 +196,15 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
       break;
     }
-    break; //subframe switch
 
-    }  // if ( !(proc->frame_tx&1) )
+   }  // if ( !(proc->frame_tx&1) )
     else // No SI message on odd frame (SFN mod 2 == 1)
     {
       /* warning: work around to send dlsch on subframe 5 odd frame !!! */
       /* todo: clean up, espacially if subframe cases are added next !!! */
     }
+    break; //subframe switch
+
     /*
   case 6:
       DCI_pdu->Num_ue_spec_dci = 1;
@@ -225,6 +226,34 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       memcpy((void*)&DCI_pdu->dci_alloc[0].dci_pdu[0],(void *)&DLSCH_alloc_pdu1,sizeof(DCI2_5MHz_2A_M10PRB_TDD_t));
     break;
     */
+
+  case 9:
+    DCI_pdu->Num_ue_spec_dci = 1;
+
+    //user 1
+    if (eNB->frame_parms.frame_type == FDD)
+      DCI_pdu->dci_alloc[0].dci_length = sizeof_DCI0_5MHz_FDD_t ;
+    else
+      DCI_pdu->dci_alloc[0].dci_length = sizeof_DCI0_5MHz_TDD_1_6_t ;
+
+    DCI_pdu->dci_alloc[0].L          = 2;
+    DCI_pdu->dci_alloc[0].rnti       = 0x1235;
+    DCI_pdu->dci_alloc[0].firstCCE   = 0;
+    DCI_pdu->dci_alloc[0].format     = format0;
+    DCI_pdu->dci_alloc[0].ra_flag    = 0;
+
+    UL_alloc_pdu.type    = 0;
+    UL_alloc_pdu.hopping = 0;
+    UL_alloc_pdu.rballoc = computeRIV(25,2,eNB->ue_ul_nb_rb);
+    UL_alloc_pdu.mcs     = eNB->target_ue_ul_mcs;
+    UL_alloc_pdu.ndi     = proc->frame_tx&1;
+    UL_alloc_pdu.TPC     = 0;
+    UL_alloc_pdu.cshift  = 0;
+    UL_alloc_pdu.dai     = 0;
+    UL_alloc_pdu.cqi_req = 1;
+    memcpy((void*)&DCI_pdu->dci_alloc[0].dci_pdu[0],(void *)&UL_alloc_pdu,sizeof(DCI0_5MHz_TDD_1_6_t));
+    break;
+
 
   default:
   case 7:
@@ -553,32 +582,8 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       memcpy((void*)&DCI_pdu->dci_alloc[0].dci_pdu[0],&RA_alloc_pdu,sizeof(DCI1A_5MHz_TDD_1_6_t));
       break;
     */
-    /*
-  case 9:
-    DCI_pdu->Num_ue_spec_dci = 1;
+    
 
-    //user 1
-    if (eNB->frame_parms.frame_type == FDD)
-      DCI_pdu->dci_alloc[0].dci_length = sizeof_DCI0_5MHz_FDD_t ;
-    else
-      DCI_pdu->dci_alloc[0].dci_length = sizeof_DCI0_5MHz_TDD_1_6_t ;
-
-    DCI_pdu->dci_alloc[0].L          = 2;
-    DCI_pdu->dci_alloc[0].rnti       = 0x1235;
-    DCI_pdu->dci_alloc[0].format     = format0;
-    DCI_pdu->dci_alloc[0].ra_flag    = 0;
-
-    UL_alloc_pdu.type    = 0;
-    UL_alloc_pdu.hopping = 0;
-    UL_alloc_pdu.rballoc = computeRIV(25,2,eNB->ue_ul_nb_rb);
-    UL_alloc_pdu.mcs     = eNB->target_ue_ul_mcs;
-    UL_alloc_pdu.ndi     = proc->frame_tx&1;
-    UL_alloc_pdu.TPC     = 0;
-    UL_alloc_pdu.cshift  = 0;
-    UL_alloc_pdu.dai     = 0;
-    UL_alloc_pdu.cqi_req = 1;
-    memcpy((void*)&DCI_pdu->dci_alloc[0].dci_pdu[0],(void *)&UL_alloc_pdu,sizeof(DCI0_5MHz_TDD_1_6_t));
-    */
     // user 2
     /*
     DCI_pdu->dci_alloc[1].dci_length = sizeof_DCI0_5MHz_TDD_1_6_t ;
