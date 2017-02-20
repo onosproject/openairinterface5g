@@ -1442,13 +1442,13 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
     }
 
 #if defined(__x86_64__)||defined(__i386__)
-#ifndef __AVX2__
+    //#ifndef __AVX2__
     for (iprime=0; iprime<G;iprime+=8,j2+=8)
       *((__m128i *)&ulsch_harq->e[iprime]) = *((__m128i *)&y[j2]);
-#else
+    /*#else
     for (iprime=0; iprime<G;iprime+=16,j2+=16)
       *((__m256i *)&ulsch_harq->e[iprime]) = *((__m256i *)&y[j2]);
-#endif
+      #endif*/
 #elif defined(__arm__)
     for (iprime=0; iprime<G;iprime+=8,j2+=8)
       *((int16x8_t *)&ulsch_harq->e[iprime]) = *((int16x8_t *)&y[j2]);
