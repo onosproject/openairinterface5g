@@ -227,7 +227,7 @@ eNB_timing_t node_timing[MAX_NUM_CCs];
 int16_t   node_synch_ref[MAX_NUM_CCs];
 
 uint32_t target_dl_mcs = 28; //maximum allowed mcs
-uint32_t target_ul_mcs = 20;
+uint32_t target_ul_mcs = 10;
 uint32_t timing_advance = 0;
 uint8_t exit_missed_slots=1;
 uint64_t num_missed_slots=0; // counter for the number of missed slots
@@ -1572,6 +1572,9 @@ int main( int argc, char **argv )
 	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
 	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
 	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
+
+	  if (frame_parms[CC_id]->frame_type == TDD) 
+	    UE[CC_id]->pucch_config_dedicated[i].tdd_AckNackFeedbackMode = bundling;
 	  
 	  UE[CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = 0;
 	  UE[CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(0%3);
@@ -1646,6 +1649,9 @@ int main( int argc, char **argv )
 	  PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
 	  PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
 	  PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
+
+	  if (frame_parms[CC_id]->frame_type == TDD) 
+	    PHY_vars_eNB_g[0][CC_id]->pucch_config_dedicated[i].tdd_AckNackFeedbackMode = bundling;
 	  
 	  PHY_vars_eNB_g[0][CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = i;
 	  PHY_vars_eNB_g[0][CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(i%3);
