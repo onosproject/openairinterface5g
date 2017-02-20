@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Thu Jan 19 09:15:03 2017
+[*] Wed Jan 18 09:49:05 2017
 [*]
 [dumpfile] "/tmp/openair_dump_eNB.vcd"
-[dumpfile_mtime] "Thu Jan 19 08:56:09 2017"
-[dumpfile_size] 239663092
-[savefile] "/homes/kaltenbe/Devel/openair/openairinterface5g/targets/RT/USER/eNB_exmimo2.gtkw"
-[timestart] 151032560000
-[size] 1215 1000
+[dumpfile_mtime] "Wed Jan 18 09:43:36 2017"
+[dumpfile_size] 892531
+[savefile] "/homes/jiangx/openair5G/openairinterface5g/targets/RT/USER/eNB_exmimo2.gtkw"
+[timestart] 21256800000
+[size] 1615 1026
 [pos] -1 -1
-*-21.445595 151034994068 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-22.787832 21257630000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [sst_width] 374
 [signals_width] 262
 [sst_expanded] 1

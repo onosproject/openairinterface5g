@@ -1127,7 +1127,12 @@ void rx_prach(PHY_VARS_eNB *eNB,
 
   //  int en;
 
-  for (aa=0; aa<nb_ant_rx; aa++) {
+  if ((eNB->rfdevice.type == EXMIMO_DEV) && (eNB->frame_parms.frame_type == TDD)) { //TDD workaround
+    remove_1_4_fs(eNB,subframe<<1); // TDD workaround for EXMIMO2 card
+    remove_1_4_fs(eNB,1+(subframe<<1));
+  }
+
+  for (aa=0; aa<nb_ant_rx; aa++) { 
     prach[aa] = (int16_t*)&eNB->common_vars.rxdata[0][aa][subframe*eNB->frame_parms.samples_per_tti-eNB->N_TA_offset];
   }
 

@@ -38,7 +38,7 @@ short conjugate14_2[8]__attribute__((aligned(16))) = {1,-1,1,-1,1,-1,1,-1} ;
 void remove_1_4_fs(PHY_VARS_eNB *eNB,uint8_t slot)
 {
   int32_t **rxdata=eNB->common_vars.rxdata[0];
-  int32_t **rxdata_1_4fs=eNB->common_vars.rxdata_7_5kHz[0];
+  int32_t **rxdata_1_4fs=eNB->common_vars.rxdata[0];
   uint16_t len;
   uint32_t *fs1_4ptr;
 #if defined(__x86_64__) || defined(__i386__)
@@ -87,7 +87,7 @@ void remove_1_4_fs(PHY_VARS_eNB *eNB,uint8_t slot)
 
 
   slot_offset = (uint32_t)slot * frame_parms->samples_per_tti/2-eNB->N_TA_offset;
-  slot_offset2 = (uint32_t)(slot&1) * frame_parms->samples_per_tti/2;
+  //slot_offset2 = (uint32_t)(slot&1) * frame_parms->samples_per_tti/2;
 
   len = frame_parms->samples_per_tti/2;
 
@@ -95,11 +95,11 @@ void remove_1_4_fs(PHY_VARS_eNB *eNB,uint8_t slot)
 
 #if defined(__x86_64__) || defined(__i386__)
     rxptr128        = (__m128i *)&rxdata[aa][slot_offset];
-    rxptr128_1_4fs = (__m128i *)&rxdata_1_4fs[aa][slot_offset2];
+    rxptr128_1_4fs = (__m128i *)&rxdata_1_4fs[aa][slot_offset];
     fs1_4ptr128    = (__m128i *)fs1_4ptr;
 #elif defined(__arm__)
     rxptr128        = (int16x8_t *)&rxdata[aa][slot_offset];
-    rxptr128_1_4fs = (int16x8_t *)&rxdata_1_4fs[aa][slot_offset2];
+    rxptr128_1_4fs = (int16x8_t *)&rxdata_1_4fs[aa][slot_offset];
     fs1_4ptr128    = (int16x8_t *)fs1_4ptr;
 #endif
     // remove 7.5 kHz + 1/4*fs

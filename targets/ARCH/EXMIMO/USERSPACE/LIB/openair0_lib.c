@@ -839,9 +839,9 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
       tx_filter = TXLPF5;
     } else if (openair0_cfg[card].sample_rate==7.68e6) {
       resampling_factor = 2;
-      //if (openair0_cfg[card].duplex_mode==duplex_mode_TDD) // TDD workaround for EXMIMO
-      //  rx_filter = RXLPF5;
-      //else 
+      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD) // TDD workaround for EXMIMO
+        rx_filter = RXLPF5;
+      else 
         rx_filter = RXLPF25;
       tx_filter = TXLPF25;
     } else {
@@ -899,8 +899,8 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
         p_exmimo_config->rf.rf_freq_rx[ant] = (unsigned int)openair0_cfg[card].rx_freq[ant];
        
         // TDD workaround
-        //if (openair0_cfg[card].duplex_mode==duplex_mode_TDD)
-        //  p_exmimo_config->rf.rf_freq_rx[ant] += openair0_cfg[card].sample_rate/4; 
+        if (openair0_cfg[card].duplex_mode==duplex_mode_TDD)
+          p_exmimo_config->rf.rf_freq_rx[ant] -= openair0_cfg[card].sample_rate/4; 
 
         switch (openair0_cfg[card].rxg_mode[ant]) {
         default:
