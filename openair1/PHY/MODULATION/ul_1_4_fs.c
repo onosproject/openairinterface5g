@@ -33,8 +33,50 @@
 
 short conjugate14[8]__attribute__((aligned(16))) = {-1,1,-1,1,-1,1,-1,1} ;
 short conjugate14_2[8]__attribute__((aligned(16))) = {1,-1,1,-1,1,-1,1,-1} ;
+short conjugate14_3[8]__attribute__((aligned(16))) = {1,1,-1,1,-1,-1,1,-1} ;
 
+void remove_1_4_fs(PHY_VARS_eNB *eNB,uint8_t slot)
+{
+  int32_t **rxdata=eNB->common_vars.rxdata[0];
+  uint16_t len;
+#if defined(__x86_64__) || defined(__i386__)
+  __m128i *rxptr128,rxptr128_1;
+#elif defined(__arm__)
+  int16x8_t *rxptr12;
+#endif
+  uint32_t slot_offset;
+  uint8_t aa;
+  uint32_t i;
+  LTE_DL_FRAME_PARMS *frame_parms=&eNB->frame_parms;
 
+  slot_offset = (uint32_t)slot * frame_parms->samples_per_tti/2-eNB->N_TA_offset;
+
+  len = frame_parms->samples_per_tti/2;
+
+  for (aa=0; aa<frame_parms->nb_antennas_rx; aa++) {
+
+#if defined(__x86_64__) || defined(__i386__)
+    rxptr128        = (__m128i *)&rxdata[aa][slot_offset];
+#elif defined(__arm__)
+    rxptr128        = (int16x8_t *)&rxdata[aa][slot_offset];
+#endif
+    // remove 1/4*fs
+
+    //      if (((slot>>1)&1) == 0) { // apply the sinusoid from the table directly
+    for (i=0; i<(len>>2); i++) {
+
+#if defined(__x86_64__) || defined(__i386__)
+      rxptr128_1 = _mm_shufflelo_epi16(*rxptr128,_MM_SHUFFLE(2,3,1,0));
+      rxptr128_1 = _mm_shufflehi_epi16(rxptr128_1,_MM_SHUFFLE(2,3,1,0));
+      rxptr128[0] = _mm_sign_epi16(rxptr128_1,*(__m128i*)&conjugate14_3[0]);
+
+      rxptr128++;
+#elif defined(__arm__)
+#endif
+    }
+  }  
+}
+/*
 void remove_1_4_fs(PHY_VARS_eNB *eNB,uint8_t slot)
 {
   int32_t **rxdata=eNB->common_vars.rxdata[0];
@@ -154,4 +196,4 @@ void remove_1_4_fs(PHY_VARS_eNB *eNB,uint8_t slot)
     }
   }
 }
-
+*/

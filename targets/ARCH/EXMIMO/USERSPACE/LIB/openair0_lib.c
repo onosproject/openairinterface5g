@@ -900,7 +900,7 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
        
         // TDD workaround
         if (openair0_cfg[card].duplex_mode==duplex_mode_TDD)
-          p_exmimo_config->rf.rf_freq_rx[ant] -= openair0_cfg[card].sample_rate/4; 
+          p_exmimo_config->rf.rf_freq_rx[ant] += openair0_cfg[card].sample_rate/4; 
 
         switch (openair0_cfg[card].rxg_mode[ant]) {
         default:

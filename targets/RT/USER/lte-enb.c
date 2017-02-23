@@ -573,6 +573,12 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   start_meas(&softmodem_stats_rxtx_sf);
 
   // ****************************************
+  // TDD workaround
+  if ((eNB->rfdevice.type == EXMIMO_DEV) && (eNB->frame_parms.frame_type == TDD) && subframe_select(&eNB->frame_parms,proc->subframe_rx)==SF_UL) {
+    remove_1_4_fs(eNB,proc->subframe_rx<<1); // TDD workaround for EXMIMO2 card
+    remove_1_4_fs(eNB,1+(proc->subframe_rx<<1));
+  }
+
   // Common RX procedures subframe n
   phy_procedures_eNB_common_RX(eNB);
   
