@@ -168,6 +168,7 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
 	static long long nextTime; 
 	static bool nextTimeValid = false;
 	iris_state_t *s = (iris_state_t*)device->priv;
+	bool time_set = false;
 	long long timeNs = 0;
 	int flags = 0;
 	int samples_received = 0;
@@ -200,20 +201,29 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
 		{
 			if (flags & SOAPY_SDR_HAS_TIME)
 			{
+				s->rx_timestamp = SoapySDR::timeNsToTicks(timeNs, s->sample_rate);
+				*ptimestamp = s->rx_timestamp;
 				nextTime = timeNs;
 				nextTimeValid = true;
+				time_set = true;
+				//printf("1) time set %llu \n", *ptimestamp);
 			}
-		}				
+		}
 	}
 
-	if (samples_received < nsamps) 
+	if (samples_received < nsamps)
 		printf("[recv] received %d samples out of %d\n",samples_received,nsamps);
+
+	s->rx_count += samples_received;
 
 	if (s->sample_rate != 0 && nextTimeValid)
 	{
-		s->rx_count += samples_received;
-		s->rx_timestamp = SoapySDR::timeNsToTicks(nextTime, s->sample_rate);
-		*ptimestamp = s->rx_timestamp;
+		if (!time_set)
+		{
+			s->rx_timestamp = SoapySDR::timeNsToTicks(nextTime, s->sample_rate);
+			*ptimestamp = s->rx_timestamp;
+			//printf("2) time set %llu, nextTime will be %llu \n", *ptimestamp, nextTime);
+		}
 		nextTime += SoapySDR::ticksToTimeNs(samples_received, s->sample_rate);
 	}
 
