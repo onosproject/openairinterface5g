@@ -390,8 +390,8 @@ extern "C" {
 
 	// Initialize Iris device
 	device->openair0_cfg = openair0_cfg;
-	// add ip to cfg so that we can add to args
-	std::string args = "driver=remote,remote:prot=tcp";
+	char* remote_addr = device->openair0_cfg->remote_addr;
+	std::string args = "driver=remote,serial="+std::string(remote_addr);
 	
 
 	s->iris = SoapySDR::Device::make(args);
