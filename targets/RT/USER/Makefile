@@ -120,6 +120,13 @@ CFLAGS += -DOAI_USRP
 LDFLAGS += -L/usr/lib/ -luhd -lpthread -lstdc++
 endif
 
+ifeq ($(IRIS),1)
+include $(OPENAIR_TARGETS)/ARCH/IRIS/USERSPACE/LIB/Makefile.inc
+CFLAGS += -I/usr/local/include/ -L/usr/local/lib -lSoapySDR -lpthread -lstdc++
+CFLAGS += -DOAI_IRIS
+LDFLAGS += -L/usr/local/lib/ -lSoapySDR -lpthread -lstdc++
+endif
+
 ifeq ($(ETHERNET),1)
 include $(OPENAIR_TARGETS)/ARCH/ETHERNET/USERSPACE/LIB/Makefile.inc
 LDFLAGS += -lpthread

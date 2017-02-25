@@ -480,7 +480,7 @@ add_list1_option(NB_ANTENNAS_RX "2" "Number of antennas in reception" "1" "2" "4
 add_list1_option(NB_ANTENNAS_TX "4" "Number of antennas in transmission" "1" "2" "4")
 add_list1_option(NB_ANTENNAS_TXRX "2" "Number of antennas in ????" "1" "2" "4")
 
-add_list2_option(RF_BOARD "EXMIMO" "RF head type" "None" "EXMIMO" "OAI_USRP" "OAI_BLADERF" "CPRIGW" "OAI_LMSSDR")
+add_list2_option(RF_BOARD "EXMIMO" "RF head type" "None" "EXMIMO" "OAI_USRP" "OAI_BLADERF" "CPRIGW" "OAI_LMSSDR" "IRIS")
 
 add_list2_option(TRANSP_PRO "None" "Transport protocol type" "None" "ETHERNET")
 
@@ -526,6 +526,12 @@ set(TPLIB_ETHERNET_SOURCE
   )
 add_library(oai_eth_transpro MODULE ${TPLIB_ETHERNET_SOURCE} )
 
+include_directories("${OPENAIR_TARGETS}/ARCH/IRIS/USERSPACE/LIB/")
+set (option_HWIRISLIB_lib "-l SoapySDR")
+set(HWLIB_IRIS_SOURCE 
+  ${OPENAIR_TARGETS}/ARCH/IRIS/USERSPACE/LIB/iris_lib.cpp
+  )
+add_library(oai_irisdevif MODULE ${HWLIB_IRIS_SOURCE} )
 
 # RF devices / transport protocols settings
 ######################################################################
@@ -569,6 +575,15 @@ elseif (${RF_BOARD} STREQUAL "OAI_LMSSDR")
   LINK_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}/Si5351C")
   set(HW_SOURCE ${HW_SOURCE} ${OPENAIR_TARGETS}/ARCH/LMSSDR/USERSPACE/LIB/lms_lib.cpp)
   set(option_HW_lib "-lLMS_SDR -lLMS7002M -lSi5351C -rdynamic -ldl")
+
+elseif (${RF_BOARD} STREQUAL "OAI_IRIS")
+  include_directories("${OPENAIR_TARGETS}/ARCH/IRIS/USERSPACE/LIB/")
+  include_directories("/usr/local/include/")
+  set(HW_SOURCE ${HW_SOURCE}
+    ${OPENAIR_TARGETS}/ARCH/IRIS/USERSPACE/LIB/iris_lib.cpp)
+  LINK_DIRECTORIES("/usr/local/lib")
+  set(option_HW_lib "-lSoapySDR -rdynamic -ldl")
+
 
 elseif (${RF_BOARD} STREQUAL "CPRIGW")
   set(HW_SOURCE ${HW_SOURCE}
