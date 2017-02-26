@@ -402,22 +402,23 @@ extern "C" {
 	device->type=IRIS_DEV;
 
 	s->iris->setMasterClockRate(8*openair0_cfg[0].sample_rate); // sample*8=clock_rate for Soapy
+	printf("tx_sample_advance %d\n", openair0_cfg[0].tx_sample_advance);
 	switch ((int)openair0_cfg[0].sample_rate) {
 	case 30720000:		
 		//openair0_cfg[0].samples_per_packet    = 1024;
-		openair0_cfg[0].tx_sample_advance     = 115;
+		//openair0_cfg[0].tx_sample_advance     = 115;
 		openair0_cfg[0].tx_bw                 = 30e6;
 		openair0_cfg[0].rx_bw                 = 30e6;
 		break;
 	case 23040000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
-		openair0_cfg[0].tx_sample_advance     = 113;
+		//openair0_cfg[0].tx_sample_advance     = 113;
 		openair0_cfg[0].tx_bw                 = 30e6;
 		openair0_cfg[0].rx_bw                 = 30e6;
 		break;
 	case 15360000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
-		openair0_cfg[0].tx_sample_advance     = 103; 
+		//openair0_cfg[0].tx_sample_advance     = 103; 
 		openair0_cfg[0].tx_bw                 = 30e6;
 		openair0_cfg[0].rx_bw                 = 30e6;
 		break;
@@ -429,7 +430,7 @@ extern "C" {
 		break;
 	case 1920000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
-		openair0_cfg[0].tx_sample_advance     = 40;
+		//openair0_cfg[0].tx_sample_advance     = 40;
 		openair0_cfg[0].tx_bw                 = 30e6;
 		openair0_cfg[0].rx_bw                 = 30e6;
 		break;
