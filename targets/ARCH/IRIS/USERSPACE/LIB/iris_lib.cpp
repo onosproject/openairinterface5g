@@ -173,9 +173,9 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
 	long long timeNs = 0;
 	int flags = 0;
 	int samples_received = 0;
-	uint32_t **samps = (uint32_t **)buff;
-	printf("Reading %d samples from Iris...\n", nsamps);
-	fflush(stdout);
+	uint32_t *samps[2] = {(uint32_t *)buff[0], (uint32_t *)buff[1]}; //cws: it seems another thread can clobber these, so we need to save them locally.
+	//printf("Reading %d samples from Iris...\n", nsamps);
+	//fflush(stdout);
 	while (samples_received < nsamps)
 	{
 		flags = 0;
