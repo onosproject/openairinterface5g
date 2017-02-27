@@ -1353,9 +1353,9 @@ void init_openair0() {
       printf("ETHERNET: Configuring UE ETH for %s:%d\n",rrh_UE_ip,rrh_UE_port);
       openair0_cfg[card].remote_addr = &rrh_UE_ip[0];
       openair0_cfg[card].remote_port = rrh_UE_port;
-      openair0_cfg[card].tx_sample_advance = tx_sample_advance; //BS will set this in the config file
-      printf("Set tx_sample_advance to %d\n", openair0_cfg[card].tx_sample_advance);
     } 
+    openair0_cfg[card].tx_sample_advance = tx_sample_advance; //BS will set this in the config file
+    printf("Set tx_sample_advance to %d\n", openair0_cfg[card].tx_sample_advance);
 
     openair0_cfg[card].num_rb_dl=frame_parms[0]->N_RB_DL;
 
