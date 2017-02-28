@@ -87,6 +87,7 @@ static int trx_iris_start(openair0_device *device)
  */
 static void trx_iris_end(openair0_device *device)
 {
+	LOG_I(HW,"Closing Iris device.\n");
 	iris_state_t *s = (iris_state_t*)device->priv;
 	s->iris->closeStream(s->txStream);
 	s->iris->closeStream(s->rxStream);
@@ -172,7 +173,9 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
 	long long timeNs = 0;
 	int flags = 0;
 	int samples_received = 0;
-	uint32_t **samps = (uint32_t **)buff;
+	uint32_t *samps[2] = {(uint32_t *)buff[0], (uint32_t *)buff[1]}; //cws: it seems another thread can clobber these, so we need to save them locally.
+	//printf("Reading %d samples from Iris...\n", nsamps);
+	//fflush(stdout);
 	while (samples_received < nsamps)
 	{
 		flags = 0;
@@ -418,44 +421,42 @@ extern "C" {
 	// Initialize Iris device
 	device->openair0_cfg = openair0_cfg;
 	char* remote_addr = device->openair0_cfg->remote_addr;
+	LOG_I(HW,"Attempting to open Iris device: %s\n", remote_addr);
 	std::string args = "driver=remote,serial="+std::string(remote_addr);
 
 	s->iris = SoapySDR::Device::make(args);
 	device->type=IRIS_DEV;
 
+	s->iris->setMasterClockRate(8*openair0_cfg[0].sample_rate); // sample*8=clock_rate for Soapy
+	printf("tx_sample_advance %d\n", openair0_cfg[0].tx_sample_advance);
 	switch ((int)openair0_cfg[0].sample_rate) {
 	case 30720000:
-		s->iris->setMasterClockRate(8*30.72e6);
 		//openair0_cfg[0].samples_per_packet    = 1024;
-		openair0_cfg[0].tx_sample_advance     = 115;
+		//openair0_cfg[0].tx_sample_advance     = 115;
 		openair0_cfg[0].tx_bw                 = 30e6;
 		openair0_cfg[0].rx_bw                 = 30e6;
 		break;
 	case 23040000:
-		s->iris->setMasterClockRate(8*23.04e6);
 		//openair0_cfg[0].samples_per_packet    = 1024;
-		openair0_cfg[0].tx_sample_advance     = 113;
+		//openair0_cfg[0].tx_sample_advance     = 113;
 		openair0_cfg[0].tx_bw                 = 30e6;
 		openair0_cfg[0].rx_bw                 = 30e6;
 		break;
 	case 15360000:
-		s->iris->setMasterClockRate(8*15.36e6);
 		//openair0_cfg[0].samples_per_packet    = 1024;
-		openair0_cfg[0].tx_sample_advance     = 103;
+		//openair0_cfg[0].tx_sample_advance     = 103;
 		openair0_cfg[0].tx_bw                 = 30e6;
 		openair0_cfg[0].rx_bw                 = 30e6;
 		break;
 	case 7680000:
-		s->iris->setMasterClockRate(8*7.68e6); // sample*8=clock_rate for Soapy
 		//openair0_cfg[0].samples_per_packet    = 1024;
-		openair0_cfg[0].tx_sample_advance     = 80;
+		//openair0_cfg[0].tx_sample_advance     = 80;
 		openair0_cfg[0].tx_bw                 = 30e6;
 		openair0_cfg[0].rx_bw                 = 30e6;
 		break;
 	case 1920000:
-		s->iris->setMasterClockRate(8*1.92e6);
 		//openair0_cfg[0].samples_per_packet    = 1024;
-		openair0_cfg[0].tx_sample_advance     = 40;
+		//openair0_cfg[0].tx_sample_advance     = 40;
 		openair0_cfg[0].tx_bw                 = 30e6;
 		openair0_cfg[0].rx_bw                 = 30e6;
 		break;
@@ -568,6 +569,8 @@ extern "C" {
 		s->tx_forward_nsamps = 90;
 	if(is_equal(s->sample_rate, (double)7.68e6))
 		s->tx_forward_nsamps = 50;
+
+	LOG_I(HW,"Finished initializing Iris device. %d %f \n");
 	return 0;
   }
 }
