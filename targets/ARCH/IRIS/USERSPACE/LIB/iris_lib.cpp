@@ -481,7 +481,7 @@ extern "C" {
 		if (i < openair0_cfg[0].tx_num_channels) {
 			s->iris->setSampleRate(SOAPY_SDR_TX, i, openair0_cfg[0].sample_rate);
 			s->iris->setFrequency(SOAPY_SDR_TX, i, "RF", openair0_cfg[0].tx_freq[i]);
-			s->iris->setGain(SOAPY_SDR_TX, i, openair0_cfg[0].rx_gain[i]-openair0_cfg[0].rx_gain_offset[i]);
+			s->iris->setGain(SOAPY_SDR_TX, i, openair0_cfg[0].tx_gain[i]-openair0_cfg[0].tx_gain_offset[i]);
 		}
 	}
 
