@@ -22,7 +22,7 @@
 #include "common_lib.h"
 
 
-/*! \brief Iris Configuration */ 
+/*! \brief Iris Configuration */
 typedef struct
 {
 
@@ -44,7 +44,7 @@ typedef struct
   //! time offset between transmiter timestamp and receiver timestamp;
   double tdiff;
 
-  //! TX forward samples. 
+  //! TX forward samples.
   int tx_forward_nsamps; //166 for 20Mhz
 
 
@@ -55,7 +55,7 @@ typedef struct
   int num_underflows;
   //! Number of overflows
   int num_overflows;
-  
+
   //! Number of sequential errors
   int num_seq_errors;
   //! tx count
@@ -129,7 +129,7 @@ static int trx_iris_write(openair0_device *device, openair0_timestamp timestamp,
 		samples_sent += ret;
 		samps[0] += ret;
 		if (cc > 1)
-			samps[1] += ret;		
+			samps[1] += ret;
 	}
 
 	if (samples_sent != nsamps) {
@@ -165,7 +165,7 @@ static int trx_iris_write(openair0_device *device, openair0_timestamp timestamp,
 static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
 	int ret = 0;
-	static long long nextTime; 
+	static long long nextTime;
 	static bool nextTimeValid = false;
 	iris_state_t *s = (iris_state_t*)device->priv;
 	bool time_set = false;
@@ -196,7 +196,7 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
 		samps[0] += ret;
 		if (cc > 1)
 			samps[1] += ret;
-				
+
 		if (samples_received == ret) // first batch
 		{
 			if (flags & SOAPY_SDR_HAS_TIME)
@@ -233,11 +233,11 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
 /*! \brief Get current timestamp of Iris
  * \param device the hardware to use
 */
-openair0_timestamp get_iris_time(openair0_device *device) 
+openair0_timestamp get_iris_time(openair0_device *device)
 {
 	iris_state_t *s = (iris_state_t*)device->priv;
 	return SoapySDR::timeNsToTicks(s->iris->getHardwareTime(""), s->sample_rate);
-} 
+}
 
 /*! \brief Compares two variables within precision
  * \param a first variable
@@ -248,32 +248,59 @@ static bool is_equal(double a, double b)
 	return std::fabs(a-b) < std::numeric_limits<double>::epsilon();
 }
 
+void *set_freq_thread(void *arg) {
 
+    openair0_device *device=(openair0_device *)arg;
+    iris_state_t *s = (iris_state_t*)device->priv;
+    int i;
+    printf("Setting Iris TX Freq %f, RX Freq %f\n",device->openair0_cfg[0].tx_freq[0],device->openair0_cfg[0].rx_freq[0]);
+    // add check for the number of channels in the cfg
+    for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_RX); i++) {
+	    if (i < device->openair0_cfg[0].rx_num_channels)
+            s->iris->setFrequency(SOAPY_SDR_RX, i, "RF", device->openair0_cfg[0].rx_freq[i]);
+    }
+    for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_TX); i++) {
+	    if (i < device->openair0_cfg[0].tx_num_channels)
+            s->iris->setFrequency(SOAPY_SDR_TX, i, "RF", device->openair0_cfg[0].tx_freq[i]);
+    }
+}
 /*! \brief Set frequencies (TX/RX)
  * \param device the hardware to use
  * \param openair0_cfg RF frontend parameters set by application
  * \param dummy dummy variable not used
- * \returns 0 in success 
+ * \returns 0 in success
  */
-int trx_iris_set_freq(openair0_device* device, openair0_config_t *openair0_cfg, int dont_block) {
-
-	iris_state_t *s = (iris_state_t*)device->priv;
-
-	printf("Setting Iris TX Freq %f, RX Freq %f\n",openair0_cfg[0].tx_freq[0],openair0_cfg[0].rx_freq[0]);
-	s->iris->setFrequency(SOAPY_SDR_RX, 0, "RF", openair0_cfg[0].rx_freq[0]);
-	s->iris->setFrequency(SOAPY_SDR_TX, 0, "RF", openair0_cfg[0].tx_freq[0]);
-	s->iris->setFrequency(SOAPY_SDR_RX, 1, "RF", openair0_cfg[0].rx_freq[1]);
-	s->iris->setFrequency(SOAPY_SDR_TX, 1, "RF", openair0_cfg[0].tx_freq[1]);
-	return(0);
+int trx_iris_set_freq(openair0_device* device, openair0_config_t *openair0_cfg, int dont_block)
+{
+    iris_state_t *s = (iris_state_t*)device->priv;
+    pthread_t f_thread;
+    if (dont_block)
+        pthread_create(&f_thread, NULL, set_freq_thread, (void*)device);
+    else
+    {
+        int i;
+        printf("Setting Iris TX Freq %f, RX Freq %f\n",openair0_cfg[0].tx_freq[0],openair0_cfg[0].rx_freq[0]);
+    	for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_RX); i++) {
+	    	if (i < openair0_cfg[0].rx_num_channels) {
+                s->iris->setFrequency(SOAPY_SDR_RX, i, "RF", openair0_cfg[0].rx_freq[i]);
+            }
+        }
+    	for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_TX); i++) {
+	    	if (i < openair0_cfg[0].tx_num_channels) {
+                s->iris->setFrequency(SOAPY_SDR_TX, i, "RF", openair0_cfg[0].tx_freq[i]);
+            }
+        }
+	}
+    return(0);
 }
 
 
 /*! \brief Set Gains (TX/RX)
  * \param device the hardware to use
  * \param openair0_cfg RF frontend parameters set by application
- * \returns 0 in success 
+ * \returns 0 in success
  */
-int trx_iris_set_gains(openair0_device* device, 
+int trx_iris_set_gains(openair0_device* device,
 		       openair0_config_t *openair0_cfg) {
 	iris_state_t *s = (iris_state_t*)device->priv;
 	s->iris->setGain(SOAPY_SDR_RX, 0, openair0_cfg[0].rx_gain[0]);
@@ -303,10 +330,10 @@ rx_gain_calib_table_t calib_table_iris[] = {
   {-1,0}};
 
 
-/*! \brief Set RX gain offset 
+/*! \brief Set RX gain offset
  * \param openair0_cfg RF frontend parameters set by application
  * \param chain_index RF chain to apply settings to
- * \returns 0 in success 
+ * \returns 0 in success
  */
 void set_rx_gain_offset(openair0_config_t *openair0_cfg, int chain_index,int bw_gain_adjust) {
 
@@ -315,7 +342,7 @@ void set_rx_gain_offset(openair0_config_t *openair0_cfg, int chain_index,int bw_
   double min_diff = 6e9,diff,gain_adj=0.0;
   if (bw_gain_adjust==1) {
     switch ((int)openair0_cfg[0].sample_rate) {
-    case 30720000:      
+    case 30720000:
       break;
     case 23040000:
       gain_adj=1.25;
@@ -350,10 +377,10 @@ void set_rx_gain_offset(openair0_config_t *openair0_cfg, int chain_index,int bw_
     }
     i++;
   }
-  
+
 }
 
-/*! \brief print the Iris statistics  
+/*! \brief print the Iris statistics
 * \param device the hardware to use
 * \returns  0 on success
 */
@@ -363,7 +390,7 @@ int trx_iris_get_stats(openair0_device* device) {
 
 }
 
-/*! \brief Reset the Iris statistics  
+/*! \brief Reset the Iris statistics
 * \param device the hardware to use
 * \returns  0 on success
 */
@@ -381,7 +408,7 @@ extern "C" {
 * \param openair0_cfg RF frontend parameters set by application
 */
   int device_init(openair0_device* device, openair0_config_t *openair0_cfg) {
-    
+
 	size_t i;
 	int bw_gain_adjust=0;
 	openair0_cfg[0].rx_gain_calib_table = calib_table_iris;
@@ -392,7 +419,6 @@ extern "C" {
 	device->openair0_cfg = openair0_cfg;
 	char* remote_addr = device->openair0_cfg->remote_addr;
 	std::string args = "driver=remote,serial="+std::string(remote_addr);
-	
 
 	s->iris = SoapySDR::Device::make(args);
 	device->type=IRIS_DEV;
@@ -415,7 +441,7 @@ extern "C" {
 	case 15360000:
 		s->iris->setMasterClockRate(8*15.36e6);
 		//openair0_cfg[0].samples_per_packet    = 1024;
-		openair0_cfg[0].tx_sample_advance     = 103; 
+		openair0_cfg[0].tx_sample_advance     = 103;
 		openair0_cfg[0].tx_bw                 = 30e6;
 		openair0_cfg[0].rx_bw                 = 30e6;
 		break;
@@ -439,7 +465,7 @@ extern "C" {
 		break;
 	}
 
-  
+
 	for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_RX); i++) {
 		if (i < openair0_cfg[0].rx_num_channels) {
 			s->iris->setSampleRate(SOAPY_SDR_RX, i, openair0_cfg[0].sample_rate);
@@ -495,7 +521,7 @@ extern "C" {
 	}
 
 	s->iris->setHardwareTime(0, "");
- 
+
 
 	for (i = 0; i < openair0_cfg[0].rx_num_channels; i++) {
 		if (i < s->iris->getNumChannels(SOAPY_SDR_RX)) {
@@ -509,7 +535,7 @@ extern "C" {
 	}
 
 	for (i=0;i<openair0_cfg[0].tx_num_channels;i++) {
-		if (i < s->iris->getNumChannels(SOAPY_SDR_TX)) { 
+		if (i < s->iris->getNumChannels(SOAPY_SDR_TX)) {
 			printf("TX Channel %lu\n",i);
 			std::cout << std::endl<<boost::format("Actual TX sample rate: %fMSps...") % (s->iris->getSampleRate(SOAPY_SDR_TX, i)/1e6) << std::endl;
 			std::cout << boost::format("Actual TX frequency: %fGHz...") % (s->iris->getFrequency(SOAPY_SDR_TX, i)/1e9) << std::endl;
