@@ -284,7 +284,7 @@ typedef enum {
 #define NUMBER_OF_HARQ_PID_MAX 8
 
 #define MAX_FRAME_NUMBER 0x400
-#if defined(CBMIMO1) || defined(EXMIMO) || defined(OAI_USRP)
+#if defined(CBMIMO1) || defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_IRIS)
 #define NUMBER_OF_eNB_MAX 1
 #define NUMBER_OF_UE_MAX 16
 #define NUMBER_OF_CONNECTED_eNB_MAX 3

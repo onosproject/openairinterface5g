@@ -326,7 +326,7 @@ int trx_iris_stop(openair0_device* device) {
 /*! \brief Iris RX calibration table */
 rx_gain_calib_table_t calib_table_iris[] = {
   {3500000000.0,0},
-  {2660000000.0,0},
+  {2660000000.0,12},
   {2300000000.0,0},
   {1880000000.0,0},
   {816000000.0,0},
