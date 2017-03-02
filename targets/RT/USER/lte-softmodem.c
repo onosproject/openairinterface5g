@@ -164,6 +164,7 @@ volatile int             oai_exit = 0;
 static char              UE_flag=0;
 unsigned int                    mmapped_dma=0;
 int                             single_thread_flag=1;
+int                      exmimo_tdd_workaround=0;
 
 static char                     threequarter_fs=0;
 
@@ -201,6 +202,9 @@ double bw = 10.0e6;
 static int                      tx_max_power[MAX_NUM_CCs]; /* =  {0,0}*/;
 
 char   rf_config_file[1024];
+
+int    tdd_recip_calib = 0;
+char   tdd_recip_calib_file[1024];
 
 int chain_offset=0;
 int phy_test = 0;
@@ -381,6 +385,8 @@ void help (void) {
   printf("  --mmapped-dma sets flag for improved EXMIMO UE performance\n");  
   printf("  --usim-test use XOR autentication algo in case of test usim mode\n"); 
   printf("  --single-thread-disable. Disables single-thread mode in lte-softmodem\n"); 
+  printf("  --tdd-recip-calib. Enable TDD channel reciprocity calibration by giving a calibration file\n"); 
+  printf("  --exmimo-tdd-workaround. Enable EXMIMO2 TDD workaround\n"); 
   printf("  -C Set the downlink frequency for all component carriers\n");
   printf("  -d Enable soft scope and L1 and L2 stats (Xforms)\n");
   printf("  -F Calibrate the EXMIMO borad, available files: exmimo2_2arxg.lime exmimo2_2brxg.lime \n");
@@ -680,7 +686,7 @@ static void get_options (int argc, char **argv)
     LONG_OPTION_NO_L2_CONNECT,
     LONG_OPTION_CALIB_PRACH_TX,
     LONG_OPTION_RXGAIN,
-	LONG_OPTION_RXGAINOFF,
+    LONG_OPTION_RXGAINOFF,
     LONG_OPTION_TXGAIN,
     LONG_OPTION_SCANCARRIER,
     LONG_OPTION_MAXPOWER,
@@ -690,6 +696,8 @@ static void get_options (int argc, char **argv)
     LONG_OPTION_USIMTEST,
     LONG_OPTION_MMAPPED_DMA,
     LONG_OPTION_SINGLE_THREAD_DISABLE,
+    LONG_OPTION_TDD_RECIP_CALIB,
+    LONG_OPTION_EXMIMO_TDD_WORKAROUND,
 #if T_TRACER
     LONG_OPTION_T_PORT,
     LONG_OPTION_T_NOWAIT,
@@ -707,7 +715,7 @@ static void get_options (int argc, char **argv)
     {"no-L2-connect",   no_argument,        NULL, LONG_OPTION_NO_L2_CONNECT},
     {"calib-prach-tx",   no_argument,        NULL, LONG_OPTION_CALIB_PRACH_TX},
     {"ue-rxgain",   required_argument,  NULL, LONG_OPTION_RXGAIN},
-	{"ue-rxgain-off",   required_argument,  NULL, LONG_OPTION_RXGAINOFF},
+    {"ue-rxgain-off",   required_argument,  NULL, LONG_OPTION_RXGAINOFF},
     {"ue-txgain",   required_argument,  NULL, LONG_OPTION_TXGAIN},
     {"ue-scan-carrier",   no_argument,  NULL, LONG_OPTION_SCANCARRIER},
     {"ue-max-power",   required_argument,  NULL, LONG_OPTION_MAXPOWER},
@@ -717,6 +725,8 @@ static void get_options (int argc, char **argv)
     {"usim-test", no_argument, NULL, LONG_OPTION_USIMTEST},
     {"mmapped-dma", no_argument, NULL, LONG_OPTION_MMAPPED_DMA},
     {"single-thread-disable", no_argument, NULL, LONG_OPTION_SINGLE_THREAD_DISABLE},
+    {"tdd-recip-calib", required_argument, NULL, LONG_OPTION_TDD_RECIP_CALIB},
+    {"exmimo-tdd-workaround", no_argument, NULL, LONG_OPTION_EXMIMO_TDD_WORKAROUND},
 #if T_TRACER
     {"T_port",                 required_argument, 0, LONG_OPTION_T_PORT},
     {"T_nowait",               no_argument,       0, LONG_OPTION_T_NOWAIT},
@@ -823,6 +833,23 @@ static void get_options (int argc, char **argv)
 
     case LONG_OPTION_SINGLE_THREAD_DISABLE:
       single_thread_flag = 0;
+      break;
+              
+    case LONG_OPTION_TDD_RECIP_CALIB:
+      if ((strcmp("null", optarg) == 0) || (strcmp("NULL", optarg) == 0)) {
+	printf("No tdd reciprocity filename is provided\n");
+      }
+      else if (strlen(optarg)<=1024){
+	strcpy(tdd_recip_calib_file,optarg);
+        tdd_recip_calib = 1;
+      }else {
+	printf("TDD calibration filename is too long\n");
+	exit(-1);   
+      }
+      break;
+
+   case LONG_OPTION_EXMIMO_TDD_WORKAROUND:
+      exmimo_tdd_workaround = 1;
       break;
               
 #if T_TRACER
@@ -1310,10 +1337,17 @@ void init_openair0() {
     }
 
     if (frame_parms[0]->frame_type==TDD)
-      openair0_cfg[card].duplex_mode = duplex_mode_TDD;
+      if (exmimo_tdd_workaround == 1)
+        openair0_cfg[card].duplex_mode = duplex_mode_TDD_workaround;
+      else
+        openair0_cfg[card].duplex_mode = duplex_mode_TDD;
     else //FDD
       openair0_cfg[card].duplex_mode = duplex_mode_FDD;
 
+    if (tdd_recip_calib == 1)
+      openair0_cfg[card].tdd_recip_calib = 1;
+    else
+      openair0_cfg[card].tdd_recip_calib = 0;
     
     if (local_remote_radio == BBU_REMOTE_RADIO_HEAD) {      
       openair0_cfg[card].remote_addr    = (eth_params+card)->remote_addr;

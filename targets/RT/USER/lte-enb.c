@@ -574,7 +574,8 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
   // ****************************************
   // TDD workaround
-  if ((eNB->rfdevice.type == EXMIMO_DEV) && (eNB->frame_parms.frame_type == TDD) && subframe_select(&eNB->frame_parms,proc->subframe_rx)==SF_UL) {
+  //if ((eNB->rfdevice.type == EXMIMO_DEV) && (eNB->frame_parms.frame_type == TDD) && subframe_select(&eNB->frame_parms,proc->subframe_rx)==SF_UL) {
+  if ((eNB->rfdevice.openair0_cfg->duplex_mode == duplex_mode_TDD_workaround) && (eNB->frame_parms.frame_type == TDD) && subframe_select(&eNB->frame_parms,proc->subframe_rx)==SF_UL) {
     remove_1_4_fs(eNB,proc->subframe_rx<<1); // TDD workaround for EXMIMO2 card
     remove_1_4_fs(eNB,1+(proc->subframe_rx<<1));
   }

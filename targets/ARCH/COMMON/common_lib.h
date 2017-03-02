@@ -70,7 +70,9 @@ typedef enum {
 #include <enums.h>
 #else
 typedef enum {
-  duplex_mode_TDD=1,duplex_mode_FDD=0
+  duplex_mode_FDD=0,
+  duplex_mode_TDD=1,
+  duplex_mode_TDD_workaround=2 // TDD workaround flag for EXMIMO2 card because of the PLL limitation in TDD mode for Lms6002D
 } duplex_mode_t;
 #endif
 
@@ -203,6 +205,9 @@ typedef struct {
   unsigned int my_port;
   //! Configuration file for LMS7002M
   char *configFilename;
+  //! TDD Reciprocity calibration, when equals 1, card
+  //config by Octave rather than by softmodem
+  int tdd_recip_calib;
 } openair0_config_t;
 
 /*! \brief RF mapping */ 

@@ -4,30 +4,34 @@
 #include "UTIL/LOG/log.h"
 #include "PHY/impl_defs_lte.h"
 
+extern char tdd_recip_calib_file[1024];
+
 int read_calibration_matrix(int32_t **tdd_calib_coeffs, char *calibF_fname, LTE_DL_FRAME_PARMS *frame_parms) {
 
   FILE *calibF_fd;
-  char calibF_file_name[1024];
   int aa,re,calibF_e ;
-  char* openair_dir = getenv("OPENAIR_DIR");
 
-  //printf("Number of antennas = %d\n", frame_parms->nb_antennas_tx) ;
-  //printf("OFDM symbol size = %d\n", frame_parms->ofdm_symbol_size) ;
+  //char calibF_file_name[1024];
+  //char* openair_dir = getenv("OPENAIR_DIR");
 
-  if (openair_dir == NULL) {
-   printf("ERR: OPENAIR_DIR not defined (did you source oaienv?)\n");
-   return(1);
-  }
+  //if (openair_dir == NULL) {
+  // printf("ERR: OPENAIR_DIR not defined (did you source oaienv?)\n");
+  // return(1);
+  //}
 
-  sprintf(calibF_file_name, "%s/targets/PROJECTS/TDDREC/result/%s", openair_dir, calibF_fname);
-  calibF_fd = fopen(calibF_file_name,"r") ;
+  //sprintf(calibF_file_name, "%s/targets/PROJECTS/TDDREC/result/%s", openair_dir, calibF_fname);
+  //calibF_fd = fopen(calibF_file_name,"r") ;
+  
+  calibF_fd = fopen(tdd_recip_calib_file, "r"); 
 
   if (calibF_fd == NULL) {
-   printf("Warning: %s not found, running with defaults\n", calibF_file_name);
+   //printf("Warning: %s not found, running with defaults\n", calibF_file_name);
+   printf("Warning: %s not found, running with defaults\n", tdd_recip_calib_file);
    return(1);
   }
 
-  printf("Loading Calibration matrix from %s\n", calibF_file_name);
+  //printf("Loading Calibration matrix from %s\n", calibF_file_name);
+  printf("Loading Calibration matrix from %s\n", tdd_recip_calib_file);
   
   for (aa=0;aa<frame_parms->nb_antennas_tx;aa++) {
     for(re=0;re<frame_parms->N_RB_DL*12;re++) {
