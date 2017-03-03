@@ -797,7 +797,16 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
   if (!openair0_cfg) {
     printf("Error, openair0_cfg is null!!\n");
     return(-1);
-  } else if (openair0_cfg[0].tdd_recip_calib == 1) {
+  }
+
+
+  /* device specific */
+  for (card=0; card<openair0_num_detected_cards; card++) {
+    openair0_cfg[card].iq_txshift = 4;//shift
+    openair0_cfg[card].iq_rxrescale = 15;//rescale iqs
+  }
+
+  if (openair0_cfg[0].tdd_recip_calib == 1) {
     printf("Warning, doing TDD reciprocity calibration, configuration has been done in Octave!!\n");
     return(-1);
   }
@@ -819,10 +828,6 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
       p_exmimo_config->framing.multicard_syncmode=SYNCMODE_MASTER;
     else
       p_exmimo_config->framing.multicard_syncmode=SYNCMODE_SLAVE;
-
-    /* device specific */
-    openair0_cfg[card].iq_txshift = 4;//shift
-    openair0_cfg[card].iq_rxrescale = 15;//rescale iqs
 
 
     if (openair0_cfg[card].sample_rate==30.72e6) {
