@@ -474,6 +474,8 @@ extern "C" {
 			set_rx_gain_offset(&openair0_cfg[0],i,bw_gain_adjust);
 
 			s->iris->setGain(SOAPY_SDR_RX, i, openair0_cfg[0].rx_gain[i]-openair0_cfg[0].rx_gain_offset[i]);
+			if (openair0_cfg[0].duplex_mode == 1) // TDD
+				s->iris->setAntenna(SOAPY_SDR_RX, i, (i==0)?"TRXA":"TRXB");			
 			s->iris->setDCOffsetMode(SOAPY_SDR_RX, i, true); // move somewhere else
 		}
 	}
