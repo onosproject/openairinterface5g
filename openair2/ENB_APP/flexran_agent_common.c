@@ -32,6 +32,7 @@
 #include "flexran_agent_common.h"
 #include "flexran_agent_common_internal.h"
 #include "flexran_agent_extern.h"
+#include "flexran_agent_net_comm.h"
 #include "PHY/extern.h"
 #include "log.h"
 
@@ -110,14 +111,16 @@ int flexran_agent_hello(mid_t mod_id, const void *params, Protocol__FlexranMessa
   Protocol__FlexHeader *header;
   /*TODO: Need to set random xid or xid from received hello message*/
   xid_t xid = 1;
-  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_HELLO, &header) != 0)
-    goto error;
 
   Protocol__FlexHello *hello_msg;
   hello_msg = malloc(sizeof(Protocol__FlexHello));
   if(hello_msg == NULL)
     goto error;
   protocol__flex_hello__init(hello_msg);
+
+  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_HELLO, &header) != 0)
+    goto error;
+
   hello_msg->header = header;
 
   *msg = malloc(sizeof(Protocol__FlexranMessage));
@@ -163,14 +166,16 @@ int flexran_agent_echo_request(mid_t mod_id, const void* params, Protocol__Flexr
   Protocol__FlexHeader *header;
   /*TODO: Need to set a random xid*/
   xid_t xid = 1;
-  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_ECHO_REQUEST, &header) != 0)
-    goto error;
 
-  Protocol__FlexEchoRequest *echo_request_msg;
+  Protocol__FlexEchoRequest *echo_request_msg = NULL;
   echo_request_msg = malloc(sizeof(Protocol__FlexEchoRequest));
   if(echo_request_msg == NULL)
     goto error;
   protocol__flex_echo_request__init(echo_request_msg);
+
+  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_ECHO_REQUEST, &header) != 0)
+    goto error;
+
   echo_request_msg->header = header;
 
   *msg = malloc(sizeof(Protocol__FlexranMessage));
@@ -217,15 +222,16 @@ int flexran_agent_echo_reply(mid_t mod_id, const void *params, Protocol__Flexran
   Protocol__FlexEchoRequest *echo_req = input->echo_request_msg;
   xid = (echo_req->header)->xid;
 
-  Protocol__FlexHeader *header;
-  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_ECHO_REPLY, &header) != 0)
-    goto error;
-
-  Protocol__FlexEchoReply *echo_reply_msg;
+  Protocol__FlexEchoReply *echo_reply_msg = NULL;
   echo_reply_msg = malloc(sizeof(Protocol__FlexEchoReply));
   if(echo_reply_msg == NULL)
     goto error;
   protocol__flex_echo_reply__init(echo_reply_msg);
+
+  Protocol__FlexHeader *header;
+  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_ECHO_REPLY, &header) != 0)
+    goto error;
+
   echo_reply_msg->header = header;
 
   *msg = malloc(sizeof(Protocol__FlexranMessage));
@@ -299,7 +305,7 @@ int flexran_agent_destroy_ue_config_reply(Protocol__FlexranMessage *msg) {
   if(msg->msg_case != PROTOCOL__FLEXRAN_MESSAGE__MSG_UE_CONFIG_REPLY_MSG)
     goto error;
   free(msg->ue_config_reply_msg->header);
-  int i, j;
+  int i;
   Protocol__FlexUeConfigReply *reply = msg->ue_config_reply_msg;
   
   for(i = 0; i < reply->n_ue_config;i++){
@@ -376,7 +382,7 @@ int flexran_agent_destroy_lc_config_request(Protocol__FlexranMessage *msg) {
 }
 
 // call this function to start a nanosecond-resolution timer
-struct timespec timer_start(){
+struct timespec timer_start(void) {
     struct timespec start_time;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
     return start_time;
@@ -395,11 +401,7 @@ int flexran_agent_control_delegation(mid_t mod_id, const void *params, Protocol_
   Protocol__FlexranMessage *input = (Protocol__FlexranMessage *)params;
   Protocol__FlexControlDelegation *control_delegation_msg = input->control_delegation_msg;
 
-  uint32_t delegation_type = control_delegation_msg->delegation_type;
-
-  int i;
-
-  struct timespec vartime = timer_start();
+  //  struct timespec vartime = timer_start();
   
   //Write the payload lib into a file in the cache and load the lib
   char lib_name[120];
@@ -413,16 +415,15 @@ int flexran_agent_control_delegation(mid_t mod_id, const void *params, Protocol_
   fwrite(control_delegation_msg->payload.data, control_delegation_msg->payload.len, 1, f);
   fclose(f);
 
-  long time_elapsed_nanos = timer_end(vartime);
+  //  long time_elapsed_nanos = timer_end(vartime);
   *msg = NULL;
   return 0;
 
- error:
-  return -1;
 }
 
 int flexran_agent_destroy_control_delegation(Protocol__FlexranMessage *msg) {
   /*TODO: Dealocate memory for a dynamically allocated control delegation message*/
+  return 0;
 }
 
 int flexran_agent_reconfiguration(mid_t mod_id, const void *params, Protocol__FlexranMessage **msg) {
@@ -437,6 +438,7 @@ int flexran_agent_reconfiguration(mid_t mod_id, const void *params, Protocol__Fl
 
 int flexran_agent_destroy_agent_reconfiguration(Protocol__FlexranMessage *msg) {
   /*TODO: Dealocate memory for a dynamically allocated agent reconfiguration message*/
+  return 0;
 }
 
 
@@ -474,7 +476,7 @@ int flexran_get_current_time_ms (mid_t mod_id, int subframe_flag){
 
 unsigned int flexran_get_current_frame (mid_t mod_id) {
 
-  #warning "SFN will not be in [0-1023] when oaisim is used"
+  //  #warning "SFN will not be in [0-1023] when oaisim is used"
   return ((eNB_MAC_INST *)enb[mod_id])->frame;
   
 }
@@ -514,15 +516,14 @@ uint16_t flexran_get_future_sfn_sf (mid_t mod_id, int ahead_of_time) {
   subframe = (sub_frame_t) flexran_get_current_subframe(mod_id);
 
   subframe = ((subframe + ahead_of_time) % 10);
-
-  int full_frames_ahead = ((ahead_of_time / 10) % 10);
   
-  frame = frame + full_frames_ahead;
-
   if (subframe < flexran_get_current_subframe(mod_id)) {
-    frame++;
+    frame = (frame + 1) % 1024;
   }
-
+  
+  int additional_frames = ahead_of_time / 10;
+  frame = (frame + additional_frames) % 1024;
+  
   frame_mask = ((1<<12) - 1);
   sf_mask = ((1<<4) - 1);
   sfn_sf = (subframe & sf_mask) | ((frame & frame_mask) << 4);
@@ -551,69 +552,81 @@ int flexran_get_ue_phr (mid_t mod_id, mid_t ue_id) {
 }
 
 int flexran_get_ue_wcqi (mid_t mod_id, mid_t ue_id) {
-  return ((UE_list_t *)enb_ue[mod_id])->eNB_UE_stats[UE_PCCID(mod_id,ue_id)][ue_id].dl_cqi;
+  LTE_eNB_UE_stats     *eNB_UE_stats     = NULL;
+  eNB_UE_stats = mac_xface->get_eNB_UE_stats(mod_id, 0, UE_RNTI(mod_id, ue_id));
+  return eNB_UE_stats->DL_cqi[0];
+
+  //  return ((UE_list_t *)enb_ue[mod_id])->eNB_UE_stats[UE_PCCID(mod_id,ue_id)][ue_id].dl_cqi;
 }
 
 int flexran_get_tx_queue_size(mid_t mod_id, mid_t ue_id, logical_chan_id_t channel_id) {
-	rnti_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
-	uint16_t frame = (uint16_t) flexran_get_current_frame(mod_id);
-	mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(mod_id,rnti, mod_id,frame,ENB_FLAG_YES,MBMS_FLAG_NO,channel_id,0);
-	return rlc_status.bytes_in_buffer;
+  rnti_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
+  uint16_t frame = (uint16_t) flexran_get_current_frame(mod_id);
+  mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(mod_id,rnti, mod_id,frame,ENB_FLAG_YES,MBMS_FLAG_NO, channel_id, 0);
+  return rlc_status.bytes_in_buffer;
 }
 
-int flexran_update_TA(mid_t mod_id, mid_t ue_id, int CC_id) {
+int flexran_get_hol_delay(mid_t mod_id, mid_t ue_id, logical_chan_id_t channel_id) {
+  rnti_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
+  uint16_t frame = (uint16_t) flexran_get_current_frame(mod_id);
+  mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(mod_id, rnti, mod_id, frame, ENB_FLAG_YES, MBMS_FLAG_NO, channel_id, 0);
+  return rlc_status.head_sdu_creation_time;
+}
+
+short flexran_get_TA(mid_t mod_id, mid_t ue_id, int CC_id) {
   
   UE_list_t *UE_list=&eNB_mac_inst[mod_id].UE_list;
-  UE_sched_ctrl *ue_sched_ctl = &UE_list->UE_sched_ctrl[ue_id];
   int rnti;
 
   rnti = flexran_get_ue_crnti(mod_id, ue_id);
-  if (ue_sched_ctl->ta_timer == 0) {
 
-    // WE SHOULD PROTECT the eNB_UE_stats with a mutex here ...                                                                         
-    LTE_eNB_UE_stats		*eNB_UE_stats = mac_xface->get_eNB_UE_stats(mod_id, CC_id, rnti);
-    ue_sched_ctl->ta_timer		      = 20;	// wait 20 subframes before taking TA measurement from PHY                                         
-    switch (PHY_vars_eNB_g[mod_id][CC_id]->frame_parms.N_RB_DL) {
-    case 6:
-      ue_sched_ctl->ta_update		      = eNB_UE_stats->timing_advance_update;
-      break;
-
-    case 15:
-      ue_sched_ctl->ta_update		      = eNB_UE_stats->timing_advance_update/2;
-      break;
-
-    case 25:
-      ue_sched_ctl->ta_update		      = eNB_UE_stats->timing_advance_update/4;
-      break;
-
-    case 50:
-      ue_sched_ctl->ta_update		      = eNB_UE_stats->timing_advance_update/8;
-      break;
-
-    case 75:
-      ue_sched_ctl->ta_update		      = eNB_UE_stats->timing_advance_update/12;
-      break;
-
-    case 100:
-      ue_sched_ctl->ta_update		      = eNB_UE_stats->timing_advance_update/16;
-      break;
+  LTE_eNB_UE_stats		*eNB_UE_stats = mac_xface->get_eNB_UE_stats(mod_id, CC_id, rnti);
+  //ue_sched_ctl->ta_timer		      = 20;	// wait 20 subframes before taking TA measurement from PHY                                         
+  switch (PHY_vars_eNB_g[mod_id][CC_id]->frame_parms.N_RB_DL) {
+  case 6:
+    return eNB_UE_stats->timing_advance_update;
+  case 15:
+    return eNB_UE_stats->timing_advance_update/2;
+  case 25:
+    return eNB_UE_stats->timing_advance_update/4;
+  case 50:
+    return eNB_UE_stats->timing_advance_update/8;
+  case 75:
+    return eNB_UE_stats->timing_advance_update/12;
+  case 100:
+    if (PHY_vars_eNB_g[mod_id][CC_id]->frame_parms.threequarter_fs == 0) {
+      return eNB_UE_stats->timing_advance_update/16;
+    } else {
+      return eNB_UE_stats->timing_advance_update/12;
     }
+  default:
+    return 0;
+  }
+}
+
+void flexran_update_TA(mid_t mod_id, mid_t ue_id, int CC_id) {
+  
+  UE_list_t *UE_list=&eNB_mac_inst[mod_id].UE_list;
+  UE_sched_ctrl *ue_sched_ctl = &UE_list->UE_sched_ctrl[ue_id];
+
+  if (ue_sched_ctl->ta_timer == 0) {
+    
+    // WE SHOULD PROTECT the eNB_UE_stats with a mutex here ...                                                                         
+    //    LTE_eNB_UE_stats		*eNB_UE_stats = mac_xface->get_eNB_UE_stats(mod_id, CC_id, rnti);
+    //ue_sched_ctl->ta_timer		      = 20;	// wait 20 subframes before taking TA measurement from PHY                                         
+    ue_sched_ctl->ta_update = flexran_get_TA(mod_id, ue_id, CC_id);
+
     // clear the update in case PHY does not have a new measurement after timer expiry                                               
-    eNB_UE_stats->timing_advance_update	      = 0;
-  }
-  else {
+    //    eNB_UE_stats->timing_advance_update	      = 0;
+  } else {
     ue_sched_ctl->ta_timer--;
-    ue_sched_ctl->ta_update		      = 0;	// don't trigger a timing advance command                                                          
+    ue_sched_ctl->ta_update		      = 0;	// don't trigger a timing advance command      
   }
-
-  return ue_sched_ctl->ta_update	      = 0;
-
 }
 
 int flexran_get_MAC_CE_bitmap_TA(mid_t mod_id, mid_t ue_id,int CC_id) {
   
   UE_list_t			*UE_list      = &eNB_mac_inst[mod_id].UE_list;
-  UE_sched_ctrl			*ue_sched_ctl = &UE_list->UE_sched_ctrl[ue_id];
 
   rnti_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
   LTE_eNB_UE_stats *eNB_UE_stats = mac_xface->get_eNB_UE_stats(mod_id,CC_id,rnti);
@@ -622,8 +635,8 @@ int flexran_get_MAC_CE_bitmap_TA(mid_t mod_id, mid_t ue_id,int CC_id) {
     return 0;
   }
 
-  if (ue_sched_ctl->ta_update == 0) {
-    return 1;
+  if (flexran_get_TA(mod_id, ue_id, CC_id) != 0) {
+    return PROTOCOL__FLEX_CE_TYPE__FLPCET_TA;
   } else {
     return 0;
   }
@@ -637,7 +650,6 @@ int flexran_get_active_CC(mid_t mod_id, mid_t ue_id) {
 int flexran_get_current_RI(mid_t mod_id, mid_t ue_id, int CC_id) {
 	LTE_eNB_UE_stats	*eNB_UE_stats = NULL;
 
-	int			 pCCid	      = UE_PCCID(mod_id,ue_id);
 	rnti_t			 rnti	      = flexran_get_ue_crnti(mod_id,ue_id);
 
 	eNB_UE_stats			      = mac_xface->get_eNB_UE_stats(mod_id,CC_id,rnti);
@@ -679,7 +691,13 @@ int flexran_get_tpc(mid_t mod_id, mid_t ue_id) {
 	return tpc;
 }
 
-int flexran_get_harq(const mid_t mod_id, const uint8_t CC_id, const mid_t ue_id, const int frame, const uint8_t subframe, int *id, int *round)	{ //flag_id_status = 0 then id, else status
+int flexran_get_harq(const mid_t mod_id, 
+		     const uint8_t CC_id, 
+		     const mid_t ue_id, 
+		     const int frame, 
+		     const uint8_t subframe, 
+		     uint8_t *id, 
+		     uint8_t *round)	{ //flag_id_status = 0 then id, else status
 	/*TODO: Add int TB in function parameters to get the status of the second TB. This can be done to by editing in
 	 * get_ue_active_harq_pid function in line 272 file: phy_procedures_lte_eNB.c to add
 	 * DLSCH_ptr = PHY_vars_eNB_g[Mod_id][CC_id]->dlsch_eNB[(uint32_t)UE_id][1];*/
@@ -701,47 +719,47 @@ int flexran_get_harq(const mid_t mod_id, const uint8_t CC_id, const mid_t ue_id,
   /* } */
 
   /* return 0; */
-  return round;
+  return *round;
 }
 
 int flexran_get_p0_pucch_dbm(mid_t mod_id, mid_t ue_id, int CC_id) {
-	LTE_eNB_UE_stats *eNB_UE_stats = NULL;
-	uint32_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
-
-	eNB_UE_stats =  mac_xface->get_eNB_UE_stats(mod_id, CC_id, rnti);
-	
-	if (eNB_UE_stats == NULL) {
-	  return -1;
-	}
-	
-	if(eNB_UE_stats->Po_PUCCH_update == 1) {
-		return eNB_UE_stats->Po_PUCCH_dBm;
-	}
-	else
-		return -1;
+  LTE_eNB_UE_stats *eNB_UE_stats = NULL;
+  uint32_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
+  
+  eNB_UE_stats =  mac_xface->get_eNB_UE_stats(mod_id, CC_id, rnti);
+  
+  if (eNB_UE_stats == NULL) {
+    return -1;
+  }
+  
+  //	if(eNB_UE_stats->Po_PUCCH_update == 1) {
+  return eNB_UE_stats->Po_PUCCH_dBm;
+  //}
+  //else
+  //  return -1;
 }
 
 int flexran_get_p0_nominal_pucch(mid_t mod_id, int CC_id) {
-	int32_t pucch_rx_received = mac_xface->get_target_pucch_rx_power(mod_id, CC_id);
-	return pucch_rx_received;
+  int32_t pucch_rx_received = mac_xface->get_target_pucch_rx_power(mod_id, CC_id);
+  return pucch_rx_received;
 }
 
 int flexran_get_p0_pucch_status(mid_t mod_id, mid_t ue_id, int CC_id) {
-        LTE_eNB_UE_stats *eNB_UE_stats = NULL;
-	uint32_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
-
-	eNB_UE_stats =  mac_xface->get_eNB_UE_stats(mod_id, CC_id, rnti);
-	return eNB_UE_stats->Po_PUCCH_update;
+  LTE_eNB_UE_stats *eNB_UE_stats = NULL;
+  uint32_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
+  
+  eNB_UE_stats =  mac_xface->get_eNB_UE_stats(mod_id, CC_id, rnti);
+  return eNB_UE_stats->Po_PUCCH_update;
 }
 
 int flexran_update_p0_pucch(mid_t mod_id, mid_t ue_id, int CC_id) {
-          LTE_eNB_UE_stats *eNB_UE_stats = NULL;
-	uint32_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
-
-	eNB_UE_stats =  mac_xface->get_eNB_UE_stats(mod_id, CC_id, rnti);
-	eNB_UE_stats->Po_PUCCH_update = 0;
-
-	return 0;
+  LTE_eNB_UE_stats *eNB_UE_stats = NULL;
+  uint32_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
+  
+  eNB_UE_stats =  mac_xface->get_eNB_UE_stats(mod_id, CC_id, rnti);
+  eNB_UE_stats->Po_PUCCH_update = 0;
+  
+  return 0;
 }
 
 
@@ -922,15 +940,11 @@ int flexran_get_special_subframe_assignment(mid_t mod_id, int CC_id) {
 }
 
 int flexran_get_ra_ResponseWindowSize(mid_t mod_id, int CC_id) {
-	Enb_properties_array_t *enb_properties;
-	enb_properties = enb_config_get();
-	return enb_properties->properties[mod_id]->rach_raResponseWindowSize[CC_id];
+  return enb_config_get()->properties[mod_id]->rach_raResponseWindowSize[CC_id];
 }
 
 int flexran_get_mac_ContentionResolutionTimer(mid_t mod_id, int CC_id) {
-	Enb_properties_array_t *enb_properties;
-	enb_properties = enb_config_get();
-	return enb_properties->properties[mod_id]->rach_macContentionResolutionTimer[CC_id];
+  return enb_config_get()->properties[mod_id]->rach_macContentionResolutionTimer[CC_id];
 }
 
 int flexran_get_duplex_mode(mid_t mod_id, int CC_id) {
@@ -969,16 +983,19 @@ int flexran_get_num_pdcch_symb(mid_t mod_id, int CC_id) {
 
 
 int flexran_get_time_alignment_timer(mid_t mod_id, mid_t ue_id) {
-	struct rrc_eNB_ue_context_s* ue_context_p = NULL;
-	uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
-
-	ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
-	if(ue_context_p != NULL) {
-	  if(ue_context_p->ue_context.mac_MainConfig != NULL)
-	    return ue_context_p->ue_context.mac_MainConfig->timeAlignmentTimerDedicated;
-	}
-	else
-	  return -1;
+  struct rrc_eNB_ue_context_s* ue_context_p = NULL;
+  uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
+  
+  ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
+  if(ue_context_p != NULL) {
+    if(ue_context_p->ue_context.mac_MainConfig != NULL) {
+      return ue_context_p->ue_context.mac_MainConfig->timeAlignmentTimerDedicated;
+    } else {
+      return -1;
+    }
+  } else {
+    return -1;
+  }
 }
 
 int flexran_get_meas_gap_config(mid_t mod_id, mid_t ue_id) {
@@ -1040,12 +1057,14 @@ int flexran_get_half_duplex(mid_t ue_id) {
 		//	halfduplex = 1;
 	//}
 	//return halfduplex;
+  return 0;
 }
 
 int flexran_get_intra_sf_hopping(mid_t ue_id) {
 	//TODO:Get proper value
 	//temp = (((UE_RRC_INST *)enb_ue_rrc[ue_id])->UECap->UE_EUTRA_Capability->featureGroupIndicators->buf);
 	//return (0 & ( 1 << (31)));
+  return 0;
 }
 
 int flexran_get_type2_sb_1(mid_t ue_id) {
@@ -1053,11 +1072,13 @@ int flexran_get_type2_sb_1(mid_t ue_id) {
 	//uint8_t temp = 0;
 	//temp = (((UE_RRC_INST *)enb_ue_rrc[ue_id])->UECap->UE_EUTRA_Capability->featureGroupIndicators->buf);
 	//return (temp & ( 1 << (11)));
+  return 0;
 }
 
 int flexran_get_ue_category(mid_t ue_id) {
 	//TODO:Get proper value
 	//return (((UE_RRC_INST *)enb_ue_rrc[ue_id])->UECap->UE_EUTRA_Capability->ue_Category);
+  return 0;
 }
 
 int flexran_get_res_alloc_type1(mid_t ue_id) {
@@ -1065,35 +1086,41 @@ int flexran_get_res_alloc_type1(mid_t ue_id) {
 	//uint8_t temp = 0;
 	//temp = (((UE_RRC_INST *)enb_ue_rrc[ue_id])->UECap->UE_EUTRA_Capability->featureGroupIndicators->buf);
 	//return (temp & ( 1 << (30)));
+  return 0;
 }
 
 int flexran_get_ue_transmission_mode(mid_t mod_id, mid_t ue_id) {
-	struct rrc_eNB_ue_context_s* ue_context_p = NULL;
-	uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
-
-	ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
-
-	if(ue_context_p != NULL) {
-	  if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
-	    return ue_context_p->ue_context.physicalConfigDedicated->antennaInfo->choice.explicitValue.transmissionMode;
-	  }
-	}
-	else
-	  return -1;
+  struct rrc_eNB_ue_context_s* ue_context_p = NULL;
+  uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
+  
+  ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
+  
+  if(ue_context_p != NULL) {
+    if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
+      return ue_context_p->ue_context.physicalConfigDedicated->antennaInfo->choice.explicitValue.transmissionMode;
+    } else {
+      return -1;
+    }
+  } else {
+    return -1;
+  }
 }
 
 int flexran_get_tti_bundling(mid_t mod_id, mid_t ue_id) {
-	struct rrc_eNB_ue_context_s* ue_context_p = NULL;
-	uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
-
-	ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
-	if(ue_context_p != NULL) {
-	  if(ue_context_p->ue_context.mac_MainConfig != NULL){
-	    return ue_context_p->ue_context.mac_MainConfig->ul_SCH_Config->ttiBundling;
-	  }
-	}
-	else
-	  return -1;
+  struct rrc_eNB_ue_context_s* ue_context_p = NULL;
+  uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
+  
+  ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
+  if(ue_context_p != NULL) {
+    if(ue_context_p->ue_context.mac_MainConfig != NULL){
+      return ue_context_p->ue_context.mac_MainConfig->ul_SCH_Config->ttiBundling;
+    } else {
+      return -1;
+    }
+  }
+  else {
+    return -1;
+  }
 }
 
 int flexran_get_maxHARQ_TX(mid_t mod_id, mid_t ue_id) {
@@ -1110,45 +1137,52 @@ int flexran_get_maxHARQ_TX(mid_t mod_id, mid_t ue_id) {
 }
 
 int flexran_get_beta_offset_ack_index(mid_t mod_id, mid_t ue_id) {
-	struct rrc_eNB_ue_context_s* ue_context_p = NULL;
-	uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
-
-	ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
-	if(ue_context_p != NULL) {
-	  if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
-	    return ue_context_p->ue_context.physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_ACK_Index;
-	  }
-	}
-	else
-	  return -1;
+  struct rrc_eNB_ue_context_s* ue_context_p = NULL;
+  uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
+  
+  ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
+  if(ue_context_p != NULL) {
+    if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
+      return ue_context_p->ue_context.physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_ACK_Index;
+    } else {
+      return -1;
+    } 
+  } else {
+    return -1;
+  }
 }
 
 int flexran_get_beta_offset_ri_index(mid_t mod_id, mid_t ue_id) {
-	struct rrc_eNB_ue_context_s* ue_context_p = NULL;
-	uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
-
-	ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
-	if(ue_context_p != NULL) {
-	  if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
-	    return ue_context_p->ue_context.physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_RI_Index;
-	  }
-	}
-	else
-	  return -1;
+  struct rrc_eNB_ue_context_s* ue_context_p = NULL;
+  uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
+  
+  ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
+  if(ue_context_p != NULL) {
+    if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
+      return ue_context_p->ue_context.physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_RI_Index;
+    } else {
+      return -1;
+    }
+  } else {
+    return -1;
+  }
 }
 
 int flexran_get_beta_offset_cqi_index(mid_t mod_id, mid_t ue_id) {
-	struct rrc_eNB_ue_context_s* ue_context_p = NULL;
-	uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
-
-	ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
-	if(ue_context_p != NULL) {
-	  if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
-	    return ue_context_p->ue_context.physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_CQI_Index;
-	  }
-	}
-	else
-	  return -1;
+  struct rrc_eNB_ue_context_s* ue_context_p = NULL;
+  uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
+  
+  ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
+  if(ue_context_p != NULL) {
+    if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
+      return ue_context_p->ue_context.physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_CQI_Index;
+    } else {
+      return -1;
+    }
+  }
+  else {
+    return -1;
+  }
 }
 
 int flexran_get_simultaneous_ack_nack_cqi(mid_t mod_id, mid_t ue_id) {
@@ -1185,32 +1219,39 @@ int flexran_get_aperiodic_cqi_rep_mode(mid_t mod_id,mid_t ue_id) {
 }
 
 int flexran_get_tdd_ack_nack_feedback(mid_t mod_id, mid_t ue_id) {
-	struct rrc_eNB_ue_context_s* ue_context_p = NULL;
-	uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
+  // TODO: This needs fixing
+  return -1;
 
-	ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
-
-	if(ue_context_p != NULL) {
-	  if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
-	    return ue_context_p->ue_context.physicalConfigDedicated->pucch_ConfigDedicated->tdd_AckNackFeedbackMode;
-	  }
-	}
-	else
-	  return -1;
+  /* struct rrc_eNB_ue_context_s* ue_context_p = NULL; */
+  /* uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id); */
+  
+  /* ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP); */
+  
+  /* if(ue_context_p != NULL) { */
+  /*   if(ue_context_p->ue_context.physicalConfigDedicated != NULL){ */
+  /*     return ue_context_p->ue_context.physicalConfigDedicated->pucch_ConfigDedicated->tdd_AckNackFeedbackMode; */
+  /*   } else { */
+  /*     return -1; */
+  /*   } */
+  /* } else { */
+  /*   return -1; */
+  /* } */
 }
 
 int flexran_get_ack_nack_repetition_factor(mid_t mod_id, mid_t ue_id) {
-	struct rrc_eNB_ue_context_s* ue_context_p = NULL;
-	uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
-
-	ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
-	if(ue_context_p != NULL) {
-	  if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
-	    return ue_context_p->ue_context.physicalConfigDedicated->pucch_ConfigDedicated->ackNackRepetition.choice.setup.repetitionFactor;
-	  }
-	}
-	else
-	  return -1;
+  struct rrc_eNB_ue_context_s* ue_context_p = NULL;
+  uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
+  
+  ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
+  if(ue_context_p != NULL) {
+    if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
+      return ue_context_p->ue_context.physicalConfigDedicated->pucch_ConfigDedicated->ackNackRepetition.choice.setup.repetitionFactor;
+    } else {
+      return -1;
+    }
+  } else {
+    return -1;
+  }
 }
 
 int flexran_get_extended_bsr_size(mid_t mod_id, mid_t ue_id) {
@@ -1233,23 +1274,26 @@ int flexran_get_extended_bsr_size(mid_t mod_id, mid_t ue_id) {
 }
 
 int flexran_get_ue_transmission_antenna(mid_t mod_id, mid_t ue_id) {
-	struct rrc_eNB_ue_context_s* ue_context_p = NULL;
-	uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
-
-	ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
-
-	if(ue_context_p != NULL) {
-	  if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
-	    if(ue_context_p->ue_context.physicalConfigDedicated->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.choice.setup == AntennaInfoDedicated__ue_TransmitAntennaSelection__setup_closedLoop)
-	      return 2;
-	    else if(ue_context_p->ue_context.physicalConfigDedicated->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.choice.setup == AntennaInfoDedicated__ue_TransmitAntennaSelection__setup_openLoop)
-	      return 1;
-	    else
-	      return 0;
-	  }
-	}
-	else
-	  return -1;
+  struct rrc_eNB_ue_context_s* ue_context_p = NULL;
+  uint32_t rntiP = flexran_get_ue_crnti(mod_id,ue_id);
+  
+  ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[mod_id],rntiP);
+  
+  if(ue_context_p != NULL) {
+    if(ue_context_p->ue_context.physicalConfigDedicated != NULL){
+      if(ue_context_p->ue_context.physicalConfigDedicated->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.choice.setup == AntennaInfoDedicated__ue_TransmitAntennaSelection__setup_closedLoop) {
+	return 2;
+      } else if(ue_context_p->ue_context.physicalConfigDedicated->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.choice.setup == AntennaInfoDedicated__ue_TransmitAntennaSelection__setup_openLoop) {
+	return 1;
+      } else {
+	return 0;
+      }
+    } else {
+      return -1;
+    }
+  } else {
+    return -1;
+  }
 }
 
 int flexran_get_lcg(mid_t ue_id, mid_t lc_id) {
@@ -1265,10 +1309,13 @@ int flexran_get_lcg(mid_t ue_id, mid_t lc_id) {
 
 int flexran_get_direction(mid_t ue_id, mid_t lc_id) {
 	/*TODO: fill with the value for the rest of LCID*/
-  if(lc_id == DCCH | lc_id == DCCH1)
+  if(lc_id == DCCH || lc_id == DCCH1) {
     return 2;
-  else if(lc_id == DTCH)
+  } else if(lc_id == DTCH) {
     return 1;
+  } else {
+    return -1;
+  }
 }
 
 int flexran_agent_ue_state_change(mid_t mod_id, uint32_t rnti, uint8_t state_change) {
@@ -1276,8 +1323,7 @@ int flexran_agent_ue_state_change(mid_t mod_id, uint32_t rnti, uint8_t state_cha
   Protocol__FlexranMessage *msg;
   Protocol__FlexHeader *header;
   void *data;
-  int priority;
-  err_code_t err_code;
+  int priority = 0;
 
   int xid = 0;
 
@@ -1461,14 +1507,14 @@ int flexran_agent_ue_state_change(mid_t mod_id, uint32_t rnti, uint8_t state_cha
   data = flexran_agent_pack_message(msg, &size);
   /*Send sr info using the MAC channel of the eNB*/
   if (flexran_agent_msg_send(mod_id, FLEXRAN_AGENT_DEFAULT, data, size, priority)) {
-    err_code = PROTOCOL__FLEXRAN_ERR__MSG_ENQUEUING;
     goto error;
   }
 
   LOG_D(FLEXRAN_AGENT,"sent message with size %d\n", size);
-  return;
+  return 0;
  error:
   LOG_D(FLEXRAN_AGENT, "Could not send UE state message\n");
+  return -1;
 }
 
 
@@ -1481,15 +1527,17 @@ int flexran_agent_lc_config_reply(mid_t mod_id, const void *params, Protocol__Fl
   xid = (lc_config_request_msg->header)->xid;
 
   int i, j;
-  Protocol__FlexHeader *header;
-  if(flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_GET_LC_CONFIG_REPLY, &header) != 0)
-    goto error;
 
   Protocol__FlexLcConfigReply *lc_config_reply_msg;
   lc_config_reply_msg = malloc(sizeof(Protocol__FlexLcConfigReply));
   if(lc_config_reply_msg == NULL)
     goto error;
   protocol__flex_lc_config_reply__init(lc_config_reply_msg);
+
+  Protocol__FlexHeader *header;
+  if(flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_GET_LC_CONFIG_REPLY, &header) != 0)
+    goto error;
+
   lc_config_reply_msg->header = header;
 
   lc_config_reply_msg->n_lc_ue_config = flexran_get_num_ues(mod_id);
@@ -1606,15 +1654,16 @@ int flexran_agent_ue_config_reply(mid_t mod_id, const void *params, Protocol__Fl
 
   int i;
 
-  Protocol__FlexHeader *header;
-  if(flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_GET_UE_CONFIG_REPLY, &header) != 0)
-    goto error;
-
   Protocol__FlexUeConfigReply *ue_config_reply_msg;
   ue_config_reply_msg = malloc(sizeof(Protocol__FlexUeConfigReply));
   if(ue_config_reply_msg == NULL)
     goto error;
   protocol__flex_ue_config_reply__init(ue_config_reply_msg);
+
+  Protocol__FlexHeader *header;
+  if(flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_GET_UE_CONFIG_REPLY, &header) != 0)
+    goto error;
+
   ue_config_reply_msg->header = header;
 
   ue_config_reply_msg->n_ue_config = flexran_get_num_ues(mod_id);
@@ -1805,16 +1854,16 @@ int flexran_agent_enb_config_request(mid_t mod_id, const void* params, Protocol_
 
 	Protocol__FlexHeader *header;
 	xid_t xid = 1;
-	if(flexran_create_header(xid,PROTOCOL__FLEX_TYPE__FLPT_GET_ENB_CONFIG_REQUEST, &header) != 0)
-	  goto error;
 
 	Protocol__FlexEnbConfigRequest *enb_config_request_msg;
 	enb_config_request_msg = malloc(sizeof(Protocol__FlexEnbConfigRequest));
-
 	if(enb_config_request_msg == NULL)
 	  goto error;
-
 	protocol__flex_enb_config_request__init(enb_config_request_msg);
+	
+	if(flexran_create_header(xid,PROTOCOL__FLEX_TYPE__FLPT_GET_ENB_CONFIG_REQUEST, &header) != 0)
+	  goto error;
+
 	enb_config_request_msg->header = header;
 
 	*msg = malloc(sizeof(Protocol__FlexranMessage));
@@ -1846,19 +1895,19 @@ int flexran_agent_enb_config_reply(mid_t mod_id, const void *params, Protocol__F
   Protocol__FlexEnbConfigRequest *enb_config_req_msg = input->enb_config_request_msg;
   xid = (enb_config_req_msg->header)->xid;
   
-  int i, j, k;
-  int cc_id = 0;
+  int i, j;
   int enb_id = mod_id;
   
-  Protocol__FlexHeader *header;
-  if(flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_GET_ENB_CONFIG_REPLY, &header) != 0)
-    goto error;
-  
-   Protocol__FlexEnbConfigReply *enb_config_reply_msg;
+  Protocol__FlexEnbConfigReply *enb_config_reply_msg;
   enb_config_reply_msg = malloc(sizeof(Protocol__FlexEnbConfigReply));
   if(enb_config_reply_msg == NULL)
     goto error;
   protocol__flex_enb_config_reply__init(enb_config_reply_msg);
+
+  Protocol__FlexHeader *header;
+  if(flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_GET_ENB_CONFIG_REPLY, &header) != 0)
+    goto error;
+  
   enb_config_reply_msg->header = header;
   
   enb_config_reply_msg->enb_id = mod_id;

@@ -43,6 +43,13 @@ Description Contains global common definitions
 #include <stddef.h>
 #include <stdbool.h>
 
+/* boolean_t is also defined in openair2/COMMON/platform_types.h
+ * let's protect potential redefinition
+ */
+
+#ifndef _BOOLEAN_T_DEFINED_
+#define _BOOLEAN_T_DEFINED_
+
 typedef signed char        boolean_t;
 
 #if !defined(TRUE)
@@ -54,6 +61,8 @@ typedef signed char        boolean_t;
 #endif
 
 #define BOOL_NOT(b) (b^TRUE)
+
+#endif /* _BOOLEAN_T_DEFINED_ */
 
 #define NAS_UE_ID_FMT "0x%06x"
 
@@ -306,15 +315,6 @@ typedef struct {
  * A list of TAIs
  */
 #define TAI_LIST_T(SIZE) struct {Byte_t n_tais; tai_t tai[SIZE];}
-
-/*
- * User notification callback, executed whenever a change of data with
- * respect of network information (e.g. network registration and/or
- * location change, new PLMN becomes available) is notified by the
- * EPS Mobility Management sublayer
- */
-typedef int (*emm_indication_callback_t) (Stat_t, tac_t, ci_t, AcT_t,
-    const char*, size_t);
 
 typedef enum eps_protocol_discriminator_e {
   /* Protocol discriminator identifier for EPS Mobility Management */

@@ -37,7 +37,7 @@
 #include "SCHED/extern.h"
 #include "SIMULATION/TOOLS/defs.h"
 //#define DEBUG_DLSCH_DECODING
- 
+
 
 void free_ue_dlsch(LTE_UE_DLSCH_t *dlsch)
 {
@@ -159,6 +159,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                          LTE_DL_FRAME_PARMS *frame_parms,
                          LTE_UE_DLSCH_t *dlsch,
                          LTE_DL_UE_HARQ_t *harq_process,
+                         uint8_t frame,
                          uint8_t subframe,
                          uint8_t harq_pid,
                          uint8_t is_crnti,
@@ -239,6 +240,11 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   if (subframe>9) {
     printf("dlsch_decoding.c: Illegal subframe index %d\n",subframe);
     return(dlsch->max_turbo_iterations);
+  }
+
+  if (dlsch->harq_ack[subframe].ack != 2) {
+    LOG_D(PHY, "[UE %d] DLSCH @ SF%d : ACK bit is %d instead of DTX even before PDSCH is decoded!\n",
+        phy_vars_ue->Mod_id, subframe, dlsch->harq_ack[subframe].ack);
   }
 
   if (llr8_flag == 0) {
@@ -337,7 +343,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 
   for (r=0; r<harq_process->C; r++) {
 
-    
+
     // Get Turbo interleaver parameters
     if (r<harq_process->Cminus)
       Kr = harq_process->Kminus;
@@ -381,7 +387,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
           harq_process->round);
 #endif
 
-
+//printf("dlsch->harq_processes[harq_pid]->rvidx = %d\n", dlsch->harq_processes[harq_pid]->rvidx);
     if (lte_rate_matching_turbo_rx(harq_process->RTC[r],
                                    G,
                                    harq_process->w[r],
@@ -480,7 +486,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       stop_meas(dlsch_turbo_decoding_stats);
     }
 #else
-    if ((harq_process->C == 1) ||  
+    if ((harq_process->C == 1) ||
 	((r==harq_process->C-1) && (skipped_last==0))) { // last segment with odd number of segments
 
       start_meas(dlsch_turbo_decoding_stats);
@@ -512,7 +518,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       }
       else {
 	skipped_last=0;
-	
+
 	if (Kr_last == Kr) { // decode 2 code segments with AVX2 version
 #ifdef DEBUG_DLSCH_DECODING
 	  printf("single decoding segment %d (%p)\n",r-1,&harq_process->d[r-1][96]);
@@ -559,7 +565,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 
 	     exit(-1);*/
 	  stop_meas(dlsch_turbo_decoding_stats);
-	} 
+	}
 	else { // Kr_last != Kr
 	  start_meas(dlsch_turbo_decoding_stats);
 	  ret = tc
@@ -579,7 +585,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
              &phy_vars_ue->dlsch_tc_intl1_stats,
              &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
 	  stop_meas(dlsch_turbo_decoding_stats);
-	  
+
 	  start_meas(dlsch_turbo_decoding_stats);
 	  ret = tc
             (&harq_process->d[r][96],
@@ -598,7 +604,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
              &phy_vars_ue->dlsch_tc_intl1_stats,
              &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
 	  stop_meas(dlsch_turbo_decoding_stats);
-	  
+
 	}
       }
     }
@@ -609,10 +615,20 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       //printf("CRC failed, segment %d\n",r);
       err_flag = 1;
     }
-
   }
 
+  int32_t frame_rx_prev = frame;
+  int32_t subframe_rx_prev = subframe - 1;
+  if (subframe_rx_prev < 0) {
+    frame_rx_prev--;
+    subframe_rx_prev += 10;
+  }
+  frame_rx_prev = frame_rx_prev%1024;
+
   if (err_flag == 1) {
+    LOG_D(PHY,"[UE %d] DLSCH: Setting NAK for SFN/SF %d/%d (pid %d, round %d, subframe %d)\n",
+        phy_vars_ue->Mod_id, frame_rx_prev, subframe_rx_prev, harq_pid, harq_process->round, subframe);
+
     dlsch->harq_ack[subframe].ack = 0;
     dlsch->harq_ack[subframe].harq_id = harq_pid;
     dlsch->harq_ack[subframe].send_harq_status = 1;
@@ -631,6 +647,9 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 
     return((1+dlsch->max_turbo_iterations));
   } else {
+    LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for SFN/SF %d/%d (pid %d, round %d, subframe %d)\n",
+        phy_vars_ue->Mod_id, frame_rx_prev, subframe_rx_prev, harq_pid, harq_process->round, subframe);
+
     harq_process->status = SCH_IDLE;
     harq_process->round  = 0;
     dlsch->harq_ack[subframe].ack = 1;
@@ -640,6 +659,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
     {
     LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d (pid %d, round %d, TBS %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round,harq_process->TBS);
     }
+    //LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
 
   }
 
@@ -727,7 +747,7 @@ int dlsch_abstraction_EESM(double* sinr_dB, uint8_t TM, uint32_t rb_alloc[4], ui
 
   bler = interp(sinr_eff,&sinr_bler_map[mcs][0][0],&sinr_bler_map[mcs][1][0],table_length[mcs]);
 
-#ifdef USER_MODE // need to be adapted for the emulation in the kernel space 
+#ifdef USER_MODE // need to be adapted for the emulation in the kernel space
 
   if (uniformrandom() < bler) {
     LOG_I(OCM,"abstraction_decoding failed (mcs=%d, sinr_eff=%f, bler=%f, TM %d)\n",mcs,sinr_eff,bler, TM);
@@ -810,7 +830,7 @@ int dlsch_abstraction_MIESM(double* sinr_dB,uint8_t TM, uint32_t rb_alloc[4], ui
 
   bler = interp(sinr_eff,&sinr_bler_map[mcs][0][0],&sinr_bler_map[mcs][1][0],table_length[mcs]);
 
-#ifdef USER_MODE // need to be adapted for the emulation in the kernel space 
+#ifdef USER_MODE // need to be adapted for the emulation in the kernel space
 
   if (uniformrandom() < bler) {
     LOG_N(OCM,"abstraction_decoding failed (mcs=%d, sinr_eff=%f, bler=%f)\n",mcs,sinr_eff,bler);

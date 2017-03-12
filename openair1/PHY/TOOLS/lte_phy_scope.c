@@ -232,8 +232,8 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
 
     if (chest_t[0] !=NULL) {
       for (i=0; i<(frame_parms->ofdm_symbol_size); i++) {
-	i2 = (i+(frame_parms->ofdm_symbol_size>>1))%frame_parms->ofdm_symbol_size;
-	time2[i] = (float)(i-(frame_parms->ofdm_symbol_size>>1));
+        i2 = (i+(frame_parms->ofdm_symbol_size>>1))%frame_parms->ofdm_symbol_size;
+        time2[i] = (float)(i-(frame_parms->ofdm_symbol_size>>1));
         chest_t_abs[0][i] = 10*log10((float) (1+chest_t[0][2*i2]*chest_t[0][2*i2]+chest_t[0][2*i2+1]*chest_t[0][2*i2+1]));
 
         if (chest_t_abs[0][i] > ymax)
@@ -247,7 +247,7 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
       if (chest_t[arx] !=NULL) {
         for (i=0; i<(frame_parms->ofdm_symbol_size>>3); i++) {
           chest_t_abs[arx][i] = 10*log10((float) (1+chest_t[arx][2*i]*chest_t[arx][2*i]+chest_t[arx][2*i+1]*chest_t[arx][2*i+1]));
- 
+
           if (chest_t_abs[arx][i] > ymax)
             ymax = chest_t_abs[arx][i];
         }
@@ -340,7 +340,7 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
       Q_pucch[ind] = (float)pucch1ab_comp[2*(ind)+1];
       A_pucch[ind] = 10*log10(pucch1_comp[ind]);
       B_pucch[ind] = ind;
-      C_pucch[ind] = (float)pucch1_thres[ind]; 
+      C_pucch[ind] = (float)pucch1_thres[ind];
     }
     fl_set_xyplot_data(form->pucch_comp,I_pucch,Q_pucch,10240,"","","");
     fl_set_xyplot_data(form->pucch_comp1,B_pucch,A_pucch,1024,"","","");
@@ -559,15 +559,15 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
   bit_pdcch = (float*) calloc(12*frame_parms->N_RB_DL*num_pdcch_symbols*2,sizeof(float));
 
   rxsig_t = (int16_t**) phy_vars_ue->common_vars.rxdata;
-  chest_t = (int16_t**) phy_vars_ue->common_vars.dl_ch_estimates_time[eNB_id];
-  chest_f = (int16_t**) phy_vars_ue->common_vars.dl_ch_estimates[eNB_id];
+  chest_t = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates_time[eNB_id];
+  chest_f = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id];
   pbch_llr = (int8_t*) phy_vars_ue->pbch_vars[eNB_id]->llr;
   pbch_comp = (int16_t*) phy_vars_ue->pbch_vars[eNB_id]->rxdataF_comp[0];
   pdcch_llr = (int8_t*) phy_vars_ue->pdcch_vars[eNB_id]->llr;
   pdcch_comp = (int16_t*) phy_vars_ue->pdcch_vars[eNB_id]->rxdataF_comp[0];
-  pdsch_llr = (int16_t*) phy_vars_ue->pdsch_vars[eNB_id]->llr[0]; // stream 0
+  pdsch_llr = (int16_t*) phy_vars_ue->pdsch_vars[subframe&0x1][eNB_id]->llr[0]; // stream 0
   //    pdsch_llr = (int16_t*) phy_vars_ue->lte_ue_pdsch_vars_SI[eNB_id]->llr[0]; // stream 0
-  pdsch_comp = (int16_t*) phy_vars_ue->pdsch_vars[eNB_id]->rxdataF_comp0[0];
+  pdsch_comp = (int16_t*) phy_vars_ue->pdsch_vars[subframe&0x1][eNB_id]->rxdataF_comp0[0];
 
   // Received signal in time domain of receive antenna 0
   if (rxsig_t != NULL) {

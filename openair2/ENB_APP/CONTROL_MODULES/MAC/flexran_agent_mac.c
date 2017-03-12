@@ -30,6 +30,7 @@
 #include "flexran_agent_extern.h"
 #include "flexran_agent_common.h"
 #include "flexran_agent_mac_internal.h"
+#include "flexran_agent_net_comm.h"
 
 #include "LAYER2/MAC/proto.h"
 #include "LAYER2/MAC/flexran_agent_mac_proto.h"
@@ -60,14 +61,11 @@ int flexran_agent_mac_handle_stats(mid_t mod_id, const void *params, Protocol__F
   // TODO: Must resolve conflicts among stats requests
 
   int i;
-  void *buffer;
-  int size;
   err_code_t err_code;
   xid_t xid;
   uint32_t usec_interval, sec_interval;
 
   //TODO: We do not deal with multiple CCs at the moment and eNB id is 0
-  int cc_id = 0;
   int enb_id = mod_id;
 
   //eNB_MAC_INST *eNB = &eNB_mac_inst[enb_id];
@@ -250,15 +248,15 @@ int flexran_agent_mac_stats_request(mid_t mod_id,
   Protocol__FlexHeader *header;
   int i;
 
-  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_STATS_REQUEST, &header) != 0)
-    goto error;
-
   Protocol__FlexStatsRequest *stats_request_msg;
   stats_request_msg = malloc(sizeof(Protocol__FlexStatsRequest));
   if(stats_request_msg == NULL)
     goto error;
-
   protocol__flex_stats_request__init(stats_request_msg);
+
+  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_STATS_REQUEST, &header) != 0)
+    goto error;
+
   stats_request_msg->header = header;
 
   stats_request_msg->type = report_config->report_type;
@@ -375,20 +373,19 @@ int flexran_agent_mac_stats_reply(mid_t mod_id,
 				  Protocol__FlexranMessage **msg) {
   Protocol__FlexHeader *header;
   int i, j, k;
-  int cc_id = 0;
   int enb_id = mod_id;
   //eNB_MAC_INST *eNB = &eNB_mac_inst[enb_id];
   //UE_list_t *eNB_UE_list=  &eNB->UE_list;
-
-
-  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_STATS_REPLY, &header) != 0)
-    goto error;
 
   Protocol__FlexStatsReply *stats_reply_msg;
   stats_reply_msg = malloc(sizeof(Protocol__FlexStatsReply));
   if (stats_reply_msg == NULL)
     goto error;
   protocol__flex_stats_reply__init(stats_reply_msg);
+
+  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_STATS_REPLY, &header) != 0)
+    goto error;
+
   stats_reply_msg->header = header;
 
   stats_reply_msg->n_ue_report = report_config->nr_ue;
@@ -419,7 +416,7 @@ int flexran_agent_mac_stats_reply(mid_t mod_id,
 	elem = (uint32_t *) malloc(sizeof(uint32_t)*ue_report[i]->n_bsr);
 	if (elem == NULL)
 	  goto error;
-	for (j = 0; j++; j < ue_report[i]->n_bsr) {
+	for (j = 0; j < ue_report[i]->n_bsr; j++) {
 	  // NN: we need to know the cc_id here, consider the first one
 	  elem[j] = flexran_get_ue_bsr (enb_id, i, j); 
 	}
@@ -446,14 +443,14 @@ int flexran_agent_mac_stats_reply(mid_t mod_id,
 	  if (rlc_reports[j] == NULL)
 	    goto error;
 	  protocol__flex_rlc_bsr__init(rlc_reports[j]);
-	  rlc_reports[j]->lc_id = j+1;
+	  rlc_reports[j]->lc_id = j + 1;
 	  rlc_reports[j]->has_lc_id = 1;
-	  rlc_reports[j]->tx_queue_size = flexran_get_tx_queue_size(enb_id,i,j+1);
+	  rlc_reports[j]->tx_queue_size = flexran_get_tx_queue_size(enb_id,i,j + 1);
 	  rlc_reports[j]->has_tx_queue_size = 1;
-
+	  
 	  //TODO:Set tx queue head of line delay in ms
-	  rlc_reports[j]->tx_queue_hol_delay = 100;
-	  rlc_reports[j]->has_tx_queue_hol_delay = 0;
+	  rlc_reports[j]->tx_queue_hol_delay = flexran_get_hol_delay(enb_id, i, j+1);
+	  rlc_reports[j]->has_tx_queue_hol_delay = 1;
 	  //TODO:Set retransmission queue size in bytes
 	  rlc_reports[j]->retransmission_queue_size = 10;
 	  rlc_reports[j]->has_retransmission_queue_size = 0;
@@ -472,7 +469,7 @@ int flexran_agent_mac_stats_reply(mid_t mod_id,
       /* Check flag for creation of MAC CE buffer status report */
       if (report_config->ue_report_type[i].ue_report_flags & PROTOCOL__FLEX_UE_STATS_TYPE__FLUST_MAC_CE_BS) {
 	// TODO: Fill in the actual MAC CE buffer status report
-	ue_report[i]->pending_mac_ces = (flexran_get_MAC_CE_bitmap_TA(enb_id,i,0) | (0 << 1) | (0 << 2) | (0 << 3)) & 15; /* Use as bitmap. Set one or more of the; /* Use as bitmap. Set one or more of the
+	ue_report[i]->pending_mac_ces = (flexran_get_MAC_CE_bitmap_TA(enb_id,i,0) | (0 << 1) | (0 << 2) | (0 << 3)) & 15;  /* Use as bitmap. Set one or more of the
 					       PROTOCOL__FLEX_CE_TYPE__FLPCET_ values
 					       found in stats_common.pb-c.h. See
 					       flex_ce_type in FlexRAN specification */
@@ -660,6 +657,8 @@ int flexran_agent_mac_stats_reply(mid_t mod_id,
 	      full_ul_report->pucch_dbm[j]->p0_pucch_dbm = flexran_get_p0_pucch_dbm(enb_id,i,j);
 	      full_ul_report->pucch_dbm[j]->has_p0_pucch_dbm = 1;
 	    }
+	    full_ul_report->pucch_dbm[j]->has_p0_pucch_updated = 1;
+	    full_ul_report->pucch_dbm[j]->p0_pucch_updated = flexran_get_p0_pucch_status(enb_id, i, j);
 	  }
 
 	  //Add full UL CQI report to the UE report
@@ -802,6 +801,8 @@ int flexran_agent_mac_destroy_stats_reply(Protocol__FlexranMessage *msg) {
 	  }
 	  free(dl_report->csi_report[j]->a31csi->sb_cqi);
 	  break;
+	default:
+	  break;
 	}
 
 	free(dl_report->csi_report[j]);
@@ -856,8 +857,6 @@ int flexran_agent_mac_sr_info(mid_t mod_id, const void *params, Protocol__Flexra
   Protocol__FlexHeader *header;
   int i;
   const int xid = *((int *)params);
-  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_UL_SR_INFO, &header) != 0)
-    goto error;
 
   Protocol__FlexUlSrInfo *ul_sr_info_msg;
   ul_sr_info_msg = malloc(sizeof(Protocol__FlexUlSrInfo));
@@ -865,6 +864,9 @@ int flexran_agent_mac_sr_info(mid_t mod_id, const void *params, Protocol__Flexra
     goto error;
   }
   protocol__flex_ul_sr_info__init(ul_sr_info_msg);
+
+  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_UL_SR_INFO, &header) != 0)
+    goto error;
 
   ul_sr_info_msg->header = header;
   ul_sr_info_msg->has_sfn_sf = 1;
@@ -921,10 +923,12 @@ int flexran_agent_mac_destroy_sr_info(Protocol__FlexranMessage *msg) {
 
 int flexran_agent_mac_sf_trigger(mid_t mod_id, const void *params, Protocol__FlexranMessage **msg) {
   Protocol__FlexHeader *header;
-  int i,j;
+  int i, j, UE_id;
+  
+  int available_harq[NUMBER_OF_UE_MAX];
+  
   const int xid = *((int *)params);
-  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_SF_TRIGGER, &header) != 0)
-    goto error;
+
 
   Protocol__FlexSfTrigger *sf_trigger_msg;
   sf_trigger_msg = malloc(sizeof(Protocol__FlexSfTrigger));
@@ -933,32 +937,53 @@ int flexran_agent_mac_sf_trigger(mid_t mod_id, const void *params, Protocol__Fle
   }
   protocol__flex_sf_trigger__init(sf_trigger_msg);
 
+  if (flexran_create_header(xid, PROTOCOL__FLEX_TYPE__FLPT_SF_TRIGGER, &header) != 0)
+    goto error;
+
   frame_t frame;
   sub_frame_t subframe;
 
-  int ahead_of_time = 1;
+  for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    available_harq[i] = -1;
+  }
+
+  int ahead_of_time = 0;
   
   frame = (frame_t) flexran_get_current_system_frame_num(mod_id);
   subframe = (sub_frame_t) flexran_get_current_subframe(mod_id);
 
   subframe = ((subframe + ahead_of_time) % 10);
-
-  int full_frames_ahead = ((ahead_of_time / 10) % 10);
   
-  frame = frame + full_frames_ahead;
-
   if (subframe < flexran_get_current_subframe(mod_id)) {
-    frame++;
+    frame = (frame + 1) % 1024;
   }
+
+  int additional_frames = ahead_of_time / 10;
+  frame = (frame + additional_frames) % 1024;
 
   sf_trigger_msg->header = header;
   sf_trigger_msg->has_sfn_sf = 1;
-  sf_trigger_msg->sfn_sf = flexran_get_future_sfn_sf(mod_id, 1);
+  sf_trigger_msg->sfn_sf = flexran_get_future_sfn_sf(mod_id, 3);
+
+  sf_trigger_msg->n_dl_info = 0;
+
+  for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    for (j = 0; j < 8; j++) {
+      if (harq_pid_updated[i][j] == 1) {
+	available_harq[i] = j;
+	sf_trigger_msg->n_dl_info++;
+	break;
+      }
+    }
+  }
+  
+
+  //  LOG_I(FLEXRAN_AGENT, "Sending subframe trigger for frame %d and subframe %d\n", flexran_get_current_frame(mod_id), (flexran_get_current_subframe(mod_id) + 1) % 10);
 
   /*TODO: Fill in the number of dl HARQ related info, based on the number of currently
    *transmitting UEs
    */
-  sf_trigger_msg->n_dl_info = flexran_get_num_ues(mod_id);
+  //  sf_trigger_msg->n_dl_info = flexran_get_num_ues(mod_id);
 
   Protocol__FlexDlInfo **dl_info = NULL;
 
@@ -966,29 +991,39 @@ int flexran_agent_mac_sf_trigger(mid_t mod_id, const void *params, Protocol__Fle
     dl_info = malloc(sizeof(Protocol__FlexDlInfo *) * sf_trigger_msg->n_dl_info);
     if(dl_info == NULL)
       goto error;
+    i = -1;
     //Fill the status of the current HARQ process for each UE
-    for(i = 0; i < sf_trigger_msg->n_dl_info; i++) {
+    for(UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
+      if (available_harq[UE_id] < 0) {
+	continue;
+      } else {
+	i++;
+      }
       dl_info[i] = malloc(sizeof(Protocol__FlexDlInfo));
       if(dl_info[i] == NULL)
 	goto error;
       protocol__flex_dl_info__init(dl_info[i]);
-      dl_info[i]->rnti = flexran_get_ue_crnti(mod_id, i);
+      dl_info[i]->rnti = flexran_get_ue_crnti(mod_id, UE_id);
       dl_info[i]->has_rnti = 1;
       /*Fill in the right id of this round's HARQ process for this UE*/
-      int harq_id;
-      int harq_status;
-      flexran_get_harq(mod_id, UE_PCCID(mod_id,i), i, frame, subframe, &harq_id, &harq_status);
-      dl_info[i]->harq_process_id = harq_id;
+      //      uint8_t harq_id;
+      //uint8_t harq_status;
+      //      flexran_get_harq(mod_id, UE_PCCID(mod_id,i), i, frame, subframe, &harq_id, &harq_status);
+      
+      
+      dl_info[i]->harq_process_id = available_harq[UE_id];
+      harq_pid_updated[UE_id][available_harq[UE_id]] = 0;
       dl_info[i]->has_harq_process_id = 1;
       /* Fill in the status of the HARQ process (2 TBs)*/
       dl_info[i]->n_harq_status = 2;
       dl_info[i]->harq_status = malloc(sizeof(uint32_t) * dl_info[i]->n_harq_status);
       for (j = 0; j < dl_info[i]->n_harq_status; j++) {
+	dl_info[i]->harq_status[j] = harq_pid_round[UE_id][available_harq[UE_id]];
 	// TODO: This should be different per TB
-	if(harq_status == 0)
-	  dl_info[i]->harq_status[j] = PROTOCOL__FLEX_HARQ_STATUS__FLHS_ACK;
-	else if (harq_status > 0)
-	  dl_info[i]->harq_status[j] = PROTOCOL__FLEX_HARQ_STATUS__FLHS_NACK;
+      }
+      //      LOG_I(FLEXRAN_AGENT, "Sending subframe trigger for frame %d and subframe %d and harq %d (round %d)\n", flexran_get_current_frame(mod_id), (flexran_get_current_subframe(mod_id) + 1) % 10, dl_info[i]->harq_process_id, dl_info[i]->harq_status[0]);
+      if(dl_info[i]->harq_status[0] > 0) {
+	//	LOG_I(FLEXRAN_AGENT, "[Frame %d][Subframe %d]Need to make a retransmission for harq %d (round %d)\n", flexran_get_current_frame(mod_id), flexran_get_current_subframe(mod_id), dl_info[i]->harq_process_id, dl_info[i]->harq_status[0]);
       }
       /*Fill in the serving cell index for this UE */
       dl_info[i]->serv_cell_index = UE_PCCID(mod_id,i);
@@ -1060,10 +1095,7 @@ int flexran_agent_mac_sf_trigger(mid_t mod_id, const void *params, Protocol__Fle
     for (i = 0; i < sf_trigger_msg->n_dl_info; i++) {
       free(sf_trigger_msg->dl_info[i]->harq_status);
     }
-    free(sf_trigger_msg->dl_info);
-    for (i = 0; i < sf_trigger_msg->n_ul_info; i++) {
-      free(sf_trigger_msg->ul_info[i]->reception_status);
-    }
+    free(sf_trigger_msg->dl_info);    
     free(sf_trigger_msg->ul_info);
     free(sf_trigger_msg);
   }
@@ -1230,18 +1262,24 @@ int flexran_agent_mac_handle_dl_mac_config(mid_t mod_id, const void *params, Pro
   *msg = NULL;
   return 2;
 
- error:
-  *msg = NULL;
-  return -1;
+  // error:
+  //*msg = NULL;
+  //return -1;
 }
 
 void flexran_agent_init_mac_agent(mid_t mod_id) {
+  int i, j;
   lfds700_misc_library_init_valid_on_current_logical_core();
   lfds700_misc_prng_init(&ps[mod_id]);
   int num_elements = RINGBUFFER_SIZE + 1;
   //Allow RINGBUFFER_SIZE messages to be stored in the ringbuffer at any time
   dl_mac_config_array[mod_id] = malloc( sizeof(struct lfds700_ringbuffer_element) *  num_elements);
   lfds700_ringbuffer_init_valid_on_current_logical_core( &ringbuffer_state[mod_id], dl_mac_config_array[mod_id], num_elements, &ps[mod_id], NULL );
+  for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    for (j = 0; j < 8; j++) {
+      harq_pid_updated[i][j] = 0;
+    }
+  }
 }
 
 /***********************************************
@@ -1252,7 +1290,7 @@ void flexran_agent_send_sr_info(mid_t mod_id) {
   int size;
   Protocol__FlexranMessage *msg;
   void *data;
-  int priority;
+  int priority = 0;
   err_code_t err_code;
 
   int xid = 0;
@@ -1282,7 +1320,7 @@ void flexran_agent_send_sf_trigger(mid_t mod_id) {
   int size;
   Protocol__FlexranMessage *msg;
   void *data;
-  int priority;
+  int priority = 0;
   err_code_t err_code;
 
   int xid = 0;
@@ -1310,13 +1348,11 @@ void flexran_agent_send_sf_trigger(mid_t mod_id) {
 
 void flexran_agent_send_update_mac_stats(mid_t mod_id) {
 
-  Protocol__FlexranMessage *current_report = NULL, *msg;
+  Protocol__FlexranMessage *current_report = NULL;
   void *data;
   int size;
   err_code_t err_code;
-  int priority;
-
-  mac_stats_updates_context_t stats_context = mac_stats_context[mod_id];
+  int priority = 0;
   
   if (pthread_mutex_lock(mac_stats_context[mod_id].mutex)) {
     goto error;
@@ -1437,7 +1473,7 @@ err_code_t flexran_agent_destroy_cont_mac_stats_update(mid_t mod_id) {
   flexran_agent_destroy_flexran_message(mac_stats_context[mod_id].prev_stats_reply);
   free(mac_stats_context[mod_id].mutex);
 
-  mac_agent_registered[mod_id] = NULL;
+  mac_agent_registered[mod_id] = 0;
   return 1;
 }
 

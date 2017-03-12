@@ -180,7 +180,7 @@ void do_DL_sig(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][MAX_N
       //dlsch_abstraction(PHY_vars_UE_g[UE_id]->sinr_dB, rb_alloc, 8);
       // fill in perfect channel estimates
       channel_desc_t *desc1 = eNB2UE[att_eNB_id][UE_id][CC_id];
-      int32_t **dl_channel_est = PHY_vars_UE_g[UE_id][CC_id]->common_vars.dl_ch_estimates[0];
+      int32_t **dl_channel_est = PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[0];
       //      double scale = pow(10.0,(enb_data[att_eNB_id]->tx_power_dBm + eNB2UE[att_eNB_id][UE_id]->path_loss_dB + (double) PHY_vars_UE_g[UE_id]->rx_total_gain_dB)/20.0);
       double scale = pow(10.0,(frame_parms->pdsch_config_common.referenceSignalPower+eNB2UE[att_eNB_id][UE_id][CC_id]->path_loss_dB + (double) PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB)/20.0);
       LOG_D(OCM,"scale =%lf (%d dB)\n",scale,(int) (20*log10(scale)));
@@ -327,8 +327,8 @@ void do_DL_sig(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][MAX_N
 	eNB_output_mask[UE_id]=0;
       
 
-	double *r_re_p[2] = {r_re_DL[eNB_id][0],r_re_DL[eNB_id][1]};
-	double *r_im_p[2] = {r_im_DL[eNB_id][0],r_im_DL[eNB_id][1]};
+	double *r_re_p[2] = {r_re_DL[UE_id][0],r_re_DL[UE_id][1]};
+	double *r_im_p[2] = {r_im_DL[UE_id][0],r_im_DL[UE_id][1]};
 
 #ifdef DEBUG_SIM
 	rx_pwr = signal_energy_fp(r_re_p,r_im_p,nb_antennas_rx,frame_parms->ofdm_symbol_size,sf_offset)/(12.0*frame_parms->N_RB_DL);
@@ -557,7 +557,7 @@ void do_UL_sig(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX_N
     
 #ifdef DEBUG_SIM
     rx_pwr2 = signal_energy(rxdata[0]+sf_offset,frame_parms->samples_per_tti)*(double)frame_parms->ofdm_symbol_size/(12.0*frame_parms->N_RB_DL);
-    LOG_D(OCM,"[SIM][UL] eNB %d rx_pwr (ADC out) %f dB (%d) for subframe %d\n",eNB_id,10*log10((double)rx_pwr2),rx_pwr2,subframe);
+    LOG_D(OCM,"[SIM][UL] eNB %d rx_pwr (ADC out) %f dB (%d) for subframe %d (offset %d)\n",eNB_id,10*log10((double)rx_pwr2),rx_pwr2,subframe,sf_offset);
 #else
     UNUSED_VARIABLE(tx_pwr);
     UNUSED_VARIABLE(rx_pwr);

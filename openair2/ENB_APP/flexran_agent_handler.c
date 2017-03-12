@@ -73,12 +73,12 @@ flexran_agent_message_destruction_callback message_destruction_callback[] = {
   flexran_agent_destroy_agent_reconfiguration,
 };
 
-static const char *flexran_agent_direction2String[] = {
-  "", /* not_set  */
-  "originating message", /* originating message */
-  "successfull outcome", /* successfull outcome */
-  "unsuccessfull outcome", /* unsuccessfull outcome */
-};
+/* static const char *flexran_agent_direction2String[] = { */
+/*   "", /\* not_set  *\/ */
+/*   "originating message", /\* originating message *\/ */
+/*   "successfull outcome", /\* successfull outcome *\/ */
+/*   "unsuccessfull outcome", /\* unsuccessfull outcome *\/ */
+/* }; */
 
 
 Protocol__FlexranMessage* flexran_agent_handle_message (mid_t mod_id,
@@ -123,7 +123,7 @@ error:
 
 
 void * flexran_agent_pack_message(Protocol__FlexranMessage *msg, 
-				  uint32_t * size){
+				  int * size){
 
   void * buffer;
   err_code_t err_code = PROTOCOL__FLEXRAN_ERR__NO_ERR;
@@ -172,7 +172,7 @@ Protocol__FlexranMessage* flexran_agent_process_timeout(long timer_id, void* tim
   struct flexran_agent_timer_element_s *found = get_timer_entry(timer_id);
  
   if (found == NULL ) goto error;
-  LOG_I(FLEXRAN_AGENT, "Found the entry (%p): timer_id is 0x%lx  0x%lx\n", found, timer_id, found->timer_id);
+  LOG_D(FLEXRAN_AGENT, "Found the entry (%p): timer_id is 0x%lx  0x%lx\n", found, timer_id, found->timer_id);
   
   if (timer_args == NULL)
     LOG_W(FLEXRAN_AGENT,"null timer args\n");
@@ -181,7 +181,7 @@ Protocol__FlexranMessage* flexran_agent_process_timeout(long timer_id, void* tim
 
  error:
   LOG_E(FLEXRAN_AGENT, "can't get the timer element\n");
-  return TIMER_ELEMENT_NOT_FOUND;
+  return NULL;
 }
 
 err_code_t flexran_agent_destroy_flexran_message(Protocol__FlexranMessage *msg) {

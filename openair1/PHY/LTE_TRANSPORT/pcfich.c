@@ -69,9 +69,9 @@ void generate_pcfich_reg_mapping(LTE_DL_FRAME_PARMS *frame_parms)
     first_reg = pcfich_reg[3];
   }
 
-  //#ifdef DEBUG_PCFICH
+  #ifdef DEBUG_PCFICH
   printf("pcfich_reg : %d,%d,%d,%d\n",pcfich_reg[0],pcfich_reg[1],pcfich_reg[2],pcfich_reg[3]);
-  //#endif
+  #endif
 }
 
 void pcfich_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
@@ -191,7 +191,7 @@ void generate_pcfich(uint8_t num_pdcch_symbols,
   // mapping
   nsymb = (frame_parms->Ncp==0) ? 14:12;
 
-  symbol_offset = (uint32_t)frame_parms->ofdm_symbol_size*((subframe*nsymb));
+  symbol_offset = (uint32_t)frame_parms->ofdm_symbol_size*(subframe*nsymb);
   re_offset = frame_parms->first_carrier_offset;
 
   // loop over 4 quadruplets and lookup REGs

@@ -1,31 +1,23 @@
- /******************************************************************************
-    OpenAirInterface
-    Copyright(c) 1999 - 2014 Eurecom
-
-    OpenAirInterface is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-
-    OpenAirInterface is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with OpenAirInterface.The full GNU General Public License is
-   included in this distribution in the file called "COPYING". If not,
-   see <http://www.gnu.org/licenses/>.
-
-  Contact Information
-  OpenAirInterface Admin: openair_admin@eurecom.fr
-  OpenAirInterface Tech : openair_tech@eurecom.fr
-  OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
-
-  Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
-
- *******************************************************************************/
+/*
+ * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The OpenAirInterface Software Alliance licenses this file to You under
+ * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.openairinterface.org/?page_id=698
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *-------------------------------------------------------------------------------
+ * For more information about the OpenAirInterface (OAI) Software Alliance:
+ *      contact@openairinterface.org
+ */
 
 /*! \file dlsim.c
  \brief Top-level DL simulator
@@ -3104,24 +3096,24 @@ PMI_FEEDBACK:
                     for(aa=0; aa<frame_parms->nb_antenna_ports_eNB; aa++) {
                       for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
                         for (i=0; i<frame_parms->N_RB_DL*12; i++) {
-                          ((int16_t *) UE->common_vars.dl_ch_estimates[k][(aa<<1)+aarx])[2*i+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size+LTE_CE_FILTER_LENGTH)*2]=(int16_t)(
+                          ((int16_t *) UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[k][(aa<<1)+aarx])[2*i+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size+LTE_CE_FILTER_LENGTH)*2]=(int16_t)(
                                 eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x*AMP);
                           //printf("x=%d,AMP=%d\n",eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x,AMP);
-                          ((int16_t *) UE->common_vars.dl_ch_estimates[k][(aa<<1)+aarx])[2*i+1+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size+LTE_CE_FILTER_LENGTH)*2]=(int16_t)(
+                          ((int16_t *) UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[k][(aa<<1)+aarx])[2*i+1+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size+LTE_CE_FILTER_LENGTH)*2]=(int16_t)(
                                 eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].y*AMP);
 
                           if (transmission_mode == 7){
 			    //this should include the BF weights! Will not work for a random channel
                             if (UE->high_speed_flag==0) {
-                              ((int16_t *)UE->pdsch_vars[0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i]=(int16_t)(
+                              ((int16_t *)UE->pdsch_vars[subframe&0x1][0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i]=(int16_t)(
                                   eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x*AMP);
-                              ((int16_t *)UE->pdsch_vars[0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+1]=(int16_t)(
+                              ((int16_t *)UE->pdsch_vars[subframe&0x1][0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+1]=(int16_t)(
                                   eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].y*AMP);
                               //printf("**,x=%d,AMP=%d\n",eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x,AMP);
                             } else  {
-                              ((int16_t *)UE->pdsch_vars[0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size)*2]=(int16_t)(
+                              ((int16_t *)UE->pdsch_vars[subframe&0x1][0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size)*2]=(int16_t)(
                                   eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x*AMP);
-                              ((int16_t *)UE->pdsch_vars[0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+1+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size)*2]=(int16_t)(
+                              ((int16_t *)UE->pdsch_vars[subframe&0x1][0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+1+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size)*2]=(int16_t)(
                                   eNB2UE[round]->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].y*AMP);
                                 
                             }
@@ -3134,15 +3126,15 @@ PMI_FEEDBACK:
                   for(aa=0; aa<frame_parms->nb_antenna_ports_eNB; aa++) {
                     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
                       for (i=0; i<frame_parms->N_RB_DL*12; i++) {
-                          ((int16_t *) UE->common_vars.dl_ch_estimates[0][(aa<<1)+aarx])[2*i+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size+LTE_CE_FILTER_LENGTH)*2]=(short)(AMP);
-                          ((int16_t *) UE->common_vars.dl_ch_estimates[0][(aa<<1)+aarx])[2*i+1+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size+LTE_CE_FILTER_LENGTH)*2]=0/2;
+                          ((int16_t *) UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[0][(aa<<1)+aarx])[2*i+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size+LTE_CE_FILTER_LENGTH)*2]=(short)(AMP);
+                          ((int16_t *) UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[0][(aa<<1)+aarx])[2*i+1+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size+LTE_CE_FILTER_LENGTH)*2]=0/2;
                         if (transmission_mode == 7) {
                           if (UE->high_speed_flag==0){
-                            ((int16_t *) UE->pdsch_vars[0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i]=(short)(AMP);
-                            ((int16_t *) UE->pdsch_vars[0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+1]=0/2;
+                            ((int16_t *) UE->pdsch_vars[subframe&0x1][0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i]=(short)(AMP);
+                            ((int16_t *) UE->pdsch_vars[subframe&0x1][0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+1]=0/2;
                           } else {
-                            ((int16_t *) UE->pdsch_vars[0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size)*2]=(short)(AMP);
-                            ((int16_t *) UE->pdsch_vars[0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+1+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size)*2]=0/2;
+                            ((int16_t *) UE->pdsch_vars[subframe&0x1][0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size)*2]=(short)(AMP);
+                            ((int16_t *) UE->pdsch_vars[subframe&0x1][0]->dl_bf_ch_estimates[(aa<<1)+aarx])[2*i+1+((l+(Ns%2)*pilot2)*frame_parms->ofdm_symbol_size)*2]=0/2;
                           }
                         }
                       }
@@ -3199,6 +3191,7 @@ PMI_FEEDBACK:
                   rx_pdcch(&UE->common_vars,
                            UE->pdcch_vars,
                            &UE->frame_parms,
+                           0, // frame
                            subframe,
                            0,
                            (UE->frame_parms.mode1_flag == 1) ? SISO : ALAMOUTI,
@@ -3405,6 +3398,7 @@ PMI_FEEDBACK:
                                  PDSCH,
                                  eNB_id,
                                  eNB_id_i,
+                                 0, // frame
                                  subframe,
                                  m,
                                  (m==UE->pdcch_vars[0]->num_pdcch_symbols)?1:0,
@@ -3430,6 +3424,7 @@ PMI_FEEDBACK:
                                  PDSCH,
                                  eNB_id,
                                  eNB_id_i,
+                                 0, // frame
                                  subframe,
                                  m,
                                  0,
@@ -3455,6 +3450,7 @@ PMI_FEEDBACK:
                                  PDSCH,
                                  eNB_id,
                                  eNB_id_i,
+                                 0, // frame
                                  subframe,
                                  m,
                                  0,
@@ -3481,34 +3477,34 @@ PMI_FEEDBACK:
                     //write_output("rxsig0.m","rxs0", &UE->common_vars.rxdata[0][0],10*UE->frame_parms.samples_per_tti,1,1);
                     write_output("rxsig0.m","rxs0", &UE->common_vars.rxdata[0][subframe*UE->frame_parms.samples_per_tti],UE->frame_parms.samples_per_tti,1,1);
                     //write_output("rxsigF0.m","rxsF0", &UE->common_vars.rxdataF[0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
-                    write_output("rxsigF0.m","rxsF0", &UE->common_vars.rxdataF[0][0],UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
+                    write_output("rxsigF0.m","rxsF0", &UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[0][0],UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
 
                     if (UE->frame_parms.nb_antennas_rx>1) {
                       write_output("rxsig1.m","rxs1", UE->common_vars.rxdata[1],UE->frame_parms.samples_per_tti,1,1);
-                      write_output("rxsigF1.m","rxsF1", UE->common_vars.rxdataF[1],UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
+                      write_output("rxsigF1.m","rxsF1", UE->common_vars..common_vars_rx_data_per_thread[subframe&0x1]rxdataF[1],UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
                     }
 
                     write_output("dlsch00_r0.m","dl00_r0",
-                                 &(UE->common_vars.dl_ch_estimates[eNB_id][0][0]),
+                                 &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][0][0]),
                                  UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
 
                     if (UE->frame_parms.nb_antennas_rx>1)
                       write_output("dlsch01_r0.m","dl01_r0",
-                                   &(UE->common_vars.dl_ch_estimates[eNB_id][1][0]),
+                                   &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][1][0]),
                                    UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
 
                     if (eNB->frame_parms.nb_antennas_tx>1)
                       write_output("dlsch10_r0.m","dl10_r0",
-                                   &(UE->common_vars.dl_ch_estimates[eNB_id][2][0]),
+                                   &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2][0]),
                                    UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
 
                     if ((UE->frame_parms.nb_antennas_rx>1) && (eNB->frame_parms.nb_antennas_tx>1))
                       write_output("dlsch11_r0.m","dl11_r0",
-                                   &(UE->common_vars.dl_ch_estimates[eNB_id][3][0]),
+                                   &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][3][0]),
                                    UE->frame_parms.ofdm_symbol_size*nsymb/2,1,1);
 
                     //pdsch_vars
-                    dump_dlsch2(UE,eNB_id,coded_bits_per_codeword,round);
+                    dump_dlsch2(UE,eNB_id,subframe,coded_bits_per_codeword,round);
                     //dump_dlsch2(UE,eNB_id_i,coded_bits_per_codeword);
                     write_output("dlsch_e.m","e",eNB->dlsch[0][0]->harq_processes[0]->e,coded_bits_per_codeword,1,4);
 
@@ -3531,8 +3527,8 @@ PMI_FEEDBACK:
             if (trials==0 && round==0 && transmission_mode>=5 && transmission_mode<7) {
               for (iii=0; iii<NB_RB; iii++) {
                 //fprintf(csv_fd, "%d, %d", (UE->pdsch_vars[eNB_id]->pmi_ext[iii]),(UE->pdsch_vars[eNB_id_i]->pmi_ext[iii]));
-                fprintf(csv_fd,"%x,%x,",(UE->pdsch_vars[eNB_id]->pmi_ext[iii]),(UE->pdsch_vars[eNB_id]->pmi_ext[iii]));
-                printf("%x ",(UE->pdsch_vars[eNB_id]->pmi_ext[iii]));
+                fprintf(csv_fd,"%x,%x,",(UE->pdsch_vars[subframe&0x1][eNB_id]->pmi_ext[iii]),(UE->pdsch_vars[eNB_id]->pmi_ext[iii]));
+                printf("%x ",(UE->pdsch_vars[subframe&0x1][eNB_id]->pmi_ext[iii]));
               }
             }
           }
@@ -3556,7 +3552,7 @@ PMI_FEEDBACK:
             // calculate uncoded BLER
             uncoded_ber=0;
             for (i=0;i<coded_bits_per_codeword;i++)
-              if (eNB->dlsch[0][0]->harq_processes[0]->e[i] != (UE->pdsch_vars[0]->llr[0][i]<0)) {
+              if (eNB->dlsch[0][0]->harq_processes[0]->e[i] != (UE->pdsch_vars[subframe&0x1][0]->llr[0][i]<0)) {
                 uncoded_ber_bit[i] = 1;
                 uncoded_ber++;
               }
@@ -3575,14 +3571,14 @@ PMI_FEEDBACK:
                                0,
                                UE->dlsch[0][cw],
                                coded_bits_per_codeword,
-                               UE->pdsch_vars[eNB_id]->llr[cw],
+                               UE->pdsch_vars[subframe&0x1][eNB_id]->llr[cw],
                                0,
                                subframe<<1);
             stop_meas(&UE->dlsch_unscrambling_stats);
 
             start_meas(&UE->dlsch_decoding_stats);
             ret = dlsch_decoding(UE,
-                                 UE->pdsch_vars[eNB_id]->llr[cw],
+                                 UE->pdsch_vars[subframe&0x1][eNB_id]->llr[cw],
                                  &UE->frame_parms,
                                  UE->dlsch[0][cw],
                                  UE->dlsch[0][cw]->harq_processes[UE->dlsch[0][cw]->current_harq_pid],
@@ -3683,7 +3679,7 @@ PMI_FEEDBACK:
               write_output(fname,vname, &UE->common_vars.rxdata[0][0],10*UE->frame_parms.samples_per_tti,1,1);
               sprintf(fname,"rxsigF0_r%d.m",round);
               sprintf(vname,"rxs0F_r%d",round);
-              write_output(fname,vname, &UE->common_vars.rxdataF[0][0],2*UE->frame_parms.ofdm_symbol_size*nsymb,2,1);
+              write_output(fname,vname, &UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[0][0],2*UE->frame_parms.ofdm_symbol_size*nsymb,2,1);
 	     
               if (UE->frame_parms.nb_antennas_rx>1) {
                 sprintf(fname,"rxsig1_r%d.m",round);
@@ -3691,20 +3687,20 @@ PMI_FEEDBACK:
                 write_output(fname,vname, UE->common_vars.rxdata[1],UE->frame_parms.samples_per_tti,1,1);
                 sprintf(fname,"rxsig1F_r%d.m",round);
                 sprintf(vname,"rxs1F_r%d.m",round);
-                write_output(fname,vname, UE->common_vars.rxdataF[1],2*UE->frame_parms.ofdm_symbol_size*nsymb,2,1);
+                write_output(fname,vname, UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[1],2*UE->frame_parms.ofdm_symbol_size*nsymb,2,1);
               }
 
               sprintf(fname,"dlsch00_r%d.m",round);
               sprintf(vname,"dl00_r%d",round);
               write_output(fname,vname,
-                           &(UE->common_vars.dl_ch_estimates[eNB_id][0][0]),
+                           &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][0][0]),
                            UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
 
               if (UE->frame_parms.nb_antennas_rx>1) {
                 sprintf(fname,"dlsch01_r%d.m",round);
                 sprintf(vname,"dl01_r%d",round);
                 write_output(fname,vname,
-                             &(UE->common_vars.dl_ch_estimates[eNB_id][1][0]),
+                             &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][1][0]),
                              UE->frame_parms.ofdm_symbol_size*nsymb/2,1,1);
               }
 
@@ -3712,7 +3708,7 @@ PMI_FEEDBACK:
                 sprintf(fname,"dlsch10_r%d.m",round);
                 sprintf(vname,"dl10_r%d",round);
                 write_output(fname,vname,
-                             &(UE->common_vars.dl_ch_estimates[eNB_id][2][0]),
+                             &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2][0]),
                              UE->frame_parms.ofdm_symbol_size*nsymb/2,1,1);
               }
 
@@ -3720,12 +3716,12 @@ PMI_FEEDBACK:
                 sprintf(fname,"dlsch11_r%d.m",round);
                 sprintf(vname,"dl11_r%d",round);
                 write_output(fname,vname,
-                             &(UE->common_vars.dl_ch_estimates[eNB_id][3][0]),
+                             &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][3][0]),
                              UE->frame_parms.ofdm_symbol_size*nsymb/2,1,1);
               }
 
               //pdsch_vars
-              dump_dlsch2(UE,eNB_id,coded_bits_per_codeword,round);
+              dump_dlsch2(UE,eNB_id,subframe,coded_bits_per_codeword,round);
               /*
               write_output("dlsch_e.m","e",eNB->dlsch[0][0]->harq_processes[0]->e,coded_bits_per_codeword,1,4);
               write_output("dlsch_ber_bit.m","ber_bit",uncoded_ber_bit,coded_bits_per_codeword,1,0);

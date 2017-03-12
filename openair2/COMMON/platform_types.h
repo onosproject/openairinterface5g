@@ -40,6 +40,13 @@
 //-----------------------------------------------------------------------------
 // GENERIC TYPES
 //-----------------------------------------------------------------------------
+
+/* boolean_t is also defined in openair2/COMMON/commonDef.h,
+ * let's protect potential redefinition
+ */
+#ifndef _BOOLEAN_T_DEFINED_
+#define _BOOLEAN_T_DEFINED_
+
 typedef signed char        boolean_t;
 
 #if !defined(TRUE)
@@ -51,6 +58,8 @@ typedef signed char        boolean_t;
 #endif
 
 #define BOOL_NOT(b) (b^TRUE)
+
+#endif /* _BOOLEAN_T_DEFINED_ */
 
 //-----------------------------------------------------------------------------
 // GENERIC ACCESS STRATUM TYPES
@@ -255,7 +264,7 @@ typedef struct protocol_ctxt_s {
     (Ctxt_Pp)->subframe  = sUBfRAME; \
     PROTOCOL_CTXT_COMPUTE_MODULE_ID(Ctxt_Pp)
 
-#define PROTOCOL_CTXT_FMT "[FRAME %05u][%s][MOD %02u][RNTI %"PRIx16"]"
+#define PROTOCOL_CTXT_FMT "[FRAME %05u][%s][MOD %02u][RNTI %" PRIx16 "]"
 #define PROTOCOL_CTXT_ARGS(CTXT_Pp) \
     (CTXT_Pp)->frame, \
     ((CTXT_Pp)->enb_flag == ENB_FLAG_YES) ? "eNB":" UE", \

@@ -32,7 +32,8 @@
 #define k1 ((long long int) 1000)
 #define k2 ((long long int) (1024-k1))
 
-//#define DEBUG_MEAS
+//#define DEBUG_MEAS_RRC
+//#define DEBUG_MEAS_UE
 
 #ifdef USER_MODE
 void print_shorts(char *s,short *x)
@@ -165,23 +166,30 @@ int8_t set_RSRQ_filtered(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index,float rs
 }
 
 void ue_rrc_measurements(PHY_VARS_UE *ue,
-                         uint8_t subframe,
-                         uint8_t abstraction_flag)
+    uint8_t slot,
+    uint8_t abstraction_flag)
 {
 
-  int aarx,rb;
+  uint8_t subframe = slot>>1;
+  int aarx,rb,n;
   int16_t *rxF,*rxF_pss,*rxF_sss;
 
   uint16_t Nid_cell = ue->frame_parms.Nid_cell;
   uint8_t eNB_offset,nu,l,nushift,k;
   uint16_t off;
 
+  uint8_t isPss; // indicate if this is a slot for extracting PSS
+  uint8_t isSss; // indicate if this is a slot for extracting SSS
+  int32_t pss_ext[4][72]; // contain the extracted 6*12 REs for mapping the PSS
+  int32_t sss_ext[4][72]; // contain the extracted 6*12 REs for mapping the SSS
+  int32_t (*xss_ext)[72]; // point to either pss_ext or sss_ext for common calculation
+  int16_t *re,*im; // real and imag part of each 32-bit xss_ext[][] value
 
   for (eNB_offset = 0; eNB_offset<1+ue->measurements.n_adj_cells; eNB_offset++) {
 
     if (eNB_offset==0) {
       ue->measurements.rssi = 0;
-      ue->measurements.n0_power_tot = 0;
+      //ue->measurements.n0_power_tot = 0;
 
       if (abstraction_flag == 0) {
         if ((ue->frame_parms.frame_type == FDD) &&
@@ -190,9 +198,8 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
           if (ue->frame_parms.Ncp==NORMAL) {
             for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
 
-	      rxF_sss = (int16_t *)&ue->common_vars.rxdataF[aarx][(5*ue->frame_parms.ofdm_symbol_size)];
-	      rxF_pss = (int16_t *)&ue->common_vars.rxdataF[aarx][(6*ue->frame_parms.ofdm_symbol_size)];
-	      
+	      rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[aarx][(5*ue->frame_parms.ofdm_symbol_size)];
+	      rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[aarx][(6*ue->frame_parms.ofdm_symbol_size)];
 
               //-ve spectrum from SSS
 	      //	      printf("slot %d: SSS DTX: %d,%d, non-DTX %d,%d\n",slot,rxF_pss[-72],rxF_pss[-71],rxF_pss[-36],rxF_pss[-35]);
@@ -216,7 +223,7 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
               ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+66]*rxF_pss[2+66])+((int32_t)rxF_pss[2+65]*rxF_pss[2+65]));
 	      //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+64]*rxF_pss[2+64])+((int32_t)rxF_pss[2+63]*rxF_pss[2+63]));
 	      //	      printf("pss32 %d\n",ue->measurements.n0_power[aarx]);              //-ve spectrum from PSS
-              rxF_pss = (int16_t *)&ue->common_vars.rxdataF[aarx][(7*ue->frame_parms.ofdm_symbol_size)];
+              rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[aarx][(7*ue->frame_parms.ofdm_symbol_size)];
 	      //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-72]*rxF_pss[-72])+((int32_t)rxF_pss[-71]*rxF_pss[-71]));
 	      //	      printf("pssm36 %d\n",ue->measurements.n0_power[aarx]);
               ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-70]*rxF_pss[-70])+((int32_t)rxF_pss[-69]*rxF_pss[-69]));
@@ -225,24 +232,75 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
 	      //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-64]*rxF_pss[-64])+((int32_t)rxF_pss[-63]*rxF_pss[-63]));
 	      //	      printf("pssm32 %d\n",ue->measurements.n0_power[aarx]);
               ue->measurements.n0_power_dB[aarx] = (unsigned short) dB_fixed(ue->measurements.n0_power[aarx]/12);
-              ue->measurements.n0_power_tot +=  ue->measurements.n0_power[aarx];
+              ue->measurements.n0_power_tot /*+=*/ = ue->measurements.n0_power[aarx];
             }
 
 	    ue->measurements.n0_power_tot_dB = (unsigned short) dB_fixed(ue->measurements.n0_power_tot/(12*aarx));
 	    ue->measurements.n0_power_tot_dBm = ue->measurements.n0_power_tot_dB - ue->rx_total_gain_dB - dB_fixed(ue->frame_parms.ofdm_symbol_size);
-	  }
+          } else {
+            LOG_E(PHY, "Not yet implemented: noise power calculation when prefix length = EXTENDED\n");
+          }
         }
-	else if ((ue->frame_parms.frame_type == TDD) &&
-		 (subframe == 0)) {  // TDD SSS, compute noise in DTX REs
+        else if ((ue->frame_parms.frame_type == TDD) &&
+            ((slot == 2) || (slot == 12) || (slot == 1) || (slot == 11))) {  // TDD PSS/SSS, compute noise in DTX REs // 2016-09-29 wilson fix incorrect noise power calculation
 
+#if 1 // fixing REs extraction in noise power calculation
+
+          // check if this slot has a PSS or SSS sequence
+          if ((slot == 2) || (slot == 12)) {
+            isPss = 1;
+          } else {
+            isPss = 0;
+          }
+          if ((slot == 1) || (slot == 11)) {
+            isSss = 1;
+          } else {
+            isSss = 0;
+          }
+
+          if (isPss) {
+            pss_only_extract(ue, pss_ext);
+            xss_ext = pss_ext;
+          }
+
+          if (isSss) {
+            sss_only_extract(ue, sss_ext);
+            xss_ext = sss_ext;
+          }
+
+          // calculate noise power
+          int num_tot=0; // number of REs totally used in calculating noise power
+          for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
+
+            int num_per_rx=0; // number of REs used in caluclaing noise power for this RX antenna
+            ue->measurements.n0_power[aarx] = 0;
+            for (n=2; n<70; n++) { // skip the 2 REs next to PDSCH, i.e. n={0,1,70,71}
+              if (n==5) {n=67;}
+
+              re = (int16_t*)(&(xss_ext[aarx][n]));
+              im = re+1;
+              ue->measurements.n0_power[aarx] += (*re)*(*re) + (*im)*(*im);
+              num_per_rx++;
+              num_tot++;
+            }
+
+            ue->measurements.n0_power_dB[aarx] = (unsigned short) dB_fixed(ue->measurements.n0_power[aarx]/(num_per_rx));
+            ue->measurements.n0_power_tot /*+=*/ =  ue->measurements.n0_power[aarx];
+          }
+
+          ue->measurements.n0_power_tot_dB = (unsigned short) dB_fixed(ue->measurements.n0_power_tot/(num_tot));
+          ue->measurements.n0_power_tot_dBm = ue->measurements.n0_power_tot_dB - ue->rx_total_gain_dB - dB_fixed(ue->frame_parms.ofdm_symbol_size);
+
+#else
           if (ue->frame_parms.Ncp==NORMAL) {
             for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
 
-	      rxF_sss = (int16_t *)&ue->common_vars.rxdataF[aarx][(6*ue->frame_parms.ofdm_symbol_size)];
+	      rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[aarx][(6*ue->frame_parms.ofdm_symbol_size)];
 	      // note this is a dummy pointer, the pss is not really there!
 	      // in FDD the pss is in the symbol after the sss, but not in TDD
-	      rxF_pss = (int16_t *)&ue->common_vars.rxdataF[aarx][(7*ue->frame_parms.ofdm_symbol_size)];
-	      
+
+	      rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[aarx][(7*ue->frame_parms.ofdm_symbol_size)];
+
 	      //-ve spectrum from SSS
 	      //              ue->measurements.n0_power[aarx] = (((int32_t)rxF_pss[-72]*rxF_pss[-72])+((int32_t)rxF_pss[-71]*rxF_pss[-71]));
               ue->measurements.n0_power[aarx] = (((int32_t)rxF_pss[-70]*rxF_pss[-70])+((int32_t)rxF_pss[-69]*rxF_pss[-69]));
@@ -255,16 +313,17 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
 	      ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+68]*rxF_sss[2+68])+((int32_t)rxF_sss[2+67]*rxF_sss[2+67]));
 	      ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+66]*rxF_sss[2+66])+((int32_t)rxF_sss[2+65]*rxF_sss[2+65]));
 	      //	      ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+64]*rxF_sss[2+64])+((int32_t)rxF_sss[2+63]*rxF_sss[2+63]));
-	      
+
 	      ue->measurements.n0_power_dB[aarx] = (unsigned short) dB_fixed(ue->measurements.n0_power[aarx]/(6));
-	      ue->measurements.n0_power_tot +=  ue->measurements.n0_power[aarx];	  
-	    }	      
+	      ue->measurements.n0_power_tot +=  ue->measurements.n0_power[aarx];
+	    }
 	    ue->measurements.n0_power_tot_dB = (unsigned short) dB_fixed(ue->measurements.n0_power_tot/(6*aarx));
 	    ue->measurements.n0_power_tot_dBm = ue->measurements.n0_power_tot_dB - ue->rx_total_gain_dB - dB_fixed(ue->frame_parms.ofdm_symbol_size);
-	      
-	    
-	  }
-	}
+
+
+          }
+#endif
+        }
       }
     }
     // recompute nushift with eNB_offset corresponding to adjacent eNB on which to perform channel estimation
@@ -286,13 +345,13 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
 
       for (l=0,nu=0; l<=(4-ue->frame_parms.Ncp); l+=(4-ue->frame_parms.Ncp),nu=3) {
         k = (nu + nushift)%6;
-#ifdef DEBUG_MEAS
+#ifdef DEBUG_MEAS_RRC
         LOG_I(PHY,"[UE %d] Frame %d subframe %d Doing ue_rrc_measurements rsrp/rssi (Nid_cell %d, nushift %d, eNB_offset %d, k %d, l %d)\n",ue->Mod_id,ue->proc.proc_rxtx[subframe&1].frame_rx,subframe,Nid_cell,nushift,
               eNB_offset,k,l);
 #endif
 
         for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
-          rxF = (int16_t *)&ue->common_vars.rxdataF[aarx][(l*ue->frame_parms.ofdm_symbol_size)];
+          rxF = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[aarx][(l*ue->frame_parms.ofdm_symbol_size)];
           off  = (ue->frame_parms.first_carrier_offset+k)<<1;
 
           if (l==(4-ue->frame_parms.Ncp)) {
@@ -305,7 +364,7 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
 	      //	      if ((ue->frame_rx&0x3ff) == 0)
 	      //                printf("rb %d, off %d : %d\n",rb,off,((rxF[off]*rxF[off])+(rxF[off+1]*rxF[off+1])));
 
-              
+
               off+=12;
 
               if (off>=(ue->frame_parms.ofdm_symbol_size<<1))
@@ -364,7 +423,7 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
 
     }
 
-#ifdef DEBUG_MEAS
+#ifdef DEBUG_MEAS_RRC
 
     //    if (slot == 0) {
 
@@ -398,7 +457,8 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
 void lte_ue_measurements(PHY_VARS_UE *ue,
                          unsigned int subframe_offset,
                          unsigned char N0_symbol,
-                         unsigned char abstraction_flag)
+                         unsigned char abstraction_flag,
+						 uint8_t subframe)
 {
 
 
@@ -415,6 +475,14 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   int nb_subbands,subband_size,last_subband_size;
   int N_RB_DL = frame_parms->N_RB_DL;
+  ue->measurements.nb_antennas_rx = frame_parms->nb_antennas_rx;
+
+    if (ue->transmission_mode[eNB_id]!=4)
+     ue->measurements.rank[eNB_id] = 0;
+    else
+    ue->measurements.rank[eNB_id] = 1;
+  //  printf ("tx mode %d\n", ue->transmission_mode[eNB_id]);
+  //  printf ("rank %d\n", ue->PHY_measurements.rank[eNB_id]);
 
   switch (N_RB_DL) {
   case 6:
@@ -448,7 +516,7 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
       for (aatx=0; aatx<frame_parms->nb_antenna_ports_eNB; aatx++) {
         ue->measurements.rx_spatial_power[eNB_id][aatx][aarx] =
-          (signal_energy_nodc(&ue->common_vars.dl_ch_estimates[eNB_id][(aatx<<1) + aarx][0],
+          (signal_energy_nodc(&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][(aatx<<1) + aarx][0],
                               (N_RB_DL*12)));
         //- ue->measurements.n0_power[aarx];
 
@@ -498,10 +566,14 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
     ue->measurements.wideband_cqi_tot[eNB_id] = dB_fixed2(ue->measurements.rx_power_tot[eNB_id],ue->measurements.n0_power_tot);
     ue->measurements.wideband_cqi_avg[eNB_id] = dB_fixed2(ue->measurements.rx_power_avg[eNB_id],ue->measurements.n0_power_avg);
     ue->measurements.rx_rssi_dBm[eNB_id] = ue->measurements.rx_power_avg_dB[eNB_id] - ue->rx_total_gain_dB;
-#ifdef DEBUG_MEAS
-    LOG_I(PHY,"[eNB %d] lte_ue_measurements: RSSI %d dBm, RSSI (digital) %d dB\n",
-          eNB_id,ue->measurements.rx_rssi_dBm[eNB_id],
-          ue->measurements.rx_power_avg_dB[eNB_id]);
+#ifdef DEBUG_MEAS_UE
+      LOG_D(PHY,"[eNB %d] RSSI %d dBm, RSSI (digital) %d dB, WBandCQI %d dB, rxPwrAvg %d, n0PwrAvg %d\n",
+            eNB_id,
+            ue->measurements.rx_rssi_dBm[eNB_id],
+            ue->measurements.rx_power_avg_dB[eNB_id],
+            ue->measurements.wideband_cqi_avg[eNB_id],
+            ue->measurements.rx_power_avg[eNB_id],
+            ue->measurements.n0_power_avg);
 #endif
   }
 
@@ -512,8 +584,8 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
       // cqi/pmi information
 
       for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
-        dl_ch0    = &ue->common_vars.dl_ch_estimates[eNB_id][aarx][4];
-        dl_ch1    = &ue->common_vars.dl_ch_estimates[eNB_id][2+aarx][4];
+        dl_ch0    = &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][aarx][4];
+        dl_ch1    = &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2+aarx][4];
 
         for (subband=0; subband<nb_subbands; subband++) {
 
@@ -562,18 +634,19 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
       }
 
       for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
+	//printf("aarx=%d", aarx);
         // skip the first 4 RE due to interpolation filter length of 5 (not possible to skip 5 due to 128i alignment, must be multiple of 128bit)
 
 #if defined(__x86_64__) || defined(__i386__)
        __m128i pmi128_re,pmi128_im,mmtmpPMI0,mmtmpPMI1 /* ,mmtmpPMI2,mmtmpPMI3 */ ;
 
-        dl_ch0_128    = (__m128i *)&ue->common_vars.dl_ch_estimates[eNB_id][aarx][4];
-        dl_ch1_128    = (__m128i *)&ue->common_vars.dl_ch_estimates[eNB_id][2+aarx][4];
+        dl_ch0_128    = (__m128i *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][aarx][4];
+        dl_ch1_128    = (__m128i *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2+aarx][4];
 #elif defined(__arm__)
         int32x4_t pmi128_re,pmi128_im,mmtmpPMI0,mmtmpPMI1,mmtmpPMI0b,mmtmpPMI1b;
 
-        dl_ch0_128    = (int16x8_t *)&ue->common_vars.dl_ch_estimates[eNB_id][aarx][4];
-        dl_ch1_128    = (int16x8_t *)&ue->common_vars.dl_ch_estimates[eNB_id][2+aarx][4];
+        dl_ch0_128    = (int16x8_t *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][aarx][4];
+        dl_ch1_128    = (int16x8_t *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2+aarx][4];
 
 #endif
         for (subband=0; subband<nb_subbands; subband++) {
@@ -581,9 +654,11 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
 
           // pmi
 #if defined(__x86_64__) || defined(__i386__)
-          pmi128_re = _mm_setzero_si128();
-          pmi128_im = _mm_setzero_si128();
+
+	  pmi128_re = _mm_xor_si128(pmi128_re,pmi128_re);
+          pmi128_im = _mm_xor_si128(pmi128_im,pmi128_im);
 #elif defined(__arm__)
+
           pmi128_re = vdupq_n_s32(0);
 	  pmi128_im = vdupq_n_s32(0);
 #endif
@@ -596,18 +671,52 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
 
           for (i=0; i<limit; i++) {
 
+#if defined(__x86_64__) || defined(__i386__)
+	      mmtmpPMI0 = _mm_xor_si128(mmtmpPMI0,mmtmpPMI0);
+              mmtmpPMI1 = _mm_xor_si128(mmtmpPMI1,mmtmpPMI1);
+
             // For each RE in subband perform ch0 * conj(ch1)
             // multiply by conjugated channel
-#if defined(__x86_64__) || defined(__i386__)
-            mmtmpPMI1 = _mm_shufflelo_epi16(dl_ch1_128[0],_MM_SHUFFLE(2,3,0,1));//_MM_SHUFFLE(2,3,0,1)
-            mmtmpPMI1 = _mm_shufflehi_epi16(mmtmpPMI1,_MM_SHUFFLE(2,3,0,1));
-            mmtmpPMI1 = _mm_sign_epi16(mmtmpPMI1,*(__m128i*)&conjugate[0]);
-            mmtmpPMI1 = _mm_madd_epi16(mmtmpPMI1,dl_ch0_128[0]);
-            // mmtmpPMI1 contains imag part of 4 consecutive outputs (32-bit)
+		//  print_ints("ch0",&dl_ch0_128[0]);
+		//  print_ints("ch1",&dl_ch1_128[0]);
 
+	    mmtmpPMI0 = _mm_madd_epi16(dl_ch0_128[0],dl_ch1_128[0]);
+	         //  print_ints("re",&mmtmpPMI0);
+            mmtmpPMI1 = _mm_shufflelo_epi16(dl_ch1_128[0],_MM_SHUFFLE(2,3,0,1));
+              //  print_ints("_mm_shufflelo_epi16",&mmtmpPMI1);
+            mmtmpPMI1 = _mm_shufflehi_epi16(mmtmpPMI1,_MM_SHUFFLE(2,3,0,1));
+	        //  print_ints("_mm_shufflehi_epi16",&mmtmpPMI1);
+            mmtmpPMI1 = _mm_sign_epi16(mmtmpPMI1,*(__m128i*)&conjugate[0]);
+	       //  print_ints("_mm_sign_epi16",&mmtmpPMI1);
+            mmtmpPMI1 = _mm_madd_epi16(mmtmpPMI1,dl_ch0_128[0]);
+	       //   print_ints("mm_madd_epi16",&mmtmpPMI1);
+            // mmtmpPMI1 contains imag part of 4 consecutive outputs (32-bit)
             pmi128_re = _mm_add_epi32(pmi128_re,mmtmpPMI0);
+	     //   print_ints(" pmi128_re 0",&pmi128_re);
             pmi128_im = _mm_add_epi32(pmi128_im,mmtmpPMI1);
+	       //   print_ints(" pmi128_im 0 ",&pmi128_im);
+
+	  /*  mmtmpPMI0 = _mm_xor_si128(mmtmpPMI0,mmtmpPMI0);
+            mmtmpPMI1 = _mm_xor_si128(mmtmpPMI1,mmtmpPMI1);
+
+	    mmtmpPMI0 = _mm_madd_epi16(dl_ch0_128[1],dl_ch1_128[1]);
+	         //  print_ints("re",&mmtmpPMI0);
+            mmtmpPMI1 = _mm_shufflelo_epi16(dl_ch1_128[1],_MM_SHUFFLE(2,3,0,1));
+              //  print_ints("_mm_shufflelo_epi16",&mmtmpPMI1);
+            mmtmpPMI1 = _mm_shufflehi_epi16(mmtmpPMI1,_MM_SHUFFLE(2,3,0,1));
+	        //  print_ints("_mm_shufflehi_epi16",&mmtmpPMI1);
+            mmtmpPMI1 = _mm_sign_epi16(mmtmpPMI1,*(__m128i*)&conjugate);
+	       //  print_ints("_mm_sign_epi16",&mmtmpPMI1);
+            mmtmpPMI1 = _mm_madd_epi16(mmtmpPMI1,dl_ch0_128[1]);
+	       //   print_ints("mm_madd_epi16",&mmtmpPMI1);
+            // mmtmpPMI1 contains imag part of 4 consecutive outputs (32-bit)
+            pmi128_re = _mm_add_epi32(pmi128_re,mmtmpPMI0);
+	        //  print_ints(" pmi128_re 1",&pmi128_re);
+            pmi128_im = _mm_add_epi32(pmi128_im,mmtmpPMI1);
+	    //print_ints(" pmi128_im 1 ",&pmi128_im);*/
+
 #elif defined(__arm__)
+
             mmtmpPMI0 = vmull_s16(((int16x4_t*)dl_ch0_128)[0], ((int16x4_t*)dl_ch1_128)[0]);
             mmtmpPMI1 = vmull_s16(((int16x4_t*)dl_ch0_128)[1], ((int16x4_t*)dl_ch1_128)[1]);
             pmi128_re = vqaddq_s32(pmi128_re,vcombine_s32(vpadd_s32(vget_low_s32(mmtmpPMI0),vget_high_s32(mmtmpPMI0)),vpadd_s32(vget_low_s32(mmtmpPMI1),vget_high_s32(mmtmpPMI1))));
@@ -631,7 +740,7 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
     else {
       // cqi information only for mode 1
       for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
-        dl_ch0    = &ue->common_vars.dl_ch_estimates[eNB_id][aarx][4];
+        dl_ch0    = &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][aarx][4];
 
         for (subband=0; subband<7; subband++) {
 
@@ -667,7 +776,7 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
       }
     }
 
-    ue->measurements.rank[eNB_id] = 0;
+    //ue->measurements.rank[eNB_id] = 0;
 
     for (i=0; i<nb_subbands; i++) {
       ue->measurements.selected_rx_antennas[eNB_id][i] = 0;

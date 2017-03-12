@@ -55,17 +55,31 @@
 typedef struct {
   
   /*!\brief socket file desc */ 
-  int sockfd[MAX_INST];
+  int sockfd;
   /*!\brief interface name */ 
-  char *if_name[MAX_INST];
+  char *if_name;
   /*!\brief buffer size */ 
   unsigned int buffer_size;
+  /*!\brief destination address for UDP socket*/
+  struct sockaddr_in dest_addr;
+  /*!\brief local address for UDP socket*/
+  struct sockaddr_in local_addr;
+  /*!\brief address length for both UDP and RAW socket*/
+  int addr_len;
+  /*!\brief destination address for RAW socket*/
+  struct sockaddr_ll dest_addr_ll;
+  /*!\brief local address for RAW socket*/
+  struct sockaddr_ll local_addr_ll;
+  /*!\brief inteface index for RAW socket*/
+  struct ifreq if_index;
   /*!\brief timeout ms */ 
   unsigned int rx_timeout_ms;
   /*!\brief timeout ms */ 
   unsigned int tx_timeout_ms;
   /*!\brief runtime flags */ 
   uint32_t flags;   
+  /*!\compression enalbe  */
+  uint32_t compression;
   /*!\ time offset between transmiter timestamp and receiver timestamp */ 
   double tdiff;
   /*!\ calibration */
@@ -86,7 +100,7 @@ typedef struct {
   int num_seq_errors;
   /*!\brief number of errors in interface's receiver */ 
   int num_rx_errors;
-  /*!\brief umber of errors in interface's transmitter */ 
+  /*!\brief number of errors in interface's transmitter */ 
   int num_tx_errors;
   
   /*!\brief current TX timestamp */ 
@@ -105,6 +119,12 @@ typedef struct {
   uint64_t tx_count; 
   /*!\brief number of packets received */
   uint64_t rx_count;
+  /*!\brief TX sequence number*/
+  uint16_t pck_seq_num;
+  /*!\brief Current RX sequence number*/
+  uint16_t pck_seq_num_cur;
+  /*!\brief Previous RX sequence number */
+  uint16_t pck_seq_num_prev;
 
   struct ether_header eh; 
 
@@ -143,6 +163,10 @@ typedef enum {
   COALESCE_PAR,
   /*!\brief pause parameters of ethernet device */
   PAUSE_PAR,
+  /*!\brief kernel network receive buffer maximun size */
+  KERNEL_RCV_BUF_MAX_SIZE,
+  /*!\brief kernel network send buffer maximun size */
+  KERNEL_SND_BUF_MAX_SIZE,
   MAX_OPT
 } eth_opt_t;
 
@@ -218,6 +242,7 @@ int trx_eth_write_raw(openair0_device *device, openair0_timestamp timestamp, voi
 int trx_eth_read_raw(openair0_device *device, openair0_timestamp *timestamp, void **buff, int nsamps, int cc);
 int trx_eth_write_raw_IF4p5(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps,int cc, int flags);
 int trx_eth_read_raw_IF4p5(openair0_device *device, openair0_timestamp *timestamp, void **buff, int nsamps, int cc);
+int trx_eth_read_raw_IF5_mobipass(openair0_device *device, openair0_timestamp *timestamp, void **buff, int nsamps, int cc);
 int trx_eth_write_udp_IF4p5(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps,int cc, int flags);
 int trx_eth_read_udp_IF4p5(openair0_device *device, openair0_timestamp *timestamp, void **buff, int nsamps, int cc);
 int eth_get_dev_conf_raw(openair0_device *device);

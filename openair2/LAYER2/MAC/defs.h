@@ -132,6 +132,10 @@
 #define MIN_CQI_VALUE  0
 /*!\brief maximum value for channel quality indicator */
 #define MAX_CQI_VALUE  15
+/*!\briefmaximum number of supported bandwidth (1.4, 5, 10, 20 MHz) */
+#define MAX_SUPPORTED_BW  4  
+/*!\brief CQI values range from 1 to 15 (4 bits) */
+#define CQI_VALUE_RANGE 16 
 
 /*!\brief value for indicating BSR Timer is not running */
 #define MAC_UE_BSR_TIMER_NOT_RUNNING   (0xFFFF)
@@ -144,6 +148,9 @@
 
 /*!\brief minimum MAC data needed for transmitting 1 min RLC PDU size + 1 byte MAC subHeader */
 #define MIN_MAC_HDR_RLC_SIZE    (1 + MIN_RLC_PDU_SIZE)
+
+/*!\brief maximum number of slices / groups */
+#define MAX_NUM_SLICES 4 
 
 /* 
  * eNB part 
