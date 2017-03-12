@@ -1046,10 +1046,6 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
       exit_fun("Exiting");
     }
   } else {
-<<<<<<< HEAD
-    //    proc->first_rx = 0;
-=======
->>>>>>> origin/develop
     proc->first_rx--;
     *frame = proc->frame_rx;
     *subframe = proc->subframe_rx;        
@@ -1725,14 +1721,9 @@ void init_eNB_proc(int inst) {
     proc->instance_cnt_FH          = -1;
     proc->instance_cnt_asynch_rxtx = -1;
     proc->CC_id = CC_id;    
-<<<<<<< HEAD
     
     proc->first_rx=100;
-=======
     proc->instance_cnt_synch        =  -1;
-
-    proc->first_rx=1;
->>>>>>> origin/develop
     proc->first_tx=1;
     proc->frame_offset = 0;
 
