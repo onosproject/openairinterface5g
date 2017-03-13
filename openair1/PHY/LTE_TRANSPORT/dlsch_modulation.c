@@ -1408,7 +1408,8 @@ x0[1+*jj]);
 
         // mapping ue specific beamforming weights from UE specified DLSCH structure to common space
         for (aa=0;aa<frame_parms->nb_antennas_tx;aa++) {
-          phy_vars_eNB->common_vars.beam_weights[0][5][aa][re_off+re] = phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa][re_off+re];
+          //phy_vars_eNB->common_vars.beam_weights[0][5][aa][re_off+re] = phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa][re_off+re];
+          phy_vars_eNB->common_vars.beam_weights[0][5][aa][re_off+re] = phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa][385];
           //printf("allocate_REs_in_RB: phy_vars_eNB->common_vars.beam_weights[0][5][%d][%d,%d]=%d, phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][%d][%d]=%d\n", aa, re_off,re, phy_vars_eNB->common_vars.beam_weights[0][5][aa][re_off+re], aa, re_off+re, phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa][re_off+re]);
         }
  

@@ -96,21 +96,28 @@ FD_lte_phy_scope_enb *create_lte_phy_scope_enb( void )
   fl_set_object_lcolor( fdui->chest_f, FL_WHITE ); // Label color
   fl_set_xyplot_ybounds( fdui->chest_f,30,70);
 
+  // Frequency-domain beamforming weights 
+  fdui->bf_weights = fl_add_xyplot( FL_IMPULSE_XYPLOT, 20, 260, 760, 100, "Frequency Domain Beamforming Weight (RE, dB)" );
+  fl_set_object_boxtype( fdui->bf_weights, FL_EMBOSSED_BOX );
+  fl_set_object_color( fdui->bf_weights, FL_BLACK, FL_RED );
+  fl_set_object_lcolor( fdui->bf_weights, FL_WHITE ); // Label color
+  fl_set_xyplot_ybounds( fdui->bf_weights,30,100);
+
   // LLR of PUSCH
-  fdui->pusch_llr = fl_add_xyplot( FL_POINTS_XYPLOT, 20, 260, 500, 200, "PUSCH Log-Likelihood Ratios (LLR, mag)" );
+  fdui->pusch_llr = fl_add_xyplot( FL_POINTS_XYPLOT, 20, 380, 500, 200, "PUSCH Log-Likelihood Ratios (LLR, mag)" );
   fl_set_object_boxtype( fdui->pusch_llr, FL_EMBOSSED_BOX );
   fl_set_object_color( fdui->pusch_llr, FL_BLACK, FL_YELLOW );
   fl_set_object_lcolor( fdui->pusch_llr, FL_WHITE ); // Label color
   fl_set_xyplot_symbolsize( fdui->pusch_llr,2);
 
   // I/Q PUSCH comp
-  fdui->pusch_comp = fl_add_xyplot( FL_POINTS_XYPLOT, 540, 260, 240, 200, "PUSCH I/Q of MF Output" );
+  fdui->pusch_comp = fl_add_xyplot( FL_POINTS_XYPLOT, 540, 380, 240, 200, "PUSCH I/Q of MF Output" );
   fl_set_object_boxtype( fdui->pusch_comp, FL_EMBOSSED_BOX );
   fl_set_object_color( fdui->pusch_comp, FL_BLACK, FL_YELLOW );
   fl_set_object_lcolor( fdui->pusch_comp, FL_WHITE ); // Label color
   fl_set_xyplot_symbolsize( fdui->pusch_comp,2);
   fl_set_xyplot_xgrid( fdui->pusch_llr,FL_GRID_MAJOR);
-
+/*
   // I/Q PUCCH comp (format 1)
   fdui->pucch_comp1 = fl_add_xyplot( FL_POINTS_XYPLOT, 540, 480, 240, 100, "PUCCH1 Energy (SR)" );
   fl_set_object_boxtype( fdui->pucch_comp1, FL_EMBOSSED_BOX );
@@ -118,7 +125,7 @@ FD_lte_phy_scope_enb *create_lte_phy_scope_enb( void )
   fl_set_object_lcolor( fdui->pucch_comp1, FL_WHITE ); // Label color
   fl_set_xyplot_symbolsize( fdui->pucch_comp1,2);
   //  fl_set_xyplot_xgrid( fdui->pusch_llr,FL_GRID_MAJOR);
-
+*/
   // I/Q PUCCH comp (fromat 1a/b)
   fdui->pucch_comp = fl_add_xyplot( FL_POINTS_XYPLOT, 540, 600, 240, 100, "PUCCH I/Q of MF Output" );
   fl_set_object_boxtype( fdui->pucch_comp, FL_EMBOSSED_BOX );
@@ -126,13 +133,13 @@ FD_lte_phy_scope_enb *create_lte_phy_scope_enb( void )
   fl_set_object_lcolor( fdui->pucch_comp, FL_WHITE ); // Label color
   fl_set_xyplot_symbolsize( fdui->pucch_comp,2);
   //  fl_set_xyplot_xgrid( fdui->pusch_llr,FL_GRID_MAJOR);
-
+/*
   // Throughput on PUSCH
   fdui->pusch_tput = fl_add_xyplot( FL_NORMAL_XYPLOT, 20, 480, 500, 100, "PUSCH Throughput [frame]/[kbit/s]" );
   fl_set_object_boxtype( fdui->pusch_tput, FL_EMBOSSED_BOX );
   fl_set_object_color( fdui->pusch_tput, FL_BLACK, FL_WHITE );
   fl_set_object_lcolor( fdui->pusch_tput, FL_WHITE ); // Label color
-
+*/
   // Generic eNB Button
   fdui->button_0 = fl_add_button( FL_PUSH_BUTTON, 20, 600, 240, 40, "" );
   fl_set_object_lalign(fdui->button_0, FL_ALIGN_CENTER );
@@ -161,6 +168,7 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
   int16_t **rxsig_t;
   int16_t **chest_t;
   int16_t **chest_f;
+  int16_t **bf_weights;
   int16_t *pusch_llr;
   int16_t *pusch_comp;
   int32_t *pucch1_comp;
@@ -173,6 +181,7 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
   float rxsig_t_dB[nb_antennas_rx][FRAME_LENGTH_COMPLEX_SAMPLES];
   float chest_t_abs[nb_antennas_rx][frame_parms->ofdm_symbol_size];
   float *chest_f_abs;
+  float *bf_weights_abs;
   float time[FRAME_LENGTH_COMPLEX_SAMPLES];
   float time2[2048];
   float freq[nsymb_ce*nb_antennas_rx*nb_antennas_tx];
@@ -192,12 +201,14 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
   coded_bits_per_codeword = frame_parms->N_RB_UL*12*get_Qm(mcs)*frame_parms->symbols_per_tti;
 
   chest_f_abs = (float*) calloc(nsymb_ce*nb_antennas_rx*nb_antennas_tx,sizeof(float));
+  bf_weights_abs = (float*) calloc(nsymb_ce*nb_antennas_rx,sizeof(float));
   llr = (float*) calloc(coded_bits_per_codeword,sizeof(float)); // init to zero
   bit = malloc(coded_bits_per_codeword*sizeof(float));
 
   rxsig_t = (int16_t**) phy_vars_enb->common_vars.rxdata[eNB_id];
   chest_t = (int16_t**) phy_vars_enb->pusch_vars[UE_id]->drs_ch_estimates_time[eNB_id];
   chest_f = (int16_t**) phy_vars_enb->pusch_vars[UE_id]->drs_ch_estimates[eNB_id];
+  bf_weights = (int16_t**) phy_vars_enb->common_vars.beam_weights[eNB_id][5]; //Illustration UE spec BF weights for TM7
   pusch_llr = (int16_t*) phy_vars_enb->pusch_vars[UE_id]->llr;
   pusch_comp = (int16_t*) phy_vars_enb->pusch_vars[UE_id]->rxdataF_comp[eNB_id][0];
   pucch1_comp = (int32_t*) phy_vars_enb->pucch1_stats[UE_id];
@@ -217,7 +228,7 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
 
     for (arx=1; arx<nb_antennas_rx; arx++) {
       if (rxsig_t[arx] != NULL) {
-        for (i=0; i<FRAME_LENGTH_COMPLEX_SAMPLES; i++) {
+        for (i=0;i<FRAME_LENGTH_COMPLEX_SAMPLES; i++) {
           rxsig_t_dB[arx][i] = 10*log10(1.0+(float) ((rxsig_t[arx][2*i])*(rxsig_t[arx][2*i])+(rxsig_t[arx][2*i+1])*(rxsig_t[arx][2*i+1])));
         }
 
@@ -285,10 +296,10 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
     fl_set_xyplot_xbounds(form->chest_f,0,nb_antennas_rx*nb_antennas_tx*nsymb_ce);
     fl_set_xyplot_xtics(form->chest_f,nb_antennas_rx*nb_antennas_tx*frame_parms->symbols_per_tti,3);
     fl_set_xyplot_xgrid(form->chest_f,FL_GRID_MAJOR);
-    fl_set_xyplot_data(form->chest_f,freq,chest_f_abs,nsymb_ce,"","","");
+    fl_set_xyplot_data(form->chest_f,freq,chest_f_abs,nsymb_ce*nb_antennas_rx,"","","");
 
     for (arx=1; arx<nb_antennas_rx; arx++) {
-      fl_add_xyplot_overlay(form->chest_f,1,&freq[arx*nsymb_ce],&chest_f_abs[arx*nsymb_ce],nsymb_ce,rx_antenna_colors[arx]);
+      fl_add_xyplot_overlay(form->chest_f,arx,&freq[arx*nsymb_ce],&chest_f_abs[arx*nsymb_ce],nsymb_ce,rx_antenna_colors[arx]);
     }
 
     // other tx antennas
@@ -305,6 +316,47 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
         fl_add_xyplot_overlay(form->chest_f,atx,&freq[atx*nsymb_ce],&chest_f_abs[atx*nsymb_ce],nsymb_ce,rx_antenna_colors[arx]);
       }
     }
+  }
+    
+  // Beamforming weights 
+  if (bf_weights != NULL) {
+      ind = 0;
+  
+      for (arx=0; arx<nb_antennas_rx; arx++) {
+        if (bf_weights[arx] != NULL) {
+          for (k=0; k<6*frame_parms->N_RB_DL; k++) {
+            freq[ind] = (float)ind;
+            Re = (float)(bf_weights[arx][2*(k+frame_parms->first_carrier_offset)]);
+            Im = (float)(bf_weights[arx][2*(k+frame_parms->first_carrier_offset)+1]);
+            //printf("bf_weights[%d][%d]=(%f,%f)\n", arx, k+frame_parms->first_carrier_offset, Re, Im);
+  
+            bf_weights_abs[ind] = (short)10*log10(1.0+((double)Re*Re + (double)Im*Im));
+            ind++;
+          }
+
+          for (k=0; k<6*frame_parms->N_RB_DL; k++) {
+            freq[ind] = (float)ind;
+            Re = (float)(bf_weights[arx][(2*k)]);
+            Im = (float)(bf_weights[arx][(2*k)+1]);
+            //printf("bf_weights[%d][%d]=(%f,%f)\n", arx, k, Re, Im);
+  
+            bf_weights_abs[ind] = (short)10*log10(1.0+((double)Re*Re + (double)Im*Im));
+            //printf("bf_weights_abs[%d][%d]=%d\n", arx, k, bf_weights_abs[ind]);
+            ind++;
+          }
+        }
+      }
+  
+    // tx antenna 0
+    fl_set_xyplot_xbounds(form->bf_weights,0,nb_antennas_rx*nb_antennas_tx*12*frame_parms->N_RB_DL);
+    fl_set_xyplot_xtics(form->bf_weights,nb_antennas_rx*nb_antennas_tx,3);
+    fl_set_xyplot_xgrid(form->bf_weights,FL_GRID_MAJOR);
+    fl_set_xyplot_data(form->bf_weights,freq,bf_weights_abs,12*frame_parms->N_RB_DL*nb_antennas_rx,"","","");
+
+    for (arx=1; arx<nb_antennas_rx; arx++) {
+      fl_add_xyplot_overlay(form->bf_weights,arx,&freq[arx*12*frame_parms->N_RB_DL],&bf_weights_abs[arx*12*frame_parms->N_RB_DL],nsymb_ce,rx_antenna_colors[arx]);
+    }
+
   }
 
   // PUSCH LLRs
@@ -332,7 +384,7 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
     fl_set_xyplot_data(form->pusch_comp,I,Q,ind,"","","");
   }
 
-  // PUSCH I/Q of MF Output
+/*  // PUSCH I/Q of MF Output
   if (pucch1ab_comp!=NULL) {
     for (ind=0; ind<10240; ind++) {
 
@@ -350,9 +402,9 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
 
     fl_set_xyplot_ybounds(form->pucch_comp1,0,80);
   }
+*/
 
-
-  // PUSCH Throughput
+/*  // PUSCH Throughput
   memmove( tput_time_enb[UE_id], &tput_time_enb[UE_id][1], (TPUT_WINDOW_LENGTH-1)*sizeof(float) );
   memmove( tput_enb[UE_id], &tput_enb[UE_id][1], (TPUT_WINDOW_LENGTH-1)*sizeof(float) );
 
@@ -363,7 +415,7 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
 
   //    fl_get_xyplot_ybounds(form->pusch_tput,&ymin,&ymax);
   //    fl_set_xyplot_ybounds(form->pusch_tput,0,ymax);
-
+*/
   fl_check_forms();
 
   free(llr);

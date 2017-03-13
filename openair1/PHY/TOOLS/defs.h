@@ -138,11 +138,12 @@ int mult_cpx_conj_vector(int16_t *x1,
   @param output_shift  - shift to be applied to generate output
 */
 
-int multiadd_cpx_vector(int16_t *x1,
-                         int16_t *x2,
-                         int16_t *y,
-                         uint32_t N,
-                         int output_shift);
+int multadd_cpx_vector(int16_t *x1,
+                       int16_t *x2,
+                       int16_t *y,
+                       uint8_t zero_flag,
+                       uint32_t N,
+                       int output_shift);
 
 
 // lte_dfts.c
