@@ -653,7 +653,10 @@ void trx_exmimo_end(openair0_device *device) {
   exmimo_state_t *exm=device->priv;
 
   exm->daq_state = idle;
-  openair0_stop(0);
+  if (device->openair0_cfg[0].tdd_recip_calib == 1)
+    openair0_stop_without_reset(0);
+  else
+    openair0_stop(0);
  
 }
 
@@ -675,7 +678,10 @@ int trx_exmimo_stop(openair0_device* device) {
 
   printf("Stopping ...\n");
   exm->daq_state = idle;  
-  openair0_stop(0);
+  if (device->openair0_cfg[0].tdd_recip_calib == 1)
+    openair0_stop_without_reset(0);
+  else
+    openair0_stop(0);
 
   return(0);
 
