@@ -290,6 +290,8 @@ const char* eurecomFunctionsNames[] = {
   "phy_eNB_dlsch_scrambling",
   "phy_eNB_beam_precoding",
   "phy_eNB_ofdm_mod_l",
+  "phy_eNB_ulcsi_to_dlsci",
+  "phy_eNB_compute_bf_weight",
 
   /* MAC  signals  */
   "macxface_macphy_init",
