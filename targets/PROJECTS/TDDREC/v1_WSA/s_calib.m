@@ -38,7 +38,7 @@
 d_M = 4;			% modulation order, e.g. 4 means QPSK
 
 %** frequency **
-d_N_f = 301; 			% carrier number carrying data
+d_N_f = 300; 			% carrier number carrying data
 d_N_FFT = 512;			% total carrier number
 d_N_CP = 128;			% extented cyclic prefix
 %** time **
@@ -93,8 +93,8 @@ end
 m_F_norm = zeros(d_N_antM+1, d_N_f);
 m_F_norm(1, :) = mean(m_F(1, :),2);
 m_F_norm(2, :) = mean(m_F(2, :),2);
-m_F_norm(3, :) = 1;
-m_F_norm = m_F_norm./max(max(abs(m_F_norm)))*0.99;
+m_F_norm(3, :) = 1+0.0001i;
+m_F_norm = m_F_norm./abs(m_F_norm)*0.99;
 
 %keyboard
 
@@ -110,26 +110,22 @@ dlmwrite('result/calibF.mtx', m_F_Q15,' ');
 figure(11)
 hold on;
 for d_f=1:d_N_f
+  plot(m_F(1,d_f),'bo')
+  plot(m_F(2,d_f),'ro')
+end
+hold off;
+title('Diagonal F');
+axis([-3 3 -3 3])
+grid on
+
+figure(12)
+hold on;
+for d_f=1:d_N_f
   plot(m_F_norm(1,d_f),'bo')
   plot(m_F_norm(2,d_f),'ro')
-  plot(m_F_norm(3,d_f)+0.000001*1i,'ko')
+  plot(m_F_norm(3,d_f),'ko')
 end
 hold off;
 title('Diagonal F');
 axis([-2 2 -2 2])
 grid on
-
-%figure(12)
-%hold on;
-%for d_f=1:d_N_f
-%  plot(m_F_(1,1,d_f),'bo')
-%  plot(m_F_(2,1,d_f),'ro')
-%%  plot(m_F_(1,3,d_f),'gx')
-%%  plot(m_F_(2,3,d_f),'yx')
-%%  plot(m_F_(1,5,d_f),'c+')
-%%  plot(m_F_(2,5,d_f),'m+')
-%end
-%hold off;
-%title('Diagonal F');
-%axis([-2 2 -2 2])
-%grid on

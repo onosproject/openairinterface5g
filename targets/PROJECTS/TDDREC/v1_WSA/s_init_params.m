@@ -20,8 +20,8 @@ freq_tx = fc*active_rf;
 freq_rx = (fc+fs/4)*active_rf;
 
 tdd_config = DUPLEXMODE_FDD+TXRXSWITCH_LSB;  %we need the LSB switching for the woduplex script, otherwise we don't receive anything
-rx_gain = [10 10 10 0];%10*active_rf;
-tx_gain = [10 10 10 0];%10*active_rf;
+rx_gain = 5*active_rf;
+tx_gain = [10 0 5 0];%5*active_rf;
 %rx_gain = 20*active_rf;
 %tx_gain = 20*active_rf;
 syncmode = SYNCMODE_FREE;

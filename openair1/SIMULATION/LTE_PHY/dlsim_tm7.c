@@ -124,6 +124,7 @@ int main(int argc, char **argv)
   //int32_t **cell_spec_bf_weights;
   int32_t *ue_spec_bf_weights;
   uint8_t tdd_calib=0;
+  char   tdd_recip_calib_file[1024];
 
   int eNB_id = 0, eNB_id_i = 1;
   unsigned char mcs1=0,mcs2=0,mcs_i=0,dual_stream_UE = 0,awgn_flag=0,round,dci_flag=0;
@@ -2170,10 +2171,16 @@ PMI_FEEDBACK:
 	    }
 
           
-	    estimate_DLCSI_from_ULCSI(eNB->dlsch[0][0]->calib_dl_ch_estimates,
+	    /*estimate_DLCSI_from_ULCSI(eNB->dlsch[0][0]->calib_dl_ch_estimates,
 	  			      &eNB->pusch_vars[0]->drs_ch_estimates[0][0],//position of second DMRS
 			              eNB->common_vars.tdd_calib_coeffs[0],
-				      frame_parms);
+				      frame_parms);*/
+	  
+	    estimate_DLCSI_from_ULCSI(eNB->dlsch[0][0]->calib_dl_ch_estimates,
+	  			      eNB->pusch_vars[0],//position of second DMRS
+			              eNB->common_vars.tdd_calib_coeffs[0],
+				      frame_parms,
+                                      0);
 	  
 	    compute_BF_weights(eNB->dlsch[0][0]->ue_spec_bf_weights[0],
 			       eNB->dlsch[0][0]->calib_dl_ch_estimates,

@@ -41,6 +41,6 @@ m_sig_R_noCP = m_sig_R_f(d_N_CP+1:end,:,:);
 %** fft **
 %m_sym_R_fft = fft(m_sig_R_noCP,d_N_FFT,1);
 m_sym_R_fft = 1/sqrt(d_N_FFT)*fft(m_sig_R_noCP,d_N_FFT,1);
-m_sym_R = m_sym_R_fft([362:512 2:151],:,:);
+m_sym_R = m_sym_R_fft([363:512 2:151],:,:);
 
 end

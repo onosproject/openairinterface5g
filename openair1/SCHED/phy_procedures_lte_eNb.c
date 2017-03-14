@@ -3000,8 +3000,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
          ((fp->tdd_config == 5) && (subframe == 2)) ||
          ((fp->tdd_config == 6) && ((subframe == 4) || (subframe == 8))))) {
          
-          LOG_I(PHY, "UE %d: Estimating DLSCI from ULCSI based on TDD reciprocity calibration: Estimating DLSCI from ULCSI based on TDD reciprocity calibration\n", i);
-          //printf(PHY, "UE %d: Estimating DLSCI from ULCSI based on TDD reciprocity calibration: Estimating DLSCI from ULCSI based on TDD reciprocity calibration\n", i);
+          //LOG_I(PHY, "UE %d: Estimating DLSCI from ULCSI based on TDD reciprocity calibration: Estimating DLSCI from ULCSI based on TDD reciprocity calibration\n", i);
         
           VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_ULCSI_TO_DLCSI,1);
 	  estimate_DLCSI_from_ULCSI(eNB->dlsch[i][0]->calib_dl_ch_estimates,

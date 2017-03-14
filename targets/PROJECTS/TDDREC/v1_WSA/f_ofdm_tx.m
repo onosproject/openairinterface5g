@@ -45,8 +45,8 @@ m_sym_T = v_MPSK(ceil(rand(d_N_f, d_N_OFDM, d_N_ant_act)*d_M));
 
 %** mapping useful data to favorable carriers **
 m_sym_T_ext = zeros(d_N_FFT,d_N_OFDM,d_N_ant_act);
-m_sym_T_ext(362:512,:,:) = m_sym_T(1:151,:,:);
-m_sym_T_ext(2:151,:,:) = m_sym_T(152:301,:,:);
+m_sym_T_ext(363:512,:,:) = m_sym_T(1:150,:,:);
+m_sym_T_ext(2:151,:,:) = m_sym_T(151:300,:,:);
 
 %** ifft **
 m_sig_T_ = sqrt(d_N_FFT)*ifft(m_sym_T_ext,d_N_FFT,1);

@@ -43,7 +43,7 @@ void estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, LTE_eNB_PUSCH *p
   uint8_t shift;
   int32_t **ul_ch_estimates = pusch_vars->drs_ch_estimates[eNB_id];
   int *ulsch_power = pusch_vars->ulsch_power;
-  int beta = 1.2;
+  int beta = 1;
 
   for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
      shift = log2_approx(ulsch_power[aa]*beta)>>1;

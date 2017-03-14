@@ -142,9 +142,9 @@ v_SNR_ideal = nan(d_N_f+1,1);
 v_SNR_iden = nan(d_N_f+1,1);
 v_SNR_diag = nan(d_N_f+1,1) ;
 
-v_SNR_ideal([1:151 153:302]) = v_SNR_ideal_([1:151 152:301]);
-v_SNR_iden([1:151 153:302]) = v_SNR_iden_([1:151 152:301]) ;
-v_SNR_diag([1:151 153:302]) = v_SNR_diag_([1:151 152:301]) ;
+v_SNR_ideal([1:150 152:301]) = v_SNR_ideal_([1:150 152:301]);
+v_SNR_iden([1:150 152:301]) = v_SNR_iden_([1:150 152:301]) ;
+v_SNR_diag([1:150 152:301]) = v_SNR_diag_([1:150 152:301]) ;
 
 %save('-v7','result/bf_gain_4x1_t3.mat','v_SNR_ideal','v_SNR_iden','v_SNR_diag','v_SNR_full');
 %% -------- plot --------
