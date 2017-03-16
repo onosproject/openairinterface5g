@@ -788,6 +788,9 @@ void fh_if5_asynch_DL(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
       exit_fun("Exiting");
     }
   }
+  proc->subframe_tx = subframe_tx;
+  if (eNB->tx_fh) eNB->tx_fh(eNB,&eNB->proc.proc_rxtx[0]);
+
 }
 
 void fh_if4p5_asynch_DL(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
@@ -857,6 +860,8 @@ void fh_if4p5_asynch_DL(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   proc->symbol_mask[*subframe] = 0;
   
   do_OFDM_mod_rt(*subframe, eNB);
+  proc->subframe_tx = subframe_tx;
+  if (eNB->tx_fh) eNB->tx_fh(eNB,&eNB->proc.proc_rxtx[0]);
 } 
 
 /*!
@@ -969,6 +974,7 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   }
   proc->frame_rx    = (proc->timestamp_rx / (fp->samples_per_tti*10))&1023;
   proc->subframe_rx = (proc->timestamp_rx / fp->samples_per_tti)%10;
+  proc->subframe_tx = (proc->subframe_rx+4)%10;
   proc->frame_rx    = (proc->frame_rx+proc->frame_offset)&1023;
   proc->frame_tx    = proc->frame_rx;
   if (proc->subframe_rx > 5) proc->frame_tx=(proc->frame_tx+1)&1023;
@@ -1467,7 +1473,7 @@ static void* eNB_thread_prach( void* param ) {
 }
 
 
-void tx_rf(PHY_VARS_eNB *eNB) { 
+void tx_rf(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) { 
 
   eNB_proc_t *proc = &eNB->proc;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
@@ -1483,14 +1489,14 @@ void tx_rf(PHY_VARS_eNB *eNB) {
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
   // prepare tx buffer pointers
   
-  lte_subframe_t SF_type     = subframe_select(fp,(proc->subframe_rx+4)%10);
-  lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_rx+4+9)%10);
-  lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_rx+4+1)%10);
+  lte_subframe_t SF_type     = subframe_select(fp,(proc->subframe_tx)%10);
+  lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_tx+9)%10);
+  lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_tx+1)%10);
   if ((SF_type == SF_DL) ||
       (SF_type == SF_S)) {
     
     for (i=0; i<fp->nb_antennas_tx; i++)
-      txp[i] = (void*)&eNB->common_vars.txdata[0][i][((proc->subframe_rx+4)%10)*fp->samples_per_tti]; 
+      txp[i] = (void*)&eNB->common_vars.txdata[0][i][((proc->subframe_tx)%10)*fp->samples_per_tti]; 
     
     int siglen=fp->samples_per_tti,flags=1;
     
@@ -1696,8 +1702,6 @@ static void* eNB_thread_single( void* param ) {
 
     if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
 
-    if ((eNB->node_function !=NGFI_RCC_IF4p5) && (eNB->node_function != eNodeB_3GPP_BBU))
-      tx_rf(eNB);
   }
   
 
@@ -2053,7 +2057,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->te                   = NULL;
 	eNB->proc_uespec_rx       = NULL;
 	eNB->proc_tx              = NULL;
-	eNB->tx_fh                = NULL;
+	eNB->tx_fh                = tx_rf;
 	eNB->rx_fh                = rx_rf;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = start_if;
@@ -2082,7 +2086,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->te                   = NULL;
 	eNB->proc_uespec_rx       = NULL;
 	eNB->proc_tx              = NULL;//proc_tx_rru_if4p5;
-	eNB->tx_fh                = NULL;
+	eNB->tx_fh                = tx_rf;
 	eNB->rx_fh                = rx_rf;
 	eNB->fh_asynch            = fh_if4p5_asynch_DL;
 	eNB->start_rf             = start_rf;
@@ -2115,7 +2119,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->te                   = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
 	eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
 	eNB->proc_tx              = proc_tx_full;
-	eNB->tx_fh                = NULL;
+	eNB->tx_fh                = tx_rf;
 	eNB->rx_fh                = rx_rf;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = NULL;
