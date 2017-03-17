@@ -116,8 +116,8 @@ static int trx_usrp_start(openair0_device *device) {
   
   //set ATR register
 //  s->usrp->set_gpio_attr("FP0", "ATR_0X", 2, 0xf);
-    s->usrp->set_gpio_attr("FP0", "ATR_RX", 1, 0xf);
-//  s->usrp->set_gpio_attr("FP0", "ATR_TX", 4, 0xf);
+    s->usrp->set_gpio_attr("FP0", "ATR_RX", 1<<7, 0xf);
+    s->usrp->set_gpio_attr("FP0", "ATR_TX", 1<<4, 0xf);
 //  s->usrp->set_gpio_attr("FP0", "ATR_XX", 8, 0xf);
 
 
