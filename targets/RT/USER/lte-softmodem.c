@@ -321,6 +321,7 @@ void help (void) {
   printf("  --ue-txgain set UE TX gain\n");
   printf("  --ue-nb-ant-rx  set UE number of rx antennas ");
   printf("  --ue-scan_carrier set UE to scan around carrier\n");
+  printf("  --dlsch-demod-shift dynamic shift for LLR compuation for TM3/4 (default 0)\n");
   printf("  --loop-memory get softmodem (UE) to loop through memory instead of acquiring from HW\n");
   printf("  --mmapped-dma sets flag for improved EXMIMO UE performance\n");  
   printf("  --external-clock tells hardware to use an external clock reference\n");
@@ -607,34 +608,35 @@ static void get_options (int argc, char **argv) {
 
   const Enb_properties_array_t *enb_properties;
 
-  enum long_option_e {
-    LONG_OPTION_START = 0x100, /* Start after regular single char options */
-    LONG_OPTION_RF_CONFIG_FILE,
-    LONG_OPTION_ULSCH_MAX_CONSECUTIVE_ERRORS,
-    LONG_OPTION_CALIB_UE_RX,
-    LONG_OPTION_CALIB_UE_RX_MED,
-    LONG_OPTION_CALIB_UE_RX_BYP,
-    LONG_OPTION_DEBUG_UE_PRACH,
-    LONG_OPTION_NO_L2_CONNECT,
-    LONG_OPTION_CALIB_PRACH_TX,
-    LONG_OPTION_RXGAIN,
-    LONG_OPTION_RXGAINOFF,
-    LONG_OPTION_TXGAIN,
-    LONG_OPTION_NBRXANT,
-    LONG_OPTION_NBTXANT,
-    LONG_OPTION_SCANCARRIER,
-    LONG_OPTION_MAXPOWER,
-    LONG_OPTION_DUMP_FRAME,
-    LONG_OPTION_LOOPMEMORY,
-    LONG_OPTION_PHYTEST,
-    LONG_OPTION_USIMTEST,
-    LONG_OPTION_MMAPPED_DMA,
-    LONG_OPTION_EXTERNAL_CLOCK,
-    LONG_OPTION_WAIT_FOR_SYNC,
-    LONG_OPTION_SINGLE_THREAD_DISABLE,
-    LONG_OPTION_THREADIQ,
-    LONG_OPTION_THREADODDSUBFRAME,
-    LONG_OPTION_THREADEVENSUBFRAME,
+    enum long_option_e {
+        LONG_OPTION_START = 0x100, /* Start after regular single char options */
+        LONG_OPTION_RF_CONFIG_FILE,
+        LONG_OPTION_ULSCH_MAX_CONSECUTIVE_ERRORS,
+        LONG_OPTION_CALIB_UE_RX,
+        LONG_OPTION_CALIB_UE_RX_MED,
+        LONG_OPTION_CALIB_UE_RX_BYP,
+        LONG_OPTION_DEBUG_UE_PRACH,
+        LONG_OPTION_NO_L2_CONNECT,
+        LONG_OPTION_CALIB_PRACH_TX,
+        LONG_OPTION_RXGAIN,
+        LONG_OPTION_RXGAINOFF,
+        LONG_OPTION_TXGAIN,
+	LONG_OPTION_NBRXANT,
+	LONG_OPTION_NBTXANT,
+        LONG_OPTION_SCANCARRIER,
+        LONG_OPTION_MAXPOWER,
+        LONG_OPTION_DUMP_FRAME,
+        LONG_OPTION_LOOPMEMORY,
+        LONG_OPTION_PHYTEST,
+        LONG_OPTION_USIMTEST,
+        LONG_OPTION_MMAPPED_DMA,
+        LONG_OPTION_EXTERNAL_CLOCK,
+        LONG_OPTION_WAIT_FOR_SYNC,
+        LONG_OPTION_SINGLE_THREAD_DISABLE,
+        LONG_OPTION_THREADIQ,
+        LONG_OPTION_THREADODDSUBFRAME,
+        LONG_OPTION_THREADEVENSUBFRAME,
+        LONG_OPTION_DEMOD_SHIFT,
 #if T_TRACER
     LONG_OPTION_T_PORT,
     LONG_OPTION_T_NOWAIT,
@@ -642,34 +644,34 @@ static void get_options (int argc, char **argv) {
 #endif
   };
 
-  static const struct option long_options[] = {
-    {"rf-config-file",required_argument,  NULL, LONG_OPTION_RF_CONFIG_FILE},
-    {"ulsch-max-errors",required_argument,  NULL, LONG_OPTION_ULSCH_MAX_CONSECUTIVE_ERRORS},
-    {"calib-ue-rx",     required_argument,  NULL, LONG_OPTION_CALIB_UE_RX},
-    {"calib-ue-rx-med", required_argument,  NULL, LONG_OPTION_CALIB_UE_RX_MED},
-    {"calib-ue-rx-byp", required_argument,  NULL, LONG_OPTION_CALIB_UE_RX_BYP},
-    {"debug-ue-prach",  no_argument,        NULL, LONG_OPTION_DEBUG_UE_PRACH},
-    {"no-L2-connect",   no_argument,        NULL, LONG_OPTION_NO_L2_CONNECT},
-    {"calib-prach-tx",   no_argument,        NULL, LONG_OPTION_CALIB_PRACH_TX},
-    {"ue-rxgain",   required_argument,  NULL, LONG_OPTION_RXGAIN},
-    {"ue-rxgain-off",   required_argument,  NULL, LONG_OPTION_RXGAINOFF},
-    {"ue-txgain",   required_argument,  NULL, LONG_OPTION_TXGAIN},
-    {"ue-nb-ant-rx", required_argument,  NULL, LONG_OPTION_NBRXANT},
-    {"ue-nb-ant-tx", required_argument,  NULL, LONG_OPTION_NBTXANT},
-    {"ue-scan-carrier",   no_argument,  NULL, LONG_OPTION_SCANCARRIER},
-    {"ue-max-power",   required_argument,  NULL, LONG_OPTION_MAXPOWER},
-    {"ue-dump-frame", no_argument, NULL, LONG_OPTION_DUMP_FRAME},
-    {"loop-memory", required_argument, NULL, LONG_OPTION_LOOPMEMORY},
-    {"phy-test", no_argument, NULL, LONG_OPTION_PHYTEST},
-    {"usim-test", no_argument, NULL, LONG_OPTION_USIMTEST},
-    {"mmapped-dma", no_argument, NULL, LONG_OPTION_MMAPPED_DMA},
-    {"external-clock", no_argument, NULL, LONG_OPTION_EXTERNAL_CLOCK},
-    {"wait-for-sync", no_argument, NULL, LONG_OPTION_WAIT_FOR_SYNC},
-    {"single-thread-disable", no_argument, NULL, LONG_OPTION_SINGLE_THREAD_DISABLE},
-    {"threadIQ",  required_argument, NULL, LONG_OPTION_THREADIQ},
-    {"threadOddSubframe",  required_argument, NULL, LONG_OPTION_THREADODDSUBFRAME},
-    {"threadEvenSubframe",  required_argument, NULL, LONG_OPTION_THREADEVENSUBFRAME},
-
+    static const struct option long_options[] = {
+        {"rf-config-file",required_argument,  NULL, LONG_OPTION_RF_CONFIG_FILE},
+        {"ulsch-max-errors",required_argument,  NULL, LONG_OPTION_ULSCH_MAX_CONSECUTIVE_ERRORS},
+        {"calib-ue-rx",     required_argument,  NULL, LONG_OPTION_CALIB_UE_RX},
+        {"calib-ue-rx-med", required_argument,  NULL, LONG_OPTION_CALIB_UE_RX_MED},
+        {"calib-ue-rx-byp", required_argument,  NULL, LONG_OPTION_CALIB_UE_RX_BYP},
+        {"debug-ue-prach",  no_argument,        NULL, LONG_OPTION_DEBUG_UE_PRACH},
+        {"no-L2-connect",   no_argument,        NULL, LONG_OPTION_NO_L2_CONNECT},
+        {"calib-prach-tx",   no_argument,        NULL, LONG_OPTION_CALIB_PRACH_TX},
+        {"ue-rxgain",   required_argument,  NULL, LONG_OPTION_RXGAIN},
+        {"ue-rxgain-off",   required_argument,  NULL, LONG_OPTION_RXGAINOFF},
+        {"ue-txgain",   required_argument,  NULL, LONG_OPTION_TXGAIN},
+     	{"ue-nb-ant-rx", required_argument,  NULL, LONG_OPTION_NBRXANT},
+	    {"ue-nb-ant-tx", required_argument,  NULL, LONG_OPTION_NBTXANT},
+        {"ue-scan-carrier",   no_argument,  NULL, LONG_OPTION_SCANCARRIER},
+        {"ue-max-power",   required_argument,  NULL, LONG_OPTION_MAXPOWER},
+        {"ue-dump-frame", no_argument, NULL, LONG_OPTION_DUMP_FRAME},
+        {"loop-memory", required_argument, NULL, LONG_OPTION_LOOPMEMORY},
+        {"phy-test", no_argument, NULL, LONG_OPTION_PHYTEST},
+        {"usim-test", no_argument, NULL, LONG_OPTION_USIMTEST},
+        {"mmapped-dma", no_argument, NULL, LONG_OPTION_MMAPPED_DMA},
+        {"external-clock", no_argument, NULL, LONG_OPTION_EXTERNAL_CLOCK},
+        {"wait-for-sync", no_argument, NULL, LONG_OPTION_WAIT_FOR_SYNC},
+        {"single-thread-disable", no_argument, NULL, LONG_OPTION_SINGLE_THREAD_DISABLE},
+        {"threadIQ",  required_argument, NULL, LONG_OPTION_THREADIQ},
+        {"threadOddSubframe",  required_argument, NULL, LONG_OPTION_THREADODDSUBFRAME},
+        {"threadEvenSubframe",  required_argument, NULL, LONG_OPTION_THREADEVENSUBFRAME},
+        {"dlsch-demod-shift", required_argument,  NULL, LONG_OPTION_DEMOD_SHIFT},
 #if T_TRACER
     {"T_port",                 required_argument, 0, LONG_OPTION_T_PORT},
     {"T_nowait",               no_argument,       0, LONG_OPTION_T_NOWAIT},
@@ -798,9 +800,13 @@ static void get_options (int argc, char **argv) {
       threads.odd=atoi(optarg);
       break;
     case LONG_OPTION_THREADEVENSUBFRAME:
-      threads.even=atoi(optarg);
-      break;
-
+       threads.even=atoi(optarg);
+       break;
+    case LONG_OPTION_DEMOD_SHIFT: {
+        extern int16_t dlsch_demod_shift;
+        dlsch_demod_shift = atof(optarg);
+        break;
+    }
 #if T_TRACER
     case LONG_OPTION_T_PORT: {
       extern int T_port;
@@ -1534,122 +1540,134 @@ int main( int argc, char **argv ) {
     // N_ZC = (prach_fmt <4)?839:139;
   }
 
-  if (UE_flag==1) {
-    NB_UE_INST=1;
-    NB_INST=1;
+    if (UE_flag==1) {
+        NB_UE_INST=1;
+        NB_INST=1;
 
-    PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**));
-    PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
+        PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**));
+        PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
 
-    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+        for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
-      PHY_vars_UE_g[0][CC_id] = init_lte_UE(frame_parms[CC_id], 0,abstraction_flag);
-      UE[CC_id] = PHY_vars_UE_g[0][CC_id];
-      printf("PHY_vars_UE_g[0][%d] = %p\n",CC_id,UE[CC_id]);
+            PHY_vars_UE_g[0][CC_id] = init_lte_UE(frame_parms[CC_id], 0,abstraction_flag);
+            UE[CC_id] = PHY_vars_UE_g[0][CC_id];
+            printf("PHY_vars_UE_g[0][%d] = %p\n",CC_id,UE[CC_id]);
 
-      if (phy_test==1)
-	UE[CC_id]->mac_enabled = 0;
-      else
-	UE[CC_id]->mac_enabled = 1;
+            if (phy_test==1)
+                UE[CC_id]->mac_enabled = 0;
+            else
+                UE[CC_id]->mac_enabled = 1;
 
-      if (UE[CC_id]->mac_enabled == 0) {  //set default UL parameters for testing mode
-	for (i=0; i<NUMBER_OF_CONNECTED_eNB_MAX; i++) {
-	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
-	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
-	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
+            if (UE[CC_id]->mac_enabled == 0) {  //set default UL parameters for testing mode
+                for (i=0; i<NUMBER_OF_CONNECTED_eNB_MAX; i++) {
+                    UE[CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
+                    UE[CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
+                    UE[CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
 
-	  UE[CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = 0;
-	  UE[CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(0%3);
-	  UE[CC_id]->scheduling_request_config[i].dsr_TransMax = sr_n4;
-	}
-      }
+                    UE[CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = 0;
+                    UE[CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(0%3);
+                    UE[CC_id]->scheduling_request_config[i].dsr_TransMax = sr_n4;
+                }
+            }
 
-      UE[CC_id]->UE_scan = UE_scan;
-      UE[CC_id]->UE_scan_carrier = UE_scan_carrier;
-      UE[CC_id]->mode    = mode;
-      printf("UE[%d]->mode = %d\n",CC_id,mode);
+            UE[CC_id]->UE_scan = UE_scan;
+            UE[CC_id]->UE_scan_carrier = UE_scan_carrier;
+            UE[CC_id]->mode    = mode;
+            printf("UE[%d]->mode = %d\n",CC_id,mode);
 
-      compute_prach_seq(&UE[CC_id]->frame_parms.prach_config_common,
-			UE[CC_id]->frame_parms.frame_type,
-			UE[CC_id]->X_u);
+            compute_prach_seq(&UE[CC_id]->frame_parms.prach_config_common,
+                              UE[CC_id]->frame_parms.frame_type,
+                              UE[CC_id]->X_u);
 
-      if (UE[CC_id]->mac_enabled == 1)
-	UE[CC_id]->pdcch_vars[0]->crnti = 0x1234;
-      else
-	UE[CC_id]->pdcch_vars[0]->crnti = 0x1235;
+            if (UE[CC_id]->mac_enabled == 1)
+            {
+                UE[CC_id]->pdcch_vars[0][0]->crnti = 0x1234;
+                UE[CC_id]->pdcch_vars[1][0]->crnti = 0x1234;
+            }
+            else
+            {
+                UE[CC_id]->pdcch_vars[0][0]->crnti = 0x1235;
+                UE[CC_id]->pdcch_vars[1][0]->crnti = 0x1235;
+            }
 
-      UE[CC_id]->rx_total_gain_dB =  (int)rx_gain[CC_id][0] + rx_gain_off;
-      UE[CC_id]->tx_power_max_dBm = tx_max_power[CC_id];
+            UE[CC_id]->rx_total_gain_dB =  (int)rx_gain[CC_id][0] + rx_gain_off;
+            UE[CC_id]->tx_power_max_dBm = tx_max_power[CC_id];
 
-      if (frame_parms[CC_id]->frame_type==FDD) {
-	UE[CC_id]->N_TA_offset = 0;
-      } else {
-	if (frame_parms[CC_id]->N_RB_DL == 100)
-	  UE[CC_id]->N_TA_offset = 624;
-	else if (frame_parms[CC_id]->N_RB_DL == 50)
-	  UE[CC_id]->N_TA_offset = 624/2;
-	else if (frame_parms[CC_id]->N_RB_DL == 25)
-	  UE[CC_id]->N_TA_offset = 624/4;
-      }
+            if (frame_parms[CC_id]->frame_type==FDD) {
+                UE[CC_id]->N_TA_offset = 0;
+            } else {
+                if (frame_parms[CC_id]->N_RB_DL == 100)
+                    UE[CC_id]->N_TA_offset = 624;
+                else if (frame_parms[CC_id]->N_RB_DL == 50)
+                    UE[CC_id]->N_TA_offset = 624/2;
+                else if (frame_parms[CC_id]->N_RB_DL == 25)
+                    UE[CC_id]->N_TA_offset = 624/4;
+            }
 
-    }
+        }
 
-    //  printf("tx_max_power = %d -> amp %d\n",tx_max_power,get_tx_amp(tx_max_poHwer,tx_max_power));
-  } else {
-    //this is eNB
-    PHY_vars_eNB_g = malloc(sizeof(PHY_VARS_eNB**));
-    PHY_vars_eNB_g[0] = malloc(sizeof(PHY_VARS_eNB*));
+        //  printf("tx_max_power = %d -> amp %d\n",tx_max_power,get_tx_amp(tx_max_poHwer,tx_max_power));
+    } else {
+        //this is eNB
+        PHY_vars_eNB_g = malloc(sizeof(PHY_VARS_eNB**));
+        PHY_vars_eNB_g[0] = malloc(sizeof(PHY_VARS_eNB*));
 
-    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-      PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,frame_parms[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
-      PHY_vars_eNB_g[0][CC_id]->ue_dl_rb_alloc=0x1fff;
-      PHY_vars_eNB_g[0][CC_id]->target_ue_dl_mcs=target_dl_mcs;
-      PHY_vars_eNB_g[0][CC_id]->ue_ul_nb_rb=6;
-      PHY_vars_eNB_g[0][CC_id]->target_ue_ul_mcs=target_ul_mcs;
-      // initialization for phy-test
-      for (k=0; k<NUMBER_OF_UE_MAX; k++) {
-	PHY_vars_eNB_g[0][CC_id]->transmission_mode[k] = transmission_mode;
-	if (transmission_mode==7)
-	  lte_gold_ue_spec_port5(PHY_vars_eNB_g[0][CC_id]->lte_gold_uespec_port5_table[k],frame_parms[CC_id]->Nid_cell,0x1235+k);
-      }
-      if ((transmission_mode==1) || (transmission_mode==7)) {
-	for (j=0; j<frame_parms[CC_id]->nb_antennas_tx; j++)
-	  for (re=0; re<frame_parms[CC_id]->ofdm_symbol_size; re++)
-	    PHY_vars_eNB_g[0][CC_id]->common_vars.beam_weights[0][0][j][re] = 0x00007fff/frame_parms[CC_id]->nb_antennas_tx;
-      }
+        for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+            PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,frame_parms[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
+            PHY_vars_eNB_g[0][CC_id]->ue_dl_rb_alloc=0x1fff;
+            PHY_vars_eNB_g[0][CC_id]->target_ue_dl_mcs=target_dl_mcs;
+            PHY_vars_eNB_g[0][CC_id]->ue_ul_nb_rb=6;
+            PHY_vars_eNB_g[0][CC_id]->target_ue_ul_mcs=target_ul_mcs;
+            // initialization for phy-test
+            for (k=0; k<NUMBER_OF_UE_MAX; k++) {
+                PHY_vars_eNB_g[0][CC_id]->transmission_mode[k] = transmission_mode;
+                if (transmission_mode==7)
+                    lte_gold_ue_spec_port5(PHY_vars_eNB_g[0][CC_id]->lte_gold_uespec_port5_table[k],frame_parms[CC_id]->Nid_cell,0x1235+k);
+            }
+            if ((transmission_mode==1) || (transmission_mode==7)) {
+                for (j=0; j<frame_parms[CC_id]->nb_antennas_tx; j++)
+                    for (re=0; re<frame_parms[CC_id]->ofdm_symbol_size; re++)
+                        PHY_vars_eNB_g[0][CC_id]->common_vars.beam_weights[0][0][j][re] = 0x00007fff/frame_parms[CC_id]->nb_antennas_tx;
+            }
 
-      if (phy_test==1) PHY_vars_eNB_g[0][CC_id]->mac_enabled = 0;
-      else PHY_vars_eNB_g[0][CC_id]->mac_enabled = 1;
+            if (phy_test==1) PHY_vars_eNB_g[0][CC_id]->mac_enabled = 0;
+            else PHY_vars_eNB_g[0][CC_id]->mac_enabled = 1;
 
-      if (PHY_vars_eNB_g[0][CC_id]->mac_enabled == 0) { //set default parameters for testing mode
-	for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-	  PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
-	  PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
-	  PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
+            if (PHY_vars_eNB_g[0][CC_id]->mac_enabled == 0) { //set default parameters for testing mode
+                for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+                    PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
+                    PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
+                    PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
 
-	  PHY_vars_eNB_g[0][CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = i;
-	  PHY_vars_eNB_g[0][CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(i%3);
-	  PHY_vars_eNB_g[0][CC_id]->scheduling_request_config[i].dsr_TransMax = sr_n4;
-	}
-      }
+                    PHY_vars_eNB_g[0][CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = i;
+                    PHY_vars_eNB_g[0][CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(i%3);
+                    PHY_vars_eNB_g[0][CC_id]->scheduling_request_config[i].dsr_TransMax = sr_n4;
+                }
+            }
 
-      compute_prach_seq(&PHY_vars_eNB_g[0][CC_id]->frame_parms.prach_config_common,
-			PHY_vars_eNB_g[0][CC_id]->frame_parms.frame_type,
-			PHY_vars_eNB_g[0][CC_id]->X_u);
+            compute_prach_seq(&PHY_vars_eNB_g[0][CC_id]->frame_parms.prach_config_common,
+                              PHY_vars_eNB_g[0][CC_id]->frame_parms.frame_type,
+                              PHY_vars_eNB_g[0][CC_id]->X_u);
 
 
-      PHY_vars_eNB_g[0][CC_id]->rx_total_gain_dB = (int)rx_gain[CC_id][0];
+            PHY_vars_eNB_g[0][CC_id]->rx_total_gain_dB = (int)rx_gain[CC_id][0];
 
-      if (frame_parms[CC_id]->frame_type==FDD) {
-	PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 0;
-      } else {
-	if (frame_parms[CC_id]->N_RB_DL == 100)
-	  PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624;
-	else if (frame_parms[CC_id]->N_RB_DL == 50)
-	  PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624/2;
-	else if (frame_parms[CC_id]->N_RB_DL == 25)
-	  PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624/4;
-      }
+            if (frame_parms[CC_id]->frame_type==FDD) {
+                PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 0;
+            } else {
+                if (frame_parms[CC_id]->N_RB_DL == 100)
+                    PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624;
+                else if (frame_parms[CC_id]->N_RB_DL == 50)
+                    PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624/2;
+                else if (frame_parms[CC_id]->N_RB_DL == 25)
+                    PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624/4;
+            }
+
+        }
+
+
+        NB_eNB_INST=1;
+        NB_INST=1;
 
     }
 
@@ -1734,9 +1752,7 @@ int main( int argc, char **argv ) {
       if (create_tasks(UE_flag ? 0 : 1, UE_flag ? 1 : 0) < 0) {
 	printf("cannot create ITTI tasks\n");
 	exit(-1); // need a softer mode
-	printf("ITTI tasks created\n");
       }
-
 
 #endif
 
