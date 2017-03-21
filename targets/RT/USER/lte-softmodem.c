@@ -1666,12 +1666,6 @@ int main( int argc, char **argv ) {
         }
 
 
-        NB_eNB_INST=1;
-        NB_INST=1;
-
-    }
-
-
     NB_eNB_INST=1;
     NB_INST=1;
 

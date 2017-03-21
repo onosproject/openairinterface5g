@@ -599,7 +599,6 @@ static void *UE_thread_rxn_txnp4(void *arg) {
           exit_fun("noting to add");
         }
     }
-  }
 
   // thread finished
   free(arg);
