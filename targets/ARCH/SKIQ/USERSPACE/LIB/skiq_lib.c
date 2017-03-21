@@ -66,6 +66,8 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
+#define SKIQ_ASYNCH 1
+
 typedef struct {
   uint32_t *dataptr;
   uint32_t length;
@@ -196,14 +198,14 @@ void *skiq_tx_thread(void *arg) {
   skiq_state_t *skiq = (skiq_state_t *)arg;
   TX_input_packet_q_t *txq = &skiq->txq;
   int32_t *txp_i;
-  int i=0;
+  int i=0,j;
   int next;
   int len;
   int32_t res;
   struct sched_param sparam;
   int s;
   long long in,out;
-
+  int tx_drop_cnt=0;
   
   memset(&sparam, 0, sizeof(sparam));
   sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
@@ -218,19 +220,47 @@ void *skiq_tx_thread(void *arg) {
   
   while (skiq->tx_active == 1) {
 
-#ifdef DEBUG_SKIQ_TX
-    //    printf(ANSI_COLOR_RED "skiq_tx_thread: locking mutex (time %llu)\n" ANSI_COLOR_RESET,rdtsc_oai());
-#endif	
+
     pthread_mutex_lock(&skiq->tx_mutex);
 
     uint64_t txts;
     skiq_read_curr_tx_timestamp(skiq->card_list[0],skiq_tx_hdl_A1, 
 				&txts);
-    in = rdtsc_oai();    
+    in = rdtsc_oai();
+#ifdef DEBUG_SKIQ_TX
+    printf(ANSI_COLOR_RED "skiq_tx_thread: locking mutex (time %llu) txq->elm[%d].active %d (len %d),skiq->txp_active[%d] %d,txq->elm[txq->head].timestamp %llu txts %llu\n" ANSI_COLOR_RESET,rdtsc_oai(),
+	   txq->head,
+	   txq->elm[txq->head].active,
+	   txq->elm[txq->head].length,
+	   i,
+	   skiq->txp_active[i],
+	   txq->elm[txq->head].timestamp,
+	   txts);
+#endif
+    /*
+    while ((txq->elm[txq->head].active==1)
+	   && (txq->elm[txq->head].timestamp<txts)) {// the head element is too late
+#ifdef DEBUG_SKIQ_TX
+      printf(ANSI_COLOR_RED "skiq_tx_thread: dropping head element %d\n" ANSI_COLOR_RESET,txq->head);
+#endif	
+      txq->elm[txq->head].active = 0;
+      txq->head = (txq->head+1)%SKIQ_MAX_TX_ELM;
+      i=0;
+      for (j=0;j<skiq->num_blocks_per_subframe;j++)
+	skiq->txp_active[j]=0;
+      if (tx_drop_cnt++ == 5)
+	skiq->tx_active=0;
+    }
+    */
+    
     if ((txq->elm[txq->head].active==1)&&
-	(skiq->txp_active[i]==0) &&
-	((txq->elm[txq->head].timestamp-txts)<4*(skiq->block_size_in_words))) { // queue is not empty
+	(skiq->txp_active[i]==0)) {
+    //&& ((txq->elm[txq->head].timestamp-txts)<4*(skiq->block_size_in_words))) { // queue is not empty
 
+      
+#ifdef DEBUG_SKIQ_TX
+      printf(ANSI_COLOR_RED "skiq_tx_thread: inner condition\n" ANSI_COLOR_RESET);
+#endif	
       txp_i = skiq->tx_packet[i]+4+1+(sizeof(void*)>>2);
       
       if (txq->elm[txq->head].length >= skiq->block_size_in_words) {
@@ -266,12 +296,20 @@ void *skiq_tx_thread(void *arg) {
 	*(void**)(txp_i-1-(sizeof(void*)>>2)) = (void*)skiq;
 	// copy tx_packet index in front of TX packet buffer
 	*(uint32_t*)(txp_i-1)=i;
-	
+
+	if (txq->elm[txq->head].length==0) {
+	  // disactivate head element
+	  txq->elm[txq->head].active=0;
+	  // point head to next element in the queue
+	  txq->head=(txq->head+1)%SKIQ_MAX_TX_ELM;
+	}
+	  
 #ifdef DEBUG_SKIQ_TX
 	printf(ANSI_COLOR_RED "skiq_tx_thread: unlocking mutex, time %llu\n" ANSI_COLOR_RESET,rdtsc_oai());
 #endif	
 	pthread_mutex_unlock(&skiq->tx_mutex);
-		
+
+#ifdef SKIQ_ASYNCH	
 	if ((res=skiq_transmit(skiq->card_list[0], skiq_tx_hdl_A1,txp_i)) == SKIQ_TX_ASYNC_SEND_QUEUE_FULL ) {
 #ifdef DEBUG_SKIQ_TX
 	  printf("skiq_tx_thread: send queue full, sleeping\n");
@@ -283,6 +321,14 @@ void *skiq_tx_thread(void *arg) {
 	  if ((res=skiq_transmit(skiq->card_list[0], skiq_tx_hdl_A1,txp_i)) == SKIQ_TX_ASYNC_SEND_QUEUE_FULL )
 	    printf("skiq_tx_thread: error, send queue still full after cond_signal, packet will be dropped\n");
 	}
+#else
+	if ((res=skiq_transmit(skiq->card_list[0], skiq_tx_hdl_A1,txp_i)) < 0 ) {
+
+	  printf("skiq_tx_thread: skiq_transmit error, exiting\n");
+	  skiq->tx_active=0;
+	}
+	skiq->txp_active[i]=0;
+#endif	
 	i=(i+1)%skiq->num_blocks_per_subframe;
 	
 	out = rdtsc_oai();
@@ -293,6 +339,7 @@ void *skiq_tx_thread(void *arg) {
       }
       else {
 	// empty head and continue with next element if its there
+
 	
 	// index of next element in the queue
 	next =(txq->head+1)%SKIQ_MAX_TX_ELM;
@@ -357,6 +404,9 @@ void *skiq_tx_thread(void *arg) {
 	  printf(ANSI_COLOR_RED                   "skiq_tx_thread: Unlocking tx_mutex\n"               ANSI_COLOR_RESET);
 #endif	  
 	  pthread_mutex_unlock(&skiq->tx_mutex);
+
+#ifdef SKIQ_ASYNCH
+
 	  if ((res=skiq_transmit(skiq->card_list[0], skiq_tx_hdl_A1,txp_i)) == SKIQ_TX_ASYNC_SEND_QUEUE_FULL ) {
 #ifdef DEBUG_SKIQ_TX
 	    printf("skiq_tx_thread: send queue full, sleeping\n");
@@ -365,6 +415,14 @@ void *skiq_tx_thread(void *arg) {
 	    pthread_cond_wait( &skiq->space_avail_cond, &skiq->space_avail_mutex );
 	    pthread_mutex_unlock( &skiq->space_avail_mutex );
 	  }
+#else
+	  if ((res=skiq_transmit(skiq->card_list[0], skiq_tx_hdl_A1,txp_i)) < 0 ) {
+	    
+	    printf("skiq_tx_thread: skiq_transmit error, exiting\n");
+	    skiq->tx_active=0;
+	  }
+	  skiq->txp_active[i]=0;
+#endif	  
 	  i=(i+1)%skiq->num_blocks_per_subframe;
 #ifdef DEBUG_SKIQ_TX
 	  printf(ANSI_COLOR_RED  "skiq_tx_thread: received res %d from skiq_transmit(), time now %llu\n" ANSI_COLOR_RESET,
@@ -469,6 +527,13 @@ int skiq_add_tx_el(skiq_state_t *skiq, openair0_timestamp ptimestamp,void **buff
     printf("TX queue is full, dropping element\n");
     res=-1;
   }
+
+  int diff = (SKIQ_MAX_TX_ELM + txq->tail - txq->head)%SKIQ_MAX_TX_ELM;
+  if (diff > 2) {
+    txq->head = (txq->head+1)%SKIQ_MAX_TX_ELM;
+    printf("dropping TX queue head\n");
+  }
+  
   pthread_mutex_unlock(&skiq->tx_mutex);
 #ifdef DEBUG_SKIQ_TX
   printf(ANSI_COLOR_BLUE "skiq_add_tx_el: unlocked TX mutex, time %llu\n" ANSI_COLOR_RESET,rdtsc_oai());
@@ -494,12 +559,14 @@ static int trx_skiq_write(openair0_device *device,openair0_timestamp ptimestamp,
 #ifdef DEBUG_SKIQ_TX
   uint32_t late;
   uint64_t txts;
-  
+
+  /*
   skiq_read_tx_num_late_timestamps(skiq->card_list[0],skiq_tx_hdl_A1, 
 				   &late);
   skiq_read_curr_tx_timestamp(skiq->card_list[0],skiq_tx_hdl_A1, 
 			      &txts);
-
+  */
+  
   printf(ANSI_COLOR_BLUE     "trx_skiq_write: Writing buff %p (%p) @ %llu (time now %llu, SKIQ TS %llu), late %d\n" ANSI_COLOR_RESET,
 	 buff,buff[0],ptimestamp,rdtsc_oai(),
 	 txts,
@@ -995,7 +1062,8 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
 	printf("SKIQ: set tx LO freq to %llu Hz\n",(unsigned long long)openair0_cfg->tx_freq[0]); 
     }
     if( (result=skiq_write_tx_data_flow_mode(skiq->card_list[cardid], skiq_tx_hdl_A1, 
-                                             skiq_tx_with_timestamps_data_flow_mode)) != 0 )
+                                             skiq_tx_immediate_data_flow_mode)) != 0 )
+      //                                             skiq_tx_with_timestamps_data_flow_mode)) != 0 )
     {
         printf("Error: unable to configure Tx data flow mode to with_timestatmps\r\n");
         return (-1);
@@ -1006,10 +1074,19 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
         printf("Error: unable to configure Tx block size\r\n");
         return (-1);
     }
-    // set the transfer mode to sync
+
+#ifdef SKIQ_ASYNCH
+    // set the transfer mode to async
     if( skiq_write_tx_transfer_mode(skiq->card_list[cardid], skiq_tx_hdl_A1, skiq_tx_transfer_mode_async) != 0 )
     {
-        printf("Error: unable to set transfer mode to sync\r\n");
+        printf("Error: unable to set transfer mode to async\r\n");
+        return (-1);
+    }
+    
+    // register the callback
+    if( skiq_register_tx_complete_callback(skiq->card_list[cardid], &skiq_tx_complete ) != 0 )
+    {
+        printf("Error: unable to register callback\r\n");
         return (-1);
     }
     if( skiq_write_num_tx_threads( skiq->card_list[cardid],
@@ -1017,14 +1094,16 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
     {
       printf("Error: unable to set number of TX threads to 2\r\n");
       return (-1);
-    }
-    // register the callback
-    if( skiq_register_tx_complete_callback(skiq->card_list[cardid], &skiq_tx_complete ) != 0 )
+    }    
+#else
+    // set the transfer mode to sync
+    if( skiq_write_tx_transfer_mode(skiq->card_list[cardid], skiq_tx_hdl_A1, skiq_tx_transfer_mode_sync) != 0 )
     {
-        printf("Error: unable to register callback\r\n");
+        printf("Error: unable to set transfer mode to sync\r\n");
         return (-1);
-    } 
-    
+    }
+#endif    
+
     if ((result=skiq_write_rx_gain_mode(skiq->card_list[cardid],
 					skiq_rx_hdl_A1,
 					skiq_rx_gain_manual) < 0)) 

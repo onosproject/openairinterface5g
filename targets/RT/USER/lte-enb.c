@@ -1429,7 +1429,7 @@ static void* eNB_thread_FH( void* param ) {
   wait_sync("eNB_thread_FH");
 
 #if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
-  if (eNB->node_function < NGFI_RRU_IF5)
+  if ((eNB->node_function < NGFI_RRU_IF5) && (eNB->mac_enabled == 1))
     wait_system_ready ("Waiting for eNB application to be ready %s\r", &start_eNB);
 #endif 
 
@@ -1559,7 +1559,7 @@ static void* eNB_thread_single( void* param ) {
   wait_sync("eNB_thread_single");
 
 #if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
-  if (eNB->node_function < NGFI_RRU_IF5)
+  if ((eNB->node_function < NGFI_RRU_IF5) && (eNB->mac_enabled == 1))
     wait_system_ready ("Waiting for eNB application to be ready %s\r", &start_eNB);
 #endif 
 
@@ -2044,6 +2044,8 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = start_if;
 	eNB->fh_asynch            = fh_if5_asynch_DL;
+	eNB->rfdevice.host_type   = RRH_HOST;
+	eNB->ifdevice.host_type   = RRH_HOST;
 	if (oaisim_flag == 0) {
 	  ret = openair0_device_load(&eNB->rfdevice, &openair0_cfg[CC_id]);
 	  if (ret<0) {
@@ -2051,8 +2053,6 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	    exit(-1);
 	  }
 	}
-	eNB->rfdevice.host_type   = RRH_HOST;
-	eNB->ifdevice.host_type   = RRH_HOST;
         ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
 	printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
         if (ret<0) {
@@ -2073,6 +2073,8 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->fh_asynch            = fh_if4p5_asynch_DL;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = start_if;
+	eNB->rfdevice.host_type   = RRH_HOST;
+	eNB->ifdevice.host_type   = RRH_HOST;
 	if (oaisim_flag == 0) {
 	  ret = openair0_device_load(&eNB->rfdevice, &openair0_cfg[CC_id]);
 	  if (ret<0) {
@@ -2080,8 +2082,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	    exit(-1);
 	  }
 	}
-	eNB->rfdevice.host_type   = RRH_HOST;
-	eNB->ifdevice.host_type   = RRH_HOST;
+
 	printf("loading transport interface ...\n");
         ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
 	printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
@@ -2106,6 +2107,9 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = NULL;
         eNB->fh_asynch            = NULL;
+	eNB->rfdevice.host_type   = BBU_HOST;
+	eNB->ifdevice.host_type   = BBU_HOST;
+
         if (oaisim_flag == 0) {
   	  ret = openair0_device_load(&eNB->rfdevice, &openair0_cfg[CC_id]);
           if (ret<0) {
@@ -2113,8 +2117,6 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
             exit(-1);
           }
         }
-	eNB->rfdevice.host_type   = BBU_HOST;
-	eNB->ifdevice.host_type   = BBU_HOST;
 	break;
       case eNodeB_3GPP_BBU:
 	eNB->do_precoding         = eNB->frame_parms.nb_antennas_tx!=eNB->frame_parms.nb_antenna_ports_eNB;
