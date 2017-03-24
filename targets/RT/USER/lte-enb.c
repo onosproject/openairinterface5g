@@ -1827,11 +1827,11 @@ void init_eNB_proc(int inst) {
     if ((eNB->node_timing == synch_to_other) ||
 	(eNB->node_function == NGFI_RRU_IF5) ||
 	(eNB->node_function == NGFI_RRU_IF4p5))
-
-	if(eNB->node_function == NGFI_RRU_IF4p5)
-		pthread_create( &if_stats_thread, NULL, print_stats_thread, &eNB->proc);
-
       pthread_create( &proc->pthread_asynch_rxtx, attr_asynch, eNB_thread_asynch_rxtx, &eNB->proc );
+
+
+    if(eNB->node_function == NGFI_RRU_IF4p5 || eNB->node_function == NGFI_RCC_IF4p5)
+                pthread_create( &if_stats_thread, NULL, print_stats_thread, &eNB->proc);
 
     char name[16];
     if (eNB->single_thread_flag == 0) {
