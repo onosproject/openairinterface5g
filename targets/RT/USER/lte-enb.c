@@ -1492,11 +1492,12 @@ void tx_rf(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
   lte_subframe_t SF_type     = subframe_select(fp,(proc->subframe_tx)%10);
   lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_tx+9)%10);
   lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_tx+1)%10);
+  int sf_extension = 0;
+
   if ((SF_type == SF_DL) ||
       (SF_type == SF_S)) {
     
-    for (i=0; i<fp->nb_antennas_tx; i++)
-      txp[i] = (void*)&eNB->common_vars.txdata[0][i][((proc->subframe_tx)%10)*fp->samples_per_tti]; 
+
     
     int siglen=fp->samples_per_tti,flags=1;
     
@@ -1507,21 +1508,28 @@ void tx_rf(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
     if ((fp->frame_type == TDD) &&
 	(SF_type == SF_DL)&&
 	(prevSF_type == SF_UL) &&
-	(nextSF_type == SF_DL))
+	(nextSF_type == SF_DL)) {
       flags = 2; // start of burst
-    
+      sf_extension = eNB->N_TA_offset<<1;
+    }
     if ((fp->frame_type == TDD) &&
 	(SF_type == SF_DL)&&
 	(prevSF_type == SF_UL) &&
-	(nextSF_type == SF_UL))
+	(nextSF_type == SF_UL)) {
       flags = 4; // start of burst and end of burst (only one DL SF between two UL)
-    
+      sf_extension = 1;
+      sf_extension = eNB->N_TA_offset<<1;
+    }
+
+    for (i=0; i<fp->nb_antennas_tx; i++)
+      txp[i] = (void*)&eNB->common_vars.txdata[0][i][(((proc->subframe_tx)%10)*siglen) - sf_extension]; 
+
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_WRITE_FLAGS,flags); 
     txs = eNB->rfdevice.trx_write_func(&eNB->rfdevice,
-				       proc->timestamp_rx+eNB->ts_offset+(4*fp->samples_per_tti)-openair0_cfg[0].tx_sample_advance,
+				       proc->timestamp_rx+eNB->ts_offset+(4*fp->samples_per_tti)-openair0_cfg[0].tx_sample_advance-sf_extension,
 				       txp,
-				       siglen,
+				       siglen+sf_extension,
 				       fp->nb_antennas_tx,
 				       flags);
     clock_gettime( CLOCK_MONOTONIC, &end_rf);    
@@ -1535,7 +1543,7 @@ void tx_rf(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
     
     
     
-    if (txs !=  siglen) {
+    if (txs !=  siglen+sf_extension) {
       LOG_E(PHY,"TX : Timeout (sent %d/%d)\n",txs, fp->samples_per_tti);
       exit_fun( "problem transmitting samples" );
     }	
