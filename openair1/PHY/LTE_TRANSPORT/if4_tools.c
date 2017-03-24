@@ -33,6 +33,7 @@
 #include "PHY/defs.h"
 #include "PHY/TOOLS/alaw_lut.h"
 #include "PHY/extern.h"
+#include "PHY/defs.h"
 #include "SCHED/defs.h"
 
 //#include "targets/ARCH/ETHERNET/USERSPACE/LIB/if_defs.h"
@@ -62,7 +63,10 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
   eth_state_t *eth = (eth_state_t*) (eNB->ifdevice.priv);
   int nsym = fp->symbols_per_tti;
   
-  if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_SEND_IF4, 1 );   
+  if (eNB->CC_id==0) {
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_SEND_IF4, 1 );   
+	start_meas(&eNB->send_if4p5_stats);
+  }
 
   if (packet_type == IF4p5_PDLFFT) {
     if (subframe_select(fp,subframe)==SF_S)
@@ -211,7 +215,10 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
     AssertFatal(1==0, "send_IF4p5 - Unknown packet_type %x", packet_type);     
   }
 
-  if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_SEND_IF4, 0 );  
+  if (eNB->CC_id==0) {
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_SEND_IF4, 0 );  
+	stop_meas(&eNB->send_if4p5_stats);
+  }
   return;  		    
 }
 
@@ -228,7 +235,11 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
   int slotoffsetF=0, blockoffsetF=0; 
   eth_state_t *eth = (eth_state_t*) (eNB->ifdevice.priv);
 
-  if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 1 );   
+  if (eNB->CC_id==0) 
+  {
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 1 );   
+	 start_meas(&eNB->recv_if4p5_stats);
+  }
   
   if (eNB->node_function == NGFI_RRU_IF4p5) {
     db_fulllength = (12*fp->N_RB_DL); 
@@ -325,7 +336,11 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
     AssertFatal(1==0, "recv_IF4p5 - Unknown packet_type %x", *packet_type);            
   }
 
-  if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 0 );     
+  if (eNB->CC_id==0) {
+	stop_meas(&eNB->recv_if4p5_stats);
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 0 );     
+  }
+
   return;   
 }
 
