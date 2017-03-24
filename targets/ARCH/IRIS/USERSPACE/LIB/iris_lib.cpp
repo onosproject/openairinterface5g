@@ -21,6 +21,7 @@
 #include "UTIL/LOG/log_extern.h"
 #include "common_lib.h"
 
+#define SAMPLE_RATE_DOWN 4
 
 /*! \brief Iris Configuration */
 typedef struct
@@ -117,7 +118,7 @@ static int trx_iris_write(openair0_device *device, openair0_timestamp timestamp,
 	if (flags)
 		flag |= SOAPY_SDR_HAS_TIME;
 
-	long long timeNs = SoapySDR::ticksToTimeNs(timestamp, s->sample_rate);
+	long long timeNs = SoapySDR::ticksToTimeNs(timestamp, s->sample_rate/SAMPLE_RATE_DOWN);
 	int samples_sent = 0;
 	uint32_t **samps = (uint32_t **)buff;
 	while (samples_sent < nsamps)
@@ -148,7 +149,7 @@ static int trx_iris_write(openair0_device *device, openair0_timestamp timestamp,
 		printf("[xmit] Timeout occured!\n");
 	else if (ret == SOAPY_SDR_STREAM_ERROR)
 		printf("[xmit] Stream (tx) error occured!\n");
-	*/
+	*/	
 	return nsamps;
 }
 
@@ -204,7 +205,7 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
 		{
 			if (flags & SOAPY_SDR_HAS_TIME)
 			{
-				s->rx_timestamp = SoapySDR::timeNsToTicks(timeNs, s->sample_rate);
+				s->rx_timestamp = SoapySDR::timeNsToTicks(timeNs, s->sample_rate/SAMPLE_RATE_DOWN);
 				*ptimestamp = s->rx_timestamp;
 				nextTime = timeNs;
 				nextTimeValid = true;
@@ -223,11 +224,11 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
 	{
 		if (!time_set)
 		{
-			s->rx_timestamp = SoapySDR::timeNsToTicks(nextTime, s->sample_rate);
+			s->rx_timestamp = SoapySDR::timeNsToTicks(nextTime, s->sample_rate/SAMPLE_RATE_DOWN);
 			*ptimestamp = s->rx_timestamp;
 			//printf("2) time set %llu, nextTime will be %llu \n", *ptimestamp, nextTime);
 		}
-		nextTime += SoapySDR::ticksToTimeNs(samples_received, s->sample_rate);
+		nextTime += SoapySDR::ticksToTimeNs(samples_received, s->sample_rate/SAMPLE_RATE_DOWN);
 	}
 
 	return samples_received;
@@ -326,7 +327,7 @@ int trx_iris_stop(openair0_device* device) {
 /*! \brief Iris RX calibration table */
 rx_gain_calib_table_t calib_table_iris[] = {
   {3500000000.0,24},
-  {2660000000.0,9},
+  {2660000000.0,70},
   {2300000000.0,8},
   {1880000000.0,11},
   {816000000.0,4},
@@ -422,7 +423,7 @@ extern "C" {
 	device->openair0_cfg = openair0_cfg;
 	char* remote_addr = device->openair0_cfg->remote_addr;
 	LOG_I(HW,"Attempting to open Iris device: %s\n", remote_addr);
-	std::string args = "driver=remote,serial="+std::string(remote_addr);
+	std::string args = "driver=remote,serial="+std::string(remote_addr)+",remote:format=CS16";
 
 	s->iris = SoapySDR::Device::make(args);
 	device->type=IRIS_DEV;
@@ -433,32 +434,32 @@ extern "C" {
 	case 30720000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
 		//openair0_cfg[0].tx_sample_advance     = 115;
-		openair0_cfg[0].tx_bw                 = 30e6;
-		openair0_cfg[0].rx_bw                 = 30e6;
+		openair0_cfg[0].tx_bw                 = 20e6;
+		openair0_cfg[0].rx_bw                 = 20e6;
 		break;
 	case 23040000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
 		//openair0_cfg[0].tx_sample_advance     = 113;
-		openair0_cfg[0].tx_bw                 = 30e6;
-		openair0_cfg[0].rx_bw                 = 30e6;
+		openair0_cfg[0].tx_bw                 = 15e6;
+		openair0_cfg[0].rx_bw                 = 15e6;
 		break;
 	case 15360000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
 		//openair0_cfg[0].tx_sample_advance     = 103;
-		openair0_cfg[0].tx_bw                 = 30e6;
-		openair0_cfg[0].rx_bw                 = 30e6;
+		openair0_cfg[0].tx_bw                 = 10e6;
+		openair0_cfg[0].rx_bw                 = 10e6;
 		break;
 	case 7680000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
 		//openair0_cfg[0].tx_sample_advance     = 80;
-		openair0_cfg[0].tx_bw                 = 30e6;
-		openair0_cfg[0].rx_bw                 = 30e6;
+		openair0_cfg[0].tx_bw                 = 5e6;
+		openair0_cfg[0].rx_bw                 = 5e6;
 		break;
 	case 1920000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
 		//openair0_cfg[0].tx_sample_advance     = 40;
-		openair0_cfg[0].tx_bw                 = 30e6;
-		openair0_cfg[0].rx_bw                 = 30e6;
+		openair0_cfg[0].tx_bw                 = 5e6;
+		openair0_cfg[0].rx_bw                 = 5e6;
 		break;
 	default:
 		printf("Error: unknown sampling rate %f\n",openair0_cfg[0].sample_rate);
@@ -469,7 +470,7 @@ extern "C" {
 
 	for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_RX); i++) {
 		if (i < openair0_cfg[0].rx_num_channels) {
-			s->iris->setSampleRate(SOAPY_SDR_RX, i, openair0_cfg[0].sample_rate);
+			s->iris->setSampleRate(SOAPY_SDR_RX, i, openair0_cfg[0].sample_rate/SAMPLE_RATE_DOWN);
 			s->iris->setFrequency(SOAPY_SDR_RX, i, "RF", openair0_cfg[0].rx_freq[i]);
 			set_rx_gain_offset(&openair0_cfg[0],i,bw_gain_adjust);
 
@@ -481,7 +482,7 @@ extern "C" {
 	}
 	for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_TX); i++) {
 		if (i < openair0_cfg[0].tx_num_channels) {
-			s->iris->setSampleRate(SOAPY_SDR_TX, i, openair0_cfg[0].sample_rate);
+			s->iris->setSampleRate(SOAPY_SDR_TX, i, openair0_cfg[0].sample_rate/SAMPLE_RATE_DOWN);
 			s->iris->setFrequency(SOAPY_SDR_TX, i, "RF", openair0_cfg[0].tx_freq[i]);
 			s->iris->setGain(SOAPY_SDR_TX, i, openair0_cfg[0].tx_gain[i]);
 		}
