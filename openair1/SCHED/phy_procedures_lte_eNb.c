@@ -890,22 +890,23 @@ void generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC
     T_INT(eNB->ulsch[(uint32_t)UE_id]->harq_processes[harq_pid]->TBS));
 }
 
-void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *dlsch, LTE_eNB_DLSCH_t *dlsch1,LTE_eNB_UE_stats *ue_stats,int ra_flag,int num_pdcch_symbols) {
+void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *dlsch0,LTE_eNB_DLSCH_t *dlsch1,LTE_eNB_UE_stats *ue_stats,int ra_flag,int num_pdcch_symbols) {
 
   int frame=proc->frame_tx;
   int subframe=proc->subframe_tx;
-  int harq_pid = dlsch->current_harq_pid;
-  LTE_DL_eNB_HARQ_t *dlsch_harq=dlsch->harq_processes[harq_pid];
+  int harq_pid = dlsch0->current_harq_pid;
+  LTE_DL_eNB_HARQ_t *dlsch_harq=dlsch0->harq_processes[harq_pid];
   int input_buffer_length = dlsch_harq->TBS/8;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
-  uint8_t *DLSCH_pdu=NULL;
-  uint8_t DLSCH_pdu_tmp[input_buffer_length+4]; //[768*8];
+  LTE_eNB_DLSCH_t *dlsch[2] = {dlsch0, dlsch1};
+  uint8_t *DLSCH_pdu[2]={NULL,NULL};
+  uint8_t DLSCH_pdu_tmp[2][input_buffer_length+4]; //[768*8];
   uint8_t DLSCH_pdu_rar[256];
-  int i;
+  int i,tb;
 
   LOG_D(PHY,
 	"[eNB %"PRIu8"][PDSCH %"PRIx16"/%"PRIu8"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8", pmi_alloc %"PRIx64", rv %"PRIu8" (round %"PRIu8")\n",
-	eNB->Mod_id, dlsch->rnti,harq_pid,
+	eNB->Mod_id, dlsch0->rnti,harq_pid,
 	frame, subframe, input_buffer_length,
 	get_G(fp,
 	      dlsch_harq->nb_rb,
@@ -954,11 +955,13 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 
     if (eNB->mac_enabled==1) {
       if (ra_flag == 0) {
-	DLSCH_pdu = mac_xface->get_dlsch_sdu(eNB->Mod_id,
-					     eNB->CC_id,
-					     frame,
-					     dlsch->rnti,
-					     0);
+	//at this point we are only getting pointers, we don't care here if the second TB is used or even valid. this is handled below
+	for (tb=0;tb<2;tb++)
+	  DLSCH_pdu[tb] = mac_xface->get_dlsch_sdu(eNB->Mod_id,
+						   eNB->CC_id,
+						   frame,
+						   dlsch0->rnti,
+						   tb);
       }
       else {
 	int16_t crnti = mac_xface->fill_rar(eNB->Mod_id,
@@ -967,7 +970,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 					    DLSCH_pdu_rar,
 					    fp->N_RB_UL,
 					    input_buffer_length);
-	DLSCH_pdu = DLSCH_pdu_rar;
+	DLSCH_pdu[0] = DLSCH_pdu_rar;
 
 	int UE_id;
 
@@ -987,7 +990,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 	  // Initialize indicator for first SR (to be cleared after ConnectionSetup is acknowledged)
 	  eNB->first_sr[(uint32_t)UE_id] = 1;
 	      
-	  generate_eNB_ulsch_params_from_rar(DLSCH_pdu,
+	  generate_eNB_ulsch_params_from_rar(DLSCH_pdu[0],
 					     frame,
 					     (subframe),
 					     eNB->ulsch[(uint32_t)UE_id],
@@ -1027,10 +1030,12 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
       }
     }
     else {
-      DLSCH_pdu = DLSCH_pdu_tmp;
-	  
-      for (i=0; i<input_buffer_length; i++)
-	DLSCH_pdu[i] = (unsigned char)(taus()&0xff);
+      for (tb=0;tb<2;tb++) {
+	DLSCH_pdu[tb] = DLSCH_pdu_tmp[tb];
+	
+	for (i=0; i<input_buffer_length; i++)
+	  DLSCH_pdu[tb][i] = (unsigned char)(taus()&0xff);
+      }
     }
 	
 #if defined(SMBV) 
@@ -1056,7 +1061,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 
 
     for (i=0; i<dlsch_harq->TBS>>3; i++)
-      LOG_T(PHY,"%"PRIx8".",DLSCH_pdu[i]);
+      LOG_T(PHY,"%"PRIx8".",DLSCH_pdu[0][i]);
 
     LOG_T(PHY,"\n");
 #endif
@@ -1072,45 +1077,48 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 
   if (eNB->abstraction_flag==0) {
 
-    LOG_D(PHY,"Generating DLSCH/PDSCH %d\n",ra_flag);
-    // 36-212
-    start_meas(&eNB->dlsch_encoding_stats);
-    eNB->te(eNB,
-	    DLSCH_pdu,
-	    num_pdcch_symbols,
-	    dlsch,
-	    frame,subframe,
-	    &eNB->dlsch_rate_matching_stats,
-	    &eNB->dlsch_turbo_encoding_stats,
-	    &eNB->dlsch_interleaving_stats);
-    stop_meas(&eNB->dlsch_encoding_stats);
-    // 36-211
-    start_meas(&eNB->dlsch_scrambling_stats);
-    dlsch_scrambling(fp,
-		     0,
-		     dlsch,
-		     get_G(fp,
-			   dlsch_harq->nb_rb,
-			   dlsch_harq->rb_alloc,
-			   get_Qm(dlsch_harq->mcs),
-			   dlsch_harq->Nl,
-			   num_pdcch_symbols,
-			   frame,subframe,
-			   0),
-		     0,
-		     subframe<<1);
-    stop_meas(&eNB->dlsch_scrambling_stats);
+    for (tb=0;tb<2;tb++) {
+      LOG_D(PHY,"Generating DLSCH/PDSCH for TB %d (ra_flag %d)\n",tb,ra_flag);
+      // 36-212
+      start_meas(&eNB->dlsch_encoding_stats);
+      if (dlsch[tb] && dlsch[tb]->active) {
+	eNB->te(eNB,
+		DLSCH_pdu[tb],
+		num_pdcch_symbols,
+		dlsch[tb],
+		frame,subframe,
+		&eNB->dlsch_rate_matching_stats,
+		&eNB->dlsch_turbo_encoding_stats,
+		&eNB->dlsch_interleaving_stats);
+	stop_meas(&eNB->dlsch_encoding_stats);
+	// 36-211
+	start_meas(&eNB->dlsch_scrambling_stats);
+	dlsch_scrambling(fp,
+			 0,
+			 dlsch[tb],
+			 get_G(fp,
+			       dlsch_harq->nb_rb,
+			       dlsch_harq->rb_alloc,
+			       get_Qm(dlsch_harq->mcs),
+			       dlsch_harq->Nl,
+			       num_pdcch_symbols,
+			       frame,subframe,
+			       0),
+			 0,
+			 subframe<<1);
+	stop_meas(&eNB->dlsch_scrambling_stats);
+	dlsch[tb]->active = 0;
+      }
+    }
 
     start_meas(&eNB->dlsch_modulation_stats);
-
-
     dlsch_modulation(eNB,
 		     eNB->common_vars.txdataF[0],
 		     AMP,
 		     subframe,
 		     num_pdcch_symbols,
-		     dlsch,
-		     dlsch1);
+		     dlsch[0],
+		     dlsch[1]);
 	
     stop_meas(&eNB->dlsch_modulation_stats);
   }
@@ -1126,7 +1134,6 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
   }
 
 #endif
-  dlsch->active = 0;
 }
 
 void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
@@ -1230,6 +1237,8 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 				     eNB->CC_id,
 				     frame,
 				     subframe);
+   for (i=0; i<DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci ; i++) 
+     dump_dci(fp,&DCI_pdu->dci_alloc[i]);
   }
   else {
     DCI_pdu = &DCI_pdu_tmp;
@@ -2475,7 +2484,6 @@ void cba_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq_p
     
     if (eNB->ulsch[UE_id]->harq_processes[harq_pid]->cqi_crc_status == 1) {
 #ifdef DEBUG_PHY_PROC
-      
       print_CQI(eNB->ulsch[UE_id]->harq_processes[harq_pid]->o,eNB->ulsch[UE_id]->harq_processes[harq_pid]->uci_format,0,fp->N_RB_DL);
 #endif
       access_mode = UNKNOWN_ACCESS;
@@ -3051,8 +3059,8 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
       eNB->ulsch[i]->harq_processes[harq_pid]->subframe_scheduling_flag=0;
 
       if (eNB->ulsch[i]->harq_processes[harq_pid]->cqi_crc_status == 1) {
+	LOG_D(PHY,"CQI status 1\n");
 #ifdef DEBUG_PHY_PROC
-        //if (((frame%10) == 0) || (frame < 50))
         print_CQI(eNB->ulsch[i]->harq_processes[harq_pid]->o,eNB->ulsch[i]->harq_processes[harq_pid]->uci_format,0,fp->N_RB_DL);
 #endif
         extract_CQI(eNB->ulsch[i]->harq_processes[harq_pid]->o,
@@ -3063,6 +3071,14 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
         eNB->UE_stats[i].rank = eNB->ulsch[i]->harq_processes[harq_pid]->o_RI[0];
 
       }
+    else {
+      if ((eNB->ulsch[i]->harq_processes[harq_pid]->O_RI == 0) &&
+	  (eNB->ulsch[i]->harq_processes[harq_pid]->Or2 == 0) &&
+	  (eNB->ulsch[i]->harq_processes[harq_pid]->Or1 == 0))
+	LOG_D(PHY,"no CQI transmitted\n");
+      else
+	LOG_D(PHY,"CQI not decoded\n");\
+    }
 
       if (eNB->ulsch[i]->Msg3_flag == 1)
 	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_ULSCH_MSG3,0);

@@ -359,6 +359,7 @@ typedef struct {
 
 /*! \brief Downlink SCH PDU Structure */
 typedef struct {
+  //uint8_t payload_valid;
   int8_t payload[8][SCH_PAYLOAD_SIZE_MAX];
   uint16_t Pdu_size[8];
 } __attribute__ ((__packed__)) DLSCH_PDU;
@@ -502,7 +503,7 @@ typedef struct {
   /// harq rounf
   uint8_t harq_round;
   /// DL Wideband CQI index (2 TBs)
-  uint8_t dl_cqi;
+  uint8_t dl_cqi[2];
   /// total available number of PRBs for a new transmission
   uint16_t rbs_used;
   /// total available number of PRBs for a retransmission
@@ -621,7 +622,7 @@ typedef struct {
   /// C-RNTI of UE
   rnti_t rnti;
   /// NDI from last scheduling
-  uint8_t oldNDI[8];
+  uint8_t oldNDI[2][8];
   /// NDI from last UL scheduling
   uint8_t oldNDI_UL[8];
   /// Flag to indicate UL has been scheduled at least once
@@ -629,8 +630,10 @@ typedef struct {
   /// Flag to indicate UE has been configured (ACK from RRCConnectionSetup received)
   boolean_t configured;
 
-  /// MCS from last scheduling
-  uint8_t mcs[8];
+  // active TBs
+  uint8_t TB_active[2][8];
+  // current MCS
+  uint8_t mcs[2][8];
 
   /// TPC from last scheduling
   uint8_t oldTPC[8];

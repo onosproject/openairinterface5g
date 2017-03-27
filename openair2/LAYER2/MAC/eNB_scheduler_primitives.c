@@ -287,7 +287,8 @@ printf("MAC: new UE id %d rnti %x\n", i, rntiP);
     memset((void*)&UE_list->UE_sched_ctrl[UE_id],0,sizeof(UE_sched_ctrl));
 
     for (j=0; j<8; j++) {
-      UE_list->UE_template[cc_idP][UE_id].oldNDI[j]    = (j==0)?1:0;   // 1 because first transmission is with format1A (Msg4) for harq_pid 0
+      UE_list->UE_template[cc_idP][UE_id].oldNDI[0][j]    = (j==0)?1:0;   // 1 because first transmission is with format1A (Msg4) for harq_pid 0
+      UE_list->UE_template[cc_idP][UE_id].oldNDI[1][j]    = 0;   
       UE_list->UE_template[cc_idP][UE_id].oldNDI_UL[j] = (j==harq_pidP)?0:1; // 1st transmission is with Msg3;
     }
 
@@ -670,7 +671,7 @@ void add_ue_spec_dci(DCI_PDU *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_si
 
   DCI_pdu->Num_ue_spec_dci++;
 
-  LOG_D(MAC,"add ue specific dci format %d for rnti %x \n",dci_fmt,rnti);
+  LOG_I(MAC,"add ue specific dci format %d for rnti %x \n",dci_fmt,rnti);
 }
 
 

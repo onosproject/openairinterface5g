@@ -2830,7 +2830,6 @@ int generate_eNB_dlsch_params_from_dci(int frame,
 int dump_dci(LTE_DL_FRAME_PARMS *frame_parms, DCI_ALLOC_t *dci)
 {
 
-
   switch (dci->format) {
 
   case format0:   // This is an UL SCH allocation so nothing here, inform MAC
@@ -3044,7 +3043,7 @@ int dump_dci(LTE_DL_FRAME_PARMS *frame_parms, DCI_ALLOC_t *dci)
         break;
 
       case 25:
-        LOG_D(PHY,"DCI format1 (FDD, 5 MHz), rnti %x (%x): rah %d, rb_alloc %x, mcs %d, harq_pid %d, ndi %d, RV %d, TPC %d\n",
+        LOG_I(PHY,"DCI format1 (FDD, 5 MHz), rnti %x (%x): rah %d, rb_alloc %x, mcs %d, harq_pid %d, ndi %d, RV %d, TPC %d\n",
               dci->rnti,
               ((uint32_t*)&dci->dci_pdu)[0],
               ((DCI1_5MHz_FDD_t *)&dci->dci_pdu[0])->rah,
@@ -3772,7 +3771,7 @@ int dump_dci(LTE_DL_FRAME_PARMS *frame_parms, DCI_ALLOC_t *dci)
           break;
 
         case 25:
-          LOG_D(PHY,"DCI format2A 2 antennas (FDD, 5 MHz), rnti %x (%"PRIu64"): rah %d, rb_alloc %x, mcs1 %d, mcs2 %d, harq_pid %d, ndi1 %d, ndi2 %d, RV1 %d, RV2 %d, tb_swap %d, TPC %d\n",
+          LOG_I(PHY,"DCI format2A 2 antennas (FDD, 5 MHz), rnti %x (%"PRIu64"): rah %d, rb_alloc %x, mcs1 %d, mcs2 %d, harq_pid %d, ndi1 %d, ndi2 %d, RV1 %d, RV2 %d, tb_swap %d, TPC %d\n",
                 dci->rnti,
                 ((uint64_t*)&dci->dci_pdu)[0],
                 ((DCI2A_5MHz_2A_FDD_t *)&dci->dci_pdu[0])->rah,
