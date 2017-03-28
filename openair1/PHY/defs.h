@@ -635,6 +635,9 @@ typedef struct PHY_VARS_eNB_s {
   // IF4 stats
   time_stats_t send_if4p5_stats;
   time_stats_t recv_if4p5_stats;
+  time_stats_t trx_write_if4p5_stats;
+  time_stats_t trx_read_if4p5_stats;
+
 
 #ifdef LOCALIZATION
   /// time state for localization
