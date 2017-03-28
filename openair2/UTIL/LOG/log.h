@@ -159,7 +159,7 @@ extern "C" {
 #    define LOG_W(c, x...) logIt(c, LOG_WARNING, x)
 #    define LOG_N(c, x...) logIt(c, LOG_NOTICE, x)
 #    define LOG_I(c, x...) logIt(c, LOG_INFO, x)
-#    define LOG_D(c, x...) logIt(c, LOG_DEBUG, x)
+#    define LOG_D(c, x...) //logIt(c, LOG_DEBUG, x)
 #    define LOG_F(c, x...) logIt(c, LOG_FILE, x)  // log to a file, useful for the MSC chart generation
 #    define LOG_T(c, x...) logIt(c, LOG_TRACE, x)
 #  endif /* T_TRACER */

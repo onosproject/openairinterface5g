@@ -448,9 +448,9 @@ static void *UE_thread_synch(void *arg)
 	  for (i=0;i<openair0_cfg[UE->rf_map.card].rx_num_channels;i++) {
 	    openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
 	    openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] -= UE->common_vars.freq_offset;
-	    openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] =  openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i]+uplink_frequency_offset[CC_id][i];
+	    openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i]+uplink_frequency_offset[CC_id][i];
 	    downlink_frequency[CC_id][i] = openair0_cfg[CC_id].rx_freq[i];
-	    freq_offset=0;	    
+	    freq_offset=0;	   
 	  }
 
 	  // reconfigure for potentially different bandwidth
@@ -483,13 +483,13 @@ static void *UE_thread_synch(void *arg)
 	
 	  UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
 	  //UE->rfdevice.trx_set_gains_func(&openair0,&openair0_cfg[0]);
-	  UE->rfdevice.trx_stop_func(&UE->rfdevice);	  
-	  sleep(1);
+	  //UE->rfdevice.trx_stop_func(&UE->rfdevice);	  
+	  //usleep(100);
 	  init_frame_parms(&UE->frame_parms,1);
-	  if (UE->rfdevice.trx_start_func(&UE->rfdevice) != 0 ) { 
-	    LOG_E(HW,"Could not start the device\n");
-	    oai_exit=1;
-	  }
+	  //if (UE->rfdevice.trx_start_func(&UE->rfdevice) != 0 ) { 
+	  //  LOG_E(HW,"Could not start the device\n");
+	  //  oai_exit=1;
+	  //}
 	}
 	else {
 	  UE->is_synchronized = 1;
@@ -521,13 +521,13 @@ static void *UE_thread_synch(void *arg)
         // calculate new offset and try again
 	if (UE->UE_scan_carrier == 1) {
 	  if (freq_offset >= 0) {
-	    freq_offset += 100;
+	    freq_offset += 20;
 	    freq_offset *= -1;
 	  } else {
 	    freq_offset *= -1;
 	  }
 	
-	  if (abs(freq_offset) > 7500) {
+	  if (abs(freq_offset) > 20000) {
 	    LOG_I( PHY, "[initial_sync] No cell synchronization found, abandoning\n" );
 	    FILE *fd;
 	    if ((fd = fopen("rxsig_frame0.dat","w"))!=NULL) {
@@ -543,9 +543,8 @@ static void *UE_thread_synch(void *arg)
 	    return &UE_thread_synch_retval; // not reached
 	  }
 	}
-	else {
-	  
-	}
+	if (freq_offset%100 == 0)
+	{
         LOG_I( PHY, "[initial_sync] trying carrier off %d Hz, rxgain %d (DL %u, UL %u)\n", 
 	       freq_offset,
                UE->rx_total_gain_dB,
@@ -564,7 +563,7 @@ static void *UE_thread_synch(void *arg)
 	}
 
 	UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
-	    
+	}
       }// initial_sync=0
 
       break;

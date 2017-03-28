@@ -74,9 +74,10 @@ typedef struct
 static int trx_iris_start(openair0_device *device)
 {
 	iris_state_t *s = (iris_state_t*)device->priv;
+
 	long long timeNs = s->iris->getHardwareTime("") + 500000;
 	int flags = 0;
-	flags |= SOAPY_SDR_HAS_TIME;
+	//flags |= SOAPY_SDR_HAS_TIME;
 	int ret = s->iris->activateStream(s->rxStream, flags, timeNs, 0);
 	int ret2 = s->iris->activateStream(s->txStream);
 	if (ret < 0 | ret2 < 0)
@@ -496,19 +497,6 @@ extern "C" {
 	int samples=openair0_cfg[0].sample_rate;
 	samples/=24000;
 
-	// create tx & rx streamer
-	const SoapySDR::Kwargs &arg = SoapySDR::Kwargs();
-	std::vector<size_t> channels={};
-	for (i = 0; i<openair0_cfg[0].rx_num_channels; i++)
-		if (i < s->iris->getNumChannels(SOAPY_SDR_RX))
-			channels.push_back(i);
-	s->rxStream = s->iris->setupStream(SOAPY_SDR_RX, SOAPY_SDR_CS16, channels, arg);
-
-	std::vector<size_t> tx_channels={};
-	for (i = 0; i<openair0_cfg[0].tx_num_channels; i++)
-		if (i < s->iris->getNumChannels(SOAPY_SDR_TX))
-			tx_channels.push_back(i);
-	s->txStream = s->iris->setupStream(SOAPY_SDR_TX, SOAPY_SDR_CS16, tx_channels, arg);
 
 	/* Setting TX/RX BW after streamers are created due to iris calibration issue */
 	for(i = 0; i < openair0_cfg[0].tx_num_channels; i++) {
@@ -524,6 +512,19 @@ extern "C" {
 		}
 	}
 
+	// create tx & rx streamer
+	const SoapySDR::Kwargs &arg = SoapySDR::Kwargs();
+	std::vector<size_t> channels={};
+	for (i = 0; i<openair0_cfg[0].rx_num_channels; i++)
+		if (i < s->iris->getNumChannels(SOAPY_SDR_RX))
+			channels.push_back(i);
+	s->rxStream = s->iris->setupStream(SOAPY_SDR_RX, SOAPY_SDR_CS16, channels, arg);
+
+	std::vector<size_t> tx_channels={};
+	for (i = 0; i<openair0_cfg[0].tx_num_channels; i++)
+		if (i < s->iris->getNumChannels(SOAPY_SDR_TX))
+			tx_channels.push_back(i);
+	s->txStream = s->iris->setupStream(SOAPY_SDR_TX, SOAPY_SDR_CS16, tx_channels, arg);
 	s->iris->setHardwareTime(0, "");
 
 
