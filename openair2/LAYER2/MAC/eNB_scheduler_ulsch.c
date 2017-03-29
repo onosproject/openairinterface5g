@@ -853,12 +853,13 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
 	    UE_list->eNB_UE_stats[CC_id][UE_id].normalized_rx_power=normalized_rx_power;
 	    UE_list->eNB_UE_stats[CC_id][UE_id].target_rx_power=target_rx_power;
 	    UE_list->eNB_UE_stats[CC_id][UE_id].ulsch_mcs1=UE_template->pre_assigned_mcs_ul;
-            mcs = UE_template->pre_assigned_mcs_ul;//cmin (UE_template->pre_assigned_mcs_ul, openair_daq_vars.target_ue_ul_mcs); // adjust, based on user-defined MCS
+            mcs = cmin (UE_template->pre_assigned_mcs_ul, 10); // adjust, based on user-defined MCS
             if (UE_template->pre_allocated_rb_table_index_ul >=0) {
               rb_table_index=UE_template->pre_allocated_rb_table_index_ul;
             } else {
 	      mcs=10;//cmin (10, openair_daq_vars.target_ue_ul_mcs);
-              rb_table_index=5; // for PHR
+              //rb_table_index=5; // for PHR
+              rb_table_index=13; // allocate 20 RBs in order to have the most RB allocate, this is used for TDD calibration
 	    }
 
             UE_list->eNB_UE_stats[CC_id][UE_id].ulsch_mcs2=mcs;

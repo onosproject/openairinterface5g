@@ -1,20 +1,20 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Wed Jan 18 09:49:05 2017
+[*] Mon Mar 13 16:06:02 2017
 [*]
 [dumpfile] "/tmp/openair_dump_eNB.vcd"
-[dumpfile_mtime] "Wed Jan 18 09:43:36 2017"
-[dumpfile_size] 892531
+[dumpfile_mtime] "Mon Mar 13 15:17:44 2017"
+[dumpfile_size] 718017266
 [savefile] "/homes/jiangx/openair5G/openairinterface5g/targets/RT/USER/eNB_exmimo2.gtkw"
-[timestart] 21256800000
-[size] 1615 1026
-[pos] -1 -1
-*-22.787832 21257630000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 0
+[size] 1301 744
+[pos] -1 -117
+*-36.091209 21257630000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [sst_width] 374
 [signals_width] 262
 [sst_expanded] 1
 [sst_vpaned_height] 262
-@25
+@24
 variables.frame_number_TX0_eNB[63:0]
 variables.frame_number_TX1_eNB[63:0]
 variables.subframe_number_TX0_eNB[63:0]
@@ -42,5 +42,8 @@ functions.udp_enb_task
 functions.phy_eNB_slot_fep
 functions.phy_eNB_ofdm_mod_l
 functions.phy_eNB_beam_precoding
+functions.phy_eNB_ulcsi_to_dlsci
+@29
+functions.phy_eNB_compute_bf_weight
 [pattern_trace] 1
 [pattern_trace] 0

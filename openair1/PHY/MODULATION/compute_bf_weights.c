@@ -3,31 +3,26 @@
 #include <string.h>
 #include "UTIL/LOG/log.h"
 #include "PHY/impl_defs_lte.h"
+#include "PHY/TOOLS/defs.h"
+
+extern char tdd_recip_calib_file[1024];
 
 int read_calibration_matrix(int32_t **tdd_calib_coeffs, char *calibF_fname, LTE_DL_FRAME_PARMS *frame_parms) {
 
   FILE *calibF_fd;
-  char calibF_file_name[1024];
   int aa,re,calibF_e ;
-  char* openair_dir = getenv("OPENAIR_DIR");
 
-  //printf("Number of antennas = %d\n", frame_parms->nb_antennas_tx) ;
-  //printf("OFDM symbol size = %d\n", frame_parms->ofdm_symbol_size) ;
-
-  if (openair_dir == NULL) {
-   printf("ERR: OPENAIR_DIR not defined (did you source oaienv?)\n");
-   return(1);
-  }
-
-  sprintf(calibF_file_name, "%s/targets/PROJECTS/TDDREC/result/%s", openair_dir, calibF_fname);
-  calibF_fd = fopen(calibF_file_name,"r") ;
+  //char* openair_dir = getenv("OPENAIR_DIR");
+  
+  calibF_fd = fopen(tdd_recip_calib_file, "r"); 
 
   if (calibF_fd == NULL) {
-   printf("Warning: %s not found, running with defaults\n", calibF_file_name);
+   printf("Warning: %s not found, running with defaults\n", tdd_recip_calib_file);
    return(1);
   }
 
-  printf("Loading Calibration matrix from %s\n", calibF_file_name);
+  //printf("Loading Calibration matrix from %s\n", calibF_file_name);
+  printf("Loading Calibration matrix from %s\n", tdd_recip_calib_file);
   
   for (aa=0;aa<frame_parms->nb_antennas_tx;aa++) {
     for(re=0;re<frame_parms->N_RB_DL*12;re++) {
@@ -42,46 +37,77 @@ int read_calibration_matrix(int32_t **tdd_calib_coeffs, char *calibF_fname, LTE_
   }
 }
 
-void estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, int32_t **ul_ch_estimates, int32_t **tdd_calib_coeffs, LTE_DL_FRAME_PARMS *frame_parms) {
+//TODO: ULCSI should be obtained from SRS in order to ensure ULCSI covers all freq band
+void estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, LTE_eNB_PUSCH *pusch_vars, int32_t **tdd_calib_coeffs, LTE_DL_FRAME_PARMS *frame_parms, int eNB_id) {
   int aa,re;
+  uint8_t shift;
+  int32_t **ul_ch_estimates = pusch_vars->drs_ch_estimates[eNB_id];
+  int *ulsch_power = pusch_vars->ulsch_power;
+  int beta = 1;
 
   for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-    multadd_cpx_vector((int16_t*)(&tdd_calib_coeffs[aa][0]),(int16_t*)(&ul_ch_estimates[aa][0]),(int16_t*)(&calib_dl_ch_estimates[aa][0]),1,frame_parms->N_RB_DL*12,15);
+     shift = log2_approx(ulsch_power[aa]*beta)>>1;
+     //printf("ulsch_power[%d]=%d\n", aa, ulsch_power[aa]);
+     // Temporal implementation for 5MHz band
+     multadd_cpx_vector((int16_t*)(&tdd_calib_coeffs[aa][12]),(int16_t*)(&ul_ch_estimates[aa][12]),(int16_t*)(&calib_dl_ch_estimates[aa][12]),1,20*12,shift);
+
+    //multadd_cpx_vector((int16_t*)(&tdd_calib_coeffs[aa][0]),(int16_t*)(&ul_ch_estimates[aa][0]),(int16_t*)(&calib_dl_ch_estimates[aa][0]),1,frame_parms->N_RB_DL*12,15);
+
 /*
-    for (re=0; re<frame_parms->N_RB_DL*12; re++) {
-      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0] = (((int16_t*)(&tdd_calib_coeffs[aa][re]))[0]*((int16_t*)(&ul_ch_estimates[aa][re]))[0])>>15;
-      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0] -= (((int16_t*)(&tdd_calib_coeffs[aa][re]))[1]*((int16_t*)(&ul_ch_estimates[aa][re]))[1])>>15;
-      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1] = (((int16_t*)(&tdd_calib_coeffs[aa][re]))[0]*((int16_t*)(&ul_ch_estimates[aa][re]))[1])>>15;
-      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1] += (((int16_t*)(&tdd_calib_coeffs[aa][re]))[1]*((int16_t*)(&ul_ch_estimates[aa][re]))[0])>>15;
+    for (re=12; re<20*12; re++) {
+      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0] = (((int16_t*)(&tdd_calib_coeffs[aa][re]))[0]*((int16_t*)(&ul_ch_estimates[aa][re]))[0])>>shift;
+      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0] -= (((int16_t*)(&tdd_calib_coeffs[aa][re]))[1]*((int16_t*)(&ul_ch_estimates[aa][re]))[1])>>shift;
+      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1] = (((int16_t*)(&tdd_calib_coeffs[aa][re]))[0]*((int16_t*)(&ul_ch_estimates[aa][re]))[1])>>shift;
+      ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1] += (((int16_t*)(&tdd_calib_coeffs[aa][re]))[1]*((int16_t*)(&ul_ch_estimates[aa][re]))[0])>>shift;
+    }
 */
-      /*printf("aa=%d, re=%d tdd_calib_coeffs= (%d, %d), ul_ch_estimates = (%d, %d), calib_dl_ch_estimates = (%d, %d)\n",
-             aa, re,
-             ((int16_t*)&tdd_calib_coeffs[aa][re])[0], ((int16_t*)&tdd_calib_coeffs[aa][re])[1],
-             ((int16_t*)&ul_ch_estimates[aa][re])[0], ((int16_t*)&ul_ch_estimates[aa][re])[1],
-             ((int16_t*)&calib_dl_ch_estimates[aa][re])[0], ((int16_t*)&calib_dl_ch_estimates[aa][re])[1]);*/
-    //}
+
+/*
+    for (re=12; re<20*12; re++) {
+      printf("aa=%d, re=%d, tdd_calib_coeffs=(%d, %d), ul_ch_estimates=(%d, %d), calib_dl_ch_estimates=(%d,%d)\n",aa,re,
+             ((int16_t*)(&tdd_calib_coeffs[aa][re]))[0], ((int16_t*)(&tdd_calib_coeffs[aa][re]))[1],
+             ((int16_t*)(&ul_ch_estimates[aa][re]))[0], ((int16_t*)(&ul_ch_estimates[aa][re]))[1],
+             ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0],((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]);
+    }
+*/
   }
 }
 
 void compute_BF_weights(int32_t **beam_weights, int32_t **calib_dl_ch_estimates, PRECODE_TYPE_t precode_type, LTE_DL_FRAME_PARMS *frame_parms) {
 
   int aa, re;
-  int norm_factor = 5;
+  int norm_factor = 0;
 
   switch (precode_type) {
   //case MRT
   case MRT :
   for (aa=0 ; aa<frame_parms->nb_antennas_tx ; aa++) {
-    for (re=0; re<frame_parms->N_RB_DL*6; re++) {
+    //for (re=0; re<frame_parms->N_RB_DL*6; re++) {
+    for (re=12; re<frame_parms->N_RB_DL*6; re++) {
       //normalisation simplied by a constent shift
       ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<norm_factor;
       ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<norm_factor;
+     /* printf("calib_dl_ch_estimates[%d][%d]=(%d,%d),beam_weight[%d][%d]=(%d,%d)\n",
+             aa, re,
+             ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0],
+             ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1],
+             aa, frame_parms->first_carrier_offset+re, 
+             ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[0],
+             ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[1]);*/
     }
 
-    for (re=frame_parms->N_RB_DL*6; re<frame_parms->N_RB_DL*12; re++) {
+    //for (re=frame_parms->N_RB_DL*6; re<frame_parms->N_RB_DL*12; re++) {
+    for (re=frame_parms->N_RB_DL*6; re<20*12; re++) {
       //normalisation simplied by a constent shift
       ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<norm_factor;
       ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[1] = -((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1]<<norm_factor;
+      /*printf("calib_dl_ch_estimates[%d][%d]=(%d,%d),beam_weight[%d][%d]=(%d,%d)\n",
+             aa, re,
+             ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0],
+             ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[1],
+             aa, frame_parms->first_carrier_offset+re, 
+             ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[0],
+             ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[1]);*/
     }
   }
   break ;

@@ -37,6 +37,7 @@ typedef struct {
   FL_OBJECT * rxsig_t;
   FL_OBJECT * chest_f;
   FL_OBJECT * chest_t;
+  FL_OBJECT * bf_weights;
   FL_OBJECT * pusch_comp;
   FL_OBJECT * pucch_comp;
   FL_OBJECT * pucch_comp1;

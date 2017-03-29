@@ -80,7 +80,6 @@ static uint32_t                      rf_vcocal_850[4] =  {2015, 2015, 2015, 2015
 static uint32_t                      rf_rxdc[4] =        {32896,32896,32896,32896};
 
 
-
 extern volatile int                    oai_exit;
 
 
@@ -654,7 +653,10 @@ void trx_exmimo_end(openair0_device *device) {
   exmimo_state_t *exm=device->priv;
 
   exm->daq_state = idle;
-  openair0_stop(0);
+  if (device->openair0_cfg[0].tdd_recip_calib == 1)
+    openair0_stop_without_reset(0);
+  else
+    openair0_stop(0);
  
 }
 
@@ -676,7 +678,10 @@ int trx_exmimo_stop(openair0_device* device) {
 
   printf("Stopping ...\n");
   exm->daq_state = idle;  
-  openair0_stop(0);
+  if (device->openair0_cfg[0].tdd_recip_calib == 1)
+    openair0_stop_without_reset(0);
+  else
+    openair0_stop(0);
 
   return(0);
 
@@ -800,6 +805,18 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
     return(-1);
   }
 
+
+  /* device specific */
+  for (card=0; card<openair0_num_detected_cards; card++) {
+    openair0_cfg[card].iq_txshift = 4;//shift
+    openair0_cfg[card].iq_rxrescale = 15;//rescale iqs
+  }
+
+  if (openair0_cfg[0].tdd_recip_calib == 1) {
+    printf("Warning, doing TDD reciprocity calibration, configuration has been done in Octave!!\n");
+    return(-1);
+  }
+
   for (card=0; card<openair0_num_detected_cards; card++) {
     ACTIVE_RF=0;
 
@@ -818,28 +835,24 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
     else
       p_exmimo_config->framing.multicard_syncmode=SYNCMODE_SLAVE;
 
-    /* device specific */
-    openair0_cfg[card].iq_txshift = 4;//shift
-    openair0_cfg[card].iq_rxrescale = 15;//rescale iqs
-
 
     if (openair0_cfg[card].sample_rate==30.72e6) {
       resampling_factor = 0;
-      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD) {
+      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD_workaround) {
         printf("Warning: TDD workaround may not work for bw 20");
       }
       rx_filter = RXLPF10;
       tx_filter = TXLPF10;
     } else if (openair0_cfg[card].sample_rate==15.36e6) {
       resampling_factor = 1;
-      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD)
+      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD_workaround) 
         rx_filter = RXLPF10;
       else
         rx_filter = RXLPF5;
       tx_filter = TXLPF5;
     } else if (openair0_cfg[card].sample_rate==7.68e6) {
       resampling_factor = 2;
-      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD) // TDD workaround for EXMIMO
+      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD_workaround) 
         rx_filter = RXLPF5;
       else 
         rx_filter = RXLPF25;
@@ -847,7 +860,7 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
     } else {
       printf("Sampling rate not supported, using default 7.68MHz");
       resampling_factor = 2;
-      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD)
+      if (openair0_cfg[card].duplex_mode==duplex_mode_TDD_workaround) 
         rx_filter = RXLPF5;
       else
         rx_filter = RXLPF25;
@@ -899,7 +912,7 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
         p_exmimo_config->rf.rf_freq_rx[ant] = (unsigned int)openair0_cfg[card].rx_freq[ant];
        
         // TDD workaround
-        if (openair0_cfg[card].duplex_mode==duplex_mode_TDD)
+        if (openair0_cfg[card].duplex_mode==duplex_mode_TDD_workaround)
           p_exmimo_config->rf.rf_freq_rx[ant] += openair0_cfg[card].sample_rate/4; 
 
         switch (openair0_cfg[card].rxg_mode[ant]) {
@@ -963,11 +976,12 @@ int openair0_config(openair0_config_t *openair0_cfg, int UE_flag)
       p_exmimo_config->framing.tdd_config = DUPLEXMODE_FDD;// + TXRXSWITCH_LSB + TXRXSWITCH_LSB + ACTIVE_RF+ ACTIVE_RF;
       printf("!!!!!setting FDD (tdd_config=%d)\n",p_exmimo_config->framing.tdd_config);
     } 
-    else {
-      // TDD workaround
-      //p_exmimo_config->framing.tdd_config = DUPLEXMODE_TDD + TXRXSWITCH_LSB + ACTIVE_RF;
-      p_exmimo_config->framing.tdd_config = DUPLEXMODE_FDD + TXRXSWITCH_LSB;
+    else if (openair0_cfg[card].duplex_mode==duplex_mode_TDD) {
+      p_exmimo_config->framing.tdd_config = DUPLEXMODE_TDD + TXRXSWITCH_LSB + ACTIVE_RF;
       printf("!!!!!setting TDD (tdd_config=%d)\n",p_exmimo_config->framing.tdd_config);
+    } else {
+      p_exmimo_config->framing.tdd_config = DUPLEXMODE_FDD + TXRXSWITCH_LSB;
+      printf("!!!!!setting TDD WORKAROUND (tdd_config=%d)\n",p_exmimo_config->framing.tdd_config);
     }
 
     ret = ioctl(openair0_fd, openair_DUMP_CONFIG, card);

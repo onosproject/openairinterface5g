@@ -226,8 +226,9 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       memcpy((void*)&DCI_pdu->dci_alloc[0].dci_pdu[0],(void *)&DLSCH_alloc_pdu1,sizeof(DCI2_5MHz_2A_M10PRB_TDD_t));
     break;
     */
-
+  case 8:
   case 9:
+  case 0:
     DCI_pdu->Num_ue_spec_dci = 1;
 
     //user 1
@@ -244,7 +245,7 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
     UL_alloc_pdu.type    = 0;
     UL_alloc_pdu.hopping = 0;
-    UL_alloc_pdu.rballoc = computeRIV(25,2,eNB->ue_ul_nb_rb);
+    UL_alloc_pdu.rballoc = computeRIV(25,0,25);
     UL_alloc_pdu.mcs     = eNB->target_ue_ul_mcs;
     UL_alloc_pdu.ndi     = proc->frame_tx&1;
     UL_alloc_pdu.TPC     = 0;
@@ -254,8 +255,7 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     memcpy((void*)&DCI_pdu->dci_alloc[0].dci_pdu[0],(void *)&UL_alloc_pdu,sizeof(DCI0_5MHz_TDD_1_6_t));
     break;
 
-
-  default:
+  case 6:
   case 7:
     DCI_pdu->Num_ue_spec_dci = 1;
     DCI_pdu->dci_alloc[0].L          = 2;
@@ -611,8 +611,8 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     break;
     */
 
-    /*default:
-      break;*/
+    default:
+      break;
   }
 
   /*

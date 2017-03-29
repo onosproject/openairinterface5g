@@ -767,11 +767,12 @@ typedef struct {
   /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
   int32_t **ul_ch_magb_1[3];
   /// measured RX power based on DRS
-  int ulsch_power[2];
+  /// -first index: rx antenna id [0..nb_antennas_rx]
+  int ulsch_power[NB_ANTENNAS_RX];
   /// measured RX power based on DRS for UE0 in case of Distributed Alamouti Scheme
-  int ulsch_power_0[2];
+  int ulsch_power_0[NB_ANTENNAS_RX];
   /// measured RX power based on DRS for UE0 in case of Distributed Alamouti Scheme
-  int ulsch_power_1[2];
+  int ulsch_power_1[NB_ANTENNAS_RX];
   /// \brief llr values.
   /// - first index: ? [0..1179743] (hard coded)
   int16_t *llr;

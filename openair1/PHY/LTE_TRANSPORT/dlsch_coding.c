@@ -154,6 +154,7 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(unsigned char Kmimo,unsigned char Mdlharq,uint32_
          dlsch->ue_spec_bf_weights[layer][aa] = (int32_t *)malloc16(OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES*sizeof(int32_t));
          for (re=0;re<OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES; re++) {
            dlsch->ue_spec_bf_weights[layer][aa][re] = 0x00007fff;
+           //dlsch->ue_spec_bf_weights[layer][aa][re] = 0xd27Cdab3;//0x2d842570;//0xaD84a570;//0x2d842570;//0x2416b191;//0x3d432a22;
          }
        }
      }

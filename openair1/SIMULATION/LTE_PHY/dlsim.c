@@ -67,6 +67,8 @@ double t_rx_min = 1000000000; /*!< \brief initial min process time for rx */
 int n_tx_dropped = 0; /*!< \brief initial max process time for tx */
 int n_rx_dropped = 0; /*!< \brief initial max process time for rx */
 
+char   tdd_recip_calib_file[1024];
+
 void handler(int sig)
 {
   void *array[10];

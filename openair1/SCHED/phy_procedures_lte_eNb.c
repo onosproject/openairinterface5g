@@ -2017,7 +2017,7 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
       eNB->UE_stats[(uint32_t)UE_id].UE_timing_offset = preamble_delay_list[preamble_max]&0x1FFF; //limit to 13 (=11+2) bits
 
       eNB->UE_stats[(uint32_t)UE_id].sector = 0;
-      LOG_D(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure (UE_id %d) with preamble %d, energy %d.%d dB, delay %d\n",
+      LOG_I(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure (UE_id %d) with preamble %d, energy %d.%d dB, delay %d\n",
             eNB->Mod_id,
             eNB->CC_id,
             frame,
@@ -2991,30 +2991,34 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
       // TDD reciprocity DL CSIT estimation based on calibraton
       start_meas(&eNB->dl_ch_calib_stats);
  
-     /* if ((fp->frame_type == TDD) && 
-          (((fp->tdd_config == 0) && ((subframe == 4) || (subframe == 9))) ||
-          ((fp->tdd_config == 1) && ((subframe == 3) || (subframe == 8))) ||
-          ((fp->tdd_config == 2) && ((subframe == 2) || (subframe == 7))) ||
-          ((fp->tdd_config == 3) && (subframe == 4)) ||
-          ((fp->tdd_config == 4) && (subframe == 3)) ||
-          ((fp->tdd_config == 5) && (subframe == 2)) ||
-          ((fp->tdd_config == 6) && ((subframe == 4) || (subframe == 8))))) {
+      if ((fp->frame_type == TDD) && (eNB->rfdevice.openair0_cfg[0].tdd_recip_calib == 1) &&
+         (((fp->tdd_config == 0) && ((subframe == 4) || (subframe == 9))) ||
+         ((fp->tdd_config == 1) && ((subframe == 3) || (subframe == 8))) ||
+         ((fp->tdd_config == 2) && ((subframe == 2) || (subframe == 7))) ||
+         ((fp->tdd_config == 3) && (subframe == 4)) ||
+         ((fp->tdd_config == 4) && (subframe == 3)) ||
+         ((fp->tdd_config == 5) && (subframe == 2)) ||
+         ((fp->tdd_config == 6) && ((subframe == 4) || (subframe == 8))))) {
          
           //LOG_I(PHY, "UE %d: Estimating DLSCI from ULCSI based on TDD reciprocity calibration: Estimating DLSCI from ULCSI based on TDD reciprocity calibration\n", i);
-          printf(PHY, "UE %d: Estimating DLSCI from ULCSI based on TDD reciprocity calibration: Estimating DLSCI from ULCSI based on TDD reciprocity calibration\n", i);
         
+          VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_ULCSI_TO_DLCSI,1);
 	  estimate_DLCSI_from_ULCSI(eNB->dlsch[i][0]->calib_dl_ch_estimates,
-                                    &eNB->pusch_vars[i]->drs_ch_estimates[eNB->UE_stats[i].sector][0],
+                                    eNB->pusch_vars[i],
                                     eNB->common_vars.tdd_calib_coeffs[eNB->UE_stats[i].sector],
-                                    fp);
+                                    fp,
+                                    eNB->UE_stats[i].sector);
+          VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_ULCSI_TO_DLCSI,0);
 	 
           // only calculate for port 5 
+          VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_COMPUTE_BF_WEIGHT,1);
           compute_BF_weights(eNB->dlsch[i][0]->ue_spec_bf_weights[0],
                              eNB->dlsch[i][0]->calib_dl_ch_estimates,
                              MRT,
                              fp);
+          VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_COMPUTE_BF_WEIGHT,0);
 
-      } */
+      } 
       stop_meas(&eNB->dl_ch_calib_stats);
 
       start_meas(&eNB->ulsch_decoding_stats);
@@ -3038,7 +3042,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 #endif
       stop_meas(&eNB->ulsch_decoding_stats);
 
-      LOG_D(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) RSSI (%d,%d) N0 (%d,%d) dB ACK (%d,%d), decoding iter %d\n",
+      LOG_G(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) RSSI (%d,%d) N0 (%d,%d) dB ACK (%d,%d), decoding iter %d\n",
             eNB->Mod_id,harq_pid,
             frame,subframe,
             eNB->ulsch[i]->rnti,
