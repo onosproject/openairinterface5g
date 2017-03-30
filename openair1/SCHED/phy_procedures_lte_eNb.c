@@ -1564,12 +1564,13 @@ void process_HARQ_feedback(uint8_t UE_id,
 {
 
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
-  uint8_t dl_harq_pid[8],dlsch_ACK[8],dl_subframe;
+  uint8_t dl_harq_pid[8],dlsch_ACK[2][8],dl_subframe;
   LTE_eNB_DLSCH_t *dlsch             =  eNB->dlsch[(uint32_t)UE_id][0];
+  LTE_eNB_DLSCH_t *dlsch1            =  eNB->dlsch[(uint32_t)UE_id][1];
   LTE_eNB_UE_stats *ue_stats         =  &eNB->UE_stats[(uint32_t)UE_id];
   LTE_DL_eNB_HARQ_t *dlsch_harq_proc;
   uint8_t subframe_m4,M,m;
-  int mp;
+  int mp,tb;
   int all_ACKed=1,nb_alloc=0,nb_ACK=0;
   int frame = proc->frame_rx;
   int subframe = proc->subframe_rx;
@@ -1582,13 +1583,15 @@ void process_HARQ_feedback(uint8_t UE_id,
     M=1;
 
     if (pusch_flag == 1) {
-      dlsch_ACK[0] = eNB->ulsch[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
+      dlsch_ACK[0][0] = eNB->ulsch[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
+      dlsch_ACK[1][0] = eNB->ulsch[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1];
       if (dlsch->subframe_tx[subframe_m4]==1)
 	LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d on PUSCH for subframe %d\n",eNB->Mod_id,
 	      frame,dlsch_ACK[0],subframe_m4);
     }
     else {
-      dlsch_ACK[0] = pucch_payload[0];
+      dlsch_ACK[0][0] = pucch_payload[0];
+      dlsch_ACK[1][0] = pucch_payload[1];
       LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d on PUCCH for subframe %d\n",eNB->Mod_id,
 	    frame,dlsch_ACK[0],subframe_m4);
       /*
@@ -1605,7 +1608,7 @@ void process_HARQ_feedback(uint8_t UE_id,
 		       "%05u:%02u %s received %s  rnti %x harq id %u  tx SF %u",
 		       frame,subframe,
 		       (pusch_flag == 1)?"PUSCH":"PUCCH",
-		       (dlsch_ACK[0])?"ACK":"NACK",
+		       (dlsch_ACK[0][0])?"ACK":"NACK",
 		       dlsch->rnti,
 		       dl_harq_pid[0],
 		       subframe_m4
@@ -1624,8 +1627,8 @@ void process_HARQ_feedback(uint8_t UE_id,
       //    otherwise, it depends on how many of the PDSCH in the set are scheduled, we can leave it like this,
       //    but we have to adapt the code below.  For example, if only one out of 2 are scheduled, only 1 bit o_ACK is used
 
-      dlsch_ACK[0] = eNB->ulsch[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
-      dlsch_ACK[1] = (eNB->pucch_config_dedicated[UE_id].tdd_AckNackFeedbackMode == bundling)
+      dlsch_ACK[0][0] = eNB->ulsch[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
+      dlsch_ACK[0][1] = (eNB->pucch_config_dedicated[UE_id].tdd_AckNackFeedbackMode == bundling)
 	?eNB->ulsch[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0]:eNB->ulsch[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1];
     }
 
@@ -1647,23 +1650,23 @@ void process_HARQ_feedback(uint8_t UE_id,
             nb_ACK = 3;
         }
       } else if (pucch_sel == 2) { // bundling or M=1
-        dlsch_ACK[0] = pucch_payload[0];
-        dlsch_ACK[1] = pucch_payload[0];
+        dlsch_ACK[0][0] = pucch_payload[0];
+        dlsch_ACK[0][1] = pucch_payload[0];
       } else { // multiplexing with no SR, this is table 10.1
         if (M==1)
-          dlsch_ACK[0] = pucch_payload[0];
+          dlsch_ACK[0][0] = pucch_payload[0];
         else if (M==2) {
           if (((pucch_sel == 1) && (pucch_payload[0] == 1) && (pucch_payload[1] == 1)) ||
               ((pucch_sel == 0) && (pucch_payload[0] == 0) && (pucch_payload[1] == 1)))
-            dlsch_ACK[0] = 1;
+            dlsch_ACK[0][0] = 1;
           else
-            dlsch_ACK[0] = 0;
+            dlsch_ACK[0][0] = 0;
 
           if (((pucch_sel == 1) && (pucch_payload[0] == 1) && (pucch_payload[1] == 1)) ||
               ((pucch_sel == 1) && (pucch_payload[0] == 0) && (pucch_payload[1] == 0)))
-            dlsch_ACK[1] = 1;
+            dlsch_ACK[0][1] = 1;
           else
-            dlsch_ACK[1] = 0;
+            dlsch_ACK[0][1] = 0;
         }
       }
     }
@@ -1705,32 +1708,42 @@ void process_HARQ_feedback(uint8_t UE_id,
       harq_pid_updated[UE_id][dl_harq_pid[m]] = 1;
 
       if ((pucch_sel != 2)&&(pusch_flag == 0)) { // multiplexing
-        if ((SR_payload == 1)&&(all_ACKed == 1))
-          dlsch_ACK[m] = 1;
-        else
-          dlsch_ACK[m] = 0;
+        if ((SR_payload == 1)&&(all_ACKed == 1)) {
+          dlsch_ACK[0][m] = 1;
+          dlsch_ACK[1][m] = 1;
+	}
+        else {
+          dlsch_ACK[0][m] = 0;
+          dlsch_ACK[1][m] = 0;
+	}
       }
 
       if (dl_harq_pid[m]<dlsch->Mdlharq) {
-        dlsch_harq_proc = dlsch->harq_processes[dl_harq_pid[m]];
+	// we always loop over 2 possible max TBs. If its not used it should habe been disabled
+      for (tb=0;tb<2;tb++) {
+	if (tb==0)
+	  dlsch_harq_proc = dlsch->harq_processes[dl_harq_pid[m]];
+	else
+	  dlsch_harq_proc = dlsch1->harq_processes[dl_harq_pid[m]];
+
 #ifdef DEBUG_PHY_PROC
-        LOG_D(PHY,"[eNB %d][PDSCH %x/%d] subframe %d, status %d, round %d (mcs %d, rv %d, TBS %d)\n",eNB->Mod_id,
-              dlsch->rnti,dl_harq_pid[m],dl_subframe,
+        LOG_D(PHY,"[eNB %d][PDSCH %x/%d] subframe %d, TB %d, status %d, round %d (mcs %d, rv %d, TBS %d)\n",eNB->Mod_id,
+              dlsch->rnti,dl_harq_pid[m],dl_subframe,tb,
               dlsch_harq_proc->status,dlsch_harq_proc->round,
               dlsch->harq_processes[dl_harq_pid[m]]->mcs,
               dlsch->harq_processes[dl_harq_pid[m]]->rvidx,
               dlsch->harq_processes[dl_harq_pid[m]]->TBS);
 
-        if (dlsch_harq_proc->status==DISABLED)
-          LOG_E(PHY,"dlsch_harq_proc is disabled? \n");
-
 #endif
 
-        if ((dl_harq_pid[m]<dlsch->Mdlharq) &&
-            (dlsch_harq_proc->status == ACTIVE)) {
+        if (dlsch_harq_proc->status==DISABLED) {
+          LOG_E(PHY,"dlsch_harq_proc is disabled? \n");
+	}
+	else {
+	  if (dlsch_harq_proc->status == ACTIVE) {
           // dl_harq_pid of DLSCH is still active
 
-          if ( dlsch_ACK[mp]==0) {
+          if ( dlsch_ACK[tb][mp]==0) {
             // Received NAK
 #ifdef DEBUG_PHY_PROC
             LOG_D(PHY,"[eNB %d][PDSCH %x/%d] M = %d, m= %d, mp=%d NAK Received in round %d, requesting retransmission\n",eNB->Mod_id,
@@ -1776,6 +1789,7 @@ void process_HARQ_feedback(uint8_t UE_id,
             T(T_ENB_PHY_DLSCH_UE_ACK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(UE_id), T_INT(dlsch->rnti),
               T_INT(dl_harq_pid[m]));
 
+	    // TODO: add TB to stats
             ue_stats->dlsch_ACK[dl_harq_pid[m]][dlsch_harq_proc->round]++;
 
             // Received ACK so set round to 0 and set dlsch_harq_pid IDLE
@@ -1800,8 +1814,8 @@ void process_HARQ_feedback(uint8_t UE_id,
           }
 
 #ifdef DEBUG_PHY_PROC
-          LOG_D(PHY,"[process_HARQ_feedback] Frame %d Setting round to %d for pid %d (subframe %d)\n",frame,
-                dlsch_harq_proc->round,dl_harq_pid[m],subframe);
+          LOG_D(PHY,"[process_HARQ_feedback] Frame %d Setting round to %d for pid %d tb %d (subframe %d)\n",frame,
+                dlsch_harq_proc->round,dl_harq_pid[m],tb,subframe);
 #endif
 	  harq_pid_round[UE_id][dl_harq_pid[m]] = dlsch_harq_proc->round;
           // Clear NAK stats and adjust mcs offset
@@ -1823,6 +1837,8 @@ void process_HARQ_feedback(uint8_t UE_id,
             ue_stats->dlsch_sliding_cnt = 0;
           }
         }
+	}
+      }
       }
     }
   }
