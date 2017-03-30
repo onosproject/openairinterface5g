@@ -428,8 +428,8 @@ int main(int argc, char **argv)
     case 'x':
       transmission_mode=atoi(optarg);
 
-      if ((transmission_mode!=1) &&
-          (transmission_mode!=2)) {
+      if ((transmission_mode<1) ||
+          (transmission_mode>7)) {
         printf("Unsupported transmission mode %d\n",transmission_mode);
         exit(-1);
       }
@@ -730,9 +730,9 @@ int main(int argc, char **argv)
   UE->dlsch_ra[0]  = new_ue_dlsch(1,1,1827072,MAX_TURBO_ITERATIONS,N_RB_DL,0);
 
   UE->measurements.rank[0] = 0;
-  UE->transmission_mode[0] = 2;
+  UE->transmission_mode[0] = transmission_mode;
   UE->pucch_config_dedicated[0].tdd_AckNackFeedbackMode = bundling_flag == 1 ? bundling : multiplexing;
-  eNB->transmission_mode[0] = 2;
+  eNB->transmission_mode[0] = transmission_mode;
   eNB->pucch_config_dedicated[0].tdd_AckNackFeedbackMode = bundling_flag == 1 ? bundling : multiplexing;
   UE->frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = 1;
   eNB->frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = 1;
