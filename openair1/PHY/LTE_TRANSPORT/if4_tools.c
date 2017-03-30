@@ -147,13 +147,14 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 1 );
 	LOG_D(PHY,"IF4p5_PULFFT: frame %d, subframe %d, symbol %d\n",frame,subframe,symbol_id);
 	for (element_id=0; element_id<db_halflength; element_id++) {
+	  start_meas(&eNB->send_if4p5_comp_stats);
 	  i = (uint16_t*) &rxdataF[0][blockoffsetF+element_id];
 	  data_block[element_id] = ((uint16_t) lin2alaw_if4p5[*i]) | ((uint16_t)(lin2alaw_if4p5[*(i+1)]<<8));
 	  
 	  i = (uint16_t*) &rxdataF[0][slotoffsetF+element_id];
 	  data_block[element_id+db_halflength] = ((uint16_t) lin2alaw_if4p5[*i]) | ((uint16_t)(lin2alaw_if4p5[*(i+1)]<<8));
 	  //if (element_id==0) LOG_I(PHY,"send_if4p5: symbol %d rxdata0 = (%d,%d)\n",symbol_id,*i,*(i+1));
-		
+	  stop_meas(&eNB->send_if4p5_comp_stats);
 	}
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 0 );   	
 	packet_header->frame_status &= ~(0x000f<<26);

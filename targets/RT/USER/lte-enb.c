@@ -684,12 +684,16 @@ static void* print_stats_thread( void* param ) {
 	reset_meas(&eNB->trx_write_if4p5_stats);
 	reset_meas(&eNB->trx_read_if4p5_stats);
 
+	reset_meas(&eNB->send_if4p5_comp_stats);
+
 	while (!oai_exit) {
 		sleep(2);
 		print_meas(&eNB->send_if4p5_stats, "send_if4p5_stats", NULL, NULL);
 		print_meas(&eNB->recv_if4p5_stats, "recv_if4p5_stats", NULL, NULL);
 		print_meas(&eNB->trx_write_if4p5_stats, "trx_write_if4p5_stats", NULL, NULL);
                 print_meas(&eNB->trx_read_if4p5_stats, "trx_read_if4p5_stats", NULL, NULL);
+		print_meas(&eNB->send_if4p5_comp_stats, "send_if4p5_comp_stats", NULL, NULL);
+		printf("\n");
 	}
 }
 
