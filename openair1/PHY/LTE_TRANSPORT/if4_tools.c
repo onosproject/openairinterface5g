@@ -92,11 +92,13 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
       if (eNB->CC_id==1) LOG_I(PHY,"DL_IF4p5: CC_id %d : frame %d, subframe %d, symbol %d\n",eNB->CC_id,frame,subframe,symbol_id);
       
       for (element_id=0; element_id<db_halflength; element_id++) {
-        i = (uint16_t*) &txdataF[eNB->CC_id][blockoffsetF+element_id];
+        start_meas(&eNB->send_if4p5_comp_stats);
+	i = (uint16_t*) &txdataF[eNB->CC_id][blockoffsetF+element_id];
         data_block[element_id] = ((uint16_t) lin2alaw_if4p5[*i]) | (lin2alaw_if4p5[*(i+1)]<<8);
 
         i = (uint16_t*) &txdataF[eNB->CC_id][slotoffsetF+element_id];
         data_block[element_id+db_halflength] = ((uint16_t) lin2alaw_if4p5[*i]) | (lin2alaw_if4p5[*(i+1)]<<8);        
+	stop_meas(&eNB->send_if4p5_comp_stats);
       }
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 0 );
 				 		
