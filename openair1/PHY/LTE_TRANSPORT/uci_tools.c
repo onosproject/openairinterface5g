@@ -169,7 +169,7 @@ void extract_CQI(void *o,UCI_format_t uci_format,LTE_eNB_UE_stats *stats, uint8_
   //UCI_format fmt;
   //uint8_t N_RB_DL = 25;
   uint8_t i;
-  LOG_I(PHY,"[eNB][UCI] N_RB_DL %d uci format %d\n", N_RB_DL,uci_format);
+  LOG_D(PHY,"[eNB][UCI] N_RB_DL %d uci format %d\n", N_RB_DL,uci_format);
 
   switch(N_RB_DL) {
   case 6:

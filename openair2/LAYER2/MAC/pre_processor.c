@@ -267,18 +267,18 @@ int maxround(module_id_t Mod_id,uint16_t rnti,int frame,sub_frame_t subframe,uin
 {
 
   uint8_t round,round_max=0,UE_id;
-  int CC_id;
+  int CC_id,tb;
   UE_list_t *UE_list = &eNB_mac_inst[Mod_id].UE_list;
 
+  UE_id = find_UE_id(Mod_id,rnti);
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-
-    UE_id = find_UE_id(Mod_id,rnti);
-    round    = UE_list->UE_sched_ctrl[UE_id].round[CC_id];
-    if (round > round_max) {
-      round_max = round;
+    for (tb=0;tb<2;tb++) {
+      round    = UE_list->UE_sched_ctrl[UE_id].round[CC_id][tb];
+      if (round > round_max) {
+	round_max = round;
+      }
     }
   }
-
   return round_max;
 }
 
@@ -505,8 +505,9 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
                                     int           *mbsfn_flag)
 {
 
-  unsigned char rballoc_sub[MAX_NUM_CCs][N_RBG_MAX],harq_pid=0,round=0,total_ue_count;
+  unsigned char rballoc_sub[MAX_NUM_CCs][N_RBG_MAX];
   unsigned char MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX];
+  unsigned char harq_pid=0,round[2]={0,0},total_ue_count;
   int                     UE_id, i; 
   uint16_t                ii,j;
   uint16_t                nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
@@ -601,7 +602,8 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
       CC_id = UE_list->ordered_CCids[ii][UE_id];
       ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
       harq_pid = ue_sched_ctl->harq_pid[CC_id];
-      round    = ue_sched_ctl->round[CC_id];
+      round[0]    = ue_sched_ctl->round[CC_id][0];
+      round[1]    = ue_sched_ctl->round[CC_id][1];
 
       // if there is no available harq_process, skip the UE
       if (UE_list->UE_sched_ctrl[UE_id].harq_pid[CC_id]<0)
@@ -613,7 +615,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
 
       //      mac_xface->get_ue_active_harq_pid(Mod_id,CC_id,rnti,frameP,subframeP,&harq_pid,&round,0);
 
-      if(round>0) {
+      if ((round[1]>0) || (round[1]>0)) {
         nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
       }
 
@@ -704,7 +706,8 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
           CC_id = UE_list->ordered_CCids[ii][UE_id];
 	  ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 	  harq_pid = ue_sched_ctl->harq_pid[CC_id];
-	  round    = ue_sched_ctl->round[CC_id];
+	  round[0]    = ue_sched_ctl->round[CC_id][0];
+	  round[1]    = ue_sched_ctl->round[CC_id][1];
 
           rnti = UE_RNTI(Mod_id,UE_id);
 
@@ -921,7 +924,7 @@ void dlsch_scheduler_pre_processor_reset (int module_idP,
   mac_xface->get_ue_active_harq_pid(module_idP,CC_id,rnti,
 				    frameP,subframeP,
 				    &ue_sched_ctl->harq_pid[CC_id],
-				    &ue_sched_ctl->round[CC_id],
+				    &ue_sched_ctl->round[CC_id][0],
 				    openair_harq_DL);
   if (ue_sched_ctl->ta_timer == 0) {
 

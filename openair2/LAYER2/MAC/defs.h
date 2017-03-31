@@ -775,7 +775,7 @@ typedef struct {
 
   // resource scheduling information
   uint8_t       harq_pid[MAX_NUM_CCs];
-  uint8_t       round[MAX_NUM_CCs];
+  uint8_t       round[MAX_NUM_CCs][2];
   uint8_t       dl_pow_off[MAX_NUM_CCs];
   uint16_t      pre_nb_available_rbs[MAX_NUM_CCs];
   unsigned char rballoc_sub_UE[MAX_NUM_CCs][N_RBG_MAX];

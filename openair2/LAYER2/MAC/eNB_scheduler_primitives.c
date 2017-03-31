@@ -671,7 +671,7 @@ void add_ue_spec_dci(DCI_PDU *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_si
 
   DCI_pdu->Num_ue_spec_dci++;
 
-  LOG_I(MAC,"add ue specific dci format %d for rnti %x \n",dci_fmt,rnti);
+  LOG_D(MAC,"add ue specific dci format %d for rnti %x \n",dci_fmt,rnti);
 }
 
 

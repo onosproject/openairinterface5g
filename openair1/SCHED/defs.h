@@ -505,6 +505,17 @@ int16_t get_hundred_times_delta_IF_mac(module_id_t module_idP, uint8_t CC_id, rn
 int16_t get_target_pusch_rx_power(module_id_t module_idP, uint8_t CC_id);
 int16_t get_target_pucch_rx_power(module_id_t module_idP, uint8_t CC_id);
 
+/*! \brief This function is typically called from the MAC and asks the PHY for a harq_pid for rnti to use in frame.subframe. The function will also return the current round (round is a vector of size 2 for the 2 TBs for DL) correspoing to this harq_pid. If the round (rounds) is (are) 0 then the harq_pid is free.
+    @param Mod_id
+    @param CC_id
+    @param rnti
+    @param frame
+    @param subframe
+    @param harq_pid
+    @param round
+    @param ul_flag
+    @returns 0 on succes, -1 for error
+ */
 int get_ue_active_harq_pid(uint8_t Mod_id,uint8_t CC_id,uint16_t rnti,int frame, uint8_t subframe,uint8_t *harq_pid,uint8_t *round,uint8_t ul_flag);
 
 void dump_dlsch(PHY_VARS_UE *phy_vars_ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t subframe,uint8_t harq_pid);

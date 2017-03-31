@@ -235,7 +235,7 @@ int8_t find_next_ue_index(PHY_VARS_eNB *eNB)
 
 int get_ue_active_harq_pid(const uint8_t Mod_id,const uint8_t CC_id,const uint16_t rnti, const int frame, const uint8_t subframe,uint8_t *harq_pid,uint8_t *round,const uint8_t harq_flag)
 {
-  LTE_eNB_DLSCH_t *DLSCH_ptr;
+  LTE_eNB_DLSCH_t *DLSCH_ptr[2];
   LTE_eNB_ULSCH_t *ULSCH_ptr;
   uint8_t ulsch_subframe,ulsch_frame;
   int i;
@@ -244,17 +244,19 @@ int get_ue_active_harq_pid(const uint8_t Mod_id,const uint8_t CC_id,const uint16
   if (UE_id==-1) {
     LOG_D(PHY,"Cannot find UE with rnti %x (Mod_id %d, CC_id %d)\n",rnti, Mod_id, CC_id);
     *round=0;
+    *(round+1)=0;
     return(-1);
   }
 
   if ((harq_flag == openair_harq_DL) || (harq_flag == openair_harq_RA))  {// this is a DL request
 
-    DLSCH_ptr = PHY_vars_eNB_g[Mod_id][CC_id]->dlsch[(uint32_t)UE_id][0];
+    DLSCH_ptr[0] = PHY_vars_eNB_g[Mod_id][CC_id]->dlsch[(uint32_t)UE_id][0];
+    DLSCH_ptr[1] = PHY_vars_eNB_g[Mod_id][CC_id]->dlsch[(uint32_t)UE_id][1];
 
     if (harq_flag == openair_harq_RA) {
-      if (DLSCH_ptr->harq_processes[0] != NULL) {
+      if (DLSCH_ptr[0]->harq_processes[0] != NULL) {
 	*harq_pid = 0;
-	*round = DLSCH_ptr->harq_processes[0]->round;
+	*round = DLSCH_ptr[0]->harq_processes[0]->round;
 	return 0;
       } else {
 	return -1;
@@ -264,12 +266,17 @@ int get_ue_active_harq_pid(const uint8_t Mod_id,const uint8_t CC_id,const uint16
     /* let's go synchronous for the moment - maybe we can change at some point */
     i = (frame * 10 + subframe) % 8;
 
-    if (DLSCH_ptr->harq_processes[i]->status == ACTIVE) {
+    if ((DLSCH_ptr[0]->harq_processes[i]->status == ACTIVE) ||
+	(DLSCH_ptr[1]->harq_processes[i]->status == ACTIVE)) { //at least one of the two TBs is active
       *harq_pid = i;
-      *round = DLSCH_ptr->harq_processes[i]->round;
-    } else if (DLSCH_ptr->harq_processes[i]->status == SCH_IDLE) {
+      *round = DLSCH_ptr[0]->harq_processes[i]->round;
+      *(round+1) = DLSCH_ptr[1]->harq_processes[i]->round;
+      
+    } else if ((DLSCH_ptr[0]->harq_processes[i]->status == SCH_IDLE) && 
+	       (DLSCH_ptr[1]->harq_processes[i]->status == SCH_IDLE)){ //none of the two TBs is active
       *harq_pid = i;
       *round = 0;
+      *(round+1) = 0;
     } else {
       printf("%s:%d: bad state for harq process - PLEASE REPORT!!\n", __FILE__, __LINE__);
       abort();
@@ -1586,20 +1593,19 @@ void process_HARQ_feedback(uint8_t UE_id,
       dlsch_ACK[0][0] = eNB->ulsch[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
       dlsch_ACK[1][0] = eNB->ulsch[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1];
       if (dlsch->subframe_tx[subframe_m4]==1)
-	LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d on PUSCH for subframe %d\n",eNB->Mod_id,
-	      frame,dlsch_ACK[0],subframe_m4);
+	LOG_I(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d,%d on PUSCH for harq_pid %d, subframe %d\n",eNB->Mod_id,
+	      frame,dlsch_ACK[0][0],dlsch_ACK[1][0],dl_harq_pid[0],subframe_m4);
     }
     else {
       dlsch_ACK[0][0] = pucch_payload[0];
       dlsch_ACK[1][0] = pucch_payload[1];
-      LOG_D(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d on PUCCH for subframe %d\n",eNB->Mod_id,
-	    frame,dlsch_ACK[0],subframe_m4);
+      LOG_I(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d,%d on PUCCH for harq_pid %d, subframe %d\n",eNB->Mod_id,
+	    frame,dlsch_ACK[0][0],dlsch_ACK[1][0],dl_harq_pid[0],subframe_m4);
       /*
 	if (dlsch_ACK[0]==0)
 	AssertFatal(0,"Exiting on NAK on PUCCH\n");
       */
     }
-
 
 #if defined(MESSAGE_CHART_GENERATOR_PHY)
     MSC_LOG_RX_MESSAGE(
@@ -1765,10 +1771,10 @@ void process_HARQ_feedback(uint8_t UE_id,
 
             if (dlsch_harq_proc->round == dlsch->Mlimit) {
               // This was the last round for DLSCH so reset round and increment l2_error counter
-#ifdef DEBUG_PHY_PROC
+	      //#ifdef DEBUG_PHY_PROC
               LOG_W(PHY,"[eNB %d][PDSCH %x/%d] DLSCH retransmissions exhausted, dropping packet\n",eNB->Mod_id,
                     dlsch->rnti,dl_harq_pid[m]);
-#endif
+	      //#endif
 #if defined(MESSAGE_CHART_GENERATOR_PHY)
               MSC_LOG_EVENT(MSC_PHY_ENB, "0 HARQ DLSCH Failed RNTI %"PRIx16" round %u",
                             dlsch->rnti,
