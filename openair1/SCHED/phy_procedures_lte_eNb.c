@@ -93,8 +93,8 @@ extern uint16_t hundred_times_log10_NPRB[100];
 unsigned int max_peak_val;
 int max_sync_pos;
 
-int harq_pid_updated[NUMBER_OF_UE_MAX][8] = {{0}};
-int harq_pid_round[NUMBER_OF_UE_MAX][8] = {{0}};
+//int harq_pid_updated[NUMBER_OF_UE_MAX][8] = {{0}};
+//int harq_pid_round[NUMBER_OF_UE_MAX][8] = {{0}};
 
 //DCI_ALLOC_t dci_alloc[8];
 
@@ -785,7 +785,7 @@ void generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC
 					 P_RNTI,
 					 eNB->UE_stats[(uint8_t)UE_id].DL_pmi_single,
 					 eNB->transmission_mode[(uint8_t)UE_id]<7?0:eNB->transmission_mode[(uint8_t)UE_id]);
-      LOG_D(PHY,"[eNB %"PRIu8"][PDSCH %"PRIx16"/%"PRIu8"] Frame %d subframe %d: Generated dlsch params\n",
+      LOG_I(PHY,"[eNB %"PRIu8"][PDSCH %"PRIx16"/%"PRIu8"] Frame %d subframe %d: Generated dlsch params\n",
 	    eNB->Mod_id,dci_alloc->rnti,eNB->dlsch[(uint8_t)UE_id][0]->current_harq_pid,frame,subframe);
       
       
@@ -1296,6 +1296,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     if (eNB->dlsch[i][0])
       eNB->dlsch[i][0]->subframe_tx[subframe] = 0;
+      eNB->dlsch[i][1]->subframe_tx[subframe] = 0;
   }
 
   /* save old HARQ information needed for PHICH generation */
@@ -1480,23 +1481,21 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++)
     {
       if ((eNB->dlsch[(uint8_t)UE_id][0])&&
-	  (eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
-	  (eNB->dlsch[(uint8_t)UE_id][0]->active == 1)) {
+	  (eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)) {
+
+	if ((eNB->dlsch[(uint8_t)UE_id][0]->active == 1) ||
+	    (eNB->dlsch[(uint8_t)UE_id][1]->active == 1)) {
 
 	pdsch_procedures(eNB,proc,eNB->dlsch[(uint8_t)UE_id][0],eNB->dlsch[(uint8_t)UE_id][1],&eNB->UE_stats[(uint32_t)UE_id],0,num_pdcch_symbols);
 
-
-      }
-
-      else if ((eNB->dlsch[(uint8_t)UE_id][0])&&
-	       (eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
-	       (eNB->dlsch[(uint8_t)UE_id][0]->active == 0)) {
-
+	}
+	else {
 	// clear subframe TX flag since UE is not scheduled for PDSCH in this subframe (so that we don't look for PUCCH later)
 	eNB->dlsch[(uint8_t)UE_id][0]->subframe_tx[subframe]=0;
+	eNB->dlsch[(uint8_t)UE_id][1]->subframe_tx[subframe]=0;
+	}
       }
     }
-
 
 
   // if we have PHICH to generate
@@ -1593,14 +1592,14 @@ void process_HARQ_feedback(uint8_t UE_id,
       dlsch_ACK[0][0] = eNB->ulsch[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[0];
       dlsch_ACK[1][0] = eNB->ulsch[(uint8_t)UE_id]->harq_processes[harq_pid]->o_ACK[1];
       if (dlsch->subframe_tx[subframe_m4]==1)
-	LOG_I(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d,%d on PUSCH for harq_pid %d, subframe %d\n",eNB->Mod_id,
-	      frame,dlsch_ACK[0][0],dlsch_ACK[1][0],dl_harq_pid[0],subframe_m4);
+	LOG_I(PHY,"[eNB %d] Frame %d,%d: Received ACK/NAK %d,%d on PUSCH for harq_pid %d\n",eNB->Mod_id,
+	      frame,subframe_m4,dlsch_ACK[0][0],dlsch_ACK[1][0],dl_harq_pid[0]);
     }
     else {
       dlsch_ACK[0][0] = pucch_payload[0];
       dlsch_ACK[1][0] = pucch_payload[1];
-      LOG_I(PHY,"[eNB %d] Frame %d: Received ACK/NAK %d,%d on PUCCH for harq_pid %d, subframe %d\n",eNB->Mod_id,
-	    frame,dlsch_ACK[0][0],dlsch_ACK[1][0],dl_harq_pid[0],subframe_m4);
+      LOG_I(PHY,"[eNB %d] Frame %d,%d: Received ACK/NAK %d,%d on PUCCH for harq_pid %d\n",eNB->Mod_id,
+	    frame,subframe_m4,dlsch_ACK[0][0],dlsch_ACK[1][0],dl_harq_pid[0]);
       /*
 	if (dlsch_ACK[0]==0)
 	AssertFatal(0,"Exiting on NAK on PUCCH\n");
@@ -1710,9 +1709,6 @@ void process_HARQ_feedback(uint8_t UE_id,
       else
         mp = m;
 
-      dl_harq_pid[m]     = dlsch->harq_ids[dl_subframe];
-      harq_pid_updated[UE_id][dl_harq_pid[m]] = 1;
-
       if ((pucch_sel != 2)&&(pusch_flag == 0)) { // multiplexing
         if ((SR_payload == 1)&&(all_ACKed == 1)) {
           dlsch_ACK[0][m] = 1;
@@ -1724,23 +1720,29 @@ void process_HARQ_feedback(uint8_t UE_id,
 	}
       }
 
-      if (dl_harq_pid[m]<dlsch->Mdlharq) {
 	// we always loop over 2 possible max TBs. If its not used it should habe been disabled
       for (tb=0;tb<2;tb++) {
-	if (tb==0)
+	if (tb==0) {
 	  dlsch_harq_proc = dlsch->harq_processes[dl_harq_pid[m]];
-	else
+	  dl_harq_pid[m]  = dlsch->harq_ids[dl_subframe];
+	}
+	else {
 	  dlsch_harq_proc = dlsch1->harq_processes[dl_harq_pid[m]];
+	  dl_harq_pid[m]  = dlsch->harq_ids[dl_subframe];
+	}
+	//harq_pid_updated[UE_id][dl_harq_pid[m]] = 1;
 
-#ifdef DEBUG_PHY_PROC
-        LOG_D(PHY,"[eNB %d][PDSCH %x/%d] subframe %d, TB %d, status %d, round %d (mcs %d, rv %d, TBS %d)\n",eNB->Mod_id,
+      if (dl_harq_pid[m]<dlsch->Mdlharq) {
+
+	//#ifdef DEBUG_PHY_PROC
+        LOG_I(PHY,"[eNB %d][PDSCH %x/%d] subframe %d, TB %d, status %d, round %d, mcs %d, rv %d, TBS %d, ACK/NAK %d\n",eNB->Mod_id,
               dlsch->rnti,dl_harq_pid[m],dl_subframe,tb,
               dlsch_harq_proc->status,dlsch_harq_proc->round,
               dlsch->harq_processes[dl_harq_pid[m]]->mcs,
               dlsch->harq_processes[dl_harq_pid[m]]->rvidx,
-              dlsch->harq_processes[dl_harq_pid[m]]->TBS);
-
-#endif
+              dlsch->harq_processes[dl_harq_pid[m]]->TBS,
+	      dlsch_ACK[tb][mp]);
+	//#endif
 
         if (dlsch_harq_proc->status==DISABLED) {
           LOG_E(PHY,"dlsch_harq_proc is disabled? \n");
@@ -1823,7 +1825,7 @@ void process_HARQ_feedback(uint8_t UE_id,
           LOG_D(PHY,"[process_HARQ_feedback] Frame %d Setting round to %d for pid %d tb %d (subframe %d)\n",frame,
                 dlsch_harq_proc->round,dl_harq_pid[m],tb,subframe);
 #endif
-	  harq_pid_round[UE_id][dl_harq_pid[m]] = dlsch_harq_proc->round;
+	  //harq_pid_round[UE_id][dl_harq_pid[m]] = dlsch_harq_proc->round;
           // Clear NAK stats and adjust mcs offset
           // after measurement window timer expires
           if (ue_stats->dlsch_sliding_cnt == dlsch->ra_window_size) {
@@ -1867,7 +1869,9 @@ void get_n1_pucch_eNB(PHY_VARS_eNB *eNB,
 
   if (frame_parms->frame_type == FDD ) {
     sf = (subframe<4) ? (subframe+6) : (subframe-4);
-
+    LOG_I(PHY,"[eMB %d] frame %d,%d: subframe_tx[%d]=%d, nCCE %d\n",eNB->Mod_id,frame,subframe,sf,
+	  eNB->dlsch[(uint32_t)UE_id][0]->subframe_tx[sf],
+	  eNB->dlsch[(uint32_t)UE_id][0]->nCCE[sf]);
     if (eNB->dlsch[(uint32_t)UE_id][0]->subframe_tx[sf]>0) {
       *n1_pucch0 = frame_parms->pucch_config_common.n1PUCCH_AN + eNB->dlsch[(uint32_t)UE_id][0]->nCCE[sf];
       *n1_pucch1 = -1;
@@ -2126,6 +2130,7 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
   PUCCH_FMT_t format;
   const int subframe = proc->subframe_rx;
   const int frame = proc->frame_rx;
+  uint32_t subframe_m4,dl_harq_pid[2];
 
   if ((eNB->dlsch[UE_id][0]) &&
       (eNB->dlsch[UE_id][0]->rnti>0) &&
@@ -2146,7 +2151,7 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
                      &n1_pucch2,
                      &n1_pucch3);
 
-    LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d, subframe %d Checking for PUCCH (%d,%d,%d,%d) SR %d\n",
+    LOG_I(PHY,"[eNB %d][PDSCH %x] Frame %d, subframe %d Checking for PUCCH (%d,%d,%d,%d) SR %d\n",
           eNB->Mod_id,eNB->dlsch[UE_id][0]->rnti,
           frame,subframe,
           n1_pucch0,n1_pucch1,n1_pucch2,n1_pucch3,do_SR);
@@ -2225,11 +2230,24 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
         // if SR was detected, use the n1_pucch from SR, else use n1_pucch0
         //          n1_pucch0 = (SR_payload==1) ? eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex:n1_pucch0;
 
-        LOG_D(PHY,"Demodulating PUCCH for ACK/NAK: n1_pucch0 %d (%d), SR_payload %d\n",n1_pucch0,eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex,SR_payload);
+	subframe_m4 = (subframe<4) ? subframe+6 : subframe-4;
+	dl_harq_pid[0] = eNB->dlsch[UE_id][0]->harq_ids[subframe_m4];
+	dl_harq_pid[1] = eNB->dlsch[UE_id][1]->harq_ids[subframe_m4];
+
+	// the second two clauses might not be necessary
+	if ((dl_harq_pid[0]<eNB->dlsch[UE_id][0]->Mdlharq) && 
+	    (dl_harq_pid[1]<eNB->dlsch[UE_id][1]->Mdlharq) &&
+	    (eNB->dlsch[UE_id][0]->harq_processes[dl_harq_pid[0]]->status==ACTIVE) &&
+	    (eNB->dlsch[UE_id][1]->harq_processes[dl_harq_pid[1]]->status==ACTIVE))
+	  format = pucch_format1b;
+	else
+	  format = pucch_format1a;
+
+        LOG_D(PHY,"Demodulating PUCCH format %d for ACK/NAK: n1_pucch0 %d (%d), SR_payload %d\n",format,n1_pucch0,eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex,SR_payload);
 
         if (eNB->abstraction_flag == 0) {
           metric0 = rx_pucch(eNB,
-                             pucch_format1a,
+                             format,
                              UE_id,
                              (uint16_t)n1_pucch0,
                              0, //n2_pucch
@@ -2244,7 +2262,7 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
           metric0 = rx_pucch_emul(eNB,
                                   proc,
                                   UE_id,
-                                  pucch_format1a,
+                                  format,
                                   0,
                                   pucch_payload0);
         }
@@ -2259,7 +2277,7 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
 
           if (eNB->abstraction_flag == 0) {
             metric0=rx_pucch(eNB,
-                             pucch_format1a,
+                             format,
                              UE_id,
                              eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex,
                              0, //n2_pucch
@@ -2274,21 +2292,21 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
             metric0 = rx_pucch_emul(eNB,
                                     proc,
                                     UE_id,
-                                    pucch_format1a,
+                                    format,
                                     0,
                                     pucch_payload0);
           }
 #endif
         }
 
-#ifdef DEBUG_PHY_PROC
-        LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d pucch1a (FDD) payload %d (metric %d)\n",
-            eNB->Mod_id,
-            eNB->dlsch[UE_id][0]->rnti,
-            frame,subframe,
-            pucch_payload0[0],metric0);
-#endif
-
+	//#ifdef DEBUG_PHY_PROC
+        LOG_I(PHY,"[eNB %d][PDSCH %x] Frame %d,%d format %d (FDD) harq_pid %d (%d), payload %d,%d (metric %d)\n",
+	      eNB->Mod_id,
+	      eNB->dlsch[UE_id][0]->rnti,
+	      frame,subframe,format,dl_harq_pid[0],dl_harq_pid[1],
+	      pucch_payload0[0],pucch_payload0[1],metric0);
+	//#endif
+      
         process_HARQ_feedback(UE_id,eNB,proc,
                             0,// pusch_flag
                             pucch_payload0,

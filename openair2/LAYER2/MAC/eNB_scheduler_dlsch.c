@@ -868,10 +868,10 @@ schedule_ue_spec(
 	UE_list->UE_template[CC_id][UE_id].mcs[0][harq_pid]=0;
 	UE_list->UE_template[CC_id][UE_id].mcs[1][harq_pid]=0;
 
-	LOG_I(MAC,"Rank Indicator%d\n",eNB_UE_stats->rank+1);
+	LOG_I(MAC,"Rank Indicator %d, cqi %d, %d\n",eNB_UE_stats->rank+1,eNB_UE_stats->DL_cqi[0],eNB_UE_stats->DL_cqi[1]);
 
 	// loop over all transport blocks
-	for (tb=0;tb<2/*eNB_UE_stats->rank+1*/;tb++) {
+	for (tb=0;tb<eNB_UE_stats->rank+1;tb++) {
 
         rlc_status.bytes_in_buffer = 0;
         // Now check RLC information to compute number of required RBs
@@ -910,7 +910,7 @@ schedule_ue_spec(
           sdu_lengths[0]=0;
 
           if (rlc_status.bytes_in_buffer > 0) {  // There is DCCH to transmit
-            LOG_D(MAC,"[eNB %d] Frame %d, DL-DCCH->DLSCH CC_id %d, Requesting %d bytes from RLC (RRC message)\n",
+            LOG_I(MAC,"[eNB %d] Frame %d, DL-DCCH->DLSCH CC_id %d, Requesting %d bytes from RLC (RRC message)\n",
                   module_idP,frameP,CC_id,TBS-header_len_dcch);
             sdu_lengths[0] = mac_rlc_data_req(
                                               module_idP,
@@ -1021,7 +1021,7 @@ schedule_ue_spec(
 
             if (rlc_status.bytes_in_buffer > 0) {
 
-              LOG_D(MAC,"[eNB %d][USER-PLANE DEFAULT DRB] Frame %d : DTCH->DLSCH, Requesting %d bytes from RLC (lcid %d total hdr len %d)\n",
+              LOG_I(MAC,"[eNB %d][USER-PLANE DEFAULT DRB] Frame %d : DTCH->DLSCH, Requesting %d bytes from RLC (lcid %d total hdr len %d)\n",
                     module_idP,frameP,TBS-header_len_dcch-sdu_length_total-header_len_dtch,lcid, header_len_dtch);
               sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP,
                                                        rnti,
@@ -1145,8 +1145,8 @@ schedule_ue_spec(
           LOG_D(MAC,"dlsch_mcs before and after the rate matching = (%d, %d)\n",eNB_UE_stats->dlsch_mcs1, mcs);
 
 	  //#ifdef DEBUG_eNB_SCHEDULER
-          LOG_I(MAC,"[eNB %d] CC_id %d Generated DLSCH header (mcs %d, TBS %d, nb_rb %d)\n",
-                module_idP,CC_id,mcs,TBS,nb_rb);
+          LOG_I(MAC,"[eNB %d] CC_id %d Generated DLSCH header (mcs %d, TB %d, TBS %d, nb_rb %d)\n",
+                module_idP,CC_id,mcs,tb,TBS,nb_rb);
           // msg("[MAC][eNB ] Reminder of DLSCH with random data %d %d %d %d \n",
           //  TBS, sdu_length_total, offset, TBS-sdu_length_total-offset);
 	  //#endif
@@ -1248,6 +1248,7 @@ schedule_ue_spec(
           UE_list->UE_template[CC_id][UE_id].oldNDI[tb][harq_pid]=1-UE_list->UE_template[CC_id][UE_id].oldNDI[tb][harq_pid];
 
 	} else {
+	  LOG_I(MAC,"CC_id %d Frame %d, subframeP %d, TB %d, UE %d: nothing to transmit.\n",CC_id, frameP,subframeP,tb,UE_id);
 	  UE_list->UE_template[CC_id][UE_id].TB_active[tb][harq_pid]=0;
 	  UE_list->UE_template[CC_id][UE_id].mcs[tb][harq_pid]=0;
 	}

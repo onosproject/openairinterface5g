@@ -362,7 +362,7 @@ int main(int argc, char **argv)
   UE->frame_parms.pucch_config_common.nRB_CQI          = 4;
   UE->frame_parms.pucch_config_common.nCS_AN           = 6;
 
-  pucch_payload = 0;
+  pucch_payload = taus()&2;
 
   generate_pucch1x(UE->common_vars.txdataF,
 		   frame_parms,

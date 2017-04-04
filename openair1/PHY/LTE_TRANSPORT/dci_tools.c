@@ -1959,6 +1959,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
     dlsch1_harq = dlsch1->harq_processes[harq_pid];
 
     dlsch0->subframe_tx[subframe] = 1;
+    dlsch1->subframe_tx[subframe] = 1;
 
     dlsch0->current_harq_pid = harq_pid;
     dlsch1->current_harq_pid = harq_pid;
