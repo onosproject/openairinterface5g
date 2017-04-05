@@ -135,6 +135,7 @@ extern int transmission_mode;
 extern int oaisim_flag;
 
 //pthread_t                       main_eNB_thread;
+pthread_t	if_stats_thread;
 
 time_stats_t softmodem_stats_mt; // main thread
 time_stats_t softmodem_stats_hw; //  hw acquisition
@@ -668,6 +669,33 @@ static void wait_system_ready (char *message, volatile int *start_flag) {
 }
 #endif
 
+//Thread for printing stats
+
+static void* print_stats_thread( void* param ) {
+
+	eNB_rxtx_proc_t *proc = (eNB_rxtx_proc_t*)param;
+
+	PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
+	
+	printf("[eNB] Launching print_stats thread...\n");
+
+	reset_meas(&eNB->send_if4p5_stats);
+	reset_meas(&eNB->recv_if4p5_stats);
+	reset_meas(&eNB->trx_write_if4p5_stats);
+	reset_meas(&eNB->trx_read_if4p5_stats);
+
+	reset_meas(&eNB->send_if4p5_comp_stats);
+
+	while (!oai_exit) {
+		sleep(2);
+		print_meas(&eNB->send_if4p5_stats, "send_if4p5_stats", NULL, NULL);
+		print_meas(&eNB->recv_if4p5_stats, "recv_if4p5_stats", NULL, NULL);
+		print_meas(&eNB->trx_write_if4p5_stats, "trx_write_if4p5_stats", NULL, NULL);
+                print_meas(&eNB->trx_read_if4p5_stats, "trx_read_if4p5_stats", NULL, NULL);
+		print_meas(&eNB->send_if4p5_comp_stats, "send_if4p5_comp_stats", NULL, NULL);
+		printf("\n");
+	}
+}
 
 // asynchronous UL with IF5 (RCC,RAU,eNodeB_BBU)
 void fh_if5_asynch_UL(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
@@ -967,7 +995,7 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   else {
 
     if (proc->timestamp_rx - old_ts != fp->samples_per_tti) {
-      LOG_I(PHY,"rx_rf: rfdevice timing drift of %"PRId64" samples\n",proc->timestamp_rx - old_ts - fp->samples_per_tti);
+      LOG_I(PHY,"xx_rf: rfdevice timing drift of %"PRId64" samples\n",proc->timestamp_rx - old_ts - fp->samples_per_tti);
       eNB->ts_offset += (proc->timestamp_rx - old_ts - fp->samples_per_tti);
       proc->timestamp_rx = ts-eNB->ts_offset;
     }
@@ -1808,9 +1836,11 @@ void init_eNB_proc(int inst) {
     if ((eNB->node_timing == synch_to_other) ||
 	(eNB->node_function == NGFI_RRU_IF5) ||
 	(eNB->node_function == NGFI_RRU_IF4p5))
-
-
       pthread_create( &proc->pthread_asynch_rxtx, attr_asynch, eNB_thread_asynch_rxtx, &eNB->proc );
+
+
+    if(eNB->node_function == NGFI_RRU_IF4p5 || eNB->node_function == NGFI_RCC_IF4p5)
+                pthread_create( &if_stats_thread, NULL, print_stats_thread, &eNB->proc);
 
     char name[16];
     if (eNB->single_thread_flag == 0) {
