@@ -5,14 +5,16 @@ NB-IoT_Docs Folder
 
             1. images - The figures of the Message Sequence Chart compared LTE with NB-IoT, in Attach/MT/MO.
             
-            2. NB_MAC_Design_Document - This document is mainly describing about the NB-IoT MAC module design based on OAI in the system/block/process/procedure side.
+            2. NB_L2_interface - Describe the interface between MAC and other layers (mainly PHY layer), and show the basic concept for development.
             
-            3. NB_MAC_Module_List - This document is mainly descrbing about the difference beween MAC in LTE and NB-IoT from 3gpp specification.
+            3. NB_MAC_Design_Document - This document is mainly describing about the NB-IoT MAC module design based on OAI in the system/block/process/procedure side.
             
-            4. NB_MAC_SAP - This document is mainly describling about the Service Access Point (primitives) between the MAC and other layers in OAI.
+            4. NB_MAC_Module_List - This document is mainly descrbing about the difference beween MAC in LTE and NB-IoT from 3gpp specification.
+            
+            5. NB_MAC_SAP - This document is mainly describling about the Service Access Point (primitives) between the MAC and other layers in OAI.
     
 
-If there is anything wrong, please do not hesitate to contact us:
+If there is anything wrong, please do not hesitate to contact us, Thanks!
 
 Advisor : Prof.Ray Guang, Cheng 	crg@mail.ntust.edu.tw
 
