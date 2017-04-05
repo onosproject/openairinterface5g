@@ -1,0 +1,27 @@
+<b>NB-IoT_Docs Folder</b>
+    BMW lab./NTUST
+
+        Document list:
+
+            1. images - The figures of the Message Sequence Chart compared LTE with NB-IoT, in Attach/MT/MO.
+            
+            2. NB_MAC_Design_Document - This document is mainly describing about the NB-IoT MAC module design based on OAI in the system/block/process/procedure side.
+            
+            3. NB_MAC_Module_List - This document is mainly descrbing about the difference beween MAC in LTE and NB-IoT from 3gpp specification.
+            
+            4. NB_MAC_SAP - This document is mainly describling about the Service Access Point (primitives) between the MAC and other layers in OAI.
+    
+
+If there is anything wrong, please do not hesitate to contact us:
+
+Advisor : Prof.Ray Guang, Cheng 	crg@mail.ntust.edu.tw
+
+The response block for each person:
+
+Scheduling:Eric	                    qqq1993qqq029@gmail.com
+DownlinkProcedure:Xavior/Alan       sephiroth7277@gmail.com/Rely4679@gmail.com
+UplinkProcedure:Nick                nick133371@gmail.com
+Config:Kenny                        kroempa@gmail.com
+SystemInformation:Calvin            calvin820119@gmail.com
+
+                                                                                                                                                 20170405
