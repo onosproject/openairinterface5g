@@ -175,7 +175,7 @@ init_SI(
 
   eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1 = 0;
   eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23 = 0;
-  eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].SIB1 = (uint8_t*) malloc16(32);
+  eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].SIB1 = (uint8_t*) malloc16(32);//allocation of buffer memory
 
   /*
      printf ("before SIB1 init : Nid_cell %d\n", mac_xface->lte_frame_parms->Nid_cell);
@@ -189,9 +189,9 @@ init_SI(
           ctxt_pP->module_id,
           CC_id,
           mac_xface->frame_parms,
-          (uint8_t*)eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].SIB1,
-          &eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].siblock1,
-          &eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sib1
+          (uint8_t*)eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].SIB1, //buffer
+          &eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].siblock1, //BCCH_DL_SCH message (parametro in un array)
+          &eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sib1 //SystemInformationBlockType1 (puntatore dentro un array)
 #if defined(ENABLE_ITTI)
           , configuration
 #endif
@@ -856,7 +856,7 @@ rrc_eNB_process_RRCConnectionSetupComplete(
         PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel UL-DCCH, " "processing RRCConnectionSetupComplete from UE (SRB1 Active)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
-  ue_context_pP->ue_context.Srb1.Active=1;  
+  ue_context_pP->ue_context.Srb1.Active=1;  //attivo SRB1
   T(T_ENB_RRC_CONNECTION_SETUP_COMPLETE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
@@ -1446,8 +1446,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
   struct SRB_ToAddMod                *SRB2_config                      = NULL;
   struct SRB_ToAddMod__rlc_Config    *SRB2_rlc_config                  = NULL;
   struct SRB_ToAddMod__logicalChannelConfig *SRB2_lchan_config         = NULL;
-  struct LogicalChannelConfig__ul_SpecificParameters
-      *SRB2_ul_SpecificParameters       = NULL;
+  struct LogicalChannelConfig__ul_SpecificParameters   *SRB2_ul_SpecificParameters       = NULL;
   SRB_ToAddModList_t*                 SRB_configList = ue_context_pP->ue_context.SRB_configList;
   SRB_ToAddModList_t                 **SRB_configList2                  = NULL;
 
@@ -1523,7 +1522,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 
   // Configure SRB2
   /// SRB2
-  SRB_configList2=&ue_context_pP->ue_context.SRB_configList2[xid];
+  SRB_configList2=&ue_context_pP->ue_context.SRB_configList2[xid]; //why no asterix?
   if (*SRB_configList2) {
     free(*SRB_configList2);
   }
@@ -1575,6 +1574,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
   if (*DRB_configList) {
     free(*DRB_configList);
   }
+  //DRB_ConfigList era già stato linkato a ue_context al momento della dichiarazione
   *DRB_configList = CALLOC(1, sizeof(**DRB_configList));
   memset(*DRB_configList, 0, sizeof(**DRB_configList));
 
@@ -2082,7 +2082,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
   size = do_RRCConnectionReconfiguration(ctxt_pP,
                                          buffer,
                                          xid,   //Transaction_id,
-                                         (SRB_ToAddModList_t*)*SRB_configList2, // SRB_configList
+                                         (SRB_ToAddModList_t*)*SRB_configList2,
                                          (DRB_ToAddModList_t*)*DRB_configList,
                                          (DRB_ToReleaseList_t*)NULL,  // DRB2_list,
                                          (struct SPS_Config*)NULL,    // *sps_Config,
@@ -2542,6 +2542,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   struct MeasConfig__speedStatePars  *Sparams;
   CellsToAddMod_t                    *CellToAdd;
   CellsToAddModList_t                *CellsToAddModList;
+
   // srb 1: for HO
   struct SRB_ToAddMod                *SRB1_config;
   struct SRB_ToAddMod__rlc_Config    *SRB1_rlc_config;
@@ -3447,6 +3448,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
   uint8_t                            *kRRCint = NULL;
   uint8_t                            *kUPenc = NULL;
 
+
   DRB_ToAddModList_t*                 DRB_configList = ue_context_pP->ue_context.DRB_configList2[xid];
   SRB_ToAddModList_t*                 SRB_configList = ue_context_pP->ue_context.SRB_configList2[xid];
 
@@ -3562,7 +3564,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
   // Loop through DRBs and establish if necessary
 
   if (DRB_configList != NULL) {
-    for (i = 0; i < DRB_configList->list.count; i++) {  // num max DRB (11-3-8)
+    for (i = 0; i < DRB_configList->list.count; i++) {  // num max DRB (11-3-8) (for NB_IoT is 2 DRB)
       if (DRB_configList->list.array[i]) {
 	drb_id = (int)DRB_configList->list.array[i]->drb_Identity;
         LOG_I(RRC,
@@ -3674,7 +3676,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
 
         } else {        // remove LCHAN from MAC/PHY
 
-          if (ue_context_pP->ue_context.DRB_active[drb_id] == 1) {
+          if (ue_context_pP->ue_context.DRB_active[drb_id] == 1) { //???
             // DRB has just been removed so remove RLC + PDCP for DRB
             /*      rrc_pdcp_config_req (ctxt_pP->module_id, frameP, 1, CONFIG_ACTION_REMOVE,
                (ue_mod_idP * NB_RB_MAX) + DRB2LCHAN[i],UNDEF_SECURITY_MODE);
@@ -3751,7 +3753,7 @@ rrc_eNB_generate_RRCConnectionSetup(
 			  (fp->nb_antenna_ports_eNB==2)?2:1, //at this point we do not have the UE capability information, so it can only be TM1 or TM2
                           rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),
                           fp,
-                          SRB_configList,
+                          SRB_configList, //qui le mando come argomento puntatore di puntatore così vengono configurate
                           &ue_context_pP->ue_context.physicalConfigDedicated);
 
 #ifdef RRC_MSG_PRINT
@@ -3769,6 +3771,7 @@ rrc_eNB_generate_RRCConnectionSetup(
 
   if (*SRB_configList != NULL) {
     for (cnt = 0; cnt < (*SRB_configList)->list.count; cnt++) {
+    	//sta lavorando solo con SRB1--> perchè RRCConnectionSetup setta solo SRB1 (per NB_IoT??)
       if ((*SRB_configList)->list.array[cnt]->srb_Identity == 1) {
         SRB1_config = (*SRB_configList)->list.array[cnt];
 
@@ -3776,9 +3779,10 @@ rrc_eNB_generate_RRCConnectionSetup(
           if (SRB1_config->logicalChannelConfig->present ==
               SRB_ToAddMod__logicalChannelConfig_PR_explicitValue) {
             SRB1_logicalChannelConfig = &SRB1_config->logicalChannelConfig->choice.explicitValue;
-          } else {
-            SRB1_logicalChannelConfig = &SRB1_logicalChannelConfig_defaultValue;
           }
+          else {
+            SRB1_logicalChannelConfig = &SRB1_logicalChannelConfig_defaultValue;
+          	  }
         } else {
           SRB1_logicalChannelConfig = &SRB1_logicalChannelConfig_defaultValue;
         }
@@ -4128,6 +4132,10 @@ rrc_eNB_decode_ccch(
             ((rrcConnectionReestablishmentRequest->reestablishmentCause == ReestablishmentCause_otherFailure) ?    "Other Failure" :
              (rrcConnectionReestablishmentRequest->reestablishmentCause == ReestablishmentCause_handoverFailure) ? "Handover Failure" :
              "reconfigurationFailure"));
+
+
+      //qui in realtà andrà gestita diversamente senza reject sempre
+
       /*{
       uint64_t                            c_rnti = 0;
 
@@ -4147,6 +4155,7 @@ rrc_eNB_decode_ccch(
       rrc_eNB_generate_RRCConnectionReestablishmentReject(ctxt_pP,
                        rrc_eNB_get_ue_context(&eNB_rrc_inst[ctxt_pP->module_id], ctxt_pP->rnti),
                        CC_id);
+
       break;
 
     case UL_CCCH_MessageType__c1_PR_rrcConnectionRequest:
@@ -4313,7 +4322,7 @@ rrc_eNB_decode_ccch(
       Idx = DCCH;
       // SRB1
       ue_context_p->ue_context.Srb1.Active = 1;
-      ue_context_p->ue_context.Srb1.Srb_info.Srb_id = Idx;
+      ue_context_p->ue_context.Srb1.Srb_info.Srb_id = Idx; //module_id
       memcpy(&ue_context_p->ue_context.Srb1.Srb_info.Lchan_desc[0],
              &DCCH_LCHAN_DESC,
              LCHAN_DESC_SIZE);
@@ -4321,7 +4330,7 @@ rrc_eNB_decode_ccch(
              &DCCH_LCHAN_DESC,
              LCHAN_DESC_SIZE);
 
-      // SRB2: set  it to go through SRB1 with id 1 (DCCH)
+      // SRB2: set  it to go through SRB1 with id 1 (DCCH) ????
       ue_context_p->ue_context.Srb2.Active = 1;
       ue_context_p->ue_context.Srb2.Srb_info.Srb_id = Idx;
       memcpy(&ue_context_p->ue_context.Srb2.Srb_info.Lchan_desc[0],

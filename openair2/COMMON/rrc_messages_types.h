@@ -84,6 +84,7 @@ typedef struct RrcStateInd_s {
 } RrcStateInd;
 
 // eNB: ENB_APP -> RRC messages
+//these parameters are set by the configuration files?
 typedef struct RrcConfigurationReq_s {
   uint32_t            cell_identity;
 
@@ -103,8 +104,8 @@ typedef struct RrcConfigurationReq_s {
   */
   int16_t                 nb_cc;
   lte_frame_type_t        frame_type[MAX_NUM_CCs];
-  uint8_t                 tdd_config[MAX_NUM_CCs];
-  uint8_t                 tdd_config_s[MAX_NUM_CCs];
+  uint8_t                 tdd_config[MAX_NUM_CCs]; //not present in NB-IoT
+  uint8_t                 tdd_config_s[MAX_NUM_CCs]; //not present in NB-IoT
   lte_prefix_type_t       prefix_type[MAX_NUM_CCs];
   int16_t                 eutra_band[MAX_NUM_CCs];
   uint32_t                downlink_frequency[MAX_NUM_CCs];
@@ -114,19 +115,26 @@ typedef struct RrcConfigurationReq_s {
   int16_t                 N_RB_DL[MAX_NUM_CCs];// for testing, change later
   int                   nb_antennas_tx[MAX_NUM_CCs];
   int                     nb_antennas_rx[MAX_NUM_CCs];
+  //PRACH
   long                    prach_root[MAX_NUM_CCs];
   long                    prach_config_index[MAX_NUM_CCs];
   BOOLEAN_t               prach_high_speed[MAX_NUM_CCs];
   long                    prach_zero_correlation[MAX_NUM_CCs];
   long                    prach_freq_offset[MAX_NUM_CCs];
+  //NPRACH for NB-IoT---
+  //...completely different parameter and structure for NPRACH
+  //-----------
+  //PUCCH
   long                    pucch_delta_shift[MAX_NUM_CCs];
   long                    pucch_nRB_CQI[MAX_NUM_CCs];
   long                    pucch_nCS_AN[MAX_NUM_CCs];
 #if !defined(Rel10) && !defined(Rel14)
   long                    pucch_n1_AN[MAX_NUM_CCs];
 #endif
+  //PDSCH
   long                    pdsch_referenceSignalPower[MAX_NUM_CCs];
   long                    pdsch_p_b[MAX_NUM_CCs];
+  //PUSCH
   long                    pusch_n_SB[MAX_NUM_CCs];
   long                    pusch_hoppingMode[MAX_NUM_CCs];
   long                    pusch_hoppingOffset[MAX_NUM_CCs];
@@ -137,35 +145,44 @@ typedef struct RrcConfigurationReq_s {
   long                    pusch_nDMRS1[MAX_NUM_CCs];
   long                    phich_duration[MAX_NUM_CCs];
   long                    phich_resource[MAX_NUM_CCs];
+  //SRS
   BOOLEAN_t               srs_enable[MAX_NUM_CCs];
   long                    srs_BandwidthConfig[MAX_NUM_CCs];
   long                    srs_SubframeConfig[MAX_NUM_CCs];
   BOOLEAN_t               srs_ackNackST[MAX_NUM_CCs];
   BOOLEAN_t               srs_MaxUpPts[MAX_NUM_CCs];
+  //uplink power control
   long                    pusch_p0_Nominal[MAX_NUM_CCs];
   long                    pusch_alpha[MAX_NUM_CCs];
   long                    pucch_p0_Nominal[MAX_NUM_CCs];
   long                    msg3_delta_Preamble[MAX_NUM_CCs];
   long                    ul_CyclicPrefixLength[MAX_NUM_CCs];
+
+  //related to UplinkPowerControl IE
   e_DeltaFList_PUCCH__deltaF_PUCCH_Format1                    pucch_deltaF_Format1[MAX_NUM_CCs];
   e_DeltaFList_PUCCH__deltaF_PUCCH_Format1b                   pucch_deltaF_Format1b[MAX_NUM_CCs];
   e_DeltaFList_PUCCH__deltaF_PUCCH_Format2                    pucch_deltaF_Format2[MAX_NUM_CCs];
   e_DeltaFList_PUCCH__deltaF_PUCCH_Format2a                   pucch_deltaF_Format2a[MAX_NUM_CCs];
   e_DeltaFList_PUCCH__deltaF_PUCCH_Format2b                   pucch_deltaF_Format2b[MAX_NUM_CCs];
-  long                    rach_numberOfRA_Preambles[MAX_NUM_CCs];
-  BOOLEAN_t               rach_preamblesGroupAConfig[MAX_NUM_CCs];
-  long                    rach_sizeOfRA_PreamblesGroupA[MAX_NUM_CCs];
-  long                    rach_messageSizeGroupA[MAX_NUM_CCs];
-  e_RACH_ConfigCommon__preambleInfo__preamblesGroupAConfig__messagePowerOffsetGroupB                    rach_messagePowerOffsetGroupB[MAX_NUM_CCs];
+
+  long                    rach_numberOfRA_Preambles[MAX_NUM_CCs];// not present in NB-IoT SIB2
+  BOOLEAN_t               rach_preamblesGroupAConfig[MAX_NUM_CCs]; // not present in NB-IoT SIB2
+  long                    rach_sizeOfRA_PreamblesGroupA[MAX_NUM_CCs];// not presen in NB-IoT SIB2
+  long                    rach_messageSizeGroupA[MAX_NUM_CCs]; // not presen in NB-IoT SIB2
+  e_RACH_ConfigCommon__preambleInfo__preamblesGroupAConfig__messagePowerOffsetGroupB   rach_messagePowerOffsetGroupB[MAX_NUM_CCs];// not presen in NB-IoT SIB2
   long                    rach_powerRampingStep[MAX_NUM_CCs];
   long                    rach_preambleInitialReceivedTargetPower[MAX_NUM_CCs];
-  long                    rach_preambleTransMax[MAX_NUM_CCs];
-  long                    rach_raResponseWindowSize[MAX_NUM_CCs];
-  long                    rach_macContentionResolutionTimer[MAX_NUM_CCs];
-  long                    rach_maxHARQ_Msg3Tx[MAX_NUM_CCs];
+  long                    rach_preambleTransMax[MAX_NUM_CCs]; // not present in NB-IoT SIB2
+  long                    rach_raResponseWindowSize[MAX_NUM_CCs]; // not present in NB-IoT SIB2
+  long                    rach_macContentionResolutionTimer[MAX_NUM_CCs]; // not present in NB-IoT SIB2
+  long                    rach_maxHARQ_Msg3Tx[MAX_NUM_CCs];// not present in NB-IoT SIB2
+
+  //BCCH
   long                    bcch_modificationPeriodCoeff[MAX_NUM_CCs];
+  //PCCH
   long                    pcch_defaultPagingCycle[MAX_NUM_CCs];
   long                    pcch_nB[MAX_NUM_CCs];
+
   long                    ue_TimersAndConstants_t300[MAX_NUM_CCs];
   long                    ue_TimersAndConstants_t301[MAX_NUM_CCs];
   long                    ue_TimersAndConstants_t310[MAX_NUM_CCs];
@@ -173,6 +190,66 @@ typedef struct RrcConfigurationReq_s {
   long                    ue_TimersAndConstants_n310[MAX_NUM_CCs];
   long                    ue_TimersAndConstants_n311[MAX_NUM_CCs];
   long                    ue_TransmissionMode[MAX_NUM_CCs];
+
+  //NB-IoT------------------------------------------------------------
+
+  //RACH
+  long					  rach_raResponseWindowSize_NB[MAX_NUM_CCs];
+  long					  rach_macContentionResolutionTimer_NB[MAX_NUM_CCs];
+  long					  rach_powerRampingStep_NB[MAX_NUM_CCs];
+  long					  rach_preambleInitialReceivedTargetPower_NB[MAX_NUM_CCs];
+  long					  preambleTransMax_CE_NB[MAX_NUM_CCs]; //da ricontrollare se va bene il tipo
+  //BCCH
+  long					  bcch_modificationPeriodCoeff_NB[MAX_NUM_CCs];
+  //PCCH
+  long					  pcch_defaultPagingCycle_NB[MAX_NUM_CCs];
+  long					  pcch_nB_NB[MAX_NUM_CCs];
+  long					  pcch_npdcch_NumRepetitionPaging_NB[MAX_NUM_CCs];
+  //NPRACH
+  long					  nprach_CP_Length[MAX_NUM_CCs];
+  long					  nprach_rsrp_range_NB[MAX_NUM_CCs];
+  long					  nprach_Periodicity[MAX_NUM_CCs];
+  long					  nprach_StartTime[MAX_NUM_CCs];
+  long					  nprach_SubcarrierOffset[MAX_NUM_CCs];
+  long					  nprach_NumSubcarriers[MAX_NUM_CCs];
+  long					  nprach_SubcarrierMSG3_RangeStart[MAX_NUM_CCs];
+  long					  maxNumPreambleAttemptCE_NB[MAX_NUM_CCs];
+  long					  numRepetitionsPerPreambleAttempt_NB[MAX_NUM_CCs];
+  long					  npdcch_NumRepetitions_RA[MAX_NUM_CCs];
+  long					  npdcch_StartSF_CSS_RA[MAX_NUM_CCs];
+  long					  npdcch_Offset_RA[MAX_NUM_CCs];
+  //NPDSCH
+  long					  npdsch_nrs_Power[MAX_NUM_CCs];
+  //NPUSCH
+  long					  npusch_ack_nack_numRepetitions_NB[MAX_NUM_CCs];
+  long					  npusch_srs_SubframeConfig_NB[MAX_NUM_CCs];
+  long					  npusch_threeTone_CyclicShift_r13[MAX_NUM_CCs];
+  long					  npusch_sixTone_CyclicShift_r13[MAX_NUM_CCs];
+  BOOLEAN_t				  npusch_groupHoppingEnabled[MAX_NUM_CCs];
+  long					  npusch_groupAssignmentNPUSCH_r13[MAX_NUM_CCs];
+
+   /*NPUCCH
+   * all data are sent over the NPUSCH. This includes also the UL control information (UCI), which is transmitted using a different format.
+   * Consequently there is no equivalent to the PUCCH of LTE in NB-IoT.
+   */
+
+  //DL_GapConfig
+  long					  dl_GapThreshold_NB[MAX_NUM_CCs];
+  long	 				  dl_GapPeriodicity_NB[MAX_NUM_CCs];
+  long	 				  dl_GapDurationCoeff_NB[MAX_NUM_CCs];
+  //Uplink power control Common
+  long					  npusch_p0_NominalNPUSCH_r13[MAX_NUM_CCs];
+  long					  npusch_alpha_r13[MAX_NUM_CCs];
+  long					  deltaPreambleMsg3_r13[MAX_NUM_CCs];
+  //UE timers and constants
+  long					  ue_TimersAndConstants_t300_NB[MAX_NUM_CCs];
+  long					  ue_TimersAndConstants_t301_NB[MAX_NUM_CCs];
+  long					  ue_TimersAndConstants_t310_NB[MAX_NUM_CCs];
+  long					  ue_TimersAndConstants_t311_NB[MAX_NUM_CCs];
+  long					  ue_TimersAndConstants_n310_NB[MAX_NUM_CCs];
+  long					  ue_TimersAndConstants_n311_NB[MAX_NUM_CCs];
+  //---------------------------------------------------------------------------
+
 } RrcConfigurationReq;
 
 // UE: NAS -> RRC messages
