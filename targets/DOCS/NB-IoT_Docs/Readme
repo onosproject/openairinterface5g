@@ -12,6 +12,8 @@ NB-IoT_Docs Folder
             4. NB_MAC_Module_List - This document is mainly descrbing about the difference beween MAC in LTE and NB-IoT from 3gpp specification.
             
             5. NB_MAC_SAP - This document is mainly describling about the Service Access Point (primitives) between the MAC and other layers in OAI.
+            
+            6. NB_MAC_Fapi_interface - This document is mainly for the FAPI style interface between OAI MAC and PHY for NB-IoT, and described how old messages in OAI go through in the FAPI style interface.
     
 
 If there is anything wrong, please do not hesitate to contact us, Thanks!
