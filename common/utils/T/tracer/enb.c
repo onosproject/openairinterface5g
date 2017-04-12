@@ -40,8 +40,8 @@ typedef struct {
   logger *pucch1_energy_ue_energy_logger;
   logger *pucch_iq_ue_logger;
   logger *dl_dci_logger[8];
-  logger *dl_ack_logger[8];
-  logger *dl_nack_logger[8];
+  logger *dl_ack_logger[2][8];
+  logger *dl_nack_logger[2][8];
   logger *ul_dci_logger[8];
   logger *ul_dci_retransmission_logger[8];
   logger *ul_ack_logger[8];
@@ -113,7 +113,18 @@ static void *gui_thread(void *_g)
   return NULL;
 }
 
-static filter *ticktime_filter(void *database, char *event, int i, int ue, int tb)
+static filter *ticktime_filter(void *database, char *event, int i, int ue)
+{
+  /* filter is harq_pid == i && UE_id == ue && eNB_id == 0" */
+  return
+    filter_and(
+      filter_eq(filter_evarg(database, event, "harq_pid"), filter_int(i)),
+      filter_and(
+        filter_eq(filter_evarg(database, event, "UE_id"), filter_int(ue)),
+	filter_eq(filter_evarg(database, event, "eNB_ID"), filter_int(0))));
+}
+
+static filter *ticktime_filter_tb(void *database, char *event, int i, int ue, int tb)
 {
   /* filter is "tb == tb && harq_pid == i && UE_id == ue && eNB_id == 0" */
   return
@@ -168,23 +179,25 @@ static void set_current_ue(gui *g, enb_data *e, int ue)
       filter_eq(
         filter_evarg(e->database, "ENB_PHY_PUCCH_1AB_IQ", "UE_ID"),
         filter_int(ue)));
-  for (tb=0; tb<2; tb++)
   for (i = 0; i < 8; i++) {
     logger_set_filter(e->e->dl_dci_logger[i],
-		      ticktime_filter(e->database, "ENB_PHY_DLSCH_UE_DCI", i, ue,tb));
-    logger_set_filter(e->e->dl_ack_logger[i],
-		      ticktime_filter(e->database, "ENB_PHY_DLSCH_UE_ACK", i, ue,tb));
-    logger_set_filter(e->e->dl_nack_logger[i],
-		      ticktime_filter(e->database, "ENB_PHY_DLSCH_UE_NACK", i, ue,tb));
+		      ticktime_filter(e->database, "ENB_PHY_DLSCH_UE_DCI", i, ue));
+    for (tb=0; tb<2; tb++)
+      {
+	logger_set_filter(e->e->dl_ack_logger[tb][i],
+			  ticktime_filter_tb(e->database, "ENB_PHY_DLSCH_UE_ACK", i, ue,tb));
+	logger_set_filter(e->e->dl_nack_logger[tb][i],
+			  ticktime_filter_tb(e->database, "ENB_PHY_DLSCH_UE_NACK", i, ue,tb));
+      }
     logger_set_filter(e->e->ul_dci_logger[i],
-		      ticktime_filter(e->database, "ENB_PHY_ULSCH_UE_DCI", i, ue,tb));
+		      ticktime_filter(e->database, "ENB_PHY_ULSCH_UE_DCI", i, ue));
     logger_set_filter(e->e->ul_dci_retransmission_logger[i],
 		      ticktime_filter(e->database,
-				      "ENB_PHY_ULSCH_UE_NO_DCI_RETRANSMISSION", i, ue,tb));
+				      "ENB_PHY_ULSCH_UE_NO_DCI_RETRANSMISSION", i, ue));
     logger_set_filter(e->e->ul_ack_logger[i],
-		      ticktime_filter(e->database, "ENB_PHY_ULSCH_UE_ACK", i, ue,tb));
+		      ticktime_filter(e->database, "ENB_PHY_ULSCH_UE_ACK", i, ue));
     logger_set_filter(e->e->ul_nack_logger[i],
-		      ticktime_filter(e->database, "ENB_PHY_ULSCH_UE_NACK", i, ue,tb));
+		      ticktime_filter(e->database, "ENB_PHY_ULSCH_UE_NACK", i, ue));
   }
   logger_set_filter(e->e->dl_mcs_logger,
       filter_eq(
@@ -457,24 +470,23 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database,
   subview = new_subview_ticktime(timeview,9+8,new_color(g,"#bbb"), 3600*1000);
   logger_add_view(timelog, subview);
   /* DL DCI */
-  for (tb = 0; tb < 2; tb++)
   for (i = 0; i < 8; i++) {
     timelog = new_ticklog(h, database, "ENB_PHY_DLSCH_UE_DCI",
         "frame", "subframe");
-    subview = new_subview_ticktime(timeview, i+1+tb*8,
+    subview = new_subview_ticktime(timeview, i+1+0*8,
         new_color(g,"#55f"), 3600*1000);
     logger_add_view(timelog, subview);
     e->dl_dci_logger[i] = timelog;
   }
   /* DL ACK */
-  for (tb = 0; tb < 2; tb++)
+  for (tb = 0; tb < 2; tb++) 
   for (i = 0; i < 8; i++) {
     timelog = new_ticklog(h, database, "ENB_PHY_DLSCH_UE_ACK",
         "frame", "subframe");
     subview = new_subview_ticktime(timeview, i+1+tb*8,
         new_color(g,"#282"), 3600*1000);
     logger_add_view(timelog, subview);
-    e->dl_ack_logger[i] = timelog;
+    e->dl_ack_logger[tb][i] = timelog;
   }
   /* DL NACK */
   for (tb = 0; tb < 2; tb++)
@@ -484,7 +496,7 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database,
     subview = new_subview_ticktime(timeview, i+1+tb*8,
         new_color(g,"#f22"), 3600*1000);
     logger_add_view(timelog, subview);
-    e->dl_nack_logger[i] = timelog;
+    e->dl_nack_logger[tb][i] = timelog;
   }
   /* UL DCI/retransmission without DCI */
   for (i = 0; i < 8; i++) {

@@ -1720,8 +1720,8 @@ void process_HARQ_feedback(uint8_t UE_id,
 	}
       }
 
-	// we always loop over 2 possible max TBs. If its not used it should habe been disabled
-      for (tb=0;tb<2;tb++) {
+	// we always loop over 2 possible max TBs. If its not used it should have been disabled
+      for (tb=0;tb<1;tb++) {
 	if (tb==0) {
 	  dlsch_harq_proc = dlsch->harq_processes[dl_harq_pid[m]];
 	  dl_harq_pid[m]  = dlsch->harq_ids[dl_subframe];
@@ -1758,8 +1758,7 @@ void process_HARQ_feedback(uint8_t UE_id,
                   dlsch->rnti,dl_harq_pid[m],M,m,mp,dlsch_harq_proc->round);
 #endif
 
-            T(T_ENB_PHY_DLSCH_UE_NACK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(UE_id), T_INT(dlsch->rnti),
-              T_INT(dl_harq_pid[m]),T_INT(tb));
+            T(T_ENB_PHY_DLSCH_UE_NACK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(UE_id), T_INT(dlsch->rnti),T_INT(dl_harq_pid[m]),T_INT(tb));
 
             if (dlsch_harq_proc->round == 0)
               ue_stats->dlsch_NAK_round0++;
@@ -1794,8 +1793,7 @@ void process_HARQ_feedback(uint8_t UE_id,
                   dlsch->rnti,dl_harq_pid[m],dlsch_harq_proc->round);
 #endif
 
-            T(T_ENB_PHY_DLSCH_UE_ACK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(UE_id), T_INT(dlsch->rnti),
-              T_INT(dl_harq_pid[m]),T_INT(tb));
+            T(T_ENB_PHY_DLSCH_UE_ACK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(UE_id), T_INT(dlsch->rnti), T_INT(dl_harq_pid[m]), T_INT(tb));
 
 	    // TODO: add TB to stats
             ue_stats->dlsch_ACK[dl_harq_pid[m]][dlsch_harq_proc->round]++;

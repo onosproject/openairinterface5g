@@ -871,7 +871,7 @@ schedule_ue_spec(
 	LOG_I(MAC,"Rank Indicator %d, cqi %d, %d\n",eNB_UE_stats->rank+1,eNB_UE_stats->DL_cqi[0],eNB_UE_stats->DL_cqi[1]);
 
 	// loop over all transport blocks
-	for (tb=0;tb<eNB_UE_stats->rank+1;tb++) {
+	for (tb=0;tb<1/*eNB_UE_stats->rank+1*/;tb++) {
 
         rlc_status.bytes_in_buffer = 0;
         // Now check RLC information to compute number of required RBs
