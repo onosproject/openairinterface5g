@@ -195,7 +195,7 @@
 //-------------------
 
 
-//?? left
+
 typedef unsigned int uid_t;
 #define UID_LINEAR_ALLOCATOR_BITMAP_SIZE (((NUMBER_OF_UE_MAX/8)/sizeof(unsigned int)) + 1)
 typedef struct uid_linear_allocator_s {
@@ -316,8 +316,6 @@ typedef struct UE_S_TMSI_s {
 } __attribute__ ((__packed__)) UE_S_TMSI;
 
 
-/*maybe not necessary puts in comment -->it seems is not used anywhere
-#if defined(ENABLE_ITTI)
 typedef enum e_rab_satus_e {
   E_RAB_STATUS_NEW,
   E_RAB_STATUS_DONE, // from the eNB perspective
@@ -330,8 +328,7 @@ typedef struct e_rab_param_s {
   uint8_t status;
   uint8_t xid; // transaction_id
 } __attribute__ ((__packed__)) e_rab_param_t;
-#endif
-*/
+
 
 //HANDOVER_INFO not implemented in NB-IoT delete
 
@@ -353,7 +350,7 @@ typedef struct RB_INFO_s {
 } RB_INFO;
 
 typedef struct SRB_INFO_s {
-  uint16_t Srb_id;  //=Lchan_id
+  uint16_t Srb_id;  //=Lchan_id---> questo potrebbe esserci utile per distinguere ???
   RRC_BUFFER Rx_buffer;
   RRC_BUFFER Tx_buffer;
   LCHAN_DESC Lchan_desc[2];//LCHAN_DESC should be changed for NB-IoT
@@ -369,7 +366,7 @@ typedef struct RB_INFO_TABLE_ENTRY_s {
   uint8_t Status;
 } RB_INFO_TABLE_ENTRY;
 
-typedef struct SRB_INFO_TABLE_ENTRY_s { //togli
+typedef struct SRB_INFO_TABLE_ENTRY_s {
   SRB_INFO Srb_info;
   uint8_t Active;
   uint8_t Status;
@@ -453,7 +450,7 @@ typedef struct eNB_RRC_UE_s { //used in rrc_eNB_ue_context
 */
 
 
-//NB-IoT eNB_RRC_UE_s--(used as a context --> ue_context in rrc_eNB_ue_context)-------------------------------
+//NB-IoT eNB_RRC_UE_s--(used as a context in eNB --> ue_context in rrc_eNB_ue_context)------
 typedef struct eNB_RRC_UE_s {
   uint8_t                            primaryCC_id;
 
@@ -461,11 +458,13 @@ typedef struct eNB_RRC_UE_s {
   //used in generate_default/dedicatedRRCConnectionReconfiguration (rrc_eNB.c)
   //in NB-IoT only SRB0, SRB1 and SRB1bis (until AS security activation) exist
 
-  SRB_ToAddModList_NB_r13_t*                SRB_configList_NB; //for SRB1 and SRB1bis
-  SRB_ToAddModList_NB_r13_t*                SRB_configListBis_NB[RRC_TRANSACTION_IDENTIFIER_NUMBER];//for SRB1bis
-  DRB_ToAddModList_NB_r13_t*                DRB_configList_NB; //for all the DRBs
-  DRB_ToAddModList_NB_r13_t*                DRB_configList2_NB[RRC_TRANSACTION_IDENTIFIER_NUMBER]; //for the configured DRBs of a xid
-  uint8_t                            		DRB_active[8];//??
+  SRB_ToAddModList_NB_r13_t*                SRB_configList;//for SRB1 and SRB1bis
+//  SRB_ToAddModList_NB_r13_t*                SRB1_configList_NB; //for SRB1
+//  SRB_ToAddModList_NB_r13_t*				SRB1bis_configList_NB; //only for SRB1bis
+  SRB_ToAddModList_NB_r13_t*                SRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER]; //only for SRB1
+  DRB_ToAddModList_NB_r13_t*                DRB_configList; //for all the DRBs
+  DRB_ToAddModList_NB_r13_t*                DRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER]; //for the configured DRBs of a xid
+  uint8_t                            		DRB_active[2];//in LTE was 8 --> at most 2 for NB-IoT
 
   struct PhysicalConfigDedicated_NB_r13*    physicalConfigDedicated_NB;
   MAC_MainConfig_NB_r13_t*           mac_MainConfig_NB;
@@ -492,7 +491,6 @@ typedef struct eNB_RRC_UE_s {
   uint64_t                           random_ue_identity;
 
 
-#if defined(ENABLE_ITTI)
 
   /* Information from UE RRC ConnectionRequest-NB-r13_IE--> NB-IoT */
   UE_S_TMSI                          Initialue_identity_s_TMSI;
@@ -501,7 +499,7 @@ typedef struct eNB_RRC_UE_s {
   /* Information from UE RRC ConnectionReestablishmentRequest-NB--> NB-IoT */
   ReestablishmentCause_NB_r13_t             reestablishment_cause_NB; //different set for NB_IoT
 
-  //nothing to be changed for NB-IoT?----------
+///nothing to be changed for NB-IoT?
   /* UE id for initial connection to S1AP */
   uint16_t                           ue_initial_id;
 
@@ -510,9 +508,9 @@ typedef struct eNB_RRC_UE_s {
 
   security_capabilities_t            security_capabilities;
 
-  /* Total number of e_rab already setup in the list */
+  /* Total number of e_rab already setup in the list */ //NAS list?
   uint8_t                           setup_e_rabs;
-  /* Number of e_rab to be setup in the list */
+  /* Number of e_rab to be setup in the list */ //NAS list?
   uint8_t                            nb_of_e_rabs;
   /* list of e_rab to be setup by RRC layers */
   e_rab_param_t                      e_rab[NB_RB_MAX];//[S1AP_MAX_E_RAB];
@@ -521,8 +519,8 @@ typedef struct eNB_RRC_UE_s {
   uint32_t                           enb_gtp_teid[S1AP_MAX_E_RAB];
   transport_layer_addr_t             enb_gtp_addrs[S1AP_MAX_E_RAB];
   rb_id_t                            enb_gtp_ebi[S1AP_MAX_E_RAB];
-  //------------------
-#endif
+
+
   uint32_t                           ul_failure_timer;
   uint32_t                           ue_release_timer;
   uint32_t                           ue_release_timer_thres;
@@ -534,6 +532,7 @@ typedef uid_t ue_uid_t;
 
 //Not touched - generally variable called: ue_context_pP
 typedef struct rrc_eNB_ue_context_s {
+
   /* Tree related data */
   RB_ENTRY(rrc_eNB_ue_context_s) entries;
 
@@ -555,7 +554,8 @@ typedef struct rrc_eNB_ue_context_s {
 //---NB-IoT (completely changed)-------------------------------
 //called "carrier"--> data from PHY layer
 typedef struct {
-	//a cosa servono questi int? buffer that contains the encoded messages
+
+  // buffer that contains the encoded messages
   uint8_t							*MIB_NB;
   uint8_t							sizeof_MIB_NB;
   uint8_t                           *SIB1_NB;
@@ -597,7 +597,7 @@ typedef struct {
   BCCH_DL_SCH_Message_NB_t             siblock1_NB; //SIB1-NB
   BCCH_DL_SCH_Message_NB_t             systemInformation_NB; //SI
 
-  //memory should be allocated--> in principle are only for commodity
+  //memory should be allocated--> in principle are only for commodity?
   SystemInformationBlockType1_NB_t     		*sib1_NB;
   SystemInformationBlockType2_NB_r13_t   	*sib2_NB;
   SystemInformationBlockType3_NB_r13_t   	*sib3_NB;
@@ -625,6 +625,7 @@ typedef struct {
 
 //---NB-IoT---(completely change)---------------------
 typedef struct eNB_RRC_INST_s {
+
   rrc_eNB_carrier_data_t          carrier[MAX_NUM_CCs];
 
   uid_allocator_t                    uid_allocator; // for rrc_ue_head
@@ -636,9 +637,7 @@ typedef struct eNB_RRC_INST_s {
   hash_table_t                      *s1ap_id2_s1ap_ids   ; // key is    content is rrc_ue_s1ap_ids_t
 
   //RRC configuration
-#if defined(ENABLE_ITTI)
   RrcConfigurationReq configuration; //should be changed but need PHY specs also
-#endif
 
   //new--> to be check
   // other PLMN parameters
@@ -667,7 +666,7 @@ typedef struct OAI_UECapability_s {
   uint8_t sdu[MAX_UE_CAPABILITY_SIZE];
   uint8_t sdu_size;
 //NB-IoT------
-  UE_Capability_NB_r13_t	UE_Capability_NB;
+  UE_Capability_NB_r13_t	UE_Capability_NB; //replace the UE_EUTRA_Capability of LTE
 } OAI_UECapability_t;
 
 

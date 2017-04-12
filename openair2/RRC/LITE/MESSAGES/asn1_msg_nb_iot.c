@@ -224,7 +224,6 @@ uint8_t do_MIB_NB(
 
   //no DL_Bandwidth, no PCHIC
 
-  //setting is correct? (cambia tutti in ->)
   mib_NB->message.systemFrameNumber_MSB_r13.buf = &sfn_MSB;
   mib_NB->message.systemFrameNumber_MSB_r13.size = 1; //if expressed in byte
   mib_NB->message.systemFrameNumber_MSB_r13.bits_unused = 4;
@@ -280,8 +279,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
                 RrcConfigurationReq *configuration
                )
 {
-	//giusto?-->chiedi a C.
-  BCCH_DL_SCH_Message_NB_t *bcch_message= &(carrier->siblock1_NB); //bcch message punta all'aria di memoria di sibblock1
+  BCCH_DL_SCH_Message_NB_t *bcch_message= &(carrier->siblock1_NB);
   SystemInformationBlockType1_NB_t *sib1_NB;
 
   asn_enc_rval_t enc_rval;
@@ -293,6 +291,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
 
   //New parameters
   //uint8_t hyperSFN_MSB_r13 ?? (BITSTRING)
+
   long* attachWithoutPDN_Connectivity = NULL;
   attachWithoutPDN_Connectivity = CALLOC(1,sizeof(long));
   long *nrs_CRS_PowerOffset=NULL;
@@ -885,8 +884,8 @@ uint8_t do_RRCConnectionSetup_NB(
   int                              CC_id,
   uint8_t*                   const buffer,
   const uint8_t                    Transaction_id,
-  const LTE_DL_FRAME_PARMS* const frame_parms, //to be changed
-  SRB_ToAddModList_NB_r13_t**             SRB_configList_NB,// we maintain 1 list only for SRB1 and SRB1bis?
+  const LTE_DL_FRAME_PARMS* const frame_parms, //to be changed ora maybe not used
+  SRB_ToAddModList_NB_r13_t**             SRB_configList_NB,
   struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB
 )
 
@@ -897,8 +896,7 @@ uint8_t do_RRCConnectionSetup_NB(
 
  //logical channel group not defined for Nb-IoT
 
- //to be used?
- long* prioritySRB1 = NULL; //logical channel priority pag 605
+ long* prioritySRB1 = NULL; //logical channel priority pag 605 (is 1 for SRB1 and for SRB1bis? is the same?)
  long* prioritySRB1bis = NULL;
  BOOLEAN_t* logicalChannelSR_Prohibit =NULL; //pag 605
 
@@ -925,13 +923,11 @@ uint8_t do_RRCConnectionSetup_NB(
  if (*SRB_configList_NB) {
    free(*SRB_configList_NB);
  }
-
  *SRB_configList_NB = CALLOC(1,sizeof(SRB_ToAddModList_NB_r13_t));
-
 
 /// SRB1
 
-//logical channel identity = 1 -->where to set it? is only inside DRB_ToAddMod_NB
+//logical channel identity = 1 for SRB1
 
  SRB1_config_NB = CALLOC(1,sizeof(*SRB1_config_NB));
 
@@ -963,20 +959,19 @@ uint8_t do_RRCConnectionSetup_NB(
 
  prioritySRB1 = CALLOC(1, sizeof(long));
  *prioritySRB1 = 1;
- SRB1_lchan_config_NB->choice.explicitValue->priority_r13 = prioritySRB1;
+ SRB1_lchan_config_NB->choice.explicitValue.priority_r13 = prioritySRB1;
 
  logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
  *logicalChannelSR_Prohibit = 1;
  //schould be set to TRUE (specs pag 641)
  SRB1_lchan_config_NB->choice.explicitValue->logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
 
- ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1_config_NB); //butto SRB1 nella SRB list
-
+ //ADD SRB1
+ ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1_config_NB);
 
  ///SRB1bis (The configuration for SRB1 and SRB1bis is the same)
 
- // the only difference is the logical channel identity = 3 -->where to set it? is only inside
- //RadioResourceconfig-IE-->DRB_ToAddMod_NB but we are setting to NULL drb_toAddModList!!!
+ // the only difference is the logical channel identity = 3 but not setted here
  //they are assumng that 2 RLC-AM entities are used for SRB1 and SRB1bis--> what means?
 
 		 SRB1bis_config_NB = CALLOC(1,sizeof(*SRB1bis_config_NB));
@@ -989,17 +984,10 @@ uint8_t do_RRCConnectionSetup_NB(
 		 SRB1bis_rlc_config_NB->present = SRB_ToAddMod_NB_r13__rlc_Config_r13_PR_explicitValue;
 		 SRB1bis_rlc_config_NB->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//the only possible in NB_IoT
 
-		#if defined(ENABLE_ITTI)//togliere solo if?
 		 SRB1bis_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1bis_timer_poll_retransmit_r13;
 		 SRB1bis_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1bis_max_retx_threshold_r13;
 		 //(musT be disabled--> SRB1 config pag 640 specs )
 		 SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
-		#else
-		 SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
-		 SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
-		 //(musT be disabled--> SRB1 config pag 640 specs )
-		 SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = NULL;
-		#endif
 
 		 SRB1bis_lchan_config_NB = CALLOC(1,sizeof(*SRB1bis_lchan_config_NB));
 		 SRB1bis_config_NB->logicalChannelConfig_r13  = SRB1bis_lchan_config_NB;
@@ -1007,15 +995,15 @@ uint8_t do_RRCConnectionSetup_NB(
 		 SRB1bis_lchan_config_NB->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue;
 
 		 prioritySRB1bis = CALLOC(1, sizeof(long));
-		 *prioritySRB1bis = 1;
-		 SRB1bis_lchan_config_NB->choice.explicitValue->priority_r13 = prioritySRB1bis;
+		 *prioritySRB1bis = 1; //same as SRB1?
+		 SRB1bis_lchan_config_NB->choice.explicitValue.priority_r13 = prioritySRB1bis;
 
 		 logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
 		 *logicalChannelSR_Prohibit = 1;
 		 //schould be set to TRUE (specs pag 641)
 		 SRB1bis_lchan_config_NB->choice.explicitValue->logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
 
-		 //butto SRB1bis nella solita lista?
+		 //ADD SRB1bis //FIXME: actually there is no way to distinguish SRB1 and SRB1bis, maybe MAC doesn't care
 		 ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1bis_config_NB);
 
 
@@ -1082,24 +1070,6 @@ uint8_t do_RRCConnectionSetup_NB(
  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
               enc_rval.failed_type->name, enc_rval.encoded);
 
- //change only "asn_DEF_DL_CCCH_Message_NB"
-
-# if !defined(DISABLE_XER_SPRINT)
- {
-   char        message_string[20000];
-   size_t      message_string_size;
-
-   if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_CCCH_Message_NB, (void *) &dl_ccch_msg)) > 0) {
-     MessageDef *msg_p;
-
-     msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_CCCH, message_string_size + sizeof (IttiMsgText));
-     msg_p->ittiMsg.rrc_dl_ccch.size = message_string_size;
-     memcpy(&msg_p->ittiMsg.rrc_dl_ccch.text, message_string, message_string_size);
-
-     itti_send_msg_to_task(TASK_UNKNOWN, ctxt_pP->instance, msg_p);
-   }
- }
-# endif
 
 #ifdef USER_MODE
  LOG_D(RRC,"RRCConnectionSetup-NB Encoded %d bits (%d bytes), ecause %d\n",
@@ -1116,7 +1086,7 @@ uint8_t do_RRCConnectionSetup_NB(
 }
 
 /*do_SecurityModeCommand - exactly the same as previous implementation*/
-uint8_t do_SecurityModeCommand(
+uint8_t do_SecurityModeCommand_NB(
   const protocol_ctxt_t* const ctxt_pP,
   uint8_t* const buffer,
   const uint8_t Transaction_id,
@@ -1154,7 +1124,8 @@ uint8_t do_SecurityModeCommand(
                                    100);
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
-//changed only "asn_DEF_DL_DCCH_Message_NB"
+
+//changed only "asn_DEF_DL_DCCH_Message_NB" //to be left?
 #if defined(ENABLE_ITTI)
 # if !defined(DISABLE_XER_SPRINT)
   {
@@ -1175,7 +1146,7 @@ uint8_t do_SecurityModeCommand(
 #endif
 
 #ifdef USER_MODE
-  LOG_D(RRC,"[eNB %d] securityModeCommand for UE %x Encoded %d bits (%d bytes)\n",
+  LOG_D(RRC,"[eNB %d] securityModeCommand-NB for UE %x Encoded %d bits (%d bytes)\n",
         ctxt_pP->module_id,
         ctxt_pP->rnti,
         enc_rval.encoded,
@@ -1183,7 +1154,7 @@ uint8_t do_SecurityModeCommand(
 #endif
 
   if (enc_rval.encoded==-1) {
-    LOG_E(RRC,"[eNB %d] ASN1 : securityModeCommand encoding failed for UE %x\n",
+    LOG_E(RRC,"[eNB %d] ASN1 : securityModeCommand-NB encoding failed for UE %x\n",
           ctxt_pP->module_id,
           ctxt_pP->rnti);
     return(-1);
@@ -1249,7 +1220,7 @@ uint8_t do_UECapabilityEnquiry_NB(
 #endif
 
 #ifdef USER_MODE
-  LOG_D(RRC,"[eNB %d] UECapabilityRequest-NB for UE %x Encoded %d bits (%d bytes)\n",
+  LOG_D(RRC,"[eNB %d] UECapabilityEnquiry-NB for UE %x Encoded %d bits (%d bytes)\n",
         ctxt_pP->module_id,
         ctxt_pP->rnti,
         enc_rval.encoded,
@@ -1257,7 +1228,7 @@ uint8_t do_UECapabilityEnquiry_NB(
 #endif
 
   if (enc_rval.encoded==-1) {
-    LOG_E(RRC,"[eNB %d] ASN1 : UECapabilityRequest-NB encoding failed for UE %x\n",
+    LOG_E(RRC,"[eNB %d] ASN1 : UECapabilityEnquiry-NB encoding failed for UE %x\n",
           ctxt_pP->module_id,
           ctxt_pP->rnti);
     return(-1);
@@ -1369,7 +1340,7 @@ uint16_t do_RRCConnectionReconfiguration_NB(
 }
 
 /*do_RRCConnectionReestablishmentReject - exactly the same as legacy LTE*/
-uint8_t do_RRCConnectionReestablishmentReject(
+uint8_t do_RRCConnectionReestablishmentReject_NB(
     uint8_t                    Mod_id,
     uint8_t*                   const buffer)
 {
@@ -1384,7 +1355,7 @@ uint8_t do_RRCConnectionReestablishmentReject(
   dl_ccch_msg_NB.message.choice.c1.present = DL_CCCH_MessageType_NB__c1_PR_rrcConnectionReestablishmentReject_r13;
   rrcConnectionReestablishmentReject    = &dl_ccch_msg_NB.message.choice.c1.choice.rrcConnectionReestablishmentReject_r13;
 
-  // RRCConnectionReestablishmentReject
+  // RRCConnectionReestablishmentReject //exactly the same as LTE
   rrcConnectionReestablishmentReject->criticalExtensions.present = RRCConnectionReestablishmentReject__criticalExtensions_PR_rrcConnectionReestablishmentReject_r8;
 
   //Only change in "asn_DEF_DL_CCCH_Message_NB"
