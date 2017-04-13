@@ -43,7 +43,7 @@
 #include <asn_application.h>
 #include <asn_internal.h> /* for _ASN_DEFAULT_STACK_MAX */
 
-#include "RRC/LITE/defs.h"
+
 #include "RRC/LITE/defs_nb_iot.h"
 
 /*
@@ -71,7 +71,7 @@ uint8_t get_adjacent_cell_mod_id(uint16_t phyCellId);
 @param frame radio frame number
 @return size of encoded bit stream in bytes*/
 uint8_t do_MIB_NB(
-		rrc_eNB_carrier_data_t *carrier,
+		rrc_eNB_carrier_data_NB_t *carrier,
 		uint32_t N_RB_DL,
 		uint32_t frame);
 
@@ -85,7 +85,7 @@ uint8_t do_MIB_NB(
 @return size of encoded bit stream in bytes*/
 
 uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
-				rrc_eNB_carrier_data_t *carrier,
+				rrc_eNB_carrier_data_NB_t *carrier,
                 RrcConfigurationReq *configuration
                );
 
@@ -100,7 +100,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
 
 uint8_t do_SIB23_NB(uint8_t Mod_id,
                  int CC_id,
-                rrc_eNB_carrier_data_t *carrier,
+                rrc_eNB_carrier_data_NB_t *carrier,
                   RrcConfigurationReq *configuration
                 );
 
@@ -158,7 +158,7 @@ PhysicalConfigDedicated-NB IEs.
 uint8_t
 do_RRCConnectionSetup_NB(
   const protocol_ctxt_t*     const ctxt_pP,
-  rrc_eNB_ue_context_t*      const ue_context_pP,
+  rrc_eNB_ue_context_NB_t*      const ue_context_pP,
   int                              CC_id,
   uint8_t*                   const buffer, //carrier[CC_id].Srb0.Tx_buffer.Payload
   const uint8_t                    Transaction_id,
@@ -207,7 +207,7 @@ do_RRCConnectionReconfiguration_NB(
  @param integrityProtAlgorithm
  */
 
-uint8_t do_SecurityModeCommand(
+uint8_t do_SecurityModeCommand_NB(
   const protocol_ctxt_t* const ctxt_pP,
   uint8_t* const buffer,
   const uint8_t Transaction_id,
@@ -237,7 +237,7 @@ uint8_t do_UECapabilityEnquiry_NB(
 @returns Size of encoded bit stream in bytes*/
 
 uint8_t
-do_RRCConnectionReestablishmentReject(
+do_RRCConnectionReestablishmentReject_NB(
     uint8_t                    Mod_id,
     uint8_t*                   const buffer);
 

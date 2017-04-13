@@ -48,55 +48,29 @@
 #include <per_encoder.h>
 
 #include "assertions.h"
-#include "RRCConnectionRequest.h"
-#include "UL-CCCH-Message.h"
-#include "UL-DCCH-Message.h"
-#include "DL-CCCH-Message.h"
-#include "DL-DCCH-Message.h"
-#include "EstablishmentCause.h"
-#include "RRCConnectionSetup.h"
-#include "SRB-ToAddModList.h"
-#include "DRB-ToAddModList.h"
-#if defined(Rel10) || defined(Rel14)
-#include "MCCH-Message.h"
-//#define MRB1 1
-#endif
+//#include "RRCConnectionRequest.h"
+//#include "UL-CCCH-Message.h"
+//#include "UL-DCCH-Message.h"
+//#include "DL-CCCH-Message.h"
+//#include "DL-DCCH-Message.h"
+//#include "EstablishmentCause.h"
+//#include "RRCConnectionSetup.h"
+//#include "SRB-ToAddModList.h"
+//#include "DRB-ToAddModList.h"
+//#if defined(Rel10) || defined(Rel14)
+//#include "MCCH-Message.h"
+////#define MRB1 1
+//#endif
 
-#include "RRC/LITE/defs.h"
-#include "RRCConnectionSetupComplete.h"
-#include "RRCConnectionReconfigurationComplete.h"
-#include "RRCConnectionReconfiguration.h"
-#include "MasterInformationBlock.h"
-#include "SystemInformation.h"
-
-#include "SystemInformationBlockType1.h"
-
-#include "SIB-Type.h"
-
-#include "BCCH-DL-SCH-Message.h"
-
-#include "PHY/defs.h"
-
-#include "MeasObjectToAddModList.h"
-#include "ReportConfigToAddModList.h"
-#include "MeasIdToAddModList.h"
-#include "enb_config.h"
-
-#if defined(ENABLE_ITTI)
-# include "intertask_interface.h"
-#endif
-
-//#include "PHY/defs.h"
-#ifndef USER_MODE
-#define msg printk
-#ifndef errno
-int errno;
-#endif
-#else
-# if !defined (msg)
-#   define msg printf
-# endif
-#endif
+//#include "RRC/LITE/defs.h"
+//#include "RRCConnectionSetupComplete.h"
+//#include "RRCConnectionReconfigurationComplete.h"
+//#include "RRCConnectionReconfiguration.h"
+//#include "MasterInformationBlock.h"
+//#include "SystemInformation.h"
+//#include "SystemInformationBlockType1.h"
+//#include "SIB-Type.h"
+//#include "BCCH-DL-SCH-Message.h"
 
 //#include for NB-IoT-------------------
 #include "RRCConnectionRequest-NB.h"
@@ -120,6 +94,30 @@ int errno;
 #include "RRCConnectionResume-NB.h"
 #include "RRCConnectionReestablishment-NB.h"
 //----------------------------------------
+
+#include "PHY/defs.h"
+
+//#include "MeasObjectToAddModList.h"
+//#include "ReportConfigToAddModList.h"
+//#include "MeasIdToAddModList.h"
+#include "enb_config.h"
+
+#if defined(ENABLE_ITTI)
+# include "intertask_interface.h"
+#endif
+
+#ifndef USER_MODE
+#define msg printk
+#ifndef errno
+int errno;
+#endif
+#else
+# if !defined (msg)
+#   define msg printf
+# endif
+#endif
+
+
 
 //Not touched
 //#define XER_PRINT
@@ -210,8 +208,8 @@ uint8_t get_adjacent_cell_mod_id(uint16_t phyCellId)
 
 /*do_MIB_NB*/
 uint8_t do_MIB_NB(
-		rrc_eNB_carrier_data_t *carrier,
-		uint32_t N_RB_DL,
+		rrc_eNB_carrier_data_NB_t *carrier,
+		uint32_t N_RB_DL,//may not needed
 		uint32_t frame)
 {
   asn_enc_rval_t enc_rval;
@@ -275,7 +273,7 @@ uint8_t do_MIB_NB(
 
 /*do_SIB1_NB*/
 uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
-				rrc_eNB_carrier_data_t *carrier,
+				rrc_eNB_carrier_data_NB_t *carrier,
                 RrcConfigurationReq *configuration
                )
 {
@@ -431,11 +429,12 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
        * freqBandInfo_r13
        * multiBandInfoList_r13
        * nrs_CRS_PowerOffset_r13
+       * sib1_NB->downlinkBitmap_r13.choice.subframePattern10_r13 =(is a BIT_STRING)
        */
 
-   sib1_NB->downlinkBitmap_r13.present= DL_Bitmap_NB_r13_PR_subframePattern10_r13;
-   //sib1_NB->downlinkBitmap_r13.choice.subframePattern10_r13 =(is a BIT_STRING)
-
+    //FIXME: correct memory allocation?
+   sib1_NB->downlinkBitmap_r13 = CALLOC(1, sizeof(struct DL_Bitmap_NB_r13));
+   (sib1_NB->downlinkBitmap_r13)->present= DL_Bitmap_NB_r13_PR_subframePattern10_r13;
 
    *eutraControlRegionSize = 0;
    sib1_NB->eutraControlRegionSize_r13 = eutraControlRegionSize; //ok
@@ -513,7 +512,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
 //to be clarified is it is possible to carry SIB2 and SIB3  in the same SI message for NB-IoT?
 uint8_t do_SIB23_NB(uint8_t Mod_id,
                  int CC_id,
-                 rrc_eNB_carrier_data_t *carrier,
+                 rrc_eNB_carrier_data_NB_t *carrier,
                  RrcConfigurationReq *configuration )
 {
   struct SystemInformation_NB_r13_IEs__sib_TypeAndInfo_r13__Member *sib2_NB_part;
@@ -610,25 +609,27 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   //NPRACH-Config-NB-IoT
   sib2_NB->radioResourceConfigCommon_r13.nprach_Config_r13.nprach_CP_Length_r13 = configuration->nprach_CP_Length[CC_id];
 
-  //new(provo metodo short)
+  //new
+
    sib2_NB->radioResourceConfigCommon_r13.nprach_Config_r13.rsrp_ThresholdsPrachInfoList_r13 =
 		   CALLOC(1, sizeof(struct RSRP_ThresholdsNPRACH_InfoList_NB_r13)); //fatto uguale dopo
    rsrp_ThresholdsPrachInfoList = sib2_NB->radioResourceConfigCommon_r13.nprach_Config_r13.rsrp_ThresholdsPrachInfoList_r13;
    rsrp_range = configuration->nprach_rsrp_range_NB;
    ASN_SEQUENCE_ADD(&rsrp_ThresholdsPrachInfoList->list,rsrp_range);
 
-  nprach_parameters->nprach_Periodicity_r13 = configuration->nprach_Periodicity[CC_id];
-  nprach_parameters->nprach_StartTime_r13 = configuration->nprach_StartTime[CC_id];
-  nprach_parameters->nprach_SubcarrierOffset_r13 = configuration->nprach_SubcarrierOffset[CC_id];
-  nprach_parameters->nprach_NumSubcarriers_r13= configuration->nprach_NumSubcarriers[CC_id];
-  nprach_parameters->nprach_SubcarrierMSG3_RangeStart_r13= configuration->nprach_SubcarrierMSG3_RangeStart[CC_id];
-  nprach_parameters->maxNumPreambleAttemptCE_r13= configuration->maxNumPreambleAttemptCE_NB[CC_id];
-  nprach_parameters->numRepetitionsPerPreambleAttempt_r13 = configuration->numRepetitionsPerPreambleAttempt_NB[CC_id];
-  nprach_parameters->npdcch_NumRepetitions_RA_r13 = configuration->npdcch_NumRepetitions_RA[CC_id];
-  nprach_parameters->npdcch_StartSF_CSS_RA_r13= configuration->npdcch_StartSF_CSS_RA[CC_id];
-  nprach_parameters->npdcch_Offset_RA_r13= configuration->npdcch_Offset_RA[CC_id];
-  //Correct?
-  ASN_SEQUENCE_ADD(&sib2_NB->radioResourceConfigCommon_r13.nprach_Config_r13.nprach_ParametersList_r13.list,nprach_parameters);
+  nprach_parameters.nprach_Periodicity_r13 = configuration->nprach_Periodicity[CC_id];
+  nprach_parameters.nprach_StartTime_r13 = configuration->nprach_StartTime[CC_id];
+  nprach_parameters.nprach_SubcarrierOffset_r13 = configuration->nprach_SubcarrierOffset[CC_id];
+  nprach_parameters.nprach_NumSubcarriers_r13= configuration->nprach_NumSubcarriers[CC_id];
+  nprach_parameters.nprach_SubcarrierMSG3_RangeStart_r13= configuration->nprach_SubcarrierMSG3_RangeStart[CC_id];
+  nprach_parameters.maxNumPreambleAttemptCE_r13= configuration->maxNumPreambleAttemptCE_NB[CC_id];
+  nprach_parameters.numRepetitionsPerPreambleAttempt_r13 = configuration->numRepetitionsPerPreambleAttempt_NB[CC_id];
+  nprach_parameters.npdcch_NumRepetitions_RA_r13 = configuration->npdcch_NumRepetitions_RA[CC_id];
+  nprach_parameters.npdcch_StartSF_CSS_RA_r13= configuration->npdcch_StartSF_CSS_RA[CC_id];
+  nprach_parameters.npdcch_Offset_RA_r13= configuration->npdcch_Offset_RA[CC_id];
+
+  //FIXME check if nprach parameter is added properly to the list
+  ASN_SEQUENCE_ADD(&sib2_NB->radioResourceConfigCommon_r13.nprach_Config_r13.nprach_ParametersList_r13.list,&nprach_parameters);
 
   // NPDSCH-Config NB-IOT
   sib2_NB->radioResourceConfigCommon_r13.npdsch_ConfigCommon_r13.nrs_Power_r13= configuration->npdsch_nrs_Power[CC_id];
@@ -880,7 +881,7 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
 /*do_RRCConnectionSetup_NB--> the aim is to establish SRB1 and SRB1bis*/
 uint8_t do_RRCConnectionSetup_NB(
   const protocol_ctxt_t*     const ctxt_pP,
-  rrc_eNB_ue_context_t*      const ue_context_pP,
+  rrc_eNB_ue_context_NB_t*      const ue_context_pP,
   int                              CC_id,
   uint8_t*                   const buffer,
   const uint8_t                    Transaction_id,
@@ -940,16 +941,16 @@ uint8_t do_RRCConnectionSetup_NB(
  SRB1_rlc_config_NB->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//the only possible in NB_IoT
 
 
- SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_timer_poll_retransmit_r13;
- SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_max_retx_threshold_r13;
- //(musT be disabled--> SRB1 config pag 640 specs )
- SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
+// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_timer_poll_retransmit_r13;
+// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_max_retx_threshold_r13;
+// //(musT be disabled--> SRB1 config pag 640 specs )
+// SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
 
- /*no static assignment
-  * SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
+
+ SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
  SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
  //(musT be disabled--> SRB1 config pag 640 specs )
- SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = NULL;*/
+ SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = NULL;
 
  SRB1_lchan_config_NB = CALLOC(1,sizeof(*SRB1_lchan_config_NB));
  SRB1_config_NB->logicalChannelConfig_r13  = SRB1_lchan_config_NB;
@@ -964,7 +965,7 @@ uint8_t do_RRCConnectionSetup_NB(
  logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
  *logicalChannelSR_Prohibit = 1;
  //schould be set to TRUE (specs pag 641)
- SRB1_lchan_config_NB->choice.explicitValue->logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
+ SRB1_lchan_config_NB->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
 
  //ADD SRB1
  ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1_config_NB);
@@ -984,8 +985,8 @@ uint8_t do_RRCConnectionSetup_NB(
 		 SRB1bis_rlc_config_NB->present = SRB_ToAddMod_NB_r13__rlc_Config_r13_PR_explicitValue;
 		 SRB1bis_rlc_config_NB->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//the only possible in NB_IoT
 
-		 SRB1bis_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1bis_timer_poll_retransmit_r13;
-		 SRB1bis_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1bis_max_retx_threshold_r13;
+		 SRB1bis_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
+		 SRB1bis_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
 		 //(musT be disabled--> SRB1 config pag 640 specs )
 		 SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
 
@@ -1001,7 +1002,7 @@ uint8_t do_RRCConnectionSetup_NB(
 		 logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
 		 *logicalChannelSR_Prohibit = 1;
 		 //schould be set to TRUE (specs pag 641)
-		 SRB1bis_lchan_config_NB->choice.explicitValue->logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
+		 SRB1bis_lchan_config_NB->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
 
 		 //ADD SRB1bis //FIXME: actually there is no way to distinguish SRB1 and SRB1bis, maybe MAC doesn't care
 		 ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1bis_config_NB);
@@ -1026,14 +1027,15 @@ uint8_t do_RRCConnectionSetup_NB(
   * */
 
  //CarrierConfigDedicated --> I don't know nothing --> settato valori a caso
-  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13->downlinkBitmapNonAnchor_r13.present=
+  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.downlinkBitmapNonAnchor_r13->present=
 		  DL_CarrierConfigDedicated_NB_r13__downlinkBitmapNonAnchor_r13_PR_useNoBitmap_r13;
-  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13->dl_GapNonAnchor_r13.present =
+  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_GapNonAnchor_r13->present =
 		  DL_CarrierConfigDedicated_NB_r13__dl_GapNonAnchor_r13_PR_useNoGap_r13;
-  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13->inbandCarrierInfo_r13.eutraControlRegionSize_r13= 0;
+  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.inbandCarrierInfo_r13->eutraControlRegionSize_r13= 0;
   //physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13->inbandCarrierInfo_r13->samePCI_Indicator_r13 (??)
-  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->ul_CarrierConfig_r13->ul_CarrierFreq_r13.carrierFreq_r13=0;
-  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->ul_CarrierConfig_r13->ul_CarrierFreq_r13->carrierFreqOffset_r13= NULL;
+  //maybe first need to allocate memory?
+  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->ul_CarrierConfig_r13.ul_CarrierFreq_r13->carrierFreq_r13=0;
+  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->ul_CarrierConfig_r13.ul_CarrierFreq_r13->carrierFreqOffset_r13= NULL;
 
  // NPDCCH
  physicalConfigDedicated2_NB->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13 =0;
@@ -1116,7 +1118,7 @@ uint8_t do_SecurityModeCommand_NB(
 
 //only changed "asn_DEF_DL_DCCH_Message_NB"
 #ifdef XER_PRINT
-  xer_fprint(stdout, &asn_DEF_DL_DCCH_Message_NB, (void*)&dl_dcch_msg);
+  xer_fprint(stdout, &asn_DEF_DL_DCCH_Message_NB, (void*)&dl_dcch_msg_NB);
 #endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message_NB,
                                    (void*)&dl_dcch_msg_NB,
@@ -1132,7 +1134,7 @@ uint8_t do_SecurityModeCommand_NB(
     char        message_string[20000];
     size_t      message_string_size;
 
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message_NB, (void *) &dl_dcch_msg)) > 0) {
+    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message_NB, (void *) &dl_dcch_msg_NB)) > 0) {
       MessageDef *msg_p;
 
       msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_DCCH, message_string_size + sizeof (IttiMsgText));
@@ -1191,7 +1193,7 @@ uint8_t do_UECapabilityEnquiry_NB(
 
 //only changed "asn_DEF_DL_DCCH_Message_NB"
 #ifdef XER_PRINT
-  xer_fprint(stdout, &asn_DEF_DL_DCCH_Message_NB, (void*)&dl_dcch_msg);
+  xer_fprint(stdout, &asn_DEF_DL_DCCH_Message_NB, (void*)&dl_dcch_msg_NB);
 #endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message_NB,
                                    (void*)&dl_dcch_msg_NB,
@@ -1206,7 +1208,7 @@ uint8_t do_UECapabilityEnquiry_NB(
     char        message_string[20000];
     size_t      message_string_size;
 
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message_NB, (void *) &dl_dcch_msg)) > 0) {
+    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message_NB, (void *) &dl_dcch_msg_NB)) > 0) {
       MessageDef *msg_p;
 
       msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_CCCH, message_string_size + sizeof (IttiMsgText));
@@ -1311,7 +1313,7 @@ uint16_t do_RRCConnectionReconfiguration_NB(
 
   //changed only asn_DEF_DL_DCCH_Message_NB
 #ifdef XER_PRINT
-  xer_fprint(stdout,&asn_DEF_DL_DCCH_Message_NB,(void*)&dl_dcch_msg);
+  xer_fprint(stdout,&asn_DEF_DL_DCCH_Message_NB,(void*)&dl_dcch_msg_NB);
 #endif
 
 #if defined(ENABLE_ITTI)
@@ -1320,7 +1322,7 @@ uint16_t do_RRCConnectionReconfiguration_NB(
     char        message_string[30000];
     size_t      message_string_size;
 
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message_NB, (void *) &dl_dcch_msg)) > 0) {
+    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message_NB, (void *) &dl_dcch_msg_NB)) > 0) {
       MessageDef *msg_p;
 
       msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_DCCH, message_string_size + sizeof (IttiMsgText));
@@ -1360,7 +1362,7 @@ uint8_t do_RRCConnectionReestablishmentReject_NB(
 
   //Only change in "asn_DEF_DL_CCCH_Message_NB"
 #ifdef XER_PRINT
-  xer_fprint(stdout, &asn_DEF_DL_CCCH_Message_NB, (void*)&dl_ccch_msg);
+  xer_fprint(stdout, &asn_DEF_DL_CCCH_Message_NB, (void*)&dl_ccch_msg_NB);
 #endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_CCCH_Message_NB,
                                    (void*)&dl_ccch_msg_NB,
@@ -1376,7 +1378,7 @@ uint8_t do_RRCConnectionReestablishmentReject_NB(
     char        message_string[20000];
     size_t      message_string_size;
 
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_CCCH_Message_NB, (void *) &dl_ccch_msg)) > 0) {
+    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_CCCH_Message_NB, (void *) &dl_ccch_msg_NB)) > 0) {
       MessageDef *msg_p;
 
       msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_CCCH, message_string_size + sizeof (IttiMsgText));
@@ -1421,7 +1423,9 @@ uint8_t do_RRCConnectionReject_NB(
   rrcConnectionReject_NB->criticalExtensions.choice.c1.choice.rrcConnectionReject_r13.extendedWaitTime_r13 = 1;
   //new-use of suspend indication
   //If present, this field indicates that the UE should remain suspended and not release its stored context.
-  rrcConnectionReject_NB->criticalExtensions.choice.c1.choice.rrcConnectionReject_r13->rrc_SuspendIndication_r13=
+  rrcConnectionReject_NB->criticalExtensions.choice.c1.choice.rrcConnectionReject_r13.rrc_SuspendIndication_r13=
+		  CALLOC(1, sizeof(long));
+  *(rrcConnectionReject_NB->criticalExtensions.choice.c1.choice.rrcConnectionReject_r13.rrc_SuspendIndication_r13)=
 		  RRCConnectionReject_NB_r13_IEs__rrc_SuspendIndication_r13_true;
 
   //Only Modified "asn_DEF_DL_CCCH_Message_NB"
@@ -1441,7 +1445,7 @@ uint8_t do_RRCConnectionReject_NB(
     char        message_string[20000];
     size_t      message_string_size;
 
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_CCCH_Message_NB, (void *) &dl_ccch_msg)) > 0) {
+    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_CCCH_Message_NB, (void *) &dl_ccch_msg_NB)) > 0) {
       MessageDef *msg_p;
 
       msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_CCCH, message_string_size + sizeof (IttiMsgText));
@@ -1536,7 +1540,7 @@ uint8_t do_DLInformationTransfer_NB(
     char        message_string[10000];
     size_t      message_string_size;
 
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message_NB, (void *)&dl_dcch_msg)) > 0) {
+    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message_NB, (void *)&dl_dcch_msg_NB)) > 0) {
       MessageDef *msg_p;
 
       msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_DCCH, message_string_size + sizeof (IttiMsgText));
@@ -1557,7 +1561,7 @@ uint8_t do_DLInformationTransfer_NB(
 
 /*OAI_UECapability_t *fill_ue_capability*/
 
-/*do_RRCConnectionReestablishment-->used to re-establish SRB1*/ //come fare??//quali parametri in ingresso?
+/*do_RRCConnectionReestablishment-->used to re-establish SRB1*/ //which parameter to use?
 uint8_t do_RRCConnectionReestablishment_NB(
 		uint8_t Mod_id,
 		uint8_t* const buffer,
@@ -1567,34 +1571,32 @@ uint8_t do_RRCConnectionReestablishment_NB(
 {
 
 	asn_enc_rval_t enc_rval;
-	DL_CCCH_Message_NB_t dl_ccch_msg;
+	DL_CCCH_Message_NB_t dl_ccch_msg_NB;
 	RRCConnectionReestablishment_NB_t* rrcConnectionReestablishment_NB;
 
-	memset(&dl_ccch_msg, 0, sizeof(DL_CCCH_Message_NB_t));
+	memset(&dl_ccch_msg_NB, 0, sizeof(DL_CCCH_Message_NB_t));
 
-	dl_ccch_msg.message.present = DL_CCCH_MessageType_NB_PR_c1;
-	dl_ccch_msg.message.choice.c1.present = DL_CCCH_MessageType_NB__c1_PR_rrcConnectionReestablishment_r13;
-	rrcConnectionReestablishment_NB = &dl_ccch_msg.message.choice.c1.choice.rrcConnectionReestablishment_r13;
+	dl_ccch_msg_NB.message.present = DL_CCCH_MessageType_NB_PR_c1;
+	dl_ccch_msg_NB.message.choice.c1.present = DL_CCCH_MessageType_NB__c1_PR_rrcConnectionReestablishment_r13;
+	rrcConnectionReestablishment_NB = &dl_ccch_msg_NB.message.choice.c1.choice.rrcConnectionReestablishment_r13;
 
 	//rrcConnectionReestablishment_NB
 	rrcConnectionReestablishment_NB->rrc_TransactionIdentifier = Transaction_id;
 	rrcConnectionReestablishment_NB->criticalExtensions.present = RRCConnectionReestablishment_NB__criticalExtensions_PR_c1;
 	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.present = RRCConnectionReestablishment_NB__criticalExtensions__c1_PR_rrcConnectionReestablishment_r13;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13=
-			CALLOC(1,sizeof(*rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13));
 
-	//??
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13->srb_ToAddModList_r13 = SRB_list_NB;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13->drb_ToAddModList_r13 = NULL;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13->drb_ToReleaseList_r13 = NULL;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13->rlf_TimersAndConstants_r13= NULL;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13->mac_MainConfig_r13= NULL;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13->physicalConfigDedicated_r13 = NULL;
+	//FIXME: which parameters are needed?
+	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.srb_ToAddModList_r13 = SRB_list_NB;
+	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.drb_ToAddModList_r13 = NULL;
+	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.drb_ToReleaseList_r13 = NULL;
+	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.rlf_TimersAndConstants_r13= NULL;
+	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.mac_MainConfig_r13= NULL;
+	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.physicalConfigDedicated_r13 = NULL;
 
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.nextHopChainingCount_r13=0;//??
+	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.nextHopChainingCount_r13=0;
 
 	enc_rval = uper_encode_to_buffer(&asn_DEF_DL_CCCH_Message_NB,
-	                                   (void*)&dl_ccch_msg,
+	                                   (void*)&dl_ccch_msg_NB,
 	                                   buffer,
 	                                   RRC_BUF_SIZE);
 
@@ -1602,7 +1604,7 @@ uint8_t do_RRCConnectionReestablishment_NB(
 	               enc_rval.failed_type->name, enc_rval.encoded);
 
 #ifdef XER_PRINT
-  xer_fprint(stdout,&asn_DEF_DL_CCCH_Message_NB,(void*)&dl_ccch_msg);
+  xer_fprint(stdout,&asn_DEF_DL_CCCH_Message_NB,(void*)&dl_ccch_msg_NB);
 #endif
 
 #if defined(ENABLE_ITTI)
@@ -1611,14 +1613,14 @@ uint8_t do_RRCConnectionReestablishment_NB(
     char        message_string[30000];
     size_t      message_string_size;
 
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_CCCH_Message_NB, (void *) &dl_ccch_msg)) > 0) {
+    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_CCCH_Message_NB, (void *) &dl_ccch_msg_NB)) > 0) {
       MessageDef *msg_p;
 
       msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_CCCH, message_string_size + sizeof (IttiMsgText));
       msg_p->ittiMsg.rrc_dl_ccch.size = message_string_size;
       memcpy(&msg_p->ittiMsg.rrc_dl_ccch.text, message_string, message_string_size);
 
-      itti_send_msg_to_task(TASK_UNKNOWN, ctxt_pP->instance, msg_p);
+      itti_send_msg_to_task(TASK_UNKNOWN, Mod_id, msg_p);
     }
   }
 # endif
@@ -1631,7 +1633,7 @@ uint8_t do_RRCConnectionReestablishment_NB(
 
 // -----??????--------------------
 #ifndef USER_MODE
-int init_module(void)
+int init_module_NB(void)
 {
   printk("Init asn1_msg_nb_iot module\n");
 
@@ -1640,7 +1642,7 @@ int init_module(void)
 }
 
 
-void cleanup_module(void)
+void cleanup_module_NB(void)
 {
   printk("Stopping asn1_msg_nb_iot module\n");
 }
@@ -1651,7 +1653,7 @@ EXPORT_SYMBOL(do_RRCConnectionRequest_NB);
 EXPORT_SYMBOL(do_RRCConnectionSetupComplete_NB);
 EXPORT_SYMBOL(do_RRCConnectionReconfigurationComplete_NB);
 EXPORT_SYMBOL(do_RRCConnectionSetup_NB);
-EXPORT_SYMBOL(do_RRCConnectionReestablishmentReject);
+EXPORT_SYMBOL(do_RRCConnectionReestablishmentReject_NB);
 EXPORT_SYMBOL(do_RRCConnectionReconfiguration_NB);
 EXPORT_SYMBOL(asn_DEF_UL_DCCH_Message_NB);
 EXPORT_SYMBOL(asn_DEF_UL_CCCH_Message_NB);

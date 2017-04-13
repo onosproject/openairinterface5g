@@ -27,9 +27,9 @@
 * \email: navid.nikaein@eurecom.fr, raymond.knopp@eurecom.fr, michele.paffetti@studio.unibo.it
 */
 
-#ifndef __OPENAIR_RRC_DEFS_H__
-#define __OPENAIR_RRC_DEFS_H__
-#endif //questo non c'era prima?
+#ifndef __OPENAIR_RRC_DEFS_NB_IOT_H__
+#define __OPENAIR_RRC_DEFS_NB_IOT_H__
+
 
 #ifdef USER_MODE
 #include <stdio.h>
@@ -52,28 +52,47 @@
 #endif
 
 //----Not needed for NB-IoT??-------- (but have to left for UE?)
-#include "SystemInformationBlockType1.h"
-#include "SystemInformation.h"
-#include "RRCConnectionReconfiguration.h"
-#include "RRCConnectionReconfigurationComplete.h"
-#include "RRCConnectionSetup.h"
-#include "RRCConnectionSetupComplete.h"
-#include "RRCConnectionRequest.h"
-#include "RRCConnectionReestablishmentRequest.h"
-#include "BCCH-DL-SCH-Message.h"
-#include "BCCH-BCH-Message.h"
-
-#if defined(Rel10) || defined(Rel14)
-#include "MCCH-Message.h"
-#include "MBSFNAreaConfiguration-r9.h"
-#include "SCellToAddMod-r10.h"
-#endif
-
-#include "AS-Config.h"
-#include "AS-Context.h"
-#include "UE-EUTRA-Capability.h"
-#include "MeasResults.h"
+//#include "SystemInformationBlockType1.h"
+//#include "SystemInformation.h"
+//#include "RRCConnectionReconfiguration.h"
+//#include "RRCConnectionReconfigurationComplete.h"
+//#include "RRCConnectionSetup.h"
+//#include "RRCConnectionSetupComplete.h"
+//#include "RRCConnectionRequest.h"
+//#include "RRCConnectionReestablishmentRequest.h"
+//#include "BCCH-DL-SCH-Message.h"
+//#include "BCCH-BCH-Message.h"
+//
+//#if defined(Rel10) || defined(Rel14)
+//#include "MCCH-Message.h"
+//#include "MBSFNAreaConfiguration-r9.h"
+//#include "SCellToAddMod-r10.h"
+//#endif
+//
+//#include "AS-Config.h"
+//#include "AS-Context.h"
+//#include "UE-EUTRA-Capability.h"
+//#include "MeasResults.h"
 //--------------------------------------
+
+
+//-----NB-IoT #include files-------
+
+#include "SystemInformationBlockType1-NB.h"
+#include "SystemInformation-NB.h"
+#include "RRCConnectionReconfiguration-NB.h"
+#include "RRCConnectionReconfigurationComplete-NB.h"
+#include "RRCConnectionSetup-NB.h"
+#include "RRCConnectionSetupComplete-NB.h"
+#include "RRCConnectionRequest-NB.h"
+#include "RRCConnectionReestablishmentRequest-NB.h"
+#include "BCCH-DL-SCH-Message-NB.h"
+#include "BCCH-BCH-Message-NB.h"
+#include "AS-Config-NB.h"
+#include "AS-Context-NB.h"
+#include "UE-Capability-NB-r13.h" //equivalent of UE-EUTRA-Capability.h
+//-------------------
+
 
 /* correct Rel(8|10)/Rel14 differences
  * the code is in favor of Rel14, those defines do the translation
@@ -142,14 +161,8 @@
 #define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib10 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib10
 #define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib11 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib11
 #endif
-/*
-#ifdef Rel10
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib12_v920 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib12_v920
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib13_v920 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib13_v920
-#endif
-*/
 
-//#include "L3_rrc_defs.h"
+
 #ifndef NO_RRM
 #include "L3_rrc_interface.h"
 #include "rrc_rrm_msg.h"
@@ -178,29 +191,14 @@
 
 
 
-//-----NB-IoT #include files-------
-#include "SystemInformationBlockType1-NB.h"
-#include "SystemInformation-NB.h"
-#include "RRCConnectionReconfiguration-NB.h"
-#include "RRCConnectionReconfigurationComplete-NB.h"
-#include "RRCConnectionSetup-NB.h"
-#include "RRCConnectionSetupComplete-NB.h"
-#include "RRCConnectionRequest-NB.h"
-#include "RRCConnectionReestablishmentRequest-NB.h"
-#include "BCCH-DL-SCH-Message-NB.h"
-#include "BCCH-BCH-Message-NB.h"
-#include "AS-Config-NB.h"
-#include "AS-Context-NB.h"
-#include "UE-Capability-NB-r13.h" //equivalent of UE-EUTRA-Capability.h
-//-------------------
+/*I will change the name of the structure for compile purposes--> hope not to undo this process*/
 
-
-
-typedef unsigned int uid_t;
+typedef unsigned int uid_NB_t;
 #define UID_LINEAR_ALLOCATOR_BITMAP_SIZE (((NUMBER_OF_UE_MAX/8)/sizeof(unsigned int)) + 1)
-typedef struct uid_linear_allocator_s {
+
+typedef struct uid_linear_allocator_NB_s {
   unsigned int   bitmap[UID_LINEAR_ALLOCATOR_BITMAP_SIZE];
-} uid_allocator_t;
+} uid_allocator_NB_t;
 
 
 #define PROTOCOL_RRC_CTXT_UE_FMT           PROTOCOL_CTXT_FMT
@@ -222,17 +220,17 @@ typedef struct uid_linear_allocator_s {
 
 
 //left as they are --> used in LAYER2/epenair2_proc.c and UE side
-typedef enum UE_STATE_e {
-  RRC_INACTIVE=0,
-  RRC_IDLE,
-  RRC_SI_RECEIVED,
-  RRC_CONNECTED,
-  RRC_RECONFIGURED,
-  RRC_HO_EXECUTION //maybe not needed?
-} UE_STATE_t;
+//typedef enum UE_STATE_NB_e {
+//  RRC_INACTIVE=0,
+//  RRC_IDLE,
+//  RRC_SI_RECEIVED,
+//  RRC_CONNECTED,
+//  RRC_RECONFIGURED,
+//  RRC_HO_EXECUTION //maybe not needed?
+//} UE_STATE_NB_t;
 
 
-// HO_STATe is not supported by NB-IoT
+// HO_STATE is not supported by NB-IoT
 
 //#define NUMBER_OF_UE_MAX MAX_MOBILES_PER_RG
 #define RRM_FREE(p)       if ( (p) != NULL) { free(p) ; p=NULL ; }
@@ -250,84 +248,53 @@ typedef enum UE_STATE_e {
 /* TS 36.331: RRC-TransactionIdentifier ::= INTEGER (0..3) */
 #define RRC_TRANSACTION_IDENTIFIER_NUMBER  3
 
+//NB-IoT version (not used for the moment)
+//typedef struct UE_RRC_INFO_s { //is used in UE_RRC_INST
+//  UE_STATE_NB_t State;
+//  uint8_t SIB1systemInfoValueTag;
+//  uint32_t SIStatus;
+//  uint32_t SIcnt;
+//#if defined(Rel10) || defined(Rel14)
+//  uint8_t MCCHStatus[8]; // MAX_MBSFN_AREA
+//#endif
+//  uint8_t SIwindowsize; //!< Corresponds to the SIB1 si-WindowLength parameter. The unit is ms. Possible values are (final): 1,2,5,10,15,20,40
+//  uint8_t handoverTarget;
+//  HO_STATE_t ho_state;
+//  uint16_t SIperiod; //!< Corresponds to the SIB1 si-Periodicity parameter (multiplied by 10). Possible values are (final): 80,160,320,640,1280,2560,5120
+//  unsigned short UE_index;
+//  uint32_t T300_active;
+//  uint32_t T300_cnt;
+//  uint32_t T304_active;
+//  uint32_t T304_cnt;
+//  uint32_t T310_active;
+//  uint32_t T310_cnt;
+//  uint32_t N310_cnt;
+//  uint32_t N311_cnt;
+//  rnti_t   rnti;
+//} __attribute__ ((__packed__)) UE_RRC_INFO;
 
-typedef struct UE_RRC_INFO_s { //is used in UE_RRC_INST
-  UE_STATE_t State;
-  uint8_t SIB1systemInfoValueTag;
-  uint32_t SIStatus;
-  uint32_t SIcnt;
-#if defined(Rel10) || defined(Rel14)
-  uint8_t MCCHStatus[8]; // MAX_MBSFN_AREA
-#endif
-  uint8_t SIwindowsize; //!< Corresponds to the SIB1 si-WindowLength parameter. The unit is ms. Possible values are (final): 1,2,5,10,15,20,40
-  uint8_t handoverTarget;
-  HO_STATE_t ho_state;
-  uint16_t SIperiod; //!< Corresponds to the SIB1 si-Periodicity parameter (multiplied by 10). Possible values are (final): 80,160,320,640,1280,2560,5120
-  unsigned short UE_index;
-  uint32_t T300_active;
-  uint32_t T300_cnt;
-  uint32_t T304_active;
-  uint32_t T304_cnt;
-  uint32_t T310_active;
-  uint32_t T310_cnt;
-  uint32_t N310_cnt;
-  uint32_t N311_cnt;
-  rnti_t   rnti;
-} __attribute__ ((__packed__)) UE_RRC_INFO;
 
-
-//NB-IoT version UE_RRC_INFO_s-------------------------------
-/*
-typedef struct UE_RRC_INFO_s {
-
-  UE_STATE_t State;
-  //uint8_t SIB1systemInfoValueTag;
-  uint8_t  MIB_NBsystemInfoValueTag; //In NB-IoT is in the MIB-NB ---systemInfoValueTag_r13
-  uint8_t  systemInfoValueTagSI; //SI message specific value tag in SIB1-NB (as specified in Clause 5.2.1.3).Common for all SIBs within the SI message other than SIB14-NB.
-  uint32_t SIStatus;
-  uint32_t SIcnt;
-
-  uint8_t SIwindowsize; //!< Corresponds to the SIB1-NB si_WindowLength_r13 parameter. The unit is ms. Possible values are (final): 160,320,480,640,960,1280,1600 (TS 36.331 V14.2.1)
-  uint16_t SIperiod; //!< Corresponds to the SIB1-NB si_Periodicity_r13 parameter (multiplied by 10= 1 rf). Possible values are (final): 640,1280,2560,5120,10240,20480,40960 (TS 36.331 V14.2.1)
-  unsigned short UE_index;
-
-  //define all the timer for NB-IoT (T300, T301, T310, T311) maybe not all used in OAI
-  uint32_t T300_active;
-  uint32_t T300_cnt;
-  uint32_t T301_active;
-  uint32_t T301_cnt;
-  uint32_t T310_active;
-  uint32_t T310_cnt;
-  uint32_t T311_active;
-  uint32_t T311_cnt;
-  uint32_t N310_cnt;
-  uint32_t N311_cnt;
-  rnti_t   rnti;
-
-} __attribute__ ((__packed__)) UE_RRC_INFO;
-*/
-//------------------------------------------
 
 //left as it is
-typedef struct UE_S_TMSI_s {
+typedef struct UE_S_TMSI_NB_s {
   boolean_t  presence;
   mme_code_t mme_code;
   m_tmsi_t   m_tmsi;
-} __attribute__ ((__packed__)) UE_S_TMSI;
+} __attribute__ ((__packed__)) UE_S_TMSI_NB;
 
 
-typedef enum e_rab_satus_e {
-  E_RAB_STATUS_NEW,
-  E_RAB_STATUS_DONE, // from the eNB perspective
-  E_RAB_STATUS_ESTABLISHED, // get the reconfigurationcomplete form UE
-  E_RAB_STATUS_FAILED,
-} e_rab_status_t;
+typedef enum e_rab_satus_NB_e {
+  E_RAB_NB_STATUS_NEW,
+  E_RAB_NB_STATUS_DONE, // from the eNB perspective
+  E_RAB_NB_STATUS_ESTABLISHED, // get the reconfigurationcomplete form UE
+  E_RAB_NB_STATUS_FAILED,
+} e_rab_status_NB_t;
 
-typedef struct e_rab_param_s {
+typedef struct e_rab_param_NB_s {
   e_rab_t param;
   uint8_t status;
   uint8_t xid; // transaction_id
-} __attribute__ ((__packed__)) e_rab_param_t;
+} __attribute__ ((__packed__)) e_rab_param_NB_t;
 
 
 //HANDOVER_INFO not implemented in NB-IoT delete
@@ -335,123 +302,52 @@ typedef struct e_rab_param_s {
 
 #define RRC_HEADER_SIZE_MAX 64
 #define RRC_BUFFER_SIZE_MAX 1024
+
 typedef struct {
   char Payload[RRC_BUFFER_SIZE_MAX];
   char Header[RRC_HEADER_SIZE_MAX];
   char payload_size;
-} RRC_BUFFER;
-#define RRC_BUFFER_SIZE sizeof(RRC_BUFFER)
+} RRC_BUFFER_NB;
+
+#define RRC_BUFFER_SIZE_NB sizeof(RRC_BUFFER_NB)
 
 
-typedef struct RB_INFO_s {
+typedef struct RB_INFO_NB_s {
   uint16_t Rb_id;  //=Lchan_id
   LCHAN_DESC Lchan_desc[2]; //LCHAN_DESC should be changed for NB-IoT
   MAC_MEAS_REQ_ENTRY *Meas_entry; //may not needed for NB-IoT
-} RB_INFO;
+} RB_INFO_NB;
 
-typedef struct SRB_INFO_s {
-  uint16_t Srb_id;  //=Lchan_id---> questo potrebbe esserci utile per distinguere ???
-  RRC_BUFFER Rx_buffer;
-  RRC_BUFFER Tx_buffer;
+typedef struct SRB_INFO_NB_s {
+  uint16_t Srb_id;  //=Lchan_id---> useful for distinguish between SRB1 and SRB1bis?
+  RRC_BUFFER_NB Rx_buffer;
+  RRC_BUFFER_NB Tx_buffer;
   LCHAN_DESC Lchan_desc[2];//LCHAN_DESC should be changed for NB-IoT
   unsigned int Trans_id;
   uint8_t Active;
-} SRB_INFO;
+} SRB_INFO_NB;
 
 
-typedef struct RB_INFO_TABLE_ENTRY_s {
-  RB_INFO Rb_info;
+typedef struct RB_INFO_TABLE_ENTRY_NB_s {
+  RB_INFO_NB Rb_info;
   uint8_t Active;
   uint32_t Next_check_frame;
   uint8_t Status;
-} RB_INFO_TABLE_ENTRY;
+} RB_INFO_TABLE_ENTRY_NB;
 
-typedef struct SRB_INFO_TABLE_ENTRY_s {
-  SRB_INFO Srb_info;
+typedef struct SRB_INFO_TABLE_ENTRY_NB_s {
+  SRB_INFO_NB Srb_info;
   uint8_t Active;
   uint8_t Status;
   uint32_t Next_check_frame;
-} SRB_INFO_TABLE_ENTRY;
+} SRB_INFO_TABLE_ENTRY_NB;
 
 //MEAS_REPORT_LIST_s not implemented in NB-IoT but is used at UE side
 //HANDOVER_INFO_UE not implemented in NB-IoT
 
 
-/* See NB-IoT implementation below
-typedef struct eNB_RRC_UE_s { //used in rrc_eNB_ue_context
-  uint8_t                            primaryCC_id;
-#if defined(Rel10) || defined(Rel14)
-  SCellToAddMod_r10_t                sCell_config[2];
-#endif
-  SRB_ToAddModList_t*                SRB_configList; //used in generate_default/dedicatedRRCConnectionReconfiguration (rrc_eNB.c)
-  SRB_ToAddModList_t*                SRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER];
-  DRB_ToAddModList_t*                DRB_configList;
-  DRB_ToAddModList_t*                DRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER];
-  uint8_t                            DRB_active[8];
-  struct PhysicalConfigDedicated*    physicalConfigDedicated;
-  struct SPS_Config*                 sps_Config;
-  MeasObjectToAddMod_t*              MeasObj[MAX_MEAS_OBJ];
-  struct ReportConfigToAddMod*       ReportConfig[MAX_MEAS_CONFIG];
-  struct QuantityConfig*             QuantityConfig;
-  struct MeasIdToAddMod*             MeasId[MAX_MEAS_ID];
-  MAC_MainConfig_t*                  mac_MainConfig;
-  MeasGapConfig_t*                   measGapConfig;
-  SRB_INFO                           SI;
-  SRB_INFO                           Srb0;
-  SRB_INFO_TABLE_ENTRY               Srb1;
-  SRB_INFO_TABLE_ENTRY               Srb2;
-  MeasConfig_t*                      measConfig;
-  HANDOVER_INFO*                     handover_info;
-
-#if defined(ENABLE_SECURITY)
-  // KeNB as derived from KASME received from EPC
-  uint8_t kenb[32];
-#endif
-  // Used integrity/ciphering algorithms
-  e_CipheringAlgorithm_r12                          ciphering_algorithm;
-  e_SecurityAlgorithmConfig__integrityProtAlgorithm integrity_algorithm;
-
-  uint8_t                            Status;
-  rnti_t                             rnti;
-  uint64_t                           random_ue_identity;
-
-#if defined(ENABLE_ITTI)
-  //Information from UE RRC ConnectionRequest
-  UE_S_TMSI                          Initialue_identity_s_TMSI;
-  EstablishmentCause_t               establishment_cause;
-
-  //Information from UE RRC ConnectionReestablishmentRequest
-  ReestablishmentCause_t             reestablishment_cause;
-
-  // UE id for initial connection to S1AP
-  uint16_t                           ue_initial_id;
-
-  //Information from S1AP initial_context_setup_req
-  uint32_t                           eNB_ue_s1ap_id :24;
-
-  security_capabilities_t            security_capabilities;
-
-  //Total number of e_rab already setup in the list
-  uint8_t                           setup_e_rabs;
-  //Number of e_rab to be setup in the list
-  uint8_t                            nb_of_e_rabs;
-  //list of e_rab to be setup by RRC layers
-  e_rab_param_t                      e_rab[NB_RB_MAX];//[S1AP_MAX_E_RAB];
-
-  // LG: For GTPV1 TUNNELS
-  uint32_t                           enb_gtp_teid[S1AP_MAX_E_RAB];
-  transport_layer_addr_t             enb_gtp_addrs[S1AP_MAX_E_RAB];
-  rb_id_t                            enb_gtp_ebi[S1AP_MAX_E_RAB];
-#endif
-  uint32_t                           ul_failure_timer;
-  uint32_t                           ue_release_timer;
-  uint32_t                           ue_release_timer_thres;
-} eNB_RRC_UE_t;
-*/
-
-
-//NB-IoT eNB_RRC_UE_s--(used as a context in eNB --> ue_context in rrc_eNB_ue_context)------
-typedef struct eNB_RRC_UE_s {
+//NB-IoT eNB_RRC_UE_NB_s--(used as a context in eNB --> ue_context in rrc_eNB_ue_context)------
+typedef struct eNB_RRC_UE_NB_s {
   uint8_t                            primaryCC_id;
 
   //Radio Bearers carried by RadioResourceConfigDedicated-NB-r13.h
@@ -472,10 +368,10 @@ typedef struct eNB_RRC_UE_s {
   //No SPS(semi-persistent scheduling) in NB-IoT
   //No Measurement report in NB-IoT
 
-  SRB_INFO                           SI;
-  SRB_INFO                           Srb0;
-  SRB_INFO_TABLE_ENTRY               Srb1;
-  SRB_INFO_TABLE_ENTRY               Srb1bis;
+  SRB_INFO_NB                           SI;
+  SRB_INFO_NB                           Srb0;
+  SRB_INFO_TABLE_ENTRY_NB               Srb1;
+  SRB_INFO_TABLE_ENTRY_NB               Srb1bis;
 
 #if defined(ENABLE_SECURITY)
   /* KeNB as derived from KASME received from EPC */
@@ -493,7 +389,7 @@ typedef struct eNB_RRC_UE_s {
 
 
   /* Information from UE RRC ConnectionRequest-NB-r13_IE--> NB-IoT */
-  UE_S_TMSI                          Initialue_identity_s_TMSI;
+  UE_S_TMSI_NB                          Initialue_identity_s_TMSI;
   EstablishmentCause_NB_r13_t               establishment_cause_NB; //different set for NB-IoT
 
   /* Information from UE RRC ConnectionReestablishmentRequest-NB--> NB-IoT */
@@ -513,7 +409,7 @@ typedef struct eNB_RRC_UE_s {
   /* Number of e_rab to be setup in the list */ //NAS list?
   uint8_t                            nb_of_e_rabs;
   /* list of e_rab to be setup by RRC layers */
-  e_rab_param_t                      e_rab[NB_RB_MAX];//[S1AP_MAX_E_RAB];
+  e_rab_param_NB_t                      e_rab[NB_RB_MAX];//[S1AP_MAX_E_RAB];
 
   // LG: For GTPV1 TUNNELS
   uint32_t                           enb_gtp_teid[S1AP_MAX_E_RAB];
@@ -524,17 +420,17 @@ typedef struct eNB_RRC_UE_s {
   uint32_t                           ul_failure_timer;
   uint32_t                           ue_release_timer;
   uint32_t                           ue_release_timer_thres;
-} eNB_RRC_UE_t;
+} eNB_RRC_UE_NB_t;
 //--------------------------------------------------------------------------------
 
-typedef uid_t ue_uid_t;
+typedef uid_NB_t ue_uid_t;
 
 
 //Not touched - generally variable called: ue_context_pP
-typedef struct rrc_eNB_ue_context_s {
+typedef struct rrc_eNB_ue_context_NB_s {
 
   /* Tree related data */
-  RB_ENTRY(rrc_eNB_ue_context_s) entries;
+  RB_ENTRY(rrc_eNB_ue_context_NB_s) entries;
 
   /* Uniquely identifies the UE between MME and eNB within the eNB.
    * This id is encoded on 24bits.
@@ -545,9 +441,9 @@ typedef struct rrc_eNB_ue_context_s {
   ue_uid_t       local_uid;
 
   /* UE id for initial connection to S1AP */
-  struct eNB_RRC_UE_s   ue_context; //context of ue in the e-nB
+  struct eNB_RRC_UE_NB_s   ue_context; //context of ue in the e-nB
 
-} rrc_eNB_ue_context_t;
+} rrc_eNB_ue_context_NB_t;
 
 
 
@@ -616,20 +512,20 @@ typedef struct {
   uint8_t							sizeof_SC_MCHH_MESS[];
   SC_MCCH_Message_NB_t				scptm;*/
 
-  SRB_INFO                          SI;
-  SRB_INFO                          Srb0;
-} rrc_eNB_carrier_data_t;
+  SRB_INFO_NB                          SI;
+  SRB_INFO_NB                          Srb0;
+} rrc_eNB_carrier_data_NB_t;
 //---------------------------------------------------
 
 
 
 //---NB-IoT---(completely change)---------------------
-typedef struct eNB_RRC_INST_s {
+typedef struct eNB_RRC_INST_NB_s {
 
-  rrc_eNB_carrier_data_t          carrier[MAX_NUM_CCs];
+  rrc_eNB_carrier_data_NB_t          carrier[MAX_NUM_CCs];
 
-  uid_allocator_t                    uid_allocator; // for rrc_ue_head
-  RB_HEAD(rrc_ue_tree_s, rrc_eNB_ue_context_s)     rrc_ue_head; // ue_context tree key search by rnti
+  uid_allocator_NB_t                    uid_allocator; // for rrc_ue_head
+  RB_HEAD(rrc_ue_tree_NB_s, rrc_eNB_ue_context_NB_s)     rrc_ue_head; // ue_context tree key search by rnti
 
   uint8_t                           Nb_ue;
 
@@ -658,185 +554,187 @@ typedef struct eNB_RRC_INST_s {
   int srs_enable[MAX_NUM_CCs];
 
 
-} eNB_RRC_INST;
+} eNB_RRC_INST_NB;
 
 
 #define MAX_UE_CAPABILITY_SIZE 255
-typedef struct OAI_UECapability_s {
-  uint8_t sdu[MAX_UE_CAPABILITY_SIZE];
-  uint8_t sdu_size;
-//NB-IoT------
-  UE_Capability_NB_r13_t	UE_Capability_NB; //replace the UE_EUTRA_Capability of LTE
-} OAI_UECapability_t;
+//not needed for the moment
+//typedef struct OAI_UECapability_s {
+//  uint8_t sdu[MAX_UE_CAPABILITY_SIZE];
+//  uint8_t sdu_size;
+////NB-IoT------
+//  UE_Capability_NB_r13_t	UE_Capability_NB; //replace the UE_EUTRA_Capability of LTE
+//} OAI_UECapability_t;
 
 
-typedef struct UE_RRC_INST_s {
-  Rrc_State_t     RrcState;
-  Rrc_Sub_State_t RrcSubState;
-# if defined(ENABLE_USE_MME)
-  plmn_t          plmnID;
-  Byte_t          rat;
-  as_nas_info_t   initialNasMsg;
-# endif
-  OAI_UECapability_t *UECap;
-  uint8_t *UECapability;
-  uint8_t UECapability_size;
-  UE_RRC_INFO Info[NB_SIG_CNX_UE];
-  SRB_INFO Srb0[NB_SIG_CNX_UE];
-  SRB_INFO_TABLE_ENTRY Srb1[NB_CNX_UE];
-  SRB_INFO_TABLE_ENTRY Srb2[NB_CNX_UE];
-  HANDOVER_INFO_UE HandoverInfoUe;
-  uint8_t *SIB1[NB_CNX_UE];
-  uint8_t sizeof_SIB1[NB_CNX_UE];
-  uint8_t *SI[NB_CNX_UE];
-  uint8_t sizeof_SI[NB_CNX_UE];
-  uint8_t SIB1Status[NB_CNX_UE];
-  uint8_t SIStatus[NB_CNX_UE];
-  SystemInformationBlockType1_t *sib1[NB_CNX_UE];
-  SystemInformation_t *si[NB_CNX_UE]; //!< Temporary storage for an SI message. Decoding happens in decode_SI().
-  SystemInformationBlockType2_t *sib2[NB_CNX_UE];
-  SystemInformationBlockType3_t *sib3[NB_CNX_UE];
-  SystemInformationBlockType4_t *sib4[NB_CNX_UE];
-  SystemInformationBlockType5_t *sib5[NB_CNX_UE];
-  SystemInformationBlockType6_t *sib6[NB_CNX_UE];
-  SystemInformationBlockType7_t *sib7[NB_CNX_UE];
-  SystemInformationBlockType8_t *sib8[NB_CNX_UE];
-  SystemInformationBlockType9_t *sib9[NB_CNX_UE];
-  SystemInformationBlockType10_t *sib10[NB_CNX_UE];
-  SystemInformationBlockType11_t *sib11[NB_CNX_UE];
-
-#if defined(Rel10) || defined(Rel14)
-  uint8_t                           MBMS_flag;
-  uint8_t *MCCH_MESSAGE[NB_CNX_UE];
-  uint8_t sizeof_MCCH_MESSAGE[NB_CNX_UE];
-  uint8_t MCCH_MESSAGEStatus[NB_CNX_UE];
-  MBSFNAreaConfiguration_r9_t       *mcch_message[NB_CNX_UE];
-  SystemInformationBlockType12_r9_t *sib12[NB_CNX_UE];
-  SystemInformationBlockType13_r9_t *sib13[NB_CNX_UE];
-#endif
-#ifdef CBA
-  uint8_t                         num_active_cba_groups;
-  uint16_t                        cba_rnti[NUM_MAX_CBA_GROUP];
-#endif
-  uint8_t                         num_srb;
-  struct SRB_ToAddMod             *SRB1_config[NB_CNX_UE];
-  struct SRB_ToAddMod             *SRB2_config[NB_CNX_UE];
-  struct DRB_ToAddMod             *DRB_config[NB_CNX_UE][8];
-  rb_id_t                         *defaultDRB; // remember the ID of the default DRB
-  MeasObjectToAddMod_t            *MeasObj[NB_CNX_UE][MAX_MEAS_OBJ];
-  struct ReportConfigToAddMod     *ReportConfig[NB_CNX_UE][MAX_MEAS_CONFIG];
-  struct QuantityConfig           *QuantityConfig[NB_CNX_UE];
-  struct MeasIdToAddMod           *MeasId[NB_CNX_UE][MAX_MEAS_ID];
-  MEAS_REPORT_LIST      *measReportList[NB_CNX_UE][MAX_MEAS_ID];
-  uint32_t           measTimer[NB_CNX_UE][MAX_MEAS_ID][6]; // 6 neighboring cells
-  RSRP_Range_t                    s_measure;
-  struct MeasConfig__speedStatePars *speedStatePars;
-  struct PhysicalConfigDedicated  *physicalConfigDedicated[NB_CNX_UE];
-  struct SPS_Config               *sps_Config[NB_CNX_UE];
-  MAC_MainConfig_t                *mac_MainConfig[NB_CNX_UE];
-  MeasGapConfig_t                 *measGapConfig[NB_CNX_UE];
-  double                          filter_coeff_rsrp; // [7] ???
-  double                          filter_coeff_rsrq; // [7] ???
-  float                           rsrp_db[7];
-  float                           rsrq_db[7];
-  float                           rsrp_db_filtered[7];
-  float                           rsrq_db_filtered[7];
-#if ENABLE_RAL
-  obj_hash_table_t               *ral_meas_thresholds;
-  ral_transaction_id_t            scan_transaction_id;
-#endif
-#if defined(ENABLE_SECURITY)
-  /* KeNB as computed from parameters within USIM card */
-  uint8_t kenb[32];
-#endif
-
-  /* Used integrity/ciphering algorithms */
-  e_CipheringAlgorithm_r12                          ciphering_algorithm;
-  e_SecurityAlgorithmConfig__integrityProtAlgorithm integrity_algorithm;
-
-} UE_RRC_INST;
-
-
-
-/*NB-IoT version (for now not consider UE-side)
-typedef struct UE_RRC_INST_s {
-  Rrc_State_t     RrcState; //are the same?
-  Rrc_Sub_State_t RrcSubState;
-
-# if defined(ENABLE_USE_MME)
-  plmn_t          plmnID;
-  Byte_t          rat;
-  as_nas_info_t   initialNasMsg;
-# endif
-
-  OAI_UECapability_t *UECap;
-  uint8_t *UECapability;
-  uint8_t UECapability_size;
-  UE_RRC_INFO Info[NB_SIG_CNX_UE];
-  SRB_INFO Srb0[NB_SIG_CNX_UE];
-  SRB_INFO_TABLE_ENTRY Srb1[NB_CNX_UE];
-  SRB_INFO_TABLE_ENTRY Srb1bis[NB_CNX_UE]; //not exist srb2
-
-  //needed for NB-IoT?
-  HANDOVER_INFO_UE HandoverInfoUe;
-
-  uint8_t *SIB1_NB[NB_CNX_UE];
-  uint8_t sizeof_SIB1_NB[N_NBB_CNX_UE];
-  uint8_t *SI_NB[NB_CNX_UE];
-  uint8_t sizeof_SI_NB[NB_CNX_UE];
-  uint8_t SIB1_NB_Status[NB_CNX_UE];
-  uint8_t SI_NB_Status[NB_CNX_UE];
-
-  //NB-IoT SIBs
-  SystemInformationBlockType1_NB_t *sib1_NB[NB_CNX_UE];
-  SystemInformation_NB_t *si_NB[NB_CNX_UE]; //!< Temporary storage for an SI-NB message. Decoding happens in decode_SI()-->UE side (to be changed).
-
-  SystemInformationBlockType2_NB_r13_t *sib2_NB[NB_CNX_UE];
-  SystemInformationBlockType3_NB_r13_t *sib3_NB[NB_CNX_UE];
-  SystemInformationBlockType4_NB_r13_t *sib4_NB[NB_CNX_UE];
-  SystemInformationBlockType5_NB_r13_t *sib5_NB[NB_CNX_UE];
-  SystemInformationBlockType14_NB_r13_t *sib14_NB[NB_CNX_UE];
-  SystemInformationBlockType16_NB_r13_t *sib16_NB[NB_CNX_UE];
-
-  /*future implementation TS 36.331 V14.2.1--(preliminary)
-  SystemInformationBlockType15_NB_r14_t *sib15_NB[NB_CNX_UE];
-  SystemInformationBlockType20_NB_r14_t *sib20_NB[NB_CNX_UE];
-  SystemInformationBlockType22_NB_r14_t *sib22_NB[NB_CNX_UE];
-
-  uint8_t							SCPTM_flag;
-  uint8_t							sizeof_SC_MCHH_MESS[];
-  SC_MCCH_Message_NB_t				scptm;
+//Old implementation --> see NB_iot version
+//typedef struct UE_RRC_INST_s {
+//  Rrc_State_t     RrcState;
+//  Rrc_Sub_State_t RrcSubState;
+//# if defined(ENABLE_USE_MME)
+//  plmn_t          plmnID;
+//  Byte_t          rat;
+//  as_nas_info_t   initialNasMsg;
+//# endif
+//  OAI_UECapability_t *UECap;
+//  uint8_t *UECapability;
+//  uint8_t UECapability_size;
+//  UE_RRC_INFO Info[NB_SIG_CNX_UE];
+//  SRB_INFO Srb0[NB_SIG_CNX_UE];
+//  SRB_INFO_TABLE_ENTRY Srb1[NB_CNX_UE];
+//  SRB_INFO_TABLE_ENTRY Srb2[NB_CNX_UE];
+//  HANDOVER_INFO_UE HandoverInfoUe;
+//  uint8_t *SIB1[NB_CNX_UE];
+//  uint8_t sizeof_SIB1[NB_CNX_UE];
+//  uint8_t *SI[NB_CNX_UE];
+//  uint8_t sizeof_SI[NB_CNX_UE];
+//  uint8_t SIB1Status[NB_CNX_UE];
+//  uint8_t SIStatus[NB_CNX_UE];
+//  SystemInformationBlockType1_t *sib1[NB_CNX_UE];
+//  SystemInformation_t *si[NB_CNX_UE]; //!< Temporary storage for an SI message. Decoding happens in decode_SI().
+//  SystemInformationBlockType2_t *sib2[NB_CNX_UE];
+//  SystemInformationBlockType3_t *sib3[NB_CNX_UE];
+//  SystemInformationBlockType4_t *sib4[NB_CNX_UE];
+//  SystemInformationBlockType5_t *sib5[NB_CNX_UE];
+//  SystemInformationBlockType6_t *sib6[NB_CNX_UE];
+//  SystemInformationBlockType7_t *sib7[NB_CNX_UE];
+//  SystemInformationBlockType8_t *sib8[NB_CNX_UE];
+//  SystemInformationBlockType9_t *sib9[NB_CNX_UE];
+//  SystemInformationBlockType10_t *sib10[NB_CNX_UE];
+//  SystemInformationBlockType11_t *sib11[NB_CNX_UE];
+//
+//#if defined(Rel10) || defined(Rel14)
+//  uint8_t                           MBMS_flag;
+//  uint8_t *MCCH_MESSAGE[NB_CNX_UE];
+//  uint8_t sizeof_MCCH_MESSAGE[NB_CNX_UE];
+//  uint8_t MCCH_MESSAGEStatus[NB_CNX_UE];
+//  MBSFNAreaConfiguration_r9_t       *mcch_message[NB_CNX_UE];
+//  SystemInformationBlockType12_r9_t *sib12[NB_CNX_UE];
+//  SystemInformationBlockType13_r9_t *sib13[NB_CNX_UE];
+//#endif
+//#ifdef CBA
+//  uint8_t                         num_active_cba_groups;
+//  uint16_t                        cba_rnti[NUM_MAX_CBA_GROUP];
+//#endif
+//  uint8_t                         num_srb;
+//  struct SRB_ToAddMod             *SRB1_config[NB_CNX_UE];
+//  struct SRB_ToAddMod             *SRB2_config[NB_CNX_UE];
+//  struct DRB_ToAddMod             *DRB_config[NB_CNX_UE][8];
+//  rb_id_t                         *defaultDRB; // remember the ID of the default DRB
+//  MeasObjectToAddMod_t            *MeasObj[NB_CNX_UE][MAX_MEAS_OBJ];
+//  struct ReportConfigToAddMod     *ReportConfig[NB_CNX_UE][MAX_MEAS_CONFIG];
+//  struct QuantityConfig           *QuantityConfig[NB_CNX_UE];
+//  struct MeasIdToAddMod           *MeasId[NB_CNX_UE][MAX_MEAS_ID];
+//  MEAS_REPORT_LIST      *measReportList[NB_CNX_UE][MAX_MEAS_ID];
+//  uint32_t           measTimer[NB_CNX_UE][MAX_MEAS_ID][6]; // 6 neighboring cells
+//  RSRP_Range_t                    s_measure;
+//  struct MeasConfig__speedStatePars *speedStatePars;
+//  struct PhysicalConfigDedicated  *physicalConfigDedicated[NB_CNX_UE];
+//  struct SPS_Config               *sps_Config[NB_CNX_UE];
+//  MAC_MainConfig_t                *mac_MainConfig[NB_CNX_UE];
+//  MeasGapConfig_t                 *measGapConfig[NB_CNX_UE];
+//  double                          filter_coeff_rsrp; // [7] ???
+//  double                          filter_coeff_rsrq; // [7] ???
+//  float                           rsrp_db[7];
+//  float                           rsrq_db[7];
+//  float                           rsrp_db_filtered[7];
+//  float                           rsrq_db_filtered[7];
+//#if ENABLE_RAL
+//  obj_hash_table_t               *ral_meas_thresholds;
+//  ral_transaction_id_t            scan_transaction_id;
+//#endif
+//#if defined(ENABLE_SECURITY)
+//  /* KeNB as computed from parameters within USIM card */
+//  uint8_t kenb[32];
+//#endif
+//
+//  /* Used integrity/ciphering algorithms */
+//  e_CipheringAlgorithm_r12                          ciphering_algorithm;
+//  e_SecurityAlgorithmConfig__integrityProtAlgorithm integrity_algorithm;
+//
+//} UE_RRC_INST;
 
 
-// delete #if defined(Rel10) || defined(Rel14)....(not used in NB-IoT) and CBA
 
-  uint8_t                         num_srb;
-  struct SRB_ToAddMod_NB_r13_t             *SRB1_config_NB[NB_CNX_UE];
-  struct SRB_ToAddMod_NB_r13_t             *SRB1bis_config_NB[NB_CNX_UE];
-  struct DRB_ToAddMod_NB_r13_t             *DRB_config_NB[NB_CNX_UE][8];
-  rb_id_t                         *defaultDRB; // remember the ID of the default DRB
+//NB-IoT version (for now not consider UE-side)--------------
 
-  //no measurement Reports in NB-IoT
+//typedef struct UE_RRC_INST_s {
+//  Rrc_State_t     RrcState; //are the same?
+//  Rrc_Sub_State_t RrcSubState;
+//
+//# if defined(ENABLE_USE_MME)
+//  plmn_t          plmnID;
+//  Byte_t          rat;
+//  as_nas_info_t   initialNasMsg;
+//# endif
+//
+//  OAI_UECapability_t *UECap;
+//  uint8_t *UECapability;
+//  uint8_t UECapability_size;
+//  UE_RRC_INFO Info[NB_SIG_CNX_UE];
+//  SRB_INFO Srb0[NB_SIG_CNX_UE];
+//  SRB_INFO_TABLE_ENTRY Srb1[NB_CNX_UE];
+//  SRB_INFO_TABLE_ENTRY Srb1bis[NB_CNX_UE]; //not exist srb2
+//
+//  //needed for NB-IoT?
+//  HANDOVER_INFO_UE HandoverInfoUe;
+//
+//  uint8_t *SIB1_NB[NB_CNX_UE];
+//  uint8_t sizeof_SIB1_NB[N_NBB_CNX_UE];
+//  uint8_t *SI_NB[NB_CNX_UE];
+//  uint8_t sizeof_SI_NB[NB_CNX_UE];
+//  uint8_t SIB1_NB_Status[NB_CNX_UE];
+//  uint8_t SI_NB_Status[NB_CNX_UE];
+//
+//  //NB-IoT SIBs
+//  SystemInformationBlockType1_NB_t *sib1_NB[NB_CNX_UE];
+//  SystemInformation_NB_t *si_NB[NB_CNX_UE]; //!< Temporary storage for an SI-NB message. Decoding happens in decode_SI()-->UE side (to be changed).
+//
+//  SystemInformationBlockType2_NB_r13_t *sib2_NB[NB_CNX_UE];
+//  SystemInformationBlockType3_NB_r13_t *sib3_NB[NB_CNX_UE];
+//  SystemInformationBlockType4_NB_r13_t *sib4_NB[NB_CNX_UE];
+//  SystemInformationBlockType5_NB_r13_t *sib5_NB[NB_CNX_UE];
+//  SystemInformationBlockType14_NB_r13_t *sib14_NB[NB_CNX_UE];
+//  SystemInformationBlockType16_NB_r13_t *sib16_NB[NB_CNX_UE];
+//
+//  future implementation TS 36.331 V14.2.1--(preliminary)
+//  SystemInformationBlockType15_NB_r14_t *sib15_NB[NB_CNX_UE];
+//  SystemInformationBlockType20_NB_r14_t *sib20_NB[NB_CNX_UE];
+//  SystemInformationBlockType22_NB_r14_t *sib22_NB[NB_CNX_UE];
+//
+//  uint8_t							SCPTM_flag;
+//  uint8_t							sizeof_SC_MCHH_MESS[];
+//  SC_MCCH_Message_NB_t				scptm;
+//
+//
+//  uint8_t                         num_srb;
+//  struct SRB_ToAddMod_NB_r13_t             *SRB1_config_NB[NB_CNX_UE];
+//  struct SRB_ToAddMod_NB_r13_t             *SRB1bis_config_NB[NB_CNX_UE];
+//  struct DRB_ToAddMod_NB_r13_t             *DRB_config_NB[NB_CNX_UE][8];
+//  rb_id_t                         *defaultDRB; // remember the ID of the default DRB
+//
+//  //no measurement Reports in NB-IoT
+//
+//  struct PhysicalConfigDedicated_NB_r13  *physicalConfigDedicated_NB[NB_CNX_UE];
+//  MAC_MainConfig_NB_r13_t                *mac_MainConfig_NB[NB_CNX_UE];
+//
+//  //no RAL
+//
+//#if defined(ENABLE_SECURITY)
+//  /* KeNB as computed from parameters within USIM card */
+//  uint8_t kenb[32];
+//#endif
+//  /* KeNB as computed from parameters within USIM card */
+//  uint8_t kenb[32];
+//#endif
+//
+//  // Used integrity/ciphering algorithms
+//  e_CipheringAlgorithm_r12                          ciphering_algorithm;
+//  e_SecurityAlgorithmConfig__integrityProtAlgorithm integrity_algorithm;
+//
+//} UE_RRC_INST;
 
-  struct PhysicalConfigDedicated_NB_r13  *physicalConfigDedicated_NB[NB_CNX_UE];
-  MAC_MainConfig_NB_r13_t                *mac_MainConfig_NB[NB_CNX_UE];
-
-  //no RAL
-
-#if defined(ENABLE_SECURITY)
-  // KeNB as computed from parameters within USIM card //
-  uint8_t kenb[32];
-#endif
-
-  // Used integrity/ciphering algorithms
-  e_CipheringAlgorithm_r12                          ciphering_algorithm;
-  e_SecurityAlgorithmConfig__integrityProtAlgorithm integrity_algorithm;
-
-} UE_RRC_INST;
-*/
-//--------------------------------------------------------------------------
-
-#include "proto.h"
+#include "proto_nb_iot.h"
 
 #endif
 /** @} */
