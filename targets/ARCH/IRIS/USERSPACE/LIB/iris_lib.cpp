@@ -468,6 +468,7 @@ extern "C" {
 		break;
 	}
 
+        openair0_cfg[0].iq_txshift = 0;//shift
 
 	for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_RX); i++) {
 		if (i < openair0_cfg[0].rx_num_channels) {
