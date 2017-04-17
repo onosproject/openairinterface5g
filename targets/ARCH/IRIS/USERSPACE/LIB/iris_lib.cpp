@@ -327,11 +327,11 @@ int trx_iris_stop(openair0_device* device) {
 
 /*! \brief Iris RX calibration table */
 rx_gain_calib_table_t calib_table_iris[] = {
-  {3500000000.0,24},
-  {2660000000.0,70},
-  {2300000000.0,8},
-  {1880000000.0,11},
-  {816000000.0,4},
+  {3500000000.0,83},
+  {2660000000.0,83},
+  {2300000000.0,83},
+  {1880000000.0,83},
+  {816000000.0,83},
   {-1,0}};
 
 
@@ -425,6 +425,7 @@ extern "C" {
 	char* remote_addr = device->openair0_cfg->remote_addr;
 	LOG_I(HW,"Attempting to open Iris device: %s\n", remote_addr);
 	std::string args = "driver=remote,serial="+std::string(remote_addr)+",remote:format=CS16";
+        openair0_cfg[0].iq_txshift = 4;//if radio needs OAI to shift left the tx samples for preserving bit precision 
 
 	s->iris = SoapySDR::Device::make(args);
 	device->type=IRIS_DEV;
@@ -468,7 +469,6 @@ extern "C" {
 		break;
 	}
 
-        openair0_cfg[0].iq_txshift = 4;//shift
 
 	for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_RX); i++) {
 		if (i < openair0_cfg[0].rx_num_channels) {
