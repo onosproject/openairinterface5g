@@ -31,14 +31,14 @@ typedef struct
   // variables for Iris configuration
   // --------------------------------
   //! Iris device pointer
-  SoapySDR::Device *iris;
-
+  std::vector<SoapySDR::Device*> iris;
+  int device_num;
   //create a send streamer and a receive streamer
   //! Iris TX Stream
-  SoapySDR::Stream *txStream;
+  std::vector<SoapySDR::Stream*> txStream;
   //! Iris RX Stream
-  SoapySDR::Stream *rxStream;
-
+  std::vector<SoapySDR::Stream*> rxStream;
+  
   //! Sampling rate
   double sample_rate;
 
@@ -75,13 +75,17 @@ static int trx_iris_start(openair0_device *device)
 {
 	iris_state_t *s = (iris_state_t*)device->priv;
 
-	long long timeNs = s->iris->getHardwareTime("") + 500000;
+	long long timeNs = s->iris[0]->getHardwareTime("") + 500000;
 	int flags = 0;
 	//flags |= SOAPY_SDR_HAS_TIME;
-	int ret = s->iris->activateStream(s->rxStream, flags, timeNs, 0);
-	int ret2 = s->iris->activateStream(s->txStream);
-	if (ret < 0 | ret2 < 0)
+	int r;
+	for (r = 0; r < s->device_num; r++)
+	{
+	    int ret = s->iris[r]->activateStream(s->rxStream[r], flags, timeNs, 0);
+	    int ret2 = s->iris[r]->activateStream(s->txStream[r]);
+	    if (ret < 0 | ret2 < 0)
 		return - 1;
+	}
 	return 0;
 }
 /*! \brief Terminate operation of the Iris lime transceiver -- free all associated resources 
@@ -91,9 +95,13 @@ static void trx_iris_end(openair0_device *device)
 {
 	LOG_I(HW,"Closing Iris device.\n");
 	iris_state_t *s = (iris_state_t*)device->priv;
-	s->iris->closeStream(s->txStream);
-	s->iris->closeStream(s->rxStream);
-	SoapySDR::Device::unmake(s->iris);
+	int r;
+	for (r = 0; r < s->device_num; r++)
+	{
+	    s->iris[r]->closeStream(s->txStream[r]);
+	    s->iris[r]->closeStream(s->rxStream[r]);
+	    SoapySDR::Device::unmake(s->iris[r]);
+	}
 }
 
 /*! \brief Called to send samples to the Iris RF target
@@ -106,52 +114,59 @@ static void trx_iris_end(openair0_device *device)
 */ 
 static int trx_iris_write(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps, int cc, int flags)
 {
-	static long long int loop=0;
-	static long time_min=0, time_max=0, time_avg=0;
-	struct timespec tp_start, tp_end;
-	long time_diff;
+    static long long int loop=0;
+    static long time_min=0, time_max=0, time_avg=0;
+    struct timespec tp_start, tp_end;
+    long time_diff;
 
-	int ret=0, ret_i=0;
-	int flag = 0;
-	iris_state_t *s = (iris_state_t*)device->priv;
+    int ret=0, ret_i=0;
+    int flag = 0;
+    iris_state_t *s = (iris_state_t*)device->priv;
 
-	clock_gettime(CLOCK_MONOTONIC_RAW, &tp_start);
-	if (flags)
-		flag |= SOAPY_SDR_HAS_TIME;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &tp_start);
+    if (flags)
+	flag |= SOAPY_SDR_HAS_TIME;
 
-	long long timeNs = SoapySDR::ticksToTimeNs(timestamp, s->sample_rate/SAMPLE_RATE_DOWN);
+    long long timeNs = SoapySDR::ticksToTimeNs(timestamp, s->sample_rate/SAMPLE_RATE_DOWN);
+    uint32_t *samps[2]; //= (uint32_t **)buff;
+    int r;
+    for (r = 0; r < s->device_num; r++)
+    { 
 	int samples_sent = 0;
-	uint32_t **samps = (uint32_t **)buff;
+	samps[0] = (uint32_t *)buff[2*r];
+	if (cc % 2 == 0)
+   	    samps[1] = (uint32_t *)buff[2*r+1]; //cws: it seems another thread can clobber these, so we need to save them locally.
 	while (samples_sent < nsamps)
 	{
-		ret = s->iris->writeStream(s->txStream, (void **)samps, (size_t)(nsamps - samples_sent), flag, timeNs, 100000);
-		if (ret < 0) {
-			printf("Unable to write stream!\n");
-			break;
-		}
-		samples_sent += ret;
-		samps[0] += ret;
-		if (cc > 1)
-			samps[1] += ret;
+	    ret = s->iris[r]->writeStream(s->txStream[r], (void **)samps, (size_t)(nsamps - samples_sent), flag, timeNs, 100000);
+	    if (ret < 0) {
+		printf("Unable to write stream!\n");
+		break;
+	    }
+	    samples_sent += ret;
+	    samps[0] += ret;
+	    if (cc % 2 == 0)
+		samps[1] += ret;
 	}
 
 	if (samples_sent != nsamps) {
 		printf("[xmit] tx samples %d != %d\n",samples_sent,nsamps);
 	}
-	/*
-	flag = 0;
-	size_t channel = 0;
-	ret = s->iris->readStreamStatus(s->txStream, channel, flag, timeNs, 0);
-	if (ret == SOAPY_SDR_TIME_ERROR)
-		printf("[xmit] Time Error in tx stream!\n");
-	else if (ret == SOAPY_SDR_UNDERFLOW)
-		printf("[xmit] Underflow occured!\n");
-	else if (ret == SOAPY_SDR_TIMEOUT)
-		printf("[xmit] Timeout occured!\n");
-	else if (ret == SOAPY_SDR_STREAM_ERROR)
-		printf("[xmit] Stream (tx) error occured!\n");
-	*/	
-	return nsamps;
+    }
+    /*
+    flag = 0;
+    size_t channel = 0;
+    ret = s->iris->readStreamStatus(s->txStream, channel, flag, timeNs, 0);
+    if (ret == SOAPY_SDR_TIME_ERROR)
+	    printf("[xmit] Time Error in tx stream!\n");
+    else if (ret == SOAPY_SDR_UNDERFLOW)
+	    printf("[xmit] Underflow occured!\n");
+    else if (ret == SOAPY_SDR_TIMEOUT)
+	    printf("[xmit] Timeout occured!\n");
+    else if (ret == SOAPY_SDR_STREAM_ERROR)
+	    printf("[xmit] Stream (tx) error occured!\n");
+    */	
+    return nsamps;
 }
 
 /*! \brief Receive samples from hardware.
@@ -167,72 +182,85 @@ static int trx_iris_write(openair0_device *device, openair0_timestamp timestamp,
 */
 static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
-	int ret = 0;
-	static long long nextTime;
-	static bool nextTimeValid = false;
-	iris_state_t *s = (iris_state_t*)device->priv;
-	bool time_set = false;
-	long long timeNs = 0;
-	int flags = 0;
-	int samples_received = 0;
-	uint32_t *samps[2] = {(uint32_t *)buff[0], (uint32_t *)buff[1]}; //cws: it seems another thread can clobber these, so we need to save them locally.
-	//printf("Reading %d samples from Iris...\n", nsamps);
-	//fflush(stdout);
+    int ret = 0;
+    static long long nextTime;
+    static bool nextTimeValid = false;
+    iris_state_t *s = (iris_state_t*)device->priv;
+    bool time_set = false;
+    long long timeNs = 0;
+    int flags;
+    int samples_received;
+    uint32_t *samps[2]; //= (uint32_t **)buff;
+    //printf("Reading %d samples from Iris...\n", nsamps);
+    //fflush(stdout);
+    int r;
+    for (r = 0; r < s->device_num; r++)
+    {
+	flags = 0;
+	samples_received = 0;
+	samps[0] = (uint32_t *)buff[2*r];
+	if (cc % 2 == 0)
+   	    samps[1] = (uint32_t *)buff[2*r+1]; 
+	//uint32_t *samps[2] = {(uint32_t *)buff[2*r], (uint32_t *)buff[2*r+1]}; //cws: it seems another thread can clobber these, so we need to save them locally.
 	while (samples_received < nsamps)
 	{
-		flags = 0;
-		ret = s->iris->readStream(s->rxStream, (void **)samps, (size_t)(nsamps-samples_received), flags, timeNs, 100000);
-		if (ret < 0)
-		{
-			if (ret == SOAPY_SDR_TIME_ERROR)
-				printf("[recv] Time Error in tx stream!\n");
-			else if (ret == SOAPY_SDR_OVERFLOW | (flags & SOAPY_SDR_END_ABRUPT))
-				printf("[recv] Overflow occured!\n");
-			else if (ret == SOAPY_SDR_TIMEOUT)
-				printf("[recv] Timeout occured!\n");
-			else if (ret == SOAPY_SDR_STREAM_ERROR)
-				printf("[recv] Stream (tx) error occured!\n");
-			else if (ret == SOAPY_SDR_CORRUPTION)
-				printf("[recv] Bad packet occured!\n");
-			break;
-		}
+	    flags = 0;
+	    ret = s->iris[r]->readStream(s->rxStream[r], (void **)samps, (size_t)(nsamps-samples_received), flags, timeNs, 100000);
+	    if (ret < 0)
+	    {
+		if (ret == SOAPY_SDR_TIME_ERROR)
+		    printf("[recv] Time Error in tx stream!\n");
+		else if (ret == SOAPY_SDR_OVERFLOW | (flags & SOAPY_SDR_END_ABRUPT))
+		    printf("[recv] Overflow occured!\n");
+		else if (ret == SOAPY_SDR_TIMEOUT)
+		    printf("[recv] Timeout occured!\n");
+		else if (ret == SOAPY_SDR_STREAM_ERROR)
+		    printf("[recv] Stream (tx) error occured!\n");
+		else if (ret == SOAPY_SDR_CORRUPTION)
+		    printf("[recv] Bad packet occured!\n");
+		break;
+	    }
 
-		samples_received += ret;
-		samps[0] += ret;
-		if (cc > 1)
-			samps[1] += ret;
-
+	    samples_received += ret;
+	    samps[0] += ret;
+	    if (cc % 2 == 0)
+		    samps[1] += ret;
+	    if (r == 0)
+	    {
 		if (samples_received == ret) // first batch
 		{
-			if (flags & SOAPY_SDR_HAS_TIME)
-			{
-				s->rx_timestamp = SoapySDR::timeNsToTicks(timeNs, s->sample_rate/SAMPLE_RATE_DOWN);
-				*ptimestamp = s->rx_timestamp;
-				nextTime = timeNs;
-				nextTimeValid = true;
-				time_set = true;
-				//printf("1) time set %llu \n", *ptimestamp);
-			}
+		    if (flags & SOAPY_SDR_HAS_TIME)
+		    {
+			s->rx_timestamp = SoapySDR::timeNsToTicks(timeNs, s->sample_rate/SAMPLE_RATE_DOWN);
+			*ptimestamp = s->rx_timestamp;
+			nextTime = timeNs;
+			nextTimeValid = true;
+			time_set = true;
+			//printf("1) time set %llu \n", *ptimestamp);
+		    }
 		}
+	    }
 	}
-
-	if (samples_received < nsamps)
+	if (r == 0)
+	{
+	    if (samples_received < nsamps)
 		printf("[recv] received %d samples out of %d\n",samples_received,nsamps);
 
-	s->rx_count += samples_received;
+	    s->rx_count += samples_received;
 
-	if (s->sample_rate != 0 && nextTimeValid)
-	{
+	    if (s->sample_rate != 0 && nextTimeValid)
+	    {
 		if (!time_set)
 		{
-			s->rx_timestamp = SoapySDR::timeNsToTicks(nextTime, s->sample_rate/SAMPLE_RATE_DOWN);
-			*ptimestamp = s->rx_timestamp;
-			//printf("2) time set %llu, nextTime will be %llu \n", *ptimestamp, nextTime);
+		    s->rx_timestamp = SoapySDR::timeNsToTicks(nextTime, s->sample_rate/SAMPLE_RATE_DOWN);
+		    *ptimestamp = s->rx_timestamp;
+		    //printf("2) time set %llu, nextTime will be %llu \n", *ptimestamp, nextTime);
 		}
 		nextTime += SoapySDR::ticksToTimeNs(samples_received, s->sample_rate/SAMPLE_RATE_DOWN);
+	    }
 	}
-
-	return samples_received;
+    }
+    return samples_received;
 }
 
 /*! \brief Get current timestamp of Iris
@@ -240,8 +268,8 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
 */
 openair0_timestamp get_iris_time(openair0_device *device)
 {
-	iris_state_t *s = (iris_state_t*)device->priv;
-	return SoapySDR::timeNsToTicks(s->iris->getHardwareTime(""), s->sample_rate);
+    iris_state_t *s = (iris_state_t*)device->priv;
+    return SoapySDR::timeNsToTicks(s->iris[0]->getHardwareTime(""), s->sample_rate);
 }
 
 /*! \brief Compares two variables within precision
@@ -250,23 +278,26 @@ openair0_timestamp get_iris_time(openair0_device *device)
 */
 static bool is_equal(double a, double b)
 {
-	return std::fabs(a-b) < std::numeric_limits<double>::epsilon();
+    return std::fabs(a-b) < std::numeric_limits<double>::epsilon();
 }
 
 void *set_freq_thread(void *arg) {
 
     openair0_device *device=(openair0_device *)arg;
     iris_state_t *s = (iris_state_t*)device->priv;
-    int i;
+    int r, i;
     printf("Setting Iris TX Freq %f, RX Freq %f\n",device->openair0_cfg[0].tx_freq[0],device->openair0_cfg[0].rx_freq[0]);
     // add check for the number of channels in the cfg
-    for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_RX); i++) {
+    for (r = 0; r < s->device_num; r++)
+    {
+	for(i=0; i < s->iris[r]->getNumChannels(SOAPY_SDR_RX); i++) {
 	    if (i < device->openair0_cfg[0].rx_num_channels)
-            s->iris->setFrequency(SOAPY_SDR_RX, i, "RF", device->openair0_cfg[0].rx_freq[i]);
-    }
-    for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_TX); i++) {
+		s->iris[r]->setFrequency(SOAPY_SDR_RX, i, "RF", device->openair0_cfg[0].rx_freq[i]);
+	}
+	for(i=0; i < s->iris[r]->getNumChannels(SOAPY_SDR_TX); i++) {
 	    if (i < device->openair0_cfg[0].tx_num_channels)
-            s->iris->setFrequency(SOAPY_SDR_TX, i, "RF", device->openair0_cfg[0].tx_freq[i]);
+		s->iris[r]->setFrequency(SOAPY_SDR_TX, i, "RF", device->openair0_cfg[0].tx_freq[i]);
+	}
     }
 }
 /*! \brief Set frequencies (TX/RX)
@@ -283,19 +314,22 @@ int trx_iris_set_freq(openair0_device* device, openair0_config_t *openair0_cfg, 
         pthread_create(&f_thread, NULL, set_freq_thread, (void*)device);
     else
     {
-        int i;
-        printf("Setting Iris TX Freq %f, RX Freq %f\n",openair0_cfg[0].tx_freq[0],openair0_cfg[0].rx_freq[0]);
-    	for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_RX); i++) {
-	    	if (i < openair0_cfg[0].rx_num_channels) {
-                s->iris->setFrequency(SOAPY_SDR_RX, i, "RF", openair0_cfg[0].rx_freq[i]);
-            }
-        }
-    	for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_TX); i++) {
-	    	if (i < openair0_cfg[0].tx_num_channels) {
-                s->iris->setFrequency(SOAPY_SDR_TX, i, "RF", openair0_cfg[0].tx_freq[i]);
-            }
-        }
+        int r, i;
+	for (r = 0; r < s->device_num; r++)
+	{
+	    printf("Setting Iris TX Freq %f, RX Freq %f\n",openair0_cfg[0].tx_freq[0],openair0_cfg[0].rx_freq[0]);
+	    for(i=0; i < s->iris[r]->getNumChannels(SOAPY_SDR_RX); i++) {
+		if (i < openair0_cfg[0].rx_num_channels) {
+		    s->iris[r]->setFrequency(SOAPY_SDR_RX, i, "RF", openair0_cfg[0].rx_freq[i]);
+		}
+	    }
+	    for(i=0; i < s->iris[r]->getNumChannels(SOAPY_SDR_TX); i++) {
+		if (i < openair0_cfg[0].tx_num_channels) {
+		    s->iris[r]->setFrequency(SOAPY_SDR_TX, i, "RF", openair0_cfg[0].tx_freq[i]);
+		}
+	    }
 	}
+    }
     return(0);
 }
 
@@ -307,22 +341,30 @@ int trx_iris_set_freq(openair0_device* device, openair0_config_t *openair0_cfg, 
  */
 int trx_iris_set_gains(openair0_device* device,
 		       openair0_config_t *openair0_cfg) {
-	iris_state_t *s = (iris_state_t*)device->priv;
-	s->iris->setGain(SOAPY_SDR_RX, 0, openair0_cfg[0].rx_gain[0]);
-	s->iris->setGain(SOAPY_SDR_TX, 0, openair0_cfg[0].tx_gain[0]);
-	s->iris->setGain(SOAPY_SDR_RX, 1, openair0_cfg[0].rx_gain[1]);
-	s->iris->setGain(SOAPY_SDR_TX, 1, openair0_cfg[0].tx_gain[1]);
-	return(0);
+    iris_state_t *s = (iris_state_t*)device->priv;
+    int r;
+    for (r = 0; r < s->device_num; r++)
+    {
+	s->iris[r]->setGain(SOAPY_SDR_RX, 0, openair0_cfg[0].rx_gain[0]);
+	s->iris[r]->setGain(SOAPY_SDR_TX, 0, openair0_cfg[0].tx_gain[0]);
+	s->iris[r]->setGain(SOAPY_SDR_RX, 1, openair0_cfg[0].rx_gain[1]);
+	s->iris[r]->setGain(SOAPY_SDR_TX, 1, openair0_cfg[0].tx_gain[1]);
+    }
+    return(0);
 }
 
 /*! \brief Stop Iris
  * \param card refers to the hardware index to use
  */
 int trx_iris_stop(openair0_device* device) {
-	iris_state_t *s = (iris_state_t*)device->priv;
-	s->iris->deactivateStream(s->txStream);
-	s->iris->deactivateStream(s->rxStream);
-	return(0);
+    iris_state_t *s = (iris_state_t*)device->priv;
+    int r;
+    for (r = 0; r < s->device_num; r++)
+    {
+	s->iris[r]->deactivateStream(s->txStream[r]);
+	s->iris[r]->deactivateStream(s->rxStream[r]);
+    }
+    return(0);
 }
 
 /*! \brief Iris RX calibration table */
@@ -423,15 +465,17 @@ extern "C" {
 	// Initialize Iris device
 	device->openair0_cfg = openair0_cfg;
 	char* remote_addr = device->openair0_cfg->remote_addr;
-	LOG_I(HW,"Attempting to open Iris device: %s\n", remote_addr);
-	std::string args = "driver=remote,serial="+std::string(remote_addr)+",remote:format=CS16";
+	char* srl = strtok(remote_addr, ",");
+	while (srl != NULL)
+	{
+	    LOG_I(HW,"Attempting to open Iris device: %s\n", srl);
+	    std::string args = "driver=remote,serial="+std::string(srl)+",remote:format=CS16";
+	    s->iris.push_back(SoapySDR::Device::make(args));
+	    srl = strtok(NULL, ",");
+	}
+	s->device_num = s->iris.size();
         openair0_cfg[0].iq_txshift = 4;//if radio needs OAI to shift left the tx samples for preserving bit precision 
-
-	s->iris = SoapySDR::Device::make(args);
 	device->type=IRIS_DEV;
-
-	s->iris->setMasterClockRate(8*openair0_cfg[0].sample_rate); // sample*8=clock_rate for Soapy
-	printf("tx_sample_advance %d\n", openair0_cfg[0].tx_sample_advance);
 	switch ((int)openair0_cfg[0].sample_rate) {
 	case 30720000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
@@ -468,90 +512,94 @@ extern "C" {
 		exit(-1);
 		break;
 	}
+	printf("tx_sample_advance %d\n", openair0_cfg[0].tx_sample_advance);
+
+	int r;
+	for (r = 0; r < s->device_num; r++)
+	{
+	    s->iris[r]->setMasterClockRate(8*openair0_cfg[0].sample_rate); // sample*8=clock_rate for Soapy
+	    // display Iris settings
+	    std::cout << boost::format("Actual master clock: %fMHz...") % (s->iris[r]->getMasterClockRate()/1e6) << std::endl;
 
 
-	for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_RX); i++) {
+	    for(i=0; i < s->iris[r]->getNumChannels(SOAPY_SDR_RX); i++) {
 		if (i < openair0_cfg[0].rx_num_channels) {
-			s->iris->setSampleRate(SOAPY_SDR_RX, i, openair0_cfg[0].sample_rate/SAMPLE_RATE_DOWN);
-			s->iris->setFrequency(SOAPY_SDR_RX, i, "RF", openair0_cfg[0].rx_freq[i]);
-			set_rx_gain_offset(&openair0_cfg[0],i,bw_gain_adjust);
+		    s->iris[r]->setSampleRate(SOAPY_SDR_RX, i, openair0_cfg[0].sample_rate/SAMPLE_RATE_DOWN);
+		    s->iris[r]->setFrequency(SOAPY_SDR_RX, i, "RF", openair0_cfg[0].rx_freq[i]);
+		    set_rx_gain_offset(&openair0_cfg[0],i,bw_gain_adjust);
 
-			s->iris->setGain(SOAPY_SDR_RX, i, openair0_cfg[0].rx_gain[i]-openair0_cfg[0].rx_gain_offset[i]);
-			if (openair0_cfg[0].duplex_mode == 1) // TDD
-				s->iris->setAntenna(SOAPY_SDR_RX, i, (i==0)?"TRXA":"TRXB");			
-			s->iris->setDCOffsetMode(SOAPY_SDR_RX, i, true); // move somewhere else
+		    s->iris[r]->setGain(SOAPY_SDR_RX, i, openair0_cfg[0].rx_gain[i]-openair0_cfg[0].rx_gain_offset[i]);
+		    if (openair0_cfg[0].duplex_mode == 1) // TDD
+			s->iris[r]->setAntenna(SOAPY_SDR_RX, i, (i==0)?"TRXA":"TRXB");			
+		    s->iris[r]->setDCOffsetMode(SOAPY_SDR_RX, i, true); // move somewhere else
 		}
-	}
-	for(i=0; i < s->iris->getNumChannels(SOAPY_SDR_TX); i++) {
+	    }
+	    for(i=0; i < s->iris[r]->getNumChannels(SOAPY_SDR_TX); i++) {
 		if (i < openair0_cfg[0].tx_num_channels) {
-			s->iris->setSampleRate(SOAPY_SDR_TX, i, openair0_cfg[0].sample_rate/SAMPLE_RATE_DOWN);
-			s->iris->setFrequency(SOAPY_SDR_TX, i, "RF", openair0_cfg[0].tx_freq[i]);
-			s->iris->setGain(SOAPY_SDR_TX, i, openair0_cfg[0].tx_gain[i]);
+		    s->iris[r]->setSampleRate(SOAPY_SDR_TX, i, openair0_cfg[0].sample_rate/SAMPLE_RATE_DOWN);
+		    s->iris[r]->setFrequency(SOAPY_SDR_TX, i, "RF", openair0_cfg[0].tx_freq[i]);
+		    s->iris[r]->setGain(SOAPY_SDR_TX, i, openair0_cfg[0].tx_gain[i]);
 		}
-	}
+	    }
 
-
-	// display Iris settings
-	std::cout << boost::format("Actual master clock: %fMHz...") % (s->iris->getMasterClockRate()/1e6) << std::endl;
-
-	sleep(1);
-	int samples=openair0_cfg[0].sample_rate;
-	samples/=24000;
-
-
-	/* Setting TX/RX BW after streamers are created due to iris calibration issue */
-	for(i = 0; i < openair0_cfg[0].tx_num_channels; i++) {
-		if (i < s->iris->getNumChannels(SOAPY_SDR_TX) ) {
-			s->iris->setBandwidth(SOAPY_SDR_TX, i, openair0_cfg[0].tx_bw);
-			printf("Setting tx freq/gain on channel %lu/%lu: BW %f (readback %f)\n",i,s->iris->getNumChannels(SOAPY_SDR_TX),openair0_cfg[0].tx_bw/1e6,s->iris->getBandwidth(SOAPY_SDR_TX, i)/1e6);
+	    /* Setting TX/RX BW after streamers are created due to iris calibration issue */
+	    for(i = 0; i < openair0_cfg[0].tx_num_channels; i++) {
+		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_TX) ) {
+		    s->iris[r]->setBandwidth(SOAPY_SDR_TX, i, openair0_cfg[0].tx_bw);
+		    printf("Setting tx freq/gain on channel %lu/%lu: BW %f (readback %f)\n",i,s->iris[r]->getNumChannels(SOAPY_SDR_TX),openair0_cfg[0].tx_bw/1e6,s->iris[r]->getBandwidth(SOAPY_SDR_TX, i)/1e6);
 		}
-	}
-	for(i = 0; i < openair0_cfg[0].rx_num_channels; i++) {
-		if (i < s->iris->getNumChannels(SOAPY_SDR_RX)) {
-			s->iris->setBandwidth(SOAPY_SDR_RX, i, openair0_cfg[0].rx_bw);
-			printf("Setting rx freq/gain on channel %lu/%lu : BW %f (readback %f)\n",i,s->iris->getNumChannels(SOAPY_SDR_RX),openair0_cfg[0].rx_bw/1e6,s->iris->getBandwidth(SOAPY_SDR_RX, i)/1e6);
+	    }
+	    for(i = 0; i < openair0_cfg[0].rx_num_channels; i++) {
+		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_RX)) {
+		    s->iris[r]->setBandwidth(SOAPY_SDR_RX, i, openair0_cfg[0].rx_bw);
+		    printf("Setting rx freq/gain on channel %lu/%lu : BW %f (readback %f)\n",i,s->iris[r]->getNumChannels(SOAPY_SDR_RX),openair0_cfg[0].rx_bw/1e6,s->iris[r]->getBandwidth(SOAPY_SDR_RX, i)/1e6);
 		}
-	}
+	    }
 
-	// create tx & rx streamer
-	const SoapySDR::Kwargs &arg = SoapySDR::Kwargs();
-	std::vector<size_t> channels={};
-	for (i = 0; i<openair0_cfg[0].rx_num_channels; i++)
-		if (i < s->iris->getNumChannels(SOAPY_SDR_RX))
-			channels.push_back(i);
-	s->rxStream = s->iris->setupStream(SOAPY_SDR_RX, SOAPY_SDR_CS16, channels, arg);
+	    // create tx & rx streamer
+	    const SoapySDR::Kwargs &arg = SoapySDR::Kwargs();
+	    std::vector<size_t> channels={};
+	    for (i = 0; i<openair0_cfg[0].rx_num_channels; i++)
+		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_RX))
+		    channels.push_back(i);
+	    s->rxStream.push_back(s->iris[r]->setupStream(SOAPY_SDR_RX, SOAPY_SDR_CS16, channels, arg));
 
-	std::vector<size_t> tx_channels={};
-	for (i = 0; i<openair0_cfg[0].tx_num_channels; i++)
-		if (i < s->iris->getNumChannels(SOAPY_SDR_TX))
-			tx_channels.push_back(i);
-	s->txStream = s->iris->setupStream(SOAPY_SDR_TX, SOAPY_SDR_CS16, tx_channels, arg);
-	s->iris->setHardwareTime(0, "");
+	    std::vector<size_t> tx_channels={};
+	    for (i = 0; i<openair0_cfg[0].tx_num_channels; i++)
+		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_TX))
+		    tx_channels.push_back(i);
+	    s->txStream.push_back(s->iris[r]->setupStream(SOAPY_SDR_TX, SOAPY_SDR_CS16, tx_channels, arg));
+	    s->iris[r]->setHardwareTime(0, "");
 
 
-	for (i = 0; i < openair0_cfg[0].rx_num_channels; i++) {
-		if (i < s->iris->getNumChannels(SOAPY_SDR_RX)) {
-			printf("RX Channel %lu\n",i);
-			std::cout << boost::format("Actual RX sample rate: %fMSps...") % (s->iris->getSampleRate(SOAPY_SDR_RX, i)/1e6) << std::endl;
-			std::cout << boost::format("Actual RX frequency: %fGHz...") % (s->iris->getFrequency(SOAPY_SDR_RX, i)/1e9) << std::endl;
-			std::cout << boost::format("Actual RX gain: %f...") % (s->iris->getGain(SOAPY_SDR_RX, i)) << std::endl;
-			std::cout << boost::format("Actual RX bandwidth: %fM...") % (s->iris->getBandwidth(SOAPY_SDR_RX, i)/1e6) << std::endl;
-			std::cout << boost::format("Actual RX antenna: %s...") % (s->iris->getAntenna(SOAPY_SDR_RX, i)) << std::endl;
+	    for (i = 0; i < openair0_cfg[0].rx_num_channels; i++) {
+		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_RX)) {
+		    printf("RX Channel %lu\n",i);
+		    std::cout << boost::format("Actual RX sample rate: %fMSps...") % (s->iris[r]->getSampleRate(SOAPY_SDR_RX, i)/1e6) << std::endl;
+		    std::cout << boost::format("Actual RX frequency: %fGHz...") % (s->iris[r]->getFrequency(SOAPY_SDR_RX, i)/1e9) << std::endl;
+		    std::cout << boost::format("Actual RX gain: %f...") % (s->iris[r]->getGain(SOAPY_SDR_RX, i)) << std::endl;
+		    std::cout << boost::format("Actual RX bandwidth: %fM...") % (s->iris[r]->getBandwidth(SOAPY_SDR_RX, i)/1e6) << std::endl;
+		    std::cout << boost::format("Actual RX antenna: %s...") % (s->iris[r]->getAntenna(SOAPY_SDR_RX, i)) << std::endl;
 		}
-	}
+	    }
 
-	for (i=0;i<openair0_cfg[0].tx_num_channels;i++) {
-		if (i < s->iris->getNumChannels(SOAPY_SDR_TX)) {
-			printf("TX Channel %lu\n",i);
-			std::cout << std::endl<<boost::format("Actual TX sample rate: %fMSps...") % (s->iris->getSampleRate(SOAPY_SDR_TX, i)/1e6) << std::endl;
-			std::cout << boost::format("Actual TX frequency: %fGHz...") % (s->iris->getFrequency(SOAPY_SDR_TX, i)/1e9) << std::endl;
-			std::cout << boost::format("Actual TX gain: %f...") % (s->iris->getGain(SOAPY_SDR_TX, i)) << std::endl;
-			std::cout << boost::format("Actual TX bandwidth: %fM...") % (s->iris->getBandwidth(SOAPY_SDR_TX, i)/1e6) << std::endl;
-			std::cout << boost::format("Actual TX antenna: %s...") % (s->iris->getAntenna(SOAPY_SDR_TX, i)) << std::endl;
+	    for (i=0;i<openair0_cfg[0].tx_num_channels;i++) {
+		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_TX)) {
+		    printf("TX Channel %lu\n",i);
+		    std::cout << std::endl<<boost::format("Actual TX sample rate: %fMSps...") % (s->iris[r]->getSampleRate(SOAPY_SDR_TX, i)/1e6) << std::endl;
+		    std::cout << boost::format("Actual TX frequency: %fGHz...") % (s->iris[r]->getFrequency(SOAPY_SDR_TX, i)/1e9) << std::endl;
+		    std::cout << boost::format("Actual TX gain: %f...") % (s->iris[r]->getGain(SOAPY_SDR_TX, i)) << std::endl;
+		    std::cout << boost::format("Actual TX bandwidth: %fM...") % (s->iris[r]->getBandwidth(SOAPY_SDR_TX, i)/1e6) << std::endl;
+		    std::cout << boost::format("Actual TX antenna: %s...") % (s->iris[r]->getAntenna(SOAPY_SDR_TX, i)) << std::endl;
 		}
+	    }
 	}
-
-	std::cout << boost::format("Device timestamp: %f...") % (s->iris->getHardwareTime()/1e9) << std::endl;
+	s->iris[0]->writeSetting("SYNC_DELAYS","");
+	for (r = 0; r < s->device_num; r++)
+	    s->iris[r]->setHardwareTime(0, "TRIGGER");
+	s->iris[0]->writeSetting("TRIGGER_GEN","");
+	for (r = 0; r < s->device_num; r++)
+	    std::cout << boost::format("Device timestamp: %f...") % (s->iris[r]->getHardwareTime("TRIG")/1e9) << std::endl;
 
 	device->priv = s;
 	device->trx_start_func = trx_iris_start;
@@ -569,11 +617,11 @@ extern "C" {
 	// TODO:
 	// init tx_forward_nsamps based iris_time_offset ex
 	if(is_equal(s->sample_rate, (double)30.72e6))
-		s->tx_forward_nsamps  = 176;
+	    s->tx_forward_nsamps  = 176;
 	if(is_equal(s->sample_rate, (double)15.36e6))
-		s->tx_forward_nsamps = 90;
+	    s->tx_forward_nsamps = 90;
 	if(is_equal(s->sample_rate, (double)7.68e6))
-		s->tx_forward_nsamps = 50;
+	    s->tx_forward_nsamps = 50;
 
 	LOG_I(HW,"Finished initializing Iris device. %d %f \n");
 	return 0;
