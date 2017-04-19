@@ -355,9 +355,7 @@ typedef struct eNB_RRC_UE_NB_s {
   //in NB-IoT only SRB0, SRB1 and SRB1bis (until AS security activation) exist
 
   SRB_ToAddModList_NB_r13_t*                SRB_configList;//for SRB1 and SRB1bis
-//  SRB_ToAddModList_NB_r13_t*                SRB1_configList_NB; //for SRB1
-//  SRB_ToAddModList_NB_r13_t*				SRB1bis_configList_NB; //only for SRB1bis
-  SRB_ToAddModList_NB_r13_t*                SRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER]; //only for SRB1
+  SRB_ToAddModList_NB_r13_t*                SRB1_configList[RRC_TRANSACTION_IDENTIFIER_NUMBER]; //only for SRB1
   DRB_ToAddModList_NB_r13_t*                DRB_configList; //for all the DRBs
   DRB_ToAddModList_NB_r13_t*                DRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER]; //for the configured DRBs of a xid
   uint8_t                            		DRB_active[2];//in LTE was 8 --> at most 2 for NB-IoT
@@ -734,7 +732,7 @@ typedef struct eNB_RRC_INST_NB_s {
 //
 //} UE_RRC_INST;
 
-#include "proto_nb_iot.h"
+#include "proto_nb_iot.h" //should be put here otherwise compilation error
 
 #endif
 /** @} */

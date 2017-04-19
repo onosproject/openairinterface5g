@@ -289,3 +289,12 @@ uint8_t do_RRCConnectionReestablishment_NB(
 		const LTE_DL_FRAME_PARMS* const frame_parms, //to be changed
 		SRB_ToAddModList_NB_r13_t**             SRB_configList_NB
 		 );
+
+/**
+\brief Generate an RRCConnectionRelease-NB DL-DCCH-Message (eNB)
+@param Mod_id Module ID of eNB
+@param buffer Pointer to PER-encoded ASN.1 description of DL-DCCH-Message PDU
+@param transaction_id Transaction index
+@returns Size of encoded bit stream in bytes*/
+
+uint8_t do_RRCConnectionRelease_NB(uint8_t Mod_id, uint8_t *buffer,int Transaction_id);

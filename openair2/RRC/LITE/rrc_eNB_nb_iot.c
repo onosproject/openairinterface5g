@@ -118,6 +118,62 @@ mui_t                               rrc_eNB_mui = 0;
 
 
 
+//-----------------------------------------------------------------------------
+//actually is not used
+void
+rrc_eNB_generate_RRCConnectionRelease_NB(
+  const protocol_ctxt_t* const ctxt_pP,
+  rrc_eNB_ue_context_NB_t*          const ue_context_pP
+)
+//-----------------------------------------------------------------------------
+{
+
+  uint8_t                             buffer[RRC_BUF_SIZE];
+  uint16_t                            size;
+
+  T(T_ENB_RRC_CONNECTION_RELEASE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
+    T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
+
+  memset(buffer, 0, RRC_BUF_SIZE);
+
+  size = do_RRCConnectionRelease_NB(ctxt_pP->module_id, buffer,rrc_eNB_get_next_transaction_identifier_NB(ctxt_pP->module_id));
+  // set release timer
+  ue_context_pP->ue_context.ue_release_timer=1;
+  // remove UE after 10 frames after RRCConnectionRelease is triggered
+  ue_context_pP->ue_context.ue_release_timer_thres=100;
+
+  LOG_I(RRC,
+        PROTOCOL_RRC_CTXT_UE_FMT" Logical Channel DL-DCCH, Generate RRCConnectionRelease-NB (bytes %d)\n",
+        PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+        size);
+
+  LOG_D(RRC,
+        PROTOCOL_RRC_CTXT_UE_FMT" --- PDCP_DATA_REQ/%d Bytes (rrcConnectionRelease-NB MUI %d) --->[PDCP][RB %u]\n",
+        PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+        size,
+        rrc_eNB_mui,
+        DCCH1);//Through SRB1
+
+  MSC_LOG_TX_MESSAGE(
+    MSC_RRC_ENB,
+    MSC_RRC_UE,
+    buffer,
+    size,
+    MSC_AS_TIME_FMT" rrcConnectionRelease-NB UE %x MUI %d size %u",
+    MSC_AS_TIME_ARGS(ctxt_pP),
+    ue_context_pP->ue_context.rnti,
+    rrc_eNB_mui,
+    size);
+
+  rrc_data_req(
+	       ctxt_pP,
+	       DCCH1,//Through SRB1
+	       rrc_eNB_mui++,
+	       SDU_CONFIRM_NO,
+	       size,
+	       buffer,
+	       PDCP_TRANSMISSION_MODE_CONTROL);
+}
 
 
 //-----------------------------------------------------------------------------
@@ -385,14 +441,20 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
 {
 
 	//connection setup involve the establishment of SRB1 and SRB1bis
+	//FIXME: this message should go through SRB0 but where to see this--> uper_encode
+	//FIXME: they are assuming that 2 RLC-AM entities are used for SRB1 and SRB1bis--> implications?
 
+
+  SRB_ToAddModList_NB_r13_t                **SRB_configList; //for both SRB1 and SRB1bis
+
+  SRB_ToAddMod_NB_r13_t                     *SRB1_config; //will use the same for SRB1bis
   LogicalChannelConfig_NB_r13_t             *SRB1_logicalChannelConfig;
-  LogicalChannelConfig_NB_r13_t				*SRB1bis_logicalChannelConfig; //may not needed
-  SRB_ToAddModList_NB_r13_t                **SRB_configList;
-  SRB_ToAddMod_NB_r13_t                     *SRB1_config;
-  SRB_ToAddMod_NB_r13_t						*SRB1bis_config; //may not needed
+
+  SRB_ToAddMod_NB_r13_t						*SRB1bis_config;
+  LogicalChannelConfig_NB_r13_t				*SRB1bis_logicalChannelConfig;
+
   int                                	 	cnt;
-  LTE_DL_FRAME_PARMS *fp = mac_xface->get_lte_frame_parms(ctxt_pP->module_id,CC_id); //to be changed
+  LTE_DL_FRAME_PARMS *fp = mac_xface->get_lte_frame_parms(ctxt_pP->module_id,CC_id); //FIXME: to be changed
 
   T(T_ENB_RRC_CONNECTION_SETUP, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
@@ -420,41 +482,40 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
   //////////////////////////////////
 #endif
 
-  // configure SRB1/SRB1bis, PhysicalConfigDedicated, MAC_MainConfig for UE
+  // configure SRB1bis, PhysicalConfigDedicated, MAC_MainConfig for UE
 
   if (*SRB_configList != NULL) {
-	  //problem: srb_identity is no more used in NB-IoT
-	  //but SRB1 and SRB1bis have exactly the same configuration --> may the for loop is not needed
-    for (cnt = 0; cnt < (*SRB_configList)->list.count; cnt++) {
+	  //srb_identity is no more used in NB-IoT
+    for (cnt = 0; cnt < (*SRB_configList)->list.count; cnt++) { //should stop at 1 at first attempt
 
-    	//no SRB identity check
+        SRB1bis_config = (*SRB_configList)->list.array[cnt];
 
-        SRB1_config = (*SRB_configList)->list.array[cnt];
-
-        if (SRB1_config->logicalChannelConfig_r13) {
-          if (SRB1_config->logicalChannelConfig_r13->present == SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue)
+        if (SRB1bis_config->logicalChannelConfig_r13) {
+          if (SRB1bis_config->logicalChannelConfig_r13->present == SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue)
           {
-            SRB1_logicalChannelConfig = &SRB1_config->logicalChannelConfig_r13->choice.explicitValue;
+            SRB1bis_logicalChannelConfig = &SRB1bis_config->logicalChannelConfig_r13->choice.explicitValue;
           }
           else {
-            SRB1_logicalChannelConfig = &SRB1_logicalChannelConfig_defaultValue; //FIXME: generate a new Vars.h file
+            SRB1bis_logicalChannelConfig = &SRB1bis_logicalChannelConfig_defaultValue; //FIXME: generate a new Vars.h file
           	  }
         } else {
-          SRB1_logicalChannelConfig = &SRB1_logicalChannelConfig_defaultValue; //FIXME: generate a new Vars.h file
+          SRB1bis_logicalChannelConfig = &SRB1bis_logicalChannelConfig_defaultValue; //FIXME: generate a new Vars.h file
         }
 
         LOG_D(RRC,
-              PROTOCOL_RRC_CTXT_UE_FMT" RRC_eNB --- MAC_CONFIG_REQ  (SRB1/SRB1bis) ---> MAC_eNB\n",
+              PROTOCOL_RRC_CTXT_UE_FMT" RRC_eNB --- MAC_CONFIG_REQ  (SRB1bis) ---> MAC_eNB\n",
               PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
-        //to be checked--> unuseful parameters
-        //which logical channel to set? depends o the SRB! how to distinguish?
+        //FIXME: unuseful parameter for rrc_mac_config_req
+        //set logicalchannelIdentity=3 (SRB1bis)--> we always have SRB1bis??
+        //FIXME: Connection Setup could be called also after security activation?
+
         rrc_mac_config_req(
           ctxt_pP->module_id,
           ue_context_pP->ue_context.primaryCC_id,
           ENB_FLAG_YES,
           ue_context_pP->ue_context.rnti,
-          0,
+          0,  //eNB_index
           (RadioResourceConfigCommonSIB_NB_r13_t *) NULL,
           ue_context_pP->ue_context.physicalConfigDedicated_NB,
 #if defined(Rel10) || defined(Rel14)
@@ -462,8 +523,8 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
 #endif
           (MeasObjectToAddMod_t **) NULL,
           ue_context_pP->ue_context.mac_MainConfig_NB,
-          1, //logical channel identity!! we have to distinguish about SRB1 and SRB1bis!
-          SRB1_logicalChannelConfig,
+          3, //LCID
+          SRB1bis_logicalChannelConfig,
           (MeasGapConfig_t*)NULL,
           (TDD_Config_t *) NULL,
           NULL,
@@ -530,7 +591,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 
 
   DRB_ToAddModList_NB_r13_t*                 DRB_configList2 = ue_context_pP->ue_context.DRB_configList2[xid];
-  SRB_ToAddModList_NB_r13_t*                 SRB_configList2 = ue_context_pP->ue_context.SRB_configList2[xid];
+  SRB_ToAddModList_NB_r13_t*                 SRB_configList2 = ue_context_pP->ue_context.SRB1_configList[xid]; //only SRB1
 
   T(T_ENB_RRC_CONNECTION_RECONFIGURATION_COMPLETE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
@@ -564,7 +625,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 
   rrc_pdcp_config_asn1_req(
     ctxt_pP,
-    SRB_configList2, //NULL,  //LG-RK 14/05/2014 SRB_configList,
+    SRB_configList2, //SRB1_configList
     DRB_configList2,
     (DRB_ToReleaseList_NB_r13_t *) NULL,
     0xff, //security mode already configured during the securitymodecommand
@@ -579,7 +640,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
   // Refresh SRBs/DRBs for RLC
   rrc_rlc_config_asn1_req(
     ctxt_pP,
-    SRB_configList2, // NULL,  //LG-RK 14/05/2014 SRB_configList,
+    SRB_configList2, //SRB1_configList
     DRB_configList2,
     (DRB_ToReleaseList_NB_r13_t *) NULL
 #if defined(Rel10) || defined(Rel14)
@@ -591,9 +652,8 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 
   if (SRB_configList2 != NULL) {
     for (i = 0; (i < SRB_configList2->list.count) && (i < 3); i++) { //FIXME why i<3??
-    	//for sure will be only SRB1 at this point that must be activated
     	//no need of checking the srb-Identity
-    	ue_context_pP->ue_context.Srb1bis.Active=0; //needed?
+    	//we should have only SRB1 in the list
     	ue_context_pP->ue_context.Srb1.Active=1;
 	    ue_context_pP->ue_context.Srb1.Srb_info.Srb_id=1; //LCHAN_iD
 	     LOG_I(RRC,"[eNB %d] Frame  %d CC %d : SRB1 is now active\n",
@@ -607,7 +667,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
   // Loop through DRBs and establish if necessary
 
   if (DRB_configList2 != NULL) {
-    for (i = 0; (i < DRB_configList2->list.count) && (i<1); i++) {  // num max DRB for NB_IoT = 2
+    for (i = 0; (i < DRB_configList2->list.count) && (i<2); i++) {  // num maxDRB-NB = 2
       if (DRB_configList2->list.array[i]) {
 	drb_id = (int)DRB_configList2->list.array[i]->drb_Identity_r13;
         LOG_I(RRC,
@@ -615,8 +675,8 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
               ctxt_pP->module_id,
               ctxt_pP->frame,
               ctxt_pP->rnti,
-              (int)DRB_configList2->list.array[i]->drb_Identity_r13,
-              (int)*DRB_configList2->list.array[i]->logicalChannelIdentity_r13);
+              (int)DRB_configList2->list.array[i]->drb_Identity_r13, //x
+              (int)*DRB_configList2->list.array[i]->logicalChannelIdentity_r13);//x+3
         // for pre-ci tests
         LOG_I(RRC,
               "[eNB %d] Frame  %d : Logical Channel UL-DCCH, Received RRCConnectionReconfigurationComplete-NB from UE %u, reconfiguring DRB %d/LCID %d\n",
@@ -630,7 +690,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 
           ue_context_pP->ue_context.DRB_active[drb_id] = 1;
 
-          LOG_D(RRC, //?? RLC UM not exist in NB-IoT
+          LOG_D(RRC, //FIXME: RLC UM not exist in NB-IoT
                 "[eNB %d] Frame %d: Establish RLC UM Bidirectional, DRB %d Active\n",
                 ctxt_pP->module_id, ctxt_pP->frame, (int)DRB_configList2->list.array[i]->drb_Identity_r13);
 
@@ -680,10 +740,12 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
                 PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
           if (DRB_configList2->list.array[i]->logicalChannelIdentity_r13) {
+        	  //FIXME: to change
             DRB2LCHAN[i] = (uint8_t) * DRB_configList2->list.array[i]->logicalChannelIdentity_r13;
           }
 
           //for each DRB I send a rrc_mac_config_req
+          //FIXME: lots of unuseful parameters
           rrc_mac_config_req(
             ctxt_pP->module_id,
             ue_context_pP->ue_context.primaryCC_id,
@@ -698,7 +760,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 #endif
             (MeasObjectToAddMod_t **) NULL,
             ue_context_pP->ue_context.mac_MainConfig_NB,
-            DRB2LCHAN[i], //check
+            DRB2LCHAN[i], //over the logical channel id of the DRB (>=4)
             DRB_configList2->list.array[i]->logicalChannelConfig_r13,
             (MeasGapConfig_t*)NULL,
             (TDD_Config_t *) NULL,
@@ -714,7 +776,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
           );
 
         } else {  //remove LCHAN from MAC/PHY
-
+        		  //DRB_active could take values different from 0 and 1 for errors
           if (ue_context_pP->ue_context.DRB_active[drb_id] == 1) {
             // DRB has just been removed so remove RLC + PDCP for DRB
         	//why not from PDCP?
@@ -744,7 +806,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
                              //(struct PhysicalConfigDedicatedSCell_r10 *)NULL,
 #endif
                              (MeasObjectToAddMod_t **) NULL,
-                             (MeasGapConfig_t*)NULL,
+                             (MeasGapConfig_t*)NULL,//?? should be MAc mainConfig
                              DRB2LCHAN[i],//check
                              (LogicalChannelConfig_t *) NULL,
                              (MeasGapConfig_t *) NULL,
@@ -776,7 +838,7 @@ rrc_eNB_reconfigure_DRBs_NB(const protocol_ctxt_t* const ctxt_pP,
   for (i = 0; i < 3;//NB_RB_MAX - 3;  // S1AP_MAX_E_RAB
        i++) {
 
-    if ( ue_context_pP->ue_context.e_rab[i].status < E_RAB_NB_STATUS_DONE){
+    if ( ue_context_pP->ue_context.e_rab[i].status < E_RAB_NB_STATUS_DONE){ // all those new e-rab
       ue_context_pP->ue_context.e_rab[i].status = E_RAB_NB_STATUS_NEW;
       ue_context_pP->ue_context.e_rab[i].param.e_rab_id = i + 1;
       ue_context_pP->ue_context.e_rab[i].param.qos.qci = i % 9;
@@ -865,7 +927,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
     // allowed value 5..15, value : x+4
     *(DRB_config->eps_BearerIdentity_r13) = ue_context_pP->ue_context.e_rab[i].param.e_rab_id;// x+4; // especial case generation
 
-    DRB_config->drb_Identity_r13 =  1 + drb_identity_index + e_rab_done; //max 2 DRBs could be established, x
+    DRB_config->drb_Identity_r13 =  1 + drb_identity_index + e_rab_done; //FIXME: max 2 DRBs could be established, x
 
     // allowed values (3..10) but 3 is reserved for SRB1bis so value : x+3
     DRB_config->logicalChannelIdentity_r13 = CALLOC(1, sizeof(long));
@@ -1016,7 +1078,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
   ////////////////////////////////////////
 #endif
 
-//#if defined(ENABLE_ITTI) -->is needed?
+//#if defined(ENABLE_ITTI)....
 
   /* Free all NAS PDUs */
   for (i = 0; i < ue_context_pP->ue_context.nb_of_e_rabs; i++) {
@@ -1026,7 +1088,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
       ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer = NULL;
     }
   }
-//#endif
+
 
  LOG_I(RRC,
         "[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration-NB (bytes %d, UE RNTI %x)\n",
@@ -1034,7 +1096,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
 
   LOG_D(RRC,
         "[FRAME %05d][RRC_eNB][MOD %u][][--- PDCP_DATA_REQ/%d Bytes (rrcConnectionReconfiguration to UE %x MUI %d) --->][PDCP][MOD %u][RB %u]\n",
-        ctxt_pP->frame, ctxt_pP->module_id, size, ue_context_pP->ue_context.rnti, rrc_eNB_mui, ctxt_pP->module_id, DCCH);
+        ctxt_pP->frame, ctxt_pP->module_id, size, ue_context_pP->ue_context.rnti, rrc_eNB_mui, ctxt_pP->module_id, DCCH1); //through SRB1
 
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
@@ -1049,7 +1111,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
 
   rrc_data_req(
     ctxt_pP,
-    DCCH,//check
+    DCCH1,//through SRB1
     rrc_eNB_mui++,
     SDU_CONFIRM_NO,
     size,
@@ -1069,10 +1131,10 @@ rrc_eNB_process_RRCConnectionSetupComplete_NB(
 //-----------------------------------------------------------------------------
 {
   LOG_I(RRC,
-        PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel UL-DCCH, " "processing RRCConnectionSetupComplete_NB from UE (SRB1 Active)\n",
+        PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel UL-DCCH, " "processing RRCConnectionSetupComplete_NB from UE (SRB1bis Active)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
-  ue_context_pP->ue_context.Srb1bis.Active=1;  //FIXME attivo SRB1bis??
+  ue_context_pP->ue_context.Srb1bis.Active=1;  //SRB1bis active for UE, from eNB point of view
   T(T_ENB_RRC_CONNECTION_SETUP_COMPLETE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
@@ -1136,7 +1198,7 @@ rrc_eNB_generate_SecurityModeCommand_NB(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
         size,
         rrc_eNB_mui,
-        DCCH);
+        DCCH0); //i'm using SRB1bis
 
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
@@ -1151,7 +1213,7 @@ rrc_eNB_generate_SecurityModeCommand_NB(
 
   rrc_data_req( //to PDCP
 	       ctxt_pP,
-	       DCCH,//check
+	       DCCH0,//through SRB1bis
 	       rrc_eNB_mui++,
 	       SDU_CONFIRM_NO,
 	       size,
@@ -1190,7 +1252,7 @@ rrc_eNB_generate_UECapabilityEnquiry_NB(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
         size,
         rrc_eNB_mui,
-        DCCH);//check
+        DCCH0);//through SRB1bis
 
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
@@ -1205,7 +1267,7 @@ rrc_eNB_generate_UECapabilityEnquiry_NB(
 
   rrc_data_req( //to PDCP
 	       ctxt_pP,
-	       DCCH,//check
+	       DCCH0,//through SRB1bis
 	       rrc_eNB_mui++,
 	       SDU_CONFIRM_NO,
 	       size,
@@ -1226,7 +1288,8 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   uint16_t                            size;
   int                                 i;
 
-  // configure SRB1/SRB2, PhysicalConfigDedicated, MAC_MainConfig for UE
+  // configure SRB1, PhysicalConfigDedicated, MAC_MainConfig for UE
+
   eNB_RRC_INST_NB*                       rrc_inst = &eNB_rrc_inst_NB[ctxt_pP->module_id];
   struct PhysicalConfigDedicated_NB_r13**    physicalConfigDedicated_NB = &ue_context_pP->ue_context.physicalConfigDedicated_NB;
 
@@ -1252,7 +1315,6 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   long								*enableStatusReportSN_Gap = NULL; //should be disabled
   long								*priority= NULL; //1 for SRB1 and 1 for SRB1bis
   BOOLEAN_t						    *logicalChannelSR_Prohibit = NULL;
-
   RSRP_Range_t                       *rsrp                             = NULL; //may not used
 
   struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13 *dedicatedInfoNASList_NB = NULL;
@@ -1260,14 +1322,14 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   /* for no gcc warnings */
   (void)dedicatedInfoNas;
 
-  uint8_t xid = rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id);   //Transaction_id,
+  uint8_t xid = rrc_eNB_get_next_transaction_identifier_NB(ctxt_pP->module_id);   //Transaction_id,
 
   T(T_ENB_RRC_CONNECTION_RECONFIGURATION, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
   // Configure SRB1
   /// SRB1
-  SRB_configList2=&ue_context_pP->ue_context.SRB_configList2[xid]; //why no asterix? //point to the first cell
+  SRB_configList2=&ue_context_pP->ue_context.SRB1_configList[xid]; //List that contains only SRB1
   if (*SRB_configList2) {
     free(*SRB_configList2);
   }
@@ -1299,7 +1361,8 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   SRB1_lchan_config->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
 
   // this list has the configuration for SRB1 and SRB1bis
-  ASN_SEQUENCE_ADD(&SRB_configList->list, SRB1_config);
+  ASN_SEQUENCE_ADD(&SRB_configList->list, SRB1_config); //FIXME: cannot do that because SRB_ToAddModList_NB_r13_t max size = 1
+
   // this list has only the configuration for SRB1
   ASN_SEQUENCE_ADD(&(*SRB_configList2)->list, SRB1_config);
 
@@ -1322,7 +1385,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   memset(*DRB_configList2, 0, sizeof(**DRB_configList2));
 
 
-  /// DRB
+  /// DRB (maxDRBs = 2)
   DRB_config = CALLOC(1, sizeof(*DRB_config));
   DRB_config->eps_BearerIdentity_r13 = CALLOC(1, sizeof(long));
   //i'm not sure that in NB-IoT the first 0..4 eps-bearerIdentity will be reserved for NSAPI
@@ -1336,15 +1399,14 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   DRB_rlc_config = CALLOC(1, sizeof(*DRB_rlc_config));
   DRB_config->rlc_Config_r13 = DRB_rlc_config;
 
-#ifdef RRC_DEFAULT_RAB_IS_AM
+//#ifdef RRC_DEFAULT_RAB_IS_AM --> is the only allowed mode in NB-IoT
   //set as TS 36.331 specs
   DRB_rlc_config->present = RLC_Config_NB_r13_PR_am;
   DRB_rlc_config->choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
   DRB_rlc_config->choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t4;
   DRB_rlc_config->choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = enableStatusReportSN_Gap;
-#else
-  //UM mode os not defined for NB-IoT RLC layer
-#endif
+//#else
+//#endif
 
   DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
   DRB_config->pdcp_Config_r13 = DRB_pdcp_config;
@@ -1406,7 +1468,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   //no Sparams
   //no handover
 
-//was inside ITTI but i think is needed
+//#if defined(ENABLE_ITTI).....correct?
   /* Initialize NAS list */
   dedicatedInfoNASList_NB = CALLOC(1, sizeof(struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13));
 
@@ -1446,7 +1508,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   size = do_RRCConnectionReconfiguration_NB(ctxt_pP,
                                          buffer,
                                          xid,   //Transaction_id,
-                                         (SRB_ToAddModList_NB_r13_t*)*SRB_configList2,
+                                         (SRB_ToAddModList_NB_r13_t*)*SRB_configList2, //only SRB1
                                          (DRB_ToAddModList_NB_r13_t*)*DRB_configList,
                                          (DRB_ToReleaseList_NB_r13_t*)NULL,  // DRB2_list,
                                          (struct PhysicalConfigDedicated_NB_r13*)*physicalConfigDedicated_NB,
@@ -1480,7 +1542,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
 
   LOG_D(RRC,
         "[FRAME %05d][RRC_eNB][MOD %u][][--- PDCP_DATA_REQ/%d Bytes (rrcConnectionReconfiguration-NB to UE %x MUI %d) --->][PDCP][MOD %u][RB %u]\n",
-        ctxt_pP->frame, ctxt_pP->module_id, size, ue_context_pP->ue_context.rnti, rrc_eNB_mui, ctxt_pP->module_id, DCCH);
+        ctxt_pP->frame, ctxt_pP->module_id, size, ue_context_pP->ue_context.rnti, rrc_eNB_mui, ctxt_pP->module_id, DCCH1);//through SRB1
 
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
@@ -1495,14 +1557,13 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
 
   rrc_data_req( //to PDCP
 	       ctxt_pP,
-	       DCCH,//check
+	       DCCH1,//through SRB1
 	       rrc_eNB_mui++,
 	       SDU_CONFIRM_NO,
 	       size,
 	       buffer,
 	       PDCP_TRANSMISSION_MODE_CONTROL);
 }
-
 
 //-----------------------------------------------------------------------------
 static void
@@ -1624,7 +1685,7 @@ init_SI_NB(
 }
 
 //-----------------------------------------------------------------------------
-//openair_rrc_eNB_init
+//aka openair_rrc_eNB_init
 char
 openair_rrc_eNB_configuration_NB(
   const module_id_t enb_mod_idP,
@@ -1683,7 +1744,7 @@ while ( eNB_rrc_inst_NB == NULL ) {
 
 
 #ifdef NO_RRM                   //init ch SRB0, SRB1 & BDTCH
-  openair_rrc_on(&ctxt); //rrc_common.c --> to be changed
+  openair_rrc_on(&ctxt); //FIXME: rrc_common.c --> to be changed
 #else
   eNB_rrc_inst_NB[ctxt.module_id].Last_scan_req = 0; //rrm_2_rrc_msg.c
   send_msg(&S_rrc, msg_rrc_phy_synch_to_MR_ind(ctxt.module_id, eNB_rrc_inst_NB[ctxt.module_id].Mac_id));
@@ -1700,7 +1761,7 @@ while ( eNB_rrc_inst_NB == NULL ) {
 int
 rrc_eNB_decode_ccch_NB(
   protocol_ctxt_t* const ctxt_pP,
-  const SRB_INFO_NB*        const Srb_info, //SRB0 first time
+  const SRB_INFO_NB*        const Srb_info, //SRB0
   const int              CC_id
 )
 //-----------------------------------------------------------------------------
@@ -1708,7 +1769,7 @@ rrc_eNB_decode_ccch_NB(
   module_id_t                                   Idx;
   asn_dec_rval_t                      dec_rval;
   UL_CCCH_Message_NB_t                  *ul_ccch_msg_NB = NULL;
-  RRCConnectionRequest_NB_r13_IEs_t*                rrcConnectionRequest_NB = NULL;
+  RRCConnectionRequest_NB_r13_IEs_t                *rrcConnectionRequest_NB = NULL;
   RRCConnectionReestablishmentRequest_NB_r13_IEs_t* rrcConnectionReestablishmentRequest_NB = NULL;
   RRCConnectionResumeRequest_NB_r13_IEs_t *rrcConnectionResumeRequest_NB= NULL;
   int                                 i, rval;
@@ -1740,34 +1801,9 @@ rrc_eNB_decode_ccch_NB(
                0);
 
   //could be deleted?
-/*#if defined(ENABLE_ITTI)
-#   if defined(DISABLE_ITTI_XER_PRINT)
-  {
-    MessageDef                         *message_p;
+//#if defined(ENABLE_ITTI)....
+//#   if defined(DISABLE_ITTI_XER_PRINT)...
 
-    message_p = itti_alloc_new_message(TASK_RRC_ENB, RRC_UL_CCCH_MESSAGE);
-    memcpy(&message_p->ittiMsg, (void *)ul_ccch_msg, sizeof(RrcUlCcchMessage));
-
-    itti_send_msg_to_task(TASK_UNKNOWN, ctxt_pP->instance, message_p);
-  }
-#   else
-  {
-    char                                message_string[10000];
-    size_t                              message_string_size;
-
-    if ((message_string_size =
-           xer_sprint(message_string, sizeof(message_string), &asn_DEF_UL_CCCH_Message, (void *)ul_ccch_msg)) > 0) {
-      MessageDef                         *msg_p;
-
-      msg_p = itti_alloc_new_message_sized(TASK_RRC_ENB, RRC_UL_CCCH, message_string_size + sizeof(IttiMsgText));
-      msg_p->ittiMsg.rrc_ul_ccch.size = message_string_size;
-      memcpy(&msg_p->ittiMsg.rrc_ul_ccch.text, message_string, message_string_size);
-
-      itti_send_msg_to_task(TASK_UNKNOWN, ctxt_pP->instance, msg_p);
-    }
-  }
-#   endif
-#endif*/
 
   for (i = 0; i < 8; i++) { //why 8?
     LOG_T(RRC, "%x.", ((uint8_t *) & ul_ccch_msg_NB)[i]);
@@ -1859,11 +1895,12 @@ rrc_eNB_decode_ccch_NB(
             PROTOCOL_RRC_CTXT_UE_FMT"MAC_eNB --- MAC_DATA_IND  (rrcConnectionRequest-NB on SRB0) --> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
-      ue_context_p = rrc_eNB_get_ue_context(
+      ue_context_p = rrc_eNB_get_ue_context( //should be changed in order to pass a eNB_RRC_INST_NB
                        &eNB_rrc_inst_NB[ctxt_pP->module_id],
                        ctxt_pP->rnti);
 
       if (ue_context_p != NULL) {
+    	 //no make sense to receive a connectionRequest when I have already the UE context
         // erase content
         rrc_eNB_free_mem_UE_context_NB(ctxt_pP, ue_context_p);
 
@@ -1872,7 +1909,7 @@ rrc_eNB_decode_ccch_NB(
           MSC_RRC_UE,
           Srb_info->Rx_buffer.Payload,
           dec_rval.consumed,
-          MSC_AS_TIME_FMT" RRCConnectionRequest UE %x size %u (UE already in context)",
+          MSC_AS_TIME_FMT" RRCConnectionRequest-NB UE %x size %u (UE already in context)",
           MSC_AS_TIME_ARGS(ctxt_pP),
           ue_context_p->ue_context.rnti,
           dec_rval.consumed);
@@ -1972,21 +2009,23 @@ rrc_eNB_decode_ccch_NB(
         if (ue_context_p != NULL) {
 
 
-//#if defined(ENABLE_ITTI) --> correct?
+//#if defined(ENABLE_ITTI) //FIXME: check if correct
           ue_context_p->ue_context.establishment_cause_NB = rrcConnectionRequest_NB->establishmentCause_r13;
-	  if (stmsi_received==0)
+	  if (stmsi_received==0){
 	    LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Accept new connection from UE random UE identity (0x%" PRIx64 ") MME code %u TMSI %u cause %ld\n",
 		  PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
 		  ue_context_p->ue_context.random_ue_identity,
 		  ue_context_p->ue_context.Initialue_identity_s_TMSI.mme_code,
 		  ue_context_p->ue_context.Initialue_identity_s_TMSI.m_tmsi,
 		  ue_context_p->ue_context.establishment_cause_NB);
-	  else
+	  }
+	  else{
 	    LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Accept new connection from UE  MME code %u TMSI %u cause %ld\n",
 		  PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
 		  ue_context_p->ue_context.Initialue_identity_s_TMSI.mme_code,
 		  ue_context_p->ue_context.Initialue_identity_s_TMSI.m_tmsi,
 		  ue_context_p->ue_context.establishment_cause_NB);
+	  }
 //#else
 //          LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Accept new connection for UE random UE identity (0x%" PRIx64 ")\n",
 //                PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
@@ -2011,38 +2050,25 @@ rrc_eNB_decode_ccch_NB(
 
       ue_context_p->ue_context.primaryCC_id = CC_id;
 
-      //LG COMMENT Idx = (ue_mod_idP * NB_RB_MAX) + DCCH;
-
-      Idx = DCCH; //check : Transaction id = channel identity??
-
-      // SRB1
-      ue_context_p->ue_context.Srb1.Active = 1; //or shuld be keept = 0??
-      ue_context_p->ue_context.Srb1.Srb_info.Srb_id = Idx; //module_id
-      memcpy(&ue_context_p->ue_context.Srb1.Srb_info.Lchan_desc[0],
+      //FIXME : Transaction id = channel identity??, defs.h MAc to be changed, LCHAN_DESC to be changed
+      Idx = DCCH0;
+      // SRB1bis (LCID = 3 = DCCH0)
+      ue_context_p->ue_context.Srb1bis.Active = 1;
+      ue_context_p->ue_context.Srb1bis.Srb_info.Srb_id = Idx; //module_id
+      memcpy(&ue_context_p->ue_context.Srb1bis.Srb_info.Lchan_desc[0],
              &DCCH_LCHAN_DESC,
              LCHAN_DESC_SIZE);
-      memcpy(&ue_context_p->ue_context.Srb1.Srb_info.Lchan_desc[1],
+      memcpy(&ue_context_p->ue_context.Srb1bis.Srb_info.Lchan_desc[1],
              &DCCH_LCHAN_DESC,
              LCHAN_DESC_SIZE);
 
-      //WHY? //LCHAN DESCH to be changed
-      /*// SRB2: set  it to go through SRB1 with id 1 (DCCH)
-      ue_context_p->ue_context.Srb2.Active = 1;
-      ue_context_p->ue_context.Srb2.Srb_info.Srb_id = Idx;
-      memcpy(&ue_context_p->ue_context.Srb2.Srb_info.Lchan_desc[0],
-             &DCCH_LCHAN_DESC,
-             LCHAN_DESC_SIZE);
-      memcpy(&ue_context_p->ue_context.Srb2.Srb_info.Lchan_desc[1],
-             &DCCH_LCHAN_DESC,
-             LCHAN_DESC_SIZE);*/
-
-      // SRB1bis: set  it to go through SRB1 with id 1 (DCCH) ???
-            ue_context_p->ue_context.Srb1bis.Active = 1;
+      //FIXME: SRB1: set  it to go through SRB1bis with id 3 (DCCH0) ???
+            ue_context_p->ue_context.Srb1.Active = 1;
             ue_context_p->ue_context.Srb1bis.Srb_info.Srb_id = Idx;
-            memcpy(&ue_context_p->ue_context.Srb1bis.Srb_info.Lchan_desc[0],
+            memcpy(&ue_context_p->ue_context.Srb1.Srb_info.Lchan_desc[0],
                    &DCCH_LCHAN_DESC,
                    LCHAN_DESC_SIZE);
-            memcpy(&ue_context_p->ue_context.Srb1bis.Srb_info.Lchan_desc[1],
+            memcpy(&ue_context_p->ue_context.Srb1.Srb_info.Lchan_desc[1],
                    &DCCH_LCHAN_DESC,
                    LCHAN_DESC_SIZE);
 
@@ -2062,6 +2088,7 @@ rrc_eNB_decode_ccch_NB(
         MSC_AS_TIME_ARGS(ctxt_pP),
         ue_context_p->ue_context.rnti);
 
+      //we are configuring PDCP and RC only for SRB1bis
       //to be checked
       rrc_pdcp_config_asn1_req(ctxt_pP,
                                ue_context_p->ue_context.SRB_configList, //check
@@ -2268,7 +2295,7 @@ rrc_eNB_decode_dcch_NB(
             PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
             "(RRCConnectionReconfigurationComplete-NB) ---> RRC_eNB]\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH, //check
+            DCCH1, //through SRB1
             sdu_sizeP);
 
       if (ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.criticalExtensions.
@@ -2281,7 +2308,7 @@ rrc_eNB_decode_dcch_NB(
 		PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
 	}else {
 	  dedicated_DRB = 0;
-	  ue_context_p->ue_context.Status = RRC_RECONFIGURED;
+	  ue_context_p->ue_context.Status = RRC_RECONFIGURED; //see below--> in this way i can establish the DRB
 	  LOG_I(RRC,
 		PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_RECONFIGURED (default DRB, xid %ld)\n",
 		PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
@@ -2302,7 +2329,7 @@ rrc_eNB_decode_dcch_NB(
       }
 
 
-//#if defined(ENABLE_ITTI) //to be left?
+//#if defined(ENABLE_ITTI)...
 #if defined(ENABLE_USE_MME)
       if (EPC_MODE_ENABLED == 1) {
 	if (dedicated_DRB == 1){
@@ -2321,7 +2348,7 @@ rrc_eNB_decode_dcch_NB(
       }
 
 #endif
-//#endif
+
       break;
 
     case UL_DCCH_MessageType_NB__c1_PR_rrcConnectionReestablishmentComplete_r13:
@@ -2393,6 +2420,7 @@ rrc_eNB_decode_dcch_NB(
             ctxt_pP,
             ue_context_p,
             &ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionSetupComplete_r13.criticalExtensions.choice.rrcConnectionSetupComplete_r13);
+
           ue_context_p->ue_context.Status = RRC_CONNECTED;
 
           LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_CONNECTED \n",
@@ -2445,7 +2473,7 @@ rrc_eNB_decode_dcch_NB(
             PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
             "(securityModeComplete-NB) ---> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH,
+            DCCH0,//through SRB1bis
             sdu_sizeP);
 #ifdef XER_PRINT
       xer_fprint(stdout, &asn_DEF_UL_DCCH_Message_NB, (void *)ul_dcch_msg_NB);
@@ -2525,19 +2553,19 @@ rrc_eNB_decode_dcch_NB(
       LOG_I(RRC,
             PROTOCOL_RRC_CTXT_UE_FMT" received ueCapabilityInformation-NB on UL-DCCH %d from UE\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH);
+            DCCH0);//through SRB1bis
       LOG_D(RRC,
             PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
             "(UECapabilityInformation) ---> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH,
+            DCCH0,//through SRB1bis
             sdu_sizeP);
 #ifdef XER_PRINT
       xer_fprint(stdout, &asn_DEF_UL_DCCH_Message_NB, (void *)ul_dcch_msg);
 #endif
       LOG_I(RRC, "got UE capabilities for UE %x\n", ctxt_pP->rnti);
 
-      //FIXME ueCapabilityInformation different w.r.t LTE
+      //FIXME ueCapabilityInformation different w.r.t LTE --> how to decode it?
       dec_rval = uper_decode(NULL,
                              &asn_DEF_UE_Capability_NB_r13,
                              (void **)&UE_Capability_NB,
@@ -2555,10 +2583,11 @@ rrc_eNB_decode_dcch_NB(
       }
 #else
       ue_context_p->ue_context.nb_of_e_rabs = 1;
+      //FIXME may no more present in NB_IoT or different parameter to set
       for (i = 0; i < ue_context_p->ue_context.nb_of_e_rabs; i++){
 	ue_context_p->ue_context.e_rab[i].status = E_RAB_NB_STATUS_NEW;
 	ue_context_p->ue_context.e_rab[i].param.e_rab_id = 1+i;
-	ue_context_p->ue_context.e_rab[i].param.qos.qci=9; //FIXME may no more present in NB_IoT or different paameter to set
+	ue_context_p->ue_context.e_rab[i].param.qos.qci=9;
       }
       ue_context_p->ue_context.setup_e_rabs =ue_context_p->ue_context.nb_of_e_rabs;
 #endif
@@ -2720,7 +2749,7 @@ rrc_enb_task_NB( ///FIXME is completely based on ITTI--> must be changed (msg_p,
 
       srb_info_p->Rx_buffer.payload_size = RRC_MAC_CCCH_DATA_IND(msg_p).sdu_size;
 
-      rrc_eNB_decode_ccch_NB(&ctxt, srb_info_p, CC_id);
+      rrc_eNB_decode_ccch_NB(&ctxt, srb_info_p, CC_id); //SRB0
 
       break;
 

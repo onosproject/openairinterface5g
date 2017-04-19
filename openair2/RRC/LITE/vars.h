@@ -68,7 +68,7 @@ unsigned short Data_to_read;
 
 #define MAX_U32 0xFFFFFFFF
 
-uint8_t DRB2LCHAN[8]; //max can be 2 DRBs for NB_IoT
+uint8_t DRB2LCHAN[8]; //max can be 2 DRBs for NB_IoT --> it used for saving the LCID of DRBs
 
 long logicalChannelGroup0 = 0;
 long  logicalChannelSR_Mask_r9=0;

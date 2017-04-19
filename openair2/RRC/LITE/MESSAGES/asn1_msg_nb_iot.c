@@ -886,7 +886,7 @@ uint8_t do_RRCConnectionSetup_NB(
   uint8_t*                   const buffer,
   const uint8_t                    Transaction_id,
   const LTE_DL_FRAME_PARMS* const frame_parms, //to be changed ora maybe not used
-  SRB_ToAddModList_NB_r13_t**             SRB_configList_NB,
+  SRB_ToAddModList_NB_r13_t**             SRB_configList_NB, //for both SRB1bis and SRB1
   struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB
 )
 
@@ -926,59 +926,56 @@ uint8_t do_RRCConnectionSetup_NB(
  }
  *SRB_configList_NB = CALLOC(1,sizeof(SRB_ToAddModList_NB_r13_t));
 
-/// SRB1
+/// SRB1--------------------
 
-//logical channel identity = 1 for SRB1
-
- SRB1_config_NB = CALLOC(1,sizeof(*SRB1_config_NB));
-
- //no srb_Identity in SRB_ToAddMod_NB
-
- SRB1_rlc_config_NB = CALLOC(1,sizeof(*SRB1_rlc_config_NB));
- SRB1_config_NB->rlc_Config_r13   = SRB1_rlc_config_NB;
-
- SRB1_rlc_config_NB->present = SRB_ToAddMod_NB_r13__rlc_Config_r13_PR_explicitValue;
- SRB1_rlc_config_NB->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//the only possible in NB_IoT
-
-
-// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_timer_poll_retransmit_r13;
-// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_max_retx_threshold_r13;
+// SRB1_config_NB = CALLOC(1,sizeof(*SRB1_config_NB));
+//
+// //no srb_Identity in SRB_ToAddMod_NB
+//
+// SRB1_rlc_config_NB = CALLOC(1,sizeof(*SRB1_rlc_config_NB));
+// SRB1_config_NB->rlc_Config_r13   = SRB1_rlc_config_NB;
+//
+// SRB1_rlc_config_NB->present = SRB_ToAddMod_NB_r13__rlc_Config_r13_PR_explicitValue;
+// SRB1_rlc_config_NB->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//the only possible in NB_IoT
+//
+//
+//// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_timer_poll_retransmit_r13;
+//// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_max_retx_threshold_r13;
+//// //(musT be disabled--> SRB1 config pag 640 specs )
+//// SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
+//
+//
+// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
+// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
 // //(musT be disabled--> SRB1 config pag 640 specs )
-// SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
+// SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = NULL;
+//
+// SRB1_lchan_config_NB = CALLOC(1,sizeof(*SRB1_lchan_config_NB));
+// SRB1_config_NB->logicalChannelConfig_r13  = SRB1_lchan_config_NB;
+//
+// SRB1_lchan_config_NB->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue;
+//
+//
+// prioritySRB1 = CALLOC(1, sizeof(long));
+// *prioritySRB1 = 1;
+// SRB1_lchan_config_NB->choice.explicitValue.priority_r13 = prioritySRB1;
+//
+// logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
+// *logicalChannelSR_Prohibit = 1;
+// //schould be set to TRUE (specs pag 641)
+// SRB1_lchan_config_NB->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
+//
+// //ADD SRB1
+// ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1_config_NB);
 
 
- SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
- SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
- //(musT be disabled--> SRB1 config pag 640 specs )
- SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = NULL;
-
- SRB1_lchan_config_NB = CALLOC(1,sizeof(*SRB1_lchan_config_NB));
- SRB1_config_NB->logicalChannelConfig_r13  = SRB1_lchan_config_NB;
-
- SRB1_lchan_config_NB->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue;
-
-
- prioritySRB1 = CALLOC(1, sizeof(long));
- *prioritySRB1 = 1;
- SRB1_lchan_config_NB->choice.explicitValue.priority_r13 = prioritySRB1;
-
- logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
- *logicalChannelSR_Prohibit = 1;
- //schould be set to TRUE (specs pag 641)
- SRB1_lchan_config_NB->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
-
- //ADD SRB1
- ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1_config_NB);
-
- ///SRB1bis (The configuration for SRB1 and SRB1bis is the same)
-
+///SRB1bis (The configuration for SRB1 and SRB1bis is the same)-------------------
  // the only difference is the logical channel identity = 3 but not setted here
- //they are assumng that 2 RLC-AM entities are used for SRB1 and SRB1bis--> what means?
 
 		 SRB1bis_config_NB = CALLOC(1,sizeof(*SRB1bis_config_NB));
+		 SRB1bis_config_NB = SRB1_config_NB;
 
 		 //no srb_Identity in SRB_ToAddMod_NB
-
 		 SRB1bis_rlc_config_NB = CALLOC(1,sizeof(*SRB1bis_rlc_config_NB));
 		 SRB1bis_config_NB->rlc_Config_r13   = SRB1bis_rlc_config_NB;
 
@@ -1004,7 +1001,8 @@ uint8_t do_RRCConnectionSetup_NB(
 		 //schould be set to TRUE (specs pag 641)
 		 SRB1bis_lchan_config_NB->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
 
-		 //ADD SRB1bis //FIXME: actually there is no way to distinguish SRB1 and SRB1bis, maybe MAC doesn't care
+		 //ADD SRB1bis
+		 //FIXME: actually there is no way to distinguish SRB1 and SRB1bis
 		 ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1bis_config_NB);
 
 
@@ -1026,7 +1024,7 @@ uint8_t do_RRCConnectionSetup_NB(
   * Once selected, the same transmission scheme applies to NPBCH, NPDCCH, and NPDSCH.
   * */
 
- //CarrierConfigDedicated --> I don't know nothing --> settato valori a caso
+ //CarrierConfigDedicated --> random values setted
   physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.downlinkBitmapNonAnchor_r13->present=
 		  DL_CarrierConfigDedicated_NB_r13__downlinkBitmapNonAnchor_r13_PR_useNoBitmap_r13;
   physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_GapNonAnchor_r13->present =
@@ -1055,6 +1053,7 @@ uint8_t do_RRCConnectionSetup_NB(
  rrcConnectionSetup_NB->rrc_TransactionIdentifier = Transaction_id; //input value
  rrcConnectionSetup_NB->criticalExtensions.present = RRCConnectionSetup_NB__criticalExtensions_PR_c1;
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.present =RRCConnectionSetup_NB__criticalExtensions__c1_PR_rrcConnectionSetup_r13 ;
+ //FIXME: should carry only SRB1bis?
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.srb_ToAddModList_r13 = *SRB_configList_NB;
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.drb_ToAddModList_r13 = NULL;
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.drb_ToReleaseList_r13 = NULL;
@@ -1127,25 +1126,9 @@ uint8_t do_SecurityModeCommand_NB(
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
 
-//changed only "asn_DEF_DL_DCCH_Message_NB" //to be left?
-#if defined(ENABLE_ITTI)
-# if !defined(DISABLE_XER_SPRINT)
-  {
-    char        message_string[20000];
-    size_t      message_string_size;
 
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message_NB, (void *) &dl_dcch_msg_NB)) > 0) {
-      MessageDef *msg_p;
-
-      msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_DCCH, message_string_size + sizeof (IttiMsgText));
-      msg_p->ittiMsg.rrc_dl_dcch.size = message_string_size;
-      memcpy(&msg_p->ittiMsg.rrc_dl_dcch.text, message_string, message_string_size);
-
-      itti_send_msg_to_task(TASK_UNKNOWN, ctxt_pP->instance, msg_p);
-    }
-  }
-# endif
-#endif
+//#if defined(ENABLE_ITTI)
+//# if !defined(DISABLE_XER_SPRINT)....
 
 #ifdef USER_MODE
   LOG_D(RRC,"[eNB %d] securityModeCommand-NB for UE %x Encoded %d bits (%d bytes)\n",
@@ -1202,24 +1185,8 @@ uint8_t do_UECapabilityEnquiry_NB(
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
 
-#if defined(ENABLE_ITTI)
-# if !defined(DISABLE_XER_SPRINT)
-  {
-    char        message_string[20000];
-    size_t      message_string_size;
-
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message_NB, (void *) &dl_dcch_msg_NB)) > 0) {
-      MessageDef *msg_p;
-
-      msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_CCCH, message_string_size + sizeof (IttiMsgText));
-      msg_p->ittiMsg.rrc_dl_ccch.size = message_string_size;
-      memcpy(&msg_p->ittiMsg.rrc_dl_ccch.text, message_string, message_string_size);
-
-      itti_send_msg_to_task(TASK_UNKNOWN, ctxt_pP->instance, msg_p);
-    }
-  }
-# endif
-#endif
+//#if defined(ENABLE_ITTI)
+//# if !defined(DISABLE_XER_SPRINT)....
 
 #ifdef USER_MODE
   LOG_D(RRC,"[eNB %d] UECapabilityEnquiry-NB for UE %x Encoded %d bits (%d bytes)\n",
@@ -1246,8 +1213,8 @@ uint16_t do_RRCConnectionReconfiguration_NB(
   const protocol_ctxt_t*        const ctxt_pP,
     uint8_t                            *buffer,
     uint8_t                             Transaction_id,
-    SRB_ToAddModList_NB_r13_t          *SRB_list_NB, //SRB_ConfigList2 (default) //SRB_ConfigList2 (handover)
-    DRB_ToAddModList_NB_r13_t          *DRB_list_NB, //DRB_ConfigList (default)  //DRB_ConfigList2 (handover)
+    SRB_ToAddModList_NB_r13_t          *SRB_list_NB, //SRB_ConfigList2 (default)--> only SRB1?
+    DRB_ToAddModList_NB_r13_t          *DRB_list_NB, //DRB_ConfigList (default)
     DRB_ToReleaseList_NB_r13_t         *DRB_list2_NB, //is NULL when passed
     struct PhysicalConfigDedicated_NB_r13     *physicalConfigDedicated_NB,
 	MAC_MainConfig_NB_r13_t                   *mac_MainConfig_NB,
@@ -1276,7 +1243,7 @@ uint16_t do_RRCConnectionReconfiguration_NB(
   //RAdioResourceconfigDedicated
   rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13 =
 		  CALLOC(1,sizeof(*rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13));
-  rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->srb_ToAddModList_r13 = SRB_list_NB;
+  rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->srb_ToAddModList_r13 = SRB_list_NB; //only SRB1?
   rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->drb_ToAddModList_r13 = DRB_list_NB;
   rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->drb_ToReleaseList_r13 = DRB_list2_NB;
   rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->physicalConfigDedicated_r13 = physicalConfigDedicated_NB;
@@ -1316,24 +1283,8 @@ uint16_t do_RRCConnectionReconfiguration_NB(
   xer_fprint(stdout,&asn_DEF_DL_DCCH_Message_NB,(void*)&dl_dcch_msg_NB);
 #endif
 
-#if defined(ENABLE_ITTI)
-# if !defined(DISABLE_XER_SPRINT)
-  {
-    char        message_string[30000];
-    size_t      message_string_size;
-
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message_NB, (void *) &dl_dcch_msg_NB)) > 0) {
-      MessageDef *msg_p;
-
-      msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_DCCH, message_string_size + sizeof (IttiMsgText));
-      msg_p->ittiMsg.rrc_dl_dcch.size = message_string_size;
-      memcpy(&msg_p->ittiMsg.rrc_dl_dcch.text, message_string, message_string_size);
-
-      itti_send_msg_to_task(TASK_UNKNOWN, ctxt_pP->instance, msg_p);
-    }
-  }
-# endif
-#endif
+//#if defined(ENABLE_ITTI)
+//# if !defined(DISABLE_XER_SPRINT)...
 
 
   LOG_I(RRC,"RRCConnectionReconfiguration-NB Encoded %d bits (%d bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
@@ -1561,7 +1512,7 @@ uint8_t do_DLInformationTransfer_NB(
 
 /*OAI_UECapability_t *fill_ue_capability*/
 
-/*do_RRCConnectionReestablishment-->used to re-establish SRB1*/ //which parameter to use?
+/*do_RRCConnectionReestablishment_NB-->used to re-establish SRB1*/ //which parameter to use?
 uint8_t do_RRCConnectionReestablishment_NB(
 		uint8_t Mod_id,
 		uint8_t* const buffer,
@@ -1628,6 +1579,46 @@ uint8_t do_RRCConnectionReestablishment_NB(
 
   LOG_I(RRC,"RRCConnectionReestablishment-NB Encoded %d bits (%d bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
 
+}
+
+/*do_RRCConnectionRelease_NB--> is used to command the release of an RRC connection*/
+uint8_t do_RRCConnectionRelease_NB(
+  uint8_t                             Mod_id,
+  uint8_t                            *buffer,
+  uint8_t                             Transaction_id)
+{
+
+  asn_enc_rval_t enc_rval;
+
+  DL_DCCH_Message_NB_t dl_dcch_msg_NB;
+  RRCConnectionRelease_NB_t *rrcConnectionRelease_NB;
+
+
+  memset(&dl_dcch_msg_NB,0,sizeof(DL_DCCH_Message_t));
+
+  dl_dcch_msg_NB.message.present           = DL_DCCH_MessageType_NB_PR_c1;
+  dl_dcch_msg_NB.message.choice.c1.present = DL_DCCH_MessageType_NB__c1_PR_rrcConnectionRelease_r13;
+  rrcConnectionRelease_NB                  = &dl_dcch_msg_NB.message.choice.c1.choice.rrcConnectionRelease_r13;
+
+  // RRCConnectionRelease
+  rrcConnectionRelease_NB->rrc_TransactionIdentifier = Transaction_id;
+  rrcConnectionRelease_NB->criticalExtensions.present = RRCConnectionRelease_NB__criticalExtensions_PR_c1;
+  rrcConnectionRelease_NB->criticalExtensions.choice.c1.present =RRCConnectionRelease_NB__criticalExtensions__c1_PR_rrcConnectionRelease_r13 ;
+
+  rrcConnectionRelease_NB->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r13.releaseCause_r13 = ReleaseCause_NB_r13_other;
+  rrcConnectionRelease_NB->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r13.redirectedCarrierInfo_r13 = NULL;
+  rrcConnectionRelease_NB->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r13.extendedWaitTime_r13 = NULL;
+
+  //Why allocate memory for non critical extension?
+  rrcConnectionRelease_NB->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r13.nonCriticalExtension=CALLOC(1,
+      sizeof(*rrcConnectionRelease_NB->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r13.nonCriticalExtension));
+
+  enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message_NB,
+                                   (void*)&dl_dcch_msg_NB,
+                                   buffer,
+                                   RRC_BUF_SIZE);//check
+
+  return((enc_rval.encoded+7)/8);
 }
 
 
