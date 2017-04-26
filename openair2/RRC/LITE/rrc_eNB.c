@@ -128,50 +128,8 @@ init_SI(
 #if defined(Rel10) || defined(Rel14)
   int                                 i;
 #endif
-  /*
-     uint32_t mib=0;
-     int i;
-     int N_RB_DL,phich_resource;
-
-     do_MIB(enb_mod_idP, mac_xface->lte_frame_parms,0x321,&mib);
-
-     for (i=0;i<1024;i+=4)
-     do_MIB(enb_mod_idP, mac_xface->lte_frame_parms,i,&mib);
-
-     N_RB_DL=6;
-     while (N_RB_DL != 0) {
-     phich_resource = 1;
-     while (phich_resource != 0) {
-     for (i=0;i<2;i++) {
-     mac_xface->lte_frame_parms->N_RB_DL = N_RB_DL;
-     mac_xface->lte_frame_parms->phich_config_common.phich_duration=i;
-     mac_xface->lte_frame_parms->phich_config_common.phich_resource = phich_resource;
-     do_MIB(enb_mod_idP, mac_xface->lte_frame_parms,0,&mib);
-     }
-     if (phich_resource == 1)
-     phich_resource = 3;
-     else if (phich_resource == 3)
-     phich_resource = 6;
-     else if (phich_resource == 6)
-     phich_resource = 12;
-     else if (phich_resource == 12)
-     phich_resource = 0;
-     }
-     if (N_RB_DL == 6)
-     N_RB_DL = 15;
-     else if (N_RB_DL == 15)
-     N_RB_DL = 25;
-     else if (N_RB_DL == 25)
-     N_RB_DL = 50;
-     else if (N_RB_DL == 50)
-     N_RB_DL = 75;
-     else if (N_RB_DL == 75)
-     N_RB_DL = 100;
-     else if (N_RB_DL == 100)
-     N_RB_DL = 0;
-     }
-     exit(-1);
-   */
+  /*Nick Start*/
+  /*Here will copy basic parameters and implement do_MIB, rrc_eNB_carrier_data_t will add some parameters in MIB*/
 
   eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1 = 0;
   eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23 = 0;
@@ -185,6 +143,7 @@ init_SI(
    */
 
   if (eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].SIB1)
+  	/*the I/O of do_SIB1 will modify, the parameters like SIB1 siblock1 sib1 will assign in the carrier structure */
     eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1 = do_SIB1(
           ctxt_pP->module_id,
           CC_id,
@@ -215,6 +174,7 @@ init_SI(
   eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].SIB23 = (uint8_t*) malloc16(64);
 
   if (eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].SIB23) {
+  	/*Modify as do_sib1*/
     eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23 = do_SIB23(
           ctxt_pP->module_id,
           CC_id,
@@ -232,16 +192,7 @@ init_SI(
 #endif
         );
 
-    /*
-       eNB_rrc_inst[ctxt_pP->module_id].sizeof_SIB23 = do_SIB2_AT4(ctxt_pP->module_id,
-       eNB_rrc_inst[ctxt_pP->module_id].SIB23,
-       &eNB_rrc_inst[ctxt_pP->module_id].systemInformation,
-       &eNB_rrc_inst[ctxt_pP->module_id].sib2,
-       #if defined(ENABLE_ITTI)
-       , configuration
-       #endif
-       );
-     */
+
     if (eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23 == 255) {
       mac_xface->macphy_exit("[RRC][init_SI] FATAL, eNB_rrc_inst[mod].carrier[CC_id].sizeof_SIB23 == 255");
     }
@@ -322,6 +273,7 @@ init_SI(
     LOG_D(RRC,
           PROTOCOL_RRC_CTXT_FMT" RRC_UE --- MAC_CONFIG_REQ (SIB1.tdd & SIB2 params) ---> MAC_UE\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
+    /*modify to rrc_mac_config_req_eNB*/
     rrc_mac_config_req(ctxt_pP->module_id, CC_id, ENB_FLAG_YES, 0, 0,
                        (RadioResourceConfigCommonSIB_t *) &
                        eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sib2->radioResourceConfigCommon,
