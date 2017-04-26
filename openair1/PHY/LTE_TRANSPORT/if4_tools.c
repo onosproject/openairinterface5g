@@ -90,16 +90,18 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
     for (symbol_id=0; symbol_id<nsym; symbol_id++) {
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 1 );
       if (eNB->CC_id==1) LOG_I(PHY,"DL_IF4p5: CC_id %d : frame %d, subframe %d, symbol %d\n",eNB->CC_id,frame,subframe,symbol_id);
-      
+
+      start_meas(&eNB->send_if4p5_comp_stats);      
       for (element_id=0; element_id<db_halflength; element_id++) {
-        start_meas(&eNB->send_if4p5_comp_stats);
+
 	i = (uint16_t*) &txdataF[eNB->CC_id][blockoffsetF+element_id];
         data_block[element_id] = ((uint16_t) lin2alaw_if4p5[*i]) | (lin2alaw_if4p5[*(i+1)]<<8);
 
         i = (uint16_t*) &txdataF[eNB->CC_id][slotoffsetF+element_id];
         data_block[element_id+db_halflength] = ((uint16_t) lin2alaw_if4p5[*i]) | (lin2alaw_if4p5[*(i+1)]<<8);        
-	stop_meas(&eNB->send_if4p5_comp_stats);
       }
+      stop_meas(&eNB->send_if4p5_comp_stats);
+
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 0 );
 				 		
       packet_header->frame_status &= ~(0x000f<<26);
@@ -148,16 +150,18 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
       VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_SEND_IF4_SYMBOL, symbol_id );
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 1 );
 	LOG_D(PHY,"IF4p5_PULFFT: frame %d, subframe %d, symbol %d\n",frame,subframe,symbol_id);
+	start_meas(&eNB->send_if4p5_comp_stats);
 	for (element_id=0; element_id<db_halflength; element_id++) {
-	  start_meas(&eNB->send_if4p5_comp_stats);
+
 	  i = (uint16_t*) &rxdataF[0][blockoffsetF+element_id];
 	  data_block[element_id] = ((uint16_t) lin2alaw_if4p5[*i]) | ((uint16_t)(lin2alaw_if4p5[*(i+1)]<<8));
 	  
 	  i = (uint16_t*) &rxdataF[0][slotoffsetF+element_id];
 	  data_block[element_id+db_halflength] = ((uint16_t) lin2alaw_if4p5[*i]) | ((uint16_t)(lin2alaw_if4p5[*(i+1)]<<8));
 	  //if (element_id==0) LOG_I(PHY,"send_if4p5: symbol %d rxdata0 = (%d,%d)\n",symbol_id,*i,*(i+1));
-	  stop_meas(&eNB->send_if4p5_comp_stats);
 	}
+	stop_meas(&eNB->send_if4p5_comp_stats);
+
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 0 );   	
 	packet_header->frame_status &= ~(0x000f<<26);
 	packet_header->frame_status |= (symbol_id&0x000f)<<26; 

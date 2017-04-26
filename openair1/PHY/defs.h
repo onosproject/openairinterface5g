@@ -254,6 +254,8 @@ typedef struct eNB_proc_t_s {
   int frame_tx;
   /// frame offset for secondary eNBs (to correct for frame asynchronism at startup)
   int frame_offset;
+  /// to undo modulo 1024 frame counter
+  int unwrapped_tx_frame;
   /// frame to act upon for PRACH
   int frame_prach;
   /// \internal This variable is protected by \ref mutex_fep.

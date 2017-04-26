@@ -458,12 +458,12 @@ static void *scope_thread(void *arg) {
                 //fl_set_object_label(form_stats_l2->stats_text, stats_buffer);
                 fl_clear_browser(form_stats_l2->stats_text);
                 fl_add_browser_line(form_stats_l2->stats_text, stats_buffer);
-            }
-            len = dump_eNB_stats (PHY_vars_eNB_g[0][0], stats_buffer, 0);
+            
+              len = dump_eNB_stats (PHY_vars_eNB_g[0][0], stats_buffer, 0);
 
-            if (MAX_NUM_CCs>1)
+              if (MAX_NUM_CCs>1)
                 len += dump_eNB_stats (PHY_vars_eNB_g[0][1], &stats_buffer[len], 0);
-
+            }
             //fl_set_object_label(form_stats->stats_text, stats_buffer);
             fl_clear_browser(form_stats->stats_text);
             fl_add_browser_line(form_stats->stats_text, stats_buffer);
@@ -1552,7 +1552,7 @@ int main( int argc, char **argv ) {
             UE[CC_id] = PHY_vars_UE_g[0][CC_id];
             printf("PHY_vars_UE_g[0][%d] = %p\n",CC_id,UE[CC_id]);
 
-            if (phy_test==1)
+            if (phy_test==1) 
                 UE[CC_id]->mac_enabled = 0;
             else
                 UE[CC_id]->mac_enabled = 1;
@@ -1623,7 +1623,7 @@ int main( int argc, char **argv ) {
                         PHY_vars_eNB_g[0][CC_id]->common_vars.beam_weights[0][0][j][re] = 0x00007fff/frame_parms[CC_id]->nb_antennas_tx;
             }
 
-            if (phy_test==1) PHY_vars_eNB_g[0][CC_id]->mac_enabled = 0;
+            if ((phy_test==1) || (node_function[CC_id] > NGFI_RAU_IF4p5)) PHY_vars_eNB_g[0][CC_id]->mac_enabled = 0;
             else PHY_vars_eNB_g[0][CC_id]->mac_enabled = 1;
 
             if (PHY_vars_eNB_g[0][CC_id]->mac_enabled == 0) { //set default parameters for testing mode

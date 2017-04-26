@@ -1336,22 +1336,10 @@ void rx_prach(PHY_VARS_eNB *eNB,
 
 #if 0
     /* TODO: resolv this conflict (there should be no printf anyway, so no big deal) */
-<<<<<<< HEAD
-    /*
-    en = dB_fixed(signal_energy(&rxsigF[0][k],840));
-    printf("Sending PRACH, k %d,n_ra_prb %d, N_RB_UL %d,  en %d\n",k,n_ra_prb,eNB->frame_parms.N_RB_UL,en);
-    if (en>60) {
-      printf("PRACH: Frame %d, Subframe %d => %d dB\n",eNB->proc.frame_rx,eNB->proc.subframe_rx,en);
-      write_output("prach_rx0.m","prach_rx0",(int16_t*)&rxsigF[0][k],839,1,1);
-      exit(-1);
-    }
-    */
 
-=======
-        en = dB_fixed(signal_energy(&rxsigF[0][k],840));
-        if (en>60)
-          printf("PRACH: Frame %d, Subframe %d => %d dB\n",eNB->proc.frame_rx,eNB->proc.subframe_rx,en);
->>>>>>> origin/fix-if4p5
+        int en = dB_fixed(signal_energy((int32_t*)&rxsigF[0][k],840));
+        if (en>50)
+          LOG_I(PHY,"PRACH: Frame %d, Subframe %d => %d dB\n",eNB->proc.frame_rx,eNB->proc.subframe_rx,en);
 #endif
 
     return;
