@@ -74,6 +74,8 @@ unsigned short config_frames[4] = {2,9,11,13};
 #include "create_tasks.h"
 #endif
 
+#include "system.h"
+
 #ifdef XFORMS
 #include "PHY/TOOLS/lte_phy_scope.h"
 #include "stats.h"
@@ -319,14 +321,15 @@ void help (void) {
   printf("  --ue-rxgain set UE RX gain\n");
   printf("  --ue-rxgain-off external UE amplifier offset\n");
   printf("  --ue-txgain set UE TX gain\n");
-  printf("  --ue-nb-ant-rx  set UE number of rx antennas ");
-  printf("  --ue-scan_carrier set UE to scan around carrier\n");
+  printf("  --ue-nb-ant-rx  set UE number of rx antennas\n");
+  printf("  --ue-scan-carrier set UE to scan around carrier\n");
   printf("  --dlsch-demod-shift dynamic shift for LLR compuation for TM3/4 (default 0)\n");
   printf("  --loop-memory get softmodem (UE) to loop through memory instead of acquiring from HW\n");
   printf("  --mmapped-dma sets flag for improved EXMIMO UE performance\n");  
   printf("  --external-clock tells hardware to use an external clock reference\n");
   printf("  --usim-test use XOR autentication algo in case of test usim mode\n"); 
   printf("  --single-thread-disable. Disables single-thread mode in lte-softmodem\n"); 
+  printf("  -A Set timing_advance\n");
   printf("  -C Set the downlink frequency for all component carriers\n");
   printf("  -d Enable soft scope and L1 and L2 stats (Xforms)\n");
   printf("  -F Calibrate the EXMIMO borad, available files: exmimo2_2arxg.lime exmimo2_2brxg.lime \n");
@@ -1370,6 +1373,8 @@ int main( int argc, char **argv ) {
   int ret;
 #endif
 
+    start_background_system();
+
 #ifdef DEBUG_CONSOLE
   setvbuf(stdout, NULL, _IONBF, 0);
   setvbuf(stderr, NULL, _IONBF, 0);
@@ -1406,16 +1411,16 @@ int main( int argc, char **argv ) {
   //randominit (0);
   set_taus_seed (0);
 
-  if (UE_flag==1) {
-    printf("configuring for UE\n");
+    if (UE_flag==1) {
+        printf("configuring for UE\n");
 
-    set_comp_log(HW,      LOG_DEBUG,  LOG_HIGH, 1);
-    set_comp_log(PHY,     LOG_DEBUG,   LOG_HIGH, 1);
-    set_comp_log(MAC,     LOG_INFO,   LOG_HIGH, 1);
-    set_comp_log(RLC,     LOG_INFO,   LOG_HIGH, 1);
-    set_comp_log(PDCP,    LOG_INFO,   LOG_HIGH, 1);
-    set_comp_log(OTG,     LOG_INFO,   LOG_HIGH, 1);
-    set_comp_log(RRC,     LOG_INFO,   LOG_HIGH, 1);
+        set_comp_log(HW,      LOG_DEBUG,  LOG_HIGH, 1);
+        set_comp_log(PHY,     LOG_DEBUG,   LOG_HIGH, 1);
+        set_comp_log(MAC,     LOG_INFO,   LOG_HIGH, 1);
+        set_comp_log(RLC,     LOG_INFO,   LOG_HIGH | FLAG_THREAD, 1);
+        set_comp_log(PDCP,    LOG_INFO,   LOG_HIGH, 1);
+        set_comp_log(OTG,     LOG_INFO,   LOG_HIGH, 1);
+        set_comp_log(RRC,     LOG_INFO,   LOG_HIGH, 1);
 #if defined(ENABLE_ITTI)
     set_comp_log(EMU,     LOG_INFO,   LOG_MED, 1);
 # if defined(ENABLE_USE_MME)
@@ -1513,6 +1518,12 @@ int main( int argc, char **argv ) {
 
 
   check_clock();
+
+#ifndef PACKAGE_VERSION
+#  define PACKAGE_VERSION "UNKNOWN-EXPERIMENTAL"
+#endif
+
+  LOG_I(HW, "Version: %s\n", PACKAGE_VERSION);
 
   // init the parameters
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {

@@ -4799,7 +4799,7 @@ int check_dci_format1_1a_coherency(DCI_format_t dci_format,
         return(0);
     }
 
-    if(harq_pid >8)
+    if(harq_pid>=8)
     {
         LOG_I(PHY,"bad harq id \n");
         return(0);
@@ -5013,7 +5013,7 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
 #endif
 
     // I- check dci content minimum coherency
-    if(harq_pid >8)
+    if(harq_pid>=8)
     {
         LOG_I(PHY,"bad harq pid\n");
       return(0);
@@ -8010,6 +8010,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
     print_CQI(ulsch->o,ulsch->uci_format,eNB_id,ue->frame_parms.N_RB_DL);
 
+    ulsch->bundling = 1-AckNackFBMode;
 
     if (frame_parms->frame_type == FDD) {
       int dl_subframe = (subframe<4) ? (subframe+6) : (subframe-4);
@@ -8041,7 +8042,6 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
     ulsch->Nsymb_pusch                             = 12-(frame_parms->Ncp<<1)-(use_srs==0?0:1);
     ulsch->srs_active                              = use_srs;
-    ulsch->bundling = 1-AckNackFBMode;
 
     if ((rnti >= cba_rnti) && (rnti < p_rnti))
       ulsch->harq_processes[harq_pid]->status = CBA_ACTIVE;
@@ -8644,6 +8644,8 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
       ulsch->harq_processes[harq_pid]->uci_format                            = HLC_subband_cqi_nopmi;
     }
 
+    ulsch->bundling = 1-AckNackFBMode;
+
     if (frame_parms->frame_type == FDD) {
       int dl_subframe = (subframe<4) ? (subframe+6) : (subframe-4);
 
@@ -8667,7 +8669,6 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
 
     ulsch->harq_processes[harq_pid]->Nsymb_pusch                             = 12-(frame_parms->Ncp<<1)-(use_srs==0?0:1);
     ulsch->harq_processes[harq_pid]->srs_active                            = use_srs;
-    ulsch->bundling = 1-AckNackFBMode;
 
     //Mapping of cyclic shift field in DCI format0 to n_DMRS2 (3GPP 36.211, Table 5.5.2.1.1-1)
     if(cshift == 0)

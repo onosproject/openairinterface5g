@@ -1725,6 +1725,7 @@ void init_eNB_proc(int inst) {
     
     proc->first_rx=100;
     proc->instance_cnt_synch        =  -1;
+    proc->first_rx=1;
     proc->first_tx=1;
     proc->frame_offset = 0;
 
@@ -2060,6 +2061,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
           printf("Exiting, cannot initialize transport protocol\n");
           exit(-1);
         }
+	malloc_IF5_buffer(eNB);
 	break;
       case NGFI_RRU_IF4p5:
 	eNB->do_precoding         = 0;
@@ -2151,6 +2153,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
           printf("Exiting, cannot initialize transport protocol\n");
           exit(-1);
         }
+	malloc_IF5_buffer(eNB);
 	break;
       case NGFI_RCC_IF4p5:
 	eNB->do_precoding         = 0;
