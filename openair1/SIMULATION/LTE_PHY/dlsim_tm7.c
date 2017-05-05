@@ -3235,6 +3235,7 @@ PMI_FEEDBACK:
                   rx_pdcch(&UE->common_vars,
                            UE->pdcch_vars,
                            &UE->frame_parms,
+                           0, // frame
                            subframe,
                            0,
                            (UE->frame_parms.mode1_flag == 1) ? SISO : ALAMOUTI,
@@ -3441,6 +3442,7 @@ PMI_FEEDBACK:
                                  PDSCH,
                                  eNB_id,
                                  eNB_id_i,
+                                 0, // frame
                                  subframe,
                                  m,
                                  (m==UE->pdcch_vars[0]->num_pdcch_symbols)?1:0,
@@ -3466,6 +3468,7 @@ PMI_FEEDBACK:
                                  PDSCH,
                                  eNB_id,
                                  eNB_id_i,
+                                 0, // frame
                                  subframe,
                                  m,
                                  0,
@@ -3491,6 +3494,7 @@ PMI_FEEDBACK:
                                  PDSCH,
                                  eNB_id,
                                  eNB_id_i,
+                                 0, // frame
                                  subframe,
                                  m,
                                  0,
