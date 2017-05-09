@@ -179,7 +179,7 @@ extern uint8_t target_ul_mcs;
 extern uint8_t abstraction_flag;
 extern uint8_t ethernet_flag;
 extern uint16_t Nid_cell;
-
+extern uint8_t use_user_control_interface;
 extern LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs];
 
 double cpuf;
@@ -236,6 +236,7 @@ help (void)
   printf ("-g Set multicast group ID (0,1,2,3) - valid if M is set\n");
   printf ("-G Enable background traffic \n");
   printf ("-H Enable handover operation (default disabled) \n");
+  printf ("-i Run with user control interface"); 
   printf ("-I Enable CLI interface (to connect use telnet localhost 1352)\n");
   printf ("-k Set the Ricean factor (linear)\n");
   printf ("-K [log_file] Enable ITTI logging into log_file\n");
@@ -760,7 +761,13 @@ l2l1_task (void *args_p)
           if (all_done == 0)
 	    usleep(500);
         }
-
+	// add this to the oai CLI
+	if (use_user_control_interface) {
+	  if ( user_control_interface(10*frame + sf)==-1) {
+	    frame=oai_emulation.info.n_frames; // exit main loop
+	    break;
+	  }
+	}
         // increment timestamps
         for (eNB_inst = oai_emulation.info.first_enb_local;
              (eNB_inst

@@ -298,10 +298,15 @@ printf("MAC: new UE id %d rnti %x\n", i, rntiP);
     return(UE_id);
   }
 
-printf("MAC: cannot add new UE for rnti %x\n", rntiP);
+  printf("MAC: cannot add new UE for rnti %x\n", rntiP);
   LOG_E(MAC,"error in add_new_ue(), could not find space in UE_list, Dumping UE list\n");
   dump_ue_list(UE_list,0);
   return(-1);
+}
+
+int add_new_ue_phy(module_id_t mod_idP, rnti_t rntiP){
+  int ret = mac_xface->add_ue(rntiP,PHY_vars_eNB_g[mod_idP][0]);
+  return (ret > 0) ? 0: -1;
 }
 
 //------------------------------------------------------------------------------

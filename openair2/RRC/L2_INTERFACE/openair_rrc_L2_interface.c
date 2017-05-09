@@ -74,6 +74,7 @@
 #include "rrc_L2_proto.h"
 #else
 #include "RRC/LITE/defs.h"
+#include "RRC/LITE/proto.h"
 #endif //CELLULAR
 #include "COMMON/mac_rrc_primitives.h"
 #include "openair_rrc_L2_interface.h"
@@ -279,4 +280,8 @@ openair_rrc_eNB_init(
 //------------------------------------------------------------------------------
 {
   return openair_rrc_lite_eNB_init(module_idP);
+}
+//------------------------------------------------------------------------------
+void mac_rrc_ue_update_ho_status(module_id_t   module_idP){
+  return (rrc_lite_ue_update_ho_status(module_idP));
 }

@@ -137,6 +137,9 @@ typedef struct {
   int16_t (*estimate_ue_tx_power)(uint32_t tbs, uint32_t nb_rb, uint8_t control_only, lte_prefix_type_t ncp, uint8_t use_srs);
 
   int (*mac_phy_remove_ue)(module_id_t Mod_idP,rnti_t rntiP);
+
+  int (*add_ue)(int16_t rnti, PHY_VARS_eNB *eNB);
+  
   /// UE functions
 
   /// reset the ue phy
@@ -170,7 +173,7 @@ typedef struct {
   PRACH_RESOURCES_t* (*ue_get_rach)(module_id_t Mod_id,int CC_id,frame_t frameP,uint8_t Msg3_flag,sub_frame_t subframe);
 
   /// Process Random-Access Response
-  uint16_t (*ue_process_rar)(module_id_t Mod_id,int CC_id,frame_t frameP, uint16_t ra_rnti, uint8_t *dlsch_buffer, uint16_t *t_crnti,uint8_t preamble_index, uint8_t* selected_rar_buffer);
+  uint16_t (*ue_process_rar)(module_id_t Mod_id,int CC_id,frame_t frameP, uint16_t ra_rnti, uint8_t *dlsch_buffer, uint16_t *t_crnti,uint8_t preamble_index, uint8_t* selected_rar_buffer, uint8_t prach_state);
 
   /// Get SR payload (0,1) from UE MAC
   uint32_t (*ue_get_SR)(module_id_t Mod_id,int CC_id,frame_t frameP,uint8_t eNB_id,rnti_t rnti,sub_frame_t subframe);
@@ -216,7 +219,7 @@ typedef struct {
   void (*phy_config_afterHO_ue)(module_id_t Mod_id,uint8_t CC_id,uint8_t CH_index,
                                 MobilityControlInfo_t *mobilityControlInfo,
                                 uint8_t ho_failed);
-
+  void (*phy_config_ue_state_ho)(uint8_t Mod_id,uint8_t CC_id,uint16_t rnti);
   /// Function to indicate failure of contention resolution or RA procedure
   void (*ra_failed)(module_id_t Mod_id, uint8_t CC_id,uint8_t eNB_index);
 
@@ -227,7 +230,7 @@ typedef struct {
   void (*Msg1_transmitted)(module_id_t Mod_id,uint8_t CC_id,frame_t frameP,uint8_t eNB_id);
 
   /// Function to indicate Msg3 transmission/retransmission which initiates/reset Contention Resolution Timer
-  void (*Msg3_transmitted)(module_id_t Mod_id,uint8_t CC_id,frame_t frameP,uint8_t eNB_id);
+  void (*Msg3_transmitted)(module_id_t Mod_id,uint8_t CC_id,frame_t frameP,uint8_t eNB_id, UE_MODE_t UE_mode);
 
   /// Function to pass inter-cell measurement parameters to PHY (cell Ids)
   void (*phy_config_meas_ue)(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index,uint8_t n_adj_cells,uint32_t *adj_cell_id);
@@ -295,6 +298,9 @@ typedef struct {
 
   /// Function for UE MAC to set the layer3 filtered RSRP/RSRQ measurements
   uint8_t (*set_RSRQ_filtered)(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index,float rsrp);
+
+  // Function to get the Nid cell
+  uint16_t (*get_nid_cell) (uint8_t Mod_id,uint8_t CC_id);
 
   /// Function for UE/eNB MAC to retrieve number of PRACH in TDD
   uint8_t (*get_num_prach_tdd)(LTE_DL_FRAME_PARMS *frame_parms);

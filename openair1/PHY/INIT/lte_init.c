@@ -1639,5 +1639,41 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
   } // node_function != NGFI_RRU_IF4p5
 
   return (0);
+}
 
+// Configure ue state in case of handover
+void phy_config_ue_state_ho(uint8_t Mod_id,uint8_t CC_id,uint16_t rnti){
+	uint32_t k,j;
+	int UE_id = find_UE_id(Mod_id,rnti);
+	if(UE_id==-1){
+		printf("Program exited: phy_config_ue_state_ho: UE does not exist\n");
+		exit(-1);
+	}
+	LOG_I(PHY, "ho called for eNB %d CC %d rnti %x UE_id %d\n", Mod_id, CC_id, rnti, UE_id);
+	PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].mode = PUSCH;
+	PHY_vars_eNB_g[Mod_id][CC_id]->ulsch[UE_id]->Msg3_flag = 0;
+
+	// HARQ processes
+    for (k=0; k<8; k++){ //harq_processes
+      for (j=0; j<PHY_vars_eNB_g[Mod_id][CC_id]->dlsch[UE_id][0]->Mdlharq; j++) {
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].dlsch_NAK[k][j]=0;
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].dlsch_ACK[k][j]=0;
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].dlsch_trials[k][j]=0;
+      }
+
+      PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].dlsch_l2_errors[k]=0;
+      PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].ulsch_errors[k]=0;
+      PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].ulsch_consecutive_errors=0;
+
+      for (j=0; j<8; j++) {
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].ulsch_decoding_attempts[k][j]=0;
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].ulsch_decoding_attempts_last[k][j]=0;
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].ulsch_round_errors[k][j]=0;
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].ulsch_round_fer[k][j]=0;
+      }
+    }
+
+    PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].dlsch_sliding_cnt=0;
+    PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].dlsch_NAK_round0=0;
+    PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].dlsch_mcs_offset=0;
 }

@@ -113,7 +113,7 @@ extern uint8_t usim_test;
 
 uint16_t two_tier_hexagonal_cellIds[7] = {0,1,2,4,5,7,8};
 uint16_t two_tier_hexagonal_adjacent_cellIds[7][6] = {{1,2,4,5,7,8},    // CellId 0
-  {11,18,2,0,8,15}, // CellId 1
+  {11,0,2,18,8,15}, // CellId 1
   {18,13,3,4,0,1},  // CellId 2
   {2,3,14,6,5,0},   // CellId 4
   {0,4,6,16,9,7},   // CellId 5
@@ -2493,6 +2493,12 @@ uint8_t do_MeasurementReport(uint8_t Mod_id, uint8_t *buffer,int measid,int phy_
   ASN_SEQUENCE_ADD(&measResultListEUTRA2->list,measresulteutra2);
 
   measurementReport->criticalExtensions.choice.c1.choice.measurementReport_r8.measResults.measResultNeighCells->choice.measResultListEUTRA=*(measResultListEUTRA2);
+
+  #ifdef Rel10
+  measurementReport->criticalExtensions.choice.c1.choice.measurementReport_r8.measResults.ext1=NULL;
+  measurementReport->criticalExtensions.choice.c1.choice.measurementReport_r8.measResults.ext2=NULL;
+  #endif
+
 
   enc_rval = uper_encode_to_buffer(&asn_DEF_UL_DCCH_Message,
                                    (void*)&ul_dcch_msg,

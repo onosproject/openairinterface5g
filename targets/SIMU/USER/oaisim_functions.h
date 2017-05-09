@@ -67,4 +67,6 @@ int init_slot_isr(void);
 
 void wait_for_slot_isr(void);
 
+int user_control_interface(int);
+
 #endif /* OAISIM_FUNCTIONS_H_ */

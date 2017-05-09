@@ -179,6 +179,12 @@
 #define ENB_CONFIG_STRING_MME_IP_ADDRESS_ACTIVE         "active"
 #define ENB_CONFIG_STRING_MME_IP_ADDRESS_PREFERENCE     "preference"
 
+#define ENB_CONFIG_STRING_TARGET_ENB_X2_IP_ADDRESS                "target_enb_x2_ip_address"
+#define ENB_CONFIG_STRING_TARGET_ENB_X2_IPV4_ADDRESS              "ipv4"
+#define ENB_CONFIG_STRING_TARGET_ENB_X2_IPV6_ADDRESS              "ipv6"
+#define ENB_CONFIG_STRING_TARGET_ENB_X2_IP_ADDRESS_ACTIVE         "active"
+#define ENB_CONFIG_STRING_TARGET_ENB_X2_IP_ADDRESS_PREFERENCE     "preference"
+
 #define ENB_CONFIG_STRING_SCTP_CONFIG                    "SCTP"
 #define ENB_CONFIG_STRING_SCTP_INSTREAMS                 "SCTP_INSTREAMS"
 #define ENB_CONFIG_STRING_SCTP_OUTSTREAMS                "SCTP_OUTSTREAMS"
@@ -189,6 +195,13 @@
 #define ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_S1U    "ENB_INTERFACE_NAME_FOR_S1U"
 #define ENB_CONFIG_STRING_ENB_IPV4_ADDR_FOR_S1U         "ENB_IPV4_ADDRESS_FOR_S1U"
 #define ENB_CONFIG_STRING_ENB_PORT_FOR_S1U              "ENB_PORT_FOR_S1U"
+
+#define ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_X2C    "ENB_INTERFACE_NAME_FOR_X2C"
+#define ENB_CONFIG_STRING_ENB_IPV4_ADDR_FOR_X2C         "ENB_IPV4_ADDRESS_FOR_X2C"
+#define ENB_CONFIG_STRING_ENB_PORT_FOR_X2C              "ENB_PORT_FOR_X2C"
+#define ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_X2U    "ENB_INTERFACE_NAME_FOR_X2U"
+#define ENB_CONFIG_STRING_ENB_IPV4_ADDR_FOR_X2U         "ENB_IPV4_ADDRESS_FOR_X2U"
+#define ENB_CONFIG_STRING_ENB_PORT_FOR_X2U              "ENB_PORT_FOR_X2U"
 
 #define ENB_CONFIG_STRING_NETWORK_CONTROLLER_CONFIG     "NETWORK_CONTROLLER"
 #define ENB_CONFIG_STRING_FLEXRAN_AGENT_INTERFACE_NAME      "FLEXRAN_AGENT_INTERFACE_NAME"
@@ -454,8 +467,9 @@ void enb_config_display(void)
       printf( "\tue_TimersAndConstants_t311 for CC %d:\t%ld:\n",j,enb_properties.properties[i]->ue_TimersAndConstants_t311[j]);
       printf( "\tue_TimersAndConstants_n311 for CC %d:\t%ld:\n",j,enb_properties.properties[i]->ue_TimersAndConstants_n311[j]);
 
-      printf( "\tue_TransmissionMode for CC %d:\t%ld:\n",j,enb_properties.properties[i]->ue_TransmissionMode[j]);
-
+    }
+    for (j=0; j < enb_properties.properties[i]->nb_x2; j++) {
+      printf( "\n\tTarget eNB IPv4 address:  \t%s", enb_properties.properties[i]->target_enb_x2_ip_address[j].ipv4_address);
     }
 
     for (j=0; j < enb_properties.properties[i]->num_otg_elements; j++) {
@@ -540,6 +554,8 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   config_setting_t *setting_srb1                  = NULL;
   config_setting_t *setting_mme_addresses         = NULL;
   config_setting_t *setting_mme_address           = NULL;
+  config_setting_t *setting_x2_addresses         = NULL;
+  config_setting_t *setting_x2_address           = NULL;
   config_setting_t *setting_rrh_gws               = NULL;
   config_setting_t *setting_rrh_gw                = NULL;
   config_setting_t *setting_enb                   = NULL;
@@ -551,6 +567,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   int               num_enbs                      = 0;
   int               num_mme_address               = 0;
   int               num_rrh_gw                    = 0;
+  int               num_x2_address               = 0;
   int               num_otg_elements              = 0;
   int               num_component_carriers        = 0;
   int               i                             = 0;
@@ -671,9 +688,15 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   const char*       active_enb[MAX_ENB];
   char*             enb_interface_name_for_S1U    = NULL;
   char*             enb_ipv4_address_for_S1U      = NULL;
+  char*             enb_interface_name_for_X2U    = NULL;
+  char*             enb_ipv4_address_for_X2U      = NULL;
   libconfig_int     enb_port_for_S1U              = 0;
+  libconfig_int     enb_port_for_X2U              = 0;
   char*             enb_interface_name_for_S1_MME = NULL;
   char*             enb_ipv4_address_for_S1_MME   = NULL;
+  char*             enb_interface_name_for_X2C     = NULL;
+  char*             enb_ipv4_address_for_X2C      = NULL;
+  libconfig_int     enb_port_for_X2C              = 0;
   char             *address                       = NULL;
   char             *cidr                          = NULL;
   char             *astring                       = NULL;
@@ -2435,7 +2458,50 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
 	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].lmssdr = 0;
             enb_properties.properties[enb_properties_index]->rrh_gw_config[j].if_compress = 0;
 	  }
-	  
+	  // X2_ENB_IP_ADDRESS
+	  setting_x2_addresses = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_TARGET_ENB_X2_IP_ADDRESS);
+          num_x2_address     = config_setting_length(setting_x2_addresses);
+          enb_properties.properties[enb_properties_index]->nb_x2 = 0;
+
+          for (j = 0; j < num_x2_address; j++) {
+            setting_x2_address = config_setting_get_elem(setting_x2_addresses, j);
+
+            if (  !(
+                   config_setting_lookup_string(setting_x2_address, ENB_CONFIG_STRING_TARGET_ENB_X2_IPV4_ADDRESS, (const char **)&ipv4)
+                   && config_setting_lookup_string(setting_x2_address, ENB_CONFIG_STRING_TARGET_ENB_X2_IPV6_ADDRESS, (const char **)&ipv6)
+                   && config_setting_lookup_string(setting_x2_address, ENB_CONFIG_STRING_TARGET_ENB_X2_IP_ADDRESS_ACTIVE, (const char **)&active)
+                   && config_setting_lookup_string(setting_x2_address, ENB_CONFIG_STRING_TARGET_ENB_X2_IP_ADDRESS_PREFERENCE, (const char **)&preference)
+                 )
+              ) {
+              AssertError (0, parse_errors ++,
+                           "Failed to parse eNB configuration file %s, %u th enb %u the X2 address !\n",
+                           lib_config_file_name_pP, i, j);
+              continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
+            }
+
+            enb_properties.properties[enb_properties_index]->nb_x2 += 1;
+
+            enb_properties.properties[enb_properties_index]->target_enb_x2_ip_address[j].ipv4_address = strdup(ipv4);
+            enb_properties.properties[enb_properties_index]->target_enb_x2_ip_address[j].ipv6_address = strdup(ipv6);
+
+            if (strcmp(active, "yes") == 0) {
+              enb_properties.properties[enb_properties_index]->target_enb_x2_ip_address[j].active = 1;
+
+            } else { 
+	      enb_properties.properties[enb_properties_index]->target_enb_x2_ip_address[j].active = 0;
+	    }
+
+            if (strcmp(preference, "ipv4") == 0) {
+              enb_properties.properties[enb_properties_index]->target_enb_x2_ip_address[j].ipv4 = 1;
+            } else if (strcmp(preference, "ipv6") == 0) {
+              enb_properties.properties[enb_properties_index]->target_enb_x2_ip_address[j].ipv6 = 1;
+            } else if (strcmp(preference, "no") == 0) {
+              enb_properties.properties[enb_properties_index]->target_enb_x2_ip_address[j].ipv4 = 1;
+              enb_properties.properties[enb_properties_index]->target_enb_x2_ip_address[j].ipv6 = 1;
+            }
+          }
+
+
           // SCTP SETTING
           enb_properties.properties[enb_properties_index]->sctp_out_streams = SCTP_OUT_STREAMS;
           enb_properties.properties[enb_properties_index]->sctp_in_streams  = SCTP_IN_STREAMS;
@@ -2468,6 +2534,19 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                                                     (const char **)&enb_ipv4_address_for_S1U)
                    && config_setting_lookup_int(subsetting, ENB_CONFIG_STRING_ENB_PORT_FOR_S1U,
                                                 &enb_port_for_S1U)
+
+		   && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_X2C,
+                                                    (const char **)&enb_interface_name_for_X2C)
+                   && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_ENB_IPV4_ADDR_FOR_X2C,
+                                                    (const char **)&enb_ipv4_address_for_X2C)
+                   && config_setting_lookup_int(subsetting, ENB_CONFIG_STRING_ENB_PORT_FOR_X2C,
+                                                &enb_port_for_X2C)
+		   && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_X2U,
+                                                    (const char **)&enb_interface_name_for_X2U)
+                   && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_ENB_IPV4_ADDR_FOR_X2U,
+                                                    (const char **)&enb_ipv4_address_for_X2U)
+                   && config_setting_lookup_int(subsetting, ENB_CONFIG_STRING_ENB_PORT_FOR_X2U,
+                                                &enb_port_for_X2U)
                  )
               ) {
               enb_properties.properties[enb_properties_index]->enb_interface_name_for_S1U = strdup(enb_interface_name_for_S1U);
@@ -2487,6 +2566,26 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
               if (address) {
                 IPV4_STR_ADDR_TO_INT_NWBO ( address, enb_properties.properties[enb_properties_index]->enb_ipv4_address_for_S1_MME, "BAD IP ADDRESS FORMAT FOR eNB S1_MME !\n" );
               }
+	      
+              enb_properties.properties[enb_properties_index]->enb_interface_name_for_X2U = strdup(enb_interface_name_for_X2U);
+              cidr = enb_ipv4_address_for_X2U;
+              address = strtok(cidr, "/");
+
+              if (address) {
+                IPV4_STR_ADDR_TO_INT_NWBO ( address, enb_properties.properties[enb_properties_index]->enb_ipv4_address_for_X2U, "BAD IP ADDRESS FORMAT FOR eNB X2U !\n" );
+              }
+	      enb_properties.properties[enb_properties_index]->enb_port_for_X2U = enb_port_for_X2U;
+	      
+	      
+	      enb_properties.properties[enb_properties_index]->enb_interface_name_for_X2C = strdup(enb_interface_name_for_X2C);
+              cidr = enb_ipv4_address_for_X2C;
+              address = strtok(cidr, "/");
+
+              if (address) {
+                IPV4_STR_ADDR_TO_INT_NWBO ( address, enb_properties.properties[enb_properties_index]->enb_ipv4_address_for_X2C, "BAD IP ADDRESS FORMAT FOR eNB X2C !\n" );
+              }
+	      enb_properties.properties[enb_properties_index]->enb_port_for_X2C = enb_port_for_X2C;
+
             }
           }
 	  

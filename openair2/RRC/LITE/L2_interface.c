@@ -40,6 +40,7 @@
 #include "rrc_eNB_UE_context.h"
 #include "pdcp.h"
 #include "msc.h"
+#include "proto.h"
 
 #ifdef PHY_EMUL
 #include "SIMULATION/simulation_defs.h"
@@ -786,4 +787,14 @@ int mac_ue_ccch_success_ind(module_id_t Mod_idP, uint8_t eNB_index)
   UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size=0;
 #endif
   return 0;
+}
+
+void rrc_lite_ue_update_ho_status(module_id_t Mod_idP){
+	// Handover is done
+	LOG_D(RRC,"Reset HO timer in RRC\n");
+	UE_rrc_inst[Mod_idP].Info[0].T304_active = 0; // Stop the timer (MAC procedure was successful)
+	//UE_rrc_inst[Mod_idP].HandoverInfoUe.measFlag = 0; // Stop the measurements
+	UE_mac_inst[Mod_idP].RA_active = 0;
+	UE_rrc_inst[Mod_idP].Info[0].State = RRC_RECONFIGURED;
+	LOG_D(RRC,"UE is updated: Mod_id: %d/State: %d\n",Mod_idP,UE_rrc_inst[Mod_idP].Info[0].State);
 }

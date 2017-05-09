@@ -1430,13 +1430,19 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
 #endif
       
       stop_meas(&ue->ulsch_encoding_stats);
+
+      if(ue->prach_ho){
+	ue->UE_mode[eNB_id] = PUSCH;
+	ue->prach_ho = 0;
+      }
       
       if (ue->mac_enabled == 1) {
 	// signal MAC that Msg3 was sent
 	mac_xface->Msg3_transmitted(Mod_id,
 				    CC_id,
 				    frame_tx,
-				    eNB_id);
+				    eNB_id,
+				    ue->UE_mode[eNB_id]);
       }
     } // Msg3_flag==1
     else {
@@ -3243,7 +3249,8 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
 						 dlsch0->harq_processes[0]->b,
 						 &ue->pdcch_vars[subframe_rx & 0x1][eNB_id]->crnti,
 						 ue->prach_resources[eNB_id]->ra_PreambleIndex,
-						 dlsch0->harq_processes[0]->b); // alter the 'b' buffer so it contains only the selected RAR header and RAR payload
+						 dlsch0->harq_processes[0]->b,
+						 ue->prach_ho); // alter the 'b' buffer so it contains only the selected RAR header and RAR payload
 
       ue->pdcch_vars[(subframe_rx+1) & 0x1][eNB_id]->crnti = ue->pdcch_vars[subframe_rx & 0x1][eNB_id]->crnti;
       
@@ -4171,17 +4178,20 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
 	  LOG_E(PHY,"[UE %d] Frame %d, subframe %d RRC Connection lost, returning to PRACH\n",ue->Mod_id,
 		frame_rx,subframe_tx);
 	  ue->UE_mode[eNB_id] = PRACH;
+	  ue->prach_ho = 0;
 	  //      mac_xface->macphy_exit("Connection lost");
 	} else if (ret == PHY_RESYNCH) {
 	  LOG_E(PHY,"[UE %d] Frame %d, subframe %d RRC Connection lost, trying to resynch\n",
 		ue->Mod_id,
 		frame_rx,subframe_tx);
 	  ue->UE_mode[eNB_id] = RESYNCH;
+	  ue->prach_ho = 0;
 	  //     mac_xface->macphy_exit("Connection lost");
 	} else if (ret == PHY_HO_PRACH) {
 	  LOG_I(PHY,"[UE %d] Frame %d, subframe %d, return to PRACH and perform a contention-free access\n",
 		ue->Mod_id,frame_rx,subframe_tx);
 	  ue->UE_mode[eNB_id] = PRACH;
+	  ue->prach_ho = 1;
 	}
       }
     }

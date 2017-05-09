@@ -287,6 +287,10 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   const uint32_t                nas_length
 );
 
+void rrc_eNB_configure_rbs_handover(struct rrc_eNB_ue_context_s* ue_context_p, protocol_ctxt_t* const ctxt_pP);
+
+void rrc_eNB_target_add_ue_handover(protocol_ctxt_t* const ctxt_pP);
+
 //L2_interface.c
 int8_t
 mac_rrc_data_req(
@@ -381,6 +385,8 @@ ue_measurement_report_triggering(
   const uint8_t                 eNB_index
 );
 
+void rrc_lite_ue_update_ho_status(module_id_t Mod_idP);
+
 int
 mac_eNB_get_rrc_status(
   const module_id_t Mod_idP,
@@ -454,7 +460,7 @@ rrc_eNB_free_mem_UE_context(
 void
 rrc_eNB_free_UE(
 		const module_id_t enb_mod_idP,
-		const struct rrc_eNB_ue_context_s*         const ue_context_pP
+		struct rrc_eNB_ue_context_s*         ue_context_pP
 );
 
 long binary_search_int(int elements[], long numElem, int value);

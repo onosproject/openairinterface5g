@@ -40,6 +40,7 @@
 #include "PHY/impl_defs_lte.h"
 #include "PHY/defs.h"
 #include "s1ap_messages_types.h"
+#include "x2ap_messages_types.h"
 #ifdef CMAKER
 #include "SystemInformationBlockType2.h"
 #include "rrc_messages_types.h"
@@ -72,6 +73,14 @@ typedef struct mme_ip_address_s {
   char     *ipv4_address;
   char     *ipv6_address;
 } mme_ip_address_t;
+
+typedef struct x2_enb_ip_address_s {
+  unsigned  ipv4:1;
+  unsigned  ipv6:1;
+  unsigned  active:1;
+  char     *ipv4_address;
+  char     *ipv6_address;
+} x2_enb_ip_address_t;
 
 typedef struct rrh_gw_config_s {
   unsigned  udp:1;
@@ -219,6 +228,11 @@ typedef struct Enb_properties_s {
   /* List of MME to connect to */
   mme_ip_address_t    mme_ip_address[S1AP_MAX_NB_MME_IP_ADDRESS];
 
+  /* Nb of X2 to connect to */
+  uint8_t             nb_x2;
+  /* List of X2 to connect to */
+  x2_enb_ip_address_t  target_enb_x2_ip_address[X2AP_MAX_NB_ENB_IP_ADDRESS];
+
   int                 sctp_in_streams;
   int                 sctp_out_streams;
 
@@ -228,6 +242,14 @@ typedef struct Enb_properties_s {
 
   char               *enb_interface_name_for_S1_MME;
   in_addr_t           enb_ipv4_address_for_S1_MME;
+
+  char               *enb_interface_name_for_X2U;
+  in_addr_t           enb_ipv4_address_for_X2U;
+  tcp_udp_port_t      enb_port_for_X2U;
+
+  char               *enb_interface_name_for_X2C;
+  in_addr_t           enb_ipv4_address_for_X2C;
+  tcp_udp_port_t      enb_port_for_X2C;
 
   char               *flexran_agent_interface_name;
   in_addr_t           flexran_agent_ipv4_address;

@@ -107,6 +107,7 @@ typedef enum cn_domain_s {
 typedef struct net_ip_address_s {
   unsigned ipv4:1;
   unsigned ipv6:1;
+  unsigned active:1;
   char ipv4_address[16];
   char ipv6_address[46];
 } net_ip_address_t;

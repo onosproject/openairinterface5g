@@ -429,6 +429,8 @@ void mac_top_cleanup(void)
     free(eNB_mac_inst);
   }
 
+  rrc_top_cleanup();
+  
   free( Mac_rlc_xface);
 }
 
@@ -474,6 +476,7 @@ int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,ui
   mac_xface->ra_failed                 = ra_failed;
   mac_xface->ra_succeeded              = ra_succeeded;
   mac_xface->mac_phy_remove_ue         = mac_phy_remove_ue;
+  mac_xface->add_ue                    = add_ue;
 
   LOG_I(MAC,"[MAIN] init UE MAC functions \n");
   mac_xface->ue_decode_si              = ue_decode_si;
@@ -500,6 +503,7 @@ int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,ui
   mac_xface->get_RSRQ               = get_RSRQ;
   mac_xface->get_RSSI               = get_RSSI;
   mac_xface->get_n_adj_cells        = get_n_adj_cells;
+  mac_xface->get_nid_cell			= get_nid_cell;
   mac_xface->get_rx_total_gain_dB   = get_rx_total_gain_dB;
   mac_xface->get_Po_NOMINAL_PUSCH   = get_Po_NOMINAL_PUSCH;
   mac_xface->get_num_prach_tdd      = get_num_prach_tdd;

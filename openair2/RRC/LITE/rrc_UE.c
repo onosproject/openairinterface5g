@@ -2097,6 +2097,7 @@ rrc_ue_process_mobilityControlInfo(
   // rrc_rlc_config_req(ue_mod_idP+NB_eNB_INST,frameP,0,CONFIG_ACTION_ADD,ue_mod_idP+DCCH,SIGNALLING_RADIO_BEARER,Rlc_info_am_config);
   // rrc_rlc_config_req(ue_mod_idP+NB_eNB_INST,frameP,0,CONFIG_ACTION_ADD,ue_mod_idP+DCCH1,SIGNALLING_RADIO_BEARER,Rlc_info_am_config);
   // rrc_rlc_config_req(ue_mod_idP+NB_eNB_INST,frameP,0,CONFIG_ACTION_ADD,ue_mod_idP+DTCH,RADIO_ACCESS_BEARER,Rlc_info_um);
+  //rrc_mac_get_new_crnti(ctxt_pP,eNB_index);
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State = RRC_SI_RECEIVED;
 }
 
@@ -2268,12 +2269,27 @@ rrc_ue_decode_dcch(
           eNB_indexP);
 
         if (target_eNB_index != 0xFF) {
+	  UE_rrc_inst[ctxt_pP->module_id].rrc_ue_do_meas=0;
+	  // Stop to measure (delay to the UE-->source)
+	  //stop_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb);
+	  //double t_x2_src_enb = (double)UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb.p_time/get_cpu_freq_GHz()/1000.0;
+	  double t_x2_src_enb = (double)ctxt_pP->frame*10+ctxt_pP->subframe - UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms; 
+	  push_front(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_list, t_x2_src_enb);
+	  LOG_D(RRC,"UE-Stop-Time-debug: %d/%lf/%d/%d\n", ctxt_pP->frame*10+ctxt_pP->subframe, (double) UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
+	  // Start to measure (delay to the UE-->target)
+	  //start_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb);
+	  UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_ms = ctxt_pP->frame*10+ctxt_pP->subframe;
+	  LOG_D(RRC,"UE-Start-Time-debug: %lf/%d/%d\n", (double) UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_target_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
+
+	  init_meas_timers(ctxt_pP); // Initialize handover measurement timers
           rrc_ue_generate_RRCConnectionReconfigurationComplete(
             ctxt_pP,
             target_eNB_index,
             dl_dcch_msg->message.choice.c1.choice.rrcConnectionReconfiguration.rrc_TransactionIdentifier);
           UE_rrc_inst[ctxt_pP->module_id].Info[eNB_indexP].State = RRC_HO_EXECUTION;
-          UE_rrc_inst[ctxt_pP->module_id].Info[target_eNB_index].State = RRC_RECONFIGURED;
+          if(eNB_indexP!=target_eNB_index){
+	    UE_rrc_inst[ctxt_pP->module_id].Info[target_eNB_index].State = RRC_RECONFIGURED;
+          }
           LOG_I(RRC, "[UE %d] State = RRC_RECONFIGURED during HO (eNB %d)\n",
                 ctxt_pP->module_id, target_eNB_index);
 #if defined(ENABLE_ITTI)
@@ -4012,10 +4028,18 @@ void ue_measurement_report_triggering(protocol_ctxt_t* const ctxt_pP, const uint
 
                   UE_rrc_inst[ctxt_pP->module_id].measReportList[i][j]->measId = UE_rrc_inst[ctxt_pP->module_id].MeasId[i][j]->measId;
                   UE_rrc_inst[ctxt_pP->module_id].measReportList[i][j]->numberOfReportsSent = 0;
-                  rrc_ue_generate_MeasurementReport(
-                    ctxt_pP,
-                    eNB_index);
-                  UE_rrc_inst[ctxt_pP->module_id].HandoverInfoUe.measFlag = 1;
+                  
+		  if (UE_rrc_inst[ctxt_pP->module_id].rrc_ue_do_meas == 0 ){
+		    UE_rrc_inst[ctxt_pP->module_id].rrc_ue_do_meas = 1;
+		    // Start to measure (delay to the UE-->source)
+		    //start_meas(&UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb);
+		    UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms = ctxt_pP->frame*10+ctxt_pP->subframe;
+		    LOG_D(RRC,"UE-Start-Time-debug: %lf/%d/%d\n", (double) UE_rrc_inst[ctxt_pP->module_id].rrc_ue_x2_src_enb_ms,ctxt_pP->frame,ctxt_pP->subframe);
+		  }
+		  rrc_ue_generate_MeasurementReport(
+						    ctxt_pP,
+						    eNB_index);
+                  //UE_rrc_inst[ctxt_pP->module_id].HandoverInfoUe.measFlag = 1;
                   LOG_I(RRC,"[UE %d] Frame %d: A3 event detected, state: %d \n",
                         ctxt_pP->module_id, ctxt_pP->frame, UE_rrc_inst[ctxt_pP->module_id].Info[0].State);
                 } else {
@@ -4097,10 +4121,10 @@ static uint8_t check_trigger_meas_event(
       }
 
       if (UE_rrc_inst->measTimer[ue_cnx_index][meas_index][tmp_offset] >= ttt) {
-        UE_rrc_inst->HandoverInfoUe.targetCellId = get_adjacent_cell_id(ue_mod_idP,tmp_offset); //WARNING!!!...check this!
+        UE_rrc_inst->HandoverInfoUe.targetCellId = get_adjacent_cell_id(currentCellIndex,tmp_offset); //WARNING!!!...check this!
         LOG_D(RRC,"[UE %d] Frame %d eNB %d: Handover triggered: targetCellId: %ld currentCellId: %d eNB_offset: %d rsrp source: %3.1f rsrp target: %3.1f\n", \
               ue_mod_idP, frameP, eNB_index,
-              UE_rrc_inst->HandoverInfoUe.targetCellId,ue_cnx_index,eNB_offset,
+              UE_rrc_inst->HandoverInfoUe.targetCellId,currentCellIndex,eNB_offset,
               (dB_fixed_times10(UE_rrc_inst[ue_mod_idP].rsrp_db[0])/10.0)-mac_xface->get_rx_total_gain_dB(ue_mod_idP,0)-dB_fixed(mac_xface->frame_parms->N_RB_DL*12),
               (dB_fixed_times10(UE_rrc_inst[ue_mod_idP].rsrp_db[eNB_offset])/10.0)-mac_xface->get_rx_total_gain_dB(ue_mod_idP,
                   0)-dB_fixed(mac_xface->frame_parms->N_RB_DL*12));
@@ -4116,6 +4140,18 @@ static uint8_t check_trigger_meas_event(
   }
 
   return 0;
+}
+// Initialize the handover measurement timers
+void init_meas_timers(const protocol_ctxt_t* const ctxt_pP){
+	uint8_t               i,j,eNB_offset;
+
+	  for(i=0 ; i<NB_CNX_UE ; i++) {
+	    for(j=0 ; j<MAX_MEAS_ID ; j++) {
+	    	for (eNB_offset = 0; eNB_offset<1+mac_xface->get_n_adj_cells(ctxt_pP->module_id,0); eNB_offset++) {
+	    		UE_rrc_inst->measTimer[i][j][eNB_offset]=0;
+	    	}
+	     }
+	   }
 }
 
 #if defined(Rel10) || defined(Rel14)

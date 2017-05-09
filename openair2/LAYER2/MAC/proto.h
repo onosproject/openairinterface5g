@@ -466,7 +466,8 @@ ue_process_rar(
   uint8_t * const dlsch_buffer,
   rnti_t * const t_crnti,
   const uint8_t preamble_index,
-  uint8_t* selected_rar_buffer
+  uint8_t* selected_rar_buffer,
+  uint8_t prach_state
 );
 
 
@@ -521,6 +522,7 @@ uint8_t *parse_ulsch_header(uint8_t *mac_header,
 int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer, uint8_t cba_group_active, uint8_t HO_active);
 int mac_init(void);
 int add_new_ue(module_id_t Mod_id, int CC_id, rnti_t rnti,int harq_pid);
+int add_new_ue_phy(module_id_t Mod_id, rnti_t rnti);
 int rrc_mac_remove_ue(module_id_t Mod_id, rnti_t rntiP);
 
 
@@ -666,7 +668,7 @@ void update_phr (module_id_t module_idP,int CC_id);
 \param[in] Mod_id Instance index of UE
 \param[in] eNB_id Index of eNB
 */
-void Msg3_tx(module_id_t module_idP,uint8_t CC_id,frame_t frameP,uint8_t eNB_id);
+void Msg3_tx(module_id_t module_idP,uint8_t CC_id,frame_t frameP,uint8_t eNB_id,UE_MODE_t UE_mode);
 
 
 /*! \brief Function to indicate the transmission of msg1/rach

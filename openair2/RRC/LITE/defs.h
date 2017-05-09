@@ -216,7 +216,11 @@ typedef enum HO_STATE_e {
   HO_MEASURMENT,
   HO_PREPARE,
   HO_CMD, // initiated by the src eNB
-  HO_COMPLETE // initiated by the target eNB
+  HO_COMPLETE, // initiated by the target eNB
+
+  HO_REQUEST,
+  HO_ACK,
+  HO_CONFIGURED,
 } HO_STATE_t;
 
 //#define NUMBER_OF_UE_MAX MAX_MOBILES_PER_RG
@@ -232,7 +236,7 @@ typedef enum HO_STATE_e {
 #define PAYLOAD_SIZE_MAX 1024
 #define RRC_BUF_SIZE 255
 #define UNDEF_SECURITY_MODE 0xff
-#define NO_SECURITY_MODE 0x20
+#define NO_SECURITY_MODE 0x20 // 0x33
 
 #define CBA_OFFSET        0xfff4
 // #define NUM_MAX_CBA_GROUP 4 // in the platform_constants
@@ -291,14 +295,17 @@ typedef struct e_rab_param_s {
 typedef struct HANDOVER_INFO_s {
   uint8_t ho_prepare;
   uint8_t ho_complete;
+  HO_STATE_t state; //current state of handover
   uint8_t modid_s; //module_idP of serving cell
   uint8_t modid_t; //module_idP of target cell
-  uint8_t ueid_s; //UE index in serving cell
-  uint8_t ueid_t; //UE index in target cell
+  uint16_t ueid_s; //UE index in serving cell
+  uint16_t ueid_t; //UE index in target cell
   AS_Config_t as_config; /* these two parameters are taken from 36.331 section 10.2.2: HandoverPreparationInformation-r8-IEs */
   AS_Context_t as_context; /* They are mandatory for HO */
   uint8_t buf[RRC_BUF_SIZE];  /* ASN.1 encoded handoverCommandMessage */
   int size;   /* size of above message in bytes */
+  /* TODO: to remove or not? */
+  int source_x2id;
 } HANDOVER_INFO;
 
 #define RRC_HEADER_SIZE_MAX 64
@@ -491,7 +498,6 @@ typedef struct eNB_RRC_INST_s {
   /// localization list for aggregated measurements from PHY
   struct list loc_list;
 #endif
-
   //RRC configuration
 #if defined(ENABLE_ITTI)
   RrcConfigurationReq configuration;
@@ -588,6 +594,13 @@ typedef struct UE_RRC_INST_s {
   /* Used integrity/ciphering algorithms */
   CipheringAlgorithm_r12_t                          ciphering_algorithm;
   e_SecurityAlgorithmConfig__integrityProtAlgorithm integrity_algorithm;
+
+  // X2 HO stats and measurements
+  uint8_t                            rrc_ue_do_meas; // flag to start the meas only once
+  uint32_t                           rrc_ue_x2_src_enb_ms; // form connected to idle : include x2 delay
+  struct list                        rrc_ue_x2_src_enb_list;
+  uint32_t                           rrc_ue_x2_target_enb_ms; // from idle to connected
+  struct list                        rrc_ue_x2_target_enb_list;
 } UE_RRC_INST;
 
 #include "proto.h"
