@@ -385,7 +385,9 @@ void *eNB_app_task(void *args_p)
 
   itti_mark_task_ready (TASK_ENB_APP);
 
-  # if defined(ENABLE_ITTI)
+  enb_properties_p = enb_config_get();
+  
+# if defined(ENABLE_ITTI)
 #   if defined(OAI_EMU)
   enb_nb =        oai_emulation.info.nb_enb_local;
   enb_id_start =  oai_emulation.info.first_enb_local;
@@ -394,10 +396,12 @@ void *eNB_app_task(void *args_p)
   AssertFatal (enb_id_end <= NUMBER_OF_eNB_MAX,
                "Last eNB index is greater or equal to maximum eNB index (%d/%d)!",
                enb_id_end, NUMBER_OF_eNB_MAX);
-#   endif
-  # endif
-
-  enb_properties_p = enb_config_get();
+#else
+  enb_nb =  enb_properties_p->number;
+  enb_id_start = 0;
+  enb_id_end = enb_properties_p->number;
+# endif
+#endif 
 
   AssertFatal (enb_nb <= enb_properties_p->number,
                "Number of eNB is greater than eNB defined in configuration file (%d/%d)!",
@@ -427,9 +431,7 @@ void *eNB_app_task(void *args_p)
 # endif
 
 # if defined(ENABLE_USE_X2)
-  enb_nb =        oai_emulation.info.nb_enb_local;
-  enb_id_start =  oai_emulation.info.first_enb_local;
-  enb_id_end =    oai_emulation.info.first_enb_local + enb_nb;
+  
   /* Try to register each eNB with each other */
   x2_registered_enb = 0;
   x2_register_enb_pending = eNB_app_register_x2 (enb_id_start, enb_id_end, enb_properties_p);
