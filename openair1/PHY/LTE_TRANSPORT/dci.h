@@ -230,7 +230,7 @@ typedef struct DCI1A_10MHz_TDD_1_6 DCI1A_10MHz_TDD_1_6_t;
 ///  DCI Format Type 0 (20 MHz,TDD1-6, 27 bits)
 struct DCI0_20MHz_TDD_1_6 {
   /// Padding
-  uint32_t padding:2;
+  uint32_t padding:3;
   /// CQI request
   uint32_t cqi_req:1;
   /// DAI
@@ -1897,9 +1897,9 @@ struct DCI2A_10MHz_4A_TDD {
 #define sizeof_DCI2A_10MHz_4A_TDD_t 41
 typedef struct DCI2A_10MHz_4A_TDD DCI2A_10MHz_4A_TDD_t;
 
-/// DCI Format Type 2A (10 MHz, FDD, 2 Antenna Ports, 36 bits)
+/// DCI Format Type 2A (10 MHz, FDD, 2 Antenna Ports, 40 bits)
 struct DCI2A_10MHz_2A_FDD {
-  uint64_t padding:28;
+  uint64_t padding:24;
   /// Redundancy version 2
   uint64_t rv2:2;
   /// New Data Indicator 2
@@ -1923,7 +1923,7 @@ struct DCI2A_10MHz_2A_FDD {
   /// Resource Allocation Header
   uint64_t rah:1;
 } __attribute__ ((__packed__));
-#define sizeof_DCI2A_10MHz_2A_FDD_t 36
+#define sizeof_DCI2A_10MHz_2A_FDD_t 41
 typedef struct DCI2A_10MHz_2A_FDD DCI2A_10MHz_2A_FDD_t;
 
 /// DCI Format Type 2A (10 MHz, FDD, 4 Antenna Ports, 38 bits)
