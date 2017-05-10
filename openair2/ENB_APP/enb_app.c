@@ -419,7 +419,7 @@ void *eNB_app_task(void *args_p)
 # if defined(ENABLE_USE_MME)
   /* Try to register each eNB */
   registered_enb = 0;
-  register_enb_pending = eNB_app_register (enb_id_start, enb_id_end, enb_properties_p);
+  register_enb_pending = eNB_app_register_s1 (enb_id_start, enb_id_end, enb_properties_p);
 # else
   /* Start L2L1 task */
   msg_p = itti_alloc_new_message(TASK_ENB_APP, INITIALIZE_MESSAGE);

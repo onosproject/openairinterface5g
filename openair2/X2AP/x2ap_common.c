@@ -39,13 +39,13 @@
 #include "x2ap_common.h"
 #include "X2AP-PDU.h"
 
-int asn_debug = 0;
-int asn1_xer_print = 0;
+int asn_debug_x2 = 0;
+int asn1_xer_print_x2 = 0;
 
 #if defined(EMIT_ASN_DEBUG_EXTERN)
-inline void ASN_DEBUG(const char *fmt, ...)
+inline void ASN_DEBUG_X2(const char *fmt, ...)
 {
-  if (asn_debug) {
+  if (asn_debug_x2) {
     int adi = asn_debug_indent;
     va_list ap;
     va_start(ap, fmt);
@@ -78,7 +78,7 @@ ssize_t x2ap_generate_initiating_message(
   pdu.choice.initiatingMessage.criticality   = criticality;
   ANY_fromType_aper(&pdu.choice.initiatingMessage.value, td, sptr);
 
-  if (asn1_xer_print) {
+  if (asn1_xer_print_x2) {
     xer_fprint(stdout, &asn_DEF_X2AP_PDU, (void *)&pdu);
   }
 
@@ -112,7 +112,7 @@ ssize_t x2ap_generate_successfull_outcome(
   pdu.choice.successfulOutcome.criticality   = criticality;
   ANY_fromType_aper(&pdu.choice.successfulOutcome.value, td, sptr);
 
-  if (asn1_xer_print) {
+  if (asn1_xer_print_x2) {
     xer_fprint(stdout, &asn_DEF_X2AP_PDU, (void *)&pdu);
   }
 
@@ -147,7 +147,7 @@ ssize_t x2ap_generate_unsuccessfull_outcome(
   pdu.choice.successfulOutcome.criticality   = criticality;
   ANY_fromType_aper(&pdu.choice.successfulOutcome.value, td, sptr);
 
-  if (asn1_xer_print) {
+  if (asn1_xer_print_x2) {
     xer_fprint(stdout, &asn_DEF_X2AP_PDU, (void *)&pdu);
   }
 
@@ -188,7 +188,7 @@ X2ap_IE_t *x2ap_new_ie(
     return NULL;
   }
 
-  if (asn1_xer_print)
+  if (asn1_xer_print_x2)
     if (xer_fprint(stdout, &asn_DEF_X2ap_IE, buff) < 0) {
       free(buff);
       return NULL;
