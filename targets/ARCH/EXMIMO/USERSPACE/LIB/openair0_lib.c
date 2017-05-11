@@ -59,7 +59,7 @@
 
 #define max(a,b) ((a)>(b) ? (a) : (b))
 
-//#define DEBUG_EXMIMO
+#define DEBUG_EXMIMO
 
 exmimo_pci_interface_bot_virtual_t openair0_exmimo_pci[MAX_CARDS]; // contains userspace pointers for each card
 
@@ -594,15 +594,15 @@ int trx_exmimo_read(openair0_device *device, openair0_timestamp *ptimestamp, voi
 #endif
   for (n=n1,ntot=0;ntot<nsamps;n=n2) {
     while ((ts < exm->last_ts_rx + n) && 
-	   (exm->watchdog_exit==0)) {
+        (exm->watchdog_exit==0)) {
       
       diff = exm->last_ts_rx+n - ts; // difference in samples between current timestamp and last RX received sample
       // go to sleep until we should have enough samples (1024 for a bit more)
 #ifdef DEBUG_EXMIMO
-      printf("portion %d samples, ts %lu, last_ts_rx %lu (%lu) => sleeping %u us\n",n,ts,exm->last_ts_rx,exm->last_ts_rx+n,
+      printf("portion %d samples, (n1, n2) = (%d, %d), ts %lu, last_ts_rx %lu (%lu) => sleeping %u us\n",n,n1,n2,ts,exm->last_ts_rx,exm->last_ts_rx+n,
 	     (unsigned int)((double)(diff+1024)*1e6/cfg->sample_rate));
 #endif
-      tv_nsec=(unsigned long)((double)(diff+3840)*1e9/cfg->sample_rate);
+      tv_nsec=(unsigned long)((double)(diff+1024)*1e9/cfg->sample_rate);
       //    tv_nsec = 500000L;
       old_ts = ts;
       rt_sleep(&sleep_time,tv_nsec);
