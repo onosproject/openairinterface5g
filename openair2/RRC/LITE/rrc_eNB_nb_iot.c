@@ -41,6 +41,7 @@
 #include "DL-DCCH-Message-NB.h"
 
 #include "extern.h"
+#include "extern_nb_iot.h"
 #include "assertions.h"
 #include "asn1_conversions.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
@@ -65,7 +66,9 @@
 #include "msc.h"
 #include "T.h"
 
-
+//FIXME: MP: once defined properly the MAC/defs_nb_iot this should be deleted
+#include "LAYER2/MAC/defs.h"
+#include "LAYER2/MAC/defs_nb_iot.h"
 
 
 #ifdef USER_MODE
@@ -99,7 +102,7 @@
 #if defined(FLEXRAN_AGENT_SB_IF)
 #include "flexran_agent_extern.h"
 #endif
-//#define XER_PRINT
+
 
 #ifdef PHY_EMUL
 extern EMULATION_VARS              *Emul_vars;
@@ -136,7 +139,9 @@ rrc_eNB_generate_RRCConnectionRelease_NB(
 
   memset(buffer, 0, RRC_BUF_SIZE);
 
-  size = do_RRCConnectionRelease_NB(ctxt_pP->module_id, buffer,rrc_eNB_get_next_transaction_identifier_NB(ctxt_pP->module_id));
+  size = do_RRCConnectionRelease_NB(ctxt_pP->module_id,
+		  	  	  	  	  	  	  	  buffer,
+									  rrc_eNB_get_next_transaction_identifier_NB(ctxt_pP->module_id));
   // set release timer
   ue_context_pP->ue_context.ue_release_timer=1;
   // remove UE after 10 frames after RRCConnectionRelease is triggered
@@ -152,7 +157,7 @@ rrc_eNB_generate_RRCConnectionRelease_NB(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
         size,
         rrc_eNB_mui,
-        DCCH1);//Through SRB1
+        DCCH1);//Through SRB1/or SRB1bis
 
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
@@ -167,7 +172,7 @@ rrc_eNB_generate_RRCConnectionRelease_NB(
 
   rrc_data_req(
 	       ctxt_pP,
-	       DCCH1,//Through SRB1
+	       DCCH1,//Through SRB1/or SRB1bis
 	       rrc_eNB_mui++,
 	       SDU_CONFIRM_NO,
 	       size,
@@ -299,8 +304,8 @@ rrc_eNB_get_next_free_ue_context_NB(
 //-----------------------------------------------------------------------------
 {
   struct rrc_eNB_ue_context_NB_s*        ue_context_p = NULL;
-  ue_context_p = rrc_eNB_get_ue_context(
-                   &eNB_rrc_inst_NB[ctxt_pP->module_id], //FIXME: rrc_eNB_UE_context to be modified
+  ue_context_p = rrc_eNB_get_ue_context_NB(
+                   &eNB_rrc_inst_NB[ctxt_pP->module_id],
                    ctxt_pP->rnti);
 
   if (ue_context_p == NULL) {
@@ -440,21 +445,23 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
 //-----------------------------------------------------------------------------
 {
 
-	//connection setup involve the establishment of SRB1 and SRB1bis
-	//FIXME: this message should go through SRB0 but where to see this--> uper_encode
-	//FIXME: they are assuming that 2 RLC-AM entities are used for SRB1 and SRB1bis--> implications?
+	//connection setup involve the establishment of SRB1 and SRB1bis (but srb1bis is established implicitly)
+	//XXX: this message should go through SRB0 to see this--> uper_encode
+	//XXX: they are assuming that 2 RLC-AM entities are used for SRB1 and SRB1bis
 
+
+
+//  SRB_ToAddMod_NB_r13_t                     *SRB1_config; //may not needed now
+//  LogicalChannelConfig_NB_r13_t             *SRB1_logicalChannelConfig;
 
   SRB_ToAddModList_NB_r13_t                **SRB_configList; //for both SRB1 and SRB1bis
-
-  SRB_ToAddMod_NB_r13_t                     *SRB1_config; //will use the same for SRB1bis
-  LogicalChannelConfig_NB_r13_t             *SRB1_logicalChannelConfig;
-
   SRB_ToAddMod_NB_r13_t						*SRB1bis_config;
   LogicalChannelConfig_NB_r13_t				*SRB1bis_logicalChannelConfig;
 
-  int                                	 	cnt;
-  LTE_DL_FRAME_PARMS *fp = mac_xface->get_lte_frame_parms(ctxt_pP->module_id,CC_id); //FIXME: to be changed
+  int  										cnt;
+
+  //FIXME: MP: structure to be chaged at phy layer
+  LTE_DL_FRAME_PARMS *fp = mac_xface->get_lte_frame_parms(ctxt_pP->module_id,CC_id);
 
   T(T_ENB_RRC_CONNECTION_SETUP, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
@@ -468,7 +475,7 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
                           (uint8_t*) eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.Payload,
                           rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),
                           fp,
-                          SRB_configList,
+                          SRB_configList, //MP:should contain only SRb1bis for the moment
                           &ue_context_pP->ue_context.physicalConfigDedicated_NB);
 
 #ifdef RRC_MSG_PRINT
@@ -485,8 +492,10 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
   // configure SRB1bis, PhysicalConfigDedicated, MAC_MainConfig for UE
 
   if (*SRB_configList != NULL) {
-	  //srb_identity is no more used in NB-IoT
-    for (cnt = 0; cnt < (*SRB_configList)->list.count; cnt++) { //should stop at 1 at first attempt
+
+	  //XXX MP: srb_identity is no more used in NB-IoT
+	  //XXX MP: the list should contain just one element
+	  for(cnt = 0; cnt < (*SRB_configList)->list.count; cnt++){
 
         SRB1bis_config = (*SRB_configList)->list.array[cnt];
 
@@ -496,50 +505,48 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
             SRB1bis_logicalChannelConfig = &SRB1bis_config->logicalChannelConfig_r13->choice.explicitValue;
           }
           else {
-            SRB1bis_logicalChannelConfig = &SRB1bis_logicalChannelConfig_defaultValue; //FIXME: generate a new Vars.h file
+        	  //XXX MP: warning saying "assignment from incompatible pointer type"
+            SRB1bis_logicalChannelConfig = &SRB1bis_NB_logicalChannelConfig_defaultValue;
           	  }
         } else {
-          SRB1bis_logicalChannelConfig = &SRB1bis_logicalChannelConfig_defaultValue; //FIXME: generate a new Vars.h file
+          SRB1bis_logicalChannelConfig = &SRB1bis_NB_logicalChannelConfig_defaultValue;
         }
 
         LOG_D(RRC,
-              PROTOCOL_RRC_CTXT_UE_FMT" RRC_eNB --- MAC_CONFIG_REQ  (SRB1bis) ---> MAC_eNB\n",
+              PROTOCOL_RRC_CTXT_UE_FMT" RRC_eNB --- MAC_CONFIG_REQ  (SRB1bis/SRB1) ---> MAC_eNB\n",
               PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
-        //FIXME: unuseful parameter for rrc_mac_config_req
-        //set logicalchannelIdentity=3 (SRB1bis)--> we always have SRB1bis??
-        //FIXME: Connection Setup could be called also after security activation?
 
-        rrc_mac_config_req(
+        //FIXME: Connection Setup could be called also after security activation
+
+        //configure the MAC for SRB1bis/SRb1???? (but in principle this configuration should be not LCID dependent)
+        NB_rrc_mac_config_req_eNB(
           ctxt_pP->module_id,
           ue_context_pP->ue_context.primaryCC_id,
-          ENB_FLAG_YES,
           ue_context_pP->ue_context.rnti,
-          0,  //eNB_index
+          0, //physCellID
+		  0, //p_eNB
+		  0, //Ncp
+		  0, //eutraband
+		  (NS_PmaxList_NB_r13_t*) NULL,
+		  (MultiBandInfoList_NB_r13_t*) NULL,
+		  (DL_Bitmap_NB_r13_t*) NULL,
+		  (long*) NULL,
+		  (long*)NULL,
+		  (uint8_t*) NULL, //SIWindowSize
+		  (uint16_t*)NULL, //SIperiod
+		  0, //dl_carrierFrequency
+		  0, //ul_carrierFrequency
+		  (BCCH_BCH_Message_NB_t*) NULL,
           (RadioResourceConfigCommonSIB_NB_r13_t *) NULL,
-          ue_context_pP->ue_context.physicalConfigDedicated_NB,
-#if defined(Rel10) || defined(Rel14)
-          NULL,
-#endif
-          (MeasObjectToAddMod_t **) NULL,
-          ue_context_pP->ue_context.mac_MainConfig_NB,
-          3, //LCID
-          SRB1bis_logicalChannelConfig,
-          (MeasGapConfig_t*)NULL,
-          (TDD_Config_t *) NULL,
-          NULL,
-          (uint8_t *) NULL,
-          (uint16_t *) NULL, NULL, NULL, NULL, (MBSFN_SubframeConfigList_t *) NULL
-#if defined(Rel10) || defined(Rel14)
-          , 0, (MBSFN_AreaInfoList_r9_t *) NULL, (PMCH_InfoList_r9_t *) NULL
-#endif
-#ifdef CBA
-          , 0, 0
-#endif
-        );
+          (PhysicalConfigDedicated_NB_r13_t*) ue_context_pP->ue_context.physicalConfigDedicated_NB,
+          ue_context_pP->ue_context.mac_MainConfig_NB, //FIXME WHo have set this??
+          DCCH0, //LCID  = 3 of SRB1bis //XXX for the moment have been defined in MAC/defs.h but should move to MAC/defs_nb_iot.h
+          SRB1bis_logicalChannelConfig
+		  );
         break;
-      }
     }
+  }
 
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
@@ -591,7 +598,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 
 
   DRB_ToAddModList_NB_r13_t*                 DRB_configList2 = ue_context_pP->ue_context.DRB_configList2[xid];
-  SRB_ToAddModList_NB_r13_t*                 SRB_configList2 = ue_context_pP->ue_context.SRB1_configList[xid]; //only SRB1
+  SRB_ToAddModList_NB_r13_t*                 SRB_configList2 = ue_context_pP->ue_context.SRB_configList2[xid];
 
   T(T_ENB_RRC_CONNECTION_RECONFIGURATION_COMPLETE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
@@ -623,39 +630,38 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
     MSC_AS_TIME_ARGS(ctxt_pP),
     ue_context_pP->ue_context.rnti);
 
-  rrc_pdcp_config_asn1_req(
+  NB_rrc_pdcp_config_asn1_req(
     ctxt_pP,
-    SRB_configList2, //SRB1_configList
+    SRB_configList2,
     DRB_configList2,
     (DRB_ToReleaseList_NB_r13_t *) NULL,
     0xff, //security mode already configured during the securitymodecommand
     kRRCenc,
     kRRCint,
-    kUPenc
-#if defined(Rel10) || defined(Rel14)
-    , (PMCH_InfoList_r9_t *) NULL //not needed
-#endif
-    ,NULL);
+    kUPenc,
+	NULL,
+	DCCH1); //SRB1
 
   // Refresh SRBs/DRBs for RLC
-  rrc_rlc_config_asn1_req(
+  NB_rrc_rlc_config_asn1_req(
     ctxt_pP,
-    SRB_configList2, //SRB1_configList
+    SRB_configList2,
     DRB_configList2,
-    (DRB_ToReleaseList_NB_r13_t *) NULL
-#if defined(Rel10) || defined(Rel14)
-    , (PMCH_InfoList_r9_t *) NULL //not needed
-#endif
+    (DRB_ToReleaseList_NB_r13_t *) NULL,
+	SRB1BIS_FLAG_NO
   );
 
   // set the SRB active in Ue context
 
   if (SRB_configList2 != NULL) {
-    for (i = 0; (i < SRB_configList2->list.count) && (i < 3); i++) { //FIXME why i<3??
+	  //MP: SRB_ToAddModList_NB_r13_t  size = 1 TS 36.331 V14.2.1 pag 615
+	  //MP: may for loop is not needed --> should stop at first iteration
+
+    for (i = 0; (i < SRB_configList2->list.count) && (i < 3); i++) {
     	//no need of checking the srb-Identity
     	//we should have only SRB1 in the list
     	ue_context_pP->ue_context.Srb1.Active=1;
-	    ue_context_pP->ue_context.Srb1.Srb_info.Srb_id=1; //LCHAN_iD
+	    ue_context_pP->ue_context.Srb1.Srb_info.Srb_id=DCCH1; //LCHAN_iD
 	     LOG_I(RRC,"[eNB %d] Frame  %d CC %d : SRB1 is now active\n",
 		ctxt_pP->module_id,
 		ctxt_pP->frame,
@@ -690,10 +696,10 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 
           ue_context_pP->ue_context.DRB_active[drb_id] = 1;
 
-          LOG_D(RRC, //FIXME: RLC UM not exist in NB-IoT
-                "[eNB %d] Frame %d: Establish RLC UM Bidirectional, DRB %d Active\n",
+          LOG_D(RRC,
+                "[eNB %d] Frame %d: Establish RLC UM Bidirectional??, DRB %d Active\n",
                 ctxt_pP->module_id, ctxt_pP->frame, (int)DRB_configList2->list.array[i]->drb_Identity_r13);
-
+          //FIXME: RLC UM not exist in NB-IoT and what means the stuff belows?
 #if  defined(PDCP_USE_NETLINK) && !defined(LINK_ENB_PDCP_TO_GTPV1U)
           // can mean also IPV6 since ether -> ipv6 autoconf
 #   if !defined(OAI_NW_DRIVER_TYPE_ETHERNET) && !defined(EXMIMO) && !defined(OAI_USRP) && !defined(OAI_BLADERF) && !defined(ETHERNET)
@@ -740,53 +746,56 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
                 PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
           if (DRB_configList2->list.array[i]->logicalChannelIdentity_r13) {
-        	  //FIXME: to change
-            DRB2LCHAN[i] = (uint8_t) * DRB_configList2->list.array[i]->logicalChannelIdentity_r13;
+            DRB2LCHAN_NB[i] = (uint8_t) * DRB_configList2->list.array[i]->logicalChannelIdentity_r13; //set in RRCConnectionReconfiguration (x+3)
           }
 
           //for each DRB I send a rrc_mac_config_req
-          //FIXME: lots of unuseful parameters
-          rrc_mac_config_req(
+          NB_rrc_mac_config_req_eNB(
             ctxt_pP->module_id,
             ue_context_pP->ue_context.primaryCC_id,
-            ENB_FLAG_YES,
             ue_context_pP->ue_context.rnti,
-            0,
-            (RadioResourceConfigCommonSIB_t *) NULL,
+            0,//physCellId --> this parameters could be set to 0 since no MIB is present
+			0,// p_eNB
+			0, //Ncp
+			0, //eutra_band
+			(struct NS_PmaxList_NB_r13*) NULL,
+			(struct MultiBandInfoList_NB_r13*) NULL,
+			(struct DL_Bitmap_NB_r13*) NULL,
+			(long*)NULL,//eutraControlRegionSize
+			(long*)NULL, //nrs_CRS_PowerOffset
+			(uint8_t*)NULL,
+			(uint16_t*)NULL,
+			0, //dl_CarrierFreq
+			0, //ul_CarrierFreq
+			(BCCH_BCH_Message_NB_t*)NULL,
+			(RadioResourceConfigCommonSIB_NB_r13_t*)NULL,
             ue_context_pP->ue_context.physicalConfigDedicated_NB,
-#if defined(Rel10) || defined(Rel14)
-            (SCellToAddMod_r10_t *)NULL,
-            //(struct PhysicalConfigDedicatedSCell_r10 *)NULL,
-#endif
-            (MeasObjectToAddMod_t **) NULL,
             ue_context_pP->ue_context.mac_MainConfig_NB,
-            DRB2LCHAN[i], //over the logical channel id of the DRB (>=4)
-            DRB_configList2->list.array[i]->logicalChannelConfig_r13,
-            (MeasGapConfig_t*)NULL,
-            (TDD_Config_t *) NULL,
-            (MeasGapConfig_t*)NULL,
-            (uint8_t *) NULL,
-            (uint16_t *) NULL, NULL, NULL, NULL, (MBSFN_SubframeConfigList_t *) NULL
-#if defined(Rel10) || defined(Rel14)
-            , 0, (MBSFN_AreaInfoList_r9_t *) NULL, (PMCH_InfoList_r9_t *) NULL
-#endif
-#ifdef CBA
-            , eNB_rrc_inst_NB[ctxt_pP->module_id].num_active_cba_groups, eNB_rrc_inst_NB[ctxt_pP->module_id].cba_rnti[0]
-#endif
-          );
+            DRB2LCHAN_NB[i], //over the logical channel id of the DRB (>=4)
+            DRB_configList2->list.array[i]->logicalChannelConfig_r13
+			);
 
-        } else {  //remove LCHAN from MAC/PHY
-        		  //DRB_active could take values different from 0 and 1 for errors
+        } else {
+
+
+        	/*MP:
+        	 * This part of the code is wrong since a the list that we manage are ADD/MOD lists and not RELEASE lists
+        	 * so it means that nothing should be deleted but only modified!!
+        	 */
+
+
+        	//remove LCHAN from MAC/PHY
+        		  //MP: DRB_active could take values different from 0 and 1 for errors?
           if (ue_context_pP->ue_context.DRB_active[drb_id] == 1) {
-            // DRB has just been removed so remove RLC + PDCP for DRB
-        	//why not from PDCP?
-            rrc_rlc_config_req(
+            // DRB has just been removed (by UE) so remove RLC + PDCP for DRB
+        	//FIXME: MP: why not from PDCP?
+
+            NB_rrc_rlc_config_req(
               ctxt_pP,
               SRB_FLAG_NO,
-              MBMS_FLAG_NO,
-              CONFIG_ACTION_REMOVE,
-              DRB2LCHAN[i],//check
-              Rlc_info_um);
+              CONFIG_ACTION_REMOVE, //XXXmodify
+              DRB2LCHAN_NB[i],
+              Rlc_info_am); //XXX: should send a RLC_info_am--> RRC/vars_nb_iot.h //rlc_infoP
           }
 
           ue_context_pP->ue_context.DRB_active[drb_id] = 0;
@@ -794,31 +803,30 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
                 PROTOCOL_RRC_CTXT_UE_FMT" RRC_eNB --- MAC_CONFIG_REQ  (DRB) ---> MAC_eNB\n",
                 PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
-          rrc_mac_config_req(ctxt_pP->module_id,
-                             ue_context_pP->ue_context.primaryCC_id,
-                             ENB_FLAG_YES,
-                             ue_context_pP->ue_context.rnti,
-                             0,
-                             (RadioResourceConfigCommonSIB_t *) NULL,
-                             ue_context_pP->ue_context.physicalConfigDedicated_NB,
-#if defined(Rel10) || defined(Rel14)
-                             (SCellToAddMod_r10_t *)NULL,
-                             //(struct PhysicalConfigDedicatedSCell_r10 *)NULL,
-#endif
-                             (MeasObjectToAddMod_t **) NULL,
-                             (MeasGapConfig_t*)NULL,//?? should be MAc mainConfig
-                             DRB2LCHAN[i],//check
-                             (LogicalChannelConfig_t *) NULL,
-                             (MeasGapConfig_t *) NULL,
-                             (TDD_Config_t *) NULL,
-                             NULL, (uint8_t *) NULL, (uint16_t *) NULL, NULL, NULL, NULL, NULL
-#if defined(Rel10) || defined(Rel14)
-                             , 0, (MBSFN_AreaInfoList_r9_t *) NULL, (PMCH_InfoList_r9_t *) NULL
-#endif
-#ifdef CBA
-                             , 0, 0
-#endif
-                            );
+          NB_rrc_mac_config_req_eNB(
+                      ctxt_pP->module_id,
+                      ue_context_pP->ue_context.primaryCC_id,
+                      ue_context_pP->ue_context.rnti,
+                      0,//physCellId --> this parameters could be set to 0 since no MIB is present
+					  0,// p_eNB
+					  0, //Ncp
+					  0, //eutra_band
+					  (struct NS_PmaxList_NB_r13*) NULL,
+					  (struct MultiBandInfoList_NB_r13*) NULL,
+					  (struct DL_Bitmap_NB_r13*) NULL,
+					  (long*)NULL,//eutraControlRegionSize
+					  (long*)NULL, //nrs_CRS_PowerOffset
+					  (uint8_t*)NULL,
+					  (uint16_t*)NULL,
+					  0, //dl_CarrierFreq
+					  0, //ul_CarrierFreq
+					  (BCCH_BCH_Message_NB_t*)NULL,
+					  (RadioResourceConfigCommonSIB_NB_r13_t*)NULL,
+                      ue_context_pP->ue_context.physicalConfigDedicated_NB,
+                      ue_context_pP->ue_context.mac_MainConfig_NB,
+                      DRB2LCHAN_NB[i], //over the logical channel id of the DRB (>=4)
+                      (LogicalChannelConfig_NB_r13_t*)NULL //MP: change this
+          			);
         }
       }
     }
@@ -834,14 +842,15 @@ rrc_eNB_reconfigure_DRBs_NB(const protocol_ctxt_t* const ctxt_pP,
 
   int i;
   int e_rab_done=0;
-  //FIXME:to be check the number of e-rab and the parameter set over them
-  for (i = 0; i < 3;//NB_RB_MAX - 3;  // S1AP_MAX_E_RAB
-       i++) {
 
-    if ( ue_context_pP->ue_context.e_rab[i].status < E_RAB_NB_STATUS_DONE){ // all those new e-rab
+  //TODO: MP: to be check the number of e-rab and the parameter set over them
+
+  for (i = 0; i < 2; i++) { //NB_RB_MAX - 3;  // S1AP_MAX_E_RAB //MP: why 3??--> i think at most 2 DRB = at most 2 e-rab
+
+    if ( ue_context_pP->ue_context.e_rab[i].status < E_RAB_NB_STATUS_DONE){ // all those new e-rab ( E_RAB_NB_STATUS_NEW)
       ue_context_pP->ue_context.e_rab[i].status = E_RAB_NB_STATUS_NEW;
       ue_context_pP->ue_context.e_rab[i].param.e_rab_id = i + 1;
-      ue_context_pP->ue_context.e_rab[i].param.qos.qci = i % 9;
+      ue_context_pP->ue_context.e_rab[i].param.qos.qci = (i % 9) + 5; //FIXME: if NB-IoT work on non-GBR range (5-9)
       ue_context_pP->ue_context.e_rab[i].param.qos.allocation_retention_priority.priority_level= i % PRIORITY_LEVEL_LOWEST;
       ue_context_pP->ue_context.e_rab[i].param.qos.allocation_retention_priority.pre_emp_capability= PRE_EMPTION_CAPABILITY_DISABLED;
       ue_context_pP->ue_context.e_rab[i].param.qos.allocation_retention_priority.pre_emp_vulnerability= PRE_EMPTION_VULNERABILITY_DISABLED;
@@ -859,10 +868,14 @@ rrc_eNB_reconfigure_DRBs_NB(const protocol_ctxt_t* const ctxt_pP,
   }
   ue_context_pP->ue_context.setup_e_rabs+=e_rab_done;
 
+  //should be at most 2 DRBs set
+  if(ue_context_pP->ue_context.setup_e_rabs > 2)
+	  LOG_E(RRC, PROTOCOL_RRC_CTXT_FMT "e_context.setup_e_rabs > 2 but maxDRBs ==2", PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
+
   rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(ctxt_pP, ue_context_pP ); //no ho state
 }
-
-uint8_t qci_to_priority[9]={2,4,3,5,1,6,7,8,9}; //FIXME understand if used in NB_IoT
+//-----------------------------------------------------------------------------
+uint8_t qci_to_priority[9]={2,4,3,5,1,6,7,8,9}; //FIXME understand if used in NB_IoT (no GBR so only 5-9)
 
 //-----------------------------------------------------------------------------
 void //was under ITTI
@@ -911,9 +924,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
   dedicatedInfoNASList_NB = CALLOC(1, sizeof(struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13));
 
 
-  for ( i = 0  ;
-	i < ue_context_pP->ue_context.setup_e_rabs ; //max must be 2 DRBs that are established
-	i++){
+  for ( i = 0  ; i < ue_context_pP->ue_context.setup_e_rabs ; i++){ //max must be 2 DRBs that are established
 
     // bypass the new and already configured erabs
     if (ue_context_pP->ue_context.e_rab[i].status >= E_RAB_NB_STATUS_DONE) {
@@ -924,7 +935,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
     DRB_config = CALLOC(1, sizeof(*DRB_config));
 
     DRB_config->eps_BearerIdentity_r13 = CALLOC(1, sizeof(long));
-    // allowed value 5..15, value : x+4
+    // allowed value 5..15, value : x+4 // e_rab_id setted previously in rrc_eNB_reconfigure_DRB_NB function
     *(DRB_config->eps_BearerIdentity_r13) = ue_context_pP->ue_context.e_rab[i].param.e_rab_id;// x+4; // especial case generation
 
     DRB_config->drb_Identity_r13 =  1 + drb_identity_index + e_rab_done; //FIXME: max 2 DRBs could be established, x
@@ -943,38 +954,18 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
 
     //must be checked in TS 36.413 and TS 23.401 if this parameter exist for NB_IoT
     switch (ue_context_pP->ue_context.e_rab[i].param.qos.qci){
-      /*
-       * type: realtime data with medium packer error rate
-       * action: swtich to RLC UM--->not possible in NB_IoT FIXME
-       */
-//    case 1: // 100ms, 10^-2, p2, GBR
-//    case 2: // 150ms, 10^-3, p4, GBR
-//    case 3: // 50ms, 10^-3, p3, GBR
-//    case 4:  // 300ms, 10^-6, p5
-//    case 7: // 100ms, 10^-3, p7, GBR
-//    case 9: // 300ms, 10^-6, p9
-//    case 65: // 75ms, 10^-2, p0.7, mission critical voice, GBR
-//    case 66: // 100ms, 10^-2, p2, non-mission critical  voice , GBR
-//      // RLC
-//      DRB_rlc_config->present = RLC_Config_PR_um_Bi_Directional;
-//      DRB_rlc_config->choice.um_Bi_Directional.ul_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
-//      DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
-//      DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.t_Reordering = T_Reordering_ms35;
-//      // PDCP
-//      PDCP_rlc_UM = CALLOC(1, sizeof(*PDCP_rlc_UM));
-//      DRB_pdcp_config->rlc_UM = PDCP_rlc_UM;
-//      PDCP_rlc_UM->pdcp_SN_Size = PDCP_Config__rlc_UM__pdcp_SN_Size_len12bits;
-//      break;
+
+    //GBR is not supported by NB-IoT
 
       /*
        * type: non-realtime data with low packer error rate
-       * action: swtich to RLC AM
+       * action: switch to RLC AM
        */
     case 5:  // 100ms, 10^-6, p1 , IMS signaling
     case 6:  // 300ms, 10^-6, p6
     case 8: // 300ms, 10^-6, p8
     case 69: // 60ms, 10^-6, p0.5, mission critical delay sensitive data, Lowest Priority
-    case 70: // 200ms, 10^-6, p5.5, mision critical data
+    case 70: // 200ms, 10^-6, p5.5, mission critical data
       // RLC
        DRB_rlc_config->present = RLC_Config_NB_r13_PR_am;
        DRB_rlc_config->choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms250; //random
@@ -983,6 +974,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
        *(DRB_rlc_config->choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13)= DL_AM_RLC_NB_r13__enableStatusReportSN_Gap_r13_true;
 
        // PDCP FIXME: something to set for PDCP?
+
        break;
 
     default :
@@ -998,6 +990,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
     DRB_config->logicalChannelConfig_r13 = DRB_lchan_config;
 
     DRB_lchan_config->priority_r13 = CALLOC(1,sizeof(long));
+
     if (ue_context_pP->ue_context.e_rab[i].param.qos.qci < 9 )
     *(DRB_lchan_config->priority_r13) = qci_to_priority[ue_context_pP->ue_context.e_rab[i].param.qos.qci-1] + 3;//FIXME ??
     else
@@ -1109,7 +1102,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
     rrc_eNB_mui,
     size);
 
-  rrc_data_req(
+  NB_rrc_data_req(
     ctxt_pP,
     DCCH1,//through SRB1
     rrc_eNB_mui++,
@@ -1117,7 +1110,6 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
     size,
     buffer,
     PDCP_TRANSMISSION_MODE_CONTROL);
-
 
 }
 
@@ -1131,10 +1123,12 @@ rrc_eNB_process_RRCConnectionSetupComplete_NB(
 //-----------------------------------------------------------------------------
 {
   LOG_I(RRC,
-        PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel UL-DCCH, " "processing RRCConnectionSetupComplete_NB from UE (SRB1bis Active)\n",
+        PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel UL-DCCH, " "processing RRCConnectionSetupComplete_NB from UE (SRB1bis/SRB1 Active)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
   ue_context_pP->ue_context.Srb1bis.Active=1;  //SRB1bis active for UE, from eNB point of view
+  ue_context_pP->ue_context.Srb1.Active=1 //SRB1 active for UE (implicitly activated)
+
   T(T_ENB_RRC_CONNECTION_SETUP_COMPLETE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
@@ -1145,7 +1139,7 @@ rrc_eNB_process_RRCConnectionSetupComplete_NB(
     rrc_eNB_send_S1AP_NAS_FIRST_REQ(
       ctxt_pP,
       ue_context_pP,
-      rrcConnectionSetupComplete_NB);
+      rrcConnectionSetupComplete_NB); ///TODO: look at NAS messages
   } else
 #endif
   {
@@ -1164,6 +1158,12 @@ rrc_eNB_generate_SecurityModeCommand_NB(
 )
 //-----------------------------------------------------------------------------
 {
+	/* R2-163262 3GPP NB-IOT Ad-hoc Meeting #2
+	 * The SRB1-bis (no PDCP) is used for SecurityModeCommand and SecurityModeFailure messages
+	 * The SRB1 (full PDCP) is used for SecurityModeComplete message
+	 */
+
+
   uint8_t                             buffer[100];
   uint8_t                             size;
 
@@ -1189,7 +1189,7 @@ rrc_eNB_generate_SecurityModeCommand_NB(
 #endif
 
   LOG_I(RRC,
-        PROTOCOL_RRC_CTXT_UE_FMT" Logical Channel DL-DCCH, Generate SecurityModeCommand (bytes %d)\n",
+        PROTOCOL_RRC_CTXT_UE_FMT" Logical Channel DL-DCCH, Generate SecurityModeCommand-NB (bytes %d)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
         size);
 
@@ -1198,7 +1198,7 @@ rrc_eNB_generate_SecurityModeCommand_NB(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
         size,
         rrc_eNB_mui,
-        DCCH0); //i'm using SRB1bis
+        DCCH0); //MP: SRB1bis
 
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
@@ -1211,14 +1211,14 @@ rrc_eNB_generate_SecurityModeCommand_NB(
     rrc_eNB_mui,
     size);
 
-  rrc_data_req( //to PDCP
+  NB_rrc_data_req( //to PDCP
 	       ctxt_pP,
-	       DCCH0,//through SRB1bis
+	       DCCH0,//MP:through SRB1bis
 	       rrc_eNB_mui++,
 	       SDU_CONFIRM_NO,
 	       size,
 	       buffer,
-	       PDCP_TRANSMISSION_MODE_CONTROL);
+		   PDCP_TRANSMISSION_MODE_TRANSPARENT);
 
 }
 
@@ -1230,6 +1230,7 @@ rrc_eNB_generate_UECapabilityEnquiry_NB(
 )
 //-----------------------------------------------------------------------------
 {
+//TODO: Clarify: this message is also called when we receive SecurityModeFailure--> we should continue to use SRB1bis?
 
   uint8_t                             buffer[100];
   uint8_t                             size;
@@ -1265,14 +1266,14 @@ rrc_eNB_generate_UECapabilityEnquiry_NB(
     rrc_eNB_mui,
     size);
 
-  rrc_data_req( //to PDCP
+  NB_rrc_data_req( //to PDCP
 	       ctxt_pP,
-	       DCCH0,//through SRB1bis
+	       DCCH1, //FIXME SRB1 or SRB1bis? depends if successful security activation by UE
 	       rrc_eNB_mui++,
 	       SDU_CONFIRM_NO,
 	       size,
 	       buffer,
-	       PDCP_TRANSMISSION_MODE_CONTROL);
+	       PDCP_TRANSMISSION_MODE_CONTROL);//XXX MP: no more transparent to PDCP // SRB1 was registered to the pdcp at the beginning
 
 }
 
@@ -1327,9 +1328,9 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   T(T_ENB_RRC_CONNECTION_RECONFIGURATION, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
-  // Configure SRB1
+  // Configure/	Refresh SRB1
   /// SRB1
-  SRB_configList2=&ue_context_pP->ue_context.SRB1_configList[xid]; //List that contains only SRB1
+  SRB_configList2=&ue_context_pP->ue_context.SRB_configList2[xid];
   if (*SRB_configList2) {
     free(*SRB_configList2);
   }
@@ -1340,7 +1341,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   SRB1_rlc_config = CALLOC(1, sizeof(*SRB1_rlc_config));
   SRB1_config->rlc_Config_r13 = SRB1_rlc_config;
 
-  //parameters values set as in the TS 36.331 specs
+  //parameters values set as in the TS 36.331 specs ( pag 640)
   SRB1_rlc_config->present = SRB_ToAddMod__rlc_Config_PR_explicitValue;
   SRB1_rlc_config->choice.explicitValue.present = RLC_Config_NB_r13_PR_am;
   SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
@@ -1361,7 +1362,8 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   SRB1_lchan_config->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
 
   // this list has the configuration for SRB1 and SRB1bis
-  ASN_SEQUENCE_ADD(&SRB_configList->list, SRB1_config); //FIXME: cannot do that because SRB_ToAddModList_NB_r13_t max size = 1
+  //XXX: Problems ? because SRB_ToAddModList_NB_r13_t max size = 1
+  ASN_SEQUENCE_ADD(&SRB_configList->list, SRB1_config);
 
   // this list has only the configuration for SRB1
   ASN_SEQUENCE_ADD(&(*SRB_configList2)->list, SRB1_config);
@@ -1376,7 +1378,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   *DRB_configList = CALLOC(1, sizeof(**DRB_configList));
   memset(*DRB_configList, 0, sizeof(**DRB_configList));
 
-  // list for the configured DRB for a this xid
+  // list for the configured DRB for this xid (transaction id)
   DRB_configList2=&ue_context_pP->ue_context.DRB_configList2[xid];
   if (*DRB_configList2) {
     free(*DRB_configList2);
@@ -1386,28 +1388,29 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
 
 
   /// DRB (maxDRBs = 2)
+
   DRB_config = CALLOC(1, sizeof(*DRB_config));
   DRB_config->eps_BearerIdentity_r13 = CALLOC(1, sizeof(long));
-  //i'm not sure that in NB-IoT the first 0..4 eps-bearerIdentity will be reserved for NSAPI
+  //FIXME: MP: I'm not sure that in NB-IoT the first 0..4 eps-bearerIdentity will be reserved for NSAPI (NEtwork Service Access Point Identifier)
   *(DRB_config->eps_BearerIdentity_r13) = 5L; // LW set to first value, allowed value 5..15, value : x+4
-  // NN: this is the 1st DRB for this ue, so set it to 1
+  // NN/MP: this is the 1st DRB for this ue, so set it to 1
   DRB_config->drb_Identity_r13 = (DRB_Identity_t) 1; //allowed values INTEGER (1..32), value: x
   DRB_config->logicalChannelIdentity_r13 = CALLOC(1, sizeof(long));
-  //logical channel identity =3 is reserved for SRB1bis, seee TS 36.331 pag 616
+  //MP: logical channel identity =3 is reserved for SRB1bis, seee TS 36.331 pag 616
   *(DRB_config->logicalChannelIdentity_r13) = (long)4; //allowed value (4..10), value : x+3
 
   DRB_rlc_config = CALLOC(1, sizeof(*DRB_rlc_config));
   DRB_config->rlc_Config_r13 = DRB_rlc_config;
 
-//#ifdef RRC_DEFAULT_RAB_IS_AM --> is the only allowed mode in NB-IoT
+
   //set as TS 36.331 specs
+  ///RLC-AM
   DRB_rlc_config->present = RLC_Config_NB_r13_PR_am;
   DRB_rlc_config->choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
   DRB_rlc_config->choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t4;
   DRB_rlc_config->choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = enableStatusReportSN_Gap;
-//#else
-//#endif
 
+  ///PDCP
   DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
   DRB_config->pdcp_Config_r13 = DRB_pdcp_config;
   DRB_pdcp_config->discardTimer_r13 = CALLOC(1, sizeof(long));
@@ -1422,11 +1425,14 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
 
   DRB_lchan_config->priority_r13 = CALLOC(1, sizeof(long));
   *(DRB_lchan_config->priority_r13) = 12; // lower priority than srb1, srb1bis and other dedicated bearer
+  DRB_lchan_config->logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;//FIXME: for DRB should be used?
 
   //Add the DRB in both list
   ASN_SEQUENCE_ADD(&(*DRB_configList)->list, DRB_config);
   ASN_SEQUENCE_ADD(&(*DRB_configList2)->list, DRB_config);
 
+
+  ///Mac_MainConfig
   mac_MainConfig_NB = CALLOC(1, sizeof(*mac_MainConfig_NB));
   ue_context_pP->ue_context.mac_MainConfig_NB = mac_MainConfig_NB;
 
@@ -1445,18 +1451,26 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
 
   //no phr_config
 
-  //FIXME not know if should be used and if well initialized
   mac_MainConfig_NB->logicalChannelSR_Config_r13 = CALLOC(1, sizeof(struct MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13));
   mac_MainConfig_NB->logicalChannelSR_Config_r13->present = MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13_PR_setup;
+  //depends if previously activated
   mac_MainConfig_NB->logicalChannelSR_Config_r13->choice.setup.logicalChannelSR_ProhibitTimer_r13 =
 		  MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13__setup__logicalChannelSR_ProhibitTimer_r13_pp2; //value in PP=PDCCH periods
 
 
+  struct PhysicalConfigDedicated ciao;
+
   if (*physicalConfigDedicated_NB) {
 
-	  //FIXME: which value should be configured of phisical config dedicated?
+	  //TODO: which value should be configured of phisical config dedicated?
 	  //antennaInfo not present in PhysicalConfigDedicated for NB_IoT
       //cqi reporting is not present in PhysicalConfigDedicated for NB_IoT
+	  /*
+	   * carrierConfigDedicated_r13
+	   * npdcch_ConfigDedicated_r13
+	   * npusch_ConfigDedicated_r13
+	   * uplinkPowerControlDedicated_r13
+	   */
   }
   else {
     LOG_E(RRC,"physical_config_dedicated not present in RRCConnectionReconfiguration-NB. Not reconfiguring!\n");
@@ -1468,7 +1482,8 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   //no Sparams
   //no handover
 
-//#if defined(ENABLE_ITTI).....correct?
+//#if defined(ENABLE_ITTI).....
+
   /* Initialize NAS list */
   dedicatedInfoNASList_NB = CALLOC(1, sizeof(struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13));
 
@@ -1483,7 +1498,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
       ASN_SEQUENCE_ADD(&dedicatedInfoNASList_NB->list, dedicatedInfoNas);
     }
 
-    /* TODO parameters yet to process ... */
+    /*OLD  TODO parameters yet to process ... */
     {
       //      ue_context_pP->ue_context.e_rab[i].param.qos;
       //      ue_context_pP->ue_context.e_rab[i].param.sgw_addr;
@@ -1555,7 +1570,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
     rrc_eNB_mui,
     size);
 
-  rrc_data_req( //to PDCP
+  NB_rrc_data_req( //to PDCP
 	       ctxt_pP,
 	       DCCH1,//through SRB1
 	       rrc_eNB_mui++,
@@ -1565,38 +1580,71 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
 	       PDCP_TRANSMISSION_MODE_CONTROL);
 }
 
+
+/*-----------------CONFIGURATION-------------------*/
+
 //-----------------------------------------------------------------------------
 static void
 init_SI_NB(
   const protocol_ctxt_t* const ctxt_pP,
   const int              CC_id,
-  RrcConfigurationReq * configuration
+  RrcConfigurationReq* configuration
 )
 //-----------------------------------------------------------------------------
 {
-  uint8_t                             SIwindowsize = 1;
-  uint16_t                            SIperiod = 8;
-#if defined(Rel10) || defined(Rel14)
-  int                                 i;
-#endif
 
-  //FIXME do_MIB_NB? put here?
+	//FIXME: MP: may this two  parameters are not needed
+  uint8_t                             SIwindowsize = 1; //frame
+  uint16_t                            SIperiod = 8; // in frames
+
+
+  //copy basic parameters
+  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].physCellId      = configuration->Nid_cell[CC_id];
+  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].p_eNB           = configuration->nb_antenna_ports[CC_id];
+  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp             = configuration->prefix_type[CC_id];
+  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].dl_CarrierFreq  = configuration->downlink_frequency[CC_id];
+  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].ul_CarrierFreq  = configuration->downlink_frequency[CC_id]+ configuration->uplink_frequency_offset[CC_id];
+
+
+  //TODO: verify who allocate memory for sib1_NB, sib2_NB, sib3_NB and mib_nb in the carrier before being passed as parameter
 
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1_NB = 0;
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23_NB = 0;
-  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].SIB1_NB = (uint8_t*) malloc16(32);//allocation of buffer memory for SIB
+  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB = 0;
+
+  //MIB
+  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].MIB_NB = (uint8_t*) malloc16(32); //MIB is 34 bits=5bytes needed
+
+  //FIXME do_MIB_NB parameters
+  if (eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].MIB_NB)
+  {
+	  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB =
+	  			  do_MIB_NB(&eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id],
+	  					  	configuration->N_RB_DL,
+					        0
+					        );
+  }
+  else {
+      LOG_E(RRC, PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for MIB_NB allocated\n",
+            PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
+      mac_xface->macphy_exit("[RRC][init_SI] FATAL, no memory for MIB_NB allocated");
+    }
 
 
+  if (eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB == 255) {
+      mac_xface->macphy_exit("[RRC][init_SI] FATAL, eNB_rrc_inst_NB[enb_mod_idP].carrier[CC_id].sizeof_MIB_NB == 255");
+    }
+
+ //SIB1_NB
+  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].SIB1_NB = (uint8_t*) malloc16(32);//allocation of buffer memory for SIB1_NB
 
   if (eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].SIB1_NB)
-    eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1_NB =
-    		do_SIB1_NB( //follow the new implementation
+    eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1_NB = do_SIB1_NB( //follow the new implementation
     				ctxt_pP->module_id,
 					CC_id,
-					&eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id], //FIXME correct?
+					&eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id],
 					configuration
     				);
-  //FIXME: verify who allocate moemory for sib1_NB in the carrier before being passed as parameter
 
   else {
     LOG_E(RRC, PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for SIB1_NB allocated\n",
@@ -1608,16 +1656,16 @@ init_SI_NB(
     mac_xface->macphy_exit("[RRC][init_SI] FATAL, eNB_rrc_inst_NB[enb_mod_idP].carrier[CC_id].sizeof_SIB1_NB == 255");
   }
 
+  //SIB23_NB
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].SIB23_NB = (uint8_t*) malloc16(64);
 
   if (eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].SIB23_NB) {
     eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23_NB = do_SIB23_NB(
           ctxt_pP->module_id,
           CC_id,
-		  &eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id], //correct?
+		  &eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id],
 		  configuration
         );
-    //FIXME: verify who allocate memory for sib2_NB and sib3_NB in the carrier before being passed as parameter
 
     if (eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23_NB == 255) {
       mac_xface->macphy_exit("[RRC][init_SI] FATAL, eNB_rrc_inst_NB[mod].carrier[CC_id].sizeof_SIB23_NB == 255");
@@ -1626,57 +1674,49 @@ init_SI_NB(
     LOG_T(RRC, PROTOCOL_RRC_CTXT_FMT" SIB2/3 Contents (partial)\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
 
-    /*decide which parameter to show....*/
+    /*FIXME: decide which parameter to show....*/
 
-    LOG_T(RRC, PROTOCOL_RRC_CTXT_FMT" npusch_config_common.groupHoppingEnabled = %d\n",
-          PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-          (int)eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.
-          ul_ReferenceSignalsNPUSCH_r13.groupHoppingEnabled_r13);
+    LOG_T(RRC, PROTOCOL_RRC_CTXT_FMT" TODO: some parameter of SIB23-NB to show\n",
+          PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
 
-    LOG_T(RRC, PROTOCOL_RRC_CTXT_FMT" npusch_config_common.groupAssignmentNPUSCH = %ld\n",
-          PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-          eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.
-		  ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13);
-
+    //Use the following as an example
+//    LOG_T(RRC, PROTOCOL_RRC_CTXT_FMT" npusch_config_common.groupAssignmentNPUSCH = %ld\n",
+//          PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
+//          eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.
+//		  ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13);
 
 
-//no MBMS flag and NO sib13
-
+    //Configure MAC
     LOG_D(RRC,
           PROTOCOL_RRC_CTXT_FMT" RRC_UE --- MAC_CONFIG_REQ (SIB1_NB & SIB2_NB params) ---> MAC_UE\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
 
-    //check
-    rrc_mac_config_req(ctxt_pP->module_id, CC_id, ENB_FLAG_YES, 0, 0,
-                       (RadioResourceConfigCommonSIB_t *) &
-                       eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib2_NB->radioResourceConfigCommon_r13,
-                       (struct PhysicalConfigDedicated_NB_r13_t *)NULL,
-#if defined(Rel10) || defined(Rel14)
-                       (SCellToAddMod_r10_t *)NULL,
-                       //(struct PhysicalConfigDedicatedSCell_r10 *)NULL,
-#endif
-                       (MeasObjectToAddMod_t **) NULL,
-                       (MAC_MainConfig_t *) NULL, 0,//check logical channel identity
-                       (struct LogicalChannelConfig_NB_r13_t *)NULL,
-                       (MeasGapConfig_t *) NULL,
-                       (TDD_Config_t*)NULL,
-                       NULL,
-                       &SIwindowsize, &SIperiod,
-                       eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib2_NB->freqInfo_r13.ul_CarrierFreq_r13,
-                       0, //FIXME must be defined
-                       &eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib2_NB->freqInfo_r13.additionalSpectrumEmission_r13,
-                       (MBSFN_SubframeConfigList_t*)NULL //not defined
-#if defined(Rel10) || defined(Rel14)
-					   	  ,
-                       eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].MBMS_flag,
-                       (MBSFN_AreaInfoList_r9_t*) & eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sib13->mbsfn_AreaInfoList_r9,
-                       (PMCH_InfoList_r9_t *) NULL
-#endif
-#ifdef CBA
-                       , 0, //eNB_rrc_inst_NB[ctxt_pP->module_id].num_active_cba_groups,
-                       0    //eNB_rrc_inst_NB[ctxt_pP->module_id].cba_rnti[0]
-#endif
-                      );
+    //
+    NB_rrc_mac_config_req_eNB(ctxt_pP->module_id,
+    							CC_id,
+								0,//rnti
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].physCellId,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].p_eNB,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->freqBandIndicator_r13,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->freqBandInfo_r13,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->multiBandInfoList_r13,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->downlinkBitmap_r13,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->eutraControlRegionSize_r13,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->nrs_CRS_PowerOffset_r13,
+								&SIwindowsize,
+								&SIperiod,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].dl_CarrierFreq,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].ul_CarrierFreq,
+								(BCCH_BCH_Message_NB_t*) &
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].mib_NB,
+								(RadioResourceConfigCommonSIB_NB_r13_t *) &
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib2_NB->radioResourceConfigCommon_r13,
+								(struct PhysicalConfigDedicated_NB_r13_t *)NULL,
+								(MAC_MainConfig_NB_r13_t *) NULL,
+								0,// MP:logicalChannelID  //TODO still have to be properly managed in the interface
+								(struct LogicalChannelConfig_NB_r13_t *)NULL
+								);
   } else {
     LOG_E(RRC, PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for SIB2/3_NB allocated\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
@@ -1689,7 +1729,7 @@ init_SI_NB(
 char
 openair_rrc_eNB_configuration_NB(
   const module_id_t enb_mod_idP,
-  RrcConfigurationReq* configuration
+  RrcConfigurationReq* configuration //FIXME MP: previously was insiede ITTI but actually I put it out
 )
 //-----------------------------------------------------------------------------
 {
@@ -1716,12 +1756,8 @@ while ( eNB_rrc_inst_NB == NULL ) {
     eNB_rrc_inst_NB[ctxt.module_id].carrier[CC_id].Srb0.Active = 0;
   }
 
-  uid_linear_allocator_init(&eNB_rrc_inst_NB[ctxt.module_id].uid_allocator);
+  uid_linear_allocator_init_NB(&eNB_rrc_inst_NB[ctxt.module_id].uid_allocator); //rrc_eNB_UE_context
   RB_INIT(&eNB_rrc_inst_NB[ctxt.module_id].rrc_ue_head);
-  //    for (j = 0; j < (NUMBER_OF_UE_MAX + 1); j++) {
-  //        eNB_rrc_inst_NB[enb_mod_idP].Srb2[j].Active = 0;
-  //    }
-
 
   eNB_rrc_inst_NB[ctxt.module_id].initial_id2_s1ap_ids = hashtable_create (NUMBER_OF_UE_MAX * 2, NULL, NULL);
   eNB_rrc_inst_NB[ctxt.module_id].s1ap_id2_s1ap_ids    = hashtable_create (NUMBER_OF_UE_MAX * 2, NULL, NULL);
@@ -1733,7 +1769,7 @@ while ( eNB_rrc_inst_NB == NULL ) {
   LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" Checking release \n",
         PROTOCOL_RRC_CTXT_ARGS(&ctxt));
 
-  LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" NB-IoT Relxx detected\n",PROTOCOL_RRC_CTXT_ARGS(&ctxt));
+  LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" NB-IoT Rel13 detected\n",PROTOCOL_RRC_CTXT_ARGS(&ctxt));
 
   //no CBA
 
@@ -1742,20 +1778,27 @@ while ( eNB_rrc_inst_NB == NULL ) {
     init_SI_NB(&ctxt, CC_id,configuration);
   }
 
+  /*New implementation Raymond*/
+  //MP: NEW defined in rrc_common_nb_iot.h // no more called in MAC/main.c but directly here
+  //rrc_init_global_param_NB();
 
-#ifdef NO_RRM                   //init ch SRB0, SRB1 & BDTCH
-  openair_rrc_on(&ctxt); //FIXME: rrc_common.c --> to be changed
-#else
-  eNB_rrc_inst_NB[ctxt.module_id].Last_scan_req = 0; //rrm_2_rrc_msg.c
-  send_msg(&S_rrc, msg_rrc_phy_synch_to_MR_ind(ctxt.module_id, eNB_rrc_inst_NB[ctxt.module_id].Mac_id));
-#endif
+  //XXX following the old implementation: openair_rrc_top_init is called in MAC/main.c
+
+  //FIXME: this probably would create some bug for the following reaon:
+  //in the onld implementation this function was called in the MAC/main.c
+  //actually is called here --> we are allocating memory so maybe we generate some problems
+
+  //openair_rrc_top_init_eNB_NB();
+
+  //init ch SRB0, SRB1 & BDTCH
+  openair_eNB_rrc_on_NB(&ctxt);
 
   return 0;
 
 }
 
 
-/*-----STATE MACHINE---------------*/
+/*-----------------STATE MACHINE---------------*/
 
 //-----------------------------------------------------------------------------
 int
@@ -1800,12 +1843,11 @@ rrc_eNB_decode_ccch_NB(
                0,
                0);
 
-  //could be deleted?
 //#if defined(ENABLE_ITTI)....
 //#   if defined(DISABLE_ITTI_XER_PRINT)...
 
 
-  for (i = 0; i < 8; i++) { //why 8?
+  for (i = 0; i < 8; i++) { //MP: FIXME why 8?
     LOG_T(RRC, "%x.", ((uint8_t *) & ul_ccch_msg_NB)[i]);
   }
 
@@ -1873,12 +1915,12 @@ rrc_eNB_decode_ccch_NB(
 
       //for the moment we only reject
       rrc_eNB_generate_RRCConnectionReestablishmentReject_NB(ctxt_pP,
-                       rrc_eNB_get_ue_context(&eNB_rrc_inst_NB[ctxt_pP->module_id], ctxt_pP->rnti),
+                       rrc_eNB_get_ue_context_NB(&eNB_rrc_inst_NB[ctxt_pP->module_id], ctxt_pP->rnti),
                        CC_id);
 
       break;
 
-    case UL_CCCH_MessageType_NB__c1_PR_rrcConnectionRequest_r13:
+    case UL_CCCH_MessageType_NB__c1_PR_rrcConnectionRequest_r13: //MSG3
       T(T_ENB_RRC_CONNECTION_REQUEST, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
         T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
@@ -1895,12 +1937,11 @@ rrc_eNB_decode_ccch_NB(
             PROTOCOL_RRC_CTXT_UE_FMT"MAC_eNB --- MAC_DATA_IND  (rrcConnectionRequest-NB on SRB0) --> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
-      ue_context_p = rrc_eNB_get_ue_context( //should be changed in order to pass a eNB_RRC_INST_NB
+      ue_context_p = rrc_eNB_get_ue_context_NB( //XXX define new function in rrc_eNB_UE_context
                        &eNB_rrc_inst_NB[ctxt_pP->module_id],
                        ctxt_pP->rnti);
 
-      if (ue_context_p != NULL) {
-    	 //no make sense to receive a connectionRequest when I have already the UE context
+      if (ue_context_p != NULL) { //MP: i receive a ConnectionRequest from a UE which have already a context
         // erase content
         rrc_eNB_free_mem_UE_context_NB(ctxt_pP, ue_context_p);
 
@@ -1919,6 +1960,7 @@ rrc_eNB_decode_ccch_NB(
         {
           if (InitialUE_Identity_PR_randomValue == rrcConnectionRequest_NB->ue_Identity_r13.present) {
 
+        	  //InitialUE-Identity randomValue size should be 40bits = 5 byte
             AssertFatal(rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.size == 5,
                         "wrong InitialUE-Identity randomValue size, expected 5, provided %d",
                         rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.size);
@@ -1934,7 +1976,7 @@ rrc_eNB_decode_ccch_NB(
               LOG_W(RRC, "new UE rnti %x (coming with random value) is already there as UE %x, removing %x from MAC/PHY\n",
                     ctxt_pP->rnti, ue_context_p->ue_context.rnti, ctxt_pP->rnti);
 
-	      rrc_mac_remove_ue(ctxt_pP->module_id, ctxt_pP->rnti);
+	      NB_rrc_mac_remove_ue(ctxt_pP->module_id, ctxt_pP->rnti);
               ue_context_p = NULL;
               return 0;
             } else {
@@ -1949,11 +1991,12 @@ rrc_eNB_decode_ccch_NB(
 
             if ((ue_context_p = rrc_eNB_ue_context_stmsi_exist_NB(ctxt_pP, mme_code, m_tmsi))) {
 	      LOG_I(RRC," S-TMSI exists, ue_context_p %p, old rnti %x => %x\n",ue_context_p,ue_context_p->ue_context.rnti,ctxt_pP->rnti);
-	      rrc_mac_remove_ue(ctxt_pP->module_id, ue_context_p->ue_context.rnti);
+	      NB_rrc_mac_remove_ue(ctxt_pP->module_id, ue_context_p->ue_context.rnti);
 	      stmsi_received=1;
 
               /* replace rnti in the context */
               /* for that, remove the context from the RB tree */
+	      ///FIXME MP: warning --> implicit declaration because I insert the new type "rrc_ue_tree_NB_s"
               RB_REMOVE(rrc_ue_tree_NB_s, &eNB_rrc_inst_NB[ctxt_pP->module_id].rrc_ue_head, ue_context_p);
               /* and insert again, after changing rnti everywhere it has to be changed */
               ue_context_p->ue_id_rnti = ctxt_pP->rnti;
@@ -1995,7 +2038,7 @@ rrc_eNB_decode_ccch_NB(
                   PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
             rrc_eNB_generate_RRCConnectionReject_NB(ctxt_pP,
-                             rrc_eNB_get_ue_context(&eNB_rrc_inst_NB[ctxt_pP->module_id], ctxt_pP->rnti),
+                             rrc_eNB_get_ue_context_NB(&eNB_rrc_inst_NB[ctxt_pP->module_id], ctxt_pP->rnti),
                              CC_id);
             break;
           }
@@ -2009,7 +2052,7 @@ rrc_eNB_decode_ccch_NB(
         if (ue_context_p != NULL) {
 
 
-//#if defined(ENABLE_ITTI) //FIXME: check if correct
+//#if defined(ENABLE_ITTI)
           ue_context_p->ue_context.establishment_cause_NB = rrcConnectionRequest_NB->establishmentCause_r13;
 	  if (stmsi_received==0){
 	    LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Accept new connection from UE random UE identity (0x%" PRIx64 ") MME code %u TMSI %u cause %ld\n",
@@ -2039,38 +2082,27 @@ rrc_eNB_decode_ccch_NB(
           LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Can't create new context for UE random UE identity (0x%" PRIx64 ")\n",
                 PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
                 random_value);
-	  rrc_mac_remove_ue(ctxt_pP->module_id,ctxt_pP->rnti);
+          NB_rrc_mac_remove_ue(ctxt_pP->module_id,ctxt_pP->rnti);
           return -1;
         }
       }
 
-#ifndef NO_RRM
-      send_msg(&S_rrc, msg_rrc_MR_attach_ind(ctxt_pP->module_id, Mac_id));
-#else
+//XXX MP: RRM not used
+//#ifndef NO_RRM
+//      send_msg(&S_rrc, msg_rrc_MR_attach_ind(ctxt_pP->module_id, Mac_id));
+//#else
 
       ue_context_p->ue_context.primaryCC_id = CC_id;
 
-      //FIXME : Transaction id = channel identity??, defs.h MAc to be changed, LCHAN_DESC to be changed
-      Idx = DCCH0;
       // SRB1bis (LCID = 3 = DCCH0)
       ue_context_p->ue_context.Srb1bis.Active = 1;
-      ue_context_p->ue_context.Srb1bis.Srb_info.Srb_id = Idx; //module_id
+      ue_context_p->ue_context.Srb1bis.Srb_info.Srb_id = DCCH0;
       memcpy(&ue_context_p->ue_context.Srb1bis.Srb_info.Lchan_desc[0],
-             &DCCH_LCHAN_DESC,
+             &DCCH_LCHAN_DESC,//FIXME MP: LCHAN_DESC (mac_rrc_primitives) to be changed
              LCHAN_DESC_SIZE);
       memcpy(&ue_context_p->ue_context.Srb1bis.Srb_info.Lchan_desc[1],
              &DCCH_LCHAN_DESC,
              LCHAN_DESC_SIZE);
-
-      //FIXME: SRB1: set  it to go through SRB1bis with id 3 (DCCH0) ???
-            ue_context_p->ue_context.Srb1.Active = 1;
-            ue_context_p->ue_context.Srb1bis.Srb_info.Srb_id = Idx;
-            memcpy(&ue_context_p->ue_context.Srb1.Srb_info.Lchan_desc[0],
-                   &DCCH_LCHAN_DESC,
-                   LCHAN_DESC_SIZE);
-            memcpy(&ue_context_p->ue_context.Srb1.Srb_info.Lchan_desc[1],
-                   &DCCH_LCHAN_DESC,
-                   LCHAN_DESC_SIZE);
 
       //generate RRCConnectionSetup-NB
       rrc_eNB_generate_RRCConnectionSetup_NB(ctxt_pP, ue_context_p, CC_id);
@@ -2088,38 +2120,40 @@ rrc_eNB_decode_ccch_NB(
         MSC_AS_TIME_ARGS(ctxt_pP),
         ue_context_p->ue_context.rnti);
 
-      //we are configuring PDCP and RC only for SRB1bis
-      //to be checked
-      rrc_pdcp_config_asn1_req(ctxt_pP,
-                               ue_context_p->ue_context.SRB_configList, //check
+      //XXX we should not configure PDCP for SRB1bis but only for SRB1 (we do it now?)
+      NB_rrc_pdcp_config_asn1_req(ctxt_pP,
+                               ue_context_p->ue_context.SRB_configList, //contain SRB1bis but used as SRB1
                                (DRB_ToAddModList_NB_r13_t *) NULL,
                                (DRB_ToReleaseList_NB_r13_t*) NULL,
                                0xff,
                                NULL,
                                NULL,
-                               NULL
-#   if defined(Rel10) || defined(Rel14)
-                               , (PMCH_InfoList_r9_t *) NULL
-#   endif
-                               ,NULL);
+                               NULL,
+                               NULL,
+							   DCCH1);
 
-      //to be checked
-      rrc_rlc_config_asn1_req(ctxt_pP,
-                              ue_context_p->ue_context.SRB_configList,//check
+      ///MP: Configure RLC for SRB1bis
+      NB_rrc_rlc_config_asn1_req(ctxt_pP,
+                              ue_context_p->ue_context.SRB_configList,
                               (DRB_ToAddModList_NB_r13_t*) NULL,
-                              (DRB_ToReleaseList_NB_r13_t*) NULL
-#   if defined(Rel10) || defined(Rel14)
-                              , (PMCH_InfoList_r9_t *) NULL
-#   endif
+                              (DRB_ToReleaseList_NB_r13_t*) NULL,
+							  SRB1BIS_FLAG_YES
                              );
-#endif //NO_RRM
+      //MP: Configure RLC for SRB1
+            NB_rrc_rlc_config_asn1_req(ctxt_pP,
+                                    ue_context_p->ue_context.SRB_configList,
+                                    (DRB_ToAddModList_NB_r13_t*) NULL,
+                                    (DRB_ToReleaseList_NB_r13_t*) NULL,
+      							  SRB1BIS_FLAG_NO
+                                   );
+//#endif //NO_RRM
 
-      break;
+      break; //RRCConnectionSetup-NB
 
     case UL_CCCH_MessageType_NB__c1_PR_rrcConnectionResumeRequest_r13:
-    	// or accept the resume, or switch back to a Connection setup or reject the request
+    	// TS 36.331 accept the resume, or switch back to a Connection setup or reject the request
 
-    	T(T_ENB_RRC_CONNECTION_RESUME_REQUEST, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame), //non so se funziona
+    	T(T_ENB_RRC_CONNECTION_RESUME_REQUEST, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     	        T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
     	#ifdef RRC_MSG_PRINT
@@ -2147,7 +2181,7 @@ rrc_eNB_decode_ccch_NB(
 
     //only reject for now
     rrc_eNB_generate_RRCConnectionReject_NB(ctxt_pP,
-                                 rrc_eNB_get_ue_context(&eNB_rrc_inst_NB[ctxt_pP->module_id], ctxt_pP->rnti),
+                                 rrc_eNB_get_ue_context_NB(&eNB_rrc_inst_NB[ctxt_pP->module_id], ctxt_pP->rnti),
                                  CC_id);
       break;
 
@@ -2172,7 +2206,7 @@ rrc_eNB_decode_ccch_NB(
 int
 rrc_eNB_decode_dcch_NB(
   const protocol_ctxt_t* const ctxt_pP,
-  const rb_id_t                Srb_id, //may not used
+  const rb_id_t                Srb_id, //Dcch_index
   const uint8_t*    const      Rx_sdu,
   const sdu_size_t             sdu_sizeP
 )
@@ -2191,7 +2225,7 @@ rrc_eNB_decode_dcch_NB(
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
   //FIXME : depends on how SRBs are managed
-  if ((Srb_id != 1) && (Srb_id != 2)) {
+  if ((Srb_id != 1) && (Srb_id != 3)) {
     LOG_E(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Received message on SRB%d, should not have ...\n",
           PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
           Srb_id);
@@ -2205,15 +2239,15 @@ rrc_eNB_decode_dcch_NB(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
   dec_rval = uper_decode(
                NULL,
-               &asn_DEF_UL_DCCH_Message,
+               &asn_DEF_UL_DCCH_Message_NB,
                (void**)&ul_dcch_msg_NB,
                Rx_sdu,
                sdu_sizeP,
                0,
                0);
 
-  //delete?
-/*#if defined(ENABLE_ITTI)
+  //TODO:delete?
+#if defined(ENABLE_ITTI)
 #   if defined(DISABLE_ITTI_XER_PRINT)
   {
     MessageDef                         *message_p;
@@ -2229,7 +2263,7 @@ rrc_eNB_decode_dcch_NB(
     size_t                              message_string_size;
 
     if ((message_string_size =
-           xer_sprint(message_string, sizeof(message_string), &asn_DEF_UL_DCCH_Message_NB, (void *)ul_dcch_msg)) >= 0) {
+           xer_sprint(message_string, sizeof(message_string), &asn_DEF_UL_DCCH_Message_NB, (void *)ul_dcch_msg_NB)) >= 0) {
       MessageDef                         *msg_p;
 
       msg_p = itti_alloc_new_message_sized(TASK_RRC_ENB, RRC_UL_DCCH, message_string_size + sizeof(IttiMsgText));
@@ -2241,7 +2275,7 @@ rrc_eNB_decode_dcch_NB(
   }
 #   endif
 #endif
-*/
+
 
   {
     for (i = 0; i < sdu_sizeP; i++) {
@@ -2258,7 +2292,7 @@ rrc_eNB_decode_dcch_NB(
     return -1;
   }
 
-  ue_context_p = rrc_eNB_get_ue_context(
+  ue_context_p = rrc_eNB_get_ue_context_NB(
                    &eNB_rrc_inst_NB[ctxt_pP->module_id],
                    ctxt_pP->rnti);
 
@@ -2301,14 +2335,15 @@ rrc_eNB_decode_dcch_NB(
       if (ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.criticalExtensions.
           present == RRCConnectionReconfigurationComplete_NB__criticalExtensions_PR_rrcConnectionReconfigurationComplete_r13) {
 	/*NN: revise the condition */
-        if (ue_context_p->ue_context.Status == RRC_RECONFIGURED){
+    	  //XXX MP: RRC_RECONFIGURED indicate if the default/dedicated bearer has been/has been not established
+        if (ue_context_p->ue_context.Status == RRC_RECONFIGURED){ // a dedicated bearers has been established
 	  dedicated_DRB = 1;
 	  LOG_I(RRC,
 		PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_RECONFIGURED (dedicated DRB, xid %ld)\n",
 		PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
-	}else {
+	}else { //a default bearer has been established
 	  dedicated_DRB = 0;
-	  ue_context_p->ue_context.Status = RRC_RECONFIGURED; //see below--> in this way i can establish the DRB
+	  ue_context_p->ue_context.Status = RRC_RECONFIGURED;
 	  LOG_I(RRC,
 		PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_RECONFIGURED (default DRB, xid %ld)\n",
 		PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
@@ -2328,7 +2363,6 @@ rrc_eNB_decode_dcch_NB(
 #endif
       }
 
-
 //#if defined(ENABLE_ITTI)...
 #if defined(ENABLE_USE_MME)
       if (EPC_MODE_ENABLED == 1) {
@@ -2341,12 +2375,10 @@ rrc_eNB_decode_dcch_NB(
 						       ue_context_p);
 	}
       }
-#else  // establish a dedicated bearer
+#else  // MP: ENABLE_USE_MME ??
       if (dedicated_DRB == 0 ) {
-	//	ue_context_p->ue_context.e_rab[0].status = E_RAB_NB_STATUS_ESTABLISHED;
-	rrc_eNB_reconfigure_DRBs_NB(ctxt_pP,ue_context_p);
+	rrc_eNB_reconfigure_DRBs_NB(ctxt_pP,ue_context_p); //MP: establish a dedicated DRB
       }
-
 #endif
 
       break;
@@ -2386,6 +2418,8 @@ rrc_eNB_decode_dcch_NB(
       break;
 
     case UL_DCCH_MessageType_NB__c1_PR_rrcConnectionSetupComplete_r13:
+    	//XXX MP: Ts 36.331 V14.2.1 RRCConnectionSetupComplete is transmitted over SRB1bis (pag 585)
+
 #ifdef RRC_MSG_PRINT
       LOG_F(RRC,"[MSG] RRCConnectionSetupComplete-NB\n");
 
@@ -2410,7 +2444,7 @@ rrc_eNB_decode_dcch_NB(
             PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
             "(RRCConnectionSetupComplete-NB) ---> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH,//check
+            DCCH0,//SRB1bis
             sdu_sizeP);
 
       if (ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionSetupComplete_r13.criticalExtensions.present ==
@@ -2442,6 +2476,12 @@ rrc_eNB_decode_dcch_NB(
       break;
 
     case UL_DCCH_MessageType_NB__c1_PR_securityModeComplete_r13:
+
+    	/* R2-163262 3GPP NB-IOT Ad-hoc Meeting #2
+    	 * After receiving the SMC and performing the security activation, the UE shall use the SRB1.
+    	 * If the UE fails the security activation, the UE shall use the SRB1-bis for Security Mode Complete message failure
+    	 */
+
       T(T_ENB_RRC_SECURITY_MODE_COMPLETE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
         T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
@@ -2478,6 +2518,7 @@ rrc_eNB_decode_dcch_NB(
 #ifdef XER_PRINT
       xer_fprint(stdout, &asn_DEF_UL_DCCH_Message_NB, (void *)ul_dcch_msg_NB);
 #endif
+      //XXX MP: ???
       // confirm with PDCP about the security mode for DCCH
       //rrc_pdcp_config_req (enb_mod_idP, frameP, 1,CONFIG_ACTION_SET_SECURITY_MODE, (ue_mod_idP * NB_RB_MAX) + DCCH, 0x77);
       // continue the procedure
@@ -2486,6 +2527,22 @@ rrc_eNB_decode_dcch_NB(
       break;
 
     case UL_DCCH_MessageType_NB__c1_PR_securityModeFailure_r13:
+
+    	//MP: Security Mode failure should be received over SRB1bis since the security activation fails
+    	/*(see R2-163262)
+    	The SRB1-bis (no PDCP) is used for SecurityModeCommand and SecurityModeFailure messages,
+    	The SRB1 (full PDCP) is used for SecurityModeComplete message.*/
+
+    	/*
+    	 * Furthermore from TS 36.331 ch:5.3.4.3 Reception of the SecurityModeCommand by the UE
+    	 * if the SecurityModeCommand message passes the integrity protection check
+    	 * ....
+    	 * else
+    	 * 2> continue using the configuration used prior to the reception of the SecurityModeCommand message,
+    	 *  i.e. neither apply integrity protection nor ciphering.
+    	 * 2> submit the SecurityModeFailure message to lower layers for transmission, upon which the procedure ends
+    	 */
+
       T(T_ENB_RRC_SECURITY_MODE_FAILURE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
         T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
@@ -2513,20 +2570,24 @@ rrc_eNB_decode_dcch_NB(
             PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
             "(securityModeFailure-NB) ---> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH,//Check
+            DCCH0,
             sdu_sizeP);
+
 #ifdef XER_PRINT
       xer_fprint(stdout, &asn_DEF_UL_DCCH_Message_NB, (void *)ul_dcch_msg_NB);
 #endif
       // cancel the security mode in PDCP??
       // followup with the remaining procedure
 //#warning "LG Removed rrc_eNB_generate_UECapabilityEnquiry after receiving securityModeFailure"
-
+//XXX MP: make sense to go ahead with the procedure without security? --> means that we should continue to use SRB1bis?
       rrc_eNB_generate_UECapabilityEnquiry_NB(ctxt_pP, ue_context_p);
 
       break;
 
     case UL_DCCH_MessageType_NB__c1_PR_ueCapabilityInformation_r13:
+
+    	//XXX message received over SRB1
+
       T(T_ENB_RRC_UE_CAPABILITY_INFORMATION, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
         T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
@@ -2553,26 +2614,27 @@ rrc_eNB_decode_dcch_NB(
       LOG_I(RRC,
             PROTOCOL_RRC_CTXT_UE_FMT" received ueCapabilityInformation-NB on UL-DCCH %d from UE\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH0);//through SRB1bis
+            DCCH1);
       LOG_D(RRC,
             PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
             "(UECapabilityInformation) ---> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH0,//through SRB1bis
+            DCCH1,
             sdu_sizeP);
 #ifdef XER_PRINT
       xer_fprint(stdout, &asn_DEF_UL_DCCH_Message_NB, (void *)ul_dcch_msg);
 #endif
       LOG_I(RRC, "got UE capabilities for UE %x\n", ctxt_pP->rnti);
 
-      //FIXME ueCapabilityInformation different w.r.t LTE --> how to decode it?
+
+      //FIXME MP: ueCapabilityInformation different w.r.t LTE --> how to decode it?
       dec_rval = uper_decode(NULL,
                              &asn_DEF_UE_Capability_NB_r13,
                              (void **)&UE_Capability_NB,
-							 Rx_sdu, //is not correct should find the buffer size for this message
-							 sdu_sizeP, //is not correct should find the buffer size for this message
-							 0,
-							 0);
+							 Rx_sdu, //*buffer//FIXME may this is not the best way (may incorrect)
+							 sdu_sizeP,//*size //FIXME may this is not the best way (may incorrect)
+							 0, //skip bits
+							 0); //unused bits
 
 #if defined(ENABLE_USE_MME)
 
@@ -2587,7 +2649,7 @@ rrc_eNB_decode_dcch_NB(
       for (i = 0; i < ue_context_p->ue_context.nb_of_e_rabs; i++){
 	ue_context_p->ue_context.e_rab[i].status = E_RAB_NB_STATUS_NEW;
 	ue_context_p->ue_context.e_rab[i].param.e_rab_id = 1+i;
-	ue_context_p->ue_context.e_rab[i].param.qos.qci=9;
+	ue_context_p->ue_context.e_rab[i].param.qos.qci=9; //Non-GBR the default value (TS
       }
       ue_context_p->ue_context.setup_e_rabs =ue_context_p->ue_context.nb_of_e_rabs;
 #endif
@@ -2694,8 +2756,9 @@ rrc_eNB_decode_dcch_NB(
 }
 
 //-----------------------------------------------------------------------------
+//put out from the ITTI FIXME is completely based on ITTI--> must be changed (msg_p, itti_receive_msg ecc...)
 void*
-rrc_enb_task_NB( ///FIXME is completely based on ITTI--> must be changed (msg_p, itti_receive_msg ecc...)
+rrc_enb_task_NB(
   void* args_p
 )
 //-----------------------------------------------------------------------------
@@ -2766,7 +2829,7 @@ rrc_enb_task_NB( ///FIXME is completely based on ITTI--> must be changed (msg_p,
             RRC_DCCH_DATA_IND(msg_p).dcch_index,
             msg_name_p);
       rrc_eNB_decode_dcch_NB(&ctxt,
-                          RRC_DCCH_DATA_IND(msg_p).dcch_index, //srb_id -->may not used for NB-IoT
+                          RRC_DCCH_DATA_IND(msg_p).dcch_index, //3 if SRB1bis and 1 for SRB1
                           RRC_DCCH_DATA_IND(msg_p).sdu_p, //rx_sdu
                           RRC_DCCH_DATA_IND(msg_p).sdu_size);
 

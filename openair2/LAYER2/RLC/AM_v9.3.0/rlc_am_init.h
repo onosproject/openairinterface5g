@@ -70,6 +70,12 @@ typedef volatile struct {
   uint32_t t_status_prohibit;   /*!< \brief t-StatusProhibit timer initial value. */
 } rlc_am_info_t;
 
+typedef volatile struct {
+uint16_t max_retx_threshold;
+uint32_t t_poll_retransmit;
+uint32_t enableStatusReportSN_Gap;
+}rlc_am_info_NB_t;
+
 //-----------------------------------------------------------------------------
 /*! \fn void rlc_am_init   (const protocol_ctxt_t* const ctxtP, rlc_am_entity_t * const rlc_pP)
 * \brief    Initialize the RLC AM protocol instance, reset variables, allocate buffers, lists, then, the next step in order have a running RLC AM instance is to configure and set debug informations for this RLC instance.

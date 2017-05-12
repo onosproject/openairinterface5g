@@ -206,18 +206,17 @@ uint8_t get_adjacent_cell_mod_id(uint16_t phyCellId)
   return 0xFF; //error!
 }
 
-/*do_MIB_NB*/
+/*do_MIB_NB*/ //FIXME: to decide lots of things
 uint8_t do_MIB_NB(
 		rrc_eNB_carrier_data_NB_t *carrier,
-		uint32_t N_RB_DL,//may not needed
+		uint16_t N_RB_DL,//may not needed--> for NB_IoT only 1 PRB is used
 		uint32_t frame)
 {
   asn_enc_rval_t enc_rval;
-  BCCH_BCH_Message_NB_t *mib_NB = &(carrier->mib_NB); //punta all'indirizzo di mib_NB
+  BCCH_BCH_Message_NB_t *mib_NB = &(carrier->mib_NB);
 
-  //should be passed as a parameter? (how decide which value is included in carrier?
-  uint8_t sfn_MSB = (uint8_t)((frame>>2)&0xff); //????? //4 bits
-  uint8_t hsfn_LSB = (uint8_t)((frame>>2)&0xff); //?? //2 bits
+  uint8_t sfn_MSB = (uint8_t)((frame>>2)&0xff); //4 bits FIXME
+  uint8_t hsfn_LSB = (uint8_t)((frame>>2)&0xff); //2 bits
   uint16_t spare=0; //11 bits --> use uint16
 
   //no DL_Bandwidth, no PCHIC
@@ -251,7 +250,7 @@ uint8_t do_MIB_NB(
   //only changes in "asn_DEF_BCCH_BCH_Message_NB"
   enc_rval = uper_encode_to_buffer(&asn_DEF_BCCH_BCH_Message_NB,
                                    (void*)mib_NB,
-                                   carrier->MIB_NB, //non credo ci vada &(carrier->MIB_NB)
+                                   carrier->MIB_NB,
                                    100);
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
@@ -333,7 +332,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
   PLMN_identity_info_NB.plmn_Identity_r13.mnc.list.size=0;
   PLMN_identity_info_NB.plmn_Identity_r13.mnc.list.count=0;
 
-  //left as it is
+  //FIXME
 #if defined(ENABLE_ITTI)
 
   if (configuration->mnc >= 100) {
@@ -408,7 +407,6 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
   //Still Set to "notAllowed" like in the previous case
   sib1_NB->cellAccessRelatedInfo_r13.intraFreqReselection_r13=SystemInformationBlockType1_NB__cellAccessRelatedInfo_r13__intraFreqReselection_r13_notAllowed;
 
-  //ClosedSubscriberGroup(CSG) is not supported by NB-IoT
 
   sib1_NB->cellSelectionInfo_r13.q_RxLevMin_r13=-65; //which value?? TS 36.331 V14.2.1 pag. 589
   sib1_NB->cellSelectionInfo_r13.q_QualMin_r13 = 0; // FIXME new parameter for SIB1-NB, not present in SIB1
@@ -416,6 +414,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
   sib1_NB->p_Max_r13 = CALLOC(1, sizeof(P_Max_t));
   *(sib1_NB->p_Max_r13) = 23;
 
+  //FIXME
   sib1_NB->freqBandIndicator_r13 =
 #if defined(ENABLE_ITTI)
     configuration->eutra_band[CC_id];
@@ -432,12 +431,11 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
        * sib1_NB->downlinkBitmap_r13.choice.subframePattern10_r13 =(is a BIT_STRING)
        */
 
-    //FIXME: correct memory allocation?
    sib1_NB->downlinkBitmap_r13 = CALLOC(1, sizeof(struct DL_Bitmap_NB_r13));
-   (sib1_NB->downlinkBitmap_r13)->present= DL_Bitmap_NB_r13_PR_subframePattern10_r13;
+   (sib1_NB->downlinkBitmap_r13)->present= DL_Bitmap_NB_r13_PR_NOTHING;
 
    *eutraControlRegionSize = 0;
-   sib1_NB->eutraControlRegionSize_r13 = eutraControlRegionSize; //ok
+   sib1_NB->eutraControlRegionSize_r13 = eutraControlRegionSize;
 
 
    *nrs_CRS_PowerOffset= 0;
@@ -454,7 +452,6 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
     *  in the first SystemInformation message
     * listed in the schedulingInfoList list.
     * */
-  //gli stiamo dicendo che ci sarà solo un SIB3 oltre che al due
   sib_type_NB=SIB_Type_NB_r13_sibType3_NB_r13;
 
   ASN_SEQUENCE_ADD(&schedulingInfo_NB.sib_MappingInfo_r13.list,&sib_type_NB);
@@ -470,7 +467,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
 	  exit(-1);
   }
 
-  //FIXME which value chose for the following parameter?
+  //FIXME which value chose for the following parameter
   sib1_NB->si_WindowLength_r13=SystemInformationBlockType1_NB__si_WindowLength_r13_ms160;
   sib1_NB->si_RadioFrameOffset_r13= 0;
 
@@ -478,11 +475,12 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
    * systemInfoValueTagSI (there is no SystemInfoValueTag in SIB1-NB but only in MIB-NB)
    *contained in systemInfoValueTagList_r13
    **/
-  asn_set_empty(&sib1_NB->systemInfoValueTagList_r13->list);   //FIXME good inizialization?
+  //FIXME correct?
+  sib1_NB->systemInfoValueTagList_r13 = CALLOC(1, sizeof(struct SystemInfoValueTagList_NB_r13));
+  asn_set_empty(&sib1_NB->systemInfoValueTagList_r13->list);
   ASN_SEQUENCE_ADD(&sib1_NB->systemInfoValueTagList_r13->list,&systemInfoValueTagSI);
 
 
-  //only change "asn_DEF_BCCH_DL_SCH_Message" in "asn_DEF_BCCH_DL_SCH_Message_NB"
 #ifdef XER_PRINT //generate xml files
   xer_fprint(stdout, &asn_DEF_BCCH_DL_SCH_Message_NB, (void*)bcch_message);
 #endif
@@ -545,7 +543,7 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
     exit(-1);
   }
 
-  //signifa che prima deve essere stata allocata memoria per forza
+  //before schould be allocated memory somewhere?
   if (!carrier->sib2_NB) {
     LOG_E(RRC,"[eNB %d] sib2_NB is null, exiting\n", Mod_id);
     exit(-1);
@@ -567,7 +565,7 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   sib2_NB_part->present = SystemInformation_NB_r13_IEs__sib_TypeAndInfo_r13__Member_PR_sib2_r13;
   sib3_NB_part->present = SystemInformation_NB_r13_IEs__sib_TypeAndInfo_r13__Member_PR_sib3_r13;
 
-  //attenzione potrebbe esserci un bug qui--> ricontrollare
+  //FIXME: may a bug?
   carrier->sib2_NB = &sib2_NB_part->choice.sib2_r13;
   carrier->sib3_NB = &sib3_NB_part->choice.sib3_r13;
   sib2_NB = carrier->sib2_NB;
@@ -685,9 +683,9 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   sib2_NB->ue_TimersAndConstants_r13.n310_r13 = configuration-> ue_TimersAndConstants_n310_NB[CC_id];
   sib2_NB->ue_TimersAndConstants_r13.n311_r13 = configuration-> ue_TimersAndConstants_n311_NB[CC_id];
 
- /* static assignment will be not used
+ /*FIXME:static assignment will be not used
 
-  //FIXME all values are almost set randomly
+
 
   	//RACH-Config-NB-IoT
   	//no numberOfRA_Preambles
@@ -794,12 +792,12 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   sib2_NB->freqInfo_r13.ul_CarrierFreq_r13 = NULL;
   sib2_NB->timeAlignmentTimerCommon_r13=TimeAlignmentTimer_infinity;//TimeAlignmentTimer_sf5120;
   //new
-  sib2_NB->multiBandInfoList_r13 = NULL; //-->Additional Spectrum Emision
+  sib2_NB->multiBandInfoList_r13 = NULL; //-->Additional Spectrum Emission
 
 /// SIB3-NB-------------------------------------------------------
 
   sib3_NB->cellReselectionInfoCommon_r13.q_Hyst_r13=SystemInformationBlockType3_NB_r13__cellReselectionInfoCommon_r13__q_Hyst_r13_dB4;
-  sib3_NB->cellReselectionServingFreqInfo_r13.s_NonIntraSearch_r13=0; //or define in configuration?
+  sib3_NB->cellReselectionServingFreqInfo_r13.s_NonIntraSearch_r13=NULL; //or define in configuration?
 
   sib3_NB->intraFreqCellReselectionInfo_r13.q_RxLevMin_r13 = -70;
   //new
@@ -811,11 +809,11 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   sib3_NB->intraFreqCellReselectionInfo_r13.t_Reselection_r13=1;
 
   //how to manage?
-  sib3_NB->freqBandInfo_r13 = NULL;//??
-  sib3_NB->multiBandInfoList_r13 = NULL;//??
+  sib3_NB->freqBandInfo_r13 = NULL;
+  sib3_NB->multiBandInfoList_r13 = NULL;
 
 
-///BCCH message (generate the SI message)--------------------------------
+///BCCH message (generate the SI message)
   bcch_message->message.present = BCCH_DL_SCH_MessageType_NB_PR_c1;
   bcch_message->message.choice.c1.present = BCCH_DL_SCH_MessageType_NB__c1_PR_systemInformation_r13;
 
@@ -837,25 +835,8 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
 
-//changed only "asn_DEF_BCCH_DL_SCH_Message_NB"
-#if defined(ENABLE_ITTI)
-# if !defined(DISABLE_XER_SPRINT)
-  {
-    char        message_string[15000];
-    size_t      message_string_size;
+//#if defined(ENABLE_ITTI).....
 
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_BCCH_DL_SCH_Message_NB, (void *)bcch_message)) > 0) {
-      MessageDef *msg_p;
-
-      msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_BCCH, message_string_size + sizeof (IttiMsgText));
-      msg_p->ittiMsg.rrc_dl_bcch.size = message_string_size;
-      memcpy(&msg_p->ittiMsg.rrc_dl_bcch.text, message_string, message_string_size);
-
-      itti_send_msg_to_task(TASK_UNKNOWN, Mod_id, msg_p);
-    }
-  }
-# endif
-#endif
 
 #ifdef USER_MODE
   LOG_D(RRC,"[eNB] SystemInformation-NB Encoded %d bits (%d bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
@@ -869,23 +850,14 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   return((enc_rval.encoded+7)/8);
 }
 
-/*do_RRCConnectionRequest_NB*/
-//from UE side (for now not needed)
-//Establishment cause are separated
-//uint8_t do_RRCConnectionRequest_NB(uint8_t Mod_id, uint8_t *buffer,uint8_t *rv){..}
-
-/*do_do_RRCConnectionSetupComplete_NB*/
-//from UE side (for now not needed)
-//uint8_t do_RRCConnectionSetupComplete(uint8_t Mod_id, uint8_t *buffer, const uint8_t Transaction_id, const int dedicatedInfoNASLength, const char *dedicatedInfoNAS)
-
-/*do_RRCConnectionSetup_NB--> the aim is to establish SRB1 and SRB1bis*/
+/*do_RRCConnectionSetup_NB--> the aim is to establish SRB1 and SRB1bis(implicitly)*/
 uint8_t do_RRCConnectionSetup_NB(
   const protocol_ctxt_t*     const ctxt_pP,
   rrc_eNB_ue_context_NB_t*      const ue_context_pP,
   int                              CC_id,
-  uint8_t*                   const buffer,
+  uint8_t*                   const buffer, //Srb0.Tx_buffer.Payload
   const uint8_t                    Transaction_id,
-  const LTE_DL_FRAME_PARMS* const frame_parms, //to be changed ora maybe not used
+  const LTE_DL_FRAME_PARMS* const frame_parms, //to be changed or maybe not used
   SRB_ToAddModList_NB_r13_t**             SRB_configList_NB, //for both SRB1bis and SRB1
   struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB
 )
@@ -895,15 +867,17 @@ uint8_t do_RRCConnectionSetup_NB(
  asn_enc_rval_t enc_rval;
  uint8_t ecause=0;
 
- //logical channel group not defined for Nb-IoT
+ //MP:logical channel group not defined for Nb-IoT
 
- long* prioritySRB1 = NULL; //logical channel priority pag 605 (is 1 for SRB1 and for SRB1bis? is the same?)
+ //MP: logical channel priority pag 605 (is 1 for SRB1 and for SRB1bis should be the same)
+ long* prioritySRB1 = NULL;
  long* prioritySRB1bis = NULL;
  BOOLEAN_t* logicalChannelSR_Prohibit =NULL; //pag 605
+ BOOLEAN_t* npusch_AllSymbols= NULL;
 
- struct SRB_ToAddMod_NB_r13* SRB1_config_NB = NULL;
- struct SRB_ToAddMod_NB_r13__rlc_Config_r13* SRB1_rlc_config_NB = NULL;
- struct SRB_ToAddMod_NB_r13__logicalChannelConfig_r13* SRB1_lchan_config_NB = NULL;
+// struct SRB_ToAddMod_NB_r13* SRB1_config_NB = NULL;
+// struct SRB_ToAddMod_NB_r13__rlc_Config_r13* SRB1_rlc_config_NB = NULL;
+// struct SRB_ToAddMod_NB_r13__logicalChannelConfig_r13* SRB1_lchan_config_NB = NULL;
 
  struct SRB_ToAddMod_NB_r13* SRB1bis_config_NB = NULL;
  struct SRB_ToAddMod_NB_r13__rlc_Config_r13* SRB1bis_rlc_config_NB = NULL;
@@ -969,23 +943,22 @@ uint8_t do_RRCConnectionSetup_NB(
 // ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1_config_NB);
 
 
-///SRB1bis (The configuration for SRB1 and SRB1bis is the same)-------------------
- // the only difference is the logical channel identity = 3 but not setted here
+///SRB1bis (The configuration for SRB1 and SRB1bis is the same)
+ // the only difference is the logical channel identity = 3 but not set here
 
 		 SRB1bis_config_NB = CALLOC(1,sizeof(*SRB1bis_config_NB));
-		 SRB1bis_config_NB = SRB1_config_NB;
 
 		 //no srb_Identity in SRB_ToAddMod_NB
 		 SRB1bis_rlc_config_NB = CALLOC(1,sizeof(*SRB1bis_rlc_config_NB));
 		 SRB1bis_config_NB->rlc_Config_r13   = SRB1bis_rlc_config_NB;
 
 		 SRB1bis_rlc_config_NB->present = SRB_ToAddMod_NB_r13__rlc_Config_r13_PR_explicitValue;
-		 SRB1bis_rlc_config_NB->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//the only possible in NB_IoT
+		 SRB1bis_rlc_config_NB->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//MP: the only possible RLC config in NB_IoT
 
 		 SRB1bis_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
 		 SRB1bis_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
 		 //(musT be disabled--> SRB1 config pag 640 specs )
-		 SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
+		 SRB1bis_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
 
 		 SRB1bis_lchan_config_NB = CALLOC(1,sizeof(*SRB1bis_lchan_config_NB));
 		 SRB1bis_config_NB->logicalChannelConfig_r13  = SRB1bis_lchan_config_NB;
@@ -997,12 +970,12 @@ uint8_t do_RRCConnectionSetup_NB(
 		 SRB1bis_lchan_config_NB->choice.explicitValue.priority_r13 = prioritySRB1bis;
 
 		 logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
-		 *logicalChannelSR_Prohibit = 1;
-		 //schould be set to TRUE (specs pag 641)
+		 *logicalChannelSR_Prohibit = 1; //schould be set to TRUE (specs pag 641)
 		 SRB1bis_lchan_config_NB->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
 
 		 //ADD SRB1bis
-		 //FIXME: actually there is no way to distinguish SRB1 and SRB1bis
+		 //MP: Actually there is no way to distinguish SRB1 and SRB1bis once in the list
+		 //MP: XXX SRB_ToAddModList_NB_r13_t size = 1
 		 ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1bis_config_NB);
 
 
@@ -1024,14 +997,13 @@ uint8_t do_RRCConnectionSetup_NB(
   * Once selected, the same transmission scheme applies to NPBCH, NPDCCH, and NPDSCH.
   * */
 
- //CarrierConfigDedicated --> random values setted
+ //FIXME: CarrierConfigDedicated check the set values
   physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.downlinkBitmapNonAnchor_r13->present=
 		  DL_CarrierConfigDedicated_NB_r13__downlinkBitmapNonAnchor_r13_PR_useNoBitmap_r13;
   physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_GapNonAnchor_r13->present =
 		  DL_CarrierConfigDedicated_NB_r13__dl_GapNonAnchor_r13_PR_useNoGap_r13;
-  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.inbandCarrierInfo_r13->eutraControlRegionSize_r13= 0;
-  //physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13->inbandCarrierInfo_r13->samePCI_Indicator_r13 (??)
-  //maybe first need to allocate memory?
+  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.inbandCarrierInfo_r13= NULL;
+
   physicalConfigDedicated2_NB->carrierConfigDedicated_r13->ul_CarrierConfig_r13.ul_CarrierFreq_r13->carrierFreq_r13=0;
   physicalConfigDedicated2_NB->carrierConfigDedicated_r13->ul_CarrierConfig_r13.ul_CarrierFreq_r13->carrierFreqOffset_r13= NULL;
 
@@ -1042,18 +1014,20 @@ uint8_t do_RRCConnectionSetup_NB(
 
  // NPUSCH
  physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->ack_NACK_NumRepetitions_r13= NULL; //(specs pag 643)
- //physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->npusch_AllSymbols_r13= //(TRUE)
- physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->groupHoppingDisabled_r13=NULL; //(TRUE?? is a long*)
+ npusch_AllSymbols= CALLOC(1, sizeof(BOOLEAN_t));
+ *npusch_AllSymbols= 1; //TRUE
+ physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->npusch_AllSymbols_r13= npusch_AllSymbols;
+ physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->groupHoppingDisabled_r13=NULL;
 
  // UplinkPowerControlDedicated
  physicalConfigDedicated2_NB->uplinkPowerControlDedicated_r13->p0_UE_NPUSCH_r13 = 0; // 0 dB (specs pag 643)
 
 
- //check if the one set to NULL are correct
+ //Fill the rrcConnectionSetup-NB message
  rrcConnectionSetup_NB->rrc_TransactionIdentifier = Transaction_id; //input value
  rrcConnectionSetup_NB->criticalExtensions.present = RRCConnectionSetup_NB__criticalExtensions_PR_c1;
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.present =RRCConnectionSetup_NB__criticalExtensions__c1_PR_rrcConnectionSetup_r13 ;
- //FIXME: should carry only SRB1bis?
+ //XXX: carry only SRB1bis at the moment and phyConfigDedicated
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.srb_ToAddModList_r13 = *SRB_configList_NB;
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.drb_ToAddModList_r13 = NULL;
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.drb_ToReleaseList_r13 = NULL;
@@ -1076,12 +1050,6 @@ uint8_t do_RRCConnectionSetup_NB(
  LOG_D(RRC,"RRCConnectionSetup-NB Encoded %d bits (%d bytes), ecause %d\n",
        enc_rval.encoded,(enc_rval.encoded+7)/8,ecause);
 #endif
-
- //  FREEMEM(SRB_list);
- //  free(SRB1_config);
- //  free(SRB1_rlc_config);
- //  free(SRB1_lchan_config);
- //  free(SRB1_ul_SpecificParameters);
 
  return((enc_rval.encoded+7)/8);
 }
@@ -1213,7 +1181,7 @@ uint16_t do_RRCConnectionReconfiguration_NB(
   const protocol_ctxt_t*        const ctxt_pP,
     uint8_t                            *buffer,
     uint8_t                             Transaction_id,
-    SRB_ToAddModList_NB_r13_t          *SRB_list_NB, //SRB_ConfigList2 (default)--> only SRB1?
+    SRB_ToAddModList_NB_r13_t          *SRB1_list_NB, //SRB_ConfigList2 (default)--> only SRB1
     DRB_ToAddModList_NB_r13_t          *DRB_list_NB, //DRB_ConfigList (default)
     DRB_ToReleaseList_NB_r13_t         *DRB_list2_NB, //is NULL when passed
     struct PhysicalConfigDedicated_NB_r13     *physicalConfigDedicated_NB,
@@ -1243,11 +1211,11 @@ uint16_t do_RRCConnectionReconfiguration_NB(
   //RAdioResourceconfigDedicated
   rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13 =
 		  CALLOC(1,sizeof(*rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13));
-  rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->srb_ToAddModList_r13 = SRB_list_NB; //only SRB1?
+  rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->srb_ToAddModList_r13 = SRB1_list_NB; //only SRB1
   rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->drb_ToAddModList_r13 = DRB_list_NB;
-  rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->drb_ToReleaseList_r13 = DRB_list2_NB;
+  rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->drb_ToReleaseList_r13 = DRB_list2_NB; //NULL
   rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->physicalConfigDedicated_r13 = physicalConfigDedicated_NB;
-  //used? pass as argument?
+  //FIXME may not used now
   //rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->rlf_TimersAndConstants_r13
 
   if (mac_MainConfig_NB!=NULL) {
@@ -1263,12 +1231,11 @@ uint16_t do_RRCConnectionReconfiguration_NB(
 	  rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->mac_MainConfig_r13=NULL;
   }
 
-  //no measConfig
+  //no measConfig, measIDlist
   //no mobilityControlInfo
 
-  //Other
   rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.dedicatedInfoNASList_r13 = dedicatedInfoNASList_NB;
-  //(how to set?)
+  //mainly used for cell-reselection/handover purposes??
   rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.fullConfig_r13 = NULL;
 
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message_NB,
@@ -1417,44 +1384,6 @@ uint8_t do_RRCConnectionReject_NB(
   return((enc_rval.encoded+7)/8);
 }
 
-/*do_RRCConnectionRelease_NB*/
-uint8_t do_RRCConnectionRelease_NB(uint8_t Mod_id, uint8_t *buffer,int Transaction_id)
-{
-
-  asn_enc_rval_t enc_rval;
-
-  DL_DCCH_Message_NB_t dl_dcch_msg_NB;
-  RRCConnectionRelease_NB_t *rrcConnectionRelease_NB;
-
-
-  memset(&dl_dcch_msg_NB,0,sizeof(DL_DCCH_Message_NB_t));
-
-  dl_dcch_msg_NB.message.present           = DL_DCCH_MessageType_NB_PR_c1;
-  dl_dcch_msg_NB.message.choice.c1.present = DL_DCCH_MessageType_NB__c1_PR_rrcConnectionRelease_r13;
-  rrcConnectionRelease_NB = &dl_dcch_msg_NB.message.choice.c1.choice.rrcConnectionRelease_r13;
-
-  // RRCConnectionRelease
-  rrcConnectionRelease_NB->rrc_TransactionIdentifier = Transaction_id;
-  rrcConnectionRelease_NB->criticalExtensions.present = RRCConnectionRelease_NB__criticalExtensions_PR_c1;
-  rrcConnectionRelease_NB->criticalExtensions.choice.c1.present =RRCConnectionRelease_NB__criticalExtensions__c1_PR_rrcConnectionRelease_r13 ;
-
-  rrcConnectionRelease_NB->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r13.releaseCause_r13 = ReleaseCause_NB_r13_other;
-  //which value set?
-  rrcConnectionRelease_NB->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r13.resumeIdentity_r13 = NULL;
-  rrcConnectionRelease_NB->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r13.extendedWaitTime_r13 = NULL;
-  rrcConnectionRelease_NB->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r13.redirectedCarrierInfo_r13 = NULL;
-
-  //why in this case allocate memory for noncriticalExtension?
-  rrcConnectionRelease_NB->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r13.nonCriticalExtension=CALLOC(1,
-      sizeof(*rrcConnectionRelease_NB->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r13.nonCriticalExtension));
-
-  enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message_NB,
-                                   (void*)&dl_dcch_msg_NB,
-                                   buffer,
-                                   RRC_BUF_SIZE);
-
-  return((enc_rval.encoded+7)/8);
-}
 
 //no do_MBSFNAreaConfig(..) in NB-IoT
 //no do_MeasurementReport(..) in NB-IoT
@@ -1585,7 +1514,7 @@ uint8_t do_RRCConnectionReestablishment_NB(
 uint8_t do_RRCConnectionRelease_NB(
   uint8_t                             Mod_id,
   uint8_t                            *buffer,
-  uint8_t                             Transaction_id)
+ const uint8_t                             Transaction_id)
 {
 
   asn_enc_rval_t enc_rval;
@@ -1594,7 +1523,7 @@ uint8_t do_RRCConnectionRelease_NB(
   RRCConnectionRelease_NB_t *rrcConnectionRelease_NB;
 
 
-  memset(&dl_dcch_msg_NB,0,sizeof(DL_DCCH_Message_t));
+  memset(&dl_dcch_msg_NB,0,sizeof(DL_DCCH_Message_NB_t));
 
   dl_dcch_msg_NB.message.present           = DL_DCCH_MessageType_NB_PR_c1;
   dl_dcch_msg_NB.message.choice.c1.present = DL_DCCH_MessageType_NB__c1_PR_rrcConnectionRelease_r13;

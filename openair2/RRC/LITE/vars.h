@@ -36,11 +36,6 @@
 #include "COMMON/mac_rrc_primitives.h"
 #include "LAYER2/MAC/defs.h"
 
-//for NB_IoT-------
-#include "defs_nb_iot.h"
-eNB_RRC_INST_NB *eNB_rrc_inst_NB;
-//--------------------
-
 eNB_RRC_INST *eNB_rrc_inst;
 UE_RRC_INST *UE_rrc_inst;
 //RRC_XFACE *Rrc_xface;
@@ -68,8 +63,7 @@ unsigned short Data_to_read;
 
 #define MAX_U32 0xFFFFFFFF
 
-uint8_t DRB2LCHAN[8]; //max can be 2 DRBs for NB_IoT --> it used for saving the LCID of DRBs
-
+uint8_t DRB2LCHAN[8];
 long logicalChannelGroup0 = 0;
 long  logicalChannelSR_Mask_r9=0;
 
@@ -107,7 +101,10 @@ LogicalChannelConfig_t SRB2_logicalChannelConfig_defaultValue = {ul_SpecificPara
                                                                 };
 
 //CONSTANTS
-rlc_info_t Rlc_info_um,Rlc_info_am_config;
+rlc_info_t Rlc_info_um,Rlc_info_am_config,
+//NB-IoT
+Rlc_info_am;
+
 uint16_t RACH_FREQ_ALLOC;
 //uint8_t NB_RACH;
 LCHAN_DESC BCCH_LCHAN_DESC,CCCH_LCHAN_DESC,DCCH_LCHAN_DESC,DTCH_DL_LCHAN_DESC,DTCH_UL_LCHAN_DESC;

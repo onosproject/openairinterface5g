@@ -314,8 +314,8 @@ typedef struct {
 
 typedef struct RB_INFO_NB_s {
   uint16_t Rb_id;  //=Lchan_id
-  LCHAN_DESC Lchan_desc[2]; //LCHAN_DESC should be changed for NB-IoT
-  MAC_MEAS_REQ_ENTRY *Meas_entry; //may not needed for NB-IoT
+  LCHAN_DESC Lchan_desc[2]; //XXX LCHAN_DESC should be changed for NB-IoT
+  //MAC_MEAS_REQ_ENTRY *Meas_entry; //may not needed for NB-IoT
 } RB_INFO_NB;
 
 typedef struct SRB_INFO_NB_s {
@@ -349,13 +349,20 @@ typedef struct SRB_INFO_TABLE_ENTRY_NB_s {
 //NB-IoT eNB_RRC_UE_NB_s--(used as a context in eNB --> ue_context in rrc_eNB_ue_context)------
 typedef struct eNB_RRC_UE_NB_s {
   uint8_t                            primaryCC_id;
-
-  //Radio Bearers carried by RadioResourceConfigDedicated-NB-r13.h
-  //used in generate_default/dedicatedRRCConnectionReconfiguration (rrc_eNB.c)
   //in NB-IoT only SRB0, SRB1 and SRB1bis (until AS security activation) exist
 
+  /*MP: Concept behind List and List2
+   *
+   * SRB_configList --> is used for the actual list of SRBs that is managed/that should be send over the RRC message
+   * SRB_configList2--> refers to all the SRBs configured for that specific transaction identifier
+   * 					this because in a single transaction one or more SRBs could be established
+   * 					and you want to keep memory on what happen for every transaction
+   * Transaction ID (xid): is used to associate the proper RRC....Complete message received by the UE to the corresponding
+   * 					   message previously sent by the eNB (e.g. RRCConnectionSetup -- RRCConnectionSetupComplete)
+   * 					   this because it could happen that more messages are transmitted at the same time
+   */
   SRB_ToAddModList_NB_r13_t*                SRB_configList;//for SRB1 and SRB1bis
-  SRB_ToAddModList_NB_r13_t*                SRB1_configList[RRC_TRANSACTION_IDENTIFIER_NUMBER]; //only for SRB1
+  SRB_ToAddModList_NB_r13_t*                SRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER];
   DRB_ToAddModList_NB_r13_t*                DRB_configList; //for all the DRBs
   DRB_ToAddModList_NB_r13_t*                DRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER]; //for the configured DRBs of a xid
   uint8_t                            		DRB_active[2];//in LTE was 8 --> at most 2 for NB-IoT
@@ -393,7 +400,6 @@ typedef struct eNB_RRC_UE_NB_s {
   /* Information from UE RRC ConnectionReestablishmentRequest-NB--> NB-IoT */
   ReestablishmentCause_NB_r13_t             reestablishment_cause_NB; //different set for NB_IoT
 
-///nothing to be changed for NB-IoT?
   /* UE id for initial connection to S1AP */
   uint16_t                           ue_initial_id;
 
@@ -407,16 +413,17 @@ typedef struct eNB_RRC_UE_NB_s {
   /* Number of e_rab to be setup in the list */ //NAS list?
   uint8_t                            nb_of_e_rabs;
   /* list of e_rab to be setup by RRC layers */
-  e_rab_param_NB_t                      e_rab[NB_RB_MAX];//[S1AP_MAX_E_RAB];
+  e_rab_param_NB_t                      e_rab[NB_RB_MAX_NB_IOT];//[S1AP_MAX_E_RAB];
 
   // LG: For GTPV1 TUNNELS
   uint32_t                           enb_gtp_teid[S1AP_MAX_E_RAB];
   transport_layer_addr_t             enb_gtp_addrs[S1AP_MAX_E_RAB];
   rb_id_t                            enb_gtp_ebi[S1AP_MAX_E_RAB];
 
-
+ //Which timers are referring to?
   uint32_t                           ul_failure_timer;
   uint32_t                           ue_release_timer;
+  //threshold of the release timer--> set in RRCConnectionRelease
   uint32_t                           ue_release_timer_thres;
 } eNB_RRC_UE_NB_t;
 //--------------------------------------------------------------------------------
@@ -424,7 +431,7 @@ typedef struct eNB_RRC_UE_NB_s {
 typedef uid_NB_t ue_uid_t;
 
 
-//Not touched - generally variable called: ue_context_pP
+//generally variable called: ue_context_pP
 typedef struct rrc_eNB_ue_context_NB_s {
 
   /* Tree related data */
@@ -480,11 +487,12 @@ typedef struct {
   uint8_t                           *SIB22_NB;
   uint8_t                           sizeof_SIB22_NB;
 
-  int                               Ncp; //extended cyclic prefix (needed?)
-  int                               p_eNB; //number of Transmit antenna (may not needed)
-  uint32_t                          dl_CarrierFreq;
-  uint32_t                          ul_CarrierFreq;
-  uint16_t                          physCellId; //SIB5-NB //look also at the difference in In-Band implementation
+  //implicit parameters needed
+  int                               Ncp; //extended cyclic prefix
+  int                               p_eNB; //number of antenna port (getting from the CRS of the MIB-NB)
+  uint32_t                          dl_CarrierFreq; //detected by the UE
+  uint32_t                          ul_CarrierFreq; //detected by the UE
+  uint16_t                          physCellId; //not stored in the MIB-NB but is getting through NPSS/NSSS
 
   //are the only static one (memory has been already allocated)
   BCCH_BCH_Message_NB_t                mib_NB;
@@ -533,7 +541,6 @@ typedef struct eNB_RRC_INST_NB_s {
   //RRC configuration
   RrcConfigurationReq configuration; //should be changed but need PHY specs also
 
-  //new--> to be check
   // other PLMN parameters
   /// Mobile country code
   int mcc;
@@ -542,10 +549,8 @@ typedef struct eNB_RRC_INST_NB_s {
   /// number of mnc digits
   int mnc_digit_length;
 
-  // other RAN parameters
+  // other RAN parameters //FIXME: to be checked--> depends on APP layer
   int srb1_timer_poll_retransmit;
-  int srb1_poll_pdu;
-  int srb1_poll_byte;
   int srb1_max_retx_threshold;
   int srb1_timer_reordering;
   int srb1_timer_status_prohibit;

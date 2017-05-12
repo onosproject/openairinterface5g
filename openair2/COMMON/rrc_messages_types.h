@@ -83,8 +83,9 @@ typedef struct RrcStateInd_s {
   Rrc_Sub_State_t sub_state;
 } RrcStateInd;
 
-// eNB: ENB_APP -> RRC messages
+// eNB: ENB_APP -> RRC messages---------------------------------------------------
 //these parameters are set by the configuration files?
+
 typedef struct RrcConfigurationReq_s {
   uint32_t            cell_identity;
 
@@ -104,8 +105,8 @@ typedef struct RrcConfigurationReq_s {
   */
   int16_t                 nb_cc;
   lte_frame_type_t        frame_type[MAX_NUM_CCs];
-  uint8_t                 tdd_config[MAX_NUM_CCs]; //not present in NB-IoT
-  uint8_t                 tdd_config_s[MAX_NUM_CCs]; //not present in NB-IoT
+  uint8_t                 tdd_config[MAX_NUM_CCs];
+  uint8_t                 tdd_config_s[MAX_NUM_CCs];
   lte_prefix_type_t       prefix_type[MAX_NUM_CCs];
   int16_t                 eutra_band[MAX_NUM_CCs];
   uint32_t                downlink_frequency[MAX_NUM_CCs];
@@ -113,17 +114,18 @@ typedef struct RrcConfigurationReq_s {
 
   int16_t                 Nid_cell[MAX_NUM_CCs];// for testing, change later
   int16_t                 N_RB_DL[MAX_NUM_CCs];// for testing, change later
-  int                   nb_antennas_tx[MAX_NUM_CCs];
-  int                     nb_antennas_rx[MAX_NUM_CCs];
+
+  int                  	  nb_antennas_tx[MAX_NUM_CCs]; //MP: may no more used
+  int                     nb_antennas_rx[MAX_NUM_CCs]; //MP: may no more used
+
+  int					  nb_antenna_ports[MAX_NUM_CCs];
+
   //PRACH
   long                    prach_root[MAX_NUM_CCs];
   long                    prach_config_index[MAX_NUM_CCs];
   BOOLEAN_t               prach_high_speed[MAX_NUM_CCs];
   long                    prach_zero_correlation[MAX_NUM_CCs];
   long                    prach_freq_offset[MAX_NUM_CCs];
-  //NPRACH for NB-IoT---
-  //...completely different parameter and structure for NPRACH
-  //-----------
   //PUCCH
   long                    pucch_delta_shift[MAX_NUM_CCs];
   long                    pucch_nRB_CQI[MAX_NUM_CCs];
@@ -165,17 +167,17 @@ typedef struct RrcConfigurationReq_s {
   e_DeltaFList_PUCCH__deltaF_PUCCH_Format2a                   pucch_deltaF_Format2a[MAX_NUM_CCs];
   e_DeltaFList_PUCCH__deltaF_PUCCH_Format2b                   pucch_deltaF_Format2b[MAX_NUM_CCs];
 
-  long                    rach_numberOfRA_Preambles[MAX_NUM_CCs];// not present in NB-IoT SIB2
-  BOOLEAN_t               rach_preamblesGroupAConfig[MAX_NUM_CCs]; // not present in NB-IoT SIB2
-  long                    rach_sizeOfRA_PreamblesGroupA[MAX_NUM_CCs];// not presen in NB-IoT SIB2
-  long                    rach_messageSizeGroupA[MAX_NUM_CCs]; // not presen in NB-IoT SIB2
+  long                    rach_numberOfRA_Preambles[MAX_NUM_CCs];
+  BOOLEAN_t               rach_preamblesGroupAConfig[MAX_NUM_CCs];
+  long                    rach_sizeOfRA_PreamblesGroupA[MAX_NUM_CCs];
+  long                    rach_messageSizeGroupA[MAX_NUM_CCs];
   e_RACH_ConfigCommon__preambleInfo__preamblesGroupAConfig__messagePowerOffsetGroupB   rach_messagePowerOffsetGroupB[MAX_NUM_CCs];// not presen in NB-IoT SIB2
   long                    rach_powerRampingStep[MAX_NUM_CCs];
   long                    rach_preambleInitialReceivedTargetPower[MAX_NUM_CCs];
-  long                    rach_preambleTransMax[MAX_NUM_CCs]; // not present in NB-IoT SIB2
-  long                    rach_raResponseWindowSize[MAX_NUM_CCs]; // not present in NB-IoT SIB2
-  long                    rach_macContentionResolutionTimer[MAX_NUM_CCs]; // not present in NB-IoT SIB2
-  long                    rach_maxHARQ_Msg3Tx[MAX_NUM_CCs];// not present in NB-IoT SIB2
+  long                    rach_preambleTransMax[MAX_NUM_CCs];
+  long                    rach_raResponseWindowSize[MAX_NUM_CCs];
+  long                    rach_macContentionResolutionTimer[MAX_NUM_CCs];
+  long                    rach_maxHARQ_Msg3Tx[MAX_NUM_CCs];
 
   //BCCH
   long                    bcch_modificationPeriodCoeff[MAX_NUM_CCs];

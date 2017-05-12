@@ -37,6 +37,7 @@
 #endif //USER_MODE
 #include "PHY/defs.h"
 #include "defs.h"
+#include "defs_nb_iot.h"
 #include "PHY_INTERFACE/defs.h"
 #include "COMMON/mac_rrc_primitives.h"
 
@@ -98,6 +99,8 @@ MAC_RLC_XFACE *Mac_rlc_xface;
 /// Primary component carrier index of eNB
 int pCC_id[NUMBER_OF_eNB_MAX];
 
+//NB-IoT
+eNB_MAC_INST_NB *eNB_mac_inst_NB;
 
 
 eNB_ULSCH_INFO eNB_ulsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX]; // eNBxUE = 8x8

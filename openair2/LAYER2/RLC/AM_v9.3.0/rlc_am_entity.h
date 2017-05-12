@@ -134,6 +134,7 @@ typedef struct rlc_am_entity_s {
   uint16_t           max_retx_threshold; /*!< \brief This parameter is used by the transmitting side of each AM RLC entity to limit the number of retransmissions of an AMD PDU. */
   uint16_t           poll_pdu;           /*!< \brief This parameter is used by the transmitting side of each AM RLC entity to trigger a poll for every pollPDU PDUs. */
   uint32_t           poll_byte;          /*!< \brief This parameter is used by the transmitting side of each AM RLC entity to trigger a poll for every pollByte bytes. */
+  uint16_t	     enableStatusReportSN_Gap;
 
   //---------------------------------------------------------------------
   // STATISTICS

@@ -83,8 +83,11 @@
 
 #define MAX_MANAGED_ENB_PER_MOBILE  2
 
-#define DEFAULT_RAB_ID 1
+///NB-IOT
+#define NB_RB_MAX_NB_IOT  (maxDRB_NB_r13 + 3) //MP: NB_IoT --> 2+3 = 5
 
+
+#define DEFAULT_RAB_ID 1
 #define NB_RB_MAX      (maxDRB + 3) /* was 11, now 14, maxDRB comes from asn1_constants.h, + 3 because of 3 SRB, one invisible id 0, then id 1 and 2 */
 #if defined(Rel10) || defined(Rel14)
 #define NB_RB_MBMS_MAX (maxSessionPerPMCH*maxServiceCount)
