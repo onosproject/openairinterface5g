@@ -1,0 +1,25 @@
+Develop record:
+
+Nick (nick133371@gmail.com)
+
+
+5/13 
+openair1/PHY/impl_defs_lte-nb.h
+openair1/PHY/INIT/defs-nb.h
+openair1/PHY/INIT/Lte_init-nb.c
+
+Comment: 
+Functions: NB_phy_config_mib_eNB(), NB_phy_config_sib2_eNB(), NB_phy_config_dedicated_eNB().
+Parameters: NB_DL_FRAME_PARAMS(Original LTE_DL_FRAME_PARAMS)
+
+5/14
+openair2/Layer2/MAC/defs-nb.h
+openair2/Layer2/MAC/proto-nb.h
+openair2/Layer2/MAC/eNB_scheduler_ulsch-nb.c
+openair2/Layer2/MAC/eNB_scheduler_prmitives-nb.c
+openair2/Layer2/MAC/eNB_scheduler_dlsch-nb.c
+
+comment:
+Functions: NB_rx_sdu(), NB_get_dci_sdu(), NB_rrc_mac_remove_ue(), NB_get_dlsch_sdu();
+Parameters: All parameters/structures used in MAC Layer.
+
