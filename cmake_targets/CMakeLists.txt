@@ -1043,7 +1043,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/CODING/viterbi.c
   ${OPENAIR1_DIR}/PHY/CODING/viterbi_lte.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_init.c
-  ${OPENAIR1_DIR}/PHY/INIT/lte_init-nb.c
+  ${OPENAIR1_DIR}/PHY/INIT/lte_init_nb_iot.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_parms.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_param_init.c
   ${OPENAIR1_DIR}/PHY/TOOLS/file_output.c
@@ -1134,13 +1134,13 @@ set (MAC_SRC
   ${MAC_DIR}/rar_tools.c
   ${MAC_DIR}/eNB_scheduler.c
   ${MAC_DIR}/eNB_scheduler_dlsch.c
-  ${MAC_DIR}/eNB_scheduler_dlsch-nb.c
+  ${MAC_DIR}/eNB_scheduler_dlsch_nb_iot.c
   ${MAC_DIR}/eNB_scheduler_ulsch.c
-  ${MAC_DIR}/eNB_scheduler_ulsch-nb.c
+  ${MAC_DIR}/eNB_scheduler_ulsch_nb_iot.c
   ${MAC_DIR}/eNB_scheduler_mch.c
   ${MAC_DIR}/eNB_scheduler_bch.c
   ${MAC_DIR}/eNB_scheduler_primitives.c
-  ${MAC_DIR}/eNB_scheduler_primitives-nb.c
+  ${MAC_DIR}/eNB_scheduler_primitives_nb_iot.c
   ${MAC_DIR}/eNB_scheduler_RA.c
   ${MAC_DIR}/pre_processor.c
   ${MAC_DIR}/config.c

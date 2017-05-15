@@ -45,7 +45,7 @@
 #endif //PHY_EMUL
 #include "PHY_INTERFACE/defs.h"
 #include "RRC/LITE/defs.h"
-#include "defs-nb.h"
+#include "defs_nb_iot.h"
 
 extern const uint32_t BSR_TABLE[BSR_TABLE_SIZE];
 //extern uint32_t EBSR_Level[63];
