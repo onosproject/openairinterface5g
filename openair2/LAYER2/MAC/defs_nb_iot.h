@@ -463,7 +463,8 @@ typedef struct {
   rnti_t rnti;
   /// RA RNTI allocated from received PRACH
   uint16_t RA_rnti;
-  /// Delete Received preamble_index, use subcarrier index?
+  /// Re-use preamble_index, but it would be subcarrier index (0-47)
+  uint8_t preamble_index;
   /// Received UE Contention Resolution Identifier
   uint8_t cont_res_id[6];
   /// Timing offset indicated by PHY
