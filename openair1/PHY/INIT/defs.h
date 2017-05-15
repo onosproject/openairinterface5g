@@ -330,28 +330,6 @@ void phy_config_dedicated_scell_eNB(uint8_t Mod_id,
 
 #endif
 
-#if defined(NB-IoT)
-/*brief Configure LTE_DL_FRAME_PARMS with components derived after initial synchronization (MIB-NB decoding + primary/secondary synch).*/
-void NB_phy_config_mib_eNB(int                    Mod_id,
-			int                    CC_id,
-			int                    eutra_band,
-			int                    Nid_cell,
-			int                    Ncp,
-			int                    p_eNB,
-			uint32_t               dl_CarrierFreq,
-			uint32_t               ul_CarrierFreq);
-
-/*NB_phy_config_sib1_eNB is not needed since NB-IoT use only FDD mode*/
-
-/*brief Configure LTE_DL_FRAME_PARMS with components of SIB2-NB (at eNB).*/
-void NB_phy_config_sib2_eNB(module_id_t                            Mod_id,
-                         int                                CC_id,
-                         RadioResourceConfigCommonSIB_t         *radioResourceConfigCommon,
-                         ARFCN_ValueEUTRA_t                     *ul_CArrierFreq,
-                         AdditionalSpectrumEmission_t           *additionalSpectrumEmission,
-                         );
-#endif
-
 
 
 /*! !\fn void phy_cleanup(void)
