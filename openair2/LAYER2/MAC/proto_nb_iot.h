@@ -825,6 +825,8 @@ void NB_eNB_dlsch_ulsch_scheduler(module_id_t module_idP, uint8_t cooperation_fl
 /* \brief Function to indicate a received preamble on PRACH.  It initiates the RA procedure.
     In NB-IoT, it indicate preamble using the frequency to indicate the preamble.
 */
+void NB_schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP)
+
 void NB_initiate_ra_proc(module_id_t module_idP,int CC_id,frame_t frameP, uint16_t preamble_index,int16_t timing_offset,uint8_t sect_id,sub_frame_t subframe,uint8_t f_id);
 
 uint8_t *NB_get_dlsch_sdu(module_id_t module_idP,int CC_id,frame_t frameP,rnti_t rnti,uint8_t TBindex);

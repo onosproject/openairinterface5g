@@ -33,6 +33,7 @@
 #define __LTE_TRANSPORT_DEFS__H__
 #include "PHY/defs.h"
 #include "dci.h"
+#include "dci_nb_iot.h"
 #include "uci.h"
 #ifndef STANDALONE_COMPILE
 #include "UTIL/LISTS/list.h"

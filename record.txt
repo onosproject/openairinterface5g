@@ -28,3 +28,14 @@ openair2/Layer2/MAC/eNB_scheduler_RA_nb_iot.c
 
 comment:
 Functions: NB_initiate_ra_proc()
+
+5/15
+modified:   openair1/PHY/INIT/defs.h
+modified:   openair1/PHY/LTE_TRANSPORT/defs.h
+modified:   openair2/LAYER2/MAC/eNB_scheduler_RA_nb_iot.c
+modified:   openair2/LAYER2/MAC/proto_nb_iot.h
+
+comment:
+Functions: Add NB_schedule_RA()
+Data Structure: Add DCI Upacked format in openair1/PHY/LTE_TRANSPORT/defs.h
+
