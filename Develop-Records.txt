@@ -1,4 +1,3 @@
-
 Develop_nb_iot_RRC Records
 
 
@@ -21,3 +20,5 @@ modify pdcp_config_set_security this particular case "else if(security_modeP == 
 *modified rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB--> no need of qci switch case since only RLC-AM mode in NB-IoT (no GBR)
 
 *LCHAN_DESC Lchan_desc[2] --> old structure and is mainly a "good practice" but non used anymore so deleted from the rrc_eNB_nb_iot.c file
+
+*update picures in DOC/RRC_images for NB-IoT protocol stack and signalling
