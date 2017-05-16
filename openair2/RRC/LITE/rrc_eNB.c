@@ -1574,7 +1574,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
   if (*DRB_configList) {
     free(*DRB_configList);
   }
-  //DRB_ConfigList era già stato linkato a ue_context al momento della dichiarazione
+  //DRB_ConfigList era giï¿½ stato linkato a ue_context al momento della dichiarazione
   *DRB_configList = CALLOC(1, sizeof(**DRB_configList));
   memset(*DRB_configList, 0, sizeof(**DRB_configList));
 
@@ -3753,7 +3753,7 @@ rrc_eNB_generate_RRCConnectionSetup(
 			  (fp->nb_antenna_ports_eNB==2)?2:1, //at this point we do not have the UE capability information, so it can only be TM1 or TM2
                           rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),
                           fp,
-                          SRB_configList, //qui le mando come argomento puntatore di puntatore così vengono configurate
+                          SRB_configList, //qui le mando come argomento puntatore di puntatore cosï¿½ vengono configurate
                           &ue_context_pP->ue_context.physicalConfigDedicated);
 
 #ifdef RRC_MSG_PRINT
@@ -3771,7 +3771,7 @@ rrc_eNB_generate_RRCConnectionSetup(
 
   if (*SRB_configList != NULL) {
     for (cnt = 0; cnt < (*SRB_configList)->list.count; cnt++) {
-    	//sta lavorando solo con SRB1--> perchè RRCConnectionSetup setta solo SRB1 (per NB_IoT??)
+    	//sta lavorando solo con SRB1--> perchï¿½ RRCConnectionSetup setta solo SRB1 (per NB_IoT??)
       if ((*SRB_configList)->list.array[cnt]->srb_Identity == 1) {
         SRB1_config = (*SRB_configList)->list.array[cnt];
 
@@ -4134,7 +4134,7 @@ rrc_eNB_decode_ccch(
              "reconfigurationFailure"));
 
 
-      //qui in realtà andrà gestita diversamente senza reject sempre
+      //qui in realtï¿½ andrï¿½ gestita diversamente senza reject sempre
 
       /*{
       uint64_t                            c_rnti = 0;
@@ -4938,6 +4938,8 @@ rrc_eNB_decode_dcch(
 }
 
 #if defined(ENABLE_ITTI)
+// This function triggers the establishemnt of dedicated bearer in the absence of EPC
+// to emulate it only establish 3 bearers but it can also establish 10 dedicated bearers.
 void rrc_eNB_reconfigure_DRBs (const protocol_ctxt_t* const ctxt_pP,
 			       rrc_eNB_ue_context_t*  ue_context_pP){
 

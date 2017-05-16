@@ -39,8 +39,6 @@
 
 //MP: NOTE:XXX some of the parameters defined in vars_nb_iot are called by the extern.h file so not replicated here
 
-//should be modified
-//extern LCHAN_DESC BCCH_LCHAN_DESC,CCCH_LCHAN_DESC,DCCH_LCHAN_DESC,DTCH_DL_LCHAN_DESC,DTCH_UL_LCHAN_DESC;
 
 extern eNB_RRC_INST_NB *eNB_rrc_inst_NB;
 

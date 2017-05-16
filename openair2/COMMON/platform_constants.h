@@ -84,7 +84,7 @@
 #define MAX_MANAGED_ENB_PER_MOBILE  2
 
 ///NB-IOT
-#define NB_RB_MAX_NB_IOT  (maxDRB_NB_r13 + 3) //MP: NB_IoT --> 2+3 = 5
+#define NB_RB_MAX_NB_IOT  (maxDRB_NB_r13 + 3) //MP: NB_IoT --> 2(DRB)+3(SRBs - 2 is not used) = 5
 
 
 #define DEFAULT_RAB_ID 1

@@ -160,7 +160,7 @@ boolean_t pdcp_serialize_user_plane_data_pdu_with_long_sn_buffer(unsigned char* 
   uint16_t sequence_number = pdu->sn;
   pdu_buffer[1] = sequence_number & 0xFF;
   sequence_number >>= 8;
-  pdu_buffer[0] = sequence_number & 0xFF;
+  pdu_buffer[0] = sequence_number & 0xFF; // sequence_number & 0x0F
 
   /*
    * Fill Data or Control field
@@ -168,6 +168,41 @@ boolean_t pdcp_serialize_user_plane_data_pdu_with_long_sn_buffer(unsigned char* 
   if (pdu->dc == PDCP_DATA_PDU_BIT_SET) {
     LOG_D(PDCP, "Setting PDU as a DATA PDU\n");
     pdu_buffer[0] |= 0x80; // set the first bit as 1
+  }
+
+  return TRUE;
+}
+
+
+/*
+ * Fills the incoming buffer with the fields of the header for short SN
+ *
+ * Created for Nb-IoT purpose
+ *
+ * @param pdu_buffer PDCP PDU buffer
+ * @return TRUE on success, FALSE otherwise
+ */
+boolean_t pdcp_serialize_user_plane_data_pdu_with_short_sn_buffer(unsigned char* pdu_buffer, \
+    pdcp_user_plane_data_pdu_header_with_short_sn* pdu)
+
+{
+  if (pdu_buffer == NULL || pdu == NULL) {
+    return FALSE;
+  }
+
+  /*
+   * Fill the Sequence Number field
+   */
+  uint16_t sequence_number = pdu->sn;
+  pdu_buffer[0] = sequence_number & 0x7F; //is a mask that set the octec; 0111 1111 --> so the first bit (D/C field) is set to 0 (Control PDU)
+
+  /*
+   * Fill Data or Control field
+   * DC field =1 for Data PDU, and =0 for Control PDU (status report, ROCH feedback ecc..)
+   */
+  if (pdu->dc == PDCP_DATA_PDU_BIT_SET) { //if required Data PDU
+    LOG_D(PDCP, "Setting PDU as a DATA PDU\n");
+    pdu_buffer[0] |= 0x80; // set the first bit as 1 (0x80 = 1000 0000)
   }
 
   return TRUE;

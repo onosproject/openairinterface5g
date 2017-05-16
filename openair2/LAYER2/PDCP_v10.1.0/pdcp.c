@@ -1668,7 +1668,16 @@ pdcp_config_set_security(
 	  pdcp_pP->cipheringAlgorithm,
 	  pdcp_pP->integrityProtAlgorithm,
 	  ctxt_pP->rnti);
-  } else {
+  }
+  /*particular case activated by SecurityModeFailure*/
+  else if(security_modeP == -1){
+	  // in this way in NB_pdcp_data_req function you never call "pdcp_apply_security"
+	  // and we never call pdcp_validate_security in NB_pdcp_data_indi
+	    	pdcp_pP->security_activated = 0;
+	    	pdcp_pP->cipheringAlgorithm = 0;
+	    	pdcp_pP->integrityProtAlgorithm = 0;
+  }
+  else {
 	  MSC_LOG_EVENT(
 	    (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_PDCP_ENB:MSC_PDCP_UE,
 	    "0 Set security failed UE %"PRIx16" ",
@@ -1680,6 +1689,7 @@ pdcp_config_set_security(
 }
 
 //-----------------------------------------------------------------------------
+// MP: seems to be no more used (old code)
 void
 rrc_pdcp_config_req (
   const protocol_ctxt_t* const  ctxt_pP,

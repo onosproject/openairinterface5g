@@ -51,6 +51,8 @@
 #include <rtai.h>
 #endif
 
+
+
 //----Not needed for NB-IoT??-------- (but have to left for UE?)
 //#include "SystemInformationBlockType1.h"
 //#include "SystemInformation.h"
@@ -314,7 +316,7 @@ typedef struct {
 
 typedef struct RB_INFO_NB_s {
   uint16_t Rb_id;  //=Lchan_id
-  LCHAN_DESC Lchan_desc[2]; //XXX LCHAN_DESC should be changed for NB-IoT
+  LCHAN_DESC Lchan_desc[2]; //MP: Lchan_desc is an old structure no more used in general --> remove also where it is setup
   //MAC_MEAS_REQ_ENTRY *Meas_entry; //may not needed for NB-IoT
 } RB_INFO_NB;
 
@@ -322,7 +324,7 @@ typedef struct SRB_INFO_NB_s {
   uint16_t Srb_id;  //=Lchan_id---> useful for distinguish between SRB1 and SRB1bis?
   RRC_BUFFER_NB Rx_buffer;
   RRC_BUFFER_NB Tx_buffer;
-  LCHAN_DESC Lchan_desc[2];//LCHAN_DESC should be changed for NB-IoT
+  LCHAN_DESC Lchan_desc[2]; //MP: Lchan_desc is an old structure no more used in general --> remove also where it is setup
   unsigned int Trans_id;
   uint8_t Active;
 } SRB_INFO_NB;

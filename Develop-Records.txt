@@ -1,0 +1,23 @@
+
+Develop_nb_iot_RRC Records
+
+
+
+2017_05_16
+
+
+*for the moment all the interfaces are in L2_interface_nb_iot.c
+
+*pdcp_primitives.c --> pdcp_serialize_user_plane_data_pdu_with_short_sn_buffer (new function) --> used in NB_pdcp_data_req interface
+included also in the proper header file pdcp_primitives.h
+
+
+*management of SecurityModeFailure message (rrc_eNB_nb_iot.c) --> we call the NB_rrc_pdcp_config_asn1_req with a particular case for securityMode =-1;
+modify NB_rrc_pdcp_config_asn1_req function in L2_interface_nb_iot.c
+modify pdcp_config_set_security this particular case "else if(security_modeP == -1)"
+
+*modified rrc_eNB_process_RRCConnectionReconfigurationComplete_NB function ---> DRBs are never deleted and ue_cuontext_pP->ue_context.DRB_active[drb_id] == 1 called only once 
+
+*modified rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB--> no need of qci switch case since only RLC-AM mode in NB-IoT (no GBR)
+
+*LCHAN_DESC Lchan_desc[2] --> old structure and is mainly a "good practice" but non used anymore so deleted from the rrc_eNB_nb_iot.c file

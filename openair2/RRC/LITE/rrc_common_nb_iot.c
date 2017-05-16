@@ -101,6 +101,7 @@ rrc_config_buffer_NB(
 
 //-----------------------------------------------------------------------------
 //XXX NEW mplementation by Raymond: still used but no more called by MAC/main.c instead directly called by rrc_eNB_nb_iot.c
+//XXX maybe this function is no more useful
 int
 rrc_init_global_param_NB(
   void
@@ -110,20 +111,18 @@ rrc_init_global_param_NB(
 
   rrc_rlc_register_rrc (rrc_data_ind, NULL); //register with rlc
 
-  //FIXME: all this parameter must be properly set
-  DCCH_LCHAN_DESC.transport_block_size = 4;
-  DCCH_LCHAN_DESC.max_transport_blocks = 16;
-  DCCH_LCHAN_DESC.Delay_class = 1;
-  DTCH_DL_LCHAN_DESC.transport_block_size = 52;
-  DTCH_DL_LCHAN_DESC.max_transport_blocks = 20;
-  DTCH_DL_LCHAN_DESC.Delay_class = 1;
-  DTCH_UL_LCHAN_DESC.transport_block_size = 52;
-  DTCH_UL_LCHAN_DESC.max_transport_blocks = 20;
-  DTCH_UL_LCHAN_DESC.Delay_class = 1;
+  //XXX MP: most probably ALL of this stuff are no more needed (also the one not commented)
 
- //UM mode not allowed in NB-IoT
+//  DCCH_LCHAN_DESC.transport_block_size = 4;
+//  DCCH_LCHAN_DESC.max_transport_blocks = 16;
+//  DCCH_LCHAN_DESC.Delay_class = 1;
+//  DTCH_DL_LCHAN_DESC.transport_block_size = 52;
+//  DTCH_DL_LCHAN_DESC.max_transport_blocks = 20;
+//  DTCH_DL_LCHAN_DESC.Delay_class = 1;
+//  DTCH_UL_LCHAN_DESC.transport_block_size = 52;
+//  DTCH_UL_LCHAN_DESC.max_transport_blocks = 20;
+//  DTCH_UL_LCHAN_DESC.Delay_class = 1;
 
- //XXX MP:structure rlc_am_info_NB --> rlc.h
   Rlc_info_am_config.rlc_mode = RLC_MODE_AM;
   Rlc_info_am_config.rlc.rlc_am_info_NB.max_retx_threshold = 50;
   Rlc_info_am_config.rlc.rlc_am_info_NB.t_poll_retransmit = 15;

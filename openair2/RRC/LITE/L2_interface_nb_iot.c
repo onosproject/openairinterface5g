@@ -41,6 +41,7 @@
 #include "msc.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 #include "gtpv1u.h"
+#include "osa_defs.h"
 
 #ifdef PHY_EMUL
 #include "SIMULATION/simulation_defs.h"
@@ -116,7 +117,7 @@ int NB_rrc_mac_config_req_eNB(
 			   BCCH_BCH_Message_NB_t            *mib_NB,
 			   RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon,
 			   struct PhysicalConfigDedicated_NB_r13  *physicalConfigDedicated,
-			   MAC_MainConfig_NB_r13_t                *mac_MainConfig,
+			   MAC_MainConfig_NB_r13_t                *mac_MainConfig, //most probably not needed since only used at UE side
 			   long                             logicalChannelIdentity,//FIXME: decide how to use it
 			   LogicalChannelConfig_NB_r13_t          *logicalChannelConfig //FIXME: decide how to use it
 			   )
@@ -145,7 +146,7 @@ int NB_rrc_mac_config_req_eNB(
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].eutra_band     = eutra_band;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].dl_CarrierFreq = dl_CarrierFreq;
 
-//    mac_xface->NB_phy_config_mib_eNB(Mod_idP,CC_idP, //XXX MP: defined by Nick in lte_init_nb_iot.c
+//  NB_phy_config_mib_eNB(Mod_idP,CC_idP, //XXX MP: defined by Nick in lte_init_nb_iot.c
 //				  eutra_band,
 //				  physCellId,
 //				  Ncp,
@@ -162,8 +163,11 @@ int NB_rrc_mac_config_req_eNB(
   if (radioResourceConfigCommon!=NULL) {
       LOG_I(MAC,"[CONFIG]SIB2/3-NB Contents (partial)\n");
 
-      //TODO:show something on npusch parameters
-      //LOG_I(MAC,"[CONFIG]npusch_config_common_r13.
+      LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13= %d\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13);
+      LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13= %d\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13);
+      LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupHoppingEnabled_r13= %d\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupHoppingEnabled_r13);
+      LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13= %d\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13);
+
 
       eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].radioResourceConfigCommon = radioResourceConfigCommon;
 
@@ -171,7 +175,7 @@ int NB_rrc_mac_config_req_eNB(
 
       //no ul_Bandwidth
 
-//      mac_xface->NB_phy_config_sib2_eNB( //XXX MP: defined by Nick in lte_init_nb_iot.c
+//     NB_phy_config_sib2_eNB( //XXX MP: defined by Nick in lte_init_nb_iot.c
 //    		  Mod_idP,
 //    		  CC_idP,
 //			  radioResourceConfigCommon,
@@ -185,9 +189,13 @@ int NB_rrc_mac_config_req_eNB(
     if (UE_id == -1) {
       LOG_E(MAC,"%s:%d:%s: ERROR, UE_id == -1\n", __FILE__, __LINE__, __FUNCTION__);
     } else {
-      //TODO logical channel configuration for UE_list->UE_template
+    	//no logical channel group not defined for nb-iot --> no UL specific Parameter
+    	//XXX: lcgidmap in MAC/defs.h most probably is not needed
     }
   }
+
+
+  ///mac_mainConfig not needed for the eNB side but only for UE
 
 
   if (physicalConfigDedicated != NULL) {
@@ -195,7 +203,7 @@ int NB_rrc_mac_config_req_eNB(
       LOG_E(MAC,"%s:%d:%s: ERROR, UE_id == -1\n", __FILE__, __LINE__, __FUNCTION__);
     else
     {
-//      mac_xface->NB_phy_config_dedicated_eNB( //XXX MP: defined by Nick in lte_init_nb_iot.c
+//   NB_phy_config_dedicated_eNB( //XXX MP: defined by Nick in lte_init_nb_iot.c
 //    		  Mod_idP,
 //			  CC_idP,
 //			  UE_RNTI(Mod_idP, UE_id),
@@ -251,7 +259,7 @@ int8_t NB_mac_rrc_data_req_eNB(
       //within the 2560 ms period
 
       //Implementation: //FIXME should be checked if compatible if SIB23-NB scheduling
-      //SchedulingInfoSIB_r13 = 0 --> n°repetitions= 4 + NcelliD mod 4 = 1 --> start_sfn_sib1_Nb = 16
+      //SchedulingInfoSIB_r13 = 0 --> nï¿½repetitions= 4 + NcelliD mod 4 = 1 --> start_sfn_sib1_Nb = 16
 
       /*logic*/
       //1) check if the current frame is before/after the starting frame of sib1-NB transmission
@@ -549,6 +557,81 @@ int NB_mac_eNB_get_rrc_status(
 
 /*----------------------------------RRC-PDCP--------------------------------------*/
 
+
+//defined in pdcp_security.c
+//called in NB_pdcp_data_req
+//-----------------------------------------------------------------------------
+int
+NB_pdcp_apply_security(
+  const protocol_ctxt_t* const ctxt_pP,
+  pdcp_t        *const pdcp_pP,
+  const srb_flag_t     srb_flagP,
+  const rb_id_t        rb_id, //rb_idP % maxDRB_NB_r13
+  const uint8_t        pdcp_header_len,
+  const uint16_t       current_sn,
+  uint8_t       * const pdcp_pdu_buffer,
+  const uint16_t      sdu_buffer_size
+)
+{
+  uint8_t *buffer_encrypted = NULL;
+  stream_cipher_t encrypt_params;
+
+  DevAssert(pdcp_pP != NULL);
+  DevAssert(pdcp_pdu_buffer != NULL);
+  DevCheck(rb_id < NB_RB_MAX_NB_IOT && rb_id >= 0, rb_id, NB_RB_MAX_NB_IOT, 0);
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_APPLY_SECURITY, VCD_FUNCTION_IN);
+
+  encrypt_params.direction  = (pdcp_pP->is_ue == 1) ? SECU_DIRECTION_UPLINK : SECU_DIRECTION_DOWNLINK;
+  encrypt_params.bearer     = rb_id - 1;
+  encrypt_params.count      = pdcp_get_next_count_tx(pdcp_pP, srb_flagP, current_sn);
+  encrypt_params.key_length = 16;
+
+  if (srb_flagP) {
+    /* SRBs */
+    uint8_t *mac_i;
+
+    LOG_D(PDCP, "[OSA][RB %d] %s Applying control-plane security %d \n",
+          rb_id, (pdcp_pP->is_ue != 0) ? "UE -> eNB" : "eNB -> UE", pdcp_pP->integrityProtAlgorithm);
+
+    encrypt_params.message    = pdcp_pdu_buffer;
+    encrypt_params.blength    = (pdcp_header_len + sdu_buffer_size) << 3;
+    encrypt_params.key        = pdcp_pP->kRRCint + 16; // + 128;
+
+    mac_i = &pdcp_pdu_buffer[pdcp_header_len + sdu_buffer_size];
+
+    /* Both header and data parts are integrity protected for
+     * control-plane PDUs */
+    stream_compute_integrity(pdcp_pP->integrityProtAlgorithm,
+                             &encrypt_params,
+                             mac_i);
+
+    encrypt_params.key = pdcp_pP->kRRCenc;  // + 128  // bit key
+  } else {
+    LOG_D(PDCP, "[OSA][RB %d] %s Applying user-plane security\n",
+          rb_id, (pdcp_pP->is_ue != 0) ? "UE -> eNB" : "eNB -> UE");
+
+    encrypt_params.key = pdcp_pP->kUPenc;//  + 128;
+  }
+
+  encrypt_params.message    = &pdcp_pdu_buffer[pdcp_header_len];
+  encrypt_params.blength    = sdu_buffer_size << 3;
+
+  buffer_encrypted = &pdcp_pdu_buffer[pdcp_header_len];
+
+  /* Apply ciphering if any requested */
+  stream_encrypt(pdcp_pP->cipheringAlgorithm,
+                 &encrypt_params,
+                 &buffer_encrypted);
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_APPLY_SECURITY, VCD_FUNCTION_OUT);
+
+  return 0;
+}
+
+
+
+
 //FIXME for the moment we not configure PDCP for SRB1bis (but used as it is SRB1)
 //defined in pdcp.c
 boolean_t NB_rrc_pdcp_config_asn1_req (
@@ -561,12 +644,11 @@ boolean_t NB_rrc_pdcp_config_asn1_req (
   uint8_t                  *const kRRCint_pP,
   uint8_t                  *const kUPenc_pP,
   rb_id_t                 *const defaultDRB,
-  long						LCID
+  long						LCID //its only for check purposes (if correctly called could be deleted)
 )
 {
   long int        lc_id          = 0;
   DRB_Identity_t  srb_id         = 0;
-  long int        mch_id         = 0;
   rlc_mode_t      rlc_type       = RLC_MODE_NONE;
   DRB_Identity_t  drb_id         = 0;
   DRB_Identity_t *pdrb_id_p      = NULL;
@@ -599,7 +681,7 @@ boolean_t NB_rrc_pdcp_config_asn1_req (
 	  if(LCID == DCCH0) //SRB1bis
 	  	{
 		  LOG_E(PDCP, PROTOCOL_PDCP_CTXT_FMT" PDCP Configiration for SRB1bis not allowed\n");
-		  return TRUE;
+		  return 0;
 		}
 	  else
 	   {
@@ -608,6 +690,37 @@ boolean_t NB_rrc_pdcp_config_asn1_req (
 		  lc_id = srb_id;
 	   }
 
+	/*Security Mode Failure*/
+    if(security_modeP == -1){
+
+    	LOG_D(PDCP, "SecurityModeFailure --> NB_rrc_pdcp_config_asn1_req --> Disabling security for srb2add_list_pP\n");
+
+    	for(int cnt=0; cnt< srb2add_list_pP->list.count; cnt++)//may not needed a loop
+    	   {
+
+    	    key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ENB_FLAG_YES, srb_id, SRB_FLAG_YES);
+    	    h_rc = hashtable_get(pdcp_coll_p,key, (void**)&pdcp_p);
+
+    	    if(h_rc != HASH_TABLE_OK){
+    	       LOG_I(PDCP, "SecurityModeFailure --> NB_rrc_pdcp_config_asn1_req not available pdcp entity for disable security for this SRB");
+    	    	    	continue;
+    	      }
+
+    	    pdcp_config_set_security(
+    	        	  ctxt_pP,
+    	        	  pdcp_p,
+    	        	  srb_id,//DCCH1
+    	        	  lc_id, //1
+    	        	  security_modeP,// should be -1
+    	        	  kRRCenc_pP,//Should be NULL
+    	        	  kRRCint_pP,//Should be NULL
+    	        	  kUPenc_pP //Should be NULL
+					  );
+
+    	      }
+    	return 0;
+    }
+
     for (cnt=0; cnt<srb2add_list_pP->list.count; cnt++) {
       srb_toaddmod_p = srb2add_list_pP->list.array[cnt];
       rlc_type = RLC_MODE_AM; //only mode available in NB-IOT
@@ -615,7 +728,6 @@ boolean_t NB_rrc_pdcp_config_asn1_req (
       key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, srb_id, SRB_FLAG_YES);
       h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
 
-      //for the moment left the same logic
       if (h_rc == HASH_TABLE_OK) {
         action = CONFIG_ACTION_MODIFY;
         LOG_D(PDCP, PROTOCOL_PDCP_CTXT_FMT" CONFIG_ACTION_MODIFY key 0x%"PRIx64"\n",
@@ -664,7 +776,7 @@ boolean_t NB_rrc_pdcp_config_asn1_req (
               srb_id,
               srb_sn, //rb_sn
               0, // drb_report
-              0, // header compression
+              0, // header compression no for SRBs
               security_modeP,
               kRRCenc_pP,
               kRRCint_pP,
@@ -766,7 +878,7 @@ boolean_t NB_rrc_pdcp_config_asn1_req (
 
       if (drb_toaddmod_p->pdcp_Config_r13) {
         if (drb_toaddmod_p->pdcp_Config_r13->discardTimer_r13) {
-          // set the value of the timer
+          //TODO: set the value of the timer
         }
 
         if (drb_toaddmod_p->pdcp_Config_r13) {
@@ -950,7 +1062,7 @@ NB_pdcp_config_req_asn1 (
 	  (rlc_modeP == RLC_MODE_AM ) ? "AM" : "TM");
     /* Setup security */
     if (security_modeP != 0xff) {
-    	//TODO: check this function
+
       pdcp_config_set_security(
         ctxt_pP,
         pdcp_pP,
@@ -1188,7 +1300,7 @@ boolean_t NB_pdcp_data_req(
     }
 
 
-  key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, srb_flagP);
+  key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ENB_FLAG_YES, rb_idP, srb_flagP);
   h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
 
   if (h_rc != HASH_TABLE_OK) {
@@ -1306,8 +1418,7 @@ boolean_t NB_pdcp_data_req(
         pdu_header.sn = pdcp_get_next_tx_seq_number(pdcp_p);
         current_sn = pdu_header.sn ;
 
-        //TODO: should change this function for NB-IoT --> define for short sn
-        if (pdcp_serialize_user_plane_data_pdu_with_long_sn_buffer((unsigned char*)pdcp_pdu_p->data, &pdu_header) == FALSE) {
+        if (pdcp_serialize_user_plane_data_pdu_with_short_sn_buffer((unsigned char*)pdcp_pdu_p->data, &pdu_header) == FALSE) {
           LOG_E(PDCP, PROTOCOL_PDCP_CTXT_FMT" Cannot fill PDU buffer with relevant header fields!\n",
                 PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP,pdcp_p));
 
@@ -1351,6 +1462,9 @@ boolean_t NB_pdcp_data_req(
       //For control plane data that are not integrity protected,
       // the MAC-I field is still present and should be padded with padding bits set to 0.
       // NOTE: user-plane data are never integrity protected
+
+      //XXX MP: in OAI seems that they not use integrity protection at all --> they padding to 0 all bits
+
       for (i=0; i<pdcp_tailer_len; i++) {
         pdcp_pdu_p->data[pdcp_header_len + sdu_buffer_sizeP + i] = 0x00;// pdu_header.mac_i[i];
       }
@@ -1367,8 +1481,8 @@ boolean_t NB_pdcp_data_req(
           start_meas(&UE_pdcp_stats[ctxt_pP->module_id].apply_security);
         }
 
-        //FIXME also this function should be checked for NB-IoT
-        pdcp_apply_security(ctxt_pP,
+        //FIXME also this function should be checked for NB-IoT (defined in pdcp_security.c)
+        NB_pdcp_apply_security(ctxt_pP,
                             pdcp_p,
                             srb_flagP,
                             rb_idP % maxDRB_NB_r13,
@@ -1471,6 +1585,9 @@ boolean_t NB_pdcp_data_req(
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_DATA_REQ,VCD_FUNCTION_OUT);
   return ret;
 }
+
+
+
 
 //defined in L2_interface
 void NB_rrc_data_ind(
