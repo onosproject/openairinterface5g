@@ -217,14 +217,18 @@ int NB_rrc_mac_config_req_eNB(
 }
 
 //defined in L2_interface
+int npdsch_rep_to_array[3] ={4,8,16}; //TS 36.213 Table 16.4.1.3-3
+int sib1_startFrame_to_array[4] = {0,16,32,48};//TS 36.213 Table 16.4.1.3-4
+//function called by eNB_dlsch_ulsch_scheduler--> Schedule_SI (eNB_scheduler_bch) for getting the bcch_sdu_legnth (BCCH case for SIBs and MIB)
+//Function called in schedule_RA for getting RRCConnectionSetup message (Msg4) length of rrc_sdu_length (CCCH case)
 int8_t NB_mac_rrc_data_req_eNB(
   const module_id_t Mod_idP,
   const int         CC_id,
   const frame_t     frameP,
   const rb_id_t     Srb_id,
   uint8_t*    const buffer_pP,
-  uint32_t				start_sfn_sib1_NB, //starting frame for sib1 transmission
-  uint32_t				nb_sib1_NB_rep, //number of sib1 repetitions
+  long				schedulingInfoSIB1,//from the mib
+  int				physCellId, //from the MAC instance-> common_channel
   const frame_t		h_frameP, //HSFN
   long				si_periodicity, //SI-periodicity
   long				si_windowLength //Si-windwolength
@@ -232,7 +236,9 @@ int8_t NB_mac_rrc_data_req_eNB(
 {
   SRB_INFO *Srb_info;
   uint8_t Sdu_size=0;
-  uint32_t y = 0;
+  uint32_t index = 0;
+  uint32_t sib1_startFrame;
+  uint8_t nb_rep=0; // number of sib1-nb repetitions within the 256 radio frames
   uint32_t sib1_NB_period = 256; //from specs TS 36.331
 
 #ifdef DEBUG_RRC
@@ -240,45 +246,140 @@ int8_t NB_mac_rrc_data_req_eNB(
   LOG_T(RRC,"[eNB %d] NB_mac_rrc_data_req_eNB to SRB ID=%d\n",Mod_idP,Srb_id);
 #endif
 
-    if((Srb_id & RAB_OFFSET) == BCCH) {
+
+//--------------------------
+  //for the moment we assume that this function is called in subframe #4 for both SIB1-NB and SIB23-NB
+  //*is better to introduce the logic in another function: is SIB1-NB? is SIB23-NB?
+//--------------------------
+
+
+    if((Srb_id & RAB_OFFSET) == BCCH) { //schedule_SI case or MIB? put a flag??
+
+        //should be added the case of BCCH that return the size of the MIB-NB  if subframe 0 --> add a flag?
+
       if(eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SI.Active==0) {
         return 0;
       }
 
-      //I have to check which SIB is transmitted
-
-      if (eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB1_NB == 255) {
-        LOG_E(RRC,"[eNB %d] MAC Request for SIB1-NB and SIB1-NB not initialized\n",Mod_idP);
-        mac_xface->macphy_exit("mac_rrc_data_req:  MAC Request for SIB1-NB and SIB1-NB not initialized");
+      if(schedulingInfoSIB1 > 11 || schedulingInfoSIB1 < 0){
+    	  LOG_E(RRC, "schedulingInfoSIB1 value incorrect");
+    	  return 0;
       }
 
-      //the entire scheduling of SIB1-NB is based on the SchedulingInfoSIB1 of MIB-NB
 
-      //SIB1-NB transmission occurs in subframe #4 of every other frame in 16 continuous frames
-      //schedule with a periodicity of 2560 ms (256 Radio Frames) and repetitions (4, 8 or 16) are made, equally spaced,
-      //within the 2560 ms period
+      /*check if SIBs are initialized*/ //FIXME check when both are initialize and if make sense to have it
+            if (eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB1_NB == 255) {
+              LOG_E(RRC,"[eNB %d] MAC Request for SIB1-NB and SIB1-NB not initialized\n",Mod_idP);
+              mac_xface->macphy_exit("mac_rrc_data_req:  MAC Request for SIB1-NB and SIB1-NB not initialized");
+            }
 
-      //Implementation: //FIXME should be checked if compatible if SIB23-NB scheduling
-      //SchedulingInfoSIB_r13 = 0 --> n�repetitions= 4 + NcelliD mod 4 = 1 --> start_sfn_sib1_Nb = 16
+            if (eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB23_NB == 255) {
+                    LOG_E(RRC,"[eNB %d] MAC Request for SIB23-NB and SIB23-NB not initialized\n",Mod_idP);
+                    mac_xface->macphy_exit("mac_rrc_data_req:  MAC Request for SIB23-NB and SIB23-NB not initialized");
+            }
 
-      /*logic*/
-      //1) check if the current frame is before/after the starting frame of sib1-NB transmission
-      //2) check if the current frame is considered in the 16 continuous frame of sib1-NB transmission in the periodicity
+        /*SIB1
+         *
+         * the entire scheduling of SIB1-NB is based on the SchedulingInfoSIB1 of MIB-NB
+         *
+         * SIB1-NB transmission occurs in subframe #4 of every other frame in 16 continuous frames (i.e. alternate frames)
+         * schedule with a periodicity of 2560 ms (256 Radio Frames) and repetitions (4, 8 or 16) are made, equally spaced
+         * within the 2560 ms period
+         *
+         * 1)from the schedulingInfoSIB1 of MIB-NB and the physCell_id we deduce the starting radio frame
+         * 2)check if the actual frame is after the staring radio frame
+         * 3)check if the actual frame is within a SIB1-transmission interval
+         * 4)based on the starting radio frame we can state  when SIB1-NB is transmitted in odd or even frame
+         * (if the starting frame is even (0,16,32,48) then SIB1-NB is transmitted in even frames, if starting frame is odd (1)
+         * we can state that SIB1-NB will be transmitted in every odd frame since repetitions are 16 in 256 radio frame period)
+         *
+         **/
 
-      if(frameP < start_sfn_sib1_NB)
+
+      //number of repetitions
+      nb_rep = npdsch_rep_to_array[schedulingInfoSIB1%3];
+
+      //based on number of rep. and the physical cell id we derive the starting radio frame (TS 36.213 Table 16.4.1.3-3/4)
+      switch(nb_rep)
+      {
+      case 4:
+    	  //physCellId%4 possible value are 0,1,2,3
+    	  sib1_startFrame = sib1_startFrame_to_array[physCellId%4];
+    	  break;
+      case 8:
+    	  //physCellId%2possible value are 0,1
+    	  sib1_startFrame = sib1_startFrame_to_array[physCellId%2];
+    	  break;
+      case 16:
+    	  //physCellId%2 possible value are 0,1
+    	  if(physCellId%2 == 0)
+    		  sib1_startFrame = 0;
+    	  else
+    		  sib1_startFrame = 1; // the only case in which the starting frame is odd
+    	  break;
+      default:
+    	  LOG_E(RRC, "Number of repetitions %d not allowed", nb_rep);
     	  return 0;
+      }
+
+      //check the actual frame w.r.t SIB1-NB starting frame
+      //XXX--> it means that also is not possible to have scheduling of other sibs since their info are contained in sib1-NB???
+      if(frameP < sib1_startFrame){
+    	  LOG_T(RRC, 'the actual frame %d is before the SIB1-NB starting frame %d --> bcch_sdu_legnth = 0', frameP, sib1_startFrame);
+    	  return 0;
+      }
+
 
       //calculate offset between SIB1-NB repetitions
-      int offset = (sib1_NB_period-(16*nb_sib1_NB_rep))/nb_sib1_NB_rep;
+      int offset = (sib1_NB_period-(16*nb_rep))/nb_rep;
+      /*
+       * possible offset results (even numbers):
+       * nb_rep= 4 ---> offset = 48
+       * nb_rep = 8 --> offset = 16
+       * nb_rep = 16 --> offset = 0
+       */
 
-      for( int i = 0; i < nb_sib1_NB_rep; i++)
+      for( int i = 0; i < nb_rep; i++)
       {
-    	  y = start_sfn_sib1_NB+ i*(16+offset);
-    	  if(frameP>= y && frameP <= (y+15)) //SIB1_NB transmission
+    	  //find the correct sib1-nb repetition interval in which the actual frame is
+
+    	  index = sib1_startFrame+ i*(16+offset);
+    	  if(frameP>= index && frameP <= (index+15)) //SIB1_NB transmission interval
     	  {
+    		  //find if the actual frame is one of the "every other frame in 16 continuous frame" in which SIB1-NB is transmitted
+
+    		  if(sib1_startFrame%2 != 0){ // means that the starting frame was 1 --> sib1-NB is transmitted in every odd frame
+    			  if(frameP%2 == 1){
+
+    				  memcpy(&buffer_pP[0],
+    						  eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SIB1_NB,
+							  eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB1_NB);
+
+    				  //XXX RRC_MAC_BCCH_DATA_REQ message not implemented in MAC layer (eNB_scheduler.c under ITTI)
+
+
+					#ifdef DEBUG_RRC
+    				   LOG_T(RRC,"[eNB %d] Frame %d : BCCH request => SIB1_NB\n",Mod_idP,frameP);
+
+    				   for (i=0; i<eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB1_NB; i++) {
+    				    LOG_T(RRC,"%x.",buffer_pP[i]);
+    				    }
+
+    				    LOG_T(RRC,"\n");
+					#endif
+
+    				    return (eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB1_NB);
+    			 }
+    		  }
+
+    		  //in all other starting frame cases SIB1-NB is transmitted in the even frames inside the corresponding repetition interval
+    		  if(frameP%2 == 0){ // SIB1-NB is transmitted
+
     		  memcpy(&buffer_pP[0],
     				  eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SIB1_NB,
     				  eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB1_NB);
+
+				  //XXX RRC_MAC_BCCH_DATA_REQ message not implemented in MAC layer (eNB_scheduler.c under ITTI)
 
 				#ifdef DEBUG_RRC
     		          LOG_T(RRC,"[eNB %d] Frame %d : BCCH request => SIB1_NB\n",Mod_idP,frameP);
@@ -291,18 +392,20 @@ int8_t NB_mac_rrc_data_req_eNB(
     		    #endif
 
     		  return (eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB1_NB);
+    		  }
     	  }
       }
 
-///if we are here means that is a SIB23-NB transmission
+
+      /*if we are here it means that we have SIB23-NB-Transmission??
 
 
       //**for NB_IoT Implementations
       //parameters that comes into play (defined in SIB1-NB):
-      //1_ si_windowlenght (w) (same for all SI messages) = 160 ms
-      //2_ si_radioFrameOffset (same for all SI messages) (not considered)
-      //3_ si_periodicity (T) = 64 rf
-      //4_ si_repetitionPattern = every2nd frame
+      //1_ si_windowlenght (w) (same for all SI messages)
+      //2_ si_radioFrameOffset (same for all SI messages) (set to 0 generally but depends on the starting radio frame of SIB1-NB)
+      //3_ si_periodicity (T)
+      //4_ si_repetitionPattern
 
       /*logic (see TS 36.331 5.2.3a)*/
       //since we have only 1 entry in the SchedulingInfoList (SIB23-NB) --> n=1
@@ -361,6 +464,10 @@ int8_t NB_mac_rrc_data_req_eNB(
 
       return (Sdu_size);
     }
+
+
+
+
   return(0);
 }
 

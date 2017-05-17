@@ -100,8 +100,8 @@ int8_t NB_mac_rrc_data_req_eNB(
   const frame_t     frameP,
   const rb_id_t     Srb_id,
   uint8_t*    const buffer_pP,
-  uint32_t				start_sfn_sib1_NB, //starting frame for sib1 transmission
-  uint32_t				nb_sib1_NB_rep, //number of sib1 repetitions
+  long				schedulingInfoSIB1,//from the mib
+  int				physCellId, //from the MAC instance-> common_channel
   const frame_t		h_frameP, //HSFN
   long				si_periodicity, //SI-periodicity
   long				si_windowLength //Si-windwolength
