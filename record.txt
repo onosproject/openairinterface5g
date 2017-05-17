@@ -37,5 +37,15 @@ modified:   openair2/LAYER2/MAC/proto_nb_iot.h
 
 comment:
 Functions: Add NB_schedule_RA()
-Data Structure: Add DCI Upacked format in openair1/PHY/LTE_TRANSPORT/defs.h
+Parameters: Add DCI unpacked format in openair1/PHY/LTE_TRANSPORT/defs.h
+
+5/16
+Add:	    openair2/PHY_Interface/IF_module_nb_iot.c
+Add:        openair2/PHY_Interface/IF_module_nb_iot.h
+Add:        openair1/PHY/sched/phy_procedures_lte_eNB_nb_iot.c
+
+Comment: Modify NB_phy_procedures_uespec_RX, change the way using primitive, use UL_IND data structure to store the needed parameters.
+Functions: NB_phy_procedures_uespec_RX()
+Parameters: UL_IND for Interface Module
+
 

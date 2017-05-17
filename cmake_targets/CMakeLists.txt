@@ -956,6 +956,7 @@ add_library(SECU_CN ${SECU_CN_SRC})
 ################################"
 set(SCHED_SRC
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_eNb.c
+  ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_eNb_nb_iot.c
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_ue.c
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common.c
   ${OPENAIR1_DIR}/SCHED/phy_mac_stub.c
