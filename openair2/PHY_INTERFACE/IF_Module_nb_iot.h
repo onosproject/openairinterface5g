@@ -38,13 +38,15 @@ typedef struct{
 
 	//ACK/NAK
 
-	boolean_t ACK_INFO;
+	boolean_t NAK;
 
 }UL_SPEC_t;
 
 //UL_IND
 typedef struct{
 	/*Start at the common part*/
+
+	int test;
 
 	//Module ID
 	module_id_t module_id;
@@ -67,7 +69,7 @@ typedef struct{
 *Parameters:
 *Parameters:
 */
-void UL_indication(UL_IND_t UL_info);
+void UL_indication(UL_IND_t UL_INFO, frame_t frame, sub_frame_t subframe, module_id_t module_id);
 
 /*Interface for Downlink, transmitting the DLSCH SDU, DCI SDU*/
 void Schedule_Response();
