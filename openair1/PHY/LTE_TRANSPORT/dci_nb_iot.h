@@ -35,6 +35,16 @@
 #include <stdint.h>
 #endif
 
+typedef enum DCI_format_NB
+{
+  DCIFormatN0 = 0,
+  DCIFormatN1,
+  DCIFormatN1_RA,
+  DCIFormatN1_RAR,
+  DCIFormatN2_Ind,
+  DCIFormatN2_Pag,
+}e_DCI_format_NB;
+
 ///  DCI Format Type 0 (180 kHz, 23 bits)
 typedef struct DCIFormatN0{
   /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
@@ -127,7 +137,7 @@ typedef struct DCIFormatN1_RAR DCIFormatN1_RAR_t;
 #define sizeof_DCIFormatN1_RAR_t 23
 
 //  DCI Format Type N2 for direct indication, 15 bits
-struct DCIFormat2_Ind{
+struct DCIFormatN2_Ind{
   //Flag for paging(1)/direct indication(0), set to 0,1 bits
   uint8_t type;
   //Direct indication information, 8 bits
@@ -136,11 +146,11 @@ struct DCIFormat2_Ind{
   uint8_t resInfoBits;
 };
 
-typedef struct DCIFormat2_Ind DCIFormat2_Ind_t;
-#define sizeof_DCIFormat2_Ind_t 15
+typedef struct DCIFormatN2_Ind DCIFormatN2_Ind_t;
+#define sizeof_DCIFormatN2_Ind_t 15
 
 //  DCI Format Type N2 for Paging, 15 bits
-struct DCIFormat2_Pag{
+struct DCIFormatN2_Pag{
   //Flag for paging(1)/direct indication(0), set to 1,1 bits
   uint8_t type;
   // Resourse Assignment (RU Assignment), 3 bits
@@ -153,8 +163,8 @@ struct DCIFormat2_Pag{
   uint8_t DCIRep;
 };
 
-typedef struct DCIFormat2_Pag DCIFormat2_Pagt;
-#define sizeof_DCIFormat2_Pag_t 15
+typedef struct DCIFormatN2_Pag DCIFormatN2_Pag_t;
+#define sizeof_DCIFormatN2_Pag_t 15
 
 // struct DCI0_5MHz_TDD0 {
 //   /// type = 0 => DCI Format 0, type = 1 => DCI Format 1A
