@@ -166,79 +166,18 @@ struct DCIFormatN2_Pag{
 typedef struct DCIFormatN2_Pag DCIFormatN2_Pag_t;
 #define sizeof_DCIFormatN2_Pag_t 15
 
-// struct DCI0_5MHz_TDD0 {
-//   /// type = 0 => DCI Format 0, type = 1 => DCI Format 1A
-//   uint32_t type:1;
-//   /// Hopping flag
-//   uint32_t hopping:1;
-//   /// RB Assignment (ceil(log2(N_RB_UL*(N_RB_UL+1)/2)) bits)
-//   uint32_t rballoc:9;
-//   /// Modulation and Coding Scheme and Redundancy Version
-//   uint32_t mcs:5;
-//   /// New Data Indicator
-//   uint32_t ndi:1;
-//   /// Power Control
-//   uint32_t TPC:2;
-//   /// Cyclic shift
-//   uint32_t cshift:3;
-//   /// DAI (TDD)
-//   uint32_t ulindex:2;
-//   /// CQI Request
-//   uint32_t cqi_req:1;
-//   /// Padding to get to size of DCI1A
-//   uint32_t padding:2;
-// } __attribute__ ((__packed__));
+ typedef union DCI_CONTENT {
+ // 
+ DCIFormatN0_t DCIN0;
+ //
+ DCIFormatN1_t DCIN1;
+ //
+ DCIFormatN1_RA_t DCIN1_RA;
+ //
+ DCIFormatN1_RAR_t DCIN1_RAR;
+ //
+ DCIFormatN2_Ind_t DCIN2_Ind;
+ //
+ DCIFormatN2_Pag_t DCIN2_Pag;
 
-// typedef struct DCI0_5MHz_TDD0 DCI0_5MHz_TDD0_t;
-// #define sizeof_DCI0_5MHz_TDD_0_t 27
-
-//Not sure if needed in NB-IoT
-// struct DCI_INFO_EXTRACTED {
-//     /// type = 0 => DCI Format 0, type = 1 => DCI Format 1A
-//     uint8_t type;
-//     /// Resource Allocation Header
-//     uint8_t rah;
-//     /// HARQ Process
-//     uint8_t harq_pid;
-//     /// CQI Request
-//     uint8_t cqi_req;
-//     /// SRS Request
-//     uint8_t srs_req;
-//     /// Power Control
-//     uint8_t TPC;
-//     /// Localized/Distributed VRB
-//     uint8_t vrb_type;
-//     /// RB Assignment (ceil(log2(N_RB_DL/P)) bits)
-//     uint32_t rballoc;
-//     // Applicable only when vrb_type = 1
-//     uint8_t Ngap;
-//     /// Cyclic shift
-//     uint8_t cshift;
-//     /// Hopping flag
-//     uint8_t hopping;
-//     /// Downlink Assignment Index
-//     uint8_t dai;
-//     /// DAI (TDD)
-//     uint8_t ulindex;
-
-//     /// TB swap
-//     uint8_t tb_swap;
-//     /// TPMI information for precoding
-//     uint8_t tpmi;
-//     /// Redundancy version 2
-//     uint8_t rv2;
-//     /// New Data Indicator 2
-//     uint8_t ndi2;
-//     /// Modulation and Coding Scheme and Redundancy Version 2
-//     uint8_t mcs2;
-//     /// Redundancy version 1
-//     uint8_t rv1;
-//     /// New Data Indicator 1
-//     uint8_t ndi1;
-//     /// Modulation and Coding Scheme and Redundancy Version 1
-//     uint8_t mcs1;
-
-//     /// Scrambling ID
-//     uint64_t ap_si_nl_id:3;
-// };
-// typedef struct DCI_INFO_EXTRACTED DCI_INFO_EXTRACTED_t;
+ }DCI_CONTENT;

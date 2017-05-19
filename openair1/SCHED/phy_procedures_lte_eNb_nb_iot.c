@@ -680,30 +680,26 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
   }
 
 #endif
-  //}
 
-#ifdef EMOS
-  phy_procedures_emos_eNB_RX(subframe,eNB);
-#endif
-
-#if defined(FLEXRAN_AGENT_SB_IF)
-#ifndef DISABLE_SF_TRIGGER
-  //Send subframe trigger to the controller
-  if (mac_agent_registered[eNB->Mod_id]) {
-    agent_mac_xface[eNB->Mod_id]->flexran_agent_send_sf_trigger(eNB->Mod_id);
-  }
-#endif
-#endif
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_UESPEC+offset, 0 );
 
   stop_meas(&eNB->phy_proc_rx);
 
   /*Exact not here, but use to debug*/
-  UL_INDICATION(UL_Info);
+  UL_indication(UL_Info);
 
 }
 
 #undef DEBUG_PHY_PROC
 
 
+void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
+         eNB_rxtx_proc_t *proc,
+         PHY_VARS_RN *rn,
+         int do_meas)
+{
+
+
+
+}

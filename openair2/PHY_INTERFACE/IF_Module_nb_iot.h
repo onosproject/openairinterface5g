@@ -10,6 +10,8 @@
 #include "platform_types.h"
 #include "openair1/PHY/LTE_TRANSPORT/dci_nb_iot.h"
 
+
+
 #define NUMBER_OF_UE_MAX 20
 
 typedef struct{
@@ -62,6 +64,7 @@ typedef struct{
 
  }UL_IND_t;
 
+
 typedef struct{
 
  /*Common part*/
@@ -83,19 +86,8 @@ typedef struct{
  /*DCI start*/
  // Format of DCI
  uint8_t DCI_Format;
- // 
- DCIFormatN0_t DCIN0;
- //
- DCIFormatN1_t DCIN1;
- //
- DCIFormatN1_RA_t DCIN1_RA;
- //
- DCIFormatN1_RAR_t DCIN1_RAR;
- //
- DCIFormatN2_Ind_t DCIN2_Ind;
- //
- DCIFormatN2_Pag_t DCIN2_Pag;
-
+ // Content of DCI
+ DCI_CONTENT DCI_Content;
 
 }Sched_Rsp_t;
 
