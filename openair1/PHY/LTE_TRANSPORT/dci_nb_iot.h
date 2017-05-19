@@ -46,7 +46,7 @@ typedef enum DCI_format_NB
 }e_DCI_format_NB;
 
 ///  DCI Format Type 0 (180 kHz, 23 bits)
-typedef struct DCIFormatN0{
+struct DCIFormatN0{
   /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
   uint8_t type;
   /// Subcarrier indication, 6 bits

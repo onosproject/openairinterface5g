@@ -66,7 +66,7 @@
 //#define DEBUG_eNB_SCHEDULER 1
 
 
-NB_get_dlsch_sdu(
+uint8_t *NB_get_dlsch_sdu(
   module_id_t module_idP,
   int CC_id,
   frame_t frameP,

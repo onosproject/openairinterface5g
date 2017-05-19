@@ -61,7 +61,7 @@
 #define ENABLE_MAC_PAYLOAD_DEBUG
 #define DEBUG_eNB_SCHEDULER 1
 
-
+/*TODO NB_mac_phy_remove_ue*/
 
 
 int NB_rrc_mac_remove_ue(
@@ -76,7 +76,7 @@ int NB_rrc_mac_remove_ue(
   if (UE_id == -1) {
 printf("MAC: cannot remove UE rnti %x\n", rntiP);
     LOG_W(MAC,"NB_rrc_mac_remove_ue: UE %x not found\n", rntiP);
-    mac_phy_remove_ue(mod_idP, rntiP);
+    //NB_mac_phy_remove_ue(mod_idP, rntiP);
     return 0;
   }
 
@@ -84,7 +84,7 @@ printf("MAC: cannot remove UE rnti %x\n", rntiP);
 
 printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
   LOG_I(MAC,"Removing UE %d from Primary CC_id %d (rnti %x)\n",UE_id,pCC_id, rntiP);
-  dump_ue_list(UE_list,0); //may should be changed
+  //dump_ue_list(UE_list,0); //may should be changed
 
   UE_list->active[UE_id] = FALSE;
   UE_list->num_UEs--;
@@ -103,7 +103,7 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
   eNB_dlsch_info[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
   eNB_dlsch_info[mod_idP][pCC_id][UE_id].status                      = S_DL_NONE;
 
-  NB_mac_phy_remove_ue(mod_idP,rntiP);
+  //NB_mac_phy_remove_ue(mod_idP,rntiP);
 
   // check if this has an RA process active
   RA_TEMPLATE_NB *RA_template;
@@ -125,7 +125,7 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
 }
 
 //------------------------------------------------------------------------------
-DCI_PDU *NB_get_dci_sdu(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframeP)
+DCI_PDU_NB *NB_get_dci_sdu(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframeP)
 //------------------------------------------------------------------------------
 {
 

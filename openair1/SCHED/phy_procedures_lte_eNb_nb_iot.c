@@ -123,7 +123,6 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
   UNUSED(r_type);
   uint32_t ret=0,i,j,k;
   uint32_t harq_pid, harq_idx, round;
-  uint8_t nPRS;
   int sync_pos;
   uint16_t rnti=0;
   uint8_t access_mode;
@@ -182,7 +181,8 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
     // check for Msg3
     if (eNB->mac_enabled==1) {
       if (eNB->UE_stats[i].mode == RA_RESPONSE) {
-	     process_Msg3(eNB,proc,i,harq_pid);
+	     /*Process Msg3 TODO*/
+       //process_Msg3(eNB,proc,i,harq_pid);
       }
     }
 
@@ -240,7 +240,7 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
       }
 
       LOG_D(PHY,
-            "[eNB %d][PUSCH %d] Frame %d Subframe %d Demodulating PUSCH: dci_alloc %d, rar_alloc %d, round %d, first_rb %d, nb_rb %d, mcs %d, TBS %d, rv %d, cyclic_shift %d (n_DMRS2 %d, cyclicShift_common %d, nprs %d), O_ACK %d \n",
+            "[eNB %d][PUSCH %d] Frame %d Subframe %d Demodulating PUSCH: dci_alloc %d, rar_alloc %d, round %d, first_rb %d, nb_rb %d, mcs %d, TBS %d, rv %d, cyclic_shift %d (n_DMRS2 %d, cyclicShift_common %d), O_ACK %d \n",
             eNB->Mod_id,harq_pid,frame,subframe,
             eNB->ulsch[i]->harq_processes[harq_pid]->dci_alloc,
             eNB->ulsch[i]->harq_processes[harq_pid]->rar_alloc,
@@ -253,7 +253,6 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
             eNB->ulsch[i]->cyclicShift,
             eNB->ulsch[i]->harq_processes[harq_pid]->n_DMRS2,
             fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift,
-            nPRS,
             eNB->ulsch[i]->harq_processes[harq_pid]->O_ACK);
       eNB->pusch_stats_rb[i][(frame*10)+subframe] = eNB->ulsch[i]->harq_processes[harq_pid]->nb_rb;
       eNB->pusch_stats_round[i][(frame*10)+subframe] = eNB->ulsch[i]->harq_processes[harq_pid]->round;
@@ -440,6 +439,8 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
                       UL_Info.UL_SPEC_Info[i].sdu_lenP = 0;
                       UL_Info.UL_SPEC_Info[i].harq_pidP = harq_pid;
                       UL_Info.UL_SPEC_Info[i].msg3_flagP = &eNB->ulsch[i]->Msg3_flag;
+                      UL_Info.UL_SPEC_Info[i].NAK=1;
+                      UL_Info.UE_NUM++;
 
                     }
               }
@@ -492,6 +493,7 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
                 UL_Info.UL_SPEC_Info[i].sdu_lenP = eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3;
                 UL_Info.UL_SPEC_Info[i].harq_pidP = harq_pid;
                 UL_Info.UL_SPEC_Info[i].msg3_flagP = &eNB->ulsch[i]->Msg3_flag;
+                UL_Info.UE_NUM++;
               }
 
 	           /* Need check if this needed in NB-IoT
@@ -559,6 +561,7 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
                   UL_Info.UL_SPEC_Info[i].sdu_lenP = eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3;
                   UL_Info.UL_SPEC_Info[i].harq_pidP = harq_pid;
                   UL_Info.UL_SPEC_Info[i].msg3_flagP = NULL;
+                  UL_Info.UE_NUM++;
 
 #ifdef LOCALIZATION
 	    start_meas(&eNB->localization_stats);
@@ -594,12 +597,12 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
             i);
 #endif
       // Process HARQ only in NPUSCH
-      process_HARQ_feedback(i,
+      /*process_HARQ_feedback(i,
                             eNB,proc,
                             1, // pusch_flag
                             0,
                             0,
-                            0);
+                            0);*/
 
 #ifdef DEBUG_PHY_PROC
       LOG_D(PHY,"[eNB %d] Frame %d subframe %d, sect %d: received ULSCH harq_pid %d for UE %d, ret = %d, CQI CRC Status %d, ACK %d,%d, ulsch_errors %d/%d\n",
@@ -625,6 +628,9 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
 	VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_UE0_SFN0+harq_pid,(frame*10)+subframe);
       }
     } // ulsch[0] && ulsch[0]->rnti>0 && ulsch[0]->subframe_scheduling_flag == 1
+
+    //store the parameter to determine if UL failure or not
+    UL_Info.UL_SPEC_Info[i].ulsch_consecutive_errors = eNB->UE_stats[i].ulsch_consecutive_errors;
 
 
     // update ULSCH statistics for tracing
@@ -692,6 +698,9 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_UESPEC+offset, 0 );
 
   stop_meas(&eNB->phy_proc_rx);
+
+  /*Exact not here, but use to debug*/
+  UL_INDICATION(UL_Info);
 
 }
 

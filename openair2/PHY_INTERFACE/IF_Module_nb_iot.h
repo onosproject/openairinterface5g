@@ -29,6 +29,8 @@ int harq_pidP;
 uint8_t *msg3_flagP;
 //ACK/NAK
 boolean_t NAK;
+// ULSCH consecutive error
+uint32_t ulsch_consecutive_errors;
 
 }UL_SPEC_t;
 
@@ -99,7 +101,7 @@ typedef struct{
 
 /*Interface for uplink, transmitting the Preamble(list), ULSCH SDU, NAK, Tick (trigger scheduler)
 */
-void UL_indication(UL_IND_t UL_INFO, frame_t frame, sub_frame_t subframe, module_id_t module_id);
+void UL_indication(UL_IND_t UL_INFO);
 
 /*Interface for Downlink, transmitting the DLSCH SDU, DCI SDU*/
 void Schedule_Response(Sched_Rsp_t Sched_INFO);

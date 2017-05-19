@@ -161,7 +161,8 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
 	UE_list->UE_sched_ctrl[UE_id].ul_failure_timer=0;
 	if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync > 0) {
 	  UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync=0;
-	  NB_mac_eNB_rrc_ul_in_sync(enb_mod_idP,CC_idP,frameP,subframeP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
+	  /*In RRC branch*/
+    //NB_mac_eNB_rrc_ul_in_sync(enb_mod_idP,CC_idP,frameP,subframeP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
 	}
       }
       crnti_rx=1;
@@ -270,6 +271,7 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
           }
 
           if (Is_rrc_registered == 1)
+            /* In RRC branch
             NB_mac_rrc_data_ind(
               enb_mod_idP,
               CC_idP,
@@ -280,7 +282,7 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
               rx_lengths[i],
               ENB_FLAG_YES,
               enb_mod_idP,
-              0);
+              0);*/
 
 
           if (num_ce >0) {  // handle msg3 which is not RRCConnectionRequest

@@ -90,7 +90,7 @@ void NB_phy_config_mib_eNB(int                 Mod_id,
   fp->ul_CarrierFreq                     = ul_CarrierFreq;
   
 
-  init_frame_parms(fp,1);
+  //init_frame_parms(fp,1);
   //init_lte_top(fp);
 
 }
@@ -104,7 +104,6 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 	NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms;
 	  //LTE_eNB_UE_stats *eNB_UE_stats		= PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats;
 	  //int32_t rx_total_gain_eNB_dB		= PHY_vars_eNB_g[Mod_id][CC_id]->rx_total_gain_eNB_dB;
-	  int i;
 	  uint8_t MAX_NPRACH = 4;
           NPRACH_Parameters_NB_r13_t *np;
 	  
@@ -117,7 +116,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 	  //LOG_D(PHY,"nprach_config_common.rsrp_ThresholdsPrachInfoList = %d\n",fp->nprach_config_common.rsrp_ThresholdsPrachInfoList);
 
 	  /*Loop over the configuration according to the maxNPRACH_Resources*/
-      for (fp->CE=0; fp->CE <= MAX_NPRACH;fp->CE++){
+      for (fp->CE=1; fp->CE <= MAX_NPRACH;fp->CE++){
       np = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[fp->CE];	  	
       /*fp->nprach_config_common.nprach_ParametersList.list.array[fp->CE]->maxNumPreambleAttemptCE           =np->maxNumPreambleAttemptCE_r13;
 	  //LOG_D(PHY,"nprach_config_common.nprach_ParametersList.list.maxNumPreambleAttemptCE = %d\n",fp->nprach_config_common.nprach_ParametersList.list.maxNumPreambleAttemptCE);
@@ -169,7 +168,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 	  LOG_D(PHY,"npusch_config_common.ul_ReferenceSignalsNPUSCH.groupHoppingEnabled = %d]n",fp->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupHoppingEnabled);
 
       /*should change the part that implement the ul hopping in NB-IoT*/
-	  init_ul_hopping(fp);
+	  //init_ul_hopping(fp);
 
 	  /*UL Power Control Config Common*/
 	
@@ -179,14 +178,14 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 
 	  /*DL gap*/
                                                                                                     
-          fp->DL_gap_config.dl_GapDurationCoeff                        = radioResourceConfigCommon->dl_Gap_r13->dl_GapDurationCoeff_r13;
+      fp->DL_gap_config.dl_GapDurationCoeff                        = radioResourceConfigCommon->dl_Gap_r13->dl_GapDurationCoeff_r13;
 	  fp->DL_gap_config.dl_GapPeriodicity                      = radioResourceConfigCommon->dl_Gap_r13->dl_GapPeriodicity_r13;
 	  fp->DL_gap_config.dl_GapThreshold                        = radioResourceConfigCommon->dl_Gap_r13->dl_GapThreshold_r13;
 	  
 	  /*PUCCH stuff in LTE*/
 	  //init_ncs_cell(fp,PHY_vars_eNB_g[Mod_id][CC_id]->ncs_cell);
 	
-	  init_ul_hopping(fp);
+	  //init_ul_hopping(fp);
 	
 	
 	  
