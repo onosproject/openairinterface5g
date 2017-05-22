@@ -68,7 +68,7 @@ openair_eNB_rrc_on_NB(
 )
 //-----------------------------------------------------------------------------
 {
-  unsigned short i;
+
   int            CC_id;
 
     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" OPENAIR RRC-NB IN....\n",
@@ -200,11 +200,10 @@ L3_xface_init_NB(
 //specialized function for the eNB initialization (NB-IoT)
 //(OLD was called in MAC/main.c--> mac_top_init)(NEW is called in directly in "openair_rrc_eNB_configuration_NB")
 void
-openair_rrc_top_init_eNB_NB()//MP: XXX Raymond put this directly the definition on rrc_eNB.c file
+openair_rrc_top_init_eNB_NB(void)//MP: XXX Raymond put this directly the definition on rrc_eNB.c file
 //-----------------------------------------------------------------------------
 {
 
-  module_id_t         module_id;
   int                 CC_id;
 
   /* for no gcc warnings */

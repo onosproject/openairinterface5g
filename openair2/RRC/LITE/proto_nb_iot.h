@@ -93,20 +93,48 @@ int NB_rrc_mac_config_req_eNB(
 			   );
 
 //----------------------------------------
+
+//New
+/**\brief function for evaluate if the SIB1-NB transmission occur
+ * called by the NB_mac_rrc_data_req
+ */
+boolean_t is_SIB1_NB(
+		const frame_t   frameP,
+		long			schedulingInfoSIB1,//from the mib
+		int				physCellId
+		);
+//--------------------------------------
+
+//New
+/**\brief function for evaluate if the SIB23-NB transmission occurr
+ * called by the NB_mac_rrc_data_req
+ *
+ */
+boolean_t is_SIB23_NB(
+		const frame_t     	frameP,
+		const frame_t		h_frameP, // the HSFN (increased by 1 every SFN wrap around) (10 bits)
+		long				si_period, //SI-periodicity (rf)
+		long				si_windowLength_ms, //Si-windowlength (ms) XXX received as an enumerative (see the IE of SIB1-NB)
+		long*				si_RadioFrameOffset, //Optional
+		long				si_RepetitionPattern // is given as an Enumerated
+		);
+//-----------------------------------
+
+
 //defined in L2_interface
 int8_t NB_mac_rrc_data_req_eNB(
   const module_id_t Mod_idP,
   const int         CC_id,
   const frame_t     frameP,
+  const frame_t		h_frameP,
   const rb_id_t     Srb_id,
   uint8_t*    const buffer_pP,
   long				schedulingInfoSIB1,//from the mib
   int				physCellId, //from the MAC instance-> common_channel
-  const frame_t		h_frameP, //HSFN
-  long				si_periodicity, //SI-periodicity
-  long				si_windowLength //Si-windwolength
+  mib_flag_t		mib_flag
 );
 //---------------------------------------
+
 
 //defined in L2_interface
 //called by rx_sdu only in case of CCCH message (e.g RRCConnectionRequest-NB)

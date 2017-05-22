@@ -69,6 +69,14 @@ schedule_SI(
 //------------------------------------------------------------------------------
 {
 
+	/*
+	 * Major changes for NB-IoT needed:
+	 * - any DCI message is transmitted for the SI-Message deconding, but all the information are inside the SIB1
+	 * (once know the SIB1 the UE in principle should also know the TBS of the SI-Message (given by the si-TB field in schedulingInfoList)
+	 * -given the TBS of the SI-Message the corresponding number of consecutive DL subframes for the broadcast of the SI is given (TS 36.331 si-TB):
+	 * 		if TBS = 56 or 120 bits --> transmission over 2-subframes
+	 * 		for every other TBS size --> transmission over 8 subframe
+	 */
 
 
   int8_t bcch_sdu_length;

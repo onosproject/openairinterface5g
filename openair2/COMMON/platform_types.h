@@ -92,6 +92,10 @@ typedef boolean_t srb1bis_flag_t;
 #define SRB1BIS_FLAG_NO	   FALSE
 #define SRB1BIS_FLAG_YES	TRUE
 
+typedef boolean_t mib_flag_t;
+#define MIB_FLAG_YES	TRUE
+#define MIB_FLAG_NO		FALSE
+
 
 typedef enum link_direction_e {
   UNKNOWN_DIR          = 0,

@@ -461,6 +461,7 @@ typedef struct {
   // buffer that contains the encoded messages
   uint8_t							*MIB_NB;
   uint8_t							sizeof_MIB_NB;
+
   uint8_t                           *SIB1_NB;
   uint8_t                           sizeof_SIB1_NB;
   uint8_t                         	*SIB23_NB;
@@ -541,7 +542,7 @@ typedef struct eNB_RRC_INST_NB_s {
   hash_table_t                      *s1ap_id2_s1ap_ids   ; // key is    content is rrc_ue_s1ap_ids_t
 
   //RRC configuration
-  RrcConfigurationReq configuration; //should be changed but need PHY specs also
+  RrcConfigurationReq configuration; //rrc_messages_types.h
 
   // other PLMN parameters
   /// Mobile country code
