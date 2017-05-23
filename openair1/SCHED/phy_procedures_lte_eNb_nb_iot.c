@@ -32,11 +32,11 @@
 
 //NB-IoT test
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
+
 #include "PHY/defs.h"
 #include "PHY/extern.h"
 #include "SCHED/defs.h"
 #include "SCHED/extern.h"
-
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
 #include "PHY/LTE_TRANSPORT/if5_tools.h"
 
@@ -694,12 +694,84 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
 #undef DEBUG_PHY_PROC
 
 
+
+/*
+r_type, rn is only used in PMCH procedure so I remove it.
+*/
 void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
          eNB_rxtx_proc_t *proc,
-         PHY_VARS_RN *rn,
          int do_meas)
 {
+  int frame = proc->frame_tx;
+  int subframe = proc->subframe_tx;
+  uint32_t i,j,aa;
+  DCI_PDU_NB *DCI_pdu;
+  DCI_PDU_NB DCI_pdu_tmp;
+  LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
+  DCI_ALLOC_t *dci_alloc = (DCI_ALLOC_t *)NULL;
+  int oai_exit = 0;
+
+  //for NB-IoT
+
+  Sched_Rsp_t Sched_Rsp;
+
+  if(do_meas == 1)
+    start_meas(&eNB->phy_proc_tx);
+
+  for(i = 0;i<NUMBER_OF_UE_MAX;i++)
+    {
+      if((frame==0)&&(subframe==0))
+        {
+          if(eNB->UE_stats[i].crnti > 0)
+              LOG_I(PHY,"UE%d : rnti %x\n",i,eNB->UE_stats[i].crnti);
+        }
+    }
+
+  // Original scheduler 
+
+  // clear the transmit data array for the current subframe
+
+  for (aa=0; aa<fp->nb_antenna_ports_eNB; aa++) 
+    {      
+      memset(&eNB->common_vars.txdataF[0][aa][subframe*fp->ofdm_symbol_size*(fp->symbols_per_tti)],
+                  0,fp->ofdm_symbol_size*(fp->symbols_per_tti)*sizeof(int32_t));
+    } 
 
 
+  //ignore the PMCH part only do the generate PSS/SSS, note: Seperate MIB from here
+  common_signal_procedures(eNB,proc);
+
+  while(!oai_exit)
+    {
+
+
+      /* Not test
+        if(wait_on_condition(&proc->mutex_l2,&proc->cond_l2,&proc->instance_cnt_l2,"eNB_L2_thread") < 0) 
+        break;*/
+
+      /*Take the structures from the shared structures*/
+      //Sched_Rsp = ;
+
+      /*DCI part*/
+
+      if(!Sched_Rsp.pdu_payload)
+        {
+          switch(Sched_Rsp.DCI_Format)
+            {
+              case DCIFormatN0:
+              case DCIFormatN1:
+              case DCIFormatN1_RAR:
+              case DCIFormatN2_Ind:
+              case DCIFormatN2_Pag:
+              default:
+                break;
+
+            }
+        }
+
+
+      /*UE specific DLSCH*/
+
+    }
 
 }

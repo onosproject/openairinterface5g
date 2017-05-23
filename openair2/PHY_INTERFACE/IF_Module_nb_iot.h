@@ -6,9 +6,7 @@
 *
 */
 
-
-#include "platform_types.h"
-#include "openair1/PHY/LTE_TRANSPORT/dci_nb_iot.h"
+#include "openair1/PHY/LTE_TRANSPORT/defs_nb_iot.h"
 
 
 
@@ -78,10 +76,8 @@ typedef struct{
  /*Downlink data*/
  //TB size for Downlink data
  uint8_t TBindex;
- //PDU for MIB,SIBs
- uint8_t *BCCH_pdu_payload;
- //PDU for DL-SCH
- uint8_t *DLSCH_pdu_payload;
+ //PDU for Downlink
+ uint8_t *pdu_payload;
 
  /*DCI start*/
  // Format of DCI

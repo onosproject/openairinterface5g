@@ -62,3 +62,11 @@ Parameters: Sched_Rsp for Interface Module
 
 Comment: 15 warnings fixed 
 
+5/23
+Add:        openair1/PHY/LTE_TRANSPORT/defs_nb_iot.h
+Modified:   openair2/PHY_INTERFACE/IF_Module_nb_iot.h
+Modified:   openair2/LAYER2/MAC/phy_procedures_lte_eNB_nb_iot.c
+
+Comment: merge with RRC branch, start the TX part implementation
+
+
