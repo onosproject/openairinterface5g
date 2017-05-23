@@ -49,6 +49,17 @@ uid_linear_allocator_init(
 }
 
 //------------------------------------------------------------------------------
+void
+uid_linear_allocator_init_NB(
+  uid_allocator_NB_t* const uid_pP
+)
+//------------------------------------------------------------------------------
+{
+  memset(uid_pP, 0, sizeof(uid_allocator_NB_t));
+}
+
+
+//------------------------------------------------------------------------------
 uid_t
 uid_linear_allocator_new(
   eNB_RRC_INST* const rrc_instance_pP
@@ -149,6 +160,21 @@ rrc_eNB_get_ue_context(
 {
   rrc_eNB_ue_context_t temp;
   memset(&temp, 0, sizeof(struct rrc_eNB_ue_context_s));
+  /* eNB ue rrc id = 24 bits wide */
+  temp.ue_id_rnti = rntiP;
+  return RB_FIND(rrc_ue_tree_s, &rrc_instance_pP->rrc_ue_head, &temp);
+}
+
+
+//--(NB-IoT implementation)-----------------------------------------------------
+struct rrc_eNB_ue_context_NB_s*
+rrc_eNB_get_ue_context_NB(
+  eNB_RRC_INST_NB* rrc_instance_pP,
+  rnti_t rntiP)
+//------------------------------------------------------------------------------
+{
+  rrc_eNB_ue_context_NB_t temp;
+  memset(&temp, 0, sizeof(struct rrc_eNB_ue_context_NB_s));
   /* eNB ue rrc id = 24 bits wide */
   temp.ue_id_rnti = rntiP;
   return RB_FIND(rrc_ue_tree_s, &rrc_instance_pP->rrc_ue_head, &temp);

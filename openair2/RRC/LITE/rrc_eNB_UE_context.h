@@ -31,6 +31,7 @@
 #include "collection/tree.h"
 #include "COMMON/platform_types.h"
 #include "defs.h"
+#include "defs_nb_iot.h"
 
 
 void
@@ -70,6 +71,12 @@ rrc_eNB_get_ue_context(
   eNB_RRC_INST* rrc_instance_pP,
   rnti_t rntiP
 );
+
+//NB-IoT
+struct rrc_eNB_ue_context_NB_s*
+rrc_eNB_get_ue_context_NB(
+  eNB_RRC_INST_NB* rrc_instance_pP,
+  rnti_t rntiP);
 
 void rrc_eNB_remove_ue_context(
   const protocol_ctxt_t* const ctxt_pP,

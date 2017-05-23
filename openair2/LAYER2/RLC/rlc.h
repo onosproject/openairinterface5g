@@ -137,6 +137,7 @@ typedef volatile struct {
   rlc_mode_t             rlc_mode;
   union {
     rlc_am_info_t              rlc_am_info; /*!< \sa rlc_am.h. */
+    rlc_am_info_NB_t		rlc_am_info_NB;
     rlc_tm_info_t              rlc_tm_info; /*!< \sa rlc_tm.h. */
     rlc_um_info_t              rlc_um_info; /*!< \sa rlc_um.h. */
   } rlc;

@@ -156,6 +156,18 @@ boolean_t pdcp_serialize_user_plane_data_pdu_with_long_sn_buffer(unsigned char* 
     pdcp_user_plane_data_pdu_header_with_long_sn* pdu);
 
 /*
+ * Fills the incoming buffer with the fields of the header for Short SN (RLC AM)
+ *
+ * Created for NB-IoT purposes
+ *
+ * @param pdu_buffer PDCP PDU buffer
+ * @return TRUE on success, FALSE otherwise
+ */
+
+boolean_t pdcp_serialize_user_plane_data_pdu_with_short_sn_buffer(unsigned char* pdu_buffer, \
+    pdcp_user_plane_data_pdu_header_with_short_sn* pdu);
+
+/*
  * Fills the incoming status report header with given value of bitmap
  * and 'first missing pdu' sequence number
  *

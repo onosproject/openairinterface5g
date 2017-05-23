@@ -308,6 +308,7 @@ if (NOT ${ret} STREQUAL 0)
 endif (NOT ${ret} STREQUAL 0)
 file(GLOB rrc_source ${RRC_FULL_DIR}/*.c)
 set(rrc_source  ${rrc_source} ${OPENAIR2_DIR}/RRC/LITE/MESSAGES/asn1_msg.c)
+set(rrc_source  ${rrc_source} ${OPENAIR2_DIR}/RRC/LITE/MESSAGES/asn1_msg_nb_iot.c)
 file(GLOB rrc_h ${RRC_FULL_DIR}/*.h)
 set(rrc_h ${rrc_h} ${RRC_FULL_DIR}/asn1_constants.h)
 set_source_files_properties(${rrc_source} PROPERTIES COMPILE_FLAGS -w) # suppress warnings from generated code
@@ -1112,12 +1113,16 @@ set(L2_SRC
   ${RLC_DIR}/rlc.c
   ${RLC_DIR}/rlc_rrc.c
   ${RLC_DIR}/rlc_mpls.c
+  ${RRC_DIR}/vars_nb_iot.c
   ${RRC_DIR}/rrc_UE.c
   ${RRC_DIR}/rrc_eNB.c
+  ${RRC_DIR}/rrc_eNB_nb_iot.c
   ${RRC_DIR}/rrc_eNB_S1AP.c
   ${RRC_DIR}/rrc_eNB_UE_context.c
   ${RRC_DIR}/rrc_common.c
+  ${RRC_DIR}/rrc_common_nb_iot.c
   ${RRC_DIR}/L2_interface.c
+  ${RRC_DIR}/L2_interface_nb_iot.c
   )
 set (MAC_SRC
   ${MAC_DIR}/lte_transport_init.c

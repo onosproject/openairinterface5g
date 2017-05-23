@@ -130,13 +130,13 @@ rrc_mac_config_req(
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
 
-  if (eNB_flagP==0) {
+  if (eNB_flagP==0) { //is UE
     LOG_I(MAC,"[CONFIG][UE %d] Configuring MAC/PHY from eNB %d\n",Mod_idP,eNB_index);
 
     if (tdd_Config != NULL) {
       UE_mac_inst[Mod_idP].tdd_Config = tdd_Config;
     }
-  } else {
+  } else { //is eNB
     UE_id = find_UE_id(Mod_idP, rntiP);
     if (physicalConfigDedicated == NULL) {
       LOG_I(MAC,"[CONFIG][eNB %d/%d] Configuring MAC/PHY\n", Mod_idP, CC_idP);
@@ -173,7 +173,7 @@ rrc_mac_config_req(
 
   // SRB2_lchan_config->choice.explicitValue.ul_SpecificParameters->logicalChannelGroup
   if (logicalChannelConfig!= NULL) {
-    if (eNB_flagP==0) {
+    if (eNB_flagP==0) { //is UE
       LOG_I(MAC,"[CONFIG][UE %d] Applying RRC logicalChannelConfig from eNB%d\n",Mod_idP,eNB_index);
       UE_mac_inst[Mod_idP].logicalChannelConfig[logicalChannelIdentity]=logicalChannelConfig;
       UE_mac_inst[Mod_idP].scheduling_info.Bj[logicalChannelIdentity]=0; // initilize the bucket for this lcid

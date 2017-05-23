@@ -223,6 +223,8 @@ typedef struct {
 
 
 /*! \brief MAC Logical Channel Descriptor
+ * XXX MP: is an old structure no more used actually in the code
+ * we left it just because it could be useful for future development
  */
 typedef struct {
   unsigned short transport_block_size;                  /*!< \brief Minimum PDU size in bytes provided by RLC to MAC layer interface */
