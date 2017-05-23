@@ -1,0 +1,64 @@
+Develop record:
+
+Nick (nick133371@gmail.com)
+
+
+5/13 
+Add:	    openair1/PHY/impl_defs_lte_nb_iot.h
+Add:        openair1/PHY/INIT/defs_nb_iot.h
+Add:        openair1/PHY/INIT/Lte_init_nb_iot.c
+
+Comment: 
+Functions: NB_phy_config_mib_eNB(), NB_phy_config_sib2_eNB(), NB_phy_config_dedicated_eNB().
+Parameters: NB_DL_FRAME_PARAMS(Original LTE_DL_FRAME_PARAMS)
+
+5/14
+Add:        openair2/Layer2/MAC/defs_nb_iot.h
+Add:        openair2/Layer2/MAC/proto_nb_iot.h
+Add:        openair2/Layer2/MAC/eNB_scheduler_ulsch_nb_iot.c
+Add:        openair2/Layer2/MAC/eNB_scheduler_prmitives_nb_iot.c
+Add:        openair2/Layer2/MAC/eNB_scheduler_dlsch_nb_iot.c
+
+comment:
+Functions: NB_rx_sdu(), NB_get_dci_sdu(), NB_rrc_mac_remove_ue(), NB_get_dlsch_sdu();
+Parameters: All parameters/structures used in MAC Layer.
+
+5/15
+Add:        openair2/Layer2/MAC/eNB_scheduler_RA_nb_iot.c
+
+comment:
+Functions: NB_initiate_ra_proc()
+
+5/15
+modified:   openair1/PHY/LTE_TRANSPORT/dci_nb_iot.h
+modified:   openair1/PHY/LTE_TRANSPORT/defs.hod
+modified:   openair2/LAYER2/MAC/eNB_scheduler_RA_nb_iot.c
+modified:   openair2/LAYER2/MAC/proto_nb_iot.h
+
+comment:
+Functions: NB_schedule_RA()
+Parameters: Add DCI unpacked format 
+
+5/16
+Add:	    openair2/LAYER2/MAC/IF_Module_nb_iot.c
+Add:        openair2/PHY_INTERFACE/IF_Module_nb_iot.h
+Add:        openair1/PHY/sched/phy_procedures_lte_eNB_nb_iot.c
+
+Comment: Modify NB_phy_procedures_uespec_RX, change the way using primitive, use UL_IND data structure to store the needed parameters.
+	 Add the implementation for UL_INDICATION, it handles the Uplink information from PHY, also trigger the scheduler.
+Functions: NB_phy_procedures_uespec_RX(), UL_INDICATION()
+Parameters: UL_IND for Interface Module
+
+5/18
+Modified:   openair1/PHY/LTE_TRANSPORT/dci_nb_iot.h
+Modified:   openair2/PHY_INTERFACE/IF_Module_nb_iot.h
+Modified:   openair2/LAYER2/MAC/IF_Module_nb_iot.c
+
+Comment: Complete the UL_INDICATION
+Functions: UL_INDICATION()
+Parameters: Sched_Rsp for Interface Module
+
+5/19
+
+Comment: 15 warnings fixed 
+

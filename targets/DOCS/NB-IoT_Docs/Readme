@@ -1,0 +1,31 @@
+NB-IoT_Docs Folder
+    BMW lab./NTUST
+
+        Document list:
+
+            1. images - The figures of the Message Sequence Chart compared LTE with NB-IoT, in Attach/MT/MO.
+            
+            2. NB_L2_interface - Describe the interface between MAC and other layers (mainly PHY layer), and show the basic concept for development.
+            
+            3. NB_MAC_Design_Document - This document is mainly describing about the NB-IoT MAC module design based on OAI in the system/block/process/procedure side.
+            
+            4. NB_MAC_Module_List - This document is mainly descrbing about the difference beween MAC in LTE and NB-IoT from 3gpp specification.
+            
+            5. NB_MAC_SAP - This document is mainly describling about the Service Access Point (primitives) between the MAC and other layers in OAI.
+            
+            6. NB_MAC_Fapi_interface - This document is mainly for the FAPI style interface between OAI MAC and PHY for NB-IoT, and described how old messages in OAI go through in the FAPI style interface.
+    
+
+If there is anything wrong, please do not hesitate to contact us, Thanks!
+
+Advisor : Prof.Ray Guang, Cheng 	crg@mail.ntust.edu.tw
+
+The response block for each person:
+
+Scheduling:Eric	                    qqq1993qqq029@gmail.com
+DownlinkProcedure:Xavier/Alan       sephiroth7277@gmail.com/Rely4679@gmail.com
+UplinkProcedure:Nick                nick133371@gmail.com
+Config:Kenny                        kroempa@gmail.com
+SystemInformation:Calvin            calvin820119@gmail.com
+
+                                                                                                                                                 20170405

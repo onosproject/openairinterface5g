@@ -37,6 +37,70 @@ extern uint16_t prach_root_sequence_map0_3[838];
 extern uint16_t prach_root_sequence_map4[138];
 uint8_t dmrs1_tab[8] = {0,2,3,4,6,8,9,10};
 
+#if defined(NB_IoT)
+
+void NB_phy_config_mib_eNB(int                 Mod_id,
+			int                 CC_id,
+			int                 eutra_band,
+			int                 Nid_cell,
+			int                 Ncp,
+			int                 p_eNB,
+			uint32_t            dl_CarrierFreq,
+			uint32_t            ul_CarrierFreq) {
+
+  
+  LTE_DL_FRAME_PARMS *fp;
+
+  LOG_I(PHY,"Configuring MIB for instance %d, CCid %d : (band %d,N_RB_DL %d,Nid_cell %d,p %d,DL freq %u)\n",
+	Mod_id, CC_id, eutra_band, N_RB_DL_array[dl_Bandwidth], Nid_cell, p_eNB,dl_CarrierFreq);
+
+  /*if (RC.eNB == NULL) {
+    RC.eNB                               = (PHY_VARS_eNB ***)malloc((1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
+    LOG_I(PHY,"RC.eNB = %p\n",RC.eNB);
+    memset(RC.eNB,0,(1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
+  }
+  if (RC.eNB[Mod_id] == NULL) {
+    RC.eNB[Mod_id]                       = (PHY_VARS_eNB **)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB**));
+    LOG_I(PHY,"RC.eNB[%d] = %p\n",Mod_id,RC.eNB[Mod_id]);
+    memset(RC.eNB[Mod_id],0,(1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB***));
+  }
+  if (RC.eNB[Mod_id][CC_id] == NULL) {
+    RC.eNB[Mod_id][CC_id] = (PHY_VARS_eNB *)malloc(sizeof(PHY_VARS_eNB));
+    LOG_I(PHY,"RC.eNB[%d][%d] = %p\n",Mod_id,CC_id,RC.eNB[Mod_id][CC_id]);
+    RC.eNB[Mod_id][CC_id]->Mod_id        = Mod_id;
+    RC.eNB[Mod_id][CC_id]->CC_id         = CC_id;
+  }
+
+  RC.eNB[Mod_id][CC_id]->mac_enabled     = 1;
+
+  fp = &RC.eNB[Mod_id][CC_id]->frame_parms; */
+
+  fp->Nid_cell                           = Nid_cell;
+  fp->nushift                            = Nid_cell%6;
+  fp->eutra_band                         = eutra_band;
+  fp->Ncp                                = Ncp;
+  fp->nb_antenna_ports_eNB               = p_eNB;
+  fp->dl_CarrierFreq                     = dl_CarrierFreq;
+  fp->ul_CarrierFreq                     = ul_CarrierFreq;
+  
+
+  init_frame_parms(fp,1);
+  init_lte_top(fp);
+
+}
+
+void NB_phy_config_sib2_eNB(uint8_t Mod_id,
+                         int CC_id,
+                         RadioResourceConfigCommonSIB_t *radioResourceConfigCommon,
+                         ARFCN_ValueEUTRA_t *ul_CArrierFreq,
+                         AdditionalSpectrumEmission_t *additionalSpectrumEmission,
+                         )
+{
+
+}
+
+#endif
+
 // FIXME not used anywhere
 void phy_config_mib(LTE_DL_FRAME_PARMS *fp,
                     uint8_t N_RB_DL,

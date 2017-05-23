@@ -956,6 +956,7 @@ add_library(SECU_CN ${SECU_CN_SRC})
 ################################"
 set(SCHED_SRC
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_eNb.c
+  ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_eNb_nb_iot.c
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_ue.c
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common.c
   ${OPENAIR1_DIR}/SCHED/phy_mac_stub.c
@@ -1043,6 +1044,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/CODING/viterbi.c
   ${OPENAIR1_DIR}/PHY/CODING/viterbi_lte.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_init.c
+  ${OPENAIR1_DIR}/PHY/INIT/lte_init_nb_iot.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_parms.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_param_init.c
   ${OPENAIR1_DIR}/PHY/TOOLS/file_output.c
@@ -1127,17 +1129,22 @@ set(L2_SRC
 set (MAC_SRC
   ${MAC_DIR}/lte_transport_init.c
   ${MAC_DIR}/main.c
+  ${MAC_DIR}/IF_Module_nb_iot.c
   ${MAC_DIR}/ue_procedures.c
   ${MAC_DIR}/ra_procedures.c
   ${MAC_DIR}/l1_helpers.c
   ${MAC_DIR}/rar_tools.c
   ${MAC_DIR}/eNB_scheduler.c
   ${MAC_DIR}/eNB_scheduler_dlsch.c
+  ${MAC_DIR}/eNB_scheduler_dlsch_nb_iot.c
   ${MAC_DIR}/eNB_scheduler_ulsch.c
+  ${MAC_DIR}/eNB_scheduler_ulsch_nb_iot.c
   ${MAC_DIR}/eNB_scheduler_mch.c
   ${MAC_DIR}/eNB_scheduler_bch.c
   ${MAC_DIR}/eNB_scheduler_primitives.c
+  ${MAC_DIR}/eNB_scheduler_primitives_nb_iot.c
   ${MAC_DIR}/eNB_scheduler_RA.c
+  ${MAC_DIR}/eNB_scheduler_RA_nb_iot.c
   ${MAC_DIR}/pre_processor.c
   ${MAC_DIR}/config.c
  )
