@@ -83,7 +83,7 @@ typedef struct{
  // Format of DCI
  uint8_t DCI_Format;
  // Content of DCI
- DCI_CONTENT DCI_Content;
+ void *DCI_Content;
 
 }Sched_Rsp_t;
 

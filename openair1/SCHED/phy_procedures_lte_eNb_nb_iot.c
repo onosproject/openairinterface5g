@@ -705,11 +705,15 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   int frame = proc->frame_tx;
   int subframe = proc->subframe_tx;
   uint32_t i,j,aa;
+  uint8_t harq_pid;
   DCI_PDU_NB *DCI_pdu;
   DCI_PDU_NB DCI_pdu_tmp;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   DCI_ALLOC_t *dci_alloc = (DCI_ALLOC_t *)NULL;
   int oai_exit = 0;
+  int8_t UE_id = 0;
+  uint8_t ul_subframe;
+  uint32_t ul_frame;
 
   //for NB-IoT
 
@@ -745,17 +749,18 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     {
 
 
-      /* Not test
+      /* Not test yet
         if(wait_on_condition(&proc->mutex_l2,&proc->cond_l2,&proc->instance_cnt_l2,"eNB_L2_thread") < 0) 
         break;*/
 
       /*Take the structures from the shared structures*/
       //Sched_Rsp = ;
 
-      /*DCI part*/
+      /*If there is a DCI, packed it after this procedure, we'll have a DCI PDU*/
 
-      if(!Sched_Rsp.pdu_payload)
+      if(Sched_Rsp.DCI_Content)
         {
+          /*Packed DCI here*/
           switch(Sched_Rsp.DCI_Format)
             {
               case DCIFormatN0:
@@ -769,8 +774,53 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
             }
         }
 
+      /*clear the existing ulsch dci allocations before applying info from MAC*/
+      ul_subframe = (subframe+4)%10;
+      ul_frame = frame+(ul_subframe >= 6 ? 1 :0);
+      harq_pid = ((ul_frame<<1)+ul_subframe)&7;
 
-      /*UE specific DLSCH*/
+      /*clear the DCI allocation maps for new subframe*/
+      for(i=0;i<NUMBER_OF_UE_MAX;i++)
+        {
+          if(eNB->ulsch[i])
+            {
+              eNB->ulsch[i]->harq_processes[harq_pid]->dci_alloc = 0;
+              eNB->ulsch[i]->harq_processes[harq_pid]->rar_alloc = 0;
+            }
+        }
+
+      /*clear previous allocation information for all UEs*/
+      for(i=0;i<NUMBER_OF_UE_MAX;i++)
+        {
+          if(eNB->dlsch[i][0])
+            eNB->dlsch[i][0]->subframe_tx[subframe]=0;
+        }
+
+      /*remove the part save old HARQ information for PHICH generation*/
+
+      /*Loop over all the dci to generate DLSCH allocation, there is only 1 DCI for NB-IoT in the same time*/
+      dci_alloc = &DCI_pdu->dci_alloc[i];
+      if ((dci_alloc->rnti<= P_RNTI) && (dci_alloc->ra_flag!=1)) 
+        {
+          UE_id = find_ue((int16_t)dci_alloc->rnti,eNB);
+        }
+      else 
+        UE_id=0;
+    
+      generate_eNB_dlsch_params(eNB,proc,dci_alloc,UE_id);
+      
+      // Apply physicalConfigDedicated if needed, don't know if needed in NB-IoT or not
+      // This is for UEs that have received this IE, which changes these DL and UL configuration, we apply after a delay for the eNodeB UL parameters
+      //phy_config_dedicated_eNB_step2(eNB);
+
+      dci_alloc = &DCI_pdu->dci_alloc[i];
+
+      if (dci_alloc->format == DCIFormatN0) // this is a ULSCH allocation
+        {  
+          UE_id = find_ue((int16_t)dci_alloc->rnti,eNB);
+          generate_eNB_ulsch_params(eNB,proc,dci_alloc,UE_id);
+        }
+
 
     }
 

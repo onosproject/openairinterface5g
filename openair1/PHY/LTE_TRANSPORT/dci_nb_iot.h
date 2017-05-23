@@ -35,7 +35,7 @@
 #include <stdint.h>
 #endif
 
-typedef enum DCI_format_NB
+typedef enum 
 {
   DCIFormatN0 = 0,
   DCIFormatN1,
@@ -43,7 +43,7 @@ typedef enum DCI_format_NB
   DCIFormatN1_RAR,
   DCIFormatN2_Ind,
   DCIFormatN2_Pag,
-}e_DCI_format_NB;
+}DCI_format_NB_t;
 
 ///  DCI Format Type 0 (180 kHz, 23 bits)
 struct DCIFormatN0{

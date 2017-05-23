@@ -416,10 +416,7 @@ typedef struct {
 } __attribute__((__packed__))POWER_HEADROOM_CMD_NB;
 
 typedef struct {
-  uint8_t Num_ue_spec_dci ;
-  uint8_t Num_common_dci  ;
-  //  uint32_t nCCE;
-  uint32_t num_pdcch_symbols;
+  //delete the count for the DCI numbers and symbols,NUM_DCI_MAX should set to 1 
   DCI_ALLOC_t dci_alloc[NUM_DCI_MAX] ;
 } DCI_PDU_NB;
 typedef struct {
