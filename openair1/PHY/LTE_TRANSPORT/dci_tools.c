@@ -5052,7 +5052,7 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
       return(0);
     }*/
 
-
+    /*
     if((pdlsch0_harq->round == 0) && (rv1 > 0))
     {
       // DCI false detection
@@ -5066,7 +5066,7 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
         LOG_I(PHY,"bad rv2\n");
       return(0);
     }
-
+    */
 
     switch (N_RB_DL) {
     case 6:
@@ -5728,9 +5728,9 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
         pdlsch1->active     = 0;
       }
 
-//#ifdef DEBUG_HARQ
+#ifdef DEBUG_HARQ
       printf("[DCI UE]: dlsch0_harq status %d , dlsch1_harq status %d\n", dlsch0_harq->status, dlsch1_harq->status);
-//#endif
+#endif
 
       // compute resource allocation
       if (TB0_active == 1){
@@ -5890,9 +5890,9 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
             dlsch1_harq->Qm = (mcs2-28)<<1;
       }
 
-//#ifdef DEBUG_HARQ
+#ifdef DEBUG_HARQ
       printf("[DCI UE]: dlsch0_harq status %d , dlsch1_harq status %d\n", dlsch0_harq->status, dlsch1_harq->status);
-//#endif
+#endif
 
   #ifdef DEBUG_HARQ
       if (dlsch0 != NULL && dlsch1 != NULL)
@@ -6166,7 +6166,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
     case format2A:
     {
     // extract dci infomation
-    LOG_I(PHY,"[DCI-format2] AbsSubframe %d.%d extract dci infomation \n", frame%1024, subframe);
+    LOG_D(PHY,"[DCI-format2] AbsSubframe %d.%d extract dci infomation \n", frame%1024, subframe);
     extract_dci2A_info(frame_parms->N_RB_DL,
                        frame_type,
                        frame_parms->nb_antenna_ports_eNB,
