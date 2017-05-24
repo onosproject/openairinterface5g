@@ -33,6 +33,8 @@ MESSAGE_DEF(S1AP_UE_CONTEXT_RELEASE_COMPLETE_LOG, MESSAGE_PRIORITY_MED, IttiMsgT
 MESSAGE_DEF(S1AP_UE_CONTEXT_RELEASE_LOG    , MESSAGE_PRIORITY_MED, IttiMsgText                      , s1ap_ue_context_release_log)
 MESSAGE_DEF(S1AP_E_RAB_SETUP_REQUEST_LOG    , MESSAGE_PRIORITY_MED, IttiMsgText                      , s1ap_e_rab_setup_request_log)
 MESSAGE_DEF(S1AP_E_RAB_SETUP_RESPONSE_LOG    , MESSAGE_PRIORITY_MED, IttiMsgText                      , s1ap_e_rab_setup_response_log)
+MESSAGE_DEF(S1AP_PATH_SWITCH_REQ_LOG    , MESSAGE_PRIORITY_MED, IttiMsgText                      , s1ap_path_switch_req_log)
+MESSAGE_DEF(S1AP_PATH_SWITCH_REQ_ACK_LOG    , MESSAGE_PRIORITY_MED, IttiMsgText                      , s1ap_path_switch_req_ack_log)
 
 /* eNB application layer -> S1AP messages */
 MESSAGE_DEF(S1AP_REGISTER_ENB_REQ          , MESSAGE_PRIORITY_MED, s1ap_register_enb_req_t          , s1ap_register_enb_req)
@@ -54,6 +56,8 @@ MESSAGE_DEF(S1AP_UE_CTXT_MODIFICATION_RESP , MESSAGE_PRIORITY_MED, s1ap_ue_ctxt_
 MESSAGE_DEF(S1AP_UE_CTXT_MODIFICATION_FAIL , MESSAGE_PRIORITY_MED, s1ap_ue_ctxt_modification_fail_t , s1ap_ue_ctxt_modification_fail)
 MESSAGE_DEF(S1AP_E_RAB_SETUP_RESP          , MESSAGE_PRIORITY_MED, s1ap_e_rab_setup_resp_t          , s1ap_e_rab_setup_resp)
 MESSAGE_DEF(S1AP_E_RAB_SETUP_REQUEST_FAIL  , MESSAGE_PRIORITY_MED, s1ap_e_rab_setup_req_fail_t      , s1ap_e_rab_setup_request_fail)
+MESSAGE_DEF(S1AP_PATH_SWITCH_REQ           , MESSAGE_PRIORITY_MED, s1ap_path_switch_req_t           , s1ap_path_switch_req)
+MESSAGE_DEF(S1AP_PATH_SWITCH_REQ_ACK           , MESSAGE_PRIORITY_MED, s1ap_path_switch_req_ack_t           , s1ap_path_switch_req_ack)
 
 /* S1AP -> RRC messages */
 MESSAGE_DEF(S1AP_DOWNLINK_NAS              , MESSAGE_PRIORITY_MED, s1ap_downlink_nas_t              , s1ap_downlink_nas )

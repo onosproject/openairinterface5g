@@ -74,8 +74,8 @@ void x2ap_eNB_handle_handover_req(instance_t instance,
 				  x2ap_handover_req_t *x2ap_handover_req);
 
 static
-void x2ap_eNB_handle_handover_resp(instance_t instance,
-				   x2ap_handover_resp_t *x2ap_handover_resp);
+void x2ap_eNB_handle_handover_req_ack(instance_t instance,
+				      x2ap_handover_req_ack_t *x2ap_handover_req_ack);
 
 static
 void x2ap_eNB_register_eNB(x2ap_eNB_instance_t *instance_p,
@@ -421,8 +421,8 @@ void x2ap_eNB_handle_handover_req(instance_t instance,
 }
 
 static
-void x2ap_eNB_handle_handover_resp(instance_t instance,
-				   x2ap_handover_resp_t *x2ap_handover_resp)
+void x2ap_eNB_handle_handover_req_ack(instance_t instance,
+				      x2ap_handover_req_ack_t *x2ap_handover_req_ack)
 {
   /* TODO: remove this hack (the goal is to find the correct
    * eNodeB structure for the other end) - we need a proper way for RRC
@@ -434,7 +434,7 @@ void x2ap_eNB_handle_handover_resp(instance_t instance,
   x2ap_eNB_instance_t *instance_p;
   x2ap_eNB_data_t     *target;
   const Enb_properties_array_t *enb_properties = enb_config_get();
-  int target_enb_id = enb_properties->properties[x2ap_handover_resp->target_mod_id]->eNB_id;
+  int target_enb_id = enb_properties->properties[x2ap_handover_req_ack->target_mod_id]->eNB_id;
 
   instance_p = x2ap_eNB_get_instance(instance);
   DevAssert(instance_p != NULL);
@@ -442,7 +442,7 @@ void x2ap_eNB_handle_handover_resp(instance_t instance,
   target = x2ap_is_eNB_id_in_list(target_enb_id);
   DevAssert(target != NULL);
 
-  x2ap_eNB_generate_x2_handover_response(instance_p, target, x2ap_handover_resp->source_x2id);
+  x2ap_eNB_generate_x2_handover_req_ack(instance_p, target, x2ap_handover_req_ack->source_x2id);
 }
 
 void *x2ap_task(void *arg)
@@ -474,9 +474,9 @@ void *x2ap_task(void *arg)
                                    &X2AP_HANDOVER_REQ(received_msg));
       break;
 
-    case X2AP_HANDOVER_RESP:
-      x2ap_eNB_handle_handover_resp(ITTI_MESSAGE_GET_INSTANCE(received_msg),
-                                    &X2AP_HANDOVER_RESP(received_msg));
+    case X2AP_HANDOVER_REQ_ACK:
+      x2ap_eNB_handle_handover_req_ack(ITTI_MESSAGE_GET_INSTANCE(received_msg),
+				       &X2AP_HANDOVER_REQ_ACK(received_msg));
       break;
 
     case SCTP_NEW_ASSOCIATION_RESP:

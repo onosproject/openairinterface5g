@@ -279,7 +279,9 @@ typedef enum e_rab_satus_e {
   E_RAB_STATUS_NEW,
   E_RAB_STATUS_DONE, // from the eNB perspective
   E_RAB_STATUS_ESTABLISHED, // get the reconfigurationcomplete form UE
+  E_RAB_STATUS_REESTABLISHED, // after HO
   E_RAB_STATUS_FAILED,
+  E_RAB_STATUS_RELEASED
 } e_rab_status_t;
 
 typedef struct e_rab_param_s {
@@ -409,14 +411,23 @@ typedef struct eNB_RRC_UE_s {
   uint32_t                           eNB_ue_s1ap_id :24;
 
   security_capabilities_t            security_capabilities;
+  
+  int                                next_hop_chain_count;
 
+  uint8_t                            next_security_key[SECURITY_KEY_LENGTH];
+  
   /* Total number of e_rab already setup in the list */
   uint8_t                           setup_e_rabs;
   /* Number of e_rab to be setup in the list */
   uint8_t                            nb_of_e_rabs;
   /* list of e_rab to be setup by RRC layers */
   e_rab_param_t                      e_rab[NB_RB_MAX];//[S1AP_MAX_E_RAB];
-
+  /* UE aggregate maximum bitrate */
+  ambr_t ue_ambr;
+  /* Number of e_rab to be released in the list */
+  uint8_t                           nb_e_rabs_tobereleased;
+  /* list of e_rab to be released by RRC layers */
+  uint8_t                           e_rabs_tobereleased[NB_RB_MAX];
   // LG: For GTPV1 TUNNELS
   uint32_t                           enb_gtp_teid[S1AP_MAX_E_RAB];
   transport_layer_addr_t             enb_gtp_addrs[S1AP_MAX_E_RAB];

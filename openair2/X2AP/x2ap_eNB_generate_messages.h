@@ -47,7 +47,7 @@ int x2ap_eNB_generate_x2_handover_request(x2ap_eNB_instance_t *instance_p,
 				          x2ap_eNB_data_t *x2ap_enb_data_p,
                                           int source_x2id);
 
-int x2ap_eNB_generate_x2_handover_response(x2ap_eNB_instance_t *instance_p, 
+int x2ap_eNB_generate_x2_handover_request_ack(x2ap_eNB_instance_t *instance_p, 
 				           x2ap_eNB_data_t *x2ap_enb_data_p,
                                            int source_x2id);
 

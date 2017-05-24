@@ -37,7 +37,7 @@
 
 #define X2AP_REGISTER_ENB_REQ(mSGpTR)           (mSGpTR)->ittiMsg.x2ap_register_enb_req
 #define X2AP_HANDOVER_REQ(mSGpTR)               (mSGpTR)->ittiMsg.x2ap_handover_req
-#define X2AP_HANDOVER_RESP(mSGpTR)               (mSGpTR)->ittiMsg.x2ap_handover_resp
+#define X2AP_HANDOVER_REQ_ACK(mSGpTR)           (mSGpTR)->ittiMsg.x2ap_handover_req_ack
 #define X2AP_REGISTER_ENB_CNF(mSGpTR)           (mSGpTR)->ittiMsg.x2ap_register_enb_cnf
 #define X2AP_DEREGISTERED_ENB_IND(mSGpTR)       (mSGpTR)->ittiMsg.x2ap_deregistered_enb_ind
 
@@ -120,11 +120,11 @@ typedef struct x2ap_handover_req_s {
   int target_mod_id;
 } x2ap_handover_req_t;
 
-typedef struct x2ap_handover_resp_s {
+typedef struct x2ap_handover_req_ack_s {
   int source_rnti;                       /* TODO: to be fixed/remove */
   int source_x2id;                       /* TODO: to be fixed/remove */
   /* TODO: this parameter has to be removed */
   int target_mod_id;
-} x2ap_handover_resp_t;
+} x2ap_handover_req_ack_t;
 
 #endif /* X2AP_MESSAGES_TYPES_H_ */

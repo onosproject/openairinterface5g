@@ -81,13 +81,36 @@ int s1ap_eNB_handle_e_rab_setup_request(uint32_t               assoc_id,
 					uint32_t               stream,
 					struct s1ap_message_s *s1ap_message_p);
 
+static
+int s1ap_eNB_handle_s1_path_switch_request_ack(uint32_t               assoc_id,
+					       uint32_t               stream,
+					       struct s1ap_message_s *message_p);
+static
+int s1ap_eNB_handle_s1_path_switch_request_failure(uint32_t               assoc_id,
+						   uint32_t               stream,
+						   struct s1ap_message_s *message_p);
+
+static
+void process_radio_network_failure(S1ap_CauseRadioNetwork_t cause);
+
+static
+void process_transport_failure(S1ap_CauseTransport_t cause);
+
+static
+void process_nas_failure(S1ap_CauseNas_t cause);
+
+static
+void process_protocol_failure(S1ap_CauseProtocol_t cause);
+
+static
+void process_misc_failure(S1ap_CauseMisc_t cause);
 
 /* Handlers matrix. Only eNB related procedure present here */
 s1ap_message_decoded_callback messages_callback[][3] = {
   { 0, 0, 0 }, /* HandoverPreparation */
   { 0, 0, 0 }, /* HandoverResourceAllocation */
   { 0, 0, 0 }, /* HandoverNotification */
-  { 0, 0, 0 }, /* PathSwitchRequest */
+  { 0, s1ap_eNB_handle_s1_path_switch_request_ack, s1ap_eNB_handle_s1_path_switch_request_failure}, /* PathSwitchRequest */
   { 0, 0, 0 }, /* HandoverCancel */
   { s1ap_eNB_handle_e_rab_setup_request, 0, 0 }, /* E_RABSetup */
   { 0, 0, 0 }, /* E_RABModify */
@@ -460,224 +483,34 @@ int s1ap_eNB_handle_error_indication(uint32_t               assoc_id,
 
   if ( s1_error_indication_p->presenceMask & S1AP_ERRORINDICATIONIES_CAUSE_PRESENT) {
     switch(s1_error_indication_p->cause.present) {
-      case S1ap_Cause_PR_NOTHING:
-    	S1AP_WARN("Received S1 Error indication cause NOTHING\n");
+    case S1ap_Cause_PR_NOTHING:
+      S1AP_WARN("Received S1 Error indication cause NOTHING\n");
       break;
-      case S1ap_Cause_PR_radioNetwork:
-      	switch (s1_error_indication_p->cause.choice.radioNetwork) {
-	      case S1ap_CauseRadioNetwork_unspecified:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unspecified\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_tx2relocoverall_expiry:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_tx2relocoverall_expiry\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_successful_handover:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_successful_handover\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_release_due_to_eutran_generated_reason:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_release_due_to_eutran_generated_reason\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_handover_cancelled:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_handover_cancelled\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_partial_handover:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_partial_handover\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_ho_failure_in_target_EPC_eNB_or_target_system:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_ho_failure_in_target_EPC_eNB_or_target_system\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_ho_target_not_allowed:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_ho_target_not_allowed\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_tS1relocoverall_expiry:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_tS1relocoverall_expiry\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_tS1relocprep_expiry:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_tS1relocprep_expiry\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_cell_not_available:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_cell_not_available\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_unknown_targetID:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unknown_targetID\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_no_radio_resources_available_in_target_cell:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_no_radio_resources_available_in_target_cell\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_unknown_mme_ue_s1ap_id:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unknown_mme_ue_s1ap_id\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_unknown_enb_ue_s1ap_id:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unknown_enb_ue_s1ap_id\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_unknown_pair_ue_s1ap_id:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unknown_pair_ue_s1ap_id\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_handover_desirable_for_radio_reason:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_handover_desirable_for_radio_reason\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_time_critical_handover:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_time_critical_handover\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_resource_optimisation_handover:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_resource_optimisation_handover\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_reduce_load_in_serving_cell:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_reduce_load_in_serving_cell\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_user_inactivity:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_user_inactivity\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_radio_connection_with_ue_lost:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_radio_connection_with_ue_lost\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_load_balancing_tau_required:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_load_balancing_tau_required\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_cs_fallback_triggered:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_cs_fallback_triggered\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_ue_not_available_for_ps_service:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_ue_not_available_for_ps_service\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_radio_resources_not_available:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_radio_resources_not_available\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_failure_in_radio_interface_procedure:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_failure_in_radio_interface_procedure\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_invals1ap_id_qos_combination:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_invals1ap_id_qos_combination\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_interrat_redirection:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_interrat_redirection\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_interaction_with_other_procedure:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_interaction_with_other_procedure\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_unknown_E_RAB_ID:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unknown_E_RAB_ID\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_multiple_E_RAB_ID_instances:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_multiple_E_RAB_ID_instances\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_encryption_and_or_integrity_protection_algorithms_not_supported:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_encryption_and_or_integrity_protection_algorithms_not_supported\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_s1_intra_system_handover_triggered:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_s1_intra_system_handover_triggered\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_s1_inter_system_handover_triggered:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_s1_inter_system_handover_triggered\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_x2_handover_triggered:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_x2_handover_triggered\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_redirection_towards_1xRTT:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_redirection_towards_1xRTT\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_not_supported_QCI_value:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_not_supported_QCI_value\n");
-            break;
-  	      case S1ap_CauseRadioNetwork_invals1ap_id_CSG_Id:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_invals1ap_id_CSG_Id\n");
-            break;
-      	  default:
-            S1AP_WARN("Received S1 Error indication cause radio network case not handled\n");
-      	}
+    case S1ap_Cause_PR_radioNetwork:
+      process_radio_network_failure(s1_error_indication_p->cause.choice.radioNetwork);
       break;
-
-      case S1ap_Cause_PR_transport:
-      	switch (s1_error_indication_p->cause.choice.transport) {
-    	  case S1ap_CauseTransport_transport_resource_unavailable:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseTransport_transport_resource_unavailable\n");
-            break;
-    	  case S1ap_CauseTransport_unspecified:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseTransport_unspecified\n");
-            break;
-      	  default:
-            S1AP_WARN("Received S1 Error indication cause transport case not handled\n");
-      	}
+    case S1ap_Cause_PR_transport:
+      process_transport_failure(s1_error_indication_p->cause.choice.transport);
       break;
-
-      case S1ap_Cause_PR_nas:
-      	switch (s1_error_indication_p->cause.choice.nas) {
-    	  case S1ap_CauseNas_normal_release:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseNas_normal_release\n");
-            break;
-      	  case S1ap_CauseNas_authentication_failure:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseNas_authentication_failure\n");
-            break;
-      	  case S1ap_CauseNas_detach:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseNas_detach\n");
-            break;
-      	  case S1ap_CauseNas_unspecified:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseNas_unspecified\n");
-            break;
-      	  case S1ap_CauseNas_csg_subscription_expiry:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseNas_csg_subscription_expiry\n");
-            break;
-      	  default:
-            S1AP_WARN("Received S1 Error indication cause nas case not handled\n");
-      	}
+      
+    case S1ap_Cause_PR_nas:
+      process_nas_failure(s1_error_indication_p->cause.choice.nas);
       break;
-
-      case S1ap_Cause_PR_protocol:
-      	switch (s1_error_indication_p->cause.choice.protocol) {
-      	  case S1ap_CauseProtocol_transfer_syntax_error:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_transfer_syntax_error\n");
-            break;
-      	  case S1ap_CauseProtocol_abstract_syntax_error_reject:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_abstract_syntax_error_reject\n");
-            break;
-      	  case S1ap_CauseProtocol_abstract_syntax_error_ignore_and_notify:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_abstract_syntax_error_ignore_and_notify\n");
-            break;
-      	  case S1ap_CauseProtocol_message_not_compatible_with_receiver_state:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_message_not_compatible_with_receiver_state\n");
-            break;
-      	  case S1ap_CauseProtocol_semantic_error:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_semantic_error\n");
-            break;
-      	  case S1ap_CauseProtocol_abstract_syntax_error_falsely_constructed_message:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_abstract_syntax_error_falsely_constructed_message\n");
-            break;
-      	  case S1ap_CauseProtocol_unspecified:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_unspecified\n");
-            break;
-      	  default:
-            S1AP_WARN("Received S1 Error indication cause protocol case not handled\n");
-      	}
+      
+    case S1ap_Cause_PR_protocol:
+      process_protocol_failure(s1_error_indication_p->cause.choice.protocol);
       break;
-
-      case S1ap_Cause_PR_misc:
-        switch (s1_error_indication_p->cause.choice.protocol) {
-          case S1ap_CauseMisc_control_processing_overload:
-            S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_control_processing_overload\n");
-            break;
-          case S1ap_CauseMisc_not_enough_user_plane_processing_resources:
-        	S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_not_enough_user_plane_processing_resources\n");
-        	break;
-          case S1ap_CauseMisc_hardware_failure:
-        	S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_hardware_failure\n");
-        	break;
-          case S1ap_CauseMisc_om_intervention:
-        	S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_om_intervention\n");
-        	break;
-          case S1ap_CauseMisc_unspecified:
-        	S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_unspecified\n");
-        	break;
-          case S1ap_CauseMisc_unknown_PLMN:
-        	S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_unknown_PLMN\n");
-        	break;
-          default:
-            S1AP_WARN("Received S1 Error indication cause misc case not handled\n");
-        }
+      
+    case S1ap_Cause_PR_misc:
+      process_misc_failure(s1_error_indication_p->cause.choice.protocol);
       break;
+    default:
+      S1AP_WARN("Received an unknown S1 Error indication cause\n");
     }
   }
+  
   if ( s1_error_indication_p->presenceMask & S1AP_ERRORINDICATIONIES_CRITICALITYDIAGNOSTICS_PRESENT) {
-    // TODO continue
+    S1AP_WARN("Critical Diagnostic not supported\n");
   }
   // TODO continue
 
@@ -776,7 +609,7 @@ int s1ap_eNB_handle_initial_context_request(uint32_t               assoc_id,
       item_p->transportLayerAddress.size * 8 - item_p->transportLayerAddress.bits_unused;
 
     /* GTP tunnel endpoint ID */
-    OCTET_STRING_TO_INT32(&item_p->gTP_TEID, S1AP_INITIAL_CONTEXT_SETUP_REQ(message_p).e_rab_param[i].gtp_teid);
+    OCTET_STRING_TO_INT32 (&item_p->gTP_TEID, S1AP_INITIAL_CONTEXT_SETUP_REQ(message_p).e_rab_param[i].gtp_teid);
 
     /* Set the QOS informations */
     S1AP_INITIAL_CONTEXT_SETUP_REQ(message_p).e_rab_param[i].qos.qci = item_p->e_RABlevelQoSParameters.qCI;
@@ -935,23 +768,7 @@ int s1ap_eNB_handle_e_rab_setup_request(uint32_t               assoc_id,
     item_p = (S1ap_E_RABToBeSetupItemBearerSUReq_t *)s1ap_E_RABSetupRequest->e_RABToBeSetupListBearerSUReq.s1ap_E_RABToBeSetupItemBearerSUReq.array[i];
 
     S1AP_E_RAB_SETUP_REQ(message_p).e_rab_setup_params[i].e_rab_id = item_p->e_RAB_ID;
-
-    // check for the NAS PDU
-    if (item_p->nAS_PDU.size > 0 ) {
-      S1AP_E_RAB_SETUP_REQ(message_p).e_rab_setup_params[i].nas_pdu.length = item_p->nAS_PDU.size;
-
-      S1AP_E_RAB_SETUP_REQ(message_p).e_rab_setup_params[i].nas_pdu.buffer = malloc(sizeof(uint8_t) * item_p->nAS_PDU.size);
-
-      memcpy(S1AP_E_RAB_SETUP_REQ(message_p).e_rab_setup_params[i].nas_pdu.buffer,
-             item_p->nAS_PDU.buf, item_p->nAS_PDU.size); 
-      // S1AP_INFO("received a NAS PDU with size %d (%02x.%02x)\n",S1AP_E_RAB_SETUP_REQ(message_p).e_rab_setup_params[i].nas_pdu.length, item_p->nAS_PDU.buf[0], item_p->nAS_PDU.buf[1]);
-    } else {
-      S1AP_E_RAB_SETUP_REQ(message_p).e_rab_setup_params[i].nas_pdu.length = 0;
-      S1AP_E_RAB_SETUP_REQ(message_p).e_rab_setup_params[i].nas_pdu.buffer = NULL;
-      
-      S1AP_WARN("NAS PDU is not provided, generate a E_RAB_SETUP Failure (TBD) back to MME \n");
-      return -1;
-    }
+    
 
     /* Set the transport layer address */
     memcpy(S1AP_E_RAB_SETUP_REQ(message_p).e_rab_setup_params[i].sgw_addr.buffer,
@@ -984,3 +801,404 @@ int s1ap_eNB_handle_e_rab_setup_request(uint32_t               assoc_id,
 }
 
 
+static
+int s1ap_eNB_handle_s1_path_switch_request_ack(uint32_t               assoc_id,
+					       uint32_t               stream,
+					       struct s1ap_message_s *s1ap_message_p)
+{
+  S1ap_PathSwitchRequestAcknowledgeIEs_t *s1PathSwitchRequestAcknowledge_p;
+  s1ap_eNB_mme_data_t       *mme_desc_p;
+  s1ap_eNB_ue_context_t     *ue_desc_p        = NULL;
+  MessageDef                *message_p        = NULL;
+  int i;
+  DevAssert(s1ap_message_p != NULL);
+
+  s1PathSwitchRequestAcknowledge_p = &s1ap_message_p->msg.s1ap_PathSwitchRequestAcknowledgeIEs;
+    
+  
+  /* S1 Setup Response == Non UE-related procedure -> stream 0 */
+  if (stream != 0) {
+    S1AP_ERROR("[SCTP %d] Received s1 path switch request ack on stream != 0 (%d)\n",
+               assoc_id, stream);
+    return -1;
+  }
+
+  if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
+    S1AP_ERROR("[SCTP %d] Received S1 path switch request ack for non existing "
+               "MME context\n", assoc_id);
+    return -1;
+  }
+  
+  if ((ue_desc_p = s1ap_eNB_get_ue_context(mme_desc_p->s1ap_eNB_instance,
+                   s1PathSwitchRequestAcknowledge_p->eNB_UE_S1AP_ID)) == NULL) {
+    S1AP_ERROR("[SCTP %d] Received path switch request ack for non "
+               "existing UE context 0x%06lx\n", assoc_id,
+               s1PathSwitchRequestAcknowledge_p->eNB_UE_S1AP_ID);
+    return -1;
+  }
+  
+  if ( ue_desc_p->mme_ue_s1ap_id != s1PathSwitchRequestAcknowledge_p->mme_ue_s1ap_id){
+    S1AP_WARN("UE context mme_ue_s1ap_id is different form that of the message (%d != %ld)", 
+	      ue_desc_p->mme_ue_s1ap_id, s1PathSwitchRequestAcknowledge_p->mme_ue_s1ap_id);
+    
+  }
+
+  // send a message to RRC
+  message_p        = itti_alloc_new_message(TASK_S1AP, S1AP_PATH_SWITCH_REQ_ACK);
+  S1AP_PATH_SWITCH_REQ_ACK(message_p).ue_initial_id  = ue_desc_p->ue_initial_id;
+  S1AP_PATH_SWITCH_REQ_ACK(message_p).eNB_ue_s1ap_id = s1PathSwitchRequestAcknowledge_p->eNB_UE_S1AP_ID;
+  S1AP_PATH_SWITCH_REQ_ACK(message_p).mme_ue_s1ap_id = s1PathSwitchRequestAcknowledge_p->mme_ue_s1ap_id;
+
+  S1AP_PATH_SWITCH_REQ_ACK(message_p).next_hop_chain_count =
+    s1PathSwitchRequestAcknowledge_p->securityContext.nextHopChainingCount;
+
+  memcpy(&S1AP_PATH_SWITCH_REQ_ACK(message_p).next_security_key,
+         s1PathSwitchRequestAcknowledge_p->securityContext.nextHopParameter.buf,
+	 s1PathSwitchRequestAcknowledge_p->securityContext.nextHopParameter.size);
+  
+  // optional 
+  if (s1PathSwitchRequestAcknowledge_p->presenceMask &
+      S1AP_PATHSWITCHREQUESTACKNOWLEDGEIES_UEAGGREGATEMAXIMUMBITRATE_PRESENT) {
+    // todo
+    OCTET_STRING_TO_INT32 (
+			   &s1PathSwitchRequestAcknowledge_p->uEaggregateMaximumBitrate.uEaggregateMaximumBitRateUL,
+			   S1AP_PATH_SWITCH_REQ_ACK(message_p).ue_ambr.br_ul	   
+			   );
+    OCTET_STRING_TO_INT32 (
+			   &s1PathSwitchRequestAcknowledge_p->uEaggregateMaximumBitrate.uEaggregateMaximumBitRateDL,
+			   S1AP_PATH_SWITCH_REQ_ACK(message_p).ue_ambr.br_dl	   
+			   );
+    //S1AP_PATH_SWITCH_REQ_ACK(message_p).ue_ambr.br_ul = 10000; 
+    //S1AP_PATH_SWITCH_REQ_ACK(message_p).ue_ambr.br_dl = 10000;
+  } else {
+    S1AP_PATH_SWITCH_REQ_ACK(message_p).ue_ambr.br_ul = 0;
+    S1AP_PATH_SWITCH_REQ_ACK(message_p).ue_ambr.br_dl = 0;
+  }
+
+  if (s1PathSwitchRequestAcknowledge_p->presenceMask &
+     S1AP_PATHSWITCHREQUESTACKNOWLEDGEIES_E_RABTOBESWITCHEDULLIST_PRESENT) {
+    
+    S1AP_PATH_SWITCH_REQ_ACK(message_p).nb_e_rabs_tobeswitched =
+      s1PathSwitchRequestAcknowledge_p->e_RABToBeSwitchedULList.s1ap_E_RABToBeSwitchedULItem.count;
+    
+    
+    for (i = 0; i < s1PathSwitchRequestAcknowledge_p->e_RABToBeSwitchedULList.s1ap_E_RABToBeSwitchedULItem.count; i++) {
+      S1ap_E_RABToBeSwitchedULItem_t *item_p;
+      
+      item_p = (S1ap_E_RABToBeSwitchedULItem_t *)s1PathSwitchRequestAcknowledge_p->e_RABToBeSwitchedULList.s1ap_E_RABToBeSwitchedULItem.array[i];
+      
+      S1AP_PATH_SWITCH_REQ_ACK (message_p).e_rabs_tobeswitched[i].e_rab_id = item_p->e_RAB_ID;
+      memcpy(S1AP_PATH_SWITCH_REQ_ACK (message_p).e_rabs_tobeswitched[i].sgw_addr.buffer,
+	     item_p->transportLayerAddress.buf, item_p->transportLayerAddress.size);
+      S1AP_PATH_SWITCH_REQ_ACK (message_p).e_rabs_tobeswitched[i].sgw_addr.length =
+	item_p->transportLayerAddress.size * 8 - item_p->transportLayerAddress.bits_unused;
+      
+      OCTET_STRING_TO_INT32(&item_p->gTP_TEID,
+			    S1AP_PATH_SWITCH_REQ_ACK (message_p).e_rabs_tobeswitched[i].gtp_teid);
+    }
+  }
+
+  if (s1PathSwitchRequestAcknowledge_p->presenceMask &
+     S1AP_PATHSWITCHREQUESTACKNOWLEDGEIES_E_RABTOBERELEASEDLIST_PRESENT) {
+
+    S1AP_PATH_SWITCH_REQ_ACK(message_p).nb_e_rabs_tobereleased =
+      s1PathSwitchRequestAcknowledge_p->e_RABToBeReleasedList.s1ap_E_RABItem.count;
+    
+    for (i = 0; i < s1PathSwitchRequestAcknowledge_p->e_RABToBeReleasedList.s1ap_E_RABItem.count; i++) {
+      
+      S1ap_E_RABItem_t *item_p;
+      item_p = (S1ap_E_RABItem_t *) s1PathSwitchRequestAcknowledge_p->e_RABToBeReleasedList.s1ap_E_RABItem.array[i];
+      S1AP_PATH_SWITCH_REQ_ACK (message_p).e_rabs_tobereleased[i].e_rab_id = item_p->e_RAB_ID;
+    }
+  }
+
+  if (s1PathSwitchRequestAcknowledge_p->presenceMask &
+     S1AP_PATHSWITCHREQUESTACKNOWLEDGEIES_CRITICALITYDIAGNOSTICS_PRESENT) {
+    S1AP_WARN("S1AP_PATHSWITCHREQUESTACKNOWLEDGEIES_CRITICALITYDIAGNOSTICS flag not supported\n");
+  }
+  
+  if (s1PathSwitchRequestAcknowledge_p->presenceMask &
+      S1AP_PATHSWITCHREQUESTACKNOWLEDGEIES_MME_UE_S1AP_ID_2_PRESENT) {
+    S1AP_WARN("S1AP_PATHSWITCHREQUESTACKNOWLEDGEIES_MME_UE_S1AP_ID_2 flag not supported\n");
+  }
+  
+  
+  itti_send_msg_to_task(TASK_RRC_ENB, ue_desc_p->eNB_instance->instance, message_p);
+
+  return 0;
+}
+static
+int s1ap_eNB_handle_s1_path_switch_request_failure(uint32_t               assoc_id,
+						   uint32_t               stream,
+						   struct s1ap_message_s *s1ap_message_p)
+{
+  S1ap_PathSwitchRequestFailureIEs_t   *s1_PathSwitchRequestFailure_p;
+  s1ap_eNB_mme_data_t        *mme_desc_p;
+
+  DevAssert(s1ap_message_p != NULL);
+
+  s1_PathSwitchRequestFailure_p = &s1ap_message_p->msg.s1ap_PathSwitchRequestFailureIEs;
+  
+  /* S1 Setup Failure == Non UE-related procedure -> stream 0 */
+  if (stream != 0) {
+    S1AP_WARN("[SCTP %d] Received s1 path switch request failure on stream != 0 (%d)\n",
+              assoc_id, stream);
+  }
+  
+  if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
+    S1AP_ERROR("[SCTP %d] Received S1 path switch request for non existing "
+               "MME context\n", assoc_id);
+    return -1;
+  }
+  
+  switch(s1_PathSwitchRequestFailure_p->cause.present) {
+  case S1ap_Cause_PR_NOTHING:
+    S1AP_WARN("Received S1 Error indication cause NOTHING\n");
+    break;
+  case S1ap_Cause_PR_radioNetwork:
+    process_radio_network_failure(s1_PathSwitchRequestFailure_p->cause.choice.radioNetwork);
+    break;
+  case S1ap_Cause_PR_transport:
+    process_transport_failure(s1_PathSwitchRequestFailure_p->cause.choice.transport);
+    break;
+  case S1ap_Cause_PR_nas:
+    process_nas_failure(s1_PathSwitchRequestFailure_p->cause.choice.nas);
+    break;
+  case S1ap_Cause_PR_misc:
+    process_misc_failure(s1_PathSwitchRequestFailure_p->cause.choice.protocol);
+    break;
+  default:
+    S1AP_WARN("Received an unknown S1 Error indication cause \n");
+    
+  }	  
+  if (s1_PathSwitchRequestFailure_p->presenceMask & S1AP_PATHSWITCHREQUESTFAILUREIES_CRITICALITYDIAGNOSTICS_PRESENT) {
+   S1AP_WARN("Critical Diagnostic not supported\n");
+  }
+  // TODO continue
+
+ 
+  return 0;
+
+}
+// for the moment, only print the cause ;)
+static
+void process_radio_network_failure(S1ap_CauseRadioNetwork_t cause){
+  
+  
+	switch (cause) {
+	     case S1ap_CauseRadioNetwork_unspecified:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unspecified\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_tx2relocoverall_expiry:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_tx2relocoverall_expiry\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_successful_handover:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_successful_handover\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_release_due_to_eutran_generated_reason:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_release_due_to_eutran_generated_reason\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_handover_cancelled:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_handover_cancelled\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_partial_handover:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_partial_handover\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_ho_failure_in_target_EPC_eNB_or_target_system:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_ho_failure_in_target_EPC_eNB_or_target_system\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_ho_target_not_allowed:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_ho_target_not_allowed\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_tS1relocoverall_expiry:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_tS1relocoverall_expiry\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_tS1relocprep_expiry:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_tS1relocprep_expiry\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_cell_not_available:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_cell_not_available\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_unknown_targetID:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unknown_targetID\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_no_radio_resources_available_in_target_cell:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_no_radio_resources_available_in_target_cell\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_unknown_mme_ue_s1ap_id:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unknown_mme_ue_s1ap_id\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_unknown_enb_ue_s1ap_id:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unknown_enb_ue_s1ap_id\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_unknown_pair_ue_s1ap_id:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unknown_pair_ue_s1ap_id\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_handover_desirable_for_radio_reason:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_handover_desirable_for_radio_reason\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_time_critical_handover:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_time_critical_handover\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_resource_optimisation_handover:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_resource_optimisation_handover\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_reduce_load_in_serving_cell:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_reduce_load_in_serving_cell\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_user_inactivity:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_user_inactivity\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_radio_connection_with_ue_lost:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_radio_connection_with_ue_lost\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_load_balancing_tau_required:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_load_balancing_tau_required\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_cs_fallback_triggered:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_cs_fallback_triggered\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_ue_not_available_for_ps_service:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_ue_not_available_for_ps_service\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_radio_resources_not_available:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_radio_resources_not_available\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_failure_in_radio_interface_procedure:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_failure_in_radio_interface_procedure\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_invals1ap_id_qos_combination:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_invals1ap_id_qos_combination\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_interrat_redirection:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_interrat_redirection\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_interaction_with_other_procedure:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_interaction_with_other_procedure\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_unknown_E_RAB_ID:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_unknown_E_RAB_ID\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_multiple_E_RAB_ID_instances:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_multiple_E_RAB_ID_instances\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_encryption_and_or_integrity_protection_algorithms_not_supported:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_encryption_and_or_integrity_protection_algorithms_not_supported\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_s1_intra_system_handover_triggered:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_s1_intra_system_handover_triggered\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_s1_inter_system_handover_triggered:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_s1_inter_system_handover_triggered\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_x2_handover_triggered:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_x2_handover_triggered\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_redirection_towards_1xRTT:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_redirection_towards_1xRTT\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_not_supported_QCI_value:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_not_supported_QCI_value\n");
+            break;
+  	      case S1ap_CauseRadioNetwork_invals1ap_id_CSG_Id:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseRadioNetwork_invals1ap_id_CSG_Id\n");
+            break;
+      	  default:
+            S1AP_WARN("Received S1 Error indication cause radio network case not handled\n");
+      	}
+	
+}
+
+static
+void process_transport_failure(S1ap_CauseTransport_t cause) {
+  switch (cause) {
+  case S1ap_CauseTransport_transport_resource_unavailable:
+    S1AP_WARN("Received S1 Error indication S1ap_CauseTransport_transport_resource_unavailable\n");
+    break;
+  case S1ap_CauseTransport_unspecified:
+    S1AP_WARN("Received S1 Error indication S1ap_CauseTransport_unspecified\n");
+    break;
+  default:
+    S1AP_WARN("Received S1 Error indication cause transport case not handled\n");
+  }
+}
+
+static
+void process_nas_failure(S1ap_CauseNas_t cause) {
+  switch (cause) {
+    	  case S1ap_CauseNas_normal_release:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseNas_normal_release\n");
+            break;
+      	  case S1ap_CauseNas_authentication_failure:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseNas_authentication_failure\n");
+            break;
+      	  case S1ap_CauseNas_detach:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseNas_detach\n");
+            break;
+      	  case S1ap_CauseNas_unspecified:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseNas_unspecified\n");
+            break;
+      	  case S1ap_CauseNas_csg_subscription_expiry:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseNas_csg_subscription_expiry\n");
+            break;
+      	  default:
+            S1AP_WARN("Received S1 Error indication cause nas case not handled\n");
+      	}
+
+}
+
+static
+void process_protocol_failure(S1ap_CauseProtocol_t cause){
+  switch (cause) {
+      	  case S1ap_CauseProtocol_transfer_syntax_error:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_transfer_syntax_error\n");
+            break;
+      	  case S1ap_CauseProtocol_abstract_syntax_error_reject:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_abstract_syntax_error_reject\n");
+            break;
+      	  case S1ap_CauseProtocol_abstract_syntax_error_ignore_and_notify:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_abstract_syntax_error_ignore_and_notify\n");
+            break;
+      	  case S1ap_CauseProtocol_message_not_compatible_with_receiver_state:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_message_not_compatible_with_receiver_state\n");
+            break;
+      	  case S1ap_CauseProtocol_semantic_error:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_semantic_error\n");
+            break;
+      	  case S1ap_CauseProtocol_abstract_syntax_error_falsely_constructed_message:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_abstract_syntax_error_falsely_constructed_message\n");
+            break;
+      	  case S1ap_CauseProtocol_unspecified:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseProtocol_unspecified\n");
+            break;
+      	  default:
+            S1AP_WARN("Received S1 Error indication cause protocol case not handled\n");
+      	}
+ 
+}
+
+static
+void process_misc_failure(S1ap_CauseMisc_t cause){
+  switch (cause) {
+          case S1ap_CauseMisc_control_processing_overload:
+            S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_control_processing_overload\n");
+            break;
+          case S1ap_CauseMisc_not_enough_user_plane_processing_resources:
+        	S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_not_enough_user_plane_processing_resources\n");
+        	break;
+          case S1ap_CauseMisc_hardware_failure:
+        	S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_hardware_failure\n");
+        	break;
+          case S1ap_CauseMisc_om_intervention:
+        	S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_om_intervention\n");
+        	break;
+          case S1ap_CauseMisc_unspecified:
+        	S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_unspecified\n");
+        	break;
+          case S1ap_CauseMisc_unknown_PLMN:
+        	S1AP_WARN("Received S1 Error indication S1ap_CauseMisc_unknown_PLMN\n");
+        	break;
+          default:
+            S1AP_WARN("Received S1 Error indication cause misc case not handled\n");
+        }
+}

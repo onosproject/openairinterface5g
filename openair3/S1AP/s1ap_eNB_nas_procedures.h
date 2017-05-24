@@ -44,4 +44,7 @@ int s1ap_eNB_ue_capabilities(instance_t instance,
 int s1ap_eNB_e_rab_setup_resp(instance_t instance,
                               s1ap_e_rab_setup_resp_t *e_rab_setup_resp_p);
 
+int s1ap_eNB_path_switch_req(instance_t instance, 
+			     s1ap_path_switch_req_t *path_switch_req_p);
+
 #endif /* S1AP_ENB_NAS_PROCEDURES_H_ */

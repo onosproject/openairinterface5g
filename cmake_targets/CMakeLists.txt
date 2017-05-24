@@ -415,7 +415,7 @@ add_library(S1AP_ENB
 ########################################
 # X2AP LAYER OPTIONS
 ##########################
-add_boolean_option(ENABLE_USE_X2                True "Enable X2 interface for X2 hanodover")
+add_boolean_option(ENABLE_USE_X2                True "Enable X2 interface for X2 handover")
 
 if (${ENABLE_USE_X2})
 

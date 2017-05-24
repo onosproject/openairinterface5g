@@ -353,11 +353,11 @@ x2ap_eNB_handle_handover_response(uint32_t assoc_id,
   x2ap_eNB_data = x2ap_get_eNB(NULL, assoc_id, 0);
   DevAssert(x2ap_eNB_data != NULL);
 
-  m = itti_alloc_new_message(TASK_X2AP, X2AP_HANDOVER_RESP);
+  m = itti_alloc_new_message(TASK_X2AP, X2AP_HANDOVER_REQ_ACK);
   /* TODO: fill the message */
   extern int x2id_to_source_rnti[1];
-  X2AP_HANDOVER_RESP(m).source_x2id = x2HandoverRequestAck->old_eNB_UE_X2AP_ID;
-  X2AP_HANDOVER_RESP(m).source_rnti = x2id_to_source_rnti[x2HandoverRequestAck->old_eNB_UE_X2AP_ID];
+  X2AP_HANDOVER_REQ_ACK(m).source_x2id = x2HandoverRequestAck->old_eNB_UE_X2AP_ID;
+  X2AP_HANDOVER_REQ_ACK(m).source_rnti = x2id_to_source_rnti[x2HandoverRequestAck->old_eNB_UE_X2AP_ID];
   itti_send_msg_to_task(TASK_RRC_ENB, x2ap_eNB_data->x2ap_eNB_instance->instance, m);
   return 0;
 }

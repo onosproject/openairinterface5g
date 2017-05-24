@@ -395,9 +395,9 @@ abort();
   return ret;
 }
 
-int x2ap_eNB_generate_x2_handover_response(x2ap_eNB_instance_t *instance,
-				           x2ap_eNB_data_t *x2ap_enb_data_p,
-                                           int source_x2id)
+int x2ap_eNB_generate_x2_handover_req_ack(x2ap_eNB_instance_t *instance,
+					      x2ap_eNB_data_t *x2ap_enb_data_p,
+					      int source_x2id)
 {
 
   x2ap_message              message;

@@ -837,3 +837,152 @@ int s1ap_eNB_e_rab_setup_resp(instance_t instance,
 
   return ret;
 }
+
+//------------------------------------------------------------------------------
+int s1ap_eNB_path_switch_req(instance_t instance, 
+			     s1ap_path_switch_req_t *path_switch_req_p)
+//------------------------------------------------------------------------------
+{
+  s1ap_eNB_instance_t          *s1ap_eNB_instance_p = NULL;
+  struct s1ap_eNB_ue_context_s *ue_context_p        = NULL;
+
+  S1ap_PathSwitchRequestIEs_t  *initial_ies_p  = NULL;
+ 
+  s1ap_message  message;
+
+  uint8_t  *buffer  = NULL;
+  uint32_t length;
+  int      ret = -1;
+  int      i;
+
+  /* Retrieve the S1AP eNB instance associated with Mod_id */
+  s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
+
+  DevAssert(path_switch_req_p != NULL);
+  DevAssert(s1ap_eNB_instance_p != NULL);
+
+  if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p,
+					      path_switch_req_p->eNB_ue_s1ap_id)) == NULL) {
+    /* The context for this eNB ue s1ap id doesn't exist in the map of eNB UEs */
+    S1AP_WARN("Failed to find ue context associated with eNB ue s1ap id: 0x%06x\n",
+              path_switch_req_p->eNB_ue_s1ap_id);
+    return -1;
+  }
+
+  /* Uplink NAS transport can occur either during an s1ap connected state
+   * or during initial attach (for example: NAS authentication).
+   */
+  if (!(ue_context_p->ue_state == S1AP_UE_CONNECTED ||
+        ue_context_p->ue_state == S1AP_UE_WAITING_CSR)) {
+    S1AP_WARN("You are attempting to send NAS data over non-connected "
+              "eNB ue s1ap id: %06x, current state: %d\n",
+              path_switch_req_p->eNB_ue_s1ap_id, ue_context_p->ue_state);
+    return -1;
+  }
+ 
+  /* Prepare the S1AP message to encode */
+  memset(&message, 0, sizeof(s1ap_message));
+
+  message.direction     = S1AP_PDU_PR_successfulOutcome;
+  message.procedureCode = S1ap_ProcedureCode_id_PathSwitchRequest;
+  message.criticality   = S1ap_Criticality_reject;
+
+  initial_ies_p = &message.msg.s1ap_PathSwitchRequestIEs;
+  
+  initial_ies_p->eNB_UE_S1AP_ID = path_switch_req_p->eNB_ue_s1ap_id;
+  initial_ies_p->sourceMME_UE_S1AP_ID = ue_context_p->mme_ue_s1ap_id;
+
+  // S1AP_PATHSWITCHREQUESTIES_CSG_ID_PRESENT                 
+  // S1AP_PATHSWITCHREQUESTIES_CELLACCESSMODE_PRESENT         
+  // S1AP_PATHSWITCHREQUESTIES_SOURCEMME_GUMMEI_PRESENT       
+
+  initial_ies_p->presenceMask |= 0;
+  
+  for (i = 0; i < path_switch_req_p->nb_of_e_rabs; i++) { 
+    S1ap_E_RABToBeSwitchedDLItem_t  *new_item;
+
+    new_item = calloc(1, sizeof(S1ap_E_RABToBeSwitchedDLListIEs_t));
+    
+    new_item->e_RAB_ID = path_switch_req_p->e_rabs_tobeswitched[i].e_rab_id;
+    GTP_TEID_TO_ASN1(path_switch_req_p->e_rabs_tobeswitched[i].gtp_teid, &new_item->gTP_TEID);
+    
+    new_item->transportLayerAddress.buf = path_switch_req_p->e_rabs_tobeswitched[i].eNB_addr.buffer; 
+    new_item->transportLayerAddress.size = path_switch_req_p->e_rabs_tobeswitched[i].eNB_addr.length;
+    new_item->transportLayerAddress.bits_unused = 0;
+    
+    S1AP_DEBUG("path_switch_req: e_rab ID %ld, teid %u, enb_addr %d.%d.%d.%d, SIZE %d\n", 
+	       new_item->e_RAB_ID,
+	       path_switch_req_p->e_rabs_tobeswitched[i].gtp_teid,
+	       new_item->transportLayerAddress.buf[0],
+	       new_item->transportLayerAddress.buf[1],
+	       new_item->transportLayerAddress.buf[2],
+	       new_item->transportLayerAddress.buf[3],
+	       new_item->transportLayerAddress.size);
+    
+    
+    S1ap_IE_t *ie = s1ap_new_ie(S1ap_ProtocolIE_ID_id_E_RABToBeSwitchedDLItem,
+				S1ap_Criticality_ignore,
+				&asn_DEF_S1ap_E_RABToBeSwitchedDLItem,
+				new_item);
+    
+    ASN_SEQUENCE_ADD(&initial_ies_p->e_RABToBeSwitchedDLList.s1ap_E_RABToBeSwitchedDLItem,
+                     ie);
+  }
+  // S1ap_EUTRAN_CGI_t    
+  MCC_MNC_TO_PLMNID(
+		    s1ap_eNB_instance_p->mcc,
+		    s1ap_eNB_instance_p->mnc,
+		    s1ap_eNB_instance_p->mnc_digit_length,
+		    &initial_ies_p->eutran_cgi.pLMNidentity);
+
+  MACRO_ENB_ID_TO_CELL_IDENTITY(s1ap_eNB_instance_p->eNB_id,
+				0,
+				&initial_ies_p->eutran_cgi.cell_ID);
+  // S1ap_TAI_t  
+  /* MCC/MNC should be repeated in TAI and EUTRAN CGI */
+  MCC_MNC_TO_PLMNID(
+    s1ap_eNB_instance_p->mcc,
+    s1ap_eNB_instance_p->mnc,
+    s1ap_eNB_instance_p->mnc_digit_length,
+    &initial_ies_p->tai.pLMNidentity);
+  
+  TAC_TO_ASN1(s1ap_eNB_instance_p->tac,&initial_ies_p->tai.tAC);
+
+  //S1ap_UESecurityCapabilities_t 
+  INT16_TO_OCTET_STRING(
+			path_switch_req_p->security_capabilities.encryption_algorithms,
+			&initial_ies_p->ueSecurityCapabilities.encryptionAlgorithms
+			);
+  INT16_TO_OCTET_STRING(
+			path_switch_req_p->security_capabilities.integrity_algorithms,
+			&initial_ies_p->ueSecurityCapabilities.encryptionAlgorithms
+			);
+			
+  fprintf(stderr, "start encode\n");
+  if (s1ap_eNB_encode_pdu(&message, &buffer, &length) < 0) {
+    S1AP_ERROR("Failed to encode Path Switch Req \n");
+    /* Encode procedure has failed... */
+    return -1;
+  }
+
+ 
+  
+  MSC_LOG_TX_MESSAGE(
+    MSC_S1AP_ENB,
+    MSC_S1AP_MME,
+    (const char *)buffer,
+    length,
+    MSC_AS_TIME_FMT" E_RAN Setup successfulOutcome eNB_ue_s1ap_id %u mme_ue_s1ap_id %u",
+    0,0,//MSC_AS_TIME_ARGS(ctxt_pP),
+    initial_ies_p->eNB_UE_S1AP_ID,
+    initial_ies_p->sourceMME_UE_S1AP_ID);
+
+  /* UE associated signalling -> use the allocated stream */
+  s1ap_eNB_itti_send_sctp_data_req(s1ap_eNB_instance_p->instance,
+                                   ue_context_p->mme_ref->assoc_id, buffer,
+                                   length, ue_context_p->tx_stream);
+
+  return ret;
+}
+
+

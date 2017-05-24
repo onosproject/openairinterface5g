@@ -48,4 +48,4 @@ MESSAGE_DEF(X2AP_DEREGISTERED_ENB_IND      , MESSAGE_PRIORITY_MED, x2ap_deregist
 
 /* handover messages X2AP <-> RRC */
 MESSAGE_DEF(X2AP_HANDOVER_REQ              , MESSAGE_PRIORITY_MED, x2ap_handover_req_t              , x2ap_handover_req)
-MESSAGE_DEF(X2AP_HANDOVER_RESP             , MESSAGE_PRIORITY_MED, x2ap_handover_resp_t             , x2ap_handover_resp)
+MESSAGE_DEF(X2AP_HANDOVER_REQ_ACK          , MESSAGE_PRIORITY_MED, x2ap_handover_req_ack_t          , x2ap_handover_req_ack)

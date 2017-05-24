@@ -2273,7 +2273,9 @@ rrc_eNB_process_MeasurementReport(
   LOG_I(RRC, "RSRP of Source %d\n", measResults2->measResultServCell.rsrpResult);
   LOG_I(RRC, "RSRQ of Source %d\n", measResults2->measResultServCell.rsrqResult);
 #endif
-
+  /* algorithm to decide whether to trigger HO or not */ 
+  
+  
   /* if the UE is not in handover mode, start handover procedure */
   if (ue_context_pP->ue_context.Status != RRC_HO_EXECUTION) {
     MessageDef      *msg;
@@ -2361,7 +2363,7 @@ rrc_eNB_generate_HandoverPreparationInformation(
 {
   struct rrc_eNB_ue_context_s*        ue_context_target_p = NULL;
   //uint8_t                             UE_id_target        = -1;
-  uint8_t                             mod_id_target = get_adjacent_cell_mod_id(targetPhyId);
+  uint8_t                             mod_id_target = get_adjacent_cell_mod_id(targetPhyId);   /*simulation related  var*/ 
   HANDOVER_INFO                      *handoverInfo = CALLOC(1, sizeof(*handoverInfo));
   /*
      uint8_t buffer[100];
@@ -2404,6 +2406,7 @@ rrc_eNB_generate_HandoverPreparationInformation(
   ue_context_pP->ue_context.handover_info->ho_prepare = 0xFF;    //0xF0;
   ue_context_pP->ue_context.handover_info->ho_complete = 0;
 
+  /* simulation related logic */
   if (mod_id_target != 0xFF) {
     //UE_id_target = rrc_find_free_ue_index(modid_target);
     ue_context_target_p =
@@ -2646,10 +2649,10 @@ check_handovers(
         memcpy(UE_rrc_inst[0].sib1[0]->cellAccessRelatedInfo.cellIdentity.buf,
                eNB_rrc_inst[ctxt_pP->module_id].carrier[0].sib1->cellAccessRelatedInfo.cellIdentity.buf,
                4);
-        msg = itti_alloc_new_message(TASK_RRC_ENB, X2AP_HANDOVER_RESP);
+        msg = itti_alloc_new_message(TASK_RRC_ENB, X2AP_HANDOVER_REQ_ACK);
         /* TODO: remove this hack */
-        X2AP_HANDOVER_RESP(msg).target_mod_id = 1 - ctxt_pP->module_id;
-        X2AP_HANDOVER_RESP(msg).source_x2id = ue_context_p->ue_context.handover_info->source_x2id;
+        X2AP_HANDOVER_REQ_ACK(msg).target_mod_id = 1 - ctxt_pP->module_id;
+        X2AP_HANDOVER_REQ_ACK(msg).source_x2id = ue_context_p->ue_context.handover_info->source_x2id;
         itti_send_msg_to_task(TASK_X2AP, ENB_MODULE_ID_TO_INSTANCE(ctxt_pP->module_id), msg);
       }
 
@@ -5428,15 +5431,19 @@ rrc_enb_task(
       break;
 
 #   endif
-
+    case S1AP_PATH_SWITCH_REQ_ACK:
+      LOG_I(RRC, "[eNB %d] received path switch ack %s\n", instance, msg_name_p);
+      rrc_eNB_process_S1AP_PATH_SWITCH_REQ_ACK(msg_p, msg_name_p, instance);
+      break;
+      
     case X2AP_HANDOVER_REQ:
       LOG_I(RRC, "[eNB %d] X2-Received %s\n", instance, msg_name_p);
       rrc_eNB_process_handoverPreparationInformation(instance, &X2AP_HANDOVER_REQ(msg_p));
       break;
 
-    case X2AP_HANDOVER_RESP: { 
+    case X2AP_HANDOVER_REQ_ACK: { 
       struct rrc_eNB_ue_context_s *ue_context_p = NULL;
-      ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[instance], X2AP_HANDOVER_RESP(msg_p).source_rnti);
+      ue_context_p = rrc_eNB_get_ue_context(&eNB_rrc_inst[instance], X2AP_HANDOVER_REQ_ACK(msg_p).source_rnti);
       LOG_I(RRC, "[eNB %d] X2-Received %s\n", instance, msg_name_p);
       DevAssert(ue_context_p != NULL);
       if (ue_context_p->ue_context.handover_info->state != HO_REQUEST) abort();
