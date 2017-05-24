@@ -2270,8 +2270,8 @@ rrc_eNB_process_MeasurementReport(
   LOG_I(RRC, "RSRP of Source %ld\n", measResults2->measResultPCell.rsrpResult);
   LOG_I(RRC, "RSRQ of Source %ld\n", measResults2->measResultPCell.rsrqResult);
 #else
-  LOG_I(RRC, "RSRP of Source %d\n", measResults2->measResultServCell.rsrpResult);
-  LOG_I(RRC, "RSRQ of Source %d\n", measResults2->measResultServCell.rsrqResult);
+  LOG_I(RRC, "RSRP of Source %ld\n", measResults2->measResultServCell.rsrpResult);
+  LOG_I(RRC, "RSRQ of Source %ld\n", measResults2->measResultServCell.rsrqResult);
 #endif
   /* algorithm to decide whether to trigger HO or not */ 
   
@@ -3965,9 +3965,9 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
             dest_ip_offset = 8;
 #      endif
             LOG_I(OIP,
-                  "[eNB %d] Config the oai%d to send/receive pkt on DRB %d to/from the protocol stack\n",
+                  "[eNB %d] Config the oai%d to send/receive pkt on DRB %ld to/from the protocol stack\n",
                   ctxt_pP->module_id, ctxt_pP->module_id,
-                  (ue_context_pP->local_uid * maxDRB) + DRB_configList->list.array[i]->drb_Identity);
+                  (long int)((ue_context_pP->local_uid * maxDRB) + DRB_configList->list.array[i]->drb_Identity));
             ue_module_id = oai_emulation.info.eNB_ue_local_uid_to_ue_module_id[ctxt_pP->module_id][ue_context_pP->local_uid];
             rb_conf_ipv4(0, //add
                          ue_module_id,  //cx
