@@ -19,8 +19,8 @@
  *      contact@openairinterface.org
  */
 
-#ifndef __INIT_DEFS__H__
-#define __INIT_DEFS__H__
+#ifndef __INIT_DEFS_NB_IoT__H__
+#define __INIT_DEFSJ_NB_IoT__H__
 
 #include "PHY/defs.h"
 
@@ -338,16 +338,17 @@ void NB_phy_config_mib_eNB(int                    Mod_id,
 			int                    Ncp,
 			int                    p_eNB,
 			uint32_t               dl_CarrierFreq,
-			uint32_t               ul_CarrierFreq,
-			struct MasterInformationBlock_NB__operationModeInfo_r13_u operationModeInfo);
+			uint32_t               ul_CarrierFreq
+			//struct MasterInformationBlock_NB__operationModeInfo_r13 operationModeInfo
+      );
 
 /*NB_phy_config_sib1_eNB is not needed since NB-IoT use only FDD mode*/
 
 /*brief Configure LTE_DL_FRAME_PARMS with components of SIB2-NB (at eNB).*/
 void NB_phy_config_sib2_eNB(module_id_t                            Mod_id,
                          int                                CC_id,
-                         RadioResourceConfigCommonSIB_NB_r13         *radioResourceConfigCommon,
-                         ARFCN_ValueEUTRA_r9_t                     *ul_CArrierFreq,,
+                         RadioResourceConfigCommonSIB_NB_r13_t         *radioResourceConfigCommon,
+                         ARFCN_ValueEUTRA_r9_t                     *ul_CArrierFreq
                          );
 
 void NB_phy_config_dedicated_eNB(module_id_t Mod_id,

@@ -714,6 +714,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   int8_t UE_id = 0;
   uint8_t ul_subframe;
   uint32_t ul_frame;
+  //uint8_t num_npdcch_symbols = 0;
 
   //for NB-IoT
 
@@ -743,7 +744,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
 
   //ignore the PMCH part only do the generate PSS/SSS, note: Seperate MIB from here
-  common_signal_procedures(eNB,proc);
+  //common_signal_procedures(eNB,proc);
 
   while(!oai_exit)
     {
@@ -756,7 +757,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       /*Take the structures from the shared structures*/
       //Sched_Rsp = ;
 
-      /*If there is a DCI, packed it after this procedure, we'll have a DCI PDU*/
+      /*If there is a DCI, packed it ,after this procedure, we'll have a DCI PDU*/
 
       if(Sched_Rsp.DCI_Content)
         {
@@ -798,6 +799,8 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
       /*remove the part save old HARQ information for PHICH generation*/
 
+      //num_npdcch_symbols = DCI_PDU->num_npdcch_symbols;
+
       /*Loop over all the dci to generate DLSCH allocation, there is only 1 DCI for NB-IoT in the same time*/
       dci_alloc = &DCI_pdu->dci_alloc[i];
       if ((dci_alloc->rnti<= P_RNTI) && (dci_alloc->ra_flag!=1)) 
@@ -807,21 +810,30 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       else 
         UE_id=0;
     
-      generate_eNB_dlsch_params(eNB,proc,dci_alloc,UE_id);
+      //generate_eNB_dlsch_params(eNB,proc,dci_alloc,UE_id);
       
-      // Apply physicalConfigDedicated if needed, don't know if needed in NB-IoT or not
-      // This is for UEs that have received this IE, which changes these DL and UL configuration, we apply after a delay for the eNodeB UL parameters
-      //phy_config_dedicated_eNB_step2(eNB);
+      /* Apply physicalConfigDedicated if needed, don't know if needed in NB-IoT or not
+       This is for UEs that have received this IE, which changes these DL and UL configuration, we apply after a delay for the eNodeB UL parameters
+      phy_config_dedicated_eNB_step2(eNB);*/
 
       dci_alloc = &DCI_pdu->dci_alloc[i];
 
       if (dci_alloc->format == DCIFormatN0) // this is a ULSCH allocation
         {  
           UE_id = find_ue((int16_t)dci_alloc->rnti,eNB);
-          generate_eNB_ulsch_params(eNB,proc,dci_alloc,UE_id);
+          //generate_eNB_ulsch_params(eNB,proc,dci_alloc,UE_id);
         }
 
+      /*If we have DCI to generate do it now TODO : have a generate dci top for NB_IoT */      
+      //num_npdcch_symbols = NB_generate_dci_top();
 
+      if(Sched_Rsp.pdu_payload)
+        {
+            /*TODO: MPDSCH procedures for NB-IoT*/
+            //npdsch_procedures();
+        }
+
+      if (do_meas==1) 
+        stop_meas(&eNB->phy_proc_tx);
     }
-
 }

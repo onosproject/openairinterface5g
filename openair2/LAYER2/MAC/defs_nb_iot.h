@@ -416,7 +416,8 @@ typedef struct {
 } __attribute__((__packed__))POWER_HEADROOM_CMD_NB;
 
 typedef struct {
-  //delete the count for the DCI numbers and symbols,NUM_DCI_MAX should set to 1 
+  //delete the count for the DCI numbers,NUM_DCI_MAX should set to 1 
+  uint32_t num_npdcch_symbols;
   DCI_ALLOC_t dci_alloc[NUM_DCI_MAX] ;
 } DCI_PDU_NB;
 typedef struct {

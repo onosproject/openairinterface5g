@@ -36,7 +36,6 @@
 //NB-IoT
 #include "defs_nb_iot.h"
 #include "RadioResourceConfigCommonSIB-NB-r13.h"
-#include "PHY/impl_defs_lte_nb_iot.h"
 #include "RadioResourceConfigDedicated-NB-r13.h"
 
 extern uint16_t prach_root_sequence_map0_3[838];
