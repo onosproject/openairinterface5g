@@ -65,8 +65,15 @@ Comment: 15 warnings fixed
 5/23
 Add:        openair1/PHY/LTE_TRANSPORT/defs_nb_iot.h
 Modified:   openair2/PHY_INTERFACE/IF_Module_nb_iot.h
-Modified:   openair2/LAYER2/MAC/phy_procedures_lte_eNB_nb_iot.c
+Modified:   openair1/Sched/phy_procedures_lte_eNB_nb_iot.c
 
 Comment: merge with RRC branch, start the TX part implementation
+
+5/27
+Modified:   openair2/LAYER2/MAC/phy_procedures_lte_eNB_nb_iot.c
+
+Comment: Complete the TX part, add the NB_generate_eNB_dlsch_params and NB_generate_eNB_ulsch_params
+	 Since original OAI packed the DCI in MAC, and unpack at PHY to apply the physical layer configuration.
+         so we'll apply the configuration and pack the DCI at the same time.
 
 
