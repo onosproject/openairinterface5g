@@ -74,7 +74,7 @@ typedef struct {
   //Modify uint8_t mcs[8];
   /// TPC from last scheduling
   //Delete uint8_t oldTPC[8];
-  // PHY interface info
+  // PHY interface infoerror
   /// DCI format for DLSCH
   uint16_t DLSCH_dci_fmt;
   /// Current Aggregation Level for DCI
@@ -95,7 +95,7 @@ typedef struct {
   //Delete int8_t pre_allocated_rb_table_index_ul;
   /// total allocated RBs
   //Delete int8_t total_allocated_rbs;
-  /// pre-assigned MCS by the ulsch preprocessor
+  /// pre-assigned MCS by the ulsch preprocessorerror
   uint8_t pre_assigned_mcs_ul;
   /// assigned MCS by the ulsch scheduler
   uint8_t assigned_mcs_ul;
