@@ -99,12 +99,12 @@ LCHAN_DESC BCCH_LCHAN_DESC,CCCH_LCHAN_DESC,DCCH_LCHAN_DESC,DTCH_DL_LCHAN_DESC,DT
 //MAC_AVG_T BCCH_MEAS_AVG, CCCH_MEAS_AVG,DCCH_MEAS_AVG, DTCH_MEAS_AVG;
 
 // timers (TS 36.331 "UE-TimersAndConstants-NB" pag 622) (milliseconds) XXX MP:--> not sure they will be used
-uint16_t T300[8] = {2500,4000,6000,10000, 15000,25000,40000,60000};
-uint16_t T301[8] = {2500,4000,6000,10000, 15000,25000,40000,60000}; //MP: this start at RRCconnectionReestablishmentReq (not implemented in OAI)
-uint16_t T310[8] = {0,200,500,1000,2000,4000,8000};
-uint16_t T311[8] = {1000, 3000, 5000, 10000, 15000, 20000, 30000}; //MP: may not used
-uint16_t N310[8] = {1,2,3,4,6,8,10,20};
-uint16_t N311[8] = {1,2,3,4,5,6,8,10};
+uint16_t T300_NB[8] = {2500,4000,6000,10000, 15000,25000,40000,60000};
+uint16_t T301_NB[8] = {2500,4000,6000,10000, 15000,25000,40000,60000}; //MP: this start at RRCconnectionReestablishmentReq (not implemented in OAI)
+uint16_t T310_NB[8] = {0,200,500,1000,2000,4000,8000};
+uint16_t T311_NB[8] = {1000, 3000, 5000, 10000, 15000, 20000, 30000}; //MP: may not used
+uint16_t N310_NB[8] = {1,2,3,4,6,8,10,20};
+uint16_t N311_NB[8] = {1,2,3,4,5,6,8,10};
 
 
 // MP: TimeToTrigger not used in NB-IoT

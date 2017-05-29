@@ -27,10 +27,12 @@
  * \email: raymond.knopp@eurecom.fr
  */
 #include "PHY/defs.h"
+#include "PHY/INIT/defs_nb_iot.h"
 #include "SCHED/defs.h"
 #include "platform_types.h"
 #include "defs_nb_iot.h" //RRC
 #include "LAYER2/MAC/defs_nb_iot.h" //MAC
+#include "LAYER2/MAC/defs.h" // MAC because see the PHY functions
 #include "extern.h"
 #include "LAYER2/MAC/extern.h"
 #include "UTIL/LOG/log.h"
@@ -38,10 +40,14 @@
 #include "rrc_eNB_UE_context.h"
 #include "pdcp_primitives.h"
 #include "pdcp.h"
+#include "pdcp_util.h"
+#include "rlc.h"
 #include "msc.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 #include "gtpv1u.h"
 #include "osa_defs.h"
+#include "pdcp_sequence_manager.h"
+#include "UTIL/OTG/otg_rx.h"
 
 #ifdef PHY_EMUL
 #include "SIMULATION/simulation_defs.h"
@@ -66,7 +72,7 @@ typedef boolean_t mib_flag_t;
 #define MIB_FLAG_YES	TRUE
 #define MIB_FLAG_NO		FALSE
 
-mui_t mui=0;
+//mui_t mui_NB=0;
 
 //XXX MP: just temporary usage since i put in one single file all the primitives modified (but they should be relocated in the
 //proper file where they are defined as indicated in the comments
@@ -95,6 +101,10 @@ extern struct mac_data_ind mac_rlc_deserialize_tb (
 		  const tb_size_t tb_sizeP,
 		  num_tb_t  num_tbP,
 		  crc_t    *crcs_pP);
+extern void rlc_am_init_timer_poll_retransmit(
+	    const protocol_ctxt_t* const ctxt_pP,
+	    rlc_am_entity_t* const       rlc_pP,
+	    const uint32_t               time_outP);
 
 
 /*---------------------------------RRC-MAC-----------------------------------*/
@@ -139,9 +149,9 @@ int NB_rrc_mac_config_req_eNB(
 
 
   if (mib_NB!=NULL) {
-    if (eNB_mac_inst == NULL) l2_init_eNB(); //XXX MP: to be included in the MAC/main.c
+    //if (eNB_mac_inst == NULL) l2_init_eNB(); //XXX MP: to be included in the MAC/main.c
 
-    mac_top_init_eNB(); //XXX MP:  to be included in the MAC/main.c
+   // mac_top_init_eNB(); //XXX MP:  to be included in the MAC/main.c
 
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].mib_NB           = mib_NB;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].physCellId     = physCellId;
@@ -150,16 +160,17 @@ int NB_rrc_mac_config_req_eNB(
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].eutra_band     = eutra_band;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].dl_CarrierFreq = dl_CarrierFreq;
 
-//  NB_phy_config_mib_eNB(Mod_idP,CC_idP, //XXX MP: defined by Nick in lte_init_nb_iot.c
-//				  eutra_band,
-//				  physCellId,
-//				  Ncp,
-//				  p_eNB,
-//				  dl_CarrierFreq,
-//				  ul_CarrierFreq,
-//				  mib_NB->message.operationModeInfo_r13);
+  NB_phy_config_mib_eNB(Mod_idP,
+		  	  	  	  	CC_idP,
+						eutra_band,
+						physCellId,
+						Ncp,
+						p_eNB,
+						dl_CarrierFreq,
+						ul_CarrierFreq);
+				  //mib_NB->message.operationModeInfo_r13);
 
-    mac_init_cell_params(Mod_idP,CC_idP);
+   // mac_init_cell_params(Mod_idP,CC_idP); //XXX to be defined in MAC/main.c
   }
 
   //phy_config_sib1_eNB--> not implemented for NB_IoT
@@ -167,10 +178,10 @@ int NB_rrc_mac_config_req_eNB(
   if (radioResourceConfigCommon!=NULL) {
       LOG_I(MAC,"[CONFIG]SIB2/3-NB Contents (partial)\n");
 
-      LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13= %d\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13);
-      LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13= %d\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13);
+      LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13= %ld\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13);
+      LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13= %ld\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13);
       LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupHoppingEnabled_r13= %d\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupHoppingEnabled_r13);
-      LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13= %d\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13);
+      LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13= %ld\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13);
 
 
       eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].radioResourceConfigCommon = radioResourceConfigCommon;
@@ -179,12 +190,12 @@ int NB_rrc_mac_config_req_eNB(
 
       //no ul_Bandwidth
 
-//     NB_phy_config_sib2_eNB( //XXX MP: defined by Nick in lte_init_nb_iot.c
-//    		  Mod_idP,
-//    		  CC_idP,
-//			  radioResourceConfigCommon,
-//			  NULL //ul_carrier_frequency
-//			  );
+     NB_phy_config_sib2_eNB(
+    		  Mod_idP,
+    		  CC_idP,
+			  radioResourceConfigCommon,
+			  NULL //ul_carrier_frequency
+			  );
 
 
   }
@@ -207,11 +218,11 @@ int NB_rrc_mac_config_req_eNB(
       LOG_E(MAC,"%s:%d:%s: ERROR, UE_id == -1\n", __FILE__, __LINE__, __FUNCTION__);
     else
     {
-//   NB_phy_config_dedicated_eNB( //XXX MP: defined by Nick in lte_init_nb_iot.c
-//    		  Mod_idP,
-//			  CC_idP,
-//			  UE_RNTI(Mod_idP, UE_id),
-//			  physicalConfigDedicated);
+   NB_phy_config_dedicated_eNB(
+    		  Mod_idP,
+			  CC_idP,
+			  UE_RNTI(Mod_idP, UE_id),
+			  physicalConfigDedicated);
     }
   }
 
@@ -249,7 +260,7 @@ boolean_t is_SIB1_NB(
 	         * within the 2560 ms period
 	         *
 	         *
-	         * 0)find the SIB1-NB period over the 1024 frames in which the actual frame fall (FIXME check if every 1023 wrap around the frame in OAI)
+	         * 0)find the SIB1-NB period over the 1024 frames in which the actual frame fall
 	         * 1)from the schedulingInfoSIB1 of MIB-NB and the physCell_id we deduce the starting radio frame
 	         * 2)check if the actual frame is after the staring radio frame
 	         * 3)check if the actual frame is within a SIB1-transmission interval
@@ -364,7 +375,7 @@ boolean_t is_SIB23_NB(
 
 
 	/*
-	 * SIB23-NB (xxx should be decided if include the SIB3 or not)
+	 * SIB23-NB
 	 *
 	 * The entire scheduling of the SI-Message is given by SIB1-NB information
 	 *
@@ -410,7 +421,7 @@ boolean_t is_SIB23_NB(
 	si_periodicity = si_period_to_nb[si_period];
 
 	//check if the actual frame is within an HSFN interval that will include si-window (relation with the si-periodicity)
-	//XXX this could happen when the si-periodicity is larger than a HSFN interval (1024 rf)
+	//this could happen when the si-periodicity is larger than a HSFN interval (1024 rf)
 	hsfn_in_periodicity = (int) si_periodicity/1024;
 
 	if(hsfn_in_periodicity > 1){//periodicity is larger than 1024rf (HSFN) and  not in all the hsfn a transmission will occurr
@@ -488,6 +499,7 @@ int8_t NB_mac_rrc_data_req_eNB(
   const int         CC_id,
   const frame_t     frameP,
   const frame_t		h_frameP,
+  const sub_frame_t   subframeP, //need for the case in which both SIB1-NB and SIB23-NB will be scheduled in the same frame
   const rb_id_t     Srb_id,
   uint8_t*    const buffer_pP,
   long				schedulingInfoSIB1,//from the mib
@@ -562,7 +574,8 @@ int8_t NB_mac_rrc_data_req_eNB(
             }
 
 
-         if(is_SIB1_NB(frameP,schedulingInfoSIB1, physCellId)){
+            //sib1-NB scheduled in subframe #4
+         if(subframeP == 4 && is_SIB1_NB(frameP,schedulingInfoSIB1, physCellId)){
 
 			  memcpy(&buffer_pP[0],
 					  eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SIB1_NB,
@@ -614,7 +627,8 @@ int8_t NB_mac_rrc_data_req_eNB(
         return(0);
     }
 
-    if( (Srb_id & RAB_OFFSET ) == CCCH) { //called when is requested the Msg3 transmission
+    //called when is requested the Msg4 transmission (RRCConnectionSetup)
+    if( (Srb_id & RAB_OFFSET ) == CCCH) {
       LOG_T(RRC,"[eNB %d] Frame %d CCCH request (Srb_id %d)\n",Mod_idP,frameP, Srb_id);
 
       if(eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].Srb0.Active==0) {
@@ -628,7 +642,11 @@ int8_t NB_mac_rrc_data_req_eNB(
       if(Srb_info->Tx_buffer.payload_size>0) { //Fill buffer
         LOG_D(RRC,"[eNB %d] CCCH (%p) has %d bytes (dest: %p, src %p)\n",Mod_idP,Srb_info,Srb_info->Tx_buffer.payload_size,buffer_pP,Srb_info->Tx_buffer.Payload);
 
-        memcpy(buffer_pP,Srb_info->Tx_buffer.Payload,Srb_info->Tx_buffer.payload_size);
+        //RRC_MAC_CCCH_DATA_REQ not implemented in MAC/eNB_scheduler.c
+
+        memcpy(buffer_pP, //CCCH_pdu.payload[0]
+        	   Srb_info->Tx_buffer.Payload,Srb_info->Tx_buffer.payload_size);
+
         Sdu_size = Srb_info->Tx_buffer.payload_size;
         Srb_info->Tx_buffer.payload_size=0;
       }
@@ -727,6 +745,25 @@ void NB_mac_eNB_rrc_ul_failure(
 }
 
 
+
+//defined in eNB_scheduler_primitives.c
+void dump_ue_list_NB(UE_list_NB_t *listP, int ul_flag)
+{
+  int j;
+
+  if ( ul_flag == 0 ) {
+    for (j=listP->head; j>=0; j=listP->next[j]) {
+      LOG_T(MAC,"node %d => %d\n",j,listP->next[j]);
+    }
+  } else {
+    for (j=listP->head_ul; j>=0; j=listP->next_ul[j]) {
+      LOG_T(MAC,"node %d => %d\n",j,listP->next_ul[j]);
+    }
+  }
+}
+
+
+
 //defined in eNB_scheduler_primitives.c
 int NB_rrc_mac_remove_ue(
 		module_id_t mod_idP,
@@ -748,7 +785,7 @@ printf("MAC: cannot remove UE rnti %x\n", rntiP);
 
 printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
   LOG_I(MAC,"Removing UE %d from Primary CC_id %d (rnti %x)\n",UE_id,pCC_id, rntiP);
-  dump_ue_list(UE_list,0); //may should be changed
+  dump_ue_list_NB(UE_list,0);
 
   UE_list->active[UE_id] = FALSE;
   UE_list->num_UEs--;
@@ -766,7 +803,7 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
   eNB_dlsch_info[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
   eNB_dlsch_info[mod_idP][pCC_id][UE_id].status                      = S_DL_NONE;
 
-  NB_mac_phy_remove_ue(mod_idP,rntiP);
+  mac_phy_remove_ue(mod_idP,rntiP); //PHY/defs.h
 
   // check if this has an RA process active
   RA_TEMPLATE_NB *RA_template;
@@ -787,6 +824,8 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
 
   return 0;
 }
+
+
 
 //defined in L2_interface
 void NB_mac_eNB_rrc_ul_in_sync(
@@ -831,6 +870,35 @@ int NB_mac_eNB_get_rrc_status(
 
 /*----------------------------------RRC-PDCP--------------------------------------*/
 
+//defined in pdcp_security.c
+static
+uint32_t pdcp_get_next_count_tx_NB(pdcp_t *const pdcp_pP, const srb_flag_t srb_flagP, const uint16_t pdcp_sn);
+
+//-----------------------------------------------------------------------------
+static
+uint32_t pdcp_get_next_count_tx_NB(
+  pdcp_t * const pdcp_pP,
+  const srb_flag_t srb_flagP,
+  const uint16_t pdcp_sn
+)
+{
+  uint32_t count; //32 bits
+
+  /* For TX COUNT = TX_HFN << length of SN | pdcp SN */
+  if (srb_flagP) {
+    /* 5 bits length SN */
+    count = ((pdcp_pP->tx_hfn << 5)  | (pdcp_sn & 0x001F));
+  } else { //DRB
+    /*Default is the 7 bits length SN TS 36.323 ch 6.2.4*/
+    count = ((pdcp_pP->tx_hfn << 7) | (pdcp_sn & 0x007F)); //FIXME: MP: to be check if ok
+  }
+
+  LOG_D(PDCP, "[OSA] TX COUNT = 0x%08x\n", count);
+
+  return count;
+}
+
+
 
 //defined in pdcp_security.c
 //called in NB_pdcp_data_req
@@ -858,7 +926,7 @@ NB_pdcp_apply_security(
 
   encrypt_params.direction  = (pdcp_pP->is_ue == 1) ? SECU_DIRECTION_UPLINK : SECU_DIRECTION_DOWNLINK;
   encrypt_params.bearer     = rb_id - 1;
-  encrypt_params.count      = pdcp_get_next_count_tx(pdcp_pP, srb_flagP, current_sn);
+  encrypt_params.count      = pdcp_get_next_count_tx_NB(pdcp_pP, srb_flagP, current_sn); //XXX (warning) because static defined in pdcp_security.c
   encrypt_params.key_length = 16;
 
   if (srb_flagP) {
@@ -902,8 +970,6 @@ NB_pdcp_apply_security(
 
   return 0;
 }
-
-
 
 
 //FIXME for the moment we not configure PDCP for SRB1bis (but used as it is SRB1)
@@ -954,7 +1020,7 @@ boolean_t NB_rrc_pdcp_config_asn1_req (
 
 	  if(LCID == DCCH0) //SRB1bis
 	  	{
-		  LOG_E(PDCP, PROTOCOL_PDCP_CTXT_FMT" PDCP Configiration for SRB1bis not allowed\n");
+		  LOG_E(PDCP,"PDCP Configuration for SRB1bis not allowed\n");
 		  return 0;
 		}
 	  else
@@ -969,7 +1035,7 @@ boolean_t NB_rrc_pdcp_config_asn1_req (
 
     	LOG_D(PDCP, "SecurityModeFailure --> NB_rrc_pdcp_config_asn1_req --> Disabling security for srb2add_list_pP\n");
 
-    	for(int cnt=0; cnt< srb2add_list_pP->list.count; cnt++)//may not needed a loop
+    	for(int cnt=0; cnt< srb2add_list_pP->list.count; cnt++)
     	   {
 
     	    key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ENB_FLAG_YES, srb_id, SRB_FLAG_YES);
@@ -1755,7 +1821,7 @@ boolean_t NB_pdcp_data_req(
           start_meas(&UE_pdcp_stats[ctxt_pP->module_id].apply_security);
         }
 
-        //FIXME also this function should be checked for NB-IoT (defined in pdcp_security.c)
+
         NB_pdcp_apply_security(ctxt_pP,
                             pdcp_p,
                             srb_flagP,
@@ -1862,7 +1928,6 @@ boolean_t NB_pdcp_data_req(
 
 
 
-
 //defined in L2_interface
 void NB_rrc_data_ind(
   const protocol_ctxt_t* const ctxt_pP,
@@ -1893,7 +1958,7 @@ void NB_rrc_data_ind(
           ctxt_pP->rnti);
   }
 
-  //FiXME: MP: we should put out this messages from ITTI
+  //FiXME: MP: we should put out this messages from ITTI ??
 #if defined(ENABLE_ITTI) //From PDCP to RRC
   {
     MessageDef *message_p;
@@ -1919,7 +1984,7 @@ void NB_rrc_data_ind(
   if (ctxt_pP->enb_flag == ENB_FLAG_YES) {
     rrc_eNB_decode_dcch_NB(
       ctxt_pP,
-	  DCCH_index, //--> becomes the srb_id in decode_dcch
+	  DCCH_index, // becomes the srb_id in decode_dcch
       buffer_pP,
       sdu_sizeP);
   } else {
@@ -1934,10 +1999,6 @@ void NB_rrc_data_ind(
 #endif
 }
 
-//defined in pdcp.c
-boolean_t NB_pdcp_remove_UE(
-  const protocol_ctxt_t* const  ctxt_pP
-);
 
 
 /*---------------------------------RRC-RLC-----------------------------------*/
@@ -2163,14 +2224,14 @@ void NB_config_req_rlc_am_asn1 (
             maxRetxThreshold_NB_tab[config_am_pP->ul_AM_RLC_r13.maxRetxThreshold_r13],
             pollRetransmit_NB_tab[config_am_pP->ul_AM_RLC_r13.t_PollRetransmit_r13]);
 
-      //FIXME: the following function are ok for NB_IoT??
+      //XXX: the following function are ok for NB_IoT??
       rlc_am_init(ctxt_pP, l_rlc_p);
       rlc_am_set_debug_infos(ctxt_pP, l_rlc_p, srb_flagP, rb_idP, chan_idP);
       NB_rlc_am_configure(ctxt_pP,
-    		  	  	  	  l_rlc_p,
-						  maxRetxThreshold_NB_tab[config_am_pP->ul_AM_RLC_r13.maxRetxThreshold_r13],
-						  pollRetransmit_NB_tab[config_am_pP->ul_AM_RLC_r13.t_PollRetransmit_r13],
-						  config_am_pP->dl_AM_RLC_r13.enableStatusReportSN_Gap_r13); //may not needed to be passed
+    		  	  	  	l_rlc_p,
+						maxRetxThreshold_NB_tab[config_am_pP->ul_AM_RLC_r13.maxRetxThreshold_r13],
+						pollRetransmit_NB_tab[config_am_pP->ul_AM_RLC_r13.t_PollRetransmit_r13],
+						(uint32_t* const) config_am_pP->dl_AM_RLC_r13.enableStatusReportSN_Gap_r13); //MP:XXX very bad cast
     } else {
       MSC_LOG_RX_DISCARDED_MESSAGE(
         (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_RLC_ENB:MSC_RLC_UE,
@@ -2201,7 +2262,7 @@ NB_rlc_am_configure(
   rlc_am_entity_t *const        rlc_pP,
   const uint16_t                max_retx_thresholdP,
   const uint16_t                t_poll_retransmitP,
-  const uint16_t* const			enableStatusReportSN_Gap
+  const uint32_t* const			enableStatusReportSN_Gap
   )
 {
   if (rlc_pP->configured == TRUE) {
@@ -2216,7 +2277,7 @@ NB_rlc_am_configure(
     rlc_pP->max_retx_threshold = max_retx_thresholdP;
     rlc_pP->protocol_state     = RLC_DATA_TRANSFER_READY_STATE;
     rlc_pP->t_poll_retransmit.ms_duration   = t_poll_retransmitP;
-    rlc_pP->enableStatusReportSN_Gap = *(enableStatusReportSN_Gap); //FIXME: new defined in rlc_am_entity
+    rlc_pP->enableStatusReportSN_Gap = *enableStatusReportSN_Gap; //XXX: warning
 
 
   } else {
@@ -2229,7 +2290,7 @@ NB_rlc_am_configure(
 
     rlc_pP->max_retx_threshold = max_retx_thresholdP;
     rlc_pP->protocol_state     = RLC_DATA_TRANSFER_READY_STATE;
-    rlc_pP->enableStatusReportSN_Gap = enableStatusReportSN_Gap;
+    rlc_pP->enableStatusReportSN_Gap = *enableStatusReportSN_Gap;
 
 
     rlc_am_init_timer_poll_retransmit(ctxt_pP, rlc_pP, t_poll_retransmitP);
@@ -2410,7 +2471,8 @@ rlc_op_status_t NB_rrc_rlc_remove_rlc   (
   return RLC_OP_STATUS_OK;
 }
 
-//defined in rlc_rrc.c //used only for process_RRCConnectionReconfigurationComplete --> CONFIG_ACTION_REMOVE
+//defined in rlc_rrc.c
+//used for process_RRCConnectionReconfigurationComplete --> CONFIG_ACTION_REMOVE
 //used also for rrc_t310_expiration --> I don't know if it is used (probably not)
 rlc_op_status_t NB_rrc_rlc_config_req   (
   const protocol_ctxt_t* const ctxt_pP,
@@ -2452,7 +2514,7 @@ rlc_op_status_t NB_rrc_rlc_config_req   (
       NB_config_req_rlc_am(
         ctxt_pP,
         srb_flagP,
-        &rlc_infoP.rlc.rlc_am_info_NB, //MP: pass the volatile structure for NB_IoT protocol params in rlc_am_init.h
+        &rlc_infoP.rlc.rlc_am_info_NB, //MP: pass the volatile structure for NB_IoT protocol params in rlc_am_init.h // warning present
         rb_idP, rb_idP);
       break;
 
@@ -2599,7 +2661,7 @@ rlc_op_status_t NB_rrc_rlc_remove_ue (
 }
 
 //defined in rlc_rrc.c --> NO MORE USED PROBABLY
-//void NB_rrc_rlc_register_rrc ( //what do?
+//void NB_rrc_rlc_register_rrc (
 //		rrc_data_ind_cb_t rrc_data_indP,
 //		rrc_data_conf_cb_t rrc_data_confP
 //		);
@@ -2663,7 +2725,7 @@ rlc_op_status_t NB_rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
 
 #if defined(Rel10) || defined(Rel14)
 
-  logical_chan_id_t      log_ch_id  = 0;
+ //logical_chan_id_t      log_ch_id  = 0;
 #endif
 #ifdef DEBUG_RLC_DATA_REQ
   LOG_D(RLC,PROTOCOL_CTXT_FMT"rlc_data_req:  rb_id %u (MAX %d), muip %d, confirmP %d, sdu_sizeP %d, sdu_pP %p\n",
@@ -2863,7 +2925,7 @@ rlc_op_status_t NB_rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
 
 
 //defined in pdcp.c
-//FIXME: should go transparent through the PDCP
+//if SRB1bis go transparently through PDCP
 //--------------------------------------------
 boolean_t
 NB_pdcp_data_ind(
@@ -3363,14 +3425,17 @@ void NB_mac_rlc_data_ind     (
   rlc_union_t           *rlc_union_p     = NULL;
   hash_key_t             key             = HASHTABLE_NOT_A_KEY_VALUE;
   hashtable_rc_t         h_rc;
-  //XXX MP: modify the check on LCID
   srb_flag_t             srb_flag        = (channel_idP <= 3) ? SRB_FLAG_YES : SRB_FLAG_NO;
-  srb1bis_flag_t         srb1bis_flag    = (channel_idP == 3) ? SRB1BIS_FLAG_YES : SRB1BIS_FLAG_NO; //may not needed?
+  //srb1bis_flag_t         srb1bis_flag    = (channel_idP == 3) ? SRB1BIS_FLAG_YES : SRB1BIS_FLAG_NO; //may not needed?
   protocol_ctxt_t     ctxt;
 
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, enb_flagP, rntiP, frameP, 0, eNB_index);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MAC_RLC_DATA_IND,VCD_FUNCTION_IN);
+
+  if(channel_idP == 2)
+	  LOG_E(RLC, "NB_mac_rlc_data_ind over srb_id invalid (%d)\n", channel_idP);
+
 
 #ifdef DEBUG_MAC_INTERFACE
 
@@ -3378,7 +3443,7 @@ void NB_mac_rlc_data_ind     (
     LOG_D(RLC, PROTOCOL_CTXT_FMT" MAC_RLC_DATA_IND on channel %d (%d), rb max %d, Num_tb %d\n",
           PROTOCOL_CTXT_ARGS(&ctxt),
           channel_idP,
-          RLC_MAX_LC, //XXX ???
+          RLC_MAX_LC,
 		  NB_RB_MAX_NB_IOT,
           num_tbP);
   }
@@ -3407,7 +3472,7 @@ void NB_mac_rlc_data_ind     (
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
 
-  //XXX MP: also for SRB1bis an RLC-AM mode should be configured
+  //MP: also for SRB1bis an RLC-AM mode should be configured
   if (h_rc == HASH_TABLE_OK) {
     rlc_mode = rlc_union_p->mode;
   } else {
@@ -3433,7 +3498,7 @@ void NB_mac_rlc_data_ind     (
     break;
 
   default:
-	  LOG_E(RLC,PROTOCOL_PDCP_CTXT_FMT"mac_rlc_data_ind -> RLC mode unknown");
+	  LOG_E(RLC,"mac_rlc_data_ind -> RLC mode unknown");
 	break;
   }
 
@@ -3687,13 +3752,18 @@ tbs_size_t NB_mac_rlc_data_req_eNB(
   hash_key_t             key             = HASHTABLE_NOT_A_KEY_VALUE;
   hashtable_rc_t         h_rc;
   srb_flag_t             srb_flag        = (channel_idP <= 3) ? SRB_FLAG_YES : SRB_FLAG_NO;
-  srb1bis_flag_t			srb1bis_flag = (channel_idP == 3) ? SRB1BIS_FLAG_YES : SRB1BIS_FLAG_NO;
+  //srb1bis_flag_t			srb1bis_flag = (channel_idP == 3) ? SRB1BIS_FLAG_YES : SRB1BIS_FLAG_NO;
   tbs_size_t             ret_tb_size         = 0;
   protocol_ctxt_t     ctxt;
 
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, rntiP, frameP, 0,eNB_index);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MAC_RLC_DATA_REQ,VCD_FUNCTION_IN);
+
+  if(channel_idP == 2)
+  	  LOG_E(RLC, "NB_mac_rlc_data_req_eNB over srb_id invalid (%d)\n", channel_idP);
+
+
 #ifdef DEBUG_MAC_INTERFACE
   LOG_D(RLC, PROTOCOL_CTXT_FMT" MAC_RLC_DATA_REQ channel %d (%d) MAX RB %d, Num_tb %d\n",
         PROTOCOL_CTXT_ARGS((&ctxt)),

@@ -19,8 +19,8 @@
  *      contact@openairinterface.org
  */
 
-#ifndef __INIT_DEFS__H__
-#define __INIT_DEFS__H__
+#ifndef __INIT_DEFS__NB_H__
+#define __INIT_DEFS__NB_H__
 
 #include "PHY/defs.h"
 
@@ -34,6 +34,11 @@
 #if defined(Rel10) || defined(Rel14)
 #include "SCellToAddMod-r10.h"
 #endif
+
+#include "RadioResourceConfigCommonSIB-NB-r13.h"
+#include "PhysicalConfigDedicated-NB-r13.h"
+
+
 /** @addtogroup _PHY_STRUCTURES_
  * @{
  */
@@ -331,29 +336,29 @@ void phy_config_dedicated_scell_eNB(uint8_t Mod_id,
 #endif
 
 /*brief Configure LTE_DL_FRAME_PARMS with components derived after initial synchronization (MIB-NB decoding + primary/secondary synch).*/
-void NB_phy_config_mib_eNB(int                    Mod_id,
+void NB_phy_config_mib_eNB(int     Mod_id,
 			int                    CC_id,
 			int                    eutra_band,
 			int                    Nid_cell,
 			int                    Ncp,
 			int                    p_eNB,
 			uint32_t               dl_CarrierFreq,
-			uint32_t               ul_CarrierFreq,
-			struct MasterInformationBlock_NB__operationModeInfo_r13_u operationModeInfo);
+			uint32_t               ul_CarrierFreq);
+			//struct MasterInformationBlock_NB__operationModeInfo_r13 operationModeInfo);
 
 /*NB_phy_config_sib1_eNB is not needed since NB-IoT use only FDD mode*/
 
 /*brief Configure LTE_DL_FRAME_PARMS with components of SIB2-NB (at eNB).*/
 void NB_phy_config_sib2_eNB(module_id_t                            Mod_id,
-                         int                                CC_id,
-                         RadioResourceConfigCommonSIB_NB_r13         *radioResourceConfigCommon,
-                         ARFCN_ValueEUTRA_r9_t                     *ul_CArrierFreq,,
+                         int                                	   CC_id,
+                         RadioResourceConfigCommonSIB_NB_r13_t     *radioResourceConfigCommon,
+                         ARFCN_ValueEUTRA_r9_t                     *ul_CArrierFreq
                          );
 
 void NB_phy_config_dedicated_eNB(module_id_t Mod_id,
                               int CC_id,
                               rnti_t rnti,
-                              struct PhysicalConfigDedicated_NB_r13 *physicalConfigDedicated);
+                              PhysicalConfigDedicated_NB_r13_t *physicalConfigDedicated);
 
 
 

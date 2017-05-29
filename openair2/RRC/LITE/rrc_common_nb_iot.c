@@ -54,9 +54,57 @@ extern mui_t rrc_eNB_mui;
 
 /*missed functions*/
 //rrc_top_cleanup
-//rrc_t310_expiration
 //binary_search_init
 //binary_search_float
+
+
+//--------------
+//MP: Most probably is not needed (old code)
+//-----------------------------------------------------------------------------
+void
+rrc_t310_expiration_NB(
+  const protocol_ctxt_t* const ctxt_pP,
+  const uint8_t                 eNB_index
+)
+//-----------------------------------------------------------------------------
+{
+
+  if (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State != RRC_CONNECTED) {
+    LOG_D(RRC, "Timer 310 expired, going to RRC_IDLE\n");
+    UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State = RRC_IDLE;
+    UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].UE_index = 0xffff;
+    UE_rrc_inst[ctxt_pP->module_id].Srb0[eNB_index].Rx_buffer.payload_size = 0;
+    UE_rrc_inst[ctxt_pP->module_id].Srb0[eNB_index].Tx_buffer.payload_size = 0;
+    UE_rrc_inst[ctxt_pP->module_id].Srb1[eNB_index].Srb_info.Rx_buffer.payload_size = 0;
+    UE_rrc_inst[ctxt_pP->module_id].Srb1[eNB_index].Srb_info.Tx_buffer.payload_size = 0;
+
+    if (UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Active == 1) {
+      msg ("[RRC Inst %d] eNB_index %d, Remove RB %d\n ", ctxt_pP->module_id, eNB_index,
+           UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id);
+      rrc_pdcp_config_req (ctxt_pP, // MP
+                           SRB_FLAG_YES,
+                           CONFIG_ACTION_REMOVE,
+                           UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
+                           0);
+
+      NB_rrc_rlc_config_req(
+    		  	  	  	  	 ctxt_pP,
+							 SRB_FLAG_YES,
+							 CONFIG_ACTION_REMOVE,
+							 UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
+							 Rlc_info_am);
+
+
+      UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Active = 0;
+      UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Status = IDLE;
+      UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Next_check_frame = 0;
+    }
+  } else { // Restablishment procedure
+    LOG_D(RRC, "Timer 310 expired, trying RRCRestablishment ...\n");
+  }
+}
+
+
 
 
 //configure  BCCH & CCCH Logical Channels and associated rrc_buffers, configure associated SRBs
@@ -251,7 +299,7 @@ rrc_rx_tx_NB(
   int32_t        current_timestamp_ms, ref_timestamp_ms;
   struct timeval ts;
   struct rrc_eNB_ue_context_NB_s   *ue_context_p = NULL;
-  struct rrc_eNB_ue_context_NB_s		  *ue_to_be_removed = NULL;
+  struct rrc_eNB_ue_context_NB_s   *ue_to_be_removed = NULL;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_RX_TX,VCD_FUNCTION_IN);
 
@@ -304,7 +352,7 @@ rrc_rx_tx_NB(
 
       if (UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].T310_cnt    == T310[UE_rrc_inst[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.t310]) {
         UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].T310_active = 0;
-        rrc_t310_expiration (ctxt_pP, enb_indexP); //FIXME: maybe is required a NB_iot version of this function
+        rrc_t310_expiration_NB (ctxt_pP, enb_indexP); //FIXME: maybe is required a NB_iot version of this function
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_RX_TX,VCD_FUNCTION_OUT);
 	LOG_I(RRC,"Returning RRC_PHY_RESYNCH: T310 expired\n");
         return RRC_PHY_RESYNCH;
@@ -389,8 +437,7 @@ rrc_rx_tx_NB(
       }
     }
     if (ue_to_be_removed)
-      rrc_eNB_free_UE(ctxt_pP->module_id,ue_to_be_removed); //FIXME: quite comple procedure, should use the same for NB-IoT?
-
+    	rrc_eNB_free_UE_NB(ctxt_pP->module_id,ue_to_be_removed);
 //no localization in NB-IoT
 
     (void)ts; /* remove gcc warning "unused variable" */

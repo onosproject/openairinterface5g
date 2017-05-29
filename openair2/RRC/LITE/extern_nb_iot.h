@@ -47,6 +47,13 @@ extern uint8_t DRB2LCHAN_NB[2];
 extern LogicalChannelConfig_NB_r13_t SRB1bis_NB_logicalChannelConfig_defaultValue;
 extern LogicalChannelConfig_NB_r13_t SRB1_NB_logicalChannelConfig_defaultValue;
 
+extern uint16_t T300_NB[8];
+extern uint16_t T301_NB[8];
+extern uint16_t T310_NB[8];
+extern uint16_t T311_NB[8];
+extern uint16_t N310_NB[8];
+extern uint16_t N311_NB[8];
+
 #endif
 
 

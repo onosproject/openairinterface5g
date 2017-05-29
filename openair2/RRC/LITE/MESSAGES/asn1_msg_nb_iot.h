@@ -52,17 +52,9 @@
  * RETURN VALUES:
  *       0: The structure is printed.
  *      -1: Problem printing the structure.
- * WARNING: No sensible errno value is returned.
+ * WARNING: No sensible error value is returned.
  */
 
-//not touched
-int xer_sprint(char *string, size_t string_size, struct asn_TYPE_descriptor_s *td, void *sptr);
-
-//not touched
-uint16_t get_adjacent_cell_id(uint8_t Mod_id,uint8_t index);
-
-//Not touched
-uint8_t get_adjacent_cell_mod_id(uint16_t phyCellId);
 
 /**
 \brief Generate configuration for SIB1 (eNB).

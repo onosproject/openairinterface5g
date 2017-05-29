@@ -36,12 +36,11 @@
 //NB-IoT
 #include "defs_nb_iot.h"
 #include "RadioResourceConfigCommonSIB-NB-r13.h"
-#include "PHY/impl_defs_lte_nb_iot.h"
 #include "RadioResourceConfigDedicated-NB-r13.h"
 
 extern uint16_t prach_root_sequence_map0_3[838];
 extern uint16_t prach_root_sequence_map4[138];
-uint8_t dmrs1_tab[8] = {0,2,3,4,6,8,9,10};
+//uint8_t dmrs1_tab[8] = {0,2,3,4,6,8,9,10};
 
 
 void NB_phy_config_mib_eNB(int                 Mod_id,
@@ -76,7 +75,7 @@ void NB_phy_config_mib_eNB(int                 Mod_id,
 
   fp = &RC.eNB[Mod_id][CC_id]->frame_parms; */
 
-  NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms;
+  NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms; //MP: PHY_VARS_eNB still to be modified
 
    //LOG_I(PHY,"Configuring MIB-NB for instance %d, CCid %d : (band %d,N_RB_DL %d,Nid_cell %d,p %d,DL freq %u)\n",
 	//Mod_id, CC_id, eutra_band, N_RB_DL_array[dl_Bandwidth], Nid_cell, p_eNB,dl_CarrierFreq);

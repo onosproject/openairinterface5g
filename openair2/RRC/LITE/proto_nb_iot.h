@@ -127,6 +127,7 @@ int8_t NB_mac_rrc_data_req_eNB(
   const int         CC_id,
   const frame_t     frameP,
   const frame_t		h_frameP,
+  const sub_frame_t   subframeP,
   const rb_id_t     Srb_id,
   uint8_t*    const buffer_pP,
   long				schedulingInfoSIB1,//from the mib
@@ -149,6 +150,11 @@ int8_t NB_mac_rrc_data_ind_eNB(
   const sdu_size_t      sdu_lenP
 );
 //-------------------------------------------
+
+//defined in L2_interface
+void dump_ue_list_NB(UE_list_NB_t *listP, int ul_flag);
+//-------------------------------------------
+
 
 //defined in L2_interface
 void NB_mac_eNB_rrc_ul_failure(
@@ -179,7 +185,22 @@ int NB_mac_eNB_get_rrc_status(
 );
 //---------------------------
 
-//FIXME for the moment we not configure PDCP for SRB1bis (but used as it is SRB1)
+//----------------------------------------
+int
+NB_pdcp_apply_security(
+  const protocol_ctxt_t* const ctxt_pP,
+  pdcp_t        *const pdcp_pP,
+  const srb_flag_t     srb_flagP,
+  const rb_id_t        rb_id, //rb_idP % maxDRB_NB_r13
+  const uint8_t        pdcp_header_len,
+  const uint16_t       current_sn,
+  uint8_t       * const pdcp_pdu_buffer,
+  const uint16_t      sdu_buffer_size
+);
+//-------------------------------------------
+
+
+//XXX for the moment we not configure PDCP for SRB1bis (but used as it is SRB1)
 //defined in pdcp.c
 boolean_t NB_rrc_pdcp_config_asn1_req (
   const protocol_ctxt_t* const  ctxt_pP,
@@ -279,7 +300,7 @@ NB_rlc_am_configure(
   rlc_am_entity_t *const        rlc_pP,
   const uint16_t                max_retx_thresholdP,
   const uint16_t                t_poll_retransmitP,
-  const uint16_t* const			enableStatusReportSN_Gap
+  const uint32_t* const			enableStatusReportSN_Gap
   );
 //--------------------------------------------------------------
 
@@ -413,9 +434,7 @@ tbs_size_t NB_mac_rlc_data_req_eNB(
 
 
 
-/*UE procedures*/
-
-/*eNB procedures*/
+/*-----------eNB procedures (rrc_eNB_nb_iot.c)---------------*/
 
 //---Initialization--------------
 void
@@ -534,6 +553,12 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
 
 
 /// Utilities------------------------------------------------
+
+void
+rrc_eNB_free_UE_NB(
+		const module_id_t enb_mod_idP,
+		const struct rrc_eNB_ue_context_NB_s*        const ue_context_pP
+		);
 
 void
 rrc_eNB_free_mem_UE_context_NB(

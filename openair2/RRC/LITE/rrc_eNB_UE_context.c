@@ -49,17 +49,6 @@ uid_linear_allocator_init(
 }
 
 //------------------------------------------------------------------------------
-void
-uid_linear_allocator_init_NB(
-  uid_allocator_NB_t* const uid_pP
-)
-//------------------------------------------------------------------------------
-{
-  memset(uid_pP, 0, sizeof(uid_allocator_NB_t));
-}
-
-
-//------------------------------------------------------------------------------
 uid_t
 uid_linear_allocator_new(
   eNB_RRC_INST* const rrc_instance_pP
@@ -166,21 +155,6 @@ rrc_eNB_get_ue_context(
 }
 
 
-//--(NB-IoT implementation)-----------------------------------------------------
-struct rrc_eNB_ue_context_NB_s*
-rrc_eNB_get_ue_context_NB(
-  eNB_RRC_INST_NB* rrc_instance_pP,
-  rnti_t rntiP)
-//------------------------------------------------------------------------------
-{
-  rrc_eNB_ue_context_NB_t temp;
-  memset(&temp, 0, sizeof(struct rrc_eNB_ue_context_NB_s));
-  /* eNB ue rrc id = 24 bits wide */
-  temp.ue_id_rnti = rntiP;
-  return RB_FIND(rrc_ue_tree_s, &rrc_instance_pP->rrc_ue_head, &temp);
-}
-
-
 //------------------------------------------------------------------------------
 void rrc_eNB_remove_ue_context(
   const protocol_ctxt_t* const ctxt_pP,
@@ -214,5 +188,163 @@ void rrc_eNB_remove_ue_context(
         PROTOCOL_RRC_CTXT_UE_FMT" Removed UE context\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 }
+
+
+
+//--------------------NB-IoT version----------------------------
+
+//------------------------------------------------------------------------------
+void
+uid_linear_allocator_init_NB(
+  uid_allocator_NB_t* const uid_pP
+)
+//------------------------------------------------------------------------------
+{
+  memset(uid_pP, 0, sizeof(uid_allocator_NB_t));
+}
+
+
+//------------------------------------------------------------------------------
+uid_t
+uid_linear_allocator_new_NB(
+  eNB_RRC_INST_NB* const rrc_instance_pP
+)
+//------------------------------------------------------------------------------
+{
+  unsigned int i;
+  unsigned int bit_index = 1;
+  uid_t        uid = 0;
+  uid_allocator_NB_t* uia_p = &rrc_instance_pP->uid_allocator;
+
+  for (i=0; i < UID_LINEAR_ALLOCATOR_BITMAP_SIZE; i++) {
+    if (uia_p->bitmap[i] != UINT_MAX) {
+      bit_index = 1;
+      uid       = 0;
+
+      while ((uia_p->bitmap[i] & bit_index) == bit_index) {
+        bit_index = bit_index << 1;
+        uid       += 1;
+      }
+
+      uia_p->bitmap[i] |= bit_index;
+      return uid + (i*sizeof(unsigned int)*8);
+    }
+  }
+
+  return UINT_MAX;
+}
+
+//------------------------------------------------------------------------------
+void
+uid_linear_allocator_free_NB(
+  eNB_RRC_INST_NB* rrc_instance_pP,
+  uid_t uidP
+)
+//------------------------------------------------------------------------------
+{
+  unsigned int i = uidP/sizeof(unsigned int)/8;
+  unsigned int bit = uidP % (sizeof(unsigned int) * 8);
+  unsigned int value = ~(0x00000001 << bit);
+
+  if (i < UID_LINEAR_ALLOCATOR_BITMAP_SIZE) {
+    rrc_instance_pP->uid_allocator.bitmap[i] &=  value;
+  }
+}
+
+
+
+int rrc_eNB_compare_ue_rnti_id_NB(
+  struct rrc_eNB_ue_context_NB_s* c1_pP, struct rrc_eNB_ue_context_NB_s* c2_pP)
+//------------------------------------------------------------------------------
+{
+  if (c1_pP->ue_id_rnti > c2_pP->ue_id_rnti) {
+    return 1;
+  }
+
+  if (c1_pP->ue_id_rnti < c2_pP->ue_id_rnti) {
+    return -1;
+  }
+
+  return 0;
+}
+
+/* Generate the tree management functions for NB-IoT structures */
+RB_GENERATE(rrc_ue_tree_NB_s, rrc_eNB_ue_context_NB_s, entries,
+            rrc_eNB_compare_ue_rnti_id_NB);
+
+
+//------------------------------------------------------------------------------
+struct rrc_eNB_ue_context_NB_s*
+rrc_eNB_allocate_new_UE_context_NB(
+  eNB_RRC_INST_NB* rrc_instance_pP
+)
+//------------------------------------------------------------------------------
+{
+  struct rrc_eNB_ue_context_NB_s* new_p;
+  new_p = malloc(sizeof(struct rrc_eNB_ue_context_NB_s));
+
+  if (new_p == NULL) {
+    LOG_E(RRC, "Cannot allocate new ue context\n");
+    return NULL;
+  }
+
+  memset(new_p, 0, sizeof(struct rrc_eNB_ue_context_NB_s));
+  new_p->local_uid = uid_linear_allocator_new_NB(rrc_instance_pP);
+  return new_p;
+}
+
+
+struct rrc_eNB_ue_context_NB_s*
+rrc_eNB_get_ue_context_NB(
+  eNB_RRC_INST_NB* rrc_instance_pP,
+  rnti_t rntiP)
+//------------------------------------------------------------------------------
+{
+  rrc_eNB_ue_context_NB_t temp;
+  memset(&temp, 0, sizeof(struct rrc_eNB_ue_context_NB_s));
+  /* eNB ue rrc id = 24 bits wide */
+  temp.ue_id_rnti = rntiP;
+  return RB_FIND(rrc_ue_tree_NB_s, &rrc_instance_pP->rrc_ue_head, &temp);
+}
+
+//------------------------------------------------------------------------------
+void rrc_eNB_remove_ue_context_NB(
+  const protocol_ctxt_t* const ctxt_pP,
+  eNB_RRC_INST_NB*                rrc_instance_pP,
+  struct rrc_eNB_ue_context_NB_s* ue_context_pP)
+//------------------------------------------------------------------------------
+{
+  if (rrc_instance_pP == NULL) {
+    LOG_E(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Bad RRC instance\n",
+          PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
+    return;
+  }
+
+  if (ue_context_pP == NULL) {
+    LOG_E(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Trying to free a NULL UE context\n",
+          PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
+    return;
+  }
+
+  RB_REMOVE(rrc_ue_tree_NB_s, &rrc_instance_pP->rrc_ue_head, ue_context_pP);
+
+  MSC_LOG_EVENT(
+    MSC_RRC_ENB,
+    "0 Removed UE %"PRIx16" ",
+    ue_context_pP->ue_context.rnti);
+
+  rrc_eNB_free_mem_UE_context_NB(ctxt_pP, ue_context_pP);
+  uid_linear_allocator_free_NB(rrc_instance_pP, ue_context_pP->local_uid);
+  free(ue_context_pP);
+  LOG_I(RRC,
+        PROTOCOL_RRC_CTXT_UE_FMT" Removed UE context\n",
+        PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
+}
+
+
+
+
+
+
 
 

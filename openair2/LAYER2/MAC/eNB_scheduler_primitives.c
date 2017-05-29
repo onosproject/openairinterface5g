@@ -261,6 +261,9 @@ void dump_ue_list(UE_list_t *listP, int ul_flag)
   }
 }
 
+
+//---------------------
+
 int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP)
 {
   int UE_id;

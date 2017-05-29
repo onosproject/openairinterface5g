@@ -48,29 +48,7 @@
 #include <per_encoder.h>
 
 #include "assertions.h"
-//#include "RRCConnectionRequest.h"
-//#include "UL-CCCH-Message.h"
-//#include "UL-DCCH-Message.h"
-//#include "DL-CCCH-Message.h"
-//#include "DL-DCCH-Message.h"
-//#include "EstablishmentCause.h"
-//#include "RRCConnectionSetup.h"
-//#include "SRB-ToAddModList.h"
-//#include "DRB-ToAddModList.h"
-//#if defined(Rel10) || defined(Rel14)
-//#include "MCCH-Message.h"
-////#define MRB1 1
-//#endif
 
-//#include "RRC/LITE/defs.h"
-//#include "RRCConnectionSetupComplete.h"
-//#include "RRCConnectionReconfigurationComplete.h"
-//#include "RRCConnectionReconfiguration.h"
-//#include "MasterInformationBlock.h"
-//#include "SystemInformation.h"
-//#include "SystemInformationBlockType1.h"
-//#include "SIB-Type.h"
-//#include "BCCH-DL-SCH-Message.h"
 
 //#include for NB-IoT-------------------
 #include "RRCConnectionRequest-NB.h"
@@ -93,13 +71,10 @@
 #include "SIB-Type-NB-r13.h"
 #include "RRCConnectionResume-NB.h"
 #include "RRCConnectionReestablishment-NB.h"
+
 //----------------------------------------
 
 #include "PHY/defs.h"
-
-//#include "MeasObjectToAddModList.h"
-//#include "ReportConfigToAddModList.h"
-//#include "MeasIdToAddModList.h"
 #include "enb_config.h"
 
 #if defined(ENABLE_ITTI)
@@ -119,94 +94,94 @@ int errno;
 
 
 
-//Not touched
-//#define XER_PRINT
-extern Enb_properties_array_t enb_properties;
-typedef struct xer_sprint_string_s {
-  char *string;
-  size_t string_size;
-  size_t string_index;
-} xer_sprint_string_t;
+////Not touched
+////#define XER_PRINT
+//extern Enb_properties_array_t enb_properties;
+//typedef struct xer_sprint_string_s {
+//  char *string;
+//  size_t string_size;
+//  size_t string_index;
+//} xer_sprint_string_t;
+//
+//extern unsigned char NB_eNB_INST;
+//extern uint8_t usim_test;
 
-extern unsigned char NB_eNB_INST;
-extern uint8_t usim_test;
+//uint16_t two_tier_hexagonal_cellIds[7] = {0,1,2,4,5,7,8};
+//uint16_t two_tier_hexagonal_adjacent_cellIds[7][6] = {{1,2,4,5,7,8},    // CellId 0
+//  {11,18,2,0,8,15}, // CellId 1
+//  {18,13,3,4,0,1},  // CellId 2
+//  {2,3,14,6,5,0},   // CellId 4
+//  {0,4,6,16,9,7},   // CellId 5
+//  {8,0,5,9,17,12},  // CellId 7
+//  {15,1,0,7,12,10}
+//};// CellId 8
 
-uint16_t two_tier_hexagonal_cellIds[7] = {0,1,2,4,5,7,8};
-uint16_t two_tier_hexagonal_adjacent_cellIds[7][6] = {{1,2,4,5,7,8},    // CellId 0
-  {11,18,2,0,8,15}, // CellId 1
-  {18,13,3,4,0,1},  // CellId 2
-  {2,3,14,6,5,0},   // CellId 4
-  {0,4,6,16,9,7},   // CellId 5
-  {8,0,5,9,17,12},  // CellId 7
-  {15,1,0,7,12,10}
-};// CellId 8
+///*
+// * This is a helper function for xer_sprint, which directs all incoming data
+// * into the provided string.
+// */
+//static int xer__print2s (const void *buffer, size_t size, void *app_key)
+//{
+//  xer_sprint_string_t *string_buffer = (xer_sprint_string_t *) app_key;
+//  size_t string_remaining = string_buffer->string_size - string_buffer->string_index;
+//
+//  if (string_remaining > 0) {
+//    if (size > string_remaining) {
+//      size = string_remaining;
+//    }
+//
+//    memcpy(&string_buffer->string[string_buffer->string_index], buffer, size);
+//    string_buffer->string_index += size;
+//  }
+//
+//  return 0;
+//}
 
-/*
- * This is a helper function for xer_sprint, which directs all incoming data
- * into the provided string.
- */
-static int xer__print2s (const void *buffer, size_t size, void *app_key)
-{
-  xer_sprint_string_t *string_buffer = (xer_sprint_string_t *) app_key;
-  size_t string_remaining = string_buffer->string_size - string_buffer->string_index;
+//int xer_sprint (char *string, size_t string_size, asn_TYPE_descriptor_t *td, void *sptr)
+//{
+//  asn_enc_rval_t er;
+//  xer_sprint_string_t string_buffer;
+//
+//  string_buffer.string = string;
+//  string_buffer.string_size = string_size;
+//  string_buffer.string_index = 0;
+//
+//  er = xer_encode(td, sptr, XER_F_BASIC, xer__print2s, &string_buffer);
+//
+//  if (er.encoded < 0) {
+//    LOG_E(RRC, "xer_sprint encoding error (%d)!", er.encoded);
+//    er.encoded = string_buffer.string_size;
+//  } else {
+//    if (er.encoded > string_buffer.string_size) {
+//      LOG_E(RRC, "xer_sprint string buffer too small, got %d need %d!", string_buffer.string_size, er.encoded);
+//      er.encoded = string_buffer.string_size;
+//    }
+//  }
+//
+//  return er.encoded;
+//}
 
-  if (string_remaining > 0) {
-    if (size > string_remaining) {
-      size = string_remaining;
-    }
+//uint16_t get_adjacent_cell_id(uint8_t Mod_id,uint8_t index)
+//{
+//  return(two_tier_hexagonal_adjacent_cellIds[Mod_id][index]);
+//}
+///* This only works for the hexagonal topology...need a more general function for other topologies */
+//
+//uint8_t get_adjacent_cell_mod_id(uint16_t phyCellId)
+//{
+//  uint8_t i;
+//
+//  for(i=0; i<7; i++) {
+//    if(two_tier_hexagonal_cellIds[i] == phyCellId) {
+//      return i;
+//    }
+//  }
+//
+//  LOG_E(RRC,"\nCannot get adjacent cell mod id! Fatal error!\n");
+//  return 0xFF; //error!
+//}
 
-    memcpy(&string_buffer->string[string_buffer->string_index], buffer, size);
-    string_buffer->string_index += size;
-  }
-
-  return 0;
-}
-
-int xer_sprint (char *string, size_t string_size, asn_TYPE_descriptor_t *td, void *sptr)
-{
-  asn_enc_rval_t er;
-  xer_sprint_string_t string_buffer;
-
-  string_buffer.string = string;
-  string_buffer.string_size = string_size;
-  string_buffer.string_index = 0;
-
-  er = xer_encode(td, sptr, XER_F_BASIC, xer__print2s, &string_buffer);
-
-  if (er.encoded < 0) {
-    LOG_E(RRC, "xer_sprint encoding error (%d)!", er.encoded);
-    er.encoded = string_buffer.string_size;
-  } else {
-    if (er.encoded > string_buffer.string_size) {
-      LOG_E(RRC, "xer_sprint string buffer too small, got %d need %d!", string_buffer.string_size, er.encoded);
-      er.encoded = string_buffer.string_size;
-    }
-  }
-
-  return er.encoded;
-}
-
-uint16_t get_adjacent_cell_id(uint8_t Mod_id,uint8_t index)
-{
-  return(two_tier_hexagonal_adjacent_cellIds[Mod_id][index]);
-}
-/* This only works for the hexagonal topology...need a more general function for other topologies */
-
-uint8_t get_adjacent_cell_mod_id(uint16_t phyCellId)
-{
-  uint8_t i;
-
-  for(i=0; i<7; i++) {
-    if(two_tier_hexagonal_cellIds[i] == phyCellId) {
-      return i;
-    }
-  }
-
-  LOG_E(RRC,"\nCannot get adjacent cell mod id! Fatal error!\n");
-  return 0xFF; //error!
-}
-
-/*do_MIB_NB*/ //FIXME: to decide lots of things
+/*do_MIB_NB*/
 uint8_t do_MIB_NB(
 		rrc_eNB_carrier_data_NB_t *carrier,
 		uint16_t N_RB_DL,//may not needed--> for NB_IoT only 1 PRB is used
@@ -215,8 +190,22 @@ uint8_t do_MIB_NB(
   asn_enc_rval_t enc_rval;
   BCCH_BCH_Message_NB_t *mib_NB = &(carrier->mib_NB);
 
-  uint8_t sfn_MSB = (uint8_t)((frame>>2)&0xff); //4 bits FIXME
-  uint8_t hsfn_LSB = (uint8_t)((frame>>2)&0xff); //2 bits
+  /*
+   * systemFrameNumber-MSB: (TS 36.331 pag 576)
+   * define the 4 MSB of the SFN (10 bits). The last significant 6 bits will be acquired implicitly by decoding the NPBCH
+   * NOTE: 6 LSB will be used for counting the 64 radio frames in the TTI period (640 ms) that is exactly the MIB period
+   *
+   * hyperSFN-LSB:
+   * indicates the 2 least significant bits of the HSFN. The remaining 8 bits are present in SIB1-NB
+   * NOTE: with the 2 bits we count the 4 HSFN (is 1 SIB1-Nb modification period) while the other 6 count the number of modification periods
+   *
+   *
+   * NOTE: in OAI never modify the SIB messages!!??
+   */
+
+  //XXX check if correct the bit assignment
+  uint8_t sfn_MSB = (uint8_t)((frame>>6) & 0x0f); // all the 4 bits are set to 1
+  uint8_t hsfn_LSB = (uint8_t)((frame>>8)& 0x03); //2 bits set to 1
   uint16_t spare=0; //11 bits --> use uint16
 
   //no DL_Bandwidth, no PCHIC
@@ -234,7 +223,7 @@ uint8_t do_MIB_NB(
   mib_NB->message.spare.bits_unused = 5;
 
   //decide how to set it
-  mib_NB->message.schedulingInfoSIB1_r13 =0; //see TS 36.213-->tables 16.4.1.3-3 ecc...
+  mib_NB->message.schedulingInfoSIB1_r13 =11; //see TS 36.213-->tables 16.4.1.3-3 ecc...
   mib_NB->message.systemInfoValueTag_r13= 0;
   mib_NB->message.ab_Enabled_r13 = 0;
 
@@ -247,7 +236,6 @@ uint8_t do_MIB_NB(
          (uint32_t)sfn_MSB,
 		 (uint32_t)hsfn_LSB);
 
-  //only changes in "asn_DEF_BCCH_BCH_Message_NB"
   enc_rval = uper_encode_to_buffer(&asn_DEF_BCCH_BCH_Message_NB,
                                    (void*)mib_NB,
                                    carrier->MIB_NB,
@@ -286,8 +274,8 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
   SchedulingInfo_NB_r13_t schedulingInfo_NB;
   SIB_Type_NB_r13_t sib_type_NB;
 
-  //New parameters
-  //uint8_t hyperSFN_MSB_r13 ?? (BITSTRING)
+  //FIXME see if correct
+  //uint8_t hyperSFN_MSB = (uint8_t) ((frame>>2)& 0xff); --> need to introduce the h_SFN concept to be passed
 
   long* attachWithoutPDN_Connectivity = NULL;
   attachWithoutPDN_Connectivity = CALLOC(1,sizeof(long));
@@ -304,6 +292,11 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
   //allocation
   carrier->sib1_NB = &bcch_message->message.choice.c1.choice.systemInformationBlockType1_r13;
   sib1_NB = carrier->sib1_NB;
+
+  //XXX to be checked
+//  sib1_NB->hyperSFN_MSB_r13.buf = &hyperSFN_MSB;
+//  sib1_NB->hyperSFN_MSB_r13.size = 1;
+//  sib1_NB->hyperSFN_MSB_r13.bits_unused = 0;
 
   memset(&PLMN_identity_info_NB,0,sizeof(PLMN_IdentityInfo_NB_r13_t));
   memset(&schedulingInfo_NB,0,sizeof(SchedulingInfo_NB_r13_t));
@@ -332,7 +325,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
   PLMN_identity_info_NB.plmn_Identity_r13.mnc.list.size=0;
   PLMN_identity_info_NB.plmn_Identity_r13.mnc.list.count=0;
 
-  //FIXME
+
 #if defined(ENABLE_ITTI)
 
   if (configuration->mnc >= 100) {
@@ -409,7 +402,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
 
 
   sib1_NB->cellSelectionInfo_r13.q_RxLevMin_r13=-65; //which value?? TS 36.331 V14.2.1 pag. 589
-  sib1_NB->cellSelectionInfo_r13.q_QualMin_r13 = 0; // FIXME new parameter for SIB1-NB, not present in SIB1
+  sib1_NB->cellSelectionInfo_r13.q_QualMin_r13 = 0; //FIXME new parameter for SIB1-NB, not present in SIB1 (for cell reselection but if not used the UE should apply the default value)
 
   sib1_NB->p_Max_r13 = CALLOC(1, sizeof(P_Max_t));
   *(sib1_NB->p_Max_r13) = 23;
@@ -419,8 +412,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
 #if defined(ENABLE_ITTI)
     configuration->eutra_band[CC_id];
 #else
-    7; // UL:2500 MHz–2570 MHz	DL:2620 MHz	–2690 MHz	mode:FDD
-       //FIXME For NB-IoT depends on the operation mode (in/out/guard band) and also, not all PRBs are allowed ?
+    5; //if not configured we use band 5 (UL: 824 MHz - 849MHz / DL: 869 MHz - 894 MHz  FDD mode)
 #endif
 
     //OPTIONAL new parameters, to be used?
@@ -430,6 +422,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
        * nrs_CRS_PowerOffset_r13
        * sib1_NB->downlinkBitmap_r13.choice.subframePattern10_r13 =(is a BIT_STRING)
        */
+
 
    sib1_NB->downlinkBitmap_r13 = CALLOC(1, sizeof(struct DL_Bitmap_NB_r13));
    (sib1_NB->downlinkBitmap_r13)->present= DL_Bitmap_NB_r13_PR_NOTHING;
@@ -445,7 +438,9 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
   //FIXME which value to set?
   schedulingInfo_NB.si_Periodicity_r13=SchedulingInfo_NB_r13__si_Periodicity_r13_rf64;
   schedulingInfo_NB.si_RepetitionPattern_r13=SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every2ndRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
-  schedulingInfo_NB.si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b56; //in 2 subframe = 2ms (pag 590 TS 36.331)
+  schedulingInfo_NB.si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b208;//208 bits
+  //from ASN1 tools we have seen that sib2 + sib3 we are always below 200 bits so we use this si_TB size.
+  //from the specs the SI-message will be transmitted in 8 subframe = 8ms (pag 590 TS 36.331)
 
   // This is for SIB2/3
   /*SIB3 --> There is no mapping information of SIB2 since it is always present
@@ -642,7 +637,7 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.srs_SubframeConfig_r13= srs_SubframeConfig;
 
 
-  //new (occhio che dmrs_config_r13 è un puntatore quando lo richiami)
+  //new (occhio che dmrs_config_r13 ï¿½ un puntatore quando lo richiami)
   sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13 =configuration->npusch_threeTone_CyclicShift_r13[CC_id];
   sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13 = configuration->npusch_sixTone_CyclicShift_r13[CC_id];
 
@@ -752,7 +747,7 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
        * twelveTone_BaseSequence_r13
 
 
-      //new (occhio che dmrs_config_r13 è un puntatore quando lo richiami)
+      //new (occhio che dmrs_config_r13 ï¿½ un puntatore quando lo richiami)
       (*sib2_NB)->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13 =0;
       (*sib2_NB)->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13 = 0;
 
@@ -857,7 +852,7 @@ uint8_t do_RRCConnectionSetup_NB(
   int                              CC_id,
   uint8_t*                   const buffer, //Srb0.Tx_buffer.Payload
   const uint8_t                    Transaction_id,
-  const LTE_DL_FRAME_PARMS* const frame_parms, //to be changed or maybe not used
+  const NB_DL_FRAME_PARMS* const frame_parms, // maybe not used
   SRB_ToAddModList_NB_r13_t**             SRB_configList_NB, //for both SRB1bis and SRB1
   struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB
 )
@@ -975,7 +970,7 @@ uint8_t do_RRCConnectionSetup_NB(
 
 		 //ADD SRB1bis
 		 //MP: Actually there is no way to distinguish SRB1 and SRB1bis once in the list
-		 //MP: XXX SRB_ToAddModList_NB_r13_t size = 1
+		 //MP: SRB_ToAddModList_NB_r13_t size = 1
 		 ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1bis_config_NB);
 
 
@@ -1013,11 +1008,11 @@ uint8_t do_RRCConnectionSetup_NB(
  physicalConfigDedicated2_NB->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13=0;
 
  // NPUSCH
- physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->ack_NACK_NumRepetitions_r13= NULL; //(specs pag 643)
+ physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->ack_NACK_NumRepetitions_r13= NULL; //(specs pag 643) /* OPTIONAL */
  npusch_AllSymbols= CALLOC(1, sizeof(BOOLEAN_t));
  *npusch_AllSymbols= 1; //TRUE
- physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->npusch_AllSymbols_r13= npusch_AllSymbols;
- physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->groupHoppingDisabled_r13=NULL;
+ physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->npusch_AllSymbols_r13= npusch_AllSymbols; /* OPTIONAL */
+ physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->groupHoppingDisabled_r13=NULL; /* OPTIONAL */
 
  // UplinkPowerControlDedicated
  physicalConfigDedicated2_NB->uplinkPowerControlDedicated_r13->p0_UE_NPUSCH_r13 = 0; // 0 dB (specs pag 643)
@@ -1027,7 +1022,7 @@ uint8_t do_RRCConnectionSetup_NB(
  rrcConnectionSetup_NB->rrc_TransactionIdentifier = Transaction_id; //input value
  rrcConnectionSetup_NB->criticalExtensions.present = RRCConnectionSetup_NB__criticalExtensions_PR_c1;
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.present =RRCConnectionSetup_NB__criticalExtensions__c1_PR_rrcConnectionSetup_r13 ;
- //XXX: carry only SRB1bis at the moment and phyConfigDedicated
+ //MP: carry only SRB1bis at the moment and phyConfigDedicated
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.srb_ToAddModList_r13 = *SRB_configList_NB;
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.drb_ToAddModList_r13 = NULL;
  rrcConnectionSetup_NB->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.drb_ToReleaseList_r13 = NULL;
@@ -1465,7 +1460,6 @@ uint8_t do_RRCConnectionReestablishment_NB(
 	rrcConnectionReestablishment_NB->criticalExtensions.present = RRCConnectionReestablishment_NB__criticalExtensions_PR_c1;
 	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.present = RRCConnectionReestablishment_NB__criticalExtensions__c1_PR_rrcConnectionReestablishment_r13;
 
-	//FIXME: which parameters are needed?
 	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.srb_ToAddModList_r13 = SRB_list_NB;
 	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.drb_ToAddModList_r13 = NULL;
 	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.drb_ToReleaseList_r13 = NULL;
