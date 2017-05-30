@@ -116,6 +116,8 @@ typedef struct x2ap_handover_req_s {
   int source_rnti;                       /* TODO: to be fixed/remove */
   int source_x2id;                       /* TODO: to be fixed/remove */
   PhysCellId_t target_physCellId;
+  uint8_t      kenb[32]; // keNB or keNB*
+  long int     next_hop_chaining_count;
   /* TODO: this parameter has to be removed */
   int target_mod_id;
 } x2ap_handover_req_t;

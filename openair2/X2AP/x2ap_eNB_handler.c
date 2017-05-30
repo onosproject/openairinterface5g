@@ -234,8 +234,15 @@ x2ap_eNB_handle_handover_preparation(uint32_t assoc_id,
   extern int x2id_to_source_rnti[1];
   X2AP_HANDOVER_REQ(m).source_x2id = x2HandoverRequest->old_eNB_UE_X2AP_ID;
   X2AP_HANDOVER_REQ(m).source_rnti = x2id_to_source_rnti[x2HandoverRequest->old_eNB_UE_X2AP_ID];
-  itti_send_msg_to_task(TASK_RRC_ENB, x2ap_eNB_data->x2ap_eNB_instance->instance, m);
-  return 0;
+  if ((x2HandoverRequest->uE_ContextInformation.aS_SecurityInformation.key_eNodeB_star.buf) &&
+	  (x2HandoverRequest->uE_ContextInformation.aS_SecurityInformation.key_eNodeB_star.size == 256)) {
+    memcpy(X2AP_HANDOVER_REQ(m).kenb, x2HandoverRequest->uE_ContextInformation.aS_SecurityInformation.key_eNodeB_star.buf, 32);
+    X2AP_HANDOVER_REQ(m).next_hop_chaining_count = x2HandoverRequest->uE_ContextInformation.aS_SecurityInformation.nextHopChainingCount;
+    itti_send_msg_to_task(TASK_RRC_ENB, x2ap_eNB_data->x2ap_eNB_instance->instance, m);
+    return 0;
+  } else {
+	return -1;
+  }
 
 #if 0
   if (x2SetupRequest->globalENB_ID.eNB_ID.present == X2ap_ENB_ID_PR_home_eNB_ID) {

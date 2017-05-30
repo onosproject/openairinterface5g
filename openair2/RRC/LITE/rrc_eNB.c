@@ -2600,7 +2600,12 @@ global_rnti = rnti;
   /* TODO: remove this hack */
   ue_context_target_p->ue_context.handover_info->modid_t = mod_id;
   ue_context_target_p->ue_context.handover_info->modid_s = 1-mod_id;
-  ue_context_target_p->ue_context.handover_info->ueid_s= m->source_rnti;
+  ue_context_target_p->ue_context.handover_info->ueid_s  = m->source_rnti;
+
+  memset (ue_context_target_p->ue_context.nh, 0, 32);
+  ue_context_target_p->ue_context.nh_ncc = -1;
+  memcpy (ue_context_target_p->ue_context.kenb, m->kenb, 32);
+  ue_context_target_p->ue_context.kenb_ncc = m->next_hop_chaining_count;
 }
 
 #if 0

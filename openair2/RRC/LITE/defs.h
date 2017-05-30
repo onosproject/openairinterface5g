@@ -387,6 +387,7 @@ typedef struct eNB_RRC_UE_s {
 #if defined(ENABLE_SECURITY)
   /* KeNB as derived from KASME received from EPC */
   uint8_t kenb[32];
+  int8_t  kenb_ncc;
   uint8_t nh[32];
   int8_t  nh_ncc;
 #endif
