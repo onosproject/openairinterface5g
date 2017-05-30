@@ -30,7 +30,8 @@
 * \warning
 */
 
-
+#ifndef __PHY_IMPL_DEFS_NB_IOT__H__
+#define __PHY_IMPL_DEFS_NB_IOT__H__
 
 #include "types.h"
 //#include "defs.h"
@@ -220,3 +221,4 @@ typedef struct {
 
 } NB_DL_FRAME_PARMS;
 
+#endif

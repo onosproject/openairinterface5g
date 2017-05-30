@@ -56,7 +56,7 @@
 
 #include "assertions.h"
 #include "msc.h"
-
+#include "PHY/defs_nb_iot.h"
 #include <time.h>
 
 #if defined(ENABLE_ITTI)
@@ -697,9 +697,9 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
 
 void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched_Rsp_t *Sched_Rsp,const int UE_id) 
 {
-  LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
+  //LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   int frame = proc->frame_tx;
-  int subframe = proc->subframe_tx;
+  //int subframe = proc->subframe_tx;
 
   // In NB-IoT, there is no DCI for SI, we might use the scheduling infomation from SIB1-NB to get the phyical layer configuration.
   
@@ -737,11 +737,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
 
 void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_Rsp_t *Sched_Rsp,const int UE_id) {
 
-  int harq_pid;
-  LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
-  int frame = proc->frame_tx;
-  int subframe = proc->subframe_tx;
-
+  int harq_pid = 0;
 
   /*Log for generate ULSCH DCI*/
 
@@ -768,12 +764,12 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 {
   int frame = proc->frame_tx;
   int subframe = proc->subframe_tx;
-  uint32_t i,j,aa;
+  uint32_t i,aa;
   uint8_t harq_pid;
-  DCI_PDU_NB *DCI_pdu;
-  DCI_PDU_NB DCI_pdu_tmp;
+  //DCI_PDU_NB *DCI_pdu;
+  //DCI_PDU_NB DCI_pdu_tmp;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
-  DCI_ALLOC_t *dci_alloc = (DCI_ALLOC_t *)NULL;
+ // DCI_ALLOC_t *dci_alloc = (DCI_ALLOC_t *)NULL;
   int oai_exit = 0;
   int8_t UE_id = 0;
   uint8_t ul_subframe;
