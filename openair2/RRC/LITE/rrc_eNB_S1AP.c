@@ -339,6 +339,8 @@ static void process_eNB_security_key (
 
   /* Saves the security key */
   memcpy (ue_context_pP->ue_context.kenb, security_key_pP, SECURITY_KEY_LENGTH);
+  memset (ue_context_pP->ue_context.nh, 0, SECURITY_KEY_LENGTH);
+  ue_context_pP->ue_context.nh_ncc = -1;
 
   for (i = 0; i < 32; i++) {
     sprintf(&ascii_buffer[2 * i], "%02X", ue_context_pP->ue_context.kenb[i]);

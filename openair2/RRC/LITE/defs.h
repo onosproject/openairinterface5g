@@ -387,6 +387,8 @@ typedef struct eNB_RRC_UE_s {
 #if defined(ENABLE_SECURITY)
   /* KeNB as derived from KASME received from EPC */
   uint8_t kenb[32];
+  uint8_t nh[32];
+  int8_t  nh_ncc;
 #endif
   /* Used integrity/ciphering algorithms */
   CipheringAlgorithm_r12_t                          ciphering_algorithm;
@@ -600,6 +602,8 @@ typedef struct UE_RRC_INST_s {
 #if defined(ENABLE_SECURITY)
   /* KeNB as computed from parameters within USIM card */
   uint8_t kenb[32];
+  uint8_t nh[32];
+  int8_t  nh_ncc;
 #endif
 
   /* Used integrity/ciphering algorithms */

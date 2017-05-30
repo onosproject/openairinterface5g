@@ -254,6 +254,8 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(
   const uint8_t                ho_state
 );
 
+int freq_to_arfcn10(int band, unsigned long freq);
+
 void
 rrc_eNB_generate_dedeicatedRRCConnectionReconfiguration(
   const protocol_ctxt_t* const ctxt_pP,
