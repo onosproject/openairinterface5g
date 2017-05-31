@@ -81,6 +81,8 @@ typedef struct{
 
  /*DCI start*/
  // Format of DCI
+ uint8_t aggregation;
+ uint8_t Num_dci;
  DCI_format_NB_t DCI_Format;
  // Content of DCI
  DCI_CONTENT *DCI_Content;

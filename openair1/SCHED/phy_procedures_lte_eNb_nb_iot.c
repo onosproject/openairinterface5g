@@ -77,27 +77,6 @@
 
 #define PUCCH 1
 
-void exit_fun(const char* s);
-
-extern int exit_openair;
-struct timespec start_fh, start_fh_prev;
-int start_fh_sf, start_fh_prev_sf;
-// Fix per CC openair rf/if device update
-// extern openair0_device openair0;
-
-unsigned char dlsch_input_buffer[2700] __attribute__ ((aligned(32)));
-int eNB_sync_buffer0[640*6] __attribute__ ((aligned(32)));
-int eNB_sync_buffer1[640*6] __attribute__ ((aligned(32)));
-int *eNB_sync_buffer[2] = {eNB_sync_buffer0, eNB_sync_buffer1};
-
-extern uint16_t hundred_times_log10_NPRB[100];
-
-unsigned int max_peak_val;
-int max_sync_pos;
-
-int harq_pid_updated[NUMBER_OF_UE_MAX][8] = {{0}};
-int harq_pid_round[NUMBER_OF_UE_MAX][8] = {{0}};
-
 //DCI_ALLOC_t dci_alloc[8];
 
 #ifdef EMOS
@@ -113,8 +92,6 @@ extern uint8_t smbv_frame_cnt;
 #ifdef DIAG_PHY
 extern int rx_sig_fifo;
 #endif
-
-
 
 
 void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const relaying_type_t r_type)
@@ -708,7 +685,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
       // configure dlsch parameters and CCE index
       LOG_D(PHY,"Generating dlsch params for RA_RNTI\n");
 
-      NB_generate_eNB_dlsch_params_from_dci();
+      //NB_generate_eNB_dlsch_params_from_dci();
       
       //eNB->dlsch_ra->nCCE[subframe] = dci_alloc->firstCCE;    
       /*Log for common DCI*/
@@ -718,7 +695,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
       if (UE_id>=0) 
         {
           LOG_D(PHY,"Generating dlsch params for RNTI %x\n",Sched_Rsp->rntiP);      
-          NB_generate_eNB_dlsch_params_from_dci();
+          //NB_generate_eNB_dlsch_params_from_dci();
 
           /*Log for remaining DCI*/
 
@@ -741,7 +718,7 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_
 
   /*Log for generate ULSCH DCI*/
 
-  NB_generate_eNB_ulsch_params_from_dci();  
+  //NB_generate_eNB_ulsch_params_from_dci();  
   
   //LOG for ULSCH DCI Resource allocation
   

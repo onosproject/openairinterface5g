@@ -50,11 +50,17 @@ typedef struct {
   /// rnti
   rnti_t rnti;
   /// Format
-  DCI_format_t format;
+  DCI_format_NB_t format;
   /// DCI pdu
   uint8_t dci_pdu[8];
 } DCI_ALLOC_NB_t;
 
+typedef struct {
+  //delete the count for the DCI numbers,NUM_DCI_MAX should set to 1 
+  uint32_t num_npdcch_symbols;
+  uint8_t Num_dci;
+  DCI_ALLOC_NB_t dci_alloc[2] ;
+} DCI_PDU_NB;
 
 /**@}*/
 #endif

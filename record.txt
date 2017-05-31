@@ -73,7 +73,10 @@ Comment: merge with RRC branch, start the TX part implementation
 Modified:   openair2/LAYER2/MAC/phy_procedures_lte_eNB_nb_iot.c
 
 Comment: Complete the TX part, add the NB_generate_eNB_dlsch_params and NB_generate_eNB_ulsch_params
-	 Since original OAI packed the DCI in MAC, and unpack at PHY to apply the physical layer configuration.
+	 	 Since original OAI packed the DCI in MAC, and unpack at PHY to apply the physical layer configuration.
          so we'll apply the configuration and pack the DCI at the same time.
+5/31
 
+Comment: Complete the dci_tools the part configuring the PHY and do the pack of dci at the same times.
+		 Add DCI packed format in dci_nb_iot.h
 

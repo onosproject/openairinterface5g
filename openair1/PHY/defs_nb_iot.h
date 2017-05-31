@@ -314,6 +314,7 @@ typedef struct PHY_VARS_eNB_NB_s {
 #include "PHY/LTE_REFSIG/defs.h"
 #include "PHY/MODULATION/defs.h"
 #include "PHY/LTE_TRANSPORT/proto.h"
+#include "PHY/LTE_TRANSPORT/proto_nb_iot.h"
 #include "PHY/LTE_ESTIMATION/defs.h"
 
 #include "SIMULATION/ETH_TRANSPORT/defs.h"
