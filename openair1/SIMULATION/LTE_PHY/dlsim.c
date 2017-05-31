@@ -695,8 +695,12 @@ void fill_DCI(PHY_VARS_eNB *eNB,
               }
             }
           } else if (eNB->frame_parms.nb_antennas_tx == 4) {
-
-          }
+	    printf("TM3 needs for 4 TX antennas not implemented!\n");
+	    exit(-1);
+          } else {
+	    printf("TM3 needs 2 or 4 TX antennas!\n");
+	    exit(-1);
+	  }
 
           memcpy(&dci_alloc[*num_dci].dci_pdu[0],&DLSCH_alloc_pdu_1[k],dci_length_bytes);
           dci_alloc[*num_dci].dci_length = dci_length;
@@ -705,7 +709,7 @@ void fill_DCI(PHY_VARS_eNB *eNB,
           dci_alloc[*num_dci].format     = format2A;
           dump_dci(&eNB->frame_parms,&dci_alloc[*num_dci]);
 
-          printf("Generating dlsch params for user %d / format 2A (%d)\n",k,format2A);
+          //printf("Generating dlsch params for user %d / format 2A (%d)\n",k,format2A);
           generate_eNB_dlsch_params_from_dci(0,
 					     subframe,
                                              &DLSCH_alloc_pdu_1[0],
@@ -846,7 +850,7 @@ void fill_DCI(PHY_VARS_eNB *eNB,
           dci_alloc[*num_dci].firstCCE       = 0;
           dump_dci(&eNB->frame_parms,&dci_alloc[*num_dci]);
 
-          printf("Generating dlsch params for user %d\n",k);
+          //printf("Generating dlsch params for user %d\n",k);
           generate_eNB_dlsch_params_from_dci(0,
 					     subframe,
                                              &DLSCH_alloc_pdu_1[0],
@@ -866,7 +870,7 @@ void fill_DCI(PHY_VARS_eNB *eNB,
 
         }
 
-        printf("Generated DCI format 2A (Transmission Mode 3)\n");
+        //printf("Generated DCI format 2A (Transmission Mode 3)\n");
         break;
 
       case 4:
@@ -2090,7 +2094,7 @@ int main(int argc, char **argv)
     break;
   }
 
-  for (k=0; k<n_users; k++) {
+  for (k=0; k<NUMBER_OF_UE_MAX; k++) {
     // Create transport channel structures for 2 transport blocks (MIMO)
     for (i=0; i<2; i++) {
       eNB->dlsch[k][i] = new_eNB_dlsch(Kmimo,8,Nsoft,N_RB_DL,0,&eNB->frame_parms);
