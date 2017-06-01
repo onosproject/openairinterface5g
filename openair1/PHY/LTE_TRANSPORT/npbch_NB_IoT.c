@@ -140,7 +140,7 @@ int generate_npbch(NB_IoT_eNB_NPBCH *eNB_npbch,
 	if (frame_mod64==0) {
 		bzero(npbch_a,5);      									// initializing input data stream , filling with zeros
 		bzero(eNB_npbch->npbch_e,pbch_E);						// filling with "0" the table pbch_e[1600]
-		memset(eNB_npbch->npbch_d,LTE_NULL,66);					// filling with "2" the first 96 elements of table pbch_d[216]
+		memset(eNB_npbch->npbch_d,LTE_NULL,96);					// filling with "2" the first 96 elements of table pbch_d[216]
 		
 		for (i=0; i<5; i++) 									// set input bits stream
 		{	
@@ -165,8 +165,8 @@ int generate_npbch(NB_IoT_eNB_NPBCH *eNB_npbch,
 			}
 		}
 		
-		ccode_encode_NB_IoT(NPBCH_A,2,npbch_a,eNB_npbch->npbch_d+66,amask);						// step 1 CRC Attachment
-		RCC = sub_block_interleaving_cc_NB_IoT(npbch_D,eNB_npbch->npbch_d+66,eNB_npbch->npbch_w);   	// step 2 Channel Coding
+		ccode_encode_NB_IoT(NPBCH_A,2,npbch_a,eNB_npbch->npbch_d+96,amask);						// step 1 CRC Attachment
+		RCC = sub_block_interleaving_cc_NB_IoT(npbch_D,eNB_npbch->npbch_d+96,eNB_npbch->npbch_w);   	// step 2 Channel Coding
 		lte_rate_matching_cc_NB_IoT(RCC,npbch_E,eNB_npbch->npbch_w,eNB_npbch->npbch_e);				// step 3 Rate Matching
 		npbch_scrambling(frame_parms,															// step 4 Scrambling
 						eNB_npbch->npbch_e,
