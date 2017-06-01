@@ -223,7 +223,7 @@ typedef struct {
 #define NPBCH_A 34 
 
 typedef struct {
-  uint8_t npbch_d[66+(3*(16+NPBCH_A))];
+  uint8_t npbch_d[96+(3*(16+NPBCH_A))];
   uint8_t npbch_w[3*3*(16+NPBCH_A)];
   uint8_t npbch_e[1600];
 } NB_IoT_eNB_NPBCH;
