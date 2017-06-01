@@ -47,7 +47,7 @@ uint32_t sub_block_interleaving_cc_NB_IoT(uint32_t D, uint8_t *d,uint8_t *w)
       w[Kpi+k]      =   d[(int32_t)index3-(int32_t)ND3+1];
       w[(Kpi<<1)+k] =   d[(int32_t)index3-(int32_t)ND3+2];
 
-      index3+=66;
+      index3+=96;
       index+=32;
       k++;
     }
@@ -56,10 +56,10 @@ uint32_t sub_block_interleaving_cc_NB_IoT(uint32_t D, uint8_t *d,uint8_t *w)
 }
 
 
-uint32_t lte_rate_matching_cc_NB_IoT(uint32_t RCC,    // RRC = 2
-									 uint16_t E,      // E = 1600
-									 uint8_t *w,	  // length 192
-									 uint8_t *e)	  // length 1600
+uint32_t lte_rate_matching_cc_NB_IoT(uint32_t RCC,      // RRC = 2
+				     uint16_t E,        // E = 1600
+				     uint8_t *w,	// length
+				     uint8_t *e)	// length 1600
 {
   uint32_t ind=0,k;
 
