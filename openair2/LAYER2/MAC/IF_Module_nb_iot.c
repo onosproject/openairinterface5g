@@ -38,3 +38,11 @@ void UL_indication(UL_IND_t UL_INFO)
 void Schedule_Response(Sched_Rsp_t Sched_INFO){
       //todo
 }
+
+int IF_Module_init(IF_Module_t *if_inst){
+  
+  if_inst->UL_indication      = UL_indication;
+  if_inst->Schedule_Response  = Schedule_Response;
+  
+  return 0;
+}

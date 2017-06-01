@@ -380,17 +380,6 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
                 eNB->ulsch[i]->harq_processes[harq_pid]->o_ACK[0],
                 eNB->ulsch[i]->harq_processes[harq_pid]->o_ACK[1]);
 
-#if defined(MESSAGE_CHART_GENERATOR_PHY)
-              MSC_LOG_RX_DISCARDED_MESSAGE(
-				       MSC_PHY_ENB,MSC_PHY_UE,
-				       NULL,0,
-				       "%05u:%02u ULSCH received rnti %x harq id %u round %d",
-				       frame,subframe,
-				       eNB->ulsch[i]->rnti,harq_pid,
-				       eNB->ulsch[i]->harq_processes[harq_pid]->round-1
-				       );
-#endif
-
               if (eNB->ulsch[i]->harq_processes[harq_pid]->round== eNB->ulsch[i]->Mlimit) 
               {
                   LOG_D(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d UE %d ULSCH Mlimit %d reached\n",
@@ -430,15 +419,7 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
           T_INT(harq_pid));
 
         // Delete MSG3  log for the PHICH 
-#if defined(MESSAGE_CHART_GENERATOR_PHY)
-        MSC_LOG_RX_MESSAGE(
-			   MSC_PHY_ENB,MSC_PHY_UE,
-			   NULL,0,
-			   "%05u:%02u ULSCH received rnti %x harq id %u",
-			   frame,subframe,
-			   eNB->ulsch[i]->rnti,harq_pid
-			   );
-#endif
+
         for (j=0; j<fp->nb_antennas_rx; j++)
           //this is the RSSI per RB
           eNB->UE_stats[i].UL_rssi[j] =
@@ -540,11 +521,7 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
                   UL_Info.UL_SPEC_Info[i].msg3_flagP = NULL;
                   UL_Info.UE_NUM++;
 
-#ifdef LOCALIZATION
-	    start_meas(&eNB->localization_stats);
-	    aggregate_eNB_UE_localization_stats(eNB,i,frame,subframe,get_hundred_times_delta_IF_eNB(eNB,i,harq_pid, 1)/100);
-	    stop_meas(&eNB->localization_stats);
-#endif
+
 	    
 	           } // mac_enabled==1
       } // Msg3_flag == 0
@@ -581,33 +558,10 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
                             0,
                             0);*/
 
-#ifdef DEBUG_PHY_PROC
-      LOG_D(PHY,"[eNB %d] Frame %d subframe %d, sect %d: received ULSCH harq_pid %d for UE %d, ret = %d, CQI CRC Status %d, ACK %d,%d, ulsch_errors %d/%d\n",
-            eNB->Mod_id,frame,subframe,
-            eNB->UE_stats[i].sector,
-            harq_pid,
-            i,
-            ret,
-            eNB->ulsch[i]->harq_processes[harq_pid]->cqi_crc_status,
-            eNB->ulsch[i]->harq_processes[harq_pid]->o_ACK[0],
-            eNB->ulsch[i]->harq_processes[harq_pid]->o_ACK[1],
-            eNB->UE_stats[i].ulsch_errors[harq_pid],
-            eNB->UE_stats[i].ulsch_decoding_attempts[harq_pid][0]);
-#endif
-      
-      // dump stats to VCD
-      if (i==0) {
-	VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_UE0_MCS0+harq_pid,eNB->pusch_stats_mcs[0][(frame*10)+subframe]);
-	VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_UE0_RB0+harq_pid,eNB->pusch_stats_rb[0][(frame*10)+subframe]);
-	VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_UE0_ROUND0+harq_pid,eNB->pusch_stats_round[0][(frame*10)+subframe]);
-	VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_UE0_RSSI0+harq_pid,dB_fixed(eNB->pusch_vars[0]->ulsch_power[0]));
-	VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_UE0_RES0+harq_pid,ret);
-	VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_UE0_SFN0+harq_pid,(frame*10)+subframe);
-      }
-    } // ulsch[0] && ulsch[0]->rnti>0 && ulsch[0]->subframe_scheduling_flag == 1
 
-    //store the parameter to determine if UL failure or not
-    UL_Info.UL_SPEC_Info[i].ulsch_consecutive_errors = eNB->UE_stats[i].ulsch_consecutive_errors;
+      
+
+    } // ulsch[0] && ulsch[0]->rnti>0 && ulsch[0]->subframe_scheduling_flag == 1
 
 
     // update ULSCH statistics for tracing
@@ -680,7 +634,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
 
   // In NB-IoT, there is no DCI for SI, we might use the scheduling infomation from SIB1-NB to get the phyical layer configuration.
   
-  if (Sched_Rsp->DCI_Format == DCIFormatN1_RAR) // This is format 1A allocation for RA
+  if (Sched_Rsp->NB_DCI.DCI_Format == DCIFormatN1_RAR) // This is format 1A allocation for RA
     {  
       // configure dlsch parameters and CCE index
       LOG_D(PHY,"Generating dlsch params for RA_RNTI\n");
@@ -690,11 +644,11 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
       //eNB->dlsch_ra->nCCE[subframe] = dci_alloc->firstCCE;    
       /*Log for common DCI*/
     }
-  else if ((Sched_Rsp->DCI_Format != DCIFormatN0)&&(Sched_Rsp->DCI_Format != DCIFormatN2_Ind)&&(Sched_Rsp->DCI_Format != DCIFormatN2_Pag))
+  else if ((Sched_Rsp->NB_DCI.DCI_Format != DCIFormatN0)&&(Sched_Rsp->NB_DCI.DCI_Format != DCIFormatN2_Ind)&&(Sched_Rsp->NB_DCI.DCI_Format != DCIFormatN2_Pag))
     { // this is a normal DLSCH allocation
       if (UE_id>=0) 
         {
-          LOG_D(PHY,"Generating dlsch params for RNTI %x\n",Sched_Rsp->rntiP);      
+          LOG_D(PHY,"Generating dlsch params for RNTI %x\n",Sched_Rsp->NB_DCI.RNTI);      
           //NB_generate_eNB_dlsch_params_from_dci();
 
           /*Log for remaining DCI*/
@@ -706,7 +660,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
       else 
         {
           LOG_D(PHY,"[eNB %"PRIu8"][PDSCH] Frame %d : No UE_id with corresponding rnti %"PRIx16", dropping DLSCH\n",
-                      eNB->Mod_id,frame,Sched_Rsp->rntiP);
+                      eNB->Mod_id,frame,Sched_Rsp->NB_DCI.RNTI);
         }
     }
   
@@ -722,7 +676,7 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_
   
   //LOG for ULSCH DCI Resource allocation
   
-  if ((Sched_Rsp->rntiP  >= CBA_RNTI) && (Sched_Rsp->rntiP < P_RNTI))
+  if ((Sched_Rsp->NB_DCI.RNTI  >= CBA_RNTI) && (Sched_Rsp->NB_DCI.RNTI < P_RNTI))
     eNB->ulsch[(uint32_t)UE_id]->harq_processes[harq_pid]->subframe_cba_scheduling_flag = 1;
   else
     eNB->ulsch[(uint32_t)UE_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 1;
@@ -787,7 +741,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     {
 
 
-      /* Not test yet , mutex_l2, cond_l2, instance_cnt_l2
+      /*Not test yet , mutex_l2, cond_l2, instance_cnt_l2
         if(wait_on_condition(&proc->mutex_l2,&proc->cond_l2,&proc->instance_cnt_l2,"eNB_L2_thread") < 0) 
         break;*/
 
@@ -822,9 +776,9 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       /*Loop over all the dci to generate DLSCH allocation, there is only 1 or 2 DCIs for NB-IoT in the same time*/
       /*Also Packed the DCI here*/
       
-      if (Sched_Rsp->rntiP<= P_RNTI) 
+      if (Sched_Rsp->NB_DCI.RNTI<= P_RNTI) 
         {
-          UE_id = find_ue((int16_t)Sched_Rsp->rntiP,eNB);
+          UE_id = find_ue((int16_t)Sched_Rsp->NB_DCI.RNTI,eNB);
         }
       else 
         UE_id=0;
@@ -837,22 +791,20 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
       //dci_alloc = &DCI_pdu->dci_alloc[i];
 
-      if (Sched_Rsp->DCI_Format == DCIFormatN0) // this is a ULSCH allocation
+      if (Sched_Rsp->NB_DCI.DCI_Format == DCIFormatN0) // this is a ULSCH allocation
         {  
-          UE_id = find_ue((int16_t)Sched_Rsp->rntiP,eNB);
+          UE_id = find_ue((int16_t)Sched_Rsp->NB_DCI.RNTI,eNB);
           NB_generate_eNB_ulsch_params(eNB,proc,Sched_Rsp,UE_id);
         }
 
       /*If we have DCI to generate do it now TODO : have a generate dci top for NB_IoT */      
       NB_generate_dci_top();
 
-      if(Sched_Rsp->pdu_payload)
+      if(Sched_Rsp->NB_DLSCH.ndlsch_pdu_payload||Sched_Rsp->NB_DLSCH.nbcch_pdu_payload)
         {
             /*TODO: MPDSCH procedures for NB-IoT*/
             //npdsch_procedures();
         }
 
-      if (do_meas==1) 
-        stop_meas(&eNB->phy_proc_tx);
     }
 }
