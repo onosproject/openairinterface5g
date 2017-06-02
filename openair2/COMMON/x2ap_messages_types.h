@@ -119,21 +119,45 @@ typedef struct x2ap_gummei_s {
   uint16_t mme_group_id;
 } x2ap_gummei_t;
 
+typedef struct x2ap_lastvisitedcell_info_s {
+  uint16_t mcc;
+  uint16_t mnc;
+  uint8_t  mnc_len;
+  PhysCellId_t target_physCellId;
+  cell_type_t cell_type;
+  uint64_t time_UE_StayedInCell;
+}x2ap_lastvisitedcell_info_t;
+
+//used for src 
 typedef struct x2ap_handover_req_s {
   int source_rnti;                       /* TODO: to be fixed/remove */
   int source_x2id;                       /* TODO: to be fixed/remove */
 
   unsigned  old_eNB_ue_s1ap_id:24;
+  
+  PhysCellId_t target_physCellId;
+
+  x2ap_gummei_t ue_gummei;
+
+  /*UE-ContextInformation */
 
   /* MME UE id  */
   uint16_t mme_ue_s1ap_id;
   
-  PhysCellId_t target_physCellId;
-
-  x2ap_gummei_t gummei_id;
-
   security_capabilities_t security_capabilities;
   
+  uint8_t      kenb[32]; // keNB or keNB*
+
+  /*next_hop_chaining_coun */ 
+  long int     kenb_ncc;
+
+  /* UE aggregate maximum bitrate */
+  ambr_t ue_ambr;
+  
+ /* list of e_rab setup-ed by RRC layers */
+  e_rab_setup_t e_rabs_tobesetup[S1AP_MAX_E_RAB];
+
+  x2ap_lastvisitedcell_info_t lastvisitedcell_info;
   
   /* TODO: this parameter has to be removed */
   int target_mod_id;

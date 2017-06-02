@@ -76,6 +76,8 @@
 #ifndef OCP_FRAMEWORK
 typedef enum cell_type_e {
   CELL_MACRO_ENB,
+  CELL_MICRO_ENB,
+  CELL_SMALL_ENB,
   CELL_HOME_ENB
 } cell_type_t;
 

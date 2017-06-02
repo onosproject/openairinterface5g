@@ -359,6 +359,15 @@ typedef struct HANDOVER_INFO_UE_s {
   uint8_t measFlag;
 } HANDOVER_INFO_UE;
 
+
+typedef struct ue_gummei_s {
+  uint16_t mcc;
+  uint16_t mnc;
+  uint8_t  mnc_len;
+  uint8_t  mme_code;
+  uint16_t mme_group_id;
+} ue_gummei_t;
+
 typedef struct eNB_RRC_UE_s {
   uint8_t                            primaryCC_id;
 #if defined(Rel10) || defined(Rel14)
@@ -387,6 +396,9 @@ typedef struct eNB_RRC_UE_s {
 #if defined(ENABLE_SECURITY)
   /* KeNB as derived from KASME received from EPC */
   uint8_t kenb[32];
+  int8_t  kenb_ncc;
+  uint8_t nh[32];
+  int8_t  nh_ncc;
 #endif
   /* Used integrity/ciphering algorithms */
   CipheringAlgorithm_r12_t                          ciphering_algorithm;
@@ -409,6 +421,9 @@ typedef struct eNB_RRC_UE_s {
 
   /* Information from S1AP initial_context_setup_req */
   uint32_t                           eNB_ue_s1ap_id :24;
+
+  /* UE GUMMEI */
+  ue_gummei_t                           ue_gummei;
 
   security_capabilities_t            security_capabilities;
   
@@ -600,6 +615,8 @@ typedef struct UE_RRC_INST_s {
 #if defined(ENABLE_SECURITY)
   /* KeNB as computed from parameters within USIM card */
   uint8_t kenb[32];
+  uint8_t nh[32];
+  int8_t  nh_ncc;
 #endif
 
   /* Used integrity/ciphering algorithms */

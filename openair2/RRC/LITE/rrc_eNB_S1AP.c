@@ -339,6 +339,8 @@ static void process_eNB_security_key (
 
   /* Saves the security key */
   memcpy (ue_context_pP->ue_context.kenb, security_key_pP, SECURITY_KEY_LENGTH);
+  memset (ue_context_pP->ue_context.nh, 0, SECURITY_KEY_LENGTH);
+  ue_context_pP->ue_context.nh_ncc = -1;
 
   for (i = 0; i < 32; i++) {
     sprintf(&ascii_buffer[2 * i], "%02X", ue_context_pP->ue_context.kenb[i]);
@@ -682,6 +684,9 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
             ue_context_pP->ue_context.rnti);
       }
 
+      const Enb_properties_array_t   *enb_properties_p  = NULL;
+      enb_properties_p = enb_config_get();
+
       if (rrcConnectionSetupComplete->registeredMME != NULL) {
         /* Fill GUMMEI */
         struct RegisteredMME *r_mme = rrcConnectionSetupComplete->registeredMME;
@@ -693,7 +698,8 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
           if ((r_mme->plmn_Identity->mcc != NULL) && (r_mme->plmn_Identity->mcc->list.count > 0)) {
             /* Use first indicated PLMN MCC if it is defined */
             S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc = *r_mme->plmn_Identity->mcc->list.array[0];
-            LOG_I(S1AP, "[eNB %d] Build S1AP_NAS_FIRST_REQ adding in s_TMSI: GUMMEI MCC %u ue %x\n",
+            ue_context_pP->ue_context.ue_gummei.mcc = *r_mme->plmn_Identity->mcc->list.array[0];
+	      LOG_I(S1AP, "[eNB %d] Build S1AP_NAS_FIRST_REQ adding in s_TMSI: GUMMEI MCC %u ue %x\n",
                 ctxt_pP->module_id,
                 S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc,
                 ue_context_pP->ue_context.rnti);
@@ -702,24 +708,30 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
           if (r_mme->plmn_Identity->mnc.list.count > 0) {
             /* Use first indicated PLMN MNC if it is defined */
             S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc = *r_mme->plmn_Identity->mnc.list.array[0];
+	    ue_context_pP->ue_context.ue_gummei.mnc = *r_mme->plmn_Identity->mnc.list.array[0];
             LOG_I(S1AP, "[eNB %d] Build S1AP_NAS_FIRST_REQ adding in s_TMSI: GUMMEI MNC %u ue %x\n",
                   ctxt_pP->module_id,
                   S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc,
                   ue_context_pP->ue_context.rnti);
           }
         } else {
-          const Enb_properties_array_t   *enb_properties_p  = NULL;
-          enb_properties_p = enb_config_get();
-
+          
           // actually the eNB configuration contains only one PLMN (can be up to 6)
           S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc = enb_properties_p->properties[ctxt_pP->module_id]->mcc;
           S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc = enb_properties_p->properties[ctxt_pP->module_id]->mnc;
           S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc_len = enb_properties_p->properties[ctxt_pP->module_id]->mnc_digit_length;
-        }
-
+	  /* save gummei in ue context for other procedures such as x2 ho */
+	  ue_context_pP->ue_context.ue_gummei.mcc=enb_properties_p->properties[ctxt_pP->module_id]->mcc;
+	  ue_context_pP->ue_context.ue_gummei.mnc=enb_properties_p->properties[ctxt_pP->module_id]->mnc;
+	  ue_context_pP->ue_context.ue_gummei.mnc_len=enb_properties_p->properties[ctxt_pP->module_id]->mnc_digit_length;
+	}
+	
         S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mme_code     = BIT_STRING_to_uint8 (&r_mme->mmec);
         S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mme_group_id = BIT_STRING_to_uint16 (&r_mme->mmegi);
-
+	ue_context_pP->ue_context.ue_gummei.mme_code                   = BIT_STRING_to_uint8 (&r_mme->mmec);
+	ue_context_pP->ue_context.ue_gummei.mme_group_id               = BIT_STRING_to_uint16 (&r_mme->mmegi);
+	  
+	  
         MSC_LOG_TX_MESSAGE(
           MSC_S1AP_ENB,
           MSC_S1AP_MME,
@@ -735,6 +747,19 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
               S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mme_code,
               S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mme_group_id,
               ue_context_pP->ue_context.rnti);
+      } else {
+	// send the default GUMME even if the registered MME is not set
+	 S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc          = enb_properties_p->properties[ctxt_pP->module_id]->mcc;
+	 S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc          = enb_properties_p->properties[ctxt_pP->module_id]->mnc;
+	 S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc_len      = enb_properties_p->properties[ctxt_pP->module_id]->mnc_digit_length;
+	 S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mme_code     = 1;
+	 S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mme_group_id = 4;
+	 // keep these values in Ue context
+	 ue_context_pP->ue_context.ue_gummei.mcc                        = enb_properties_p->properties[ctxt_pP->module_id]->mcc;
+	 ue_context_pP->ue_context.ue_gummei.mnc                        = enb_properties_p->properties[ctxt_pP->module_id]->mnc;
+	 ue_context_pP->ue_context.ue_gummei.mnc_len                    = enb_properties_p->properties[ctxt_pP->module_id]->mnc_digit_length;
+	 ue_context_pP->ue_context.ue_gummei.mme_code                   = 1;
+	 ue_context_pP->ue_context.ue_gummei.mme_group_id               = 4;
       }
     }
     itti_send_msg_to_task (TASK_S1AP, ctxt_pP->instance, message_p);

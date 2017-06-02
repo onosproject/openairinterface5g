@@ -42,10 +42,18 @@
 #include "x2ap_eNB_generate_messages.h"
 #include "x2ap_eNB_encoder.h"
 #include "x2ap_eNB_itti_messaging.h"
+#include "RRC/LITE/defs.h"
+#include "RRC/LITE/extern.h"
+#include "secu_defs.h"
+#include "rrc_eNB_UE_context.h"
+#include "enb_config.h"
 
 #include "msc.h"
 #include "assertions.h"
 #include "conversions.h"
+
+extern unsigned char NB_eNB_INST;
+extern int x2id_to_source_rnti[1];
 
 
 int x2ap_eNB_generate_x2_setup_request(x2ap_eNB_instance_t *instance_p,
@@ -334,10 +342,34 @@ int x2ap_eNB_generate_x2_handover_request(x2ap_eNB_instance_t *instance_p,
 
   INTPROTALG_TO_BIT_STRING(0,&message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.uESecurityCapabilities.integrityProtectionAlgorithms);
 
-  char KeNB_star[32] = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 };
+  uint8_t KeNB_star[32] = { 0 };
+  // find UE context
+  // use hack defined in x2ap_eNB.c in x2ap_eNB_handle_handover_req(...):
+  if ((instance_p->instance < 0) || (instance_p->instance >= NB_eNB_INST)) {
+	X2AP_ERROR("Failed to find RRC eNB instance %d\n", instance_p->instance);
+	return -1;
+  }
+  eNB_RRC_INST* rrc_instance = &eNB_rrc_inst[instance_p->instance];
+  struct rrc_eNB_ue_context_s* rrc_eNB_ue_context = rrc_eNB_get_ue_context(rrc_instance, x2id_to_source_rnti[0]);
+  if (!rrc_eNB_ue_context) {
+	X2AP_ERROR("Failed to find RRC UE context RNTI %X\n", x2id_to_source_rnti[0]);
+    return -1;
+  }
+
+  const Enb_properties_array_t *enb_properties = enb_config_get();
+  uint16_t pci = enb_properties->properties[instance_p->instance]->Nid_cell[0];
+  uint32_t earfcn_dl = (uint32_t)freq_to_arfcn10(enb_properties->properties[instance_p->instance]->eutra_band[0],
+		  enb_properties->properties[instance_p->instance]->downlink_frequency[0]);
+  if (rrc_eNB_ue_context->ue_context.nh_ncc >= 0) {
+    derive_keNB_star (rrc_eNB_ue_context->ue_context.nh, pci, earfcn_dl, false, KeNB_star);
+    message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.aS_SecurityInformation.nextHopChainingCount = rrc_eNB_ue_context->ue_context.nh_ncc;
+  } else { // first HO 
+    derive_keNB_star (rrc_eNB_ue_context->ue_context.kenb, pci, earfcn_dl, false, KeNB_star);
+    // LG: really 1 ?
+    message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.aS_SecurityInformation.nextHopChainingCount = 1;
+  }
 
   KENB_STAR_TO_BIT_STRING(KeNB_star,&message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.aS_SecurityInformation.key_eNodeB_star);
-  message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.aS_SecurityInformation.nextHopChainingCount = 1;
 
   UEAGMAXBITRTD_TO_ASN_PRIMITIVES(3L,&message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.uEaggregateMaximumBitRate.uEaggregateMaximumBitRateDownlink);
   UEAGMAXBITRTU_TO_ASN_PRIMITIVES(6L,&message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.uEaggregateMaximumBitRate.uEaggregateMaximumBitRateUplink);
