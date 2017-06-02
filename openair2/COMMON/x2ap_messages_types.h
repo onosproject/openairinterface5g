@@ -111,11 +111,30 @@ typedef struct x2ap_deregistered_enb_ind_s {
 
 //-------------------------------------------------------------------------------------------//
 // X2AP <-> RRC
+typedef struct x2ap_gummei_s {
+  uint16_t mcc;
+  uint16_t mnc;
+  uint8_t  mnc_len;
+  uint8_t  mme_code;
+  uint16_t mme_group_id;
+} x2ap_gummei_t;
 
 typedef struct x2ap_handover_req_s {
   int source_rnti;                       /* TODO: to be fixed/remove */
   int source_x2id;                       /* TODO: to be fixed/remove */
+
+  unsigned  old_eNB_ue_s1ap_id:24;
+
+  /* MME UE id  */
+  uint16_t mme_ue_s1ap_id;
+  
   PhysCellId_t target_physCellId;
+
+  x2ap_gummei_t gummei_id;
+
+  security_capabilities_t security_capabilities;
+  
+  
   /* TODO: this parameter has to be removed */
   int target_mod_id;
 } x2ap_handover_req_t;
