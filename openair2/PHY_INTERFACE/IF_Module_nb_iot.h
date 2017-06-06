@@ -15,14 +15,33 @@
 
 // uplink subframe P7
 
+typedef struct{
+
+ 	//index of the preamble, detected initial subcarrier (0-47)
+ 	uint16_t preamble_index;
+ 	//timing offset by PHY
+ 	int16_t timing_offset;
+ 	//Indicates the NRACH CE level as configured in CONFIG (0,1,2 = CE level 0,1,2)
+ 	uint8_t NRACH_CE_Level;
+ 	//RA-RNTI
+ 	uint16_t RNTI;
+ 	//Timing Advance
+ 	uint16_t TA;
+
+}NRACH_t;
+
 /*UL_SPEC_t:
 * A struture mainly describes the UE specific information. (for NB_rx_sdu)
-* Corresponding to thhe RX_ULSCH.indication, CRC.inidcation, NB_HARQ.indication in FAPI
+* Corresponding to the RX_ULSCH.indication, CRC.inidcation, NB_HARQ.indication in FAPI
 */
 typedef struct{
 
+	// 0 = format 1 (data), 1 = formaat 2 (ACK/NACK)
+	uint8_t NPUSCH_format;
+	//An opaque handling returned in the RX.indication
+	uint32_t OPA_handle;
 	//rnti
-	rnti_t rntiP;
+	uint16_t RNTI;
 	//Pointer to sdu
 	uint8_t *sdu;
 	//Pointer to sdu length 
@@ -34,10 +53,11 @@ typedef struct{
 	//CRC indication for the message is corrected or not for the Uplink HARQ
 	uint8_t crc_ind;
 
-	//This ACK NACK is for the Downlink HARQ received by the NPUSCH from UE
+	//This ACK NACK is for the Downlink HARQ feedback received by the NPUSCH from UE
 	uint8_t NAK;
 
 }UL_SPEC_t;
+
 
 /*UL_IND_t:
 * A structure handles all the uplink information.
@@ -47,6 +67,7 @@ typedef struct{
  	/*Start at the common part*/
 
  	int test;
+
  	//Module ID
  	module_id_t module_id;
  	//CC ID
@@ -55,25 +76,26 @@ typedef struct{
  	frame_t frame;
  	//subframe
  	sub_frame_t subframe;
- 	//Number of availble UE
- 	int UE_NUM;
 
  	/*preamble part*/
 
- 	//index of the preamble
- 	uint16_t preamble_index;
- 	//timing offset by PHY
- 	int16_t timing_offset;
+ 	//number of the subcarrier detected in the same time
+ 	uint8_t Number_SC;
+ 	//NRACH Indication parameters list
+ 	NRACH_t Preamble_list[48];
 
  	/*UE specific part*/
 
+ 	//Number of availble UE for Uplink
+ 	int UE_NUM;
+ 	//Uplink Schedule information
  	UL_SPEC_t UL_SPEC_Info[NUMBER_OF_UE_MAX]; 
 
  }UL_IND_t;
 
  // Downlink subframe P7
 
- typedef union{
+ typedef struct{
 
  	//The length (in bytes)
  	uint16_t Length;
@@ -88,7 +110,7 @@ typedef struct{
 
  }npbch_t;
 
- typedef union{
+ typedef struct{
 
  	//The length (in bytes)
  	uint16_t Length;
@@ -107,7 +129,7 @@ typedef struct{
 
  }npdsch_t;
 
- typedef union{
+ typedef struct{
 
  	// The length (in bytes)
  	uint16_t Length;
@@ -136,6 +158,16 @@ typedef struct{
 
  }npdcch_t;
 
+typedef union{
+
+	npdcch_t NB_DCI;
+ 	
+ 	npdsch_t NB_DLSCH;
+
+ 	npbch_t NB_BCH;
+
+}NB_DL_u;
+
 
 typedef struct{
 
@@ -150,11 +182,7 @@ typedef struct{
  	//subframe
  	sub_frame_t subframeP;
 
- 	npdcch_t NB_DCI;
-
- 	npdsch_t NB_DLSCH;
-
- 	npbch_t NB_BCH;
+ 	NB_DL_u NB_DL;
 
 }Sched_Rsp_t;
 
