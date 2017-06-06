@@ -522,6 +522,7 @@ set(HWLIB_EXMIMO_SOURCE
 add_library(oai_exmimodevif MODULE ${HWLIB_EXMIMO_SOURCE} )
 
 include_directories("${OPENAIR_TARGETS}/ARCH/USRP/USERSPACE/LIB/")
+#set (option_HWUSRPLIB_lib "-l uhd -lboost_thread -lboost_filesystem  -lboost_system")
 set(HWLIB_USRP_SOURCE
   ${OPENAIR_TARGETS}/ARCH/USRP/USERSPACE/LIB/usrp_lib.cpp
   )
@@ -1744,7 +1745,7 @@ add_executable(lte-softmodem
 
 target_link_libraries (lte-softmodem -ldl
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB ${X2AP_LIB} ${X2AP_ENB} GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
+  RRC_LIB S1AP_LIB S1AP_ENB ${X2AP_LIB} ${X2AP_ENB} GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7 -lboost_thread -lboost_filesystem  -lboost_system
   -Wl,--end-group )
 
 target_link_libraries (lte-softmodem ${LIBXML2_LIBRARIES})

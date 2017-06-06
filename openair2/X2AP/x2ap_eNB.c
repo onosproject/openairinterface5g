@@ -407,7 +407,7 @@ void x2ap_eNB_handle_handover_req(instance_t instance,
   x2ap_eNB_instance_t *instance_p;
   x2ap_eNB_data_t     *target;
   const Enb_properties_array_t *enb_properties = enb_config_get();
-  int target_enb_id = enb_properties->properties[x2ap_handover_req->target_mod_id]->eNB_id;
+  int target_enb_id = 0xe00 + x2ap_handover_req->target_physCellId;//enb_properties->properties[x2ap_handover_req->target_mod_id]->eNB_id;
 
   instance_p = x2ap_eNB_get_instance(instance);
   DevAssert(instance_p != NULL);
@@ -434,7 +434,7 @@ void x2ap_eNB_handle_handover_req_ack(instance_t instance,
   x2ap_eNB_instance_t *instance_p;
   x2ap_eNB_data_t     *target;
   const Enb_properties_array_t *enb_properties = enb_config_get();
-  int target_enb_id = enb_properties->properties[x2ap_handover_req_ack->target_mod_id]->eNB_id;
+  int target_enb_id = 3584; //enb_properties->properties[x2ap_handover_req_ack->target_mod_id]->eNB_id;
 
   instance_p = x2ap_eNB_get_instance(instance);
   DevAssert(instance_p != NULL);

@@ -1826,7 +1826,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 
   MeasObj->measObjectId = 1;
   MeasObj->measObject.present = MeasObjectToAddMod__measObject_PR_measObjectEUTRA;
-  MeasObj->measObject.choice.measObjectEUTRA.carrierFreq = 3350; //band 7, 2.68GHz
+  MeasObj->measObject.choice.measObjectEUTRA.carrierFreq = 3150; //band 7, 2.68GHz
   //MeasObj->measObject.choice.measObjectEUTRA.carrierFreq = 36090; //band 33, 1.909GHz
   MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = AllowedMeasBandwidth_mbw25;
   MeasObj->measObject.choice.measObjectEUTRA.presenceAntennaPort1 = 1;
@@ -1842,14 +1842,15 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
   CellsToAddModList = MeasObj->measObject.choice.measObjectEUTRA.cellsToAddModList;
 
   // Add adjacent cell lists (6 per eNB)
-  for (i = 0; i < 6; i++) {
+//  for (i = 0; i < 6; i++) {
     CellToAdd = (CellsToAddMod_t *) CALLOC(1, sizeof(*CellToAdd));
-    CellToAdd->cellIndex = i + 1;
-    CellToAdd->physCellId = get_adjacent_cell_id(ctxt_pP->module_id, i);
+//    CellToAdd->cellIndex = i + 1;
+    CellToAdd->cellIndex = 1;
+    CellToAdd->physCellId = 1;//get_adjacent_cell_id(ctxt_pP->module_id, i);
     CellToAdd->cellIndividualOffset = Q_OffsetRange_dB0;
 
     ASN_SEQUENCE_ADD(&CellsToAddModList->list, CellToAdd);
-  }
+//  }
 
   ASN_SEQUENCE_ADD(&MeasObj_list->list, MeasObj);
   //  rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->measObjectToAddModList = MeasObj_list;
@@ -1902,7 +1903,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A1);
 
-  if (ho_state == 1 /*HO_MEASURMENT */ ) {
+//  if (ho_state == 1 /*HO_MEASURMENT */ ) {
     LOG_I(RRC, "[eNB %d] frame %d: requesting A2, A3, A4, A5, and A6 event reporting\n",
           ctxt_pP->module_id, ctxt_pP->frame);
     ReportConfig_A2->reportConfigId = 3;
@@ -1932,7 +1933,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
       ReportConfigEUTRA__triggerType__event__eventId_PR_eventA3;
 
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset = 1;   //10;
+    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset = 0;   //10;
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
     eventA3.reportOnLeave = 1;
 
@@ -1943,7 +1944,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
 
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = 0.5; // FIXME ...hysteresis is of type long!
+    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = 0; // FIXME ...hysteresis is of type long!
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger =
       TimeToTrigger_ms40;
     ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A3);
@@ -2005,20 +2006,22 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
     Sparams->choice.setup.mobilityStateParameters.t_Evaluation = MobilityStateParameters__t_Evaluation_s60;
     Sparams->choice.setup.mobilityStateParameters.t_HystNormal = MobilityStateParameters__t_HystNormal_s120;
 
-    quantityConfig = CALLOC(1, sizeof(*quantityConfig));
-    memset((void *)quantityConfig, 0, sizeof(*quantityConfig));
-    quantityConfig->quantityConfigEUTRA = CALLOC(1, sizeof(struct QuantityConfigEUTRA));
-    memset((void *)quantityConfig->quantityConfigEUTRA, 0, sizeof(*quantityConfig->quantityConfigEUTRA));
-    quantityConfig->quantityConfigCDMA2000 = NULL;
-    quantityConfig->quantityConfigGERAN = NULL;
-    quantityConfig->quantityConfigUTRA = NULL;
-    quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP =
-      CALLOC(1, sizeof(*(quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP)));
-    quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ =
-      CALLOC(1, sizeof(*(quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ)));
-    *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP = FilterCoefficient_fc4;
-    *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ = FilterCoefficient_fc4;
+//    quantityConfig = CALLOC(1, sizeof(*quantityConfig));
+//    memset((void *)quantityConfig, 0, sizeof(*quantityConfig));
+//    quantityConfig->quantityConfigEUTRA = CALLOC(1, sizeof(struct QuantityConfigEUTRA));
+//    memset((void *)quantityConfig->quantityConfigEUTRA, 0, sizeof(*quantityConfig->quantityConfigEUTRA));
+//    quantityConfig->quantityConfigCDMA2000 = NULL;
+//    quantityConfig->quantityConfigGERAN = NULL;
+//    quantityConfig->quantityConfigUTRA = NULL;
+//    quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP =
+//      CALLOC(1, sizeof(*(quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP)));
+//    quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ =
+//      CALLOC(1, sizeof(*(quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ)));
+//    *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP = FilterCoefficient_fc4;
+//    *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ = FilterCoefficient_fc4;
 
+#if 0
+//    if (ho_state == 1 /*HO_MEASUREMENT */ ) {
     LOG_I(RRC,
           "[eNB %d] Frame %d: potential handover preparation: store the information in an intermediate structure in case of failure\n",
           ctxt_pP->module_id, ctxt_pP->frame);
@@ -2041,7 +2044,25 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
     ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.sps_Config = NULL;
     //memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.sps_Config,(void *)rrc_inst->sps_Config[ue_mod_idP],sizeof(SPS_Config_t));
 
-  }
+//  }
+#endif
+
+
+  // Add quantity configuration
+
+  quantityConfig = CALLOC(1, sizeof(*quantityConfig));
+  memset((void *)quantityConfig, 0, sizeof(*quantityConfig));
+  quantityConfig->quantityConfigEUTRA = CALLOC(1, sizeof(struct QuantityConfigEUTRA));
+  memset((void *)quantityConfig->quantityConfigEUTRA, 0, sizeof(*quantityConfig->quantityConfigEUTRA));
+  quantityConfig->quantityConfigCDMA2000 = NULL;
+  quantityConfig->quantityConfigGERAN = NULL;
+  quantityConfig->quantityConfigUTRA = NULL;
+  quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP =
+    CALLOC(1, sizeof(*(quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP)));
+  quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ =
+    CALLOC(1, sizeof(*(quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ)));
+  *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP = FilterCoefficient_fc4;
+  *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ = FilterCoefficient_fc4;
 
 #if defined(ENABLE_ITTI)
   /* Initialize NAS list */
@@ -2089,14 +2110,14 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
                                          (DRB_ToReleaseList_t*)NULL,  // DRB2_list,
                                          (struct SPS_Config*)NULL,    // *sps_Config,
                                          (struct PhysicalConfigDedicated*)*physicalConfigDedicated,
-#ifdef EXMIMO_IOT
-                                         NULL, NULL, NULL,NULL,
-#else
+//#ifdef EXMIMO_IOT
+//                                         NULL, NULL, NULL,NULL,
+//#else
                                          (MeasObjectToAddModList_t*)MeasObj_list,
                                          (ReportConfigToAddModList_t*)ReportConfig_list,
                                          (QuantityConfig_t*)quantityConfig,
                                          (MeasIdToAddModList_t*)MeasId_list,
-#endif
+//#endif
                                          (MAC_MainConfig_t*)mac_MainConfig,
                                          (MeasGapConfig_t*)NULL,
                                          (MobilityControlInfo_t*)NULL,
@@ -2361,15 +2382,42 @@ rrc_eNB_process_MeasurementReport(
   LOG_I(RRC, "[eNB %d] Frame %d: Process Measurement Report From UE %x (Measurement Id %d)\n",
         ctxt_pP->module_id, ctxt_pP->frame, ctxt_pP->rnti, (int)measResults2->measId);
 
-  if (measResults2->measResultNeighCells->choice.measResultListEUTRA.list.count > 0) {
-    LOG_I(RRC, "Physical Cell Id %d\n",
-          (int)measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->physCellId);
-    LOG_I(RRC, "RSRP of Target %d\n",
-          (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
-                 measResult.rsrpResult));
-    LOG_I(RRC, "RSRQ of Target %d\n",
-          (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
-                 measResult.rsrqResult));
+  if (measResults2->measResultNeighCells==NULL) {
+	  LOG_I(RRC, "Cells are not discovered\n");
+  }
+  else {
+	  if(measResults2->measId == 1){
+		  LOG_I(RRC, "Cells are discovered\n");
+		  if (measResults2->measResultNeighCells->choice.measResultListEUTRA.list.count > 0) {
+			LOG_I(RRC, "Physical Cell Id %d\n",
+				  (int)measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->physCellId);
+			LOG_I(RRC, "RSRP of Target %d\n",
+				  (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
+						 measResult.rsrpResult));
+			LOG_I(RRC, "RSRQ of Target %d\n",
+				  (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
+						 measResult.rsrqResult));
+		  }
+	  }
+	  else if (measResults2->measId == 4) {
+		  LOG_I(RRC, "A3 event happened...\n");
+		  if (measResults2->measResultNeighCells->choice.measResultListEUTRA.list.count > 0) {
+			LOG_I(RRC, "RSRP of Source %ld\n", measResults2->measResultPCell.rsrpResult);
+			LOG_I(RRC, "RSRQ of Source %ld\n", measResults2->measResultPCell.rsrqResult);
+			LOG_I(RRC, "Physical Cell Id %d\n",
+				  (int)measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->physCellId);
+			LOG_I(RRC, "RSRP of Target %d\n",
+				  (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
+						 measResult.rsrpResult));
+			LOG_I(RRC, "RSRQ of Target %d\n",
+				  (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
+						 measResult.rsrqResult));
+		  }
+		  exit(0);
+	  }
+	  else {
+		  LOG_I(RRC, "Other events happened...\n");
+	  }
   }
 
 #if defined(Rel10) || defined(Rel14)
@@ -2424,7 +2472,7 @@ rrc_eNB_process_MeasurementReport(
     //    X2AP_HANDOVER_REQ(msg).e_rabs_tobesetu=;
       
     /* TODO: don't do that, X2AP should find the target by itself */
-    X2AP_HANDOVER_REQ(msg).target_mod_id = get_adjacent_cell_mod_id(X2AP_HANDOVER_REQ(msg).target_physCellId);
+    X2AP_HANDOVER_REQ(msg).target_mod_id = 0;//get_adjacent_cell_mod_id(X2AP_HANDOVER_REQ(msg).target_physCellId);
 
     LOG_I(RRC,
           "[eNB %d] Frame %d: potential handover preparation: store the information in an intermediate structure in case of failure\n",
@@ -2538,45 +2586,45 @@ rrc_eNB_generate_HandoverPreparationInformation(
   /* simulation related logic */
   if (mod_id_target != 0xFF) {
     //UE_id_target = rrc_find_free_ue_index(modid_target);
-    ue_context_target_p =
-      rrc_eNB_get_ue_context(
-        &eNB_rrc_inst[mod_id_target],
-        ue_context_pP->ue_context.rnti);
+//    ue_context_target_p =
+//      rrc_eNB_get_ue_context(
+//        &eNB_rrc_inst[mod_id_target],
+//        ue_context_pP->ue_context.rnti);
 
     /*UE_id_target = rrc_eNB_get_next_free_UE_index(
                     mod_id_target,
                     eNB_rrc_inst[ctxt_pP->module_id].Info.UE_list[ue_mod_idP]);  //this should return a new index*/
 
     if (ue_context_target_p == NULL) { // if not already in target cell
-      ue_context_target_p = rrc_eNB_allocate_new_UE_context(&eNB_rrc_inst[ctxt_pP->module_id]);
-      ue_context_target_p->ue_id_rnti      = ue_context_pP->ue_context.rnti;             // LG: should not be the same
-      ue_context_target_p->ue_context.rnti = ue_context_target_p->ue_id_rnti; // idem
-      LOG_N(RRC,
-            "[eNB %d] Frame %d : Emulate sending HandoverPreparationInformation msg from eNB source %d to eNB target %ld: source UE_id %x target UE_id %x source_modId: %d target_modId: %d\n",
-            ctxt_pP->module_id,
-            ctxt_pP->frame,
-            eNB_rrc_inst[ctxt_pP->module_id].carrier[0] /* CROUX TBC */.physCellId,
-            targetPhyId,
-            ue_context_pP->ue_context.rnti,
-            ue_context_target_p->ue_id_rnti,
-            ctxt_pP->module_id,
-            mod_id_target);
-      ue_context_target_p->ue_context.handover_info =
-        CALLOC(1, sizeof(*(ue_context_target_p->ue_context.handover_info)));
-      memcpy((void*)&ue_context_target_p->ue_context.handover_info->as_context,
-             (void*)&ue_context_pP->ue_context.handover_info->as_context,
-             sizeof(AS_Context_t));
-      memcpy((void*)&ue_context_target_p->ue_context.handover_info->as_config,
-             (void*)&ue_context_pP->ue_context.handover_info->as_config,
-             sizeof(AS_Config_t));
-      ue_context_target_p->ue_context.handover_info->ho_prepare = 0x00;// 0xFF;
-      ue_context_target_p->ue_context.handover_info->ho_complete = 0;
+//      ue_context_target_p = rrc_eNB_allocate_new_UE_context(&eNB_rrc_inst[ctxt_pP->module_id]);
+//      ue_context_target_p->ue_id_rnti      = ue_context_pP->ue_context.rnti;             // LG: should not be the same
+//      ue_context_target_p->ue_context.rnti = ue_context_target_p->ue_id_rnti; // idem
+//      LOG_N(RRC,
+//            "[eNB %d] Frame %d : Emulate sending HandoverPreparationInformation msg from eNB source %d to eNB target %ld: source UE_id %x target UE_id %x source_modId: %d target_modId: %d\n",
+//            ctxt_pP->module_id,
+//            ctxt_pP->frame,
+//            eNB_rrc_inst[ctxt_pP->module_id].carrier[0] /* CROUX TBC */.physCellId,
+//            targetPhyId,
+//            ue_context_pP->ue_context.rnti,
+//            ue_context_target_p->ue_id_rnti,
+//            ctxt_pP->module_id,
+//            mod_id_target);
+//      ue_context_target_p->ue_context.handover_info =
+//        CALLOC(1, sizeof(*(ue_context_target_p->ue_context.handover_info)));
+//      memcpy((void*)&ue_context_target_p->ue_context.handover_info->as_context,
+//             (void*)&ue_context_pP->ue_context.handover_info->as_context,
+//             sizeof(AS_Context_t));
+//      memcpy((void*)&ue_context_target_p->ue_context.handover_info->as_config,
+//             (void*)&ue_context_pP->ue_context.handover_info->as_config,
+//             sizeof(AS_Config_t));
+//      ue_context_target_p->ue_context.handover_info->ho_prepare = 0x00;// 0xFF;
+//      ue_context_target_p->ue_context.handover_info->ho_complete = 0;
       ue_context_pP->ue_context.handover_info->modid_t = mod_id_target;
       ue_context_pP->ue_context.handover_info->ueid_s  = ue_context_pP->ue_context.rnti;
       ue_context_pP->ue_context.handover_info->modid_s = ctxt_pP->module_id;
-      ue_context_target_p->ue_context.handover_info->modid_t = mod_id_target;
-      ue_context_target_p->ue_context.handover_info->modid_s = ctxt_pP->module_id;
-      ue_context_target_p->ue_context.handover_info->ueid_t  = ue_context_target_p->ue_context.rnti;
+//      ue_context_target_p->ue_context.handover_info->modid_t = mod_id_target;
+//      ue_context_target_p->ue_context.handover_info->modid_s = ctxt_pP->module_id;
+//      ue_context_target_p->ue_context.handover_info->ueid_t  = ue_context_target_p->ue_context.rnti;
 
     } else {
       LOG_E(RRC, "\nError in obtaining free UE id in target eNB %ld for handover \n", targetPhyId);
@@ -2780,9 +2828,9 @@ check_handovers(
         ue_context_p->ue_context.handover_info->state = HO_CONFIGURED;
 
         /* HACK HACK!! "works" only for one UE */
-        memcpy(UE_rrc_inst[0].sib1[0]->cellAccessRelatedInfo.cellIdentity.buf,
-               eNB_rrc_inst[ctxt_pP->module_id].carrier[0].sib1->cellAccessRelatedInfo.cellIdentity.buf,
-               4);
+//        memcpy(UE_rrc_inst[0].sib1[0]->cellAccessRelatedInfo.cellIdentity.buf,
+//               eNB_rrc_inst[ctxt_pP->module_id].carrier[0].sib1->cellAccessRelatedInfo.cellIdentity.buf,
+//               4);
         msg = itti_alloc_new_message(TASK_RRC_ENB, X2AP_HANDOVER_REQ_ACK);
         /* TODO: remove this hack */
         X2AP_HANDOVER_REQ_ACK(msg).target_mod_id = 1 - ctxt_pP->module_id;
@@ -2821,6 +2869,8 @@ rrc_eNB_configure_rbs_handover(struct rrc_eNB_ue_context_s* ue_context_p, protoc
 {
   struct rrc_eNB_ue_context_s* 		  ue_source_context;
   uint16_t                            Idx;
+
+return;
 
   ue_source_context =
     rrc_eNB_get_ue_context(
@@ -4976,7 +5026,7 @@ rrc_eNB_decode_dcch(
       break;
 
     case UL_DCCH_MessageType__c1_PR_measurementReport:
-      LOG_D(RRC,
+      LOG_I(RRC,
             PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND "
             "%d bytes (measurementReport) ---> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
@@ -5307,10 +5357,9 @@ rrc_eNB_decode_dcch(
       }
       ue_context_p->ue_context.setup_e_rabs =ue_context_p->ue_context.nb_of_e_rabs;
 #endif
-
       rrc_eNB_generate_defaultRRCConnectionReconfiguration(ctxt_pP,
           ue_context_p,
-          eNB_rrc_inst[ctxt_pP->module_id].HO_flag);
+          0); //eNB_rrc_inst[ctxt_pP->module_id].HO_flag
       break;
 
     case UL_DCCH_MessageType__c1_PR_ulHandoverPreparationTransfer:

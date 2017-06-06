@@ -1047,6 +1047,7 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
       exit_fun("Exiting");
     }
   } else {
+    LOG_I(PHY,"First Frame: %d , First Subframe: %d Timestamp: %"PRId64" \n",proc->frame_rx, proc->subframe_rx, proc->timestamp_rx);	
     proc->first_rx--;
     *frame = proc->frame_rx;
     *subframe = proc->subframe_rx;        
