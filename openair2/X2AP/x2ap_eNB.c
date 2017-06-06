@@ -442,7 +442,8 @@ void x2ap_eNB_handle_handover_req_ack(instance_t instance,
   target = x2ap_is_eNB_id_in_list(target_enb_id);
   DevAssert(target != NULL);
 
-  x2ap_eNB_generate_x2_handover_req_ack(instance_p, target, x2ap_handover_req_ack->source_x2id);
+  x2ap_eNB_generate_x2_handover_req_ack(instance_p, target, x2ap_handover_req_ack->source_x2id,
+          x2ap_handover_req_ack->rrc_buffer, x2ap_handover_req_ack->rrc_buffer_size);
 }
 
 void *x2ap_task(void *arg)

@@ -428,8 +428,10 @@ abort();
 }
 
 int x2ap_eNB_generate_x2_handover_req_ack(x2ap_eNB_instance_t *instance,
-					      x2ap_eNB_data_t *x2ap_enb_data_p,
-					      int source_x2id)
+        x2ap_eNB_data_t *x2ap_enb_data_p,
+        int source_x2id,
+        uint8_t *rrc_buffer,
+        int rrc_buffer_size)
 {
 
   x2ap_message              message;
@@ -454,10 +456,12 @@ int x2ap_eNB_generate_x2_handover_req_ack(x2ap_eNB_instance_t *instance,
   message.procedureCode = procedure;
   message.criticality= criticality;
   message.direction = present;
+#if 0
   //data is in file RRC_Context_acknowledge.txt
   uint8_t RRC[63] = { 0x01,0xe9,0x00,0x90,0xa8,0x00,0x00,0x22,0x33,0xe9,0x42,0x80,0x02,0xf0,0x80,0x9e,0x20,0x23,0xc6,0x05,0x79,0x00,0xef,0x28,
                       0x21,0xe1,0x01,0x24,0x38,0x40,0x05,0x00,0x12,0x1c,0xa0,0x00,0x02,0x00,0x88,0x02,0x18,0x06,0x40,0x10,0xa0,0x2b,0x43,0x81,
                       0x1d,0xd9,0xc0,0x30,0x70,0x00,0xe0,0x21,0xc3,0x17,0x01,0x74,0x60,0x12,0x80 };
+#endif
   message.msg.x2ap_HandoverRequestAcknowledge_IEs.old_eNB_UE_X2AP_ID = source_x2id;
   message.msg.x2ap_HandoverRequestAcknowledge_IEs.new_eNB_UE_X2AP_ID= 2001;
 
@@ -466,7 +470,8 @@ int x2ap_eNB_generate_x2_handover_req_ack(x2ap_eNB_instance_t *instance,
   e_RABs_Admitted_Item1->iE_Extensions = NULL;
   ASN_SEQUENCE_ADD(e_RABs_Admitted_List1, e_RABs_Admitted_Item1);
   memcpy(&message.msg.x2ap_HandoverRequestAcknowledge_IEs.e_RABs_Admitted_List, e_RABs_Admitted_List1, sizeof(X2ap_E_RABs_Admitted_ListIEs_t));
-  OCTET_STRING_fromBuf(&message.msg.x2ap_HandoverRequestAcknowledge_IEs.targeteNBtoSource_eNBTransparentContainer, (char*) RRC, sizeof(RRC));
+  //OCTET_STRING_fromBuf(&message.msg.x2ap_HandoverRequestAcknowledge_IEs.targeteNBtoSource_eNBTransparentContainer, (char*) RRC, sizeof(RRC));
+  OCTET_STRING_fromBuf(&message.msg.x2ap_HandoverRequestAcknowledge_IEs.targeteNBtoSource_eNBTransparentContainer, (char*)rrc_buffer, rrc_buffer_size);
 
   if (x2ap_eNB_encode_pdu(&message, &buffer, &len) < 0) {
     X2AP_ERROR("Failed to encode X2 handover response\n");

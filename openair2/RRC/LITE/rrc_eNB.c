@@ -111,6 +111,13 @@ extern uint16_t                     two_tier_hexagonal_cellIds[7];
 
 mui_t                               rrc_eNB_mui = 0;
 
+void rrc_eNB_generate_handover_reconfiguration(
+  const protocol_ctxt_t* const ctxt_pP,
+  rrc_eNB_ue_context_t*  const ue_context_pP,
+  uint8_t*                     buffer,
+  int                          *_size
+);
+
 //-----------------------------------------------------------------------------
 static void
 init_SI(
@@ -2384,6 +2391,7 @@ rrc_eNB_process_MeasurementReport(
 
   if (measResults2->measResultNeighCells==NULL) {
 	  LOG_I(RRC, "Cells are not discovered\n");
+          return;
   }
   else {
 	  if(measResults2->measId == 1){
@@ -2553,7 +2561,7 @@ rrc_eNB_generate_HandoverPreparationInformation(
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
   handoverInfo->as_config.antennaInfoCommon.antennaPortsCount = 0;    //Not used 0- but check value
-  handoverInfo->as_config.sourceDl_CarrierFreq = 36090;   //Verify!
+  handoverInfo->as_config.sourceDl_CarrierFreq = 3150;   //Verify!
 
   memcpy((void *)&handoverInfo->as_config.sourceMasterInformationBlock,
          (void*)&eNB_rrc_inst[ctxt_pP->module_id].carrier[0] /* CROUX TBC */.mib, sizeof(MasterInformationBlock_t));
@@ -2827,11 +2835,15 @@ check_handovers(
 //	 	 ue_context_p->ue_context.handover_info->ho_prepare = 0x00;
         ue_context_p->ue_context.handover_info->state = HO_CONFIGURED;
 
+        msg = itti_alloc_new_message(TASK_RRC_ENB, X2AP_HANDOVER_REQ_ACK);
+
+        rrc_eNB_generate_handover_reconfiguration(ctxt_pP, ue_context_p, X2AP_HANDOVER_REQ_ACK(msg).rrc_buffer,
+                &X2AP_HANDOVER_REQ_ACK(msg).rrc_buffer_size);
+
         /* HACK HACK!! "works" only for one UE */
 //        memcpy(UE_rrc_inst[0].sib1[0]->cellAccessRelatedInfo.cellIdentity.buf,
 //               eNB_rrc_inst[ctxt_pP->module_id].carrier[0].sib1->cellAccessRelatedInfo.cellIdentity.buf,
 //               4);
-        msg = itti_alloc_new_message(TASK_RRC_ENB, X2AP_HANDOVER_REQ_ACK);
         /* TODO: remove this hack */
         X2AP_HANDOVER_REQ_ACK(msg).target_mod_id = 1 - ctxt_pP->module_id;
         X2AP_HANDOVER_REQ_ACK(msg).source_x2id = ue_context_p->ue_context.handover_info->source_x2id;
@@ -2998,6 +3010,960 @@ rrc_eNB_target_add_ue_handover(protocol_ctxt_t* const ctxt_pP){
   // Add a new user (called during the HO procedure)
   add_new_ue(ctxt_pP->module_id, 0, ctxt_pP->rnti, -1); // UE allocation MAC
   add_new_ue_phy(ctxt_pP->module_id, ctxt_pP->rnti);
+}
+
+void
+rrc_eNB_generate_handover_reconfiguration(
+  const protocol_ctxt_t* const ctxt_pP,
+  rrc_eNB_ue_context_t*  const ue_context_pP,
+  uint8_t*                     buffer,
+  int                          *_size
+)
+//-----------------------------------------------------------------------------
+{
+  T(T_ENB_RRC_CONNECTION_RECONFIGURATION, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
+    T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
+
+
+  uint16_t                            size;
+  int                                 i;
+  uint8_t                             rv[2];
+  uint16_t                            Idx;
+  // configure SRB1/SRB2, PhysicalConfigDedicated, MAC_MainConfig for UE
+  //eNB_RRC_INST*                       rrc_inst = &eNB_rrc_inst[ue_context_pP->ue_context.handover_info->modid_t];
+  eNB_RRC_INST*                       rrc_inst = &eNB_rrc_inst[ctxt_pP->module_id];
+  struct PhysicalConfigDedicated**    physicalConfigDedicated = &ue_context_pP->ue_context.physicalConfigDedicated;
+
+  struct SRB_ToAddMod                *SRB2_config;
+  struct SRB_ToAddMod__rlc_Config    *SRB2_rlc_config;
+  struct SRB_ToAddMod__logicalChannelConfig *SRB2_lchan_config;
+  struct LogicalChannelConfig__ul_SpecificParameters *SRB2_ul_SpecificParameters;
+  LogicalChannelConfig_t             *SRB1_logicalChannelConfig = NULL;
+  SRB_ToAddModList_t*                 SRB_configList = ue_context_pP->ue_context.SRB_configList;    // not used in this context: may be removed
+  SRB_ToAddModList_t                 *SRB_configList2;
+
+  struct DRB_ToAddMod                *DRB_config;
+  struct RLC_Config                  *DRB_rlc_config;
+  struct PDCP_Config                 *DRB_pdcp_config;
+  struct PDCP_Config__rlc_UM         *PDCP_rlc_UM;
+  struct LogicalChannelConfig        *DRB_lchan_config;
+  struct LogicalChannelConfig__ul_SpecificParameters *DRB_ul_SpecificParameters;
+  DRB_ToAddModList_t                 *DRB_configList2;
+
+  MAC_MainConfig_t                   *mac_MainConfig;
+  MeasObjectToAddModList_t           *MeasObj_list;
+  MeasObjectToAddMod_t               *MeasObj;
+  ReportConfigToAddModList_t         *ReportConfig_list;
+  ReportConfigToAddMod_t             *ReportConfig_per, *ReportConfig_A1,
+                                     *ReportConfig_A2, *ReportConfig_A3, *ReportConfig_A4, *ReportConfig_A5;
+  MeasIdToAddModList_t               *MeasId_list;
+  MeasIdToAddMod_t                   *MeasId0, *MeasId1, *MeasId2, *MeasId3, *MeasId4, *MeasId5;
+  QuantityConfig_t                   *quantityConfig;
+  MobilityControlInfo_t              *mobilityInfo;
+  // HandoverCommand_t handoverCommand;
+  //uint8_t                             sourceModId =
+  //  get_adjacent_cell_mod_id(ue_context_pP->ue_context.handover_info->as_context.reestablishmentInfo->sourcePhysCellId);
+#if defined(Rel10) || defined(Rel14)
+  long                               *sr_ProhibitTimer_r9;
+#endif
+
+  long                               *logicalchannelgroup, *logicalchannelgroup_drb;
+  long                               *maxHARQ_Tx, *periodicBSR_Timer;
+
+  // RSRP_Range_t *rsrp;
+  struct MeasConfig__speedStatePars  *Sparams;
+  CellsToAddMod_t                    *CellToAdd;
+  CellsToAddModList_t                *CellsToAddModList;
+  // srb 1: for HO
+  struct SRB_ToAddMod                *SRB1_config;
+  struct SRB_ToAddMod__rlc_Config    *SRB1_rlc_config;
+  struct SRB_ToAddMod__logicalChannelConfig *SRB1_lchan_config;
+  struct LogicalChannelConfig__ul_SpecificParameters *SRB1_ul_SpecificParameters;
+  // phy config dedicated
+  PhysicalConfigDedicated_t          *physicalConfigDedicated2;
+  struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList *dedicatedInfoNASList;
+  protocol_ctxt_t                     ctxt;
+
+  LOG_D(RRC, "[eNB %d] Frame %d: handover preparation: get the newSourceUEIdentity (C-RNTI): ",
+        ctxt_pP->module_id, ctxt_pP->frame);
+
+#if 0
+  for (i = 0; i < 2; i++) {
+    rv[i] = taus() & 0xff;
+    LOG_D(RRC, " %x.", rv[i]);
+  }
+#endif
+
+  rv[0] = (ue_context_pP->ue_context.rnti >> 8) & 255;
+  rv[1] = ue_context_pP->ue_context.rnti & 255;
+
+  LOG_I(RRC, "target UE rnti = %x (decimal: %d)\n", ue_context_pP->ue_context.rnti, ue_context_pP->ue_context.rnti);
+
+  LOG_D(RRC, "[eNB %d] Frame %d : handover reparation: add target eNB SRB1 and PHYConfigDedicated reconfiguration\n",
+        ctxt_pP->module_id, ctxt_pP->frame);
+  // 1st: reconfigure SRB
+  SRB_configList2 = CALLOC(1, sizeof(*SRB_configList));
+  SRB1_config = CALLOC(1, sizeof(*SRB1_config));
+  SRB1_config->srb_Identity = 1;
+  SRB1_rlc_config = CALLOC(1, sizeof(*SRB1_rlc_config));
+  SRB1_config->rlc_Config = SRB1_rlc_config;
+
+  SRB1_rlc_config->present = SRB_ToAddMod__rlc_Config_PR_explicitValue;
+  SRB1_rlc_config->choice.explicitValue.present = RLC_Config_PR_am;
+  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.t_PollRetransmit = T_PollRetransmit_ms15;
+  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.pollPDU = PollPDU_p8;
+  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.pollByte = PollByte_kB1000;
+  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.maxRetxThreshold = UL_AM_RLC__maxRetxThreshold_t16;
+  SRB1_rlc_config->choice.explicitValue.choice.am.dl_AM_RLC.t_Reordering = T_Reordering_ms35;
+  SRB1_rlc_config->choice.explicitValue.choice.am.dl_AM_RLC.t_StatusProhibit = T_StatusProhibit_ms10;
+
+  SRB1_lchan_config = CALLOC(1, sizeof(*SRB1_lchan_config));
+  SRB1_config->logicalChannelConfig = SRB1_lchan_config;
+
+  SRB1_lchan_config->present = SRB_ToAddMod__logicalChannelConfig_PR_explicitValue;
+  SRB1_ul_SpecificParameters = CALLOC(1, sizeof(*SRB1_ul_SpecificParameters));
+
+  SRB1_lchan_config->choice.explicitValue.ul_SpecificParameters = SRB1_ul_SpecificParameters;
+
+  SRB1_ul_SpecificParameters->priority = 1;
+
+  //assign_enum(&SRB1_ul_SpecificParameters->prioritisedBitRate,LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_infinity);
+  SRB1_ul_SpecificParameters->prioritisedBitRate =
+    LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_infinity;
+
+  //assign_enum(&SRB1_ul_SpecificParameters->bucketSizeDuration,LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50);
+  SRB1_ul_SpecificParameters->bucketSizeDuration =
+    LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
+
+  logicalchannelgroup = CALLOC(1, sizeof(long));
+  *logicalchannelgroup = 0;
+  SRB1_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup;
+
+  ASN_SEQUENCE_ADD(&SRB_configList2->list, SRB1_config);
+
+  //2nd: now reconfigure phy config dedicated
+  physicalConfigDedicated2 = CALLOC(1, sizeof(*physicalConfigDedicated2));
+  *physicalConfigDedicated = physicalConfigDedicated2;
+
+  physicalConfigDedicated2->pdsch_ConfigDedicated =
+    CALLOC(1, sizeof(*physicalConfigDedicated2->pdsch_ConfigDedicated));
+  physicalConfigDedicated2->pucch_ConfigDedicated =
+    CALLOC(1, sizeof(*physicalConfigDedicated2->pucch_ConfigDedicated));
+  physicalConfigDedicated2->pusch_ConfigDedicated =
+    CALLOC(1, sizeof(*physicalConfigDedicated2->pusch_ConfigDedicated));
+  physicalConfigDedicated2->uplinkPowerControlDedicated =
+    CALLOC(1, sizeof(*physicalConfigDedicated2->uplinkPowerControlDedicated));
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUCCH =
+    CALLOC(1, sizeof(*physicalConfigDedicated2->tpc_PDCCH_ConfigPUCCH));
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH =
+    CALLOC(1, sizeof(*physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH));
+  physicalConfigDedicated2->cqi_ReportConfig = NULL;  //CALLOC(1,sizeof(*physicalConfigDedicated2->cqi_ReportConfig));
+  physicalConfigDedicated2->soundingRS_UL_ConfigDedicated = CALLOC(1,sizeof(*physicalConfigDedicated2->soundingRS_UL_ConfigDedicated));
+  physicalConfigDedicated2->antennaInfo = CALLOC(1, sizeof(*physicalConfigDedicated2->antennaInfo));
+  physicalConfigDedicated2->schedulingRequestConfig =
+    CALLOC(1, sizeof(*physicalConfigDedicated2->schedulingRequestConfig));
+  // PDSCH
+  //assign_enum(&physicalConfigDedicated2->pdsch_ConfigDedicated->p_a,
+  //          PDSCH_ConfigDedicated__p_a_dB0);
+  physicalConfigDedicated2->pdsch_ConfigDedicated->p_a = PDSCH_ConfigDedicated__p_a_dB0;
+
+  // PUCCH
+  physicalConfigDedicated2->pucch_ConfigDedicated->ackNackRepetition.present =
+    PUCCH_ConfigDedicated__ackNackRepetition_PR_release;
+  physicalConfigDedicated2->pucch_ConfigDedicated->ackNackRepetition.choice.release = 0;
+  physicalConfigDedicated2->pucch_ConfigDedicated->tdd_AckNackFeedbackMode = NULL;    //PUCCH_ConfigDedicated__tdd_AckNackFeedbackMode_multiplexing;
+
+  // Pusch_config_dedicated
+  physicalConfigDedicated2->pusch_ConfigDedicated->betaOffset_ACK_Index = 0;  // 2.00
+  physicalConfigDedicated2->pusch_ConfigDedicated->betaOffset_RI_Index = 0;   // 1.25
+  physicalConfigDedicated2->pusch_ConfigDedicated->betaOffset_CQI_Index = 8;  // 2.25
+
+  // UplinkPowerControlDedicated
+  physicalConfigDedicated2->uplinkPowerControlDedicated->p0_UE_PUSCH = 0; // 0 dB
+  //assign_enum(&physicalConfigDedicated2->uplinkPowerControlDedicated->deltaMCS_Enabled,
+  // UplinkPowerControlDedicated__deltaMCS_Enabled_en1);
+  physicalConfigDedicated2->uplinkPowerControlDedicated->deltaMCS_Enabled =
+    UplinkPowerControlDedicated__deltaMCS_Enabled_en1;
+  physicalConfigDedicated2->uplinkPowerControlDedicated->accumulationEnabled = 1; // should be TRUE in order to have 0dB power offset
+  physicalConfigDedicated2->uplinkPowerControlDedicated->p0_UE_PUCCH = 0; // 0 dB
+  physicalConfigDedicated2->uplinkPowerControlDedicated->pSRS_Offset = 0; // 0 dB
+  physicalConfigDedicated2->uplinkPowerControlDedicated->filterCoefficient =
+    CALLOC(1, sizeof(*physicalConfigDedicated2->uplinkPowerControlDedicated->filterCoefficient));
+  //  assign_enum(physicalConfigDedicated2->uplinkPowerControlDedicated->filterCoefficient,FilterCoefficient_fc4); // fc4 dB
+  *physicalConfigDedicated2->uplinkPowerControlDedicated->filterCoefficient = FilterCoefficient_fc4;  // fc4 dB
+
+  // TPC-PDCCH-Config
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUCCH->present = TPC_PDCCH_Config_PR_setup;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUCCH->choice.setup.tpc_Index.present = TPC_Index_PR_indexOfFormat3;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUCCH->choice.setup.tpc_Index.choice.indexOfFormat3 = 1;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUCCH->choice.setup.tpc_RNTI.buf = CALLOC(1, 2);
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUCCH->choice.setup.tpc_RNTI.size = 2;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUCCH->choice.setup.tpc_RNTI.buf[0] = 0x12;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUCCH->choice.setup.tpc_RNTI.buf[1] = 0x34 + ue_context_pP->local_uid;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUCCH->choice.setup.tpc_RNTI.bits_unused = 0;
+
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH->present = TPC_PDCCH_Config_PR_setup;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH->choice.setup.tpc_Index.present = TPC_Index_PR_indexOfFormat3;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH->choice.setup.tpc_Index.choice.indexOfFormat3 = 1;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH->choice.setup.tpc_RNTI.buf = CALLOC(1, 2);
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH->choice.setup.tpc_RNTI.size = 2;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH->choice.setup.tpc_RNTI.buf[0] = 0x22;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH->choice.setup.tpc_RNTI.buf[1] = 0x34 + ue_context_pP->local_uid;
+  physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH->choice.setup.tpc_RNTI.bits_unused = 0;
+
+  // CQI ReportConfig
+  /*
+     physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportModeAperiodic=CALLOC(1,sizeof(*physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportModeAperiodic));
+     assign_enum(physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportModeAperiodic,
+     CQI_ReportConfig__cqi_ReportModeAperiodic_rm30); // HLC CQI, no PMI
+     physicalConfigDedicated2->cqi_ReportConfig->nomPDSCH_RS_EPRE_Offset = 0; // 0 dB
+     physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic=CALLOC(1,sizeof(*physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic));
+     physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic->present =  CQI_ReportPeriodic_PR_setup;
+     physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic->choice.setup.cqi_PUCCH_ResourceIndex = 0;  // n2_pucch
+     physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic->choice.setup.cqi_pmi_ConfigIndex = 0;  // Icqi/pmi
+     physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic->choice.setup.cqi_FormatIndicatorPeriodic.present = CQI_ReportPeriodic__setup__cqi_FormatIndicatorPeriodic_PR_subbandCQI;  // subband CQI
+     physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic->choice.setup.cqi_FormatIndicatorPeriodic.choice.subbandCQI.k=4;
+
+     physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic->choice.setup.ri_ConfigIndex=NULL;
+     physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic->choice.setup.simultaneousAckNackAndCQI=0;
+   */
+
+  //soundingRS-UL-ConfigDedicated
+  /*
+     physicalConfigDedicated2->soundingRS_UL_ConfigDedicated->present = SoundingRS_UL_ConfigDedicated_PR_setup;
+     assign_enum(&physicalConfigDedicated2->soundingRS_UL_ConfigDedicated->choice.setup.srs_Bandwidth,
+     SoundingRS_UL_ConfigDedicated__setup__srs_Bandwidth_bw0);
+     assign_enum(&physicalConfigDedicated2->soundingRS_UL_ConfigDedicated->choice.setup.srs_HoppingBandwidth,
+     SoundingRS_UL_ConfigDedicated__setup__srs_HoppingBandwidth_hbw0);
+     physicalConfigDedicated2->soundingRS_UL_ConfigDedicated->choice.setup.freqDomainPosition=0;
+     physicalConfigDedicated2->soundingRS_UL_ConfigDedicated->choice.setup.duration=1;
+     physicalConfigDedicated2->soundingRS_UL_ConfigDedicated->choice.setup.srs_ConfigIndex=1;
+     physicalConfigDedicated2->soundingRS_UL_ConfigDedicated->choice.setup.transmissionComb=0;
+     assign_enum(&physicalConfigDedicated2->soundingRS_UL_ConfigDedicated->choice.setup.cyclicShift,
+     SoundingRS_UL_ConfigDedicated__setup__cyclicShift_cs0);
+   */
+
+  //AntennaInfoDedicated
+  physicalConfigDedicated2->antennaInfo = CALLOC(1, sizeof(*physicalConfigDedicated2->antennaInfo));
+  physicalConfigDedicated2->antennaInfo->present = PhysicalConfigDedicated__antennaInfo_PR_explicitValue;
+  //assign_enum(&physicalConfigDedicated2->antennaInfo->choice.explicitValue.transmissionMode,
+  //     AntennaInfoDedicated__transmissionMode_tm2);
+  /*
+     switch (transmission_mode){
+     case 1:
+     physicalConfigDedicated2->antennaInfo->choice.explicitValue.transmissionMode=     AntennaInfoDedicated__transmissionMode_tm1;
+     break;
+     case 2:
+     physicalConfigDedicated2->antennaInfo->choice.explicitValue.transmissionMode=     AntennaInfoDedicated__transmissionMode_tm2;
+     break;
+     case 4:
+     physicalConfigDedicated2->antennaInfo->choice.explicitValue.transmissionMode=     AntennaInfoDedicated__transmissionMode_tm4;
+     break;
+     case 5:
+     physicalConfigDedicated2->antennaInfo->choice.explicitValue.transmissionMode=     AntennaInfoDedicated__transmissionMode_tm5;
+     break;
+     case 6:
+     physicalConfigDedicated2->antennaInfo->choice.explicitValue.transmissionMode=     AntennaInfoDedicated__transmissionMode_tm6;
+     break;
+     }
+   */
+  physicalConfigDedicated2->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.present =
+    AntennaInfoDedicated__ue_TransmitAntennaSelection_PR_release;
+  physicalConfigDedicated2->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.choice.release = 0;
+
+  // SchedulingRequestConfig
+  physicalConfigDedicated2->schedulingRequestConfig->present = SchedulingRequestConfig_PR_setup;
+  physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = ue_context_pP->local_uid;
+
+  if (mac_xface->frame_parms->frame_type == 0) {  // FDD
+    physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_ConfigIndex = 5 + (ue_context_pP->local_uid %
+        10);   // Isr = 5 (every 10 subframes, offset=2+UE_id mod3)
+  } else {
+    switch (mac_xface->frame_parms->tdd_config) {
+    case 1:
+      physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_ConfigIndex = 7 + (ue_context_pP->local_uid & 1) + ((
+            ue_context_pP->local_uid & 3) >> 1) * 5;    // Isr = 5 (every 10 subframes, offset=2 for UE0, 3 for UE1, 7 for UE2, 8 for UE3 , 2 for UE4 etc..)
+      break;
+
+    case 3:
+      physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_ConfigIndex = 7 + (ue_context_pP->local_uid %
+          3);    // Isr = 5 (every 10 subframes, offset=2 for UE0, 3 for UE1, 3 for UE2, 2 for UE3 , etc..)
+      break;
+
+    case 4:
+      physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_ConfigIndex = 7 + (ue_context_pP->local_uid &
+          1);    // Isr = 5 (every 10 subframes, offset=2 for UE0, 3 for UE1, 3 for UE2, 2 for UE3 , etc..)
+      break;
+
+    default:
+      physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_ConfigIndex = 7; // Isr = 5 (every 10 subframes, offset=2 for all UE0 etc..)
+      break;
+    }
+  }
+
+  //  assign_enum(&physicalConfigDedicated2->schedulingRequestConfig->choice.setup.dsr_TransMax,
+  //SchedulingRequestConfig__setup__dsr_TransMax_n4);
+  //  assign_enum(&physicalConfigDedicated2->schedulingRequestConfig->choice.setup.dsr_TransMax = SchedulingRequestConfig__setup__dsr_TransMax_n4;
+  physicalConfigDedicated2->schedulingRequestConfig->choice.setup.dsr_TransMax =
+    SchedulingRequestConfig__setup__dsr_TransMax_n4;
+
+  LOG_D(RRC,
+        "handover_config [FRAME %05d][RRC_eNB][MOD %02d][][--- MAC_CONFIG_REQ  (SRB1 UE %x) --->][MAC_eNB][MOD %02d][]\n",
+        ctxt_pP->frame, ctxt_pP->module_id, ue_context_pP->ue_context.rnti, ctxt_pP->module_id);
+#if 0
+  rrc_mac_config_req(
+    ctxt_pP->module_id,
+    ue_context_pP->ue_context.primaryCC_id,
+    ENB_FLAG_YES,
+    ue_context_pP->ue_context.rnti,
+    0,
+    (RadioResourceConfigCommonSIB_t*) NULL,
+    ue_context_pP->ue_context.physicalConfigDedicated,
+#if defined(Rel10) || defined(Rel14)
+    (SCellToAddMod_r10_t *)NULL,
+    //(struct PhysicalConfigDedicatedSCell_r10 *)NULL,
+#endif
+    (MeasObjectToAddMod_t **) NULL,
+    ue_context_pP->ue_context.mac_MainConfig,
+    1,
+    SRB1_logicalChannelConfig,
+    ue_context_pP->ue_context.measGapConfig,
+    (TDD_Config_t*) NULL,
+    (MobilityControlInfo_t*) NULL,
+    (uint8_t*) NULL,
+    (uint16_t*) NULL,
+    NULL,
+    NULL,
+    NULL,
+    (MBSFN_SubframeConfigList_t *) NULL
+#if defined(Rel10) || defined(Rel14)
+    , 0, (MBSFN_AreaInfoList_r9_t *) NULL, (PMCH_InfoList_r9_t *) NULL
+#endif
+#ifdef CBA
+    , eNB_rrc_inst[ctxt_pP->module_id].num_active_cba_groups, eNB_rrc_inst[ctxt_pP->module_id].cba_rnti[0]
+#endif
+  );
+#endif
+
+  // Configure target eNB SRB2
+  /// SRB2
+  SRB2_config = CALLOC(1, sizeof(*SRB2_config));
+  SRB_configList2 = CALLOC(1, sizeof(*SRB_configList2));
+  memset(SRB_configList2, 0, sizeof(*SRB_configList2));
+
+  SRB2_config->srb_Identity = 2;
+  SRB2_rlc_config = CALLOC(1, sizeof(*SRB2_rlc_config));
+  SRB2_config->rlc_Config = SRB2_rlc_config;
+
+  SRB2_rlc_config->present = SRB_ToAddMod__rlc_Config_PR_explicitValue;
+  SRB2_rlc_config->choice.explicitValue.present = RLC_Config_PR_am;
+  SRB2_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.t_PollRetransmit = T_PollRetransmit_ms15;
+  SRB2_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.pollPDU = PollPDU_p8;
+  SRB2_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.pollByte = PollByte_kB1000;
+  SRB2_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.maxRetxThreshold = UL_AM_RLC__maxRetxThreshold_t32;
+  SRB2_rlc_config->choice.explicitValue.choice.am.dl_AM_RLC.t_Reordering = T_Reordering_ms35;
+  SRB2_rlc_config->choice.explicitValue.choice.am.dl_AM_RLC.t_StatusProhibit = T_StatusProhibit_ms10;
+
+  SRB2_lchan_config = CALLOC(1, sizeof(*SRB2_lchan_config));
+  SRB2_config->logicalChannelConfig = SRB2_lchan_config;
+
+  SRB2_lchan_config->present = SRB_ToAddMod__logicalChannelConfig_PR_explicitValue;
+
+  SRB2_ul_SpecificParameters = CALLOC(1, sizeof(*SRB2_ul_SpecificParameters));
+
+  SRB2_ul_SpecificParameters->priority = 1;
+  SRB2_ul_SpecificParameters->prioritisedBitRate =
+    LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_infinity;
+  SRB2_ul_SpecificParameters->bucketSizeDuration =
+    LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
+
+  // LCG for CCCH and DCCH is 0 as defined in 36331
+  logicalchannelgroup = CALLOC(1, sizeof(long));
+  *logicalchannelgroup = 0;
+
+  SRB2_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup;
+  SRB2_lchan_config->choice.explicitValue.ul_SpecificParameters = SRB2_ul_SpecificParameters;
+  ASN_SEQUENCE_ADD(&SRB_configList->list, SRB2_config);
+  ASN_SEQUENCE_ADD(&SRB_configList2->list, SRB2_config);
+
+  // Configure target eNB DRB
+  DRB_configList2 = CALLOC(1, sizeof(*DRB_configList2));
+  /// DRB
+  DRB_config = CALLOC(1, sizeof(*DRB_config));
+
+  //DRB_config->drb_Identity = (DRB_Identity_t) 1; //allowed values 1..32
+  // NN: this is the 1st DRB for this ue, so set it to 1
+  DRB_config->drb_Identity = (DRB_Identity_t) 1;  // (ue_mod_idP+1); //allowed values 1..32
+  DRB_config->logicalChannelIdentity = CALLOC(1, sizeof(long));
+  *(DRB_config->logicalChannelIdentity) = (long)3;
+  DRB_rlc_config = CALLOC(1, sizeof(*DRB_rlc_config));
+  DRB_config->rlc_Config = DRB_rlc_config;
+  DRB_rlc_config->present = RLC_Config_PR_um_Bi_Directional;
+  DRB_rlc_config->choice.um_Bi_Directional.ul_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
+  DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
+  DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.t_Reordering = T_Reordering_ms35;
+
+  DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
+  DRB_config->pdcp_Config = DRB_pdcp_config;
+  DRB_pdcp_config->discardTimer = NULL;
+  DRB_pdcp_config->rlc_AM = NULL;
+  PDCP_rlc_UM = CALLOC(1, sizeof(*PDCP_rlc_UM));
+  DRB_pdcp_config->rlc_UM = PDCP_rlc_UM;
+  PDCP_rlc_UM->pdcp_SN_Size = PDCP_Config__rlc_UM__pdcp_SN_Size_len12bits;
+  DRB_pdcp_config->headerCompression.present = PDCP_Config__headerCompression_PR_notUsed;
+
+  DRB_lchan_config = CALLOC(1, sizeof(*DRB_lchan_config));
+  DRB_config->logicalChannelConfig = DRB_lchan_config;
+  DRB_ul_SpecificParameters = CALLOC(1, sizeof(*DRB_ul_SpecificParameters));
+  DRB_lchan_config->ul_SpecificParameters = DRB_ul_SpecificParameters;
+
+  DRB_ul_SpecificParameters->priority = 2;    // lower priority than srb1, srb2
+  DRB_ul_SpecificParameters->prioritisedBitRate =
+    LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_infinity;
+  DRB_ul_SpecificParameters->bucketSizeDuration =
+    LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
+
+  // LCG for DTCH can take the value from 1 to 3 as defined in 36331: normally controlled by upper layers (like RRM)
+  logicalchannelgroup_drb = CALLOC(1, sizeof(long));
+  *logicalchannelgroup_drb = 1;
+  DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
+
+  ASN_SEQUENCE_ADD(&DRB_configList2->list, DRB_config);
+
+  mac_MainConfig = CALLOC(1, sizeof(*mac_MainConfig));
+  ue_context_pP->ue_context.mac_MainConfig = mac_MainConfig;
+
+  mac_MainConfig->ul_SCH_Config = CALLOC(1, sizeof(*mac_MainConfig->ul_SCH_Config));
+
+  maxHARQ_Tx = CALLOC(1, sizeof(long));
+  *maxHARQ_Tx = MAC_MainConfig__ul_SCH_Config__maxHARQ_Tx_n5;
+  mac_MainConfig->ul_SCH_Config->maxHARQ_Tx = maxHARQ_Tx;
+
+  periodicBSR_Timer = CALLOC(1, sizeof(long));
+  *periodicBSR_Timer = PeriodicBSR_Timer_r12_sf64;
+  mac_MainConfig->ul_SCH_Config->periodicBSR_Timer = periodicBSR_Timer;
+
+  mac_MainConfig->ul_SCH_Config->retxBSR_Timer = RetxBSR_Timer_r12_sf320;
+
+  mac_MainConfig->ul_SCH_Config->ttiBundling = 0; // FALSE
+
+  mac_MainConfig->drx_Config = NULL;
+
+  mac_MainConfig->phr_Config = CALLOC(1, sizeof(*mac_MainConfig->phr_Config));
+
+  mac_MainConfig->phr_Config->present = MAC_MainConfig__phr_Config_PR_setup;
+  mac_MainConfig->phr_Config->choice.setup.periodicPHR_Timer = MAC_MainConfig__phr_Config__setup__periodicPHR_Timer_sf20; // sf20 = 20 subframes
+
+  mac_MainConfig->phr_Config->choice.setup.prohibitPHR_Timer = MAC_MainConfig__phr_Config__setup__prohibitPHR_Timer_sf20; // sf20 = 20 subframes
+
+  mac_MainConfig->phr_Config->choice.setup.dl_PathlossChange = MAC_MainConfig__phr_Config__setup__dl_PathlossChange_dB1;  // Value dB1 =1 dB, dB3 = 3 dB
+
+#if defined(Rel10) || defined(Rel14)
+  sr_ProhibitTimer_r9 = CALLOC(1, sizeof(long));
+  *sr_ProhibitTimer_r9 = 0;   // SR tx on PUCCH, Value in number of SR period(s). Value 0 = no timer for SR, Value 2= 2*SR
+  mac_MainConfig->ext1 = CALLOC(1, sizeof(struct MAC_MainConfig__ext1));
+  mac_MainConfig->ext1->sr_ProhibitTimer_r9 = sr_ProhibitTimer_r9;
+  //sps_RA_ConfigList_rlola = NULL;
+#endif
+  // Measurement ID list
+  MeasId_list = CALLOC(1, sizeof(*MeasId_list));
+  memset((void *)MeasId_list, 0, sizeof(*MeasId_list));
+
+  MeasId0 = CALLOC(1, sizeof(*MeasId0));
+  MeasId0->measId = 1;
+  MeasId0->measObjectId = 1;
+  MeasId0->reportConfigId = 1;
+  ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId0);
+
+  MeasId1 = CALLOC(1, sizeof(*MeasId1));
+  MeasId1->measId = 2;
+  MeasId1->measObjectId = 1;
+  MeasId1->reportConfigId = 2;
+  ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId1);
+
+  MeasId2 = CALLOC(1, sizeof(*MeasId2));
+  MeasId2->measId = 3;
+  MeasId2->measObjectId = 1;
+  MeasId2->reportConfigId = 3;
+  ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId2);
+
+  MeasId3 = CALLOC(1, sizeof(*MeasId3));
+  MeasId3->measId = 4;
+  MeasId3->measObjectId = 1;
+  MeasId3->reportConfigId = 4;
+  ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId3);
+
+  MeasId4 = CALLOC(1, sizeof(*MeasId4));
+  MeasId4->measId = 5;
+  MeasId4->measObjectId = 1;
+  MeasId4->reportConfigId = 5;
+  ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId4);
+
+  MeasId5 = CALLOC(1, sizeof(*MeasId5));
+  MeasId5->measId = 6;
+  MeasId5->measObjectId = 1;
+  MeasId5->reportConfigId = 6;
+  ASN_SEQUENCE_ADD(&MeasId_list->list, MeasId5);
+
+  //  rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->measIdToAddModList = MeasId_list;
+
+  // Add one EUTRA Measurement Object
+  MeasObj_list = CALLOC(1, sizeof(*MeasObj_list));
+  memset((void *)MeasObj_list, 0, sizeof(*MeasObj_list));
+
+  // Configure MeasObject
+
+  MeasObj = CALLOC(1, sizeof(*MeasObj));
+  memset((void *)MeasObj, 0, sizeof(*MeasObj));
+
+  MeasObj->measObjectId = 1;
+  MeasObj->measObject.present = MeasObjectToAddMod__measObject_PR_measObjectEUTRA;
+  MeasObj->measObject.choice.measObjectEUTRA.carrierFreq = 3150;
+  MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = AllowedMeasBandwidth_mbw25;
+  MeasObj->measObject.choice.measObjectEUTRA.presenceAntennaPort1 = 1;
+  MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf = CALLOC(1, sizeof(uint8_t));
+  MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf[0] = 0;
+  MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.size = 1;
+  MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.bits_unused = 6;
+  MeasObj->measObject.choice.measObjectEUTRA.offsetFreq = NULL;   // Default is 15 or 0dB
+
+  MeasObj->measObject.choice.measObjectEUTRA.cellsToAddModList =
+    (CellsToAddModList_t *) CALLOC(1, sizeof(*CellsToAddModList));
+  CellsToAddModList = MeasObj->measObject.choice.measObjectEUTRA.cellsToAddModList;
+
+  // Add adjacent cell lists (6 per eNB)
+//  for (i = 0; i < 6; i++) {
+    CellToAdd = (CellsToAddMod_t *) CALLOC(1, sizeof(*CellToAdd));
+    CellToAdd->cellIndex = 1;//i + 1;
+    //CellToAdd->physCellId = get_adjacent_cell_id(ue_context_pP->ue_context.handover_info->modid_t, i);
+    CellToAdd->physCellId = 0;//get_adjacent_cell_id(ctxt_pP->module_id, i);
+    CellToAdd->cellIndividualOffset = Q_OffsetRange_dB0;
+
+    ASN_SEQUENCE_ADD(&CellsToAddModList->list, CellToAdd);
+//  }
+
+  ASN_SEQUENCE_ADD(&MeasObj_list->list, MeasObj);
+  //  rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->measObjectToAddModList = MeasObj_list;
+
+  // Report Configurations for periodical, A1-A5 events
+  ReportConfig_list = CALLOC(1, sizeof(*ReportConfig_list));
+
+  ReportConfig_per = CALLOC(1, sizeof(*ReportConfig_per));
+
+  ReportConfig_A1 = CALLOC(1, sizeof(*ReportConfig_A1));
+
+  ReportConfig_A2 = CALLOC(1, sizeof(*ReportConfig_A2));
+
+  ReportConfig_A3 = CALLOC(1, sizeof(*ReportConfig_A3));
+
+  ReportConfig_A4 = CALLOC(1, sizeof(*ReportConfig_A4));
+
+  ReportConfig_A5 = CALLOC(1, sizeof(*ReportConfig_A5));
+
+  ReportConfig_per->reportConfigId = 1;
+  ReportConfig_per->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.triggerType.present =
+    ReportConfigEUTRA__triggerType_PR_periodical;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.triggerType.choice.periodical.purpose =
+    ReportConfigEUTRA__triggerType__periodical__purpose_reportStrongestCells;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.triggerQuantity = ReportConfigEUTRA__triggerQuantity_rsrp;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+
+  ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_per);
+
+  ReportConfig_A1->reportConfigId = 2;
+  ReportConfig_A1->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.present =
+    ReportConfigEUTRA__triggerType_PR_event;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
+    ReportConfigEUTRA__triggerType__event__eventId_PR_eventA1;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
+  a1_Threshold.present = ThresholdEUTRA_PR_threshold_RSRP;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
+  a1_Threshold.choice.threshold_RSRP = 10;
+
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerQuantity = ReportConfigEUTRA__triggerQuantity_rsrp;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+
+  ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A1);
+
+  ReportConfig_A2->reportConfigId = 3;
+  ReportConfig_A2->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.present =
+    ReportConfigEUTRA__triggerType_PR_event;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
+    ReportConfigEUTRA__triggerType__event__eventId_PR_eventA2;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA2.
+  a2_Threshold.present = ThresholdEUTRA_PR_threshold_RSRP;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA2.
+  a2_Threshold.choice.threshold_RSRP = 10;
+
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerQuantity = ReportConfigEUTRA__triggerQuantity_rsrp;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+
+  ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A2);
+
+  ReportConfig_A3->reportConfigId = 4;
+  ReportConfig_A3->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.present =
+    ReportConfigEUTRA__triggerType_PR_event;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
+    ReportConfigEUTRA__triggerType__event__eventId_PR_eventA3;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset =
+    10;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  eventA3.reportOnLeave = 1;
+
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerQuantity = ReportConfigEUTRA__triggerQuantity_rsrp;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+
+  ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A3);
+
+  ReportConfig_A4->reportConfigId = 5;
+  ReportConfig_A4->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.present =
+    ReportConfigEUTRA__triggerType_PR_event;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
+    ReportConfigEUTRA__triggerType__event__eventId_PR_eventA4;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA4.
+  a4_Threshold.present = ThresholdEUTRA_PR_threshold_RSRP;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA4.
+  a4_Threshold.choice.threshold_RSRP = 10;
+
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerQuantity = ReportConfigEUTRA__triggerQuantity_rsrp;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+
+  ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A4);
+
+  ReportConfig_A5->reportConfigId = 6;
+  ReportConfig_A5->reportConfig.present = ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.present =
+    ReportConfigEUTRA__triggerType_PR_event;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
+    ReportConfigEUTRA__triggerType__event__eventId_PR_eventA5;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  eventA5.a5_Threshold1.present = ThresholdEUTRA_PR_threshold_RSRP;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  eventA5.a5_Threshold2.present = ThresholdEUTRA_PR_threshold_RSRP;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  eventA5.a5_Threshold1.choice.threshold_RSRP = 10;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
+  eventA5.a5_Threshold2.choice.threshold_RSRP = 10;
+
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerQuantity = ReportConfigEUTRA__triggerQuantity_rsrp;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportQuantity = ReportConfigEUTRA__reportQuantity_both;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportInterval = ReportInterval_ms120;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportAmount = ReportConfigEUTRA__reportAmount_infinity;
+
+  ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A5);
+
+  Sparams = CALLOC(1, sizeof(*Sparams));
+  Sparams->present = MeasConfig__speedStatePars_PR_setup;
+  Sparams->choice.setup.timeToTrigger_SF.sf_High = SpeedStateScaleFactors__sf_Medium_oDot75;
+  Sparams->choice.setup.timeToTrigger_SF.sf_Medium = SpeedStateScaleFactors__sf_High_oDot5;
+  Sparams->choice.setup.mobilityStateParameters.n_CellChangeHigh = 10;
+  Sparams->choice.setup.mobilityStateParameters.n_CellChangeMedium = 5;
+  Sparams->choice.setup.mobilityStateParameters.t_Evaluation = MobilityStateParameters__t_Evaluation_s60;
+  Sparams->choice.setup.mobilityStateParameters.t_HystNormal = MobilityStateParameters__t_HystNormal_s120;
+
+  quantityConfig = CALLOC(1, sizeof(*quantityConfig));
+  memset((void *)quantityConfig, 0, sizeof(*quantityConfig));
+  quantityConfig->quantityConfigEUTRA = CALLOC(1, sizeof(*quantityConfig->quantityConfigEUTRA));
+  memset((void *)quantityConfig->quantityConfigEUTRA, 0, sizeof(*quantityConfig->quantityConfigEUTRA));
+  quantityConfig->quantityConfigCDMA2000 = NULL;
+  quantityConfig->quantityConfigGERAN = NULL;
+  quantityConfig->quantityConfigUTRA = NULL;
+  quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP =
+    CALLOC(1, sizeof(*quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP));
+  quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ =
+    CALLOC(1, sizeof(*quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ));
+  *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRP = FilterCoefficient_fc4;
+  *quantityConfig->quantityConfigEUTRA->filterCoefficientRSRQ = FilterCoefficient_fc4;
+
+  /* mobilityinfo  */
+
+  mobilityInfo = CALLOC(1, sizeof(*mobilityInfo));
+  memset((void *)mobilityInfo, 0, sizeof(*mobilityInfo));
+  mobilityInfo->targetPhysCellId = 0;
+    //(PhysCellId_t) two_tier_hexagonal_cellIds[ue_context_pP->ue_context.handover_info->modid_t];
+  LOG_D(RRC, "[eNB %d] Frame %d: handover preparation: targetPhysCellId: %ld mod_id: %d ue: %x \n",
+        ctxt_pP->module_id,
+        ctxt_pP->frame,
+        mobilityInfo->targetPhysCellId,
+        ctxt_pP->module_id, // get_adjacent_cell_mod_id(mobilityInfo->targetPhysCellId),
+        ue_context_pP->ue_context.rnti);
+
+  mobilityInfo->additionalSpectrumEmission = CALLOC(1, sizeof(*mobilityInfo->additionalSpectrumEmission));
+  *mobilityInfo->additionalSpectrumEmission = 1;  //Check this value!
+
+  mobilityInfo->t304 = MobilityControlInfo__t304_ms50;    // need to configure an appropriate value here
+
+  // New UE Identity (C-RNTI) to identify an UE uniquely in a cell
+  mobilityInfo->newUE_Identity.size = 2;
+  mobilityInfo->newUE_Identity.bits_unused = 0;
+  mobilityInfo->newUE_Identity.buf = rv;
+  mobilityInfo->newUE_Identity.buf[0] = rv[0];
+  mobilityInfo->newUE_Identity.buf[1] = rv[1];
+
+  //memset((void *)&mobilityInfo->radioResourceConfigCommon,(void *)&rrc_inst->sib2->radioResourceConfigCommon,sizeof(RadioResourceConfigCommon_t));
+  //memset((void *)&mobilityInfo->radioResourceConfigCommon,0,sizeof(RadioResourceConfigCommon_t));
+
+  // Configuring radioResourceConfigCommon
+  mobilityInfo->radioResourceConfigCommon.rach_ConfigCommon =
+    CALLOC(1, sizeof(*mobilityInfo->radioResourceConfigCommon.rach_ConfigCommon));
+  memcpy((void *)mobilityInfo->radioResourceConfigCommon.rach_ConfigCommon,
+         (void *)&rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.rach_ConfigCommon, sizeof(RACH_ConfigCommon_t));
+  mobilityInfo->radioResourceConfigCommon.prach_Config.prach_ConfigInfo =
+    CALLOC(1, sizeof(*mobilityInfo->radioResourceConfigCommon.prach_Config.prach_ConfigInfo));
+  memcpy((void *)mobilityInfo->radioResourceConfigCommon.prach_Config.prach_ConfigInfo,
+         (void *)&rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.prach_Config.prach_ConfigInfo,
+         sizeof(PRACH_ConfigInfo_t));
+
+  mobilityInfo->radioResourceConfigCommon.prach_Config.rootSequenceIndex =
+    rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.prach_Config.rootSequenceIndex;
+  mobilityInfo->radioResourceConfigCommon.pdsch_ConfigCommon =
+    CALLOC(1, sizeof(*mobilityInfo->radioResourceConfigCommon.pdsch_ConfigCommon));
+  memcpy((void *)mobilityInfo->radioResourceConfigCommon.pdsch_ConfigCommon,
+         (void *)&rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.pdsch_ConfigCommon, sizeof(PDSCH_ConfigCommon_t));
+  memcpy((void *)&mobilityInfo->radioResourceConfigCommon.pusch_ConfigCommon,
+         (void *)&rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.pusch_ConfigCommon, sizeof(PUSCH_ConfigCommon_t));
+  mobilityInfo->radioResourceConfigCommon.phich_Config = NULL;
+  mobilityInfo->radioResourceConfigCommon.pucch_ConfigCommon =
+    CALLOC(1, sizeof(*mobilityInfo->radioResourceConfigCommon.pucch_ConfigCommon));
+  memcpy((void *)mobilityInfo->radioResourceConfigCommon.pucch_ConfigCommon,
+         (void *)&rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.pucch_ConfigCommon, sizeof(PUCCH_ConfigCommon_t));
+  mobilityInfo->radioResourceConfigCommon.soundingRS_UL_ConfigCommon =
+    CALLOC(1, sizeof(*mobilityInfo->radioResourceConfigCommon.soundingRS_UL_ConfigCommon));
+  memcpy((void *)mobilityInfo->radioResourceConfigCommon.soundingRS_UL_ConfigCommon,
+         (void *)&rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.soundingRS_UL_ConfigCommon,
+         sizeof(SoundingRS_UL_ConfigCommon_t));
+  mobilityInfo->radioResourceConfigCommon.uplinkPowerControlCommon =
+    CALLOC(1, sizeof(*mobilityInfo->radioResourceConfigCommon.uplinkPowerControlCommon));
+  memcpy((void *)mobilityInfo->radioResourceConfigCommon.uplinkPowerControlCommon,
+         (void *)&rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.uplinkPowerControlCommon,
+         sizeof(UplinkPowerControlCommon_t));
+  mobilityInfo->radioResourceConfigCommon.antennaInfoCommon = NULL;
+  mobilityInfo->radioResourceConfigCommon.p_Max = NULL;   // CALLOC(1,sizeof(*mobilityInfo->radioResourceConfigCommon.p_Max));
+  //memcpy((void *)mobilityInfo->radioResourceConfigCommon.p_Max,(void *)rrc_inst->sib1->p_Max,sizeof(P_Max_t));
+  mobilityInfo->radioResourceConfigCommon.tdd_Config = NULL;  //CALLOC(1,sizeof(TDD_Config_t));
+  //memcpy((void *)mobilityInfo->radioResourceConfigCommon.tdd_Config,(void *)rrc_inst->sib1->tdd_Config,sizeof(TDD_Config_t));
+  mobilityInfo->radioResourceConfigCommon.ul_CyclicPrefixLength =
+    rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.ul_CyclicPrefixLength;
+  //End of configuration of radioResourceConfigCommon
+
+  mobilityInfo->carrierFreq = CALLOC(1, sizeof(*mobilityInfo->carrierFreq));  //CALLOC(1,sizeof(CarrierFreqEUTRA_t)); 36090
+  mobilityInfo->carrierFreq->dl_CarrierFreq = 3150;
+  mobilityInfo->carrierFreq->ul_CarrierFreq = NULL;
+
+  mobilityInfo->carrierBandwidth = CALLOC(1, sizeof(
+      *mobilityInfo->carrierBandwidth));    //CALLOC(1,sizeof(struct CarrierBandwidthEUTRA));  AllowedMeasBandwidth_mbw25
+  mobilityInfo->carrierBandwidth->dl_Bandwidth = CarrierBandwidthEUTRA__dl_Bandwidth_n25;
+  mobilityInfo->carrierBandwidth->ul_Bandwidth = NULL;
+  mobilityInfo->rach_ConfigDedicated = NULL;
+
+  // Update target with the new c-rnti
+  //ue_context_pP->ue_context.handover_info->ueid_t=((mobilityInfo->newUE_Identity.buf[0])|(mobilityInfo->newUE_Identity.buf[1]<<8));
+
+  // store the srb and drb list for ho management, mainly in case of failure
+
+  memcpy(ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.srb_ToAddModList,
+         (void*)SRB_configList2,
+         sizeof(SRB_ToAddModList_t));
+  memcpy((void*)ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.drb_ToAddModList,
+         (void*)DRB_configList2,
+         sizeof(DRB_ToAddModList_t));
+  ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.drb_ToReleaseList = NULL;
+  memcpy((void*)ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.mac_MainConfig,
+         (void*)mac_MainConfig,
+         sizeof(MAC_MainConfig_t));
+  memcpy((void*)ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.physicalConfigDedicated,
+         (void*)ue_context_pP->ue_context.physicalConfigDedicated,
+         sizeof(PhysicalConfigDedicated_t));
+  /*    memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.sps_Config,
+     (void *)rrc_inst->sps_Config[ue_mod_idP],
+     sizeof(SPS_Config_t));
+   */
+  LOG_I(RRC, "[eNB %d] Frame %d: adding new UE\n",
+        ctxt_pP->module_id, ctxt_pP->frame);
+  //Idx = (ue_mod_idP * NB_RB_MAX) + DCCH;
+  Idx = DCCH;
+  // SRB1
+  ue_context_pP->ue_context.Srb1.Active = 1;
+  ue_context_pP->ue_context.Srb1.Srb_info.Srb_id = Idx;
+  memcpy(&ue_context_pP->ue_context.Srb1.Srb_info.Lchan_desc[0], &DCCH_LCHAN_DESC, LCHAN_DESC_SIZE);
+  memcpy(&ue_context_pP->ue_context.Srb1.Srb_info.Lchan_desc[1], &DCCH_LCHAN_DESC, LCHAN_DESC_SIZE);
+
+  // SRB2 
+  ue_context_pP->ue_context.Srb2.Active = 1;
+  ue_context_pP->ue_context.Srb2.Srb_info.Srb_id = Idx;
+  memcpy(&ue_context_pP->ue_context.Srb2.Srb_info.Lchan_desc[0], &DCCH_LCHAN_DESC, LCHAN_DESC_SIZE);
+  memcpy(&ue_context_pP->ue_context.Srb2.Srb_info.Lchan_desc[1], &DCCH_LCHAN_DESC, LCHAN_DESC_SIZE);
+
+  LOG_I(RRC, "[eNB %d] CALLING RLC CONFIG SRB1 (rbid %d) for UE %x\n",
+        ctxt_pP->module_id, Idx, ue_context_pP->ue_context.rnti);
+
+  //      rrc_pdcp_config_req (enb_mod_idP, frameP, 1, CONFIG_ACTION_ADD, idx, UNDEF_SECURITY_MODE);
+  //      rrc_rlc_config_req(enb_mod_idP,frameP,1,CONFIG_ACTION_ADD,Idx,SIGNALLING_RADIO_BEARER,Rlc_info_am_config);
+
+#if 0
+  rrc_pdcp_config_asn1_req(&ctxt,
+                           ue_context_pP->ue_context.SRB_configList,
+                           (DRB_ToAddModList_t *) NULL, (DRB_ToReleaseList_t *) NULL, 0xff, NULL, NULL, NULL
+#if defined(Rel10) || defined(Rel14)
+                           , (PMCH_InfoList_r9_t *) NULL
+#endif
+                           ,NULL);
+
+  rrc_rlc_config_asn1_req(&ctxt,
+                          ue_context_pP->ue_context.SRB_configList,
+                          (DRB_ToAddModList_t *) NULL, (DRB_ToReleaseList_t *) NULL
+#if defined(Rel10) || defined(Rel14)
+                          , (PMCH_InfoList_r9_t *) NULL
+#endif
+                         );
+#endif
+
+  /* Initialize NAS list */
+  dedicatedInfoNASList = NULL;
+
+  //  rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->reportConfigToAddModList = ReportConfig_list;
+  memset(buffer, 0, RRC_BUF_SIZE);
+
+  size = do_RRCConnectionReconfiguration(
+           ctxt_pP,
+           buffer,
+           rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),   //Transaction_id,
+           SRB_configList2,
+           DRB_configList2,
+           NULL,  // DRB2_list,
+           NULL,    //*sps_Config,
+           ue_context_pP->ue_context.physicalConfigDedicated,
+           MeasObj_list,
+           ReportConfig_list,
+           quantityConfig,
+           MeasId_list,
+           mac_MainConfig,
+           NULL,
+           mobilityInfo,
+           Sparams,
+           NULL,
+           NULL,
+           dedicatedInfoNASList
+#if defined(Rel10) || defined(Rel14)
+           , NULL   // SCellToAddMod_r10_t
+#endif
+         );
+
+  *_size = size;
+
+  LOG_I(RRC,
+        "[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration for handover (bytes %d, UE rnti %x)\n",
+        ctxt_pP->module_id, ctxt_pP->frame, size, ue_context_pP->ue_context.rnti);
+  // to be updated if needed
+  /*if (eNB_rrc_inst[ctxt_pP->module_id].SRB1_config[ue_mod_idP]->logicalChannelConfig) {
+     if (eNB_rrc_inst[ctxt_pP->module_id].SRB1_config[ue_mod_idP]->logicalChannelConfig->present == SRB_ToAddMod__logicalChannelConfig_PR_explicitValue) {
+     SRB1_logicalChannelConfig = &eNB_rrc_inst[ctxt_pP->module_id].SRB1_config[ue_mod_idP]->logicalChannelConfig->choice.explicitValue;
+     }
+     else {
+     SRB1_logicalChannelConfig = &SRB1_logicalChannelConfig_defaultValue;
+     }
+     }
+     else {
+     SRB1_logicalChannelConfig = &SRB1_logicalChannelConfig_defaultValue;
+     }
+   */
+
+  LOG_D(RRC,
+        "[FRAME %05d][RRC_eNB][MOD %02d][][--- PDCP_DATA_REQ/%d Bytes (rrcConnectionReconfiguration_handover to UE %x MUI %d) --->][PDCP][MOD %02d][RB %02d]\n",
+        ctxt_pP->frame, ctxt_pP->module_id, size, ue_context_pP->ue_context.rnti, rrc_eNB_mui, ctxt_pP->module_id, DCCH);
+  //rrc_rlc_data_req(ctxt_pP->module_id,frameP, 1,(ue_mod_idP*NB_RB_MAX)+DCCH,rrc_eNB_mui++,0,size,(char*)buffer);
+  //pdcp_data_req (ctxt_pP->module_id, frameP, 1, (ue_mod_idP * NB_RB_MAX) + DCCH,rrc_eNB_mui++, 0, size, (char *) buffer, 1);
+#if 0
+  rrc_mac_config_req(
+    ctxt_pP->module_id,
+    ue_context_pP->ue_context.primaryCC_id,
+    ENB_FLAG_YES,
+    ue_context_pP->ue_context.rnti,
+    0,
+    (RadioResourceConfigCommonSIB_t *) NULL,
+    ue_context_pP->ue_context.physicalConfigDedicated,
+#if defined(Rel10) || defined(Rel14)
+    (SCellToAddMod_r10_t *)NULL,
+    //(struct PhysicalConfigDedicatedSCell_r10 *)NULL,
+#endif
+    (MeasObjectToAddMod_t **) NULL,
+    ue_context_pP->ue_context.mac_MainConfig,
+    1,
+    SRB1_logicalChannelConfig,
+    ue_context_pP->ue_context.measGapConfig,
+    (TDD_Config_t *) NULL,
+    (MobilityControlInfo_t *) mobilityInfo,
+    (uint8_t *) NULL, (uint16_t *) NULL, NULL, NULL, NULL, (MBSFN_SubframeConfigList_t *) NULL
+#if defined(Rel10) || defined(Rel14)
+    , 0, (MBSFN_AreaInfoList_r9_t *) NULL, (PMCH_InfoList_r9_t *) NULL
+#endif
+#ifdef CBA
+    , 0, 0
+#endif
+  );
+#endif
+
+  /*
+     handoverCommand.criticalExtensions.present = HandoverCommand__criticalExtensions_PR_c1;
+     handoverCommand.criticalExtensions.choice.c1.present = HandoverCommand__criticalExtensions__c1_PR_handoverCommand_r8;
+     handoverCommand.criticalExtensions.choice.c1.choice.handoverCommand_r8.handoverCommandMessage.buf = buffer;
+     handoverCommand.criticalExtensions.choice.c1.choice.handoverCommand_r8.handoverCommandMessage.size = size;
+   */
+//#warning "COMPILATION PROBLEM"
+#ifdef PROBLEM_COMPILATION_RESOLVED
+
+  if (sourceModId != 0xFF) {
+    memcpy(eNB_rrc_inst[sourceModId].handover_info[eNB_rrc_inst[ctxt_pP->module_id].handover_info[ue_mod_idP]->ueid_s]->buf,
+           (void *)buffer, size);
+    eNB_rrc_inst[sourceModId].handover_info[eNB_rrc_inst[ctxt_pP->module_id].handover_info[ue_mod_idP]->ueid_s]->size = size;
+    eNB_rrc_inst[sourceModId].handover_info[eNB_rrc_inst[ctxt_pP->module_id].handover_info[ue_mod_idP]->ueid_s]->ho_complete =
+      0xF1;
+    //eNB_rrc_inst[ctxt_pP->module_id].handover_info[ue_mod_idP]->ho_complete = 0xFF;
+    LOG_D(RRC, "[eNB %d] Frame %d: setting handover complete to 0xF1 for (%d,%d) and to 0xFF for (%d,%d)\n",
+          ctxt_pP->module_id,
+          ctxt_pP->frame,
+          sourceModId,
+          eNB_rrc_inst[ctxt_pP->module_id].handover_info[ue_mod_idP]->ueid_s,
+          ctxt_pP->module_id,
+          ue_mod_idP);
+  } else
+    LOG_W(RRC,
+          "[eNB %d] Frame %d: rrc_eNB_generate_RRCConnectionReconfiguration_handover: Could not find source eNB mod_id.\n",
+          ctxt_pP->module_id, ctxt_pP->frame);
+
+#endif
+ 
+#if 0
+ rrc_data_req(ctxt_pP,
+	      DCCH,
+	      rrc_eNB_mui++,
+	      SDU_CONFIRM_NO,
+	      size,
+	      buffer,
+	      PDCP_TRANSMISSION_MODE_CONTROL);
+#endif
+
 }
 
 // 5.3.5.4 RRCConnectionReconfiguration including the mobilityControlInfo to prepare the UE handover
@@ -3500,7 +4466,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
 
   MeasObj->measObjectId = 1;
   MeasObj->measObject.present = MeasObjectToAddMod__measObject_PR_measObjectEUTRA;
-  MeasObj->measObject.choice.measObjectEUTRA.carrierFreq = 36090;
+  MeasObj->measObject.choice.measObjectEUTRA.carrierFreq = 3150;
   MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = AllowedMeasBandwidth_mbw25;
   MeasObj->measObject.choice.measObjectEUTRA.presenceAntennaPort1 = 1;
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf = CALLOC(1, sizeof(uint8_t));
@@ -3750,7 +4716,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   //End of configuration of radioResourceConfigCommon
 
   mobilityInfo->carrierFreq = CALLOC(1, sizeof(*mobilityInfo->carrierFreq));  //CALLOC(1,sizeof(CarrierFreqEUTRA_t)); 36090
-  mobilityInfo->carrierFreq->dl_CarrierFreq = 36090;
+  mobilityInfo->carrierFreq->dl_CarrierFreq = 3150;
   mobilityInfo->carrierFreq->ul_CarrierFreq = NULL;
 
   mobilityInfo->carrierBandwidth = CALLOC(1, sizeof(
