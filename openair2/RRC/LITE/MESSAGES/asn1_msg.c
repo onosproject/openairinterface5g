@@ -58,6 +58,7 @@
 #include "RRCConnectionSetup.h"
 #include "SRB-ToAddModList.h"
 #include "DRB-ToAddModList.h"
+#include "HandoverCommand.h"
 #if defined(Rel10) || defined(Rel14)
 #include "MCCH-Message.h"
 //#define MRB1 1
@@ -2598,6 +2599,32 @@ uint8_t do_ULInformationTransfer(uint8_t **buffer, uint32_t pdu_length, uint8_t 
   encoded = uper_encode_to_new_buffer (&asn_DEF_UL_DCCH_Message, NULL, (void*) &ul_dcch_msg, (void **) buffer);
 
   return encoded;
+}
+
+int do_HandoverCommand(char *ho_buf, int ho_size, char *rrc_buf, int rrc_size)
+{
+  asn_enc_rval_t enc_rval;
+  HandoverCommand_t ho;
+
+  memset(&ho, 0, sizeof(ho));
+
+  ho.criticalExtensions.present = HandoverCommand__criticalExtensions_PR_c1;
+  ho.criticalExtensions.choice.c1.present = HandoverCommand__criticalExtensions__c1_PR_handoverCommand_r8;
+  if (OCTET_STRING_fromBuf(
+          &ho.criticalExtensions.choice.c1.choice.handoverCommand_r8.handoverCommandMessage,
+          rrc_buf, rrc_size) == -1) { printf("%s:%d: fatal: OCTET_STRING_fromBuf failed\n"); abort(); }
+
+  enc_rval = uper_encode_to_buffer(&asn_DEF_HandoverCommand,
+                                   &ho,
+                                   ho_buf,
+                                   ho_size);
+
+  /* TODO: free the OCTET_STRING */
+
+  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
+               enc_rval.failed_type->name, enc_rval.encoded);
+
+  return((enc_rval.encoded+7)/8);
 }
 
 OAI_UECapability_t *fill_ue_capability(char *UE_EUTRA_Capability_xer_fname)

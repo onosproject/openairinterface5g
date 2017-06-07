@@ -3158,7 +3158,7 @@ rrc_eNB_generate_handover_reconfiguration(
   physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH =
     CALLOC(1, sizeof(*physicalConfigDedicated2->tpc_PDCCH_ConfigPUSCH));
   physicalConfigDedicated2->cqi_ReportConfig = NULL;  //CALLOC(1,sizeof(*physicalConfigDedicated2->cqi_ReportConfig));
-  physicalConfigDedicated2->soundingRS_UL_ConfigDedicated = CALLOC(1,sizeof(*physicalConfigDedicated2->soundingRS_UL_ConfigDedicated));
+  physicalConfigDedicated2->soundingRS_UL_ConfigDedicated = NULL; //CALLOC(1,sizeof(*physicalConfigDedicated2->soundingRS_UL_ConfigDedicated));
   physicalConfigDedicated2->antennaInfo = CALLOC(1, sizeof(*physicalConfigDedicated2->antennaInfo));
   physicalConfigDedicated2->schedulingRequestConfig =
     CALLOC(1, sizeof(*physicalConfigDedicated2->schedulingRequestConfig));
@@ -3700,7 +3700,8 @@ rrc_eNB_generate_handover_reconfiguration(
 
   mobilityInfo = CALLOC(1, sizeof(*mobilityInfo));
   memset((void *)mobilityInfo, 0, sizeof(*mobilityInfo));
-  mobilityInfo->targetPhysCellId = 0;
+  mobilityInfo->targetPhysCellId = rrc_inst->configuration.cell_identity;
+
     //(PhysCellId_t) two_tier_hexagonal_cellIds[ue_context_pP->ue_context.handover_info->modid_t];
   LOG_D(RRC, "[eNB %d] Frame %d: handover preparation: targetPhysCellId: %ld mod_id: %d ue: %x \n",
         ctxt_pP->module_id,
@@ -3782,6 +3783,7 @@ rrc_eNB_generate_handover_reconfiguration(
 
   // store the srb and drb list for ho management, mainly in case of failure
 
+#if 0
   memcpy(ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.srb_ToAddModList,
          (void*)SRB_configList2,
          sizeof(SRB_ToAddModList_t));
@@ -3795,6 +3797,8 @@ rrc_eNB_generate_handover_reconfiguration(
   memcpy((void*)ue_context_pP->ue_context.handover_info->as_config.sourceRadioResourceConfig.physicalConfigDedicated,
          (void*)ue_context_pP->ue_context.physicalConfigDedicated,
          sizeof(PhysicalConfigDedicated_t));
+#endif
+
   /*    memcpy((void *)rrc_inst->handover_info[ue_mod_idP]->as_config.sourceRadioResourceConfig.sps_Config,
      (void *)rrc_inst->sps_Config[ue_mod_idP],
      sizeof(SPS_Config_t));
@@ -3845,9 +3849,11 @@ rrc_eNB_generate_handover_reconfiguration(
   //  rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->reportConfigToAddModList = ReportConfig_list;
   memset(buffer, 0, RRC_BUF_SIZE);
 
-  size = do_RRCConnectionReconfiguration(
+  char rrc_buf[1000 /* arbitrary, should be big enough, has to be less than size of return buf by a few bits/bytes */];
+  int rrc_size;
+  rrc_size = do_RRCConnectionReconfiguration(
            ctxt_pP,
-           buffer,
+           (unsigned char *)rrc_buf,
            rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),   //Transaction_id,
            SRB_configList2,
            DRB_configList2,
@@ -3870,7 +3876,16 @@ rrc_eNB_generate_handover_reconfiguration(
 #endif
          );
 
-  *_size = size;
+  if (rrc_size <= 0) { printf("%s:%d: fatal\n", __FILE__, __LINE__); abort(); }
+
+  char *ho_buf = (char*)buffer;
+  int ho_size;
+  ho_size = do_HandoverCommand(
+           ho_buf, 1024 /* TODO: this is the value found in struct x2ap_handover_req_ack_s for array rrc_buffer */,
+           rrc_buf,
+           rrc_size);
+
+  *_size = size = ho_size;
 
   LOG_I(RRC,
         "[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration for handover (bytes %d, UE rnti %x)\n",

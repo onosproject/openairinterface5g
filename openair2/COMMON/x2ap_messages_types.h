@@ -168,7 +168,7 @@ typedef struct x2ap_handover_req_ack_s {
   int source_x2id;                       /* TODO: to be fixed/remove */
   /* TODO: this parameter has to be removed */
   int target_mod_id;
-  uint8_t rrc_buffer[255 /* TODO: should be RRC_BUF_SIZE */];
+  uint8_t rrc_buffer[1024 /* arbitrary, big enough */];
   int rrc_buffer_size;
 } x2ap_handover_req_ack_t;
 
