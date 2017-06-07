@@ -365,6 +365,15 @@ x2ap_eNB_handle_handover_response(uint32_t assoc_id,
   extern int x2id_to_source_rnti[1];
   X2AP_HANDOVER_REQ_ACK(m).source_x2id = x2HandoverRequestAck->old_eNB_UE_X2AP_ID;
   X2AP_HANDOVER_REQ_ACK(m).source_rnti = x2id_to_source_rnti[x2HandoverRequestAck->old_eNB_UE_X2AP_ID];
+
+  X2ap_TargeteNBtoSource_eNBTransparentContainer_t *c = &x2HandoverRequestAck->targeteNBtoSource_eNBTransparentContainer;
+
+  if (c->size > 1024 /* TODO: this is the size of rrc_buffer in struct x2ap_handover_req_ack_s*/)
+    { printf("%s:%d: fatal: buffer too big\n", __FILE__, __LINE__); abort(); }
+
+  memcpy(X2AP_HANDOVER_REQ_ACK(m).rrc_buffer, c->buf, c->size);
+  X2AP_HANDOVER_REQ_ACK(m).rrc_buffer_size = c->size;
+
   itti_send_msg_to_task(TASK_RRC_ENB, x2ap_eNB_data->x2ap_eNB_instance->instance, m);
   return 0;
 }

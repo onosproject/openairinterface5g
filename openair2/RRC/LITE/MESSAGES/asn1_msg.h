@@ -193,6 +193,7 @@ do_RRCConnectionReconfiguration(
     MAC_MainConfig_t                   *mac_MainConfig,
     MeasGapConfig_t                    *measGapConfig,
     MobilityControlInfo_t              *mobilityInfo,
+    SecurityConfigHO_t                 *securityConfigHO,
     struct MeasConfig__speedStatePars  *speedStatePars,
     RSRP_Range_t                       *rsrp,
     C_RNTI_t                           *cba_rnti,

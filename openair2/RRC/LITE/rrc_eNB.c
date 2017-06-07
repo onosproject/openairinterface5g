@@ -1376,7 +1376,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration(const protocol_ctxt_t* co
 					  (DRB_ToReleaseList_t*)NULL,  // DRB2_list,
                                          (struct SPS_Config*)NULL,    // *sps_Config,
 					  NULL, NULL, NULL, NULL,NULL,
-					  NULL, NULL,  NULL, NULL, NULL, NULL, 
+					  NULL, NULL,  NULL, NULL, NULL, NULL, NULL,
 					  (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
 #if defined(Rel10) || defined(Rel14)
                                          , (SCellToAddMod_r10_t*)NULL
@@ -2128,6 +2128,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
                                          (MAC_MainConfig_t*)mac_MainConfig,
                                          (MeasGapConfig_t*)NULL,
                                          (MobilityControlInfo_t*)NULL,
+                                         (SecurityConfigHO_t*)NULL,
                                          (struct MeasConfig__speedStatePars*)Sparams,
                                          (RSRP_Range_t*)rsrp,
                                          (C_RNTI_t*)cba_RNTI,
@@ -2338,6 +2339,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_SCell(
                                          (MAC_MainConfig_t*)NULL,
                                          (MeasGapConfig_t*)NULL,
                                          (MobilityControlInfo_t*)NULL,
+                                         (SecurityConfigHO_t*)NULL,
                                          (struct MeasConfig__speedStatePars*)NULL,
                                          (RSRP_Range_t*)NULL,
                                          (C_RNTI_t*)NULL,
@@ -2687,6 +2689,39 @@ void rrc_eNB_process_handoverPreparationInformation(int mod_id, x2ap_handover_re
   ue_context_target_p->ue_context.kenb_ncc = m->kenb_ncc;
 }
 
+void rrc_eNB_process_handoverCommand(
+        int                         mod_id,
+        struct rrc_eNB_ue_context_s *ue_context,
+        x2ap_handover_req_ack_t     *m)
+{
+  asn_dec_rval_t dec_rval;
+  HandoverCommand_t *ho = NULL;
+
+  dec_rval = uper_decode(
+               NULL,
+               &asn_DEF_HandoverCommand,
+               (void**)&ho,
+               m->rrc_buffer,
+               m->rrc_buffer_size,
+               0,
+               0);
+
+  if (dec_rval.code != RC_OK ||
+      ho->criticalExtensions.present != HandoverCommand__criticalExtensions_PR_c1 ||
+      ho->criticalExtensions.choice.c1.present != HandoverCommand__criticalExtensions__c1_PR_handoverCommand_r8) {
+    LOG_E(RRC, "could not decode Handover Command\n");
+    abort();
+  }
+
+  unsigned char *buf = ho->criticalExtensions.choice.c1.choice.handoverCommand_r8.handoverCommandMessage.buf;
+  int size = ho->criticalExtensions.choice.c1.choice.handoverCommand_r8.handoverCommandMessage.size;
+
+  if (size > RRC_BUF_SIZE) { printf("%s:%d: fatal\n", __FILE__, __LINE__); abort(); }
+
+  memcpy(ue_context->ue_context.handover_info->buf, buf, size);
+  ue_context->ue_context.handover_info->size = size;
+}
+
 #if 0
 //-----------------------------------------------------------------------------
 void
@@ -2808,6 +2843,16 @@ check_handovers(
         LOG_I(RRC,
                 "[eNB %d] Frame %d : Logical Channel UL-DCCH, processing RRCHandoverPreparationInformation, sending RRCConnectionReconfiguration to UE %d \n",
                 ctxt_pP->module_id, ctxt_pP->frame, ue_context_p->ue_context.rnti);
+
+        result = pdcp_data_req(ctxt_pP,
+                               SRB_FLAG_YES,
+                               DCCH,
+                               rrc_eNB_mui++,
+                               SDU_CONFIRM_NO,
+                               ue_context_p->ue_context.handover_info->size,
+                               ue_context_p->ue_context.handover_info->buf,
+                               PDCP_TRANSMISSION_MODE_CONTROL);
+        AssertFatal(result == TRUE, "PDCP data request failed!\n");
 
 /* TODO: remove this hack, this call has to be done here I think but we must do
  *       it before rrc_eNB_configure_rbs_handover because the SRBs are copied
@@ -3060,6 +3105,7 @@ rrc_eNB_generate_handover_reconfiguration(
   MeasIdToAddMod_t                   *MeasId0, *MeasId1, *MeasId2, *MeasId3, *MeasId4, *MeasId5;
   QuantityConfig_t                   *quantityConfig;
   MobilityControlInfo_t              *mobilityInfo;
+  SecurityConfigHO_t                 *securityConfigHO;
   // HandoverCommand_t handoverCommand;
   //uint8_t                             sourceModId =
   //  get_adjacent_cell_mod_id(ue_context_pP->ue_context.handover_info->as_context.reestablishmentInfo->sourcePhysCellId);
@@ -3778,6 +3824,14 @@ rrc_eNB_generate_handover_reconfiguration(
   mobilityInfo->carrierBandwidth->ul_Bandwidth = NULL;
   mobilityInfo->rach_ConfigDedicated = NULL;
 
+  securityConfigHO = CALLOC(1, sizeof(*securityConfigHO));
+  memset((void *)securityConfigHO, 0, sizeof(*securityConfigHO));
+
+  securityConfigHO->handoverType.present = SecurityConfigHO__handoverType_PR_intraLTE;
+  securityConfigHO->handoverType.choice.intraLTE.securityAlgorithmConfig = NULL; /* TODO: to be checked */
+  securityConfigHO->handoverType.choice.intraLTE.keyChangeIndicator = 0;
+  securityConfigHO->handoverType.choice.intraLTE.nextHopChainingCount = 0;
+
   // Update target with the new c-rnti
   //ue_context_pP->ue_context.handover_info->ueid_t=((mobilityInfo->newUE_Identity.buf[0])|(mobilityInfo->newUE_Identity.buf[1]<<8));
 
@@ -3855,8 +3909,8 @@ rrc_eNB_generate_handover_reconfiguration(
            ctxt_pP,
            (unsigned char *)rrc_buf,
            rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),   //Transaction_id,
-           SRB_configList2,
-           DRB_configList2,
+           NULL, //SRB_configList2,
+           NULL, //DRB_configList2,
            NULL,  // DRB2_list,
            NULL,    //*sps_Config,
            ue_context_pP->ue_context.physicalConfigDedicated,
@@ -3867,6 +3921,7 @@ rrc_eNB_generate_handover_reconfiguration(
            mac_MainConfig,
            NULL,
            mobilityInfo,
+           securityConfigHO,
            Sparams,
            NULL,
            NULL,
@@ -4822,6 +4877,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
            mac_MainConfig,
            NULL,
            mobilityInfo,
+           NULL,
            Sparams,
            NULL,
            NULL,
@@ -6611,6 +6667,7 @@ rrc_enb_task(
       LOG_I(RRC, "[eNB %d] X2-Received %s\n", instance, msg_name_p);
       DevAssert(ue_context_p != NULL);
       if (ue_context_p->ue_context.handover_info->state != HO_REQUEST) abort();
+      rrc_eNB_process_handoverCommand(instance, ue_context_p, &X2AP_HANDOVER_REQ_ACK(msg_p));
       ue_context_p->ue_context.handover_info->state = HO_PREPARE;
       break;
      }

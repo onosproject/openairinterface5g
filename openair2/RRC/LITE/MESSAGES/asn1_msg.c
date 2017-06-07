@@ -1949,6 +1949,7 @@ do_RRCConnectionReconfiguration(
   MAC_MainConfig_t                   *mac_MainConfig,
   MeasGapConfig_t                    *measGapConfig,
   MobilityControlInfo_t              *mobilityInfo,
+  SecurityConfigHO_t                 *securityConfigHO,
   struct MeasConfig__speedStatePars  *speedStatePars,
   RSRP_Range_t                       *rsrp,
   C_RNTI_t                           *cba_rnti,
@@ -2047,7 +2048,15 @@ do_RRCConnectionReconfiguration(
   }
 
   rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.dedicatedInfoNASList = dedicatedInfoNASList;
-  rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.securityConfigHO     = NULL;
+
+  if (securityConfigHO != NULL) {
+    rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.securityConfigHO     = CALLOC(1,
+        sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.securityConfigHO));
+    memcpy((void*)rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.securityConfigHO, (void*)securityConfigHO,
+           sizeof(SecurityConfigHO_t));
+  } else {
+    rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.securityConfigHO     = NULL;
+  }
 
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message,
                                    (void*)&dl_dcch_msg,
