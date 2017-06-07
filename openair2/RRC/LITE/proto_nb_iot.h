@@ -80,8 +80,8 @@ int NB_rrc_mac_config_req_eNB(
 			   struct DL_Bitmap_NB_r13          *dl_bitmap, //optional SIB1
 			   long*                            eutraControlRegionSize, //optional sib1
 			   long*							nrs_CRS_PowerOffset, //optional
-			   uint8_t                          *SIwindowsize, //maybe no more needed because TDD only
-			   uint16_t                         *SIperiod, //maybe no more needed because TDD only
+//			   uint8_t                          *SIwindowsize, //maybe no more needed because TDD only
+//			   uint16_t                         *SIperiod, //maybe no more needed because TDD only
 			   uint32_t                         dl_CarrierFreq,
 			   uint32_t                         ul_CarrierFreq,
 			   BCCH_BCH_Message_NB_t            *mib_NB,

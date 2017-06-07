@@ -96,7 +96,7 @@ typedef struct{
 void UL_indication(UL_IND_t UL_INFO);
 
 /*Interface for Downlink, transmitting the DLSCH SDU, DCI SDU*/
-void Schedule_Response(Sched_Rsp_t Sched_INFO);
+void schedule_Response(Sched_Rsp_t Sched_INFO);
 
 /*Interface for Configuration*/
 //void Config_Request();

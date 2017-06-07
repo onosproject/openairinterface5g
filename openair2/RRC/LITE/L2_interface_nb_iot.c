@@ -123,9 +123,9 @@ int NB_rrc_mac_config_req_eNB(
 			   struct MultiBandInfoList_NB_r13  *multiBandInfoList, //optional SIB1
 			   struct DL_Bitmap_NB_r13          *dl_bitmap, //optional SIB1
 			   long*                            eutraControlRegionSize, //optional sib1
-			   long*							nrs_CRS_PowerOffset, //optional
-			   uint8_t                          *SIwindowsize, //maybe no more needed because TDD only
-			   uint16_t                         *SIperiod, //maybe no more needed because TDD only
+			   long*							nrs_CRS_PoweSIwindowsizerOffset, //optional
+//			   uint8_t                          *SIwindowsize, //maybe no more needed because TDD only
+//			   uint16_t                         *SIperiod, //maybe no more needed because TDD only
 			   uint32_t                         dl_CarrierFreq,
 			   uint32_t                         ul_CarrierFreq,
 			   BCCH_BCH_Message_NB_t            *mib_NB,
@@ -136,6 +136,7 @@ int NB_rrc_mac_config_req_eNB(
 			   LogicalChannelConfig_NB_r13_t          *logicalChannelConfig //FIXME: decide how to use it
 			   )
 {
+
 
   //int i;
 
@@ -231,7 +232,7 @@ int NB_rrc_mac_config_req_eNB(
 
 }
 
-
+//-------------------------------------------------------
 //New
 int npdsch_rep_to_array[3] ={4,8,16}; //TS 36.213 Table 16.4.1.3-3
 int sib1_startFrame_to_array[4] = {0,16,32,48};//TS 36.213 Table 16.4.1.3-4

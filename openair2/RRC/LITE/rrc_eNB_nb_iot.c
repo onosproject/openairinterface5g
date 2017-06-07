@@ -578,8 +578,8 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
 		  (DL_Bitmap_NB_r13_t*) NULL,
 		  (long*) NULL,
 		  (long*)NULL,
-		  (uint8_t*) NULL, //SIWindowSize
-		  (uint16_t*)NULL, //SIperiod
+//		  (uint8_t*) NULL, //SIWindowSize
+//		  (uint16_t*)NULL, //SIperiod
 		  0, //dl_carrierFrequency
 		  0, //ul_carrierFrequency
 		  (BCCH_BCH_Message_NB_t*) NULL,
@@ -806,8 +806,8 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 			(struct DL_Bitmap_NB_r13*) NULL,
 			(long*)NULL,//eutraControlRegionSize
 			(long*)NULL, //nrs_CRS_PowerOffset
-			(uint8_t*)NULL,
-			(uint16_t*)NULL,
+//			(uint8_t*)NULL,
+//			(uint16_t*)NULL,
 			0, //dl_CarrierFreq
 			0, //ul_CarrierFreq
 			(BCCH_BCH_Message_NB_t*)NULL,
@@ -848,8 +848,8 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 					  (struct DL_Bitmap_NB_r13*) NULL,
 					  (long*)NULL,//eutraControlRegionSize
 					  (long*)NULL, //nrs_CRS_PowerOffset
-					  (uint8_t*)NULL,
-					  (uint16_t*)NULL,
+//					  (uint8_t*)NULL,
+//					  (uint16_t*)NULL,
 					  0, //dl_CarrierFreq
 					  0, //ul_CarrierFreq
 					  (BCCH_BCH_Message_NB_t*)NULL,
@@ -1611,9 +1611,8 @@ init_SI_NB(
 //-----------------------------------------------------------------------------
 {
 
-	//FIXME: MP: may this two  parameters are not needed
-  uint8_t                             SIwindowsize = 1; //frame
-  uint16_t                            SIperiod = 8; // in frames
+//  uint8_t                             SIwindowsize = 1; //frame
+//  uint16_t                            SIperiod = 8; // in frames
 
 
   //copy basic parameters
@@ -1722,8 +1721,8 @@ init_SI_NB(
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->downlinkBitmap_r13,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->eutraControlRegionSize_r13,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->nrs_CRS_PowerOffset_r13,
-								&SIwindowsize,
-								&SIperiod,
+//								&SIwindowsize,
+//								&SIperiod,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].dl_CarrierFreq,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].ul_CarrierFreq,
 								(BCCH_BCH_Message_NB_t*) &
@@ -2317,6 +2316,7 @@ rrc_eNB_decode_dcch_NB(
 	/*NN: revise the condition */
 
    //MP: RRC_RECONFIGURED indicate if the default/dedicated bearer has been/not established
+
         if (ue_context_p->ue_context.Status == RRC_RECONFIGURED){ // a dedicated bearers has been established
 	  dedicated_DRB = 1;
 	  LOG_I(RRC,

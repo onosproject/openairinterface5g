@@ -35,6 +35,6 @@ void UL_indication(UL_IND_t UL_INFO)
     NB_eNB_dlsch_ulsch_scheduler(UL_INFO.module_id,0,UL_INFO.frame,UL_INFO.subframe);
 }
 
-void Schedule_Response(Sched_Rsp_t Sched_INFO){
+void schedule_Response(Sched_Rsp_t Sched_INFO){
       //todo
 }
