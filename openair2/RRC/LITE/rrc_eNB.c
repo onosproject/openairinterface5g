@@ -3700,7 +3700,7 @@ rrc_eNB_generate_handover_reconfiguration(
 
   mobilityInfo = CALLOC(1, sizeof(*mobilityInfo));
   memset((void *)mobilityInfo, 0, sizeof(*mobilityInfo));
-  mobilityInfo->targetPhysCellId = rrc_inst->configuration.cell_identity;
+  mobilityInfo->targetPhysCellId = mac_xface->frame_parms->Nid_cell;
 
     //(PhysCellId_t) two_tier_hexagonal_cellIds[ue_context_pP->ue_context.handover_info->modid_t];
   LOG_D(RRC, "[eNB %d] Frame %d: handover preparation: targetPhysCellId: %ld mod_id: %d ue: %x \n",
