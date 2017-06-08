@@ -13,7 +13,9 @@
 */
 
 #include "PHY/defs.h"
+#include "PHY/defs_nb_iot.h"
 #include "PHY/extern.h"
+#include "PHY/LTE_REFSIG/primary_synch_NB_IoT.h"
 
 int generate_npss_NB_IoT(int32_t **txdataF,
 						short amp,
@@ -41,9 +43,9 @@ int generate_npss_NB_IoT(int32_t **txdataF,
 	
 		if(RB_IoT_ID < (frame_parms->N_RB_DL/2))
 		{
-			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(ceil(frame_parms->N_RB_DL/(float)2)));
+			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		} else {
-			NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(ceil(frame_parms->N_RB_DL/(float)2)));
+			NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		}
 		// For the In-band or Stand-alone case the REs of NPSS signal have the same positions
 		for (s=0; s<11; s++ )   				// loop on OFDM symbols

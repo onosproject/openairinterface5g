@@ -13,6 +13,7 @@
 */
 
 #include "PHY/defs.h"
+#include "PHY/defs_nb_iot.h"
 #include "PHY/CODING/extern.h"
 #include "PHY/CODING/lte_interleaver_inline.h"
 #include "defs.h"
@@ -118,10 +119,11 @@ int generate_npbch(NB_IoT_eNB_NPBCH *eNB_npbch,
                   int amp,
                   LTE_DL_FRAME_PARMS *frame_parms,
                   uint8_t *npbch_pdu,
-                  uint8_t frame_mod64
+                  uint8_t frame_mod64,
 				  unsigned short NB_IoT_RB_ID)
 {
   int i, l;
+  int id_offset;
   uint32_t npbch_D,npbch_E;
   uint8_t npbch_a[5];   							// 34/8 =4.25 => 4 bytes and 2 bits
   uint8_t RCC;
@@ -139,7 +141,7 @@ int generate_npbch(NB_IoT_eNB_NPBCH *eNB_npbch,
 									
 	if (frame_mod64==0) {
 		bzero(npbch_a,5);      									// initializing input data stream , filling with zeros
-		bzero(eNB_npbch->npbch_e,pbch_E);						// filling with "0" the table pbch_e[1600]
+		bzero(eNB_npbch->npbch_e,npbch_E);						// filling with "0" the table pbch_e[1600]
 		memset(eNB_npbch->npbch_d,LTE_NULL,96);					// filling with "2" the first 96 elements of table pbch_d[216]
 		
 		for (i=0; i<5; i++) 									// set input bits stream
@@ -155,7 +157,7 @@ int generate_npbch(NB_IoT_eNB_NPBCH *eNB_npbch,
 		if (frame_parms->mode1_flag == 1)						// setting CRC mask depending on the number of used eNB antennas 
 			amask = 0x0000;
 		else {
-			switch (frame_parms->nb_antennas_tx_eNB) {			// *****???? better replacing nb_antennas_tx_eNB by nb_antennas_tx_eNB_NB_IoT
+			switch (frame_parms->nb_antennas_tx) {			// *****???? better replacing nb_antennas_tx_eNB by nb_antennas_tx_eNB_NB_IoT
 				case 1:
 					amask = 0x0000;
 				break;
@@ -190,9 +192,9 @@ int generate_npbch(NB_IoT_eNB_NPBCH *eNB_npbch,
 		
 		if(RB_IoT_ID < (frame_parms->N_RB_DL/2))
 		{
-			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(ceil(frame_parms->N_RB_DL/(float)2)));
+			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		} else {
-			NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(ceil(frame_parms->N_RB_DL/(float)2)));
+			NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		}
 		
 		symbol_offset = frame_parms->ofdm_symbol_size*l + NB_IoT_start;  						// symbol_offset = 512 * L + NB_IOT_RB start

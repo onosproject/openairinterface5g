@@ -94,6 +94,67 @@ extern int rx_sig_fifo;
 #endif
 
 
+
+/* For NB-IoT, we put NPBCH in later part, since it would be scheduled by MAC scheduler
+* It generates NRS/NPSS/NSSS
+*
+*/
+
+void NB_common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) 
+{
+  LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
+  int **txdataF = eNB->common_vars.txdataF[0];
+  int subframe = proc->subframe_tx;
+  int frame = proc->frame_tx;
+  uint16_t Ntti = 10;//ntti = 10
+  int RB_IoT_ID;// RB reserved for NB-IoT, PRB index
+  int With_NSSS;// With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
+  
+  /*NSSS only happened in the even frame*/
+  if(frame%2==0)
+    {
+      With_NSSS = 1;
+    }
+  else
+    {
+      With_NSSS = 0;
+    }
+    
+  /*NRS*/
+    generate_pilots_NB_IoT(eNB,
+               txdataF,
+               AMP,
+               Ntti,
+               RB_IoT_ID,
+               With_NSSS);
+               
+  /*NPSS when subframe 5*/
+  if(subframe == 5)
+    {
+      generate_npss_NB_IoT(txdataF,
+                 AMP,
+                 fp,
+                 3,
+                 0,
+                 RB_IoT_ID);
+    }
+    
+  /*NSSS when subframe 9 on even frame*/
+  if((subframe == 9)&&(With_NSSS == 1))
+    {
+      generate_nsss_NB_IoT(txdataF,
+                          AMP,
+                          fp,
+                          3,
+                          0,
+                          frame,
+                          RB_IoT_ID);
+    }
+
+  
+}
+
+
 void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const relaying_type_t r_type)
 {
   //RX processing for ue-specific resources (i
@@ -532,7 +593,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
 
   //ignore the PMCH part only do the generate PSS/SSS, note: Seperate MIB from here
-  //common_signal_procedures(eNB,proc);
+  NB_common_signal_procedures(eNB,proc);
 
   while(!oai_exit)
     {

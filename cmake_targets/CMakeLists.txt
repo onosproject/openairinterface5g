@@ -975,6 +975,10 @@ set(PHY_SRC
   # depend on code generation from asn1c
   ${RRC_FULL_DIR}/asn1_constants.h
   # actual source
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/npss_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/nsss_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pilots_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/npbch_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pss.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/sss.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pilots.c

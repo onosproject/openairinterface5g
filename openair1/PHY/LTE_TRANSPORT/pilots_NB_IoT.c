@@ -13,16 +13,17 @@
 */
 
 #include "PHY/defs.h"
+#include "PHY/defs_nb_iot.h"
 
 void generate_pilots_NB_IoT(PHY_VARS_eNB *phy_vars_eNB,
                      int32_t **txdataF,
                      int16_t amp,
                      uint16_t Ntti, 					// Ntti = 10
 					 unsigned short RB_IoT_ID,			// RB reserved for NB-IoT
-					 unsigned short With_NSSS;) 		// With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
+					 unsigned short With_NSSS) 		// With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
 {
 
-  LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->lte_frame_parms;
+  LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->frame_parms;
 
   uint32_t tti,tti_offset,slot_offset,Nsymb,samples_per_symbol;
   uint8_t first_pilot,second_pilot;
