@@ -34,6 +34,59 @@
 #include "PHY/defs_nb_iot.h"
 #include <math.h>
 
+//NPSS
+
+int generate_npss_NB_IoT(int32_t **txdataF,
+                  short amp,
+                  LTE_DL_FRAME_PARMS *frame_parms,
+                  unsigned short symbol_offset,          // symbol_offset should equal to 3 for NB-IoT 
+                  unsigned short slot_offset,
+                  unsigned short RB_IoT_ID);             // new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
+
+//NSSS
+
+int generate_sss_NB_IoT(int32_t **txdataF,
+                  int16_t amp,
+                  LTE_DL_FRAME_PARMS *frame_parms, 
+                  uint16_t symbol_offset,             // symbol_offset = 3 for NB-IoT 
+                  uint16_t slot_offset, 
+                  unsigned short frame_number,        // new attribute (Get value from higher layer), it does not exist for LTE
+                  unsigned short RB_IoT_ID);          // new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
+
+//NRS
+
+void generate_pilots_NB_IoT(PHY_VARS_eNB *phy_vars_eNB,
+                     int32_t **txdataF,
+                     int16_t amp,
+                     uint16_t Ntti,                // Ntti = 10
+                unsigned short RB_IoT_ID,       // RB reserved for NB-IoT
+                unsigned short With_NSSS);      // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
+
+
+//NPBCH
+
+int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
+                            int32_t **txdataF,
+                            uint32_t *jj,
+                            uint32_t symbol_offset,
+                            uint8_t *x0,
+                            uint8_t pilots,
+                            int16_t amp,
+                     unsigned short id_offset,
+                            uint32_t *re_allocated);
+
+int generate_npbch(NB_IoT_eNB_NPBCH *eNB_npbch,
+                  int32_t **txdataF,
+                  int amp,
+                  LTE_DL_FRAME_PARMS *frame_parms,
+                  uint8_t *npbch_pdu,
+                  uint8_t frame_mod64,
+              unsigned short NB_IoT_RB_ID);
+
+void npbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
+                     uint8_t *npbch_e,
+                     uint32_t length);
+
 // Functions below implement 36-211 and 36-212
 
 /*Function to pack the DCI*/

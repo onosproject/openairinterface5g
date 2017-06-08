@@ -14,8 +14,10 @@
 
 
 #include "PHY/defs.h"
+#include "PHY/defs_nb_iot.h"
 #include "defs.h"
 #include "PHY/extern.h"
+#include "nsss_NB_IoT.h"
 
 int generate_sss_NB_IoT(int32_t **txdataF,
 						int16_t amp,
@@ -27,7 +29,6 @@ int generate_sss_NB_IoT(int32_t **txdataF,
 {
 	uint8_t aa,Nid_NB_IoT,Nid2,f,q,s,c,u;
 	int16_t *d;
-	uint8_t Nid2;
 	uint16_t n_f;
 	unsigned short a;
 	uint16_t slot_id;  						// slot_id = 17 in NB_IoT
@@ -109,9 +110,9 @@ int generate_sss_NB_IoT(int32_t **txdataF,
 
 		if(RB_IoT_ID < (frame_parms->N_RB_DL/2))
 		{
-			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(ceil(frame_parms->N_RB_DL/(float)2)));
+			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		} else {
-			NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(ceil(frame_parms->N_RB_DL/(float)2)));
+			NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		}
 		// For the In-band or Stand-alone case the REs of NPSS signal have the same positions
 		for (s=0; s<11; s++ ) 								// loop on OFDM symbols
