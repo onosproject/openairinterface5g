@@ -641,7 +641,7 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13 =configuration->npusch_threeTone_CyclicShift_r13[CC_id];
   sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13 = configuration->npusch_sixTone_CyclicShift_r13[CC_id];
 
-  /*
+  /*OPTIONAL
     * threeTone_BaseSequence_r13
     * sixTone_BaseSequence_r13
     * twelveTone_BaseSequence_r13
@@ -679,8 +679,6 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   sib2_NB->ue_TimersAndConstants_r13.n311_r13 = configuration-> ue_TimersAndConstants_n311_NB[CC_id];
 
  /*FIXME:static assignment will be not used
-
-
 
   	//RACH-Config-NB-IoT
   	//no numberOfRA_Preambles

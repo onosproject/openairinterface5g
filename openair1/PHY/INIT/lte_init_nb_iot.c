@@ -227,6 +227,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 //		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_StartSF_CSS_RA
 //		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_NumRepetitions_RA
 //		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_Offset_RA
+//		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->maxNumPreambleAttemptCE
 
 	  }
 

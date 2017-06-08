@@ -111,7 +111,7 @@ typedef struct{
 	/*OAI config. parameters*/
 	module_id_t mod_id;
 	int CC_id;
-	int rnti;
+	uint16_t rnti;
 	int get_MIB; //should be different from 0 only when the mib!= null (NB_rrc_mac_config_req_eNB)
 	int get_COMMON;
 	int get_DEDICATED;
@@ -341,7 +341,7 @@ void schedule_response(Sched_Rsp_t Sched_INFO);
 /*Interface for PHY Configuration
  * Trigger the phy_config_xxx functions using parameters from the shared PHY_Config structure
  * */
-void PHY_config_req(PHY_Config_t config_INFO);
+void PHY_config_req(PHY_Config_t* config_INFO);
 
 
 #endif

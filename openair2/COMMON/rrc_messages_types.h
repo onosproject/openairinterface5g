@@ -230,11 +230,6 @@ typedef struct RrcConfigurationReq_s {
   BOOLEAN_t				  npusch_groupHoppingEnabled[MAX_NUM_CCs];
   long					  npusch_groupAssignmentNPUSCH_r13[MAX_NUM_CCs];
 
-   /*NPUCCH
-   * all data are sent over the NPUSCH. This includes also the UL control information (UCI), which is transmitted using a different format.
-   * Consequently there is no equivalent to the PUCCH of LTE in NB-IoT.
-   */
-
   //DL_GapConfig
   long					  dl_GapThreshold_NB[MAX_NUM_CCs];
   long	 				  dl_GapPeriodicity_NB[MAX_NUM_CCs];

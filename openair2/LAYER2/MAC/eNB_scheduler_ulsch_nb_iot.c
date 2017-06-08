@@ -64,10 +64,6 @@
 #define ENABLE_MAC_PAYLOAD_DEBUG
 #define DEBUG_eNB_SCHEDULER 1
 
-// This table holds the allowable PRB sizes for ULSCH transmissions
-uint8_t rb_table[33] = {1,2,3,4,5,6,8,9,10,12,15,16,18,20,24,25,27,30,32,36,40,45,48,50,54,60,72,75,80,81,90,96,100};
-
-
 
 void NB_rx_sdu(const module_id_t enb_mod_idP,
 	    const int         CC_idP,

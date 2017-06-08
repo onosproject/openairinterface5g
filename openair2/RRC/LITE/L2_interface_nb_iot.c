@@ -115,7 +115,7 @@ extern void rlc_am_init_timer_poll_retransmit(
 int NB_rrc_mac_config_req_eNB(
 			   module_id_t       				Mod_idP,
 			   int                              CC_idP,
-			   int								rntiP, //FIXME: Raymond bug
+			   int								rntiP,
 			   int                              physCellId,
 			   int                              p_eNB, //number of eNB TX antenna ports
 			   int                              Ncp,
@@ -137,22 +137,26 @@ int NB_rrc_mac_config_req_eNB(
 			   LogicalChannelConfig_NB_r13_t          *logicalChannelConfig //FIXME: decide how to use it
 			   )
 {
+   //no ul_Bandwidth
 
-	//------------
-	PHY_Config_t *config_INFO;
-	//------------
+  //------------
+  PHY_Config_t *config_INFO; //TODO should be seen as a global variable
+  //------------
 
   int UE_id = -1;
   //eNB_MAC_INST_NB *eNB = &eNB_mac_inst_NB[Mod_idP];
   //UE_list_NB_t *UE_list= &eNB_mac_inst_NB->UE_list;
+  UE_id = find_UE_id(Mod_idP, rntiP);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
-
-  UE_id = find_UE_id(Mod_idP, rntiP);
 
   config_INFO->get_MIB = 0;
   config_INFO->get_COMMON = 0;
   config_INFO->get_DEDICATED = 0;
+
+  config_INFO->mod_id = Mod_idP;
+  config_INFO->CC_id = CC_idP;
+
 
   if (mib_NB!=NULL) {
 
@@ -184,8 +188,6 @@ int NB_rrc_mac_config_req_eNB(
      */
 
     config_INFO->get_MIB = 1;
-    config_INFO->mod_id = Mod_idP;
-    config_INFO->CC_id = CC_idP;
     config_INFO->rnti = rntiP;
     config_INFO->frequency_band_indicator = (uint8_t)eutra_band;
     config_INFO->sch_config.physical_cell_id = physCellId;
@@ -214,7 +216,7 @@ int NB_rrc_mac_config_req_eNB(
     	break;
     }
 
-    //PHY_config_req(config_INFO);
+    PHY_config_req(config_INFO); //for trigger the NB_phy_config_mib_eNB()
 
    // mac_init_cell_params(Mod_idP,CC_idP); //TODO MP: to be defined in MAC/main.c (in the old implementation was inside the mac_top_init but raymond have separated
   }
@@ -236,23 +238,18 @@ int NB_rrc_mac_config_req_eNB(
 
       if (ul_CarrierFreq>0) eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].ul_CarrierFreq   = ul_CarrierFreq;
 
-      //no ul_Bandwidth
-
-//     NB_phy_config_sib2_eNB(
-//    		  Mod_idP,
-//    		  CC_idP,
-//			  radioResourceConfigCommon,
-//			  NULL //ul_carrier_frequency
-//			  );
 
       /*
        * Following the FAPI like approach:
        * 1)fill the PHY_Config_t structure (PHY_INTERFACE/IF_Module_nb_iot.h)
        * 1.1) check for how many NPRACH resources has been set and enable the corresponding parameter
+       * 1.2)fill the structure PHY_Config_t (shared structure of the IF_Module
        * 2)Call the PHY_config_req for trigger the NB_phy_config_sib2_eNB()
        */
 
       /*NPRACH Resources*/
+
+      NPRACH_Parameters_NB_r13_t* nprach_parameter;
 
 	  config_INFO->nb_iot_config.nprach_config_0_enabled = 0;
 	  config_INFO->nb_iot_config.nprach_config_1_enabled = 0;
@@ -263,27 +260,133 @@ int NB_rrc_mac_config_req_eNB(
       case 0:
     	  break;
       case 1:
+    	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[0];
     	  config_INFO->nb_iot_config.nprach_config_0_enabled = 1;
+    	  config_INFO->nb_iot_config.nprach_config_0_cp_length = radioResourceConfigCommon->nprach_Config_r13.nprach_CP_Length_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_sf_periodicity = nprach_parameter->nprach_Periodicity_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_start_time = nprach_parameter->nprach_StartTime_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_subcarrier_offset = nprach_parameter->nprach_SubcarrierOffset_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_number_of_subcarriers = nprach_parameter->nprach_NumSubcarriers_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_number_of_repetitions_per_attempts = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
+    	  //MP: missed configuration for FAPI-style structure
+    	   //nprach_SubcarrierMSG3_RangeStart_r13
+    	   //maxNumPreambleAttemptCE_r13
+    	   //npdcch_NumRepetitions_RA_r13
+    	   //npdcch_StartSF_CSS_RA_r13
+    	   //npdcch_Offset_RA_r13
+    	  //rsrp_ThresholdsPrachInfoList_r13
+
     	  break;
       case 2:
+    	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[0];
     	  config_INFO->nb_iot_config.nprach_config_0_enabled = 1;
+    	  config_INFO->nb_iot_config.nprach_config_0_cp_length = radioResourceConfigCommon->nprach_Config_r13.nprach_CP_Length_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_sf_periodicity = nprach_parameter->nprach_Periodicity_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_start_time = nprach_parameter->nprach_StartTime_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_subcarrier_offset = nprach_parameter->nprach_SubcarrierOffset_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_number_of_subcarriers = nprach_parameter->nprach_NumSubcarriers_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_number_of_repetitions_per_attempts = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
+    	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[1];
     	  config_INFO->nb_iot_config.nprach_config_1_enabled = 1;
+    	  config_INFO->nb_iot_config.nprach_config_1_cp_length = radioResourceConfigCommon->nprach_Config_r13.nprach_CP_Length_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_sf_periodicity = nprach_parameter->nprach_Periodicity_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_start_time = nprach_parameter->nprach_StartTime_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_subcarrier_offset = nprach_parameter->nprach_SubcarrierOffset_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_number_of_subcarriers = nprach_parameter->nprach_NumSubcarriers_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_number_of_repetitions_per_attempts = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
     	  break;
       case 3:
+    	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[0];
     	  config_INFO->nb_iot_config.nprach_config_0_enabled = 1;
+    	  config_INFO->nb_iot_config.nprach_config_0_cp_length = radioResourceConfigCommon->nprach_Config_r13.nprach_CP_Length_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_sf_periodicity = nprach_parameter->nprach_Periodicity_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_start_time = nprach_parameter->nprach_StartTime_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_subcarrier_offset = nprach_parameter->nprach_SubcarrierOffset_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_number_of_subcarriers = nprach_parameter->nprach_NumSubcarriers_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_number_of_repetitions_per_attempts = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
+    	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[1];
     	  config_INFO->nb_iot_config.nprach_config_1_enabled = 1;
+    	  config_INFO->nb_iot_config.nprach_config_1_cp_length = radioResourceConfigCommon->nprach_Config_r13.nprach_CP_Length_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_sf_periodicity = nprach_parameter->nprach_Periodicity_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_start_time = nprach_parameter->nprach_StartTime_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_subcarrier_offset = nprach_parameter->nprach_SubcarrierOffset_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_number_of_subcarriers = nprach_parameter->nprach_NumSubcarriers_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_number_of_repetitions_per_attempts = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
+    	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[2];
     	  config_INFO->nb_iot_config.nprach_config_2_enabled = 1;
+    	  config_INFO->nb_iot_config.nprach_config_2_cp_length = radioResourceConfigCommon->nprach_Config_r13.nprach_CP_Length_r13;
+    	  config_INFO->nb_iot_config.nprach_config_2_sf_periodicity = nprach_parameter->nprach_Periodicity_r13;
+    	  config_INFO->nb_iot_config.nprach_config_2_start_time = nprach_parameter->nprach_StartTime_r13;
+    	  config_INFO->nb_iot_config.nprach_config_2_subcarrier_offset = nprach_parameter->nprach_SubcarrierOffset_r13;
+    	  config_INFO->nb_iot_config.nprach_config_2_number_of_subcarriers = nprach_parameter->nprach_NumSubcarriers_r13;
+    	  config_INFO->nb_iot_config.nprach_config_2_number_of_repetitions_per_attempts = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
     	  break;
       default:
     	  LOG_E(RRC,"NB_rrc_mac_config_req_eNB: nprach_ParametersList size not valid\n");
 
       }
 
-      config_INFO->nb_iot_config;
+      /*NPDSCH ConfigCommon*/
 
-      //PHY_config_req(config_INFO);
+      //FIXME: MP: FAPI specs define a range of value [0-255]==[0db - 63.75db] with 0.25db step -- corrispondence in 3GPP specs???
+      config_INFO->rf_config.reference_signal_power = radioResourceConfigCommon->npdsch_ConfigCommon_r13.nrs_Power_r13;
+
+      /*NPUSCH ConfigCommon*/
+
+      	  /* OPTIONAL */
+      if(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13 != NULL)
+      {
+    	  /* OPTIONAL */
+    	  if(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_BaseSequence_r13!= NULL)
+    		  config_INFO->nb_iot_config.three_tone_base_sequence  = *(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_BaseSequence_r13);
+    	  /* OPTIONAL */
+    	  if(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_BaseSequence_r13!= NULL)
+    		  config_INFO->nb_iot_config.six_tone_base_sequence = *(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_BaseSequence_r13);
+    	  /* OPTIONAL */
+		  if(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->twelveTone_BaseSequence_r13!= NULL)
+			  config_INFO->nb_iot_config.twelve_tone_base_sequence = *(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->twelveTone_BaseSequence_r13);
+
+		  config_INFO->nb_iot_config.three_tone_cyclic_shift = radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13;
+		  config_INFO->nb_iot_config.six_tone_cyclic_shift = radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13;
+      }
+
+      //Some missed parameters are in UL_CONFIG.request message (P7) in FAPI specs. and not configured through P5 procedure
+	   //ack_NACK_NumRepetitions_Msg4_r13
+	   //srs_SubframeConfig_r13 /* OPTIONAL */
+	   //ul_ReferenceSignalsNPUSCH_r13 - groupHoppingEnabled_r13, groupAssignmentNPUSCH_r13
+
+	  /*DL GAP config*/ /* OPTIONAL */
+
+      if(radioResourceConfigCommon->dl_Gap_r13 !=NULL)
+      {
+    	  config_INFO->nb_iot_config.dl_gap_config_enable = 1;
+    	  config_INFO->nb_iot_config.dl_gap_threshold = radioResourceConfigCommon->dl_Gap_r13->dl_GapThreshold_r13;
+		  config_INFO->nb_iot_config.dl_gap_duration_coefficent = radioResourceConfigCommon->dl_Gap_r13->dl_GapDurationCoeff_r13;
+		  config_INFO->nb_iot_config.dl_gap_periodicity = radioResourceConfigCommon->dl_Gap_r13->dl_GapPeriodicity_r13;
+      }
+      else
+    	  config_INFO->nb_iot_config.dl_gap_config_enable = 0;
 
 
+	  /*UL Power Control ConfigCommon*/
+      //nothing defined in FAPI specs
+
+	  /*RACH Config Common*/
+      //nothing defined in FAPI specs
+
+      PHY_config_req(config_INFO); //for trigger NB_phy_config_sib2_eNB ()
+
+      //     NB_phy_config_sib2_eNB(
+      //    		  Mod_idP,
+      //    		  CC_idP,
+      //			  radioResourceConfigCommon
+      //			  );
 
   }
 
@@ -297,9 +400,6 @@ int NB_rrc_mac_config_req_eNB(
   }
 
 
-  ///mac_mainConfig not needed for the eNB side but only for UE
-
-
   if (physicalConfigDedicated != NULL) {
 
     if (UE_id == -1)
@@ -307,11 +407,16 @@ int NB_rrc_mac_config_req_eNB(
     else
     {
     	config_INFO->get_DEDICATED = 1;
-    	NB_phy_config_dedicated_eNB(
-    								Mod_idP,
-									CC_idP,
-									UE_RNTI(Mod_idP, UE_id),
-									physicalConfigDedicated);
+    	config_INFO->rnti = UE_RNTI(Mod_idP, UE_id);
+    	config_INFO->phy_config_dedicated = physicalConfigDedicated;
+
+    	PHY_config_req(config_INFO); // for trigger NB_phy_config_dedicated_eNB()
+
+//    	NB_phy_config_dedicated_eNB(
+//    								Mod_idP,
+//									CC_idP,
+//									UE_RNTI(Mod_idP, UE_id),
+//									physicalConfigDedicated);
     }
   }
 
