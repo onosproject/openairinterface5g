@@ -226,4 +226,13 @@ typedef struct {
 
 } NB_DL_FRAME_PARMS;
 
+#define NPBCH_A 34 
+
+typedef struct {
+  uint8_t npbch_d[96+(3*(16+NPBCH_A))];
+  uint8_t npbch_w[3*3*(16+NPBCH_A)];
+  uint8_t npbch_e[1600];
+} NB_IoT_eNB_NPBCH;
+
+
 #endif
