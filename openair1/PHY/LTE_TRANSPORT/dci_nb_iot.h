@@ -35,7 +35,7 @@
 #include <stdint.h>
 #endif
 
-typedef enum DCI_format_NB
+typedef enum 
 {
   DCIFormatN0 = 0,
   DCIFormatN1,
@@ -43,7 +43,7 @@ typedef enum DCI_format_NB
   DCIFormatN1_RAR,
   DCIFormatN2_Ind,
   DCIFormatN2_Pag,
-}e_DCI_format_NB;
+}DCI_format_NB_t;
 
 ///  DCI Format Type 0 (180 kHz, 23 bits)
 struct DCIFormatN0{
@@ -68,7 +68,6 @@ struct DCIFormatN0{
 };
 
 typedef struct DCIFormatN0 DCIFormatN0_t;
-#define sizeof_DDCIFormatN0_t 23
 
 ///  DCI Format Type N1 for User data
 struct DCIFormatN1{
@@ -94,7 +93,6 @@ struct DCIFormatN1{
 
 
 typedef struct DCIFormatN1 DCIFormatN1_t;
-#define sizeof_DCIFormatN1_t 23
 
 ///  DCI Format Type N1 for initial RA
 struct DCIFormatN1_RA{
@@ -111,7 +109,6 @@ struct DCIFormatN1_RA{
 };
 
 typedef struct DCIFormatN1_RA DCIFormatN1_RA_t;
-#define sizeof_DCIFormatN1_RA_t 23
 
 ///  DCI Format Type N1 for RAR
 struct DCIFormatN1_RAR{
@@ -134,7 +131,6 @@ struct DCIFormatN1_RAR{
 };
 
 typedef struct DCIFormatN1_RAR DCIFormatN1_RAR_t;
-#define sizeof_DCIFormatN1_RAR_t 23
 
 //  DCI Format Type N2 for direct indication, 15 bits
 struct DCIFormatN2_Ind{
@@ -147,7 +143,6 @@ struct DCIFormatN2_Ind{
 };
 
 typedef struct DCIFormatN2_Ind DCIFormatN2_Ind_t;
-#define sizeof_DCIFormatN2_Ind_t 15
 
 //  DCI Format Type N2 for Paging, 15 bits
 struct DCIFormatN2_Pag{
@@ -164,9 +159,8 @@ struct DCIFormatN2_Pag{
 };
 
 typedef struct DCIFormatN2_Pag DCIFormatN2_Pag_t;
-#define sizeof_DCIFormatN2_Pag_t 15
 
- typedef union DCI_CONTENT {
+typedef union DCI_CONTENT {
  // 
  DCIFormatN0_t DCIN0;
  //
@@ -181,3 +175,105 @@ typedef struct DCIFormatN2_Pag DCIFormatN2_Pag_t;
  DCIFormatN2_Pag_t DCIN2_Pag;
 
  }DCI_CONTENT;
+
+ /*Structure for packing*/
+
+ struct DCIN0{
+  /// DCI subframe repetition Number, 2 bits
+  uint8_t DCIRep:2;
+  /// New Data Indicator, 1 bits
+  uint8_t ndi:1;
+  /// Repetition Number, 3 bits
+  uint8_t RepNum:3;
+  /// Redundancy version for HARQ (only use 0 and 2), 1 bits
+  uint8_t rv:1;
+  /// Modulation and Coding Scheme, 4 bits
+  uint8_t mcs:4;
+  /// Scheduling Delay, 2 bits
+  uint8_t Scheddly:2;
+  /// Resourse Assignment (RU Assignment), 3 bits
+  uint8_t ResAssign:3;
+  /// Subcarrier indication, 6 bits
+  uint8_t scind:6;
+  /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
+  uint8_t type:1;
+ } __attribute__ ((__packed__));
+
+ typedef struct DCIN0 DCIN0_t;
+#define sizeof_DCIN0_t 23
+
+struct DCIN1_RAR{
+  // Reserved 5 bits like payload
+  uint8_t Reserved:5;
+  // DCI subframe repetition Number, 2 bits
+  uint8_t DCIRep:2;
+  // Repetition Number, 4 bits
+  uint8_t RepNum:4;
+  // Modulation and Coding Scheme, 4 bits
+  uint8_t mcs:4;
+  // Resourse Assignment (RU Assignment), 3 bits
+  uint8_t ResAssign:3;
+  // Scheduling Delay, 3 bits
+  uint8_t Scheddly:3;
+  //NPDCCH order indicator (set to 0),1 bits
+  uint8_t orderIndicator:1;
+  /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
+  uint8_t type:1;
+ } __attribute__ ((__packed__));
+
+ typedef struct DCIN1_RAR DCIN1_RAR_t;
+#define sizeof_DCIN1_RAR_t 23
+
+struct DCIN1{
+  // DCI subframe repetition Number, 2 bits
+  uint8_t DCIRep:2;
+  // HARQ-ACK resource,4 bits
+  uint8_t HARQackRes:4; 
+  // New Data Indicator,1 bits
+  uint8_t ndi:1;
+  // Repetition Number, 4 bits
+  uint8_t RepNum:4;
+  // Modulation and Coding Scheme, 4 bits
+  uint8_t mcs:4;
+  // Resourse Assignment (RU Assignment), 3 bits
+  uint8_t ResAssign:3;
+  // Scheduling Delay, 3 bits
+  uint8_t Scheddly:3;
+  //NPDCCH order indicator (set to 0),1 bits
+  uint8_t orderIndicator:1;
+  /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
+  uint8_t type:1;
+ } __attribute__ ((__packed__));
+
+ typedef struct DCIN1 DCIN1_t;
+#define sizeof_DCIN1_t 23
+
+//  DCI Format Type N2 for direct indication, 15 bits
+struct DCIN2_Ind{
+  // Reserved information bits, 6 bits
+  uint8_t resInfoBits:6;
+  //Direct indication information, 8 bits
+  uint8_t directIndInf:8;
+  //Flag for paging(1)/direct indication(0), set to 0,1 bits
+  uint8_t type:1;
+} __attribute__ ((__packed__));;
+
+typedef struct DCIN2_Ind DCIN2_Ind_t;
+#define sizeof_DCIN2_Ind_t 15
+
+//  DCI Format Type N2 for Paging, 15 bits
+struct DCIN2_Pag{
+  // Reserved 3 bits
+  uint8_t DCIRep:3;
+  // Repetition Number, 4 bits
+  uint8_t RepNum:4;
+  // Modulation and Coding Scheme, 4 bits
+  uint8_t mcs:4;
+  // Resourse Assignment (RU Assignment), 3 bits
+  uint8_t ResAssign:3;
+  //Flag for paging(1)/direct indication(0), set to 1,1 bits
+  uint8_t type:1;
+} __attribute__ ((__packed__));;
+
+typedef struct DCIN2_Pag DCIN2_Pag_t;
+#define sizeof_DCIN2_Pag_t 15

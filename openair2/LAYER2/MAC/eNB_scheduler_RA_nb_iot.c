@@ -55,7 +55,7 @@
 #include "proto_nb_iot.h"
 #include "defs_nb_iot.h"
 #include "math.h"
-#include "openair1/PHY/LTE_TRANSPORT/dci_nb_iot.h"
+//#include "openair1/PHY/LTE_TRANSPORT/dci_nb_iot.h"
 //#include "LAYER2/MAC/pre_processor.c"
 #include "pdcp.h"
 

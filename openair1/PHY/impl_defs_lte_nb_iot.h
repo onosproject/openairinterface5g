@@ -30,7 +30,8 @@
 * \warning
 */
 
-
+#ifndef __PHY_IMPL_DEFS_NB_IOT__H__
+#define __PHY_IMPL_DEFS_NB_IOT__H__
 
 #include "types.h"
 //#include "defs.h"
@@ -47,27 +48,31 @@
 
 
 /// NPRACH-ParametersList-NB-r13 from 36.331 RRC spec
-typedef struct {
+typedef struct NPRACH_Parameters_NB{
   /// the period time for nprach
-  uint8_t nprach_Periodicity;
+  uint16_t nprach_Periodicity;
   /// for the start time for the NPRACH resource from 40ms-2560ms
-  uint8_t nprach_StartTime;	
+  uint16_t nprach_StartTime;
   /// for the subcarrier of set to the NPRACH preamble from n0 - n34
-  uint8_t nprach_SubcarrierOffset;
+  uint16_t nprach_SubcarrierOffset;
+  ///number of subcarriers in a NPRACH resource allowed values (n12,n24,n36,n48)
+  uint16_t nprach_NumSubcarriers;
   /// where is the region that in NPRACH resource to indicate if this UE support MSG3 for multi-tone or not. from 0 - 1
-  uint8_t nprach_SubcarrierMSG3_RangeStart;
+  uint16_t nprach_SubcarrierMSG3_RangeStart;
   /// The max preamble transmission attempt for the CE level from 1 - 128
-  uint8_t maxNumPreambleAttemptCE;
+  uint16_t maxNumPreambleAttemptCE;
+  /// Number of NPRACH repetitions per attempt for each NPRACH resource
+  uint16_t numRepetitionsPerPreambleAttempt;
   /// The number of the repetition for DCI use in RAR/MSG3/MSG4 from 1 - 2048
-  uint8_t npdcch_NumRepetitions_RA;
+  uint16_t npdcch_NumRepetitions_RA;
   /// Starting subframe for NPDCCH Common searching space for (RAR/MSG3/MSG4)
-  uint8_t npdcch_StartSF_CSS_RA;
+  uint16_t npdcch_StartSF_CSS_RA;
   /// Fractional period offset of starting subframe for NPDCCH common search space
-  uint8_t npdcch_Offset_RA;
+  uint16_t npdcch_Offset_RA;
 } nprach_parameters_NB_t;
 
 typedef struct{
-  A_SEQUENCE_OF(struct NPRACH_Parameters_NB) list;
+  A_SEQUENCE_OF(nprach_parameters_NB_t) list;
 }NPRACH_List_NB_t;
 
 typedef long RSRP_Range_t;
@@ -80,7 +85,7 @@ typedef struct {
 /// NPRACH_ConfigSIB-NB from 36.331 RRC spec
 typedef struct {
   /// nprach_CP_Length_r13, for the CP length(unit us) only 66.7 and 266.7 is implemented
-  uint8_t nprach_CP_Length;
+  uint16_t nprach_CP_Length;
   /// The criterion for UEs to select a NPRACH resource. Up to 2 RSRP threshold values can be signalled.  \vr{[1..2]}
   struct rsrp_ThresholdsNPrachInfoList *rsrp_ThresholdsPrachInfoList;
   /// NPRACH Parameters List
@@ -90,20 +95,20 @@ typedef struct {
 /// NPDSCH-ConfigCommon from 36.331 RRC spec
 typedef struct {
   ///see TS 36.213 (16.2). \vr{[-60..50]}\n Provides the downlink reference-signal EPRE. The actual value in dBm.
-  int8_t nrs_Power;
+  uint16_t nrs_Power;
 } NPDSCH_CONFIG_COMMON;
 
 typedef struct{
   /// The base sequence of DMRS sequence in a cell for 3 tones transmission; see TS 36.211 [21, 10.1.4.1.2]. If absent, it is given by NB-IoT CellID mod 12. Value 12 is not used.
-  uint8_t threeTone_BaseSequence;
+  uint16_t threeTone_BaseSequence;
   /// Define 3 cyclic shifts for the 3-tone case, see TS 36.211 [21, 10.1.4.1.2].
-  uint8_t threeTone_CyclicShift;
+  uint16_t threeTone_CyclicShift;
   /// The base sequence of DMRS sequence in a cell for 6 tones transmission; see TS 36.211 [21, 10.1.4.1.2]. If absent, it is given by NB-IoT CellID mod 14. Value 14 is not used.
-  uint8_t sixTone_BaseSequence;
+  uint16_t sixTone_BaseSequence;
   /// Define 4 cyclic shifts for the 6-tone case, see TS 36.211 [21, 10.1.4.1.2].
-  uint8_t sixTone_CyclicShift;
+  uint16_t sixTone_CyclicShift;
   /// The base sequence of DMRS sequence in a cell for 12 tones transmission; see TS 36.211 [21, 10.1.4.1.2]. If absent, it is given by NB-IoT CellID mod 30. Value 30 is not used.
-  uint8_t twelveTone_BaseSequence;
+  uint16_t twelveTone_BaseSequence;
 
 }DMRS_CONFIG_t;
 
@@ -141,9 +146,9 @@ typedef struct{
 
 /* DL-GapConfig-NB-r13 */
 typedef struct {
-	uint8_t	 dl_GapThreshold;
-	uint8_t	 dl_GapPeriodicity;
-	uint8_t	 dl_GapDurationCoeff;
+	uint16_t	 dl_GapThreshold;
+	uint16_t	 dl_GapPeriodicity;
+	uint16_t	 dl_GapDurationCoeff;
 } DL_GapConfig_NB;
 
 typedef struct {
@@ -216,7 +221,18 @@ typedef struct {
   int                 eutra_band;
   uint32_t            dl_CarrierFreq;
   uint32_t            ul_CarrierFreq;
-  uint8_t             CE;// CE level to determine the NPRACH Configuration
+  // CE level to determine the NPRACH Configuration (one CE for each NPRACH config.)
+  uint8_t             CE;
 
 } NB_DL_FRAME_PARMS;
 
+#define NPBCH_A 34 
+
+typedef struct {
+  uint8_t npbch_d[96+(3*(16+NPBCH_A))];
+  uint8_t npbch_w[3*3*(16+NPBCH_A)];
+  uint8_t npbch_e[1600];
+} NB_IoT_eNB_NPBCH;
+
+
+#endif

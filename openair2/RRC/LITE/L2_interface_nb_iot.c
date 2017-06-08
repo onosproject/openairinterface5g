@@ -214,7 +214,7 @@ int NB_rrc_mac_config_req_eNB(
     	break;
     }
 
-    PHY_config_req(config_INFO);
+    //PHY_config_req(config_INFO);
 
    // mac_init_cell_params(Mod_idP,CC_idP); //TODO MP: to be defined in MAC/main.c (in the old implementation was inside the mac_top_init but raymond have separated
   }
@@ -264,7 +264,6 @@ int NB_rrc_mac_config_req_eNB(
     	  break;
       case 1:
     	  config_INFO->nb_iot_config.nprach_config_0_enabled = 1;
-    	  c
     	  break;
       case 2:
     	  config_INFO->nb_iot_config.nprach_config_0_enabled = 1;
@@ -280,9 +279,9 @@ int NB_rrc_mac_config_req_eNB(
 
       }
 
-      config_INFO->nb_iot_config
+      config_INFO->nb_iot_config;
 
-      PHY_config_req(config_INFO);
+      //PHY_config_req(config_INFO);
 
 
 
