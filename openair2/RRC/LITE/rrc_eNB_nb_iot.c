@@ -1715,7 +1715,7 @@ init_SI_NB(
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].physCellId,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].p_eNB,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp,
-								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->freqBandIndicator_r13,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->freqBandIndicator_r13, //eutra_band
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->freqBandInfo_r13,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->multiBandInfoList_r13,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->downlinkBitmap_r13,

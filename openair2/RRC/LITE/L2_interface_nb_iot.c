@@ -48,6 +48,7 @@
 #include "osa_defs.h"
 #include "pdcp_sequence_manager.h"
 #include "UTIL/OTG/otg_rx.h"
+#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
 
 #ifdef PHY_EMUL
 #include "SIMULATION/simulation_defs.h"
@@ -114,9 +115,9 @@ extern void rlc_am_init_timer_poll_retransmit(
 int NB_rrc_mac_config_req_eNB(
 			   module_id_t       				Mod_idP,
 			   int                              CC_idP,
-			   int								rntiP, //FIXME: Raymond bug?
+			   int								rntiP, //FIXME: Raymond bug
 			   int                              physCellId,
-			   int                              p_eNB,
+			   int                              p_eNB, //number of eNB TX antenna ports
 			   int                              Ncp,
 			   long                             eutra_band,//FIXME: frequencyBandIndicator in sib1 (is a long not an int!!)
 			   struct NS_PmaxList_NB_r13        *frequencyBandInfo, //optional SIB1
@@ -137,8 +138,9 @@ int NB_rrc_mac_config_req_eNB(
 			   )
 {
 
-
-  //int i;
+	//------------
+	PHY_Config_t *config_INFO;
+	//------------
 
   int UE_id = -1;
   //eNB_MAC_INST_NB *eNB = &eNB_mac_inst_NB[Mod_idP];
@@ -148,11 +150,15 @@ int NB_rrc_mac_config_req_eNB(
 
   UE_id = find_UE_id(Mod_idP, rntiP);
 
+  config_INFO->get_MIB = 0;
+  config_INFO->get_COMMON = 0;
+  config_INFO->get_DEDICATED = 0;
 
   if (mib_NB!=NULL) {
-    //if (eNB_mac_inst == NULL) l2_init_eNB(); //XXX MP: to be included in the MAC/main.c
 
-   // mac_top_init_eNB(); //XXX MP:  to be included in the MAC/main.c
+   //if(eNB_mac_inst == NULL) l2_init_eNB(); //TODO MP: to be included in the MAC/main.c
+
+   //mac_top_init_eNB(); //TODO MP:  to be included in the MAC/main.c
 
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].mib_NB           = mib_NB;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].physCellId     = physCellId;
@@ -161,22 +167,63 @@ int NB_rrc_mac_config_req_eNB(
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].eutra_band     = eutra_band;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].dl_CarrierFreq = dl_CarrierFreq;
 
-  NB_phy_config_mib_eNB(Mod_idP,
-		  	  	  	  	CC_idP,
-						eutra_band,
-						physCellId,
-						Ncp,
-						p_eNB,
-						dl_CarrierFreq,
-						ul_CarrierFreq);
-				  //mib_NB->message.operationModeInfo_r13);
+//  NB_phy_config_mib_eNB(Mod_idP,
+//		  	  	  	  	CC_idP,
+//						eutra_band,
+//						physCellId,
+//						Ncp,
+//						p_eNB,
+//						dl_CarrierFreq,
+//						ul_CarrierFreq);
+//				  //mib_NB->message.operationModeInfo_r13); XXX check if needed or not
 
-   // mac_init_cell_params(Mod_idP,CC_idP); //XXX to be defined in MAC/main.c
+    /*
+     * Following the FAPI like approach:
+     * 1)fill the PHY_Config_t structure (PHY_INTERFACE/IF_Module_nb_iot.h)
+     * 2)Call the PHY_config_req for trigger the NB_phy_config_mib_eNB()
+     */
+
+    config_INFO->get_MIB = 1;
+    config_INFO->mod_id = Mod_idP;
+    config_INFO->CC_id = CC_idP;
+    config_INFO->rnti = rntiP;
+    config_INFO->frequency_band_indicator = (uint8_t)eutra_band;
+    config_INFO->sch_config.physical_cell_id = physCellId;
+    config_INFO->subframe_config.dl_cyclic_prefix_type = Ncp;
+    config_INFO->rf_config.tx_antenna_ports = p_eNB;
+    config_INFO->dl_CarrierFreq = dl_CarrierFreq;
+    config_INFO->ul_CarrierFreq = ul_CarrierFreq;
+
+    switch (mib_NB->message.operationModeInfo_r13.present)
+    {
+    //FAPI specs pag 135
+    case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13:
+		config_INFO->nb_iot_config.operating_mode = 0;
+		break;
+    case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_DifferentPCI_r13:
+    	config_INFO->nb_iot_config.operating_mode = 1;
+    	break;
+    case MasterInformationBlock_NB__operationModeInfo_r13_PR_guardband_r13:
+    	config_INFO->nb_iot_config.operating_mode = 2;
+    	break;
+    case MasterInformationBlock_NB__operationModeInfo_r13_PR_standalone_r13:
+    	config_INFO->nb_iot_config.operating_mode = 3;
+    	break;
+    default:
+    	LOG_E(RRC, "NB_rrc_mac_config_req_eNB: NB-IoT operating Mode (MIB-NB) not valid\n");
+    	break;
+    }
+
+    PHY_config_req(config_INFO);
+
+   // mac_init_cell_params(Mod_idP,CC_idP); //TODO MP: to be defined in MAC/main.c (in the old implementation was inside the mac_top_init but raymond have separated
   }
 
-  //phy_config_sib1_eNB--> not implemented for NB_IoT
 
   if (radioResourceConfigCommon!=NULL) {
+
+	  config_INFO->get_COMMON = 1;
+
       LOG_I(MAC,"[CONFIG]SIB2/3-NB Contents (partial)\n");
 
       LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13= %ld\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13);
@@ -191,12 +238,52 @@ int NB_rrc_mac_config_req_eNB(
 
       //no ul_Bandwidth
 
-     NB_phy_config_sib2_eNB(
-    		  Mod_idP,
-    		  CC_idP,
-			  radioResourceConfigCommon,
-			  NULL //ul_carrier_frequency
-			  );
+//     NB_phy_config_sib2_eNB(
+//    		  Mod_idP,
+//    		  CC_idP,
+//			  radioResourceConfigCommon,
+//			  NULL //ul_carrier_frequency
+//			  );
+
+      /*
+       * Following the FAPI like approach:
+       * 1)fill the PHY_Config_t structure (PHY_INTERFACE/IF_Module_nb_iot.h)
+       * 1.1) check for how many NPRACH resources has been set and enable the corresponding parameter
+       * 2)Call the PHY_config_req for trigger the NB_phy_config_sib2_eNB()
+       */
+
+      /*NPRACH Resources*/
+
+	  config_INFO->nb_iot_config.nprach_config_0_enabled = 0;
+	  config_INFO->nb_iot_config.nprach_config_1_enabled = 0;
+	  config_INFO->nb_iot_config.nprach_config_2_enabled = 0;
+
+      switch(radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.size)
+      {
+      case 0:
+    	  break;
+      case 1:
+    	  config_INFO->nb_iot_config.nprach_config_0_enabled = 1;
+    	  c
+    	  break;
+      case 2:
+    	  config_INFO->nb_iot_config.nprach_config_0_enabled = 1;
+    	  config_INFO->nb_iot_config.nprach_config_1_enabled = 1;
+    	  break;
+      case 3:
+    	  config_INFO->nb_iot_config.nprach_config_0_enabled = 1;
+    	  config_INFO->nb_iot_config.nprach_config_1_enabled = 1;
+    	  config_INFO->nb_iot_config.nprach_config_2_enabled = 1;
+    	  break;
+      default:
+    	  LOG_E(RRC,"NB_rrc_mac_config_req_eNB: nprach_ParametersList size not valid\n");
+
+      }
+
+      config_INFO->nb_iot_config
+
+      PHY_config_req(config_INFO);
+
 
 
   }
@@ -215,15 +302,17 @@ int NB_rrc_mac_config_req_eNB(
 
 
   if (physicalConfigDedicated != NULL) {
+
     if (UE_id == -1)
       LOG_E(MAC,"%s:%d:%s: ERROR, UE_id == -1\n", __FILE__, __LINE__, __FUNCTION__);
     else
     {
-   NB_phy_config_dedicated_eNB(
-    		  Mod_idP,
-			  CC_idP,
-			  UE_RNTI(Mod_idP, UE_id),
-			  physicalConfigDedicated);
+    	config_INFO->get_DEDICATED = 1;
+    	NB_phy_config_dedicated_eNB(
+    								Mod_idP,
+									CC_idP,
+									UE_RNTI(Mod_idP, UE_id),
+									physicalConfigDedicated);
     }
   }
 
