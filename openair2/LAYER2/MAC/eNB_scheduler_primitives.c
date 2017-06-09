@@ -306,7 +306,7 @@ printf("MAC: new UE id %d rnti %x\n", i, rntiP);
 
 int add_new_ue_phy(module_id_t mod_idP, rnti_t rntiP){
   int ret = mac_xface->add_ue(rntiP,PHY_vars_eNB_g[mod_idP][0]);
-  return (ret > 0) ? 0: -1;
+  return (ret == -1) ? -1 : 0;
 }
 
 //------------------------------------------------------------------------------

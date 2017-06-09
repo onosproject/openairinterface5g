@@ -658,7 +658,7 @@ void phy_config_dedicated_eNB(uint8_t Mod_id,
   int8_t UE_id = find_ue(rnti,eNB);
 
   if (UE_id == -1) {
-    LOG_E( PHY, "[eNB %"PRIu8"] find_ue() returns -1\n", Mod_id);
+    LOG_E( PHY, "[eNB %"PRIu8"] find_ue() returns -1 for rnti %d\n", Mod_id, rnti);
     return;
   }
 

@@ -2876,7 +2876,6 @@ check_handovers(
       if (ue_context_p->ue_context.handover_info->state == HO_ACK /*ho_prepare == 0xF2*/) {
         MessageDef *msg;
         // Configure target
-        rrc_eNB_configure_rbs_handover(ue_context_p,ctxt_pP);
 //	 	 ue_context_p->ue_context.handover_info->ho_prepare = 0x00;
         ue_context_p->ue_context.handover_info->state = HO_CONFIGURED;
 
@@ -2884,6 +2883,8 @@ check_handovers(
 
         rrc_eNB_generate_handover_reconfiguration(ctxt_pP, ue_context_p, X2AP_HANDOVER_REQ_ACK(msg).rrc_buffer,
                 &X2AP_HANDOVER_REQ_ACK(msg).rrc_buffer_size);
+
+        rrc_eNB_configure_rbs_handover(ue_context_p,ctxt_pP);
 
         /* HACK HACK!! "works" only for one UE */
 //        memcpy(UE_rrc_inst[0].sib1[0]->cellAccessRelatedInfo.cellIdentity.buf,
@@ -2924,11 +2925,10 @@ check_handovers(
 void
 rrc_eNB_configure_rbs_handover(struct rrc_eNB_ue_context_s* ue_context_p, protocol_ctxt_t* const ctxt_pP)
 {
-  struct rrc_eNB_ue_context_s* 		  ue_source_context;
+  //struct rrc_eNB_ue_context_s* 		  ue_source_context;
   uint16_t                            Idx;
 
-return;
-
+#if 0
   ue_source_context =
     rrc_eNB_get_ue_context(
 			   &eNB_rrc_inst[ue_context_p->ue_context.handover_info->modid_s],
@@ -2950,7 +2950,10 @@ return;
 							   0);
     }
     LOG_D(RRC,"Frame: %d-Entering target: C-RNTI %x-eNB: %d-MOD_ID: %d\n",ctxt_pP->frame,ctxt_pP->rnti,ctxt_pP->eNB_index,ctxt_pP->module_id);
+#endif
+
     // E-RABS
+#if 0
     // Emulating transmission/reception (just a memory copy)
     ue_context_p->ue_context.SRB_configList =
       CALLOC(1, sizeof(*(ue_context_p->ue_context.SRB_configList)));
@@ -2973,8 +2976,31 @@ return;
     memcpy((void*)ue_context_p->ue_context.physicalConfigDedicated,
 	   (void*)ue_source_context->ue_context.handover_info->as_config.sourceRadioResourceConfig.physicalConfigDedicated,
 	   sizeof(PhysicalConfigDedicated_t));
+#endif
     
+#if 0
+  ue_context_p->ue_context.SRB_configList =
+      CALLOC(1, sizeof(*(ue_context_p->ue_context.SRB_configList)));
+
+  ue_context_p->ue_context.DRB_configList =
+      CALLOC(1, sizeof(*(ue_context_p->ue_context.DRB_configList)));
+
+  ue_context_p->ue_context.mac_MainConfig =
+      CALLOC(1, sizeof(*(ue_context_p->ue_context.mac_MainConfig)));
+
+  ue_context_p->ue_context.physicalConfigDedicated =
+      CALLOC(1, sizeof(*(ue_context_p->ue_context.physicalConfigDedicated)));
+
+    SRB_ToAddModList_t  *SRB_configList = ue_context_p->ue_context.SRB_configList;
+    long* logicalchannelgroup = NULL;
+    struct SRB_ToAddMod* SRB1_config = NULL;
+    struct SRB_ToAddMod__rlc_Config* SRB1_rlc_config = NULL;
+    struct SRB_ToAddMod__logicalChannelConfig* SRB1_lchan_config = NULL;
+    struct LogicalChannelConfig__ul_SpecificParameters* SRB1_ul_SpecificParameters = NULL;
+#endif
+
     Idx = DCCH;
+#if 1
     
     // Activate the radio bearers
     // SRB1
@@ -2988,6 +3014,8 @@ return;
     ue_context_p->ue_context.Srb2.Srb_info.Srb_id = Idx;
     memcpy(&ue_context_p->ue_context.Srb2.Srb_info.Lchan_desc[0], &DCCH_LCHAN_DESC, LCHAN_DESC_SIZE);
     memcpy(&ue_context_p->ue_context.Srb2.Srb_info.Lchan_desc[1], &DCCH_LCHAN_DESC, LCHAN_DESC_SIZE);
+#endif
+
     LOG_I(RRC, "[eNB %d] CALLING RLC CONFIG SRB1 (rbid %d) for UE %x\n",
 	  ctxt_pP->module_id, Idx, ue_context_p->ue_context.rnti);
     
@@ -3047,14 +3075,20 @@ return;
 #endif
 		       );
     
+#if 0
   }
+#endif
 }
 
 void
 rrc_eNB_target_add_ue_handover(protocol_ctxt_t* const ctxt_pP){
   // Add a new user (called during the HO procedure)
-  add_new_ue(ctxt_pP->module_id, 0, ctxt_pP->rnti, -1); // UE allocation MAC
-  add_new_ue_phy(ctxt_pP->module_id, ctxt_pP->rnti);
+  LOG_I(RRC, "rrc_eNB_target_add_ue_handover module_id %d rnti %d\n", ctxt_pP->module_id, ctxt_pP->rnti);
+  if (add_new_ue(ctxt_pP->module_id, 0, ctxt_pP->rnti, -1) == -1)// UE allocation MAC
+    { printf("%s:%d: fatal\n", __FILE__, __LINE__); abort(); }
+  if (add_new_ue_phy(ctxt_pP->module_id, ctxt_pP->rnti) == -1)
+    { printf("%s:%d: fatal\n", __FILE__, __LINE__); abort(); }
+  phy_config_ue_state_ho(ctxt_pP->module_id, 0 /*CC_idP*/, ctxt_pP->rnti);
 }
 
 void
@@ -3070,6 +3104,7 @@ rrc_eNB_generate_handover_reconfiguration(
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
 
+  uint8_t xid = rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id);   //Transaction_id,
   uint16_t                            size;
   int                                 i;
   uint8_t                             rv[2];
@@ -3084,8 +3119,12 @@ rrc_eNB_generate_handover_reconfiguration(
   struct SRB_ToAddMod__logicalChannelConfig *SRB2_lchan_config;
   struct LogicalChannelConfig__ul_SpecificParameters *SRB2_ul_SpecificParameters;
   LogicalChannelConfig_t             *SRB1_logicalChannelConfig = NULL;
-  SRB_ToAddModList_t*                 SRB_configList = ue_context_pP->ue_context.SRB_configList;    // not used in this context: may be removed
+  //SRB_ToAddModList_t*                 SRB_configList = ue_context_pP->ue_context.SRB_configList;    // not used in this context: may be removed
+  SRB_ToAddModList_t                 *SRB_configList;
   SRB_ToAddModList_t                 *SRB_configList2;
+
+  DRB_ToAddModList_t**                DRB_configList = &ue_context_pP->ue_context.DRB_configList;
+  DRB_ToAddModList_t**                DRB_configList2 = NULL;
 
   struct DRB_ToAddMod                *DRB_config;
   struct RLC_Config                  *DRB_rlc_config;
@@ -3093,7 +3132,7 @@ rrc_eNB_generate_handover_reconfiguration(
   struct PDCP_Config__rlc_UM         *PDCP_rlc_UM;
   struct LogicalChannelConfig        *DRB_lchan_config;
   struct LogicalChannelConfig__ul_SpecificParameters *DRB_ul_SpecificParameters;
-  DRB_ToAddModList_t                 *DRB_configList2;
+  //DRB_ToAddModList_t                 *DRB_configList2;
 
   MAC_MainConfig_t                   *mac_MainConfig;
   MeasObjectToAddModList_t           *MeasObj_list;
@@ -3148,6 +3187,7 @@ rrc_eNB_generate_handover_reconfiguration(
   LOG_D(RRC, "[eNB %d] Frame %d : handover reparation: add target eNB SRB1 and PHYConfigDedicated reconfiguration\n",
         ctxt_pP->module_id, ctxt_pP->frame);
   // 1st: reconfigure SRB
+  SRB_configList = CALLOC(1, sizeof(*SRB_configList));
   SRB_configList2 = CALLOC(1, sizeof(*SRB_configList));
   SRB1_config = CALLOC(1, sizeof(*SRB1_config));
   SRB1_config->srb_Identity = 1;
@@ -3186,6 +3226,9 @@ rrc_eNB_generate_handover_reconfiguration(
   SRB1_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup;
 
   ASN_SEQUENCE_ADD(&SRB_configList2->list, SRB1_config);
+  ASN_SEQUENCE_ADD(&SRB_configList->list, SRB1_config);
+
+  ue_context_pP->ue_context.SRB_configList = SRB_configList;
 
   //2nd: now reconfigure phy config dedicated
   physicalConfigDedicated2 = CALLOC(1, sizeof(*physicalConfigDedicated2));
@@ -3432,6 +3475,7 @@ rrc_eNB_generate_handover_reconfiguration(
   ASN_SEQUENCE_ADD(&SRB_configList->list, SRB2_config);
   ASN_SEQUENCE_ADD(&SRB_configList2->list, SRB2_config);
 
+#if 0
   // Configure target eNB DRB
   DRB_configList2 = CALLOC(1, sizeof(*DRB_configList2));
   /// DRB
@@ -3475,6 +3519,94 @@ rrc_eNB_generate_handover_reconfiguration(
   DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
 
   ASN_SEQUENCE_ADD(&DRB_configList2->list, DRB_config);
+#endif
+
+  // Configure DRB
+  //*DRB_configList = CALLOC(1, sizeof(*DRB_configList));
+  // list for all the configured DRB
+  if (*DRB_configList) {
+    free(*DRB_configList);
+  }
+  *DRB_configList = CALLOC(1, sizeof(**DRB_configList));
+  memset(*DRB_configList, 0, sizeof(**DRB_configList));
+
+  // list for the configured DRB for a this xid
+  DRB_configList2=&ue_context_pP->ue_context.DRB_configList2[xid];
+  if (*DRB_configList2) {
+    free(*DRB_configList2);
+  }
+  *DRB_configList2 = CALLOC(1, sizeof(**DRB_configList2));
+  memset(*DRB_configList2, 0, sizeof(**DRB_configList2));
+
+
+  /// DRB
+  DRB_config = CALLOC(1, sizeof(*DRB_config));
+
+  DRB_config->eps_BearerIdentity = CALLOC(1, sizeof(long));
+  *(DRB_config->eps_BearerIdentity) = 5L; // LW set to first value, allowed value 5..15, value : x+4
+  // DRB_config->drb_Identity = (DRB_Identity_t) 1; //allowed values 1..32
+  // NN: this is the 1st DRB for this ue, so set it to 1
+  DRB_config->drb_Identity = (DRB_Identity_t) 1;  // (ue_mod_idP+1); //allowed values 1..32, value: x
+  DRB_config->logicalChannelIdentity = CALLOC(1, sizeof(long));
+  *(DRB_config->logicalChannelIdentity) = (long)3; // value : x+2
+  DRB_rlc_config = CALLOC(1, sizeof(*DRB_rlc_config));
+  DRB_config->rlc_Config = DRB_rlc_config;
+
+#ifdef RRC_DEFAULT_RAB_IS_AM
+  DRB_rlc_config->present = RLC_Config_PR_am;
+  DRB_rlc_config->choice.am.ul_AM_RLC.t_PollRetransmit = T_PollRetransmit_ms50;
+  DRB_rlc_config->choice.am.ul_AM_RLC.pollPDU = PollPDU_p16;
+  DRB_rlc_config->choice.am.ul_AM_RLC.pollByte = PollByte_kBinfinity;
+  DRB_rlc_config->choice.am.ul_AM_RLC.maxRetxThreshold = UL_AM_RLC__maxRetxThreshold_t8;
+  DRB_rlc_config->choice.am.dl_AM_RLC.t_Reordering = T_Reordering_ms35;
+  DRB_rlc_config->choice.am.dl_AM_RLC.t_StatusProhibit = T_StatusProhibit_ms25;
+#else
+  DRB_rlc_config->present = RLC_Config_PR_um_Bi_Directional;
+  DRB_rlc_config->choice.um_Bi_Directional.ul_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
+  DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
+#ifdef CBA
+  DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.t_Reordering   = T_Reordering_ms5;//T_Reordering_ms25;
+#else
+  DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.t_Reordering = T_Reordering_ms35;
+#endif
+#endif
+
+  DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
+  DRB_config->pdcp_Config = DRB_pdcp_config;
+  DRB_pdcp_config->discardTimer = CALLOC(1, sizeof(long));
+  *DRB_pdcp_config->discardTimer = PDCP_Config__discardTimer_infinity;
+  DRB_pdcp_config->rlc_AM = NULL;
+  DRB_pdcp_config->rlc_UM = NULL;
+
+#ifdef RRC_DEFAULT_RAB_IS_AM // EXMIMO_IOT
+  PDCP_rlc_AM = CALLOC(1, sizeof(*PDCP_rlc_AM));
+  DRB_pdcp_config->rlc_AM = PDCP_rlc_AM;
+  PDCP_rlc_AM->statusReportRequired = FALSE;
+#else
+  PDCP_rlc_UM = CALLOC(1, sizeof(*PDCP_rlc_UM));
+  DRB_pdcp_config->rlc_UM = PDCP_rlc_UM;
+  PDCP_rlc_UM->pdcp_SN_Size = PDCP_Config__rlc_UM__pdcp_SN_Size_len12bits;
+#endif
+  DRB_pdcp_config->headerCompression.present = PDCP_Config__headerCompression_PR_notUsed;
+
+  DRB_lchan_config = CALLOC(1, sizeof(*DRB_lchan_config));
+  DRB_config->logicalChannelConfig = DRB_lchan_config;
+  DRB_ul_SpecificParameters = CALLOC(1, sizeof(*DRB_ul_SpecificParameters));
+  DRB_lchan_config->ul_SpecificParameters = DRB_ul_SpecificParameters;
+
+  DRB_ul_SpecificParameters->priority = 12;    // lower priority than srb1, srb2 and other dedicated bearer
+  DRB_ul_SpecificParameters->prioritisedBitRate =LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_kBps8 ;
+    //LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_infinity;
+  DRB_ul_SpecificParameters->bucketSizeDuration =
+    LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
+
+  // LCG for DTCH can take the value from 1 to 3 as defined in 36331: normally controlled by upper layers (like RRM)
+  logicalchannelgroup_drb = CALLOC(1, sizeof(long));
+  *logicalchannelgroup_drb = 1;
+  DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
+
+  ASN_SEQUENCE_ADD(&(*DRB_configList)->list, DRB_config);
+  ASN_SEQUENCE_ADD(&(*DRB_configList2)->list, DRB_config);
 
   mac_MainConfig = CALLOC(1, sizeof(*mac_MainConfig));
   ue_context_pP->ue_context.mac_MainConfig = mac_MainConfig;
@@ -3908,7 +4040,7 @@ rrc_eNB_generate_handover_reconfiguration(
   rrc_size = do_RRCConnectionReconfiguration(
            ctxt_pP,
            (unsigned char *)rrc_buf,
-           rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),   //Transaction_id,
+           xid,   //Transaction_id,
            NULL, //SRB_configList2,
            NULL, //DRB_configList2,
            NULL,  // DRB2_list,

@@ -73,11 +73,11 @@ void rx_sdu(const module_id_t enb_mod_idP,
 	    const int         harq_pidP,
 	    uint8_t          *msg3_flagP)
 {
-
+  int rnti = rntiP;
   unsigned char  rx_ces[MAX_NUM_CE],num_ce,num_sdu,i,*payload_ptr;
   unsigned char  rx_lcids[NB_RB_MAX];
   unsigned short rx_lengths[NB_RB_MAX];
-  int    UE_id = find_UE_id(enb_mod_idP,rntiP);
+  int    UE_id = find_UE_id(enb_mod_idP,rnti);
   int ii,j;
   eNB_MAC_INST *eNB = &eNB_mac_inst[enb_mod_idP];
   UE_list_t *UE_list= &eNB->UE_list;
@@ -93,12 +93,12 @@ void rx_sdu(const module_id_t enb_mod_idP,
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RX_SDU,1);
   if (opt_enabled == 1) {
-    trace_pdu(0, sduP,sdu_lenP, 0, 3, rntiP, frameP, subframeP, 0,0);
+    trace_pdu(0, sduP,sdu_lenP, 0, 3, rnti, frameP, subframeP, 0,0);
     LOG_D(OPT,"[eNB %d][ULSCH] Frame %d  rnti %x  with size %d\n",
-    		  enb_mod_idP, frameP, rntiP, sdu_lenP);
+    		  enb_mod_idP, frameP, rnti, sdu_lenP);
   }
 
-  LOG_D(MAC,"[eNB %d] CC_id %d Received ULSCH sdu from PHY (rnti %x, UE_id %d), parsing header\n",enb_mod_idP,CC_idP,rntiP,UE_id);
+  LOG_D(MAC,"[eNB %d] CC_id %d Received ULSCH sdu from PHY (rnti %x, UE_id %d), parsing header\n",enb_mod_idP,CC_idP,rnti,UE_id);
 
   if (sduP==NULL) { // we've got an error after N rounds
     UE_list->UE_sched_ctrl[UE_id].ul_scheduled       &= (~(1<<harq_pidP));
@@ -119,9 +119,9 @@ void rx_sdu(const module_id_t enb_mod_idP,
 
   payload_ptr = parse_ulsch_header(sduP,&num_ce,&num_sdu,rx_ces,rx_lcids,rx_lengths,sdu_lenP);
 
-  T(T_ENB_MAC_UE_UL_PDU, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
+  T(T_ENB_MAC_UE_UL_PDU, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
     T_INT(harq_pidP), T_INT(sdu_lenP), T_INT(num_ce), T_INT(num_sdu));
-  T(T_ENB_MAC_UE_UL_PDU_WITH_DATA, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
+  T(T_ENB_MAC_UE_UL_PDU_WITH_DATA, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
     T_INT(harq_pidP), T_INT(sdu_lenP), T_INT(num_ce), T_INT(num_sdu), T_BUFFER(sduP, sdu_lenP));
 
   eNB->eNB_stats[CC_idP].ulsch_bytes_rx=sdu_lenP;
@@ -130,7 +130,7 @@ void rx_sdu(const module_id_t enb_mod_idP,
   // control element
   for (i=0; i<num_ce; i++) {
 
-    T(T_ENB_MAC_UE_UL_CE, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
+    T(T_ENB_MAC_UE_UL_CE, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
       T_INT(rx_ces[i]));
 
     switch (rx_ces[i]) { // implement and process BSR + CRNTI +
@@ -150,16 +150,21 @@ void rx_sdu(const module_id_t enb_mod_idP,
       LOG_I(MAC, "[eNB %d] Frame %d, Subframe %d CC_id %d MAC CE_LCID %d (ce %d/%d): CRNTI %x (UE_id %d) in Msg3\n",
 	    frameP,subframeP,enb_mod_idP, CC_idP, rx_ces[i], i,num_ce,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1],UE_id);
       if (UE_id!=-1) {
+        rnti = (((uint16_t)payload_ptr[0])<<8) + payload_ptr[1];
 	UE_list->UE_sched_ctrl[UE_id].ul_inactivity_timer=0;
 	UE_list->UE_sched_ctrl[UE_id].ul_failure_timer=0;
 	if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync > 0) {
 	  UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync=0;
 	  mac_eNB_rrc_ul_in_sync(enb_mod_idP,CC_idP,frameP,subframeP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
 	}
+        /* TODO: do only for HO case */
+        //phy_config_ue_state_ho(enb_mod_idP, CC_idP, rnti);
+        eNB_mac_inst[enb_mod_idP].UE_list.UE_template[UE_PCCID(enb_mod_idP, UE_id)][UE_id].configured = 1;
       }
       crnti_rx=1;
       payload_ptr+=2;
 
+      LOG_I(MAC, "c-rnti received, msg3_flag = %p\n", msg3_flagP);
       if (msg3_flagP != NULL) {
 	*msg3_flagP = 0;
       }
@@ -303,9 +308,9 @@ void rx_sdu(const module_id_t enb_mod_idP,
   for (i=0; i<num_sdu; i++) {
     LOG_D(MAC,"SDU Number %d MAC Subheader SDU_LCID %d, length %d\n",i,rx_lcids[i],rx_lengths[i]);
 
-    T(T_ENB_MAC_UE_UL_SDU, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
+    T(T_ENB_MAC_UE_UL_SDU, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
       T_INT(rx_lcids[i]), T_INT(rx_lengths[i]));
-    T(T_ENB_MAC_UE_UL_SDU_WITH_DATA, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
+    T(T_ENB_MAC_UE_UL_SDU_WITH_DATA, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
       T_INT(rx_lcids[i]), T_INT(rx_lengths[i]), T_BUFFER(payload_ptr, rx_lengths[i]));
 
     switch (rx_lcids[i]) {
@@ -317,16 +322,16 @@ void rx_sdu(const module_id_t enb_mod_idP,
       }
       LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, Received CCCH:  %x.%x.%x.%x.%x.%x, Terminating RA procedure for UE rnti %x\n",
             enb_mod_idP,CC_idP,frameP,
-            payload_ptr[0],payload_ptr[1],payload_ptr[2],payload_ptr[3],payload_ptr[4], payload_ptr[5], rntiP);
+            payload_ptr[0],payload_ptr[1],payload_ptr[2],payload_ptr[3],payload_ptr[4], payload_ptr[5], rnti);
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_TERMINATE_RA_PROC,1);
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_TERMINATE_RA_PROC,0);
       for (ii=0; ii<NB_RA_PROC_MAX; ii++) {
         LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Checking proc %d : rnti (%x, %x), active %d\n",
               enb_mod_idP, CC_idP, ii,
-              eNB->common_channels[CC_idP].RA_template[ii].rnti, rntiP,
+              eNB->common_channels[CC_idP].RA_template[ii].rnti, rnti,
               eNB->common_channels[CC_idP].RA_template[ii].RA_active);
 
-        if ((eNB->common_channels[CC_idP].RA_template[ii].rnti==rntiP) &&
+        if ((eNB->common_channels[CC_idP].RA_template[ii].rnti==rnti) &&
             (eNB->common_channels[CC_idP].RA_template[ii].RA_active==TRUE)) {
 
           //payload_ptr = parse_ulsch_header(msg3,&num_ce,&num_sdu,rx_ces,rx_lcids,rx_lengths,msg3_len);
@@ -353,7 +358,7 @@ void rx_sdu(const module_id_t enb_mod_idP,
               enb_mod_idP,
               CC_idP,
               frameP,subframeP,
-              rntiP,
+              rnti,
               CCCH,
               (uint8_t*)payload_ptr,
               rx_lengths[i],
@@ -399,7 +404,7 @@ void rx_sdu(const module_id_t enb_mod_idP,
 
           mac_rlc_data_ind(
 			   enb_mod_idP,
-			   rntiP,
+			   rnti,
 			   enb_mod_idP,
 			   frameP,
 			   ENB_FLAG_YES,
@@ -445,7 +450,7 @@ void rx_sdu(const module_id_t enb_mod_idP,
 	  if ((rx_lengths[i] <SCH_PAYLOAD_SIZE_MAX) &&  (rx_lengths[i] > 0) ) {   // MAX SIZE OF transport block
 	    mac_rlc_data_ind(
 			     enb_mod_idP,
-			     rntiP,
+			     rnti,
 			     enb_mod_idP,
 			     frameP,
 			     ENB_FLAG_YES,
