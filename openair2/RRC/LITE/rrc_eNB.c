@@ -2384,19 +2384,27 @@ rrc_eNB_process_MeasurementReport(
 )
 //-----------------------------------------------------------------------------
 {
+  int target_rsrp, source_rsrp;
+  int offset_db = 4;
+
   T(T_ENB_RRC_MEASUREMENT_REPORT, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
 
+#if 0
   LOG_I(RRC, "[eNB %d] Frame %d: Process Measurement Report From UE %x (Measurement Id %d)\n",
         ctxt_pP->module_id, ctxt_pP->frame, ctxt_pP->rnti, (int)measResults2->measId);
+#endif
 
   if (measResults2->measResultNeighCells==NULL) {
+#if 0
 	  LOG_I(RRC, "Cells are not discovered\n");
+#endif
           return;
   }
   else {
 	  if(measResults2->measId == 1){
+#if 0
 		  LOG_I(RRC, "Cells are discovered\n");
 		  if (measResults2->measResultNeighCells->choice.measResultListEUTRA.list.count > 0) {
 			LOG_I(RRC, "Physical Cell Id %d\n",
@@ -2408,10 +2416,12 @@ rrc_eNB_process_MeasurementReport(
 				  (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
 						 measResult.rsrqResult));
 		  }
+#endif
 	  }
 	  else if (measResults2->measId == 4) {
 		  LOG_I(RRC, "A3 event happened...\n");
 		  if (measResults2->measResultNeighCells->choice.measResultListEUTRA.list.count > 0) {
+                        /* TODO: handle all values of the array, not just the first */
 			LOG_I(RRC, "RSRP of Source %ld\n", measResults2->measResultPCell.rsrpResult);
 			LOG_I(RRC, "RSRQ of Source %ld\n", measResults2->measResultPCell.rsrqResult);
 			LOG_I(RRC, "Physical Cell Id %d\n",
@@ -2422,14 +2432,19 @@ rrc_eNB_process_MeasurementReport(
 			LOG_I(RRC, "RSRQ of Target %d\n",
 				  (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
 						 measResult.rsrqResult));
+                        source_rsrp = measResults2->measResultPCell.rsrpResult;
+                        target_rsrp = (int)*(measResults2->measResultNeighCells->choice.measResultListEUTRA.list.array[0]->
+                                                     measResult.rsrpResult);
 		  }
-		  exit(0);
 	  }
 	  else {
+#if 0
 		  LOG_I(RRC, "Other events happened...\n");
+#endif
 	  }
   }
 
+#if 0
 #if defined(Rel10) || defined(Rel14)
   LOG_I(RRC, "RSRP of Source %ld\n", measResults2->measResultPCell.rsrpResult);
   LOG_I(RRC, "RSRQ of Source %ld\n", measResults2->measResultPCell.rsrqResult);
@@ -2437,8 +2452,10 @@ rrc_eNB_process_MeasurementReport(
   LOG_I(RRC, "RSRP of Source %ld\n", measResults2->measResultServCell.rsrpResult);
   LOG_I(RRC, "RSRQ of Source %ld\n", measResults2->measResultServCell.rsrqResult);
 #endif
+#endif
   /* algorithm to decide whether to trigger HO or not */ 
-  
+  if (!(measResults2->measId == 4 && target_rsrp - source_rsrp >= offset_db))
+    return;
   
   /* if the UE is not in handover mode, start handover procedure */
   if (ue_context_pP->ue_context.Status != RRC_HO_EXECUTION) {
