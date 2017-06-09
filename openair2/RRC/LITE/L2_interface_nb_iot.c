@@ -226,7 +226,7 @@ int NB_rrc_mac_config_req_eNB(
 
 	  config_INFO->get_COMMON = 1;
 
-      LOG_I(MAC,"[CONFIG]SIB2/3-NB Contents (partial)\n");
+      LOG_I(MAC,"[CONFIG]SIB2/3-NB radioResourceConfigCommon Contents (partial)\n");
 
       LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13= %ld\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13);
       LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13= %ld\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13);

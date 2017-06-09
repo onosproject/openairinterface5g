@@ -1632,13 +1632,13 @@ init_SI_NB(
   //MIB
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].MIB_NB = (uint8_t*) malloc16(32); //MIB is 34 bits=5bytes needed
 
-  //FIXME do_MIB_NB parameters
+
   if (eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].MIB_NB)
   {
 	  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB =
 	  			  do_MIB_NB(&eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id],
 	  					  	configuration->N_RB_DL[CC_id],
-					        0
+					        0 //FIXME is correct to pass frame = 0??
 					        );
   }
   else {
@@ -1660,7 +1660,8 @@ init_SI_NB(
     				ctxt_pP->module_id,
 					CC_id,
 					&eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id],
-					configuration
+					configuration,
+					0 //FIXME is correct to pass frame = 0??
     				);
 
   else {

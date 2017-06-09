@@ -78,7 +78,8 @@ uint8_t do_MIB_NB(
 
 uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
 				rrc_eNB_carrier_data_NB_t *carrier,
-                RrcConfigurationReq *configuration
+                RrcConfigurationReq *configuration,
+				uint32_t frame
                );
 
 /**

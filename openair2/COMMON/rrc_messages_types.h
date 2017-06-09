@@ -200,7 +200,7 @@ typedef struct RrcConfigurationReq_s {
   long					  rach_macContentionResolutionTimer_NB[MAX_NUM_CCs];
   long					  rach_powerRampingStep_NB[MAX_NUM_CCs];
   long					  rach_preambleInitialReceivedTargetPower_NB[MAX_NUM_CCs];
-  long					  preambleTransMax_CE_NB[MAX_NUM_CCs]; //da ricontrollare se va bene il tipo
+  long					  rach_preambleTransMax_CE_NB[MAX_NUM_CCs];
   //BCCH
   long					  bcch_modificationPeriodCoeff_NB[MAX_NUM_CCs];
   //PCCH
@@ -209,7 +209,7 @@ typedef struct RrcConfigurationReq_s {
   long					  pcch_npdcch_NumRepetitionPaging_NB[MAX_NUM_CCs];
   //NPRACH
   long					  nprach_CP_Length[MAX_NUM_CCs];
-  long					  nprach_rsrp_range_NB[MAX_NUM_CCs];
+  long					  nprach_rsrp_range[MAX_NUM_CCs];
   long					  nprach_Periodicity[MAX_NUM_CCs];
   long					  nprach_StartTime[MAX_NUM_CCs];
   long					  nprach_SubcarrierOffset[MAX_NUM_CCs];
@@ -235,9 +235,9 @@ typedef struct RrcConfigurationReq_s {
   long	 				  dl_GapPeriodicity_NB[MAX_NUM_CCs];
   long	 				  dl_GapDurationCoeff_NB[MAX_NUM_CCs];
   //Uplink power control Common
-  long					  npusch_p0_NominalNPUSCH_r13[MAX_NUM_CCs];
-  long					  npusch_alpha_r13[MAX_NUM_CCs];
-  long					  deltaPreambleMsg3_r13[MAX_NUM_CCs];
+  long					  npusch_p0_NominalNPUSCH[MAX_NUM_CCs];
+  long					  npusch_alpha[MAX_NUM_CCs];
+  long					  deltaPreambleMsg3[MAX_NUM_CCs];
   //UE timers and constants
   long					  ue_TimersAndConstants_t300_NB[MAX_NUM_CCs];
   long					  ue_TimersAndConstants_t301_NB[MAX_NUM_CCs];

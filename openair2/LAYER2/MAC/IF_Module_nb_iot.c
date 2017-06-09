@@ -91,11 +91,12 @@ void PHY_config_req(PHY_Config_t* config_INFO){
 
 int IF_Module_init(IF_Module_t *if_inst){
   
+  //at initialization of the IF module assign the function to be pointed to the function pointer
   if_inst->UL_indication      = UL_indication;
   if_inst->schedule_response  = schedule_response;
   if_inst->PHY_config_req 	  = PHY_config_req;
   
-  //create the UL_IND_t , Sched_Resp_t and PHY_Config_t structures
+  //create the UL_IND_t , Sched_Resp_t and PHY_Config_t structures ???
 
   return 0;
 }
