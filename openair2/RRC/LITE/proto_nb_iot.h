@@ -74,6 +74,7 @@ int NB_rrc_mac_config_req_eNB(
 			   int                              physCellId,
 			   int                              p_eNB,
 			   int                              Ncp,
+			   int								Ncp_UL,
 			   long                             eutra_band,//FIXME: frequencyBandIndicator in sib1 (is a long not an int!!)
 			   struct NS_PmaxList_NB_r13        *frequencyBandInfo, //optional SIB1
 			   struct MultiBandInfoList_NB_r13  *multiBandInfoList, //optional SIB1

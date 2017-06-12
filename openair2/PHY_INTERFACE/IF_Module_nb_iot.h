@@ -10,7 +10,7 @@
 
 #include "openair1/PHY/LTE_TRANSPORT/defs_nb_iot.h"
 #include "PhysicalConfigDedicated-NB-r13.h"
-
+#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
 
 #define SCH_PAYLOAD_SIZE_MAX 4096
 #define BCCH_PAYLOAD_SIZE_MAX 128
@@ -317,34 +317,22 @@ typedef struct{
 
 }Sched_Rsp_t;
 
-//	Calvin 20170531 start
 
 /*IF_Module_t*/
 typedef struct IF_Module_s{
-
 	//define the function pointer
 	void (*UL_indication)(UL_IND_t UL_INFO);
 	void (*schedule_response)(Sched_Rsp_t Sched_INFO);
-	void (*PHY_config_req)(PHY_Config_t config_INFO);
+	void (*PHY_config_req)(PHY_Config_t* config_INFO);
 
 }IF_Module_t;
 
 /*Initial */
-int IF_Module_init(IF_Module_t *if_inst);
 
-//	Calvin 20170531 end
+//int IF_Module_init(IF_Module_t *if_inst);
 
-/*Interface for uplink, transmitting the Preamble(list), ULSCH SDU, NAK, Tick (trigger scheduler)
-*/
-void UL_indication(UL_IND_t UL_INFO);
-
-/*Interface for Downlink, transmitting the DLSCH SDU, DCI SDU*/
-void schedule_response(Sched_Rsp_t Sched_INFO);
-
-/*Interface for PHY Configuration
- * Trigger the phy_config_xxx functions using parameters from the shared PHY_Config structure
- * */
-void PHY_config_req(PHY_Config_t* config_INFO);
+IF_Module_t* IF_Module_init_L1(IF_Module_t *if_inst);
+IF_Module_t* IF_Module_init_L2(IF_Module_t *if_inst);
 
 
 #endif

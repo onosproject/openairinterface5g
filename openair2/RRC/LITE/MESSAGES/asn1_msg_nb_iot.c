@@ -142,7 +142,6 @@ uint8_t do_MIB_NB(
   mib_NB->message.operationModeInfo_r13.present = MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13;
   mib_NB->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13 = 0;
 
-
   printf("[MIB] something to write HERE ,sfn_MSB %x, hsfn_LSB %x\n",
          (uint32_t)sfn_MSB,
 		 (uint32_t)hsfn_LSB);
@@ -184,7 +183,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
   attachWithoutPDN_Connectivity = CALLOC(1,sizeof(long));
   long *nrs_CRS_PowerOffset=NULL;
   nrs_CRS_PowerOffset = CALLOC(1, sizeof(long));
-  long *eutraControlRegionSize=NULL;
+  long *eutraControlRegionSize=NULL; //this parameter should be set only if we are considering in-band operating mode (samePCI or differentPCI)
    eutraControlRegionSize = CALLOC(1,sizeof(long));
   long systemInfoValueTagSI = 0;
 

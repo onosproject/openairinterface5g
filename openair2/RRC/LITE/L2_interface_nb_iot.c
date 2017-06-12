@@ -49,6 +49,7 @@
 #include "pdcp_sequence_manager.h"
 #include "UTIL/OTG/otg_rx.h"
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
+#include "openair1/SCHED/IF_Module_L1_primitives_nb_iot.h"
 
 #ifdef PHY_EMUL
 #include "SIMULATION/simulation_defs.h"
@@ -119,11 +120,12 @@ int NB_rrc_mac_config_req_eNB(
 			   int                              physCellId,
 			   int                              p_eNB, //number of eNB TX antenna ports
 			   int                              Ncp,
+			   int								Ncp_UL,
 			   long                             eutra_band,//FIXME: frequencyBandIndicator in sib1 (is a long not an int!!)
 			   struct NS_PmaxList_NB_r13        *frequencyBandInfo, //optional SIB1
 			   struct MultiBandInfoList_NB_r13  *multiBandInfoList, //optional SIB1
 			   struct DL_Bitmap_NB_r13          *dl_bitmap, //optional SIB1
-			   long*                            eutraControlRegionSize, //optional sib1
+			   long*                            eutraControlRegionSize, //optional sib1, is defined only when we are in in-band operation mode (same PCI or different PCI)
 			   long*							nrs_CRS_PoweSIwindowsizerOffset, //optional
 //			   uint8_t                          *SIwindowsize, //maybe no more needed because TDD only
 //			   uint16_t                         *SIperiod, //maybe no more needed because TDD only
@@ -140,7 +142,7 @@ int NB_rrc_mac_config_req_eNB(
    //no ul_Bandwidth
 
   //------------
-  PHY_Config_t *config_INFO; //TODO should be seen as a global variable
+  PHY_Config_t *config_INFO; //TODO should be seen as a global variable (who initialize this???)
   //------------
 
   int UE_id = -1;
@@ -168,6 +170,7 @@ int NB_rrc_mac_config_req_eNB(
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].physCellId     = physCellId;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].p_eNB          = p_eNB;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].Ncp            = Ncp;
+    eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].Ncp_UL         = Ncp_UL;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].eutra_band     = eutra_band;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].dl_CarrierFreq = dl_CarrierFreq;
 
@@ -192,6 +195,7 @@ int NB_rrc_mac_config_req_eNB(
     config_INFO->frequency_band_indicator = (uint8_t)eutra_band;
     config_INFO->sch_config.physical_cell_id = physCellId;
     config_INFO->subframe_config.dl_cyclic_prefix_type = Ncp;
+    config_INFO->subframe_config.ul_cyclic_prefix_type = Ncp_UL;
     config_INFO->rf_config.tx_antenna_ports = p_eNB;
     config_INFO->dl_CarrierFreq = dl_CarrierFreq;
     config_INFO->ul_CarrierFreq = ul_CarrierFreq;
@@ -201,15 +205,34 @@ int NB_rrc_mac_config_req_eNB(
     //FAPI specs pag 135
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13:
 		config_INFO->nb_iot_config.operating_mode = 0;
+		config_INFO->nb_iot_config.prb_index = mib_NB->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13;
+		config_INFO->nb_iot_config.assumed_crs_aps = -1; //is not defined so we put a negative value
+		if(eutraControlRegionSize == NULL)
+			LOG_E(RRC, "NB_rrc_mac_config_req_eNB: oepration mode is in-band but eutraControlRegionSize is not defined");
+		else
+			config_INFO->nb_iot_config.control_region_size = *eutraControlRegionSize;
 		break;
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_DifferentPCI_r13:
     	config_INFO->nb_iot_config.operating_mode = 1;
+    	//config_INFO->nb_iot_config.prb_index = mib_NB->message.operationModeInfo_r13.choice.inband_DifferentPCI_r13
+    	config_INFO->nb_iot_config.assumed_crs_aps = mib_NB->message.operationModeInfo_r13.choice.inband_DifferentPCI_r13.eutra_NumCRS_Ports_r13;
+		if(eutraControlRegionSize == NULL)
+			LOG_E(RRC, "NB_rrc_mac_config_req_eNB: oepration mode is in-band but eutraControlRegionSize is not defined");
+		else
+			config_INFO->nb_iot_config.control_region_size = *eutraControlRegionSize;
     	break;
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_guardband_r13:
     	config_INFO->nb_iot_config.operating_mode = 2;
+    	//config_INFO->nb_iot_config.prb_index = mib_NB->message.operationModeInfo_r13.choice.guardband_r13
+    	config_INFO->nb_iot_config.control_region_size = -1; //should not being defined so we put a negative value
+		config_INFO->nb_iot_config.assumed_crs_aps = -1; //is not defined so we put a negative value
+
     	break;
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_standalone_r13:
     	config_INFO->nb_iot_config.operating_mode = 3;
+    	config_INFO->nb_iot_config.prb_index = -1; // is not defined for this case (put a negative value)
+    	config_INFO->nb_iot_config.control_region_size = -1;//is not defined so we put a negative value
+		config_INFO->nb_iot_config.assumed_crs_aps = -1; //is not defined so we put a negative value
     	break;
     default:
     	LOG_E(RRC, "NB_rrc_mac_config_req_eNB: NB-IoT operating Mode (MIB-NB) not valid\n");
@@ -217,6 +240,7 @@ int NB_rrc_mac_config_req_eNB(
     }
 
     PHY_config_req(config_INFO); //for trigger the NB_phy_config_mib_eNB()
+    //IF_Module->PHY_config_req(config_INFO);
 
    // mac_init_cell_params(Mod_idP,CC_idP); //TODO MP: to be defined in MAC/main.c (in the old implementation was inside the mac_top_init but raymond have separated
   }
@@ -275,7 +299,7 @@ int NB_rrc_mac_config_req_eNB(
     	   //npdcch_NumRepetitions_RA_r13
     	   //npdcch_StartSF_CSS_RA_r13
     	   //npdcch_Offset_RA_r13
-    	  //rsrp_ThresholdsPrachInfoList_r13
+    	  //rsrp_ThresholdsPrachInfoList_r13 /*OPTIONAL*/
 
     	  break;
       case 2:

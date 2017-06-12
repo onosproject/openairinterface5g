@@ -42,6 +42,7 @@ void NB_phy_config_mib_eNB(int     Mod_id,
 			int                    eutra_band,
 			int                    Nid_cell,
 			int                    Ncp,
+			int					   Ncp_UL,
 			int                    p_eNB,
 			uint32_t               dl_CarrierFreq,
 			uint32_t               ul_CarrierFreq);

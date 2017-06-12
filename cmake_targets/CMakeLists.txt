@@ -963,6 +963,7 @@ set(SCHED_SRC
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_ue.c
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common.c
   ${OPENAIR1_DIR}/SCHED/phy_mac_stub.c
+  ${OPENAIR1_DIR}/SCHED/IF_Module_L1_primitives_nb_iot.c
   ${OPENAIR1_DIR}/SCHED/pucch_pc.c
   ${OPENAIR1_DIR}/SCHED/pusch_pc.c
   ${OPENAIR1_DIR}/SCHED/srs_pc.c
@@ -1082,12 +1083,15 @@ add_library(PHY ${PHY_SRC})
 #####################
 set(MAC_DIR ${OPENAIR2_DIR}/LAYER2/MAC)
 set(RLC_DIR ${OPENAIR2_DIR}/LAYER2/RLC)
+set(PHY_INTERFACE_DIR ${OPENAIR2_DIR}/PHY_INTERFACE)
 set(RLC_UM_DIR ${OPENAIR2_DIR}/LAYER2/RLC/UM_v9.3.0)
 set(RLC_AM_DIR ${OPENAIR2_DIR}/LAYER2/RLC/AM_v9.3.0)
 set(RLC_TM_DIR ${OPENAIR2_DIR}/LAYER2/RLC/TM_v9.3.0)
 set(RRC_DIR ${OPENAIR2_DIR}/RRC/LITE)
 set(PDCP_DIR  ${OPENAIR2_DIR}/LAYER2/PDCP_v10.1.0)
 set(L2_SRC
+  ${PHY_INTERFACE_DIR}/IF_Module_nb_iot.c
+  ${PHY_INTERFACE_DIR}/IF_Module_L2_primitives_nb_iot.c
   ${OPENAIR2_DIR}/LAYER2/openair2_proc.c
   ${PDCP_DIR}/pdcp.c
   ${PDCP_DIR}/pdcp_fifo.c
@@ -1137,7 +1141,6 @@ set(L2_SRC
 set (MAC_SRC
   ${MAC_DIR}/lte_transport_init.c
   ${MAC_DIR}/main.c
-  ${MAC_DIR}/IF_Module_nb_iot.c
   ${MAC_DIR}/ue_procedures.c
   ${MAC_DIR}/ra_procedures.c
   ${MAC_DIR}/l1_helpers.c

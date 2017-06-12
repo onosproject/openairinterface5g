@@ -470,6 +470,7 @@ typedef struct {
   int                              physCellId;
   int                              p_eNB;
   int                              Ncp;
+  int							   Ncp_UL;
   int                              eutra_band;
   uint32_t                         dl_CarrierFreq;
   BCCH_BCH_Message_NB_t               *mib_NB;

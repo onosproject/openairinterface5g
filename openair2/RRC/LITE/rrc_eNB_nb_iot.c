@@ -572,11 +572,12 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
           0, //physCellID
 		  0, //p_eNB
 		  0, //Ncp
+		  0, //Ncp_UL
 		  0, //eutraband
 		  (NS_PmaxList_NB_r13_t*) NULL,
 		  (MultiBandInfoList_NB_r13_t*) NULL,
 		  (DL_Bitmap_NB_r13_t*) NULL,
-		  (long*) NULL,
+		  (long*) NULL,//eutraControlRegionSize
 		  (long*)NULL,
 //		  (uint8_t*) NULL, //SIWindowSize
 //		  (uint16_t*)NULL, //SIperiod
@@ -800,6 +801,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
             0,//physCellId --> this parameters could be set to 0 since no MIB is present
 			0,// p_eNB
 			0, //Ncp
+			0, //Ncp_UL
 			0, //eutra_band
 			(struct NS_PmaxList_NB_r13*) NULL,
 			(struct MultiBandInfoList_NB_r13*) NULL,
@@ -842,6 +844,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
                       0,//physCellId --> this parameters could be set to 0 since no MIB is present
 					  0,// p_eNB
 					  0, //Ncp
+					  0, //Ncp_UL
 					  0, //eutra_band
 					  (struct NS_PmaxList_NB_r13*) NULL,
 					  (struct MultiBandInfoList_NB_r13*) NULL,
@@ -1606,7 +1609,7 @@ static void
 init_SI_NB(
   const protocol_ctxt_t* const ctxt_pP,
   const int              CC_id,
-  RrcConfigurationReq* configuration
+  RrcConfigurationReq* configuration //openair2/COMMON/rrc_messages_types
 )
 //-----------------------------------------------------------------------------
 {
@@ -1618,7 +1621,8 @@ init_SI_NB(
   //copy basic parameters
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].physCellId      = configuration->Nid_cell[CC_id];
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].p_eNB           = configuration->nb_antenna_ports[CC_id];
-  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp             = configuration->prefix_type[CC_id];
+  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp             = configuration->prefix_type[CC_id]; //DL Cyclic prefix
+  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp_UL			 = configuration->prefix_type_UL[CC_id];//UL cyclic prefix
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].dl_CarrierFreq  = configuration->downlink_frequency[CC_id];
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].ul_CarrierFreq  = configuration->downlink_frequency[CC_id]+ configuration->uplink_frequency_offset[CC_id];
 
@@ -1716,6 +1720,7 @@ init_SI_NB(
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].physCellId,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].p_eNB,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp_UL,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->freqBandIndicator_r13, //eutra_band
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->freqBandInfo_r13,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->multiBandInfoList_r13,

@@ -491,7 +491,8 @@ typedef struct {
   uint8_t                           sizeof_SIB22_NB;
 
   //implicit parameters needed
-  int                               Ncp; //extended cyclic prefix
+  int                               Ncp; //cyclic prefix for DL
+  int								Ncp_UL; //cyclic prefix for UL
   int                               p_eNB; //number of antenna port (getting from the CRS of the MIB-NB)
   uint32_t                          dl_CarrierFreq; //detected by the UE
   uint32_t                          ul_CarrierFreq; //detected by the UE
