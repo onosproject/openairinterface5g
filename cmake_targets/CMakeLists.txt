@@ -987,6 +987,8 @@ set(SCHED_SRC
   ${OPENAIR1_DIR}/SCHED/pusch_pc.c
   ${OPENAIR1_DIR}/SCHED/srs_pc.c
 )
+#set_source_files_properties(${OPENAIR1_DIR}/SCHED/phy_procedures_lte_eNb.c PROPERTIES COMPILE_FLAGS "-g -O0")
+
 add_library(SCHED_LIB ${SCHED_SRC})
 
 # Layer 1
@@ -1144,6 +1146,7 @@ set(L2_SRC
   ${RRC_DIR}/rrc_common.c
   ${RRC_DIR}/L2_interface.c
   )
+#set_source_files_properties(${RRC_DIR}/rrc_eNB.c PROPERTIES COMPILE_FLAGS "-g -O0")
 set (MAC_SRC
   ${MAC_DIR}/lte_transport_init.c
   ${MAC_DIR}/main.c

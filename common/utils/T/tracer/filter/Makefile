@@ -1,5 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -g -pthread -I..
+CFLAGS += -O3 -ffast-math -fomit-frame-pointer
 
 OBJS=filter.o
 

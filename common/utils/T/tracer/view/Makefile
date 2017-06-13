@@ -1,5 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -g -pthread -I.. -I../logger
+CFLAGS += -O3 -ffast-math -fomit-frame-pointer
 
 OBJS=stdout.o textlist.o xy.o tti.o time.o ticktime.o scrolltti.o
 
