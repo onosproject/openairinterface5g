@@ -236,10 +236,15 @@ x2ap_eNB_handle_handover_preparation(uint32_t assoc_id,
   X2AP_HANDOVER_REQ(m).source_x2id = x2HandoverRequest->old_eNB_UE_X2AP_ID;
   X2AP_HANDOVER_REQ(m).source_rnti = x2id_to_source_rnti[x2HandoverRequest->old_eNB_UE_X2AP_ID];
   X2AP_HANDOVER_REQ(m).nb_e_rabs_tobesetup=x2HandoverRequest->uE_ContextInformation.e_RABs_ToBeSetup_List.list.count;
-  X2ap_E_RABs_ToBeSetup_Item_t *e_RABs_ToBeSetup_Item;
+
+  X2ap_E_RABs_ToBeSetup_ListIEs_t *e_RABs_ToBeSetup_ListIEs=calloc(1, sizeof(X2ap_E_RABs_ToBeSetup_ListIEs_t));
+
+if (x2ap_decode_x2ap_e_rabs_tobesetup_list(e_RABs_ToBeSetup_ListIEs,
+										   &x2HandoverRequest->uE_ContextInformation.e_RABs_ToBeSetup_List)>0) {
 
   for (i=0; i< x2HandoverRequest->uE_ContextInformation.e_RABs_ToBeSetup_List.list.count;i++){
-	  e_RABs_ToBeSetup_Item=(X2ap_E_RABs_ToBeSetup_Item_t *) x2HandoverRequest->uE_ContextInformation.e_RABs_ToBeSetup_List.list.array[i];
+	  X2ap_E_RABs_ToBeSetup_Item_t *e_RABs_ToBeSetup_Item;
+	  e_RABs_ToBeSetup_Item=(X2ap_E_RABs_ToBeSetup_Item_t *) e_RABs_ToBeSetup_ListIEs->x2ap_E_RABs_ToBeSetup_Item.array[i];
 
 	  X2AP_HANDOVER_REQ(m).e_rabs_tobesetup[i].e_rab_id=e_RABs_ToBeSetup_Item->e_RAB_ID;
 
@@ -254,7 +259,9 @@ x2ap_eNB_handle_handover_preparation(uint32_t assoc_id,
 			  	  	  	    X2AP_HANDOVER_REQ(m).e_rabs_tobesetup[i].gtp_teid);
 
   }
-
+}else {
+	X2AP_ERROR ("Can't decode the e_RABs_ToBeSetup_List \n");
+}
   if ((x2HandoverRequest->uE_ContextInformation.aS_SecurityInformation.key_eNodeB_star.buf) &&
 	  (x2HandoverRequest->uE_ContextInformation.aS_SecurityInformation.key_eNodeB_star.size == 32)) {
     memcpy(X2AP_HANDOVER_REQ(m).kenb, x2HandoverRequest->uE_ContextInformation.aS_SecurityInformation.key_eNodeB_star.buf, 32);

@@ -376,6 +376,7 @@ int x2ap_eNB_generate_x2_handover_request(x2ap_eNB_instance_t *instance_p,
 
 
   X2ap_E_RABs_ToBeSetup_Item_t *e_RABs_ToBeSetup_Item1 = calloc(1, sizeof(X2ap_E_RABs_ToBeSetup_Item_t));
+  X2ap_E_RABs_ToBeSetup_ListIEs_t *e_RABs_ToBeSetup_List1 = calloc(1, sizeof(X2ap_E_RABs_ToBeSetup_ListIEs_t));
   int i;
 
   for (i=0;i<rrc_eNB_ue_context->ue_context.setup_e_rabs;i++){
@@ -406,15 +407,17 @@ int x2ap_eNB_generate_x2_handover_request(x2ap_eNB_instance_t *instance_p,
 	  //TRLA_TO_BIT_STRING(rrc_eNB_ue_context->ue_context.e_rab[i].param.sgw_addr.buffer,
 		//	  	  	  	 &e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.transportLayerAddress); // IPv4
 
-	  GTP_TEID_TO_OCTET_STRING (rrc_eNB_ue_context->ue_context.e_rab[i].param.gtp_teid,
-			  	  	  	  	  	&e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.gTP_TEID);
+	  INT32_TO_OCTET_STRING(rrc_eNB_ue_context->ue_context.e_rab[i].param.gtp_teid,
+			  	  	  	  	&e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.gTP_TEID);
 
-	  X2ap_E_RABs_ToBeSetup_ListIEs_t *e_RABs_ToBeSetup_List1 = calloc(1, sizeof(X2ap_E_RABs_ToBeSetup_ListIEs_t));
+	  //GTP_TEID_TO_OCTET_STRING (rrc_eNB_ue_context->ue_context.e_rab[i].param.gtp_teid,
+	//		  	  	  	  	  	&e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.gTP_TEID);
 
 	  ASN_SEQUENCE_ADD(e_RABs_ToBeSetup_List1, e_RABs_ToBeSetup_Item1);
-	  x2ap_encode_x2ap_e_rabs_tobesetup_list(&message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.e_RABs_ToBeSetup_List, e_RABs_ToBeSetup_List1);
 
   }
+  x2ap_encode_x2ap_e_rabs_tobesetup_list(&message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.e_RABs_ToBeSetup_List, e_RABs_ToBeSetup_List1);
+
 #if 0
   char RRC[81] = { 0x0a,0x10,0x00,0x00,0x03,0x41,0x60,0x08,0xcf,0x50,0x4a,0x0e,0x07,0x00,0x8c,0xf5,0x04,0xa0,0xe0,0x03,0xc0,0x51,0xc2,0x28,
                    0xb8,0x56,0xd1,0x80,0x4a,0x00,0x00,0x08,0x18,0x02,0x20,0x42,0x08,0x00,0x80,0x60,0x00,0x20,0x00,0x00,0x03,0x82,0xca,0x04,
