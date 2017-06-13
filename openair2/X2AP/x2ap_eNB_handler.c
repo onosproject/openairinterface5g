@@ -211,6 +211,7 @@ x2ap_eNB_handle_handover_preparation(uint32_t assoc_id,
   X2ap_HandoverRequest_IEs_t         *x2HandoverRequest;
   x2ap_eNB_data_t                    *x2ap_eNB_data;
   uint32_t                           eNB_id = 0;
+  uint8_t                             i;
   int                                ta_ret;
   //uint16_t                                max_enb_connected;
   MessageDef                 *m;
@@ -234,15 +235,36 @@ x2ap_eNB_handle_handover_preparation(uint32_t assoc_id,
   extern int x2id_to_source_rnti[1];
   X2AP_HANDOVER_REQ(m).source_x2id = x2HandoverRequest->old_eNB_UE_X2AP_ID;
   X2AP_HANDOVER_REQ(m).source_rnti = x2id_to_source_rnti[x2HandoverRequest->old_eNB_UE_X2AP_ID];
+  X2AP_HANDOVER_REQ(m).nb_e_rabs_tobesetup=x2HandoverRequest->uE_ContextInformation.e_RABs_ToBeSetup_List.list.count;
+  X2ap_E_RABs_ToBeSetup_Item_t *e_RABs_ToBeSetup_Item;
+
+  for (i=0; i< x2HandoverRequest->uE_ContextInformation.e_RABs_ToBeSetup_List.list.count;i++){
+	  e_RABs_ToBeSetup_Item=(X2ap_E_RABs_ToBeSetup_Item_t *) x2HandoverRequest->uE_ContextInformation.e_RABs_ToBeSetup_List.list.array[i];
+
+	  X2AP_HANDOVER_REQ(m).e_rabs_tobesetup[i].e_rab_id=e_RABs_ToBeSetup_Item->e_RAB_ID;
+
+	  memcpy(X2AP_HANDOVER_REQ(m).e_rabs_tobesetup[i].eNB_addr.buffer,
+			 e_RABs_ToBeSetup_Item->uL_GTPtunnelEndpoint.transportLayerAddress.buf,
+			 e_RABs_ToBeSetup_Item->uL_GTPtunnelEndpoint.transportLayerAddress.size);
+
+	  X2AP_HANDOVER_REQ(m).e_rabs_tobesetup[i].eNB_addr.length =
+			  e_RABs_ToBeSetup_Item->uL_GTPtunnelEndpoint.transportLayerAddress.size * 8 - e_RABs_ToBeSetup_Item->uL_GTPtunnelEndpoint.transportLayerAddress.bits_unused;
+
+	  OCTET_STRING_TO_INT32(&e_RABs_ToBeSetup_Item->uL_GTPtunnelEndpoint.gTP_TEID,
+			  	  	  	    X2AP_HANDOVER_REQ(m).e_rabs_tobesetup[i].gtp_teid);
+
+  }
+
   if ((x2HandoverRequest->uE_ContextInformation.aS_SecurityInformation.key_eNodeB_star.buf) &&
 	  (x2HandoverRequest->uE_ContextInformation.aS_SecurityInformation.key_eNodeB_star.size == 32)) {
     memcpy(X2AP_HANDOVER_REQ(m).kenb, x2HandoverRequest->uE_ContextInformation.aS_SecurityInformation.key_eNodeB_star.buf, 32);
     X2AP_HANDOVER_REQ(m).kenb_ncc = x2HandoverRequest->uE_ContextInformation.aS_SecurityInformation.nextHopChainingCount;
-    itti_send_msg_to_task(TASK_RRC_ENB, x2ap_eNB_data->x2ap_eNB_instance->instance, m);
-    return 0;
   } else {
-	return -1;
+	  X2AP_WARN ("Size of eNB key star does not match the expected value\n");
+	  //return -1;
   }
+
+  itti_send_msg_to_task(TASK_RRC_ENB, x2ap_eNB_data->x2ap_eNB_instance->instance, m);
 
 #if 0
   if (x2SetupRequest->globalENB_ID.eNB_ID.present == X2ap_ENB_ID_PR_home_eNB_ID) {
