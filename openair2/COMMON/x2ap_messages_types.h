@@ -154,8 +154,12 @@ typedef struct x2ap_handover_req_s {
   /* UE aggregate maximum bitrate */
   ambr_t ue_ambr;
   
+  uint8_t nb_e_rabs_tobesetup;
+
  /* list of e_rab setup-ed by RRC layers */
   e_rab_setup_t e_rabs_tobesetup[S1AP_MAX_E_RAB];
+
+  /* ue_context_pP->ue_context.e_rab[i].param.sgw_addr; */
 
   x2ap_lastvisitedcell_info_t lastvisitedcell_info;
   

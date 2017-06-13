@@ -374,23 +374,47 @@ int x2ap_eNB_generate_x2_handover_request(x2ap_eNB_instance_t *instance_p,
   UEAGMAXBITRTD_TO_ASN_PRIMITIVES(3L,&message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.uEaggregateMaximumBitRate.uEaggregateMaximumBitRateDownlink);
   UEAGMAXBITRTU_TO_ASN_PRIMITIVES(6L,&message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.uEaggregateMaximumBitRate.uEaggregateMaximumBitRateUplink);
 
+
   X2ap_E_RABs_ToBeSetup_Item_t *e_RABs_ToBeSetup_Item1 = calloc(1, sizeof(X2ap_E_RABs_ToBeSetup_Item_t));
+  int i;
 
-  e_RABs_ToBeSetup_Item1->e_RAB_ID=10;
-  e_RABs_ToBeSetup_Item1->e_RAB_Level_QoS_Parameters.qCI=1;
-  e_RABs_ToBeSetup_Item1->e_RAB_Level_QoS_Parameters.allocationAndRetentionPriority.priorityLevel = 1;
-  e_RABs_ToBeSetup_Item1->e_RAB_Level_QoS_Parameters.allocationAndRetentionPriority.pre_emptionCapability = 0;
-  e_RABs_ToBeSetup_Item1->e_RAB_Level_QoS_Parameters.allocationAndRetentionPriority.pre_emptionVulnerability = 0;
-  e_RABs_ToBeSetup_Item1->e_RAB_Level_QoS_Parameters.allocationAndRetentionPriority.iE_Extensions = NULL;
+  for (i=0;i<rrc_eNB_ue_context->ue_context.setup_e_rabs;i++){
 
-  TRLA_TO_BIT_STRING(1, &e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.transportLayerAddress); // IPv4
-  GTP_TEID_TO_OCTET_STRING (12, &e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.gTP_TEID);
+	  e_RABs_ToBeSetup_Item1->e_RAB_ID=rrc_eNB_ue_context->ue_context.e_rab[i].param.e_rab_id;
+	  e_RABs_ToBeSetup_Item1->e_RAB_Level_QoS_Parameters.qCI=rrc_eNB_ue_context->ue_context.e_rab[i].param.qos.qci;
+	  e_RABs_ToBeSetup_Item1->e_RAB_Level_QoS_Parameters.allocationAndRetentionPriority.priorityLevel =
+			  rrc_eNB_ue_context->ue_context.e_rab[i].param.qos.allocation_retention_priority.priority_level ;
+	  e_RABs_ToBeSetup_Item1->e_RAB_Level_QoS_Parameters.allocationAndRetentionPriority.pre_emptionCapability =
+			  rrc_eNB_ue_context->ue_context.e_rab[i].param.qos.allocation_retention_priority.pre_emp_capability ;
+	  e_RABs_ToBeSetup_Item1->e_RAB_Level_QoS_Parameters.allocationAndRetentionPriority.pre_emptionVulnerability =
+			  rrc_eNB_ue_context->ue_context.e_rab[i].param.qos.allocation_retention_priority.pre_emp_vulnerability;
+	  e_RABs_ToBeSetup_Item1->e_RAB_Level_QoS_Parameters.allocationAndRetentionPriority.iE_Extensions = NULL;
 
-  X2ap_E_RABs_ToBeSetup_ListIEs_t *e_RABs_ToBeSetup_List1 = calloc(1, sizeof(X2ap_E_RABs_ToBeSetup_ListIEs_t));
 
-  ASN_SEQUENCE_ADD(e_RABs_ToBeSetup_List1, e_RABs_ToBeSetup_Item1);
-  x2ap_encode_x2ap_e_rabs_tobesetup_list(&message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.e_RABs_ToBeSetup_List, e_RABs_ToBeSetup_List1);
 
+	  e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.transportLayerAddress.size= (uint8_t)(rrc_eNB_ue_context->ue_context.e_rab[i].param.sgw_addr.length/8);
+	  e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.transportLayerAddress.bits_unused = rrc_eNB_ue_context->ue_context.e_rab[i].param.sgw_addr.length%8;
+
+	  e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.transportLayerAddress.buf =
+			  calloc(1,e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.transportLayerAddress.size);
+
+
+	  memcpy (e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.transportLayerAddress.buf,
+			  rrc_eNB_ue_context->ue_context.e_rab[i].param.sgw_addr.buffer,
+			  e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.transportLayerAddress.size);
+
+	  //TRLA_TO_BIT_STRING(rrc_eNB_ue_context->ue_context.e_rab[i].param.sgw_addr.buffer,
+		//	  	  	  	 &e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.transportLayerAddress); // IPv4
+
+	  GTP_TEID_TO_OCTET_STRING (rrc_eNB_ue_context->ue_context.e_rab[i].param.gtp_teid,
+			  	  	  	  	  	&e_RABs_ToBeSetup_Item1->uL_GTPtunnelEndpoint.gTP_TEID);
+
+	  X2ap_E_RABs_ToBeSetup_ListIEs_t *e_RABs_ToBeSetup_List1 = calloc(1, sizeof(X2ap_E_RABs_ToBeSetup_ListIEs_t));
+
+	  ASN_SEQUENCE_ADD(e_RABs_ToBeSetup_List1, e_RABs_ToBeSetup_Item1);
+	  x2ap_encode_x2ap_e_rabs_tobesetup_list(&message.msg.x2ap_HandoverRequest_IEs.uE_ContextInformation.e_RABs_ToBeSetup_List, e_RABs_ToBeSetup_List1);
+
+  }
 #if 0
   char RRC[81] = { 0x0a,0x10,0x00,0x00,0x03,0x41,0x60,0x08,0xcf,0x50,0x4a,0x0e,0x07,0x00,0x8c,0xf5,0x04,0xa0,0xe0,0x03,0xc0,0x51,0xc2,0x28,
                    0xb8,0x56,0xd1,0x80,0x4a,0x00,0x00,0x08,0x18,0x02,0x20,0x42,0x08,0x00,0x80,0x60,0x00,0x20,0x00,0x00,0x03,0x82,0xca,0x04,
