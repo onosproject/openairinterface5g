@@ -755,8 +755,8 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
     for (k=0; k<frame_parms->symbols_per_tti; k++) {
       for (i=0; i<12*frame_parms->N_RB_DL/2; i++) {
     	int j = (2*frame_parms->N_RB_DL*12*k)+4*i;
-        I[ind] = (pdsch_mag[j  ]!=0? 1.0/pdsch_mag[j  ]: 0.0) * pdsch_comp[j  ]*1.0;
-        Q[ind] = (pdsch_mag[j+1]!=0? 1.0/pdsch_mag[j+1]: 0.0) * pdsch_comp[j+1]*1.0;
+        I[ind] = /*(pdsch_mag[j  ]!=0? 1.0/pdsch_mag[j  ]: 0.0) */ pdsch_comp[j  ]*1.0;
+        Q[ind] = /*(pdsch_mag[j+1]!=0? 1.0/pdsch_mag[j+1]: 0.0) */ pdsch_comp[j+1]*1.0;
         ind++;
       }
     }

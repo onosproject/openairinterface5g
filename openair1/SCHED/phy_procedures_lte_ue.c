@@ -3987,13 +3987,18 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
   
       
 #ifdef DEBUG_PHY_PROC
-    LOG_D(PHY,"[UE  %d][PDSCH %x/%d] Frame %d subframe %d: PDSCH/DLSCH decoding iter %d (mcs %d, rv %d, TBS %d)\n",
+    LOG_D(PHY,"[UE  %d][PDSCH %x/%d] Frame %d subframe %d: PDSCH/DLSCH decoding iter CW0 (mcs %d, rv %d, TBS %d): %d, CW1 (mcs %d, rv %d, TBS %d): %d\n",
 	  ue->Mod_id,
 	  dlsch0->rnti,harq_pid,
-	  frame_rx,subframe_rx,ret,
+	  frame_rx,subframe_rx,
 	  dlsch0->harq_processes[harq_pid]->mcs,
 	  dlsch0->harq_processes[harq_pid]->rvidx,
-	  dlsch0->harq_processes[harq_pid]->TBS);
+	  dlsch0->harq_processes[harq_pid]->TBS,
+	  ret,
+	  dlsch1->harq_processes[harq_pid]->mcs,
+	  dlsch1->harq_processes[harq_pid]->rvidx,
+	  dlsch1->harq_processes[harq_pid]->TBS,
+	  ret1);
     
     if (frame_rx%100==0) {
       LOG_D(PHY,"[UE  %d][PDSCH %x] Frame %d subframe %d dlsch_errors %d, dlsch_received %d, dlsch_fer %d, current_dlsch_cqi %d\n",

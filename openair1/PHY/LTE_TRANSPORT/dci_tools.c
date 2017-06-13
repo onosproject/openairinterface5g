@@ -5534,16 +5534,10 @@ switch (tpmi) {
             case 5:
               dlsch_harq->mimo_mode   = PUSCH_PRECODING0;
               dlsch_harq->pmi_alloc   = pmi_alloc;;//pmi_convert(frame_parms,dlsch0->pmi_alloc,0);
-  #ifdef DEBUG_HARQ
-              printf ("[DCI UE] I am calling from the UE side pmi_alloc_new = %d\n", dlsch0->pmi_alloc);
-  #endif
             break;
             case 6:
               dlsch_harq->mimo_mode   = PUSCH_PRECODING1;
               dlsch_harq->pmi_alloc   = pmi_alloc;;//pmi_convert(frame_parms,dlsch0->pmi_alloc,1);
-  #ifdef DEBUG_HARQ
-              printf ("[DCI UE] I am calling from the UE side pmi_alloc_new = %d\n", dlsch0->pmi_alloc);
-  #endif
             break;
             }
 }
@@ -5817,8 +5811,8 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
         if ((ndi1!=dlsch0_harq->DCINdi) || (dlsch0_harq->first_tx==1))  {
           dlsch0_harq->round = 0;
 
-          //LOG_I(PHY,"[UE] DLSCH: New Data Indicator CW0 subframe %d (pid %d, round %d)\n",
-          //           subframe,harq_pid,dlsch0_harq->round);
+          LOG_I(PHY,"[UE] DLSCH: New Data Indicator CW0 subframe %d (pid %d, round %d)\n",
+                     subframe,harq_pid,dlsch0_harq->round);
           if ( dlsch0_harq->first_tx==1) {
             LOG_D(PHY,"Format 2 DCI First TX0: Clearing flag\n");
             dlsch0_harq->first_tx = 0;
@@ -5828,7 +5822,7 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
 	  //NDI has not been toggled but rv was increased by eNB: retransmission
 	  {
 	    if(dlsch0_harq->status == SCH_IDLE) {
-	      // skip pdsch decoding and report ack
+	      LOG_I(PHY,"[UE] DLSCH CW0: skip pdsch decoding and report ack\n");
 	      //dlsch0_harq->status   = SCH_IDLE;
 	      pdlsch0->active       = 0;
 	      pdlsch0->harq_ack[subframe].ack = 1;
@@ -5862,8 +5856,8 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
       if (TB1_active) {
         if ((ndi2!=dlsch1_harq->DCINdi) || (dlsch1_harq->first_tx==1)) {
           dlsch1_harq->round = 0;
-          //LOG_I(PHY,"[UE] DLSCH: New Data Indicator CW1 subframe %d (pid %d, round %d)\n",
-          //           subframe,harq_pid,dlsch0_harq->round);
+          LOG_I(PHY,"[UE] DLSCH: New Data Indicator CW1 subframe %d (pid %d, round %d)\n",
+                     subframe,harq_pid,dlsch0_harq->round);
           if (dlsch1_harq->first_tx==1) {
             LOG_D(PHY,"Format 2 DCI First TX1: Clearing flag\n");
             dlsch1_harq->first_tx = 0;
@@ -5873,7 +5867,7 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
 	//NDI has not been toggled but rv was increased by eNB: retransmission
 	  {
 	    if(dlsch1_harq->status == SCH_IDLE) {
-	      // skip pdsch decoding and report ack
+	      LOG_I(PHY,"[UE] DLSCH CW1: skip pdsch decoding and report ack\n");
 	      //dlsch1_harq->status   = SCH_IDLE;
 	      pdlsch1->active       = 0;
 	      pdlsch1->harq_ack[subframe].ack = 1;
@@ -5905,14 +5899,6 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
       printf("[DCI UE]: dlsch0_harq status %d , dlsch1_harq status %d\n", dlsch0_harq->status, dlsch1_harq->status);
 #endif
 
-  #ifdef DEBUG_HARQ
-      if (dlsch0 != NULL && dlsch1 != NULL)
-        printf("[DCI UE] dlsch0_harq status = %d, dlsch1_harq status = %d\n", dlsch0_harq->status, dlsch1_harq->status);
-      else if (dlsch0 == NULL && dlsch1 != NULL)
-        printf("[DCI UE] dlsch0_harq NULL dlsch1_harq status = %d\n", dlsch1_harq->status);
-      else if (dlsch0 != NULL && dlsch1 == NULL)
-        printf("[DCI UE] dlsch1_harq NULL dlsch0_harq status = %d\n", dlsch0_harq->status);
-  #endif
 }
 
 int generate_ue_dlsch_params_from_dci(int frame,

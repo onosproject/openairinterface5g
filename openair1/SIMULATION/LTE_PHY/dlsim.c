@@ -1610,6 +1610,33 @@ int main(int argc, char **argv)
       case 'N':
         channel_model=AWGN;
         break;
+      case 'P':
+        channel_model=Rayleigh1_orthogonal;
+        break;
+      case 'Q':
+        channel_model=Rayleigh1_orth_eff_ch_TM4_prec_real; // for DUALSTREAM_UNIFORM_PRECODING1 when interf is precancelled
+        break;
+      case 'R':
+        channel_model=Rayleigh1_orth_eff_ch_TM4_prec_imag; // for DUALSTREAM_UNIFORM_PRECODINGj when interf is precancelled
+        break;
+      case 'S':
+        channel_model=Rayleigh8_orth_eff_ch_TM4_prec_real;//when interf is precancelled
+        break;
+      case 'T':
+        channel_model=Rayleigh8_orth_eff_ch_TM4_prec_imag;//when interf is precancelled
+        break;
+      case 'U':
+        channel_model = TS_SHIFT;
+        break;
+      case 'V':
+        channel_model=EPA_low;
+        break;
+      case 'W':
+        channel_model=EPA_medium;
+        break;
+      case 'X':
+        channel_model=EPA_high;
+        break;
       default:
         msg("Unsupported channel model!\n");
         exit(-1);
