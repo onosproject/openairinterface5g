@@ -172,13 +172,13 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
   
   /*NB-IoT IF module Common setting*/
   
-  UL_IND_t UL_Info;
+  UL_IND_t UL_INFO;
 
 
-  UL_Info.module_id = eNB->Mod_id;
-  UL_Info.CC_id = eNB->CC_id;
-  UL_Info.frame =  frame;
-  UL_Info.subframe = subframe;
+  UL_INFO.module_id = eNB->Mod_id;
+  UL_INFO.CC_id = eNB->CC_id;
+  UL_INFO.frame =  frame;
+  UL_INFO.subframe = subframe;
 
 
   T(T_ENB_PHY_UL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
@@ -333,14 +333,13 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
 	                if (eNB->mac_enabled == 1)
                     {
                       //instead rx_sdu to report The Uplink data not received successfully to MAC
-                      UL_Info.UL_SPEC_Info[i].RNTI= eNB->ulsch[i]->rnti;
-                      UL_Info.UL_SPEC_Info[i].sdu = NULL;
-                      UL_Info.UL_SPEC_Info[i].sdu_lenP = 0;
-                      UL_Info.UL_SPEC_Info[i].harq_pidP = harq_pid;
-                      UL_Info.UL_SPEC_Info[i].msg3_flagP = &eNB->ulsch[i]->Msg3_flag;
-                      UL_Info.UL_SPEC_Info[i].NAK=1;
-                      UL_Info.UE_NUM++;
-
+                      (UL_INFO.crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 1;
+                       UL_INFO.crc_ind.number_of_crcs++;
+                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->ulsch[i]->rnti;
+                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->data= NULL;
+                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = 0;
+                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid = harq_pid;
+                       UL_INFO.RX_NPUSCH.number_of_pdus++;
                     }
                 }
             }
@@ -376,12 +375,13 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
 	                if (eNB->mac_enabled)
                     {
                       // store successful MSG3 in UL_Info instead rx_sdu
-                      UL_Info.UL_SPEC_Info[i].RNTI= eNB->ulsch[i]->rnti;
-                      UL_Info.UL_SPEC_Info[i].sdu = eNB->ulsch[i]->harq_processes[harq_pid]->b;
-                      UL_Info.UL_SPEC_Info[i].sdu_lenP = eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3;
-                      UL_Info.UL_SPEC_Info[i].harq_pidP = harq_pid;
-                      UL_Info.UL_SPEC_Info[i].msg3_flagP = &eNB->ulsch[i]->Msg3_flag;
-                      UL_Info.UE_NUM++;
+                      (UL_INFO.crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 0;
+                      UL_INFO.crc_ind.number_of_crcs++;
+                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->ulsch[i]->rnti;
+                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->data = eNB->ulsch[i]->harq_processes[harq_pid]->b;
+                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3;
+                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid = harq_pid;
+                      UL_INFO.RX_NPUSCH.number_of_pdus++;
                     }
 
 	                /* Need check if this needed in NB-IoT
@@ -435,12 +435,13 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
 	          if (eNB->mac_enabled==1) 
               {
                   // store successful Uplink data in UL_Info instead rx_sdu
-                  UL_Info.UL_SPEC_Info[i].RNTI= eNB->ulsch[i]->rnti;
-                  UL_Info.UL_SPEC_Info[i].sdu = eNB->ulsch[i]->harq_processes[harq_pid]->b;
-                  UL_Info.UL_SPEC_Info[i].sdu_lenP = eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3;
-                  UL_Info.UL_SPEC_Info[i].harq_pidP = harq_pid;
-                  UL_Info.UL_SPEC_Info[i].msg3_flagP = NULL;
-                  UL_Info.UE_NUM++;
+                  (UL_INFO.crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 0;
+                  UL_INFO.crc_ind.number_of_crcs++;
+                  (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->ulsch[i]->rnti;
+                  (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->data = eNB->ulsch[i]->harq_processes[harq_pid]->b;
+                  (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3;
+                  (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid  = harq_pid;
+                  UL_INFO.RX_NPUSCH.number_of_pdus++;
 	    
 	            } // mac_enabled==1
           } // Msg3_flag == 0
@@ -476,7 +477,7 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,con
 
 
   /*Exact not here, but use to debug*/
-  UL_indication(UL_Info);
+  if_inst->UL_indication(UL_INFO);
 
 }
 
@@ -506,7 +507,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
     { // this is a normal DLSCH allocation
       if (UE_id>=0) 
         {
-          LOG_D(PHY,"Generating dlsch params for RNTI %x\n",Sched_Rsp->NB_DL.NB_DCI.RNTI);      
+          LOG_D(PHY,"Generating dlsch params for RNTI %x\n",Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.rnti);      
           //NB_generate_eNB_dlsch_params_from_dci();
 
           /*Log for remaining DCI*/
@@ -518,7 +519,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
       else 
         {
           LOG_D(PHY,"[eNB %"PRIu8"][PDSCH] Frame %d : No UE_id with corresponding rnti %"PRIx16", dropping DLSCH\n",
-                      eNB->Mod_id,frame,Sched_Rsp->NB_DL.NB_DCI.RNTI);
+                      eNB->Mod_id,frame,Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.rnti);
         }
     }
   
@@ -534,7 +535,7 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_
   
   //LOG for ULSCH DCI Resource allocation
   
-  if ((Sched_Rsp->NB_DL.NB_DCI.RNTI  >= CBA_RNTI) && (Sched_Rsp->NB_DL.NB_DCI.RNTI < P_RNTI))
+  if ((Sched_Rsp->NB_DL.NB_DCI.UL_DCI.npdcch_dci_pdu_rel13.rnti  >= CBA_RNTI) && (Sched_Rsp->NB_DL.NB_DCI.UL_DCI.npdcch_dci_pdu_rel13.rnti < P_RNTI))
     eNB->ulsch[(uint32_t)UE_id]->harq_processes[harq_pid]->subframe_cba_scheduling_flag = 1;
   else
     eNB->ulsch[(uint32_t)UE_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 1;
@@ -634,9 +635,9 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       /*Loop over all the dci to generate DLSCH allocation, there is only 1 or 2 DCIs for NB-IoT in the same time*/
       /*Also Packed the DCI here*/
       
-      if (Sched_Rsp->NB_DL.NB_DCI.RNTI<= P_RNTI) 
+      if (Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.rnti<= P_RNTI) 
         {
-          UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.RNTI,eNB);
+          UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.rnti,eNB);
         }
       else 
         UE_id=0;
@@ -651,14 +652,14 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
       if (Sched_Rsp->NB_DL.NB_DCI.DCI_Format == DCIFormatN0) // this is a ULSCH allocation
         {  
-          UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.RNTI,eNB);
+          UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.UL_DCI.npdcch_dci_pdu_rel13.rnti,eNB);
           NB_generate_eNB_ulsch_params(eNB,proc,Sched_Rsp,UE_id);
         }
 
       /*If we have DCI to generate do it now TODO : have a generate dci top for NB_IoT */      
-      NB_generate_dci_top();
+      //NB_generate_dci_top();
 
-      if(Sched_Rsp->NB_DL.NB_DLSCH.ndlsch_pdu_payload||Sched_Rsp->NB_DL.NB_DLSCH.nbcch_pdu_payload)
+      if(Sched_Rsp->NB_DL.NB_DLSCH.NPDSCH_pdu.segments)
         {
             /*TODO: MPDSCH procedures for NB-IoT*/
             //npdsch_procedures();

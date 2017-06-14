@@ -8,6 +8,7 @@
 #ifndef __IF_MODULE_NB_IoT__H__
 #define __IF_MODULE_NB_IoT__H__
 
+#include "nfapi_interface.h"
 #include "openair1/PHY/LTE_TRANSPORT/defs_nb_iot.h"
 #include "PhysicalConfigDedicated-NB-r13.h"
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
@@ -146,52 +147,12 @@ typedef struct{
 
 // uplink subframe P7
 
-typedef struct{
 
- 	//index of the preamble, detected initial subcarrier (0-47)
- 	uint16_t preamble_index;
- 	//timing offset by PHY
- 	int16_t timing_offset;
- 	//Indicates the NRACH CE level as configured in CONFIG (0,1,2 = CE level 0,1,2)
- 	uint8_t NRACH_CE_Level;
- 	//RA-RNTI
- 	uint16_t RNTI;
- 	//Timing Advance
- 	uint16_t TA;
-
-}NRACH_t;
-
-/*UL_SPEC_t:
-* A struture mainly describes the UE specific information. (for NB_rx_sdu)
-* Corresponding to the RX_ULSCH.indication, CRC.inidcation, NB_HARQ.indication in FAPI
-*/
-typedef struct{
-
-	// 0 = format 1 (data), 1 = formaat 2 (ACK/NACK)
-	uint8_t NPUSCH_format;
-	//An opaque handling returned in the RX.indication
-	uint32_t OPA_handle;
-	//rnti
-	uint16_t RNTI;
-	//Pointer to sdu
-	uint8_t *sdu;
-	//Pointer to sdu length 
-	uint16_t sdu_lenP;
-	//HARQ ID
-	int harq_pidP;
-	//MSG3 flag
-	uint8_t *msg3_flagP;
-	//CRC indication for the message is corrected or not for the Uplink HARQ
-	uint8_t crc_ind;
-
-	//This ACK NACK is for the Downlink HARQ feedback received by the NPUSCH from UE
-	uint8_t NAK;
-
-}UL_SPEC_t;
 
 
 /*UL_IND_t:
 * A structure handles all the uplink information.
+* Corresponding to the NRACH.indicaiton, UL_Config_indication, RX_ULSCH.indication, CRC.inidcation, NB_HARQ.indication in FAPI
 */
 typedef struct{
 
@@ -210,17 +171,16 @@ typedef struct{
 
  	/*preamble part*/
 
- 	//number of the subcarrier detected in the same time
- 	uint8_t Number_SC;
- 	//NRACH Indication parameters list
- 	NRACH_t Preamble_list[48];
+ 	nfapi_nrach_indication_body_t NRACH;
 
- 	/*UE specific part*/
+ 	/*Uplink data part*/
 
- 	//Number of availble UE for Uplink
- 	int UE_NUM;
- 	//Uplink Schedule information
- 	UL_SPEC_t UL_SPEC_Info[NUMBER_OF_UE_MAX]; 
+ 	/*indication of the uplink data*/
+ 	nfapi_ul_config_nulsch_pdu NULSCH;
+ 	/*Uplink data PDU*/
+ 	nfapi_rx_indication_body_t RX_NPUSCH;
+ 	/*crc_indication*/
+ 	nfapi_crc_indication_body_t crc_ind;
 
  }UL_IND_t;
 
@@ -228,64 +188,28 @@ typedef struct{
 
  typedef struct{
 
- 	//The length (in bytes)
- 	uint16_t Length;
- 	//PDU index 
- 	uint16_t PDU_index;
- 	//Transmission Power
- 	uint16_t Trans_Power;
- 	//HYPER SFN 2lsbs
- 	uint16_t HyperSFN2lsbs;
- 	//NPBCH pdu payload
- 	uint8_t npbch_pdu_payload[4]; 
+ 	/*Indicate the MIB PDU*/
+	nfapi_dl_config_nbch_pdu_rel13_t nbch;
+	/*MIB PDU*/
+	nfapi_tx_request_pdu_t MIB_pdu;
 
  }npbch_t;
 
  typedef struct{
-
- 	//The length (in bytes)
- 	uint16_t Length;
- 	//PDU index 
- 	uint16_t PDU_index;
- 	//start symbol 0-4 0 for guard-band and standalone operating
- 	uint8_t start_symbol;
- 	//RNTI type,0 = BCCH(SIB), 1 for DL data
- 	uint8_t RNTI_type;
- 	// RNTI 
- 	uint16_t RNTI;
- 	// SIB payload
- 	uint8_t nbcch_pdu_payload[BCCH_PAYLOAD_SIZE_MAX];
- 	// NDLSCH payload
- 	uint8_t ndlsch_pdu_payload[SCH_PAYLOAD_SIZE_MAX];
+ 	/*indicate the NPDSCH PDU*/
+	nfapi_dl_config_ndlsch_pdu_rel13_t ndlsch;
+	/*NPDSCH PDU*/
+	nfapi_tx_request_pdu_t NPDSCH_pdu;
 
  }npdsch_t;
 
  typedef struct{
 
- 	// The length (in bytes)
- 	uint16_t Length;
- 	// PDU index 
- 	uint16_t PDU_index;
- 	// NCCE index value 0 -> 1
- 	uint8_t NCCE_index;
- 	// Aggregation level
- 	uint8_t aggregation;
- 	// start symbol
- 	uint8_t start_symbol;
- 	// RNTI type,0 = TC-RNTI, 1 = RA-RNTI, 2 = P-RNTI 3 = other
- 	uint8_t RNTI_type;
- 	// RNTI 
- 	uint16_t RNTI;
- 	// Scrambliing re-initialization batch index from FAPI specs (1-4)
- 	uint8_t batch_index;
- 	// NRS antenna ports assumed by the UE from FAPI specs (1-2)
- 	uint8_t num_antenna;
- 	// Number of DCI
-  	uint8_t Num_dci;
-  	// Format of DCI
  	DCI_format_NB_t DCI_Format;
- 	// Content of DCI
- 	DCI_CONTENT *DCI_Content;
+ 	/*DL DCI*/
+	nfapi_dl_config_npdcch_pdu DL_DCI;
+	/*UL DCI*/
+	nfapi_hi_dci0_npdcch_dci_pdu UL_DCI;
 
  }npdcch_t;
 
@@ -318,7 +242,8 @@ typedef struct{
 }Sched_Rsp_t;
 
 
-/*IF_Module_t*/
+/*IF_Module_t a group for gathering the Interface
+It should be allocated at the main () in lte-softmodem.c*/
 typedef struct IF_Module_s{
 	//define the function pointer
 	void (*UL_indication)(UL_IND_t UL_INFO);

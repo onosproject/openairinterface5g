@@ -72,8 +72,8 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
 	    const rnti_t      rntiP,
 	    uint8_t          *sduP,
 	    const uint16_t    sdu_lenP,
-	    const int         harq_pidP,
-	    uint8_t          *msg3_flagP)
+	    const int         harq_pidP
+      )
 {
 
   unsigned char  rx_ces[MAX_NUM_CE],num_ce,num_sdu,i,*payload_ptr;
@@ -163,9 +163,6 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
       }
       crnti_rx=1;
       payload_ptr+=2;
-
-      if (msg3_flagP != NULL) {
-		*msg3_flagP = 0;
     
       break;
     /*For this moment, long bsr is not processed in the case*/
@@ -215,7 +212,7 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
     default:
       LOG_E(MAC, "[eNB %d] CC_id %d Received unknown MAC header (0x%02x)\n", enb_mod_idP, CC_idP, rx_ces[i]);
       break;
-    }
+
   }
 
   for (i=0; i<num_sdu; i++) {
@@ -402,12 +399,6 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
     if (UE_id != -1)
       UE_list->eNB_UE_stats[CC_idP][UE_id].total_num_errors_rx+=1;
 
-    if (msg3_flagP != NULL) {
-      if( *msg3_flagP == 1 ) {
-        LOG_N(MAC,"[eNB %d] CC_id %d frame %d : false msg3 detection: signal phy to canceling RA and remove the UE\n", enb_mod_idP, CC_idP, frameP);
-        *msg3_flagP=0;
-      }
-    }
   } else {
     if (UE_id != -1) {
       UE_list->eNB_UE_stats[CC_idP][UE_id].pdu_bytes_rx=sdu_lenP;
@@ -420,5 +411,5 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
   stop_meas(&eNB->rx_ulsch_sdu);
 }
 }
-\
+
 

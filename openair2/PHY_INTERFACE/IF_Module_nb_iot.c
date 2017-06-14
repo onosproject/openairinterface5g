@@ -11,7 +11,8 @@ IF_Module_t* IF_Module_init_L2(void) //southbound IF-Module Interface
 {
 	//register the IF Module to MAC
 	if_inst->UL_indication = UL_indication;
-	return 0;
+
+	return if_inst;
 }
 
 //called at initialization of L1
@@ -23,6 +24,6 @@ IF_Module_t* IF_Module_init_L1(void) //northbound IF-Module Interface
 	if_inst->schedule_response = schedule_response;
 	if_inst->PHY_config_req  = PHY_config_req;
 
-	return 0;
+	return if_inst;
 }
 

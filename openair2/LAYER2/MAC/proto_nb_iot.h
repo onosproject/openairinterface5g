@@ -38,7 +38,7 @@
 
 /* \brief Function to indicate a received SDU on ULSCH for NB-IoT.
 */
-void NB_rx_sdu(const module_id_t module_idP, const int CC_id,const frame_t frameP, const sub_frame_t subframeP, const rnti_t rnti, uint8_t *sdu, const uint16_t sdu_len, const int harq_pid,uint8_t *msg3_flag);
+void NB_rx_sdu(const module_id_t module_idP, const int CC_id,const frame_t frameP, const sub_frame_t subframeP, const rnti_t rnti, uint8_t *sdu, const uint16_t sdu_len, const int harq_pid);
 
 /* \brief Function to retrieve result of scheduling (DCI) in current subframe.  Can be called an arbitrary numeber of times after eNB_dlsch_ulsch_scheduler
 in a given subframe. 
