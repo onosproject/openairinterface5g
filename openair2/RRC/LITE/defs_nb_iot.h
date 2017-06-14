@@ -493,7 +493,8 @@ typedef struct {
   //implicit parameters needed
   int                               Ncp; //cyclic prefix for DL
   int								Ncp_UL; //cyclic prefix for UL
-  int                               p_eNB; //number of antenna port (getting from the CRS of the MIB-NB)
+  int                               p_eNB; //number of tx antenna port
+  int								p_rx_eNB; //number of receiving antenna ports
   uint32_t                          dl_CarrierFreq; //detected by the UE
   uint32_t                          ul_CarrierFreq; //detected by the UE
   uint16_t                          physCellId; //not stored in the MIB-NB but is getting through NPSS/NSSS

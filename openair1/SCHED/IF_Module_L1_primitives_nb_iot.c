@@ -16,10 +16,10 @@ void PHY_config_req(PHY_Config_t* config_INFO){
 		NB_phy_config_mib_eNB(config_INFO->mod_id,
 							  config_INFO->CC_id,
 							  config_INFO->frequency_band_indicator,
-							  config_INFO->sch_config.physical_cell_id,
-							  config_INFO->subframe_config.dl_cyclic_prefix_type,
-							  config_INFO->subframe_config.ul_cyclic_prefix_type,
-							  config_INFO->rf_config.tx_antenna_ports,
+							  config_INFO->sch_config.physical_cell_id.value,
+							  config_INFO->subframe_config.dl_cyclic_prefix_type.value,
+							  config_INFO->subframe_config.ul_cyclic_prefix_type.value,
+							  config_INFO->rf_config.tx_antenna_ports.value,
 							  config_INFO->dl_CarrierFreq,
 							  config_INFO->ul_CarrierFreq);
 	}

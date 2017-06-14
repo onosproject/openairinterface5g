@@ -29,8 +29,6 @@
 */
 
 
-//#ifndef __OPENAIR_RRC_VARS_NB_H__
-//#define __OPENAIR_RRC_VARS_NB_H__
 #include "defs_nb_iot.h"
 #include "LAYER2/RLC/rlc.h"
 #include "COMMON/mac_rrc_primitives.h"
@@ -66,10 +64,7 @@ unsigned short Data_to_read;
 #include "LAYER2/MAC/extern.h"
 #define MAX_U32 0xFFFFFFFF
 
-//LogicalChannelConfig__ext1 logicalChannelSR_Mask_r9_ext1--> not defined for NB-IoT
-
 eNB_RRC_INST_NB *eNB_rrc_inst_NB;
-
 uint8_t DRB2LCHAN_NB[2];//max can be 2 DRBs for NB_IoT --> it used for saving the LCID of DRBs
 
 BOOLEAN_t logicalChannelSR_Prohibit = 1;
@@ -89,16 +84,12 @@ struct LogicalChannelConfig_NB_r13 SRB1_NB_logicalChannelConfig_defaultValue = {
 
 //CONSTANTS
 rlc_info_t Rlc_info_um,Rlc_info_am_config, Rlc_info_am;
-uint16_t RACH_FREQ_ALLOC;
 
-//TODO: MP: to e changed --> mac_rrc_primitives
-LCHAN_DESC BCCH_LCHAN_DESC,CCCH_LCHAN_DESC,DCCH_LCHAN_DESC,DTCH_DL_LCHAN_DESC,DTCH_UL_LCHAN_DESC;
+//MP:  LCHAN_DESC (mac_rrc_primitives) is not needed, was only an old implementation for storing LCH information
 
-//XXX //MP:May not needed
-//MAC_MEAS_T BCCH_MEAS_TRIGGER,CCCH_MEAS_TRIGGER,DCCH_MEAS_TRIGGER,DTCH_MEAS_TRIGGER;
-//MAC_AVG_T BCCH_MEAS_AVG, CCCH_MEAS_AVG,DCCH_MEAS_AVG, DTCH_MEAS_AVG;
 
-// timers (TS 36.331 "UE-TimersAndConstants-NB" pag 622) (milliseconds) XXX MP:--> not sure they will be used
+// timers (TS 36.331 v14.2.1 "UE-TimersAndConstants-NB" pag 622) (milliseconds)
+//seems to be not used or only at UE side
 uint16_t T300_NB[8] = {2500,4000,6000,10000, 15000,25000,40000,60000};
 uint16_t T301_NB[8] = {2500,4000,6000,10000, 15000,25000,40000,60000}; //MP: this start at RRCconnectionReestablishmentReq (not implemented in OAI)
 uint16_t T310_NB[8] = {0,200,500,1000,2000,4000,8000};
@@ -111,4 +102,3 @@ uint16_t N311_NB[8] = {1,2,3,4,5,6,8,10};
 /* MP: 36.133 Section 9.1.4 RSRP Measurement Report Mapping and RSRQ Mapping, Table: 9.1.4-1 --> not for NB-IoT*/
 
 
-//#endif

@@ -571,6 +571,7 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
           ue_context_pP->ue_context.rnti,
           0, //physCellID
 		  0, //p_eNB
+		  0, //p_rx_eNB
 		  0, //Ncp
 		  0, //Ncp_UL
 		  0, //eutraband
@@ -800,6 +801,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
             ue_context_pP->ue_context.rnti,
             0,//physCellId --> this parameters could be set to 0 since no MIB is present
 			0,// p_eNB
+			0,//p_rx_eNB
 			0, //Ncp
 			0, //Ncp_UL
 			0, //eutra_band
@@ -843,6 +845,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
                       ue_context_pP->ue_context.rnti,
                       0,//physCellId --> this parameters could be set to 0 since no MIB is present
 					  0,// p_eNB
+					  0,//p_rx_eNB
 					  0, //Ncp
 					  0, //Ncp_UL
 					  0, //eutra_band
@@ -1456,7 +1459,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   ASN_SEQUENCE_ADD(&(*DRB_configList2)->list, DRB_config);
 
 
-  ///Mac_MainConfig
+  ///Mac_MainConfig (default as defined in TS 36.331 ch 9.2.2)
   mac_MainConfig_NB = CALLOC(1, sizeof(*mac_MainConfig_NB));
   ue_context_pP->ue_context.mac_MainConfig_NB = mac_MainConfig_NB;
 
@@ -1483,6 +1486,9 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
 
 
   if (*physicalConfigDedicated_NB) {
+
+	  //DL_CarrierConfigDedicated_NB_r13_t cio;
+	  //UL_CarrierConfigDedicated_NB_r13_t c;
 
 	  //TODO: which value should be configured of phisical config dedicated?
 	  //antennaInfo not present in PhysicalConfigDedicated for NB_IoT
@@ -1621,6 +1627,7 @@ init_SI_NB(
   //copy basic parameters
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].physCellId      = configuration->Nid_cell[CC_id];
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].p_eNB           = configuration->nb_antenna_ports[CC_id];
+  eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].p_rx_eNB		 = configuration->nb_antenna_ports_rx[CC_id];
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp             = configuration->prefix_type[CC_id]; //DL Cyclic prefix
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp_UL			 = configuration->prefix_type_UL[CC_id];//UL cyclic prefix
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].dl_CarrierFreq  = configuration->downlink_frequency[CC_id];
@@ -1719,6 +1726,7 @@ init_SI_NB(
 								0,//rnti
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].physCellId,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].p_eNB,
+								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].p_rx_eNB,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Ncp_UL,
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].sib1_NB->freqBandIndicator_r13, //eutra_band
@@ -1807,7 +1815,6 @@ while ( eNB_rrc_inst_NB == NULL ) {
 
   //XXX following the old implementation: openair_rrc_top_init is called in MAC/main.c
   //In Rymond version actually is called here
-
   //openair_rrc_top_init_eNB_NB();
 
   //init ch SRB0, SRB1 & BDTCH

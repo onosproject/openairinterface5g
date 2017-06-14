@@ -117,16 +117,16 @@ uint8_t do_MIB_NB(
 
   //XXX check if correct the bit assignment
   uint8_t sfn_MSB = (uint8_t)((frame>>6) & 0x0f); // all the 4 bits are set to 1
-  uint8_t hsfn_LSB = (uint8_t)((frame>>8)& 0x03); //2 bits set to 1
+  uint8_t hsfn_LSB = (uint8_t)(frame & 0x3); //2 bits set to 1 (0x3 = 0011)
   uint16_t spare=0; //11 bits --> use uint16
 
   mib_NB->message.systemFrameNumber_MSB_r13.buf = &sfn_MSB;
   mib_NB->message.systemFrameNumber_MSB_r13.size = 1; //if expressed in byte
-  mib_NB->message.systemFrameNumber_MSB_r13.bits_unused = 6;
+  mib_NB->message.systemFrameNumber_MSB_r13.bits_unused = 4; //is byte based (so how many bits you don't use of the 8 bits of a bite
 
   mib_NB->message.hyperSFN_LSB_r13.buf= &hsfn_LSB;
   mib_NB->message.hyperSFN_LSB_r13.size= 1;
-  mib_NB->message.hyperSFN_LSB_r13.bits_unused = 8;
+  mib_NB->message.hyperSFN_LSB_r13.bits_unused = 6;
 
   //XXX to be set??
   mib_NB->message.spare.buf = (uint16_t *)&spare;
@@ -206,7 +206,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
   //XXX to be checked
   sib1_NB->hyperSFN_MSB_r13.buf = &hyperSFN_MSB;
   sib1_NB->hyperSFN_MSB_r13.size = 1;
-  sib1_NB->hyperSFN_MSB_r13.bits_unused = 2;
+  sib1_NB->hyperSFN_MSB_r13.bits_unused = 0;
 
   memset(&PLMN_identity_info_NB,0,sizeof(PLMN_IdentityInfo_NB_r13_t));
   memset(&schedulingInfo_NB,0,sizeof(SchedulingInfo_NB_r13_t));
@@ -481,8 +481,9 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
 
 /// SIB2-NB-----------------------------------------
 
-  //Barring is manage by ab-Enabled in MIB-NB (but is not a struct as ac-BarringInfo)
+  //Barring is manage by ab-Enabled in MIB-NB (but is not a struct as ac-BarringInfo in LTE legacy)
 
+  //RACH Config. Common--------------------------------------------------------------
   sib2_NB->radioResourceConfigCommon_r13.rach_ConfigCommon_r13.preambleTransMax_CE_r13 =
    		  configuration->rach_preambleTransMax_CE_NB[CC_id];
   sib2_NB->radioResourceConfigCommon_r13.rach_ConfigCommon_r13.powerRampingParameters_r13.powerRampingStep =
@@ -492,7 +493,7 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
 
   rach_Info_NB.ra_ResponseWindowSize_r13 = configuration->rach_raResponseWindowSize_NB[CC_id];
   rach_Info_NB.mac_ContentionResolutionTimer_r13 = configuration-> rach_macContentionResolutionTimer_NB[CC_id];
-  //initialize this list? how to use it? correct?
+  //rach_infoList max size = maxNPRACH-Resources-NB-r13 = 3
   ASN_SEQUENCE_ADD(&sib2_NB->radioResourceConfigCommon_r13.rach_ConfigCommon_r13.rach_InfoList_r13.list,&rach_Info_NB);
 
   //TS 36.331 pag 614 --> if not present the value to infinity sould be used
@@ -500,17 +501,17 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
    sib2_NB->radioResourceConfigCommon_r13.rach_ConfigCommon_r13.connEstFailOffset_r13 = connEstFailOffset; /*OPTIONAL*/
 
 
-  // BCCH-Config-NB-IoT
+  // BCCH-Config-NB-IoT----------------------------------------------------------------
   sib2_NB->radioResourceConfigCommon_r13.bcch_Config_r13.modificationPeriodCoeff_r13
     = configuration->bcch_modificationPeriodCoeff_NB[CC_id];
 
-  // PCCH-Config-NB-IoT
+  // PCCH-Config-NB-IoT-----------------------------------------------------------------
   sib2_NB->radioResourceConfigCommon_r13.pcch_Config_r13.defaultPagingCycle_r13
     = configuration->pcch_defaultPagingCycle_NB[CC_id];
   sib2_NB->radioResourceConfigCommon_r13.pcch_Config_r13.nB_r13 = configuration->pcch_nB_NB[CC_id];
   sib2_NB->radioResourceConfigCommon_r13.pcch_Config_r13.npdcch_NumRepetitionPaging_r13 = configuration-> pcch_npdcch_NumRepetitionPaging_NB[CC_id];
 
-  //NPRACH-Config-NB-IoT
+  //NPRACH-Config-NB-IoT-----------------------------------------------------------------
   sib2_NB->radioResourceConfigCommon_r13.nprach_Config_r13.nprach_CP_Length_r13 = configuration->nprach_CP_Length[CC_id];
   sib2_NB->radioResourceConfigCommon_r13.nprach_Config_r13.rsrp_ThresholdsPrachInfoList_r13 = NULL; /*OPTIONAL*/
 //   =CALLOC(1, sizeof(struct RSRP_ThresholdsNPRACH_InfoList_NB_r13)); //fatto uguale dopo
@@ -536,7 +537,7 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   sib2_NB->radioResourceConfigCommon_r13.npdsch_ConfigCommon_r13.nrs_Power_r13= configuration->npdsch_nrs_Power[CC_id];
 
 
-  //NPUSCH-Config NB-IoT
+  //NPUSCH-Config NB-IoT----------------------------------------------------------------
   //list of size 3 (see maxNPRACH_Resources_NB_r13)
   ack_nack_repetition = configuration-> npusch_ack_nack_numRepetitions_NB[CC_id]; //is an enumerative
   ASN_SEQUENCE_ADD(&sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.ack_NACK_NumRepetitions_Msg4_r13.list,ack_nack_repetition);
@@ -556,17 +557,17 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
 
   sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.dmrs_Config_r13 = dmrs_config;
 
+  //ulReferenceSignalsNPUSCH
+  /*Reference Signal (RS) for UL in NB-IoT is called DRS (Demodulation Reference Signal)
+   * sequence-group hopping can be enabled or disabled by means of the cell-specific parameter groupHoppingEnabled_r13
+   * sequence-group hopping can be disabled for certain specific UE through the parameter groupHoppingDisabled (physicalConfigDedicated)
+   * groupAssignmentNPUSCH--> is used for generate the sequence-shift pattern
+   */
   sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupHoppingEnabled_r13= configuration->npusch_groupHoppingEnabled[CC_id];
   sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13 =configuration->npusch_groupAssignmentNPUSCH_r13[CC_id];
 
 
- /* NPUCCH NOT EXIST in NB-IoT
-  *
-  * all data are sent over the NPUSCH. This includes also the UL control information (UCI),
-  * which is transmitted using a different format. Consequently there is no equivalent to the PUCCH of LTE in NB-IoT.
-  */
-
-  /*OPTIONAL*/
+  //dl_GAP---------------------------------------------------------------------------------/*OPTIONAL*/
   dl_Gap = CALLOC(1,sizeof(struct DL_GapConfig_NB_r13));
   dl_Gap->dl_GapDurationCoeff_r13= configuration-> dl_GapDurationCoeff_NB[CC_id];
   dl_Gap->dl_GapPeriodicity_r13= configuration->dl_GapPeriodicity_NB[CC_id];
@@ -574,13 +575,13 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   sib2_NB->radioResourceConfigCommon_r13.dl_Gap_r13 = dl_Gap;
 
 
-  // uplinkPowerControlCommon - NB-IoT
+  // uplinkPowerControlCommon - NB-IoT------------------------------------------------------
   sib2_NB->radioResourceConfigCommon_r13.uplinkPowerControlCommon_r13.p0_NominalNPUSCH_r13 = configuration->npusch_p0_NominalNPUSCH;
   sib2_NB->radioResourceConfigCommon_r13.uplinkPowerControlCommon_r13.deltaPreambleMsg3_r13 = configuration->deltaPreambleMsg3;
   sib2_NB->radioResourceConfigCommon_r13.uplinkPowerControlCommon_r13.alpha_r13 = configuration->npusch_alpha;
   //no deltaFlist_PUCCH and no UL cyclic prefix
 
-  // UE Timers and Constants -NB-IoT
+  // UE Timers and Constants -NB-IoT--------------------------------------------------------
   sib2_NB->ue_TimersAndConstants_r13.t300_r13 = configuration-> ue_TimersAndConstants_t300_NB[CC_id];
   sib2_NB->ue_TimersAndConstants_r13.t301_r13 = configuration-> ue_TimersAndConstants_t301_NB[CC_id];
   sib2_NB->ue_TimersAndConstants_r13.t310_r13 = configuration-> ue_TimersAndConstants_t310_NB[CC_id];
@@ -588,9 +589,10 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   sib2_NB->ue_TimersAndConstants_r13.n310_r13 = configuration-> ue_TimersAndConstants_n310_NB[CC_id];
   sib2_NB->ue_TimersAndConstants_r13.n311_r13 = configuration-> ue_TimersAndConstants_n311_NB[CC_id];
 
-
+  //other SIB2-NB Parameters--------------------------------------------------------------------------------
   sib2_NB->freqInfo_r13.additionalSpectrumEmission_r13 = 1;
   sib2_NB->freqInfo_r13.ul_CarrierFreq_r13 = NULL; /*OPTIONAL*/
+
   sib2_NB->timeAlignmentTimerCommon_r13=TimeAlignmentTimer_infinity;//TimeAlignmentTimer_sf5120;
 
   /*OPTIONAL*/
@@ -703,7 +705,7 @@ uint8_t do_RRCConnectionSetup_NB(
  *SRB_configList_NB = CALLOC(1,sizeof(SRB_ToAddModList_NB_r13_t));
 
 /// SRB1--------------------
-
+ {
 // SRB1_config_NB = CALLOC(1,sizeof(*SRB1_config_NB));
 //
 // //no srb_Identity in SRB_ToAddMod_NB
@@ -713,7 +715,6 @@ uint8_t do_RRCConnectionSetup_NB(
 //
 // SRB1_rlc_config_NB->present = SRB_ToAddMod_NB_r13__rlc_Config_r13_PR_explicitValue;
 // SRB1_rlc_config_NB->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//the only possible in NB_IoT
-//
 //
 //// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_timer_poll_retransmit_r13;
 //// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_max_retx_threshold_r13;
@@ -743,10 +744,9 @@ uint8_t do_RRCConnectionSetup_NB(
 //
 // //ADD SRB1
 // ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1_config_NB);
+ }
 
-
-///SRB1bis (The configuration for SRB1 and SRB1bis is the same)
- // the only difference is the logical channel identity = 3 but not set here
+///SRB1bis (The configuration for SRB1 and SRB1bis is the same) the only difference is the logical channel identity = 3 but not set here
 
 		 SRB1bis_config_NB = CALLOC(1,sizeof(*SRB1bis_config_NB));
 
@@ -776,7 +776,7 @@ uint8_t do_RRCConnectionSetup_NB(
 		 SRB1bis_lchan_config_NB->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
 
 		 //ADD SRB1bis
-		 //MP: Actually there is no way to distinguish SRB1 and SRB1bis once in the list
+		 //MP: Actually there is no way to distinguish SRB1 and SRB1bis once put in the list
 		 //MP: SRB_ToAddModList_NB_r13_t size = 1
 		 ASN_SEQUENCE_ADD(&(*SRB_configList_NB)->list,SRB1bis_config_NB);
 
@@ -799,30 +799,38 @@ uint8_t do_RRCConnectionSetup_NB(
   * Once selected, the same transmission scheme applies to NPBCH, NPDCCH, and NPDSCH.
   * */
 
- //FIXME: CarrierConfigDedicated check the set values
-  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.downlinkBitmapNonAnchor_r13->present=
-		  DL_CarrierConfigDedicated_NB_r13__downlinkBitmapNonAnchor_r13_PR_useNoBitmap_r13;
-  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_GapNonAnchor_r13->present =
-		  DL_CarrierConfigDedicated_NB_r13__dl_GapNonAnchor_r13_PR_useNoGap_r13;
-  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.inbandCarrierInfo_r13= NULL;
+ //FIXME: MP: CarrierConfigDedicated check the set values ----------------------------------------------
 
-  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->ul_CarrierConfig_r13.ul_CarrierFreq_r13->carrierFreq_r13=0;
-  physicalConfigDedicated2_NB->carrierConfigDedicated_r13->ul_CarrierConfig_r13.ul_CarrierFreq_r13->carrierFreqOffset_r13= NULL;
+  //DL
+
+ physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_CarrierFreq_r13.carrierFreq_r13=0;//random value set
+ physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.downlinkBitmapNonAnchor_r13= CALLOC(1,sizeof(struct DL_CarrierConfigDedicated_NB_r13__downlinkBitmapNonAnchor_r13));
+		 physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.downlinkBitmapNonAnchor_r13->present=
+				 	 	 	 	 	 	 	 	 DL_CarrierConfigDedicated_NB_r13__downlinkBitmapNonAnchor_r13_PR_useNoBitmap_r13;
+
+ physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_GapNonAnchor_r13 = CALLOC(1,sizeof(struct DL_CarrierConfigDedicated_NB_r13__dl_GapNonAnchor_r13));
+ physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_GapNonAnchor_r13->present =
+		  	  	  	  	  	  	  	  	  	  	  DL_CarrierConfigDedicated_NB_r13__dl_GapNonAnchor_r13_PR_useNoGap_r13;
+
+ physicalConfigDedicated2_NB->carrierConfigDedicated_r13->dl_CarrierConfig_r13.inbandCarrierInfo_r13= NULL;
+
+  //UL
+ physicalConfigDedicated2_NB->carrierConfigDedicated_r13->ul_CarrierConfig_r13.ul_CarrierFreq_r13= NULL;
 
  // NPDCCH
  physicalConfigDedicated2_NB->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13 =0;
  physicalConfigDedicated2_NB->npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13 =0;
  physicalConfigDedicated2_NB->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13=0;
 
- // NPUSCH
- physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->ack_NACK_NumRepetitions_r13= NULL; //(specs pag 643) /* OPTIONAL */
+ // NPUSCH //(specs TS 36.331 v14.2.1 pag 643) /* OPTIONAL */
+ physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->ack_NACK_NumRepetitions_r13= NULL;
  npusch_AllSymbols= CALLOC(1, sizeof(BOOLEAN_t));
  *npusch_AllSymbols= 1; //TRUE
  physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->npusch_AllSymbols_r13= npusch_AllSymbols; /* OPTIONAL */
  physicalConfigDedicated2_NB->npusch_ConfigDedicated_r13->groupHoppingDisabled_r13=NULL; /* OPTIONAL */
 
  // UplinkPowerControlDedicated
- physicalConfigDedicated2_NB->uplinkPowerControlDedicated_r13->p0_UE_NPUSCH_r13 = 0; // 0 dB (specs pag 643)
+ physicalConfigDedicated2_NB->uplinkPowerControlDedicated_r13->p0_UE_NPUSCH_r13 = 0; // 0 dB (specs TS36.331 v14.2.1 pag 643)
 
 
  //Fill the rrcConnectionSetup-NB message

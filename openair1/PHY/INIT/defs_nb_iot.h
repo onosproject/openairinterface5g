@@ -60,8 +60,8 @@ void NB_phy_config_mib_eNB(int     Mod_id,
 
 void NB_phy_config_sib2_eNB(uint8_t Mod_id,
                             int CC_id,
-                            nb_iot_config_t *config,
-			    rf_config_t *rf_config
+                            nfapi_nb_iot_config_t *config,
+							nfapi_rf_config_t *rf_config
                             );
 
 void NB_phy_config_dedicated_eNB(module_id_t Mod_id,

@@ -468,7 +468,8 @@ typedef struct {
 /*! \brief eNB common channels */
 typedef struct {
   int                              physCellId;
-  int                              p_eNB;
+  int                              p_eNB; //number of tx antenna port
+  int							   p_rx_eNB; //number of Rx antenna port
   int                              Ncp;
   int							   Ncp_UL;
   int                              eutra_band;

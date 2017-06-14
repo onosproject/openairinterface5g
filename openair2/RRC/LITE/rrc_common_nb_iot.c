@@ -312,7 +312,7 @@ rrc_rx_tx_NB(
               "[UE %d][RAPROC] Frame %d T300 Count %d ms\n", ctxt_pP->module_id, ctxt_pP->frame, UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].T300_cnt);
 
       if (UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].T300_cnt
-          == T300[UE_rrc_inst[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.t300]) {
+          == T300_NB[UE_rrc_inst[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.t300]) {
         UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].T300_active = 0;
         // ALLOW CCCH to be used
         UE_rrc_inst[ctxt_pP->module_id].Srb0[enb_indexP].Tx_buffer.payload_size = 0;

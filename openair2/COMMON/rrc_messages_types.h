@@ -116,10 +116,11 @@ typedef struct RrcConfigurationReq_s {
   int16_t                 Nid_cell[MAX_NUM_CCs];// for testing, change later
   int16_t                 N_RB_DL[MAX_NUM_CCs];// for testing, change later
 
-  int                  	  nb_antennas_tx[MAX_NUM_CCs]; //MP: may no more used
-  int                     nb_antennas_rx[MAX_NUM_CCs]; //MP: may no more used
+  int                  	  nb_antennas_tx[MAX_NUM_CCs];
+  int                     nb_antennas_rx[MAX_NUM_CCs];
 
   int					  nb_antenna_ports[MAX_NUM_CCs];
+  int					  nb_antenna_ports_rx[MAX_NUM_CCs];
 
   //PRACH
   long                    prach_root[MAX_NUM_CCs];

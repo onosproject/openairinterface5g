@@ -204,6 +204,8 @@ typedef struct {
   uint8_t nb_antennas_rx;
   /// Number of common transmit antenna ports in eNodeB (1 or 2)
   uint8_t nb_antenna_ports_eNB;
+  /// Number of common receiving antenna ports in eNodeB (1 or 2)
+  uint8_t nb_antenna_ports_rx_eNB;
   /// NPRACH Config Common (from 36-331 RRC spec)
   NPRACH_CONFIG_COMMON nprach_config_common;
   /// NPDSCH Config Common (from 36-331 RRC spec)

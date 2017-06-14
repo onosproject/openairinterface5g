@@ -70,9 +70,10 @@ RRC_status_t rrc_rx_tx_NB(protocol_ctxt_t* const ctxt_pP, const uint8_t  enb_ind
 int NB_rrc_mac_config_req_eNB(
 			   module_id_t       				Mod_idP,
 			   int                              CC_idP,
-			   int								rntiP, //FIXME: Raymond bug?
+			   int								rntiP,
 			   int                              physCellId,
 			   int                              p_eNB,
+			   int								p_rx_eNB,// number of rx antenna ports
 			   int                              Ncp,
 			   int								Ncp_UL,
 			   long                             eutra_band,//FIXME: frequencyBandIndicator in sib1 (is a long not an int!!)

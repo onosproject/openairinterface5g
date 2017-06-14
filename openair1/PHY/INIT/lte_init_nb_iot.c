@@ -201,8 +201,8 @@ void NB_phy_config_mib_eNB(
 
 void NB_phy_config_sib2_eNB(uint8_t Mod_id,
                          int CC_id,
-                         nb_iot_config_t *config,
-						 rf_config_t *rf_config
+                         nfapi_nb_iot_config_t *config,
+						 nfapi_rf_config_t *rf_config
                          )
 {
 	NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms;
@@ -213,21 +213,21 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 
 	//MP: FAPI style approach: instead of a list they consider the 3 possible configuration separately
 
-	  if(config->nprach_config_0_enabled == 1){
+	  if(config->nprach_config_0_enabled.value == 1){
 		  LOG_D(PHY, "NPRACH Config #0 enabled\n");
 
-		  fp->nprach_config_common.nprach_CP_Length = config->nprach_config_0_cp_length; //NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7
+		  fp->nprach_config_common.nprach_CP_Length = config->nprach_config_0_cp_length.value; //NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7
 		  LOG_D(PHY," config#0: nprach_CP_Length = %d\n",fp->nprach_config_common.nprach_CP_Length);
 		  //FIXME: MP: memory for the list should be allocated? initialization??
-		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_Periodicity = config->nprach_config_0_sf_periodicity;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_Periodicity = config->nprach_config_0_sf_periodicity.value;
 		  LOG_D(PHY,"config#0: nprach_Periodicity = %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_Periodicity);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_StartTime = config->nprach_config_0_start_time;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_StartTime = config->nprach_config_0_start_time.value;
 		  LOG_D(PHY,"config#0: nprach_StartTime = %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_StartTime);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_SubcarrierOffset = config->nprach_config_0_subcarrier_offset;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_SubcarrierOffset = config->nprach_config_0_subcarrier_offset.value;
 		  LOG_D(PHY,"config#0: nprach_SubcarrierOffset= %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_SubcarrierOffset);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_NumSubcarriers = config->nprach_config_0_number_of_subcarriers;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_NumSubcarriers = config->nprach_config_0_number_of_subcarriers.value;
 		  LOG_D(PHY,"config#0: nprach_NumSubcarriers= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_NumSubcarriers);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->numRepetitionsPerPreambleAttempt = config->nprach_config_0_number_of_repetitions_per_attempts;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->numRepetitionsPerPreambleAttempt = config->nprach_config_0_number_of_repetitions_per_attempt.value;
 		  LOG_D(PHY,"config#0: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[0]->numRepetitionsPerPreambleAttempt);
 
 		  ///FIXME: missed configuration in FAPI config_request (TS 36.331 pag 610)
@@ -240,21 +240,21 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 
 	  }
 
-	  if(config->nprach_config_1_enabled == 1){
+	  if(config->nprach_config_1_enabled.value == 1){
 		  LOG_D(PHY, "NPRACH Config #1 enabled\n");
 
-		  fp->nprach_config_common.nprach_CP_Length = config->nprach_config_1_cp_length; //NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7
+		  fp->nprach_config_common.nprach_CP_Length = config->nprach_config_1_cp_length.value; //NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7
 		  LOG_D(PHY," config#1: nprach_CP_Length = %d\n",fp->nprach_config_common.nprach_CP_Length);
 		  //FIXME: MP: memory for the list should be allocated? initialization??
-		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_Periodicity = config->nprach_config_1_sf_periodicity;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_Periodicity = config->nprach_config_1_sf_periodicity.value;
 		  LOG_D(PHY,"config#1: nprach_Periodicity = %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_Periodicity);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_StartTime = config->nprach_config_1_start_time;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_StartTime = config->nprach_config_1_start_time.value;
 		  LOG_D(PHY,"config#1: nprach_StartTime = %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_StartTime);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_SubcarrierOffset = config->nprach_config_1_subcarrier_offset;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_SubcarrierOffset = config->nprach_config_1_subcarrier_offset.value;
 		  LOG_D(PHY,"config#1: nprach_SubcarrierOffset= %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_SubcarrierOffset);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_NumSubcarriers = config->nprach_config_1_number_of_subcarriers;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_NumSubcarriers = config->nprach_config_1_number_of_subcarriers.value;
 		  LOG_D(PHY,"config#1: nprach_NumSubcarriers= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_NumSubcarriers);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->numRepetitionsPerPreambleAttempt = config->nprach_config_1_number_of_repetitions_per_attempts;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->numRepetitionsPerPreambleAttempt = config->nprach_config_1_number_of_repetitions_per_attempt.value;
 		  LOG_D(PHY,"config#1: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[1]->numRepetitionsPerPreambleAttempt);
 
 		  ///FIXME: missed configuration in FAPI config_request (TS 36.331 pag 610)
@@ -266,21 +266,21 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 
 	  }
 
-	  if(config->nprach_config_2_enabled == 1){
+	  if(config->nprach_config_2_enabled.value == 1){
 		  LOG_D(PHY, "NPRACH Config #2 enabled\n");
 
-		  fp->nprach_config_common.nprach_CP_Length = config->nprach_config_2_cp_length; //NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7
+		  fp->nprach_config_common.nprach_CP_Length = config->nprach_config_2_cp_length.value; //NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7
 		  LOG_D(PHY," config#2: nprach_CP_Length = %d\n",fp->nprach_config_common.nprach_CP_Length);
 		  //FIXME: MP: memory for the list should be allocated? initialization??
-		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_Periodicity = config->nprach_config_2_sf_periodicity;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_Periodicity = config->nprach_config_2_sf_periodicity.value;
 		  LOG_D(PHY,"config#2: nprach_Periodicity = %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_Periodicity);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_StartTime = config->nprach_config_2_start_time;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_StartTime = config->nprach_config_2_start_time.value;
 		  LOG_D(PHY,"config#2: nprach_StartTime = %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_StartTime);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_SubcarrierOffset = config->nprach_config_2_subcarrier_offset;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_SubcarrierOffset = config->nprach_config_2_subcarrier_offset.value;
 		  LOG_D(PHY,"config#2: nprach_SubcarrierOffset= %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_SubcarrierOffset);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_NumSubcarriers = config->nprach_config_2_number_of_subcarriers;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_NumSubcarriers = config->nprach_config_2_number_of_subcarriers.value;
 		  LOG_D(PHY,"config#2: nprach_NumSubcarriers= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_NumSubcarriers);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->numRepetitionsPerPreambleAttempt = config->nprach_config_2_number_of_repetitions_per_attempts;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->numRepetitionsPerPreambleAttempt = config->nprach_config_2_number_of_repetitions_per_attempt.value;
 		  LOG_D(PHY,"config#2: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->numRepetitionsPerPreambleAttempt);
 
 		  ///FIXME: missed configuration in FAPI config_request (TS 36.331 pag 610)
@@ -300,20 +300,20 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 	  //NPDSCH_ConfigCommon_NB_r13_t b;
 
 	  //FIXME: the FAPI specs pag 140 fix a range of value (0->255) but i don't find any similar correspondence in the 3GPP specs (TS 36.331 pag 608 and TS 36.213 ch 16.2.2)
-	  fp->npdsch_config_common.nrs_Power = rf_config->reference_signal_power;
+	  fp->npdsch_config_common.nrs_Power = rf_config->reference_signal_power.value;
 	
 	  /*NPUSCH ConfigCommon-------------------------------------------------------------------*/
 	  //NPUSCH_ConfigCommon_NB_r13_t c;
 
-	  fp->npusch_config_common.dmrs_Config.threeTone_BaseSequence = config->three_tone_base_sequence;
+	  fp->npusch_config_common.dmrs_Config.threeTone_BaseSequence = config->three_tone_base_sequence.value;
 	  LOG_D(PHY,"npusch_config_common.dmrs_Config.threeTone_BaseSequence = %d\n",fp->npusch_config_common.dmrs_Config.threeTone_BaseSequence);
-	  fp->npusch_config_common.dmrs_Config.sixTone_BaseSequence = config->six_tone_base_sequence;
+	  fp->npusch_config_common.dmrs_Config.sixTone_BaseSequence = config->six_tone_base_sequence.value;
 	  LOG_D(PHY,"npusch_config_common.dmrs_Config.sixTone_BaseSequence = %d\n",fp->npusch_config_common.dmrs_Config.sixTone_BaseSequence);
-	  fp->npusch_config_common.dmrs_Config.threeTone_CyclicShift = config->three_tone_cyclic_shift;
+	  fp->npusch_config_common.dmrs_Config.threeTone_CyclicShift = config->three_tone_cyclic_shift.value;
 	  LOG_D(PHY,"npusch_config_common.dmrs_Config.threeTone_CyclicShift = %d\n",fp->npusch_config_common.dmrs_Config.threeTone_CyclicShift);
-	  fp->npusch_config_common.dmrs_Config.sixTone_CyclicShift = config->six_tone_cyclic_shift;
+	  fp->npusch_config_common.dmrs_Config.sixTone_CyclicShift = config->six_tone_cyclic_shift.value;
 	  LOG_D(PHY,"npusch_config_common.dmrs_Config.sixTone_CyclicShift = %d\n",fp->npusch_config_common.dmrs_Config.sixTone_CyclicShift);
-	  fp->npusch_config_common.dmrs_Config.twelveTone_BaseSequence= config->twelve_tone_base_sequence;
+	  fp->npusch_config_common.dmrs_Config.twelveTone_BaseSequence= config->twelve_tone_base_sequence.value;
 	  LOG_D(PHY,"npusch_config_common.dmrs_Config.twelveTone_BaseSequence = %d\n",fp->npusch_config_common.dmrs_Config.twelveTone_BaseSequence);
 
 	  //MP: FAPI missed parameters
@@ -337,10 +337,10 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 
 	  /*DL gap Config - OPTIONAL----------------------------------------------------------------*/
 	  //DL_GapConfig_NB_r13_t a;
-	  if(config->dl_gap_config_enable == 1){
-		  fp->DL_gap_config.dl_GapDurationCoeff= config->dl_gap_duration_coefficent;
-		  fp->DL_gap_config.dl_GapPeriodicity = config->dl_gap_periodicity;
-		  fp->DL_gap_config.dl_GapThreshold = config->dl_gap_threshold;
+	  if(config->dl_gap_config_enable.value == 1){
+		  fp->DL_gap_config.dl_GapDurationCoeff= config->dl_gap_periodicity.value;
+		  fp->DL_gap_config.dl_GapPeriodicity = config->dl_gap_periodicity.value;
+		  fp->DL_gap_config.dl_GapThreshold = config->dl_gap_threshold.value;
 	  }
 
 	  //TODO

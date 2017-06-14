@@ -11,6 +11,7 @@
 #include "openair1/PHY/LTE_TRANSPORT/defs_nb_iot.h"
 #include "PhysicalConfigDedicated-NB-r13.h"
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
+#include "temp_nfapi_interface.h"
 
 #define SCH_PAYLOAD_SIZE_MAX 4096
 #define BCCH_PAYLOAD_SIZE_MAX 128
@@ -18,93 +19,6 @@
 
 
 // P5 FAPI-like configuration structures
-
-typedef struct{
-	uint16_t duplex_mode;
-	uint16_t pcfich_power_offset;
-	uint16_t p_b; //refers to DL power allocation (see TS 36.213 ch 5.2
-	uint16_t dl_cyclic_prefix_type;
-	uint16_t ul_cyclic_prefix_type;
-}subframe_config_t;
-
-typedef struct{
-	uint16_t dl_channel_bandwidth;
-	uint16_t ul_channel_bandwidth;
-	uint16_t reference_signal_power;
-	uint16_t tx_antenna_ports;
-	uint16_t rx_antenna_ports;
-}rf_config_t;
-
-typedef struct{
-	uint16_t primary_sinchronization_signal_epre_eprers;
-	uint16_t secondary_sinchronization_signal_epre_eprers;
-	uint16_t physical_cell_id; //aka Ncell_id
-}sch_config_t;
-
-typedef struct{
-
-	uint16_t operating_mode;
-	uint16_t anchor;
-	uint16_t prb_index;
-	uint16_t control_region_size;
-	uint16_t assumed_crs_aps;
-
-	//enable or disable configuration #0 (value: 0 = Disable, 1 = Enable)
-	uint16_t nprach_config_0_enabled;
-	//periodicity of NPRACH resource (value 0,1,2,3,4,5,6,7 correspond to 40,80,160,240,320,640,1280,2560ms)
-	uint16_t nprach_config_0_sf_periodicity;
-	//NPRACH resource starting time after period (value 0,1,2,3,4,5,6,7 correspond to 8,16,32,64,128,256,512,1024ms)
-	uint16_t nprach_config_0_start_time;
-	//Frequency location of an NPRACH resource within a PRB (value 0,1,2,3,4,5,6 correspond to 0,12,24,36,2,18,34
-	uint16_t nprach_config_0_subcarrier_offset;
-	//Number of Subcarriers in NPRACH resource (value 0,1,2,3 correspond to 12,24,36,48)
-	uint16_t nprach_config_0_number_of_subcarriers;
-	//Cyclic prefix length for NPRACH transmission (value: 0 = 66.7usec, 1 = 266.7usec)
-	uint16_t nprach_config_0_cp_length;
-	//Number of repetitions for NPRACH transmission (value: 0,1,2,3,4,5,6,7 correspond to 1,2,4,8,16,32,64,128)
-	uint16_t nprach_config_0_number_of_repetitions_per_attempts;
-
-	uint16_t nprach_config_1_enabled;
-	uint16_t nprach_config_1_sf_periodicity;
-	uint16_t nprach_config_1_start_time;
-	uint16_t nprach_config_1_subcarrier_offset;
-	uint16_t nprach_config_1_number_of_subcarriers;
-	uint16_t nprach_config_1_cp_length;
-	uint16_t nprach_config_1_number_of_repetitions_per_attempts;
-
-	uint16_t nprach_config_2_enabled;
-	uint16_t nprach_config_2_sf_periodicity;
-	uint16_t nprach_config_2_start_time;
-	uint16_t nprach_config_2_subcarrier_offset;
-	uint16_t nprach_config_2_number_of_subcarriers;
-	uint16_t nprach_config_2_cp_length;
-	uint16_t nprach_config_2_number_of_repetitions_per_attempts;
-
-	//4 bits
-	uint16_t three_tone_base_sequence;/*OPTIONAL*/
-	//2bits
-	uint16_t six_tone_base_sequence; /*OPTIONAL*/
-	//5 bits
-	uint16_t twelve_tone_base_sequence; /*OPTIONAL*/
-	uint16_t three_tone_cyclic_shift;
-	uint16_t six_tone_cyclic_shift;
-
-	//Enable/disable the DL gap
-	uint16_t dl_gap_config_enable;
-	//Threshold on the maximum number of repetitions configured for NPDCCH before application of DL transmission gap config.
-	//value 0,1,2,3 correspond to 32,64,128,256
-	uint16_t dl_gap_threshold;
-	//Periodicity of a DL tranmission gap (value 0,1,2,3 correspond to 64,128,256,512sf)
-	uint16_t dl_gap_periodicity;
-	//Coefficent to calculate the gap duration of a DL transmission (value 0,1,2,3 correspond to oneEight, oneFourth, threeEight, oneHalf)
-	uint16_t dl_gap_duration_coefficent;
-
-}nb_iot_config_t;
-
-typedef struct{
-	uint16_t data_report_mode;
-	uint16_t sfn_sf;
-}l23_config_t;
 
 typedef struct{
 
@@ -130,11 +44,12 @@ typedef struct{
 
 
 	/*FAPI style config. parameters*/
-	subframe_config_t subframe_config;
-	rf_config_t rf_config;
-	sch_config_t sch_config;
-	nb_iot_config_t nb_iot_config;
-	l23_config_t l23_config;
+	nfapi_uplink_reference_signal_config_t uplink_reference_signal_config;
+	nfapi_subframe_config_t subframe_config;
+	nfapi_rf_config_t rf_config;
+	nfapi_sch_config_t sch_config;
+	nfapi_nb_iot_config_t nb_iot_config;
+	nfapi_l23_config_t l23_config;
 
 	/*Dedicated configuration --> not supported by FAPI?*/
 	PhysicalConfigDedicated_NB_r13_t *phy_config_dedicated;

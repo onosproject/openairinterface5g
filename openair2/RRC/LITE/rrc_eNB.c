@@ -3628,7 +3628,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
 
         } else {        // remove LCHAN from MAC/PHY
 
-          if (ue_context_pP->ue_context.DRB_active[drb_id] == 1) { //???
+          if (ue_context_pP->ue_context.DRB_active[drb_id] == 1) {
             // DRB has just been removed so remove RLC + PDCP for DRB
             /*      rrc_pdcp_config_req (ctxt_pP->module_id, frameP, 1, CONFIG_ACTION_REMOVE,
                (ue_mod_idP * NB_RB_MAX) + DRB2LCHAN[i],UNDEF_SECURITY_MODE);
