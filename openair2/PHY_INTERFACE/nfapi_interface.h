@@ -19,6 +19,7 @@
 #define _NFAPI_INTERFACE_H_
 
 #include "stddef.h"
+#include "ACK-NACK-NumRepetitions-NB-r13.h"
 
 // Constants - update based on implementation
 #define NFAPI_MAX_PHY_RF_INSTANCES 2
@@ -854,6 +855,37 @@ typedef struct {
 	nfapi_uint16_tlv_t dl_gap_threshold;
 	nfapi_uint16_tlv_t dl_gap_periodicity;
 	nfapi_uint16_tlv_t dl_gap_duration_coefficient;
+
+	///MP: MISSED COMMON CONFIG. of SIB2-NB in FAPI SPECS
+
+			//nprach_config
+			uint16_t nprach_config_0_subcarrier_MSG3_range_start;
+			uint16_t nprach_config_1_subcarrier_MSG3_range_start;
+			uint16_t nprach_config_2_subcarrier_MSG3_range_start;
+			uint16_t nprach_config_0_max_num_preamble_attempt_CE;
+			uint16_t nprach_config_1_max_num_preamble_attempt_CE;
+			uint16_t nprach_config_2_max_num_preamble_attempt_CE;
+			uint16_t nprach_config_0_npdcch_num_repetitions_RA;
+			uint16_t nprach_config_1_npdcch_num_repetitions_RA;
+			uint16_t nprach_config_2_npdcch_num_repetitions_RA;
+			uint16_t nprach_config_0_npdcch_startSF_CSS_RA;
+			uint16_t nprach_config_1_npdcch_startSF_CSS_RA;
+			uint16_t nprach_config_2_npdcch_startSF_CSS_RA;
+			uint16_t nprach_config_0_npdcch_offset_RA;
+			uint16_t nprach_config_1_npdcch_offset_RA;
+			uint16_t nprach_config_2_npdcch_offset_RA;
+
+			//npusch ConfigCommon
+			ACK_NACK_NumRepetitions_NB_r13_t *ack_nack_numRepetitions_MSG4; //pointer to the first cell of a list of ack_nack_num_repetitions
+
+			//ulPowerControlCommon
+			uint16_t p0_nominal_npusch;
+			uint16_t alpha;
+			uint16_t delta_preamle_MSG3;
+
+
+
+
 } nfapi_nb_iot_config_t;
 
 #define NFAPI_NB_IOT_CONFIG_OPERATING_MODE_TAG 0x00A5

@@ -12,7 +12,6 @@
 #include "openair1/PHY/LTE_TRANSPORT/defs_nb_iot.h"
 #include "PhysicalConfigDedicated-NB-r13.h"
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
-#include "temp_nfapi_interface.h"
 
 #define SCH_PAYLOAD_SIZE_MAX 4096
 #define BCCH_PAYLOAD_SIZE_MAX 128
