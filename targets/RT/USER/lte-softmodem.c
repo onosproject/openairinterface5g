@@ -1737,6 +1737,7 @@ int main( int argc, char **argv ) {
     int eMBMS_active=0;
     if (node_function[0] <= NGFI_RAU_IF4p5) { // don't initialize L2 for RRU
         LOG_I(PHY,"Intializing L2\n");
+        // Initialization of IF module for NB-IoT should be here
         mac_xface = malloc(sizeof(MAC_xface));
         l2_init(frame_parms[0],eMBMS_active,(uecap_xer_in==1)?uecap_xer:NULL,
                 0,// cba_group_active

@@ -5,24 +5,25 @@
 #include "LAYER2/MAC/proto_nb_iot.h"
 
 
-//called at initialization of the PHY
-//TODO: define the input
-IF_Module_t* IF_Module_init_L1(IF_Module_t *if_inst) //southbound IF-Module Interface
-{
-	//fill the UL_IND_t??
-	if_inst->UL_indication = UL_indication;
-	return 0;
-}
-
 //called at initialization of L2
 //TODO: define the input
-IF_Module_t* IF_Module_init_L2(IF_Module_t *if_inst) //northbound IF-Module Interface
+IF_Module_t* IF_Module_init_L2(void) //southbound IF-Module Interface
+{
+	//register the IF Module to MAC
+	if_inst->UL_indication = UL_indication;
+
+	return if_inst;
+}
+
+//called at initialization of L1
+//TODO: define the input
+IF_Module_t* IF_Module_init_L1(void) //northbound IF-Module Interface
 {
 	//fill the Sched_Rsp_t
 	//fill the PHY_Config_t -->already done in rrc_mac_config
 	if_inst->schedule_response = schedule_response;
 	if_inst->PHY_config_req  = PHY_config_req;
 
-	return 0;
+	return if_inst;
 }
 
