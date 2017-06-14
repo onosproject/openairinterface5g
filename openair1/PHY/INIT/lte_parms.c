@@ -184,10 +184,15 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     break;
   }
 
-  printf("lte_parms.c: Setting N_RB_DL to %d, ofdm_symbol_size %d\n",frame_parms->N_RB_DL, frame_parms->ofdm_symbol_size);
+  LOG_I(PHY,"Setting N_RB_DL to %d, ofdm_symbol_size %d\n",frame_parms->N_RB_DL, frame_parms->ofdm_symbol_size);
 
-  if (frame_parms->frame_type == TDD) set_S_config(frame_parms);
-
+  if (frame_parms->frame_type == TDD) { 
+    set_S_config(frame_parms);
+    LOG_I(PHY,"TDD: Configuration %d, S-Subframe config %d: num DL symbols in S-subframe %d, num UL symbols in S-subframe\n",
+	  frame_parms->tdd_config,frame_parms->tdd_config_S,
+	  frame_parms->dl_symbols_in_S_subframe,
+	  frame_parms->ul_symbols_in_S_subframe);
+  }
   //  frame_parms->tdd_config=3;
   return(0);
 }
