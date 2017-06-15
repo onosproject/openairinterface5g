@@ -30,7 +30,10 @@ void PHY_config_req(PHY_Config_t* config_INFO){
 		NB_phy_config_sib2_eNB(config_INFO->mod_id,
 							   config_INFO->CC_id,
 						       &config_INFO->nb_iot_config, // FIXME to be evaluated is should be passed a pointer
-						       &config_INFO->rf_config); // FIXME to be evaluated is should be passed a pointer
+						       &config_INFO->rf_config,
+							   &config_INFO->uplink_reference_signal_config,
+							   &config_INFO->extra_phy_parms
+							   );
 	}
 
 	if(config_INFO->get_DEDICATED!= 0)

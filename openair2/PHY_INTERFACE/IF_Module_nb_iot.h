@@ -20,6 +20,36 @@
 
 // P5 FAPI-like configuration structures
 
+/*MP: MISSED COMMON CONFIG. of SIB2-NB in FAPI SPECS (may non needed)*/
+typedef struct{
+	//nprach_config
+	uint16_t nprach_config_0_subcarrier_MSG3_range_start;
+	uint16_t nprach_config_1_subcarrier_MSG3_range_start;
+	uint16_t nprach_config_2_subcarrier_MSG3_range_start;
+	uint16_t nprach_config_0_max_num_preamble_attempt_CE;
+	uint16_t nprach_config_1_max_num_preamble_attempt_CE;
+	uint16_t nprach_config_2_max_num_preamble_attempt_CE;
+	uint16_t nprach_config_0_npdcch_num_repetitions_RA;
+	uint16_t nprach_config_1_npdcch_num_repetitions_RA;
+	uint16_t nprach_config_2_npdcch_num_repetitions_RA;
+	uint16_t nprach_config_0_npdcch_startSF_CSS_RA;
+	uint16_t nprach_config_1_npdcch_startSF_CSS_RA;
+	uint16_t nprach_config_2_npdcch_startSF_CSS_RA;
+	uint16_t nprach_config_0_npdcch_offset_RA;
+	uint16_t nprach_config_1_npdcch_offset_RA;
+	uint16_t nprach_config_2_npdcch_offset_RA;
+
+	//npusch ConfigCommon (carried by the NULSCH PDU in FAPI--> so maybe not a static parameter)
+	//not used
+	ACK_NACK_NumRepetitions_NB_r13_t *ack_nack_numRepetitions_MSG4; //pointer to the first cell of a list of ack_nack_num_repetitions
+
+    //ulPowerControlCommon (UE side)
+    uint16_t p0_nominal_npusch;
+	uint16_t alpha;
+	uint16_t delta_preamle_MSG3;
+
+}extra_phyConfigCommon_t;
+
 typedef struct{
 
 	/*OAI config. parameters*/
@@ -36,7 +66,7 @@ typedef struct{
 
 	//In 3GPP specs (TS 36.101 Table 5.7.3-1 and ch 5.7.3F) see also SIB2-NB freqInfo.ul-carrierFreq
 	//this parameters should be evaluated based of the EUTRA Absolute Radio Frequency Channel Number (EARFCN)
-	//in FAPI this value is given inside th BROADCAST DETECT request (P4 Network Monito Mode procedure)
+	//in FAPI this value is given inside the BROADCAST DETECT request (P4 Network Monitor Mode procedure)
 	//in OAI we set the dl_CarrierFrequenci at configuration time (see COMMON/rrc_messages_types.h)
 	//then adding an offset for the ul_CarrierFreq ( see RU-RAU split approach - init_SI)
 	uint32_t dl_CarrierFreq;
@@ -44,6 +74,7 @@ typedef struct{
 
 
 	/*FAPI style config. parameters*/
+
 	nfapi_uplink_reference_signal_config_t uplink_reference_signal_config;
 	nfapi_subframe_config_t subframe_config;
 	nfapi_rf_config_t rf_config;
@@ -51,9 +82,14 @@ typedef struct{
 	nfapi_nb_iot_config_t nb_iot_config;
 	nfapi_l23_config_t l23_config;
 
-	/*Dedicated configuration --> not supported by FAPI?*/
+	/*Dedicated configuration -->not supported by FAPI
+	 * In OAI at least are needed when we manage the phy_procedures_eNB_TX in which we call the phy_config_dedicated_eNB_step2
+	 * that use the physicalConfigDedicated info previously stored in the PHY_VARS_eNB structure through the phy_config_dedicated procedure
+	 */
 	PhysicalConfigDedicated_NB_r13_t *phy_config_dedicated;
 
+	/*MP: MISSED COMMON CONFIG. of SIB2-NB in FAPI SPECS (may non needed)*/
+	extra_phyConfigCommon_t extra_phy_parms;
 
 }PHY_Config_t;
 

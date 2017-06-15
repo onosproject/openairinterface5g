@@ -6,21 +6,18 @@
 
 
 //called at initialization of L2
-//TODO: define the input
 IF_Module_t* IF_Module_init_L2(void) //southbound IF-Module Interface
 {
-	//register the IF Module to MAC
+	//mapping the IF-Module function to L2 definition
 	if_inst->UL_indication = UL_indication;
 
 	return if_inst;
 }
 
-//called at initialization of L1
-//TODO: define the input
+//called at initialization of L1 (phy_init_lte_eNB)
 IF_Module_t* IF_Module_init_L1(void) //northbound IF-Module Interface
 {
-	//fill the Sched_Rsp_t
-	//fill the PHY_Config_t -->already done in rrc_mac_config
+	//mapping the IF-module function to L1 definition
 	if_inst->schedule_response = schedule_response;
 	if_inst->PHY_config_req  = PHY_config_req;
 

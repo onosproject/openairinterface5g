@@ -202,7 +202,9 @@ void NB_phy_config_mib_eNB(
 void NB_phy_config_sib2_eNB(uint8_t Mod_id,
                          int CC_id,
                          nfapi_nb_iot_config_t *config,
-						 nfapi_rf_config_t *rf_config
+						 nfapi_rf_config_t *rf_config,
+						 nfapi_uplink_reference_signal_config_t* ul_nrs_config,
+						 extra_phyConfigCommon_t* extra_phy_parms
                          )
 {
 	NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms;
@@ -230,13 +232,13 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->numRepetitionsPerPreambleAttempt = config->nprach_config_0_number_of_repetitions_per_attempt.value;
 		  LOG_D(PHY,"config#0: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[0]->numRepetitionsPerPreambleAttempt);
 
-		  ///FIXME: missed configuration in FAPI config_request (TS 36.331 pag 610)
-//		  fp->nprach_config_common.rsrp_ThresholdsPrachInfoList.list /*OPTIONAL*/
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_SubcarrierMSG3_RangeStart
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_StartSF_CSS_RA
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_NumRepetitions_RA
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_Offset_RA
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->maxNumPreambleAttemptCE
+		  //missed configuration in FAPI config_request (TS 36.331 pag 610) (may not needed)
+		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_SubcarrierMSG3_RangeStart = extra_phy_parms->nprach_config_0_subcarrier_MSG3_range_start;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_StartSF_CSS_RA = extra_phy_parms->nprach_config_0_npdcch_startSF_CSS_RA;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_NumRepetitions_RA = extra_phy_parms->nprach_config_0_npdcch_num_repetitions_RA;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_Offset_RA = extra_phy_parms->nprach_config_0_npdcch_offset_RA;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->maxNumPreambleAttemptCE = extra_phy_parms->nprach_config_0_max_num_preamble_attempt_CE;
+		  //fp->nprach_config_common.rsrp_ThresholdsPrachInfoList.list /*OPTIONAL*/
 
 	  }
 
@@ -257,12 +259,13 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->numRepetitionsPerPreambleAttempt = config->nprach_config_1_number_of_repetitions_per_attempt.value;
 		  LOG_D(PHY,"config#1: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[1]->numRepetitionsPerPreambleAttempt);
 
-		  ///FIXME: missed configuration in FAPI config_request (TS 36.331 pag 610)
-//		  fp->nprach_config_common.rsrp_ThresholdsPrachInfoList.list /*OPTIONAL*/
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_SubcarrierMSG3_RangeStart
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->npdcch_StartSF_CSS_RA
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->npdcch_NumRepetitions_RA
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->npdcch_Offset_RA
+		  //missed configuration in FAPI config_request (TS 36.331 pag 610) (may not needed)
+		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_SubcarrierMSG3_RangeStart = extra_phy_parms->nprach_config_1_subcarrier_MSG3_range_start;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->npdcch_StartSF_CSS_RA = extra_phy_parms->nprach_config_1_npdcch_startSF_CSS_RA;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->npdcch_NumRepetitions_RA = extra_phy_parms->nprach_config_1_npdcch_num_repetitions_RA;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->npdcch_Offset_RA = extra_phy_parms->nprach_config_1_npdcch_offset_RA;
+		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->maxNumPreambleAttemptCE = extra_phy_parms->nprach_config_1_max_num_preamble_attempt_CE;
+		  //fp->nprach_config_common.rsrp_ThresholdsPrachInfoList.list /*OPTIONAL*/
 
 	  }
 
@@ -271,7 +274,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 
 		  fp->nprach_config_common.nprach_CP_Length = config->nprach_config_2_cp_length.value; //NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7
 		  LOG_D(PHY," config#2: nprach_CP_Length = %d\n",fp->nprach_config_common.nprach_CP_Length);
-		  //FIXME: MP: memory for the list should be allocated? initialization??
+		  //FIXME: MP: memory for the list should be allocated? initialization?? where??
 		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_Periodicity = config->nprach_config_2_sf_periodicity.value;
 		  LOG_D(PHY,"config#2: nprach_Periodicity = %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_Periodicity);
 		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_StartTime = config->nprach_config_2_start_time.value;
@@ -283,12 +286,18 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->numRepetitionsPerPreambleAttempt = config->nprach_config_2_number_of_repetitions_per_attempt.value;
 		  LOG_D(PHY,"config#2: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->numRepetitionsPerPreambleAttempt);
 
-		  ///FIXME: missed configuration in FAPI config_request (TS 36.331 pag 610)
-//		  fp->nprach_config_common.rsrp_ThresholdsPrachInfoList.list /*OPTIONAL*/
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_SubcarrierMSG3_RangeStart
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_StartSF_CSS_RA
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_NumRepetitions_RA
-//		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_Offset_RA
+		  //missed configuration in FAPI config_request (TS 36.331 pag 610) (may not needed)
+		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_SubcarrierMSG3_RangeStart = extra_phy_parms->nprach_config_2_subcarrier_MSG3_range_start;
+		  LOG_D(PHY,"config#2: nprach_SubcarrierMSG3_RangeStart= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_SubcarrierMSG3_RangeStart);
+		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_StartSF_CSS_RA = extra_phy_parms->nprach_config_2_npdcch_startSF_CSS_RA;
+		  LOG_D(PHY,"config#2: npdcch_StartSF_CSS_RA= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_StartSF_CSS_RA);
+		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_NumRepetitions_RA = extra_phy_parms->nprach_config_2_npdcch_num_repetitions_RA;
+		  LOG_D(PHY,"config#2: npdcch_NumRepetitions_RA= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_NumRepetitions_RA);
+		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_Offset_RA = extra_phy_parms->nprach_config_2_npdcch_offset_RA;
+		  LOG_D(PHY,"config#2: npdcch_Offset_RA= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_Offset_RA);
+		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->maxNumPreambleAttemptCE = extra_phy_parms->nprach_config_2_max_num_preamble_attempt_CE;
+		  LOG_D(PHY,"config#2: maxNumPreambleAttemptCE= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->maxNumPreambleAttemptCE);
+		  //fp->nprach_config_common.rsrp_ThresholdsPrachInfoList.list /*OPTIONAL*/
 
 	  }
 
@@ -316,13 +325,18 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 	  fp->npusch_config_common.dmrs_Config.twelveTone_BaseSequence= config->twelve_tone_base_sequence.value;
 	  LOG_D(PHY,"npusch_config_common.dmrs_Config.twelveTone_BaseSequence = %d\n",fp->npusch_config_common.dmrs_Config.twelveTone_BaseSequence);
 
-	  //MP: FAPI missed parameters
-//	  fp->npusch_config_common.ack_NACK_NumRepetitions_Msg4 --> list of size maxNPRACH_Resources_NB_r13 (3 elements)
-//	  fp->npusch_config_common.srs_SubframeConfig /*OPTIONAL*/
-//	  fp->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupAssignmentNPUSCH
-//	  LOG_D(PHY,"npusch_config_common.ul_ReferenceSignalsNPUSCH.groupAssignmentNPUSCH = %d]n",fp->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupAssignmentNPUSCH);
-//	  fp->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupHoppingEnabled
-//	  LOG_D(PHY,"npusch_config_common.ul_ReferenceSignalsNPUSCH.groupHoppingEnabled = %d]n",fp->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupHoppingEnabled);
+
+	  fp->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupHoppingEnabled = ul_nrs_config->uplink_rs_hopping.value;
+	  LOG_D(PHY,"npusch_config_common.ul_ReferenceSignalsNPUSCH.groupHoppingEnabled = %d\n",fp->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupHoppingEnabled);
+	  LOG_D(PHY,"**%s**\n",fp->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupHoppingEnabled == 1 ? "RS_GROUP_HOPPING" : "RS_NO_HOPPING");
+	  fp->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupAssignmentNPUSCH = ul_nrs_config->group_assignment.value;
+	  LOG_D(PHY,"npusch_config_common.ul_ReferenceSignalsNPUSCH.groupAssignmentNPUSCH = %d]n",fp->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupAssignmentNPUSCH);
+
+
+
+	  //MP: FAPI missed parameters (may not needed at eNB side and some of them are optional by the 3GPP specs)
+	  //fp->npusch_config_common.ack_NACK_NumRepetitions_Msg4 --> list of size maxNPRACH_Resources_NB_r13 (3 elements)
+	  //fp->npusch_config_common.srs_SubframeConfig /*OPTIONAL*/
 
 
       //TODO:should change the part that implement the ul hopping in NB-IoT
@@ -330,10 +344,10 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 
 
 	  /*UL Power Control Config Common---------------------------------------------------------*/
-	  //FIXME: nothing has been defined in FAPI specs for this
-//	  fp->ul_power_control_config_common.p0_NominalNPUSCH
-//	  fp->ul_power_control_config_common.alpha
-//    fp->ul_power_control_config_common.deltaPreambleMsg3
+	  //F nothing has been defined in FAPI specs for this (may because are only UE stuffs)
+	  fp->ul_power_control_config_common.p0_NominalNPUSCH = extra_phy_parms->p0_nominal_npusch;
+	  fp->ul_power_control_config_common.alpha = extra_phy_parms->alpha;
+	  fp->ul_power_control_config_common.deltaPreambleMsg3 = extra_phy_parms->delta_preamle_MSG3;
 
 	  /*DL gap Config - OPTIONAL----------------------------------------------------------------*/
 	  //DL_GapConfig_NB_r13_t a;

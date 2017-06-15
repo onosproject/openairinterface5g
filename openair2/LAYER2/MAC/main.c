@@ -436,7 +436,6 @@ int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,ui
 {
 
 
-
   LOG_I(MAC,"[MAIN] MAC_INIT_GLOBAL_PARAM IN...\n");
   //    NB_NODE=2;
   //    NB_INST=2;

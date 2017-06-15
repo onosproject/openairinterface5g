@@ -295,94 +295,100 @@ int NB_rrc_mac_config_req_eNB(
     	  config_INFO->nb_iot_config.nprach_config_0_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
     	  config_INFO->nb_iot_config.nprach_config_0_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
     	  config_INFO->nb_iot_config.nprach_config_0_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
-
-    	  //MP: missed configuration for FAPI-style structure (i have added on my own)
-    	   //nprach_SubcarrierMSG3_RangeStart_r13
-    	   //maxNumPreambleAttemptCE_r13
-    	   //npdcch_NumRepetitions_RA_r13
-    	   //npdcch_StartSF_CSS_RA_r13
-    	   //npdcch_Offset_RA_r13
+    	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
+    	  config_INFO->extra_phy_parms.nprach_config_0_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
     	  //rsrp_ThresholdsPrachInfoList_r13 /*OPTIONAL*/
 
     	  break;
       case 2:
     	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[0];
-    	  config_INFO->nb_iot_config.nprach_config_0_enabled.value= 1;
+    	  config_INFO->nb_iot_config.nprach_config_0_enabled.value = 1;
     	  config_INFO->nb_iot_config.nprach_config_0_cp_length.value = radioResourceConfigCommon->nprach_Config_r13.nprach_CP_Length_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_sf_periodicity.value= nprach_parameter->nprach_Periodicity_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_sf_periodicity.value = nprach_parameter->nprach_Periodicity_r13;
     	  config_INFO->nb_iot_config.nprach_config_0_start_time.value = nprach_parameter->nprach_StartTime_r13;
     	  config_INFO->nb_iot_config.nprach_config_0_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
     	  config_INFO->nb_iot_config.nprach_config_0_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
     	  config_INFO->nb_iot_config.nprach_config_0_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
+    	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
+    	  config_INFO->extra_phy_parms.nprach_config_0_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
+    	  //rsrp_ThresholdsPrachInfoList_r13 /*OPTIONAL*/
+
 
     	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[1];
-    	  config_INFO->nb_iot_config.nprach_config_1_enabled.value= 1;
+    	  config_INFO->nb_iot_config.nprach_config_1_enabled.value = 1;
     	  config_INFO->nb_iot_config.nprach_config_1_cp_length.value = radioResourceConfigCommon->nprach_Config_r13.nprach_CP_Length_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_sf_periodicity.value= nprach_parameter->nprach_Periodicity_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_sf_periodicity.value = nprach_parameter->nprach_Periodicity_r13;
     	  config_INFO->nb_iot_config.nprach_config_1_start_time.value = nprach_parameter->nprach_StartTime_r13;
     	  config_INFO->nb_iot_config.nprach_config_1_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
     	  config_INFO->nb_iot_config.nprach_config_1_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
     	  config_INFO->nb_iot_config.nprach_config_1_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
-
+    	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
+    	  config_INFO->extra_phy_parms.nprach_config_1_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_1_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_1_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_1_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_1_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
+    	  //rsrp_ThresholdsPrachInfoList_r13 /*OPTIONAL*/
     	  break;
       case 3:
     	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[0];
-    	  config_INFO->nb_iot_config.nprach_config_0_enabled.value= 1;
+    	  config_INFO->nb_iot_config.nprach_config_0_enabled.value = 1;
     	  config_INFO->nb_iot_config.nprach_config_0_cp_length.value = radioResourceConfigCommon->nprach_Config_r13.nprach_CP_Length_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_sf_periodicity.value= nprach_parameter->nprach_Periodicity_r13;
+    	  config_INFO->nb_iot_config.nprach_config_0_sf_periodicity.value = nprach_parameter->nprach_Periodicity_r13;
     	  config_INFO->nb_iot_config.nprach_config_0_start_time.value = nprach_parameter->nprach_StartTime_r13;
     	  config_INFO->nb_iot_config.nprach_config_0_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
     	  config_INFO->nb_iot_config.nprach_config_0_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
     	  config_INFO->nb_iot_config.nprach_config_0_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_0_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
+    	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
+    	  config_INFO->extra_phy_parms.nprach_config_0_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
+    	  //rsrp_ThresholdsPrachInfoList_r13 /*OPTIONAL*/
+
 
     	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[1];
-    	  config_INFO->nb_iot_config.nprach_config_1_enabled.value= 1;
+    	  config_INFO->nb_iot_config.nprach_config_1_enabled.value = 1;
     	  config_INFO->nb_iot_config.nprach_config_1_cp_length.value = radioResourceConfigCommon->nprach_Config_r13.nprach_CP_Length_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_sf_periodicity.value= nprach_parameter->nprach_Periodicity_r13;
+    	  config_INFO->nb_iot_config.nprach_config_1_sf_periodicity.value = nprach_parameter->nprach_Periodicity_r13;
     	  config_INFO->nb_iot_config.nprach_config_1_start_time.value = nprach_parameter->nprach_StartTime_r13;
     	  config_INFO->nb_iot_config.nprach_config_1_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
     	  config_INFO->nb_iot_config.nprach_config_1_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
     	  config_INFO->nb_iot_config.nprach_config_1_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_1_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
+    	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
+    	  config_INFO->extra_phy_parms.nprach_config_1_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_1_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_1_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_1_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_1_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
+    	  //rsrp_ThresholdsPrachInfoList_r13 /*OPTIONAL*/
 
 
     	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[2];
-    	  config_INFO->nb_iot_config.nprach_config_2_enabled.value= 1;
+    	  config_INFO->nb_iot_config.nprach_config_2_enabled.value = 1;
     	  config_INFO->nb_iot_config.nprach_config_2_cp_length.value = radioResourceConfigCommon->nprach_Config_r13.nprach_CP_Length_r13;
-    	  config_INFO->nb_iot_config.nprach_config_2_sf_periodicity.value= nprach_parameter->nprach_Periodicity_r13;
+    	  config_INFO->nb_iot_config.nprach_config_2_sf_periodicity.value = nprach_parameter->nprach_Periodicity_r13;
     	  config_INFO->nb_iot_config.nprach_config_2_start_time.value = nprach_parameter->nprach_StartTime_r13;
     	  config_INFO->nb_iot_config.nprach_config_2_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
     	  config_INFO->nb_iot_config.nprach_config_2_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
     	  config_INFO->nb_iot_config.nprach_config_2_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
-    	  config_INFO->nb_iot_config.nprach_config_2_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
-    	  config_INFO->nb_iot_config.nprach_config_2_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
-    	  config_INFO->nb_iot_config.nprach_config_2_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_2_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
-    	  config_INFO->nb_iot_config.nprach_config_2_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
+    	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
+    	  config_INFO->extra_phy_parms.nprach_config_2_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_2_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_2_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_2_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
+    	  config_INFO->extra_phy_parms.nprach_config_2_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
+    	  //rsrp_ThresholdsPrachInfoList_r13 /*OPTIONAL*/
+    	  break;
 
     	  break;
       default:
@@ -398,7 +404,7 @@ int NB_rrc_mac_config_req_eNB(
       /*NPUSCH ConfigCommon*/
 
       //a pointer to the first element of the list
-      config_INFO->nb_iot_config.ack_nack_numRepetitions_MSG4 = &radioResourceConfigCommon->npusch_ConfigCommon_r13.ack_NACK_NumRepetitions_Msg4_r13.list.array[0];
+      config_INFO->extra_phy_parms.ack_nack_numRepetitions_MSG4 = &radioResourceConfigCommon->npusch_ConfigCommon_r13.ack_NACK_NumRepetitions_Msg4_r13.list.array[0];
 
 
       if(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13 != NULL)/* OPTIONAL */
@@ -444,9 +450,9 @@ int NB_rrc_mac_config_req_eNB(
 
 	  /*UL Power Control ConfigCommon*/
       //nothing defined in FAPI specs
-      config_INFO->nb_iot_config.p0_nominal_npusch = radioResourceConfigCommon->uplinkPowerControlCommon_r13.p0_NominalNPUSCH_r13;
-      config_INFO->nb_iot_config.alpha = radioResourceConfigCommon->uplinkPowerControlCommon_r13.alpha_r13;
-      config_INFO->nb_iot_config.delta_preamle_MSG3 = radioResourceConfigCommon->uplinkPowerControlCommon_r13.deltaPreambleMsg3_r13;
+      config_INFO->extra_phy_parms.p0_nominal_npusch = radioResourceConfigCommon->uplinkPowerControlCommon_r13.p0_NominalNPUSCH_r13;
+      config_INFO->extra_phy_parms.alpha = radioResourceConfigCommon->uplinkPowerControlCommon_r13.alpha_r13;
+      config_INFO->extra_phy_parms.delta_preamle_MSG3 = radioResourceConfigCommon->uplinkPowerControlCommon_r13.deltaPreambleMsg3_r13;
 
 	  /*RACH Config Common*/
       //nothing defined in FAPI specs
