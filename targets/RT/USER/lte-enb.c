@@ -587,7 +587,10 @@ static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_
 
   if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5)))
     eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
-  phy_procedures_eNB_common_RX(eNB,proc);
+  
+  // skip the comment for this moment
+
+  // phy_procedures_eNB_common_RX(eNB,proc);
   
   // UE-specific RX processing for subframe n
 
