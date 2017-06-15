@@ -73,9 +73,6 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB_NB *eNB,
                                       )
 {
 
-  LTE_eNB_ULSCH_t *ulsch=eNB->ulsch[UE_id];
-  NB_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
-  int subframe = proc->subframe_tx;
   void *ULSCH_DCI_NB = NULL;
   DCI_PDU_NB *DCI_pdu;
 
@@ -169,8 +166,6 @@ int NB_generate_eNB_dlsch_params_from_dci(int frame,
   uint8_t mcs;
   // Repetition Number, 4 bits
   uint8_t RepNum;
-  // Reserved 5 bits
-  uint8_t Reserved;
   // DCI subframe repetition Number, 2 bits
   uint8_t DCIRep;
   // New Data Indicator,1 bits
@@ -201,7 +196,8 @@ int NB_generate_eNB_dlsch_params_from_dci(int frame,
     ResAssign          = DCI_Content->DCIN1_RAR.ResAssign; 
     mcs                = DCI_Content->DCIN1_RAR.mcs; 
     RepNum             = DCI_Content->DCIN1_RAR.RepNum; 
-    Reserved           = DCI_Content->DCIN1_RAR.Reserved; 
+    ndi                = DCI_Content->DCIN1_RAR.ndi;
+    HARQackRes         = DCI_Content->DCIN1_RAR.HARQackRes; 
     DCIRep             = DCI_Content->DCIN1_RAR.DCIRep;
     
     /*Packed DCI here*/
@@ -211,8 +207,9 @@ int NB_generate_eNB_dlsch_params_from_dci(int frame,
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->ResAssign      =ResAssign;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->mcs            =mcs;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->RepNum         =RepNum;
+    ((DCIN1_RAR_t *)DLSCH_DCI_NB)->ndi            =ndi;
+    ((DCIN1_RAR_t *)DLSCH_DCI_NB)->HARQackRes     =HARQackRes;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->DCIRep         =DCIRep;
-    ((DCIN1_RAR_t *)DLSCH_DCI_NB)->Reserved       =Reserved;
 
     DCI_pdu->Num_dci = Num_dci;
 

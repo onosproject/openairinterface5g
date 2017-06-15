@@ -120,6 +120,8 @@ typedef struct{
  typedef struct{
 
  	DCI_format_NB_t DCI_Format;
+
+ 	uint8_t NUM_DCI;
  	/*DL DCI*/
 	nfapi_dl_config_npdcch_pdu DL_DCI;
 	/*UL DCI*/

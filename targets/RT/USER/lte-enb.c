@@ -71,6 +71,10 @@
 
 #include "../../SIMU/USER/init_lte.h"
 
+//NB-IoT 
+
+#include "SCHED/defs_nb_iot.h"
+
 #include "LAYER2/MAC/defs.h"
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/proto.h"
@@ -568,6 +572,47 @@ int wait_CCs(eNB_rxtx_proc_t *proc) {
     exit_fun("nothing to add");
     return(-1);
   }
+  return(0);
+}
+
+/*NB-IoT rxtx*/
+static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
+
+  UL_IND_t UL_INFO; //not here but temp
+
+  start_meas(&softmodem_stats_rxtx_sf);
+
+  // ****************************************
+  // Common RX procedures subframe n
+
+  if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5)))
+    eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
+  phy_procedures_eNB_common_RX(eNB,proc);
+  
+  // UE-specific RX processing for subframe n
+
+  NB_phy_procedures_eNB_uespec_RX(eNB,proc);
+
+  // After stored the Upink information, process it and made it into FAPI style, also provide a tick to the scheduler
+
+  if(if_inst->UL_indication) if_inst->UL_indication(UL_INFO);
+  
+  
+  // *****************************************
+  // TX processing for subframe n+4
+  // run PHY TX procedures the one after the other for all CCs to avoid race conditions
+  // (may be relaxed in the future for performance reasons)
+  // *****************************************
+  //if (wait_CCs(proc)<0) return(-1);
+  
+  if (oai_exit) return(-1);
+  
+  NB_phy_procedures_eNB_TX(eNB,proc,NULL);
+  
+  if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) return(-1);
+
+  stop_meas( &softmodem_stats_rxtx_sf );
+  
   return(0);
 }
 
