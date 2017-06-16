@@ -103,9 +103,6 @@ MAC_RLC_XFACE *Mac_rlc_xface;
 /// Primary component carrier index of eNB
 int pCC_id[NUMBER_OF_eNB_MAX];
 
-//NB-IoT
-eNB_MAC_INST_NB *eNB_mac_inst_NB;
-
 
 eNB_ULSCH_INFO eNB_ulsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX]; // eNBxUE = 8x8
 eNB_DLSCH_INFO eNB_dlsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX]; // eNBxUE = 8x8
@@ -156,6 +153,14 @@ DCI2_5MHz_2A_TDD_t DLSCH_alloc_pdu1;
 DCI2_5MHz_2A_TDD_t DLSCH_alloc_pdu2;
 
 DCI1E_5MHz_2A_M10PRB_TDD_t DLSCH_alloc_pdu1E;
+
+
+//NB-IoT--------------------------------------
+eNB_MAC_INST_NB *eNB_mac_inst_NB;
+//should be utilized in: NB_schedule_RA,NB_rx_sdu, mac_top_init_NB,
+uint8_t Is_rrc_nb_iot_registered;
+
+
 
 #endif
 

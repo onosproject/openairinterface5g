@@ -6,7 +6,7 @@
 
 
 //called at initialization of L2
-IF_Module_t* IF_Module_init_L2(void) //southbound IF-Module Interface
+IF_Module_t* IF_Module_init_L2(void) // northbound IF-Module Interface
 {
 	//mapping the IF-Module function to L2 definition
 	if_inst->UL_indication = UL_indication;
@@ -15,7 +15,7 @@ IF_Module_t* IF_Module_init_L2(void) //southbound IF-Module Interface
 }
 
 //called at initialization of L1 (phy_init_lte_eNB)
-IF_Module_t* IF_Module_init_L1(void) //northbound IF-Module Interface
+IF_Module_t* IF_Module_init_L1(void) //southbound IF-Module Interface
 {
 	//mapping the IF-module function to L1 definition
 	if_inst->schedule_response = schedule_response;

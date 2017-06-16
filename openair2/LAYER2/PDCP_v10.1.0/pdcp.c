@@ -69,6 +69,15 @@ extern int otg_enabled;
 #endif
 
 
+#ifdef NB_IOT
+#include "openair2/RRC/LITE/proto_nb_iot.h"
+#undef maxDRB
+#define maxDRB maxDRB_NB_r13
+#endif
+
+
+
+
 //-----------------------------------------------------------------------------
 /*
  * If PDCP_UNIT_TEST is set here then data flow between PDCP and RLC is broken
@@ -1971,6 +1980,7 @@ void pdcp_layer_init(void)
   memset(Pdcp_stats_rx_bytes_last, 0, sizeof(Pdcp_stats_rx_bytes_last));
   memset(Pdcp_stats_rx_rate, 0, sizeof(Pdcp_stats_rx_rate));
 }
+
 
 //-----------------------------------------------------------------------------
 void pdcp_layer_cleanup (void)

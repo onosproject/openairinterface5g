@@ -263,19 +263,18 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
 	    // kill RA procedure
           }
 
-          if (Is_rrc_registered == 1)
-            /* In RRC branch
-            NB_mac_rrc_data_ind(
+          if (Is_rrc_nb_iot_registered == 1)
+        	 //MP: send directly the information to the RRC in case of CCCH (SRB0)
+
+            NB_mac_rrc_data_ind_eNB(
               enb_mod_idP,
               CC_idP,
-              frameP,subframeP,
+              frameP,
+        	  subframeP,
               rntiP,
               CCCH,
               (uint8_t*)payload_ptr,
-              rx_lengths[i],
-              ENB_FLAG_YES,
-              enb_mod_idP,
-              0);*/
+              rx_lengths[i]);
 
 
           if (num_ce >0) {  // handle msg3 which is not RRCConnectionRequest

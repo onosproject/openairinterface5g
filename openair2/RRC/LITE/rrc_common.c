@@ -191,6 +191,7 @@ L3_xface_init(
 
 #else
 
+  //MP: rtf_create(fifo ID, size in bytes) --> for creating FIFO
   ret=rtf_create(RRC2RRM_FIFO,32768);
 
   if (ret < 0) {

@@ -30,6 +30,7 @@
 
 #include "defs_nb_iot.h"
 #include "extern.h"
+#include "extern_nb_iot.h"
 #include "LAYER2/MAC/extern.h"
 #include "COMMON/openair_defs.h"
 #include "COMMON/platform_types.h"
@@ -41,6 +42,7 @@
 #include "pdcp.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 #include "rrc_eNB_UE_context.h"
+#include "proto_nb_iot.h"
 
 #ifdef LOCALIZATION
 #include <sys/time.h>
@@ -92,7 +94,7 @@ rrc_t310_expiration_NB(
 							 SRB_FLAG_YES,
 							 CONFIG_ACTION_REMOVE,
 							 UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
-							 Rlc_info_am);
+							 Rlc_info_am_NB);
 
 
       UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Active = 0;
@@ -157,28 +159,23 @@ rrc_init_global_param_NB(
 //-----------------------------------------------------------------------------
 {
 
-  rrc_rlc_register_rrc (rrc_data_ind, NULL); //register with rlc
+  //may no more used (defined in rlc_rrc.c)
+  rrc_rlc_register_rrc_NB (NB_rrc_data_ind, NULL); //register with rlc
 
   //XXX MP: most probably ALL of this stuff are no more needed (also the one not commented)
 
-//  DCCH_LCHAN_DESC.transport_block_size = 4;
-//  DCCH_LCHAN_DESC.max_transport_blocks = 16;
-//  DCCH_LCHAN_DESC.Delay_class = 1;
-//  DTCH_DL_LCHAN_DESC.transport_block_size = 52;
-//  DTCH_DL_LCHAN_DESC.max_transport_blocks = 20;
-//  DTCH_DL_LCHAN_DESC.Delay_class = 1;
-//  DTCH_UL_LCHAN_DESC.transport_block_size = 52;
-//  DTCH_UL_LCHAN_DESC.max_transport_blocks = 20;
-//  DTCH_UL_LCHAN_DESC.Delay_class = 1;
+  //DCCH_LCHAN_DESC.transport_block_size = 4;....
 
-  Rlc_info_am_config.rlc_mode = RLC_MODE_AM;
-  Rlc_info_am_config.rlc.rlc_am_info_NB.max_retx_threshold = 50;
-  Rlc_info_am_config.rlc.rlc_am_info_NB.t_poll_retransmit = 15;
-  Rlc_info_am_config.rlc.rlc_am_info_NB.enableStatusReportSN_Gap = 0; //FIXME MP: should be disabled
+  //Setting of this values????
+  Rlc_info_am_config_NB.rlc_mode = RLC_MODE_AM; //only allowed for NB-IoT
+  Rlc_info_am_config_NB.rlc.rlc_am_info_NB.max_retx_threshold_NB = 50;
+  Rlc_info_am_config_NB.rlc.rlc_am_info_NB.t_poll_retransmit_NB = 15;
+  Rlc_info_am_config_NB.rlc.rlc_am_info_NB.enableStatusReportSN_Gap = NULL; //should be disabled
+
 
 #ifndef NO_RRM
 
-  if (L3_xface_init_NB ()) {
+if (L3_xface_init_NB ()) { //XXX to be modified???
     return (-1);
   }
 
@@ -187,11 +184,11 @@ rrc_init_global_param_NB(
   return 0;
 }
 
-//shoudl be changed?
+
 #ifndef NO_RRM
 //-----------------------------------------------------------------------------
 int
-L3_xface_init_NB(
+L3_xface_init_NB( //Exact copy of the LTE implementation
   void
 )
 //-----------------------------------------------------------------------------
@@ -271,6 +268,8 @@ openair_rrc_top_init_eNB_NB(void)//MP: XXX Raymond put this directly the definit
     eNB_rrc_inst_NB = NULL;
   }
 
+
+//this stuff below i think are no more used
 #ifndef NO_RRM
 #ifndef USER_MODE
 

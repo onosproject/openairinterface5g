@@ -24,6 +24,7 @@
 
 #include "PHY/defs.h"
 #include "PHY_INTERFACE/defs.h"
+#include "PHY_INTERFACE/IF_Module_nb_iot.h"
 
 extern  char* namepointer_chMag ;
 extern char* namepointer_log2;
@@ -53,6 +54,7 @@ extern PHY_VARS_eNB * PHY_vars_eNB_g[MAX_eNB][MAX_NUM_CCs];
 #endif
 
 extern MAC_xface *mac_xface;
+extern IF_Module_t *if_inst;
 
 
 extern short primary_synch0[144];

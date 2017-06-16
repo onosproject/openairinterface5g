@@ -108,6 +108,20 @@ extern void rlc_am_init_timer_poll_retransmit(
 	    rlc_am_entity_t* const       rlc_pP,
 	    const uint32_t               time_outP);
 
+//pointer function in rlc.h file
+extern void (*rlc_rrc_data_ind_NB)(
+                const protocol_ctxt_t* const ctxtP,
+                const rb_id_t     rb_idP,
+                const sdu_size_t  sdu_sizeP,
+                const uint8_t   * const sduP,
+				const srb1bis_flag_t srb1bis_flag);
+extern void (*rlc_rrc_data_conf)(
+        const protocol_ctxt_t* const ctxtP,
+        const rb_id_t         rb_idP,
+        const mui_t           muiP,
+        const rlc_tx_status_t statusP);
+
+
 
 /*---------------------------------RRC-MAC-----------------------------------*/
 
@@ -404,7 +418,7 @@ int NB_rrc_mac_config_req_eNB(
       /*NPUSCH ConfigCommon*/
 
       //a pointer to the first element of the list
-      config_INFO->extra_phy_parms.ack_nack_numRepetitions_MSG4 = &radioResourceConfigCommon->npusch_ConfigCommon_r13.ack_NACK_NumRepetitions_Msg4_r13.list.array[0];
+      config_INFO->extra_phy_parms.ack_nack_numRepetitions_MSG4 = radioResourceConfigCommon->npusch_ConfigCommon_r13.ack_NACK_NumRepetitions_Msg4_r13.list.array[0];
 
 
       if(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13 != NULL)/* OPTIONAL */
@@ -929,7 +943,7 @@ int8_t NB_mac_rrc_data_req_eNB(
 }
 
 //defined in L2_interface
-//called by rx_sdu only in case of CCCH message (e.g RRCConnectionRequest-NB)
+//called by rx_sdu only in case of CCCH message (e.g RRCConnectionRequest-NB - SRB0) --> is used for a direct communication between MAC and RRC
 int8_t NB_mac_rrc_data_ind_eNB(
   const module_id_t     module_idP,
   const int             CC_id,
@@ -948,8 +962,7 @@ int8_t NB_mac_rrc_data_ind_eNB(
   /* for no gcc warnings */
   (void)sdu_size;
 
-  //MP: XXX eNB_index (last parameter) set = 0 (verify)
-  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, rntiP, frameP, sub_frameP,0);
+  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, rntiP, frameP, sub_frameP,module_idP);
 
     Srb_info = &eNB_rrc_inst_NB[module_idP].carrier[CC_id].Srb0;
     LOG_T(RRC,"[eNB %d] Received SDU for CCCH on SRB %d\n",module_idP,Srb_info->Srb_id);
@@ -2200,6 +2213,8 @@ boolean_t NB_pdcp_data_req(
 
 
 //defined in L2_interface
+//called by the PDCP in the pdcp_data_ind
+//mapped to rlc_rrc_data_ind (but maybe no more used for this purpose)
 void NB_rrc_data_ind(
   const protocol_ctxt_t* const ctxt_pP,
   const rb_id_t                Srb_id,
@@ -2475,7 +2490,7 @@ void NB_config_req_rlc_am_asn1 (
   if (h_rc == HASH_TABLE_OK) {
     l_rlc_p = &rlc_union_p->rlc.am;
 
-    //MP: TODO: check if this conditions are correct
+    //MP: check if this conditions are correct
     if ((config_am_pP->ul_AM_RLC_r13.maxRetxThreshold_r13 <= UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t32) &&
         (config_am_pP->ul_AM_RLC_r13.t_PollRetransmit_r13 < T_PollRetransmit_NB_r13_spare1)
 		&&(config_am_pP->dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 == NULL))
@@ -2546,10 +2561,10 @@ NB_rlc_am_configure(
 
     //FIXME: rlc_am_entity_t should be modified??
 
-    rlc_pP->max_retx_threshold = max_retx_thresholdP;
+    rlc_pP->max_retx_threshold_NB = max_retx_thresholdP;
     rlc_pP->protocol_state     = RLC_DATA_TRANSFER_READY_STATE;
-    rlc_pP->t_poll_retransmit.ms_duration   = t_poll_retransmitP;
-    rlc_pP->enableStatusReportSN_Gap = *enableStatusReportSN_Gap;
+    rlc_pP->t_poll_retransmit_NB.ms_duration   = t_poll_retransmitP;
+    rlc_pP->enableStatusReportSN_Gap = enableStatusReportSN_Gap;
 
 
   } else {
@@ -2560,9 +2575,9 @@ NB_rlc_am_configure(
 		  //enableStatusReportSN_Gap
     		);
 
-    rlc_pP->max_retx_threshold = max_retx_thresholdP;
+    rlc_pP->max_retx_threshold_NB = max_retx_thresholdP;
     rlc_pP->protocol_state     = RLC_DATA_TRANSFER_READY_STATE;
-    rlc_pP->enableStatusReportSN_Gap = *enableStatusReportSN_Gap;
+    rlc_pP->enableStatusReportSN_Gap = enableStatusReportSN_Gap;
 
 
     rlc_am_init_timer_poll_retransmit(ctxt_pP, rlc_pP, t_poll_retransmitP);
@@ -2842,17 +2857,17 @@ NB_config_req_rlc_am (
     LOG_D(RLC,
           PROTOCOL_RLC_AM_CTXT_FMT" CONFIG_REQ (max_retx_threshold=%d t_poll_retransmit=%d)\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,l_rlc_p),
-          config_am_pP->max_retx_threshold,
-          config_am_pP->t_poll_retransmit
+          config_am_pP->max_retx_threshold_NB,
+          config_am_pP->t_poll_retransmit_NB
 		  //enableStatusReportSN_Gap_r13
 		  );
     rlc_am_init(ctxt_pP, l_rlc_p);
     rlc_am_set_debug_infos(ctxt_pP, l_rlc_p, srb_flagP, rb_idP, chan_idP);
     NB_rlc_am_configure(ctxt_pP,
     					l_rlc_p,
-						config_am_pP->max_retx_threshold,
-                    	config_am_pP->t_poll_retransmit,
-						&config_am_pP->enableStatusReportSN_Gap);
+						config_am_pP->max_retx_threshold_NB,
+                    	config_am_pP->t_poll_retransmit_NB,
+						config_am_pP->enableStatusReportSN_Gap);
   } else {
     LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" CONFIG_REQ RLC NOT FOUND\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,l_rlc_p));
@@ -2917,7 +2932,8 @@ rlc_op_status_t NB_rrc_rlc_remove_ue (
     }
   }
 
-  for (rb_id = 1; rb_id <= maxDRB_NB_r13; rb_id++) { //FIXME: maxDRB_NB_r13 +3 ??
+  //XXX possible BUG here???
+  for (rb_id = 1; rb_id <= maxDRB_NB_r13 + 3; rb_id++) {
 	  if(rb_id != 2){
 		  NB_rrc_rlc_remove_rlc(ctxt_pP,
                        SRB_FLAG_NO,
@@ -2932,10 +2948,15 @@ rlc_op_status_t NB_rrc_rlc_remove_ue (
 }
 
 //defined in rlc_rrc.c --> NO MORE USED PROBABLY
-//void NB_rrc_rlc_register_rrc (
-//		rrc_data_ind_cb_t rrc_data_indP,
-//		rrc_data_conf_cb_t rrc_data_confP
-//		);
+//------------------------------------------------------------------------------
+void rrc_rlc_register_rrc_NB (rrc_data_ind_cb_NB_t NB_rrc_data_indP, rrc_data_conf_cb_t rrc_data_confP)
+{
+	//his function is called by RRC to register its DATA-INDICATE and DATA-CONFIRM handlers to RLC laye
+	//map the function pointer to the function in input
+	//rlc_rrc_data_ind  and rlc_rrc_data_conf are protected internal functions in the rlc.c file
+	 rlc_rrc_data_ind_NB  = NB_rrc_data_indP;
+	 rlc_rrc_data_conf = rrc_data_confP;
+}
 
 /*--------------------------------------------RLC-PDCP--------------------------------------------------*/
 

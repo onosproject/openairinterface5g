@@ -399,8 +399,12 @@ int mac_init_global_param(void)
   //  Mac_rlc_xface->mrbch_phy_sync_failure=mrbch_phy_sync_failure;
   //  Mac_rlc_xface->dl_phy_sync_success=dl_phy_sync_success;
 
+
+#ifndef NB_IOT
   LOG_I(MAC,"[MAIN] RLC interface setup and init\n");
   rrc_init_global_param();
+  //MP: otherwise we call the initialization of the RRC NB-IoT module (see mac_init_global_param_NB)
+#endif
 
 #ifdef USER_MODE
   pdcp_layer_init ();

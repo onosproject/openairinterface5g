@@ -71,9 +71,11 @@ typedef volatile struct {
 } rlc_am_info_t;
 
 typedef volatile struct {
-uint16_t max_retx_threshold;
-uint32_t t_poll_retransmit;
-uint32_t enableStatusReportSN_Gap;
+//UL-AM-RLC Configurations
+uint16_t max_retx_threshold_NB;
+uint32_t t_poll_retransmit_NB;
+//DL-AM-RLC Configurations
+uint32_t* enableStatusReportSN_Gap; /*OPTIONAL*/
 }rlc_am_info_NB_t;
 
 //-----------------------------------------------------------------------------

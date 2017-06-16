@@ -800,6 +800,7 @@ rlc_op_status_t rrc_rlc_data_req     (
 void rrc_rlc_register_rrc (rrc_data_ind_cb_t rrc_data_indP, rrc_data_conf_cb_t rrc_data_confP)
 {
   //-----------------------------------------------------------------------------
+
   rlc_rrc_data_ind  = rrc_data_indP;
   rlc_rrc_data_conf = rrc_data_confP;
 }

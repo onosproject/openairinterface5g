@@ -42,7 +42,7 @@
 
 extern eNB_RRC_INST_NB *eNB_rrc_inst_NB;
 
-extern rlc_info_t Rlc_info_um,Rlc_info_am_config,Rlc_info_am;
+extern rlc_info_t Rlc_info_am_NB,Rlc_info_am_config_NB;
 extern uint8_t DRB2LCHAN_NB[2];
 extern LogicalChannelConfig_NB_r13_t SRB1bis_NB_logicalChannelConfig_defaultValue;
 extern LogicalChannelConfig_NB_r13_t SRB1_NB_logicalChannelConfig_defaultValue;

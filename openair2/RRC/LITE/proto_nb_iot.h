@@ -384,6 +384,13 @@ rlc_op_status_t NB_rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
                                   mem_block_t *sdu_pP);
 //-----------------------------------------------------------------------------
 
+
+//defined in rlc_rrc.c --> NO MORE USED PROBABLY
+//------------------------------------------------------------------------------
+void rrc_rlc_register_rrc_NB (rrc_data_ind_cb_NB_t NB_rrc_data_indP, rrc_data_conf_cb_t rrc_data_confP);
+
+
+
 //defined in pdcp.c
 //FIXME: should go transparent through the PDCP
 //--------------------------------------------

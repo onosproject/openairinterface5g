@@ -35,10 +35,12 @@
 #include "LAYER2/MAC/defs_nb_iot.h"
 #include "LogicalChannelConfig-NB-r13.h"
 
+//-----------------------------------------------------------------------
+// ALL what is defined here should be shared through extern_nb_iot.h file
+//------------------------------------------------------------------------
+
 
 //UE_RRC_INST *UE_rrc_inst; //MP: may not used for the moment
-
-
 #ifndef USER_MODE
 
 #ifndef NO_RRM
@@ -83,8 +85,7 @@ struct LogicalChannelConfig_NB_r13 SRB1_NB_logicalChannelConfig_defaultValue = {
 
 
 //CONSTANTS
-rlc_info_t Rlc_info_um,Rlc_info_am_config, Rlc_info_am;
-
+rlc_info_t Rlc_info_am_NB, Rlc_info_am_config_NB;
 //MP:  LCHAN_DESC (mac_rrc_primitives) is not needed, was only an old implementation for storing LCH information
 
 

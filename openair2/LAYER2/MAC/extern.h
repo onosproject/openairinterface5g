@@ -69,9 +69,6 @@ extern UE_MAC_INST *ue_mac_inst;
 extern MAC_RLC_XFACE *Mac_rlc_xface;
 extern uint8_t Is_rrc_registered;
 
-//NB-IoT
-extern eNB_MAC_INST_NB *eNB_mac_inst_NB;
-
 extern eNB_ULSCH_INFO eNB_ulsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX]; // eNBxUE = 8x8
 extern eNB_DLSCH_INFO eNB_dlsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX]; // eNBxUE = 8x8
 
@@ -126,6 +123,14 @@ extern DCI1_5MHz_FDD_t       DLSCH_alloc_pdu_fdd;
 extern DCI2_5MHz_2A_TDD_t DLSCH_alloc_pdu1;
 extern DCI2_5MHz_2A_TDD_t DLSCH_alloc_pdu2;
 extern DCI1E_5MHz_2A_M10PRB_TDD_t DLSCH_alloc_pdu1E;
+
+
+//NB-IoT---------------------------------
+
+extern eNB_MAC_INST_NB *eNB_mac_inst_NB;
+extern uint8_t Is_rrc_nb_iot_registered;
+
+
 
 #endif //DEF_H
 
