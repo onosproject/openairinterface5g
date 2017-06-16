@@ -51,6 +51,7 @@
 #include "LAYER2/MAC/proto.h"
 #include "RRC/LITE/vars.h"
 #include "PHY_INTERFACE/vars.h"
+#include "PHY_INTERFACE/defs_nb_iot.h"
 
 #ifdef SMBV
 #include "PHY/TOOLS/smbv.h"
@@ -1623,6 +1624,10 @@ int main( int argc, char **argv ) {
         PHY_vars_eNB_g = malloc(sizeof(PHY_VARS_eNB**));
         PHY_vars_eNB_g[0] = malloc(sizeof(PHY_VARS_eNB*));
 
+#ifdef NB_IOT
+        // do the initialization for the IF Module
+        if_inst = malloc(sizeof(IF_Module_t *));
+#endif
         for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
             PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,frame_parms[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
             PHY_vars_eNB_g[0][CC_id]->ue_dl_rb_alloc=0x1fff;
@@ -1861,8 +1866,13 @@ int main( int argc, char **argv ) {
             PHY_vars_UE_g[0][CC_id]->rf_map.chain=CC_id+chain_offset;
         }
     } else {
+#ifdef NB_IOT
+        printf("Initializing IF Module in PHY layer\n");
+        IF_Module_init_L1();
+#endif
         printf("Initializing eNB threads\n");
         init_eNB(node_function,node_timing,1,eth_params,single_thread_flag,wait_for_sync);
+
 
         number_of_cards = 1;
 

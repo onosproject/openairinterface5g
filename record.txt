@@ -84,3 +84,6 @@ Comment: Complete the dci_tools the part configuring the PHY and do the pack of 
 
 Comment: Update the IF Module header file to fit the FAPI structure and types.
 
+6/15
+
+Comment: New RXTX defined for NB-IoT, use the FAPI parameters adapting to the physical layer parameters.

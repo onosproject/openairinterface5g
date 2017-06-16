@@ -156,6 +156,8 @@ typedef struct{
  typedef struct{
 
  	DCI_format_NB_t DCI_Format;
+
+ 	uint8_t NUM_DCI;
  	/*DL DCI*/
 	nfapi_dl_config_npdcch_pdu DL_DCI;
 	/*UL DCI*/
@@ -206,8 +208,8 @@ typedef struct IF_Module_s{
 
 //int IF_Module_init(IF_Module_t *if_inst);
 
-IF_Module_t* IF_Module_init_L1(void);
-IF_Module_t* IF_Module_init_L2(void);
+void IF_Module_init_L1(void);
+void IF_Module_init_L2(void);
 
 
 #endif

@@ -110,23 +110,25 @@ struct DCIFormatN1_RA{
 
 typedef struct DCIFormatN1_RA DCIFormatN1_RA_t;
 
-///  DCI Format Type N1 for RAR
+///  DCI Format Type N1 for User data
 struct DCIFormatN1_RAR{
-  /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
+  /// type = 0 => DCI Format N0, type = 1 => DCI Format N1,1bits
   uint8_t type;
-  //NPDCCH order indicator (set to 0),1 bits
+  //NPDCCH order indicator (set to 0), 1 bits
   uint8_t orderIndicator;
-  // Scheduling Delay, 3 bits
+  // Scheduling Delay,3 bits
   uint8_t Scheddly;
-  // Resourse Assignment (RU Assignment), 3 bits
+  // Resourse Assignment (RU Assignment),3 bits
   uint8_t ResAssign;
-  // Modulation and Coding Scheme, 4 bits
+  // Modulation and Coding Scheme,4 bits
   uint8_t mcs;
-  // Repetition Number, 4 bits
+  // Repetition Number,4 bits
   uint8_t RepNum;
-  // Reserved 5 bits
-  uint8_t Reserved;
-  // DCI subframe repetition Number, 2 bits
+  // New Data Indicator,1 bits,reserved in the RAR
+  uint8_t ndi;
+  // HARQ-ACK resource,4 bits,reserved in the RAR
+  uint8_t HARQackRes;
+  // DCI subframe repetition Number,2 bits
   uint8_t DCIRep;
 };
 
@@ -203,10 +205,12 @@ typedef union DCI_CONTENT {
 #define sizeof_DCIN0_t 23
 
 struct DCIN1_RAR{
-  // Reserved 5 bits like payload
-  uint8_t Reserved:5;
   // DCI subframe repetition Number, 2 bits
   uint8_t DCIRep:2;
+  // HARQ-ACK resource,4 bits
+  uint8_t HARQackRes:4; 
+  // New Data Indicator,1 bits
+  uint8_t ndi:1;
   // Repetition Number, 4 bits
   uint8_t RepNum:4;
   // Modulation and Coding Scheme, 4 bits

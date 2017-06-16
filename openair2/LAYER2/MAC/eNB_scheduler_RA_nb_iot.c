@@ -77,11 +77,9 @@ void NB_schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP
   RA_TEMPLATE_NB *RA_template;
   unsigned char i,harq_pid,round;
   int16_t rrc_sdu_length;
-  unsigned char lcid,offset;
   int UE_id = -1;
   unsigned short TBsize = -1;
-  unsigned short msg4_padding,msg4_post_padding,msg4_header;
-  DCI_PDU_NB *DCI_pdu;
+  unsigned short msg4_header;
 
   // start_meas(&eNB->schedule_ra);
 
@@ -89,7 +87,6 @@ void NB_schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP
 
 
     
-    DCI_pdu = &eNB->common_channels[CC_id].DCI_pdu;
 
     for (i=0; i<NB_RA_PROC_MAX; i++) {
 
@@ -114,7 +111,7 @@ void NB_schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP
               ((DCIFormatN1_RAR_t*)&RA_template->RA_alloc_pdu1[0])->ResAssign=0;
               ((DCIFormatN1_RAR_t*)&RA_template->RA_alloc_pdu1[0])->mcs=0;//fixes?//fixes? base on CE levels?
               ((DCIFormatN1_RAR_t*)&RA_template->RA_alloc_pdu1[0])->RepNum=0;//fixes? base on CE levels?
-              ((DCIFormatN1_RAR_t*)&RA_template->RA_alloc_pdu1[0])->Reserved=0;
+             // ((DCIFormatN1_RAR_t*)&RA_template->RA_alloc_pdu1[0])->Reserved=0;
               ((DCIFormatN1_RAR_t*)&RA_template->RA_alloc_pdu1[0])->DCIRep=0;//fixes?
         }
     //New appoach for CCE allocaton, delete !CCE_allocation_infeasible..
