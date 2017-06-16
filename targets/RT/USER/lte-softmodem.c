@@ -808,7 +808,7 @@ static void get_options (int argc, char **argv) {
        break;
     case LONG_OPTION_DEMOD_SHIFT: {
         extern int16_t dlsch_demod_shift;
-        dlsch_demod_shift = atof(optarg);
+        dlsch_demod_shift = atoi(optarg);
         break;
     }
 #if T_TRACER
