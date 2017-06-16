@@ -3505,12 +3505,13 @@ void ue_pdsch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, PDSC
   int i_mod,eNB_id_i,dual_stream_UE;
   int first_symbol_flag=0;
 
-  if (dlsch0->active == 0)
+  if ((dlsch0->active == 0) && (dlsch1!=NULL) && (dlsch1->active==0)) {
+    LOG_I(PHY,"ue_pdsch_procedures: no codeword active! returning.\n");
     return;
+  }
 
   for (m=s0;m<=s1;m++) {
 
-    if (dlsch0 && (!dlsch1))  {
       harq_pid = dlsch0->current_harq_pid;
       LOG_D(PHY,"[UE %d] PDSCH active in subframe %d, harq_pid %d Symbol %d\n",ue->Mod_id,subframe_rx,harq_pid,m);
 	    
@@ -3564,7 +3565,6 @@ void ue_pdsch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, PDSC
 	       i_mod,
 	       dlsch0->current_harq_pid);
       stop_meas(&ue->dlsch_llr_stats);
-    } // CRNTI active
   }
 } 
 
@@ -3739,6 +3739,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 
     if (abstraction_flag == 0) {
 
+      if (is_cw0_active) {
       // start turbo decode for CW 0
       dlsch0->harq_processes[harq_pid]->G = get_G(&ue->frame_parms,
 						  dlsch0->harq_processes[harq_pid]->nb_rb,
@@ -3787,7 +3788,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
               (ue->dlsch_unscrambling_stats.p_time)/(cpuf*1000.0));
       LOG_D(PHY,"AbsSubframe %d.%d --> Turbo Decoding for CW0 %5.3f\n",
               frame_rx%1024, subframe_rx,(ue->dlsch_decoding_stats[subframe_rx&0x1].p_time)/(cpuf*1000.0));
-
+      }
 
       if(is_cw1_active)
       {
@@ -3857,6 +3858,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
     }
 	
     // Check CRC for CW 0
+    if (is_cw0_active) {
     if (ret == (1+dlsch0->max_turbo_iterations)) {
       *dlsch_errors=*dlsch_errors+1;
       
@@ -3940,7 +3942,8 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
       ue->total_received_bits[eNB_id] = ue->total_TBS[eNB_id] +
 	dlsch0->harq_processes[dlsch0->current_harq_pid]->TBS;
     }
-  
+    }
+
     // Check CRC for CW 1
     if(is_cw1_active)
     {
@@ -4149,7 +4152,8 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
 
   start_meas(&ue->generic_stat);
   // do procedures for C-RNTI
-  if (ue->dlsch[subframe_rx&0x1][eNB_id][0]->active == 1) {
+  if ((ue->dlsch[subframe_rx&0x1][eNB_id][0]->active == 1) ||
+      (ue->dlsch[subframe_rx&0x1][eNB_id][1]->active == 1)) {
     LOG_D(PHY,"dlsch is active, doing ue_pdsch_procedures\n");
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDSCH_PROC, VCD_FUNCTION_IN);
     ue_pdsch_procedures(ue,
@@ -4157,7 +4161,7 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
 			eNB_id,
 			PDSCH,
 			ue->dlsch[subframe_rx&0x1][eNB_id][0],
-			NULL,
+			ue->dlsch[subframe_rx&0x1][eNB_id][1],
 			ue->pdcch_vars[subframe_rx & 0x1][eNB_id]->num_pdcch_symbols,
 			ue->frame_parms.symbols_per_tti>>1,
 			abstraction_flag);
@@ -4257,7 +4261,8 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
    
   // do procedures for C-RNTI
   LOG_D(PHY," ------ --> PDSCH ChannelComp/LLR slot 0: AbsSubframe %d.%d ------  \n", frame_rx%1024, subframe_rx);
-  if (ue->dlsch[subframe_rx&0x1][eNB_id][0]->active == 1) {
+  if ((ue->dlsch[subframe_rx&0x1][eNB_id][0]->active == 1) ||
+      (ue->dlsch[subframe_rx&0x1][eNB_id][1]->active == 1)) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDSCH_PROC, VCD_FUNCTION_IN);
     start_meas(&ue->pdsch_procedures_stat);
     ue_pdsch_procedures(ue,
@@ -4265,7 +4270,7 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
 			eNB_id,
 			PDSCH,
 			ue->dlsch[subframe_rx&0x1][eNB_id][0],
-			NULL,
+			ue->dlsch[subframe_rx&0x1][eNB_id][1],
 			1+(ue->frame_parms.symbols_per_tti>>1),
 			ue->frame_parms.symbols_per_tti-1,
 			abstraction_flag);
