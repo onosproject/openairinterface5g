@@ -41,9 +41,11 @@
 #include "PHY_INTERFACE/defs.h"
 #include "COMMON/mac_rrc_primitives.h"
 
+#ifdef NB_IOT
 //NB-IoT
 eNB_MAC_INST_NB *eNB_mac_inst_NB;
 IF_Module_t *if_inst;
+#endif
 
 const uint32_t BSR_TABLE[BSR_TABLE_SIZE]= {0,10,12,14,17,19,22,26,31,36,42,49,57,67,78,91,
                                            105,125,146,171,200,234,274,321,376,440,515,603,706,826,967,1132,
@@ -102,9 +104,6 @@ MAC_RLC_XFACE *Mac_rlc_xface;
 
 /// Primary component carrier index of eNB
 int pCC_id[NUMBER_OF_eNB_MAX];
-
-//NB-IoT
-eNB_MAC_INST_NB *eNB_mac_inst_NB;
 
 
 eNB_ULSCH_INFO eNB_ulsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX]; // eNBxUE = 8x8
