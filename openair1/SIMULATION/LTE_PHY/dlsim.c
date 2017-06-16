@@ -2609,70 +2609,6 @@ int main(int argc, char **argv)
 		for (i=0; i<Kr_bytes; i++)
 		  printf("%d : %x (%x)\n",i,UE->dlsch[subframe&0x1][0][0]->harq_processes[0]->c[s][i],UE->dlsch[subframe&0x1][0][0]->harq_processes[0]->c[s][i]^eNB->dlsch[0][0]->harq_processes[0]->c[s][i]);
 	      }
-	      
-	      sprintf(fname,"rxsig0_r%d.m",round);
-	      sprintf(vname,"rxs0_r%d",round);
-	      write_output(fname,vname, &UE->common_vars.rxdata[0][0],10*UE->frame_parms.samples_per_tti,1,1);
-	      sprintf(fname,"rxsigF0_r%d.m",round);
-	      sprintf(vname,"rxs0F_r%d",round);
-	      
-	      write_output(fname,vname, &UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[0][0],UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
-	      
-	      if (UE->frame_parms.nb_antennas_rx>1) {
-		sprintf(fname,"rxsig1_r%d.m",round);
-		sprintf(vname,"rxs1_r%d.m",round);
-		write_output(fname,vname, UE->common_vars.rxdata[1],UE->frame_parms.samples_per_tti,1,1);
-		sprintf(fname,"rxsigF1_r%d.m",round);
-		sprintf(vname,"rxs1F_r%d.m",round);
-		write_output(fname,vname, UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[1],UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
-	      }
-	      
-	      sprintf(fname,"dlsch00_r%d.m",round);
-	      sprintf(vname,"dl00_r%d",round);
-	      write_output(fname,vname,
-			   &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][0][0]),
-			   UE->frame_parms.ofdm_symbol_size*nsymb,1,1);
-	      
-	      if (UE->frame_parms.nb_antennas_rx>1) {
-		sprintf(fname,"dlsch01_r%d.m",round);
-		sprintf(vname,"dl01_r%d",round);
-		write_output(fname,vname,
-			     &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][1][0]),
-			     UE->frame_parms.ofdm_symbol_size*nsymb/2,1,1);
-	      }
-	      
-	      if (eNB->frame_parms.nb_antennas_tx>1) {
-		sprintf(fname,"dlsch10_r%d.m",round);
-		sprintf(vname,"dl10_r%d",round);
-		write_output(fname,vname,
-			     &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2][0]),
-			     UE->frame_parms.ofdm_symbol_size*nsymb/2,1,1);
-	      }
-	      
-	      if ((UE->frame_parms.nb_antennas_rx>1) && (eNB->frame_parms.nb_antennas_tx>1)) {
-		sprintf(fname,"dlsch11_r%d.m",round);
-		sprintf(vname,"dl11_r%d",round);
-		write_output(fname,vname,
-			     &(UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][3][0]),
-			     UE->frame_parms.ofdm_symbol_size*nsymb/2,1,1);
-	      }
-	      
-	      //pdsch_vars
-	      dump_dlsch2(UE,eNB_id,subframe,&coded_bits_per_codeword,round, UE->dlsch[subframe&0x1][0][0]->current_harq_pid);
-	      
-	      
-	      //write_output("dlsch_e.m","e",eNB->dlsch[0][0]->harq_processes[0]->e,coded_bits_per_codeword,1,4);
-	      //write_output("dlsch_ber_bit.m","ber_bit",uncoded_ber_bit,coded_bits_per_codeword,1,0);
-	      //write_output("dlsch_w.m","w",eNB->dlsch[0][0]->harq_processes[0]->w[0],3*(tbs+64),1,4);
-	      //write_output("dlsch_w.m","w",UE->dlsch[subframe&0x1][0][0]->harq_processes[0]->w[0],3*(tbs+64),1,0);
-	      //pdcch_vars
-	      write_output("pdcchF0_ext.m","pdcchF_ext", UE->pdcch_vars[0][eNB_id]->rxdataF_ext[0],2*3*UE->frame_parms.ofdm_symbol_size,1,1);
-	      write_output("pdcch00_ch0_ext.m","pdcch00_ch0_ext",UE->pdcch_vars[0][eNB_id]->dl_ch_estimates_ext[0],300*3,1,1);
-	      
-	      write_output("pdcch_rxF_comp0.m","pdcch0_rxF_comp0",UE->pdcch_vars[0][eNB_id]->rxdataF_comp[0],4*300,1,1);
-	      write_output("pdcch_rxF_llr.m","pdcch_llr",UE->pdcch_vars[0][eNB_id]->llr,2400,1,4);
-	      
-	      if (round == 3) exit(-1);
 	    }
 	  }
 	  }
@@ -2691,8 +2627,24 @@ int main(int argc, char **argv)
 	    } //DLSCH CW 1 received ok
 	    else {
 	      errs[1][round]++;
-	      if (n_frames==1)
+
+	      if (n_frames==1) {
 		printf("DLSCH errors found on CW 1 (round %d), uncoded ber %f\n",round,uncoded_ber);
+
+		for (s=0; s<UE->dlsch[subframe&0x1][0][1]->harq_processes[0]->C; s++) {
+		if (s<UE->dlsch[subframe&0x1][0][1]->harq_processes[0]->Cminus)
+		  Kr = UE->dlsch[subframe&0x1][0][1]->harq_processes[0]->Kminus;
+		else
+		  Kr = UE->dlsch[subframe&0x1][0][1]->harq_processes[0]->Kplus;
+		
+		Kr_bytes = Kr>>3;
+		
+		printf("Decoded_output (Segment %d):\n",s);
+		
+		for (i=0; i<Kr_bytes; i++)
+		  printf("%d : %x (%x)\n",i,UE->dlsch[subframe&0x1][0][1]->harq_processes[0]->c[s][i],UE->dlsch[subframe&0x1][0][1]->harq_processes[0]->c[s][i]^eNB->dlsch[0][0]->harq_processes[0]->c[s][i]);
+		}
+	      }
 	    }
 	  }
 
