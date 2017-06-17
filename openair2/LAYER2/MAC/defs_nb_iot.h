@@ -47,6 +47,7 @@
 #include "MasterInformationBlock-NB.h"
 #include "BCCH-BCH-Message-NB.h"
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
+#include "defs.h"
 //#ifdef PHY_EMUL
 //#include "SIMULATION/PHY_EMULATION/impl_defs.h"
 //#endif
@@ -433,7 +434,7 @@ typedef struct {
   uint8_t RA_dci_size_bits1;
   /// Actual DCI to transmit for RA-Response
   uint8_t RA_alloc_pdu1[(MAX_DCI_SIZE_BITS>>3)+1];
-  /// DCI format for RA-Response (should be 1A)
+  /// DCI format for RA-Response (should be N1 RAR)
   uint8_t RA_dci_fmt1;
   /// Size of DCI for Msg4/ContRes (bytes)
   uint8_t RA_dci_size_bytes2;

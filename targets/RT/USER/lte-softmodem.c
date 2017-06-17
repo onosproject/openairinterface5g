@@ -51,6 +51,7 @@
 #include "LAYER2/MAC/proto.h"
 #include "RRC/LITE/vars.h"
 #include "PHY_INTERFACE/vars.h"
+#include "PHY_INTERFACE/defs_nb_iot.h"
 
 #ifdef SMBV
 #include "PHY/TOOLS/smbv.h"
@@ -1862,6 +1863,10 @@ int main( int argc, char **argv ) {
             PHY_vars_UE_g[0][CC_id]->rf_map.chain=CC_id+chain_offset;
         }
     } else {
+
+        printf("Initializing IF Module in PHY layer\n");
+        IF_Module_init_L1();
+
         printf("Initializing eNB threads\n");
         init_eNB(node_function,node_timing,1,eth_params,single_thread_flag,wait_for_sync);
 

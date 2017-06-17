@@ -1147,6 +1147,7 @@ set(L2_SRC
 set (MAC_SRC
   ${MAC_DIR}/lte_transport_init.c
   ${MAC_DIR}/main.c
+  ${MAC_DIR}/main_nb_iot.c
   ${MAC_DIR}/ue_procedures.c
   ${MAC_DIR}/ra_procedures.c
   ${MAC_DIR}/l1_helpers.c
