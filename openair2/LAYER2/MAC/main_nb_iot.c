@@ -81,7 +81,7 @@ int mac_init_global_param_NB(void)
   return 0;
 }
 
-int mac_top_init_NB(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active, uint8_t HO_active)
+int mac_top_init_NB()
 {
 
   module_id_t    Mod_id,i,j;
@@ -90,10 +90,11 @@ int mac_top_init_NB(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
   int size_bytes1,size_bytes2,size_bits1,size_bits2;
   int CC_id;
   int list_el;
-  UE_list_NB_t *UE_list;
+  UE_list_NB_t *UE_list; //XXX to review if elements are correct
 
   // delete the part to init the UE_INST
 
+  //XXX NB_eNB_INST is global and set in lte-softmodem = 1 always (should be modified???)
   LOG_I(MAC,"[MAIN] Init function start:Nb_eNB_INST=%d\n",NB_eNB_INST);
 
   if (NB_eNB_INST>0) {
@@ -104,10 +105,11 @@ int mac_top_init_NB(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
       LOG_I(MAC,"[MAC][MAIN] not enough memory for eNB \n");
       exit(1);
     } else {
-      LOG_D(MAC,"[MAIN] ALLOCATE %zu Bytes for %d eNB_MAC_INST @ %p\n",sizeof(eNB_MAC_INST),NB_eNB_INST,eNB_mac_inst);
+      LOG_D(MAC,"[MAIN] ALLOCATE %zu Bytes for %d eNB_MAC_INST @ %p\n",sizeof(eNB_MAC_INST),NB_eNB_INST,eNB_mac_inst_NB);
       bzero(eNB_mac_inst_NB,NB_eNB_INST*sizeof(eNB_MAC_INST_NB));
     }
   } else {
+	LOG_I (MAC, "No instance allocated for the MAC layer (NB-IoT)\n");
     eNB_mac_inst_NB = NULL;
   }
 
@@ -129,32 +131,24 @@ int mac_top_init_NB(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
     UE_list->next_ul[list_el]=-1;
 
   }
-// TODO : check the pointer to TX 
 
   if (Is_rrc_nb_iot_registered == 1) {
-    LOG_I(MAC,"[MAIN] calling RRC\n");
+    LOG_I(MAC,"[MAIN] calling RRC NB-IoT\n");
 #ifndef CELLULAR //nothing to be done yet for cellular
-    openair_rrc_top_init(eMBMS_active, uecap_xer, cba_group_active,HO_active);
+    openair_rrc_top_init_NB();
 #endif
   } else {
     LOG_I(MAC,"[MAIN] Running without an RRC\n");
   }
 
-#ifndef USER_MODE
-#ifndef PHY_EMUL
-  LOG_I(MAC,"[MAIN] add openair2 proc\n");
-  ////  add_openair2_stats();
-#endif
-#endif
-
   // initialization for the RA template
 
   for (i=0; i<NB_eNB_INST; i++)
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-      LOG_D(MAC,"[MAIN][eNB %d] CC_id %d initializing RA_template\n",i, CC_id);
+      LOG_D(MAC,"[MAIN][eNB %d] CC_id %d initializing RA_template (NB-IoT)\n",i, CC_id);
       LOG_D(MAC, "[MSC_NEW][FRAME 00000][MAC_eNB][MOD %02d][]\n", i);
 
-      RA_template = (RA_TEMPLATE_NB *)&eNB_mac_inst[i].common_channels[CC_id].RA_template[0];
+      RA_template = (RA_TEMPLATE_NB *)&eNB_mac_inst_NB[i].common_channels[CC_id].RA_template[0];
 
       for (j=0; j<NB_RA_PROC_MAX; j++) {
         size_bytes1 = sizeof(DCIN1_RAR_t);
@@ -171,7 +165,7 @@ int mac_top_init_NB(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
         RA_template[j].RA_dci_size_bits2  = size_bits2;
 
         RA_template[j].RA_dci_fmt1        = DCIFormatN1_RAR;
-        RA_template[j].RA_dci_fmt2        = DCIFormatN1;
+        RA_template[j].RA_dci_fmt2        = DCIFormatN1; //for MSG4
       }
 
       memset (&eNB_mac_inst_NB[i].eNB_stats,0,sizeof(eNB_STATS_NB));
@@ -185,11 +179,9 @@ int mac_top_init_NB(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
     }
 
 
-  //ICIC init param
+  //ICIC not used
 
-  //end ALU's algo
-
-  LOG_I(MAC,"[MAIN][INIT] Init function finished\n");
+  LOG_I(MAC,"[MAIN][INIT][NB-IoT] Init function finished\n");
 
   return(0);
 
@@ -209,12 +201,10 @@ int l2_init_eNB_NB()
   Is_rrc_nb_iot_registered=1;
 
 
-  LOG_D(MAC,"[MAIN] ALL INIT OK\n");
-//
-//    mac_xface->macphy_init(eMBMS_active,uecap_xer,cba_group_active,HO_active);
+  LOG_D(MAC,"[MAIN][NB-IoT] ALL INIT OK\n");
 
-
-//XXX call mac_top_init_NB!!!
+//    mac_xface->macphy_init(eMBMS_active,uecap_xer,cba_group_active,HO_active); (old mac_top_init)
+  mac_top_init_NB();
 
   return(1);
 }

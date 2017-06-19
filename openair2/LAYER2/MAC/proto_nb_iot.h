@@ -65,8 +65,8 @@ uint8_t *NB_get_dlsch_sdu(module_id_t module_idP,int CC_id,frame_t frameP,rnti_t
 
 int NB_rrc_mac_remove_ue(module_id_t Mod_id, rnti_t rntiP);
 
-int NB_l2_init_eNB(void);
+int l2_init_eNB_NB(void);
 int mac_init_global_param_NB(void);
-
+int mac_top_init_NB(void);
 
 

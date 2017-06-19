@@ -259,6 +259,7 @@ openair_rrc_top_init_eNB_NB(void)//MP: XXX Raymond put this directly the definit
   if (NB_eNB_INST > 0) {
     eNB_rrc_inst_NB = (eNB_RRC_INST_NB*) malloc16(NB_eNB_INST*sizeof(eNB_RRC_INST_NB));
     memset (eNB_rrc_inst_NB, 0, NB_eNB_INST * sizeof(eNB_RRC_INST_NB));
+    LOG_D(RRC, "ALLOCATE %d Bytes for eNB_RRC_INST NB-IoT @ %p\n", (unsigned int)(NB_eNB_INST*sizeof(eNB_RRC_INST_NB)), eNB_rrc_inst_NB);
 
 //no CBA, no LOcalization, no MBMS flag
 
@@ -269,7 +270,7 @@ openair_rrc_top_init_eNB_NB(void)//MP: XXX Raymond put this directly the definit
   }
 
 
-//this stuff below i think are no more used
+//XXX this stuff below i think are no more used
 #ifndef NO_RRM
 #ifndef USER_MODE
 

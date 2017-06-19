@@ -1681,6 +1681,11 @@ int main( int argc, char **argv ) {
         NB_eNB_INST=1;
         NB_INST=1;
 
+//#ifdef NB_IOT
+//       NB_eNB_INST_NB =1;
+//       NB_INST_NB = 1;
+//#endif
+
     }
 
     fill_modeled_runtime_table(runtime_phy_rx,runtime_phy_tx);
@@ -1738,9 +1743,11 @@ int main( int argc, char **argv ) {
     int eMBMS_active=0;
     if (node_function[0] <= NGFI_RAU_IF4p5) { // don't initialize L2 for RRU
 
-        // MP, Nick: Initialization of IF module for NB-IoT should be here----------
+        // MP, Nick: Initialization of IF module for NB-IoT should be here
+#ifdef NB_IOT
         	if_inst = malloc(sizeof(IF_Module_t));
         	LOG_I(PHY,"Allocate IF-Module for NB-IoT\n");
+#endif
         //---------------------------
 
         LOG_I(PHY,"Intializing L2\n");
@@ -1864,8 +1871,11 @@ int main( int argc, char **argv ) {
         }
     } else {
 
+#ifdef NB_IOT
         printf("Initializing IF Module in PHY layer\n");
+        //register function
         IF_Module_init_L1();
+#endif
 
         printf("Initializing eNB threads\n");
         init_eNB(node_function,node_timing,1,eth_params,single_thread_flag,wait_for_sync);

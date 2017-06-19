@@ -305,6 +305,7 @@ typedef struct {
   int32_t       ul_out_of_sync;
   int32_t       phr_received;// received from Msg3 MAC Control Element
 } UE_sched_ctrl_NB;
+
 /*! \brief UE list used by eNB to order UEs/CC for scheduling*/
 typedef struct {
   /// DLSCH pdu
@@ -330,6 +331,7 @@ typedef struct {
   int num_UEs;
   boolean_t active[NUMBER_OF_UE_MAX];
 } UE_list_NB_t;
+
 /*!\brief Values of BCCH0 logical channel for MIB*/
 #define BCCH0 11 // MIB-NB
 /*!\brief Values of BCCH1 logical channel for SIBs */
