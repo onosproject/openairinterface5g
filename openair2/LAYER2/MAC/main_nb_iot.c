@@ -154,7 +154,7 @@ int mac_top_init_NB(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
       LOG_D(MAC,"[MAIN][eNB %d] CC_id %d initializing RA_template\n",i, CC_id);
       LOG_D(MAC, "[MSC_NEW][FRAME 00000][MAC_eNB][MOD %02d][]\n", i);
 
-      RA_template = (RA_TEMPLATE *)&eNB_mac_inst[i].common_channels[CC_id].RA_template[0];
+      RA_template = (RA_TEMPLATE_NB *)&eNB_mac_inst[i].common_channels[CC_id].RA_template[0];
 
       for (j=0; j<NB_RA_PROC_MAX; j++) {
         size_bytes1 = sizeof(DCIN1_RAR_t);
@@ -175,7 +175,7 @@ int mac_top_init_NB(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
       }
 
       memset (&eNB_mac_inst_NB[i].eNB_stats,0,sizeof(eNB_STATS_NB));
-      UE_template = (UE_TEMPLATE_NB *)&eNB_mac_inst[i].UE_list.UE_template[CC_id][0];
+      UE_template = (UE_TEMPLATE_NB *)&eNB_mac_inst_NB[i].UE_list.UE_template[CC_id][0];
 
       for (j=0; j<NUMBER_OF_UE_MAX; j++) {
         UE_template[j].rnti=0;
