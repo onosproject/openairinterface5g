@@ -234,7 +234,7 @@ typedef struct rlc_union_s {
   rlc_mode_t           mode;
   union {
     rlc_am_entity_t  am;
-    rlc_um_entity_t  um;
+    rlc_um_entity_t  um; //not allowed for NB-IoT
     rlc_tm_entity_t  tm;
   } rlc;
 } rlc_union_t;

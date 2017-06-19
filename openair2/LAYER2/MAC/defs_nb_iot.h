@@ -73,9 +73,7 @@ typedef struct {
   /// Flag to indicate UE has been configured (ACK from RRCConnectionSetup received)
   boolean_t configured;
   /// MCS from last scheduling
-  //Modify uint8_t mcs[8];
-  /// TPC from last scheduling
-  //Delete uint8_t oldTPC[8];
+  uint8_t mcs[8];
   // PHY interface infoerror
   /// DCI format for DLSCH
   uint16_t DLSCH_dci_fmt;
@@ -86,17 +84,8 @@ typedef struct {
   /// DCI buffer for DLSCH
   /* rounded to 32 bits unit (actual value should be 8 due to the logic
    * of the function generate_dci0) */
-  //Modifyuint8_t DLSCH_DCI[8][(((MAX_DCI_SIZE_BITS)+31)>>5)*4];
-  /// Number of Allocated RBs for DL after scheduling (prior to frequency allocation)
-  //Delete uint16_t nb_rb[8]; // num_max_harq
-  /// Number of Allocated RBs for UL after scheduling (prior to frequency allocation)
-  //Delete uint16_t nb_rb_ul[8]; // num_max_harq
-  /// Number of Allocated RBs by the ulsch preprocessor
-  //Delete uint8_t pre_allocated_nb_rb_ul;
-  /// index of Allocated RBs by the ulsch preprocessor
-  //Delete int8_t pre_allocated_rb_table_index_ul;
-  /// total allocated RBs
-  //Delete int8_t total_allocated_rbs;
+  // need to modify
+  uint8_t DLSCH_DCI[8][(((MAX_DCI_SIZE_BITS)+31)>>5)*4];
   /// pre-assigned MCS by the ulsch preprocessorerror
   uint8_t pre_assigned_mcs_ul;
   /// assigned MCS by the ulsch scheduler
@@ -104,20 +93,11 @@ typedef struct {
   /// DCI buffer for ULSCH
   /* rounded to 32 bits unit (actual value should be 8 due to the logic
    * of the function generate_dci0) */
-  //Modify uint8_t ULSCH_DCI[8][(((MAX_DCI_SIZE_BITS)+31)>>5)*4];
-  /// DL DAI
-  //Delete uint8_t DAI;
-  /// UL DAI
-  //Delete uint8_t DAI_ul[10];
-  /// UL Scheduling Request Received
-  //Delete uint8_t ul_SR;
-  /// Resource Block indication for each sub-band in MU-MIMO
-  //Delete uint8_t rballoc_subband[8][50];
+  // need to modify
+  uint8_t ULSCH_DCI[8][(((MAX_DCI_SIZE_BITS)+31)>>5)*4];
   // Logical channel info for link with RLC
   /// Last received UE BSR info for each logical channel group id
   uint8_t bsr_info[MAX_NUM_LCGID];
-  /// LCGID mapping
-  //Delete long lcgidmap[11];
   /// phr information, received from DPR MAC control element
   int8_t phr_info;
   /// phr information, received from DPR MAC control element
@@ -148,12 +128,6 @@ typedef struct {
   uint32_t ul_buffer_info[MAX_NUM_LCGID];
   /// UE tx power
   int32_t ue_tx_power;
-  /// stores the frame where the last TPC was transmitted
-  //Delete uint32_t pusch_tpc_tx_frame;
-  //Delete uint32_t pusch_tpc_tx_subframe;
-  //Delete uint32_t pucch_tpc_tx_frame;
-  //Delete uint32_t pucch_tpc_tx_subframe;
-//Delete eNB_UE_estimated_distances distance;
 } UE_TEMPLATE_NB;
 /*! \brief eNB statistics for the connected UEs*/
 typedef struct {
@@ -314,11 +288,6 @@ typedef struct {
   UE_TEMPLATE_NB UE_template[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
   /// DCI template and MAC connection for RA processes
   int pCC_id[NUMBER_OF_UE_MAX];
-  /// Delete sorted downlink component carrier for the scheduler
-  /// Delete number of downlink active component carrier
-  /// Delete sorted uplink component carrier for the scheduler
-  /// Delete number of uplink active component carrier
-  /// Delete number of downlink active component carrier
   /// eNB to UE statistics
   eNB_UE_STATS_NB eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
   /// scheduling control info
@@ -333,21 +302,21 @@ typedef struct {
 } UE_list_NB_t;
 
 /*!\brief Values of BCCH0 logical channel for MIB*/
-#define BCCH0 11 // MIB-NB
+#define BCCH0_NB 11 // MIB-NB
 /*!\brief Values of BCCH1 logical channel for SIBs */
-#define BCCH1 12 // SI-SIB-NBs
+#define BCCH1_NB 12 // SI-SIB-NBs
 /*!\brief Values of PCCH logical channel */
-//#define PCCH 13  // Paging XXX not used for the moment
+#define PCCH_NB 13  // Paging XXX not used for the moment
 /*!\brief Value of CCCH / SRB0 logical channel */
-//#define CCCH 0  // srb0 ---> XXX exactly the same as in LTE (commented for compilation purposes)
+#define CCCH_NB 0  // srb0 ---> XXX exactly the same as in LTE (commented for compilation purposes)
 /*!\brief DCCH0 / SRB1bis logical channel */
-#define DCCH0 3  // srb1bis
+#define DCCH0_NB 3  // srb1bis
 /*!\brief DCCH1 / SRB1  logical channel */
-//#define DCCH1 1 // srb1 //XXX we redefine it for the SRB1
+#define DCCH1_NB 1 // srb1 //XXX we redefine it for the SRB1
 /*!\brief DTCH0 DRB0  logical channel */
-#define DTCH0 4 // DRB0
+#define DTCH0_NB 4 // DRB0
 /*!\brief DTCH1 DRB1  logical channel */
-#define DTCH1 5 // DRB1
+#define DTCH1_NB 5 // DRB1
 // DLSCH LCHAN ID all the same as NB-IoT
 /*!\brief  DCI PDU filled by MAC for the PHY  */
 /* 

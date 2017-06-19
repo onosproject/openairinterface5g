@@ -20,7 +20,7 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_
 void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched_Rsp_t *Sched_Rsp,const int UE_id);
 
 /*Process all the scheduling result from MAC and also common signals.*/
-void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int do_meas);
+void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_t *proc,int do_meas);
 #endif
 
 

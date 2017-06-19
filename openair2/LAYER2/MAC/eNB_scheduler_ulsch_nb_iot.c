@@ -224,7 +224,7 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
       T_INT(rx_lcids[i]), T_INT(rx_lengths[i]), T_BUFFER(payload_ptr, rx_lengths[i]));
 
     switch (rx_lcids[i]) {
-    case CCCH :
+    case CCCH_NB :
       if (rx_lengths[i] > CCCH_PAYLOAD_SIZE_MAX) {
         LOG_E(MAC, "[eNB %d/%d] frame %d received CCCH of size %d (too big, maximum allowed is %d), dropping packet\n",
               enb_mod_idP, CC_idP, frameP, rx_lengths[i], CCCH_PAYLOAD_SIZE_MAX);
@@ -289,8 +289,8 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
       
       break ;
     /*DCCH0 is for SRB1bis, DCCH1 is for SRB1*/
-    case DCCH0 :
-    case DCCH1 :
+    case DCCH0_NB :
+    case DCCH1_NB :
       //      if(eNB_mac_inst[module_idP][CC_idP].Dcch_lchan[UE_id].Active==1){
       
 
@@ -304,7 +304,7 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
 
       if (UE_id != -1) {
 
-		/*NO lcg in NB-IoT, anyway set to 0*/
+	/*NO lcg in NB-IoT, anyway set to 0*/
 	// adjust buffer occupancy of the correponding logical channel group
 	/*if (UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] >= rx_lengths[i])
 	  UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] -= rx_lengths[i];
@@ -314,19 +314,18 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
           LOG_D(MAC,"[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DCCH, received %d bytes form UE %d on LCID %d \n",
                 enb_mod_idP,CC_idP,frameP, rx_lengths[i], UE_id, rx_lcids[i]);
 
-		  /*TODO*/
-          /*mac_rlc_data_ind(
+          NB_mac_rlc_data_ind(
 			   enb_mod_idP,
 			   rntiP,
 			   enb_mod_idP,
 			   frameP,
 			   ENB_FLAG_YES,
-			   MBMS_FLAG_NO,
 			   rx_lcids[i],
 			   (char *)payload_ptr,
 			   rx_lengths[i],
 			   1,
 			   NULL);//(unsigned int*)crc_status);*/
+
           UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]]+=1;
           UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]]+=rx_lengths[i];
       } /* UE_id != -1 */
@@ -335,7 +334,7 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
       break;
 
       // all the DRBS
-    case DTCH0:
+    case DTCH0_NB:
     default :
 
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)
@@ -359,13 +358,13 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
 	  else
 	    UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] = 0;*/
 	  if ((rx_lengths[i] <SCH_PAYLOAD_SIZE_MAX) &&  (rx_lengths[i] > 0) ) {   // MAX SIZE OF transport block
-	    /*mac_rlc_data_ind(
+
+	    NB_mac_rlc_data_ind(
 			     enb_mod_idP,
 			     rntiP,
 			     enb_mod_idP,
 			     frameP,
 			     ENB_FLAG_YES,
-			     MBMS_FLAG_NO,
 			     rx_lcids[i],
 			     (char *)payload_ptr,
 			     rx_lengths[i],

@@ -160,6 +160,12 @@ typedef struct {
   pthread_mutex_t mutex_rxtx;
   /// scheduling parameters for RXn-TXnp4 thread
   struct sched_param sched_param_rxtx;
+  
+  /// for IF_Module
+  pthread_t pthread_l2;
+  pthread_cond_t cond_l2;
+  pthread_mutex_t mutex_l2;
+  int instance_cnt_l2;
 } eNB_rxtx_proc_NB_t;
 
 
@@ -289,6 +295,7 @@ typedef struct eNB_proc_NB_t_s {
   te_params tep;
   /// set of scheduling variables RXn-TXnp4 threads
   eNB_rxtx_proc_NB_t proc_rxtx[2];
+
 } eNB_proc_NB_t;
 
 
@@ -307,7 +314,6 @@ typedef struct PHY_VARS_eNB_NB_s {
 
 } PHY_VARS_eNB_NB;
 
-#define debug_msg if (((mac_xface->frame%100) == 0) || (mac_xface->frame < 50)) msg
 
 
 #include "PHY/INIT/defs.h"

@@ -620,10 +620,11 @@ rlc_module_init (void)
   rlc_rrc_data_ind  = NULL;
   rlc_rrc_data_conf = NULL;
 
-//NB-IOT---------------------------------------------------------------
+#ifdef NB_IOT
   //MP: change variable maxDRB for NB-IoT --> see ifdef at the beginning
   rlc_rrc_data_ind_NB = NULL;
-//-------------------------------------------------------------------
+#endif
+
 
   rlc_coll_p = hashtable_create ((maxDRB + 2) * 16, NULL, rb_free_rlc_union);
   AssertFatal(rlc_coll_p != NULL, "UNRECOVERABLE error, RLC hashtable_create failed");

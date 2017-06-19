@@ -256,10 +256,11 @@ int NB_rrc_mac_config_req_eNB(
     	break;
     }
 
-    PHY_config_req(config_INFO); //for trigger the NB_phy_config_mib_eNB()
-    //IF_Module->PHY_config_req(config_INFO);
+    if(if_inst->PHY_config_req)
+    	if_inst->PHY_config_req(config_INFO); //for trigger the NB_phy_config_mib_eNB()
+    else
+    	LOG_E(RRC, "NB_rrc_mac_config_req_eNB: PHY_config_req pointer function is NULL\n");
 
-   // mac_init_cell_params(Mod_idP,CC_idP); //TODO MP: to be defined in MAC/main.c (in the old implementation was inside the mac_top_init but raymond have separated
   }
 
 
@@ -471,7 +472,11 @@ int NB_rrc_mac_config_req_eNB(
 	  /*RACH Config Common*/
       //nothing defined in FAPI specs
 
-      PHY_config_req(config_INFO); //for trigger NB_phy_config_sib2_eNB ()
+
+      if(if_inst->PHY_config_req)
+      	if_inst->PHY_config_req(config_INFO); //for trigger the NB_phy_config_sib2_eNB()
+      else
+      	LOG_E(RRC, "NB_rrc_mac_config_req_eNB: PHY_config_req pointer function is NULL\n");
 
       //     NB_phy_config_sib2_eNB(
       //    		  Mod_idP,
@@ -485,8 +490,8 @@ int NB_rrc_mac_config_req_eNB(
     if (UE_id == -1) {
       LOG_E(MAC,"%s:%d:%s: ERROR, UE_id == -1\n", __FILE__, __LINE__, __FUNCTION__);
     } else {
-    	//no logical channel group not defined for nb-iot --> no UL specific Parameter
-    	//XXX: lcgidmap in MAC/defs.h most probably is not needed
+    	//logical channel group not defined for nb-iot --> no UL specific Parameter
+    	// or at least LCGID should be set to 0 for NB-IoT (See TS 36.321 ch 6.1.3.1) so no make sense to store this
     }
   }
 
@@ -501,13 +506,17 @@ int NB_rrc_mac_config_req_eNB(
     	config_INFO->rnti = UE_RNTI(Mod_idP, UE_id);
     	config_INFO->phy_config_dedicated = physicalConfigDedicated;
 
-    	PHY_config_req(config_INFO); // for trigger NB_phy_config_dedicated_eNB()
+        if(if_inst->PHY_config_req)
+        	if_inst->PHY_config_req(config_INFO); //for trigger the NB_phy_config_dedicated_eNB()
+        else
+        	LOG_E(RRC, "NB_rrc_mac_config_req_eNB: PHY_config_req pointer function is NULL\n");
 
 //    	NB_phy_config_dedicated_eNB(
 //    								Mod_idP,
 //									CC_idP,
 //									UE_RNTI(Mod_idP, UE_id),
 //									physicalConfigDedicated);
+
     }
   }
 
@@ -1302,7 +1311,7 @@ boolean_t NB_rrc_pdcp_config_asn1_req (
 
   if (srb2add_list_pP != NULL) {
 
-	  if(LCID == DCCH0) //SRB1bis
+	  if(LCID == DCCH0_NB) //SRB1bis
 	  	{
 		  LOG_E(PDCP,"PDCP Configuration for SRB1bis not allowed\n");
 		  return 0;
@@ -2328,10 +2337,10 @@ rlc_op_status_t NB_rrc_rlc_config_asn1_req (
 
   if (srb2add_listP != NULL) {
 		if(srb1bis_flag == SRB1BIS_FLAG_YES){
-	    	rb_id = DCCH0; //3
+	    	rb_id = DCCH0_NB; //3
 		}//srb1bis
 	    else{
-	    	rb_id = DCCH1; //1
+	    	rb_id = DCCH1_NB; //1
 	    }//srb1
 
 	    lc_id = rb_id;
@@ -2959,7 +2968,8 @@ void rrc_rlc_register_rrc_NB (rrc_data_ind_cb_NB_t NB_rrc_data_indP, rrc_data_co
 }
 
 /*--------------------------------------------RLC-PDCP--------------------------------------------------*/
-
+//XXX to be integrated in the flow
+//called by rlc_am_send_sdu and rlc_tm_send_sdu
 //defined in rlc.c
 //--------------------------------------------
 void NB_rlc_data_ind     (
@@ -3709,7 +3719,7 @@ void NB_mac_rlc_data_ind     (
   const logical_chan_id_t   channel_idP,
   char                     *buffer_pP,
   const tb_size_t           tb_sizeP,
-  num_tb_t                  num_tbP,
+  num_tb_t                  num_tbP, //number of transport block
   crc_t                    *crcs_pP)
 {
   //-----------------------------------------------------------------------------
@@ -3783,7 +3793,7 @@ void NB_mac_rlc_data_ind     (
     NB_rlc_am_mac_data_indication(&ctxt, &rlc_union_p->rlc.am, data_ind);
     break;
 
-   //XXX MP: no UM mode for NB_IoT
+   //MP: no UM mode for NB_IoT
 
   case RLC_MODE_TM:
     rlc_tm_mac_data_indication(&ctxt, &rlc_union_p->rlc.tm, data_ind);

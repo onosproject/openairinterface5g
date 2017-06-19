@@ -588,7 +588,7 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
           (RadioResourceConfigCommonSIB_NB_r13_t *) NULL,
           (PhysicalConfigDedicated_NB_r13_t*) ue_context_pP->ue_context.physicalConfigDedicated_NB,
           ue_context_pP->ue_context.mac_MainConfig_NB, //XXX most probably is not needed since is only at UE side
-          DCCH0, //LCID  = 3 of SRB1bis
+          DCCH0_NB, //LCID  = 3 of SRB1bis
           SRB1bis_logicalChannelConfig
 		  );
         break;
@@ -1225,7 +1225,7 @@ rrc_eNB_generate_SecurityModeCommand_NB(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
         size,
         rrc_eNB_mui_NB,
-        DCCH0); //MP: SRB1bis
+        DCCH0_NB); //MP: SRB1bis
 
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
@@ -1240,7 +1240,7 @@ rrc_eNB_generate_SecurityModeCommand_NB(
 
   NB_rrc_data_req( //to PDCP
 	       ctxt_pP,
-	       DCCH0,//MP:through SRB1bis
+	       DCCH0_NB,//MP:through SRB1bis
 	       rrc_eNB_mui_NB++,
 	       SDU_CONFIRM_NO,
 	       size,
@@ -1280,7 +1280,7 @@ rrc_eNB_generate_UECapabilityEnquiry_NB(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
         size,
         rrc_eNB_mui_NB,
-        DCCH0);//through SRB1bis
+        DCCH0_NB);//through SRB1bis
 
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
@@ -2123,14 +2123,14 @@ rrc_eNB_decode_ccch_NB(
 
       // SRB1bis (LCID = 3 = DCCH0)
       ue_context_p->ue_context.Srb1bis.Active = 1;
-      ue_context_p->ue_context.Srb1bis.Srb_info.Srb_id = DCCH0;
+      ue_context_p->ue_context.Srb1bis.Srb_info.Srb_id = DCCH0_NB;
 
       //generate RRCConnectionSetup-NB
       rrc_eNB_generate_RRCConnectionSetup_NB(ctxt_pP, ue_context_p, CC_id);
 
       LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT"CALLING RLC CONFIG SRB1bis and SRB1 (rbid %d, rbid %d)\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH0, DCCH1);
+            DCCH0_NB, DCCH1_NB);
 
       MSC_LOG_TX_MESSAGE(
         MSC_RRC_ENB,
@@ -2439,7 +2439,7 @@ rrc_eNB_decode_dcch_NB(
             PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
             "(RRCConnectionSetupComplete-NB) ---> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH0,//SRB1bis
+            DCCH0_NB,//SRB1bis
             sdu_sizeP);
 
       if (ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionSetupComplete_r13.criticalExtensions.present ==
@@ -2508,7 +2508,7 @@ rrc_eNB_decode_dcch_NB(
             PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
             "(securityModeComplete-NB) ---> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH0,//through SRB1bis
+            DCCH0_NB,//through SRB1bis
             sdu_sizeP);
 #ifdef XER_PRINT
       xer_fprint(stdout, &asn_DEF_UL_DCCH_Message_NB, (void *)ul_dcch_msg_NB);
@@ -2568,7 +2568,7 @@ rrc_eNB_decode_dcch_NB(
             PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
             "(securityModeFailure-NB) ---> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            DCCH0,
+            DCCH0_NB,
             sdu_sizeP);
 
 #ifdef XER_PRINT

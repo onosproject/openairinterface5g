@@ -130,7 +130,7 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   //RX processing for ue-specific resources (i
 
   uint32_t ret=0,i,j,k;
-  uint32_t harq_pid, harq_idx, round;
+  uint32_t harq_pid,round;
   int sync_pos;
   uint16_t rnti=0;
   uint8_t access_mode;
@@ -138,7 +138,6 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
   const int subframe = proc->subframe_rx;
   const int frame    = proc->frame_rx;
-  int offset         = eNB->CC_id;//(proc == &eNB->proc.proc_rxtx[0]) ? 0 : 1;
   
   /*NB-IoT IF module Common setting*/
   
@@ -569,13 +568,13 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_
 }
 
 
-
+extern int oai_exit;
 
 /*
 r_type, rn is only used in PMCH procedure so I remove it.
 */
 void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
-         eNB_rxtx_proc_t *proc,
+         eNB_rxtx_proc_NB_t *proc,
          int do_meas)
 {
   int frame = proc->frame_tx;
@@ -585,8 +584,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   //DCI_PDU_NB *DCI_pdu;
   //DCI_PDU_NB DCI_pdu_tmp;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
- // DCI_ALLOC_t *dci_alloc = (DCI_ALLOC_t *)NULL;
-  int oai_exit = 0;
+  // DCI_ALLOC_t *dci_alloc = (DCI_ALLOC_t *)NULL;
   int8_t UE_id = 0;
   uint8_t ul_subframe;
   uint32_t ul_frame;
@@ -625,10 +623,9 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   while(!oai_exit)
     {
 
-
-      /*Not test yet , mutex_l2, cond_l2, instance_cnt_l2
+        //Not test yet , mutex_l2, cond_l2, instance_cnt_l2
         if(wait_on_condition(&proc->mutex_l2,&proc->cond_l2,&proc->instance_cnt_l2,"eNB_L2_thread") < 0) 
-        break;*/
+        break;
 
       /*Take the structures from the shared structures*/
       //Sched_Rsp = ;
