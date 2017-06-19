@@ -85,8 +85,7 @@ void handler(int sig)
 
 
 //DCI2_5MHz_2A_M10PRB_TDD_t DLSCH_alloc_pdu2_2A[2];
-
-DCI1E_5MHz_2A_M10PRB_TDD_t  DLSCH_alloc_pdu2_1E[2];
+//DCI1E_5MHz_2A_M10PRB_TDD_t  DLSCH_alloc_pdu2_1E[2];
 uint64_t DLSCH_alloc_pdu_1[2];
 
 #define UL_RB_ALLOC 0x1ff;
@@ -268,6 +267,7 @@ fill_DCI (
   int ndi2,
   int rv1,
   int rv2,
+  int tpmi,
   int *num_common_dci,
   int *num_ue_spec_dci,
   int *num_dci)
@@ -833,6 +833,7 @@ fill_DCI (
               ((DCI2_1_5MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->mcs2 = mcs2;
               ((DCI2_1_5MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->ndi2 = ndi2;
               ((DCI2_1_5MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->rv2 = rv2;
+              ((DCI2_1_5MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->tpmi = tpmi;
               break;
 
             case 25:
@@ -849,6 +850,7 @@ fill_DCI (
               ((DCI2_5MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->mcs2 = mcs2;
               ((DCI2_5MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->ndi2 = ndi2;
               ((DCI2_5MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->rv2 = rv2;
+              ((DCI2_5MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->tpmi = tpmi;
               break;
 
             case 50:
@@ -865,6 +867,7 @@ fill_DCI (
               ((DCI2_10MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->mcs2 = mcs2;
               ((DCI2_10MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->ndi2 = ndi2;
               ((DCI2_10MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->rv2 = rv2;
+              ((DCI2_10MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->tpmi = tpmi;
               break;
 
             case 100:
@@ -879,6 +882,7 @@ fill_DCI (
               ((DCI2_20MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->mcs2 = mcs2;
               ((DCI2_20MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->ndi2 = ndi2;
               ((DCI2_20MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->rv2 = rv2;
+              ((DCI2_20MHz_2A_TDD_t *) & DLSCH_alloc_pdu_1[k])->tpmi = tpmi;
               dci_length = sizeof_DCI2_20MHz_2A_TDD_t;
               dci_length_bytes = sizeof (DCI2_20MHz_2A_TDD_t);
               break;
@@ -897,6 +901,7 @@ fill_DCI (
               ((DCI2_1_5MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->mcs2 = mcs2;
               ((DCI2_1_5MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->ndi2 = ndi2;
               ((DCI2_1_5MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->rv2 = rv2;
+              ((DCI2_1_5MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->tpmi = tpmi;
               break;
 
             case 25:
@@ -912,6 +917,7 @@ fill_DCI (
               ((DCI2_5MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->mcs2 = mcs2;
               ((DCI2_5MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->ndi2 = ndi2;
               ((DCI2_5MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->rv2 = rv2;
+              ((DCI2_5MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->tpmi = tpmi;
               break;
 
             case 50:
@@ -927,6 +933,7 @@ fill_DCI (
               ((DCI2_10MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->mcs2 = mcs2;
               ((DCI2_10MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->ndi2 = ndi2;
               ((DCI2_10MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->rv2 = rv2;
+              ((DCI2_10MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->tpmi = tpmi;
               break;
 
             case 100:
@@ -942,10 +949,13 @@ fill_DCI (
               ((DCI2_20MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->mcs2 = mcs2;
               ((DCI2_20MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->ndi2 = ndi2;
               ((DCI2_20MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->rv2 = rv2;
+              ((DCI2_20MHz_2A_FDD_t *) & DLSCH_alloc_pdu_1[k])->tpmi = tpmi;
               break;
             }
           }
         } else if (eNB->frame_parms.nb_antennas_tx == 4) {
+	  printf("error: TM4 with 4TX not supported\n");
+	  exit(-1);
         }
 
         memcpy (&dci_alloc[*num_dci].dci_pdu[0], &DLSCH_alloc_pdu_1[k], dci_length_bytes);
@@ -958,7 +968,16 @@ fill_DCI (
         generate_eNB_dlsch_params_from_dci (0,
                                             subframe,
                                             &DLSCH_alloc_pdu_1[0],
-                                            n_rnti + k, format2, eNB->dlsch[0], &eNB->frame_parms, eNB->pdsch_config_dedicated, SI_RNTI, 0, P_RNTI, eNB->UE_stats[0].DL_pmi_single, transmission_mode >= 7 ? transmission_mode : 0);
+                                            n_rnti + k, 
+					    format2, 
+					    eNB->dlsch[0], 
+					    &eNB->frame_parms, 
+					    eNB->pdsch_config_dedicated, 
+					    SI_RNTI, 
+					    0, 
+					    P_RNTI, 
+					    eNB->UE_stats[0].DL_pmi_single, 
+					    transmission_mode >= 7 ? transmission_mode : 0);
         *num_dci = *num_dci + 1;
         *num_ue_spec_dci = *num_ue_spec_dci + 1;
       } else {
@@ -1096,7 +1115,7 @@ fill_DCI (
 
     case 5:
     case 6:
-      memcpy (&dci_alloc[*num_dci].dci_pdu[0], &DLSCH_alloc_pdu2_1E[k], sizeof (DCI1E_5MHz_2A_M10PRB_TDD_t));
+      memcpy (&dci_alloc[*num_dci].dci_pdu[0], &DLSCH_alloc_pdu_1[k], sizeof (DCI1E_5MHz_2A_M10PRB_TDD_t));
       dci_alloc[*num_dci].dci_length = sizeof_DCI1E_5MHz_2A_M10PRB_TDD_t;
       dci_alloc[*num_dci].L = 1;
       dci_alloc[*num_dci].rnti = n_rnti + k;
@@ -1105,7 +1124,7 @@ fill_DCI (
       //printf ("Generating dlsch params for user %d\n", k);
       generate_eNB_dlsch_params_from_dci (0,
                                           subframe,
-                                          &DLSCH_alloc_pdu2_1E[k],
+                                          &DLSCH_alloc_pdu_1[k],
                                           n_rnti + k, format1E_2A_M10PRB, eNB->dlsch[k], &eNB->frame_parms, eNB->pdsch_config_dedicated, SI_RNTI, 0, P_RNTI, eNB->UE_stats[k].DL_pmi_single, transmission_mode >= 7 ? transmission_mode : 0);
       dump_dci (&eNB->frame_parms, &dci_alloc[*num_dci]);
       *num_ue_spec_dci = *num_ue_spec_dci + 1;
@@ -1226,7 +1245,7 @@ int main(int argc, char **argv)
 
   //  unsigned char pbch_pdu[6];
 
-
+  int tpmi = 0;
 
 
   //  FILE *rx_frame_file;
@@ -1968,6 +1987,7 @@ int main(int argc, char **argv)
   CCCH_alloc_pdu.mcs      = 1;
   CCCH_alloc_pdu.harq_pid = 0;
 
+  /*
   DLSCH_alloc_pdu2_1E[0].rah              = 0;
   DLSCH_alloc_pdu2_1E[0].rballoc          = DLSCH_RB_ALLOC;
   DLSCH_alloc_pdu2_1E[0].TPC              = 0;
@@ -1993,6 +2013,7 @@ int main(int argc, char **argv)
   // Forget second codeword
   DLSCH_alloc_pdu2_1E[1].tpmi             = (transmission_mode>=5 ? 5 : 0) ;  // precoding
   DLSCH_alloc_pdu2_1E[1].dl_power_off     = (transmission_mode==5 ? 0 : 1);
+  */
 
   eNB2UE[0] = new_channel_desc_scm(eNB->frame_parms.nb_antennas_tx,
                                    UE->frame_parms.nb_antennas_rx,
@@ -2081,7 +2102,7 @@ int main(int argc, char **argv)
   // structure for SIC at UE
   UE->dlsch_eNB[0] = new_eNB_dlsch(Kmimo,8,Nsoft,N_RB_DL,0,&eNB->frame_parms);
 
-  if (DLSCH_alloc_pdu2_1E[0].tpmi == 5) {
+  if (tpmi == 5) {
 
     eNB->UE_stats[0].DL_pmi_single = (unsigned short)(taus()&0xffff);
 
@@ -2114,6 +2135,7 @@ int main(int argc, char **argv)
 	     1,
 	     0,
 	     0,
+	     tpmi,
 	     &num_common_dci,
 	     &num_ue_spec_dci,
 	     &num_dci);
@@ -2316,12 +2338,13 @@ int main(int argc, char **argv)
 
               if (round == 0) { // First round
                 fill_DCI (eNB, &dci_alloc[0], subframe, n_rnti, n_users, transmission_mode, common_flag, DLSCH_RB_ALLOC, TPC, 
-			  mcs1, mcs2, trials & 1, trials &1, round & 3, round & 3, &num_common_dci, &num_ue_spec_dci, &num_dci);
+			  mcs1, mcs2, trials & 1, trials &1, round & 3, round & 3, tpmi, &num_common_dci, &num_ue_spec_dci, &num_dci);
               } else {
                 fill_DCI (eNB, &dci_alloc[0], subframe, n_rnti, n_users, transmission_mode, common_flag, DLSCH_RB_ALLOC, TPC,
                           (TB0_active == 1) ? mcs1 : 0, (TB1_active==1) ? mcs2 : 0, 
 			  trials&1, trials&1, 
 			  (TB0_active == 1) ? round&3 : 1, (TB1_active == 1) ? round&3 : 1, 
+			  tpmi,
 			  &num_common_dci, &num_ue_spec_dci, &num_dci);
               }
 

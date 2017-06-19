@@ -3523,7 +3523,7 @@ void ue_pdsch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, PDSC
 	eNB_id_i = ue->n_connected_eNB;
 	i_mod =  dlsch0->harq_processes[harq_pid]->Qm;
       }
-      else if((pdsch==PDSCH) && (ue->transmission_mode[eNB_id]==3))
+      else if((pdsch==PDSCH) && ((ue->transmission_mode[eNB_id]==3) ||(ue->transmission_mode[eNB_id]==4)) )
       {
           dual_stream_UE = rx_IC_dual_stream;
           eNB_id_i       = eNB_id;
