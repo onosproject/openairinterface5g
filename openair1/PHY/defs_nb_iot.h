@@ -307,7 +307,9 @@ typedef struct PHY_VARS_eNB_NB_s {
   eNB_proc_NB_t           proc;
   NB_DL_FRAME_PARMS   frame_parms;
 
+  //number of UE max = 1 // in fapy is udated dinamically each subframe  and is no more a table
   LTE_eNB_DLSCH_t     *dlsch[NUMBER_OF_UE_MAX][2];   // Nusers times two spatial streams
+  //how many ULSCH we keep???? should be more that 1 for sure
   LTE_eNB_ULSCH_t     *ulsch[NUMBER_OF_UE_MAX+1];      // Nusers + number of RA
   LTE_eNB_DLSCH_t     *dlsch_SI,*dlsch_ra;
   LTE_eNB_DLSCH_t     *dlsch_MCH;

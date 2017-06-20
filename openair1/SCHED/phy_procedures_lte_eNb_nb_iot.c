@@ -617,11 +617,12 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     } 
 
 
-  //ignore the PMCH part only do the generate PSS/SSS, note: Seperate MIB from here
-  NB_common_signal_procedures(eNB,proc);
+
 
   while(!oai_exit)
     {
+	  //ignore the PMCH part only do the generate PSS/SSS, note: Seperate MIB from here
+	  NB_common_signal_procedures(eNB,proc);
 
         //Not test yet , mutex_l2, cond_l2, instance_cnt_l2
         if(wait_on_condition(&proc->mutex_l2,&proc->cond_l2,&proc->instance_cnt_l2,"eNB_L2_thread") < 0) 
@@ -660,11 +661,14 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       
       if (Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.rnti<= P_RNTI) 
         {
+    	  //is not system iformation but cound be paging
+    	  //in any case we generate dlsch for not system information
           UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.rnti,eNB);
         }
       else 
         UE_id=0;
     
+      //inside we hve nFAPI to OAI parameters
       NB_generate_eNB_dlsch_params(eNB,proc,Sched_Rsp,UE_id);
       
       /* Apply physicalConfigDedicated if needed, don't know if needed in NB-IoT or not
@@ -682,9 +686,11 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       /*If we have DCI to generate do it now TODO : have a generate dci top for NB_IoT */      
       //NB_generate_dci_top();
 
+
+      // what should be figurate this week
       if(Sched_Rsp->NB_DL.NB_DLSCH.NPDSCH_pdu.segments)
         {
-            /*TODO: MPDSCH procedures for NB-IoT*/
+            /*TODO: NPDSCH procedures for NB-IoT*/
             //npdsch_procedures();
         }
 

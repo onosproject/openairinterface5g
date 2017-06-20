@@ -47,7 +47,7 @@ void rrc_config_buffer_NB(SRB_INFO_NB *srb_info, uint8_t Lchan_type, uint8_t Rol
 
 int L3_xface_init_NB(void);
 
-void openair_rrc_top_init_NB( char *uecap_xer);
+void openair_rrc_top_init_eNB_NB(void);
 
 //void rrc_top_cleanup(void); -->seems not to be used
 

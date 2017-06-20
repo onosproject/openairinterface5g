@@ -181,6 +181,8 @@ int NB_rrc_mac_config_req_eNB(
 
    //mac_top_init_eNB(); //TODO MP:  to be included in the MAC/main.c
 
+	  ///to review with the Raymond implementation
+
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].mib_NB           = mib_NB;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].physCellId     = physCellId;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].p_eNB          = p_eNB;
@@ -208,14 +210,15 @@ int NB_rrc_mac_config_req_eNB(
 
     config_INFO->get_MIB = 1;
     config_INFO->rnti = rntiP;
-    config_INFO->frequency_band_indicator = (uint8_t)eutra_band;
+    config_INFO->frequency_band_indicator = (uint8_t)eutra_band; // guarda raimon
     config_INFO->sch_config.physical_cell_id.value = physCellId;
     config_INFO->subframe_config.dl_cyclic_prefix_type.value = Ncp;
     config_INFO->subframe_config.ul_cyclic_prefix_type.value = Ncp_UL;
     config_INFO->rf_config.tx_antenna_ports.value = p_eNB;
     config_INFO->rf_config.rx_antenna_ports.value = p_rx_eNB;
-    config_INFO->dl_CarrierFreq = dl_CarrierFreq;
-    config_INFO->ul_CarrierFreq = ul_CarrierFreq;
+    config_INFO->dl_CarrierFreq = dl_CarrierFreq; //guarda raymond is in rf_config
+    config_INFO->ul_CarrierFreq = ul_CarrierFreq; //guarda raymond
+
 
     switch (mib_NB->message.operationModeInfo_r13.present)
     {

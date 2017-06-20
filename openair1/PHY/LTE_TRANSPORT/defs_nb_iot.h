@@ -62,5 +62,8 @@ typedef struct {
   DCI_ALLOC_NB_t dci_alloc[2] ;
 } DCI_PDU_NB;
 
+// to be created LTE_eNB_DLSCH_t --> is duplicated for each number of UE and then indexed in the table
+
+
 /**@}*/
 #endif

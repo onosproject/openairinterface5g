@@ -42,9 +42,9 @@ int mac_init_global_param_NB(void)
 //  Mac_rlc_xface = NULL;
 //  LOG_I(MAC,"[MAIN] CALLING RLC_MODULE_INIT...\n");
 //
-//  if (rlc_module_init()!=0) {
-//    return(-1);
-//  }
+  if (rlc_module_init()!=0) {
+    return(-1);
+ }
 //
 //  LOG_I(MAC,"[MAIN] RLC_MODULE_INIT OK, malloc16 for mac_rlc_xface...\n");
 //
@@ -69,12 +69,12 @@ int mac_init_global_param_NB(void)
   rrc_init_global_param_NB();
 
 
-//  LOG_I(MAC,"[MAIN] PDCP layer init\n");
-//#ifdef USER_MODE
-//  pdcp_layer_init ();
-//#else
-//  pdcp_module_init ();
-//#endif
+  LOG_I(MAC,"[MAIN] PDCP layer init\n");
+#ifdef USER_MODE
+  pdcp_layer_init ();
+#else
+  pdcp_module_init ();
+#endif
 //
 //  LOG_I(MAC,"[MAIN] Init Global Param Done\n");
 
@@ -135,7 +135,7 @@ int mac_top_init_NB()
   if (Is_rrc_nb_iot_registered == 1) {
     LOG_I(MAC,"[MAIN] calling RRC NB-IoT\n");
 #ifndef CELLULAR //nothing to be done yet for cellular
-    openair_rrc_top_init_NB();
+    openair_rrc_top_init_eNB_NB();
 #endif
   } else {
     LOG_I(MAC,"[MAIN] Running without an RRC\n");
