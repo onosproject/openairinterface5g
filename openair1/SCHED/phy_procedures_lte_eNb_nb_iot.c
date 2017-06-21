@@ -121,6 +121,12 @@ void NB_common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                           RB_IoT_ID);
     }
 
+  /*generate NPBCH*/
+  /*
+   *generate_pbch should have as an input the segment_data field
+   *
+   */
+
   
 }
 
