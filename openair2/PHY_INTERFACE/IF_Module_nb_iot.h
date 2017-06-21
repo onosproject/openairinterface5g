@@ -154,14 +154,13 @@ typedef struct{
  }npdsch_t;
 
  typedef struct{
-
+ 	// sinces FAPI spec didn't explain the format for the DCI clearly
  	DCI_format_NB_t DCI_Format;
 
- 	uint8_t NUM_DCI;
- 	/*DL DCI*/
-	nfapi_dl_config_npdcch_pdu DL_DCI;
-	/*UL DCI*/
-	nfapi_hi_dci0_npdcch_dci_pdu UL_DCI;
+ 	/*DL DCI, it contains the DCI list and the other useful information*/
+	nfapi_dl_config_request_body_t DL_DCI;
+	/*UL DCI*/ 
+	nfapi_hi_dci0_request_body_t UL_DCI;
 
  }npdcch_t;
 

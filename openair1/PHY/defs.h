@@ -474,6 +474,8 @@ typedef struct PHY_VARS_eNB_s {
   LTE_eNB_UE_stats     UE_stats[NUMBER_OF_UE_MAX];
   LTE_eNB_UE_stats    *UE_stats_ptr[NUMBER_OF_UE_MAX];
 
+  NB_IoT_eNB_NPBCH npbch;
+
   /// cell-specific reference symbols
   uint32_t         lte_gold_table[20][2][14];
 

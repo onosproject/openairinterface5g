@@ -1,6 +1,7 @@
 
 
 #include "PHY/defs.h"
+#include "PHY/defs_nb_iot.h"
 #include "PHY/extern.h"
 #include "SCHED/defs.h"
 #include "SCHED/extern.h"
@@ -90,14 +91,6 @@ void NB_common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       With_NSSS = 0;
     }
     
-  /*NRS*/
-    generate_pilots_NB_IoT(eNB,
-               txdataF,
-               AMP,
-               Ntti,
-               RB_IoT_ID,
-               With_NSSS);
-               
   /*NPSS when subframe 5*/
   if(subframe == 5)
     {
@@ -110,9 +103,9 @@ void NB_common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     }
     
   /*NSSS when subframe 9 on even frame*/
-  if((subframe == 9)&&(With_NSSS == 1))
+  else if((subframe == 9)&&(With_NSSS == 1))
     {
-      generate_nsss_NB_IoT(txdataF,
+      generate_sss_NB_IoT(txdataF,
                           AMP,
                           fp,
                           3,
@@ -121,6 +114,16 @@ void NB_common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                           RB_IoT_ID);
     }
 
+  else
+  {
+    /*NRS*/
+    generate_pilots_NB_IoT(eNB,
+               txdataF,
+               AMP,
+               Ntti,
+               RB_IoT_ID,
+               With_NSSS);
+  }
   
 }
 
@@ -474,7 +477,6 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
       DCI_Content->DCIN1_RAR.Scheddly = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.scheduling_delay;
       DCI_Content->DCIN1_RAR.ResAssign = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.resource_assignment;
       DCI_Content->DCIN1_RAR.mcs = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.mcs;
-      DCI_Content->DCIN1_RAR.RepNum = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.repetition_number;
       DCI_Content->DCIN1_RAR.ndi = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.new_data_indicator;
       DCI_Content->DCIN1_RAR.HARQackRes = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.harq_ack_resource;
       DCI_Content->DCIN1_RAR.DCIRep = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.dci_subframe_repetition_number;
@@ -588,6 +590,9 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   int8_t UE_id = 0;
   uint8_t ul_subframe;
   uint32_t ul_frame;
+
+  int **txdataF = eNB->common_vars.txdataF[0];
+
   //uint8_t num_npdcch_symbols = 0;
 
   //for NB-IoT
@@ -617,24 +622,52 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     } 
 
 
-
-
   while(!oai_exit)
     {
 	  //ignore the PMCH part only do the generate PSS/SSS, note: Seperate MIB from here
 	  NB_common_signal_procedures(eNB,proc);
 
         //Not test yet , mutex_l2, cond_l2, instance_cnt_l2
+        //cond_l2 should be given by sched_rsp after the scheduling
         if(wait_on_condition(&proc->mutex_l2,&proc->cond_l2,&proc->instance_cnt_l2,"eNB_L2_thread") < 0) 
         break;
 
       /*Take the structures from the shared structures*/
       //Sched_Rsp = ;
 
+      /*
+      broadcast channel for n-FAPI style
+      pdu length - 14 (bytes)
+      pdu index - 1 
+      num segments -1
+      segment length 5 bytes
+      segment data  34 bits (5 bytes)
+      */
+
+      if((subframe==0) && (Sched_Rsp->NB_DL.NB_BCH.MIB_pdu.segments[0].segment_data)!=NULL)
+        {
+          generate_npbch(&eNB->npbch,
+                         txdataF,
+                         AMP,
+                         fp,
+                         &Sched_Rsp->NB_DL.NB_BCH.MIB_pdu.segments[0].segment_data,
+                         frame%64==0?0:1,
+                         fp->NB_IoT_RB_ID // iD of the resource block may be passed by the config request (phy config structure)
+                         );
+        }
+
       /*clear the existing ulsch dci allocations before applying info from MAC*/
       ul_subframe = (subframe+4)%10;
       ul_frame = frame+(ul_subframe >= 6 ? 1 :0);
       harq_pid = ((ul_frame<<1)+ul_subframe)&7;
+
+      // NPDSCH management from nfapi 
+      // what should be figurate this week
+      if(Sched_Rsp->NB_DL.NB_DLSCH.NPDSCH_pdu.segments)
+        {
+            /*TODO: NPDSCH procedures for NB-IoT*/
+            //npdsch_procedures();
+        }
 
       /*clear the DCI allocation maps for new subframe*/
       for(i=0;i<NUMBER_OF_UE_MAX;i++)
@@ -653,10 +686,9 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
             eNB->dlsch[i][0]->subframe_tx[subframe]=0;
         }
 
-      /*remove the part save old HARQ information for PHICH generation*/
-
 
       /*Loop over all the dci to generate DLSCH allocation, there is only 1 or 2 DCIs for NB-IoT in the same time*/
+      // Add dci fapi structure for contain two dcis
       /*Also Packed the DCI here*/
       
       if (Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.rnti<= P_RNTI) 
@@ -675,8 +707,6 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
        This is for UEs that have received this IE, which changes these DL and UL configuration, we apply after a delay for the eNodeB UL parameters
       phy_config_dedicated_eNB_step2(eNB);*/
 
-      //dci_alloc = &DCI_pdu->dci_alloc[i];
-
       if (Sched_Rsp->NB_DL.NB_DCI.DCI_Format == DCIFormatN0) // this is a ULSCH allocation
         {  
           UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.UL_DCI.npdcch_dci_pdu_rel13.rnti,eNB);
@@ -687,12 +717,6 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       //NB_generate_dci_top();
 
 
-      // what should be figurate this week
-      if(Sched_Rsp->NB_DL.NB_DLSCH.NPDSCH_pdu.segments)
-        {
-            /*TODO: NPDSCH procedures for NB-IoT*/
-            //npdsch_procedures();
-        }
 
     }
 }
