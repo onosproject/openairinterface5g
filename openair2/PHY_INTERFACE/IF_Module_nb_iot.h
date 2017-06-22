@@ -164,6 +164,14 @@ typedef struct{
 
  }npdcch_t;
 
+ typedef struct{
+	//for indicate receiving the NPUSCH
+	nfapi_ul_config_nulsch_pdu				nulsch_pdu;
+	//for indicate receiving the NPRACH
+	nfapi_ul_config_nrach_pdu				nrach_pdu;
+
+ }nulsch_t;
+
 typedef union{
 
 	npdcch_t NB_DCI;
@@ -171,6 +179,8 @@ typedef union{
  	npdsch_t NB_DLSCH;
 
  	npbch_t NB_BCH;
+
+ 	nulsch_t NB_UL;
 
 }NB_DL_u;
 
