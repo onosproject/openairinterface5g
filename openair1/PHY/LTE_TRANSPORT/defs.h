@@ -287,8 +287,8 @@ typedef struct {
 } LTE_eNB_DLSCH_t;
 
 
-
-//NB-IoT new structure for NPDCCH
+//----------------------------------------------------------------------------------------------------
+//new structure for NPDCCH
 typedef struct
 {
 	  /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
@@ -334,6 +334,52 @@ typedef struct
 }NB_IoT_eNB_NPDCCH_t;
 
 
+typedef struct {
+  /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
+  int32_t *txdataF[8];
+  /// beamforming weights for UE-spec transmission (antenna ports 5 or 7..14), for each codeword, maximum 4 layers?
+  int32_t **ue_spec_bf_weights[4];
+  /// dl channel estimates (estimated from ul channel estimates)
+  int32_t **calib_dl_ch_estimates;
+  /// Allocated RNTI (0 means DLSCH_t is not currently used)
+  uint16_t rnti;
+  /// Active flag for baseband transmitter processing
+  uint8_t active;
+  /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
+  uint8_t subframe_tx[10];
+  /// First CCE of last PDSCH scheduling per subframe.  Again used during PUCCH detection for ACK/NAK.
+  uint8_t nCCE[10];
+
+  /*in NB-IoT there is only 1 HARQ process for each UE therefore no pid is required*/
+  /// Current HARQ process id
+  //uint8_t current_harq_pid;
+  /// Process ID's per subframe.  Used to associate received ACKs on PUSCH/PUCCH to DLSCH harq process ids
+  //uint8_t harq_ids[10];
+  /// Window size (in outgoing transport blocks) for fine-grain rate adaptation
+  uint8_t ra_window_size;
+  /// First-round error threshold for fine-grain rate adaptation
+  uint8_t error_threshold;
+  /// The only HARQ processes for the DLSCH
+  LTE_DL_eNB_HARQ_t harq_process;
+  /// Number of soft channel bits
+  uint32_t G;
+  /// Codebook index for this dlsch (0,1,2,3)
+  uint8_t codebook_index;
+  /// Maximum number of HARQ processes (for definition see 36-212 V8.6 2009-03, p.17)
+  uint8_t Mdlharq;
+  /// Maximum number of HARQ rounds
+  uint8_t Mlimit;
+  /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
+  uint8_t Kmimo;
+  /// Nsoft parameter related to UE Category
+  uint32_t Nsoft;
+  /// amplitude of PDSCH (compared to RS) in symbols without pilots
+  int16_t sqrt_rho_a;
+  /// amplitude of PDSCH (compared to RS) in symbols containing pilots
+  int16_t sqrt_rho_b;
+
+} NB_IoT_eNB_DLSCH_t;
+//---------------------------------------------------------------------------------------
 
 #define PUSCH_x 2
 #define PUSCH_y 3

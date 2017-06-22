@@ -479,6 +479,7 @@ typedef struct PHY_VARS_eNB_s {
   //NB-IoT------------------------
   NB_IoT_eNB_NPBCH npbch;
   NB_IoT_eNB_NPDCCH_t *npdcch[NUMBER_OF_UE_MAC_NB_IoT]; //check the max size of this array
+  NB_DL_FRAME_PARMS frame_parms_nb_iot;
 
   /// cell-specific reference symbols
   uint32_t         lte_gold_table[20][2][14];
