@@ -168,6 +168,9 @@ int                             otg_enabled;
 //int                             number_of_cards =   1;
 
 static LTE_DL_FRAME_PARMS      *frame_parms[MAX_NUM_CCs];
+//NB-IoT
+static NB_DL_FRAME_PARMS *frame_parms_nb_iot[MAX_NUM_CCs];
+
 eNB_func_t node_function[MAX_NUM_CCs];
 eNB_timing_t node_timing[MAX_NUM_CCs];
 int16_t   node_synch_ref[MAX_NUM_CCs];
@@ -1394,6 +1397,7 @@ int main( int argc, char **argv ) {
     // set default parameters
     set_default_frame_parms(frame_parms);
 
+
     // initialize logging
     logInit();
 
@@ -1621,10 +1625,14 @@ int main( int argc, char **argv ) {
         //  printf("tx_max_power = %d -> amp %d\n",tx_max_power,get_tx_amp(tx_max_poHwer,tx_max_power));
     } else {
         //this is eNB
-        PHY_vars_eNB_g = malloc(sizeof(PHY_VARS_eNB**));
+        PHY_vars_eNB_g = malloc(sizeof(PHY_VARS_eNB**)); //global PHY Vars matrix
         PHY_vars_eNB_g[0] = malloc(sizeof(PHY_VARS_eNB*));
 
         for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+        	//we initialiaze DL/UL buffer and HARQ (inside the LTE_eNB_DLSCH)
+        	/*
+        	 * the LTE_DL_FRAME PARMS for NB-IoT is mantained the same for the monent
+        	 */
             PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,frame_parms[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
             PHY_vars_eNB_g[0][CC_id]->ue_dl_rb_alloc=0x1fff;
             PHY_vars_eNB_g[0][CC_id]->target_ue_dl_mcs=target_dl_mcs;

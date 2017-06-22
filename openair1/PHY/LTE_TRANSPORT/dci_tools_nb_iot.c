@@ -74,7 +74,8 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB_NB *eNB,
 {
 
   void *ULSCH_DCI_NB = NULL;
-  DCI_PDU_NB *DCI_pdu;
+
+  eNB->DCI_pdu = (DCI_PDU_NB*) malloc(sizeof(DCI_PDU_NB));
 
   /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
   uint8_t type;
@@ -119,9 +120,9 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB_NB *eNB,
       ((DCIN0_t *)ULSCH_DCI_NB)->ndi       =ndi;
       ((DCIN0_t *)ULSCH_DCI_NB)->DCIRep    =DCIRep;
 
-      DCI_pdu->Num_dci = Num_dci;
+      eNB->DCI_pdu->Num_dci = Num_dci;
 
-      NB_add_dci(DCI_pdu,ULSCH_DCI_NB,rnti,sizeof(DCIN0_t),aggregation,sizeof_DCIN0_t,DCIFormatN0);
+      NB_add_dci(eNB->DCI_pdu,ULSCH_DCI_NB,rnti,sizeof(DCIN0_t),aggregation,sizeof_DCIN0_t,DCIFormatN0);
 
       // use this value to configure PHY both harq_processes and resource mapping.
 
@@ -149,7 +150,7 @@ int NB_generate_eNB_dlsch_params_from_dci(int frame,
 {
 
   void *DLSCH_DCI_NB = NULL;
-  DCI_PDU_NB *DCI_pdu;
+  eNB->DCI_pdu = (DCI_PDU_NB*) malloc(sizeof(DCI_PDU_NB));
 
 
   //N1 start
@@ -211,9 +212,9 @@ int NB_generate_eNB_dlsch_params_from_dci(int frame,
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->HARQackRes     =HARQackRes;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->DCIRep         =DCIRep;
 
-    DCI_pdu->Num_dci = Num_dci;
+    eNB->DCI_pdu->Num_dci = Num_dci;
 
-    NB_add_dci(DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_RAR_t),aggregation,sizeof_DCIN1_RAR_t,DCIFormatN1_RAR);
+    NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_RAR_t),aggregation,sizeof_DCIN1_RAR_t,DCIFormatN1_RAR);
 
 
     // use this value to configure PHY both harq_processes and resource mapping.
@@ -243,9 +244,9 @@ int NB_generate_eNB_dlsch_params_from_dci(int frame,
     ((DCIN1_t *)DLSCH_DCI_NB)->HARQackRes     =HARQackRes;
     ((DCIN1_t *)DLSCH_DCI_NB)->DCIRep         =DCIRep;
 
-    DCI_pdu->Num_dci = Num_dci;
+    eNB->DCI_pdu->Num_dci = Num_dci;
 
-    NB_add_dci(DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_t),aggregation,sizeof_DCIN1_t,DCIFormatN1);
+    NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_t),aggregation,sizeof_DCIN1_t,DCIFormatN1);
 
     // use this value to configure PHY both harq_processes and resource mapping.
 
@@ -260,9 +261,9 @@ int NB_generate_eNB_dlsch_params_from_dci(int frame,
     ((DCIN2_Ind_t *)DLSCH_DCI_NB)->directIndInf   =directIndInf;
     ((DCIN2_Ind_t *)DLSCH_DCI_NB)->resInfoBits    =resInfoBits;
 
-    DCI_pdu->Num_dci = Num_dci;
+    eNB->DCI_pdu->Num_dci = Num_dci;
 
-    NB_add_dci(DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Ind_t),aggregation,sizeof_DCIN2_Ind_t,DCIFormatN2_Ind);
+    NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Ind_t),aggregation,sizeof_DCIN2_Ind_t,DCIFormatN2_Ind);
 
     // use this value to configure PHY both harq_processes and resource mapping.
 
@@ -282,9 +283,9 @@ int NB_generate_eNB_dlsch_params_from_dci(int frame,
     ((DCIN2_Pag_t *)DLSCH_DCI_NB)->RepNum    =RepNum;
     ((DCIN2_Pag_t *)DLSCH_DCI_NB)->DCIRep    =DCIRep;
 
-    DCI_pdu->Num_dci = Num_dci;
+    eNB->DCI_pdu->Num_dci = Num_dci;
 
-    NB_add_dci(DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Pag_t),aggregation,sizeof_DCIN2_Pag_t,DCIFormatN2_Pag);
+    NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Pag_t),aggregation,sizeof_DCIN2_Pag_t,DCIFormatN2_Pag);
 
     // use this value to configure PHY both harq_processes and resource mapping.
 
