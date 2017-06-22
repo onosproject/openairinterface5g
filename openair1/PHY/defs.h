@@ -428,6 +428,7 @@ typedef struct {
   UE_rxtx_proc_t proc_rxtx[2];
 } UE_proc_t;
 
+
 /// Top-level PHY Data Structure for eNB
 typedef struct PHY_VARS_eNB_s {
   /// Module ID indicator for this instance
@@ -474,7 +475,10 @@ typedef struct PHY_VARS_eNB_s {
   LTE_eNB_UE_stats     UE_stats[NUMBER_OF_UE_MAX];
   LTE_eNB_UE_stats    *UE_stats_ptr[NUMBER_OF_UE_MAX];
 
+
+  //NB-IoT------------------------
   NB_IoT_eNB_NPBCH npbch;
+  NB_IoT_eNB_NPDCCH_t *npdcch[NUMBER_OF_UE_MAC_NB_IoT]; //check the max size of this array
 
   /// cell-specific reference symbols
   uint32_t         lte_gold_table[20][2][14];

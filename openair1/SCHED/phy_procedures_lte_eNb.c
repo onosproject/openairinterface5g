@@ -1008,6 +1008,15 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 	  // Initialize indicator for first SR (to be cleared after ConnectionSetup is acknowledged)
 	  eNB->first_sr[(uint32_t)UE_id] = 1;
 	      
+
+	  /*
+	   * In FAPI style we don-t need to process the RAR because we have all the parameters for getting the MSG3 given by the
+	   * UL_CONFIG.request
+	   * 1) this data are given at the same time with the DLSCH PDU containing the RAR
+	   * 2) wee need to do a mapping of this parameters OAI->FAPI
+	   */
+
+
 	  generate_eNB_ulsch_params_from_rar(DLSCH_pdu,
 					     frame,
 					     subframe,
@@ -1089,6 +1098,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
     LOG_D(PHY,"Generating DLSCH/PDSCH %d\n",ra_flag);
     // 36-212
     start_meas(&eNB->dlsch_encoding_stats);
+    //encoding
     eNB->te(eNB,
 	    DLSCH_pdu,
 	    num_pdcch_symbols,
@@ -1100,6 +1110,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
     stop_meas(&eNB->dlsch_encoding_stats);
     // 36-211
     start_meas(&eNB->dlsch_scrambling_stats);
+    //scrambling
     dlsch_scrambling(fp,
 		     0,
 		     dlsch,
@@ -1118,6 +1129,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
     start_meas(&eNB->dlsch_modulation_stats);
 
 
+    //modulation
     dlsch_modulation(eNB,
 		     eNB->common_vars.txdataF[0],
 		     AMP,
