@@ -933,7 +933,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
                          AMP,
                          fp,
                          &Sched_Rsp->NB_DL.NB_BCH.MIB_pdu.segments[0].segment_data,
-                         frame%64==0?0:1,
+                         frame%64,
                          fp->NB_IoT_RB_ID // iD of the resource block may be passed by the config request (phy config structure)
                          );
         }
