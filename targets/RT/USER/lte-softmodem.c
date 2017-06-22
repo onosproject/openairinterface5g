@@ -169,7 +169,7 @@ int                             otg_enabled;
 
 static LTE_DL_FRAME_PARMS      *frame_parms[MAX_NUM_CCs];
 //NB-IoT
-static NB_DL_FRAME_PARMS *frame_parms_nb_iot[MAX_NUM_CCs];
+static NB_DL_FRAME_PARMS *frame_parms_nb_iot[MAX_NUM_CCs]; // this will be still inside the PHY_VARS of LTE
 
 eNB_func_t node_function[MAX_NUM_CCs];
 eNB_timing_t node_timing[MAX_NUM_CCs];
@@ -1212,7 +1212,7 @@ int T_dont_fork = 0;  /* default is to fork, see 'T_init' to understand */
 #endif
 
 void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]);
-void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
+void A(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
 
     int CC_id;
 
@@ -1257,6 +1257,52 @@ void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
     }
 
 }
+
+//NB_IoT-------------------------------------------------
+void set_default_frame_parms_NB(NB_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]);
+void set_default_frame_parms_NB(NB_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
+
+    int CC_id;
+
+    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+        frame_parms[CC_id] = (NB_DL_FRAME_PARMS*) malloc(sizeof(NB_DL_FRAME_PARMS));
+        /* Set some default values that may be overwritten while reading options */
+
+        //XXX check if there are other parameters to be set
+
+        frame_parms[CC_id]->Ncp                 = NORMAL;
+        frame_parms[CC_id]->Ncp_UL              = NORMAL;
+        frame_parms[CC_id]->Nid_cell            = 0;
+        frame_parms[CC_id]->nb_antenna_ports_eNB  = 1;
+        frame_parms[CC_id]->nb_antennas_tx      = 1;
+        frame_parms[CC_id]->nb_antennas_rx      = 1;
+
+        frame_parms[CC_id]->nushift             = 0;
+
+        // UL RS Config
+        frame_parms[CC_id]->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupHoppingEnabled = 0;
+        frame_parms[CC_id]->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupAssignmentNPUSCH = 0;
+
+
+        frame_parms[CC_id]->nprach_config_common.nprach_CP_Length
+		//frame_parms[CC_id]->nprach_config_common.nprach_ParametersList.list.array[CC_id]
+		//frame_parms[CC_id]->nprach_config_common.rsrp_ThresholdsPrachInfoList
+
+
+		//already initialized in the set_default_frame_parms function for LTE
+
+//        downlink_frequency[CC_id][0] = 2680000000; // Use float to avoid issue with frequency over 2^31.
+//        downlink_frequency[CC_id][1] = downlink_frequency[CC_id][0];
+//        downlink_frequency[CC_id][2] = downlink_frequency[CC_id][0];
+//        downlink_frequency[CC_id][3] = downlink_frequency[CC_id][0];
+//        //printf("Downlink for CC_id %d frequency set to %u\n", CC_id, downlink_frequency[CC_id][0]);
+
+    }
+
+}
+
+
+
 
 void init_openair0(void);
 
@@ -1396,6 +1442,9 @@ int main( int argc, char **argv ) {
 
     // set default parameters
     set_default_frame_parms(frame_parms);
+#ifdef NB_IOT
+    set_default_frame_parms_NB(frame_parms_nb_iot);
+#endif
 
 
     // initialize logging
@@ -1539,8 +1588,19 @@ int main( int argc, char **argv ) {
       frame_parms[CC_id]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
 
       LOG_I(PHY,"Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms[CC_id]->nb_antennas_rx, frame_parms[CC_id]->nb_antennas_tx);
+
+#ifdef NB_IoT
+      frame_parms_nb_iot[CC_id]->nb_antennas_tx     = nb_antenna_tx;
+      frame_parms_nb_iot[CC_id]->nb_antennas_rx     = nb_antenna_rx;
+      frame_parms_nb_iot[CC_id]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
+
+      LOG_I(PHY,"[NB-IoT] Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms_nb_iot[CC_id]->nb_antennas_rx, frame_parms_nb_iot[CC_id]->nb_antennas_tx);
+
+#endif
     }
 
+
+    //XXXX we need to modify it for NB-IoT????
     init_ul_hopping(frame_parms[CC_id]);
     init_frame_parms(frame_parms[CC_id],1);
     //   phy_init_top(frame_parms[CC_id]);
@@ -1625,15 +1685,18 @@ int main( int argc, char **argv ) {
         //  printf("tx_max_power = %d -> amp %d\n",tx_max_power,get_tx_amp(tx_max_poHwer,tx_max_power));
     } else {
         //this is eNB
-        PHY_vars_eNB_g = malloc(sizeof(PHY_VARS_eNB**)); //global PHY Vars matrix
+        PHY_vars_eNB_g = malloc(sizeof(PHY_VARS_eNB**)); //global PHY_vars --> is a matrix
         PHY_vars_eNB_g[0] = malloc(sizeof(PHY_VARS_eNB*));
 
         for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
         	//we initialiaze DL/UL buffer and HARQ (inside the LTE_eNB_DLSCH)
-        	/*
-        	 * the LTE_DL_FRAME PARMS for NB-IoT is mantained the same for the monent
-        	 */
+
             PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,frame_parms[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
+            //this is a complementary function for just initialize manage NB_ioT stuff inside the PHY_Vars
+#ifdef NB_IOT
+            init_lte_eNB_NB(PHY_vars_eNB_g[0][CC_id],frame_parms_nb_iot[CC_id], 0, frame_parms_nb_iot[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
+#endif
+
             PHY_vars_eNB_g[0][CC_id]->ue_dl_rb_alloc=0x1fff;
             PHY_vars_eNB_g[0][CC_id]->target_ue_dl_mcs=target_dl_mcs;
             PHY_vars_eNB_g[0][CC_id]->ue_ul_nb_rb=6;
@@ -1665,6 +1728,7 @@ int main( int argc, char **argv ) {
                 }
             }
 
+            //TODO: this is different for NB-IoT
             compute_prach_seq(&PHY_vars_eNB_g[0][CC_id]->frame_parms.prach_config_common,
                               PHY_vars_eNB_g[0][CC_id]->frame_parms.frame_type,
                               PHY_vars_eNB_g[0][CC_id]->X_u);
@@ -1688,11 +1752,6 @@ int main( int argc, char **argv ) {
 
         NB_eNB_INST=1;
         NB_INST=1;
-
-//#ifdef NB_IOT
-//       NB_eNB_INST_NB =1;
-//       NB_INST_NB = 1;
-//#endif
 
     }
 

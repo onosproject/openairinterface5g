@@ -469,18 +469,11 @@ typedef struct PHY_VARS_eNB_s {
   LTE_eNB_PUSCH       *pusch_vars[NUMBER_OF_UE_MAX];
   LTE_eNB_PRACH        prach_vars;
   LTE_eNB_DLSCH_t     *dlsch[NUMBER_OF_UE_MAX][2];   // Nusers times two spatial streams
-  LTE_eNB_ULSCH_t     *ulsch[NUMBER_OF_UE_MAX+1];      // Nusers + number of RA
+  LTE_eNB_ULSCH_t     *ulsch[NUMBER_OF_UE_MAX+1];      // Nusers + number of RA (the ulsch[0] contains RAR)
   LTE_eNB_DLSCH_t     *dlsch_SI,*dlsch_ra;
   LTE_eNB_DLSCH_t     *dlsch_MCH;
   LTE_eNB_UE_stats     UE_stats[NUMBER_OF_UE_MAX];
   LTE_eNB_UE_stats    *UE_stats_ptr[NUMBER_OF_UE_MAX];
-
-
-  //NB-IoT------------------------
-  NB_IoT_eNB_NPBCH npbch;
-  NB_IoT_eNB_NPDCCH_t *npdcch[NUMBER_OF_UE_MAC_NB_IoT]; //check the max size of this array
-  NB_DL_FRAME_PARMS frame_parms_nb_iot;
-  DCI_PDU_NB DCI_pdu;
 
 
   /// cell-specific reference symbols
@@ -665,6 +658,24 @@ typedef struct PHY_VARS_eNB_s {
   openair0_device ifdevice;
   /// Pointer for ifdevice buffer struct
   if_buffer_t ifbuffer;
+
+
+
+  //------------------------
+  // NB-IoT
+  //------------------------
+  NB_IoT_eNB_NPBCH npbch;
+  NB_IoT_eNB_NPDCCH_t *npdcch[NUMBER_OF_UE_MAX_NB_IoT]; //check the max size of this array
+  NB_IoT_eNB_NDLSCH_t *ndlsch[NUMBER_OF_UE_MAX_NB_IoT];
+  NB_IoT_eNB_NULSCH_t *nulsch[NUMBER_OF_UE_MAX_NB_IoT+1] //nulsch[0] contains the RAR
+
+  NB_IoT_eNB_NDLSCH_t     *dlsch_SI_NB,*dlsch_ra_NB;
+
+
+  NB_DL_FRAME_PARMS frame_parms_nb_iot;
+  DCI_PDU_NB DCI_pdu;
+
+
 
 } PHY_VARS_eNB;
 

@@ -950,7 +950,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       if(Sched_Rsp->NB_DL.NB_DLSCH.ndlsch.rnti_type == 0)
         {
             /*TODO: NPDSCH procedures for BCCH for NB-IoT*/
-            //npdsch_procedures();
+            npdsch_procedures_NB();
         }
 
       /*clear the DCI allocation maps for new subframe*/

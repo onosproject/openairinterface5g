@@ -1816,6 +1816,7 @@ void init_eNB_proc(int inst) {
 #endif
 
     if (eNB->single_thread_flag==0) {
+      //the two threads that manage tw consecutive subframes
       pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, &proc_rxtx[0] );
       pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, eNB_thread_rxtx, &proc_rxtx[1] );
       pthread_create( &proc->pthread_FH, attr_FH, eNB_thread_FH, &eNB->proc );

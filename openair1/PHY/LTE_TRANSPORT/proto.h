@@ -60,6 +60,17 @@ void clean_eNb_dlsch(LTE_eNB_DLSCH_t *dlsch);
 */
 LTE_eNB_DLSCH_t *new_eNB_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_t N_RB_DL, uint8_t abstraction_flag, LTE_DL_FRAME_PARMS* frame_parms);
 
+
+//NB-IoT version
+NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB(//unsigned char Kmimo,
+									//unsigned char Mdlharq,
+									uint32_t Nsoft,
+									//unsigned char N_RB_DL,
+									uint8_t abstraction_flag,
+									NB_DL_FRAME_PARMS* frame_parms);
+
+
+
 /** \fn free_ue_dlsch(LTE_UE_DLSCH_t *dlsch)
     \brief This function frees memory allocated for a particular DLSCH at UE
     @param dlsch Pointer to DLSCH to be removed
@@ -83,6 +94,9 @@ void clean_eNb_ulsch(LTE_eNB_ULSCH_t *ulsch);
 void free_ue_ulsch(LTE_UE_ULSCH_t *ulsch);
 
 LTE_eNB_ULSCH_t *new_eNB_ulsch(uint8_t max_turbo_iterations,uint8_t N_RB_UL, uint8_t abstraction_flag);
+
+NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag);
+
 
 LTE_UE_ULSCH_t *new_ue_ulsch(unsigned char N_RB_UL, uint8_t abstraction_flag);
 

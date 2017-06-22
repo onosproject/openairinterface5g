@@ -287,100 +287,6 @@ typedef struct {
 } LTE_eNB_DLSCH_t;
 
 
-//----------------------------------------------------------------------------------------------------
-//new structure for NPDCCH
-typedef struct
-{
-	  /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
-	  int32_t *txdataF[8];
-	  /// beamforming weights for UE-spec transmission (antenna ports 5 or 7..14), for each codeword, maximum 4 layers?
-	  int32_t **ue_spec_bf_weights[4];
-	  /// dl channel estimates (estimated from ul channel estimates)
-	  int32_t **calib_dl_ch_estimates;
-	  /// Allocated RNTI (0 means DLSCH_t is not currently used)
-	  uint16_t rnti;
-	  /// Active flag for baseband transmitter processing
-	  uint8_t active;
-	  /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
-	  uint8_t subframe_tx[10];
-	  /// First CCE of last PDSCH scheduling per subframe.  Again used during PUCCH detection for ACK/NAK.
-	  uint8_t nCCE[10];
-	  /// Current HARQ process id
-	  uint8_t current_harq_pid;
-	  /// Process ID's per subframe.  Used to associate received ACKs on PUSCH/PUCCH to DLSCH harq process ids
-	  uint8_t harq_ids[10];
-	  /// Window size (in outgoing transport blocks) for fine-grain rate adaptation
-	  uint8_t ra_window_size;
-	  /// First-round error threshold for fine-grain rate adaptation
-	  uint8_t error_threshold;
-	  /// Pointers to 8 HARQ processes for the DLSCH
-	  LTE_DL_eNB_HARQ_t *harq_processes[8];
-	  /// Number of soft channel bits
-	  uint32_t G;
-	  /// Codebook index for this dlsch (0,1,2,3)
-	  uint8_t codebook_index;
-	  /// Maximum number of HARQ processes (for definition see 36-212 V8.6 2009-03, p.17)
-	  uint8_t Mdlharq;
-	  /// Maximum number of HARQ rounds
-	  uint8_t Mlimit;
-	  /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
-	  uint8_t Kmimo;
-	  /// Nsoft parameter related to UE Category
-	  uint32_t Nsoft;
-	  /// amplitude of PDSCH (compared to RS) in symbols without pilots
-	  int16_t sqrt_rho_a;
-	  /// amplitude of PDSCH (compared to RS) in symbols containing pilots
-	  int16_t sqrt_rho_b;
-}NB_IoT_eNB_NPDCCH_t;
-
-
-typedef struct {
-  /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
-  int32_t *txdataF[8];
-  /// beamforming weights for UE-spec transmission (antenna ports 5 or 7..14), for each codeword, maximum 4 layers?
-  int32_t **ue_spec_bf_weights[4];
-  /// dl channel estimates (estimated from ul channel estimates)
-  int32_t **calib_dl_ch_estimates;
-  /// Allocated RNTI (0 means DLSCH_t is not currently used)
-  uint16_t rnti;
-  /// Active flag for baseband transmitter processing
-  uint8_t active;
-  /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
-  uint8_t subframe_tx[10];
-  /// First CCE of last PDSCH scheduling per subframe.  Again used during PUCCH detection for ACK/NAK.
-  uint8_t nCCE[10];
-
-  /*in NB-IoT there is only 1 HARQ process for each UE therefore no pid is required*/
-  /// Current HARQ process id
-  //uint8_t current_harq_pid;
-  /// Process ID's per subframe.  Used to associate received ACKs on PUSCH/PUCCH to DLSCH harq process ids
-  //uint8_t harq_ids[10];
-  /// Window size (in outgoing transport blocks) for fine-grain rate adaptation
-  uint8_t ra_window_size;
-  /// First-round error threshold for fine-grain rate adaptation
-  uint8_t error_threshold;
-  /// The only HARQ processes for the DLSCH
-  LTE_DL_eNB_HARQ_t harq_process;
-  /// Number of soft channel bits
-  uint32_t G;
-  /// Codebook index for this dlsch (0,1,2,3)
-  uint8_t codebook_index;
-  /// Maximum number of HARQ processes (for definition see 36-212 V8.6 2009-03, p.17)
-  uint8_t Mdlharq;
-  /// Maximum number of HARQ rounds
-  uint8_t Mlimit;
-  /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
-  uint8_t Kmimo;
-  /// Nsoft parameter related to UE Category
-  uint32_t Nsoft;
-  /// amplitude of PDSCH (compared to RS) in symbols without pilots
-  int16_t sqrt_rho_a;
-  /// amplitude of PDSCH (compared to RS) in symbols containing pilots
-  int16_t sqrt_rho_b;
-
-} NB_IoT_eNB_DLSCH_t;
-//---------------------------------------------------------------------------------------
-
 #define PUSCH_x 2
 #define PUSCH_y 3
 
@@ -893,6 +799,144 @@ typedef struct {
   /// DCI pdu
   uint8_t dci_pdu[8];
 } DCI_ALLOC_t;
+
+
+//----------------------------------------------------------------------------------------------------------
+// NB-IoT
+//----------------------------------------------------------------------------------------------------
+
+typedef struct
+{
+	  /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
+	  int32_t *txdataF[8];
+	  /// beamforming weights for UE-spec transmission (antenna ports 5 or 7..14), for each codeword, maximum 4 layers?
+	  int32_t **ue_spec_bf_weights[4];
+	  /// dl channel estimates (estimated from ul channel estimates)
+	  int32_t **calib_dl_ch_estimates;
+	  /// Allocated RNTI (0 means DLSCH_t is not currently used)
+	  uint16_t rnti;
+	  /// Active flag for baseband transmitter processing
+	  uint8_t active;
+	  /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
+	  uint8_t subframe_tx[10];
+	  /// First CCE of last PDSCH scheduling per subframe.  Again used during PUCCH detection for ACK/NAK.
+	  uint8_t nCCE[10];
+	  /// Current HARQ process id
+	  uint8_t current_harq_pid;
+	  /// Process ID's per subframe.  Used to associate received ACKs on PUSCH/PUCCH to DLSCH harq process ids
+	  uint8_t harq_ids[10];
+	  /// Window size (in outgoing transport blocks) for fine-grain rate adaptation
+	  uint8_t ra_window_size;
+	  /// First-round error threshold for fine-grain rate adaptation
+	  uint8_t error_threshold;
+	  /// Pointers to 8 HARQ processes for the DLSCH
+	  LTE_DL_eNB_HARQ_t *harq_processes[8];
+	  /// Number of soft channel bits
+	  uint32_t G;
+	  /// Codebook index for this dlsch (0,1,2,3)
+	  uint8_t codebook_index;
+	  /// Maximum number of HARQ processes (for definition see 36-212 V8.6 2009-03, p.17)
+	  uint8_t Mdlharq;
+	  /// Maximum number of HARQ rounds
+	  uint8_t Mlimit;
+	  /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
+	  uint8_t Kmimo;
+	  /// Nsoft parameter related to UE Category
+	  uint32_t Nsoft;
+	  /// amplitude of PDSCH (compared to RS) in symbols without pilots
+	  int16_t sqrt_rho_a;
+	  /// amplitude of PDSCH (compared to RS) in symbols containing pilots
+	  int16_t sqrt_rho_b;
+}NB_IoT_eNB_NPDCCH_t;
+
+
+typedef struct {
+  /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
+  int32_t *txdataF[8];
+  /// beamforming weights for UE-spec transmission (antenna ports 5 or 7..14), for each codeword, maximum 4 layers?
+  int32_t **ue_spec_bf_weights[4];
+  /// dl channel estimates (estimated from ul channel estimates)
+  int32_t **calib_dl_ch_estimates;
+  /// Allocated RNTI (0 means DLSCH_t is not currently used)
+  uint16_t rnti;
+  /// Active flag for baseband transmitter processing
+  uint8_t active;
+  /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
+  uint8_t subframe_tx[10];
+  /// First CCE of last PDSCH scheduling per subframe.  Again used during PUCCH detection for ACK/NAK.
+  uint8_t nCCE[10];
+
+  /*in NB-IoT there is only 1 HARQ process for each UE therefore no pid is required*/
+  /// Current HARQ process id
+  //uint8_t current_harq_pid;
+  /// Process ID's per subframe.  Used to associate received ACKs on PUSCH/PUCCH to DLSCH harq process ids
+  //uint8_t harq_ids[10];
+  /// Window size (in outgoing transport blocks) for fine-grain rate adaptation
+  uint8_t ra_window_size;
+  /// First-round error threshold for fine-grain rate adaptation
+  uint8_t error_threshold;
+  /// The only HARQ processes for the DLSCH
+  LTE_DL_eNB_HARQ_t *harq_process;
+  /// Number of soft channel bits
+  uint32_t G;
+  /// Codebook index for this dlsch (0,1,2,3)
+  uint8_t codebook_index;
+  /// Maximum number of HARQ processes (for definition see 36-212 V8.6 2009-03, p.17)
+  //uint8_t Mdlharq;
+  /// Maximum number of HARQ rounds
+  uint8_t Mlimit;
+  /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
+  //uint8_t Kmimo;
+  /// Nsoft parameter related to UE Category
+  uint32_t Nsoft;
+  /// amplitude of PDSCH (compared to RS) in symbols without pilots
+  int16_t sqrt_rho_a;
+  /// amplitude of PDSCH (compared to RS) in symbols containing pilots
+  int16_t sqrt_rho_b;
+
+} NB_IoT_eNB_NDLSCH_t;
+
+
+typedef struct {
+  /// Pointers to 8 HARQ processes for the ULSCH
+  LTE_UL_eNB_HARQ_t *harq_process;
+  /// Maximum number of HARQ rounds
+  //uint8_t Mlimit;
+  /// Maximum number of iterations used in eNB turbo decoder
+  //uint8_t max_turbo_iterations;
+//boundling not exist in NB-IoT since we are not using TDD and only 1 HARQ process
+  /// ACK/NAK Bundling flag
+  //uint8_t bundling;
+  /// beta_offset_cqi times 8
+  uint16_t beta_offset_cqi_times8;
+  /// beta_offset_ri times 8
+  uint16_t beta_offset_ri_times8;
+  /// beta_offset_harqack times 8
+  uint16_t beta_offset_harqack_times8;
+  /// Flag to indicate that eNB awaits UE Msg3
+  uint8_t Msg3_active;
+  /// Flag to indicate that eNB should decode UE Msg3
+  uint8_t Msg3_flag;
+  /// Subframe for Msg3
+  uint8_t Msg3_subframe;
+  /// Frame for Msg3
+  uint32_t Msg3_frame;
+  /// RNTI attributed to this ULSCH
+  uint16_t rnti;
+  /// cyclic shift for DM RS
+  uint8_t cyclicShift;
+  /// cooperation flag
+  uint8_t cooperation_flag;
+  /// num active cba group
+  //uint8_t num_active_cba_groups;
+  /// allocated CBA RNTI for this ulsch
+  //uint16_t cba_rnti[4];//NUM_MAX_CBA_GROUP];
+
+} NB_IoT_eNB_NULSCH_t;
+
+//---------------------------------------------------------------------------------------
+
+
 
 
 /**@}*/
