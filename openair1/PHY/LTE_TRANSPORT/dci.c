@@ -1754,8 +1754,8 @@ int32_t rx_pdcch(PHY_VARS_UE *ue,
       avgs = cmax(avgs,avgP[(aarx<<1)+aatx]);
 
   log2_maxh = (log2_approx(avgs)/2) + 5;  //+frame_parms->nb_antennas_rx;
-#ifdef DEBUG_PHY
-  LOG_I(PHY,"subframe %d: pdcch log2_maxh = %d (%d,%d)\n",subframe,log2_maxh,avgP[0],avgs);
+#ifdef UE_DEBUG_TRACE
+  LOG_D(PHY,"subframe %d: pdcch log2_maxh = %d (%d,%d)\n",subframe,log2_maxh,avgP[0],avgs);
 #endif
 
 #if T_TRACER
@@ -1979,6 +1979,9 @@ uint8_t get_num_pdcch_symbols(uint8_t num_dci,
   uint16_t numCCE = 0;
   uint8_t i;
   uint8_t nCCEmin = 0;
+  uint16_t CCE_max_used_index = 0;
+  uint16_t firstCCE_max = dci_alloc[0].firstCCE;
+  uint8_t  L = dci_alloc[0].L;
 
   // check pdcch duration imposed by PHICH duration (Section 6.9 of 36-211)
   if (frame_parms->Ncp==1) { // extended prefix
@@ -1995,16 +1998,22 @@ uint8_t get_num_pdcch_symbols(uint8_t num_dci,
   for (i=0; i<num_dci; i++) {
     //     printf("dci %d => %d\n",i,dci_alloc[i].L);
     numCCE += (1<<(dci_alloc[i].L));
+
+    if(firstCCE_max < dci_alloc[i].firstCCE) {
+      firstCCE_max = dci_alloc[i].firstCCE;
+      L            = dci_alloc[i].L;
+    }
   }
+  CCE_max_used_index = firstCCE_max + (1<<L) - 1;
 
   //if ((9*numCCE) <= (frame_parms->N_RB_DL*2))
-  if (numCCE <= get_nCCE(1, frame_parms, get_mi(frame_parms, subframe)))
+  if (CCE_max_used_index < get_nCCE(1, frame_parms, get_mi(frame_parms, subframe)))
     return(cmax(1,nCCEmin));
   //else if ((9*numCCE) <= (frame_parms->N_RB_DL*((frame_parms->nb_antenna_ports_eNB==4) ? 4 : 5)))
-  else if (numCCE <= get_nCCE(2, frame_parms, get_mi(frame_parms, subframe)))
+  else if (CCE_max_used_index < get_nCCE(2, frame_parms, get_mi(frame_parms, subframe)))
     return(cmax(2,nCCEmin));
   //else if ((9*numCCE) <= (frame_parms->N_RB_DL*((frame_parms->nb_antenna_ports_eNB==4) ? 7 : 8)))
-  else if (numCCE <= get_nCCE(3, frame_parms, get_mi(frame_parms, subframe)))
+  else if (CCE_max_used_index < get_nCCE(3, frame_parms, get_mi(frame_parms, subframe)))
     return(cmax(3,nCCEmin));
   else if (frame_parms->N_RB_DL<=10) {
     if (frame_parms->Ncp == 0) { // normal CP
@@ -2644,7 +2653,8 @@ int get_nCCE_offset_l1(int *CCE_table,
       search_space_free = 1;
 
       for (l=0; l<L; l++) {
-        if (CCE_table[(((Yk+m)%(nCCE/L))*L) + l] == 1) {
+        int cce = (((Yk+m)%(nCCE/L))*L) + l;
+        if (cce >= nCCE || CCE_table[cce] == 1) {
           search_space_free = 0;
           break;
         }

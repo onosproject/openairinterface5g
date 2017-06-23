@@ -451,7 +451,7 @@ void proc_tx_high0(PHY_VARS_eNB *eNB,
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_TX0_ENB+offset, proc->frame_tx );
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_SUBFRAME_NUMBER_TX0_ENB+offset, proc->subframe_tx );
 
-  phy_procedures_eNB_TX(eNB,proc,r_type,rn,1);
+  phy_procedures_eNB_TX(eNB,proc,r_type,rn,1,1);
 
   /* we're done, let the next one proceed */
   if (pthread_mutex_lock(&sync_phy_proc.mutex_phy_proc_tx) != 0) {
@@ -1614,7 +1614,7 @@ static void* eNB_thread_single( void* param ) {
   wait_sync("eNB_thread_single");
 
 #if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
-  if (eNB->node_function < NGFI_RRU_IF5)
+  if ((eNB->node_function < NGFI_RRU_IF5) && (eNB->mac_enabled==1))
     wait_system_ready ("Waiting for eNB application to be ready %s\r", &start_eNB);
 #endif 
 
@@ -1739,7 +1739,6 @@ static void* eNB_thread_single( void* param ) {
     wakeup_slaves(proc);
 
     if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
-
   }
   
 
@@ -1840,7 +1839,6 @@ void init_eNB_proc(int inst) {
 	(eNB->node_function == NGFI_RRU_IF5) ||
 	(eNB->node_function == NGFI_RRU_IF4p5))
       pthread_create( &proc->pthread_asynch_rxtx, attr_asynch, eNB_thread_asynch_rxtx, &eNB->proc );
-
 
     if(eNB->node_function == NGFI_RRU_IF4p5 || eNB->node_function == NGFI_RCC_IF4p5)
                 pthread_create( &if_stats_thread, NULL, print_stats_thread, &eNB->proc);
@@ -2118,6 +2116,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
           printf("Exiting, cannot initialize transport protocol\n");
           exit(-1);
         }
+	malloc_IF5_buffer(eNB);
 	break;
       case NGFI_RRU_IF4p5:
 	eNB->do_precoding         = 0;
@@ -2207,6 +2206,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
           printf("Exiting, cannot initialize transport protocol\n");
           exit(-1);
         }
+	malloc_IF5_buffer(eNB);
 	break;
       case NGFI_RCC_IF4p5:
 	eNB->do_precoding         = 0;
