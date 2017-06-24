@@ -62,8 +62,8 @@ void NB_add_dci(DCI_PDU_NB *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_size
 }
 
 
-int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB_NB *eNB,
-                                       eNB_rxtx_proc_NB_t *proc,
+int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
+                                       eNB_rxtx_proc_t *proc,
                                        DCI_CONTENT *DCI_Content,
                                        uint16_t rnti,
                                        DCI_format_NB_t dci_format,
@@ -137,7 +137,8 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB_NB *eNB,
     }
 }
 
-int NB_generate_eNB_dlsch_params_from_dci(int frame,
+int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
+                                        int frame,
                                        uint8_t subframe,
                                        DCI_CONTENT *DCI_Content,
                                        uint16_t rnti,

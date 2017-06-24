@@ -471,22 +471,23 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
   switch (Sched_Rsp->NB_DL.NB_DCI.DCI_Format){
     case DCIFormatN1_RAR:
       //DCI format N1 to RAR
-      DCI_Content[i]->DCIN1_RAR.type = 1;
+      DCI_Content[i].DCIN1_RAR.type = 1;
       //check if this work
-      DCI_Content[i]->DCIN1_RAR.orderIndicator = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i]->npdcch_pdu.npdcch_pdu_rel13.npdcch_order_indication;
-      DCI_Content[i]->DCIN1_RAR.Scheddly = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.scheduling_delay;
-      DCI_Content[i]->DCIN1_RAR.ResAssign = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.resource_assignment;
-      DCI_Content[i]->DCIN1_RAR.mcs = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.mcs;
-      DCI_Content[i]->DCIN1_RAR.ndi = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.new_data_indicator;
-      DCI_Content[i]->DCIN1_RAR.HARQackRes = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
-      DCI_Content[i]->DCIN1_RAR.DCIRep = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
+      DCI_Content[i].DCIN1_RAR.orderIndicator = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.npdcch_order_indication;
+      DCI_Content[i].DCIN1_RAR.Scheddly = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.scheduling_delay;
+      DCI_Content[i].DCIN1_RAR.ResAssign = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.resource_assignment;
+      DCI_Content[i].DCIN1_RAR.mcs = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.mcs;
+      DCI_Content[i].DCIN1_RAR.ndi = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.new_data_indicator;
+      DCI_Content[i].DCIN1_RAR.HARQackRes = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
+      DCI_Content[i].DCIN1_RAR.DCIRep = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
 
       // configure dlsch parameters and CCE index
       LOG_D(PHY,"Generating dlsch params for RA_RNTI\n");
 
-      NB_generate_eNB_dlsch_params_from_dci(frame,
+      NB_generate_eNB_dlsch_params_from_dci(eNB,
+                                            frame,
                                             subframe,
-											DCI_Content[i],
+											                      &DCI_Content[i],
                                             Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.rnti,
                                             DCIFormatN1_RAR,
                                             &eNB->dlsch_ra,
@@ -497,18 +498,19 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
       break;
     case DCIFormatN1:
       //DCI format N1 to DLSCH
-    	 DCI_Content[i]->DCIN1_RAR.type = 1;
-    	 DCI_Content[i]->DCIN1_RAR.orderIndicator = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.npdcch_order_indication;
-    	 DCI_Content[i]->DCIN1_RAR.Scheddly = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.scheduling_delay;
-    	 DCI_Content[i]->DCIN1_RAR.ResAssign = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.resource_assignment;
-    	 DCI_Content[i]->DCIN1_RAR.mcs = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.mcs;
-    	 DCI_Content[i]->DCIN1_RAR.ndi = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.new_data_indicator;
-    	 DCI_Content[i]->DCIN1_RAR.HARQackRes = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
-    	 DCI_Content[i]->DCIN1_RAR.DCIRep = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
+    	 DCI_Content[i].DCIN1_RAR.type = 1;
+    	 DCI_Content[i].DCIN1_RAR.orderIndicator = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.npdcch_order_indication;
+    	 DCI_Content[i].DCIN1_RAR.Scheddly = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.scheduling_delay;
+    	 DCI_Content[i].DCIN1_RAR.ResAssign = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.resource_assignment;
+    	 DCI_Content[i].DCIN1_RAR.mcs = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.mcs;
+    	 DCI_Content[i].DCIN1_RAR.ndi = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.new_data_indicator;
+    	 DCI_Content[i].DCIN1_RAR.HARQackRes = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
+    	 DCI_Content[i].DCIN1_RAR.DCIRep = Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
 
-      NB_generate_eNB_dlsch_params_from_dci(frame,
+      NB_generate_eNB_dlsch_params_from_dci(eNB,
+                                            frame,
                                             subframe,
-											DCI_Content[i],
+											                      &DCI_Content[i],
                                             Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.rnti,
                                             DCIFormatN0,
                                             eNB->dlsch[(uint8_t)UE_id],
@@ -541,22 +543,22 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_
   {
 
   //mapping the fapi parameters to the OAI parameters
-  DCI_Content[i]->DCIN0.type = 0;
-  DCI_Content[i]->DCIN0.scind = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list->npdcch_dci_pdu.npdcch_dci_pdu_rel13.subcarrier_indication;
-  DCI_Content[i]->DCIN0.ResAssign = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list->npdcch_dci_pdu.npdcch_dci_pdu_rel13.subcarrier_indication;
-  DCI_Content[i]->DCIN0.mcs = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list->npdcch_dci_pdu.npdcch_dci_pdu_rel13.mcs;
-  DCI_Content[i]->DCIN0.ndi = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list->npdcch_dci_pdu.npdcch_dci_pdu_rel13.new_data_indicator;
-  DCI_Content[i]->DCIN0.Scheddly = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list->npdcch_dci_pdu.npdcch_dci_pdu_rel13.scheduling_delay;
-  DCI_Content[i]->DCIN0.RepNum = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list->npdcch_dci_pdu.npdcch_dci_pdu_rel13.repetition_number;
-  DCI_Content[i]->DCIN0.rv = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list->npdcch_dci_pdu.npdcch_dci_pdu_rel13.redudancy_version;
-  DCI_Content[i]->DCIN0.DCIRep = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list->npdcch_dci_pdu.npdcch_dci_pdu_rel13.dci_subframe_repetition_number;
+  DCI_Content[i].DCIN0.type = 0;
+  DCI_Content[i].DCIN0.scind = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list[i].npdcch_dci_pdu.npdcch_dci_pdu_rel13.subcarrier_indication;
+  DCI_Content[i].DCIN0.ResAssign = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list[i].npdcch_dci_pdu.npdcch_dci_pdu_rel13.subcarrier_indication;
+  DCI_Content[i].DCIN0.mcs = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list[i].npdcch_dci_pdu.npdcch_dci_pdu_rel13.mcs;
+  DCI_Content[i].DCIN0.ndi = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list[i].npdcch_dci_pdu.npdcch_dci_pdu_rel13.new_data_indicator;
+  DCI_Content[i].DCIN0.Scheddly = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list[i].npdcch_dci_pdu.npdcch_dci_pdu_rel13.scheduling_delay;
+  DCI_Content[i].DCIN0.RepNum = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list[i].npdcch_dci_pdu.npdcch_dci_pdu_rel13.repetition_number;
+  DCI_Content[i].DCIN0.rv = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list[i].npdcch_dci_pdu.npdcch_dci_pdu_rel13.redudancy_version;
+  DCI_Content[i].DCIN0.DCIRep = Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list[i].npdcch_dci_pdu.npdcch_dci_pdu_rel13.dci_subframe_repetition_number;
 
 
   /*Log for generate ULSCH DCI*/
 
   NB_generate_eNB_ulsch_params_from_dci(eNB,
                                         proc,
-                                        DCI_Content[i],
+                                        &DCI_Content[i],
                                         Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list->npdcch_dci_pdu.npdcch_dci_pdu_rel13.rnti,
                                         DCIFormatN0,
                                         UE_id,
@@ -574,280 +576,6 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_
     eNB->ulsch[(uint32_t)UE_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 1;
   
   }
-}
-
-/*
- * for NB-IoT
- * this function is called by the PHy procedure TX in 3 possible occasion:
- * 1) we manage BCCH pdu
- * 2) we manage RA dlsch pdu (to be checked if needed in our case)
- * 3) UE specific dlsch pdu
- * ** we need to know if exist and which value has the eutracontrolRegionSize (TS 36.213 ch 16.4.1.4) whenever we are in In-band mode
- * ** CQI and PMI are not present in NB-IoT
- * ** redundancy version exist only in UL for NB-IoT and not in DL
- */
-void pdsch_procedures_NB(PHY_VARS_eNB *eNB,
-						eNB_rxtx_proc_t *proc, //Context data structure for RX/TX portion of subframe processing
-						NB_IoT_eNB_DLSCH_t *dlsch,
-						NB_IoT_eNB_DLSCH_t *dlsch1,//this is the second colum of the UE specific LTE_eNB_DLSCH_t (see the PHY/defs.h line 471)
-						LTE_eNB_UE_stats *ue_stats,
-						int ra_flag,// set to 1 only in case of RA
-						int num_pdcch_symbols,
-						uint32_t segment_length, //lenght of the  DLSCH PDU from the Sched_rsp (FAPI nomenclature)
-						uint8_t* segment_data // the DLSCH PDU itself from the Sched_rsp (FAPI nomenclature)
-							)
-{
-
-  int frame=proc->frame_tx;
-  int subframe=proc->subframe_tx;
-  //int harq_pid = dlsch->current_harq_pid;
-  LTE_DL_eNB_HARQ_t dlsch_harq=dlsch->harq_process; //TODO: review the HARQ process for NB_IoT
-  int input_buffer_length = dlsch_harq->TBS/8; // get in byte //to be changed for NB_IoT????
-  NB_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
-  uint8_t *DLSCH_pdu=NULL;
-  uint8_t DLSCH_pdu_tmp[input_buffer_length+4]; //[768*8];
-  uint8_t DLSCH_pdu_rar[256];
-  int i;
-
-
-
-  LOG_D(PHY,
-	"[eNB %"PRIu8"][PDSCH rnti%"PRIx16"/HARQ proc%"PRIu8"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8"(round %"PRIu8")\n",
-	eNB->Mod_id,
-	dlsch->rnti,
-	harq_pid,
-	frame, subframe, input_buffer_length,
-	get_G(fp,dlsch_harq->nb_rb,dlsch_harq->rb_alloc,get_Qm(dlsch_harq->mcs),dlsch_harq->Nl, num_pdcch_symbols, frame, subframe, dlsch_harq->mimo_mode==TM7?7:0),
-	dlsch_harq->nb_rb, //in NB_IoT we not need it???
-	dlsch_harq->mcs, //why MCS is inside the harq???
-	dlsch_harq->round);
-
-#if defined(MESSAGE_CHART_GENERATOR_PHY)
-  MSC_LOG_TX_MESSAGE(
-		     MSC_PHY_ENB,MSC_PHY_UE,
-		     NULL,0,
-		     "%05u:%02u PDSCH/DLSCH input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8", pmi_alloc %"PRIx16", rv %"PRIu8" (round %"PRIu8")",
-		     frame, subframe,
-		     input_buffer_length,
-		     get_G(fp,
-			   dlsch_harq->nb_rb,
-			   dlsch_harq->rb_alloc,
-			   get_Qm(dlsch_harq->mcs),
-			   dlsch_harq->Nl,
-			   num_pdcch_symbols,
-			   frame,
-			   subframe,
-			   dlsch_harq->mimo_mode==TM7?7:0),
-		     dlsch_harq->nb_rb,
-		     dlsch_harq->mcs,
-		     pmi2hex_2Ar1(dlsch_harq->pmi_alloc),
-		     dlsch_harq->rvidx,
-		     dlsch_harq->round);
-#endif
-
-  if (ue_stats) ue_stats->dlsch_sliding_cnt++;
-
-  if (dlsch_harq->round == 0) {
-
-    if (ue_stats)
-      ue_stats->dlsch_trials[harq_pid][0]++;
-
-    if (eNB->mac_enabled==1) { // set in lte-softmodem - main line 1646
-      if (ra_flag == 0)  {
-    	  DLSCH_pdu =segment_data;
-
-      }
-    else { // XXX decide what should be done for NB-IoT
-
-  	  /*
-  	   * In FAPI style we don-t need to process the RAR because we have all the parameters for getting the MSG3 given by the
-  	   * UL_CONFIG.request
-  	   * 1) this data are given at the same time with the DLSCH PDU containing the RAR???
-  	   * 2) wee need to do a mapping of this parameters OAI->FAPI
-  	   */
-
-    	  int16_t crnti = mac_xface->fill_rar(eNB->Mod_id,
-					    eNB->CC_id,
-					    frame,
-					    DLSCH_pdu_rar,
-					    fp->N_RB_UL,
-					    input_buffer_length);
-    	  DLSCH_pdu = DLSCH_pdu_rar;
-
-    	  int UE_id;
-
-    	  if (crnti!=0)
-    		  UE_id = add_ue(crnti,eNB);
-    	  else
-	 	UE_id = -1;
-
-    	  if (UE_id==-1) {
-    		  LOG_W(PHY,"[eNB] Max user count reached.\n");
-    		  mac_xface->cancel_ra_proc(eNB->Mod_id,
-    				  	  	  	  	  eNB->CC_id,
-									  frame,
-									  crnti);
-    	  } else {
-    		  eNB->UE_stats[(uint32_t)UE_id].mode = RA_RESPONSE;
-    		  // Initialize indicator for first SR (to be cleared after ConnectionSetup is acknowledged)
-    		  eNB->first_sr[(uint32_t)UE_id] = 1;
-
-
-
-
-
-    		  generate_eNB_ulsch_params_from_rar(DLSCH_pdu,
-					     	 	 	 	 	 	 frame,
-												 subframe,
-												 eNB->ulsch[(uint32_t)UE_id],
-												 fp);
-
-    		  LOG_D(PHY,"[eNB][RAPROC] Frame %d subframe %d, Activated Msg3 demodulation for UE %"PRId8" in frame %"PRIu32", subframe %"PRIu8"\n",
-    				  frame,
-					  subframe,
-					  UE_id,
-					  eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
-					  eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
-
-    		  /* TODO: get rid of this hack. The problem is that the eNodeB may
-    		   * sometimes wrongly generate PHICH because somewhere 'phich_active' was
-    		   * not reset to 0, due to an unidentified reason. When adding this
-    		   * resetting here the problem seems to disappear completely.
-    		   */
-    		  LOG_D(PHY, "hack: set phich_active to 0 for UE %d fsf %d %d all HARQs\n", UE_id, frame, subframe);
-    		  for (i = 0; i < 8; i++)
-    			  eNB->ulsch[(uint32_t)UE_id]->harq_processes[i]->phich_active = 0;
-
-    		  mac_xface->set_msg3_subframe(eNB->Mod_id, eNB->CC_id, frame, subframe, (uint16_t)crnti,
-                                       eNB->ulsch[UE_id]->Msg3_frame, eNB->ulsch[UE_id]->Msg3_subframe);
-
-    		  T(T_ENB_PHY_MSG3_ALLOCATION, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe),
-    				  T_INT(UE_id), T_INT((uint16_t)crnti), T_INT(1 /* 1 is for initial transmission*/),
-					  T_INT(eNB->ulsch[UE_id]->Msg3_frame), T_INT(eNB->ulsch[UE_id]->Msg3_subframe));
-    	  }
-    	  if (ue_stats) ue_stats->total_TBS_MAC += dlsch_harq->TBS;
-
-      }// ra_flag = 1
-
-    } //mac_eabled = 1
-    else {  //XXX we should change taus function???
-      DLSCH_pdu = DLSCH_pdu_tmp;
-
-      for (i=0; i<input_buffer_length; i++)
-	DLSCH_pdu[i] = (unsigned char)(taus()&0xff);
-    }
-
-#if defined(SMBV)
-
-    // Configures the data source of allocation (allocation is configured by DCI)
-    if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4)) {
-      LOG_D(PHY,"[SMBV] Frame %3d, Configuring PDSCH payload in SF %d alloc %"PRIu8"\n",frame,(smbv_frame_cnt*10) + (subframe),smbv_alloc_cnt);
-      //          smbv_configure_datalist_for_user(smbv_fname, find_ue(dlsch->rnti,eNB)+1, DLSCH_pdu, input_buffer_length);
-    }
-
-#endif
-
-
-
-#ifdef DEBUG_PHY_PROC
-#ifdef DEBUG_DLSCH
-    LOG_T(PHY,"eNB DLSCH SDU: \n");
-
-    //eNB->dlsch[(uint8_t)UE_id][0]->nCCE[subframe] = DCI_pdu->dci_alloc[i].firstCCE;
-
-    LOG_D(PHY,"[eNB %"PRIu8"] Frame %d subframe %d : CCE resource for ue DCI (PDSCH %"PRIx16")  => %"PRIu8"/%u\n",eNB->Mod_id,eNB->proc[sched_subframe].frame_tx,subframe,
-	  DCI_pdu->dci_alloc[i].rnti,eNB->dlsch[(uint8_t)UE_id][0]->nCCE[subframe],DCI_pdu->dci_alloc[i].firstCCE);
-
-
-    for (i=0; i<dlsch_harq->TBS>>3; i++)
-      LOG_T(PHY,"%"PRIx8".",DLSCH_pdu[i]);
-
-    LOG_T(PHY,"\n");
-#endif
-#endif
-  } //harq round == 0
-  else {
-	  //We are doing a retransmission
-
-    ue_stats->dlsch_trials[harq_pid][dlsch_harq->round]++;
-
-#ifdef DEBUG_PHY_PROC
-#ifdef DEBUG_DLSCH
-    LOG_D(PHY,"[eNB] This DLSCH is a retransmission\n");
-#endif
-#endif
-  }
-
-  if (eNB->abstraction_flag==0) { // used for simulation of the PHY??
-
-    LOG_D(PHY,"Generating NDLSCH/NPDSCH %d\n",ra_flag);
-
-
-    // 36-212
-    //encoding---------------------------
-    start_meas(&eNB->dlsch_encoding_stats);
-
-    LOG_I(PHY, "NB-IoT Encoding step\n");
-
-    eNB->te(eNB,
-	    DLSCH_pdu,
-	    num_pdcch_symbols,
-	    dlsch,
-	    frame,subframe,
-	    &eNB->dlsch_rate_matching_stats,
-	    &eNB->dlsch_turbo_encoding_stats,
-	    &eNB->dlsch_interleaving_stats);
-
-    stop_meas(&eNB->dlsch_encoding_stats);
-    //scrambling-------------------------------------------
-    // 36-211
-    start_meas(&eNB->dlsch_scrambling_stats);
-    LOG_I(PHY, "NB-IoT Scrambling step\n");
-
-    dlsch_scrambling(fp,
-		     0,
-		     dlsch,
-		     get_G(fp,
-			   dlsch_harq->nb_rb,
-			   dlsch_harq->rb_alloc,
-			   get_Qm(dlsch_harq->mcs),
-			   dlsch_harq->Nl,
-			   num_pdcch_symbols,
-			   frame,subframe,
-			   0),
-		     0,
-		     subframe<<1);
-
-    stop_meas(&eNB->dlsch_scrambling_stats);
-
-
-    //modulation-------------------------------------------
-    start_meas(&eNB->dlsch_modulation_stats);
-    LOG_I(PHY, "NB-IoT Modulation step\n");
-
-    dlsch_modulation(eNB,
-		     eNB->common_vars.txdataF[0],
-		     AMP,
-		     subframe,
-		     num_pdcch_symbols,
-		     dlsch,
-		     dlsch1);
-
-    stop_meas(&eNB->dlsch_modulation_stats);
-  }
-
-
-#ifdef PHY_ABSTRACTION
-  else {
-    start_meas(&eNB->dlsch_encoding_stats);
-    dlsch_encoding_emul(eNB,
-			DLSCH_pdu,
-			dlsch);
-    stop_meas(&eNB->dlsch_encoding_stats);
-  }
-
-#endif
-  dlsch->active = 0;
 }
 
 
@@ -950,7 +678,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       if(Sched_Rsp->NB_DL.NB_DLSCH.ndlsch.rnti_type == 0)
         {
             /*TODO: NPDSCH procedures for BCCH for NB-IoT*/
-            npdsch_procedures_NB();
+            //npdsch_procedures_NB();
         }
 
       /*clear the DCI allocation maps for new subframe*/
@@ -970,7 +698,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
             eNB->dlsch[i][0]->subframe_tx[subframe]=0;
         }
 
-   if(Sched_Rsp->NB_DL.NB_DCI != NULL)
+   if(Sched_Rsp->NB_DL.NB_DCI.DL_DCI.number_dci+Sched_Rsp->NB_DL.NB_DCI.UL_DCI.number_of_dci > 0)
     {
 
       /*Loop over all the dci to generate DLSCH allocation, there is only 1 or 2 DCIs for NB-IoT in the same time*/
@@ -978,11 +706,11 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       /*Also Packed the DCI here*/
       for(int i= 0; i< Sched_Rsp->NB_DL.NB_DCI.DL_DCI.number_dci; i++)
       {
-      if (Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.rnti<= P_RNTI)
+      if (Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.rnti<= P_RNTI)
         {
     	  //is not system iformation but cound be paging
     	  //in any case we generate dlsch for not system information
-          UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.rnti,eNB);
+          UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.rnti,eNB);
         }
       else 
         UE_id=0;
@@ -1001,7 +729,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
       if (Sched_Rsp->NB_DL.NB_DCI.DCI_Format == DCIFormatN0) // this is a ULSCH allocation
         {  
-          UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.UL_DCI.npdcch_dci_pdu_rel13.rnti,eNB);
+          UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.UL_DCI.hi_dci0_pdu_list[i].npdcch_dci_pdu.npdcch_dci_pdu_rel13.rnti,eNB);
           NB_generate_eNB_ulsch_params(eNB,proc,Sched_Rsp,UE_id);
         }
 
@@ -1009,7 +737,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
       /*If we have DCI to generate do it now TODO : have a generate dci top for NB_IoT */
       //to be modified but inside we have the nuew function for dci transmission
-      generate_dci_top();
+      //generate_dci_top_NB();
 
     }
 

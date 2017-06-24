@@ -216,6 +216,7 @@ typedef struct {
   pthread_mutex_t mutex_rxtx;
   /// scheduling parameters for RXn-TXnp4 thread
   struct sched_param sched_param_rxtx;
+
 } eNB_rxtx_proc_t;
 
 typedef struct {
@@ -427,6 +428,30 @@ typedef struct {
   /// set of scheduling variables RXn-TXnp4 threads
   UE_rxtx_proc_t proc_rxtx[2];
 } UE_proc_t;
+
+typedef struct {
+  /// Length of DCI in bits
+  uint8_t dci_length;
+  /// Aggregation level only 0,1 in NB-IoT
+  uint8_t L;
+  /// Position of first CCE of the dci
+  int firstCCE;
+  /// flag to indicate that this is a RA response
+  boolean_t ra_flag;
+  /// rnti
+  rnti_t rnti;
+  /// Format
+  DCI_format_NB_t format;
+  /// DCI pdu
+  uint8_t dci_pdu[8];
+} DCI_ALLOC_NB_t;
+
+typedef struct {
+  //delete the count for the DCI numbers,NUM_DCI_MAX should set to 1 
+  uint32_t num_npdcch_symbols;
+  uint8_t Num_dci;
+  DCI_ALLOC_NB_t dci_alloc[2] ;
+} DCI_PDU_NB;
 
 
 /// Top-level PHY Data Structure for eNB
@@ -667,13 +692,13 @@ typedef struct PHY_VARS_eNB_s {
   NB_IoT_eNB_NPBCH npbch;
   NB_IoT_eNB_NPDCCH_t *npdcch[NUMBER_OF_UE_MAX_NB_IoT]; //check the max size of this array
   NB_IoT_eNB_NDLSCH_t *ndlsch[NUMBER_OF_UE_MAX_NB_IoT];
-  NB_IoT_eNB_NULSCH_t *nulsch[NUMBER_OF_UE_MAX_NB_IoT+1] //nulsch[0] contains the RAR
+  NB_IoT_eNB_NULSCH_t *nulsch[NUMBER_OF_UE_MAX_NB_IoT+1]; //nulsch[0] contains the RAR
 
   NB_IoT_eNB_NDLSCH_t     *dlsch_SI_NB,*dlsch_ra_NB;
 
 
   NB_DL_FRAME_PARMS frame_parms_nb_iot;
-  DCI_PDU_NB DCI_pdu;
+  DCI_PDU_NB *DCI_pdu;
 
 
 
@@ -960,6 +985,7 @@ void exit_fun(const char* s);
 
 static inline int wait_on_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
 
+  // lock the mutex, if lock successfully, it would return the 0, the other value means failed
   if (pthread_mutex_lock(mutex) != 0) {
     LOG_E( PHY, "[SCHED][eNB] error locking mutex for %s\n",name);
     exit_fun("nothing to add");

@@ -172,7 +172,7 @@ typedef struct{
 
  }nulsch_t;
 
-typedef union{
+typedef struct{
 
 	npdcch_t NB_DCI;
  	
@@ -182,7 +182,7 @@ typedef union{
 
  	nulsch_t NB_UL;
 
-}NB_DL_u;
+}NB_DL_t;
 
 
 typedef struct{
@@ -198,7 +198,7 @@ typedef struct{
  	//subframe
  	sub_frame_t subframeP;
 
- 	NB_DL_u NB_DL;
+ 	NB_DL_t NB_DL;
 
 }Sched_Rsp_t;
 
