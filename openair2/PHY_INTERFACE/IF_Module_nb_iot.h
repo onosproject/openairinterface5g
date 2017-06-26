@@ -174,13 +174,15 @@ typedef struct{
 
 typedef struct{
 
+	// these structures contains both instruction and PDUs itself
+
 	npdcch_t NB_DCI;
  	
  	npdsch_t NB_DLSCH;
 
  	npbch_t NB_BCH;
 
- 	nulsch_t NB_UL;
+ 	nulsch_t NB_UL_config;
 
 }NB_DL_t;
 

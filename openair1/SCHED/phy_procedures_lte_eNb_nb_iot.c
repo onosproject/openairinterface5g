@@ -572,6 +572,24 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_
 }
 
 
+/*
+* process the following message 
+* 
+*/
+void process_schedule_rsp(Sched_Rsp_t *sched_rsp,
+                          PHY_VARS_eNB *eNB,
+                          eNB_rxtx_proc_NB_t *proc,
+                          const int UE_id)
+{
+  // check for the MIB (process N-BCH PDU)
+  if(sched_rsp->NB_DL.NB_BCH.MIB_pdu.segments[0].segment_data)!=NULL)
+    {
+
+    }
+
+
+}
+
 
 extern int oai_exit;
 
