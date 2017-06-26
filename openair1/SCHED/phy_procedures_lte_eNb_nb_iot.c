@@ -126,7 +126,7 @@ void NB_common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   
 }
 
-void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
+void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,UL_IND_t *UL_INFO)
 {
   //RX processing for ue-specific resources (i
 
@@ -141,13 +141,11 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   const int frame    = proc->frame_rx;
   
   /*NB-IoT IF module Common setting*/
-  
-  UL_IND_t UL_INFO;
 
-  UL_INFO.module_id = eNB->Mod_id;
-  UL_INFO.CC_id = eNB->CC_id;
-  UL_INFO.frame =  frame;
-  UL_INFO.subframe = subframe;
+  UL_INFO->module_id = eNB->Mod_id;
+  UL_INFO->CC_id = eNB->CC_id;
+  UL_INFO->frame =  frame;
+  UL_INFO->subframe = subframe;
 
 
   T(T_ENB_PHY_UL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
@@ -302,13 +300,13 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	                if (eNB->mac_enabled == 1)
                     {
                       //instead rx_sdu to report The Uplink data not received successfully to MAC
-                      (UL_INFO.crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 1;
-                       UL_INFO.crc_ind.number_of_crcs++;
-                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->ulsch[i]->rnti;
-                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->data= NULL;
-                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = 0;
-                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid = harq_pid;
-                       UL_INFO.RX_NPUSCH.number_of_pdus++;
+                      (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 1;
+                       UL_INFO->crc_ind.number_of_crcs++;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->ulsch[i]->rnti;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data= NULL;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = 0;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid = harq_pid;
+                       UL_INFO->RX_NPUSCH.number_of_pdus++;
                     }
                 }
             }
@@ -344,13 +342,13 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	                if (eNB->mac_enabled)
                     {
                       // store successful MSG3 in UL_Info instead rx_sdu
-                      (UL_INFO.crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 0;
-                      UL_INFO.crc_ind.number_of_crcs++;
-                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->ulsch[i]->rnti;
-                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->data = eNB->ulsch[i]->harq_processes[harq_pid]->b;
-                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3;
-                      (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid = harq_pid;
-                      UL_INFO.RX_NPUSCH.number_of_pdus++;
+                      (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 0;
+                      UL_INFO->crc_ind.number_of_crcs++;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->ulsch[i]->rnti;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data = eNB->ulsch[i]->harq_processes[harq_pid]->b;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid = harq_pid;
+                      UL_INFO->RX_NPUSCH.number_of_pdus++;
                     }
 
 	                /* Need check if this needed in NB-IoT
@@ -404,13 +402,13 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	          if (eNB->mac_enabled==1) 
               {
                   // store successful Uplink data in UL_Info instead rx_sdu
-                  (UL_INFO.crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 0;
-                  UL_INFO.crc_ind.number_of_crcs++;
-                  (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->ulsch[i]->rnti;
-                  (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->data = eNB->ulsch[i]->harq_processes[harq_pid]->b;
-                  (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3;
-                  (UL_INFO.RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid  = harq_pid;
-                  UL_INFO.RX_NPUSCH.number_of_pdus++;
+                  (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 0;
+                  UL_INFO->crc_ind.number_of_crcs++;
+                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->ulsch[i]->rnti;
+                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data = eNB->ulsch[i]->harq_processes[harq_pid]->b;
+                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3;
+                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid  = harq_pid;
+                  UL_INFO->RX_NPUSCH.number_of_pdus++;
 	    
 	            } // mac_enabled==1
           } // Msg3_flag == 0
@@ -442,11 +440,6 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
 
   } // loop i=0 ... NUMBER_OF_UE_MAX-1
-
-
-
-  /*Exact not here, but use to debug*/
-  if_inst->UL_indication(UL_INFO);
 
 }
 

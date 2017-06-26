@@ -207,8 +207,8 @@ typedef struct{
 It should be allocated at the main () in lte-softmodem.c*/
 typedef struct IF_Module_s{
 	//define the function pointer
-	void (*UL_indication)(UL_IND_t UL_INFO);
-	void (*schedule_response)(Sched_Rsp_t Sched_INFO);
+	void (*UL_indication)(UL_IND_t *UL_INFO);
+	void (*schedule_response)(Sched_Rsp_t *Sched_INFO);
 	void (*PHY_config_req)(PHY_Config_t* config_INFO);
 
 }IF_Module_t;

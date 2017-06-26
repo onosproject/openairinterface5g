@@ -580,7 +580,11 @@ int wait_CCs(eNB_rxtx_proc_t *proc) {
 */
 static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
-  UL_IND_t UL_INFO; //not here but temp
+  UL_IND_t *UL_INFO;
+  Sched_Rsp_t *Sched_Rsp;
+
+  UL_INFO = (UL_IND_t*) malloc(sizeof(UL_IND_t));
+  Sched_Rsp = (Sched_Rsp_t*) malloc(sizeof(Sched_Rsp_t));
 
   start_meas(&softmodem_stats_rxtx_sf);
 
@@ -593,7 +597,7 @@ static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_
   
   // UE-specific RX processing for subframe n
 
-  NB_phy_procedures_eNB_uespec_RX(eNB,proc);
+  NB_phy_procedures_eNB_uespec_RX(eNB,proc,UL_INFO);
 
   // After stored the Upink information, process it and made it into FAPI style, also provide a tick to the scheduler
 

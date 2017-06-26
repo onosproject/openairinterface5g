@@ -8,7 +8,7 @@
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
 
 /*Processing the ue-specific resources for uplink in NB-IoT*/
-void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc);
+void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, UL_IND_t *UL_INFO);
 
 /* For NB-IoT, we put NPBCH in later part, since it would be scheduled by MAC scheduler,this generates NRS/NPSS/NSSS*/
 void NB_common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc); 

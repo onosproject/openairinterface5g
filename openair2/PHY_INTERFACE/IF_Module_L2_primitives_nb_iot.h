@@ -8,6 +8,6 @@
 
 /*Interface for uplink, transmitting the Preamble(list), ULSCH SDU, NAK, Tick (trigger scheduler)
 */
-void UL_indication(UL_IND_t UL_INFO);
+void UL_indication(UL_IND_t *UL_INFO);
 
 #endif
