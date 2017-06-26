@@ -37,17 +37,20 @@
 #endif
 
 /*brief Configure LTE_DL_FRAME_PARMS with components derived after initial synchronization (MIB-NB decoding + primary/secondary synch).*/
-void NB_phy_config_mib_eNB(int     Mod_id,
-			int                    CC_id,
-			int                    eutra_band,
-			int                    Nid_cell,
-			int                    Ncp,
-			int					   Ncp_UL,
-			int                    p_eNB,
-			uint32_t               dl_CarrierFreq,
-			uint32_t               ul_CarrierFreq);
-			//struct MasterInformationBlock_NB__operationModeInfo_r13 operationModeInfo);
-
+void NB_phy_config_mib_eNB(
+			int  				Mod_id,
+			int                 CC_id,
+			int                 eutra_band,
+			int                 Nid_cell,
+			int                 Ncp,
+			int					Ncp_UL,
+			int                 p_eNB,
+			uint32_t            dl_CarrierFreq,
+			uint32_t            ul_CarrierFreq,
+			uint16_t			prb_index, // NB_IoT_RB_ID,
+			uint16_t 			operating_mode,
+			uint16_t			control_region_size,
+			uint16_t			eutra_NumCRS_ports);
 
 /*NB_phy_config_sib1_eNB is not needed since NB-IoT use only FDD mode*/
 

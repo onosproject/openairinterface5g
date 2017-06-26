@@ -299,25 +299,6 @@ typedef struct eNB_proc_NB_t_s {
 } eNB_proc_NB_t;
 
 
-/// Top-level PHY Data Structure for eNB
-typedef struct PHY_VARS_eNB_NB_s {
-  /// Module ID indicator for this instance
-  module_id_t          Mod_id;
-  uint8_t              CC_id;
-  eNB_proc_NB_t           proc;
-  NB_DL_FRAME_PARMS   frame_parms;
-  NB_IoT_eNB_NPBCH npbch;
-
-  //number of UE max = 1 // in fapy is udated dinamically each subframe  and is no more a table
-  LTE_eNB_DLSCH_t     *dlsch[NUMBER_OF_UE_MAX][2];   // Nusers times two spatial streams
-  //how many ULSCH we keep???? should be more that 1 for sure
-  LTE_eNB_ULSCH_t     *ulsch[NUMBER_OF_UE_MAX+1];      // Nusers + number of RA
-  LTE_eNB_DLSCH_t     *dlsch_SI,*dlsch_ra;
-  LTE_eNB_DLSCH_t     *dlsch_MCH;
-
-} PHY_VARS_eNB_NB;
-
-
 
 #include "PHY/INIT/defs.h"
 #include "PHY/LTE_REFSIG/defs.h"

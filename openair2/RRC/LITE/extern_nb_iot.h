@@ -41,6 +41,7 @@
 
 
 extern eNB_RRC_INST_NB *eNB_rrc_inst_NB;
+extern PHY_Config_t *config_INFO;
 
 extern rlc_info_t Rlc_info_am_NB,Rlc_info_am_config_NB;
 extern uint8_t DRB2LCHAN_NB[2];

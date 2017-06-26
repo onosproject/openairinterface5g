@@ -1620,6 +1620,12 @@ init_SI_NB(
 //-----------------------------------------------------------------------------
 {
 
+	/*WE should allocate memory for PHY_Config structure
+	 * is declared in vars_nb_iot.c and put also in the extern_nb_iot
+	 * */
+	config_INFO = malloc(sizeof(PHY_Config_t));
+
+
 //  uint8_t                             SIwindowsize = 1; //frame
 //  uint16_t                            SIperiod = 8; // in frames
 

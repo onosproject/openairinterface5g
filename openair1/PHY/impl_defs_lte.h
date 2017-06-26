@@ -587,8 +587,6 @@ typedef struct {
 
   struct MBSFN_SubframeConfig *mbsfn_SubframeConfig[MAX_MBSFN_AREA];
 
-  //NB-iot to be transfer in the new structure
-  unsigned short NB_IoT_RB_ID;
 
 } LTE_DL_FRAME_PARMS;
 

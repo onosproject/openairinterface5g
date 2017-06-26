@@ -15,7 +15,7 @@
 
 #define SCH_PAYLOAD_SIZE_MAX 4096
 #define BCCH_PAYLOAD_SIZE_MAX 128
-#define NUMBER_OF_UE_MAX 20
+
 
 
 // P5 FAPI-like configuration structures
@@ -59,6 +59,10 @@ typedef struct{
 	int get_MIB; //should be different from 0 only when the mib!= null (NB_rrc_mac_config_req_eNB)
 	int get_COMMON;
 	int get_DEDICATED;
+
+	//ID of the Resource Block dedicated to NB-IoT
+	//For Nb-IoT only a restricted values of PRB indexes are allowed (see Rhode&Shwartz pag9)
+	//unsigned short NB_IoT_RB_ID; (should coincide with PRB index)
 
 	//In FAPI specs --> is inside the nb_iot_rssi_request (P4 Network Monitor Mode procedure)
 	//In OAI is called eutra_band

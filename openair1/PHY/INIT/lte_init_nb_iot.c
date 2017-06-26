@@ -53,7 +53,12 @@ void NB_phy_config_mib_eNB(
 			int					Ncp_UL,
 			int                 p_eNB,
 			uint32_t            dl_CarrierFreq,
-			uint32_t            ul_CarrierFreq) {
+			uint32_t            ul_CarrierFreq,
+			uint16_t			prb_index, // NB_IoT_RB_ID,
+			uint16_t 			operating_mode,
+			uint16_t			control_region_size,
+			uint16_t			eutra_NumCRS_ports)
+{
 
   /*Not sure if phy parameters should be initial here or not*/
   /*the phy_config_mib_eNB as the entry point to allocate the context for L1.  The RC contains the context for L1,L2. If RC.eNB is NULL, it hasn't been allocated earlier so we allocate it there.*/
@@ -78,7 +83,7 @@ void NB_phy_config_mib_eNB(
 
   fp = &RC.eNB[Mod_id][CC_id]->frame_parms; */
 
-  NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms; //MP: PHY_VARS_eNB still to be modified
+  NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms_nb_iot;
 
    LOG_I(PHY,"Configuring MIB-NB for instance %d, CCid %d : (band %d,Nid_cell %d,p %d,DL freq %u)\n",
   	  	  Mod_id, CC_id, eutra_band, Nid_cell, p_eNB,dl_CarrierFreq);
@@ -91,11 +96,11 @@ void NB_phy_config_mib_eNB(
   fp->nb_antenna_ports_eNB               = p_eNB; //tx antenna port
   fp->dl_CarrierFreq                     = dl_CarrierFreq;
   fp->ul_CarrierFreq                     = ul_CarrierFreq;
-  //fp->operating mode (in-band, guard-band, out-of-band)
+  fp->operating_mode					 = operating_mode; //see how are defined by FAPI structure
+  fp->NB_IoT_RB_ID						 = prb_index; //XXX to be better understand how should be managed
   //fp->nb_rx_antenna_ports_eNB
-  //fp->prb_index (applicable only in guard band or in-band operating mode) indicates the prb index with regard to the middle prb in LTE system / delivered by MIB-NB
-  //fp->eutraControlRegionSize (only if in-band operating mode)
-  //fp->nb_CRS_ports (valid only for in-band operating mode with different PCI)
+  fp->control_region_size			 	 = control_region_size; //(assume that this value is negative if not used)
+  fp->eutra_NumCRS_ports				 = eutra_NumCRS_ports //(valid only for in-band operating mode with different PCI)
   
 
   //TODO

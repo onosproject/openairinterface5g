@@ -2,7 +2,7 @@
 
 #include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
-#include "PHY/extern.h"
+#include "PHY/extern.h" //where we get the global Sched_Rsp_t structure filled
 #include "SCHED/defs.h"
 #include "SCHED/extern.h"
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
@@ -586,13 +586,13 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_
  * ** CQI and PMI are not present in NB-IoT
  * ** redundancy version exist only in UL for NB-IoT and not in DL
  */
-void pdsch_procedures_NB(PHY_VARS_eNB *eNB,
+void npdsch_procedures(PHY_VARS_eNB *eNB,
 						eNB_rxtx_proc_t *proc, //Context data structure for RX/TX portion of subframe processing
 						NB_IoT_eNB_DLSCH_t *dlsch,
-						NB_IoT_eNB_DLSCH_t *dlsch1,//this is the second colum of the UE specific LTE_eNB_DLSCH_t (see the PHY/defs.h line 471)
+//NB_IoT_eNB_DLSCH_t *dlsch1,//this is the second colum of the UE specific LTE_eNB_DLSCH_t (see the PHY/defs.h line 471) is used only in ue specific dlsch for two parallel streams (but we don't have it in NB-IoT)
 						LTE_eNB_UE_stats *ue_stats,
-						int ra_flag,// set to 1 only in case of RA
-						int num_pdcch_symbols,
+						int ra_flag,// set to 1 only in case of RAR as a segment data
+						//int num_pdcch_symbols, (BCOM says are not needed
 						uint32_t segment_length, //lenght of the  DLSCH PDU from the Sched_rsp (FAPI nomenclature)
 						uint8_t* segment_data // the DLSCH PDU itself from the Sched_rsp (FAPI nomenclature)
 							)
@@ -606,7 +606,7 @@ void pdsch_procedures_NB(PHY_VARS_eNB *eNB,
   NB_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
   uint8_t *DLSCH_pdu=NULL;
   uint8_t DLSCH_pdu_tmp[input_buffer_length+4]; //[768*8];
-  uint8_t DLSCH_pdu_rar[256];
+  //uint8_t DLSCH_pdu_rar[256];
   int i;
 
 
@@ -618,61 +618,63 @@ void pdsch_procedures_NB(PHY_VARS_eNB *eNB,
 	harq_pid,
 	frame, subframe, input_buffer_length,
 	get_G(fp,dlsch_harq->nb_rb,dlsch_harq->rb_alloc,get_Qm(dlsch_harq->mcs),dlsch_harq->Nl, num_pdcch_symbols, frame, subframe, dlsch_harq->mimo_mode==TM7?7:0),
-	dlsch_harq->nb_rb, //in NB_IoT we not need it???
-	dlsch_harq->mcs, //why MCS is inside the harq???
+	dlsch_harq->nb_rb, //in NB_IoT we not need it??? (Current Number of RBs should be only 1)
+	dlsch_harq->mcs,
 	dlsch_harq->round);
 
-#if defined(MESSAGE_CHART_GENERATOR_PHY)
-  MSC_LOG_TX_MESSAGE(
-		     MSC_PHY_ENB,MSC_PHY_UE,
-		     NULL,0,
-		     "%05u:%02u PDSCH/DLSCH input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8", pmi_alloc %"PRIx16", rv %"PRIu8" (round %"PRIu8")",
-		     frame, subframe,
-		     input_buffer_length,
-		     get_G(fp,
-			   dlsch_harq->nb_rb,
-			   dlsch_harq->rb_alloc,
-			   get_Qm(dlsch_harq->mcs),
-			   dlsch_harq->Nl,
-			   num_pdcch_symbols,
-			   frame,
-			   subframe,
-			   dlsch_harq->mimo_mode==TM7?7:0),
-		     dlsch_harq->nb_rb,
-		     dlsch_harq->mcs,
-		     pmi2hex_2Ar1(dlsch_harq->pmi_alloc),
-		     dlsch_harq->rvidx,
-		     dlsch_harq->round);
-#endif
 
-  if (ue_stats) ue_stats->dlsch_sliding_cnt++;
+///XXX skip this for the moment and all the ue stats
+//#if defined(MESSAGE_CHART_GENERATOR_PHY)
+//  MSC_LOG_TX_MESSAGE(
+//		     MSC_PHY_ENB,MSC_PHY_UE,
+//		     NULL,0,
+//		     "%05u:%02u PDSCH/DLSCH input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8", pmi_alloc %"PRIx16", rv %"PRIu8" (round %"PRIu8")",
+//		     frame, subframe,
+//		     input_buffer_length,
+//		     get_G(fp,
+//			   dlsch_harq->nb_rb,
+//			   dlsch_harq->rb_alloc,
+//			   get_Qm(dlsch_harq->mcs),
+//			   dlsch_harq->Nl,
+//			   num_pdcch_symbols,
+//			   frame,
+//			   subframe,
+//			   dlsch_harq->mimo_mode==TM7?7:0),
+//		     dlsch_harq->nb_rb,
+//		     dlsch_harq->mcs,
+//		     pmi2hex_2Ar1(dlsch_harq->pmi_alloc),
+//		     dlsch_harq->rvidx,
+//		     dlsch_harq->round);
+//#endif
 
-  if (dlsch_harq->round == 0) {
+//if (ue_stats) ue_stats->dlsch_sliding_cnt++; //used to compute the mcs offset
 
-    if (ue_stats)
-      ue_stats->dlsch_trials[harq_pid][0]++;
+  if (dlsch_harq->round == 0) { //first transmission
 
-    if (eNB->mac_enabled==1) { // set in lte-softmodem - main line 1646
+//    if (ue_stats)
+//      ue_stats->dlsch_trials[harq_pid][0]++;
+
+    if (eNB->mac_enabled==1) { // set in lte-softmodem/main line 1646
       if (ra_flag == 0)  {
     	  DLSCH_pdu =segment_data;
 
       }
-    else { // XXX decide what should be done for NB-IoT
+    else { //manage the RAR
 
   	  /*
   	   * In FAPI style we don-t need to process the RAR because we have all the parameters for getting the MSG3 given by the
-  	   * UL_CONFIG.request
-  	   * 1) this data are given at the same time with the DLSCH PDU containing the RAR???
-  	   * 2) wee need to do a mapping of this parameters OAI->FAPI
+  	   * UL_CONFIG.request (all inside the next Sched_RSP function)
+  	   *
   	   */
 
-    	  int16_t crnti = mac_xface->fill_rar(eNB->Mod_id,
-					    eNB->CC_id,
-					    frame,
-					    DLSCH_pdu_rar,
-					    fp->N_RB_UL,
-					    input_buffer_length);
-    	  DLSCH_pdu = DLSCH_pdu_rar;
+//    	  int16_t crnti = mac_xface->fill_rar(eNB->Mod_id,
+//					    eNB->CC_id,
+//					    frame,
+//					    DLSCH_pdu_rar,
+//					    fp->N_RB_UL,
+//					    input_buffer_length);
+
+    	  DLSCH_pdu = segment_data; //the proper PDU should be passed in the function when the RA flag is activated
 
     	  int UE_id;
 
@@ -785,6 +787,15 @@ void pdsch_procedures_NB(PHY_VARS_eNB *eNB,
 
     // 36-212
     //encoding---------------------------
+
+    /*
+     * we should have as an iput parameter also G for the encoding based on the switch/case
+     * G is evaluated based on the switch/case done over eutracontrolRegionSize (if exist) and operationModeInfo
+     * NB: switch case of G is the same for npdsch and npdcch
+     *
+     * Nsf needed as an input (number of subframe)
+     */
+
     start_meas(&eNB->dlsch_encoding_stats);
 
     LOG_I(PHY, "NB-IoT Encoding step\n");
@@ -797,6 +808,7 @@ void pdsch_procedures_NB(PHY_VARS_eNB *eNB,
 	    &eNB->dlsch_rate_matching_stats,
 	    &eNB->dlsch_turbo_encoding_stats,
 	    &eNB->dlsch_interleaving_stats);
+
 
     stop_meas(&eNB->dlsch_encoding_stats);
     //scrambling-------------------------------------------
@@ -858,16 +870,16 @@ extern int oai_exit;
 r_type, rn is only used in PMCH procedure so I remove it.
 */
 void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
-         eNB_rxtx_proc_NB_t *proc,
-         int do_meas)
+         	 	 	 	 	  eNB_rxtx_proc_NB_t *proc,
+							  int do_meas)
 {
   int frame = proc->frame_tx;
   int subframe = proc->subframe_tx;
   uint32_t i,aa;
-  uint8_t harq_pid;
-  //DCI_PDU_NB *DCI_pdu;
+  //uint8_t harq_pid; only one HARQ process
+  //DCI_PDU_NB *DCI_pdu; we already have inside Sched_Rsp
   //DCI_PDU_NB DCI_pdu_tmp;
-  LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
+  NB_DL_FRAME_PARMS *fp = &eNB->frame_parms_nb_iot;
   // DCI_ALLOC_t *dci_alloc = (DCI_ALLOC_t *)NULL;
   int8_t UE_id = 0;
   uint8_t ul_subframe;
@@ -875,28 +887,31 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
   int **txdataF = eNB->common_vars.txdataF[0];
 
+  Sched_Rsp_t *sched_rsp;
+
+  // are needed??? (maybe not)
   //uint8_t num_npdcch_symbols = 0;
 
-  //for NB-IoT
-
-  Sched_Rsp_t *Sched_Rsp;
+  Sched_Rsp_t *sched_rsp;
 
   if(do_meas == 1)
     start_meas(&eNB->phy_proc_tx);
 
-  for(i = 0;i<NUMBER_OF_UE_MAX;i++)
-    {
-      if((frame==0)&&(subframe==0))
-        {
-          if(eNB->UE_stats[i].crnti > 0)
-              LOG_I(PHY,"UE%d : rnti %x\n",i,eNB->UE_stats[i].crnti);
-        }
-    }
 
-  // Original scheduler 
+  //UE_stats can be not considered
+//  for(i = 0;i<NUMBER_OF_UE_MAX;i++)
+//    {
+//      if((frame==0)&&(subframe==0))
+//        {
+//          if(eNB->UE_stats[i].crnti > 0)
+//              LOG_I(PHY,"UE%d : rnti %x\n",i,eNB->UE_stats[i].crnti);
+//        }
+//    }
+  //ULSCH consecutive error count from Ue_stats reached has been deleted
+
+  /*called the original scheduler "eNB_dlsch_ulsch_scheduler" now is no more done here but is triggered directly from UL_Indication (IF-Module Function)*/
 
   // clear the transmit data array for the current subframe
-
   for (aa=0; aa<fp->nb_antenna_ports_eNB; aa++) 
     {      
       memset(&eNB->common_vars.txdataF[0][aa][subframe*fp->ofdm_symbol_size*(fp->symbols_per_tti)],
@@ -906,91 +921,124 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
   while(!oai_exit)
     {
-	  //ignore the PMCH part only do the generate PSS/SSS, note: Seperate MIB from here
+
+	  //generate NPSS/NSSS
 	  NB_common_signal_procedures(eNB,proc);
 
         //Not test yet , mutex_l2, cond_l2, instance_cnt_l2
         //cond_l2 should be given by sched_rsp after the scheduling
+	  	//WE should unlock this thread through the Schedule_rsp content
         if(wait_on_condition(&proc->mutex_l2,&proc->cond_l2,&proc->instance_cnt_l2,"eNB_L2_thread") < 0) 
         break;
 
-      /*Take the structures from the shared structures*/
-      //Sched_Rsp = ;
+      /*At this point it means that we have the Sched_rsp structure filled by the MAC scheduler*/
 
-      /*
-      broadcast channel for n-FAPI style
-      pdu length - 14 (bytes)
-      pdu index - 1 
-      num segments -1
-      segment length 5 bytes
-      segment data  34 bits (5 bytes)
-      */
+       //Take the Sched_rsp structures from the shared structures
+       if(Sched_Rsp == NULL)
+    	   LOG_E(PHY, "We don't have the Sched_Rsp_t structure ready\n");
 
-      if((subframe==0) && (Sched_Rsp->NB_DL.NB_BCH.MIB_pdu.segments[0].segment_data)!=NULL)
+      sched_rsp = Sched_Rsp;
+
+
+
+      /*Generate MIB
+       *
+       *
+       *Sched_Rsp_t content:
+       *
+       * DL_Config.request--> dl_config_request_pdu --> nfapi_dl_config_nbch_pdu_rel13_t --> NBCH PDU
+       *
+       * TX.request --> nfapi_tx_request_pdu_t --> MAC PDU (MIB)
+       * 	Content of tx_request_pdu
+       * 	-pdu length 14 (bytes)???
+       * 	-pdu index = 1
+       * 	-num segments = 1,
+       * 	-segment length 5 bytes,
+       * 	-segment data  34 bits for MIB (5 bytes)
+       *
+       *XXX we are assuming that for the moment we are not segmenting the pdu (this should happen only when we have separate machines)
+       *XXX so the data is always contained in the first segment (segments[0])
+       *
+       *Problem: NB_IoT_RB_ID should be the ID of the RB dedicated to NB-IoT
+       *but if we are in stand alone mode?? i should pass the DC carrier???
+       *in general this RB-ID should be w.r.t LTE bandwidht???
+       **allowed indexes for Nb-IoT PRBs are reported in R&Shwartz pag 9
+       *
+       */
+      if((subframe==0) && (sched_rsp->NB_DL.NB_BCH.MIB_pdu.segments[0].segment_data)!=NULL)
         {
           generate_npbch(&eNB->npbch,
                          txdataF,
                          AMP,
                          fp,
-                         &Sched_Rsp->NB_DL.NB_BCH.MIB_pdu.segments[0].segment_data,
+                         &sched_rsp->NB_DL.NB_BCH.MIB_pdu.segments[0].segment_data,
                          frame%64,
-                         fp->NB_IoT_RB_ID // iD of the resource block may be passed by the config request (phy config structure)
+                         fp->NB_IoT_RB_ID
                          );
         }
 
-      /*clear the existing ulsch dci allocations before applying info from MAC*/
-      ul_subframe = (subframe+4)%10;
-      ul_frame = frame+(ul_subframe >= 6 ? 1 :0);
-      harq_pid = ((ul_frame<<1)+ul_subframe)&7;
 
-
+      /*
+       * Generate BCCH transmission (System Information)
+       */
       // check for BCCH
       //rnti_type = 0 BCCH information
       //rnti_type = 1 Other
-      if(Sched_Rsp->NB_DL.NB_DLSCH.ndlsch.rnti_type == 0)
+      if(sched_rsp->NB_DL.NB_DLSCH.ndlsch.rnti_type == 0 && (sched_rsp->NB_DL.NB_DLSCH.NPDSCH_pdu.segments[0].segment_data)!= NULL)
         {
             /*TODO: NPDSCH procedures for BCCH for NB-IoT*/
-            npdsch_procedures_NB();
+            npdsch_procedures(eNB,
+            				  proc,
+							  eNB->dlsch_SI_NB, //should be filled ?? (in the old implementation was filled when from DCI we generate_dlsch_params
+							  sched_rsp->NB_DL.NB_DLSCH.NPDSCH_pdu.segments[0].segment_length,
+							  sched_rsp->NB_DL.NB_DLSCH.NPDSCH_pdu.segments[0].segment_data);
         }
 
-      /*clear the DCI allocation maps for new subframe*/
-      for(i=0;i<NUMBER_OF_UE_MAX;i++)
-        {
-          if(eNB->ulsch[i])
-            {
-              eNB->ulsch[i]->harq_processes[harq_pid]->dci_alloc = 0;
-              eNB->ulsch[i]->harq_processes[harq_pid]->rar_alloc = 0;
-            }
-        }
 
-      /*clear previous allocation information for all UEs*/
-      for(i=0;i<NUMBER_OF_UE_MAX;i++)
-        {
-          if(eNB->dlsch[i][0])
-            eNB->dlsch[i][0]->subframe_tx[subframe]=0;
-        }
-
-   if(Sched_Rsp->NB_DL.NB_DCI != NULL)
-    {
-
-      /*Loop over all the dci to generate DLSCH allocation, there is only 1 or 2 DCIs for NB-IoT in the same time*/
-      // Add dci fapi structure for contain two dcis
-      /*Also Packed the DCI here*/
-      for(int i= 0; i< Sched_Rsp->NB_DL.NB_DCI.DL_DCI.number_dci; i++)
+      //no HARQ pid (we have only 1 single process for each user)
+      //clear previous possible allocation
+      for(int i = 0; i < NUMBER_OF_UE_MAX_NB_IoT; i++)
       {
-      if (Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.rnti<= P_RNTI)
-        {
-    	  //is not system iformation but cound be paging
-    	  //in any case we generate dlsch for not system information
-          UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.rnti,eNB);
-        }
-      else 
-        UE_id=0;
-    
-      //inside we have nFAPI to OAI parameters
-      NB_generate_eNB_dlsch_params(eNB,proc,Sched_Rsp,UE_id);
-      
+    	  if(eNB->ndlsch[i])
+    	  {
+    		  eNB->ndlsch[i]->harq_process->round=0; // may not needed
+    		  /*clear previous allocation information for all UEs*/
+    		  eNB->ndlsch[i]->subframe_tx[subframe] = 0;
+    	  }
+
+    	  /*clear the DCI allocation maps for new subframe*/
+    	  if(eNB->nulsch[i])
+    	  {
+    		  eNB->nulsch[i]->harq_process->dci_alloc = 0; //flag for indicating that a DCI has been allocated for UL
+    		  eNB->nulsch[i]->harq_process->rar_alloc = 0; //Flag indicating that this ULSCH has been allocated by a RAR
+    	  }
+
       }
+
+
+      //no PHICH in NB-IoT
+      //num_pdcch_symbols?? (maybe later when we have the DCI)
+
+
+
+    /*Loop over all the dci to generate DLSCH allocation, there is only 1 or 2 DCIs for NB-IoT in the same time*/
+    // Add dci fapi structure for contain two dcis
+    /*Also Packed the DCI here*/
+    for(int i= 0; i< Sched_Rsp->NB_DL.NB_DCI.DL_DCI.number_dci; i++)
+    	{
+    		if (Sched_Rsp->NB_DL.NB_DCI.DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.rnti<= P_RNTI)
+    		{
+    			//is not system iformation but cound be paging
+    			//in any case we generate dlsch for not system information
+    			UE_id = find_ue((int16_t)Sched_Rsp->NB_DL.NB_DCI.DL_DCI.npdcch_pdu_rel13.rnti,eNB);
+    		}
+    		else
+    			UE_id=0;
+    
+    		//inside we have nFAPI to OAI parameters
+    		NB_generate_eNB_dlsch_params(eNB,proc,Sched_Rsp,UE_id);
+      
+    	}
 
       /* Apply physicalConfigDedicated if needed, don't know if needed in NB-IoT or not
        This is for UEs that have received this IE, which changes these DL and UL configuration, we apply after a delay for the eNodeB UL parameters
@@ -1011,12 +1059,12 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       //to be modified but inside we have the nuew function for dci transmission
       generate_dci_top();
 
-    }
+
 
       //now we should check if Sched_Rsp contains data
       //rnti_type = 0 BCCH information
       //rnti_type = 1 Other
-      if(Sched_Rsp->NB_DL.NB_DLSCH.ndlsch.rnti_type != 0)
+      if(Sched_Rsp->NB_DL.NB_DLSCH.ndlsch.rnti_type == 0)
       {
 
     	  //we not need between RAR PDUS

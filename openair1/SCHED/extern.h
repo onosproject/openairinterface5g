@@ -78,4 +78,7 @@ extern fifo_dump_emos_eNB emos_dump_eNB;
 #endif
 */
 
+extern Sched_Rsp_t* Sched_Rsp;
+
+
 #endif /*__SCHED_EXTERN_H__ */

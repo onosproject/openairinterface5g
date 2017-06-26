@@ -575,10 +575,13 @@ int wait_CCs(eNB_rxtx_proc_t *proc) {
   return(0);
 }
 
-/*NB-IoT rxtx*/
+/*NB-IoT rxtx
+ * IMPORTANT
+ * When we run the rxtx thread for NB-IoT we should not run at the same time otherwise we fill the same buffers in PHY_Vars_eNB
+ * */
 static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
-  UL_IND_t UL_INFO; //not here but temp
+
 
   start_meas(&softmodem_stats_rxtx_sf);
 
@@ -589,14 +592,12 @@ static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_
     eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
   
   // skip the comment for this moment
-
-  // phy_procedures_eNB_common_RX(eNB,proc);
   
-  // UE-specific RX processing for subframe n
+  /*UE-specific RX processing for subframe n*/
 
   NB_phy_procedures_eNB_uespec_RX(eNB,proc);
 
-  // After stored the Upink information, process it and made it into FAPI style, also provide a tick to the scheduler
+  // After stored the Upink information, process it and made it into FAPI style,  send the UL_Indication to higher layer that also provide a tick to the scheduler
 
   if(if_inst->UL_indication) if_inst->UL_indication(UL_INFO);
   
@@ -1242,6 +1243,7 @@ void rx_fh_slave(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
 
 
 int wakeup_rxtx(eNB_proc_t *proc,eNB_rxtx_proc_t *proc_rxtx,LTE_DL_FRAME_PARMS *fp) {
+
 
   int i;
   struct timespec wait;

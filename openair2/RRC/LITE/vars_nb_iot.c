@@ -69,6 +69,9 @@ unsigned short Data_to_read;
 eNB_RRC_INST_NB *eNB_rrc_inst_NB;
 uint8_t DRB2LCHAN_NB[2];//max can be 2 DRBs for NB_IoT --> it used for saving the LCID of DRBs
 
+//structure for FAPI-like configuration
+PHY_Config_t *config_INFO;
+
 BOOLEAN_t logicalChannelSR_Prohibit = 1;
 long priority =1;
 

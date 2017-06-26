@@ -105,7 +105,14 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
 
         if (dci_alloc[i].firstCCE>=0) {
           //encoding
-          e_ptr = generate_dci0(dci_alloc[i].dci_pdu,e+(72*dci_alloc[i].firstCCE),dci_alloc[i].dci_length,dci_alloc[i].L,dci_alloc[i].rnti);
+          e_ptr = generate_dci0(
+        		  dci_alloc[i].dci_pdu, //we should pass the two DCI pdu (if exist)
+				  //second pdu
+				  //aggregation level
+        		  e+(72*dci_alloc[i].firstCCE),
+				  dci_alloc[i].dci_length,
+				  dci_alloc[i].L,
+				  dci_alloc[i].rnti);
 
           //new NB-IoT
           npdcch_encoding_NB_IoT(
@@ -131,11 +138,12 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
 
   //NB-IoT--------------------------
   /*
-   * switch(npdcch_start_index)
+   * switch(npdcch_start_index) (see mail)
+   *
    * case 0
-   * G = 272
+   * G = 304
    * case 1
-   * G = 248
+   * G = 240
    * case 2
    * G = 224
    * case 3
@@ -145,10 +153,10 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
 
   npdcch_scrambling_NB_IoT(
               frame_parms,
-          npdcch,
-          //G,
-          //q = nf mod 2 (TS 36.211 ch 10.2.3.1)  with nf = number of frame
-          //slot_id
+			  npdcch,
+			  //G,
+			  //q = nf mod 2 (TS 36.211 ch 10.2.3.1)  with nf = number of frame
+			  //slot_id
                     );
 
 
@@ -174,6 +182,7 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
 
   // This is the REG allocation algorithm from 36-211, second part of Section 6.8.5
   // there is a function to do the resource mapping function
+  //already done in the modulation in our NB-IoT implementaiton
 
   return 0;
 }

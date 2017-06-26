@@ -911,7 +911,13 @@ void generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC
     T_INT(dci_alloc->firstCCE));
 }
 
-void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *dlsch, LTE_eNB_DLSCH_t *dlsch1,LTE_eNB_UE_stats *ue_stats,int ra_flag,int num_pdcch_symbols) {
+void pdsch_procedures(PHY_VARS_eNB *eNB,
+					  eNB_rxtx_proc_t *proc,
+					  LTE_eNB_DLSCH_t *dlsch,
+					  LTE_eNB_DLSCH_t *dlsch1,
+					  LTE_eNB_UE_stats *ue_stats,
+					  int ra_flag,
+					  int num_pdcch_symbols) {
 
   int frame=proc->frame_tx;
   int subframe=proc->subframe_tx;
@@ -1017,6 +1023,11 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 	   */
 
 
+	  /*this for MSG3*/
+	  //the problem of OAI is that i don't have any DCI0 for scheduling the info for getting Msg3 (because is direclty given in RAR)
+	  //so i should gather the information directly form RAR before sending it
+	  //In FAPI style apporach so we directly get it from the next UL-config given in the Sched_rsp
+	  //so most probably i don't care about it because i will receive all the information for get Msg3
 	  generate_eNB_ulsch_params_from_rar(DLSCH_pdu,
 					     frame,
 					     subframe,
@@ -1432,7 +1443,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,0);
 
   // Check for SI activity
-
+  //MP: eNB->dlsch_SI->active is set by the function generate_dlsch_params_from_dci (depending on the DCI content)
   if ((eNB->dlsch_SI) && (eNB->dlsch_SI->active == 1)) {
 
     pdsch_procedures(eNB,proc,eNB->dlsch_SI,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,0,num_pdcch_symbols);

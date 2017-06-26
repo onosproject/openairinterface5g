@@ -154,11 +154,9 @@ int NB_rrc_mac_config_req_eNB(
 			   LogicalChannelConfig_NB_r13_t          *logicalChannelConfig //FIXME: decide how to use it
 			   )
 {
-   //no ul_Bandwidth
 
-  //------------
-  PHY_Config_t *config_INFO; //TODO should be seen as a global variable (who initialize this???)
-  //------------
+ /*to review with the Raymond implementation*/
+
 
   int UE_id = -1;
   //eNB_MAC_INST_NB *eNB = &eNB_mac_inst_NB[Mod_idP];
@@ -181,7 +179,6 @@ int NB_rrc_mac_config_req_eNB(
 
    //mac_top_init_eNB(); //TODO MP:  to be included in the MAC/main.c
 
-	  ///to review with the Raymond implementation
 
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].mib_NB           = mib_NB;
     eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].physCellId     = physCellId;
@@ -225,28 +222,37 @@ int NB_rrc_mac_config_req_eNB(
     //FAPI specs pag 135
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13:
 		config_INFO->nb_iot_config.operating_mode.value = 0;
-		config_INFO->nb_iot_config.prb_index.value = mib_NB->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13;
+		config_INFO->nb_iot_config.prb_index.value = mib_NB->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13; //see TS 36.213 ch 16.0
 		config_INFO->nb_iot_config.assumed_crs_aps.value = -1; //is not defined so we put a negative value
+
 		if(eutraControlRegionSize == NULL)
 			LOG_E(RRC, "NB_rrc_mac_config_req_eNB: operation mode is in-band but eutraControlRegionSize is not defined");
 		else
 			config_INFO->nb_iot_config.control_region_size.value = *eutraControlRegionSize;
+
 		break;
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_DifferentPCI_r13:
     	config_INFO->nb_iot_config.operating_mode.value = 1;
+
+    	//XXX problem: fapi think to define also eutra_CRS_sequenceInfo also for in band with different PCI but the problem is that we don-t have it
     	//config_INFO->nb_iot_config.prb_index.value = mib_NB->message.operationModeInfo_r13.choice.inband_DifferentPCI_r13 XXX (see FAPI specs pag 135)
+
     	config_INFO->nb_iot_config.assumed_crs_aps.value = mib_NB->message.operationModeInfo_r13.choice.inband_DifferentPCI_r13.eutra_NumCRS_Ports_r13;
+
 		if(eutraControlRegionSize == NULL)
 			LOG_E(RRC, "NB_rrc_mac_config_req_eNB: operation mode is in-band but eutraControlRegionSize is not defined");
 		else
 			config_INFO->nb_iot_config.control_region_size.value = *eutraControlRegionSize;
+
     	break;
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_guardband_r13:
     	config_INFO->nb_iot_config.operating_mode.value = 2;
-    	//config_INFO->nb_iot_config.prb_index = mib_NB->message.operationModeInfo_r13.choice.guardband_r13 XXX (see FAPI specs pag 135)
+
+    	//XXX problem: fapi think to define also eutra_CRS_sequenceInfo also for in band with different PCI but the problem is that we don-t have it
+    	//config_INFO->nb_iot_config.prb_index = mib_NB->message.operationModeInfo_r13.choice.guardband_r13; XXX (see FAPI specs pag 135)
+
     	config_INFO->nb_iot_config.control_region_size.value = -1; //should not being defined so we put a negative value
 		config_INFO->nb_iot_config.assumed_crs_aps.value = -1; //is not defined so we put a negative value
-
     	break;
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_standalone_r13:
     	config_INFO->nb_iot_config.operating_mode.value = 3;

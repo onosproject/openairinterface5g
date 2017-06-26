@@ -226,6 +226,40 @@ typedef struct {
   // CE level to determine the NPRACH Configuration (one CE for each NPRACH config.)
   uint8_t             CE;
 
+
+
+  /*
+   * index of the PRB assigned to NB-IoT carrier in in-band/guard-band operating mode
+   */
+  unsigned short NB_IoT_RB_ID;
+
+
+  /*Following FAPI approach:
+   * 0 = in-band with same PCI
+   * 1 = in-band with diff PCI
+   * 2 = guard band
+   * 3 =stand alone
+   */
+  uint16_t operating_mode;
+
+  /*
+   * Only for In-band operating mode with same PCI
+   * its measured in number of OFDM symbols
+   * allowed values:
+   * 1, 2, 3, 4(this value is written in FAPI specs but not exist in TS 36.331 v14.2.1 pag 587)
+   * -1 (we put this value when is not defined - other operating mode)
+   */
+  uint16_t control_region_size;
+
+  /*Number of EUTRA CRS antenna ports (AP)
+   * valid only for in-band different PCI mode
+   * value 0 = indicates the same number of AP as NRS APs
+   * value 1 = four CRS APs
+   */
+  uint16_t eutra_NumCRS_ports;
+
+
+
 } NB_DL_FRAME_PARMS;
 
 #define NPBCH_A 34 
