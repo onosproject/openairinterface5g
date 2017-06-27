@@ -4,7 +4,7 @@
 
 
 //to be integrated in the scheduling procedure of L1
-void schedule_response(Sched_Rsp_t Sched_INFO){
+void schedule_response(Sched_Rsp_t *Sched_INFO){
       //todo
 }
 

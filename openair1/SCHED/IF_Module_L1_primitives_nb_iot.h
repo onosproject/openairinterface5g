@@ -7,7 +7,7 @@
 #define __IF_MODULE_L1_PRIMITIVES_NB_IOT_H__
 
 /*Interface for Downlink, transmitting the DLSCH SDU, DCI SDU*/
-void schedule_response(Sched_Rsp_t Sched_INFO);
+void schedule_response(Sched_Rsp_t *Sched_INFO);
 
 /*Interface for PHY Configuration
  * Trigger the phy_config_xxx functions using parameters from the shared PHY_Config structure

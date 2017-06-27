@@ -31,36 +31,13 @@
 */
 #ifndef __LTE_TRANSPORT_DEFS_NB_IOT__H__
 #define __LTE_TRANSPORT_DEFS_NB_IOT__H__
-#include "PHY/defs.h"
 #include "dci_nb_iot.h"
+#include "PHY/defs.h"
 #ifndef STANDALONE_COMPILE
 #include "UTIL/LISTS/list.h"
 #endif
 
 
-typedef struct {
-  /// Length of DCI in bits
-  uint8_t dci_length;
-  /// Aggregation level only 0,1 in NB-IoT
-  uint8_t L;
-  /// Position of first CCE of the dci
-  int firstCCE;
-  /// flag to indicate that this is a RA response
-  boolean_t ra_flag;
-  /// rnti
-  rnti_t rnti;
-  /// Format
-  DCI_format_NB_t format;
-  /// DCI pdu
-  uint8_t dci_pdu[8];
-} DCI_ALLOC_NB_t;
-
-typedef struct {
-  //delete the count for the DCI numbers,NUM_DCI_MAX should set to 1 
-  uint32_t num_npdcch_symbols;
-  uint8_t Num_dci;
-  DCI_ALLOC_NB_t dci_alloc[2] ;
-} DCI_PDU_NB;
 
 // to be created LTE_eNB_DLSCH_t --> is duplicated for each number of UE and then indexed in the table
 

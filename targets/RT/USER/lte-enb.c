@@ -575,13 +575,18 @@ int wait_CCs(eNB_rxtx_proc_t *proc) {
   return(0);
 }
 
+
 /*NB-IoT rxtx
  * IMPORTANT
  * When we run the rxtx thread for NB-IoT we should not run at the same time otherwise we fill the same buffers in PHY_Vars_eNB
  * */
 static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
+  UL_IND_t *UL_INFO;
+  Sched_Rsp_t *Sched_Rsp;
 
+  UL_INFO = (UL_IND_t*) malloc(sizeof(UL_IND_t));
+  Sched_Rsp = (Sched_Rsp_t*) malloc(sizeof(Sched_Rsp_t));
 
   start_meas(&softmodem_stats_rxtx_sf);
 
@@ -591,11 +596,13 @@ static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_
   if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5)))
     eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
   
+
   // skip the comment for this moment
+
   
   /*UE-specific RX processing for subframe n*/
 
-  NB_phy_procedures_eNB_uespec_RX(eNB,proc);
+  NB_phy_procedures_eNB_uespec_RX(eNB,proc,UL_INFO);
 
   // After stored the Upink information, process it and made it into FAPI style,  send the UL_Indication to higher layer that also provide a tick to the scheduler
 
@@ -620,6 +627,51 @@ static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_
   return(0);
 }
 
+/*!
+ * \brief The RX UE-specific and TX thread of NB-IoT eNB (NB-rxtx).
+ * \param param is a \ref eNB_proc_t structure which contains the info what to process.
+ * \returns a pointer to an int. The storage is not on the heap and must not be freed.
+ */
+static void* eNB_thread_NB_rxtx( void* param ) {
+
+  static int eNB_thread_rxtx_status;
+
+  eNB_rxtx_proc_t *proc = (eNB_rxtx_proc_t*)param;
+  PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
+
+  char thread_name[100];
+
+
+  // set default return value
+  eNB_thread_rxtx_status = 0;
+
+
+  sprintf(thread_name,"RXn_TXnp4_%d\n",&eNB->proc.proc_rxtx[0] == proc ? 0 : 1);
+  thread_top_init(thread_name,1,850000L,1000000L,2000000L);
+
+  while (!oai_exit) {
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 0 );
+
+    if (wait_on_condition(&proc->mutex_rxtx,&proc->cond_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) break;
+
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 1 );
+
+    
+  
+    if (oai_exit) break;
+
+    if (eNB->CC_id==0)
+      if (NB_rxtx(eNB,proc,thread_name) < 0) break;
+
+  } // while !oai_exit
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 0 );
+
+  printf( "Exiting eNB thread RXn_TXnp4\n");
+
+  eNB_thread_rxtx_status = 0;
+  return &eNB_thread_rxtx_status;
+}
 static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
   start_meas(&softmodem_stats_rxtx_sf);

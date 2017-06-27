@@ -901,7 +901,7 @@ typedef struct {
   /// Pointers to 8 HARQ processes for the ULSCH
   LTE_UL_eNB_HARQ_t *harq_process;
   /// Maximum number of HARQ rounds
-  //uint8_t Mlimit;
+  uint8_t Mlimit;
   /// Maximum number of iterations used in eNB turbo decoder
   //uint8_t max_turbo_iterations;
 //boundling not exist in NB-IoT since we are not using TDD and only 1 HARQ process

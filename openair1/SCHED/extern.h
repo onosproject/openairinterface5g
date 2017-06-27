@@ -42,8 +42,6 @@
 #include <asm/page.h>
 
 
-
-
 #ifdef RTAI_ENABLED
 #include <rtai.h>
 //#include <rtai_posix.h>
@@ -59,6 +57,7 @@
 #endif  /* USER_MODE */
 
 #include "defs.h"
+#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
 //#include "dlc_engine.h"
 
 extern int openair_sched_status;
@@ -78,7 +77,9 @@ extern fifo_dump_emos_eNB emos_dump_eNB;
 #endif
 */
 
+
 extern Sched_Rsp_t* Sched_Rsp;
+
 
 
 #endif /*__SCHED_EXTERN_H__ */

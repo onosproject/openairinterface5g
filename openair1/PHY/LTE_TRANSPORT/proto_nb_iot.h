@@ -93,8 +93,8 @@ void npbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
 void NB_add_dci(DCI_PDU_NB *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_size_bytes,unsigned char aggregation,unsigned char dci_size_bits,unsigned char dci_fmt);
 
 /*Use the UL DCI Information to configure PHY and also Packed*/
-int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB_NB *eNB,
-                                       eNB_rxtx_proc_NB_t *proc,
+int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
+                                       eNB_rxtx_proc_t *proc,
                                        DCI_CONTENT *DCI_Content,
                                        uint16_t rnti,
                                        DCI_format_NB_t dci_format,
@@ -103,14 +103,17 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB_NB *eNB,
                                        uint8_t Num_dci
                                       );
 /*Use the DL DCI Information to configure PHY and also Packed*/
-int NB_generate_eNB_dlsch_params_from_dci(int frame,
+int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
+                                       int frame,
                                        uint8_t subframe,
                                        DCI_CONTENT *DCI_Content,
                                        uint16_t rnti,
                                        DCI_format_NB_t dci_format,
-                                       LTE_eNB_DLSCH_t **dlsch,
+                                       LTE_eNB_DLSCH_t *dlsch,
                                        NB_DL_FRAME_PARMS *frame_parms,
                                        uint8_t aggregation,
                                        uint8_t Num_dci
                                        );
+
+
 #endif

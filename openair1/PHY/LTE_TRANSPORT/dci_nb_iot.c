@@ -53,22 +53,8 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
                          uint32_t subframe)
 {
 
-  uint8_t *e_ptr,num_pdcch_symbols;
-  int8_t L;
-  uint32_t i, lprime;
-  uint32_t gain_lin_QPSK,kprime,kprime_mod12,mprime,nsymb,symbol_offset,tti_offset;
-  int16_t re_offset;
-  uint8_t mi = get_mi(frame_parms,subframe);
-  static uint8_t e[DCI_BITS_MAX];
-  static int32_t yseq0[Msymb],yseq1[Msymb],wbar0[Msymb],wbar1[Msymb];
 
-  int32_t *y[2];
-  int32_t *wbar[2]; 
-
-  int nushiftmod3 = frame_parms->nushift%3;
-
-  int split_flag=0;
-
+  int i,L;
   /*
   **e_ptr : store the encoding result, and as a input to modulation
   *num_pdcch_symbols : to calculate the resource allocation for pdcch
@@ -82,18 +68,6 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
 
   //num_pdcch_symbols = get_num_pdcch_symbols(num_ue_spec_dci+num_common_dci,dci_alloc,frame_parms,subframe);
 
-  wbar[0] = &wbar0[0];
-  wbar[1] = &wbar1[0];
-  y[0] = &yseq0[0];
-  y[1] = &yseq1[0];
-
-  // reset all bits to <NIL>, here we set <NIL> elements as 2
-  // memset(e, 2, DCI_BITS_MAX);
-  // here we interpret NIL as a random QPSK sequence. That makes power estimation easier.
-  for (i=0; i<DCI_BITS_MAX; i++)
-    e[i]=taus()&1;
-
-  e_ptr = e;
 
   // generate DCIs in order of decreasing aggregation level, then common/ue spec
   // MAC is assumed to have ordered the UE spec DCI according to the RNTI-based randomization
@@ -104,25 +78,16 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
       if (dci_alloc[i].L == (uint8_t)L) {
 
         if (dci_alloc[i].firstCCE>=0) {
-          //encoding
-          e_ptr = generate_dci0(
-        		  dci_alloc[i].dci_pdu, //we should pass the two DCI pdu (if exist)
-				  //second pdu
-				  //aggregation level
-        		  e+(72*dci_alloc[i].firstCCE),
-				  dci_alloc[i].dci_length,
-				  dci_alloc[i].L,
-				  dci_alloc[i].rnti);
 
-          //new NB-IoT
-          npdcch_encoding_NB_IoT(
-              dci_alloc[i].dci_pdu,
-          frame_parms,
-          npdcch, //see when function dci_top is called
-          //no frame
-          subframe
-          //rm_stats, te_stats, i_stats
-                      );
+
+          //NB-IoT encoding
+          /*npdcch_encoding_NB_IoT(dci_alloc[i].dci_pdu,
+                                 frame_parms,
+                                 npdcch, //see when function dci_top is called
+                                 //no frame
+                                subframe
+                                //rm_stats, te_stats, i_stats
+                                );*/
 
 
         }
@@ -150,7 +115,8 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
    * G = 200
    */
 
-
+  /*
+  // NB-IoT scrambling
   npdcch_scrambling_NB_IoT(
               frame_parms,
 			  npdcch,
@@ -161,7 +127,7 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
 
 
 
-  //NB-IoT
+  //NB-IoT modulation
   npdcch_modulation_NB_IoT(
       txdataF,
       AMP,
@@ -169,7 +135,7 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
       //no symbol
       //npdcch0???
       //RB_ID --> statically get from the higher layer (may included in the dl_frame params)
-      );
+      );*/
 
 
 

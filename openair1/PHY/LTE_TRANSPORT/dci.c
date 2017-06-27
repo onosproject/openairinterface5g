@@ -2045,7 +2045,6 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
                          uint32_t n_rnti,
                          int16_t amp,
                          LTE_DL_FRAME_PARMS *frame_parms,
-						 //NB_IoT_eNB_NPDCCH_t npdcch,
                          int32_t **txdataF,
                          uint32_t subframe)
 {
@@ -2132,24 +2131,11 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
 #endif
 
         if (dci_alloc[i].firstCCE>=0) {
-        	//encoding
           e_ptr = generate_dci0(dci_alloc[i].dci_pdu,
                                 e+(72*dci_alloc[i].firstCCE),
                                 dci_alloc[i].dci_length,
                                 dci_alloc[i].L,
                                 dci_alloc[i].rnti);
-
-          //new NB-IoT
-          npdcch_encoding_NB_IoT(
-        		  dci_alloc[i].dci_pdu,
-				  frame_parms,
-				  npdcch, //see when function dci_top is called
-				  //no frame
-				  subframe
-				  //rm_stats, te_stats, i_stats
-      	  	  	  	  );
-
-
         }
       }
     }
@@ -2171,9 +2157,9 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
                                 dci_alloc[i].L,
                                 dci_alloc[i].rnti);
         }
-	else {
-	  
-	}
+  else {
+    
+  }
       }
     }
   }
@@ -2185,31 +2171,6 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
                    e,
                    8*get_nquad(num_pdcch_symbols, frame_parms, mi));
   //72*get_nCCE(num_pdcch_symbols,frame_parms,mi));
-
-
-
-  //NB-IoT--------------------------
-  /*
-   * switch(npdcch_start_index)
-   * case 0
-   * G = 272
-   * case 1
-   * G = 248
-   * case 2
-   * G = 224
-   * case 3
-   * G = 200
-   */
-
-
-  npdcch_scrambling_NB_IoT(
-		  	  	  frame_parms,
-				  npdcch,
-				  //G,
-				  //q = nf mod 2 (TS 36.211 ch 10.2.3.1)  with nf = number of frame
-				  //slot_id
-		  	  	  	    );
-
 
 
 
@@ -2274,18 +2235,6 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
   }
 
 
-
-  //NB-IoT
-  npdcch_modulation_NB_IoT(
-		  txdataF,
-		  AMP,
-		  frame_parms,
-		  //no symbol
-		  //npdcch0???
-		  //RB_ID --> statically get from the higher layer (may included in the dl_frame params)
-		  );
-
-
 #ifdef DEBUG_DCI_ENCODING
   printf(" PDCCH Interleaving\n");
 #endif
@@ -2293,9 +2242,6 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
   //  printf("y %p (%p,%p), wbar %p (%p,%p)\n",y,y[0],y[1],wbar,wbar[0],wbar[1]);
   // This is the interleaving procedure defined in 36-211, first part of Section 6.8.5
   pdcch_interleaving(frame_parms,&y[0],&wbar[0],num_pdcch_symbols,mi);
-
-  //in NB-IoT the interleaving is done directly with the encoding procedure
-
 
   mprime=0;
   nsymb = (frame_parms->Ncp==0) ? 14:12;
@@ -2422,7 +2368,6 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
 
   return(num_pdcch_symbols);
 }
-
 #ifdef PHY_ABSTRACTION
 uint8_t generate_dci_top_emul(PHY_VARS_eNB *phy_vars_eNB,
                               uint8_t num_ue_spec_dci,

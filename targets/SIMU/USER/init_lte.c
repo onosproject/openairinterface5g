@@ -171,7 +171,7 @@ void init_lte_eNB_NB(
   LOG_I(PHY,"init eNB NB_IoT: Nid_cell %d\n", frame_parms->Nid_cell);
   LOG_I(PHY,"init eNB NB_IoT: number of ue max %d number of enb max %d \n",
         NUMBER_OF_UE_MAX, NUMBER_OF_eNB_MAX);
-  LOG_I(PHY,"init eNB NB_IoT: N_RB_DL %d\n", frame_parms->N_RB_DL);
+ //LOG_I(PHY,"init eNB NB_IoT: N_RB_DL %d\n", frame_parms->N_RB_DL);
   //LOG_I(PHY,"init eNB NB_IoT: prach_config_index %d\n", frame_parms->nprach_config_common.prach_ConfigInfo.prach_ConfigIndex);
 
   if (node_function >= NGFI_RRU_IF5)
@@ -185,15 +185,15 @@ void init_lte_eNB_NB(
    * In NB-IoT we not transmit two dlsch pdu at the same time so the dlsch dimension in PHY_vars_eNB for NB-IoT is just an array
    */
 
-  for (i=0; i<NUMBER_OF_UE_MAX_NB_IOT; i++) {
+  for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     LOG_I(PHY,"[NB-IoT] Allocating Transport Channel Buffers for NDLSCH, UE %d\n",i);
       PHY_vars_eNB->ndlsch[i] = new_eNB_dlsch_NB(NSOFT,abstraction_flag,frame_parms);
       if (!PHY_vars_eNB->ndlsch[i]) {
 	LOG_E(PHY,"Can't get eNB ndlsch structures for UE %d \n", i);
 	exit(-1);
       } else {
-	LOG_D(PHY,"dlsch[%d] => %p\n",i,PHY_vars_eNB->dlsch[i]);
-	PHY_vars_eNB->dlsch[i]->rnti=0;
+	LOG_D(PHY,"dlsch[%d] => %p\n",i,PHY_vars_eNB->ndlsch[i]);
+	PHY_vars_eNB->ndlsch[i]->rnti=0;
       }
 
 

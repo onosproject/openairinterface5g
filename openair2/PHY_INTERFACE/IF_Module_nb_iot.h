@@ -18,7 +18,7 @@
 
 
 
-// P5 FAPI-like configuration structures
+// P5 FAPI-like configuration structures-------------------------------------------------------------------------------
 
 /*MP: MISSED COMMON CONFIG. of SIB2-NB in FAPI SPECS (may non needed)*/
 typedef struct{
@@ -99,9 +99,7 @@ typedef struct{
 
 
 
-// uplink subframe P7
-
-
+// uplink subframe P7---------------------------------------------------------------------------------
 
 
 /*UL_IND_t:
@@ -169,24 +167,22 @@ typedef struct{
  }npdcch_t;
 
  typedef struct{
-	//for indicate receiving the NPUSCH
-	nfapi_ul_config_nulsch_pdu				nulsch_pdu;
-	//for indicate receiving the NPRACH
-	nfapi_ul_config_nrach_pdu				nrach_pdu;
-
+	 nfapi_ul_config_request_pdu_t ulsch_pdu;
  }nulsch_t;
 
-typedef union{
+typedef struct{
 
-	npdcch_t NB_DCI;
+	// these structures contains both instruction and PDUs itself
+
+	npdcch_t *NB_DCI;
  	
- 	npdsch_t NB_DLSCH;
+ 	npdsch_t *NB_DLSCH;
 
- 	npbch_t NB_BCH;
+ 	npbch_t *NB_BCH;
 
- 	nulsch_t NB_UL;
+ 	nulsch_t *NB_UL_config;
 
-}NB_DL_u;
+}NB_DL_t;
 
 
 typedef struct{
@@ -202,7 +198,7 @@ typedef struct{
  	//subframe
  	sub_frame_t subframeP;
 
- 	NB_DL_u NB_DL;
+ 	NB_DL_t NB_DL;
 
 }Sched_Rsp_t;
 
@@ -211,8 +207,8 @@ typedef struct{
 It should be allocated at the main () in lte-softmodem.c*/
 typedef struct IF_Module_s{
 	//define the function pointer
-	void (*UL_indication)(UL_IND_t UL_INFO);
-	void (*schedule_response)(Sched_Rsp_t Sched_INFO);
+	void (*UL_indication)(UL_IND_t *UL_INFO);
+	void (*schedule_response)(Sched_Rsp_t *Sched_INFO);
 	void (*PHY_config_req)(PHY_Config_t* config_INFO);
 
 }IF_Module_t;

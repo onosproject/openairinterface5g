@@ -100,7 +100,7 @@ void NB_phy_config_mib_eNB(
   fp->NB_IoT_RB_ID						 = prb_index; //XXX to be better understand how should be managed
   //fp->nb_rx_antenna_ports_eNB
   fp->control_region_size			 	 = control_region_size; //(assume that this value is negative if not used)
-  fp->eutra_NumCRS_ports				 = eutra_NumCRS_ports //(valid only for in-band operating mode with different PCI)
+  fp->eutra_NumCRS_ports				 = eutra_NumCRS_ports; //(valid only for in-band operating mode with different PCI)
   
 
   //TODO
