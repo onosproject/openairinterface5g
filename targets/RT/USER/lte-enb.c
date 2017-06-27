@@ -816,6 +816,12 @@ void fh_if5_asynch_DL(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
       exit_fun("Exiting");
     }
   }
+
+  *frame = frame_tx;
+  if ((frame_tx == 0) && (subframe_tx == 0))
+     proc->unwrapped_tx_frame += 1024;
+  proc->timestamp_tx = (((frame_tx+proc->unwrapped_tx_frame)*10)+subframe_tx)*eNB->frame_parms.samples_per_tti;
+
   proc->subframe_tx = subframe_tx;
   if (eNB->tx_fh) eNB->tx_fh(eNB,&eNB->proc.proc_rxtx[0]);
 
