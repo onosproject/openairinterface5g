@@ -109,7 +109,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
                                        DCI_CONTENT *DCI_Content,
                                        uint16_t rnti,
                                        DCI_format_NB_t dci_format,
-                                       LTE_eNB_DLSCH_t *dlsch,
+                                       NB_IoT_eNB_NDLSCH_t *ndlsch,
                                        NB_DL_FRAME_PARMS *frame_parms,
                                        uint8_t aggregation,
                                        uint8_t Num_dci

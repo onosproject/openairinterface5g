@@ -1694,7 +1694,7 @@ int main( int argc, char **argv ) {
             PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,frame_parms[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
             //this is a complementary function for just initialize manage NB_ioT stuff inside the PHY_Vars
 #ifdef NB_IOT
-            init_lte_eNB_NB(PHY_vars_eNB_g[0][CC_id],frame_parms_nb_iot[CC_id], 0, frame_parms_nb_iot[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
+            //init_lte_eNB_NB(PHY_vars_eNB_g[0][CC_id],frame_parms_nb_iot[CC_id], 0, frame_parms_nb_iot[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
 #endif
 
             PHY_vars_eNB_g[0][CC_id]->ue_dl_rb_alloc=0x1fff;

@@ -9,7 +9,7 @@
 
 void process_schedule_rsp(Sched_Rsp_t *sched_rsp,
                           PHY_VARS_eNB *eNB,
-                          eNB_rxtx_proc_NB_t *proc);
+                          eNB_rxtx_proc_t *proc);
 
 /*Processing the ue-specific resources for uplink in NB-IoT*/
 void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, UL_IND_t *UL_INFO);
@@ -24,7 +24,7 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_
 void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched_Rsp_t *Sched_Rsp,const int UE_id);
 
 /*Process all the scheduling result from MAC and also common signals.*/
-void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_t *proc,int do_meas);
+void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int do_meas);
 #endif
 
 

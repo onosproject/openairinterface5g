@@ -477,20 +477,29 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
       // configure dlsch parameters and CCE index (fill the dlsch_ra structure???)
       LOG_D(PHY,"Generating dlsch params for RA_RNTI\n");
 
+      // fill the dlsch_ra_NB sructure for RAR, and packed the DCI PDU
       NB_generate_eNB_dlsch_params_from_dci(eNB,
                                             frame,
                                             subframe,
-											&DCI_Content[i],
+											                      &DCI_Content[i],
                                             Sched_Rsp->NB_DL.NB_DCI->DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.rnti,
                                             DCIFormatN1_RAR,
                                             &eNB->dlsch_ra_NB,
                                             fp,
                                             Sched_Rsp->NB_DL.NB_DCI->DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.aggregation_level,
-											Sched_Rsp->NB_DL.NB_DCI->DL_DCI.number_dci
+											                      Sched_Rsp->NB_DL.NB_DCI->DL_DCI.number_dci
                                             );
+
+      eNB->dlsch_ra_NB->nCCE[subframe] = eNB->DCI_pdu->dci_alloc[i].firstCCE;
+
+      LOG_D(PHY,"[eNB %"PRIu8"] Frame %d subframe %d : CCE resource for common DCI (RA)  => %"PRIu8"\n",eNB->Mod_id,frame,subframe,
+        eNB->dlsch_ra_NB->nCCE[subframe]);
       break;
+
     case DCIFormatN1:
-      //DCI format N1 to DLSCH
+      if(UE_id >= 0)
+      {        
+       //DCI format N1 to DLSCH
     	 DCI_Content[i].DCIN1.type = 1;
     	 DCI_Content[i].DCIN1.orderIndicator = Sched_Rsp->NB_DL.NB_DCI->DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.npdcch_order_indication;
     	 DCI_Content[i].DCIN1.Scheddly = Sched_Rsp->NB_DL.NB_DCI->DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.scheduling_delay;
@@ -501,7 +510,8 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
     	 DCI_Content[i].DCIN1.DCIRep = Sched_Rsp->NB_DL.NB_DCI->DL_DCI.dl_config_pdu_list[i].npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
 
 
-    	//fill the dlsch[] structure???
+    	//fill the ndlsch structure for UE 
+      //parameters we don't consider pdsch config dedicated since not calling the phy config dedicated step2
       NB_generate_eNB_dlsch_params_from_dci(eNB,
                                             frame,
                                             subframe,
@@ -512,8 +522,20 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched
                                             fp,
                                             Sched_Rsp->NB_DL.NB_DCI->DL_DCI.dl_config_pdu_list->npdcch_pdu.npdcch_pdu_rel13.aggregation_level,
                                             Sched_Rsp->NB_DL.NB_DCI->DL_DCI.number_dci
-                                            );
+                                            ); 
+
+      eNB->ndlsch[(uint8_t)UE_id]->nCCE[subframe] = eNB->DCI_pdu->dci_alloc[i].firstCCE;
+      
+      LOG_D(PHY,"[eNB %"PRIu8"] Frame %d subframe %d : CCE resource for ue DCI (PDSCH %"PRIx16")  => %"PRIu8"\n",eNB->Mod_id,frame,subframe,
+      eNB->DCI_pdu->dci_alloc[i].rnti,eNB->ndlsch[(uint8_t)UE_id]->nCCE[subframe]);
+      }
+      else
+        {
+          LOG_D(PHY,"[eNB %"PRIu8"][NPDSCH] Frame %d : No UE_id with corresponding rnti %"PRIx16", dropping NDLSCH\n",
+                eNB->Mod_id,frame,eNB->DCI_pdu->dci_alloc[i].rnti);
+        }
       break;
+
     /*TODO reserve for the N2 DCI*/
     case DCIFormatN2_Pag:
     	LOG_I(PHY, "Paging is not implemented, DCIFormatN2_Pag cannot be elaborated\n");
@@ -581,7 +603,7 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_
 */
 void process_schedule_rsp(Sched_Rsp_t *sched_rsp,
                           PHY_VARS_eNB *eNB,
-                          eNB_rxtx_proc_NB_t *proc)
+                          eNB_rxtx_proc_t *proc)
 
 {
 
@@ -653,7 +675,7 @@ void process_schedule_rsp(Sched_Rsp_t *sched_rsp,
 		  //check for the SI (FAPI specs rnti_type = 1 Other or rnti_type = 0 BCCH information)
 		  if(sched_rsp->NB_DL.NB_DLSCH->ndlsch.rnti_type == 0)
 		  {
-		  //TODO fill the dlsch_SI
+		  //TODO fill the dlsch_SI, in NB-IoT you don't have the DCI to manage system information
 		  }
 		  else
 		  {
@@ -977,7 +999,7 @@ extern int oai_exit;
 r_type, rn is only used in PMCH procedure so I remove it.
 */
 void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
-         	 	 	 	 	  eNB_rxtx_proc_NB_t *proc,
+         	 	 	 	 	  eNB_rxtx_proc_t *proc,
 							  int do_meas)
 {
   int frame = proc->frame_tx;

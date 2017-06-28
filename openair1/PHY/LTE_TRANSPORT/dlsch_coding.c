@@ -234,7 +234,7 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(unsigned char Kmimo,unsigned char Mdlharq,uint32_
 
 
 }
-
+/*
 NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB(//unsigned char Kmimo,
 									//unsigned char Mdlharq,
 									uint32_t Nsoft,
@@ -295,9 +295,7 @@ NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB(//unsigned char Kmimo,
 
 
     //In NB-IoT we have only 1 HARQ process for each User-------------
-     /*
-      * for Nb-IoT we are using the same HARQ structure as for LTE (for the moment)
-      */
+ 
       dlsch->harq_process = (LTE_DL_eNB_HARQ_t *)malloc16(sizeof(LTE_DL_eNB_HARQ_t));
       LOG_T(PHY, "[NB-IoT] Required mem size %d (bw scaling %d), dlsch->harq_process %p\n",
             MAX_DLSCH_PAYLOAD_BYTES/bw_scaling,bw_scaling,dlsch->harq_process);
@@ -365,7 +363,7 @@ NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB(//unsigned char Kmimo,
 
 }
 
-
+*/
 
 void clean_eNb_dlsch(LTE_eNB_DLSCH_t *dlsch)
 {

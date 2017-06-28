@@ -137,13 +137,15 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
     }
 }
 
+int resource_to_subframe[8] = {1,2,3,4,5,6,8,10}; 
+
 int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
                                         int frame,
                                        uint8_t subframe,
                                        DCI_CONTENT *DCI_Content,
                                        uint16_t rnti,
                                        DCI_format_NB_t dci_format,
-                                       LTE_eNB_DLSCH_t *dlsch,
+                                       NB_IoT_eNB_NDLSCH_t *ndlsch,
                                        NB_DL_FRAME_PARMS *frame_parms,
                                        uint8_t aggregation,
                                        uint8_t Num_dci
@@ -154,28 +156,29 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
   eNB->DCI_pdu = (DCI_PDU_NB*) malloc(sizeof(DCI_PDU_NB));
 
 
-  //N1 start
+
+  //N1 parameters
 
   /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
-  uint8_t type;
+  uint8_t type = 0;
   //NPDCCH order indicator (set to 0),1 bits
-  uint8_t orderIndicator;
+  uint8_t orderIndicator = 0;
   // Scheduling Delay, 3 bits
-  uint8_t Scheddly;
+  uint8_t Scheddly = 0;
   // Resourse Assignment (RU Assignment), 3 bits
-  uint8_t ResAssign;
+  uint8_t ResAssign = 0;
   // Modulation and Coding Scheme, 4 bits
-  uint8_t mcs;
+  uint8_t mcs = 0;
   // Repetition Number, 4 bits
-  uint8_t RepNum;
+  uint8_t RepNum = 0;
   // DCI subframe repetition Number, 2 bits
-  uint8_t DCIRep;
+  uint8_t DCIRep = 0;
   // New Data Indicator,1 bits
-  uint8_t ndi;
+  uint8_t ndi = 0;
   // HARQ-ACK resource,4 bits
-  uint8_t HARQackRes;
+  uint8_t HARQackRes = 0;
 
-  //N2 start
+  //N2 parameters
 
   //Direct indication information, 8 bits
   uint8_t directIndInf;
@@ -186,11 +189,16 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
 
   switch (dci_format) {
 
+  // Impossible to have a DCI N0, we have condition before
   case DCIFormatN0:
     return(-1);
     break;
 
   case DCIFormatN1_RAR:  // This is DLSCH allocation for control traffic
+
+    ndlsch->subframe_tx[subframe] = 1; // check if it's OK
+    ndlsch->rnti = rnti;
+    ndlsch->active = 1;
 
     type               = DCI_Content->DCIN1_RAR.type;
     orderIndicator     = DCI_Content->DCIN1_RAR.orderIndicator; 
@@ -223,6 +231,8 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
 
 
   case DCIFormatN1: // for user data
+    
+    ndlsch->subframe_tx[subframe] = 1; // check if it's OK
 
     type               = DCI_Content->DCIN1.type;
     orderIndicator     = DCI_Content->DCIN1.orderIndicator; 

@@ -217,6 +217,12 @@ typedef struct {
   /// scheduling parameters for RXn-TXnp4 thread
   struct sched_param sched_param_rxtx;
 
+  /// NB-IoT for IF_Module
+  pthread_t pthread_l2;
+  pthread_cond_t cond_l2;
+  pthread_mutex_t mutex_l2;
+  int instance_cnt_l2;
+  pthread_attr_t attr_l2;
 } eNB_rxtx_proc_t;
 
 typedef struct {
@@ -447,7 +453,7 @@ typedef struct {
 } DCI_ALLOC_NB_t;
 
 typedef struct {
-  //delete the count for the DCI numbers,NUM_DCI_MAX should set to 1 
+  //delete the count for the DCI numbers,NUM_DCI_MAX should set to 2 
   uint32_t num_npdcch_symbols;
   uint8_t Num_dci;
   DCI_ALLOC_NB_t dci_alloc[2] ;
@@ -726,6 +732,7 @@ typedef struct PHY_VARS_eNB_s {
   NB_IoT_eNB_NDLSCH_t *dlsch_SI_NB,*dlsch_ra_NB;
 
   NB_DL_FRAME_PARMS frame_parms_nb_iot;
+  // DCI for at most 2 DCI pdus
   DCI_PDU_NB *DCI_pdu;
 
 
