@@ -30,14 +30,14 @@
 
 #define NPBCH_A 34                             // 34 for NB-IoT and 24 for LTE
 
-int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
+int allocate_npbch_REs_in_RB(NB_IOT_DL_FRAME_PARMS *frame_parms,
                             int32_t **txdataF,
                             uint32_t *jj,
                             uint32_t symbol_offset,
                             uint8_t *x0,
                             uint8_t pilots,
                             int16_t amp,
-							unsigned short id_offset,
+			    unsigned short id_offset,
                             uint32_t *re_allocated)  //  not used variable ??!!
 {
   MIMO_mode_t mimo_mode = (frame_parms->mode1_flag==1)?SISO:ALAMOUTI;
@@ -116,7 +116,7 @@ int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
 int generate_npbch(NB_IoT_eNB_NPBCH *eNB_npbch,
                   int32_t **txdataF,
                   int amp,
-                  LTE_DL_FRAME_PARMS *frame_parms,
+                  NB_IOT_DL_FRAME_PARMS *frame_parms,
                   uint8_t *npbch_pdu,
                   uint8_t frame_mod64
 				  unsigned short NB_IoT_RB_ID)
@@ -208,7 +208,7 @@ return(0);
 }
 /**********************************************************
 **********************************************************/
-void npbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
+void npbch_scrambling(NB_IOT_DL_FRAME_PARMS *frame_parms,
                      uint8_t *npbch_e,
                      uint32_t length)  // 1600
 {
