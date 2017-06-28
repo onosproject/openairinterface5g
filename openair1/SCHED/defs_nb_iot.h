@@ -18,10 +18,10 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, UL
 void NB_common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc); 
 
 /*Generate the ulsch params and do the mapping for the FAPI style parameters to OAI, and then do the packing*/
-void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,Sched_Rsp_t *Sched_Rsp,const int UE_id);
+void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu);
 
 /*Generate the dlsch params and do the mapping for the FAPI style parameters to OAI, and then do the packing*/
-void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,Sched_Rsp_t *Sched_Rsp,const int UE_id);
+void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu);
 
 /*Process all the scheduling result from MAC and also common signals.*/
 void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int do_meas);

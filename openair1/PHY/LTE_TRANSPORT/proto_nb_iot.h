@@ -99,8 +99,7 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
                                        uint16_t rnti,
                                        DCI_format_NB_t dci_format,
                                        uint8_t UE_id,
-                                       uint8_t aggregation,
-                                       uint8_t Num_dci
+                                       uint8_t aggregation
                                       );
 /*Use the DL DCI Information to configure PHY and also Packed*/
 int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
@@ -111,8 +110,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
                                        DCI_format_NB_t dci_format,
                                        NB_IoT_eNB_NDLSCH_t *ndlsch,
                                        NB_DL_FRAME_PARMS *frame_parms,
-                                       uint8_t aggregation,
-                                       uint8_t Num_dci
+                                       uint8_t aggregation
                                        );
 
 

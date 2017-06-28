@@ -608,17 +608,10 @@ static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_
 
   if(if_inst->UL_indication) if_inst->UL_indication(UL_INFO);
   
-  
-  // *****************************************
-  // TX processing for subframe n+4
-  // run PHY TX procedures the one after the other for all CCs to avoid race conditions
-  // (may be relaxed in the future for performance reasons)
-  // *****************************************
-  //if (wait_CCs(proc)<0) return(-1);
-  
+  // phy_proceduers_eNB_TX will be triggered at schedule response
+
   if (oai_exit) return(-1);
   
-  NB_phy_procedures_eNB_TX(eNB,proc,NULL);
   
   if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) return(-1);
 

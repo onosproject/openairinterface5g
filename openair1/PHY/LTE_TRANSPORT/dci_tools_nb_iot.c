@@ -68,8 +68,7 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
                                        uint16_t rnti,
                                        DCI_format_NB_t dci_format,
                                        uint8_t UE_id,
-                                       uint8_t aggregation,
-                                       uint8_t Num_dci
+                                       uint8_t aggregation
                                       )
 {
 
@@ -120,7 +119,7 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
       ((DCIN0_t *)ULSCH_DCI_NB)->ndi       =ndi;
       ((DCIN0_t *)ULSCH_DCI_NB)->DCIRep    =DCIRep;
 
-      eNB->DCI_pdu->Num_dci = Num_dci;
+      eNB->DCI_pdu->Num_dci++;
 
       NB_add_dci(eNB->DCI_pdu,ULSCH_DCI_NB,rnti,sizeof(DCIN0_t),aggregation,sizeof_DCIN0_t,DCIFormatN0);
 
@@ -147,8 +146,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
                                        DCI_format_NB_t dci_format,
                                        NB_IoT_eNB_NDLSCH_t *ndlsch,
                                        NB_DL_FRAME_PARMS *frame_parms,
-                                       uint8_t aggregation,
-                                       uint8_t Num_dci
+                                       uint8_t aggregation
                                        )
 {
 
@@ -221,7 +219,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->HARQackRes     =HARQackRes;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->DCIRep         =DCIRep;
 
-    eNB->DCI_pdu->Num_dci = Num_dci;
+    eNB->DCI_pdu->Num_dci++;
 
     NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_RAR_t),aggregation,sizeof_DCIN1_RAR_t,DCIFormatN1_RAR);
 
@@ -255,7 +253,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN1_t *)DLSCH_DCI_NB)->HARQackRes     =HARQackRes;
     ((DCIN1_t *)DLSCH_DCI_NB)->DCIRep         =DCIRep;
 
-    eNB->DCI_pdu->Num_dci = Num_dci;
+    //eNB->DCI_pdu->Num_dci = Num_dci;
 
     NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_t),aggregation,sizeof_DCIN1_t,DCIFormatN1);
 
@@ -272,7 +270,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN2_Ind_t *)DLSCH_DCI_NB)->directIndInf   =directIndInf;
     ((DCIN2_Ind_t *)DLSCH_DCI_NB)->resInfoBits    =resInfoBits;
 
-    eNB->DCI_pdu->Num_dci = Num_dci;
+    eNB->DCI_pdu->Num_dci++;
 
     NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Ind_t),aggregation,sizeof_DCIN2_Ind_t,DCIFormatN2_Ind);
 
@@ -294,7 +292,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN2_Pag_t *)DLSCH_DCI_NB)->RepNum    =RepNum;
     ((DCIN2_Pag_t *)DLSCH_DCI_NB)->DCIRep    =DCIRep;
 
-    eNB->DCI_pdu->Num_dci = Num_dci;
+    eNB->DCI_pdu->Num_dci++;
 
     NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Pag_t),aggregation,sizeof_DCIN2_Pag_t,DCIFormatN2_Pag);
 
