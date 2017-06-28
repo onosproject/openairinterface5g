@@ -77,14 +77,20 @@ typedef struct{
 	uint32_t ul_CarrierFreq;
 
 
-	/*FAPI style config. parameters*/
+	/*FAPI style config. parameters
+	 *
+	 * useful config message contents:
+	 * -nfapi_uplink_reference_signal_config_t uplink_reference_signal_config
+	 * -nfapi_subframe_config_t subframe_config;
+	 * -nfapi_rf_config_t rf_config;
+	 * -nfapi_sch_config_t sch_config;
+	 * -nfapi_nb_iot_config_t nb_iot_config;
+	 * -nfapi_l23_config_t l23_config;
+	 *
+	 * */
+	//XXX where allocate memory??
+	nfapi_config_request_t* cfg;
 
-	nfapi_uplink_reference_signal_config_t uplink_reference_signal_config;
-	nfapi_subframe_config_t subframe_config;
-	nfapi_rf_config_t rf_config;
-	nfapi_sch_config_t sch_config;
-	nfapi_nb_iot_config_t nb_iot_config;
-	nfapi_l23_config_t l23_config;
 
 	/*Dedicated configuration -->not supported by FAPI
 	 * In OAI at least are needed when we manage the phy_procedures_eNB_TX in which we call the phy_config_dedicated_eNB_step2

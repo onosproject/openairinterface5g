@@ -148,6 +148,8 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
   return (PHY_vars_eNB);
 }
 
+
+/*this is a function just for initialization of NB-IoT stuff*/
 void init_lte_eNB_NB(
 					PHY_VARS_eNB  *PHY_vars_eNB,
 					NB_DL_FRAME_PARMS *frame_parms,
