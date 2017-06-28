@@ -144,12 +144,7 @@ int generate_npbch(NB_IoT_eNB_NPBCH *eNB_npbch,
 		
 		for (i=0; i<5; i++) 									// set input bits stream
 		{	
-			if (i !=4 )
-			{
-				npbch_a[5-i-1] = npbch_pdu[i];            		// ????????/*****?? in LTE 24 bits with 3 bytes, but in NB_IoT 34 bits will require 4 bytes+2 bits !! to verify
-			} else {
-				npbch_a[5-i-1]= npbch_pdu[i] & 0x03;
-			}
+			npbch_a[5-i-1] = npbch_pdu[i];        				// & 0xc0   //??/** in LTE 24 bits with 3 bytes, but in NB_IoT 34 bits will require 4 bytes+2 bits !! to check
 		}
 	
 		if (frame_parms->mode1_flag == 1)						// setting CRC mask depending on the number of used eNB antennas 
