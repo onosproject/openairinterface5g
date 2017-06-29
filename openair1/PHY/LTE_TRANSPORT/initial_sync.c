@@ -36,6 +36,7 @@
 #include "SCHED/extern.h"
 #include "defs.h"
 #include "extern.h"
+#include "PHY/LTE_REFSIG/defs.h"
 
 
 #include "common_lib.h"

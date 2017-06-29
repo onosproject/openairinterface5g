@@ -37,6 +37,7 @@
 #include "PHY/extern.h"
 #include "PHY/sse_intrin.h"
 
+
 #ifdef PHY_ABSTRACTION
 #include "SIMULATION/TOOLS/defs.h"
 #endif
@@ -49,6 +50,8 @@
 #ifdef OPENAIR2
 #include "PHY_INTERFACE/defs.h"
 #endif
+
+#include "PHY/LTE_REFSIG/defs.h"
 
 #define PBCH_A 24
 

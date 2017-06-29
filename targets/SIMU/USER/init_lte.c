@@ -149,7 +149,11 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
 }
 
 
+
 /*this is a function just for initialization of NB-IoT stuff*/
+
+/*
+
 void init_lte_eNB_NB(
 					PHY_VARS_eNB  *PHY_vars_eNB,
 					NB_DL_FRAME_PARMS *frame_parms,
@@ -182,10 +186,6 @@ void init_lte_eNB_NB(
 
 
 
-
-  /*
-   * In NB-IoT we not transmit two dlsch pdu at the same time so the dlsch dimension in PHY_vars_eNB for NB-IoT is just an array
-   */
 
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     LOG_I(PHY,"[NB-IoT] Allocating Transport Channel Buffers for NDLSCH, UE %d\n",i);
@@ -240,7 +240,7 @@ void init_lte_eNB_NB(
   return;
 }
 
-
+*/
 
 PHY_VARS_UE* init_lte_UE(LTE_DL_FRAME_PARMS *frame_parms,
                          uint8_t UE_id,

@@ -14,6 +14,7 @@
 
 #include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
+#include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 
 void generate_pilots_NB_IoT(PHY_VARS_eNB *phy_vars_eNB,
                      int32_t **txdataF,
@@ -42,11 +43,12 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB *phy_vars_eNB,
 		//Generate Pilots for slot 0 and 1
 		
 			//antenna 0 symbol 5 slot 0
-		lte_dl_cell_spec_NB_IoT(phy_vars_eNB,&txdataF[0][tti_offset + (first_pilot*samples_per_symbol)], 			// tti_offset 512 x 32 bits
+		lte_dl_cell_spec_NB_IoT(phy_vars_eNB,
+					&txdataF[0][tti_offset + (first_pilot*samples_per_symbol)], 			// tti_offset 512 x 32 bits
                      amp,
 					 RB_IoT_ID,
                      slot_offset,
-                     0,
+                     0, //p
                      0);
 					 
 			//antenna 0 symbol 6 slot 0

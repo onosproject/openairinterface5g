@@ -68,8 +68,7 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
                                        uint16_t rnti,
                                        DCI_format_NB_t dci_format,
                                        uint8_t UE_id,
-                                       uint8_t aggregation,
-                                       uint8_t Num_dci
+                                       uint8_t aggregation
                                       )
 {
 
@@ -120,7 +119,7 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
       ((DCIN0_t *)ULSCH_DCI_NB)->ndi       =ndi;
       ((DCIN0_t *)ULSCH_DCI_NB)->DCIRep    =DCIRep;
 
-      eNB->DCI_pdu->Num_dci = Num_dci;
+      eNB->DCI_pdu->Num_dci++;
 
       NB_add_dci(eNB->DCI_pdu,ULSCH_DCI_NB,rnti,sizeof(DCIN0_t),aggregation,sizeof_DCIN0_t,DCIFormatN0);
 
@@ -137,64 +136,73 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
     }
 }
 
+//map the Isf (DCI param) to the number of subframes (Nsf)
+int resource_to_subframe[8] = {1,2,3,4,5,6,8,10}; 
+
 int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
                                         int frame,
                                        uint8_t subframe,
                                        DCI_CONTENT *DCI_Content,
                                        uint16_t rnti,
                                        DCI_format_NB_t dci_format,
-									   LTE_eNB_DLSCH_t *dlsch,
+                                       NB_IoT_eNB_NDLSCH_t *ndlsch,
                                        NB_DL_FRAME_PARMS *frame_parms,
-                                       uint8_t aggregation,
-                                       uint8_t Num_dci
+                                       uint8_t aggregation
                                        )
 {
 
+  NB_IoT_DL_eNB_HARQ_t* ndlsch_harq = ndlsch->harq_process;
   void *DLSCH_DCI_NB = NULL;
   eNB->DCI_pdu = (DCI_PDU_NB*) malloc(sizeof(DCI_PDU_NB));
 
 
-  //N1 start
+
+  //N1 parameters
 
   /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
-  uint8_t type;
+  uint8_t type = 0;
   //NPDCCH order indicator (set to 0),1 bits
-  uint8_t orderIndicator;
+  uint8_t orderIndicator = 0;
   // Scheduling Delay, 3 bits
-  uint8_t Scheddly;
+  uint8_t Sched_delay = 0;
   // Resourse Assignment (RU Assignment), 3 bits
-  uint8_t ResAssign;
+  uint8_t ResAssign = 0;//Isf
   // Modulation and Coding Scheme, 4 bits
-  uint8_t mcs;
+  uint8_t mcs = 0;
   // Repetition Number, 4 bits
-  uint8_t RepNum;
+  uint8_t RepNum = 0;
   // DCI subframe repetition Number, 2 bits
-  uint8_t DCIRep;
+  uint8_t DCIRep = 0;
   // New Data Indicator,1 bits
-  uint8_t ndi;
+  uint8_t ndi = 0;
   // HARQ-ACK resource,4 bits
-  uint8_t HARQackRes;
+  uint8_t HARQackRes = 0;
 
-  //N2 start
+  //N2 parameters
 
   //Direct indication information, 8 bits
-  uint8_t directIndInf;
+  uint8_t directIndInf= 0;
   // Reserved information bits, 6 bits
-  uint8_t resInfoBits;
+  uint8_t resInfoBits =0;
 
   //   printf("Generate eNB DCI, format %d, rnti %x (pdu %p)\n",dci_format,rnti,dci_pdu);
 
   switch (dci_format) {
 
+  // Impossible to have a DCI N0, we have condition before
   case DCIFormatN0:
     return(-1);
     break;
 
-  case DCIFormatN1_RAR:  // This is DLSCH allocation for control traffic
+  case DCIFormatN1_RAR:  // This is DLSCH allocation for control traffic (no NDI and no ACK/NACK resource for RAR DCI)
+
+    ndlsch->subframe_tx[subframe] = 1; // check if it's OK
+    ndlsch->rnti = rnti;
+    ndlsch->active = 1;
 
     type               = DCI_Content->DCIN1_RAR.type;
     orderIndicator     = DCI_Content->DCIN1_RAR.orderIndicator; 
-    Scheddly           = DCI_Content->DCIN1_RAR.Scheddly; 
+    Sched_delay        = DCI_Content->DCIN1_RAR.Scheddly;
     ResAssign          = DCI_Content->DCIN1_RAR.ResAssign; 
     mcs                = DCI_Content->DCIN1_RAR.mcs; 
     RepNum             = DCI_Content->DCIN1_RAR.RepNum; 
@@ -205,7 +213,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     /*Packed DCI here*/
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->type           =type;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->orderIndicator =orderIndicator;
-    ((DCIN1_RAR_t *)DLSCH_DCI_NB)->Scheddly       =Scheddly;
+    ((DCIN1_RAR_t *)DLSCH_DCI_NB)->Scheddly       =Sched_delay;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->ResAssign      =ResAssign;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->mcs            =mcs;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->RepNum         =RepNum;
@@ -213,20 +221,47 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->HARQackRes     =HARQackRes;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->DCIRep         =DCIRep;
 
-    eNB->DCI_pdu->Num_dci = Num_dci;
+    eNB->DCI_pdu->Num_dci++;
 
     NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_RAR_t),aggregation,sizeof_DCIN1_RAR_t,DCIFormatN1_RAR);
 
-
     // use this value to configure PHY both harq_processes and resource mapping.
+    ndlsch_harq->scheduling_delay = Sched_delay;
+    ndlsch_harq->resource_assignment = resource_to_subframe[ResAssign];  //from Isf of DCI to the number of subframe
+    ndlsch_harq->repetition_number = RepNum;
+    ndlsch_harq->dci_subframe_repetitions = DCIRep;
+    ndlsch_harq->modulation = 2; //QPSK
+    if(ndlsch_harq->round == 0) //this should be set from initialization (init-lte)
+    	ndlsch_harq->status = ACTIVE;
+    ndlsch_harq->mcs = mcs;
+    ndlsch_harq->TBS = TBStable[get_I_TBS(ndlsch_harq->mcs)][ndlsch_harq->resource_assignment-1]; // this table should be rewritten for nb-iot
+    ndlsch_harq->frame = frame;
+    ndlsch_harq->subframe = subframe;
+
+    //ndlsch_harq->B; we don-t have now my is given when we receive the dlsch data
+    //ndlsch->error_treshold
+    //ndlsch->G??
+    //ndlsc->nsoft?? //set in new_eNB_dlsch (initialization)
+    //ndlsch-> sqrt_rho_a?? set in dlsch_modulation
+    //ndlsch-> sqrt_rho_b??? set in dlsch_modulation
+
+    //set in new_eNB_dlsch (initialization)
+    /*
+     * Mlimit
+     * nsoft
+     * round
+     */
 
 
+    break;
 
   case DCIFormatN1: // for user data
+    
+    ndlsch->subframe_tx[subframe] = 1; // check if it's OK
 
     type               = DCI_Content->DCIN1.type;
     orderIndicator     = DCI_Content->DCIN1.orderIndicator; 
-    Scheddly           = DCI_Content->DCIN1.Scheddly; 
+    Sched_delay           = DCI_Content->DCIN1.Scheddly;
     ResAssign          = DCI_Content->DCIN1.ResAssign; 
     mcs                = DCI_Content->DCIN1.mcs; 
     RepNum             = DCI_Content->DCIN1.RepNum; 
@@ -237,7 +272,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     /*Packed DCI here*/
     ((DCIN1_t *)DLSCH_DCI_NB)->type           =type;
     ((DCIN1_t *)DLSCH_DCI_NB)->orderIndicator =orderIndicator;
-    ((DCIN1_t *)DLSCH_DCI_NB)->Scheddly       =Scheddly;
+    ((DCIN1_t *)DLSCH_DCI_NB)->Scheddly       =Sched_delay;
     ((DCIN1_t *)DLSCH_DCI_NB)->ResAssign      =ResAssign;
     ((DCIN1_t *)DLSCH_DCI_NB)->mcs            =mcs;
     ((DCIN1_t *)DLSCH_DCI_NB)->RepNum         =RepNum;
@@ -245,13 +280,31 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN1_t *)DLSCH_DCI_NB)->HARQackRes     =HARQackRes;
     ((DCIN1_t *)DLSCH_DCI_NB)->DCIRep         =DCIRep;
 
-    eNB->DCI_pdu->Num_dci = Num_dci;
+    //eNB->DCI_pdu->Num_dci = Num_dci;
 
     NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_t),aggregation,sizeof_DCIN1_t,DCIFormatN1);
 
     // use this value to configure PHY both harq_processes and resource mapping.
 
-  case DCIFormatN2_Ind: 
+    // use this value to configure PHY both harq_processes and resource mapping.
+        ndlsch_harq->scheduling_delay = Sched_delay;
+        ndlsch_harq->resource_assignment = resource_to_subframe[ResAssign]; //from Isf of DCI to the number of subframe
+        ndlsch_harq->repetition_number = RepNum;
+        ndlsch_harq->dci_subframe_repetitions = DCIRep;
+        ndlsch_harq->modulation = 2; //QPSK
+        if(ndlsch_harq->round == 0){ //this should be set from initialization (init-lte)
+        	ndlsch_harq->status = ACTIVE;
+        	ndlsch_harq->mcs = mcs;
+        	ndlsch_harq->TBS = TBStable[get_I_TBS(ndlsch_harq->mcs)][ndlsch_harq->resource_assignment-1]; // this table should be rewritten for nb-iot
+        }
+        ndlsch_harq->frame = frame;
+        ndlsch_harq->subframe = subframe;
+
+
+
+    break;
+
+  case DCIFormatN2_Ind: //MP: for the moment is not implemented
 
     type               = DCI_Content->DCIN2_Ind.type;
     directIndInf       = DCI_Content->DCIN2_Ind.directIndInf; 
@@ -262,14 +315,15 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN2_Ind_t *)DLSCH_DCI_NB)->directIndInf   =directIndInf;
     ((DCIN2_Ind_t *)DLSCH_DCI_NB)->resInfoBits    =resInfoBits;
 
-    eNB->DCI_pdu->Num_dci = Num_dci;
+    eNB->DCI_pdu->Num_dci++;
 
     NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Ind_t),aggregation,sizeof_DCIN2_Ind_t,DCIFormatN2_Ind);
 
     // use this value to configure PHY both harq_processes and resource mapping.
+    break;
 
     
-  case DCIFormatN2_Pag:
+  case DCIFormatN2_Pag:  //MP: for the moment is not implemented
 
     type               = DCI_Content->DCIN2_Pag.type;
     ResAssign          = DCI_Content->DCIN2_Pag.ResAssign; 
@@ -284,11 +338,12 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN2_Pag_t *)DLSCH_DCI_NB)->RepNum    =RepNum;
     ((DCIN2_Pag_t *)DLSCH_DCI_NB)->DCIRep    =DCIRep;
 
-    eNB->DCI_pdu->Num_dci = Num_dci;
+    eNB->DCI_pdu->Num_dci++;
 
     NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Pag_t),aggregation,sizeof_DCIN2_Pag_t,DCIFormatN2_Pag);
 
     // use this value to configure PHY both harq_processes and resource mapping.
+    break;
 
 
   default:

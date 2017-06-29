@@ -133,10 +133,10 @@ typedef struct{
 
  	/*Uplink data part*/
 
- 	/*indication of the uplink data*/
- 	nfapi_ul_config_nulsch_pdu NULSCH;
- 	/*Uplink data PDU*/
- 	nfapi_rx_indication_body_t RX_NPUSCH;
+ 	/*indication of the harq feedback*/
+ 	nfapi_nb_harq_indication_t nb_harq_ind;
+ 	/*indication of the uplink data PDU*/
+  	nfapi_rx_indication_body_t RX_NPUSCH;
  	/*crc_indication*/
  	nfapi_crc_indication_body_t crc_ind;
 
@@ -144,67 +144,28 @@ typedef struct{
 
  // Downlink subframe P7
 
- typedef struct{
-
- 	/*Indicate the MIB PDU*/
-	nfapi_dl_config_nbch_pdu_rel13_t nbch;
-	/*MIB PDU*/
-	nfapi_tx_request_pdu_t MIB_pdu;
-
- }npbch_t;
-
- typedef struct{
- 	/*indicate the NPDSCH PDU*/
-	nfapi_dl_config_ndlsch_pdu_rel13_t ndlsch;
-	/*NPDSCH PDU*/
-	nfapi_tx_request_pdu_t NPDSCH_pdu;
-
- }npdsch_t;
-
- typedef struct{
- 	// sinces FAPI spec didn't explain the format for the DCI clearly
- 	DCI_format_NB_t DCI_Format;
-
- 	/*DL DCI, it contains the DCI list and the other useful information*/
-	nfapi_dl_config_request_body_t DL_DCI;
-	/*UL DCI*/ 
-	nfapi_hi_dci0_request_body_t UL_DCI;
-
- }npdcch_t;
-
- typedef struct{
-	 nfapi_ul_config_request_pdu_t ulsch_pdu;
- }nulsch_t;
-
-typedef struct{
-
-	// these structures contains both instruction and PDUs itself
-
-	npdcch_t *NB_DCI;
- 	
- 	npdsch_t *NB_DLSCH;
-
- 	npbch_t *NB_BCH;
-
- 	nulsch_t *NB_UL_config;
-
-}NB_DL_t;
-
 
 typedef struct{
 
  	/*Start at the common part*/
 
  	//Module ID
-	module_id_t module_idP; 
+	module_id_t module_id; 
  	//CC ID
  	int CC_id;
  	//frame
- 	frame_t frameP;
+ 	frame_t frame;
  	//subframe
- 	sub_frame_t subframeP;
+ 	sub_frame_t subframe;
 
- 	NB_DL_t NB_DL;
+  	/// nFAPI DL Config Request
+  	nfapi_dl_config_request_body_t *DL_req;
+  	/// nFAPI UL Config Request
+  	nfapi_ul_config_request_t *UL_req;
+  	/// nFAPI HI_DCI Request
+  	nfapi_hi_dci0_request_body_t *HI_DCI0_req;
+  	/// Pointers to DL SDUs
+  	uint8_t **sdu;
 
 }Sched_Rsp_t;
 

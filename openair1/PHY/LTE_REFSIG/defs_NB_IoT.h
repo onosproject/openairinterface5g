@@ -17,7 +17,7 @@
 #ifndef __LTE_REFSIG_DEFS_NB_IOT__H__
 #define __LTE_REFSIG_DEFS_NB_IOT__H__
 #include "PHY/defs.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_nb_iot.h"
 
 /** @ingroup _PHY_REF_SIG
  * @{
@@ -43,7 +43,10 @@ int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB *phy_vars_eNB,
                      short amp,
                      unsigned char Ns,
                      unsigned char l,
-                     unsigned char p
+                     unsigned char p,
 					 unsigned short RB_IoT_ID); 
+
+
+unsigned int lte_gold_generic_NB_IoT(unsigned int *x1, unsigned int *x2, unsigned char reset);
 					 
 #endif

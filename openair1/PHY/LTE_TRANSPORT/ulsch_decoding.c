@@ -164,7 +164,7 @@ LTE_eNB_ULSCH_t *new_eNB_ulsch(uint8_t max_turbo_iterations,uint8_t N_RB_UL, uin
   return(NULL);
 }
 
-
+/*
 NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag)
 {
 
@@ -197,10 +197,7 @@ NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag)
     //MP: add some parameters in npusch structure for convolutional coding to be set
     ulsch->Mlimit = 4;
 
-    	/*
-    	 * In NB-IoT we have only 1 HARQ process for each UE
-	 * we use the same HARQ process structure as LTE
-    	 */
+
       ulsch->harq_process = (LTE_UL_eNB_HARQ_t *)malloc16(sizeof(LTE_UL_eNB_HARQ_t));
 
       if (ulsch->harq_process) {
@@ -245,7 +242,7 @@ NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag)
   return(NULL);
 }
 
-
+*/
 
 void clean_eNb_ulsch(LTE_eNB_ULSCH_t *ulsch)
 {

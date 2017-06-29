@@ -32,6 +32,7 @@
 #define DEBUG_PHY
 #include "assertions.h"
 #include <math.h>
+#include "PHY/LTE_REFSIG/defs.h"
 
 extern uint16_t prach_root_sequence_map0_3[838];
 extern uint16_t prach_root_sequence_map4[138];

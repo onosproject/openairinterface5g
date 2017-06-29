@@ -168,6 +168,7 @@ typedef struct {
   uint8_t codeword;
 } LTE_DL_eNB_HARQ_t;
 
+
 typedef struct {
   /// Indicator of first transmission
   uint8_t first_tx;
@@ -285,7 +286,6 @@ typedef struct {
   int16_t sqrt_rho_b;
 
 } LTE_eNB_DLSCH_t;
-
 
 #define PUSCH_x 2
 #define PUSCH_y 3
@@ -805,6 +805,8 @@ typedef struct {
 // NB-IoT
 //----------------------------------------------------------------------------------------------------
 
+
+
 typedef struct
 {
 	  /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
@@ -851,10 +853,48 @@ typedef struct
 
 
 typedef struct {
+  /// NB-IoT
+  /// The scheduling the NPDCCH and the NPDSCH transmission TS 36.213 Table 16.4.1-1
+  uint8_t scheduling_delay;
+  /// The number of the subframe to transmit the NPDSCH TB TS 36.213 Table 16.4.1.3-1  
+  /// FAPI spec P.181 for the NPDSCH containing BCCH value 1-8, while 36.331 P.190 value only 2 & 8
+  /// Nsf
+  uint8_t resource_assignment;
+  /// Determined the repeat number of NPDSCH TB TS 36.213 Table 16.4.1.3-2 (Nrep)
+  uint8_t repetition_number;
+  /// Determined the ACK/NACK delay and the subcarrier allocation TS 36.213 Table 16.4.2
+  uint8_t HARQ_ACK_resource;
+  /// Determined the repetition number value 0-3
+  uint8_t dci_subframe_repetitions;
+  /// modulation always QPSK Qm = 2 
+  uint8_t modulation;
+
+  /// Status Flag indicating for this DLSCH (idle,active,disabled)
+  SCH_status_t status;
+  /// Transport block size
+  uint32_t TBS;
+  /// The payload + CRC size in bits, "B" from 36-212
+  uint32_t B;
+  /// Pointer to the payload
+  uint8_t *b;
+  ///pdu of the ndlsch message
+  uint8_t*pdu;
+  /// Frame where current HARQ round was sent
+  uint32_t frame;
+  /// Subframe where current HARQ round was sent
+  uint32_t subframe;
+  /// Index of current HARQ round for this DLSCH
+  uint8_t round;
+  /// MCS format for this NDLSCH , TS 36.213 Table 16.4.1.5
+  uint8_t mcs;
+  // we don't have code block segmentation / crc attachment / concatenation in NB-IoT R13 36.212 6.4.2
+  // we don't have beamforming in NB-IoT
+
+} NB_IoT_DL_eNB_HARQ_t;
+
+typedef struct {
   /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
   int32_t *txdataF[8];
-  /// beamforming weights for UE-spec transmission (antenna ports 5 or 7..14), for each codeword, maximum 4 layers?
-  int32_t **ue_spec_bf_weights[4];
   /// dl channel estimates (estimated from ul channel estimates)
   int32_t **calib_dl_ch_estimates;
   /// Allocated RNTI (0 means DLSCH_t is not currently used)
@@ -867,26 +907,14 @@ typedef struct {
   uint8_t nCCE[10];
 
   /*in NB-IoT there is only 1 HARQ process for each UE therefore no pid is required*/
-  /// Current HARQ process id
-  //uint8_t current_harq_pid;
-  /// Process ID's per subframe.  Used to associate received ACKs on PUSCH/PUCCH to DLSCH harq process ids
-  //uint8_t harq_ids[10];
-  /// Window size (in outgoing transport blocks) for fine-grain rate adaptation
-  uint8_t ra_window_size;
-  /// First-round error threshold for fine-grain rate adaptation
-  uint8_t error_threshold;
-  /// The only HARQ processes for the DLSCH
-  LTE_DL_eNB_HARQ_t *harq_process;
+
+
+  /// The only HARQ process for the DLSCH
+  NB_IoT_DL_eNB_HARQ_t *harq_process;
   /// Number of soft channel bits
   uint32_t G;
-  /// Codebook index for this dlsch (0,1,2,3)
-  uint8_t codebook_index;
-  /// Maximum number of HARQ processes (for definition see 36-212 V8.6 2009-03, p.17)
-  //uint8_t Mdlharq;
   /// Maximum number of HARQ rounds
   uint8_t Mlimit;
-  /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
-  //uint8_t Kmimo;
   /// Nsoft parameter related to UE Category
   uint32_t Nsoft;
   /// amplitude of PDSCH (compared to RS) in symbols without pilots
@@ -894,25 +922,96 @@ typedef struct {
   /// amplitude of PDSCH (compared to RS) in symbols containing pilots
   int16_t sqrt_rho_b;
 
+  ///NB-IoT
+  /// may use in the npdsch_procedures
+  uint16_t scrambling_sequence_intialization;
+  /// number of cell specific TX antenna ports assumed by the UE
+  uint8_t nrs_antenna_ports;
+
+  /*
+  * This indicate the current subframe within the subframe interval between the NPDSCH transmission (Nsf*Nrep)
+  */
+  uint16_t sf_index;
+
+
 } NB_IoT_eNB_NDLSCH_t;
+
+typedef struct {
+
+  /// Determined the subcarrier allocation for the NPUSCH.(15, 3.75 KHz)
+  uint8_t subcarrier_indication;
+  /// Determined the number of resource unit for the NPUSCH
+  uint8_t resource_assignment;
+  /// Determined the scheduling delay for NPUSCH
+  uint8_t scheduling_delay;
+  /// The number of the repetition number for NPUSCH Transport block
+  uint8_t repetition_number;
+  /// Determined the repetition number value 0-3
+  uint8_t dci_subframe_repetitions;
+
+  /// Flag indicating that this ULSCH has been allocated by a DCI (otherwise it is a retransmission based on PHICH NAK)
+  uint8_t dci_alloc;
+  /// Flag indicating that this ULSCH has been allocated by a RAR (otherwise it is a retransmission based on PHICH NAK or DCI)
+  uint8_t rar_alloc;
+  /// Status Flag indicating for this ULSCH (idle,active,disabled)
+  SCH_status_t status;
+  /// Subframe scheduling indicator (i.e. Transmission opportunity indicator)
+  uint8_t subframe_scheduling_flag;
+
+  /// Transport block size
+  uint32_t TBS;
+  /// The payload + CRC size in bits
+  uint32_t B;
+  /// Number of soft channel bits
+  uint32_t G;
+
+  /// Pointer to ACK
+  uint8_t o_ACK[4];
+  /// Length of ACK information (bits)
+  uint8_t O_ACK;
+
+  /// Temporary h sequence to flag PUSCH_x/PUSCH_y symbols which are not scrambled
+  uint8_t h[MAX_NUM_CHANNEL_BITS];
+  /// Pointer to the payload
+  uint8_t *b;
+
+  /// Current Number of Symbols
+  uint8_t Nsymb_pusch;
+
+  /// Index of current HARQ round for this ULSCH
+  uint8_t round;
+  /// MCS format for this ULSCH
+  uint8_t mcs;
+  /// Redundancy-version of the current sub-frame (value 0->RV0,value 1 ->RV2)
+  uint8_t rvidx;
+
+  /// Msc_initial, Initial number of subcarriers for ULSCH (36-212, v8.6 2009-03, p.26-27)
+  uint16_t Msc_initial;
+  /// Nsymb_initial, Initial number of symbols for ULSCH (36-212, v8.6 2009-03, p.26-27)
+  uint8_t Nsymb_initial;
+  /// n_DMRS  for cyclic shift of DMRS (36.213 Table 9.1.2-2)
+  uint8_t n_DMRS;
+  /// n_DMRS  for cyclic shift of DMRS (36.213 Table 9.1.2-2) - previous scheduling
+  /// This is needed for PHICH generation which
+  /// is done after a new scheduling
+  uint8_t previous_n_DMRS;
+  /// n_DMRS 2 for cyclic shift of DMRS (36.211 Table 5.5.1.1.-1)
+  uint8_t n_DMRS2;
+  /// Flag to indicate that this ULSCH is for calibration information sent from UE (i.e. no MAC SDU to pass up)
+  //  int calibration_flag;
+  /// delta_TF for power control
+  int32_t delta_TF;
+} NB_IoT_UL_eNB_HARQ_t;
 
 
 typedef struct {
   /// Pointers to 8 HARQ processes for the ULSCH
-  LTE_UL_eNB_HARQ_t *harq_process;
+  NB_IoT_UL_eNB_HARQ_t *harq_process;
   /// Maximum number of HARQ rounds
   uint8_t Mlimit;
-  /// Maximum number of iterations used in eNB turbo decoder
-  //uint8_t max_turbo_iterations;
-//boundling not exist in NB-IoT since we are not using TDD and only 1 HARQ process
-  /// ACK/NAK Bundling flag
-  //uint8_t bundling;
-  /// beta_offset_cqi times 8
-  uint16_t beta_offset_cqi_times8;
-  /// beta_offset_ri times 8
-  uint16_t beta_offset_ri_times8;
-  /// beta_offset_harqack times 8
-  uint16_t beta_offset_harqack_times8;
+
+  /// Value 0 = npush format 1 (data) value 1 = npusch format 2 (ACK/NAK)
+  uint8_t npusch_format;
   /// Flag to indicate that eNB awaits UE Msg3
   uint8_t Msg3_active;
   /// Flag to indicate that eNB should decode UE Msg3
@@ -927,10 +1026,19 @@ typedef struct {
   uint8_t cyclicShift;
   /// cooperation flag
   uint8_t cooperation_flag;
-  /// num active cba group
-  //uint8_t num_active_cba_groups;
-  /// allocated CBA RNTI for this ulsch
-  //uint16_t cba_rnti[4];//NUM_MAX_CBA_GROUP];
+  /// (only in-band mode), indicate the resource block overlap the SRS configuration of LTE
+  uint8_t N_srs;
+
+  uint8_t scrambling_re_intialization_batch_index;
+  /// number of cell specific TX antenna ports assumed by the UE
+  uint8_t nrs_antenna_ports;
+
+  uint16_t scrambling_sequence_intialization;
+
+  uint16_t sf_index;
+
+  /// Determined the ACK/NACK delay and the subcarrier allocation TS 36.213 Table 16.4.2
+  uint8_t HARQ_ACK_resource;
 
 } NB_IoT_eNB_NULSCH_t;
 

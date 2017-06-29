@@ -44,6 +44,7 @@ typedef enum
   DCIFormatN1,
   DCIFormatN1_RA,
   DCIFormatN1_RAR,
+  DCIFormatN2,
   DCIFormatN2_Ind,
   DCIFormatN2_Pag,
 }DCI_format_NB_t;
