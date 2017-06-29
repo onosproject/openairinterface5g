@@ -90,7 +90,7 @@ void npbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
 // Functions below implement 36-211 and 36-212
 
 /*Function to pack the DCI*/
-void NB_add_dci(DCI_PDU_NB *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_size_bytes,unsigned char aggregation,unsigned char dci_size_bits,unsigned char dci_fmt);
+void NB_add_dci(DCI_PDU_NB *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_size_bytes,unsigned char aggregation,unsigned char dci_size_bits,unsigned char dci_fmt, uint8_t npdcch_start_symbol);
 
 /*Use the UL DCI Information to configure PHY and also Packed*/
 int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
@@ -99,18 +99,20 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
                                        uint16_t rnti,
                                        DCI_format_NB_t dci_format,
                                        uint8_t UE_id,
-                                       uint8_t aggregation
+                                       uint8_t aggregation,
+									   uint8_t npdcch_start_symbol
                                       );
 /*Use the DL DCI Information to configure PHY and also Packed*/
 int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
-                                       int frame,
+                                        int frame,
                                        uint8_t subframe,
                                        DCI_CONTENT *DCI_Content,
                                        uint16_t rnti,
                                        DCI_format_NB_t dci_format,
                                        NB_IoT_eNB_NDLSCH_t *ndlsch,
                                        NB_DL_FRAME_PARMS *frame_parms,
-                                       uint8_t aggregation
+                                       uint8_t aggregation,
+									   uint8_t npdcch_start_symbol
                                        );
 
 

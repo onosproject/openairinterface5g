@@ -60,7 +60,7 @@ void NB_phy_config_mib_eNB(
 			uint16_t			eutra_NumCRS_ports)
 {
 
-  /*Not sure if phy parameters should be initial here or not*/
+  /*Not sure if phy parameters should be initial here or not (RAYMOND version)*/
   /*the phy_config_mib_eNB as the entry point to allocate the context for L1.  The RC contains the context for L1,L2. If RC.eNB is NULL, it hasn't been allocated earlier so we allocate it there.*/
   /*if (RC.eNB == NULL) {
     RC.eNB                               = (PHY_VARS_eNB ***)malloc((1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));

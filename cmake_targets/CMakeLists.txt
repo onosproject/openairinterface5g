@@ -1045,11 +1045,13 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_cell_spec_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_uespec.c   
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold.c   
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold_NB_IoT.c   
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold_mbsfn.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_mbsfn.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref.c
   ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte.c
+  ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_lte.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_sse.c
   ${OPENAIR1_DIR}/PHY/CODING/crc_byte.c
@@ -1057,6 +1059,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_16bit.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_avx2_16bit.c
   ${OPENAIR1_DIR}/PHY/CODING/lte_rate_matching.c
+  ${OPENAIR1_DIR}/PHY/CODING/lte_rate_matching_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/CODING/rate_matching.c
   ${OPENAIR1_DIR}/PHY/CODING/viterbi.c
   ${OPENAIR1_DIR}/PHY/CODING/viterbi_lte.c

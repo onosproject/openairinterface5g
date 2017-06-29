@@ -764,7 +764,8 @@ void generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC
       
 #endif
 
-      LOG_D(PHY,"Generating dlsch params for RNTI %x\n",dci_alloc->rnti);      
+      LOG_D(PHY,"Generating dlsch params for RNTI %x\n",dci_alloc->rnti);
+      //fill the dlsch structures
       generate_eNB_dlsch_params_from_dci(frame,
 					 subframe,
 					 &dci_alloc->dci_pdu[0],

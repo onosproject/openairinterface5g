@@ -19,7 +19,7 @@
 #include "PHY/defs.h"
 #include "assertions.h"
 
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 
 static uint32_t bitrev_cc[32] = {1,17,9,25,5,21,13,29,3,19,11,27,7,23,15,31,0,16,8,24,4,20,12,28,2,18,10,26,6,22,14,30};
 

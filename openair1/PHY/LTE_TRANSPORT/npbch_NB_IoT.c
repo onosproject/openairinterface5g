@@ -21,6 +21,9 @@
 #include "PHY/extern.h"
 #include "PHY/sse_intrin.h"
 
+#include "PHY/CODING/defs_nb_iot.h"
+#include "PHY/LTE_REFSIG/defs_NB_IoT.h"
+
 #ifdef PHY_ABSTRACTION
 #include "SIMULATION/TOOLS/defs.h"
 #endif

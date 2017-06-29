@@ -38,6 +38,8 @@
 #include "UTIL/LISTS/list.h"
 #endif
 
+#include "dci_nb_iot.h"
+
 #define MOD_TABLE_QPSK_OFFSET 1
 #define MOD_TABLE_16QAM_OFFSET 5
 #define MOD_TABLE_64QAM_OFFSET 21
@@ -806,59 +808,41 @@ typedef struct {
 //----------------------------------------------------------------------------------------------------
 
 
+typedef struct {
 
-typedef struct
-{
-	  /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
-	  int32_t *txdataF[8];
-	  /// beamforming weights for UE-spec transmission (antenna ports 5 or 7..14), for each codeword, maximum 4 layers?
-	  int32_t **ue_spec_bf_weights[4];
-	  /// dl channel estimates (estimated from ul channel estimates)
-	  int32_t **calib_dl_ch_estimates;
-	  /// Allocated RNTI (0 means DLSCH_t is not currently used)
-	  uint16_t rnti;
-	  /// Active flag for baseband transmitter processing
-	  uint8_t active;
-	  /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
-	  uint8_t subframe_tx[10];
-	  /// First CCE of last PDSCH scheduling per subframe.  Again used during PUCCH detection for ACK/NAK.
-	  uint8_t nCCE[10];
-	  /// Current HARQ process id
-	  uint8_t current_harq_pid;
-	  /// Process ID's per subframe.  Used to associate received ACKs on PUSCH/PUCCH to DLSCH harq process ids
-	  uint8_t harq_ids[10];
-	  /// Window size (in outgoing transport blocks) for fine-grain rate adaptation
-	  uint8_t ra_window_size;
-	  /// First-round error threshold for fine-grain rate adaptation
-	  uint8_t error_threshold;
-	  /// Pointers to 8 HARQ processes for the DLSCH
-	  LTE_DL_eNB_HARQ_t *harq_processes[8];
-	  /// Number of soft channel bits
-	  uint32_t G;
-	  /// Codebook index for this dlsch (0,1,2,3)
-	  uint8_t codebook_index;
-	  /// Maximum number of HARQ processes (for definition see 36-212 V8.6 2009-03, p.17)
-	  uint8_t Mdlharq;
-	  /// Maximum number of HARQ rounds
-	  uint8_t Mlimit;
-	  /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
-	  uint8_t Kmimo;
-	  /// Nsoft parameter related to UE Category
-	  uint32_t Nsoft;
-	  /// amplitude of PDSCH (compared to RS) in symbols without pilots
-	  int16_t sqrt_rho_a;
-	  /// amplitude of PDSCH (compared to RS) in symbols containing pilots
-	  int16_t sqrt_rho_b;
-}NB_IoT_eNB_NPDCCH_t;
+  ///indicates the starting OFDM symbol in the first slot of a subframe k for the NPDCCH transmission
+  /// see FAPI/NFAPI specs Table 4-121
+  uint8_t npdcch_start_symbol;
+  /// Length of DCI in bits
+  uint8_t dci_length;
+  /// Aggregation level only 0,1 in NB-IoT
+  uint8_t L;
+  /// Position of first CCE of the dci
+  int firstCCE;
+  /// flag to indicate that this is a RA response
+  boolean_t ra_flag;
+  /// rnti
+  rnti_t rnti;
+  /// Format
+  DCI_format_NB_t format;
+  /// DCI pdu
+  uint8_t dci_pdu[8];
+} DCI_ALLOC_NB_t;
+
+typedef struct {
+  //delete the count for the DCI numbers,NUM_DCI_MAX should set to 2
+  uint32_t num_npdcch_symbols;
+  uint8_t Num_dci;
+  DCI_ALLOC_NB_t dci_alloc[2] ;
+} DCI_PDU_NB;
 
 
 typedef struct {
   /// NB-IoT
   /// The scheduling the NPDCCH and the NPDSCH transmission TS 36.213 Table 16.4.1-1
   uint8_t scheduling_delay;
-  /// The number of the subframe to transmit the NPDSCH TB TS 36.213 Table 16.4.1.3-1  
+  /// The number of the subframe to transmit the NPDSCH TB TS 36.213 Table 16.4.1.3-1  (Nsf
   /// FAPI spec P.181 for the NPDSCH containing BCCH value 1-8, while 36.331 P.190 value only 2 & 8
-  /// Nsf
   uint8_t resource_assignment;
   /// Determined the repeat number of NPDSCH TB TS 36.213 Table 16.4.1.3-2 (Nrep)
   uint8_t repetition_number;
@@ -932,6 +916,11 @@ typedef struct {
   * This indicate the current subframe within the subframe interval between the NPDSCH transmission (Nsf*Nrep)
   */
   uint16_t sf_index;
+
+  ///indicates the starting OFDM symbol in the first slot of a subframe k for the NPDSCH transmission
+  /// see FAPI/NFAPI specs Table 4-47
+  uint8_t npdsch_start_symbol;
+
 
 
 } NB_IoT_eNB_NDLSCH_t;
@@ -1041,6 +1030,19 @@ typedef struct {
   uint8_t HARQ_ACK_resource;
 
 } NB_IoT_eNB_NULSCH_t;
+
+
+
+#define NPBCH_A 34
+
+typedef struct {
+  uint8_t npbch_d[96+(3*(16+NPBCH_A))];
+  uint8_t npbch_w[3*3*(16+NPBCH_A)];
+  uint8_t npbch_e[1600];
+  ///pdu of the npbch message
+  uint8_t*pdu;
+} NB_IoT_eNB_NPBCH;
+
 
 //---------------------------------------------------------------------------------------
 

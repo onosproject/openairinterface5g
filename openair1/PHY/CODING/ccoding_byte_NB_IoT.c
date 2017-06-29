@@ -14,9 +14,10 @@
 
 #include "defs.h"
 
-#include "defs_NB_IoT.h"
+#include "defs_nb_iot.h"
 
 unsigned char  ccodelte_table_NB_IoT[128];      // for transmitter
+unsigned short glte_NB[] = { 0133, 0171, 0165 }; // {A,B} //renaimed but is exactly the same as the one in the old implementation
 //unsigned char  ccodelte_table_rev[128];  // for receiver
 
 /*************************************************************************
@@ -128,7 +129,7 @@ void ccodelte_init_NB_IoT(void)
       sum = 0;
 
       for (k = 0; k < 7; k++)
-        if ((i & glte[j]) & (1 << k))
+        if ((i & glte_NB[j]) & (1 << k))
           sum++;
 
       /* Write the sum modulo 2 in bit j */
