@@ -36,6 +36,7 @@
 #include "PHY/vars.h"
 #endif
 #include "assertions.h"
+//#include "dlsch_tbs_full.h"
 
 
 //#define DEBUG_HARQ
@@ -240,7 +241,14 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     if(ndlsch_harq->round == 0) //this should be set from initialization (init-lte)
     	ndlsch_harq->status = ACTIVE;
     ndlsch_harq->mcs = mcs;
-    ndlsch_harq->TBS = TBStable[get_I_TBS(ndlsch_harq->mcs)][ndlsch_harq->resource_assignment-1]; // this table should be rewritten for nb-iot
+
+    /*
+     * TS 36.213 ch 16.4.1.5
+     * ITBS is always set equivalent to IMCS for data
+     * ISF = ResAssign
+     */
+
+    ndlsch_harq->TBS = TBStable_NB_IoT[mcs][ResAssign]; // this table should be rewritten for nb-iot
     ndlsch_harq->frame = frame;
     ndlsch_harq->subframe = subframe;
 
@@ -301,7 +309,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
         if(ndlsch_harq->round == 0){ //this should be set from initialization (init-lte)
         	ndlsch_harq->status = ACTIVE;
         	ndlsch_harq->mcs = mcs;
-        	ndlsch_harq->TBS = TBStable[get_I_TBS(ndlsch_harq->mcs)][ndlsch_harq->resource_assignment-1]; // this table should be rewritten for nb-iot
+        	ndlsch_harq->TBS = TBStable_NB_IoT[mcs][ResAssign]; // this table should be rewritten for nb-iot
         }
         ndlsch_harq->frame = frame;
         ndlsch_harq->subframe = subframe;

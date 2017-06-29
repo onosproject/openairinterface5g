@@ -19,6 +19,10 @@
  *      contact@openairinterface.org
  */
 
+
+#ifndef __DLSCH_TBS_FULL_H__
+#define __DLSCH_TBS_FULL_H__
+
 #define TBStable_rowCnt 27
 
 /** \brief "Transport block size table"
@@ -55,10 +59,10 @@ unsigned int TBStable[TBStable_rowCnt][110] = {{16,32,56,88,120,152,176,208,224,
 
 unsigned int TBStable1C[32] = {40, 56, 72, 120, 136, 144, 176, 208, 224, 256, 280, 296, 328, 336, 392, 488, 552, 600, 632, 696, 776, 840, 904, 1000, 1064, 1128, 1224, 1288, 1384, 1480, 1608, 1736};
 
-// NB-IoT 
+// NB-IoT------------------
 
 // TBS table for the case not containing SIB1-NB, Table 16.4.1.5.1-1 in TS 36.213 v14.2 
-unsigned int TBStable_NB_IoT[14][8] ={
+unsigned int TBStable_NB_IoT[14][8] ={ //[ITBS][ISF]
   {16,32,56,88,120.152,208,256},
   {24,56,88,144,176,208,256,344},
   {32,72,144,176,208,256,328,424},
@@ -76,5 +80,10 @@ unsigned int TBStable_NB_IoT[14][8] ={
 };
 
 //TBS table for the case containing S1B1-NB, Table 16.4.1.5.2-1 in TS 36.213 v14.2 (Itbs = 12 ~ 15 is reserved field
-
+//mapping ITBS to SIB1-NB
 unsigned int TBStable_NB_IoT_SIB1[16] = {208,208,208,328,328,328,440,440,440,680,680,680};
+
+#endif
+
+
+

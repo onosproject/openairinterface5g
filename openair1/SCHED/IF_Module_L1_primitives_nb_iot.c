@@ -40,6 +40,7 @@ void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
         ndlsch->nrs_antenna_ports = rel13->nrs_antenna_ports_assumed_by_the_ue;
         ndlsch->scrambling_sequence_intialization = rel13->scrambling_sequence_initialization_cinit;
 
+        //managment of TBS size for SI??? (is written inside the SIB1-NB)
 
   }
   else
