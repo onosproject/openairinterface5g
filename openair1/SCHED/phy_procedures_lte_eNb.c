@@ -1179,7 +1179,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_TX+offset,1);
   if (do_meas==1) start_meas(&eNB->phy_proc_tx);
 
-  T(T_ENB_PHY_DL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
+  T(T_ENB_PHY_DL_TICK, T_INT(eNB->Mod_id), T_INT(eNB->CC_id), T_INT(frame), T_INT(subframe));
 
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     // If we've dropped the UE, go back to PRACH mode for this UE
@@ -2170,7 +2170,7 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
                                 frame,
                                 subframe,
                                 PUCCH1_THRES);
-          LOG_D(PHY,"[eNB %d][SR %x] Frame %d subframe %d Checking SR is %d (SR n1pucch is %d)\n",
+          LOG_I(PHY,"[eNB %d][SR %x] Frame %d subframe %d Checking SR is %d (SR n1pucch is %d)\n",
                 eNB->Mod_id,
                 eNB->ulsch[UE_id]->rnti,
                 frame,
@@ -2197,7 +2197,7 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
         // if SR was detected, use the n1_pucch from SR, else use n1_pucch0
         //          n1_pucch0 = (SR_payload==1) ? eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex:n1_pucch0;
 
-        LOG_D(PHY,"Demodulating PUCCH for ACK/NAK: n1_pucch0 %d (%d), SR_payload %d\n",n1_pucch0,eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex,SR_payload);
+        LOG_I(PHY,"Demodulating PUCCH for ACK/NAK: n1_pucch0 %d (%d), SR_payload %d\n",n1_pucch0,eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex,SR_payload);
 
         if (eNB->abstraction_flag == 0) {
           metric0 = rx_pucch(eNB,
@@ -2253,6 +2253,11 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
 #endif
         }
 
+        LOG_I(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d pucch1a (FDD) payload %d (metric %d)\n",
+            eNB->Mod_id,
+            eNB->dlsch[UE_id][0]->rnti,
+            frame,subframe,
+            pucch_payload0[0],metric0);
 #ifdef DEBUG_PHY_PROC
         LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d pucch1a (FDD) payload %d (metric %d)\n",
             eNB->Mod_id,
@@ -2283,6 +2288,10 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
 
         // if SR was detected, use the n1_pucch from SR
         if (SR_payload==1) {
+          LOG_I(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d Checking ACK/NAK (%d,%d,%d,%d) format %d with SR\n",eNB->Mod_id,
+                eNB->dlsch[UE_id][0]->rnti,
+                frame,subframe,
+                n1_pucch0,n1_pucch1,n1_pucch2,n1_pucch3,format);
 #ifdef DEBUG_PHY_PROC
           LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d Checking ACK/NAK (%d,%d,%d,%d) format %d with SR\n",eNB->Mod_id,
                 eNB->dlsch[UE_id][0]->rnti,
@@ -2311,6 +2320,10 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
 #endif
           }
         } else { //using n1_pucch0/n1_pucch1 resources
+          LOG_I(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d Checking ACK/NAK (%d,%d,%d,%d) format %d\n",eNB->Mod_id,
+                eNB->dlsch[UE_id][0]->rnti,
+                frame,subframe,
+                n1_pucch0,n1_pucch1,n1_pucch2,n1_pucch3,format);
 #ifdef DEBUG_PHY_PROC
           LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d Checking ACK/NAK (%d,%d,%d,%d) format %d\n",eNB->Mod_id,
                 eNB->dlsch[UE_id][0]->rnti,
@@ -2388,6 +2401,10 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
           pucch_sel = 2;  // indicate that this is a bundled ACK/NAK
         }
 
+        LOG_I(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d ACK/NAK metric 0 %d, metric 1 %d, sel %d, (%d,%d)\n",eNB->Mod_id,
+              eNB->dlsch[UE_id][0]->rnti,
+              frame,subframe,
+              metric0,metric1,pucch_sel,pucch_payload[0],pucch_payload[1]);
 #ifdef DEBUG_PHY_PROC
         LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d ACK/NAK metric 0 %d, metric 1 %d, sel %d, (%d,%d)\n",eNB->Mod_id,
               eNB->dlsch[UE_id][0]->rnti,
@@ -2403,6 +2420,8 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
     }
 
     if (SR_payload == 1) {
+      LOG_I(PHY,"[eNB %d][SR %x] Frame %d subframe %d Got SR for PUSCH, transmitting to MAC\n",eNB->Mod_id,
+            eNB->ulsch[UE_id]->rnti,frame,subframe);
       LOG_D(PHY,"[eNB %d][SR %x] Frame %d subframe %d Got SR for PUSCH, transmitting to MAC\n",eNB->Mod_id,
             eNB->ulsch[UE_id]->rnti,frame,subframe);
       eNB->UE_stats[UE_id].sr_received++;
@@ -2411,6 +2430,9 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
         eNB->first_sr[UE_id] = 0;
         eNB->dlsch[UE_id][0]->harq_processes[0]->round=0;
         eNB->dlsch[UE_id][0]->harq_processes[0]->status=SCH_IDLE;
+        LOG_I(PHY,"[eNB %d][SR %x] Frame %d subframe %d First SR\n",
+              eNB->Mod_id,
+              eNB->ulsch[UE_id]->rnti,frame,subframe);
         LOG_D(PHY,"[eNB %d][SR %x] Frame %d subframe %d First SR\n",
               eNB->Mod_id,
               eNB->ulsch[UE_id]->rnti,frame,subframe);
@@ -2886,9 +2908,9 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
   uint16_t do_srs=0;
   uint16_t is_srs_pos=0;
 
-  T(T_ENB_PHY_UL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
+  T(T_ENB_PHY_UL_TICK, T_INT(eNB->Mod_id), T_INT(eNB->CC_id), T_INT(frame), T_INT(subframe));
 
-  T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
+  T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(eNB->CC_id), T_INT(frame), T_INT(subframe), T_INT(0),
     T_BUFFER(&eNB->common_vars.rxdata[0][0][subframe*eNB->frame_parms.samples_per_tti],
              eNB->frame_parms.samples_per_tti * 4));
 

@@ -215,7 +215,7 @@ void send_IF5(PHY_VARS_eNB *eNB, openair0_timestamp proc_timestamp, int subframe
       
       // Write the packet to the fronthaul
       if ((eNB->ifdevice.trx_write_func(&eNB->ifdevice,
-                                        packet_id,
+                                        proc_timestamp + packet_id*db_fulllength,
                                         (void**)&tx_buffer,
                                         db_fulllength,
                                         1,
@@ -464,6 +464,22 @@ void recv_IF5(PHY_VARS_eNB *eNB, openair0_timestamp *proc_timestamp, int subfram
                                        db_fulllength,
                                         1
                                         );
+
+        //store rxdata and increase packet_id
+        rxp[0] = (void*)&eNB->common_vars.rxdata[0][0][(subframe*eNB->frame_parms.samples_per_tti)+packet_id*db_fulllength];
+        rxp128 = (__m128i *) (rxp[0]);
+        for (i=0; i<db_fulllength>>2; i+=2) {
+          r0 = _mm_loadu_si128(data_block++);
+          *rxp128++ =_mm_slli_epi16(_mm_srai_epi16(_mm_unpacklo_epi8(r0,r0),8),4);
+          *rxp128++ =_mm_slli_epi16(_mm_srai_epi16(_mm_unpackhi_epi8(r0,r0),8),4);
+        }   
+        packet_id++; 
+#if 0
+     uint64_t tt = htonl(timestamp_mobipass[packet_id]);
+     static uint64_t oldts = 0;
+     T(T_MOBIPASS, T_INT(tt-oldts), T_INT(tt));
+     oldts = tt;
+if (offset_cnt != header->seqno) printf("ERROR offset_cnt %d header->seqno %d\n", offset_cnt, header->seqno);
 #ifdef DEBUG_UL_MOBIPASS
       if (((proc->timestamp_tx + lower_offset) > ntohl(timestamp_mobipass[packet_id])) || ((proc->timestamp_tx + upper_offset) < ntohl(timestamp_mobipass[packet_id]))) {
         //ignore the packet
@@ -499,6 +515,7 @@ void recv_IF5(PHY_VARS_eNB *eNB, openair0_timestamp *proc_timestamp, int subfram
         packet_id++; 
         offset_cnt = (header->seqno+1)&255;
       }
+#endif /* #if 0 */
     }//end while
   
       *proc_timestamp = ntohl(timestamp_mobipass[0]); 

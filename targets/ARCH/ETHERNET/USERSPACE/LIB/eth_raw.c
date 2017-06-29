@@ -52,8 +52,20 @@
 //int addr_len[MAX_INST];
 //struct ifreq if_index[MAX_INST];
 
+static unsigned char frame[1024*10*7680*2*2];
+
 int eth_socket_init_raw(openair0_device *device) {
  
+do { static int first = 1;
+//if (first == 0) break;
+first = 0;
+printf("read file\n");
+FILE *f = fopen("/roux/FRAMES.raw", "r"); if (f==NULL) abort();
+if (fread(frame, 1024*10*7680*2*2, 1, f) != 1) abort();
+fclose(f);
+printf("ok\n");
+} while (0);
+
   eth_state_t *eth = (eth_state_t*)device->priv;
   const char *local_mac, *remote_mac;
   int sock_dom=0;
@@ -219,6 +231,35 @@ int trx_eth_write_raw_IF4p5(openair0_device *device, openair0_timestamp timestam
   
   eth->tx_nsamps = nblocks;
   
+if (flags == IF5_MOBIPASS) do {
+  if (nsamps != 640) { printf("bad nsamps %d\n", nsamps); break; }
+  static FILE *f = NULL;
+  static unsigned long ts = 0;
+  if (f == NULL) { f = fopen("/tmp/test.raw", "w"); if (f == NULL) abort(); }
+  unsigned char *x = buff[0];
+  timestamp = ntohl(* (int32_t*)(x + 14+10));
+  if (ts != timestamp) {
+    printf("warning : bad ts (timestamp %ld ts %ld diff %ld)!!\n", timestamp, ts, timestamp-ts);
+    ts = timestamp;
+//    fclose(f);
+//    f = fopen("/tmp/test.raw", "w"); if (f == NULL) abort();
+  }
+  ts += 640;
+  x += MAC_HEADER_SIZE_BYTES+sizeof_IF5_mobipass_header_t;
+  fwrite(x, 640*2, 1, f);
+} while(0);
+
+if (0 && flags == IF5_MOBIPASS) {
+static int pos = 0;
+  unsigned char *x = buff[0];
+  x += MAC_HEADER_SIZE_BYTES+sizeof_IF5_mobipass_header_t;
+  memcpy(x, frame+pos, nsamps*2);
+//int i; for (i = 0; i < 16; i++) printf("%2.2x ", x[i]); printf("\n");
+  pos += nsamps * 2;
+  if (pos == 1024*10*7680*2*2) pos = 0;
+  if (pos > 1024*10*7680*2*2) { pos = 0; printf("WARN: bad nsamps somehow\n");}
+printf("psize %ld\n", packet_size-MAC_HEADER_SIZE_BYTES-sizeof_IF5_mobipass_header_t);
+}
   memcpy(buff[0], (void*)&eth->eh, MAC_HEADER_SIZE_BYTES);	
 
 
@@ -424,6 +465,9 @@ int trx_eth_read_raw_IF5_mobipass(openair0_device *device, openair0_timestamp *t
  ssize_t packet_size =  28; //MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t ;
 //   ssize_t packet_size =  MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t + 640*sizeof(int16_t);
  
+
+int nloop = 0;
+loop:
   bytes_received = recv(eth->sockfd,
                         buff[0],
                         packet_size,
@@ -432,6 +476,10 @@ int trx_eth_read_raw_IF5_mobipass(openair0_device *device, openair0_timestamp *t
   if (bytes_received ==-1) {
           eth->num_rx_errors++;
           perror("[MOBIPASS]ETHERNET IF5 READ (header): ");
+nloop++;
+usleep(10*1000);
+if (nloop < 100)
+goto loop;
           exit(-1);
   }
 
@@ -439,6 +487,7 @@ int trx_eth_read_raw_IF5_mobipass(openair0_device *device, openair0_timestamp *t
   *timestamp = test_header->time_stamp;
   packet_size =  MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t + 640*sizeof(int16_t);
 
+nloop = 0;
   while(bytes_received < packet_size) {
     bytes_received = recv(eth->sockfd,
                           buff[0],
@@ -447,6 +496,9 @@ int trx_eth_read_raw_IF5_mobipass(openair0_device *device, openair0_timestamp *t
     if (bytes_received ==-1) {
       eth->num_rx_errors++;
       perror("[MOBIPASS] ETHERNET IF5 READ (payload): ");
+nloop++;
+usleep(10*1000);
+if (nloop >= 100)
       exit(-1);
     } else {
       eth->rx_actual_nsamps = bytes_received>>1;

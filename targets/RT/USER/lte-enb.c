@@ -681,6 +681,7 @@ void fh_if5_asynch_UL(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   pthread_mutex_lock(&proc->mutex_asynch_rxtx);
   proc->subframe_rx = ((proc->timestamp_rx-offset_mobipass)/fp->samples_per_tti)%10;
   proc->frame_rx    = ((proc->timestamp_rx-offset_mobipass)/(fp->samples_per_tti*10))&1023;
+  T(T_SUBFRAME, T_INT(proc->frame_rx), T_INT(proc->subframe_rx), T_STRING(__FUNCTION__));
   
   if (proc->first_rx == 1) {
     proc->first_rx =2;
@@ -872,6 +873,9 @@ static void* eNB_thread_asynch_rxtx( void* param ) {
   eNB_proc_t *proc = (eNB_proc_t*)param;
   PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
 
+  PHY_VARS_eNB fake_eNB;
+  memcpy(&fake_eNB, eNB, sizeof(PHY_VARS_eNB));
+  memcpy(&fake_eNB.proc, proc, sizeof(eNB_proc_t));
 
 
   int subframe=0, frame=0; 
@@ -902,7 +906,8 @@ static void* eNB_thread_asynch_rxtx( void* param ) {
       subframe++;
     }      
 
-    if (eNB->fh_asynch) eNB->fh_asynch(eNB,&frame,&subframe);
+    //if (eNB->fh_asynch) eNB->fh_asynch(eNB,&frame,&subframe);
+    if (eNB->fh_asynch) eNB->fh_asynch(&fake_eNB,&frame,&subframe);
     else AssertFatal(1==0, "Unknown eNB->node_function %d",eNB->node_function);
     
   }
@@ -1028,6 +1033,7 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   }
   proc->frame_rx    = (proc->timestamp_rx / (fp->samples_per_tti*10))&1023;
   proc->subframe_rx = (proc->timestamp_rx / fp->samples_per_tti)%10;
+  T(T_SUBFRAME, T_INT(proc->frame_rx), T_INT(proc->subframe_rx), T_STRING(__FUNCTION__));
   proc->frame_rx    = (proc->frame_rx+proc->frame_offset)&1023;
   proc->frame_tx    = proc->frame_rx;
   if (proc->subframe_rx > 5) proc->frame_tx=(proc->frame_tx+1)&1023;
@@ -1072,6 +1078,43 @@ void rx_fh_if5(PHY_VARS_eNB *eNB,int *frame, int *subframe) {
 
   proc->frame_rx    = (proc->timestamp_rx / (fp->samples_per_tti*10))&1023;
   proc->subframe_rx = (proc->timestamp_rx / fp->samples_per_tti)%10;
+  T(T_SUBFRAME, T_INT(proc->frame_rx), T_INT(proc->subframe_rx), T_STRING(__FUNCTION__));
+  
+  if (proc->first_rx == 0) {
+    if (proc->subframe_rx != *subframe){
+      LOG_E(PHY,"rx_fh_if5: Received Timestamp doesn't correspond to the time we think it is (proc->subframe_rx %d, subframe %d)\n",proc->subframe_rx,*subframe);
+      exit_fun("Exiting");
+    }
+    
+    if (proc->frame_rx != *frame) {
+      LOG_E(PHY,"rx_fh_if5: Received Timestamp doesn't correspond to the time we think it is (proc->frame_rx %d frame %d)\n",proc->frame_rx,*frame);
+      exit_fun("Exiting");
+    }
+  } else {
+    proc->first_rx--;
+    *frame = proc->frame_rx;
+    *subframe = proc->subframe_rx;        
+  }      
+
+
+
+  proc->timestamp_tx = proc->timestamp_rx +  (4*fp->samples_per_tti);
+  
+  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
+
+}
+
+void rx_fh_if5_mobipass(PHY_VARS_eNB *eNB,int *frame, int *subframe) {
+
+  LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
+  eNB_proc_t *proc = &eNB->proc;
+
+  recv_IF5(eNB, &proc->timestamp_rx, *subframe, IF5_MOBIPASS); 
+//printf("in rx_fh_if5_mobipass timestamp from recv_IF5 %ld\n", proc->timestamp_rx);
+
+  proc->frame_rx    = (proc->timestamp_rx / (fp->samples_per_tti*10))&1023;
+  proc->subframe_rx = (proc->timestamp_rx / fp->samples_per_tti)%10;
+  T(T_SUBFRAME, T_INT(proc->frame_rx), T_INT(proc->subframe_rx), T_STRING(__FUNCTION__));
   
   if (proc->first_rx == 0) {
     if (proc->subframe_rx != *subframe){
@@ -1141,6 +1184,7 @@ void rx_fh_if4p5(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
 
   proc->subframe_rx = sf;
   proc->frame_rx    = f;
+  T(T_SUBFRAME, T_INT(proc->frame_rx), T_INT(proc->subframe_rx), T_STRING(__FUNCTION__));
 
   proc->symbol_mask[*subframe] = 0;
   proc->symbol_mask[(9+*subframe)%10]= 0; // to handle a resynchronization event
@@ -1230,6 +1274,7 @@ int wakeup_rxtx(eNB_proc_t *proc,eNB_rxtx_proc_t *proc_rxtx,LTE_DL_FRAME_PARMS *
   proc_rxtx->timestamp_tx = proc->timestamp_rx + (4*fp->samples_per_tti);
   proc_rxtx->frame_rx     = proc->frame_rx;
   proc_rxtx->subframe_rx  = proc->subframe_rx;
+  T(T_SUBFRAME, T_INT(proc->frame_rx), T_INT(proc->subframe_rx), T_STRING(__FUNCTION__));
   proc_rxtx->frame_tx     = (proc_rxtx->subframe_rx > 5) ? (proc_rxtx->frame_rx+1)&1023 : proc_rxtx->frame_rx;
   proc_rxtx->subframe_tx  = (proc_rxtx->subframe_rx + 4)%10;
   
@@ -1273,6 +1318,7 @@ void wakeup_slaves(eNB_proc_t *proc) {
     int cnt_slave            = ++slave_proc->instance_cnt_FH;
     slave_proc->frame_rx     = proc->frame_rx;
     slave_proc->subframe_rx  = proc->subframe_rx;
+  T(T_SUBFRAME, T_INT(proc->frame_rx), T_INT(proc->subframe_rx), T_STRING(__FUNCTION__));
     //slave_proc->timestamp_rx = proc->timestamp_rx;
     slave_proc->timestamp_tx = proc->timestamp_tx; 
 
@@ -1468,7 +1514,7 @@ static void* eNB_thread_FH( void* param ) {
     if (eNB->rx_fh) eNB->rx_fh(eNB,&frame,&subframe);
     else AssertFatal(1==0, "No fronthaul interface : eNB->node_function %d",eNB->node_function);
 
-    T(T_ENB_MASTER_TICK, T_INT(0), T_INT(proc->frame_rx), T_INT(proc->subframe_rx));
+    T(T_ENB_MASTER_TICK, T_INT(0), T_INT(eNB->CC_id), T_INT(proc->frame_rx), T_INT(proc->subframe_rx));
 
     // At this point, all information for subframe has been received on FH interface
     // If this proc is to provide synchronization, do so
@@ -1669,10 +1715,11 @@ static void* eNB_thread_single( void* param ) {
     if (eNB->rx_fh) eNB->rx_fh(eNB,&frame,&subframe);
     else AssertFatal(1==0, "No fronthaul interface : eNB->node_function %d",eNB->node_function);
 
-    T(T_ENB_MASTER_TICK, T_INT(0), T_INT(proc->frame_rx), T_INT(proc->subframe_rx));
+    T(T_ENB_MASTER_TICK, T_INT(0), T_INT(eNB->CC_id), T_INT(proc->frame_rx), T_INT(proc->subframe_rx));
 
     proc_rxtx->subframe_rx = proc->subframe_rx;
     proc_rxtx->frame_rx    = proc->frame_rx;
+  T(T_SUBFRAME, T_INT(proc->frame_rx), T_INT(proc->subframe_rx), T_STRING(__FUNCTION__));
     proc_rxtx->subframe_tx = (proc->subframe_rx+4)%10;
     proc_rxtx->frame_tx    = (proc->subframe_rx>5) ? (1+proc->frame_rx)&1023 : proc->frame_rx;
     proc->frame_tx         = proc_rxtx->frame_tx;
@@ -1785,7 +1832,7 @@ void init_eNB_proc(int inst) {
 	(eNB->node_function == NGFI_RRU_IF4p5))
 
 
-      pthread_create( &proc->pthread_asynch_rxtx, attr_asynch, eNB_thread_asynch_rxtx, &eNB->proc );
+;//      pthread_create( &proc->pthread_asynch_rxtx, attr_asynch, eNB_thread_asynch_rxtx, &eNB->proc );
 
     char name[16];
     if (eNB->single_thread_flag == 0) {
@@ -2128,8 +2175,8 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->proc_tx              = proc_tx_full;
         if (eNB->node_timing == synch_to_other) {
            eNB->tx_fh             = tx_fh_if5_mobipass;
-           eNB->rx_fh             = rx_fh_slave;
-           eNB->fh_asynch         = fh_if5_asynch_UL;
+           eNB->rx_fh             = rx_fh_if5_mobipass; //rx_fh_slave;
+           eNB->fh_asynch         = NULL; //fh_if5_asynch_UL;
 
         }
         else {

@@ -532,6 +532,14 @@ set(TPLIB_ETHERNET_SOURCE
   )
 add_library(oai_eth_transpro MODULE ${TPLIB_ETHERNET_SOURCE} )
 
+include_directories("${OPENAIR_TARGETS}/ARCH/mobipass/")
+set(TPLIB_MOBIPASS_SOURCE
+  ${OPENAIR_TARGETS}/ARCH/mobipass/main.c
+  ${OPENAIR_TARGETS}/ARCH/mobipass/mobipass.c
+  ${OPENAIR_TARGETS}/ARCH/mobipass/queues.c
+  )
+add_library(oai_mobipass MODULE ${TPLIB_MOBIPASS_SOURCE} )
+
 
 ##########################################################
 

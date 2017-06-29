@@ -1899,6 +1899,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
   Nprime_div_deltaPUCCH_Shift = (n1_pucch < thres) ? Ncs1_div_deltaPUCCH_Shift : (12/deltaPUCCH_Shift);
   Nprime = Nprime_div_deltaPUCCH_Shift * deltaPUCCH_Shift;
 
+  LOG_I(PHY, "[eNB] PUCCH: cNcs1/deltaPUCCH_Shift %d, Nprime %d, n1_pucch %d\n",thres,Nprime,n1_pucch);
 #ifdef DEBUG_PUCCH_RX
   printf("[eNB] PUCCH: cNcs1/deltaPUCCH_Shift %d, Nprime %d, n1_pucch %d\n",thres,Nprime,n1_pucch);
 #endif
@@ -2095,6 +2096,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
   // Do cfo correction and MRC across symbols
 
   if (fmt == pucch_format1) {
+    LOG_I(PHY, "Doing PUCCH detection for format 1\n");
 #ifdef DEBUG_PUCCH_RX
     printf("Doing PUCCH detection for format 1\n");
 #endif
@@ -2159,6 +2161,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
     printf("[eNB] PUCCH: stat %d, stat_max %d, phase_max %d\n", stat,stat_max,phase_max);
 #endif
 
+    LOG_I(PHY,"[eNB] PUCCH fmt1:  stat_max : %d, sigma2_dB %d (%d, %d), phase_max : %d\n",dB_fixed(stat_max),sigma2_dB,eNB->measurements[0].n0_subband_power_tot_dBm[6],pucch1_thres,phase_max);
 #ifdef DEBUG_PUCCH_RX
     LOG_I(PHY,"[eNB] PUCCH fmt1:  stat_max : %d, sigma2_dB %d (%d, %d), phase_max : %d\n",dB_fixed(stat_max),sigma2_dB,eNB->measurements[0].n0_subband_power_tot_dBm[6],pucch1_thres,phase_max);
 #endif
@@ -2198,6 +2201,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
     }
   } else if ((fmt == pucch_format1a)||(fmt == pucch_format1b)) {
     stat_max = 0;
+    LOG_I(PHY,"Doing PUCCH detection for format 1a/1b\n");
 #ifdef DEBUG_PUCCH_RX
     LOG_I(PHY,"Doing PUCCH detection for format 1a/1b\n");
 #endif
@@ -2266,6 +2270,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
         } //re
       } // aa
 
+      LOG_I(PHY,"Format 1A: phase %d : stat %d\n",phase,stat);
 #ifdef DEBUG_PUCCH_RX
       LOG_I(PHY,"Format 1A: phase %d : stat %d\n",phase,stat);
 #endif
@@ -2402,6 +2407,8 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
         } //re
       } // aa
 
+      LOG_I(PHY,"PUCCH 1a/b: subframe %d : stat %d,%d (pos %d)\n",subframe,stat_re,stat_im,
+	    (subframe<<10) + (eNB->pucch1ab_stats_cnt[UE_id][subframe]));
 #ifdef DEBUG_PUCCH_RX
       LOG_I(PHY,"PUCCH 1a/b: subframe %d : stat %d,%d (pos %d)\n",subframe,stat_re,stat_im,
 	    (subframe<<10) + (eNB->pucch1ab_stats_cnt[UE_id][subframe]));

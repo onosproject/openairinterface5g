@@ -264,14 +264,14 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database,
 
   input_signal_plot = new_xy_plot(g, 256, 55, "input signal", 20);
   widget_add_child(g, line, input_signal_plot, -1);
-  xy_plot_set_range(g, input_signal_plot, 0, 7680*10, 20, 70);
+  xy_plot_set_range(g, input_signal_plot, 0, 7680*10*2, 20, 70);
   input_signal_log = new_framelog(h, database,
       "ENB_PHY_INPUT_SIGNAL", "subframe", "rxdata");
   /* a skip value of 10 means to process 1 frame over 10, that is
    * more or less 10 frames per second
    */
   framelog_set_skip(input_signal_log, 10);
-  input_signal_view = new_view_xy(7680*10, 10,
+  input_signal_view = new_view_xy(7680*10*2, 10,
       g, input_signal_plot, new_color(g, "#0c0c72"), XY_LOOP_MODE);
   logger_add_view(input_signal_log, input_signal_view);
 
