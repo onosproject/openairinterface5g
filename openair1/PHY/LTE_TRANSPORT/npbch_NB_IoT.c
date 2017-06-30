@@ -124,7 +124,7 @@ int generate_npbch(NB_IoT_eNB_NPBCH *eNB_npbch,
   int i, l;
   uint32_t npbch_D,npbch_E;
   uint8_t npbch_a[5];   							// 34/8 =4.25 => 4 bytes and 2 bits
-  uint8_t RCC;
+  uint8_t RCC,id_offset=0;
   unsigned short bandwidth_even_odd;
   unsigned short NB_IoT_start, RB_IoT_ID;
   uint32_t nsymb = 14;
