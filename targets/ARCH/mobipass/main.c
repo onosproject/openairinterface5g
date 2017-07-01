@@ -27,7 +27,7 @@ struct mobipass_header {
   uint32_t timestamp;
 } __attribute__((__packed__));
 
-int trx_eth_start(openair0_device *device) { return 0;}
+int trx_eth_start(openair0_device *device) { init_mobipass(); return 0;}
 int trx_eth_request(openair0_device *device, void *msg, ssize_t msg_len) { abort(); return 0;}
 int trx_eth_reply(openair0_device *device, void *msg, ssize_t msg_len) { abort(); return 0;}
 int trx_eth_get_stats(openair0_device* device) { return(0); }
@@ -37,10 +37,12 @@ int trx_eth_stop(openair0_device *device) { return(0); }
 int trx_eth_set_freq(openair0_device* device, openair0_config_t *openair0_cfg,int exmimo_dump_config) { return(0); }
 int trx_eth_set_gains(openair0_device* device, openair0_config_t *openair0_cfg) { return(0); }
 
-int da__write(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps, int cc, int flags) {
+int mobipass_write(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps, int cc, int flags) {
   struct mobipass_header *mh = (struct mobipass_header *)(((char *)buff[0]) + 14);
   static uint32_t last_timestamp = 4*7680*2-640;
   last_timestamp += 640;
+  last_timestamp %= SAMPLES_PER_1024_FRAMES;
+  mh->timestamp = htonl(ntohl(mh->timestamp) % SAMPLES_PER_1024_FRAMES);
   if (last_timestamp != ntohl(mh->timestamp)) { printf("bad timestamp wanted %d got %d\n", last_timestamp, ntohl(mh->timestamp)); exit(1); }
 //printf("__write nsamps %d timestamps %ld seqno %d (packet timestamp %d)\n", nsamps, timestamp, mh->seqno, ntohl(mh->timestamp));
   if (nsamps != 640) abort();
@@ -48,12 +50,13 @@ int da__write(openair0_device *device, openair0_timestamp timestamp, void **buff
   return nsamps;
 }
 
-int da__read(openair0_device *device, openair0_timestamp *timestamp, void **buff, int nsamps, int cc) {
+int mobipass_read(openair0_device *device, openair0_timestamp *timestamp, void **buff, int nsamps, int cc) {
   static uint32_t ts = 0;
   static unsigned char seqno = 0;
 //printf("__read nsamps %d return timestamp %d\n", nsamps, ts);
   *timestamp = htonl(ts);
   ts += nsamps;
+  ts %= SAMPLES_PER_1024_FRAMES;
   if (nsamps != 640) { printf("bad nsamps %d, should be 640\n", nsamps); fflush(stdout); abort(); }
 
   dequeue_from_mobipass(ntohl(*timestamp), buff[0]);
@@ -74,7 +77,7 @@ int da__read(openair0_device *device, openair0_timestamp *timestamp, void **buff
 int transport_init(openair0_device *device, openair0_config_t *openair0_cfg,
         eth_params_t * eth_params )
 {
-  init_mobipass();
+  //init_mobipass();
 
   eth_state_t *eth = (eth_state_t*)malloc(sizeof(eth_state_t));
   memset(eth, 0, sizeof(eth_state_t));
@@ -96,8 +99,8 @@ int transport_init(openair0_device *device, openair0_config_t *openair0_cfg,
   device->trx_stop_func        = trx_eth_stop;
   device->trx_set_freq_func = trx_eth_set_freq;
   device->trx_set_gains_func = trx_eth_set_gains;
-  device->trx_write_func   = da__write;
-  device->trx_read_func    = da__read;
+  device->trx_write_func   = mobipass_write;
+  device->trx_read_func    = mobipass_read;
 
   eth->if_name = eth_params->local_if_name;
   device->priv = eth;

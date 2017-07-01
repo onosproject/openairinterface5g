@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #include "queues.h"
+#include "mobipass.h"
 
 /******************************************************************/
 /* time begin                                                     */
@@ -36,6 +37,11 @@ static void init_time(void)
 
 static void synch_time(uint32_t ts)
 {
+  static uint32_t last_ts = 0;
+  static uint64_t mega_ts = 0;
+  if (ts < last_ts) mega_ts++;
+  last_ts = ts;
+
   struct timespec now;
   if (clock_gettime(CLOCK_MONOTONIC_RAW, &now)) abort();
 
@@ -47,16 +53,16 @@ static void synch_time(uint32_t ts)
   /* 15360000 samples/second, in nanoseconds:
    *  = 15360000 / 1000000000 = 1536 / 100000 = 48 / 3125*/
 
-  uint64_t ts_ns = (uint64_t)ts * (uint64_t)3125 / (uint64_t)48;
+  uint64_t ts_ns = ((uint64_t)ts + mega_ts * (uint64_t)SAMPLES_PER_1024_FRAMES) * (uint64_t)3125 / (uint64_t)48;
 
-//printf("tnow %lu t0 %lu ts %u ts_ns %lu\n", tnow, t0, ts, ts_ns);
+//printf("tnow %lu t0 %lu ts %u cur %lu ts_ns %lu mega_ts %lu\n", tnow, t0, ts, cur, ts_ns, mega_ts);
   if (cur >= ts_ns) return;
 
   uint64_t delta = ts_ns - cur;
   /* don't sleep more than 1 ms */
   if (delta > 1000*1000) delta = 1000*1000;
   delta = delta/1000;
-printf("ts %u delta %lu\n", ts, delta);
+//printf("ts %u delta %lu\n", ts, delta);
   if (delta) usleep(delta);
 }
 
@@ -87,14 +93,15 @@ static void receive(int sock, unsigned char *b)
 {
   if (recv(sock, b, 14+14+1280, 0) != 14+14+1280) { perror("recv"); exit(1); }
   struct mobipass_header *mh = (struct mobipass_header *)(b+14);
-  mh->timestamp = htonl(ntohl(mh->timestamp)-45378/*40120*/);
+  mh->timestamp = htonl((ntohl(mh->timestamp)-45378/*40120*/) % SAMPLES_PER_1024_FRAMES);
+//printf("recv timestamp %u\n", ntohl(mh->timestamp));
 }
 
 void mobipass_send(void *data)
 {
 //printf("SEND seqno %d ts %d\n", seqno, ts);
   struct ethernet_header *eh = (struct ethernet_header *)data;
-  //struct mobipass_header *mh = (struct mobipass_header *)(data+14);
+//struct mobipass_header *mh = (struct mobipass_header *)(data+14);
 //printf("SEND seqno %d ts %d\n", mh->seqno, ntohl(mh->timestamp));
 
   eh->dst[0] = 0x00;
@@ -169,9 +176,11 @@ static void *receiver(void *_)
 
 void dosend(int sock, int seqno, uint32_t ts)
 {
-//printf("SEND seqno %d ts %d\n", seqno, ts);
   struct ethernet_header *eh = (struct ethernet_header *)packet;
   struct mobipass_header *mh = (struct mobipass_header *)(packet+14);
+
+  ts %= SAMPLES_PER_1024_FRAMES;
+//printf("SEND seqno %d ts %d\n", seqno, ts);
 
   eh->dst[0] = 0x00;
   eh->dst[1] = 0x21;
@@ -220,6 +229,7 @@ void *sender(void *_)
     dosend(sock, seqno, ts);
     seqno++;
     ts += 640;
+    ts %= SAMPLES_PER_1024_FRAMES;
   }
 }
 
