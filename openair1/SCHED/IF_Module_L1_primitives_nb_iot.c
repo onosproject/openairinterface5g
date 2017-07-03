@@ -8,7 +8,6 @@
 #include "PHY/INIT/defs_nb_iot.h"
 
 
-
 void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
 						  eNB_rxtx_proc_t *proc,
 		       	   	   	   nfapi_dl_config_request_pdu_t *dl_config_pdu,
@@ -21,33 +20,85 @@ void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
 	int UE_id= -1;
 
   //Check for SI PDU since in NB-IoT there is no DCI for that
-  //SIB (type 0), other DLSCH data (type 1)
-  if(rel13->rnti_type == 0)
+  //SIB1 (type 0), other DLSCH data (type 1) (include the SI messages) based on our ASSUMPTIONs
+
+  if(rel13->rnti_type == 0 && rel13->rnti == 65535)
   {
-		ndlsch = eNB->ndlsch_SI;
+
+	  /*
+	   * the configuration of the NDLSCH PDU for the SIB1-NB shoudl be the following:
+	   * RNTI type = 0;
+	   * RNTI = OxFFFF (65535)
+	   * Repetition number = 0-15 and should be mapped to 4,8,16 as reported in Table 16.4.1.3-3 TS 36.213
+	   * Number of subframe for resource assignment = may is not neded to know since the scheduling is fixed
+	   *
+	   * From spec. TS 36.321 v14.2.o pag 31 --> there is an HARQ process for all the broadcast
+	   *
+	   */
+
+	  	ndlsch= eNB->ndlsch_SIB1;
 		ndlsch->npdsch_start_symbol = rel13->start_symbol; //start symbol for the ndlsch transmission
 		ndlsch_harq = ndlsch->harq_process;
-
 		ndlsch_harq->pdu = sdu;
 		//should be from 1 to 8
 		ndlsch_harq->resource_assignment = rel13->number_of_subframes_for_resource_assignment;
-		ndlsch_harq->repetition_number = rel13->repetition_number;
+		ndlsch_harq->repetition_number = rel13->repetition_number; //is the schedulingInfoSIB1 of MMIB that is mapped into value 4-8-16 (see NDLSCH fapi specs Table 4-47)
 		ndlsch_harq->modulation = rel13->modulation;
 		ndlsch_harq->status = ACTIVE;
-		//SI information in reality have no feedback
+		//SI information in reality have no feedback (so there is no retransmission from the HARQ view point since no sck and nack)
 //        ndlsch_harq->frame = frame;
 //        ndlsch_harq->subframe = subframe;
         ndlsch->nrs_antenna_ports = rel13->nrs_antenna_ports_assumed_by_the_ue;
         ndlsch->scrambling_sequence_intialization = rel13->scrambling_sequence_initialization_cinit;
 
-        //managment of TBS size for SI??? (is written inside the SIB1-NB)
 
   }
-  else
-  { //ue specific data or RAR
+  //This are System Information (SI message)
+  else if(rel13->rnti_type == 1 && rel13->rnti == 65535)
+  {
+	  /*
+	   *
+	   * the configuration of the NDLSCH PDU for the SIB1-NB should be the following:
+	   * RNTI type = 1;
+	   * RNTI = OxFFFF (65535)
+	   * Repetition number = 0 and should be mapped to 1 through Table 16.4.1.3-2 TS 36.213
+	   * Number of subframe for resource assignment = will be evaluated by the MAC based on the value of the "si-TB" field inside the SIB1-NB
+	   *
+	   * From spec. TS 36.321 v14.2.o pag 31 --> there is an HARQ process for all the broadcast
+	   *
+	   *
+	   */
+
+
+	  	ndlsch= eNB->ndlsch_SI;
+		ndlsch->npdsch_start_symbol = rel13->start_symbol; //start symbol for the ndlsch transmission
+		ndlsch_harq = ndlsch->harq_process;
+
+		if(sdu != NULL) //new SI starting transmission
+			ndlsch_harq->pdu = sdu;
+		else //this indicate me to continue the transmission of the previous one
+		{
+			//the major fact is that i should be aware when the SI should be transmitted since the PHY layer have no logic for this
+		}
+
+		//should be from 1 to 8
+		ndlsch_harq->resource_assignment = rel13->number_of_subframes_for_resource_assignment;
+		ndlsch_harq->repetition_number = rel13->repetition_number;
+		ndlsch_harq->modulation = rel13->modulation;
+		ndlsch_harq->status = ACTIVE;
+		//SI information in reality have no feedback (so there is no retransmission from the HARQ view point since no sck and nack)
+//        ndlsch_harq->frame = frame;
+//        ndlsch_harq->subframe = subframe;
+      ndlsch->nrs_antenna_ports = rel13->nrs_antenna_ports_assumed_by_the_ue;
+      ndlsch->scrambling_sequence_intialization = rel13->scrambling_sequence_initialization_cinit;
+
+  }
+  //ue specific data or RAR
+  else if(rel13->rnti != 65535 && rel13->rnti_type == 1)
+  {
 
 	  //check if the PDU is for RAR
-	  if(eNB->ndlsch_ra != NULL && rel13->rnti == eNB->ndlsch_ra->rnti)
+	  if(eNB->ndlsch_ra != NULL && rel13->rnti == eNB->ndlsch_ra->rnti) //rnti for the RAR should have been set priviously by the DCI
 	  {
 		  eNB->ndlsch_ra->harq_process->pdu = sdu;
 		  eNB->ndlsch_ra->npdsch_start_symbol = rel13->start_symbol;
@@ -62,17 +113,19 @@ void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
 		  UE_id =  find_ue_NB(rel13->rnti,eNB);
 	  	  AssertFatal(UE_id==-1,"no existing ue specific dlsch_context\n");
 
+	  	  ndlsch = eNB->ndlsch[(uint8_t)UE_id];
 	  	  ndlsch_harq     = eNB->ndlsch[(uint8_t)UE_id]->harq_process;
 	  	  AssertFatal(ndlsch_harq!=NULL,"dlsch_harq for ue specific is null\n");
-
-	  	  ndlsch = eNB->ndlsch[(uint8_t)UE_id];
 	  	  ndlsch->npdsch_start_symbol = rel13->start_symbol;
 	  	  ndlsch_harq->pdu  = sdu;
 	  }
 
   }
-
-
+  //I don't know which kind of data is
+  else
+  {
+	  LOG_E(PHY, "handle_nfapi_dlsch_pdu_NB: Unknown type of data (rnti type %d, rnti %d)\n", rel13->rnti_type, rel13->rnti);
+  }
 
 }
 
@@ -113,24 +166,51 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   nfapi_ul_config_request_pdu_t *ul_config_pdu;
   nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu;
 
-  for (i=0;i<number_dl_pdu;i++) 
+
+  //clear previous possible allocation (maybe someone else should be added)
+  for(int i = 0; i < NUMBER_OF_UE_MAX_NB_IoT; i++)
+  {
+	  if(eNB->ndlsch[i])
+	  {
+		  eNB->ndlsch[i]->harq_process->round=0; // may not needed
+		  /*clear previous allocation information for all UEs*/
+		  eNB->ndlsch[i]->subframe_tx[subframe] = 0;
+	  }
+
+
+	  /*clear the DCI allocation maps for new subframe*/
+	  if(eNB->nulsch[i])
+	  {
+		  eNB->nulsch[i]->harq_process->dci_alloc = 0; //flag for indicating that a DCI has been allocated for UL
+		  eNB->nulsch[i]->harq_process->rar_alloc = 0; //Flag indicating that this ULSCH has been allocated by a RAR (for Msg3)
+		  //no phich for NB-IoT so no DMRS should be utilized
+	  }
+
+  }
+
+
+
+  for (i=0;i<number_dl_pdu;i++) //in principle this should be always = 1
   {
     dl_config_pdu = &DL_req->dl_config_pdu_list[i];
     switch (dl_config_pdu->pdu_type) 
     {
     	case NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE:
-
+    		//Remember: there is no DCI for SI information
       		NB_generate_eNB_dlsch_params(eNB,proc,dl_config_pdu);
 
       		break;
     	case NFAPI_DL_CONFIG_NBCH_PDU_TYPE:
 
-    		//XXX for the moment we don't care about the n-bch pdu content since we need only the sdu if tx.request
-    		npbch = eNB->npbch;
-    		npbch->pdu = Sched_INFO->sdu[i];
+    		// for the moment we don't care about the n-bch pdu content since we need only the sdu if tx.request
+    		npbch = eNB->npbch; //in the main of the lte-softmodem they should allocate this memory of phy vars
+    		if(Sched_INFO->sdu[i] != NULL)
+    			npbch->pdu = Sched_INFO->sdu[i];
+    		else
+    			LOG_E(PHY, "REceived a schedule_response with N-BCH but no PDU!!\n");
 
       		break;
-    	case NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE:
+    	case NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE://we can have three types of NDLSCH based on our assumptions: SIB1, SI, Data
 
     		handle_nfapi_dlsch_pdu_NB(eNB, proc,dl_config_pdu,Sched_INFO->sdu[i]);
 

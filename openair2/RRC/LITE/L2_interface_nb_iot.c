@@ -559,7 +559,9 @@ int NB_rrc_mac_config_req_eNB(
 int npdsch_rep_to_array[3] ={4,8,16}; //TS 36.213 Table 16.4.1.3-3
 int sib1_startFrame_to_array[4] = {0,16,32,48};//TS 36.213 Table 16.4.1.3-4
 //New----------------------------------------------------
-boolean_t is_SIB1_NB(
+//return -1 whenever no SIB1-NB transmission occur.
+//return sib1_startFrame when transmission occur
+uint32_t is_SIB1_NB(
 		const frame_t    	frameP,
 		long				schedulingInfoSIB1,//from the mib
 		int					physCellId //by configuration
@@ -623,13 +625,13 @@ boolean_t is_SIB1_NB(
 	    	  break;
 	      default:
 	    	  LOG_E(RRC, "Number of repetitions %d not allowed", nb_rep);
-	    	  return FALSE;
+	    	  return -1;
 	      }
 
 	      //check the actual frame w.r.t SIB1-NB starting frame
 	      if(frameP < sib1_startFrame + period_nb*256){
 	    	  LOG_T(RRC, "the actual frame %d is before the SIB1-NB starting frame %d of the period--> bcch_sdu_legnth = 0", frameP, sib1_startFrame + period_nb*256);
-	    	  return FALSE;
+	    	  return -1;
 	      }
 
 
@@ -656,22 +658,23 @@ boolean_t is_SIB1_NB(
 
 	    		  if(sib1_startFrame%2 != 0){ // means that the starting frame was 1 --> sib1-NB is transmitted in every odd frame
 	    			  if(frameP%2 == 1){
-	    				  return TRUE;
+	    				  return sib1_startFrame;
 	    			 }
 	    		  }
 
 	    		  //in all other starting frame cases SIB1-NB is transmitted in the even frames inside the corresponding repetition interval
 	    		  if(frameP%2 == 0){ // SIB1-NB is transmitted
-	    			  return TRUE;
+	    			  return sib1_startFrame;
 	    		  }
 	    	  }
 
 	    	  if(index> frameP) // was not inside an interval of 16 radio frames for sib1-nb transmission
-	    	  	    return 0;
+	    	  	    return -1;
 	      }
 
-	      return FALSE;
+	      return -1;
 }
+
 //---------------------------------------------------------------------------
 //New
 int si_windowLength_to_rf[7]={16,32,48,64,96,128,160}; //TS 36.331  v14.2.1 pag 587
@@ -681,8 +684,8 @@ int si_period_to_nb[7]={64,128,256,512,1024,2048,4096};
 boolean_t is_SIB23_NB(
 		const frame_t     	frameP,
 		const frame_t		h_frameP, // the HSFN (increased by 1 every SFN wrap around) (10 bits)
-		long				si_period, //SI-periodicity (rf)
-		long				si_windowLength_ms, //Si-windowlength (ms) XXX received as an enumerative (see the IE of SIB1-NB)
+		long				si_period, //SI-periodicity (value given by the Enumerative of the SIB1-NB)
+		long				si_windowLength_ms, //Si-windowlength (ms) received as an enumerative (see the IE of SIB1-NB)
 		long*				si_RadioFrameOffset, //Optional
 		long				si_RepetitionPattern // is given as an Enumerated
 		)
@@ -741,6 +744,7 @@ boolean_t is_SIB23_NB(
 						return FALSE;
 	}
 
+	//translate the enumerative into numer of Radio Frames
 	si_periodicity = si_period_to_nb[si_period];
 
 	//check if the actual frame is within an HSFN interval that will include si-window (relation with the si-periodicity)
@@ -761,7 +765,7 @@ boolean_t is_SIB23_NB(
 				return FALSE;
 	}
 
-	//get the si_window in Radio Frame
+	//get the si_window from enumerative into Radio FRames
 	si_windowLength = si_windowLength_to_rf[si_windowLength_ms];
 
 	if(si_windowLength > si_periodicity){
@@ -769,10 +773,10 @@ boolean_t is_SIB23_NB(
 		return FALSE;
 	}
 
-	//get the si_pattern
+	//get the si_pattern from the enumerative
 	si_pattern = si_repPattern_to_nb[si_RepetitionPattern];
 
-	if(si_RadioFrameOffset == NULL)//is not defined
+	if(si_RadioFrameOffset == NULL)//may is not defined since is optional
 	{
 		LOG_I(RRC, "si_RadioFrame offset was NULL --> set = 0\n");
 		si_offset = 0;
@@ -873,7 +877,7 @@ int8_t NB_mac_rrc_data_req_eNB(
 
       //Requesting for SI Message
       //XXX to be check when it is initialized
-      if(eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SI.Active==0) {
+      if(eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SI.Active==0) { //is set when we call openair_rrc_on function
     	  LOG_E(RRC, "SI value on the carrier = 0");
         return 0;
       }
@@ -898,7 +902,7 @@ int8_t NB_mac_rrc_data_req_eNB(
 
 
             //sib1-NB scheduled in subframe #4
-         if(subframeP == 4 && is_SIB1_NB(frameP,schedulingInfoSIB1, physCellId)){
+         if(subframeP == 4 && is_SIB1_NB(frameP,schedulingInfoSIB1, physCellId)!= -1){
 
 			  memcpy(&buffer_pP[0],
 					  eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SIB1_NB,

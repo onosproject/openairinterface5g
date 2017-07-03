@@ -267,8 +267,8 @@ void NB_initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint1
       if (loop == 100) { printf("%s:%d:%s: FATAL ERROR! contact the authors\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
       //RA_template[i].RA_rnti = 1+subframeP+(10*f_id);
       /*for NB-IoT, RA_rnti is counted in 36.321 5.1.4*/
-      RA_template[i].RA_rnti = 1+floor(frameP/4)+256*carrier_id;
       RA_template[i].preamble_index = preamble_index;
+      RA_template[i].RA_rnti = 1+floor(frameP/4)+256*carrier_id;
       LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Activating RAR generation for process %d, rnti %x, RA_active %d\n",
             module_idP,CC_id,frameP,i,RA_template[i].rnti,
             RA_template[i].RA_active);

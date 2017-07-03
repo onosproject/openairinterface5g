@@ -1626,10 +1626,6 @@ init_SI_NB(
 	config_INFO = malloc(sizeof(PHY_Config_t));
 
 
-//  uint8_t                             SIwindowsize = 1; //frame
-//  uint16_t                            SIperiod = 8; // in frames
-
-
   //copy basic parameters
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].physCellId      = configuration->Nid_cell[CC_id];
   eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].p_eNB           = configuration->nb_antenna_ports[CC_id];

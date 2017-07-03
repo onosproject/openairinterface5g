@@ -468,7 +468,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
   // check DCI format is N1 (format 0) or N2 (format 1)
   if(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_format == 0)
     {
-      //check DCI format N1 is for RAR  ra_rnti = 2 in FAPI specs table 4-45
+      //check DCI format N1 is for RAR  rnti_type  in FAPI specs table 4-45
       if(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti_type == 1)
         {
           DCI_format = DCIFormatN1_RAR;
@@ -605,8 +605,8 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nfapi_
  * for NB-IoT ndlsch procedure
  * this function is called by the PHy procedure TX in 3 possible occasion:
  * 1) we manage BCCH pdu (SI)
- * 2) we manage RA dlsch pdu (to be checked if needed in our case)
- * 3) UE specific dlsch pdu
+ * 2) we manage RA dlsch pdu
+ * 3) UE-specific dlsch pdu
  * ** we need to know if exist and which value has the eutracontrolRegionSize (TS 36.213 ch 16.4.1.4) whenever we are in In-band mode
  * ** CQI and PMI are not present in NB-IoT
  * ** redundancy version exist only in UL for NB-IoT and not in DL
@@ -640,15 +640,7 @@ void npdsch_procedures(PHY_VARS_eNB *eNB,
 	ndlsch_harq->mcs,
 	ndlsch_harq->round);
 
-
-///XXX skip this for the moment and all the ue stats
-//#if defined(MESSAGE_CHART_GENERATOR_PHY)..
-//if (ue_stats) ue_stats->dlsch_sliding_cnt++; //used to compute the mcs offset
-
-  if(ndlsch_harq->round == 0) { //first transmission
-
-//    if (ue_stats)
-//      ue_stats->dlsch_trials[harq_pid][0]++;
+  if(ndlsch_harq->round == 0) { //first transmission so we encode... because we generate the sequence
 
     if (eNB->mac_enabled==1) { // set in lte-softmodem/main line 1646
 
@@ -689,6 +681,20 @@ void npdsch_procedures(PHY_VARS_eNB *eNB,
   if (eNB->abstraction_flag==0) { // used for simulation of the PHY??
 
 
+	 /*
+	  * in any case inside the encoding procedure is re-checked if this is round 0 or no
+	  * in the case of harq_process round = 0 --> generate the sequence and put it into the parameter *c[r]
+	  * otherwise do nothing(only rate maching)
+	  */
+
+
+	/*
+	 * REASONING:
+	 * Encoding procedure will generate a Table with encoded data ( in ndlsch structure)
+	 * The table will go in input to the scrambling
+	 * --we should take care if there are repetitions of data or not because scrambling should be called at the first frame and subframe in which each repetition
+	 * begin (see params Nf, Ns)
+	 */
 
 
     // 36-212
@@ -754,6 +760,12 @@ void npdsch_procedures(PHY_VARS_eNB *eNB,
     start_meas(&eNB->dlsch_scrambling_stats);
     LOG_I(PHY, "NB-IoT Scrambling step\n");
 
+    /*
+     * SOME RELEVANT FACTS:
+     *
+     *
+     */
+
 //    dlsch_scrambling(fp,
 //		     0,
 //		     dlsch,
@@ -804,9 +816,38 @@ void npdsch_procedures(PHY_VARS_eNB *eNB,
 
 extern int oai_exit;
 
+
 /*
-r_type, rn is only used in PMCH procedure so I remove it.
-*/
+ * ASSUMPTION
+ *Since in FAPI specs seems to not manage the information for the sceduling of system information:
+ * Assume that the MAC layer manage the scheduling for the System information (SI messages) transmission while MIB and SIB1 are done directly at PHY layer
+ * This means that the MAC scheduler will send to the PHY the NDLSCH PDU and MIB PDU (DL_CONFIG.request)each time they should be transmitted. In particular:
+ ***MIB-NB
+ *schedule_response containing a n-BCH PDU is transmitted only at the beginning of the MIB period, then repetitions are made directly by the PHY layer (see FAPI specs pag 94 N-BCH 3.2.4.2)
+ *if no new N-BCH PDU is trasmitted at SFN mod 64=0 then stop MIB transmission
+ ***SIB1-NB
+ *schedule response containing a NDLSCH pdu (with appropiate configuration) will be transmitted only at the beginning of each SIB1-NB period (256 rf)
+ *then repetitions are managed directly by the PHY layer
+ *if no new NDLSCH pdu (configured for SIB1-NB) at SFN mod 256 = 0 is transmitted. stop SIB1-NB transmission
+ ****SI Messages
+ * -schedule_response is transmitted by the MAC in every subframe needed for the SI transmission (NDLSCH should have a proper configuration)
+ * -if the schedule_response carry any SDU (SDU!= NULL)--> put the SDU in the PHY buffer to be encoded ecc... and start the transmission
+ * -if the schedule_response not carry any SDU (SDU == NULL) but NDLSCH is properly set for SI, then PHY continue transmit the remaining part of the previous SDU
+ * (this because the PHY layer have no logic of repetition_pattern, si_window ecc.. so should be continuously instructed the PHY when to transmit.
+ * Furthermore, SI messages are transmitted in more that 1 subframe (2 or 8) and therefore MAC layer need to count how many subframes are available in the current frame for transmit it
+ * and take in consideration that other frames are needed before starting the transmission of a new one)
+ *
+ *
+ * FAPI distingsh the BCCH info in the NDLSCH may for some reasons:
+ * -scrambling is different
+ *
+ * **relevant aspects for the System information Transmission (Table 4-47 NDLSCH FAPi specs)
+ * 1)RNTI type = 0 (contains a BCCH)
+ * 2)Repetition number == scheduling info SIB1
+ * 3)RNTI
+ * (see schedule_response implementation)
+ *
+ */
 void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
          	 	 	 	 	  eNB_rxtx_proc_t *proc,
 							  int do_meas)
@@ -814,24 +855,20 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   int frame = proc->frame_tx;
   int subframe = proc->subframe_tx;
   uint32_t i,aa;
-  //uint8_t harq_pid; only one HARQ process
   DCI_PDU_NB *dci_pdu = eNB->DCI_pdu;
-  //DCI_PDU_NB DCI_pdu_tmp;
   NB_DL_FRAME_PARMS *fp = &eNB->frame_parms_nb_iot;
-  // DCI_ALLOC_t *dci_alloc = (DCI_ALLOC_t *)NULL; (not used since we have already packed)
   int8_t UE_id = 0;
   uint8_t ul_subframe;
   uint32_t ul_frame;
 
   int **txdataF = eNB->common_vars.txdataF[0];
 
-  //uint8_t num_npdcch_symbols = 0;
 
   if(do_meas == 1)
     start_meas(&eNB->phy_proc_tx);
 
 
-  /*he original scheduler "eNB_dlsch_ulsch_scheduler" now is no more done here but is triggered directly from UL_Indication (IF-Module Function)*/
+  /*the original scheduler "eNB_dlsch_ulsch_scheduler" now is no more done here but is triggered directly from UL_Indication (IF-Module Function)*/
 
   // clear the transmit data array for the current subframe
   for (aa=0; aa<fp->nb_antenna_ports_eNB; aa++) 
@@ -848,7 +885,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
        *
        * *the MIB pdu has been stored in the npbch structure of the PHY_vars_eNB during the schedule_response procedure
        *
-       * TX.request --> nfapi_tx_request_pdu_t --> MAC PDU (MIB) //not used in our case
+       * TX.request --> nfapi_tx_request_pdu_t --> MAC PDU (MIB) //not used in our case since we put inside the *sdu in Sched_INFO
        * 	Content of tx_request_pdu
        * 	-pdu length 14 (bytes)???
        * 	-pdu index = 1
@@ -856,19 +893,18 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
        * 	-segment length 5 bytes,
        * 	-segment data  34 bits for MIB (5 bytes)
        *
-       *XXX we are assuming that for the moment we are not segmenting the pdu (this should happen only when we have separate machines)
-       *XXX so the data is always contained in the first segment (segments[0])
        *
        *Problem: NB_IoT_RB_ID should be the ID of the RB dedicated to NB-IoT
        *but if we are in stand alone mode?? i should pass the DC carrier???
        *in general this RB-ID should be w.r.t LTE bandwidht???
-       **allowed indexes for Nb-IoT PRBs are reported in R&Shwartz pag 9
+       **allowed indexes for Nb-IoT PRBs are reported in R&Shwartz whitepaper pag 9
        *
-       *should add new condition here
        */
     if(subframe==0 && (eNB->npbch != NULL))
      {
           if(eNB->npbch->pdu != NULL)
+          {
+        	  //BCOM function
     		generate_npbch(&eNB->npbch,
                          txdataF,
                          AMP,
@@ -877,17 +913,37 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
                          frame%64,
                          fp->NB_IoT_RB_ID
                          );
-          else
-        	  LOG_E(PHY, "NB_phy_procedures_eNB_TX: missed mib pdu to be transmitted\n");
+          }
+
+          //In the last frame in which the MIB-NB should be transmitted after we point to NULL since maybe we stop MIB trasnmission
+          //this should be in line with FAPI specs pag 94 (BCH procedure in Downlink 3.2.4.2 for NB-IoT)
+          if(frame%64 == 63)
+        	  eNB->npbch->pdu = NULL;
       }
 
 
+    //Check for SIB1-NB transmission
+    //we should still consider that if at the start of the new SIB1-NB period the MAC will not send an NPDSCH for the SIB1-NB transmission then SIB1-NB will be not transmitted
+    if(subframe == 4 && eNB->ndlsch_SIB1 != NULL)
+    {
+      uint32_t sib1_startFrame = is_SIB1_NB(frame, eNB->ndlsch_SIB1->harq_process->repetition_number,fp->Nid_cell);
+
+  	  if(sib1_startFrame != -1 && eNB->ndlsch_SIB1->harq_process->pdu != NULL)
+  	  {
+    	npdsch_procedures(eNB,
+          				  proc,
+					      eNB->ndlsch_SIB1, //since we have no DCI for system information, this is filled directly when we receive the DL_CONFIG.request message (add a file in Sched_INFO)
+					      eNB->ndlsch_SIB1->harq_process->pdu);
+  	  }
+
+  	  //at the end of the period we put the PDU to NULL since we have to wait for the new one from the MAC for starting the nextis_SIB1_NB
+  	  if((frame-sib1_startFrame)%256 == 255)
+  		eNB->ndlsch_SIB1->harq_process->pdu = NULL;
+
+    }
 
 
-
-    ///check for BCCH transmission (System Information)
-    //XXX the scheduling of SI and also MIB ecc... we don-t care at phy layer??? is the scheduler that gives us the DL_config at proper time??
-
+    //Check for SI transmission
       if(eNB->ndlsch_SI != NULL && (eNB->ndlsch_SI->harq_process->pdu != NULL))
       {
     	  npdsch_procedures(eNB,
@@ -904,30 +960,14 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
             			proc,
 						eNB->ndlsch_ra, //should be filled ?? (in the old implementation was filled when from DCI we generate_dlsch_params
 						eNB->ndlsch_ra->harq_process->pdu);
-      }
 
-
-
-      //clear previous possible allocation
-      for(int i = 0; i < NUMBER_OF_UE_MAX_NB_IoT; i++)
-      {
-    	  if(eNB->ndlsch[i])
-    	  {
-    		  eNB->ndlsch[i]->harq_process->round=0; // may not needed
-    		  /*clear previous allocation information for all UEs*/
-    		  eNB->ndlsch[i]->subframe_tx[subframe] = 0;
-    	  }
-
-
-    	  /*clear the DCI allocation maps for new subframe*/
-    	  if(eNB->nulsch[i])
-    	  {
-    		  eNB->nulsch[i]->harq_process->dci_alloc = 0; //flag for indicating that a DCI has been allocated for UL
-    		  eNB->nulsch[i]->harq_process->rar_alloc = 0; //Flag indicating that this ULSCH has been allocated by a RAR (for Msg3)
-    		  //no phich for NB-IoT so no DMRS should be utilized
-    	  }
+    	  eNB->ndlsch_ra->active= 0;
 
       }
+
+
+
+
 
 
       //transmission of UE specific ndlsch data
