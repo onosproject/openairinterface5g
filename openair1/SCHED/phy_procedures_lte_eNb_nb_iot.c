@@ -1,4 +1,34 @@
+/*
+ * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The OpenAirInterface Software Alliance licenses this file to You under
+ * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.openairinterface.org/?page_id=698
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *-------------------------------------------------------------------------------
+ * For more information about the OpenAirInterface (OAI) Software Alliance:
+ *      contact@openairinterface.org
+ */
 
+/*! \file phy_procedures_lte_eNB.c
+ * \brief Implementation of eNB procedures from 36.213 LTE specifications
+ * \author R. Knopp, F. Kaltenberger, N. Nikaein, X. Foukas, Michele Paffetti, Nick Ho
+ * \date 2011
+ * \version 0.1
+ * \company Eurecom
+ * \email: knopp@eurecom.fr,florian.kaltenberger@eurecom.fr,navid.nikaein@eurecom.fr, x.foukas@sms.ed.ac.uk, michele.paffetti@studio.unibo.it, nick133371@gmail.com
+ * \note
+ * \warning
+ */
 
 #include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
@@ -474,6 +504,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
           DCI_format = DCIFormatN1_RAR;
 
           ndlsch= eNB->ndlsch_ra;//we store the RNTI for the RAR
+          ndlsch->ndlsch_type = RAR;
 
           //DCI format N1 to RAR
           DCI_Content->DCIN1_RAR.type           = 1;
@@ -511,6 +542,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
     	  AssertFatal(UE_id == -1, "no ndlsch context available or no ndlsch context corresponding to that rnti\n");
 
     	  ndlsch = eNB->ndlsch[(uint8_t)UE_id]; //in the old implementation they also consider UE_id = 1;
+    	  ndlsch->ndlsch_type = UE_Data;
 
               //DCI format N1 to DLSCH
               DCI_Content->DCIN1.type           = 1;
@@ -649,7 +681,7 @@ void npdsch_procedures(PHY_VARS_eNB *eNB,
   	  /*
   	   * we don't need to manage the RAR here since should be managed in the MAC layer for two reasons:
   	   * 1)we should receive directly the pdu containing the RAR from the MAC in the schedule_response
-  	   * 2)all the parameters for getting the MSG3 should be given by the UL_CONFIG.request (all inside the next Sched_RSP function)
+  	   * 2)all the parameters for getting the MSG3 should be given by the UL_CONFIG.request (all inside the next schedule_response function)
   	   *
   	   */
 
@@ -658,8 +690,6 @@ void npdsch_procedures(PHY_VARS_eNB *eNB,
     	  //scheduling request not implemented in NB-IoT
     	  //nulsch_param configuration for MSG3 should be considered in handling UL_Config.request
     	  //(in particular the nulsch structure for RAR is distinguished based on the harq_process->rar_alloc and the particular subframe in which we should have Msg3)
-
-
     }
 
     else {  //XXX we should change taus function???
@@ -679,6 +709,20 @@ void npdsch_procedures(PHY_VARS_eNB *eNB,
   }
 
   if (eNB->abstraction_flag==0) { // used for simulation of the PHY??
+
+
+	  //we can distinguish among the different kind of NDLSCH structure (example)
+	  switch(ndlsch->ndlsch_type)
+	  {
+	  case SIB1:
+		  break;
+	  case SI_Message:
+		  break;
+	  case RAR: //maybe not needed
+		  break;
+	  case UE_Data: //maybe not needed
+		  break;
+	  }
 
 
 	 /*
@@ -701,20 +745,27 @@ void npdsch_procedures(PHY_VARS_eNB *eNB,
     //encoding---------------------------
 
     /*
-     * we should have as an iput parameter also G for the encoding based on the switch/case
-     * G is evaluated based on the switch/case done over eutracontrolRegionSize (if exist) and operationModeInfo
+     *
+     * REASONING:
+	 * Encoding procedure will generate a Table with encoded data ( in ndlsch structure)
+	 * The table will go in input to the scrambling
+	 * --we should take care if there are repetitions of data or not because scrambling should be called at the first frame and subframe in which each repetition
+	 * 	begin (see params Nf, Ns)
+     *
+     * we should have as an iput parameter also G for the encoding based on the switch/case over eutracontrolRegionSize (if exist) and operationModeInfo if defined
      * NB: switch case of G is the same for npdsch and npdcch
      *
-     * the npdsch_start symbol index refers to TS 36.213 ch 16.4.1.4
+     * npdsch_start symbol index
+     * -refers to TS 36.213 ch 16.4.1.4:
+     * -if subframe k is a subframe for receiving the SIB1-NB
+     *	-- if operationModeInfo set to 00 or 01 (in band) --> npdsch_start_sysmbol = 3
+     *	-- otherwise --> npdsch_start_symbol = 0
+     * -if the k subframe is not for SIB1-NB
+     *	--npdsch_start_symbol = eutracontrolregionsize (defined for in-band operating mode (mode 0,1 for FAPI specs) and take values 1,2,3 [units in number of OFDM symbol])
+     * - otherwise --> npdsch_start_symbol = 0
      * (is the starting OFDM for the NPDSCH transmission in the first slot in a subframe k)
-     * FAPI style: is stored in the ndlsch structure from the reception of the NPDLSCH PDU in the DL_CONFIG.request (so should be set by the MAC and put inside the schedule response)
-     *-if subframe k is a subframe for receiving the SIB1-NB
-     *-- if operationModeInfo set to 00 or 01 (in band) --> npdsch_start_sysmbol = 3
-     *-- otherwise --> npdsch_start_symbol = 0
-     *-if the k subframe is not for SIB1-NB
-     *--npdsch_start_symbol = eutracontrolregionsize (defined for in-band operating mode (mode 0,1 for FAPI specs) and take values 1,2,3 [units in number of OFDM symbol])
-     *- otherwise --> npdsch_start_symbol = 0
-     *
+     * FAPI style:
+     * npdsch_start symbol is stored in the ndlsch structure from the reception of the NPDLSCH PDU in the DL_CONFIG.request (so should be set by the MAC and put inside the schedule response)
      * Nsf needed as an input (number of subframe)-->inside harq_process of ndlsch
      */
 
@@ -848,6 +899,13 @@ extern int oai_exit;
  * (see schedule_response implementation)
  *
  */
+
+/*
+ * This function is triggered by the schedule_response
+ * (the frequency at which is transmitted to the PHY depends on the MAC scheduler implementation)
+ * (in OAI in principle is every subframe)
+ */
+
 void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
          	 	 	 	 	  eNB_rxtx_proc_t *proc,
 							  int do_meas)
@@ -860,7 +918,6 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   int8_t UE_id = 0;
   uint8_t ul_subframe;
   uint32_t ul_frame;
-
   int **txdataF = eNB->common_vars.txdataF[0];
 
 
@@ -880,31 +937,22 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   //generate NPSS/NSSS
   NB_common_signal_procedures(eNB,proc);
 
-      /*Generate MIB
-       *
-       *
-       * *the MIB pdu has been stored in the npbch structure of the PHY_vars_eNB during the schedule_response procedure
-       *
-       * TX.request --> nfapi_tx_request_pdu_t --> MAC PDU (MIB) //not used in our case since we put inside the *sdu in Sched_INFO
-       * 	Content of tx_request_pdu
-       * 	-pdu length 14 (bytes)???
-       * 	-pdu index = 1
-       * 	-num segments = 1,
-       * 	-segment length 5 bytes,
-       * 	-segment data  34 bits for MIB (5 bytes)
-       *
-       *
-       *Problem: NB_IoT_RB_ID should be the ID of the RB dedicated to NB-IoT
-       *but if we are in stand alone mode?? i should pass the DC carrier???
-       *in general this RB-ID should be w.r.t LTE bandwidht???
-       **allowed indexes for Nb-IoT PRBs are reported in R&Shwartz whitepaper pag 9
-       *
-       */
+    //Generate MIB
     if(subframe==0 && (eNB->npbch != NULL))
      {
           if(eNB->npbch->pdu != NULL)
           {
         	  //BCOM function
+        	  /*
+        	   * -the function get the MIB pdu and schedule the transmission over the 64 radio frame
+        	   * -need to check the subframe #0 (since encoding functions only check the frame)
+        	   * this functions should be called every frame (the function will transmit the remaining part of MIB)
+        	   * ( XXX Should check when the schedule_responce is transmitted by MAC scheduler)
+        	   * RB-ID only for the case of in-band operation but should be always considered
+        	   * (in stand alone i can put whatever the number)in other case consider the PRB index in the Table R&Shwartz pag 9
+        	   *
+        	   */
+
     		generate_npbch(&eNB->npbch,
                          txdataF,
                          AMP,
@@ -923,20 +971,37 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
 
     //Check for SIB1-NB transmission
-    //we should still consider that if at the start of the new SIB1-NB period the MAC will not send an NPDSCH for the SIB1-NB transmission then SIB1-NB will be not transmitted
+    /*
+     *
+     * the function should be called for each frame
+     * Parameters needed:
+     * -sib1-NB pdu if new one (should be given by the MAC at the start of each SIB1-NB period)
+     * -when start a new SIB1-NB repetition (sib1_rep_start)
+     * -the frame number relative to the 16 continuous frame within a repetition (relative_sib1_frame) 1st, 2nd ...
+     *
+     * we check that the transmission should occurr in subframe #4
+     *
+     * consider that if at the start of the new SIB1-NB period the MAC will not send an NPDSCH for the SIB1-NB transmission then SIB1-NB will be not transmitted (pdu = NULL)
+     *
+     */
     if(subframe == 4 && eNB->ndlsch_SIB1 != NULL)
     {
-      uint32_t sib1_startFrame = is_SIB1_NB(frame, eNB->ndlsch_SIB1->harq_process->repetition_number,fp->Nid_cell);
+      //check if current frame is for SIB1-NB transmission (if yes get the starting frame of SIB1-NB) and set the flag for the encoding
+      uint32_t sib1_startFrame = is_SIB1_NB(frame,
+    		  	  	  	  	  	  	  	  	eNB->ndlsch_SIB1->harq_process->repetition_number,
+											fp->Nid_cell,
+											eNB->ndlsch_SIB1 // we need it to set the flag
+											);
 
   	  if(sib1_startFrame != -1 && eNB->ndlsch_SIB1->harq_process->pdu != NULL)
   	  {
     	npdsch_procedures(eNB,
           				  proc,
-					      eNB->ndlsch_SIB1, //since we have no DCI for system information, this is filled directly when we receive the DL_CONFIG.request message (add a file in Sched_INFO)
+					      eNB->ndlsch_SIB1, //since we have no DCI for system information, this is filled directly when we receive the NDLSCH pdu from DL_CONFIG.request message
 					      eNB->ndlsch_SIB1->harq_process->pdu);
   	  }
 
-  	  //at the end of the period we put the PDU to NULL since we have to wait for the new one from the MAC for starting the nextis_SIB1_NB
+  	  //at the end of the period we put the PDU to NULL since we have to wait for the new one from the MAC for starting the next SIB1-NB transmission
   	  if((frame-sib1_startFrame)%256 == 255)
   		eNB->ndlsch_SIB1->harq_process->pdu = NULL;
 
@@ -944,13 +1009,33 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
 
     //Check for SI transmission
-      if(eNB->ndlsch_SI != NULL && (eNB->ndlsch_SI->harq_process->pdu != NULL))
+    /*
+     *Parameters needed:
+     * -total number of subframes for the transmission (2-8) (inside the NDLSCH structure --> HARQ process -->resource_assignment)
+     * XXX: in reality this flag is not needed because is enough to check if the PDU is NULL (continue the transmission) or not (new SI transmission)
+     * -SI_start (inside ndlsch structure): flag for indicate the starting of the SI transmission within the SI window (new PDU is received by the MAC) otherwise the PHY continue to transmit
+     *  what have in its buffer (so check the remaining encoded data continuously)
+     *
+     * SI transmission should not occurr in reserved subframes
+     * subframe = 0 (MIB-NB)
+     * subframe = 4 (SIB1-NB) but depends on the frame
+     * subframe = 5 (NPSS)
+     * subframe = 9 (NSSS) but depends on the frame (if is even)
+     *
+     * XXX Important: in the case the SI-window finish the PHY layer should have also being able to conclude all the SI transmission in time
+     * (because this is managed by the MAC layer that stops transmitting the SDU to PHY in advance because is counting the remaining subframe for the transmission)
+     *
+     *
+     */
+      if(eNB->ndlsch_SI != NULL)
       {
+    	  //check if the PDU != NULL will be done inside just for understanding if a new SI message need to be transmitted or not
     	  npdsch_procedures(eNB,
             			proc,
 					    eNB->ndlsch_SI, //since we have no DCI for system information, this is filled directly when we receive the DL_CONFIG.request message
 						eNB->ndlsch_SI->harq_process->pdu);
       }
+
 
       ///check for RAR transmission
       if(eNB->ndlsch_ra != NULL && eNB->ndlsch_ra->active == 1)
@@ -985,8 +1070,6 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       }
 
 
-      //num_pdcch_symbols?? (maybe later when we have the DCI)
-      //no SMBV
       //no dedicated phy config
 
 

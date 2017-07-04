@@ -807,6 +807,16 @@ typedef struct {
 // NB-IoT
 //----------------------------------------------------------------------------------------------------
 
+//enum for distinguish the different type of ndlsch (may in the future will be not needed)
+typedef enum
+{
+	SIB1,
+	SI_Message,
+	RAR,
+	UE_Data
+
+}ndlsch_flag_t;
+
 
 typedef struct {
 
@@ -841,10 +851,9 @@ typedef struct {
   /// NB-IoT
   /// The scheduling the NPDCCH and the NPDSCH transmission TS 36.213 Table 16.4.1-1
   uint8_t scheduling_delay;
-  /// The number of the subframe to transmit the NPDSCH TB TS 36.213 Table 16.4.1.3-1  (Nsf
-  /// FAPI spec P.181 for the NPDSCH containing BCCH value 1-8, while 36.331 P.190 value only 2 & 8
+  /// The number of the subframe to transmit the NPDSCH Table TS 36.213 Table 16.4.1.3-1  (Nsf) (NB. in this case is not the index Isf)
   uint8_t resource_assignment;
-  /// Determined the repeat number of NPDSCH TB TS 36.213 Table 16.4.1.3-2 (Nrep)
+  /// is the index that determined the repeat number of NPDSCH through table TS 36.213 Table 16.4.1.3-2 / for SIB1-NB Table 16.4.1.3-3
   uint8_t repetition_number;
   /// Determined the ACK/NACK delay and the subcarrier allocation TS 36.213 Table 16.4.2
   uint8_t HARQ_ACK_resource;
@@ -891,8 +900,6 @@ typedef struct {
   uint8_t nCCE[10];
 
   /*in NB-IoT there is only 1 HARQ process for each UE therefore no pid is required*/
-
-
   /// The only HARQ process for the DLSCH
   NB_IoT_DL_eNB_HARQ_t *harq_process;
   /// Number of soft channel bits
@@ -912,15 +919,22 @@ typedef struct {
   /// number of cell specific TX antenna ports assumed by the UE
   uint8_t nrs_antenna_ports;
 
-  /*
-  * This indicate the current subframe within the subframe interval between the NPDSCH transmission (Nsf*Nrep)
-  */
+  //This indicate the current subframe within the subframe interval between the NPDSCH transmission (Nsf*Nrep)
   uint16_t sf_index;
 
   ///indicates the starting OFDM symbol in the first slot of a subframe k for the NPDSCH transmission
   /// see FAPI/NFAPI specs Table 4-47
   uint8_t npdsch_start_symbol;
 
+  /*SIB1-NB related parameters*/
+  ///flag for indicate if the current frame is the start of a new SIB1-NB repetition within the SIB1-NB period (0 = FALSE, 1 = TRUE)
+  uint8_t sib1_rep_start;
+  ///the number of the frame within the 16 continuous frame in which sib1-NB is transmitted (1-8 = 1st, 2nd ecc..) (0 = not foresees a transmission)
+  uint8_t relative_sib1_frame;
+
+  //Flag  used to discern among different NDLSCH structures (SIB1,SI,RA,UE-spec)
+  //(in this case is used because we may have that more that one calls of npdch_procedure is needed for transmitting a data (NB-IoT implement repetitions)
+  ndlsch_flag_t ndlsch_type;
 
 
 } NB_IoT_eNB_NDLSCH_t;
@@ -1036,6 +1050,9 @@ typedef struct {
 #define NPBCH_A 34
 
 typedef struct {
+  //the 2 LSB of the hsfn (the MSB are indicated by the SIB1-NB)
+  uint16_t h_sfn_lsb;
+
   uint8_t npbch_d[96+(3*(16+NPBCH_A))];
   uint8_t npbch_w[3*3*(16+NPBCH_A)];
   uint8_t npbch_e[1600];

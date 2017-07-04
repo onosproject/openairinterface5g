@@ -98,14 +98,29 @@ int NB_rrc_mac_config_req_eNB(
 
 //New
 /**\brief function for evaluate if the SIB1-NB transmission occur
- * called by the NB_mac_rrc_data_req
+ * return the SIB1 starting frame
+ * called by phy_procedure_eNB_Tx before calling the npdsch_procedure
  */
 uint32_t is_SIB1_NB(
-		const frame_t   frameP,
-		long			schedulingInfoSIB1,//from the mib
-		int				physCellId
+		const frame_t    		frameP,
+		long					schedulingInfoSIB1,//from the mib
+		int						physCellId, //by configuration
+		NB_IoT_eNB_NDLSCH_t		*ndlsch_SIB1
 		);
 //--------------------------------------
+
+//New
+/**\brief function for evaluate if the SIB1-NB period start
+ * return 0 = TRUE
+ * return -1 = FALSE
+ * called by the NB_mac_rrc_data_req
+ */
+uint8_t is_SIB1_NB_start(
+		const frame_t    		frameP,
+		long					schedulingInfoSIB1,//from the mib
+		int						physCellId //by configuration
+		);
+
 
 //New
 /**\brief function for evaluate if the SIB23-NB transmission occurr

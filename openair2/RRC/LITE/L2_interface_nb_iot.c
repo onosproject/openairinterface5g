@@ -560,11 +560,12 @@ int npdsch_rep_to_array[3] ={4,8,16}; //TS 36.213 Table 16.4.1.3-3
 int sib1_startFrame_to_array[4] = {0,16,32,48};//TS 36.213 Table 16.4.1.3-4
 //New----------------------------------------------------
 //return -1 whenever no SIB1-NB transmission occur.
-//return sib1_startFrame when transmission occur
+//return sib1_startFrame when transmission occur in the current frame
 uint32_t is_SIB1_NB(
-		const frame_t    	frameP,
-		long				schedulingInfoSIB1,//from the mib
-		int					physCellId //by configuration
+		const frame_t    		frameP,
+		long					schedulingInfoSIB1,//from the mib
+		int						physCellId, //by configuration
+		NB_IoT_eNB_NDLSCH_t		*ndlsch_SIB1
 		)
 {
 	uint8_t nb_rep=0; // number of sib1-nb repetitions within the 256 radio frames
@@ -584,18 +585,27 @@ uint32_t is_SIB1_NB(
 	         * schedule with a periodicity of 2560 ms (256 Radio Frames) and repetitions (4, 8 or 16) are made, equally spaced
 	         * within the 2560 ms period
 	         *
-	         *
-	         * 0)find the SIB1-NB period over the 1024 frames in which the actual frame fall
+	         * 0.0) check the input parameters
+	         * 0)find the SIB1-NB period number over the 1024 frames in which the actual frame fall
 	         * 1)from the schedulingInfoSIB1 of MIB-NB and the physCell_id we deduce the starting radio frame
 	         * 2)check if the actual frame is after the staring radio frame
 	         * 3)check if the actual frame is within a SIB1-transmission interval
-	         * 4)based on the starting radio frame we can state  when SIB1-NB is transmitted in odd or even frame
+	         * 4)based on the starting radio frame we can state  when SIB1-NB is transmitted in odd or even frame (commented)
 	         * (if the starting frame is even (0,16,32,48) then SIB1-NB is transmitted in even frames, if starting frame is odd (1)
 	         * we can state that SIB1-NB will be transmitted in every odd frame since repetitions are 16 in 256 radio frame period)
+	         * 4bis) we do a for loop over the 16 continuous frame (hopping by 2) for check if the frame is considered in that interval
+
 	         *
 	         * *0) is necessary because at least i need to know in which of the even frames the repetition are -> is based on the offset
 	         * *in 1023 frames there are exactly 4 period of SIB1-NB
 	         **/
+
+
+
+    		if(schedulingInfoSIB1 > 11 || schedulingInfoSIB1 < 0){
+    			LOG_E(RRC, "is_SIB1_NB: schedulingInfoSIB1 value not allowed");
+    			return 0;
+    		}
 
 
 		  //SIB1-NB period number
@@ -646,34 +656,125 @@ uint32_t is_SIB1_NB(
 
 
 
+	      //loop over the SIB1-NB period
 	      for( int i = 0; i < nb_rep; i++)
 	      {
 	    	  //find the correct sib1-nb repetition interval in which the actual frame is
 
+	    	  //this is the start frame of a repetition
 	    	  index = sib1_startFrame+ i*(16+offset) + period_nb*256;
 
-	    	  if(frameP>= index && frameP <= (index+15)) //SIB1_NB transmission interval
+	    	  //the actual frame is in a gap between two consecutive repetitions
+	    	  if(frameP < index)
+	    	  {
+	    		  	ndlsch_SIB1->sib1_rep_start = 0;
+	    		  	ndlsch_SIB1->relative_sib1_frame = 0;
+	    	  	    return -1;
+	    	  }
+	    	  //this is needed for ndlsch_procedure
+	    	  else if(frameP == index)
+	    	  {
+	    		  //the actual frame is the start of a new repetition (SIB1-NB should be retransmitted)
+	    		  ndlsch_SIB1->sib1_rep_start = 1;
+	    		  ndlsch_SIB1->relative_sib1_frame = 1;
+	    		  return sib1_startFrame;
+	    	  }
+	    	  else
+	    		  ndlsch_SIB1->sib1_rep_start = 0;
+
+	    	  //check in the current SIB1_NB repetition
+	    	  if(frameP>= index && frameP <= (index+15))
 	    	  {
 	    		  //find if the actual frame is one of the "every other frame in 16 continuous frame" in which SIB1-NB is transmitted
 
-	    		  if(sib1_startFrame%2 != 0){ // means that the starting frame was 1 --> sib1-NB is transmitted in every odd frame
-	    			  if(frameP%2 == 1){
+	    		  for(int y = 0; y < 16; y += 2) //every other frame (increment by 2)
+	    		  {
+	    			  if(frameP == index + y)
+	    			  {
+	    				  //this flag tell which is the number of the current frame w.r.t the 8th (over the continuous 16) in a repetition
+	    				  ndlsch_SIB1->relative_sib1_frame = y/2 + 1; //1st, 2nd, 3rd,...
 	    				  return sib1_startFrame;
-	    			 }
+	    			  }
 	    		  }
 
-	    		  //in all other starting frame cases SIB1-NB is transmitted in the even frames inside the corresponding repetition interval
-	    		  if(frameP%2 == 0){ // SIB1-NB is transmitted
-	    			  return sib1_startFrame;
-	    		  }
+	    		  //if we are here means that the frame was inside the repetition interval but not considered for SIB1-NB transmission
+	    		  ndlsch_SIB1->relative_sib1_frame = 0;
+	    		  return -1;
+
+//XXX this part has been commented because in case that the "relative_sib1_frame" flag is not needed is necessary just a simple check if even or odd frame depending on sib1_startFrame
+
+//	    		  if(sib1_startFrame%2 != 0){ // means that the starting frame was 1 --> sib1-NB is transmitted in every odd frame
+//	    			  if(frameP%2 == 1){ //the actual frame is odd
+//	    				  return sib1_startFrame;
+//	    			 }
+//	    		  }
+//
+//	    		  //in all other starting frame cases SIB1-NB is transmitted in the even frames inside the corresponding repetition interval
+//	    		  if(frameP%2 == 0){ // SIB1-NB is transmitted
+//	    			  return sib1_startFrame;
+//	    		  }
+//---------------------------------------------------------------------------------------------------------------------------------------------------------
 	    	  }
 
-	    	  if(index> frameP) // was not inside an interval of 16 radio frames for sib1-nb transmission
-	    	  	    return -1;
 	      }
 
 	      return -1;
 }
+
+//New----------------------------------------------------
+//Function for check if the current frame is the start of a new SIB1-NB period
+uint8_t is_SIB1_NB_start(
+		const frame_t    		frameP,
+		long					schedulingInfoSIB1,//from the mib
+		int						physCellId //by configuration
+		)
+{
+	uint8_t nb_rep=0; // number of sib1-nb repetitions within the 256 radio frames
+	uint32_t sib1_startFrame;
+	uint32_t sib1_NB_period = 256;//from specs TS 36.331 (rf)
+	uint8_t index;
+	int offset;
+	int period_nb; // the number of the actual period over the 1024 frames
+
+
+    		if(schedulingInfoSIB1 > 11 || schedulingInfoSIB1 < 0){
+    			LOG_E(RRC, "is_SIB1_NB: schedulingInfoSIB1 value not allowed");
+    			return 0;
+    		}
+
+	      //number of repetitions
+	      nb_rep = npdsch_rep_to_array[schedulingInfoSIB1%3];
+
+	      //based on number of rep. and the physical cell id we derive the starting radio frame (TS 36.213 Table 16.4.1.3-3/4)
+	      switch(nb_rep)
+	      {
+	      case 4:
+	    	  //physCellId%4 possible value are 0,1,2,3
+	    	  sib1_startFrame = sib1_startFrame_to_array[physCellId%4];
+	    	  break;
+	      case 8:
+	    	  //physCellId%2possible value are 0,1
+	    	  sib1_startFrame = sib1_startFrame_to_array[physCellId%2];
+	    	  break;
+	      case 16:
+	    	  //physCellId%2 possible value are 0,1
+	    	  if(physCellId%2 == 0)
+	    		  sib1_startFrame = 0;
+	    	  else
+	    		  sib1_startFrame = 1; // the only case in which the starting frame is odd
+	    	  break;
+	      default:
+	    	  LOG_E(RRC, "Number of repetitions %d not allowed", nb_rep);
+	    	  return -1;
+	      }
+
+	      if((frameP-sib1_startFrame)%256 == 0)
+	    	  return 0;
+	      else
+	    	  return -1;
+
+}
+//-------------------------------------------------------
 
 //---------------------------------------------------------------------------
 //New
@@ -901,8 +1002,10 @@ int8_t NB_mac_rrc_data_req_eNB(
             }
 
 
-            //sib1-NB scheduled in subframe #4
-         if(subframeP == 4 && is_SIB1_NB(frameP,schedulingInfoSIB1, physCellId)!= -1){
+///XXX Following FAPI implementation in principle we should only take care of get the PDU from the MAC only when the SIB1-NB period Start
+
+         //sib1-NB scheduled in subframe #4
+         if(subframeP == 4 && is_SIB1_NB_start(frameP,schedulingInfoSIB1, physCellId)!= -1){
 
 			  memcpy(&buffer_pP[0],
 					  eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SIB1_NB,
