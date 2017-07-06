@@ -54,7 +54,7 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
 
 
   int i,L, G;
-  int npdcch_start_index;
+  int npdcch_start_index = dci_alloc->npdcch_start_symbol;
 
   /* PARAMETERS may not needed
   **e_ptr : store the encoding result, and as a input to modulation

@@ -75,23 +75,25 @@ void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
 	   *
 	   * From spec. TS 36.321 v14.2.o pag 31 --> there is an HARQ process for all the broadcast
 	   *
+	   * XXX for the moment we are not able to prevent the problem of Error: first transmission but sdu = NULL.
+	   * anyway, the PHY layer if have finished the transmission it will not transmit anything and will generate the error
+	   *
 	   */
 
-
 	  	ndlsch= eNB->ndlsch_SI;
-	  	ndlsch->ndlsch_type = SI_Message;
+	  	ndlsch_harq = ndlsch->harq_process;
 
-		ndlsch->npdsch_start_symbol = rel13->start_symbol; //start OFDM symbol for the ndlsch transmission
-		ndlsch_harq = ndlsch->harq_process;
-
-		//new SI starting transmission
+		//new SI starting transmission (should enter here only the first time for a new transmission)
 		if(sdu != NULL)
 		{
+
+		  	ndlsch->ndlsch_type = SI_Message;
+			ndlsch->npdsch_start_symbol = rel13->start_symbol; //start OFDM symbol for the ndlsch transmission
 			ndlsch_harq->pdu = sdu;
 			ndlsch_harq->resource_assignment = rel13->number_of_subframes_for_resource_assignment;//value 2 or 8
 			ndlsch_harq->repetition_number = rel13->repetition_number;//should be always fix to 0 to be mapped in 1
 			ndlsch_harq->modulation = rel13->modulation;
-			ndlsch_harq->status = ACTIVE;
+
 
 			//SI information in reality have no feedback (so there is no retransmission from the HARQ view point since no sck and nack)
 	//        ndlsch_harq->frame = frame;
@@ -100,13 +102,16 @@ void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
 			ndlsch->nrs_antenna_ports = rel13->nrs_antenna_ports_assumed_by_the_ue;
 			ndlsch->scrambling_sequence_intialization = rel13->scrambling_sequence_initialization_cinit;
 		}
-		//continue the remaining transmission of the previous SI at PHY if any (otherwise nothing)
 		else
 		{
-			ndlsch_harq->pdu = NULL;
+			//continue the remaining transmission of the previous SI at PHY if any (otherwise nothing)
 			//there is no need of repeating the configuration on the ndlsch
-
+			ndlsch_harq->pdu = NULL;
 		}
+
+		//Independently if we have the PDU or not (first transmission or repetition) the process is activated for triggering the ndlsch_procedure
+	  	ndlsch_harq->status = ACTIVE;
+
 
   }
   //ue specific data or RAR (we already have received the DCI for this)
@@ -229,8 +234,8 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 
       		break;
     	case NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE:
-    		//we can have three types of NDLSCH based on our assumptions: SIB1, SI, Data
-    		//remember that SI messages have no DCI in NB-IoT therefore this is the only way to configure the ndlsch_SI structure
+    		//we can have three types of NDLSCH based on our assumptions: SIB1, SI, Data, RAR
+    		//remember that SI messages have no DCI in NB-IoT therefore this is the only way to configure the ndlsch_SI/ndlsch_SIB1 structure
 
     		handle_nfapi_dlsch_pdu_NB(eNB, proc,dl_config_pdu,Sched_INFO->sdu[i]);
 
@@ -282,6 +287,8 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   }
 
 
+  //XXX problem: although we may have nothing to transmit this function should be always triggered in order to allow the PHY layer to complete the repetitions
+  //of previous Transport Blocks
   NB_phy_procedures_eNB_TX(eNB,proc,NULL);
 
 }

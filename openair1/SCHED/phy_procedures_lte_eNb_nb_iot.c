@@ -870,6 +870,9 @@ extern int oai_exit;
 
 /*
  * ASSUMPTION
+ *
+ * The MAC schedule the schedule_response in a SUBFRAME BASE (at least because otherwise we have problem with our assumptions on SI transmission)
+ *
  *Since in FAPI specs seems to not manage the information for the sceduling of system information:
  * Assume that the MAC layer manage the scheduling for the System information (SI messages) transmission while MIB and SIB1 are done directly at PHY layer
  * This means that the MAC scheduler will send to the PHY the NDLSCH PDU and MIB PDU (DL_CONFIG.request)each time they should be transmitted. In particular:
@@ -882,20 +885,20 @@ extern int oai_exit;
  *if no new NDLSCH pdu (configured for SIB1-NB) at SFN mod 256 = 0 is transmitted. stop SIB1-NB transmission
  ****SI Messages
  * -schedule_response is transmitted by the MAC in every subframe needed for the SI transmission (NDLSCH should have a proper configuration)
- * -if the schedule_response carry any SDU (SDU!= NULL)--> put the SDU in the PHY buffer to be encoded ecc... and start the transmission
+ * -if the schedule_response carry any SDU for SI-Message (SDU!= NULL)--> put the SDU in the PHY buffer to be encoded ecc... and start the transmission
  * -if the schedule_response not carry any SDU (SDU == NULL) but NDLSCH is properly set for SI, then PHY continue transmit the remaining part of the previous SDU
  * (this because the PHY layer have no logic of repetition_pattern, si_window ecc.. so should be continuously instructed the PHY when to transmit.
+ *
  * Furthermore, SI messages are transmitted in more that 1 subframe (2 or 8) and therefore MAC layer need to count how many subframes are available in the current frame for transmit it
  * and take in consideration that other frames are needed before starting the transmission of a new one)
  *
  *
- * FAPI distingsh the BCCH info in the NDLSCH may for some reasons:
- * -scrambling is different
+ *We assume that whenever the NDLSCH pdu is a BCCH type, we consider as if it's a SIB1 while in other case can be data or SI-message depending on the RNTI
  *
  * **relevant aspects for the System information Transmission (Table 4-47 NDLSCH FAPi specs)
  * 1)RNTI type = 0 (contains a BCCH)
- * 2)Repetition number == scheduling info SIB1
- * 3)RNTI
+ * 2)Repetition number == scheduling info SIB1 mapped into 4-8-16
+ * 3)RNTI (0xFFFF = SI-RNTI)
  * (see schedule_response implementation)
  *
  */
@@ -919,6 +922,9 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   uint8_t ul_subframe;
   uint32_t ul_frame;
   int **txdataF = eNB->common_vars.txdataF[0];
+  uint32_t sib1_startFrame = -1;
+
+
 
 
   if(do_meas == 1)
@@ -966,7 +972,9 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
           //In the last frame in which the MIB-NB should be transmitted after we point to NULL since maybe we stop MIB trasnmission
           //this should be in line with FAPI specs pag 94 (BCH procedure in Downlink 3.2.4.2 for NB-IoT)
           if(frame%64 == 63)
+          {
         	  eNB->npbch->pdu = NULL;
+          }
       }
 
 
@@ -984,14 +992,14 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
      * consider that if at the start of the new SIB1-NB period the MAC will not send an NPDSCH for the SIB1-NB transmission then SIB1-NB will be not transmitted (pdu = NULL)
      *
      */
-    if(subframe == 4 && eNB->ndlsch_SIB1 != NULL)
+    if(subframe == 4 && eNB->ndlsch_SIB1 != NULL && eNB->ndlsch_SIB1->harq_process->status == ACTIVE)
     {
       //check if current frame is for SIB1-NB transmission (if yes get the starting frame of SIB1-NB) and set the flag for the encoding
-      uint32_t sib1_startFrame = is_SIB1_NB(frame,
-    		  	  	  	  	  	  	  	  	eNB->ndlsch_SIB1->harq_process->repetition_number,
-											fp->Nid_cell,
-											eNB->ndlsch_SIB1 // we need it to set the flag
-											);
+      sib1_startFrame = is_SIB1_NB(frame,
+    		  	  	  	  	  	  eNB->ndlsch_SIB1->harq_process->repetition_number,
+								  fp->Nid_cell,
+								  eNB->ndlsch_SIB1 //set the flags
+								  );
 
   	  if(sib1_startFrame != -1 && eNB->ndlsch_SIB1->harq_process->pdu != NULL)
   	  {
@@ -1003,7 +1011,11 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
   	  //at the end of the period we put the PDU to NULL since we have to wait for the new one from the MAC for starting the next SIB1-NB transmission
   	  if((frame-sib1_startFrame)%256 == 255)
+  	  {
+  		//whenever we will not receive a new sdu from MAC at the start of the next SIB1-NB period we prevent future SIB1-NB transmission (may just only of the two condition is necessary)
+  		eNB->ndlsch_SIB1->harq_process->status = DISABLED;
   		eNB->ndlsch_SIB1->harq_process->pdu = NULL;
+  	  }
 
     }
 
@@ -1022,19 +1034,48 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
      * subframe = 5 (NPSS)
      * subframe = 9 (NSSS) but depends on the frame (if is even)
      *
+     * [This condition should be known by the MAC layer so it should trigger an DLSCH pdu only at proper instants]
+     *
      * XXX Important: in the case the SI-window finish the PHY layer should have also being able to conclude all the SI transmission in time
      * (because this is managed by the MAC layer that stops transmitting the SDU to PHY in advance because is counting the remaining subframe for the transmission)
      *
      *
+     *XXX important: set the flag HARQ process->status to DISABLE when PHY finished the SI-transmission over the 2 or 8 subframes
+     *XXX important: whenever we enter for some error in the ndlsch_procedure with a pdu that is NULL but all the data of the SI have been transmitted --> generate error
+     *XXX : the npdlsch_procedure in this case should be only called when is triggered by the MAC schedule_response (use the status flag set by the schedule_response)
+     *
      */
-      if(eNB->ndlsch_SI != NULL)
-      {
-    	  //check if the PDU != NULL will be done inside just for understanding if a new SI message need to be transmitted or not
-    	  npdsch_procedures(eNB,
-            			proc,
-					    eNB->ndlsch_SI, //since we have no DCI for system information, this is filled directly when we receive the DL_CONFIG.request message
-						eNB->ndlsch_SI->harq_process->pdu);
-      }
+
+	if(eNB->ndlsch_SI->harq_process->status == ACTIVE && (eNB->ndlsch_SI->harq_process->status != ACTIVE || subframe != 4)) //condition on SIB1-NB
+	{
+	    if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
+	     {
+	      if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5 && subframe != 9)
+	       {
+    		  //check if the PDU != NULL will be done inside just for understanding if a new SI message need to be transmitted or not
+    		  npdsch_procedures(eNB,
+            					proc,
+								eNB->ndlsch_SI, //since we have no DCI for system information, this is filled directly when we receive the DL_CONFIG.request message
+								eNB->ndlsch_SI->harq_process->pdu);
+
+    		  eNB->ndlsch_SI->harq_process->status = DISABLED;
+	    	}
+	      }
+	    else //this frame not foresee the transmission of NSSS (subframe 9 is available)
+	    {
+	    	if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5)
+	    	   {
+	    		  npdsch_procedures(eNB,
+	            					proc,
+									eNB->ndlsch_SI, //since we have no DCI for system information, this is filled directly when we receive the DL_CONFIG.request message
+									eNB->ndlsch_SI->harq_process->pdu);
+
+	    		  eNB->ndlsch_SI->harq_process->status = DISABLED;
+
+	    	   }
+	    }
+
+	}
 
 
       ///check for RAR transmission
@@ -1049,8 +1090,6 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     	  eNB->ndlsch_ra->active= 0;
 
       }
-
-
 
 
 

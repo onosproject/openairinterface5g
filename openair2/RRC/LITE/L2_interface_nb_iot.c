@@ -141,7 +141,8 @@ int NB_rrc_mac_config_req_eNB(
 			   int								p_rx_eNB,// number of eNB Rx antenna ports (1 or 2 for NB-IoT)
 			   int                              Ncp,
 			   int								Ncp_UL,
-			   long                             eutra_band,//FIXME: frequencyBandIndicator in sib1 (is a long not an int!!)
+//FIXME: frequencyBandIndicator (eutra_band) in sib1 (as Rymond Implementation) (is a long not an int!!)//XXX this param is set in the do_sib1_nb and is directly taken from the .config file
+			   long                             eutra_band,
 			   struct NS_PmaxList_NB_r13        *frequencyBandInfo, //optional SIB1
 			   struct MultiBandInfoList_NB_r13  *multiBandInfoList, //optional SIB1
 			   struct DL_Bitmap_NB_r13          *dl_bitmap, //optional SIB1

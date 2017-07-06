@@ -768,6 +768,9 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
     enb_properties_index = 0;
     num_enbs = config_setting_length(setting);
 
+
+    //Start the loop for parsing all the element over the .config file
+
     for (i = 0; i < num_enbs; i++) {
       setting_enb = config_setting_get_elem(setting, i);
 
@@ -782,6 +785,8 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
         enb_id = i;
 # endif
       }
+
+      //Identification Parameters
 
       if (  !(       config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_CELL_TYPE,           &cell_type)
                     && config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_ENB_NAME,            &enb_name)
@@ -2519,7 +2524,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
           }
 	  
 
-          // OTG _CONFIG
+          // OTG _CONFIG //MP: refers to USB On the GO Features ?? (use USB devices as a fleshdrives)
           setting_otg = config_setting_get_member (setting_enb, ENB_CONF_STRING_OTG_CONFIG);
 
           if (setting_otg != NULL) {

@@ -933,8 +933,9 @@ typedef struct {
   uint8_t relative_sib1_frame;
 
   //Flag  used to discern among different NDLSCH structures (SIB1,SI,RA,UE-spec)
-  //(in this case is used because we may have that more that one calls of npdch_procedure is needed for transmitting a data (NB-IoT implement repetitions)
+  //(used inside the ndlsch procedure for distinguish the different type of data to manage also in term of repetitions and transmission over more subframes
   ndlsch_flag_t ndlsch_type;
+
 
 
 } NB_IoT_eNB_NDLSCH_t;
