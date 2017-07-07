@@ -123,6 +123,7 @@ void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
 	  {
 		  eNB->ndlsch_ra->harq_process->pdu = sdu;
 		  eNB->ndlsch_ra->npdsch_start_symbol = rel13->start_symbol;
+		  eNB->ndlsch_ra->active = 1;
 	  }
 	  else
 	  { //this for ue data
@@ -137,8 +138,11 @@ void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
 	  	  ndlsch = eNB->ndlsch[(uint8_t)UE_id];
 	  	  ndlsch_harq     = eNB->ndlsch[(uint8_t)UE_id]->harq_process;
 	  	  AssertFatal(ndlsch_harq!=NULL,"dlsch_harq for ue specific is null\n");
+
 	  	  ndlsch->npdsch_start_symbol = rel13->start_symbol;
 	  	  ndlsch_harq->pdu  = sdu;
+	  	  ndlsch->active = 1;
+
 	  }
 
   }
@@ -151,6 +155,11 @@ void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
 }
 
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//Memo for initialization TODO: target/SIMU/USER/init_lte.c/init_lte_eNB --> new_eNB_dlsch(..) //
+//this is where the allocation of PHy_vars_eNB and all the ndlsch structures happen            //
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 // do the schedule response and trigger the TX
@@ -211,7 +220,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 
 
 
-  for (i=0;i<number_dl_pdu;i++) //in principle this should be always = 1
+  for (i=0;i<number_dl_pdu;i++) //in principle this should be at most 2 (in case of DCI)
   {
     dl_config_pdu = &DL_req->dl_config_pdu_list[i];
     switch (dl_config_pdu->pdu_type) 
@@ -235,7 +244,16 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
       		break;
     	case NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE:
     		//we can have three types of NDLSCH based on our assumptions: SIB1, SI, Data, RAR
-    		//remember that SI messages have no DCI in NB-IoT therefore this is the only way to configure the ndlsch_SI/ndlsch_SIB1 structure
+    		//remember that SI messages have no DCI in NB-IoT therefore this is the only way to configure the ndlsch_SI/ndlsch_SIB1 structures ndlsch->active = 1;
+
+    		/*
+    		 * OBSERVATION:
+    		 * Although 2 DCI may be received over a schedule_response the transmission of the NDLSCH data foresees only 1 NDLSCH PDU at time.
+    		 * Therefore is the MAC scheduler that knowing the different timing delay will send the corresponding schedule_response containing the NDLSCH PDU and the MAC PDU
+    		 * at the proper DL subframe
+    		 * -for this reason the activation of the ndslch structure is done only when we receive the NDLSCH pdu (here) such the in the TX procedure only 1 ue-specific pdu
+    		 * 	result active from the loop before calling the ndlsch_procedure
+    		 */
 
     		handle_nfapi_dlsch_pdu_NB(eNB, proc,dl_config_pdu,Sched_INFO->sdu[i]);
 

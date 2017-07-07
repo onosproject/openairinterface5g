@@ -42,7 +42,7 @@ typedef enum
 {
   DCIFormatN0 = 0,
   DCIFormatN1,
-  DCIFormatN1_RA,
+  DCIFormatN1_RA,//is for initial RA procedure (semi-static information) so maybe is not needed
   DCIFormatN1_RAR,
   DCIFormatN2,
   DCIFormatN2_Ind,

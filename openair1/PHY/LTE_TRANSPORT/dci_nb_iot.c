@@ -46,13 +46,15 @@
 
 //------------------------------------------------
 // BCOM code functions npdcch start
+// (TODO solve some error in compilation)
 //------------------------------------------------
 static uint8_t d[2][3*(MAX_DCI_SIZE_BITS_NB_IOT + 16) + 96];
 static uint8_t w[2][3*3*(MAX_DCI_SIZE_BITS_NB_IOT+16)];
 
 
-void dci_encoding_NB_IoT(uint8_t *a[2],				// Table of two DCI, even if one DCI is to transmit , the number of DCI is indicated in dci_number
-						uint8_t A,					// Length of table a
+/*
+void dci_encoding_NB_IoT(uint8_t *a[2],				// Array of two DCI pdus, even if one DCI is to transmit , the number of DCI is indicated in dci_number
+						uint8_t A,					// Length of array a (in number of bytes)(es 4 bytes = 32 bits) is a parameter fixed
 						uint16_t E,					// E should equals to G (number of available bits in one RB)
 						uint8_t *e[2],				// *e should be e[2][G]
 						uint16_t rnti[2],			// RNTI for UE specific or common search space
@@ -96,10 +98,10 @@ void dci_encoding_NB_IoT(uint8_t *a[2],				// Table of two DCI, even if one DCI 
 ///The scrambling sequence shall be initialised at the start of the search space and after every 4th NPDCCH subframes.
 ///
 ///
-void npdcch_scrambling_NB_IoT(NB_IOT_DL_FRAME_PARMS *frame_parms,
+void npdcch_scrambling_NB_IoT(NB_DL_FRAME_PARMS *frame_parms,
 							  uint8_t *e[2],							// Input data
 							  int length,        						// Total number of bits to transmit in one subframe(case of DCI = G)
-							  uint8_t Ns,								// Slot number (0..19)
+							  uint8_t Ns,//XXX we pass the subframe								// Slot number (0..19)
 							  uint8_t dci_number,						// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
 							  uint8_t agr_level)						// Aggregation level
 {
@@ -158,7 +160,7 @@ void npdcch_scrambling_NB_IoT(NB_IOT_DL_FRAME_PARMS *frame_parms,
 }
 
 
-int dci_allocate_REs_in_RB_NB_IoT(NB_IOT_DL_FRAME_PARMS *frame_parms,
+int dci_allocate_REs_in_RB_NB_IoT(NB_DL_FRAME_PARMS *frame_parms,
                                   int32_t **txdataF,
                                   uint32_t *jj,
                                   uint32_t symbol_offset,
@@ -397,11 +399,10 @@ int dci_allocate_REs_in_RB_NB_IoT(NB_IOT_DL_FRAME_PARMS *frame_parms,
 
 int dci_modulation_NB_IoT(int32_t **txdataF,
 						int16_t amp,
-						NB_IOT_DL_FRAME_PARMS *frame_parms,
-						uint8_t control_region_size,                        // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+						NB_DL_FRAME_PARMS *frame_parms,
+						uint8_t control_region_size,//XXX we pass the npdcch_start_symbol                       // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
 						uint8_t *e[2],										// Input data
 						int G,												// number of bits per subframe
-						unsigned short NB_IoT_RB_ID,
 						uint8_t dci_number,									// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
 						uint8_t agr_level)									// Aggregation level
 {
@@ -415,7 +416,7 @@ int dci_modulation_NB_IoT(int32_t **txdataF,
 	id_offset=0;
 	// testing if the total number of RBs is even or odd
 		bandwidth_even_odd = frame_parms->N_RB_DL % 2; 	 	// 0 even, 1 odd
-		RB_IoT_ID = NB_IoT_RB_ID;
+		RB_IoT_ID = frame_parms->NB_IoT_RB_ID;
 	// step  5, 6, 7   									 	// modulation and mapping (slot 1, symbols 0..3)
 	for (l=control_region_size; l<14; l++) { 								 	// loop on OFDM symbols
 		if((l>=4 && l<=8) || (l>=11 && l<=13))
@@ -448,7 +449,7 @@ int dci_modulation_NB_IoT(int32_t **txdataF,
     // VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_MODULATION, VCD_FUNCTION_OUT);
   return (re_allocated);
 }
-
+*/
 //------------------------------------------------
 // BCOM code functions npdcch end
 //------------------------------------------------
@@ -456,18 +457,23 @@ int dci_modulation_NB_IoT(int32_t **txdataF,
 
 
 
-uint8_t generate_dci_top_NB(uint8_t Num_dci,
+uint8_t generate_dci_top_NB(
+						 NB_IoT_eNB_NPDCCH_t* npdcch,
+						 uint8_t Num_dci,
                          DCI_ALLOC_NB_t *dci_alloc,
                          int16_t amp,
                          NB_DL_FRAME_PARMS *fp,
-                         //NB_IoT_eNB_NPDCCH_t npdcch,
                          int32_t **txdataF,
-                         uint32_t subframe)
+                         uint32_t subframe,
+						 uint8_t npdcch_start_symbol)
 {
 
 
-  int i,L, G;
-  int npdcch_start_index = dci_alloc->npdcch_start_symbol;
+  int i, G;
+  //temporary variable
+  uint16_t rnti[2];
+  uint8_t L = 0;
+
 
   /* PARAMETERS may not needed
   **e_ptr : store the encoding result, and as a input to modulation
@@ -480,118 +486,104 @@ uint8_t generate_dci_top_NB(uint8_t Num_dci,
   *wbar used in the interleaving and also REG allocation
   */
 
-  //num_pdcch_symbols = get_num_pdcch_symbols(num_ue_spec_dci+num_common_dci,dci_alloc,frame_parms,subframe);
-
-
-  // generate DCIs in order of decreasing aggregation level, then common/ue spec
   // MAC is assumed to have ordered the UE spec DCI according to the RNTI-based randomization???
 
   // Value of aggregation level (FAPI/NFAPI specs v.9.0 pag 221 value 1,2)
-  for (L=2; L>=1; L--) {
-    for (i=0; i<Num_dci; i++) {
+  /*
+   * in NB-IoT we can have at most 2 aggregation level since we have only 2 NCCE (Narrowband control channel element)
+   * if only 1 DCI transmitted:
+   * 	- Aggregation level could be 1 or 2
+   * if 2 DCI transmitted:
+   * 	- Aggregation level should be 1
+   *
+   */
 
-    	//XXX should be checked how the scheduler store the aggregation level for NB-IoT (value 1-2 or 0-1)
-      if (dci_alloc[i].L == (uint8_t)L) {
-
-        if (dci_alloc[i].firstCCE>=0) {
-
-
-          //NB-IoT encoding
-          /*npdcch_encoding_NB_IoT(dci_alloc[i].dci_pdu,
-                                 frame_parms,
-                                 npdcch, //see when function dci_top is called
-                                 //no frame
-                                subframe
-                                //rm_stats, te_stats, i_stats
-                                );*/
-
-        }
-      }
-    }
+  //First take all the DCI pdu and their corrispondent rnti
+  for(i = 0; i<Num_dci;i++)
+  {
+	  npdcch->a[i]=dci_alloc[i].dci_pdu;
+	  rnti[i]=dci_alloc[i].rnti;
+	  L = dci_alloc[i].L;
 
   }
+
+  if(Num_dci == 2 && L == 1)
+	  LOG_E(PHY,"generate_dci_top_NB: Aggregation level not compatible with Num_dci\n" );
+
+
+  //Second, evaluate the G variable based of the npdcch_start_sysmbol
+
+  /*
+   * TS 36.213 ch 16.6.1
+   * npdcch_start_symbol  indicate the starting OFDM symbol for NPDCCH in the first slot of a subframe k ad is determined as follow:
+   * - if eutracontrolregionsize is present (defined for in-band operating mode (mode 0,1 for FAPI specs))
+   * 	npdcch_start_symbol = eutracontrolregionsize (value 1,2,3) [units in number of OFDM symbol]
+   * -otherwise
+   * 	npdcch_start_symbol = 0
+   *
+   *XXX npdcch_start symbol should be the same for every DCI once is decided since depends on the parameters
+   *(the setting of this npdcch_start_symbol parameter should be done in the MAC)
+   *Depending on npdcch_start_symbol then we define different values for G
+   *
+   */
+
+
+  switch(npdcch_start_symbol) //mail Bcom matthieu
+  {
+	  	  case 0:
+	  		  G = 304;
+		 	break;
+	  	  case 1:
+	  		  G = 240;
+	  		  break;
+	  	  case 2:
+	  		  G = 224;
+	  		  break;
+	  	  case 3:
+	  		  G =200;
+	  		  break;
+	  	  default:
+	  		  LOG_E (PHY,"npdcch_start_symbol has unwanted value\n");
+	  		  break;
+  }
+
+   //NB-IoT encoding
+//  dci_encoding_NB_IoT(
+//		  	  	  	  a,
+//					  4, // total length (in byte) of a [assume max 2 pdus of  ??]
+//					  G,
+//					  npdcch->e,
+//					  rnti,
+//					  Num_dci,
+//					  L
+//		  	  	  	  );
+
 
 
   //NB-IoT scrambling
-  /*
-   *
-   * TS 36.213 ch 16.6.1
-   * npdcch_start_index  indicate the starting OFDM symbol for NPDCCH in the first slot of a subframe k ad is determined as follow:
-   * - if eutracontrolregionsize is present (defined for in-band operating mode (mode 0,1 for FAPI specs))
-   * 	npdcch_start_index = eutracontrolregionsize (value 1,2,3) [units in number of OFDM symbol]
-   * -otherwise
-   * 	npdcch_start_index = 0
-   *
-   *Depending on npddch_start_index then we define different values for G
-   */
-
-  //XXX the setting of this npdcch_start_index parameter should be done in the MAC
-//  if(fp->operating_mode == 0 || fp->operating_mode == 1) //in-band operating mode
-//  {
-//	  npdcch_start_index = fp->control_region_size;
-//  }
-//  else
-//  {
-//	  npdcch_start_index = 0;
-//  }
-
-  for(int i = 0; i <Num_dci; i++)
-  {
-
-	  switch(dci_alloc[i].npdcch_start_symbol) //mail Bcom matthieu
-	  {
-  	  	  case 0:
-  	  		  G = 304;
-  		 	break;
-  	  	  case 1:
-  	  		  G = 240;
-  	  		  break;
-  	  	  case 2:
-  	  		  G = 224;
-  	  		  break;
-  	  	  case 3:
-  	  		  G =200;
-  	  		  break;
-  	  	  default:
-  	  		  LOG_E (PHY,"npdcch_start_index has unwanted value\n");
-  	  		  break;
-	  }
+//  npdcch_scrambling_NB_IoT(
+//		  	  	  	  	  fp,
+//						  npdcch->e,
+//						  G,
+//						  subframe,
+//						  Num_dci,
+//						  L
+//		  	  	  	  	   );
 
 
-
-//  	  	  // NB-IoT scrambling
-//  	  	  npdcch_scrambling_NB_IoT(
-//  	  	              frame_parms,
-//  	  				  npdcch,
-//  	  				  //G,
-//  	  				  //q = nf mod 2 (TS 36.211 ch 10.2.3.1)  with nf = number of frame
-//  	  				  //slot_id
-//  	  	                    );
-
-
-  }
-
+  //NB-IoT Modulation
+//  dci_modulation_NB_IoT(
+//		  	  	  	  txdataF,
+//					  amp,
+//					  fp,
+//					  npdcch_start_symbol,
+//					  npdcch->e,
+//					  G,
+//					  Num_dci,
+//					  L
+//		  	  	  	  );
 
 
-//  //NB-IoT modulation
-//  npdcch_modulation_NB_IoT(
-//      txdataF,
-//      AMP,
-//      frame_parms,
-//      //no symbol
-//      //npdcch0???
-//      //RB_ID --> statically get from the higher layer (may included in the dl_frame params)
-//      );
-
-
-
-
-  //in NB-IoT the interleaving is done directly with the encoding procedure
-  //there is no interleaving because we don't apply turbo coding
-
-
-  // This is the REG allocation algorithm from 36-211
-  //already done in the modulation in our NB-IoT implementaiton??
 
   return 0;
 }

@@ -487,24 +487,19 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
   DCI_format_NB_t DCI_format;
   NB_IoT_eNB_NDLSCH_t *ndlsch;
 
-
-
   DCI_Content = (DCI_CONTENT*) malloc(sizeof(DCI_CONTENT));
 
-  // In NB-IoT, there is no DCI for SI, we might use the scheduling infomation from SIB1-NB to get the phyical layer configuration.
 
-  //mapping the fapi parameters to the oai parameters
-
-  // check DCI format is N1 (format 0) or N2 (format 1)
+  // check DCI format is N1 (format 0)
   if(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_format == 0)
     {
       //check DCI format N1 is for RAR  rnti_type  in FAPI specs table 4-45
       if(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti_type == 1)
         {
-          DCI_format = DCIFormatN1_RAR;
 
-          ndlsch= eNB->ndlsch_ra;//we store the RNTI for the RAR
-          ndlsch->ndlsch_type = RAR;
+    	  //mapping the fapi parameters to the oai parameters
+
+          DCI_format = DCIFormatN1_RAR;
 
           //DCI format N1 to RAR
           DCI_Content->DCIN1_RAR.type           = 1;
@@ -519,7 +514,11 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
 
 
           // fill the dlsch_ra_NB sructure for RAR, and packed the DCI PDU
-          LOG_D(PHY,"Generating dlsch params for RA_RNTI\n");
+
+          ndlsch= eNB->ndlsch_ra;
+          ndlsch->ndlsch_type = RAR;
+
+          LOG_D(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");
           NB_generate_eNB_dlsch_params_from_dci(eNB,
                                                 frame,
                                                 subframe,
@@ -539,10 +538,12 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
 
     	  //TODO target/SIMU/USER?init_lte/init_lte_eNB we should allocate the ndlsch structures
     	  UE_id = find_ue_NB(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti, eNB);
-    	  AssertFatal(UE_id == -1, "no ndlsch context available or no ndlsch context corresponding to that rnti\n");
+    	  AssertFatal(UE_id != -1, "no ndlsch context available or no ndlsch context corresponding to that rnti\n");
 
-    	  ndlsch = eNB->ndlsch[(uint8_t)UE_id]; //in the old implementation they also consider UE_id = 1;
-    	  ndlsch->ndlsch_type = UE_Data;
+
+    	  //mapping the fapi parameters to the oai parameters
+
+    	  	  DCI_format = DCIFormatN1;
 
               //DCI format N1 to DLSCH
               DCI_Content->DCIN1.type           = 1;
@@ -555,8 +556,14 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
               DCI_Content->DCIN1.HARQackRes     = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
               DCI_Content->DCIN1.DCIRep         = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
 
-              //fill the ndlsch structure for UE 
+              //fill the ndlsch structure for UE and packed the DCI PD
+
+        	  ndlsch = eNB->ndlsch[(uint8_t)UE_id]; //in the old implementation they also consider UE_id = 1;
+        	  ndlsch->ndlsch_type = UE_Data;
+
               //parameters we don't consider pdsch config dedicated since not calling the phy config dedicated step2
+
+        	  LOG_D(PHY,"Generating dlsch params for DCIN1 data and packing DCI\n");
               NB_generate_eNB_dlsch_params_from_dci(eNB,
                                                     frame,
                                                     subframe,
@@ -1041,12 +1048,13 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
      *
      *
      *XXX important: set the flag HARQ process->status to DISABLE when PHY finished the SI-transmission over the 2 or 8 subframes
-     *XXX important: whenever we enter for some error in the ndlsch_procedure with a pdu that is NULL but all the data of the SI have been transmitted --> generate error
-     *XXX : the npdlsch_procedure in this case should be only called when is triggered by the MAC schedule_response (use the status flag set by the schedule_response)
+     *XXX important: whenever we enter for some error in the ndlsch_procedure with a pdu that is NULL but all the data of the SI have been transmitted (pdu_buffer_index = 0)
+     *XXX  --> generate error
+     *XXX: the npdlsch_procedure in this case should be only called when is triggered by the MAC schedule_response (use the status flag set by the schedule_response)
      *
      */
 
-	if(eNB->ndlsch_SI->harq_process->status == ACTIVE && (eNB->ndlsch_SI->harq_process->status != ACTIVE || subframe != 4)) //condition on SIB1-NB
+	if(eNB->ndlsch_SI->harq_process->status == ACTIVE && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE || subframe != 4)) //condition on SIB1-NB
 	{
 	    if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
 	     {
@@ -1078,31 +1086,79 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	}
 
 
+
       ///check for RAR transmission
-      if(eNB->ndlsch_ra != NULL && eNB->ndlsch_ra->active == 1)
+      if(eNB->ndlsch_ra != NULL && eNB->ndlsch_ra->active == 1 && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE || subframe != 4)) //condition on SIB1-NB
       {
+  	    if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
+  	     {
+  	      if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5 && subframe != 9)
+  	       {
 
-    	  npdsch_procedures(eNB,
-            			proc,
-						eNB->ndlsch_ra, //should be filled ?? (in the old implementation was filled when from DCI we generate_dlsch_params
-						eNB->ndlsch_ra->harq_process->pdu);
+  	    	  npdsch_procedures(eNB,
+            					proc,
+								eNB->ndlsch_ra, //should be filled ?? (in the old implementation was filled when from DCI we generate_dlsch_params
+								eNB->ndlsch_ra->harq_process->pdu);
 
-    	  eNB->ndlsch_ra->active= 0;
+  	    	  //it should be activated only when we receive the proper DCIN1_RAR
+  	    	  eNB->ndlsch_ra->active= 0;
+  	       }
+  	     }
+	    else //this frame not foresee the transmission of NSSS (subframe 9 is available)
+	    {
+	    	if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5)
+	    	   {
+	  	    	  npdsch_procedures(eNB,
+	            					proc,
+									eNB->ndlsch_ra, //should be filled ?? (in the old implementation was filled when from DCI we generate_dlsch_params
+									eNB->ndlsch_ra->harq_process->pdu);
 
+	  	    	  //it should be activated only when we receive the proper DCIN1_RAR
+	  	    	  eNB->ndlsch_ra->active= 0; // maybe this is already done inside the ndlsch_procedure
+
+	    	   }
+	    }
       }
 
 
+      /*
+       * Delays between DCI transmission and NDLSCH transmission are taken in consideration by the MAC scheduler by sending in the proper subframe the scheduler_response
+       * Transmission over more subframe and Repetitions are managed directly by the PHY layer
+       * We should have only 1 ue-specific ndlsch structure active at each time (active flag is set = 1 only at the corresponding NDLSCH pdu reception and not at the DCI time
+       * (NDLSCH transmission should be compliant with the FAPI procedure Figure 3-49)
+       *
+       * XXX how are managed the transmission and repetitions???
+       *
+       */
 
-
-      //transmission of UE specific ndlsch data
+      //this should give only 1 result (since only 1 ndlsch procedure is activated at once) so we brak after the transmission
       for (int UE_id = 0; i < NUMBER_OF_UE_MAX_NB_IoT; UE_id++)
       {
-    	  if(eNB->ndlsch[(uint8_t)UE_id] != NULL && eNB->ndlsch[(uint8_t)UE_id]->active == 1)
+    	  if(eNB->ndlsch[(uint8_t)UE_id] != NULL && eNB->ndlsch[(uint8_t)UE_id]->active == 1 && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE || subframe != 4)) //condition on sib1-NB
     	  {
-        	  npdsch_procedures(eNB,
-                			proc,
-							eNB->ndlsch[(uint8_t)UE_id],
-							eNB->ndlsch[(uint8_t)UE_id]->harq_process->pdu);
+    	  	if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
+    	  	  {
+    	  	    if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5 && subframe != 9)
+    	  	     {
+    	  	    	npdsch_procedures(eNB,
+                						proc,
+										eNB->ndlsch[(uint8_t)UE_id],
+										eNB->ndlsch[(uint8_t)UE_id]->harq_process->pdu);
+    	  	    	break;
+    	  	       }
+    	  	     }
+    	    else //this frame not foresee the transmission of NSSS (subframe 9 is available)
+    	    {
+    	    	if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5)
+    	    	   {
+    	  	    	npdsch_procedures(eNB,
+                						proc,
+										eNB->ndlsch[(uint8_t)UE_id],
+										eNB->ndlsch[(uint8_t)UE_id]->harq_process->pdu);
+    	  	    	break;
+
+    	    	   }
+    	    }
     	  }
 
     	  //we don't care about subframe TX for the PUCCH since not defined by NB-IoT
@@ -1114,11 +1170,13 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
       /*If we have DCI to generate do it now*/
       generate_dci_top_NB(
+    		  	  	  	  eNB->npdcch,
     		  	  	  	  dci_pdu->Num_dci,
 						  dci_pdu->dci_alloc,
 						  AMP,
 						  fp,
 						  eNB->common_vars.txdataF[0],
-						  subframe);
+						  subframe,
+						  dci_pdu->npdcch_start_symbol); //this parameter depends by eutraControlRegionSize (see TS36.213 16.6.1)
 
 }

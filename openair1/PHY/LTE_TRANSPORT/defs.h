@@ -818,14 +818,24 @@ typedef enum
 }ndlsch_flag_t;
 
 
+
 typedef struct {
 
-  ///indicates the starting OFDM symbol in the first slot of a subframe k for the NPDCCH transmission
-  /// see FAPI/NFAPI specs Table 4-121
-  uint8_t npdcch_start_symbol;
+	//array containing the pdus of DCI
+	uint8_t *a[2];
+	//Array containing encoded DCI data
+	uint8_t *e[2];
+
+
+}NB_IoT_eNB_NPDCCH_t;
+
+
+
+typedef struct {
+
   /// Length of DCI in bits
   uint8_t dci_length;
-  /// Aggregation level only 0,1 in NB-IoT
+  /// Aggregation level only 1,2 in NB-IoT
   uint8_t L;
   /// Position of first CCE of the dci
   int firstCCE;
@@ -842,6 +852,9 @@ typedef struct {
 typedef struct {
   //delete the count for the DCI numbers,NUM_DCI_MAX should set to 2
   uint32_t num_npdcch_symbols;
+  ///indicates the starting OFDM symbol in the first slot of a subframe k for the NPDCCH transmission
+  /// see FAPI/NFAPI specs Table 4-45
+  uint8_t npdcch_start_symbol;
   uint8_t Num_dci;
   DCI_ALLOC_NB_t dci_alloc[2] ;
 } DCI_PDU_NB;
@@ -882,6 +895,8 @@ typedef struct {
   uint8_t mcs;
   // we don't have code block segmentation / crc attachment / concatenation in NB-IoT R13 36.212 6.4.2
   // we don't have beamforming in NB-IoT
+  //this index will be used mainly for SI message buffer
+   uint8_t pdu_buffer_index;
 
 } NB_IoT_DL_eNB_HARQ_t;
 
