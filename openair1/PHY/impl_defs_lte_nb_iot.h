@@ -152,6 +152,13 @@ typedef struct {
 } DL_GapConfig_NB;
 
 typedef struct {
+
+
+  /// Number of resource blocks (RB) in DL of the LTE (for knowing the bandwidth)
+  uint8_t N_RB_DL;
+  /// Number of resource blocks (RB) in UL of the LTE ((for knowing the bandwidth)
+  uint8_t N_RB_UL;
+
   /// Cell ID
   uint16_t Nid_cell;
   /// Cyclic Prefix for DL (0=Normal CP, 1=Extended CP)
@@ -225,8 +232,6 @@ typedef struct {
   uint32_t            ul_CarrierFreq;
   // CE level to determine the NPRACH Configuration (one CE for each NPRACH config.)
   uint8_t             CE;
-
-
 
   /*
    * index of the PRB assigned to NB-IoT carrier in in-band/guard-band operating mode

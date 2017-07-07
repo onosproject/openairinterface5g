@@ -92,7 +92,7 @@ void npbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
 /*Function to pack the DCI*/
 void NB_add_dci(DCI_PDU_NB *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_size_bytes,unsigned char aggregation,unsigned char dci_size_bits,unsigned char dci_fmt, uint8_t npdcch_start_symbol);
 
-/*Use the UL DCI Information to configure PHY and also Packed*/
+/*Use the UL DCI Information to configure PHY and also Pack the DCI*/
 int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
                                        eNB_rxtx_proc_t *proc,
                                        DCI_CONTENT *DCI_Content,
@@ -102,7 +102,7 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
                                        uint8_t aggregation,
 									   uint8_t npdcch_start_symbol
                                       );
-/*Use the DL DCI Information to configure PHY and also Packed*/
+/*Use the DL DCI Information to configure PHY and also Pack the DCI*/
 int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
                                         int frame,
                                        uint8_t subframe,
@@ -114,6 +114,18 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
                                        uint8_t aggregation,
 									   uint8_t npdcch_start_symbol
                                        );
+
+/*Function for DCI encoding, scrambling, modulation*/
+uint8_t generate_dci_top_NB(
+						 NB_IoT_eNB_NPDCCH_t* npdcch,
+						 uint8_t Num_dci,
+                         DCI_ALLOC_NB_t *dci_alloc,
+                         int16_t amp,
+                         NB_DL_FRAME_PARMS *fp,
+                         int32_t **txdataF,
+                         uint32_t subframe,
+						 uint8_t npdcch_start_symbol);
+
 
 
 #endif

@@ -56,7 +56,7 @@ void NB_add_dci(DCI_PDU_NB *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_size
   DCI_pdu->dci_alloc[DCI_pdu->Num_dci].L          = aggregation;
   DCI_pdu->dci_alloc[DCI_pdu->Num_dci].rnti       = rnti;
   DCI_pdu->dci_alloc[DCI_pdu->Num_dci].format     = dci_fmt;
-  DCI_pdu->dci_alloc[DCI_pdu->Num_dci].npdcch_start_symbol = npdcch_start_symbol;
+  DCI_pdu->npdcch_start_symbol = npdcch_start_symbol;
 
   DCI_pdu->Num_dci++;
 
@@ -122,7 +122,6 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
       ((DCIN0_t *)ULSCH_DCI_NB)->ndi       =ndi;
       ((DCIN0_t *)ULSCH_DCI_NB)->DCIRep    =DCIRep;
 
-      eNB->DCI_pdu->Num_dci++;
 
       NB_add_dci(eNB->DCI_pdu,ULSCH_DCI_NB,rnti,sizeof(DCIN0_t),aggregation,sizeof_DCIN0_t,DCIFormatN0, npdcch_start_symbol);
 
@@ -158,6 +157,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
   NB_IoT_DL_eNB_HARQ_t* ndlsch_harq = ndlsch->harq_process;
   void *DLSCH_DCI_NB = NULL;
   eNB->DCI_pdu = (DCI_PDU_NB*) malloc(sizeof(DCI_PDU_NB));
+
 
 
   //N1 parameters
@@ -229,8 +229,8 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     /*Now configure the ndlsch structure*/
 
     ndlsch->subframe_tx[subframe] = 1; // check if it's OK
-    ndlsch->rnti = rnti;
-    ndlsch->active = 1;
+    ndlsch->rnti = rnti; //we store the RNTI (e.g. for RNTI will be used later)
+    ndlsch->active = 0; //will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
     ndlsch_harq->scheduling_delay = Sched_delay;
@@ -248,8 +248,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
      * ISF = ResAssign
      */
 
-    ndlsch_harq->TBS = TBStable_NB_IoT[mcs][ResAssign]; // this table should be rewritten for nb-iot
-    ndlsch_harq->frame = frame;
+    ndlsch_harq->TBS = TBStable_NB_IoT[mcs][ResAssign];
     ndlsch_harq->subframe = subframe;
 
     //ndlsch_harq->B; we don-t have now my is given when we receive the dlsch data
@@ -299,6 +298,8 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     /*Now configure the ndlsch structure*/
 
     ndlsch->subframe_tx[subframe] = 1; // check if it's OK
+    ndlsch->rnti = rnti; //we store the RNTI (e.g. for RNTI will be used later)
+    ndlsch->active = 0;//will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
         ndlsch_harq->scheduling_delay = Sched_delay;
