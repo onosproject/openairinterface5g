@@ -1123,11 +1123,20 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
       /*
        * Delays between DCI transmission and NDLSCH transmission are taken in consideration by the MAC scheduler by sending in the proper subframe the scheduler_response
+       * (TS 36.213 ch 16.4.1: DCI format N1, N2, ending in subframe n intended for the UE, the UE shall decode, starting from subframe n+5 DL subframe,
+       * the corresponding NPDSCH transmission over the N consecutive NB/IoT DL subframes according to NPDCCH information)
        * Transmission over more subframe and Repetitions are managed directly by the PHY layer
        * We should have only 1 ue-specific ndlsch structure active at each time (active flag is set = 1 only at the corresponding NDLSCH pdu reception and not at the DCI time
        * (NDLSCH transmission should be compliant with the FAPI procedure Figure 3-49)
        *
-       * XXX how are managed the transmission and repetitions???
+       * XXX how are managed the transmission and repetitions over the NPDSCH:
+       * -repetitions over the NPDSCH channel are defined inside the DCI
+       * -need to know the repetition number R (see specs)
+       * -repetition are made following a pattern rule (e.g. 00, 11 ...) (see specs)
+       * --whenever R>4 then repetition pattern rule changes
+       * -possibility to have DL-GAP (OPTIONAL) otherwise no gap in DCI transmission
+       *
+       * XXX During repetitions of DCI or NDLSCH we receive no schedule_response form MAC
        *
        */
 
@@ -1168,7 +1177,26 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       //no dedicated phy config
 
 
-      /*If we have DCI to generate do it now*/
+      /*If we have DCI to generate do it now
+       *
+       * DCI in NB-IoT are transmitted over NPDCCH search spaces as described in TS 36.213 ch 16.6
+       * 1)distinction of NPDCCH SS is implicit with type of DCI? (assume yes)
+       * 2)NPDCCH rep. number (R) is obtained by different tables and by the higher layer parms:
+       * -npdcch-NumRepetitions (UE-specific)
+       * -npdcch-NumRepetitionPaging (common)
+       * -npdcch-NumRepetitions-rA (common)
+       *  PROBLEM: in FAPI specs seems there is no way to trasnmit them to the PHY
+       *
+       *  We need
+       *  - a flag for telling us if it is a new repetition or not (means when the MAC transmit the scedule response for the DCI
+       *  -Add a check for understanding if the current subframe is at the beginning of the search space or not
+       *  -among the R repetition which number is the current one
+       *
+       *  ***whenever we have aggretation level = 1 for UE-specific the R is always = 1 (see table 16.6-1)
+       *
+       *
+       * */
+
       generate_dci_top_NB(
     		  	  	  	  eNB->npdcch,
     		  	  	  	  dci_pdu->Num_dci,

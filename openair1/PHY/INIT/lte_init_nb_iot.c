@@ -52,50 +52,33 @@ void NB_phy_config_mib_eNB(
 			int                 Ncp,
 			int					Ncp_UL,
 			int                 p_eNB,
-			uint32_t            dl_CarrierFreq,
-			uint32_t            ul_CarrierFreq,
+			uint16_t			EARFCN,
 			uint16_t			prb_index, // NB_IoT_RB_ID,
 			uint16_t 			operating_mode,
 			uint16_t			control_region_size,
 			uint16_t			eutra_NumCRS_ports)
 {
 
-  /*Not sure if phy parameters should be initial here or not (RAYMOND version)*/
-  /*the phy_config_mib_eNB as the entry point to allocate the context for L1.  The RC contains the context for L1,L2. If RC.eNB is NULL, it hasn't been allocated earlier so we allocate it there.*/
-  /*if (RC.eNB == NULL) {
-    RC.eNB                               = (PHY_VARS_eNB ***)malloc((1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
-    LOG_I(PHY,"RC.eNB = %p\n",RC.eNB);
-    memset(RC.eNB,0,(1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
-  }
-  if (RC.eNB[Mod_id] == NULL) {
-    RC.eNB[Mod_id]                       = (PHY_VARS_eNB **)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB**));
-    LOG_I(PHY,"RC.eNB[%d] = %p\n",Mod_id,RC.eNB[Mod_id]);
-    memset(RC.eNB[Mod_id],0,(1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB***));
-  }
-  if (RC.eNB[Mod_id][CC_id] == NULL) {
-    RC.eNB[Mod_id][CC_id] = (PHY_VARS_eNB *)malloc(sizeof(PHY_VARS_eNB));
-    LOG_I(PHY,"RC.eNB[%d][%d] = %p\n",Mod_id,CC_id,RC.eNB[Mod_id][CC_id]);
-    RC.eNB[Mod_id][CC_id]->Mod_id        = Mod_id;
-    RC.eNB[Mod_id][CC_id]->CC_id         = CC_id;
-  }
 
-  RC.eNB[Mod_id][CC_id]->mac_enabled     = 1;
-
-  fp = &RC.eNB[Mod_id][CC_id]->frame_parms; */
+  AssertFatal(PHY_vars_eNB_g != NULL, "PHY_vars_eNB_g instance pointer doesn't exist\n");
+  AssertFatal(PHY_vars_eNB_g[Mod_id] != NULL, "PHY_vars_eNB_g instance %d doesn't exist\n",Mod_id);
+  AssertFatal(PHY_vars_eNB_g[Mod_id][CC_id] != NULL, "PHY_vars_eNB_g instance %d, CCid %d doesn't exist\n",Mod_id,CC_id);
 
   NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms_nb_iot;
 
-   LOG_I(PHY,"Configuring MIB-NB for instance %d, CCid %d : (band %d,Nid_cell %d,p %d,DL freq %u)\n",
-  	  	  Mod_id, CC_id, eutra_band, Nid_cell, p_eNB,dl_CarrierFreq);
+   LOG_I(PHY,"Configuring MIB-NB for instance %d, CCid %d : (band %d,Nid_cell %d,p %d,EARFCN %u)\n",
+  	  	  Mod_id, CC_id, eutra_band, Nid_cell, p_eNB,EARFCN);
 
+//  fp->N_RB_DL
+//  fp->N_RB_UL						also this two values need to be known when we are dealing with in-band and guard-band operating mode
   fp->Nid_cell                           = Nid_cell;
   fp->nushift                            = Nid_cell%6;
   fp->eutra_band                         = eutra_band;
   fp->Ncp                             	 = Ncp;
   fp->Ncp_UL							 = Ncp_UL;
   fp->nb_antenna_ports_eNB               = p_eNB; //tx antenna port
-  fp->dl_CarrierFreq                     = dl_CarrierFreq;
-  fp->ul_CarrierFreq                     = ul_CarrierFreq;
+  fp->dl_CarrierFreq                     = from_earfcn(eutra_band,EARFCN);
+  fp->ul_CarrierFreq                     = fp->dl_CarrierFreq - get_uldl_offset(eutra_band);
   fp->operating_mode					 = operating_mode; //see how are defined by FAPI structure
   fp->NB_IoT_RB_ID						 = prb_index; //XXX to be better understand how should be managed
   //fp->nb_rx_antenna_ports_eNB
@@ -103,12 +86,13 @@ void NB_phy_config_mib_eNB(
   fp->eutra_NumCRS_ports				 = eutra_NumCRS_ports; //(valid only for in-band operating mode with different PCI)
   
 
-  //TODO
+  //TODO for nb-iot ??? (new Raymond implementation) in the classic implementation seems to be used only by oaisim
   //init_frame_parms(fp,1);
   //init_lte_top(fp);
 
 }
 
+//Before FAPI implementation
 //void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 //                         int CC_id,
 //                         RadioResourceConfigCommonSIB_NB_r13_t *radioResourceConfigCommon

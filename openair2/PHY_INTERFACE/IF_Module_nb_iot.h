@@ -65,17 +65,13 @@ typedef struct{
 	//For Nb-IoT only a restricted values of PRB indexes are allowed (see Rhode&Shwartz pag9)
 	//unsigned short NB_IoT_RB_ID; (should coincide with PRB index)
 
-	//In FAPI specs --> is inside the nb_iot_rssi_request (P4 Network Monitor Mode procedure)
-	//In OAI is called eutra_band
-	uint8_t frequency_band_indicator; //parameter carried by the SIB1-NB, is and index of the Table 5.5-1 TS 36.101
-
 	//In 3GPP specs (TS 36.101 Table 5.7.3-1 and ch 5.7.3F) see also SIB2-NB freqInfo.ul-carrierFreq
 	//this parameters should be evaluated based of the EUTRA Absolute Radio Frequency Channel Number (EARFCN)
 	//in FAPI this value is given inside the BROADCAST DETECT request (P4 Network Monitor Mode procedure)
 	//in OAI we set the dl_CarrierFrequenci at configuration time (see COMMON/rrc_messages_types.h)
 	//then adding an offset for the ul_CarrierFreq ( see RU-RAU split approach - init_SI)
-	uint32_t dl_CarrierFreq;
-	uint32_t ul_CarrierFreq;
+	//uint32_t dl_CarrierFreq;
+	//uint32_t ul_CarrierFreq; --> problem solved since we directly evaluate the EARFCN has requested by FAPI specs
 
 
 	/*FAPI style config. parameters
@@ -87,13 +83,14 @@ typedef struct{
 	 * -nfapi_sch_config_t sch_config;
 	 * -nfapi_nb_iot_config_t nb_iot_config;
 	 * -nfapi_l23_config_t l23_config;
+	 * -nfapi_config --> EARFCN
 	 *
 	 * */
 	//XXX where allocate memory??
 	nfapi_config_request_t* cfg;
 
 
-	/*Dedicated configuration -->not supported by FAPI
+	/*Dedicated configuration -->not supported by FAPI (may not needed)
 	 * In OAI at least are needed when we manage the phy_procedures_eNB_TX in which we call the phy_config_dedicated_eNB_step2
 	 * that use the physicalConfigDedicated info previously stored in the PHY_VARS_eNB structure through the phy_config_dedicated procedure
 	 */

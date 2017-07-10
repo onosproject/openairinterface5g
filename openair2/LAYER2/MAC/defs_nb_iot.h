@@ -541,6 +541,7 @@ typedef struct {
 } eNB_STATS_NB;
 /*! \brief top level eNB MAC structure */
 typedef struct {
+
   ///
   uint16_t Node_id;
   /// frame counter

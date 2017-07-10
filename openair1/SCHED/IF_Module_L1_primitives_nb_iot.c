@@ -227,6 +227,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     {
     	case NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE:
     		//Remember: there is no DCI for SI information
+    		//TODO: separate the ndlsch structure configuration from the DCI (here we will encode only the DCI)
       		NB_generate_eNB_dlsch_params(eNB,proc,dl_config_pdu);
 
       		break;
@@ -319,17 +320,17 @@ void PHY_config_req(PHY_Config_t* config_INFO){
 		//MIB-NB configuration
 		NB_phy_config_mib_eNB(config_INFO->mod_id,
 							  config_INFO->CC_id,
-							  config_INFO->frequency_band_indicator,
+							  config_INFO->cfg->nfapi_config.rf_bands.rf_band[0],//eutraband
 							  config_INFO->cfg->sch_config.physical_cell_id.value,
 							  config_INFO->cfg->subframe_config.dl_cyclic_prefix_type.value,
 							  config_INFO->cfg->subframe_config.ul_cyclic_prefix_type.value,
 							  config_INFO->cfg->rf_config.tx_antenna_ports.value,
-							  config_INFO->dl_CarrierFreq,
-							  config_INFO->ul_CarrierFreq,
+							  config_INFO->cfg->nfapi_config.earfcn.value,
 							  config_INFO->cfg->nb_iot_config.prb_index.value,
 							  config_INFO->cfg->nb_iot_config.operating_mode.value,
 							  config_INFO->cfg->nb_iot_config.control_region_size.value,
 							  config_INFO->cfg->nb_iot_config.assumed_crs_aps.value); //defined only in in-band different PCI
+
 	}
 
 	if(config_INFO->get_COMMON != 0)
@@ -344,6 +345,7 @@ void PHY_config_req(PHY_Config_t* config_INFO){
 							   );
 	}
 
+	///FOR FAPI is not specified
 	if(config_INFO->get_DEDICATED!= 0)
 	{
 	//Dedicated Configuration

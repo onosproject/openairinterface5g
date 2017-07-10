@@ -870,7 +870,7 @@ typedef struct {
   uint8_t repetition_number;
   /// Determined the ACK/NACK delay and the subcarrier allocation TS 36.213 Table 16.4.2
   uint8_t HARQ_ACK_resource;
-  /// Determined the repetition number value 0-3
+  /// Determined the repetition number value 0-3 (2 biut carried by the FAPI NPDCCH)
   uint8_t dci_subframe_repetitions;
   /// modulation always QPSK Qm = 2 
   uint8_t modulation;
