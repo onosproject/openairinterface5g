@@ -349,14 +349,12 @@ void PHY_config_req(PHY_Config_t* config_INFO){
 	if(config_INFO->get_DEDICATED!= 0)
 	{
 	//Dedicated Configuration
-		if(config_INFO->phy_config_dedicated != NULL){
 
 			NB_phy_config_dedicated_eNB(config_INFO->mod_id,
 										config_INFO->CC_id,
 										config_INFO->rnti,
-										config_INFO->phy_config_dedicated //not defined by fapi specs
+										&config_INFO->extra_phy_parms
 										);
-		}
 
 	}
 }

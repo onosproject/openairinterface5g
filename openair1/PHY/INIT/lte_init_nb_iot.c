@@ -77,7 +77,7 @@ void NB_phy_config_mib_eNB(
   fp->Ncp                             	 = Ncp;
   fp->Ncp_UL							 = Ncp_UL;
   fp->nb_antenna_ports_eNB               = p_eNB; //tx antenna port
-  fp->dl_CarrierFreq                     = from_earfcn(eutra_band,EARFCN);
+  fp->dl_CarrierFreq                     = from_earfcn(eutra_band,EARFCN,0);
   fp->ul_CarrierFreq                     = fp->dl_CarrierFreq - get_uldl_offset(eutra_band);
   fp->operating_mode					 = operating_mode; //see how are defined by FAPI structure
   fp->NB_IoT_RB_ID						 = prb_index; //XXX to be better understand how should be managed
@@ -86,7 +86,7 @@ void NB_phy_config_mib_eNB(
   fp->eutra_NumCRS_ports				 = eutra_NumCRS_ports; //(valid only for in-band operating mode with different PCI)
   
 
-  //TODO for nb-iot ??? (new Raymond implementation) in the classic implementation seems to be used only by oaisim
+  //TODO  (new Raymond implementation) in the classic implementation seems to be used only by oaisim
   //init_frame_parms(fp,1);
   //init_lte_top(fp);
 
@@ -200,7 +200,6 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 	LOG_D(PHY,"[eNB%d] CCid %d: Applying nb_iot_config from sib2_NB\n",Mod_id,CC_id);
 	  
 	/*NPRACH_ConfigSIB_NB_r13----------------------------------------------------------*/
-	//NPRACH_ConfigSIB_NB_r13_t a;
 
 	//MP: FAPI style approach: instead of a list they consider the 3 possible configuration separately
 
@@ -328,7 +327,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 	  //fp->npusch_config_common.srs_SubframeConfig /*OPTIONAL*/
 
 
-      //TODO:should change the part that implement the ul hopping in NB-IoT
+      //TODO:should change the part that implement the ul hopping in NB-IoT?? (
 	  //init_ul_hopping(fp);
 
 
@@ -357,9 +356,11 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 void NB_phy_config_dedicated_eNB(uint8_t Mod_id,
                               int CC_id,
                               uint16_t rnti,
-                              struct PhysicalConfigDedicated_NB_r13 *physicalConfigDedicated)
+							  extra_phyConfigCommon_t *extra_parms
+							  )
 {
 	  PHY_VARS_eNB *eNB = PHY_vars_eNB_g[Mod_id][CC_id];
+	  NB_IoT_eNB_NPDCCH_t *npdcch;
 	  uint8_t UE_id = find_ue(rnti,eNB);
 	
 	  if (UE_id == -1) {
@@ -367,10 +368,17 @@ void NB_phy_config_dedicated_eNB(uint8_t Mod_id,
 		return;
 	  }
 	
-	/*physicalconfigDedicated is defined in PHY_VARS_eNB in defs.h in PHY layer*/
-	  if (physicalConfigDedicated) {
-		eNB->phy_config_dedicated_NB[UE_id] = physicalConfigDedicated;
-		LOG_I(PHY,"NB_phy_config_dedicated_eNB: physicalConfigDedicated=%p\n",physicalConfigDedicated);
+	  //configure UE specific parameters for NPDCCH Search Space
+
+	  if (eNB->npdcch[UE_id]) {
+		npdcch = eNB->npdcch[UE_id];
+		npdcch->rnti = rnti;
+		npdcch->npdcch_NumRepetitions = extra_parms->npdcch_NumRepetitions;
+		npdcch->npdcch_Offset_USS = extra_parms->npdcch_Offset_USS;
+		npdcch->npdcch_StartSF_USS = extra_parms->npdcch_StartSF_USS;
+
+		LOG_I(PHY,"NB_phy_config_dedicated_eNB: npdcch_NumRepetitions = %d, npdcch_Offset_USS = %d, npdcch_StartSF_USS = %d\n",
+				npdcch->npdcch_NumRepetitions, npdcch->npdcch_Offset_USS, npdcch->npdcch_StartSF_USS);
 	
 	  } else {
 		LOG_E(PHY,"[eNB %d] Received NULL radioResourceConfigDedicated from eNB %d\n",Mod_id, UE_id);

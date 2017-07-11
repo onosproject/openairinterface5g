@@ -930,6 +930,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   uint32_t ul_frame;
   int **txdataF = eNB->common_vars.txdataF[0];
   uint32_t sib1_startFrame = -1;
+  NB_IoT_eNB_NPDCCH_t*npdcch;
 
 
 
@@ -1194,8 +1195,16 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
        *
        *  ***whenever we have aggretation level = 1 for UE-specific the R is always = 1 (see table 16.6-1)
        *
+       *s
        *
        * */
+
+      //XXX we should check which npdcch structure we have to pass
+      //assume that the [0] is used for common search space
+//      for(int i = UE_id; i < NUMBER_OF_UE_MAX_NB_IoT; UE_id++)
+//      {
+//    	  if(eNB->npdcch[(uint8_t)UE_id] != NULL && eNB->npdcch[(uint8_t)UE_id]->rnti == dci_pdu->dci_alloc )
+//      }
 
       generate_dci_top_NB(
     		  	  	  	  eNB->npdcch,

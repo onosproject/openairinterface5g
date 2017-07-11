@@ -123,6 +123,12 @@ extern void (*rlc_rrc_data_conf)(
 
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Most of the Functions re-defined for NB-IoT should be re-located in their proper position over the code as already indicated the comments//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 /*---------------------------------RRC-MAC-----------------------------------*/
 
 
@@ -147,15 +153,16 @@ typedef struct band_info_s {
 } band_info_t;
 
 
-//TS 36.101 Table 7.7.3-1 for the EARFCN values (Last column of the table Noff_DL = lowest defined EARFCN value for the corresponfing band)
+//TS 36.101 Table 7.7.3-1 for the EARFCN values (Last column of the table Noff_DL = lowest defined EARFCN value for the corresponding band)
 //TS 36.101 Table 5.5-1 for the Operating bands + 5.5F for the operating bands of category NB1 and NB2
-
+//frequency are in 100KHz in order to consider all unsigned int
 static const eutra_bandentry_NB_t eutra_bandtable[] = {
+//[BAND] [FUL_low] [FUL_hi] [FDL_low] [FDL_hig] [NOFF_DL]
   { 1, 19200, 19800, 21100, 21700, 0},
   { 2, 18500, 19100, 19300, 19900, 6000},
   { 3, 17100, 17850, 18050, 18800, 12000},
   { 5,  8240,  8490,  8690,  8940, 24000},
-  { 8,  8800, 9150 ,  9250,  9600, 34500},
+  { 8,  8800, 9150,  9250,  9600, 34500},
   {11, 14279, 14529, 14759, 15009, 47500},
   {12,  6980,  7160,  7280,  7460, 50100},
   {13,  7770,  7870,  7460,  7560, 51800},
@@ -164,11 +171,11 @@ static const eutra_bandentry_NB_t eutra_bandtable[] = {
   {19,  8300,  8450,  8750,  8900, 60000},
   {20,  8320,  8620,  7910,  8210, 61500},
   {25, 18500, 19150, 19300, 19950, 80400},
-  {26, 8140 ,  8490,  8590,  8940, 86900},
-  {28, 7030 ,  7580,  7580,  8130, 92100},
-  {31, 45250, 34900, 46250, 35900, 98700}, //may should add a "0" at the end of N_OFFS_DL
-  {66, 17100, 18000, 21100, 22000, 66436},//may should add a "0" at the end of N_OFFS_DL
-  {70, 16950 , 17100 ,  19950,  20200, 68336}};//may should add a "0" at the end of N_OFFS_DL
+  {26, 8140,  8490,  8590,  8940, 86900},
+  {28, 7030,  7580,  7580,  8130, 92100},
+  {31, 45250, 34900, 46250, 35900, 98700},
+  {66, 17100, 18000, 21100, 22000, 664360},
+  {70, 16950 , 17100,  19950,  20200, 683360}}; //may not used for Rel.13 equipment
 
 uint32_t to_earfcn(int eutra_bandP,uint32_t dl_CarrierFreq, float m_dl) {
 
@@ -176,7 +183,7 @@ uint32_t to_earfcn(int eutra_bandP,uint32_t dl_CarrierFreq, float m_dl) {
 
   int i;
 
-  AssertFatal(eutra_bandP < 69,"eutra_band %d > 68\n",eutra_bandP);
+  AssertFatal(eutra_bandP < 70,"eutra_band %d > 70\n",eutra_bandP);
   for (i=0;i<69 && eutra_bandtable[i].band!=eutra_bandP;i++);
 
   AssertFatal(dl_CarrierFreq_by_100k>=eutra_bandtable[i].dl_min,
@@ -193,11 +200,14 @@ uint32_t to_earfcn(int eutra_bandP,uint32_t dl_CarrierFreq, float m_dl) {
   return(dl_CarrierFreq_by_100k - eutra_bandtable[i].dl_min - 0.0025*(2*m_dl+ 1)+ (eutra_bandtable[i].N_OFFs_DL/10));
 }
 
-uint32_t from_earfcn(int eutra_bandP,uint32_t dl_earfcn) {
+
+//PROBLEM: for UE category NB1 and NB2 the introduction of the offset (m_dl) may create some problems in the reconstruction of the dl_CarrierFreq
+//this function is used in phy_config_mib_NB for getting the DL Carrier Frequency from the EARFCN
+uint32_t from_earfcn(int eutra_bandP,uint32_t dl_earfcn, float m_dl) {
 
   int i;
 
-  float m_dl = 0; //for the moment we fix but maybe should be dynamic (anyway the 0 works for any case)
+ // float m_dl = 0; //for the moment we fix but maybe should be dynamic (anyway the 0 works for any case)
 
   AssertFatal(eutra_bandP <= 70,"eutra_band %d > 70\n",eutra_bandP);
   for (i=0;i<= 70 && eutra_bandtable[i].band!=eutra_bandP;i++);
@@ -233,7 +243,7 @@ void config_mib_NB_fapi(
 	//receive NSSS, NPSSS ecc... but the RRCConnectionReconfiguration may could indicate non-anchor carrier to be used for data transmission
 	//ASSUMPTION: we always use an anchor carrier
 
-	float m_dl = 0; //this is the category offset for NB1/NB2 UE category used for EARFCN evaluation (TS 36.101 ch. 5.7.3F)
+	float m_dl = 0; //this is the category offset for NB1/NB2 UE category used for EARFCN evaluation (TS 36.101 ch. 5.7.3F) (for the moment we keep this value fixed)
     config_INFO->get_MIB = 1;
     config_INFO->rnti = rntiP;
     config_INFO->cfg->nfapi_config.rf_bands.rf_band[0] = (uint16_t)eutra_band;
@@ -263,15 +273,16 @@ void config_mib_NB_fapi(
 			config_INFO->cfg->nb_iot_config.control_region_size.value = *eutraControlRegionSize;
 
 
-		m_dl = NB_Category_Offset_anchor[rand()%4];
+		//m_dl = NB_Category_Offset_anchor[rand()%4];
 
 
 		break;
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_DifferentPCI_r13:
     	config_INFO->cfg->nb_iot_config.operating_mode.value = 1;
 
-    	//XXX problem: fapi think to define also eutra_CRS_sequenceInfo also for in band with different PCI but the problem is that we don-t have it
-    	//config_INFO->nb_iot_config.prb_index.value = mib_NB->message.operationModeInfo_r13.choice.inband_DifferentPCI_r13 XXX (see FAPI specs pag 135)
+    	//XXX problem: fapi think to define also eutra_CRS_sequenceInfo also for in band with different PCI but the problem is that we don-t have i
+    	//XXX should pass the prb_index may defined by configuration file depending on the LTE band we are considering (see Rhode&Shwartz whitepaper pag9)
+    	//config_INFO->nb_iot_config.prb_index.value =
 
     	config_INFO->cfg->nb_iot_config.assumed_crs_aps.value = mib_NB->message.operationModeInfo_r13.choice.inband_DifferentPCI_r13.eutra_NumCRS_Ports_r13;
 
@@ -281,32 +292,32 @@ void config_mib_NB_fapi(
 			config_INFO->cfg->nb_iot_config.control_region_size.value = *eutraControlRegionSize;
 
 
-		m_dl = NB_Category_Offset_anchor[rand()%4];
+		//m_dl = NB_Category_Offset_anchor[rand()%4];
 
 
     	break;
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_guardband_r13:
     	config_INFO->cfg->nb_iot_config.operating_mode.value = 2;
 
-    	//XXX problem: fapi think to define also eutra_CRS_sequenceInfo also for in band with different PCI but the problem is that we don-t have it
-    	//config_INFO->nb_iot_config.prb_index = mib_NB->message.operationModeInfo_r13.choice.guardband_r13; XXX (see FAPI specs pag 135)
+       	//XXX should pass the prb_index may defined by configuration file depending on the LTE band we are considering (see Rhode&Shwartz whitepaper pag9)
+        //config_INFO->nb_iot_config.prb_index.value =
 
     	config_INFO->cfg->nb_iot_config.control_region_size.value = -1; //should not being defined so we put a negative value
 		config_INFO->cfg->nb_iot_config.assumed_crs_aps.value = -1; //is not defined so we put a negative value
 
 
-		m_dl = NB_Category_Offset_anchor[rand()%4];
+		//m_dl = NB_Category_Offset_anchor[rand()%4];
 
 
     	break;
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_standalone_r13:
+
     	config_INFO->cfg->nb_iot_config.operating_mode.value = 3;
-    	config_INFO->cfg->nb_iot_config.prb_index.value = -1; // is not defined for this case (put a negative value)
+    	config_INFO->cfg->nb_iot_config.prb_index.value = -1; // is not defined for this case (put a negative random value--> will be not considered for encoding, scrambling procedures)
     	config_INFO->cfg->nb_iot_config.control_region_size.value = -1;//is not defined so we put a negative value
 		config_INFO->cfg->nb_iot_config.assumed_crs_aps.value = -1; //is not defined so we put a negative value
 
-
-		m_dl = NB_Category_Offset_short[rand()%2];
+		//m_dl = NB_Category_Offset_short[rand()%2];
 
     	break;
     default:
@@ -326,6 +337,7 @@ void config_mib_NB_fapi(
 
 
 void config_sib2_NB_fapi(
+						int physCellId,
 						RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon
 						)
 {
@@ -349,6 +361,7 @@ void config_sib2_NB_fapi(
     switch(radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.size)
     {
     case 0:
+    	LOG_E(MAC, "nprach_ParametersLis is empty\n");
   	  break;
     case 1:
   	  nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[0];
@@ -359,6 +372,7 @@ void config_sib2_NB_fapi(
   	  config_INFO->cfg->nb_iot_config.nprach_config_0_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_0_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_0_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
   	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
   	  config_INFO->extra_phy_parms.nprach_config_0_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
   	  config_INFO->extra_phy_parms.nprach_config_0_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
@@ -377,6 +391,7 @@ void config_sib2_NB_fapi(
   	  config_INFO->cfg->nb_iot_config.nprach_config_0_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_0_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_0_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
   	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
   	  config_INFO->extra_phy_parms.nprach_config_0_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
   	  config_INFO->extra_phy_parms.nprach_config_0_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
@@ -394,6 +409,7 @@ void config_sib2_NB_fapi(
   	  config_INFO->cfg->nb_iot_config.nprach_config_1_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_1_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_1_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
   	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
   	  config_INFO->extra_phy_parms.nprach_config_1_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
   	  config_INFO->extra_phy_parms.nprach_config_1_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
@@ -411,6 +427,7 @@ void config_sib2_NB_fapi(
   	  config_INFO->cfg->nb_iot_config.nprach_config_0_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_0_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_0_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
   	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
   	  config_INFO->extra_phy_parms.nprach_config_0_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
   	  config_INFO->extra_phy_parms.nprach_config_0_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
@@ -428,6 +445,7 @@ void config_sib2_NB_fapi(
   	  config_INFO->cfg->nb_iot_config.nprach_config_1_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_1_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_1_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
   	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
   	  config_INFO->extra_phy_parms.nprach_config_1_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
   	  config_INFO->extra_phy_parms.nprach_config_1_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
@@ -445,6 +463,7 @@ void config_sib2_NB_fapi(
   	  config_INFO->cfg->nb_iot_config.nprach_config_2_subcarrier_offset.value = nprach_parameter->nprach_SubcarrierOffset_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_2_number_of_subcarriers.value = nprach_parameter->nprach_NumSubcarriers_r13;
   	  config_INFO->cfg->nb_iot_config.nprach_config_2_number_of_repetitions_per_attempt.value = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
+
   	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
   	  config_INFO->extra_phy_parms.nprach_config_2_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
   	  config_INFO->extra_phy_parms.nprach_config_2_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
@@ -454,9 +473,9 @@ void config_sib2_NB_fapi(
   	  //rsrp_ThresholdsPrachInfoList_r13 /*OPTIONAL*/
   	  break;
 
-  	  break;
     default:
   	  LOG_E(RRC,"NB_rrc_mac_config_req_eNB: nprach_ParametersList size not valid\n");
+  	  break;
 
     }
 
@@ -476,15 +495,23 @@ void config_sib2_NB_fapi(
   	  /* OPTIONAL */
   	  if(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_BaseSequence_r13!= NULL)
   		  config_INFO->cfg->nb_iot_config.three_tone_base_sequence.value  = *(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_BaseSequence_r13);
+  	  else
+  		config_INFO->cfg->nb_iot_config.three_tone_base_sequence.value = physCellId%12; //see spec TS 36.331 NPUSCH-Config-NB
+
   	  /* OPTIONAL */
   	  if(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_BaseSequence_r13!= NULL)
   		  config_INFO->cfg->nb_iot_config.six_tone_base_sequence.value = *(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_BaseSequence_r13);
-  	  /* OPTIONAL */
-		  if(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->twelveTone_BaseSequence_r13!= NULL)
-			  config_INFO->cfg->nb_iot_config.twelve_tone_base_sequence.value = *(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->twelveTone_BaseSequence_r13);
+  	  else
+  		config_INFO->cfg->nb_iot_config.six_tone_base_sequence.value = physCellId%14; //see spec TS 36.331 NPUSCH-Config-NB
 
-		  config_INFO->cfg->nb_iot_config.three_tone_cyclic_shift.value = radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13;
-		  config_INFO->cfg->nb_iot_config.six_tone_cyclic_shift.value = radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13;
+  	  /* OPTIONAL */
+	  if(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->twelveTone_BaseSequence_r13!= NULL)
+		config_INFO->cfg->nb_iot_config.twelve_tone_base_sequence.value = *(radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->twelveTone_BaseSequence_r13);
+	  else
+		config_INFO->cfg->nb_iot_config.twelve_tone_base_sequence.value = physCellId%30; //see spec TS 36.331 NPUSCH-Config-NB
+
+		config_INFO->cfg->nb_iot_config.three_tone_cyclic_shift.value = radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->threeTone_CyclicShift_r13;
+		config_INFO->cfg->nb_iot_config.six_tone_cyclic_shift.value = radioResourceConfigCommon->npusch_ConfigCommon_r13.dmrs_Config_r13->sixTone_CyclicShift_r13;
     }
 
 
@@ -540,15 +567,12 @@ int NB_rrc_mac_config_req_eNB(
 			   int								p_rx_eNB,// number of eNB Rx antenna ports (1 or 2 for NB-IoT)
 			   int                              Ncp,
 			   int								Ncp_UL,
-//FIXME: frequencyBandIndicator (eutra_band) in sib1 (as Rymond Implementation) (is a long not an int!!)//XXX this param is set in the do_sib1_nb and is directly taken from the .config file
-			   long                             eutra_band,
+			   long                             eutra_band, //requencyBandIndicator (eutra_band) in sib1. this param is set in the do_sib1_nb and is directly taken from the .config file
 			   struct NS_PmaxList_NB_r13        *frequencyBandInfo, //optional SIB1
 			   struct MultiBandInfoList_NB_r13  *multiBandInfoList, //optional SIB1
 			   struct DL_Bitmap_NB_r13          *dl_bitmap, //optional SIB1
 			   long*                            eutraControlRegionSize, //optional sib1, is defined only when we are in in-band operation mode (same PCI or different PCI)
 			   long*							nrs_CRS_PoweSIwindowsizerOffset, //optional
-//			   uint8_t                          *SIwindowsize, //maybe no more needed because TDD only
-//			   uint16_t                         *SIperiod, //maybe no more needed because TDD only
 			   uint32_t                         dl_CarrierFreq,
 			   uint32_t                         ul_CarrierFreq,
 			   BCCH_BCH_Message_NB_t            *mib_NB,
@@ -652,7 +676,7 @@ int NB_rrc_mac_config_req_eNB(
       if (ul_CarrierFreq>0) eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].ul_CarrierFreq   = ul_CarrierFreq;
 
 
-      config_sib2_NB_fapi(radioResourceConfigCommon);
+      config_sib2_NB_fapi(physCellId,radioResourceConfigCommon);
 
   }
 
@@ -680,8 +704,17 @@ int NB_rrc_mac_config_req_eNB(
     else
     {
     	config_INFO->get_DEDICATED = 1;
+
+    	//XXX this parameters seems to be not defined by FAPi specs
+
+    	//this are UE specific information that should be transmitted to the PHY layer
+    	//Possible implementation is to use UE-specific structure at phy layer where to store this information (NPDCCH structure) this structure will be scrambled based on the rnti
     	config_INFO->rnti = UE_RNTI(Mod_idP, UE_id);
-    	config_INFO->phy_config_dedicated = physicalConfigDedicated; //for the moment fapi not allow this so not used
+    	config_INFO->extra_phy_parms.npdcch_NumRepetitions = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13;
+    	config_INFO->extra_phy_parms.npdcch_Offset_USS = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13;
+    	config_INFO->extra_phy_parms.npdcch_StartSF_USS = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13;
+
+    	//config_INFO->extra_phy_parms.phy_config_dedicated = physicalConfigDedicated; //for the moment fapi not allow this so not used
 
 
     }

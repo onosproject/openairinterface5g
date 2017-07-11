@@ -821,10 +821,16 @@ typedef enum
 
 typedef struct {
 
+	rnti_t rnti;
 	//array containing the pdus of DCI
 	uint8_t *a[2];
 	//Array containing encoded DCI data
 	uint8_t *e[2];
+
+	//UE specific parameters
+	uint16_t npdcch_NumRepetitions;
+	uint16_t npdcch_Offset_USS;
+	uint16_t npdcch_StartSF_USS;
 
 
 }NB_IoT_eNB_NPDCCH_t;

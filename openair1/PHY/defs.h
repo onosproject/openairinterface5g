@@ -703,7 +703,7 @@ typedef struct PHY_VARS_eNB_s {
    */
 
   NB_IoT_eNB_NPBCH *npbch;
-  NB_IoT_eNB_NPDCCH_t *npdcch; //check if should be an array and  the max size of this array
+  NB_IoT_eNB_NPDCCH_t *npdcch[NUMBER_OF_UE_MAX_NB_IoT]; //check if should be an array and  the max size of this array
   NB_IoT_eNB_NDLSCH_t *ndlsch[NUMBER_OF_UE_MAX_NB_IoT];
   NB_IoT_eNB_NULSCH_t *nulsch[NUMBER_OF_UE_MAX_NB_IoT+1]; //nulsch[0] contains the RAR
   NB_IoT_eNB_NDLSCH_t *ndlsch_SI,*ndlsch_ra, *ndlsch_SIB1;

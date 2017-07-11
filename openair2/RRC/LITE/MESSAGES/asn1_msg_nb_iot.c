@@ -550,7 +550,10 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
   dmrs_config = CALLOC(1,sizeof(struct NPUSCH_ConfigCommon_NB_r13__dmrs_Config_r13));
   dmrs_config->threeTone_CyclicShift_r13 = configuration->npusch_threeTone_CyclicShift_r13[CC_id];
   dmrs_config->sixTone_CyclicShift_r13 = configuration->npusch_sixTone_CyclicShift_r13[CC_id];
-  /*OPTIONAL*/
+
+  /*OPTIONAL
+   * -define the base sequence for a DMRS sequence in a cell with multi tone transmission (3,6,12) see TS 36.331 NPUSCH-Config-NB
+   * -if not defined will be calculated based on the cellID once we configure the phy layer (rrc_mac_config_req) through the config_sib2 */
   dmrs_config->threeTone_BaseSequence_r13 = NULL;
   dmrs_config->sixTone_BaseSequence_r13 = NULL;
   dmrs_config->twelveTone_BaseSequence_r13 = NULL;

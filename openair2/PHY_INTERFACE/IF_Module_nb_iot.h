@@ -21,7 +21,13 @@
 
 // P5 FAPI-like configuration structures-------------------------------------------------------------------------------
 
-/*MP: MISSED COMMON CONFIG. of SIB2-NB in FAPI SPECS (may non needed)*/
+/*MP: MISSED COMMON CONFIG. of SIB2-NB in FAPI SPECS
+ * some of them may not needed because are used only at UE side
+ * some of them are not needed because not necessary at PHY level
+ * other have to be clarified since seems to be needed at PHY layer
+ * there is no UE_Config. request message carrying NB-IoT parameters???
+ *
+ * */
 typedef struct{
 	//nprach_config
 	uint16_t nprach_config_0_subcarrier_MSG3_range_start;
@@ -30,24 +36,39 @@ typedef struct{
 	uint16_t nprach_config_0_max_num_preamble_attempt_CE;
 	uint16_t nprach_config_1_max_num_preamble_attempt_CE;
 	uint16_t nprach_config_2_max_num_preamble_attempt_CE;
-	uint16_t nprach_config_0_npdcch_num_repetitions_RA;
+	uint16_t nprach_config_0_npdcch_num_repetitions_RA; //Rmax (see TS 36.213 ch 16.6)
 	uint16_t nprach_config_1_npdcch_num_repetitions_RA;
 	uint16_t nprach_config_2_npdcch_num_repetitions_RA;
-	uint16_t nprach_config_0_npdcch_startSF_CSS_RA;
+	uint16_t nprach_config_0_npdcch_startSF_CSS_RA; //G (see TS 36.213 ch 16.6)
 	uint16_t nprach_config_1_npdcch_startSF_CSS_RA;
 	uint16_t nprach_config_2_npdcch_startSF_CSS_RA;
-	uint16_t nprach_config_0_npdcch_offset_RA;
+	uint16_t nprach_config_0_npdcch_offset_RA; //Alfa_offset (see TS 36.213 ch 16.6)
 	uint16_t nprach_config_1_npdcch_offset_RA;
 	uint16_t nprach_config_2_npdcch_offset_RA;
 
-	//npusch ConfigCommon (carried by the NULSCH PDU in FAPI--> so maybe not a static parameter)
-	//not used
+	//configured through the phy_config_dedicated
+	//Higher layer parameter for NPDCCH UE-spec search space
+	uint16_t npdcch_NumRepetitions;//Rmax (see TS 36.213 ch 16.6)
+	uint16_t npdcch_StartSF_USS; //G (see TS 36.213 ch 16.6)
+	uint16_t npdcch_Offset_USS; //Alfa_offset (see TS 36.213 ch 16.6)
+
+
 	ACK_NACK_NumRepetitions_NB_r13_t *ack_nack_numRepetitions_MSG4; //pointer to the first cell of a list of ack_nack_num_repetitions
 
     //ulPowerControlCommon (UE side)
     uint16_t p0_nominal_npusch;
 	uint16_t alpha;
 	uint16_t delta_preamle_MSG3;
+
+
+	/*Dedicated configuration -->not supported by FAPI (may not needed)
+	 * In OAI at least are needed when we manage the phy_procedures_eNB_TX in which we call the phy_config_dedicated_eNB_step2
+	 * that use the physicalConfigDedicated info previously stored in the PHY_VARS_eNB structure through the phy_config_dedicated procedure
+	 */
+	PhysicalConfigDedicated_NB_r13_t *phy_config_dedicated;
+
+
+
 
 }extra_phyConfigCommon_t;
 
@@ -65,36 +86,22 @@ typedef struct{
 	//For Nb-IoT only a restricted values of PRB indexes are allowed (see Rhode&Shwartz pag9)
 	//unsigned short NB_IoT_RB_ID; (should coincide with PRB index)
 
-	//In 3GPP specs (TS 36.101 Table 5.7.3-1 and ch 5.7.3F) see also SIB2-NB freqInfo.ul-carrierFreq
-	//this parameters should be evaluated based of the EUTRA Absolute Radio Frequency Channel Number (EARFCN)
-	//in FAPI this value is given inside the BROADCAST DETECT request (P4 Network Monitor Mode procedure)
-	//in OAI we set the dl_CarrierFrequenci at configuration time (see COMMON/rrc_messages_types.h)
-	//then adding an offset for the ul_CarrierFreq ( see RU-RAU split approach - init_SI)
-	//uint32_t dl_CarrierFreq;
-	//uint32_t ul_CarrierFreq; --> problem solved since we directly evaluate the EARFCN has requested by FAPI specs
 
 
-	/*FAPI style config. parameters
+
+	/*FAPI useful config. parameters used in the code
 	 *
-	 * useful config message contents:
 	 * -nfapi_uplink_reference_signal_config_t uplink_reference_signal_config
 	 * -nfapi_subframe_config_t subframe_config;
 	 * -nfapi_rf_config_t rf_config;
 	 * -nfapi_sch_config_t sch_config;
 	 * -nfapi_nb_iot_config_t nb_iot_config;
 	 * -nfapi_l23_config_t l23_config;
-	 * -nfapi_config --> EARFCN
-	 *
+	 * -nfapi_config --> EARFCN (for the transport of the dl_CarrierFreq
 	 * */
+
 	//XXX where allocate memory??
 	nfapi_config_request_t* cfg;
-
-
-	/*Dedicated configuration -->not supported by FAPI (may not needed)
-	 * In OAI at least are needed when we manage the phy_procedures_eNB_TX in which we call the phy_config_dedicated_eNB_step2
-	 * that use the physicalConfigDedicated info previously stored in the PHY_VARS_eNB structure through the phy_config_dedicated procedure
-	 */
-	PhysicalConfigDedicated_NB_r13_t *phy_config_dedicated;
 
 	/*MP: MISSED COMMON CONFIG. of SIB2-NB in FAPI SPECS (may non needed)*/
 	extra_phyConfigCommon_t extra_phy_parms;

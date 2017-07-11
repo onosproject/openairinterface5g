@@ -71,7 +71,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 void NB_phy_config_dedicated_eNB(module_id_t Mod_id,
                               int CC_id,
                               rnti_t rnti,
-                              PhysicalConfigDedicated_NB_r13_t *physicalConfigDedicated);
+							  extra_phyConfigCommon_t* extra_phy_parms);
 
 
 
