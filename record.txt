@@ -87,3 +87,7 @@ Comment: Update the IF Module header file to fit the FAPI structure and types.
 6/15
 
 Comment: New RXTX defined for NB-IoT, use the FAPI parameters adapting to the physical layer parameters.
+
+7/11
+
+Comment: start MAC scheduler implementation
