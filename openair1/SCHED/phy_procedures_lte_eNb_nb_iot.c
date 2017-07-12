@@ -96,6 +96,9 @@ extern int rx_sig_fifo;
 
 
 
+
+
+
 /* For NB-IoT, we put NPBCH in later part, since it would be scheduled by MAC scheduler
 * It generates NRS/NPSS/NSSS
 *
@@ -486,6 +489,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
   DCI_CONTENT *DCI_Content; 
   DCI_format_NB_t DCI_format;
   NB_IoT_eNB_NDLSCH_t *ndlsch;
+  NB_IoT_eNB_NPDCCH_t *npdcch;
 
   DCI_Content = (DCI_CONTENT*) malloc(sizeof(DCI_CONTENT));
 
@@ -512,8 +516,10 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
           DCI_Content->DCIN1_RAR.HARQackRes     = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
           DCI_Content->DCIN1_RAR.DCIRep         = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
 
+          //TODO calculate the number of common repetitions
+          //fp->nprach_config_common.number_repetition_RA = see TS 36.213 Table 16.1-3
 
-          // fill the dlsch_ra_NB sructure for RAR, and packed the DCI PDU
+          // fill the dlsch_ra_NB structure for RAR, and packed the DCI PDU
 
           ndlsch= eNB->ndlsch_ra;
           ndlsch->ndlsch_type = RAR;
@@ -541,7 +547,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
     	  AssertFatal(UE_id != -1, "no ndlsch context available or no ndlsch context corresponding to that rnti\n");
 
 
-    	  //mapping the fapi parameters to the oai parameters
+    	  	  //mapping the fapi parameters to the oai parameters
 
     	  	  DCI_format = DCIFormatN1;
 
@@ -555,6 +561,20 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
               DCI_Content->DCIN1.ndi            = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.new_data_indicator;
               DCI_Content->DCIN1.HARQackRes     = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
               DCI_Content->DCIN1.DCIRep         = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
+
+
+              //set the NPDCCH UE-specific structure  (calculate R)
+              npdcch=eNB->npdcch[(uint8_t)UE_id];
+              AssertFatal(npdcch != NULL, "NPDCCH structure for UE specific is not exist\n");
+              npdcch->repetition_idx = 0; //this is used for the encoding mechanism to understand that is the first transmission
+
+              if(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level) //whenever aggregation level is =1 we have only 1 repetition for USS
+              npdcch->repetition_number = 1;
+              else
+              {
+            	  //see TS 36.213 Table 16.1-1
+              }
+
 
               //fill the ndlsch structure for UE and packed the DCI PD
 
@@ -659,7 +679,7 @@ void npdsch_procedures(PHY_VARS_eNB *eNB,
 {
   int frame=proc->frame_tx;
   int subframe=proc->subframe_tx;
-  LTE_DL_eNB_HARQ_t *ndlsch_harq=ndlsch->harq_process;
+  NB_IoT_DL_eNB_HARQ_t *ndlsch_harq =ndlsch->harq_process;
   int input_buffer_length = ndlsch_harq->TBS/8; // get in byte //the TBS is set in generate_dlsch_param
   NB_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
   int G;
@@ -967,7 +987,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
         	   *
         	   */
 
-    		generate_npbch(&eNB->npbch,
+    		generate_npbch(eNB->npbch,
                          txdataF,
                          AMP,
                          fp,
@@ -1004,7 +1024,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     {
       //check if current frame is for SIB1-NB transmission (if yes get the starting frame of SIB1-NB) and set the flag for the encoding
       sib1_startFrame = is_SIB1_NB(frame,
-    		  	  	  	  	  	  eNB->ndlsch_SIB1->harq_process->repetition_number,
+    		  	  	  	  	  	  (long)eNB->ndlsch_SIB1->harq_process->repetition_number,
 								  fp->Nid_cell,
 								  eNB->ndlsch_SIB1 //set the flags
 								  );
@@ -1122,6 +1142,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       }
 
 
+      //check for UE specific transmission
       /*
        * Delays between DCI transmission and NDLSCH transmission are taken in consideration by the MAC scheduler by sending in the proper subframe the scheduler_response
        * (TS 36.213 ch 16.4.1: DCI format N1, N2, ending in subframe n intended for the UE, the UE shall decode, starting from subframe n+5 DL subframe,
@@ -1148,7 +1169,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     	  {
     	  	if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
     	  	  {
-    	  	    if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5 && subframe != 9)
+    	  	    if( subframe!= 0 && subframe != 5 && subframe != 9)
     	  	     {
     	  	    	npdsch_procedures(eNB,
                 						proc,
@@ -1159,7 +1180,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     	  	     }
     	    else //this frame not foresee the transmission of NSSS (subframe 9 is available)
     	    {
-    	    	if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5)
+    	    	if( subframe!= 0 && subframe != 5)
     	    	   {
     	  	    	npdsch_procedures(eNB,
                 						proc,
@@ -1171,7 +1192,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     	    }
     	  }
 
-    	  //we don't care about subframe TX for the PUCCH since not defined by NB-IoT
+
       }
 
 
@@ -1181,39 +1202,79 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       /*If we have DCI to generate do it now
        *
        * DCI in NB-IoT are transmitted over NPDCCH search spaces as described in TS 36.213 ch 16.6
-       * 1)distinction of NPDCCH SS is implicit with type of DCI? (assume yes)
-       * 2)NPDCCH rep. number (R) is obtained by different tables and by the higher layer parms:
-       * -npdcch-NumRepetitions (UE-specific)
+       *
+       * Don-t care about the concept of search space since will be managed by the MAC.
+       * MAC also evaluate the starting position of NPDCCH transmission and will send the corresponding scheduling_response
+       *
+       *
+       * The PHY layer should evaluate R (repetitions of DCI) based on:
+       *  -L (aggregation level) --> inside the NPDCCH PDU
+       *  -Rmax
+       *  -DCI subframe repetition number (2 bits) --> inside the NPDCCH PDU
+       *  -TS 36.213 Table 16.6/1/2/3
+       *
+       *
+       *  The higher layer parms (Rmax):
+       * -npdcch-NumRepetitions (UE-specific) [inside the NPDCCH UE-specific strucuture] --> configured through phyconfigDedicated
        * -npdcch-NumRepetitionPaging (common)
-       * -npdcch-NumRepetitions-rA (common)
-       *  PROBLEM: in FAPI specs seems there is no way to trasnmit them to the PHY
+       * -npdcch-NumRepetitions-RA (common) [inside the NB_DL_FRAME_PARMS-> nprach_ParametersList] --> configured in phy_config_sib2
        *
-       *  We need
-       *  - a flag for telling us if it is a new repetition or not (means when the MAC transmit the scedule response for the DCI
-       *  -Add a check for understanding if the current subframe is at the beginning of the search space or not
-       *  -among the R repetition which number is the current one
+       *  PROBLEM: in FAPI specs seems there is no way to trasnmit Rmax to the PHY (waiting for answers)
        *
-       *  ***whenever we have aggretation level = 1 for UE-specific the R is always = 1 (see table 16.6-1)
+       * *Rmax is also needed for evaluate the scheduling delay for NDLSCH (see scheduling delay field in NPDCCH PDU FAPI)
        *
-       *s
+       * *Scrambling re-initialization is needed at the beginning of the Search Space or every 4th NPDCCH subframe (See TS 36.211)
+       * (this is taken in cosideration by the NPDCCH parameter "scrambling re-initialization batch index" in FAPI specs (Table 4-45)
+       *
+       ****whenever we have aggregation level = 1 for UE-specific the R is always = 1 (see table 16.6-1)
+       ****DCI DL transmission should not happen in case of reference signals or SI messages (this function should be triggered every subframe)
        *
        * */
 
-      //XXX we should check which npdcch structure we have to pass
-      //assume that the [0] is used for common search space
-//      for(int i = UE_id; i < NUMBER_OF_UE_MAX_NB_IoT; UE_id++)
-//      {
-//    	  if(eNB->npdcch[(uint8_t)UE_id] != NULL && eNB->npdcch[(uint8_t)UE_id]->rnti == dci_pdu->dci_alloc )
-//      }
 
-      generate_dci_top_NB(
-    		  	  	  	  eNB->npdcch,
-    		  	  	  	  dci_pdu->Num_dci,
-						  dci_pdu->dci_alloc,
-						  AMP,
-						  fp,
-						  eNB->common_vars.txdataF[0],
-						  subframe,
-						  dci_pdu->npdcch_start_symbol); //this parameter depends by eutraControlRegionSize (see TS36.213 16.6.1)
+      for(int i = UE_id; i < NUMBER_OF_UE_MAX_NB_IoT; UE_id++)
+      {
+    	  if(eNB->npdcch[(uint8_t)UE_id] != NULL && eNB->npdcch[(uint8_t)UE_id]->rnti == dci_pdu->dci_alloc->rnti && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE || subframe != 4))
+    	  {
+      	  	if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
+      	  	  {
+      	  	    if( subframe!= 0 && subframe != 5 && subframe != 9)
+      	  	     {
+
+      	  	    	generate_dci_top_NB(
+    		      		  	  	  eNB->npdcch[(uint8_t)UE_id],
+    		      		  	  	  dci_pdu->Num_dci,
+    		  					  dci_pdu->dci_alloc,
+    		  					  AMP,
+    		  					  fp,
+    		  					  eNB->common_vars.txdataF[0],
+    		  					  subframe,
+    		  					  dci_pdu->npdcch_start_symbol); //this parameter depends by eutraControlRegionSize (see TS36.213 16.6.1)
+      	  	    	  eNB->npdcch[(uint8_t)UE_id]->repetition_idx++; //can do also inside also the management
+
+    		  	  	  break;
+      	  	     }
+      	  	  }
+      	  else //this frame not foresee the transmission of NSSS (subframe 9 is available)
+      	     {
+      	     if( subframe!= 0 && subframe != 5)
+      	      {
+   	  	    	generate_dci_top_NB(
+ 		      		  	  	  eNB->npdcch[(uint8_t)UE_id],
+ 		      		  	  	  dci_pdu->Num_dci,
+ 		  					  dci_pdu->dci_alloc,
+ 		  					  AMP,
+ 		  					  fp,
+ 		  					  eNB->common_vars.txdataF[0],
+ 		  					  subframe,
+ 		  					  dci_pdu->npdcch_start_symbol); //this parameter depends by eutraControlRegionSize (see TS36.213 16.6.1)
+   	  	    	  eNB->npdcch[(uint8_t)UE_id]->repetition_idx++; //can do also inside also the management
+
+ 		  	  	  break;
+      	      }
+
+      	     }
+      	   }
+    	  }
 
 }

@@ -36,7 +36,7 @@ typedef struct{
 	uint16_t nprach_config_0_max_num_preamble_attempt_CE;
 	uint16_t nprach_config_1_max_num_preamble_attempt_CE;
 	uint16_t nprach_config_2_max_num_preamble_attempt_CE;
-	uint16_t nprach_config_0_npdcch_num_repetitions_RA; //Rmax (see TS 36.213 ch 16.6)
+	uint16_t nprach_config_0_npdcch_num_repetitions_RA; //Rmax (see TS 36.213 ch 16.6) -->only this is managed at PHY layer
 	uint16_t nprach_config_1_npdcch_num_repetitions_RA;
 	uint16_t nprach_config_2_npdcch_num_repetitions_RA;
 	uint16_t nprach_config_0_npdcch_startSF_CSS_RA; //G (see TS 36.213 ch 16.6)
@@ -48,7 +48,7 @@ typedef struct{
 
 	//configured through the phy_config_dedicated
 	//Higher layer parameter for NPDCCH UE-spec search space
-	uint16_t npdcch_NumRepetitions;//Rmax (see TS 36.213 ch 16.6)
+	uint16_t npdcch_NumRepetitions;//Rmax (see TS 36.213 ch 16.6)  -->only this is managed at PHY layer
 	uint16_t npdcch_StartSF_USS; //G (see TS 36.213 ch 16.6)
 	uint16_t npdcch_Offset_USS; //Alfa_offset (see TS 36.213 ch 16.6)
 

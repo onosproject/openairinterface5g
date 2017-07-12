@@ -117,7 +117,7 @@ int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
 }
 /**********************************************************
 **********************************************************/
-int generate_npbch(NB_IoT_eNB_NPBCH *eNB_npbch,
+int generate_npbch(NB_IoT_eNB_NPBCH_t *eNB_npbch,
                   int32_t **txdataF,
                   int amp,
                   LTE_DL_FRAME_PARMS *frame_parms,

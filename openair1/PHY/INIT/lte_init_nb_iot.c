@@ -369,16 +369,17 @@ void NB_phy_config_dedicated_eNB(uint8_t Mod_id,
 	  }
 	
 	  //configure UE specific parameters for NPDCCH Search Space
+	  //
 
 	  if (eNB->npdcch[UE_id]) {
 		npdcch = eNB->npdcch[UE_id];
 		npdcch->rnti = rnti;
-		npdcch->npdcch_NumRepetitions = extra_parms->npdcch_NumRepetitions;
-		npdcch->npdcch_Offset_USS = extra_parms->npdcch_Offset_USS;
-		npdcch->npdcch_StartSF_USS = extra_parms->npdcch_StartSF_USS;
+		npdcch->npdcch_NumRepetitions = extra_parms->npdcch_NumRepetitions; //Rmax maybe is the only one needed
+//		npdcch->npdcch_Offset_USS = extra_parms->npdcch_Offset_USS;
+//		npdcch->npdcch_StartSF_USS = extra_parms->npdcch_StartSF_USS;
 
-		LOG_I(PHY,"NB_phy_config_dedicated_eNB: npdcch_NumRepetitions = %d, npdcch_Offset_USS = %d, npdcch_StartSF_USS = %d\n",
-				npdcch->npdcch_NumRepetitions, npdcch->npdcch_Offset_USS, npdcch->npdcch_StartSF_USS);
+		LOG_I(PHY,"NB_phy_config_dedicated_eNB: npdcch_NumRepetitions = %d\n",
+				npdcch->npdcch_NumRepetitions);
 	
 	  } else {
 		LOG_E(PHY,"[eNB %d] Received NULL radioResourceConfigDedicated from eNB %d\n",Mod_id, UE_id);

@@ -63,7 +63,7 @@ typedef struct NPRACH_Parameters_NB{
   uint16_t maxNumPreambleAttemptCE;
   /// Number of NPRACH repetitions per attempt for each NPRACH resource
   uint16_t numRepetitionsPerPreambleAttempt;
-  /// The number of the repetition for DCI use in RAR/MSG3/MSG4 from 1 - 2048
+  /// The number of the repetition for DCI use in RAR/MSG3/MSG4 from 1 - 2048 (Rmax)
   uint16_t npdcch_NumRepetitions_RA;
   /// Starting subframe for NPDCCH Common searching space for (RAR/MSG3/MSG4)
   uint16_t npdcch_StartSF_CSS_RA;
@@ -90,6 +90,7 @@ typedef struct {
   struct rsrp_ThresholdsNPrachInfoList *rsrp_ThresholdsPrachInfoList;
   /// NPRACH Parameters List
   NPRACH_List_NB_t nprach_ParametersList;
+
 } NPRACH_CONFIG_COMMON;
 
 /// NPDSCH-ConfigCommon from 36.331 RRC spec
@@ -262,7 +263,6 @@ typedef struct {
    * value 1 = four CRS APs
    */
   uint16_t eutra_NumCRS_ports;
-
 
 
 } NB_DL_FRAME_PARMS;

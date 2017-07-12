@@ -820,7 +820,6 @@ typedef enum
 
 
 typedef struct {
-
 	rnti_t rnti;
 	//array containing the pdus of DCI
 	uint8_t *a[2];
@@ -829,11 +828,29 @@ typedef struct {
 
 	//UE specific parameters
 	uint16_t npdcch_NumRepetitions;
-	uint16_t npdcch_Offset_USS;
-	uint16_t npdcch_StartSF_USS;
+
+	uint16_t repetition_number;
+	//indicate the corresponding subframe within the repetition (set to 0 when a new NPDCCH pdu is received)
+	uint16_t repetition_idx;
+
+//	uint16_t npdcch_Offset_USS;
+//	uint16_t npdcch_StartSF_USS;
 
 
 }NB_IoT_eNB_NPDCCH_t;
+
+
+typedef struct{
+
+//Number of repetitions (R) for common search space (RAR and PAGING)
+uint16_t number_repetition_RA;
+uint16_t number_repetition_PAg;
+//index of the current subframe among the repetition (set to 0 when we receive the new NPDCCH)
+uint16_t repetition_idx_RA;
+uint16_t repetition_idx_Pag;
+
+
+}NB_IoT_eNB_COMMON_NPDCCH_t;
 
 
 
@@ -1080,7 +1097,7 @@ typedef struct {
   uint8_t npbch_e[1600];
   ///pdu of the npbch message
   uint8_t*pdu;
-} NB_IoT_eNB_NPBCH;
+} NB_IoT_eNB_NPBCH_t;
 
 
 //---------------------------------------------------------------------------------------

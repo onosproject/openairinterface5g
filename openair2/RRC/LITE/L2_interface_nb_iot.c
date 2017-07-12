@@ -376,7 +376,7 @@ void config_sib2_NB_fapi(
   	  //MP: missed configuration for FAPI-style structure (I have added on my own byt maybe are not needed)
   	  config_INFO->extra_phy_parms.nprach_config_0_subcarrier_MSG3_range_start = nprach_parameter->nprach_SubcarrierMSG3_RangeStart_r13;
   	  config_INFO->extra_phy_parms.nprach_config_0_max_num_preamble_attempt_CE = nprach_parameter->maxNumPreambleAttemptCE_r13;
-  	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13;
+  	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_num_repetitions_RA = nprach_parameter->npdcch_NumRepetitions_RA_r13; //Rmax
   	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_startSF_CSS_RA = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
   	  config_INFO->extra_phy_parms.nprach_config_0_npdcch_offset_RA = nprach_parameter->npdcch_Offset_RA_r13;
   	  //rsrp_ThresholdsPrachInfoList_r13 /*OPTIONAL*/
@@ -706,11 +706,10 @@ int NB_rrc_mac_config_req_eNB(
     	config_INFO->get_DEDICATED = 1;
 
     	//XXX this parameters seems to be not defined by FAPi specs
-
     	//this are UE specific information that should be transmitted to the PHY layer
-    	//Possible implementation is to use UE-specific structure at phy layer where to store this information (NPDCCH structure) this structure will be scrambled based on the rnti
+    	//use UE-specific structure at phy layer where to store this information (NPDCCH structure) this structure will be scrambled based on the rnti
     	config_INFO->rnti = UE_RNTI(Mod_idP, UE_id);
-    	config_INFO->extra_phy_parms.npdcch_NumRepetitions = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13;
+    	config_INFO->extra_phy_parms.npdcch_NumRepetitions = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13; //Rmax
     	config_INFO->extra_phy_parms.npdcch_Offset_USS = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13;
     	config_INFO->extra_phy_parms.npdcch_StartSF_USS = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13;
 
