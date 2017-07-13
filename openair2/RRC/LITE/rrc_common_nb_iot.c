@@ -270,19 +270,6 @@ openair_rrc_top_init_eNB_NB(void)//MP: XXX Raymond put this directly the definit
   }
 
 
-//XXX this stuff below i think are no more used
-#ifndef NO_RRM
-#ifndef USER_MODE
-
-  Header_buf=(char*)malloc16(sizeof(msg_head_t));
-  Data=(char*)malloc16(2400);
-  Header_read_idx=0;
-  Data_read_idx=0;
-  Header_size=sizeof(msg_head_t);
-
-#endif //NO_RRM
-  Data_to_read = 0;
-#endif //USER_MODE
 }
 
 //-----------------------------------------------------------------------------

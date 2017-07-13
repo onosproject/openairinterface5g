@@ -65,12 +65,12 @@ typedef struct{
 	 * In OAI at least are needed when we manage the phy_procedures_eNB_TX in which we call the phy_config_dedicated_eNB_step2
 	 * that use the physicalConfigDedicated info previously stored in the PHY_VARS_eNB structure through the phy_config_dedicated procedure
 	 */
-	PhysicalConfigDedicated_NB_r13_t *phy_config_dedicated;
+	//PhysicalConfigDedicated_NB_r13_t *phy_config_dedicated;
 
 
 
 
-}extra_phyConfigCommon_t;
+}extra_phyConfig_t;
 
 typedef struct{
 
@@ -104,7 +104,7 @@ typedef struct{
 	nfapi_config_request_t* cfg;
 
 	/*MP: MISSED COMMON CONFIG. of SIB2-NB in FAPI SPECS (may non needed)*/
-	extra_phyConfigCommon_t extra_phy_parms;
+	extra_phyConfig_t extra_phy_parms;
 
 }PHY_Config_t;
 

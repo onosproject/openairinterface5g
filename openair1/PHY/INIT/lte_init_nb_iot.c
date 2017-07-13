@@ -193,7 +193,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
                          nfapi_nb_iot_config_t *config,
 						 nfapi_rf_config_t *rf_config,
 						 nfapi_uplink_reference_signal_config_t* ul_nrs_config,
-						 extra_phyConfigCommon_t* extra_phy_parms
+						 extra_phyConfig_t* extra_phy_parms
                          )
 {
 	NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms;
@@ -327,8 +327,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 	  //fp->npusch_config_common.srs_SubframeConfig /*OPTIONAL*/
 
 
-      //TODO:should change the part that implement the ul hopping in NB-IoT?? (
-	  //init_ul_hopping(fp);
+	  //No Frequency hopping in NULSCH for NB-IoT and not init_ncs_cell used for PUCCH
 
 
 	  /*UL Power Control Config Common---------------------------------------------------------*/
@@ -345,9 +344,6 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 		  fp->DL_gap_config.dl_GapThreshold = config->dl_gap_threshold.value;
 	  }
 
-	  //TODO
-	  //init_ncs_cell(fp,PHY_vars_eNB_g[Mod_id][CC_id]->ncs_cell);
-	  //init_ul_hopping(fp);
 
 }
 
@@ -356,7 +352,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 void NB_phy_config_dedicated_eNB(uint8_t Mod_id,
                               int CC_id,
                               uint16_t rnti,
-							  extra_phyConfigCommon_t *extra_parms
+							  extra_phyConfig_t *extra_parms
 							  )
 {
 	  PHY_VARS_eNB *eNB = PHY_vars_eNB_g[Mod_id][CC_id];

@@ -3276,11 +3276,11 @@ void rrc_rlc_register_rrc_NB (rrc_data_ind_cb_NB_t NB_rrc_data_indP, rrc_data_co
 	//map the function pointer to the function in input
 	//rlc_rrc_data_ind  and rlc_rrc_data_conf are protected internal functions in the rlc.c file
 	 rlc_rrc_data_ind_NB  = NB_rrc_data_indP;
-	 rlc_rrc_data_conf = rrc_data_confP;
+	//rlc_rrc_data_conf = rrc_data_confP; not used since only asn.1 function are considered
 }
 
 /*--------------------------------------------RLC-PDCP--------------------------------------------------*/
-//XXX to be integrated in the flow
+//XXX to be integrated in the data flow for NB-IoT
 //called by rlc_am_send_sdu and rlc_tm_send_sdu
 //defined in rlc.c
 //--------------------------------------------
