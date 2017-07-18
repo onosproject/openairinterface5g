@@ -19,9 +19,9 @@
 #include "PHY/defs.h"
 #include "assertions.h"
 
-#include "PHY/LTE_REFSIG/defs_NB_IoT.h"
+#include "PHY/LTE_REFSIG/defs_NB_IoT.h"   // does this file is needed ?
 
-static uint32_t bitrev_cc[32] = {1,17,9,25,5,21,13,29,3,19,11,27,7,23,15,31,0,16,8,24,4,20,12,28,2,18,10,26,6,22,14,30};
+static uint32_t bitrev_cc_NB_IoT[32] = {1,17,9,25,5,21,13,29,3,19,11,27,7,23,15,31,0,16,8,24,4,20,12,28,2,18,10,26,6,22,14,30};
 
 uint32_t sub_block_interleaving_cc_NB_IoT(uint32_t D, uint8_t *d,uint8_t *w)
 {
@@ -39,7 +39,7 @@ uint32_t sub_block_interleaving_cc_NB_IoT(uint32_t D, uint8_t *d,uint8_t *w)
 
   for (col=0; col<32; col++) {
 
-    index = bitrev_cc[col];
+    index = bitrev_cc_NB_IoT[col];
     index3 = 3*index;
 
     for (row=0; row<RCC; row++) {
