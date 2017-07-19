@@ -47,7 +47,7 @@
 
 //#define DEBUG_DCI
 
-void NB_add_dci(DCI_PDU_NB *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_size_bytes,unsigned char aggregation,unsigned char dci_size_bits,unsigned char dci_fmt, uint8_t npdcch_start_symbol)
+void add_dci_NB_IoT(DCI_PDU_NB *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_size_bytes,unsigned char aggregation,unsigned char dci_size_bits,unsigned char dci_fmt, uint8_t npdcch_start_symbol)
 {
 	//put the pdu
   memcpy(&DCI_pdu->dci_alloc[DCI_pdu->Num_dci].dci_pdu[0],pdu,dci_size_bytes);
@@ -123,7 +123,7 @@ int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
       ((DCIN0_t *)ULSCH_DCI_NB)->DCIRep    =DCIRep;
 
 
-      NB_add_dci(eNB->DCI_pdu,ULSCH_DCI_NB,rnti,sizeof(DCIN0_t),aggregation,sizeof_DCIN0_t,DCIFormatN0, npdcch_start_symbol);
+      add_dci_NB_IoT(eNB->DCI_pdu,ULSCH_DCI_NB,rnti,sizeof(DCIN0_t),aggregation,sizeof_DCIN0_t,DCIFormatN0, npdcch_start_symbol);
 
       // use this value to configure PHY both harq_processes and resource mapping.
 
@@ -223,7 +223,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN1_RAR_t *)DLSCH_DCI_NB)->DCIRep         =DCIRep;
 
 
-    NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_RAR_t),aggregation,sizeof_DCIN1_RAR_t,DCIFormatN1_RAR, npdcch_start_symbol);
+    add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_RAR_t),aggregation,sizeof_DCIN1_RAR_t,DCIFormatN1_RAR, npdcch_start_symbol);
 
 
     /*Now configure the ndlsch structure*/
@@ -293,7 +293,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN1_t *)DLSCH_DCI_NB)->DCIRep         =DCIRep;
 
 
-    NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_t),aggregation,sizeof_DCIN1_t,DCIFormatN1,npdcch_start_symbol);
+    add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN1_t),aggregation,sizeof_DCIN1_t,DCIFormatN1,npdcch_start_symbol);
 
     /*Now configure the ndlsch structure*/
 
@@ -331,7 +331,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN2_Ind_t *)DLSCH_DCI_NB)->resInfoBits    =resInfoBits;
 
 
-    NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Ind_t),aggregation,sizeof_DCIN2_Ind_t,DCIFormatN2_Ind,npdcch_start_symbol);
+    add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Ind_t),aggregation,sizeof_DCIN2_Ind_t,DCIFormatN2_Ind,npdcch_start_symbol);
 
     // use this value to configure PHY both harq_processes and resource mapping.
     break;
@@ -353,7 +353,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
     ((DCIN2_Pag_t *)DLSCH_DCI_NB)->DCIRep    =DCIRep;
 
 
-    NB_add_dci(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Pag_t),aggregation,sizeof_DCIN2_Pag_t,DCIFormatN2_Pag,npdcch_start_symbol);
+    add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB,rnti,sizeof(DCIN2_Pag_t),aggregation,sizeof_DCIN2_Pag_t,DCIFormatN2_Pag,npdcch_start_symbol);
 
     // use this value to configure PHY both harq_processes and resource mapping.
     break;
