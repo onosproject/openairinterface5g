@@ -457,7 +457,7 @@ int dci_modulation_NB_IoT(int32_t **txdataF,
 
 
 
-uint8_t generate_dci_top_NB(
+uint8_t generate_dci_top_NB_IoT(
 						 NB_IoT_eNB_NPDCCH_t* npdcch,
 						 uint8_t Num_dci,
                          DCI_ALLOC_NB_t *dci_alloc,
@@ -508,7 +508,7 @@ uint8_t generate_dci_top_NB(
   }
 
   if(Num_dci == 2 && L == 1)
-	  LOG_E(PHY,"generate_dci_top_NB: Aggregation level not compatible with Num_dci\n" );
+	  LOG_E(PHY,"generate_dci_top_NB_IoT: Aggregation level not compatible with Num_dci\n" );
 
 
   //Second, evaluate the G variable based of the npdcch_start_sysmbol

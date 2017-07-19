@@ -116,7 +116,7 @@ int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
                                        );
 
 /*Function for DCI encoding, scrambling, modulation*/
-uint8_t generate_dci_top_NB(
+uint8_t generate_dci_top_NB_IoT(
 						 NB_IoT_eNB_NPDCCH_t* npdcch,
 						 uint8_t Num_dci,
                          DCI_ALLOC_NB_t *dci_alloc,

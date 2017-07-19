@@ -1241,7 +1241,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       	  	    if( subframe!= 0 && subframe != 5 && subframe != 9)
       	  	     {
 
-      	  	    	generate_dci_top_NB(
+      	  	    	generate_dci_top_NB_IoT(
     		      		  	  	  eNB->npdcch[(uint8_t)UE_id],
     		      		  	  	  dci_pdu->Num_dci,
     		  					  dci_pdu->dci_alloc,
@@ -1259,7 +1259,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       	     {
       	     if( subframe!= 0 && subframe != 5)
       	      {
-   	  	    	generate_dci_top_NB(
+   	  	    	generate_dci_top_NB_IoT(
  		      		  	  	  eNB->npdcch[(uint8_t)UE_id],
  		      		  	  	  dci_pdu->Num_dci,
  		  					  dci_pdu->dci_alloc,
