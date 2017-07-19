@@ -46,7 +46,7 @@ int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
 {
   MIMO_mode_t mimo_mode = (frame_parms->mode1_flag==1)?SISO:ALAMOUTI;
   uint32_t tti_offset,aa;
-  uint8_t re, diff_re;
+  uint8_t re;
   int16_t gain_lin_QPSK;
   uint8_t first_re,last_re;
   int32_t tmp_sample1,tmp_sample2;
@@ -132,12 +132,10 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t *eNB_npbch,
   uint8_t RCC;
   unsigned short bandwidth_even_odd;
   unsigned short NB_IoT_start, RB_IoT_ID;
-  uint32_t nsymb = 14;
   uint32_t pilots;
-  uint32_t second_pilot = 4;
   uint32_t jj=0;
   uint32_t re_allocated=0;
-  uint32_t rb, symbol_offset;
+  uint32_t symbol_offset;
   uint16_t amask=0;
   npbch_D  = 16+NPBCH_A;
   npbch_E  = 1600; 									
