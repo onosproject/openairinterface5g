@@ -140,17 +140,16 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB *eNB,
 //map the Isf (DCI param) to the number of subframes (Nsf)
 int resource_to_subframe[8] = {1,2,3,4,5,6,8,10}; 
 
-int NB_generate_eNB_dlsch_params_from_dci(PHY_VARS_eNB *eNB,
-                                        int frame,
-                                       uint8_t subframe,
-                                       DCI_CONTENT *DCI_Content,
-                                       uint16_t rnti,
-                                       DCI_format_NB_t dci_format,
-                                       NB_IoT_eNB_NDLSCH_t *ndlsch,
-                                       NB_DL_FRAME_PARMS *frame_parms,
-                                       uint8_t aggregation,
-									   uint8_t npdcch_start_symbol
-                                       )
+int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB *eNB,
+                                              int frame,
+                                              uint8_t subframe,
+                                              DCI_CONTENT *DCI_Content,
+                                              uint16_t rnti,
+                                              DCI_format_NB_t dci_format,
+                                              NB_IoT_eNB_NDLSCH_t *ndlsch,
+                                              NB_DL_FRAME_PARMS *frame_parms,
+                                              uint8_t aggregation,
+									                            uint8_t npdcch_start_symbol)
 {
 
   NB_IoT_DL_eNB_HARQ_t* ndlsch_harq = ndlsch->harq_process;

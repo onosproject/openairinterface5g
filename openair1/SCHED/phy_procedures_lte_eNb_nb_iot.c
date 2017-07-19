@@ -525,17 +525,16 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
           ndlsch->ndlsch_type = RAR;
 
           LOG_D(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");
-          NB_generate_eNB_dlsch_params_from_dci(eNB,
-                                                frame,
-                                                subframe,
-                                                DCI_Content,
-                                                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti,
-                                                DCI_format,
-                                                ndlsch,
-                                                fp,
-                                                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level,
-												dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol
-                                                );
+          generate_eNB_dlsch_params_from_dci_NB_IoT(eNB,
+                                                    frame,
+                                                    subframe,
+                                                    DCI_Content,
+                                                    dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti,
+                                                    DCI_format,
+                                                    ndlsch,
+                                                    fp,
+                                                    dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level,
+												                            dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol);
 
           //eNB->dlsch_ra_NB->nCCE[subframe] = eNB->DCI_pdu->dci_alloc.firstCCE;
         }
@@ -584,17 +583,16 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
               //parameters we don't consider pdsch config dedicated since not calling the phy config dedicated step2
 
         	  LOG_D(PHY,"Generating dlsch params for DCIN1 data and packing DCI\n");
-              NB_generate_eNB_dlsch_params_from_dci(eNB,
-                                                    frame,
-                                                    subframe,
-                                                    DCI_Content,
-                                                    dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti,
-                                                    DCI_format,
-                                                    ndlsch,
-                                                    fp,
-                                                    dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level,
-													dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol
-                                                    ); 
+            generate_eNB_dlsch_params_from_dci_NB_IoT(eNB,
+                                                      frame,
+                                                      subframe,
+                                                      DCI_Content,
+                                                      dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti,
+                                                      DCI_format,
+                                                      ndlsch,
+                                                      fp,
+                                                      dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level,
+													                            dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol); 
 
               //eNB->ndlsch[(uint8_t)UE_id]->nCCE[subframe] = eNB->DCI_pdu->dci_alloc[i].firstCCE;
 
