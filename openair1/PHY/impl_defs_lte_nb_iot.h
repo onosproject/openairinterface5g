@@ -265,7 +265,7 @@ typedef struct {
   uint16_t eutra_NumCRS_ports;
 
 
-} NB_DL_FRAME_PARMS;
+} NB_IoT_DL_FRAME_PARMS;
 
 
 #endif

@@ -147,7 +147,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB *eNB,
                                               uint16_t rnti,
                                               DCI_format_NB_t dci_format,
                                               NB_IoT_eNB_NDLSCH_t *ndlsch,
-                                              NB_DL_FRAME_PARMS *frame_parms,
+                                              NB_IoT_DL_FRAME_PARMS *frame_parms,
                                               uint8_t aggregation,
 									                            uint8_t npdcch_start_symbol)
 {

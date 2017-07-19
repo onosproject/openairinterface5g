@@ -98,7 +98,7 @@ void dci_encoding_NB_IoT(uint8_t *a[2],				// Array of two DCI pdus, even if one
 ///The scrambling sequence shall be initialised at the start of the search space and after every 4th NPDCCH subframes.
 ///
 ///
-void npdcch_scrambling_NB_IoT(NB_DL_FRAME_PARMS *frame_parms,
+void npdcch_scrambling_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
 							  uint8_t *e[2],							// Input data
 							  int length,        						// Total number of bits to transmit in one subframe(case of DCI = G)
 							  uint8_t Ns,//XXX we pass the subframe								// Slot number (0..19)
@@ -160,7 +160,7 @@ void npdcch_scrambling_NB_IoT(NB_DL_FRAME_PARMS *frame_parms,
 }
 
 
-int dci_allocate_REs_in_RB_NB_IoT(NB_DL_FRAME_PARMS *frame_parms,
+int dci_allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
                                   int32_t **txdataF,
                                   uint32_t *jj,
                                   uint32_t symbol_offset,
@@ -399,7 +399,7 @@ int dci_allocate_REs_in_RB_NB_IoT(NB_DL_FRAME_PARMS *frame_parms,
 
 int dci_modulation_NB_IoT(int32_t **txdataF,
 						int16_t amp,
-						NB_DL_FRAME_PARMS *frame_parms,
+						NB_IoT_DL_FRAME_PARMS *frame_parms,
 						uint8_t control_region_size,//XXX we pass the npdcch_start_symbol                       // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
 						uint8_t *e[2],										// Input data
 						int G,												// number of bits per subframe
@@ -462,7 +462,7 @@ uint8_t generate_dci_top_NB_IoT(
 						 uint8_t Num_dci,
                          DCI_ALLOC_NB_t *dci_alloc,
                          int16_t amp,
-                         NB_DL_FRAME_PARMS *fp,
+                         NB_IoT_DL_FRAME_PARMS *fp,
                          int32_t **txdataF,
                          uint32_t subframe,
 						 uint8_t npdcch_start_symbol)

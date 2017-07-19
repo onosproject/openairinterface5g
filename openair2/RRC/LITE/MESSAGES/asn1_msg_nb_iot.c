@@ -664,7 +664,7 @@ uint8_t do_RRCConnectionSetup_NB(
   int                              CC_id,
   uint8_t*                   const buffer, //Srb0.Tx_buffer.Payload
   const uint8_t                    Transaction_id,
-  const NB_DL_FRAME_PARMS* const frame_parms, // maybe not used
+  const NB_IoT_DL_FRAME_PARMS* const frame_parms, // maybe not used
   SRB_ToAddModList_NB_r13_t**             SRB_configList_NB, //for both SRB1bis and SRB1
   struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB
 )

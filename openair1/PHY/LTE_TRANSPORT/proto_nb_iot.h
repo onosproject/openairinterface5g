@@ -111,7 +111,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB *eNB,
                                               uint16_t rnti,
                                               DCI_format_NB_t dci_format,
                                               NB_IoT_eNB_NDLSCH_t *ndlsch,
-                                              NB_DL_FRAME_PARMS *frame_parms,
+                                              NB_IoT_DL_FRAME_PARMS *frame_parms,
                                               uint8_t aggregation,
 									                            uint8_t npdcch_start_symbol);
 
@@ -121,7 +121,7 @@ uint8_t generate_dci_top_NB_IoT(
 						 uint8_t Num_dci,
                          DCI_ALLOC_NB_t *dci_alloc,
                          int16_t amp,
-                         NB_DL_FRAME_PARMS *fp,
+                         NB_IoT_DL_FRAME_PARMS *fp,
                          int32_t **txdataF,
                          uint32_t subframe,
 						 uint8_t npdcch_start_symbol);

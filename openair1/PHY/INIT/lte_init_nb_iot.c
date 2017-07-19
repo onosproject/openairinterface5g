@@ -64,7 +64,7 @@ void NB_phy_config_mib_eNB(
   AssertFatal(PHY_vars_eNB_g[Mod_id] != NULL, "PHY_vars_eNB_g instance %d doesn't exist\n",Mod_id);
   AssertFatal(PHY_vars_eNB_g[Mod_id][CC_id] != NULL, "PHY_vars_eNB_g instance %d, CCid %d doesn't exist\n",Mod_id,CC_id);
 
-  NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms_nb_iot;
 
    LOG_I(PHY,"Configuring MIB-NB for instance %d, CCid %d : (band %d,Nid_cell %d,p %d,EARFCN %u)\n",
   	  	  Mod_id, CC_id, eutra_band, Nid_cell, p_eNB,EARFCN);
@@ -98,7 +98,7 @@ void NB_phy_config_mib_eNB(
 //                         RadioResourceConfigCommonSIB_NB_r13_t *radioResourceConfigCommon
 //                         )
 //{
-//	NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms;
+//	NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms;
 //	  //LTE_eNB_UE_stats *eNB_UE_stats		= PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats;
 //	  //int32_t rx_total_gain_eNB_dB		= PHY_vars_eNB_g[Mod_id][CC_id]->rx_total_gain_eNB_dB;
 //	  uint8_t MAX_NPRACH = 4;
@@ -196,7 +196,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 						 extra_phyConfig_t* extra_phy_parms
                          )
 {
-	NB_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms;
+	NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms;
 	LOG_D(PHY,"[eNB%d] CCid %d: Applying nb_iot_config from sib2_NB\n",Mod_id,CC_id);
 	  
 	/*NPRACH_ConfigSIB_NB_r13----------------------------------------------------------*/

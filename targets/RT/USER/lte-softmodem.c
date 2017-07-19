@@ -169,7 +169,7 @@ int                             otg_enabled;
 
 static LTE_DL_FRAME_PARMS      *frame_parms[MAX_NUM_CCs];
 //NB-IoT
-static NB_DL_FRAME_PARMS *frame_parms_nb_iot[MAX_NUM_CCs]; // this will be still inside the PHY_VARS of LTE
+static NB_IoT_DL_FRAME_PARMS *frame_parms_nb_iot[MAX_NUM_CCs]; // this will be still inside the PHY_VARS of LTE
 
 eNB_func_t node_function[MAX_NUM_CCs];
 eNB_timing_t node_timing[MAX_NUM_CCs];
@@ -1259,13 +1259,13 @@ void A(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
 }
 
 //NB_IoT-------------------------------------------------
-void set_default_frame_parms_NB(NB_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]);
-void set_default_frame_parms_NB(NB_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
+void set_default_frame_parms_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]);
+void set_default_frame_parms_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
 
     int CC_id;
 
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-        frame_parms[CC_id] = (NB_DL_FRAME_PARMS*) malloc(sizeof(NB_DL_FRAME_PARMS));
+        frame_parms[CC_id] = (NB_IoT_DL_FRAME_PARMS*) malloc(sizeof(NB_IoT_DL_FRAME_PARMS));
         /* Set some default values that may be overwritten while reading options */
 
         //XXX check if there are other parameters to be set
@@ -1443,7 +1443,7 @@ int main( int argc, char **argv ) {
     // set default parameters
     set_default_frame_parms(frame_parms);
 #ifdef NB_IOT
-    set_default_frame_parms_NB(frame_parms_nb_iot);
+    set_default_frame_parms_NB_IoT(frame_parms_nb_iot);
 #endif
 
 

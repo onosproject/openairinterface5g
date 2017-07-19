@@ -156,7 +156,7 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
 
 void init_lte_eNB_NB(
 					PHY_VARS_eNB  *PHY_vars_eNB,
-					NB_DL_FRAME_PARMS *frame_parms,
+					NB_IoT_DL_FRAME_PARMS *frame_parms,
                     uint8_t eNB_id,
                     uint8_t Nid_cell,
 				    eNB_func_t node_function,
@@ -168,7 +168,7 @@ void init_lte_eNB_NB(
   memset(PHY_vars_eNB,0,sizeof(PHY_VARS_eNB));
   PHY_vars_eNB->Mod_id=eNB_id;
   PHY_vars_eNB->cooperation_flag=0;//cooperation_flag;
-  memcpy(&(PHY_vars_eNB->frame_parms_nb_iot), frame_parms, sizeof(NB_DL_FRAME_PARMS));
+  memcpy(&(PHY_vars_eNB->frame_parms_nb_iot), frame_parms, sizeof(NB_IoT_DL_FRAME_PARMS));
   PHY_vars_eNB->frame_parms_nb_iot.Nid_cell = ((Nid_cell/3)*3)+((eNB_id+Nid_cell)%3); //XXX NB_IoT ????
   PHY_vars_eNB->frame_parms_nb_iot.nushift = PHY_vars_eNB->frame_parms.Nid_cell%6;
   phy_init_lte_eNB(PHY_vars_eNB,0,abstraction_flag);

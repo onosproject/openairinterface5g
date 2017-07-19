@@ -509,7 +509,7 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
 
   //XXX MP:warning due to function still not completed at PHY (get_lte_frame_parms)
   //XXX this approach is gone most probably
-  NB_DL_FRAME_PARMS *fp = mac_xface->get_lte_frame_parms(ctxt_pP->module_id,CC_id);
+  NB_IoT_DL_FRAME_PARMS *fp = mac_xface->get_lte_frame_parms(ctxt_pP->module_id,CC_id);
   T(T_ENB_RRC_CONNECTION_SETUP, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 

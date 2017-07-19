@@ -483,7 +483,7 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,UL_
 void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
 {
   int UE_id = -1;
-  NB_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
   int frame = proc->frame_tx;
   int subframe = proc->subframe_tx;
   DCI_CONTENT *DCI_Content; 
@@ -678,7 +678,7 @@ void npdsch_procedures(PHY_VARS_eNB *eNB,
   int subframe=proc->subframe_tx;
   NB_IoT_DL_eNB_HARQ_t *ndlsch_harq =ndlsch->harq_process;
   int input_buffer_length = ndlsch_harq->TBS/8; // get in byte //the TBS is set in generate_dlsch_param
-  NB_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
   int G;
   uint8_t *DLSCH_pdu=NULL;
   uint8_t DLSCH_pdu_tmp[input_buffer_length+4]; //[768*8];
@@ -941,7 +941,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   int subframe = proc->subframe_tx;
   uint32_t i,aa;
   DCI_PDU_NB *dci_pdu = eNB->DCI_pdu;
-  NB_DL_FRAME_PARMS *fp = &eNB->frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS *fp = &eNB->frame_parms_nb_iot;
   int8_t UE_id = 0;
   uint8_t ul_subframe;
   uint32_t ul_frame;
@@ -1214,7 +1214,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
        *  The higher layer parms (Rmax):
        * -npdcch-NumRepetitions (UE-specific) [inside the NPDCCH UE-specific strucuture] --> configured through phyconfigDedicated
        * -npdcch-NumRepetitionPaging (common)
-       * -npdcch-NumRepetitions-RA (common) [inside the NB_DL_FRAME_PARMS-> nprach_ParametersList] --> configured in phy_config_sib2
+       * -npdcch-NumRepetitions-RA (common) [inside the NB_IoT_DL_FRAME_PARMS-> nprach_ParametersList] --> configured in phy_config_sib2
        *
        *  PROBLEM: in FAPI specs seems there is no way to trasnmit Rmax to the PHY (waiting for answers)
        *
