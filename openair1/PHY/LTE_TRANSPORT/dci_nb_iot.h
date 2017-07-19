@@ -47,7 +47,7 @@ typedef enum
   DCIFormatN2,
   DCIFormatN2_Ind,
   DCIFormatN2_Pag,
-}DCI_format_NB_t;
+}DCI_format_NB_IoT_t;
 
 ///  DCI Format Type 0 (180 kHz, 23 bits)
 struct DCIFormatN0{

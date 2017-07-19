@@ -487,7 +487,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
   int frame = proc->frame_tx;
   int subframe = proc->subframe_tx;
   DCI_CONTENT *DCI_Content; 
-  DCI_format_NB_t DCI_format;
+  DCI_format_NB_IoT_t DCI_format;
   NB_IoT_eNB_NDLSCH_t *ndlsch;
   NB_IoT_eNB_NPDCCH_t *npdcch;
 

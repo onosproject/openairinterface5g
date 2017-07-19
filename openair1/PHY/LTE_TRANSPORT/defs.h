@@ -867,10 +867,10 @@ typedef struct {
   /// rnti
   rnti_t rnti;
   /// Format
-  DCI_format_NB_t format;
+  DCI_format_NB_IoT_t format;
   /// DCI pdu
   uint8_t dci_pdu[8];
-} DCI_ALLOC_NB_t;
+} DCI_ALLOC_NB_IoT_t;
 
 typedef struct {
   //delete the count for the DCI numbers,NUM_DCI_MAX should set to 2
@@ -879,7 +879,7 @@ typedef struct {
   /// see FAPI/NFAPI specs Table 4-45
   uint8_t npdcch_start_symbol;
   uint8_t Num_dci;
-  DCI_ALLOC_NB_t dci_alloc[2] ;
+  DCI_ALLOC_NB_IoT_t dci_alloc[2] ;
 } DCI_PDU_NB;
 
 

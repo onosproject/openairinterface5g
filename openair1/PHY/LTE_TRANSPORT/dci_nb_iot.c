@@ -460,7 +460,7 @@ int dci_modulation_NB_IoT(int32_t **txdataF,
 uint8_t generate_dci_top_NB_IoT(
 						 NB_IoT_eNB_NPDCCH_t* npdcch,
 						 uint8_t Num_dci,
-                         DCI_ALLOC_NB_t *dci_alloc,
+                         DCI_ALLOC_NB_IoT_t *dci_alloc,
                          int16_t amp,
                          NB_IoT_DL_FRAME_PARMS *fp,
                          int32_t **txdataF,
