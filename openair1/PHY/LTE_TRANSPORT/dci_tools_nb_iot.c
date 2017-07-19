@@ -64,15 +64,14 @@ void add_dci_NB_IoT(DCI_PDU_NB *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_
 }
 
 
-int NB_generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
-                                       eNB_rxtx_proc_t *proc,
-                                       DCI_CONTENT *DCI_Content,
-                                       uint16_t rnti,
-                                       DCI_format_NB_t dci_format,
-                                       uint8_t UE_id,
-                                       uint8_t aggregation,
-									   uint8_t npdcch_start_symbol
-                                      )
+int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB *eNB,
+                                              eNB_rxtx_proc_t *proc,
+                                              DCI_CONTENT *DCI_Content,
+                                              uint16_t rnti,
+                                              DCI_format_NB_t dci_format,
+                                              uint8_t UE_id,
+                                              uint8_t aggregation,
+									                            uint8_t npdcch_start_symbol)
 {
 
   void *ULSCH_DCI_NB = NULL;

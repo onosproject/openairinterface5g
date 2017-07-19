@@ -641,15 +641,14 @@ void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nfapi_
 
   /*Log for generate ULSCH DCI*/
 
-  NB_generate_eNB_ulsch_params_from_dci(eNB,
-                                        proc,
-                                        DCI_Content,
-                                        hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.rnti,
-                                        DCIFormatN0,
-                                        UE_id,
-                                        hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.aggregation_level,
-										hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.start_symbol
-                                        );  
+  generate_eNB_ulsch_params_from_dci_NB_IoT(eNB,
+                                            proc,
+                                            DCI_Content,
+                                            hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.rnti,
+                                            DCIFormatN0,
+                                            UE_id,
+                                            hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.aggregation_level,
+										                        hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.start_symbol);  
 
   
   //LOG for ULSCH DCI Resource allocation
