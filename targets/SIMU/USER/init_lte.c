@@ -189,7 +189,7 @@ void init_lte_eNB_NB(
 
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     LOG_I(PHY,"[NB-IoT] Allocating Transport Channel Buffers for NDLSCH, UE %d\n",i);
-      PHY_vars_eNB->ndlsch[i] = new_eNB_dlsch_NB(NSOFT,abstraction_flag,frame_parms);
+      PHY_vars_eNB->ndlsch[i] = new_eNB_dlsch_NB_IoT(NSOFT,abstraction_flag,frame_parms);
       if (!PHY_vars_eNB->ndlsch[i]) {
 	LOG_E(PHY,"Can't get eNB ndlsch structures for UE %d \n", i);
 	exit(-1);
@@ -215,9 +215,9 @@ void init_lte_eNB_NB(
     LOG_E(PHY,"Can't get eNB nulsch structures\n");
     exit(-1);
   }
-  PHY_vars_eNB->dlsch_SI_NB  = new_eNB_dlsch_NB(NSOFT, abstraction_flag, frame_parms);
+  PHY_vars_eNB->dlsch_SI_NB  = new_eNB_dlsch_NB_IoT(NSOFT, abstraction_flag, frame_parms);
   LOG_D(PHY,"[NB-IoT] eNB %d : SI %p\n",eNB_id,PHY_vars_eNB->dlsch_SI_NB);
-  PHY_vars_eNB->dlsch_ra_NB  = new_eNB_dlsch_NB(NSOFT, abstraction_flag, frame_parms);
+  PHY_vars_eNB->dlsch_ra_NB  = new_eNB_dlsch_NB_IoT(NSOFT, abstraction_flag, frame_parms);
   LOG_D(PHY,"[NB-IoT] eNB %d : RA %p\n",eNB_id,PHY_vars_eNB->dlsch_ra_NB);
 
 

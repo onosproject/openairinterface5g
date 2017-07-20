@@ -62,12 +62,12 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint
 
 
 //NB-IoT version
-NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB(//unsigned char Kmimo,
-									//unsigned char Mdlharq,
-									uint32_t Nsoft,
-									//unsigned char N_RB_DL,
-									uint8_t abstraction_flag,
-									NB_IoT_DL_FRAME_PARMS* frame_parms);
+NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(//unsigned char Kmimo,
+									      //unsigned char Mdlharq,
+									      uint32_t Nsoft,
+									      //unsigned char N_RB_DL,
+									      uint8_t abstraction_flag,
+									      NB_IoT_DL_FRAME_PARMS* frame_parms);
 
 
 

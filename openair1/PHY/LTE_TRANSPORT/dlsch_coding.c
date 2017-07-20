@@ -235,7 +235,7 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(unsigned char Kmimo,unsigned char Mdlharq,uint32_
 
 }
 /*
-NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB(//unsigned char Kmimo,
+NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(//unsigned char Kmimo,
 									//unsigned char Mdlharq,
 									uint32_t Nsoft,
 									//unsigned char N_RB_DL,
