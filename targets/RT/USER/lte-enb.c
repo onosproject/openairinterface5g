@@ -606,7 +606,7 @@ static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_
    * stored the Upink information in UL_info struct, process it and made it into FAPI style,
    */
 
-  NB_phy_procedures_eNB_uespec_RX(eNB,proc,UL_INFO);
+  phy_procedures_eNB_uespec_RX_NB_IoT(eNB,proc,UL_INFO);
 
   /*
    * send the UL_Indication to higher layer that also provide a tick to the scheduler_dlsch_ulsch

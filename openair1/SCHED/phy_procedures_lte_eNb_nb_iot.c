@@ -159,7 +159,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   
 }
 
-void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,UL_IND_t *UL_INFO)
+void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,UL_IND_t *UL_INFO)
 {
   //RX processing for ue-specific resources (i
 
@@ -480,7 +480,7 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,UL_
 
 /*Generate eNB ndlsch params for NB-IoT from the NPDCCH PDU of the DCI, modify the input to the Sched Rsp variable*/
 
-void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
+void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
 {
   int UE_id = -1;
   NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
@@ -612,7 +612,7 @@ void NB_generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi
 
 
 
-void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu) {
+void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu) {
 
   int UE_id = -1;
   int harq_pid = 0;
@@ -933,7 +933,7 @@ extern int oai_exit;
  * (in OAI in principle is every subframe)
  */
 
-void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
+void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB *eNB,
          	 	 	 	 	  eNB_rxtx_proc_t *proc,
 							  int do_meas)
 {

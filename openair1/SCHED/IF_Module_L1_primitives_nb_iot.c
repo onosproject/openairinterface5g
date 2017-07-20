@@ -228,7 +228,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     	case NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE:
     		//Remember: there is no DCI for SI information
     		//TODO: separate the ndlsch structure configuration from the DCI (here we will encode only the DCI)
-      		NB_generate_eNB_dlsch_params(eNB,proc,dl_config_pdu);
+      		generate_eNB_dlsch_params_NB_IoT(eNB,proc,dl_config_pdu);
 
       		break;
     	case NFAPI_DL_CONFIG_NBCH_PDU_TYPE:
@@ -272,7 +272,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     {
     	case NFAPI_HI_DCI0_NPDCCH_DCI_PDU_TYPE:
 
-      		NB_generate_eNB_ulsch_params(eNB,proc,hi_dci0_pdu);
+      		generate_eNB_ulsch_params_NB_IoT(eNB,proc,hi_dci0_pdu);
 
       		break;
     	default:
@@ -308,7 +308,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 
   //XXX problem: although we may have nothing to transmit this function should be always triggered in order to allow the PHY layer to complete the repetitions
   //of previous Transport Blocks
-  NB_phy_procedures_eNB_TX(eNB,proc,NULL);
+  phy_procedures_eNB_TX_NB_IoT(eNB,proc,NULL);
 
 }
 
