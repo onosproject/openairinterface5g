@@ -12,7 +12,8 @@
 * \warning
 */
 
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
+#include "PHY/defs_nb_iot.h"
 #include "PHY/extern.h"
 #include "PHY/CODING/defs.h"
 #include "PHY/CODING/extern.h"

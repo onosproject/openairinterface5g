@@ -30,7 +30,7 @@
  * \warning
  */
 
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 #include "PHY/extern.h" //where we get the global Sched_Rsp_t structure filled
 #include "SCHED/defs.h"
@@ -103,7 +103,7 @@ extern int rx_sig_fifo;
 * It generates NRS/NPSS/NSSS
 *
 */
-void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) 
+void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc) 
 {
   NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   int **txdataF = eNB->common_vars.txdataF[0];
@@ -159,7 +159,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   
 }
 
-void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,UL_IND_t *UL_INFO)
+void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc,UL_IND_t *UL_INFO)
 {
   //RX processing for ue-specific resources (i
 
@@ -480,7 +480,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc
 
 /*Generate eNB ndlsch params for NB-IoT from the NPDCCH PDU of the DCI, modify the input to the Sched Rsp variable*/
 
-void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
+void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
 {
   int UE_id = -1;
   NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
@@ -612,7 +612,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
 
 
 
-void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu) {
+void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu) {
 
   int UE_id = -1;
   int harq_pid = 0;
@@ -667,7 +667,7 @@ void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nf
  * ** CQI and PMI are not present in NB-IoT
  * ** redundancy version exist only in UL for NB-IoT and not in DL
  */
-void npdsch_procedures(PHY_VARS_eNB *eNB,
+void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
 						eNB_rxtx_proc_t *proc, //Context data structure for RX/TX portion of subframe processing
 						NB_IoT_eNB_NDLSCH_t *ndlsch,
 						//int num_pdcch_symbols, (BCOM says are not needed
@@ -933,7 +933,7 @@ extern int oai_exit;
  * (in OAI in principle is every subframe)
  */
 
-void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB *eNB,
+void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
          	 	 	 	 	  eNB_rxtx_proc_t *proc,
 							  int do_meas)
 {

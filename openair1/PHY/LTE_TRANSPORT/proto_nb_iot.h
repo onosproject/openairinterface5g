@@ -55,7 +55,7 @@ int generate_sss_NB_IoT(int32_t **txdataF,
 
 //NRS
 
-void generate_pilots_NB_IoT(PHY_VARS_eNB *phy_vars_eNB,
+void generate_pilots_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
                             int32_t **txdataF,
                             int16_t amp,
                             uint16_t Ntti,                // Ntti = 10
@@ -100,7 +100,7 @@ void add_dci_NB_IoT(DCI_PDU_NB *DCI_pdu,
                     uint8_t npdcch_start_symbol);
 
 /*Use the UL DCI Information to configure PHY and also Pack the DCI*/
-int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB *eNB,
+int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
                                               eNB_rxtx_proc_t *proc,
                                               DCI_CONTENT *DCI_Content,
                                               uint16_t rnti,
@@ -110,7 +110,7 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB *eNB,
 									                            uint8_t npdcch_start_symbol);
 
 /*Use the DL DCI Information to configure PHY and also Pack the DCI*/
-int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB *eNB,
+int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
                                               int frame,
                                               uint8_t subframe,
                                               DCI_CONTENT *DCI_Content,

@@ -13,7 +13,7 @@
 */
 
 
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 #include "defs.h"
 #include "PHY/extern.h"

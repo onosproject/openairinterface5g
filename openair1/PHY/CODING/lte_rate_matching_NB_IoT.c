@@ -16,7 +16,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #endif
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
+#include "PHY/defs_nb_iot.h"
 #include "assertions.h"
 
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"   // does this file is needed ?

@@ -31,7 +31,7 @@
 
 #include "assertions.h"
 #include "platform_types.h"
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "PHY/extern.h"
 #include "msc.h"
 
@@ -52,6 +52,7 @@
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 
 //NB-IoT
+#include "PHY/defs_nb_iot.h"
 #include "proto_nb_iot.h"
 #include "defs_nb_iot.h"
 #include "math.h"

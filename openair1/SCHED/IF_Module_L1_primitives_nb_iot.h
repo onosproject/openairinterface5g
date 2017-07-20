@@ -13,9 +13,10 @@ void schedule_response(Sched_Rsp_t *Sched_INFO);
  * Trigger the phy_config_xxx functions using parameters from the shared PHY_Config structure
  * */
 void PHY_config_req(PHY_Config_t* config_INFO);
-void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
-						  eNB_rxtx_proc_t *proc,
-		       	   	   	   nfapi_dl_config_request_pdu_t *dl_config_pdu,
-						   uint8_t *sdu);
+
+void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB_NB_IoT *eNB,
+						  	   eNB_rxtx_proc_t *proc,
+		       	   	   	   	   nfapi_dl_config_request_pdu_t *dl_config_pdu,
+						   	   uint8_t *sdu);
 
 #endif

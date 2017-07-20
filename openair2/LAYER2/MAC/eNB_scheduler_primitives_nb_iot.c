@@ -30,7 +30,7 @@
  */
 
 #include "assertions.h"
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "PHY/extern.h"
 
 #include "SCHED/defs.h"
@@ -49,6 +49,7 @@
 #include "RRC/LITE/extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 //NB-IoT
+#include "PHY/defs_nb_iot.h"
 #include "defs_nb_iot.h"
 #include "proto_nb_iot.h"
 //#include "LAYER2/MAC/pre_processor.c"

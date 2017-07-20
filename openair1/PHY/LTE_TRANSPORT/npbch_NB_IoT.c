@@ -12,7 +12,7 @@
 * \warning
 */
 
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 #include "PHY/CODING/extern.h"
 #include "PHY/CODING/lte_interleaver_inline.h"

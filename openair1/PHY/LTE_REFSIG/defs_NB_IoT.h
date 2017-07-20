@@ -16,7 +16,7 @@
 
 #ifndef __LTE_REFSIG_DEFS_NB_IOT__H__
 #define __LTE_REFSIG_DEFS_NB_IOT__H__
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 
 /** @ingroup _PHY_REF_SIG
@@ -38,7 +38,7 @@ void lte_gold_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_table[
 @param p antenna index
 @param RB_IoT_ID the ID of the RB dedicated for NB_IoT
 */
-int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB *phy_vars_eNB,
+int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
                      int32_t *output,
                      short amp,
                      unsigned char Ns,

@@ -29,7 +29,7 @@
  * \note
  * \warning
  */
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "PHY/extern.h"
 #include "SCHED/defs.h"
 #ifdef DEBUG_DCI_TOOLS
@@ -64,7 +64,7 @@ void add_dci_NB_IoT(DCI_PDU_NB *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_
 }
 
 
-int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB *eNB,
+int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
                                               eNB_rxtx_proc_t *proc,
                                               DCI_CONTENT *DCI_Content,
                                               uint16_t rnti,
@@ -140,7 +140,7 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB *eNB,
 //map the Isf (DCI param) to the number of subframes (Nsf)
 int resource_to_subframe[8] = {1,2,3,4,5,6,8,10}; 
 
-int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB *eNB,
+int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
                                               int frame,
                                               uint8_t subframe,
                                               DCI_CONTENT *DCI_Content,

@@ -30,7 +30,8 @@
  */
 
 #include "assertions.h"
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
+#include "PHY/defs_nb_iot.h"
 #include "PHY/extern.h"
 
 #include "SCHED/defs.h"

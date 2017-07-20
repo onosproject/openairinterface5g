@@ -63,7 +63,7 @@ typedef struct{
 
 	/*Dedicated configuration -->not supported by FAPI (may not needed)
 	 * In OAI at least are needed when we manage the phy_procedures_eNB_TX in which we call the phy_config_dedicated_eNB_step2
-	 * that use the physicalConfigDedicated info previously stored in the PHY_VARS_eNB structure through the phy_config_dedicated procedure
+	 * that use the physicalConfigDedicated info previously stored in the PHY_VARS_eNB_NB_IoT structure through the phy_config_dedicated procedure
 	 */
 	//PhysicalConfigDedicated_NB_r13_t *phy_config_dedicated;
 

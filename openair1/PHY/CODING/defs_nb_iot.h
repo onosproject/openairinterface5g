@@ -29,7 +29,8 @@
 #define OPENAIR1_PHY_CODING_DEFS_NB_IOT_H_
 
 #include <stdint.h>
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
+#include "PHY/defs_nb_iot.h"
 
 /** \fn uint32_t sub_block_interleaving_cc(uint32_t D, uint8_t *d,uint8_t *w)
 \brief This is the subblock interleaving algorithm for convolutionally coded blocks from 36-212 (Release 13.4, 2017).

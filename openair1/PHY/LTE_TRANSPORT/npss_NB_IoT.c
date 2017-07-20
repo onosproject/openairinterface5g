@@ -12,7 +12,7 @@
 * \warning
 */
 
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 #include "PHY/extern.h"
 #include "PHY/LTE_REFSIG/primary_synch_NB_IoT.h"
@@ -67,7 +67,7 @@ int generate_npss_NB_IoT(int32_t **txdataF,
 }
 
 /* (for LTE)
-int generate_pss_emul(PHY_VARS_eNB *phy_vars_eNb,uint8_t sect_id)
+int generate_pss_emul(PHY_VARS_eNB_NB_IoT *phy_vars_eNb,uint8_t sect_id)
 {
 
   msg("[PHY] EMUL eNB generate_pss_emul eNB %d, sect_id %d\n",phy_vars_eNb->Mod_id,sect_id);

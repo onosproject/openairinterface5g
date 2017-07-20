@@ -13,7 +13,8 @@
 */
 //#ifndef __LTE_TRANSPORT_DEFS_NB_IOT__H__
 //#define __LTE_TRANSPORT_DEFS_NB_IOT__H__
-//#include "PHY/defs.h"
+////#include "PHY/defs.h"
+//#include "PHY/defs_nb_iot.h"
 //#include "dci_nb_iot.h"
 //#include "dci.h"
 //#include "uci.h"

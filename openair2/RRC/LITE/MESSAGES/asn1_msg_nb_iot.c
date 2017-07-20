@@ -71,10 +71,10 @@
 #include "SIB-Type-NB-r13.h"
 #include "RRCConnectionResume-NB.h"
 #include "RRCConnectionReestablishment-NB.h"
-
+#include "PHY/defs_nb_iot.h"
 //----------------------------------------
 
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "enb_config.h"
 
 #if defined(ENABLE_ITTI)

@@ -23,7 +23,8 @@
 #ifndef __INIT_DEFS_NB_IoT__H__
 #define __INIT_DEFS_NB_IoT__H__
 
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
+#include "PHY/defs_nb_iot.h"
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
 
 #include "SystemInformationBlockType2.h"

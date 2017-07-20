@@ -355,7 +355,7 @@ void NB_phy_config_dedicated_eNB(uint8_t Mod_id,
 							  extra_phyConfig_t *extra_parms
 							  )
 {
-	  PHY_VARS_eNB *eNB = PHY_vars_eNB_g[Mod_id][CC_id];
+	  PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_g[Mod_id][CC_id];
 	  NB_IoT_eNB_NPDCCH_t *npdcch;
 	  uint8_t UE_id = find_ue(rnti,eNB);
 	

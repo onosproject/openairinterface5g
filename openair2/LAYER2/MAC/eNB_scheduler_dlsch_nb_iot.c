@@ -30,7 +30,7 @@
  */
 
 #include "assertions.h"
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "PHY/extern.h"
 
 #include "SCHED/defs.h"
@@ -45,6 +45,7 @@
 #include "OCG.h"
 #include "OCG_extern.h"
 //NB-IoT
+#include "PHY/defs_nb_iot.h"
 #include "defs_nb_iot.h"
 #include "proto_nb_iot.h"
 

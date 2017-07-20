@@ -2,13 +2,14 @@
 #include "../SCHED/defs.h"
 #include "../SCHED/defs_nb_iot.h"
 #include "common/utils/itti/assertions.h"
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
+#include "PHY/defs_nb_iot.h"
 #include "PHY/extern.h"
 #include "PHY/vars.h"
 #include "PHY/INIT/defs_nb_iot.h"
 
 
-void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
+void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB_NB_IoT *eNB,
 						  eNB_rxtx_proc_t *proc,
 		       	   	   	   nfapi_dl_config_request_pdu_t *dl_config_pdu,
 						   uint8_t *sdu)
@@ -158,7 +159,7 @@ void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB *eNB,
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //Memo for initialization TODO: target/SIMU/USER/init_lte.c/init_lte_eNB --> new_eNB_dlsch(..) //
-//this is where the allocation of PHy_vars_eNB and all the ndlsch structures happen            //
+//this is where the allocation of PHy_vars_eNB_NB_IoT and all the ndlsch structures happen            //
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -167,7 +168,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 {
 
   //XXX check if correct to take eNB like this
-  PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][Sched_INFO->CC_id];
+  PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_g[0][Sched_INFO->CC_id];
   eNB_rxtx_proc_t *proc = &eNB->proc.proc_rxtx[0];
   NB_IoT_eNB_NPBCH_t *npbch;
 
