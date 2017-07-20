@@ -103,7 +103,7 @@ extern int rx_sig_fifo;
 * It generates NRS/NPSS/NSSS
 *
 */
-void NB_common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) 
+void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) 
 {
   NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   int **txdataF = eNB->common_vars.txdataF[0];
@@ -966,7 +966,7 @@ void NB_phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     } 
 
   //generate NPSS/NSSS
-  NB_common_signal_procedures(eNB,proc);
+  common_signal_procedures_NB_IoT(eNB,proc);
 
     //Generate MIB
     if(subframe==0 && (eNB->npbch != NULL))

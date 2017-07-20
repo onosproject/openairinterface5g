@@ -15,7 +15,7 @@ void process_schedule_rsp(Sched_Rsp_t *sched_rsp,
 void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, UL_IND_t *UL_INFO);
 
 /* For NB-IoT, we put NPBCH in later part, since it would be scheduled by MAC scheduler,this generates NRS/NPSS/NSSS*/
-void NB_common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc); 
+void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc); 
 
 /*Generate the ulsch params and do the mapping for the FAPI style parameters to OAI, and then do the packing*/
 void NB_generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu);
