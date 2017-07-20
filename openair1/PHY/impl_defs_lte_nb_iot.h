@@ -154,7 +154,8 @@ typedef struct {
 
 typedef struct {
 
-
+  /// Frame type (0 FDD, 1 TDD)
+  lte_frame_type_t frame_type;
   /// Number of resource blocks (RB) in DL of the LTE (for knowing the bandwidth)
   uint8_t N_RB_DL;
   /// Number of resource blocks (RB) in UL of the LTE ((for knowing the bandwidth)

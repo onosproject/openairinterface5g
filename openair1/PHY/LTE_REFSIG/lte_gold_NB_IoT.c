@@ -15,7 +15,7 @@
 #include "defs.h"
 #include "defs_NB_IoT.h"
 
-void lte_gold_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_table_NB_IoT[20][2][14],uint16_t Nid_cell)  //  Nid_cell = Nid_cell_NB_IoT
+void lte_gold_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_table_NB_IoT[20][2][14],uint16_t Nid_cell)  //  Nid_cell = Nid_cell_NB_IoT
 {
   unsigned char ns,l,Ncp=1;
   unsigned int n,x1,x2;

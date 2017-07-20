@@ -34,7 +34,7 @@
 
 #define NPBCH_A 34                             // 34 for NB-IoT and 24 for LTE
 
-int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
+int allocate_npbch_REs_in_RB(NB_IoT_DL_FRAME_PARMS *frame_parms,
                             int32_t **txdataF,
                             uint32_t *jj,
                             uint32_t symbol_offset,
@@ -120,7 +120,7 @@ int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
 int generate_npbch(NB_IoT_eNB_NPBCH_t *eNB_npbch,
                   int32_t **txdataF,
                   int amp,
-                  LTE_DL_FRAME_PARMS *frame_parms,
+                  NB_IoT_DL_FRAME_PARMS *frame_parms,
                   uint8_t *npbch_pdu,
                   uint8_t frame_mod64,
 				  unsigned short NB_IoT_RB_ID)
@@ -216,7 +216,7 @@ return(0);
 }
 /**********************************************************
 **********************************************************/
-void npbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
+void npbch_scrambling(NB_IoT_DL_FRAME_PARMS *frame_parms,
                      uint8_t *npbch_e,
                      uint32_t length)  // 1600
 {

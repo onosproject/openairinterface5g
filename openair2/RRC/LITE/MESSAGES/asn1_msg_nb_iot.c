@@ -1259,7 +1259,7 @@ uint8_t do_RRCConnectionReestablishment_NB(
 		uint8_t Mod_id,
 		uint8_t* const buffer,
 		const uint8_t     Transaction_id,
-		const LTE_DL_FRAME_PARMS* const frame_parms, //to be changed
+		const NB_IoT_DL_FRAME_PARMS* const frame_parms, //to be changed
 		SRB_ToAddModList_NB_r13_t*      SRB_list_NB) //should contain SRB1 already configured?
 {
 

@@ -38,7 +38,7 @@
 
 int generate_npss_NB_IoT(int32_t **txdataF,
                          short amp,
-                         LTE_DL_FRAME_PARMS *frame_parms,
+                         NB_IoT_DL_FRAME_PARMS *frame_parms,
                          unsigned short symbol_offset,          // symbol_offset should equal to 3 for NB-IoT 
                          unsigned short slot_offset,
                          unsigned short RB_IoT_ID);             // new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
@@ -47,7 +47,7 @@ int generate_npss_NB_IoT(int32_t **txdataF,
 
 int generate_sss_NB_IoT(int32_t **txdataF,
                         int16_t amp,
-                        LTE_DL_FRAME_PARMS *frame_parms, 
+                        NB_IoT_DL_FRAME_PARMS *frame_parms, 
                         uint16_t symbol_offset,             // symbol_offset = 3 for NB-IoT 
                         uint16_t slot_offset, 
                         unsigned short frame_number,        // new attribute (Get value from higher layer), it does not exist for LTE
@@ -65,7 +65,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB *phy_vars_eNB,
 
 //NPBCH
 
-int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
+int allocate_npbch_REs_in_RB(NB_IoT_DL_FRAME_PARMS *frame_parms,
                              int32_t **txdataF,
                              uint32_t *jj,
                              uint32_t symbol_offset,
@@ -78,12 +78,12 @@ int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,
 int generate_npbch(NB_IoT_eNB_NPBCH_t *eNB_npbch,
                    int32_t **txdataF,
                    int amp,
-                   LTE_DL_FRAME_PARMS *frame_parms,
+                   NB_IoT_DL_FRAME_PARMS *frame_parms,
                    uint8_t *npbch_pdu,
                    uint8_t frame_mod64,
                    unsigned short NB_IoT_RB_ID);
 
-void npbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
+void npbch_scrambling(NB_IoT_DL_FRAME_PARMS *frame_parms,
                       uint8_t *npbch_e,
                       uint32_t length);
 

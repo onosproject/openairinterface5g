@@ -21,7 +21,7 @@
 
 int generate_sss_NB_IoT(int32_t **txdataF,
 						int16_t amp,
-						LTE_DL_FRAME_PARMS *frame_parms, 
+						NB_IoT_DL_FRAME_PARMS *frame_parms, 
 						uint16_t symbol_offset, 				// symbol_offset = 3 for NB-IoT 
 						uint16_t slot_offset, 
 						unsigned short frame_number, 			// new attribute (Get value from higher layer), it does not exist for LTE

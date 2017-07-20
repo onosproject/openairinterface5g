@@ -105,7 +105,7 @@ extern int rx_sig_fifo;
 */
 void NB_common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) 
 {
-  LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
+  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   int **txdataF = eNB->common_vars.txdataF[0];
   int subframe = proc->subframe_tx;
   int frame = proc->frame_tx;
@@ -168,7 +168,7 @@ void NB_phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,UL_
   int sync_pos;
   uint16_t rnti=0;
   uint8_t access_mode;
-  LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
+  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms;
 
   const int subframe = proc->subframe_rx;
   const int frame    = proc->frame_rx;

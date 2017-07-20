@@ -19,7 +19,7 @@
 
 int generate_npss_NB_IoT(int32_t **txdataF,
 						short amp,
-						LTE_DL_FRAME_PARMS *frame_parms,
+						NB_IoT_DL_FRAME_PARMS *frame_parms,
 						unsigned short symbol_offset,				// symbol_offset should equal to 3 for NB-IoT 
 						unsigned short slot_offset,
 						unsigned short RB_IoT_ID)					// new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
