@@ -497,6 +497,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
   // generate Cell-Specific Reference Signals for both slots
   if (eNB->abstraction_flag==0) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_RS_TX,1);
+    if (frame==0) LOG_I(PHY,"Generating RS for slot %d\n",subframe<<1);
     generate_pilots_slot(eNB,
 			 txdataF,
 			 AMP,
@@ -598,6 +599,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
     
     if ((fp->frame_type == TDD)&&
 	(eNB->abstraction_flag==0)){
+      if (frame==0) LOG_I(PHY,"Generating SSS for slot %d\n",1+(subframe<<1));
       generate_sss(txdataF,
 		   AMP,
 		   fp,
@@ -624,6 +626,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
   else if ((subframe == 1) &&
 	   (fp->frame_type == TDD)&&
 	   (eNB->abstraction_flag==0)) {
+    if (frame==0) LOG_I(PHY,"Generating PSS for slot %d\n",subframe<<1);
     generate_pss(txdataF,
 		 AMP,
 		 fp,
@@ -1383,7 +1386,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (common %"PRIu8",ue_spec %"PRIu8")\n",eNB->Mod_id,frame, subframe,
 	      DCI_pdu->Num_common_dci,DCI_pdu->Num_ue_spec_dci);
       }
-
+      if (frame==0) LOG_I(PHY,"Generating PDCCCH/PCFICH for slot %d\n",subframe<<1);
       num_pdcch_symbols = generate_dci_top(DCI_pdu->Num_ue_spec_dci,
 					   DCI_pdu->Num_common_dci,
 					   DCI_pdu->dci_alloc,
