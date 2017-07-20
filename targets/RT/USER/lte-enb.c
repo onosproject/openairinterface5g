@@ -308,6 +308,7 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_OFDM_MODULATION,1);
 
+    if (phy_vars_eNB->proc.frame_tx==0) LOG_I(PHY,"doing OFDM mod for for slot %d\n",subframe<<1);
     do_OFDM_mod_symbol(&phy_vars_eNB->common_vars,
 		       0,
 		       subframe<<1,
@@ -493,6 +494,9 @@ void proc_tx_full(PHY_VARS_eNB *eNB,
   // do OFDM modulation
   do_OFDM_mod_rt(proc->subframe_tx,eNB);
   // if TX fronthaul go ahead 
+  if (proc->frame_tx == 0) LOG_I(PHY, "Frame 0 : Calling eNB->tx_fh for subframe %d\n",proc->subframe_tx);
+
+  eNB->proc.subframe_tx = proc->subframe_tx;
   if (eNB->tx_fh) eNB->tx_fh(eNB,proc);
 
   /*
@@ -695,6 +699,7 @@ static void* print_stats_thread( void* param ) {
 		print_meas(&eNB->send_if4p5_comp_stats, "send_if4p5_comp_stats", NULL, NULL);
 		printf("\n");
 	}
+	return(0);
 }
 
 // asynchronous UL with IF5 (RCC,RAU,eNodeB_BBU)
@@ -1037,7 +1042,7 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   
   //printf("timestamp_rx %lu, frame %d(%d), subframe %d(%d)\n",proc->timestamp_rx,proc->frame_rx,frame,proc->subframe_rx,subframe);
   
-  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
+  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, (proc->timestamp_rx+eNB->ts_offset)&0xffffffff );
   
   if (rxs != fp->samples_per_tti)
     exit_fun( "problem receiving samples" );
@@ -1516,7 +1521,6 @@ void tx_rf(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
   void *txp[fp->nb_antennas_tx]; 
   unsigned int txs;
   int i;
-  openair0_timestamp ts,old_ts;
 
 
   // Transmit TX buffer based on timestamp from RX
@@ -1552,13 +1556,14 @@ void tx_rf(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
 	(prevSF_type == SF_UL) &&
 	(nextSF_type == SF_UL)) {
       flags = 4; // start of burst and end of burst (only one DL SF between two UL)
-      sf_extension = 1;
       sf_extension = eNB->N_TA_offset<<1;
     }
 
-    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, (proc->timestamp_tx-openair0_cfg[0].tx_sample_advance-sf_extension)&0xffffffff );
+    if (proc->frame_tx == 0) LOG_I(PHY,"siglen = %d, sf_extension = %d (%d,%d)\n",siglen,sf_extension,proc->subframe_tx,proc_rxtx->subframe_tx);
+
+    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, (proc->timestamp_tx+eNB->ts_offset-openair0_cfg[0].tx_sample_advance-sf_extension)&0xffffffff );
     for (i=0; i<fp->nb_antennas_tx; i++)
-      txp[i] = (void*)&eNB->common_vars.txdata[0][i][(((proc->subframe_tx)%10)*siglen) - sf_extension]; 
+      txp[i] = (void*)&eNB->common_vars.txdata[0][i][(((proc->subframe_tx)%10)*fp->samples_per_tti) - sf_extension]; 
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_WRITE_FLAGS,flags); 
@@ -1572,8 +1577,8 @@ void tx_rf(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
     end_rf_ts = proc->timestamp_tx+eNB->ts_offset-openair0_cfg[0].tx_sample_advance;
     if (recv_if_count != 0 ) {
       recv_if_count = recv_if_count-1;
-      LOG_D(HW,"[From Timestamp %d to Timestamp %d] RTT_RF: %"PRId64"; RTT_RF\n", start_rf_prev_ts, end_rf_ts, clock_difftime_ns(start_rf_prev, end_rf));
-      LOG_D(HW,"[From Timestamp %d to Timestamp %d] RTT_RF: %"PRId64"; RTT_RF\n",start_rf_prev2_ts, end_rf_ts, clock_difftime_ns(start_rf_prev2, end_rf));
+      LOG_D(HW,"[From Timestamp %llu to Timestamp %llu] RTT_RF: %"PRId64"; RTT_RF\n", (long long unsigned int)start_rf_prev_ts, (long long unsigned int)end_rf_ts, clock_difftime_ns(start_rf_prev, end_rf));
+      LOG_D(HW,"[From Timestamp %llu to Timestamp %llu] RTT_RF: %"PRId64"; RTT_RF\n", (long long unsigned int)start_rf_prev2_ts, (long long unsigned int)end_rf_ts, clock_difftime_ns(start_rf_prev2, end_rf));
     }
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
     
