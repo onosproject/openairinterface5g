@@ -22,6 +22,7 @@
 #include "defs.h"
 #include "SCHED/defs.h"
 #include "PHY/extern.h"
+#include "PHY/extern_NB_IoT.h"
 #include "SIMULATION/TOOLS/defs.h"
 #include "RadioResourceConfigCommonSIB.h"
 #include "RadioResourceConfigDedicated.h"
@@ -60,11 +61,11 @@ void NB_phy_config_mib_eNB(
 {
 
 
-  AssertFatal(PHY_vars_eNB_g != NULL, "PHY_vars_eNB_g instance pointer doesn't exist\n");
-  AssertFatal(PHY_vars_eNB_g[Mod_id] != NULL, "PHY_vars_eNB_g instance %d doesn't exist\n",Mod_id);
-  AssertFatal(PHY_vars_eNB_g[Mod_id][CC_id] != NULL, "PHY_vars_eNB_g instance %d, CCid %d doesn't exist\n",Mod_id,CC_id);
+  AssertFatal(PHY_vars_eNB_NB_IoT_g != NULL, "PHY_vars_eNB_NB_IoT_g instance pointer doesn't exist\n");
+  AssertFatal(PHY_vars_eNB_NB_IoT_g[Mod_id] != NULL, "PHY_vars_eNB_NB_IoT_g instance %d doesn't exist\n",Mod_id);
+  AssertFatal(PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id] != NULL, "PHY_vars_eNB_NB_IoT_g instance %d, CCid %d doesn't exist\n",Mod_id,CC_id);
 
-  NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms_nb_iot;
 
    LOG_I(PHY,"Configuring MIB-NB for instance %d, CCid %d : (band %d,Nid_cell %d,p %d,EARFCN %u)\n",
   	  	  Mod_id, CC_id, eutra_band, Nid_cell, p_eNB,EARFCN);
@@ -98,9 +99,9 @@ void NB_phy_config_mib_eNB(
 //                         RadioResourceConfigCommonSIB_NB_r13_t *radioResourceConfigCommon
 //                         )
 //{
-//	NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms;
-//	  //LTE_eNB_UE_stats *eNB_UE_stats		= PHY_vars_eNB_g[Mod_id][CC_id]->eNB_UE_stats;
-//	  //int32_t rx_total_gain_eNB_dB		= PHY_vars_eNB_g[Mod_id][CC_id]->rx_total_gain_eNB_dB;
+//	NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms;
+//	  //LTE_eNB_UE_stats *eNB_UE_stats		= PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->eNB_UE_stats;
+//	  //int32_t rx_total_gain_eNB_dB		= PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->rx_total_gain_eNB_dB;
 //	  uint8_t MAX_NPRACH = 4;
 //          NPRACH_Parameters_NB_r13_t *np;
 //
@@ -135,7 +136,7 @@ void NB_phy_config_mib_eNB(
 //      }
 //
 //	  /*Should modify to compute_nprach_seq*/
-//	  //compute_prach_seq(&fp->prach_config_common,fp->frame_type,PHY_vars_eNB_g[Mod_id][CC_id]->X_u);
+//	  //compute_prach_seq(&fp->prach_config_common,fp->frame_type,PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->X_u);
 //
 //	  /*NPDSCH ConfigCommon*/
 //	  fp->npdsch_config_common.nrs_Power           = radioResourceConfigCommon->npdsch_ConfigCommon_r13.nrs_Power_r13;
@@ -180,7 +181,7 @@ void NB_phy_config_mib_eNB(
 //	  fp->DL_gap_config.dl_GapThreshold                        = radioResourceConfigCommon->dl_Gap_r13->dl_GapThreshold_r13;
 //
 //	  /*PUCCH stuff in LTE*/
-//	  //init_ncs_cell(fp,PHY_vars_eNB_g[Mod_id][CC_id]->ncs_cell);
+//	  //init_ncs_cell(fp,PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->ncs_cell);
 //
 //	  //init_ul_hopping(fp);
 //
@@ -196,7 +197,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 						 extra_phyConfig_t* extra_phy_parms
                          )
 {
-	NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms;
+	NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms;
 	LOG_D(PHY,"[eNB%d] CCid %d: Applying nb_iot_config from sib2_NB\n",Mod_id,CC_id);
 	  
 	/*NPRACH_ConfigSIB_NB_r13----------------------------------------------------------*/
@@ -290,7 +291,7 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 	  }
 
 	  //TODO: Should modify to compute_nprach_seq --> nprach.
-	  //compute_prach_seq(&fp->prach_config_common,fp->frame_type,PHY_vars_eNB_g[Mod_id][CC_id]->X_u);
+	  //compute_prach_seq(&fp->prach_config_common,fp->frame_type,PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->X_u);
 	  
 
 	  /*NPDSCH ConfigCommon-------------------------------------------------------------------*/
@@ -355,7 +356,7 @@ void NB_phy_config_dedicated_eNB(uint8_t Mod_id,
 							  extra_phyConfig_t *extra_parms
 							  )
 {
-	  PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_g[Mod_id][CC_id];
+	  PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id];
 	  NB_IoT_eNB_NPDCCH_t *npdcch;
 	  uint8_t UE_id = find_ue(rnti,eNB);
 	

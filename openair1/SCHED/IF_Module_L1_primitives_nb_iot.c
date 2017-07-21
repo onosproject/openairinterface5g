@@ -2,10 +2,12 @@
 #include "../SCHED/defs.h"
 #include "../SCHED/defs_nb_iot.h"
 #include "common/utils/itti/assertions.h"
-//#include "PHY/defs.h"
+#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
-#include "PHY/extern.h"
+//#include "PHY/extern.h"
+#include "PHY/extern_NB_IoT.h"
 #include "PHY/vars.h"
+#include "PHY/vars_NB_IoT.h"
 #include "PHY/INIT/defs_nb_iot.h"
 
 
@@ -168,7 +170,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 {
 
   //XXX check if correct to take eNB like this
-  PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_g[0][Sched_INFO->CC_id];
+  PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_NB_IoT_g[0][Sched_INFO->CC_id];
   eNB_rxtx_proc_t *proc = &eNB->proc.proc_rxtx[0];
   NB_IoT_eNB_NPBCH_t *npbch;
 
