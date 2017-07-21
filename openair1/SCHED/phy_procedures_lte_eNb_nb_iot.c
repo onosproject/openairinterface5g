@@ -105,7 +105,7 @@ extern int rx_sig_fifo;
 */
 void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc) 
 {
-  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms;
+  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
   int **txdataF = eNB->common_vars.txdataF[0];
   int subframe = proc->subframe_tx;
   int frame = proc->frame_tx;
@@ -168,7 +168,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
   int sync_pos;
   uint16_t rnti=0;
   uint8_t access_mode;
-  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms;
+  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
 
   const int subframe = proc->subframe_rx;
   const int frame    = proc->frame_rx;
@@ -184,8 +184,8 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
   T(T_ENB_PHY_UL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
 
   T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
-    T_BUFFER(&eNB->common_vars.rxdata[0][0][subframe*eNB->frame_parms.samples_per_tti],
-             eNB->frame_parms.samples_per_tti * 4));
+    T_BUFFER(&eNB->common_vars.rxdata[0][0][subframe*eNB->frame_parms_nb_iot.samples_per_tti],
+             eNB->frame_parms_nb_iot.samples_per_tti * 4));
 
   //if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) return;
 
