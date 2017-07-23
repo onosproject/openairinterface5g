@@ -703,16 +703,17 @@ typedef struct PHY_VARS_eNB_s {
    */
 
   //TODO: check what should be NUMBER_OF_UE_MAX_NB_IoT value
+  /*
   NB_IoT_eNB_NPBCH_t *npbch;
   NB_IoT_eNB_NPDCCH_t *npdcch[NUMBER_OF_UE_MAX_NB_IoT];
   NB_IoT_eNB_NDLSCH_t *ndlsch[NUMBER_OF_UE_MAX_NB_IoT];
   NB_IoT_eNB_NULSCH_t *nulsch[NUMBER_OF_UE_MAX_NB_IoT+1]; //nulsch[0] contains the RAR
   NB_IoT_eNB_NDLSCH_t *ndlsch_SI,*ndlsch_ra, *ndlsch_SIB1;
 
-  NB_IoT_DL_FRAME_PARMS frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS frame_parms_NB_IoT;
   // DCI for at most 2 DCI pdus
   DCI_PDU_NB *DCI_pdu;
-
+*/
 
 
 } PHY_VARS_eNB;

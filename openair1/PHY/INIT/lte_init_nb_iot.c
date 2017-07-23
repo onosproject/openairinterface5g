@@ -65,7 +65,7 @@ void NB_phy_config_mib_eNB(
   AssertFatal(PHY_vars_eNB_NB_IoT_g[Mod_id] != NULL, "PHY_vars_eNB_NB_IoT_g instance %d doesn't exist\n",Mod_id);
   AssertFatal(PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id] != NULL, "PHY_vars_eNB_NB_IoT_g instance %d, CCid %d doesn't exist\n",Mod_id,CC_id);
 
-  NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms_NB_IoT;
 
    LOG_I(PHY,"Configuring MIB-NB for instance %d, CCid %d : (band %d,Nid_cell %d,p %d,EARFCN %u)\n",
   	  	  Mod_id, CC_id, eutra_band, Nid_cell, p_eNB,EARFCN);

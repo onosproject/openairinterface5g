@@ -32,7 +32,7 @@
 
 //#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
-#include "PHY/extern.h" //where we get the global Sched_Rsp_t structure filled
+#include "PHY/extern_NB_IoT.h" //where we get the global Sched_Rsp_t structure filled
 #include "SCHED/defs.h"
 #include "SCHED/extern.h"
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
@@ -105,7 +105,7 @@ extern int rx_sig_fifo;
 */
 void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc) 
 {
-  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_NB_IoT;
   int **txdataF = eNB->common_vars.txdataF[0];
   int subframe = proc->subframe_tx;
   int frame = proc->frame_tx;
@@ -168,7 +168,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
   int sync_pos;
   uint16_t rnti=0;
   uint8_t access_mode;
-  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_NB_IoT;
 
   const int subframe = proc->subframe_rx;
   const int frame    = proc->frame_rx;
@@ -184,8 +184,8 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
   T(T_ENB_PHY_UL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
 
   T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
-    T_BUFFER(&eNB->common_vars.rxdata[0][0][subframe*eNB->frame_parms_nb_iot.samples_per_tti],
-             eNB->frame_parms_nb_iot.samples_per_tti * 4));
+    T_BUFFER(&eNB->common_vars.rxdata[0][0][subframe*eNB->frame_parms_NB_IoT.samples_per_tti],
+             eNB->frame_parms_NB_IoT.samples_per_tti * 4));
 
   //if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) return;
 
@@ -483,7 +483,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
 {
   int UE_id = -1;
-  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_NB_IoT;
   int frame = proc->frame_tx;
   int subframe = proc->subframe_tx;
   DCI_CONTENT *DCI_Content; 
@@ -678,7 +678,7 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
   int subframe=proc->subframe_tx;
   NB_IoT_DL_eNB_HARQ_t *ndlsch_harq =ndlsch->harq_process;
   int input_buffer_length = ndlsch_harq->TBS/8; // get in byte //the TBS is set in generate_dlsch_param
-  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_NB_IoT;
   int G;
   uint8_t *DLSCH_pdu=NULL;
   uint8_t DLSCH_pdu_tmp[input_buffer_length+4]; //[768*8];
@@ -941,7 +941,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   int subframe = proc->subframe_tx;
   uint32_t i,aa;
   DCI_PDU_NB *dci_pdu = eNB->DCI_pdu;
-  NB_IoT_DL_FRAME_PARMS *fp = &eNB->frame_parms_nb_iot;
+  NB_IoT_DL_FRAME_PARMS *fp = &eNB->frame_parms_NB_IoT;
   int8_t UE_id = 0;
   uint8_t ul_subframe;
   uint32_t ul_frame;
@@ -1160,7 +1160,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
        */
 
       //this should give only 1 result (since only 1 ndlsch procedure is activated at once) so we brak after the transmission
-      for (int UE_id = 0; i < NUMBER_OF_UE_MAX_NB_IoT; UE_id++)
+      for (int UE_id = 0; UE_id < NUMBER_OF_UE_MAX_NB_IoT; UE_id++)
       {
     	  if(eNB->ndlsch[(uint8_t)UE_id] != NULL && eNB->ndlsch[(uint8_t)UE_id]->active == 1 && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE || subframe != 4)) //condition on sib1-NB
     	  {

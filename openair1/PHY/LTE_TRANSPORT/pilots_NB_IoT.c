@@ -24,7 +24,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
 					 unsigned short With_NSSS) 		// With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
 {
 
-  NB_IoT_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->frame_parms;
+  NB_IoT_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->frame_parms_NB_IoT;
 
   uint32_t tti,tti_offset,slot_offset,Nsymb,samples_per_symbol;
   uint8_t first_pilot,second_pilot;

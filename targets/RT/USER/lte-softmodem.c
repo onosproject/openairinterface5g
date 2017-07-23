@@ -1589,7 +1589,7 @@ int main( int argc, char **argv ) {
 
       LOG_I(PHY,"Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms[CC_id]->nb_antennas_rx, frame_parms[CC_id]->nb_antennas_tx);
 
-#ifdef NB_IoT
+#ifdef NB_IOT
       frame_parms_nb_iot[CC_id]->nb_antennas_tx     = nb_antenna_tx;
       frame_parms_nb_iot[CC_id]->nb_antennas_rx     = nb_antenna_rx;
       frame_parms_nb_iot[CC_id]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
