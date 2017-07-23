@@ -25,6 +25,9 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
 
 /*Process all the scheduling result from MAC and also common signals.*/
 void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc,int do_meas);
+
+int8_t find_ue_NB_IoT(uint16_t rnti, PHY_VARS_eNB_NB_IoT *eNB);
+
 #endif
 
 

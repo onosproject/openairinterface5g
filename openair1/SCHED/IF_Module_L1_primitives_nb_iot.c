@@ -135,7 +135,7 @@ void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB_NB_IoT *eNB,
 		  //int UE_id = find_dlsch(rel13->rnti,eNB,SEARCH_EXIST);
 
 
-		  UE_id =  find_ue_NB(rel13->rnti,eNB);
+		  UE_id =  find_ue_NB_IoT(rel13->rnti,eNB);
 	  	  AssertFatal(UE_id==-1,"no existing ue specific dlsch_context\n");
 
 	  	  ndlsch = eNB->ndlsch[(uint8_t)UE_id];

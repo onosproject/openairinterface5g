@@ -542,7 +542,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
         { //managing data
 
     	  //TODO target/SIMU/USER?init_lte/init_lte_eNB we should allocate the ndlsch structures
-    	  UE_id = find_ue_NB(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti, eNB);
+    	  UE_id = find_ue_NB_IoT(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti, eNB);
     	  AssertFatal(UE_id != -1, "no ndlsch context available or no ndlsch context corresponding to that rnti\n");
 
 
@@ -633,7 +633,7 @@ void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
 
 
 
-  UE_id = find_ue_NB(hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.rnti, eNB);
+  UE_id = find_ue_NB_IoT(hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.rnti, eNB);
   AssertFatal(UE_id == -1, "no ndlsch context available or no ndlsch context corresponding to that rnti\n");
 
 

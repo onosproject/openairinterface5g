@@ -1,43 +1,25 @@
-/*
- * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.openairinterface.org/?page_id=698
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *-------------------------------------------------------------------------------
- * For more information about the OpenAirInterface (OAI) Software Alliance:
- *      contact@openairinterface.org
- */
+
 
 /*! \file phy_procedures_lte_eNB.c
 * \brief Implementation of common utilities for eNB/UE procedures from 36.213 LTE specifications
-* \author R. Knopp, F. Kaltenberger
-* \date 2011
+* \author M. KANJ R. Knopp, F. Kaltenberger
+* \date 2017
 * \version 0.1
-* \company Eurecom
-* \email: knopp@eurecom.fr,florian.kaltenberger@eurecom.fr
+* \company Bcom & Eurecom
+* \email: matthieu.kanj@b-com.com , knopp@eurecom.fr,florian.kaltenberger@eurecom.fr
 * \note
 * \warning
 */
-#include "PHY/defs.h"
-#include "PHY/extern.h"
-#include "SCHED/defs.h"
+#include "PHY/defs_nb_iot.h"
+#include "PHY/extern_NB_IoT.h"
+#include "SCHED/defs_nb_iot.h"
 #include "SCHED/extern.h"
 
 #ifdef LOCALIZATION
 #include <sys/time.h>
 #endif
 
+/*
 void get_Msg3_alloc(LTE_DL_FRAME_PARMS *frame_parms,
                     unsigned char current_subframe,
                     unsigned int current_frame,
@@ -156,7 +138,7 @@ void get_Msg3_alloc_ret(LTE_DL_FRAME_PARMS *frame_parms,
                         unsigned char *subframe)
 {
   if (frame_parms->frame_type == FDD) {
-    /* always retransmit in n+8 */
+    // always retransmit in n+8 /
     *subframe = current_subframe + 8;
 
     if (*subframe > 9) {
@@ -1021,7 +1003,7 @@ double aggregate_eNB_UE_localization_stats(PHY_VARS_eNB *phy_vars_eNB, int8_t UE
     // A includes the rx gain (eNB->rx_total_gain_eNB_dB) and hardware calibration
     power_distance = pow(10, ((UE_tx_power_dB - median_power - eNB->rx_total_gain_eNB_dB + 133)/(10.0*alpha)));
     /* current measurements shows constant UE_timing_offset = 18
-       and timing_advance_update = 11 at 1m. at 5m, timing_advance_update = 12*/
+       and timing_advance_update = 11 at 1m. at 5m, timing_advance_update = 12//
     //time_distance = (double) 299792458*(eNB->UE_stats[(uint32_t)UE_id].timing_advance_update)/(sys_bw*1000000);
     time_distance = (double) abs(eNB->UE_stats[(uint32_t)UE_id].timing_advance_update - 11) * 4.89;//  (3 x 108 x 1 / (15000 x 2048)) / 2 = 4.89 m
 
@@ -1110,8 +1092,7 @@ int8_t find_ue(uint16_t rnti, PHY_VARS_eNB *eNB)
 
   return(-1);
 }
-
-/*
+*/
 int8_t find_ue_NB_IoT(uint16_t rnti, PHY_VARS_eNB_NB_IoT *eNB)
 {
 
@@ -1127,9 +1108,9 @@ int8_t find_ue_NB_IoT(uint16_t rnti, PHY_VARS_eNB_NB_IoT *eNB)
   return(-1);
 }
 
-*/
 
 
+/*
 
 LTE_DL_FRAME_PARMS* get_lte_frame_parms(module_id_t Mod_id, uint8_t  CC_id)
 {
@@ -1292,3 +1273,4 @@ void compute_srs_pos(lte_frame_type_t frameType,uint16_t isrs,uint16_t *psrsPeri
         }
     }
 }
+*/

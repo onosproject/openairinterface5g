@@ -968,6 +968,7 @@ set(SCHED_SRC
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_eNb_nb_iot.c
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_ue.c
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common.c
+  ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common_NB_IoT.c
   ${OPENAIR1_DIR}/SCHED/phy_mac_stub.c
   ${OPENAIR1_DIR}/SCHED/IF_Module_L1_primitives_nb_iot.c
   ${OPENAIR1_DIR}/SCHED/pucch_pc.c
