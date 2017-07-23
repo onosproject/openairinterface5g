@@ -28,6 +28,8 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc
 
 int8_t find_ue_NB_IoT(uint16_t rnti, PHY_VARS_eNB_NB_IoT *eNB);
 
+int16_t get_hundred_times_delta_IF_eNB_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,uint8_t UE_id,uint8_t harq_pid, uint8_t bw_factor);
+
 #endif
 
 

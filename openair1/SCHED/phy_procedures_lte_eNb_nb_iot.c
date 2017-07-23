@@ -277,7 +277,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 			                       eNB->ulsch[i]->harq_processes[harq_pid]->nb_rb>20 ? 1 : 0);
 
           //compute the expected ULSCH RX power (for the stats)
-          eNB->ulsch[(uint32_t)i]->harq_processes[harq_pid]->delta_TF = get_hundred_times_delta_IF_eNB(eNB,i,harq_pid, 0); // 0 means bw_factor is not considered
+          eNB->ulsch[(uint32_t)i]->harq_processes[harq_pid]->delta_TF = get_hundred_times_delta_IF_eNB_NB_IoT(eNB,i,harq_pid, 0); // 0 means bw_factor is not considered
           eNB->UE_stats[i].ulsch_decoding_attempts[harq_pid][eNB->ulsch[i]->harq_processes[harq_pid]->round]++;
           eNB->ulsch[i]->harq_processes[harq_pid]->subframe_scheduling_flag=0;
           if (eNB->ulsch[i]->harq_processes[harq_pid]->cqi_crc_status == 1) 
@@ -360,7 +360,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
                      fp->ofdm_symbol_size) -
             eNB->rx_total_gain_dB -
             hundred_times_log10_NPRB[eNB->ulsch[i]->harq_processes[harq_pid]->nb_rb-1]/100 -
-            get_hundred_times_delta_IF_eNB(eNB,i,harq_pid, 0)/100;
+            get_hundred_times_delta_IF_eNB_NB_IoT(eNB,i,harq_pid, 0)/100;
           //for NB-IoT PHICH not work
 	        /*eNB->ulsch[i]->harq_processes[harq_pid]->phich_active = 1;
           eNB->ulsch[i]->harq_processes[harq_pid]->phich_ACK = 1;*/

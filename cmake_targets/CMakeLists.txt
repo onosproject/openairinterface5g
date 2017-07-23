@@ -973,6 +973,7 @@ set(SCHED_SRC
   ${OPENAIR1_DIR}/SCHED/IF_Module_L1_primitives_nb_iot.c
   ${OPENAIR1_DIR}/SCHED/pucch_pc.c
   ${OPENAIR1_DIR}/SCHED/pusch_pc.c
+  ${OPENAIR1_DIR}/SCHED/pusch_pc_NB_IoT.c
   ${OPENAIR1_DIR}/SCHED/srs_pc.c
 )
 add_library(SCHED_LIB ${SCHED_SRC})

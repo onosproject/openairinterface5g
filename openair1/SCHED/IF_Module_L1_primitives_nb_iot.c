@@ -176,8 +176,8 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 
   int i;
 
-  module_id_t                     Mod_id    = Sched_INFO->module_id;
-  uint8_t                         CC_id     = Sched_INFO->CC_id;
+  //module_id_t                     Mod_id    = Sched_INFO->module_id;
+  //uint8_t                         CC_id     = Sched_INFO->CC_id;
   nfapi_dl_config_request_body_t *DL_req    = Sched_INFO->DL_req;
   nfapi_ul_config_request_t 	 *UL_req    = Sched_INFO->UL_req;
   nfapi_hi_dci0_request_body_t *HI_DCI0_req = Sched_INFO->HI_DCI0_req;
@@ -185,14 +185,14 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   frame_t                         frame     = Sched_INFO->frame;
   sub_frame_t                     subframe  = Sched_INFO->subframe;
 
-  // implicite declaration of AssertFatal , this function does not exist in OAI code
+  // implicite declaration of AssertFatal
   AsserFatal(proc->subframe_tx != subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
   AsserFatal(proc->frame_tx != frame, "Current sframe %d != NFAPI frame %d\n", proc->frame_tx,frame );
 
   uint8_t number_dl_pdu             = DL_req->number_pdu;
   uint8_t number_ul_pdu				= UL_req->ul_config_request_body.number_of_pdus;
   uint8_t number_ul_dci             = HI_DCI0_req->number_of_dci;
-  uint8_t number_pdsch_rnti         = DL_req->number_pdsch_rnti; // for the moment not used
+  //uint8_t number_pdsch_rnti         = DL_req->number_pdsch_rnti; // for the moment not used
 
   // at most 2 pdus (DCI) in the case of NPDCCH
   nfapi_dl_config_request_pdu_t *dl_config_pdu;
