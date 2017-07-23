@@ -34,6 +34,8 @@
 #include "defs_nb_iot.h"
 #include "proto_nb_iot.h"
 #include "extern.h"
+#include "RRC/LITE/proto_nb_iot.h"
+
 
 int mac_init_global_param_NB(void)
 {
@@ -66,7 +68,7 @@ int mac_init_global_param_NB(void)
 //  LOG_I(MAC,"[MAIN] RLC interface (mac_rlc_xface) setup and init (maybe no mre used??)\n");
 
   LOG_I(MAC,"[MAIN] RRC NB-IoT initialization of global params\n");
-  rrc_init_global_param_NB();
+  rrc_init_global_param_NB_IoT();
 
 
   LOG_I(MAC,"[MAIN] PDCP layer init\n");

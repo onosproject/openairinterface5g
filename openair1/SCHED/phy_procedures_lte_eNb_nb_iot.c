@@ -37,7 +37,8 @@
 #include "SCHED/extern.h"
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
 #include "PHY/LTE_TRANSPORT/if5_tools.h"
-
+#include "RRC/LITE/proto_nb_iot.h"
+#include "SIMULATION/TOOLS/defs.h"
 #ifdef EMOS
 #include "SCHED/phy_procedures_emos.h"
 #endif
@@ -615,7 +616,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
 void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu) {
 
   int UE_id = -1;
-  int harq_pid = 0;
+  //int harq_pid = 0;
 
   DCI_CONTENT *DCI_Content;
   DCI_Content = (DCI_CONTENT*) malloc(sizeof(DCI_CONTENT));
@@ -1018,10 +1019,10 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     if(subframe == 4 && eNB->ndlsch_SIB1 != NULL && eNB->ndlsch_SIB1->harq_process->status == ACTIVE)
     {
       //check if current frame is for SIB1-NB transmission (if yes get the starting frame of SIB1-NB) and set the flag for the encoding
-      sib1_startFrame = is_SIB1_NB(frame,
-    		  	  	  	  	  	       (long)eNB->ndlsch_SIB1->harq_process->repetition_number,
-								                   fp->Nid_cell,
-								                   eNB->ndlsch_SIB1); //set the flags
+      sib1_startFrame = is_SIB1_NB_IoT(frame,
+    		  	  	  	  	  	           (long)eNB->ndlsch_SIB1->harq_process->repetition_number,
+								                       fp->Nid_cell,
+								                       eNB->ndlsch_SIB1); //set the flags
 								                   
   	  if(sib1_startFrame != -1 && eNB->ndlsch_SIB1->harq_process->pdu != NULL)
   	  {

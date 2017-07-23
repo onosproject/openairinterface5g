@@ -152,10 +152,7 @@ rrc_config_buffer_NB(
 //-----------------------------------------------------------------------------
 //XXX NEW mplementation by Raymond: still used but no more called by MAC/main.c instead directly called by rrc_eNB_nb_iot.c
 //XXX maybe this function is no more useful
-int
-rrc_init_global_param_NB(
-  void
-)
+int rrc_init_global_param_NB_IoT( void )
 //-----------------------------------------------------------------------------
 {
 

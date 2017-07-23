@@ -204,7 +204,7 @@ uint32_t to_earfcn(int eutra_bandP,uint32_t dl_CarrierFreq, float m_dl) {
 
 //PROBLEM: for UE category NB1 and NB2 the introduction of the offset (m_dl) may create some problems in the reconstruction of the dl_CarrierFreq
 //this function is used in phy_config_mib_NB for getting the DL Carrier Frequency from the EARFCN
-uint32_t from_earfcn(int eutra_bandP,uint32_t dl_earfcn, float m_dl) {
+uint32_t from_earfcn_NB_IoT(int eutra_bandP,uint32_t dl_earfcn, float m_dl) {
 
   int i;
 
@@ -217,7 +217,7 @@ uint32_t from_earfcn(int eutra_bandP,uint32_t dl_earfcn, float m_dl) {
 }
 
 
-int32_t get_uldl_offset(int eutra_band) {
+int32_t get_uldl_offset_NB_IoT(int eutra_band) {
   return(-eutra_bandtable[eutra_band].dl_min + eutra_bandtable[eutra_band].ul_min);
 }
 
@@ -738,7 +738,7 @@ int sib1_startFrame_to_array[4] = {0,16,32,48};//TS 36.213 Table 16.4.1.3-4
 //New----------------------------------------------------
 //return -1 whenever no SIB1-NB transmission occur.
 //return sib1_startFrame when transmission occur in the current frame
-uint32_t is_SIB1_NB(
+uint32_t is_SIB1_NB_IoT(
 		const frame_t    		frameP,
 		long					schedulingInfoSIB1,//from the mib
 		int						physCellId, //by configuration
@@ -780,7 +780,7 @@ uint32_t is_SIB1_NB(
 
 
     		if(schedulingInfoSIB1 > 11 || schedulingInfoSIB1 < 0){
-    			LOG_E(RRC, "is_SIB1_NB: schedulingInfoSIB1 value not allowed");
+    			LOG_E(RRC, "is_SIB1_NB_IoT: schedulingInfoSIB1 value not allowed");
     			return 0;
     		}
 
@@ -900,7 +900,7 @@ uint32_t is_SIB1_NB(
 
 //New----------------------------------------------------
 //Function for check if the current frame is the start of a new SIB1-NB period
-uint8_t is_SIB1_NB_start(
+uint8_t is_SIB1_start_NB_IoT(
 		const frame_t    		frameP,
 		long					schedulingInfoSIB1,//from the mib
 		int						physCellId //by configuration
@@ -915,7 +915,7 @@ uint8_t is_SIB1_NB_start(
 
 
     		if(schedulingInfoSIB1 > 11 || schedulingInfoSIB1 < 0){
-    			LOG_E(RRC, "is_SIB1_NB: schedulingInfoSIB1 value not allowed");
+    			LOG_E(RRC, "is_SIB1_NB_IoT: schedulingInfoSIB1 value not allowed");
     			return 0;
     		}
 
@@ -1182,7 +1182,7 @@ int8_t NB_mac_rrc_data_req_eNB(
 ///XXX Following FAPI implementation in principle we should only take care of get the PDU from the MAC only when the SIB1-NB period Start
 
          //sib1-NB scheduled in subframe #4
-         if(subframeP == 4 && is_SIB1_NB_start(frameP,schedulingInfoSIB1, physCellId)!= -1){
+         if(subframeP == 4 && is_SIB1_start_NB_IoT(frameP,schedulingInfoSIB1, physCellId)!= -1){
 
 			  memcpy(&buffer_pP[0],
 					  eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SIB1_NB,

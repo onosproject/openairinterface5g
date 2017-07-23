@@ -101,7 +101,7 @@ int NB_rrc_mac_config_req_eNB(
  * return the SIB1 starting frame
  * called by phy_procedure_eNB_Tx before calling the npdsch_procedure
  */
-uint32_t is_SIB1_NB(
+uint32_t is_SIB1_NB_IoT(
 		const frame_t    		frameP,
 		long					schedulingInfoSIB1,//from the mib
 		int						physCellId, //by configuration
@@ -115,7 +115,7 @@ uint32_t is_SIB1_NB(
  * return -1 = FALSE
  * called by the NB_mac_rrc_data_req
  */
-uint8_t is_SIB1_NB_start(
+uint8_t is_SIB1_start_NB_IoT(
 		const frame_t    		frameP,
 		long					schedulingInfoSIB1,//from the mib
 		int						physCellId //by configuration
@@ -597,3 +597,9 @@ rrc_eNB_free_mem_UE_context_NB(
    \return a transaction identifier*/
 uint8_t rrc_eNB_get_next_transaction_identifier_NB(module_id_t module_idP);
 
+
+int rrc_init_global_param_NB_IoT(void);
+
+uint32_t from_earfcn_NB_IoT(int eutra_bandP,uint32_t dl_earfcn, float m_dl);
+
+int32_t get_uldl_offset_NB_IoT(int eutra_band);

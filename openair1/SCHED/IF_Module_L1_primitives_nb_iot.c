@@ -185,7 +185,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   frame_t                         frame     = Sched_INFO->frame;
   sub_frame_t                     subframe  = Sched_INFO->subframe;
 
-
+  // implicite declaration of AssertFatal , this function does not exist in OAI code
   AsserFatal(proc->subframe_tx != subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
   AsserFatal(proc->frame_tx != frame, "Current sframe %d != NFAPI frame %d\n", proc->frame_tx,frame );
 

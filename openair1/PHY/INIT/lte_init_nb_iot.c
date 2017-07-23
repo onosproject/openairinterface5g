@@ -23,6 +23,7 @@
 #include "SCHED/defs.h"
 #include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"
+#include "RRC/LITE/proto_nb_iot.h"
 #include "SIMULATION/TOOLS/defs.h"
 #include "RadioResourceConfigCommonSIB.h"
 #include "RadioResourceConfigDedicated.h"
@@ -78,8 +79,8 @@ void NB_phy_config_mib_eNB(
   fp->Ncp                             	 = Ncp;
   fp->Ncp_UL							 = Ncp_UL;
   fp->nb_antenna_ports_eNB               = p_eNB; //tx antenna port
-  fp->dl_CarrierFreq                     = from_earfcn(eutra_band,EARFCN,0);
-  fp->ul_CarrierFreq                     = fp->dl_CarrierFreq - get_uldl_offset(eutra_band);
+  fp->dl_CarrierFreq                     = from_earfcn_NB_IoT(eutra_band,EARFCN,0);
+  fp->ul_CarrierFreq                     = fp->dl_CarrierFreq - get_uldl_offset_NB_IoT(eutra_band);
   fp->operating_mode					 = operating_mode; //see how are defined by FAPI structure
   fp->NB_IoT_RB_ID						 = prb_index; //XXX to be better understand how should be managed
   //fp->nb_rx_antenna_ports_eNB

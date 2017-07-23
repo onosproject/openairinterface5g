@@ -1002,7 +1002,7 @@ double aggregate_eNB_UE_localization_stats(PHY_VARS_eNB *phy_vars_eNB, int8_t UE
     // distance = 10^((Ptx - Prx - A)/10alpha), A is a constance experimentally evaluated
     // A includes the rx gain (eNB->rx_total_gain_eNB_dB) and hardware calibration
     power_distance = pow(10, ((UE_tx_power_dB - median_power - eNB->rx_total_gain_eNB_dB + 133)/(10.0*alpha)));
-    /* current measurements shows constant UE_timing_offset = 18
+    // current measurements shows constant UE_timing_offset = 18
        and timing_advance_update = 11 at 1m. at 5m, timing_advance_update = 12//
     //time_distance = (double) 299792458*(eNB->UE_stats[(uint32_t)UE_id].timing_advance_update)/(sys_bw*1000000);
     time_distance = (double) abs(eNB->UE_stats[(uint32_t)UE_id].timing_advance_update - 11) * 4.89;//  (3 x 108 x 1 / (15000 x 2048)) / 2 = 4.89 m
