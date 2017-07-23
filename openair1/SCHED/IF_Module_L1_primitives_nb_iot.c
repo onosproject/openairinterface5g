@@ -11,10 +11,10 @@
 #include "PHY/INIT/defs_nb_iot.h"
 
 
-void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB_NB_IoT *eNB,
-						  eNB_rxtx_proc_t *proc,
-		       	   	   	   nfapi_dl_config_request_pdu_t *dl_config_pdu,
-						   uint8_t *sdu)
+void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
+						  		   eNB_rxtx_proc_t *proc,
+		       	   	   	           nfapi_dl_config_request_pdu_t *dl_config_pdu,
+						   		   uint8_t *sdu)
 {
 
 	NB_IoT_eNB_NDLSCH_t *ndlsch;
@@ -152,7 +152,7 @@ void handle_nfapi_dlsch_pdu_NB(PHY_VARS_eNB_NB_IoT *eNB,
   //I don't know which kind of data is
   else
   {
-	  LOG_E(PHY, "handle_nfapi_dlsch_pdu_NB: Unknown type of data (rnti type %d, rnti %d)\n", rel13->rnti_type, rel13->rnti);
+	  LOG_E(PHY, "handle_nfapi_dlsch_pdu_NB_IoT: Unknown type of data (rnti type %d, rnti %d)\n", rel13->rnti_type, rel13->rnti);
   }
 
 }
@@ -259,7 +259,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     		 * 	result active from the loop before calling the ndlsch_procedure
     		 */
 
-    		handle_nfapi_dlsch_pdu_NB(eNB, proc,dl_config_pdu,Sched_INFO->sdu[i]);
+    		handle_nfapi_dlsch_pdu_NB_IoT(eNB, proc,dl_config_pdu,Sched_INFO->sdu[i]);
 
     		break;
     	default:
