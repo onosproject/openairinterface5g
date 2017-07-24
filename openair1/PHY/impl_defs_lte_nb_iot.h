@@ -48,7 +48,7 @@
 
 
 /// NPRACH-ParametersList-NB-r13 from 36.331 RRC spec
-typedef struct NPRACH_Parameters_NB{
+typedef struct NPRACH_Parameters_NB_IoT{
   /// the period time for nprach
   uint16_t nprach_Periodicity;
   /// for the start time for the NPRACH resource from 40ms-2560ms
@@ -69,11 +69,11 @@ typedef struct NPRACH_Parameters_NB{
   uint16_t npdcch_StartSF_CSS_RA;
   /// Fractional period offset of starting subframe for NPDCCH common search space
   uint16_t npdcch_Offset_RA;
-} nprach_parameters_NB_t;
+} nprach_parameters_NB_IoT_t;
 
 typedef struct{
-  A_SEQUENCE_OF(nprach_parameters_NB_t) list;
-}NPRACH_List_NB_t;
+  A_SEQUENCE_OF(nprach_parameters_NB_IoT_t) list;
+}NPRACH_List_NB_IoT_t;
 
 typedef long RSRP_Range_t;
 
@@ -89,7 +89,7 @@ typedef struct {
   /// The criterion for UEs to select a NPRACH resource. Up to 2 RSRP threshold values can be signalled.  \vr{[1..2]}
   struct rsrp_ThresholdsNPrachInfoList *rsrp_ThresholdsPrachInfoList;
   /// NPRACH Parameters List
-  NPRACH_List_NB_t nprach_ParametersList;
+  NPRACH_List_NB_IoT_t nprach_ParametersList;
 
 } NPRACH_CONFIG_COMMON;
 
@@ -142,7 +142,7 @@ typedef struct{
   uint8_t alpha;
   /// See TS 36.213 [23, 16.2.1.1]. Actual value = IE value * 2 [dB].
   uint8_t deltaPreambleMsg3;
-}UplinkPowerControlCommon_NB;
+}UplinkPowerControlCommon_NB_IoT;
 
 
 /* DL-GapConfig-NB-r13 */
@@ -150,7 +150,7 @@ typedef struct {
 	uint16_t	 dl_GapThreshold;
 	uint16_t	 dl_GapPeriodicity;
 	uint16_t	 dl_GapDurationCoeff;
-} DL_GapConfig_NB;
+} DL_GapConfig_NB_IoT;
 
 typedef struct {
 
@@ -222,9 +222,9 @@ typedef struct {
   /// PUSCH Config Common (from 36-331 RRC spec)
   NPUSCH_CONFIG_COMMON npusch_config_common;
   /// UL Power Control (from 36-331 RRC spec)
-  UplinkPowerControlCommon_NB ul_power_control_config_common;
+  UplinkPowerControlCommon_NB_IoT ul_power_control_config_common;
   /// DL Gap
-  DL_GapConfig_NB DL_gap_config;
+  DL_GapConfig_NB_IoT DL_gap_config;
   /// Size of SI windows used for repetition of one SI message (in frames)
   uint8_t SIwindowsize;
   /// Period of SI windows used for repetition of one SI message (in frames)

@@ -908,10 +908,10 @@ uint8_t is_SIB1_start_NB_IoT(
 {
 	uint8_t nb_rep=0; // number of sib1-nb repetitions within the 256 radio frames
 	uint32_t sib1_startFrame;
-	uint32_t sib1_NB_period = 256;//from specs TS 36.331 (rf)
-	uint8_t index;
-	int offset;
-	int period_nb; // the number of the actual period over the 1024 frames
+//	uint32_t sib1_NB_period = 256;//from specs TS 36.331 (rf)
+//	uint8_t index;
+//	int offset;
+//	int period_nb; // the number of the actual period over the 1024 frames
 
 
     		if(schedulingInfoSIB1 > 11 || schedulingInfoSIB1 < 0){

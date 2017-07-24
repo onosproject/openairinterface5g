@@ -205,7 +205,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
   // delete the srs
   
   /*Loop over the UE, i is the UE ID */
-  for (i=0; i<NUMBER_OF_UE_MAX; i++) 
+  for (i=0; i<NUMBER_OF_UE_MAX_NB_IoT; i++) 
     {
 
       // delete srs 
