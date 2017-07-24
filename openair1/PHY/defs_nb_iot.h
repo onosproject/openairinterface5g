@@ -226,7 +226,7 @@ typedef struct {
   pthread_mutex_t mutex_l2;
   int instance_cnt_l2;
   pthread_attr_t attr_l2;
-} eNB_rxtx_proc_NB_t;
+} eNB_rxtx_proc_NB_IoT_t;
 /*
 typedef struct {
   struct PHY_VARS_eNB_NB_IoT_s *eNB;
@@ -244,7 +244,7 @@ typedef struct {
 */
 
 /// Context data structure for eNB subframe processing
-typedef struct eNB_proc_NB_t_s {
+typedef struct eNB_proc_NB_IoT_t_s {
   /// Component Carrier index
   uint8_t              CC_id;
   /// thread index
@@ -373,9 +373,9 @@ typedef struct eNB_proc_NB_t_s {
   struct eNB_proc_t_s           **slave_proc;
   /// set of scheduling variables RXn-TXnp4 threads
   // newly added for NB_IoT
-  eNB_rxtx_proc_NB_t proc_rxtx[2];
+  eNB_rxtx_proc_NB_IoT_t proc_rxtx[2];
 
-} eNB_proc_NB_t;
+} eNB_proc_NB_IoT_t;
 
 /*
 /// Context data structure for RX/TX portion of subframe processing
@@ -463,19 +463,19 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   // indicator for precoding function (eNB,3GPP_eNB_BBU)
   int                  do_precoding;
   void                 (*do_prach)(struct PHY_VARS_eNB_NB_IoT_s *eNB,int frame,int subframe);
-  void                 (*fep)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_t *proc);
+  void                 (*fep)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc);
   int                  (*td)(struct PHY_VARS_eNB_NB_IoT_s *eNB,int UE_id,int harq_pid,int llr8_flag);
   int                  (*te)(struct PHY_VARS_eNB_NB_IoT_s *,uint8_t *,uint8_t,LTE_eNB_DLSCH_t *,int,uint8_t,time_stats_t *,time_stats_t *,time_stats_t *);
-  void                 (*proc_uespec_rx)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_t *proc,const relaying_type_t r_type);
-  void                 (*proc_tx)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_t *proc,relaying_type_t r_type,PHY_VARS_RN *rn);
-  void                 (*tx_fh)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_t *proc);
+  void                 (*proc_uespec_rx)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc,const relaying_type_t r_type);
+  void                 (*proc_tx)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc,relaying_type_t r_type,PHY_VARS_RN *rn);
+  void                 (*tx_fh)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc);
   void                 (*rx_fh)(struct PHY_VARS_eNB_NB_IoT_s *eNB,int *frame, int *subframe);
   int                  (*start_rf)(struct PHY_VARS_eNB_NB_IoT_s *eNB);
   int                  (*start_if)(struct PHY_VARS_eNB_NB_IoT_s *eNB);
   void                 (*fh_asynch)(struct PHY_VARS_eNB_NB_IoT_s *eNB,int *frame, int *subframe);
   uint8_t              local_flag;
   uint32_t             rx_total_gain_dB;
-  LTE_DL_FRAME_PARMS   frame_parms;
+  NB_IoT_DL_FRAME_PARMS   frame_parms;
   PHY_MEASUREMENTS_eNB measurements[NUMBER_OF_eNB_SECTORS_MAX_NB_IoT]; /// Measurement variables
   LTE_eNB_COMMON       common_vars;
   LTE_eNB_SRS          srs_vars[NUMBER_OF_UE_MAX_NB_IoT];

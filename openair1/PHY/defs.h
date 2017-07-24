@@ -217,12 +217,6 @@ typedef struct {
   /// scheduling parameters for RXn-TXnp4 thread
   struct sched_param sched_param_rxtx;
 
-  /// NB-IoT for IF_Module
-  pthread_t pthread_l2;
-  pthread_cond_t cond_l2;
-  pthread_mutex_t mutex_l2;
-  int instance_cnt_l2;
-  pthread_attr_t attr_l2;
 } eNB_rxtx_proc_t;
 
 typedef struct {

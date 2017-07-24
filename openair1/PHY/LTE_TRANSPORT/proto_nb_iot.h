@@ -101,7 +101,7 @@ void add_dci_NB_IoT(DCI_PDU_NB *DCI_pdu,
 
 /*Use the UL DCI Information to configure PHY and also Pack the DCI*/
 int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
-                                              eNB_rxtx_proc_t *proc,
+                                              eNB_rxtx_proc_NB_IoT_t *proc,
                                               DCI_CONTENT *DCI_Content,
                                               uint16_t rnti,
                                               DCI_format_NB_IoT_t dci_format,
@@ -130,6 +130,25 @@ uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t* npdcch,
                                 int32_t **txdataF,
                                 uint32_t subframe,
 						                    uint8_t npdcch_start_symbol);
+
+/*!
+  \brief Decoding of PUSCH/ACK/RI/ACK from 36-212.
+  @param phy_vars_eNB Pointer to eNB top-level descriptor
+  @param proc Pointer to RXTX proc variables
+  @param UE_id ID of UE transmitting this PUSCH
+  @param subframe Index of subframe for PUSCH
+  @param control_only_flag Receive PUSCH with control information only
+  @param Nbundled Nbundled parameter for ACK/NAK scrambling from 36-212/36-213
+  @param llr8_flag If 1, indicate that the 8-bit turbo decoder should be used
+  @returns 0 on success
+*/
+unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
+                                    eNB_rxtx_proc_NB_IoT_t *proc,
+                                    uint8_t UE_id,
+                                    uint8_t control_only_flag,
+                                    uint8_t Nbundled,
+                                    uint8_t llr8_flag);
+
 
 
 
