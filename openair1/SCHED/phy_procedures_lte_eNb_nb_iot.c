@@ -946,7 +946,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   int8_t UE_id = 0;
   int **txdataF = eNB->common_vars.txdataF[0];
   uint32_t sib1_startFrame = -1;
-  NB_IoT_eNB_NPDCCH_t*npdcch;
+  //NB_IoT_eNB_NPDCCH_t*npdcch;
 
 
 
