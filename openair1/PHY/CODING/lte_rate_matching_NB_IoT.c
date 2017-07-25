@@ -16,11 +16,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #endif
-//#include "PHY/defs.h"
+
 #include "PHY/defs_nb_iot.h"
 #include "assertions.h"
 
-#include "PHY/LTE_REFSIG/defs_NB_IoT.h"   // does this file is needed ?
+//#include "PHY/LTE_REFSIG/defs_NB_IoT.h"   // does this file is needed ?
 
 static uint32_t bitrev_cc_NB_IoT[32] = {1,17,9,25,5,21,13,29,3,19,11,27,7,23,15,31,0,16,8,24,4,20,12,28,2,18,10,26,6,22,14,30};
 
@@ -58,9 +58,9 @@ uint32_t sub_block_interleaving_cc_NB_IoT(uint32_t D, uint8_t *d,uint8_t *w)
 
 
 uint32_t lte_rate_matching_cc_NB_IoT(uint32_t RCC,      // RRC = 2
-				     uint16_t E,        // E = 1600
-				     uint8_t *w,	// length
-				     uint8_t *e)	// length 1600
+				                             uint16_t E,        // E = 1600
+				                             uint8_t *w,	// length
+				                             uint8_t *e)	// length 1600
 {
   uint32_t ind=0,k;
 
