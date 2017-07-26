@@ -19,18 +19,18 @@
  *      contact@openairinterface.org
  */
 
-#include "defs.h"
-#include "SCHED/defs.h"
-#include "PHY/extern.h"
+//#include "defs.h"
+//#include "SCHED/defs.h"
+//#include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"
 #include "RRC/LITE/proto_nb_iot.h"
-#include "SIMULATION/TOOLS/defs.h"
-#include "RadioResourceConfigCommonSIB.h"
-#include "RadioResourceConfigDedicated.h"
-#include "TDD-Config.h"
-#include "LAYER2/MAC/extern.h"
-#include "MBSFN-SubframeConfigList.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+//#include "SIMULATION/TOOLS/defs.h"
+//#include "RadioResourceConfigCommonSIB.h"
+//#include "RadioResourceConfigDedicated.h"
+//#include "TDD-Config.h"
+//#include "LAYER2/MAC/extern.h"
+//#include "MBSFN-SubframeConfigList.h"
+//#include "UTIL/LOG/vcd_signal_dumper.h"
 #define DEBUG_PHY
 #include "assertions.h"
 #include <math.h>
@@ -41,24 +41,23 @@
 #include "RadioResourceConfigDedicated-NB-r13.h"
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
 
-extern uint16_t prach_root_sequence_map0_3[838];
-extern uint16_t prach_root_sequence_map4[138];
+//extern uint16_t prach_root_sequence_map0_3[838];
+//extern uint16_t prach_root_sequence_map4[138];
 //uint8_t dmrs1_tab[8] = {0,2,3,4,6,8,9,10};
 
 
-void NB_phy_config_mib_eNB(
-			int  				Mod_id,
-			int                 CC_id,
-			int                 eutra_band,
-			int                 Nid_cell,
-			int                 Ncp,
-			int					Ncp_UL,
-			int                 p_eNB,
-			uint16_t			EARFCN,
-			uint16_t			prb_index, // NB_IoT_RB_ID,
-			uint16_t 			operating_mode,
-			uint16_t			control_region_size,
-			uint16_t			eutra_NumCRS_ports)
+void phy_config_mib_eNB_NB_IoT(int  			Mod_id,
+							   int              CC_id,
+							   int              eutra_band,
+							   int              Nid_cell,
+							   int              Ncp,
+							   int				Ncp_UL,
+							   int              p_eNB,
+							   uint16_t			EARFCN,
+							   uint16_t			prb_index, // NB_IoT_RB_ID,
+							   uint16_t 		operating_mode,
+							   uint16_t			control_region_size,
+							   uint16_t			eutra_NumCRS_ports)
 {
 
 
@@ -190,13 +189,12 @@ void NB_phy_config_mib_eNB(
 //
 //}
 
-void NB_phy_config_sib2_eNB(uint8_t Mod_id,
-                         int CC_id,
-                         nfapi_nb_iot_config_t *config,
-						 nfapi_rf_config_t *rf_config,
-						 nfapi_uplink_reference_signal_config_t* ul_nrs_config,
-						 extra_phyConfig_t* extra_phy_parms
-                         )
+void phy_config_sib2_eNB_NB_IoT(uint8_t Mod_id,
+                         		int CC_id,
+                         		nfapi_config_NB_IoT_t *config,
+						 		nfapi_rf_config_t *rf_config,
+						 		nfapi_uplink_reference_signal_config_t* ul_nrs_config,
+						 		extra_phyConfig_t* extra_phy_parms)
 {
 	NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms;
 	LOG_D(PHY,"[eNB%d] CCid %d: Applying nb_iot_config from sib2_NB\n",Mod_id,CC_id);
@@ -351,15 +349,14 @@ void NB_phy_config_sib2_eNB(uint8_t Mod_id,
 
 
 
-void NB_phy_config_dedicated_eNB(uint8_t Mod_id,
-                              int CC_id,
-                              uint16_t rnti,
-							  extra_phyConfig_t *extra_parms
-							  )
+void phy_config_dedicated_eNB_NB_IoT(uint8_t Mod_id,
+                              		 int CC_id,
+                             		 uint16_t rnti,
+							 		 extra_phyConfig_t *extra_parms)
 {
 	  PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id];
 	  NB_IoT_eNB_NPDCCH_t *npdcch;
-	  uint8_t UE_id = find_ue(rnti,eNB);
+	  uint8_t UE_id = find_ue_NB_IoT(rnti,eNB);
 	
 	  if (UE_id == -1) {
 		LOG_E( PHY, "[eNB %"PRIu8"] find_ue() returns -1\n", Mod_id);
@@ -376,7 +373,7 @@ void NB_phy_config_dedicated_eNB(uint8_t Mod_id,
 //		npdcch->npdcch_Offset_USS = extra_parms->npdcch_Offset_USS;
 //		npdcch->npdcch_StartSF_USS = extra_parms->npdcch_StartSF_USS;
 
-		LOG_I(PHY,"NB_phy_config_dedicated_eNB: npdcch_NumRepetitions = %d\n",
+		LOG_I(PHY,"phy_config_dedicated_eNB_NB_IoT: npdcch_NumRepetitions = %d\n",
 				npdcch->npdcch_NumRepetitions);
 	
 	  } else {

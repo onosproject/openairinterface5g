@@ -321,31 +321,30 @@ void PHY_config_req(PHY_Config_t* config_INFO){
 	if(config_INFO->get_MIB != 0){
 
 		//MIB-NB configuration
-		NB_phy_config_mib_eNB(config_INFO->mod_id,
-							  config_INFO->CC_id,
-							  config_INFO->cfg->nfapi_config.rf_bands.rf_band[0],//eutraband
-							  config_INFO->cfg->sch_config.physical_cell_id.value,
-							  config_INFO->cfg->subframe_config.dl_cyclic_prefix_type.value,
-							  config_INFO->cfg->subframe_config.ul_cyclic_prefix_type.value,
-							  config_INFO->cfg->rf_config.tx_antenna_ports.value,
-							  config_INFO->cfg->nfapi_config.earfcn.value,
-							  config_INFO->cfg->nb_iot_config.prb_index.value,
-							  config_INFO->cfg->nb_iot_config.operating_mode.value,
-							  config_INFO->cfg->nb_iot_config.control_region_size.value,
-							  config_INFO->cfg->nb_iot_config.assumed_crs_aps.value); //defined only in in-band different PCI
+		phy_config_mib_eNB_NB_IoT(config_INFO->mod_id,
+							  	  config_INFO->CC_id,
+							  	  config_INFO->cfg->nfapi_config.rf_bands.rf_band[0],//eutraband
+							  	  config_INFO->cfg->sch_config.physical_cell_id.value,
+							      config_INFO->cfg->subframe_config.dl_cyclic_prefix_type.value,
+							  	  config_INFO->cfg->subframe_config.ul_cyclic_prefix_type.value,
+							  	  config_INFO->cfg->rf_config.tx_antenna_ports.value,
+							  	  config_INFO->cfg->nfapi_config.earfcn.value,
+							  	  config_INFO->cfg->nb_iot_config.prb_index.value,
+							  	  config_INFO->cfg->nb_iot_config.operating_mode.value,
+							  	  config_INFO->cfg->nb_iot_config.control_region_size.value,
+							  	  config_INFO->cfg->nb_iot_config.assumed_crs_aps.value); //defined only in in-band different PCI
 
 	}
 
 	if(config_INFO->get_COMMON != 0)
 	{
 		//Common Configuration included in SIB2-NB
-		NB_phy_config_sib2_eNB(config_INFO->mod_id,
-							   config_INFO->CC_id,
-						       &config_INFO->cfg->nb_iot_config, // FIXME to be evaluated is should be passed a pointer
-						       &config_INFO->cfg->rf_config,
-							   &config_INFO->cfg->uplink_reference_signal_config,
-							   &config_INFO->extra_phy_parms
-							   );
+		phy_config_sib2_eNB_NB_IoT(config_INFO->mod_id,
+							   	   config_INFO->CC_id,
+						       	   &config_INFO->cfg->nb_iot_config, // FIXME to be evaluated is should be passed a pointer
+						       	   &config_INFO->cfg->rf_config,
+							   	   &config_INFO->cfg->uplink_reference_signal_config,
+							   	   &config_INFO->extra_phy_parms);
 	}
 
 	///FOR FAPI is not specified
@@ -353,11 +352,10 @@ void PHY_config_req(PHY_Config_t* config_INFO){
 	{
 	//Dedicated Configuration
 
-			NB_phy_config_dedicated_eNB(config_INFO->mod_id,
-										config_INFO->CC_id,
-										config_INFO->rnti,
-										&config_INFO->extra_phy_parms
-										);
+			phy_config_dedicated_eNB_NB_IoT(config_INFO->mod_id,
+											config_INFO->CC_id,
+											config_INFO->rnti,
+											&config_INFO->extra_phy_parms);
 
 	}
 }

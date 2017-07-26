@@ -20,37 +20,35 @@
  */
 
 
-#ifndef __INIT_DEFS_NB_IoT__H__
-#define __INIT_DEFS_NB_IoT__H__
+#ifndef __INIT_DEFS_NB_IOT__H__
+#define __INIT_DEFS_NB_IOT__H__
 
-//#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
 
-#include "SystemInformationBlockType2.h"
+//#include "SystemInformationBlockType2.h"
 //#include "RadioResourceConfigCommonSIB.h"
-#include "RadioResourceConfigDedicated.h"
-#include "TDD-Config.h"
-#include "MBSFN-SubframeConfigList.h"
-#include "MobilityControlInfo.h"
-#if defined(Rel10) || defined(Rel14)
-#include "SCellToAddMod-r10.h"
-#endif
+//#include "RadioResourceConfigDedicated.h"
+//#include "TDD-Config.h"
+//#include "MBSFN-SubframeConfigList.h"
+//#include "MobilityControlInfo.h"
+//#if defined(Rel10) || defined(Rel14)
+//#include "SCellToAddMod-r10.h"
+//#endif
 
 /*brief Configure LTE_DL_FRAME_PARMS with components derived after initial synchronization (MIB-NB decoding + primary/secondary synch).*/
-void NB_phy_config_mib_eNB(
-			int  				Mod_id,
-			int                 CC_id,
-			int                 eutra_band,
-			int                 Nid_cell,
-			int                 Ncp,
-			int					Ncp_UL,
-			int                 p_eNB,
-			uint16_t			EARFCN,
-			uint16_t			prb_index, // NB_IoT_RB_ID,
-			uint16_t 			operating_mode,
-			uint16_t			control_region_size,
-			uint16_t			eutra_NumCRS_ports);
+void phy_config_mib_eNB_NB_IoT(int  		Mod_id,
+						   	   int      	CC_id,
+						   	   int          eutra_band,
+						       int          Nid_cell,
+						       int          Ncp,
+						       int			Ncp_UL,
+						       int          p_eNB,
+						       uint16_t		EARFCN,
+						       uint16_t		prb_index, // NB_IoT_RB_ID,
+						       uint16_t 	operating_mode,
+						       uint16_t		control_region_size,
+						       uint16_t		eutra_NumCRS_ports);
 
 /*NB_phy_config_sib1_eNB is not needed since NB-IoT use only FDD mode*/
 
@@ -61,18 +59,17 @@ void NB_phy_config_mib_eNB(
 //                         RadioResourceConfigCommonSIB_NB_r13_t      *radioResourceConfigCommon
 //                         );
 
-void NB_phy_config_sib2_eNB(uint8_t Mod_id,
-                         int CC_id,
-                         nfapi_nb_iot_config_t *config,
-						 nfapi_rf_config_t *rf_config,
-						 nfapi_uplink_reference_signal_config_t* ul_nrs_config,
-						 extra_phyConfig_t* extra_phy_parms
-                         );
+void phy_config_sib2_eNB_NB_IoT(uint8_t Mod_id,
+                         		int CC_id,
+                         		nfapi_config_NB_IoT_t *config,
+						 		nfapi_rf_config_t *rf_config,
+								nfapi_uplink_reference_signal_config_t* ul_nrs_config,
+								extra_phyConfig_t* extra_phy_parms);
 
-void NB_phy_config_dedicated_eNB(module_id_t Mod_id,
-                              int CC_id,
-                              rnti_t rnti,
-							  extra_phyConfig_t* extra_phy_parms);
+void phy_config_dedicated_eNB_NB_IoT(module_id_t Mod_id,
+                              	 	 int CC_id,
+                              	 	 rnti_t rnti,
+							     	 extra_phyConfig_t* extra_phy_parms);
 
 
 

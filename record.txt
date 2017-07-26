@@ -9,8 +9,8 @@ Add:        openair1/PHY/INIT/defs_nb_iot.h
 Add:        openair1/PHY/INIT/Lte_init_nb_iot.c
 
 Comment: 
-Functions: NB_phy_config_mib_eNB(), NB_phy_config_sib2_eNB(), NB_phy_config_dedicated_eNB().
-Parameters: NB_DL_FRAME_PARAMS(Original LTE_DL_FRAME_PARAMS)
+Functions: phy_config_mib_eNB_NB_IoT(), phy_config_sib2_eNB_NB_IoT(), phy_config_dedicated_eNB_NB_IoT().
+Parameters: NB_IoT_DL_FRAME_PARAMS(Original LTE_DL_FRAME_PARAMS)
 
 5/14
 Add:        openair2/Layer2/MAC/defs_nb_iot.h

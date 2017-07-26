@@ -855,7 +855,7 @@ typedef struct {
 	nfapi_uint16_tlv_t dl_gap_threshold;
 	nfapi_uint16_tlv_t dl_gap_periodicity;
 	nfapi_uint16_tlv_t dl_gap_duration_coefficient;
-} nfapi_nb_iot_config_t;
+} nfapi_config_NB_IoT_t;
 
 #define NFAPI_NB_IOT_CONFIG_OPERATING_MODE_TAG 0x00A5
 #define NFAPI_NB_IOT_CONFIG_ANCHOR_TAG 0x00A6
@@ -1102,7 +1102,7 @@ typedef struct {
 	nfapi_uplink_reference_signal_config_t uplink_reference_signal_config;
 	nfapi_tdd_frame_structure_t tdd_frame_structure_config;
 	nfapi_l23_config_t l23_config;
-	nfapi_nb_iot_config_t nb_iot_config;
+	nfapi_config_NB_IoT_t nb_iot_config;
 
 	// addition nfapi tlvs as per table 2-16 in idle or configure
 	nfapi_nfapi_t nfapi_config;
@@ -1125,7 +1125,7 @@ typedef struct {
 	nfapi_emtc_config_t emtc_config;
 	nfapi_tdd_frame_structure_t tdd_frame_structure_config;
 	nfapi_l23_config_t l23_config;
-	nfapi_nb_iot_config_t nb_iot_config;
+	nfapi_config_NB_IoT_t nb_iot_config;
 	
 	// addition nfapi tlvs as per table 2-16 in idle or configure
 	nfapi_nfapi_t nfapi_config;
