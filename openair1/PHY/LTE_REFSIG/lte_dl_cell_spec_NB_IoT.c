@@ -17,26 +17,23 @@
 #include <stdlib.h>
 #endif
 
-#include "defs.h"
-//#include "PHY/defs.h"
-
 #include "defs_NB_IoT.h"
 #include "PHY/defs_nb_iot.h"
 
 int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
-                     int32_t *output,
-                     short amp,
-                     unsigned char Ns,
-                     unsigned char l,
-                     unsigned char p,
-					 unsigned short RB_IoT_ID) 			// the ID of the RB dedicated for NB_IoT
+                            int32_t *output,
+                            short amp,
+                            unsigned char Ns,
+                            unsigned char l,
+                            unsigned char p,
+					                  unsigned short RB_IoT_ID) 			// the ID of the RB dedicated for NB_IoT
 {
   unsigned char nu,mprime,mprime_dword,mprime_qpsk_symb,m;
   unsigned short k,a;
   unsigned short NB_IoT_start,bandwidth_even_odd;
   int32_t qpsk[4];
 
-  a = (amp*ONE_OVER_SQRT2_Q15)>>15;
+  a = (amp*ONE_OVER_SQRT2_Q15_NB_IoT)>>15;
   ((short *)&qpsk[0])[0] = a;
   ((short *)&qpsk[0])[1] = a;
   ((short *)&qpsk[1])[0] = -a;
@@ -55,7 +52,7 @@ int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
   else if ((p==1) && (l>0))
     nu = 0;
   else {
-    printf("lte_dl_cell_spec: p %d, l %d -> ERROR\n",p,l);
+    printf("lte_dl_cell_spec_NB_IoT: p %d, l %d -> ERROR\n",p,l);
     return(-1);
   }
 
@@ -79,7 +76,7 @@ int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
   DevAssert( l < 2 );
 
   for (m=0; m<2; m++) {
-    output[k] = qpsk[(phy_vars_eNB->lte_gold_table[Ns][l][0]) & 3]; //TODO should be defined one for NB-IoT
+    output[k] = qpsk[(phy_vars_eNB->lte_gold_table_NB_IoT[Ns][l][0]) & 3]; //TODO should be defined one for NB-IoT
     k+=6;
   }
 

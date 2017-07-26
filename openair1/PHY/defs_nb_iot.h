@@ -120,6 +120,7 @@ static inline void* malloc16_clear( size_t size )
 #define UNUSED(x) (void)x;
 
 
+#include "impl_defs_top_NB_IoT.h"
 #include "impl_defs_top.h"
 #include "impl_defs_lte.h"
 #include "impl_defs_lte_nb_iot.h"
@@ -491,7 +492,7 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
 
 
   /// cell-specific reference symbols
-  uint32_t         lte_gold_table[20][2][14];
+  uint32_t         lte_gold_table_NB_IoT[20][2][14];
 
   /// UE-specific reference symbols (p=5), TM 7
   uint32_t         lte_gold_uespec_port5_table[NUMBER_OF_UE_MAX_NB_IoT][20][38];

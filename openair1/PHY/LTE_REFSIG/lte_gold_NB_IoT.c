@@ -12,7 +12,7 @@
 * \warning
 */
 
-#include "defs.h"
+//#include "defs.h"
 #include "defs_NB_IoT.h"
 
 void lte_gold_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_table_NB_IoT[20][2][14],uint16_t Nid_cell)  //  Nid_cell = Nid_cell_NB_IoT
