@@ -30,7 +30,7 @@
 //// structures below implement 36-211 and 36-212
 //
 //#define NSOFT 1827072
-//#define LTE_NULL 2
+#define LTE_NULL_NB_IoT 2
 //
 //// maximum of 3 segments before each coding block if data length exceeds 6144 bits.
 //

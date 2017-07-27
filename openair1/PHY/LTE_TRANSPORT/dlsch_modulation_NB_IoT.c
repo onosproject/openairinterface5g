@@ -22,7 +22,7 @@
 #include "defs.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 
-int allocate_REs_in_RB_NB_IoT(NB_IOT_DL_FRAME_PARMS *frame_parms,
+int allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
                               int32_t **txdataF,
                               uint32_t *jj,
                               uint32_t symbol_offset,
@@ -32,13 +32,13 @@ int allocate_REs_in_RB_NB_IoT(NB_IOT_DL_FRAME_PARMS *frame_parms,
 						  	  unsigned short id_offset,
                               uint32_t *re_allocated)  //  not used variable ??!!
 {
-  MIMO_mode_t mimo_mode = (frame_parms->mode1_flag==1)?SISO:ALAMOUTI;
+  MIMO_mode_NB_IoT_t mimo_mode = (frame_parms->mode1_flag==1)?SISO_NB_IoT:ALAMOUTI_NB_IoT;
   uint32_t tti_offset,aa;
   uint8_t re, diff_re;
   int16_t gain_lin_QPSK;
   uint8_t first_re,last_re;
   int32_t tmp_sample1,tmp_sample2;
-  gain_lin_QPSK = (int16_t)((amp*ONE_OVER_SQRT2_Q15)>>15);
+  gain_lin_QPSK = (int16_t)((amp*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
   first_re=0;
   last_re=12;
 
@@ -49,7 +49,7 @@ int allocate_REs_in_RB_NB_IoT(NB_IOT_DL_FRAME_PARMS *frame_parms,
 	if (pilots != 1 || re%3 != id_offset)  			// if re is not a pilot
 	{
 													//	diff_re = re%3 - id_offset;  
-      if (mimo_mode == SISO) {  								//SISO mapping
+      if (mimo_mode == SISO_NB_IoT) {  								//SISO mapping
 			*re_allocated = *re_allocated + 1;						// variable incremented but never used
 			
 			for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
@@ -61,7 +61,7 @@ int allocate_REs_in_RB_NB_IoT(NB_IOT_DL_FRAME_PARMS *frame_parms,
 			}
 			*jj = *jj + 1;	
 			
-      } else if (mimo_mode == ALAMOUTI) {
+      } else if (mimo_mode == ALAMOUTI_NB_IoT) {
 	  
 			*re_allocated = *re_allocated + 1;
 
@@ -110,7 +110,7 @@ int allocate_REs_in_RB_NB_IoT(NB_IOT_DL_FRAME_PARMS *frame_parms,
 
 int dlsch_modulation_NB_IoT(int32_t **txdataF,
 							int16_t amp,
-							NB_IOT_DL_FRAME_PARMS *frame_parms,
+							NB_IoT_DL_FRAME_PARMS *frame_parms,
 							uint8_t control_region_size,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
 							NB_IoT_eNB_DLSCH_t *dlsch0,
 							int G,												// number of bits per subframe
@@ -128,8 +128,8 @@ int dlsch_modulation_NB_IoT(int32_t **txdataF,
     re_allocated=0;
 	id_offset=0;
 	// testing if the total number of RBs is even or odd 
-		bandwidth_even_odd = frame_parms->N_RB_DL % 2; 	 	// 0 even, 1 odd
-		RB_IoT_ID = NB_IoT_RB_ID;
+	bandwidth_even_odd = frame_parms->N_RB_DL % 2; 	 	// 0 even, 1 odd
+	RB_IoT_ID = NB_IoT_RB_ID;
 	// step  5, 6, 7   									 	// modulation and mapping (slot 1, symbols 0..3)
 	for (l=control_region_size; l<14; l++) { 								 	// loop on OFDM symbols	
 		if((l>=4 && l<=8) || (l>=11 && l<=13))
@@ -147,14 +147,14 @@ int dlsch_modulation_NB_IoT(int32_t **txdataF,
 		}
 		symbol_offset = frame_parms->ofdm_symbol_size*l + NB_IoT_start;  						// symbol_offset = 512 * L + NB_IOT_RB start
 		allocate_REs_in_RB_NB_IoT(frame_parms,
-								txdataF,
-								&jj,
-								symbol_offset,
-								&dlsch0->harq_processes->s_e[G*npdsch_data_subframe],
-								pilots,
-								amp,
-								id_offset,
-								&re_allocated);
+								  txdataF,
+								  &jj,
+								  symbol_offset,
+								  &dlsch0->harq_processes->s_e[G*npdsch_data_subframe],
+								  pilots,
+								  amp,
+								  id_offset,
+								  &re_allocated);
 	}
 	
  // VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_MODULATION, VCD_FUNCTION_OUT);

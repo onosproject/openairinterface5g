@@ -127,6 +127,7 @@ static inline void* malloc16_clear( size_t size )
 
 #include "PHY/TOOLS/time_meas.h"
 #include "PHY/CODING/defs.h"
+#include "PHY/CODING/defs_nb_iot.h"
 #include "PHY/TOOLS/defs.h"
 #include "platform_types.h"
 

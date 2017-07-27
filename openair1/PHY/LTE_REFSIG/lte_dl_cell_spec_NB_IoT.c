@@ -28,7 +28,7 @@ int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
                             unsigned char p,
 					                  unsigned short RB_IoT_ID) 			// the ID of the RB dedicated for NB_IoT
 {
-  unsigned char nu,mprime,mprime_dword,mprime_qpsk_symb,m;
+  unsigned char nu,m;
   unsigned short k,a;
   unsigned short NB_IoT_start,bandwidth_even_odd;
   int32_t qpsk[4];
@@ -59,7 +59,7 @@ int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
   // testing if the total number of RBs is even or odd 
   bandwidth_even_odd = phy_vars_eNB->frame_parms.N_RB_DL % 2;    // 0 even, 1 odd
   
-  mprime = 0; 										// mprime = 0,1 for NB_IoT //  for LTE , maximum number of resources blocks (110) - the total number of RB in the selected bandwidth (.... 15 , 25 , 50, 100)
+  //mprime = 0; 										// mprime = 0,1 for NB_IoT //  for LTE , maximum number of resources blocks (110) - the total number of RB in the selected bandwidth (.... 15 , 25 , 50, 100)
   k = (nu + phy_vars_eNB->frame_parms.nushift)%6;
 
   if(RB_IoT_ID < (phy_vars_eNB->frame_parms.N_RB_DL/2))
