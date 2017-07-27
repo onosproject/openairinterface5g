@@ -126,7 +126,7 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
 }
 
 //------------------------------------------------------------------------------
-DCI_PDU_NB *NB_get_dci_sdu(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframeP)
+DCI_PDU_NB_IoT *NB_get_dci_sdu(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframeP)
 //------------------------------------------------------------------------------
 {
 

@@ -91,7 +91,7 @@ void npbch_scrambling(NB_IoT_DL_FRAME_PARMS *frame_parms,
 
 /*Function to pack the DCI*/ 
 // newly added function for NB-IoT , does not exist for LTE
-void add_dci_NB_IoT(DCI_PDU_NB *DCI_pdu,
+void add_dci_NB_IoT(DCI_PDU_NB_IoT *DCI_pdu,
                     void *pdu,rnti_t rnti,
                     unsigned char dci_size_bytes,
                     unsigned char aggregation, 

@@ -941,7 +941,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   int frame = proc->frame_tx;
   int subframe = proc->subframe_tx;
   uint32_t aa;
-  DCI_PDU_NB *dci_pdu = eNB->DCI_pdu;
+  DCI_PDU_NB_IoT *dci_pdu = eNB->DCI_pdu;
   NB_IoT_DL_FRAME_PARMS *fp = &eNB->frame_parms_NB_IoT;
   int8_t UE_id = 0;
   int **txdataF = eNB->common_vars.txdataF[0];

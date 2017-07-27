@@ -717,7 +717,7 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
 
   NB_IoT_DL_FRAME_PARMS frame_parms_NB_IoT;
   // DCI for at most 2 DCI pdus
-  DCI_PDU_NB *DCI_pdu;
+  DCI_PDU_NB_IoT *DCI_pdu;
 
 
 

@@ -32,11 +32,11 @@
 #ifndef __DCI_NB_IOT_H__
 #define __DCI_NB_IOT_H__
 
-#ifndef USER_MODE
-#include "PHY/types.h"
-#else
-#include <stdint.h>
-#endif
+//#ifndef USER_MODE
+//#include "PHY/types.h"
+//#else
+////////////////////////////////////////#include <stdint.h>
+//#endif
 
 typedef enum 
 {
@@ -284,6 +284,7 @@ struct DCIN2_Pag{
 } __attribute__ ((__packed__));;
 
 typedef struct DCIN2_Pag DCIN2_Pag_t;
+
 #define sizeof_DCIN2_Pag_t 15
 
 #define MAX_DCI_SIZE_BITS_NB_IOT 23

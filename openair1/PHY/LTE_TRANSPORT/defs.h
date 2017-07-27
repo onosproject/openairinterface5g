@@ -802,7 +802,6 @@ typedef struct {
   uint8_t dci_pdu[8];
 } DCI_ALLOC_t;
 
-
 //----------------------------------------------------------------------------------------------------------
 // NB-IoT
 //----------------------------------------------------------------------------------------------------
@@ -810,31 +809,31 @@ typedef struct {
 //enum for distinguish the different type of ndlsch (may in the future will be not needed)
 typedef enum
 {
-	SIB1,
-	SI_Message,
-	RAR,
-	UE_Data
+  SIB1,
+  SI_Message,
+  RAR,
+  UE_Data
 
 }ndlsch_flag_t;
 
 
 
 typedef struct {
-	rnti_t rnti;
-	//array containing the pdus of DCI
-	uint8_t *a[2];
-	//Array containing encoded DCI data
-	uint8_t *e[2];
+  rnti_t rnti;
+  //array containing the pdus of DCI
+  uint8_t *a[2];
+  //Array containing encoded DCI data
+  uint8_t *e[2];
 
-	//UE specific parameters
-	uint16_t npdcch_NumRepetitions;
+  //UE specific parameters
+  uint16_t npdcch_NumRepetitions;
 
-	uint16_t repetition_number;
-	//indicate the corresponding subframe within the repetition (set to 0 when a new NPDCCH pdu is received)
-	uint16_t repetition_idx;
+  uint16_t repetition_number;
+  //indicate the corresponding subframe within the repetition (set to 0 when a new NPDCCH pdu is received)
+  uint16_t repetition_idx;
 
-//	uint16_t npdcch_Offset_USS;
-//	uint16_t npdcch_StartSF_USS;
+//  uint16_t npdcch_Offset_USS;
+//  uint16_t npdcch_StartSF_USS;
 
 
 }NB_IoT_eNB_NPDCCH_t;
@@ -851,7 +850,6 @@ uint16_t repetition_idx_Pag;
 
 
 }NB_IoT_eNB_COMMON_NPDCCH_t;
-
 
 
 typedef struct {
@@ -872,6 +870,7 @@ typedef struct {
   uint8_t dci_pdu[8];
 } DCI_ALLOC_NB_IoT_t;
 
+
 typedef struct {
   //delete the count for the DCI numbers,NUM_DCI_MAX should set to 2
   uint32_t num_npdcch_symbols;
@@ -880,7 +879,7 @@ typedef struct {
   uint8_t npdcch_start_symbol;
   uint8_t Num_dci;
   DCI_ALLOC_NB_IoT_t dci_alloc[2] ;
-} DCI_PDU_NB;
+} DCI_PDU_NB_IoT;
 
 
 typedef struct {
@@ -1101,9 +1100,6 @@ typedef struct {
 
 
 //---------------------------------------------------------------------------------------
-
-
-
 
 /**@}*/
 #endif

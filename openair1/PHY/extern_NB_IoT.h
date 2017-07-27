@@ -77,7 +77,7 @@ extern int flagMag;
 
 extern char mode_string[4][20];
 */
-#include "PHY/LTE_TRANSPORT/extern.h"
+
 
 /*
 #ifndef OPENAIR2

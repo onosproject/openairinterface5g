@@ -43,7 +43,7 @@ void NB_rx_sdu(const module_id_t module_idP, const int CC_id,const frame_t frame
 /* \brief Function to retrieve result of scheduling (DCI) in current subframe.  Can be called an arbitrary numeber of times after eNB_dlsch_ulsch_scheduler
 in a given subframe. 
 */
-DCI_PDU_NB *NB_get_dci_sdu(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframe);
+DCI_PDU_NB_IoT *NB_get_dci_sdu(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframe);
 
 
 /* \brief Function to trigger the eNB scheduling procedure.  It is called by PHY at the beginning of each subframe, \f$n$\f
