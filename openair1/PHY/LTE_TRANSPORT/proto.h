@@ -61,16 +61,6 @@ void clean_eNb_dlsch(LTE_eNB_DLSCH_t *dlsch);
 LTE_eNB_DLSCH_t *new_eNB_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_t N_RB_DL, uint8_t abstraction_flag, LTE_DL_FRAME_PARMS* frame_parms);
 
 
-//NB-IoT version
-NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(//unsigned char Kmimo,
-									      //unsigned char Mdlharq,
-									      uint32_t Nsoft,
-									      //unsigned char N_RB_DL,
-									      uint8_t abstraction_flag,
-									      NB_IoT_DL_FRAME_PARMS* frame_parms);
-
-
-
 /** \fn free_ue_dlsch(LTE_UE_DLSCH_t *dlsch)
     \brief This function frees memory allocated for a particular DLSCH at UE
     @param dlsch Pointer to DLSCH to be removed
@@ -94,8 +84,6 @@ void clean_eNb_ulsch(LTE_eNB_ULSCH_t *ulsch);
 void free_ue_ulsch(LTE_UE_ULSCH_t *ulsch);
 
 LTE_eNB_ULSCH_t *new_eNB_ulsch(uint8_t max_turbo_iterations,uint8_t N_RB_UL, uint8_t abstraction_flag);
-
-NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag);
 
 
 LTE_UE_ULSCH_t *new_ue_ulsch(unsigned char N_RB_UL, uint8_t abstraction_flag);
@@ -126,7 +114,7 @@ LTE_UE_ULSCH_t *new_ue_ulsch(unsigned char N_RB_UL, uint8_t abstraction_flag);
     @returns status
 */
 int32_t dlsch_encoding(PHY_VARS_eNB *eNB,
-		       uint8_t *a,
+		               uint8_t *a,
                        uint8_t num_pdcch_symbols,
                        LTE_eNB_DLSCH_t *dlsch,
                        int frame,
@@ -136,14 +124,14 @@ int32_t dlsch_encoding(PHY_VARS_eNB *eNB,
                        time_stats_t *i_stats);
 
 int32_t dlsch_encoding_SIC(PHY_VARS_UE *ue,
-                       uint8_t *a,
-                       uint8_t num_pdcch_symbols,
-                       LTE_eNB_DLSCH_t *dlsch,
-                       int frame,
-                       uint8_t subframe,
-                       time_stats_t *rm_stats,
-                       time_stats_t *te_stats,
-                       time_stats_t *i_stats);
+                           uint8_t *a,
+                           uint8_t num_pdcch_symbols,
+                           LTE_eNB_DLSCH_t *dlsch,
+                           int frame,
+                           uint8_t subframe,
+                           time_stats_t *rm_stats,
+                           time_stats_t *te_stats,
+                           time_stats_t *i_stats);
 
 
 
@@ -277,11 +265,11 @@ int32_t allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
                            uint32_t *re_allocated,
                            uint8_t skip_dc,
                            uint8_t skip_half,
-			   uint8_t lprime,
-			   uint8_t mprime,
-			   uint8_t Ns,
-			   int *P1_SHIFT,
-			   int *P2_SHIFT);
+			               uint8_t lprime,
+			               uint8_t mprime,
+			               uint8_t Ns,
+			               int *P1_SHIFT,
+			               int *P2_SHIFT);
 
 
 /** \fn int32_t dlsch_modulation(int32_t **txdataF,
@@ -309,11 +297,11 @@ int32_t dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
                          LTE_eNB_DLSCH_t *dlsch1);
 
 int32_t dlsch_modulation_SIC(int32_t **sic_buffer,
-                         uint32_t sub_frame_offset,
-                         LTE_DL_FRAME_PARMS *frame_parms,
-                         uint8_t num_pdcch_symbols,
-                         LTE_eNB_DLSCH_t *dlsch0,
-                         int G);
+                             uint32_t sub_frame_offset,
+                             LTE_DL_FRAME_PARMS *frame_parms,
+                             uint8_t num_pdcch_symbols,
+                             LTE_eNB_DLSCH_t *dlsch0,
+                             int G);
 /*
   \brief This function is the top-level routine for generation of the sub-frame signal (frequency-domain) for MCH.
   @param txdataF Table of pointers for frequency-domain TX signals
@@ -401,7 +389,7 @@ int32_t generate_pilots_slot(PHY_VARS_eNB *phy_vars_eNB,
 
 int32_t generate_mbsfn_pilot(PHY_VARS_eNB *phy_vars_eNB,
                              eNB_rxtx_proc_t *proc,
-			     int32_t **txdataF,
+			                 int32_t **txdataF,
                              int16_t amp);
 
 void generate_ue_spec_pilots(PHY_VARS_eNB *phy_vars_eNB,
@@ -409,7 +397,7 @@ void generate_ue_spec_pilots(PHY_VARS_eNB *phy_vars_eNB,
                              int32_t **txdataF,
                              int16_t amp,
                              uint16_t Ntti,
-		             uint8_t beamforming_mode);
+		                     uint8_t beamforming_mode);
 
 int32_t generate_pss(int32_t **txdataF,
                      int16_t amp,
@@ -1612,7 +1600,7 @@ int32_t generate_srs_tx(PHY_VARS_UE *phy_vars_ue,
 */
 
 int32_t generate_drs_pusch(PHY_VARS_UE *phy_vars_ue,
-			   UE_rxtx_proc_t *proc,
+			               UE_rxtx_proc_t *proc,
                            uint8_t eNB_id,
                            int16_t amp,
                            uint32_t subframe,
@@ -1695,7 +1683,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
                                       DCI_format_t dci_format,
                                       PHY_VARS_UE *phy_vars_ue,
                                       UE_rxtx_proc_t *proc,
-				      uint16_t si_rnti,
+				                      uint16_t si_rnti,
                                       uint16_t ra_rnti,
                                       uint16_t p_rnti,
                                       uint16_t cba_rnti,
@@ -1703,8 +1691,8 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
                                       uint8_t use_srs);
 
 int32_t generate_ue_ulsch_params_from_rar(PHY_VARS_UE *phy_vars_ue,
-					  UE_rxtx_proc_t *proc,
-					  uint8_t eNB_id);
+					                      UE_rxtx_proc_t *proc,
+					                      uint8_t eNB_id);
 double sinr_eff_cqi_calc(PHY_VARS_UE *phy_vars_ue,
                          uint8_t eNB_id,
 						 uint8_t subframe);
@@ -1773,13 +1761,13 @@ int initial_sync(PHY_VARS_UE *phy_vars_ue, runmode_t mode);
 
 void rx_ulsch(PHY_VARS_eNB *phy_vars_eNB,
               eNB_rxtx_proc_t *proc,
-	      uint8_t eNB_id,  // this is the effective sector id
+	          uint8_t eNB_id,  // this is the effective sector id
               uint8_t UE_id,
               LTE_eNB_ULSCH_t **ulsch,
               uint8_t cooperation_flag);
 
 void rx_ulsch_emul(PHY_VARS_eNB *phy_vars_eNB,
-		   eNB_rxtx_proc_t *proc,
+		           eNB_rxtx_proc_t *proc,
                    uint8_t sect_id,
                    uint8_t UE_index);
 
@@ -1829,7 +1817,7 @@ int32_t ulsch_encoding_emul(uint8_t *ulsch_buffer,
   @returns 0 on success
 */
 unsigned int  ulsch_decoding(PHY_VARS_eNB *phy_vars_eNB,
-			     eNB_rxtx_proc_t *proc,
+			                 eNB_rxtx_proc_t *proc,
                              uint8_t UE_id,
                              uint8_t control_only_flag,
                              uint8_t Nbundled,
@@ -1844,9 +1832,9 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *phy_vars_eNB,
   @returns 0 on success
 */
 int ulsch_decoding_data_2thread(PHY_VARS_eNB *eNB,
-				int UE_id,
-				int harq_pid,
-				int llr8_flag);
+				                int UE_id,
+				                int harq_pid,
+				                int llr8_flag);
 
 /*!
   \brief Decoding of ULSCH data component from 36-212. This one is single thread.
@@ -1857,17 +1845,17 @@ int ulsch_decoding_data_2thread(PHY_VARS_eNB *eNB,
   @returns 0 on success
 */
 int ulsch_decoding_data(PHY_VARS_eNB *eNB,
-			int UE_id,
-			int harq_pid,
-			int llr8_flag);
+			            int UE_id,
+			            int harq_pid,
+			            int llr8_flag);
 
 uint32_t ulsch_decoding_emul(PHY_VARS_eNB *phy_vars_eNB,
                              eNB_rxtx_proc_t *proc,
-			     uint8_t UE_index,
+			                 uint8_t UE_index,
                              uint16_t *crnti);
 
 void generate_phich_top(PHY_VARS_eNB *phy_vars_eNB,
-			eNB_rxtx_proc_t *proc,
+			            eNB_rxtx_proc_t *proc,
                         int16_t amp,
                         uint8_t sect_id);
 
@@ -1879,7 +1867,7 @@ void generate_phich_top(PHY_VARS_eNB *phy_vars_eNB,
 */
 
 void rx_phich(PHY_VARS_UE *phy_vars_ue,
-	      UE_rxtx_proc_t *proc,
+	          UE_rxtx_proc_t *proc,
               uint8_t subframe,
               uint8_t eNB_id);
 

@@ -33,6 +33,8 @@
 #ifndef __PHY_IMPLEMENTATION_DEFS_NB_IOT_H__
 #define __PHY_IMPLEMENTATION_DEFS_NB_IOT_H__
 
+
+#include "openairinterface5g_limits.h"
 /** @defgroup _ref_implementation_ OpenAirInterface LTE Implementation
  * @{
 
@@ -381,7 +383,7 @@ typedef struct {
   // short          dlsch_errors;
 
 } PHY_MEASUREMENTS;
-
+*/
 typedef struct {
   //unsigned int   rx_power[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];     //! estimated received signal power (linear)
   //unsigned short rx_power_dB[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];  //! estimated received signal power (dB)
@@ -408,33 +410,33 @@ typedef struct {
   short n0_subband_power_tot_dBm[100];
   // eNB measurements (per user)
   //! estimated received spatial signal power (linear)
-  unsigned int   rx_spatial_power[NUMBER_OF_UE_MAX][2][2];
+  unsigned int   rx_spatial_power[NUMBER_OF_UE_MAX_NB_IoT][2][2];
   //! estimated received spatial signal power (dB)
-  unsigned short rx_spatial_power_dB[NUMBER_OF_UE_MAX][2][2];
+  unsigned short rx_spatial_power_dB[NUMBER_OF_UE_MAX_NB_IoT][2][2];
   //! estimated rssi (dBm)
-  short          rx_rssi_dBm[NUMBER_OF_UE_MAX];
+  short          rx_rssi_dBm[NUMBER_OF_UE_MAX_NB_IoT];
   //! estimated correlation (wideband linear) between spatial channels (computed in dlsch_demodulation)
-  int            rx_correlation[NUMBER_OF_UE_MAX][2];
+  int            rx_correlation[NUMBER_OF_UE_MAX_NB_IoT][2];
   //! estimated correlation (wideband dB) between spatial channels (computed in dlsch_demodulation)
-  int            rx_correlation_dB[NUMBER_OF_UE_MAX][2];
+  int            rx_correlation_dB[NUMBER_OF_UE_MAX_NB_IoT][2];
 
   /// Wideband CQI (= SINR)
-  int            wideband_cqi[NUMBER_OF_UE_MAX][NB_ANTENNAS_RX];
+  int            wideband_cqi[NUMBER_OF_UE_MAX_NB_IoT][NB_ANTENNAS_RX];
   /// Wideband CQI in dB (= SINR dB)
-  int            wideband_cqi_dB[NUMBER_OF_UE_MAX][NB_ANTENNAS_RX];
+  int            wideband_cqi_dB[NUMBER_OF_UE_MAX_NB_IoT][NB_ANTENNAS_RX];
   /// Wideband CQI (sum of all RX antennas, in dB)
-  char           wideband_cqi_tot[NUMBER_OF_UE_MAX];
+  char           wideband_cqi_tot[NUMBER_OF_UE_MAX_NB_IoT];
   /// Subband CQI per RX antenna and RB (= SINR)
-  int            subband_cqi[NUMBER_OF_UE_MAX][NB_ANTENNAS_RX][100];
+  int            subband_cqi[NUMBER_OF_UE_MAX_NB_IoT][NB_ANTENNAS_RX][100];
   /// Total Subband CQI and RB (= SINR)
-  int            subband_cqi_tot[NUMBER_OF_UE_MAX][100];
+  int            subband_cqi_tot[NUMBER_OF_UE_MAX_NB_IoT][100];
   /// Subband CQI in dB and RB (= SINR dB)
-  int            subband_cqi_dB[NUMBER_OF_UE_MAX][NB_ANTENNAS_RX][100];
+  int            subband_cqi_dB[NUMBER_OF_UE_MAX_NB_IoT][NB_ANTENNAS_RX][100];
   /// Total Subband CQI and RB
-  int            subband_cqi_tot_dB[NUMBER_OF_UE_MAX][100];
+  int            subband_cqi_tot_dB[NUMBER_OF_UE_MAX_NB_IoT][100];
 
-} PHY_MEASUREMENTS_eNB;
-
+} PHY_MEASUREMENTS_eNB_NB_IoT;
+/*
 #define MCS_COUNT 28
 #define MCS_TABLE_LENGTH_MAX 64
 */

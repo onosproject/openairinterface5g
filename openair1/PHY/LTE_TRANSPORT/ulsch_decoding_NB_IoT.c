@@ -934,7 +934,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
   int16_t *ulsch_llr = eNB->pusch_vars[UE_id]->llr;
   NB_IoT_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
-  LTE_eNB_ULSCH_t *ulsch = eNB->ulsch[UE_id];
+  NB_IoT_eNB_ULSCH_t *ulsch = eNB->ulsch[UE_id];
   uint8_t harq_pid;
   unsigned short nb_rb;
   unsigned int A;
@@ -964,7 +964,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   int off;
 
   int subframe = proc->subframe_rx;
-  LTE_UL_eNB_HARQ_t *ulsch_harq;
+  NB_IoT_UL_eNB_HARQ_t *ulsch_harq;
 
 
 
@@ -974,7 +974,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
   // x1 is set in lte_gold_generic
   x2 = ((uint32_t)ulsch->rnti<<14) + ((uint32_t)subframe<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.3.1
-  ulsch_harq = ulsch->harq_processes[harq_pid];
+  ulsch_harq = ulsch->harq_process;
 
   if (harq_pid==255) {
     LOG_E(PHY, "FATAL ERROR: illegal harq_pid, returning\n");
@@ -1657,7 +1657,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     if (extract_cqi_crc_NB_IoT(o_flip,ulsch_harq->Or1) == (crc8(o_flip,ulsch_harq->Or1)>>24))
       ulsch_harq->cqi_crc_status = 1;
 
-    if (ulsch->harq_processes[harq_pid]->Or1<=32) {
+    if (ulsch->harq_process->Or1<=32) {
       ulsch_harq->o[3] = o_flip[0] ;
       ulsch_harq->o[2] = o_flip[1] ;
       ulsch_harq->o[1] = o_flip[2] ;

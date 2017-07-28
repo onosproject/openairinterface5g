@@ -149,7 +149,14 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
                                     uint8_t Nbundled,
                                     uint8_t llr8_flag);
 
+//NB-IoT version
+NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(//unsigned char Kmimo,
+                        //unsigned char Mdlharq,
+                        uint32_t Nsoft,
+                        //unsigned char N_RB_DL,
+                        uint8_t abstraction_flag,
+                        NB_IoT_DL_FRAME_PARMS* frame_parms);
 
-
+NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag);
 
 #endif

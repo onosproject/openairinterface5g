@@ -36,6 +36,9 @@
 #include "types.h"
 //#include "defs.h"
 
+typedef enum {TDD_NB_IoT=1,FDD_NB_IoT=0} NB_IoT_frame_type_t;
+typedef enum {EXTENDED_NB_IoT=1,NORMAL_NB_IoT=0} NB_IoT_prefix_type_t;
+
 #define	A_SEQUENCE_OF(type)	A_SET_OF(type)
 
 #define	A_SET_OF(type)					\
@@ -155,7 +158,7 @@ typedef struct {
 typedef struct {
 
   /// Frame type (0 FDD, 1 TDD)
-  lte_frame_type_t frame_type;
+  NB_IoT_frame_type_t frame_type;
   /// Number of resource blocks (RB) in DL of the LTE (for knowing the bandwidth)
   uint8_t N_RB_DL;
   /// Number of resource blocks (RB) in UL of the LTE ((for knowing the bandwidth)
@@ -164,9 +167,9 @@ typedef struct {
   /// Cell ID
   uint16_t Nid_cell;
   /// Cyclic Prefix for DL (0=Normal CP, 1=Extended CP)
-  lte_prefix_type_t Ncp;
+  NB_IoT_prefix_type_t Ncp;
   /// Cyclic Prefix for UL (0=Normal CP, 1=Extended CP)
-  lte_prefix_type_t Ncp_UL;
+  NB_IoT_prefix_type_t Ncp_UL;
   /// shift of pilot position in one RB
   uint8_t nushift;
   /// indicates if node is a UE (NODE=2) or eNB (PRIMARY_CH=0).
@@ -268,6 +271,177 @@ typedef struct {
 
 } NB_IoT_DL_FRAME_PARMS;
 
+typedef struct {
+  /// \brief Holds the transmit data in time domain.
+  /// For IFFT_FPGA this points to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER.
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: tx antenna [0..nb_antennas_tx[
+  /// - third index:
+  int32_t **txdata[3];
+  /// \brief holds the transmit data in the frequency domain.
+  /// For IFFT_FPGA this points to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER. //?
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: tx antenna [0..14[ where 14 is the total supported antenna ports.
+  /// - third index: sample [0..]
+  int32_t **txdataF[3];
+  /// \brief holds the transmit data after beamforming in the frequency domain.
+  /// For IFFT_FPGA this points to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER. //?
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: tx antenna [0..nb_antennas_tx[
+  /// - third index: sample [0..]
+  int32_t **txdataF_BF[3];
+  /// \brief Holds the received data in time domain.
+  /// Should point to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna [0..nb_antennas_rx[
+  /// - third index: sample [0..]
+  int32_t **rxdata[3];
+  /// \brief Holds the last subframe of received data in time domain after removal of 7.5kHz frequency offset.
+  /// - first index: secotr id [0..2] (hard coded)
+  /// - second index: rx antenna [0..nb_antennas_rx[
+  /// - third index: sample [0..samples_per_tti[
+  int32_t **rxdata_7_5kHz[3];
+  /// \brief Holds the received data in the frequency domain.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna [0..nb_antennas_rx[
+  /// - third index: ? [0..2*ofdm_symbol_size*frame_parms->symbols_per_tti[
+  int32_t **rxdataF[3];
+  /// \brief Holds output of the sync correlator.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: sample [0..samples_per_tti*10[
+  uint32_t *sync_corr[3];
+  /// \brief Holds the beamforming weights
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: eNB antenna port index (hard coded)
+  /// - third index: tx antenna [0..nb_antennas_tx[
+  /// - fourth index: sample [0..]
+  int32_t **beam_weights[3][15];
+  /// \brief Holds the tdd reciprocity calibration coefficients
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: tx antenna [0..nb_antennas_tx[
+  /// - third index: frequency [0..]
+  int32_t **tdd_calib_coeffs[3];
+} NB_IoT_eNB_COMMON;
+
+typedef struct {
+  /// \brief Hold the channel estimates in frequency domain based on SRS.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..ofdm_symbol_size[
+  int32_t **srs_ch_estimates[3];
+  /// \brief Hold the channel estimates in time domain based on SRS.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..2*ofdm_symbol_size[
+  int32_t **srs_ch_estimates_time[3];
+  /// \brief Holds the SRS for channel estimation at the RX.
+  /// - first index: ? [0..ofdm_symbol_size[
+  int32_t *srs;
+} NB_IoT_eNB_SRS;
+
+typedef struct {
+  /// \brief Holds the received data in the frequency domain for the allocated RBs in repeated format.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..2*ofdm_symbol_size[
+  /// - third index (definition from phy_init_lte_eNB()): ? [0..24*N_RB_UL*frame_parms->symbols_per_tti[
+  /// \warning inconsistent third index definition
+  int32_t **rxdataF_ext[3];
+  /// \brief Holds the received data in the frequency domain for the allocated RBs in normal format.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index (definition from phy_init_lte_eNB()): ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **rxdataF_ext2[3];
+  /// \brief Hold the channel estimates in time domain based on DRS.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..4*ofdm_symbol_size[
+  int32_t **drs_ch_estimates_time[3];
+  /// \brief Hold the channel estimates in frequency domain based on DRS.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **drs_ch_estimates[3];
+  /// \brief Hold the channel estimates for UE0 in case of Distributed Alamouti Scheme.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **drs_ch_estimates_0[3];
+  /// \brief Hold the channel estimates for UE1 in case of Distributed Almouti Scheme.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **drs_ch_estimates_1[3];
+  /// \brief Holds the compensated signal.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **rxdataF_comp[3];
+  /// \brief Hold the compensated data (y)*(h0*) in case of Distributed Alamouti Scheme.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **rxdataF_comp_0[3];
+  /// \brief Hold the compensated data (y*)*(h1) in case of Distributed Alamouti Scheme.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **rxdataF_comp_1[3];
+  /// \brief ?.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **ul_ch_mag[3];
+  /// \brief ?.
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **ul_ch_magb[3];
+  /// \brief Hold the channel mag for UE0 in case of Distributed Alamouti Scheme.
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **ul_ch_mag_0[3];
+  /// \brief Hold the channel magb for UE0 in case of Distributed Alamouti Scheme.
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **ul_ch_magb_0[3];
+  /// \brief Hold the channel mag for UE1 in case of Distributed Alamouti Scheme.
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **ul_ch_mag_1[3];
+  /// \brief Hold the channel magb for UE1 in case of Distributed Alamouti Scheme.
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: rx antenna id [0..nb_antennas_rx[
+  /// - third index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **ul_ch_magb_1[3];
+  /// measured RX power based on DRS
+  int ulsch_power[2];
+  /// measured RX power based on DRS for UE0 in case of Distributed Alamouti Scheme
+  int ulsch_power_0[2];
+  /// measured RX power based on DRS for UE0 in case of Distributed Alamouti Scheme
+  int ulsch_power_1[2];
+  /// \brief llr values.
+  /// - first index: ? [0..1179743] (hard coded)
+  int16_t *llr;
+#ifdef LOCALIZATION
+  /// number of active subcarrier for a specific UE
+  int32_t active_subcarrier;
+  /// subcarrier power in dBm
+  int32_t *subcarrier_power;
+#endif
+} NB_IoT_eNB_PUSCH;
+
+#define PBCH_A_NB_IoT 24
+typedef struct {
+  uint8_t pbch_d[96+(3*(16+PBCH_A_NB_IoT))];
+  uint8_t pbch_w[3*3*(16+PBCH_A_NB_IoT)];
+  uint8_t pbch_e[1920];
+} NB_IoT_eNB_PBCH;
+
+
 typedef enum {
   /// TM1
   SISO_NB_IoT=0,
@@ -290,5 +464,28 @@ typedef enum {
   TM8_NB_IoT=13,
   TM9_10_NB_IoT=14
 } MIMO_mode_NB_IoT_t;
+
+typedef struct {
+  /// \brief ?.
+  /// first index: ? [0..1023] (hard coded)
+  int16_t *prachF;
+  /// \brief ?.
+  /// first index: rx antenna [0..63] (hard coded) \note Hard coded array size indexed by \c nb_antennas_rx.
+  /// second index: ? [0..ofdm_symbol_size*12[
+  int16_t *rxsigF[64];
+  /// \brief local buffer to compute prach_ifft (necessary in case of multiple CCs)
+  /// first index: rx antenna [0..63] (hard coded) \note Hard coded array size indexed by \c nb_antennas_rx.
+  /// second index: ? [0..2047] (hard coded)
+  int16_t *prach_ifft[64];
+} NB_IoT_eNB_PRACH;
+
+typedef enum {
+  NOT_SYNCHED_NB_IoT=0,
+  PRACH_NB_IoT=1,
+  RA_RESPONSE_NB_IoT=2,
+  PUSCH_NB_IoT=3,
+  RESYNCH_NB_IoT=4
+} UE_MODE_NB_IoT_t;
+
 
 #endif
