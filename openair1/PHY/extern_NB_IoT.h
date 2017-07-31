@@ -24,8 +24,8 @@
 
 //#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
-#include "PHY_INTERFACE/defs.h"
-#include "PHY_INTERFACE/IF_Module_nb_iot.h"
+//#include "PHY_INTERFACE/defs.h"
+//#include "PHY_INTERFACE/IF_Module_nb_iot.h"
 /*
 extern  char* namepointer_chMag ;
 extern char* namepointer_log2;
@@ -34,11 +34,11 @@ extern  char fmageren_name2[512];
 extern unsigned int RX_DMA_BUFFER[4][NB_ANTENNAS_RX];
 extern unsigned int TX_DMA_BUFFER[4][NB_ANTENNAS_TX];
 */
-#include "PHY/LTE_TRANSPORT/extern.h"
-#include "SIMULATION/ETH_TRANSPORT/extern.h"
+//#include "PHY/LTE_TRANSPORT/extern.h"
+//#include "SIMULATION/ETH_TRANSPORT/extern.h"
 
-extern unsigned int DAQ_MBOX;
-extern int number_of_cards;
+extern unsigned int DAQ_MBOX_NB_IoT;
+extern int number_of_cards_NB_IoT;
 
 //extern PHY_CONFIG *PHY_config;
 //extern PHY_VARS *PHY_vars;

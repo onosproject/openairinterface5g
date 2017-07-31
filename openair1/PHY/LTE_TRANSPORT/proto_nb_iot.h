@@ -159,4 +159,38 @@ NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(//unsigned char Kmimo,
 
 NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag);
 
+/** \fn dlsch_encoding(PHY_VARS_eNB *eNB,
+    uint8_t *input_buffer,
+    LTE_DL_FRAME_PARMS *frame_parms,
+    uint8_t num_pdcch_symbols,
+    LTE_eNB_DLSCH_t *dlsch,
+    int frame,
+    uint8_t subframe)
+    \brief This function performs a subset of the bit-coding functions for LTE as described in 36-212, Release 8.Support is limited to turbo-coded channels (DLSCH/ULSCH). The implemented functions are:
+    - CRC computation and addition
+    - Code block segmentation and sub-block CRC addition
+    - Channel coding (Turbo coding)
+    - Rate matching (sub-block interleaving, bit collection, selection and transmission
+    - Code block concatenation
+    @param eNB Pointer to eNB PHY context
+    @param input_buffer Pointer to input buffer for sub-frame
+    @param frame_parms Pointer to frame descriptor structure
+    @param num_pdcch_symbols Number of PDCCH symbols in this subframe
+    @param dlsch Pointer to dlsch to be encoded
+    @param frame Frame number
+    @param subframe Subframe number
+    @param rm_stats Time statistics for rate-matching
+    @param te_stats Time statistics for turbo-encoding
+    @param i_stats Time statistics for interleaving
+    @returns status
+*/
+
+int32_t dlsch_encoding_NB_IoT(unsigned char       *a,
+                              NB_IoT_eNB_DLSCH_t  *dlsch,
+                              uint8_t             Nsf,        // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
+                              unsigned int        G,          // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
+                              time_stats_t        *rm_stats,
+                              time_stats_t        *te_stats,
+                              time_stats_t        *i_stats);
+
 #endif

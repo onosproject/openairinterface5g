@@ -184,4 +184,9 @@ This function takes the w-sequence and generates the d-sequence.  The nu-sequenc
 //                                         uint8_t r,
 //                                         uint32_t *E_out);
 
+void ccode_encode_npdsch_NB_IoT (int32_t   numbits,
+								 uint8_t   *inPtr,
+								 uint8_t   *outPtr,
+								 uint32_t  crc);
+
 #endif /* OPENAIR1_PHY_CODING_DEFS_NB_IOT_H_ */

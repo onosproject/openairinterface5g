@@ -31,6 +31,7 @@
  */
 //#include "PHY/defs.h"
 #include "PHY/extern_NB_IoT.h"
+#include "PHY/LTE_TRANSPORT/extern_NB_IoT.h"
 #include "SCHED/defs_nb_iot.h"
 #ifdef DEBUG_DCI_TOOLS
 #include "PHY/vars_NB_IoT.h"
