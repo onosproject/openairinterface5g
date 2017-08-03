@@ -29,6 +29,7 @@
  * \note
  * \warning
  */
+
 #include "PHY/defs.h"
 #include "PHY/extern.h"
 #include "PHY/CODING/defs.h"
@@ -66,7 +67,7 @@ uint8_t is_not_pilot(uint8_t pilots, uint8_t re, uint8_t nushift, uint8_t use2nd
 {
   return(1);
 }*/
-uint8_t is_not_UEspecRS(int8_t lprime, uint8_t re, uint8_t nushift, uint8_t Ncp, uint8_t beamforming_mode)
+uint8_t is_not_UEspecRS(int8_t lprime, uint8_t re, uint8_t nushift, uint8_t Ncp, uint8_t beamforming_mode, uint8_t Ns)
 {
   uint8_t offset = (lprime==1||lprime==3)?2:0;
   if (lprime==-1)
@@ -85,6 +86,21 @@ uint8_t is_not_UEspecRS(int8_t lprime, uint8_t re, uint8_t nushift, uint8_t Ncp,
           return(1);
       }
       break;
+
+      case 8:/*ToDo (36.211 v11.3 p86)*/ /* Mapping to REs */
+        if (Ncp == NORMAL){
+          if ((re!=offset+1) && (re!=5+offset+1) &&  (re!=10+offset+1)) 
+            return(1);
+        } else { 
+          if (Ns%2==0) { // even slot in a subframe
+            if ((re!=offset+1) && (re!=3+offset+1) &&  (re!=6+offset+1) && (re!=9+offset+1)) 
+              return(1);
+          } else {  // odd slot in a subframe
+            if ((re!=offset+2) && (re!=3+offset+2) &&  (re!=6+offset+2) && (re!=9+offset+2)) 
+              return(1);
+          }
+        }
+        break;
 
     default:
       msg("is_not_UEspecRS() [dlsch_modulation.c] : ERROR, unknown beamforming_mode %d\n",beamforming_mode);
@@ -258,7 +274,7 @@ int allocate_REs_in_RB_pilots_16QAM_siso(PHY_VARS_eNB* phy_vars_eNB,
 {
 
 
-  LTE_DL_FRAME_PARMS *frame_parms=&phy_vars_eNB->frame_parms;
+  LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->frame_parms;
 
   uint8_t *x0             = dlsch0_harq->e;
   uint32_t qam16_table_offset_re = 0;
@@ -485,7 +501,7 @@ int allocate_REs_in_RB_pilots_64QAM_siso(PHY_VARS_eNB* phy_vars_eNB,
 {
 
 
-  LTE_DL_FRAME_PARMS *frame_parms=&phy_vars_eNB->frame_parms;
+  LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->frame_parms;
 
   uint8_t *x0             = dlsch0_harq->e;
   uint32_t qam64_table_offset_re = 0;
@@ -554,7 +570,7 @@ int allocate_REs_in_RB_pilots_64QAM_siso(PHY_VARS_eNB* phy_vars_eNB,
   return(0);
 }
 
-int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
+int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
                        int32_t **txdataF,
                        uint32_t *jj,
                        uint32_t *jj2,
@@ -620,19 +636,28 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
   int32_t tmp_sample1,tmp_sample2;
   int16_t tmp_amp=amp;
   int s=1;
-  int mprime2 = mprime,ind,ind_dword,ind_qpsk_symb;
-
+  int mprime2 = mprime,ind,ind_dword,ind_qpsk_symb,p,n_PRB,w;
+  int Wbar_NCP[8][4] = {{1,1,1,1},{1,-1,1,-1},{1,1,1,1},{1,-1,1,-1},{1,1,-1,-1},{-1,-1,1,1},{1,-1,-1,1},{-1,1,1,-1}} ;
   gain_lin_QPSK = (int16_t)((amp*ONE_OVER_SQRT2_Q15)>>15);
 
-  int32_t qpsk[4];
+  int32_t qpsk[4],nqpsk[4],*qpsk_p;
   ((int16_t *)&qpsk[0])[0] = gain_lin_QPSK;
   ((int16_t *)&qpsk[0])[1] = gain_lin_QPSK;
   ((int16_t *)&qpsk[1])[0] = -gain_lin_QPSK;
-  ((int16_t *)&qpsk[1])[1] = gain_lin_QPSK;;
-  ((int16_t *)&qpsk[2])[0] = gain_lin_QPSK;;
-  ((int16_t *)&qpsk[2])[1] = -gain_lin_QPSK;;
-  ((int16_t *)&qpsk[3])[0] = -gain_lin_QPSK;;
+  ((int16_t *)&qpsk[1])[1] = gain_lin_QPSK;
+  ((int16_t *)&qpsk[2])[0] = gain_lin_QPSK;
+  ((int16_t *)&qpsk[2])[1] = -gain_lin_QPSK;
+  ((int16_t *)&qpsk[3])[0] = -gain_lin_QPSK;
   ((int16_t *)&qpsk[3])[1] = -gain_lin_QPSK;
+
+  ((int16_t *)&nqpsk[0])[0] = -gain_lin_QPSK;
+  ((int16_t *)&nqpsk[0])[1] = -gain_lin_QPSK;
+  ((int16_t *)&nqpsk[1])[0] = gain_lin_QPSK;
+  ((int16_t *)&nqpsk[1])[1] = -gain_lin_QPSK;
+  ((int16_t *)&nqpsk[2])[0] = -gain_lin_QPSK;
+  ((int16_t *)&nqpsk[2])[1] = gain_lin_QPSK;
+  ((int16_t *)&nqpsk[3])[0] = gain_lin_QPSK;
+  ((int16_t *)&nqpsk[3])[1] = gain_lin_QPSK;
 
   if ((dlsch0_harq != NULL) && (dlsch1_harq != NULL)) { //this is for TM3, TM4
 
@@ -1456,7 +1481,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
       if (mimo_mode == TM7) {
         *re_allocated = *re_allocated + 1;
 
-        if (is_not_UEspecRS(lprime,re,frame_parms->Nid_cell%3,frame_parms->Ncp,7)) {
+        if (is_not_UEspecRS(lprime,re,frame_parms->Nid_cell%3,frame_parms->Ncp,7,Ns)) {
 
           switch (mod_order0){
             case 2:  //QPSK
@@ -1559,7 +1584,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
       } else if (mimo_mode >= TM8) { //TM8,TM9,TM10
         //uint8_t is_not_UEspecRS(int8_t lprime, uint8_t re, uint8_t nushift, uint8_t Ncp, uint8_t beamforming_mode)
 
-        if (is_not_UEspecRS(lprime,re,frame_parms->nushift,frame_parms->Ncp,8)) {
+        if (is_not_UEspecRS(lprime,re,frame_parms->nushift,frame_parms->Ncp,8,Ns)) {
           switch (mod_order0) {
           case 2:  //QPSK
 
@@ -1574,7 +1599,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
             break;
 
           case 4:  //16QAM
-            if (is_not_UEspecRS(lprime,re,frame_parms->nushift,frame_parms->Ncp,8)) {
+            if (is_not_UEspecRS(lprime,re,frame_parms->nushift,frame_parms->Ncp,8,Ns)) {
               qam16_table_offset_re = 0;
               qam16_table_offset_im = 0;
 
@@ -1649,6 +1674,41 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
             break;
 
           }
+        }
+        else {
+          /* TM8 ToDo: fill in UE spec RS (based on phy_vars_eNB->lte_gold_uespec_table multilied with the spreading sequence)*/
+          for (p=first_layer0; p<(first_layer0+Nlayers0); p++) {
+            for (n_PRB=0; n_PRB<dlsch0_harq->nb_rb; n_PRB+=2) {
+            if (frame_parms->Ncp==0) {
+              ind = 3*lprime*dlsch0_harq->nb_rb+3*n_PRB/*rb_alloc_ind*/+mprime2 ;
+              ind_dword = ind>>4 ;
+              ind_qpsk_symb = ind&0xf ;
+
+                if (((mprime2+n_PRB)%12)==0) {
+                  w = Wbar_NCP[p-7][lprime] ;
+                } else {
+                  w = Wbar_NCP[p-7][3-lprime] ;
+                }
+            } else {
+                ind = 4*lprime*dlsch0_harq->nb_rb+4*n_PRB/*rb_alloc_ind*/+mprime2 ;
+                ind_dword = ind>>4 ;
+                ind_qpsk_symb = ind&0xf ;
+                int l = lprime%2 ;
+
+                  if ((mprime2%12)==0) {
+                    w = Wbar_NCP[p-7][l] ;
+                  } else {
+                    w = Wbar_NCP[p-7][1-l] ;
+                  }
+            }
+            qpsk_p = (w==1) ? qpsk : nqpsk;
+            }
+            /* pointer to the frequency domain Tx signal */
+           // txdataF[7][tti_offset] = qpsk[(phy_vars_eNB->lte_gold_uespec_table[0][Ns][lprime][ind_dword]>>(2*ind_qpsk_symb))&3] ;
+            txdataF[p][tti_offset] = qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[0][Ns][lprime][ind_dword]>>(2*ind_qpsk_symb))&3] ;
+            mprime2++ ;
+          }
+          
         }
       } else if (mimo_mode>=TM9_10) {
         printf("allocate_REs_in_RB() [dlsch.c] : ERROR, unknown mimo_mode %d\n",mimo_mode);
@@ -2207,9 +2267,59 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
           lprime=-1;
       }
 
-      // mapping ue specific beamforming weights from UE specified DLSCH structure to common space
+      
       for (aa=0;aa<frame_parms->nb_antennas_tx;aa++){
-        memcpy(phy_vars_eNB->common_vars.beam_weights[0][5][aa],dlsch0->ue_spec_bf_weights[0][aa],frame_parms->ofdm_symbol_size*sizeof(int32_t));
+        for (i=0;i<frame_parms->N_RB_DL*12/2;i++){
+          (phy_vars_eNB->common_vars.beam_weights[0][5][aa])[i+1] = (phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa])[i+frame_parms->N_RB_DL*12/2] ;
+          //memcpy(PHY_vars_eNB->lte_eNB_common_vars.beam_weights[0][5][aa][i], PHY_vars_eNB->dlsch_eNB[0][0]->ue_spec_bf_weights[0][aa][i+149], 300) ;
+        }
+      }
+      for (aa=0;aa<frame_parms->nb_antennas_tx;aa++){
+        for (i=0;i<frame_parms->N_RB_DL*12/2;i++){
+        (phy_vars_eNB->common_vars.beam_weights[0][5][aa])[i+frame_parms->first_carrier_offset] = (phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa])[i] ;
+        // memcpy(PHY_vars_eNB->lte_eNB_common_vars.beam_weights[0][5][aa][i+363], PHY_vars_eNB->dlsch_eNB[0][0]->ue_spec_bf_weights[0][aa][i], 300) ;
+        }
+      }
+      //printf("beam_weights[0][5][0][363]\n", PHY_vars_eNB->lte_eNB_common_vars.beam_weights[0][5][0][363]) ;
+      //printf("beam_weights[0][5][0][362]\n", PHY_vars_eNB->lte_eNB_common_vars.beam_weights[0][5][0][362]) ;
+
+
+    }
+    else if (mimo_mode==TM8) {   /*TODO (p 86 36.211 v11.3)*/
+      mprime = 0;
+      if (frame_parms->Ncp==0) { 
+        if (l==13)
+          lprime=3;   
+        else if (l==12)
+          lprime=2;   
+        else if (l==6)
+          lprime=1;   
+        else if (l==5)
+          lprime=0;   
+        else
+          lprime=-1;
+      } else {
+        if (l==13)
+          lprime=3;
+        else if (l==12)
+          lprime=2;
+        else if (l==5)
+          lprime=1;
+        else if (l==4)
+          lprime=0;
+        else
+          lprime=-1;
+      }
+
+      for (aa=0;aa<frame_parms->nb_antennas_tx;aa++){
+        for (i=0;i<frame_parms->N_RB_DL*12/2;i++){
+          (phy_vars_eNB->common_vars.beam_weights[0][7][aa])[i+1] = (phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa])[i+frame_parms->N_RB_DL*12/2] ;
+        }
+      }
+      for (aa=0;aa<frame_parms->nb_antennas_tx;aa++){
+        for (i=0;i<frame_parms->N_RB_DL*12/2;i++){
+        (phy_vars_eNB->common_vars.beam_weights[0][7][aa])[i+frame_parms->first_carrier_offset] = (phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa])[i] ;
+        }
       }
 
     }
@@ -2580,13 +2690,13 @@ int mch_modulation(int32_t **txdataF,
                    int16_t amp,
                    uint32_t subframe_offset,
                    LTE_DL_FRAME_PARMS *frame_parms,
-                   LTE_eNB_DLSCH_t *dlsch)
+                   LTE_eNB_DLSCH_t *dlsch_eNB)
 {
   uint8_t nsymb,nsymb_pmch;
   uint32_t i,jj,re_allocated,symbol_offset;
   uint16_t l,rb,re_offset;
   uint8_t skip_dc=0;
-  uint8_t mod_order = get_Qm(dlsch->harq_processes[0]->mcs);
+  uint8_t mod_order = get_Qm(dlsch_eNB->harq_processes[0]->mcs);
   int16_t qam16_table_a[4],qam64_table_a[8];//,qam16_table_b[4],qam64_table_b[8];
   int16_t *qam_table_s;
 
@@ -2639,7 +2749,7 @@ int mch_modulation(int32_t **txdataF,
                              &jj,
                              re_offset,
                              symbol_offset,
-                             dlsch->harq_processes[0]->e,
+                             dlsch_eNB->harq_processes[0]->e,
                              l,
                              mod_order,
                              amp,
@@ -2661,7 +2771,7 @@ int mch_modulation(int32_t **txdataF,
   }
 
 #ifdef DEBUG_DLSCH_MODULATION
-  printf("generate_dlsch(MCH) : jj = %d,re_allocated = %d (G %d)\n",jj,re_allocated,get_G(frame_parms,dlsch->harq_processes[0]->nb_rb,dlsch->harq_processes[0]->rb_alloc,mod_order,1,2,0,subframe_offset,1/*transmission mode*/));
+  printf("generate_dlsch(MCH) : jj = %d,re_allocated = %d (G %d)\n",jj,re_allocated,get_G(frame_parms,dlsch_eNB->harq_processes[0]->nb_rb,dlsch->harq_processes[0]->rb_alloc,mod_order,1,2,0,subframe_offset,1/*transmission mode*/));
 #endif
 
   return (re_allocated);
