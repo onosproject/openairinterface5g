@@ -2311,7 +2311,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
           lprime=-1;
       }
 
-      /*NOTE: the antenna port 7 and 8 should be replaced with 7+dlsch0_harq_first_layer and dlsch1_harq->first_layer below*/
+      /*NOTE: the antenna port 7 and 8 should be replaced with dlsch0_harq->first_layer and dlsch1_harq->first_layer below (when first_layer is actually initialized)*/
       if (dlsch0 != NULL) {
       for (aa=0;aa<frame_parms->nb_antennas_tx;aa++){
         for (i=0;i<frame_parms->N_RB_DL*12/2;i++){

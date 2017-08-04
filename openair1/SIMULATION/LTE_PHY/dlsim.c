@@ -1846,6 +1846,7 @@ int main(int argc, char **argv)
 
     case 'L':
       log_level=atoi(optarg);
+      set_glog(log_level,LOG_HIGH);
       break;
 
     case 'h':

@@ -2257,22 +2257,28 @@ int generate_eNB_dlsch_params_from_dci(int frame,
 
     // check if either TB is disabled (see 36-213 V8.6 p. 26)
 
+    dlsch0_harq->Nl        = 1;
+    dlsch1_harq->Nl        = 1;
 
     if ((dlsch0_harq->rvidx == 1) && (dlsch0_harq->mcs == 0))
       dlsch0_harq->status = DISABLED;
+    else {
+      if (dlsch0_harq->round == 0) {
+        dlsch0_harq->status = ACTIVE;
+        dlsch0->active = 1;
+        //      printf("Setting DLSCH process %d to ACTIVE\n",harq_pid);
+      }
+    }
 
     if ((dlsch1_harq->rvidx == 1) && (dlsch1_harq->mcs == 0))
       dlsch1_harq->status = DISABLED;
-
-    dlsch0_harq->Nl        = 1;
-
-
-    if (dlsch0_harq->round == 0) {
-      dlsch0_harq->status = ACTIVE;
-      //      printf("Setting DLSCH process %d to ACTIVE\n",harq_pid);
+    else {
+      if (dlsch1_harq->round == 0) {
+        dlsch1_harq->status = ACTIVE;
+        dlsch1->active = 1;
+        //      printf("Setting DLSCH process %d to ACTIVE\n",harq_pid);
+      }
     }
-
-    dlsch0_harq->mcs         = mcs1;
 
     if (dlsch0_harq->nb_rb > 0) {
       dlsch0_harq->TBS         = TBStable[get_I_TBS(dlsch0_harq->mcs)][dlsch0_harq->nb_rb-1];
@@ -2280,7 +2286,11 @@ int generate_eNB_dlsch_params_from_dci(int frame,
       dlsch0_harq->TBS = 0;
     }
 
-    dlsch0->active = 1;
+    if (dlsch1_harq->nb_rb > 0) {
+      dlsch1_harq->TBS         = TBStable[get_I_TBS(dlsch1_harq->mcs)][dlsch1_harq->nb_rb-1];
+    } else {
+      dlsch1_harq->TBS = 0;
+    }
 
     dlsch0->rnti = rnti;
     dlsch1->rnti = rnti;
@@ -2289,6 +2299,12 @@ int generate_eNB_dlsch_params_from_dci(int frame,
     dlsch1_harq->dl_power_off = 1;
 
     dlsch0_harq->mimo_mode = TM8; //this DCI can only be used in TM8
+    dlsch1_harq->mimo_mode = TM8; //this DCI can only be used in TM8
+
+    dlsch0_harq->first_layer = 7;
+    dlsch1_harq->first_layer = 8;
+    dlsch0_harq->Nlayers = 1;
+    dlsch1_harq->Nlayers = 1;
 
     break;
 
