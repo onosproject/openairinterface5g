@@ -45,7 +45,7 @@ unsigned int lte_gold_generic(unsigned int *x1, unsigned int *x2, unsigned char 
 void lte_gold(LTE_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_table[20][2][14],uint16_t Nid_cell);
 
 /*! \brief This function generates the LTE Gold sequence for DL UE-specific pilots for antenna ports 7,...,14 (transmission modes 8/9) */
-void lte_gold_ue_spec(LTE_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_uespec_table[2][20][2][21],uint16_t Nid_cell, uint16_t *n_idDMRS);
+void lte_gold_ue_spec(uint32_t lte_gold_uespec_table[2][20][2][21],uint16_t Nid_cell, uint16_t *n_idDMRS);
 
 /*! \brief This function generates the LTE Gold sequence for DL UE-specific pilots for antenna port 5 (transmission mode 7) */
 void lte_gold_ue_spec_port5(uint32_t lte_gold_uespec_port5_table[20][38],uint16_t Nid_cell, uint16_t n_rnti);

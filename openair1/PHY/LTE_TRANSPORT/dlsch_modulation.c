@@ -2311,17 +2311,32 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
           lprime=-1;
       }
 
+      /*NOTE: the antenna port 7 and 8 should be replaced with 7+dlsch0_harq_first_layer and dlsch1_harq->first_layer below*/
+      if (dlsch0 != NULL) {
       for (aa=0;aa<frame_parms->nb_antennas_tx;aa++){
         for (i=0;i<frame_parms->N_RB_DL*12/2;i++){
-          (phy_vars_eNB->common_vars.beam_weights[0][7][aa])[i+1] = (phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa])[i+frame_parms->N_RB_DL*12/2] ;
+          (phy_vars_eNB->common_vars.beam_weights[0][7][aa])[i+1] = (dlsch0->ue_spec_bf_weights[0][aa])[i+frame_parms->N_RB_DL*12/2] ;
         }
       }
       for (aa=0;aa<frame_parms->nb_antennas_tx;aa++){
         for (i=0;i<frame_parms->N_RB_DL*12/2;i++){
-        (phy_vars_eNB->common_vars.beam_weights[0][7][aa])[i+frame_parms->first_carrier_offset] = (phy_vars_eNB->dlsch[0][0]->ue_spec_bf_weights[0][aa])[i] ;
+        (phy_vars_eNB->common_vars.beam_weights[0][7][aa])[i+frame_parms->first_carrier_offset] = (dlsch0->ue_spec_bf_weights[0][aa])[i] ;
+        }
+      }
+      }
+      if (dlsch1 != NULL) {
+      for (aa=0;aa<frame_parms->nb_antennas_tx;aa++){
+        for (i=0;i<frame_parms->N_RB_DL*12/2;i++){
+          (phy_vars_eNB->common_vars.beam_weights[0][8][aa])[i+1] = (dlsch1->ue_spec_bf_weights[0][aa])[i+frame_parms->N_RB_DL*12/2] ;
+        }
+      }
+      for (aa=0;aa<frame_parms->nb_antennas_tx;aa++){
+        for (i=0;i<frame_parms->N_RB_DL*12/2;i++){
+        (phy_vars_eNB->common_vars.beam_weights[0][8][aa])[i+frame_parms->first_carrier_offset] = (dlsch1->ue_spec_bf_weights[0][aa])[i] ;
         }
       }
 
+      }
     }
 
     Ns = 2*subframe_offset+(l>=(nsymb>>1));

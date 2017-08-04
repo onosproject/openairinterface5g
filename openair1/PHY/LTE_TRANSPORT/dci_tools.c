@@ -2288,6 +2288,8 @@ int generate_eNB_dlsch_params_from_dci(int frame,
     dlsch0_harq->dl_power_off = 1;
     dlsch1_harq->dl_power_off = 1;
 
+    dlsch0_harq->mimo_mode = TM8; //this DCI can only be used in TM8
+
     break;
 
   case format2C:

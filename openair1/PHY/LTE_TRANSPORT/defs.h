@@ -162,7 +162,7 @@ typedef struct {
   uint8_t Nl;
   /// Number of layers for this PDSCH transmission (TM8-10)
   uint8_t Nlayers;
-  /// First layer for this PSCH transmission
+  /// First layer for this PDSCH transmission
   uint8_t first_layer;
    /// codeword this transport block is mapped to
   uint8_t codeword;

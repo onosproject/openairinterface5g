@@ -51,7 +51,6 @@
 
 #include "unitary_defs.h"
 
-
 #include "PHY/TOOLS/lte_phy_scope.h"
 
 PHY_VARS_eNB *eNB;
@@ -1207,6 +1206,117 @@ void fill_DCI(PHY_VARS_eNB *eNB,
 
         break;
 
+    case 8:
+        if (common_flag == 0) {
+	  if (eNB->frame_parms.frame_type == TDD) {
+	    switch (eNB->frame_parms.N_RB_DL) {
+	    case 6:
+	      dci_length = sizeof_DCI2B_1_5MHz_TDD_t;
+                dci_length_bytes = sizeof(DCI2B_1_5MHz_TDD_t);
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rballoc          = DLSCH_RB_ALLOC;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->scrambling_id    = 0;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->TPC              = 0;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->dai              = 0;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->harq_pid         = 0;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs1             = mcs1;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi1             = ndi;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv1              = rv;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs2             = mcs2;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi2             = ndi;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv2              = rv;
+                break;
+
+              case 25:
+                dci_length = sizeof_DCI2B_5MHz_TDD_t;
+                dci_length_bytes = sizeof(DCI2B_5MHz_TDD_t);
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rah              = 0;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->scrambling_id    = 0;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rballoc          = DLSCH_RB_ALLOC;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->TPC              = 0;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->dai              = 0;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->harq_pid         = 0;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs1             = mcs1;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi1             = ndi;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv1              = rv;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs2             = mcs2;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi2             = ndi;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv2              = rv;
+                break;
+
+              case 50:
+                dci_length = sizeof_DCI2B_10MHz_TDD_t;
+                dci_length_bytes = sizeof(DCI2B_10MHz_TDD_t);
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rah              = 0;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->scrambling_id    = 0;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rballoc          = DLSCH_RB_ALLOC;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->TPC              = 0;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->dai              = 0;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->harq_pid         = 0;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs1             = mcs1;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi1             = ndi;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv1              = rv;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs2             = mcs2;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi2             = ndi;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv2              = rv;
+                break;
+
+              case 100:
+                dci_length = sizeof_DCI2B_20MHz_TDD_t;
+                dci_length_bytes = sizeof(DCI2B_20MHz_TDD_t);
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rah              = 0;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->scrambling_id    = 0;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rballoc          = DLSCH_RB_ALLOC;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->TPC              = 0;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->dai              = 0;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->harq_pid         = 0;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs1             = mcs1;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi1             = ndi;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv1              = rv;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs2             = mcs2;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi2             = ndi;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv2              = rv;
+                break;
+              }
+            }
+
+            else {
+	      printf("FDD DCI alloc todo!\n");
+	      exit(-1);
+	    }
+          memcpy(&dci_alloc[*num_dci].dci_pdu[0],&DLSCH_alloc_pdu_1[k],dci_length_bytes);
+          dci_alloc[*num_dci].dci_length = dci_length;
+          dci_alloc[*num_dci].L          = 1;
+          dci_alloc[*num_dci].rnti       = n_rnti+k;
+          dci_alloc[*num_dci].format     = format2B;
+          dump_dci(&eNB->frame_parms,&dci_alloc[*num_dci]);
+
+          //printf("Generating dlsch params for user %d / format 2A (%d)\n",k,format2A);
+          generate_eNB_dlsch_params_from_dci(0,
+					     subframe,
+                                             &DLSCH_alloc_pdu_1[0],
+                                             n_rnti+k,
+                                             format2B,
+                                             eNB->dlsch[0],
+                                             &eNB->frame_parms,
+                                             eNB->pdsch_config_dedicated,
+                                             SI_RNTI,
+                                             0,
+                                             P_RNTI,
+                                             eNB->UE_stats[0].DL_pmi_single,
+					     transmission_mode>=7?transmission_mode:0);
+
+          *num_dci = *num_dci + 1;
+          *num_ue_spec_dci = *num_ue_spec_dci + 1;
+
+        }
+	else {
+	  printf("DCI format 2B does not support common RNTIs\n");
+	}
+
+        printf("Generated DCI format 2B (Transmission Mode 8)\n");
+        break;
+
+
       default:
         printf("Unsupported Transmission Mode!!!");
         exit(-1);
@@ -1395,8 +1505,18 @@ int main(int argc, char **argv)
   int two_thread_flag=0;
   int DLSCH_RB_ALLOC = 0;
 
-  int log_level = LOG_ERR;
+  int log_level = LOG_DEBUG;
   int dci_received;
+
+  logInit();
+  // enable these lines if you need debug info
+  set_comp_log(PHY,LOG_DEBUG,LOG_HIGH,1);
+  set_glog(log_level,LOG_HIGH);
+  // moreover you need to init itti with the following line
+  // however itti will catch all signals, so ctrl-c won't work anymore
+  // alternatively you can disable ITTI completely in CMakeLists.txt
+  //itti_init(TASK_MAX, THREAD_MAX, MESSAGES_ID_MAX, tasks_info, messages_info, messages_definition_xml, NULL);
+
 
 #if defined(__arm__)
   FILE    *proc_fd = NULL;
@@ -1765,16 +1885,6 @@ int main(int argc, char **argv)
       break;
     }
   }
-
-  logInit();
-  // enable these lines if you need debug info
-  set_comp_log(PHY,LOG_DEBUG,LOG_HIGH,1);
-  set_glog(log_level,LOG_HIGH);
-  // moreover you need to init itti with the following line
-  // however itti will catch all signals, so ctrl-c won't work anymore
-  // alternatively you can disable ITTI completely in CMakeLists.txt
-  //itti_init(TASK_MAX, THREAD_MAX, MESSAGES_ID_MAX, tasks_info, messages_info, messages_definition_xml, NULL);
-
 
   if (common_flag == 0) {
     switch (N_RB_DL) {
