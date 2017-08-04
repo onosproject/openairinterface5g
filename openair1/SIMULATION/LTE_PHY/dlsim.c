@@ -539,7 +539,7 @@ void fill_DCI(PHY_VARS_eNB *eNB,
 
           printf("Generating dlsch params for user %d\n",k);
           generate_eNB_dlsch_params_from_dci(0,
-					     subframe,
+					                                   subframe,
                                              &DLSCH_alloc_pdu_1[0],
                                              SI_RNTI,
                                              format1A,
@@ -550,7 +550,7 @@ void fill_DCI(PHY_VARS_eNB *eNB,
                                              0,
                                              P_RNTI,
                                              eNB->UE_stats[0].DL_pmi_single,
-					     transmission_mode>=7?transmission_mode:0);
+					                                   transmission_mode>=7?transmission_mode:0);
 
           *num_common_dci=*num_common_dci+1;
           *num_dci = *num_dci + 1;
@@ -1669,12 +1669,13 @@ int main(int argc, char **argv)
           (transmission_mode!=4) &&
           (transmission_mode!=5) &&
           (transmission_mode!=6) &&
-          (transmission_mode!=7)) {
+          (transmission_mode!=7) &&
+          (transmission_mode!=8)) {
         msg("Unsupported transmission mode %d\n",transmission_mode);
         exit(-1);
       }
 
-      if (transmission_mode>1 && transmission_mode<7) {
+      if (transmission_mode>1 && transmission_mode<8) {
         n_tx_port = 2;
       }
 
@@ -1684,7 +1685,7 @@ int main(int argc, char **argv)
       n_tx_phy=atoi(optarg);
 
       if (n_tx_phy < n_tx_port) {
-        msg("n_tx_phy mush not be smaller than n_tx_port");
+        msg("n_tx_phy must not be smaller than n_tx_port");
         exit(-1);
       }
 

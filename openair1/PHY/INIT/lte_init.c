@@ -1638,6 +1638,9 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
     init_prach_tables(839);
   } // node_function != NGFI_RRU_IF4p5
 
+  /*init the ue spec reference sequence for TM8/9*/
+  lte_gold_ue_spec(fp, eNB->lte_gold_uespec_table,eNB->frame_parms.Nid_cell, NULL);
+
   return (0);
 
 }
