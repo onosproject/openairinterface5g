@@ -551,6 +551,19 @@ int phy_stats_exist(module_id_t Mod_id, int rnti);
 \param[in] eNB_index  instance of eNB
 @returns L2 state (CONNETION_OK or CONNECTION_LOST or PHY_RESYNCH)
 */
+#ifdef UE_NR_PHY_DEMO
+UE_L2_STATE_t ue_scheduler(
+  const module_id_t module_idP,
+  const frame_t rxFrameP,
+  const sub_frame_t rxSubframe,
+  const nr_tti_t    rxNRTtiP,
+  const frame_t txFrameP,
+  const sub_frame_t txSubframe,
+  const nr_tti_t    txNRTtiP,
+  const lte_subframe_t direction,
+  const uint8_t eNB_index,
+  const int CC_id);
+#else
 UE_L2_STATE_t ue_scheduler(
   const module_id_t module_idP,
   const frame_t rxFrameP,
@@ -560,6 +573,7 @@ UE_L2_STATE_t ue_scheduler(
   const lte_subframe_t direction,
   const uint8_t eNB_index,
   const int CC_id);
+#endif
 
 /*! \fn  int cba_access(module_id_t module_idP,frame_t frameP,sub_frame_t subframe, uint8_t eNB_index,uint16_t buflen);
 \brief determine whether to use cba resource to transmit or not

@@ -66,6 +66,7 @@ UE_AUTOTEST_TRACE="False"
 UE_DEBUG_TRACE="False"
 UE_TIMING_TRACE="False"
 DISABLE_LOG_X="False"
+UE_NR_PHY_DEMO="False"
 BUILD_ECLIPSE=0
 trap handle_ctrl_c INT
 
@@ -337,6 +338,10 @@ function main() {
             DISABLE_LOG_X="True"
             echo_info "Disabling all LOG_* traces"
             shift 1;;
+        --ue-nr-phy-demo)
+            UE_NR_PHY_DEMO="True"
+            echo_info "Enabling UE NR functionalities for PHY demo"
+            shift 1;;
         --uhd-images-dir)
             UHD_IMAGES_DIR=$2
             echo_info "Downloading UHD images in the indicated location"
@@ -528,6 +533,7 @@ function main() {
     echo "set (UE_DEBUG_TRACE $UE_DEBUG_TRACE)"        >>  $cmake_file
     echo "set (UE_TIMING_TRACE $UE_TIMING_TRACE)"        >>  $cmake_file
     echo "set (DISABLE_LOG_X $DISABLE_LOG_X)"        >>  $cmake_file
+    echo "set (UE_NR_PHY_DEMO $UE_NR_PHY_DEMO)"        >>  $cmake_file
     if [ "$UE" = 1 -a "$NOS1" = "0" ] ; then
      echo_info "Compiling UE S1 build : enabling Linux and NETLINK"
      echo "set (LINUX True )"              >>  $cmake_file
