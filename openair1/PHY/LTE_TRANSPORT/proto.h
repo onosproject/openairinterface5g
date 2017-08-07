@@ -1348,7 +1348,6 @@ uint32_t dlsch_decoding_emul(PHY_VARS_UE *phy_vars_ue,
     @param i_mod Modulation order of the interfering stream
 */
 int32_t rx_pdsch(PHY_VARS_UE *phy_vars_ue,
-                 UE_rxtx_proc_t *proc,
                  PDSCH_t type,
                  uint8_t eNB_id,
                  uint8_t eNB_id_i,
@@ -1454,8 +1453,7 @@ void dci_encoding(uint8_t *a,
                   uint16_t rnti);
 
 /*! \brief Top-level DCI entry point. This routine codes an set of DCI PDUs and performs PDCCH modulation, interleaving and mapping.
-  \param num_ue_spec_dci  Number of UE specific DCI pdus to encode
-  \param num_common_dci Number of Common DCI pdus to encode
+  \param num_dci  Number of DCI pdus to encode
   \param dci_alloc Allocation vectors for each DCI pdu
   \param n_rnti n_RNTI (see )
   \param amp Amplitude of QPSK symbols
@@ -1464,8 +1462,7 @@ void dci_encoding(uint8_t *a,
   \param sub_frame_offset subframe offset in frame
   @returns Number of PDCCH symbols
 */
-uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
-                         uint8_t num_common_dci,
+uint8_t generate_dci_top(int num_dci,
                          DCI_ALLOC_t *dci_alloc,
                          uint32_t n_rnti,
                          int16_t amp,
@@ -1474,8 +1471,7 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
                          uint32_t sub_frame_offset);
 
 uint8_t generate_dci_top_emul(PHY_VARS_eNB *phy_vars_eNB,
-                              uint8_t num_ue_spec_dci,
-                              uint8_t num_common_dci,
+                              int num_dci,
                               DCI_ALLOC_t *dci_alloc,
                               uint8_t subframe);
 

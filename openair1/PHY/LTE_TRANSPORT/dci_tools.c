@@ -5291,29 +5291,31 @@ void prepare_dl_decoding_format1_1A(DCI_format_t dci_format,
             pdlsch0_harq->first_tx = 0;
             pdlsch0_harq->status   = ACTIVE;
 
-        }
-
-	else if (rv1  != 0 )
-	//NDI has not been toggled but rv was increased by eNB: retransmission
-	  {
-	    if (pdlsch0_harq->status == SCH_IDLE)
-	    //packet was actually decoded in previous transmission (ACK was missed by eNB)
-	    //However, the round is not a good check as it might have been decoded in a retransmission prior to this one.
+        }else if (rv1  != 0 )
+            //NDI has not been toggled but rv was increased by eNB: retransmission
         {
-            LOG_D(PHY,"skip pdsch decoding and report ack\n");
-            // skip pdsch decoding and report ack
-		//pdlsch0_harq->status   = SCH_IDLE;
-            pdlsch0->active       = 0;
-            pdlsch0->harq_ack[subframe].ack = 1;
-            pdlsch0->harq_ack[subframe].harq_id = harq_pid;
-            pdlsch0->harq_ack[subframe].send_harq_status = 1;
+            if (pdlsch0_harq->status == SCH_IDLE)
+                //packet was actually decoded in previous transmission (ACK was missed by eNB)
+                //However, the round is not a good check as it might have been decoded in a retransmission prior to this one.
+            {
+                LOG_D(PHY,"skip pdsch decoding and report ack\n");
+                // skip pdsch decoding and report ack
+                //pdlsch0_harq->status   = SCH_IDLE;
+                pdlsch0->active       = 0;
+                pdlsch0->harq_ack[subframe].ack = 1;
+                pdlsch0->harq_ack[subframe].harq_id = harq_pid;
+                pdlsch0->harq_ack[subframe].send_harq_status = 1;
 
-		//pdlsch0_harq->first_tx = 0;
-	      }
-	    else  //normal retransmission
-	      {
-		// nothing special to do
-	      }
+                //pdlsch0_harq->first_tx = 0;
+            }
+            else  //normal retransmission
+            {
+                // nothing special to do
+            }
+        }
+        else
+        {
+            pdlsch0_harq->status   = ACTIVE;
         }
     }
 
@@ -7353,7 +7355,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
   uint8_t transmission_mode = ue->transmission_mode[eNB_id];
   ANFBmode_t AckNackFBMode;
   LTE_UE_ULSCH_t *ulsch = ue->ulsch[eNB_id];
-  LTE_UE_DLSCH_t **dlsch = ue->dlsch[subframe%RX_NB_TH][0];
+  LTE_UE_DLSCH_t **dlsch = ue->dlsch[ue->current_thread_id[subframe]][0];
   PHY_MEASUREMENTS *meas = &ue->measurements;
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   //  uint32_t current_dlsch_cqi = ue->current_dlsch_cqi[eNB_id];
@@ -8160,7 +8162,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
       //int dl_subframe = (subframe<4) ? (subframe+6) : (subframe-4);
       int dl_subframe = subframe;
 
-      if (ue->dlsch[dl_subframe%RX_NB_TH][eNB_id][0]->harq_ack[dl_subframe].send_harq_status>0) { // we have downlink transmission
+      if (ue->dlsch[ue->current_thread_id[subframe]][eNB_id][0]->harq_ack[dl_subframe].send_harq_status>0) { // we have downlink transmission
         ulsch->harq_processes[harq_pid]->O_ACK = 1;
       } else {
         ulsch->harq_processes[harq_pid]->O_ACK = 0;
@@ -8919,7 +8921,7 @@ double sinr_eff_cqi_calc(PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe)
   uint8_t transmission_mode = ue->transmission_mode[eNB_id];
   PHY_MEASUREMENTS *meas = &ue->measurements;
   LTE_DL_FRAME_PARMS *frame_parms =  &ue->frame_parms;
-  int32_t **dl_channel_est = ue->common_vars.common_vars_rx_data_per_thread[subframe %RX_NB_TH].dl_ch_estimates[eNB_id];
+  int32_t **dl_channel_est = ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id];
   double *s_dB;
   s_dB = ue->sinr_CQI_dB;
   //  LTE_UE_ULSCH_t *ulsch  = ue->ulsch[eNB_id];

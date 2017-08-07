@@ -75,8 +75,6 @@
 
 #define RX_NB_TH_MAX 2
 #define RX_NB_TH 2
-extern uint8_t dciFormat;
-extern uint8_t agregationLevel;
 
 
 //#ifdef SHRLIBDEV
@@ -420,7 +418,7 @@ typedef struct {
   uint8_t llr_slot1_available;
   uint8_t dci_slot0_available;
   uint8_t first_symbol_available;
-  uint8_t channel_level;
+  //uint8_t channel_level;
   /// scheduling parameters for fep_slot1 thread
   struct sched_param sched_param_fep_slot1;
 
@@ -738,6 +736,9 @@ typedef struct {
   LTE_DL_FRAME_PARMS  frame_parms_before_ho;
   LTE_UE_COMMON    common_vars;
 
+  // point to the current rxTx thread index
+  uint8_t current_thread_id[10];
+
   LTE_UE_PDSCH     *pdsch_vars[RX_NB_TH_MAX][NUMBER_OF_CONNECTED_eNB_MAX+1]; // two RxTx Threads
   LTE_UE_PDSCH_FLP *pdsch_vars_flp[NUMBER_OF_CONNECTED_eNB_MAX+1];
   LTE_UE_PDSCH     *pdsch_vars_SI[NUMBER_OF_CONNECTED_eNB_MAX+1];
@@ -838,6 +839,7 @@ typedef struct {
   uint8_t               decode_MIB;
   int              rx_offset; /// Timing offset
   int              rx_offset_diff; /// Timing adjustment for ofdm symbol0 on HW USRP
+  int              time_sync_cell;
   int              timing_advance; ///timing advance signalled from eNB
   int              hw_timing_advance;
   int              N_TA_offset; ///timing offset used in TDD
@@ -938,7 +940,8 @@ typedef struct {
   time_stats_t dlsch_rate_unmatching_stats;
   time_stats_t dlsch_turbo_decoding_stats;
   time_stats_t dlsch_deinterleaving_stats;
-  time_stats_t dlsch_llr_stats[RX_NB_TH][LTE_SLOTS_PER_SUBFRAME];
+  time_stats_t dlsch_llr_stats;
+  time_stats_t dlsch_llr_stats_parallelization[RX_NB_TH][LTE_SLOTS_PER_SUBFRAME];
   time_stats_t dlsch_unscrambling_stats;
   time_stats_t dlsch_rate_matching_stats;
   time_stats_t dlsch_turbo_encoding_stats;
