@@ -1137,7 +1137,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
 
     for (i=0; i<fp->nb_antennas_tx; i++) {
 
-      common_vars->txdata[i]  = (int32_t*)malloc16_clear( fp->samples_per_tti*10*sizeof(int32_t) );
+      common_vars->txdata[i]  = (int32_t*)malloc16_clear( fp->samples_per_subframe*10*sizeof(int32_t) );
       common_vars->txdataF[i] = (int32_t *)malloc16_clear( fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t) );
     }
 
@@ -1149,7 +1149,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
     }
 
     for (i=0; i<fp->nb_antennas_rx; i++) {
-      common_vars->rxdata[i] = (int32_t*) malloc16_clear( (fp->samples_per_tti*10+2048)*sizeof(int32_t) );
+      common_vars->rxdata[i] = (int32_t*) malloc16_clear( (fp->samples_per_subframe*10+2048)*sizeof(int32_t) );
       for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
           common_vars->common_vars_rx_data_per_thread[th_id].rxdataF[i] = (int32_t*)malloc16_clear( sizeof(int32_t)*(fp->ofdm_symbol_size*14) );
       }

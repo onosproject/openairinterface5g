@@ -68,6 +68,11 @@ typedef int32_t               sdu_size_t;
 typedef uint32_t              frame_t;
 typedef int32_t               sframe_t;
 typedef uint32_t              sub_frame_t;
+#ifdef UE_NR_PHY_DEMO
+/* NR tti corresponding to 2 consecutive slots(or 1 slot if SlotConfig0) for the smaller configured numerology granularity */
+/* tti = 1ms for numerology 0, = 0.5ms for numerology 1, = 0.250 ms for numerology 2, etc ...*/
+typedef uint8_t				  nr_tti_t;
+#endif
 typedef uint8_t               module_id_t;
 typedef uint8_t               eNB_index_t;
 typedef uint16_t              ue_id_t;

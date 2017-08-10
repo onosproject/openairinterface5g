@@ -318,7 +318,7 @@ static void *UE_thread_synch(void *arg) {
 #endif
             if (initial_sync( UE, UE->mode ) == 0) {
 
-                hw_slot_offset = (UE->rx_offset<<1) / UE->frame_parms.samples_per_tti;
+                hw_slot_offset = (UE->rx_offset<<1) / UE->frame_parms.samples_per_subframe;
                 LOG_I( HW, "Got synch: hw_slot_offset %d, carrier off %d Hz, rxgain %d (DL %u, UL %u), UE_scan_carrier %d\n",
                        hw_slot_offset,
                        freq_offset,
@@ -395,7 +395,7 @@ static void *UE_thread_synch(void *arg) {
                             if ((fd = fopen("rxsig_frame0.dat","w")) != NULL) {
                                 fwrite((void*)&UE->common_vars.rxdata[0][0],
                                        sizeof(int32_t),
-                                       10*UE->frame_parms.samples_per_tti,
+                                       10*UE->frame_parms.samples_per_subframe,
                                        fd);
                                 LOG_I(PHY,"Dummping Frame ... bye bye \n");
                                 fclose(fd);
@@ -426,7 +426,7 @@ static void *UE_thread_synch(void *arg) {
                         if ((fd = fopen("rxsig_frame0.dat","w"))!=NULL) {
                             fwrite((void*)&UE->common_vars.rxdata[0][0],
                                    sizeof(int32_t),
-                                   10*UE->frame_parms.samples_per_tti,
+                                   10*UE->frame_parms.samples_per_subframe,
                                    fd);
                             LOG_I(PHY,"Dummping Frame ... bye bye \n");
                             fclose(fd);
@@ -562,6 +562,18 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 #endif
         if (UE->mac_enabled==1) {
 
+#ifdef UE_NR_PHY_DEMO
+            ret = mac_xface->ue_scheduler(UE->Mod_id,
+                                          proc->frame_rx,
+                                          proc->subframe_rx,
+										  proc->nr_tti_rx,
+                                          proc->frame_tx,
+                                          proc->subframe_tx,
+										  proc->nr_tti_tx,
+                                          subframe_select(&UE->frame_parms,proc->subframe_tx),
+                                          0,
+                                          0/*FIXME CC_id*/);
+#else
             ret = mac_xface->ue_scheduler(UE->Mod_id,
                                           proc->frame_rx,
                                           proc->subframe_rx,
@@ -570,6 +582,8 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                                           subframe_select(&UE->frame_parms,proc->subframe_tx),
                                           0,
                                           0/*FIXME CC_id*/);
+
+#endif
             if ( ret != CONNECTION_OK) {
                 char *txt;
                 switch (ret) {
@@ -637,7 +651,7 @@ void *UE_thread(void *arg) {
 
     PHY_VARS_UE *UE = (PHY_VARS_UE *) arg;
     //  int tx_enabled = 0;
-    int dummy_rx[UE->frame_parms.nb_antennas_rx][UE->frame_parms.samples_per_tti] __attribute__((aligned(32)));
+    int dummy_rx[UE->frame_parms.nb_antennas_rx][UE->frame_parms.samples_per_subframe] __attribute__((aligned(32)));
     openair0_timestamp timestamp,timestamp1;
     void* rxp[NB_ANTENNAS_RX], *txp[NB_ANTENNAS_TX];
     int start_rx_stream = 0;
@@ -682,11 +696,11 @@ void *UE_thread(void *arg) {
                     rxp[i] = (void*)&UE->common_vars.rxdata[i][0];
 
                 if (UE->mode != loop_through_memory)
-                    AssertFatal( UE->frame_parms.samples_per_tti*10 ==
+                    AssertFatal( UE->frame_parms.samples_per_subframe*10 ==
                                  UE->rfdevice.trx_read_func(&UE->rfdevice,
                                                             &timestamp,
                                                             rxp,
-                                                            UE->frame_parms.samples_per_tti*10,
+                                                            UE->frame_parms.samples_per_subframe*10,
                                                             UE->frame_parms.nb_antennas_rx), "");
 		AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
                 instance_cnt_synch = ++UE->proc.instance_cnt_synch;
@@ -711,7 +725,7 @@ void *UE_thread(void *arg) {
                           UE->rfdevice.trx_read_func(&UE->rfdevice,
                                               &timestamp,
                                               rxp,
-                                              UE->frame_parms.samples_per_tti,
+                                              UE->frame_parms.samples_per_subframe,
                                               UE->frame_parms.nb_antennas_rx);
                 }
 #endif
@@ -769,31 +783,31 @@ void *UE_thread(void *arg) {
                     for (i=0; i<UE->frame_parms.nb_antennas_rx; i++)
                         rxp[i] = (void*)&UE->common_vars.rxdata[i][UE->frame_parms.ofdm_symbol_size+
                                  UE->frame_parms.nb_prefix_samples0+
-                                 sub_frame*UE->frame_parms.samples_per_tti];
+                                 sub_frame*UE->frame_parms.samples_per_subframe];
                     for (i=0; i<UE->frame_parms.nb_antennas_tx; i++)
-                        txp[i] = (void*)&UE->common_vars.txdata[i][((sub_frame+2)%10)*UE->frame_parms.samples_per_tti];
+                        txp[i] = (void*)&UE->common_vars.txdata[i][((sub_frame+2)%10)*UE->frame_parms.samples_per_subframe];
 
                     int readBlockSize, writeBlockSize;
                     if (sub_frame<9) {
-                        readBlockSize=UE->frame_parms.samples_per_tti;
-                        writeBlockSize=UE->frame_parms.samples_per_tti;
+                        readBlockSize=UE->frame_parms.samples_per_subframe;
+                        writeBlockSize=UE->frame_parms.samples_per_subframe;
                     } else {
                         // set TO compensation to zero
                         UE->rx_offset_diff = 0;
                         // compute TO compensation that should be applied for this frame
-                        if ( UE->rx_offset < 5*UE->frame_parms.samples_per_tti  &&
+                        if ( UE->rx_offset < 5*UE->frame_parms.samples_per_subframe  &&
                                 UE->rx_offset > 0 )
                             UE->rx_offset_diff = -1 ;
-                        if ( UE->rx_offset > 5*UE->frame_parms.samples_per_tti &&
-                                UE->rx_offset < 10*UE->frame_parms.samples_per_tti )
+                        if ( UE->rx_offset > 5*UE->frame_parms.samples_per_subframe &&
+                                UE->rx_offset < 10*UE->frame_parms.samples_per_subframe )
                             UE->rx_offset_diff = 1;
 
                         LOG_D(PHY,"AbsSubframe %d.%d SET rx_off_diff to %d rx_offset %d \n",proc->frame_rx,sub_frame,UE->rx_offset_diff,UE->rx_offset);
-                        readBlockSize=UE->frame_parms.samples_per_tti -
+                        readBlockSize=UE->frame_parms.samples_per_subframe -
                                       UE->frame_parms.ofdm_symbol_size -
                                       UE->frame_parms.nb_prefix_samples0 -
                                       UE->rx_offset_diff;
-                        writeBlockSize=UE->frame_parms.samples_per_tti -
+                        writeBlockSize=UE->frame_parms.samples_per_subframe -
                                        UE->rx_offset_diff;
                     }
 
@@ -806,7 +820,7 @@ void *UE_thread(void *arg) {
                     AssertFatal( writeBlockSize ==
                                  UE->rfdevice.trx_write_func(&UE->rfdevice,
                                          timestamp+
-                                         (2*UE->frame_parms.samples_per_tti) -
+                                         (2*UE->frame_parms.samples_per_subframe) -
                                          UE->frame_parms.ofdm_symbol_size-UE->frame_parms.nb_prefix_samples0 -
                                          openair0_cfg[0].tx_sample_advance,
                                          txp,
@@ -845,7 +859,7 @@ void *UE_thread(void *arg) {
                     proc->subframe_tx=(sub_frame+4)%10;
                     proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
                     proc->timestamp_tx = timestamp+
-                                         (4*UE->frame_parms.samples_per_tti)-
+                                         (4*UE->frame_parms.samples_per_subframe)-
                                          UE->frame_parms.ofdm_symbol_size-UE->frame_parms.nb_prefix_samples0;
 
                     proc->instance_cnt_rxtx++;
