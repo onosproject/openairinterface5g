@@ -138,7 +138,7 @@ static int trx_iris_write(openair0_device *device, openair0_timestamp timestamp,
    	    samps[1] = (uint32_t *)buff[2*r+1]; //cws: it seems another thread can clobber these, so we need to save them locally.
 	while (samples_sent < nsamps)
 	{
-	    ret = s->iris[r]->writeStream(s->txStream[r], (void **)samps, (size_t)(nsamps - samples_sent), flag, timeNs, 100000);
+	    ret = s->iris[r]->writeStream(s->txStream[r], (void **)samps, (size_t)(nsamps - samples_sent), flag, timeNs, 1000000);
 	    if (ret < 0) {
 		printf("Unable to write stream!\n");
 		break;
@@ -205,7 +205,7 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
 	while (samples_received < nsamps)
 	{
 	    flags = 0;
-	    ret = s->iris[r]->readStream(s->rxStream[r], (void **)samps, (size_t)(nsamps-samples_received), flags, timeNs, 100000);
+	    ret = s->iris[r]->readStream(s->rxStream[r], (void **)samps, (size_t)(nsamps-samples_received), flags, timeNs, 1000000);
 	    if (ret < 0)
 	    {
 		if (ret == SOAPY_SDR_TIME_ERROR)
@@ -469,7 +469,7 @@ extern "C" {
 	while (srl != NULL)
 	{
 	    LOG_I(HW,"Attempting to open Iris device: %s\n", srl);
-	    std::string args = "driver=remote,serial="+std::string(srl)+",remote:format=CS16";
+	    std::string args = "driver=iris,serial="+std::string(srl)+",remote:format=CS16";
 	    s->iris.push_back(SoapySDR::Device::make(args));
 	    srl = strtok(NULL, ",");
 	}
@@ -529,7 +529,7 @@ extern "C" {
 		    set_rx_gain_offset(&openair0_cfg[0],i,bw_gain_adjust);
 
 		    s->iris[r]->setGain(SOAPY_SDR_RX, i, openair0_cfg[0].rx_gain[i]-openair0_cfg[0].rx_gain_offset[i]);
-		    if (openair0_cfg[0].duplex_mode == 1) // TDD
+		    if (openair0_cfg[0].duplex_mode == 1 ) //duplex_mode_TDD
 			s->iris[r]->setAntenna(SOAPY_SDR_RX, i, (i==0)?"TRXA":"TRXB");			
 		    s->iris[r]->setDCOffsetMode(SOAPY_SDR_RX, i, true); // move somewhere else
 		}

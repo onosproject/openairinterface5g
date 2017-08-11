@@ -59,7 +59,7 @@
 
 #define max(a,b) ((a)>(b) ? (a) : (b))
 
-//#define DEBUG_EXMIMO
+#define DEBUG_EXMIMO
 
 exmimo_pci_interface_bot_virtual_t openair0_exmimo_pci[MAX_CARDS]; // contains userspace pointers for each card
 
@@ -297,6 +297,8 @@ static void *watchdog_thread(void *arg) {
   int first_acquisition;
   struct timespec sleep_time,wait;
 
+  int ret;
+
 
   wait.tv_sec=0;
   wait.tv_nsec=50000000L;
@@ -404,10 +406,10 @@ static void *watchdog_thread(void *arg) {
 
   first_acquisition=1;
   printf("Locking watchdog for first acquisition\n");
-  pthread_mutex_timedlock(&exm->watchdog_mutex,&wait);
+  ret = pthread_mutex_timedlock(&exm->watchdog_mutex,&wait);
   // main loop to keep up with DMA transfers from exmimo2
 
-  int cnt_diff0=0;
+  unsigned long long cnt_diff0=0;
   while ((!oai_exit) && (!exm->watchdog_exit)) {
 
     if (exm->daq_state == running) {
@@ -424,7 +426,15 @@ static void *watchdog_thread(void *arg) {
       exm->last_mbox = mbox;
 
       if (first_acquisition==0)
-	pthread_mutex_timedlock(&exm->watchdog_mutex,&wait);
+      {
+        ret = pthread_mutex_timedlock(&exm->watchdog_mutex,&wait);
+        if(ret)
+        {
+//           exm->watchdog_exit = 1;
+           printf("watchdog_thread pthread_mutex_timedlock error = %d\n", ret);
+           continue;
+        }
+      }
 
       exm->ts += (diff*exm->samples_per_frame/150) ; 
 
@@ -433,7 +443,7 @@ static void *watchdog_thread(void *arg) {
 	  (diff > 16)&&
 	  (first_acquisition==0))  {// we're too late so exit
 	exm->watchdog_exit = 1;
-        printf("exiting, too late to keep up\n");
+        printf("exiting, too late to keep up - diff = %d\n", diff);
       }
       first_acquisition=0;
 
@@ -442,7 +452,7 @@ static void *watchdog_thread(void *arg) {
 	cnt_diff0++;
 	if (cnt_diff0 == 10) {
 	  exm->watchdog_exit = 1;
-	  printf("exiting, HW stopped\n");
+	  printf("exiting, HW stopped %llu\n", cnt_diff0);
 	}
       }
       else
@@ -453,9 +463,11 @@ static void *watchdog_thread(void *arg) {
 	  (exm->ts - exm->last_ts_rx > exm->samples_per_frame)) {
 	exm->watchdog_exit = 1;
 	printf("RX Overflow, exiting (TS %llu, TS last read %llu)\n",
-	       exm->ts,exm->last_ts_rx);
+	       (long long unsigned int)exm->ts,(long long unsigned int)exm->last_ts_rx);
       }
       //      printf("ts %lu, last_ts_rx %lu, mbox %d, diff %d\n",exm->ts, exm->last_ts_rx,mbox,diff);
+      
+      if ( !ret )
       pthread_mutex_unlock(&exm->watchdog_mutex);
     }
     else {
@@ -582,15 +594,15 @@ int trx_exmimo_read(openair0_device *device, openair0_timestamp *ptimestamp, voi
 #endif
   for (n=n1,ntot=0;ntot<nsamps;n=n2) {
     while ((ts < exm->last_ts_rx + n) && 
-	   (exm->watchdog_exit==0)) {
+        (exm->watchdog_exit==0)) {
       
       diff = exm->last_ts_rx+n - ts; // difference in samples between current timestamp and last RX received sample
       // go to sleep until we should have enough samples (1024 for a bit more)
 #ifdef DEBUG_EXMIMO
-      printf("portion %d samples, ts %lu, last_ts_rx %lu (%lu) => sleeping %u us\n",n,ts,exm->last_ts_rx,exm->last_ts_rx+n,
+      printf("portion %d samples, (n1, n2) = (%d, %d), ts %lu, last_ts_rx %lu (%lu) => sleeping %u us\n",n,n1,n2,ts,exm->last_ts_rx,exm->last_ts_rx+n,
 	     (unsigned int)((double)(diff+1024)*1e6/cfg->sample_rate));
 #endif
-      tv_nsec=(unsigned long)((double)(diff+3840)*1e9/cfg->sample_rate);
+      tv_nsec=(unsigned long)((double)(diff+1024)*1e9/cfg->sample_rate);
       //    tv_nsec = 500000L;
       old_ts = ts;
       rt_sleep(&sleep_time,tv_nsec);

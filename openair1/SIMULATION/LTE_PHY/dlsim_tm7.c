@@ -76,6 +76,8 @@ double t_rx_min = 1000000000; /*!< \brief initial min process time for rx */
 int n_tx_dropped = 0; /*!< \brief initial max process time for tx */
 int n_rx_dropped = 0; /*!< \brief initial max process time for rx */
 
+char   tdd_recip_calib_file[1024];
+
 void handler(int sig)
 {
   void *array[10];
@@ -124,7 +126,6 @@ int main(int argc, char **argv)
   //int32_t **cell_spec_bf_weights;
   int32_t *ue_spec_bf_weights;
   uint8_t tdd_calib=0;
-  char   tdd_recip_calib_file[1024];
 
   int eNB_id = 0, eNB_id_i = 1;
   unsigned char mcs1=0,mcs2=0,mcs_i=0,dual_stream_UE = 0,awgn_flag=0,round,dci_flag=0;
@@ -263,7 +264,7 @@ int main(int argc, char **argv)
   //  num_layers = 1;
   perfect_ce = 0;
 
-  while ((c = getopt (argc, argv, "ahdpZDe:Em:n:o:s:f:t:c:g:r:F:x:p:y:z:AM:N:I:i:O:R:S:C:T:b:u:v:w:B:PLl:WXY")) != -1) {
+  while ((c = getopt (argc, argv, "ahdpZDe:Em:n:o:s:f:t:c:g:r:F:W:x:p:y:z:AM:N:I:i:O:R:S:C:T:b:u:v:w:B:PLl:XY")) != -1) {
     switch (c) {
     case 'a':
       awgn_flag = 1;
@@ -534,7 +535,18 @@ int main(int argc, char **argv)
       break;
 
     case 'W':
-      tdd_calib=1;
+      if ((strcmp("null", optarg) == 0) || (strcmp("NULL", optarg) == 0)) {
+      //if (strlen(optarg) == 0){
+        printf("No tdd reciprocity filename is provided\n");
+      }
+      else if (strlen(optarg)<=1024){
+        strcpy(tdd_recip_calib_file,optarg);
+        tdd_calib = 1;
+      }else {
+        printf("TDD calibration filename is too long\n");
+        exit(-1);
+      }
+
       break;
 
     case 'X':
@@ -3235,6 +3247,7 @@ PMI_FEEDBACK:
                   rx_pdcch(&UE->common_vars,
                            UE->pdcch_vars,
                            &UE->frame_parms,
+                           0, // frame
                            subframe,
                            0,
                            (UE->frame_parms.mode1_flag == 1) ? SISO : ALAMOUTI,
@@ -3441,6 +3454,7 @@ PMI_FEEDBACK:
                                  PDSCH,
                                  eNB_id,
                                  eNB_id_i,
+                                 0, // frame
                                  subframe,
                                  m,
                                  (m==UE->pdcch_vars[0]->num_pdcch_symbols)?1:0,
@@ -3466,6 +3480,7 @@ PMI_FEEDBACK:
                                  PDSCH,
                                  eNB_id,
                                  eNB_id_i,
+                                 0, // frame
                                  subframe,
                                  m,
                                  0,
@@ -3491,6 +3506,7 @@ PMI_FEEDBACK:
                                  PDSCH,
                                  eNB_id,
                                  eNB_id_i,
+                                 0, // frame
                                  subframe,
                                  m,
                                  0,

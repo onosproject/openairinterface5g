@@ -49,9 +49,9 @@ void estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, LTE_eNB_PUSCH *p
      shift = log2_approx(ulsch_power[aa]*beta)>>1;
      //printf("ulsch_power[%d]=%d\n", aa, ulsch_power[aa]);
      // Temporal implementation for 5MHz band
-     multadd_cpx_vector((int16_t*)(&tdd_calib_coeffs[aa][12]),(int16_t*)(&ul_ch_estimates[aa][12]),(int16_t*)(&calib_dl_ch_estimates[aa][12]),1,20*12,shift);
+     //multadd_cpx_vector((int16_t*)(&tdd_calib_coeffs[aa][12]),(int16_t*)(&ul_ch_estimates[aa][12]),(int16_t*)(&calib_dl_ch_estimates[aa][12]),1,20*12,shift);
 
-    //multadd_cpx_vector((int16_t*)(&tdd_calib_coeffs[aa][0]),(int16_t*)(&ul_ch_estimates[aa][0]),(int16_t*)(&calib_dl_ch_estimates[aa][0]),1,frame_parms->N_RB_DL*12,15);
+     multadd_cpx_vector((int16_t*)(&tdd_calib_coeffs[aa][0]),(int16_t*)(&ul_ch_estimates[aa][0]),(int16_t*)(&calib_dl_ch_estimates[aa][0]),1,frame_parms->N_RB_DL*12,9);
 
 /*
     for (re=12; re<20*12; re++) {
@@ -96,7 +96,7 @@ void compute_BF_weights(int32_t **beam_weights, int32_t **calib_dl_ch_estimates,
              ((int16_t*)(&beam_weights[aa][frame_parms->first_carrier_offset+re]))[1]);*/
     }
 
-    //for (re=frame_parms->N_RB_DL*6; re<frame_parms->N_RB_DL*12; re++) {
+   // for (re=frame_parms->N_RB_DL*6; re<frame_parms->N_RB_DL*12; re++) {
     for (re=frame_parms->N_RB_DL*6; re<20*12; re++) {
       //normalisation simplied by a constent shift
       ((int16_t*)(&beam_weights[aa][re-frame_parms->N_RB_DL*6+1]))[0] = ((int16_t*)(&calib_dl_ch_estimates[aa][re]))[0]<<norm_factor;
