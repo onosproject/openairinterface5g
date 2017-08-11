@@ -11,7 +11,7 @@
 #include <SoapySDR/Device.hpp>
 #include <SoapySDR/Formats.hpp>
 #include <SoapySDR/Time.hpp>
-#include <boost/format.hpp>
+//#include <boost/format.hpp>
 #include <iostream>
 #include <complex>
 #include <fstream>
@@ -519,7 +519,7 @@ extern "C" {
 	{
 	    s->iris[r]->setMasterClockRate(8*openair0_cfg[0].sample_rate); // sample*8=clock_rate for Soapy
 	    // display Iris settings
-	    std::cout << boost::format("Actual master clock: %fMHz...") % (s->iris[r]->getMasterClockRate()/1e6) << std::endl;
+	    printf("Actual master clock: %fMHz...\n", (s->iris[r]->getMasterClockRate()/1e6));
 
 
 	    for(i=0; i < s->iris[r]->getNumChannels(SOAPY_SDR_RX); i++) {
@@ -575,22 +575,22 @@ extern "C" {
 	    for (i = 0; i < openair0_cfg[0].rx_num_channels; i++) {
 		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_RX)) {
 		    printf("RX Channel %lu\n",i);
-		    std::cout << boost::format("Actual RX sample rate: %fMSps...") % (s->iris[r]->getSampleRate(SOAPY_SDR_RX, i)/1e6) << std::endl;
-		    std::cout << boost::format("Actual RX frequency: %fGHz...") % (s->iris[r]->getFrequency(SOAPY_SDR_RX, i)/1e9) << std::endl;
-		    std::cout << boost::format("Actual RX gain: %f...") % (s->iris[r]->getGain(SOAPY_SDR_RX, i)) << std::endl;
-		    std::cout << boost::format("Actual RX bandwidth: %fM...") % (s->iris[r]->getBandwidth(SOAPY_SDR_RX, i)/1e6) << std::endl;
-		    std::cout << boost::format("Actual RX antenna: %s...") % (s->iris[r]->getAntenna(SOAPY_SDR_RX, i)) << std::endl;
+		    printf("Actual RX sample rate: %fMSps...", (s->iris[r]->getSampleRate(SOAPY_SDR_RX, i)/1e6) );
+		    printf("Actual RX frequency: %fGHz...", (s->iris[r]->getFrequency(SOAPY_SDR_RX, i)/1e9) );
+		    printf("Actual RX gain: %f...", (s->iris[r]->getGain(SOAPY_SDR_RX, i)) );
+		    printf("Actual RX bandwidth: %fM...", (s->iris[r]->getBandwidth(SOAPY_SDR_RX, i)/1e6) );
+		    printf("Actual RX antenna: %s...", (s->iris[r]->getAntenna(SOAPY_SDR_RX, i)) );
 		}
 	    }
 
 	    for (i=0;i<openair0_cfg[0].tx_num_channels;i++) {
 		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_TX)) {
 		    printf("TX Channel %lu\n",i);
-		    std::cout << std::endl<<boost::format("Actual TX sample rate: %fMSps...") % (s->iris[r]->getSampleRate(SOAPY_SDR_TX, i)/1e6) << std::endl;
-		    std::cout << boost::format("Actual TX frequency: %fGHz...") % (s->iris[r]->getFrequency(SOAPY_SDR_TX, i)/1e9) << std::endl;
-		    std::cout << boost::format("Actual TX gain: %f...") % (s->iris[r]->getGain(SOAPY_SDR_TX, i)) << std::endl;
-		    std::cout << boost::format("Actual TX bandwidth: %fM...") % (s->iris[r]->getBandwidth(SOAPY_SDR_TX, i)/1e6) << std::endl;
-		    std::cout << boost::format("Actual TX antenna: %s...") % (s->iris[r]->getAntenna(SOAPY_SDR_TX, i)) << std::endl;
+		    printf("Actual TX sample rate: %fMSps...", (s->iris[r]->getSampleRate(SOAPY_SDR_TX, i)/1e6) );
+		    printf("Actual TX frequency: %fGHz...", (s->iris[r]->getFrequency(SOAPY_SDR_TX, i)/1e9) );
+		    printf("Actual TX gain: %f...", (s->iris[r]->getGain(SOAPY_SDR_TX, i)) );
+		    printf("Actual TX bandwidth: %fM...", (s->iris[r]->getBandwidth(SOAPY_SDR_TX, i)/1e6) );
+		    printf("Actual TX antenna: %s...", (s->iris[r]->getAntenna(SOAPY_SDR_TX, i)) );
 		}
 	    }
 	}
@@ -599,7 +599,7 @@ extern "C" {
 	    s->iris[r]->setHardwareTime(0, "TRIGGER");
 	s->iris[0]->writeSetting("TRIGGER_GEN","");
 	for (r = 0; r < s->device_num; r++)
-	    std::cout << boost::format("Device timestamp: %f...") % (s->iris[r]->getHardwareTime("TRIG")/1e9) << std::endl;
+	    printf("Device timestamp: %f...", (s->iris[r]->getHardwareTime("TRIG")/1e9) );
 
 	device->priv = s;
 	device->trx_start_func = trx_iris_start;
