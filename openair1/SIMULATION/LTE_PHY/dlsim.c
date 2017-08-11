@@ -51,7 +51,6 @@
 
 #include "unitary_defs.h"
 
-
 #include "PHY/TOOLS/lte_phy_scope.h"
 
 PHY_VARS_eNB *eNB;
@@ -92,35 +91,7 @@ uint64_t DLSCH_alloc_pdu_1[2];
 #define CCCH_RB_ALLOC computeRIV(eNB->frame_parms.N_RB_UL,0,2)
 //#define DLSCH_RB_ALLOC 0x1fbf // igore DC component,RB13
 //#define DLSCH_RB_ALLOC 0x0001
-void do_OFDM_mod_l(int32_t **txdataF, int32_t **txdata, uint16_t next_slot, LTE_DL_FRAME_PARMS *frame_parms)
-{
 
-  int aa, slot_offset, slot_offset_F;
-
-  slot_offset_F = (next_slot)*(frame_parms->ofdm_symbol_size)*((frame_parms->Ncp==1) ? 6 : 7);
-  slot_offset = (next_slot)*(frame_parms->samples_per_tti>>1);
-
-  for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-    //    printf("Thread %d starting ... aa %d (%llu)\n",omp_get_thread_num(),aa,rdtsc());
-
-    if (frame_parms->Ncp == 1)
-      PHY_ofdm_mod(&txdataF[aa][slot_offset_F],        // input
-                   &txdata[aa][slot_offset],         // output
-                   frame_parms->ofdm_symbol_size,
-                   6,                 // number of symbols
-                   frame_parms->nb_prefix_samples,               // number of prefix samples
-                   CYCLIC_PREFIX);
-    else {
-      normal_prefix_mod(&txdataF[aa][slot_offset_F],
-                        &txdata[aa][slot_offset],
-                        7,
-                        frame_parms);
-    }
-
-
-  }
-
-}
 
 void DL_channel(PHY_VARS_eNB *eNB,PHY_VARS_UE *UE,int subframe,int awgn_flag,double SNR, int tx_lev,int hold_channel,int abstx, int num_rounds, int trials, int round, channel_desc_t *eNB2UE[4],
 		double *s_re[2],double *s_im[2],double *r_re[2],double *r_im[2],FILE *csv_fd) {
@@ -1110,7 +1081,6 @@ fill_DCI (
         *num_common_dci = *num_common_dci + 1;
         *num_dci = *num_dci + 1;
       }
-
       break;
 
     case 5:
@@ -1130,6 +1100,116 @@ fill_DCI (
       *num_ue_spec_dci = *num_ue_spec_dci + 1;
       *num_dci = *num_dci + 1;
       break;
+
+    case 8:
+        if (common_flag == 0) {
+	  if (eNB->frame_parms.frame_type == TDD) {
+	    switch (eNB->frame_parms.N_RB_DL) {
+	    case 6:
+	      dci_length = sizeof_DCI2B_1_5MHz_TDD_t;
+                dci_length_bytes = sizeof(DCI2B_1_5MHz_TDD_t);
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rballoc          = DLSCH_RB_ALLOC;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->scrambling_id    = 0;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->TPC              = 0;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->dai              = 0;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->harq_pid         = 0;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs1             = mcs1;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi1             = ndi1;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv1              = rv1;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs2             = mcs2;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi2             = ndi2;
+                ((DCI2B_1_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv2              = rv2;
+                break;
+
+              case 25:
+                dci_length = sizeof_DCI2B_5MHz_TDD_t;
+                dci_length_bytes = sizeof(DCI2B_5MHz_TDD_t);
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rah              = 0;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->scrambling_id    = 0;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rballoc          = DLSCH_RB_ALLOC;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->TPC              = 0;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->dai              = 0;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->harq_pid         = 0;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs1             = mcs1;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi1             = ndi1;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv1              = rv1;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs2             = mcs2;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi2             = ndi2;
+                ((DCI2B_5MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv2              = rv2;
+                break;
+
+              case 50:
+                dci_length = sizeof_DCI2B_10MHz_TDD_t;
+                dci_length_bytes = sizeof(DCI2B_10MHz_TDD_t);
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rah              = 0;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->scrambling_id    = 0;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rballoc          = DLSCH_RB_ALLOC;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->TPC              = 0;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->dai              = 0;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->harq_pid         = 0;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs1             = mcs1;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi1             = ndi1;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv1              = rv1;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs2             = mcs2;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi2             = ndi2;
+                ((DCI2B_10MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv2              = rv2;
+                break;
+
+              case 100:
+                dci_length = sizeof_DCI2B_20MHz_TDD_t;
+                dci_length_bytes = sizeof(DCI2B_20MHz_TDD_t);
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rah              = 0;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->scrambling_id    = 0;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rballoc          = DLSCH_RB_ALLOC;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->TPC              = 0;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->dai              = 0;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->harq_pid         = 0;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs1             = mcs1;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi1             = ndi1;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv1              = rv1;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->mcs2             = mcs2;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->ndi2             = ndi2;
+                ((DCI2B_20MHz_TDD_t *)&DLSCH_alloc_pdu_1[k])->rv2              = rv2;
+                break;
+              }
+            }
+
+            else {
+	      printf("FDD DCI alloc todo!\n");
+	      exit(-1);
+	    }
+          memcpy(&dci_alloc[*num_dci].dci_pdu[0],&DLSCH_alloc_pdu_1[k],dci_length_bytes);
+          dci_alloc[*num_dci].dci_length = dci_length;
+          dci_alloc[*num_dci].L          = 1;
+          dci_alloc[*num_dci].rnti       = n_rnti+k;
+          dci_alloc[*num_dci].format     = format2B;
+          dump_dci(&eNB->frame_parms,&dci_alloc[*num_dci]);
+
+          //printf("Generating dlsch params for user %d / format 2A (%d)\n",k,format2A);
+          generate_eNB_dlsch_params_from_dci(0,
+					     subframe,
+                                             &DLSCH_alloc_pdu_1[0],
+                                             n_rnti+k,
+                                             format2B,
+                                             eNB->dlsch[0],
+                                             &eNB->frame_parms,
+                                             eNB->pdsch_config_dedicated,
+                                             SI_RNTI,
+                                             0,
+                                             P_RNTI,
+                                             eNB->UE_stats[0].DL_pmi_single,
+					     transmission_mode>=7?transmission_mode:0);
+
+          *num_dci = *num_dci + 1;
+          *num_ue_spec_dci = *num_ue_spec_dci + 1;
+
+        }
+	else {
+	  printf("DCI format 2B does not support common RNTIs\n");
+	}
+
+        printf("Generated DCI format 2B (Transmission Mode 8)\n");
+        break;
 
     default:
       printf ("Unsupported Transmission Mode!!!");
@@ -1189,7 +1269,7 @@ int main(int argc, char **argv)
 {
 
   int c;
-  int k,i,aa;
+  int k,i,aa,p;
   int re;
 
   int s,Kr,Kr_bytes;
@@ -1243,34 +1323,21 @@ int main(int argc, char **argv)
 
   char input_trch_val[16];
 
-  //  unsigned char pbch_pdu[6];
-
   int tpmi = 0;
-
-
-  //  FILE *rx_frame_file;
 
   int n_frames;
   int n_ch_rlz = 1;
   channel_desc_t *eNB2UE[4];
-  //uint8_t num_pdcch_symbols_2=0;
   uint8_t rx_sample_offset = 0;
-  //char stats_buffer[4096];
-  //int len;
   uint8_t num_rounds = 4;//,fix_rounds=0;
 
-  //int u;
   int n=0;
   int abstx=0;
-  //int iii;
 
   int ch_realization;
   //int pmi_feedback=0;
   int hold_channel=0;
 
-  // void *data;
-  // int ii;
-  //  int bler;
   double blerr[4],uncoded_ber; //,avg_ber;
   short *uncoded_ber_bit=NULL;
   uint8_t N_RB_DL=25,osf=1;
@@ -1280,12 +1347,9 @@ int main(int argc, char **argv)
   char title[255];
 
   int numCCE=0;
-  //int dci_length_bytes=0,dci_length=0;
-  //double channel_bandwidth = 5.0, sampling_rate=7.68;
   int common_flag=0,TPC=0;
 
   double cpu_freq_GHz;
-  //  time_stats_t ts;//,sts,usts;
   int avg_iter,iter_trials;
   int rballocset=0;
   int print_perf=0;
@@ -1320,8 +1384,18 @@ int main(int argc, char **argv)
   int two_thread_flag=0;
   int DLSCH_RB_ALLOC = 0;
 
-  int log_level = LOG_ERR;
+  int log_level = LOG_DEBUG;
   int dci_received;
+
+  logInit();
+  // enable these lines if you need debug info
+  set_comp_log(PHY,LOG_DEBUG,LOG_HIGH,1);
+  set_glog(log_level,LOG_HIGH);
+  // moreover you need to init itti with the following line
+  // however itti will catch all signals, so ctrl-c won't work anymore
+  // alternatively you can disable ITTI completely in CMakeLists.txt
+  //itti_init(TASK_MAX, THREAD_MAX, MESSAGES_ID_MAX, tasks_info, messages_info, messages_definition_xml, NULL);
+
 
 #if defined(__arm__)
   FILE    *proc_fd = NULL;
@@ -1621,12 +1695,13 @@ int main(int argc, char **argv)
           (transmission_mode!=4) &&
           (transmission_mode!=5) &&
           (transmission_mode!=6) &&
-          (transmission_mode!=7)) {
+          (transmission_mode!=7) &&
+          (transmission_mode!=8)) {
         msg("Unsupported transmission mode %d\n",transmission_mode);
         exit(-1);
       }
 
-      if (transmission_mode>1 && transmission_mode<7) {
+      if (transmission_mode>1 && transmission_mode<8) {
         n_tx_port = 2;
       }
 
@@ -1636,7 +1711,7 @@ int main(int argc, char **argv)
       n_tx_phy=atoi(optarg);
 
       if (n_tx_phy < n_tx_port) {
-        msg("n_tx_phy mush not be smaller than n_tx_port");
+        msg("n_tx_phy must not be smaller than n_tx_port");
         exit(-1);
       }
 
@@ -1677,6 +1752,7 @@ int main(int argc, char **argv)
 
     case 'L':
       log_level=atoi(optarg);
+      set_glog(log_level,LOG_HIGH);
       break;
 
     case 'h':
@@ -1716,16 +1792,6 @@ int main(int argc, char **argv)
       break;
     }
   }
-
-  logInit();
-  // enable these lines if you need debug info
-  set_comp_log(PHY,LOG_DEBUG,LOG_HIGH,1);
-  set_glog(log_level,LOG_HIGH);
-  // moreover you need to init itti with the following line
-  // however itti will catch all signals, so ctrl-c won't work anymore
-  // alternatively you can disable ITTI completely in CMakeLists.txt
-  //itti_init(TASK_MAX, THREAD_MAX, MESSAGES_ID_MAX, tasks_info, messages_info, messages_definition_xml, NULL);
-
 
   if (common_flag == 0) {
     switch (N_RB_DL) {
@@ -2321,9 +2387,11 @@ int main(int argc, char **argv)
 	  //PMI_FEEDBACK:
 
           //  printf("Trial %d : Round %d, pmi_feedback %d \n",trials,round,pmi_feedback);
-          for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++) {
-            memset(&eNB->common_vars.txdataF[eNB_id][aa][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(int32_t));
-          }
+	  for (p=0; p<NB_ANTENNA_PORTS_ENB; p++) {
+	    if (p<frame_parms->nb_antenna_ports_eNB || p==5 || i==7 || i==8) {
+	      memset(&eNB->common_vars.txdataF[eNB_id][p][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(int32_t));
+	    }
+	  }
 
           if (input_fd==NULL) {
 
@@ -2405,18 +2473,6 @@ int main(int argc, char **argv)
 
 	    start_meas(&eNB->ofdm_mod_stats);
 
-            /*
-	    do_OFDM_mod_l(eNB->common_vars.txdataF[eNB_id],
-			  eNB->common_vars.txdata[eNB_id],
-			  (subframe*2),
-			  &eNB->frame_parms);
-
-	    do_OFDM_mod_l(eNB->common_vars.txdataF[eNB_id],
-			  eNB->common_vars.txdata[eNB_id],
-			  (subframe*2)+1,
-			  &eNB->frame_parms);
-	    */
-
             do_OFDM_mod_symbol(&eNB->common_vars,
                                eNB_id,
                                (subframe*2),
@@ -2438,10 +2494,11 @@ int main(int argc, char **argv)
 
 	    phy_procedures_eNB_TX(eNB,proc_eNB,no_relay,NULL,0,dci_flag);
 
-	    do_OFDM_mod_l(eNB->common_vars.txdataF[eNB_id],
-			  eNB->common_vars.txdata[eNB_id],
-			  (subframe*2)+2,
-			  &eNB->frame_parms);
+	    do_OFDM_mod_symbol(&eNB->common_vars,
+			       eNB_id,
+			       (subframe*2)+2,
+			       &eNB->frame_parms,
+			       eNB->do_precoding);
 
 
 	    proc_eNB->frame_tx++;
@@ -2462,13 +2519,14 @@ int main(int argc, char **argv)
 
               write_output("txsig0.m","txs0", &eNB->common_vars.txdata[eNB_id][0][subframe* eNB->frame_parms.samples_per_tti], eNB->frame_parms.samples_per_tti,1,1);
 
-              if (transmission_mode<7) {
-	        write_output("txsigF0.m","txsF0", &eNB->common_vars.txdataF[eNB_id][0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
-              } else if (transmission_mode == 7) {
-                write_output("txsigF0.m","txsF0", &eNB->common_vars.txdataF[eNB_id][5][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
-                write_output("txsigF0_BF.m","txsF0_BF", &eNB->common_vars.txdataF_BF[eNB_id][0][0],eNB->frame_parms.ofdm_symbol_size,1,1);
-              }
-            }
+	      for (p=0; p<NB_ANTENNA_PORTS_ENB; p++) {
+		if (p<frame_parms->nb_antenna_ports_eNB || p==5 || p==7 || p==8) {
+		  sprintf(fname,"txsigF%d.m",p);
+		  sprintf(vname,"txsF%d",p);
+		  write_output(fname,vname, &eNB->common_vars.txdataF[eNB_id][p][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+		}
+	      }
+	    }
 	  }
 
 	  DL_channel(eNB,UE,subframe,awgn_flag,SNR,tx_lev,hold_channel,abstx,num_rounds,trials,round,eNB2UE,s_re,s_im,r_re,r_im,csv_fd);

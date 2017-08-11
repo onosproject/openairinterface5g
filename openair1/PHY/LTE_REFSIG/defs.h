@@ -42,11 +42,12 @@ unsigned int lte_gold_generic(unsigned int *x1, unsigned int *x2, unsigned char 
 @param frame_parms LTE DL Frame parameters
 @param lte_gold_table pointer to table where sequences are stored
 @param Nid_cell Cell Id (to compute sequences for local and adjacent cells) */
-
 void lte_gold(LTE_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_table[20][2][14],uint16_t Nid_cell);
 
-void lte_gold_ue_spec(LTE_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_uespec_table[2][20][2][21],uint16_t Nid_cell, uint16_t *n_idDMRS);
+/*! \brief This function generates the LTE Gold sequence for DL UE-specific pilots for antenna ports 7,...,14 (transmission modes 8/9) */
+void lte_gold_ue_spec(uint32_t lte_gold_uespec_table[2][20][2][21],uint16_t Nid_cell, uint16_t *n_idDMRS);
 
+/*! \brief This function generates the LTE Gold sequence for DL UE-specific pilots for antenna port 5 (transmission mode 7) */
 void lte_gold_ue_spec_port5(uint32_t lte_gold_uespec_port5_table[20][38],uint16_t Nid_cell, uint16_t n_rnti);
 
 /*!\brief This function generates the LTE Gold sequence (36-211, Sec 7.2), specifically for DL UE-specific reference signals for antenna ports 7..14.
@@ -54,7 +55,6 @@ void lte_gold_ue_spec_port5(uint32_t lte_gold_uespec_port5_table[20][38],uint16_
 @param lte_gold_uespec_table pointer to table where sequences are stored
 @param Nid_cell Cell Id (to compute sequences for local and adjacent cells)
 @param n_idDMRS Scrambling identity for TM10*/
-
 void lte_gold_mbsfn(LTE_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_mbsfn_table[10][3][42],uint16_t Nid_MBSFN);
 
 

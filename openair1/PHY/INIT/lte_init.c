@@ -692,6 +692,11 @@ void phy_config_dedicated_eNB(uint8_t Mod_id,
         eNB->do_precoding = 1;
         eNB->transmission_mode[UE_id] = 7;
         break;
+      case AntennaInfoDedicated__transmissionMode_tm8_v920:
+        lte_gold_ue_spec(eNB->lte_gold_uespec_table,eNB->frame_parms.Nid_cell,NULL);
+        eNB->do_precoding = 1;
+        eNB->transmission_mode[UE_id] = 8;
+        break;
       default:
         LOG_E(PHY,"Unknown transmission mode!\n");
         break;
@@ -1411,7 +1416,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
 
       if (eNB->node_function != NGFI_RRU_IF5) {
         for (i=0; i<NB_ANTENNA_PORTS_ENB; i++) {
-          if (i<fp->nb_antenna_ports_eNB || i==5) {
+          if (i<fp->nb_antenna_ports_eNB || i==5 || i==7 || i==8) {
             common_vars->txdataF[eNB_id][i] = (int32_t*)malloc16_clear(fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t) );
 #ifdef DEBUG_PHY
             printf("[openair][LTE_PHY][INIT] common_vars->txdataF[%d][%d] = %p (%lu bytes)\n",
@@ -1436,7 +1441,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
       }
 
       for (i=0; i<NB_ANTENNA_PORTS_ENB; i++) {
-        if (i<fp->nb_antenna_ports_eNB || i==5) {
+        if (i<fp->nb_antenna_ports_eNB || i==5 || i==7 || i==8) {
           common_vars->beam_weights[eNB_id][i] = (int32_t **)malloc16_clear(fp->nb_antennas_tx*sizeof(int32_t*));
           for (j=0; j<fp->nb_antennas_tx; j++) {
             common_vars->beam_weights[eNB_id][i][j] = (int32_t *)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t));
@@ -1637,6 +1642,9 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
 
     init_prach_tables(839);
   } // node_function != NGFI_RRU_IF4p5
+
+  /*init the ue spec reference sequence for TM8/9*/
+  lte_gold_ue_spec(eNB->lte_gold_uespec_table,eNB->frame_parms.Nid_cell, NULL);
 
   return (0);
 

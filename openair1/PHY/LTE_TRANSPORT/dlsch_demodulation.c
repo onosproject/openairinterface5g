@@ -29,7 +29,7 @@
  * \note
  * \warning
  */
-//#include "PHY/defs.h"
+#include "PHY/defs.h"
 #include "PHY/extern.h"
 #include "SCHED/defs.h"
 #include "defs.h"
