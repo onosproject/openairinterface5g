@@ -92,35 +92,7 @@ uint64_t DLSCH_alloc_pdu_1[2];
 #define CCCH_RB_ALLOC computeRIV(eNB->frame_parms.N_RB_UL,0,2)
 //#define DLSCH_RB_ALLOC 0x1fbf // igore DC component,RB13
 //#define DLSCH_RB_ALLOC 0x0001
-void do_OFDM_mod_l(int32_t **txdataF, int32_t **txdata, uint16_t next_slot, LTE_DL_FRAME_PARMS *frame_parms)
-{
 
-  int aa, slot_offset, slot_offset_F;
-
-  slot_offset_F = (next_slot)*(frame_parms->ofdm_symbol_size)*((frame_parms->Ncp==1) ? 6 : 7);
-  slot_offset = (next_slot)*(frame_parms->samples_per_tti>>1);
-
-  for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-    //    printf("Thread %d starting ... aa %d (%llu)\n",omp_get_thread_num(),aa,rdtsc());
-
-    if (frame_parms->Ncp == 1)
-      PHY_ofdm_mod(&txdataF[aa][slot_offset_F],        // input
-                   &txdata[aa][slot_offset],         // output
-                   frame_parms->ofdm_symbol_size,
-                   6,                 // number of symbols
-                   frame_parms->nb_prefix_samples,               // number of prefix samples
-                   CYCLIC_PREFIX);
-    else {
-      normal_prefix_mod(&txdataF[aa][slot_offset_F],
-                        &txdata[aa][slot_offset],
-                        7,
-                        frame_parms);
-    }
-
-
-  }
-
-}
 
 void DL_channel(PHY_VARS_eNB *eNB,PHY_VARS_UE *UE,int subframe,int awgn_flag,double SNR, int tx_lev,int hold_channel,int abstx, int num_rounds, int trials, int round, channel_desc_t *eNB2UE[4],
 		double *s_re[2],double *s_im[2],double *r_re[2],double *r_im[2],FILE *csv_fd) {
@@ -1374,7 +1346,7 @@ int main(int argc, char **argv)
 {
 
   int c;
-  int k,i,aa;
+  int k,i,aa,p;
   int re;
 
   int s,Kr,Kr_bytes;
@@ -1428,34 +1400,19 @@ int main(int argc, char **argv)
 
   char input_trch_val[16];
 
-  //  unsigned char pbch_pdu[6];
-
-
-
-
-  //  FILE *rx_frame_file;
-
   int n_frames;
   int n_ch_rlz = 1;
   channel_desc_t *eNB2UE[4];
-  //uint8_t num_pdcch_symbols_2=0;
   uint8_t rx_sample_offset = 0;
-  //char stats_buffer[4096];
-  //int len;
   uint8_t num_rounds = 4;//,fix_rounds=0;
 
-  //int u;
   int n=0;
   int abstx=0;
-  //int iii;
 
   int ch_realization;
   //int pmi_feedback=0;
   int hold_channel=0;
 
-  // void *data;
-  // int ii;
-  //  int bler;
   double blerr[4],uncoded_ber; //,avg_ber;
   short *uncoded_ber_bit=NULL;
   uint8_t N_RB_DL=25,osf=1;
@@ -1465,12 +1422,9 @@ int main(int argc, char **argv)
   char title[255];
 
   int numCCE=0;
-  //int dci_length_bytes=0,dci_length=0;
-  //double channel_bandwidth = 5.0, sampling_rate=7.68;
   int common_flag=0,TPC=0;
 
   double cpu_freq_GHz;
-  //  time_stats_t ts;//,sts,usts;
   int avg_iter,iter_trials;
   int rballocset=0;
   int print_perf=0;
@@ -2471,9 +2425,11 @@ int main(int argc, char **argv)
 	  //PMI_FEEDBACK:
 
           //  printf("Trial %d : Round %d, pmi_feedback %d \n",trials,round,pmi_feedback);
-          for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++) {
-            memset(&eNB->common_vars.txdataF[eNB_id][aa][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(int32_t));
-          }
+	  for (p=0; p<NB_ANTENNA_PORTS_ENB; p++) {
+	    if (p<frame_parms->nb_antenna_ports_eNB || p==5 || i==7 || i==8) {
+	      memset(&eNB->common_vars.txdataF[eNB_id][p][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(int32_t));
+	    }
+	  }
 
           if (input_fd==NULL) {
 
@@ -2555,18 +2511,6 @@ int main(int argc, char **argv)
 
 	    start_meas(&eNB->ofdm_mod_stats);
 
-            /*
-	    do_OFDM_mod_l(eNB->common_vars.txdataF[eNB_id],
-			  eNB->common_vars.txdata[eNB_id],
-			  (subframe*2),
-			  &eNB->frame_parms);
-
-	    do_OFDM_mod_l(eNB->common_vars.txdataF[eNB_id],
-			  eNB->common_vars.txdata[eNB_id],
-			  (subframe*2)+1,
-			  &eNB->frame_parms);
-	    */
-
             do_OFDM_mod_symbol(&eNB->common_vars,
                                eNB_id,
                                (subframe*2),
@@ -2588,10 +2532,11 @@ int main(int argc, char **argv)
 
 	    phy_procedures_eNB_TX(eNB,proc_eNB,no_relay,NULL,0,dci_flag);
 
-	    do_OFDM_mod_l(eNB->common_vars.txdataF[eNB_id],
-			  eNB->common_vars.txdata[eNB_id],
-			  (subframe*2)+2,
-			  &eNB->frame_parms);
+	    do_OFDM_mod_symbol(&eNB->common_vars,
+			       eNB_id,
+			       (subframe*2)+2,
+			       &eNB->frame_parms,
+			       eNB->do_precoding);
 
 
 	    proc_eNB->frame_tx++;
@@ -2612,13 +2557,14 @@ int main(int argc, char **argv)
 
               write_output("txsig0.m","txs0", &eNB->common_vars.txdata[eNB_id][0][subframe* eNB->frame_parms.samples_per_tti], eNB->frame_parms.samples_per_tti,1,1);
 
-              if (transmission_mode<7) {
-	        write_output("txsigF0.m","txsF0", &eNB->common_vars.txdataF[eNB_id][0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
-              } else if (transmission_mode == 7) {
-                write_output("txsigF0.m","txsF0", &eNB->common_vars.txdataF[eNB_id][5][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
-                write_output("txsigF0_BF.m","txsF0_BF", &eNB->common_vars.txdataF_BF[eNB_id][0][0],eNB->frame_parms.ofdm_symbol_size,1,1);
-              }
-            }
+	      for (p=0; p<NB_ANTENNA_PORTS_ENB; p++) {
+		if (p<frame_parms->nb_antenna_ports_eNB || p==5 || p==7 || p==8) {
+		  sprintf(fname,"txsigF%d.m",p);
+		  sprintf(vname,"txsF%d",p);
+		  write_output(fname,vname, &eNB->common_vars.txdataF[eNB_id][p][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+		}
+	      }
+	    }
 	  }
 
 	  DL_channel(eNB,UE,subframe,awgn_flag,SNR,tx_lev,hold_channel,abstx,num_rounds,trials,round,eNB2UE,s_re,s_im,r_re,r_im,csv_fd);

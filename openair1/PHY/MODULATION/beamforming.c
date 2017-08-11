@@ -56,7 +56,7 @@ int beam_precoding(int32_t **txdataF,
   memset(txdataF_BF[aa],0,sizeof(int32_t)*(frame_parms->ofdm_symbol_size));
 
   for (p=0; p<NB_ANTENNA_PORTS_ENB; p++) {
-    if (p<frame_parms->nb_antenna_ports_eNB || p==5) {
+    if (p<frame_parms->nb_antenna_ports_eNB || p==5 || p==7 || p==8) {
       multadd_cpx_vector((int16_t*)&txdataF[p][slot_offset_F+symbol*frame_parms->ofdm_symbol_size],(int16_t*)beam_weights[p][aa], (int16_t*)txdataF_BF[aa], 0, frame_parms->ofdm_symbol_size, 15);
       //mult_cpx_conj_vector((int16_t*)beam_weights[p][aa], (int16_t*)&txdataF[p][slot_offset_F+symbol*frame_parms->ofdm_symbol_size], (int16_t*)txdataF_BF[aa], frame_parms->ofdm_symbol_size, 15, 1);
 
