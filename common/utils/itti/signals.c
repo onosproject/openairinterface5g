@@ -68,6 +68,7 @@ int signal_mask(void)
   sigaddset (&set, SIGABRT);
   sigaddset (&set, SIGSEGV);
   sigaddset (&set, SIGINT);
+  sigaddset (&set, SIGPIPE);
 
   if (sigprocmask(SIG_BLOCK, &set, NULL) < 0) {
     perror ("sigprocmask");
@@ -89,12 +90,13 @@ int signal_handle(int *end)
   sigaddset (&set, SIGABRT);
   sigaddset (&set, SIGSEGV);
   sigaddset (&set, SIGINT);
-
+  sigaddset (&set, SIGPIPE);
+/*
   if (sigprocmask(SIG_BLOCK, &set, NULL) < 0) {
     perror ("sigprocmask");
     return -1;
   }
-
+*/
   /* Block till a signal is received.
    * NOTE: The signals defined by set are required to be blocked at the time
    * of the call to sigwait() otherwise sigwait() is not successful.
@@ -125,12 +127,13 @@ int signal_handle(int *end)
       backtrace_handle_signal(&info);
       break;
 
+    case SIGPIPE:
     case SIGINT:
       printf("Received SIGINT\n");
       itti_send_terminate_message(TASK_UNKNOWN);
       *end = 1;
       break;
-
+    
     default:
       SIG_ERROR("Received unknown signal %d\n", info.si_signo);
       break;
