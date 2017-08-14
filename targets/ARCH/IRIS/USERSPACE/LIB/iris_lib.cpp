@@ -577,22 +577,22 @@ extern "C" {
 	    for (i = 0; i < openair0_cfg[0].rx_num_channels; i++) {
 		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_RX)) {
 		    printf("RX Channel %lu\n",i);
-		    printf("Actual RX sample rate: %fMSps...", (s->iris[r]->getSampleRate(SOAPY_SDR_RX, i)/1e6) );
-		    printf("Actual RX frequency: %fGHz...", (s->iris[r]->getFrequency(SOAPY_SDR_RX, i)/1e9) );
-		    printf("Actual RX gain: %f...", (s->iris[r]->getGain(SOAPY_SDR_RX, i)) );
-		    printf("Actual RX bandwidth: %fM...", (s->iris[r]->getBandwidth(SOAPY_SDR_RX, i)/1e6) );
-		    printf("Actual RX antenna: %s...", (s->iris[r]->getAntenna(SOAPY_SDR_RX, i)) );
+		    printf("Actual RX sample rate: %fMSps...\n", (s->iris[r]->getSampleRate(SOAPY_SDR_RX, i)/1e6) );
+		    printf("Actual RX frequency: %fGHz...\n", (s->iris[r]->getFrequency(SOAPY_SDR_RX, i)/1e9) );
+		    printf("Actual RX gain: %f...\n", (s->iris[r]->getGain(SOAPY_SDR_RX, i)) );
+		    printf("Actual RX bandwidth: %fM...\n", (s->iris[r]->getBandwidth(SOAPY_SDR_RX, i)/1e6) );
+		    printf("Actual RX antenna: %s...\n", (s->iris[r]->getAntenna(SOAPY_SDR_RX, i).c_str()) );
 		}
 	    }
 
 	    for (i=0;i<openair0_cfg[0].tx_num_channels;i++) {
 		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_TX)) {
 		    printf("TX Channel %lu\n",i);
-		    printf("Actual TX sample rate: %fMSps...", (s->iris[r]->getSampleRate(SOAPY_SDR_TX, i)/1e6) );
-		    printf("Actual TX frequency: %fGHz...", (s->iris[r]->getFrequency(SOAPY_SDR_TX, i)/1e9) );
-		    printf("Actual TX gain: %f...", (s->iris[r]->getGain(SOAPY_SDR_TX, i)) );
-		    printf("Actual TX bandwidth: %fM...", (s->iris[r]->getBandwidth(SOAPY_SDR_TX, i)/1e6) );
-		    printf("Actual TX antenna: %s...", (s->iris[r]->getAntenna(SOAPY_SDR_TX, i)) );
+		    printf("Actual TX sample rate: %fMSps...\n", (s->iris[r]->getSampleRate(SOAPY_SDR_TX, i)/1e6) );
+		    printf("Actual TX frequency: %fGHz...\n", (s->iris[r]->getFrequency(SOAPY_SDR_TX, i)/1e9) );
+		    printf("Actual TX gain: %f...\n", (s->iris[r]->getGain(SOAPY_SDR_TX, i)) );
+		    printf("Actual TX bandwidth: %fM...\n", (s->iris[r]->getBandwidth(SOAPY_SDR_TX, i)/1e6) );
+		    printf("Actual TX antenna: %s...\n", (s->iris[r]->getAntenna(SOAPY_SDR_TX, i).c_str()) );
 		}
 	    }
 	}
@@ -601,7 +601,7 @@ extern "C" {
 	    s->iris[r]->setHardwareTime(0, "TRIGGER");
 	s->iris[0]->writeSetting("TRIGGER_GEN","");
 	for (r = 0; r < s->device_num; r++)
-	    printf("Device timestamp: %f...", (s->iris[r]->getHardwareTime("TRIG")/1e9) );
+	    printf("Device timestamp: %f...\n", (s->iris[r]->getHardwareTime("TRIG")/1e9) );
 
 	device->priv = s;
 	device->trx_start_func = trx_iris_start;
