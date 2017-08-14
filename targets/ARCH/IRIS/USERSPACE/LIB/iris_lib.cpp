@@ -88,12 +88,28 @@ static int trx_iris_start(openair0_device *device)
 	}
 	return 0;
 }
+
+/*! \brief Stop Iris
+ * \param card refers to the hardware index to use
+ */
+int trx_iris_stop(openair0_device* device) {
+    iris_state_t *s = (iris_state_t*)device->priv;
+    int r;
+    for (r = 0; r < s->device_num; r++)
+    {
+	s->iris[r]->deactivateStream(s->txStream[r]);
+	s->iris[r]->deactivateStream(s->rxStream[r]);
+    }
+    return(0);
+}
+
 /*! \brief Terminate operation of the Iris lime transceiver -- free all associated resources 
  * \param device the hardware to use
  */
 static void trx_iris_end(openair0_device *device)
 {
 	LOG_I(HW,"Closing Iris device.\n");
+	trx_iris_stop(device);
 	iris_state_t *s = (iris_state_t*)device->priv;
 	int r;
 	for (r = 0; r < s->device_num; r++)
@@ -353,20 +369,6 @@ int trx_iris_set_gains(openair0_device* device,
     return(0);
 }
 
-/*! \brief Stop Iris
- * \param card refers to the hardware index to use
- */
-int trx_iris_stop(openair0_device* device) {
-    iris_state_t *s = (iris_state_t*)device->priv;
-    int r;
-    for (r = 0; r < s->device_num; r++)
-    {
-	s->iris[r]->deactivateStream(s->txStream[r]);
-	s->iris[r]->deactivateStream(s->rxStream[r]);
-    }
-    return(0);
-}
-
 /*! \brief Iris RX calibration table */
 rx_gain_calib_table_t calib_table_iris[] = {
   {3500000000.0,83},
@@ -469,7 +471,7 @@ extern "C" {
 	while (srl != NULL)
 	{
 	    LOG_I(HW,"Attempting to open Iris device: %s\n", srl);
-	    std::string args = "driver=iris,serial="+std::string(srl)+",remote:format=CS16";
+	    std::string args = "driver=iris,serial="+std::string(srl);
 	    s->iris.push_back(SoapySDR::Device::make(args));
 	    srl = strtok(NULL, ",");
 	}
