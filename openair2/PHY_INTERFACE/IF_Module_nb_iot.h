@@ -158,19 +158,23 @@ typedef struct{
 	module_id_t module_id; 
  	//CC ID
  	int CC_id;
+ 	// hyper subframe
+ 	uint32_t hypersfn;
  	//frame
  	frame_t frame;
  	//subframe
  	sub_frame_t subframe;
 
   	/// nFAPI DL Config Request
-  	nfapi_dl_config_request_body_t *DL_req;
+  	nfapi_dl_config_request_t *DL_req;
   	/// nFAPI UL Config Request
   	nfapi_ul_config_request_t *UL_req;
   	/// nFAPI HI_DCI Request
-  	nfapi_hi_dci0_request_body_t *HI_DCI0_req;
+  	nfapi_hi_dci0_request_t *HI_DCI0_req;
+  	/// nFAPI TX Request
+  	nfapi_tx_request_t        *TX_req; 
   	/// Pointers to DL SDUs
-  	uint8_t **sdu;
+  	//uint8_t **sdu;
 
 }Sched_Rsp_t;
 

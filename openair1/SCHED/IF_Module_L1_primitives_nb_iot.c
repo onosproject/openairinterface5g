@@ -178,10 +178,12 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 
   //module_id_t                     Mod_id    = Sched_INFO->module_id;
   //uint8_t                         CC_id     = Sched_INFO->CC_id;
-  nfapi_dl_config_request_body_t *DL_req    = Sched_INFO->DL_req;
-  nfapi_ul_config_request_t 	 *UL_req    = Sched_INFO->UL_req;
-  nfapi_hi_dci0_request_body_t *HI_DCI0_req = Sched_INFO->HI_DCI0_req;
+  nfapi_dl_config_request_t *DL_req    = Sched_INFO->DL_req;
+  nfapi_ul_config_request_t *UL_req    = Sched_INFO->UL_req;
+  nfapi_hi_dci0_request_t *HI_DCI0_req = Sched_INFO->HI_DCI0_req;
+  nfapi_tx_request_t        *TX_req    = Sched_INFO->TX_req; 
 
+  uint32_t                        hypersfn  = Sched_INFO->hypersfn;
   frame_t                         frame     = Sched_INFO->frame;
   sub_frame_t                     subframe  = Sched_INFO->subframe;
 
@@ -189,9 +191,9 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   AsserFatal(proc->subframe_tx != subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
   AsserFatal(proc->frame_tx != frame, "Current sframe %d != NFAPI frame %d\n", proc->frame_tx,frame );
 
-  uint8_t number_dl_pdu             = DL_req->number_pdu;
+  uint8_t number_dl_pdu             = DL_req->dl_config_request_body.number_pdu;
   uint8_t number_ul_pdu				= UL_req->ul_config_request_body.number_of_pdus;
-  uint8_t number_ul_dci             = HI_DCI0_req->number_of_dci;
+  uint8_t number_ul_dci             = HI_DCI0_req->hi_dci0_request_body.number_of_dci;
   //uint8_t number_pdsch_rnti         = DL_req->number_pdsch_rnti; // for the moment not used
 
   // at most 2 pdus (DCI) in the case of NPDCCH
@@ -225,7 +227,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 
   for (i=0;i<number_dl_pdu;i++) //in principle this should be at most 2 (in case of DCI)
   {
-    dl_config_pdu = &DL_req->dl_config_pdu_list[i];
+    dl_config_pdu = &DL_req->dl_config_request_body.dl_config_pdu_list[i];
     switch (dl_config_pdu->pdu_type) 
     {
     	case NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE:
@@ -240,8 +242,8 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     		npbch = eNB->npbch; //in the main of the lte-softmodem they should allocate this memory of PHY_vars
     		npbch->h_sfn_lsb = dl_config_pdu->nbch_pdu.nbch_pdu_rel13.hyper_sfn_2_lsbs;
 
-    		if(Sched_INFO->sdu[i] != NULL)
-    			npbch->pdu = Sched_INFO->sdu[i];
+    		if(TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->nbch_pdu.nbch_pdu_rel13.pdu_index].segments[0].segment_data != NULL)
+    			npbch->pdu = TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->nbch_pdu.nbch_pdu_rel13.pdu_index].segments[0].segment_data;
     		else
     			LOG_E(PHY, "Received a schedule_response with N-BCH but no SDU!!\n");
 
@@ -259,7 +261,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     		 * 	result active from the loop before calling the ndlsch_procedure
     		 */
 
-    		handle_nfapi_dlsch_pdu_NB_IoT(eNB, proc,dl_config_pdu,Sched_INFO->sdu[i]);
+    		handle_nfapi_dlsch_pdu_NB_IoT(eNB, proc,dl_config_pdu,TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index].segments[0].segment_data);
 
     		break;
     	default:
@@ -270,7 +272,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   
   for (i=0;i<number_ul_dci;i++) 
   {
-    hi_dci0_pdu = &HI_DCI0_req->hi_dci0_pdu_list[i];
+    hi_dci0_pdu = &HI_DCI0_req->hi_dci0_request_body.hi_dci0_pdu_list[i];
     switch (hi_dci0_pdu->pdu_type) 
     {
     	case NFAPI_HI_DCI0_NPDCCH_DCI_PDU_TYPE:
