@@ -68,7 +68,7 @@ uint32_t lte_rate_matching_cc_NB_IoT(uint32_t RCC,      // RRC = 2
 
   for (k=0; k<E; k++) {
 
-    while(w[ind] == LTE_NULL) {
+    while(w[ind] == LTE_NULL_NB_IoT) {
 
       ind++;
 

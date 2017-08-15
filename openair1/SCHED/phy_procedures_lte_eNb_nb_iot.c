@@ -33,7 +33,7 @@
 //#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 #include "PHY/extern_NB_IoT.h" //where we get the global Sched_Rsp_t structure filled
-#include "SCHED/defs.h"
+//#include "SCHED/defs.h"
 #include "SCHED/extern.h"
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
 #include "PHY/LTE_TRANSPORT/if5_tools.h"
@@ -814,7 +814,7 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
 
     }
 
-    start_meas(&eNB->dlsch_encoding_stats);
+    //start_meas_NB_IoT(&eNB->dlsch_encoding_stats);
 
     LOG_I(PHY, "NB-IoT Encoding step\n");
 
@@ -828,12 +828,12 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
 //	    &eNB->dlsch_interleaving_stats);
 
 
-    stop_meas(&eNB->dlsch_encoding_stats);
+   // stop_meas_NB_IoT(&eNB->dlsch_encoding_stats);
 
     // 36-211
     //scrambling-------------------------------------------
 
-    start_meas(&eNB->dlsch_scrambling_stats);
+   // start_meas_NB_IoT(&eNB->dlsch_scrambling_stats);
     LOG_I(PHY, "NB-IoT Scrambling step\n");
 
     /*
@@ -856,11 +856,11 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
 //		     0,
 //		     subframe<<1);
 
-    stop_meas(&eNB->dlsch_scrambling_stats);
+    //stop_meas_NB_IoT(&eNB->dlsch_scrambling_stats);
 
 
     //modulation-------------------------------------------
-    start_meas(&eNB->dlsch_modulation_stats);
+    //start_meas_NB_IoT(&eNB->dlsch_modulation_stats);
     LOG_I(PHY, "NB-IoT Modulation step\n");
 
 //    dlsch_modulation(eNB,
@@ -871,17 +871,17 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
 //		     dlsch,
 //		     dlsch1);
 
-    stop_meas(&eNB->dlsch_modulation_stats);
+    //stop_meas_NB_IoT(&eNB->dlsch_modulation_stats);
   }
 
 
 #ifdef PHY_ABSTRACTION
   else {
-    start_meas(&eNB->dlsch_encoding_stats);
+    //start_meas_NB_IoT(&eNB->dlsch_encoding_stats);
     //dlsch_encoding_emul(eNB,
 			//DLSCH_pdu,
 			//dlsch);
-    stop_meas(&eNB->dlsch_encoding_stats);
+   // stop_meas_NB_IoT(&eNB->dlsch_encoding_stats);
   }
 
 #endif
@@ -952,7 +952,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
 
   if(do_meas == 1)
-    start_meas(&eNB->phy_proc_tx);
+    //start_meas_NB_IoT(&eNB->phy_proc_tx);
 
 
   /*the original scheduler "eNB_dlsch_ulsch_scheduler" now is no more done here but is triggered directly from UL_Indication (IF-Module Function)*/

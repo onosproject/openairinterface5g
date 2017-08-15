@@ -121,15 +121,15 @@ static inline void* malloc16_clear( size_t size )
 
 
 #include "impl_defs_top_NB_IoT.h"
-#include "impl_defs_top.h"
-#include "impl_defs_lte.h"
+//#include "impl_defs_top.h"
+//#include "impl_defs_lte.h"
 #include "PHY/impl_defs_lte_nb_iot.h"
 
-#include "PHY/TOOLS/time_meas.h"
-#include "PHY/CODING/defs.h"
+#include "PHY/TOOLS/time_meas_NB_IoT.h"
+//#include "PHY/CODING/defs.h"
 #include "PHY/CODING/defs_nb_iot.h"
-#include "PHY/TOOLS/defs.h"
-#include "platform_types.h"
+//#include "PHY/TOOLS/defs.h"
+//#include "platform_types.h"
 ///#include "openair1/PHY/LTE_TRANSPORT/defs_nb_iot.h"
 #ifdef OPENAIR_LTE
 
@@ -144,12 +144,13 @@ static inline void* malloc16_clear( size_t size )
 #define NUMBER_OF_eNB_SECTORS_MAX_NB_IoT 3
 
 #define NB_BANDS_MAX_NB_IoT 8
-/*
+
 #ifdef OCP_FRAMEWORK
 #include <enums.h>
 #else
-typedef enum {normal_txrx=0,rx_calib_ue=1,rx_calib_ue_med=2,rx_calib_ue_byp=3,debug_prach=4,no_L2_connect=5,calib_prach_tx=6,rx_dump_frame=7,loop_through_memory=8} runmode_t;
-
+typedef enum {normal_txrx_NB_IoT=0,rx_calib_ue_NB_IoT=1,rx_calib_ue_med_NB_IoT=2,rx_calib_ue_byp_NB_IoT=3,debug_prach_NB_IoT=4,no_L2_connect_NB_IoT=5,calib_prach_tx_NB_IoT=6,rx_dump_frame_NB_IoT=7,loop_through_memory_NB_IoT=8} runmode_NB_IoT_t;
+#endif
+/*
 enum transmission_access_mode {
   NO_ACCESS=0,
   POSTPONED_ACCESS,
@@ -172,14 +173,14 @@ typedef enum {
   synch_to_other          // synch to another source (timer, other CC_id)
 } eNB_timing_t;
 #endif
-
-typedef struct UE_SCAN_INFO_s {
+*/
+typedef struct UE_SCAN_INFO_NB_IoT_s {
   /// 10 best amplitudes (linear) for each pss signals
   int32_t amp[3][10];
   /// 10 frequency offsets (kHz) corresponding to best amplitudes, with respect do minimum DL frequency in the band
   int32_t freq_offset_Hz[3][10];
-} UE_SCAN_INFO_t;
-*/
+} UE_SCAN_INFO_NB_IoT_t;
+
 /// Top-level PHY Data Structure for RN
 typedef struct {
   /// Module ID indicator for this instance
@@ -424,7 +425,7 @@ typedef struct eNB_proc_NB_IoT_t_s {
 
 } eNB_proc_NB_IoT_t;
 
-/*
+
 /// Context data structure for RX/TX portion of subframe processing
 typedef struct {
   /// index of the current UE RX/TX proc
@@ -457,7 +458,7 @@ typedef struct {
   int sub_frame_start;
   int sub_frame_step;
   unsigned long long gotIQs;
-} UE_rxtx_proc_t;
+} UE_rxtx_proc_NB_IoT_t;
 
 /// Context data structure for eNB subframe processing
 typedef struct {
@@ -485,10 +486,10 @@ typedef struct {
   /// mutex for UE synch thread
   pthread_mutex_t mutex_synch;
   /// set of scheduling variables RXn-TXnp4 threads
-  UE_rxtx_proc_t proc_rxtx[2];
-} UE_proc_t;
+  UE_rxtx_proc_NB_IoT_t proc_rxtx[2];
+} UE_proc_NB_IoT_t;
 
-*/
+
 
 /// Top-level PHY Data Structure for eNB
 typedef struct PHY_VARS_eNB_NB_IoT_s {
@@ -512,9 +513,9 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   void                 (*do_prach)(struct PHY_VARS_eNB_NB_IoT_s *eNB,int frame,int subframe);
   void                 (*fep)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc);
   int                  (*td)(struct PHY_VARS_eNB_NB_IoT_s *eNB,int UE_id,int harq_pid,int llr8_flag);
-  int                  (*te)(struct PHY_VARS_eNB_NB_IoT_s *,uint8_t *,uint8_t,LTE_eNB_DLSCH_t *,int,uint8_t,time_stats_t *,time_stats_t *,time_stats_t *);
-  void                 (*proc_uespec_rx)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc,const relaying_type_t r_type);
-  void                 (*proc_tx)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc,relaying_type_t r_type,PHY_VARS_RN_NB_IoT *rn);
+  int                  (*te)(struct PHY_VARS_eNB_NB_IoT_s *,uint8_t *,uint8_t,NB_IoT_eNB_DLSCH_t *,int,uint8_t,time_stats_t_NB_IoT *,time_stats_t_NB_IoT *,time_stats_t_NB_IoT *);
+  void                 (*proc_uespec_rx)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc,const relaying_type_t_NB_IoT r_type);
+  void                 (*proc_tx)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc,relaying_type_t_NB_IoT r_type,PHY_VARS_RN_NB_IoT *rn);
   void                 (*tx_fh)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc);
   void                 (*rx_fh)(struct PHY_VARS_eNB_NB_IoT_s *eNB,int *frame, int *subframe);
   int                  (*start_rf)(struct PHY_VARS_eNB_NB_IoT_s *eNB);
@@ -590,34 +591,34 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   /// For emulation only (used by UE abstraction to retrieve DCI)
   uint8_t num_common_dci[2];                         // num_dci in even/odd subframes
   uint8_t num_ue_spec_dci[2];                         // num_dci in even/odd subframes
-  DCI_ALLOC_t dci_alloc[2][NUM_DCI_MAX_NB_IoT]; // dci_alloc from even/odd subframes
+  DCI_ALLOC_NB_IoT_t dci_alloc[2][NUM_DCI_MAX_NB_IoT]; // dci_alloc from even/odd subframes
 
 
   // PDSCH Varaibles
-  PDSCH_CONFIG_DEDICATED pdsch_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];
+  PDSCH_CONFIG_DEDICATED_NB_IoT pdsch_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];
 
   // PUSCH Varaibles
-  PUSCH_CONFIG_DEDICATED pusch_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];
+  PUSCH_CONFIG_DEDICATED_NB_IoT pusch_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];
 
   // PUCCH variables
-  PUCCH_CONFIG_DEDICATED pucch_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];
+  PUCCH_CONFIG_DEDICATED_NB_IoT pucch_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];
 
   // UL-POWER-Control
-  UL_POWER_CONTROL_DEDICATED ul_power_control_dedicated[NUMBER_OF_UE_MAX_NB_IoT];
+  UL_POWER_CONTROL_DEDICATED_NB_IoT ul_power_control_dedicated[NUMBER_OF_UE_MAX_NB_IoT];
 
   // TPC
-  TPC_PDCCH_CONFIG tpc_pdcch_config_pucch[NUMBER_OF_UE_MAX_NB_IoT];
-  TPC_PDCCH_CONFIG tpc_pdcch_config_pusch[NUMBER_OF_UE_MAX_NB_IoT];
+  TPC_PDCCH_CONFIG_NB_IoT tpc_pdcch_config_pucch[NUMBER_OF_UE_MAX_NB_IoT];
+  TPC_PDCCH_CONFIG_NB_IoT tpc_pdcch_config_pusch[NUMBER_OF_UE_MAX_NB_IoT];
 
   // CQI reporting
-  CQI_REPORT_CONFIG cqi_report_config[NUMBER_OF_UE_MAX_NB_IoT];
+  CQI_REPORT_CONFIG_NB_IoT cqi_report_config[NUMBER_OF_UE_MAX_NB_IoT];
 
   // SRS Variables
-  SOUNDINGRS_UL_CONFIG_DEDICATED soundingrs_ul_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];
+  SOUNDINGRS_UL_CONFIG_DEDICATED_NB_IoT soundingrs_ul_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];
   uint8_t ncs_cell[20][7];
 
   // Scheduling Request Config
-  SCHEDULING_REQUEST_CONFIG scheduling_request_config[NUMBER_OF_UE_MAX_NB_IoT];
+  SCHEDULING_REQUEST_CONFIG_NB_IoT scheduling_request_config[NUMBER_OF_UE_MAX_NB_IoT];
 
   // Transmission mode per UE
   uint8_t transmission_mode[NUMBER_OF_UE_MAX_NB_IoT];
@@ -635,7 +636,7 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   uint32_t rb_mask_ul[4];
 
   /// Information regarding TM5
-  MU_MIMO_mode mu_mimo_mode[NUMBER_OF_UE_MAX_NB_IoT];
+  MU_MIMO_mode_NB_IoT mu_mimo_mode[NUMBER_OF_UE_MAX_NB_IoT];
 
 
   /// target_ue_dl_mcs : only for debug purposes
@@ -666,41 +667,41 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
 
   int hw_timing_advance;
 
-  time_stats_t phy_proc;
-  time_stats_t phy_proc_tx;
-  time_stats_t phy_proc_rx;
-  time_stats_t rx_prach;
+  time_stats_t_NB_IoT phy_proc;
+  time_stats_t_NB_IoT phy_proc_tx;
+  time_stats_t_NB_IoT phy_proc_rx;
+  time_stats_t_NB_IoT rx_prach;
 
-  time_stats_t ofdm_mod_stats;
-  time_stats_t dlsch_encoding_stats;
-  time_stats_t dlsch_modulation_stats;
-  time_stats_t dlsch_scrambling_stats;
-  time_stats_t dlsch_rate_matching_stats;
-  time_stats_t dlsch_turbo_encoding_stats;
-  time_stats_t dlsch_interleaving_stats;
+  time_stats_t_NB_IoT ofdm_mod_stats;
+  time_stats_t_NB_IoT dlsch_encoding_stats;
+  time_stats_t_NB_IoT dlsch_modulation_stats;
+  time_stats_t_NB_IoT dlsch_scrambling_stats;
+  time_stats_t_NB_IoT dlsch_rate_matching_stats;
+  time_stats_t_NB_IoT dlsch_turbo_encoding_stats;
+  time_stats_t_NB_IoT dlsch_interleaving_stats;
 
-  time_stats_t ofdm_demod_stats;
-  time_stats_t rx_dft_stats;
-  time_stats_t ulsch_channel_estimation_stats;
-  time_stats_t ulsch_freq_offset_estimation_stats;
-  time_stats_t ulsch_decoding_stats;
-  time_stats_t ulsch_demodulation_stats;
-  time_stats_t ulsch_rate_unmatching_stats;
-  time_stats_t ulsch_turbo_decoding_stats;
-  time_stats_t ulsch_deinterleaving_stats;
-  time_stats_t ulsch_demultiplexing_stats;
-  time_stats_t ulsch_llr_stats;
-  time_stats_t ulsch_tc_init_stats;
-  time_stats_t ulsch_tc_alpha_stats;
-  time_stats_t ulsch_tc_beta_stats;
-  time_stats_t ulsch_tc_gamma_stats;
-  time_stats_t ulsch_tc_ext_stats;
-  time_stats_t ulsch_tc_intl1_stats;
-  time_stats_t ulsch_tc_intl2_stats;
+  time_stats_t_NB_IoT ofdm_demod_stats;
+  time_stats_t_NB_IoT rx_dft_stats;
+  time_stats_t_NB_IoT ulsch_channel_estimation_stats;
+  time_stats_t_NB_IoT ulsch_freq_offset_estimation_stats;
+  time_stats_t_NB_IoT ulsch_decoding_stats;
+  time_stats_t_NB_IoT ulsch_demodulation_stats;
+  time_stats_t_NB_IoT ulsch_rate_unmatching_stats;
+  time_stats_t_NB_IoT ulsch_turbo_decoding_stats;
+  time_stats_t_NB_IoT ulsch_deinterleaving_stats;
+  time_stats_t_NB_IoT ulsch_demultiplexing_stats;
+  time_stats_t_NB_IoT ulsch_llr_stats;
+  time_stats_t_NB_IoT ulsch_tc_init_stats;
+  time_stats_t_NB_IoT ulsch_tc_alpha_stats;
+  time_stats_t_NB_IoT ulsch_tc_beta_stats;
+  time_stats_t_NB_IoT ulsch_tc_gamma_stats;
+  time_stats_t_NB_IoT ulsch_tc_ext_stats;
+  time_stats_t_NB_IoT ulsch_tc_intl1_stats;
+  time_stats_t_NB_IoT ulsch_tc_intl2_stats;
 
 #ifdef LOCALIZATION
   /// time state for localization
-  time_stats_t localization_stats;
+  time_stats_t_NB_IoT localization_stats;
 #endif
 
   int32_t pucch1_stats_cnt[NUMBER_OF_UE_MAX_NB_IoT][10];
@@ -767,8 +768,8 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
 
 
 } PHY_VARS_eNB_NB_IoT;
-/*
-#define debug_msg if (((mac_xface->frame%100) == 0) || (mac_xface->frame < 50)) msg
+
+//#define debug_msg if (((mac_xface->frame%100) == 0) || (mac_xface->frame < 50)) msg
 
 /// Top-level PHY Data Structure for UE
 typedef struct {
@@ -780,7 +781,7 @@ typedef struct {
   openair0_rf_map      rf_map;
   //uint8_t local_flag;
   /// \brief Indicator of current run mode of UE (normal_txrx, rx_calib_ue, no_L2_connect, debug_prach)
-  runmode_t mode;
+  runmode_NB_IoT_t mode;
   /// \brief Indicator that UE should perform band scanning
   int UE_scan;
   /// \brief Indicator that UE should perform coarse scanning around carrier
@@ -788,7 +789,7 @@ typedef struct {
   /// \brief Indicator that UE is synchronized to an eNB
   int is_synchronized;
   /// Data structure for UE process scheduling
-  UE_proc_t proc;
+  UE_proc_NB_IoT_t proc;
   /// Flag to indicate the UE shouldn't do timing correction at all
   int no_timing_correction;
   /// \brief Total gain of the TX chain (16-bit baseband I/Q to antenna)
@@ -814,12 +815,12 @@ typedef struct {
   /// \brief indicator that Handover procedure has been triggered
   uint8_t ho_triggered;
   /// \brief Measurement variables.
-  PHY_MEASUREMENTS measurements;
-  LTE_DL_FRAME_PARMS  frame_parms;
+  PHY_MEASUREMENTS_NB_IoT measurements;
+  NB_IoT_DL_FRAME_PARMS  frame_parms;
   /// \brief Frame parame before ho used to recover if ho fails.
-  LTE_DL_FRAME_PARMS  frame_parms_before_ho;
-  LTE_UE_COMMON    common_vars;
-
+  NB_IoT_DL_FRAME_PARMS  frame_parms_before_ho;
+  NB_IoT_UE_COMMON    common_vars;
+/*
   LTE_UE_PDSCH     *pdsch_vars[2][NUMBER_OF_CONNECTED_eNB_MAX+1]; // two RxTx Threads
   LTE_UE_PDSCH_FLP *pdsch_vars_flp[NUMBER_OF_CONNECTED_eNB_MAX+1];
   LTE_UE_PDSCH     *pdsch_vars_SI[NUMBER_OF_CONNECTED_eNB_MAX+1];
@@ -837,7 +838,7 @@ typedef struct {
   LTE_UE_DLSCH_t   *dlsch_MCH[NUMBER_OF_CONNECTED_eNB_MAX];
   // This is for SIC in the UE, to store the reencoded data
   LTE_eNB_DLSCH_t  *dlsch_eNB[NUMBER_OF_CONNECTED_eNB_MAX];
-
+*/
   //Paging parameters
   uint32_t              IMSImod1024;
   uint32_t              PF;
@@ -848,7 +849,7 @@ typedef struct {
   uint8_t               pucch_sel[10];
   uint8_t               pucch_payload[22];
 
-  UE_MODE_t        UE_mode[NUMBER_OF_CONNECTED_eNB_MAX];
+  //UE_MODE_t        UE_mode[NUMBER_OF_CONNECTED_eNB_MAX];
   /// cell-specific reference symbols
   uint32_t lte_gold_table[7][20][2][14];
 
@@ -868,11 +869,11 @@ typedef struct {
   int16_t ch_est_alpha;
   int generate_ul_signal[NUMBER_OF_CONNECTED_eNB_MAX];
 
-  UE_SCAN_INFO_t scan_info[NB_BANDS_MAX];
+  UE_SCAN_INFO_NB_IoT_t scan_info[NB_BANDS_MAX_NB_IoT];
 
   char ulsch_no_allocation_counter[NUMBER_OF_CONNECTED_eNB_MAX];
 
-
+/*
 
   unsigned char ulsch_Msg3_active[NUMBER_OF_CONNECTED_eNB_MAX];
   uint32_t  ulsch_Msg3_frame[NUMBER_OF_CONNECTED_eNB_MAX];
@@ -931,7 +932,7 @@ typedef struct {
   int              **ul_precoder_S_UE;
   /// holds the maximum channel/precoder coefficient
   char             log2_maxp;
-
+*/
   /// if ==0 enables phy only test mode
   int mac_enabled;
 
@@ -951,7 +952,7 @@ typedef struct {
 
   /// N0 (used for abstraction)
   double N0;
-
+/*
   /// PDSCH Varaibles
   PDSCH_CONFIG_DEDICATED pdsch_config_dedicated[NUMBER_OF_CONNECTED_eNB_MAX];
 
@@ -1042,9 +1043,9 @@ typedef struct {
   SLIST_HEAD(ral_thresholds_gen_poll_s, ral_threshold_phy_t) ral_thresholds_gen_polled[RAL_LINK_PARAM_GEN_MAX];
   SLIST_HEAD(ral_thresholds_lte_poll_s, ral_threshold_phy_t) ral_thresholds_lte_polled[RAL_LINK_PARAM_LTE_MAX];
 #endif
-
-} PHY_VARS_UE;
 */
+} PHY_VARS_UE_NB_IoT;
+
 
 /*
 void exit_fun(const char* s);
@@ -1119,8 +1120,8 @@ static inline int release_thread(pthread_mutex_t *mutex,int *instance_cnt,char *
 //#include "PHY/MODULATION/defs.h"
 //#include "PHY/LTE_TRANSPORT/proto.h"
 #include "PHY/LTE_TRANSPORT/proto_nb_iot.h"
-#include "PHY/LTE_ESTIMATION/defs.h"
+//#include "PHY/LTE_ESTIMATION/defs.h"
 
-#include "SIMULATION/ETH_TRANSPORT/defs.h"
+//#include "SIMULATION/ETH_TRANSPORT/defs.h"
 #endif
 #endif //  __PHY_DEFS__H__

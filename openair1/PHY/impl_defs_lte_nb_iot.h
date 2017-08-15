@@ -50,6 +50,234 @@ typedef enum {EXTENDED_NB_IoT=1,NORMAL_NB_IoT=0} NB_IoT_prefix_type_t;
 	}
 
 
+/////////////////////////
+  /// Union for \ref TPC_PDCCH_CONFIG::tpc_Index.
+typedef union {
+  /// Index of N when DCI format 3 is used. See TS 36.212 (5.3.3.1.6). \vr{[1..15]}
+  uint8_t indexOfFormat3;
+  /// Index of M when DCI format 3A is used. See TS 36.212 (5.3.3.1.7). \vr{[1..31]}
+  uint8_t indexOfFormat3A;
+} TPC_INDEX_NB_IoT_t;
+
+/// TPC-PDCCH-Config Information Element from 36.331 RRC spec
+typedef struct {
+  /// RNTI for power control using DCI format 3/3A, see TS 36.212. \vr{[0..65535]}
+  uint16_t rnti;
+  /// Index of N or M, see TS 36.212 (5.3.3.1.6 and 5.3.3.1.7), where N or M is dependent on the used DCI format (i.e. format 3 or 3a).
+  TPC_INDEX_NB_IoT_t tpc_Index;
+} TPC_PDCCH_CONFIG_NB_IoT;
+  /// Enumeration for parameter \f$N_\text{ANRep}\f$ \ref PUCCH_CONFIG_DEDICATED::repetitionFactor.
+typedef enum {
+  //n2=0,
+  n4_n,
+  n6_n
+} ACKNAKREP_NB_IoT_t;
+
+/// Enumeration for \ref PUCCH_CONFIG_DEDICATED::tdd_AckNackFeedbackMode.
+typedef enum {
+  bundling_N=0,
+  multiplexing_N
+} ANFBmode_NB_IoT_t;
+
+/// PUCCH-ConfigDedicated from 36.331 RRC spec
+typedef struct {
+  /// Flag to indicate ACK NAK repetition activation, see TS 36.213 (10.1). \vr{[0..1]}
+  uint8_t ackNackRepetition;
+  /// Parameter: \f$N_\text{ANRep}\f$, see TS 36.213 (10.1).
+  ACKNAKREP_NB_IoT_t repetitionFactor;
+  /// Parameter: \f$n^{(1)}_\text{PUCCH,ANRep}\f$, see TS 36.213 (10.1). \vr{[0..2047]}
+  uint16_t n1PUCCH_AN_Rep;
+  /// Feedback mode, see TS 36.213 (7.3). \details Applied to both PUCCH and PUSCH feedback. For TDD, should always be set to bundling.
+  ANFBmode_NB_IoT_t tdd_AckNackFeedbackMode;
+} PUCCH_CONFIG_DEDICATED_NB_IoT;
+  // UE specific PUSCH configuration.
+typedef struct {
+  /// Parameter: \f$I^\text{HARQ-ACK}_\text{offset}\f$, see TS 36.213 (Table 8.6.3-1). \vr{[0..15]}
+  uint16_t betaOffset_ACK_Index;
+  /// Parameter: \f$I^{RI}_\text{offset}\f$, see TS 36.213 (Table 8.6.3-2). \vr{[0..15]}
+  uint16_t betaOffset_RI_Index;
+  /// Parameter: \f$I^{CQI}_\text{offset}\f$, see TS 36.213 (Table 8.6.3-3). \vr{[0..15]}
+  uint16_t betaOffset_CQI_Index;
+} PUSCH_CONFIG_DEDICATED_NB_IoT;
+/// Enumeration for Parameter \f$P_A\f$ \ref PDSCH_CONFIG_DEDICATED::p_a.
+typedef enum {
+  //dBm6=0, ///< (dB-6) corresponds to -6 dB
+ // dBm477, ///< (dB-4dot77) corresponds to -4.77 dB
+ // dBm3,   ///< (dB-3) corresponds to -3 dB
+  //dBm177, ///< (dB-1dot77) corresponds to -1.77 dB
+  //dB0,    ///< corresponds to 0 dB
+ // dB1,    ///< corresponds to 1 dB
+  dB2_NB,    ///< corresponds to 2 dB
+  dB3_NB     ///< corresponds to 3 dB
+} PA_NB_IoT_t;
+
+/// PDSCH-ConfigDedicated from 36.331 RRC spec
+typedef struct {
+  /// Parameter: \f$P_A\f$, see TS 36.213 (5.2).
+  PA_NB_IoT_t p_a;
+} PDSCH_CONFIG_DEDICATED_NB_IoT;
+
+/// UplinkPowerControlDedicated Information Element from 36.331 RRC spec
+typedef struct {
+  /// Parameter: \f$P_\text{0\_UE\_PUSCH}(1)\f$, see TS 36.213 (5.1.1.1), unit dB. \vr{[-8..7]}\n This field is applicable for non-persistent scheduling, only.
+  int8_t p0_UE_PUSCH;
+  /// Parameter: Ks, see TS 36.213 (5.1.1.1). \vr{[0..1]}\n en0 corresponds to value 0 corresponding to state “disabled”. en1 corresponds to value 1.25 corresponding to “enabled”. \note the specification sais it is an enumerated value. \warning the enumeration values do not correspond to the given values in the specification (en1 should be 1.25).
+  uint8_t deltaMCS_Enabled;
+  /// Parameter: Accumulation-enabled, see TS 36.213 (5.1.1.1). \vr{[0..1]} 1 corresponds to "enabled" whereas 0 corresponds to "disabled".
+  uint8_t accumulationEnabled;
+  /// Parameter: \f$P_\text{0\_UE\_PUCCH}(1)\f$, see TS 36.213 (5.1.2.1), unit dB. \vr{[-8..7]}
+  int8_t p0_UE_PUCCH;
+  /// Parameter: \f$P_\text{SRS\_OFFSET}\f$, see TS 36.213 (5.1.3.1). \vr{[0..15]}\n For Ks=1.25 (\ref deltaMCS_Enabled), the actual parameter value is pSRS_Offset value - 3. For Ks=0, the actual parameter value is -10.5 + 1.5*pSRS_Offset value.
+  int8_t pSRS_Offset;
+  /// Specifies the filtering coefficient for RSRP measurements used to calculate path loss, as specified in TS 36.213 (5.1.1.1).\details The same filtering mechanism applies as for quantityConfig described in 5.5.3.2. \note the specification sais it is an enumerated value.
+  uint8_t filterCoefficient;
+} UL_POWER_CONTROL_DEDICATED_NB_IoT;
+
+/// Union for \ref TPC_PDCCH_CONFIG::tpc_Index.
+//typedef union {
+  /// Index of N when DCI format 3 is used. See TS 36.212 (5.3.3.1.6). \vr{[1..15]}
+ // uint8_t indexOfFormat3;
+  /// Index of M when DCI format 3A is used. See TS 36.212 (5.3.3.1.7). \vr{[1..31]}
+ // uint8_t indexOfFormat3A;
+//} TPC_INDEX_NB_IoT_t;
+
+/// CQI-ReportPeriodic
+typedef struct {
+  /// Parameter: \f$n^{(2)}_\text{PUCCH}\f$, see TS 36.213 (7.2). \vr{[0..1185]}, -1 indicates inactivity
+  int16_t cqi_PUCCH_ResourceIndex;
+  /// Parameter: CQI/PMI Periodicity and Offset Configuration Index \f$I_\text{CQI/PMI}\f$, see TS 36.213 (tables 7.2.2-1A and 7.2.2-1C). \vr{[0..1023]}
+  int16_t cqi_PMI_ConfigIndex;
+  /// Parameter: K, see 36.213 (4.2.2). \vr{[1..4]}
+  uint8_t K;
+  /// Parameter: RI Config Index \f$I_\text{RI}\f$, see TS 36.213 (7.2.2-1B). \vr{[0..1023]}, -1 indicates inactivity
+  int16_t ri_ConfigIndex;
+  /// Parameter: Simultaneous-AN-and-CQI, see TS 36.213 (10.1). \vr{[0..1]} 1 indicates that simultaneous transmission of ACK/NACK and CQI is allowed.
+  uint8_t simultaneousAckNackAndCQI;
+  /// parameter computed from Tables 7.2.2-1A and 7.2.2-1C
+  uint16_t Npd;
+  /// parameter computed from Tables 7.2.2-1A and 7.2.2-1C
+  uint16_t N_OFFSET_CQI;
+} CQI_REPORTPERIODIC_NB_IoT;
+
+/// Enumeration for parameter reporting mode \ref CQI_REPORT_CONFIG::cqi_ReportModeAperiodic.
+typedef enum {
+  //rm12=0,
+  //rm20=1,
+  //rm22=2,
+  rm30_N=3,
+  rm31_N=4
+} CQI_REPORTMODEAPERIODIC_NB_IoT;
+
+/// CQI-ReportConfig Information Element from 36.331 RRC spec
+typedef struct {
+  /// Parameter: reporting mode. Value rm12 corresponds to Mode 1-2, rm20 corresponds to Mode 2-0, rm22 corresponds to Mode 2-2 etc. PUSCH reporting modes are described in TS 36.213 [23, 7.2.1].
+  CQI_REPORTMODEAPERIODIC_NB_IoT cqi_ReportModeAperiodic;
+  /// Parameter: \f$\Delta_\text{offset}\f$, see TS 36.213 (7.2.3). \vr{[-1..6]}\n Actual value = IE value * 2 [dB].
+  int8_t nomPDSCH_RS_EPRE_Offset;
+  CQI_REPORTPERIODIC_NB_IoT CQI_ReportPeriodic;
+} CQI_REPORT_CONFIG_NB_IoT;
+
+/// SoundingRS-UL-ConfigDedicated Information Element from 36.331 RRC spec
+typedef struct {
+  /// Parameter: \f$B_\text{SRS}\f$, see TS 36.211 (table 5.5.3.2-1, 5.5.3.2-2, 5.5.3.2-3 and 5.5.3.2-4). \vr{[0..3]} \note the specification sais it is an enumerated value.
+  uint8_t srs_Bandwidth;
+  /// Parameter: SRS hopping bandwidth \f$b_\text{hop}\in\{0,1,2,3\}\f$, see TS 36.211 (5.5.3.2) \vr{[0..3]} \note the specification sais it is an enumerated value.
+  uint8_t srs_HoppingBandwidth;
+  /// Parameter: \f$n_\text{RRC}\f$, see TS 36.211 (5.5.3.2). \vr{[0..23]}
+  uint8_t freqDomainPosition;
+  /// Parameter: Duration, see TS 36.213 (8.2). \vr{[0..1]} 0 corresponds to "single" and 1 to "indefinite".
+  uint8_t duration;
+  /// Parameter: \f$k_\text{TC}\in\{0,1\}\f$, see TS 36.211 (5.5.3.2). \vr{[0..1]}
+  uint8_t transmissionComb;
+  /// Parameter: \f$I_\text{SRS}\f$, see TS 36.213 (table 8.2-1). \vr{[0..1023]}
+  uint16_t srs_ConfigIndex;
+  /// Parameter: \f$n^\text{CS}_\text{SRS}\f$. See TS 36.211 (5.5.3.1). \vr{[0..7]} \note the specification sais it is an enumerated value.
+  uint8_t cyclicShift;
+  // Parameter: internal implementation: UE SRS configured
+  uint8_t srsConfigDedicatedSetup;
+  // Parameter: cell srs subframe for internal implementation
+  uint8_t srsCellSubframe;
+  // Parameter: ue srs subframe for internal implementation
+  uint8_t srsUeSubframe;
+} SOUNDINGRS_UL_CONFIG_DEDICATED_NB_IoT;
+
+/// Enumeration for parameter SR transmission \ref SCHEDULING_REQUEST_CONFIG::dsr_TransMax.
+typedef enum {
+  //sr_n4=0,
+ // sr_n8=1,
+ // sr_n16=2,
+  sr_n32_N=3,
+  sr_n64_N=4
+} DSR_TRANSMAX_NB_IoT_t;
+
+/// SchedulingRequestConfig Information Element from 36.331 RRC spec
+typedef struct {
+  /// Parameter: \f$n^{(1)}_\text{PUCCH,SRI}\f$, see TS 36.213 (10.1). \vr{[0..2047]}
+  uint16_t sr_PUCCH_ResourceIndex;
+  /// Parameter: \f$I_\text{SR}\f$, see TS 36.213 (10.1). \vr{[0..155]}
+  uint8_t sr_ConfigIndex;
+  /// Parameter for SR transmission in TS 36.321 (5.4.4). \details The value n4 corresponds to 4 transmissions, n8 corresponds to 8 transmissions and so on.
+  DSR_TRANSMAX_NB_IoT_t dsr_TransMax;
+} SCHEDULING_REQUEST_CONFIG_NB_IoT;
+
+typedef struct {
+  /// Downlink Power offset field
+  uint8_t dl_pow_off;
+  ///Subband resource allocation field
+  uint8_t rballoc_sub[50];
+  ///Total number of PRBs indicator
+  uint8_t pre_nb_available_rbs;
+} MU_MIMO_mode_NB_IoT;
+////////////////////////
+
+typedef struct {
+
+    /// \brief Holds the received data in the frequency domain.
+    /// - first index: rx antenna [0..nb_antennas_rx[
+    /// - second index: symbol [0..28*ofdm_symbol_size[
+    int32_t **rxdataF;
+
+    /// \brief Hold the channel estimates in frequency domain.
+    /// - first index: eNB id [0..6] (hard coded)
+    /// - second index: ? [0..7] (hard coded) FIXME! accessed via \c nb_antennas_rx
+    /// - third index: samples? [0..symbols_per_tti*(ofdm_symbol_size+LTE_CE_FILTER_LENGTH)[
+    int32_t **dl_ch_estimates[7];
+
+    /// \brief Hold the channel estimates in time domain (used for tracking).
+    /// - first index: eNB id [0..6] (hard coded)
+    /// - second index: ? [0..7] (hard coded) FIXME! accessed via \c nb_antennas_rx
+    /// - third index: samples? [0..2*ofdm_symbol_size[
+    int32_t **dl_ch_estimates_time[7];
+}NB_IoT_UE_COMMON_PER_THREAD;
+
+typedef struct {
+  /// \brief Holds the transmit data in time domain.
+  /// For IFFT_FPGA this points to the same memory as PHY_vars->tx_vars[a].TX_DMA_BUFFER.
+  /// - first index: tx antenna [0..nb_antennas_tx[
+  /// - second index: sample [0..FRAME_LENGTH_COMPLEX_SAMPLES[
+  int32_t **txdata;
+  /// \brief Holds the transmit data in the frequency domain.
+  /// For IFFT_FPGA this points to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER.
+  /// - first index: tx antenna [0..nb_antennas_tx[
+  /// - second index: sample [0..FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX[
+  int32_t **txdataF;
+
+  /// \brief Holds the received data in time domain.
+  /// Should point to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER.
+  /// - first index: rx antenna [0..nb_antennas_rx[
+  /// - second index: sample [0..FRAME_LENGTH_COMPLEX_SAMPLES+2048[
+  int32_t **rxdata;
+
+  NB_IoT_UE_COMMON_PER_THREAD common_vars_rx_data_per_thread[2];
+
+  /// holds output of the sync correlator
+  int32_t *sync_corr;
+  /// estimated frequency offset (in radians) for all subcarriers
+  int32_t freq_offset;
+  /// eNb_id user is synched to
+  int32_t eNb_id;
+} NB_IoT_UE_COMMON;
+
 /// NPRACH-ParametersList-NB-r13 from 36.331 RRC spec
 typedef struct NPRACH_Parameters_NB_IoT{
   /// the period time for nprach

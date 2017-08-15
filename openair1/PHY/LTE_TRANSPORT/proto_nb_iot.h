@@ -185,12 +185,12 @@ NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag);
     @returns status
 */
 
-int32_t dlsch_encoding_NB_IoT(unsigned char       *a,
-                              NB_IoT_eNB_DLSCH_t  *dlsch,
-                              uint8_t             Nsf,        // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
-                              unsigned int        G,          // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
-                              time_stats_t        *rm_stats,
-                              time_stats_t        *te_stats,
-                              time_stats_t        *i_stats);
+int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
+                              NB_IoT_eNB_DLSCH_t         *dlsch,
+                              uint8_t                    Nsf,        // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
+                              unsigned int               G,          // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
+                              time_stats_t_NB_IoT        *rm_stats,
+                              time_stats_t_NB_IoT        *te_stats,
+                              time_stats_t_NB_IoT        *i_stats);
 
 #endif

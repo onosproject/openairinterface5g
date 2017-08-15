@@ -15,8 +15,8 @@
 
 //#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
-#include "defs.h"
-#include "PHY/extern.h"
+//#include "defs.h"
+#include "PHY/extern_NB_IoT.h"
 #include "nsss_NB_IoT.h"
 
 int generate_sss_NB_IoT(int32_t **txdataF,
@@ -101,7 +101,7 @@ int generate_sss_NB_IoT(int32_t **txdataF,
 	slot_id = slot_offset;
    
 	//  Signal amplitude
-	a = (frame_parms->nb_antennas_tx == 1) ? amp: (amp*ONE_OVER_SQRT2_Q15)>>15;
+	a = (frame_parms->nb_antennas_tx == 1) ? amp: (amp*ONE_OVER_SQRT2_Q15_NB_IoT)>>15;
    
 	// Testing if the total number of RBs is even or odd (i.e. Identification of the bandwidth: 1.4, 3, 5, 10, ... MHz)
 	bandwidth_even_odd = frame_parms->N_RB_DL % 2;  		// 0 even, 1 odd

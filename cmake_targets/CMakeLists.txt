@@ -995,11 +995,13 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_coding.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_coding_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_modulation.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_modulation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_demodulation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_llr_computation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/power_control.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_decoding.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_scrambling.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_scrambling_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools_nb_iot.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/uci_tools.c

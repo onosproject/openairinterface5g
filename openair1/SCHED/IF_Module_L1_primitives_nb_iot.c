@@ -6,7 +6,7 @@
 #include "PHY/defs_nb_iot.h"
 //#include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"
-#include "PHY/vars.h"
+//#include "PHY/vars.h"
 #include "PHY/vars_NB_IoT.h"
 #include "PHY/INIT/defs_nb_iot.h"
 

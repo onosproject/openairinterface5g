@@ -281,8 +281,9 @@ typedef enum {
 } Extension_t;
 	
 /// Measurement Variables
-
-#define NUMBER_OF_SUBBANDS_MAX 13
+*/
+#define NUMBER_OF_SUBBANDS_MAX_NB_IoT 13
+/*
 #define NUMBER_OF_HARQ_PID_MAX 8
 
 #define MAX_FRAME_NUMBER 0x400
@@ -384,6 +385,101 @@ typedef struct {
 
 } PHY_MEASUREMENTS;
 */
+typedef enum {no_relay_NB_IoT=1,unicast_relay_type1_NB_IoT,unicast_relay_type2_NB_IoT, multicast_relay_NB_IoT} relaying_type_t_NB_IoT;
+typedef struct {
+  //unsigned int   rx_power[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];     //! estimated received signal power (linear)
+  //unsigned short rx_power_dB[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];  //! estimated received signal power (dB)
+  //unsigned short rx_avg_power_dB[NUMBER_OF_CONNECTED_eNB_MAX];              //! estimated avg received signal power (dB)
+
+  // RRC measurements
+  uint32_t rssi;
+  int n_adj_cells;
+  unsigned int adj_cell_id[6];
+  uint32_t rsrq[7];
+  uint32_t rsrp[7];
+  float rsrp_filtered[7]; // after layer 3 filtering
+  float rsrq_filtered[7];
+  // common measurements
+  //! estimated noise power (linear)
+  unsigned int   n0_power[NB_ANTENNAS_RX];
+  //! estimated noise power (dB)
+  unsigned short n0_power_dB[NB_ANTENNAS_RX];
+  //! total estimated noise power (linear)
+  unsigned int   n0_power_tot;
+  //! total estimated noise power (dB)
+  unsigned short n0_power_tot_dB;
+  //! average estimated noise power (linear)
+  unsigned int   n0_power_avg;
+  //! average estimated noise power (dB)
+  unsigned short n0_power_avg_dB;
+  //! total estimated noise power (dBm)
+  short n0_power_tot_dBm;
+
+  // UE measurements
+  //! estimated received spatial signal power (linear)
+  int            rx_spatial_power[NUMBER_OF_CONNECTED_eNB_MAX][2][2];
+  //! estimated received spatial signal power (dB)
+  unsigned short rx_spatial_power_dB[NUMBER_OF_CONNECTED_eNB_MAX][2][2];
+
+  /// estimated received signal power (sum over all TX antennas)
+  //int            wideband_cqi[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];
+  int            rx_power[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];
+  /// estimated received signal power (sum over all TX antennas)
+  //int            wideband_cqi_dB[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];
+  unsigned short rx_power_dB[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];
+
+  /// estimated received signal power (sum over all TX/RX antennas)
+  int            rx_power_tot[NUMBER_OF_CONNECTED_eNB_MAX]; //NEW
+  /// estimated received signal power (sum over all TX/RX antennas)
+  unsigned short rx_power_tot_dB[NUMBER_OF_CONNECTED_eNB_MAX]; //NEW
+
+  //! estimated received signal power (sum of all TX/RX antennas, time average)
+  int            rx_power_avg[NUMBER_OF_CONNECTED_eNB_MAX];
+  //! estimated received signal power (sum of all TX/RX antennas, time average, in dB)
+  unsigned short rx_power_avg_dB[NUMBER_OF_CONNECTED_eNB_MAX];
+
+  /// SINR (sum of all TX/RX antennas, in dB)
+  int            wideband_cqi_tot[NUMBER_OF_CONNECTED_eNB_MAX];
+  /// SINR (sum of all TX/RX antennas, time average, in dB)
+  int            wideband_cqi_avg[NUMBER_OF_CONNECTED_eNB_MAX];
+
+  //! estimated rssi (dBm)
+  short          rx_rssi_dBm[NUMBER_OF_CONNECTED_eNB_MAX];
+  //! estimated correlation (wideband linear) between spatial channels (computed in dlsch_demodulation)
+  int            rx_correlation[NUMBER_OF_CONNECTED_eNB_MAX][2];
+  //! estimated correlation (wideband dB) between spatial channels (computed in dlsch_demodulation)
+  int            rx_correlation_dB[NUMBER_OF_CONNECTED_eNB_MAX][2];
+
+  /// Wideband CQI (sum of all RX antennas, in dB, for precoded transmission modes (3,4,5,6), up to 4 spatial streams)
+  int            precoded_cqi_dB[NUMBER_OF_CONNECTED_eNB_MAX+1][4];
+  /// Subband CQI per RX antenna (= SINR)
+  int            subband_cqi[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX][NUMBER_OF_SUBBANDS_MAX_NB_IoT];
+  /// Total Subband CQI  (= SINR)
+  int            subband_cqi_tot[NUMBER_OF_CONNECTED_eNB_MAX][NUMBER_OF_SUBBANDS_MAX_NB_IoT];
+  /// Subband CQI in dB (= SINR dB)
+  int            subband_cqi_dB[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX][NUMBER_OF_SUBBANDS_MAX_NB_IoT];
+  /// Total Subband CQI
+  int            subband_cqi_tot_dB[NUMBER_OF_CONNECTED_eNB_MAX][NUMBER_OF_SUBBANDS_MAX_NB_IoT];
+  /// Wideband PMI for each RX antenna
+  int            wideband_pmi_re[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];
+  /// Wideband PMI for each RX antenna
+  int            wideband_pmi_im[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];
+  ///Subband PMI for each RX antenna
+  int            subband_pmi_re[NUMBER_OF_CONNECTED_eNB_MAX][NUMBER_OF_SUBBANDS_MAX_NB_IoT][NB_ANTENNAS_RX];
+  ///Subband PMI for each RX antenna
+  int            subband_pmi_im[NUMBER_OF_CONNECTED_eNB_MAX][NUMBER_OF_SUBBANDS_MAX_NB_IoT][NB_ANTENNAS_RX];
+  /// chosen RX antennas (1=Rx antenna 1, 2=Rx antenna 2, 3=both Rx antennas)
+  unsigned char           selected_rx_antennas[NUMBER_OF_CONNECTED_eNB_MAX][NUMBER_OF_SUBBANDS_MAX_NB_IoT];
+  /// Wideband Rank indication
+  unsigned char  rank[NUMBER_OF_CONNECTED_eNB_MAX];
+  /// Number of RX Antennas
+  unsigned char  nb_antennas_rx;
+  /// DLSCH error counter
+  // short          dlsch_errors;
+
+} PHY_MEASUREMENTS_NB_IoT;
+
+
 typedef struct {
   //unsigned int   rx_power[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];     //! estimated received signal power (linear)
   //unsigned short rx_power_dB[NUMBER_OF_CONNECTED_eNB_MAX][NB_ANTENNAS_RX];  //! estimated received signal power (dB)

@@ -42,7 +42,7 @@ void ccode_encode_NB_IoT (int32_t numbits,
   state = 0;
 
   if (add_crc == 2) {
-    crc = crc16(inPtr,numbits);     // crc is 2 bytes
+    crc = crc16_NB_IoT(inPtr,numbits);     // crc is 2 bytes
     // scramble with RNTI
     crc ^= (((uint32_t)rnti)<<16);  // XOR with crc
     first_bit = 2;

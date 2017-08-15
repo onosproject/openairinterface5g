@@ -32,11 +32,11 @@
 
 //#include "defs.h"
 
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 #include "PHY/extern.h"
 #include "PHY/CODING/extern.h"
-#include "extern.h"
+#include "extern_NB_IoT.h"
 #include "SCHED/extern.h"
 #ifdef OPENAIR2
 #include "LAYER2/MAC/defs.h"
@@ -1133,7 +1133,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
 
   // Demultiplexing/Deinterleaving of PUSCH/ACK/RI/CQI
-  start_meas(&eNB->ulsch_demultiplexing_stats);
+  //start_meas_NB_IoT(&eNB->ulsch_demultiplexing_stats);
   Hpp = Hprime + Qprime_RI;
 
   Cmux       = ulsch_harq->Nsymb_pusch;
@@ -1555,7 +1555,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   }
     
    
-  stop_meas(&eNB->ulsch_demultiplexing_stats);
+  //stop_meas_NB_IoT(&eNB->ulsch_demultiplexing_stats);
 
   //  printf("after ACKNAK2 c[%d] = %p (iprime %d, G %d)\n",0,ulsch_harq->c[0],iprime,G);
 

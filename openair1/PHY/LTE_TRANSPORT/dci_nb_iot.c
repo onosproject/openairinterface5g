@@ -226,10 +226,10 @@ int dci_allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
 					*jj=*jj+1;
 
 					// normalization for 2 tx antennas
-					((int16_t*)&txdataF[0][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample1)[0]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[0][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample1)[1]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[1][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample2)[0]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[1][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample2)[1]*ONE_OVER_SQRT2_Q15)>>15);
+					((int16_t*)&txdataF[0][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample1)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[0][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample1)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[1][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample2)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[1][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample2)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
 
 					// fill in the rest of the ALAMOUTI precoding
 					if ( pilots != 1 || (re+1)%3 != id_offset) {
@@ -289,10 +289,10 @@ int dci_allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
 					*jj=*jj+1;
 
 					// normalization for 2 tx antennas
-					((int16_t*)&txdataF[0][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample1)[0]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[0][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample1)[1]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[1][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample2)[0]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[1][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample2)[1]*ONE_OVER_SQRT2_Q15)>>15);
+					((int16_t*)&txdataF[0][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample1)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[0][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample1)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[1][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample2)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[1][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample2)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
 
 					// fill in the rest of the ALAMOUTI precoding
 					if ( pilots != 1 || (re+1)%3 != id_offset) {
@@ -359,15 +359,15 @@ int dci_allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
 					*jj=*jj+1;
 
 					// normalization for 2 tx antennas
-					((int16_t*)&txdataF[0][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample1)[0]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[0][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample1)[1]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[1][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample2)[0]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[1][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample2)[1]*ONE_OVER_SQRT2_Q15)>>15);
+					((int16_t*)&txdataF[0][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample1)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[0][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample1)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[1][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample2)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[1][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample2)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
 
-					((int16_t*)&txdataF[0][tti_offset+6])[0] += (int16_t)((((int16_t*)&tmp_sample3)[0]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[0][tti_offset+6])[1] += (int16_t)((((int16_t*)&tmp_sample3)[1]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[1][tti_offset+6])[0] += (int16_t)((((int16_t*)&tmp_sample4)[0]*ONE_OVER_SQRT2_Q15)>>15);
-					((int16_t*)&txdataF[1][tti_offset+6])[1] += (int16_t)((((int16_t*)&tmp_sample4)[1]*ONE_OVER_SQRT2_Q15)>>15);
+					((int16_t*)&txdataF[0][tti_offset+6])[0] += (int16_t)((((int16_t*)&tmp_sample3)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[0][tti_offset+6])[1] += (int16_t)((((int16_t*)&tmp_sample3)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[1][tti_offset+6])[0] += (int16_t)((((int16_t*)&tmp_sample4)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+					((int16_t*)&txdataF[1][tti_offset+6])[1] += (int16_t)((((int16_t*)&tmp_sample4)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
 
 					// fill in the rest of the ALAMOUTI precoding
 					if ( pilots != 1 || (re+1)%3 != id_offset) {

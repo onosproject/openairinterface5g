@@ -86,6 +86,7 @@ int16_t get_hundred_times_delta_IF_eNB_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,uint8_t U
   } else {
     return(0);
   }
+
 }
 
 /*
