@@ -3991,6 +3991,163 @@ int dump_dci(LTE_DL_FRAME_PARMS *frame_parms, DCI_ALLOC_t *dci)
 
     break;
 
+  case format2B:
+
+    if ((frame_parms->frame_type == TDD) &&
+        (frame_parms->tdd_config>0)) {
+      switch(frame_parms->N_RB_DL) {
+        case 6:
+          LOG_D(PHY,"DCI format2B (TDD 1.5 MHz), rnti %x (%x): rb_alloc %x, mcs %d|%d, harq_pid %d, ndi %d|%d, RV %d|%d, TPC %d, dai %d\n",
+                dci->rnti,
+                ((uint32_t*)&dci->dci_pdu)[0],
+                ((DCI2B_1_5MHz_TDD_t *)&dci->dci_pdu[0])->rballoc,
+                ((DCI2B_1_5MHz_TDD_t *)&dci->dci_pdu[0])->mcs1,
+                ((DCI2B_1_5MHz_TDD_t *)&dci->dci_pdu[0])->mcs2,
+                ((DCI2B_1_5MHz_TDD_t *)&dci->dci_pdu[0])->harq_pid,
+                ((DCI2B_1_5MHz_TDD_t *)&dci->dci_pdu[0])->ndi1,
+                ((DCI2B_1_5MHz_TDD_t *)&dci->dci_pdu[0])->ndi2,
+                ((DCI2B_1_5MHz_TDD_t *)&dci->dci_pdu[0])->rv1,
+                ((DCI2B_1_5MHz_TDD_t *)&dci->dci_pdu[0])->rv2,
+                ((DCI2B_1_5MHz_TDD_t *)&dci->dci_pdu[0])->TPC,
+                ((DCI2B_1_5MHz_TDD_t *)&dci->dci_pdu[0])->dai);
+          break;
+
+        case 25:
+          LOG_D(PHY,"DCI format2B (TDD 5 MHz), rnti %x (%x): rah %d, rb_alloc %x, mcs %d|%d, harq_pid %d, ndi %d|%d, RV %d|%d, TPC %d, dai %d\n",
+                dci->rnti,
+                ((uint32_t*)&dci->dci_pdu)[0],
+                ((DCI2B_5MHz_TDD_t *)&dci->dci_pdu[0])->rah,
+                ((DCI2B_5MHz_TDD_t *)&dci->dci_pdu[0])->rballoc,
+                ((DCI2B_5MHz_TDD_t *)&dci->dci_pdu[0])->mcs1,
+                ((DCI2B_5MHz_TDD_t *)&dci->dci_pdu[0])->mcs2,
+                ((DCI2B_5MHz_TDD_t *)&dci->dci_pdu[0])->harq_pid,
+                ((DCI2B_5MHz_TDD_t *)&dci->dci_pdu[0])->ndi1,
+                ((DCI2B_5MHz_TDD_t *)&dci->dci_pdu[0])->ndi2,
+                ((DCI2B_5MHz_TDD_t *)&dci->dci_pdu[0])->rv1,
+                ((DCI2B_5MHz_TDD_t *)&dci->dci_pdu[0])->rv2,
+                ((DCI2B_5MHz_TDD_t *)&dci->dci_pdu[0])->TPC,
+                ((DCI2B_5MHz_TDD_t *)&dci->dci_pdu[0])->dai);
+          break;
+
+        case 50:
+          LOG_D(PHY,"DCI format2B (TDD 10 MHz), rnti %x (%x): rah %d, rb_alloc %x, mcs %d|%d, harq_pid %d, ndi %d|%d, RV %d|%d, TPC %d, dai %d\n",
+                dci->rnti,
+                ((uint32_t*)&dci->dci_pdu)[0],
+                ((DCI2B_10MHz_TDD_t *)&dci->dci_pdu[0])->rah,
+                ((DCI2B_10MHz_TDD_t *)&dci->dci_pdu[0])->rballoc,
+                ((DCI2B_10MHz_TDD_t *)&dci->dci_pdu[0])->mcs1,
+                ((DCI2B_10MHz_TDD_t *)&dci->dci_pdu[0])->mcs2,
+                ((DCI2B_10MHz_TDD_t *)&dci->dci_pdu[0])->harq_pid,
+                ((DCI2B_10MHz_TDD_t *)&dci->dci_pdu[0])->ndi1,
+                ((DCI2B_10MHz_TDD_t *)&dci->dci_pdu[0])->ndi2,
+                ((DCI2B_10MHz_TDD_t *)&dci->dci_pdu[0])->rv1,
+                ((DCI2B_10MHz_TDD_t *)&dci->dci_pdu[0])->rv2,
+                ((DCI2B_10MHz_TDD_t *)&dci->dci_pdu[0])->TPC,
+                ((DCI2B_10MHz_TDD_t *)&dci->dci_pdu[0])->dai);
+          break;
+
+        case 100:
+          LOG_D(PHY,"DCI format2B (TDD 20 MHz), rnti %x (%x): rah %d, rb_alloc %x, mcs %d|%d, harq_pid %d, ndi %d|%d, RV %d|%d, TPC %d, dai %d\n",
+                dci->rnti,
+                ((uint32_t*)&dci->dci_pdu)[0],
+                ((DCI2B_20MHz_TDD_t *)&dci->dci_pdu[0])->rah,
+                ((DCI2B_20MHz_TDD_t *)&dci->dci_pdu[0])->rballoc,
+                ((DCI2B_20MHz_TDD_t *)&dci->dci_pdu[0])->mcs1,
+                ((DCI2B_20MHz_TDD_t *)&dci->dci_pdu[0])->mcs2,
+                ((DCI2B_20MHz_TDD_t *)&dci->dci_pdu[0])->harq_pid,
+                ((DCI2B_20MHz_TDD_t *)&dci->dci_pdu[0])->ndi1,
+                ((DCI2B_20MHz_TDD_t *)&dci->dci_pdu[0])->ndi2,
+                ((DCI2B_20MHz_TDD_t *)&dci->dci_pdu[0])->rv1,
+                ((DCI2B_20MHz_TDD_t *)&dci->dci_pdu[0])->rv2,
+                ((DCI2B_20MHz_TDD_t *)&dci->dci_pdu[0])->TPC,
+                ((DCI2B_20MHz_TDD_t *)&dci->dci_pdu[0])->dai);
+          break;
+
+        default:
+          LOG_E(PHY,"Invalid N_RB_DL %d\n", frame_parms->N_RB_DL);
+          DevParam (frame_parms->N_RB_DL, 0, 0);
+          break;
+      }
+    } else if (frame_parms->frame_type == FDD) {
+      switch(frame_parms->N_RB_DL) {
+        case 6:
+          LOG_D(PHY,"DCI format2B (FDD, 1.5 MHz), rnti %x (%x):  rb_alloc %x, mcs1 %d, mcs2 %d, harq_pid %d, ndi1 %d, ndi2 %d, RV1 %d, RV2 %d, TPC %d\n",
+                dci->rnti,
+                ((uint32_t*)&dci->dci_pdu)[0],
+                ((DCI2B_1_5MHz_FDD_t *)&dci->dci_pdu[0])->rballoc,
+                ((DCI2B_1_5MHz_FDD_t *)&dci->dci_pdu[0])->mcs1,
+                ((DCI2B_1_5MHz_FDD_t *)&dci->dci_pdu[0])->mcs2,
+                ((DCI2B_1_5MHz_FDD_t *)&dci->dci_pdu[0])->harq_pid,
+                ((DCI2B_1_5MHz_FDD_t *)&dci->dci_pdu[0])->ndi1,
+                ((DCI2B_1_5MHz_FDD_t *)&dci->dci_pdu[0])->ndi2,
+                ((DCI2B_1_5MHz_FDD_t *)&dci->dci_pdu[0])->rv1,
+                ((DCI2B_1_5MHz_FDD_t *)&dci->dci_pdu[0])->rv2,
+                ((DCI2B_1_5MHz_FDD_t *)&dci->dci_pdu[0])->TPC);
+          break;
+
+        case 25:
+
+          LOG_D(PHY,"DCI format2B (FDD, 5 MHz), rnti %x (%x): rah %d, rb_alloc %x, mcs1 %d, mcs2 %d, harq_pid %d, ndi1 %d, ndi2 %d, RV1 %d, RV2 %d, TPC %d\n",
+
+                dci->rnti,
+                ((uint32_t*)&dci->dci_pdu)[0],
+                ((DCI2B_5MHz_FDD_t *)&dci->dci_pdu[0])->rah,
+                ((DCI2B_5MHz_FDD_t *)&dci->dci_pdu[0])->rballoc,
+                ((DCI2B_5MHz_FDD_t *)&dci->dci_pdu[0])->mcs1,
+                ((DCI2B_5MHz_FDD_t *)&dci->dci_pdu[0])->mcs2,
+                ((DCI2B_5MHz_FDD_t *)&dci->dci_pdu[0])->harq_pid,
+                ((DCI2B_5MHz_FDD_t *)&dci->dci_pdu[0])->ndi1,
+                ((DCI2B_5MHz_FDD_t *)&dci->dci_pdu[0])->ndi2,
+                ((DCI2B_5MHz_FDD_t *)&dci->dci_pdu[0])->rv1,
+                ((DCI2B_5MHz_FDD_t *)&dci->dci_pdu[0])->rv2,
+                ((DCI2B_5MHz_FDD_t *)&dci->dci_pdu[0])->TPC);
+          break;
+
+        case 50:
+          LOG_D(PHY,"DCI format2B (FDD, 10 MHz), rnti %x (%x): rah %d, rb_alloc %x, mcs %d|%d, harq_pid %d, ndi %d|%d, RV %d|%d, TPC %d\n",
+                dci->rnti,
+                ((uint32_t*)&dci->dci_pdu)[0],
+                ((DCI2B_10MHz_FDD_t *)&dci->dci_pdu[0])->rah,
+                ((DCI2B_10MHz_FDD_t *)&dci->dci_pdu[0])->rballoc,
+                ((DCI2B_10MHz_FDD_t *)&dci->dci_pdu[0])->mcs1,
+                ((DCI2B_10MHz_FDD_t *)&dci->dci_pdu[0])->mcs2,
+                ((DCI2B_10MHz_FDD_t *)&dci->dci_pdu[0])->harq_pid,
+                ((DCI2B_10MHz_FDD_t *)&dci->dci_pdu[0])->ndi1,
+                ((DCI2B_10MHz_FDD_t *)&dci->dci_pdu[0])->ndi2,
+                ((DCI2B_10MHz_FDD_t *)&dci->dci_pdu[0])->rv1,
+                ((DCI2B_10MHz_FDD_t *)&dci->dci_pdu[0])->rv2,
+                ((DCI2B_10MHz_FDD_t *)&dci->dci_pdu[0])->TPC);
+          break;
+
+        case 100:
+          LOG_D(PHY,"DCI format2B (FDD, 20 MHz), rnti %x (%x): rah %d, rb_alloc %x, mcs %d|%d, harq_pid %d, ndi %d|%d, RV %d|%d, TPC %d\n",
+                dci->rnti,
+                ((uint32_t*)&dci->dci_pdu)[0],
+                ((DCI2B_20MHz_FDD_t *)&dci->dci_pdu[0])->rah,
+                ((DCI2B_20MHz_FDD_t *)&dci->dci_pdu[0])->rballoc,
+                ((DCI2B_20MHz_FDD_t *)&dci->dci_pdu[0])->mcs1,
+                ((DCI2B_20MHz_FDD_t *)&dci->dci_pdu[0])->mcs2,
+                ((DCI2B_20MHz_FDD_t *)&dci->dci_pdu[0])->harq_pid,
+                ((DCI2B_20MHz_FDD_t *)&dci->dci_pdu[0])->ndi1,
+                ((DCI2B_20MHz_FDD_t *)&dci->dci_pdu[0])->ndi2,
+                ((DCI2B_20MHz_FDD_t *)&dci->dci_pdu[0])->rv1,
+                ((DCI2B_20MHz_FDD_t *)&dci->dci_pdu[0])->rv2,
+                ((DCI2B_20MHz_FDD_t *)&dci->dci_pdu[0])->TPC);
+          break;
+
+        default:
+          LOG_E(PHY,"Invalid N_RB_DL %d\n", frame_parms->N_RB_DL);
+          DevParam (frame_parms->N_RB_DL, 0, 0);
+          break;
+        }
+    }
+
+    else
+      LOG_E(PHY,"Don't know how to handle TDD format 0 yet\n");
+
+    break;
+
+
   case format1E_2A_M10PRB:
 
     LOG_D(PHY,"DCI format1E_2A_M10PRB, rnti %x (%8x): harq_pid %d, rah %d, rb_alloc %x, mcs %d, rv %d, tpmi %d, ndi %d, dl_power_offset %d\n",
