@@ -2200,7 +2200,7 @@ int main(int argc, char **argv)
 	     1,
 	     1,
 	     0,
-	     0,
+	     1,
 	     tpmi,
 	     &num_common_dci,
 	     &num_ue_spec_dci,
@@ -2404,17 +2404,23 @@ int main(int argc, char **argv)
 	      num_common_dci=0;
 	      num_ue_spec_dci=0;
 
+	      /*
               if (round == 0) { // First round
                 fill_DCI (eNB, &dci_alloc[0], subframe, n_rnti, n_users, transmission_mode, common_flag, DLSCH_RB_ALLOC, TPC, 
-			  mcs1, mcs2, trials & 1, trials &1, round & 3, round & 3, tpmi, &num_common_dci, &num_ue_spec_dci, &num_dci);
+			  mcs1, mcs2, 
+			  trials & 1, trials &1, 
+			  round & 3, round & 3, 
+			  tpmi, 
+			  &num_common_dci, &num_ue_spec_dci, &num_dci);
               } else {
+	      */
                 fill_DCI (eNB, &dci_alloc[0], subframe, n_rnti, n_users, transmission_mode, common_flag, DLSCH_RB_ALLOC, TPC,
                           (TB0_active == 1) ? mcs1 : 0, (TB1_active==1) ? mcs2 : 0, 
 			  trials&1, trials&1, 
 			  (TB0_active == 1) ? round&3 : 1, (TB1_active == 1) ? round&3 : 1, 
 			  tpmi,
 			  &num_common_dci, &num_ue_spec_dci, &num_dci);
-              }
+		//}
 
 	      for (i=num_common_dci; i<num_dci; i++) {
 
