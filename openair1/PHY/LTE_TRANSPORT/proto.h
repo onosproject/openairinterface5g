@@ -232,6 +232,7 @@ void dlsch_encoding_emul(PHY_VARS_eNB *phy_vars_eNB,
     \param txdataF pointer to output data (frequency domain signal)
     \param jj index to output (from CW 1)
     \param jj index to output (from CW 2)
+    \param rb index of the current RB
     \param re_offset index of the first RE of the RB
     \param symbol_offset index to the OFDM symbol
     \param dlsch0_harq Pointer to Transport block 0 HARQ structure
@@ -251,6 +252,7 @@ int32_t allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
                            int32_t **txdataF,
                            uint32_t *jj,
                            uint32_t *jj2,
+                           uint16_t rb,
                            uint16_t re_offset,
                            uint32_t symbol_offset,
                            LTE_DL_eNB_HARQ_t *dlsch0_harq,
