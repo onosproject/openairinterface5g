@@ -65,42 +65,43 @@ uint8_t is_not_pilot(uint8_t pilots, uint8_t re, uint8_t nushift, uint8_t use2nd
 
 uint8_t is_not_UEspecRS(int8_t lprime, uint8_t re, uint8_t nushift, uint8_t Ncp, uint8_t beamforming_mode, uint8_t Ns)
 {
-  uint8_t offset = (lprime==1||lprime==3)?2:0;
+  uint8_t offset = 0;
   if (lprime==-1)
     return(1);
 
   switch (beamforming_mode) {
-    case 7:
-      if (Ncp == NORMAL){
-        if ((re!=nushift+offset) && (re!=((nushift+4+offset)%12)) &&  (re!=((nushift+8+offset)%12)))
-          return(1);
-        /*else{
-          printf("(is_no_UEspec_RS):lprime=%d, re=%d, nushift=%d, offset=%d\n",lprime, re,nushift,offset);
+  case 7:
+    offset = (lprime==1||lprime==3)?2:0;
+    if (Ncp == NORMAL){
+      if ((re!=nushift+offset) && (re!=((nushift+4+offset)%12)) &&  (re!=((nushift+8+offset)%12)))
+	return(1);
+      /*else{
+	printf("(is_no_UEspec_RS):lprime=%d, re=%d, nushift=%d, offset=%d\n",lprime, re,nushift,offset);
         }*/
-      } else {
-        if ((re!=nushift+offset) && (re!=((nushift+3+offset)%12)) && (re!=((nushift+6+offset)%12)) && (re!=((nushift+9+offset)%12)))
-          return(1);
+    } else {
+      if ((re!=nushift+offset) && (re!=((nushift+3+offset)%12)) && (re!=((nushift+6+offset)%12)) && (re!=((nushift+9+offset)%12)))
+	return(1);
+    }
+    break;
+    
+  case 8:/*ToDo (36.211 v11.3 p86)*/ /* Mapping to REs */
+    if (Ncp == NORMAL){
+      if ((re!=offset+1) && (re!=5+offset+1) &&  (re!=10+offset+1)) 
+	return(1);
+    } else { 
+      if (Ns%2==0) { // even slot in a subframe
+	if ((re!=offset+1) && (re!=3+offset+1) &&  (re!=6+offset+1) && (re!=9+offset+1)) 
+	  return(1);
+      } else {  // odd slot in a subframe
+	if ((re!=offset+2) && (re!=3+offset+2) &&  (re!=6+offset+2) && (re!=9+offset+2)) 
+	  return(1);
       }
-      break;
-
-      case 8:/*ToDo (36.211 v11.3 p86)*/ /* Mapping to REs */
-        if (Ncp == NORMAL){
-          if ((re!=offset+1) && (re!=5+offset+1) &&  (re!=10+offset+1)) 
-            return(1);
-        } else { 
-          if (Ns%2==0) { // even slot in a subframe
-            if ((re!=offset+1) && (re!=3+offset+1) &&  (re!=6+offset+1) && (re!=9+offset+1)) 
-              return(1);
-          } else {  // odd slot in a subframe
-            if ((re!=offset+2) && (re!=3+offset+2) &&  (re!=6+offset+2) && (re!=9+offset+2)) 
-              return(1);
-          }
-        }
-        break;
-
-    default:
-      msg("is_not_UEspecRS() [dlsch_modulation.c] : ERROR, unknown beamforming_mode %d\n",beamforming_mode);
-      return(-1);
+    }
+    break;
+    
+  default:
+    msg("is_not_UEspecRS() [dlsch_modulation.c] : ERROR, unknown beamforming_mode %d\n",beamforming_mode);
+    return(-1);
   }
 
   return(0);
