@@ -415,22 +415,22 @@ void set_rx_gain_offset(openair0_config_t *openair0_cfg, int chain_index,int bw_
       break;
     }
   }
-  /*
-  while (openair0_cfg->rx_gain_calib_table[i].freq>0) {
-    diff = fabs(openair0_cfg->rx_freq[chain_index] - openair0_cfg->rx_gain_calib_table[i].freq);
-    printf("cal %d: freq %f, offset %f, diff %f\n",
+  if (openair0_cfg[0].gain_calib_val == 0){
+    while (openair0_cfg->rx_gain_calib_table[i].freq>0) {
+      diff = fabs(openair0_cfg->rx_freq[chain_index] - openair0_cfg->rx_gain_calib_table[i].freq);
+      printf("cal %d: freq %f, offset %f, diff %f\n",
 	   i,
 	   openair0_cfg->rx_gain_calib_table[i].freq,
 	   openair0_cfg->rx_gain_calib_table[i].offset,diff);
-    if (min_diff > diff) {
-      min_diff = diff;
-      openair0_cfg->rx_gain_offset[chain_index] = openair0_cfg->rx_gain_calib_table[i].offset+gain_adj;
+      if (min_diff > diff) {
+        min_diff = diff;
+        openair0_cfg->rx_gain_offset[chain_index] = openair0_cfg->rx_gain_calib_table[i].offset+gain_adj;
+      }
+      i++;
     }
-    i++;
   }
-  */
-  openair0_cfg->rx_gain_offset[chain_index] = openair0_cfg->gain_calib_val+gain_adj;
-  printf("Calculating gain offset for rf chain %d: %2.2f\n", chain_index, openair0_cfg->rx_gain_offset[chain_index]);
+  else
+     openair0_cfg->rx_gain_offset[chain_index] = openair0_cfg[0].gain_calib_val+gain_adj;
 }
 
 /*! \brief print the Iris statistics
@@ -519,7 +519,6 @@ extern "C" {
 		break;
 	}
 	printf("tx_sample_advance %d\n", openair0_cfg[0].tx_sample_advance);
-	printf("gain calibration value %2.2f\n", openair0_cfg[0].gain_calib_val);
 
 	int r;
 	for (r = 0; r < s->device_num; r++)
@@ -536,7 +535,6 @@ extern "C" {
 
 		    set_rx_gain_offset(&openair0_cfg[0],i,bw_gain_adjust);
 		    s->iris[r]->setGain(SOAPY_SDR_RX, i, openair0_cfg[0].rx_gain[i]-openair0_cfg[0].rx_gain_offset[i]);
-		    printf("input rx gain value for rf chain %d: %2.2f\n", i, openair0_cfg[0].rx_gain[i]);
 
 		    if (openair0_cfg[0].duplex_mode == 1 ) //duplex_mode_TDD
 			s->iris[r]->setAntenna(SOAPY_SDR_RX, i, (i==0)?"TRXA":"TRXB");			
