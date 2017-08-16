@@ -13,8 +13,12 @@
 */
 
 //#include "PHY/defs.h"
-#include "PHY/defs_nb_iot.h"
-#include "PHY/extern.h"
+///////////////#include "PHY/defs_nb_iot.h"
+//#include "PHY/extern.h"
+#include <math.h>
+#include "PHY/impl_defs_lte_nb_iot.h"
+#include "PHY/impl_defs_top_NB_IoT.h"
+//or #include "PHY/defs_nb_iot.h"
 #include "PHY/LTE_REFSIG/primary_synch_NB_IoT.h"
 
 int generate_npss_NB_IoT(int32_t **txdataF,
@@ -34,7 +38,7 @@ int generate_npss_NB_IoT(int32_t **txdataF,
    primary_sync = primary_synch_NB_IoT;     		// primary_synch_NB_IoT[264] of primary_synch_NB_IoT.h
 
    // Signal amplitude
-   a = (frame_parms->nb_antennas_tx == 1) ? amp: (amp*ONE_OVER_SQRT2_Q15)>>15;
+   a = (frame_parms->nb_antennas_tx == 1) ? amp: (amp*ONE_OVER_SQRT2_Q15_NB_IoT)>>15;
 
    // Testing if the total number of RBs is even or odd (i.e. Identification of the bandwidth: 1.4, 3, 5, 10, ... MHz)
    bandwidth_even_odd = frame_parms->N_RB_DL % 2;  		// 0 for even, 1 for odd

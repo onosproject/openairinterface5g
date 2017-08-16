@@ -16,7 +16,7 @@
 //#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 //#include "defs.h"
-#include "PHY/extern_NB_IoT.h"
+//#include "PHY/extern_NB_IoT.h"
 #include "nsss_NB_IoT.h"
 
 int generate_sss_NB_IoT(int32_t **txdataF,

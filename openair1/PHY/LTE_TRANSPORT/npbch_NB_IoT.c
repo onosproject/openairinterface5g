@@ -17,8 +17,8 @@
 //#include "PHY/CODING/extern.h"
 //#include "PHY/CODING/lte_interleaver_inline.h"
 #include "PHY/LTE_TRANSPORT/defs_nb_iot.h"
-#include "extern_NB_IoT.h"
-#include "PHY/extern_NB_IoT.h"
+//#include "extern_NB_IoT.h"
+//#include "PHY/extern_NB_IoT.h"
 //#include "PHY/sse_intrin.h"
 
 #include "PHY/CODING/defs_nb_iot.h"

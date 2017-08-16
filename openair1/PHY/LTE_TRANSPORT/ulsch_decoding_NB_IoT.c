@@ -35,9 +35,9 @@
 //#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 #include "PHY/extern.h"
-#include "PHY/CODING/extern.h"
-#include "extern_NB_IoT.h"
-#include "SCHED/extern.h"
+//#include "PHY/CODING/extern.h"
+//#include "extern_NB_IoT.h"
+//#include "SCHED/extern.h"
 #ifdef OPENAIR2
 #include "LAYER2/MAC/defs.h"
 #include "LAYER2/MAC/extern.h"
