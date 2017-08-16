@@ -373,6 +373,7 @@ int trx_iris_set_gains(openair0_device* device,
 rx_gain_calib_table_t calib_table_iris[] = {
   {3500000000.0,83},
   {2660000000.0,83},
+  {2580000000.0,80},
   {2300000000.0,83},
   {1880000000.0,83},
   {816000000.0,83},
@@ -414,6 +415,7 @@ void set_rx_gain_offset(openair0_config_t *openair0_cfg, int chain_index,int bw_
       break;
     }
   }
+  /*
   while (openair0_cfg->rx_gain_calib_table[i].freq>0) {
     diff = fabs(openair0_cfg->rx_freq[chain_index] - openair0_cfg->rx_gain_calib_table[i].freq);
     printf("cal %d: freq %f, offset %f, diff %f\n",
@@ -426,7 +428,9 @@ void set_rx_gain_offset(openair0_config_t *openair0_cfg, int chain_index,int bw_
     }
     i++;
   }
-
+  */
+  openair0_cfg->rx_gain_offset[chain_index] = openair0_cfg->gain_calib_val+gain_adj;
+  printf("Calculating gain offset for rf chain %d: %2.2f\n", chain_index, openair0_cfg->rx_gain_offset[chain_index]);
 }
 
 /*! \brief print the Iris statistics
@@ -515,6 +519,7 @@ extern "C" {
 		break;
 	}
 	printf("tx_sample_advance %d\n", openair0_cfg[0].tx_sample_advance);
+	printf("gain calibration value %2.2f\n", openair0_cfg[0].gain_calib_val);
 
 	int r;
 	for (r = 0; r < s->device_num; r++)
@@ -528,9 +533,11 @@ extern "C" {
 		if (i < openair0_cfg[0].rx_num_channels) {
 		    s->iris[r]->setSampleRate(SOAPY_SDR_RX, i, openair0_cfg[0].sample_rate/SAMPLE_RATE_DOWN);
 		    s->iris[r]->setFrequency(SOAPY_SDR_RX, i, "RF", openair0_cfg[0].rx_freq[i]);
-		    set_rx_gain_offset(&openair0_cfg[0],i,bw_gain_adjust);
 
+		    set_rx_gain_offset(&openair0_cfg[0],i,bw_gain_adjust);
 		    s->iris[r]->setGain(SOAPY_SDR_RX, i, openair0_cfg[0].rx_gain[i]-openair0_cfg[0].rx_gain_offset[i]);
+		    printf("input rx gain value for rf chain %d: %2.2f\n", i, openair0_cfg[0].rx_gain[i]);
+
 		    if (openair0_cfg[0].duplex_mode == 1 ) //duplex_mode_TDD
 			s->iris[r]->setAntenna(SOAPY_SDR_RX, i, (i==0)?"TRXA":"TRXB");			
 		    s->iris[r]->setDCOffsetMode(SOAPY_SDR_RX, i, true); // move somewhere else
@@ -548,13 +555,13 @@ extern "C" {
 	    for(i = 0; i < openair0_cfg[0].tx_num_channels; i++) {
 		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_TX) ) {
 		    s->iris[r]->setBandwidth(SOAPY_SDR_TX, i, openair0_cfg[0].tx_bw);
-		    printf("Setting tx freq/gain on channel %lu/%lu: BW %f (readback %f)\n",i,s->iris[r]->getNumChannels(SOAPY_SDR_TX),openair0_cfg[0].tx_bw/1e6,s->iris[r]->getBandwidth(SOAPY_SDR_TX, i)/1e6);
+		    printf("Setting tx bandwidth on channel %lu/%lu: BW %f (readback %f)\n",i,s->iris[r]->getNumChannels(SOAPY_SDR_TX),openair0_cfg[0].tx_bw/1e6,s->iris[r]->getBandwidth(SOAPY_SDR_TX, i)/1e6);
 		}
 	    }
 	    for(i = 0; i < openair0_cfg[0].rx_num_channels; i++) {
 		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_RX)) {
 		    s->iris[r]->setBandwidth(SOAPY_SDR_RX, i, openair0_cfg[0].rx_bw);
-		    printf("Setting rx freq/gain on channel %lu/%lu : BW %f (readback %f)\n",i,s->iris[r]->getNumChannels(SOAPY_SDR_RX),openair0_cfg[0].rx_bw/1e6,s->iris[r]->getBandwidth(SOAPY_SDR_RX, i)/1e6);
+		    printf("Setting rx bandwidth on channel %lu/%lu : BW %f (readback %f)\n",i,s->iris[r]->getNumChannels(SOAPY_SDR_RX),openair0_cfg[0].rx_bw/1e6,s->iris[r]->getBandwidth(SOAPY_SDR_RX, i)/1e6);
 		}
 	    }
 
