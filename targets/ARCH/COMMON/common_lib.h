@@ -176,6 +176,7 @@ typedef struct {
   //! \brief memory
   //! \brief Pointer to Calibration table for RX gains
   rx_gain_calib_table_t *rx_gain_calib_table;
+  int gain_calib_val;
 
   //! mode for rxgain (ExpressMIMO2) 
   rx_gain_t rxg_mode[4];

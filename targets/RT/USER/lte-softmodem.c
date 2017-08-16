@@ -233,6 +233,7 @@ int16_t   node_synch_ref[MAX_NUM_CCs];
 uint32_t target_dl_mcs = 28; //maximum allowed mcs
 uint32_t target_ul_mcs = 10;
 uint32_t tx_sample_advance = 0; //cws: added to test tx/rx sync
+uint32_t gain_calib_val = 0; //rd: having a fixed table in the driver was not as efficient, so we set it as cmdline arg
 uint32_t timing_advance = 0;
 uint8_t exit_missed_slots=1;
 uint64_t num_missed_slots=0; // counter for the number of missed slots
@@ -409,6 +410,7 @@ void help (void) {
   printf("  -E Apply three-quarter of sampling frequency, 23.04 Msps to reduce the data rate on USB/PCIe transfers (only valid for 20 MHz)\n");
   printf("  --rrh-remote-address Remote radio head address (serial for Iris)\n");
   printf("  --tx-sample-advance TX Sample Advance\n");
+  printf("  --gain-calib-val value to be used for calibrating gain\n");
 #if T_TRACER
   printf("  --T_port [port]    use given port\n");
   printf("  --T_nowait         don't wait for tracer, start immediately\n");
@@ -703,6 +705,7 @@ static void get_options (int argc, char **argv)
     LONG_OPTION_EXMIMO_TDD_WORKAROUND,
     LONG_OPTION_RRH_REMOTE_ADDRESS,
     LONG_OPTION_TX_SAMPLE_ADVANCE,
+    LONG_OPTION_GAIN_CALIB_VALUE,
 #if T_TRACER
     LONG_OPTION_T_PORT,
     LONG_OPTION_T_NOWAIT,
@@ -734,6 +737,7 @@ static void get_options (int argc, char **argv)
     {"exmimo-tdd-workaround", no_argument, NULL, LONG_OPTION_EXMIMO_TDD_WORKAROUND},
     {"rrh-remote-address", required_argument, NULL, LONG_OPTION_RRH_REMOTE_ADDRESS},
     {"tx-sample-advance", required_argument, NULL, LONG_OPTION_TX_SAMPLE_ADVANCE},
+    {"gain-calib-value", required_argument, NULL, LONG_OPTION_GAIN_CALIB_VALUE},
 #if T_TRACER
     {"T_port",                 required_argument, 0, LONG_OPTION_T_PORT},
     {"T_nowait",               no_argument,       0, LONG_OPTION_T_NOWAIT},
@@ -745,6 +749,10 @@ static void get_options (int argc, char **argv)
   while ((c = getopt_long (argc, argv, "A:a:C:dEK:g:F:G:hqO:m:SUVRM:r:P:Ws:t:Tx:",long_options,NULL)) != -1) {
     switch (c) {
 
+    case LONG_OPTION_GAIN_CALIB_VALUE:
+      gain_calib_val = atoi(optarg);
+      printf("Setting gain calib value to %d\n",gain_calib_val);
+      break;
     case LONG_OPTION_TX_SAMPLE_ADVANCE:
       tx_sample_advance = atoi(optarg);
       printf("Setting tx_sample_advance to %d\n",tx_sample_advance);
@@ -1390,6 +1398,9 @@ void init_openair0() {
     } 
     openair0_cfg[card].tx_sample_advance = tx_sample_advance; //BS will set this in the config file
     printf("Set tx_sample_advance to %d\n", openair0_cfg[card].tx_sample_advance);
+
+    openair0_cfg[card].gain_calib_val = gain_calib_val; 
+    printf("Set gain calibration value to %d\n", openair0_cfg[card].gain_calib_val);
 
     openair0_cfg[card].num_rb_dl=frame_parms[0]->N_RB_DL;
 
