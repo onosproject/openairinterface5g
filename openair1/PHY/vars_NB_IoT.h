@@ -22,7 +22,7 @@
 #ifndef __PHY_VARS_NB_IOT_H__
 #define __PHY_VARS_NB_IOT_H__
 
-#include "PHY/types.h"
+#include "PHY/types_NB_IoT.h"
 #include "PHY/defs_nb_iot.h"
 
 /*

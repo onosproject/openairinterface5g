@@ -1227,7 +1227,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
       for(UE_id = 0 ; UE_id < NUMBER_OF_UE_MAX_NB_IoT; UE_id++)
       {
-    	  if(eNB->npdcch[(uint8_t)UE_id] != NULL && eNB->npdcch[(uint8_t)UE_id]->rnti == dci_pdu->dci_alloc->rnti && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE || subframe != 4))
+    	  if(eNB->npdcch[(uint8_t)UE_id] != NULL && eNB->npdcch[(uint8_t)UE_id]->rnti == dci_pdu->dci_alloc->rnti && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE_NB_IoT || subframe != 4))
     	  {
       	  	if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
       	  	  {

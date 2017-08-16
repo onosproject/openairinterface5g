@@ -159,6 +159,14 @@ NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(//unsigned char Kmimo,
 
 NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag);
 
+//5555
+/*void rx_ulsch_NB_IoT(PHY_VARS_eNB *phy_vars_eNB,
+                     eNB_rxtx_proc_t *proc,
+                     uint8_t eNB_id,  // this is the effective sector id
+                     uint8_t UE_id,
+                     LTE_eNB_ULSCH_t **ulsch,
+                     uint8_t cooperation_flag);
+*/
 /** \fn dlsch_encoding(PHY_VARS_eNB *eNB,
     uint8_t *input_buffer,
     LTE_DL_FRAME_PARMS *frame_parms,

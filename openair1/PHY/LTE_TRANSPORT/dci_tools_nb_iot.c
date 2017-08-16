@@ -38,7 +38,7 @@
 #endif
 #include "assertions.h"
 //#include "dlsch_tbs_full.h"
-
+#include "PHY/LTE_TRANSPORT/dlsch_tbs_full_NB_IoT.h"
 
 //#define DEBUG_HARQ
 

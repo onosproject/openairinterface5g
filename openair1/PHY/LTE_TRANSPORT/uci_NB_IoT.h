@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-#include "PHY/types.h"
+#include "PHY/types_NB_IoT.h"
 
 
 
