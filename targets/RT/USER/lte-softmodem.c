@@ -1635,7 +1635,7 @@ int main( int argc, char **argv ) {
                 if (transmission_mode==7)
                     lte_gold_ue_spec_port5(PHY_vars_eNB_g[0][CC_id]->lte_gold_uespec_port5_table[k],frame_parms[CC_id]->Nid_cell,0x1235+k);
             }
-            if ((transmission_mode==1) || (transmission_mode==7)) {
+            if ((transmission_mode==1) || (transmission_mode==7) || (transmission_mode==8)) {
                 for (j=0; j<frame_parms[CC_id]->nb_antennas_tx; j++)
                     for (re=0; re<frame_parms[CC_id]->ofdm_symbol_size; re++)
                         PHY_vars_eNB_g[0][CC_id]->common_vars.beam_weights[0][0][j][re] = 0x00007fff/frame_parms[CC_id]->nb_antennas_tx;

@@ -664,6 +664,47 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       // set the precoder of the second UE orthogonal to the first
       eNB->UE_stats[1].DL_pmi_single = (eNB->UE_stats[0].DL_pmi_single ^ 0x1555);
     }
+    else if (transmission_mode == 8) {
+      DCI_pdu->Num_ue_spec_dci = 1;
+      // user 1
+      DCI_pdu->dci_alloc[0].dci_length = sizeof_DCI2B_5MHz_TDD_t;
+      DCI_pdu->dci_alloc[0].L          = 3;
+      DCI_pdu->dci_alloc[0].rnti       = 0x1235;
+      DCI_pdu->dci_alloc[0].format     = format2B;
+      DCI_pdu->dci_alloc[0].ra_flag    = 0;
+
+      switch (eNB->frame_parms.N_RB_DL) {
+      case 25:
+	if (eNB->frame_parms.frame_type == FDD) {
+	  ((DCI2B_5MHz_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv1      = 0;
+	  ((DCI2B_5MHz_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi1     = subframe / 5;
+	  ((DCI2B_5MHz_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs1     = eNB->target_ue_dl_mcs;
+	  ((DCI2B_5MHz_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv2      = 0;
+	  ((DCI2B_5MHz_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi2     = subframe / 5;
+	  ((DCI2B_5MHz_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs2     = eNB->target_ue_dl_mcs;
+	  ((DCI2B_5MHz_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->harq_pid = subframe % 5;
+	  ((DCI2B_5MHz_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->TPC      = 0;
+	  ((DCI2B_5MHz_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rballoc  = eNB->ue_dl_rb_alloc;
+	  ((DCI2B_5MHz_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rah      = 0;
+	}
+	else {
+	  ((DCI2B_5MHz_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv1      = 0;
+	  ((DCI2B_5MHz_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi1     = subframe / 5;
+	  ((DCI2B_5MHz_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs1     = eNB->target_ue_dl_mcs;
+	  ((DCI2B_5MHz_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv2      = 0;
+	  ((DCI2B_5MHz_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi2     = subframe / 5;
+	  ((DCI2B_5MHz_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs2     = eNB->target_ue_dl_mcs;
+	  ((DCI2B_5MHz_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->harq_pid = subframe % 5;
+	  ((DCI2B_5MHz_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->TPC      = 0;
+	  ((DCI2B_5MHz_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rballoc  = eNB->ue_dl_rb_alloc;
+	  ((DCI2B_5MHz_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rah      = 0;
+	}
+	break;
+      default:
+	LOG_E(PHY,"fill_DCI for TM8 only coded for 25PRB\n");
+	break;
+      }
+    }
 
     break; //subframe switch
 
