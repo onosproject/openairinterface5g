@@ -5,7 +5,8 @@
 
 //#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
-#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
+//#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
+#include "openair2/PHY_INTERFACE/nfapi_interface.h"
 
 void process_schedule_rsp_NB_IoT(Sched_Rsp_t *sched_rsp,
                           		 PHY_VARS_eNB_NB_IoT *eNB,

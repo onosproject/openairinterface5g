@@ -27,7 +27,8 @@
  * \version 1.0
  */
 
- 
+#ifndef __LAYER2_MAC_PROTO_NB_IoT_H__
+#define __LAYER2_MAC_PROTO_NB_IoT_H__
 
 
 /** \addtogroup _mac
@@ -69,4 +70,4 @@ int l2_init_eNB_NB(void);
 int mac_init_global_param_NB(void);
 int mac_top_init_NB(void);
 
-
+#endif

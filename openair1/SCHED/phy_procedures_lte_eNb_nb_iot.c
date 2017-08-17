@@ -32,16 +32,16 @@
 
 //#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
-#include "PHY/extern_NB_IoT.h" //where we get the global Sched_Rsp_t structure filled
+//#include "PHY/extern_NB_IoT.h" //where we get the global Sched_Rsp_t structure filled
 //#include "SCHED/defs.h"
-#include "SCHED/extern.h"
-#include "PHY/LTE_TRANSPORT/if4_tools.h"
-#include "PHY/LTE_TRANSPORT/if5_tools.h"
-#include "RRC/LITE/proto_nb_iot.h"
-#include "SIMULATION/TOOLS/defs.h"
-#ifdef EMOS
-#include "SCHED/phy_procedures_emos.h"
-#endif
+#include "SCHED/extern_NB_IoT.h"
+//#include "PHY/LTE_TRANSPORT/if4_tools.h"
+//#include "PHY/LTE_TRANSPORT/if5_tools.h"
+//#include "RRC/LITE/proto_nb_iot.h"
+#include "SIMULATION/TOOLS/defs.h"  // purpose: included for taus() function
+//#ifdef EMOS
+//#include "SCHED/phy_procedures_emos.h"
+//#endif
 
 // for NB-IoT
 #include "SCHED/defs_nb_iot.h"
@@ -49,8 +49,8 @@
 //#define DEBUG_PHY_PROC (Already defined in cmake)
 //#define DEBUG_ULSCH
 
-#include "LAYER2/MAC/extern.h"
-#include "LAYER2/MAC/defs.h"
+//#include "LAYER2/MAC/extern.h"
+//#include "LAYER2/MAC/defs.h"
 #include "UTIL/LOG/log.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 
@@ -65,6 +65,7 @@
 #   include "intertask_interface.h"
 #endif
 
+/*
 
 #if defined(FLEXRAN_AGENT_SB_IF)
 //Agent-related headers
@@ -72,19 +73,21 @@
 #include "ENB_APP/CONTROL_MODULES/MAC/flexran_agent_mac.h"
 #include "LAYER2/MAC/flexran_agent_mac_proto.h"
 #endif
+*/
 
 //#define DIAG_PHY
 
-#define NS_PER_SLOT 500000
+///#define NS_PER_SLOT 500000
 
-#define PUCCH 1
+///#define PUCCH 1
 
 //DCI_ALLOC_t dci_alloc[8];
 
-#ifdef EMOS
-fifo_dump_emos_eNB emos_dump_eNB;
-#endif
+///#ifdef EMOS
+///fifo_dump_emos_eNB emos_dump_eNB;
+///#endif
 
+/*
 #if defined(SMBV) 
 extern const char smbv_fname[];
 extern unsigned short config_frames[4];
@@ -95,7 +98,7 @@ extern uint8_t smbv_frame_cnt;
 extern int rx_sig_fifo;
 #endif
 
-
+*/
 
 
 
@@ -359,7 +362,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
                      (eNB->nulsch[i]->harq_process->nb_rb*12)/
                      fp->ofdm_symbol_size) -
             eNB->rx_total_gain_dB -
-            hundred_times_log10_NPRB[eNB->nulsch[i]->harq_process->nb_rb-1]/100 -
+            hundred_times_log10_NPRB_NB_IoT[eNB->nulsch[i]->harq_process->nb_rb-1]/100 -
             get_hundred_times_delta_IF_eNB_NB_IoT(eNB,i,harq_pid, 0)/100;
           //for NB-IoT PHICH not work
 	        /*eNB->ulsch[i]->harq_processes[harq_pid]->phich_active = 1;

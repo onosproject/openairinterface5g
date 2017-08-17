@@ -1,8 +1,11 @@
+
+
+
 #include "../SCHED/IF_Module_L1_primitives_nb_iot.h"
-#include "../SCHED/defs.h"
+//#include "../SCHED/defs.h"
 #include "../SCHED/defs_nb_iot.h"
 #include "assertions.h"
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 //#include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"
@@ -52,7 +55,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 		ndlsch_harq->resource_assignment = rel13->number_of_subframes_for_resource_assignment;//maybe we don't care about it since a fixed schedule
 		ndlsch_harq->repetition_number = rel13->repetition_number; //is the schedulingInfoSIB1 (value 1-15) of MIB that is mapped into value 4-8-16 (see NDLSCH fapi specs Table 4-47)
 		ndlsch_harq->modulation = rel13->modulation;
-		ndlsch_harq->status = ACTIVE;
+		ndlsch_harq->status = ACTIVE_NB_IoT;
 
 		//SI information in reality have no feedback (so there is no retransmission from the HARQ view point since no ack and nack)
 //        ndlsch_harq->frame = frame;
@@ -113,7 +116,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 		}
 
 		//Independently if we have the PDU or not (first transmission or repetition) the process is activated for triggering the ndlsch_procedure
-	  	ndlsch_harq->status = ACTIVE;
+	  	ndlsch_harq->status = ACTIVE_NB_IoT;
 
 
   }

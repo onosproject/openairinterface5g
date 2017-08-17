@@ -11,9 +11,9 @@
 * \warning
 */
 #include "PHY/defs_nb_iot.h"
-#include "PHY/extern_NB_IoT.h"
-#include "SCHED/defs_nb_iot.h"
-#include "SCHED/extern.h"
+//#include "PHY/extern_NB_IoT.h"
+//#include "SCHED/defs_nb_iot.h"
+//#include "SCHED/extern.h"
 
 #ifdef LOCALIZATION
 #include <sys/time.h>

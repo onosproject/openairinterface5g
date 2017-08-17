@@ -51,7 +51,7 @@ int16_t *primary_synch2_time;
 PHY_VARS_UE_NB_IoT ***PHY_vars_UE_NB_IoT_g;
 PHY_VARS_eNB_NB_IoT ***PHY_vars_eNB_NB_IoT_g;
 PHY_VARS_RN_NB_IoT **PHY_vars_RN_NB_IoT_g;
-LTE_DL_FRAME_PARMS *lte_frame_parms_g;
+NB_IoT_DL_FRAME_PARMS *lte_frame_parms_g;
 #else
 PHY_VARS_UE_NB_IoT * PHY_vars_UE_NB_IoT_g[MAX_UE][MAX_NUM_CCs]={NULL};
 PHY_vars_eNB_NB_IoT * PHY_vars_eNB_NB_IoT_g[MAX_eNB_NB_IoT][MAX_NUM_CCs]={NULL};

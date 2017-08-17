@@ -1,10 +1,18 @@
-#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
-#include "LAYER2/MAC/extern.h"
-#include "LAYER2/MAC/proto_nb_iot.h"
+
+
+
+
 
 
 #ifndef __IF_MODULE_L1_PRIMITIVES_NB_IOT_H__
 #define __IF_MODULE_L1_PRIMITIVES_NB_IOT_H__
+
+//#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
+#include "openair1/PHY/defs_nb_iot.h"
+//#include "LAYER2/MAC/extern.h"
+//#include "LAYER2/MAC/proto_nb_iot.h"
+
+
 
 /*Interface for Downlink, transmitting the DLSCH SDU, DCI SDU*/
 void schedule_response(Sched_Rsp_t *Sched_INFO);
