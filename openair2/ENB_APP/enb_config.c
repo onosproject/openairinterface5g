@@ -1959,6 +1959,9 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
 	      case 7:
 		enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm7;
 		break;
+	      case 8:
+		enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm8_v920;
+		break;
 	      default:
                 AssertFatal (0,
                              "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for ue_TransmissionMode choice: 1,2,3,4,5,6,7",
