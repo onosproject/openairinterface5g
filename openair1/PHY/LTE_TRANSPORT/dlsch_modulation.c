@@ -659,7 +659,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
   ((int16_t *)&nqpsk[3])[0] = gain_lin_QPSK;
   ((int16_t *)&nqpsk[3])[1] = gain_lin_QPSK;
 
-  if ((dlsch0_harq->status == ACTIVE) && (dlsch1_harq->status == ACTIVE)) { //this is for TM3, TM4, TM8
+  if (dlsch0_harq && (dlsch0_harq->status == ACTIVE) && dlsch1_harq && (dlsch1_harq->status == ACTIVE)) { //this is for TM3, TM4, TM8
 
     x0 = dlsch0_harq->e;
     mimo_mode = dlsch0_harq->mimo_mode;
@@ -672,7 +672,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
     first_layer1   = dlsch1_harq->first_layer;
     mod_order1     = get_Qm(dlsch1_harq->mcs);
 
-  } else if ((dlsch0_harq->status == ACTIVE) && (dlsch1_harq->status != ACTIVE)){ //This is for SIS0 TM1, TM6, etc
+  } else if (dlsch0_harq && (dlsch0_harq->status == ACTIVE)){ //This is for SIS0 TM1, TM6, etc
 
     x0 = dlsch0_harq->e;
     mimo_mode = dlsch0_harq->mimo_mode;
@@ -680,7 +680,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
     Nlayers0 = dlsch0_harq->Nlayers;
     mod_order0 = get_Qm(dlsch0_harq->mcs);
 
-  } else if ((dlsch0_harq->status != ACTIVE) && (dlsch1_harq->status == ACTIVE)){ // This is for TM4 retransmission
+  } else if (dlsch1_harq && (dlsch1_harq->status == ACTIVE)){ // This is for TM4 retransmission
 
     x0 = dlsch1_harq->e;
     mimo_mode = dlsch1_harq->mimo_mode;
@@ -2558,8 +2558,8 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
 			 rb,
                          re_offset,
                          symbol_offset,
-                         dlsch0->harq_processes[harq_pid],
-                         dlsch1->harq_processes[harq_pid],
+                         (dlsch0 == NULL) ? NULL : dlsch0->harq_processes[harq_pid],
+                         (dlsch1 == NULL) ? NULL : dlsch1->harq_processes[harq_pid],
                          pilots,
                          ((pilots) ? amp_rho_b : amp_rho_a),
                          get_pmi_temp,
