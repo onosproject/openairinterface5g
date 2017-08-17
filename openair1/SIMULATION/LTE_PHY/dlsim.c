@@ -1384,7 +1384,7 @@ int main(int argc, char **argv)
   int two_thread_flag=0;
   int DLSCH_RB_ALLOC = 0;
 
-  int log_level = LOG_DEBUG;
+  int log_level = LOG_WARNING;
   int dci_received;
 
   logInit();
@@ -1503,6 +1503,7 @@ int main(int argc, char **argv)
 
     case 'M':
       mcs2 = atoi(optarg);
+      TB1_active=1;
       break;
 
     case 'O':
@@ -1762,7 +1763,7 @@ int main(int argc, char **argv)
       printf("-a Use AWGN channel and not multipath\n");
       printf("-c Number of PDCCH symbols\n");
       printf("-m MCS1 for TB 1\n");
-      printf("-M MCS2 for TB 2\n");
+      printf("-M MCS2 for TB 2 (if not present TB2 is disabled)\n");
       printf("-d Transmit the DCI and compute its error statistics\n");
       printf("-p Use extended prefix mode\n");
       printf("-n Number of frames to simulate\n");
@@ -2200,7 +2201,7 @@ int main(int argc, char **argv)
 	     1,
 	     1,
 	     0,
-	     1,
+	     0,
 	     tpmi,
 	     &num_common_dci,
 	     &num_ue_spec_dci,
@@ -2357,12 +2358,6 @@ int main(int argc, char **argv)
         fflush(stdout);
         round=0;
 
-	TB0_active = 1;
-	if ((transmission_mode ==3) || (transmission_mode ==4))
-	  TB1_active = 1;
-	else
-	  TB1_active = 0;
-	
         eNB2UE[0]->first_run = 1;
 	UE->dlsch[subframe&0x1][eNB_id][0]->harq_ack[subframe].ack = 0;
 	UE->dlsch[subframe&0x1][eNB_id][1]->harq_ack[subframe].ack = 0;
