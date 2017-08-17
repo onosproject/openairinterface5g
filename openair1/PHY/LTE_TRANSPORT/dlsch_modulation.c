@@ -39,7 +39,7 @@
 #include "defs.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 
-#define DEBUG_DLSCH_MODULATION
+//#define DEBUG_DLSCH_MODULATION
 
 //#define is_not_pilot(pilots,re,nushift,use2ndpilots) ((pilots==0) || ((re!=nushift) && (re!=nushift+6)&&((re!=nushift+3)||(use2ndpilots==1))&&((re!=nushift+9)||(use2ndpilots==1)))?1:0)
 
@@ -1725,25 +1725,26 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
           }
         }
         else {
-          for (p=7; p<8; p++) {
+          for (p=7; p<9; p++) {
 	    if (p==first_layer0 || p==first_layer1) {
-	      if (frame_parms->Ncp==0) {
+	      if (frame_parms->Ncp==0) { //normal CP
 		ind = 3*lprime*dlsch0_harq->nb_rb+3*rb+mprime2;
 		ind_dword = ind>>4 ;
 		ind_qpsk_symb = ind&0xf ;
 		
-		if (((mprime2+rb)%12)==0) {
+		if (((mprime2+rb)%2)==0) {
 		  w = Wbar_NCP[p-7][lprime] ;
 		} else {
 		  w = Wbar_NCP[p-7][3-lprime] ;
 		}
-	      } else {
+	      } else { //extended CP
+		// this is very likely wrong as the Wbar table is different for extended CP
 		ind = 4*lprime*dlsch0_harq->nb_rb+4*rb+mprime2 ;
 		ind_dword = ind>>4 ;
 		ind_qpsk_symb = ind&0xf ;
 		int l = lprime%2 ;
 		
-		if ((mprime2%12)==0) {
+		if ((mprime2%2)==0) {
 		  w = Wbar_NCP[p-7][l] ;
 		} else {
 		  w = Wbar_NCP[p-7][1-l] ;
@@ -1753,9 +1754,9 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
 	      
 	      /* pointer to the frequency domain Tx signal */
 	      txdataF[p][tti_offset] = qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[0][Ns][lprime][ind_dword]>>(2*ind_qpsk_symb))&3] ;
-	      mprime2++ ;
 	    }
           }
+	  mprime2++ ;
         }
       } else if (mimo_mode>=TM9_10) {
         printf("allocate_REs_in_RB() [dlsch.c] : ERROR, unknown mimo_mode %d\n",mimo_mode);
