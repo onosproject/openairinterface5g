@@ -1045,6 +1045,20 @@ typedef struct {
   frame_t     txFrame;
   /// TX subframe counter
   sub_frame_t txSubframe;
+#ifdef UE_NR_PHY_DEMO
+  /// NR numerology index [0..5] as specified in 38.211 Section 4 (mu). 0=15khZ SCS, 1=30khZ, 2=60kHz, etc
+  uint8_t numerology_index;
+  /// NR number of ttis per subframe deduced from numerology (cf 38.211): 1, 2, 4, 8(not supported),16(not supported),32(not supported)
+  uint8_t ttis_per_subframe;
+  /// NR number of slots per tti . Assumption only 2 Slot per TTI is supported (Slot Config 1 in 38.211)
+  uint8_t slots_per_tti;
+  /// NR TTI index within subframe_tx [0 .. ttis_per_subframe - 1] to act upon for transmission
+  nr_tti_t txNRTti;
+  /// NR TTI index within subframe_rx [0 .. ttis_per_subframe - 1] to act upon for reception
+  nr_tti_t rxNRTti;
+  /// TX last absolute subframe
+  uint32_t txLastAbsSubframe;
+#endif
   /// C-RNTI of UE
   uint16_t crnti;
   /// C-RNTI of UE before HO

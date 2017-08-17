@@ -1861,6 +1861,10 @@ ue_scheduler(
   instance_t    instance;
   int           result;
 #endif
+#ifdef UE_NR_PHY_DEMO
+  boolean_t isNewTxSubframe = (UE_mac_inst[module_idP].txLastAbsSubframe != (txFrameP*10 + txSubframeP));
+  UE_mac_inst[module_idP].txLastAbsSubframe = (txFrameP*10 + txSubframeP);
+#endif
 #if UE_TIMING_TRACE
   start_meas(&UE_mac_inst[module_idP].ue_scheduler);
 #endif
@@ -1903,12 +1907,22 @@ ue_scheduler(
   //Rrc_xface->Frame_index=Mac_rlc_xface->frameP;
   //if (subframe%5 == 0)
   //LG#ifdef EXMIMO
+#ifdef UE_NR_PHY_DEMO
+  // call pdcp_run every subframe on TTI0. To check later if OK
+  if (isNewTxSubframe)
+#endif
+  {
   pdcp_run(&ctxt);
+  }
   //#endif
   UE_mac_inst[module_idP].txFrame    = txFrameP;
   UE_mac_inst[module_idP].txSubframe = txSubframeP;
   UE_mac_inst[module_idP].rxFrame    = rxFrameP;
   UE_mac_inst[module_idP].rxSubframe = rxSubframeP;
+#ifdef UE_NR_PHY_DEMO
+  UE_mac_inst[module_idP].txNRTti = txNRTtiP;
+  UE_mac_inst[module_idP].rxNRTti = rxNRTtiP;
+#endif
 
 #ifdef CELLULAR
   rrc_rx_tx(module_idP, txFrameP, 0, eNB_indexP);
@@ -1973,23 +1987,30 @@ ue_scheduler(
       //return(RRC_OK);
     }
 
-    LOG_I(MAC,"Frame %d: Contention resolution timer %d/%ld\n",txFrameP,UE_mac_inst[module_idP].RA_contention_resolution_cnt,
-          ((1+rach_ConfigCommon->ra_SupervisionInfo.mac_ContentionResolutionTimer)<<3));
+#ifdef UE_NR_PHY_DEMO
+  // NR: update and check contention resolution only on every new subframe (TTI0). To check later
+  if (isNewTxSubframe)
+#endif
+   {
+		LOG_I(MAC,"Frame %d: Contention resolution timer %d/%ld\n",txFrameP,UE_mac_inst[module_idP].RA_contention_resolution_cnt,
+			  ((1+rach_ConfigCommon->ra_SupervisionInfo.mac_ContentionResolutionTimer)<<3));
 
-    UE_mac_inst[module_idP].RA_contention_resolution_cnt++;
+		UE_mac_inst[module_idP].RA_contention_resolution_cnt++;
 
-    if (UE_mac_inst[module_idP].RA_contention_resolution_cnt ==
-        ((1+rach_ConfigCommon->ra_SupervisionInfo.mac_ContentionResolutionTimer)<<3)) {
-      UE_mac_inst[module_idP].RA_active = 0;
-      UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
-      // Signal PHY to quit RA procedure
-      LOG_E(MAC,"Module id %u Contention resolution timer expired, RA failed\n", module_idP);
-      mac_xface->ra_failed(module_idP,0,eNB_indexP);
+		if (UE_mac_inst[module_idP].RA_contention_resolution_cnt ==
+			((1+rach_ConfigCommon->ra_SupervisionInfo.mac_ContentionResolutionTimer)<<3)) {
+		  UE_mac_inst[module_idP].RA_active = 0;
+		  UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
+		  // Signal PHY to quit RA procedure
+		  LOG_E(MAC,"Module id %u Contention resolution timer expired, RA failed\n", module_idP);
+		  mac_xface->ra_failed(module_idP,0,eNB_indexP);
+		}
     }
   }
 
 
   // Get RLC status info and update Bj for all lcids that are active
+  // NR LCP: not necessary to update as LCP is not used in OAI but should be done once handling several DRB
   for (lcid=DCCH; lcid < MAX_NUM_LCID; lcid++ ) {
     if (UE_mac_inst[module_idP].logicalChannelConfig[lcid]) {
       // meausre the Bj
@@ -2024,16 +2045,22 @@ ue_scheduler(
 
   // First check ReTxBSR Timer because it is always configured
   // Decrement ReTxBSR Timer if it is running and not null
-  if ((UE_mac_inst[module_idP].scheduling_info.retxBSR_SF != MAC_UE_BSR_TIMER_NOT_RUNNING)
-          && (UE_mac_inst[module_idP].scheduling_info.retxBSR_SF != 0)){
-      UE_mac_inst[module_idP].scheduling_info.retxBSR_SF --;
-  }
+#ifdef UE_NR_PHY_DEMO
+  // NR: update only on every new subframe (TTI0). To check later
+  if (isNewTxSubframe)
+#endif
+  {
+	  if ((UE_mac_inst[module_idP].scheduling_info.retxBSR_SF != MAC_UE_BSR_TIMER_NOT_RUNNING)
+			  && (UE_mac_inst[module_idP].scheduling_info.retxBSR_SF != 0)){
+		  UE_mac_inst[module_idP].scheduling_info.retxBSR_SF --;
+	  }
 
-  // Decrement Periodic Timer if it is running and not null
-  if ((UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF != MAC_UE_BSR_TIMER_NOT_RUNNING)
-            && (UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF != 0)){
-        UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF--;
-    }
+	  // Decrement Periodic Timer if it is running and not null
+	  if ((UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF != MAC_UE_BSR_TIMER_NOT_RUNNING)
+				&& (UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF != 0)){
+			UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF--;
+		}
+  }
 
   //Check whether Regular BSR is triggered
   if (update_bsr(module_idP,txFrameP, txSubframeP,eNB_indexP) == TRUE) {
@@ -2077,7 +2104,14 @@ ue_scheduler(
     if (UE_mac_inst[module_idP].PHR_reconfigured == 1) { // upon (re)configuration of the power headroom reporting functionality by upper layers
       UE_mac_inst[module_idP].PHR_reporting_active = 1;
       UE_mac_inst[module_idP].PHR_reconfigured = 0;
-    } else {
+    }
+#ifdef UE_NR_PHY_DEMO
+    // NR: Only check Power headroom and update PHR timers every subframe. To check
+    else if (isNewTxSubframe)
+#else
+    else
+#endif
+    {
       //LOG_D(MAC,"PHR normal operation %d active %d \n", UE_mac_inst[module_idP].scheduling_info.periodicPHR_SF, UE_mac_inst[module_idP].PHR_reporting_active);
       if ((UE_mac_inst[module_idP].scheduling_info.prohibitPHR_SF <= 0) &&
           ((mac_xface->get_PL(module_idP,0,eNB_indexP) <  UE_mac_inst[module_idP].scheduling_info.PathlossChange_db) ||
