@@ -2227,7 +2227,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
       }
 
       if (harq_pid>=8) {
-        LOG_E(PHY,"ERROR: Format 2_2A: harq_pid=%d >= 8\n", harq_pid);
+        LOG_E(PHY,"ERROR: Format 2B: harq_pid=%d >= 8\n", harq_pid);
         return(-1);
       }
 
@@ -2298,7 +2298,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
 #endif
       }
       else {
-        LOG_E(PHY,"should not happen!\n");
+        LOG_E(PHY,"should not happen (rv1 %d mcs1 %d TB0_active %d, rv2 %d mcs2 %d TB1_active %d)!\n",rv1,mcs1,TB0_active,rv2,mcs2,TB1_active);
       }
 
       if (dlsch0 != NULL) {

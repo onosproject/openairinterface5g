@@ -116,14 +116,14 @@ void lte_param_init(unsigned char N_tx_port_eNB,
   // DL power control init
   //if (transmission_mode == 1) {
   if (N_tx_port_eNB == 1) {
-    eNB->pdsch_config_dedicated->p_a  = dB0; // 4 = 0dB
+    eNB->pdsch_config_dedicated->p_a  = dB0; 
     ((eNB->frame_parms).pdsch_config_common).p_b = 0;
-    UE->pdsch_config_dedicated->p_a  = dB0; // 4 = 0dB
+    UE->pdsch_config_dedicated->p_a  = dB0; 
     ((UE->frame_parms).pdsch_config_common).p_b = 0;
   } else if  (N_tx_port_eNB == 2) { // rho_a = rhob
-    eNB->pdsch_config_dedicated->p_a  = dBm3; // 4 = 0dB
+    eNB->pdsch_config_dedicated->p_a  = dBm3; 
     ((eNB->frame_parms).pdsch_config_common).p_b = 1;
-    UE->pdsch_config_dedicated->p_a  = dBm3; // 4 = 0dB
+    UE->pdsch_config_dedicated->p_a  = dBm3; 
     ((UE->frame_parms).pdsch_config_common).p_b = 1;
   }
   else {
