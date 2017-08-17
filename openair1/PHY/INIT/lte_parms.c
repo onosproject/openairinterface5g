@@ -54,6 +54,12 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     frame_parms->nb_prefix_samples0=512;
     frame_parms->nb_prefix_samples = 512;
     frame_parms->symbols_per_tti = 12;
+#ifdef UE_NR_PHY_DEMO
+    // Only numerology 2 is supported for Extended Cyclic Prefix
+    frame_parms->numerology_index = 2;
+    frame_parms->ttis_per_subframe = 4;
+    frame_parms->slots_per_tti = 2; //only slot config 1 is supported
+#endif
   } else {
     frame_parms->nb_prefix_samples0 = 160;
     frame_parms->nb_prefix_samples = 144;
@@ -98,7 +104,8 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
 
     if (frame_parms->threequarter_fs) {
       frame_parms->ofdm_symbol_size = 1536;
-      frame_parms->samples_per_tti = 23040;
+      frame_parms->samples_per_subframe = 23040;
+      frame_parms->samples_per_tti = frame_parms->samples_per_subframe;
       frame_parms->first_carrier_offset = 1536-600;
       frame_parms->nb_prefix_samples=(frame_parms->nb_prefix_samples*3)>>2;
       frame_parms->nb_prefix_samples0=(frame_parms->nb_prefix_samples0*3)>>2;
@@ -106,6 +113,11 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     else {
       frame_parms->ofdm_symbol_size = 2048;
       frame_parms->samples_per_tti = 30720;
+#ifdef UE_NR_PHY_DEMO
+      frame_parms->samples_per_subframe = 30720 * frame_parms->ttis_per_subframe;
+#else
+      frame_parms->samples_per_subframe = 30720;
+#endif
       frame_parms->first_carrier_offset = 2048-600;
     }
     frame_parms->N_RBGS = 4;
@@ -120,7 +132,8 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
 
 
     frame_parms->ofdm_symbol_size = 1536;
-    frame_parms->samples_per_tti = 23040;
+    frame_parms->samples_per_subframe = 23040;
+    frame_parms->samples_per_tti = frame_parms->samples_per_subframe;
     frame_parms->first_carrier_offset = 1536-450;
     frame_parms->nb_prefix_samples=(frame_parms->nb_prefix_samples*3)>>2;
     frame_parms->nb_prefix_samples0=(frame_parms->nb_prefix_samples0*3)>>2;
@@ -135,7 +148,8 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     }
 
     frame_parms->ofdm_symbol_size = 1024*osf;
-    frame_parms->samples_per_tti = 15360*osf;
+    frame_parms->samples_per_subframe = 15360*osf;
+    frame_parms->samples_per_tti = frame_parms->samples_per_subframe;
     frame_parms->first_carrier_offset = frame_parms->ofdm_symbol_size - 300;
     frame_parms->nb_prefix_samples>>=(1-log2_osf);
     frame_parms->nb_prefix_samples0>>=(1-log2_osf);
@@ -152,7 +166,8 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     frame_parms->ofdm_symbol_size = 512*osf;
 
 
-    frame_parms->samples_per_tti = 7680*osf;
+    frame_parms->samples_per_subframe = 7680*osf;
+    frame_parms->samples_per_tti = frame_parms->samples_per_subframe;
     frame_parms->first_carrier_offset = frame_parms->ofdm_symbol_size - 150;
     frame_parms->nb_prefix_samples>>=(2-log2_osf);
     frame_parms->nb_prefix_samples0>>=(2-log2_osf);
@@ -164,7 +179,8 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
 
   case 15:
     frame_parms->ofdm_symbol_size = 256*osf;
-    frame_parms->samples_per_tti = 3840*osf;
+    frame_parms->samples_per_subframe = 3840*osf;
+    frame_parms->samples_per_tti = frame_parms->samples_per_subframe;
     frame_parms->first_carrier_offset = frame_parms->ofdm_symbol_size - 90;
     frame_parms->nb_prefix_samples>>=(3-log2_osf);
     frame_parms->nb_prefix_samples0>>=(3-log2_osf);
@@ -174,7 +190,8 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
 
   case 6:
     frame_parms->ofdm_symbol_size = 128*osf;
-    frame_parms->samples_per_tti = 1920*osf;
+    frame_parms->samples_per_subframe = 1920*osf;
+    frame_parms->samples_per_tti = frame_parms->samples_per_subframe;
     frame_parms->first_carrier_offset = frame_parms->ofdm_symbol_size - 36;
     frame_parms->nb_prefix_samples>>=(4-log2_osf);
     frame_parms->nb_prefix_samples0>>=(4-log2_osf);
@@ -217,5 +234,6 @@ void dump_frame_parms(LTE_DL_FRAME_PARMS *frame_parms)
   printf("frame_parms->nb_prefix_samples0=%d\n",frame_parms->nb_prefix_samples0);
   printf("frame_parms->first_carrier_offset=%d\n",frame_parms->first_carrier_offset);
   printf("frame_parms->samples_per_tti=%d\n",frame_parms->samples_per_tti);
+  printf("frame_parms->samples_per_subframe=%d\n",frame_parms->samples_per_subframe);
   printf("frame_parms->symbols_per_tti=%d\n",frame_parms->symbols_per_tti);
 }

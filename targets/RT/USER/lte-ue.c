@@ -395,7 +395,7 @@ static void *UE_thread_synch(void *arg) {
                             if ((fd = fopen("rxsig_frame0.dat","w")) != NULL) {
                                 fwrite((void*)&UE->common_vars.rxdata[0][0],
                                        sizeof(int32_t),
-                                       10*UE->frame_parms.samples_per_tti,
+                                       10*UE->frame_parms.samples_per_subframe,
                                        fd);
                                 LOG_I(PHY,"Dummping Frame ... bye bye \n");
                                 fclose(fd);
@@ -426,7 +426,7 @@ static void *UE_thread_synch(void *arg) {
                         if ((fd = fopen("rxsig_frame0.dat","w"))!=NULL) {
                             fwrite((void*)&UE->common_vars.rxdata[0][0],
                                    sizeof(int32_t),
-                                   10*UE->frame_parms.samples_per_tti,
+                                   10*UE->frame_parms.samples_per_subframe,
                                    fd);
                             LOG_I(PHY,"Dummping Frame ... bye bye \n");
                             fclose(fd);
@@ -562,6 +562,18 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 #endif
         if (UE->mac_enabled==1) {
 
+#ifdef UE_NR_PHY_DEMO
+            ret = mac_xface->ue_scheduler(UE->Mod_id,
+                                          proc->frame_rx,
+                                          proc->subframe_rx,
+										  proc->nr_tti_rx,
+                                          proc->frame_tx,
+                                          proc->subframe_tx,
+										  proc->nr_tti_tx,
+                                          subframe_select(&UE->frame_parms,proc->subframe_tx),
+                                          0,
+                                          0/*FIXME CC_id*/);
+#else
             ret = mac_xface->ue_scheduler(UE->Mod_id,
                                           proc->frame_rx,
                                           proc->subframe_rx,
@@ -570,6 +582,8 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                                           subframe_select(&UE->frame_parms,proc->subframe_tx),
                                           0,
                                           0/*FIXME CC_id*/);
+
+#endif
             if ( ret != CONNECTION_OK) {
                 char *txt;
                 switch (ret) {
@@ -666,7 +680,7 @@ void *UE_thread(void *arg) {
     itti_send_msg_to_task (TASK_NAS_UE, UE->Mod_id + NB_eNB_INST, message_p);
 #endif
 
-    int sub_frame=-1;
+    int tti_nr=-1;
     //int cumulated_shift=0;
     AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0, "Could not start the device\n");
     while (!oai_exit) {
@@ -682,11 +696,11 @@ void *UE_thread(void *arg) {
                     rxp[i] = (void*)&UE->common_vars.rxdata[i][0];
 
                 if (UE->mode != loop_through_memory)
-                    AssertFatal( UE->frame_parms.samples_per_tti*10 ==
+                    AssertFatal( UE->frame_parms.samples_per_subframe*10 ==
                                  UE->rfdevice.trx_read_func(&UE->rfdevice,
                                                             &timestamp,
                                                             rxp,
-                                                            UE->frame_parms.samples_per_tti*10,
+                                                            UE->frame_parms.samples_per_subframe*10,
                                                             UE->frame_parms.nb_antennas_rx), "");
 		AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
                 instance_cnt_synch = ++UE->proc.instance_cnt_synch;
@@ -711,7 +725,7 @@ void *UE_thread(void *arg) {
                           UE->rfdevice.trx_read_func(&UE->rfdevice,
                                               &timestamp,
                                               rxp,
-                                              UE->frame_parms.samples_per_tti,
+                                              UE->frame_parms.samples_per_subframe,
                                               UE->frame_parms.nb_antennas_rx);
                 }
 #endif
@@ -752,13 +766,13 @@ void *UE_thread(void *arg) {
                     rt_sleep_ns(1000*1000);
 
             } else {
-                sub_frame++;
-                sub_frame%=10;
+                tti_nr++;
+                tti_nr%=10*UE->frame_parms.ttis_per_subframe;
                 UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[thread_idx];
                 // update thread index for received subframe
-                UE->current_thread_id[sub_frame] = thread_idx;
+                UE->current_thread_id[tti_nr] = thread_idx;
 
-                LOG_D(PHY,"Process Subframe %d thread Idx %d \n", sub_frame, UE->current_thread_id[sub_frame]);
+                LOG_D(PHY,"Process TTI %d thread Idx %d \n", tti_nr, UE->current_thread_id[tti_nr]);
 
                 thread_idx++;
                 if(thread_idx>=RX_NB_TH)
@@ -769,12 +783,12 @@ void *UE_thread(void *arg) {
                     for (i=0; i<UE->frame_parms.nb_antennas_rx; i++)
                         rxp[i] = (void*)&UE->common_vars.rxdata[i][UE->frame_parms.ofdm_symbol_size+
                                  UE->frame_parms.nb_prefix_samples0+
-                                 sub_frame*UE->frame_parms.samples_per_tti];
+                                 tti_nr*UE->frame_parms.samples_per_tti];
                     for (i=0; i<UE->frame_parms.nb_antennas_tx; i++)
-                        txp[i] = (void*)&UE->common_vars.txdata[i][((sub_frame+2)%10)*UE->frame_parms.samples_per_tti];
+                        txp[i] = (void*)&UE->common_vars.txdata[i][((tti_nr+2)%10*UE->frame_parms.ttis_per_subframe)*UE->frame_parms.samples_per_tti];
 
                     int readBlockSize, writeBlockSize;
-                    if (sub_frame<9) {
+                    if (tti_nr<(10*UE->frame_parms.ttis_per_subframe-1)) {
                         readBlockSize=UE->frame_parms.samples_per_tti;
                         writeBlockSize=UE->frame_parms.samples_per_tti;
                     } else {
@@ -788,7 +802,7 @@ void *UE_thread(void *arg) {
                                 UE->rx_offset < 10*UE->frame_parms.samples_per_tti )
                             UE->rx_offset_diff = 1;
 
-                        LOG_D(PHY,"AbsSubframe %d.%d SET rx_off_diff to %d rx_offset %d \n",proc->frame_rx,sub_frame,UE->rx_offset_diff,UE->rx_offset);
+                        LOG_D(PHY,"AbsSubframe %d.%d TTI SET rx_off_diff to %d rx_offset %d \n",proc->frame_rx,tti_nr>>2,tti_nr,UE->rx_offset_diff,UE->rx_offset);
                         readBlockSize=UE->frame_parms.samples_per_tti -
                                       UE->frame_parms.ofdm_symbol_size -
                                       UE->frame_parms.nb_prefix_samples0 -
@@ -813,7 +827,7 @@ void *UE_thread(void *arg) {
                                          writeBlockSize,
                                          UE->frame_parms.nb_antennas_tx,
                                          1),"");
-                    if( sub_frame==9) {
+                    if( tti_nr==(10*UE->frame_parms.ttis_per_subframe-1)) {
                         // read in first symbol of next frame and adjust for timing drift
                         int first_symbols=writeBlockSize-readBlockSize;
                         if ( first_symbols > 0 )
@@ -829,7 +843,7 @@ void *UE_thread(void *arg) {
                     pickTime(gotIQs);
                     // operate on thread sf mod 2
                     AssertFatal(pthread_mutex_lock(&proc->mutex_rxtx) ==0,"");
-                    if(sub_frame == 0) {
+                    if(tti_nr == 0) {
                         //UE->proc.proc_rxtx[0].frame_rx++;
                         //UE->proc.proc_rxtx[1].frame_rx++;
                         for (th_id=0; th_id < RX_NB_TH; th_id++) {
@@ -841,8 +855,8 @@ void *UE_thread(void *arg) {
                     for (th_id=0; th_id < RX_NB_TH; th_id++) {
                         UE->proc.proc_rxtx[th_id].gotIQs=readTime(gotIQs);
                     }
-                    proc->subframe_rx=sub_frame;
-                    proc->subframe_tx=(sub_frame+4)%10;
+                    proc->nr_tti_rx=tti_nr;
+                    proc->nr_tti_tx=(tti_nr+4)%(10*UE->frame_parms.ttis_per_subframe);
                     proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
                     proc->timestamp_tx = timestamp+
                                          (4*UE->frame_parms.samples_per_tti)-

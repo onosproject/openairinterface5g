@@ -546,6 +546,8 @@ typedef struct {
   /// Carrier offset in FFT buffer for first RE in PRB0
   uint16_t first_carrier_offset;
   /// Number of samples in a subframe
+  uint32_t samples_per_subframe;
+  /// Number of samples in a tti (same as subrame in LTE, depending on numerology in NR)
   uint32_t samples_per_tti;
   /// Number of OFDM/SC-FDMA symbols in one subframe (to be modified to account for potential different in UL/DL)
   uint16_t symbols_per_tti;
@@ -553,6 +555,14 @@ typedef struct {
   uint16_t dl_symbols_in_S_subframe;
   /// Number of SC-FDMA symbols in UL portion of S-subframe
   uint16_t ul_symbols_in_S_subframe;
+#ifdef UE_NR_PHY_DEMO
+  /// NR numerology index [0..5] as specified in 38.211 Section 4 (mu). 0=15khZ SCS, 1=30khZ, 2=60kHz, etc
+  uint8_t numerology_index;
+  /// NR number of ttis per subframe deduced from numerology (cf 38.211): 1, 2, 4, 8(not supported),16(not supported),32(not supported)
+  uint8_t ttis_per_subframe;
+  /// NR number of slots per tti . Assumption only 2 Slot per TTI is supported (Slot Config 1 in 38.211)
+  uint8_t slots_per_tti;
+#endif
   /// Number of Physical transmit antennas in node
   uint8_t nb_antennas_tx;
   /// Number of Receive antennas in node
@@ -654,7 +664,7 @@ typedef struct {
   /// \brief Holds the last subframe of received data in time domain after removal of 7.5kHz frequency offset.
   /// - first index: secotr id [0..2] (hard coded)
   /// - second index: rx antenna [0..nb_antennas_rx[
-  /// - third index: sample [0..samples_per_tti[
+  /// - third index: sample [0..samples_per_subframe[
   int32_t **rxdata_7_5kHz[3];
   /// \brief Holds the received data in the frequency domain.
   /// - first index: sector id [0..2] (hard coded)
@@ -663,7 +673,7 @@ typedef struct {
   int32_t **rxdataF[3];
   /// \brief Holds output of the sync correlator.
   /// - first index: sector id [0..2] (hard coded)
-  /// - second index: sample [0..samples_per_tti*10[
+  /// - second index: sample [0..samples_per_subframe*10[
   uint32_t *sync_corr[3];
   /// \brief Holds the beamforming weights
   /// - first index: eNB id [0..2] (hard coded)

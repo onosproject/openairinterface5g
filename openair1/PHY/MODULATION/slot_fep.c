@@ -44,7 +44,7 @@ int slot_fep(PHY_VARS_UE *ue,
   unsigned int subframe_offset;//,subframe_offset_F;
   unsigned int slot_offset;
   int i;
-  unsigned int frame_length_samples = frame_parms->samples_per_tti * 10;
+  unsigned int frame_length_samples = frame_parms->samples_per_subframe * 10;
   unsigned int rx_offset;
 
   /*LTE_UE_DLSCH_t **dlsch_ue = phy_vars_ue->dlsch_ue[eNB_id];
@@ -257,7 +257,7 @@ int front_end_fft(PHY_VARS_UE *ue,
   unsigned int nb_prefix_samples0 = (no_prefix ? 0 : frame_parms->nb_prefix_samples0);
   unsigned int subframe_offset;//,subframe_offset_F;
   unsigned int slot_offset;
-  unsigned int frame_length_samples = frame_parms->samples_per_tti * 10;
+  unsigned int frame_length_samples = frame_parms->samples_per_subframe * 10;
   unsigned int rx_offset;
   uint8_t  threadId;
 

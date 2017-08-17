@@ -1247,7 +1247,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
   int overflow=0;
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
   int k,l;
-  int dummy_tx_buffer[frame_parms->samples_per_tti] __attribute__((aligned(16)));
+  int dummy_tx_buffer[frame_parms->samples_per_subframe] __attribute__((aligned(16)));
 #endif
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_UE_TX_ULSCH_COMMON,VCD_FUNCTION_IN);
@@ -1257,44 +1257,44 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
   nsymb = (frame_parms->Ncp == 0) ? 14 : 12;
 
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)//this is the EXPRESS MIMO case
-  ulsch_start = (ue->rx_offset+subframe_tx*frame_parms->samples_per_tti-
+  ulsch_start = (ue->rx_offset+subframe_tx*frame_parms->samples_per_subframe-
          ue->hw_timing_advance-
          ue->timing_advance-
          ue->N_TA_offset+5);
   //LOG_E(PHY,"ul-signal [subframe: %d, ulsch_start %d]\n",subframe_tx, ulsch_start);
 
   if(ulsch_start < 0)
-      ulsch_start = ulsch_start + (LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_tti);
+      ulsch_start = ulsch_start + (LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_subframe);
 
-  if (ulsch_start > (LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_tti))
-      ulsch_start = ulsch_start % (LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_tti);
+  if (ulsch_start > (LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_subframe))
+      ulsch_start = ulsch_start % (LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_subframe);
 
   //LOG_E(PHY,"ul-signal [subframe: %d, ulsch_start %d]\n",subframe_tx, ulsch_start);
 #else //this is the normal case
-  ulsch_start = (frame_parms->samples_per_tti*subframe_tx)-ue->N_TA_offset; //-ue->timing_advance;
+  ulsch_start = (frame_parms->samples_per_subframe*subframe_tx)-ue->N_TA_offset; //-ue->timing_advance;
 #endif //else EXMIMO
 
 //#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
   if (empty_subframe)
   {
 //#if 1
-      overflow = ulsch_start - 9*frame_parms->samples_per_tti;
+      overflow = ulsch_start - 9*frame_parms->samples_per_subframe;
       for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
 
           if (overflow > 0)
      {
-       memset(&ue->common_vars.txdata[aa][ulsch_start],0,4*(frame_parms->samples_per_tti-overflow));
+       memset(&ue->common_vars.txdata[aa][ulsch_start],0,4*(frame_parms->samples_per_subframe-overflow));
        memset(&ue->common_vars.txdata[aa][0],0,4*overflow);
      }
      else
      {
-       memset(&ue->common_vars.txdata[aa][ulsch_start],0,4*frame_parms->samples_per_tti);
+       memset(&ue->common_vars.txdata[aa][ulsch_start],0,4*frame_parms->samples_per_subframe);
      }
       }
 /*#else
-      overflow = ulsch_start - 9*frame_parms->samples_per_tti;
+      overflow = ulsch_start - 9*frame_parms->samples_per_subframe;
       for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-          for (k=ulsch_start; k<cmin(frame_parms->samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME,ulsch_start+frame_parms->samples_per_tti); k++) {
+          for (k=ulsch_start; k<cmin(frame_parms->samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME,ulsch_start+frame_parms->samples_per_subframe); k++) {
               ((short*)ue->common_vars.txdata[aa])[2*k] = 0;
               ((short*)ue->common_vars.txdata[aa])[2*k+1] = 0;
           }
@@ -1352,10 +1352,10 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 
 
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
-    overflow = ulsch_start - 9*frame_parms->samples_per_tti;
+    overflow = ulsch_start - 9*frame_parms->samples_per_subframe;
 
 
-    for (k=ulsch_start,l=0; k<cmin(frame_parms->samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME,ulsch_start+frame_parms->samples_per_tti); k++,l++) {
+    for (k=ulsch_start,l=0; k<cmin(frame_parms->samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME,ulsch_start+frame_parms->samples_per_subframe); k++,l++) {
       ((short*)ue->common_vars.txdata[aa])[2*k] = ((short*)dummy_tx_buffer)[2*l]<<4;
       ((short*)ue->common_vars.txdata[aa])[2*k+1] = ((short*)dummy_tx_buffer)[2*l+1]<<4;
     }
@@ -1366,11 +1366,11 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
     }
 #if defined(EXMIMO)
     // handle switch before 1st TX subframe, guarantee that the slot prior to transmission is switch on
-    for (k=ulsch_start - (frame_parms->samples_per_tti>>1) ; k<ulsch_start ; k++) {
+    for (k=ulsch_start - (frame_parms->samples_per_subframe>>1) ; k<ulsch_start ; k++) {
       if (k<0)
-  ue->common_vars.txdata[aa][k+frame_parms->samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
-      else if (k>(frame_parms->samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME))
-  ue->common_vars.txdata[aa][k-frame_parms->samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
+  ue->common_vars.txdata[aa][k+frame_parms->samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
+      else if (k>(frame_parms->samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME))
+  ue->common_vars.txdata[aa][k-frame_parms->samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
       else
   ue->common_vars.txdata[aa][k] &= 0xFFFEFFFE;
     }
@@ -1382,7 +1382,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
     if( (crash == 1) && (subframe_tx == 0) )
     {
       LOG_E(PHY,"***** DUMP TX Signal [ulsch_start %d] *****\n",ulsch_start);
-      write_output("txBuff.m","txSignal",&ue->common_vars.txdata[aa][ulsch_start],frame_parms->samples_per_tti,1,1);
+      write_output("txBuff.m","txSignal",&ue->common_vars.txdata[aa][ulsch_start],frame_parms->samples_per_subframe,1,1);
     }
     */
 
@@ -2590,12 +2590,12 @@ void phy_procedures_UE_S_TX(PHY_VARS_UE *ue,uint8_t eNB_id,uint8_t abstraction_f
 #if defined(EXMIMO) //this is the EXPRESS MIMO case
       int i;
       // set the whole tx buffer to RX
-      for (i=0; i<LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_tti; i++)
+      for (i=0; i<LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_subframe; i++)
   ue->common_vars.txdata[aa][i] = 0x00010001;
 
 #else //this is the normal case
       memset(&ue->common_vars.txdata[aa][0],0,
-       (LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_tti)*sizeof(int32_t));
+       (LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_subframe)*sizeof(int32_t));
 #endif //else EXMIMO
 
     }
@@ -3015,7 +3015,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     LOG_I(PHY,"[UE %d] rx_offset %d\n",ue->Mod_id,ue->rx_offset);
 
 
-    write_output("rxsig0.m","rxs0", ue->common_vars.rxdata[0],ue->frame_parms.samples_per_tti,1,1);
+    write_output("rxsig0.m","rxs0", ue->common_vars.rxdata[0],ue->frame_parms.samples_per_subframe,1,1);
 
     write_output("H00.m","h00",&(ue->common_vars.dl_ch_estimates[0][0][0]),((ue->frame_parms.Ncp==0)?7:6)*(ue->frame_parms.ofdm_symbol_size),1,1);
     write_output("H10.m","h10",&(ue->common_vars.dl_ch_estimates[0][2][0]),((ue->frame_parms.Ncp==0)?7:6)*(ue->frame_parms.ofdm_symbol_size),1,1);
@@ -4544,8 +4544,8 @@ int phy_procedures_slot_parallelization_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *pr
     T(T_UE_PHY_DL_TICK, T_INT(ue->Mod_id), T_INT(frame_rx%1024), T_INT(subframe_rx));
 
     T(T_UE_PHY_INPUT_SIGNAL, T_INT(ue->Mod_id), T_INT(frame_rx%1024), T_INT(subframe_rx), T_INT(0),
-            T_BUFFER(&ue->common_vars.rxdata[0][subframe_rx*ue->frame_parms.samples_per_tti],
-                    ue->frame_parms.samples_per_tti * 4));
+            T_BUFFER(&ue->common_vars.rxdata[0][subframe_rx*ue->frame_parms.samples_per_subframe],
+                    ue->frame_parms.samples_per_subframe * 4));
 #endif
 
     // start timers
@@ -5065,8 +5065,8 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
   T(T_UE_PHY_DL_TICK, T_INT(ue->Mod_id), T_INT(frame_rx%1024), T_INT(subframe_rx));
 
   T(T_UE_PHY_INPUT_SIGNAL, T_INT(ue->Mod_id), T_INT(frame_rx%1024), T_INT(subframe_rx), T_INT(0),
-    T_BUFFER(&ue->common_vars.rxdata[0][subframe_rx*ue->frame_parms.samples_per_tti],
-             ue->frame_parms.samples_per_tti * 4));
+    T_BUFFER(&ue->common_vars.rxdata[0][subframe_rx*ue->frame_parms.samples_per_subframe],
+             ue->frame_parms.samples_per_subframe * 4));
 #endif
 
   // start timers
@@ -5573,6 +5573,11 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
   int           frame_tx = proc->frame_tx;
   int           subframe_rx = proc->subframe_rx;
   int           subframe_tx = proc->subframe_tx;
+#ifdef UE_NR_PHY_DEMO
+  int           nr_tti_rx = proc->nr_tti_rx;
+  int           nr_tti_tx = proc->nr_tti_tx;
+#endif
+
 #undef DEBUG_PHY_PROC
 
   UE_L2_STATE_t ret;
@@ -5649,7 +5654,18 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
 
     if (ue->mac_enabled==1) {
       if (slot==0) {
-          //LOG_I(PHY,"[UE %d] Frame %d, subframe %d, star ue_scheduler\n", ue->Mod_id,frame_rx,subframe_tx);
+#ifdef UE_NR_PHY_DEMO
+          ret = mac_xface->ue_scheduler(ue->Mod_id,
+               frame_rx,
+               subframe_rx,
+			   nr_tti_rx,
+               frame_tx,
+               subframe_tx,
+			   nr_tti_tx,
+               subframe_select(&ue->frame_parms,subframe_tx),
+               eNB_id,
+               0/*FIXME CC_id*/);
+#else
         ret = mac_xface->ue_scheduler(ue->Mod_id,
             frame_rx,
             subframe_rx,
@@ -5658,6 +5674,7 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
             subframe_select(&ue->frame_parms,subframe_tx),
             eNB_id,
             0/*FIXME CC_id*/);
+#endif
 
   if (ret == CONNECTION_LOST) {
     LOG_E(PHY,"[UE %d] Frame %d, subframe %d RRC Connection lost, returning to PRACH\n",ue->Mod_id,

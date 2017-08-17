@@ -1279,6 +1279,13 @@ void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.highSpeedFlag=0;
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.prach_FreqOffset=0;
 
+#ifdef UE_NR_PHY_DEMO
+        // NR: Init to legacy LTE 20Mhz params
+        frame_parms[CC_id]->numerology_index	= 0;
+        frame_parms[CC_id]->ttis_per_subframe	= 1;
+        frame_parms[CC_id]->slots_per_tti		= 2;
+#endif
+
         downlink_frequency[CC_id][0] = 2680000000; // Use float to avoid issue with frequency over 2^31.
         downlink_frequency[CC_id][1] = downlink_frequency[CC_id][0];
         downlink_frequency[CC_id][2] = downlink_frequency[CC_id][0];
@@ -1923,8 +1930,8 @@ int main( int argc, char **argv ) {
             printf("Reading in from file to antenna buffer %d\n",0);
             if (fread(UE[0]->common_vars.rxdata[0],
                       sizeof(int32_t),
-                      frame_parms[0]->samples_per_tti*10,
-                      input_fd) != frame_parms[0]->samples_per_tti*10)
+                      frame_parms[0]->samples_per_subframe*10,
+                      input_fd) != frame_parms[0]->samples_per_subframe*10)
                 printf("error reading from file\n");
         }
         //p_exmimo_config->framing.tdd_config = TXRXSWITCH_TESTRX;
@@ -1939,7 +1946,7 @@ int main( int argc, char **argv ) {
         // Set LSBs for antenna switch (ExpressMIMO)
         for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
             PHY_vars_eNB_g[0][CC_id]->hw_timing_advance = 0;
-            for (i=0; i<frame_parms[CC_id]->samples_per_tti*10; i++)
+            for (i=0; i<frame_parms[CC_id]->samples_per_subframe*10; i++)
                 for (aa=0; aa<frame_parms[CC_id]->nb_antennas_tx; aa++)
                     PHY_vars_eNB_g[0][CC_id]->common_vars.txdata[0][aa][i] = 0x00010001;
         }

@@ -313,7 +313,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
     ue->rx_offset = FRAME_LENGTH_COMPLEX_SAMPLES + sync_pos2 - sync_pos_slot;
 
   if (((sync_pos2 - sync_pos_slot) >=0 ) &&
-      ((sync_pos2 - sync_pos_slot) < ((FRAME_LENGTH_COMPLEX_SAMPLES-frame_parms->samples_per_tti/2)))) {
+	 ((sync_pos2 - sync_pos_slot) < ((FRAME_LENGTH_COMPLEX_SAMPLES-frame_parms->samples_per_tti/2)))) {
 #ifdef DEBUG_INITIAL_SYNCH
     LOG_I(PHY,"Calling sss detection (FDD normal CP)\n");
 #endif
@@ -606,7 +606,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
     // do a measurement on the full frame
     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
       rx_power += signal_energy(&ue->common_vars.rxdata[aarx][0],
-				frame_parms->samples_per_tti*10);
+				frame_parms->samples_per_subframe*10);
     */
 
     // we might add a low-pass filter here later

@@ -239,6 +239,7 @@ add_boolean_option(UE_AUTOTEST_TRACE   False "Activate UE autotest specific logs
 add_boolean_option(UE_DEBUG_TRACE      False "Activate UE debug trace")
 add_boolean_option(UE_TIMING_TRACE     False "Activate UE timing trace")
 add_boolean_option(DISABLE_LOG_X       False "Deactivate all LOG_* macros")
+add_boolean_option(UE_NR_PHY_DEMO      False "Activate UE NR functionalities for PHY demo")
 
 add_boolean_option(DEBUG_CONSOLE False "makes debugging easier, disables stdout/stderr buffering")
 
