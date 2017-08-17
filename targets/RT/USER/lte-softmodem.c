@@ -1124,6 +1124,9 @@ static void get_options (int argc, char **argv) {
                 frame_parms[CC_id]->mode1_flag         = (frame_parms[CC_id]->nb_antenna_ports_eNB == 1) ? 1 : 0;
                 frame_parms[CC_id]->threequarter_fs    = threequarter_fs;
 
+		frame_parms[CC_id]->pdsch_config_common.referenceSignalPower = enb_properties->properties[i]->pdsch_referenceSignalPower[CC_id];
+		frame_parms[CC_id]->pdsch_config_common.p_b = enb_properties->properties[i]->pdsch_p_b[CC_id];
+
                 //} // j
             }
 
