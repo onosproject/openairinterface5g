@@ -491,7 +491,6 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->type    = 0;
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->hopping = 0;
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->rballoc = computeRIV(25,1,20);
-	printf("rballoc %d\n",((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->rballoc);
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->mcs     = eNB->target_ue_ul_mcs;
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->ndi     = proc->frame_tx&1;
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->TPC     = 0;
@@ -600,6 +599,49 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	break;
       }
     }
+    } else if (transmission_mode==3) {
+      DCI_pdu->Num_ue_spec_dci = 1;
+      // user 1
+      DCI_pdu->dci_alloc[0].dci_length = sizeof_DCI2_5MHz_2A_FDD_t;
+      DCI_pdu->dci_alloc[0].L          = 3;
+      DCI_pdu->dci_alloc[0].rnti       = 0x1235;
+      DCI_pdu->dci_alloc[0].format     = format2;
+      DCI_pdu->dci_alloc[0].ra_flag    = 0;
+
+      switch (eNB->frame_parms.N_RB_DL) {
+      case 25:
+	if (eNB->frame_parms.frame_type == FDD) {
+	  ((DCI2A_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv1      = 0;
+	  ((DCI2A_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi1     = subframe / 5;
+	  ((DCI2A_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs1     = eNB->target_ue_dl_mcs;
+	  ((DCI2A_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv2      = 0;
+	  ((DCI2A_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi2     = subframe / 5;
+	  ((DCI2A_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs2     = eNB->target_ue_dl_mcs;
+	  ((DCI2A_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->tb_swap  = 0;
+	  ((DCI2A_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->harq_pid = subframe % 5;
+	  ((DCI2A_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->TPC      = 0;
+	  ((DCI2A_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rballoc  = eNB->ue_dl_rb_alloc;
+	  ((DCI2A_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rah      = 0;
+	}
+	else {
+	  ((DCI2A_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv1      = 0;
+	  ((DCI2A_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi1     = subframe / 5;
+	  ((DCI2A_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs1     = eNB->target_ue_dl_mcs;
+	  ((DCI2A_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv2      = 0;
+	  ((DCI2A_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi2     = subframe / 5;
+	  ((DCI2A_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs2     = eNB->target_ue_dl_mcs;
+	  ((DCI2A_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->tb_swap  = 0;
+	  ((DCI2A_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->harq_pid = subframe % 5;
+	  ((DCI2A_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->TPC      = 0;
+	  ((DCI2A_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rballoc  = eNB->ue_dl_rb_alloc;
+	  ((DCI2A_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rah      = 0;
+	}
+	break;
+      default:
+	LOG_E(PHY,"fill_DCI for TM3 only coded for 25PRB\n");
+	break;
+      }
+
     } else if (transmission_mode==4) {
       DCI_pdu->Num_ue_spec_dci = 1;
       // user 1
@@ -609,19 +651,41 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       DCI_pdu->dci_alloc[0].format     = format2;
       DCI_pdu->dci_alloc[0].ra_flag    = 0;
 
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->tpmi     = 0;
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv1      = 0;
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi1     = subframe / 5;
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs1     = eNB->target_ue_dl_mcs;
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv2      = 0;
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi2     = subframe / 5;
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs2     = eNB->target_ue_dl_mcs;
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->tb_swap  = 0;
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->harq_pid = subframe % 5;
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->TPC      = 0;
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rballoc  = eNB->ue_dl_rb_alloc;
-      ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rah      = 0;
-
+      switch (eNB->frame_parms.N_RB_DL) {
+      case 25:
+	if (eNB->frame_parms.frame_type == FDD) {
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->tpmi     = 0;
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv1      = 0;
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi1     = subframe / 5;
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs1     = eNB->target_ue_dl_mcs;
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv2      = 0;
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi2     = subframe / 5;
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs2     = eNB->target_ue_dl_mcs;
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->tb_swap  = 0;
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->harq_pid = subframe % 5;
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->TPC      = 0;
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rballoc  = eNB->ue_dl_rb_alloc;
+	  ((DCI2_5MHz_2A_FDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rah      = 0;
+	}
+	else {
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->tpmi     = 0;
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv1      = 0;
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi1     = subframe / 5;
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs1     = eNB->target_ue_dl_mcs;
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rv2      = 0;
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->ndi2     = subframe / 5;
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->mcs2     = eNB->target_ue_dl_mcs;
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->tb_swap  = 0;
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->harq_pid = subframe % 5;
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->TPC      = 0;
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rballoc  = eNB->ue_dl_rb_alloc;
+	  ((DCI2_5MHz_2A_TDD_t*) (&DCI_pdu->dci_alloc[0].dci_pdu))->rah      = 0;
+	}
+	break;
+      default:
+	LOG_E(PHY,"fill_DCI for TM8 only coded for 25PRB\n");
+	break;
+      }
     } else if (transmission_mode==5) {
       DCI_pdu->Num_ue_spec_dci = 2;
       // user 1
@@ -704,6 +768,9 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	LOG_E(PHY,"fill_DCI for TM8 only coded for 25PRB\n");
 	break;
       }
+    }
+    else {
+      LOG_E(PHY,"fill_DCI: unsupported transmission mode\n");
     }
 
     break; //subframe switch
