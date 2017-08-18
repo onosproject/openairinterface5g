@@ -502,6 +502,10 @@ void proc_tx_full(PHY_VARS_eNB *eNB,
     write_output("/tmp/txsigF1.m","txsF1", &eNB->common_vars.txdataF[eNB->Mod_id][1][0],eNB->frame_parms.symbols_per_tti*eNB->frame_parms.ofdm_symbol_size*10,1,1);
     if (transmission_mode == 7) 
       write_output("/tmp/txsigF5.m","txsF5", &eNB->common_vars.txdataF[eNB->Mod_id][5][0],eNB->frame_parms.symbols_per_tti*eNB->frame_parms.ofdm_symbol_size*10,1,1);
+    if (transmission_mode==8) {
+      write_output("/tmp/txsigF7.m","txsF7", &eNB->common_vars.txdataF[eNB->Mod_id][7][0],eNB->frame_parms.symbols_per_tti*eNB->frame_parms.ofdm_symbol_size*10,1,1);
+      write_output("/tmp/txsigF8.m","txsF8", &eNB->common_vars.txdataF[eNB->Mod_id][7][0],eNB->frame_parms.symbols_per_tti*eNB->frame_parms.ofdm_symbol_size*10,1,1);
+    }
     exit_fun("");
   }
   */
@@ -945,7 +949,7 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
       int siglen=fp->samples_per_tti,flags=1;
 
       if (SF_type == SF_S) {
-	siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);
+	siglen = (fp->dl_symbols_in_S_subframe+1)*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);
 	flags=3; // end of burst
       }
       if ((fp->frame_type == TDD) &&
@@ -2096,7 +2100,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 
 	break;
       case eNodeB_3GPP:
-	eNB->do_precoding         = eNB->frame_parms.nb_antennas_tx!=eNB->frame_parms.nb_antenna_ports_eNB;
+	eNB->do_precoding         = 1; /*eNB->frame_parms.nb_antennas_tx!=eNB->frame_parms.nb_antenna_ports_eNB*/;
 	eNB->do_prach             = do_prach;
 	eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
 	eNB->td                   = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
