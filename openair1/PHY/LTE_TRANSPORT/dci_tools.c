@@ -2327,6 +2327,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
                                        frame_parms->N_RB_DL);
 
         if (dlsch1!=NULL) {
+	  // fixme (need to copy more fields of rb_alloc)
           dlsch1_harq->rb_alloc[0]     = dlsch0_harq->rb_alloc[0];
           dlsch1_harq->nb_rb           = dlsch0_harq->nb_rb;
         }

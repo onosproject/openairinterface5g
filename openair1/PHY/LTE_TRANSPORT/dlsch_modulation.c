@@ -691,9 +691,9 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
   }
 
 #ifdef DEBUG_DLSCH_MODULATION
-  printf("mimo_mode %d, first_layer0 %d, NLayers0 %d, first_layer1 %d, NLayers1 %d\n",mimo_mode,first_layer0,Nlayers0,first_layer1,Nlayers1);
+    LOG_D(PHY,"mimo_mode %d, first_layer0 %d, NLayers0 %d, first_layer1 %d, NLayers1 %d\n",mimo_mode,first_layer0,Nlayers0,first_layer1,Nlayers1);
 
-  printf("allocate_re (mod %d): symbol_offset %d re_offset %d (%d,%d), jj %d -> %d,%d\n",mod_order0,symbol_offset,re_offset,skip_dc,skip_half,*jj, x0[*jj], x0[1+*jj]);
+    LOG_D(PHY,"allocate_re (mod %d): symbol_offset %d re_offset %d (%d,%d), jj %d -> %d,%d\n",mod_order0,symbol_offset,re_offset,skip_dc,skip_half,*jj, x0[*jj], x0[1+*jj]);
 #endif
 
   first_re=0;
@@ -1578,14 +1578,17 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
         }
 
       } else if (mimo_mode == TM8) { //TM8,TM9,TM10
+        *re_allocated = *re_allocated + 1;
+
 	// TODO: integrate second codeword!
 	// in TM8, Nlayers is alwyas 1
         if (is_not_UEspecRS(lprime,re,frame_parms->nushift,frame_parms->Ncp,8,Ns)) {
+
+	  //LOG_D(PHY,"TM8 tti_offset %d, jj %d, jj2 %d, x0 %p, x1 %p\n",tti_offset,*jj,*jj2,x0,x1);
+   
           switch (mod_order0) {
           case 2:  //QPSK
 
-            //    printf("%d : %d,%d => ",tti_offset,((int16_t*)&txdataF[0][tti_offset])[0],((int16_t*)&txdataF[0][tti_offset])[1]);
-   
 	    if (x0 && Nlayers0==1) {
 	      ((int16_t*)&txdataF[first_layer0][tti_offset])[0] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //I //b_i
 	      *jj = *jj + 1;
@@ -1656,7 +1659,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
 
           case 6:  //64QAM
 
-	    if (x0 && Nlayers0==0) {
+	    if (x0 && Nlayers0==1) {
 	      qam64_table_offset_re = 0;
 	      qam64_table_offset_im = 0;
 	      
@@ -1688,7 +1691,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
               ((int16_t*)&txdataF[first_layer0][tti_offset])[1] = qam_table_s0[qam64_table_offset_im];
             }
 
-	    if (x1 && Nlayers1==0) {
+	    if (x1 && Nlayers1==1) {
 	      qam64_table_offset_re = 0;
 	      qam64_table_offset_im = 0;
 	      
@@ -2223,11 +2226,11 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
   nsymb = (frame_parms->Ncp==0) ? 14:12;
 
   if (dlsch0 != NULL){
-  amp_rho_a = (int16_t)(((int32_t)amp*dlsch0->sqrt_rho_a)>>13); //amp=512 in  full scale; dlsch0->sqrt_rho_a=8192in Q2.13, 1 in full scale
-  amp_rho_b = (int16_t)(((int32_t)amp*dlsch0->sqrt_rho_b)>>13);
+    amp_rho_a = (int16_t)(((int32_t)amp*dlsch0->sqrt_rho_a)>>13); //amp=512 in  full scale; dlsch0->sqrt_rho_a=8192in Q2.13, 1 in full scale
+    amp_rho_b = (int16_t)(((int32_t)amp*dlsch0->sqrt_rho_b)>>13);
   } else{
-  amp_rho_a = (int16_t)(((int32_t)amp*dlsch1->sqrt_rho_a)>>13);
-  amp_rho_b = (int16_t)(((int32_t)amp*dlsch1->sqrt_rho_b)>>13);
+    amp_rho_a = (int16_t)(((int32_t)amp*dlsch1->sqrt_rho_a)>>13);
+    amp_rho_b = (int16_t)(((int32_t)amp*dlsch1->sqrt_rho_b)>>13);
   }
 
   if (mod_order0 == 4)
@@ -2259,18 +2262,18 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
   re_allocated=0;
 
 
-  //  printf("num_pdcch_symbols %d, nsymb %d\n",num_pdcch_symbols,nsymb);
-  for (l=num_pdcch_symbols; l<nsymb; l++) {
-
-#ifdef DEBUG_DLSCH_MODULATION
-    printf("Generating DLSCH (harq_pid %d,mimo %d, pmi_alloc0 %lx, mod0 %d, mod1 %d, rb_alloc[0] %d)\n",
+    //#ifdef DEBUG_DLSCH_MODULATION
+    LOG_D(PHY,"Generating DLSCH (harq_pid %d,mimo %d, pmi_alloc0 %lx, mod0 %d, mod1 %d, rb_alloc[0] %d)\n",
             harq_pid,
             dlsch0_harq->mimo_mode,
             pmi2hex_2Ar2(dlsch0_harq->pmi_alloc),
             mod_order0,
             mod_order1,
             rb_alloc[0]);
-#endif
+    //#endif
+
+  //  printf("num_pdcch_symbols %d, nsymb %d\n",num_pdcch_symbols,nsymb);
+  for (l=num_pdcch_symbols; l<nsymb; l++) {
 
     if (frame_parms->Ncp==0) { // normal prefix
       if ((l==4)||(l==11))
@@ -2590,12 +2593,12 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
         else
           re_offset=7;  // odd number of RBs
       }
+  //#ifdef DEBUG_DLSCH_MODULATION
+      LOG_D(PHY,"generate_dlsch : l=%d, rb=%d, jj=%d, jj2=%d, lprime=%d, mprime=%d, re_allocated = %d\n",l,rb,jj,jj2,lprime,mprime,re_allocated);
+  //#endif
     }
   }
 
-#ifdef DEBUG_DLSCH_MODULATION
-  msg("generate_dlsch : jj = %d,re_allocated = %d (G %d)\n",jj,re_allocated,get_G(frame_parms,dlsch0_harq->nb_rb,dlsch0_harq->rb_alloc,mod_order0,Nl0,2,0,subframe_offset,mimo_mode==TM7? 7 : (mimo_mode==TM8? 8 : 1)));
-#endif
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_MODULATION, VCD_FUNCTION_OUT);
 
