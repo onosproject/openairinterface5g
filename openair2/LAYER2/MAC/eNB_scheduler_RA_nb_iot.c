@@ -32,24 +32,25 @@
 #include "assertions.h"
 #include "platform_types.h"
 //#include "PHY/defs.h"
-#include "PHY/extern.h"
+//#include "PHY/extern.h"
 #include "msc.h"
 
-#include "SCHED/defs.h"
+//#include "SCHED/defs.h"
 #include "SCHED/extern.h"
 
-#include "LAYER2/MAC/defs.h"
+
+//#include "LAYER2/MAC/defs.h"
 #include "LAYER2/MAC/extern.h"
 
 #include "LAYER2/MAC/proto.h"
 #include "UTIL/LOG/log.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
-#include "UTIL/OPT/opt.h"
-#include "OCG.h"
-#include "OCG_extern.h"
+//#include "UTIL/OPT/opt.h"
+//#include "OCG.h"
+//#include "OCG_extern.h"
 
-#include "RRC/LITE/extern.h"
-#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
+//#include "RRC/LITE/extern.h"
+//#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 
 //NB-IoT
 #include "PHY/defs_nb_iot.h"
@@ -58,7 +59,7 @@
 #include "math.h"
 //#include "openair1/PHY/LTE_TRANSPORT/dci_nb_iot.h"
 //#include "LAYER2/MAC/pre_processor.c"
-#include "pdcp.h"
+//#include "pdcp.h"
 
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"

@@ -33,7 +33,7 @@
 #include "asn1_constants.h"
 #include "defs_nb_iot.h"
 #include "proto_nb_iot.h"
-#include "extern.h"
+//#include "extern.h"
 #include "RRC/LITE/proto_nb_iot.h"
 
 
@@ -88,7 +88,7 @@ int mac_top_init_NB()
 
   module_id_t    Mod_id,i,j;
   RA_TEMPLATE_NB *RA_template;
-  UE_TEMPLATE_NB *UE_template;
+  UE_TEMPLATE_NB_IoT *UE_template;
   int size_bytes1,size_bytes2,size_bits1,size_bits2;
   int CC_id;
   int list_el;
@@ -171,7 +171,7 @@ int mac_top_init_NB()
       }
 
       memset (&eNB_mac_inst_NB[i].eNB_stats,0,sizeof(eNB_STATS_NB));
-      UE_template = (UE_TEMPLATE_NB *)&eNB_mac_inst_NB[i].UE_list.UE_template[CC_id][0];
+      UE_template = (UE_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB[i].UE_list.UE_template[CC_id][0];
 
       for (j=0; j<NUMBER_OF_UE_MAX; j++) {
         UE_template[j].rnti=0;

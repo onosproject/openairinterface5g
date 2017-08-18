@@ -48,7 +48,7 @@
 #include "MasterInformationBlock-NB.h"
 #include "BCCH-BCH-Message-NB.h"
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
-#include "defs.h"
+//#include "defs.h"
 //#ifdef PHY_EMUL
 //#include "SIMULATION/PHY_EMULATION/impl_defs.h"
 //#endif
@@ -56,11 +56,20 @@
  * @ingroup _oai2
  * @{
  */
+
+#define CCCH_PAYLOAD_SIZE_MAX_NB_IoT 128
+/*!\brief Maximum number of random access process */
+#define RA_PROC_MAX_NB_IoT 4
+/*!\brief Maximum number of logical channl group IDs */
+#define MAX_NUM_LCGID_NB_IoT 4
+/*!\brief Maximum number of logical chanels */
+#define MAX_NUM_LCID_NB_IoT 11
+
 /*! \brief Downlink SCH PDU Structure */
 typedef struct {
   int8_t payload[8][SCH_PAYLOAD_SIZE_MAX];
   uint16_t Pdu_size[8];
-} __attribute__ ((__packed__)) DLSCH_PDU_NB;
+} __attribute__ ((__packed__)) DLSCH_PDU_NB_IoT;
 /*! \brief eNB template for UE context information  */
 typedef struct {
   /// C-RNTI of UE
@@ -98,38 +107,38 @@ typedef struct {
   uint8_t ULSCH_DCI[8][(((MAX_DCI_SIZE_BITS)+31)>>5)*4];
   // Logical channel info for link with RLC
   /// Last received UE BSR info for each logical channel group id
-  uint8_t bsr_info[MAX_NUM_LCGID];
+  uint8_t bsr_info[MAX_NUM_LCGID_NB_IoT];
   /// phr information, received from DPR MAC control element
   int8_t phr_info;
   /// phr information, received from DPR MAC control element
   int8_t phr_info_configured;
   ///dl buffer info
-  uint32_t dl_buffer_info[MAX_NUM_LCID];
+  uint32_t dl_buffer_info[MAX_NUM_LCID_NB_IoT];
   /// total downlink buffer info
   uint32_t dl_buffer_total;
   /// total downlink pdus
   uint32_t dl_pdus_total;
   /// downlink pdus for each LCID
-  uint32_t dl_pdus_in_buffer[MAX_NUM_LCID];
+  uint32_t dl_pdus_in_buffer[MAX_NUM_LCID_NB_IoT];
   /// creation time of the downlink buffer head for each LCID
-  uint32_t dl_buffer_head_sdu_creation_time[MAX_NUM_LCID];
+  uint32_t dl_buffer_head_sdu_creation_time[MAX_NUM_LCID_NB_IoT];
   /// maximum creation time of the downlink buffer head across all LCID
   uint32_t  dl_buffer_head_sdu_creation_time_max;
   /// a flag indicating that the downlink head SDU is segmented
-  uint8_t    dl_buffer_head_sdu_is_segmented[MAX_NUM_LCID];
+  uint8_t    dl_buffer_head_sdu_is_segmented[MAX_NUM_LCID_NB_IoT];
   /// size of remaining size to send for the downlink head SDU
-  uint32_t dl_buffer_head_sdu_remaining_size_to_send[MAX_NUM_LCID];
+  uint32_t dl_buffer_head_sdu_remaining_size_to_send[MAX_NUM_LCID_NB_IoT];
   /// total uplink buffer size
   uint32_t ul_total_buffer;
   /// uplink buffer creation time for each LCID
-  uint32_t ul_buffer_creation_time[MAX_NUM_LCGID];
+  uint32_t ul_buffer_creation_time[MAX_NUM_LCGID_NB_IoT];
   /// maximum uplink buffer creation time across all the LCIDs
   uint32_t ul_buffer_creation_time_max;
   /// uplink buffer size per LCID
-  uint32_t ul_buffer_info[MAX_NUM_LCGID];
+  uint32_t ul_buffer_info[MAX_NUM_LCGID_NB_IoT];
   /// UE tx power
   int32_t ue_tx_power;
-} UE_TEMPLATE_NB;
+} UE_TEMPLATE_NB_IoT;
 /*! \brief eNB statistics for the connected UEs*/
 typedef struct {
   /// CRNTI of UE
@@ -246,12 +255,12 @@ typedef struct {
 /*! \brief scheduling control information set through an API (not used)*/
 typedef struct {
   ///UL transmission bandwidth in RBs
-  uint8_t ul_bandwidth[MAX_NUM_LCID];
+  uint8_t ul_bandwidth[MAX_NUM_LCID_NB_IoT];
   ///DL transmission bandwidth in RBs
-  uint8_t dl_bandwidth[MAX_NUM_LCID];
+  uint8_t dl_bandwidth[MAX_NUM_LCID_NB_IoT];
   //To do GBR bearer
-  uint8_t min_ul_bandwidth[MAX_NUM_LCID];
-  uint8_t min_dl_bandwidth[MAX_NUM_LCID];
+  uint8_t min_ul_bandwidth[MAX_NUM_LCID_NB_IoT];
+  uint8_t min_dl_bandwidth[MAX_NUM_LCID_NB_IoT];
   ///aggregated bit rate of non-gbr bearer per UE
   uint64_t  ue_AggregatedMaximumBitrateDL;
   ///aggregated bit rate of non-gbr bearer per UE
@@ -261,8 +270,8 @@ typedef struct {
   ///Contention resolution timer used during random access
   uint8_t mac_ContentionResolutionTimer;
   //Delete uint16_t max_allowed_rbs[MAX_NUM_LCID];
-  uint8_t max_mcs[MAX_NUM_LCID];
-  uint16_t priority[MAX_NUM_LCID];
+  uint8_t max_mcs[MAX_NUM_LCID_NB_IoT];
+  uint16_t priority[MAX_NUM_LCID_NB_IoT];
   // resource scheduling information
   uint8_t       harq_pid[MAX_NUM_CCs];
   uint8_t       round[MAX_NUM_CCs];
@@ -284,9 +293,9 @@ typedef struct {
 /*! \brief UE list used by eNB to order UEs/CC for scheduling*/
 typedef struct {
   /// DLSCH pdu
-  DLSCH_PDU_NB DLSCH_pdu[MAX_NUM_CCs][2][NUMBER_OF_UE_MAX];
+  DLSCH_PDU_NB_IoT DLSCH_pdu[MAX_NUM_CCs][2][NUMBER_OF_UE_MAX];
   /// DCI template and MAC connection parameters for UEs
-  UE_TEMPLATE_NB UE_template[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  UE_TEMPLATE_NB_IoT UE_template[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
   /// DCI template and MAC connection for RA processes
   int pCC_id[NUMBER_OF_UE_MAX];
   /// eNB to UE statistics
@@ -394,7 +403,7 @@ typedef struct {
 } __attribute__((__packed__))BCCH_PDU_NB;
 /*! \brief CCCH payload */
 typedef struct {
-  uint8_t payload[CCCH_PAYLOAD_SIZE_MAX] ;
+  uint8_t payload[CCCH_PAYLOAD_SIZE_MAX_NB_IoT] ;
 } __attribute__((__packed__))CCCH_PDU_NB;
 /*! \brief eNB template for the Random access information */
 typedef struct {
@@ -460,7 +469,7 @@ typedef struct {
   uint32_t BCCH_alloc_pdu;
   /// Outgoing CCCH pdu for PHY
   CCCH_PDU_NB CCCH_pdu;
-  RA_TEMPLATE_NB RA_template[NB_RA_PROC_MAX];
+  RA_TEMPLATE_NB RA_template[RA_PROC_MAX_NB_IoT];
   /// Delete VRB map for common channels
   /// Delete MBSFN SubframeConfig
   /// Delete number of subframe allocation pattern available for MBSFN sync area
