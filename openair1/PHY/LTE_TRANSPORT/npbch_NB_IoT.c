@@ -21,7 +21,7 @@
 //#include "PHY/extern_NB_IoT.h"
 //#include "PHY/sse_intrin.h"
 
-#include "PHY/CODING/defs_nb_iot.h"
+#include "PHY/CODING/defs_NB_IoT.h"
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 
 //#ifdef PHY_ABSTRACTION

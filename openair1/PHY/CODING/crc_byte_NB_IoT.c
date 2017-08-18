@@ -36,7 +36,7 @@
 
 //#include "defs.h"   // to delete in final code version
 
-#include "defs_nb_iot.h"  //
+#include "defs_NB_IoT.h"  //
 /*ref 36-212 v8.6.0 , pp 8-9 */
 /* the highest degree is set by default */
 unsigned int             poly24a_NB_IoT = 0x864cfb00;   //1000 0110 0100 1100 1111 1011  D^24 + D^23 + D^18 + D^17 + D^14 + D^11 + D^10 + D^7 + D^6 + D^5 + D^4 + D^3 + D + 1

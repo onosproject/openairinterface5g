@@ -15,7 +15,7 @@
 //#include "PHY/defs.h"
 #include "PHY/defs_nb_iot.h"
 #include "PHY/extern_NB_IoT.h"
-#include "PHY/CODING/defs_nb_iot.h"
+#include "PHY/CODING/defs_NB_IoT.h"
 //#include "PHY/CODING/extern.h"
 //#include "PHY/CODING/lte_interleaver_inline.h"
 #include "PHY/LTE_TRANSPORT/defs_nb_iot.h"

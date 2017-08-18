@@ -127,7 +127,7 @@ static inline void* malloc16_clear( size_t size )
 
 #include "PHY/TOOLS/time_meas_NB_IoT.h"
 //#include "PHY/CODING/defs.h"
-#include "PHY/CODING/defs_nb_iot.h"
+#include "PHY/CODING/defs_NB_IoT.h"
 //#include "PHY/TOOLS/defs.h"
 //#include "platform_types.h"
 ///#include "openair1/PHY/LTE_TRANSPORT/defs_nb_iot.h"

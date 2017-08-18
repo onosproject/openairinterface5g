@@ -12,7 +12,7 @@
 * \warning
 */
 
-#include "defs_nb_iot.h"
+#include "defs_NB_IoT.h"
 
 unsigned char  ccodelte_table_NB_IoT[128];      // for transmitter
 unsigned short glte_NB_IoT[] = { 0133, 0171, 0165 }; // {A,B} //renaimed but is exactly the same as the one in the old implementation
