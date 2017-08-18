@@ -30,7 +30,7 @@ comment:
 Functions: NB_initiate_ra_proc()
 
 5/15
-modified:   openair1/PHY/LTE_TRANSPORT/dci_nb_iot.h
+modified:   openair1/PHY/LTE_TRANSPORT/dci_NB_IoT.h
 modified:   openair1/PHY/LTE_TRANSPORT/defs.hod
 modified:   openair2/LAYER2/MAC/eNB_scheduler_RA_nb_iot.c
 modified:   openair2/LAYER2/MAC/proto_nb_iot.h
@@ -50,7 +50,7 @@ Functions: NB_phy_procedures_uespec_RX(), UL_INDICATION()
 Parameters: UL_IND for Interface Module
 
 5/18
-Modified:   openair1/PHY/LTE_TRANSPORT/dci_nb_iot.h
+Modified:   openair1/PHY/LTE_TRANSPORT/dci_NB_IoT.h
 Modified:   openair2/PHY_INTERFACE/IF_Module_nb_iot.h
 Modified:   openair2/LAYER2/MAC/IF_Module_nb_iot.c
 
