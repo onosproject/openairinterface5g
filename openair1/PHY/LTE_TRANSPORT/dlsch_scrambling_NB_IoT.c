@@ -23,7 +23,7 @@
 //#include "PHY/extern_NB_IoT.h"
 //#include "UTIL/LOG/vcd_signal_dumper.h"
 
-#include "PHY/LTE_TRANSPORT/defs_nb_iot.h"
+#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 
 void dlsch_scrambling_NB_IoT(NB_IoT_DL_FRAME_PARMS  *frame_parms,
 							               NB_IoT_eNB_DLSCH_t     *dlsch,

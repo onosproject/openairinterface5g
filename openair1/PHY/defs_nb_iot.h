@@ -134,7 +134,7 @@ static inline void* malloc16_clear( size_t size )
 #ifdef OPENAIR_LTE
 
 //#include "PHY/LTE_TRANSPORT/defs.h"
-#include "PHY/LTE_TRANSPORT/defs_nb_iot.h"
+#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 #include <pthread.h>
 
 #include "targets/ARCH/COMMON/common_lib.h"

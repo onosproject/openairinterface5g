@@ -9,7 +9,7 @@
 #define __IF_MODULE_NB_IoT__H__
 
 #include "nfapi_interface.h"
-#include "openair1/PHY/LTE_TRANSPORT/defs_nb_iot.h"
+#include "openair1/PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 #include "PhysicalConfigDedicated-NB-r13.h"
 //#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
 #include "openair2/COMMON/platform_types.h"
