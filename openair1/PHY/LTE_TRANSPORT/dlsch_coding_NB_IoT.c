@@ -19,7 +19,7 @@
 //#include "PHY/CODING/extern.h"
 //#include "PHY/CODING/lte_interleaver_inline.h"
 #include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
-#include "PHY/LTE_TRANSPORT/proto_nb_iot.h"
+#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
 #include "SCHED/defs_nb_iot.h"
 //#include "defs_nb_iot.h"
 //#include "UTIL/LOG/vcd_signal_dumper.h"

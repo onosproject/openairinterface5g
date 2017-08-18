@@ -1119,7 +1119,7 @@ static inline int release_thread(pthread_mutex_t *mutex,int *instance_cnt,char *
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 //#include "PHY/MODULATION/defs.h"
 //#include "PHY/LTE_TRANSPORT/proto.h"
-#include "PHY/LTE_TRANSPORT/proto_nb_iot.h"
+#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
 //#include "PHY/LTE_ESTIMATION/defs.h"
 
 //#include "SIMULATION/ETH_TRANSPORT/defs.h"
