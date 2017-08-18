@@ -75,8 +75,7 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   DCI_pdu->Num_common_dci = 0;
   DCI_pdu->Num_ue_spec_dci=0;
 
-  switch (subframe) {
-  case 5:
+  if (subframe==5) {
    if ( !(proc->frame_tx&1) ) // SI message on even frame only (SFN mod 2 == 0)
    {
 	DCI_pdu->Num_common_dci = 1;
@@ -196,16 +195,16 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
       break;
     }
-    break; //subframe switch
 
-    }  // if ( !(proc->frame_tx&1) )
-    else // No SI message on odd frame (SFN mod 2 == 1)
+   }  // if ( !(proc->frame_tx&1) )
+   else // No SI message on odd frame (SFN mod 2 == 1)
     {
       /* warning: work around to send dlsch on subframe 5 odd frame !!! */
       /* todo: clean up, espacially if subframe cases are added next !!! */
     }
+  }
     /*
-  case 6:
+    else if (subframe==6) {
       DCI_pdu->Num_ue_spec_dci = 1;
       DCI_pdu->dci_alloc[0].dci_length = sizeof_DCI2_5MHz_2A_M10PRB_TDD_t;
       DCI_pdu->dci_alloc[0].L          = 2;
@@ -223,11 +222,10 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       DLSCH_alloc_pdu1.rv1              = 0;
       DLSCH_alloc_pdu1.tpmi             = 0;
       memcpy((void*)&DCI_pdu->dci_alloc[0].dci_pdu[0],(void *)&DLSCH_alloc_pdu1,sizeof(DCI2_5MHz_2A_M10PRB_TDD_t));
-    break;
+    }
     */
 
-  default:
-  case 7:
+  else if (subframe_select(&eNB->frame_parms,subframe)==SF_DL) {
     DCI_pdu->Num_ue_spec_dci = 1;
     DCI_pdu->dci_alloc[0].L          = 2;
     DCI_pdu->dci_alloc[0].firstCCE   = 0;
@@ -772,8 +770,7 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     else {
       LOG_E(PHY,"fill_DCI: unsupported transmission mode\n");
     }
-
-    break; //subframe switch
+  }
 
     /*
       case 8:
@@ -824,7 +821,6 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     memcpy((void*)&DCI_pdu->dci_alloc[1].dci_pdu[0],(void *)&UL_alloc_pdu,sizeof(DCI0_5MHz_TDD_1_6_t));
  
     */
-  }
 
   /*
   DCI_pdu->nCCE = 0;

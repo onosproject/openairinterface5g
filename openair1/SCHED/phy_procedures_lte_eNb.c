@@ -1259,8 +1259,6 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 				     eNB->CC_id,
 				     frame,
 				     subframe);
-   for (i=0; i<DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci ; i++) 
-     dump_dci(fp,&DCI_pdu->dci_alloc[i]);
   }
   else {
     DCI_pdu = &DCI_pdu_tmp;
@@ -1277,6 +1275,10 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     }
 
 #endif
+
+    for (i=0; i<DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci ; i++) 
+      dump_dci(fp,&DCI_pdu->dci_alloc[i]);
+    
   }
 
   // clear existing ulsch dci allocations before applying info from MAC  (this is table
