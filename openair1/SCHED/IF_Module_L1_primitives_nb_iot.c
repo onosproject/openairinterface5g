@@ -11,7 +11,7 @@
 #include "PHY/extern_NB_IoT.h"
 //#include "PHY/vars.h"
 #include "PHY/vars_NB_IoT.h"
-#include "PHY/INIT/defs_nb_iot.h"
+#include "PHY/INIT/defs_NB_IoT.h"
 
 
 void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,

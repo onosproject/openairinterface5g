@@ -5,7 +5,7 @@ Nick (nick133371@gmail.com)
 
 5/13 
 Add:	    openair1/PHY/impl_defs_lte_nb_iot.h
-Add:        openair1/PHY/INIT/defs_nb_iot.h
+Add:        openair1/PHY/INIT/defs_NB_IoT.h
 Add:        openair1/PHY/INIT/Lte_init_nb_iot.c
 
 Comment: 
