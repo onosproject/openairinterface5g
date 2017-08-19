@@ -490,7 +490,7 @@ void generate_pucch1x(int32_t **txdataF,
             //      printf("d0 %d\n",d0);
             break;
 
-          case pucch_format1b:  //QPSK 2-bits (Table 5.4.1-1 from 36.211, pg. 18)
+          case pucch_format1b:  //QPSK 2-bits (Table 5.4.1-1 from 36.211)
             if (((payload[0]&1)==0) && ((payload[1]&1)==0))  {// 1
               ((int16_t *)&zptr[n])[0] = ((int32_t)amp*ref_re)>>15;
               ((int16_t *)&zptr[n])[1] = ((int32_t)amp*ref_im)>>15;
@@ -2023,7 +2023,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
         tmp_re = (int16_t)(((int32_t)alpha_re[alpha_ind] * ul_ref_sigs[u][v][0][n<<1] - (int32_t)alpha_im[alpha_ind] * ul_ref_sigs[u][v][0][1+(n<<1)])>>15);
         tmp_im = (int16_t)(((int32_t)alpha_re[alpha_ind] * ul_ref_sigs[u][v][0][1+(n<<1)] + (int32_t)alpha_im[alpha_ind] * ul_ref_sigs[u][v][0][n<<1])>>15);
 
-        // this is S(ns)*w_noc(m)*r_uv^alpha(n)
+        // this is S(ns)*w_noc(m)*r_uv^alpha(n), conjugated for received (minus in imaginary term)
         zptr[n<<1] = (tmp_re*W_re - tmp_im*W_im)>>15;
         zptr[1+(n<<1)] = -(tmp_re*W_im + tmp_im*W_re)>>15;
 
@@ -2339,8 +2339,8 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
             off=(re<<1) + (24*l);
             tmp_re = ((rxcomp[aa][off]*(int32_t)cfo[l<<1])>>15)     - ((rxcomp[aa][1+off]*(int32_t)cfo[1+(l<<1)])>>15);
             tmp_im = ((rxcomp[aa][off]*(int32_t)cfo[1+(l<<1)])>>15) + ((rxcomp[aa][1+off]*(int32_t)cfo[(l<<1)])>>15);
-            stat_re += (((tmp_re*chest_re)>>15) + ((tmp_im*chest_im)>>15)/4);
-            stat_im += (((tmp_re*chest_im)>>15) - ((tmp_im*chest_re)>>15)/4);
+            stat_re += (((tmp_re*chest_re)>>15) + ((tmp_im*chest_im)>>15))/4;
+	    stat_im += (((tmp_re*chest_im)>>15) - ((tmp_im*chest_re)>>15))/4;
             off+=2;
 #ifdef DEBUG_PUCCH_RX
             printf("[eNB] PUCCH subframe %d (%d,%d) => (%d,%d) x (%d,%d) : (%d,%d)\n",subframe,l,re,
@@ -2364,7 +2364,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
           printf("[eNB] PUCCH subframe %d l %d re %d chest2 => (%d,%d)\n",subframe,l,re,
                 chest_re,chest_im);
 #endif
-
+	  // note sign of Re/Im components indicate that Ch. Estimate is conjugated
           for (l=0; l<2; l++) {
             off=(re<<1) + (24*l) + (nsymb>>1)*24;
             tmp_re = ((rxcomp[aa][off]*(int32_t)cfo[l<<1])>>15)     - ((rxcomp[aa][1+off]*(int32_t)cfo[1+(l<<1)])>>15);
@@ -2379,7 +2379,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
                   stat_re,stat_im);
 #endif
           }
-
+	  // note sign of Re/Im components indicate that Ch. Estimate is conjugated
           for (l=(nsymb>>1)-2; l<(nsymb>>1)-1; l++) {
             off=(re<<1) + (24*l) + (nsymb>>1)*24;
             tmp_re = ((rxcomp[aa][off]*(int32_t)cfo[l<<1])>>15)     - ((rxcomp[aa][1+off]*(int32_t)cfo[1+(l<<1)])>>15);
@@ -2402,23 +2402,28 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
         } //re
       } // aa
 
-#ifdef DEBUG_PUCCH_RX
-      LOG_I(PHY,"PUCCH 1a/b: subframe %d : stat %d,%d (pos %d)\n",subframe,stat_re,stat_im,
-	    (subframe<<10) + (eNB->pucch1ab_stats_cnt[UE_id][subframe]));
-#endif
 
-	eNB->pucch1ab_stats[UE_id][(subframe<<11) + 2*(eNB->pucch1ab_stats_cnt[UE_id][subframe])] = (stat_re);
-	eNB->pucch1ab_stats[UE_id][(subframe<<11) + 1+2*(eNB->pucch1ab_stats_cnt[UE_id][subframe])] = (stat_im);
-	eNB->pucch1ab_stats_cnt[UE_id][subframe] = (eNB->pucch1ab_stats_cnt[UE_id][subframe]+1)&1023;
-
+      eNB->pucch1ab_stats[UE_id][(subframe<<11) + 2*(eNB->pucch1ab_stats_cnt[UE_id][subframe])] = (stat_re);
+      eNB->pucch1ab_stats[UE_id][(subframe<<11) + 1+2*(eNB->pucch1ab_stats_cnt[UE_id][subframe])] = (stat_im);
+      eNB->pucch1ab_stats_cnt[UE_id][subframe] = (eNB->pucch1ab_stats_cnt[UE_id][subframe]+1)&1023;
+      
       /* frame not available here - set to -1 for the moment */
       T(T_ENB_PHY_PUCCH_1AB_IQ, T_INT(eNB->Mod_id), T_INT(UE_id), T_INT(-1), T_INT(subframe), T_INT(stat_re), T_INT(stat_im));
 
 	  
-      *payload = (stat_re<0) ? 1 : 0;
-
-      if (fmt==pucch_format1b)
-        *(1+payload) = (stat_im<0) ? 1 : 0;
+      if (fmt == pucch_format1a) *payload = (stat_re<0) ? 1 : 0;
+      else if (fmt == pucch_format1b) { // use format1b constellation in Table 5.4.1-1 from 36.211
+	//NOTE HERE: The second case should be the other way around
+	if (abs(stat_re)>abs(stat_im)) {
+	  *payload = (stat_re<0)? 1 : 0;
+	  *(1+payload) = *payload;
+	}
+	else {
+	  *payload     = (stat_im<0) ? 1 : 0;
+	  *(1+payload) = 1-*payload; 
+	}
+      }
+      
     } else { // insufficient energy on PUCCH so NAK
       *payload = 0;
       ((int16_t*)&eNB->pucch1ab_stats[UE_id][(subframe<<10) + (eNB->pucch1ab_stats_cnt[UE_id][subframe])])[0] = (int16_t)(stat_re);
