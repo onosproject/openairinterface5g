@@ -491,7 +491,7 @@ void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->type    = 0;
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->hopping = 0;
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->rballoc = computeRIV(25,1,20);
-	printf("rballoc %d\n",((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->rballoc);
+	//printf("rballoc %d\n",((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->rballoc);
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->mcs     = eNB->target_ue_ul_mcs;
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->ndi     = proc->frame_tx&1;
 	((DCI0_5MHz_FDD_t*)&DCI_pdu->dci_alloc[1].dci_pdu[0])->TPC     = 0;

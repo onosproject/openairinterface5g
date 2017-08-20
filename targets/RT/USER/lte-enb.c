@@ -324,51 +324,18 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_OFDM_MODULATION,0);
     
-
-/*
-    for (aa=0; aa<phy_vars_eNB->frame_parms.nb_antennas_tx; aa++) {
-      if (phy_vars_eNB->frame_parms.Ncp == EXTENDED) {
-        PHY_ofdm_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F],
-                     dummy_tx_b,
-                     phy_vars_eNB->frame_parms.ofdm_symbol_size,
-                     6,
-                     phy_vars_eNB->frame_parms.nb_prefix_samples,
-                     CYCLIC_PREFIX);
-	if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_DL) 
-	  PHY_ofdm_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F+slot_sizeF],
-		       dummy_tx_b+(phy_vars_eNB->frame_parms.samples_per_tti>>1),
-		       phy_vars_eNB->frame_parms.ofdm_symbol_size,
-		       6,
-		       phy_vars_eNB->frame_parms.nb_prefix_samples,
-		       CYCLIC_PREFIX);
-      } else {
-        normal_prefix_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F],
-                          dummy_tx_b,
-                          7,
-                          &(phy_vars_eNB->frame_parms));
-	// if S-subframe generate first slot only
-	if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_DL)
-	  normal_prefix_mod(&phy_vars_eNB->common_vars.txdataF[0][aa][slot_offset_F+slot_sizeF],
-			    dummy_tx_b+(phy_vars_eNB->frame_parms.samples_per_tti>>1),
-			    7,
-			    &(phy_vars_eNB->frame_parms));
-      }
-    } */
-
+    /*
+    int16_t tmp;
+    
     for (aa=0; aa<phy_vars_eNB->frame_parms.nb_antennas_tx; aa++) {
       // if S-subframe generate first slot only
       if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_S)
 	len = phy_vars_eNB->frame_parms.samples_per_tti>>1;
       else
 	len = phy_vars_eNB->frame_parms.samples_per_tti;
-      /*
-      for (i=0;i<len;i+=4) {
-	dummy_tx_b[i] = 0x100;
-	dummy_tx_b[i+1] = 0x01000000;
-	dummy_tx_b[i+2] = 0xff00;
-	dummy_tx_b[i+3] = 0xff000000;
-	}*/
+
       for (i=0; i<len; i++) {
+	
         tx_offset = (int)slot_offset+time_offset[aa]+i;
 
 	
@@ -378,40 +345,37 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB *phy_vars_eNB)
         if (tx_offset>=(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti))
           tx_offset -= LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti;
 
-/*	((short*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset])[0] = ((short*)dummy_tx_b)[2*i]<<openair0_cfg[0].iq_txshift;
-	
-	((short*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset])[1] = ((short*)dummy_tx_b)[2*i+1]<<openair0_cfg[0].iq_txshift; */
-
-	((short*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset])[0] = ((short*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset])[0]<<openair0_cfg[CC_id].iq_txshift;
-	
-	((short*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset])[1] = ((short*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset])[1]<<openair0_cfg[CC_id].iq_txshift;
-     }
+	tmp = ((short*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset])[1];//<<openair0_cfg[CC_id].iq_txshift;
+	((short*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset])[0] = tmp;
+	((short*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset])[1] = ((short*)&phy_vars_eNB->common_vars.txdata[0][aa][tx_offset])[0];//<<openair0_cfg[CC_id].iq_txshift;
+      }
      // if S-subframe switch to RX in second subframe
-     if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_S) {
-       for (i=0; i<len; i++) {
-	 phy_vars_eNB->common_vars.txdata[0][aa][tx_offset++] = 0x00010001;
-       }
-     }
-
-     if ((((phy_vars_eNB->frame_parms.tdd_config==0) ||
-	  (phy_vars_eNB->frame_parms.tdd_config==1) ||
-	  (phy_vars_eNB->frame_parms.tdd_config==2) ||
-	  (phy_vars_eNB->frame_parms.tdd_config==6)) && 
-	  (subframe==0)) || (subframe==5)) {
-       // turn on tx switch N_TA_offset before
-       //LOG_D(HW,"subframe %d, time to switch to tx (N_TA_offset %d, slot_offset %d) \n",subframe,phy_vars_eNB->N_TA_offset,slot_offset);
-       for (i=0; i<phy_vars_eNB->N_TA_offset; i++) {
-         tx_offset = (int)slot_offset+time_offset[aa]+i-phy_vars_eNB->N_TA_offset;
-         if (tx_offset<0)
-           tx_offset += LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti;
-	 
-	 if (tx_offset>=(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti))
-	   tx_offset -= LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti;
-	 
-	 phy_vars_eNB->common_vars.txdata[0][aa][tx_offset] = 0x00000000;
-       }
-     }
+      if (subframe_select(&phy_vars_eNB->frame_parms,subframe) == SF_S) {
+	for (i=0; i<len; i++) {
+	  phy_vars_eNB->common_vars.txdata[0][aa][tx_offset++] = 0x00010001;
+	}
+      }
+      
+      if ((((phy_vars_eNB->frame_parms.tdd_config==0) ||
+	    (phy_vars_eNB->frame_parms.tdd_config==1) ||
+	    (phy_vars_eNB->frame_parms.tdd_config==2) ||
+	    (phy_vars_eNB->frame_parms.tdd_config==6)) && 
+	   (subframe==0)) || (subframe==5)) {
+	// turn on tx switch N_TA_offset before
+	//LOG_D(HW,"subframe %d, time to switch to tx (N_TA_offset %d, slot_offset %d) \n",subframe,phy_vars_eNB->N_TA_offset,slot_offset);
+	for (i=0; i<phy_vars_eNB->N_TA_offset; i++) {
+	  tx_offset = (int)slot_offset+time_offset[aa]+i-phy_vars_eNB->N_TA_offset;
+	  if (tx_offset<0)
+	    tx_offset += LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti;
+	  
+	  if (tx_offset>=(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti))
+	    tx_offset -= LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*phy_vars_eNB->frame_parms.samples_per_tti;
+	  
+	  phy_vars_eNB->common_vars.txdata[0][aa][tx_offset] = 0x00000000;
+	}
+      }
     }
+    */
   }
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_SFGEN , 0 );
 }
@@ -1684,7 +1648,7 @@ static void* eNB_thread_single( void* param ) {
     // If this proc is to provide synchronization, do so
     wakeup_slaves(proc);
 
-    //    if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
+    if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
   }
   
 
