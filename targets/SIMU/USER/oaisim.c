@@ -184,7 +184,7 @@ extern LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs];
 
 double cpuf;
 #include "threads_t.h"
-threads_t threads= {-1,-1,-1};
+threads_t threads= {-1,-1,-1,-1,-1,-1,-1};
 
 //#ifdef XFORMS
 int otg_enabled;
@@ -1188,12 +1188,23 @@ int T_port = 2021;    /* default port to listen to to wait for the tracer */
 int T_dont_fork = 0;  /* default is to fork, see 'T_init' to understand */
 #endif
 
+static void print_current_directory(void)
+{
+  char dir[8192]; /* arbitrary size (should be big enough) */
+  if (getcwd(dir, 8192) == NULL)
+    printf("ERROR getting working directory\n");
+  else
+    printf("working directory: %s\n", dir);
+}
+
 /*------------------------------------------------------------------------------*/
 int
 main (int argc, char **argv)
 {
 
   clock_t t;
+
+  print_current_directory();
 
   start_background_system();
 
@@ -1350,6 +1361,11 @@ main (int argc, char **argv)
   LOG_N(EMU,
         ">>>>>>>>>>>>>>>>>>>>>>>>>>> OAIEMU initialization done <<<<<<<<<<<<<<<<<<<<<<<<<<\n\n");
 
+#ifndef PACKAGE_VERSION
+#  define PACKAGE_VERSION "UNKNOWN-EXPERIMENTAL"
+#endif
+  LOG_I(EMU, "Version: %s\n", PACKAGE_VERSION);
+
 #if defined(ENABLE_ITTI)
 
   // Handle signals until all tasks are terminated
@@ -1389,7 +1405,8 @@ reset_opp_meas_oaisim (void)
   reset_meas (&ul_chan_stats);
 
   for (UE_id = 0; UE_id < NB_UE_INST; UE_id++) {
-    reset_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc);
+    reset_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc[0]);
+    reset_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc[1]);
     reset_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc_rx[0]);
     reset_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc_rx[1]);
     reset_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc_tx);
@@ -1558,7 +1575,9 @@ print_opp_meas_oaisim (void)
   }
 
   for (UE_id = 0; UE_id < NB_UE_INST; UE_id++) {
-    print_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc, "[UE][total_phy_proc]",
+    print_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc[0], "[UE][total_phy_proc[0]]",
+                &oaisim_stats, &oaisim_stats_f);
+    print_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc[1], "[UE][total_phy_proc[1]]",
                 &oaisim_stats, &oaisim_stats_f);
 
     print_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc_rx[0],

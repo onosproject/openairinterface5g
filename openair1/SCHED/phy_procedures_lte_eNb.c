@@ -906,7 +906,9 @@ void generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC
     T_INT(eNB->ulsch[(uint32_t)UE_id]->harq_processes[harq_pid]->round),
     T_INT(eNB->ulsch[(uint32_t)UE_id]->harq_processes[harq_pid]->first_rb),
     T_INT(eNB->ulsch[(uint32_t)UE_id]->harq_processes[harq_pid]->nb_rb),
-    T_INT(eNB->ulsch[(uint32_t)UE_id]->harq_processes[harq_pid]->TBS));
+    T_INT(eNB->ulsch[(uint32_t)UE_id]->harq_processes[harq_pid]->TBS),
+    T_INT(dci_alloc->L),
+    T_INT(dci_alloc->firstCCE));
 }
 
 void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *dlsch, LTE_eNB_DLSCH_t *dlsch1,LTE_eNB_UE_stats *ue_stats,int ra_flag,int num_pdcch_symbols) {
@@ -1145,7 +1147,8 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 			   eNB_rxtx_proc_t *proc,
                            relaying_type_t r_type,
 			   PHY_VARS_RN *rn,
-			   int do_meas)
+			   int do_meas,
+			   int do_pdcch_flag)
 {
   UNUSED(rn);
   int frame=proc->frame_tx;
@@ -1315,24 +1318,9 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   }
 
 
-  num_pdcch_symbols = DCI_pdu->num_pdcch_symbols;
-  LOG_D(PHY,"num_pdcch_symbols %"PRIu8",(dci common %"PRIu8", dci uespec %"PRIu8"\n",num_pdcch_symbols,
-        DCI_pdu->Num_common_dci,DCI_pdu->Num_ue_spec_dci);
-
-#if defined(SMBV) 
-  // Sets up PDCCH and DCI table
-  if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4) && ((DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci)>0)) {
-    LOG_D(PHY,"[SMBV] Frame %3d, SF %d PDCCH, number of DCIs %d\n",frame,subframe,DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci);
-    dump_dci(fp,&DCI_pdu->dci_alloc[0]);
-    smbv_configure_pdcch(smbv_fname,(smbv_frame_cnt*10) + (subframe),num_pdcch_symbols,DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci);
-  }
-#endif
-
-  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->num_pdcch_symbols);
-
   // loop over all DCIs for this subframe to generate DLSCH allocations
-  for (i=0; i<DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci ; i++) {
-    LOG_D(PHY,"[eNB] Subframe %d: DCI %d/%d : rnti %x, CCEind %d\n",subframe,i,DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci,DCI_pdu->dci_alloc[i].rnti,DCI_pdu->dci_alloc[i].firstCCE);
+  for (i=0; i<DCI_pdu->Num_dci; i++) {
+    LOG_D(PHY,"[eNB] Subframe %d: DCI %d/%d : rnti %x, CCEind %d\n",subframe,i,DCI_pdu->Num_dci,DCI_pdu->dci_alloc[i].rnti,DCI_pdu->dci_alloc[i].firstCCE);
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].rnti);
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].format);
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].firstCCE);
@@ -1358,7 +1346,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   phy_config_dedicated_eNB_step2(eNB);
 
   // Now loop again over the DCIs for UL configuration
-  for (i=0; i<DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci ; i++) {
+  for (i=0; i<DCI_pdu->Num_dci; i++) {
     dci_alloc = &DCI_pdu->dci_alloc[i];
 
     if (dci_alloc->format == format0) {  // this is a ULSCH allocation
@@ -1380,7 +1368,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
 
   // if we have DCI to generate do it now
-  if ((DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci)>0) {
+  if (DCI_pdu->Num_dci>0) {
 
 
   } else { // for emulation!!
@@ -1388,34 +1376,49 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     eNB->num_common_dci[(subframe)&1]=0;
   }
 
+
   if (eNB->abstraction_flag == 0) {
+    if (do_pdcch_flag) {
+      if (DCI_pdu->Num_dci > 0) {
+	LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (Num_dci=%d)\n",eNB->Mod_id,frame, subframe,
+	      DCI_pdu->Num_dci);
+      }
 
-    if (DCI_pdu->Num_ue_spec_dci+DCI_pdu->Num_common_dci > 0) {
-      LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (common %"PRIu8",ue_spec %"PRIu8")\n",eNB->Mod_id,frame, subframe,
-            DCI_pdu->Num_common_dci,DCI_pdu->Num_ue_spec_dci);
+      num_pdcch_symbols = generate_dci_top(DCI_pdu->Num_dci,
+					   DCI_pdu->dci_alloc,
+					   0,
+					   AMP,
+					   fp,
+					   eNB->common_vars.txdataF[0],
+					   subframe);
     }
-
-
-    num_pdcch_symbols = generate_dci_top(DCI_pdu->Num_ue_spec_dci,
-                                         DCI_pdu->Num_common_dci,
-                                         DCI_pdu->dci_alloc,
-                                         0,
-                                         AMP,
-                                         fp,
-                                         eNB->common_vars.txdataF[0],
-                                         subframe);
-
+    else {
+      num_pdcch_symbols = DCI_pdu->num_pdcch_symbols;
+      LOG_D(PHY,"num_pdcch_symbols %"PRIu8" (Num_dci %d)\n",num_pdcch_symbols,
+	    DCI_pdu->Num_dci);
+    }
   }
 
 #ifdef PHY_ABSTRACTION // FIXME this ifdef seems suspicious
   else {
     LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_to_emul\n",eNB->Mod_id,frame, subframe);
-    num_pdcch_symbols = generate_dci_top_emul(eNB,DCI_pdu->Num_ue_spec_dci,DCI_pdu->Num_common_dci,DCI_pdu->dci_alloc,subframe);
+    num_pdcch_symbols = generate_dci_top_emul(eNB,DCI_pdu->Num_dci,DCI_pdu->dci_alloc,subframe);
   }
 
 #endif
 
+  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->num_pdcch_symbols);
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,0);
+
+#if defined(SMBV) 
+  // Sets up PDCCH and DCI table
+  if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4) && (DCI_pdu->Num_dci>0)) {
+    LOG_D(PHY,"[SMBV] Frame %3d, SF %d PDCCH, number of DCIs %d\n",frame,subframe,DCI_pdu->Num_dci);
+    dump_dci(fp,&DCI_pdu->dci_alloc[0]);
+    smbv_configure_pdcch(smbv_fname,(smbv_frame_cnt*10) + (subframe),num_pdcch_symbols,DCI_pdu->Num_dci);
+  }
+#endif
 
   // Check for SI activity
 
@@ -2272,7 +2275,7 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
 
         if ((fp->frame_type==FDD) ||
           (bundling_flag==bundling)    ||
-          ((fp->frame_type==TDD)&&(fp->tdd_config==1)&&((subframe!=2)||(subframe!=7)))) {
+          ((fp->frame_type==TDD)&&(fp->tdd_config==1)&&((subframe!=2)&&(subframe!=7)))) {
           format = pucch_format1a;
         } else {
           format = pucch_format1b;

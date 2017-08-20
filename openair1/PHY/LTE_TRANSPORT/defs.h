@@ -777,9 +777,14 @@ typedef enum {
   pucch_format1b,
   pucch_format2,
   pucch_format2a,
-  pucch_format2b
+  pucch_format2b,
+  pucch_format3    // PUCCH format3
 } PUCCH_FMT_t;
 
+typedef enum {
+  DCI_COMMON_SPACE,
+  DCI_UE_SPACE
+} dci_space_t;
 
 typedef struct {
   /// Length of DCI in bits
@@ -794,6 +799,8 @@ typedef struct {
   rnti_t rnti;
   /// Format
   DCI_format_t format;
+  /// search space
+  dci_space_t search_space;
   /// DCI pdu
   uint8_t dci_pdu[8];
 } DCI_ALLOC_t;

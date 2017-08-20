@@ -2002,7 +2002,7 @@ uint32_t ulsch_decoding_emul(PHY_VARS_eNB *eNB, eNB_rxtx_proc_t *proc,
 #endif
 
   for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
-    if (rnti == PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[subframe & 0x1][0]->crnti)
+    if (rnti == PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[PHY_vars_UE_g[UE_id][CC_id]->current_thread_id[subframe]][0]->crnti)
       break;
 
   }
@@ -2067,7 +2067,8 @@ uint32_t ulsch_decoding_emul(PHY_VARS_eNB *eNB, eNB_rxtx_proc_t *proc,
     if ((UE_index >= oai_emulation.info.first_ue_local) ||(UE_index <(oai_emulation.info.first_ue_local+oai_emulation.info.nb_ue_local))) {
       get_ack(&eNB->frame_parms,
               PHY_vars_UE_g[UE_id][CC_id]->dlsch[0][0][0]->harq_ack,
-              subframe,
+              proc->subframe_tx,
+              proc->subframe_rx,
               eNB->ulsch[UE_index]->harq_processes[harq_pid]->o_ACK,0);
     } else { // get remote UEs' ack
       eNB->ulsch[UE_index]->harq_processes[harq_pid]->o_ACK[0] = PHY_vars_UE_g[UE_id][CC_id]->ulsch[0]->o_ACK[0];

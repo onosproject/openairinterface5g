@@ -1050,15 +1050,15 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 
   *ptimestamp = last_eNB_rx_timestamp[eNB_id][CC_id];
 
-  LOG_D(EMU,"eNB_trx_read nsamps %d TS(%llu,%llu) => subframe %d\n",nsamps,
-        (unsigned long long)current_eNB_rx_timestamp[eNB_id][CC_id],
-        (unsigned long long)last_eNB_rx_timestamp[eNB_id][CC_id],
-	(*ptimestamp/PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti)%10);
+  LOG_D(EMU,"eNB_trx_read nsamps %d TS(%"PRId64",%"PRId64") => subframe %d\n",nsamps,
+        current_eNB_rx_timestamp[eNB_id][CC_id],
+        last_eNB_rx_timestamp[eNB_id][CC_id],
+	(int)((*ptimestamp/PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti)%10));
   // if we're at a subframe boundary generate UL signals for this eNB
 
   while (nsamps) {
     while (current_eNB_rx_timestamp[eNB_id][CC_id] == last) {
-      LOG_D(EMU,"eNB: current TS %llu, last TS %llu, sleeping\n",current_eNB_rx_timestamp[eNB_id][CC_id],last_eNB_rx_timestamp[eNB_id][CC_id]);
+      LOG_D(EMU,"eNB: current TS %"PRId64", last TS %"PRId64", sleeping\n",current_eNB_rx_timestamp[eNB_id][CC_id],last_eNB_rx_timestamp[eNB_id][CC_id]);
       usleep(500);
     }
 
@@ -1126,7 +1126,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
       usleep(500);
     }
     while (current_UE_rx_timestamp[UE_id][CC_id] == last) {
-      LOG_D(EMU,"UE_trx_read : current TS %d, last TS %d, sleeping\n",current_UE_rx_timestamp[UE_id][CC_id],last_UE_rx_timestamp[UE_id][CC_id]);
+      LOG_D(EMU,"UE_trx_read : current TS %"PRId64", last TS %"PRId64", sleeping\n",current_UE_rx_timestamp[UE_id][CC_id],last_UE_rx_timestamp[UE_id][CC_id]);
 
       usleep(500);
     }
@@ -1431,6 +1431,11 @@ void init_openair1(void)
 	PHY_vars_UE_g[UE_id][CC_id]->mac_enabled=1;
 
       PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[0][0]->crnti = 0x1235 + UE_id;
+
+      for (uint8_t i=0; i<RX_NB_TH_MAX; i++) {
+          PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[i][0]->dciFormat      = 0;
+          PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[i][0]->agregationLevel      = 0xFF;
+      }
       PHY_vars_UE_g[UE_id][CC_id]->current_dlsch_cqi[0] = 10;
 
       LOG_I(EMU, "UE %d mode is initialized to %d\n", UE_id, PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] );
@@ -1486,7 +1491,7 @@ void init_ocm(void)
     break;
 
   case TDD:
-    frame_type = "FDD";
+    frame_type = "TDD";
     break;
   }
 
