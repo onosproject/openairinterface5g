@@ -378,12 +378,12 @@ int main(int argc, char **argv)
   init_ul_hopping(&eNB->frame_parms);
   init_ul_hopping(&UE->frame_parms);
 
-  eNB->frame_parms.pucch_config_common.deltaPUCCH_Shift = 2;
-  eNB->frame_parms.pucch_config_common.nRB_CQI          = 4;
-  eNB->frame_parms.pucch_config_common.nCS_AN           = 6;
-  UE->frame_parms.pucch_config_common.deltaPUCCH_Shift = 2;
-  UE->frame_parms.pucch_config_common.nRB_CQI          = 4;
-  UE->frame_parms.pucch_config_common.nCS_AN           = 6;
+  eNB->frame_parms.pucch_config_common.deltaPUCCH_Shift = 1;
+  eNB->frame_parms.pucch_config_common.nRB_CQI          = 0;
+  eNB->frame_parms.pucch_config_common.nCS_AN           = 0;
+  UE->frame_parms.pucch_config_common.deltaPUCCH_Shift = 1;
+  UE->frame_parms.pucch_config_common.nRB_CQI          = 0;
+  UE->frame_parms.pucch_config_common.nCS_AN           = 0;
 
 
 

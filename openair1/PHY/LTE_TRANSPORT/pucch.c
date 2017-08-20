@@ -2369,8 +2369,8 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
             off=(re<<1) + (24*l) + (nsymb>>1)*24;
             tmp_re = ((rxcomp[aa][off]*(int32_t)cfo[l<<1])>>15)     - ((rxcomp[aa][1+off]*(int32_t)cfo[1+(l<<1)])>>15);
             tmp_im = ((rxcomp[aa][off]*(int32_t)cfo[1+(l<<1)])>>15) + ((rxcomp[aa][1+off]*(int32_t)cfo[(l<<1)])>>15);
-            stat_re += (((tmp_re*chest_re)>>15) + ((tmp_im*chest_im)>>15))/4;
-            stat_im += (((tmp_re*chest_im)>>15) - ((tmp_im*chest_re)>>15))/4;
+            stat_re += (((tmp_re*chest_re)>>15) + ((tmp_im*chest_im)>>15));///4;
+            stat_im += (((tmp_re*chest_im)>>15) - ((tmp_im*chest_re)>>15));///4;
             off+=2;
 #ifdef DEBUG_PUCCH_RX
             printf("[PHY][eNB] PUCCH subframe %d (%d,%d) => (%d,%d) x (%d,%d) : (%d,%d)\n",subframe,l,re,
@@ -2384,8 +2384,8 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
             off=(re<<1) + (24*l) + (nsymb>>1)*24;
             tmp_re = ((rxcomp[aa][off]*(int32_t)cfo[l<<1])>>15)     - ((rxcomp[aa][1+off]*(int32_t)cfo[1+(l<<1)])>>15);
             tmp_im = ((rxcomp[aa][off]*(int32_t)cfo[1+(l<<1)])>>15) + ((rxcomp[aa][1+off]*(int32_t)cfo[(l<<1)])>>15);
-            stat_re += (((tmp_re*chest_re)>>15) + ((tmp_im*chest_im)>>15))/4;
-            stat_im += (((tmp_re*chest_im)>>15) - ((tmp_im*chest_re)>>15))/4;
+            stat_re += (((tmp_re*chest_re)>>15) + ((tmp_im*chest_im)>>15));///4;
+            stat_im += (((tmp_re*chest_im)>>15) - ((tmp_im*chest_re)>>15));///4;
             off+=2;
 #ifdef DEBUG_PUCCH_RX
             printf("[PHY][eNB] PUCCH subframe %d (%d,%d) => (%d,%d) x (%d,%d) : (%d,%d)\n",subframe,l,re,
