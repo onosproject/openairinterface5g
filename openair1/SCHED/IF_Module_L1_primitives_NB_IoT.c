@@ -3,7 +3,7 @@
 
 #include "../SCHED/IF_Module_L1_primitives_NB_IoT.h"
 //#include "../SCHED/defs.h"
-#include "../SCHED/defs_nb_iot.h"
+#include "../SCHED/defs_NB_IoT.h"
 #include "assertions.h"
 //#include "PHY/defs.h"
 #include "PHY/defs_NB_IoT.h"

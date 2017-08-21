@@ -73,7 +73,7 @@
 
 //NB-IoT 
 
-#include "SCHED/defs_nb_iot.h"
+#include "SCHED/defs_NB_IoT.h"
 
 #include "LAYER2/MAC/defs.h"
 #include "LAYER2/MAC/extern.h"

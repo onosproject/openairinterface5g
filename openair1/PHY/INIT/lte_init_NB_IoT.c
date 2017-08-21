@@ -20,7 +20,7 @@
  */
 
 //#include "defs.h"
-#include "SCHED/defs_nb_iot.h"
+#include "SCHED/defs_NB_IoT.h"
 //#include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"
 //#include "RRC/LITE/proto_nb_iot.h"
@@ -36,7 +36,7 @@
 #include <math.h>
 
 //NB-IoT
-#include "defs_nb_iot.h"
+#include "defs_NB_IoT.h"
 #include "RadioResourceConfigCommonSIB-NB-r13.h"
 #include "RadioResourceConfigDedicated-NB-r13.h"
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"

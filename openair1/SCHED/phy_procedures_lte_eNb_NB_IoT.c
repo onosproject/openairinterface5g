@@ -44,7 +44,7 @@
 //#endif
 
 // for NB-IoT
-#include "SCHED/defs_nb_iot.h"
+#include "SCHED/defs_NB_IoT.h"
 
 //#define DEBUG_PHY_PROC (Already defined in cmake)
 //#define DEBUG_ULSCH

@@ -20,7 +20,7 @@
 //#include "PHY/CODING/lte_interleaver_inline.h"
 #include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 #include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
-#include "SCHED/defs_nb_iot.h"
+#include "SCHED/defs_NB_IoT.h"
 //#include "defs_nb_iot.h"
 //#include "UTIL/LOG/vcd_signal_dumper.h"
 
