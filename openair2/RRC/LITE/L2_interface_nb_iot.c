@@ -50,7 +50,7 @@
 #include "pdcp_sequence_manager.h"
 #include "UTIL/OTG/otg_rx.h"
 #include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
-#include "openair1/SCHED/IF_Module_L1_primitives_nb_iot.h"
+#include "openair1/SCHED/IF_Module_L1_primitives_NB_IoT.h"
 
 #ifdef PHY_EMUL
 #include "SIMULATION/simulation_defs.h"

@@ -1,7 +1,7 @@
 
 
 
-#include "../SCHED/IF_Module_L1_primitives_nb_iot.h"
+#include "../SCHED/IF_Module_L1_primitives_NB_IoT.h"
 //#include "../SCHED/defs.h"
 #include "../SCHED/defs_nb_iot.h"
 #include "assertions.h"
