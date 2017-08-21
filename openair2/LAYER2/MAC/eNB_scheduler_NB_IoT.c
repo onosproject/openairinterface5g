@@ -31,6 +31,8 @@
 
 #include "assertions.h"
 //#include "PHY/defs.h"
+
+/* (commented to remove warnings since this file is not used for the moment)
 #include "PHY/defs_NB_IoT.h"
 #include "PHY/extern.h"
 
@@ -55,16 +57,21 @@
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
 #endif
+*/
+
+
 
 /*function description
 * top level of the scheduler, this will trigger in every subframe, 
 * and determined if do the schedule by checking this current subframe is the start of the NPDCCH period or not
 */
 
+
+/* already defined in proto_NB_IoT.h
 void NB_eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP, uint16_t hypersfn)  
 {
 
 }
 
-
+*/
 
