@@ -50,7 +50,7 @@
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 //NB-IoT
 #include "PHY/defs_NB_IoT.h"
-#include "defs_nb_iot.h"
+#include "defs_NB_IoT.h"
 #include "proto_nb_iot.h"
 //#include "LAYER2/MAC/pre_processor.c"
 #include "pdcp.h"

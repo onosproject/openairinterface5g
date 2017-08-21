@@ -37,7 +37,7 @@
 #endif //USER_MODE
 #include "PHY/defs.h"
 #include "defs.h"
-#include "defs_nb_iot.h"
+#include "defs_NB_IoT.h"
 #include "PHY_INTERFACE/defs.h"
 #include "COMMON/mac_rrc_primitives.h"
 

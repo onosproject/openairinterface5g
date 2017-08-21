@@ -58,7 +58,7 @@
 #include "T.h"
 
 #include "LAYER2/MAC/defs.h"
-#include "LAYER2/MAC/defs_nb_iot.h"
+#include "LAYER2/MAC/defs_NB_IoT.h"
 
 
 #ifdef USER_MODE

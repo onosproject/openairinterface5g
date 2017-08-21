@@ -31,7 +31,7 @@
 
 
 #include "asn1_constants.h"
-#include "defs_nb_iot.h"
+#include "defs_NB_IoT.h"
 #include "proto_nb_iot.h"
 //#include "extern.h"
 #include "RRC/LITE/proto_nb_iot.h"

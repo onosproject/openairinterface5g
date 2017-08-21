@@ -13,7 +13,7 @@ Functions: phy_config_mib_eNB_NB_IoT(), phy_config_sib2_eNB_NB_IoT(), phy_config
 Parameters: NB_IoT_DL_FRAME_PARAMS(Original LTE_DL_FRAME_PARAMS)
 
 5/14
-Add:        openair2/Layer2/MAC/defs_nb_iot.h
+Add:        openair2/Layer2/MAC/defs_NB_IoT.h
 Add:        openair2/Layer2/MAC/proto_nb_iot.h
 Add:        openair2/Layer2/MAC/eNB_scheduler_ulsch_nb_iot.c
 Add:        openair2/Layer2/MAC/eNB_scheduler_prmitives_nb_iot.c

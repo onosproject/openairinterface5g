@@ -46,7 +46,7 @@
 #include "RRC/LITE/defs.h"
 
 #ifdef NB_IOT
-#include "defs_nb_iot.h"
+#include "defs_NB_IoT.h"
 
 //NB-IoT
 extern IF_Module_t *if_inst;
