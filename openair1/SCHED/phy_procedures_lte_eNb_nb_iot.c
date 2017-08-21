@@ -31,7 +31,7 @@
  */
 
 //#include "PHY/defs.h"
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 //#include "PHY/extern_NB_IoT.h" //where we get the global Sched_Rsp_t structure filled
 //#include "SCHED/defs.h"
 #include "SCHED/extern_NB_IoT.h"

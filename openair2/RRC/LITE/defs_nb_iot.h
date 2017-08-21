@@ -40,7 +40,7 @@
 #include "collection/tree.h"
 #include "rrc_types.h"
 //#include "PHY/defs.h"
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 #include "COMMON/platform_constants.h"
 #include "COMMON/platform_types.h"
 

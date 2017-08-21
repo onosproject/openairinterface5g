@@ -31,7 +31,7 @@
  */
 #ifndef __LTE_TRANSPORT_PROTO_NB_IOT__H__
 #define __LTE_TRANSPORT_PROTO_NB_IOT__H__
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 #include <math.h>
 
 //NPSS

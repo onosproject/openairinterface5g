@@ -18,7 +18,7 @@
 #endif
 
 #include "defs_NB_IoT.h"
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 
 int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
                             int32_t *output,

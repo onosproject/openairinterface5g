@@ -14,7 +14,7 @@
 
 
 //#include "PHY/defs.h"
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 //#include "defs.h"
 //#include "PHY/extern_NB_IoT.h"
 #include "nsss_NB_IoT.h"

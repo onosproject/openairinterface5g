@@ -45,7 +45,7 @@
 #include "OCG.h"
 #include "OCG_extern.h"
 //NB-IoT
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 #include "defs_nb_iot.h"
 #include "proto_nb_iot.h"
 

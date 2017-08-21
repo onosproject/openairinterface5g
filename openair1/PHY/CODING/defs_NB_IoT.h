@@ -31,7 +31,7 @@
 #include <stdint.h>
 
 #ifndef NO_OPENAIR1
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 #else
 #include "PHY/TOOLS/time_meas.h"
 #endif

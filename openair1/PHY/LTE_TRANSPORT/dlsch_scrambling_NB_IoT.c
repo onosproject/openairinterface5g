@@ -15,7 +15,7 @@
 //#define DEBUG_SCRAMBLING 1
 
 //#include "PHY/defs.h"
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 //#include "PHY/CODING/extern.h"
 //#include "PHY/CODING/lte_interleaver_inline.h"
 //#include "defs.h"

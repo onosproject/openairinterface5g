@@ -41,7 +41,7 @@
 #include "COMMON/platform_constants.h"
 #include "COMMON/mac_rrc_primitives.h"
 //#include "PHY/defs.h"
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 #include "RadioResourceConfigCommonSIB-NB-r13.h"
 #include "RadioResourceConfigDedicated-NB-r13.h"
 #include "RACH-ConfigCommon-NB-r13.h"

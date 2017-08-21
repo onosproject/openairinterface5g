@@ -13,7 +13,7 @@
 */
 
 //#include "PHY/defs.h"
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 #include "PHY/extern_NB_IoT.h"
 #include "PHY/CODING/defs_NB_IoT.h"
 //#include "PHY/CODING/extern.h"

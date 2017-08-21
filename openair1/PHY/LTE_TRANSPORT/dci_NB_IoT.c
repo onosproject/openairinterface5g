@@ -35,7 +35,7 @@
 #include <string.h>
 #endif
 //#include "PHY/defs.h"
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 //#include "PHY/extern.h"
 //////////#include "PHY/extern_NB_IoT.h"

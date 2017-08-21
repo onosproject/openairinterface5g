@@ -27,7 +27,7 @@
  * \email: raymond.knopp@eurecom.fr
  */
 //#include "PHY/defs.h"
-#include "PHY/defs_nb_iot.h"
+#include "PHY/defs_NB_IoT.h"
 #include "PHY/INIT/defs_NB_IoT.h"
 #include "SCHED/defs.h"
 #include "platform_types.h"
