@@ -16,7 +16,7 @@
 ///////////////#include "PHY/defs_nb_iot.h"
 //#include "PHY/extern.h"
 #include <math.h>
-#include "PHY/impl_defs_lte_nb_iot.h"
+#include "PHY/impl_defs_lte_NB_IoT.h"
 #include "PHY/impl_defs_top_NB_IoT.h"
 //or #include "PHY/defs_nb_iot.h"
 #include "PHY/LTE_REFSIG/primary_synch_NB_IoT.h"

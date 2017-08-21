@@ -16,7 +16,7 @@
 ////#include "PHY/defs.h"
 //#include "PHY/defs_nb_iot.h"
 #include "PHY/LTE_TRANSPORT/dci_NB_IoT.h"
-#include "PHY/impl_defs_lte_nb_iot.h"
+#include "PHY/impl_defs_lte_NB_IoT.h"
 #include "openair2/COMMON/platform_types_NB_IoT.h"
 //#include "dci.h"
 #include "PHY/LTE_TRANSPORT/uci_NB_IoT.h"
