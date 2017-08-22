@@ -23,7 +23,7 @@
 #include "SCHED/defs_NB_IoT.h"
 //#include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"
-//#include "RRC/LITE/proto_nb_iot.h"
+//#include "RRC/LITE/proto_NB_IoT.h"
 //#include "SIMULATION/TOOLS/defs.h"
 //#include "RadioResourceConfigCommonSIB.h"
 //#include "RadioResourceConfigDedicated.h"

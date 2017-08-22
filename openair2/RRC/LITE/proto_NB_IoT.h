@@ -18,7 +18,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file proto_nb_iot.h
+/*! \file proto_NB_IoT.h
  * \brief RRC functions prototypes for eNB and UE for NB-IoT
  * \author Navid Nikaein, Raymond Knopp and Michele Paffetti
  * \date 2010 - 2014
@@ -33,7 +33,7 @@
 #include "RRC/LITE/defs_NB_IoT.h"
 #include "pdcp.h"
 #include "rlc.h"
-#include "extern_nb_iot.h"
+#include "extern_NB_IoT.h"
 
 /*NOTE: no static function should be declared in this header file (e.g. init_SI_NB)*/
 

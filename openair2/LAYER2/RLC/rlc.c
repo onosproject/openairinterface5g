@@ -49,7 +49,7 @@ extern boolean_t pdcp_data_ind(
 #define DEBUG_RLC_DATA_REQ 1
 
 #ifdef NB_IOT
-#include "openair2/RRC/LITE/proto_nb_iot.h"
+#include "openair2/RRC/LITE/proto_NB_IoT.h"
 #undef maxDRB
 #define maxDRB maxDRB_NB_r13
 #endif

@@ -34,7 +34,7 @@
 #include "defs_NB_IoT.h"
 #include "proto_nb_iot.h"
 //#include "extern.h"
-#include "RRC/LITE/proto_nb_iot.h"
+#include "RRC/LITE/proto_NB_IoT.h"
 
 
 int mac_init_global_param_NB(void)

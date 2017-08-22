@@ -30,7 +30,7 @@
 
 #include "defs_NB_IoT.h"
 #include "extern.h"
-#include "extern_nb_iot.h"
+#include "extern_NB_IoT.h"
 #include "LAYER2/MAC/extern.h"
 #include "COMMON/openair_defs.h"
 #include "COMMON/platform_types.h"
@@ -42,7 +42,7 @@
 #include "pdcp.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 #include "rrc_eNB_UE_context.h"
-#include "proto_nb_iot.h"
+#include "proto_NB_IoT.h"
 
 #ifdef LOCALIZATION
 #include <sys/time.h>

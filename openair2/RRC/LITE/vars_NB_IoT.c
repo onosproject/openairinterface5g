@@ -36,7 +36,7 @@
 #include "LogicalChannelConfig-NB-r13.h"
 
 //-----------------------------------------------------------------------
-// ALL what is defined here should be shared through extern_nb_iot.h file
+// ALL what is defined here should be shared through extern_NB_IoT.h file
 //------------------------------------------------------------------------
 
 

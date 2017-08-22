@@ -546,7 +546,7 @@ typedef struct eNB_RRC_INST_NB_s {
 //} OAI_UECapability_t;
 
 
-#include "proto_nb_iot.h" //should be put here otherwise compilation error
+#include "proto_NB_IoT.h" //should be put here otherwise compilation error
 
 #endif
 /** @} */
