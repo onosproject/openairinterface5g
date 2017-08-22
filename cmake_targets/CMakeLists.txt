@@ -311,7 +311,7 @@ if (NOT ${ret} STREQUAL 0)
 endif (NOT ${ret} STREQUAL 0)
 file(GLOB rrc_source ${RRC_FULL_DIR}/*.c)
 set(rrc_source  ${rrc_source} ${OPENAIR2_DIR}/RRC/LITE/MESSAGES/asn1_msg.c)
-set(rrc_source  ${rrc_source} ${OPENAIR2_DIR}/RRC/LITE/MESSAGES/asn1_msg_nb_iot.c)
+set(rrc_source  ${rrc_source} ${OPENAIR2_DIR}/RRC/LITE/MESSAGES/asn1_msg_NB_IoT.c)
 file(GLOB rrc_h ${RRC_FULL_DIR}/*.h)
 set(rrc_h ${rrc_h} ${RRC_FULL_DIR}/asn1_constants.h)
 set_source_files_properties(${rrc_source} PROPERTIES COMPILE_FLAGS -w) # suppress warnings from generated code
@@ -1108,8 +1108,8 @@ set(RLC_TM_DIR ${OPENAIR2_DIR}/LAYER2/RLC/TM_v9.3.0)
 set(RRC_DIR ${OPENAIR2_DIR}/RRC/LITE)
 set(PDCP_DIR  ${OPENAIR2_DIR}/LAYER2/PDCP_v10.1.0)
 set(L2_SRC
-  ${PHY_INTERFACE_DIR}/IF_Module_nb_iot.c
-  ${PHY_INTERFACE_DIR}/IF_Module_L2_primitives_nb_iot.c
+  ${PHY_INTERFACE_DIR}/IF_Module_NB_IoT.c
+  ${PHY_INTERFACE_DIR}/IF_Module_L2_primitives_NB_IoT.c
   ${OPENAIR2_DIR}/LAYER2/openair2_proc.c
   ${PDCP_DIR}/pdcp.c
   ${PDCP_DIR}/pdcp_fifo.c
@@ -1145,16 +1145,16 @@ set(L2_SRC
   ${RLC_DIR}/rlc.c
   ${RLC_DIR}/rlc_rrc.c
   ${RLC_DIR}/rlc_mpls.c
-  ${RRC_DIR}/vars_nb_iot.c
+  ${RRC_DIR}/vars_NB_IoT.c
   ${RRC_DIR}/rrc_UE.c
   ${RRC_DIR}/rrc_eNB.c
-  ${RRC_DIR}/rrc_eNB_nb_iot.c
+  ${RRC_DIR}/rrc_eNB_NB_IoT.c
   ${RRC_DIR}/rrc_eNB_S1AP.c
   ${RRC_DIR}/rrc_eNB_UE_context.c
   ${RRC_DIR}/rrc_common.c
-  ${RRC_DIR}/rrc_common_nb_iot.c
+  ${RRC_DIR}/rrc_common_NB_IoT.c
   ${RRC_DIR}/L2_interface.c
-  ${RRC_DIR}/L2_interface_nb_iot.c
+  ${RRC_DIR}/L2_interface_NB_IoT.c
   )
 set (MAC_SRC
   ${MAC_DIR}/lte_transport_init.c
