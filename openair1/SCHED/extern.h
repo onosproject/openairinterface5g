@@ -57,7 +57,7 @@
 #endif  /* USER_MODE */
 
 #include "defs.h"
-#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
+//#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 //#include "dlc_engine.h"
 
 extern int openair_sched_status;
@@ -78,7 +78,7 @@ extern fifo_dump_emos_eNB emos_dump_eNB;
 */
 
 
-extern Sched_Rsp_t* Sched_Rsp;
+//extern Sched_Rsp_t* Sched_Rsp;
 
 
 
