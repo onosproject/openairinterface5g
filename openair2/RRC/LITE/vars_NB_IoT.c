@@ -29,7 +29,7 @@
 */
 
 
-#include "defs_nb_iot.h"
+#include "defs_NB_IoT.h"
 #include "LAYER2/RLC/rlc.h"
 #include "COMMON/mac_rrc_primitives.h"
 #include "LAYER2/MAC/defs_NB_IoT.h"

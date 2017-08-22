@@ -30,8 +30,8 @@
 #define RRC_ENB_C
 
 /*NB-IoT include files*/
-#include "defs_nb_iot.h"
-#include "RRC/LITE/MESSAGES/asn1_msg_nb_iot.h"
+#include "defs_NB_IoT.h"
+#include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
 #include "RRCConnectionRequest-NB.h"
 #include "RRCConnectionReestablishmentRequest-NB.h"
 #include "ReestablishmentCause-NB-r13.h"

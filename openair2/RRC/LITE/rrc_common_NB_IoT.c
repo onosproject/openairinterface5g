@@ -28,7 +28,7 @@
  * \email:  navid.nikaein@eurecom.fr and raymond.knopp@eurecom.fr
  */
 
-#include "defs_nb_iot.h"
+#include "defs_NB_IoT.h"
 #include "extern.h"
 #include "extern_nb_iot.h"
 #include "LAYER2/MAC/extern.h"

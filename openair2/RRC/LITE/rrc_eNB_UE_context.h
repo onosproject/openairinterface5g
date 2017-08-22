@@ -31,7 +31,7 @@
 #include "collection/tree.h"
 #include "COMMON/platform_types.h"
 #include "defs.h"
-#include "defs_nb_iot.h"
+#include "defs_NB_IoT.h"
 
 
 void

@@ -31,7 +31,7 @@
 #include "PHY/INIT/defs_NB_IoT.h"
 #include "SCHED/defs.h"
 #include "platform_types.h"
-#include "defs_nb_iot.h" //RRC
+#include "defs_NB_IoT.h" //RRC
 #include "LAYER2/MAC/defs_NB_IoT.h" //MAC
 #include "LAYER2/MAC/defs.h" // MAC because see the PHY functions
 #include "extern.h"
