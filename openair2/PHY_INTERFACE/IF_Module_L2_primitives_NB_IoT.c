@@ -1,4 +1,4 @@
-#include "IF_Module_L2_primitives_nb_iot.h"
+#include "IF_Module_L2_primitives_NB_IoT.h"
 
 // Sched_INFO as a input for the scheduler
 void UL_indication(UL_IND_t *UL_INFO)
