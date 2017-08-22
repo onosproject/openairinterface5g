@@ -169,7 +169,7 @@ int8_t NB_mac_rrc_data_ind_eNB(
 //-------------------------------------------
 
 //defined in L2_interface
-void dump_ue_list_NB(UE_list_NB_t *listP, int ul_flag);
+void dump_ue_list_NB(UE_list_NB_IoT_t *listP, int ul_flag);
 //-------------------------------------------
 
 

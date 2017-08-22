@@ -287,6 +287,6 @@ typedef struct DCIN2_Pag DCIN2_Pag_t;
 
 #define sizeof_DCIN2_Pag_t 15
 
-#define MAX_DCI_SIZE_BITS_NB_IOT 23
+#define MAX_DCI_SIZE_BITS_NB_IoT 23
 
 #endif

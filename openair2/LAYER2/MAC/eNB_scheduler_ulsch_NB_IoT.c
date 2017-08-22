@@ -84,7 +84,7 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
   int    UE_id = find_UE_id(enb_mod_idP,rntiP);
   int ii,j;
   eNB_MAC_INST_NB *eNB = &eNB_mac_inst_NB[enb_mod_idP];
-  UE_list_NB_t *UE_list= &eNB->UE_list;
+  UE_list_NB_IoT_t *UE_list= &eNB->UE_list;
   int crnti_rx=0;
   //int old_buffer_info;
 

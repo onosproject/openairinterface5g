@@ -52,8 +52,8 @@
 // BCOM code functions npdcch start
 // (TODO solve some error in compilation)
 //------------------------------------------------
-static uint8_t d[2][3*(MAX_DCI_SIZE_BITS_NB_IOT + 16) + 96];
-static uint8_t w[2][3*3*(MAX_DCI_SIZE_BITS_NB_IOT+16)];
+static uint8_t d[2][3*(MAX_DCI_SIZE_BITS_NB_IoT + 16) + 96];
+static uint8_t w[2][3*3*(MAX_DCI_SIZE_BITS_NB_IoT+16)];
 
 
 

@@ -587,7 +587,7 @@ int NB_rrc_mac_config_req_eNB(
 
 
   int UE_id = -1;
-  //UE_list_NB_t *UE_list= &eNB_mac_inst_NB->UE_list;
+  //UE_list_NB_IoT_t *UE_list= &eNB_mac_inst_NB->UE_list;
   UE_id = find_UE_id(Mod_idP, rntiP);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
@@ -1353,7 +1353,7 @@ void NB_mac_eNB_rrc_ul_failure(
 
 
 //defined in eNB_scheduler_primitives.c
-void dump_ue_list_NB(UE_list_NB_t *listP, int ul_flag)
+void dump_ue_list_NB(UE_list_NB_IoT_t *listP, int ul_flag)
 {
   int j;
 
@@ -1376,7 +1376,7 @@ int NB_rrc_mac_remove_ue(
 		rnti_t rntiP)
 {
   int i;
-  UE_list_NB_t *UE_list = &eNB_mac_inst_NB[mod_idP].UE_list;
+  UE_list_NB_IoT_t *UE_list = &eNB_mac_inst_NB[mod_idP].UE_list;
   int UE_id = find_UE_id(mod_idP,rntiP); //may should be changed
   int pCC_id;
 

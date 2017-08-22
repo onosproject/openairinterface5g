@@ -56,6 +56,7 @@
  * @ingroup _oai2
  * @{
  */
+#define SCH_PAYLOAD_SIZE_MAX_NB_IoT 4096
 
 #define CCCH_PAYLOAD_SIZE_MAX_NB_IoT 128
 /*!\brief Maximum number of random access process */
@@ -67,7 +68,7 @@
 
 /*! \brief Downlink SCH PDU Structure */
 typedef struct {
-  int8_t payload[8][SCH_PAYLOAD_SIZE_MAX];
+  int8_t payload[8][SCH_PAYLOAD_SIZE_MAX_NB_IoT];
   uint16_t Pdu_size[8];
 } __attribute__ ((__packed__)) DLSCH_PDU_NB_IoT;
 /*! \brief eNB template for UE context information  */
@@ -95,7 +96,7 @@ typedef struct {
   /* rounded to 32 bits unit (actual value should be 8 due to the logic
    * of the function generate_dci0) */
   // need to modify
-  uint8_t DLSCH_DCI[8][(((MAX_DCI_SIZE_BITS)+31)>>5)*4];
+  uint8_t DLSCH_DCI[8][(((MAX_DCI_SIZE_BITS_NB_IoT)+31)>>5)*4];
   /// pre-assigned MCS by the ulsch preprocessorerror
   uint8_t pre_assigned_mcs_ul;
   /// assigned MCS by the ulsch scheduler
@@ -104,7 +105,7 @@ typedef struct {
   /* rounded to 32 bits unit (actual value should be 8 due to the logic
    * of the function generate_dci0) */
   // need to modify
-  uint8_t ULSCH_DCI[8][(((MAX_DCI_SIZE_BITS)+31)>>5)*4];
+  uint8_t ULSCH_DCI[8][(((MAX_DCI_SIZE_BITS_NB_IoT)+31)>>5)*4];
   // Logical channel info for link with RLC
   /// Last received UE BSR info for each logical channel group id
   uint8_t bsr_info[MAX_NUM_LCGID_NB_IoT];
@@ -251,7 +252,7 @@ typedef struct {
   uint32_t total_num_pdus_rx;
   /// num of error pdus
   uint32_t total_num_errors_rx;
-} eNB_UE_STATS_NB;
+} eNB_UE_STATS_NB_IoT;
 /*! \brief scheduling control information set through an API (not used)*/
 typedef struct {
   ///UL transmission bandwidth in RBs
@@ -288,28 +289,28 @@ typedef struct {
   int32_t       ra_pdcch_order_sent;
   int32_t       ul_out_of_sync;
   int32_t       phr_received;// received from Msg3 MAC Control Element
-} UE_sched_ctrl_NB;
+} UE_sched_ctrl_NB_IoT;
 
 /*! \brief UE list used by eNB to order UEs/CC for scheduling*/
 typedef struct {
   /// DLSCH pdu
-  DLSCH_PDU_NB_IoT DLSCH_pdu[MAX_NUM_CCs][2][NUMBER_OF_UE_MAX];
+  DLSCH_PDU_NB_IoT DLSCH_pdu[MAX_NUM_CCs][2][NUMBER_OF_UE_MAX_NB_IoT];
   /// DCI template and MAC connection parameters for UEs
-  UE_TEMPLATE_NB_IoT UE_template[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  UE_TEMPLATE_NB_IoT UE_template[MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT];
   /// DCI template and MAC connection for RA processes
-  int pCC_id[NUMBER_OF_UE_MAX];
+  int pCC_id[NUMBER_OF_UE_MAX_NB_IoT];
   /// eNB to UE statistics
-  eNB_UE_STATS_NB eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  eNB_UE_STATS_NB_IoT eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT];
   /// scheduling control info
-  UE_sched_ctrl_NB UE_sched_ctrl[NUMBER_OF_UE_MAX];
-  int next[NUMBER_OF_UE_MAX];
+  UE_sched_ctrl_NB_IoT UE_sched_ctrl[NUMBER_OF_UE_MAX_NB_IoT];
+  int next[NUMBER_OF_UE_MAX_NB_IoT];
   int head;
-  int next_ul[NUMBER_OF_UE_MAX];
+  int next_ul[NUMBER_OF_UE_MAX_NB_IoT];
   int head_ul;
   int avail;
   int num_UEs;
-  boolean_t active[NUMBER_OF_UE_MAX];
-} UE_list_NB_t;
+  boolean_t active[NUMBER_OF_UE_MAX_NB_IoT];
+} UE_list_NB_IoT_t;
 
 /*!\brief Values of BCCH0 logical channel for MIB*/
 #define BCCH0_NB 11 // MIB-NB
@@ -414,7 +415,7 @@ typedef struct {
   /// Size of DCI for RA-Response (bits)
   uint8_t RA_dci_size_bits1;
   /// Actual DCI to transmit for RA-Response
-  uint8_t RA_alloc_pdu1[(MAX_DCI_SIZE_BITS>>3)+1];
+  uint8_t RA_alloc_pdu1[(MAX_DCI_SIZE_BITS_NB_IoT>>3)+1];
   /// DCI format for RA-Response (should be N1 RAR)
   uint8_t RA_dci_fmt1;
   /// Size of DCI for Msg4/ContRes (bytes)
@@ -422,7 +423,7 @@ typedef struct {
   /// Size of DCI for Msg4/ContRes (bits)
   uint8_t RA_dci_size_bits2;
   /// Actual DCI to transmit for Msg4/ContRes
-  uint8_t RA_alloc_pdu2[(MAX_DCI_SIZE_BITS>>3)+1];
+  uint8_t RA_alloc_pdu2[(MAX_DCI_SIZE_BITS_NB_IoT>>3)+1];
   /// DCI format for Msg4/ContRes (should be 1A)
   uint8_t RA_dci_fmt2;
   /// Flag to indicate the eNB should generate RAR.  This is triggered by detection of PRACH
@@ -560,7 +561,7 @@ typedef struct {
   sub_frame_t subframe;
   /// Common cell resources
   COMMON_channels_NB_t common_channels[MAX_NUM_CCs];
-  UE_list_NB_t UE_list;
+  UE_list_NB_IoT_t UE_list;
   ///Delete subband bitmap configuration, no related CQI report
   // / Modify CCE table used to build DCI scheduling information
   int CCE_table[MAX_NUM_CCs][12];//180 khz for Anchor carrier

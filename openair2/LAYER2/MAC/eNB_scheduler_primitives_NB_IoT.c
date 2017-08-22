@@ -70,7 +70,7 @@ int NB_rrc_mac_remove_ue(
 		rnti_t rntiP)
 {
   int i;
-  UE_list_NB_t *UE_list = &eNB_mac_inst_NB[mod_idP].UE_list;
+  UE_list_NB_IoT_t *UE_list = &eNB_mac_inst_NB[mod_idP].UE_list;
   int UE_id = find_UE_id(mod_idP,rntiP); //may should be changed
   int pCC_id;
 
