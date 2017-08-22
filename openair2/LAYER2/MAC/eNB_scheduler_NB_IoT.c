@@ -45,7 +45,7 @@
 
 #include "LAYER2/MAC/defs_nb_iot.h"
 #include "LAYER2/MAC/proto_nb_iot.h"
-#include "PHY_INTERFACE/IF_Module_nb_iot.h"
+#include "PHY_INTERFACE/IF_Module_NB_IoT.h"
 
 #include "RRC/LITE/extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"

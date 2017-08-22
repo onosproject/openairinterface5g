@@ -49,7 +49,7 @@
 #include "osa_defs.h"
 #include "pdcp_sequence_manager.h"
 #include "UTIL/OTG/otg_rx.h"
-#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
+#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "openair1/SCHED/IF_Module_L1_primitives_NB_IoT.h"
 
 #ifdef PHY_EMUL
@@ -345,7 +345,7 @@ void config_sib2_NB_fapi(
 
     /*
      * Following the FAPI like approach:
-     * 1)fill the PHY_Config_t structure (PHY_INTERFACE/IF_Module_nb_iot.h)
+     * 1)fill the PHY_Config_t structure (PHY_INTERFACE/IF_Module_NB_IoT.h)
      * 1.1) check for how many NPRACH resources has been set and enable the corresponding parameter
      * 1.2)fill the structure PHY_Config_t (shared structure of the IF_Module
      * 2)Call the PHY_config_req for trigger the NB_phy_config_sib2_eNB()
@@ -631,7 +631,7 @@ int NB_rrc_mac_config_req_eNB(
 
     /*
      * Following the FAPI like approach:
-     * 1)fill the PHY_Config_t structure (PHY_INTERFACE/IF_Module_nb_iot.h)
+     * 1)fill the PHY_Config_t structure (PHY_INTERFACE/IF_Module_NB_IoT.h)
      * 2)Call the PHY_config_req for trigger the NB_phy_config_mib_eNB() at the end
      */
 

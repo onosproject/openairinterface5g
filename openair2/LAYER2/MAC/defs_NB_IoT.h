@@ -47,7 +47,7 @@
 #include "RACH-ConfigCommon-NB-r13.h"
 #include "MasterInformationBlock-NB.h"
 #include "BCCH-BCH-Message-NB.h"
-#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
+#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 //#include "defs.h"
 //#ifdef PHY_EMUL
 //#include "SIMULATION/PHY_EMULATION/impl_defs.h"

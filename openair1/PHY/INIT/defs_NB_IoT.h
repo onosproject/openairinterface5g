@@ -24,7 +24,7 @@
 #define __INIT_DEFS_NB_IOT__H__
 
 #include "PHY/defs_NB_IoT.h"
-#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
+#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 
 //#include "SystemInformationBlockType2.h"
 //#include "RadioResourceConfigCommonSIB.h"

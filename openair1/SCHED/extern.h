@@ -57,7 +57,7 @@
 #endif  /* USER_MODE */
 
 #include "defs.h"
-#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
+#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 //#include "dlc_engine.h"
 
 extern int openair_sched_status;

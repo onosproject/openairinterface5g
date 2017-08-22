@@ -24,7 +24,7 @@
 
 #include "PHY/defs.h"
 #include "PHY_INTERFACE/defs.h"
-#include "PHY_INTERFACE/IF_Module_nb_iot.h"
+#include "PHY_INTERFACE/IF_Module_NB_IoT.h"
 
 extern  char* namepointer_chMag ;
 extern char* namepointer_log2;
