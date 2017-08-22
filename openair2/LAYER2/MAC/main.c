@@ -403,7 +403,7 @@ int mac_init_global_param(void)
 
   LOG_I(MAC,"[MAIN] RLC interface setup and init\n");
   rrc_init_global_param();
-  //MP: otherwise we call the initialization of the RRC NB-IoT module (see mac_init_global_param_NB)
+  //MP: otherwise we call the initialization of the RRC NB-IoT module (see mac_init_global_param_NB_IoT)
 
 
 #ifdef USER_MODE

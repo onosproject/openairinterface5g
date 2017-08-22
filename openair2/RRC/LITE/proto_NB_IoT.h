@@ -183,7 +183,7 @@ void NB_mac_eNB_rrc_ul_failure(
 //------------------------------------------
 
 //defined in eNB_scheduler_primitives.c
-int NB_rrc_mac_remove_ue(
+int rrc_mac_remove_ue_NB_IoT(
 		module_id_t mod_idP,
 		rnti_t rntiP);
 //------------------------------------------

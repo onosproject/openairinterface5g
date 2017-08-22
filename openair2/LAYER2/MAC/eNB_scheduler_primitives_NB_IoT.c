@@ -65,18 +65,18 @@
 /*TODO NB_mac_phy_remove_ue*/
 
 
-int NB_rrc_mac_remove_ue(
+int rrc_mac_remove_ue_NB_IoT(
 		module_id_t mod_idP,
 		rnti_t rntiP)
 {
   int i;
-  UE_list_NB_IoT_t *UE_list = &eNB_mac_inst_NB[mod_idP].UE_list;
+  UE_list_NB_IoT_t *UE_list = &eNB_mac_inst_NB_IoT[mod_idP].UE_list;
   int UE_id = find_UE_id(mod_idP,rntiP); //may should be changed
   int pCC_id;
 
   if (UE_id == -1) {
 printf("MAC: cannot remove UE rnti %x\n", rntiP);
-    LOG_W(MAC,"NB_rrc_mac_remove_ue: UE %x not found\n", rntiP);
+    LOG_W(MAC,"rrc_mac_remove_ue_NB_IoT: UE %x not found\n", rntiP);
     //NB_mac_phy_remove_ue(mod_idP, rntiP);
     return 0;
   }
@@ -109,7 +109,7 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
   // check if this has an RA process active
   RA_TEMPLATE_NB_IoT *RA_template;
   for (i=0;i<NB_RA_PROC_MAX;i++) {
-    RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB[mod_idP].common_channels[pCC_id].RA_template[i];
+    RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB_IoT[mod_idP].common_channels[pCC_id].RA_template[i];
     if (RA_template->rnti == rntiP){
       RA_template->RA_active=FALSE;
       RA_template->generate_rar=0;
@@ -126,11 +126,11 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
 }
 
 //------------------------------------------------------------------------------
-DCI_PDU_NB_IoT *NB_get_dci_sdu(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframeP)
+DCI_PDU_NB_IoT *get_dci_sdu_NB_IoT(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframeP)
 //------------------------------------------------------------------------------
 {
 
-  return(&eNB_mac_inst_NB[module_idP].common_channels[CC_id].DCI_pdu);
+  return(&eNB_mac_inst_NB_IoT[module_idP].common_channels[CC_id].DCI_pdu);
 
 }
 

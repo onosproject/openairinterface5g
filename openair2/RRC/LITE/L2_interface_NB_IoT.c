@@ -587,7 +587,7 @@ int NB_rrc_mac_config_req_eNB(
 
 
   int UE_id = -1;
-  //UE_list_NB_IoT_t *UE_list= &eNB_mac_inst_NB->UE_list;
+  //UE_list_NB_IoT_t *UE_list= &eNB_mac_inst_NB_IoT->UE_list;
   UE_id = find_UE_id(Mod_idP, rntiP);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
@@ -610,14 +610,14 @@ int NB_rrc_mac_config_req_eNB(
    //mac_top_init_eNB(); //TODO MP:  to be included in the MAC/main.c
 
 
-    eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].mib_NB           = mib_NB;
-    eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].physCellId     = physCellId;
-    eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].p_eNB          = p_eNB;
-    eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].p_rx_eNB		= p_rx_eNB;
-    eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].Ncp            = Ncp;
-    eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].Ncp_UL         = Ncp_UL;
-    eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].eutra_band     = eutra_band;
-    eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].dl_CarrierFreq = dl_CarrierFreq;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].mib_NB           = mib_NB;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].physCellId     = physCellId;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].p_eNB          = p_eNB;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].p_rx_eNB		= p_rx_eNB;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].Ncp            = Ncp;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].Ncp_UL         = Ncp_UL;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].eutra_band     = eutra_band;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].dl_CarrierFreq = dl_CarrierFreq;
 
     LOG_I(MAC,
  	  "Configuring MIB for instance %d, CCid %d : (band %d,Nid_cell %d,TX antenna port (p) %d,DL freq %u\n",
@@ -673,8 +673,8 @@ int NB_rrc_mac_config_req_eNB(
       LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13= %ld\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13);
 
 
-      eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].radioResourceConfigCommon = radioResourceConfigCommon;
-      if (ul_CarrierFreq>0) eNB_mac_inst_NB[Mod_idP].common_channels[CC_idP].ul_CarrierFreq   = ul_CarrierFreq;
+      eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].radioResourceConfigCommon = radioResourceConfigCommon;
+      if (ul_CarrierFreq>0) eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].ul_CarrierFreq   = ul_CarrierFreq;
 
 
       config_sib2_NB_fapi(physCellId,radioResourceConfigCommon);
@@ -1347,7 +1347,7 @@ void NB_mac_eNB_rrc_ul_failure(
   else {
     LOG_W(RRC,"Frame %d, Subframe %d: UL failure: UE %x unknown \n",frameP,subframeP,rntiP);
   }
-  NB_rrc_mac_remove_ue(mod_idP,rntiP);
+  rrc_mac_remove_ue_NB_IoT(mod_idP,rntiP);
 }
 
 
@@ -1371,18 +1371,18 @@ void dump_ue_list_NB(UE_list_NB_IoT_t *listP, int ul_flag)
 
 
 //defined in eNB_scheduler_primitives.c
-int NB_rrc_mac_remove_ue(
+int rrc_mac_remove_ue_NB_IoT(
 		module_id_t mod_idP,
 		rnti_t rntiP)
 {
   int i;
-  UE_list_NB_IoT_t *UE_list = &eNB_mac_inst_NB[mod_idP].UE_list;
+  UE_list_NB_IoT_t *UE_list = &eNB_mac_inst_NB_IoT[mod_idP].UE_list;
   int UE_id = find_UE_id(mod_idP,rntiP); //may should be changed
   int pCC_id;
 
   if (UE_id == -1) {
 printf("MAC: cannot remove UE rnti %x\n", rntiP);
-    LOG_W(MAC,"NB_rrc_mac_remove_ue: UE %x not found\n", rntiP);
+    LOG_W(MAC,"rrc_mac_remove_ue_NB_IoT: UE %x not found\n", rntiP);
     mac_phy_remove_ue(mod_idP, rntiP); //PHY/defs.h
     return 0;
   }

@@ -39,12 +39,12 @@
 
 /* \brief Function to indicate a received SDU on ULSCH for NB-IoT.
 */
-void NB_rx_sdu(const module_id_t module_idP, const int CC_id,const frame_t frameP, const sub_frame_t subframeP, const rnti_t rnti, uint8_t *sdu, const uint16_t sdu_len, const int harq_pid);
+void rx_sdu_NB_IoT(const module_id_t module_idP, const int CC_id,const frame_t frameP, const sub_frame_t subframeP, const rnti_t rnti, uint8_t *sdu, const uint16_t sdu_len, const int harq_pid);
 
 /* \brief Function to retrieve result of scheduling (DCI) in current subframe.  Can be called an arbitrary numeber of times after eNB_dlsch_ulsch_scheduler
 in a given subframe. 
 */
-DCI_PDU_NB_IoT *NB_get_dci_sdu(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframe);
+DCI_PDU_NB_IoT *get_dci_sdu_NB_IoT(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframe);
 
 
 /* \brief Function to trigger the eNB scheduling procedure.  It is called by PHY at the beginning of each subframe, \f$n$\f
@@ -52,22 +52,22 @@ DCI_PDU_NB_IoT *NB_get_dci_sdu(module_id_t module_idP,int CC_id,frame_t frameP,s
    ready after returning from this call.
 
 */
-void NB_eNB_dlsch_ulsch_scheduler(module_id_t module_idP, uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP);
+void eNB_dlsch_ulsch_scheduler_NB_IoT(module_id_t module_idP, uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP);
 
 /* \brief Function to indicate a received preamble on PRACH.  It initiates the RA procedure.
     In NB-IoT, it indicate preamble using the frequency to indicate the preamble.
 */
-void NB_schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP);
+void schedule_RA_NB_IoT(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP);
 
-void NB_initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t preamble_index,int16_t timing_offset,sub_frame_t subframeP);
+void initiate_ra_proc_NB_IoT(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t preamble_index,int16_t timing_offset,sub_frame_t subframeP);
 
-uint8_t *NB_get_dlsch_sdu(module_id_t module_idP,int CC_id,frame_t frameP,rnti_t rnti,uint8_t TBindex);
+uint8_t *get_dlsch_sdu_NB_IoT(module_id_t module_idP,int CC_id,frame_t frameP,rnti_t rnti,uint8_t TBindex);
 
 
-int NB_rrc_mac_remove_ue(module_id_t Mod_id, rnti_t rntiP);
+int rrc_mac_remove_ue_NB_IoT(module_id_t Mod_id, rnti_t rntiP);
 
-int l2_init_eNB_NB(void);
-int mac_init_global_param_NB(void);
-int mac_top_init_NB(void);
+int l2_init_eNB_NB_IoT(void);
+int mac_init_global_param_NB_IoT(void);
+int mac_top_init_NB_IoT(void);
 
 #endif

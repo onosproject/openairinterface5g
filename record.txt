@@ -20,14 +20,14 @@ Add:        openair2/Layer2/MAC/eNB_scheduler_prmitives_NB_IoT.c
 Add:        openair2/Layer2/MAC/eNB_scheduler_dlsch_NB_IoT.c
 
 comment:
-Functions: NB_rx_sdu(), NB_get_dci_sdu(), NB_rrc_mac_remove_ue(), NB_get_dlsch_sdu();
+Functions: rx_sdu_NB_IoT(), get_dci_sdu_NB_IoT(), rrc_mac_remove_ue_NB_IoT(), get_dlsch_sdu_NB_IoT();
 Parameters: All parameters/structures used in MAC Layer.
 
 5/15
 Add:        openair2/Layer2/MAC/eNB_scheduler_RA_NB_IoT.c
 
 comment:
-Functions: NB_initiate_ra_proc()
+Functions: initiate_ra_proc_NB_IoT()
 
 5/15
 modified:   openair1/PHY/LTE_TRANSPORT/dci_NB_IoT.h
@@ -36,7 +36,7 @@ modified:   openair2/LAYER2/MAC/eNB_scheduler_RA_NB_IoT.c
 modified:   openair2/LAYER2/MAC/proto_NB_IoT.h
 
 comment:
-Functions: NB_schedule_RA()
+Functions: schedule_RA_NB_IoT()
 Parameters: Add DCI unpacked format 
 
 5/16

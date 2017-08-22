@@ -67,7 +67,7 @@
 #define DEBUG_eNB_SCHEDULER 1
 
 
-void NB_rx_sdu(const module_id_t enb_mod_idP,
+void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
 	    const int         CC_idP,
 	    const frame_t     frameP,
 	    const sub_frame_t subframeP,
@@ -83,7 +83,7 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
   unsigned short rx_lengths[NB_RB_MAX];
   int    UE_id = find_UE_id(enb_mod_idP,rntiP);
   int ii,j;
-  eNB_MAC_INST_NB_IoT *eNB = &eNB_mac_inst_NB[enb_mod_idP];
+  eNB_MAC_INST_NB_IoT *eNB = &eNB_mac_inst_NB_IoT[enb_mod_idP];
   UE_list_NB_IoT_t *UE_list= &eNB->UE_list;
   int crnti_rx=0;
   //int old_buffer_info;

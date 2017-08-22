@@ -1826,7 +1826,7 @@ int main( int argc, char **argv ) {
 
 //initialize L2 for NB-IoT stuff (complementary to legacy OAI initialization)
 #ifdef NB_IOT
-        l2_init_eNB_NB();
+        l2_init_eNB_NB_IoT();
 #endif
 
 

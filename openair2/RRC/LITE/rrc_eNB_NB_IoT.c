@@ -2004,7 +2004,7 @@ rrc_eNB_decode_ccch_NB(
               LOG_W(RRC, "new UE rnti %x (coming with random value) is already there as UE %x, removing %x from MAC/PHY\n",
                     ctxt_pP->rnti, ue_context_p->ue_context.rnti, ctxt_pP->rnti);
 
-	      NB_rrc_mac_remove_ue(ctxt_pP->module_id, ctxt_pP->rnti);
+	      rrc_mac_remove_ue_NB_IoT(ctxt_pP->module_id, ctxt_pP->rnti);
               ue_context_p = NULL;
               return 0;
             } else {
@@ -2019,7 +2019,7 @@ rrc_eNB_decode_ccch_NB(
 
             if ((ue_context_p = rrc_eNB_ue_context_stmsi_exist_NB(ctxt_pP, mme_code, m_tmsi))) {
 	      LOG_I(RRC," S-TMSI exists, ue_context_p %p, old rnti %x => %x\n",ue_context_p,ue_context_p->ue_context.rnti,ctxt_pP->rnti);
-	      NB_rrc_mac_remove_ue(ctxt_pP->module_id, ue_context_p->ue_context.rnti);
+	      rrc_mac_remove_ue_NB_IoT(ctxt_pP->module_id, ue_context_p->ue_context.rnti);
 	      stmsi_received=1;
 
               /* replace rnti in the context */
@@ -2111,7 +2111,7 @@ rrc_eNB_decode_ccch_NB(
           LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Can't create new context for UE random UE identity (0x%" PRIx64 ")\n",
                 PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
                 random_value);
-          NB_rrc_mac_remove_ue(ctxt_pP->module_id,ctxt_pP->rnti);
+          rrc_mac_remove_ue_NB_IoT(ctxt_pP->module_id,ctxt_pP->rnti);
           return -1;
         }
       }

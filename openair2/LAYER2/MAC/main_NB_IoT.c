@@ -37,7 +37,7 @@
 #include "RRC/LITE/proto_NB_IoT.h"
 
 
-int mac_init_global_param_NB(void)
+int mac_init_global_param_NB_IoT(void)
 {
 
 //XXX commented parts are called in the parallel path of OAI
@@ -83,7 +83,7 @@ int mac_init_global_param_NB(void)
   return 0;
 }
 
-int mac_top_init_NB()
+int mac_top_init_NB_IoT()
 {
 
   module_id_t    Mod_id,i,j;
@@ -100,24 +100,24 @@ int mac_top_init_NB()
   LOG_I(MAC,"[MAIN] Init function start:Nb_eNB_INST=%d\n",NB_eNB_INST);
 
   if (NB_eNB_INST>0) {
-    eNB_mac_inst_NB = (eNB_MAC_INST_NB_IoT*)malloc16(NB_eNB_INST*sizeof(eNB_MAC_INST_NB_IoT));
+    eNB_mac_inst_NB_IoT = (eNB_MAC_INST_NB_IoT*)malloc16(NB_eNB_INST*sizeof(eNB_MAC_INST_NB_IoT));
 
-    if (eNB_mac_inst_NB == NULL) {
+    if (eNB_mac_inst_NB_IoT == NULL) {
       LOG_D(MAC,"[MAIN] can't ALLOCATE %zu Bytes for %d eNB_MAC_INST with size %zu \n",NB_eNB_INST*sizeof(eNB_MAC_INST_NB_IoT*),NB_eNB_INST,sizeof(eNB_MAC_INST_NB_IoT));
       LOG_I(MAC,"[MAC][MAIN] not enough memory for eNB \n");
       exit(1);
     } else {
-      LOG_D(MAC,"[MAIN] ALLOCATE %zu Bytes for %d eNB_MAC_INST @ %p\n",sizeof(eNB_MAC_INST),NB_eNB_INST,eNB_mac_inst_NB);
-      bzero(eNB_mac_inst_NB,NB_eNB_INST*sizeof(eNB_MAC_INST_NB_IoT));
+      LOG_D(MAC,"[MAIN] ALLOCATE %zu Bytes for %d eNB_MAC_INST @ %p\n",sizeof(eNB_MAC_INST),NB_eNB_INST,eNB_mac_inst_NB_IoT);
+      bzero(eNB_mac_inst_NB_IoT,NB_eNB_INST*sizeof(eNB_MAC_INST_NB_IoT));
     }
   } else {
 	LOG_I (MAC, "No instance allocated for the MAC layer (NB-IoT)\n");
-    eNB_mac_inst_NB = NULL;
+    eNB_mac_inst_NB_IoT = NULL;
   }
 
   // Initialize Linked-List for Active UEs
   for(Mod_id=0; Mod_id<NB_eNB_INST; Mod_id++) {
-    UE_list = &eNB_mac_inst_NB[Mod_id].UE_list;
+    UE_list = &eNB_mac_inst_NB_IoT[Mod_id].UE_list;
 
     UE_list->num_UEs=0;
     UE_list->head=-1;
@@ -150,7 +150,7 @@ int mac_top_init_NB()
       LOG_D(MAC,"[MAIN][eNB %d] CC_id %d initializing RA_template (NB-IoT)\n",i, CC_id);
       LOG_D(MAC, "[MSC_NEW][FRAME 00000][MAC_eNB][MOD %02d][]\n", i);
 
-      RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB[i].common_channels[CC_id].RA_template[0];
+      RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB_IoT[i].common_channels[CC_id].RA_template[0];
 
       for (j=0; j<NB_RA_PROC_MAX; j++) {
         size_bytes1 = sizeof(DCIN1_RAR_t);
@@ -170,13 +170,13 @@ int mac_top_init_NB()
         RA_template[j].RA_dci_fmt2        = DCIFormatN1; //for MSG4
       }
 
-      memset (&eNB_mac_inst_NB[i].eNB_stats,0,sizeof(eNB_STATS_NB_IoT));
-      UE_template = (UE_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB[i].UE_list.UE_template[CC_id][0];
+      memset (&eNB_mac_inst_NB_IoT[i].eNB_stats,0,sizeof(eNB_STATS_NB_IoT));
+      UE_template = (UE_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB_IoT[i].UE_list.UE_template[CC_id][0];
 
       for (j=0; j<NUMBER_OF_UE_MAX; j++) {
         UE_template[j].rnti=0;
         // initiallize the eNB to UE statistics
-        memset (&eNB_mac_inst_NB[i].UE_list.eNB_UE_stats[CC_id][j],0,sizeof(eNB_UE_STATS_NB_IoT));
+        memset (&eNB_mac_inst_NB_IoT[i].UE_list.eNB_UE_stats[CC_id][j],0,sizeof(eNB_UE_STATS_NB_IoT));
       }
     }
 
@@ -190,7 +190,7 @@ int mac_top_init_NB()
 }
 
 
-int l2_init_eNB_NB()
+int l2_init_eNB_NB_IoT()
 {
 
   LOG_I(MAC,"[MAIN] Mapping L2 IF-Module functions\n");
@@ -199,14 +199,14 @@ int l2_init_eNB_NB()
   LOG_I(MAC,"[MAIN] MAC_INIT_GLOBAL_PARAM NB-IoT IN...\n");
 
   Is_rrc_nb_iot_registered=0;
-  mac_init_global_param_NB();
+  mac_init_global_param_NB_IoT();
   Is_rrc_nb_iot_registered=1;
 
 
   LOG_D(MAC,"[MAIN][NB-IoT] ALL INIT OK\n");
 
 //    mac_xface->macphy_init(eMBMS_active,uecap_xer,cba_group_active,HO_active); (old mac_top_init)
-  mac_top_init_NB();
+  mac_top_init_NB_IoT();
 
   return(1);
 }

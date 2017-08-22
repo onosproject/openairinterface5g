@@ -69,11 +69,11 @@
 
 #include "T.h"
 
-void NB_schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP)
+void schedule_RA_NB_IoT(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP)
 {
 
   int CC_id;
-  eNB_MAC_INST_NB_IoT *eNB = &eNB_mac_inst_NB[module_idP];
+  eNB_MAC_INST_NB_IoT *eNB = &eNB_mac_inst_NB_IoT[module_idP];
 
 
   RA_TEMPLATE_NB_IoT *RA_template;
@@ -222,7 +222,7 @@ printf("MAC: msg4 acknowledged for rnti %x fsf %d/%d, let's configure it\n", RA_
     RA_template->RA_active=FALSE;
     UE_id = find_UE_id(module_idP,RA_template->rnti);
     DevAssert( UE_id != -1 );
-    eNB_mac_inst_NB[module_idP].UE_list.UE_template[UE_PCCID(module_idP,UE_id)][UE_id].configured=TRUE;
+    eNB_mac_inst_NB_IoT[module_idP].UE_list.UE_template[UE_PCCID(module_idP,UE_id)][UE_id].configured=TRUE;
     
   }
   
@@ -233,13 +233,13 @@ printf("MAC: msg4 acknowledged for rnti %x fsf %d/%d, let's configure it\n", RA_
   // stop_meas(&eNB->schedule_ra);
 }
 /*This function should loop all over the preamble index*/
-void NB_initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t preamble_index,int16_t timing_offset,sub_frame_t subframeP)
+void initiate_ra_proc_NB_IoT(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t preamble_index,int16_t timing_offset,sub_frame_t subframeP)
 {
 
   uint8_t i;
   uint8_t carrier_id = 0;/*The index of the UL carrier associated with the NPRACH, the carrier_id of the anchor carrier is 0*/
 
-  RA_TEMPLATE_NB_IoT *RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB[module_idP].common_channels[CC_id].RA_template[0];
+  RA_TEMPLATE_NB_IoT *RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB_IoT[module_idP].common_channels[CC_id].RA_template[0];
     /*preamble index will be a subcarrier index (0-47)*/
   LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Initiating RA procedure for preamble index %d\n",module_idP,CC_id,frameP,preamble_index);
 

@@ -68,7 +68,7 @@
 
 
 /* already defined in proto_NB_IoT.h
-void NB_eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP, uint16_t hypersfn)  
+void eNB_dlsch_ulsch_scheduler_NB_IoT(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP, uint16_t hypersfn)  
 {
 
 }
