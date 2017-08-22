@@ -51,7 +51,7 @@
 //NB-IoT
 #include "PHY/defs_NB_IoT.h"
 #include "LAYER2/MAC/defs_NB_IoT.h"
-#include "LAYER2/MAC/proto_nb_iot.h"
+#include "LAYER2/MAC/proto_NB_IoT.h"
 
 
 //#include "LAYER2/MAC/pre_processor.c"

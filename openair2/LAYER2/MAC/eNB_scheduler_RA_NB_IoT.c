@@ -54,7 +54,7 @@
 
 //NB-IoT
 #include "PHY/defs_NB_IoT.h"
-#include "proto_nb_iot.h"
+#include "proto_NB_IoT.h"
 #include "defs_NB_IoT.h"
 #include "math.h"
 //#include "openair1/PHY/LTE_TRANSPORT/dci_NB_IoT.h"

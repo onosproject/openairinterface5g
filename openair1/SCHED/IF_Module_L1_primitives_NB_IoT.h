@@ -10,7 +10,7 @@
 //#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
 #include "openair1/PHY/defs_NB_IoT.h"
 //#include "LAYER2/MAC/extern.h"
-//#include "LAYER2/MAC/proto_nb_iot.h"
+//#include "LAYER2/MAC/proto_NB_IoT.h"
 
 
 

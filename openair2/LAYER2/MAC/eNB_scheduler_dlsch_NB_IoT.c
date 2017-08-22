@@ -47,7 +47,7 @@
 //NB-IoT
 #include "PHY/defs_NB_IoT.h"
 #include "defs_NB_IoT.h"
-#include "proto_nb_iot.h"
+#include "proto_NB_IoT.h"
 
 #include "RRC/LITE/extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
