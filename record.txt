@@ -15,16 +15,16 @@ Parameters: NB_IoT_DL_FRAME_PARAMS(Original LTE_DL_FRAME_PARAMS)
 5/14
 Add:        openair2/Layer2/MAC/defs_NB_IoT.h
 Add:        openair2/Layer2/MAC/proto_NB_IoT.h
-Add:        openair2/Layer2/MAC/eNB_scheduler_ulsch_nb_iot.c
-Add:        openair2/Layer2/MAC/eNB_scheduler_prmitives_nb_iot.c
-Add:        openair2/Layer2/MAC/eNB_scheduler_dlsch_nb_iot.c
+Add:        openair2/Layer2/MAC/eNB_scheduler_ulsch_NB_IoT.c
+Add:        openair2/Layer2/MAC/eNB_scheduler_prmitives_NB_IoT.c
+Add:        openair2/Layer2/MAC/eNB_scheduler_dlsch_NB_IoT.c
 
 comment:
 Functions: NB_rx_sdu(), NB_get_dci_sdu(), NB_rrc_mac_remove_ue(), NB_get_dlsch_sdu();
 Parameters: All parameters/structures used in MAC Layer.
 
 5/15
-Add:        openair2/Layer2/MAC/eNB_scheduler_RA_nb_iot.c
+Add:        openair2/Layer2/MAC/eNB_scheduler_RA_NB_IoT.c
 
 comment:
 Functions: NB_initiate_ra_proc()
@@ -32,7 +32,7 @@ Functions: NB_initiate_ra_proc()
 5/15
 modified:   openair1/PHY/LTE_TRANSPORT/dci_NB_IoT.h
 modified:   openair1/PHY/LTE_TRANSPORT/defs.hod
-modified:   openair2/LAYER2/MAC/eNB_scheduler_RA_nb_iot.c
+modified:   openair2/LAYER2/MAC/eNB_scheduler_RA_NB_IoT.c
 modified:   openair2/LAYER2/MAC/proto_NB_IoT.h
 
 comment:
@@ -40,9 +40,9 @@ Functions: NB_schedule_RA()
 Parameters: Add DCI unpacked format 
 
 5/16
-Add:	    openair2/LAYER2/MAC/IF_Module_nb_iot.c
+Add:	    openair2/LAYER2/MAC/IF_Module_NB_IoT.c
 Add:        openair2/PHY_INTERFACE/IF_Module_NB_IoT.h
-Add:        openair1/PHY/sched/phy_procedures_lte_eNB_nb_iot.c
+Add:        openair1/PHY/sched/phy_procedures_lte_eNB_NB_IoT.c
 
 Comment: Modify NB_phy_procedures_uespec_RX, change the way using primitive, use UL_IND data structure to store the needed parameters.
 	 Add the implementation for UL_INDICATION, it handles the Uplink information from PHY, also trigger the scheduler.
@@ -52,7 +52,7 @@ Parameters: UL_IND for Interface Module
 5/18
 Modified:   openair1/PHY/LTE_TRANSPORT/dci_NB_IoT.h
 Modified:   openair2/PHY_INTERFACE/IF_Module_NB_IoT.h
-Modified:   openair2/LAYER2/MAC/IF_Module_nb_iot.c
+Modified:   openair2/LAYER2/MAC/IF_Module_NB_IoT.c
 
 Comment: Complete the UL_INDICATION
 Functions: UL_INDICATION()
@@ -65,12 +65,12 @@ Comment: 15 warnings fixed
 5/23
 Add:        openair1/PHY/LTE_TRANSPORT/defs_NB_IoT.h
 Modified:   openair2/PHY_INTERFACE/IF_Module_NB_IoT.h
-Modified:   openair1/Sched/phy_procedures_lte_eNB_nb_iot.c
+Modified:   openair1/Sched/phy_procedures_lte_eNB_NB_IoT.c
 
 Comment: merge with RRC branch, start the TX part implementation
 
 5/27
-Modified:   openair2/LAYER2/MAC/phy_procedures_lte_eNB_nb_iot.c
+Modified:   openair2/LAYER2/MAC/phy_procedures_lte_eNB_NB_IoT.c
 
 Comment: Complete the TX part, add the NB_generate_eNB_dlsch_params and NB_generate_eNB_ulsch_params
 	 	 Since original OAI packed the DCI in MAC, and unpack at PHY to apply the physical layer configuration.
@@ -78,7 +78,7 @@ Comment: Complete the TX part, add the NB_generate_eNB_dlsch_params and NB_gener
 5/31
 
 Comment: Complete the dci_tools the part configuring the PHY and do the pack of dci at the same times.
-		 Add DCI packed format in dci_nb_iot.h
+		 Add DCI packed format in dci_NB_IoT.h
 
 6/6
 
