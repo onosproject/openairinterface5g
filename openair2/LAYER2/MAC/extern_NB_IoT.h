@@ -50,7 +50,7 @@
 
 //NB-IoT
 extern IF_Module_t *if_inst;
-extern eNB_MAC_INST_NB *eNB_mac_inst_NB;
+extern eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB;
 #endif
 
 // extern const uint32_t BSR_TABLE[BSR_TABLE_SIZE];
@@ -131,7 +131,7 @@ extern EMULATION_VARS *Emul_vars;
 
 //NB-IoT---------------------------------
 
-extern eNB_MAC_INST_NB *eNB_mac_inst_NB;
+extern eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB;
 extern uint8_t Is_rrc_nb_iot_registered;
 
 

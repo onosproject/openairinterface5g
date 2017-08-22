@@ -15,7 +15,7 @@
 #include "openair2/COMMON/platform_types.h"
 
 #define SCH_PAYLOAD_SIZE_MAX 4096
-#define BCCH_PAYLOAD_SIZE_MAX 128
+#define BCCH_PAYLOAD_SIZE_MAX_NB_IoT 128
 
 
 

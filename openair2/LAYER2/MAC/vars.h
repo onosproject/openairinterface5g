@@ -43,7 +43,7 @@
 
 #ifdef NB_IOT
 //NB-IoT
-eNB_MAC_INST_NB *eNB_mac_inst_NB;
+eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB;
 IF_Module_t *if_inst;
 #endif
 
@@ -158,7 +158,7 @@ DCI1E_5MHz_2A_M10PRB_TDD_t DLSCH_alloc_pdu1E;
 
 
 //NB-IoT--------------------------------------
-eNB_MAC_INST_NB *eNB_mac_inst_NB;
+eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB;
 //should be utilized in: NB_schedule_RA,NB_rx_sdu, mac_top_init_NB,
 uint8_t Is_rrc_nb_iot_registered;
 

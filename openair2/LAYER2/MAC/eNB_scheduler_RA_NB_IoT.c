@@ -73,10 +73,10 @@ void NB_schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP
 {
 
   int CC_id;
-  eNB_MAC_INST_NB *eNB = &eNB_mac_inst_NB[module_idP];
+  eNB_MAC_INST_NB_IoT *eNB = &eNB_mac_inst_NB[module_idP];
 
 
-  RA_TEMPLATE_NB *RA_template;
+  RA_TEMPLATE_NB_IoT *RA_template;
   unsigned char i,harq_pid,round;
   int16_t rrc_sdu_length;
   int UE_id = -1;
@@ -92,7 +92,7 @@ void NB_schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP
 
     for (i=0; i<NB_RA_PROC_MAX; i++) {
 
-      RA_template = (RA_TEMPLATE_NB *)&eNB->common_channels[CC_id].RA_template[i];
+      RA_template = (RA_TEMPLATE_NB_IoT *)&eNB->common_channels[CC_id].RA_template[i];
 
       if (RA_template->RA_active == TRUE) {
 
@@ -239,7 +239,7 @@ void NB_initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint1
   uint8_t i;
   uint8_t carrier_id = 0;/*The index of the UL carrier associated with the NPRACH, the carrier_id of the anchor carrier is 0*/
 
-  RA_TEMPLATE_NB *RA_template = (RA_TEMPLATE_NB *)&eNB_mac_inst_NB[module_idP].common_channels[CC_id].RA_template[0];
+  RA_TEMPLATE_NB_IoT *RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB[module_idP].common_channels[CC_id].RA_template[0];
     /*preamble index will be a subcarrier index (0-47)*/
   LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Initiating RA procedure for preamble index %d\n",module_idP,CC_id,frameP,preamble_index);
 

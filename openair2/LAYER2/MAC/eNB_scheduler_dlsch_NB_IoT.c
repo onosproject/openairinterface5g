@@ -78,7 +78,7 @@ uint8_t *NB_get_dlsch_sdu(
 {
 
   int UE_id;
-  eNB_MAC_INST_NB *eNB=&eNB_mac_inst_NB[module_idP];
+  eNB_MAC_INST_NB_IoT *eNB=&eNB_mac_inst_NB[module_idP];
 
   /*for SIBs*/
   if (rntiP==SI_RNTI) {

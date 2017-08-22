@@ -83,7 +83,7 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
   unsigned short rx_lengths[NB_RB_MAX];
   int    UE_id = find_UE_id(enb_mod_idP,rntiP);
   int ii,j;
-  eNB_MAC_INST_NB *eNB = &eNB_mac_inst_NB[enb_mod_idP];
+  eNB_MAC_INST_NB_IoT *eNB = &eNB_mac_inst_NB[enb_mod_idP];
   UE_list_NB_IoT_t *UE_list= &eNB->UE_list;
   int crnti_rx=0;
   //int old_buffer_info;
@@ -226,10 +226,10 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
       T_INT(rx_lcids[i]), T_INT(rx_lengths[i]), T_BUFFER(payload_ptr, rx_lengths[i]));
 
     switch (rx_lcids[i]) {
-    case CCCH_NB :
-      if (rx_lengths[i] > CCCH_PAYLOAD_SIZE_MAX) {
+    case CCCH_NB_IoT :
+      if (rx_lengths[i] > CCCH_PAYLOAD_SIZE_MAX_NB_IoT) {
         LOG_E(MAC, "[eNB %d/%d] frame %d received CCCH of size %d (too big, maximum allowed is %d), dropping packet\n",
-              enb_mod_idP, CC_idP, frameP, rx_lengths[i], CCCH_PAYLOAD_SIZE_MAX);
+              enb_mod_idP, CC_idP, frameP, rx_lengths[i], CCCH_PAYLOAD_SIZE_MAX_NB_IoT);
         break;
       }
       LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, Received CCCH:  %x.%x.%x.%x.%x.%x, Terminating RA procedure for UE rnti %x\n",
@@ -291,8 +291,8 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
       
       break ;
     /*DCCH0 is for SRB1bis, DCCH1 is for SRB1*/
-    case DCCH0_NB :
-    case DCCH1_NB :
+    case DCCH0_NB_IoT :
+    case DCCH1_NB_IoT :
       //      if(eNB_mac_inst[module_idP][CC_idP].Dcch_lchan[UE_id].Active==1){
       
 
@@ -336,7 +336,7 @@ void NB_rx_sdu(const module_id_t enb_mod_idP,
       break;
 
       // all the DRBS
-    case DTCH0_NB:
+    case DTCH0_NB_IoT:
     default :
 
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)

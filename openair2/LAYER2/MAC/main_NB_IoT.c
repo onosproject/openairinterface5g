@@ -87,7 +87,7 @@ int mac_top_init_NB()
 {
 
   module_id_t    Mod_id,i,j;
-  RA_TEMPLATE_NB *RA_template;
+  RA_TEMPLATE_NB_IoT *RA_template;
   UE_TEMPLATE_NB_IoT *UE_template;
   int size_bytes1,size_bytes2,size_bits1,size_bits2;
   int CC_id;
@@ -100,15 +100,15 @@ int mac_top_init_NB()
   LOG_I(MAC,"[MAIN] Init function start:Nb_eNB_INST=%d\n",NB_eNB_INST);
 
   if (NB_eNB_INST>0) {
-    eNB_mac_inst_NB = (eNB_MAC_INST_NB*)malloc16(NB_eNB_INST*sizeof(eNB_MAC_INST_NB));
+    eNB_mac_inst_NB = (eNB_MAC_INST_NB_IoT*)malloc16(NB_eNB_INST*sizeof(eNB_MAC_INST_NB_IoT));
 
     if (eNB_mac_inst_NB == NULL) {
-      LOG_D(MAC,"[MAIN] can't ALLOCATE %zu Bytes for %d eNB_MAC_INST with size %zu \n",NB_eNB_INST*sizeof(eNB_MAC_INST_NB*),NB_eNB_INST,sizeof(eNB_MAC_INST_NB));
+      LOG_D(MAC,"[MAIN] can't ALLOCATE %zu Bytes for %d eNB_MAC_INST with size %zu \n",NB_eNB_INST*sizeof(eNB_MAC_INST_NB_IoT*),NB_eNB_INST,sizeof(eNB_MAC_INST_NB_IoT));
       LOG_I(MAC,"[MAC][MAIN] not enough memory for eNB \n");
       exit(1);
     } else {
       LOG_D(MAC,"[MAIN] ALLOCATE %zu Bytes for %d eNB_MAC_INST @ %p\n",sizeof(eNB_MAC_INST),NB_eNB_INST,eNB_mac_inst_NB);
-      bzero(eNB_mac_inst_NB,NB_eNB_INST*sizeof(eNB_MAC_INST_NB));
+      bzero(eNB_mac_inst_NB,NB_eNB_INST*sizeof(eNB_MAC_INST_NB_IoT));
     }
   } else {
 	LOG_I (MAC, "No instance allocated for the MAC layer (NB-IoT)\n");
@@ -150,7 +150,7 @@ int mac_top_init_NB()
       LOG_D(MAC,"[MAIN][eNB %d] CC_id %d initializing RA_template (NB-IoT)\n",i, CC_id);
       LOG_D(MAC, "[MSC_NEW][FRAME 00000][MAC_eNB][MOD %02d][]\n", i);
 
-      RA_template = (RA_TEMPLATE_NB *)&eNB_mac_inst_NB[i].common_channels[CC_id].RA_template[0];
+      RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB[i].common_channels[CC_id].RA_template[0];
 
       for (j=0; j<NB_RA_PROC_MAX; j++) {
         size_bytes1 = sizeof(DCIN1_RAR_t);
@@ -170,7 +170,7 @@ int mac_top_init_NB()
         RA_template[j].RA_dci_fmt2        = DCIFormatN1; //for MSG4
       }
 
-      memset (&eNB_mac_inst_NB[i].eNB_stats,0,sizeof(eNB_STATS_NB));
+      memset (&eNB_mac_inst_NB[i].eNB_stats,0,sizeof(eNB_STATS_NB_IoT));
       UE_template = (UE_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB[i].UE_list.UE_template[CC_id][0];
 
       for (j=0; j<NUMBER_OF_UE_MAX; j++) {

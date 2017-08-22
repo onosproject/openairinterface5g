@@ -107,9 +107,9 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
   //NB_mac_phy_remove_ue(mod_idP,rntiP);
 
   // check if this has an RA process active
-  RA_TEMPLATE_NB *RA_template;
+  RA_TEMPLATE_NB_IoT *RA_template;
   for (i=0;i<NB_RA_PROC_MAX;i++) {
-    RA_template = (RA_TEMPLATE_NB *)&eNB_mac_inst_NB[mod_idP].common_channels[pCC_id].RA_template[i];
+    RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB[mod_idP].common_channels[pCC_id].RA_template[i];
     if (RA_template->rnti == rntiP){
       RA_template->RA_active=FALSE;
       RA_template->generate_rar=0;

@@ -85,7 +85,7 @@ extern unsigned int           pdcp_eNB_UE_instance_to_rnti_index;
 extern rnti_t                 pdcp_eNB_UE_instance_to_rnti[NUMBER_OF_UE_MAX];
 extern list_t                 pdcp_sdu_list;
 //extern struct mac_data_req rlc_am_mac_data_request (const protocol_ctxt_t* const ctxtP,void * const rlc_pP);
-//extern eNB_MAC_INST_NB *eNB;
+//extern eNB_MAC_INST_NB_IoT *eNB;
 extern void rlc_tm_init ( const protocol_ctxt_t* const  ctxt_pP, rlc_tm_entity_t * const rlcP);
 extern void rlc_tm_set_debug_infos(
         const protocol_ctxt_t* const  ctxt_pP,
@@ -1412,10 +1412,10 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
   mac_phy_remove_ue(mod_idP,rntiP); //PHY/defs.h
 
   // check if this has an RA process active
-  RA_TEMPLATE_NB *RA_template;
+  RA_TEMPLATE_NB_IoT *RA_template;
   for (i=0;i<NB_RA_PROC_MAX;i++) {
 
-    RA_template = (RA_TEMPLATE_NB *)&eNB_mac_inst[mod_idP].common_channels[pCC_id].RA_template[i];
+    RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst[mod_idP].common_channels[pCC_id].RA_template[i];
     if (RA_template->rnti == rntiP){
       RA_template->RA_active=FALSE;
       RA_template->generate_rar=0;
@@ -1624,7 +1624,7 @@ boolean_t NB_rrc_pdcp_config_asn1_req (
 
   if (srb2add_list_pP != NULL) {
 
-	  if(LCID == DCCH0_NB) //SRB1bis
+	  if(LCID == DCCH0_NB_IoT) //SRB1bis
 	  	{
 		  LOG_E(PDCP,"PDCP Configuration for SRB1bis not allowed\n");
 		  return 0;
@@ -2650,10 +2650,10 @@ rlc_op_status_t NB_rrc_rlc_config_asn1_req (
 
   if (srb2add_listP != NULL) {
 		if(srb1bis_flag == SRB1BIS_FLAG_YES){
-	    	rb_id = DCCH0_NB; //3
+	    	rb_id = DCCH0_NB_IoT; //3
 		}//srb1bis
 	    else{
-	    	rb_id = DCCH1_NB; //1
+	    	rb_id = DCCH1_NB_IoT; //1
 	    }//srb1
 
 	    lc_id = rb_id;
