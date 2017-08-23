@@ -1112,7 +1112,7 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
   mib_flag_t		mib_flag
 )
 {
-  SRB_INFO_NB *Srb_info;
+  SRB_INFO_NB_IoT *Srb_info;
   uint8_t Sdu_size=0;
 
 
@@ -1277,7 +1277,7 @@ int8_t NB_mac_rrc_data_ind_eNB(
   const sdu_size_t      sdu_lenP
 )
 {
-  SRB_INFO_NB *Srb_info;
+  SRB_INFO_NB_IoT *Srb_info;
   protocol_ctxt_t ctxt;
   sdu_size_t      sdu_size = 0;
 
@@ -1335,7 +1335,7 @@ void mac_eNB_rrc_ul_failure_NB_IoT(
 	    const sub_frame_t subframeP,
 	    const rnti_t rntiP)
 {
-  struct rrc_eNB_ue_context_NB_s* ue_context_p = NULL;
+  struct rrc_eNB_ue_context_NB_IoT_s* ue_context_p = NULL;
   ue_context_p = rrc_eNB_get_ue_context_NB(
                    &eNB_rrc_inst_NB_IoT[mod_idP],
                    rntiP);
@@ -1441,7 +1441,7 @@ void mac_eNB_rrc_ul_in_sync_NB_IoT(
 			    const sub_frame_t subframeP,
 			    const rnti_t rntiP)
 {
-  struct rrc_eNB_ue_context_NB_s* ue_context_p = NULL;
+  struct rrc_eNB_ue_context_NB_IoT_s* ue_context_p = NULL;
   ue_context_p = rrc_eNB_get_ue_context_NB(
                    &eNB_rrc_inst_NB_IoT[mod_idP],
                    rntiP);
@@ -1462,7 +1462,7 @@ int mac_eNB_get_rrc_status_NB_IoT(
   const rnti_t      rntiP
 )
 {
-  struct rrc_eNB_ue_context_NB_s* ue_context_p = NULL;
+  struct rrc_eNB_ue_context_NB_IoT_s* ue_context_p = NULL;
   ue_context_p = rrc_eNB_get_ue_context_NB(
                    &eNB_rrc_inst_NB_IoT[Mod_idP],
                    rntiP);

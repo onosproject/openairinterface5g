@@ -43,7 +43,7 @@
  */
 void openair_rrc_on_NB_IoT(const protocol_ctxt_t* const ctxt_pP);
 
-void rrc_config_buffer_NB_IoT(SRB_INFO_NB *srb_info, uint8_t Lchan_type, uint8_t Role);
+void rrc_config_buffer_NB_IoT(SRB_INFO_NB_IoT *srb_info, uint8_t Lchan_type, uint8_t Role);
 
 int L3_xface_init_NB_IoT(void);
 
@@ -460,7 +460,7 @@ void openair_eNB_rrc_on_NB_IoT(
 );
 
 void rrc_config_buffer_NB_IoT(
-  SRB_INFO_NB* Srb_info,
+  SRB_INFO_NB_IoT* Srb_info,
   uint8_t Lchan_type,
   uint8_t Role
 );
@@ -480,7 +480,7 @@ void *rrc_enb_task_NB_IoT(void *args_p);
    \param Srb_info Pointer to SRB0 information structure (buffer, etc.)*/
 int rrc_eNB_decode_ccch_NB_IoT(
   protocol_ctxt_t* const ctxt_pP,
-  const SRB_INFO_NB*        const Srb_info,
+  const SRB_INFO_NB_IoT*        const Srb_info,
   const int              CC_id
 );
 
@@ -501,58 +501,58 @@ int rrc_eNB_decode_dcch_NB_IoT(
    \param CC_id         Component Carrier ID*/
 void rrc_eNB_generate_RRCConnectionReestablishmentReject_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*          const ue_context_pP,
+  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP,
   const int                    CC_id
 );
 
 void rrc_eNB_generate_RRCConnectionReject_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*          const ue_context_pP,
+  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP,
   const int                    CC_id
 );
 
 void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*          const ue_context_pP,
+  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP,
   const int                    CC_id
 );
 
 void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*        ue_context_pP,
+  rrc_eNB_ue_context_NB_IoT_t*        ue_context_pP,
   const uint8_t xid //transaction identifier
 );
 
 
 void //was under ITTI
 rrc_eNB_reconfigure_DRBs_NB_IoT(const protocol_ctxt_t* const ctxt_pP,
-			       rrc_eNB_ue_context_NB_t*  ue_context_pP);
+			       rrc_eNB_ue_context_NB_IoT_t*  ue_context_pP);
 
 void //was under ITTI
 rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 		const protocol_ctxt_t* const ctxt_pP,
-	    rrc_eNB_ue_context_NB_t*          const ue_context_pP
+	    rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP
         //no ho state
 	     );
 
 void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*         ue_context_pP,
+  rrc_eNB_ue_context_NB_IoT_t*         ue_context_pP,
   RRCConnectionSetupComplete_NB_r13_IEs_t * rrcConnectionSetupComplete_NB
 );
 
 void rrc_eNB_generate_SecurityModeCommand_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*          const ue_context_pP
+  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP
 );
 
 void rrc_eNB_generate_UECapabilityEnquiry_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*          const ue_context_pP
+  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP
 );
 
 void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_ctxt_t* const ctxt_pP,
-						                                                     rrc_eNB_ue_context_NB_t*          const ue_context_pP
+						                                                     rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP
 						                                                     //no HO flag
 						                                                    );
 
@@ -561,12 +561,12 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
 
 void rrc_eNB_free_UE_NB_IoT(
 		const module_id_t enb_mod_idP,
-		const struct rrc_eNB_ue_context_NB_s*        const ue_context_pP
+		const struct rrc_eNB_ue_context_NB_IoT_s*        const ue_context_pP
 		);
 
 void rrc_eNB_free_mem_UE_context_NB_IoT(
   const protocol_ctxt_t*               const ctxt_pP,
-  struct rrc_eNB_ue_context_NB_s*         const ue_context_pP
+  struct rrc_eNB_ue_context_NB_IoT_s*         const ue_context_pP
 );
 
 

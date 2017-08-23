@@ -95,7 +95,7 @@ int errno;
 
 /*do_MIB_NB*/
 uint8_t do_MIB_NB(
-		rrc_eNB_carrier_data_NB_t *carrier,
+		rrc_eNB_carrier_data_NB_IoT_t *carrier,
 		uint16_t N_RB_DL,//may not needed--> for NB_IoT only 1 PRB is used
 		uint32_t frame)
 {
@@ -163,7 +163,7 @@ uint8_t do_MIB_NB(
 
 /*do_SIB1_NB*/
 uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
-				rrc_eNB_carrier_data_NB_t *carrier,
+				rrc_eNB_carrier_data_NB_IoT_t *carrier,
                 RrcConfigurationReq *configuration,
 				uint32_t frame
                )
@@ -415,7 +415,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
 //to be clarified is it is possible to carry SIB2 and SIB3  in the same SI message for NB-IoT?
 uint8_t do_SIB23_NB(uint8_t Mod_id,
                  int CC_id,
-                 rrc_eNB_carrier_data_NB_t *carrier,//MP: this is already a carrier[CC_id]
+                 rrc_eNB_carrier_data_NB_IoT_t *carrier,//MP: this is already a carrier[CC_id]
                  RrcConfigurationReq *configuration ) //openair2/COMMON/rrc_messages_types.h
 {
   struct SystemInformation_NB_r13_IEs__sib_TypeAndInfo_r13__Member *sib2_NB_part;
@@ -660,7 +660,7 @@ uint8_t do_SIB23_NB(uint8_t Mod_id,
 /*do_RRCConnectionSetup_NB--> the aim is to establish SRB1 and SRB1bis(implicitly)*/
 uint8_t do_RRCConnectionSetup_NB(
   const protocol_ctxt_t*     const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*      const ue_context_pP,
+  rrc_eNB_ue_context_NB_IoT_t*      const ue_context_pP,
   int                              CC_id,
   uint8_t*                   const buffer, //Srb0.Tx_buffer.Payload
   const uint8_t                    Transaction_id,

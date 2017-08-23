@@ -112,7 +112,7 @@ mui_t                               rrc_eNB_mui_NB = 0;
 
 
 // should be called when UE is lost by eNB
-void rrc_eNB_free_UE_NB_IoT(const module_id_t enb_mod_idP,const struct rrc_eNB_ue_context_NB_s*        const ue_context_pP)
+void rrc_eNB_free_UE_NB_IoT(const module_id_t enb_mod_idP,const struct rrc_eNB_ue_context_NB_IoT_s*        const ue_context_pP)
 //-----------------------------------------------------------------------------
 {
 
@@ -161,7 +161,7 @@ void rrc_eNB_free_UE_NB_IoT(const module_id_t enb_mod_idP,const struct rrc_eNB_u
     rrc_eNB_remove_ue_context_NB(
       &ctxt,
       &eNB_rrc_inst_NB_IoT[enb_mod_idP],
-      (struct rrc_eNB_ue_context_NB_s*) ue_context_pP);
+      (struct rrc_eNB_ue_context_NB_IoT_s*) ue_context_pP);
   }
 }
 
@@ -171,7 +171,7 @@ void rrc_eNB_free_UE_NB_IoT(const module_id_t enb_mod_idP,const struct rrc_eNB_u
 void
 rrc_eNB_generate_RRCConnectionRelease_NB(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*          const ue_context_pP
+  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP
 )
 //-----------------------------------------------------------------------------
 {
@@ -229,7 +229,7 @@ rrc_eNB_generate_RRCConnectionRelease_NB(
 //-----------------------------------------------------------------------------
 void rrc_eNB_generate_RRCConnectionReestablishmentReject_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*          const ue_context_pP,
+  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP,
   const int                    CC_id
 )
 //-----------------------------------------------------------------------------
@@ -275,7 +275,7 @@ void rrc_eNB_generate_RRCConnectionReestablishmentReject_NB_IoT(
 //-----------------------------------------------------------------------------
 void rrc_eNB_free_mem_UE_context_NB_IoT(
   const protocol_ctxt_t*               const ctxt_pP,
-  struct rrc_eNB_ue_context_NB_s*         const ue_context_pP
+  struct rrc_eNB_ue_context_NB_IoT_s*         const ue_context_pP
 )
 //-----------------------------------------------------------------------------
 {
@@ -321,16 +321,16 @@ void rrc_eNB_free_mem_UE_context_NB_IoT(
 
 //-----------------------------------------------------------------------------
 // return the ue context if there is already an UE with ue_identityP, NULL otherwise
-static struct rrc_eNB_ue_context_NB_s*
+static struct rrc_eNB_ue_context_NB_IoT_s*
 rrc_eNB_ue_context_random_exist_NB(
   const protocol_ctxt_t* const ctxt_pP,
   const uint64_t               ue_identityP
 )
 //-----------------------------------------------------------------------------
 {
-  struct rrc_eNB_ue_context_NB_s*        ue_context_p = NULL;
-  //FIXME: there is a warning related to the new  type rrc_ue_tree_NB_s
-  RB_FOREACH(ue_context_p, rrc_ue_tree_NB_s, &(eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head)) {
+  struct rrc_eNB_ue_context_NB_IoT_s*        ue_context_p = NULL;
+  //FIXME: there is a warning related to the new  type rrc_ue_tree_NB_IoT_s
+  RB_FOREACH(ue_context_p, rrc_ue_tree_NB_IoT_s, &(eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head)) {
     if (ue_context_p->ue_context.random_ue_identity == ue_identityP)
       return ue_context_p;
   }
@@ -339,20 +339,20 @@ rrc_eNB_ue_context_random_exist_NB(
 
 //-----------------------------------------------------------------------------
 // return a new ue context structure if ue_identityP, ctxt_pP->rnti not found in collection
-static struct rrc_eNB_ue_context_NB_s*
+static struct rrc_eNB_ue_context_NB_IoT_s*
 rrc_eNB_get_next_free_ue_context_NB(
   const protocol_ctxt_t* const ctxt_pP,
   const uint64_t               ue_identityP
 )
 //-----------------------------------------------------------------------------
 {
-  struct rrc_eNB_ue_context_NB_s*        ue_context_p = NULL;
+  struct rrc_eNB_ue_context_NB_IoT_s*        ue_context_p = NULL;
   ue_context_p = rrc_eNB_get_ue_context_NB(
                    &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id],
                    ctxt_pP->rnti);
 
   if (ue_context_p == NULL) {
-    RB_FOREACH(ue_context_p, rrc_ue_tree_NB_s, &(eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head)) {
+    RB_FOREACH(ue_context_p, rrc_ue_tree_NB_IoT_s, &(eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head)) {
       if (ue_context_p->ue_context.random_ue_identity == ue_identityP) {
         LOG_D(RRC,
               PROTOCOL_RRC_CTXT_UE_FMT" Cannot create new UE context, already exist rand UE id 0x%"PRIx64", uid %u\n",
@@ -374,7 +374,7 @@ rrc_eNB_get_next_free_ue_context_NB(
     ue_context_p->ue_id_rnti                    = ctxt_pP->rnti; // here ue_id_rnti is just a key, may be something else
     ue_context_p->ue_context.rnti               = ctxt_pP->rnti; // yes duplicate, 1 may be removed
     ue_context_p->ue_context.random_ue_identity = ue_identityP;
-    RB_INSERT(rrc_ue_tree_NB_s, &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head, ue_context_p);
+    RB_INSERT(rrc_ue_tree_NB_IoT_s, &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head, ue_context_p);
     LOG_D(RRC,
           PROTOCOL_RRC_CTXT_UE_FMT" Created new UE context uid %u\n",
           PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
@@ -391,7 +391,7 @@ rrc_eNB_get_next_free_ue_context_NB(
 
 //-----------------------------------------------------------------------------
 // return the ue context if there is already an UE with the same S-TMSI(MMEC+M-TMSI), NULL otherwise
-static struct rrc_eNB_ue_context_NB_s*
+static struct rrc_eNB_ue_context_NB_IoT_s*
 rrc_eNB_ue_context_stmsi_exist_NB(
   const protocol_ctxt_t* const ctxt_pP,
   const mme_code_t             mme_codeP,
@@ -399,8 +399,8 @@ rrc_eNB_ue_context_stmsi_exist_NB(
 )
 //-----------------------------------------------------------------------------
 {
-  struct rrc_eNB_ue_context_NB_s*        ue_context_p = NULL;
-  RB_FOREACH(ue_context_p, rrc_ue_tree_NB_s, &(eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head)) {
+  struct rrc_eNB_ue_context_NB_IoT_s*        ue_context_p = NULL;
+  RB_FOREACH(ue_context_p, rrc_ue_tree_NB_IoT_s, &(eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head)) {
     LOG_I(RRC,"checking for UE S-TMSI %x, mme %x (%p): rnti %x",
 	  m_tmsiP, mme_codeP, ue_context_p,
 	  ue_context_p->ue_context.rnti);
@@ -434,7 +434,7 @@ uint8_t rrc_eNB_get_next_transaction_identifier_NB_IoT(
 //-----------------------------------------------------------------------------
 void rrc_eNB_generate_RRCConnectionReject_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*          const ue_context_pP,
+  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP,
   const int                    CC_id
 )
 //-----------------------------------------------------------------------------
@@ -479,7 +479,7 @@ void rrc_eNB_generate_RRCConnectionReject_NB_IoT(
 //-----------------------------------------------------------------------------
 void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*          const ue_context_pP,
+  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP,
   const int                    CC_id
 )
 //-----------------------------------------------------------------------------
@@ -615,7 +615,7 @@ void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
 //-----------------------------------------------------------------------------
 void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*        ue_context_pP,
+  rrc_eNB_ue_context_NB_IoT_t*        ue_context_pP,
   const uint8_t xid //transaction identifier
 )
 //-----------------------------------------------------------------------------
@@ -869,7 +869,7 @@ void //was under ITTI
 // This function triggers the establishment of dedicated bearer in the absence of EPC (oaisim case -- noS1)
 // to emulate it only establish 2 bearers (max number for NB-IoT)
 rrc_eNB_reconfigure_DRBs_NB_IoT(const protocol_ctxt_t* const ctxt_pP,
-			       rrc_eNB_ue_context_NB_t*  ue_context_pP)
+			       rrc_eNB_ue_context_NB_IoT_t*  ue_context_pP)
 //------------------------------------------------------------------
 {
 
@@ -879,8 +879,8 @@ rrc_eNB_reconfigure_DRBs_NB_IoT(const protocol_ctxt_t* const ctxt_pP,
 
   for (i = 0; i < NB_RB_MAX_NB_IOT-3; i++) { //most 2 DRB for NB-IoT = at most 2 e-rab (DRB)
 
-    if ( ue_context_pP->ue_context.e_rab[i].status < E_RAB_NB_STATUS_DONE){ // all those new e-rab ( E_RAB_NB_STATUS_NEW)
-      ue_context_pP->ue_context.e_rab[i].status = E_RAB_NB_STATUS_NEW;
+    if ( ue_context_pP->ue_context.e_rab[i].status < E_RAB_STATUS_DONE_NB_IoT){ // all those new e-rab ( E_RAB_STATUS_NEW_NB_IoT)
+      ue_context_pP->ue_context.e_rab[i].status = E_RAB_STATUS_NEW_NB_IoT;
       ue_context_pP->ue_context.e_rab[i].param.e_rab_id = i + 1;
       ue_context_pP->ue_context.e_rab[i].param.qos.qci = i % 9;
       ue_context_pP->ue_context.e_rab[i].param.qos.allocation_retention_priority.priority_level= i % PRIORITY_LEVEL_LOWEST;
@@ -910,7 +910,7 @@ rrc_eNB_reconfigure_DRBs_NB_IoT(const protocol_ctxt_t* const ctxt_pP,
 void //was under ITTI
 rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 		const protocol_ctxt_t* const ctxt_pP,
-	    rrc_eNB_ue_context_NB_t*          const ue_context_pP
+	    rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP
         //no ho state
 	     )
 //-----------------------------------------------------------------------------
@@ -961,7 +961,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
   for ( i = 0  ; i < ue_context_pP->ue_context.setup_e_rabs ; i++){ //max must be 2 DRBs that are established
 
     // bypass the new and already configured erabs
-    if (ue_context_pP->ue_context.e_rab[i].status >= E_RAB_NB_STATUS_DONE) {
+    if (ue_context_pP->ue_context.e_rab[i].status >= E_RAB_STATUS_DONE_NB_IoT) {
       drb_identity_index++;
       continue; //skip to the next loop iteration
     }
@@ -1031,7 +1031,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 	  );
 
     e_rab_done++;
-    ue_context_pP->ue_context.e_rab[i].status = E_RAB_NB_STATUS_DONE;
+    ue_context_pP->ue_context.e_rab[i].status = E_RAB_STATUS_DONE_NB_IoT;
     ue_context_pP->ue_context.e_rab[i].xid = xid;
 
     {
@@ -1136,7 +1136,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 //-----------------------------------------------------------------------------
 void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*         ue_context_pP,
+  rrc_eNB_ue_context_NB_IoT_t*         ue_context_pP,
   RRCConnectionSetupComplete_NB_r13_IEs_t * rrcConnectionSetupComplete_NB
 )
 //-----------------------------------------------------------------------------
@@ -1172,7 +1172,7 @@ void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
 //-----------------------------------------------------------------------------
 void rrc_eNB_generate_SecurityModeCommand_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*          const ue_context_pP
+  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP
 )
 //-----------------------------------------------------------------------------
 {
@@ -1243,7 +1243,7 @@ void rrc_eNB_generate_SecurityModeCommand_NB_IoT(
 //-----------------------------------------------------------------------------
 void rrc_eNB_generate_UECapabilityEnquiry_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_t*          const ue_context_pP
+  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP
 )
 //-----------------------------------------------------------------------------
 {
@@ -1296,7 +1296,7 @@ void rrc_eNB_generate_UECapabilityEnquiry_NB_IoT(
 
 //-----------------------------------------------------------------------------
 void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_ctxt_t* const ctxt_pP,
-						                                                     rrc_eNB_ue_context_NB_t*          const ue_context_pP
+						                                                     rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP
 						                                                     //no HO flag
 						                                                    )
 //-----------------------------------------------------------------------------
@@ -1522,9 +1522,9 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
     }
 
     /* TODO should test if e RAB are Ok before! */
-    ue_context_pP->ue_context.e_rab[i].status = E_RAB_NB_STATUS_DONE;
+    ue_context_pP->ue_context.e_rab[i].status = E_RAB_STATUS_DONE_NB_IoT;
     LOG_D(RRC, "setting the status for the default DRB (index %d) to (%d,%s)\n",
-	  i, ue_context_pP->ue_context.e_rab[i].status, "E_RAB_NB_STATUS_DONE");
+	  i, ue_context_pP->ue_context.e_rab[i].status, "E_RAB_STATUS_DONE_NB_IoT");
   }
 
   /* If list is empty free the list and reset the address */
@@ -1820,7 +1820,7 @@ while ( eNB_rrc_inst_NB_IoT == NULL ) {
 //-----------------------------------------------------------------------------
 int rrc_eNB_decode_ccch_NB_IoT(
   protocol_ctxt_t* const ctxt_pP,
-  const SRB_INFO_NB*        const Srb_info, //SRB0
+  const SRB_INFO_NB_IoT*        const Srb_info, //SRB0
   const int              CC_id
 )
 //-----------------------------------------------------------------------------
@@ -1831,7 +1831,7 @@ int rrc_eNB_decode_ccch_NB_IoT(
   RRCConnectionReestablishmentRequest_NB_r13_IEs_t* rrcConnectionReestablishmentRequest_NB = NULL;
   RRCConnectionResumeRequest_NB_r13_IEs_t *rrcConnectionResumeRequest_NB= NULL;
   int                                 i, rval;
-  struct rrc_eNB_ue_context_NB_s*                  ue_context_p = NULL;
+  struct rrc_eNB_ue_context_NB_IoT_s*                  ue_context_p = NULL;
   uint64_t                                      random_value = 0;
   int                                           stmsi_received = 0;
 
@@ -2012,12 +2012,12 @@ int rrc_eNB_decode_ccch_NB_IoT(
               /* replace rnti in the context */
               /* for that, remove the context from the RB tree */
 
-	      ///FIXME MP: warning --> implicit declaration because I insert the new type "rrc_ue_tree_NB_s"
-              RB_REMOVE(rrc_ue_tree_NB_s, &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head, ue_context_p);
+	      ///FIXME MP: warning --> implicit declaration because I insert the new type "rrc_ue_tree_NB_IoT_s"
+              RB_REMOVE(rrc_ue_tree_NB_IoT_s, &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head, ue_context_p);
               /* and insert again, after changing rnti everywhere it has to be changed */
               ue_context_p->ue_id_rnti = ctxt_pP->rnti;
 	      ue_context_p->ue_context.rnti = ctxt_pP->rnti;
-              RB_INSERT(rrc_ue_tree_NB_s, &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head, ue_context_p);
+              RB_INSERT(rrc_ue_tree_NB_IoT_s, &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head, ue_context_p);
               /* reset timers */
               ue_context_p->ue_context.ul_failure_timer = 0;
               ue_context_p->ue_context.ue_release_timer = 0;
@@ -2226,7 +2226,7 @@ int rrc_eNB_decode_dcch_NB_IoT(
   UL_DCCH_Message_NB_t                  *ul_dcch_msg_NB = NULL;
   UE_Capability_NB_r13_t              *UE_Capability_NB = NULL;
   int i;
-  struct rrc_eNB_ue_context_NB_s*        ue_context_p = NULL;
+  struct rrc_eNB_ue_context_NB_IoT_s*        ue_context_p = NULL;
 
   int dedicated_DRB=0;
 
@@ -2655,7 +2655,7 @@ int rrc_eNB_decode_dcch_NB_IoT(
       ue_context_p->ue_context.nb_of_e_rabs = 1;
       //FIXME may no more present in NB_IoT or different parameter to set
       for (i = 0; i < ue_context_p->ue_context.nb_of_e_rabs; i++){
-	ue_context_p->ue_context.e_rab[i].status = E_RAB_NB_STATUS_NEW;
+	ue_context_p->ue_context.e_rab[i].status = E_RAB_STATUS_NEW_NB_IoT;
 	ue_context_p->ue_context.e_rab[i].param.e_rab_id = 1+i;
 	ue_context_p->ue_context.e_rab[i].param.qos.qci=9; //Non-GBR
       }
@@ -2774,7 +2774,7 @@ void* rrc_enb_task_NB_IoT(
   const char                         *msg_name_p;
   instance_t                          instance;
   int                                 result;
-  SRB_INFO_NB                           *srb_info_p;
+  SRB_INFO_NB_IoT                     *srb_info_p;
   int                                 CC_id;
 
   protocol_ctxt_t                     ctxt;

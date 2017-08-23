@@ -18,7 +18,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file RRC/LITE/defs_nb_iot.h
+/*! \file RRC/LITE/defs_NB_IoT.h
 * \brief NB-IoT RRC struct definitions and function prototypes
 * \author Navid Nikaein, Raymond Knopp and Michele Paffetti
 * \date 2010 - 2014, 2017
@@ -196,12 +196,12 @@
 
 /*I will change the name of the structure for compile purposes--> hope not to undo this process*/
 
-typedef unsigned int uid_NB_t;
+typedef unsigned int uid_NB_IoT_t;
 #define UID_LINEAR_ALLOCATOR_BITMAP_SIZE (((NUMBER_OF_UE_MAX/8)/sizeof(unsigned int)) + 1)
 
-typedef struct uid_linear_allocator_NB_s {
+typedef struct uid_linear_allocator_NB_IoT_s {
   unsigned int   bitmap[UID_LINEAR_ALLOCATOR_BITMAP_SIZE];
-} uid_allocator_NB_t;
+} uid_allocator_NB_IoT_t;
 
 
 #define PROTOCOL_RRC_CTXT_UE_FMT           PROTOCOL_CTXT_FMT
@@ -251,25 +251,25 @@ typedef struct uid_linear_allocator_NB_s {
 /* TS 36.331: RRC-TransactionIdentifier ::= INTEGER (0..3) */
 #define RRC_TRANSACTION_IDENTIFIER_NUMBER  3
 
-typedef struct UE_S_TMSI_NB_s {
+typedef struct UE_S_TMSI_NB_IoT_s {
   boolean_t  presence;
   mme_code_t mme_code;
   m_tmsi_t   m_tmsi;
-} __attribute__ ((__packed__)) UE_S_TMSI_NB;
+} __attribute__ ((__packed__)) UE_S_TMSI_NB_IoT;
 
 
-typedef enum e_rab_satus_NB_e {
-  E_RAB_NB_STATUS_NEW,
-  E_RAB_NB_STATUS_DONE, // from the eNB perspective
-  E_RAB_NB_STATUS_ESTABLISHED, // get the reconfigurationcomplete form UE
-  E_RAB_NB_STATUS_FAILED,
-} e_rab_status_NB_t;
+typedef enum e_rab_satus_NB_IoT_e {
+  E_RAB_STATUS_NEW_NB_IoT,
+  E_RAB_STATUS_DONE_NB_IoT, // from the eNB perspective
+  E_RAB_STATUS_ESTABLISHED_NB_IoT, // get the reconfigurationcomplete form UE
+  E_RAB_STATUS_FAILED_NB_IoT,
+} e_rab_status_NB_IoT_t;
 
-typedef struct e_rab_param_NB_s {
+typedef struct e_rab_param_NB_IoT_s {
   e_rab_t param;
   uint8_t status;
   uint8_t xid; // transaction_id
-} __attribute__ ((__packed__)) e_rab_param_NB_t;
+} __attribute__ ((__packed__)) e_rab_param_NB_IoT_t;
 
 
 //HANDOVER_INFO not implemented in NB-IoT delete
@@ -282,46 +282,46 @@ typedef struct {
   char Payload[RRC_BUFFER_SIZE_MAX];
   char Header[RRC_HEADER_SIZE_MAX];
   char payload_size;
-} RRC_BUFFER_NB;
+} RRC_BUFFER_NB_IoT;
 
-#define RRC_BUFFER_SIZE_NB sizeof(RRC_BUFFER_NB)
+#define RRC_BUFFER_SIZE_NB_IoT sizeof(RRC_BUFFER_NB_IoT)
 
 
-typedef struct RB_INFO_NB_s {
+typedef struct RB_INFO_NB_IoT_s {
   uint16_t Rb_id;  //=Lchan_id
   //LCHAN_DESC Lchan_desc[2]; no more used
   //MAC_MEAS_REQ_ENTRY *Meas_entry; //may not needed for NB-IoT
-} RB_INFO_NB;
+} RB_INFO_NB_IoT;
 
-typedef struct SRB_INFO_NB_s {
+typedef struct SRB_INFO_NB_IoT_s {
   uint16_t Srb_id;  //=Lchan_id---> useful for distinguish between SRB1 and SRB1bis?
-  RRC_BUFFER_NB Rx_buffer;
-  RRC_BUFFER_NB Tx_buffer;
+  RRC_BUFFER_NB_IoT Rx_buffer;
+  RRC_BUFFER_NB_IoT Tx_buffer;
   //LCHAN_DESC Lchan_desc[2]; no more used
   unsigned int Trans_id;
   uint8_t Active;
-} SRB_INFO_NB;
+} SRB_INFO_NB_IoT;
 
 
-typedef struct RB_INFO_TABLE_ENTRY_NB_s {
-  RB_INFO_NB Rb_info;
+typedef struct RB_INFO_TABLE_ENTRY_NB_IoT_s {
+  RB_INFO_NB_IoT Rb_info;
   uint8_t Active;
   uint32_t Next_check_frame;
   uint8_t Status;
-} RB_INFO_TABLE_ENTRY_NB;
+} RB_INFO_TABLE_ENTRY_NB_IoT;
 
-typedef struct SRB_INFO_TABLE_ENTRY_NB_s {
-  SRB_INFO_NB Srb_info;
+typedef struct SRB_INFO_TABLE_ENTRY_NB_IoT_s {
+  SRB_INFO_NB_IoT Srb_info;
   uint8_t Active;
   uint8_t Status;
   uint32_t Next_check_frame;
-} SRB_INFO_TABLE_ENTRY_NB;
+} SRB_INFO_TABLE_ENTRY_NB_IoT;
 
 //MEAS_REPORT_LIST_s not implemented in NB-IoT but is used at UE side
 //HANDOVER_INFO_UE not implemented in NB-IoT
 
-//NB-IoT eNB_RRC_UE_NB_s--(used as a context in eNB --> ue_context in rrc_eNB_ue_context)------
-typedef struct eNB_RRC_UE_NB_s {
+//NB-IoT eNB_RRC_UE_NB_IoT_s--(used as a context in eNB --> ue_context in rrc_eNB_ue_context)------
+typedef struct eNB_RRC_UE_NB_IoT_s {
   uint8_t                            primaryCC_id;
   //in NB-IoT only SRB0, SRB1 and SRB1bis (until AS security activation) exist
 
@@ -347,10 +347,10 @@ typedef struct eNB_RRC_UE_NB_s {
   //No SPS(semi-persistent scheduling) in NB-IoT
   //No Measurement report in NB-IoT
 
-  SRB_INFO_NB                           SI;
-  SRB_INFO_NB                           Srb0;
-  SRB_INFO_TABLE_ENTRY_NB               Srb1;
-  SRB_INFO_TABLE_ENTRY_NB               Srb1bis;
+  SRB_INFO_NB_IoT                           SI;
+  SRB_INFO_NB_IoT                           Srb0;
+  SRB_INFO_TABLE_ENTRY_NB_IoT               Srb1;
+  SRB_INFO_TABLE_ENTRY_NB_IoT               Srb1bis;
 
 #if defined(ENABLE_SECURITY)
   /* KeNB as derived from KASME received from EPC */
@@ -368,7 +368,7 @@ typedef struct eNB_RRC_UE_NB_s {
 
 
   /* Information from UE RRC ConnectionRequest-NB-r13_IE--> NB-IoT */
-  UE_S_TMSI_NB                          Initialue_identity_s_TMSI;
+  UE_S_TMSI_NB_IoT                          Initialue_identity_s_TMSI;
   EstablishmentCause_NB_r13_t               establishment_cause_NB; //different set for NB-IoT
 
   /* Information from UE RRC ConnectionReestablishmentRequest-NB--> NB-IoT */
@@ -387,7 +387,7 @@ typedef struct eNB_RRC_UE_NB_s {
   /* Number of e_rab to be setup in the list */ //NAS list?
   uint8_t                            nb_of_e_rabs;
   /* list of e_rab to be setup by RRC layers */
-  e_rab_param_NB_t                      e_rab[NB_RB_MAX_NB_IOT];//[S1AP_MAX_E_RAB];
+  e_rab_param_NB_IoT_t                      e_rab[NB_RB_MAX_NB_IOT];//[S1AP_MAX_E_RAB];
 
   // LG: For GTPV1 TUNNELS
   uint32_t                           enb_gtp_teid[S1AP_MAX_E_RAB];
@@ -399,17 +399,17 @@ typedef struct eNB_RRC_UE_NB_s {
   uint32_t                           ue_release_timer;
   //threshold of the release timer--> set in RRCConnectionRelease
   uint32_t                           ue_release_timer_thres;
-} eNB_RRC_UE_NB_t;
+} eNB_RRC_UE_NB_IoT_t;
 //--------------------------------------------------------------------------------
 
-typedef uid_NB_t ue_uid_t;
+typedef uid_NB_IoT_t ue_uid_t;
 
 
 //generally variable called: ue_context_pP
-typedef struct rrc_eNB_ue_context_NB_s {
+typedef struct rrc_eNB_ue_context_NB_IoT_s {
 
   /* Tree related data */
-  RB_ENTRY(rrc_eNB_ue_context_NB_s) entries;
+  RB_ENTRY(rrc_eNB_ue_context_NB_IoT_s) entries;
 
   /* Uniquely identifies the UE between MME and eNB within the eNB.
    * This id is encoded on 24bits.
@@ -420,9 +420,9 @@ typedef struct rrc_eNB_ue_context_NB_s {
   ue_uid_t       local_uid;
 
   /* UE id for initial connection to S1AP */
-  struct eNB_RRC_UE_NB_s   ue_context; //context of ue in the e-nB
+  struct eNB_RRC_UE_NB_IoT_s   ue_context; //context of ue in the e-nB
 
-} rrc_eNB_ue_context_NB_t;
+} rrc_eNB_ue_context_NB_IoT_t;
 
 
 
@@ -482,8 +482,8 @@ typedef struct {
   SystemInformationBlockType16_NB_r13_t     *sib16_NB;
 
 
-  SRB_INFO_NB                          SI;
-  SRB_INFO_NB                          Srb0;
+  SRB_INFO_NB_IoT                          SI;
+  SRB_INFO_NB_IoT                          Srb0;
 
   /*future implementation TS 36.331 V14.2.1
   SystemInformationBlockType15_NB_r14_t     *sib15;
@@ -495,7 +495,7 @@ typedef struct {
   SC_MCCH_Message_NB_t				scptm;*/
 
 
-} rrc_eNB_carrier_data_NB_t;
+} rrc_eNB_carrier_data_NB_IoT_t;
 //---------------------------------------------------
 
 
@@ -503,10 +503,10 @@ typedef struct {
 //---NB-IoT---(completely change)---------------------
 typedef struct eNB_RRC_INST_NB_IoT_s {
 
-  rrc_eNB_carrier_data_NB_t          carrier[MAX_NUM_CCs];
+  rrc_eNB_carrier_data_NB_IoT_t          carrier[MAX_NUM_CCs];
 
-  uid_allocator_NB_t                    uid_allocator; // for rrc_ue_head
-  RB_HEAD(rrc_ue_tree_NB_s, rrc_eNB_ue_context_NB_s)     rrc_ue_head; // ue_context tree key search by rnti
+  uid_allocator_NB_IoT_t                    uid_allocator; // for rrc_ue_head
+  RB_HEAD(rrc_ue_tree_NB_IoT_s, rrc_eNB_ue_context_NB_IoT_s)     rrc_ue_head; // ue_context tree key search by rnti
 
   uint8_t                           Nb_ue;
 

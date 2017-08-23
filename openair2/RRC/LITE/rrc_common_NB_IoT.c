@@ -135,7 +135,7 @@ void openair_eNB_rrc_on_NB_IoT(
 
 //-----------------------------------------------------------------------------
 void rrc_config_buffer_NB_IoT(
-  SRB_INFO_NB* Srb_info,
+  SRB_INFO_NB_IoT* Srb_info,
   uint8_t Lchan_type,
   uint8_t Role
 )
@@ -279,8 +279,8 @@ rrc_rx_tx_NB_IoT(
   //uint8_t        UE_id;
   int32_t        current_timestamp_ms, ref_timestamp_ms;
   struct timeval ts;
-  struct rrc_eNB_ue_context_NB_s   *ue_context_p = NULL;
-  struct rrc_eNB_ue_context_NB_s   *ue_to_be_removed = NULL;
+  struct rrc_eNB_ue_context_NB_IoT_s   *ue_context_p = NULL;
+  struct rrc_eNB_ue_context_NB_IoT_s   *ue_to_be_removed = NULL;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_RX_TX,VCD_FUNCTION_IN);
 
@@ -384,7 +384,7 @@ rrc_rx_tx_NB_IoT(
     // counter, and get the value and aggregate
 
     // check for UL failure
-    RB_FOREACH(ue_context_p, rrc_ue_tree_NB_s, &(eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head)) {
+    RB_FOREACH(ue_context_p, rrc_ue_tree_NB_IoT_s, &(eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head)) {
       if ((ctxt_pP->frame == 0) && (ctxt_pP->subframe==0)) {
 	if (ue_context_p->ue_context.Initialue_identity_s_TMSI.presence == TRUE) {
 	  LOG_I(RRC,"UE rnti %x:S-TMSI %x failure timer %d/20000\n",
