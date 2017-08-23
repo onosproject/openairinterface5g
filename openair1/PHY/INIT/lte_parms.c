@@ -111,11 +111,11 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     else {
       frame_parms->ofdm_symbol_size = 2048;
       frame_parms->samples_per_tti = 30720;
-#ifdef UE_NR_PHY_DEMO
+//#ifdef UE_NR_PHY_DEMO
       frame_parms->samples_per_subframe = 30720 * frame_parms->ttis_per_subframe;
-#else
-      frame_parms->samples_per_subframe = 30720;
-#endif
+//#else
+//      frame_parms->samples_per_subframe = 30720;
+//#endif
       frame_parms->first_carrier_offset = 2048-600;
     }
     frame_parms->N_RBGS = 4;
