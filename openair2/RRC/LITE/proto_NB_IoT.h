@@ -102,10 +102,10 @@ int rrc_mac_config_req_eNB_NB_IoT(
  * called by phy_procedure_eNB_Tx before calling the npdsch_procedure
  */
 uint32_t is_SIB1_NB_IoT(
-		const frame_t    		frameP,
-		long					schedulingInfoSIB1,//from the mib
-		int						physCellId, //by configuration
-		NB_IoT_eNB_NDLSCH_t		*ndlsch_SIB1
+		const frame_t    	frameP,
+		long					  schedulingInfoSIB1,//from the mib
+		int						  physCellId, //by configuration
+		NB_IoT_eNB_NDLSCH_t	*ndlsch_SIB1
 		);
 //--------------------------------------
 

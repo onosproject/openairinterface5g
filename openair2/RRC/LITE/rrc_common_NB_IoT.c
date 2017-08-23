@@ -94,7 +94,7 @@ rrc_t310_expiration_NB(
 							                  SRB_FLAG_YES,
 							                  CONFIG_ACTION_REMOVE,
 							                  UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
-							                  Rlc_info_am_NB);
+							                  Rlc_info_am_NB_IoT);
 
 
       UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Active = 0;
@@ -123,10 +123,10 @@ void openair_eNB_rrc_on_NB_IoT(
     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" OPENAIR RRC-NB IN....\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
     for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
-      rrc_config_buffer_NB_IoT (&eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].SI, BCCH, 1);
-      eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].SI.Active = 1;
-      rrc_config_buffer_NB_IoT (&eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Srb0, CCCH, 1);
-      eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Srb0.Active = 1;
+      rrc_config_buffer_NB_IoT (&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].SI, BCCH, 1);
+      eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].SI.Active = 1;
+      rrc_config_buffer_NB_IoT (&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0, CCCH, 1);
+      eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Active = 1;
     }
     //no UE side
  }
@@ -162,10 +162,10 @@ int rrc_init_global_param_NB_IoT( void )
   //DCCH_LCHAN_DESC.transport_block_size = 4;....
 
   //Setting of this values????
-  Rlc_info_am_config_NB.rlc_mode = RLC_MODE_AM; //only allowed for NB-IoT
-  Rlc_info_am_config_NB.rlc.rlc_am_info_NB.max_retx_threshold_NB = 50;
-  Rlc_info_am_config_NB.rlc.rlc_am_info_NB.t_poll_retransmit_NB = 15;
-  Rlc_info_am_config_NB.rlc.rlc_am_info_NB.enableStatusReportSN_Gap = NULL; //should be disabled
+  Rlc_info_am_config_NB_IoT.rlc_mode = RLC_MODE_AM; //only allowed for NB-IoT
+  Rlc_info_am_config_NB_IoT.rlc.rlc_am_info_NB.max_retx_threshold_NB = 50;
+  Rlc_info_am_config_NB_IoT.rlc.rlc_am_info_NB.t_poll_retransmit_NB = 15;
+  Rlc_info_am_config_NB_IoT.rlc.rlc_am_info_NB.enableStatusReportSN_Gap = NULL; //should be disabled
 
 
 #ifndef NO_RRM
@@ -251,16 +251,16 @@ void openair_rrc_top_init_eNB_NB_IoT(void)//MP: XXX Raymond put this directly th
 //not consider UE part
 
   if (NB_eNB_INST > 0) {
-    eNB_rrc_inst_NB = (eNB_RRC_INST_NB*) malloc16(NB_eNB_INST*sizeof(eNB_RRC_INST_NB));
-    memset (eNB_rrc_inst_NB, 0, NB_eNB_INST * sizeof(eNB_RRC_INST_NB));
-    LOG_D(RRC, "ALLOCATE %d Bytes for eNB_RRC_INST NB-IoT @ %p\n", (unsigned int)(NB_eNB_INST*sizeof(eNB_RRC_INST_NB)), eNB_rrc_inst_NB);
+    eNB_rrc_inst_NB_IoT = (eNB_RRC_INST_NB_IoT*) malloc16(NB_eNB_INST*sizeof(eNB_RRC_INST_NB_IoT));
+    memset (eNB_rrc_inst_NB_IoT, 0, NB_eNB_INST * sizeof(eNB_RRC_INST_NB_IoT));
+    LOG_D(RRC, "ALLOCATE %d Bytes for eNB_RRC_INST NB-IoT @ %p\n", (unsigned int)(NB_eNB_INST*sizeof(eNB_RRC_INST_NB_IoT)), eNB_rrc_inst_NB_IoT);
 
 //no CBA, no LOcalization, no MBMS flag
 
     LOG_D(RRC,
-          "ALLOCATE %d Bytes for eNB_RRC_INST_NB @ %p\n", (unsigned int)(NB_eNB_INST*sizeof(eNB_RRC_INST_NB)), eNB_rrc_inst_NB);
+          "ALLOCATE %d Bytes for eNB_RRC_INST_NB @ %p\n", (unsigned int)(NB_eNB_INST*sizeof(eNB_RRC_INST_NB_IoT)), eNB_rrc_inst_NB_IoT);
   } else {
-    eNB_rrc_inst_NB = NULL;
+    eNB_rrc_inst_NB_IoT = NULL;
   }
 
 
@@ -293,7 +293,7 @@ rrc_rx_tx_NB_IoT(
               "[UE %d][RAPROC] Frame %d T300 Count %d ms\n", ctxt_pP->module_id, ctxt_pP->frame, UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].T300_cnt);
 
       if (UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].T300_cnt
-          == T300_NB[UE_rrc_inst[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.t300]) {
+          == T300_NB_IoT[UE_rrc_inst[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.t300]) {
         UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].T300_active = 0;
         // ALLOW CCCH to be used
         UE_rrc_inst[ctxt_pP->module_id].Srb0[enb_indexP].Tx_buffer.payload_size = 0;
@@ -384,7 +384,7 @@ rrc_rx_tx_NB_IoT(
     // counter, and get the value and aggregate
 
     // check for UL failure
-    RB_FOREACH(ue_context_p, rrc_ue_tree_NB_s, &(eNB_rrc_inst_NB[ctxt_pP->module_id].rrc_ue_head)) {
+    RB_FOREACH(ue_context_p, rrc_ue_tree_NB_s, &(eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].rrc_ue_head)) {
       if ((ctxt_pP->frame == 0) && (ctxt_pP->subframe==0)) {
 	if (ue_context_p->ue_context.Initialue_identity_s_TMSI.presence == TRUE) {
 	  LOG_I(RRC,"UE rnti %x:S-TMSI %x failure timer %d/20000\n",

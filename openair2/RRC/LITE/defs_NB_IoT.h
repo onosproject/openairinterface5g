@@ -501,7 +501,7 @@ typedef struct {
 
 
 //---NB-IoT---(completely change)---------------------
-typedef struct eNB_RRC_INST_NB_s {
+typedef struct eNB_RRC_INST_NB_IoT_s {
 
   rrc_eNB_carrier_data_NB_t          carrier[MAX_NUM_CCs];
 
@@ -532,7 +532,7 @@ typedef struct eNB_RRC_INST_NB_s {
   int srs_enable[MAX_NUM_CCs];
 
 
-} eNB_RRC_INST_NB;
+} eNB_RRC_INST_NB_IoT;
 
 
 #define MAX_UE_CAPABILITY_SIZE 255

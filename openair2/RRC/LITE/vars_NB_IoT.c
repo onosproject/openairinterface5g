@@ -66,8 +66,8 @@ unsigned short Data_to_read;
 #include "LAYER2/MAC/extern.h"
 #define MAX_U32 0xFFFFFFFF
 
-eNB_RRC_INST_NB *eNB_rrc_inst_NB;
-uint8_t DRB2LCHAN_NB[2];//max can be 2 DRBs for NB_IoT --> it used for saving the LCID of DRBs
+eNB_RRC_INST_NB_IoT *eNB_rrc_inst_NB_IoT;
+uint8_t DRB2LCHAN_NB_IoT[2];//max can be 2 DRBs for NB_IoT --> it used for saving the LCID of DRBs
 
 //structure for FAPI-like configuration (memory for this is allocated in init_SI)
 PHY_Config_t *config_INFO;
@@ -76,11 +76,11 @@ BOOLEAN_t logicalChannelSR_Prohibit = 1;
 long priority =1;
 
 // Default SRB configurations from 36.331 (9.2.1.1 pag 641  V14.2.1)
-struct LogicalChannelConfig_NB_r13 SRB1bis_NB_logicalChannelConfig_defaultValue = {
+struct LogicalChannelConfig_NB_r13 SRB1bis_logicalChannelConfig_defaultValue_NB_IoT = {
 		priority_r13: &priority, //priority
 		logicalChannelSR_Prohibit_r13: &logicalChannelSR_Prohibit //set to TRUE
 };
-struct LogicalChannelConfig_NB_r13 SRB1_NB_logicalChannelConfig_defaultValue = {
+struct LogicalChannelConfig_NB_r13 SRB1_logicalChannelConfig_defaultValue_NB_IoT = {
 		priority_r13: &priority, //priority
 		logicalChannelSR_Prohibit_r13: &logicalChannelSR_Prohibit //set to TRUE
 };
@@ -88,18 +88,18 @@ struct LogicalChannelConfig_NB_r13 SRB1_NB_logicalChannelConfig_defaultValue = {
 
 
 //CONSTANTS
-rlc_info_t Rlc_info_am_NB, Rlc_info_am_config_NB;
+rlc_info_t Rlc_info_am_NB_IoT, Rlc_info_am_config_NB_IoT;
 //MP:  LCHAN_DESC (mac_rrc_primitives) is not needed, was only an old implementation for storing LCH information
 
 
 // timers (TS 36.331 v14.2.1 "UE-TimersAndConstants-NB" pag 622) (milliseconds)
 //seems to be not used or only at UE side
-uint16_t T300_NB[8] = {2500,4000,6000,10000, 15000,25000,40000,60000};
-uint16_t T301_NB[8] = {2500,4000,6000,10000, 15000,25000,40000,60000}; //MP: this start at RRCconnectionReestablishmentReq (not implemented in OAI)
-uint16_t T310_NB[8] = {0,200,500,1000,2000,4000,8000};
-uint16_t T311_NB[8] = {1000, 3000, 5000, 10000, 15000, 20000, 30000}; //MP: may not used
-uint16_t N310_NB[8] = {1,2,3,4,6,8,10,20};
-uint16_t N311_NB[8] = {1,2,3,4,5,6,8,10};
+uint16_t T300_NB_IoT[8] = {2500,4000,6000,10000, 15000,25000,40000,60000};
+uint16_t T301_NB_IoT[8] = {2500,4000,6000,10000, 15000,25000,40000,60000}; //MP: this start at RRCconnectionReestablishmentReq (not implemented in OAI)
+uint16_t T310_NB_IoT[8] = {0,200,500,1000,2000,4000,8000};
+uint16_t T311_NB_IoT[8] = {1000, 3000, 5000, 10000, 15000, 20000, 30000}; //MP: may not used
+uint16_t N310_NB_IoT[8] = {1,2,3,4,6,8,10,20};
+uint16_t N311_NB_IoT[8] = {1,2,3,4,5,6,8,10};
 
 
 // MP: TimeToTrigger not used in NB-IoT

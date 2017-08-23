@@ -40,20 +40,20 @@
 //MP: NOTE:XXX some of the parameters defined in vars_nb_iot are called by the extern.h file so not replicated here
 
 
-extern eNB_RRC_INST_NB *eNB_rrc_inst_NB;
+extern eNB_RRC_INST_NB_IoT *eNB_rrc_inst_NB_IoT;
 extern PHY_Config_t *config_INFO;
 
-extern rlc_info_t Rlc_info_am_NB,Rlc_info_am_config_NB;
-extern uint8_t DRB2LCHAN_NB[2];
-extern LogicalChannelConfig_NB_r13_t SRB1bis_NB_logicalChannelConfig_defaultValue;
-extern LogicalChannelConfig_NB_r13_t SRB1_NB_logicalChannelConfig_defaultValue;
+extern rlc_info_t Rlc_info_am_NB_IoT,Rlc_info_am_config_NB_IoT;
+extern uint8_t DRB2LCHAN_NB_IoT[2];
+extern LogicalChannelConfig_NB_r13_t SRB1bis_logicalChannelConfig_defaultValue_NB_IoT;
+extern LogicalChannelConfig_NB_r13_t SRB1_logicalChannelConfig_defaultValue_NB_IoT;
 
-extern uint16_t T300_NB[8];
-extern uint16_t T301_NB[8];
-extern uint16_t T310_NB[8];
-extern uint16_t T311_NB[8];
-extern uint16_t N310_NB[8];
-extern uint16_t N311_NB[8];
+extern uint16_t T300_NB_IoT[8];
+extern uint16_t T301_NB_IoT[8];
+extern uint16_t T310_NB_IoT[8];
+extern uint16_t T311_NB_IoT[8];
+extern uint16_t N310_NB_IoT[8];
+extern uint16_t N311_NB_IoT[8];
 
 #endif
 

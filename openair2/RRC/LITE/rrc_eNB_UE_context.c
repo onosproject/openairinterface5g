@@ -207,7 +207,7 @@ uid_linear_allocator_init_NB(
 //------------------------------------------------------------------------------
 uid_t
 uid_linear_allocator_new_NB(
-  eNB_RRC_INST_NB* const rrc_instance_pP
+  eNB_RRC_INST_NB_IoT* const rrc_instance_pP
 )
 //------------------------------------------------------------------------------
 {
@@ -237,7 +237,7 @@ uid_linear_allocator_new_NB(
 //------------------------------------------------------------------------------
 void
 uid_linear_allocator_free_NB(
-  eNB_RRC_INST_NB* rrc_instance_pP,
+  eNB_RRC_INST_NB_IoT* rrc_instance_pP,
   uid_t uidP
 )
 //------------------------------------------------------------------------------
@@ -276,7 +276,7 @@ RB_GENERATE(rrc_ue_tree_NB_s, rrc_eNB_ue_context_NB_s, entries,
 //------------------------------------------------------------------------------
 struct rrc_eNB_ue_context_NB_s*
 rrc_eNB_allocate_new_UE_context_NB(
-  eNB_RRC_INST_NB* rrc_instance_pP
+  eNB_RRC_INST_NB_IoT* rrc_instance_pP
 )
 //------------------------------------------------------------------------------
 {
@@ -296,7 +296,7 @@ rrc_eNB_allocate_new_UE_context_NB(
 
 struct rrc_eNB_ue_context_NB_s*
 rrc_eNB_get_ue_context_NB(
-  eNB_RRC_INST_NB* rrc_instance_pP,
+  eNB_RRC_INST_NB_IoT* rrc_instance_pP,
   rnti_t rntiP)
 //------------------------------------------------------------------------------
 {
@@ -310,7 +310,7 @@ rrc_eNB_get_ue_context_NB(
 //------------------------------------------------------------------------------
 void rrc_eNB_remove_ue_context_NB(
   const protocol_ctxt_t* const ctxt_pP,
-  eNB_RRC_INST_NB*                rrc_instance_pP,
+  eNB_RRC_INST_NB_IoT*                rrc_instance_pP,
   struct rrc_eNB_ue_context_NB_s* ue_context_pP)
 //------------------------------------------------------------------------------
 {

@@ -92,12 +92,12 @@ uid_linear_allocator_init_NB(
 
 uid_t
 uid_linear_allocator_new_NB(
-  eNB_RRC_INST_NB* const rrc_instance_pP
+  eNB_RRC_INST_NB_IoT* const rrc_instance_pP
 );
 
 void
 uid_linear_allocator_free_NB(
-  eNB_RRC_INST_NB* rrc_instance_pP,
+  eNB_RRC_INST_NB_IoT* rrc_instance_pP,
   uid_t uidP
 );
 
@@ -109,17 +109,17 @@ RB_PROTOTYPE(rrc_ue_tree_NB_s, rrc_eNB_ue_context_NB_s, entries, rrc_eNB_compare
 
 struct rrc_eNB_ue_context_NB_s*
 rrc_eNB_allocate_new_UE_context_NB(
-  eNB_RRC_INST_NB* rrc_instance_pP
+  eNB_RRC_INST_NB_IoT* rrc_instance_pP
 );
 
 struct rrc_eNB_ue_context_NB_s*
 rrc_eNB_get_ue_context_NB(
-  eNB_RRC_INST_NB* rrc_instance_pP,
+  eNB_RRC_INST_NB_IoT* rrc_instance_pP,
   rnti_t rntiP);
 
 void rrc_eNB_remove_ue_context_NB(
   const protocol_ctxt_t* const ctxt_pP,
-  eNB_RRC_INST_NB*                rrc_instance_pP,
+  eNB_RRC_INST_NB_IoT*                rrc_instance_pP,
   struct rrc_eNB_ue_context_NB_s* ue_context_pP);
 
 #endif

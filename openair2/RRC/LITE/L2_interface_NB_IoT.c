@@ -1129,33 +1129,33 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
       if(mib_flag == MIB_FLAG_YES){
 
     	  //XXX to be check when MIB-NB should be initialized
-    	  if (eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_MIB_NB == 255) {
+    	  if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB == 255) {
     	       LOG_E(RRC,"[eNB %d] MAC Request for MIB-NB and MIB-NB not initialized\n",Mod_idP);
     	       mac_xface->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for MIB-NB and MIB-NB not initialized");
     	   }
 
     	  memcpy(&buffer_pP[0],
-    	      	eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].MIB_NB,
-    	      	eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_MIB_NB);
+    	      	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].MIB_NB,
+    	      	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB);
 
     	  	//XXX RRC_MAC_BCCH_DATA_REQ message not implemented in MAC layer (eNB_scheduler.c under ITTI)
 
     	  	#ifdef DEBUG_RRC
     	      LOG_T(RRC,"[eNB %d] Frame %d : BCCH request => MIB_NB\n",Mod_idP,frameP);
 
-    	     for (i=0; i<eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_MIB_NB; i++) {
+    	     for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB; i++) {
     	      		    LOG_T(RRC,"%x.",buffer_pP[i]);
     	      	}
 
     	      		    LOG_T(RRC,"\n");
     	    #endif
 
-    	    return (eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_MIB_NB); //exit from the function
+    	    return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB); //exit from the function
       }
 
       //Requesting for SI Message
       //XXX to be check when it is initialized
-      if(eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SI.Active==0) { //is set when we call openair_rrc_on function
+      if(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SI.Active==0) { //is set when we call openair_rrc_on function
     	  LOG_E(RRC, "SI value on the carrier = 0");
         return 0;
       }
@@ -1168,12 +1168,12 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
 
       /*check if SIBs are initialized*/
       //FIXME to be check when both are initialize and if make sense to have it
-            if (eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB1_NB == 255) {
+            if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB == 255) {
               LOG_E(RRC,"[eNB %d] MAC Request for SIB1-NB and SIB1-NB not initialized\n",Mod_idP);
               mac_xface->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB1-NB and SIB1-NB not initialized");
             }
 
-            if (eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB23_NB == 255) {
+            if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB == 255) {
                     LOG_E(RRC,"[eNB %d] MAC Request for SIB23-NB and SIB23-NB not initialized\n",Mod_idP);
                     mac_xface->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB23-NB and SIB23-NB not initialized");
             }
@@ -1185,8 +1185,8 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
          if(subframeP == 4 && is_SIB1_start_NB_IoT(frameP,schedulingInfoSIB1, physCellId)!= -1){
 
 			  memcpy(&buffer_pP[0],
-					  eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SIB1_NB,
-					  eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB1_NB);
+					  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB1_NB,
+					  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB);
 
 			  //XXX RRC_MAC_BCCH_DATA_REQ message not implemented in MAC layer (eNB_scheduler.c under ITTI)
 
@@ -1194,41 +1194,41 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
 			#ifdef DEBUG_RRC
 			   LOG_T(RRC,"[eNB %d] Frame %d : BCCH request => SIB1_NB\n",Mod_idP,frameP);
 
-			   for (i=0; i<eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB1_NB; i++) {
+			   for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB; i++) {
 			    LOG_T(RRC,"%x.",buffer_pP[i]);
 			    }
 
 			    LOG_T(RRC,"\n");
 			#endif
 
-			    return (eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB1_NB);
+			    return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB);
          }
 
          //check for SIB23-Transmission
 
-         for(int i = 0; i<  eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sib1_NB->schedulingInfoList_r13.list.count; i++){
+         for(int i = 0; i<  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB->schedulingInfoList_r13.list.count; i++){
         	 if(is_SIB23_NB_IoT(frameP,h_frameP,
-        		 eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sib1_NB->schedulingInfoList_r13.list.array[i]->si_Periodicity_r13,
-				 eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sib1_NB->si_WindowLength_r13,
-				 eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sib1_NB->si_RadioFrameOffset_r13,
-				 eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sib1_NB->schedulingInfoList_r13.list.array[i]->si_RepetitionPattern_r13))
+        		 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB->schedulingInfoList_r13.list.array[i]->si_Periodicity_r13,
+				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB->si_WindowLength_r13,
+				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB->si_RadioFrameOffset_r13,
+				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB->schedulingInfoList_r13.list.array[i]->si_RepetitionPattern_r13))
         	 {
 
         	 memcpy(&buffer_pP[0],
-        			eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].SIB23_NB,
-        	    	eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB23_NB);
+        			eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB23_NB,
+        	    	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB);
 
         	    #ifdef DEBUG_RRC
         	    	LOG_T(RRC,"[eNB %d] Frame %d BCCH request => SIB 2-3\n",Mod_idP,frameP);
 
-        	    	for (i=0; i<eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB23_NB; i++) {
+        	    	for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB; i++) {
         	    		    LOG_T(RRC,"%x.",buffer_pP[i]);
         	    		 }
 
         	    		 LOG_T(RRC,"\n");
         	    #endif
 
-        	    return(eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].sizeof_SIB23_NB);
+        	    return(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB);
         	 }
          }
         return(0);
@@ -1238,12 +1238,12 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
     if( (Srb_id & RAB_OFFSET ) == CCCH) {
       LOG_T(RRC,"[eNB %d] Frame %d CCCH request (Srb_id %d)\n",Mod_idP,frameP, Srb_id);
 
-      if(eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].Srb0.Active==0) {
+      if(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].Srb0.Active==0) {
         LOG_E(RRC,"[eNB %d] CCCH Not active\n",Mod_idP);
         return -1;
       }
 
-      Srb_info=&eNB_rrc_inst_NB[Mod_idP].carrier[CC_id].Srb0;
+      Srb_info=&eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].Srb0;
 
       // check if data is there for MAC
       if(Srb_info->Tx_buffer.payload_size>0) { //Fill buffer
@@ -1286,7 +1286,7 @@ int8_t NB_mac_rrc_data_ind_eNB(
 
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, rntiP, frameP, sub_frameP,module_idP);
 
-    Srb_info = &eNB_rrc_inst_NB[module_idP].carrier[CC_id].Srb0;
+    Srb_info = &eNB_rrc_inst_NB_IoT[module_idP].carrier[CC_id].Srb0;
     LOG_T(RRC,"[eNB %d] Received SDU for CCCH on SRB %d\n",module_idP,Srb_info->Srb_id);
 
 
@@ -1337,7 +1337,7 @@ void mac_eNB_rrc_ul_failure_NB_IoT(
 {
   struct rrc_eNB_ue_context_NB_s* ue_context_p = NULL;
   ue_context_p = rrc_eNB_get_ue_context_NB(
-                   &eNB_rrc_inst_NB[mod_idP],
+                   &eNB_rrc_inst_NB_IoT[mod_idP],
                    rntiP);
 
   if (ue_context_p != NULL) {
@@ -1443,7 +1443,7 @@ void mac_eNB_rrc_ul_in_sync_NB_IoT(
 {
   struct rrc_eNB_ue_context_NB_s* ue_context_p = NULL;
   ue_context_p = rrc_eNB_get_ue_context_NB(
-                   &eNB_rrc_inst_NB[mod_idP],
+                   &eNB_rrc_inst_NB_IoT[mod_idP],
                    rntiP);
 
   if (ue_context_p != NULL) {
@@ -1464,7 +1464,7 @@ int mac_eNB_get_rrc_status_NB_IoT(
 {
   struct rrc_eNB_ue_context_NB_s* ue_context_p = NULL;
   ue_context_p = rrc_eNB_get_ue_context_NB(
-                   &eNB_rrc_inst_NB[Mod_idP],
+                   &eNB_rrc_inst_NB_IoT[Mod_idP],
                    rntiP);
 
   if (ue_context_p != NULL) {
