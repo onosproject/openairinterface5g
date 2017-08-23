@@ -665,9 +665,9 @@ int lte_dl_channel_estimation(PHY_VARS_UE *ue,
 
                 uint8_t previous_tti;
                 if(Ns>>1 == 0)
-                    previous_tti = 10*ue->frame_parms.ttis_per_subframe-1;
+                    previous_tti = LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*ue->frame_parms.ttis_per_subframe-1;
                 else
-                    previous_tti = ((Ns>>1) - 1 )%(ue->frame_parms.ttis_per_subframe-1);
+                    previous_tti = ((Ns>>1) - 1 )%(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*ue->frame_parms.ttis_per_subframe-1);
 
                 if((subframe_select(&ue->frame_parms,previous_tti) == SF_UL))
                 {
