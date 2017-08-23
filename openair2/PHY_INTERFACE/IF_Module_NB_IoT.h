@@ -78,7 +78,7 @@ typedef struct{
 	module_id_t mod_id;
 	int CC_id;
 	uint16_t rnti;
-	int get_MIB; //should be different from 0 only when the mib!= null (NB_rrc_mac_config_req_eNB)
+	int get_MIB; //should be different from 0 only when the mib!= null (NB_rrc_mac_config_req_eNB_IoT)
 	int get_COMMON;
 	int get_DEDICATED;
 

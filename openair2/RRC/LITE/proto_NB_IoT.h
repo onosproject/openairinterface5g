@@ -41,13 +41,13 @@
 
 /** \brief configure  BCCH & CCCH Logical Channels and associated rrc_buffers, configure associated SRBs
  */
-void openair_rrc_on_NB(const protocol_ctxt_t* const ctxt_pP);
+void openair_rrc_on_NB_IoT(const protocol_ctxt_t* const ctxt_pP);
 
-void rrc_config_buffer_NB(SRB_INFO_NB *srb_info, uint8_t Lchan_type, uint8_t Role);
+void rrc_config_buffer_NB_IoT(SRB_INFO_NB *srb_info, uint8_t Lchan_type, uint8_t Role);
 
-int L3_xface_init_NB(void);
+int L3_xface_init_NB_IoT(void);
 
-void openair_rrc_top_init_eNB_NB(void);
+void openair_rrc_top_init_eNB_NB_IoT(void);
 
 //void rrc_top_cleanup(void); -->seems not to be used
 
@@ -58,7 +58,7 @@ void openair_rrc_top_init_eNB_NB(void);
 @param enb_index
 @param CC_id
 */
-RRC_status_t rrc_rx_tx_NB(protocol_ctxt_t* const ctxt_pP, const uint8_t  enb_index, const int CC_id);
+RRC_status_t rrc_rx_tx_NB_IoT(protocol_ctxt_t* const ctxt_pP, const uint8_t  enb_index, const int CC_id);
 
 //long binary_search_int(int elements[], long numElem, int value);--> seems not to be used
 //long binary_search_float(float elements[], long numElem, float value);--> used only at UE side
@@ -67,7 +67,7 @@ RRC_status_t rrc_rx_tx_NB(protocol_ctxt_t* const ctxt_pP, const uint8_t  enb_ind
 
 //defined in MAC/config.c
 //FIXME: this function has no implication in terms of logical channel configuration for MAC
-int NB_rrc_mac_config_req_eNB(
+int rrc_mac_config_req_eNB_NB_IoT(
 			   module_id_t       				Mod_idP,
 			   int                              CC_idP,
 			   int								rntiP,
@@ -127,7 +127,7 @@ uint8_t is_SIB1_start_NB_IoT(
  * called by the NB_mac_rrc_data_req
  *
  */
-boolean_t is_SIB23_NB(
+boolean_t is_SIB23_NB_IoT(
 		const frame_t     	frameP,
 		const frame_t		h_frameP, // the HSFN (increased by 1 every SFN wrap around) (10 bits)
 		long				si_period, //SI-periodicity (rf)
@@ -139,7 +139,7 @@ boolean_t is_SIB23_NB(
 
 
 //defined in L2_interface
-int8_t NB_mac_rrc_data_req_eNB(
+int8_t mac_rrc_data_req_eNB_NB_IoT(
   const module_id_t Mod_idP,
   const int         CC_id,
   const frame_t     frameP,
@@ -156,7 +156,7 @@ int8_t NB_mac_rrc_data_req_eNB(
 
 //defined in L2_interface
 //called by rx_sdu only in case of CCCH message (e.g RRCConnectionRequest-NB)
-int8_t NB_mac_rrc_data_ind_eNB(
+int8_t mac_rrc_data_ind_eNB_NB_IoT(
   const module_id_t     module_idP,
   const int             CC_id,
   const frame_t         frameP,
@@ -169,12 +169,12 @@ int8_t NB_mac_rrc_data_ind_eNB(
 //-------------------------------------------
 
 //defined in L2_interface
-void dump_ue_list_NB(UE_list_NB_IoT_t *listP, int ul_flag);
+void dump_ue_list_NB_IoT(UE_list_NB_IoT_t *listP, int ul_flag);
 //-------------------------------------------
 
 
 //defined in L2_interface
-void NB_mac_eNB_rrc_ul_failure(
+void mac_eNB_rrc_ul_failure_NB_IoT(
 		const module_id_t mod_idP,
 	    const int CC_idP,
 	    const frame_t frameP,
@@ -188,7 +188,7 @@ int rrc_mac_remove_ue_NB_IoT(
 		rnti_t rntiP);
 //------------------------------------------
 //defined in L2_interface
-void NB_mac_eNB_rrc_ul_in_sync(
+void mac_eNB_rrc_ul_in_sync_NB_IoT(
 				const module_id_t mod_idP,
 			    const int CC_idP,
 			    const frame_t frameP,
@@ -196,15 +196,14 @@ void NB_mac_eNB_rrc_ul_in_sync(
 			    const rnti_t rntiP);
 //------------------------------------------
 //defined in L2_interface
-int NB_mac_eNB_get_rrc_status(
+int mac_eNB_get_rrc_status_NB_IoT(
   const module_id_t Mod_idP,
   const rnti_t      rntiP
 );
 //---------------------------
 
 //----------------------------------------
-int
-NB_pdcp_apply_security(
+int pdcp_apply_security_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   pdcp_t        *const pdcp_pP,
   const srb_flag_t     srb_flagP,
@@ -219,7 +218,7 @@ NB_pdcp_apply_security(
 
 //XXX for the moment we not configure PDCP for SRB1bis (but used as it is SRB1)
 //defined in pdcp.c
-boolean_t NB_rrc_pdcp_config_asn1_req (
+boolean_t rrc_pdcp_config_asn1_req_NB_IoT (
   const protocol_ctxt_t* const  ctxt_pP,
   SRB_ToAddModList_NB_r13_t  *const srb2add_list_pP,
   DRB_ToAddModList_NB_r13_t  *const drb2add_list_pP,
@@ -235,8 +234,7 @@ boolean_t NB_rrc_pdcp_config_asn1_req (
 
 //defined in pdcp.c --> should be called only by a SRB1 (is internal to PDCP so is not an interface)
 //-----------------------------------------------------------------------------
-boolean_t
-NB_pdcp_config_req_asn1 (
+boolean_t pdcp_config_req_asn1_NB_IoT (
   const protocol_ctxt_t* const  ctxt_pP,
   pdcp_t         * const        pdcp_pP,
   const srb_flag_t              srb_flagP,
@@ -256,7 +254,7 @@ NB_pdcp_config_req_asn1 (
 //defined in L2_interface/pdcp.c
 //FIXME SRB1bis should bypass the pdcp
 //Distinction between different SRBs will be done by means of rd_id
-uint8_t NB_rrc_data_req(
+uint8_t rrc_data_req_NB_IoT(
   const protocol_ctxt_t*   const ctxt_pP,
   const rb_id_t                  rb_idP,
   const mui_t                    muiP,
@@ -267,7 +265,7 @@ uint8_t NB_rrc_data_req(
 );
 //-------------------------------------------------------------
 //we distinguish the SRBs based on the logical channel id and the transmission mode
-boolean_t NB_pdcp_data_req(
+boolean_t pdcp_data_req_NB_IoT(
   protocol_ctxt_t*  ctxt_pP,
   const srb_flag_t     srb_flagP, //SRB_FLAG_YES if called by RRC
   const rb_id_t        rb_idP,
@@ -281,7 +279,7 @@ boolean_t NB_pdcp_data_req(
 //----------------------------------------------------------------
 
 //defined in L2_interface
-void NB_rrc_data_ind(
+void rrc_data_ind_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   const rb_id_t                Srb_id,
   const sdu_size_t             sdu_sizeP,
@@ -291,7 +289,7 @@ void NB_rrc_data_ind(
 //------------------------------------------------------------------------------
 
 //defined in rlc_rrc.c
-rlc_op_status_t NB_rrc_rlc_config_asn1_req (
+rlc_op_status_t rrc_rlc_config_asn1_req_NB_IoT (
 	const protocol_ctxt_t   * const ctxt_pP,
     const SRB_ToAddModList_NB_r13_t   * const srb2add_listP,
     const DRB_ToAddModList_NB_r13_t   * const drb2add_listP,
@@ -301,7 +299,7 @@ rlc_op_status_t NB_rrc_rlc_config_asn1_req (
 //-------------------------------------------------------------------------
 
 // defined in rlc_am.c
-void NB_config_req_rlc_am_asn1 (
+void config_req_rlc_am_asn1_NB_IoT (
   const protocol_ctxt_t* const         ctxt_pP,
   const srb_flag_t                     srb_flagP,
   const struct RLC_Config_NB_r13__am  * const config_am_pP, //extracted from the srb_toAddMod
@@ -311,8 +309,7 @@ void NB_config_req_rlc_am_asn1 (
 
 //defined in rlc_am_init.c
 //------------------------------------------------------------
-void
-NB_rlc_am_configure(
+void rlc_am_configure_NB_IoT(
   const protocol_ctxt_t* const  ctxt_pP,
   rlc_am_entity_t *const        rlc_pP,
   const uint16_t                max_retx_thresholdP,
@@ -323,7 +320,7 @@ NB_rlc_am_configure(
 
 //defined in rlc_rrc.c
 //-------------------------------------------------------------
-rlc_union_t* NB_rrc_rlc_add_rlc   (
+rlc_union_t* rrc_rlc_add_rlc_NB_IoT (
   const protocol_ctxt_t* const ctxt_pP,
   const srb_flag_t        srb_flagP,
   const rb_id_t           rb_idP,
@@ -333,7 +330,7 @@ rlc_union_t* NB_rrc_rlc_add_rlc   (
 
 //defined in rlc_rrc.c
 //--------------------------------------------------------------
-rlc_op_status_t NB_rrc_rlc_remove_rlc   (
+rlc_op_status_t rrc_rlc_remove_rlc_NB_IoT (
   const protocol_ctxt_t* const ctxt_pP,
   const srb_flag_t  srb_flagP,
   const rb_id_t     rb_idP);
@@ -341,7 +338,7 @@ rlc_op_status_t NB_rrc_rlc_remove_rlc   (
 
 //defined in rlc_rrc.c //used only for process_RRCConnectionReconfigurationComplete --> CONFIG_ACTION_REMOVE
 //used also for rrc_t310_expiration --> I don't know if it is used (probably not)
-rlc_op_status_t NB_rrc_rlc_config_req   (
+rlc_op_status_t rrc_rlc_config_req_NB_IoT (
   const protocol_ctxt_t* const ctxt_pP,
   const srb_flag_t      srb_flagP,
   const config_action_t actionP,
@@ -352,8 +349,7 @@ rlc_op_status_t NB_rrc_rlc_config_req   (
 
 //defined in rlc_am.c
 //------------------------------------------------------
-void
-NB_config_req_rlc_am (
+void config_req_rlc_am_NB_IoT (
   const protocol_ctxt_t* const ctxt_pP,
   const srb_flag_t             srb_flagP,
   rlc_am_info_NB_t  * const       config_am_pP, //XXX: MP: rlc_am_init.c --> this structure has been modified for NB-IoT
@@ -364,7 +360,7 @@ NB_config_req_rlc_am (
 
 //defined in rlc_tm_init.c (nothing to be changed)
 //-----------------------------------------------------------------------------
-void NB_config_req_rlc_tm (
+void config_req_rlc_tm_NB_IoT (
   const protocol_ctxt_t* const  ctxt_pP,
   const srb_flag_t  srb_flagP,
   const rlc_tm_info_t * const config_tmP,
@@ -373,13 +369,13 @@ void NB_config_req_rlc_tm (
 );
 //------------------------------------------------------
 //defined in rlc_rrc.c
-rlc_op_status_t NB_rrc_rlc_remove_ue (
+rlc_op_status_t rrc_rlc_remove_ue_NB_IoT (
   const protocol_ctxt_t* const ctxt_pP);
 //----------------------------------------------------
 
 //defined in rlc.c
 //--------------------------------------------
-void NB_rlc_data_ind     (
+void rlc_data_ind_NB_IoT  (
   const protocol_ctxt_t* const ctxt_pP,
   const srb_flag_t  srb_flagP,
   const srb1bis_flag_t srb1bis_flag,
@@ -390,27 +386,26 @@ void NB_rlc_data_ind     (
 
 //defined in rlc.c
 //-----------------------------------------------------------------------------
-rlc_op_status_t NB_rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
-                                  const srb_flag_t   srb_flagP,
-                                  const rb_id_t      rb_idP,
-                                  const mui_t        muiP,
-                                  confirm_t    confirmP,
-                                  sdu_size_t   sdu_sizeP,
-                                  mem_block_t *sdu_pP);
+rlc_op_status_t rlc_data_req_NB_IoT  (const protocol_ctxt_t* const ctxt_pP,
+                                      const srb_flag_t   srb_flagP,
+                                      const rb_id_t      rb_idP,
+                                      const mui_t        muiP,
+                                      confirm_t    confirmP,
+                                      sdu_size_t   sdu_sizeP,
+                                      mem_block_t *sdu_pP);
 //-----------------------------------------------------------------------------
 
 
 //defined in rlc_rrc.c --> NO MORE USED PROBABLY
 //------------------------------------------------------------------------------
-void rrc_rlc_register_rrc_NB (rrc_data_ind_cb_NB_t NB_rrc_data_indP, rrc_data_conf_cb_t rrc_data_confP);
+void rrc_rlc_register_rrc_NB_IoT (rrc_data_ind_cb_NB_t NB_rrc_data_indP, rrc_data_conf_cb_t rrc_data_confP);
 
 
 
 //defined in pdcp.c
 //FIXME: should go transparent through the PDCP
 //--------------------------------------------
-boolean_t
-NB_pdcp_data_ind(
+boolean_t pdcp_data_ind_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   const srb_flag_t   srb_flagP,
   const srb1bis_flag_t srb1bis_flag,
@@ -421,7 +416,7 @@ NB_pdcp_data_ind(
 //---------------------------------------------
 
 //defined in rlc_mac.c
-void NB_mac_rlc_data_ind     (
+void mac_rlc_data_ind_NB_IoT (
   const module_id_t         module_idP,
   const rnti_t              rntiP,
   const module_id_t         eNB_index,
@@ -436,8 +431,7 @@ void NB_mac_rlc_data_ind     (
 //-------------------------------------------
 
 //defined in rlc_am.c
-void
-NB_rlc_am_mac_data_indication (
+void rlc_am_mac_data_indication_NB_IoT (
   const protocol_ctxt_t* const ctxt_pP,
   void * const                 rlc_pP,
   struct mac_data_ind          data_indP
@@ -446,7 +440,7 @@ NB_rlc_am_mac_data_indication (
 
 //defined in rlc_mac.c
 //called by the schedule_ue_spec for getting SDU to be transmitted from SRB1/SRB1bis and DRBs
-tbs_size_t NB_mac_rlc_data_req_eNB(
+tbs_size_t mac_rlc_data_req_eNB_NB_IoT(
   const module_id_t       module_idP,
   const rnti_t            rntiP,
   const eNB_index_t       eNB_index,
@@ -461,20 +455,17 @@ tbs_size_t NB_mac_rlc_data_req_eNB(
 /*-----------eNB procedures (rrc_eNB_nb_iot.c)---------------*/
 
 //---Initialization--------------
-void
-openair_eNB_rrc_on_NB(
+void openair_eNB_rrc_on_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP
 );
 
-void
-rrc_config_buffer_NB(
+void rrc_config_buffer_NB_IoT(
   SRB_INFO_NB* Srb_info,
   uint8_t Lchan_type,
   uint8_t Role
 );
 
-char
-openair_rrc_eNB_configuration_NB(
+char openair_rrc_eNB_configuration_NB_IoT(
   const module_id_t enb_mod_idP,
   RrcConfigurationReq* configuration
 );
@@ -482,13 +473,12 @@ openair_rrc_eNB_configuration_NB(
 //-----------------------------
 /**\brief RRC eNB task. (starting of the RRC state machine)
    \param void *args_p Pointer on arguments to start the task. */
-void *rrc_enb_task_NB(void *args_p);
+void *rrc_enb_task_NB_IoT(void *args_p);
 
 /**\brief Entry routine to decode a UL-CCCH-Message-NB.  Invokes PER decoder and parses message.
    \param ctxt_pP Running context
    \param Srb_info Pointer to SRB0 information structure (buffer, etc.)*/
-int
-rrc_eNB_decode_ccch_NB(
+int rrc_eNB_decode_ccch_NB_IoT(
   protocol_ctxt_t* const ctxt_pP,
   const SRB_INFO_NB*        const Srb_info,
   const int              CC_id
@@ -498,8 +488,7 @@ rrc_eNB_decode_ccch_NB(
    \param ctxt_pP Context
    \param Rx_sdu Pointer Received Message
    \param sdu_size Size of incoming SDU*/
-int
-rrc_eNB_decode_dcch_NB(
+int rrc_eNB_decode_dcch_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   const rb_id_t                Srb_id,
   const uint8_t*    const      Rx_sdu,
@@ -510,29 +499,25 @@ rrc_eNB_decode_dcch_NB(
    \param ctxt_pP       Running context
    \param ue_context_pP UE context
    \param CC_id         Component Carrier ID*/
-void
-rrc_eNB_generate_RRCConnectionReestablishmentReject_NB(
+void rrc_eNB_generate_RRCConnectionReestablishmentReject_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*          const ue_context_pP,
   const int                    CC_id
 );
 
-void
-rrc_eNB_generate_RRCConnectionReject_NB(
+void rrc_eNB_generate_RRCConnectionReject_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*          const ue_context_pP,
   const int                    CC_id
 );
 
-void
-rrc_eNB_generate_RRCConnectionSetup_NB(
+void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*          const ue_context_pP,
   const int                    CC_id
 );
 
-void
-rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
+void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*        ue_context_pP,
   const uint8_t xid //transaction identifier
@@ -540,52 +525,46 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 
 
 void //was under ITTI
-rrc_eNB_reconfigure_DRBs_NB(const protocol_ctxt_t* const ctxt_pP,
+rrc_eNB_reconfigure_DRBs_NB_IoT(const protocol_ctxt_t* const ctxt_pP,
 			       rrc_eNB_ue_context_NB_t*  ue_context_pP);
 
 void //was under ITTI
-rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
+rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 		const protocol_ctxt_t* const ctxt_pP,
 	    rrc_eNB_ue_context_NB_t*          const ue_context_pP
         //no ho state
 	     );
 
-void
-rrc_eNB_process_RRCConnectionSetupComplete_NB(
+void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*         ue_context_pP,
   RRCConnectionSetupComplete_NB_r13_IEs_t * rrcConnectionSetupComplete_NB
 );
 
-void
-rrc_eNB_generate_SecurityModeCommand_NB(
+void rrc_eNB_generate_SecurityModeCommand_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*          const ue_context_pP
 );
 
-void
-rrc_eNB_generate_UECapabilityEnquiry_NB(
+void rrc_eNB_generate_UECapabilityEnquiry_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*          const ue_context_pP
 );
 
-void
-rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* const ctxt_pP,
-						     rrc_eNB_ue_context_NB_t*          const ue_context_pP
-						//no HO flag
-						     );
+void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_ctxt_t* const ctxt_pP,
+						                                                     rrc_eNB_ue_context_NB_t*          const ue_context_pP
+						                                                     //no HO flag
+						                                                    );
 
 
 /// Utilities------------------------------------------------
 
-void
-rrc_eNB_free_UE_NB(
+void rrc_eNB_free_UE_NB_IoT(
 		const module_id_t enb_mod_idP,
 		const struct rrc_eNB_ue_context_NB_s*        const ue_context_pP
 		);
 
-void
-rrc_eNB_free_mem_UE_context_NB(
+void rrc_eNB_free_mem_UE_context_NB_IoT(
   const protocol_ctxt_t*               const ctxt_pP,
   struct rrc_eNB_ue_context_NB_s*         const ue_context_pP
 );
@@ -595,7 +574,7 @@ rrc_eNB_free_mem_UE_context_NB(
 /**\brief Function to get the next transaction identifier.
    \param module_idP Instance ID for CH/eNB
    \return a transaction identifier*/
-uint8_t rrc_eNB_get_next_transaction_identifier_NB(module_id_t module_idP);
+uint8_t rrc_eNB_get_next_transaction_identifier_NB_IoT(module_id_t module_idP);
 
 
 int rrc_init_global_param_NB_IoT(void);

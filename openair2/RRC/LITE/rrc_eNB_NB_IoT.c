@@ -105,15 +105,14 @@ extern void*                        bigphys_malloc(int);
 
 
 /*the Message Unit Identifieer (MUI) is an Identity of the RLC SDU, whic is used to indicate which RLC SDU that is confirmed
- * with the RLC-AM-Data-conf. e.g. ((struct rlc_am_data_req *) (new_sdu_p->data))->mui (NB_rlc_data_req)
+ * with the RLC-AM-Data-conf. e.g. ((struct rlc_am_data_req *) (new_sdu_p->data))->mui (rlc_data_req_NB_IoT)
  */
 mui_t                               rrc_eNB_mui_NB = 0;
 
 
 
 // should be called when UE is lost by eNB
-void
-rrc_eNB_free_UE_NB(const module_id_t enb_mod_idP,const struct rrc_eNB_ue_context_NB_s*        const ue_context_pP)
+void rrc_eNB_free_UE_NB_IoT(const module_id_t enb_mod_idP,const struct rrc_eNB_ue_context_NB_s*        const ue_context_pP)
 //-----------------------------------------------------------------------------
 {
 
@@ -187,7 +186,7 @@ rrc_eNB_generate_RRCConnectionRelease_NB(
 
   size = do_RRCConnectionRelease_NB(ctxt_pP->module_id,
 		  	  	  	  	  	  	  	  buffer,
-									  rrc_eNB_get_next_transaction_identifier_NB(ctxt_pP->module_id));
+									  rrc_eNB_get_next_transaction_identifier_NB_IoT(ctxt_pP->module_id));
   // set release timer
   ue_context_pP->ue_context.ue_release_timer=1;
   // remove UE after 10 frames after RRCConnectionRelease is triggered
@@ -228,8 +227,7 @@ rrc_eNB_generate_RRCConnectionRelease_NB(
 
 
 //-----------------------------------------------------------------------------
-void
-rrc_eNB_generate_RRCConnectionReestablishmentReject_NB(
+void rrc_eNB_generate_RRCConnectionReestablishmentReject_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*          const ue_context_pP,
   const int                    CC_id
@@ -275,8 +273,7 @@ rrc_eNB_generate_RRCConnectionReestablishmentReject_NB(
 }
 
 //-----------------------------------------------------------------------------
-void
-rrc_eNB_free_mem_UE_context_NB(
+void rrc_eNB_free_mem_UE_context_NB_IoT(
   const protocol_ctxt_t*               const ctxt_pP,
   struct rrc_eNB_ue_context_NB_s*         const ue_context_pP
 )
@@ -423,8 +420,7 @@ rrc_eNB_ue_context_stmsi_exist_NB(
 }
 
 //-----------------------------------------------------------------------------
-uint8_t
-rrc_eNB_get_next_transaction_identifier_NB(
+uint8_t rrc_eNB_get_next_transaction_identifier_NB_IoT(
   module_id_t enb_mod_idP
 )
 //-----------------------------------------------------------------------------
@@ -436,8 +432,7 @@ rrc_eNB_get_next_transaction_identifier_NB(
 }
 
 //-----------------------------------------------------------------------------
-void
-rrc_eNB_generate_RRCConnectionReject_NB(
+void rrc_eNB_generate_RRCConnectionReject_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*          const ue_context_pP,
   const int                    CC_id
@@ -482,8 +477,7 @@ rrc_eNB_generate_RRCConnectionReject_NB(
 }
 
 //-----------------------------------------------------------------------------
-void
-rrc_eNB_generate_RRCConnectionSetup_NB(
+void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*          const ue_context_pP,
   const int                    CC_id
@@ -565,7 +559,7 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
         //XXX: Maybe some problem if Connection Setup could be called also after security activation
 
         //configure the MAC for SRB1bis/SRb1 (but in principle this configuration should be not LCID dependent)
-        NB_rrc_mac_config_req_eNB(
+        rrc_mac_config_req_eNB_NB_IoT(
           ctxt_pP->module_id,
           ue_context_pP->ue_context.primaryCC_id,
           ue_context_pP->ue_context.rnti,
@@ -619,8 +613,7 @@ rrc_eNB_generate_RRCConnectionSetup_NB(
 }
 
 //-----------------------------------------------------------------------------
-void
-rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
+void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*        ue_context_pP,
   const uint8_t xid //transaction identifier
@@ -679,7 +672,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
     MSC_AS_TIME_ARGS(ctxt_pP),
     ue_context_pP->ue_context.rnti);
 
-  NB_rrc_pdcp_config_asn1_req(
+  rrc_pdcp_config_asn1_req_NB_IoT(
     ctxt_pP,
     SRB_configList2,
     DRB_configList2,
@@ -692,7 +685,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 	DCCH1); //SRB1
 
   // Refresh SRBs/DRBs for RLC
-  NB_rrc_rlc_config_asn1_req(
+  rrc_rlc_config_asn1_req_NB_IoT(
     ctxt_pP,
     SRB_configList2,
     DRB_configList2,
@@ -795,7 +788,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
           }
 
           //MP: for each DRB I send a rrc_mac_config_req--> what change is the DRB2LCHAN_NB and logicalChannelConfig_r13
-          NB_rrc_mac_config_req_eNB(
+          rrc_mac_config_req_eNB_NB_IoT(
             ctxt_pP->module_id,
             ue_context_pP->ue_context.primaryCC_id,
             ue_context_pP->ue_context.rnti,
@@ -839,7 +832,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 
           //MP: The only change w.r.t previous case is that we not put logicalChannelConfig
 
-          NB_rrc_mac_config_req_eNB(
+          rrc_mac_config_req_eNB_NB_IoT(
                       ctxt_pP->module_id,
                       ue_context_pP->ue_context.primaryCC_id,
                       ue_context_pP->ue_context.rnti,
@@ -875,7 +868,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
 void //was under ITTI
 // This function triggers the establishment of dedicated bearer in the absence of EPC (oaisim case -- noS1)
 // to emulate it only establish 2 bearers (max number for NB-IoT)
-rrc_eNB_reconfigure_DRBs_NB(const protocol_ctxt_t* const ctxt_pP,
+rrc_eNB_reconfigure_DRBs_NB_IoT(const protocol_ctxt_t* const ctxt_pP,
 			       rrc_eNB_ue_context_NB_t*  ue_context_pP)
 //------------------------------------------------------------------
 {
@@ -908,14 +901,14 @@ rrc_eNB_reconfigure_DRBs_NB(const protocol_ctxt_t* const ctxt_pP,
   ue_context_pP->ue_context.setup_e_rabs+=e_rab_done;
 
   //MP: in the case of EPC this function is called directly by S1AP (see rrc_eNB_S1AP.c)
-  rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(ctxt_pP, ue_context_pP ); //XXX MP: no ho state
+  rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(ctxt_pP, ue_context_pP ); //XXX MP: no ho state
 }
 //-----------------------------------------------------------------------------
 //uint8_t qci_to_priority[9]={2,4,3,5,1,6,7,8,9};
 
 //-----------------------------------------------------------------------------
 void //was under ITTI
-rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
+rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 		const protocol_ctxt_t* const ctxt_pP,
 	    rrc_eNB_ue_context_NB_t*          const ue_context_pP
         //no ho state
@@ -947,7 +940,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
   int e_rab_done=0;
 
 
-  uint8_t xid = rrc_eNB_get_next_transaction_identifier_NB(ctxt_pP->module_id);   //Transaction_id,
+  uint8_t xid = rrc_eNB_get_next_transaction_identifier_NB_IoT(ctxt_pP->module_id);   //Transaction_id,
 
   DRB_configList2=&ue_context_pP->ue_context.DRB_configList2[xid];
   if (*DRB_configList2) {
@@ -1129,7 +1122,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
     size);
 
   //transmit the RRCConnectionReconfiguration-NB
-  NB_rrc_data_req(
+  rrc_data_req_NB_IoT(
     ctxt_pP,
     DCCH1,//through SRB1
     rrc_eNB_mui_NB++,
@@ -1141,8 +1134,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB(
 }
 
 //-----------------------------------------------------------------------------
-void
-rrc_eNB_process_RRCConnectionSetupComplete_NB(
+void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*         ue_context_pP,
   RRCConnectionSetupComplete_NB_r13_IEs_t * rrcConnectionSetupComplete_NB
@@ -1171,15 +1163,14 @@ rrc_eNB_process_RRCConnectionSetupComplete_NB(
 #endif
   {
     // RRC loop back (no S1AP), send SecurityModeCommand to UE
-    rrc_eNB_generate_SecurityModeCommand_NB(
+    rrc_eNB_generate_SecurityModeCommand_NB_IoT(
       ctxt_pP,
       ue_context_pP);
   }
 }
 
 //-----------------------------------------------------------------------------
-void
-rrc_eNB_generate_SecurityModeCommand_NB(
+void rrc_eNB_generate_SecurityModeCommand_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*          const ue_context_pP
 )
@@ -1200,7 +1191,7 @@ rrc_eNB_generate_SecurityModeCommand_NB(
   size = do_SecurityModeCommand_NB(
            ctxt_pP,
            buffer,
-           rrc_eNB_get_next_transaction_identifier_NB(ctxt_pP->module_id),
+           rrc_eNB_get_next_transaction_identifier_NB_IoT(ctxt_pP->module_id),
            ue_context_pP->ue_context.ciphering_algorithm,
            ue_context_pP->ue_context.integrity_algorithm);
 
@@ -1238,7 +1229,7 @@ rrc_eNB_generate_SecurityModeCommand_NB(
     rrc_eNB_mui_NB,
     size);
 
-  NB_rrc_data_req( //to PDCP
+  rrc_data_req_NB_IoT( //to PDCP
 	       ctxt_pP,
 	       DCCH0_NB_IoT,//MP:through SRB1bis
 	       rrc_eNB_mui_NB++,
@@ -1250,8 +1241,7 @@ rrc_eNB_generate_SecurityModeCommand_NB(
 }
 
 //-----------------------------------------------------------------------------
-void
-rrc_eNB_generate_UECapabilityEnquiry_NB(
+void rrc_eNB_generate_UECapabilityEnquiry_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_t*          const ue_context_pP
 )
@@ -1293,7 +1283,7 @@ rrc_eNB_generate_UECapabilityEnquiry_NB(
     rrc_eNB_mui_NB,
     size);
 
-  NB_rrc_data_req( //to PDCP
+  rrc_data_req_NB_IoT( //to PDCP
 	       ctxt_pP,
 	       DCCH1, //MP: send over SRB1
 	       rrc_eNB_mui_NB++,
@@ -1305,11 +1295,10 @@ rrc_eNB_generate_UECapabilityEnquiry_NB(
 }
 
 //-----------------------------------------------------------------------------
-void
-rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* const ctxt_pP,
-						     rrc_eNB_ue_context_NB_t*          const ue_context_pP
-						//no HO flag
-						     )
+void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_ctxt_t* const ctxt_pP,
+						                                                     rrc_eNB_ue_context_NB_t*          const ue_context_pP
+						                                                     //no HO flag
+						                                                    )
 //-----------------------------------------------------------------------------
 {
   uint8_t                             buffer[RRC_BUF_SIZE];
@@ -1349,7 +1338,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
   /* for no gcc warnings */
   (void)dedicatedInfoNas;
 
-  uint8_t xid = rrc_eNB_get_next_transaction_identifier_NB(ctxt_pP->module_id);   //Transaction_id,
+  uint8_t xid = rrc_eNB_get_next_transaction_identifier_NB_IoT(ctxt_pP->module_id);   //Transaction_id,
 
   T(T_ENB_RRC_CONNECTION_RECONFIGURATION, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
@@ -1597,7 +1586,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(const protocol_ctxt_t* c
     rrc_eNB_mui_NB,
     size);
 
-  NB_rrc_data_req( //to PDCP
+  rrc_data_req_NB_IoT( //to PDCP
 	       ctxt_pP,
 	       DCCH1,//through SRB1
 	       rrc_eNB_mui_NB++,
@@ -1723,7 +1712,7 @@ init_SI_NB(
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
 
     //
-    NB_rrc_mac_config_req_eNB(ctxt_pP->module_id,
+    rrc_mac_config_req_eNB_NB_IoT(ctxt_pP->module_id,
     							CC_id,
 								0,//rnti
 								eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].physCellId,
@@ -1759,8 +1748,7 @@ init_SI_NB(
 
 //-----------------------------------------------------------------------------
 //aka openair_rrc_eNB_init
-char
-openair_rrc_eNB_configuration_NB(
+char openair_rrc_eNB_configuration_NB_IoT(
   const module_id_t enb_mod_idP,
   RrcConfigurationReq* configuration //MP: previously was insiede ITTI but actually I put it out
 )
@@ -1817,10 +1805,10 @@ while ( eNB_rrc_inst_NB == NULL ) {
 
   //XXX following the old implementation: openair_rrc_top_init is called in MAC/main.c
   //In Rymond version actually is called here
-  //openair_rrc_top_init_eNB_NB();
+  //openair_rrc_top_init_eNB_NB_IoT();
 
   //init ch SRB0, SRB1 & BDTCH
-  openair_eNB_rrc_on_NB(&ctxt);
+  openair_eNB_rrc_on_NB_IoT(&ctxt);
 
   return 0;
 
@@ -1830,8 +1818,7 @@ while ( eNB_rrc_inst_NB == NULL ) {
 /*-----------------STATE MACHINE---------------*/
 
 //-----------------------------------------------------------------------------
-int
-rrc_eNB_decode_ccch_NB(
+int rrc_eNB_decode_ccch_NB_IoT(
   protocol_ctxt_t* const ctxt_pP,
   const SRB_INFO_NB*        const Srb_info, //SRB0
   const int              CC_id
@@ -1942,7 +1929,7 @@ rrc_eNB_decode_ccch_NB(
       /* reject all reestablishment attempts for the moment */
 
       //MP:for the moment we only reject
-      rrc_eNB_generate_RRCConnectionReestablishmentReject_NB(ctxt_pP,
+      rrc_eNB_generate_RRCConnectionReestablishmentReject_NB_IoT(ctxt_pP,
                        rrc_eNB_get_ue_context_NB(&eNB_rrc_inst_NB[ctxt_pP->module_id], ctxt_pP->rnti),
                        CC_id);
 
@@ -1971,7 +1958,7 @@ rrc_eNB_decode_ccch_NB(
 
       if (ue_context_p != NULL) { //MP: i receive a ConnectionRequest from a UE which have already a context
         // erase content
-        rrc_eNB_free_mem_UE_context_NB(ctxt_pP, ue_context_p);
+        rrc_eNB_free_mem_UE_context_NB_IoT(ctxt_pP, ue_context_p);
 
         MSC_LOG_RX_DISCARDED_MESSAGE(
           MSC_RRC_ENB,
@@ -2066,7 +2053,7 @@ rrc_eNB_decode_ccch_NB(
                   PROTOCOL_RRC_CTXT_UE_FMT" RRCConnectionRequest-NB without random UE identity or S-TMSI not supported, let's reject the UE\n",
                   PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
-            rrc_eNB_generate_RRCConnectionReject_NB(ctxt_pP,
+            rrc_eNB_generate_RRCConnectionReject_NB_IoT(ctxt_pP,
                              rrc_eNB_get_ue_context_NB(&eNB_rrc_inst_NB[ctxt_pP->module_id], ctxt_pP->rnti),
                              CC_id);
             break;
@@ -2128,7 +2115,7 @@ rrc_eNB_decode_ccch_NB(
       ue_context_p->ue_context.Srb1bis.Srb_info.Srb_id = DCCH0_NB_IoT;
 
       //generate RRCConnectionSetup-NB
-      rrc_eNB_generate_RRCConnectionSetup_NB(ctxt_pP, ue_context_p, CC_id);
+      rrc_eNB_generate_RRCConnectionSetup_NB_IoT(ctxt_pP, ue_context_p, CC_id);
 
       LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT"CALLING RLC CONFIG SRB1bis and SRB1 (rbid %d, rbid %d)\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
@@ -2144,26 +2131,26 @@ rrc_eNB_decode_ccch_NB(
         ue_context_p->ue_context.rnti);
 
       //MP: we should not configure PDCP for SRB1bis but only for SRB1
-      NB_rrc_pdcp_config_asn1_req(ctxt_pP,
-                               ue_context_p->ue_context.SRB_configList, //contain SRB1bis but used as SRB1
-                               (DRB_ToAddModList_NB_r13_t *) NULL,
-                               (DRB_ToReleaseList_NB_r13_t*) NULL,
-                               0xff,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-							   DCCH1);
+      rrc_pdcp_config_asn1_req_NB_IoT(ctxt_pP,
+                                      ue_context_p->ue_context.SRB_configList, //contain SRB1bis but used as SRB1
+                                      (DRB_ToAddModList_NB_r13_t *) NULL,
+                                      (DRB_ToReleaseList_NB_r13_t*) NULL,
+                                      0xff,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+							                        DCCH1);
 
       ///MP: Configure RLC for SRB1bis
-      NB_rrc_rlc_config_asn1_req(ctxt_pP,
-                              ue_context_p->ue_context.SRB_configList,
-                              (DRB_ToAddModList_NB_r13_t*) NULL,
-                              (DRB_ToReleaseList_NB_r13_t*) NULL,
-							  SRB1BIS_FLAG_YES
-                             );
+      rrc_rlc_config_asn1_req_NB_IoT(ctxt_pP,
+                                     ue_context_p->ue_context.SRB_configList,
+                                     (DRB_ToAddModList_NB_r13_t*) NULL,
+                                     (DRB_ToReleaseList_NB_r13_t*) NULL,
+							                       SRB1BIS_FLAG_YES
+                                     );
       //MP: Configure RLC for SRB1
-            NB_rrc_rlc_config_asn1_req(ctxt_pP,
+            rrc_rlc_config_asn1_req_NB_IoT(ctxt_pP,
                                     ue_context_p->ue_context.SRB_configList,
                                     (DRB_ToAddModList_NB_r13_t*) NULL,
                                     (DRB_ToReleaseList_NB_r13_t*) NULL,
@@ -2203,7 +2190,7 @@ rrc_eNB_decode_ccch_NB(
                 "delay tollerant Access v1330"));
 
     //MP: only reject for now
-    rrc_eNB_generate_RRCConnectionReject_NB(ctxt_pP,
+    rrc_eNB_generate_RRCConnectionReject_NB_IoT(ctxt_pP,
                                  rrc_eNB_get_ue_context_NB(&eNB_rrc_inst_NB[ctxt_pP->module_id], ctxt_pP->rnti),
                                  CC_id);
       break;
@@ -2226,8 +2213,7 @@ rrc_eNB_decode_ccch_NB(
 }
 
 //-----------------------------------------------------------------------------
-int
-rrc_eNB_decode_dcch_NB(
+int rrc_eNB_decode_dcch_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   const rb_id_t                Srb_id, //Dcch_index
   const uint8_t*    const      Rx_sdu,
@@ -2344,7 +2330,7 @@ rrc_eNB_decode_dcch_NB(
 		PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_RECONFIGURED (default DRB, xid %ld)\n",
 		PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
 	}
-	rrc_eNB_process_RRCConnectionReconfigurationComplete_NB(
+	rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
           ctxt_pP,
           ue_context_p,
 	  ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
@@ -2374,7 +2360,7 @@ rrc_eNB_decode_dcch_NB(
 #else  // MP: not use of MME
       //dedicated bearer in the absence of EPC
       if (dedicated_DRB == 0 ) {
-	rrc_eNB_reconfigure_DRBs_NB(ctxt_pP,ue_context_p); //MP: establish a dedicated DRB
+	rrc_eNB_reconfigure_DRBs_NB_IoT(ctxt_pP,ue_context_p); //MP: establish a dedicated DRB
       }
 #endif
 
@@ -2447,7 +2433,7 @@ rrc_eNB_decode_dcch_NB(
       if (ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionSetupComplete_r13.criticalExtensions.present ==
     		  RRCConnectionSetupComplete_NB__criticalExtensions_PR_rrcConnectionSetupComplete_r13) {
 
-          rrc_eNB_process_RRCConnectionSetupComplete_NB(
+          rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
             ctxt_pP,
             ue_context_p,
             &ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionSetupComplete_r13.criticalExtensions.choice.rrcConnectionSetupComplete_r13);
@@ -2522,7 +2508,7 @@ rrc_eNB_decode_dcch_NB(
       ue_context_p->ue_context.Srb1bis.Active=0;
 
 
-      rrc_eNB_generate_UECapabilityEnquiry_NB(ctxt_pP, ue_context_p);
+      rrc_eNB_generate_UECapabilityEnquiry_NB_IoT(ctxt_pP, ue_context_p);
 
       break;
 
@@ -2582,14 +2568,14 @@ rrc_eNB_decode_dcch_NB(
 //therefore setting securityActivated=0 for the corresponding PDCP entity in the PDCP but still start the usage of SRB1
 
 
-      //   pdcp_pP-> security_activated modified (=1) by pdcp_config_set_security in NB_pdcp_config_req_asn1 at configuration time
+      //   pdcp_pP-> security_activated modified (=1) by pdcp_config_set_security in pdcp_config_req_asn1_NB_IoT at configuration time
       //   we now create a particular case for pdcp_config_set_securityy function in which for a particular securityMode (= -1) we deactivate security.
-      //   we first invoke the NB_rrc_pdcp_config_asn1_req that with the particular case of securityMode = -1 will disable security through the pdcp_config_set_security
+      //   we first invoke the rrc_pdcp_config_asn1_req_NB_IoT that with the particular case of securityMode = -1 will disable security through the pdcp_config_set_security
 
 
 //MP: the integrity protection is still not used in OAI --> MAC-I is padded always to 0 so no need to modify it
 
-      NB_rrc_pdcp_config_asn1_req(
+      rrc_pdcp_config_asn1_req_NB_IoT(
     		  	  	  	  	  	  ctxt_pP,
 								  ue_context_p->ue_context.SRB_configList,
 								  (DRB_ToAddModList_NB_r13_t *)NULL,
@@ -2602,7 +2588,7 @@ rrc_eNB_decode_dcch_NB(
 								  DCCH1//its only for check purposes (if correctly called could be deleted)
       	  	  	  	  	  	  	  );
 
-      rrc_eNB_generate_UECapabilityEnquiry_NB(ctxt_pP, ue_context_p);
+      rrc_eNB_generate_UECapabilityEnquiry_NB_IoT(ctxt_pP, ue_context_p);
 
       break;
 
@@ -2676,7 +2662,7 @@ rrc_eNB_decode_dcch_NB(
       ue_context_p->ue_context.setup_e_rabs =ue_context_p->ue_context.nb_of_e_rabs;
 #endif
 
-      rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB(ctxt_pP, ue_context_p);//no HO_FLAG
+      rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(ctxt_pP, ue_context_p);//no HO_FLAG
 
       break;
 
@@ -2779,8 +2765,7 @@ rrc_eNB_decode_dcch_NB(
 
 //-----------------------------------------------------------------------------
 //put out from the ITTI FIXME is completely based on ITTI--> must be changed (msg_p, itti_receive_msg ecc...)
-void*
-rrc_enb_task_NB(
+void* rrc_enb_task_NB_IoT(
   void* args_p
 )
 //-----------------------------------------------------------------------------
@@ -2834,7 +2819,7 @@ rrc_enb_task_NB(
 
       srb_info_p->Rx_buffer.payload_size = RRC_MAC_CCCH_DATA_IND(msg_p).sdu_size;
 
-      rrc_eNB_decode_ccch_NB(&ctxt, srb_info_p, CC_id); //SRB0
+      rrc_eNB_decode_ccch_NB_IoT(&ctxt, srb_info_p, CC_id); //SRB0
 
       break;
 
@@ -2850,10 +2835,10 @@ rrc_enb_task_NB(
             PROTOCOL_RRC_CTXT_UE_ARGS(&ctxt),
             RRC_DCCH_DATA_IND(msg_p).dcch_index,
             msg_name_p);
-      rrc_eNB_decode_dcch_NB(&ctxt,
-                          RRC_DCCH_DATA_IND(msg_p).dcch_index, //3 if SRB1bis and 1 for SRB1
-                          RRC_DCCH_DATA_IND(msg_p).sdu_p, //rx_sdu
-                          RRC_DCCH_DATA_IND(msg_p).sdu_size);
+      rrc_eNB_decode_dcch_NB_IoT(&ctxt,
+                                 RRC_DCCH_DATA_IND(msg_p).dcch_index, //3 if SRB1bis and 1 for SRB1
+                                 RRC_DCCH_DATA_IND(msg_p).sdu_p, //rx_sdu
+                                 RRC_DCCH_DATA_IND(msg_p).sdu_size);
 
       // Message buffer has been processed, free it now.
       result = itti_free(ITTI_MSG_ORIGIN_ID(msg_p), RRC_DCCH_DATA_IND(msg_p).sdu_p);
@@ -2903,7 +2888,7 @@ rrc_enb_task_NB(
       /* Messages from eNB app */
     case RRC_CONFIGURATION_REQ:
       LOG_I(RRC, "[eNB %d] Received %s\n", instance, msg_name_p);
-      openair_rrc_eNB_configuration_NB(ENB_INSTANCE_TO_MODULE_ID(instance), &RRC_CONFIGURATION_REQ(msg_p));
+      openair_rrc_eNB_configuration_NB_IoT(ENB_INSTANCE_TO_MODULE_ID(instance), &RRC_CONFIGURATION_REQ(msg_p));
       break;
 
     default:

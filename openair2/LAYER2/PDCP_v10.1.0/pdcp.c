@@ -1680,7 +1680,7 @@ pdcp_config_set_security(
   }
   /*]SecurityModeFailure*/
   else if(security_modeP == -1){
-	  // in this way in NB_pdcp_data_req function you never call "pdcp_apply_security"
+	  // in this way in pdcp_data_req_NB_IoT function you never call "pdcp_apply_security"
 	  // and we never call pdcp_validate_security in NB_pdcp_data_indi
 	    	pdcp_pP->security_activated = 0;
 	    	pdcp_pP->cipheringAlgorithm = 0;

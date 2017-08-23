@@ -333,7 +333,7 @@ void rrc_eNB_remove_ue_context_NB(
     "0 Removed UE %"PRIx16" ",
     ue_context_pP->ue_context.rnti);
 
-  rrc_eNB_free_mem_UE_context_NB(ctxt_pP, ue_context_pP);
+  rrc_eNB_free_mem_UE_context_NB_IoT(ctxt_pP, ue_context_pP);
   uid_linear_allocator_free_NB(rrc_instance_pP, ue_context_pP->local_uid);
   free(ue_context_pP);
   LOG_I(RRC,

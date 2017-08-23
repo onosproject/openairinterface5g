@@ -137,7 +137,7 @@ int mac_top_init_NB_IoT()
   if (Is_rrc_nb_iot_registered == 1) {
     LOG_I(MAC,"[MAIN] calling RRC NB-IoT\n");
 #ifndef CELLULAR //nothing to be done yet for cellular
-    openair_rrc_top_init_eNB_NB();
+    openair_rrc_top_init_eNB_NB_IoT();
 #endif
   } else {
     LOG_I(MAC,"[MAIN] Running without an RRC\n");

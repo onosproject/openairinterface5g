@@ -89,12 +89,12 @@ rrc_t310_expiration_NB(
                            UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
                            0);
 
-      NB_rrc_rlc_config_req(
-    		  	  	  	  	 ctxt_pP,
-							 SRB_FLAG_YES,
-							 CONFIG_ACTION_REMOVE,
-							 UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
-							 Rlc_info_am_NB);
+      rrc_rlc_config_req_NB_IoT(
+    		  	  	  	  	        ctxt_pP,
+							                  SRB_FLAG_YES,
+							                  CONFIG_ACTION_REMOVE,
+							                  UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
+							                  Rlc_info_am_NB);
 
 
       UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Active = 0;
@@ -110,10 +110,9 @@ rrc_t310_expiration_NB(
 
 
 //configure  BCCH & CCCH Logical Channels and associated rrc_buffers, configure associated SRBs
-//called by openair_rrc_eNB_configuration_NB
+//called by openair_rrc_eNB_configuration_NB_IoT
 //-----------------------------------------------------------------------------
-void
-openair_eNB_rrc_on_NB(
+void openair_eNB_rrc_on_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP
 )
 //-----------------------------------------------------------------------------
@@ -124,9 +123,9 @@ openair_eNB_rrc_on_NB(
     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" OPENAIR RRC-NB IN....\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
     for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
-      rrc_config_buffer_NB (&eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].SI, BCCH, 1);
+      rrc_config_buffer_NB_IoT (&eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].SI, BCCH, 1);
       eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].SI.Active = 1;
-      rrc_config_buffer_NB (&eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Srb0, CCCH, 1);
+      rrc_config_buffer_NB_IoT (&eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Srb0, CCCH, 1);
       eNB_rrc_inst_NB[ctxt_pP->module_id].carrier[CC_id].Srb0.Active = 1;
     }
     //no UE side
@@ -135,8 +134,7 @@ openair_eNB_rrc_on_NB(
 
 
 //-----------------------------------------------------------------------------
-void
-rrc_config_buffer_NB(
+void rrc_config_buffer_NB_IoT(
   SRB_INFO_NB* Srb_info,
   uint8_t Lchan_type,
   uint8_t Role
@@ -157,7 +155,7 @@ int rrc_init_global_param_NB_IoT( void )
 {
 
   //may no more used (defined in rlc_rrc.c)
-  rrc_rlc_register_rrc_NB (NB_rrc_data_ind, NULL); //register with rlc
+  rrc_rlc_register_rrc_NB_IoT (rrc_data_ind_NB_IoT, NULL); //register with rlc
 
   //XXX MP: most probably ALL of this stuff are no more needed (also the one not commented)
 
@@ -172,7 +170,7 @@ int rrc_init_global_param_NB_IoT( void )
 
 #ifndef NO_RRM
 
-if (L3_xface_init_NB ()) { //XXX to be modified???
+if (L3_xface_init_NB_IoT ()) { //XXX to be modified???
     return (-1);
   }
 
@@ -185,7 +183,7 @@ if (L3_xface_init_NB ()) { //XXX to be modified???
 #ifndef NO_RRM
 //-----------------------------------------------------------------------------
 int
-L3_xface_init_NB( //Exact copy of the LTE implementation
+L3_xface_init_NB_IoT( //Exact copy of the LTE implementation
   void
 )
 //-----------------------------------------------------------------------------
@@ -240,9 +238,8 @@ L3_xface_init_NB( //Exact copy of the LTE implementation
 
 //------------------------------------------------------------------------------
 //specialized function for the eNB initialization (NB-IoT)
-//(OLD was called in MAC/main.c--> mac_top_init)(NEW is called in directly in "openair_rrc_eNB_configuration_NB")
-void
-openair_rrc_top_init_eNB_NB(void)//MP: XXX Raymond put this directly the definition on rrc_eNB.c file
+//(OLD was called in MAC/main.c--> mac_top_init)(NEW is called in directly in "openair_rrc_eNB_configuration_NB_IoT")
+void openair_rrc_top_init_eNB_NB_IoT(void)//MP: XXX Raymond put this directly the definition on rrc_eNB.c file
 //-----------------------------------------------------------------------------
 {
 
@@ -272,7 +269,7 @@ openair_rrc_top_init_eNB_NB(void)//MP: XXX Raymond put this directly the definit
 //-----------------------------------------------------------------------------
 //XXX MP: most probably is not needed
 RRC_status_t
-rrc_rx_tx_NB(
+rrc_rx_tx_NB_IoT(
   protocol_ctxt_t* const ctxt_pP,
   const uint8_t      enb_indexP,
   const int          CC_id
@@ -421,7 +418,7 @@ rrc_rx_tx_NB(
       }
     }
     if (ue_to_be_removed)
-    	rrc_eNB_free_UE_NB(ctxt_pP->module_id,ue_to_be_removed);
+    	rrc_eNB_free_UE_NB_IoT(ctxt_pP->module_id,ue_to_be_removed);
 //no localization in NB-IoT
 
     (void)ts; /* remove gcc warning "unused variable" */

@@ -117,7 +117,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
     /*RLF procedure this part just check UE context is NULL or not, if not, means UL in synch*/
     if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync > 0) {
       UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync=0;
-      NB_mac_eNB_rrc_ul_in_sync(enb_mod_idP,CC_idP,frameP,subframeP,UE_RNTI(enb_mod_idP,UE_id));
+      mac_eNB_rrc_ul_in_sync_NB_IoT(enb_mod_idP,CC_idP,frameP,subframeP,UE_RNTI(enb_mod_idP,UE_id));
     }
   }
 
@@ -160,7 +160,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
 	if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync > 0) {
 	  UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync=0;
 	  /*In RRC branch*/
-    //NB_mac_eNB_rrc_ul_in_sync(enb_mod_idP,CC_idP,frameP,subframeP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
+    //mac_eNB_rrc_ul_in_sync_NB_IoT(enb_mod_idP,CC_idP,frameP,subframeP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
 	}
       }
       crnti_rx=1;
@@ -268,7 +268,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
           if (Is_rrc_nb_iot_registered == 1)
         	 //MP: send directly the information to the RRC in case of CCCH (SRB0)
 
-            NB_mac_rrc_data_ind_eNB(
+            mac_rrc_data_ind_eNB_NB_IoT(
               enb_mod_idP,
               CC_idP,
               frameP,
@@ -316,7 +316,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
           LOG_D(MAC,"[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DCCH, received %d bytes form UE %d on LCID %d \n",
                 enb_mod_idP,CC_idP,frameP, rx_lengths[i], UE_id, rx_lcids[i]);
 
-          NB_mac_rlc_data_ind(
+        mac_rlc_data_ind_NB_IoT(
 			   enb_mod_idP,
 			   rntiP,
 			   enb_mod_idP,
@@ -361,7 +361,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
 	    UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] = 0;*/
 	  if ((rx_lengths[i] <SCH_PAYLOAD_SIZE_MAX) &&  (rx_lengths[i] > 0) ) {   // MAX SIZE OF transport block
 
-	    NB_mac_rlc_data_ind(
+	    mac_rlc_data_ind_NB_IoT(
 			     enb_mod_idP,
 			     rntiP,
 			     enb_mod_idP,
