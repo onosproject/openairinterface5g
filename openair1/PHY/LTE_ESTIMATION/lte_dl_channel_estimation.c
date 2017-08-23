@@ -663,13 +663,13 @@ int lte_dl_channel_estimation(PHY_VARS_UE *ue,
               //LOG_I(PHY,"Interpolate s0-->s4 to get s1 s2 and s3 Ns %d \n", Ns);
               if (ue->frame_parms.Ncp==0) {// pilot spacing 4 symbols (1/4,1/2,3/4 combination)
 
-                uint8_t previous_subframe;
+                uint8_t previous_tti;
                 if(Ns>>1 == 0)
-                    previous_subframe = 9;
+                    previous_tti = 10*ue->frame_parms.ttis_per_subframe-1;
                 else
-                    previous_subframe = ((Ns>>1) - 1 )%9;
+                    previous_tti = ((Ns>>1) - 1 )%(ue->frame_parms.ttis_per_subframe-1);
 
-                if((subframe_select(&ue->frame_parms,previous_subframe) == SF_UL))
+                if((subframe_select(&ue->frame_parms,previous_tti) == SF_UL))
                 {
 
                     multadd_complex_vector_real_scalar(dl_ch_prev,328,dl_ch_prev+(2*(ue->frame_parms.ofdm_symbol_size)),1,ue->frame_parms.ofdm_symbol_size);

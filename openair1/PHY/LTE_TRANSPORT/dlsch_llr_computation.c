@@ -700,7 +700,7 @@ int32_t dlsch_qpsk_llr_SIC(LTE_DL_FRAME_PARMS *frame_parms,
                            short *dlsch_llr,
                            uint8_t num_pdcch_symbols,
                            uint16_t nb_rb,
-                           uint8_t subframe,
+                           uint8_t nr_tti_rx,
                            uint16_t mod_order_0,
                            uint32_t rb_alloc)
 {
@@ -736,7 +736,7 @@ int32_t dlsch_qpsk_llr_SIC(LTE_DL_FRAME_PARMS *frame_parms,
       amp_tmp=amp_tmp<<1; // to compensate for >> 1 shift in modulation
 
 
-    pbch_pss_sss_adjust=adjust_G2(frame_parms,&rb_alloc,2,subframe,symbol);
+    pbch_pss_sss_adjust=adjust_G2(frame_parms,&rb_alloc,2,nr_tti_rx,symbol);
 
     if ((symbol_mod==0) || (symbol_mod==(4-frame_parms->Ncp))) {
       if (frame_parms->mode1_flag==0)
@@ -939,7 +939,7 @@ void dlsch_16qam_llr_SIC (LTE_DL_FRAME_PARMS *frame_parms,
                           uint8_t num_pdcch_symbols,
                           int32_t **dl_ch_mag,
                           uint16_t nb_rb,
-                          uint8_t subframe,
+                          uint8_t nr_tti_rx,
                           uint16_t mod_order_0,
                           uint32_t rb_alloc)
 {
@@ -965,7 +965,7 @@ void dlsch_16qam_llr_SIC (LTE_DL_FRAME_PARMS *frame_parms,
 
     symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
 
-    pbch_pss_sss_adjust=adjust_G2(frame_parms,&rb_alloc,4,subframe,symbol);
+    pbch_pss_sss_adjust=adjust_G2(frame_parms,&rb_alloc,4,nr_tti_rx,symbol);
 
     if ((symbol_mod==0) || (symbol_mod==(4-frame_parms->Ncp))) {
       amp_tmp=0x1fff;//dlsch0->sqrt_rho_b; already taken into account
@@ -1217,7 +1217,7 @@ void dlsch_64qam_llr_SIC(LTE_DL_FRAME_PARMS *frame_parms,
                          int32_t **dl_ch_mag,
                          int32_t **dl_ch_magb,
                          uint16_t nb_rb,
-                         uint8_t subframe,
+                         uint8_t nr_tti_rx,
                          uint16_t mod_order_0,
                          uint32_t rb_alloc)
 {
@@ -1245,7 +1245,7 @@ void dlsch_64qam_llr_SIC(LTE_DL_FRAME_PARMS *frame_parms,
 
     symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
 
-    pbch_pss_sss_adjust=adjust_G2(frame_parms,&rb_alloc,6,subframe,symbol);
+    pbch_pss_sss_adjust=adjust_G2(frame_parms,&rb_alloc,6,nr_tti_rx,symbol);
 
     if ((symbol_mod==0) || (symbol_mod==(4-frame_parms->Ncp))) {
       amp_tmp = 0x1fff;//dlsch0->sqrt_rho_b; already taken into account

@@ -54,12 +54,10 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     frame_parms->nb_prefix_samples0=512;
     frame_parms->nb_prefix_samples = 512;
     frame_parms->symbols_per_tti = 12;
-#ifdef UE_NR_PHY_DEMO
     // Only numerology 2 is supported for Extended Cyclic Prefix
     frame_parms->numerology_index = 2;
     frame_parms->ttis_per_subframe = 4;
     frame_parms->slots_per_tti = 2; //only slot config 1 is supported
-#endif
   } else {
     frame_parms->nb_prefix_samples0 = 160;
     frame_parms->nb_prefix_samples = 144;

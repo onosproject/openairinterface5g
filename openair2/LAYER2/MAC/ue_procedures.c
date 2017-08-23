@@ -1819,7 +1819,7 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
 // 3. Perform SR/BSR procedures for scheduling feedback
 // 4. Perform PHR procedures
 
-#ifdef UE_NR_PHY_DEMO
+//#ifdef UE_NR_PHY_DEMO
 UE_L2_STATE_t
 ue_scheduler(
   const module_id_t    module_idP,
@@ -1832,7 +1832,7 @@ ue_scheduler(
   const lte_subframe_t directionP,
   const uint8_t        eNB_indexP,
   const int            CC_id)
-#else
+/*#else
 UE_L2_STATE_t
 ue_scheduler(
   const module_id_t    module_idP,
@@ -1843,7 +1843,7 @@ ue_scheduler(
   const lte_subframe_t directionP,
   const uint8_t        eNB_indexP,
   const int            CC_id)
-#endif
+#endif*/
 //------------------------------------------------------------------------------
 {
   int lcid; // lcid index

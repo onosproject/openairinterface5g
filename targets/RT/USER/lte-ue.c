@@ -562,7 +562,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 #endif
         if (UE->mac_enabled==1) {
 
-#ifdef UE_NR_PHY_DEMO
+//#ifdef UE_NR_PHY_DEMO
             ret = mac_xface->ue_scheduler(UE->Mod_id,
                                           proc->frame_rx,
                                           proc->subframe_rx,
@@ -573,17 +573,16 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                                           subframe_select(&UE->frame_parms,proc->subframe_tx),
                                           0,
                                           0/*FIXME CC_id*/);
-#else
+/*#else
             ret = mac_xface->ue_scheduler(UE->Mod_id,
                                           proc->frame_rx,
                                           proc->subframe_rx,
                                           proc->frame_tx,
                                           proc->subframe_tx,
                                           subframe_select(&UE->frame_parms,proc->subframe_tx),
-                                          0,
-                                          0/*FIXME CC_id*/);
-
-#endif
+                                          0,  */
+//                                          0/*FIXME CC_id*/);
+//#endif
             if ( ret != CONNECTION_OK) {
                 char *txt;
                 switch (ret) {
@@ -795,14 +794,14 @@ void *UE_thread(void *arg) {
                         // set TO compensation to zero
                         UE->rx_offset_diff = 0;
                         // compute TO compensation that should be applied for this frame
-                        if ( UE->rx_offset < 5*UE->frame_parms.samples_per_tti  &&
+                        if ( UE->rx_offset < 5*UE->frame_parms.samples_per_subframe  &&
                                 UE->rx_offset > 0 )
                             UE->rx_offset_diff = -1 ;
-                        if ( UE->rx_offset > 5*UE->frame_parms.samples_per_tti &&
+                        if ( UE->rx_offset > 5*UE->frame_parms.samples_per_subframe &&
                                 UE->rx_offset < 10*UE->frame_parms.samples_per_tti )
                             UE->rx_offset_diff = 1;
 
-                        LOG_D(PHY,"AbsSubframe %d.%d TTI SET rx_off_diff to %d rx_offset %d \n",proc->frame_rx,tti_nr>>2,tti_nr,UE->rx_offset_diff,UE->rx_offset);
+                        LOG_D(PHY,"AbsSubframe %d.%d TTI SET rx_off_diff to %d rx_offset %d \n",proc->frame_rx,tti_nr,UE->rx_offset_diff,UE->rx_offset);
                         readBlockSize=UE->frame_parms.samples_per_tti -
                                       UE->frame_parms.ofdm_symbol_size -
                                       UE->frame_parms.nb_prefix_samples0 -
@@ -857,6 +856,7 @@ void *UE_thread(void *arg) {
                     }
                     proc->nr_tti_rx=tti_nr;
                     proc->nr_tti_tx=(tti_nr+4)%(10*UE->frame_parms.ttis_per_subframe);
+                    proc->subframe_rx=tti_nr>>((uint8_t)(log2 (UE->frame_parms.ttis_per_subframe)));
                     proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
                     proc->timestamp_tx = timestamp+
                                          (4*UE->frame_parms.samples_per_tti)-

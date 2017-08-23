@@ -75,7 +75,7 @@ void generate_pcfich_reg_mapping(LTE_DL_FRAME_PARMS *frame_parms)
 }
 
 void pcfich_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
-                       uint8_t subframe,
+                       uint8_t nr_tti_rx,
                        uint8_t *b,
                        uint8_t *bt)
 {
@@ -85,7 +85,7 @@ void pcfich_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
 
   reset = 1;
   // x1 is set in lte_gold_generic
-  x2 = ((((2*frame_parms->Nid_cell)+1)*(1+subframe))<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.7.1
+  x2 = ((((2*frame_parms->Nid_cell)+1)*(1+nr_tti_rx))<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.7.1
 
   for (i=0; i<32; i++) {
     if ((i&0x1f)==0) {
@@ -100,7 +100,7 @@ void pcfich_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
 }
 
 void pcfich_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
-                         uint8_t subframe,
+                         uint8_t nr_tti_rx,
                          int16_t *d)
 {
 
@@ -110,7 +110,7 @@ void pcfich_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
 
   reset = 1;
   // x1 is set in lte_gold_generic
-  x2 = ((((2*frame_parms->Nid_cell)+1)*(1+subframe))<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.7.1
+  x2 = ((((2*frame_parms->Nid_cell)+1)*(1+nr_tti_rx))<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.7.1
 
   for (i=0; i<32; i++) {
     if ((i&0x1f)==0) {
@@ -136,7 +136,7 @@ void generate_pcfich(uint8_t num_pdcch_symbols,
                      int16_t amp,
                      LTE_DL_FRAME_PARMS *frame_parms,
                      int32_t **txdataF,
-                     uint8_t subframe)
+                     uint8_t nr_tti_rx)
 {
 
   uint8_t pcfich_bt[32],nsymb,pcfich_quad;
@@ -153,7 +153,7 @@ void generate_pcfich(uint8_t num_pdcch_symbols,
 
   // scrambling
   if ((num_pdcch_symbols>0) && (num_pdcch_symbols<4))
-    pcfich_scrambling(frame_parms,subframe,pcfich_b[num_pdcch_symbols-1],pcfich_bt);
+    pcfich_scrambling(frame_parms,nr_tti_rx,pcfich_b[num_pdcch_symbols-1],pcfich_bt);
 
   // modulation
   if (frame_parms->mode1_flag==1)
@@ -191,7 +191,7 @@ void generate_pcfich(uint8_t num_pdcch_symbols,
   // mapping
   nsymb = (frame_parms->Ncp==0) ? 14:12;
 
-  symbol_offset = (uint32_t)frame_parms->ofdm_symbol_size*(subframe*nsymb);
+  symbol_offset = (uint32_t)frame_parms->ofdm_symbol_size*(nr_tti_rx*nsymb);
   re_offset = frame_parms->first_carrier_offset;
 
   // loop over 4 quadruplets and lookup REGs
@@ -220,7 +220,7 @@ void generate_pcfich(uint8_t num_pdcch_symbols,
 
 
 uint8_t rx_pcfich(LTE_DL_FRAME_PARMS *frame_parms,
-                  uint8_t subframe,
+                  uint8_t nr_tti_rx,
                   LTE_UE_PDCCH *lte_ue_pdcch_vars,
                   MIMO_mode_t mimo_mode)
 {
@@ -288,7 +288,7 @@ uint8_t rx_pcfich(LTE_DL_FRAME_PARMS *frame_parms,
 
   // pcfhich unscrambling
 
-  pcfich_unscrambling(frame_parms,subframe,pcfich_d);
+  pcfich_unscrambling(frame_parms,nr_tti_rx,pcfich_d);
 
   // pcfich detection
 

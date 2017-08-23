@@ -54,7 +54,7 @@
 
 uint8_t rv_table[4] = {0, 2, 3, 1};
 
-uint8_t get_mi(LTE_DL_FRAME_PARMS *frame_parms,uint8_t subframe)
+uint8_t get_mi(LTE_DL_FRAME_PARMS *frame_parms,uint8_t nr_tti_rx)
 {
 
   // for FDD
@@ -65,42 +65,42 @@ uint8_t get_mi(LTE_DL_FRAME_PARMS *frame_parms,uint8_t subframe)
   switch (frame_parms->tdd_config) {
 
   case 0:
-    if ((subframe==0) || (subframe==5))
+    if ((nr_tti_rx==0) || (nr_tti_rx==5))
       return(2);
     else return(1);
 
     break;
 
   case 1:
-    if ((subframe==0) || (subframe==5))
+    if ((nr_tti_rx==0) || (nr_tti_rx==5))
       return(0);
     else return(1);
 
     break;
 
   case 2:
-    if ((subframe==3) || (subframe==8))
+    if ((nr_tti_rx==3) || (nr_tti_rx==8))
       return(1);
     else return(0);
 
     break;
 
   case 3:
-    if ((subframe==0) || (subframe==8) || (subframe==9))
+    if ((nr_tti_rx==0) || (nr_tti_rx==8) || (nr_tti_rx==9))
       return(1);
     else return(0);
 
     break;
 
   case 4:
-    if ((subframe==8) || (subframe==9))
+    if ((nr_tti_rx==8) || (nr_tti_rx==9))
       return(1);
     else return(0);
 
     break;
 
   case 5:
-    if (subframe==8)
+    if (nr_tti_rx==8)
       return(1);
     else return(0);
 
@@ -115,32 +115,32 @@ uint8_t get_mi(LTE_DL_FRAME_PARMS *frame_parms,uint8_t subframe)
   }
 }
 
-unsigned char subframe2_ul_harq(LTE_DL_FRAME_PARMS *frame_parms,unsigned char subframe)
+unsigned char subframe2_ul_harq(LTE_DL_FRAME_PARMS *frame_parms,unsigned char nr_tti_rx)
 {
 
   if (frame_parms->frame_type == FDD)
-    return(subframe&7);
+    return(nr_tti_rx&7);
 
   switch (frame_parms->tdd_config) {
   case 3:
-    if ( (subframe == 8) || (subframe == 9) ) {
-      return(subframe-8);
-    } else if (subframe==0)
+    if ( (nr_tti_rx == 8) || (nr_tti_rx == 9) ) {
+      return(nr_tti_rx-8);
+    } else if (nr_tti_rx==0)
       return(2);
     else {
-      LOG_E(PHY,"phich.c: subframe2_ul_harq, illegal subframe %d for tdd_config %d\n",
-            subframe,frame_parms->tdd_config);
+      LOG_E(PHY,"phich.c: subframe2_ul_harq, illegal nr_tti_rx %d for tdd_config %d\n",
+            nr_tti_rx,frame_parms->tdd_config);
       return(0);
     }
 
     break;
 
   case 4:
-     if ( (subframe == 8) || (subframe == 9) ) {
-       return(subframe-8);
+     if ( (nr_tti_rx == 8) || (nr_tti_rx == 9) ) {
+       return(nr_tti_rx-8);
      } else {
-       LOG_E(PHY,"phich.c: subframe2_ul_harq, illegal subframe %d for tdd_config %d\n",
-             subframe,frame_parms->tdd_config);
+       LOG_E(PHY,"phich.c: subframe2_ul_harq, illegal nr_tti_rx %d for tdd_config %d\n",
+             nr_tti_rx,frame_parms->tdd_config);
        return(0);
      }
 
@@ -151,136 +151,136 @@ unsigned char subframe2_ul_harq(LTE_DL_FRAME_PARMS *frame_parms,unsigned char su
   return(0);
 }
 
-uint8_t phich_frame2_pusch_frame(LTE_DL_FRAME_PARMS *frame_parms,frame_t frame,uint8_t subframe)
+uint8_t phich_frame2_pusch_frame(LTE_DL_FRAME_PARMS *frame_parms,frame_t frame,uint8_t nr_tti_rx)
 {
   uint8_t pusch_frame = 255;
   if (frame_parms->frame_type == FDD) {
-    pusch_frame = ((subframe<4) ? (frame - 1) : frame);
+    pusch_frame = ((nr_tti_rx<4) ? (frame - 1) : frame);
   } else {
     // Note this is not true, but it doesn't matter, the frame number is irrelevant for TDD!
     pusch_frame = (frame);
   }
 
-  LOG_D(PHY, "frame %d subframe %d: PUSCH frame = %d\n", frame, subframe, pusch_frame);
+  LOG_D(PHY, "frame %d nr_tti_rx %d: PUSCH frame = %d\n", frame, nr_tti_rx, pusch_frame);
   return pusch_frame;
 }
 
-uint8_t phich_subframe2_pusch_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t subframe)
+uint8_t phich_subframe2_pusch_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t nr_tti_rx)
 {
-  uint8_t pusch_subframe = 255;
+  uint8_t pusch_tti = 255;
 
   if (frame_parms->frame_type == FDD)
-    return subframe < 4 ? subframe + 6 : subframe - 4;
+    return nr_tti_rx < 4 ? nr_tti_rx + 6 : nr_tti_rx - 4;
 
   switch (frame_parms->tdd_config) {
   case 0:
-    if (subframe == 0)
-      pusch_subframe = (3);
-    else if (subframe == 5) {
-      pusch_subframe = (8);
-    } else if (subframe == 6)
-      pusch_subframe = (2);
-    else if (subframe == 1)
-      pusch_subframe = (7);
+    if (nr_tti_rx == 0)
+      pusch_tti = (3);
+    else if (nr_tti_rx == 5) {
+      pusch_tti = (8);
+    } else if (nr_tti_rx == 6)
+      pusch_tti = (2);
+    else if (nr_tti_rx == 1)
+      pusch_tti = (7);
     else {
-      LOG_E(PHY, "phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-            subframe,frame_parms->tdd_config);
-      pusch_subframe = (0);
+      LOG_E(PHY, "phich.c: phich_subframe2_pusch_subframe, illegal nr_tti_rx %d for tdd_config %d\n",
+            nr_tti_rx,frame_parms->tdd_config);
+      pusch_tti = (0);
     }
 
     break;
 
   case 1:
-    if (subframe == 6)
-      pusch_subframe = (2);
-    else if (subframe == 9)
-      pusch_subframe = (3);
-    else if (subframe == 1)
-      pusch_subframe = (7);
-    else if (subframe == 4)
-      pusch_subframe = (8);
+    if (nr_tti_rx == 6)
+      pusch_tti = (2);
+    else if (nr_tti_rx == 9)
+      pusch_tti = (3);
+    else if (nr_tti_rx == 1)
+      pusch_tti = (7);
+    else if (nr_tti_rx == 4)
+      pusch_tti = (8);
     else {
-      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-            subframe,frame_parms->tdd_config);
-      pusch_subframe = (0);
+      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal nr_tti_rx %d for tdd_config %d\n",
+            nr_tti_rx,frame_parms->tdd_config);
+      pusch_tti = (0);
     }
 
     break;
 
   case 2:
-    if (subframe == 8)
-      pusch_subframe = (2);
-    else if (subframe == 3)
-      pusch_subframe = (7);
+    if (nr_tti_rx == 8)
+      pusch_tti = (2);
+    else if (nr_tti_rx == 3)
+      pusch_tti = (7);
     else {
-      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-            subframe,frame_parms->tdd_config);
-      pusch_subframe = (0);
+      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal nr_tti_rx %d for tdd_config %d\n",
+            nr_tti_rx,frame_parms->tdd_config);
+      pusch_tti = (0);
     }
 
     break;
 
   case 3:
-    if ( (subframe == 8) || (subframe == 9) ) {
-      pusch_subframe = (subframe-6);
-    } else if (subframe==0)
-      pusch_subframe = (4);
+    if ( (nr_tti_rx == 8) || (nr_tti_rx == 9) ) {
+      pusch_tti = (nr_tti_rx-6);
+    } else if (nr_tti_rx==0)
+      pusch_tti = (4);
     else {
-      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-            subframe,frame_parms->tdd_config);
-      pusch_subframe = (0);
+      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal nr_tti_rx %d for tdd_config %d\n",
+            nr_tti_rx,frame_parms->tdd_config);
+      pusch_tti = (0);
     }
 
     break;
 
   case 4:
-    if ( (subframe == 8) || (subframe == 9) ) {
-      pusch_subframe = (subframe-6);
+    if ( (nr_tti_rx == 8) || (nr_tti_rx == 9) ) {
+      pusch_tti = (nr_tti_rx-6);
     } else {
-      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-            subframe,frame_parms->tdd_config);
-      pusch_subframe = (0);
+      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal nr_tti_rx %d for tdd_config %d\n",
+            nr_tti_rx,frame_parms->tdd_config);
+      pusch_tti = (0);
     }
 
     break;
 
   case 5:
-    if (subframe == 8) {
-      pusch_subframe = (2);
+    if (nr_tti_rx == 8) {
+      pusch_tti = (2);
     } else {
-      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-            subframe,frame_parms->tdd_config);
-      pusch_subframe = (0);
+      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal nr_tti_rx %d for tdd_config %d\n",
+            nr_tti_rx,frame_parms->tdd_config);
+      pusch_tti = (0);
     }
 
     break;
 
   case 6:
-    if (subframe == 6) {
-      pusch_subframe = (2);
-    } else if (subframe == 9) {
-      pusch_subframe = (3);
-    } else if (subframe == 0) {
-      pusch_subframe = (4);
-    } else if (subframe == 1) {
-      pusch_subframe = (7);
-    } else if (subframe == 5) {
-      pusch_subframe = (8);
+    if (nr_tti_rx == 6) {
+      pusch_tti = (2);
+    } else if (nr_tti_rx == 9) {
+      pusch_tti = (3);
+    } else if (nr_tti_rx == 0) {
+      pusch_tti = (4);
+    } else if (nr_tti_rx == 1) {
+      pusch_tti = (7);
+    } else if (nr_tti_rx == 5) {
+      pusch_tti = (8);
     } else {
-      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-            subframe,frame_parms->tdd_config);
-      pusch_subframe = (0);
+      LOG_E(PHY,"phich.c: phich_subframe2_pusch_subframe, illegal nr_tti_rx %d for tdd_config %d\n",
+            nr_tti_rx,frame_parms->tdd_config);
+      pusch_tti = (0);
     }
 
     break;
 
   default:
     LOG_E(PHY, "no implementation for TDD UL/DL-config = %d!\n", frame_parms->tdd_config);
-    pusch_subframe = (0);
+    pusch_tti = (0);
   }
 
-  LOG_D(PHY, "subframe  %d: PUSCH subframe = %d\n", subframe, pusch_subframe);
-  return pusch_subframe;
+  LOG_D(PHY, "nr_tti_rx  %d: PUSCH nr_tti_rx = %d\n", nr_tti_rx, pusch_tti);
+  return pusch_tti;
 }
 
 int check_pcfich(LTE_DL_FRAME_PARMS *frame_parms,uint16_t reg)
@@ -405,7 +405,7 @@ void generate_phich_reg_mapping(LTE_DL_FRAME_PARMS *frame_parms)
 
 void generate_phich_emul(LTE_DL_FRAME_PARMS *frame_parms,
                          uint8_t HI,
-                         uint8_t subframe)
+                         uint8_t nr_tti_rx)
 {
 
 
@@ -421,7 +421,7 @@ void generate_phich(LTE_DL_FRAME_PARMS *frame_parms,
                     uint8_t nseq_PHICH,
                     uint8_t ngroup_PHICH,
                     uint8_t HI,
-                    uint8_t subframe,
+                    uint8_t nr_tti_rx,
                     int32_t **y)
 {
 
@@ -436,7 +436,7 @@ void generate_phich(LTE_DL_FRAME_PARMS *frame_parms,
   int16_t cs[12];
   uint32_t i,i2,i3,m,j;
   int16_t gain_lin_QPSK;
-  uint32_t subframe_offset=((frame_parms->Ncp==0)?14:12)*frame_parms->ofdm_symbol_size*subframe;
+  uint32_t subframe_offset=((frame_parms->Ncp==0)?14:12)*frame_parms->ofdm_symbol_size*nr_tti_rx;
 
   memset(d,0,24*sizeof(int16_t));
 
@@ -454,7 +454,7 @@ void generate_phich(LTE_DL_FRAME_PARMS *frame_parms,
 
   //  c = (1-(2*HI))*SSS_AMP;
   // x1 is set in lte_gold_generic
-  x2 = (((subframe+1)*((frame_parms->Nid_cell<<1)+1))<<9) + frame_parms->Nid_cell;
+  x2 = (((nr_tti_rx+1)*((frame_parms->Nid_cell<<1)+1))<<9) + frame_parms->Nid_cell;
 
   s = lte_gold_generic(&x1, &x2, reset);
 
@@ -466,7 +466,7 @@ void generate_phich(LTE_DL_FRAME_PARMS *frame_parms,
 
   if (frame_parms->Ncp == 0) { // Normal Cyclic Prefix
 
-    //    printf("Doing PHICH : Normal CP, subframe %d\n",subframe);
+    //    printf("Doing PHICH : Normal CP, nr_tti_rx %d\n",nr_tti_rx);
     // 12 output symbols (Msymb)
     for (i=0,i2=0,i3=0; i<3; i++,i2+=4,i3+=8) {
       switch (nseq_PHICH) {
@@ -1072,16 +1072,16 @@ void generate_phich(LTE_DL_FRAME_PARMS *frame_parms,
 
 void rx_phich(PHY_VARS_UE *ue,
 	      UE_rxtx_proc_t *proc,
-              uint8_t subframe,
+              uint8_t nr_tti_rx,
               uint8_t eNB_id)
 {
 
 
   LTE_DL_FRAME_PARMS *frame_parms=&ue->frame_parms;
-  LTE_UE_PDCCH **pdcch_vars = &ue->pdcch_vars[ue->current_thread_id[subframe]][eNB_id];
+  LTE_UE_PDCCH **pdcch_vars = &ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id];
 
   //  uint8_t HI;
-  uint8_t harq_pid = phich_subframe_to_harq_pid(frame_parms,proc->frame_rx,subframe);
+  uint8_t harq_pid = phich_subframe_to_harq_pid(frame_parms,proc->frame_rx,nr_tti_rx);
   LTE_UE_ULSCH_t *ulsch = ue->ulsch[eNB_id];
   int16_t phich_d[24],*phich_d_ptr,HI16;
   //  unsigned int i,aa;
@@ -1096,20 +1096,20 @@ void rx_phich(PHY_VARS_UE *ue,
   int32_t **rxdataF_comp = pdcch_vars[eNB_id]->rxdataF_comp;
   uint8_t Ngroup_PHICH,ngroup_PHICH,nseq_PHICH;
   uint8_t NSF_PHICH = 4;
-  uint8_t pusch_subframe;
+  uint8_t pusch_tti;
 
   int8_t delta_PUSCH_acc[4] = {-1,0,1,3};
 
-  // check if we're expecting a PHICH in this subframe
-  LOG_D(PHY,"[UE  %d][PUSCH %d] Frame %d subframe %d PHICH RX\n",ue->Mod_id,harq_pid,proc->frame_rx,subframe);
+  // check if we're expecting a PHICH in this nr_tti_rx
+  LOG_D(PHY,"[UE  %d][PUSCH %d] Frame %d nr_tti_rx %d PHICH RX\n",ue->Mod_id,harq_pid,proc->frame_rx,nr_tti_rx);
 
   if (!ulsch)
     return;
 
-  LOG_D(PHY,"[UE  %d][PUSCH %d] Frame %d subframe %d PHICH RX Status: %d \n",ue->Mod_id,harq_pid,proc->frame_rx,subframe, ulsch->harq_processes[harq_pid]->status);
+  LOG_D(PHY,"[UE  %d][PUSCH %d] Frame %d nr_tti_rx %d PHICH RX Status: %d \n",ue->Mod_id,harq_pid,proc->frame_rx,nr_tti_rx, ulsch->harq_processes[harq_pid]->status);
 
   if (ulsch->harq_processes[harq_pid]->status == ACTIVE) {
-     LOG_D(PHY,"[UE  %d][PUSCH %d] Frame %d subframe %d PHICH RX ACTIVE\n",ue->Mod_id,harq_pid,proc->frame_rx,subframe);
+     LOG_D(PHY,"[UE  %d][PUSCH %d] Frame %d nr_tti_rx %d PHICH RX ACTIVE\n",ue->Mod_id,harq_pid,proc->frame_rx,nr_tti_rx);
     Ngroup_PHICH = (frame_parms->phich_config_common.phich_resource*frame_parms->N_RB_DL)/48;
 
     if (((frame_parms->phich_config_common.phich_resource*frame_parms->N_RB_DL)%48) > 0)
@@ -1123,20 +1123,20 @@ void rx_phich(PHY_VARS_UE *ue,
                     ulsch->harq_processes[harq_pid]->n_DMRS)%Ngroup_PHICH;
 
     if ((frame_parms->tdd_config == 0) && (frame_parms->frame_type == TDD) ) {
-      pusch_subframe = phich_subframe2_pusch_subframe(frame_parms,subframe);
+      pusch_tti = phich_subframe2_pusch_subframe(frame_parms,nr_tti_rx);
 
-      if ((pusch_subframe == 4) || (pusch_subframe == 9))
+      if ((pusch_tti == 4) || (pusch_tti == 9))
         ngroup_PHICH += Ngroup_PHICH;
     }
 
     nseq_PHICH = ((ulsch->harq_processes[harq_pid]->first_rb/Ngroup_PHICH) +
                   ulsch->harq_processes[harq_pid]->n_DMRS)%(2*NSF_PHICH);
   } else {
-    LOG_D(PHY,"[UE  %d][PUSCH %d] Frame %d subframe %d PHICH RX %s\n",
+    LOG_D(PHY,"[UE  %d][PUSCH %d] Frame %d pusch_tti %d PHICH RX %s\n",
         ue->Mod_id,
         harq_pid,
         proc->frame_rx,
-        subframe,
+        pusch_tti,
         (ulsch->harq_processes[harq_pid]->status==SCH_IDLE?   "SCH_IDLE"  :
         (ulsch->harq_processes[harq_pid]->status==ACTIVE?     "ACTIVE"    :
         (ulsch->harq_processes[harq_pid]->status==CBA_ACTIVE? "CBA_ACTIVE":
@@ -1149,7 +1149,7 @@ void rx_phich(PHY_VARS_UE *ue,
   phich_d_ptr = phich_d;
 
   // x1 is set in lte_gold_generic
-  x2 = (((subframe+1)*((frame_parms->Nid_cell<<1)+1))<<9) + frame_parms->Nid_cell;
+  x2 = (((pusch_tti+1)*((frame_parms->Nid_cell<<1)+1))<<9) + frame_parms->Nid_cell;
 
   s = lte_gold_generic(&x1, &x2, reset);
 
@@ -1381,10 +1381,10 @@ void rx_phich(PHY_VARS_UE *ue,
 
   if (HI16>0) {   //NACK
     if (ue->ulsch_Msg3_active[eNB_id] == 1) {
-      LOG_I(PHY,"[UE  %d][PUSCH %d][RAPROC] Frame %d subframe %d Msg3 PHICH, received NAK (%d) nseq %d, ngroup %d\n",
+      LOG_I(PHY,"[UE  %d][PUSCH %d][RAPROC] Frame %d pusch_tti %d Msg3 PHICH, received NAK (%d) nseq %d, ngroup %d\n",
             ue->Mod_id,harq_pid,
             proc->frame_rx,
-            subframe,
+            pusch_tti,
             HI16,
             nseq_PHICH,
             ngroup_PHICH);
@@ -1392,7 +1392,7 @@ void rx_phich(PHY_VARS_UE *ue,
       ulsch->f_pusch += delta_PUSCH_acc[ulsch->harq_processes[harq_pid]->TPC];
 
       LOG_I(PHY,"[PUSCH %d] AbsSubframe %d.%d: f_pusch (ACC) %d, adjusting by %d (TPC %d)\n",
-                 harq_pid,proc->frame_rx,subframe,ulsch->f_pusch,
+                 harq_pid,proc->frame_rx,pusch_tti,ulsch->f_pusch,
                     delta_PUSCH_acc[ulsch->harq_processes[harq_pid]->TPC],
                     ulsch->harq_processes[harq_pid]->TPC);
 
@@ -1410,10 +1410,10 @@ void rx_phich(PHY_VARS_UE *ue,
       }
     } else {
 #ifdef UE_DEBUG_TRACE
-      LOG_I(PHY,"[UE  %d][PUSCH %d] Frame %d subframe %d PHICH, received NAK (%d) nseq %d, ngroup %d round %d (Mlimit %d)\n",
+      LOG_I(PHY,"[UE  %d][PUSCH %d] Frame %d pusch_tti %d PHICH, received NAK (%d) nseq %d, ngroup %d round %d (Mlimit %d)\n",
             ue->Mod_id,harq_pid,
             proc->frame_rx%1024,
-            subframe,
+            pusch_tti,
             HI16,
             nseq_PHICH,
             ngroup_PHICH,
@@ -1452,24 +1452,24 @@ void rx_phich(PHY_VARS_UE *ue,
       }
     }
 #if T_TRACER
-    T(T_UE_PHY_ULSCH_UE_NACK, T_INT(eNB_id), T_INT(proc->frame_rx%1024), T_INT(subframe), T_INT(ue->Mod_id), T_INT(ulsch->rnti),
+    T(T_UE_PHY_ULSCH_UE_NACK, T_INT(eNB_id), T_INT(proc->frame_rx%1024), T_INT(pusch_tti), T_INT(ue->Mod_id), T_INT(ulsch->rnti),
       T_INT(harq_pid));
 #endif
 
   } else {  //ACK
     if (ue->ulsch_Msg3_active[eNB_id] == 1) {
-      LOG_I(PHY,"[UE  %d][PUSCH %d][RAPROC] Frame %d subframe %d Msg3 PHICH, received ACK (%d) nseq %d, ngroup %d\n\n",
+      LOG_I(PHY,"[UE  %d][PUSCH %d][RAPROC] Frame %d pusch_tti %d Msg3 PHICH, received ACK (%d) nseq %d, ngroup %d\n\n",
             ue->Mod_id,harq_pid,
             proc->frame_rx,
-            subframe,
+            pusch_tti,
             HI16,
             nseq_PHICH,ngroup_PHICH);
     } else {
 #ifdef UE_DEBUG_TRACE
-      LOG_I(PHY,"[UE  %d][PUSCH %d] Frame %d subframe %d PHICH, received ACK (%d) nseq %d, ngroup %d\n\n",
+      LOG_I(PHY,"[UE  %d][PUSCH %d] Frame %d pusch_tti %d PHICH, received ACK (%d) nseq %d, ngroup %d\n\n",
             ue->Mod_id,harq_pid,
             proc->frame_rx%1024,
-            subframe, HI16,
+            pusch_tti, HI16,
             nseq_PHICH,ngroup_PHICH);
 #endif
     }
@@ -1490,7 +1490,7 @@ void rx_phich(PHY_VARS_UE *ue,
     ue->ulsch_Msg3_active[eNB_id] = 0;
 
 #if T_TRACER
-    T(T_UE_PHY_ULSCH_UE_ACK, T_INT(eNB_id), T_INT(proc->frame_rx%1024), T_INT(subframe), T_INT(ue->Mod_id), T_INT(ulsch->rnti),
+    T(T_UE_PHY_ULSCH_UE_ACK, T_INT(eNB_id), T_INT(proc->frame_rx%1024), T_INT(pusch_tti), T_INT(ue->Mod_id), T_INT(ulsch->rnti),
       T_INT(harq_pid));
 #endif
 

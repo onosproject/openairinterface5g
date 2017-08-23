@@ -34,7 +34,7 @@
 void lte_adjust_synch(LTE_DL_FRAME_PARMS *frame_parms,
                       PHY_VARS_UE *ue,
                       unsigned char eNB_id,
-					  uint8_t subframe,
+					  uint8_t nr_tti_rx,
                       unsigned char clear,
                       short coef)
 {
@@ -51,7 +51,7 @@ void lte_adjust_synch(LTE_DL_FRAME_PARMS *frame_parms,
   ncoef = 32767 - coef;
 
 #ifdef DEBUG_PHY
-  LOG_D(PHY,"AbsSubframe %d.%d: rx_offset (before) = %d\n",ue->proc.proc_rxtx[0].frame_rx%1024,subframe,ue->rx_offset);
+  LOG_D(PHY,"AbsSubframe %d.%d: rx_offset (before) = %d\n",ue->proc.proc_rxtx[0].frame_rx%1024,nr_tti_rx,ue->rx_offset);
 #endif //DEBUG_PHY
 
 
@@ -60,8 +60,8 @@ void lte_adjust_synch(LTE_DL_FRAME_PARMS *frame_parms,
     temp = 0;
 
     for (aa=0; aa<frame_parms->nb_antennas_rx; aa++) {
-      Re = ((int16_t*)ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates_time[eNB_id][aa])[(i<<2)];
-      Im = ((int16_t*)ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates_time[eNB_id][aa])[1+(i<<2)];
+      Re = ((int16_t*)ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates_time[eNB_id][aa])[(i<<2)];
+      Im = ((int16_t*)ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates_time[eNB_id][aa])[1+(i<<2)];
       temp += (Re*Re/2) + (Im*Im/2);
     }
 
@@ -80,7 +80,7 @@ void lte_adjust_synch(LTE_DL_FRAME_PARMS *frame_parms,
   // do not filter to have proactive timing adjustment
   max_pos_fil = max_pos;
 
-  if(subframe == 6)
+  if(nr_tti_rx == 6)
   {
       diff = max_pos_fil - (frame_parms->nb_prefix_samples>>3);
 
@@ -119,9 +119,9 @@ void lte_adjust_synch(LTE_DL_FRAME_PARMS *frame_parms,
 
       #ifdef DEBUG_PHY
       LOG_D(PHY,"AbsSubframe %d.%d: ThreadId %d diff =%i rx_offset (final) = %i : clear %d,max_pos = %d,max_pos_fil = %d (peak %d) max_val %d target_pos %d \n",
-              ue->proc.proc_rxtx[ue->current_thread_id[subframe]].frame_rx,
-              subframe,
-              ue->current_thread_id[subframe],
+              ue->proc.proc_rxtx[ue->current_thread_id[nr_tti_rx]].frame_rx,
+              nr_tti_rx,
+              ue->current_thread_id[nr_tti_rx],
               diff,
               ue->rx_offset,
               clear,
