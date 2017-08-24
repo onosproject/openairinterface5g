@@ -1132,11 +1132,11 @@ void rx_phich(PHY_VARS_UE *ue,
     nseq_PHICH = ((ulsch->harq_processes[harq_pid]->first_rb/Ngroup_PHICH) +
                   ulsch->harq_processes[harq_pid]->n_DMRS)%(2*NSF_PHICH);
   } else {
-    LOG_D(PHY,"[UE  %d][PUSCH %d] Frame %d pusch_tti %d PHICH RX %s\n",
+    LOG_D(PHY,"[UE  %d][PUSCH %d] Frame %d nr_tti_rx %d PHICH RX %s\n",
         ue->Mod_id,
         harq_pid,
         proc->frame_rx,
-        pusch_tti,
+        nr_tti_rx,
         (ulsch->harq_processes[harq_pid]->status==SCH_IDLE?   "SCH_IDLE"  :
         (ulsch->harq_processes[harq_pid]->status==ACTIVE?     "ACTIVE"    :
         (ulsch->harq_processes[harq_pid]->status==CBA_ACTIVE? "CBA_ACTIVE":

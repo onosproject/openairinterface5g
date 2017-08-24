@@ -1135,7 +1135,7 @@ void rx_prach(PHY_VARS_eNB *eNB,
 
 
   for (aa=0; aa<nb_ant_rx; aa++) {
-    prach[aa] = (int16_t*)&eNB->common_vars.rxdata[0][aa][subframe*eNB->frame_parms.samples_per_subframe-eNB->N_TA_offset];
+    prach[aa] = (int16_t*)&eNB->common_vars.rxdata[0][aa][subframe*eNB->frame_parms.samples_per_tti-eNB->N_TA_offset];
   }
 
   // First compute physical root sequence

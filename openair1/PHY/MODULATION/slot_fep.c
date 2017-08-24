@@ -89,7 +89,7 @@ int slot_fep(PHY_VARS_UE *ue,
     subframe_offset = frame_parms->ofdm_symbol_size * frame_parms->symbols_per_tti * (Ns>>1);
     slot_offset = frame_parms->ofdm_symbol_size * (frame_parms->symbols_per_tti>>1) * (Ns%2);
   } else {
-    subframe_offset = frame_parms->samples_per_subframe * (Ns>>1);
+    subframe_offset = frame_parms->samples_per_tti * (Ns>>1);
     slot_offset = (frame_parms->samples_per_tti>>1) * (Ns%2);
   }
 
@@ -303,7 +303,7 @@ int front_end_fft(PHY_VARS_UE *ue,
     subframe_offset = frame_parms->ofdm_symbol_size * frame_parms->symbols_per_tti * (Ns>>1);
     slot_offset = frame_parms->ofdm_symbol_size * (frame_parms->symbols_per_tti>>1) * (Ns%2);
   } else {
-    subframe_offset = frame_parms->samples_per_subframe * (Ns>>1);
+    subframe_offset = frame_parms->samples_per_tti * (Ns>>1);
     slot_offset = (frame_parms->samples_per_tti>>1) * (Ns%2);
   }
 
