@@ -471,11 +471,12 @@ extern "C" {
 	// Initialize Iris device
 	device->openair0_cfg = openair0_cfg;
 	char* remote_addr = device->openair0_cfg->remote_addr;
-	char* srl = strtok(remote_addr, ",");
+	char* drvtype = strtok(remote_addr, ",");
+	char *srl = strtok(NULL, ",");
 	while (srl != NULL)
 	{
 	    LOG_I(HW,"Attempting to open Iris device: %s\n", srl);
-	    std::string args = "driver=iris,serial="+std::string(srl);
+	    std::string args = "driver="+std::string(drvtype)+",serial="+std::string(srl);
 	    s->iris.push_back(SoapySDR::Device::make(args));
 	    srl = strtok(NULL, ",");
 	}
