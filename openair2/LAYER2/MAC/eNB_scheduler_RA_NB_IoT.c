@@ -36,13 +36,13 @@
 #include "msc.h"
 
 //#include "SCHED/defs.h"
-#include "SCHED/extern.h"
+#include "SCHED/extern_NB_IoT.h"
 
 
 //#include "LAYER2/MAC/defs.h"
-#include "LAYER2/MAC/extern.h"
+#include "LAYER2/MAC/extern_NB_IoT.h"
 
-#include "LAYER2/MAC/proto.h"
+//#include "LAYER2/MAC/proto_NB_IoT.h"
 #include "UTIL/LOG/log.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 //#include "UTIL/OPT/opt.h"
@@ -188,7 +188,7 @@ void schedule_RA_NB_IoT(module_id_t module_idP,frame_t frameP, sub_frame_t subfr
   LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 was acknowledged: \n",
         module_idP,CC_id,frameP,subframeP);
   // Get candidate harq_pid from PHY
-  mac_xface->get_ue_active_harq_pid(module_idP,CC_id,RA_template->rnti,frameP,subframeP,&harq_pid,&round,openair_harq_RA);
+  mac_xface->get_ue_active_harq_pid(module_idP,CC_id,RA_template->rnti,frameP,subframeP,&harq_pid,&round,openair_harq_RA_NB_IoT);
   
   if (round>0) {
     //RA_template->wait_ack_Msg4++;

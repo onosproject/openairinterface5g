@@ -59,7 +59,7 @@
 
 
 
-
+#include "defs_NB_IoT.h"
 
 
 

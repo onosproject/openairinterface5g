@@ -28,6 +28,7 @@
  */
 //#include "PHY/defs.h"
 #include "PHY/defs_NB_IoT.h"
+#include "openair2/LAYER2/MAC/proto_NB_IoT.h"
 #include "PHY/INIT/defs_NB_IoT.h"
 #include "SCHED/defs.h"
 #include "platform_types.h"
@@ -588,7 +589,7 @@ int rrc_mac_config_req_eNB_NB_IoT(
 
   int UE_id = -1;
   //UE_list_NB_IoT_t *UE_list= &eNB_mac_inst_NB_IoT->UE_list;
-  UE_id = find_UE_id(Mod_idP, rntiP);
+  UE_id = find_UE_id_NB_IoT(Mod_idP, rntiP);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
 
@@ -1371,13 +1372,14 @@ void dump_ue_list_NB_IoT(UE_list_NB_IoT_t *listP, int ul_flag)
 
 
 //defined in eNB_scheduler_primitives.c
+/*
 int rrc_mac_remove_ue_NB_IoT(
 		module_id_t mod_idP,
 		rnti_t rntiP)
 {
   int i;
   UE_list_NB_IoT_t *UE_list = &eNB_mac_inst_NB_IoT[mod_idP].UE_list;
-  int UE_id = find_UE_id(mod_idP,rntiP); //may should be changed
+  int UE_id = find_UE_id_NB_IoT(mod_idP,rntiP); //may should be changed
   int pCC_id;
 
   if (UE_id == -1) {
@@ -1431,7 +1433,7 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
   return 0;
 }
 
-
+*/
 
 //defined in L2_interface
 void mac_eNB_rrc_ul_in_sync_NB_IoT(
