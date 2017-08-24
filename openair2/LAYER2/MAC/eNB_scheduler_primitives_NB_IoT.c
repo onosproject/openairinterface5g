@@ -64,6 +64,31 @@
 
 /*TODO NB_mac_phy_remove_ue*/
 
+//------------------------------------------------------------------------------
+int find_UE_id_NB_IoT(module_id_t mod_idP, rnti_t rntiP)
+//------------------------------------------------------------------------------
+{
+  int UE_id;
+  UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
+
+  for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX_NB_IoT; UE_id++) {
+    if (UE_list->active[UE_id] != TRUE) continue;
+    if (UE_list->UE_template[UE_PCCID_NB_IoT(mod_idP,UE_id)][UE_id].rnti==rntiP) {
+      return(UE_id);
+    }
+  }
+
+  return(-1);
+}
+
+//------------------------------------------------------------------------------
+int UE_PCCID_NB_IoT(module_id_t mod_idP,int ue_idP)
+//------------------------------------------------------------------------------
+{
+  return(eNB_mac_inst_NB_IoT[mod_idP].UE_list.pCC_id[ue_idP]);
+}
+
+
 
 int rrc_mac_remove_ue_NB_IoT(
 		module_id_t mod_idP,

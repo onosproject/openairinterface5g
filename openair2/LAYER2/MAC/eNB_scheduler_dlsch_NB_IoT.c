@@ -29,40 +29,44 @@
 
  */
 
-#include "assertions.h"
+//#include "assertions.h"
 //#include "PHY/defs.h"
-#include "PHY/extern.h"
+//#include "PHY/extern_NB_IoT.h"
 
-#include "SCHED/defs.h"
-#include "SCHED/extern.h"
+//#include "SCHED/defs.h"
+//#include "SCHED/extern.h"
 
-#include "LAYER2/MAC/defs.h"
-#include "LAYER2/MAC/proto.h"
-#include "LAYER2/MAC/extern.h"
+//#include "SCHED/defs_NB_IoT.h"
+//#include "SCHED/extern_NB_IoT.h"
+
+//#include "LAYER2/MAC/defs.h"
+//#include "LAYER2/MAC/proto.h"
+//#include "LAYER2/MAC/extern.h"
 #include "UTIL/LOG/log.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
-#include "UTIL/OPT/opt.h"
-#include "OCG.h"
-#include "OCG_extern.h"
+//#include "UTIL/LOG/vcd_signal_dumper.h"
+//#include "UTIL/OPT/opt.h"
+//#include "OCG.h"
+//#include "OCG_extern.h"
 //NB-IoT
-#include "PHY/defs_NB_IoT.h"
-#include "defs_NB_IoT.h"
-#include "proto_NB_IoT.h"
-
-#include "RRC/LITE/extern.h"
-#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
+//#include "PHY/defs_NB_IoT.h"
+//#include "LAYER2/MAC/defs_NB_IoT.h"
+#include "LAYER2/MAC/proto_NB_IoT.h"
+#include "LAYER2/MAC/extern_NB_IoT.h"
+//#include "RRC/LITE/extern_NB_IoT.h"
+//#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 
 //#include "LAYER2/MAC/pre_processor.c"
-#include "pdcp.h"
+//#include "pdcp.h"
+//#include "COMMON/platform_types.h"
+//#include "SIMULATION/TOOLS/defs.h" // for taus
 
-#include "SIMULATION/TOOLS/defs.h" // for taus
-
+/*
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
 #endif
 
 #include "T.h"
-
+*/
 #define ENABLE_MAC_PAYLOAD_DEBUG
 //#define DEBUG_eNB_SCHEDULER 1
 
@@ -87,7 +91,7 @@ uint8_t *get_dlsch_sdu_NB_IoT(
     return((unsigned char *)&eNB->common_channels[CC_id].BCCH_pdu.payload[0]);
   }
 
-  UE_id = find_UE_id(module_idP,rntiP);
+  UE_id = find_UE_id_NB_IoT(module_idP,rntiP);
 
   if (UE_id != -1) {
     LOG_D(MAC,"[eNB %d] Frame %d:  CC_id %d Get DLSCH sdu for rnti %x => UE_id %d\n",module_idP,frameP,CC_id,rntiP,UE_id);

@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file LAYER2/MAC/proto.h
+/*! \file LAYER2/MAC/proto_NB_IoT.h
  * \brief MAC functions prototypes for eNB and UE
  * \author Navid Nikaein and Raymond Knopp
  * \date 2010 - 2014
@@ -30,7 +30,8 @@
 #ifndef __LAYER2_MAC_PROTO_NB_IoT_H__
 #define __LAYER2_MAC_PROTO_NB_IoT_H__
 
-
+#include "openair1/PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+#include "COMMON/platform_types.h"
 /** \addtogroup _mac
  *  @{
  */
@@ -69,5 +70,8 @@ int rrc_mac_remove_ue_NB_IoT(module_id_t Mod_id, rnti_t rntiP);
 int l2_init_eNB_NB_IoT(void);
 int mac_init_global_param_NB_IoT(void);
 int mac_top_init_NB_IoT(void);
+
+int find_UE_id_NB_IoT (module_id_t module_idP, rnti_t rnti) ;
+int UE_PCCID_NB_IoT (module_id_t module_idP, int UE_id);
 
 #endif

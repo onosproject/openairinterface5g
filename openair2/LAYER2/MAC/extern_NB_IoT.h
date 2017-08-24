@@ -42,8 +42,8 @@
 // #ifdef PHY_EMUL
 // //#include "SIMULATION/simulation_defs.h"
 // #endif //PHY_EMUL
-#include "PHY_INTERFACE/defs.h"
-#include "RRC/LITE/defs.h"
+#include "PHY_INTERFACE/defs.h"  // should be replaced by PHY_INTERFACE/defs_NB_IoT.h (create MAC_xface for NB_IoT)
+//#include "RRC/LITE/defs.h"
 
 #ifdef NB_IOT
 #include "defs_NB_IoT.h"
@@ -79,10 +79,10 @@ extern eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
 
 
 // //#ifndef USER_MODE
-// extern MAC_xface *mac_xface;
+extern MAC_xface *mac_xface;
 // extern RRC_XFACE *Rrc_xface;
 
-// extern uint8_t Is_rrc_registered;
+extern uint8_t Is_rrc_registered;
 
 #ifndef PHY_EMUL
 #ifndef PHYSIM

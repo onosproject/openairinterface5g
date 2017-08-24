@@ -8,6 +8,15 @@
 //#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
 #include "openair2/PHY_INTERFACE/nfapi_interface.h"
 
+
+
+enum openair_HARQ_TYPE_NB_IoT {
+  openair_harq_DL_NB_IoT = 0,
+  openair_harq_UL_NB_IoT,
+  openair_harq_RA_NB_IoT
+};
+
+
 void process_schedule_rsp_NB_IoT(Sched_Rsp_t *sched_rsp,
                           		 PHY_VARS_eNB_NB_IoT *eNB,
                           		 eNB_rxtx_proc_NB_IoT_t *proc);
