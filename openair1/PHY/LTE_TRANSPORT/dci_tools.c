@@ -4764,7 +4764,7 @@ int check_dci_format1_1a_coherency(DCI_format_t dci_format,
         uint16_t ra_rnti,
         uint16_t p_rnti,
         uint32_t frame,
-        uint8_t  subframe,
+        uint8_t  nr_tti_rx,
         DCI_INFO_EXTRACTED_t *pdci_info_extarcted,
         LTE_DL_UE_HARQ_t *pdlsch0_harq)
 {
@@ -4782,7 +4782,7 @@ int check_dci_format1_1a_coherency(DCI_format_t dci_format,
     long long int RIV_max = 0;
 
 #ifdef DEBUG_DCI
-    LOG_I(PHY,"[DCI-FORMAT-1-1A] AbsSubframe %d.%d dci_format %d\n", frame, subframe, dci_format);
+    LOG_I(PHY,"[DCI-FORMAT-1-1A] AbsSubframe %d.%d dci_format %d\n", frame, nr_tti_rx, dci_format);
     LOG_I(PHY,"[DCI-FORMAT-1-1A] rnti       %x\n",  rnti);
     LOG_I(PHY,"[DCI-FORMAT-1-1A] harq_pid   %d\n", harq_pid);
     LOG_I(PHY,"[DCI-FORMAT-1-1A] rah        %d\n", rah);
@@ -5137,7 +5137,7 @@ void compute_llr_offset(LTE_DL_FRAME_PARMS *frame_parms,
                         LTE_UE_PDSCH *pdsch_vars,
                         LTE_DL_UE_HARQ_t *dlsch0_harq,
                         uint8_t nb_rb_alloc,
-                        uint8_t subframe)
+                        uint8_t nr_tti_rx)
 {
     uint32_t pbch_pss_sss_re;
     uint32_t crs_re;
@@ -5170,7 +5170,7 @@ void compute_llr_offset(LTE_DL_FRAME_PARMS *frame_parms,
         }
 
         granted_re = nb_rb_alloc * (12-crs_re);
-        pbch_pss_sss_re = adjust_G2(frame_parms,dlsch0_harq->rb_alloc_even,dlsch0_harq->Qm,subframe,symbol);
+        pbch_pss_sss_re = adjust_G2(frame_parms,dlsch0_harq->rb_alloc_even,dlsch0_harq->Qm,nr_tti_rx,symbol);
         pbch_pss_sss_re = (double)pbch_pss_sss_re * ((double)(12-crs_re)/12);
         data_re = granted_re - pbch_pss_sss_re;
         llr_offset = data_re * dlsch0_harq->Qm * 2;
@@ -5179,14 +5179,14 @@ void compute_llr_offset(LTE_DL_FRAME_PARMS *frame_parms,
         if(symbol < (frame_parms->symbols_per_tti-1))
           pdsch_vars->llr_offset[symbol+1] = pdsch_vars->llr_offset[symbol] + llr_offset;
 
-        //LOG_I(PHY,"Granted Re subframe %d / symbol %d => %d (%d RBs)\n", subframe, symbol_mod, granted_re,dlsch0_harq->nb_rb);
-        //LOG_I(PHY,"Pbch/PSS/SSS Re subframe %d / symbol %d => %d \n", subframe, symbol_mod, pbch_pss_sss_re);
-        //LOG_I(PHY,"CRS Re Per PRB subframe %d / symbol %d => %d \n", subframe, symbol_mod, crs_re);
-        //LOG_I(PHY,"Data Re subframe %d / symbol %d => %d \n", subframe, symbol_mod, data_re);
+        //LOG_I(PHY,"Granted Re nr_tti_rx %d / symbol %d => %d (%d RBs)\n", nr_tti_rx, symbol_mod, granted_re,dlsch0_harq->nb_rb);
+        //LOG_I(PHY,"Pbch/PSS/SSS Re nr_tti_rx %d / symbol %d => %d \n", nr_tti_rx, symbol_mod, pbch_pss_sss_re);
+        //LOG_I(PHY,"CRS Re Per PRB nr_tti_rx %d / symbol %d => %d \n", nr_tti_rx, symbol_mod, crs_re);
+        //LOG_I(PHY,"Data Re nr_tti_rx %d / symbol %d => %d \n", nr_tti_rx, symbol_mod, data_re);
 
 
 
-        //LOG_I(PHY,"Data Re subframe %d-symbol %d => llr length %d, llr offset %d \n", subframe, symbol,
+        //LOG_I(PHY,"Data Re nr_tti_rx %d-symbol %d => llr length %d, llr offset %d \n", nr_tti_rx, symbol,
         //      pdsch_vars->llr_length[symbol], pdsch_vars->llr_offset[symbol]);
     }
 }
@@ -5196,7 +5196,7 @@ void prepare_dl_decoding_format1_1A(DCI_format_t dci_format,
                                     LTE_DL_FRAME_PARMS *frame_parms,
                                     LTE_UE_PDCCH *pdcch_vars,
                                     LTE_UE_PDSCH *pdsch_vars,
-                                    uint8_t  subframe,
+                                    uint8_t  nr_tti_rx,
                                     uint16_t rnti,
 									uint16_t tc_rnti,
                                     uint16_t si_rnti,
@@ -5268,7 +5268,7 @@ void prepare_dl_decoding_format1_1A(DCI_format_t dci_format,
     pdlsch0->active           = 1;
     pdlsch0->rnti             = rnti;
     if(dci_format == format1A)
-        pdlsch0->harq_ack[subframe].vDAI_DL = dai+1;
+        pdlsch0->harq_ack[nr_tti_rx].vDAI_DL = dai+1;
 
     if ((rnti==si_rnti) || (rnti==p_rnti) || (rnti==ra_rnti))
     {
@@ -5302,9 +5302,9 @@ void prepare_dl_decoding_format1_1A(DCI_format_t dci_format,
                 // skip pdsch decoding and report ack
                 //pdlsch0_harq->status   = SCH_IDLE;
                 pdlsch0->active       = 0;
-                pdlsch0->harq_ack[subframe].ack = 1;
-                pdlsch0->harq_ack[subframe].harq_id = harq_pid;
-                pdlsch0->harq_ack[subframe].send_harq_status = 1;
+                pdlsch0->harq_ack[nr_tti_rx].ack = 1;
+                pdlsch0->harq_ack[nr_tti_rx].harq_id = harq_pid;
+                pdlsch0->harq_ack[nr_tti_rx].send_harq_status = 1;
 
                 //pdlsch0_harq->first_tx = 0;
             }
@@ -5445,7 +5445,7 @@ void prepare_dl_decoding_format1_1A(DCI_format_t dci_format,
                        pdsch_vars,
                        pdlsch0_harq,
                        nb_rb_alloc,
-                       subframe);
+                       nr_tti_rx);
 }
 
 void prepare_dl_decoding_format1C(uint8_t N_RB_DL,
@@ -5458,7 +5458,7 @@ void prepare_dl_decoding_format1C(uint8_t N_RB_DL,
                                   uint32_t ra_rnti,
                                   uint32_t p_rnti,
                                   uint32_t frame,
-                                  uint8_t  subframe,
+                                  uint8_t  nr_tti_rx,
                                   LTE_DL_UE_HARQ_t *pdlsch0_harq,
                                   LTE_UE_DLSCH_t *pdlsch0)
 {
@@ -5473,10 +5473,10 @@ void prepare_dl_decoding_format1C(uint8_t N_RB_DL,
       pdlsch0_harq->vrb_type  = DISTRIBUTED;
 
       if (rnti==si_rnti) { // rule from Section 5.3.1 of 36.321
-        if (((frame&1) == 0) && (subframe == 5))
+        if (((frame&1) == 0) && (nr_tti_rx == 5))
            pdlsch0_harq->rvidx = (((3*((frame>>1)&3))+1)>>1)&3;  // SIB1
         else
-           pdlsch0_harq->rvidx = (((3*(subframe&3))+1)>>1)&3;  // other SIBs
+           pdlsch0_harq->rvidx = (((3*(nr_tti_rx&3))+1)>>1)&3;  // other SIBs
       }
       else if ((rnti==p_rnti) || (rnti==ra_rnti)) { // Section 7.1.7.3
         pdlsch0_harq->rvidx = 0;
@@ -5561,7 +5561,7 @@ void prepare_dl_decoding_format1C(uint8_t N_RB_DL,
                        pdsch_vars,
                        pdlsch0_harq,
                        pdlsch0_harq->nb_rb,
-                       subframe);
+                       nr_tti_rx);
 
 }
 
@@ -5727,7 +5727,7 @@ void compute_precoding_info_format2A(uint8_t tpmi,
         }
       }
       //    printf("Format 2A: NPRB=%d (rballoc %x,mcs1 %d, mcs2 %d, frame_type %d N_RB_DL %d,active %d/%d)\n",NPRB,rballoc,mcs1,mcs2,frame_parms->frame_type,frame_parms->N_RB_DL,dlsch0->active,dlsch1->active);
-      //printf("UE (%x/%d): Subframe %d Format2A DCI: ndi1 %d, old_ndi1 %d, ndi2 %d, old_ndi2 %d (first tx1 %d, first tx2 %d) harq_status1 %d, harq_status2 %d\n",dlsch0->rnti,harq_pid,subframe,ndi,dlsch0_harq->DCINdi,
+      //printf("UE (%x/%d): nr_tti_rx %d Format2A DCI: ndi1 %d, old_ndi1 %d, ndi2 %d, old_ndi2 %d (first tx1 %d, first tx2 %d) harq_status1 %d, harq_status2 %d\n",dlsch0->rnti,harq_pid,nr_tti_rx,ndi,dlsch0_harq->DCINdi,
       //    dlsch0_harq->first_tx,dlsch1_harq->first_tx,dlsch0_harq->status,dlsch1_harq->status);
       //printf("TBS0 %d, TBS1 %d\n",dlsch0_harq->TBS,dlsch1_harq->TBS);
 
@@ -5739,7 +5739,7 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
                                     LTE_UE_PDCCH *pdcch_vars,
                                     LTE_UE_PDSCH *pdsch_vars,
                                     uint16_t rnti,
-                                    uint8_t subframe,
+                                    uint8_t nr_tti_rx,
                                     LTE_DL_UE_HARQ_t *dlsch0_harq,
                                     LTE_DL_UE_HARQ_t *dlsch1_harq,
                                     LTE_UE_DLSCH_t *pdlsch0,
@@ -5793,9 +5793,9 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
         dlsch1_harq->dl_power_off = 1;
 
         pdlsch0->current_harq_pid = harq_pid;
-        pdlsch0->harq_ack[subframe].harq_id     = harq_pid;
+        pdlsch0->harq_ack[nr_tti_rx].harq_id     = harq_pid;
         pdlsch1->current_harq_pid = harq_pid;
-        pdlsch1->harq_ack[subframe].harq_id     = harq_pid;
+        pdlsch1->harq_ack[nr_tti_rx].harq_id     = harq_pid;
 
         // assume two CW are active
         dlsch0_harq->status   = ACTIVE;
@@ -5945,13 +5945,13 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
         if(dlsch0_harq->mcs <= 28)
         {
             dlsch0_harq->TBS = TBStable[get_I_TBS(dlsch0_harq->mcs)][dlsch0_harq->nb_rb-1];
-            LOG_D(PHY,"[UE] DLSCH: New TBS CW0 subframe %d (pid %d, round %d) TBS %d \n",
-                       subframe,harq_pid,dlsch0_harq->round, dlsch0_harq->TBS);
+            LOG_D(PHY,"[UE] DLSCH: New TBS CW0 nr_tti_rx %d (pid %d, round %d) TBS %d \n",
+                       nr_tti_rx,harq_pid,dlsch0_harq->round, dlsch0_harq->TBS);
         }
         else
         {
-            LOG_D(PHY,"[UE] DLSCH: Keep the same TBS CW0 subframe %d (pid %d, round %d) TBS %d \n",
-                       subframe,harq_pid,dlsch0_harq->round, dlsch0_harq->TBS);
+            LOG_D(PHY,"[UE] DLSCH: Keep the same TBS CW0 nr_tti_rx %d (pid %d, round %d) TBS %d \n",
+                       nr_tti_rx,harq_pid,dlsch0_harq->round, dlsch0_harq->TBS);
         }
         //if(dlsch0_harq->Nl == 2)
         //dlsch0_harq->TBS = TBStable[get_I_TBS(dlsch0_harq->mcs)][(dlsch0_harq->nb_rb<<1)-1];
@@ -5994,13 +5994,13 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
         if(dlsch1_harq->mcs <= 28)
         {
             dlsch1_harq->TBS = TBStable[get_I_TBS(dlsch1_harq->mcs)][dlsch1_harq->nb_rb-1];
-            LOG_D(PHY,"[UE] DLSCH: New TBS CW1 subframe %d (pid %d, round %d) TBS %d \n",
-                       subframe,harq_pid,dlsch1_harq->round, dlsch1_harq->TBS);
+            LOG_D(PHY,"[UE] DLSCH: New TBS CW1 nr_tti_rx %d (pid %d, round %d) TBS %d \n",
+                       nr_tti_rx,harq_pid,dlsch1_harq->round, dlsch1_harq->TBS);
         }
         else
         {
-            LOG_D(PHY,"[UE] DLSCH: Keep the same TBS CW1 subframe %d (pid %d, round %d) TBS %d \n",
-                       subframe,harq_pid,dlsch1_harq->round, dlsch1_harq->TBS);
+            LOG_D(PHY,"[UE] DLSCH: Keep the same TBS CW1 nr_tti_rx %d (pid %d, round %d) TBS %d \n",
+                       nr_tti_rx,harq_pid,dlsch1_harq->round, dlsch1_harq->TBS);
         }
         if (mcs2 <= 28)
             dlsch1_harq->Qm = get_Qm(mcs2);
@@ -6014,7 +6014,7 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
                          pdsch_vars,
                          dlsch0_harq,
                          dlsch0_harq->nb_rb,
-                         subframe);
+                         nr_tti_rx);
 
 
  /* #ifdef DEBUG_HARQ
@@ -6030,7 +6030,7 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
 }
 
 int generate_ue_dlsch_params_from_dci(int frame,
-                                      uint8_t subframe,
+                                      uint8_t nr_tti_rx,
                                       void *dci_pdu,
                                       uint16_t rnti,
                                       DCI_format_t dci_format,
@@ -6061,7 +6061,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
     LOG_D(PHY,"dci_tools.c: Filling ue dlsch params -> rnti %x, SFN/SF %d/%d, dci_format %s\n",
         rnti,
         frame%1024,
-        subframe,
+        nr_tti_rx,
         (dci_format==format0?  "Format 0":(
          dci_format==format1?  "format 1":(
          dci_format==format1A? "format 1A":(
@@ -6090,7 +6090,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
     {
       // extract dci infomation
 #ifdef DEBUG_DCI
-      LOG_I(PHY,"[DCI-FORMAT-1A] AbsSubframe %d.%d extarct dci info \n", frame, subframe);
+      LOG_I(PHY,"[DCI-FORMAT-1A] AbsSubframe %d.%d extarct dci info \n", frame, nr_tti_rx);
 #endif
       extract_dci1A_info(frame_parms->N_RB_DL,
                          frame_type,
@@ -6103,7 +6103,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
       dlsch0->active = 0;
       dlsch0_harq   = dlsch[0]->harq_processes[dci_info_extarcted.harq_pid];
 #ifdef DEBUG_DCI
-      LOG_I(PHY,"[DCI-FORMAT-1A] AbsSubframe %d.%d check dci coherency \n", frame, subframe);
+      LOG_I(PHY,"[DCI-FORMAT-1A] AbsSubframe %d.%d check dci coherency \n", frame, nr_tti_rx);
 #endif
       status = check_dci_format1_1a_coherency(format1A,
                                               frame_parms->N_RB_DL,
@@ -6111,7 +6111,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
                                               tc_rnti,
                                               si_rnti,
                                               ra_rnti,
-                                              p_rnti,frame,subframe,
+                                              p_rnti,frame,nr_tti_rx,
                                               &dci_info_extarcted,
                                               dlsch0_harq);
       if(status == 0)
@@ -6122,7 +6122,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
 
       // dci is correct ==> update internal structure and prepare dl decoding
 #ifdef DEBUG_DCI
-      LOG_I(PHY,"[DCI-FORMAT-1A] AbsSubframe %d.%d prepare dl decoding \n", frame, subframe);
+      LOG_I(PHY,"[DCI-FORMAT-1A] AbsSubframe %d.%d prepare dl decoding \n", frame, nr_tti_rx);
 #endif
       prepare_dl_decoding_format1_1A(format1A,
                                      frame_parms->N_RB_DL,
@@ -6130,7 +6130,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
                                      frame_parms,
                                      pdcch_vars,
                                      pdsch_vars,
-                                     subframe,
+                                     nr_tti_rx,
                                      rnti,
 									 tc_rnti,
                                      si_rnti,
@@ -6187,7 +6187,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
                                    ra_rnti,
                                    p_rnti,
                                    frame,
-                                   subframe,
+                                   nr_tti_rx,
                                    dlsch0_harq,
                                    dlsch0);
 
@@ -6198,7 +6198,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
     {
       // extract dci infomation
 #ifdef DEBUG_DCI
-      LOG_I(PHY,"[DCI-FORMAT-1] AbsSubframe %d.%d extarct dci info \n", frame, subframe);
+      LOG_I(PHY,"[DCI-FORMAT-1] AbsSubframe %d.%d extarct dci info \n", frame, nr_tti_rx);
 #endif
       extract_dci1_info(frame_parms->N_RB_DL,
                          frame_type,
@@ -6211,7 +6211,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
       dlsch0_harq = dlsch[0]->harq_processes[dci_info_extarcted.harq_pid];
 
 #ifdef DEBUG_DCI
-      LOG_I(PHY,"[DCI-FORMAT-1] AbsSubframe %d.%d check dci coherency \n", frame, subframe);
+      LOG_I(PHY,"[DCI-FORMAT-1] AbsSubframe %d.%d check dci coherency \n", frame, nr_tti_rx);
 #endif
       status = check_dci_format1_1a_coherency(format1,
                                               frame_parms->N_RB_DL,
@@ -6219,7 +6219,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
                                               tc_rnti,
                                               si_rnti,
                                               ra_rnti,
-                                              p_rnti,frame,subframe,
+                                              p_rnti,frame,nr_tti_rx,
                                               &dci_info_extarcted,
                                               dlsch0_harq);
       if(status == 0)
@@ -6231,7 +6231,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
 
       // dci is correct ==> update internal structure and prepare dl decoding
 #ifdef DEBUG_DCI
-      LOG_I(PHY,"[DCI-FORMAT-1] AbsSubframe %d.%d prepare dl decoding \n", frame, subframe);
+      LOG_I(PHY,"[DCI-FORMAT-1] AbsSubframe %d.%d prepare dl decoding \n", frame, nr_tti_rx);
 #endif
       prepare_dl_decoding_format1_1A(format1,
                                      frame_parms->N_RB_DL,
@@ -6239,7 +6239,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
                                      frame_parms,
                                      pdcch_vars,
                                      pdsch_vars,
-                                     subframe,
+                                     nr_tti_rx,
                                      rnti,
 									 tc_rnti,
                                      si_rnti,
@@ -6296,7 +6296,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
                 pdcch_vars,
                 pdsch_vars,
                 rnti,
-                subframe,
+                nr_tti_rx,
                 dlsch0_harq,
                 dlsch1_harq,
                 dlsch0,
@@ -6307,7 +6307,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
     case format2A:
     {
     // extract dci infomation
-    LOG_I(PHY,"[DCI-format2] AbsSubframe %d.%d extract dci infomation \n", frame%1024, subframe);
+    LOG_I(PHY,"[DCI-format2] AbsSubframe %d.%d extract dci infomation \n", frame%1024, nr_tti_rx);
     extract_dci2A_info(frame_parms->N_RB_DL,
                        frame_type,
                        frame_parms->nb_antenna_ports_eNB,
@@ -6351,7 +6351,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
                                    pdcch_vars,
                                    pdsch_vars,
                                    rnti,
-                                   subframe,
+                                   nr_tti_rx,
                                    dlsch0_harq,
                                    dlsch1_harq,
                                    dlsch0,
@@ -6370,7 +6370,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
       }
 
       dlsch[0]->current_harq_pid = harq_pid;
-      dlsch[0]->harq_ack[subframe].harq_id = harq_pid;
+      dlsch[0]->harq_ack[nr_tti_rx].harq_id = harq_pid;
 
       /*
         tbswap = ((DCI1E_5MHz_2A_M10PRB_TDD_t *)dci_pdu)->tb_swap;
@@ -6536,7 +6536,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
 #ifdef UE_DEBUG_TRACE
 
     if (dlsch[0] && (dlsch[0]->rnti != 0xffff)) {
-        LOG_I(PHY,"dci_format:%d Abssubframe: %d.%d \n",dci_format,frame%1024,subframe);
+        LOG_I(PHY,"dci_format:%d Abssubframe: %d.%d \n",dci_format,frame%1024,nr_tti_rx);
         LOG_I(PHY,"PDSCH dlsch0 UE: rnti     %x\n",dlsch[0]->rnti);
         LOG_D(PHY,"PDSCH dlsch0 UE: NBRB     %d\n",dlsch0_harq->nb_rb);
         LOG_D(PHY,"PDSCH dlsch0 UE: rballoc  %x\n",dlsch0_harq->rb_alloc_even[0]);
@@ -6554,7 +6554,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
   #if T_TRACER
     if( (dlsch[0]->rnti != si_rnti) && (dlsch[0]->rnti != ra_rnti) && (dlsch[0]->rnti != p_rnti))
     {
-    T(T_UE_PHY_DLSCH_UE_DCI, T_INT(0), T_INT(frame%1024), T_INT(subframe), T_INT(0),
+    T(T_UE_PHY_DLSCH_UE_DCI, T_INT(0), T_INT(frame%1024), T_INT(nr_tti_rx), T_INT(0),
             T_INT(dlsch[0]->rnti), T_INT(dci_format),
             T_INT(harq_pid),
             T_INT(dlsch0_harq->mcs),
@@ -6579,7 +6579,7 @@ int generate_ue_dlsch_params_from_dci(int frame,
 }
 
 
-uint8_t subframe2harq_pid(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe)
+uint8_t subframe2harq_pid(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t nr_tti_rx)
 {
   /*
     #ifdef DEBUG_DCI
@@ -6591,9 +6591,10 @@ uint8_t subframe2harq_pid(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t
   */
 
   uint8_t ret = 255;
+  uint8_t subframe = nr_tti_rx>>((int)(log2 (frame_parms->ttis_per_subframe)));
 
   if (frame_parms->frame_type == FDD) {
-    ret = (((frame<<1)+subframe)&7);
+    ret = (((frame<<1)+nr_tti_rx)&7);
   } else {
 
     switch (frame_parms->tdd_config) {
@@ -7339,7 +7340,7 @@ uint32_t pmi_extend(LTE_DL_FRAME_PARMS *frame_parms,uint8_t wideband_pmi, uint8_
 
 int generate_ue_ulsch_params_from_dci(void *dci_pdu,
                                       uint16_t rnti,
-                                      uint8_t subframe,
+                                      uint8_t nr_tti_rx,
                                       DCI_format_t dci_format,
                                       PHY_VARS_UE *ue,
                                       UE_rxtx_proc_t *proc,
@@ -7355,7 +7356,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
   uint8_t transmission_mode = ue->transmission_mode[eNB_id];
   ANFBmode_t AckNackFBMode;
   LTE_UE_ULSCH_t *ulsch = ue->ulsch[eNB_id];
-  LTE_UE_DLSCH_t **dlsch = ue->dlsch[ue->current_thread_id[subframe]][0];
+  LTE_UE_DLSCH_t **dlsch = ue->dlsch[ue->current_thread_id[nr_tti_rx]][0];
   PHY_MEASUREMENTS *meas = &ue->measurements;
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   //  uint32_t current_dlsch_cqi = ue->current_dlsch_cqi[eNB_id];
@@ -7391,12 +7392,12 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
       harq_pid = 0;
     else
       harq_pid = subframe2harq_pid(frame_parms,
-                                   pdcch_alloc2ul_frame(frame_parms,proc->frame_rx,subframe),
-                                   pdcch_alloc2ul_subframe(frame_parms,subframe));
+                                   pdcch_alloc2ul_frame(frame_parms,proc->frame_rx,nr_tti_rx),
+                                   pdcch_alloc2ul_subframe(frame_parms,nr_tti_rx));
 
     if (harq_pid == 255) {
-      LOG_E(PHY, "frame %d, subframe %d, rnti %x, format %d: illegal harq_pid!\n",
-            proc->frame_rx, subframe, rnti, dci_format);
+      LOG_E(PHY, "frame %d, nr_tti_rx %d, rnti %x, format %d: illegal harq_pid!\n",
+            proc->frame_rx, nr_tti_rx, rnti, dci_format);
       return(-1);
     }
 
@@ -7522,8 +7523,8 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
 
     if (rballoc > RIV_max) {
-      LOG_E(PHY,"frame %d, subframe %d, rnti %x, format %d: FATAL ERROR: generate_ue_ulsch_params_from_dci, rb_alloc[%d] > RIV_max[%d]\n",
-            proc->frame_rx, subframe, rnti, dci_format,rballoc,RIV_max);
+      LOG_E(PHY,"frame %d, nr_tti_rx %d, rnti %x, format %d: FATAL ERROR: generate_ue_ulsch_params_from_dci, rb_alloc[%d] > RIV_max[%d]\n",
+            proc->frame_rx, nr_tti_rx, rnti, dci_format,rballoc,RIV_max);
       LOG_E(PHY,"Wrong DCI0 detection, do not transmit PUSCH for HARQID: %d\n",harq_pid);
       ulsch->harq_processes[harq_pid]->subframe_scheduling_flag = 0;
       return(-1);
@@ -7545,14 +7546,14 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
     ulsch->harq_processes[harq_pid]->nb_rb                                 = RIV2nb_rb_LUT[rballoc];
 
     if (ue->ul_power_control_dedicated[eNB_id].accumulationEnabled == 1) {
-      LOG_D(PHY,"[UE %d][PUSCH %d] Frame %d subframe %d: f_pusch (ACC) %d, adjusting by %d (TPC %d)\n",
-            ue->Mod_id,harq_pid,proc->frame_rx,subframe,ulsch->f_pusch,
+      LOG_D(PHY,"[UE %d][PUSCH %d] Frame %d nr_tti_rx %d: f_pusch (ACC) %d, adjusting by %d (TPC %d)\n",
+            ue->Mod_id,harq_pid,proc->frame_rx,nr_tti_rx,ulsch->f_pusch,
             delta_PUSCH_acc[ue->ulsch[eNB_id]->harq_processes[harq_pid]->TPC],
             ue->ulsch[eNB_id]->harq_processes[harq_pid]->TPC);
       ulsch->f_pusch += delta_PUSCH_acc[ue->ulsch[eNB_id]->harq_processes[harq_pid]->TPC];
     } else {
-      LOG_D(PHY,"[UE %d][PUSCH %d] Frame %d subframe %d: f_pusch (ABS) %d, adjusting to %d (TPC %d)\n",
-            ue->Mod_id,harq_pid,proc->frame_rx,subframe,ulsch->f_pusch,
+      LOG_D(PHY,"[UE %d][PUSCH %d] Frame %d nr_tti_rx %d: f_pusch (ABS) %d, adjusting to %d (TPC %d)\n",
+            ue->Mod_id,harq_pid,proc->frame_rx,nr_tti_rx,ulsch->f_pusch,
             delta_PUSCH_abs[ue->ulsch[eNB_id]->harq_processes[harq_pid]->TPC],
             ue->ulsch[eNB_id]->harq_processes[harq_pid]->TPC);
       ulsch->f_pusch = delta_PUSCH_abs[ue->ulsch[eNB_id]->harq_processes[harq_pid]->TPC];
@@ -8160,9 +8161,9 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
     if (frame_parms->frame_type == FDD) {
       //int dl_subframe = (subframe<4) ? (subframe+6) : (subframe-4);
-      int dl_subframe = subframe;
+      int dl_tti = nr_tti_rx;
 
-      if (ue->dlsch[ue->current_thread_id[subframe]][eNB_id][0]->harq_ack[dl_subframe].send_harq_status>0) { // we have downlink transmission
+      if (ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id][0]->harq_ack[dl_tti].send_harq_status>0) { // we have downlink transmission
         ulsch->harq_processes[harq_pid]->O_ACK = 1;
       } else {
         ulsch->harq_processes[harq_pid]->O_ACK = 0;
@@ -8182,7 +8183,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
       //      ulsch->harq_processes[harq_pid]->V_UL_DAI = dai+1;
     }
 
-    dlsch[0]->harq_ack[subframe].vDAI_UL = dai+1;
+    dlsch[0]->harq_ack[nr_tti_rx].vDAI_UL = dai+1;
 
 
     /*LOG_I(PHY, "[PUSCH %d] Format0 DCI %s, CQI_req=%d, cshift=%d, TPC=%d, DAI=%d, vDAI_UL[sf#%d]=%d, NDI=%d, MCS=%d, RBalloc=%d, first_rb=%d, harq_pid=%d, nb_rb=%d, subframe_scheduling_flag=%d"
@@ -8238,16 +8239,16 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
     if (ue->ulsch_Msg3_active[eNB_id] == 1)
       ue->ulsch_Msg3_active[eNB_id] = 0;
 
-    LOG_D(PHY,"[UE %d][PUSCH %d] Frame %d, subframe %d : Programming PUSCH with n_DMRS2 %d (cshift %d), nb_rb %d, first_rb %d, mcs %d, round %d, rv %d, ulsch_ue_Msg3_active %d\n",
+    LOG_D(PHY,"[UE %d][PUSCH %d] Frame %d, nr_tti_rx %d : Programming PUSCH with n_DMRS2 %d (cshift %d), nb_rb %d, first_rb %d, mcs %d, round %d, rv %d, ulsch_ue_Msg3_active %d\n",
         ue->Mod_id,harq_pid,
-        proc->frame_rx,subframe,ulsch->harq_processes[harq_pid]->n_DMRS2,cshift,ulsch->harq_processes[harq_pid]->nb_rb,ulsch->harq_processes[harq_pid]->first_rb,
+        proc->frame_rx,nr_tti_rx,ulsch->harq_processes[harq_pid]->n_DMRS2,cshift,ulsch->harq_processes[harq_pid]->nb_rb,ulsch->harq_processes[harq_pid]->first_rb,
         ulsch->harq_processes[harq_pid]->mcs,ulsch->harq_processes[harq_pid]->round,ulsch->harq_processes[harq_pid]->rvidx, ue->ulsch_Msg3_active[eNB_id]);
 
   // ulsch->n_DMRS2 = ((DCI0_5MHz_TDD_1_6_t *)dci_pdu)->cshift;
 
 #ifdef UE_DEBUG_TRACE
 
-    LOG_I(PHY,"Format 0 DCI : ulsch (ue): AbsSubframe %d.%d\n",proc->frame_rx%1024,subframe);
+    LOG_I(PHY,"Format 0 DCI : ulsch (ue): AbsSubframe %d.%d\n",proc->frame_rx%1024,nr_tti_rx);
     LOG_D(PHY,"Format 0 DCI : ulsch (ue): NBRB        %d\n",ulsch->harq_processes[harq_pid]->nb_rb);
     LOG_D(PHY,"Format 0 DCI :ulsch (ue): first_rb    %d\n",ulsch->harq_processes[harq_pid]->first_rb);
     LOG_D(PHY,"Format 0 DCI :ulsch (ue): rballoc     %d\n",rballoc);
@@ -8272,8 +8273,8 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 #endif
     return(0);
   } else {
-    LOG_E(PHY,"frame %d, subframe %d: FATAL ERROR, generate_ue_ulsch_params_from_dci, Illegal dci_format %d\n",
-          proc->frame_rx, subframe,dci_format);
+    LOG_E(PHY,"frame %d, nr_tti_rx %d: FATAL ERROR, generate_ue_ulsch_params_from_dci, Illegal dci_format %d\n",
+          proc->frame_rx, nr_tti_rx,dci_format);
     return(-1);
   }
 
@@ -8916,12 +8917,12 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
 }
 
 
-double sinr_eff_cqi_calc(PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe)
+double sinr_eff_cqi_calc(PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t nr_tti_rx)
 {
   uint8_t transmission_mode = ue->transmission_mode[eNB_id];
   PHY_MEASUREMENTS *meas = &ue->measurements;
   LTE_DL_FRAME_PARMS *frame_parms =  &ue->frame_parms;
-  int32_t **dl_channel_est = ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id];
+  int32_t **dl_channel_est = ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates[eNB_id];
   double *s_dB;
   s_dB = ue->sinr_CQI_dB;
   //  LTE_UE_ULSCH_t *ulsch  = ue->ulsch[eNB_id];

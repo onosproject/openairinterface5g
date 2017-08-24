@@ -300,7 +300,7 @@ void generate_pucch1x(int32_t **txdataF,
 		      uint8_t shortened_format,
 		      uint8_t *payload,
 		      int16_t amp,
-		      uint8_t subframe)
+		      uint8_t nr_tti_rx)
 {
 
   uint32_t u,v,n;
@@ -325,10 +325,10 @@ void generate_pucch1x(int32_t **txdataF,
   LOG_D(PHY,"generate_pucch Start [deltaPUCCH_Shift %d, NRB2 %d, Ncs1_div_deltaPUCCH_Shift %d, n1_pucch %d]\n", deltaPUCCH_Shift, NRB2, Ncs1_div_deltaPUCCH_Shift,n1_pucch);
 
 
-  uint32_t u0 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[subframe<<1]) % 30;
-  uint32_t u1 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(subframe<<1)]) % 30;
-  uint32_t v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
-  uint32_t v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
+  uint32_t u0 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[nr_tti_rx<<1]) % 30;
+  uint32_t u1 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(nr_tti_rx<<1)]) % 30;
+  uint32_t v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[nr_tti_rx<<1];
+  uint32_t v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(nr_tti_rx<<1)];
 
   if ((deltaPUCCH_Shift==0) || (deltaPUCCH_Shift>3)) {
     printf("[PHY] generate_pucch: Illegal deltaPUCCH_shift %d (should be 1,2,3)\n",deltaPUCCH_Shift);
@@ -394,7 +394,7 @@ void generate_pucch1x(int32_t **txdataF,
   n_oc  =n_oc0;
 
   // loop over 2 slots
-  for (ns=(subframe<<1),u=u0,v=v0; ns<(2+(subframe<<1)); ns++,u=u1,v=v1) {
+  for (ns=(nr_tti_rx<<1),u=u0,v=v0; ns<(2+(nr_tti_rx<<1)); ns++,u=u1,v=v1) {
 
     if ((nprime&1) == 0)
       S=0;  // 1
@@ -416,7 +416,7 @@ void generate_pucch1x(int32_t **txdataF,
       refs=0;
 
       // Comput W_noc(m) (36.211 p. 19)
-      if ((ns==(1+(subframe<<1))) && (shortened_format==1)) {  // second slot and shortened format
+      if ((ns==(1+(nr_tti_rx<<1))) && (shortened_format==1)) {  // second slot and shortened format
 
         if (l<2) {                                         // data
           W_re=W3_re[n_oc][l];
@@ -525,7 +525,7 @@ void generate_pucch1x(int32_t **txdataF,
         }
 
 #ifdef DEBUG_PUCCH_TX
-        printf("[PHY] PUCCH subframe %d z(%d,%d) => %d,%d, alpha(%d) => %d,%d\n",subframe,l,n,((int16_t *)&zptr[n])[0],((int16_t *)&zptr[n])[1],
+        printf("[PHY] PUCCH nr_tti_rx %d z(%d,%d) => %d,%d, alpha(%d) => %d,%d\n",nr_tti_rx,l,n,((int16_t *)&zptr[n])[0],((int16_t *)&zptr[n])[1],
             alpha_ind,alpha_re[alpha_ind],alpha_im[alpha_ind]);
 #endif
         alpha_ind = (alpha_ind + n_cs)%12;
@@ -561,7 +561,7 @@ void generate_pucch1x(int32_t **txdataF,
     if (re_offset > frame_parms->ofdm_symbol_size)
       re_offset -= (frame_parms->ofdm_symbol_size);
 
-    symbol_offset = (unsigned int)frame_parms->ofdm_symbol_size*(l+(subframe*nsymb));
+    symbol_offset = (unsigned int)frame_parms->ofdm_symbol_size*(l+(nr_tti_rx*nsymb));
     txptr = &txdataF[0][symbol_offset];
 
     for (i=0; i<12; i++,j++) {
@@ -571,7 +571,7 @@ void generate_pucch1x(int32_t **txdataF,
         re_offset = 0;
 
 #ifdef DEBUG_PUCCH_TX
-      printf("[PHY] PUCCH subframe %d (%d,%d,%d,%d) => %d,%d\n",subframe,l,i,re_offset-1,m,((int16_t *)&z[j])[0],((int16_t *)&z[j])[1]);
+      printf("[PHY] PUCCH nr_tti_rx %d (%d,%d,%d,%d) => %d,%d\n",nr_tti_rx,l,i,re_offset-1,m,((int16_t *)&z[j])[0],((int16_t *)&z[j])[1]);
 #endif
     }
   }
@@ -587,17 +587,17 @@ void generate_pucch_emul(PHY_VARS_UE *ue,
 
 {
 
-  int subframe = proc->subframe_tx;
+  int nr_tti_rx = proc->nr_tti_rx;
 
   UE_transport_info[ue->Mod_id][ue->CC_id].cntl.pucch_flag    = format;
   UE_transport_info[ue->Mod_id][ue->CC_id].cntl.pucch_Ncs1    = ncs1;
 
 
   UE_transport_info[ue->Mod_id][ue->CC_id].cntl.sr            = sr;
-  // the value of ue->pucch_sel[subframe] is set by get_n1_pucch
-  UE_transport_info[ue->Mod_id][ue->CC_id].cntl.pucch_sel      = ue->pucch_sel[subframe];
+  // the value of ue->pucch_sel[nr_tti_rx] is set by get_n1_pucch
+  UE_transport_info[ue->Mod_id][ue->CC_id].cntl.pucch_sel      = ue->pucch_sel[nr_tti_rx];
 
-  // LOG_I(PHY,"subframe %d emu tx pucch_sel is %d sr is %d \n", subframe, UE_transport_info[ue->Mod_id].cntl.pucch_sel, sr);
+  // LOG_I(PHY,"nr_tti_rx %d emu tx pucch_sel is %d sr is %d \n", nr_tti_rx, UE_transport_info[ue->Mod_id].cntl.pucch_sel, sr);
 
   if (format == pucch_format1a) {
 
@@ -607,22 +607,22 @@ void generate_pucch_emul(PHY_VARS_UE *ue,
     ue->pucch_payload[0] = pucch_payload[0] + (pucch_payload[1]<<1);
     UE_transport_info[ue->Mod_id][ue->CC_id].cntl.pucch_payload = pucch_payload[0] + (pucch_payload[1]<<1);
   } else if (format == pucch_format1) {
-    //    LOG_D(PHY,"[UE %d] Frame %d subframe %d Generating PUCCH for SR %d\n",ue->Mod_id,proc->frame_tx,subframe,sr);
+    //    LOG_D(PHY,"[UE %d] Frame %d nr_tti_rx %d Generating PUCCH for SR %d\n",ue->Mod_id,proc->frame_tx,nr_tti_rx,sr);
   }
 
-  ue->sr[subframe] = sr;
+  ue->sr[nr_tti_rx] = sr;
 
 }
 
 
-inline void pucch2x_scrambling(LTE_DL_FRAME_PARMS *fp,int subframe,uint16_t rnti,uint32_t B,uint8_t *btilde) __attribute__((always_inline));
-inline void pucch2x_scrambling(LTE_DL_FRAME_PARMS *fp,int subframe,uint16_t rnti,uint32_t B,uint8_t *btilde) {
+inline void pucch2x_scrambling(LTE_DL_FRAME_PARMS *fp,int nr_tti_rx,uint16_t rnti,uint32_t B,uint8_t *btilde) __attribute__((always_inline));
+inline void pucch2x_scrambling(LTE_DL_FRAME_PARMS *fp,int nr_tti_rx,uint16_t rnti,uint32_t B,uint8_t *btilde) {
 
   uint32_t x1, x2, s=0;
   int i;
   uint8_t c;
 
-  x2 = (rnti) + ((uint32_t)(1+subframe)<<16)*(1+(fp->Nid_cell<<1)); //this is c_init in 36.211 Sec 6.3.1
+  x2 = (rnti) + ((uint32_t)(1+nr_tti_rx)<<16)*(1+(fp->Nid_cell<<1)); //this is c_init in 36.211 Sec 6.3.1
   s = lte_gold_generic(&x1, &x2, 1);
   for (i=0;i<19;i++) {
     c = (uint8_t)((s>>i)&1);
@@ -657,7 +657,7 @@ void generate_pucch2x(int32_t **txdataF,
 		      int A,
 		      int B2,
 		      int16_t amp,
-		      uint8_t subframe,
+		      uint8_t nr_tti_rx,
 		      uint16_t rnti) {
 
   int i,j;
@@ -668,10 +668,10 @@ void generate_pucch2x(int32_t **txdataF,
   uint8_t NRB2                      = fp->pucch_config_common.nRB_CQI;
   uint8_t Ncs1                      = fp->pucch_config_common.nCS_AN;
 
-  uint32_t u0 = fp->pucch_config_common.grouphop[subframe<<1];
-  uint32_t u1 = fp->pucch_config_common.grouphop[1+(subframe<<1)];
-  uint32_t v0 = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
-  uint32_t v1 = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
+  uint32_t u0 = fp->pucch_config_common.grouphop[nr_tti_rx<<1];
+  uint32_t u1 = fp->pucch_config_common.grouphop[1+(nr_tti_rx<<1)];
+  uint32_t v0 = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[nr_tti_rx<<1];
+  uint32_t v1 = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(nr_tti_rx<<1)];
 
   uint32_t z[12*14],*zptr;
   uint32_t u,v,n;
@@ -698,7 +698,7 @@ void generate_pucch2x(int32_t **txdataF,
       B=B^pucch_code[i];
 
   // scrambling
-  pucch2x_scrambling(fp,subframe,rnti,B,btilde);
+  pucch2x_scrambling(fp,nr_tti_rx,rnti,B,btilde);
   // modulation
   pucch2x_modulation(btilde,d,amp);
 
@@ -736,7 +736,7 @@ void generate_pucch2x(int32_t **txdataF,
   data_ind  = 0;
   zptr      = z;
   nprime    = 0;
-  for (ns=(subframe<<1),u=u0,v=v0; ns<(2+(subframe<<1)); ns++,u=u1,v=v1) {
+  for (ns=(nr_tti_rx<<1),u=u0,v=v0; ns<(2+(nr_tti_rx<<1)); ns++,u=u1,v=v1) {
 
     if ((ns&1) == 0)
         nprime = (n2_pucch < 12*NRB2) ?
@@ -820,10 +820,10 @@ void generate_pucch2x(int32_t **txdataF,
 
 
 
-    symbol_offset = (unsigned int)fp->ofdm_symbol_size*(l+(subframe*nsymb_pertti));
+    symbol_offset = (unsigned int)fp->ofdm_symbol_size*(l+(nr_tti_rx*nsymb_pertti));
     txptr = &txdataF[0][symbol_offset];
 
-    //LOG_I(PHY,"ofdmSymb %d/%d, firstCarrierOffset %d, symbolOffset[sfn %d] %d, reOffset %d, &txptr: %x \n", l, nsymb, fp->first_carrier_offset, subframe, symbol_offset, re_offset, &txptr[0]);
+    //LOG_I(PHY,"ofdmSymb %d/%d, firstCarrierOffset %d, symbolOffset[sfn %d] %d, reOffset %d, &txptr: %x \n", l, nsymb, fp->first_carrier_offset, nr_tti_rx, symbol_offset, re_offset, &txptr[0]);
 
     for (i=0; i<12; i++,j++) {
       txptr[re_offset] = z[j];
@@ -834,7 +834,7 @@ void generate_pucch2x(int32_t **txdataF,
           re_offset -= (fp->ofdm_symbol_size);
 
 #ifdef DEBUG_PUCCH_TX
-      LOG_D(PHY,"[PHY] PUCCH subframe %d (%d,%d,%d,%d) => %d,%d\n",subframe,l,i,re_offset-1,m,((int16_t *)&z[j])[0],((int16_t *)&z[j])[1]);
+      LOG_D(PHY,"[PHY] PUCCH nr_tti_rx %d (%d,%d,%d,%d) => %d,%d\n",nr_tti_rx,l,i,re_offset-1,m,((int16_t *)&z[j])[0],((int16_t *)&z[j])[1]);
 #endif
     }
   }
@@ -870,7 +870,7 @@ void generate_pucch3x(int32_t **txdataF,
                     uint8_t shortened_format,
                     uint8_t *payload,
                     int16_t amp,
-                    uint8_t subframe,
+                    uint8_t nr_tti_rx,
                     uint16_t rnti)
 {
 
@@ -886,10 +886,10 @@ void generate_pucch3x(int32_t **txdataF,
   int32_t *txptr;
   uint32_t symbol_offset;
   
-  uint32_t u0 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[subframe<<1]) % 30;
-  uint32_t u1 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(subframe<<1)]) % 30;
-  uint32_t v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
-  uint32_t v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
+  uint32_t u0 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[nr_tti_rx<<1]) % 30;
+  uint32_t u1 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(nr_tti_rx<<1)]) % 30;
+  uint32_t v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[nr_tti_rx<<1];
+  uint32_t v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(nr_tti_rx<<1)];
 
   // variables for channel coding
   uint8_t chcod_tbl_idx = 0;
@@ -933,7 +933,7 @@ void generate_pucch3x(int32_t **txdataF,
     }
 
     // Scrambling
-    cinit = (subframe + 1) * ((2 * frame_parms->Nid_cell + 1)<<16) + rnti;
+    cinit = (nr_tti_rx + 1) * ((2 * frame_parms->Nid_cell + 1)<<16) + rnti;
     s0 = lte_gold_generic(&x1,&cinit,1);
     s1 = lte_gold_generic(&x1,&cinit,0);
 
@@ -978,8 +978,8 @@ void generate_pucch3x(int32_t **txdataF,
     zptr = z;
 
     // loop over 2 slots
-    for (ns=(subframe<<1), u=u0, v=v0; ns<(2+(subframe<<1)); ns++, u=u1, v=v1) {
-      first_slot = (ns==(subframe<<1))?1:0;
+    for (ns=(nr_tti_rx<<1), u=u0, v=v0; ns<(2+(nr_tti_rx<<1)); ns++, u=u1, v=v1) {
+      first_slot = (ns==(nr_tti_rx<<1))?1:0;
 
       //loop over symbols in slot
       for (l=0; l<N_UL_symb; l++) {
@@ -1101,7 +1101,7 @@ void generate_pucch3x(int32_t **txdataF,
       if (re_offset > frame_parms->ofdm_symbol_size)
         re_offset -= (frame_parms->ofdm_symbol_size);
 
-      symbol_offset = (unsigned int)frame_parms->ofdm_symbol_size*(l+(subframe*14));
+      symbol_offset = (unsigned int)frame_parms->ofdm_symbol_size*(l+(nr_tti_rx*14));
       txptr = &txdataF[0][symbol_offset];
 
       for (i=0; i<12; i++,j++) {
@@ -1111,7 +1111,7 @@ void generate_pucch3x(int32_t **txdataF,
           re_offset = 0;
 
 #ifdef DEBUG_PUCCH_TX
-        msg("[PHY] PUCCH subframe %d (%d,%d,%d,%d) => %d,%d\n",subframe,l,i,re_offset-1,m,((int16_t *)&z[j])[0],((int16_t *)&z[j])[1]);
+        msg("[PHY] PUCCH nr_tti_rx %d (%d,%d,%d,%d) => %d,%d\n",nr_tti_rx,l,i,re_offset-1,m,((int16_t *)&z[j])[0],((int16_t *)&z[j])[1]);
 #endif
       }
     }
@@ -1244,7 +1244,7 @@ uint16_t pucchfmt3_ChannelEstimation( int16_t SubCarrierDeMapData[NB_ANTENNAS_RX
                                       double delta_theta[NB_ANTENNAS_RX][12],
                                       int16_t ChestValue[NB_ANTENNAS_RX][2][12][2],
                                       int16_t *Interpw,
-                                      uint8_t subframe,
+                                      uint8_t nr_tti_rx,
                                       uint8_t shortened_format,
                                       LTE_DL_FRAME_PARMS *frame_parms,
                                       uint16_t n3_pucch,
@@ -1271,10 +1271,10 @@ uint16_t pucchfmt3_ChannelEstimation( int16_t SubCarrierDeMapData[NB_ANTENNAS_RX
 	uint8_t N_PUCCH_SF0 = 5;
 	uint8_t N_PUCCH_SF1 = (shortened_format==0)? 5:4;
     
-    uint32_t u0 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[subframe<<1]) % 30;
-    uint32_t u1 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(subframe<<1)]) % 30;
-    uint32_t v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
-    uint32_t v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
+    uint32_t u0 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[nr_tti_rx<<1]) % 30;
+    uint32_t u1 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(nr_tti_rx<<1)]) % 30;
+    uint32_t v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[nr_tti_rx<<1];
+    uint32_t v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(nr_tti_rx<<1)];
     
     uint32_t u=u0;
     uint32_t v=v0;
@@ -1375,8 +1375,8 @@ uint16_t pucchfmt3_ChannelEstimation( int16_t SubCarrierDeMapData[NB_ANTENNAS_RX
                     //npucch_sf = D_NPUCCH_SF5;// = 5
                 }
                 // cyclic shift e^(-j * beta_n * k)
-                calctmp[0] = alphaTBL_re[(((ncs_cell[2*subframe+slotNo][sym] + np_n)%D_NSC1RB)*k)%12];
-                calctmp[1] = alphaTBL_im[(((ncs_cell[2*subframe+slotNo][sym] + np_n)%D_NSC1RB)*k)%12];
+                calctmp[0] = alphaTBL_re[(((ncs_cell[2*nr_tti_rx+slotNo][sym] + np_n)%D_NSC1RB)*k)%12];
+                calctmp[1] = alphaTBL_im[(((ncs_cell[2*nr_tti_rx+slotNo][sym] + np_n)%D_NSC1RB)*k)%12];
                 
                 // Channel Estimation 1A, g'(n_cs)_l,m,n
             	// CsData_temp = g_l,m,n,k
@@ -1412,11 +1412,11 @@ uint16_t pucchfmt3_ChannelEstimation( int16_t SubCarrierDeMapData[NB_ANTENNAS_RX
 						}
 						if(j == same_m_number - 1) { //when even once it has not been used
 							if(shortened_format == 1) {
-								calctmp[0] = alphaTBL_re[(((ncs_cell[2*subframe+slotNo][sym] + TBL_3_SF4_GEN_N_DASH_NS[i])%D_NSC1RB)*k)%12]; //D_NSC1RB =12
-		                        calctmp[1] = alphaTBL_im[(((ncs_cell[2*subframe+slotNo][sym] + TBL_3_SF4_GEN_N_DASH_NS[i])%D_NSC1RB)*k)%12];
+								calctmp[0] = alphaTBL_re[(((ncs_cell[2*nr_tti_rx+slotNo][sym] + TBL_3_SF4_GEN_N_DASH_NS[i])%D_NSC1RB)*k)%12]; //D_NSC1RB =12
+		                        calctmp[1] = alphaTBL_im[(((ncs_cell[2*nr_tti_rx+slotNo][sym] + TBL_3_SF4_GEN_N_DASH_NS[i])%D_NSC1RB)*k)%12];
 							} else {
-								calctmp[0] = alphaTBL_re[(((ncs_cell[2*subframe+slotNo][sym] + TBL_3_SF5_GEN_N_DASH_NS[i])%D_NSC1RB)*k)%12];
-		                        calctmp[1] = alphaTBL_im[(((ncs_cell[2*subframe+slotNo][sym] + TBL_3_SF5_GEN_N_DASH_NS[i])%D_NSC1RB)*k)%12];
+								calctmp[0] = alphaTBL_re[(((ncs_cell[2*nr_tti_rx+slotNo][sym] + TBL_3_SF5_GEN_N_DASH_NS[i])%D_NSC1RB)*k)%12];
+		                        calctmp[1] = alphaTBL_im[(((ncs_cell[2*nr_tti_rx+slotNo][sym] + TBL_3_SF5_GEN_N_DASH_NS[i])%D_NSC1RB)*k)%12];
 							}
 							// IP_CsData_allsfavg = g'(n_cs)_l,m,n
 	                        IP_CsData_allsfavg[aa][symNo][ip_ind][0] += ((((int32_t)BsCshData[aa][symNo][k][0] * calctmp[0] + (int32_t)BsCshData[aa][symNo][k][1] * calctmp[1]))>>15);
@@ -1687,7 +1687,7 @@ void pucchfmt3_IDft2( int16_t *x, int16_t *y )
 /* descramble */
 uint16_t pucchfmt3_Descramble( int16_t IFFTOutData_Fmt3[2][12][2],
                                int16_t b[48],
-                               uint8_t subframe,
+                               uint8_t nr_tti_rx,
                                uint32_t Nid_cell,
                                uint32_t rnti
                               )
@@ -1696,7 +1696,7 @@ uint16_t pucchfmt3_Descramble( int16_t IFFTOutData_Fmt3[2][12][2],
     uint32_t cinit = 0;
     uint32_t x1;
     uint32_t s,s0,s1;
-    cinit = (subframe + 1) * ((2 * Nid_cell + 1)<<16) + rnti;
+    cinit = (nr_tti_rx + 1) * ((2 * Nid_cell + 1)<<16) + rnti;
     s0 = lte_gold_generic(&x1,&cinit,1);
     s1 = lte_gold_generic(&x1,&cinit,0);
     i=0;
@@ -1719,7 +1719,7 @@ uint16_t pucchfmt3_Descramble( int16_t IFFTOutData_Fmt3[2][12][2],
 }
 
 int16_t pucchfmt3_Decode( int16_t b[48],
-                          uint8_t subframe,
+                          uint8_t nr_tti_rx,
                           int16_t DTXthreshold,
                           int16_t Interpw,
                           uint8_t do_sr)

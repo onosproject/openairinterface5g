@@ -202,7 +202,7 @@ uint32_t ulsch_encoding(uint8_t *a,
                         PHY_VARS_UE *ue,
                         uint8_t harq_pid,
                         uint8_t eNB_id,
-                        uint8_t subframe_rx,
+                        uint8_t nr_tti_rx,
                         uint8_t tmode,
                         uint8_t control_only_flag,
                         uint8_t Nbundled)
@@ -262,7 +262,7 @@ uint32_t ulsch_encoding(uint8_t *a,
   // fill CQI/PMI information
   if (ulsch->O>0) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_ULSCH_ENCODING_FILL_CQI, VCD_FUNCTION_IN);
-    rnti = ue->pdcch_vars[ue->current_thread_id[subframe_rx]][eNB_id]->crnti;
+    rnti = ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id]->crnti;
     fill_CQI(ulsch,meas,0,harq_pid,ue->frame_parms.N_RB_DL,rnti, tmode,ue->sinr_eff);
 
     LOG_D(PHY,"ULSCH Encoding rnti %x \n", rnti);

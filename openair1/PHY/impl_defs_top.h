@@ -115,11 +115,11 @@
  * @{
 */
 #define NUMBER_OF_OFDM_CARRIERS (frame_parms->ofdm_symbol_size)
-#ifdef UE_NR_PHY_DEMO
+//#ifdef UE_NR_PHY_DEMO
 #define NUMBER_OF_SYMBOLS_PER_FRAME (frame_parms->symbols_per_tti*(frame_parms->ttis_per_subframe)*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)
-#else
-#define NUMBER_OF_SYMBOLS_PER_FRAME (frame_parms->symbols_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)
-#endif
+//#else
+//#define NUMBER_OF_SYMBOLS_PER_FRAME (frame_parms->symbols_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)
+//#endif
 #define NUMBER_OF_USEFUL_CARRIERS (12*frame_parms->N_RB_DL)
 #define NUMBER_OF_ZERO_CARRIERS (NUMBER_OF_OFDM_CARRIERS-NUMBER_OF_USEFUL_CARRIERS)
 #define NUMBER_OF_USEFUL_CARRIERS_BYTES (NUMBER_OF_USEFUL_CARRIERS>>2)
@@ -156,11 +156,11 @@
 #define OFDM_SYMBOL_SIZE_BYTES0 (OFDM_SYMBOL_SIZE_SAMPLES0*2)
 #define OFDM_SYMBOL_SIZE_BYTES_NO_PREFIX (OFDM_SYMBOL_SIZE_SAMPLES_NO_PREFIX*2)
 
-#ifdef UE_NR_PHY_DEMO
+//#ifdef UE_NR_PHY_DEMO
 #define SLOT_LENGTH_BYTES ((frame_parms->samples_per_subframe << 2) / frame_parms->slots_per_tti) // 4 bytes * samples_per_subframe/slots_per_tti
-#else
-#define SLOT_LENGTH_BYTES (frame_parms->samples_per_subframe<<1) // 4 bytes * samples_per_subframe/2
-#endif
+//#else
+//#define SLOT_LENGTH_BYTES (frame_parms->samples_per_subframe<<1) // 4 bytes * samples_per_subframe/2
+//#endif
 #define SLOT_LENGTH_BYTES_NO_PREFIX (OFDM_SYMBOL_SIZE_BYTES_NO_PREFIX * NUMBER_OF_OFDM_SYMBOLS_PER_SLOT)
 
 #define FRAME_LENGTH_COMPLEX_SAMPLES (frame_parms->samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)

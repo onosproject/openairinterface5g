@@ -27,7 +27,7 @@
 
 int slot_fep_mbsfn(PHY_VARS_UE *ue,
                    unsigned char l,
-                   int subframe,
+                   int nr_tti_rx,
                    int sample_offset,
                    int no_prefix)
 {
@@ -40,7 +40,7 @@ int slot_fep_mbsfn(PHY_VARS_UE *ue,
   unsigned char frame_type = frame_parms->frame_type; // Frame Type: 0 - FDD, 1 - TDD;
   unsigned int nb_prefix_samples = frame_parms->ofdm_symbol_size>>2;//(no_prefix ? 0 : frame_parms->nb_prefix_samples);
   unsigned int nb_prefix_samples0 = frame_parms->ofdm_symbol_size>>2;//(no_prefix ? 0 : frame_parms->nb_prefix_samples0);
-  unsigned int subframe_offset;
+  unsigned int tti_offset;
 
   //   int i;
   unsigned int frame_length_samples = frame_parms->samples_per_tti * 10;
@@ -78,10 +78,10 @@ int slot_fep_mbsfn(PHY_VARS_UE *ue,
   }
 
   if (no_prefix) {
-    subframe_offset = frame_parms->ofdm_symbol_size * frame_parms->symbols_per_tti * subframe;
+    tti_offset = frame_parms->ofdm_symbol_size * frame_parms->symbols_per_tti * nr_tti_rx;
 
   } else {
-    subframe_offset = frame_parms->samples_per_tti * subframe;
+    tti_offset = frame_parms->samples_per_tti * nr_tti_rx;
 
   }
 
@@ -91,34 +91,34 @@ int slot_fep_mbsfn(PHY_VARS_UE *ue,
     return(-1);
   }
 
-  if (((subframe == 0) || (subframe == 5) ||    // SFn 0,4,5,9;
-       (subframe == 4) || (subframe == 9))
+  if (((nr_tti_rx == 0) || (nr_tti_rx == 5) ||    // SFn 0,4,5,9;
+       (nr_tti_rx == 4) || (nr_tti_rx == 9))
       && (frame_type==FDD) )    {   //check for valid MBSFN subframe
-    msg("slot_fep_mbsfn: Subframe must be 1,2,3,6,7,8 for FDD, Got %d \n",subframe);
+    msg("slot_fep_mbsfn: nr_tti_rx must be 1,2,3,6,7,8 for FDD, Got %d \n",nr_tti_rx);
     return(-1);
-  } else if (((subframe == 0) || (subframe == 1) || (subframe==2) ||  // SFn 0,4,5,9;
-              (subframe == 5) || (subframe == 6))
+  } else if (((nr_tti_rx == 0) || (nr_tti_rx == 1) || (nr_tti_rx==2) ||  // SFn 0,4,5,9;
+              (nr_tti_rx == 5) || (nr_tti_rx == 6))
              && (frame_type==TDD) )   {   //check for valid MBSFN subframe
-    msg("slot_fep_mbsfn: Subframe must be 3,4,7,8,9 for TDD, Got %d \n",subframe);
+    msg("slot_fep_mbsfn: nr_tti_rx must be 3,4,7,8,9 for TDD, Got %d \n",nr_tti_rx);
     return(-1);
   }
 
 #ifdef DEBUG_FEP
-  msg("slot_fep_mbsfn: subframe %d, symbol %d, nb_prefix_samples %d, nb_prefix_samples0 %d, subframe_offset %d, sample_offset %d\n", subframe, l, nb_prefix_samples,nb_prefix_samples0,subframe_offset,
+  msg("slot_fep_mbsfn: nr_tti_rx %d, symbol %d, nb_prefix_samples %d, nb_prefix_samples0 %d, tti_offset %d, sample_offset %d\n", nr_tti_rx, l, nb_prefix_samples,nb_prefix_samples0,tti_offset,
       sample_offset);
 #endif
 
   for (aa=0; aa<frame_parms->nb_antennas_rx; aa++) {
-    memset(&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],0,frame_parms->ofdm_symbol_size*sizeof(int));
+    memset(&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],0,frame_parms->ofdm_symbol_size*sizeof(int));
     if (l==0) {
 #if UE_TIMING_TRACE
         start_meas(&ue->rx_dft_stats);
 #endif
       dft((int16_t *)&common_vars->rxdata[aa][(sample_offset +
           nb_prefix_samples0 +
-          subframe_offset -
+          tti_offset -
           SOFFSET) % frame_length_samples],
-          (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
+          (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
 #if UE_TIMING_TRACE
       stop_meas(&ue->rx_dft_stats);
 #endif
@@ -126,7 +126,7 @@ int slot_fep_mbsfn(PHY_VARS_UE *ue,
       if ((sample_offset +
            (frame_parms->ofdm_symbol_size+nb_prefix_samples0+nb_prefix_samples) +
            (frame_parms->ofdm_symbol_size+nb_prefix_samples)*(l-1) +
-           subframe_offset-
+           tti_offset-
            SOFFSET) > (frame_length_samples - frame_parms->ofdm_symbol_size))
         memcpy((short *)&common_vars->rxdata[aa][frame_length_samples],
                (short *)&common_vars->rxdata[aa][0],
@@ -138,9 +138,9 @@ int slot_fep_mbsfn(PHY_VARS_UE *ue,
       dft((int16_t *)&common_vars->rxdata[aa][(sample_offset +
           (frame_parms->ofdm_symbol_size+nb_prefix_samples0+nb_prefix_samples) +
           (frame_parms->ofdm_symbol_size+nb_prefix_samples)*(l-1) +
-          subframe_offset-
+          tti_offset-
           SOFFSET) % frame_length_samples],
-          (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
+          (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
 #if UE_TIMING_TRACE
       stop_meas(&ue->rx_dft_stats);
 #endif
@@ -155,19 +155,19 @@ int slot_fep_mbsfn(PHY_VARS_UE *ue,
     for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
       if (ue->perfect_ce == 0) {
 #ifdef DEBUG_FEP
-        msg("Channel estimation eNB %d, aatx %d, subframe %d, symbol %d\n",eNB_id,aa,subframe,l);
+        msg("Channel estimation eNB %d, aatx %d, nr_tti_rx %d, symbol %d\n",eNB_id,aa,nr_tti_rx,l);
 #endif
 
         lte_dl_mbsfn_channel_estimation(ue,
                                         eNB_id,
                                         0,
-                                        subframe,
+                                        nr_tti_rx,
                                         l);
         /*   for (i=0;i<ue->PHY_measurements.n_adj_cells;i++) {
         lte_dl_mbsfn_channel_estimation(ue,
                eNB_id,
              i+1,
-               subframe,
+               nr_tti_rx,
                l);
              lte_dl_channel_estimation(ue,eNB_id,0,
            Ns,

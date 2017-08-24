@@ -39,109 +39,109 @@
 #endif
 
 void get_Msg3_alloc(LTE_DL_FRAME_PARMS *frame_parms,
-                    unsigned char current_subframe,
+                    unsigned char current_nr_tti_rx,
                     unsigned int current_frame,
                     unsigned int *frame,
-                    unsigned char *subframe)
+                    unsigned char *nr_tti_rx)
 {
 
   // Fill in other TDD Configuration!!!!
 
   if (frame_parms->frame_type == FDD) {
-    *subframe = current_subframe+6;
+    *nr_tti_rx = current_nr_tti_rx+6;
 
-    if (*subframe>9) {
-      *subframe = *subframe-10;
+    if (*nr_tti_rx > ((frame_parms->ttis_per_subframe)*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)) {
+      *nr_tti_rx = *nr_tti_rx-((frame_parms->ttis_per_subframe)*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME);
       *frame = (current_frame+1) & 1023;
     } else {
       *frame=current_frame;
     }
   } else { // TDD
     if (frame_parms->tdd_config == 1) {
-      switch (current_subframe) {
+      switch (current_nr_tti_rx) {
 
       case 0:
-        *subframe = 7;
+        *nr_tti_rx = 7;
         *frame = current_frame;
         break;
 
       case 4:
-        *subframe = 2;
+        *nr_tti_rx = 2;
         *frame = (current_frame+1) & 1023;
         break;
 
       case 5:
-        *subframe = 2;
+        *nr_tti_rx = 2;
         *frame = (current_frame+1) & 1023;
         break;
 
       case 9:
-        *subframe = 7;
+        *nr_tti_rx = 7;
         *frame = (current_frame+1) & 1023;
         break;
       }
     } else if (frame_parms->tdd_config == 3) {
-      switch (current_subframe) {
+      switch (current_nr_tti_rx) {
 
       case 0:
       case 5:
       case 6:
-        *subframe = 2;
+        *nr_tti_rx = 2;
         *frame = (current_frame+1) & 1023;
         break;
 
       case 7:
-        *subframe = 3;
+        *nr_tti_rx = 3;
         *frame = (current_frame+1) & 1023;
         break;
 
       case 8:
-        *subframe = 4;
+        *nr_tti_rx = 4;
         *frame = (current_frame+1) & 1023;
         break;
 
       case 9:
-        *subframe = 2;
+        *nr_tti_rx = 2;
         *frame = (current_frame+2) & 1023;
         break;
       }
     } else if (frame_parms->tdd_config == 4) {
-        switch (current_subframe) {
+        switch (current_nr_tti_rx) {
 
         case 0:
         case 4:
         case 5:
         case 6:
-          *subframe = 2;
+          *nr_tti_rx = 2;
           *frame = (current_frame+1) & 1023;
           break;
 
         case 7:
-          *subframe = 3;
+          *nr_tti_rx = 3;
           *frame = (current_frame+1) & 1023;
           break;
 
         case 8:
         case 9:
-          *subframe = 2;
+          *nr_tti_rx = 2;
           *frame = (current_frame+2) & 1023;
           break;
         }
       } else if (frame_parms->tdd_config == 5) {
-          switch (current_subframe) {
+          switch (current_nr_tti_rx) {
 
           case 0:
           case 4:
           case 5:
           case 6:
-            *subframe = 2;
+            *nr_tti_rx = 2;
             *frame = (current_frame+1) & 1023;
             break;
 
           case 7:
           case 8:
           case 9:
-            *subframe = 2;
+            *nr_tti_rx = 2;
             *frame = (current_frame+2) & 1023;
             break;
           }
@@ -150,19 +150,19 @@ void get_Msg3_alloc(LTE_DL_FRAME_PARMS *frame_parms,
 }
 
 void get_Msg3_alloc_ret(LTE_DL_FRAME_PARMS *frame_parms,
-                        unsigned char current_subframe,
+                        unsigned char current_nr_tti_rx,
                         unsigned int current_frame,
                         unsigned int *frame,
-                        unsigned char *subframe)
+                        unsigned char *nr_tti_rx)
 {
   if (frame_parms->frame_type == FDD) {
     /* always retransmit in n+8 */
-    *subframe = current_subframe + 8;
+    *nr_tti_rx = current_nr_tti_rx + 8;
 
-    if (*subframe > 9) {
-      *subframe = *subframe - 10;
+    if (*nr_tti_rx > ((frame_parms->ttis_per_subframe)*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)) {
+      *nr_tti_rx = *nr_tti_rx-((frame_parms->ttis_per_subframe)*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME);
       *frame = (current_frame + 1) & 1023;
-    } else {
+      } else {
       *frame = current_frame;
     }
   } else {
@@ -190,28 +190,28 @@ void get_Msg3_alloc_ret(LTE_DL_FRAME_PARMS *frame_parms,
 
 uint8_t get_Msg3_harq_pid(LTE_DL_FRAME_PARMS *frame_parms,
                           uint32_t frame,
-                          unsigned char current_subframe)
+                          unsigned char current_nr_tti_rx)
 {
 
-  uint8_t ul_subframe=0;
+  uint8_t ul_nr_tti_rx=0;
   uint32_t ul_frame=0;
 
   if (frame_parms->frame_type ==FDD) {
-    ul_subframe = (current_subframe>3) ? (current_subframe-4) : (current_subframe+6);
-    ul_frame    = (current_subframe>3) ? ((frame+1)&1023) : frame;
+      ul_nr_tti_rx = ((current_nr_tti_rx>((frame_parms->ttis_per_subframe)*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)-6)) ? (current_nr_tti_rx-4) : (current_nr_tti_rx+6);
+    ul_frame    = ((current_nr_tti_rx>((frame_parms->ttis_per_subframe)*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)-6)) ? ((frame+1)&1023) : frame;
   } else {
     switch (frame_parms->tdd_config) {
     case 1:
-      switch (current_subframe) {
+      switch (current_nr_tti_rx) {
 
       case 9:
       case 0:
-        ul_subframe = 7;
+          ul_nr_tti_rx = 7;
         break;
 
       case 5:
       case 7:
-        ul_subframe = 2;
+          ul_nr_tti_rx = 2;
         break;
 
       }
@@ -219,49 +219,49 @@ uint8_t get_Msg3_harq_pid(LTE_DL_FRAME_PARMS *frame_parms,
       break;
 
     case 3:
-      switch (current_subframe) {
+      switch (current_nr_tti_rx) {
 
       case 0:
       case 5:
       case 6:
-        ul_subframe = 2;
+          ul_nr_tti_rx = 2;
         break;
 
       case 7:
-        ul_subframe = 3;
+          ul_nr_tti_rx = 3;
         break;
 
       case 8:
-        ul_subframe = 4;
+          ul_nr_tti_rx = 4;
         break;
 
       case 9:
-        ul_subframe = 2;
+          ul_nr_tti_rx = 2;
         break;
       }
 
       break;
 
     case 4:
-      switch (current_subframe) {
+      switch (current_nr_tti_rx) {
 
       case 0:
       case 5:
       case 6:
       case 8:
       case 9:
-        ul_subframe = 2;
+          ul_nr_tti_rx = 2;
         break;
 
       case 7:
-        ul_subframe = 3;
+          ul_nr_tti_rx = 3;
         break;
       }
 
       break;
 
     case 5:
-      ul_subframe =2;
+        ul_nr_tti_rx =2;
       break;
 
     default:
@@ -271,65 +271,65 @@ uint8_t get_Msg3_harq_pid(LTE_DL_FRAME_PARMS *frame_parms,
     }
   }
 
-  return(subframe2harq_pid(frame_parms,ul_frame,ul_subframe));
+  return(subframe2harq_pid(frame_parms,ul_frame,ul_nr_tti_rx));
 
 }
 
-unsigned char ul_ACK_subframe2_dl_subframe(LTE_DL_FRAME_PARMS *frame_parms,unsigned char subframe,unsigned char ACK_index)
+unsigned char ul_ACK_subframe2_dl_subframe(LTE_DL_FRAME_PARMS *frame_parms,unsigned char nr_tti_rx,unsigned char ACK_index)
 {
 
   if (frame_parms->frame_type == FDD) {
-    return((subframe<4) ? subframe+6 : subframe-4);
+    return(nr_tti_rx<(((frame_parms->ttis_per_subframe)*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)-6) ? nr_tti_rx+6 : nr_tti_rx-4);
   } else {
     switch (frame_parms->tdd_config) {
     case 3:
-      if (subframe == 2) {  // ACK subframes 5 and 6
+      if (nr_tti_rx == 2) {  // ACK nr_tti_rx 5 and 6
         if (ACK_index==2)
           return(1);
 
         return(5+ACK_index);
-      } else if (subframe == 3) { // ACK subframes 7 and 8
+      } else if (nr_tti_rx == 3) { // ACK nr_tti_rx 7 and 8
         return(7+ACK_index);  // To be updated
-      } else if (subframe == 4) { // ACK subframes 9 and 0
+      } else if (nr_tti_rx == 4) { // ACK nr_tti_rx 9 and 0
         return((9+ACK_index)%10);
       } else {
-        LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal subframe %d for tdd_config %d\n",
-              subframe,frame_parms->tdd_config);
+        LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal nr_tti_rx %d for tdd_config %d\n",
+                nr_tti_rx,frame_parms->tdd_config);
         return(0);
       }
 
       break;
 
     case 4:
-          if (subframe == 2) {  // ACK subframes 0, 4 and 5
+          if (nr_tti_rx == 2) {  // ACK nr_tti_rx 0, 4 and 5
             //if (ACK_index==2)
             //  return(1); TBC
             if (ACK_index==2)
             return(0);
 
             return(4+ACK_index);
-          } else if (subframe == 3) { // ACK subframes 6, 7 8 and 9
+          } else if (nr_tti_rx == 3) { // ACK subframes 6, 7 8 and 9
             return(6+ACK_index);  // To be updated
           } else {
-            LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal subframe %d for tdd_config %d\n",
-                  subframe,frame_parms->tdd_config);
+            LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal nr_tti_rx %d for tdd_config %d\n",
+                    nr_tti_rx,frame_parms->tdd_config);
             return(0);
           }
 
           break;
 
     case 1:
-      if (subframe == 2) {  // ACK subframes 5 and 6
+      if (nr_tti_rx == 2) {  // ACK nr_tti_rx 5 and 6
         return(5+ACK_index);
-      } else if (subframe == 3) { // ACK subframe 9
+      } else if (nr_tti_rx == 3) { // ACK nr_tti_rx 9
         return(9);  // To be updated
-      } else if (subframe == 7) { // ACK subframes 0 and 1
+      } else if (nr_tti_rx == 7) { // ACK nr_tti_rx 0 and 1
         return(ACK_index);  // To be updated
-      } else if (subframe == 8) { // ACK subframe 4
+      } else if (nr_tti_rx == 8) { // ACK nr_tti_rx 4
         return(4);  // To be updated
       } else {
-        LOG_E(PHY,"phy_procedures_lte_common.c/ul_ACK_subframe2_dl_subframe: illegal subframe %d for tdd_config %d\n",
-              subframe,frame_parms->tdd_config);
+        LOG_E(PHY,"phy_procedures_lte_common.c/ul_ACK_subframe2_dl_subframe: illegal nr_tti_rx %d for tdd_config %d\n",
+                nr_tti_rx,frame_parms->tdd_config);
         return(0);
       }
 
@@ -340,7 +340,7 @@ unsigned char ul_ACK_subframe2_dl_subframe(LTE_DL_FRAME_PARMS *frame_parms,unsig
   return(0);
 }
 
-unsigned char ul_ACK_subframe2_M(LTE_DL_FRAME_PARMS *frame_parms,unsigned char subframe)
+unsigned char ul_ACK_subframe2_M(LTE_DL_FRAME_PARMS *frame_parms,unsigned char nr_tti_rx)
 {
 
   if (frame_parms->frame_type == FDD) {
@@ -348,56 +348,56 @@ unsigned char ul_ACK_subframe2_M(LTE_DL_FRAME_PARMS *frame_parms,unsigned char s
   } else {
     switch (frame_parms->tdd_config) {
     case 3:
-      if (subframe == 2) {  // ACK subframes 5 and 6
+      if (nr_tti_rx == 2) {  // ACK subframes 5 and 6
         return(2); // should be 3
-      } else if (subframe == 3) { // ACK subframes 7 and 8
+      } else if (nr_tti_rx == 3) { // ACK subframes 7 and 8
         return(2);  // To be updated
-      } else if (subframe == 4) { // ACK subframes 9 and 0
+      } else if (nr_tti_rx == 4) { // ACK subframes 9 and 0
         return(2);
       } else {
-        LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal subframe %d for tdd_config %d\n",
-              subframe,frame_parms->tdd_config);
+        LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal nr_tti_rx %d for tdd_config %d\n",
+                nr_tti_rx,frame_parms->tdd_config);
         return(0);
       }
 
       break;
 
     case 4:
-          if (subframe == 2) {  // ACK subframes 0,4 and 5
+          if (nr_tti_rx == 2) {  // ACK subframes 0,4 and 5
             return(3); // should be 4
-          } else if (subframe == 3) { // ACK subframes 6,7,8 and 9
+          } else if (nr_tti_rx == 3) { // ACK subframes 6,7,8 and 9
             return(4);
           } else {
-            LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal subframe %d for tdd_config %d\n",
-                  subframe,frame_parms->tdd_config);
+            LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal nr_tti_rx %d for tdd_config %d\n",
+                    nr_tti_rx,frame_parms->tdd_config);
             return(0);
           }
 
           break;
 
     case 5:
-              if (subframe == 2) {  // ACK subframes 0,3,4,5,6,7,8 and 9
+              if (nr_tti_rx == 2) {  // ACK subframes 0,3,4,5,6,7,8 and 9
                 return(8); // should be 3
               } else {
-                LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal subframe %d for tdd_config %d\n",
-                      subframe,frame_parms->tdd_config);
+                LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal nr_tti_rx %d for tdd_config %d\n",
+                        nr_tti_rx,frame_parms->tdd_config);
                 return(0);
               }
 
               break;
 
     case 1:
-      if (subframe == 2) {  // ACK subframes 5 and 6
+      if (nr_tti_rx == 2) {  // ACK subframes 5 and 6
         return(2);
-      } else if (subframe == 3) { // ACK subframe 9
+      } else if (nr_tti_rx == 3) { // ACK nr_tti_rx 9
         return(1);  // To be updated
-      } else if (subframe == 7) { // ACK subframes 0 and 1
+      } else if (nr_tti_rx == 7) { // ACK nr_tti_rx 0 and 1
         return(2);  // To be updated
-      } else if (subframe == 8) { // ACK subframe 4
+      } else if (nr_tti_rx == 8) { // ACK nr_tti_rx 4
         return(1);  // To be updated
       } else {
-        LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal subframe %d for tdd_config %d\n",
-              subframe,frame_parms->tdd_config);
+        LOG_E(PHY,"phy_procedures_lte_common.c/subframe2_dl_harq_pid: illegal nr_tti_rx %d for tdd_config %d\n",
+                nr_tti_rx,frame_parms->tdd_config);
         return(0);
       }
 
@@ -412,34 +412,35 @@ unsigned char ul_ACK_subframe2_M(LTE_DL_FRAME_PARMS *frame_parms,unsigned char s
 // return the number 'Nbundled'
 uint8_t get_reset_ack(LTE_DL_FRAME_PARMS *frame_parms,
                 harq_status_t *harq_ack,
-                unsigned char subframe_tx,
-                unsigned char subframe_rx,
+                unsigned char nr_tti_tx,
+                unsigned char nr_tti_rx,
                 unsigned char *o_ACK,
                 uint8_t *pN_bundled,
                 uint8_t cw_idx,
                 uint8_t do_reset) // 1 to reset ACK/NACK status : 0 otherwise
 {
   uint8_t status=0;
-  uint8_t subframe_ul=0xff, subframe_dl0=0xff, subframe_dl1=0xff,subframe_dl2=0xff, subframe_dl3=0xff;
-
-  //  printf("get_ack: SF %d\n",subframe);
+  //uint8_t nr_tti_ul=0xff, nr_tti_dl0=0xff, nr_tti_dl1=0xff,nr_tti_dl2=0xff;// nr_tti_dl3=0xff;
+  uint8_t nr_tti_dl0=0xff;
+  //  printf("get_ack: SF %d\n",nr_tti_rx);
   if (frame_parms->frame_type == FDD) {
-    if (subframe_tx < 4)
-      subframe_dl0 = subframe_tx + 6;
+    if (nr_tti_tx < 4)
+        nr_tti_dl0 = nr_tti_tx + ((frame_parms->ttis_per_subframe)*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME) - 4;
     else
-      subframe_dl0 = subframe_tx - 4;
+        nr_tti_dl0 = nr_tti_tx - 4;
 
-    o_ACK[cw_idx] = harq_ack[subframe_dl0].ack;
-    status = harq_ack[subframe_dl0].send_harq_status;
+    o_ACK[cw_idx] = harq_ack[nr_tti_dl0].ack;
+    status = harq_ack[nr_tti_dl0].send_harq_status;
 
-    //LOG_I(PHY,"dl subframe %d send_harq_status %d cw_idx %d, reset %d\n",subframe_dl0, status, cw_idx, do_reset);
+    //LOG_I(PHY,"dl nr_tti_rx %d send_harq_status %d cw_idx %d, reset %d\n",nr_tti_rx_dl0, status, cw_idx, do_reset);
     if(do_reset)
-    	harq_ack[subframe_dl0].send_harq_status = 0;
-    //printf("get_ack: Getting ACK/NAK for PDSCH (subframe %d) => %d\n",subframe_dl,o_ACK[0]);
+    	harq_ack[nr_tti_dl0].send_harq_status = 0;
+    //printf("get_ack: Getting ACK/NAK for PDSCH (nr_tti_rx %d) => %d\n",nr_tti_rx_dl,o_ACK[0]);
   } else {
+     /*
     switch (frame_parms->tdd_config) {
     case 1:
-      if (subframe_tx == 2) {  // ACK subframes 5,6
+      if (nr_tti_tx == 2) {  // ACK nr_tti_rx 5,6
         subframe_ul  = 6;
         subframe_dl0 = 5;
         subframe_dl1 = 6;
@@ -535,13 +536,13 @@ uint8_t get_reset_ack(LTE_DL_FRAME_PARMS *frame_parms,
         subframe_dl0 = 7;
         subframe_dl1 = 8;
         subframe_ul  = 3;
-        //printf("Subframe 3, TDD config 3: harq_ack[7] = %d,harq_ack[8] = %d\n",harq_ack[7].ack,harq_ack[8].ack);
+        //printf("nr_tti_rx 3, TDD config 3: harq_ack[7] = %d,harq_ack[8] = %d\n",harq_ack[7].ack,harq_ack[8].ack);
         //printf("status %d : o_ACK (%d,%d)\n", status,o_ACK[0],o_ACK[1]);
-      } else if (subframe_tx == 4) { // ACK subframes 9 and 0
+      } else if (subframe_tx == 4) { // ACK nr_tti_rxs 9 and 0
         subframe_dl0 = 9;
         subframe_dl1 = 0;
         subframe_ul  = 4;
-        //printf("Subframe 4, TDD config 3: harq_ack[9] = %d,harq_ack[0] = %d\n",harq_ack[9].ack,harq_ack[0].ack);
+        //printf("nr_tti_rx 4, TDD config 3: harq_ack[9] = %d,harq_ack[0] = %d\n",harq_ack[9].ack,harq_ack[0].ack);
       } else {
         LOG_E(PHY,"phy_procedures_lte.c: get_ack, illegal subframe_tx %d for tdd_config %d\n",
               subframe_tx,frame_parms->tdd_config);
@@ -632,6 +633,7 @@ uint8_t get_reset_ack(LTE_DL_FRAME_PARMS *frame_parms,
           break;
 
     }
+    */
   }
 
   //printf("status %d\n",status);
@@ -641,24 +643,24 @@ uint8_t get_reset_ack(LTE_DL_FRAME_PARMS *frame_parms,
 
 uint8_t get_ack(LTE_DL_FRAME_PARMS *frame_parms,
                 harq_status_t *harq_ack,
-                unsigned char subframe_tx,
-                unsigned char subframe_rx,
+                unsigned char nr_tti_tx,
+                unsigned char nr_tti_rx,
                 unsigned char *o_ACK,
                 uint8_t cw_idx)
 {
     uint8_t N_bundled = 0;
-  return get_reset_ack(frame_parms, harq_ack, subframe_tx, subframe_rx, o_ACK, &N_bundled, cw_idx, 0);
+  return get_reset_ack(frame_parms, harq_ack, nr_tti_tx, nr_tti_rx, o_ACK, &N_bundled, cw_idx, 0);
 }
 
 uint8_t reset_ack(LTE_DL_FRAME_PARMS *frame_parms,
                 harq_status_t *harq_ack,
-                unsigned char subframe_tx,
-                unsigned char subframe_rx,
+                unsigned char nr_tti_tx,
+                unsigned char nr_tti_rx,
                 unsigned char *o_ACK,
                 uint8_t *pN_bundled,
                 uint8_t cw_idx)
 {
-  return get_reset_ack(frame_parms, harq_ack, subframe_tx, subframe_rx, o_ACK, pN_bundled, cw_idx, 1);
+  return get_reset_ack(frame_parms, harq_ack, nr_tti_tx, nr_tti_rx, o_ACK, pN_bundled, cw_idx, 1);
 }
 
 
@@ -713,17 +715,18 @@ uint16_t get_Np(uint8_t N_RB_DL,uint8_t nCCE,uint8_t plus1)
     return(Np[0+plus1]);
 }
 
-lte_subframe_t subframe_select(LTE_DL_FRAME_PARMS *frame_parms,unsigned char subframe)
+lte_subframe_t subframe_select(LTE_DL_FRAME_PARMS *frame_parms,unsigned char nr_tti)
 {
 
   // if FDD return dummy value
   if (frame_parms->frame_type == FDD)
     return(SF_DL);
+  /*
 
   switch (frame_parms->tdd_config) {
 
   case 1:
-    switch (subframe) {
+    switch (nr_tti) {
     case 0:
     case 4:
     case 5:
@@ -786,9 +789,13 @@ lte_subframe_t subframe_select(LTE_DL_FRAME_PARMS *frame_parms,unsigned char sub
     return(255);
 
   }
+      */
+  return(255);
+
+
 }
 
-dci_detect_mode_t dci_detect_mode_select(LTE_DL_FRAME_PARMS *frame_parms,uint8_t subframe)
+dci_detect_mode_t dci_detect_mode_select(LTE_DL_FRAME_PARMS *frame_parms,uint8_t nr_tti)
 {
   dci_detect_mode_t ret = 0;
 
@@ -803,41 +810,42 @@ dci_detect_mode_t dci_detect_mode_select(LTE_DL_FRAME_PARMS *frame_parms,uint8_t
       {UL_DL_DCI, UL_DL_DCI , NO_DCI    , NO_DCI    , NO_DCI    , UL_DL_DCI , UL_DL_DCI , NO_DCI, NO_DCI    , UL_DL_DCI }}; // tdd6
 
 
-  DevAssert(subframe>=0 && subframe<=9);
+  DevAssert(nr_tti>=0 && nr_tti<=(((frame_parms->ttis_per_subframe)*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)-1));
   DevAssert((frame_parms->tdd_config)>=0 && (frame_parms->tdd_config)<=6);
 
   if (frame_parms->frame_type == FDD) {
     ret = UL_DL_DCI;
   } else {
-    ret = Table_8_2_3gpp_36_213[frame_parms->tdd_config][subframe];
+    ret = Table_8_2_3gpp_36_213[frame_parms->tdd_config][nr_tti];
   }
 
-  LOG_D(PHY, "subframe %d: detect UL_DCI=%d, detect DL_DCI=%d\n", subframe, (ret & UL_DCI)>0, (ret & DL_DCI)>0);
+  LOG_D(PHY, "nr_tti %d: detect UL_DCI=%d, detect DL_DCI=%d\n", nr_tti, (ret & UL_DCI)>0, (ret & DL_DCI)>0);
   return ret;
 }
 
-lte_subframe_t get_subframe_direction(uint8_t Mod_id,uint8_t CC_id,uint8_t subframe)
+lte_subframe_t get_subframe_direction(uint8_t Mod_id,uint8_t CC_id,uint8_t nr_tti)
 {
 
-  return(subframe_select(&PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms,subframe));
+  return(subframe_select(&PHY_vars_eNB_g[Mod_id][CC_id]->frame_parms,nr_tti));
 
 }
 
-uint8_t phich_subframe_to_harq_pid(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe)
+uint8_t phich_subframe_to_harq_pid(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t nr_tti)
 {
 
-  //LOG_D(PHY,"phich_subframe_to_harq_pid.c: frame %d, subframe %d\n",frame,subframe);
+  //LOG_D(PHY,"phich_subframe_to_harq_pid.c: frame %d, nr_tti %d\n",frame,nr_tti);
   return(subframe2harq_pid(frame_parms,
-                           phich_frame2_pusch_frame(frame_parms,frame,subframe),
-                           phich_subframe2_pusch_subframe(frame_parms,subframe)));
+                           phich_frame2_pusch_frame(frame_parms,frame,nr_tti),
+                           phich_subframe2_pusch_subframe(frame_parms,nr_tti)));
 }
 
-unsigned int is_phich_subframe(LTE_DL_FRAME_PARMS *frame_parms,unsigned char subframe)
+unsigned int is_phich_subframe(LTE_DL_FRAME_PARMS *frame_parms,unsigned char nr_tti)
 {
 
   if (frame_parms->frame_type == FDD) {
     return(1);
   } else {
+      /*
     switch (frame_parms->tdd_config) {
     case 1:
       if ((subframe == 1) || (subframe == 4) || (subframe == 6) || (subframe == 9))
@@ -867,6 +875,7 @@ unsigned int is_phich_subframe(LTE_DL_FRAME_PARMS *frame_parms,unsigned char sub
       return(0);
       break;
     }
+    */
   }
 
   return(0);

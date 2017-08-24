@@ -161,7 +161,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                          LTE_UE_DLSCH_t *dlsch,
                          LTE_DL_UE_HARQ_t *harq_process,
                          uint32_t frame,
-                         uint8_t subframe,
+                         uint8_t nr_tti_rx,
                          uint8_t harq_pid,
                          uint8_t is_crnti,
                          uint8_t llr8_flag)
@@ -239,14 +239,14 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
     return(dlsch->max_turbo_iterations);
   }
 
-  if (subframe>9) {
-    printf("dlsch_decoding.c: Illegal subframe index %d\n",subframe);
+  if (nr_tti_rx> (10*frame_parms->ttis_per_subframe-1)) {
+    printf("dlsch_decoding.c: Illegal subframe index %d\n",nr_tti_rx);
     return(dlsch->max_turbo_iterations);
   }
 
-  if (dlsch->harq_ack[subframe].ack != 2) {
+  if (dlsch->harq_ack[nr_tti_rx].ack != 2) {
     LOG_D(PHY, "[UE %d] DLSCH @ SF%d : ACK bit is %d instead of DTX even before PDSCH is decoded!\n",
-        phy_vars_ue->Mod_id, subframe, dlsch->harq_ack[subframe].ack);
+        phy_vars_ue->Mod_id, nr_tti_rx, dlsch->harq_ack[nr_tti_rx].ack);
   }
 
   if (llr8_flag == 0) {
@@ -486,7 +486,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 #if UE_TIMING_TRACE
         start_meas(dlsch_turbo_decoding_stats);
 #endif
-      LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,subframe,r,harq_process->C-1);
+      LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
       ret = tc
             (&harq_process->d[r][96],
              harq_process->c[r],
@@ -658,27 +658,27 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 
 
     if ((err_flag == 0) && (ret>=(1+dlsch->max_turbo_iterations))) {// a Code segment is in error so break;
-      LOG_D(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,subframe,r,harq_process->C-1);
+      LOG_D(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
       err_flag = 1;
     }
   }
 
   int32_t frame_rx_prev = frame;
-  int32_t subframe_rx_prev = subframe - 1;
-  if (subframe_rx_prev < 0) {
+  int32_t tti_rx_prev = nr_tti_rx - 1;
+  if (tti_rx_prev < 0) {
     frame_rx_prev--;
-    subframe_rx_prev += 10;
+    tti_rx_prev += 10*frame_parms->ttis_per_subframe;
   }
   frame_rx_prev = frame_rx_prev%1024;
 
   if (err_flag == 1) {
 #if UE_DEBUG_TRACE
     LOG_I(PHY,"[UE %d] DLSCH: Setting NAK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d) Kr %d r %d harq_process->round %d\n",
-        phy_vars_ue->Mod_id, frame, subframe, harq_pid,harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs,Kr,r,harq_process->round);
+        phy_vars_ue->Mod_id, frame, nr_tti_rx, harq_pid,harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs,Kr,r,harq_process->round);
 #endif
-    dlsch->harq_ack[subframe].ack = 0;
-    dlsch->harq_ack[subframe].harq_id = harq_pid;
-    dlsch->harq_ack[subframe].send_harq_status = 1;
+    dlsch->harq_ack[nr_tti_rx].ack = 0;
+    dlsch->harq_ack[nr_tti_rx].harq_id = harq_pid;
+    dlsch->harq_ack[nr_tti_rx].send_harq_status = 1;
     harq_process->errors[harq_process->round]++;
     harq_process->round++;
 
@@ -690,28 +690,28 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
     }
     if(is_crnti)
     {
-    LOG_D(PHY,"[UE %d] DLSCH: Setting NACK for subframe %d (pid %d, pid status %d, round %d/Max %d, TBS %d)\n",
-               phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->status,harq_process->round,dlsch->Mdlharq,harq_process->TBS);
+    LOG_D(PHY,"[UE %d] DLSCH: Setting NACK for nr_tti_rx %d (pid %d, pid status %d, round %d/Max %d, TBS %d)\n",
+               phy_vars_ue->Mod_id,nr_tti_rx,harq_pid,harq_process->status,harq_process->round,dlsch->Mdlharq,harq_process->TBS);
     }
 
     return((1+dlsch->max_turbo_iterations));
   } else {
 #if UE_DEBUG_TRACE
-      LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d TBS %d mcs %d nb_rb %d\n",
-           phy_vars_ue->Mod_id,subframe,harq_process->TBS,harq_process->mcs,harq_process->nb_rb);
+      LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for nr_tti_rx %d TBS %d mcs %d nb_rb %d\n",
+           phy_vars_ue->Mod_id,nr_tti_rx,harq_process->TBS,harq_process->mcs,harq_process->nb_rb);
 #endif
 
     harq_process->status = SCH_IDLE;
     harq_process->round  = 0;
-    dlsch->harq_ack[subframe].ack = 1;
-    dlsch->harq_ack[subframe].harq_id = harq_pid;
-    dlsch->harq_ack[subframe].send_harq_status = 1;
+    dlsch->harq_ack[nr_tti_rx].ack = 1;
+    dlsch->harq_ack[nr_tti_rx].harq_id = harq_pid;
+    dlsch->harq_ack[nr_tti_rx].send_harq_status = 1;
     //LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d)\n",
       //  phy_vars_ue->Mod_id, frame, subframe, harq_pid, harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs);
 
     if(is_crnti)
     {
-    LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d (pid %d, round %d, TBS %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round,harq_process->TBS);
+    LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for nr_tti_rx %d (pid %d, round %d, TBS %d)\n",phy_vars_ue->Mod_id,nr_tti_rx,harq_pid,harq_process->round,harq_process->TBS);
     }
     //LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
 
@@ -898,7 +898,7 @@ int dlsch_abstraction_MIESM(double* sinr_dB,uint8_t TM, uint32_t rb_alloc[4], ui
 }
 
 uint32_t dlsch_decoding_emul(PHY_VARS_UE *phy_vars_ue,
-                             uint8_t subframe,
+                             uint8_t nr_tti_rx,
                              PDSCH_t dlsch_id,
                              uint8_t eNB_id)
 {
@@ -924,7 +924,7 @@ uint32_t dlsch_decoding_emul(PHY_VARS_UE *phy_vars_ue,
     mac_xface->macphy_exit("Could not find attached eNB for DLSCH emulation");
   }
 
-  LOG_D(PHY,"[UE] dlsch_decoding_emul : subframe %d, eNB_id %d, dlsch_id %d\n",subframe,eNB_id2,dlsch_id);
+  LOG_D(PHY,"[UE] dlsch_decoding_emul : nr_tti_rx %d, eNB_id %d, dlsch_id %d\n",nr_tti_rx,eNB_id2,dlsch_id);
 
   //  printf("dlsch_eNB_ra->harq_processes[0] %p\n",PHY_vars_eNB_g[eNB_id]->dlsch_eNB_ra->harq_processes[0]);
 

@@ -54,17 +54,17 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     frame_parms->nb_prefix_samples0=512;
     frame_parms->nb_prefix_samples = 512;
     frame_parms->symbols_per_tti = 12;
-#ifdef UE_NR_PHY_DEMO
     // Only numerology 2 is supported for Extended Cyclic Prefix
     frame_parms->numerology_index = 2;
-    frame_parms->ttis_per_subframe = 4;
+    frame_parms->ttis_per_subframe = 1;
     frame_parms->slots_per_tti = 2; //only slot config 1 is supported
-#endif
   } else {
     frame_parms->nb_prefix_samples0 = 160;
     frame_parms->nb_prefix_samples = 144;
     frame_parms->symbols_per_tti = 14;
-      
+    frame_parms->numerology_index = 0;
+    frame_parms->ttis_per_subframe = 1;
+    frame_parms->slots_per_tti = 2; //only slot config 1 is supported      
   }
 
 
@@ -113,11 +113,11 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     else {
       frame_parms->ofdm_symbol_size = 2048;
       frame_parms->samples_per_tti = 30720;
-#ifdef UE_NR_PHY_DEMO
+//#ifdef UE_NR_PHY_DEMO
       frame_parms->samples_per_subframe = 30720 * frame_parms->ttis_per_subframe;
-#else
-      frame_parms->samples_per_subframe = 30720;
-#endif
+//#else
+//      frame_parms->samples_per_subframe = 30720;
+//#endif
       frame_parms->first_carrier_offset = 2048-600;
     }
     frame_parms->N_RBGS = 4;

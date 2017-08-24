@@ -368,7 +368,7 @@ void dft_lte(int32_t *z,int32_t *d, int32_t Msc_PUSCH, uint8_t Nsymb)
 void ulsch_modulation(int32_t **txdataF,
                       short amp,
                       uint32_t frame,
-                      uint32_t subframe,
+                      uint32_t nr_tti_rx,
                       LTE_DL_FRAME_PARMS *frame_parms,
                       LTE_UE_ULSCH_t *ulsch)
 {
@@ -382,8 +382,8 @@ void ulsch_modulation(int32_t **txdataF,
   DevAssert(frame_parms);
 
   int re_offset,re_offset0,i,Msymb,j,k,nsymb,Msc_PUSCH,l;
-  //  uint8_t harq_pid = (rag_flag == 1) ? 0 : subframe2harq_pid_tdd(frame_parms->tdd_config,subframe);
-  uint8_t harq_pid = subframe2harq_pid(frame_parms,frame,subframe);
+  //  uint8_t harq_pid = (rag_flag == 1) ? 0 : subframe2harq_pid_tdd(frame_parms->tdd_config,nr_tti_rx);
+  uint8_t harq_pid = subframe2harq_pid(frame_parms,frame,nr_tti_rx);
   uint8_t Q_m;
   int32_t *txptr;
   uint32_t symbol_offset;
@@ -400,7 +400,7 @@ void ulsch_modulation(int32_t **txdataF,
   }
 
   // x1 is set in lte_gold_generic
-  x2 = (ulsch->rnti<<14) + (subframe<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.3.1
+  x2 = (ulsch->rnti<<14) + (nr_tti_rx<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.3.1
 
   if (harq_pid>=8) {
     printf("ulsch_modulation.c: Illegal harq_pid %d\n",harq_pid);
@@ -411,12 +411,12 @@ void ulsch_modulation(int32_t **txdataF,
   nb_rb = ulsch->harq_processes[harq_pid]->nb_rb;
 
   if (nb_rb == 0) {
-    printf("ulsch_modulation.c: Frame %d, Subframe %d Illegal nb_rb %d\n",frame,subframe,nb_rb);
+    printf("ulsch_modulation.c: Frame %d, nr_tti_rx %d Illegal nb_rb %d\n",frame,nr_tti_rx,nb_rb);
     return;
   }
 
   if (first_rb > frame_parms->N_RB_UL) {
-    printf("ulsch_modulation.c: Frame %d, Subframe %d Illegal first_rb %d\n",frame,subframe,first_rb);
+    printf("ulsch_modulation.c: Frame %d, nr_tti_rx %d Illegal first_rb %d\n",frame,nr_tti_rx,first_rb);
     return;
   }
 
@@ -432,8 +432,8 @@ void ulsch_modulation(int32_t **txdataF,
   Msc_PUSCH = ulsch->harq_processes[harq_pid]->nb_rb*12;
 
 #ifdef DEBUG_ULSCH_MODULATION
-  LOG_D(PHY,"ulsch_modulation.c: Doing modulation (rnti %x,x2 %x) for G=%d bits, harq_pid %d , nb_rb %d, Q_m %d, Nsymb_pusch %d (nsymb %d), subframe %d\n",
-        ulsch->rnti,x2,G,harq_pid,ulsch->harq_processes[harq_pid]->nb_rb,Q_m, ulsch->Nsymb_pusch,nsymb,subframe);
+  LOG_D(PHY,"ulsch_modulation.c: Doing modulation (rnti %x,x2 %x) for G=%d bits, harq_pid %d , nb_rb %d, Q_m %d, Nsymb_pusch %d (nsymb %d), nr_tti_rx %d\n",
+        ulsch->rnti,x2,G,harq_pid,ulsch->harq_processes[harq_pid]->nb_rb,Q_m, ulsch->Nsymb_pusch,nsymb,nr_tti_rx);
 #endif
 
   // scrambling (Note the placeholding bits are handled in ulsch_coding.c directly!)
@@ -745,9 +745,9 @@ void ulsch_modulation(int32_t **txdataF,
   //  printf("txdataF %p\n",&txdataF[0][0]);
   for (j=0,l=0; l<(nsymb-ulsch->srs_active); l++) {
     re_offset = re_offset0;
-    symbol_offset = (uint32_t)frame_parms->ofdm_symbol_size*(l+(subframe*nsymb));
+    symbol_offset = (uint32_t)frame_parms->ofdm_symbol_size*(l+(nr_tti_rx*nsymb));
 #ifdef DEBUG_ULSCH_MODULATION
-    printf("ulsch_mod (SC-FDMA) symbol %d (subframe %d): symbol_offset %d\n",l,subframe,symbol_offset);
+    printf("ulsch_mod (SC-FDMA) symbol %d (nr_tti_rx %d): symbol_offset %d\n",l,nr_tti_rx,symbol_offset);
 #endif
     txptr = &txdataF[0][symbol_offset];
 

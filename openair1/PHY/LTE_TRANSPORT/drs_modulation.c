@@ -38,7 +38,7 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
 		       UE_rxtx_proc_t *proc,
                        uint8_t eNB_id,
                        short amp,
-                       unsigned int subframe,
+                       unsigned int nr_tti_rx,
                        unsigned int first_rb,
                        unsigned int nb_rb,
                        uint8_t ant)
@@ -46,7 +46,7 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
 
   uint16_t k,l,Msc_RS,Msc_RS_idx,rb,drs_offset;
   uint16_t * Msc_idx_ptr;
-  int subframe_offset,re_offset,symbol_offset;
+  int tti_offset,re_offset,symbol_offset;
 
   //uint32_t phase_shift; // phase shift for cyclic delay in DM RS
   //uint8_t alpha_ind;
@@ -58,22 +58,22 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   int32_t *txdataF = ue->common_vars.txdataF[ant];
   uint32_t u,v,alpha_ind;
-  uint32_t u0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[subframe<<1];
-  uint32_t u1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(subframe<<1)];
-  uint32_t v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
-  uint32_t v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
+  uint32_t u0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[nr_tti_rx<<1];
+  uint32_t u1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(nr_tti_rx<<1)];
+  uint32_t v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[nr_tti_rx<<1];
+  uint32_t v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(nr_tti_rx<<1)];
   int32_t ref_re,ref_im;
-  uint8_t harq_pid = subframe2harq_pid(frame_parms,proc->frame_tx,subframe);
+  uint8_t harq_pid = subframe2harq_pid(frame_parms,proc->frame_tx,nr_tti_rx);
 
   cyclic_shift0 = (frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
                    ue->ulsch[eNB_id]->harq_processes[harq_pid]->n_DMRS2 +
-                   frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1]+
+                   frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[nr_tti_rx<<1]+
                    ((ue->ulsch[0]->cooperation_flag==2)?10:0)+
                    ant*6) % 12;
-  //  printf("PUSCH.cyclicShift %d, n_DMRS2 %d, nPRS %d\n",frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift,ue->ulsch[eNB_id]->n_DMRS2,ue->lte_frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1]);
+  //  printf("PUSCH.cyclicShift %d, n_DMRS2 %d, nPRS %d\n",frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift,ue->ulsch[eNB_id]->n_DMRS2,ue->lte_frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[nr_tti_rx<<1]);
   cyclic_shift1 = (frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
                    ue->ulsch[eNB_id]->harq_processes[harq_pid]->n_DMRS2 +
-                   frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[(subframe<<1)+1]+
+                   frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[(nr_tti_rx<<1)+1]+
                    ((ue->ulsch[0]->cooperation_flag==2)?10:0)+
                    ant*6) % 12;
 
@@ -114,12 +114,12 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
 
 
     re_offset = frame_parms->first_carrier_offset;
-    subframe_offset = subframe*frame_parms->symbols_per_tti*frame_parms->ofdm_symbol_size;
-    symbol_offset = subframe_offset + frame_parms->ofdm_symbol_size*l;
+    tti_offset = nr_tti_rx*frame_parms->symbols_per_tti*frame_parms->ofdm_symbol_size;
+    symbol_offset = tti_offset + frame_parms->ofdm_symbol_size*l;
 
 
 #ifdef DEBUG_DRS
-    printf("generate_drs_pusch: symbol_offset %d, subframe offset %d, cyclic shift %d\n",symbol_offset,subframe_offset,cyclic_shift);
+    printf("generate_drs_pusch: symbol_offset %d, subframe offset %d, cyclic shift %d\n",symbol_offset,tti_offset,cyclic_shift);
 #endif
     alpha_ind = 0;
 

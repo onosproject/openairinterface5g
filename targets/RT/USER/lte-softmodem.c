@@ -1279,12 +1279,12 @@ void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.highSpeedFlag=0;
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.prach_FreqOffset=0;
 
-#ifdef UE_NR_PHY_DEMO
+//#ifdef UE_NR_PHY_DEMO
         // NR: Init to legacy LTE 20Mhz params
         frame_parms[CC_id]->numerology_index	= 0;
         frame_parms[CC_id]->ttis_per_subframe	= 1;
         frame_parms[CC_id]->slots_per_tti		= 2;
-#endif
+//#endif
 
         downlink_frequency[CC_id][0] = 2680000000; // Use float to avoid issue with frequency over 2^31.
         downlink_frequency[CC_id][1] = downlink_frequency[CC_id][0];

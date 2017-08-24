@@ -29,7 +29,7 @@
 int lte_dl_mbsfn_channel_estimation(PHY_VARS_UE *ue,
                                     uint8_t eNB_id,
                                     uint8_t eNB_offset,
-                                    int subframe,
+                                    int nr_tti_rx,
                                     unsigned char l)
 {
 
@@ -44,8 +44,8 @@ int lte_dl_mbsfn_channel_estimation(PHY_VARS_UE *ue,
   //  unsigned int n;
   //  int i;
 
-  int **dl_ch_estimates=ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[0];
-  int **rxdataF=ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF;
+  int **dl_ch_estimates=ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates[0];
+  int **rxdataF=ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].rxdataF;
 
   ch_offset     = (l*(ue->frame_parms.ofdm_symbol_size));
   symbol_offset = ch_offset;//phy_vars_ue->lte_frame_parms.ofdm_symbol_size*l;
@@ -55,7 +55,7 @@ int lte_dl_mbsfn_channel_estimation(PHY_VARS_UE *ue,
     if ((l==2)||(l==6)||(l==10)) {
       lte_dl_mbsfn_rx(ue,
                       &pilot[0],
-                      subframe,
+                      nr_tti_rx,
                       l>>2);
     } // if symbol==2, return 0 else if symbol = 6, return 1, else if symbol=10 return 2
 
@@ -734,31 +734,31 @@ int lte_dl_mbsfn_channel_estimation(PHY_VARS_UE *ue,
 
   // do ifft of channel estimate
   for (aa=0; aa<ue->frame_parms.nb_antennas_rx*ue->frame_parms.nb_antennas_tx; aa++) {
-    if (ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_offset][aa]) {
+    if (ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates[eNB_offset][aa]) {
       switch (ue->frame_parms.N_RB_DL) {
       case 6:
-	idft128((int16_t*) &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_offset][aa][8],
-		(int16_t*) ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates_time[eNB_offset][aa],
+	idft128((int16_t*) &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates[eNB_offset][aa][8],
+		(int16_t*) ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates_time[eNB_offset][aa],
 		1);
 	break;
       case 25:
-	idft512((int16_t*) &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_offset][aa][8],
-		(int16_t*) ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates_time[eNB_offset][aa],
+	idft512((int16_t*) &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates[eNB_offset][aa][8],
+		(int16_t*) ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates_time[eNB_offset][aa],
 		1);
 	break;
       case 50:
-	idft1024((int16_t*) &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_offset][aa][8],
-		(int16_t*) ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates_time[eNB_offset][aa],
+	idft1024((int16_t*) &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates[eNB_offset][aa][8],
+		(int16_t*) ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates_time[eNB_offset][aa],
 		1);
 	break;
       case 75:
-	idft1536((int16_t*) &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_offset][aa][8],
-		 (int16_t*) ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates_time[eNB_offset][aa],
+	idft1536((int16_t*) &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates[eNB_offset][aa][8],
+		 (int16_t*) ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates_time[eNB_offset][aa],
 		 1);
 	break;
       case 100:
-	idft2048((int16_t*) &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_offset][aa][8],
-		(int16_t*) ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates_time[eNB_offset][aa],
+	idft2048((int16_t*) &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates[eNB_offset][aa][8],
+		(int16_t*) ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[nr_tti_rx]].dl_ch_estimates_time[eNB_offset][aa],
 		1);
 	break;
       default:

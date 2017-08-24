@@ -35,7 +35,7 @@
 #include "PHY/LTE_TRANSPORT/proto.h"
 #include "PHY/extern.h"
 
-int16_t pucch_power_cntl(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t subframe,uint8_t eNB_id,PUCCH_FMT_t pucch_fmt)
+int16_t pucch_power_cntl(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t nr_tti_rx,uint8_t eNB_id,PUCCH_FMT_t pucch_fmt)
 {
 
   int16_t Po_PUCCH;
@@ -45,7 +45,7 @@ int16_t pucch_power_cntl(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t subframe,u
   //
   //if ((pucch_fmt == pucch_format1a) ||
   //    (pucch_fmt == pucch_format1b)) {  // Update g_pucch based on TPC/delta_PUCCH received in PDCCH for this process
-    //harq_pid = ue->dlsch[eNB_id][0]->harq_ack[subframe].harq_id;
+    //harq_pid = ue->dlsch[eNB_id][0]->harq_ack[nr_tti_rx].harq_id;
     //this is now done in dci_tools
     //ue->g_pucch[eNB_id] += ue->dlsch[eNB_id][0]->harq_processes[harq_pid]->delta_PUCCH;
   //}
@@ -95,7 +95,7 @@ int16_t pucch_power_cntl(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t subframe,u
   if (pucch_fmt!=pucch_format1) {
     LOG_D(PHY,"[UE  %d][PDSCH %x] AbsSubframe %d.%d: Po_PUCCH %d dBm : Po_NOMINAL_PUCCH %d dBm, PL %d dB, g_pucch %d dB\n",
           ue->Mod_id,
-          ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,proc->frame_tx%1024,subframe,
+          ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,proc->frame_tx%1024,nr_tti_rx,
           Po_PUCCH,
           ue->frame_parms.ul_power_control_config_common.p0_NominalPUCCH,
           get_PL(ue->Mod_id,ue->CC_id,eNB_id),
@@ -103,7 +103,7 @@ int16_t pucch_power_cntl(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t subframe,u
   } else {
     LOG_D(PHY,"[UE  %d][SR %x] AbsSubframe %d.%d: Po_PUCCH %d dBm : Po_NOMINAL_PUCCH %d dBm, PL %d dB g_pucch %d dB\n",
           ue->Mod_id,
-          ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,proc->frame_tx%1024,subframe,
+          ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,proc->frame_tx%1024,nr_tti_rx,
           Po_PUCCH,
           ue->frame_parms.ul_power_control_config_common.p0_NominalPUCCH,
           get_PL(ue->Mod_id,ue->CC_id,eNB_id),

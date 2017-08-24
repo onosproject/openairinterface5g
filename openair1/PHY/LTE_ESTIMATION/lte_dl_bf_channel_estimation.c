@@ -38,7 +38,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
   unsigned short rb,nb_rb=0;
   unsigned char aarx,l,lprime,nsymb,skip_half=0,sss_symb,pss_symb=0,rb_alloc_ind,harq_pid,uespec_pilots=0;
   int beamforming_mode, ch_offset;
-  uint8_t subframe;
+  uint8_t nr_tti_rx;
   int8_t uespec_nushift, uespec_poffset=0, pil_offset=0;
   uint8_t pilot0,pilot1,pilot2,pilot3;
 
@@ -75,7 +75,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
 
   
   uespec_nushift = frame_parms->Nid_cell%3;
-  subframe = Ns>>1;
+  nr_tti_rx = Ns>>1;
  
 
     //generate ue specific pilots
@@ -263,18 +263,18 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
           rb_alloc_ind = 0;
 
         // PBCH
-        if ((subframe==0) && (rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4))) {
+        if ((nr_tti_rx==0) && (rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4))) {
           rb_alloc_ind = 0;
         }
 
         //PBCH subframe 0, symbols nsymb>>1 ... nsymb>>1 + 3
-        if ((subframe==0) && (rb==((frame_parms->N_RB_DL>>1)-3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4)))
+        if ((nr_tti_rx==0) && (rb==((frame_parms->N_RB_DL>>1)-3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4)))
           skip_half=1;
-        else if ((subframe==0) && (rb==((frame_parms->N_RB_DL>>1)+3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4)))
+        else if ((nr_tti_rx==0) && (rb==((frame_parms->N_RB_DL>>1)+3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4)))
           skip_half=2;
 
         //SSS
-        if (((subframe==0)||(subframe==5)) &&
+        if (((nr_tti_rx==0)||(nr_tti_rx==5)) &&
             (rb>((frame_parms->N_RB_DL>>1)-3)) &&
             (rb<((frame_parms->N_RB_DL>>1)+3)) &&
             (l==sss_symb) ) {
@@ -282,28 +282,28 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
         }
 
         //SSS
-        if (((subframe==0)||(subframe==5)) &&
+        if (((nr_tti_rx==0)||(nr_tti_rx==5)) &&
             (rb==((frame_parms->N_RB_DL>>1)-3)) &&
             (l==sss_symb))
           skip_half=1;
-        else if (((subframe==0)||(subframe==5)) &&
+        else if (((nr_tti_rx==0)||(nr_tti_rx==5)) &&
                  (rb==((frame_parms->N_RB_DL>>1)+3)) &&
                  (l==sss_symb))
           skip_half=2;
 
         //PSS in subframe 0/5 if FDD
         if (frame_parms->frame_type == FDD) {  //FDD
-          if (((subframe==0)||(subframe==5)) && (rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb) ) {
+          if (((nr_tti_rx==0)||(nr_tti_rx==5)) && (rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb) ) {
             rb_alloc_ind = 0;
           }
 
-          if (((subframe==0)||(subframe==5)) && (rb==((frame_parms->N_RB_DL>>1)-3)) && (l==pss_symb))
+          if (((nr_tti_rx==0)||(nr_tti_rx==5)) && (rb==((frame_parms->N_RB_DL>>1)-3)) && (l==pss_symb))
             skip_half=1;
-          else if (((subframe==0)||(subframe==5)) && (rb==((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb))
+          else if (((nr_tti_rx==0)||(nr_tti_rx==5)) && (rb==((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb))
             skip_half=2;
         }
 
-        if ((frame_parms->frame_type == TDD) && ((subframe==1)||(subframe==6))) { //TDD Subframe 1 and 6
+        if ((frame_parms->frame_type == TDD) && ((nr_tti_rx==1)||(nr_tti_rx==6))) { //TDD Subframe 1 and 6
           if ((rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb) ) {
             rb_alloc_ind = 0;
           }
@@ -416,23 +416,23 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
         rb_alloc_ind = 0;
 
       // PBCH
-      if ((subframe==0) && (rb>=((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4))) {
+      if ((nr_tti_rx==0) && (rb>=((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4))) {
         rb_alloc_ind = 0;
       }
 
       //SSS
-      if (((subframe==0)||(subframe==5)) && (rb>=((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==sss_symb) ) {
+      if (((nr_tti_rx==0)||(nr_tti_rx==5)) && (rb>=((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==sss_symb) ) {
         rb_alloc_ind = 0;
       }
 
       if (frame_parms->frame_type == FDD) {
        //PSS
-        if (((subframe==0)||(subframe==5)) && (rb>=((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb) ) {
+        if (((nr_tti_rx==0)||(nr_tti_rx==5)) && (rb>=((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb) ) {
           rb_alloc_ind = 0;
         }
       }
 
-      if ((frame_parms->frame_type == TDD) && ((subframe==1)||(subframe==6))) {
+      if ((frame_parms->frame_type == TDD) && ((nr_tti_rx==1)||(nr_tti_rx==6))) {
         //PSS
         if ((rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb) ) {
           rb_alloc_ind = 0;
@@ -518,41 +518,41 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
           rb_alloc_ind = 0;
 
         // PBCH
-        if ((subframe==0) && (rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l>=nsymb>>1) && (l<((nsymb>>1) + 4))) {
+        if ((nr_tti_rx==0) && (rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l>=nsymb>>1) && (l<((nsymb>>1) + 4))) {
           rb_alloc_ind = 0;
         }
 
         //PBCH subframe 0, symbols nsymb>>1 ... nsymb>>1 + 3
-        if ((subframe==0) && (rb==((frame_parms->N_RB_DL>>1)-3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4)))
+        if ((nr_tti_rx==0) && (rb==((frame_parms->N_RB_DL>>1)-3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4)))
           skip_half=1;
-        else if ((subframe==0) && (rb==((frame_parms->N_RB_DL>>1)+3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4)))
+        else if ((nr_tti_rx==0) && (rb==((frame_parms->N_RB_DL>>1)+3)) && (l>=(nsymb>>1)) && (l<((nsymb>>1) + 4)))
           skip_half=2;
 
         //SSS
-        if (((subframe==0)||(subframe==5)) && (rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==sss_symb) ) {
+        if (((nr_tti_rx==0)||(nr_tti_rx==5)) && (rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==sss_symb) ) {
           rb_alloc_ind = 0;
         }
 
         //SSS
-        if (((subframe==0)||(subframe==5)) && (rb==((frame_parms->N_RB_DL>>1)-3)) && (l==sss_symb))
+        if (((nr_tti_rx==0)||(nr_tti_rx==5)) && (rb==((frame_parms->N_RB_DL>>1)-3)) && (l==sss_symb))
           skip_half=1;
-        else if (((subframe==0)||(subframe==5)) && (rb==((frame_parms->N_RB_DL>>1)+3)) && (l==sss_symb))
+        else if (((nr_tti_rx==0)||(nr_tti_rx==5)) && (rb==((frame_parms->N_RB_DL>>1)+3)) && (l==sss_symb))
           skip_half=2;
 
         if (frame_parms->frame_type == FDD) {
           //PSS
-          if (((subframe==0)||(subframe==5)) && (rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb) ) {
+          if (((nr_tti_rx==0)||(nr_tti_rx==5)) && (rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb) ) {
             rb_alloc_ind = 0;
           }
 
           //PSS
-          if (((subframe==0)||(subframe==5)) && (rb==((frame_parms->N_RB_DL>>1)-3)) && (l==pss_symb))
+          if (((nr_tti_rx==0)||(nr_tti_rx==5)) && (rb==((frame_parms->N_RB_DL>>1)-3)) && (l==pss_symb))
             skip_half=1;
-          else if (((subframe==0)||(subframe==5)) && (rb==((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb))
+          else if (((nr_tti_rx==0)||(nr_tti_rx==5)) && (rb==((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb))
             skip_half=2;
         }
 
-        if ((frame_parms->frame_type == TDD) && ((subframe==1)||(subframe==6))) { //TDD Subframe 1 and 6
+        if ((frame_parms->frame_type == TDD) && ((nr_tti_rx==1)||(nr_tti_rx==6))) { //TDD Subframe 1 and 6
           if ((rb>((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb) ) {
             rb_alloc_ind = 0;
           }

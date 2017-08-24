@@ -1819,7 +1819,7 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
 // 3. Perform SR/BSR procedures for scheduling feedback
 // 4. Perform PHR procedures
 
-#ifdef UE_NR_PHY_DEMO
+//#ifdef UE_NR_PHY_DEMO
 UE_L2_STATE_t
 ue_scheduler(
   const module_id_t    module_idP,
@@ -1832,7 +1832,7 @@ ue_scheduler(
   const lte_subframe_t directionP,
   const uint8_t        eNB_indexP,
   const int            CC_id)
-#else
+/*#else
 UE_L2_STATE_t
 ue_scheduler(
   const module_id_t    module_idP,
@@ -1843,7 +1843,7 @@ ue_scheduler(
   const lte_subframe_t directionP,
   const uint8_t        eNB_indexP,
   const int            CC_id)
-#endif
+#endif*/
 //------------------------------------------------------------------------------
 {
   int lcid; // lcid index
@@ -1992,20 +1992,20 @@ ue_scheduler(
   if (isNewTxSubframe)
 #endif
    {
-		LOG_I(MAC,"Frame %d: Contention resolution timer %d/%ld\n",txFrameP,UE_mac_inst[module_idP].RA_contention_resolution_cnt,
-			  ((1+rach_ConfigCommon->ra_SupervisionInfo.mac_ContentionResolutionTimer)<<3));
+    LOG_I(MAC,"Frame %d: Contention resolution timer %d/%ld\n",txFrameP,UE_mac_inst[module_idP].RA_contention_resolution_cnt,
+          ((1+rach_ConfigCommon->ra_SupervisionInfo.mac_ContentionResolutionTimer)<<3));
 
-		UE_mac_inst[module_idP].RA_contention_resolution_cnt++;
+    UE_mac_inst[module_idP].RA_contention_resolution_cnt++;
 
-		if (UE_mac_inst[module_idP].RA_contention_resolution_cnt ==
-			((1+rach_ConfigCommon->ra_SupervisionInfo.mac_ContentionResolutionTimer)<<3)) {
-		  UE_mac_inst[module_idP].RA_active = 0;
-		  UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
-		  // Signal PHY to quit RA procedure
-		  LOG_E(MAC,"Module id %u Contention resolution timer expired, RA failed\n", module_idP);
-		  mac_xface->ra_failed(module_idP,0,eNB_indexP);
-		}
+    if (UE_mac_inst[module_idP].RA_contention_resolution_cnt ==
+        ((1+rach_ConfigCommon->ra_SupervisionInfo.mac_ContentionResolutionTimer)<<3)) {
+      UE_mac_inst[module_idP].RA_active = 0;
+      UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
+      // Signal PHY to quit RA procedure
+      LOG_E(MAC,"Module id %u Contention resolution timer expired, RA failed\n", module_idP);
+      mac_xface->ra_failed(module_idP,0,eNB_indexP);
     }
+  }
   }
 
 
@@ -2050,16 +2050,16 @@ ue_scheduler(
   if (isNewTxSubframe)
 #endif
   {
-	  if ((UE_mac_inst[module_idP].scheduling_info.retxBSR_SF != MAC_UE_BSR_TIMER_NOT_RUNNING)
-			  && (UE_mac_inst[module_idP].scheduling_info.retxBSR_SF != 0)){
-		  UE_mac_inst[module_idP].scheduling_info.retxBSR_SF --;
-	  }
+  if ((UE_mac_inst[module_idP].scheduling_info.retxBSR_SF != MAC_UE_BSR_TIMER_NOT_RUNNING)
+          && (UE_mac_inst[module_idP].scheduling_info.retxBSR_SF != 0)){
+      UE_mac_inst[module_idP].scheduling_info.retxBSR_SF --;
+  }
 
-	  // Decrement Periodic Timer if it is running and not null
-	  if ((UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF != MAC_UE_BSR_TIMER_NOT_RUNNING)
-				&& (UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF != 0)){
-			UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF--;
-		}
+  // Decrement Periodic Timer if it is running and not null
+  if ((UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF != MAC_UE_BSR_TIMER_NOT_RUNNING)
+            && (UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF != 0)){
+        UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF--;
+    }
   }
 
   //Check whether Regular BSR is triggered
