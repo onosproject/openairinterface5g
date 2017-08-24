@@ -29,36 +29,38 @@
 
  */
 
-#include "assertions.h"
+//#include "assertions.h"
 //#include "PHY/defs.h"
-#include "PHY/extern.h"
+//#include "PHY/extern.h"
 
-#include "SCHED/defs.h"
-#include "SCHED/extern.h"
+//#include "SCHED/defs.h"
+//#include "SCHED/extern.h"
 
 #include "LAYER2/MAC/defs.h"
-#include "LAYER2/MAC/extern.h"
+//#include "LAYER2/MAC/extern.h"
 
-#include "LAYER2/MAC/proto.h"
+//#include "LAYER2/MAC/proto.h"
 #include "UTIL/LOG/log.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
-#include "UTIL/OPT/opt.h"
-#include "OCG.h"
-#include "OCG_extern.h"
+//#include "UTIL/LOG/vcd_signal_dumper.h"
+//#include "UTIL/OPT/opt.h"
+//#include "OCG.h"
+//#include "OCG_extern.h"
 
-#include "RRC/LITE/extern.h"
-#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
+//#include "RRC/LITE/extern.h"
+//#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 //NB-IoT
-#include "PHY/defs_NB_IoT.h"
-#include "defs_NB_IoT.h"
-#include "proto_NB_IoT.h"
+//#include "PHY/defs_NB_IoT.h"
+#include "LAYER2/MAC/defs_NB_IoT.h"
+#include "LAYER2/MAC/proto_NB_IoT.h"
+#include "LAYER2/MAC/extern_NB_IoT.h"
 //#include "LAYER2/MAC/pre_processor.c"
-#include "pdcp.h"
+//#include "pdcp.h"
 
+/*
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
 #endif
-
+*/
 #define ENABLE_MAC_PAYLOAD_DEBUG
 #define DEBUG_eNB_SCHEDULER 1
 
@@ -69,7 +71,7 @@ int find_UE_id_NB_IoT(module_id_t mod_idP, rnti_t rntiP)
 //------------------------------------------------------------------------------
 {
   int UE_id;
-  UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
+  UE_list_NB_IoT_t *UE_list = &eNB_mac_inst_NB_IoT[mod_idP].UE_list;
 
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX_NB_IoT; UE_id++) {
     if (UE_list->active[UE_id] != TRUE) continue;
@@ -96,7 +98,7 @@ int rrc_mac_remove_ue_NB_IoT(
 {
   int i;
   UE_list_NB_IoT_t *UE_list = &eNB_mac_inst_NB_IoT[mod_idP].UE_list;
-  int UE_id = find_UE_id(mod_idP,rntiP); //may should be changed
+  int UE_id = find_UE_id_NB_IoT(mod_idP,rntiP); //may should be changed
   int pCC_id;
 
   if (UE_id == -1) {
@@ -106,7 +108,7 @@ printf("MAC: cannot remove UE rnti %x\n", rntiP);
     return 0;
   }
 
-  pCC_id = UE_PCCID(mod_idP,UE_id);
+  pCC_id = UE_PCCID_NB_IoT(mod_idP,UE_id);
 
 printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
   LOG_I(MAC,"Removing UE %d from Primary CC_id %d (rnti %x)\n",UE_id,pCC_id, rntiP);
