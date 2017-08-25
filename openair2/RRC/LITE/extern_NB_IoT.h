@@ -39,6 +39,7 @@
 
 //MP: NOTE:XXX some of the parameters defined in vars_nb_iot are called by the extern.h file so not replicated here
 
+extern UE_RRC_INST_NB_IoT *UE_rrc_inst_NB_IoT;
 
 extern eNB_RRC_INST_NB_IoT *eNB_rrc_inst_NB_IoT;
 extern PHY_Config_t *config_INFO;

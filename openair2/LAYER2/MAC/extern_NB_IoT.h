@@ -43,7 +43,7 @@
 // //#include "SIMULATION/simulation_defs.h"
 // #endif //PHY_EMUL
 #include "PHY_INTERFACE/defs.h"  // should be replaced by PHY_INTERFACE/defs_NB_IoT.h (create MAC_xface for NB_IoT)
-//#include "RRC/LITE/defs.h"
+//#include "RRC/LITE/defs_NB_IoT.h"
 
 #ifdef NB_IOT
 #include "defs_NB_IoT.h"
@@ -67,7 +67,7 @@ extern const uint32_t BSR_TABLE_NB_IoT[BSR_TABLE_SIZE_NB_IoT];
 // extern UE_MAC_INST *UE_mac_inst;
 // extern eNB_MAC_INST *eNB_mac_inst;
 // extern eNB_RRC_INST *eNB_rrc_inst;
-// extern UE_RRC_INST *UE_rrc_inst;
+//extern UE_RRC_INST_NB_IoT *UE_rrc_inst_NB_IoT;
 // extern UE_MAC_INST *ue_mac_inst;
 // extern MAC_RLC_XFACE *Mac_rlc_xface;
 // extern uint8_t Is_rrc_registered;

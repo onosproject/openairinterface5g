@@ -49,8 +49,8 @@
 //#include "RRC/LITE/extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 //NB-IoT
-#include "PHY/defs_NB_IoT.h"
-#include "LAYER2/MAC/defs_NB_IoT.h"
+//#include "PHY/defs_NB_IoT.h"
+//#include "LAYER2/MAC/defs_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
 #include "RRC/LITE/defs_NB_IoT.h"

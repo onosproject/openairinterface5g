@@ -3079,6 +3079,46 @@ rlc_op_status_t rrc_rlc_remove_rlc_NB_IoT (
   return RLC_OP_STATUS_OK;
 }
 
+
+//defined in rlc_am.c
+//-----------------------------------------------------------------------------
+void config_req_rlc_am_NB_IoT (
+  const protocol_ctxt_t* const ctxt_pP,
+  const srb_flag_t             srb_flagP,
+  rlc_am_info_NB_t  * const       config_am_pP, //XXX: MP: rlc_am_init.c --> this structure has been modified for NB-IoT
+  const rb_id_t                rb_idP,
+  const logical_chan_id_t      chan_idP
+)
+{
+  rlc_union_t       *rlc_union_p = NULL;
+  rlc_am_entity_t *l_rlc_p         = NULL;
+  hash_key_t       key           = RLC_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, srb_flagP);
+  hashtable_rc_t   h_rc;
+
+  h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
+
+  if (h_rc == HASH_TABLE_OK) {
+    l_rlc_p = &rlc_union_p->rlc.am;
+    LOG_D(RLC,
+          PROTOCOL_RLC_AM_CTXT_FMT" CONFIG_REQ (max_retx_threshold=%d t_poll_retransmit=%d)\n",
+          PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,l_rlc_p),
+          config_am_pP->max_retx_threshold_NB,
+          config_am_pP->t_poll_retransmit_NB
+      //enableStatusReportSN_Gap_r13
+      );
+    rlc_am_init(ctxt_pP, l_rlc_p);
+    rlc_am_set_debug_infos(ctxt_pP, l_rlc_p, srb_flagP, rb_idP, chan_idP);
+    rlc_am_configure_NB_IoT(ctxt_pP,
+              l_rlc_p,
+            config_am_pP->max_retx_threshold_NB,
+                      config_am_pP->t_poll_retransmit_NB,
+            config_am_pP->enableStatusReportSN_Gap);
+  } else {
+    LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" CONFIG_REQ RLC NOT FOUND\n",
+          PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,l_rlc_p));
+  }
+}
+
 //defined in rlc_rrc.c
 //used only for rrc_t310_expiration --> I don't know if it is used (probably not)
 rlc_op_status_t rrc_rlc_config_req_NB_IoT (
@@ -3155,44 +3195,6 @@ rlc_op_status_t rrc_rlc_config_req_NB_IoT (
 }
 
 
-//defined in rlc_am.c
-//-----------------------------------------------------------------------------
-void config_req_rlc_am_NB_IoT (
-  const protocol_ctxt_t* const ctxt_pP,
-  const srb_flag_t             srb_flagP,
-  rlc_am_info_NB_t  * const       config_am_pP, //XXX: MP: rlc_am_init.c --> this structure has been modified for NB-IoT
-  const rb_id_t                rb_idP,
-  const logical_chan_id_t      chan_idP
-)
-{
-  rlc_union_t       *rlc_union_p = NULL;
-  rlc_am_entity_t *l_rlc_p         = NULL;
-  hash_key_t       key           = RLC_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, srb_flagP);
-  hashtable_rc_t   h_rc;
-
-  h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
-
-  if (h_rc == HASH_TABLE_OK) {
-    l_rlc_p = &rlc_union_p->rlc.am;
-    LOG_D(RLC,
-          PROTOCOL_RLC_AM_CTXT_FMT" CONFIG_REQ (max_retx_threshold=%d t_poll_retransmit=%d)\n",
-          PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,l_rlc_p),
-          config_am_pP->max_retx_threshold_NB,
-          config_am_pP->t_poll_retransmit_NB
-		  //enableStatusReportSN_Gap_r13
-		  );
-    rlc_am_init(ctxt_pP, l_rlc_p);
-    rlc_am_set_debug_infos(ctxt_pP, l_rlc_p, srb_flagP, rb_idP, chan_idP);
-    rlc_am_configure_NB_IoT(ctxt_pP,
-    					l_rlc_p,
-						config_am_pP->max_retx_threshold_NB,
-                    	config_am_pP->t_poll_retransmit_NB,
-						config_am_pP->enableStatusReportSN_Gap);
-  } else {
-    LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" CONFIG_REQ RLC NOT FOUND\n",
-          PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,l_rlc_p));
-  }
-}
 
 
 //defined in rlc_tm_init.c (nothing to be changed)
