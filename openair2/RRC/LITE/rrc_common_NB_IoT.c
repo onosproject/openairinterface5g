@@ -28,7 +28,7 @@
  * \email:  navid.nikaein@eurecom.fr and raymond.knopp@eurecom.fr
  */
 
-#include "defs_NB_IoT.h"
+//#include "defs_NB_IoT.h"
 #include "extern.h"
 #include "extern_NB_IoT.h"
 #include "LAYER2/MAC/extern.h"
@@ -43,6 +43,7 @@
 #include "UTIL/LOG/vcd_signal_dumper.h"
 #include "rrc_eNB_UE_context.h"
 #include "proto_NB_IoT.h"
+#include "RRC/LITE/defs_NB_IoT.h"
 
 #ifdef LOCALIZATION
 #include <sys/time.h>
@@ -71,9 +72,9 @@ rrc_t310_expiration_NB(
 //-----------------------------------------------------------------------------
 {
 
-  if (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State != RRC_CONNECTED) {
-    LOG_D(RRC, "Timer 310 expired, going to RRC_IDLE\n");
-    UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State = RRC_IDLE;
+  if (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State != RRC_CONNECTED_NB_IoT) {
+    LOG_D(RRC, "Timer 310 expired, going to RRC_IDLE_NB_IoT\n");
+    UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State = RRC_IDLE_NB_IoT;
     UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].UE_index = 0xffff;
     UE_rrc_inst[ctxt_pP->module_id].Srb0[eNB_index].Rx_buffer.payload_size = 0;
     UE_rrc_inst[ctxt_pP->module_id].Srb0[eNB_index].Tx_buffer.payload_size = 0;
@@ -371,9 +372,9 @@ rrc_rx_tx_NB_IoT(
       LOG_I(RRC,"[UE %d] Frame %d : RRC handover initiated\n", ctxt_pP->module_id, ctxt_pP->frame);
     }
 
-    if((UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].State == RRC_HO_EXECUTION)   &&
+    if((UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].State == RRC_HO_EXECUTION_NB_IoT)   &&
         (UE_rrc_inst[ctxt_pP->module_id].HandoverInfoUe.targetCellId != 0xFF)) {
-      UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].State= RRC_IDLE;
+      UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].State= RRC_IDLE_NB_IoT;
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_RX_TX,VCD_FUNCTION_OUT);
       return(RRC_HO_STARTED);
     }

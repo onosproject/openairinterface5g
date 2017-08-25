@@ -73,5 +73,6 @@ int mac_top_init_NB_IoT(void);
 
 int find_UE_id_NB_IoT (module_id_t module_idP, rnti_t rnti) ;
 int UE_PCCID_NB_IoT (module_id_t module_idP, int UE_id);
+rnti_t  UE_RNTI_NB_IoT (module_id_t module_idP, int UE_id);
 
 #endif

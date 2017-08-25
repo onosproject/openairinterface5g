@@ -53,7 +53,7 @@ extern IF_Module_t *if_inst;
 extern eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
 #endif
 
-// extern const uint32_t BSR_TABLE[BSR_TABLE_SIZE];
+extern const uint32_t BSR_TABLE_NB_IoT[BSR_TABLE_SIZE_NB_IoT];
 // //extern uint32_t EBSR_Level[63];
 // extern const uint32_t Extended_BSR_TABLE[BSR_TABLE_SIZE];
 // //extern uint32_t Extended_BSR_TABLE[63];  ----currently not used 

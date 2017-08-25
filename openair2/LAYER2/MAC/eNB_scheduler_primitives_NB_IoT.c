@@ -36,7 +36,7 @@
 //#include "SCHED/defs.h"
 //#include "SCHED/extern.h"
 
-#include "LAYER2/MAC/defs.h"
+//#include "LAYER2/MAC/defs.h"
 //#include "LAYER2/MAC/extern.h"
 
 //#include "LAYER2/MAC/proto.h"
@@ -61,8 +61,8 @@
 # include "intertask_interface.h"
 #endif
 */
-#define ENABLE_MAC_PAYLOAD_DEBUG
-#define DEBUG_eNB_SCHEDULER 1
+//#define ENABLE_MAC_PAYLOAD_DEBUG
+//#define DEBUG_eNB_SCHEDULER 1
 
 /*TODO NB_mac_phy_remove_ue*/
 
@@ -90,8 +90,23 @@ int UE_PCCID_NB_IoT(module_id_t mod_idP,int ue_idP)
   return(eNB_mac_inst_NB_IoT[mod_idP].UE_list.pCC_id[ue_idP]);
 }
 
+//------------------------------------------------------------------------------
+rnti_t UE_RNTI_NB_IoT(module_id_t mod_idP, int ue_idP)
+//------------------------------------------------------------------------------
+{
 
+  rnti_t rnti = eNB_mac_inst_NB_IoT[mod_idP].UE_list.UE_template[UE_PCCID_NB_IoT(mod_idP,ue_idP)][ue_idP].rnti;
 
+  if (rnti>0) {
+    return (rnti);
+  }
+
+  LOG_D(MAC,"[eNB %d] Couldn't find RNTI for UE %d\n",mod_idP,ue_idP);
+  //display_backtrace();
+  return(NOT_A_RNTI);
+}
+
+//--------------------------------------------------------------------------------------------------------
 int rrc_mac_remove_ue_NB_IoT(
 		module_id_t mod_idP,
 		rnti_t rntiP)

@@ -328,6 +328,8 @@ typedef struct {
 #define DTCH0_NB_IoT 4 // DRB0
 /*!\brief DTCH1 DRB1  logical channel */
 #define DTCH1_NB_IoT 5 // DRB1
+/*!\brief size of buffer status report table */
+#define BSR_TABLE_SIZE_NB_IoT 64
 // DLSCH LCHAN ID all the same as NB-IoT
 /*!\brief  DCI PDU filled by MAC for the PHY  */
 /* 

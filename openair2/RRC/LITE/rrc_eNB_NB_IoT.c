@@ -2316,18 +2316,18 @@ int rrc_eNB_decode_dcch_NB_IoT(
           present == RRCConnectionReconfigurationComplete_NB__criticalExtensions_PR_rrcConnectionReconfigurationComplete_r13) {
 	/*NN: revise the condition */
 
-   //MP: RRC_RECONFIGURED indicate if the default/dedicated bearer has been/not established
+   //MP: RRC_RECONFIGURED_NB_IoT indicate if the default/dedicated bearer has been/not established
 
-        if (ue_context_p->ue_context.Status == RRC_RECONFIGURED){ // a dedicated bearers has been established
+        if (ue_context_p->ue_context.Status == RRC_RECONFIGURED_NB_IoT){ // a dedicated bearers has been established
 	  dedicated_DRB = 1;
 	  LOG_I(RRC,
-		PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_RECONFIGURED (dedicated DRB, xid %ld)\n",
+		PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_RECONFIGURED_NB_IoT (dedicated DRB, xid %ld)\n",
 		PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
 	}else { //a default bearer has been established
 	  dedicated_DRB = 0;
-	  ue_context_p->ue_context.Status = RRC_RECONFIGURED;
+	  ue_context_p->ue_context.Status = RRC_RECONFIGURED_NB_IoT;
 	  LOG_I(RRC,
-		PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_RECONFIGURED (default DRB, xid %ld)\n",
+		PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_RECONFIGURED_NB_IoT (default DRB, xid %ld)\n",
 		PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
 	}
 	rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
@@ -2439,9 +2439,9 @@ int rrc_eNB_decode_dcch_NB_IoT(
             &ul_dcch_msg_NB->message.choice.c1.choice.rrcConnectionSetupComplete_r13.criticalExtensions.choice.rrcConnectionSetupComplete_r13);
 
           //set Ue status CONNECTED
-          ue_context_p->ue_context.Status = RRC_CONNECTED;
+          ue_context_p->ue_context.Status = RRC_CONNECTED_NB_IoT;
 
-          LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_CONNECTED \n",
+          LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_CONNECTED_NB_IoT \n",
                 PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
 #if defined(FLEXRAN_AGENT_SB_IF)

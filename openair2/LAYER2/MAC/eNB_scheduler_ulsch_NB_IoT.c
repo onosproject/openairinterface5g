@@ -29,42 +29,42 @@
 
  */
 
-#include "assertions.h"
+//#include "assertions.h"
 //#include "PHY/defs.h"
-#include "PHY/extern.h"
+//#include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"
 
-#include "SCHED/defs.h"
-#include "SCHED/extern.h"
+//#include "SCHED/defs.h"
+//#include "SCHED/extern.h"
 
 //#include "LAYER2/MAC/defs.h"
-#include "LAYER2/MAC/proto.h"
-#include "LAYER2/MAC/extern.h"
+//#include "LAYER2/MAC/proto.h"
+
 #include "UTIL/LOG/log.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
-#include "UTIL/OPT/opt.h"
-#include "OCG.h"
-#include "OCG_extern.h"
+#include "UTIL/OPT/opt.h"  // for trace_pdu() function , description is in probe.c
+//#include "OCG.h"
+//#include "OCG_extern.h"
 
-#include "RRC/LITE/extern.h"
+//#include "RRC/LITE/extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 //NB-IoT
 #include "PHY/defs_NB_IoT.h"
 #include "LAYER2/MAC/defs_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
-
-
+#include "LAYER2/MAC/extern_NB_IoT.h"
+#include "RRC/LITE/defs_NB_IoT.h"
 //#include "LAYER2/MAC/pre_processor.c"
-#include "pdcp.h"
+//#include "pdcp.h"
 
-#if defined(ENABLE_ITTI)
-# include "intertask_interface.h"
-#endif
+//#if defined(ENABLE_ITTI)
+//# include "intertask_interface.h"
+//#endif
 
 #include "T.h"
 
 #define ENABLE_MAC_PAYLOAD_DEBUG
-#define DEBUG_eNB_SCHEDULER 1
+//#define DEBUG_eNB_SCHEDULER 1
 
 
 void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
@@ -81,7 +81,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
   unsigned char  rx_ces[MAX_NUM_CE],num_ce,num_sdu,i,*payload_ptr;
   unsigned char  rx_lcids[NB_RB_MAX];//for NB-IoT, NB_RB_MAX should be fixed to 5 (2 DRB+ 3SRB) 
   unsigned short rx_lengths[NB_RB_MAX];
-  int    UE_id = find_UE_id(enb_mod_idP,rntiP);
+  int    UE_id = find_UE_id_NB_IoT(enb_mod_idP,rntiP);
   int ii,j;
   eNB_MAC_INST_NB_IoT *eNB = &eNB_mac_inst_NB_IoT[enb_mod_idP];
   UE_list_NB_IoT_t *UE_list= &eNB->UE_list;
@@ -91,7 +91,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
   start_meas(&eNB->rx_ulsch_sdu);
 
   /*if there is an error for UE_id> max or UE_id==-1, set rx_lengths to 0*/
-  if ((UE_id >  NUMBER_OF_UE_MAX) || (UE_id == -1)  )
+  if ((UE_id >  NUMBER_OF_UE_MAX_NB_IoT) || (UE_id == -1)  )
     for(ii=0; ii<NB_RB_MAX; ii++) {
       rx_lengths[ii] = 0;
     }
@@ -117,7 +117,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
     /*RLF procedure this part just check UE context is NULL or not, if not, means UL in synch*/
     if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync > 0) {
       UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync=0;
-      mac_eNB_rrc_ul_in_sync_NB_IoT(enb_mod_idP,CC_idP,frameP,subframeP,UE_RNTI(enb_mod_idP,UE_id));
+      mac_eNB_rrc_ul_in_sync_NB_IoT(enb_mod_idP,CC_idP,frameP,subframeP,UE_RNTI_NB_IoT(enb_mod_idP,UE_id));
     }
   }
 
@@ -151,7 +151,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
       break;
 
     case CRNTI:
-      UE_id = find_UE_id(enb_mod_idP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
+      UE_id = find_UE_id_NB_IoT(enb_mod_idP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
       LOG_I(MAC, "[eNB %d] Frame %d, Subframe %d CC_id %d MAC CE_LCID %d (ce %d/%d): CRNTI %x (UE_id %d) in Msg3\n",
 	    frameP,subframeP,enb_mod_idP, CC_idP, rx_ces[i], i,num_ce,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1],UE_id);
       if (UE_id!=-1) {
@@ -187,7 +187,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
 
 	// update buffer info
 	
-	UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[lcgid]=BSR_TABLE[UE_list->UE_template[CC_idP][UE_id].bsr_info[lcgid]];
+	UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[lcgid]=BSR_TABLE_NB_IoT[UE_list->UE_template[CC_idP][UE_id].bsr_info[lcgid]];
 
 	UE_list->UE_template[CC_idP][UE_id].ul_total_buffer= UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[lcgid];
 
@@ -197,7 +197,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
         if (UE_list->UE_template[CC_idP][UE_id].ul_buffer_creation_time[lcgid] == 0 ) {
           UE_list->UE_template[CC_idP][UE_id].ul_buffer_creation_time[lcgid]=frameP;
         }
-	if (mac_eNB_get_rrc_status(enb_mod_idP,UE_RNTI(enb_mod_idP,UE_id)) < RRC_CONNECTED)
+	if (mac_eNB_get_rrc_status(enb_mod_idP,UE_RNTI_NB_IoT(enb_mod_idP,UE_id)) < RRC_CONNECTED_NB_IoT)
 	  LOG_I(MAC, "[eNB %d] CC_id %d MAC CE_LCID %d : ul_total_buffer = %d (lcg increment %d)\n",
 		enb_mod_idP, CC_idP, rx_ces[i], UE_list->UE_template[CC_idP][UE_id].ul_total_buffer,
 		UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[lcgid]);	

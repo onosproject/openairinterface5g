@@ -223,14 +223,14 @@ typedef struct uid_linear_allocator_NB_IoT_s {
 
 
 //left as they are --> used in LAYER2/epenair2_proc.c and UE side
-//typedef enum UE_STATE_NB_e {
-//  RRC_INACTIVE=0,
-//  RRC_IDLE,
-//  RRC_SI_RECEIVED,
-//  RRC_CONNECTED,
-//  RRC_RECONFIGURED,
-//  RRC_HO_EXECUTION //maybe not needed?
-//} UE_STATE_NB_t;
+typedef enum UE_STATE_NB_IoT_e {
+ RRC_INACTIVE_NB_IoT=0,
+ RRC_IDLE_NB_IoT,
+ RRC_SI_RECEIVED_NB_IoT,
+ RRC_CONNECTED_NB_IoT,
+ RRC_RECONFIGURED_NB_IoT,
+ RRC_HO_EXECUTION_NB_IoT //maybe not needed?
+} UE_STATE_NB_IoT_t;
 
 
 // HO_STATE is not supported by NB-IoT

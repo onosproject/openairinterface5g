@@ -1472,7 +1472,7 @@ int mac_eNB_get_rrc_status_NB_IoT(
   if (ue_context_p != NULL) {
     return(ue_context_p->ue_context.Status);
   } else {
-    return RRC_INACTIVE;
+    return RRC_INACTIVE_NB_IoT;
   }
 }
 
