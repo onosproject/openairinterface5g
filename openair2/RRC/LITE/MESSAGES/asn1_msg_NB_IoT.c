@@ -93,8 +93,8 @@ int errno;
 #endif
 
 
-/*do_MIB_NB*/
-uint8_t do_MIB_NB(
+/*do_MIB_NB_NB_IoT*/
+uint8_t do_MIB_NB_IoT(
 		rrc_eNB_carrier_data_NB_IoT_t *carrier,
 		uint16_t N_RB_DL,//may not needed--> for NB_IoT only 1 PRB is used
 		uint32_t frame)

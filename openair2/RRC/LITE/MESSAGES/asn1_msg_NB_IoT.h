@@ -62,7 +62,7 @@
 @param N_RB_DL Number of downlink PRBs
 @param frame radio frame number
 @return size of encoded bit stream in bytes*/
-uint8_t do_MIB_NB(
+uint8_t do_MIB_NB_IoT(
 		rrc_eNB_carrier_data_NB_IoT_t *carrier,
 		uint32_t N_RB_DL,
 		uint32_t frame);

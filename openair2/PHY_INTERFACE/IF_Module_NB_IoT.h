@@ -14,7 +14,7 @@
 //#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "openair2/COMMON/platform_types.h"
 
-#define SCH_PAYLOAD_SIZE_MAX 4096
+//#define SCH_PAYLOAD_SIZE_MAX 4096
 #define BCCH_PAYLOAD_SIZE_MAX_NB_IoT 128
 
 

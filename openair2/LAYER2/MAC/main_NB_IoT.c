@@ -173,7 +173,7 @@ int mac_top_init_NB_IoT()
       memset (&eNB_mac_inst_NB_IoT[i].eNB_stats,0,sizeof(eNB_STATS_NB_IoT));
       UE_template = (UE_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB_IoT[i].UE_list.UE_template[CC_id][0];
 
-      for (j=0; j<NUMBER_OF_UE_MAX; j++) {
+      for (j=0; j<NUMBER_OF_UE_MAX_NB_IoT; j++) {
         UE_template[j].rnti=0;
         // initiallize the eNB to UE statistics
         memset (&eNB_mac_inst_NB_IoT[i].UE_list.eNB_UE_stats[CC_id][j],0,sizeof(eNB_UE_STATS_NB_IoT));

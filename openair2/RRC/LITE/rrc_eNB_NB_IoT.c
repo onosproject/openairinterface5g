@@ -1639,7 +1639,7 @@ init_SI_NB(
   if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].MIB_NB)
   {
 	  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB =
-	  			  do_MIB_NB(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id],
+	  			  do_MIB_NB_IoT(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id],
 	  					  	configuration->N_RB_DL[CC_id],
 					        0 //FIXME is correct to pass frame = 0??
 					        );
