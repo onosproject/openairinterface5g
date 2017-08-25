@@ -460,7 +460,7 @@ typedef struct {
 
   // buffer that contains the encoded messages
   uint8_t							*MIB_NB;
-  uint8_t							sizeof_MIB_NB;
+  uint8_t							sizeof_MIB_NB_IoT;
 
   uint8_t                           *SIB1_NB;
   uint8_t                           sizeof_SIB1_NB;
@@ -496,11 +496,11 @@ typedef struct {
   uint16_t                          physCellId; //not stored in the MIB-NB but is getting through NPSS/NSSS
 
   //are the only static one (memory has been already allocated)
-  BCCH_BCH_Message_NB_t                mib_NB;
-  BCCH_DL_SCH_Message_NB_t             siblock1_NB; //SIB1-NB
-  BCCH_DL_SCH_Message_NB_t             systemInformation_NB; //SI
+  BCCH_BCH_Message_NB_t                mib_NB_IoT;
+  BCCH_DL_SCH_Message_NB_t             siblock1_NB_IoT; //SIB1-NB
+  BCCH_DL_SCH_Message_NB_t             systemInformation_NB_IoT; //SI
 
-  SystemInformationBlockType1_NB_t     		*sib1_NB;
+  SystemInformationBlockType1_NB_t     		*sib1_NB_IoT;
   SystemInformationBlockType2_NB_r13_t   	*sib2_NB;
   SystemInformationBlockType3_NB_r13_t   	*sib3_NB;
   //not implemented yet

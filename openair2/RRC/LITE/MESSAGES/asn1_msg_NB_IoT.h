@@ -86,7 +86,7 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
 \brief Generate a default configuration for SIB2/SIB3-NB in one System Information PDU (eNB).
 @param Mod_id Index of eNB (used to derive some parameters)
 @param buffer Pointer to PER-encoded ASN.1 description of SI-NB PDU
-@param systemInformation_NB Pointer to asn1c C representation of SI-NB PDU
+@param systemInformation_NB_IoT Pointer to asn1c C representation of SI-NB PDU
 @param sib2_NB Pointer (returned) to sib2_NB component withing SI-NB PDU
 @param sib3_NB Pointer (returned) to sib3_NB component withing SI-NB PDU
 @return size of encoded bit stream in bytes*/

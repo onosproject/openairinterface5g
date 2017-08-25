@@ -1626,11 +1626,11 @@ init_SI_NB(
   eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].ul_CarrierFreq  = configuration->downlink_frequency[CC_id]+ configuration->uplink_frequency_offset[CC_id];
 
 
-  //TODO: verify who allocate memory for sib1_NB, sib2_NB, sib3_NB and mib_nb in the carrier before being passed as parameter
+  //TODO: verify who allocate memory for sib1_NB_IoT, sib2_NB, sib3_NB and mib_nb in the carrier before being passed as parameter
 
   eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1_NB = 0;
   eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23_NB = 0;
-  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB = 0;
+  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB_IoT = 0;
 
   //MIB
   eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].MIB_NB = (uint8_t*) malloc16(32); //MIB is 34 bits=5bytes needed
@@ -1638,7 +1638,7 @@ init_SI_NB(
 
   if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].MIB_NB)
   {
-	  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB =
+	  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB_IoT =
 	  			  do_MIB_NB_IoT(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id],
 	  					  	configuration->N_RB_DL[CC_id],
 					        0 //FIXME is correct to pass frame = 0??
@@ -1651,8 +1651,8 @@ init_SI_NB(
     }
 
 
-  if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB == 255) {
-      mac_xface->macphy_exit("[RRC][init_SI] FATAL, eNB_rrc_inst_NB[enb_mod_idP].carrier[CC_id].sizeof_MIB_NB == 255");
+  if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB_IoT == 255) {
+      mac_xface->macphy_exit("[RRC][init_SI] FATAL, eNB_rrc_inst_NB[enb_mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT == 255");
     }
 
  //SIB1_NB
@@ -1721,18 +1721,18 @@ init_SI_NB(
 								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].p_rx_eNB,
 								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Ncp,
 								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Ncp_UL,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB->freqBandIndicator_r13, //eutra_band
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB->freqBandInfo_r13,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB->multiBandInfoList_r13,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB->downlinkBitmap_r13,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB->eutraControlRegionSize_r13,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB->nrs_CRS_PowerOffset_r13,
+								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->freqBandIndicator_r13, //eutra_band
+								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->freqBandInfo_r13,
+								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->multiBandInfoList_r13,
+								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->downlinkBitmap_r13,
+								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->eutraControlRegionSize_r13,
+								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->nrs_CRS_PowerOffset_r13,
 //								&SIwindowsize,
 //								&SIperiod,
 								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].dl_CarrierFreq,
 								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].ul_CarrierFreq,
 								(BCCH_BCH_Message_NB_t*) &
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].mib_NB,
+								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].mib_NB_IoT,
 								(RadioResourceConfigCommonSIB_NB_r13_t *) &
 								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib2_NB->radioResourceConfigCommon_r13,
 								(struct PhysicalConfigDedicated_NB_r13 *)NULL,

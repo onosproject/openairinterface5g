@@ -460,7 +460,7 @@ typedef struct {
   int							   Ncp_UL;
   int                              eutra_band;
   uint32_t                         dl_CarrierFreq;
-  BCCH_BCH_Message_NB_t               *mib_NB;
+  BCCH_BCH_Message_NB_t               *mib_NB_IoT;
   RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon;
   ARFCN_ValueEUTRA_r9_t               ul_CarrierFreq;
   struct MasterInformationBlock_NB__operationModeInfo_r13 operationModeInfo;

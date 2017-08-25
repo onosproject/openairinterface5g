@@ -224,7 +224,7 @@ int32_t get_uldl_offset_NB_IoT(int eutra_band) {
 
 
 
-void config_mib_NB_fapi(
+void config_mib_fapi_NB_IoT(
 		int rntiP,
 		int physCellId,
 		uint8_t eutra_band,
@@ -235,7 +235,7 @@ void config_mib_NB_fapi(
 		int dl_CarrierFreq,
 		int ul_CarrierFreq,
 		long*eutraControlRegionSize,
-		BCCH_BCH_Message_NB_t *mib_NB
+		BCCH_BCH_Message_NB_t *mib_NB_IoT
 		)
 
 {
@@ -261,12 +261,12 @@ void config_mib_NB_fapi(
     //The prb index allowed are the one specified in R&shwarz pag 9 NB-IoT white papaer
 
 
-    switch (mib_NB->message.operationModeInfo_r13.present)
+    switch (mib_NB_IoT->message.operationModeInfo_r13.present)
     {
     //FAPI specs pag 135
     case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13:
 		config_INFO->cfg->nb_iot_config.operating_mode.value = 0;
-		config_INFO->cfg->nb_iot_config.prb_index.value = mib_NB->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13; //see TS 36.213 ch 16.0
+		config_INFO->cfg->nb_iot_config.prb_index.value = mib_NB_IoT->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13; //see TS 36.213 ch 16.0
 		config_INFO->cfg->nb_iot_config.assumed_crs_aps.value = -1; //is not defined so we put a negative value
 
 		if(eutraControlRegionSize == NULL)
@@ -286,7 +286,7 @@ void config_mib_NB_fapi(
     	//XXX should pass the prb_index may defined by configuration file depending on the LTE band we are considering (see Rhode&Shwartz whitepaper pag9)
     	//config_INFO->nb_iot_config.prb_index.value =
 
-    	config_INFO->cfg->nb_iot_config.assumed_crs_aps.value = mib_NB->message.operationModeInfo_r13.choice.inband_DifferentPCI_r13.eutra_NumCRS_Ports_r13;
+    	config_INFO->cfg->nb_iot_config.assumed_crs_aps.value = mib_NB_IoT->message.operationModeInfo_r13.choice.inband_DifferentPCI_r13.eutra_NumCRS_Ports_r13;
 
 		if(eutraControlRegionSize == NULL)
 			LOG_E(RRC, "rrc_mac_config_req_eNB_NB_IoT: operation mode is in-band but eutraControlRegionSize is not defined");
@@ -577,7 +577,7 @@ int rrc_mac_config_req_eNB_NB_IoT(
 			   long*							nrs_CRS_PoweSIwindowsizerOffset, //optional
 			   uint32_t                         dl_CarrierFreq,
 			   uint32_t                         ul_CarrierFreq,
-			   BCCH_BCH_Message_NB_t            *mib_NB,
+			   BCCH_BCH_Message_NB_t            *mib_NB_IoT,
 			   RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon,
 			   struct PhysicalConfigDedicated_NB_r13  *physicalConfigDedicated,
 			   MAC_MainConfig_NB_r13_t                *mac_MainConfig, //most probably not needed since only used at UE side
@@ -604,14 +604,14 @@ int rrc_mac_config_req_eNB_NB_IoT(
 
 
 
-  if (mib_NB!=NULL ) {
+  if (mib_NB_IoT!=NULL ) {
 
    //XXX possible alternative implementation (as RU-RAU splitting)
    //if(eNB_mac_inst == NULL) l2_init_eNB(); //TODO MP: to be included in the MAC/main.c
    //mac_top_init_eNB(); //TODO MP:  to be included in the MAC/main.c
 
 
-    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].mib_NB           = mib_NB;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].mib_NB_IoT           = mib_NB_IoT;
     eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].physCellId     = physCellId;
     eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].p_eNB          = p_eNB;
     eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].p_rx_eNB		= p_rx_eNB;
@@ -641,7 +641,7 @@ int rrc_mac_config_req_eNB_NB_IoT(
 
 
     //Mapping OAI params into FAPI params
-    		config_mib_NB_fapi(
+    		config_mib_fapi_NB_IoT(
     						rntiP,
 							physCellId,
 							eutra_band,
@@ -652,12 +652,12 @@ int rrc_mac_config_req_eNB_NB_IoT(
 							dl_CarrierFreq,
 							ul_CarrierFreq,
 							eutraControlRegionSize,
-							mib_NB
+							mib_NB_IoT
     						);
 
 
 
-  }//mib_NB!=NULL
+  }//mib_NB_IoT!=NULL
 
 
   if (radioResourceConfigCommon!=NULL) {
@@ -1130,28 +1130,28 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
       if(mib_flag == MIB_FLAG_YES){
 
     	  //XXX to be check when MIB-NB should be initialized
-    	  if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB == 255) {
+    	  if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT == 255) {
     	       LOG_E(RRC,"[eNB %d] MAC Request for MIB-NB and MIB-NB not initialized\n",Mod_idP);
     	       mac_xface->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for MIB-NB and MIB-NB not initialized");
     	   }
 
     	  memcpy(&buffer_pP[0],
     	      	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].MIB_NB,
-    	      	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB);
+    	      	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT);
 
     	  	//XXX RRC_MAC_BCCH_DATA_REQ message not implemented in MAC layer (eNB_scheduler.c under ITTI)
 
     	  	#ifdef DEBUG_RRC
     	      LOG_T(RRC,"[eNB %d] Frame %d : BCCH request => MIB_NB\n",Mod_idP,frameP);
 
-    	     for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB; i++) {
+    	     for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT; i++) {
     	      		    LOG_T(RRC,"%x.",buffer_pP[i]);
     	      	}
 
     	      		    LOG_T(RRC,"\n");
     	    #endif
 
-    	    return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB); //exit from the function
+    	    return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT); //exit from the function
       }
 
       //Requesting for SI Message
@@ -1207,12 +1207,12 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
 
          //check for SIB23-Transmission
 
-         for(int i = 0; i<  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB->schedulingInfoList_r13.list.count; i++){
+         for(int i = 0; i<  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB_IoT->schedulingInfoList_r13.list.count; i++){
         	 if(is_SIB23_NB_IoT(frameP,h_frameP,
-        		 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB->schedulingInfoList_r13.list.array[i]->si_Periodicity_r13,
-				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB->si_WindowLength_r13,
-				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB->si_RadioFrameOffset_r13,
-				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB->schedulingInfoList_r13.list.array[i]->si_RepetitionPattern_r13))
+        		 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB_IoT->schedulingInfoList_r13.list.array[i]->si_Periodicity_r13,
+				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB_IoT->si_WindowLength_r13,
+				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB_IoT->si_RadioFrameOffset_r13,
+				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB_IoT->schedulingInfoList_r13.list.array[i]->si_RepetitionPattern_r13))
         	 {
 
         	 memcpy(&buffer_pP[0],
