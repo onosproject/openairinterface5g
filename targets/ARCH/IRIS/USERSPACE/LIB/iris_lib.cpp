@@ -476,7 +476,7 @@ extern "C" {
 	while (srl != NULL)
 	{
 	    LOG_I(HW,"Attempting to open Iris device: %s\n", srl);
-	    std::string args = "driver="+std::string(drvtype)+",serial="+std::string(srl);
+	    std::string args = "driver="+std::string(drvtype)+",serial="+std::string(srl)+",remote:prot=tcp";
 	    s->iris.push_back(SoapySDR::Device::make(args));
 	    srl = strtok(NULL, ",");
 	}
