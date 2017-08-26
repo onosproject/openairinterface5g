@@ -1136,7 +1136,7 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
     	   }
 
     	  memcpy(&buffer_pP[0],
-    	      	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].MIB_NB,
+    	      	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].MIB_NB_IoT,
     	      	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT);
 
     	  	//XXX RRC_MAC_BCCH_DATA_REQ message not implemented in MAC layer (eNB_scheduler.c under ITTI)
@@ -1169,14 +1169,14 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
 
       /*check if SIBs are initialized*/
       //FIXME to be check when both are initialize and if make sense to have it
-            if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB == 255) {
-              LOG_E(RRC,"[eNB %d] MAC Request for SIB1-NB and SIB1-NB not initialized\n",Mod_idP);
-              mac_xface->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB1-NB and SIB1-NB not initialized");
+            if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT == 255) {
+              LOG_E(RRC,"[eNB %d] MAC Request for SIB1-NB and SIB1-NB_IoT not initialized\n",Mod_idP);
+              mac_xface->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB1-NB_IoT and SIB1-NB_IoT not initialized");
             }
 
-            if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB == 255) {
-                    LOG_E(RRC,"[eNB %d] MAC Request for SIB23-NB and SIB23-NB not initialized\n",Mod_idP);
-                    mac_xface->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB23-NB and SIB23-NB not initialized");
+            if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT == 255) {
+                    LOG_E(RRC,"[eNB %d] MAC Request for SIB23-NB and SIB23-NB_IoT not initialized\n",Mod_idP);
+                    mac_xface->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB23-NB_IoT and SIB23-NB_IoT not initialized");
             }
 
 
@@ -1186,8 +1186,8 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
          if(subframeP == 4 && is_SIB1_start_NB_IoT(frameP,schedulingInfoSIB1, physCellId)!= -1){
 
 			  memcpy(&buffer_pP[0],
-					  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB1_NB,
-					  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB);
+					  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB1_NB_IoT,
+					  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT);
 
 			  //XXX RRC_MAC_BCCH_DATA_REQ message not implemented in MAC layer (eNB_scheduler.c under ITTI)
 
@@ -1195,14 +1195,14 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
 			#ifdef DEBUG_RRC
 			   LOG_T(RRC,"[eNB %d] Frame %d : BCCH request => SIB1_NB\n",Mod_idP,frameP);
 
-			   for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB; i++) {
+			   for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT; i++) {
 			    LOG_T(RRC,"%x.",buffer_pP[i]);
 			    }
 
 			    LOG_T(RRC,"\n");
 			#endif
 
-			    return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB);
+			    return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT);
          }
 
          //check for SIB23-Transmission
@@ -1216,20 +1216,20 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
         	 {
 
         	 memcpy(&buffer_pP[0],
-        			eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB23_NB,
-        	    	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB);
+        			eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB23_NB_IoT,
+        	    	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT);
 
         	    #ifdef DEBUG_RRC
         	    	LOG_T(RRC,"[eNB %d] Frame %d BCCH request => SIB 2-3\n",Mod_idP,frameP);
 
-        	    	for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB; i++) {
+        	    	for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT; i++) {
         	    		    LOG_T(RRC,"%x.",buffer_pP[i]);
         	    		 }
 
         	    		 LOG_T(RRC,"\n");
         	    #endif
 
-        	    return(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB);
+        	    return(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT);
         	 }
          }
         return(0);

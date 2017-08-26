@@ -76,11 +76,12 @@ uint8_t do_MIB_NB_IoT(
 @param configuration Pointer Configuration Request structure
 @return size of encoded bit stream in bytes*/
 
-uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
-				rrc_eNB_carrier_data_NB_IoT_t *carrier,
-                RrcConfigurationReq *configuration,
-				uint32_t frame
-               );
+uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, 
+                       int CC_id,
+				               rrc_eNB_carrier_data_NB_IoT_t *carrier,
+                       RrcConfigurationReq *configuration,
+				               uint32_t frame
+                      );
 
 /**
 \brief Generate a default configuration for SIB2/SIB3-NB in one System Information PDU (eNB).
@@ -91,11 +92,11 @@ uint8_t do_SIB1_NB(uint8_t Mod_id, int CC_id,
 @param sib3_NB Pointer (returned) to sib3_NB component withing SI-NB PDU
 @return size of encoded bit stream in bytes*/
 
-uint8_t do_SIB23_NB(uint8_t Mod_id,
-                 int CC_id,
-                rrc_eNB_carrier_data_NB_IoT_t *carrier,
-                  RrcConfigurationReq *configuration
-                );
+uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
+                        int CC_id,
+                        rrc_eNB_carrier_data_NB_IoT_t *carrier,
+                        RrcConfigurationReq *configuration
+                        );
 
 /**(UE-SIDE)
 \brief Generate an RRCConnectionRequest-NB UL-CCCH-Message (UE) based on random string or S-TMSI.  This
@@ -105,7 +106,7 @@ routine only generates an mo-data establishment cause.
 @param Mod_id
 @returns Size of encoded bit stream in bytes*/
 
-uint8_t do_RRCConnectionRequest_NB(uint8_t Mod_id, uint8_t *buffer,uint8_t *rv);
+uint8_t do_RRCConnectionRequest_NB_IoT(uint8_t Mod_id, uint8_t *buffer,uint8_t *rv);
 
 
 /**(UE -SIDE)
@@ -117,8 +118,8 @@ uint8_t do_RRCConnectionRequest_NB(uint8_t Mod_id, uint8_t *buffer,uint8_t *rv);
 @param buffer Pointer to PER-encoded ASN.1 description of UL-DCCH-Message PDU
 @returns Size of encoded bit stream in bytes*/
 
-uint8_t do_RRCConnectionSetupComplete_NB(uint8_t Mod_id, uint8_t* buffer, const uint8_t Transaction_id, const int dedicatedInfoNASLength,
-                                      const char* dedicatedInfoNAS);
+uint8_t do_RRCConnectionSetupComplete_NB_IoT(uint8_t Mod_id, uint8_t* buffer, const uint8_t Transaction_id, const int dedicatedInfoNASLength,
+                                             const char* dedicatedInfoNAS);
 
 /** (UE-SIDE)
 \brief Generate an RRCConnectionReconfigurationComplete-NB UL-DCCH-Message (UE)
@@ -127,8 +128,7 @@ uint8_t do_RRCConnectionSetupComplete_NB(uint8_t Mod_id, uint8_t* buffer, const 
 @param Transaction_id
 @returns Size of encoded bit stream in bytes*/
 
-uint8_t
-do_RRCConnectionReconfigurationComplete_NB(
+uint8_t do_RRCConnectionReconfigurationComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   uint8_t* buffer,
   const uint8_t Transaction_id
@@ -148,8 +148,7 @@ PhysicalConfigDedicated-NB IEs.
 @param physicalConfigDedicated_NB Pointer (returned) to PhysicalConfigDedicated-NB IE for this UE
 @returns Size of encoded bit stream in bytes*/
 
-uint8_t
-do_RRCConnectionSetup_NB(
+uint8_t do_RRCConnectionSetup_NB_IoT(
   const protocol_ctxt_t*     const ctxt_pP,
   rrc_eNB_ue_context_NB_IoT_t*      const ue_context_pP,
   int                              CC_id,
@@ -179,7 +178,7 @@ do_RRCConnectionSetup_NB(
 @returns Size of encoded bit stream in bytes*/
 
 uint16_t
-do_RRCConnectionReconfiguration_NB(
+do_RRCConnectionReconfiguration_NB_IoT(
   const protocol_ctxt_t*        const ctxt_pP,
     uint8_t                            *buffer,
     uint8_t                             Transaction_id,
@@ -200,7 +199,7 @@ do_RRCConnectionReconfiguration_NB(
  @param integrityProtAlgorithm
  */
 
-uint8_t do_SecurityModeCommand_NB(
+uint8_t do_SecurityModeCommand_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   uint8_t* const buffer,
   const uint8_t Transaction_id,
@@ -215,7 +214,7 @@ uint8_t do_SecurityModeCommand_NB(
  @param Transaction_id Transaction_ID for this message
  */
 
-uint8_t do_UECapabilityEnquiry_NB(
+uint8_t do_UECapabilityEnquiry_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   uint8_t*               const buffer,
   const uint8_t                Transaction_id
@@ -230,7 +229,7 @@ uint8_t do_UECapabilityEnquiry_NB(
 @returns Size of encoded bit stream in bytes*/
 
 uint8_t
-do_RRCConnectionReestablishmentReject_NB(
+do_RRCConnectionReestablishmentReject_NB_IoT(
     uint8_t                    Mod_id,
     uint8_t*                   const buffer);
 
@@ -241,7 +240,7 @@ do_RRCConnectionReestablishmentReject_NB(
 @param buffer Pointer to PER-encoded ASN.1 description of DL-CCCH-Message PDU
 @returns Size of encoded bit stream in bytes*/
 uint8_t
-do_RRCConnectionReject_NB(
+do_RRCConnectionReject_NB_IoT(
     uint8_t                    Mod_id,
     uint8_t*                   const buffer);
 
@@ -253,10 +252,10 @@ do_RRCConnectionReject_NB(
 @param transaction_id Transaction index
 @returns Size of encoded bit stream in bytes*/
 
-uint8_t do_RRCConnectionRelease_NB(uint8_t Mod_id, uint8_t *buffer,int Transaction_id);
+uint8_t do_RRCConnectionRelease_NB_IoT(uint8_t Mod_id, uint8_t *buffer,int Transaction_id);
 
 
-uint8_t do_DLInformationTransfer_NB(
+uint8_t do_DLInformationTransfer_NB_IoT(
 		uint8_t Mod_id,
 		uint8_t **buffer,
 		uint8_t transaction_id,
@@ -275,7 +274,7 @@ uint8_t do_DLInformationTransfer_NB(
  *
  */
 
-uint8_t do_RRCConnectionReestablishment_NB(
+uint8_t do_RRCConnectionReestablishment_NB_IoT(
 		uint8_t Mod_id,
 		uint8_t* const buffer,
 		const uint8_t     Transaction_id,
@@ -290,4 +289,4 @@ uint8_t do_RRCConnectionReestablishment_NB(
 @param transaction_id Transaction index
 @returns Size of encoded bit stream in bytes*/
 
-uint8_t do_RRCConnectionRelease_NB(uint8_t Mod_id, uint8_t *buffer,int Transaction_id);
+//uint8_t do_RRCConnectionRelease_NB_IoT(uint8_t Mod_id, uint8_t *buffer,int Transaction_id);

@@ -185,7 +185,7 @@ rrc_eNB_generate_RRCConnectionRelease_NB(
 
   memset(buffer, 0, RRC_BUF_SIZE);
 
-  size = do_RRCConnectionRelease_NB(ctxt_pP->module_id,
+  size = do_RRCConnectionRelease_NB_IoT(ctxt_pP->module_id,
 		  	  	  	  	  	  	  	  buffer,
 									  rrc_eNB_get_next_transaction_identifier_NB_IoT(ctxt_pP->module_id));
   // set release timer
@@ -244,7 +244,7 @@ void rrc_eNB_generate_RRCConnectionReestablishmentReject_NB_IoT(
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
   eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size =
-    do_RRCConnectionReestablishmentReject_NB(ctxt_pP->module_id,
+    do_RRCConnectionReestablishmentReject_NB_IoT(ctxt_pP->module_id,
                           (uint8_t*) eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.Payload);
 
 #ifdef RRC_MSG_PRINT
@@ -448,8 +448,8 @@ void rrc_eNB_generate_RRCConnectionReject_NB_IoT(
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
   eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size =
-    do_RRCConnectionReject_NB(ctxt_pP->module_id,
-                          (uint8_t*) eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.Payload);
+    do_RRCConnectionReject_NB_IoT(ctxt_pP->module_id,
+                                  (uint8_t*) eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.Payload);
 
 #ifdef RRC_MSG_PRINT
   LOG_F(RRC,"[MSG] RRCConnectionReject-NB\n");
@@ -511,14 +511,14 @@ void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
   SRB_configList = &ue_context_pP->ue_context.SRB_configList;
 
   eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size =
-    do_RRCConnectionSetup_NB(ctxt_pP,
-                          ue_context_pP,
-                          CC_id,
-                          (uint8_t*) eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.Payload,
-                          rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),
-                          fp,
-                          SRB_configList, //MP:should contain only SRb1bis for the moment
-                          &ue_context_pP->ue_context.physicalConfigDedicated_NB);
+    do_RRCConnectionSetup_NB_IoT(ctxt_pP,
+                                 ue_context_pP,
+                                 CC_id,
+                                 (uint8_t*) eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.Payload,
+                                 rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),
+                                 fp,
+                                 SRB_configList, //MP:should contain only SRb1bis for the moment
+                                 &ue_context_pP->ue_context.physicalConfigDedicated_NB);
 
 #ifdef RRC_MSG_PRINT
   LOG_F(RRC,"[MSG] RRC Connection Setup\n");
@@ -1071,15 +1071,15 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 
   memset(buffer, 0, RRC_BUF_SIZE);
 
-   size = do_RRCConnectionReconfiguration_NB(ctxt_pP,
-					  buffer,
-					  xid,
-					  (SRB_ToAddModList_NB_r13_t*)NULL,
-					  (DRB_ToAddModList_NB_r13_t*)*DRB_configList2,
-					  (DRB_ToReleaseList_NB_r13_t*)NULL,  // DRB2_list,
-					  NULL, NULL, //physical an MAC config dedicated
-					  (struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13*)dedicatedInfoNASList_NB
-                                        );
+   size = do_RRCConnectionReconfiguration_NB_IoT(ctxt_pP,
+					                                       buffer,
+					                                       xid,
+					                                       (SRB_ToAddModList_NB_r13_t*)NULL,
+					                                       (DRB_ToAddModList_NB_r13_t*)*DRB_configList2,
+					                                       (DRB_ToReleaseList_NB_r13_t*)NULL,  // DRB2_list,
+					                                       NULL, NULL, //physical an MAC config dedicated
+					                                       (struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13*)dedicatedInfoNASList_NB
+                                                );
 
 
 #ifdef RRC_MSG_PRINT
@@ -1189,7 +1189,7 @@ void rrc_eNB_generate_SecurityModeCommand_NB_IoT(
   T(T_ENB_RRC_SECURITY_MODE_COMMAND, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
-  size = do_SecurityModeCommand_NB(
+  size = do_SecurityModeCommand_NB_IoT(
            ctxt_pP,
            buffer,
            rrc_eNB_get_next_transaction_identifier_NB_IoT(ctxt_pP->module_id),
@@ -1256,7 +1256,7 @@ void rrc_eNB_generate_UECapabilityEnquiry_NB_IoT(
   T(T_ENB_RRC_UE_CAPABILITY_ENQUIRY, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
-  size = do_UECapabilityEnquiry_NB(
+  size = do_UECapabilityEnquiry_NB_IoT(
            ctxt_pP,
            buffer,
            rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id));
@@ -1537,16 +1537,16 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
 
   memset(buffer, 0, RRC_BUF_SIZE);
 
-  size = do_RRCConnectionReconfiguration_NB(ctxt_pP,
-                                         buffer,
-                                         xid,   //Transaction_id,
-                                         (SRB_ToAddModList_NB_r13_t*)*SRB_configList2, //only SRB1
-                                         (DRB_ToAddModList_NB_r13_t*)*DRB_configList,
-                                         (DRB_ToReleaseList_NB_r13_t*)NULL,  // DRB2_list,
-                                         (struct PhysicalConfigDedicated_NB_r13*)*physicalConfigDedicated_NB,
-                                         (MAC_MainConfig_t*)mac_MainConfig_NB,
-                                         (struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13*)dedicatedInfoNASList_NB
-                                        );
+  size = do_RRCConnectionReconfiguration_NB_IoT(ctxt_pP,
+                                                buffer,
+                                                xid,   //Transaction_id,
+                                                (SRB_ToAddModList_NB_r13_t*)*SRB_configList2, //only SRB1
+                                                (DRB_ToAddModList_NB_r13_t*)*DRB_configList,
+                                                (DRB_ToReleaseList_NB_r13_t*)NULL,  // DRB2_list,
+                                                (struct PhysicalConfigDedicated_NB_r13*)*physicalConfigDedicated_NB,
+                                                (MAC_MainConfig_t*)mac_MainConfig_NB,
+                                                (struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13*)dedicatedInfoNASList_NB
+                                                );
 
 #ifdef RRC_MSG_PRINT
   LOG_F(RRC,"[MSG] RRCConnectionReconfiguration-NB\n");
@@ -1626,17 +1626,17 @@ init_SI_NB(
   eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].ul_CarrierFreq  = configuration->downlink_frequency[CC_id]+ configuration->uplink_frequency_offset[CC_id];
 
 
-  //TODO: verify who allocate memory for sib1_NB_IoT, sib2_NB, sib3_NB and mib_nb in the carrier before being passed as parameter
+  //TODO: verify who allocate memory for sib1_NB_IoT, sib2_NB_IoT, sib3_NB and mib_nb in the carrier before being passed as parameter
 
-  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1_NB = 0;
-  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23_NB = 0;
+  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1_NB_IoT = 0;
+  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23_NB_IoT = 0;
   eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB_IoT = 0;
 
   //MIB
-  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].MIB_NB = (uint8_t*) malloc16(32); //MIB is 34 bits=5bytes needed
+  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].MIB_NB_IoT = (uint8_t*) malloc16(32); //MIB is 34 bits=5bytes needed
 
 
-  if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].MIB_NB)
+  if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].MIB_NB_IoT)
   {
 	  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB_IoT =
 	  			  do_MIB_NB_IoT(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id],
@@ -1645,9 +1645,9 @@ init_SI_NB(
 					        );
   }
   else {
-      LOG_E(RRC, PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for MIB_NB allocated\n",
+      LOG_E(RRC, PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for MIB_NB_IoT allocated\n",
             PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
-      mac_xface->macphy_exit("[RRC][init_SI] FATAL, no memory for MIB_NB allocated");
+      mac_xface->macphy_exit("[RRC][init_SI] FATAL, no memory for MIB_NB_IoT allocated");
     }
 
 
@@ -1655,11 +1655,11 @@ init_SI_NB(
       mac_xface->macphy_exit("[RRC][init_SI] FATAL, eNB_rrc_inst_NB[enb_mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT == 255");
     }
 
- //SIB1_NB
-  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].SIB1_NB = (uint8_t*) malloc16(32);//allocation of buffer memory for SIB1_NB
+ //SIB1_NB_IoT
+  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].SIB1_NB_IoT = (uint8_t*) malloc16(32);//allocation of buffer memory for SIB1_NB_IOT
 
-  if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].SIB1_NB)
-    eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1_NB = do_SIB1_NB( //follow the new implementation
+  if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].SIB1_NB_IoT)
+    eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1_NB_IoT = do_SIB1_NB_IoT( //follow the new implementation
     				ctxt_pP->module_id,
 					CC_id,
 					&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id],
@@ -1668,28 +1668,28 @@ init_SI_NB(
     				);
 
   else {
-    LOG_E(RRC, PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for SIB1_NB allocated\n",
+    LOG_E(RRC, PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for SIB1_NB_IoT allocated\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
-    mac_xface->macphy_exit("[RRC][init_SI] FATAL, no memory for SIB1_NB allocated");
+    mac_xface->macphy_exit("[RRC][init_SI] FATAL, no memory for SIB1_NB_IoT allocated");
   }
 
-  if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1_NB == 255) {
-    mac_xface->macphy_exit("[RRC][init_SI] FATAL, eNB_rrc_inst_NB[enb_mod_idP].carrier[CC_id].sizeof_SIB1_NB == 255");
+  if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1_NB_IoT == 255) {
+    mac_xface->macphy_exit("[RRC][init_SI] FATAL, eNB_rrc_inst_NB[enb_mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT == 255");
   }
 
-  //SIB23_NB
-  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].SIB23_NB = (uint8_t*) malloc16(64);
+  //SIB23_NB_IoT
+  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].SIB23_NB_IoT = (uint8_t*) malloc16(64);
 
-  if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].SIB23_NB) {
-    eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23_NB = do_SIB23_NB(
+  if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].SIB23_NB_IoT) {
+    eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23_NB_IoT = do_SIB23_NB_IoT(
           ctxt_pP->module_id,
           CC_id,
 		  &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id],
 		  configuration
         );
 
-    if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23_NB == 255) {
-      mac_xface->macphy_exit("[RRC][init_SI] FATAL, eNB_rrc_inst_NB[mod].carrier[CC_id].sizeof_SIB23_NB == 255");
+    if (eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB23_NB_IoT == 255) {
+      mac_xface->macphy_exit("[RRC][init_SI] FATAL, eNB_rrc_inst_NB[mod].carrier[CC_id].sizeof_SIB23_NB_IoT == 255");
     }
 
     LOG_T(RRC, PROTOCOL_RRC_CTXT_FMT" SIB2/3 Contents (partial)\n",
@@ -1703,13 +1703,13 @@ init_SI_NB(
     //Use the following as an example
 //    LOG_T(RRC, PROTOCOL_RRC_CTXT_FMT" npusch_config_common.groupAssignmentNPUSCH = %ld\n",
 //          PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-//          eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib2_NB->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.
+//          eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib2_NB_IoT->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.
 //		  ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13);
 
 
     //Configure MAC
     LOG_D(RRC,
-          PROTOCOL_RRC_CTXT_FMT" RRC_UE --- MAC_CONFIG_REQ (SIB1_NB & SIB2_NB params) ---> MAC_UE\n",
+          PROTOCOL_RRC_CTXT_FMT" RRC_UE --- MAC_CONFIG_REQ (SIB1_NB_IoT & SIB2_NB params) ---> MAC_UE\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
 
     //
@@ -1734,7 +1734,7 @@ init_SI_NB(
 								(BCCH_BCH_Message_NB_t*) &
 								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].mib_NB_IoT,
 								(RadioResourceConfigCommonSIB_NB_r13_t *) &
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib2_NB->radioResourceConfigCommon_r13,
+								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib2_NB_IoT->radioResourceConfigCommon_r13,
 								(struct PhysicalConfigDedicated_NB_r13 *)NULL,
 								(MAC_MainConfig_NB_r13_t *) NULL,
 								0,// MP:logicalChannelID  //TODO still have to be properly managed in the interface

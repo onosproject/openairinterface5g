@@ -459,24 +459,24 @@ typedef struct rrc_eNB_ue_context_NB_IoT_s {
 typedef struct {
 
   // buffer that contains the encoded messages
-  uint8_t							*MIB_NB;
+  uint8_t							*MIB_NB_IoT;
   uint8_t							sizeof_MIB_NB_IoT;
 
-  uint8_t                           *SIB1_NB;
-  uint8_t                           sizeof_SIB1_NB;
-  uint8_t                         	*SIB23_NB;
-  uint8_t                        	sizeof_SIB23_NB;
+  uint8_t                           *SIB1_NB_IoT;
+  uint8_t                           sizeof_SIB1_NB_IoT;
+  uint8_t                         	*SIB23_NB_IoT;
+  uint8_t                        	sizeof_SIB23_NB_IoT;
 
 
   //not actually implemented in OAI
-  uint8_t                           *SIB4_NB;
-  uint8_t                           sizeof_SIB4_NB;
-  uint8_t                           *SIB5_NB;
-  uint8_t                           sizeof_SIB5_NB;
-  uint8_t                           *SIB14_NB;
-  uint8_t                           sizeof_SIB14_NB;
-  uint8_t                           *SIB16_NB;
-  uint8_t                           sizeof_SIB16_NB;
+  uint8_t                           *SIB4_NB_IoT;
+  uint8_t                           sizeof_SIB4_NB_IoT;
+  uint8_t                           *SIB5_NB_IoT;
+  uint8_t                           sizeof_SIB5_NB_IoT;
+  uint8_t                           *SIB14_NB_IoT;
+  uint8_t                           sizeof_SIB14_NB_IoT;
+  uint8_t                           *SIB16_NB_IoT;
+  uint8_t                           sizeof_SIB16_NB_IoT;
 
   //TS 36.331 V14.2.1
 //  uint8_t                           *SIB15_NB;
@@ -501,13 +501,13 @@ typedef struct {
   BCCH_DL_SCH_Message_NB_t             systemInformation_NB_IoT; //SI
 
   SystemInformationBlockType1_NB_t     		*sib1_NB_IoT;
-  SystemInformationBlockType2_NB_r13_t   	*sib2_NB;
-  SystemInformationBlockType3_NB_r13_t   	*sib3_NB;
+  SystemInformationBlockType2_NB_r13_t   	*sib2_NB_IoT;
+  SystemInformationBlockType3_NB_r13_t   	*sib3_NB_IoT;
   //not implemented yet
-  SystemInformationBlockType4_NB_r13_t    	*sib4_NB;
-  SystemInformationBlockType5_NB_r13_t     	*sib5_NB;
-  SystemInformationBlockType14_NB_r13_t     *sib14_NB;
-  SystemInformationBlockType16_NB_r13_t     *sib16_NB;
+  SystemInformationBlockType4_NB_r13_t    	*sib4_NB_IoT;
+  SystemInformationBlockType5_NB_r13_t     	*sib5_NB_IoT;
+  SystemInformationBlockType14_NB_r13_t     *sib14_NB_IoT;
+  SystemInformationBlockType16_NB_r13_t     *sib16_NB_IoT;
 
 
   SRB_INFO_NB_IoT                          SI;
