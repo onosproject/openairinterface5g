@@ -566,10 +566,10 @@ static void *UE_thread_rxn_txnp4(void *arg) {
             ret = mac_xface->ue_scheduler(UE->Mod_id,
                                           proc->frame_rx,
                                           proc->subframe_rx,
-										  proc->nr_tti_rx,
+                                          proc->nr_tti_rx,
                                           proc->frame_tx,
                                           proc->subframe_tx,
-										  proc->nr_tti_tx,
+                                          proc->nr_tti_tx%(UE->frame_parms.ttis_per_subframe),
                                           subframe_select(&UE->frame_parms,proc->subframe_tx),
                                           0,
                                           0/*FIXME CC_id*/);
@@ -858,6 +858,7 @@ void *UE_thread(void *arg) {
                     proc->nr_tti_tx=(tti_nr+4)%(10*UE->frame_parms.ttis_per_subframe);
                     proc->subframe_rx=tti_nr>>((uint8_t)(log2 (UE->frame_parms.ttis_per_subframe)));
                     proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
+                    proc->subframe_tx=(proc->nr_tti_tx)>>((uint8_t)(log2 (UE->frame_parms.ttis_per_subframe)));
                     proc->timestamp_tx = timestamp+
                                          (4*UE->frame_parms.samples_per_tti)-
                                          UE->frame_parms.ofdm_symbol_size-UE->frame_parms.nb_prefix_samples0;

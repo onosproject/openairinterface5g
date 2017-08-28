@@ -1050,8 +1050,6 @@ typedef struct {
   uint8_t numerology_index;
   /// NR number of ttis per subframe deduced from numerology (cf 38.211): 1, 2, 4, 8(not supported),16(not supported),32(not supported)
   uint8_t ttis_per_subframe;
-  /// NR number of slots per tti . Assumption only 2 Slot per TTI is supported (Slot Config 1 in 38.211)
-  uint8_t slots_per_tti;
   /// NR TTI index within subframe_tx [0 .. ttis_per_subframe - 1] to act upon for transmission
   nr_tti_t txNRTti;
   /// NR TTI index within subframe_rx [0 .. ttis_per_subframe - 1] to act upon for reception

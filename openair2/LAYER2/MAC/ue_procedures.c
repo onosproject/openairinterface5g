@@ -93,6 +93,9 @@ void ue_init_mac(module_id_t module_idP)
   // default values as deined in 36.331 sec 9.2.2
   LOG_I(MAC,"[UE%d] Applying default macMainConfig\n",module_idP);
   //UE_mac_inst[module_idP].scheduling_info.macConfig=NULL;
+  UE_mac_inst[module_idP].numerology_index = 0;
+  UE_mac_inst[module_idP].ttis_per_subframe = 1;
+  UE_mac_inst[module_idP].txLastAbsSubframe = 0xFFFFFFFF;
   UE_mac_inst[module_idP].scheduling_info.retxBSR_Timer= RetxBSR_Timer_r12_sf10240;
   UE_mac_inst[module_idP].scheduling_info.periodicBSR_Timer=PeriodicBSR_Timer_r12_infinity;
   UE_mac_inst[module_idP].scheduling_info.periodicPHR_Timer = MAC_MainConfig__phr_Config__setup__periodicPHR_Timer_sf20;
@@ -1276,7 +1279,7 @@ unsigned char generate_ulsch_header(uint8_t *mac_header,
 
 }
 
-void ue_get_sdu(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframe, uint8_t eNB_index,uint8_t *ulsch_buffer,uint16_t buflen, uint8_t *access_mode)
+void ue_get_sdu(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframe, nr_tti_t nrTti, uint8_t eNB_index,uint8_t *ulsch_buffer,uint16_t buflen, uint8_t *access_mode)
 {
 
   uint8_t total_rlc_pdu_header_len=0, rlc_pdu_header_len_last=0 ;
@@ -1307,9 +1310,8 @@ void ue_get_sdu(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subf
   int num_lcg_id_with_data = 0;
   rlc_buffer_occupancy_t lcid_buffer_occupancy_old=0, lcid_buffer_occupancy_new=0;
   
-  LOG_D(MAC,"[UE %d] MAC PROCESS UL TRANSPORT BLOCK at frame%d subframe %d TBS=%d\n",
-                        module_idP, frameP, subframe, buflen);
-
+  LOG_D(MAC,"[UE %d] MAC PROCESS UL TRANSPORT BLOCK at frame%d subframe %d nrtti%d TBS=%d\n",
+                        module_idP, frameP, subframe, nrTti, buflen);
   
   if (CC_id>0) {
     LOG_E(MAC,"Transmission on secondary CCs is not supported yet\n");

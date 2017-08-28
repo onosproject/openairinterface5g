@@ -164,7 +164,7 @@ typedef struct {
 #endif
 
   /// Retrieve ULSCH sdu from MAC
-  void (*ue_get_sdu)(module_id_t Mod_id,int CC_id,frame_t frameP,sub_frame_t subframe, uint8_t CH_index,uint8_t *ulsch_buffer,uint16_t buflen,uint8_t *access_mode);
+  void (*ue_get_sdu)(module_id_t Mod_id,int CC_id,frame_t frameP,sub_frame_t subframe, nr_tti_t nrTti, uint8_t CH_index,uint8_t *ulsch_buffer,uint16_t buflen,uint8_t *access_mode);
 
   /// Retrieve RRCConnectionReq from MAC
   PRACH_RESOURCES_t* (*ue_get_rach)(module_id_t Mod_id,int CC_id,frame_t frameP,uint8_t Msg3_flag,sub_frame_t subframe);
