@@ -1337,7 +1337,7 @@ void mac_eNB_rrc_ul_failure_NB_IoT(
 	    const rnti_t rntiP)
 {
   struct rrc_eNB_ue_context_NB_IoT_s* ue_context_p = NULL;
-  ue_context_p = rrc_eNB_get_ue_context_NB(
+  ue_context_p = rrc_eNB_get_ue_context_NB_IoT(
                    &eNB_rrc_inst_NB_IoT[mod_idP],
                    rntiP);
 
@@ -1444,7 +1444,7 @@ void mac_eNB_rrc_ul_in_sync_NB_IoT(
 			    const rnti_t rntiP)
 {
   struct rrc_eNB_ue_context_NB_IoT_s* ue_context_p = NULL;
-  ue_context_p = rrc_eNB_get_ue_context_NB(
+  ue_context_p = rrc_eNB_get_ue_context_NB_IoT(
                    &eNB_rrc_inst_NB_IoT[mod_idP],
                    rntiP);
 
@@ -1465,7 +1465,7 @@ int mac_eNB_get_rrc_status_NB_IoT(
 )
 {
   struct rrc_eNB_ue_context_NB_IoT_s* ue_context_p = NULL;
-  ue_context_p = rrc_eNB_get_ue_context_NB(
+  ue_context_p = rrc_eNB_get_ue_context_NB_IoT(
                    &eNB_rrc_inst_NB_IoT[Mod_idP],
                    rntiP);
 

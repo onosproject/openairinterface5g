@@ -195,7 +195,7 @@ void rrc_eNB_remove_ue_context(
 
 //------------------------------------------------------------------------------
 void
-uid_linear_allocator_init_NB(
+uid_linear_allocator_init_NB_IoT(
   uid_allocator_NB_IoT_t* const uid_pP
 )
 //------------------------------------------------------------------------------
@@ -206,7 +206,7 @@ uid_linear_allocator_init_NB(
 
 //------------------------------------------------------------------------------
 uid_t
-uid_linear_allocator_new_NB(
+uid_linear_allocator_new_NB_IoT(
   eNB_RRC_INST_NB_IoT* const rrc_instance_pP
 )
 //------------------------------------------------------------------------------
@@ -236,7 +236,7 @@ uid_linear_allocator_new_NB(
 
 //------------------------------------------------------------------------------
 void
-uid_linear_allocator_free_NB(
+uid_linear_allocator_free_NB_IoT(
   eNB_RRC_INST_NB_IoT* rrc_instance_pP,
   uid_t uidP
 )
@@ -253,7 +253,7 @@ uid_linear_allocator_free_NB(
 
 
 
-int rrc_eNB_compare_ue_rnti_id_NB(
+int rrc_eNB_compare_ue_rnti_id_NB_IoT(
   struct rrc_eNB_ue_context_NB_IoT_s* c1_pP, struct rrc_eNB_ue_context_NB_IoT_s* c2_pP)
 //------------------------------------------------------------------------------
 {
@@ -270,12 +270,12 @@ int rrc_eNB_compare_ue_rnti_id_NB(
 
 /* Generate the tree management functions for NB-IoT structures */
 RB_GENERATE(rrc_ue_tree_NB_IoT_s, rrc_eNB_ue_context_NB_IoT_s, entries,
-            rrc_eNB_compare_ue_rnti_id_NB);
+            rrc_eNB_compare_ue_rnti_id_NB_IoT);
 
 
 //------------------------------------------------------------------------------
 struct rrc_eNB_ue_context_NB_IoT_s*
-rrc_eNB_allocate_new_UE_context_NB(
+rrc_eNB_allocate_new_UE_context_NB_IoT(
   eNB_RRC_INST_NB_IoT* rrc_instance_pP
 )
 //------------------------------------------------------------------------------
@@ -289,13 +289,13 @@ rrc_eNB_allocate_new_UE_context_NB(
   }
 
   memset(new_p, 0, sizeof(struct rrc_eNB_ue_context_NB_IoT_s));
-  new_p->local_uid = uid_linear_allocator_new_NB(rrc_instance_pP);
+  new_p->local_uid = uid_linear_allocator_new_NB_IoT(rrc_instance_pP);
   return new_p;
 }
 
 
 struct rrc_eNB_ue_context_NB_IoT_s*
-rrc_eNB_get_ue_context_NB(
+rrc_eNB_get_ue_context_NB_IoT(
   eNB_RRC_INST_NB_IoT* rrc_instance_pP,
   rnti_t rntiP)
 //------------------------------------------------------------------------------
@@ -308,7 +308,7 @@ rrc_eNB_get_ue_context_NB(
 }
 
 //------------------------------------------------------------------------------
-void rrc_eNB_remove_ue_context_NB(
+void rrc_eNB_remove_ue_context_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   eNB_RRC_INST_NB_IoT*                rrc_instance_pP,
   struct rrc_eNB_ue_context_NB_IoT_s* ue_context_pP)
@@ -334,7 +334,7 @@ void rrc_eNB_remove_ue_context_NB(
     ue_context_pP->ue_context.rnti);
 
   rrc_eNB_free_mem_UE_context_NB_IoT(ctxt_pP, ue_context_pP);
-  uid_linear_allocator_free_NB(rrc_instance_pP, ue_context_pP->local_uid);
+  uid_linear_allocator_free_NB_IoT(rrc_instance_pP, ue_context_pP->local_uid);
   free(ue_context_pP);
   LOG_I(RRC,
         PROTOCOL_RRC_CTXT_UE_FMT" Removed UE context\n",

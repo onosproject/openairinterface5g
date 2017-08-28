@@ -159,7 +159,7 @@ void rrc_eNB_free_UE_NB_IoT(const module_id_t enb_mod_idP,const struct rrc_eNB_u
     rrc_rlc_remove_ue(&ctxt);
     pdcp_remove_UE(&ctxt);
 
-    rrc_eNB_remove_ue_context_NB(
+    rrc_eNB_remove_ue_context_NB_IoT(
       &ctxt,
       &eNB_rrc_inst_NB_IoT[enb_mod_idP],
       (struct rrc_eNB_ue_context_NB_IoT_s*) ue_context_pP);
@@ -323,7 +323,7 @@ void rrc_eNB_free_mem_UE_context_NB_IoT(
 //-----------------------------------------------------------------------------
 // return the ue context if there is already an UE with ue_identityP, NULL otherwise
 static struct rrc_eNB_ue_context_NB_IoT_s*
-rrc_eNB_ue_context_random_exist_NB(
+rrc_eNB_ue_context_random_exist_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   const uint64_t               ue_identityP
 )
@@ -341,14 +341,14 @@ rrc_eNB_ue_context_random_exist_NB(
 //-----------------------------------------------------------------------------
 // return a new ue context structure if ue_identityP, ctxt_pP->rnti not found in collection
 static struct rrc_eNB_ue_context_NB_IoT_s*
-rrc_eNB_get_next_free_ue_context_NB(
+rrc_eNB_get_next_free_ue_context_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   const uint64_t               ue_identityP
 )
 //-----------------------------------------------------------------------------
 {
   struct rrc_eNB_ue_context_NB_IoT_s*        ue_context_p = NULL;
-  ue_context_p = rrc_eNB_get_ue_context_NB(
+  ue_context_p = rrc_eNB_get_ue_context_NB_IoT(
                    &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id],
                    ctxt_pP->rnti);
 
@@ -363,7 +363,7 @@ rrc_eNB_get_next_free_ue_context_NB(
         return NULL;
       }
     }
-    ue_context_p = rrc_eNB_allocate_new_UE_context_NB(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id]);
+    ue_context_p = rrc_eNB_allocate_new_UE_context_NB_IoT(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id]);
 
     if (ue_context_p == NULL) {
       LOG_E(RRC,
@@ -1778,7 +1778,7 @@ while ( eNB_rrc_inst_NB_IoT == NULL ) {
     eNB_rrc_inst_NB_IoT[ctxt.module_id].carrier[CC_id].Srb0.Active = 0;
   }
 
-  uid_linear_allocator_init_NB(&eNB_rrc_inst_NB_IoT[ctxt.module_id].uid_allocator); //rrc_eNB_UE_context
+  uid_linear_allocator_init_NB_IoT(&eNB_rrc_inst_NB_IoT[ctxt.module_id].uid_allocator); //rrc_eNB_UE_context
   RB_INIT(&eNB_rrc_inst_NB_IoT[ctxt.module_id].rrc_ue_head);
 
   eNB_rrc_inst_NB_IoT[ctxt.module_id].initial_id2_s1ap_ids = hashtable_create (NUMBER_OF_UE_MAX * 2, NULL, NULL);
@@ -1931,7 +1931,7 @@ int rrc_eNB_decode_ccch_NB_IoT(
 
       //MP:for the moment we only reject
       rrc_eNB_generate_RRCConnectionReestablishmentReject_NB_IoT(ctxt_pP,
-                       rrc_eNB_get_ue_context_NB(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id], ctxt_pP->rnti),
+                       rrc_eNB_get_ue_context_NB_IoT(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id], ctxt_pP->rnti),
                        CC_id);
 
       break;
@@ -1953,7 +1953,7 @@ int rrc_eNB_decode_ccch_NB_IoT(
             PROTOCOL_RRC_CTXT_UE_FMT"MAC_eNB --- MAC_DATA_IND  (rrcConnectionRequest-NB on SRB0) --> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
-      ue_context_p = rrc_eNB_get_ue_context_NB( //XXX define new function in rrc_eNB_UE_context
+      ue_context_p = rrc_eNB_get_ue_context_NB_IoT( //XXX define new function in rrc_eNB_UE_context
                        &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id],
                        ctxt_pP->rnti);
 
@@ -1988,7 +1988,7 @@ int rrc_eNB_decode_ccch_NB_IoT(
             /* if there is already a registered UE (with another RNTI) with this random_value,
              * the current one must be removed from MAC/PHY (zombie UE)
              */
-            if ((ue_context_p = rrc_eNB_ue_context_random_exist_NB(ctxt_pP, random_value))) {
+            if ((ue_context_p = rrc_eNB_ue_context_random_exist_NB_IoT(ctxt_pP, random_value))) {
               LOG_W(RRC, "new UE rnti %x (coming with random value) is already there as UE %x, removing %x from MAC/PHY\n",
                     ctxt_pP->rnti, ue_context_p->ue_context.rnti, ctxt_pP->rnti);
 
@@ -1996,7 +1996,7 @@ int rrc_eNB_decode_ccch_NB_IoT(
               ue_context_p = NULL;
               return 0;
             } else {
-              ue_context_p = rrc_eNB_get_next_free_ue_context_NB(ctxt_pP, random_value);
+              ue_context_p = rrc_eNB_get_next_free_ue_context_NB_IoT(ctxt_pP, random_value);
             }
           } else if (InitialUE_Identity_PR_s_TMSI == rrcConnectionRequest_NB->ue_Identity_r13.present) {
             /* Save s-TMSI */
@@ -2024,9 +2024,9 @@ int rrc_eNB_decode_ccch_NB_IoT(
               ue_context_p->ue_context.ue_release_timer = 0;
             } else {
 	      LOG_I(RRC," S-TMSI doesn't exist, setting Initialue_identity_s_TMSI.m_tmsi to %p => %x\n",ue_context_p,m_tmsi);
-              ue_context_p = rrc_eNB_get_next_free_ue_context_NB(ctxt_pP, NOT_A_RANDOM_UE_IDENTITY);
+              ue_context_p = rrc_eNB_get_next_free_ue_context_NB_IoT(ctxt_pP, NOT_A_RANDOM_UE_IDENTITY);
               if (ue_context_p == NULL)
-                LOG_E(RRC, "%s:%d:%s: rrc_eNB_get_next_free_ue_context_NB returned NULL\n", __FILE__, __LINE__, __FUNCTION__);
+                LOG_E(RRC, "%s:%d:%s: rrc_eNB_get_next_free_ue_context_NB_IoT returned NULL\n", __FILE__, __LINE__, __FUNCTION__);
               if (ue_context_p != NULL) {
 	        ue_context_p->ue_context.Initialue_identity_s_TMSI.presence = TRUE;
 	        ue_context_p->ue_context.Initialue_identity_s_TMSI.mme_code = mme_code;
@@ -2055,7 +2055,7 @@ int rrc_eNB_decode_ccch_NB_IoT(
                   PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
             rrc_eNB_generate_RRCConnectionReject_NB_IoT(ctxt_pP,
-                             rrc_eNB_get_ue_context_NB(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id], ctxt_pP->rnti),
+                             rrc_eNB_get_ue_context_NB_IoT(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id], ctxt_pP->rnti),
                              CC_id);
             break;
           }
@@ -2192,7 +2192,7 @@ int rrc_eNB_decode_ccch_NB_IoT(
 
     //MP: only reject for now
     rrc_eNB_generate_RRCConnectionReject_NB_IoT(ctxt_pP,
-                                 rrc_eNB_get_ue_context_NB(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id], ctxt_pP->rnti),
+                                 rrc_eNB_get_ue_context_NB_IoT(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id], ctxt_pP->rnti),
                                  CC_id);
       break;
 
@@ -2273,7 +2273,7 @@ int rrc_eNB_decode_dcch_NB_IoT(
     return -1;
   }
 
-  ue_context_p = rrc_eNB_get_ue_context_NB(
+  ue_context_p = rrc_eNB_get_ue_context_NB_IoT(
                    &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id],
                    ctxt_pP->rnti);
 
