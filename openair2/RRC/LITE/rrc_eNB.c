@@ -96,7 +96,7 @@
 #if defined(FLEXRAN_AGENT_SB_IF)
 #include "flexran_agent_extern.h"
 #endif
-//#define XER_PRINT
+#define XER_PRINT
 
 #ifdef PHY_EMUL
 extern EMULATION_VARS              *Emul_vars;
@@ -1703,7 +1703,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
   if (*physicalConfigDedicated) {
     if ((*physicalConfigDedicated)->antennaInfo) {
       (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.transmissionMode = rrc_inst->configuration.ue_TransmissionMode[0];
-      LOG_D(RRC,"Setting transmission mode to %ld+1\n",rrc_inst->configuration.ue_TransmissionMode[0]);
+      LOG_I(RRC,"Setting transmission mode to %ld+1\n",rrc_inst->configuration.ue_TransmissionMode[0]);
       if (rrc_inst->configuration.ue_TransmissionMode[0]==AntennaInfoDedicated__transmissionMode_tm3) {
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=     
 	  CALLOC(1,sizeof(AntennaInfoDedicated__codebookSubsetRestriction_PR));
@@ -1744,6 +1744,17 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm6.buf[0] = 0xf0;
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm6.size=1;
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm6.bits_unused=4;
+      }
+      else if (rrc_inst->configuration.ue_TransmissionMode[0]==AntennaInfoDedicated__transmissionMode_tm8_v920) {
+	(*physicalConfigDedicated)->ext1 = CALLOC(1,sizeof((*physicalConfigDedicated)->ext1));
+	(*physicalConfigDedicated)->ext1->antennaInfo_v920 = CALLOC(1, sizeof((*physicalConfigDedicated)->ext1->antennaInfo_v920));
+	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920 = NULL;
+	  /*CALLOC(1, sizeof((*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920));
+	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920->present = AntennaInfoDedicated_v920__codebookSubsetRestriction_v920_PR_n2TxAntenna_tm8_r9;
+	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920->choice.n2TxAntenna_tm8_r9.buf= MALLOC(1);
+	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920->choice.n2TxAntenna_tm8_r9.buf[0] = 0xfc;
+	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920->choice.n2TxAntenna_tm8_r9.size=1;
+	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920->choice.n2TxAntenna_tm8_r9.bits_unused=2;*/
       }
     }
     else {
@@ -4801,9 +4812,22 @@ rrc_eNB_decode_dcch(
                              ul_dcch_msg->message.choice.c1.choice.ueCapabilityInformation.criticalExtensions.
                              choice.c1.choice.ueCapabilityInformation_r8.ue_CapabilityRAT_ContainerList.list.
                              array[0]->ueCapabilityRAT_Container.size, 0, 0);
-      //#ifdef XER_PRINT
-      //xer_fprint(stdout, &asn_DEF_UE_EUTRA_Capability, (void *)UE_EUTRA_Capability);
-      //#endif
+#ifdef XER_PRINT
+      /*
+      //write the UE capabilities raw to a binary file
+      FILE *uecap_fd = fopen("uecap.raw","wb");
+      assert(uecap_fd);
+      fwrite(ul_dcch_msg->message.choice.c1.choice.ueCapabilityInformation.criticalExtensions.
+	     choice.c1.choice.ueCapabilityInformation_r8.ue_CapabilityRAT_ContainerList.list.
+	     array[0]->ueCapabilityRAT_Container.buf,
+	     ul_dcch_msg->message.choice.c1.choice.ueCapabilityInformation.criticalExtensions.
+	     choice.c1.choice.ueCapabilityInformation_r8.ue_CapabilityRAT_ContainerList.list.
+	     array[0]->ueCapabilityRAT_Container.size,
+	     1,uecap_fd);
+      fclose(uecap_fd);
+      */
+      xer_fprint(stdout, &asn_DEF_UE_EUTRA_Capability, (void *)UE_EUTRA_Capability);
+#endif
 
 #if defined(ENABLE_USE_MME)
 
