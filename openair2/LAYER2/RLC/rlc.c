@@ -622,7 +622,7 @@ rlc_module_init (void)
 
 #ifdef NB_IOT
   //MP: change variable maxDRB for NB-IoT --> see ifdef at the beginning
-  rlc_rrc_data_ind_NB = NULL;
+  rlc_rrc_data_ind_NB_IoT = NULL;
 #endif
 
 

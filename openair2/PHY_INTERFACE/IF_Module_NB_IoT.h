@@ -95,7 +95,7 @@ typedef struct{
 	 * -nfapi_subframe_config_t subframe_config;
 	 * -nfapi_rf_config_t rf_config;
 	 * -nfapi_sch_config_t sch_config;
-	 * -nfapi_nb_iot_config_t nb_iot_config;
+	 * -nfapi_nb_iot_config_t config_NB_IoT;
 	 * -nfapi_l23_config_t l23_config;
 	 * -nfapi_config --> EARFCN (for the transport of the dl_CarrierFreq
 	 * */

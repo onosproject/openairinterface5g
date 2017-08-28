@@ -197,7 +197,7 @@ void phy_config_sib2_eNB_NB_IoT(uint8_t Mod_id,
 						 		extra_phyConfig_t* extra_phy_parms)
 {
 	NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms;
-	LOG_D(PHY,"[eNB%d] CCid %d: Applying nb_iot_config from sib2_NB\n",Mod_id,CC_id);
+	LOG_D(PHY,"[eNB%d] CCid %d: Applying config_NB_IoT from sib2_NB\n",Mod_id,CC_id);
 	  
 	/*NPRACH_ConfigSIB_NB_r13----------------------------------------------------------*/
 

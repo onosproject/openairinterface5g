@@ -398,7 +398,7 @@ rlc_op_status_t rlc_data_req_NB_IoT  (const protocol_ctxt_t* const ctxt_pP,
 
 //defined in rlc_rrc.c --> NO MORE USED PROBABLY
 //------------------------------------------------------------------------------
-void rrc_rlc_register_rrc_NB_IoT (rrc_data_ind_cb_NB_t NB_rrc_data_indP, rrc_data_conf_cb_t rrc_data_confP);
+void rrc_rlc_register_rrc_NB_IoT (rrc_data_ind_cb_NB_IoT_t rrc_data_indP_NB_IoT, rrc_data_conf_cb_t rrc_data_confP);
 
 
 

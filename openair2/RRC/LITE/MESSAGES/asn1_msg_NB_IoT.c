@@ -1265,27 +1265,27 @@ uint8_t do_RRCConnectionReestablishment_NB_IoT(
 
 	asn_enc_rval_t enc_rval;
 	DL_CCCH_Message_NB_t dl_ccch_msg_NB_IoT;
-	RRCConnectionReestablishment_NB_t* rrcConnectionReestablishment_NB;
+	RRCConnectionReestablishment_NB_t* rrcConnectionReestablishment_NB_IoT;
 
 	memset(&dl_ccch_msg_NB_IoT, 0, sizeof(DL_CCCH_Message_NB_t));
 
 	dl_ccch_msg_NB_IoT.message.present = DL_CCCH_MessageType_NB_PR_c1;
 	dl_ccch_msg_NB_IoT.message.choice.c1.present = DL_CCCH_MessageType_NB__c1_PR_rrcConnectionReestablishment_r13;
-	rrcConnectionReestablishment_NB = &dl_ccch_msg_NB_IoT.message.choice.c1.choice.rrcConnectionReestablishment_r13;
+	rrcConnectionReestablishment_NB_IoT = &dl_ccch_msg_NB_IoT.message.choice.c1.choice.rrcConnectionReestablishment_r13;
 
 	//rrcConnectionReestablishment_NB
-	rrcConnectionReestablishment_NB->rrc_TransactionIdentifier = Transaction_id;
-	rrcConnectionReestablishment_NB->criticalExtensions.present = RRCConnectionReestablishment_NB__criticalExtensions_PR_c1;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.present = RRCConnectionReestablishment_NB__criticalExtensions__c1_PR_rrcConnectionReestablishment_r13;
+	rrcConnectionReestablishment_NB_IoT->rrc_TransactionIdentifier = Transaction_id;
+	rrcConnectionReestablishment_NB_IoT->criticalExtensions.present = RRCConnectionReestablishment_NB__criticalExtensions_PR_c1;
+	rrcConnectionReestablishment_NB_IoT->criticalExtensions.choice.c1.present = RRCConnectionReestablishment_NB__criticalExtensions__c1_PR_rrcConnectionReestablishment_r13;
 
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.srb_ToAddModList_r13 = SRB_list_NB_IoT;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.drb_ToAddModList_r13 = NULL;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.drb_ToReleaseList_r13 = NULL;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.rlf_TimersAndConstants_r13= NULL;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.mac_MainConfig_r13= NULL;
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.physicalConfigDedicated_r13 = NULL;
+	rrcConnectionReestablishment_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.srb_ToAddModList_r13 = SRB_list_NB_IoT;
+	rrcConnectionReestablishment_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.drb_ToAddModList_r13 = NULL;
+	rrcConnectionReestablishment_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.drb_ToReleaseList_r13 = NULL;
+	rrcConnectionReestablishment_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.rlf_TimersAndConstants_r13= NULL;
+	rrcConnectionReestablishment_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.mac_MainConfig_r13= NULL;
+	rrcConnectionReestablishment_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.radioResourceConfigDedicated_r13.physicalConfigDedicated_r13 = NULL;
 
-	rrcConnectionReestablishment_NB->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.nextHopChainingCount_r13=0;
+	rrcConnectionReestablishment_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r13.nextHopChainingCount_r13=0;
 
 	enc_rval = uper_encode_to_buffer(&asn_DEF_DL_CCCH_Message_NB,
 	                                   (void*)&dl_ccch_msg_NB_IoT,
