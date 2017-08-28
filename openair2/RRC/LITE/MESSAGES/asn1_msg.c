@@ -2608,7 +2608,7 @@ OAI_UECapability_t *fill_ue_capability(char *UE_EUTRA_Capability_xer_fname)
   int i;
 
   UE_EUTRA_Capability_t *UE_EUTRA_Capability;
-  char UE_EUTRA_Capability_xer[8192];
+  char UE_EUTRA_Capability_xer[102400];
   size_t size;
 
   LOG_I(RRC,"Allocating %u bytes for UE_EUTRA_Capability\n",sizeof(*UE_EUTRA_Capability));
@@ -2726,7 +2726,10 @@ OAI_UECapability_t *fill_ue_capability(char *UE_EUTRA_Capability_xer_fname)
       return(NULL);
     }
 
-    dec_rval = xer_decode(0, &asn_DEF_UE_EUTRA_Capability, (void*)UE_EUTRA_Capability, UE_EUTRA_Capability_xer, size);
+    // use this line if UE capabilites was stored in a xml file (does not seem to work)
+    // dec_rval = xer_decode(0, &asn_DEF_UE_EUTRA_Capability, (void*)UE_EUTRA_Capability, UE_EUTRA_Capability_xer, size);
+    // use this line if UE capabilites was stored as a raw file  
+    dec_rval = uper_decode(NULL, &asn_DEF_UE_EUTRA_Capability, (void**)&UE_EUTRA_Capability, UE_EUTRA_Capability_xer, size, 0, 0);
     assert(dec_rval.code == RC_OK);
   }
 

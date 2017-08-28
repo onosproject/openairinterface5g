@@ -1765,7 +1765,7 @@ rrc_ue_process_ueCapabilityEnquiry(
 
   UE_CapabilityRAT_Container_t ue_CapabilityRAT_Container;
 
-  uint8_t buffer[200];
+  uint8_t buffer[256];
   int i;
 
   LOG_I(RRC,"[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), Processing UECapabilityEnquiry (eNB %d)\n",
@@ -1804,8 +1804,10 @@ rrc_ue_process_ueCapabilityEnquiry(
           ASN_SEQUENCE_ADD(
             &ul_dcch_msg.message.choice.c1.choice.ueCapabilityInformation.criticalExtensions.choice.c1.choice.ueCapabilityInformation_r8.ue_CapabilityRAT_ContainerList.list,
             &ue_CapabilityRAT_Container);
-
-          enc_rval = uper_encode_to_buffer(&asn_DEF_UL_DCCH_Message, (void*) &ul_dcch_msg, buffer, 100);
+	}
+      }
+    
+          enc_rval = uper_encode_to_buffer(&asn_DEF_UL_DCCH_Message, (void*) &ul_dcch_msg, buffer, 256);
           AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %jd)!\n",
                        enc_rval.failed_type->name, enc_rval.encoded);
 
@@ -1849,8 +1851,6 @@ rrc_ue_process_ueCapabilityEnquiry(
 			(enc_rval.encoded + 7) / 8,
 			buffer,
 			PDCP_TRANSMISSION_MODE_CONTROL);
-        }
-      }
     }
   }
 }
