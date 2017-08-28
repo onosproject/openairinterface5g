@@ -265,7 +265,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
 	    // kill RA procedure
           }
 
-          if (Is_rrc_nb_iot_registered == 1)
+          if (Is_rrc_registered_NB_IoT == 1)
         	 //MP: send directly the information to the RRC in case of CCCH (SRB0)
 
             mac_rrc_data_ind_eNB_NB_IoT(

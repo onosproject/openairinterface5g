@@ -66,6 +66,40 @@
 /*!\brief Maximum number of logical chanels */
 #define MAX_NUM_LCID_NB_IoT 11
 
+/*!\brief  UE ULSCH scheduling states*/
+typedef enum {
+  S_UL_NONE_NB_IoT =0,
+  S_UL_WAITING_NB_IoT,
+  S_UL_SCHEDULED_NB_IoT,
+  S_UL_BUFFERED_NB_IoT,
+  S_UL_NUM_STATUS_NB_IoT
+} UE_ULSCH_STATUS_NB_IoT;
+
+/*!\brief  UE DLSCH scheduling states*/
+typedef enum {
+  S_DL_NONE_NB_IoT =0,
+  S_DL_WAITING_NB_IoT,
+  S_DL_SCHEDULED_NB_IoT,
+  S_DL_BUFFERED_NB_IoT,
+  S_DL_NUM_STATUS_NB_IoT
+} UE_DLSCH_STATUS_NB_IoT;
+
+/*! \brief temporary struct for ULSCH sched */
+typedef struct {
+  rnti_t rnti;
+  uint16_t subframe;
+  uint16_t serving_num;
+  UE_ULSCH_STATUS_NB_IoT status;
+} eNB_ULSCH_INFO_NB_IoT;
+/*! \brief temp struct for DLSCH sched */
+typedef struct {
+  rnti_t rnti;
+  uint16_t weight;
+  uint16_t subframe;
+  uint16_t serving_num;
+  UE_DLSCH_STATUS_NB_IoT status;
+} eNB_DLSCH_INFO_NB_IoT;
+
 /*! \brief Downlink SCH PDU Structure */
 typedef struct {
   int8_t payload[8][SCH_PAYLOAD_SIZE_MAX_NB_IoT];

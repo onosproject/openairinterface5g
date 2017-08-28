@@ -376,7 +376,7 @@ protected_pdcp_fifo(void pdcp_fifo_read_input_sdus_from_otg       (
                       const protocol_ctxt_t* const  ctxt_pP);)
 
 //NB-IoT
-public_pdcp(void pdcp_layer_init_NB(void);)
+public_pdcp(void pdcp_layer_init_NB_IoT(void);)
 
 
 

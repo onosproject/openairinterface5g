@@ -155,8 +155,8 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
   uint8_t*                   const buffer, //carrier[CC_id].Srb0.Tx_buffer.Payload
   const uint8_t                    Transaction_id,
   const NB_IoT_DL_FRAME_PARMS* const frame_parms, //to be changed but not deleted
-  SRB_ToAddModList_NB_r13_t**             SRB_configList_NB, //in order to be configured--> stanno puntando alla SRB_configlist dell ue_context
-  struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB //in order to be configured--> stanno puntando alla physicalConfigDedicated dell ue_context
+  SRB_ToAddModList_NB_r13_t**             SRB_configList_NB_IoT, //in order to be configured--> stanno puntando alla SRB_configlist dell ue_context
+  struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB_IoT //in order to be configured--> stanno puntando alla physicalConfigDedicated dell ue_context
 );
 
 
@@ -182,12 +182,12 @@ do_RRCConnectionReconfiguration_NB_IoT(
   const protocol_ctxt_t*        const ctxt_pP,
     uint8_t                            *buffer,
     uint8_t                             Transaction_id,
-    SRB_ToAddModList_NB_r13_t          *SRB_list_NB,
-    DRB_ToAddModList_NB_r13_t          *DRB_list_NB,
-    DRB_ToReleaseList_NB_r13_t         *DRB_list2_NB,
+    SRB_ToAddModList_NB_r13_t          *SRB_list_NB_IoT,
+    DRB_ToAddModList_NB_r13_t          *DRB_list_NB_IoT,
+    DRB_ToReleaseList_NB_r13_t         *DRB_list2_NB_IoT,
     struct PhysicalConfigDedicated_NB_r13     *physicalConfigDedicated,
     MAC_MainConfig_t                   *mac_MainConfig,
-  struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13* dedicatedInfoNASList_NB);
+  struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13* dedicatedInfoNASList_NB_IoT);
 
 /**
  * E-UTRAN applies the procedure as follows: when only for NB-IoT SRB1 and SRB1bis is established
@@ -279,7 +279,7 @@ uint8_t do_RRCConnectionReestablishment_NB_IoT(
 		uint8_t* const buffer,
 		const uint8_t     Transaction_id,
 		const NB_IoT_DL_FRAME_PARMS* const frame_parms, //to be changed
-		SRB_ToAddModList_NB_r13_t**             SRB_configList_NB
+		SRB_ToAddModList_NB_r13_t**             SRB_configList_NB_IoT
 		 );
 
 /**

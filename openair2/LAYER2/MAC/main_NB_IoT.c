@@ -30,10 +30,10 @@
  */
 
 
-#include "asn1_constants.h"
-#include "defs_NB_IoT.h"
-#include "proto_NB_IoT.h"
-//#include "extern.h"
+//#include "asn1_constants.h"
+#include "LAYER2/MAC/defs_NB_IoT.h"
+#include "LAYER2/MAC/proto_NB_IoT.h"
+#include "LAYER2/MAC/extern_NB_IoT.h"
 #include "RRC/LITE/proto_NB_IoT.h"
 
 
@@ -134,7 +134,7 @@ int mac_top_init_NB_IoT()
 
   }
 
-  if (Is_rrc_nb_iot_registered == 1) {
+  if (Is_rrc_registered_NB_IoT == 1) {
     LOG_I(MAC,"[MAIN] calling RRC NB-IoT\n");
 #ifndef CELLULAR //nothing to be done yet for cellular
     openair_rrc_top_init_eNB_NB_IoT();
@@ -198,9 +198,9 @@ int l2_init_eNB_NB_IoT()
 
   LOG_I(MAC,"[MAIN] MAC_INIT_GLOBAL_PARAM NB-IoT IN...\n");
 
-  Is_rrc_nb_iot_registered=0;
+  Is_rrc_registered_NB_IoT=0;
   mac_init_global_param_NB_IoT();
-  Is_rrc_nb_iot_registered=1;
+  Is_rrc_registered_NB_IoT=1;
 
 
   LOG_D(MAC,"[MAIN][NB-IoT] ALL INIT OK\n");

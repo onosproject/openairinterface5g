@@ -45,13 +45,13 @@
 #include "PHY_INTERFACE/defs.h"  // should be replaced by PHY_INTERFACE/defs_NB_IoT.h (create MAC_xface for NB_IoT)
 //#include "RRC/LITE/defs_NB_IoT.h"
 
-#ifdef NB_IOT
+//#ifdef NB_IOT
 #include "LAYER2/MAC/defs_NB_IoT.h"
 
 //NB-IoT
 extern IF_Module_t *if_inst;
 extern eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
-#endif
+//#endif
 
 extern const uint32_t BSR_TABLE_NB_IoT[BSR_TABLE_SIZE_NB_IoT];
 // //extern uint32_t EBSR_Level[63];
@@ -73,8 +73,8 @@ extern const uint32_t BSR_TABLE_NB_IoT[BSR_TABLE_SIZE_NB_IoT];
 // extern uint8_t Is_rrc_registered;
 
 
-extern eNB_ULSCH_INFO eNB_ulsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX]; // eNBxUE = 8x8
-extern eNB_DLSCH_INFO eNB_dlsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX]; // eNBxUE = 8x8
+extern eNB_ULSCH_INFO_NB_IoT eNB_ulsch_info_NB_IoT[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT]; // eNBxUE = 8x8
+extern eNB_DLSCH_INFO_NB_IoT eNB_dlsch_info_NB_IoT[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT]; // eNBxUE = 8x8
 
 
 
@@ -132,7 +132,7 @@ extern EMULATION_VARS *Emul_vars;
 //NB-IoT---------------------------------
 
 extern eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
-extern uint8_t Is_rrc_nb_iot_registered;
+extern uint8_t Is_rrc_registered_NB_IoT;
 
 
 

@@ -1151,6 +1151,7 @@ set(L2_SRC
   ${RRC_DIR}/rrc_eNB_NB_IoT.c
   ${RRC_DIR}/rrc_eNB_S1AP.c
   ${RRC_DIR}/rrc_eNB_UE_context.c
+  ${RRC_DIR}/rrc_eNB_UE_context_NB_IoT.c
   ${RRC_DIR}/rrc_common.c
   ${RRC_DIR}/rrc_common_NB_IoT.c
   ${RRC_DIR}/L2_interface.c

@@ -197,10 +197,10 @@
 /*I will change the name of the structure for compile purposes--> hope not to undo this process*/
 
 typedef unsigned int uid_NB_IoT_t;
-#define UID_LINEAR_ALLOCATOR_BITMAP_SIZE (((NUMBER_OF_UE_MAX/8)/sizeof(unsigned int)) + 1)
+#define UID_LINEAR_ALLOCATOR_BITMAP_SIZE_NB_IoT (((NUMBER_OF_UE_MAX_NB_IoT/8)/sizeof(unsigned int)) + 1)
 
 typedef struct uid_linear_allocator_NB_IoT_s {
-  unsigned int   bitmap[UID_LINEAR_ALLOCATOR_BITMAP_SIZE];
+  unsigned int   bitmap[UID_LINEAR_ALLOCATOR_BITMAP_SIZE_NB_IoT];
 } uid_allocator_NB_IoT_t;
 
 
@@ -369,7 +369,7 @@ typedef struct eNB_RRC_UE_NB_IoT_s {
   DRB_ToAddModList_NB_r13_t*                DRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER]; //for the configured DRBs of a xid
   uint8_t                            		DRB_active[2];//in LTE was 8 --> at most 2 for NB-IoT
 
-  struct PhysicalConfigDedicated_NB_r13*    physicalConfigDedicated_NB;
+  struct PhysicalConfigDedicated_NB_r13*    physicalConfigDedicated_NB_IoT;
   MAC_MainConfig_NB_r13_t*           mac_MainConfig_NB;
 
   //No SPS(semi-persistent scheduling) in NB-IoT

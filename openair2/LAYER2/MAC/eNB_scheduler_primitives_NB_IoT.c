@@ -53,6 +53,8 @@
 #include "LAYER2/MAC/defs_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
+#include "LAYER2/MAC/vars_NB_IoT.h"  //////////////////// to comment during test
+//#include "openair2/COMMON/platform_types.h"
 //#include "LAYER2/MAC/pre_processor.c"
 //#include "pdcp.h"
 
@@ -139,12 +141,14 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
   UE_list->UE_template[pCC_id][UE_id].bsr_info[LCGID3]  = 0;*/
 
   //UE_list->UE_template[pCC_id][UE_id].ul_SR             = 0;
+
+
   UE_list->UE_template[pCC_id][UE_id].rnti              = NOT_A_RNTI;
   UE_list->UE_template[pCC_id][UE_id].ul_active         = FALSE;
-  eNB_ulsch_info[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
-  eNB_ulsch_info[mod_idP][pCC_id][UE_id].status                      = S_UL_NONE;
-  eNB_dlsch_info[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
-  eNB_dlsch_info[mod_idP][pCC_id][UE_id].status                      = S_DL_NONE;
+  eNB_ulsch_info_NB_IoT[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
+  eNB_ulsch_info_NB_IoT[mod_idP][pCC_id][UE_id].status                      = S_UL_NONE_NB_IoT;
+  eNB_dlsch_info_NB_IoT[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
+  eNB_dlsch_info_NB_IoT[mod_idP][pCC_id][UE_id].status                      = S_DL_NONE_NB_IoT;
 
   //NB_mac_phy_remove_ue(mod_idP,rntiP);
 

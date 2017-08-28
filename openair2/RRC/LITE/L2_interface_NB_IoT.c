@@ -39,7 +39,7 @@
 #include "LAYER2/MAC/extern.h"
 #include "UTIL/LOG/log.h"
 #include "UTIL/OCG/OCG_vars.h"
-#include "rrc_eNB_UE_context.h"
+#include "RRC/LITE/rrc_eNB_UE_context_NB_IoT.h"
 #include "pdcp_primitives.h"
 #include "pdcp.h"
 #include "pdcp_util.h"
@@ -83,7 +83,7 @@ typedef boolean_t mib_flag_t;
 
 //XXX access of protected variables in pdcp.h
 extern unsigned int           pdcp_eNB_UE_instance_to_rnti_index;
-extern rnti_t                 pdcp_eNB_UE_instance_to_rnti[NUMBER_OF_UE_MAX];
+extern rnti_t                 pdcp_eNB_UE_instance_to_rnti[NUMBER_OF_UE_MAX_NB_IoT];
 extern list_t                 pdcp_sdu_list;
 //extern struct mac_data_req rlc_am_mac_data_request (const protocol_ctxt_t* const ctxtP,void * const rlc_pP);
 //extern eNB_MAC_INST_NB_IoT *eNB;
@@ -147,18 +147,18 @@ typedef struct eutra_bandentry_NB_s {
     uint32_t dl_min;
     uint32_t dl_max;
     uint32_t N_OFFs_DL;
-} eutra_bandentry_NB_t;
+} eutra_bandentry_NB_IoT_t;
 
 typedef struct band_info_s {
     int nbands;
-    eutra_bandentry_NB_t band_info[100];
+    eutra_bandentry_NB_IoT_t band_info[100];
 } band_info_t;
 
 
 //TS 36.101 Table 7.7.3-1 for the EARFCN values (Last column of the table Noff_DL = lowest defined EARFCN value for the corresponding band)
 //TS 36.101 Table 5.5-1 for the Operating bands + 5.5F for the operating bands of category NB1 and NB2
 //frequency are in 100KHz in order to consider all unsigned int
-static const eutra_bandentry_NB_t eutra_bandtable[] = {
+static const eutra_bandentry_NB_IoT_t eutra_bandtable[] = {
 //[BAND] [FUL_low] [FUL_hi] [FDL_low] [FDL_hig] [NOFF_DL]
   { 1, 19200, 19800, 21100, 21700, 0},
   { 2, 18500, 19100, 19300, 19900, 6000},
@@ -338,7 +338,7 @@ void config_mib_fapi_NB_IoT(
 }
 
 
-void config_sib2_NB_fapi(
+void config_sib2_fapi_NB_IoT(
 						int physCellId,
 						RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon
 						)
@@ -678,7 +678,7 @@ int rrc_mac_config_req_eNB_NB_IoT(
       if (ul_CarrierFreq>0) eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].ul_CarrierFreq   = ul_CarrierFreq;
 
 
-      config_sib2_NB_fapi(physCellId,radioResourceConfigCommon);
+      config_sib2_fapi_NB_IoT(physCellId,radioResourceConfigCommon);
 
   }
 
@@ -710,7 +710,7 @@ int rrc_mac_config_req_eNB_NB_IoT(
     	//XXX this parameters seems to be not defined by FAPi specs
     	//this are UE specific information that should be transmitted to the PHY layer
     	//use UE-specific structure at phy layer where to store this information (NPDCCH structure) this structure will be scrambled based on the rnti
-    	config_INFO->rnti = UE_RNTI(Mod_idP, UE_id);
+    	config_INFO->rnti = UE_RNTI_NB_IoT(Mod_idP, UE_id);
     	config_INFO->extra_phy_parms.npdcch_NumRepetitions = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13; //Rmax
     	config_INFO->extra_phy_parms.npdcch_Offset_USS = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13;
     	config_INFO->extra_phy_parms.npdcch_StartSF_USS = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13;
@@ -748,7 +748,7 @@ uint32_t is_SIB1_NB_IoT(
 {
 	uint8_t nb_rep=0; // number of sib1-nb repetitions within the 256 radio frames
 	uint32_t sib1_startFrame;
-	uint32_t sib1_NB_period = 256;//from specs TS 36.331 (rf)
+	uint32_t sib1_period_NB_IoT = 256;//from specs TS 36.331 (rf)
 	uint8_t index;
 	int offset;
 	int period_nb; // the number of the actual period over the 1024 frames
@@ -787,7 +787,7 @@ uint32_t is_SIB1_NB_IoT(
 
 
 		  //SIB1-NB period number
-		  period_nb = (int) frameP/sib1_NB_period;
+		  period_nb = (int) frameP/sib1_period_NB_IoT;
 
 
 	      //number of repetitions
@@ -824,7 +824,7 @@ uint32_t is_SIB1_NB_IoT(
 
 
 	      //calculate offset between SIB1-NB repetitions (repetitions are equally spaced)
-	      offset = (sib1_NB_period-(16*nb_rep))/nb_rep;
+	      offset = (sib1_period_NB_IoT-(16*nb_rep))/nb_rep;
 	      /*
 	       * possible offset results (even numbers):
 	       * nb_rep= 4 ---> offset = 48
@@ -909,7 +909,7 @@ uint8_t is_SIB1_start_NB_IoT(
 {
 	uint8_t nb_rep=0; // number of sib1-nb repetitions within the 256 radio frames
 	uint32_t sib1_startFrame;
-//	uint32_t sib1_NB_period = 256;//from specs TS 36.331 (rf)
+//	uint32_t sib1_period_NB_IoT = 256;//from specs TS 36.331 (rf)
 //	uint8_t index;
 //	int offset;
 //	int period_nb; // the number of the actual period over the 1024 frames
@@ -1267,7 +1267,7 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
 
 //defined in L2_interface
 //called by rx_sdu only in case of CCCH message (e.g RRCConnectionRequest-NB - SRB0) --> is used for a direct communication between MAC and RRC
-int8_t NB_mac_rrc_data_ind_eNB(
+int8_t mac_rrc_data_ind_eNB_NB_IoT(
   const module_id_t     module_idP,
   const int             CC_id,
   const frame_t         frameP,
@@ -1406,10 +1406,10 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
 
   UE_list->UE_template[pCC_id][UE_id].rnti              = NOT_A_RNTI;
   UE_list->UE_template[pCC_id][UE_id].ul_active         = FALSE;
-  eNB_ulsch_info[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
-  eNB_ulsch_info[mod_idP][pCC_id][UE_id].status                      = S_UL_NONE;
-  eNB_dlsch_info[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
-  eNB_dlsch_info[mod_idP][pCC_id][UE_id].status                      = S_DL_NONE;
+  eNB_ulsch_info_NB_IoT[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
+  eNB_ulsch_info_NB_IoT[mod_idP][pCC_id][UE_id].status                      = S_UL_NONE;
+  eNB_dlsch_info_NB_IoT[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
+  eNB_dlsch_info_NB_IoT[mod_idP][pCC_id][UE_id].status                      = S_DL_NONE;
 
   mac_phy_remove_ue(mod_idP,rntiP); //PHY/defs.h
 
@@ -1480,11 +1480,11 @@ int mac_eNB_get_rrc_status_NB_IoT(
 
 //defined in pdcp_security.c
 static
-uint32_t pdcp_get_next_count_tx_NB(pdcp_t *const pdcp_pP, const srb_flag_t srb_flagP, const uint16_t pdcp_sn);
+uint32_t pdcp_get_next_count_tx_NB_IoT(pdcp_t *const pdcp_pP, const srb_flag_t srb_flagP, const uint16_t pdcp_sn);
 
 //-----------------------------------------------------------------------------
 static
-uint32_t pdcp_get_next_count_tx_NB(
+uint32_t pdcp_get_next_count_tx_NB_IoT(
   pdcp_t * const pdcp_pP,
   const srb_flag_t srb_flagP,
   const uint16_t pdcp_sn
@@ -1533,7 +1533,7 @@ int pdcp_apply_security_NB_IoT(
 
   encrypt_params.direction  = (pdcp_pP->is_ue == 1) ? SECU_DIRECTION_UPLINK : SECU_DIRECTION_DOWNLINK;
   encrypt_params.bearer     = rb_id - 1;
-  encrypt_params.count      = pdcp_get_next_count_tx_NB(pdcp_pP, srb_flagP, current_sn); //XXX (warning) because static defined in pdcp_security.c
+  encrypt_params.count      = pdcp_get_next_count_tx_NB_IoT(pdcp_pP, srb_flagP, current_sn); //XXX (warning) because static defined in pdcp_security.c
   encrypt_params.key_length = 16;
 
   if (srb_flagP) {

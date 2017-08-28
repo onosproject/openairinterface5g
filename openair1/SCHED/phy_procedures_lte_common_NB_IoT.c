@@ -1071,7 +1071,7 @@ int8_t find_ue(uint16_t rnti, PHY_VARS_eNB *eNB)
 
   uint8_t i;
 
-  for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+  for (i=0; i<NUMBER_OF_UE_MAX_NB_IoT; i++) {
     if ((eNB->dlsch[i]) &&
         (eNB->dlsch[i][0]) &&
         (eNB->dlsch[i][0]->rnti==rnti)) {
