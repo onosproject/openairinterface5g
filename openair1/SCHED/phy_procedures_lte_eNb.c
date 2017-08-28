@@ -1729,12 +1729,12 @@ void process_HARQ_feedback(uint8_t UE_id,
 	// we always loop over 2 possible max TBs. If its not used it should have been disabled
       for (tb=0;tb<1;tb++) {
 	if (tb==0) {
-	  dlsch_harq_proc = dlsch->harq_processes[dl_harq_pid[m]];
 	  dl_harq_pid[m]  = dlsch->harq_ids[dl_subframe];
+	  dlsch_harq_proc = dlsch->harq_processes[dl_harq_pid[m]];
 	}
 	else {
-	  dlsch_harq_proc = dlsch1->harq_processes[dl_harq_pid[m]];
 	  dl_harq_pid[m]  = dlsch->harq_ids[dl_subframe];
+	  dlsch_harq_proc = dlsch1->harq_processes[dl_harq_pid[m]];
 	}
 	//harq_pid_updated[UE_id][dl_harq_pid[m]] = 1;
 
