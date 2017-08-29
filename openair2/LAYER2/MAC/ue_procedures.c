@@ -1928,7 +1928,7 @@ ue_scheduler(
   //if (subframe%5 == 0)
   //LG#ifdef EXMIMO
 //#ifdef UE_NR_PHY_DEMO
-  // call pdcp_run every subframe on TTI0. To check later if OK
+  // NR demo: call pdcp_run every subframe on TTI0. To check later if OK
   if (isNewTxSubframe)
 //#endif
   {
@@ -1944,57 +1944,60 @@ ue_scheduler(
   UE_mac_inst[module_idP].rxNRTti = rxNRTtiP;
 //#endif
 
+  //NR demo: update RRC timers and check RRC state only once per subframe
+  if (isNewTxSubframe) {
 #ifdef CELLULAR
-  rrc_rx_tx(module_idP, txFrameP, 0, eNB_indexP);
+      rrc_rx_tx(module_idP, txFrameP, 0, eNB_indexP);
 #else
 
-  switch (rrc_rx_tx(&ctxt,
-                    eNB_indexP,
-                    CC_id)) {
-  case RRC_OK:
-    break;
+      switch (rrc_rx_tx(&ctxt,
+              eNB_indexP,
+              CC_id)) {
+      case RRC_OK:
+          break;
 
-  case RRC_ConnSetup_failed:
-    LOG_E(MAC,"RRCConnectionSetup failed, returning to IDLE state\n");
-    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SCHEDULER, VCD_FUNCTION_OUT);
+      case RRC_ConnSetup_failed:
+          LOG_E(MAC,"RRCConnectionSetup failed, returning to IDLE state\n");
+          VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SCHEDULER, VCD_FUNCTION_OUT);
 #if UE_TIMING_TRACE
-    stop_meas(&UE_mac_inst[module_idP].ue_scheduler);
+          stop_meas(&UE_mac_inst[module_idP].ue_scheduler);
 #endif
-    return(CONNECTION_LOST);
-    break;
+          return(CONNECTION_LOST);
+          break;
 
-  case RRC_PHY_RESYNCH:
-    LOG_E(MAC,"RRC Loss of synch, returning PHY_RESYNCH\n");
-    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SCHEDULER, VCD_FUNCTION_OUT);
+      case RRC_PHY_RESYNCH:
+          LOG_E(MAC,"RRC Loss of synch, returning PHY_RESYNCH\n");
+          VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SCHEDULER, VCD_FUNCTION_OUT);
 #if UE_TIMING_TRACE
-    stop_meas(&UE_mac_inst[module_idP].ue_scheduler);
+          stop_meas(&UE_mac_inst[module_idP].ue_scheduler);
 #endif
-    return(PHY_RESYNCH);
+          return(PHY_RESYNCH);
 
-  case RRC_Handover_failed:
-    LOG_N(MAC,"Handover failure for UE %d eNB_index %d\n",module_idP,eNB_indexP);
-    //Invalid...need to add another MAC UE state for re-connection procedure
-    mac_xface->phy_config_afterHO_ue(module_idP,0,eNB_indexP,(MobilityControlInfo_t *)NULL,1);
-    //return(3);
-    break;
+      case RRC_Handover_failed:
+          LOG_N(MAC,"Handover failure for UE %d eNB_index %d\n",module_idP,eNB_indexP);
+          //Invalid...need to add another MAC UE state for re-connection procedure
+          mac_xface->phy_config_afterHO_ue(module_idP,0,eNB_indexP,(MobilityControlInfo_t *)NULL,1);
+          //return(3);
+          break;
 
-  case RRC_HO_STARTED:
+      case RRC_HO_STARTED:
 #if DISABLE_LOG_X
-        printf("MAC,RRC handover, Instruct PHY to start the contention-free PRACH and synchronization\n");
+          printf("MAC,RRC handover, Instruct PHY to start the contention-free PRACH and synchronization\n");
 #else
-    LOG_I(MAC,"RRC handover, Instruct PHY to start the contention-free PRACH and synchronization\n");
+          LOG_I(MAC,"RRC handover, Instruct PHY to start the contention-free PRACH and synchronization\n");
 #endif
-    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SCHEDULER, VCD_FUNCTION_OUT);
+          VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SCHEDULER, VCD_FUNCTION_OUT);
 #if UE_TIMING_TRACE
-    stop_meas(&UE_mac_inst[module_idP].ue_scheduler);
+          stop_meas(&UE_mac_inst[module_idP].ue_scheduler);
 #endif
-    return(PHY_HO_PRACH);
+          return(PHY_HO_PRACH);
 
-  default:
-    break;
+      default:
+          break;
+      }
+
+#endif
   }
-
-#endif
 
   // Check Contention resolution timer (put in a function later)
   if (UE_mac_inst[module_idP].RA_contention_resolution_timer_active == 1) {
