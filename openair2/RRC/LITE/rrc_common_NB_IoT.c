@@ -29,20 +29,20 @@
  */
 
 //#include "defs_NB_IoT.h"
-#include "extern.h"
-#include "extern_NB_IoT.h"
-#include "LAYER2/MAC/extern.h"
-#include "COMMON/openair_defs.h"
-#include "COMMON/platform_types.h"
-#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
+//#include "extern.h"
+//#include "RRC/LITE/extern_NB_IoT.h"
+#include "LAYER2/MAC/extern_NB_IoT.h"
+//#include "COMMON/openair_defs.h"
+//#include "COMMON/platform_types.h"
+//#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 #include "LAYER2/RLC/rlc.h"
-#include "COMMON/mac_rrc_primitives.h"
+//#include "COMMON/mac_rrc_primitives.h"
 #include "UTIL/LOG/log.h"
 #include "asn1_msg.h"
 #include "pdcp.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
-#include "rrc_eNB_UE_context.h"
-#include "proto_NB_IoT.h"
+//#include "rrc_eNB_UE_context.h"
+//#include "proto_NB_IoT.h"
 #include "RRC/LITE/defs_NB_IoT.h"
 
 #ifdef LOCALIZATION
@@ -64,8 +64,7 @@ extern mui_t rrc_eNB_mui;
 //--------------
 //MP: Most probably is not needed (old code)
 //-----------------------------------------------------------------------------
-void
-rrc_t310_expiration_NB(
+void rrc_t310_expiration_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   const uint8_t                 eNB_index
 )
@@ -183,8 +182,7 @@ if (L3_xface_init_NB_IoT ()) { //XXX to be modified???
 
 #ifndef NO_RRM
 //-----------------------------------------------------------------------------
-int
-L3_xface_init_NB_IoT( //Exact copy of the LTE implementation
+int L3_xface_init_NB_IoT( //Exact copy of the LTE implementation
   void
 )
 //-----------------------------------------------------------------------------
@@ -269,8 +267,7 @@ void openair_rrc_top_init_eNB_NB_IoT(void)//MP: XXX Raymond put this directly th
 
 //-----------------------------------------------------------------------------
 //XXX MP: most probably is not needed
-RRC_status_t
-rrc_rx_tx_NB_IoT(
+RRC_status_t rrc_rx_tx_NB_IoT(
   protocol_ctxt_t* const ctxt_pP,
   const uint8_t      enb_indexP,
   const int          CC_id
@@ -308,8 +305,8 @@ rrc_rx_tx_NB_IoT(
 
     if ((UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].SIStatus&2)>0) {
       if (UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].N310_cnt
-          == N310[UE_rrc_inst_NB_IoT[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.n310]) {
-	LOG_I(RRC,"Activating T310\n");
+          == N310_NB_IoT[UE_rrc_inst_NB_IoT[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.n310]) {
+	LOG_I(RRC,"Activating T310_NB_IoT\n");
         UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].T310_active = 1;
       }
     } else { // in case we have not received SIB2 yet
@@ -323,18 +320,18 @@ rrc_rx_tx_NB_IoT(
 
     if (UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].T310_active == 1) {
       if (UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].N311_cnt
-          == N311[UE_rrc_inst_NB_IoT[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.n311]) {
+          == N311_NB_IoT[UE_rrc_inst_NB_IoT[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.n311]) {
         UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].T310_active = 0;
         UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].N311_cnt = 0;
       }
 
       if ((UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].T310_cnt % 10) == 0) {
-        LOG_D(RRC, "[UE %d] Frame %d T310 Count %d ms\n", ctxt_pP->module_id, ctxt_pP->frame, UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].T310_cnt);
+        LOG_D(RRC, "[UE %d] Frame %d T310_NB_IoT Count %d ms\n", ctxt_pP->module_id, ctxt_pP->frame, UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].T310_cnt);
       }
 
-      if (UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].T310_cnt    == T310[UE_rrc_inst_NB_IoT[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.t310]) {
+      if (UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].T310_cnt    == T310_NB_IoT[UE_rrc_inst_NB_IoT[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.t310]) {
         UE_rrc_inst_NB_IoT[ctxt_pP->module_id].Info[enb_indexP].T310_active = 0;
-        rrc_t310_expiration_NB (ctxt_pP, enb_indexP); //FIXME: maybe is required a NB_iot version of this function
+        rrc_t310_expiration_NB_IoT (ctxt_pP, enb_indexP); //FIXME: maybe is required a NB_iot version of this function
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_RX_TX,VCD_FUNCTION_OUT);
 	LOG_I(RRC,"Returning RRC_PHY_RESYNCH: T310 expired\n");
         return RRC_PHY_RESYNCH;
