@@ -91,7 +91,11 @@ void ue_init_mac(module_id_t module_idP)
 {
   int i;
   // default values as deined in 36.331 sec 9.2.2
+#if DISABLE_LOG_X
+  printf("MAC,[UE%d] Applying default macMainConfig\n",module_idP);
+#else
   LOG_I(MAC,"[UE%d] Applying default macMainConfig\n",module_idP);
+#endif
   //UE_mac_inst[module_idP].scheduling_info.macConfig=NULL;
   UE_mac_inst[module_idP].numerology_index = 0;
   UE_mac_inst[module_idP].ttis_per_subframe = 1;
@@ -321,8 +325,11 @@ uint32_t ue_get_SR(module_id_t module_idP,int CC_id,frame_t frameP,uint8_t eNB_i
           UE_mac_inst[module_idP].physicalConfigDedicated = NULL;
           UE_mac_inst[module_idP].ul_active=0;
           UE_mac_inst[module_idP].BSR_reporting_active=BSR_TRIGGER_NONE;
-
+#if DISABLE_LOG_X
+          printf("MAC,[UE %d] Release all SRs \n", module_idP);
+#else
           LOG_I(MAC,"[UE %d] Release all SRs \n", module_idP);
+#endif
       }
     UE_mac_inst[module_idP].scheduling_info.SR_pending=0;
     UE_mac_inst[module_idP].scheduling_info.SR_COUNTER=0;
@@ -385,12 +392,20 @@ ue_send_sdu(
     //    printf("ce %d : %d\n",i,rx_ces[i]);
     switch (rx_ces[i]) {
     case UE_CONT_RES:
-
+#if DISABLE_LOG_X
+      printf("MAC,[UE %d][RAPROC] Frame %d : received contention resolution msg: %x.%x.%x.%x.%x.%x, Terminating RA procedure\n",
+            module_idP,frameP,payload_ptr[0],payload_ptr[1],payload_ptr[2],payload_ptr[3],payload_ptr[4],payload_ptr[5]);
+#else
       LOG_I(MAC,"[UE %d][RAPROC] Frame %d : received contention resolution msg: %x.%x.%x.%x.%x.%x, Terminating RA procedure\n",
             module_idP,frameP,payload_ptr[0],payload_ptr[1],payload_ptr[2],payload_ptr[3],payload_ptr[4],payload_ptr[5]);
+#endif
 
       if (UE_mac_inst[module_idP].RA_active == 1) {
+#if DISABLE_LOG_X
+        printf("MAC,[UE %d][RAPROC] Frame %d : Clearing RA_active flag\n", module_idP, frameP);
+#else
         LOG_I(MAC,"[UE %d][RAPROC] Frame %d : Clearing RA_active flag\n", module_idP, frameP);
+#endif
         UE_mac_inst[module_idP].RA_active=0;
         // check if RA procedure has finished completely (no contention)
         tx_sdu = &UE_mac_inst[module_idP].CCCH_pdu.payload[3];
@@ -405,8 +420,11 @@ ue_send_sdu(
             VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SEND_SDU, VCD_FUNCTION_OUT);
             return;
           }
-
+#if DISABLE_LOG_X
+        printf("MAC,[UE %d][RAPROC] Frame %d : Clearing contention resolution timer\n", module_idP, frameP);
+#else
         LOG_I(MAC,"[UE %d][RAPROC] Frame %d : Clearing contention resolution timer\n", module_idP, frameP);
+#endif
         UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
         mac_xface->ra_succeeded(module_idP,CC_id,eNB_index);
       }
@@ -1961,7 +1979,11 @@ ue_scheduler(
     break;
 
   case RRC_HO_STARTED:
+#if DISABLE_LOG_X
+        printf("MAC,RRC handover, Instruct PHY to start the contention-free PRACH and synchronization\n");
+#else
     LOG_I(MAC,"RRC handover, Instruct PHY to start the contention-free PRACH and synchronization\n");
+#endif
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SCHEDULER, VCD_FUNCTION_OUT);
 #if UE_TIMING_TRACE
     stop_meas(&UE_mac_inst[module_idP].ue_scheduler);
@@ -1994,8 +2016,13 @@ ue_scheduler(
   if (isNewTxSubframe)
 //#endif
    {
+#if DISABLE_LOG_X
+    printf("MAC,Frame %d: Contention resolution timer %d/%ld\n",txFrameP,UE_mac_inst[module_idP].RA_contention_resolution_cnt,
+          ((1+rach_ConfigCommon->ra_SupervisionInfo.mac_ContentionResolutionTimer)<<3));
+#else
     LOG_I(MAC,"Frame %d: Contention resolution timer %d/%ld\n",txFrameP,UE_mac_inst[module_idP].RA_contention_resolution_cnt,
           ((1+rach_ConfigCommon->ra_SupervisionInfo.mac_ContentionResolutionTimer)<<3));
+#endif
 
     UE_mac_inst[module_idP].RA_contention_resolution_cnt++;
 
@@ -2422,8 +2449,13 @@ boolean_t  update_bsr(module_id_t module_idP, frame_t frameP, sub_frame_t subfra
 		  bsr_regular_triggered = TRUE;
 
 		  if ((UE_mac_inst[module_idP].BSR_reporting_active & BSR_TRIGGER_REGULAR) == 0) {
+#if DISABLE_LOG_X
+		        printf("MAC,[UE %d] PDCCH Tick : MAC BSR Triggered ReTxBSR Timer expiry at frame %d subframe %d\n",
+                                  module_idP, frameP, subframeP);
+#else
 		        LOG_I(MAC,"[UE %d] PDCCH Tick : MAC BSR Triggered ReTxBSR Timer expiry at frame %d subframe %d\n",
 		                          module_idP, frameP, subframeP);
+#endif
 		  }
 
 	  }

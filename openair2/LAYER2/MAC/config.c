@@ -131,7 +131,11 @@ rrc_mac_config_req(
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
 
   if (eNB_flagP==0) {
+#if DISABLE_LOG_X
+    printf("MAC,[CONFIG][UE %d] Configuring MAC/PHY from eNB %d\n",Mod_idP,eNB_index);
+#else
     LOG_I(MAC,"[CONFIG][UE %d] Configuring MAC/PHY from eNB %d\n",Mod_idP,eNB_index);
+#endif
 
     if (tdd_Config != NULL) {
       UE_mac_inst[Mod_idP].tdd_Config = tdd_Config;
@@ -174,7 +178,11 @@ rrc_mac_config_req(
   // SRB2_lchan_config->choice.explicitValue.ul_SpecificParameters->logicalChannelGroup
   if (logicalChannelConfig!= NULL) {
     if (eNB_flagP==0) {
+#if DISABLE_LOG_X
+      printf("MAC,[CONFIG][UE %d] Applying RRC logicalChannelConfig from eNB%d\n",Mod_idP,eNB_index);
+#else
       LOG_I(MAC,"[CONFIG][UE %d] Applying RRC logicalChannelConfig from eNB%d\n",Mod_idP,eNB_index);
+#endif
       UE_mac_inst[Mod_idP].logicalChannelConfig[logicalChannelIdentity]=logicalChannelConfig;
       UE_mac_inst[Mod_idP].scheduling_info.Bj[logicalChannelIdentity]=0; // initilize the bucket for this lcid
 
@@ -208,7 +216,11 @@ rrc_mac_config_req(
 
   if (mac_MainConfig != NULL) {
     if (eNB_flagP==0) {
+#if DISABLE_LOG_X
+      printf("MAC,[CONFIG][UE%d] Applying RRC macMainConfig from eNB%d\n",Mod_idP,eNB_index);
+#else
       LOG_I(MAC,"[CONFIG][UE%d] Applying RRC macMainConfig from eNB%d\n",Mod_idP,eNB_index);
+#endif
       UE_mac_inst[Mod_idP].macConfig=mac_MainConfig;
       UE_mac_inst[Mod_idP].measGapConfig=measGapConfig;
 
@@ -427,7 +439,11 @@ rrc_mac_config_req(
       // store the previous rnti in case of failure, and set thenew rnti
       UE_mac_inst[Mod_idP].crnti_before_ho = UE_mac_inst[Mod_idP].crnti;
       UE_mac_inst[Mod_idP].crnti = ((mobilityControlInfo->newUE_Identity.buf[0])|(mobilityControlInfo->newUE_Identity.buf[1]<<8));
+#if DISABLE_LOG_X
+      printf("MAC,[UE %d] Received new identity %x from %d\n", Mod_idP, UE_mac_inst[Mod_idP].crnti, eNB_index);
+#else
       LOG_I(MAC,"[UE %d] Received new identity %x from %d\n", Mod_idP, UE_mac_inst[Mod_idP].crnti, eNB_index);
+#endif
       UE_mac_inst[Mod_idP].rach_ConfigDedicated = malloc(sizeof(*mobilityControlInfo->rach_ConfigDedicated));
 
       if (mobilityControlInfo->rach_ConfigDedicated) {

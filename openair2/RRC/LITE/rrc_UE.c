@@ -387,8 +387,13 @@ void rrc_ue_generate_RRCConnectionRequest( const protocol_ctxt_t* const ctxt_pP,
         (uint8_t*)UE_rrc_inst[ctxt_pP->module_id].Srb0[eNB_index].Tx_buffer.Payload,
         rv);
 
+#if DISABLE_LOG_X
+    printf("RRC,[UE %d] : Frame %d, Logical Channel UL-CCCH (SRB0), Generating RRCConnectionRequest (bytes %d, eNB %d)\n",
+          ctxt_pP->module_id, ctxt_pP->frame, UE_rrc_inst[ctxt_pP->module_id].Srb0[eNB_index].Tx_buffer.payload_size, eNB_index);
+#else
     LOG_I(RRC,"[UE %d] : Frame %d, Logical Channel UL-CCCH (SRB0), Generating RRCConnectionRequest (bytes %d, eNB %d)\n",
           ctxt_pP->module_id, ctxt_pP->frame, UE_rrc_inst[ctxt_pP->module_id].Srb0[eNB_index].Tx_buffer.payload_size, eNB_index);
+#endif
 
     for (i=0; i<UE_rrc_inst[ctxt_pP->module_id].Srb0[eNB_index].Tx_buffer.payload_size; i++) {
       LOG_T(RRC,"%x.",UE_rrc_inst[ctxt_pP->module_id].Srb0[eNB_index].Tx_buffer.Payload[i]);
@@ -455,8 +460,13 @@ static void rrc_ue_generate_RRCConnectionSetupComplete( const protocol_ctxt_t* c
 
   size = do_RRCConnectionSetupComplete(ctxt_pP->module_id, buffer, Transaction_id, nas_msg_length, nas_msg);
 
+#if DISABLE_LOG_X
+    printf("RRC,[UE %d][RAPROC] Frame %d : Logical Channel UL-DCCH (SRB1), Generating RRCConnectionSetupComplete (bytes%d, eNB %d)\n",
+        ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
+#else
   LOG_I(RRC,"[UE %d][RAPROC] Frame %d : Logical Channel UL-DCCH (SRB1), Generating RRCConnectionSetupComplete (bytes%d, eNB %d)\n",
         ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
+#endif
   LOG_D(RLC,
         "[FRAME %05d][RRC_UE][MOD %02d][][--- PDCP_DATA_REQ/%d Bytes (RRCConnectionSetupComplete to eNB %d MUI %d) --->][PDCP][MOD %02d][RB %02d]\n",
         ctxt_pP->frame, ctxt_pP->module_id+NB_eNB_INST, size, eNB_index, rrc_mui, ctxt_pP->module_id+NB_eNB_INST, DCCH);
@@ -476,8 +486,13 @@ static void rrc_ue_generate_RRCConnectionReconfigurationComplete( const protocol
 
   uint8_t buffer[32], size;
   size = do_RRCConnectionReconfigurationComplete(ctxt_pP, buffer, Transaction_id);
+#if DISABLE_LOG_X
+    printf("RRC,Logical Channel UL-DCCH (SRB1), Generating RRCConnectionReconfigurationComplete (bytes %d, eNB_index %d)\n",
+        size, eNB_index);
+#else
   LOG_I(RRC,PROTOCOL_RRC_CTXT_UE_FMT" Logical Channel UL-DCCH (SRB1), Generating RRCConnectionReconfigurationComplete (bytes %d, eNB_index %d)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP), size, eNB_index);
+#endif
   LOG_D(RLC,
         "[FRAME %05d][RRC_UE][INST %02d][][--- PDCP_DATA_REQ/%d Bytes (RRCConnectionReconfigurationComplete to eNB %d MUI %d) --->][PDCP][INST %02d][RB %02d]\n",
         ctxt_pP->frame,
@@ -653,8 +668,11 @@ rrc_ue_establish_srb1(
   //  memcpy(&UE_rrc_inst[ue_mod_idP].Srb1[eNB_index].Srb_info.Lchan_desc[0],&DCCH_LCHAN_DESC,LCHAN_DESC_SIZE);
   //  memcpy(&UE_rrc_inst[ue_mod_idP].Srb1[eNB_index].Srb_info.Lchan_desc[1],&DCCH_LCHAN_DESC,LCHAN_DESC_SIZE);
 
-
+#if DISABLE_LOG_X
+    printf("RRC,[UE %d], CONFIG_SRB1 %d corresponding to eNB_index %d\n", ue_mod_idP,lchan_id,eNB_index);
+#else
   LOG_I(RRC,"[UE %d], CONFIG_SRB1 %d corresponding to eNB_index %d\n", ue_mod_idP,lchan_id,eNB_index);
+#endif
 
   //rrc_pdcp_config_req (ue_mod_idP+NB_eNB_INST, frameP, 0, CONFIG_ACTION_ADD, lchan_id,UNDEF_SECURITY_MODE);
   //  rrc_rlc_config_req(ue_mod_idP+NB_eNB_INST,frameP,0,CONFIG_ACTION_ADD,lchan_id,SIGNALLING_RADIO_BEARER,Rlc_info_am_config);
@@ -687,8 +705,11 @@ rrc_ue_establish_srb2(
   //  memcpy(&UE_rrc_inst[ue_mod_idP].Srb2[eNB_index].Srb_info.Lchan_desc[0],&DCCH_LCHAN_DESC,LCHAN_DESC_SIZE);
   //  memcpy(&UE_rrc_inst[ue_mod_idP].Srb2[eNB_index].Srb_info.Lchan_desc[1],&DCCH_LCHAN_DESC,LCHAN_DESC_SIZE);
 
-
+#if DISABLE_LOG_X
+    printf("RRC,[UE %d], CONFIG_SRB2 %d corresponding to eNB_index %d\n",ue_mod_idP,lchan_id,eNB_index);
+#else
   LOG_I(RRC,"[UE %d], CONFIG_SRB2 %d corresponding to eNB_index %d\n",ue_mod_idP,lchan_id,eNB_index);
+#endif
 
   //rrc_pdcp_config_req (ue_mod_idP+NB_eNB_INST, frameP, 0, CONFIG_ACTION_ADD, lchan_id, UNDEF_SECURITY_MODE);
   //  rrc_rlc_config_req(ue_mod_idP+NB_eNB_INST,frameP,0,CONFIG_ACTION_ADD,lchan_id,SIGNALLING_RADIO_BEARER,Rlc_info_am_config);
@@ -717,9 +738,13 @@ rrc_ue_establish_drb(
   (void)ip_addr_offset3;
   (void)ip_addr_offset4;
 #endif
-
+#if DISABLE_LOG_X
+    printf("RRC,[UE %d] Frame %d: processing RRCConnectionReconfiguration: reconfiguring DRB %ld/LCID %d\n",
+        ue_mod_idP, frameP, DRB_config->drb_Identity, (int)*DRB_config->logicalChannelIdentity);
+#else
   LOG_I(RRC,"[UE %d] Frame %d: processing RRCConnectionReconfiguration: reconfiguring DRB %ld/LCID %d\n",
         ue_mod_idP, frameP, DRB_config->drb_Identity, (int)*DRB_config->logicalChannelIdentity);
+#endif
   /*
   rrc_pdcp_config_req (ue_mod_idP+NB_eNB_INST, frameP, 0, CONFIG_ACTION_ADD,
                              (eNB_index * NB_RB_MAX) + *DRB_config->logicalChannelIdentity, UNDEF_SECURITY_MODE);
@@ -1330,9 +1355,13 @@ rrc_ue_process_radioResourceConfigDedicated(
           } else {
             SRB1_logicalChannelConfig = &SRB1_logicalChannelConfig_defaultValue;
           }
-
+#if DISABLE_LOG_X
+          printf("RRC,[FRAME %05d][RRC_UE][MOD %02d][][--- MAC_CONFIG_REQ  (SRB1 eNB %d) --->][MAC_UE][MOD %02d][]\n",
+                ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
+#else
           LOG_I(RRC, "[FRAME %05d][RRC_UE][MOD %02d][][--- MAC_CONFIG_REQ  (SRB1 eNB %d) --->][MAC_UE][MOD %02d][]\n",
                 ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
+#endif
           rrc_mac_config_req(ctxt_pP->module_id,0,ENB_FLAG_NO,0,eNB_index,
                              (RadioResourceConfigCommonSIB_t *)NULL,
                              UE_rrc_inst[ctxt_pP->module_id].physicalConfigDedicated[eNB_index],
@@ -1567,9 +1596,13 @@ rrc_ue_process_securityModeCommand(
   // SecurityModeCommand_t SecurityModeCommand;
   uint8_t buffer[200];
   int i, securityMode;
-
+#if DISABLE_LOG_X
+  printf("RRC,[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), Processing securityModeCommand (eNB %d)\n",
+        ctxt_pP->module_id,ctxt_pP->frame,eNB_index);
+#else
   LOG_I(RRC,"[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), Processing securityModeCommand (eNB %d)\n",
         ctxt_pP->module_id,ctxt_pP->frame,eNB_index);
+#endif
 
   switch (securityModeCommand->criticalExtensions.choice.c1.choice.securityModeCommand_r8.securityConfigSMC.securityAlgorithmConfig.cipheringAlgorithm) {
   case CipheringAlgorithm_r12_eea0:
@@ -1693,9 +1726,13 @@ rrc_ue_process_securityModeCommand(
       ul_dcch_msg.message.choice.c1.choice.securityModeComplete.rrc_TransactionIdentifier = securityModeCommand->rrc_TransactionIdentifier;
       ul_dcch_msg.message.choice.c1.choice.securityModeComplete.criticalExtensions.present = SecurityModeCommand__criticalExtensions_PR_c1;
       ul_dcch_msg.message.choice.c1.choice.securityModeComplete.criticalExtensions.choice.securityModeComplete_r8.nonCriticalExtension =NULL;
-
+#if DISABLE_LOG_X
+      printf("RRC,[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), encoding securityModeComplete (eNB %d)\n",
+            ctxt_pP->module_id,ctxt_pP->frame,eNB_index);
+#else
       LOG_I(RRC,"[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), encoding securityModeComplete (eNB %d)\n",
             ctxt_pP->module_id,ctxt_pP->frame,eNB_index);
+#endif
 
       enc_rval = uper_encode_to_buffer(&asn_DEF_UL_DCCH_Message,
                                        (void*)&ul_dcch_msg,
@@ -1768,10 +1805,17 @@ rrc_ue_process_ueCapabilityEnquiry(
   uint8_t buffer[200];
   int i;
 
+#if DISABLE_LOG_X
+      printf("RRC,[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), Processing UECapabilityEnquiry (eNB %d)\n",
+        ctxt_pP->module_id,
+        ctxt_pP->frame,
+        eNB_index);
+#else
   LOG_I(RRC,"[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), Processing UECapabilityEnquiry (eNB %d)\n",
         ctxt_pP->module_id,
         ctxt_pP->frame,
         eNB_index);
+#endif
 
 
   memset((void *)&ul_dcch_msg,0,sizeof(UL_DCCH_Message_t));
@@ -1866,8 +1910,13 @@ rrc_ue_process_rrcConnectionReconfiguration(
 //-----------------------------------------------------------------------------
 {
 
+#if DISABLE_LOG_X
+      printf("RRC,[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), Processing RRCConnectionReconfiguration (eNB %d)\n",
+        ctxt_pP->module_id,ctxt_pP->frame,eNB_index);
+#else
   LOG_I(RRC,"[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), Processing RRCConnectionReconfiguration (eNB %d)\n",
         ctxt_pP->module_id,ctxt_pP->frame,eNB_index);
+#endif
 
   if (rrcConnectionReconfiguration->criticalExtensions.present == RRCConnectionReconfiguration__criticalExtensions_PR_c1) {
     if (rrcConnectionReconfiguration->criticalExtensions.choice.c1.present ==
@@ -2412,8 +2461,13 @@ rrc_ue_decode_dcch(
         break;
 
       case DL_DCCH_MessageType__c1_PR_securityModeCommand:
+#if DISABLE_LOG_X
+      printf("RRC,[UE %d] Received securityModeCommand (eNB %d)\n",
+              ctxt_pP->module_id, eNB_indexP);
+#else
         LOG_I(RRC, "[UE %d] Received securityModeCommand (eNB %d)\n",
               ctxt_pP->module_id, eNB_indexP);
+#endif
         rrc_ue_process_securityModeCommand(
           ctxt_pP,
           &dl_dcch_msg->message.choice.c1.choice.securityModeCommand,
@@ -2421,9 +2475,15 @@ rrc_ue_decode_dcch(
         break;
 
       case DL_DCCH_MessageType__c1_PR_ueCapabilityEnquiry:
+#if DISABLE_LOG_X
+      printf("RRC,[UE %d] Received Capability Enquiry (eNB %d)\n",
+              ctxt_pP->module_id,
+              eNB_indexP);
+#else
         LOG_I(RRC, "[UE %d] Received Capability Enquiry (eNB %d)\n",
               ctxt_pP->module_id,
               eNB_indexP);
+#endif
         rrc_ue_process_ueCapabilityEnquiry(
           ctxt_pP,
           &dl_dcch_msg->message.choice.c1.choice.ueCapabilityEnquiry,

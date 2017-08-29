@@ -195,7 +195,11 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
         case SRB_ToAddMod__rlc_Config_PR_defaultValue:
 //#warning TO DO SRB_ToAddMod__rlc_Config_PR_defaultValue
+#if DISABLE_LOG_X
+          printf("RRC,RLC SRB1 is default value !!\n");
+#else
           LOG_I(RRC, "RLC SRB1 is default value !!\n");
+#endif
           struct RLC_Config__am  *  config_am_pP = &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am;
           config_am_pP->dl_AM_RLC.t_Reordering     = T_Reordering_ms35;
           config_am_pP->dl_AM_RLC.t_StatusProhibit = T_StatusProhibit_ms0;
@@ -670,12 +674,21 @@ rlc_union_t* rrc_rlc_add_rlc   (
       rlc_union_p->mode = rlc_modeP;
       return rlc_union_p;
     } else {
+#if DISABLE_LOG_X
+      printf(PROTOCOL_CTXT_FMT"[%s %u] rrc_rlc_add_rlc FAILED %s (add by RB_id=%d; add by LC_id=%d)\n",
+              PROTOCOL_CTXT_ARGS(ctxt_pP),
+              (srb_flagP) ? "SRB" : "DRB",
+              rb_idP,
+              (srb_flagP) ? "SRB" : "DRB",
+              h_rc, h_lcid_rc);
+#else
       LOG_E(RLC, PROTOCOL_CTXT_FMT"[%s %u] rrc_rlc_add_rlc FAILED %s (add by RB_id=%d; add by LC_id=%d)\n",
             PROTOCOL_CTXT_ARGS(ctxt_pP),
             (srb_flagP) ? "SRB" : "DRB",
             rb_idP,
             (srb_flagP) ? "SRB" : "DRB",
             h_rc, h_lcid_rc);
+#endif
       free(rlc_union_p);
       rlc_union_p = NULL;
       return NULL;

@@ -200,6 +200,9 @@ rlc_am_configure(
   const uint32_t                t_status_prohibitP)
 {
   if (rlc_pP->configured == TRUE) {
+#if DISABLE_LOG_X
+          printf("RLC,[RECONFIGURE] AM Id%d Isdata%d\n",rlc_pP->rb_id, (int)rlc_pP->is_data_plane);
+#else
     LOG_I(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[RECONFIGURE] max_retx_threshold %d poll_pdu %d poll_byte %d t_poll_retransmit %d t_reordering %d t_status_prohibit %d\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
           max_retx_thresholdP,
@@ -208,6 +211,7 @@ rlc_am_configure(
           t_poll_retransmitP,
           t_reorderingP,
           t_status_prohibitP);
+#endif
 
     rlc_pP->max_retx_threshold = max_retx_thresholdP;
     rlc_pP->poll_pdu           = poll_pduP;
@@ -218,6 +222,9 @@ rlc_am_configure(
     rlc_pP->t_status_prohibit.ms_duration   = t_status_prohibitP;
 
   } else {
+#if DISABLE_LOG_X
+          printf("RLC,[CONFIGURE] AM Id%d Isdata%d\n",rlc_pP->rb_id, (int)rlc_pP->is_data_plane);
+#else
     LOG_I(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[CONFIGURE] max_retx_threshold %d poll_pdu %d poll_byte %d t_poll_retransmit %d t_reordering %d t_status_prohibit %d\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
           max_retx_thresholdP,
@@ -226,6 +233,7 @@ rlc_am_configure(
           t_poll_retransmitP,
           t_reorderingP,
           t_status_prohibitP);
+#endif
 
     rlc_pP->max_retx_threshold = max_retx_thresholdP;
     rlc_pP->poll_pdu           = poll_pduP;

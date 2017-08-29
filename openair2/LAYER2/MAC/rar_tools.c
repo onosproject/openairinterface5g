@@ -170,7 +170,11 @@ ue_process_rar(
 		}
 
 		if (rarh->E == 0) {
-			LOG_I(PHY, "No RAR found with the intended RAPID. The closest RAPID in all RARs is %d\n", best_rx_rapid);
+#if DISABLE_LOG_X
+		  printf("PHY,No RAR found with the intended RAPID. The closest RAPID in all RARs is %d\n", best_rx_rapid);
+#else
+          LOG_I(PHY, "No RAR found with the intended RAPID. The closest RAPID in all RARs is %d\n", best_rx_rapid);
+#endif
 			break;
 		} else {
 			rarh++;

@@ -442,7 +442,11 @@ rrc_rx_tx(
     if ((UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].SIStatus&2)>0) {
       if (UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].N310_cnt
           == N310[UE_rrc_inst[ctxt_pP->module_id].sib2[enb_indexP]->ue_TimersAndConstants.n310]) {
+#if DISABLE_LOG_X
+    printf("RRC,Activating T310\n");
+#else
 	LOG_I(RRC,"Activating T310\n");
+#endif
         UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].T310_active = 1;
       }
     } else { // in case we have not received SIB2 yet
@@ -469,7 +473,11 @@ rrc_rx_tx(
         UE_rrc_inst[ctxt_pP->module_id].Info[enb_indexP].T310_active = 0;
         rrc_t310_expiration (ctxt_pP, enb_indexP);
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_RX_TX,VCD_FUNCTION_OUT);
+#if DISABLE_LOG_X
+    printf("RRC,Returning RRC_PHY_RESYNCH: T310 expired\n");
+#else
 	LOG_I(RRC,"Returning RRC_PHY_RESYNCH: T310 expired\n"); 
+#endif
         return RRC_PHY_RESYNCH;
       }
 

@@ -169,7 +169,11 @@ boolean_t pdcp_is_rx_seq_number_valid(uint16_t seq_num, pdcp_t* pdcp_entity,srb_
     LOG_I(PDCP, "Received sequence number successfuly marked\n");
 #endif
   } else {
+#if DISABLE_LOG_X
+    printf("PDCP,Cannot mark received sequence number on the bitmap!\n");
+#else
     LOG_W(PDCP, "Cannot mark received sequence number on the bitmap!\n");
+#endif
   }
 
   /*
