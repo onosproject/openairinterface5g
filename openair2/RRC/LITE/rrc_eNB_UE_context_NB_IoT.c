@@ -60,7 +60,7 @@ uid_linear_allocator_new_NB_IoT(
   uid_t        uid = 0;
   uid_allocator_NB_IoT_t* uia_p = &rrc_instance_pP->uid_allocator;
 
-  for (i=0; i < UID_LINEAR_ALLOCATOR_BITMAP_SIZE; i++) {
+  for (i=0; i < UID_LINEAR_ALLOCATOR_BITMAP_SIZE_NB_IoT; i++) {
     if (uia_p->bitmap[i] != UINT_MAX) {
       bit_index = 1;
       uid       = 0;
@@ -90,7 +90,7 @@ uid_linear_allocator_free_NB_IoT(
   unsigned int bit = uidP % (sizeof(unsigned int) * 8);
   unsigned int value = ~(0x00000001 << bit);
 
-  if (i < UID_LINEAR_ALLOCATOR_BITMAP_SIZE) {
+  if (i < UID_LINEAR_ALLOCATOR_BITMAP_SIZE_NB_IoT) {
     rrc_instance_pP->uid_allocator.bitmap[i] &=  value;
   }
 }
