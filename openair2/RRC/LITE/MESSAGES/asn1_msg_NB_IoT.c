@@ -998,7 +998,7 @@ uint16_t do_RRCConnectionReconfiguration_NB_IoT(
     DRB_ToAddModList_NB_r13_t          *DRB_list_NB_IoT, //DRB_ConfigList (default)
     DRB_ToReleaseList_NB_r13_t         *DRB_list2_NB_IoT, //is NULL when passed
     struct PhysicalConfigDedicated_NB_r13     *physicalConfigDedicated_NB_IoT,
-	MAC_MainConfig_NB_r13_t                   *mac_MainConfig_NB,
+	MAC_MainConfig_NB_r13_t                   *mac_MainConfig_NB_IoT,
   struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13* dedicatedInfoNASList_NB_IoT)
 
 {
@@ -1031,14 +1031,14 @@ uint16_t do_RRCConnectionReconfiguration_NB_IoT(
   //FIXME may not used now
   //rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->rlf_TimersAndConstants_r13
 
-  if (mac_MainConfig_NB!=NULL) {
+  if (mac_MainConfig_NB_IoT!=NULL) {
     rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->mac_MainConfig_r13 =
     		CALLOC(1, sizeof(*rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->mac_MainConfig_r13));
     rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->mac_MainConfig_r13->present
       =RadioResourceConfigDedicated_NB_r13__mac_MainConfig_r13_PR_explicitValue_r13;
    //why memcopy only this one?
     memcpy(&rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->mac_MainConfig_r13->choice.explicitValue_r13,
-           mac_MainConfig_NB, sizeof(*mac_MainConfig_NB));
+           mac_MainConfig_NB_IoT, sizeof(*mac_MainConfig_NB_IoT));
 
   } else {
 	  rrcConnectionReconfiguration_NB->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r13.radioResourceConfigDedicated_r13->mac_MainConfig_r13=NULL;

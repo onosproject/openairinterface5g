@@ -304,9 +304,9 @@ void rrc_eNB_free_mem_UE_context_NB_IoT(
   }
 
 
-  if (ue_context_pP->ue_context.mac_MainConfig_NB) {
-    ASN_STRUCT_FREE(asn_DEF_MAC_MainConfig_NB_r13, ue_context_pP->ue_context.mac_MainConfig_NB);
-    ue_context_pP->ue_context.mac_MainConfig_NB = NULL;
+  if (ue_context_pP->ue_context.mac_MainConfig_NB_IoT) {
+    ASN_STRUCT_FREE(asn_DEF_MAC_MainConfig_NB_r13, ue_context_pP->ue_context.mac_MainConfig_NB_IoT);
+    ue_context_pP->ue_context.mac_MainConfig_NB_IoT = NULL;
   }
 
   //no sps in NB_IoT
@@ -581,7 +581,7 @@ void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
 		  (BCCH_BCH_Message_NB_t*) NULL,
           (RadioResourceConfigCommonSIB_NB_r13_t *) NULL,
           (PhysicalConfigDedicated_NB_r13_t*) ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT,
-          ue_context_pP->ue_context.mac_MainConfig_NB, //XXX most probably is not needed since is only at UE side
+          ue_context_pP->ue_context.mac_MainConfig_NB_IoT, //XXX most probably is not needed since is only at UE side
           DCCH0_NB_IoT, //LCID  = 3 of SRB1bis
           SRB1bis_logicalChannelConfig
 		  );
@@ -810,7 +810,7 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
 			(BCCH_BCH_Message_NB_t*)NULL,
 			(RadioResourceConfigCommonSIB_NB_r13_t*)NULL,
             ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT,
-            ue_context_pP->ue_context.mac_MainConfig_NB,
+            ue_context_pP->ue_context.mac_MainConfig_NB_IoT,
             DRB2LCHAN_NB_IoT[i], //over the logical channel id of the DRB (>=4)
             DRB_configList2->list.array[i]->logicalChannelConfig_r13
 			);
@@ -854,7 +854,7 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
 					  (BCCH_BCH_Message_NB_t*)NULL,
 					  (RadioResourceConfigCommonSIB_NB_r13_t*)NULL,
                       ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT,
-                      ue_context_pP->ue_context.mac_MainConfig_NB,
+                      ue_context_pP->ue_context.mac_MainConfig_NB_IoT,
                       DRB2LCHAN_NB_IoT[i], //over the logical channel id of the DRB (>=4)
                       (LogicalChannelConfig_NB_r13_t*)NULL
           			);
@@ -1325,7 +1325,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
   DRB_ToAddModList_NB_r13_t**                DRB_configList = &ue_context_pP->ue_context.DRB_configList;
   DRB_ToAddModList_NB_r13_t**                DRB_configList2 = NULL;
 
-   MAC_MainConfig_NB_r13_t                   *mac_MainConfig_NB               = NULL;
+   MAC_MainConfig_NB_r13_t                   *mac_MainConfig_NB_IoT               = NULL;
 
   long                              *periodicBSR_Timer;
   long								*enableStatusReportSN_Gap = NULL; //should be disabled
@@ -1449,28 +1449,28 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
 
 
   ///Mac_MainConfig (default as defined in TS 36.331 ch 9.2.2)
-  mac_MainConfig_NB = CALLOC(1, sizeof(*mac_MainConfig_NB));
-  ue_context_pP->ue_context.mac_MainConfig_NB = mac_MainConfig_NB;
+  mac_MainConfig_NB_IoT = CALLOC(1, sizeof(*mac_MainConfig_NB_IoT));
+  ue_context_pP->ue_context.mac_MainConfig_NB_IoT = mac_MainConfig_NB_IoT;
 
-  mac_MainConfig_NB->ul_SCH_Config_r13 = CALLOC(1, sizeof(*mac_MainConfig_NB->ul_SCH_Config_r13));
+  mac_MainConfig_NB_IoT->ul_SCH_Config_r13 = CALLOC(1, sizeof(*mac_MainConfig_NB_IoT->ul_SCH_Config_r13));
 
   //no maxARQtx
 
   periodicBSR_Timer = CALLOC(1, sizeof(long));
   *periodicBSR_Timer = PeriodicBSR_Timer_NB_r13_pp8;
-  mac_MainConfig_NB->ul_SCH_Config_r13->periodicBSR_Timer_r13 = periodicBSR_Timer;
-  mac_MainConfig_NB->ul_SCH_Config_r13->retxBSR_Timer_r13 = RetxBSR_Timer_NB_r13_infinity;
+  mac_MainConfig_NB_IoT->ul_SCH_Config_r13->periodicBSR_Timer_r13 = periodicBSR_Timer;
+  mac_MainConfig_NB_IoT->ul_SCH_Config_r13->retxBSR_Timer_r13 = RetxBSR_Timer_NB_r13_infinity;
 
-  mac_MainConfig_NB->timeAlignmentTimerDedicated_r13 = TimeAlignmentTimer_infinity;
+  mac_MainConfig_NB_IoT->timeAlignmentTimerDedicated_r13 = TimeAlignmentTimer_infinity;
 
-  mac_MainConfig_NB->drx_Config_r13 = NULL;
+  mac_MainConfig_NB_IoT->drx_Config_r13 = NULL;
 
   //no phr_config
 
-  mac_MainConfig_NB->logicalChannelSR_Config_r13 = CALLOC(1, sizeof(struct MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13));
-  mac_MainConfig_NB->logicalChannelSR_Config_r13->present = MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13_PR_setup;
+  mac_MainConfig_NB_IoT->logicalChannelSR_Config_r13 = CALLOC(1, sizeof(struct MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13));
+  mac_MainConfig_NB_IoT->logicalChannelSR_Config_r13->present = MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13_PR_setup;
   //depends if previously activated
-  mac_MainConfig_NB->logicalChannelSR_Config_r13->choice.setup.logicalChannelSR_ProhibitTimer_r13 =
+  mac_MainConfig_NB_IoT->logicalChannelSR_Config_r13->choice.setup.logicalChannelSR_ProhibitTimer_r13 =
 		  MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13__setup__logicalChannelSR_ProhibitTimer_r13_pp2; //value in PP=PDCCH periods
 
 
@@ -1543,7 +1543,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
                                                 (DRB_ToAddModList_NB_r13_t*)*DRB_configList,
                                                 (DRB_ToReleaseList_NB_r13_t*)NULL,  // DRB2_list,
                                                 (struct PhysicalConfigDedicated_NB_r13*)*physicalConfigDedicated_NB_IoT,
-                                                (MAC_MainConfig_t*)mac_MainConfig_NB,
+                                                (MAC_MainConfig_t*)mac_MainConfig_NB_IoT,
                                                 (struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13*)dedicatedInfoNASList_NB_IoT
                                                 );
 
@@ -1827,9 +1827,9 @@ int rrc_eNB_decode_ccch_NB_IoT(
 {
   asn_dec_rval_t                      dec_rval;
   UL_CCCH_Message_NB_t                  *ul_ccch_msg_NB = NULL;
-  RRCConnectionRequest_NB_r13_IEs_t                *rrcConnectionRequest_NB = NULL;
-  RRCConnectionReestablishmentRequest_NB_r13_IEs_t* rrcConnectionReestablishmentRequest_NB = NULL;
-  RRCConnectionResumeRequest_NB_r13_IEs_t *rrcConnectionResumeRequest_NB= NULL;
+  RRCConnectionRequest_NB_r13_IEs_t                *rrcConnectionRequest_NB_IoT = NULL;
+  RRCConnectionReestablishmentRequest_NB_r13_IEs_t* rrcConnectionReestablishmentRequest_NB_IoT = NULL;
+  RRCConnectionResumeRequest_NB_r13_IEs_t *rrcConnectionResumeRequest_NB_IoT= NULL;
   int                                 i, rval;
   struct rrc_eNB_ue_context_NB_IoT_s*                  ue_context_p = NULL;
   uint64_t                                      random_value = 0;
@@ -1899,14 +1899,14 @@ int rrc_eNB_decode_ccch_NB_IoT(
       LOG_D(RRC,
             PROTOCOL_RRC_CTXT_UE_FMT"MAC_eNB--- MAC_DATA_IND (rrcConnectionReestablishmentRequest-NB on SRB0) --> RRC_eNB\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
-      rrcConnectionReestablishmentRequest_NB =
+      rrcConnectionReestablishmentRequest_NB_IoT =
         &ul_ccch_msg_NB->message.choice.c1.choice.rrcConnectionReestablishmentRequest_r13.criticalExtensions.choice.rrcConnectionReestablishmentRequest_r13;
 
       //for NB-IoT only "reconfiguration Failure" and "other failure" are allowed as reestablishment cause
       LOG_I(RRC,
             PROTOCOL_RRC_CTXT_UE_FMT" RRCConnectionReestablishmentRequest-NB cause %s\n",
             PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-            ((rrcConnectionReestablishmentRequest_NB->reestablishmentCause_r13 == ReestablishmentCause_NB_r13_otherFailure) ? "Other Failure" :
+            ((rrcConnectionReestablishmentRequest_NB_IoT->reestablishmentCause_r13 == ReestablishmentCause_NB_r13_otherFailure) ? "Other Failure" :
              "reconfigurationFailure"));
 
 
@@ -1971,18 +1971,18 @@ int rrc_eNB_decode_ccch_NB_IoT(
           dec_rval.consumed);
       }
       else {
-        rrcConnectionRequest_NB = &ul_ccch_msg_NB->message.choice.c1.choice.rrcConnectionRequest_r13.criticalExtensions.choice.rrcConnectionRequest_r13;
+        rrcConnectionRequest_NB_IoT = &ul_ccch_msg_NB->message.choice.c1.choice.rrcConnectionRequest_r13.criticalExtensions.choice.rrcConnectionRequest_r13;
         {
-          if (InitialUE_Identity_PR_randomValue == rrcConnectionRequest_NB->ue_Identity_r13.present) {
+          if (InitialUE_Identity_PR_randomValue == rrcConnectionRequest_NB_IoT->ue_Identity_r13.present) {
 
         	  //InitialUE-Identity randomValue size should be 40bits = 5 byte
-            AssertFatal(rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.size == 5,
+            AssertFatal(rrcConnectionRequest_NB_IoT->ue_Identity_r13.choice.randomValue.size == 5,
                         "wrong InitialUE-Identity randomValue size, expected 5, provided %d",
-                        rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.size);
+                        rrcConnectionRequest_NB_IoT->ue_Identity_r13.choice.randomValue.size);
 
             memcpy(((uint8_t*) & random_value) + 3,
-                   rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.buf,
-                   rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.size);
+                   rrcConnectionRequest_NB_IoT->ue_Identity_r13.choice.randomValue.buf,
+                   rrcConnectionRequest_NB_IoT->ue_Identity_r13.choice.randomValue.size);
 
             /* if there is already a registered UE (with another RNTI) with this random_value,
              * the current one must be removed from MAC/PHY (zombie UE)
@@ -1997,9 +1997,9 @@ int rrc_eNB_decode_ccch_NB_IoT(
             } else {
               ue_context_p = rrc_eNB_get_next_free_ue_context_NB_IoT(ctxt_pP, random_value);
             }
-          } else if (InitialUE_Identity_PR_s_TMSI == rrcConnectionRequest_NB->ue_Identity_r13.present) {
+          } else if (InitialUE_Identity_PR_s_TMSI == rrcConnectionRequest_NB_IoT->ue_Identity_r13.present) {
             /* Save s-TMSI */
-            S_TMSI_t   s_TMSI = rrcConnectionRequest_NB->ue_Identity_r13.choice.s_TMSI;
+            S_TMSI_t   s_TMSI = rrcConnectionRequest_NB_IoT->ue_Identity_r13.choice.s_TMSI;
             mme_code_t mme_code = BIT_STRING_to_uint8(&s_TMSI.mmec);
             m_tmsi_t   m_tmsi   = BIT_STRING_to_uint32(&s_TMSI.m_TMSI);
             random_value = (((uint64_t)mme_code) << 32) | m_tmsi;
@@ -2069,21 +2069,21 @@ int rrc_eNB_decode_ccch_NB_IoT(
 
 
 //#if defined(ENABLE_ITTI)
-          ue_context_p->ue_context.establishment_cause_NB = rrcConnectionRequest_NB->establishmentCause_r13;
+          ue_context_p->ue_context.establishment_cause_NB_IoT = rrcConnectionRequest_NB_IoT->establishmentCause_r13;
 	  if (stmsi_received==0){
 	    LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Accept new connection from UE random UE identity (0x%" PRIx64 ") MME code %u TMSI %u cause %ld\n",
 		  PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
 		  ue_context_p->ue_context.random_ue_identity,
 		  ue_context_p->ue_context.Initialue_identity_s_TMSI.mme_code,
 		  ue_context_p->ue_context.Initialue_identity_s_TMSI.m_tmsi,
-		  ue_context_p->ue_context.establishment_cause_NB);
+		  ue_context_p->ue_context.establishment_cause_NB_IoT);
 	  }
 	  else{
 	    LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Accept new connection from UE  MME code %u TMSI %u cause %ld\n",
 		  PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
 		  ue_context_p->ue_context.Initialue_identity_s_TMSI.mme_code,
 		  ue_context_p->ue_context.Initialue_identity_s_TMSI.m_tmsi,
-		  ue_context_p->ue_context.establishment_cause_NB);
+		  ue_context_p->ue_context.establishment_cause_NB_IoT);
 	  }
 //#else
 //          LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Accept new connection for UE random UE identity (0x%" PRIx64 ")\n",
@@ -2178,15 +2178,15 @@ int rrc_eNB_decode_ccch_NB_IoT(
 
     LOG_D(RRC, PROTOCOL_RRC_CTXT_UE_FMT"MAC_eNB--- MAC_DATA_IND (rrcConnectionResumeRequest-NB on SRB0) --> RRC_eNB\n",
     	                  PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
-    rrcConnectionResumeRequest_NB=
+    rrcConnectionResumeRequest_NB_IoT=
     	              &ul_ccch_msg_NB->message.choice.c1.choice.rrcConnectionResumeRequest_r13.criticalExtensions.choice.rrcConnectionResumeRequest_r13;
 
     LOG_I(RRC,PROTOCOL_RRC_CTXT_UE_FMT" RRCConnectionResumeRequest-NB cause %s\n",
                 PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-                ((rrcConnectionResumeRequest_NB->resumeCause_r13 == EstablishmentCause_NB_r13_mt_Access) ?    "mt Access" :
-                 (rrcConnectionResumeRequest_NB->resumeCause_r13 == EstablishmentCause_NB_r13_mo_Signalling) ? "mo Signalling" :
-                 (rrcConnectionResumeRequest_NB->resumeCause_r13 == EstablishmentCause_NB_r13_mo_Data) ? "mo Data":
-                (rrcConnectionResumeRequest_NB->resumeCause_r13 == EstablishmentCause_NB_r13_mo_ExceptionData) ? "mo Exception data" :
+                ((rrcConnectionResumeRequest_NB_IoT->resumeCause_r13 == EstablishmentCause_NB_r13_mt_Access) ?    "mt Access" :
+                 (rrcConnectionResumeRequest_NB_IoT->resumeCause_r13 == EstablishmentCause_NB_r13_mo_Signalling) ? "mo Signalling" :
+                 (rrcConnectionResumeRequest_NB_IoT->resumeCause_r13 == EstablishmentCause_NB_r13_mo_Data) ? "mo Data":
+                (rrcConnectionResumeRequest_NB_IoT->resumeCause_r13 == EstablishmentCause_NB_r13_mo_ExceptionData) ? "mo Exception data" :
                 "delay tollerant Access v1330"));
 
     //MP: only reject for now

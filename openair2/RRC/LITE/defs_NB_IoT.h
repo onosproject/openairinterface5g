@@ -40,12 +40,12 @@
 #include "collection/tree.h"
 #include "rrc_types_NB_IoT.h"
 //#include "PHY/defs.h"
-#include "PHY/defs_NB_IoT.h"
+//#include "PHY/defs_NB_IoT.h"
 #include "COMMON/platform_constants.h"
 #include "COMMON/platform_types.h"
 
 #include "COMMON/mac_rrc_primitives.h"
-#include "LAYER2/MAC/defs.h"
+//#include "LAYER2/MAC/defs.h"
 
 //#include "COMMON/openair_defs.h"
 #ifndef USER_MODE
@@ -370,7 +370,7 @@ typedef struct eNB_RRC_UE_NB_IoT_s {
   uint8_t                            		DRB_active[2];//in LTE was 8 --> at most 2 for NB-IoT
 
   struct PhysicalConfigDedicated_NB_r13*    physicalConfigDedicated_NB_IoT;
-  MAC_MainConfig_NB_r13_t*           mac_MainConfig_NB;
+  MAC_MainConfig_NB_r13_t*           mac_MainConfig_NB_IoT;
 
   //No SPS(semi-persistent scheduling) in NB-IoT
   //No Measurement report in NB-IoT
@@ -397,10 +397,10 @@ typedef struct eNB_RRC_UE_NB_IoT_s {
 
   /* Information from UE RRC ConnectionRequest-NB-r13_IE--> NB-IoT */
   UE_S_TMSI_NB_IoT                          Initialue_identity_s_TMSI;
-  EstablishmentCause_NB_r13_t               establishment_cause_NB; //different set for NB-IoT
+  EstablishmentCause_NB_r13_t               establishment_cause_NB_IoT; //different set for NB-IoT
 
   /* Information from UE RRC ConnectionReestablishmentRequest-NB--> NB-IoT */
-  ReestablishmentCause_NB_r13_t             reestablishment_cause_NB; //different set for NB_IoT
+  ReestablishmentCause_NB_r13_t             reestablishment_cause_NB_IoT; //different set for NB_IoT
 
   /* UE id for initial connection to S1AP */
   uint16_t                           ue_initial_id;
@@ -591,10 +591,10 @@ typedef struct UE_RRC_INST_NB_IoT_s {
 
   UE_RRC_INFO_NB_IoT Info[NB_SIG_CNX_UE];
   
-  SRB_INFO_NB_IoT Srb0[NB_SIG_CNX_UE];
-  SRB_INFO_TABLE_ENTRY_NB_IoT Srb1[NB_CNX_UE];
-  SRB_INFO_TABLE_ENTRY_NB_IoT Srb2[NB_CNX_UE];
-  HANDOVER_INFO_UE_NB_IoT HandoverInfoUe;
+  SRB_INFO_NB_IoT                 Srb0[NB_SIG_CNX_UE];
+  SRB_INFO_TABLE_ENTRY_NB_IoT     Srb1[NB_CNX_UE];
+  SRB_INFO_TABLE_ENTRY_NB_IoT     Srb2[NB_CNX_UE];
+  HANDOVER_INFO_UE_NB_IoT         HandoverInfoUe;
   /*
   uint8_t *SIB1[NB_CNX_UE];
   uint8_t sizeof_SIB1[NB_CNX_UE];
