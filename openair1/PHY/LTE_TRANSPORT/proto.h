@@ -269,7 +269,8 @@ int32_t allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
                            uint8_t mprime,
                            uint8_t Ns,
                            int *P1_SHIFT,
-                           int *P2_SHIFT);
+                           int *P2_SHIFT,
+			   uint8_t nscid);
 
 
 /** \fn int32_t dlsch_modulation(int32_t **txdataF,

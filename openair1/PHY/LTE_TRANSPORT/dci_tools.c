@@ -886,6 +886,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
   uint8_t TPC=0;
   uint8_t TB0_active=0,TB1_active=0;
   uint8_t ndi1=0,ndi2=0;
+  uint8_t nscid;
   LTE_DL_eNB_HARQ_t *dlsch0_harq=NULL,*dlsch1_harq=NULL;
 
   //   printf("Generate eNB DCI, format %d, rnti %x (pdu %p)\n",dci_format,rnti,dci_pdu);
@@ -2134,9 +2135,10 @@ int generate_eNB_dlsch_params_from_dci(int frame,
             rballoc   = ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->rballoc;
             rv1       = ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->rv1;
             rv2       = ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->rv2;
-            ndi1       = ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->ndi1;
-            ndi2       = ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->ndi2;
+            ndi1      = ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->ndi1;
+            ndi2      = ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->ndi2;
             harq_pid  = ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->harq_pid;
+            nscid     = ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->scrambling_id;
           } else {
             mcs1      = ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->mcs1;
             mcs2      = ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->mcs2;
@@ -2146,6 +2148,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
             ndi1      = ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->ndi1;
             ndi2      = ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->ndi2;
             harq_pid  = ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->harq_pid;
+            nscid     = ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->scrambling_id;
           }
 
           break;
@@ -2161,6 +2164,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
             ndi1       = ((DCI2B_5MHz_TDD_t *)dci_pdu)->ndi1;
             ndi2       = ((DCI2B_5MHz_TDD_t *)dci_pdu)->ndi2;
             harq_pid  = ((DCI2B_5MHz_TDD_t *)dci_pdu)->harq_pid;
+            nscid     = ((DCI2B_5MHz_TDD_t *)dci_pdu)->scrambling_id;
           } else {
             mcs1      = ((DCI2B_5MHz_FDD_t *)dci_pdu)->mcs1;
             mcs2      = ((DCI2B_5MHz_FDD_t *)dci_pdu)->mcs2;
@@ -2171,6 +2175,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
             ndi1       = ((DCI2B_5MHz_FDD_t *)dci_pdu)->ndi1;
             ndi2       = ((DCI2B_5MHz_FDD_t *)dci_pdu)->ndi2;
             harq_pid  = ((DCI2B_5MHz_FDD_t *)dci_pdu)->harq_pid;
+            nscid     = ((DCI2B_5MHz_FDD_t *)dci_pdu)->scrambling_id;
           }
 
           break;
@@ -2186,6 +2191,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
             ndi1      = ((DCI2B_10MHz_TDD_t *)dci_pdu)->ndi1;
             ndi2      = ((DCI2B_10MHz_TDD_t *)dci_pdu)->ndi2;
             harq_pid  = ((DCI2B_10MHz_TDD_t *)dci_pdu)->harq_pid;
+            nscid     = ((DCI2B_10MHz_TDD_t *)dci_pdu)->scrambling_id;
           } else {
             mcs1      = ((DCI2B_10MHz_FDD_t *)dci_pdu)->mcs1;
             mcs2      = ((DCI2B_10MHz_FDD_t *)dci_pdu)->mcs2;
@@ -2196,6 +2202,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
             ndi1       = ((DCI2B_10MHz_FDD_t *)dci_pdu)->ndi1;
             ndi2       = ((DCI2B_10MHz_FDD_t *)dci_pdu)->ndi2;
             harq_pid  = ((DCI2B_10MHz_FDD_t *)dci_pdu)->harq_pid;
+            nscid     = ((DCI2B_10MHz_FDD_t *)dci_pdu)->scrambling_id;
           }
 
           break;
@@ -2211,6 +2218,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
             ndi1       = ((DCI2B_20MHz_TDD_t *)dci_pdu)->ndi1;
             ndi2       = ((DCI2B_20MHz_TDD_t *)dci_pdu)->ndi2;
             harq_pid  = ((DCI2B_20MHz_TDD_t *)dci_pdu)->harq_pid;
+            nscid     = ((DCI2B_20MHz_TDD_t *)dci_pdu)->scrambling_id;
           } else {
             mcs1      = ((DCI2B_20MHz_FDD_t *)dci_pdu)->mcs1;
             mcs2      = ((DCI2B_20MHz_FDD_t *)dci_pdu)->mcs2;
@@ -2221,6 +2229,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
             ndi1       = ((DCI2B_20MHz_FDD_t *)dci_pdu)->ndi1;
             ndi2       = ((DCI2B_20MHz_FDD_t *)dci_pdu)->ndi2;
             harq_pid  = ((DCI2B_20MHz_FDD_t *)dci_pdu)->harq_pid;
+            nscid     = ((DCI2B_20MHz_TDD_t *)dci_pdu)->scrambling_id;
           }
 
           break;
@@ -2327,8 +2336,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
                                        frame_parms->N_RB_DL);
 
         if (dlsch1!=NULL) {
-	  // fixme (need to copy more fields of rb_alloc)
-          dlsch1_harq->rb_alloc[0]     = dlsch0_harq->rb_alloc[0];
+          memcpy(dlsch1_harq->rb_alloc,dlsch0_harq->rb_alloc,4*sizeof(uint32_t));
           dlsch1_harq->nb_rb           = dlsch0_harq->nb_rb;
         }
       } else if ((dlsch0 == NULL ) && (dlsch1 != NULL )) {
@@ -2350,6 +2358,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
         dlsch0_harq->dl_power_off = 1;
         dlsch0_harq->mimo_mode = TM8; //this DCI can only be used in TM8
         dlsch0_harq->Nlayers = 1;
+	dlsch0_harq->nscid = nscid;
       }
 
       if (dlsch1_harq != NULL) {
@@ -2363,6 +2372,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
         dlsch1_harq->dl_power_off = 1;
         dlsch1_harq->mimo_mode = TM8; //this DCI can only be used in TM8
         dlsch1_harq->Nlayers = 1;
+	dlsch1_harq->nscid = nscid;
       }
 
       break;

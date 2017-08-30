@@ -166,6 +166,8 @@ typedef struct {
   uint8_t first_layer;
    /// codeword this transport block is mapped to
   uint8_t codeword;
+  /// nscid
+  uint8_t nscid;
 } LTE_DL_eNB_HARQ_t;
 
 typedef struct {

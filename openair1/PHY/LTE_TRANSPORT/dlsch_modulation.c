@@ -590,7 +590,8 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
                        uint8_t mprime,
                        uint8_t Ns,
                        int *P1_SHIFT,
-                       int *P2_SHIFT)
+                       int *P2_SHIFT,
+		       uint8_t nscid)
 {
 
   LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->frame_parms;
@@ -1585,7 +1586,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
         if (is_not_UEspecRS(lprime,re,frame_parms->nushift,frame_parms->Ncp,8,Ns)) {
 
 	  //LOG_D(PHY,"TM8 tti_offset %d, jj %d, jj2 %d, x0 %p, x1 %p\n",tti_offset,*jj,*jj2,x0,x1);
-   
+	  /*
           switch (mod_order0) {
           case 2:  //QPSK
 
@@ -1726,12 +1727,13 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
             break;
 
           }
+	  */
         }
         else {
           for (p=7; p<9; p++) {
 	    if (p==first_layer0 || p==first_layer1) {
 	      if (frame_parms->Ncp==0) { //normal CP
-		ind = 3*lprime*dlsch0_harq->nb_rb+3*rb+mprime2;
+		ind = 3*lprime*frame_parms->N_RB_DL+3*rb+mprime2;
 		ind_dword = ind>>4 ;
 		ind_qpsk_symb = ind&0xf ;
 		
@@ -1756,7 +1758,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
 	      qpsk_p = (w==1) ? qpsk : nqpsk;
 	      
 	      /* pointer to the frequency domain Tx signal */
-	      txdataF[p][tti_offset] = qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[0][Ns][lprime][ind_dword]>>(2*ind_qpsk_symb))&3] ;
+	      txdataF[p][tti_offset] = qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3] ;
 	    }
           }
 	  mprime2++ ;
@@ -2160,7 +2162,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
   uint8_t mprime=0,Ns;
   int8_t  lprime=-1;
   int aa=0;
-
+  uint8_t nscid=0;
 
 #ifdef DEBUG_DLSCH_MODULATION
   uint8_t Nl0=0;  //= dlsch0_harq->Nl;
@@ -2185,6 +2187,8 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
     Nl1 = dlsch1_harq->Nl;
 #endif
 
+    nscid = dlsch0_harq->nscid;
+
   }else if ((dlsch0 != NULL) && (dlsch1 == NULL)){
 
     harq_pid = dlsch0->current_harq_pid;
@@ -2201,6 +2205,8 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
 #ifdef DEBUG_DLSCH_MODULATION
     Nl1 = 0;
 #endif
+
+    nscid = dlsch0_harq->nscid;
 
   }else if ((dlsch0 == NULL) && (dlsch1 != NULL)){
 
@@ -2219,6 +2225,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
     Nl1 = 0;
 #endif
 
+    nscid = dlsch1_harq->nscid;
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_MODULATION, VCD_FUNCTION_IN);
@@ -2575,7 +2582,8 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
                          mprime,
                          Ns,
                          P1_SHIFT,
-                         P2_SHIFT);
+                         P2_SHIFT,
+			 nscid);
 
           if ((mimo_mode == TM7) && (lprime>=0))
             mprime +=3+frame_parms->Ncp;

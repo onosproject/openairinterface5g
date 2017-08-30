@@ -81,7 +81,7 @@ void lte_gold(LTE_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_table[20][2][14]
   }
 }
 
-void lte_gold_ue_spec(uint32_t lte_gold_uespec_table[2][20][2][21],uint16_t Nid_cell, uint16_t *n_idDMRS)
+void lte_gold_ue_spec(uint32_t lte_gold_uespec_table[2][20][2][100],uint16_t Nid_cell, uint16_t *n_idDMRS)
 {
 
   unsigned char ns,l;
@@ -117,7 +117,7 @@ void lte_gold_ue_spec(uint32_t lte_gold_uespec_table[2][20][2][21],uint16_t Nid_
           //  printf("x1 : %x, x2 : %x\n",x1,x2);
         }
 
-        for (n=0; n<14; n++) {
+        for (n=0; n<100; n++) {
           x1 = (x1>>1) ^ (x1>>4);
           x1 = x1 ^ (x1<<31) ^ (x1<<28);
           x2 = (x2>>1) ^ (x2>>2) ^ (x2>>3) ^ (x2>>4);
@@ -131,7 +131,7 @@ void lte_gold_ue_spec(uint32_t lte_gold_uespec_table[2][20][2][21],uint16_t Nid_
   }
 }
 
-void lte_gold_ue_spec_port5(uint32_t lte_gold_uespec_port5_table[20][38],uint16_t Nid_cell, uint16_t n_rnti)
+void lte_gold_ue_spec_port5(uint32_t lte_gold_uespec_port5_table[20][75],uint16_t Nid_cell, uint16_t n_rnti)
 {
 
   unsigned char ns;
@@ -157,7 +157,7 @@ void lte_gold_ue_spec_port5(uint32_t lte_gold_uespec_port5_table[20][38],uint16_
       //printf("x1 : %x, x2 : %x\n",x1,x2);
     }
 
-    for (n=0; n<38; n++) {
+    for (n=0; n<75; n++) {
       x1 = (x1>>1) ^ (x1>>4);
       x1 = x1 ^ (x1<<31) ^ (x1<<28);
       x2 = (x2>>1) ^ (x2>>2) ^ (x2>>3) ^ (x2>>4);
