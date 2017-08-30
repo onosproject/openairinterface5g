@@ -22,8 +22,8 @@
 //#include "defs.h"
 #include "SCHED/defs_NB_IoT.h"
 //#include "PHY/extern.h"
-#include "PHY/extern_NB_IoT.h"
-//#include "RRC/LITE/proto_NB_IoT.h"
+#include "PHY/extern_NB_IoT.h"   	// PHY/defs_NB_IoT.h is called here , log.h & LTE_TRANSPORT/defs_NB_IoT.h are included through PHY/defs_NB_IoT.h
+#include "RRC/LITE/proto_NB_IoT.h"	// for functions: from_earfcn_NB_IoT, get_uldl_offset_NB_IoT
 //#include "SIMULATION/TOOLS/defs.h"
 //#include "RadioResourceConfigCommonSIB.h"
 //#include "RadioResourceConfigDedicated.h"
@@ -31,15 +31,16 @@
 //#include "LAYER2/MAC/extern.h"
 //#include "MBSFN-SubframeConfigList.h"
 //#include "UTIL/LOG/vcd_signal_dumper.h"
-#define DEBUG_PHY
+//#define DEBUG_PHY
 #include "assertions.h"
-#include <math.h>
+//#include <math.h>
 
 //NB-IoT
-#include "defs_NB_IoT.h"
-#include "RadioResourceConfigCommonSIB-NB-r13.h"
-#include "RadioResourceConfigDedicated-NB-r13.h"
-#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
+#include "PHY/INIT/defs_NB_IoT.h"   // nfapi_interface.h & IF_Module_NB_IoT.h are included here
+//#include "RadioResourceConfigCommonSIB-NB-r13.h"
+//#include "RadioResourceConfigDedicated-NB-r13.h"
+//#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
+//#include "openair2/RRC/LITE/proto_NB_IoT.h"
 
 //extern uint16_t prach_root_sequence_map0_3[838];
 //extern uint16_t prach_root_sequence_map4[138];
@@ -67,8 +68,7 @@ void phy_config_mib_eNB_NB_IoT(int  			Mod_id,
 
   NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms_NB_IoT;
 
-   LOG_I(PHY,"Configuring MIB-NB for instance %d, CCid %d : (band %d,Nid_cell %d,p %d,EARFCN %u)\n",
-  	  	  Mod_id, CC_id, eutra_band, Nid_cell, p_eNB,EARFCN);
+   LOG_I(PHY,"Configuring MIB-NB for instance %d, CCid %d : (band %d,Nid_cell %d,p %d,EARFCN %u)\n",Mod_id, CC_id, eutra_band, Nid_cell, p_eNB,EARFCN);
 
 //  fp->N_RB_DL
 //  fp->N_RB_UL						also this two values need to be known when we are dealing with in-band and guard-band operating mode
@@ -189,12 +189,12 @@ void phy_config_mib_eNB_NB_IoT(int  			Mod_id,
 //
 //}
 
-void phy_config_sib2_eNB_NB_IoT(uint8_t Mod_id,
-                         		int CC_id,
-                         		nfapi_config_NB_IoT_t *config,
-						 		nfapi_rf_config_t *rf_config,
-						 		nfapi_uplink_reference_signal_config_t* ul_nrs_config,
-						 		extra_phyConfig_t* extra_phy_parms)
+void phy_config_sib2_eNB_NB_IoT(uint8_t 								  Mod_id,
+                         		int 									  CC_id,
+                         		nfapi_config_NB_IoT_t 					  *config,
+						 		nfapi_rf_config_t 						  *rf_config,
+						 		nfapi_uplink_reference_signal_config_t	  *ul_nrs_config,
+						 		extra_phyConfig_t						  *extra_phy_parms)
 {
 	NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms;
 	LOG_D(PHY,"[eNB%d] CCid %d: Applying config_NB_IoT from sib2_NB\n",Mod_id,CC_id);
@@ -349,37 +349,36 @@ void phy_config_sib2_eNB_NB_IoT(uint8_t Mod_id,
 
 
 
-void phy_config_dedicated_eNB_NB_IoT(uint8_t Mod_id,
-                              		 int CC_id,
-                             		 uint16_t rnti,
-							 		 extra_phyConfig_t *extra_parms)
+void phy_config_dedicated_eNB_NB_IoT(uint8_t 			Mod_id,
+                              		 int 				CC_id,
+                             		 uint16_t 			rnti,
+							 		 extra_phyConfig_t  *extra_parms)
 {
-	  PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id];
-	  NB_IoT_eNB_NPDCCH_t *npdcch;
-	  uint8_t UE_id = find_ue_NB_IoT(rnti,eNB);
+	PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id];
+	NB_IoT_eNB_NPDCCH_t *npdcch;
+	uint8_t UE_id = find_ue_NB_IoT(rnti,eNB);
 	
-	  if (UE_id == -1) {
+	if (UE_id == -1) {
+
 		LOG_E( PHY, "[eNB %"PRIu8"] find_ue() returns -1\n", Mod_id);
 		return;
-	  }
+	}
 	
-	  //configure UE specific parameters for NPDCCH Search Space
-	  //
+	//configure UE specific parameters for NPDCCH Search Space
 
-	  if (eNB->npdcch[UE_id]) {
+	if (eNB->npdcch[UE_id]) {
 		npdcch = eNB->npdcch[UE_id];
 		npdcch->rnti = rnti;
 		npdcch->npdcch_NumRepetitions = extra_parms->npdcch_NumRepetitions; //Rmax maybe is the only one needed
-//		npdcch->npdcch_Offset_USS = extra_parms->npdcch_Offset_USS;
-//		npdcch->npdcch_StartSF_USS = extra_parms->npdcch_StartSF_USS;
+		//npdcch->npdcch_Offset_USS = extra_parms->npdcch_Offset_USS;
+		//npdcch->npdcch_StartSF_USS = extra_parms->npdcch_StartSF_USS;
 
-		LOG_I(PHY,"phy_config_dedicated_eNB_NB_IoT: npdcch_NumRepetitions = %d\n",
-				npdcch->npdcch_NumRepetitions);
+		LOG_I(PHY,"phy_config_dedicated_eNB_NB_IoT: npdcch_NumRepetitions = %d\n",npdcch->npdcch_NumRepetitions);
 	
-	  } else {
+	} else {
 		LOG_E(PHY,"[eNB %d] Received NULL radioResourceConfigDedicated from eNB %d\n",Mod_id, UE_id);
 		return;
-	  }
+	}
 	
 }
 

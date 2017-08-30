@@ -11,20 +11,19 @@
 * \note
 * \warning
 */
-
+#include <string.h>
 //#include "PHY/defs.h"
-#include "PHY/defs_NB_IoT.h"
-#include "PHY/extern_NB_IoT.h"
+//#include "PHY/defs_NB_IoT.h"
+//#include "PHY/extern_NB_IoT.h"
 #include "PHY/CODING/defs_NB_IoT.h"
 //#include "PHY/CODING/extern.h"
 //#include "PHY/CODING/lte_interleaver_inline.h"
 #include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
-#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
-#include "SCHED/defs_NB_IoT.h"
+//#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
+//#include "SCHED/defs_NB_IoT.h"
 //#include "defs_nb_iot.h"
 //#include "UTIL/LOG/vcd_signal_dumper.h"
-
-//#include "PHY/LTE_TRANSPORT/defs_nb_iot.h" // newly added for NB_IoT
+#include "PHY/TOOLS/time_meas_NB_IoT.h" 
 
 unsigned char  ccodelte_table2_NB_IoT[128];
 
@@ -35,12 +34,12 @@ void ccode_encode_npdsch_NB_IoT (int32_t   numbits,
 {
 	uint32_t  	state;
 	uint8_t  	c, out, first_bit;
-	int8_t 		shiftbit=0;
+	int8_t 		shiftbit = 0;
     /* The input bit is shifted in position 8 of the state.
 	Shiftbit will take values between 1 and 8 */
-	state = 0;
-	first_bit = 2;
-	c = ((uint8_t*)&crc)[0];
+	state 		= 0;
+	first_bit   = 2;
+	c 			= ((uint8_t*)&crc)[0];
 	// Perform Tail-biting
 	// get bits from last byte of input (or crc)
 	for (shiftbit = 0 ; shiftbit <(8-first_bit) ; shiftbit++) {
@@ -74,19 +73,21 @@ int dlsch_encoding_NB_IoT(unsigned char      			*a,
 						  time_stats_t_NB_IoT 		 	*te_stats,
 						  time_stats_t_NB_IoT 		 	*i_stats)
 {
-	unsigned int crc=1;
+	unsigned int  crc = 1;
 	//unsigned char harq_pid = dlsch->current_harq_pid;  			// to check during implementation if harq_pid is required in the NB_IoT_eNB_DLSCH_t structure  in defs_NB_IoT.h
-	unsigned int A;
-	uint8_t 	 RCC;
-	A = dlsch->harq_process.TBS;  				// 680
-	dlsch->harq_process.length_e = G*Nsf;			// G*Nsf (number_of_subframes) = total number of bits to transmit 
+	unsigned int  A;
+	uint8_t 	  RCC;
+
+	A 							 = dlsch->harq_process.TBS;  				// 680
+	dlsch->harq_process.length_e = G*Nsf;									// G*Nsf (number_of_subframes) = total number of bits to transmit
+
 	int32_t numbits = A+24;
 	
 	if (dlsch->harq_process.round == 0) { 	    // This is a new packet
 
 		crc = crc24a_NB_IoT(a,A)>>8;						// CRC calculation (24 bits CRC)
 												    // CRC attachment to payload
-		a[A>>3] = ((uint8_t*)&crc)[2];
+		a[A>>3]     = ((uint8_t*)&crc)[2];
 		a[1+(A>>3)] = ((uint8_t*)&crc)[1];
 		a[2+(A>>3)] = ((uint8_t*)&crc)[0];
 		

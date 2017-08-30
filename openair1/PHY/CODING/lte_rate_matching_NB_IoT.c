@@ -12,13 +12,14 @@
 * \warning
 */
 
+/* // check if this ifdef MAIN is required for NB-IoT
 #ifdef MAIN
 #include <stdio.h>
 #include <stdlib.h>
 #endif
-
-#include "PHY/defs_NB_IoT.h"
-#include "assertions.h"
+*/
+#include "PHY/CODING/defs_NB_IoT.h"
+//#include "assertions.h"
 
 //#include "PHY/LTE_REFSIG/defs_NB_IoT.h"   // does this file is needed ?
 
@@ -26,44 +27,44 @@ static uint32_t bitrev_cc_NB_IoT[32] = {1,17,9,25,5,21,13,29,3,19,11,27,7,23,15,
 
 uint32_t sub_block_interleaving_cc_NB_IoT(uint32_t D, uint8_t *d,uint8_t *w)
 {
-  uint32_t RCC = (D>>5), ND, ND3;   // D = 50 ,  
-  uint32_t row,col,Kpi,index;
-  uint32_t index3,k;
+    uint32_t RCC = (D>>5), ND, ND3;   // D = 50 ,  
+    uint32_t row,col,Kpi,index;
+    uint32_t index3,k;
 
-  if ((D&0x1f) > 0)
-    RCC++;
+    if ((D&0x1f) > 0)
+        RCC++;
 
-  Kpi = (RCC<<5); 					// Kpi = 32
-  ND = Kpi - D;
-  ND3 = ND*3;   					// ND3 = ND*3 = 18 *3 = 54
-  k=0;
+    Kpi = (RCC<<5); 					// Kpi = 32
+    ND = Kpi - D;
+    ND3 = ND*3;   					  // ND3 = ND*3 = 18 *3 = 54
+    k=0;
 
-  for (col=0; col<32; col++) {
+    for (col=0; col<32; col++) {
 
-    index = bitrev_cc_NB_IoT[col];
-    index3 = 3*index;
+      index = bitrev_cc_NB_IoT[col];
+      index3 = 3*index;
 
-    for (row=0; row<RCC; row++) {
-      w[k]          =   d[(int32_t)index3-(int32_t)ND3];
-      w[Kpi+k]      =   d[(int32_t)index3-(int32_t)ND3+1];
-      w[(Kpi<<1)+k] =   d[(int32_t)index3-(int32_t)ND3+2];
+        for (row=0; row<RCC; row++) {
 
-      index3+=96;
-      index+=32;
-      k++;
+          w[k]          =   d[(int32_t)index3-(int32_t)ND3];
+          w[Kpi+k]      =   d[(int32_t)index3-(int32_t)ND3+1];
+          w[(Kpi<<1)+k] =   d[(int32_t)index3-(int32_t)ND3+2];
+
+          index3+=96;
+          index+=32;
+          k++;
+        }
     }
-  }
-  return(RCC);
+    return(RCC);
 }
 
 
-uint32_t lte_rate_matching_cc_NB_IoT(uint32_t RCC,      // RRC = 2
-				                             uint16_t E,        // E = 1600
-				                             uint8_t *w,	// length
-				                             uint8_t *e)	// length 1600
+uint32_t lte_rate_matching_cc_NB_IoT(uint32_t  RCC,      // RRC = 2
+				                             uint16_t  E,        // E = 1600
+				                             uint8_t   *w,	     // length
+				                             uint8_t   *e)	     // length 1600
 {
   uint32_t ind=0,k;
-
   uint16_t Kw = 3*(RCC<<5);   				  // 3*64 = 192
 
   for (k=0; k<E; k++) {

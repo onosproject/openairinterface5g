@@ -13,16 +13,17 @@
 */
 
 //#include "PHY/defs.h"
-#include "PHY/defs_NB_IoT.h"
+//#include "PHY/defs_NB_IoT.h"
 //#include "PHY/CODING/extern.h"
 //#include "PHY/CODING/lte_interleaver_inline.h"
-#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 //#include "extern_NB_IoT.h"
 //#include "PHY/extern_NB_IoT.h"
 //#include "PHY/sse_intrin.h"
-
+#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 #include "PHY/CODING/defs_NB_IoT.h"
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
+#include "PHY/impl_defs_lte_NB_IoT.h"
+#include "PHY/impl_defs_top_NB_IoT.h"
 
 //#ifdef PHY_ABSTRACTION
 //#include "SIMULATION/TOOLS/defs.h"
@@ -45,14 +46,16 @@ int allocate_npbch_REs_in_RB(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
                              uint32_t 				*re_allocated)  //  not used variable ??!!
 {
   MIMO_mode_NB_IoT_t mimo_mode = (frame_parms->mode1_flag==1)?SISO_NB_IoT:ALAMOUTI_NB_IoT;
-  uint32_t tti_offset,aa;
-  uint8_t re;
-  int16_t gain_lin_QPSK;
-  uint8_t first_re,last_re;
-  int32_t tmp_sample1,tmp_sample2;
+
+  uint32_t  tti_offset,aa;
+  uint8_t   re;
+  int16_t   gain_lin_QPSK;
+  uint8_t   first_re,last_re;
+  int32_t   tmp_sample1,tmp_sample2;
+
   gain_lin_QPSK = (int16_t)((amp*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-  first_re=0;
-  last_re=12;
+  first_re      = 0;
+  last_re       = 12;
 
   for (re=first_re; re<last_re; re++) {      		// re varies between 0 and 12 sub-carriers
 
@@ -125,19 +128,20 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
                    uint8_t 					frame_mod64,
 				   unsigned short 			NB_IoT_RB_ID)
 {
-  int i, l;
-  int id_offset;
-  uint32_t npbch_D,npbch_E;
-  uint8_t npbch_a[5];   							// 34/8 =4.25 => 4 bytes and 2 bits
-  uint8_t RCC;
-  unsigned short bandwidth_even_odd;
-  unsigned short NB_IoT_start, RB_IoT_ID;
-  uint32_t pilots;
-  uint32_t jj=0;
-  uint32_t re_allocated=0;
-  uint32_t symbol_offset;
-  uint16_t amask=0;
-  npbch_D  = 16+NPBCH_A;
+  int 			  i, l;
+  int 			  id_offset;
+  uint32_t 		  npbch_D,npbch_E;
+  uint8_t 		  npbch_a[5];   							// 34/8 =4.25 => 4 bytes and 2 bits
+  uint8_t 		  RCC;
+  unsigned short  bandwidth_even_odd;
+  unsigned short  NB_IoT_start, RB_IoT_ID;
+  uint32_t 		  pilots;
+  uint32_t 		  jj=0;
+  uint32_t 		  re_allocated=0;
+  uint32_t 		  symbol_offset;
+  uint16_t 		  amask=0;
+
+  npbch_D  = 16 + NPBCH_A;
   npbch_E  = 1600; 									
 									
 	if (frame_mod64==0) {
@@ -147,7 +151,7 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
 		
 		for (i=0; i<5; i++) 									// set input bits stream
 		{	
-			if (i !=4 )
+			if (i != 4)
 			{
 				npbch_a[5-i-1] = npbch_pdu[i];            		// ????????/*****?? in LTE 24 bits with 3 bytes, but in NB_IoT 34 bits will require 4 bytes+2 bits !! to verify
 			} else {
@@ -220,14 +224,17 @@ void npbch_scrambling(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
                       uint8_t 					*npbch_e,
                       uint32_t 					length)  // 1600
 {
-  int i;
-  uint8_t reset;
-  uint32_t x1, x2, s=0;
+  int 		i;
+  uint8_t 	reset;
+  uint32_t 	x1, x2, s=0;
+
   reset = 1;
-  x2 = frame_parms->Nid_cell;
+  x2 	= frame_parms->Nid_cell;
+
   for (i=0; i<length; i++) {
     if ((i&0x1f)==0) {
-      s = lte_gold_generic_NB_IoT(&x1, &x2, reset);
+
+      s 	= lte_gold_generic_NB_IoT(&x1, &x2, reset);
       reset = 0;
     }
     npbch_e[i] = (npbch_e[i]&1) ^ ((s>>(i&0x1f))&1);

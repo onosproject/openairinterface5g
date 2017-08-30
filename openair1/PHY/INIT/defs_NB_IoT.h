@@ -23,8 +23,9 @@
 #ifndef __INIT_DEFS_NB_IOT__H__
 #define __INIT_DEFS_NB_IOT__H__
 
-#include "PHY/defs_NB_IoT.h"
-#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
+//#include "PHY/defs_NB_IoT.h"
+#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"  
+// nfapi_interface.h is required here, it is called through IF_Module_NB_IoT.h
 
 //#include "SystemInformationBlockType2.h"
 //#include "RadioResourceConfigCommonSIB.h"

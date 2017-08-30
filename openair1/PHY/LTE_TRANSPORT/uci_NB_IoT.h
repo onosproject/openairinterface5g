@@ -19,7 +19,9 @@
  *      contact@openairinterface.org
  */
 
-#include "PHY/types_NB_IoT.h"
+#ifndef __UCI_NB_IOT__H__
+#define __UCI_NB_IOT__H__
+//#include "PHY/types_NB_IoT.h"
 
 
 
@@ -336,3 +338,4 @@ HLC_subband_cqi_mcs_CBA_20MHz;
 #define MAX_ACK_PAYLOAD 18
 #define MAX_RI_PAYLOAD 6
 */
+#endif

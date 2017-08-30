@@ -36,14 +36,14 @@
 
 //#include "defs.h"   // to delete in final code version
 
-#include "defs_NB_IoT.h"  //
+#include "PHY/CODING/defs_NB_IoT.h"  //
 /*ref 36-212 v8.6.0 , pp 8-9 */
 /* the highest degree is set by default */
-unsigned int             poly24a_NB_IoT = 0x864cfb00;   //1000 0110 0100 1100 1111 1011  D^24 + D^23 + D^18 + D^17 + D^14 + D^11 + D^10 + D^7 + D^6 + D^5 + D^4 + D^3 + D + 1
-unsigned int             poly24b_NB_IoT = 0x80006300;    // 1000 0000 0000 0000 0110 0011  D^24 + D^23 + D^6 + D^5 + D + 1
-unsigned int             poly16_NB_IoT = 0x10210000;    // 0001 0000 0010 0001            D^16 + D^12 + D^5 + 1
-unsigned int             poly12_NB_IoT = 0x80F00000;    // 1000 0000 1111                 D^12 + D^11 + D^3 + D^2 + D + 1
-unsigned int             poly8_NB_IoT = 0x9B000000;     // 1001 1011                      D^8  + D^7  + D^4 + D^3 + D + 1
+unsigned int     poly24a_NB_IoT = 0x864cfb00;   //1000 0110 0100 1100 1111 1011  D^24 + D^23 + D^18 + D^17 + D^14 + D^11 + D^10 + D^7 + D^6 + D^5 + D^4 + D^3 + D + 1
+unsigned int     poly24b_NB_IoT = 0x80006300;    // 1000 0000 0000 0000 0110 0011  D^24 + D^23 + D^6 + D^5 + D + 1
+unsigned int     poly16_NB_IoT = 0x10210000;    // 0001 0000 0010 0001            D^16 + D^12 + D^5 + 1
+unsigned int     poly12_NB_IoT = 0x80F00000;    // 1000 0000 1111                 D^12 + D^11 + D^3 + D^2 + D + 1
+unsigned int     poly8_NB_IoT = 0x9B000000;     // 1001 1011                      D^8  + D^7  + D^4 + D^3 + D + 1
 /*********************************************************
 
 For initialization && verification purposes,
@@ -52,22 +52,26 @@ For initialization && verification purposes,
 The first bit is in the MSB of each byte
 
 *********************************************************/
-unsigned int
-crcbit_NB_IoT (unsigned char * inputptr, int octetlen, unsigned int poly)
+unsigned int crcbit_NB_IoT (unsigned char * inputptr, int octetlen, unsigned int poly)
 {
-  unsigned int             i, crc = 0, c;
+  unsigned int i, crc = 0, c;
 
   while (octetlen-- > 0) {
-    c = (*inputptr++) << 24;
+      
+      c = (*inputptr++) << 24;
 
-    for (i = 8; i != 0; i--) {
-      if ((1 << 31) & (c ^ crc))
-        crc = (crc << 1) ^ poly;
-      else
-        crc <<= 1;
+      for (i = 8; i != 0; i--) {
 
-      c <<= 1;
-    }
+          if ((1 << 31) & (c ^ crc))
+
+              crc = (crc << 1) ^ poly;
+
+          else
+        
+              crc <<= 1;
+
+          c <<= 1;
+      }
   }
 
   return crc;
@@ -86,15 +90,16 @@ static unsigned char       crc8Table_NB_IoT[256];
 
 void crcTableInit_NB_IoT (void)
 {
-  unsigned char              c = 0;
+  unsigned char c = 0;
 
   do {
-    crc24aTable_NB_IoT[c] = crcbit_NB_IoT (&c, 1, poly24a_NB_IoT);
-    crc24bTable_NB_IoT[c] = crcbit_NB_IoT (&c, 1, poly24b_NB_IoT);
-    crc16Table_NB_IoT[c] = (unsigned short) (crcbit_NB_IoT (&c, 1, poly16_NB_IoT) >> 16);
-    crc12Table_NB_IoT[c] = (unsigned short) (crcbit_NB_IoT (&c, 1, poly12_NB_IoT) >> 16);
-    crc8Table_NB_IoT[c] = (unsigned char) (crcbit_NB_IoT (&c, 1, poly8_NB_IoT) >> 24);
+       crc24aTable_NB_IoT[c] = crcbit_NB_IoT (&c, 1, poly24a_NB_IoT);
+       crc24bTable_NB_IoT[c] = crcbit_NB_IoT (&c, 1, poly24b_NB_IoT);
+       crc16Table_NB_IoT[c] = (unsigned short) (crcbit_NB_IoT (&c, 1, poly16_NB_IoT) >> 16);
+       crc12Table_NB_IoT[c] = (unsigned short) (crcbit_NB_IoT (&c, 1, poly12_NB_IoT) >> 16);
+       crc8Table_NB_IoT[c] = (unsigned char) (crcbit_NB_IoT (&c, 1, poly8_NB_IoT) >> 24);
   } while (++c);
+
 }
 /*********************************************************
 
@@ -102,22 +107,24 @@ Byte by byte implementations,
 assuming initial byte is 0 padded (in MSB) if necessary
 
 *********************************************************/
-unsigned int
-crc24a_NB_IoT (unsigned char * inptr, int bitlen)
+unsigned int crc24a_NB_IoT (unsigned char * inptr, int bitlen)
 {
 
-  int             octetlen, resbit;
-  unsigned int             crc = 0;
+  int            octetlen, resbit;
+  unsigned int   crc = 0;
+  
   octetlen = bitlen / 8;        /* Change in octets */
   resbit = (bitlen % 8);
 
   while (octetlen-- > 0) {
-    //    printf("in %x => crc %x\n",crc,*inptr);
-    crc = (crc << 8) ^ crc24aTable_NB_IoT[(*inptr++) ^ (crc >> 24)];
+    
+      crc = (crc << 8) ^ crc24aTable_NB_IoT[(*inptr++) ^ (crc >> 24)];
+
   }
 
   if (resbit > 0)
-    crc = (crc << resbit) ^ crc24aTable_NB_IoT[((*inptr) >> (8 - resbit)) ^ (crc >> (32 - resbit))];
+
+      crc = (crc << resbit) ^ crc24aTable_NB_IoT[((*inptr) >> (8 - resbit)) ^ (crc >> (32 - resbit))];
 
   return crc;
 }
@@ -126,41 +133,47 @@ unsigned int crc24b_NB_IoT (unsigned char * inptr, int bitlen)
 {
 
   int             octetlen, resbit;
-  unsigned int             crc = 0;
+  unsigned int    crc = 0;
+  
   octetlen = bitlen / 8;        /* Change in octets */
   resbit = (bitlen % 8);
 
   while (octetlen-- > 0) {
-    crc = (crc << 8) ^ crc24bTable_NB_IoT[(*inptr++) ^ (crc >> 24)];
+
+      crc = (crc << 8) ^ crc24bTable_NB_IoT[(*inptr++) ^ (crc >> 24)];
+
   }
 
   if (resbit > 0)
-    crc = (crc << resbit) ^ crc24bTable_NB_IoT[((*inptr) >> (8 - resbit)) ^ (crc >> (32 - resbit))];
+
+      crc = (crc << resbit) ^ crc24bTable_NB_IoT[((*inptr) >> (8 - resbit)) ^ (crc >> (32 - resbit))];
 
   return crc;
 }
 
-unsigned int
-crc16_NB_IoT (unsigned char * inptr, int bitlen)
+unsigned int crc16_NB_IoT (unsigned char * inptr, int bitlen)
 {
   int             octetlen, resbit;
-  unsigned int             crc = 0;
+  unsigned int    crc = 0;
+  
   octetlen = bitlen / 8;        /* Change in octets */
   resbit = (bitlen % 8);
 
   while (octetlen-- > 0) {
 
     crc = (crc << 8) ^ (crc16Table_NB_IoT[(*inptr++) ^ (crc >> 24)] << 16);
+
   }
 
   if (resbit > 0)
+
     crc = (crc << resbit) ^ (crc16Table_NB_IoT[((*inptr) >> (8 - resbit)) ^ (crc >> (32 - resbit))] << 16);
 
   return crc;
 }
 
 
-#ifdef DEBUG_CRC
+//#ifdef DEBUG_CRC
 /*******************************************************************/
 /**
    Test code
@@ -177,5 +190,5 @@ crc16_NB_IoT (unsigned char * inptr, int bitlen)
 //   printf("%x\n", crcbit(test, sizeof(test) - 1, poly8));
 //   printf("%x\n", crc8(test, (sizeof(test) - 1)*8));
 // }
-#endif
+//#endif
 

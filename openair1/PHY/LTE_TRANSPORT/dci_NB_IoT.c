@@ -35,8 +35,10 @@
 #include <string.h>
 #endif
 //#include "PHY/defs.h"
-#include "PHY/defs_NB_IoT.h"
-#include "PHY/LTE_REFSIG/defs_NB_IoT.h"
+//#include "PHY/LTE_TRANSPORT/dci_NB_IoT.h"
+//#include "PHY/CODING/defs_NB_IoT.h"
+#include "PHY/defs_NB_IoT.h"  // /LTE_TRANSPORT/defs_NB_IoT.h
+//#include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 //#include "PHY/extern.h"
 //////////#include "PHY/extern_NB_IoT.h"
 //#include "SCHED/defs.h"
@@ -57,17 +59,17 @@ static uint8_t w[2][3*3*(MAX_DCI_SIZE_BITS_NB_IoT+16)];
 
 
 
-void dci_encoding_NB_IoT(uint8_t   *a[2],				// Array of two DCI pdus, even if one DCI is to transmit , the number of DCI is indicated in dci_number
-						uint8_t    A,					// Length of array a (in number of bytes)(es 4 bytes = 32 bits) is a parameter fixed
-						uint16_t   E,					// E should equals to G (number of available bits in one RB)
-						uint8_t    *e[2],				// *e should be e[2][G]
-						uint16_t   rnti[2],			// RNTI for UE specific or common search space
-						uint8_t    dci_number,			// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
-						uint8_t    agr_level)			// Aggregation level
+void dci_encoding_NB_IoT(uint8_t    *a[2],				// Array of two DCI pdus, even if one DCI is to transmit , the number of DCI is indicated in dci_number
+						 uint8_t    A,					// Length of array a (in number of bytes)(es 4 bytes = 32 bits) is a parameter fixed
+						 uint16_t   E,					// E should equals to G (number of available bits in one RB)
+						 uint8_t    *e[2],				// *e should be e[2][G]
+						 uint16_t   rnti[2],			// RNTI for UE specific or common search space
+						 uint8_t    dci_number,			// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
+						 uint8_t    agr_level)			// Aggregation level
 {
-	uint8_t D = (A + 16);
+	uint8_t  D = (A + 16);
 	uint32_t RCC;
-	uint8_t occupation_size=1;
+	uint8_t  occupation_size=1;
 	// encode dci
 	if(dci_number == 1)
 	{
@@ -109,10 +111,10 @@ void npdcch_scrambling_NB_IoT(NB_IoT_DL_FRAME_PARMS    *frame_parms,
 							  uint8_t 				   dci_number,		// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
 							  uint8_t 				   agr_level)		// Aggregation level
 {
-	int i,k=0;
-	uint32_t x1, x2, s=0;
-	uint8_t reset;
-	uint8_t occupation_size=1;
+	int 	  i,k=0;
+	uint32_t  x1, x2, s=0;
+	uint8_t   reset;
+	uint8_t   occupation_size=1;
 
 	reset = 1;
 
@@ -178,11 +180,12 @@ int dci_allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
 								  uint8_t 					agr_level)
 {
 	MIMO_mode_NB_IoT_t mimo_mode = (frame_parms->mode1_flag==1)?SISO_NB_IoT:ALAMOUTI_NB_IoT;
-	uint32_t tti_offset,aa;
-	uint8_t re;
-	int16_t gain_lin_QPSK;
-	uint8_t first_re,last_re;
-	int32_t tmp_sample1,tmp_sample2,tmp_sample3,tmp_sample4;
+
+	uint32_t  tti_offset,aa;
+	uint8_t   re;
+	int16_t   gain_lin_QPSK;
+	uint8_t   first_re,last_re;
+	int32_t   tmp_sample1,tmp_sample2,tmp_sample3,tmp_sample4;
 
 	gain_lin_QPSK = (int16_t)((amp*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
 	first_re=0;
@@ -413,12 +416,13 @@ int dci_modulation_NB_IoT(int32_t 					**txdataF,
 						  uint8_t 					dci_number,				// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
 						  uint8_t 					agr_level)				// Aggregation level
 {
-    uint32_t jj=0;
-	uint32_t re_allocated,symbol_offset;
-    uint16_t l;
-    uint8_t id_offset,pilots=0;
-	unsigned short bandwidth_even_odd;
-    unsigned short NB_IoT_start, RB_IoT_ID;
+    uint32_t 		jj=0;
+	uint32_t 		re_allocated,symbol_offset;
+    uint16_t 		l;
+    uint8_t 		id_offset,pilots=0;
+	unsigned short  bandwidth_even_odd;
+    unsigned short  NB_IoT_start, RB_IoT_ID;
+
     re_allocated=0;
 	id_offset=0;
 	// testing if the total number of RBs is even or odd
@@ -475,10 +479,10 @@ uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t		*npdcch,
 {
 
 
-  int i, G;
+  int      i, G;
   //temporary variable
   uint16_t rnti[2];
-  uint8_t L = 0;
+  uint8_t  L = 0;
 
 
   /* PARAMETERS may not needed

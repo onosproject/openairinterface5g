@@ -21,20 +21,20 @@
 //or #include "PHY/defs_nb_iot.h"
 #include "PHY/LTE_REFSIG/primary_synch_NB_IoT.h"
 
-int generate_npss_NB_IoT(int32_t **txdataF,
-						short amp,
-						NB_IoT_DL_FRAME_PARMS *frame_parms,
-						unsigned short symbol_offset,				// symbol_offset should equal to 3 for NB-IoT 
-						unsigned short slot_offset,
-						unsigned short RB_IoT_ID)					// new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
+int generate_npss_NB_IoT(int32_t 				**txdataF,
+						short 					amp,
+						NB_IoT_DL_FRAME_PARMS   *frame_parms,
+						unsigned short 			symbol_offset,				// symbol_offset should equal to 3 for NB-IoT 
+						unsigned short 			slot_offset,
+						unsigned short 			RB_IoT_ID)					// new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
 {
-   unsigned short c,aa,a,s;
-   unsigned short slot_id;
-   short *primary_sync;
-   unsigned short NB_IoT_start; 			// Index of the first RE in the RB dedicated for NB-IoT
-   unsigned short bandwidth_even_odd;
+   unsigned short  c,aa,a,s;
+   unsigned short  slot_id;
+   short 		   *primary_sync;
+   unsigned short  NB_IoT_start; 			// Index of the first RE in the RB dedicated for NB-IoT
+   unsigned short  bandwidth_even_odd;
 
-   slot_id = slot_offset;  							// The id(0..19) of the slot including the NPSS signal // For NB-IoT, slod_id should be 10 (SF5)
+   slot_id 		= slot_offset;  					// The id(0..19) of the slot including the NPSS signal // For NB-IoT, slod_id should be 10 (SF5)
    primary_sync = primary_synch_NB_IoT;     		// primary_synch_NB_IoT[264] of primary_synch_NB_IoT.h
 
    // Signal amplitude

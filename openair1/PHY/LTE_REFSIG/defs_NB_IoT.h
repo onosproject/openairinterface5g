@@ -27,7 +27,9 @@
 @param lte_gold_table pointer to table where sequences are stored
 @param Nid_cell Cell Id for NB_IoT (to compute sequences for local and adjacent cells) */
 
-void lte_gold_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_table_NB_IoT[20][2][14],uint16_t Nid_cell);
+void lte_gold_NB_IoT(NB_IoT_DL_FRAME_PARMS  *frame_parms,
+					 uint32_t 				lte_gold_table_NB_IoT[20][2][14],
+					 uint16_t 				Nid_cell);
 
 /*! \brief This function generates the Narrowband reference signal (NRS) sequence (36-211, Sec 6.10.1.1)
 @param phy_vars_eNB Pointer to eNB variables
@@ -38,15 +40,17 @@ void lte_gold_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_table_
 @param p antenna index
 @param RB_IoT_ID the ID of the RB dedicated for NB_IoT
 */
-int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
-                     		int32_t *output,
-                     		short amp,
-                     		unsigned char Ns,
-                     		unsigned char l,
-                     		unsigned char p,
-					 		unsigned short RB_IoT_ID); 
+int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB_NB_IoT  *phy_vars_eNB,
+                     		int32_t 			 *output,
+                     		short 				 amp,
+                     		unsigned char 		 Ns,
+                     		unsigned char 		 l,
+                     		unsigned char 		 p,
+					 		unsigned short 		 RB_IoT_ID); 
 
 
-unsigned int lte_gold_generic_NB_IoT(unsigned int *x1, unsigned int *x2, unsigned char reset);
+unsigned int lte_gold_generic_NB_IoT(unsigned int  *x1,
+									 unsigned int  *x2,
+									 unsigned char reset);
 					 
 #endif

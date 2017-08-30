@@ -30,20 +30,22 @@
  * \warning
  */
 //#include "PHY/defs.h"
-#include "PHY/extern_NB_IoT.h"
-#include "PHY/LTE_TRANSPORT/extern_NB_IoT.h"
-#include "SCHED/defs_NB_IoT.h"
+//#include "PHY/extern_NB_IoT.h"
+//#include "PHY/LTE_TRANSPORT/extern_NB_IoT.h"
+//#include "SCHED/defs_NB_IoT.h"
+/*
 #ifdef DEBUG_DCI_TOOLS
 #include "PHY/vars_NB_IoT.h"
 #endif
-#include "assertions.h"
+*/
+//#include "assertions.h"
 //#include "dlsch_tbs_full.h"
 #include "PHY/LTE_TRANSPORT/dlsch_tbs_full_NB_IoT.h"
 
 //#define DEBUG_HARQ
 
-#include "LAYER2/MAC/extern_NB_IoT.h"
-#include "LAYER2/MAC/defs_NB_IoT.h"
+//#include "LAYER2/MAC/extern_NB_IoT.h"
+//#include "LAYER2/MAC/defs_NB_IoT.h"
 #include "PHY/defs_NB_IoT.h"
 
 //#define DEBUG_DCI
@@ -53,11 +55,11 @@ void add_dci_NB_IoT(DCI_PDU_NB_IoT *DCI_pdu,void *pdu,rnti_t rnti,unsigned char 
 	//put the pdu
   memcpy(&DCI_pdu->dci_alloc[DCI_pdu->Num_dci].dci_pdu[0],pdu,dci_size_bytes);
   //configure the dci alloc
-  DCI_pdu->dci_alloc[DCI_pdu->Num_dci].dci_length = dci_size_bits;
-  DCI_pdu->dci_alloc[DCI_pdu->Num_dci].L          = aggregation;
-  DCI_pdu->dci_alloc[DCI_pdu->Num_dci].rnti       = rnti;
-  DCI_pdu->dci_alloc[DCI_pdu->Num_dci].format     = dci_fmt;
-  DCI_pdu->npdcch_start_symbol = npdcch_start_symbol;
+  DCI_pdu->dci_alloc[DCI_pdu->Num_dci].dci_length      = dci_size_bits;
+  DCI_pdu->dci_alloc[DCI_pdu->Num_dci].L               = aggregation;
+  DCI_pdu->dci_alloc[DCI_pdu->Num_dci].rnti            = rnti;
+  DCI_pdu->dci_alloc[DCI_pdu->Num_dci].format          = dci_fmt;
+  DCI_pdu->npdcch_start_symbol                         = npdcch_start_symbol;
 
   DCI_pdu->Num_dci++;
 
@@ -65,14 +67,14 @@ void add_dci_NB_IoT(DCI_PDU_NB_IoT *DCI_pdu,void *pdu,rnti_t rnti,unsigned char 
 }
 
 
-int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
-                                              eNB_rxtx_proc_NB_IoT_t *proc,
-                                              DCI_CONTENT *DCI_Content,
-                                              uint16_t rnti,
-                                              DCI_format_NB_IoT_t dci_format,
-                                              uint8_t UE_id,
-                                              uint8_t aggregation,
-									                            uint8_t npdcch_start_symbol)
+int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT        *eNB,
+                                              eNB_rxtx_proc_NB_IoT_t     *proc,
+                                              DCI_CONTENT                *DCI_Content,
+                                              uint16_t                   rnti,
+                                              DCI_format_NB_IoT_t        dci_format,
+                                              uint8_t                    UE_id,
+                                              uint8_t                    aggregation,
+									                            uint8_t                    npdcch_start_symbol)
 {
 
   void *ULSCH_DCI_NB_IoT = NULL;
@@ -141,20 +143,21 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 //map the Isf (DCI param) to the number of subframes (Nsf)
 int resource_to_subframe[8] = {1,2,3,4,5,6,8,10}; 
 
-int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
-                                              int frame,
-                                              uint8_t subframe,
-                                              DCI_CONTENT *DCI_Content,
-                                              uint16_t rnti,
-                                              DCI_format_NB_IoT_t dci_format,
-                                              NB_IoT_eNB_NDLSCH_t *ndlsch,
-                                              NB_IoT_DL_FRAME_PARMS *frame_parms,
-                                              uint8_t aggregation,
-									                            uint8_t npdcch_start_symbol)
+int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
+                                              int                      frame,
+                                              uint8_t                  subframe,
+                                              DCI_CONTENT              *DCI_Content,
+                                              uint16_t                 rnti,
+                                              DCI_format_NB_IoT_t      dci_format,
+                                              NB_IoT_eNB_NDLSCH_t      *ndlsch,
+                                              NB_IoT_DL_FRAME_PARMS    *frame_parms,
+                                              uint8_t                  aggregation,
+									                            uint8_t                  npdcch_start_symbol)
 {
 
-  NB_IoT_DL_eNB_HARQ_t* ndlsch_harq = ndlsch->harq_process;
-  void *DLSCH_DCI_NB_IoT = NULL;
+  NB_IoT_DL_eNB_HARQ_t  *ndlsch_harq      = ndlsch->harq_process;
+  void                  *DLSCH_DCI_NB_IoT = NULL;
+
   eNB->DCI_pdu = (DCI_PDU_NB_IoT*) malloc(sizeof(DCI_PDU_NB_IoT));
 
 
@@ -232,15 +235,15 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     ndlsch->active = 0; //will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
-    ndlsch_harq->scheduling_delay = Sched_delay;
-    ndlsch_harq->resource_assignment = resource_to_subframe[ResAssign];  //from Isf of DCI to the number of subframe
-    ndlsch_harq->repetition_number = RepNum;
+    ndlsch_harq->scheduling_delay         = Sched_delay;
+    ndlsch_harq->resource_assignment      = resource_to_subframe[ResAssign];  //from Isf of DCI to the number of subframe
+    ndlsch_harq->repetition_number        = RepNum;
     ndlsch_harq->dci_subframe_repetitions = DCIRep;
-    ndlsch_harq->modulation = 2; //QPSK
+    ndlsch_harq->modulation               = 2; //QPSK
     if(ndlsch_harq->round == 0) //this should be set from initialization (init-lte)
-    	ndlsch_harq->status = ACTIVE;
-    
-    ndlsch_harq->mcs = mcs;
+
+    	ndlsch_harq->status = ACTIVE_NB_IoT;
+      ndlsch_harq->mcs    = mcs;
 
     /*
      * TS 36.213 ch 16.4.1.5
@@ -248,8 +251,8 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
      * ISF = ResAssign
      */
 
-    ndlsch_harq->TBS = TBStable_NB_IoT[mcs][ResAssign];
-    ndlsch_harq->subframe = subframe;
+      ndlsch_harq->TBS      = TBStable_NB_IoT[mcs][ResAssign];
+      ndlsch_harq->subframe = subframe;
 
     //ndlsch_harq->B; we don-t have now my is given when we receive the dlsch data
     //ndlsch->error_treshold
@@ -298,21 +301,22 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     /*Now configure the ndlsch structure*/
 
     ndlsch->subframe_tx[subframe] = 1; // check if it's OK
-    ndlsch->rnti = rnti; //we store the RNTI (e.g. for RNTI will be used later)
-    ndlsch->active = 0;//will be activated by the corresponding NDSLCH pdu
+    ndlsch->rnti                  = rnti; //we store the RNTI (e.g. for RNTI will be used later)
+    ndlsch->active                = 0;//will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
-        ndlsch_harq->scheduling_delay = Sched_delay;
-        ndlsch_harq->resource_assignment = resource_to_subframe[ResAssign]; //from Isf of DCI to the number of subframe
-        ndlsch_harq->repetition_number = RepNum;
+        ndlsch_harq->scheduling_delay         = Sched_delay;
+        ndlsch_harq->resource_assignment      = resource_to_subframe[ResAssign]; //from Isf of DCI to the number of subframe
+        ndlsch_harq->repetition_number        = RepNum;
         ndlsch_harq->dci_subframe_repetitions = DCIRep;
-        ndlsch_harq->modulation = 2; //QPSK
+        ndlsch_harq->modulation               = 2; //QPSK
         if(ndlsch_harq->round == 0){ //this should be set from initialization (init-lte)
-        	ndlsch_harq->status = ACTIVE;
-        	ndlsch_harq->mcs = mcs;
-        	ndlsch_harq->TBS = TBStable_NB_IoT[mcs][ResAssign]; // this table should be rewritten for nb-iot
+
+        	ndlsch_harq->status  = ACTIVE_NB_IoT;
+        	ndlsch_harq->mcs     = mcs;
+        	ndlsch_harq->TBS     = TBStable_NB_IoT[mcs][ResAssign]; // this table should be rewritten for nb-iot
         }
-        ndlsch_harq->frame = frame;
+        ndlsch_harq->frame    = frame;
         ndlsch_harq->subframe = subframe;
 
 

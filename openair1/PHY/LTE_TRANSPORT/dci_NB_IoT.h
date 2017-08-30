@@ -35,7 +35,7 @@
 //#ifndef USER_MODE
 //#include "PHY/types.h"
 //#else
-////////////////////////////////////////#include <stdint.h>
+#include <stdint.h>
 //#endif
 
 typedef enum 
