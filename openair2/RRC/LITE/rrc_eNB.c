@@ -1746,15 +1746,51 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm6.bits_unused=4;
       }
       else if (rrc_inst->configuration.ue_TransmissionMode[0]==AntennaInfoDedicated__transmissionMode_tm8_v920) {
+	// delete previously allocated release 8 configs
+	free((*physicalConfigDedicated)->antennaInfo);
+	(*physicalConfigDedicated)->antennaInfo=NULL;
+	free((*physicalConfigDedicated)->cqi_ReportConfig);
+	(*physicalConfigDedicated)->cqi_ReportConfig=NULL;
+	// Rel 9 config (does not seem to work)
+	/*
 	(*physicalConfigDedicated)->ext1 = CALLOC(1,sizeof((*physicalConfigDedicated)->ext1));
 	(*physicalConfigDedicated)->ext1->antennaInfo_v920 = CALLOC(1, sizeof((*physicalConfigDedicated)->ext1->antennaInfo_v920));
 	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920 = NULL;
-	  /*CALLOC(1, sizeof((*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920));
+	*/ 
+	/*
+        //optional: use codebook subset restriction  
+	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920 = CALLOC(1, sizeof((*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920));
 	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920->present = AntennaInfoDedicated_v920__codebookSubsetRestriction_v920_PR_n2TxAntenna_tm8_r9;
 	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920->choice.n2TxAntenna_tm8_r9.buf= MALLOC(1);
 	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920->choice.n2TxAntenna_tm8_r9.buf[0] = 0xfc;
 	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920->choice.n2TxAntenna_tm8_r9.size=1;
-	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920->choice.n2TxAntenna_tm8_r9.bits_unused=2;*/
+	(*physicalConfigDedicated)->ext1->antennaInfo_v920->codebookSubsetRestriction_v920->choice.n2TxAntenna_tm8_r9.bits_unused=2;
+	*/
+	// Rel 10 config
+	(*physicalConfigDedicated)->ext2 = CALLOC(1,sizeof(struct PhysicalConfigDedicated__ext2));
+	(*physicalConfigDedicated)->ext2->antennaInfo_r10 = CALLOC(1,sizeof(struct PhysicalConfigDedicated__ext2__antennaInfo_r10));
+	(*physicalConfigDedicated)->ext2->antennaInfo_r10->present = PhysicalConfigDedicated__ext2__antennaInfo_r10_PR_explicitValue_r10;
+	(*physicalConfigDedicated)->ext2->antennaInfo_r10->choice.explicitValue_r10.transmissionMode_r10 = AntennaInfoDedicated_r10__transmissionMode_r10_tm8_v920;
+	(*physicalConfigDedicated)->ext2->antennaInfo_r10->choice.explicitValue_r10.ue_TransmitAntennaSelection.present=AntennaInfoDedicated_r10__ue_TransmitAntennaSelection_PR_release;
+	// TM8 requires at least this minimal CQI config to be present
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10 = CALLOC(1,sizeof(struct CQI_ReportConfig_r10));
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->nomPDSCH_RS_EPRE_Offset = 0;
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->cqi_ReportPeriodic_r10 = NULL;
+	/*
+	// this is the CQI config that amarisoft uses. the corresponding procedures are not yet supported in OAI
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->cqi_ReportPeriodic_r10 = CALLOC(1,sizeof(struct CQI_ReportPeriodic_r10));
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->cqi_ReportPeriodic_r10->present = CQI_ReportPeriodic_r10_PR_setup;
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->cqi_ReportPeriodic_r10->choice.setup.cqi_PUCCH_ResourceIndex_r10 = 0;
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->cqi_ReportPeriodic_r10->choice.setup.cqi_pmi_ConfigIndex = 39;
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->cqi_ReportPeriodic_r10->choice.setup.simultaneousAckNackAndCQI = true;
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->cqi_ReportPeriodic_r10->choice.setup.cqi_FormatIndicatorPeriodic_r10.present=CQI_ReportPeriodic_r10__setup__cqi_FormatIndicatorPeriodic_r10_PR_widebandCQI_r10;
+	*/
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->cqi_ReportAperiodic_r10 = CALLOC(1,sizeof(struct CQI_ReportAperiodic_r10));
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->cqi_ReportAperiodic_r10->present = CQI_ReportAperiodic_r10_PR_setup;
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->cqi_ReportAperiodic_r10->choice.setup.cqi_ReportModeAperiodic_r10 = CQI_ReportModeAperiodic_rm30;
+
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->csi_SubframePatternConfig_r10 = NULL;
+	(*physicalConfigDedicated)->ext2->cqi_ReportConfig_r10->pmi_RI_Report_r9 = NULL;
       }
     }
     else {
