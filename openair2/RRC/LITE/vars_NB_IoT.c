@@ -48,7 +48,7 @@ int S_rrc= RRC2RRM_FIFO;
 #endif //NO_RRM
 
 #else
-#include "LAYER2/MAC/extern.h"
+//#include "LAYER2/MAC/extern.h"
 #ifndef NO_RRM
 sock_rrm_t S_rrc;
 #endif
@@ -63,7 +63,7 @@ unsigned short Header_read_idx,Data_read_idx,Header_size;
 unsigned short Data_to_read;
 #endif //NO_RRM
 
-#include "LAYER2/MAC/extern.h"
+//#include "LAYER2/MAC/extern.h"
 #define MAX_U32 0xFFFFFFFF
 
 eNB_RRC_INST_NB_IoT *eNB_rrc_inst_NB_IoT;
