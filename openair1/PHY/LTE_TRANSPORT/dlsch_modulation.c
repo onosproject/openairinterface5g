@@ -1586,7 +1586,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
         if (is_not_UEspecRS(lprime,re,frame_parms->nushift,frame_parms->Ncp,8,Ns)) {
 
 	  //LOG_D(PHY,"TM8 tti_offset %d, jj %d, jj2 %d, x0 %p, x1 %p\n",tti_offset,*jj,*jj2,x0,x1);
-	  /*
+	  
           switch (mod_order0) {
           case 2:  //QPSK
 
@@ -1727,7 +1727,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
             break;
 
           }
-	  */
+
         }
         else {
           for (p=7; p<9; p++) {
@@ -2269,7 +2269,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
   re_allocated=0;
 
 
-    //#ifdef DEBUG_DLSCH_MODULATION
+#ifdef DEBUG_DLSCH_MODULATION
     LOG_D(PHY,"Generating DLSCH (harq_pid %d,mimo %d, pmi_alloc0 %lx, mod0 %d, mod1 %d, rb_alloc[0] %d)\n",
             harq_pid,
             dlsch0_harq->mimo_mode,
@@ -2277,7 +2277,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
             mod_order0,
             mod_order1,
             rb_alloc[0]);
-    //#endif
+#endif
 
   //  printf("num_pdcch_symbols %d, nsymb %d\n",num_pdcch_symbols,nsymb);
   for (l=num_pdcch_symbols; l<nsymb; l++) {
@@ -2601,9 +2601,9 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
         else
           re_offset=7;  // odd number of RBs
       }
-  //#ifdef DEBUG_DLSCH_MODULATION
+#ifdef DEBUG_DLSCH_MODULATION
       LOG_D(PHY,"generate_dlsch : l=%d, rb=%d, jj=%d, jj2=%d, lprime=%d, mprime=%d, re_allocated = %d\n",l,rb,jj,jj2,lprime,mprime,re_allocated);
-  //#endif
+#endif
     }
   }
 
