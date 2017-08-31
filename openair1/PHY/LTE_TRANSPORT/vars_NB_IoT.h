@@ -19,17 +19,18 @@
  *      contact@openairinterface.org
  */
 
+//#include "dlsch_tbs.h"
+//#include "dlsch_tbs_full.h"
+//#include "sss.h"
+#ifndef __PHY_LTE_TRANSPORT_VARS_NB_IOT__H__
+#define __PHY_LTE_TRANSPORT_VARS_NB_IOT__H__
 
-#ifndef __PHY_LTE_TRANSPORT_EXTERN_NB_IOT__H__
-#define __PHY_LTE_TRANSPORT_EXTERN_NB_IOT__H__
+unsigned char cs_ri_normal_NB_IoT[4]    = {1,4,7,10};
+unsigned char cs_ri_extended_NB_IoT[4]  = {0,3,5,8};
+unsigned char cs_ack_normal_NB_IoT[4]   = {2,3,8,9};
+unsigned char cs_ack_extended_NB_IoT[4] = {1,2,6,7};
 
-//NB-Iot
-extern unsigned int TBStable_NB_IoT[14][8];
 
-extern unsigned char cs_ri_normal_NB_IoT[4];
-extern unsigned char cs_ri_extended_NB_IoT[4];
-extern unsigned char cs_ack_normal_NB_IoT[4];
-extern unsigned char cs_ack_extended_NB_IoT[4];
-extern int8_t wACK_RX_NB_IoT[5][4];
+int8_t wACK_RX_NB_IoT[5][4] = {{-1,-1,-1,-1},{-1,1,-1,1},{-1,-1,1,1},{-1,1,1,-1},{1,1,1,1}};
 
 #endif

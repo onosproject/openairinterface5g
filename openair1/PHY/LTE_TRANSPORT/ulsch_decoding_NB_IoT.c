@@ -34,10 +34,12 @@
 
 //#include "PHY/defs.h"
 #include "PHY/defs_NB_IoT.h"
-#include "PHY/extern.h"
+#include "PHY/extern_NB_IoT.h"
+#include "PHY/LTE_TRANSPORT/vars_NB_IoT.h"
 //#include "PHY/CODING/extern.h"
 //#include "extern_NB_IoT.h"
 //#include "SCHED/extern.h"
+/*
 #ifdef OPENAIR2
 #include "LAYER2/MAC/defs.h"
 #include "LAYER2/MAC/extern.h"
@@ -49,7 +51,7 @@
 #include "UTIL/OCG/OCG.h"
 #include "UTIL/OCG/OCG_extern.h"
 #endif
-
+*/
 #include "UTIL/LOG/vcd_signal_dumper.h"
 //#define DEBUG_ULSCH_DECODING
 /*
@@ -923,58 +925,51 @@ static inline unsigned int lte_gold_unscram_NB_IoT(unsigned int *x1, unsigned in
 }
 
 
-unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
-                                    eNB_rxtx_proc_NB_IoT_t *proc,
-                                    uint8_t UE_id,
-                                    uint8_t control_only_flag,
-                                    uint8_t Nbundled,
-                                    uint8_t llr8_flag)
+unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
+                                    eNB_rxtx_proc_NB_IoT_t  *proc,
+                                    uint8_t                 UE_id,
+                                    uint8_t                 control_only_flag,
+                                    uint8_t                 Nbundled,
+                                    uint8_t                 llr8_flag)
 {
+  int16_t                 *ulsch_llr    = eNB->pusch_vars[UE_id]->llr;
+  NB_IoT_DL_FRAME_PARMS   *frame_parms  = &eNB->frame_parms;
+  NB_IoT_eNB_ULSCH_t      *ulsch        = eNB->ulsch[UE_id];
+  NB_IoT_UL_eNB_HARQ_t    *ulsch_harq;
 
+  uint8_t         harq_pid;
+  unsigned short  nb_rb;
+  unsigned int    A;
+  uint8_t         Q_m;
+  unsigned int    i,i2,q,j,j2;
+  int             iprime;
+  unsigned int    ret = 0;
+  int             r,Kr;
 
-  int16_t *ulsch_llr = eNB->pusch_vars[UE_id]->llr;
-  NB_IoT_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
-  NB_IoT_eNB_ULSCH_t *ulsch = eNB->ulsch[UE_id];
-  uint8_t harq_pid;
-  unsigned short nb_rb;
-  unsigned int A;
-  uint8_t Q_m;
-  unsigned int i,i2,q,j,j2;
-  int iprime;
-  unsigned int ret=0;
+  uint8_t         *columnset;
+  unsigned int    sumKr=0;
+  unsigned int    Qprime,L,G,Q_CQI,Q_RI,H,Hprime,Hpp,Cmux,Rmux_prime,O_RCC;
+  unsigned int    Qprime_ACK,Qprime_RI,len_ACK=0,len_RI=0;
 
-  //  uint8_t dummy_channel_output[(3*8*block_length)+12];
-  int r,Kr;
+  int             metric,metric_new;
+  uint8_t         o_flip[8];
+  uint32_t        x1, x2, s=0;
+  int16_t         ys,c;
+  uint32_t        wACK_idx;
+  uint8_t         dummy_w_cc[3*(MAX_CQI_BITS+8+32)];
+  int16_t         y[6*14*1200] __attribute__((aligned(32)));
+  uint8_t         ytag[14*1200];
+  int16_t         cseq[6*14*1200];
+  int             off;
+  int             subframe = proc->subframe_rx;
 
-  uint8_t *columnset;
-  unsigned int sumKr=0;
-  unsigned int Qprime,L,G,Q_CQI,Q_RI,H,Hprime,Hpp,Cmux,Rmux_prime,O_RCC;
-  unsigned int Qprime_ACK,Qprime_RI,len_ACK=0,len_RI=0;
-  //  uint8_t q_ACK[MAX_ACK_PAYLOAD],q_RI[MAX_RI_PAYLOAD];
-  int metric,metric_new;
-  uint8_t o_flip[8];
-  uint32_t x1, x2, s=0;
-  int16_t ys,c;
-  uint32_t wACK_idx;
-  uint8_t dummy_w_cc[3*(MAX_CQI_BITS+8+32)];
-  int16_t y[6*14*1200] __attribute__((aligned(32)));
-  uint8_t ytag[14*1200];
-  //  uint8_t ytag2[6*14*1200],*ytag2_ptr;
-  int16_t cseq[6*14*1200];
-  int off;
-
-  int subframe = proc->subframe_rx;
-  NB_IoT_UL_eNB_HARQ_t *ulsch_harq;
-
-
-
-  harq_pid = subframe2harq_pid(frame_parms,proc->frame_rx,subframe);
+  harq_pid = subframe2harq_pid_NB_IoT(frame_parms,proc->frame_rx,subframe);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_ULSCH_DECODING0+harq_pid,1);
 
   // x1 is set in lte_gold_generic
-  x2 = ((uint32_t)ulsch->rnti<<14) + ((uint32_t)subframe<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.3.1
-  ulsch_harq = ulsch->harq_process;
+  x2         =  ((uint32_t)ulsch->rnti<<14) + ((uint32_t)subframe<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.3.1
+  ulsch_harq =  ulsch->harq_process;
 
   if (harq_pid==255) {
     LOG_E(PHY, "FATAL ERROR: illegal harq_pid, returning\n");
@@ -990,12 +985,9 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
 
   nb_rb = ulsch_harq->nb_rb;
-
-  A = ulsch_harq->TBS;
-
-
-  Q_m = get_Qm_ul(ulsch_harq->mcs);
-  G = nb_rb * (12 * Q_m) * ulsch_harq->Nsymb_pusch;
+  A     = ulsch_harq->TBS;
+  Q_m   = get_Qm_ul(ulsch_harq->mcs);
+  G     = nb_rb * (12 * Q_m) * ulsch_harq->Nsymb_pusch;
 
 
 #ifdef DEBUG_ULSCH_DECODING
@@ -1053,7 +1045,6 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     mac_xface->macphy_exit("ulsch_decoding.c: FATAL sumKr is 0!");
     return(-1);
   }
-
   // Compute Q_ri
   Qprime = ulsch_harq->O_RI*ulsch_harq->Msc_initial*ulsch_harq->Nsymb_initial * ulsch->beta_offset_ri_times8;
 
@@ -1067,12 +1058,9 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
       Qprime = 4*nb_rb * 12;
   }
 
-  Q_RI = Q_m*Qprime;
+  Q_RI      = Q_m*Qprime;
   Qprime_RI = Qprime;
-
-
   // Compute Q_ack
-
   Qprime = ulsch_harq->O_ACK*ulsch_harq->Msc_initial*ulsch_harq->Nsymb_initial * ulsch->beta_offset_harqack_times8;
 
   if (Qprime > 0) {
@@ -1084,7 +1072,6 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     if (Qprime > (4*nb_rb * 12))
       Qprime = 4*nb_rb * 12;
   }
-
   //  Q_ACK = Qprime * Q_m;
   Qprime_ACK = Qprime;
 #ifdef DEBUG_ULSCH_DECODING
@@ -1120,7 +1107,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   printf("ulsch_decoding: G %d, Q_RI %d, Q_CQI %d (L %d, Or1 %d) O_ACK %d\n",G,Q_RI,Q_CQI,L,ulsch_harq->Or1,ulsch_harq->O_ACK);
 #endif
 
-  G = G - Q_RI - Q_CQI;
+  G             = G - Q_RI - Q_CQI;
   ulsch_harq->G = G;
 
   if ((int)G < 0) {
@@ -1128,31 +1115,22 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     return(-1);
   }
 
-  H = G + Q_CQI;
+  H      = G + Q_CQI;
   Hprime = H/Q_m;
-
-
   // Demultiplexing/Deinterleaving of PUSCH/ACK/RI/CQI
   //start_meas_NB_IoT(&eNB->ulsch_demultiplexing_stats);
-  Hpp = Hprime + Qprime_RI;
-
+  Hpp        = Hprime + Qprime_RI;
   Cmux       = ulsch_harq->Nsymb_pusch;
   Rmux_prime = Hpp/Cmux;
 
   // Clear "tag" interleaving matrix to allow for CQI/DATA identification
   memset(ytag,0,Cmux*Rmux_prime);
-
-
-
-  i=0;
-  memset(y,LTE_NULL,Q_m*Hpp);
-
+  i = 0;
+  memset(y,LTE_NULL_NB_IoT,Q_m*Hpp);
   // read in buffer and unscramble llrs for everything but placeholder bits
   // llrs stored per symbol correspond to columns of interleaving matrix
-
-
-  s = lte_gold_unscram_NB_IoT(&x1, &x2, 1);
-  i2=0;
+  s  = lte_gold_unscram_NB_IoT(&x1, &x2, 1);
+  i2 = 0;
 
   for (i=0; i<((Hpp*Q_m)>>5); i++) {
     /*
@@ -1160,24 +1138,24 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
       cseq[i2++] = (int16_t)((((s>>j)&1)<<1)-1);
     }
     */
-#if defined(__x86_64__) || defined(__i386__)
-#ifndef __AVX2__
-    ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut)[(s&65535)<<1];
-    ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut)[1+((s&65535)<<1)];
-    s>>=16;
-    ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut)[(s&65535)<<1];
-    ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut)[1+((s&65535)<<1)];
-#else
-    ((__m256i*)cseq)[i2++] = ((__m256i*)unscrambling_lut)[s&65535];
-    ((__m256i*)cseq)[i2++] = ((__m256i*)unscrambling_lut)[(s>>16)&65535];
-#endif
-#elif defined(__arm__)
-    ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut)[(s&65535)<<1];
-    ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut)[1+((s&65535)<<1)];
-    s>>=16;
-    ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut)[(s&65535)<<1];
-    ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut)[1+((s&65535)<<1)];
-#endif
+    #if defined(__x86_64__) || defined(__i386__)
+    #ifndef __AVX2__
+        ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut_NB_IoT)[(s&65535)<<1];
+        ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut_NB_IoT)[1+((s&65535)<<1)];
+        s>>=16;
+        ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut_NB_IoT)[(s&65535)<<1];
+        ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut_NB_IoT)[1+((s&65535)<<1)];
+    #else
+        ((__m256i*)cseq)[i2++] = ((__m256i*)unscrambling_lut_NB_IoT)[s&65535];
+        ((__m256i*)cseq)[i2++] = ((__m256i*)unscrambling_lut_NB_IoT)[(s>>16)&65535];
+    #endif
+    #elif defined(__arm__)
+        ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut_NB_IoT)[(s&65535)<<1];
+        ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut_NB_IoT)[1+((s&65535)<<1)];
+        s>>=16;
+        ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut_NB_IoT)[(s&65535)<<1];
+        ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut_NB_IoT)[1+((s&65535)<<1)];
+    #endif
     s = lte_gold_unscram_NB_IoT(&x1, &x2, 0);
   }
 
@@ -1185,25 +1163,26 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   //  printf("after unscrambling c[%d] = %p\n",0,ulsch_harq->c[0]);
 
   if (frame_parms->Ncp == 0)
-    columnset = cs_ri_normal;
+    columnset = cs_ri_normal_NB_IoT;
   else
-    columnset = cs_ri_extended;
+    columnset = cs_ri_extended_NB_IoT;
 
-  j=0;
+  j = 0;
 
   for (i=0; i<Qprime_RI; i++) {
-    r = Rmux_prime - 1 - (i>>2);
+
+    r           = Rmux_prime - 1 - (i>>2);
     /*
     for (q=0;q<Q_m;q++)
       ytag2[q+(Q_m*((r*Cmux) + columnset[j]))]  = q_RI[(q+(Q_m*i))%len_RI];
     */
-    off =((Rmux_prime*Q_m*columnset[j])+(r*Q_m));
+    off         =((Rmux_prime*Q_m*columnset[j])+(r*Q_m));
     cseq[off+1] = cseq[off];  // PUSCH_y
 
     for (q=2; q<Q_m; q++)
       cseq[off+q] = -1;    // PUSCH_x
 
-    j=(j+3)&3;
+    j = (j+3)&3;
 
   }
 
@@ -1211,11 +1190,11 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
   // HARQ-ACK Bits (Note these overwrite some bits)
   if (frame_parms->Ncp == 0)
-    columnset = cs_ack_normal;
+    columnset = cs_ack_normal_NB_IoT;
   else
-    columnset = cs_ack_extended;
+    columnset = cs_ack_extended_NB_IoT;
 
-  j=0;
+  j = 0;
 
   for (i=0; i<Qprime_ACK; i++) {
     r = Rmux_prime - 1 - (i>>2);
@@ -1232,31 +1211,31 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
         cseq[off+q] = -1;    // PUSCH_x
     }
 
-#ifdef DEBUG_ULSCH_DECODING
+    #ifdef DEBUG_ULSCH_DECODING
     printf("ulsch_decoding.c: ACK i %d, r %d, j %d, ColumnSet[j] %d\n",i,r,j,columnset[j]);
-#endif
+    #endif
     j=(j+3)&3;
   }
 
-
-
-  i=0;
+  i = 0;
 
   switch (Q_m) {
   case 2:
     for (j=0; j<Cmux; j++) {
-      i2=j<<1;
+
+      i2 = j<<1;
 
       for (r=0; r<Rmux_prime; r++) {
-        c = cseq[i];
+
+        c       = cseq[i];
         //  printf("ulsch %d: %d * ",i,c);
         y[i2++] = c*ulsch_llr[i++];
         //  printf("%d\n",ulsch_llr[i-1]);
-        c = cseq[i];
+        c       = cseq[i];
         //  printf("ulsch %d: %d * ",i,c);
-        y[i2] = c*ulsch_llr[i++];
+        y[i2]   = c*ulsch_llr[i++];
         //  printf("%d\n",ulsch_llr[i-1]);
-        i2=(i2+(Cmux<<1)-1);
+        i2      =(i2+(Cmux<<1)-1);
       }
     }
 
@@ -1264,10 +1243,11 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
   case 4:
     for (j=0; j<Cmux; j++) {
-      i2=j<<2;
+
+      i2 = j<<2;
 
       for (r=0; r<Rmux_prime; r++) {
-	/*
+	      /*
         c = cseq[i];
         y[i2++] = c*ulsch_llr[i++];
         c = cseq[i];
@@ -1277,10 +1257,9 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
         c = cseq[i];
         y[i2] = c*ulsch_llr[i++];
         i2=(i2+(Cmux<<2)-3);
-	*/
-	// slightly more optimized version (equivalent to above) for 16QAM to improve computational performance
-	*(__m64 *)&y[i2] = _mm_sign_pi16(*(__m64*)&ulsch_llr[i],*(__m64*)&cseq[i]);i+=4;i2+=(Cmux<<2);
-
+	      */
+	      // slightly more optimized version (equivalent to above) for 16QAM to improve computational performance
+	      *(__m64 *)&y[i2] = _mm_sign_pi16(*(__m64*)&ulsch_llr[i],*(__m64*)&cseq[i]);i+=4;i2+=(Cmux<<2);
 
       }
     }
@@ -1289,22 +1268,23 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
   case 6:
     for (j=0; j<Cmux; j++) {
-      i2=j*6;
+
+      i2 = j*6;
 
       for (r=0; r<Rmux_prime; r++) {
-        c = cseq[i];
-        y[i2++] = c*ulsch_llr[i++];
-        c = cseq[i];
-        y[i2++] = c*ulsch_llr[i++];
-        c = cseq[i];
-        y[i2++] = c*ulsch_llr[i++];
-        c = cseq[i];
-        y[i2++] = c*ulsch_llr[i++];
-        c = cseq[i];
-        y[i2++] = c*ulsch_llr[i++];
-        c = cseq[i];
-        y[i2] = c*ulsch_llr[i++];
-        i2=(i2+(Cmux*6)-5);
+        c           = cseq[i];
+        y[i2++]     = c*ulsch_llr[i++];
+        c           = cseq[i];
+        y[i2++]     = c*ulsch_llr[i++];
+        c           = cseq[i];
+        y[i2++]     = c*ulsch_llr[i++];
+        c           = cseq[i];
+        y[i2++]     = c*ulsch_llr[i++];
+        c           = cseq[i];
+        y[i2++]     = c*ulsch_llr[i++];
+        c           = cseq[i];
+        y[i2]       = c*ulsch_llr[i++];
+        i2          =(i2+(Cmux*6)-5);
       }
     }
 
@@ -1320,9 +1300,9 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   // HARQ-ACK Bits (LLRs are nulled in overwritten bits after copying HARQ-ACK LLR)
 
   if (frame_parms->Ncp == 0)
-    columnset = cs_ack_normal;
+    columnset = cs_ack_normal_NB_IoT;
   else
-    columnset = cs_ack_extended;
+    columnset = cs_ack_extended_NB_IoT;
 
   j=0;
 
@@ -1371,12 +1351,14 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     r = Rmux_prime -1 - (i>>2);
 
     for (q=0; q<Q_m; q++) {
+
       if (y[q+(Q_m*((r*Cmux) + columnset[j]))]!=0)
         ulsch_harq->q_ACK[(q+(Q_m*i))%len_ACK] += y[q+(Q_m*((r*Cmux) + columnset[j]))];
-      y[q+(Q_m*((r*Cmux) + columnset[j]))]=0;  // NULL LLRs in ACK positions
+
+      y[q+(Q_m*((r*Cmux) + columnset[j]))] = 0;  // NULL LLRs in ACK positions
     }
 
-    j=(j+3)&3;
+    j = (j+3)&3;
   }
 
   //  printf("after ACKNAK c[%d] = %p\n",0,ulsch_harq->c[0]);
@@ -1386,15 +1368,15 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   if (ulsch_harq->O_RI == 1) {
     switch (Q_m) {
     case 2:
-      len_RI=2;
+      len_RI = 2;
       break;
 
     case 4:
-      len_RI=4;
+      len_RI = 4;
       break;
 
     case 6:
-      len_RI=6;
+      len_RI = 6;
       break;
     }
   }
@@ -1408,9 +1390,9 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     ulsch_harq->q_RI[i] = 0;
 
   if (frame_parms->Ncp == 0)
-    columnset = cs_ri_normal;
+    columnset = cs_ri_normal_NB_IoT;
   else
-    columnset = cs_ri_extended;
+    columnset = cs_ri_extended_NB_IoT;
 
   j=0;
 
@@ -1420,137 +1402,123 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     for (q=0; q<Q_m; q++)
       ulsch_harq->q_RI[(q+(Q_m*i))%len_RI] += y[q+(Q_m*((r*Cmux) + columnset[j]))];
 
-    ytag[(r*Cmux) + columnset[j]] = LTE_NULL;
-    j=(j+3)&3;
+    ytag[(r*Cmux) + columnset[j]] = LTE_NULL_NB_IoT;
+    j                             = (j+3)&3;
   }
 
   //  printf("after RI2 c[%d] = %p\n",0,ulsch_harq->c[0]);
 
   // CQI and Data bits
-  j=0;
-  j2=0;
+  j  = 0;
+  j2 = 0;
 
   //  r=0;
   if (Q_RI>0) {
     for (i=0; i<(Q_CQI/Q_m); i++) {
       
-      while (ytag[j]==LTE_NULL) {
-	j++;
-	j2+=Q_m;
-      }
+        while (ytag[j]==LTE_NULL_NB_IoT) {
+	         j++;
+	         j2+=Q_m;
+        }
       
-      for (q=0; q<Q_m; q++) {
-	//      ys = y[q+(Q_m*((r*Cmux)+j))];
-	ys = y[q+j2];
+        for (q=0; q<Q_m; q++) {
+	       
+	         ys = y[q+j2];
 	
-	if (ys>127)
-	  ulsch_harq->q[q+(Q_m*i)] = 127;
-	else if (ys<-128)
-	  ulsch_harq->q[q+(Q_m*i)] = -128;
-	else
-	  ulsch_harq->q[q+(Q_m*i)] = ys;
-      }
-      
-      j2+=Q_m;
+	         if (ys>127)
+	            ulsch_harq->q[q+(Q_m*i)] = 127;
+	         else if (ys<-128)
+	            ulsch_harq->q[q+(Q_m*i)] = -128;
+	         else
+	            ulsch_harq->q[q+(Q_m*i)] = ys;
+        }
+        j2+=Q_m;
     }
     
         
     switch (Q_m) {
-    case 2:
-      for (iprime=0; iprime<G;) {
-	while (ytag[j]==LTE_NULL) {
-	  j++;
-	  j2+=2;
-	}
-	
-	ulsch_harq->e[iprime++] = y[j2++];
-	ulsch_harq->e[iprime++] = y[j2++];
-	
-      }
+        case 2:
+            for (iprime=0; iprime<G;) {
+	             while (ytag[j]==LTE_NULL_NB_IoT) {
+	                j++;
+	                j2+=2;
+	             }
+	             ulsch_harq->e[iprime++] = y[j2++];
+	             ulsch_harq->e[iprime++] = y[j2++];
+            } 
+        break;
       
+        case 4:
+            for (iprime=0; iprime<G;) {
+	             while (ytag[j]==LTE_NULL_NB_IoT) {
+	                 j++;
+	                 j2+=4;
+	             }
+	             ulsch_harq->e[iprime++] = y[j2++];
+	             ulsch_harq->e[iprime++] = y[j2++];
+	             ulsch_harq->e[iprime++] = y[j2++];
+	             ulsch_harq->e[iprime++] = y[j2++];
+            }
+        break;
       
-      break;
-      
-    case 4:
-      for (iprime=0; iprime<G;) {
-	while (ytag[j]==LTE_NULL) {
-	  j++;
-	  j2+=4;
-	}
-	
-	ulsch_harq->e[iprime++] = y[j2++];
-	ulsch_harq->e[iprime++] = y[j2++];
-	ulsch_harq->e[iprime++] = y[j2++];
-	ulsch_harq->e[iprime++] = y[j2++];
-	
-      }
-      
-      break;
-      
-    case 6:
-      for (iprime=0; iprime<G;) {
-	while (ytag[j]==LTE_NULL) {
-	  j++;
-	  j2+=6;
-	}
-	
-	ulsch_harq->e[iprime++] = y[j2++];
-	ulsch_harq->e[iprime++] = y[j2++];
-	ulsch_harq->e[iprime++] = y[j2++];
-	ulsch_harq->e[iprime++] = y[j2++];
-	ulsch_harq->e[iprime++] = y[j2++];
-	ulsch_harq->e[iprime++] = y[j2++];
-	
-      }
-      
-      break;
-
+        case 6:
+            for (iprime=0; iprime<G;) {
+	             while (ytag[j]==LTE_NULL_NB_IoT) {
+	                 j++;
+	                 j2+=6;
+	             }
+	             ulsch_harq->e[iprime++] = y[j2++];
+	             ulsch_harq->e[iprime++] = y[j2++];
+	             ulsch_harq->e[iprime++] = y[j2++];
+	             ulsch_harq->e[iprime++] = y[j2++];
+	             ulsch_harq->e[iprime++] = y[j2++];
+	             ulsch_harq->e[iprime++] = y[j2++];
+            }
+        break;
     }
-    
-
   } // Q_RI>0
   else {
 
     for (i=0; i<(Q_CQI/Q_m); i++) {
       
       for (q=0; q<Q_m; q++) {
-	ys = y[q+j2];
-	if (ys>127)
-	  ulsch_harq->q[q+(Q_m*i)] = 127;
-	else if (ys<-128)
-	  ulsch_harq->q[q+(Q_m*i)] = -128;
-	else
-	  ulsch_harq->q[q+(Q_m*i)] = ys;
+	       ys = y[q+j2];
+	       if (ys>127)
+	           ulsch_harq->q[q+(Q_m*i)] = 127;
+	       else if (ys<-128)
+	           ulsch_harq->q[q+(Q_m*i)] = -128;
+	       else
+	           ulsch_harq->q[q+(Q_m*i)] = ys;
       }
-      
       j2+=Q_m;
     }
     /* To be improved according to alignment of j2
-#if defined(__x86_64__)||defined(__i386__)
-#ifndef __AVX2__
+    #if defined(__x86_64__)||defined(__i386__)
+    #ifndef __AVX2__
     for (iprime=0; iprime<G;iprime+=8,j2+=8)
       *((__m128i *)&ulsch_harq->e[iprime]) = *((__m128i *)&y[j2]);
-#else
+    #else
     for (iprime=0; iprime<G;iprime+=16,j2+=16)
       *((__m256i *)&ulsch_harq->e[iprime]) = *((__m256i *)&y[j2]);
-#endif
-#elif defined(__arm__)
+    #endif
+    #elif defined(__arm__)
     for (iprime=0; iprime<G;iprime+=8,j2+=8)
       *((int16x8_t *)&ulsch_harq->e[iprime]) = *((int16x8_t *)&y[j2]);
-#endif
+    #endif
     */
     int16_t *yp,*ep;
+
     for (iprime=0,yp=&y[j2],ep=&ulsch_harq->e[0]; 
-	 iprime<G;
-	 iprime+=8,j2+=8,ep+=8,yp+=8) {
-      ep[0] = yp[0];
-      ep[1] = yp[1];
-      ep[2] = yp[2];
-      ep[3] = yp[3];
-      ep[4] = yp[4];
-      ep[5] = yp[5];
-      ep[6] = yp[6];
-      ep[7] = yp[7];
+	     iprime<G;
+	     iprime+=8,j2+=8,ep+=8,yp+=8) {
+       ep[0] = yp[0];
+       ep[1] = yp[1];
+       ep[2] = yp[2];
+       ep[3] = yp[3];
+       ep[4] = yp[4];
+       ep[5] = yp[5];
+       ep[6] = yp[6];
+       ep[7] = yp[7];
     }
   }
     
@@ -1565,8 +1533,8 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   wACK_idx = (ulsch->bundling==0) ? 4 : ((Nbundled-1)&3);
 
   if (ulsch_harq->O_ACK == 1) {
-    ulsch_harq->q_ACK[0] *= wACK_RX[wACK_idx][0];
-    ulsch_harq->q_ACK[0] += (ulsch->bundling==0) ? ulsch_harq->q_ACK[1]*wACK_RX[wACK_idx][0] : ulsch_harq->q_ACK[1]*wACK_RX[wACK_idx][1];
+    ulsch_harq->q_ACK[0] *= wACK_RX_NB_IoT[wACK_idx][0];
+    ulsch_harq->q_ACK[0] += (ulsch->bundling==0) ? ulsch_harq->q_ACK[1]*wACK_RX_NB_IoT[wACK_idx][0] : ulsch_harq->q_ACK[1]*wACK_RX_NB_IoT[wACK_idx][1];
 
     if (ulsch_harq->q_ACK[0] < 0)
       ulsch_harq->o_ACK[0] = 0;
@@ -1578,19 +1546,19 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     switch (Q_m) {
 
     case 2:
-      ulsch_harq->q_ACK[0] = ulsch_harq->q_ACK[0]*wACK_RX[wACK_idx][0] + ulsch_harq->q_ACK[3]*wACK_RX[wACK_idx][1];
-      ulsch_harq->q_ACK[1] = ulsch_harq->q_ACK[1]*wACK_RX[wACK_idx][0] + ulsch_harq->q_ACK[4]*wACK_RX[wACK_idx][1];
-      ulsch_harq->q_ACK[2] = ulsch_harq->q_ACK[2]*wACK_RX[wACK_idx][0] + ulsch_harq->q_ACK[5]*wACK_RX[wACK_idx][1];
+      ulsch_harq->q_ACK[0] = ulsch_harq->q_ACK[0]*wACK_RX_NB_IoT[wACK_idx][0] + ulsch_harq->q_ACK[3]*wACK_RX_NB_IoT[wACK_idx][1];
+      ulsch_harq->q_ACK[1] = ulsch_harq->q_ACK[1]*wACK_RX_NB_IoT[wACK_idx][0] + ulsch_harq->q_ACK[4]*wACK_RX_NB_IoT[wACK_idx][1];
+      ulsch_harq->q_ACK[2] = ulsch_harq->q_ACK[2]*wACK_RX_NB_IoT[wACK_idx][0] + ulsch_harq->q_ACK[5]*wACK_RX_NB_IoT[wACK_idx][1];
       break;
     case 4:
-      ulsch_harq->q_ACK[0] = ulsch_harq->q_ACK[0]*wACK_RX[wACK_idx][0] + ulsch_harq->q_ACK[5]*wACK_RX[wACK_idx][1];
-      ulsch_harq->q_ACK[1] = ulsch_harq->q_ACK[1]*wACK_RX[wACK_idx][0] + ulsch_harq->q_ACK[8]*wACK_RX[wACK_idx][1];
-      ulsch_harq->q_ACK[2] = ulsch_harq->q_ACK[4]*wACK_RX[wACK_idx][0] + ulsch_harq->q_ACK[9]*wACK_RX[wACK_idx][1];
+      ulsch_harq->q_ACK[0] = ulsch_harq->q_ACK[0]*wACK_RX_NB_IoT[wACK_idx][0] + ulsch_harq->q_ACK[5]*wACK_RX_NB_IoT[wACK_idx][1];
+      ulsch_harq->q_ACK[1] = ulsch_harq->q_ACK[1]*wACK_RX_NB_IoT[wACK_idx][0] + ulsch_harq->q_ACK[8]*wACK_RX_NB_IoT[wACK_idx][1];
+      ulsch_harq->q_ACK[2] = ulsch_harq->q_ACK[4]*wACK_RX_NB_IoT[wACK_idx][0] + ulsch_harq->q_ACK[9]*wACK_RX_NB_IoT[wACK_idx][1];
       break;
     case 6:
-      ulsch_harq->q_ACK[0] =  ulsch_harq->q_ACK[0]*wACK_RX[wACK_idx][0] + ulsch_harq->q_ACK[7]*wACK_RX[wACK_idx][1];
-      ulsch_harq->q_ACK[1] =  ulsch_harq->q_ACK[1]*wACK_RX[wACK_idx][0] + ulsch_harq->q_ACK[12]*wACK_RX[wACK_idx][1];
-      ulsch_harq->q_ACK[2] =  ulsch_harq->q_ACK[6]*wACK_RX[wACK_idx][0] + ulsch_harq->q_ACK[13]*wACK_RX[wACK_idx][1];
+      ulsch_harq->q_ACK[0] =  ulsch_harq->q_ACK[0]*wACK_RX_NB_IoT[wACK_idx][0] + ulsch_harq->q_ACK[7]*wACK_RX_NB_IoT[wACK_idx][1];
+      ulsch_harq->q_ACK[1] =  ulsch_harq->q_ACK[1]*wACK_RX_NB_IoT[wACK_idx][0] + ulsch_harq->q_ACK[12]*wACK_RX_NB_IoT[wACK_idx][1];
+      ulsch_harq->q_ACK[2] =  ulsch_harq->q_ACK[6]*wACK_RX_NB_IoT[wACK_idx][0] + ulsch_harq->q_ACK[13]*wACK_RX_NB_IoT[wACK_idx][1];
       break;
     }
 
@@ -1640,7 +1608,6 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     O_RCC = generate_dummy_w_cc(ulsch_harq->Or1+8,
                                 &dummy_w_cc[0]);
 
-
     lte_rate_matching_cc_rx(O_RCC,
                             Q_CQI,
                             ulsch_harq->o_w,
@@ -1652,6 +1619,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
                                 &ulsch_harq->o_w[0]);
 
     memset(o_flip,0,1+((8+ulsch_harq->Or1)/8));
+
     phy_viterbi_lte_sse2(ulsch_harq->o_d+96,o_flip,8+ulsch_harq->Or1);
 
     if (extract_cqi_crc_NB_IoT(o_flip,ulsch_harq->Or1) == (crc8(o_flip,ulsch_harq->Or1)>>24))
@@ -1674,7 +1642,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
     }
 
-#ifdef DEBUG_ULSCH_DECODING
+    #ifdef DEBUG_ULSCH_DECODING
     printf("ulsch_decoding: Or1=%d\n",ulsch_harq->Or1);
 
     for (i=0; i<1+((8+ulsch_harq->Or1)/8); i++)
@@ -1685,7 +1653,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     else
       printf("RX CQI CRC NOT OK (%x)\n",extract_cqi_crc_NB_IoT(o_flip,ulsch_harq->Or1));
 
-#endif
+    #endif
   }
 
 

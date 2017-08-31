@@ -391,7 +391,8 @@ typedef struct {
   uint8_t N_RB_DL;
   /// Number of resource blocks (RB) in UL of the LTE ((for knowing the bandwidth)
   uint8_t N_RB_UL;
-
+  /// TDD subframe assignment (0-7) (default = 3) (254=RX only, 255=TX only)
+  uint8_t tdd_config;
   /// Cell ID
   uint16_t Nid_cell;
   /// Cyclic Prefix for DL (0=Normal CP, 1=Extended CP)

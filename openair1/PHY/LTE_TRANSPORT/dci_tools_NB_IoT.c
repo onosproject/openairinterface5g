@@ -30,7 +30,8 @@
  * \warning
  */
 //#include "PHY/defs.h"
-//#include "PHY/extern_NB_IoT.h"
+#include "PHY/impl_defs_lte_NB_IoT.h"
+#include "openair1/PHY/extern_NB_IoT.h"
 //#include "PHY/LTE_TRANSPORT/extern_NB_IoT.h"
 //#include "SCHED/defs_NB_IoT.h"
 /*
@@ -141,7 +142,7 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT        *eNB,
 }
 
 //map the Isf (DCI param) to the number of subframes (Nsf)
-int resource_to_subframe[8] = {1,2,3,4,5,6,8,10}; 
+int resource_to_subframe[8] = {1,2,3,4,5,6,8,10};
 
 int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
                                               int                      frame,
@@ -375,3 +376,99 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
   return(0);
 }
+
+
+uint8_t subframe2harq_pid_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe)
+{
+  /*
+    #ifdef DEBUG_DCI
+    if (frame_parms->frame_type == TDD)
+    printf("dci_tools.c: subframe2_harq_pid, subframe %d for TDD configuration %d\n",subframe,frame_parms->tdd_config);
+    else
+    printf("dci_tools.c: subframe2_harq_pid, subframe %d for FDD \n",subframe);
+    #endif
+  */
+
+  uint8_t ret = 255;
+
+  if (frame_parms->frame_type == FDD_NB_IoT) {
+    ret = (((frame<<1)+subframe)&7);
+  } else {
+
+    switch (frame_parms->tdd_config) {
+
+    case 1:
+      if ((subframe==2) ||
+          (subframe==3) ||
+          (subframe==7) ||
+          (subframe==8))
+        switch (subframe) {
+        case 2:
+        case 3:
+          ret = (subframe-2);
+          break;
+
+        case 7:
+        case 8:
+          ret = (subframe-5);
+          break;
+
+        default:
+          LOG_E(PHY,"subframe2_harq_pid_NB_IoT, Illegal subframe %d for TDD mode %d\n",subframe,frame_parms->tdd_config);
+          ret = (255);
+          break;
+        }
+
+      break;
+
+    case 2:
+      if ((subframe!=2) && (subframe!=7)) {
+        LOG_E(PHY,"subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",subframe,frame_parms->tdd_config);
+        mac_xface->macphy_exit("subframe2_harq_pid_NB_IoT, Illegal subframe");
+        ret = (255);
+      }
+
+      ret = (subframe/7);
+      break;
+
+    case 3:
+      if ((subframe<2) || (subframe>4)) {
+        LOG_E(PHY,"subframe2_harq_pid_NB_IoT, Illegal subframe %d for TDD mode %d\n",subframe,frame_parms->tdd_config);
+        ret = (255);
+      }
+
+      ret = (subframe-2);
+      break;
+
+    case 4:
+      if ((subframe<2) || (subframe>3)) {
+        LOG_E(PHY,"subframe2_harq_pid_NB_IoT, Illegal subframe %d for TDD mode %d\n",subframe,frame_parms->tdd_config);
+        ret = (255);
+      }
+
+      ret = (subframe-2);
+      break;
+
+    case 5:
+      if (subframe!=2) {
+        LOG_E(PHY,"subframe2_harq_pid_NB_IoT, Illegal subframe %d for TDD mode %d\n",subframe,frame_parms->tdd_config);
+        ret = (255);
+      }
+
+      ret = (subframe-2);
+      break;
+
+    default:
+      LOG_E(PHY,"subframe2_harq_pid_NB_IoT, Unsupported TDD mode %d\n",frame_parms->tdd_config);
+      ret = (255);
+
+    }
+  }
+
+  if (ret == 255) {
+    LOG_E(PHY, "invalid harq_pid(%d) at SFN/SF = %d/%d\n", ret, frame, subframe);
+    mac_xface->macphy_exit("invalid harq_pid");
+  }
+  return ret;
+}
+

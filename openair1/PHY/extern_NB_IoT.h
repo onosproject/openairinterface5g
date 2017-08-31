@@ -24,7 +24,7 @@
 
 //#include "PHY/defs.h"
 #include "PHY/defs_NB_IoT.h"
-//#include "PHY_INTERFACE/defs.h"
+#include "openair2/PHY_INTERFACE/defs.h"
 //#include "PHY_INTERFACE/IF_Module_NB_IoT.h"
 /*
 extern  char* namepointer_chMag ;
@@ -54,8 +54,9 @@ extern PHY_VARS_UE_NB_IoT * PHY_vars_UE_NB_IoT_g[MAX_UE][MAX_NUM_CCs];
 extern PHY_VARS_eNB_NB_IoT * PHY_vars_eNB_NB_IoT_g[MAX_eNB_NB_IoT][MAX_NUM_CCs];
 #endif
 
-/*
+
 extern MAC_xface *mac_xface;
+/*
 extern IF_Module_t *if_inst;
 
 
@@ -117,8 +118,9 @@ extern double beta2_dlsch[6][MCS_COUNT];
 extern char eNB_functions[6][20];
 extern char eNB_timing[2][20];
 
-
-extern int16_t unscrambling_lut[65536*16];
+*/
+extern int16_t unscrambling_lut_NB_IoT[65536*16];
+/*
 extern uint8_t scrambling_lut[65536*16];
 
 extern unsigned short msrsb_6_40[8][4];

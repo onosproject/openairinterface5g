@@ -174,6 +174,9 @@ NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag);
                      LTE_eNB_ULSCH_t **ulsch,
                      uint8_t cooperation_flag);
 */
+
+uint8_t subframe2harq_pid_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe);
+
 /** \fn dlsch_encoding(PHY_VARS_eNB *eNB,
     uint8_t *input_buffer,
     LTE_DL_FRAME_PARMS *frame_parms,

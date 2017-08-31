@@ -191,8 +191,8 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   sub_frame_t                     subframe  = Sched_INFO->subframe;
 
   // implicite declaration of AssertFatal
-  AsserFatal(proc->subframe_tx != subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
-  AsserFatal(proc->frame_tx != frame, "Current sframe %d != NFAPI frame %d\n", proc->frame_tx,frame );
+  //AsserFatal(proc->subframe_tx != subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
+  //AsserFatal(proc->frame_tx != frame, "Current sframe %d != NFAPI frame %d\n", proc->frame_tx,frame );
 
   uint8_t number_dl_pdu             = DL_req->dl_config_request_body.number_pdu;
   uint8_t number_ul_pdu				= UL_req->ul_config_request_body.number_of_pdus;
