@@ -32,6 +32,7 @@
 
 //#include "defs_nb_iot.h"
 #include "PHY/defs_NB_IoT.h"
+#include "PHY/TOOLS/dB_routines.h"
 //#include "PHY/LTE_TRANSPORT/proto_nb_iot.h"
 //#include "PHY/extern_NB_IoT.h"
 

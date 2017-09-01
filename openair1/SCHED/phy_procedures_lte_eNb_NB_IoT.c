@@ -37,7 +37,7 @@
 #include "SCHED/extern_NB_IoT.h"
 //#include "PHY/LTE_TRANSPORT/if4_tools.h"
 //#include "PHY/LTE_TRANSPORT/if5_tools.h"
-//#include "RRC/LITE/proto_nb_iot.h"
+#include "RRC/LITE/proto_NB_IoT.h"
 #include "SIMULATION/TOOLS/defs.h"  // purpose: included for taus() function
 //#ifdef EMOS
 //#include "SCHED/phy_procedures_emos.h"
@@ -109,13 +109,13 @@ extern int rx_sig_fifo;
 */
 void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc) 
 {
-  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_NB_IoT;
-  int **txdataF = eNB->common_vars.txdataF[0];
-  int subframe = proc->subframe_tx;
-  int frame = proc->frame_tx;
-  uint16_t Ntti = 10;//ntti = 10
-  int RB_IoT_ID;// XXX should be initialized (RB reserved for NB-IoT, PRB index)
-  int With_NSSS;// With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
+  NB_IoT_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms_NB_IoT;
+  int                     **txdataF =  eNB->common_vars.txdataF[0];
+  int                     subframe  =  proc->subframe_tx;
+  int                     frame     =  proc->frame_tx;
+  uint16_t                Ntti      =  10;                      //ntti = 10
+  int                     RB_IoT_ID;                            // XXX should be initialized (RB reserved for NB-IoT, PRB index)
+  int                     With_NSSS;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
   
   /*NSSS only happened in the even frame*/
   if(frame%2==0)
@@ -131,11 +131,11 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_I
   if(subframe == 5)
     {
       generate_npss_NB_IoT(txdataF,
-                 AMP,
-                 fp,
-                 3,
-                 0,
-                 RB_IoT_ID);
+                           AMP,
+                           fp,
+                           3,
+                           0,
+                           RB_IoT_ID);
     }
     
   /*NSSS when subframe 9 on even frame*/
@@ -154,11 +154,11 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_I
   {
     /*NRS*/
     generate_pilots_NB_IoT(eNB,
-               txdataF,
-               AMP,
-               Ntti,
-               RB_IoT_ID,
-               With_NSSS);
+                           txdataF,
+                           AMP,
+                           Ntti,
+                           RB_IoT_ID,
+                           With_NSSS);
   }
   
 }
@@ -167,15 +167,15 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 {
   //RX processing for ue-specific resources (i
 
-  uint32_t ret=0,i,j,k;
-  uint32_t harq_pid,round;
-  int sync_pos;
-  uint16_t rnti=0;
-  uint8_t access_mode;
-  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_NB_IoT;
+  uint32_t                  ret=0,i,j,k;
+  uint32_t                  harq_pid,round;
+  int                       sync_pos;
+  uint16_t                  rnti=0;
+  uint8_t                   access_mode;
+  NB_IoT_DL_FRAME_PARMS     *fp=&eNB->frame_parms_NB_IoT;
 
-  const int subframe = proc->subframe_rx;
-  const int frame    = proc->frame_rx;
+  const int subframe    =   proc->subframe_rx;
+  const int frame       =   proc->frame_rx;
   
   /*NB-IoT IF module Common setting*/
 
@@ -183,7 +183,6 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
   UL_INFO->CC_id = eNB->CC_id;
   UL_INFO->frame =  frame;
   UL_INFO->subframe = subframe;
-
 
   T(T_ENB_PHY_UL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
 
@@ -202,7 +201,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 
   // Check for active processes in current subframe
   // NB-IoT subframe2harq_pid is in dci_tools, always set the frame type to FDD, this would become simpler.
-  harq_pid = subframe2harq_pid(fp,frame,subframe);
+  harq_pid = subframe2harq_pid_NB_IoT(fp,frame,subframe);
 
   // delete the cba
   // delete the srs
@@ -224,9 +223,9 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
             }
         }
 
-      eNB->pusch_stats_rb[i][(frame*10)+subframe] = -63;
+      eNB->pusch_stats_rb[i][(frame*10)+subframe]    = -63;
       eNB->pusch_stats_round[i][(frame*10)+subframe] = 0;
-      eNB->pusch_stats_mcs[i][(frame*10)+subframe] = -63;
+      eNB->pusch_stats_mcs[i][(frame*10)+subframe]   = -63;
 
       /*Check if this UE is has ULSCH scheduling*/
       if ((eNB->nulsch[i]) &&
@@ -238,8 +237,8 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
           /*NB-IoT The nb_rb always set to 1 */
           for (int rb=0;rb<=eNB->nulsch[i]->harq_process->nb_rb;rb++) 
             {
-	           int rb2 = rb+eNB->nulsch[i]->harq_process->first_rb;
-              eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
+	             int rb2 = rb+eNB->nulsch[i]->harq_process->first_rb;
+               eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
             }
 
           /*Log for what kind of the ULSCH Reception*/
@@ -266,36 +265,44 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
           eNB->pusch_stats_rb[i][(frame*10)+subframe] = eNB->nulsch[i]->harq_process->nb_rb;
           eNB->pusch_stats_round[i][(frame*10)+subframe] = eNB->nulsch[i]->harq_process->round;
           eNB->pusch_stats_mcs[i][(frame*10)+subframe] = eNB->nulsch[i]->harq_process->mcs;
+/*
+  need for rx_ulsch function for NB_IoT
 
           rx_ulsch(eNB,proc,
                   eNB->UE_stats[i].sector,  // this is the effective sector id
                   i,
                   eNB->nulsch,
                   0);
-
+*/
           ret = ulsch_decoding_NB_IoT(eNB,proc,
-                             i,
-                             0, // control_only_flag
-                             eNB->nulsch[i]->harq_process->V_UL_DAI,
-			                       eNB->nulsch[i]->harq_process->nb_rb>20 ? 1 : 0);
+                                      i,
+                                      0, // control_only_flag
+                                      eNB->nulsch[i]->harq_process->V_UL_DAI,
+			                                eNB->nulsch[i]->harq_process->nb_rb>20 ? 1 : 0);
 
           //compute the expected ULSCH RX power (for the stats)
           eNB->nulsch[(uint32_t)i]->harq_process->delta_TF = get_hundred_times_delta_IF_eNB_NB_IoT(eNB,i,harq_pid, 0); // 0 means bw_factor is not considered
           eNB->UE_stats[i].nulsch_decoding_attempts[harq_pid][eNB->nulsch[i]->harq_process->round]++;
           eNB->nulsch[i]->harq_process->subframe_scheduling_flag=0;
-          if (eNB->nulsch[i]->harq_process->cqi_crc_status == 1) 
-            {
-              extract_CQI(eNB->nulsch[i]->harq_process->o,
-                        eNB->nulsch[i]->harq_process->uci_format,
-                        &eNB->UE_stats[i],
-                      fp->N_RB_DL,
-                      &rnti, &access_mode);
-              eNB->UE_stats[i].rank = eNB->nulsch[i]->harq_process->o_RI[0];
-            }
+          if (eNB->nulsch[i]->harq_process->cqi_crc_status == 1) {
 
-          if (ret == (1+MAX_TURBO_ITERATIONS)) 
-            {
-              T(T_ENB_PHY_ULSCH_UE_NACK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(i), T_INT(eNB->nulsch[i]->rnti),
+              extract_CQI(eNB->nulsch[i]->harq_process->o,
+                          eNB->nulsch[i]->harq_process->uci_format,
+                          &eNB->UE_stats[i],
+                          fp->N_RB_DL,
+                          &rnti, &access_mode);
+            
+              eNB->UE_stats[i].rank = eNB->nulsch[i]->harq_process->o_RI[0];
+          }
+
+          if (ret == (1+MAX_TURBO_ITERATIONS)) {
+
+              T(T_ENB_PHY_ULSCH_UE_NACK,
+                T_INT(eNB->Mod_id),
+                T_INT(frame),
+                T_INT(subframe),
+                T_INT(i),
+                T_INT(eNB->nulsch[i]->rnti),
                 T_INT(harq_pid));
 
               eNB->UE_stats[i].ulsch_round_errors[harq_pid][eNB->nulsch[i]->harq_process->round]++;
@@ -337,12 +344,12 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 	                if (eNB->mac_enabled == 1)
                     {
                       //instead rx_sdu to report The Uplink data not received successfully to MAC
-                      (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 1;
+                      (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag = 1;
                        UL_INFO->crc_ind.number_of_crcs++;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->nulsch[i]->rnti;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data= NULL;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = 0;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid = harq_pid;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti      = eNB->nulsch[i]->rnti;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data                        = NULL;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length   = 0;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid  = harq_pid;
                        UL_INFO->RX_NPUSCH.number_of_pdus++;
                     }
                 }
@@ -358,10 +365,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
           for (j=0; j<fp->nb_antennas_rx; j++)
           //this is the RSSI per RB
           eNB->UE_stats[i].UL_rssi[j] =
-            dB_fixed(eNB->pusch_vars[i]->ulsch_power[j]*
-                     (eNB->nulsch[i]->harq_process->nb_rb*12)/
-                     fp->ofdm_symbol_size) -
-            eNB->rx_total_gain_dB -
+            dB_fixed(eNB->pusch_vars[i]->ulsch_power[j] * (eNB->nulsch[i]->harq_process->nb_rb*12) / fp->ofdm_symbol_size) - eNB->rx_total_gain_dB -
             hundred_times_log10_NPRB_NB_IoT[eNB->nulsch[i]->harq_process->nb_rb-1]/100 -
             get_hundred_times_delta_IF_eNB_NB_IoT(eNB,i,harq_pid, 0)/100;
           //for NB-IoT PHICH not work
@@ -379,12 +383,12 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 	                if (eNB->mac_enabled)
                     {
                       // store successful MSG3 in UL_Info instead rx_sdu
-                      (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 0;
+                      (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag  = 0;
                       UL_INFO->crc_ind.number_of_crcs++;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->nulsch[i]->rnti;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data = eNB->nulsch[i]->harq_process->b;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = eNB->nulsch[i]->harq_process->TBS>>3;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid = harq_pid;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti       = eNB->nulsch[i]->rnti;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data                         = eNB->nulsch[i]->harq_process->b;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length    = eNB->nulsch[i]->harq_process->TBS>>3;
+                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid   = harq_pid;
                       UL_INFO->RX_NPUSCH.number_of_pdus++;
                     }
 
@@ -402,7 +406,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 	    
 	            } // mac_enabled==1
 
-            eNB->UE_stats[i].mode = PUSCH;
+            eNB->UE_stats[i].mode     = PUSCH;
             eNB->nulsch[i]->Msg3_flag = 0;
 
 	          LOG_D(PHY,"[eNB %d][RAPROC] Frame %d : RX Subframe %d Setting UE %d mode to PUSCH\n",eNB->Mod_id,frame,subframe,i);
@@ -412,46 +416,46 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
               { //harq_processes
                 for (j=0; j<eNB->ndlsch[i]->Mlimit; j++) 
                   {
-                    eNB->UE_stats[i].dlsch_NAK[k][j]=0;
-                    eNB->UE_stats[i].dlsch_ACK[k][j]=0;
-                    eNB->UE_stats[i].dlsch_trials[k][j]=0;
+                    eNB->UE_stats[i].dlsch_NAK[k][j]    = 0;
+                    eNB->UE_stats[i].dlsch_ACK[k][j]    = 0;
+                    eNB->UE_stats[i].dlsch_trials[k][j] = 0;
                   }
 
-                eNB->UE_stats[i].dlsch_l2_errors[k]=0;
-                eNB->UE_stats[i].ulsch_errors[k]=0;
-                eNB->UE_stats[i].ulsch_consecutive_errors=0;
+                eNB->UE_stats[i].dlsch_l2_errors[k]       = 0;
+                eNB->UE_stats[i].ulsch_errors[k]          = 0;
+                eNB->UE_stats[i].ulsch_consecutive_errors = 0;
 
                 for (j=0; j<eNB->nulsch[i]->Mlimit; j++) 
                   {
-                    eNB->UE_stats[i].nulsch_decoding_attempts[k][j]=0;
-                    eNB->UE_stats[i].ulsch_decoding_attempts_last[k][j]=0;
-                    eNB->UE_stats[i].ulsch_round_errors[k][j]=0;
-                    eNB->UE_stats[i].ulsch_round_fer[k][j]=0;
+                    eNB->UE_stats[i].nulsch_decoding_attempts[k][j]     = 0;
+                    eNB->UE_stats[i].ulsch_decoding_attempts_last[k][j] = 0;
+                    eNB->UE_stats[i].ulsch_round_errors[k][j]           = 0;
+                    eNB->UE_stats[i].ulsch_round_fer[k][j]              = 0;
                   }
               }
 
-            eNB->UE_stats[i].dlsch_sliding_cnt=0;
-            eNB->UE_stats[i].dlsch_NAK_round0=0;
-            eNB->UE_stats[i].dlsch_mcs_offset=0;
+            eNB->UE_stats[i].dlsch_sliding_cnt  = 0;
+            eNB->UE_stats[i].dlsch_NAK_round0   = 0;
+            eNB->UE_stats[i].dlsch_mcs_offset   = 0;
           } // Msg3_flag==1
 	       else 
           {  // Msg3_flag == 0
-	          if (eNB->mac_enabled==1) 
+	          if (eNB->mac_enabled == 1) 
               {
                   // store successful Uplink data in UL_Info instead rx_sdu
-                  (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag= 0;
+                  (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag  = 0;
                   UL_INFO->crc_ind.number_of_crcs++;
-                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti= eNB->nulsch[i]->rnti;
-                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data = eNB->nulsch[i]->harq_process->b;
-                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length = eNB->nulsch[i]->harq_process->TBS>>3;
-                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid  = harq_pid;
+                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti       = eNB->nulsch[i]->rnti;
+                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data                         = eNB->nulsch[i]->harq_process->b;
+                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length    = eNB->nulsch[i]->harq_process->TBS>>3;
+                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid   = harq_pid;
                   UL_INFO->RX_NPUSCH.number_of_pdus++;
 	    
 	            } // mac_enabled==1
           } // Msg3_flag == 0
 
             // estimate timing advance for MAC
-              sync_pos = lte_est_timing_advance_pusch(eNB,i);
+              sync_pos                               = lte_est_timing_advance_pusch(eNB,i);
               eNB->UE_stats[i].timing_advance_update = sync_pos - fp->nb_prefix_samples/4; //to check
 
       }  // ulsch not in error

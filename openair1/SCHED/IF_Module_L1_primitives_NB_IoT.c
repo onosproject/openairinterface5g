@@ -173,22 +173,21 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 {
 
   //XXX check if correct to take eNB like this
-  PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_NB_IoT_g[0][Sched_INFO->CC_id];
-  eNB_rxtx_proc_NB_IoT_t *proc = &eNB->proc.proc_rxtx[0];
-  NB_IoT_eNB_NPBCH_t *npbch;
-
-  int i;
-
+  PHY_VARS_eNB_NB_IoT 		*eNB     = PHY_vars_eNB_NB_IoT_g[0][Sched_INFO->CC_id];
+  eNB_rxtx_proc_NB_IoT_t 	*proc 	 = &eNB->proc.proc_rxtx[0];
+  NB_IoT_eNB_NPBCH_t 		*npbch;
+  ///
+  int 						i;
   //module_id_t                     Mod_id    = Sched_INFO->module_id;
   //uint8_t                         CC_id     = Sched_INFO->CC_id;
-  nfapi_dl_config_request_t *DL_req    = Sched_INFO->DL_req;
-  nfapi_ul_config_request_t *UL_req    = Sched_INFO->UL_req;
-  nfapi_hi_dci0_request_t *HI_DCI0_req = Sched_INFO->HI_DCI0_req;
-  nfapi_tx_request_t        *TX_req    = Sched_INFO->TX_req; 
+  nfapi_dl_config_request_t 	*DL_req    		= Sched_INFO->DL_req;
+  nfapi_ul_config_request_t 	*UL_req    		= Sched_INFO->UL_req;
+  nfapi_hi_dci0_request_t 		*HI_DCI0_req 	= Sched_INFO->HI_DCI0_req;
+  nfapi_tx_request_t        	*TX_req    		= Sched_INFO->TX_req; 
 
-  uint32_t                        hypersfn  = Sched_INFO->hypersfn;
-  frame_t                         frame     = Sched_INFO->frame;
-  sub_frame_t                     subframe  = Sched_INFO->subframe;
+  //uint32_t                     hypersfn  		= Sched_INFO->hypersfn;
+  //frame_t                      frame     		= Sched_INFO->frame;       // unused for instance
+  sub_frame_t                    subframe  		= Sched_INFO->subframe;	 
 
   // implicite declaration of AssertFatal
   //AsserFatal(proc->subframe_tx != subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
@@ -198,12 +197,10 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   uint8_t number_ul_pdu				= UL_req->ul_config_request_body.number_of_pdus;
   uint8_t number_ul_dci             = HI_DCI0_req->hi_dci0_request_body.number_of_dci;
   //uint8_t number_pdsch_rnti         = DL_req->number_pdsch_rnti; // for the moment not used
-
   // at most 2 pdus (DCI) in the case of NPDCCH
-  nfapi_dl_config_request_pdu_t *dl_config_pdu;
-  nfapi_ul_config_request_pdu_t *ul_config_pdu;
-  nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu;
-
+  nfapi_dl_config_request_pdu_t 	*dl_config_pdu;
+  nfapi_ul_config_request_pdu_t 	*ul_config_pdu;
+  nfapi_hi_dci0_request_pdu_t 		*hi_dci0_pdu;
 
   //clear previous possible allocation (maybe someone else should be added)
   for(int i = 0; i < NUMBER_OF_UE_MAX_NB_IoT; i++)
@@ -215,7 +212,6 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 		  eNB->ndlsch[i]->subframe_tx[subframe] = 0;
 	  }
 
-
 	  /*clear the DCI allocation maps for new subframe*/
 	  if(eNB->nulsch[i])
 	  {
@@ -225,7 +221,6 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 	  }
 
   }
-
 
 
   for (i=0;i<number_dl_pdu;i++) //in principle this should be at most 2 (in case of DCI)
@@ -316,7 +311,8 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 
   //XXX problem: although we may have nothing to transmit this function should be always triggered in order to allow the PHY layer to complete the repetitions
   //of previous Transport Blocks
-  phy_procedures_eNB_TX_NB_IoT(eNB,proc,NULL);
+  //phy_procedures_eNB_TX_NB_IoT(eNB,proc,NULL);
+  phy_procedures_eNB_TX_NB_IoT(eNB,proc,0); // check if 0 or NULL ?!
 
 }
 
