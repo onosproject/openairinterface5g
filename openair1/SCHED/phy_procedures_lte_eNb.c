@@ -408,7 +408,7 @@ int QPSK2[4]= {AMP_OVER_2|(AMP_OVER_2<<16),AMP_OVER_2|((65536-AMP_OVER_2)<<16),(
 
 
 unsigned int taus(void);
-DCI_PDU DCI_pdu_tmp;
+//DCI_PDU DCI_pdu_tmp;
 
 
 void pmch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,PHY_VARS_RN *rn,relaying_type_t r_type) {
@@ -1206,11 +1206,12 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       LOG_W(PHY,"[eNB %d, CC %d] frame %d, subframe %d, UE %d: ULSCH consecutive error count reached %u, triggering UL Failure\n",
             eNB->Mod_id,eNB->CC_id,frame,subframe, i, eNB->UE_stats[i].ulsch_consecutive_errors);
       eNB->UE_stats[i].ulsch_consecutive_errors=0;
-      mac_xface->UL_failure_indication(eNB->Mod_id,
-				       eNB->CC_id,
-				       frame,
-				       eNB->UE_stats[i].crnti,
-				       subframe);
+      if (eNB->mac_enabled == 1)
+	mac_xface->UL_failure_indication(eNB->Mod_id,
+					 eNB->CC_id,
+					 frame,
+					 eNB->UE_stats[i].crnti,
+					 subframe);
 				       
     }
 	
@@ -1252,9 +1253,10 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
 #endif
 
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,1);
+
   if (eNB->mac_enabled==1) {
     // Parse DCI received from MAC
-    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,1);
     DCI_pdu = mac_xface->get_dci_sdu(eNB->Mod_id,
 				     eNB->CC_id,
 				     frame,
@@ -1262,6 +1264,9 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   }
   else {
     DCI_pdu = &DCI_pdu_tmp;
+    DCI_pdu->Num_ue_spec_dci=0;
+    DCI_pdu->Num_common_dci=0;
+    DCI_pdu->num_pdcch_symbols=0;
 #ifdef EMOS_CHANNEL
     fill_dci_emos(DCI_pdu,eNB);
 #else
@@ -1275,11 +1280,10 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     }
 
 #endif
-
-    for (i=0; i<DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci ; i++) 
-      dump_dci(fp,&DCI_pdu->dci_alloc[i]);
-    
   }
+
+  for (i=0; i<DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci ; i++) 
+    dump_dci(fp,&DCI_pdu->dci_alloc[i]);
 
   // clear existing ulsch dci allocations before applying info from MAC  (this is table
   ul_subframe = pdcch_alloc2ul_subframe(fp,subframe);
@@ -1340,9 +1344,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   // loop over all DCIs for this subframe to generate DLSCH allocations
   for (i=0; i<DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci ; i++) {
     LOG_D(PHY,"[eNB] Subframe %d: DCI %d/%d : rnti %x, CCEind %d\n",subframe,i,DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci,DCI_pdu->dci_alloc[i].rnti,DCI_pdu->dci_alloc[i].firstCCE);
-    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].rnti);
-    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].format);
-    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].firstCCE);
+
     dci_alloc = &DCI_pdu->dci_alloc[i];
 
     if ((dci_alloc->rnti<= P_RNTI) && 
@@ -1357,8 +1359,6 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     generate_eNB_dlsch_params(eNB,proc,dci_alloc,UE_id);
 
   }
-
-  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,(frame*10)+subframe);
 
   // Apply physicalConfigDedicated if needed
   // This is for UEs that have received this IE, which changes these DL and UL configuration, we apply after a delay for the eNodeB UL parameters
@@ -1411,6 +1411,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 					   fp,
 					   eNB->common_vars.txdataF[0],
 					   subframe);
+
     }
     else {
       num_pdcch_symbols = DCI_pdu->num_pdcch_symbols;
@@ -2603,8 +2604,8 @@ void cba_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq_p
 	      UE_id % eNB->ulsch[UE_id]->num_active_cba_groups, eNB->ulsch[UE_id]->cba_rnti[UE_id%num_active_cba_groups]);
 
 	// detect if there is a CBA collision
-	if ((eNB->cba_last_reception[UE_id%num_active_cba_groups] == 0 ) && 
-	    (eNB->mac_enabled==1)) {
+	if  (eNB->mac_enabled==1) {
+	  if ((eNB->cba_last_reception[UE_id%num_active_cba_groups] == 0 )) {
 	  mac_xface->rx_sdu(eNB->Mod_id,
 			    eNB->CC_id,
 			    frame,subframe,
@@ -2630,6 +2631,7 @@ void cba_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq_p
 				   eNB->CC_id,
 				   frame,
 				   eNB->dlsch[UE_id][0]->rnti,subframe);
+	}
 	}
       } // UNKNOWN_ACCESS
     } // ULSCH CBA not in error
@@ -3341,15 +3343,15 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 	    LOG_I(PHY,"[eNB %d][RAPROC] Frame %d Terminating ra_proc for harq %d, UE %d\n",
 		  eNB->Mod_id,
 		  frame,harq_pid,i);
-	    if (eNB->mac_enabled)
-	      mac_xface->rx_sdu(eNB->Mod_id,
-				eNB->CC_id,
-				frame,subframe,
-				eNB->ulsch[i]->rnti,
-				eNB->ulsch[i]->harq_processes[harq_pid]->b,
-				eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3,
-				harq_pid,
-				&eNB->ulsch[i]->Msg3_flag);
+
+	    mac_xface->rx_sdu(eNB->Mod_id,
+			      eNB->CC_id,
+			      frame,subframe,
+			      eNB->ulsch[i]->rnti,
+			      eNB->ulsch[i]->harq_processes[harq_pid]->b,
+			      eNB->ulsch[i]->harq_processes[harq_pid]->TBS>>3,
+			      harq_pid,
+			      &eNB->ulsch[i]->Msg3_flag);
 	    
 	    // one-shot msg3 detection by MAC: empty PDU (e.g. CRNTI)
 	    if (eNB->ulsch[i]->Msg3_flag == 0 ) {

@@ -1980,8 +1980,8 @@ uint8_t get_num_pdcch_symbols(uint8_t num_dci,
   uint8_t i;
   uint8_t nCCEmin = 0;
   uint16_t CCE_max_used_index = 0;
-  uint16_t firstCCE_max = dci_alloc[0].firstCCE;
-  uint8_t  L = dci_alloc[0].L;
+  uint16_t firstCCE_max = 0;
+  uint8_t  L = 0;
 
   // check pdcch duration imposed by PHICH duration (Section 6.9 of 36-211)
   if (frame_parms->Ncp==1) { // extended prefix
@@ -2002,9 +2002,9 @@ uint8_t get_num_pdcch_symbols(uint8_t num_dci,
     if(firstCCE_max < dci_alloc[i].firstCCE) {
       firstCCE_max = dci_alloc[i].firstCCE;
       L            = dci_alloc[i].L;
+      CCE_max_used_index = firstCCE_max + (1<<L) - 1;
     }
   }
-  CCE_max_used_index = firstCCE_max + (1<<L) - 1;
 
   //if ((9*numCCE) <= (frame_parms->N_RB_DL*2))
   if (CCE_max_used_index < get_nCCE(1, frame_parms, get_mi(frame_parms, subframe)))
@@ -2032,10 +2032,6 @@ uint8_t get_num_pdcch_symbols(uint8_t num_dci,
 
 
   LOG_I(PHY," dci.c: get_num_pdcch_symbols subframe %d FATAL, illegal numCCE %d (num_dci %d)\n",subframe,numCCE,num_dci);
-  //for (i=0;i<num_dci;i++) {
-  //  printf("dci_alloc[%d].L = %d\n",i,dci_alloc[i].L);
-  //}
-  //exit(-1);
   return(0);
 }
 
