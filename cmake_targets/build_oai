@@ -481,6 +481,7 @@ function main() {
 	if [ ! "$DISABLE_HARDWARE_DEPENDENCY" == "True" ]; then
             install_usrp_uhd_driver
 	fi
+    fi
     if [ "$FLEXRAN_AGENT" == "1" ] ; then
       echo_info "installing protobuf/protobuf-c for flexran agent support"
       install_protobuf_from_source
@@ -552,7 +553,7 @@ function main() {
     fi
     echo 'include(${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)' >> $cmake_file
     cd  $DIR/$lte_build_dir/build
-    eval $CMAKE_CMD
+    eval $CMAKE_CMD    
   fi
 
   if [ "$eNB" = "1" -o "$UE" = "1" ] ; then

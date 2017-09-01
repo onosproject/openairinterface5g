@@ -211,18 +211,24 @@ openair0_timestamp trx_get_timestamp(openair0_device *device) {
   return 0;
 }
 
-void skiq_dump_txpacket(void *txp,int len) {
+void skiq_dump_txpacket(void *txp,int len,FILE *fp) {
 
   printf("txp.idx %d\n",((tx_packet_t*)txp)->idx);
   printf("txp.skiq_pkt.meta 0x%" PRIx64 "\n",((tx_packet_t*)txp)->skiq_pkt.meta);
   printf("txp.skiq_pkt.ts %llu\n",((tx_packet_t*)txp)->skiq_pkt.ts);
+  if (fp!=NULL) fwrite(txp,sizeof(skiq_tx_packet_t),1,fp);
+
+
+  /*
   for (int i=0;i<len;i++) {
     if (i%10 == 0) printf("\n%d :",i);
     printf("%x.",((tx_packet_t*)txp)->skiq_pkt.iq[i]);
-
+    
   }
-  printf("\n");
+  printf("\n");*/
 }
+
+#define DUMP_TX_FILE 1
 
 void *skiq_tx_thread(void *arg) {
 
@@ -239,8 +245,10 @@ void *skiq_tx_thread(void *arg) {
   int tx_drop_cnt=0;
   int tx_cnt=0;
   uint32_t late;
+#ifdef DUMP_TX_FILE
   int dump_cnt=0;
-  
+  FILE *fp=fopen("/tmp/skiq_txdebug.dat","w");
+#endif
   memset(&sparam, 0, sizeof(sparam));
   sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
 
@@ -251,6 +259,7 @@ void *skiq_tx_thread(void *arg) {
     skiq->tx_active=0;
     return((void*)NULL);
   }
+
   
   mlockall(MCL_CURRENT | MCL_FUTURE);
 
@@ -334,10 +343,10 @@ void *skiq_tx_thread(void *arg) {
 	txq->elm[txq->head].dataptr   += skiq->block_size_in_words;
 	txq->elm[txq->head].timestamp += skiq->block_size_in_words;
 	txq->elm[txq->head].length    -= skiq->block_size_in_words;
-	//#ifdef DEBUG_SKIQ_TX
+#ifdef DEBUG_SKIQ_TX
 	  printf("elm %d: writing %d words/ left %d to tx @%llu -> %p\n",txq->head,skiq->block_size_in_words,txq->elm[txq->head].length,txq->elm[txq->head].timestamp-skiq->block_size_in_words,
 		 txq->elm[txq->head].dataptr-skiq->block_size_in_words);
-	//#endif
+#endif
 	// copy skiq pointer in front of TX packet buffer
         txp_i->priv = (void *)skiq;
 	// copy tx_packet index in front of TX packet buffer
@@ -373,11 +382,13 @@ void *skiq_tx_thread(void *arg) {
 	  printf("skiq_tx_thread: skiq_transmit error, exiting\n");
 	  skiq->tx_active=0;
 	}
-	if (dump_cnt<5) { 
-	  skiq_dump_txpacket((void*)txp_i,skiq->block_size_in_words);
+#ifdef DUMP_TX_FILE	
+	if (dump_cnt<1+(153600/skiq->block_size_in_words)) {
+	  printf("skiq_tx_thread: Dumping packet %d/%d\n",dump_cnt,153600/skiq->block_size_in_words);
+	  skiq_dump_txpacket((void*)txp_i,skiq->block_size_in_words,fp);
 	  dump_cnt++;
 	}
-	
+#endif	
 	skiq->txp_active[i]=0;
 #endif
 	tx_cnt++;
@@ -423,11 +434,11 @@ void *skiq_tx_thread(void *arg) {
 	  memcpy(txp_i->skiq_pkt.iq,
 		 (void *)txq->elm[txq->head].dataptr,
 		 len<<2);
-	  //#ifdef DEBUG_SKIQ_TX
+#ifdef DEBUG_SKIQ_TX
 	  printf("elm %d: writing %d words/ left %d to tx @%llu -> %p\n",txq->head,len,len-txq->elm[txq->head].length,
 		 txq->elm[txq->head].timestamp,
 		 txq->elm[txq->head].dataptr);
-	  //#endif	  
+#endif	  
 	  // disactivate head element
 	  txq->elm[txq->head].active=0;
 	  // point head to next element in the queue
@@ -449,11 +460,11 @@ void *skiq_tx_thread(void *arg) {
 	  txq->elm[txq->head].dataptr   += (skiq->block_size_in_words-len);
 	  txq->elm[txq->head].timestamp += (skiq->block_size_in_words-len);
 	  txq->elm[txq->head].length    -= (skiq->block_size_in_words-len);
-	  //#ifdef DEBUG_SKIQ_TX
+#ifdef DEBUG_SKIQ_TX
 	  printf("elm %d : writing %d words/ left %d to tx @%llu -> %p\n",txq->head,skiq->block_size_in_words-len,txq->elm[txq->head].length,
 		 txq->elm[txq->head].timestamp-(skiq->block_size_in_words-len),
 		 txq->elm[txq->head].dataptr-(skiq->block_size_in_words-len));
-	  //#endif
+#endif
 	  // copy skiq pointer in front of TX packet buffer
           txp_i->priv = (void *)skiq;
 	  // copy tx_packet index in front of TX packet buffer
@@ -510,6 +521,9 @@ void *skiq_tx_thread(void *arg) {
     }
   }
   printf(ANSI_COLOR_RED           "skiq_tx_thread: returning\n"            ANSI_COLOR_RESET);
+#ifdef DUMP_TX_FILE	
+  fclose(fp);
+#endif
   return((void*)NULL);
 }
 
@@ -566,10 +580,10 @@ int skiq_add_tx_el(skiq_state_t *skiq, openair0_timestamp ptimestamp,void **buff
   
   if (((txq->tail+1) % SKIQ_MAX_TX_ELM) != txq->head) { // queue is not full
 
-    //#ifdef DEBUG_SKIQ_TX    
+#ifdef DEBUG_SKIQ_TX    
     printf(ANSI_COLOR_BLUE  "skiq_add_tx_el: Adding element at time %lu and size %d to txq (head %d, tail %d, SKIQ_MAX_TX_ELM %d), buff %p\n" ANSI_COLOR_RESET,
 	   (uint64_t)ptimestamp,nsamps,txq->head,txq->tail,SKIQ_MAX_TX_ELM,buff[0]);
-    //#endif
+#endif
     txq->elm[txq->tail].dataptr   = buff[0];
     txq->elm[txq->tail].timestamp = ptimestamp;
     txq->elm[txq->tail].length    = nsamps;

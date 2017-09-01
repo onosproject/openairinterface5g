@@ -523,7 +523,10 @@ set(HWLIB_SKIQ_SOURCE
   ${OPENAIR_TARGETS}/ARCH/SKIQ/USERSPACE/LIB/skiq_lib.c
   )
 add_library(oai_skiqdevif MODULE ${HWLIB_SKIQ_SOURCE}  )
-
+FIND_LIBRARY(LIBSIDEKIQ NAMES "libsidekiq__x86_64.gcc.a" "arg_parser__x86_64.gcc.a" PATHS ${SKIQ_SDK}/lib NO_DEFAULT_PATH)
+target_link_libraries(oai_skiqdevif ${LIBSIDEKIQ})
+target_include_directories(oai_skiqdevif PRIVATE "${SKIQ_SDK}/sidekiq_core/inc")
+set (CMAKE_SHARED_LINKER_FLAGS "-lglib-2.0 -Wl,--enable-new-dtags -Wl,-rpath,/usr/lib/epiq")  
 include_directories("${OPENAIR_TARGETS}/ARCH/LMSSDR/USERSPACE/LIB/")
 
 set(HWLIB_LMSSDR_SOURCE
