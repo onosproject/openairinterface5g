@@ -314,7 +314,7 @@ void rlc_am_configure_NB_IoT(
   rlc_am_entity_t *const        rlc_pP,
   const uint16_t                max_retx_thresholdP,
   const uint16_t                t_poll_retransmitP,
-  const uint32_t* const			enableStatusReportSN_Gap
+  uint32_t                      *enableStatusReportSN_Gap
   );
 //--------------------------------------------------------------
 
@@ -343,16 +343,16 @@ rlc_op_status_t rrc_rlc_config_req_NB_IoT (
   const srb_flag_t      srb_flagP,
   const config_action_t actionP,
   const rb_id_t         rb_idP,
-  const rlc_info_t      rlc_infoP);
+   rlc_info_t      rlc_infoP);
 //-----------------------------------------------------
 
 
 //defined in rlc_am.c
 //------------------------------------------------------
 void config_req_rlc_am_NB_IoT (
-  const protocol_ctxt_t* const ctxt_pP,
+  const protocol_ctxt_t        * const ctxt_pP,
   const srb_flag_t             srb_flagP,
-  rlc_am_info_NB_t  * const       config_am_pP, //XXX: MP: rlc_am_init.c --> this structure has been modified for NB-IoT
+  rlc_am_info_NB_IoT_t         *const config_am_pP, //XXX: MP: rlc_am_init.c --> this structure has been modified for NB-IoT
   const rb_id_t                rb_idP,
   const logical_chan_id_t      chan_idP
 );

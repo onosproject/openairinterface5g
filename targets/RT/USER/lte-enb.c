@@ -587,10 +587,10 @@ static inline int NB_rxtx(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,
 
   //Allocate memory for the structures used by PHY and MAC
   UL_IND_t *UL_INFO;
-  Sched_Rsp_t *Sched_Rsp;
+  Sched_Rsp_t *Sched_Rsp; 
 
   UL_INFO = (UL_IND_t*) malloc(sizeof(UL_IND_t));
-  Sched_Rsp = (Sched_Rsp_t*) malloc(sizeof(Sched_Rsp_t));
+  Sched_Rsp = (Sched_Rsp_t*) malloc(sizeof(Sched_Rsp_t)); 
 
   start_meas(&softmodem_stats_rxtx_sf);
 

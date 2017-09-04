@@ -32,6 +32,7 @@
 
 //#include "PHY/defs.h"
 #include "PHY/defs_NB_IoT.h"
+#include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
 //#include "PHY/extern_NB_IoT.h" //where we get the global Sched_Rsp_t structure filled
 //#include "SCHED/defs.h"
 #include "SCHED/extern_NB_IoT.h"
@@ -168,7 +169,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
   //RX processing for ue-specific resources (i
 
   uint32_t                  ret=0,i,j,k;
-  uint32_t                  harq_pid,round;
+  uint32_t                  harq_pid;   // round;
   int                       sync_pos;
   uint16_t                  rnti=0;
   uint8_t                   access_mode;
@@ -179,10 +180,10 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
   
   /*NB-IoT IF module Common setting*/
 
-  UL_INFO->module_id = eNB->Mod_id;
-  UL_INFO->CC_id = eNB->CC_id;
-  UL_INFO->frame =  frame;
-  UL_INFO->subframe = subframe;
+  UL_INFO->module_id    = eNB->Mod_id;
+  UL_INFO->CC_id        = eNB->CC_id;
+  UL_INFO->frame        =  frame;
+  UL_INFO->subframe     = subframe;
 
   T(T_ENB_PHY_UL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
 
@@ -192,27 +193,23 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 
   //if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) return;
 
-
   //check if any RB using in this UL subframe
-  eNB->rb_mask_ul[0]=0;
-  eNB->rb_mask_ul[1]=0;
-  eNB->rb_mask_ul[2]=0;
-  eNB->rb_mask_ul[3]=0;
+  eNB->rb_mask_ul[0] = 0;
+  eNB->rb_mask_ul[1] = 0;
+  eNB->rb_mask_ul[2] = 0;
+  eNB->rb_mask_ul[3] = 0;
 
   // Check for active processes in current subframe
   // NB-IoT subframe2harq_pid is in dci_tools, always set the frame type to FDD, this would become simpler.
   harq_pid = subframe2harq_pid_NB_IoT(fp,frame,subframe);
-
   // delete the cba
   // delete the srs
-  
   /*Loop over the UE, i is the UE ID */
   for (i=0; i<NUMBER_OF_UE_MAX_NB_IoT; i++) 
     {
 
       // delete srs 
       // delete Pucch procedure
-
       // check for Msg3
       if (eNB->mac_enabled==1) 
         {
@@ -233,7 +230,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
           (eNB->nulsch[i]->harq_process->subframe_scheduling_flag==1)) 
         {
           // UE is has ULSCH scheduling
-          round = eNB->nulsch[i]->harq_process->round;
+          //////////////////////////////////////round = eNB->nulsch[i]->harq_process->round; //commented to remove warning, to be added if round is used
           /*NB-IoT The nb_rb always set to 1 */
           for (int rb=0;rb<=eNB->nulsch[i]->harq_process->nb_rb;rb++) 
             {
@@ -262,9 +259,9 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
                 }
             }
 
-          eNB->pusch_stats_rb[i][(frame*10)+subframe] = eNB->nulsch[i]->harq_process->nb_rb;
+          eNB->pusch_stats_rb[i][(frame*10)+subframe]    = eNB->nulsch[i]->harq_process->nb_rb;
           eNB->pusch_stats_round[i][(frame*10)+subframe] = eNB->nulsch[i]->harq_process->round;
-          eNB->pusch_stats_mcs[i][(frame*10)+subframe] = eNB->nulsch[i]->harq_process->mcs;
+          eNB->pusch_stats_mcs[i][(frame*10)+subframe]   = eNB->nulsch[i]->harq_process->mcs;
 /*
   need for rx_ulsch function for NB_IoT
 
@@ -455,7 +452,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
           } // Msg3_flag == 0
 
             // estimate timing advance for MAC
-              sync_pos                               = lte_est_timing_advance_pusch(eNB,i);
+              sync_pos                               = NB_IoT_est_timing_advance_pusch(eNB,i);
               eNB->UE_stats[i].timing_advance_update = sync_pos - fp->nb_prefix_samples/4; //to check
 
       }  // ulsch not in error
@@ -693,16 +690,14 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
   //uint8_t DLSCH_pdu_rar[256];
   int i;
 
-
-
-
   LOG_D(PHY,
-	"[eNB %"PRIu8"][PDSCH rnti%"PRIx16"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", mcs %"PRIu8"(round %"PRIu8")\n",
-	eNB->Mod_id,
-	ndlsch->rnti,
-	frame, subframe, input_buffer_length,
-	ndlsch_harq->mcs,
-	ndlsch_harq->round);
+	      "[eNB %"PRIu8"][PDSCH rnti%"PRIx16"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", mcs %"PRIu8"(round %"PRIu8")\n",
+	      eNB->Mod_id,
+	      ndlsch->rnti,
+	      frame, subframe, input_buffer_length,
+	      ndlsch_harq->mcs,
+	      ndlsch_harq->round
+        );
 
   if(ndlsch_harq->round == 0) { //first transmission so we encode... because we generate the sequence
 
@@ -725,19 +720,21 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
     }
 
     else {  //XXX we should change taus function???
+
       DLSCH_pdu = DLSCH_pdu_tmp;
+
       for (i=0; i<input_buffer_length; i++)
-	DLSCH_pdu[i] = (unsigned char)(taus()&0xff);
+
+	       DLSCH_pdu[i] = (unsigned char)(taus()&0xff);
     }
   }
   else {
 	  //We are doing a retransmission (harq round > 0
-
-#ifdef DEBUG_PHY_PROC
-#ifdef DEBUG_DLSCH
+    #ifdef DEBUG_PHY_PROC
+    #ifdef DEBUG_DLSCH
     LOG_D(PHY,"[eNB] This DLSCH is a retransmission\n");
-#endif
-#endif
+    #endif
+    #endif
   }
 
   if (eNB->abstraction_flag==0) { // used for simulation of the PHY??
@@ -805,34 +802,32 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
     {
   	  case 0:
   		  G = 304;
-	 	break;
+	 	  break;
   	  case 1:
   		  G = 240;
-  		  break;
+  		break;
   	  case 2:
   		  G = 224;
-  		  break;
+  		break;
   	  case 3:
   		  G =200;
-  		  break;
+  		break;
   	  default:
   		  LOG_E (PHY,"npdsch_start_index has unwanted value\n");
-  		  break;
+  		break;
 
     }
-
     //start_meas_NB_IoT(&eNB->dlsch_encoding_stats);
-
     LOG_I(PHY, "NB-IoT Encoding step\n");
 
-//    eNB->te(eNB,
-//	    DLSCH_pdu,
-//	    num_pdcch_symbols,
-//	    dlsch,
-//	    frame,subframe,
-//	    &eNB->dlsch_rate_matching_stats,
-//	    &eNB->dlsch_turbo_encoding_stats,
-//	    &eNB->dlsch_interleaving_stats);
+    //    eNB->te(eNB,
+    //	    DLSCH_pdu,
+    //	    num_pdcch_symbols,
+    //	    dlsch,
+    //	    frame,subframe,
+    //	    &eNB->dlsch_rate_matching_stats,
+    //	    &eNB->dlsch_turbo_encoding_stats,
+    //	    &eNB->dlsch_interleaving_stats);
 
 
    // stop_meas_NB_IoT(&eNB->dlsch_encoding_stats);
@@ -849,19 +844,19 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
      *
      */
 
-//    dlsch_scrambling(fp,
-//		     0,
-//		     dlsch,
-//		     get_G(fp,
-//			   dlsch_harq->nb_rb,
-//			   dlsch_harq->rb_alloc,
-//			   get_Qm(dlsch_harq->mcs),
-//			   dlsch_harq->Nl,
-//			   num_pdcch_symbols,
-//			   frame,subframe,
-//			   0),
-//		     0,
-//		     subframe<<1);
+      //    dlsch_scrambling(fp,
+      //		     0,
+      //		     dlsch,
+      //		     get_G(fp,
+      //			   dlsch_harq->nb_rb,
+      //			   dlsch_harq->rb_alloc,
+      //			   get_Qm(dlsch_harq->mcs),
+      //			   dlsch_harq->Nl,
+      //			   num_pdcch_symbols,
+      //			   frame,subframe,
+      //			   0),
+      //		     0,
+      //		     subframe<<1);
 
     //stop_meas_NB_IoT(&eNB->dlsch_scrambling_stats);
 
@@ -870,13 +865,13 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
     //start_meas_NB_IoT(&eNB->dlsch_modulation_stats);
     LOG_I(PHY, "NB-IoT Modulation step\n");
 
-//    dlsch_modulation(eNB,
-//		     eNB->common_vars.txdataF[0],
-//		     AMP,
-//		     subframe,
-//		     num_pdcch_symbols,
-//		     dlsch,
-//		     dlsch1);
+    //    dlsch_modulation(eNB,
+    //		     eNB->common_vars.txdataF[0],
+    //		     AMP,
+    //		     subframe,
+    //		     num_pdcch_symbols,
+    //		     dlsch,
+    //		     dlsch1);
 
     //stop_meas_NB_IoT(&eNB->dlsch_modulation_stats);
   }
@@ -896,9 +891,7 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
 }
 
 
-
 extern int oai_exit;
-
 
 /*
  * ASSUMPTION
@@ -941,22 +934,19 @@ extern int oai_exit;
  * (in OAI in principle is every subframe)
  */
 
-void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
-         	 	 	 	 	                eNB_rxtx_proc_NB_IoT_t *proc,
-							                    int do_meas)
+void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
+         	 	 	 	 	                eNB_rxtx_proc_NB_IoT_t  *proc,
+							                    int                     do_meas)
 {
-  int frame = proc->frame_tx;
-  int subframe = proc->subframe_tx;
-  uint32_t aa;
-  DCI_PDU_NB_IoT *dci_pdu = eNB->DCI_pdu;
-  NB_IoT_DL_FRAME_PARMS *fp = &eNB->frame_parms_NB_IoT;
-  int8_t UE_id = 0;
-  int **txdataF = eNB->common_vars.txdataF[0];
-  uint32_t sib1_startFrame = -1;
+  int                    frame           = proc->frame_tx;
+  int                    subframe        = proc->subframe_tx;
+  uint32_t               aa;
+  DCI_PDU_NB_IoT         *dci_pdu        = eNB->DCI_pdu;
+  NB_IoT_DL_FRAME_PARMS  *fp             = &eNB->frame_parms_NB_IoT;
+  int8_t                 UE_id           = 0;
+  int                    **txdataF       = eNB->common_vars.txdataF[0];
+  uint32_t               sib1_startFrame = -1;
   //NB_IoT_eNB_NPDCCH_t*npdcch;
-
-
-
 
   if(do_meas == 1)
     //start_meas_NB_IoT(&eNB->phy_proc_tx);
@@ -975,7 +965,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   common_signal_procedures_NB_IoT(eNB,proc);
 
     //Generate MIB
-    if(subframe==0 && (eNB->npbch != NULL))
+    if(subframe ==0 && (eNB->npbch != NULL))
      {
           if(eNB->npbch->pdu != NULL)
           {
@@ -990,13 +980,13 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
         	   *
         	   */
 
-    		      generate_npbch(eNB->npbch,
-                             txdataF,
-                             AMP,
-                             fp,
-						                 eNB->npbch->pdu,
-                             frame%64,
-                             fp->NB_IoT_RB_ID);
+    		    generate_npbch(eNB->npbch,
+                           txdataF,
+                           AMP,
+                           fp,
+						               eNB->npbch->pdu,
+                           frame%64,
+                           fp->NB_IoT_RB_ID);
                         
           }
 

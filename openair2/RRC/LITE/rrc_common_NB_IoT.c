@@ -164,9 +164,9 @@ int rrc_init_global_param_NB_IoT( void )
 
   //Setting of this values????
   Rlc_info_am_config_NB_IoT.rlc_mode = RLC_MODE_AM; //only allowed for NB-IoT
-  Rlc_info_am_config_NB_IoT.rlc.rlc_am_info_NB.max_retx_threshold_NB = 50;
-  Rlc_info_am_config_NB_IoT.rlc.rlc_am_info_NB.t_poll_retransmit_NB = 15;
-  Rlc_info_am_config_NB_IoT.rlc.rlc_am_info_NB.enableStatusReportSN_Gap = NULL; //should be disabled
+  Rlc_info_am_config_NB_IoT.rlc.rlc_am_info_NB_IoT.max_retx_threshold_NB_IoT = 50;
+  Rlc_info_am_config_NB_IoT.rlc.rlc_am_info_NB_IoT.t_poll_retransmit_NB_IoT = 15;
+  Rlc_info_am_config_NB_IoT.rlc.rlc_am_info_NB_IoT.enableStatusReportSN_Gap_NB_IoT = NULL; //should be disabled
 
 
 #ifndef NO_RRM

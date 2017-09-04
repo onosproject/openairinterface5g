@@ -201,6 +201,7 @@ typedef struct {
   uint8_t srsUeSubframe;
 } SOUNDINGRS_UL_CONFIG_DEDICATED_NB_IoT;
 
+
 /// Enumeration for parameter SR transmission \ref SCHEDULING_REQUEST_CONFIG::dsr_TransMax.
 typedef enum {
   //sr_n4=0,

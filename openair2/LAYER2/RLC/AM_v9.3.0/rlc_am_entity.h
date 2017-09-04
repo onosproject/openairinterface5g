@@ -140,10 +140,10 @@ typedef struct rlc_am_entity_s {
   //----------------------------------------------------
 
   //DL-AM-RLC Config NB-IoT parameter
-  uint32_t*	     enableStatusReportSN_Gap;
+  uint32_t      *enableStatusReportSN_Gap_NB_IoT;
   //UL-AM-RLC Config. NB-IoT parameter
-  uint16_t       max_retx_threshold_NB;
-  rlc_am_timer_t t_poll_retransmit_NB; //TIMER
+  uint16_t       max_retx_threshold_NB_IoT;
+  rlc_am_timer_t t_poll_retransmit_NB_IoT; //TIMER
 
   //---------------------------------------------------------------------
   // STATISTICS

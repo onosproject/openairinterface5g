@@ -2815,7 +2815,7 @@ void config_req_rlc_am_asn1_NB_IoT (
         PROTOCOL_RLC_AM_MSC_ARGS(ctxt_pP, l_rlc_p),
         pollRetransmit_NB_tab[config_am_pP->ul_AM_RLC_r13.t_PollRetransmit_r13]);
 
-      LOG_D(RLC, PROTOCOL_RLC_AM_CTXT_FMT" CONFIG_REQ (max_retx_threshold_NB = %d t_poll_retransmit_NB = %d \n",
+      LOG_D(RLC, PROTOCOL_RLC_AM_CTXT_FMT" CONFIG_REQ (max_retx_threshold_NB_IoT = %d t_poll_retransmit_NB_IoT = %d \n",
             PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,l_rlc_p),
             maxRetxThreshold_NB_tab[config_am_pP->ul_AM_RLC_r13.maxRetxThreshold_r13],
             pollRetransmit_NB_tab[config_am_pP->ul_AM_RLC_r13.t_PollRetransmit_r13]);
@@ -2839,7 +2839,7 @@ void config_req_rlc_am_asn1_NB_IoT (
         PROTOCOL_RLC_AM_MSC_ARGS(ctxt_pP, l_rlc_p));
 
       LOG_D(RLC,
-            PROTOCOL_RLC_AM_CTXT_FMT"ILLEGAL CONFIG_REQ (max_retx_threshold_NB=%ld t_poll_retransmit_NB=%ld), RLC-AM NOT CONFIGURED\n",
+            PROTOCOL_RLC_AM_CTXT_FMT"ILLEGAL CONFIG_REQ (max_retx_threshold_NB_IoT=%ld t_poll_retransmit_NB_IoT=%ld), RLC-AM NOT CONFIGURED\n",
             PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,l_rlc_p),
             config_am_pP->ul_AM_RLC_r13.maxRetxThreshold_r13,
             config_am_pP->ul_AM_RLC_r13.t_PollRetransmit_r13);
@@ -2853,15 +2853,15 @@ void config_req_rlc_am_asn1_NB_IoT (
 //defined in rlc_am_init.c
 //-----------------------------------------------------------------------------
 void rlc_am_configure_NB_IoT(
-  const protocol_ctxt_t* const  ctxt_pP,
-  rlc_am_entity_t *const        rlc_pP,
+  const protocol_ctxt_t         *const  ctxt_pP,
+  rlc_am_entity_t               *const  rlc_pP,
   const uint16_t                max_retx_thresholdP,
   const uint16_t                t_poll_retransmitP,
-  const uint32_t*				enableStatusReportSN_Gap
+  uint32_t                *enableStatusReportSN_Gap
   )
 {
   if (rlc_pP->configured == TRUE) {
-    LOG_I(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[RECONFIGURE] max_retx_threshold_NB %d t_poll_retransmit_NB %d\n",
+    LOG_I(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[RECONFIGURE] max_retx_threshold_NB_IoT %d t_poll_retransmit_NB_IoT %d\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
           max_retx_thresholdP,
           t_poll_retransmitP
@@ -2869,23 +2869,23 @@ void rlc_am_configure_NB_IoT(
 
     //FIXME: rlc_am_entity_t should be modified??
 
-    rlc_pP->max_retx_threshold_NB = max_retx_thresholdP;
+    rlc_pP->max_retx_threshold_NB_IoT = max_retx_thresholdP;
     rlc_pP->protocol_state     = RLC_DATA_TRANSFER_READY_STATE;
-    rlc_pP->t_poll_retransmit_NB.ms_duration   = t_poll_retransmitP;
-    rlc_pP->enableStatusReportSN_Gap = enableStatusReportSN_Gap;
+    rlc_pP->t_poll_retransmit_NB_IoT.ms_duration   = t_poll_retransmitP;
+    rlc_pP->enableStatusReportSN_Gap_NB_IoT = enableStatusReportSN_Gap;
 
 
   } else {
-    LOG_I(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[CONFIGURE] max_retx_threshold_NB %d t_poll_retransmit_NB %d\n",
+    LOG_I(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[CONFIGURE] max_retx_threshold_NB_IoT %d t_poll_retransmit_NB_IoT %d\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
           max_retx_thresholdP,
           t_poll_retransmitP
 		  //enableStatusReportSN_Gap
     		);
 
-    rlc_pP->max_retx_threshold_NB = max_retx_thresholdP;
+    rlc_pP->max_retx_threshold_NB_IoT = max_retx_thresholdP;
     rlc_pP->protocol_state     = RLC_DATA_TRANSFER_READY_STATE;
-    rlc_pP->enableStatusReportSN_Gap = enableStatusReportSN_Gap;
+    rlc_pP->enableStatusReportSN_Gap_NB_IoT = enableStatusReportSN_Gap;
 
 
     rlc_am_init_timer_poll_retransmit(ctxt_pP, rlc_pP, t_poll_retransmitP);
@@ -3070,9 +3070,9 @@ rlc_op_status_t rrc_rlc_remove_rlc_NB_IoT (
 //defined in rlc_am.c
 //-----------------------------------------------------------------------------
 void config_req_rlc_am_NB_IoT (
-  const protocol_ctxt_t* const ctxt_pP,
+  const protocol_ctxt_t        *const ctxt_pP,
   const srb_flag_t             srb_flagP,
-  rlc_am_info_NB_t  * const       config_am_pP, //XXX: MP: rlc_am_init.c --> this structure has been modified for NB-IoT
+  rlc_am_info_NB_IoT_t         *const config_am_pP, //XXX: MP: rlc_am_init.c --> this structure has been modified for NB-IoT
   const rb_id_t                rb_idP,
   const logical_chan_id_t      chan_idP
 )
@@ -3089,17 +3089,17 @@ void config_req_rlc_am_NB_IoT (
     LOG_D(RLC,
           PROTOCOL_RLC_AM_CTXT_FMT" CONFIG_REQ (max_retx_threshold=%d t_poll_retransmit=%d)\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,l_rlc_p),
-          config_am_pP->max_retx_threshold_NB,
-          config_am_pP->t_poll_retransmit_NB
+          config_am_pP->max_retx_threshold_NB_IoT,
+          config_am_pP->t_poll_retransmit_NB_IoT
       //enableStatusReportSN_Gap_r13
       );
     rlc_am_init(ctxt_pP, l_rlc_p);
     rlc_am_set_debug_infos(ctxt_pP, l_rlc_p, srb_flagP, rb_idP, chan_idP);
     rlc_am_configure_NB_IoT(ctxt_pP,
               l_rlc_p,
-            config_am_pP->max_retx_threshold_NB,
-                      config_am_pP->t_poll_retransmit_NB,
-            config_am_pP->enableStatusReportSN_Gap);
+            config_am_pP->max_retx_threshold_NB_IoT,
+            config_am_pP->t_poll_retransmit_NB_IoT,
+            config_am_pP->enableStatusReportSN_Gap_NB_IoT);
   } else {
     LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" CONFIG_REQ RLC NOT FOUND\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,l_rlc_p));
@@ -3109,11 +3109,11 @@ void config_req_rlc_am_NB_IoT (
 //defined in rlc_rrc.c
 //used only for rrc_t310_expiration --> I don't know if it is used (probably not)
 rlc_op_status_t rrc_rlc_config_req_NB_IoT (
-  const protocol_ctxt_t* const ctxt_pP,
-  const srb_flag_t      srb_flagP,
-  const config_action_t actionP,
-  const rb_id_t         rb_idP,
-  const rlc_info_t      rlc_infoP)
+  const protocol_ctxt_t                    *const ctxt_pP,
+  const srb_flag_t                         srb_flagP,
+  const config_action_t                    actionP,
+  const rb_id_t                            rb_idP,
+  rlc_info_t                               rlc_infoP)
 {
   //-----------------------------------------------------------------------------
   //rlc_op_status_t status;
@@ -3148,7 +3148,7 @@ rlc_op_status_t rrc_rlc_config_req_NB_IoT (
       config_req_rlc_am_NB_IoT(
         ctxt_pP,
         srb_flagP,
-        &rlc_infoP.rlc.rlc_am_info_NB, //MP: pass the volatile structure for NB_IoT protocol params in rlc_am_init.h // warning present
+        &rlc_infoP.rlc.rlc_am_info_NB_IoT, //MP: pass the volatile structure for NB_IoT protocol params in rlc_am_init.h // warning present
         rb_idP, rb_idP);
       break;
 
