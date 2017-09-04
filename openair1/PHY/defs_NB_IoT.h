@@ -210,14 +210,14 @@ typedef struct {
 //   SCHEDULED_ACCESS,
 //   CBA_ACCESS};
 
-// typedef enum  {
-//   eNodeB_3GPP=0,   // classical eNodeB function
-//   eNodeB_3GPP_BBU, // eNodeB with NGFI IF5
-//   NGFI_RCC_IF4p5,  // NGFI_RCC (NGFI radio cloud center)
-//   NGFI_RAU_IF4p5,
-//   NGFI_RRU_IF5,    // NGFI_RRU (NGFI remote radio-unit,IF5)
-//   NGFI_RRU_IF4p5   // NGFI_RRU (NGFI remote radio-unit,IF4p5)
-// } eNB_func_NB_IoT_t;
+typedef enum  {
+  eNodeB_3GPP_NB_IoT=0,   // classical eNodeB function
+  eNodeB_3GPP_BBU_NB_IoT, // eNodeB with NGFI IF5
+  NGFI_RCC_IF4p5_NB_IoT,  // NGFI_RCC (NGFI radio cloud center)
+  NGFI_RAU_IF4p5_NB_IoT,
+  NGFI_RRU_IF5_Nb_IoT,    // NGFI_RRU (NGFI remote radio-unit,IF5)
+  NGFI_RRU_IF4p5_NB_IoT   // NGFI_RRU (NGFI remote radio-unit,IF4p5)
+} eNB_func_NB_IoT_t;
 
 typedef enum {
 
@@ -510,7 +510,7 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   module_id_t                   Mod_id;
   uint8_t                       CC_id;
   eNB_proc_NB_IoT_t             proc;
-  //eNB_func_NB_IoT_t           node_function;
+  eNB_func_NB_IoT_t             node_function;
   eNB_timing_NB_IoT_t           node_timing;
   eth_params_t                  *eth_params;
   int                           single_thread_flag;

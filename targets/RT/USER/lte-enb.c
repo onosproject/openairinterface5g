@@ -72,9 +72,10 @@
 #include "../../SIMU/USER/init_lte.h"
 
 //NB-IoT 
-
+#include "PHY/defs_NB_IoT.h"
 #include "SCHED/defs_NB_IoT.h"
-
+#include "PHY_INTERFACE/IF_Module_NB_IoT.h"
+#include "PHY/extern_NB_IoT.h"
 #include "LAYER2/MAC/defs.h"
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/proto.h"
@@ -582,7 +583,7 @@ int wait_CCs(eNB_rxtx_proc_t *proc) {
  *
  * For the moment the NB-IoT implementation foresees a single thread implementation
  * */
-static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
+static inline int NB_rxtx(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc, char *thread_name) {
 
   //Allocate memory for the structures used by PHY and MAC
   UL_IND_t *UL_INFO;
@@ -596,7 +597,7 @@ static inline int NB_rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_
   // ****************************************
   // Common RX procedures subframe n
 
-  if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5)))
+  if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5_NB_IoT)))
     eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
   
   /*UE-specific RX processing for subframe n*/
@@ -669,7 +670,11 @@ static void* eNB_thread_rxtx( void* param ) {
   static int eNB_thread_rxtx_status;
 
   eNB_rxtx_proc_t *proc = (eNB_rxtx_proc_t*)param;
+  eNB_rxtx_proc_NB_IoT_t *proc_NB_IoT = (eNB_rxtx_proc_NB_IoT_t*)param;  // to remove when eNB_thread_rxtx_status is duplicated for NB-IoT
+
   PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
+
+  PHY_VARS_eNB_NB_IoT *eNB_NB_IoT = PHY_vars_eNB_NB_IoT_g[0][proc_NB_IoT->CC_id]; // to remove when eNB_thread_rxtx_status is duplicated for NB-IoT
 
   char thread_name[100];
 
@@ -695,7 +700,7 @@ static void* eNB_thread_rxtx( void* param ) {
     if (eNB->CC_id==0)
     {
 #ifdef NB_IOT
-      if(NB_rxtx(eNB, proc,thread_name)<0) break;
+      if(NB_rxtx(eNB_NB_IoT, proc_NB_IoT,thread_name)<0) break;
 #else
       if (rxtx(eNB,proc,thread_name) < 0) break;
 #endif

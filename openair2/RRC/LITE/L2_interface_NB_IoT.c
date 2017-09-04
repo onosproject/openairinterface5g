@@ -137,23 +137,25 @@ extern void (*rlc_rrc_data_conf)(
 
 
 //NB1/NB2 Offset of category (XXX for the moment we choose a random number but i don't know if whould be like this- TS 36.101 ch 5.7.3F)
-float Category_Offset_NB_IoT[21]={-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,-0.5,0,1,2,3,4,5,6,7,8,9}; //-0.5 is not applicable for in-band and guard band
-float Category_Offset_short_NB_IoT[2]={-0.5,0}; //for guard band operating mode
-float Category_Offset_anchor_NB_IoT[4]={-2,-1,0,1}; //for in band and guard band mode over anchor carrier (include nsss and npsss)
+float Category_Offset_NB_IoT[21]       = {-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,-0.5,0,1,2,3,4,5,6,7,8,9}; //-0.5 is not applicable for in-band and guard band
+float Category_Offset_short_NB_IoT[2]  = {-0.5,0};                                                  //for guard band operating mode
+float Category_Offset_anchor_NB_IoT[4] = {-2,-1,0,1};                                               //for in band and guard band mode over anchor carrier (include nsss and npsss)
 
 typedef struct eutra_bandentry_NB_s {
 	//this should be the colum order of the table below
-    int16_t band;
-    uint32_t ul_min;
-    uint32_t ul_max;
-    uint32_t dl_min;
-    uint32_t dl_max;
-    uint32_t N_OFFs_DL;
+    int16_t   band;
+    uint32_t  ul_min;
+    uint32_t  ul_max;
+    uint32_t  dl_min;
+    uint32_t  dl_max;
+    uint32_t  N_OFFs_DL;
 } eutra_bandentry_NB_IoT_t;
 
 typedef struct band_info_s {
-    int nbands;
-    eutra_bandentry_NB_IoT_t band_info[100];
+
+    int                        nbands;
+    eutra_bandentry_NB_IoT_t   band_info[100];
+
 } band_info_t;
 
 
@@ -227,17 +229,18 @@ int32_t get_uldl_offset_NB_IoT(int eutra_band) {
 
 
 void config_mib_fapi_NB_IoT(
-		int rntiP,
-		int physCellId,
-		uint8_t eutra_band,
-		int Ncp,
-		int Ncp_UL,
-		int p_eNB,
-		int p_rx_eNB,
-		int dl_CarrierFreq,
-		int ul_CarrierFreq,
-		long*eutraControlRegionSize,
-		BCCH_BCH_Message_NB_t *mib_NB_IoT
+
+		int                     rntiP,
+		int                     physCellId,
+		uint8_t                 eutra_band,
+		int                     Ncp,
+		int                     Ncp_UL,
+		int                     p_eNB,
+		int                     p_rx_eNB,
+		int                     dl_CarrierFreq,
+		int                     ul_CarrierFreq,
+		long                    *eutraControlRegionSize,
+		BCCH_BCH_Message_NB_t   *mib_NB_IoT
 		)
 
 {
@@ -248,14 +251,14 @@ void config_mib_fapi_NB_IoT(
 	//ASSUMPTION: we always use an anchor carrier
 
 	float m_dl = 0; //this is the category offset for NB1/NB2 UE category used for EARFCN evaluation (TS 36.101 ch. 5.7.3F) (for the moment we keep this value fixed)
-    config_INFO->get_MIB = 1;
-    config_INFO->rnti = rntiP;
-    config_INFO->cfg->nfapi_config.rf_bands.rf_band[0] = (uint16_t)eutra_band;
-    config_INFO->cfg->sch_config.physical_cell_id.value = physCellId;
+    config_INFO->get_MIB                                          = 1;
+    config_INFO->rnti                                             = rntiP;
+    config_INFO->cfg->nfapi_config.rf_bands.rf_band[0]            = (uint16_t)eutra_band;
+    config_INFO->cfg->sch_config.physical_cell_id.value           = physCellId;
     config_INFO->cfg->subframe_config.dl_cyclic_prefix_type.value = Ncp;
     config_INFO->cfg->subframe_config.ul_cyclic_prefix_type.value = Ncp_UL;
-    config_INFO->cfg->rf_config.tx_antenna_ports.value = p_eNB;
-    config_INFO->cfg->rf_config.rx_antenna_ports.value = p_rx_eNB;
+    config_INFO->cfg->rf_config.tx_antenna_ports.value            = p_eNB;
+    config_INFO->cfg->rf_config.rx_antenna_ports.value            = p_rx_eNB;
 
 
 
@@ -265,70 +268,61 @@ void config_mib_fapi_NB_IoT(
 
     switch (mib_NB_IoT->message.operationModeInfo_r13.present)
     {
-    //FAPI specs pag 135
-    case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13:
-		config_INFO->cfg->config_NB_IoT.operating_mode.value = 0;
-		config_INFO->cfg->config_NB_IoT.prb_index.value = mib_NB_IoT->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13; //see TS 36.213 ch 16.0
-		config_INFO->cfg->config_NB_IoT.assumed_crs_aps.value = -1; //is not defined so we put a negative value
+      //FAPI specs pag 135
+      case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13:
 
-		if(eutraControlRegionSize == NULL)
-			LOG_E(RRC, "rrc_mac_config_req_eNB_NB_IoT: operation mode is in-band but eutraControlRegionSize is not defined");
-		else
-			config_INFO->cfg->config_NB_IoT.control_region_size.value = *eutraControlRegionSize;
+		      config_INFO->cfg->config_NB_IoT.operating_mode.value  = 0;
+		      config_INFO->cfg->config_NB_IoT.prb_index.value       = mib_NB_IoT->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13; //see TS 36.213 ch 16.0
+		      config_INFO->cfg->config_NB_IoT.assumed_crs_aps.value = -1; //is not defined so we put a negative value
 
-
-		//m_dl = NB_Category_Offset_anchor[rand()%4];
+		      if(eutraControlRegionSize == NULL)
+			       LOG_E(RRC, "rrc_mac_config_req_eNB_NB_IoT: operation mode is in-band but eutraControlRegionSize is not defined");
+		      else
+			       config_INFO->cfg->config_NB_IoT.control_region_size.value = *eutraControlRegionSize;
 
 
-		break;
-    case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_DifferentPCI_r13:
-    	config_INFO->cfg->config_NB_IoT.operating_mode.value = 1;
-
-    	//XXX problem: fapi think to define also eutra_CRS_sequenceInfo also for in band with different PCI but the problem is that we don-t have i
-    	//XXX should pass the prb_index may defined by configuration file depending on the LTE band we are considering (see Rhode&Shwartz whitepaper pag9)
-    	//config_INFO->config_NB_IoT.prb_index.value =
-
-    	config_INFO->cfg->config_NB_IoT.assumed_crs_aps.value = mib_NB_IoT->message.operationModeInfo_r13.choice.inband_DifferentPCI_r13.eutra_NumCRS_Ports_r13;
-
-		if(eutraControlRegionSize == NULL)
-			LOG_E(RRC, "rrc_mac_config_req_eNB_NB_IoT: operation mode is in-band but eutraControlRegionSize is not defined");
-		else
-			config_INFO->cfg->config_NB_IoT.control_region_size.value = *eutraControlRegionSize;
+		      //m_dl = NB_Category_Offset_anchor[rand()%4];
 
 
-		//m_dl = NB_Category_Offset_anchor[rand()%4];
+		  break;
 
+      case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_DifferentPCI_r13:
+
+    	   config_INFO->cfg->config_NB_IoT.operating_mode.value = 1;
+    	   //XXX problem: fapi think to define also eutra_CRS_sequenceInfo also for in band with different PCI but the problem is that we don-t have i
+    	   //XXX should pass the prb_index may defined by configuration file depending on the LTE band we are considering (see Rhode&Shwartz whitepaper pag9)
+    	   //config_INFO->config_NB_IoT.prb_index.value =
+    	   config_INFO->cfg->config_NB_IoT.assumed_crs_aps.value = mib_NB_IoT->message.operationModeInfo_r13.choice.inband_DifferentPCI_r13.eutra_NumCRS_Ports_r13;
+
+		     if(eutraControlRegionSize == NULL)
+			       LOG_E(RRC, "rrc_mac_config_req_eNB_NB_IoT: operation mode is in-band but eutraControlRegionSize is not defined");
+		     else
+			       config_INFO->cfg->config_NB_IoT.control_region_size.value = *eutraControlRegionSize;
 
     	break;
-    case MasterInformationBlock_NB__operationModeInfo_r13_PR_guardband_r13:
-    	config_INFO->cfg->config_NB_IoT.operating_mode.value = 2;
 
-       	//XXX should pass the prb_index may defined by configuration file depending on the LTE band we are considering (see Rhode&Shwartz whitepaper pag9)
-        //config_INFO->config_NB_IoT.prb_index.value =
-
-    	config_INFO->cfg->config_NB_IoT.control_region_size.value = -1; //should not being defined so we put a negative value
-		config_INFO->cfg->config_NB_IoT.assumed_crs_aps.value = -1; //is not defined so we put a negative value
-
-
-		//m_dl = NB_Category_Offset_anchor[rand()%4];
-
+      case MasterInformationBlock_NB__operationModeInfo_r13_PR_guardband_r13:
+    	
+          config_INFO->cfg->config_NB_IoT.operating_mode.value      = 2;
+       	  //XXX should pass the prb_index may defined by configuration file depending on the LTE band we are considering (see Rhode&Shwartz whitepaper pag9)
+          //config_INFO->config_NB_IoT.prb_index.value =
+    	    config_INFO->cfg->config_NB_IoT.control_region_size.value = -1; //should not being defined so we put a negative value
+		      config_INFO->cfg->config_NB_IoT.assumed_crs_aps.value     = -1; //is not defined so we put a negative value
 
     	break;
-    case MasterInformationBlock_NB__operationModeInfo_r13_PR_standalone_r13:
 
-    	config_INFO->cfg->config_NB_IoT.operating_mode.value = 3;
-    	config_INFO->cfg->config_NB_IoT.prb_index.value = -1; // is not defined for this case (put a negative random value--> will be not considered for encoding, scrambling procedures)
-    	config_INFO->cfg->config_NB_IoT.control_region_size.value = -1;//is not defined so we put a negative value
-		config_INFO->cfg->config_NB_IoT.assumed_crs_aps.value = -1; //is not defined so we put a negative value
+      case MasterInformationBlock_NB__operationModeInfo_r13_PR_standalone_r13:
 
-		//m_dl = NB_Category_Offset_short[rand()%2];
+    	    config_INFO->cfg->config_NB_IoT.operating_mode.value       = 3;
+    	    config_INFO->cfg->config_NB_IoT.prb_index.value            = -1;   // is not defined for this case (put a negative random value--> will be not considered for encoding, scrambling procedures)
+    	    config_INFO->cfg->config_NB_IoT.control_region_size.value  = -1;   //is not defined so we put a negative value
+		      config_INFO->cfg->config_NB_IoT.assumed_crs_aps.value      = -1;   //is not defined so we put a negative value
 
     	break;
-    default:
-    	LOG_E(RRC, "rrc_mac_config_req_eNB_NB_IoT: NB-IoT operating Mode (MIB-NB) not set\n");
+      default:
+    	    LOG_E(RRC, "rrc_mac_config_req_eNB_NB_IoT: NB-IoT operating Mode (MIB-NB) not set\n");
     	break;
     }
-
 
     //we shoud use dl_CarrierConfig for generating the earfcn for LTE-CAT N2 based on  TS 36.101 5.7.3F
     /*
@@ -338,7 +332,6 @@ void config_mib_fapi_NB_IoT(
     config_INFO->cfg->nfapi_config.earfcn.value = to_earfcn(eutra_band,dl_CarrierFreq, m_dl);
 
 }
-
 
 void config_sib2_fapi_NB_IoT(
 						int physCellId,
@@ -534,19 +527,19 @@ void config_sib2_fapi_NB_IoT(
 	  /*DL GAP config */
     if(radioResourceConfigCommon->dl_Gap_r13 !=NULL)/* OPTIONAL */
     {
-  	  config_INFO->cfg->config_NB_IoT.dl_gap_config_enable.value = 1;
-  	  config_INFO->cfg->config_NB_IoT.dl_gap_threshold.value = radioResourceConfigCommon->dl_Gap_r13->dl_GapThreshold_r13;
+  	  config_INFO->cfg->config_NB_IoT.dl_gap_config_enable.value        = 1;
+  	  config_INFO->cfg->config_NB_IoT.dl_gap_threshold.value            = radioResourceConfigCommon->dl_Gap_r13->dl_GapThreshold_r13;
 		  config_INFO->cfg->config_NB_IoT.dl_gap_duration_coefficient.value = radioResourceConfigCommon->dl_Gap_r13->dl_GapDurationCoeff_r13;
-		  config_INFO->cfg->config_NB_IoT.dl_gap_periodicity.value = radioResourceConfigCommon->dl_Gap_r13->dl_GapPeriodicity_r13;
+		  config_INFO->cfg->config_NB_IoT.dl_gap_periodicity.value          = radioResourceConfigCommon->dl_Gap_r13->dl_GapPeriodicity_r13;
     }
     else
-  	  config_INFO->cfg->config_NB_IoT.dl_gap_config_enable.value = 0;
+  	  config_INFO->cfg->config_NB_IoT.dl_gap_config_enable.value        = 0;
 
 
 	  /*UL Power Control ConfigCommon*/
     //nothing defined in FAPI specs
-    config_INFO->extra_phy_parms.p0_nominal_npusch = radioResourceConfigCommon->uplinkPowerControlCommon_r13.p0_NominalNPUSCH_r13;
-    config_INFO->extra_phy_parms.alpha = radioResourceConfigCommon->uplinkPowerControlCommon_r13.alpha_r13;
+    config_INFO->extra_phy_parms.p0_nominal_npusch  = radioResourceConfigCommon->uplinkPowerControlCommon_r13.p0_NominalNPUSCH_r13;
+    config_INFO->extra_phy_parms.alpha              = radioResourceConfigCommon->uplinkPowerControlCommon_r13.alpha_r13;
     config_INFO->extra_phy_parms.delta_preamle_MSG3 = radioResourceConfigCommon->uplinkPowerControlCommon_r13.deltaPreambleMsg3_r13;
 
 	  /*RACH Config Common*/
@@ -563,74 +556,73 @@ void config_sib2_fapi_NB_IoT(
 //defined in MAC/config.c
 //FIXME: this function has no implication in terms of logical channel configuration for MAC
 int rrc_mac_config_req_eNB_NB_IoT(
-			   module_id_t       				Mod_idP,
-			   int                              CC_idP,
-			   int								rntiP,
-			   int                              physCellId, // is the NcellID for NB-IoT
-			   int                              p_eNB, //number of eNB TX antenna ports (1 or 2 for NB-IoT)
-			   int								p_rx_eNB,// number of eNB Rx antenna ports (1 or 2 for NB-IoT)
-			   int                              Ncp,
-			   int								Ncp_UL,
-			   long                             eutra_band, //requencyBandIndicator (eutra_band) in sib1. this param is set in the do_sib1_nb and is directly taken from the .config file
-			   struct NS_PmaxList_NB_r13        *frequencyBandInfo, //optional SIB1
-			   struct MultiBandInfoList_NB_r13  *multiBandInfoList, //optional SIB1
-			   struct DL_Bitmap_NB_r13          *dl_bitmap, //optional SIB1
-			   long*                            eutraControlRegionSize, //optional sib1, is defined only when we are in in-band operation mode (same PCI or different PCI)
-			   long*							nrs_CRS_PoweSIwindowsizerOffset, //optional
-			   uint32_t                         dl_CarrierFreq,
-			   uint32_t                         ul_CarrierFreq,
-			   BCCH_BCH_Message_NB_t            *mib_NB_IoT,
+			   module_id_t       				               Mod_idP,
+			   int                                     CC_idP,
+			   int								                     rntiP,
+			   int                                     physCellId,                       // is the NcellID for NB-IoT
+			   int                                     p_eNB,                            //number of eNB TX antenna ports (1 or 2 for NB-IoT)
+			   int								                     p_rx_eNB,                         // number of eNB Rx antenna ports (1 or 2 for NB-IoT)
+			   int                                     Ncp,
+			   int								                     Ncp_UL,
+			   long                                    eutra_band,                       //requencyBandIndicator (eutra_band) in sib1. this param is set in the do_sib1_nb and is directly taken from the .config file
+			   struct NS_PmaxList_NB_r13               *frequencyBandInfo,               //optional SIB1
+			   struct MultiBandInfoList_NB_r13         *multiBandInfoList,               //optional SIB1
+			   struct DL_Bitmap_NB_r13                 *dl_bitmap,                       //optional SIB1
+			   long*                                   eutraControlRegionSize,           //optional sib1, is defined only when we are in in-band operation mode (same PCI or different PCI)
+			   long*							                     nrs_CRS_PoweSIwindowsizerOffset,  //optional
+			   uint32_t                                dl_CarrierFreq,
+			   uint32_t                                ul_CarrierFreq,
+			   BCCH_BCH_Message_NB_t                   *mib_NB_IoT,
 			   RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon,
-			   struct PhysicalConfigDedicated_NB_r13  *physicalConfigDedicated,
-			   MAC_MainConfig_NB_r13_t                *mac_MainConfig, //most probably not needed since only used at UE side
-			   long                             logicalChannelIdentity,//FIXME: decide how to use it
-			   LogicalChannelConfig_NB_r13_t          *logicalChannelConfig //FIXME: decide how to use it
+			   struct PhysicalConfigDedicated_NB_r13   *physicalConfigDedicated,
+			   MAC_MainConfig_NB_r13_t                 *mac_MainConfig,                  //most probably not needed since only used at UE side
+			   long                                    logicalChannelIdentity,           //FIXME: decide how to use it
+			   LogicalChannelConfig_NB_r13_t           *logicalChannelConfig             //FIXME: decide how to use it
 			   )
 {
 
 
   int UE_id = -1;
   //UE_list_NB_IoT_t *UE_list= &eNB_mac_inst_NB_IoT->UE_list;
-  UE_id = find_UE_id_NB_IoT(Mod_idP, rntiP);
+  UE_id     = find_UE_id_NB_IoT(Mod_idP, rntiP);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
 
-  config_INFO->get_MIB = 0;
-  config_INFO->get_COMMON = 0;
-  config_INFO->get_DEDICATED = 0;
-
-  config_INFO->mod_id = Mod_idP;
-  config_INFO->CC_id = CC_idP;
-  config_INFO->cfg->subframe_config.duplex_mode.value = 2; //HD-FDD for NB-IoT
-
+  config_INFO->get_MIB                                 = 0;
+  config_INFO->get_COMMON                              = 0;
+  config_INFO->get_DEDICATED                           = 0;
+  config_INFO->mod_id                                  = Mod_idP;
+  config_INFO->CC_id                                   = CC_idP;
+  config_INFO->cfg->subframe_config.duplex_mode.value  = 2;               //HD-FDD for NB-IoT
 
 
 
-  if (mib_NB_IoT!=NULL ) {
+
+  if (mib_NB_IoT != NULL) {
 
    //XXX possible alternative implementation (as RU-RAU splitting)
    //if(eNB_mac_inst == NULL) l2_init_eNB(); //TODO MP: to be included in the MAC/main.c
    //mac_top_init_eNB(); //TODO MP:  to be included in the MAC/main.c
 
 
-    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].mib_NB_IoT           = mib_NB_IoT;
-    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].physCellId     = physCellId;
-    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].p_eNB          = p_eNB;
-    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].p_rx_eNB		= p_rx_eNB;
-    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].Ncp            = Ncp;
-    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].Ncp_UL         = Ncp_UL;
-    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].eutra_band     = eutra_band;
-    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].dl_CarrierFreq = dl_CarrierFreq;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].mib_NB_IoT       = mib_NB_IoT;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].physCellId       = physCellId;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].p_eNB            = p_eNB;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].p_rx_eNB		      = p_rx_eNB;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].Ncp              = Ncp;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].Ncp_UL           = Ncp_UL;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].eutra_band       = eutra_band;
+    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].dl_CarrierFreq   = dl_CarrierFreq;
 
     LOG_I(MAC,
- 	  "Configuring MIB for instance %d, CCid %d : (band %d,Nid_cell %d,TX antenna port (p) %d,DL freq %u\n",
- 	  Mod_idP,
- 	  CC_idP,
- 	  eutra_band,
- 	  physCellId,
- 	  p_eNB,
- 	  dl_CarrierFreq
-	  );
+ 	        "Configuring MIB for instance %d, CCid %d : (band %ld,Nid_cell %d,TX antenna port (p) %d,DL freq %u\n",
+ 	        Mod_idP,
+ 	        CC_idP,
+ 	        eutra_band,
+ 	        physCellId,
+ 	        p_eNB,
+ 	        dl_CarrierFreq
+	       );
 
     /*
      * Following the FAPI like approach:
@@ -643,21 +635,18 @@ int rrc_mac_config_req_eNB_NB_IoT(
 
 
     //Mapping OAI params into FAPI params
-    		config_mib_fapi_NB_IoT(
-    						rntiP,
-							physCellId,
-							eutra_band,
-							Ncp,
-							Ncp_UL,
-							p_eNB,
-							p_rx_eNB,
-							dl_CarrierFreq,
-							ul_CarrierFreq,
-							eutraControlRegionSize,
-							mib_NB_IoT
-    						);
-
-
+    		config_mib_fapi_NB_IoT(rntiP,
+							                 physCellId,
+							                 eutra_band,
+							                 Ncp,
+							                 Ncp_UL,
+							                 p_eNB,
+							                 p_rx_eNB,
+							                 dl_CarrierFreq,
+							                 ul_CarrierFreq,
+							                 eutraControlRegionSize,
+							                 mib_NB_IoT
+    					               	);
 
   }//mib_NB_IoT!=NULL
 
@@ -676,9 +665,9 @@ int rrc_mac_config_req_eNB_NB_IoT(
       LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13= %ld\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13);
 
 
-      eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].radioResourceConfigCommon = radioResourceConfigCommon;
-      if (ul_CarrierFreq>0) eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].ul_CarrierFreq   = ul_CarrierFreq;
-
+      eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].radioResourceConfigCommon  = radioResourceConfigCommon;
+      if (ul_CarrierFreq>0) 
+        eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].ul_CarrierFreq   = ul_CarrierFreq;
 
       config_sib2_fapi_NB_IoT(physCellId,radioResourceConfigCommon);
 
@@ -697,7 +686,6 @@ int rrc_mac_config_req_eNB_NB_IoT(
     }
   }
 
-
   if (physicalConfigDedicated != NULL) {
 
 
@@ -714,8 +702,8 @@ int rrc_mac_config_req_eNB_NB_IoT(
     	//use UE-specific structure at phy layer where to store this information (NPDCCH structure) this structure will be scrambled based on the rnti
     	config_INFO->rnti = UE_RNTI_NB_IoT(Mod_idP, UE_id);
     	config_INFO->extra_phy_parms.npdcch_NumRepetitions = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13; //Rmax
-    	config_INFO->extra_phy_parms.npdcch_Offset_USS = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13;
-    	config_INFO->extra_phy_parms.npdcch_StartSF_USS = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13;
+    	config_INFO->extra_phy_parms.npdcch_Offset_USS     = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13;
+    	config_INFO->extra_phy_parms.npdcch_StartSF_USS    = physicalConfigDedicated->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13;
 
     	//config_INFO->extra_phy_parms.phy_config_dedicated = physicalConfigDedicated; //for the moment fapi not allow this so not used
 
@@ -736,24 +724,23 @@ int rrc_mac_config_req_eNB_NB_IoT(
 
 //-------------------------------------------------------
 //New
-int npdsch_rep_to_array[3] ={4,8,16}; //TS 36.213 Table 16.4.1.3-3
+int npdsch_rep_to_array[3]      = {4,8,16}; //TS 36.213 Table 16.4.1.3-3
 int sib1_startFrame_to_array[4] = {0,16,32,48};//TS 36.213 Table 16.4.1.3-4
 //New----------------------------------------------------
 //return -1 whenever no SIB1-NB transmission occur.
 //return sib1_startFrame when transmission occur in the current frame
-uint32_t is_SIB1_NB_IoT(
-		const frame_t    		frameP,
-		long					schedulingInfoSIB1,//from the mib
-		int						physCellId, //by configuration
-		NB_IoT_eNB_NDLSCH_t		*ndlsch_SIB1
-		)
+uint32_t is_SIB1_NB_IoT(const frame_t    		   frameP,
+		                    long					         schedulingInfoSIB1,   //from the mib
+		                    int						         physCellId,           //by configuration
+		                    NB_IoT_eNB_NDLSCH_t		*ndlsch_SIB1
+		                    )
 {
-	uint8_t nb_rep=0; // number of sib1-nb repetitions within the 256 radio frames
-	uint32_t sib1_startFrame;
-	uint32_t sib1_period_NB_IoT = 256;//from specs TS 36.331 (rf)
-	uint8_t index;
-	int offset;
-	int period_nb; // the number of the actual period over the 1024 frames
+	uint8_t    nb_rep=0; // number of sib1-nb repetitions within the 256 radio frames
+	uint32_t   sib1_startFrame;
+	uint32_t   sib1_period_NB_IoT = 256;//from specs TS 36.331 (rf)
+	uint8_t    index;
+	int        offset;
+	int        period_nb; // the number of the actual period over the 1024 frames
 
 
 
@@ -788,8 +775,8 @@ uint32_t is_SIB1_NB_IoT(
     		}
 
 
-		  //SIB1-NB period number
-		  period_nb = (int) frameP/sib1_period_NB_IoT;
+		    //SIB1-NB period number
+		    period_nb = (int) frameP/sib1_period_NB_IoT;
 
 
 	      //number of repetitions
@@ -847,7 +834,7 @@ uint32_t is_SIB1_NB_IoT(
 	    	  //the actual frame is in a gap between two consecutive repetitions
 	    	  if(frameP < index)
 	    	  {
-	    		  	ndlsch_SIB1->sib1_rep_start = 0;
+	    		  	ndlsch_SIB1->sib1_rep_start      = 0;
 	    		  	ndlsch_SIB1->relative_sib1_frame = 0;
 	    	  	    return -1;
 	    	  }
@@ -855,7 +842,7 @@ uint32_t is_SIB1_NB_IoT(
 	    	  else if(frameP == index)
 	    	  {
 	    		  //the actual frame is the start of a new repetition (SIB1-NB should be retransmitted)
-	    		  ndlsch_SIB1->sib1_rep_start = 1;
+	    		  ndlsch_SIB1->sib1_rep_start      = 1;
 	    		  ndlsch_SIB1->relative_sib1_frame = 1;
 	    		  return sib1_startFrame;
 	    	  }
@@ -903,18 +890,17 @@ uint32_t is_SIB1_NB_IoT(
 
 //New----------------------------------------------------
 //Function for check if the current frame is the start of a new SIB1-NB period
-uint8_t is_SIB1_start_NB_IoT(
-		const frame_t    		frameP,
-		long					schedulingInfoSIB1,//from the mib
-		int						physCellId //by configuration
-		)
+uint8_t is_SIB1_start_NB_IoT(const frame_t    		frameP,
+		                         long					        schedulingInfoSIB1,   //from the mib
+		                         int						      physCellId            //by configuration
+		                        )
 {
-	uint8_t nb_rep=0; // number of sib1-nb repetitions within the 256 radio frames
-	uint32_t sib1_startFrame;
-//	uint32_t sib1_period_NB_IoT = 256;//from specs TS 36.331 (rf)
-//	uint8_t index;
-//	int offset;
-//	int period_nb; // the number of the actual period over the 1024 frames
+	uint8_t    nb_rep = 0;        // number of sib1-nb repetitions within the 256 radio frames
+	uint32_t   sib1_startFrame;
+  //	uint32_t sib1_period_NB_IoT = 256;//from specs TS 36.331 (rf)
+  //	uint8_t index;
+  //	int offset;
+  //	int period_nb; // the number of the actual period over the 1024 frames
 
 
     		if(schedulingInfoSIB1 > 11 || schedulingInfoSIB1 < 0){
@@ -958,18 +944,17 @@ uint8_t is_SIB1_start_NB_IoT(
 
 //---------------------------------------------------------------------------
 //New
-int si_windowLength_to_rf[7]={16,32,48,64,96,128,160}; //TS 36.331  v14.2.1 pag 587
-int si_repPattern_to_nb[4]={2,4,8,16};
-int si_period_to_nb[7]={64,128,256,512,1024,2048,4096};
+int si_windowLength_to_rf[7] = {16,32,48,64,96,128,160}; //TS 36.331  v14.2.1 pag 587
+int si_repPattern_to_nb[4]   = {2,4,8,16};
+int si_period_to_nb[7]       = {64,128,256,512,1024,2048,4096};
 //New---------------------------------------------------------------------------
-boolean_t is_SIB23_NB_IoT(
-		const frame_t     	frameP,
-		const frame_t		h_frameP, // the HSFN (increased by 1 every SFN wrap around) (10 bits)
-		long				si_period, //SI-periodicity (value given by the Enumerative of the SIB1-NB)
-		long				si_windowLength_ms, //Si-windowlength (ms) received as an enumerative (see the IE of SIB1-NB)
-		long*				si_RadioFrameOffset, //Optional
-		long				si_RepetitionPattern // is given as an Enumerated
-		)
+boolean_t is_SIB23_NB_IoT(const frame_t     frameP,
+		                      const frame_t		  h_frameP,               // the HSFN (increased by 1 every SFN wrap around) (10 bits)
+		                      long				      si_period,              //SI-periodicity (value given by the Enumerative of the SIB1-NB)
+		                      long				      si_windowLength_ms,     //Si-windowlength (ms) received as an enumerative (see the IE of SIB1-NB)
+		                      long*				      si_RadioFrameOffset,    //Optional
+		                      long				      si_RepetitionPattern    // is given as an Enumerated
+		                      )
 {
 
 	long w_start; //start of the si-window
