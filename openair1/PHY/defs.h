@@ -58,6 +58,7 @@
 #include "msc.h"
 
 #include "openair2/PHY_INTERFACE/IF_Module.h"
+#include "openair2/PHY_INTERFACE/IF_Module_UE.h"
 
 //#include <complex.h>
 #include "assertions.h"

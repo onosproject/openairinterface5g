@@ -59,7 +59,6 @@ int l1_north_init_eNB() {
 }
 
 
-
 void phy_config_request(PHY_Config_t *phy_config) {
 
   uint8_t Mod_id              = phy_config->Mod_id;
@@ -254,6 +253,18 @@ void phy_config_request(PHY_Config_t *phy_config) {
   RC.eNB[Mod_id][CC_id]->configured                                   = 1;
   LOG_I(PHY,"eNB %d/%d configured\n",Mod_id,CC_id);
 }
+
+
+/* Panos: New function of the UE MAC interface: This function
+should copy the values assigned to the interface parameters
+(within MAC/config.c) to the PHY frame configuration. It should be called at the end of
+config::rrc_mac_config_request_ue()*/
+
+void phy_config_request_ue (UE_PHY_Config_t* UE_config_INFO)
+{
+
+}
+
 
 void phy_config_sib1_ue(uint8_t Mod_id,int CC_id,
                         uint8_t eNB_id,

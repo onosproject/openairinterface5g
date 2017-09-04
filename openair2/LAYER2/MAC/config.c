@@ -264,6 +264,7 @@ void config_sib1(int Mod_idP,
   
 }
 
+
 int power_off_dB[6] = {78,118,140,170,188,200};
 
 void config_sib2(int Mod_idP, 
@@ -413,6 +414,10 @@ void config_sib2(int Mod_idP,
 #endif
 
 }
+
+
+
+
 
 void config_dedicated(int Mod_idP, 
 		      int CC_idP, 
@@ -671,6 +676,47 @@ int rrc_mac_config_req_eNB(module_id_t                      Mod_idP,
   return(0);			   
 
 }
+
+// P: New function supporting the MAC interface
+void config_sib1_ue()
+{
+
+}
+
+// P: New function supporting the MAC interface
+void config_sib2_ue()
+{
+
+}
+
+// P: New function supporting the MAC interface
+void config_meas_ue()
+{
+
+}
+
+// P: New function supporting the MAC interface
+// to substitute call to phy_config_afterHO_ue().
+void config_afterHO_ue()
+{
+
+}
+
+// P: New function supporting the MAC interface
+void config_sib13_ue()
+{
+
+}
+
+
+// P: New function supporting the MAC interface
+void config_dedicated_ue()
+{
+
+}
+
+
+
 int
 rrc_mac_config_req_ue(
   module_id_t                      Mod_idP,
@@ -1020,6 +1066,9 @@ rrc_mac_config_req_ue(
   }
 #endif
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
+
+  // Panos: Call to the phy_config_request_ue() function of the interface to copy the UE_PHY_Config_t interface
+  // configuration to the PHY common and dedicated configuration originating from RRC.
 
   return(0);
 }

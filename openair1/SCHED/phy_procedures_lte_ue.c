@@ -503,6 +503,7 @@ void ue_compute_srs_occasion(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id
                   {
                       int Mod_id = ue->Mod_id;
                       int CC_id = ue->CC_id;
+                      // Panos: Substitute call to ue_get_SR() with the filled ue_SR_config->SR_payload (0, or 1).
                       SR_payload = ue_get_SR(Mod_id,
 					     CC_id,
 					     frame_tx,
@@ -1338,6 +1339,8 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
     // ask L2 for RACH transport
     if ((mode != rx_calib_ue) && (mode != rx_calib_ue_med) && (mode != rx_calib_ue_byp) && (mode != no_L2_connect) ) {
       LOG_D(PHY,"Getting PRACH resources\n");
+      // Panos: Substitute the call to ue_get_rach with ue->prach_resources[eNB_id] = ue_rach_config, assuming that
+      // ue_get_rach() will have been called from the MAC layer.
       ue->prach_resources[eNB_id] = ue_get_rach(ue->Mod_id,
 						ue->CC_id,
 						frame_tx,
@@ -1416,6 +1419,7 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
   }
   
   if (ue->mac_enabled==1){
+	  // Panos: Substitute with fill_Tx_indication(ue->Mod_id, ue->CC_id, frame_tx, eNB_id, UE_MAC_Tx_IND_Msg1_TYPE)
     Msg1_transmitted(ue->Mod_id,
 		     ue->CC_id,
 		     frame_tx,
@@ -1684,6 +1688,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       
       if (ue->mac_enabled == 1) {
 	// signal MAC that Msg3 was sent
+    // Substitute call to this function by call to fill_Tx_indication (UE_MAC_Tx_IND_Msg3_TYPE)
 	Msg3_transmitted(Mod_id,
 			 CC_id,
 			 frame_tx,
@@ -1699,6 +1704,10 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
 	if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->round==0) {
 	  //if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->calibration_flag == 0) {
 	  access_mode=SCHEDULED_ACCESS;
+
+	  // Panos: Remove the call to ue_get_sdu here and use
+	  // the corresponding Tx.request PDU, instead of ulsch_input_buffer, below.
+
 	  ue_get_sdu(Mod_id,
 		     CC_id,
 		     frame_tx,
@@ -2536,6 +2545,8 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     frame_tx += pbch_phase;
 
     if (ue->mac_enabled==1) {
+      // Panos:Substitute this call with fill_bch_indication(sync=1)
+
       dl_phy_sync_success(ue->Mod_id,frame_rx,eNB_id,
 			  ue->UE_mode[eNB_id]==NOT_SYNCHED ? 1 : 0);
     }
@@ -2617,7 +2628,11 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
     ue->pbch_vars[eNB_id]->pdu_errors_conseq++;
     ue->pbch_vars[eNB_id]->pdu_errors++;
-    if (ue->mac_enabled == 1) rrc_out_of_sync_ind(ue->Mod_id,frame_rx,eNB_id);
+    if (ue->mac_enabled == 1) {
+    	// Panos: Substitute call to rrc_out_of_sync_ind() with fill_bch_incication(sync=0).
+
+    	rrc_out_of_sync_ind(ue->Mod_id,frame_rx,eNB_id);
+    }
     else AssertFatal(ue->pbch_vars[eNB_id]->pdu_errors_conseq<100,
 		     "More that 100 consecutive PBCH errors! Exiting!\n");
   }
@@ -2636,6 +2651,55 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 #endif
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_PBCH_PROCEDURES, VCD_FUNCTION_OUT);
 }
+
+// Panos: New function supporting the MAC interface
+void fill_bch_indication(module_id_t   module_idP,
+		frame_t frameP,
+		unsigned char eNB_index,
+		uint8_t first_sync,
+		uint8_t sync)
+{
+
+}
+
+// Panos: New function supporting the MAC interface
+void fill_dlsch_indication(module_id_t module_idP,
+	    uint8_t CC_id,
+	    frame_t frameP,
+        sub_frame_t subframeP,
+	    uint8_t* sdu,
+	    uint16_t sdu_len,
+	    uint8_t eNB_index)
+{
+
+}
+
+// Panos: New function supporting the MAC interface
+void fill_dlsch_rar_indication(module_id_t module_idP,
+		  int CC_id,
+		  frame_t frameP,
+		  rnti_t ra_rnti,
+		  uint8_t* dlsch_buffer,
+		  rnti_t* t_crnti,
+		  uint8_t preamble_index,
+		  uint8_t* selected_rar_buffer)
+{
+
+}
+
+// PANOS: New function supporting the MAC interface
+
+void fill_Tx_indication(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id, uint8_t Tx_ind_type)
+{
+	switch (Tx_ind_type)
+	{
+	case UE_MAC_Tx_IND_Msg1_TYPE:
+		break;
+	case UE_MAC_Tx_IND_Msg3_TYPE:
+		break;
+	}
+}
+
 
 int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t abstraction_flag)
 {
@@ -3217,6 +3281,7 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
 	    subframe_rx,
 	    ue->prach_resources[eNB_id]->ra_PreambleIndex);
       
+      // Panos: Substitute call to ue_process_rar() with call to fill_dlsch_rar_indication()
       timing_advance = ue_process_rar(ue->Mod_id,
 				      ue->CC_id,
 				      frame_rx,
@@ -3507,6 +3572,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
       if (ue->mac_enabled == 1) {
 	switch (pdsch) {
 	case PDSCH:
+		// Panos: Substitute call to ue_send_sdu() with call to fill_dlsch_indication()
 	  ue_send_sdu(ue->Mod_id,
 		      CC_id,
 		      frame_rx,
@@ -3516,6 +3582,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 		      eNB_id);
 	  break;
 	case SI_PDSCH:
+		// Panos: Substitute call with call to fill_dlsch_indication()
 	  ue_decode_si(ue->Mod_id,
 		       CC_id,
 		       frame_rx,
@@ -3524,7 +3591,8 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 		       ue->dlsch_SI[eNB_id]->harq_processes[0]->TBS>>3);
 	  break;
 	case P_PDSCH:
-	  ue_decode_p(ue->Mod_id,
+		// Panos: Substitute call with call to fill_dlsch_indication()
+		ue_decode_p(ue->Mod_id,
 		      CC_id,
 		      frame_rx,
 		      eNB_id,
@@ -3532,6 +3600,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 		      ue->dlsch_SI[eNB_id]->harq_processes[0]->TBS>>3);
 	  break;
 	case RA_PDSCH:
+		// Panos: Substitute with call to fill_dlsch_rar_indication()
 	  process_rar(ue,proc,eNB_id,mode,abstraction_flag);
 	  break;
 	case PDSCH1:
