@@ -36,7 +36,6 @@
 #include "LAYER2/MAC/extern_NB_IoT.h"
 #include "RRC/LITE/proto_NB_IoT.h"
 
-
 int mac_init_global_param_NB_IoT(void)
 {
 
@@ -107,7 +106,7 @@ int mac_top_init_NB_IoT()
       LOG_I(MAC,"[MAC][MAIN] not enough memory for eNB \n");
       exit(1);
     } else {
-      LOG_D(MAC,"[MAIN] ALLOCATE %zu Bytes for %d eNB_MAC_INST @ %p\n",sizeof(eNB_MAC_INST),NB_eNB_INST,eNB_mac_inst_NB_IoT);
+      LOG_D(MAC,"[MAIN] ALLOCATE %zu Bytes for %d eNB_MAC_INST @ %p\n",sizeof(eNB_MAC_INST_NB_IoT),NB_eNB_INST,eNB_mac_inst_NB_IoT);
       bzero(eNB_mac_inst_NB_IoT,NB_eNB_INST*sizeof(eNB_MAC_INST_NB_IoT));
     }
   } else {
@@ -152,7 +151,7 @@ int mac_top_init_NB_IoT()
 
       RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst_NB_IoT[i].common_channels[CC_id].RA_template[0];
 
-      for (j=0; j<NB_RA_PROC_MAX; j++) {
+      for (j=0; j<RA_PROC_MAX_NB_IoT; j++) {
         size_bytes1 = sizeof(DCIN1_RAR_t);
         size_bytes2 = sizeof(DCIN1_t);
         size_bits1 = sizeof_DCIN1_RAR_t;

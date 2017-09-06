@@ -582,3 +582,19 @@ int rrc_init_global_param_NB_IoT(void);
 uint32_t from_earfcn_NB_IoT(int eutra_bandP,uint32_t dl_earfcn, float m_dl);
 
 int32_t get_uldl_offset_NB_IoT(int eutra_band);
+
+//L2_interface.c
+int8_t mac_rrc_data_req_NB_IoT(
+  const module_id_t Mod_idP,
+  const int         CC_id,
+  const frame_t     frameP,
+  const rb_id_t     Srb_id,
+  const uint8_t     Nb_tb,
+  uint8_t*    const buffer_pP,
+  const eNB_flag_t  enb_flagP,
+  const uint8_t     eNB_index,
+  const uint8_t     mbsfn_sync_area
+);
+
+
+

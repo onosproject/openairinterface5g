@@ -48,7 +48,7 @@
 //#include "UTIL/OPT/opt.h"
 //#include "OCG.h"
 //#include "OCG_extern.h"
-
+#include "RRC/LITE/proto_NB_IoT.h"
 //#include "RRC/LITE/extern.h"
 //#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 
@@ -90,7 +90,7 @@ void schedule_RA_NB_IoT(module_id_t module_idP,frame_t frameP, sub_frame_t subfr
 
     
 
-    for (i=0; i<NB_RA_PROC_MAX; i++) {
+    for (i=0; i<RA_PROC_MAX_NB_IoT; i++) {
 
       RA_template = (RA_TEMPLATE_NB_IoT *)&eNB->common_channels[CC_id].RA_template[i];
 
@@ -120,24 +120,24 @@ void schedule_RA_NB_IoT(module_id_t module_idP,frame_t frameP, sub_frame_t subfr
         else if (RA_template->generate_Msg4 == 1) {
 
           // check for Msg4 Message
-          UE_id = find_UE_id(module_idP,RA_template->rnti);
+          UE_id = find_UE_id_NB_IoT(module_idP,RA_template->rnti);
           if (UE_id == -1) { printf("%s:%d:%s: FATAL ERROR\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 
           if (Is_rrc_registered == 1) {//Fixed mac_rrc_data_req
 
             // Get RRCConnectionSetup for Piggyback
-            rrc_sdu_length = mac_rrc_data_req(module_idP,
-                                              CC_id,
-                                              frameP,
-                                              CCCH,
-                                              1, // 1 transport block
-                                              &eNB->common_channels[CC_id].CCCH_pdu.payload[0],
-                                              ENB_FLAG_YES,
-                                              module_idP,
-                                              0); // not used in this case
+            rrc_sdu_length = mac_rrc_data_req_NB_IoT(module_idP,
+                                                     CC_id,
+                                                     frameP,
+                                                     CCCH_NB_IoT,
+                                                     1, // 1 transport block
+                                                     &eNB->common_channels[CC_id].CCCH_pdu.payload[0],
+                                                     ENB_FLAG_YES,
+                                                     module_idP,
+                                                     0); // not used in this case
 
             if (rrc_sdu_length == -1) {
-              mac_xface->macphy_exit("[MAC][eNB Scheduler] CCCH not allocated\n");
+              mac_xface_NB_IoT->macphy_exit("[MAC][eNB Scheduler] CCCH not allocated\n");
               return; // not reached
             } else {
               //msg("[MAC][eNB %d] Frame %d, subframeP %d: got %d bytes from RRC\n",module_idP,frameP, subframeP,rrc_sdu_length);
@@ -188,7 +188,7 @@ void schedule_RA_NB_IoT(module_id_t module_idP,frame_t frameP, sub_frame_t subfr
   LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 was acknowledged: \n",
         module_idP,CC_id,frameP,subframeP);
   // Get candidate harq_pid from PHY
-  mac_xface->get_ue_active_harq_pid(module_idP,CC_id,RA_template->rnti,frameP,subframeP,&harq_pid,&round,openair_harq_RA_NB_IoT);
+  mac_xface_NB_IoT->get_ue_active_harq_pid(module_idP,CC_id,RA_template->rnti,frameP,subframeP,&harq_pid,&round,openair_harq_RA_NB_IoT);
   
   if (round>0) {
     //RA_template->wait_ack_Msg4++;
@@ -220,9 +220,9 @@ printf("MAC: msg4 acknowledged for rnti %x fsf %d/%d, let's configure it\n", RA_
     LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d : Msg4 acknowledged\n",module_idP,CC_id,frameP,subframeP);
     RA_template->wait_ack_Msg4=0;
     RA_template->RA_active=FALSE;
-    UE_id = find_UE_id(module_idP,RA_template->rnti);
+    UE_id = find_UE_id_NB_IoT(module_idP,RA_template->rnti);
     DevAssert( UE_id != -1 );
-    eNB_mac_inst_NB_IoT[module_idP].UE_list.UE_template[UE_PCCID(module_idP,UE_id)][UE_id].configured=TRUE;
+    eNB_mac_inst_NB_IoT[module_idP].UE_list.UE_template[UE_PCCID_NB_IoT(module_idP,UE_id)][UE_id].configured=TRUE;
     
   }
   
@@ -246,7 +246,7 @@ void initiate_ra_proc_NB_IoT(module_id_t module_idP, int CC_id,frame_t frameP, u
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_INITIATE_RA_PROC,1);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_INITIATE_RA_PROC,0);
   /*May up to 48 RA Procdeure MAX at the moment*/
-  for (i=0; i<NB_RA_PROC_MAX; i++) {
+  for (i=0; i<RA_PROC_MAX_NB_IoT; i++) {
     if (RA_template[i].RA_active==FALSE &&
         RA_template[i].wait_ack_Msg4 == 0) {
       int loop = 0;
@@ -263,7 +263,7 @@ void initiate_ra_proc_NB_IoT(module_id_t module_idP, int CC_id,frame_t frameP, u
                /* TODO: this is not correct, the rnti may be in use without
                 * being in the MAC yet. To be refined.
                 */
-               !(find_UE_id(module_idP, RA_template[i].rnti) == -1 &&
+               !(find_UE_id_NB_IoT(module_idP, RA_template[i].rnti) == -1 &&
                  /* 1024 and 60000 arbirarily chosen, not coming from standard */
                  RA_template[i].rnti >= 1024 && RA_template[i].rnti < 60000));
       if (loop == 100) { printf("%s:%d:%s: FATAL ERROR! contact the authors\n", __FILE__, __LINE__, __FUNCTION__); abort(); }

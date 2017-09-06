@@ -51,7 +51,7 @@
 #include "LAYER2/MAC/proto.h"
 #include "RRC/LITE/vars.h"
 #include "PHY_INTERFACE/vars.h"
-#include "PHY_INTERFACE/defs_nb_iot.h"
+#include "PHY_INTERFACE/defs.h"
 
 #ifdef SMBV
 #include "PHY/TOOLS/smbv.h"

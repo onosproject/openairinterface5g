@@ -42,7 +42,7 @@
 /*
 #ifdef OPENAIR2
 #include "LAYER2/MAC/defs.h"
-#include "LAYER2/MAC/extern.h"
+#include "LAYER2/MAC/extern_NB_IoT.h"
 #include "RRC/LITE/extern.h"
 #include "PHY_INTERFACE/extern.h"
 #endif
@@ -932,6 +932,8 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
                                     uint8_t                 Nbundled,
                                     uint8_t                 llr8_flag)
 {
+  MAC_xface_NB_IoT *mac_xface_NB_IoT;  //test_xface
+
   int16_t                 *ulsch_llr    = eNB->pusch_vars[UE_id]->llr;
   NB_IoT_DL_FRAME_PARMS   *frame_parms  = &eNB->frame_parms;
   NB_IoT_eNB_ULSCH_t      *ulsch        = eNB->ulsch[UE_id];
@@ -1042,7 +1044,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
           ulsch_harq->O_ACK,
           G,
           subframe);
-    mac_xface->macphy_exit("ulsch_decoding.c: FATAL sumKr is 0!");
+    mac_xface_NB_IoT->macphy_exit("ulsch_decoding.c: FATAL sumKr is 0!");
     return(-1);
   }
   // Compute Q_ri

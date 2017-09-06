@@ -513,6 +513,9 @@ typedef struct {
   SRB_INFO_NB_IoT                          SI;
   SRB_INFO_NB_IoT                          Srb0;
 
+  uint8_t                           **MCCH_MESSAGE; //  probably not needed , but added to remove errors
+  uint8_t                           sizeof_MCCH_MESSAGE[8];// but added to remove errors
+  SRB_INFO_NB_IoT                          MCCH_MESS[8];// MAX_MBSFN_AREA
   /*future implementation TS 36.331 V14.2.1
   SystemInformationBlockType15_NB_r14_t     *sib15;
   SystemInformationBlockType20_NB_r14_t     *sib20;

@@ -29,8 +29,8 @@
 
 */
 
-#ifndef __MAC_EXTERN_NB_IoT_H__
-#define __MAC_EXTERN_NB_IoT_H__
+#ifndef __MAC_EXTERN_NB_IOT_H__
+#define __MAC_EXTERN_NB_IOT_H__
 
 
 // #ifdef USER_MODE
@@ -42,7 +42,7 @@
 // #ifdef PHY_EMUL
 // //#include "SIMULATION/simulation_defs.h"
 // #endif //PHY_EMUL
-#include "PHY_INTERFACE/defs.h"  // should be replaced by PHY_INTERFACE/defs_NB_IoT.h (create MAC_xface for NB_IoT)
+#include "openair2/PHY_INTERFACE/defs_NB_IoT.h" 
 //#include "RRC/LITE/defs_NB_IoT.h"
 
 //#ifdef NB_IOT
@@ -78,8 +78,8 @@ extern eNB_DLSCH_INFO_NB_IoT eNB_dlsch_info_NB_IoT[NUMBER_OF_eNB_MAX][MAX_NUM_CC
 
 
 
-// //#ifndef USER_MODE
-extern MAC_xface *mac_xface;
+//#ifndef USER_MODE
+extern MAC_xface_NB_IoT *mac_xface_NB_IoT;
 // extern RRC_XFACE *Rrc_xface;
 
 extern uint8_t Is_rrc_registered;

@@ -1100,6 +1100,8 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
   mib_flag_t		mib_flag
 )
 {
+  MAC_xface_NB_IoT *mac_xface_NB_IoT;
+
   SRB_INFO_NB_IoT *Srb_info;
   uint8_t Sdu_size=0;
 
@@ -1110,7 +1112,7 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
 #endif
 
 
-    if((Srb_id & RAB_OFFSET) == BCCH){
+    if((Srb_id & RAB_OFFSET) == BCCH_NB_IoT){
 
 
      // Requesting for the MIB-NB
@@ -1119,7 +1121,7 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
     	  //XXX to be check when MIB-NB should be initialized
     	  if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT == 255) {
     	       LOG_E(RRC,"[eNB %d] MAC Request for MIB-NB and MIB-NB not initialized\n",Mod_idP);
-    	       mac_xface->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for MIB-NB and MIB-NB not initialized");
+    	       mac_xface_NB_IoT->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for MIB-NB and MIB-NB not initialized");
     	   }
 
     	  memcpy(&buffer_pP[0],
@@ -1158,12 +1160,12 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
       //FIXME to be check when both are initialize and if make sense to have it
             if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT == 255) {
               LOG_E(RRC,"[eNB %d] MAC Request for SIB1-NB and SIB1-NB_IoT not initialized\n",Mod_idP);
-              mac_xface->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB1-NB_IoT and SIB1-NB_IoT not initialized");
+              mac_xface_NB_IoT->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB1-NB_IoT and SIB1-NB_IoT not initialized");
             }
 
             if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT == 255) {
                     LOG_E(RRC,"[eNB %d] MAC Request for SIB23-NB and SIB23-NB_IoT not initialized\n",Mod_idP);
-                    mac_xface->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB23-NB_IoT and SIB23-NB_IoT not initialized");
+                    mac_xface_NB_IoT->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB23-NB_IoT and SIB23-NB_IoT not initialized");
             }
 
 
@@ -1223,7 +1225,7 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
     }
 
     //called when is requested the Msg4 transmission (RRCConnectionSetup)
-    if( (Srb_id & RAB_OFFSET ) == CCCH) {
+    if( (Srb_id & RAB_OFFSET ) == CCCH_NB_IoT) {
       LOG_T(RRC,"[eNB %d] Frame %d CCCH request (Srb_id %d)\n",Mod_idP,frameP, Srb_id);
 
       if(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].Srb0.Active==0) {
@@ -1356,7 +1358,276 @@ void dump_ue_list_NB_IoT(UE_list_NB_IoT_t *listP, int ul_flag)
   }
 }
 
+//------------------------------------------------------------------------------
+int8_t mac_rrc_data_req_NB_IoT(
+  const module_id_t Mod_idP,
+  const int         CC_id,
+  const frame_t     frameP,
+  const rb_id_t     Srb_id,
+  const uint8_t     Nb_tb,
+  uint8_t*    const buffer_pP,
+  const eNB_flag_t  enb_flagP,
+  const uint8_t     eNB_index,
+  const uint8_t     mbsfn_sync_area
+)
+//--------------------------------------------------------------------------
+{
+  MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
+  
+  SRB_INFO_NB_IoT *Srb_info;
+  uint8_t Sdu_size=0;
 
+#ifdef DEBUG_RRC
+  int i;
+  LOG_T(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_id);
+#endif
+
+  if( enb_flagP == ENB_FLAG_YES) {
+
+    if((Srb_id & RAB_OFFSET) == BCCH_NB_IoT) {
+      if(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SI.Active==0) {
+        return 0;
+      }
+
+      // All even frames transmit SIB in SF 5
+      if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT == 255) {
+        LOG_E(RRC,"[eNB %d] MAC Request for SIB1 and SIB1 not initialized\n",Mod_idP);
+        mac_xface_NB_IoT->macphy_exit("mac_rrc_data_req:  MAC Request for SIB1 and SIB1 not initialized");
+      }
+
+      if ((frameP%2) == 0) {
+        memcpy(&buffer_pP[0],
+               eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB1_NB_IoT,
+               eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT);
+
+#if defined(ENABLE_ITTI)
+        {
+          MessageDef *message_p;
+          int sib1_size = eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT;
+          int sdu_size = sizeof(RRC_MAC_BCCH_DATA_REQ (message_p).sdu);
+
+          if (sib1_size > sdu_size) {
+            LOG_E(RRC, "SIB1 SDU larger than BCCH SDU buffer size (%d, %d)", sib1_size, sdu_size);
+            sib1_size = sdu_size;
+          }
+
+          message_p = itti_alloc_new_message (TASK_RRC_ENB, RRC_MAC_BCCH_DATA_REQ);
+          RRC_MAC_BCCH_DATA_REQ (message_p).frame    = frameP;
+          RRC_MAC_BCCH_DATA_REQ (message_p).sdu_size = sib1_size;
+          memset (RRC_MAC_BCCH_DATA_REQ (message_p).sdu, 0, BCCH_SDU_SIZE);
+          memcpy (RRC_MAC_BCCH_DATA_REQ (message_p).sdu,
+                  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB1_NB_IoT,
+                  sib1_size);
+          RRC_MAC_BCCH_DATA_REQ (message_p).enb_index = eNB_index;
+
+          itti_send_msg_to_task (TASK_MAC_ENB, ENB_MODULE_ID_TO_INSTANCE(Mod_idP), message_p);
+        }
+#endif
+
+#ifdef DEBUG_RRC
+        LOG_T(RRC,"[eNB %d] Frame %d : BCCH request => SIB 1\n",Mod_idP,frameP);
+
+        for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT; i++) {
+          LOG_T(RRC,"%x.",buffer_pP[i]);
+        }
+
+        LOG_T(RRC,"\n");
+#endif
+
+        return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT);
+      } // All RFN mod 8 transmit SIB2-3 in SF 5
+      else if ((frameP%8) == 1) {
+        memcpy(&buffer_pP[0],
+               eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB23_NB_IoT,
+               eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT);
+
+#if defined(ENABLE_ITTI)
+        {
+          MessageDef *message_p;
+          int sib23_size = eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT;
+          int sdu_size = sizeof(RRC_MAC_BCCH_DATA_REQ (message_p).sdu);
+
+          if (sib23_size > sdu_size) {
+            LOG_E(RRC, "SIB23 SDU larger than BCCH SDU buffer size (%d, %d)", sib23_size, sdu_size);
+            sib23_size = sdu_size;
+          }
+
+          message_p = itti_alloc_new_message (TASK_RRC_ENB, RRC_MAC_BCCH_DATA_REQ);
+          RRC_MAC_BCCH_DATA_REQ (message_p).frame = frameP;
+          RRC_MAC_BCCH_DATA_REQ (message_p).sdu_size = sib23_size;
+          memset (RRC_MAC_BCCH_DATA_REQ (message_p).sdu, 0, BCCH_SDU_SIZE);
+          memcpy (RRC_MAC_BCCH_DATA_REQ (message_p).sdu,
+                  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB23_NB_IoT,
+                  sib23_size);
+          RRC_MAC_BCCH_DATA_REQ (message_p).enb_index = eNB_index;
+
+          itti_send_msg_to_task (TASK_MAC_ENB, ENB_MODULE_ID_TO_INSTANCE(Mod_idP), message_p);
+        }
+#endif
+
+#ifdef DEBUG_RRC
+        LOG_T(RRC,"[eNB %d] Frame %d BCCH request => SIB 2-3\n",Mod_idP,frameP);
+
+        for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT; i++) {
+          LOG_T(RRC,"%x.",buffer_pP[i]);
+        }
+
+        LOG_T(RRC,"\n");
+#endif
+        return(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT);
+      } else {
+        return(0);
+      }
+    }
+
+    if( (Srb_id & RAB_OFFSET ) == CCCH_NB_IoT) {
+      LOG_T(RRC,"[eNB %d] Frame %d CCCH request (Srb_id %d)\n",Mod_idP,frameP, Srb_id);
+
+      if(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].Srb0.Active==0) {
+        LOG_E(RRC,"[eNB %d] CCCH Not active\n",Mod_idP);
+        return -1;
+      }
+
+      Srb_info=&eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].Srb0;
+
+      // check if data is there for MAC
+      if(Srb_info->Tx_buffer.payload_size>0) { //Fill buffer
+        LOG_D(RRC,"[eNB %d] CCCH (%p) has %d bytes (dest: %p, src %p)\n",Mod_idP,Srb_info,Srb_info->Tx_buffer.payload_size,buffer_pP,Srb_info->Tx_buffer.Payload);
+
+#if defined(ENABLE_ITTI)
+        {
+          MessageDef *message_p;
+          int ccch_size = Srb_info->Tx_buffer.payload_size;
+          int sdu_size = sizeof(RRC_MAC_CCCH_DATA_REQ (message_p).sdu);
+
+          if (ccch_size > sdu_size) {
+            LOG_E(RRC, "SDU larger than CCCH SDU buffer size (%d, %d)", ccch_size, sdu_size);
+            ccch_size = sdu_size;
+          }
+
+          message_p = itti_alloc_new_message (TASK_RRC_ENB, RRC_MAC_CCCH_DATA_REQ);
+          RRC_MAC_CCCH_DATA_REQ (message_p).frame = frameP;
+          RRC_MAC_CCCH_DATA_REQ (message_p).sdu_size = ccch_size;
+          memset (RRC_MAC_CCCH_DATA_REQ (message_p).sdu, 0, CCCH_SDU_SIZE);
+          memcpy (RRC_MAC_CCCH_DATA_REQ (message_p).sdu, Srb_info->Tx_buffer.Payload, ccch_size);
+          RRC_MAC_CCCH_DATA_REQ (message_p).enb_index = eNB_index;
+
+          itti_send_msg_to_task (TASK_MAC_ENB, ENB_MODULE_ID_TO_INSTANCE(Mod_idP), message_p);
+        }
+#endif
+
+        memcpy(buffer_pP,Srb_info->Tx_buffer.Payload,Srb_info->Tx_buffer.payload_size);
+        Sdu_size = Srb_info->Tx_buffer.payload_size;
+        Srb_info->Tx_buffer.payload_size=0;
+      }
+
+      return (Sdu_size);
+    }
+
+#if defined(Rel10) || defined(Rel14)
+
+    if((Srb_id & RAB_OFFSET) == MCCH_NB_IoT) {
+      if(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].MCCH_MESS[mbsfn_sync_area].Active==0) {
+        return 0;  // this parameter is set in function init_mcch in rrc_eNB.c
+      }
+
+      // this part not needed as it is done in init_mcch
+      /*     if (eNB_rrc_inst[Mod_id].sizeof_MCCH_MESSAGE[mbsfn_sync_area] == 255) {
+      LOG_E(RRC,"[eNB %d] MAC Request for MCCH MESSAGE and MCCH MESSAGE is not initialized\n",Mod_id);
+      mac_xface->macphy_exit("");
+      }*/
+
+
+#if defined(ENABLE_ITTI)
+      {
+        MessageDef *message_p;
+        int mcch_size = eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MCCH_MESSAGE[mbsfn_sync_area];
+        int sdu_size = sizeof(RRC_MAC_MCCH_DATA_REQ (message_p).sdu);
+
+        if (mcch_size > sdu_size) {
+          LOG_E(RRC, "SDU larger than MCCH SDU buffer size (%d, %d)", mcch_size, sdu_size);
+          mcch_size = sdu_size;
+        }
+
+        message_p = itti_alloc_new_message (TASK_RRC_ENB, RRC_MAC_MCCH_DATA_REQ);
+        RRC_MAC_MCCH_DATA_REQ (message_p).frame = frameP;
+        RRC_MAC_MCCH_DATA_REQ (message_p).sdu_size = mcch_size;
+        memset (RRC_MAC_MCCH_DATA_REQ (message_p).sdu, 0, MCCH_SDU_SIZE);
+        memcpy (RRC_MAC_MCCH_DATA_REQ (message_p).sdu,
+                eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].MCCH_MESSAGE[mbsfn_sync_area],
+                mcch_size);
+        RRC_MAC_MCCH_DATA_REQ (message_p).enb_index = eNB_index;
+        RRC_MAC_MCCH_DATA_REQ (message_p).mbsfn_sync_area = mbsfn_sync_area;
+
+        itti_send_msg_to_task (TASK_MAC_ENB, ENB_MODULE_ID_TO_INSTANCE(Mod_idP), message_p);
+      }
+#endif
+
+      memcpy(&buffer_pP[0],
+             eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].MCCH_MESSAGE[mbsfn_sync_area],
+             eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MCCH_MESSAGE[mbsfn_sync_area]);
+
+#ifdef DEBUG_RRC
+      LOG_D(RRC,"[eNB %d] Frame %d : MCCH request => MCCH_MESSAGE \n",Mod_idP,frameP);
+
+      for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MCCH_MESSAGE[mbsfn_sync_area]; i++) {
+        LOG_T(RRC,"%x.",buffer_pP[i]);
+      }
+
+      LOG_T(RRC,"\n");
+#endif
+
+      return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MCCH_MESSAGE[mbsfn_sync_area]);
+      //      }
+      //else
+      //return(0);
+    }
+
+#endif //Rel10 || Rel14
+  } else {  //This is an UE
+
+    LOG_D(RRC,"[UE %d] Frame %d Filling CCCH SRB_ID %d\n",Mod_idP,frameP,Srb_id);
+    LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst_NB_IoT[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size);
+
+
+    if( (UE_rrc_inst_NB_IoT[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size > 0) ) {
+
+#if defined(ENABLE_ITTI)
+      {
+        MessageDef *message_p;
+        int ccch_size = UE_rrc_inst_NB_IoT[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size;
+        int sdu_size = sizeof(RRC_MAC_CCCH_DATA_REQ (message_p).sdu);
+
+        if (ccch_size > sdu_size) {
+          LOG_E(RRC, "SDU larger than CCCH SDU buffer size (%d, %d)", ccch_size, sdu_size);
+          ccch_size = sdu_size;
+        }
+
+        message_p = itti_alloc_new_message (TASK_RRC_UE, RRC_MAC_CCCH_DATA_REQ);
+        RRC_MAC_CCCH_DATA_REQ (message_p).frame = frameP;
+        RRC_MAC_CCCH_DATA_REQ (message_p).sdu_size = ccch_size;
+        memset (RRC_MAC_CCCH_DATA_REQ (message_p).sdu, 0, CCCH_SDU_SIZE);
+        memcpy (RRC_MAC_CCCH_DATA_REQ (message_p).sdu, UE_rrc_inst_NB_IoT[Mod_idP].Srb0[eNB_index].Tx_buffer.Payload, ccch_size);
+        RRC_MAC_CCCH_DATA_REQ (message_p).enb_index = eNB_index;
+
+        itti_send_msg_to_task (TASK_MAC_UE, UE_MODULE_ID_TO_INSTANCE(Mod_idP), message_p);
+      }
+#endif
+
+      memcpy(&buffer_pP[0],&UE_rrc_inst_NB_IoT[Mod_idP].Srb0[eNB_index].Tx_buffer.Payload[0],UE_rrc_inst_NB_IoT[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size);
+      uint8_t Ret_size=UE_rrc_inst_NB_IoT[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size;
+      //   UE_rrc_inst[Mod_id].Srb0[eNB_index].Tx_buffer.payload_size=0;
+      UE_rrc_inst_NB_IoT[Mod_idP].Info[eNB_index].T300_active = 1;
+      UE_rrc_inst_NB_IoT[Mod_idP].Info[eNB_index].T300_cnt = 0;
+      //      msg("[RRC][UE %d] Sending rach\n",Mod_id);
+      return(Ret_size);
+    } else {
+      return 0;
+    }
+  }
+
+  return(0);
+}
 
 //defined in eNB_scheduler_primitives.c
 /*
@@ -1402,7 +1673,7 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
 
   // check if this has an RA process active
   RA_TEMPLATE_NB_IoT *RA_template;
-  for (i=0;i<NB_RA_PROC_MAX;i++) {
+  for (i=0;i<RA_PROC_MAX_NB_IoT;i++) {
 
     RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst[mod_idP].common_channels[pCC_id].RA_template[i];
     if (RA_template->rnti == rntiP){
@@ -1620,7 +1891,7 @@ boolean_t rrc_pdcp_config_asn1_req_NB_IoT (
 	  else
 	   {
 		  //is SRB1
-		  srb_id = DCCH1;
+		  srb_id = DCCH1_NB_IoT;
 		  lc_id = srb_id;
 	   }
 
@@ -2177,6 +2448,7 @@ boolean_t pdcp_data_req_NB_IoT(
   const pdcp_transmission_mode_t modeP
 )
 {
+  MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
 
   pdcp_t            *pdcp_p          = NULL;
   uint8_t            i               = 0;
@@ -2217,7 +2489,7 @@ boolean_t pdcp_data_req_NB_IoT(
     LOG_E(PDCP, "Requested SDU size (%d) is bigger than that can be handled by PDCP (%u)!\n",
           sdu_buffer_sizeP, MAX_IP_PACKET_SIZE);
     // XXX What does following call do?
-    mac_xface->macphy_exit("PDCP sdu buffer size > MAX_IP_PACKET_SIZE");
+    mac_xface_NB_IoT->macphy_exit("PDCP sdu buffer size > MAX_IP_PACKET_SIZE");
   }
 
   //check for MBMS not needed for NB-IoT*/

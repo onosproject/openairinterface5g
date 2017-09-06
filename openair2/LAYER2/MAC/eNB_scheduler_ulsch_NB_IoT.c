@@ -65,6 +65,78 @@
 
 #define ENABLE_MAC_PAYLOAD_DEBUG
 //#define DEBUG_eNB_SCHEDULER 1
+unsigned char *parse_ulsch_header_NB_IoT(unsigned char *mac_header,
+                                         unsigned char *num_ce,
+                                         unsigned char *num_sdu,
+                                         unsigned char *rx_ces,
+                                         unsigned char *rx_lcids,
+                                         unsigned short *rx_lengths,
+                                         unsigned short tb_length)
+{
+  //MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
+
+  unsigned char not_done=1,num_ces=0,num_sdus=0,lcid,num_sdu_cnt;
+  unsigned char *mac_header_ptr = mac_header;
+  unsigned short length, ce_len=0;
+
+  while (not_done==1) {
+
+    if (((SCH_SUBHEADER_FIXED_NB_IoT*)mac_header_ptr)->E == 0) {
+      not_done = 0;
+    }
+
+    lcid = ((SCH_SUBHEADER_FIXED_NB_IoT *)mac_header_ptr)->LCID;
+
+    if (lcid < EXTENDED_POWER_HEADROOM_NB_IoT) {
+      if (not_done==0) { // last MAC SDU, length is implicit
+        mac_header_ptr++;
+        length = tb_length-(mac_header_ptr-mac_header)-ce_len;
+
+        for (num_sdu_cnt=0; num_sdu_cnt < num_sdus ; num_sdu_cnt++) {
+          length -= rx_lengths[num_sdu_cnt];
+        }
+      } else {
+        if (((SCH_SUBHEADER_SHORT_NB_IoT *)mac_header_ptr)->F == 0) {
+          length = ((SCH_SUBHEADER_SHORT_NB_IoT *)mac_header_ptr)->L;
+          mac_header_ptr += 2;//sizeof(SCH_SUBHEADER_SHORT);
+        } else { // F = 1
+          length = ((((SCH_SUBHEADER_LONG_NB_IoT *)mac_header_ptr)->L_MSB & 0x7f ) << 8 ) | (((SCH_SUBHEADER_LONG_NB_IoT *)mac_header_ptr)->L_LSB & 0xff);
+          mac_header_ptr += 3;//sizeof(SCH_SUBHEADER_LONG);
+        }
+      }
+
+      LOG_D(MAC,"[eNB] sdu %d lcid %d tb_length %d length %d (offset now %ld)\n",
+            num_sdus,lcid,tb_length, length,mac_header_ptr-mac_header);
+      rx_lcids[num_sdus] = lcid;
+      rx_lengths[num_sdus] = length;
+      num_sdus++;
+    } else { // This is a control element subheader POWER_HEADROOM, BSR and CRNTI
+      if (lcid == SHORT_PADDING_NB_IoT) {
+        mac_header_ptr++;
+      } else {
+        rx_ces[num_ces] = lcid;
+        num_ces++;
+        mac_header_ptr++;
+
+        if (lcid==LONG_BSR_NB_IoT) {
+          ce_len+=3;
+        } else if (lcid==CRNTI_NB_IoT) {
+          ce_len+=2;
+        } else if ((lcid==POWER_HEADROOM_NB_IoT) || (lcid==TRUNCATED_BSR_NB_IoT)|| (lcid== SHORT_BSR_NB_IoT)) {
+          ce_len++;
+        } else {
+          LOG_E(MAC,"unknown CE %d \n", lcid);
+          mac_xface_NB_IoT->macphy_exit("unknown CE");
+        }
+      }
+    }
+  }
+
+  *num_ce = num_ces;
+  *num_sdu = num_sdus;
+
+  return(mac_header_ptr);
+}
 
 
 void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
@@ -78,7 +150,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
       )
 {
 
-  unsigned char  rx_ces[MAX_NUM_CE],num_ce,num_sdu,i,*payload_ptr;
+  unsigned char  rx_ces[MAX_NUM_CE_NB_IoT],num_ce,num_sdu,i,*payload_ptr;
   unsigned char  rx_lcids[NB_RB_MAX];//for NB-IoT, NB_RB_MAX should be fixed to 5 (2 DRB+ 3SRB) 
   unsigned short rx_lengths[NB_RB_MAX];
   int    UE_id = find_UE_id_NB_IoT(enb_mod_idP,rntiP);
@@ -122,7 +194,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
   }
 
 
-  payload_ptr = parse_ulsch_header(sduP,&num_ce,&num_sdu,rx_ces,rx_lcids,rx_lengths,sdu_lenP);
+  payload_ptr = parse_ulsch_header_NB_IoT(sduP,&num_ce,&num_sdu,rx_ces,rx_lcids,rx_lengths,sdu_lenP);
 
   T(T_ENB_MAC_UE_UL_PDU, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
     T_INT(harq_pidP), T_INT(sdu_lenP), T_INT(num_ce), T_INT(num_sdu));
@@ -139,18 +211,18 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
       T_INT(rx_ces[i]));
     /*rx_ces = lcid in parse_ulsch_header() if not short padding*/
     switch (rx_ces[i]) { // implement and process BSR + CRNTI + PHR
-    case POWER_HEADROOM:
+    case POWER_HEADROOM_NB_IoT:
       if (UE_id != -1) {
-        UE_list->UE_template[CC_idP][UE_id].phr_info =  (payload_ptr[0] & 0x3f) - PHR_MAPPING_OFFSET;
+        UE_list->UE_template[CC_idP][UE_id].phr_info =  (payload_ptr[0] & 0x3f) - PHR_MAPPING_OFFSET_NB_IoT;
         LOG_D(MAC, "[eNB %d] CC_id %d MAC CE_LCID %d : Received PHR PH = %d (db)\n",
               enb_mod_idP, CC_idP, rx_ces[i], UE_list->UE_template[CC_idP][UE_id].phr_info);
         UE_list->UE_template[CC_idP][UE_id].phr_info_configured=1;
 	UE_list->UE_sched_ctrl[UE_id].phr_received = 1;
       }
-      payload_ptr+=sizeof(POWER_HEADROOM_CMD);
+      payload_ptr+=sizeof(POWER_HEADROOM_CMD_NB_IoT);
       break;
 
-    case CRNTI:
+    case CRNTI_NB_IoT:
       UE_id = find_UE_id_NB_IoT(enb_mod_idP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
       LOG_I(MAC, "[eNB %d] Frame %d, Subframe %d CC_id %d MAC CE_LCID %d (ce %d/%d): CRNTI %x (UE_id %d) in Msg3\n",
 	    frameP,subframeP,enb_mod_idP, CC_idP, rx_ces[i], i,num_ce,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1],UE_id);
@@ -171,7 +243,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
     //case TRUNCATED_BSR:
     /*DV lcid =???*/
     //case DATA_VOLUME_INDICATOR
-    case SHORT_BSR: {
+    case SHORT_BSR_NB_IoT: {
       uint8_t lcgid;
       lcgid = (payload_ptr[0] >> 6);
 
@@ -205,7 +277,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
       else {
 
       }
-      payload_ptr += 1;//sizeof(SHORT_BSR); // fixme
+      payload_ptr += 1;//sizeof(SHORT_BSR_NB_IoT); // fixme
     }
     break;
 
@@ -237,7 +309,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
             payload_ptr[0],payload_ptr[1],payload_ptr[2],payload_ptr[3],payload_ptr[4], payload_ptr[5], rntiP);
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_TERMINATE_RA_PROC,1);
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_TERMINATE_RA_PROC,0);
-      for (ii=0; ii<NB_RA_PROC_MAX; ii++) {
+      for (ii=0; ii<RA_PROC_MAX_NB_IoT; ii++) {
         LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Checking proc %d : rnti (%x, %x), active %d\n",
               enb_mod_idP, CC_idP, ii,
               eNB->common_channels[CC_idP].RA_template[ii].rnti, rntiP,
@@ -253,8 +325,8 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
             LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d CCCH: Received Msg3: length %d, offset %ld\n",
                   enb_mod_idP,CC_idP,frameP,rx_lengths[i],payload_ptr-sduP);
 
-            if ((UE_id=add_new_ue(enb_mod_idP,CC_idP,eNB->common_channels[CC_idP].RA_template[ii].rnti,harq_pidP)) == -1 ) {
-              mac_xface->macphy_exit("[MAC][eNB] Max user count reached\n");
+            if ((UE_id=add_new_ue_NB_IoT(enb_mod_idP,CC_idP,eNB->common_channels[CC_idP].RA_template[ii].rnti,harq_pidP)) == -1 ) {
+              mac_xface_NB_IoT->macphy_exit("[MAC][eNB] Max user count reached\n");
 	      // kill RA procedure
             } else
               LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Added user with rnti %x => UE %d\n",
@@ -274,7 +346,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
               frameP,
         	  subframeP,
               rntiP,
-              CCCH,
+              CCCH_NB_IoT,
               (uint8_t*)payload_ptr,
               rx_lengths[i]);
 
@@ -359,7 +431,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
 	    UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] -= rx_lengths[i];
 	  else
 	    UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] = 0;*/
-	  if ((rx_lengths[i] <SCH_PAYLOAD_SIZE_MAX) &&  (rx_lengths[i] > 0) ) {   // MAX SIZE OF transport block
+	  if ((rx_lengths[i] <SCH_PAYLOAD_SIZE_MAX_NB_IoT) &&  (rx_lengths[i] > 0) ) {   // MAX SIZE OF transport block
 
 	    mac_rlc_data_ind_NB_IoT(
 			     enb_mod_idP,
@@ -410,6 +482,30 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RX_SDU,0);
   stop_meas(&eNB->rx_ulsch_sdu);
 }
+}
+
+/* This function is called by PHY layer when it schedules some
+ * uplink for a random access message 3.
+ * The MAC scheduler has to skip the RBs used by this message 3
+ * (done below in schedule_ulsch).
+ */
+void set_msg3_subframe_NB_IoT(module_id_t Mod_id,
+                              int CC_id,
+                              int frame,
+                              int subframe,
+                              int rnti,
+                              int Msg3_frame,
+                              int Msg3_subframe)
+{
+  eNB_MAC_INST_NB_IoT *eNB=&eNB_mac_inst_NB_IoT[Mod_id];
+  int i;
+  for (i=0; i<RA_PROC_MAX_NB_IoT; i++) {
+    if (eNB->common_channels[CC_id].RA_template[i].RA_active == TRUE &&
+        eNB->common_channels[CC_id].RA_template[i].rnti == rnti) {
+      eNB->common_channels[CC_id].RA_template[i].Msg3_subframe = Msg3_subframe;
+      break;
+    }
+  }
 }
 
 

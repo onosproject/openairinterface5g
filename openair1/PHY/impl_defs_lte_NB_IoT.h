@@ -38,6 +38,7 @@
 
 typedef enum {TDD_NB_IoT=1,FDD_NB_IoT=0} NB_IoT_frame_type_t;
 typedef enum {EXTENDED_NB_IoT=1,NORMAL_NB_IoT=0} NB_IoT_prefix_type_t;
+typedef enum {SF_DL_NB_IoT, SF_UL_NB_IoT, SF_S_NB_IoT} NB_IoT_subframe_t;
 
 #define	A_SEQUENCE_OF(type)	A_SET_OF(type)
 

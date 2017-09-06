@@ -24,7 +24,7 @@
 
 //#include "PHY/defs.h"
 #include "PHY/defs_NB_IoT.h"
-#include "openair2/PHY_INTERFACE/defs.h"
+#include "openair2/PHY_INTERFACE/defs_NB_IoT.h"
 //#include "PHY_INTERFACE/IF_Module_NB_IoT.h"
 /*
 extern  char* namepointer_chMag ;
@@ -55,7 +55,7 @@ extern PHY_VARS_eNB_NB_IoT * PHY_vars_eNB_NB_IoT_g[MAX_eNB_NB_IoT][MAX_NUM_CCs];
 #endif
 
 
-extern MAC_xface *mac_xface;
+extern MAC_xface_NB_IoT *mac_xface_NB_IoT;
 /*
 extern IF_Module_t *if_inst;
 
