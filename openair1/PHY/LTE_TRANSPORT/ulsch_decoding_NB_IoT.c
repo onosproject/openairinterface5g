@@ -36,6 +36,7 @@
 #include "PHY/defs_NB_IoT.h"
 #include "PHY/extern_NB_IoT.h"
 #include "PHY/LTE_TRANSPORT/vars_NB_IoT.h"
+#include "PHY/CODING/defs_NB_IoT.h"
 //#include "PHY/CODING/extern.h"
 //#include "extern_NB_IoT.h"
 //#include "SCHED/extern.h"
@@ -988,7 +989,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
   nb_rb = ulsch_harq->nb_rb;
   A     = ulsch_harq->TBS;
-  Q_m   = get_Qm_ul(ulsch_harq->mcs);
+  Q_m   = get_Qm_ul_NB_IoT(ulsch_harq->mcs);
   G     = nb_rb * (12 * Q_m) * ulsch_harq->Nsymb_pusch;
 
 
@@ -1007,15 +1008,15 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
   if (ulsch_harq->round == 0) {
     // This is a new packet, so compute quantities regarding segmentation
     ulsch_harq->B = A+24;
-    lte_segmentation(NULL,
-                     NULL,
-                     ulsch_harq->B,
-                     &ulsch_harq->C,
-                     &ulsch_harq->Cplus,
-                     &ulsch_harq->Cminus,
-                     &ulsch_harq->Kplus,
-                     &ulsch_harq->Kminus,
-                     &ulsch_harq->F);
+    lte_segmentation_NB_IoT(NULL,
+                            NULL,
+                            ulsch_harq->B,
+                            &ulsch_harq->C,
+                            &ulsch_harq->Cplus,
+                            &ulsch_harq->Cminus,
+                            &ulsch_harq->Kplus,
+                            &ulsch_harq->Kminus,
+                            &ulsch_harq->F);
     //  CLEAR LLR's HERE for first packet in process
   }
 
@@ -1607,24 +1608,24 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
   if (Q_CQI>0) {
     memset((void *)&dummy_w_cc[0],0,3*(ulsch_harq->Or1+8+32));
 
-    O_RCC = generate_dummy_w_cc(ulsch_harq->Or1+8,
-                                &dummy_w_cc[0]);
+    O_RCC = generate_dummy_w_cc_NB_IoT(ulsch_harq->Or1+8,
+                                       &dummy_w_cc[0]);
 
-    lte_rate_matching_cc_rx(O_RCC,
-                            Q_CQI,
-                            ulsch_harq->o_w,
-                            dummy_w_cc,
-                            ulsch_harq->q);
+    lte_rate_matching_cc_rx_NB_IoT(O_RCC,
+                                   Q_CQI,
+                                   ulsch_harq->o_w,
+                                   dummy_w_cc,
+                                   ulsch_harq->q);
 
-    sub_block_deinterleaving_cc((unsigned int)(ulsch_harq->Or1+8),
-                                &ulsch_harq->o_d[96],
-                                &ulsch_harq->o_w[0]);
+    sub_block_deinterleaving_cc_NB_IoT((unsigned int)(ulsch_harq->Or1+8),
+                                        &ulsch_harq->o_d[96],
+                                        &ulsch_harq->o_w[0]);
 
     memset(o_flip,0,1+((8+ulsch_harq->Or1)/8));
 
-    phy_viterbi_lte_sse2(ulsch_harq->o_d+96,o_flip,8+ulsch_harq->Or1);
+    phy_viterbi_lte_sse2_NB_IoT(ulsch_harq->o_d+96,o_flip,8+ulsch_harq->Or1);
 
-    if (extract_cqi_crc_NB_IoT(o_flip,ulsch_harq->Or1) == (crc8(o_flip,ulsch_harq->Or1)>>24))
+    if (extract_cqi_crc_NB_IoT(o_flip,ulsch_harq->Or1) == (crc8_NB_IoT(o_flip,ulsch_harq->Or1)>>24))
       ulsch_harq->cqi_crc_status = 1;
 
     if (ulsch->harq_process->Or1<=32) {

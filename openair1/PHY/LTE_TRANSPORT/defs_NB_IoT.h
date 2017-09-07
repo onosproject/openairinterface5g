@@ -17,7 +17,7 @@
 //#include "PHY/defs_nb_iot.h"
 #include "PHY/LTE_TRANSPORT/dci_NB_IoT.h"
 #include "PHY/impl_defs_lte_NB_IoT.h"
-#include "openair2/COMMON/platform_types_NB_IoT.h"
+#include "openair2/COMMON/platform_types.h"
 //#include "dci.h"
 #include "PHY/LTE_TRANSPORT/uci_NB_IoT.h"
 //#include "dci.h"
@@ -468,7 +468,7 @@ typedef enum
 
 
 typedef struct {
-  rnti_NB_IoT_t   rnti;
+  rnti_t          rnti;
   //array containing the pdus of DCI
   uint8_t         *a[2];
   //Array containing encoded DCI data
@@ -481,8 +481,8 @@ typedef struct {
   //indicate the corresponding subframe within the repetition (set to 0 when a new NPDCCH pdu is received)
   uint16_t        repetition_idx;
 
-//  uint16_t npdcch_Offset_USS;
-//  uint16_t npdcch_StartSF_USS;
+  //  uint16_t npdcch_Offset_USS;
+  //  uint16_t npdcch_StartSF_USS;
 
 
 }NB_IoT_eNB_NPDCCH_t;
@@ -490,12 +490,12 @@ typedef struct {
 
 typedef struct{
 
-//Number of repetitions (R) for common search space (RAR and PAGING)
-uint16_t  number_repetition_RA;
-uint16_t  number_repetition_PAg;
-//index of the current subframe among the repetition (set to 0 when we receive the new NPDCCH)
-uint16_t  repetition_idx_RA;
-uint16_t  repetition_idx_Pag;
+  //Number of repetitions (R) for common search space (RAR and PAGING)
+  uint16_t    number_repetition_RA;
+  uint16_t    number_repetition_PAg;
+  //index of the current subframe among the repetition (set to 0 when we receive the new NPDCCH)
+  uint16_t    repetition_idx_RA;
+  uint16_t    repetition_idx_Pag;
 
 }NB_IoT_eNB_COMMON_NPDCCH_t;
 
@@ -509,9 +509,9 @@ typedef struct {
   /// Position of first CCE of the dci
   int                   firstCCE;
   /// flag to indicate that this is a RA response
-  boolean_NB_IoT_t      ra_flag;
+  boolean_t      ra_flag;
   /// rnti
-  rnti_NB_IoT_t         rnti;
+  rnti_t                rnti;
   /// Format
   DCI_format_NB_IoT_t   format;
   /// DCI pdu

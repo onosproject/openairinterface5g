@@ -119,11 +119,92 @@ uint32_t crc24b_NB_IoT (uint8_t *inPtr, int32_t bitlen);
 @param bitlen length of inputs in bits*/
 uint32_t crc16_NB_IoT (uint8_t *inPtr, int32_t bitlen);
 
+/*!\fn uint32_t crc8(uint8_t *inPtr, int32_t bitlen)
+\brief This computes a 8-bit crc based on 3GPP UMTS specifications.
+@param inPtr Pointer to input byte stream
+@param bitlen length of inputs in bits*/
+uint32_t crc8_NB_IoT  (uint8_t *inPtr, int32_t bitlen);
+
+
+
+
 
 
 uint32_t crcbit_NB_IoT (uint8_t * ,
                  		int32_t,
                  		uint32_t);
+
+
+/*!\fn void phy_viterbi_lte_sse2(int8_t *y, uint8_t *decoded_bytes, uint16_t n)
+\brief This routine performs a SIMD optmized Viterbi decoder for the LTE 64-state tail-biting convolutional code.
+@param y Pointer to soft input (coded on 8-bits but should be limited to 4-bit precision to avoid overflow)
+@param decoded_bytes Pointer to decoded output
+@param n Length of input/trellis depth in bits*/
+//void phy_viterbi_lte_sse2(int8_t *y,uint8_t *decoded_bytes,uint16_t n);
+void phy_viterbi_lte_sse2_NB_IoT(int8_t *y,uint8_t *decoded_bytes,uint16_t n);
+
+/** \fn void sub_block_deinterleaving_cc(uint32_t D, int8_t *d,int8_t *w)
+\brief This is the subblock deinterleaving algorithm for convolutionally-coded data from 36-212 (Release 8, 8.6 2009-03), pages 15-16.
+This function takes the w-sequence and generates the d-sequence.  The nu-sequence from 36-212 is implicit.
+\param D Number of input bits
+\param d Pointer to output (d-sequence, turbo code output)
+\param w Pointer to input (w-sequence, interleaver output)
+*/
+void sub_block_deinterleaving_cc_NB_IoT(uint32_t D,int8_t *d,int8_t *w);
+
+
+/*
+\brief This is the LTE rate matching algorithm for Convolutionally-coded channels (e.g. BCH,DCI,UCI).  It is taken directly from 36-212 (Rel 8 8.6, 2009-03), pages 16-18 )
+\param RCC R^CC_subblock from subblock interleaver (number of rows in interleaving matrix)
+\param E This the number of coded bits allocated for channel
+\param w This is a pointer to the soft w-sequence (second interleaver output) with soft-combined outputs from successive HARQ rounds
+\param dummy_w This is the first row of the interleaver matrix for identifying/discarding the "LTE-NULL" positions
+\param soft_input This is a pointer to the soft channel output
+\returns \f$E\f$, the number of coded bits per segment
+*/
+void lte_rate_matching_cc_rx_NB_IoT(uint32_t RCC,
+                             		uint16_t E,
+                             		int8_t *w,
+                             		uint8_t *dummy_w,
+                             		int8_t *soft_input);
+
+/** \fn generate_dummy_w_cc(uint32_t D, uint8_t *w)
+\brief This function generates a dummy interleaved sequence (first row) for receiver (convolutionally-coded data), in order to identify the NULL positions used to make the matrix complete.
+\param D Number of systematic bits plus 4 (plus 4 for termination)
+\param w This is the dummy sequence (first row), it will contain zeros and at most 31 "LTE_NULL" values
+\returns Interleaving matrix cardinality (\f$K_{\pi}\f$ from 36-212)
+*/
+uint32_t generate_dummy_w_cc_NB_IoT(uint32_t D, uint8_t *w);
+
+/** \fn lte_segmentation(uint8_t *input_buffer,
+              uint8_t **output_buffers,
+            uint32_t B,
+            uint32_t *C,
+            uint32_t *Cplus,
+            uint32_t *Cminus,
+            uint32_t *Kplus,
+            uint32_t *Kminus,
+            uint32_t *F)
+\brief This function implements the LTE transport block segmentation algorithm from 36-212, V8.6 2009-03.
+@param input_buffer
+@param output_buffers
+@param B
+@param C
+@param Cplus
+@param Cminus
+@param Kplus
+@param Kminus
+@param F
+*/
+int32_t lte_segmentation_NB_IoT(uint8_t *input_buffer,
+                         		uint8_t **output_buffers,
+                         		uint32_t B,
+                         		uint32_t *C,
+                         		uint32_t *Cplus,
+                         		uint32_t *Cminus,
+                         		uint32_t *Kplus,
+                         		uint32_t *Kminus,
+                         		uint32_t *F);
 
 /** \fn void sub_block_deinterleaving_turbo(uint32_t D, int16_t *d,int16_t *w)
 \brief This is the subblock deinterleaving algorithm from 36-212 (Release 8, 8.6 2009-03), pages 15-16.

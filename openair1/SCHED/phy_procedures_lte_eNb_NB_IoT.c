@@ -487,17 +487,18 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 
 void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
 {
-  int UE_id = -1;
-  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_NB_IoT;
-  int frame = proc->frame_tx;
-  int subframe = proc->subframe_tx;
-  DCI_CONTENT *DCI_Content; 
-  DCI_format_NB_IoT_t DCI_format;
-  NB_IoT_eNB_NDLSCH_t *ndlsch;
-  NB_IoT_eNB_NPDCCH_t *npdcch;
+  int                      UE_id         =  -1;
+  NB_IoT_DL_FRAME_PARMS    *fp           =  &eNB->frame_parms_NB_IoT;
+  int                      frame         =  proc->frame_tx;
+  int                      subframe      =  proc->subframe_tx;
+  DCI_CONTENT              *DCI_Content; 
+  DCI_format_NB_IoT_t      DCI_format;
+  NB_IoT_eNB_NDLSCH_t      *ndlsch;
+  NB_IoT_eNB_NPDCCH_t      *npdcch;
+
+
 
   DCI_Content = (DCI_CONTENT*) malloc(sizeof(DCI_CONTENT));
-
 
   // check DCI format is N1 (format 0)
   if(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_format == 0)
@@ -516,7 +517,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_
           DCI_Content->DCIN1_RAR.Scheddly       = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.scheduling_delay;
           DCI_Content->DCIN1_RAR.ResAssign      = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.resource_assignment;
           DCI_Content->DCIN1_RAR.mcs            = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.mcs;
-          DCI_Content->DCIN1_RAR.RepNum			= dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.repetition_number;
+          DCI_Content->DCIN1_RAR.RepNum			    = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.repetition_number;
           DCI_Content->DCIN1_RAR.ndi            = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.new_data_indicator;
           DCI_Content->DCIN1_RAR.HARQackRes     = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
           DCI_Content->DCIN1_RAR.DCIRep         = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
@@ -526,8 +527,8 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_
 
           // fill the dlsch_ra_NB structure for RAR, and packed the DCI PDU
 
-          ndlsch= eNB->ndlsch_ra;
-          ndlsch->ndlsch_type = RAR;
+          ndlsch               =  eNB->ndlsch_ra;
+          ndlsch->ndlsch_type  =  RAR;
 
           LOG_D(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");
           generate_eNB_dlsch_params_from_dci_NB_IoT(eNB,
@@ -561,7 +562,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_
               DCI_Content->DCIN1.Scheddly       = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.scheduling_delay;
               DCI_Content->DCIN1.ResAssign      = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.resource_assignment;
               DCI_Content->DCIN1.mcs            = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.mcs;
-              DCI_Content->DCIN1.RepNum			= dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.repetition_number;
+              DCI_Content->DCIN1.RepNum			    = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.repetition_number;
               DCI_Content->DCIN1.ndi            = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.new_data_indicator;
               DCI_Content->DCIN1.HARQackRes     = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
               DCI_Content->DCIN1.DCIRep         = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
@@ -672,23 +673,23 @@ void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_
  * ** CQI and PMI are not present in NB-IoT
  * ** redundancy version exist only in UL for NB-IoT and not in DL
  */
-void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
-						eNB_rxtx_proc_NB_IoT_t *proc, //Context data structure for RX/TX portion of subframe processing
-						NB_IoT_eNB_NDLSCH_t *ndlsch,
-						//int num_pdcch_symbols, (BCOM says are not needed
-						uint8_t* pdu
-									)
+void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
+						           eNB_rxtx_proc_NB_IoT_t   *proc,     //Context data structure for RX/TX portion of subframe processing
+						           NB_IoT_eNB_NDLSCH_t      *ndlsch,
+						           //int num_pdcch_symbols,            //(BCOM says are not needed
+						           uint8_t                  *pdu
+									     )
 {
-  int frame=proc->frame_tx;
-  int subframe=proc->subframe_tx;
-  NB_IoT_DL_eNB_HARQ_t *ndlsch_harq =ndlsch->harq_process;
-  int input_buffer_length = ndlsch_harq->TBS/8; // get in byte //the TBS is set in generate_dlsch_param
-  NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms_NB_IoT;
-  int G;
-  uint8_t *DLSCH_pdu=NULL;
-  uint8_t DLSCH_pdu_tmp[input_buffer_length+4]; //[768*8];
+  int                     frame                   =   proc->frame_tx;
+  int                     subframe                =   proc->subframe_tx;
+  NB_IoT_DL_eNB_HARQ_t    *ndlsch_harq            =   ndlsch->harq_process;
+  int                     input_buffer_length     =   ndlsch_harq->TBS/8;         // get in byte //the TBS is set in generate_dlsch_param
+  NB_IoT_DL_FRAME_PARMS   *fp                     =   &eNB->frame_parms_NB_IoT;
+  int                     G;
+  uint8_t                 *DLSCH_pdu              =   NULL;
+  uint8_t                 DLSCH_pdu_tmp[input_buffer_length+4];                   //[768*8];
   //uint8_t DLSCH_pdu_rar[256];
-  int i;
+  int                     i;
 
   LOG_D(PHY,
 	      "[eNB %"PRIu8"][PDSCH rnti%"PRIx16"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", mcs %"PRIu8"(round %"PRIu8")\n",
@@ -701,9 +702,9 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT *eNB,
 
   if(ndlsch_harq->round == 0) { //first transmission so we encode... because we generate the sequence
 
-    if (eNB->mac_enabled==1) { // set in lte-softmodem/main line 1646
+    if (eNB->mac_enabled == 1) { // set in lte-softmodem/main line 1646
 
-    	  DLSCH_pdu =pdu;
+    	  DLSCH_pdu = pdu;
 
   	  /*
   	   * we don't need to manage the RAR here since should be managed in the MAC layer for two reasons:

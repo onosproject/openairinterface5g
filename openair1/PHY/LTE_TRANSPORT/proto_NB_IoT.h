@@ -177,6 +177,11 @@ NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag);
 
 uint8_t subframe2harq_pid_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe);
 
+
+/** \brief Compute Q (modulation order) based on I_MCS for PUSCH.  Implements table 8.6.1-1 from 36.213.
+    @param I_MCS */
+uint8_t get_Qm_ul_NB_IoT(uint8_t I_MCS);
+
 /** \fn dlsch_encoding(PHY_VARS_eNB *eNB,
     uint8_t *input_buffer,
     LTE_DL_FRAME_PARMS *frame_parms,
@@ -210,5 +215,14 @@ int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
                               time_stats_t_NB_IoT        *rm_stats,
                               time_stats_t_NB_IoT        *te_stats,
                               time_stats_t_NB_IoT        *i_stats);
+
+
+void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT      *phy_vars_eNB,
+                     eNB_rxtx_proc_NB_IoT_t   *proc,
+                     uint8_t                  eNB_id,               // this is the effective sector id
+                     uint8_t                  UE_id,
+                     NB_IoT_eNB_ULSCH_t       **ulsch,
+                     uint8_t                  cooperation_flag);
+
 
 #endif

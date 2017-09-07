@@ -1006,6 +1006,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/uci_tools.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_mcs.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_mcs_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pbch.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_NB_IoT.c
@@ -1057,6 +1058,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_mbsfn.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref.c
   ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation.c
+  ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_lte.c
@@ -1071,6 +1073,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/CODING/rate_matching.c
   ${OPENAIR1_DIR}/PHY/CODING/viterbi.c
   ${OPENAIR1_DIR}/PHY/CODING/viterbi_lte.c
+  ${OPENAIR1_DIR}/PHY/CODING/viterbi_lte_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_init.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_init_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_parms.c

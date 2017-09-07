@@ -19,62 +19,31 @@
  *      contact@openairinterface.org
  */
 
-/*!\brief SCHED external variables */
-
-#ifndef __SCHED_EXTERN_H__
-#define __SCHED_EXTERN_H__
-
-#ifndef USER_MODE
-#define __NO_VERSION__
-
-
-#include <linux/kernel.h>
-#include <linux/init.h>
-#include <linux/module.h>
-#include <linux/version.h>
-#include <linux/types.h>
-
-#include <asm/io.h>
-#include <asm/bitops.h>
-
-#include <asm/uaccess.h>
-#include <asm/segment.h>
-#include <asm/page.h>
-
-
-#ifdef RTAI_ENABLED
-#include <rtai.h>
-//#include <rtai_posix.h>
-#include <rtai_fifos.h>
-#include <rtai_sched.h>
-#include <rtai_sem.h>
-//#include "rt_compat.h"
-
-#else
-#include <unistd.h>
-#endif
-
-#endif  /* USER_MODE */
-
-#include "defs.h"
-//#include "dlc_engine.h"
-
-extern int openair_sched_status;
-
-//extern int exit_PHY;
-//extern int exit_PHY_ack;
-
-extern int synch_wait_cnt;
-
-
-extern int16_t hundred_times_delta_TF[100];
-extern uint16_t hundred_times_log10_NPRB[100];
-/*
-#ifdef EMOS
-extern fifo_dump_emos_UE emos_dump_UE;
-extern fifo_dump_emos_eNB emos_dump_eNB;
-#endif
+/*! \file PHY/LTE_TRANSPORT/lte_mcs.c
+* \brief Some support routines for MCS computations
+* \author R. Knopp
+* \date 2011
+* \version 0.1
+* \company Eurecom
+* \email: knopp@eurecom.fr
+* \note
+* \warning
 */
 
+//#include "PHY/defs.h"
+//#include "PHY/extern.h"
+#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
 
-#endif /*__SCHED_EXTERN_H__ */
+
+unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS)
+{
+
+  if (I_MCS < 11)
+    return(2);
+  else if (I_MCS < 21)
+    return(4);
+  else
+    return(6);
+
+}
+

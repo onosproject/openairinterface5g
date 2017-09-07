@@ -56,9 +56,9 @@ extern PHY_VARS_eNB_NB_IoT * PHY_vars_eNB_NB_IoT_g[MAX_eNB_NB_IoT][MAX_NUM_CCs];
 
 
 extern MAC_xface_NB_IoT *mac_xface_NB_IoT;
-/*
-extern IF_Module_t *if_inst;
 
+extern IF_Module_t *if_inst;
+/*
 
 extern short primary_synch0[144];
 extern short primary_synch1[144];

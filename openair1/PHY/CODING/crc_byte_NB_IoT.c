@@ -172,6 +172,23 @@ unsigned int crc16_NB_IoT (unsigned char * inptr, int bitlen)
   return crc;
 }
 
+unsigned int crc8_NB_IoT (unsigned char * inptr, int bitlen)
+{
+  int             octetlen, resbit;
+  unsigned int             crc = 0;
+  octetlen = bitlen / 8;        /* Change in octets */
+  resbit = (bitlen % 8);
+
+  while (octetlen-- > 0) {
+    crc = crc8Table_NB_IoT[(*inptr++) ^ (crc >> 24)] << 24;
+  }
+
+  if (resbit > 0)
+    crc = (crc << resbit) ^ (crc8Table_NB_IoT[((*inptr) >> (8 - resbit)) ^ (crc >> (32 - resbit))] << 24);
+
+  return crc;
+}
+
 
 //#ifdef DEBUG_CRC
 /*******************************************************************/
