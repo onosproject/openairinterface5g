@@ -41,11 +41,12 @@
 //#include "PHY_INTERFACE/defs.h"
 //#include "COMMON/mac_rrc_primitives.h"
 
-// #ifdef NB_IOT
-// //NB-IoT
-// eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
-// IF_Module_t *if_inst;
-// #endif
+#ifdef NB_IOT
+//NB-IoT
+eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
+IF_Module_t *if_inst;
+#endif
+
 
 const uint32_t BSR_TABLE_NB_IoT[BSR_TABLE_SIZE_NB_IoT]= {0,10,12,14,17,19,22,26,31,36,42,49,57,67,78,91,
                                            				105,125,146,171,200,234,274,321,376,440,515,603,706,826,967,1132,
@@ -55,6 +56,14 @@ const uint32_t BSR_TABLE_NB_IoT[BSR_TABLE_SIZE_NB_IoT]= {0,10,12,14,17,19,22,26,
 
 eNB_ULSCH_INFO_NB_IoT 	eNB_ulsch_info_NB_IoT[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT]; // eNBxUE = 8x8
 eNB_DLSCH_INFO_NB_IoT 	eNB_dlsch_info_NB_IoT[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT]; // eNBxUE = 8x8
+
+
+MAC_xface_NB_IoT *mac_xface_NB_IoT;
+
+//NB-IoT--------------------------------------
+eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
+//should be utilized in: schedule_RA_NB_IoT,rx_sdu_NB_IoT, mac_top_init_NB_IoT,
+uint8_t Is_rrc_registered_NB_IoT;
 
 
 #endif

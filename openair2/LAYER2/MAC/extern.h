@@ -129,10 +129,6 @@ extern DCI2_5MHz_2A_TDD_t DLSCH_alloc_pdu2;
 extern DCI1E_5MHz_2A_M10PRB_TDD_t DLSCH_alloc_pdu1E;
 
 
-//NB-IoT---------------------------------
-
-extern eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
-extern uint8_t Is_rrc_nb_iot_registered;
 
 
 

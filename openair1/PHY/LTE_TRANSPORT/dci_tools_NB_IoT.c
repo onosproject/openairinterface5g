@@ -380,7 +380,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
 uint8_t subframe2harq_pid_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe)
 {
-  MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
+  //MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
   /*
     #ifdef DEBUG_DCI
     if (frame_parms->frame_type == TDD)

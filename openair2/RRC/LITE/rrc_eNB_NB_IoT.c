@@ -490,7 +490,7 @@ void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
 )
 //-----------------------------------------------------------------------------
 {
-  MAC_xface_NB_IoT *mac_xface_NB_IoT;
+  //MAC_xface_NB_IoT *mac_xface_NB_IoT;
 	//connection setup involve the establishment of SRB1 and SRB1bis (but srb1bis is established implicitly)
 	//XXX: this message should go through SRB0 to see this--> uper_encode
 	//XXX: they are assuming that 2 RLC-AM entities are used for SRB1 and SRB1bis
@@ -1613,7 +1613,7 @@ static void init_SI_NB_IoT(
 )
 //-----------------------------------------------------------------------------
 { 
-  MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
+  //MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
 
 	/*WE should allocate memory for PHY_Config structure
 	 * is declared in vars_nb_iot.c and put also in the extern_nb_iot

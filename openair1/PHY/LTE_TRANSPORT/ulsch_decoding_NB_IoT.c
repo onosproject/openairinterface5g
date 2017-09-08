@@ -933,7 +933,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
                                     uint8_t                 Nbundled,
                                     uint8_t                 llr8_flag)
 {
-  MAC_xface_NB_IoT *mac_xface_NB_IoT;  //test_xface
+  //MAC_xface_NB_IoT *mac_xface_NB_IoT;  //test_xface
 
   int16_t                 *ulsch_llr    = eNB->pusch_vars[UE_id]->llr;
   NB_IoT_DL_FRAME_PARMS   *frame_parms  = &eNB->frame_parms;

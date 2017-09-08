@@ -169,7 +169,7 @@ int                             otg_enabled;
 
 static LTE_DL_FRAME_PARMS      *frame_parms[MAX_NUM_CCs];
 //NB-IoT
-static NB_IoT_DL_FRAME_PARMS *frame_parms_nb_iot[MAX_NUM_CCs]; // this will be still inside the PHY_VARS of LTE
+static NB_IoT_DL_FRAME_PARMS *frame_parms_NB_IoT[MAX_NUM_CCs]; // this will be still inside the PHY_VARS of LTE
 
 eNB_func_t node_function[MAX_NUM_CCs];
 eNB_timing_t node_timing[MAX_NUM_CCs];
@@ -1443,7 +1443,7 @@ int main( int argc, char **argv ) {
     // set default parameters
     set_default_frame_parms(frame_parms);
 #ifdef NB_IOT
-    set_default_frame_parms_NB_IoT(frame_parms_nb_iot);
+    set_default_frame_parms_NB_IoT(frame_parms_NB_IoT);
 #endif
 
 
@@ -1590,11 +1590,11 @@ int main( int argc, char **argv ) {
       LOG_I(PHY,"Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms[CC_id]->nb_antennas_rx, frame_parms[CC_id]->nb_antennas_tx);
 
 #ifdef NB_IOT
-      frame_parms_nb_iot[CC_id]->nb_antennas_tx     = nb_antenna_tx;
-      frame_parms_nb_iot[CC_id]->nb_antennas_rx     = nb_antenna_rx;
-      frame_parms_nb_iot[CC_id]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
+      frame_parms_NB_IoT[CC_id]->nb_antennas_tx     = nb_antenna_tx;
+      frame_parms_NB_IoT[CC_id]->nb_antennas_rx     = nb_antenna_rx;
+      frame_parms_NB_IoT[CC_id]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
 
-      LOG_I(PHY,"[NB-IoT] Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms_nb_iot[CC_id]->nb_antennas_rx, frame_parms_nb_iot[CC_id]->nb_antennas_tx);
+      LOG_I(PHY,"[NB-IoT] Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms_NB_IoT[CC_id]->nb_antennas_rx, frame_parms_NB_IoT[CC_id]->nb_antennas_tx);
 
 #endif
     }
@@ -1694,7 +1694,7 @@ int main( int argc, char **argv ) {
             PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,frame_parms[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
             //this is a complementary function for just initialize manage NB_ioT stuff inside the PHY_Vars
 #ifdef NB_IOT
-            //init_lte_eNB_NB(PHY_vars_eNB_g[0][CC_id],frame_parms_nb_iot[CC_id], 0, frame_parms_nb_iot[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
+            //init_lte_eNB_NB(PHY_vars_eNB_g[0][CC_id],frame_parms_NB_IoT[CC_id], 0, frame_parms_NB_IoT[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
 #endif
 
             PHY_vars_eNB_g[0][CC_id]->ue_dl_rb_alloc=0x1fff;

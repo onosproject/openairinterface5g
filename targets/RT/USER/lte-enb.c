@@ -583,7 +583,7 @@ int wait_CCs(eNB_rxtx_proc_t *proc) {
  *
  * For the moment the NB-IoT implementation foresees a single thread implementation
  * */
-static inline int NB_rxtx(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc, char *thread_name) {
+static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc, char *thread_name) {
 
   //Allocate memory for the structures used by PHY and MAC
   UL_IND_t *UL_INFO;
@@ -700,7 +700,7 @@ static void* eNB_thread_rxtx( void* param ) {
     if (eNB->CC_id==0)
     {
 #ifdef NB_IOT
-      if(NB_rxtx(eNB_NB_IoT, proc_NB_IoT,thread_name)<0) break;
+      if(rxtx_NB_IoT(eNB_NB_IoT, proc_NB_IoT,thread_name)<0) break;
 #else
       if (rxtx(eNB,proc,thread_name) < 0) break;
 #endif

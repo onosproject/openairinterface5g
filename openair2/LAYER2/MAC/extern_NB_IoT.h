@@ -80,7 +80,7 @@ extern eNB_DLSCH_INFO_NB_IoT eNB_dlsch_info_NB_IoT[NUMBER_OF_eNB_MAX][MAX_NUM_CC
 
 //#ifndef USER_MODE
 extern MAC_xface_NB_IoT *mac_xface_NB_IoT;
-// extern RRC_XFACE *Rrc_xface;
+// extern RRC_XFACE *Rrc_xface;          //// to uncomment when it is used
 
 extern uint8_t Is_rrc_registered;
 

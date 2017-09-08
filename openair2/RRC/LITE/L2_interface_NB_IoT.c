@@ -1100,7 +1100,7 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
   mib_flag_t		mib_flag
 )
 {
-  MAC_xface_NB_IoT *mac_xface_NB_IoT;
+  //MAC_xface_NB_IoT *mac_xface_NB_IoT;
 
   SRB_INFO_NB_IoT *Srb_info;
   uint8_t Sdu_size=0;
@@ -1372,7 +1372,7 @@ int8_t mac_rrc_data_req_NB_IoT(
 )
 //--------------------------------------------------------------------------
 {
-  MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
+  //MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
   
   SRB_INFO_NB_IoT *Srb_info;
   uint8_t Sdu_size=0;
@@ -1629,69 +1629,6 @@ int8_t mac_rrc_data_req_NB_IoT(
   return(0);
 }
 
-//defined in eNB_scheduler_primitives.c
-/*
-int rrc_mac_remove_ue_NB_IoT(
-		module_id_t mod_idP,
-		rnti_t rntiP)
-{
-  int i;
-  UE_list_NB_IoT_t *UE_list = &eNB_mac_inst_NB_IoT[mod_idP].UE_list;
-  int UE_id = find_UE_id_NB_IoT(mod_idP,rntiP); //may should be changed
-  int pCC_id;
-
-  if (UE_id == -1) {
-printf("MAC: cannot remove UE rnti %x\n", rntiP);
-    LOG_W(MAC,"rrc_mac_remove_ue_NB_IoT: UE %x not found\n", rntiP);
-    mac_phy_remove_ue(mod_idP, rntiP); //PHY/defs.h
-    return 0;
-  }
-
-  pCC_id = UE_PCCID(mod_idP,UE_id);
-
-printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
-  LOG_I(MAC,"Removing UE %d from Primary CC_id %d (rnti %x)\n",UE_id,pCC_id, rntiP);
-  dump_ue_list_NB_IoT(UE_list,0);
-
-  UE_list->active[UE_id] = FALSE;
-  UE_list->num_UEs--;
-
-  // clear all remaining pending transmissions
-  UE_list->UE_template[pCC_id][UE_id].bsr_info[LCGID0]  = 0;
-  UE_list->UE_template[pCC_id][UE_id].bsr_info[LCGID1]  = 0;
-  UE_list->UE_template[pCC_id][UE_id].bsr_info[LCGID2]  = 0;
-  UE_list->UE_template[pCC_id][UE_id].bsr_info[LCGID3]  = 0;
-
-  UE_list->UE_template[pCC_id][UE_id].rnti              = NOT_A_RNTI;
-  UE_list->UE_template[pCC_id][UE_id].ul_active         = FALSE;
-  eNB_ulsch_info_NB_IoT[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
-  eNB_ulsch_info_NB_IoT[mod_idP][pCC_id][UE_id].status                      = S_UL_NONE;
-  eNB_dlsch_info_NB_IoT[mod_idP][pCC_id][UE_id].rnti                        = NOT_A_RNTI;
-  eNB_dlsch_info_NB_IoT[mod_idP][pCC_id][UE_id].status                      = S_DL_NONE;
-
-  mac_phy_remove_ue(mod_idP,rntiP); //PHY/defs.h
-
-  // check if this has an RA process active
-  RA_TEMPLATE_NB_IoT *RA_template;
-  for (i=0;i<RA_PROC_MAX_NB_IoT;i++) {
-
-    RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst[mod_idP].common_channels[pCC_id].RA_template[i];
-    if (RA_template->rnti == rntiP){
-      RA_template->RA_active=FALSE;
-      RA_template->generate_rar=0;
-      RA_template->generate_Msg4=0;
-      RA_template->wait_ack_Msg4=0;
-      RA_template->timing_offset=0;
-      RA_template->RRC_timer=20;
-      RA_template->rnti = 0;
-      //break;
-    }
-  }
-
-  return 0;
-}
-
-*/
 
 //defined in L2_interface
 void mac_eNB_rrc_ul_in_sync_NB_IoT(
@@ -2448,7 +2385,7 @@ boolean_t pdcp_data_req_NB_IoT(
   const pdcp_transmission_mode_t modeP
 )
 {
-  MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
+  //MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
 
   pdcp_t            *pdcp_p          = NULL;
   uint8_t            i               = 0;
