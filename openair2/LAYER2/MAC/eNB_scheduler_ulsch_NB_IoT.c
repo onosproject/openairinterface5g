@@ -160,7 +160,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
   int crnti_rx=0;
   //int old_buffer_info;
 
-  start_meas(&eNB->rx_ulsch_sdu);
+  start_meas(&eNB->rx_ulsch_sdu_NB_IoT);
 
   /*if there is an error for UE_id> max or UE_id==-1, set rx_lengths to 0*/
   if ((UE_id >  NUMBER_OF_UE_MAX_NB_IoT) || (UE_id == -1)  )
@@ -480,7 +480,7 @@ void rx_sdu_NB_IoT(const module_id_t enb_mod_idP,
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RX_SDU,0);
-  stop_meas(&eNB->rx_ulsch_sdu);
+  stop_meas(&eNB->rx_ulsch_sdu_NB_IoT);
 }
 }
 

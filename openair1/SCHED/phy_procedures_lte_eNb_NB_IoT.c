@@ -262,15 +262,15 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
           eNB->pusch_stats_rb[i][(frame*10)+subframe]    = eNB->nulsch[i]->harq_process->nb_rb;
           eNB->pusch_stats_round[i][(frame*10)+subframe] = eNB->nulsch[i]->harq_process->round;
           eNB->pusch_stats_mcs[i][(frame*10)+subframe]   = eNB->nulsch[i]->harq_process->mcs;
-/*
-  need for rx_ulsch function for NB_IoT
 
-          rx_ulsch(eNB,proc,
-                  eNB->UE_stats[i].sector,  // this is the effective sector id
-                  i,
-                  eNB->nulsch,
-                  0);
-*/
+  
+
+          rx_ulsch_NB_IoT(eNB,proc,
+                          eNB->UE_stats[i].sector,  // this is the effective sector id
+                          i,
+                          eNB->nulsch,
+                          0);
+
           ret = ulsch_decoding_NB_IoT(eNB,proc,
                                       i,
                                       0, // control_only_flag

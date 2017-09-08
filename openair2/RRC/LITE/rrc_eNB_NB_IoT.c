@@ -44,6 +44,7 @@
 #include "DL-DCCH-Message-NB.h"
 #include "SRB-ToAddMod-NB-r13.h"
 
+#include "common/utils/collection/tree.h"
 //#include "extern.h"
 #include "extern_NB_IoT.h"
 #include "assertions.h"

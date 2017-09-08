@@ -224,5 +224,13 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT      *phy_vars_eNB,
                      NB_IoT_eNB_ULSCH_t       **ulsch,
                      uint8_t                  cooperation_flag);
 
+void ulsch_extract_rbs_single_NB_IoT(int32_t                **rxdataF,
+                                     int32_t                **rxdataF_ext,
+                                     uint32_t               first_rb,
+                                     uint32_t               nb_rb,
+                                     uint8_t                l,
+                                     uint8_t                Ns,
+                                     NB_IoT_DL_FRAME_PARMS  *frame_parms);
+
 
 #endif

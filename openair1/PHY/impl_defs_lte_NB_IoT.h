@@ -352,6 +352,14 @@ typedef struct {
   uint8_t groupHoppingEnabled;
   /// , see TS 36.211 (5.5.1.3). \vr{[0..29]}
   uint8_t groupAssignmentNPUSCH;
+  /// Parameter: cyclicShift, see TS 36.211 (Table 5.5.2.1.1-2). \vr{[0..7]}
+  uint8_t cyclicShift;
+  /// nPRS for cyclic shift of DRS \note not part of offical UL-ReferenceSignalsPUSCH ASN1 specification.
+  uint8_t nPRS[20];
+  /// group hopping sequence for DRS \note not part of offical UL-ReferenceSignalsPUSCH ASN1 specification.
+  uint8_t grouphop[20];
+  /// sequence hopping sequence for DRS \note not part of offical UL-ReferenceSignalsPUSCH ASN1 specification.
+  uint8_t seqhop[20];
 } UL_REFERENCE_SIGNALS_NPUSCH_t;
 
 
@@ -365,6 +373,7 @@ typedef struct {
   DMRS_CONFIG_t dmrs_Config;
   /// Ref signals configuration
   UL_REFERENCE_SIGNALS_NPUSCH_t ul_ReferenceSignalsNPUSCH;
+
 } NPUSCH_CONFIG_COMMON;
 
 
@@ -384,6 +393,7 @@ typedef struct {
 	uint16_t	 dl_GapPeriodicity;
 	uint16_t	 dl_GapDurationCoeff;
 } DL_GapConfig_NB_IoT;
+
 
 typedef struct {
 

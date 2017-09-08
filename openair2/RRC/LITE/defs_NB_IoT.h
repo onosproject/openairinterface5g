@@ -100,6 +100,7 @@
 /* correct Rel(8|10)/Rel14 differences
  * the code is in favor of Rel14, those defines do the translation
  */
+/*
 #if !defined(Rel14)
 #  define CipheringAlgorithm_r12_t e_SecurityAlgorithmConfig__cipheringAlgorithm
 #  define CipheringAlgorithm_r12_t e_CipheringAlgorithm_r12 //maybe this solve the problem of the previous line
@@ -164,7 +165,7 @@
 #define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib10 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib10
 #define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib11 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib11
 #endif
-
+*/
 
 #ifndef NO_RRM
 #include "L3_rrc_interface.h"

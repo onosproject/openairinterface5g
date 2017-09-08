@@ -662,6 +662,8 @@ typedef struct {
   uint32_t              F;
   /// Temporary h sequence to flag PUSCH_x/PUSCH_y symbols which are not scrambled
   //uint8_t h[MAX_NUM_CHANNEL_BITS];
+  /// SRS active flag
+  uint8_t srs_active;
   /// Pointer to the payload
   uint8_t               *b;
   /// Current Number of Symbols

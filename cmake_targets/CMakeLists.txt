@@ -1021,6 +1021,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/drs_modulation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_modulation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_demodulation.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_demodulation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_coding.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_decoding.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_decoding_NB_IoT.c
@@ -1037,6 +1038,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/MODULATION/beamforming.c
   ${OPENAIR1_DIR}/PHY/MODULATION/compute_bf_weights.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/freq_equalization.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/freq_equalization_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_time.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_timefreq.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_adjust_sync.c
@@ -1045,6 +1047,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_bf_channel_estimation.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_mbsfn_channel_estimation.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_est_freq_offset.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ue_measurements.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_eNB_measurements.c

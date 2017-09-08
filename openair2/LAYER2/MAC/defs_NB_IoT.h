@@ -667,7 +667,7 @@ typedef struct {
   time_stats_t schedule_dlsch; // include rlc_data_req + MAC header + preprocessor
   /// Delete processing time of eNB MCH scheduler
   /// processing time of eNB ULSCH reception
-  time_stats_t rx_ulsch_sdu; // include rlc_data_ind
+  time_stats_t rx_ulsch_sdu_NB_IoT; // include rlc_data_ind
 } eNB_MAC_INST_NB_IoT;
 
 /*!\brief Top level UE MAC structure */

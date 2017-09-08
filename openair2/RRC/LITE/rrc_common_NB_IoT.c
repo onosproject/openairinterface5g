@@ -31,7 +31,7 @@
 //#include "defs_NB_IoT.h"
 //#include "extern.h"
 //#include "RRC/LITE/extern_NB_IoT.h"
-//#include "common/utils/collection/tree.h"
+#include "common/utils/collection/tree.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
 //#include "COMMON/openair_defs.h"
 //#include "COMMON/platform_types.h"
