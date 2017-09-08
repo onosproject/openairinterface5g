@@ -232,5 +232,7 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t                **rxdataF,
                                      uint8_t                Ns,
                                      NB_IoT_DL_FRAME_PARMS  *frame_parms);
 
+void extract_CQI_NB_IoT(void *o,UCI_format_NB_IoT_t uci_format,NB_IoT_eNB_UE_stats *stats,uint8_t N_RB_DL, uint16_t * crnti, uint8_t * access_mode);
+
 
 #endif

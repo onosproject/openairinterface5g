@@ -283,11 +283,11 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
           eNB->nulsch[i]->harq_process->subframe_scheduling_flag=0;
           if (eNB->nulsch[i]->harq_process->cqi_crc_status == 1) {
 
-              extract_CQI(eNB->nulsch[i]->harq_process->o,
-                          eNB->nulsch[i]->harq_process->uci_format,
-                          &eNB->UE_stats[i],
-                          fp->N_RB_DL,
-                          &rnti, &access_mode);
+              extract_CQI_NB_IoT(eNB->nulsch[i]->harq_process->o,
+                                 eNB->nulsch[i]->harq_process->uci_format,
+                                 &eNB->UE_stats[i],
+                                 fp->N_RB_DL,
+                                 &rnti, &access_mode);
             
               eNB->UE_stats[i].rank = eNB->nulsch[i]->harq_process->o_RI[0];
           }
