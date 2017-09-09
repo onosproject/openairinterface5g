@@ -663,7 +663,7 @@ typedef struct {
   /// Temporary h sequence to flag PUSCH_x/PUSCH_y symbols which are not scrambled
   //uint8_t h[MAX_NUM_CHANNEL_BITS];
   /// SRS active flag
-  uint8_t srs_active;
+  uint8_t               srs_active;
   /// Pointer to the payload
   uint8_t               *b;
   /// Current Number of Symbols
@@ -695,7 +695,7 @@ typedef struct {
 
 
 typedef struct {
-  /// Pointers to 8 HARQ processes for the ULSCH
+  /// Pointers to the HARQ processes for the NULSCH
   NB_IoT_UL_eNB_HARQ_t    *harq_process;
   /// Maximum number of HARQ rounds
   uint8_t                 Mlimit;
@@ -728,13 +728,8 @@ typedef struct {
   /// Determined the ACK/NACK delay and the subcarrier allocation TS 36.213 Table 16.4.2
   uint8_t                 HARQ_ACK_resource;
 
-} NB_IoT_eNB_NULSCH_t;
+  ///////////// kept from LTE ///////////////////////////////////////////////////
 
-typedef struct {
-  /// Pointers to 8 HARQ processes for the ULSCH
-  NB_IoT_UL_eNB_HARQ_t    *harq_process;
-  /// Maximum number of HARQ rounds
-  uint8_t                 Mlimit;
   /// Maximum number of iterations used in eNB turbo decoder
   uint8_t                 max_turbo_iterations;
   /// ACK/NAK Bundling flag
@@ -745,25 +740,11 @@ typedef struct {
   uint16_t                beta_offset_ri_times8;
   /// beta_offset_harqack times 8
   uint16_t                beta_offset_harqack_times8;
-  /// Flag to indicate that eNB awaits UE Msg3
-  uint8_t                 Msg3_active;
-  /// Flag to indicate that eNB should decode UE Msg3
-  uint8_t                 Msg3_flag;
-  /// Subframe for Msg3
-  uint8_t                 Msg3_subframe;
-  /// Frame for Msg3
-  uint32_t                Msg3_frame;
-  /// RNTI attributed to this ULSCH
-  uint16_t                rnti;
-  /// cyclic shift for DM RS
-  uint8_t                 cyclicShift;
-  /// cooperation flag
-  uint8_t                 cooperation_flag;
   /// num active cba group
   uint8_t                 num_active_cba_groups;
   /// allocated CBA RNTI for this ulsch
   uint16_t                cba_rnti[4];//NUM_MAX_CBA_GROUP];
-#ifdef LOCALIZATION
+  #ifdef LOCALIZATION
   /// epoch timestamp in millisecond
   int32_t                 reference_timestamp_ms;
   /// aggregate physical states every n millisecond
@@ -771,10 +752,9 @@ typedef struct {
   /// a set of lists used for localization
   struct                  list loc_rss_list[10], loc_rssi_list[10], loc_subcarrier_rss_list[10], loc_timing_advance_list[10], loc_timing_update_list[10];
   struct                  list tot_loc_rss_list, tot_loc_rssi_list, tot_loc_subcarrier_rss_list, tot_loc_timing_advance_list, tot_loc_timing_update_list;
-#endif
+  #endif
 
-} NB_IoT_eNB_ULSCH_t;
-
+} NB_IoT_eNB_NULSCH_t;
 
 #define NPBCH_A 34
 

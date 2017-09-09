@@ -164,16 +164,8 @@ NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(//unsigned char Kmimo,
                                           NB_IoT_DL_FRAME_PARMS* frame_parms);
 
 
-NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag);
+NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB_IoT(uint8_t abstraction_flag);
 
-//5555
-/*void rx_ulsch_NB_IoT(PHY_VARS_eNB *phy_vars_eNB,
-                     eNB_rxtx_proc_t *proc,
-                     uint8_t eNB_id,  // this is the effective sector id
-                     uint8_t UE_id,
-                     LTE_eNB_ULSCH_t **ulsch,
-                     uint8_t cooperation_flag);
-*/
 
 uint8_t subframe2harq_pid_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe);
 
@@ -221,7 +213,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT      *phy_vars_eNB,
                      eNB_rxtx_proc_NB_IoT_t   *proc,
                      uint8_t                  eNB_id,               // this is the effective sector id
                      uint8_t                  UE_id,
-                     NB_IoT_eNB_ULSCH_t       **ulsch,
+                     NB_IoT_eNB_NULSCH_t      **ulsch,
                      uint8_t                  cooperation_flag);
 
 void ulsch_extract_rbs_single_NB_IoT(int32_t                **rxdataF,

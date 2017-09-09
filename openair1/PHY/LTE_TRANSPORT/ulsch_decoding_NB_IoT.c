@@ -937,7 +937,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
   int16_t                 *ulsch_llr    = eNB->pusch_vars[UE_id]->llr;
   NB_IoT_DL_FRAME_PARMS   *frame_parms  = &eNB->frame_parms;
-  NB_IoT_eNB_ULSCH_t      *ulsch        = eNB->ulsch[UE_id];
+  NB_IoT_eNB_NULSCH_t     *ulsch        = eNB->ulsch[UE_id];
   NB_IoT_UL_eNB_HARQ_t    *ulsch_harq;
 
   uint8_t         harq_pid;

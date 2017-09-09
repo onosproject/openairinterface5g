@@ -544,7 +544,7 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   NB_IoT_eNB_PUSCH              *pusch_vars[NUMBER_OF_UE_MAX_NB_IoT];
   NB_IoT_eNB_PRACH              prach_vars;
   //LTE_eNB_DLSCH_t             *dlsch[NUMBER_OF_UE_MAX_NB_IoT][2];             // Nusers times two spatial streams
-  NB_IoT_eNB_ULSCH_t            *ulsch[NUMBER_OF_UE_MAX_NB_IoT+1];              // Nusers + number of RA (the ulsch[0] contains RAR)
+  NB_IoT_eNB_NULSCH_t            *ulsch[NUMBER_OF_UE_MAX_NB_IoT+1];              // Nusers + number of RA (the ulsch[0] contains RAR)
   //LTE_eNB_DLSCH_t             *dlsch_SI,*dlsch_ra;
   //LTE_eNB_DLSCH_t             *dlsch_MCH;
   NB_IoT_eNB_UE_stats           UE_stats[NUMBER_OF_UE_MAX_NB_IoT];
