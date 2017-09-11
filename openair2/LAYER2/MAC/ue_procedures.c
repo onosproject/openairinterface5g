@@ -1927,14 +1927,8 @@ ue_scheduler(
   //Rrc_xface->Frame_index=Mac_rlc_xface->frameP;
   //if (subframe%5 == 0)
   //LG#ifdef EXMIMO
-//#ifdef UE_NR_PHY_DEMO
-  // NR demo: call pdcp_run every subframe on TTI0. To check later if OK
-  if (isNewTxSubframe)
-//#endif
-  {
-      pdcp_run(&ctxt);
-  }
-  //#endif
+  pdcp_run(&ctxt);
+
   UE_mac_inst[module_idP].txFrame    = txFrameP;
   UE_mac_inst[module_idP].txSubframe = txSubframeP;
   UE_mac_inst[module_idP].rxFrame    = rxFrameP;
