@@ -628,7 +628,7 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   // Pointers for active physicalConfigDedicated to be applied in current subframe
   struct                                    PhysicalConfigDedicated                         *physicalConfigDedicated[NUMBER_OF_UE_MAX_NB_IoT];
   //Pointers for actve physicalConfigDedicated for NB-IoT to be applied in current subframe
-  struct                                    PhysicalConfigDedicated_NB_r13                  *phy_config_dedicated_NB[NUMBER_OF_UE_MAX_NB_IoT];
+  struct                                    PhysicalConfigDedicated_NB_r13                  *phy_config_dedicated_NB_IoT[NUMBER_OF_UE_MAX_NB_IoT];
   ///
   uint32_t                                  rb_mask_ul[4];
   /// Information regarding TM5

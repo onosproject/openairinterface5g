@@ -125,7 +125,7 @@ typedef struct {
 #endif
 
   /// PHY-Config-Dedicated eNB
-  void (*phy_config_dedicated_eNB)(module_id_t Mod_id,int CC_id,rnti_t rnti,
+  void (*phy_config_dedicated_eNB_NB_IoT)(module_id_t Mod_id,int CC_id,rnti_t rnti,
                                    struct PhysicalConfigDedicated *physicalConfigDedicated);
 /////////////////////////////////////////////
  /*

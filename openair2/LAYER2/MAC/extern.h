@@ -45,14 +45,6 @@
 #include "PHY_INTERFACE/defs.h"
 #include "RRC/LITE/defs.h"
 
-#ifdef NB_IOT
-#include "defs_NB_IoT.h"
-
-//NB-IoT
-extern IF_Module_t *if_inst;
-extern eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
-#endif
-
 extern const uint32_t BSR_TABLE[BSR_TABLE_SIZE];
 //extern uint32_t EBSR_Level[63];
 extern const uint32_t Extended_BSR_TABLE[BSR_TABLE_SIZE];
@@ -127,9 +119,6 @@ extern DCI1_5MHz_FDD_t       DLSCH_alloc_pdu_fdd;
 extern DCI2_5MHz_2A_TDD_t DLSCH_alloc_pdu1;
 extern DCI2_5MHz_2A_TDD_t DLSCH_alloc_pdu2;
 extern DCI1E_5MHz_2A_M10PRB_TDD_t DLSCH_alloc_pdu1E;
-
-
-
 
 
 #endif //DEF_H

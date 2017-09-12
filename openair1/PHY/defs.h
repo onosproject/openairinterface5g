@@ -119,7 +119,6 @@ static inline void* malloc16_clear( size_t size )
 
 #include "impl_defs_top.h"
 #include "impl_defs_lte.h"
-//#include "impl_defs_lte_NB_IoT.h"
 
 #include "PHY/TOOLS/time_meas.h"
 #include "PHY/CODING/defs.h"
@@ -129,7 +128,7 @@ static inline void* malloc16_clear( size_t size )
 #ifdef OPENAIR_LTE
 
 #include "PHY/LTE_TRANSPORT/defs.h"
-//#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+
 #include <pthread.h>
 
 #include "targets/ARCH/COMMON/common_lib.h"
@@ -569,10 +568,6 @@ typedef struct PHY_VARS_eNB_s {
   // Pointers for active physicalConfigDedicated to be applied in current subframe
   struct PhysicalConfigDedicated *physicalConfigDedicated[NUMBER_OF_UE_MAX];
 
-  //Pointers for actve physicalConfigDedicated for NB-IoT to be applied in current subframe
-  //struct PhysicalConfigDedicated_NB_r13 *phy_config_dedicated_NB[NUMBER_OF_UE_MAX];
-
-
   uint32_t rb_mask_ul[4];
 
   /// Information regarding TM5
@@ -660,55 +655,6 @@ typedef struct PHY_VARS_eNB_s {
   openair0_device ifdevice;
   /// Pointer for ifdevice buffer struct
   if_buffer_t ifbuffer;
-
-
-
-  //------------------------
-  // NB-IoT
-  //------------------------
-
-  /*
-   * NUMBER_OF_UE_MAX_NB_IoT maybe in the future should be dynamic because could be very large and the memory may explode
-   * (is almost the indication of the number of UE context that we are storing at PHY layer)
-   *
-   * reasoning: the following data structure (ndlsch, nulsch ecc..) are used to store the context that should be transmitted in at least n+4 subframe later
-   * (the minimum interval between NPUSCH and the ACK for this)
-   * the problem is that in NB_IoT the ACK for the UPLINK is contained in the DCI through the NDI field (if this value change from the previous one then it means ACK)
-   * but may we could schedule this DCI long time later so may lots of contents shuld be stored (there is no concept of phich channel in NB-IoT)
-   * For the DL transmission the UE send a proper ACK/NACK message
-   *
-   * *the HARQ process should be killed when the NDI change
-   *
-   * *In the Structure for nulsch we should also store the information related to the subframe (because each time we should read it and understand what should be done
-   * in that subframe)
-   *
-   */
-
-
-  /*
-   * TIMING
-   * the entire transmission and scheduling are done for the "subframe" concept but the subframe = proc->subframe_tx (that in reality is the subframe_rx +4)
-   * (see USER/lte-enb/wakeup_rxtx )
-   *
-   * Related to FAPI:
-   * DCI and  DL_CONFIG.request (also more that 1) and MAC_PDU are transmitted in the same subframe (our assumption) so will be all contained in the schedule_response getting from the scheduler
-   * DCI0 and UL_CONFIG.request are transmitted in the same subframe (our assumption) so contained in the schedule_response
-   *
-   */
-
-  //TODO: check what should be NUMBER_OF_UE_MAX_NB_IoT value
-  /*
-  NB_IoT_eNB_NPBCH_t *npbch;
-  NB_IoT_eNB_NPDCCH_t *npdcch[NUMBER_OF_UE_MAX_NB_IoT];
-  NB_IoT_eNB_NDLSCH_t *ndlsch[NUMBER_OF_UE_MAX_NB_IoT];
-  NB_IoT_eNB_NULSCH_t *nulsch[NUMBER_OF_UE_MAX_NB_IoT+1]; //nulsch[0] contains the RAR
-  NB_IoT_eNB_NDLSCH_t *ndlsch_SI,*ndlsch_ra, *ndlsch_SIB1;
-
-  NB_IoT_DL_FRAME_PARMS frame_parms_NB_IoT;
-  // DCI for at most 2 DCI pdus
-  DCI_PDU_NB_IoT *DCI_pdu;
-*/
-
 
 } PHY_VARS_eNB;
 

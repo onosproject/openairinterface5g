@@ -374,8 +374,6 @@ uint16_t get_Np(uint8_t N_RB_DL,uint8_t nCCE,uint8_t plus1);
 
 
 int8_t find_ue(uint16_t rnti, PHY_VARS_eNB *phy_vars_eNB);
-//NB-IoT
-//int8_t find_ue_NB_IoT(uint16_t rnti, PHY_VARS_eNB_NB_IoT *eNB);
 
 int32_t add_ue(int16_t rnti, PHY_VARS_eNB *phy_vars_eNB);
 int mac_phy_remove_ue(module_id_t Mod_idP,rnti_t rnti);

@@ -38,8 +38,6 @@
 #include "UTIL/LISTS/list.h"
 #endif
 
-////////////////////////////////////////////////#include "dci_nb_iot.h"
-
 #define MOD_TABLE_QPSK_OFFSET 1
 #define MOD_TABLE_16QAM_OFFSET 5
 #define MOD_TABLE_64QAM_OFFSET 21

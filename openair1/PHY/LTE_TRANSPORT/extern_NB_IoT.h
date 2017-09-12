@@ -23,7 +23,7 @@
 #ifndef __PHY_LTE_TRANSPORT_EXTERN_NB_IOT__H__
 #define __PHY_LTE_TRANSPORT_EXTERN_NB_IOT__H__
 
-//NB-Iot
+
 extern unsigned int TBStable_NB_IoT[14][8];
 
 extern unsigned char cs_ri_normal_NB_IoT[4];
