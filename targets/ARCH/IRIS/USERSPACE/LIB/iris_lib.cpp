@@ -530,7 +530,7 @@ extern "C" {
 	    printf("Enabling %d rx and %d tx channel(s) on each device...\n", s->rx_num_channels, s->tx_num_channels);
 	else
 	{
-	    printf("Invalid rx or tx number of channels\n");
+	    printf("Invalid rx or tx number of channels (%d, %d)\n", s->rx_num_channels, s->tx_num_channels);
 	    exit(-1);
 	}
 	int r;
@@ -643,7 +643,7 @@ extern "C" {
 	if(is_equal(s->sample_rate, (double)7.68e6))
 	    s->tx_forward_nsamps = 50;
 
-	LOG_I(HW,"Finished initializing Iris device. %d %f \n");
+	LOG_I(HW,"Finished initializing %d Iris device(s).\n", s->device_num);
 	fflush(stdout);
 	return 0;
   }
