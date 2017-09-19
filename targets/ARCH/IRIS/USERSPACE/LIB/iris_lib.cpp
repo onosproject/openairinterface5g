@@ -145,6 +145,14 @@ static int trx_iris_write(openair0_device *device, openair0_timestamp timestamp,
     if (flags)
 	flag |= SOAPY_SDR_HAS_TIME;
 
+    if (flags == 2 || flags == 1) { // start of burst
+
+    }else if (flags == 3 || flags == 4){
+	flag |= SOAPY_SDR_END_BURST;
+    }
+
+
+
     long long timeNs = SoapySDR::ticksToTimeNs(timestamp, s->sample_rate/SAMPLE_RATE_DOWN);
     uint32_t *samps[2]; //= (uint32_t **)buff;
     int r;
