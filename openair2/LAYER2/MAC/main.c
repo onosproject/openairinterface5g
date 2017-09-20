@@ -61,7 +61,7 @@ void dl_phy_sync_success(module_id_t   module_idP,
 #endif
 
   if (first_sync==1 && !(mme_enabled==1)) {
-    layer2_init_UE(module_idP);
+    //DJP layer2_init_UE(module_idP);
     openair_rrc_ue_init(module_idP,eNB_index);
   } else
   {
@@ -148,7 +148,7 @@ int mac_top_init_ue(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
 }
 
 
-int mac_top_init_eNB()
+int mac_top_init_eNB(void)
 {
 
   module_id_t    Mod_id,i,j;
@@ -379,7 +379,7 @@ int l2_init_ue(int eMBMS_active, char *uecap_xer,uint8_t cba_group_active, uint8
   return(1);
 }
 
-int l2_init_eNB()
+int l2_init_eNB(void)
 {
 
 

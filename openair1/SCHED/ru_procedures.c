@@ -146,7 +146,7 @@ void feptx_ofdm(RU_t *ru) {
 	}
 	txdata = (int16_t*)&ru->common.txdata[aa][0];
 	for (j=0; i<(len<<1); i++,j++) {
-	  txdata[j++] = ((int16_t*)dummy_tx_b)[i];
+          txdata[j++] = ((int16_t*)dummy_tx_b)[i];
 	}
       }
       else {
@@ -205,6 +205,14 @@ void feptx_prec(RU_t *ru) {
     eNB = eNB_list[0];
     fp  = &eNB->frame_parms;
     
+    if (0) LOG_E(PHY,"%s() run->nb_tx:%u subframe:%u fp->symbols_per_tti:%u fp->ofdm_symbol_size:%u symbols:(%d, %d), (%d,%d)\n", 
+    __FUNCTION__, ru->nb_tx, subframe, fp->symbols_per_tti, fp->ofdm_symbol_size,
+    ((short*)&eNB->common_vars.txdataF[0][1])[0],
+    ((short*)&eNB->common_vars.txdataF[0][1])[1],
+    ((short*)&eNB->common_vars.txdataF[0][2])[0],
+    ((short*)&eNB->common_vars.txdataF[0][2])[1]
+    );
+
     for (aa=0;aa<ru->nb_tx;aa++)
       memcpy((void*)ru->common.txdataF_BF[aa],
 	     (void*)&eNB->common_vars.txdataF[aa][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],
@@ -409,4 +417,3 @@ void do_prach_ru(RU_t *ru) {
   }
 
 }
-

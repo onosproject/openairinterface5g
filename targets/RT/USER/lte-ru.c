@@ -592,12 +592,14 @@ void fh_if4p5_north_asynch_in(RU_t *ru,int *frame,int *subframe) {
   uint32_t symbol_number,symbol_mask,symbol_mask_full;
   int subframe_tx,frame_tx;
 
+LOG_E(PHY, "%s(ru:%p frame, subframe)\n", __FUNCTION__, ru);
   symbol_number = 0;
   symbol_mask = 0;
   symbol_mask_full = (1<<fp->symbols_per_tti)-1;
 
   do {   
     recv_IF4p5(ru, &frame_tx, &subframe_tx, &packet_type, &symbol_number);
+    LOG_E(PHY, "%s(ru:%p frame, subframe) frame_tx:%d/%d packet_type:%u symbol_number:%u proc->first_tx:%d\n", __FUNCTION__, ru, frame_tx, subframe_tx, packet_type, symbol_number, proc->first_tx);
     if (proc->first_tx != 0) {
       *frame    = frame_tx;
       *subframe = subframe_tx;
@@ -777,14 +779,80 @@ void tx_rf(RU_t *ru) {
   lte_subframe_t SF_type     = subframe_select(fp,proc->subframe_tx%10);
   lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_tx+9)%10);
   lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_tx+1)%10);
+
+  //LOG_E(PHY,"%s() nb_tx:%d sf:%d tti:%d\n", __FUNCTION__, ru->nb_tx, proc->subframe_tx, fp->samples_per_tti);
+
   if ((SF_type == SF_DL) ||
       (SF_type == SF_S)) {
     
     for (i=0; i<ru->nb_tx; i++)
+    {
       txp[i] = (void*)&ru->common.txdata[i][proc->subframe_tx*fp->samples_per_tti]; 
+      if (0)
+      {
+        if (
+            (proc->frame_tx % 10 ==0 && proc->subframe_tx==0)  ||
+            (proc->frame_tx % 10 ==0 && proc->subframe_tx==5)
+           )
+        {
+          LOG_E(PHY,"%s() nb_tx:%d i:%d samples_per_tti:%u subframe_tx:%u txp[i]\n", __FUNCTION__, ru->nb_tx, i, fp->samples_per_tti, proc->subframe_tx, txp[i]);
+        }
+      }
+    }
     
     int siglen=fp->samples_per_tti,flags=1;
     
+    if (0 &&
+    (
+        (proc->frame_tx % 300 ==0 && proc->subframe_tx==0)  ||
+        (proc->frame_tx % 300 ==0 && proc->subframe_tx==5)
+        )
+       )
+    {
+       uint32_t *tx0p = &txp[0];
+
+      LOG_E(PHY,"%s() nb_tx:%d first_carrier_offset:%u samples_per_tti:%u subframe_tx:%u sf:%u(%u) txp:%2x %2x %2x %2x %2x %2x %2x %2x\n", 
+          __FUNCTION__, ru->nb_tx, fp->first_carrier_offset, fp->samples_per_tti, proc->subframe_tx,
+          SF_type, SF_type==SF_S,
+          tx0p[fp->first_carrier_offset],
+          tx0p[fp->first_carrier_offset+1],
+          tx0p[fp->first_carrier_offset+2],
+          tx0p[fp->first_carrier_offset+3],
+          tx0p[fp->first_carrier_offset+4],
+          tx0p[fp->first_carrier_offset+5],
+          tx0p[fp->first_carrier_offset+6],
+          tx0p[fp->first_carrier_offset+7]
+          );
+    }
+    if ( 0 &&
+        (
+         (proc->frame_tx % 300 ==0 && proc->subframe_tx==0)  ||
+         (proc->frame_tx % 300 ==0 && proc->subframe_tx==5)
+        )
+       )
+    {
+      int32_t *txpbuf = RC.ru[0]->common.txdata[0];
+
+      char *buf = malloc(fp->symbols_per_tti * 3 + 100);
+      char *pbuf = buf;
+
+      for (int i=0;i<10;i++)
+      {
+        buf[0]='\0';
+        pbuf = buf;
+
+        pbuf += sprintf(pbuf, "SF%d:", proc->subframe_tx);
+
+        for (int k=0;k<fp->symbols_per_tti;k++)
+        {
+          pbuf += sprintf(pbuf, "%2x ", txpbuf[k]);
+        }
+        LOG_E(PHY, "%s\n", buf);
+
+      }
+      free(buf);
+    }
+
     if (SF_type == SF_S) {
       siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);
       flags=3; // end of burst
@@ -813,10 +881,12 @@ void tx_rf(RU_t *ru) {
 				      ru->nb_tx,
 				      flags);
     
-    LOG_D(PHY,"[TXPATH] RU %d tx_rf, writing to TS %llu, frame %d, unwrapped_frame %d, subframe %d\n",ru->idx,
-	  proc->timestamp_tx,proc->frame_tx,proc->frame_tx_unwrap,proc->subframe_tx,proc);
+    if (0 && proc->frame_tx % 10 ==0 && proc->subframe_tx==0) 
+      LOG_E(PHY,"[TXPATH] RU %d tx_rf, writing to TS %llu, frame %d, unwrapped_frame %d, subframe %d flags:%d siglen:%d\n",
+          ru->idx,
+          proc->timestamp_tx,proc->frame_tx,proc->frame_tx_unwrap,proc->subframe_tx, flags, siglen);
+
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
-    
     
     
     if (txs !=  fp->samples_per_tti) {
@@ -1109,7 +1179,7 @@ void wakeup_eNBs(RU_t *ru) {
 
   LOG_D(PHY,"wakeup_eNBs (num %d) for RU %d\n",ru->num_eNB,ru->idx);
 
-  if (ru->num_eNB==1) {
+  if (ru->num_eNB==1 && ru->eNB_top!=0) {
     // call eNB function directly
 
     char string[20];
@@ -1120,7 +1190,7 @@ void wakeup_eNBs(RU_t *ru) {
   else {
 
     for (i=0;i<ru->num_eNB;i++)
-      if (ru->wakeup_rxtx(eNB_list[i],ru->proc.frame_rx,ru->proc.subframe_rx) < 0)
+      if (ru->wakeup_rxtx!=0 && ru->wakeup_rxtx(eNB_list[i],ru->proc.frame_rx,ru->proc.subframe_rx) < 0)
 	LOG_E(PHY,"could not wakeup eNB rxtx process for subframe %d\n", ru->proc.subframe_rx);
   }
 }
@@ -1181,6 +1251,8 @@ static inline int wakeup_prach_ru_br(RU_t *ru) {
 }
 #endif
 
+void oai_subframe_ind(uint16_t frame, uint16_t subframe);
+
 static void* ru_thread( void* param ) {
 
   static int ru_thread_status;
@@ -1215,6 +1287,11 @@ static void* ru_thread( void* param ) {
         init_frame_parms(&ru->frame_parms,1);
         phy_init_RU(ru);
  //     }
+
+ru->openair0_cfg.tx_gain[0]=0.0;
+ru->openair0_cfg.tx_gain[1]=0.0;
+ru->openair0_cfg.tx_gain[2]=0.0;
+ru->openair0_cfg.tx_gain[3]=0.0;
 
       ret = openair0_device_load(&ru->rfdevice,&ru->openair0_cfg);
       if (setup_RU_buffers(ru)!=0) {
@@ -1278,6 +1355,7 @@ static void* ru_thread( void* param ) {
     if (ru->fh_south_in) ru->fh_south_in(ru,&frame,&subframe);
     else AssertFatal(1==0, "No fronthaul interface at south port");
 
+    oai_subframe_ind(frame, subframe);
 
     LOG_D(PHY,"RU thread (do_prach %d, is_prach_subframe %d), received frame %d, subframe %d\n",
 	  ru->do_prach,
@@ -1304,13 +1382,15 @@ static void* ru_thread( void* param ) {
     // If this proc is to provide synchronization, do so
     wakeup_slaves(proc);
 
-    LOG_D(PHY,"RU %d/%d frame_tx %d, subframe_tx %d\n",0,ru->idx,proc->frame_tx,proc->subframe_tx);
+    //LOG_E(PHY,"RU %d/%d frame_tx %d, subframe_tx %d\n",0,ru->idx,proc->frame_tx,proc->subframe_tx);
     // wakeup all eNB processes waiting for this RU
     if (ru->num_eNB>0) wakeup_eNBs(ru);
 
+    //LOG_E(PHY,"%s() Before wait_on_condition()\n", __FUNCTION__);
     // wait until eNBs are finished subframe RX n and TX n+4
     wait_on_condition(&proc->mutex_eNBs,&proc->cond_eNBs,&proc->instance_cnt_eNBs,"ru_thread");
-
+    //LOG_E(PHY,"%s() AFTER wait_on_condition() ru->feptx_prec:%p ru->fh_north_asynch_in:%p ru->feptx_ofdm:%p ru->fh_south_out:%p ru->fh_north_out:%p\n", 
+    //__FUNCTION__, ru->feptx_prec, ru->fh_north_asynch_in, ru->feptx_ofdm, ru->fh_south_out, ru->fh_north_out);
 
     // do TX front-end processing if needed (precoding and/or IDFTs)
     if (ru->feptx_prec) ru->feptx_prec(ru);
@@ -1544,6 +1624,8 @@ int setup_RU_buffers(RU_t *ru) {
   */
   
   
+  printf("%s() nb_rx:%d dma:%d\n", __FUNCTION__, ru->nb_rx, ru->openair0_cfg.mmapped_dma);
+
   if (ru->openair0_cfg.mmapped_dma == 1) {
     // replace RX signal buffers with mmaped HW versions
     
@@ -1578,6 +1660,7 @@ int setup_RU_buffers(RU_t *ru) {
   }
   else {  // not memory-mapped DMA 
     //nothing to do, everything already allocated in lte_init
+    printf("%s() Not memory-mapped DMA - nothing to do\n", __FUNCTION__);
   }
   return(0);
 }
@@ -1637,15 +1720,20 @@ void fill_rf_config(RU_t *ru,const char *rf_config_file) {
     cfg->tx_freq[i] = (double)fp->dl_CarrierFreq;
     cfg->rx_freq[i] = (double)fp->ul_CarrierFreq;
 
+//fp->att_tx = 0;
+//printf("%s() DJP - HARD CODE ALERT - fp->att_tx:%d\n", __FUNCTION__);
+
     cfg->tx_gain[i] = (double)fp->att_tx;
     cfg->rx_gain[i] = ru->max_rxgain-(double)fp->att_rx;
 
     cfg->configFilename = rf_config_file;
-    printf("channel %d, Setting tx_gain offset %f, rx_gain offset %f, tx_freq %f, rx_freq %f\n",
+    printf("channel %d, Setting tx_gain offset %f, rx_gain offset %f, tx_freq %f, rx_freq %f configFilename:%s fp->att_tx:%d\n",
 	   i, cfg->tx_gain[i],
 	   cfg->rx_gain[i],
 	   cfg->tx_freq[i],
-	   cfg->rx_freq[i]);
+	   cfg->rx_freq[i],
+           cfg->configFilename,
+           fp->att_tx);
   }
 }
 
@@ -1835,8 +1923,9 @@ void init_RU(const char *rf_config_file) {
   RCconfig_RU();
   printf("number of L1 instances %d, number of RU %d\n",RC.nb_L1_inst,RC.nb_RU);
 
-  for (i=0;i<RC.nb_L1_inst;i++) 
-    for (CC_id=0;CC_id<RC.nb_CC[i];CC_id++) RC.eNB[i][CC_id]->num_RU=0;
+  if (RC.nb_CC != 0)
+    for (i=0;i<RC.nb_L1_inst;i++) 
+      for (CC_id=0;CC_id<RC.nb_CC[i];CC_id++) RC.eNB[i][CC_id]->num_RU=0;
 
   for (ru_id=0;ru_id<RC.nb_RU;ru_id++) {
     ru               = RC.ru[ru_id];
@@ -1846,24 +1935,47 @@ void init_RU(const char *rf_config_file) {
     // use eNB_list[0] as a reference for RU frame parameters
     // NOTE: multiple CC_id are not handled here yet!
 
-    
+    printf("%s() RC.ru[%d].num_eNB:%d ru->eNB_list[0]:%p RC.eNB[0][0]:%p rf_config_file:%s\n", __FUNCTION__, ru_id, ru->num_eNB, ru->eNB_list[0], RC.eNB[0][0], ru->rf_config_file);
+
+    if (ru->eNB_list[0] == 0)
+    {
+      LOG_E(PHY,"%s() DJP - ru->eNB_list ru->num_eNB are not initialized - so do it manually\n", __FUNCTION__);
+      ru->eNB_list[0] = RC.eNB[0][0];
+      ru->num_eNB=1;
+      //
+      // DJP - feptx_prec() / feptx_ofdm() parses the eNB_list (based on num_eNB) and copies the txdata_F to txdata in RU
+      //
+    }
+
     eNB0             = ru->eNB_list[0];
-    if ((ru->function != NGFI_RRU_IF5) && (ru->function != NGFI_RRU_IF4p5))
-      AssertFatal(eNB0!=NULL,"eNB0 is null!\n");
+    printf("RU FUnction:%d ru->if_south:%d\n", ru->function, ru->if_south);
+    printf("eNB0:%p\n", eNB0);
+    if (eNB0)
+    {
+      if ((ru->function != NGFI_RRU_IF5) && (ru->function != NGFI_RRU_IF4p5))
+        AssertFatal(eNB0!=NULL,"eNB0 is null!\n");
 
-    if (eNB0) {
-      LOG_I(PHY,"Copying frame parms from eNB %d to ru %d\n",eNB0->Mod_id,ru->idx);
-      memcpy((void*)&ru->frame_parms,(void*)&eNB0->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
+      if (eNB0) {
+        LOG_I(PHY,"Copying frame parms from eNB %d to ru %d\n",eNB0->Mod_id,ru->idx);
+        memcpy((void*)&ru->frame_parms,(void*)&eNB0->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
 
-      // attach all RU to all eNBs in its list/
-      for (i=0;i<ru->num_eNB;i++) {
-	eNB0 = ru->eNB_list[i];
-	eNB0->RU_list[eNB0->num_RU++] = ru;
+        // attach all RU to all eNBs in its list/
+        for (i=0;i<ru->num_eNB;i++) {
+          eNB0 = ru->eNB_list[i];
+          eNB0->RU_list[eNB0->num_RU++] = ru;
+        }
       }
+    }
+    else
+    {
+      printf("eNB0 was NULL - DJP - missing out of copying of frame_params - NOT A GOOD THING TO MISS\n\n\n\n\n");
+      //extern uint8_t n_rb_dl;
+      //ru->frame_parms.N_RB_DL = n_rb_dl;
+      //printf("ru->frame_parms.N_RB_DL:%d\n", ru->frame_parms.N_RB_DL);
     }
     //    LOG_I(PHY,"Initializing RRU descriptor %d : (%s,%s,%d)\n",ru_id,ru_if_types[ru->if_south],eNB_timing[ru->if_timing],ru->function);
 
-    
+
     switch (ru->if_south) {
     case LOCAL_RF:   // this is an RU with integrated RF (RRU, eNB)
       if (ru->function ==  NGFI_RRU_IF5) {                 // IF5 RRU
@@ -1934,7 +2046,8 @@ void init_RU(const char *rf_config_file) {
       if (setup_RU_buffers(ru)!=0) {
 	printf("Exiting, cannot initialize RU Buffers\n");
 	exit(-1);
-      }*/
+      }
+      */
       break;
 
     case REMOTE_IF5: // the remote unit is IF5 RRU

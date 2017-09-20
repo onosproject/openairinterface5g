@@ -207,7 +207,7 @@ void UL_indication(UL_IND_t *UL_info)
 
     sched_info->TX_req      = &mac->TX_req[CC_id];
     AssertFatal(ifi->schedule_response!=NULL,
-		"UL_indication is null (mod %d, cc %d)\n",
+		"schedule_response is null (mod %d, cc %d)\n",
 		module_id,
 		CC_id);
     ifi->schedule_response(sched_info);

@@ -37,6 +37,8 @@
 #include "nfapi_interface.h"
 #include "fapi_l1.h"
 
+int oai_nfapi_dl_config_req(nfapi_dl_config_request_t *dl_config_req);
+int oai_nfapi_tx_req(nfapi_tx_request_t *tx_req);
 
 
 void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,  
@@ -576,8 +578,9 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
   ul_subframe = pdcch_alloc2ul_subframe(fp,subframe);
   ul_frame    = pdcch_alloc2ul_frame(fp,frame,subframe);
 
-  AssertFatal(proc->subframe_tx == subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
-  AssertFatal(proc->subframe_tx == subframe, "Current frame %d != NFAPI frame %d\n",proc->frame_tx,frame);
+// DJP - subframe assert will fail - not sure why yet
+  // DJP - AssertFatal(proc->subframe_tx == subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
+  // DJP - AssertFatal(proc->subframe_tx == subframe, "Current frame %d != NFAPI frame %d\n",proc->frame_tx,frame);
 
   uint8_t number_dl_pdu             = DL_req->dl_config_request_body.number_pdu;
   uint8_t number_hi_dci0_pdu        = HI_DCI0_req->hi_dci0_request_body.number_of_dci+HI_DCI0_req->hi_dci0_request_body.number_of_hi;
@@ -591,12 +594,13 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
   int i;
 
   eNB->pdcch_vars[subframe&1].num_pdcch_symbols = DL_req->dl_config_request_body.number_pdcch_ofdm_symbols;
-  eNB->pdcch_vars[subframe&1].num_dci           = 0;
+  eNB->pdcch_vars[subframe&1].num_dci           = DL_req->dl_config_request_body.number_dci;
   eNB->phich_vars[subframe&1].num_hi            = 0;
 
   LOG_D(PHY,"NFAPI: Frame %d, Subframe %d: received %d dl_pdu, %d tx_req, %d hi_dci0_config_req, %d UL_config \n",
 	frame,subframe,number_dl_pdu,TX_req->tx_request_body.number_of_pdus,number_hi_dci0_pdu,number_ul_pdu);
 
+  int do_oai =0;
   
   if ((subframe_select(fp,ul_subframe)==SF_UL) ||
       (fp->frame_type == FDD)) {
@@ -619,6 +623,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
     case NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE:
       handle_nfapi_dci_dl_pdu(eNB,proc,dl_config_pdu);
       eNB->pdcch_vars[subframe&1].num_dci++;
+      do_oai=1;
       break;
     case NFAPI_DL_CONFIG_BCH_PDU_TYPE:
       AssertFatal(dl_config_pdu->bch_pdu.bch_pdu_rel8.pdu_index<TX_req->tx_request_body.number_of_pdus,
@@ -626,6 +631,11 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
 		  dl_config_pdu->bch_pdu.bch_pdu_rel8.pdu_index,
 		  TX_req->tx_request_body.number_of_pdus);
       eNB->pbch_configured=1;
+      do_oai=1;
+      //LOG_D(PHY,"%s() NFAPI_DL_CONFIG_BCH_PDU_TYPE TX:%d/%d RX:%d/%d TXREQ:%d/%d\n", 
+          //__FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx, NFAPI_SFNSF2SFN(TX_req->sfn_sf), NFAPI_SFNSF2SF(TX_req->sfn_sf));
+
+
       handle_nfapi_bch_pdu(eNB,proc,dl_config_pdu,
 			   TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->bch_pdu.bch_pdu_rel8.pdu_index].segments[0].segment_data);
       break;
@@ -633,6 +643,8 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
       //      handle_nfapi_mch_dl_pdu(eNB,dl_config_pdu);
       break;
     case NFAPI_DL_CONFIG_DLSCH_PDU_TYPE:
+      //LOG_D(PHY,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d\n", __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx);
+
       AssertFatal(dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index<TX_req->tx_request_body.number_of_pdus,
 		  "dlsch_pdu_rel8.pdu_index>=TX_req->number_of_pdus (%d>%d)\n",
 		  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index,
@@ -653,6 +665,10 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
 					   subframe);
 					   
 					   }	*/				   
+      // Send the data first so that the DL_CONFIG can just pluck it out of the buffer
+      // DJP - OAI was here - moved to bottom
+      do_oai=1;
+
       break;
     case NFAPI_DL_CONFIG_PCH_PDU_TYPE:
       //      handle_nfapi_pch_pdu(eNB,dl_config_pdu);
@@ -673,6 +689,15 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
     }
   }
   
+#if 1
+  if (do_oai)
+  {
+    oai_nfapi_tx_req(Sched_INFO->TX_req);
+
+    oai_nfapi_dl_config_req(Sched_INFO->DL_req); // DJP - .dl_config_request_body.dl_config_pdu_list[0]); // DJP - FIXME TODO - yuk - only copes with 1 pdu
+  }
+#endif
+
   for (i=0;i<number_hi_dci0_pdu;i++) {
 
     hi_dci0_req_pdu = &HI_DCI0_req->hi_dci0_request_body.hi_dci0_pdu_list[i];

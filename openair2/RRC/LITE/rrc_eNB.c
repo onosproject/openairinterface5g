@@ -147,7 +147,7 @@ init_SI(
 #ifdef Rel14
   RC.rrc[ctxt_pP->module_id]->carrier[CC_id].pbch_repetition = configuration->pbch_repetition[CC_id];
 #endif
-  LOG_I(RRC, "Configuring MIB (N_RB_DL %d,phich_Resource %d,phich_Duration %d)\n", 
+  LOG_I(RRC, "Configuring MIB (N_RB_DL %d,phich_Resource %ld,phich_Duration %ld)\n", 
 	configuration->N_RB_DL[CC_id],
 	configuration->phich_resource[CC_id],
 	configuration->phich_duration[CC_id]);
@@ -281,6 +281,8 @@ init_SI(
       sib1_v13ext = RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib1_BR->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension;
   }
 #endif
+
+  LOG_I(RRC, "About to call rrc_mac_config_req_eNB");
 
   rrc_mac_config_req_eNB(ctxt_pP->module_id, CC_id,
 			 RC.rrc[ctxt_pP->module_id]->carrier[CC_id].physCellId,

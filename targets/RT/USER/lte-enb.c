@@ -148,30 +148,54 @@ void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
 void wakeup_prach_eNB_br(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
 #endif
 
+void oai_subframe_ind(uint16_t frame, uint16_t subframe);
+extern uint8_t nfapi_pnf;
+
 static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
   start_meas(&softmodem_stats_rxtx_sf);
+
+  if (nfapi_pnf)
+  {
+    oai_subframe_ind(proc->frame_tx, proc->subframe_tx); // PNF ---> P7:subframe_ind --> VNF 
+  }
+  else
+  {
+  }
+  // *******************************************************************
+
+  //if (proc->subframe_tx==0) LOG_W(PHY, "sfn/sf:%d:%d eNB:%p eNB[0]:%p eNB[0][0]:%p dlsch:%p:%p:%p rnti:%d\n", proc->frame_tx, proc->subframe_tx, RC.eNB, RC.eNB[0], RC.eNB[0][0], RC.eNB[0][0]->dlsch, RC.eNB[0][0]->dlsch[0], RC.eNB[0][0]->dlsch[0][0], RC.eNB[0][0]->dlsch[0][0]->rnti);
+  if ( proc->frame_tx == 22 && proc->subframe_tx==5) { LOG_D(PHY,"22/5\n"); }
 
   // ****************************************
   // Common RX procedures subframe n
 
   // if this is IF5 or 3GPP_eNB
-  if (eNB->RU_list[0]->function < NGFI_RAU_IF4p5) {
+  if (eNB && eNB->RU_list && eNB->RU_list[0] && eNB->RU_list[0]->function < NGFI_RAU_IF4p5) {
+  LOG_D(PHY,"%s:%s() %u/%u Before wakeup_prach_eNB() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
     wakeup_prach_eNB(eNB,NULL,proc->frame_rx,proc->subframe_rx);
+  LOG_D(PHY,"%s:%s() %u/%u Before wakeup_prach_eNB_br() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
 #ifdef Rel14
     wakeup_prach_eNB_br(eNB,NULL,proc->frame_rx,proc->subframe_rx);
+  LOG_D(PHY,"%s:%s() %u/%u proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
 #endif
   }
   // UE-specific RX processing for subframe n
+  LOG_D(PHY,"%s:%s() %u/%u Before phy_procedures_eNB_uespec_RX() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
   phy_procedures_eNB_uespec_RX(eNB, proc, no_relay );
 
+  LOG_D(PHY,"%s:%s() %u/%u Before UL_INFO_mutex proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
+  LOG_D(PHY,"%s:%s() %u/%u After UL_INFO_mutex proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
   eNB->UL_INFO.frame     = proc->frame_rx;
   eNB->UL_INFO.subframe  = proc->subframe_rx;
   eNB->UL_INFO.module_id = eNB->Mod_id;
   eNB->UL_INFO.CC_id     = eNB->CC_id;
+  LOG_D(PHY,"%s:%s() %u/%u Before UL_ind proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
   eNB->if_inst->UL_indication(&eNB->UL_INFO);
+  LOG_D(PHY,"%s:%s() %u/%u After UL_ind proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+  LOG_D(PHY,"%s:%s() %u/%u After UL_INFO_mutex unlock proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
   // *****************************************
   // TX processing for subframe n+4
   // run PHY TX procedures the one after the other for all CCs to avoid race conditions
@@ -183,9 +207,15 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   
   if (oai_exit) return(-1);
   
+  LOG_D(PHY,"%s:%s() %u/%u Before phy_procedures_eNB_TX() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
   phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
+  LOG_D(PHY,"%s:%s() %u/%u After phy_procedures_eNB_TX() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
   
+  LOG_D(PHY,"%s:%s() %u/%u Before release_thread() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx,  proc->instance_cnt_rxtx);
+
   if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) return(-1);
+
+  LOG_D(PHY,"%s:%s() %u/%u AFTER release_thread() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx,  proc->instance_cnt_rxtx);
 
   stop_meas( &softmodem_stats_rxtx_sf );
   
@@ -208,27 +238,34 @@ static void* eNB_thread_rxtx( void* param ) {
 
   char thread_name[100];
 
+  //LOG_D(PHY,"%s()\n", __FUNCTION__);
 
   // set default return value
   eNB_thread_rxtx_status = 0;
 
 
-  sprintf(thread_name,"RXn_TXnp4_%d\n",&eNB->proc.proc_rxtx[0] == proc ? 0 : 1);
+  sprintf(thread_name,"RXn_TXnp4_%d",&eNB->proc.proc_rxtx[0] == proc ? 0 : 1);
   thread_top_init(thread_name,1,850000L,1000000L,2000000L);
+
+  //LOG_D(PHY,"%s() thread_name:%s\n", __FUNCTION__, thread_name);
 
   while (!oai_exit) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 0 );
 
+    LOG_D(PHY,"%s:%s() %u/%u About to wait on proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
     if (wait_on_condition(&proc->mutex_rxtx,&proc->cond_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) break;
+
+    LOG_D(PHY,"%s:%s() %u/%u - WOKEN on proc->instance_cnt_rxtx proc->instance_cnt_rxtx:%d \n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 1 );
 
-    
-  
     if (oai_exit) break;
 
+    LOG_D(PHY,"%s:%s() %u/%u About to rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
     if (eNB->CC_id==0)
       if (rxtx(eNB,proc,thread_name) < 0) break;
+
+    LOG_D(PHY,"%s:%s() %u/%u DONE rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
 
   } // while !oai_exit
 
@@ -355,6 +392,7 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   }
   
   ++proc_rxtx->instance_cnt_rxtx;
+  LOG_E(PHY,"%s() %u/%u Just incremented proc->instance_cnt_rxtx:%d\n", __FUNCTION__, proc_rxtx->frame_tx, proc_rxtx->subframe_tx, proc_rxtx->instance_cnt_rxtx);
   
   // We have just received and processed the common part of a subframe, say n. 
   // TS_rx is the last received timestamp (start of 1st slot), TS_tx is the desired 
@@ -596,10 +634,12 @@ void init_eNB_proc(int inst) {
   pthread_attr_t *attr_prach_br=NULL;
 #endif
 
+  LOG_I(PHY,"%s(inst:%d) RC.nb_CC[inst]:%d \n",__FUNCTION__,inst,RC.nb_CC[inst]);
+
   for (CC_id=0; CC_id<RC.nb_CC[inst]; CC_id++) {
     eNB = RC.eNB[inst][CC_id];
 #ifndef OCP_FRAMEWORK
-    LOG_I(PHY,"Initializing eNB processes %d CC_id %d \n",inst,CC_id);
+    LOG_I(PHY,"Initializing eNB processes instance:%d CC_id %d \n",inst,CC_id);
 #endif
     proc = &eNB->proc;
 
@@ -657,6 +697,8 @@ void init_eNB_proc(int inst) {
     attr_td     = &proc->attr_td;
     attr_te     = &proc->attr_te; 
 #endif
+
+    LOG_I(PHY,"eNB->single_thread_flag:%d\n", eNB->single_thread_flag);
 
     if (eNB->single_thread_flag==0) {
       pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, &proc_rxtx[0] );
@@ -801,8 +843,8 @@ void init_transport(PHY_VARS_eNB *eNB) {
 	LOG_E(PHY,"Can't get eNB dlsch structures for UE %d \n", i);
 	exit(-1);
       } else {
-	LOG_D(PHY,"dlsch[%d][%d] => %p\n",i,j,eNB->dlsch[i][j]);
 	eNB->dlsch[i][j]->rnti=0;
+	LOG_D(PHY,"dlsch[%d][%d] => %p rnti:%d\n",i,j,eNB->dlsch[i][j], eNB->dlsch[i][j]->rnti);
       }
     }
     
@@ -854,13 +896,18 @@ void init_eNB_afterRU() {
   int inst,CC_id,ru_id,i,aa;
   PHY_VARS_eNB *eNB;
 
+  LOG_I(PHY,"%s() RC.nb_inst:%d\n", __FUNCTION__, RC.nb_inst);
 
   for (inst=0;inst<RC.nb_inst;inst++) {
+    LOG_I(PHY,"RC.nb_CC[inst]:%d\n", RC.nb_CC[inst]);
     for (CC_id=0;CC_id<RC.nb_CC[inst];CC_id++) {
+
+      LOG_I(PHY,"RC.nb_CC[inst:%d][CC_id:%d]:%d\n", inst, CC_id, RC.eNB[inst][CC_id]);
+
       eNB                                  =  RC.eNB[inst][CC_id];
       phy_init_lte_eNB(eNB,0,0);
       // map antennas and PRACH signals to eNB RX
-      AssertFatal(eNB->num_RU>0,"Number of RU attached to eNB %d is zero\n",eNB->Mod_id);
+      if (0) AssertFatal(eNB->num_RU>0,"Number of RU attached to eNB %d is zero\n",eNB->Mod_id);
       LOG_I(PHY,"Mapping RX ports from %d RUs to eNB %d\n",eNB->num_RU,eNB->Mod_id);
       eNB->frame_parms.nb_antennas_rx       = 0;
       eNB->prach_vars.rxsigF[0] = (int16_t*)malloc16(64*sizeof(int16_t*));
@@ -868,6 +915,9 @@ void init_eNB_afterRU() {
       for (int ce_level=0;ce_level<4;ce_level++)
 	eNB->prach_vars_br.rxsigF[ce_level] = (int16_t*)malloc16(64*sizeof(int16_t*));
 #endif
+
+      LOG_I(PHY,"eNB->num_RU:%d\n", eNB->num_RU);
+
       for (ru_id=0,aa=0;ru_id<eNB->num_RU;ru_id++) {
 	eNB->frame_parms.nb_antennas_rx    += eNB->RU_list[ru_id]->nb_rx;
 
@@ -885,6 +935,25 @@ void init_eNB_afterRU() {
 	  eNB->common_vars.rxdataF[aa]     =  eNB->RU_list[ru_id]->common.rxdataF[i];
 	}
       }
+
+
+
+
+      if (eNB->frame_parms.nb_antennas_rx < 1)
+      {
+        LOG_I(PHY, "%s() ************* DJP ***** eNB->frame_parms.nb_antennas_rx:%d - GOING TO HARD CODE TO 1", __FUNCTION__, eNB->frame_parms.nb_antennas_rx);
+        eNB->frame_parms.nb_antennas_rx = 1;
+      }
+
+      if (eNB->frame_parms.nb_antennas_tx < 1)
+      {
+        LOG_I(PHY, "%s() ************* DJP ***** eNB->frame_parms.nb_antennas_tx:%d - GOING TO HARD CODE TO 1", __FUNCTION__, eNB->frame_parms.nb_antennas_tx);
+        eNB->frame_parms.nb_antennas_tx = 1;
+      }
+
+
+
+
       AssertFatal(eNB->frame_parms.nb_antennas_rx >0,
 		  "inst %d, CC_id %d : nb_antennas_rx %d\n",inst,CC_id,eNB->frame_parms.nb_antennas_rx);
       LOG_I(PHY,"inst %d, CC_id %d : nb_antennas_rx %d\n",inst,CC_id,eNB->frame_parms.nb_antennas_rx);
@@ -892,9 +961,12 @@ void init_eNB_afterRU() {
       init_transport(eNB);
       init_precoding_weights(RC.eNB[inst][CC_id]);
     }
+    printf("RC.nb_CC[inst:%d]:%d CC_id:%d AFTER LOOP - About to init_eNB_proc\n", inst, RC.nb_CC[inst], CC_id);
     init_eNB_proc(inst);
   }
+  printf("%s() RC.nb_inst:%d AFTER LOOP\n", __FUNCTION__, RC.nb_inst);
 
+  printf("%s:%d RC.nb_RU:%d\n", __FILE__, __LINE__, RC.nb_RU);
   for (ru_id=0;ru_id<RC.nb_RU;ru_id++) {
 
     AssertFatal(RC.ru[ru_id]!=NULL,"ru_id %d is null\n",ru_id);
@@ -904,6 +976,8 @@ void init_eNB_afterRU() {
     RC.ru[ru_id]->wakeup_prach_eNB_br = wakeup_prach_eNB_br;
     RC.ru[ru_id]->eNB_top             = eNB_top;
   }
+
+  LOG_I(PHY,"%s() Exitting\n", __FUNCTION__);
 }
 
 void init_eNB(int single_thread_flag,int wait_for_sync) {
@@ -912,7 +986,10 @@ void init_eNB(int single_thread_flag,int wait_for_sync) {
   int inst;
   PHY_VARS_eNB *eNB;
 
+  LOG_I(PHY,"[lte-softmodem.c] eNB structure about to allocated\n");
+
   if (RC.eNB == NULL) RC.eNB = (PHY_VARS_eNB***) malloc(RC.nb_L1_inst*sizeof(PHY_VARS_eNB **));
+  LOG_I(PHY,"[lte-softmodem.c] eNB structure RC.eNB allocated\n");
   for (inst=0;inst<RC.nb_L1_inst;inst++) {
     if (RC.eNB[inst] == NULL) RC.eNB[inst] = (PHY_VARS_eNB**) malloc(RC.nb_CC[inst]*sizeof(PHY_VARS_eNB *));
     for (CC_id=0;CC_id<RC.nb_L1_CC[inst];CC_id++) {
@@ -948,11 +1025,7 @@ void init_eNB(int single_thread_flag,int wait_for_sync) {
 
   }
 
-
   LOG_I(PHY,"[lte-softmodem.c] eNB structure allocated\n");
-  
-
-
 }
 
 

@@ -100,6 +100,7 @@ schedule_SIB1_BR(
   int                            n_NB = 0;
   int                            TBS;
   int                            k=0,rvidx;
+  uint16_t sfn_sf = frameP << 4 | subframeP;
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
@@ -240,10 +241,11 @@ schedule_SIB1_BR(
     // Rel13 fields
     dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 1; // CEModeA UE
     dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 0; // SIB1-BR
-    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF; // absolute SFx
+    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF; // absolute SF
     
     //	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ; 
     dl_req->number_pdu++;
+    dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
     
     // Program TX Request
     TX_req                                                                = &eNB->TX_req[CC_id].tx_request_body.tx_pdu_list[eNB->TX_req[CC_id].tx_request_body.number_of_pdus]; 
@@ -252,8 +254,14 @@ schedule_SIB1_BR(
     TX_req->num_segments                                                  = 1;
     TX_req->segments[0].segment_length                                    = bcch_sdu_length;
     TX_req->segments[0].segment_data                                      = cc->BCCH_BR_pdu[0].payload;
+    eNB->TX_req[CC_id].sfn_sf = sfn_sf;
+    eNB->TX_req[CC_id].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
     eNB->TX_req[CC_id].tx_request_body.number_of_pdus++;
+    eNB->TX_req[CC_id].header.message_id = NFAPI_TX_REQUEST;
     
+    if (frameP%100==0) LOG_E(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
+        __FUNCTION__, eNB->TX_req[CC_id].sfn_sf, eNB->TX_req[CC_id].tx_request_body.number_of_pdus,
+        TX_req->pdu_length, TX_req->pdu_index, TX_req->num_segments, TX_req->segments[0].segment_length);
     
     
     if (opt_enabled == 1) {
@@ -314,6 +322,7 @@ schedule_SI_BR(
   int                                     i;
   int                                     rvidx;
   int                                     absSF = (frameP*10)+subframeP;
+  uint16_t sfn_sf = frameP << 4 | subframeP;
 
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
@@ -400,10 +409,10 @@ schedule_SI_BR(
 	    vrb_map[first_rb+4] = 1;
 	    vrb_map[first_rb+5] = 1;
 
-	    if ((frameP&1023) < 200) LOG_D(MAC,"[eNB %d] Frame %d Subframe %d: SI_BR->DLSCH CC_id %d, Narrowband %d rvidx %d (sf_mod_period %d : si_WindowLength_BR_r13 %d : si_RepetitionPattern_r13 %d) bcch_sdu_length %d\n",
-					   module_idP,frameP,subframeP,CC_id,(int)si_Narrowband_r13-1,rvidx,
-					   sf_mod_period,(int)si_WindowLength_BR_r13,(int)si_RepetitionPattern_r13,
-					   bcch_sdu_length);	    
+	    if ((frameP&1023) < 200) LOG_D(MAC,"[eNB %d] Frame %d Subframe %d: SI_BR->DLSCH CC_id %d, Narrowband %ld rvidx %d (sf_mod_period %d : si_WindowLength_BR_r13 %ld : si_RepetitionPattern_r13 %ld) bcch_sdu_length %d\n",
+					   module_idP,frameP,subframeP,CC_id,si_Narrowband_r13-1,rvidx,
+					   sf_mod_period,si_WindowLength_BR_r13,si_RepetitionPattern_r13,
+					   bcch_sdu_length);
 
 
 
@@ -412,6 +421,7 @@ schedule_SI_BR(
 	    memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
 	    dl_config_pdu->pdu_type                                                        = NFAPI_DL_CONFIG_DLSCH_PDU_TYPE; 
 	    dl_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_dl_config_dlsch_pdu));
+	    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
 	    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.length                                 = si_TBS_r13>>3;
 	    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = eNB->pdu_index[CC_id];
 	    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = 0xFFFF;
@@ -443,6 +453,7 @@ schedule_SI_BR(
 	    
 	    //	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ; 
 	    dl_req->number_pdu++;
+            dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 	    
 	    // Program TX Request
 	    TX_req                                                                = &eNB->TX_req[CC_id].tx_request_body.tx_pdu_list[eNB->TX_req[CC_id].tx_request_body.number_of_pdus]; 
@@ -452,7 +463,14 @@ schedule_SI_BR(
 	    TX_req->segments[0].segment_length                                    = bcch_sdu_length;
 	    TX_req->segments[0].segment_data                                      = cc->BCCH_BR_pdu[i+1].payload;
 	    eNB->TX_req[CC_id].tx_request_body.number_of_pdus++;
-	    
+            eNB->TX_req[CC_id].sfn_sf = sfn_sf;
+            eNB->TX_req[CC_id].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
+            eNB->TX_req[CC_id].header.message_id = NFAPI_TX_REQUEST;
+
+            if (frameP%100==0) LOG_E(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
+                __FUNCTION__, eNB->TX_req[CC_id].sfn_sf, eNB->TX_req[CC_id].tx_request_body.number_of_pdus,
+                TX_req->pdu_length, TX_req->pdu_index, TX_req->num_segments, TX_req->segments[0].segment_length);
+
 	    if (opt_enabled == 1) {
 	      trace_pdu(1,
 			&cc->BCCH_BR_pdu[i+1].payload[0],
@@ -493,18 +511,22 @@ void schedule_mib(module_id_t   module_idP,
 
   eNB_MAC_INST                   *eNB = RC.mac[module_idP];
   COMMON_channels_t              *cc;
+  nfapi_dl_config_request_t      *dl_config_request;
   nfapi_dl_config_request_pdu_t  *dl_config_pdu;
   nfapi_tx_request_pdu_t         *TX_req;
   int mib_sdu_length;
   int CC_id;
   nfapi_dl_config_request_body_t *dl_req;
+  uint16_t sfn_sf = frameP << 4 | subframeP;
 
-  AssertFatal(subframeP==0,"Subframe must be 0\n");
-  AssertFatal((frameP&3)==0,"Frame must be a multiple of 4\n");
+// DJP - commented out because I am going to try and send MIB every frame
+  //AssertFatal(subframeP==0,"Subframe must be 0\n");
+  //AssertFatal((frameP&3)==0,"Frame must be a multiple of 4\n");
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
-    dl_req          = &eNB->DL_req[CC_id].dl_config_request_body;
+    dl_config_request = &eNB->DL_req[CC_id];
+    dl_req          = &dl_config_request->dl_config_request_body;
     cc              = &eNB->common_channels[CC_id];
 
     mib_sdu_length = mac_rrc_data_req(module_idP,
@@ -516,36 +538,46 @@ void schedule_mib(module_id_t   module_idP,
 				      module_idP,
 				      0); // not used in this case
 
-    LOG_D(MAC,"Frame %d, subframe %d: BCH PDU length %d\n",
+    LOG_E(MAC,"Frame %d, subframe %d: BCH PDU length %d\n",
 	  frameP,subframeP,mib_sdu_length);
 
     if (mib_sdu_length > 0) {
 
-      LOG_D(MAC,"Frame %d, subframe %d: Adding BCH PDU in position %d (length %d)\n",
-	    frameP,subframeP,dl_req->number_pdu,mib_sdu_length);
+      LOG_D(MAC,"Frame %d, subframe %d: Adding BCH PDU in position %d (length %d)\n", frameP,subframeP,dl_req->number_pdu,mib_sdu_length);
 
-      if ((frameP&1023) < 40) LOG_D(MAC,"[eNB %d] Frame %d : MIB->BCH  CC_id %d, Received %d bytes (cc->mib->message.schedulingInfoSIB1_BR_r13 %d)\n",module_idP,frameP,CC_id,mib_sdu_length,(int)cc->mib->message.schedulingInfoSIB1_BR_r13);
+      if ((frameP&1023) < 40) LOG_D(MAC,"[eNB %d] Frame %d : MIB->BCH  CC_id %d, Received %d bytes (cc->mib->message.schedulingInfoSIB1_BR_r13 %ld)\n",module_idP,frameP,CC_id,mib_sdu_length,cc->mib->message.schedulingInfoSIB1_BR_r13);
 
       dl_config_pdu                                                         = &dl_req->dl_config_pdu_list[dl_req->number_pdu]; 
       memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
-      dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_BCH_PDU_TYPE,
+      dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_BCH_PDU_TYPE;
       dl_config_pdu->pdu_size                                               = 2+sizeof(nfapi_dl_config_bch_pdu);
+      dl_config_pdu->bch_pdu.bch_pdu_rel8.tl.tag                            = NFAPI_DL_CONFIG_REQUEST_BCH_PDU_REL8_TAG;
       dl_config_pdu->bch_pdu.bch_pdu_rel8.length                            = mib_sdu_length;
       dl_config_pdu->bch_pdu.bch_pdu_rel8.pdu_index                         = eNB->pdu_index[CC_id];
       dl_config_pdu->bch_pdu.bch_pdu_rel8.transmission_power                = 6000;
+      dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
       dl_req->number_pdu++;
 
-      LOG_D(MAC,"eNB->DL_req[0].number_pdu %d (%p)\n",
-	    dl_req->number_pdu,&dl_req->number_pdu);
+      dl_config_request->header.message_id = NFAPI_DL_CONFIG_REQUEST;
+      dl_config_request->sfn_sf = sfn_sf;
+
+      //LOG_E(MAC,"eNB->DL_req[0].number_pdu %d (%p) sfn_sf:%d\n", dl_req->number_pdu,&dl_req->number_pdu, NFAPI_SFNSF2DEC(dl_config_request->sfn_sf));
       // DL request
 
       TX_req                                                                = &eNB->TX_req[CC_id].tx_request_body.tx_pdu_list[eNB->TX_req[CC_id].tx_request_body.number_of_pdus]; 
       TX_req->pdu_length                                                    = 3;
       TX_req->pdu_index                                                     = eNB->pdu_index[CC_id]++;
       TX_req->num_segments                                                  = 1;
-      TX_req->segments[0].segment_length                                    = 0;
+      TX_req->segments[0].segment_length                                    = mib_sdu_length;
       TX_req->segments[0].segment_data                                      = cc[CC_id].MIB_pdu.payload;
       eNB->TX_req[CC_id].tx_request_body.number_of_pdus++;
+      eNB->TX_req[CC_id].sfn_sf = sfn_sf;
+      eNB->TX_req[CC_id].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
+      eNB->TX_req[CC_id].header.message_id = NFAPI_TX_REQUEST;
+
+      if (frameP%100==0) LOG_E(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
+          __FUNCTION__, eNB->TX_req[CC_id].sfn_sf, eNB->TX_req[CC_id].tx_request_body.number_of_pdus,
+          TX_req->pdu_length, TX_req->pdu_index, TX_req->num_segments, TX_req->segments[0].segment_length);
     }
   }
 }
@@ -569,9 +601,11 @@ schedule_SI(
   uint8_t                        *vrb_map;
   int                            first_rb = -1;
   int                            N_RB_DL;
+  nfapi_dl_config_request_t      *dl_config_request;
   nfapi_dl_config_request_pdu_t  *dl_config_pdu;
   nfapi_tx_request_pdu_t         *TX_req;
   nfapi_dl_config_request_body_t *dl_req;
+  uint16_t sfn_sf = frameP << 4 | subframeP;
 
   start_meas(&eNB->schedule_si);
   
@@ -583,8 +617,8 @@ schedule_SI(
       cc              = &eNB->common_channels[CC_id];
       vrb_map         = (void*)&cc->vrb_map;
       N_RB_DL         = to_prb(cc->mib->message.dl_Bandwidth); 
+      dl_config_request = &eNB->DL_req[CC_id];
       dl_req          = &eNB->DL_req[CC_id].dl_config_request_body;
-      
       
       bcch_sdu_length = mac_rrc_data_req(module_idP,
 					 CC_id,
@@ -596,7 +630,7 @@ schedule_SI(
 					 0); // not used in this case
       
       if (bcch_sdu_length > 0) {
-	LOG_D(MAC,"[eNB %d] Frame %d : BCCH->DLSCH CC_id %d, Received %d bytes \n",module_idP,frameP,CC_id,bcch_sdu_length);
+	LOG_D(MAC,"[eNB %d] Frame %d subframe %d : BCCH->DLSCH CC_id %d, Received %d bytes \n",module_idP,frameP,subframeP,CC_id,bcch_sdu_length);
 	
 	// Allocate 4 PRBs in a random location
 	/*
@@ -654,10 +688,20 @@ schedule_SI(
 	}
 	
 	
+        //dl_req->number_pdcch_ofdm_symbols = &RC.mac[module_idP]->DL_req[CC_id].dl_config_request_body;
+
+
+
+
+
+
+
 	dl_config_pdu                                                         = &dl_req->dl_config_pdu_list[dl_req->number_pdu]; 
 	memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
 	dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE; 
-	dl_config_pdu->pdu_size                                               = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
+	dl_config_pdu->pdu_size                                               = (uint8_t)(sizeof(nfapi_dl_config_dci_dl_pdu));
+        dl_req->number_dci++;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                      = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1A;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = 4;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                        = 0xFFFF;
@@ -671,23 +715,22 @@ schedule_SI(
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_1        = 0;
 	
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding       = getRIV(N_RB_DL,first_rb,4);      
-
-	// Rel10 fields
-	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start                           = 3;
-	// Rel13 fields
-	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 0; // regular UE
-	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2; // not BR
-	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF; // absolute SF	
-
+        dl_config_request->header.message_id = NFAPI_DL_CONFIG_REQUEST;
+        dl_config_request->sfn_sf = sfn_sf;
+	
 	if (!CCE_allocation_infeasible(module_idP,CC_id,1,subframeP,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,SI_RNTI)) {
-	  LOG_D(MAC,"Frame %d: Subframe %d : Adding common DCI for S_RNTI\n",
-		frameP,subframeP);
-	  dl_req->number_dci++;
+	  // DJP - dl_req->number_dci++;
 	  dl_req->number_pdu++;
+	  dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
+
+	  LOG_E(MAC,"Frame %d: Subframe %d : Adding common DCI for S_RNTI\n", frameP,subframeP);
+
 	  dl_config_pdu                                                                  = &dl_req->dl_config_pdu_list[dl_req->number_pdu]; 
 	  memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
 	  dl_config_pdu->pdu_type                                                        = NFAPI_DL_CONFIG_DLSCH_PDU_TYPE; 
-	  dl_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_dl_config_dlsch_pdu));
+	  dl_config_pdu->pdu_size                                                        = (uint8_t)(sizeof(nfapi_dl_config_dlsch_pdu));
+	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
+
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = eNB->pdu_index[CC_id];
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = 0xFFFF;
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type               = 2;   // format 1A/1B/1D
@@ -705,13 +748,24 @@ schedule_SI(
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pa                                     = 4; // 0 dB
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.delta_power_offset_index               = 0;
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.ngap                                   = 0;
-	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb                                   = get_subbandsize(cc->mib->message.dl_Bandwidth); // ignored
+	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb                                   = 1; // DJP - wireshark whinges - get_subbandsize(cc->mib->message.dl_Bandwidth); // ignored
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transmission_mode                      = (cc->p_eNB==1 ) ? 1 : 2;
-	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = 1;
-	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 1;
+	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = 0; // DJP 
+	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 0; // DJP 
 	  //	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ; 
-	  dl_req->number_pdu++;
+          dl_req->number_pdu++;
+          dl_config_request->header.message_id = NFAPI_DL_CONFIG_REQUEST;
+          dl_config_request->sfn_sf = sfn_sf;
 	  
+	  //dl_config_pdu->dlsch_pdu.dlsch_pdu_rel9.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL9_TAG;
+	  //dl_config_pdu->dlsch_pdu.dlsch_pdu_rel9.nscid = 0;
+
+	  //dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL10_TAG;
+
+	  //dl_config_pdu->dlsch_pdu.dlsch_pdu_rel11.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL11_TAG;
+	  //dl_config_pdu->dlsch_pdu.dlsch_pdu_rel12.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL12_TAG;
+	  //dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
+
 	  // Program TX Request
 	  TX_req                                                                = &eNB->TX_req[CC_id].tx_request_body.tx_pdu_list[eNB->TX_req[CC_id].tx_request_body.number_of_pdus]; 
 	  TX_req->pdu_length                                                    = bcch_sdu_length;
@@ -720,7 +774,13 @@ schedule_SI(
 	  TX_req->segments[0].segment_length                                    = bcch_sdu_length;
 	  TX_req->segments[0].segment_data                                      = cc->BCCH_pdu.payload;
 	  eNB->TX_req[CC_id].tx_request_body.number_of_pdus++;
+          eNB->TX_req[CC_id].sfn_sf = sfn_sf;
+          eNB->TX_req[CC_id].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
+          eNB->TX_req[CC_id].header.message_id = NFAPI_TX_REQUEST;
 	  
+	  if (frameP%100==0) LOG_E(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
+              __FUNCTION__, eNB->TX_req[CC_id].sfn_sf, eNB->TX_req[CC_id].tx_request_body.number_of_pdus,
+              TX_req->pdu_length, TX_req->pdu_index, TX_req->num_segments, TX_req->segments[0].segment_length);
 	}
 	else {
 	  LOG_E(MAC,"[eNB %d] CCid %d Frame %d, subframe %d : Cannot add DCI 1A for SI\n",module_idP, CC_id,frameP,subframeP);
@@ -772,6 +832,4 @@ schedule_SI(
 #endif
 
   stop_meas(&eNB->schedule_si);
-  return;
 }
- 

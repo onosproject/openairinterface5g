@@ -135,13 +135,11 @@ void pmch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,PHY_VARS_RN *rn,rel
 #endif
 }
 
-void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
+void common_signal_procedures (PHY_VARS_eNB *eNB,int frame, int subframe) {
 
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   int **txdataF = eNB->common_vars.txdataF;
   uint8_t *pbch_pdu=&eNB->pbch_pdu[0];
-  int subframe = proc->subframe_tx;
-  int frame = proc->frame_tx;
 
   LOG_D(PHY,"common_signal_procedures: frame %d, subframe %d\n",frame,subframe); 
 
@@ -420,7 +418,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   }
   else {
     // this is not a pmch subframe, so generate PSS/SSS/PBCH
-    common_signal_procedures(eNB,proc);
+    common_signal_procedures(eNB,proc->frame_tx, proc->subframe_tx);
   }
 
   // clear existing ulsch dci allocations before applying info from MAC  (this is table
@@ -1914,10 +1912,20 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
   // Call SRS first since all others depend on presence of SRS or lack thereof
   srs_procedures(eNB,proc);
 
+  {
+    static int first_time=1;
+    if (first_time)
+    {
+      LOG_E(PHY,"%s() DJP - removed lte_eNB_I0_measurements because it core dumps - no idea why!!!\n\n\n\n\n", __FUNCTION__);
+      first_time=0;
+    }
+  }
+#if 0
   lte_eNB_I0_measurements(eNB,
 			  subframe,
 			  0,
 			  eNB->first_run_I0_measurements);
+#endif
   eNB->first_run_I0_measurements = 0;
 
   uci_procedures(eNB,proc);

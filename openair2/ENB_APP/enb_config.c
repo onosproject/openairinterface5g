@@ -53,7 +53,9 @@
 #include "LAYER2/MAC/extern.h"
 #include "PHY/extern.h"
 #include "targets/ARCH/ETHERNET/USERSPACE/LIB/ethernet_lib.h"
-#include "enb_paramdef.h"
+#include "nfapi_vnf.h"
+#include "nfapi_pnf.h"
+
 /* those macros are here to help diagnose problems in configuration files
  * if the lookup fails, a warning is printed
  * (yes we can use the function name for the macro itself, the C preprocessor
@@ -74,6 +76,276 @@
 #define config_setting_lookup_string(setting, name, value)		\
   (config_setting_lookup_string(setting, name, value) ||		\
    (printf("WARNING: setting '%s' not found in configuration file\n", name), 0))
+
+#define ENB_CONFIG_STRING_ACTIVE_ENBS                   "Active_eNBs"
+
+#define ENB_CONFIG_STRING_ENB_LIST                      "eNBs"
+#define ENB_CONFIG_STRING_ENB_ID                        "eNB_ID"
+#define ENB_CONFIG_STRING_CELL_TYPE                     "cell_type"
+#define ENB_CONFIG_STRING_ENB_NAME                      "eNB_name"
+
+#define ENB_CONFIG_STRING_TRACKING_AREA_CODE            "tracking_area_code"
+#define ENB_CONFIG_STRING_MOBILE_COUNTRY_CODE           "mobile_country_code"
+#define ENB_CONFIG_STRING_MOBILE_NETWORK_CODE           "mobile_network_code"
+
+#define ENB_CONFIG_STRING_LOCAL_S_IF_NAME               "local_s_if_name"
+#define ENB_CONFIG_STRING_LOCAL_S_ADDRESS               "local_s_address"
+#define ENB_CONFIG_STRING_REMOTE_S_ADDRESS              "remote_s_address"
+#define ENB_CONFIG_STRING_LOCAL_S_PORTC                 "local_s_portc"
+#define ENB_CONFIG_STRING_REMOTE_S_PORTC                "remote_s_portc"
+#define ENB_CONFIG_STRING_LOCAL_S_PORTD                 "local_s_portd"
+#define ENB_CONFIG_STRING_REMOTE_S_PORTD                "remote_s_portd"
+#define ENB_CONFIG_STRING_TRANSPORT_S_PREFERENCE        "tr_s_preference"
+
+
+#define ENB_CONFIG_STRING_COMPONENT_CARRIERS                            "component_carriers"
+
+#define ENB_CONFIG_STRING_CC_NODE_FUNCTION                              "node_function"
+#define ENB_CONFIG_STRING_CC_NODE_TIMING                                "node_timing"   
+#define ENB_CONFIG_STRING_CC_NODE_SYNCH_REF                             "node_synch_ref"   
+
+#define ENB_CONFIG_STRING_FRAME_TYPE                                    "frame_type"
+#define ENB_CONFIG_STRING_TDD_CONFIG                                    "tdd_config"
+#define ENB_CONFIG_STRING_TDD_CONFIG_S                                  "tdd_config_s"
+#define ENB_CONFIG_STRING_PREFIX_TYPE                                   "prefix_type"
+#define ENB_CONFIG_STRING_PBCH_REPETITION                               "pbch_repetition"
+#define ENB_CONFIG_STRING_EUTRA_BAND                                    "eutra_band"
+#define ENB_CONFIG_STRING_DOWNLINK_FREQUENCY                            "downlink_frequency"
+#define ENB_CONFIG_STRING_UPLINK_FREQUENCY_OFFSET                       "uplink_frequency_offset"
+
+#define ENB_CONFIG_STRING_NID_CELL                                      "Nid_cell"
+#define ENB_CONFIG_STRING_N_RB_DL                                       "N_RB_DL"
+#define ENB_CONFIG_STRING_CELL_MBSFN                                  "Nid_cell_mbsfn"
+#define ENB_CONFIG_STRING_NB_ANT_PORTS                              "nb_antenna_ports"
+#define ENB_CONFIG_STRING_NB_ANT_TX                                 "nb_antennas_tx"
+#define ENB_CONFIG_STRING_NB_ANT_RX                                 "nb_antennas_rx"
+#define ENB_CONFIG_STRING_TX_GAIN                                       "tx_gain"
+#define ENB_CONFIG_STRING_RX_GAIN                                       "rx_gain"
+#define ENB_CONFIG_STRING_PRACH_ROOT                                  "prach_root"
+#define ENB_CONFIG_STRING_PRACH_CONFIG_INDEX                          "prach_config_index"
+#define ENB_CONFIG_STRING_PRACH_HIGH_SPEED                          "prach_high_speed"
+#define ENB_CONFIG_STRING_PRACH_ZERO_CORRELATION                  "prach_zero_correlation"
+#define ENB_CONFIG_STRING_PRACH_FREQ_OFFSET                         "prach_freq_offset"
+#define ENB_CONFIG_STRING_PUCCH_DELTA_SHIFT                         "pucch_delta_shift"
+#define ENB_CONFIG_STRING_PUCCH_NRB_CQI                                 "pucch_nRB_CQI"
+#define ENB_CONFIG_STRING_PUCCH_NCS_AN                                  "pucch_nCS_AN"
+#if !defined(Rel10) && !defined(Rel14)
+#define ENB_CONFIG_STRING_PUCCH_N1_AN                                 "pucch_n1_AN"
+#endif
+#define ENB_CONFIG_STRING_PDSCH_RS_EPRE                                 "pdsch_referenceSignalPower"
+#define ENB_CONFIG_STRING_PDSCH_PB                                  "pdsch_p_b"
+#define ENB_CONFIG_STRING_PUSCH_N_SB                                  "pusch_n_SB"
+#define ENB_CONFIG_STRING_PUSCH_HOPPINGMODE                             "pusch_hoppingMode"
+#define ENB_CONFIG_STRING_PUSCH_HOPPINGOFFSET                           "pusch_hoppingOffset"
+#define ENB_CONFIG_STRING_PUSCH_ENABLE64QAM                         "pusch_enable64QAM"
+#define ENB_CONFIG_STRING_PUSCH_GROUP_HOPPING_EN                  "pusch_groupHoppingEnabled"
+#define ENB_CONFIG_STRING_PUSCH_GROUP_ASSIGNMENT                  "pusch_groupAssignment"
+#define ENB_CONFIG_STRING_PUSCH_SEQUENCE_HOPPING_EN                 "pusch_sequenceHoppingEnabled"
+#define ENB_CONFIG_STRING_PUSCH_NDMRS1                                  "pusch_nDMRS1"
+#define ENB_CONFIG_STRING_PHICH_DURATION                          "phich_duration"
+#define ENB_CONFIG_STRING_PHICH_RESOURCE                          "phich_resource"
+#define ENB_CONFIG_STRING_SRS_ENABLE                                  "srs_enable"
+#define ENB_CONFIG_STRING_SRS_BANDWIDTH_CONFIG                          "srs_BandwidthConfig"
+#define ENB_CONFIG_STRING_SRS_SUBFRAME_CONFIG                         "srs_SubframeConfig"
+#define ENB_CONFIG_STRING_SRS_ACKNACKST_CONFIG                          "srs_ackNackST"
+#define ENB_CONFIG_STRING_SRS_MAXUPPTS                                  "srs_MaxUpPts"
+#define ENB_CONFIG_STRING_PUSCH_PO_NOMINAL                          "pusch_p0_Nominal"
+#define ENB_CONFIG_STRING_PUSCH_ALPHA                                 "pusch_alpha"
+#define ENB_CONFIG_STRING_PUCCH_PO_NOMINAL                          "pucch_p0_Nominal"
+#define ENB_CONFIG_STRING_MSG3_DELTA_PREAMBLE                         "msg3_delta_Preamble"
+#define ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT1                          "pucch_deltaF_Format1"
+#define ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT1b                         "pucch_deltaF_Format1b"
+#define ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT2                          "pucch_deltaF_Format2"
+#define ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT2A                         "pucch_deltaF_Format2a"
+#define ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT2B                         "pucch_deltaF_Format2b"
+#define ENB_CONFIG_STRING_RACH_NUM_RA_PREAMBLES                         "rach_numberOfRA_Preambles"
+#define ENB_CONFIG_STRING_RACH_PREAMBLESGROUPACONFIG                  "rach_preamblesGroupAConfig"
+#define ENB_CONFIG_STRING_RACH_SIZEOFRA_PREAMBLESGROUPA                 "rach_sizeOfRA_PreamblesGroupA"
+#define ENB_CONFIG_STRING_RACH_MESSAGESIZEGROUPA                        "rach_messageSizeGroupA"
+#define ENB_CONFIG_STRING_RACH_MESSAGEPOWEROFFSETGROUPB                 "rach_messagePowerOffsetGroupB"
+#define ENB_CONFIG_STRING_RACH_POWERRAMPINGSTEP                         "rach_powerRampingStep"
+#define ENB_CONFIG_STRING_RACH_PREAMBLEINITIALRECEIVEDTARGETPOWER "rach_preambleInitialReceivedTargetPower"
+#define ENB_CONFIG_STRING_RACH_PREAMBLETRANSMAX                         "rach_preambleTransMax"
+#define ENB_CONFIG_STRING_RACH_RARESPONSEWINDOWSIZE                 "rach_raResponseWindowSize"
+#define ENB_CONFIG_STRING_RACH_MACCONTENTIONRESOLUTIONTIMER         "rach_macContentionResolutionTimer"
+#define ENB_CONFIG_STRING_RACH_MAXHARQMSG3TX                          "rach_maxHARQ_Msg3Tx"
+#define ENB_CONFIG_STRING_PCCH_DEFAULT_PAGING_CYCLE                     "pcch_default_PagingCycle"
+#define ENB_CONFIG_STRING_PCCH_NB                                       "pcch_nB"
+#define ENB_CONFIG_STRING_BCCH_MODIFICATIONPERIODCOEFF                  "bcch_modificationPeriodCoeff"
+#define ENB_CONFIG_STRING_UETIMERS_T300                                 "ue_TimersAndConstants_t300"
+#define ENB_CONFIG_STRING_UETIMERS_T301                                 "ue_TimersAndConstants_t301"
+#define ENB_CONFIG_STRING_UETIMERS_T310                                 "ue_TimersAndConstants_t310"
+#define ENB_CONFIG_STRING_UETIMERS_T311                                 "ue_TimersAndConstants_t311"
+#define ENB_CONFIG_STRING_UETIMERS_N310                                 "ue_TimersAndConstants_n310"
+#define ENB_CONFIG_STRING_UETIMERS_N311                                 "ue_TimersAndConstants_n311"
+#define ENB_CONFIG_STRING_UE_TRANSMISSION_MODE                          "ue_TransmissionMode"
+
+#define ENB_CONFIG_STRING_SRB1                                          "srb1_parameters"
+#define ENB_CONFIG_STRING_SRB1_TIMER_POLL_RETRANSMIT                    "timer_poll_retransmit"
+#define ENB_CONFIG_STRING_SRB1_TIMER_REORDERING                         "timer_reordering"
+#define ENB_CONFIG_STRING_SRB1_TIMER_STATUS_PROHIBIT                    "timer_status_prohibit"
+#define ENB_CONFIG_STRING_SRB1_POLL_PDU                                 "poll_pdu"
+#define ENB_CONFIG_STRING_SRB1_POLL_BYTE                                "poll_byte"
+#define ENB_CONFIG_STRING_SRB1_MAX_RETX_THRESHOLD                       "max_retx_threshold"
+#define ENB_CONFIG_STRING_MME_IP_ADDRESS                "mme_ip_address"
+#define ENB_CONFIG_STRING_MME_IPV4_ADDRESS              "ipv4"
+#define ENB_CONFIG_STRING_MME_IPV6_ADDRESS              "ipv6"
+#define ENB_CONFIG_STRING_MME_IP_ADDRESS_ACTIVE         "active"
+#define ENB_CONFIG_STRING_MME_IP_ADDRESS_PREFERENCE     "preference"
+
+#define ENB_CONFIG_STRING_SCTP_CONFIG                    "SCTP"
+#define ENB_CONFIG_STRING_SCTP_INSTREAMS                 "SCTP_INSTREAMS"
+#define ENB_CONFIG_STRING_SCTP_OUTSTREAMS                "SCTP_OUTSTREAMS"
+
+#define ENB_CONFIG_STRING_NETWORK_INTERFACES_CONFIG     "NETWORK_INTERFACES"
+#define ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_S1_MME "ENB_INTERFACE_NAME_FOR_S1_MME"
+#define ENB_CONFIG_STRING_ENB_IPV4_ADDRESS_FOR_S1_MME   "ENB_IPV4_ADDRESS_FOR_S1_MME"
+#define ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_S1U    "ENB_INTERFACE_NAME_FOR_S1U"
+#define ENB_CONFIG_STRING_ENB_IPV4_ADDR_FOR_S1U         "ENB_IPV4_ADDRESS_FOR_S1U"
+#define ENB_CONFIG_STRING_ENB_PORT_FOR_S1U              "ENB_PORT_FOR_S1U"
+
+#define ENB_CONFIG_STRING_NETWORK_CONTROLLER_CONFIG     "NETWORK_CONTROLLER"
+#define ENB_CONFIG_STRING_FLEXRAN_AGENT_INTERFACE_NAME      "FLEXRAN_AGENT_INTERFACE_NAME"
+#define ENB_CONFIG_STRING_FLEXRAN_AGENT_IPV4_ADDRESS        "FLEXRAN_AGENT_IPV4_ADDRESS"
+#define ENB_CONFIG_STRING_FLEXRAN_AGENT_PORT                "FLEXRAN_AGENT_PORT"
+#define ENB_CONFIG_STRING_FLEXRAN_AGENT_CACHE               "FLEXRAN_AGENT_CACHE"
+
+
+
+
+#define ENB_CONFIG_STRING_ASN1_VERBOSITY                   "Asn1_verbosity"
+#define ENB_CONFIG_STRING_ASN1_VERBOSITY_NONE              "none"
+#define ENB_CONFIG_STRING_ASN1_VERBOSITY_ANNOYING          "annoying"
+#define ENB_CONFIG_STRING_ASN1_VERBOSITY_INFO              "info"
+
+// OTG config per ENB-UE DL
+#define ENB_CONF_STRING_OTG_CONFIG                         "otg_config"
+#define ENB_CONF_STRING_OTG_UE_ID                          "ue_id"
+#define ENB_CONF_STRING_OTG_APP_TYPE                       "app_type"
+#define ENB_CONF_STRING_OTG_BG_TRAFFIC                     "bg_traffic"
+
+// per eNB configuration
+#define ENB_CONFIG_STRING_LOG_CONFIG                       "log_config"
+#define ENB_CONFIG_STRING_GLOBAL_LOG_LEVEL                 "global_log_level"
+#define ENB_CONFIG_STRING_GLOBAL_LOG_VERBOSITY             "global_log_verbosity"
+#define ENB_CONFIG_STRING_HW_LOG_LEVEL                     "hw_log_level"
+#define ENB_CONFIG_STRING_HW_LOG_VERBOSITY                 "hw_log_verbosity"
+#define ENB_CONFIG_STRING_PHY_LOG_LEVEL                    "phy_log_level"
+#define ENB_CONFIG_STRING_PHY_LOG_VERBOSITY                "phy_log_verbosity"
+#define ENB_CONFIG_STRING_MAC_LOG_LEVEL                    "mac_log_level"
+#define ENB_CONFIG_STRING_MAC_LOG_VERBOSITY                "mac_log_verbosity"
+#define ENB_CONFIG_STRING_RLC_LOG_LEVEL                    "rlc_log_level"
+#define ENB_CONFIG_STRING_RLC_LOG_VERBOSITY                "rlc_log_verbosity"
+#define ENB_CONFIG_STRING_PDCP_LOG_LEVEL                   "pdcp_log_level"
+#define ENB_CONFIG_STRING_PDCP_LOG_VERBOSITY               "pdcp_log_verbosity"
+#define ENB_CONFIG_STRING_RRC_LOG_LEVEL                    "rrc_log_level"
+#define ENB_CONFIG_STRING_RRC_LOG_VERBOSITY                "rrc_log_verbosity"
+#define ENB_CONFIG_STRING_GTPU_LOG_LEVEL                   "gtpu_log_level"
+#define ENB_CONFIG_STRING_GTPU_LOG_VERBOSITY               "gtpu_log_verbosity"
+#define ENB_CONFIG_STRING_UDP_LOG_LEVEL                    "udp_log_level"
+#define ENB_CONFIG_STRING_UDP_LOG_VERBOSITY                "udp_log_verbosity"
+#define ENB_CONFIG_STRING_OSA_LOG_LEVEL                    "osa_log_level"
+#define ENB_CONFIG_STRING_OSA_LOG_VERBOSITY                "osa_log_verbosity"
+
+#define CONFIG_STRING_MACRLC_LIST                          "MACRLCs"
+#define CONFIG_STRING_MACRLC_CONFIG                        "macrlc_config"
+#define CONFIG_STRING_MACRLC_CC                            "num_cc"
+#define CONFIG_STRING_MACRLC_LOCAL_N_IF_NAME               "local_n_if_name"
+#define CONFIG_STRING_MACRLC_LOCAL_N_ADDRESS               "local_n_address"
+#define CONFIG_STRING_MACRLC_REMOTE_N_ADDRESS              "remote_n_address"
+#define CONFIG_STRING_MACRLC_LOCAL_N_PORTC                 "local_n_portc"
+#define CONFIG_STRING_MACRLC_REMOTE_N_PORTC                "remote_n_portc"
+#define CONFIG_STRING_MACRLC_LOCAL_N_PORTD                 "local_n_portd"
+#define CONFIG_STRING_MACRLC_REMOTE_N_PORTD                "remote_n_portd"
+#define CONFIG_STRING_MACRLC_LOCAL_S_IF_NAME               "local_s_if_name"
+#define CONFIG_STRING_MACRLC_LOCAL_S_ADDRESS               "local_s_address"
+#define CONFIG_STRING_MACRLC_REMOTE_S_ADDRESS              "remote_s_address"
+#define CONFIG_STRING_MACRLC_LOCAL_S_PORTC                 "local_s_portc"
+#define CONFIG_STRING_MACRLC_REMOTE_S_PORTC                "remote_s_portc"
+#define CONFIG_STRING_MACRLC_LOCAL_S_PORTD                 "local_s_portd"
+#define CONFIG_STRING_MACRLC_REMOTE_S_PORTD                "remote_s_portd"
+#define CONFIG_STRING_MACRLC_TRANSPORT_S_PREFERENCE        "tr_s_preference"
+#define CONFIG_STRING_MACRLC_TRANSPORT_N_PREFERENCE        "tr_n_preference"
+
+#define CONFIG_STRING_L1_LIST                              "L1s"
+#define CONFIG_STRING_L1_CONFIG                            "l1_config"
+#define CONFIG_STRING_L1_CC                                "num_cc"
+#define CONFIG_STRING_L1_LOCAL_N_IF_NAME                   "local_n_if_name"
+#define CONFIG_STRING_L1_LOCAL_N_ADDRESS                   "local_n_address"
+#define CONFIG_STRING_L1_REMOTE_N_ADDRESS                  "remote_n_address"
+#define CONFIG_STRING_L1_LOCAL_N_PORTC                     "local_n_portc"
+#define CONFIG_STRING_L1_REMOTE_N_PORTC                    "remote_n_portc"
+#define CONFIG_STRING_L1_LOCAL_N_PORTD                     "local_n_portd"
+#define CONFIG_STRING_L1_REMOTE_N_PORTD                    "remote_n_portd"
+#define CONFIG_STRING_L1_TRANSPORT_N_PREFERENCE            "tr_n_preference"
+
+#define CONFIG_STRING_ACTIVE_RUS                  "Active_RUs"
+#define CONFIG_STRING_RU_LIST                     "RUs"
+#define CONFIG_STRING_RU_CONFIG                   "ru_config"
+#define CONFIG_STRING_RU_LOCAL_IF_NAME            "local_if_name"
+#define CONFIG_STRING_RU_LOCAL_ADDRESS            "local_address"
+#define CONFIG_STRING_RU_REMOTE_ADDRESS           "remote_address"
+#define CONFIG_STRING_RU_LOCAL_PORTC              "local_portc"
+#define CONFIG_STRING_RU_REMOTE_PORTC             "remote_portc"
+#define CONFIG_STRING_RU_LOCAL_PORTD              "local_portd"
+#define CONFIG_STRING_RU_REMOTE_PORTD             "remote_portd"
+#define CONFIG_STRING_RU_LOCAL_RF                 "local_rf"
+#define CONFIG_STRING_RU_TRANSPORT_PREFERENCE     "tr_preference"
+#define CONFIG_STRING_RU_BAND_LIST                "bands"
+#define CONFIG_STRING_RU_ENB_LIST                 "eNB_instances"
+#define CONFIG_STRING_RU_NB_TX                    "nb_tx"
+#define CONFIG_STRING_RU_NB_RX                    "nb_rx"
+#define CONFIG_STRING_RU_ATT_TX                   "att_tx"
+#define CONFIG_STRING_RU_ATT_RX                   "att_rx"
+#define CONFIG_STRING_RU_MAX_RS_EPRE              "max_pdschReferenceSignalPower"
+#define CONFIG_STRING_RU_MAX_RXGAIN               "max_rxgain"
+#define CONFIG_STRING_RU_IF_COMPRESSION           "if_compression"
+
+#define KHz (1000UL)
+#define MHz (1000 * KHz)
+
+typedef struct eutra_band_s {
+  int16_t             band;
+  uint32_t            ul_min;
+  uint32_t            ul_max;
+  uint32_t            dl_min;
+  uint32_t            dl_max;
+  lte_frame_type_t    frame_type;
+} eutra_band_t;
+
+static const eutra_band_t eutra_bands[] = {
+  { 1, 1920    * MHz, 1980    * MHz, 2110    * MHz, 2170    * MHz, FDD},
+  { 2, 1850    * MHz, 1910    * MHz, 1930    * MHz, 1990    * MHz, FDD},
+  { 3, 1710    * MHz, 1785    * MHz, 1805    * MHz, 1880    * MHz, FDD},
+  { 4, 1710    * MHz, 1755    * MHz, 2110    * MHz, 2155    * MHz, FDD},
+  { 5,  824    * MHz,  849    * MHz,  869    * MHz,  894    * MHz, FDD},
+  { 6,  830    * MHz,  840    * MHz,  875    * MHz,  885    * MHz, FDD},
+  { 7, 2500    * MHz, 2570    * MHz, 2620    * MHz, 2690    * MHz, FDD},
+  { 8,  880    * MHz,  915    * MHz,  925    * MHz,  960    * MHz, FDD},
+  { 9, 1749900 * KHz, 1784900 * KHz, 1844900 * KHz, 1879900 * KHz, FDD},
+  {10, 1710    * MHz, 1770    * MHz, 2110    * MHz, 2170    * MHz, FDD},
+  {11, 1427900 * KHz, 1452900 * KHz, 1475900 * KHz, 1500900 * KHz, FDD},
+  {12,  698    * MHz,  716    * MHz,  728    * MHz,  746    * MHz, FDD},
+  {13,  777    * MHz,  787    * MHz,  746    * MHz,  756    * MHz, FDD},
+  {14,  788    * MHz,  798    * MHz,  758    * MHz,  768    * MHz, FDD},
+
+  {17,  704    * MHz,  716    * MHz,  734    * MHz,  746    * MHz, FDD},
+  {20,  832    * MHz,  862    * MHz,  791    * MHz,  821    * MHz, FDD},
+  {33, 1900    * MHz, 1920    * MHz, 1900    * MHz, 1920    * MHz, TDD},
+  {33, 1900    * MHz, 1920    * MHz, 1900    * MHz, 1920    * MHz, TDD},
+  {34, 2010    * MHz, 2025    * MHz, 2010    * MHz, 2025    * MHz, TDD},
+  {35, 1850    * MHz, 1910    * MHz, 1850    * MHz, 1910    * MHz, TDD},
+  {36, 1930    * MHz, 1990    * MHz, 1930    * MHz, 1990    * MHz, TDD},
+  {37, 1910    * MHz, 1930    * MHz, 1910    * MHz, 1930    * MHz, TDD},
+  {38, 2570    * MHz, 2620    * MHz, 2570    * MHz, 2630    * MHz, TDD},
+  {39, 1880    * MHz, 1920    * MHz, 1880    * MHz, 1920    * MHz, TDD},
+  {40, 2300    * MHz, 2400    * MHz, 2300    * MHz, 2400    * MHz, TDD},
+  {41, 2496    * MHz, 2690    * MHz, 2496    * MHz, 2690    * MHz, TDD},
+  {42, 3400    * MHz, 3600    * MHz, 3400    * MHz, 3600    * MHz, TDD},
+  {43, 3600    * MHz, 3800    * MHz, 3600    * MHz, 3800    * MHz, TDD},
+  {44, 703    * MHz, 803    * MHz, 703    * MHz, 803    * MHz, TDD},
+};
+
 
 
 
@@ -117,6 +389,26 @@ static int enb_check_band_frequencies(char* lib_config_file_name_pP,
   return errors;
 }
 
+#if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
+extern int asn_debug;
+extern int asn1_xer_print;
+#endif
+
+#ifdef LIBCONFIG_LONG
+#define libconfig_int long
+#else
+#define libconfig_int int
+#endif
+
+typedef enum {
+  RU     = 0,
+  L1     = 1,
+  L2     = 2,
+  L3     = 3,
+  S1     = 4,
+  lastel = 5
+} RC_config_functions_t;
+
 void RCconfig_RU(void);
 void RCconfig_L1(void);
 void RCconfig_macrlc(void);
@@ -140,6 +432,8 @@ int load_config_file(config_t *cfg) {
   }
 
 }
+extern uint8_t  nfapi_pnf;
+
 void RCconfig_RU() {
 
   config_t          cfg;
@@ -206,12 +500,9 @@ void RCconfig_RU() {
               config_setting_lookup_string(setting_ru, CONFIG_STRING_RU_LOCAL_RF,(const char **)&local_rf)
               )
             ) {
-	local_rf_flag = CONFIG_FALSE;
+        local_rf_flag = CONFIG_FALSE;
       }			  
-      else {
-        if (strcmp(local_rf, "no") == 0) 
-	  local_rf_flag = CONFIG_FALSE;
-      }
+      
       if (local_rf_flag == CONFIG_TRUE) { // eNB or RRU
 	
 
@@ -258,27 +549,37 @@ void RCconfig_RU() {
 
       }
 
-      if (RC.nb_L1_inst>0) {
-	AssertFatal((setting_eNB_list = config_setting_get_member(setting_ru, CONFIG_STRING_RU_ENB_LIST))!=NULL,"No RU<->eNB mappings\n");
-      
-	if (setting_eNB_list != NULL) num_eNB4RU    = config_setting_length(setting_eNB_list);
-	else num_eNB4RU=0;
-	AssertFatal(num_eNB4RU>0,"Number of eNBs is zero\n");
-	
-	for (i=0;i<num_eNB4RU;i++) {
-	  setting_eNB_list_elem = config_setting_get_elem(setting_eNB_list,i);
-	  eNB_list[i] = config_setting_get_int(setting_eNB_list_elem);
-	  printf("RU %d: eNB %d\n",j,eNB_list[i]);
-	}
+      if (nfapi_pnf == 1 || nfapi_pnf == 2)
+      {
+        printf("DJP - COMMENTED OUT nb_L1_inst %s:%d\n\n\n\n", __FILE__, __LINE__);
+      }
+      else
+      {
+        printf("Before eNB_list\n");
+        printf("RC.nb_L1_inst:%d\n", RC.nb_L1_inst);
+        if (RC.nb_L1_inst>0) {
+          AssertFatal((setting_eNB_list = config_setting_get_member(setting_ru, CONFIG_STRING_RU_ENB_LIST))!=NULL,"No RU<->eNB mappings\n");
+
+          if (setting_eNB_list != NULL) num_eNB4RU    = config_setting_length(setting_eNB_list);
+          else num_eNB4RU=0;
+          AssertFatal(num_eNB4RU>0,"Number of eNBs is zero\n");
+
+          printf("num_eNB4RU:%u\n", num_eNB4RU);
+          for (i=0;i<num_eNB4RU;i++) {
+            setting_eNB_list_elem = config_setting_get_elem(setting_eNB_list,i);
+            eNB_list[i] = config_setting_get_int(setting_eNB_list_elem);
+            printf("RU %d: eNB %d\n",j,eNB_list[i]);
+          }
+        }
       }
 
       config_setting_lookup_int(setting_ru, CONFIG_STRING_RU_ATT_TX, &att_tx);
       config_setting_lookup_int(setting_ru, CONFIG_STRING_RU_ATT_RX, &att_rx);
 
       if ( !(
-	               config_setting_lookup_int(setting_ru, CONFIG_STRING_RU_NB_TX,  &nb_tx)
-		    && config_setting_lookup_int(setting_ru, CONFIG_STRING_RU_NB_RX,  &nb_rx)
-		    )) {
+            config_setting_lookup_int(setting_ru, CONFIG_STRING_RU_NB_TX,  &nb_tx)
+            && config_setting_lookup_int(setting_ru, CONFIG_STRING_RU_NB_RX,  &nb_rx)
+            )) {
 	AssertFatal (0,
 	  "Failed to parse configuration file %s, RU %d config !\n",
 	  RC.config_file_name, j);
@@ -293,7 +594,14 @@ void RCconfig_RU() {
       RC.ru[j]->if_timing                           = synch_to_ext_device;
       RC.ru[j]->num_eNB                             = num_eNB4RU;
 
-      for (i=0;i<num_eNB4RU;i++) RC.ru[j]->eNB_list[i] = RC.eNB[eNB_list[i]][0];
+      printf("RC.ru[%d]->num_eNB:%u\n", j, RC.ru[j]->num_eNB);
+
+      //for (i=0;i<num_eNB4RU;i++) RC.ru[j]->eNB_list[i] = RC.eNB[eNB_list[i]][0];
+      for (i=0;i<num_eNB4RU;i++)
+      {
+        printf("Copying RC.ru[%d]->eNB_list[%d] = RC.eNB[eNB_list[%d][0]\n", j, i, i);
+        RC.ru[j]->eNB_list[i] = RC.eNB[eNB_list[i]][0];
+      }
       
       if (strcmp(local_rf, "yes") == 0) {
 	if (fronthaul_flag == CONFIG_FALSE) {
@@ -336,6 +644,8 @@ void RCconfig_RU() {
 	RC.ru[j]->max_pdschReferenceSignalPower     = max_pdschReferenceSignalPower;
 	RC.ru[j]->max_rxgain                        = max_rxgain;
 	RC.ru[j]->num_bands                         = num_bands;
+	RC.ru[j]->att_tx                         = att_tx; 
+	RC.ru[j]->att_rx                         = att_rx; 
 	for (i=0;i<num_bands;i++) RC.ru[j]->band[i] = band[i]; 
       }
       else {
@@ -398,98 +708,127 @@ void RCconfig_L1() {
   char*             if_name_n                       = NULL;
   char*             ipv4_n                          = NULL;
   char*             ipv4_n_remote                   = NULL;
- 
+
   char*             tr_n_preference                 = NULL;
   libconfig_int     local_n_portc                   = 0;
   libconfig_int     remote_n_portc                  = 0;
   libconfig_int     local_n_portd                   = 0;
   libconfig_int     remote_n_portd                  = 0;
 
+  printf("%s()\n", __FUNCTION__);
+
   load_config_file(&cfg);
 
-  setting = config_lookup(&cfg, CONFIG_STRING_L1_LIST);
-  
-  if (setting != NULL) {
+  printf("%s() RC.eNB:%p - NEED? malloc it\n", __FUNCTION__, RC.eNB);
 
-    if (RC.eNB == NULL) {
-      RC.eNB                               = (PHY_VARS_eNB ***)malloc((1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
-      LOG_I(PHY,"RC.eNB = %p\n",RC.eNB);
-      memset(RC.eNB,0,(1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
-      RC.nb_L1_CC = malloc((1+RC.nb_L1_inst)*sizeof(int));
+  if (RC.eNB == NULL) {
+    RC.eNB                               = (PHY_VARS_eNB ***)malloc((1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
+    LOG_I(PHY,"DJP - have malloced RC.eNB - RC.eNB = %p\n",RC.eNB);
+    memset(RC.eNB,0,(1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
+    RC.nb_L1_CC = malloc((1+RC.nb_L1_inst)*sizeof(int));
+    printf("%s() RC.eNB:%p - RC.nb_L1_CC:%p\n", __FUNCTION__, RC.eNB, RC.nb_L1_CC);
+  }
+
+#if 0
+  if (RC.nb_L1_inst==0)
+  {
+    RC.nb_L1_inst = 1;
+    printf("********\n\n\n*********** DJP - hard coding RC.nb_L1_inst = 1 \n\n\n\n");
+  }
+#endif
+
+  setting = config_lookup(&cfg, CONFIG_STRING_L1_LIST);
+
+  printf("%s() CONFIG_STRING_L1_LIST setting:%p\n", __FUNCTION__, setting);
+
+  for (j = 0; j < RC.nb_L1_inst; j++) {
+
+    if (RC.eNB[j] == NULL) {
+      RC.eNB[j]                       = (PHY_VARS_eNB **)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB**));
+      LOG_I(PHY,"RC.eNB[%d] = %p\n",j,RC.eNB[j]);
+      memset(RC.eNB[j],0,(1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB***));
     }
 
-    for (j = 0; j < RC.nb_L1_inst; j++) {
+    if (setting != NULL) {
 
       setting_l1 = config_setting_get_elem(setting, j);
       if (!config_setting_lookup_int   (setting_l1,CONFIG_STRING_L1_CC,&RC.nb_L1_CC[j]))
-	AssertFatal (0,
-		     "Failed to parse configuration file %s, L1 %d config !\n",
-		     RC.config_file_name, j);	
+        AssertFatal (0,
+            "Failed to parse configuration file %s, L1 %d config !\n",
+            RC.config_file_name, j);	
+    }
+    else
+    {
+#if 0
+      RC.nb_L1_CC[j] = 1;
 
-      if (RC.eNB[j] == NULL) {
-	RC.eNB[j]                       = (PHY_VARS_eNB **)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB**));
-	LOG_I(PHY,"RC.eNB[%d] = %p\n",j,RC.eNB[j]);
-	memset(RC.eNB[j],0,(1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB***));
+      printf("****DJP - hard coding  nb_L1_CC[%d] = 1 *************\n", j, RC.nb_L1_CC[j]);
+#endif
+    }
+
+    for (i=0;i<RC.nb_L1_CC[j];i++) {
+      if (RC.eNB[j][i] == NULL) {
+        RC.eNB[j][i] = (PHY_VARS_eNB *)malloc(sizeof(PHY_VARS_eNB));
+        memset((void*)RC.eNB[j][i],0,sizeof(PHY_VARS_eNB));
+        LOG_I(PHY,"RC.eNB[%d][%d] = %p\n",j,i,RC.eNB[j][i]);
+        RC.eNB[j][i]->Mod_id  = j;
+        RC.eNB[j][i]->CC_id   = i;
       }
+    }
 
+    printf("l1 %d/%d (nb CC %d)\n",j,RC.nb_inst,RC.nb_L1_CC[j]);
 
-      for (i=0;i<RC.nb_L1_CC[j];i++) {
-	if (RC.eNB[j][i] == NULL) {
-	  RC.eNB[j][i] = (PHY_VARS_eNB *)malloc(sizeof(PHY_VARS_eNB));
-	  memset((void*)RC.eNB[j][i],0,sizeof(PHY_VARS_eNB));
-	  LOG_I(PHY,"RC.eNB[%d][%d] = %p\n",j,i,RC.eNB[j][i]);
-	  RC.eNB[j][i]->Mod_id  = j;
-	  RC.eNB[j][i]->CC_id   = i;
-	}
-      }
-
-
-      
-      printf("l1 %d/%d (nb CC %d)\n",j,RC.nb_inst,RC.nb_L1_CC[j]);
-      
-
+    if (setting)
+    {
       printf("RU %d: Transport %s\n",j,tr_n_preference);
       if (!(config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_TRANSPORT_N_PREFERENCE, (const char **)&tr_n_preference))) {
-	  AssertFatal (0,
-		       "Failed to parse configuration file %s, L1 %d config !\n",
-		       RC.config_file_name, j);
+        AssertFatal (0,
+            "Failed to parse configuration file %s, L1 %d config !\n",
+            RC.config_file_name, j);
       }
 
       if (strcmp(tr_n_preference, "local_mac") == 0) {
 
       }
       else if (strcmp(tr_n_preference, "nfapi") == 0) {
-	if (  !(
-		config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_LOCAL_N_IF_NAME,        (const char **)&if_name_n)
-		&& config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_LOCAL_N_ADDRESS,        (const char **)&ipv4_n)
-		&& config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_REMOTE_N_ADDRESS,       (const char **)&ipv4_n_remote)
-		&& config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_LOCAL_N_PORTC,          &local_n_portc)
-		&& config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_REMOTE_N_PORTC,         &remote_n_portc)
-		&& config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_LOCAL_N_PORTD,          &local_n_portd)
-		&& config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_REMOTE_N_PORTD,         &remote_n_portd)
-		)
-	      ) {
-	  AssertFatal (0,
-		       "Failed to parse configuration file %s, L1 %d config !\n",
-		       RC.config_file_name, j);
-	  continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
-	}
-	RC.eNB[j][0]->eth_params_n.local_if_name            = strdup(if_name_n);
-	RC.eNB[j][0]->eth_params_n.my_addr                  = strdup(ipv4_n);
-	RC.eNB[j][0]->eth_params_n.remote_addr              = strdup(ipv4_n_remote);
-	RC.eNB[j][0]->eth_params_n.my_portc                 = local_n_portc;
-	RC.eNB[j][0]->eth_params_n.remote_portc             = remote_n_portc;
-	RC.eNB[j][0]->eth_params_n.my_portd                 = local_n_portd;
-	RC.eNB[j][0]->eth_params_n.remote_portd             = remote_n_portd;
-	RC.eNB[j][0]->eth_params_n.transp_preference          = ETH_UDP_MODE;
+        if (  !(
+              config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_LOCAL_N_IF_NAME,        (const char **)&if_name_n)
+              && config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_LOCAL_N_ADDRESS,        (const char **)&ipv4_n)
+              && config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_REMOTE_N_ADDRESS,       (const char **)&ipv4_n_remote)
+              && config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_LOCAL_N_PORTC,          &local_n_portc)
+              && config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_REMOTE_N_PORTC,         &remote_n_portc)
+              && config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_LOCAL_N_PORTD,          &local_n_portd)
+              && config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_REMOTE_N_PORTD,         &remote_n_portd)
+              )
+           ) {
+          AssertFatal (0,
+              "Failed to parse configuration file %s, L1 %d config !\n",
+              RC.config_file_name, j);
+          continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
+        }
+        RC.eNB[j][0]->eth_params_n.local_if_name            = strdup(if_name_n);
+        RC.eNB[j][0]->eth_params_n.my_addr                  = strdup(ipv4_n);
+        RC.eNB[j][0]->eth_params_n.remote_addr              = strdup(ipv4_n_remote);
+        RC.eNB[j][0]->eth_params_n.my_portc                 = local_n_portc;
+        RC.eNB[j][0]->eth_params_n.remote_portc             = remote_n_portc;
+        RC.eNB[j][0]->eth_params_n.my_portd                 = local_n_portd;
+        RC.eNB[j][0]->eth_params_n.remote_portd             = remote_n_portd;
+        RC.eNB[j][0]->eth_params_n.transp_preference          = ETH_UDP_MODE;
+
+        configure_nfapi_pnf(RC.eNB[j][0]->eth_params_n.remote_addr, RC.eNB[j][0]->eth_params_n.remote_portc, RC.eNB[j][0]->eth_params_n.my_portd, RC.eNB[j][0]->eth_params_n.remote_portd);
+
+        {
+          extern uint8_t  nfapi_pnf;
+          nfapi_pnf = 1;
+        }
       }
-      
       else { // other midhaul
       }	
-    }// j=0..num_inst
-    printf("Initializing northbound interface for L1\n");
-    l1_north_init_eNB();
-  }
+    } // setting
+  }// j=0..num_inst
+  printf("Initializing northbound interface for L1\n");
+  l1_north_init_eNB();
+
   return;
 }
 
@@ -614,6 +953,18 @@ void RCconfig_macrlc() {
 	RC.mac[j]->eth_params_s.my_portd                 = local_s_portd;
 	RC.mac[j]->eth_params_s.remote_portd             = remote_s_portd;
 	RC.mac[j]->eth_params_s.transp_preference        = ETH_UDP_MODE;
+
+        {
+          extern uint8_t  nfapi_pnf;
+          nfapi_pnf = 2;
+        }
+
+        {
+          printf("**************** vnf_port:%d\n", RC.mac[j]->eth_params_s.my_portc);
+          configure_nfapi_vnf(RC.mac[j]->eth_params_s.my_addr, RC.mac[j]->eth_params_s.my_portc);
+          printf("**************** RETURNED FROM configure_nfapi_vnf() vnf_port:%d\n", RC.mac[j]->eth_params_s.my_portc);
+
+        }
       }
       
       else { // other midhaul
@@ -2807,6 +3158,7 @@ void RCConfig(const char *config_file_name) {
     // Get num RU instances
     setting = config_lookup(&cfg, CONFIG_STRING_RU_LIST);
     if (setting != NULL) RC.nb_RU     = config_setting_length(setting); 
+    printf("RC.nb_RU may have been set to:%d setting:%p\n", RC.nb_RU, setting);
   }
   else {
     config_destroy(&cfg);
