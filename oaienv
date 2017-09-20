@@ -18,8 +18,7 @@ alias oailte='cd $OPENAIR_TARGETS/RT/USER'
 alias oais='cd $OPENAIR_TARGETS/SIMU/USER'
 alias oaiex='cd $OPENAIR_TARGETS/SIMU/EXAMPLES'
 
-#export NFAPI_DIR=/home/nfapi-001/open-nFAPI/nfapi/public_inc
-export NFAPI_DIR=/home/nfapi-001/open-nFAPI
+export NFAPI_DIR=${HOME}/open-nFAPI
 
 alias bld='cd $OPENAIR_HOME/cmake_targets ; ./build_oai --eNB -x -w USRP'
 alias b='cd $OPENAIR_HOME/cmake_targets ; ./build_oai --eNB -x -w USRP'

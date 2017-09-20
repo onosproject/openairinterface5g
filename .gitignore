@@ -1,0 +1,8 @@
+cscope.files
+cscope.files2
+cscope.in.out
+cscope.out
+cscope.po.out
+targets/bin/
+cmake_targets/log/
+cmake_targets/lte_build_oai/
