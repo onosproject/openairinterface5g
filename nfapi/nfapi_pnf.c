@@ -23,19 +23,11 @@ extern RAN_CONTEXT_t RC;
 #include <vendor_ext.h>
 #include "fapi_stub.h"
 
-#if 0
-#include "pool.h"
-
-#include <mutex>
-#include <list>
-#include <queue>
-#include <map>
-#include <vector>
-#include <algorithm>
-#include <stdlib.h>
-#endif
-
 #define NUM_P5_PHY 2
+
+extern void phy_init_RU(RU_t*);
+
+
 
 uint16_t phy_antenna_capability_values[] = { 1, 2, 4, 8, 16 };
 
@@ -222,137 +214,6 @@ typedef struct
   nfapi_pnf_p7_config_t* p7_config;
 }pnf_phy_user_data_t;
 
-//DJP int read_pnf_xml(pnf_info& pnf, const char* xml_file)
-int read_pnf_xml(pnf_info* pnf, const char* xml_file)
-{
-#if 0
-  try
-  {
-    std::ifstream input(xml_file);
-
-    using boost::property_tree::ptree;
-    ptree pt;
-
-    read_xml(input, pt);
-
-    pnf.wireshark_test_mode = pt.get<unsigned>("pnf.wireshark_test_mode", 0);
-
-
-    pnf.sync_mode = pt.get<unsigned>("pnf.sync_mode");
-    pnf.location_mode= pt.get<unsigned>("pnf.location_mode");
-    //pnf.sync_mode = pt.get<unsigned>("pnf.location_coordinates");
-
-    pnf.dl_config_timing= pt.get<unsigned>("pnf.dl_config_timing");
-    pnf.ul_config_timing = pt.get<unsigned>("pnf.ul_config_timing");
-    pnf.tx_timing = pt.get<unsigned>("pnf.tx_timing");
-    pnf.hi_dci0_timing = pt.get<unsigned>("pnf.hi_dci0_timing");
-
-    pnf.max_phys = pt.get<unsigned>("pnf.max_phys");
-    pnf.max_total_bw = pt.get<unsigned>("pnf.max_total_bandwidth");
-    pnf.max_total_dl_layers = pt.get<unsigned>("pnf.max_total_num_dl_layers");
-    pnf.max_total_ul_layers = pt.get<unsigned>("pnf.max_total_num_ul_layers");
-
-    pnf.shared_bands = pt.get<unsigned>("pnf.shared_bands");
-    pnf.shared_pa = pt.get<unsigned>("pnf.shared_pas");
-
-    pnf.max_total_power = pt.get<signed>("pnf.maximum_total_power");
-
-    //"oui");
-
-    for(const auto& v : pt.get_child("pnf.phys"))
-    {
-      if(v.first == "phy")
-      {
-        phy_info phy;
-
-
-
-        phy.index = v.second.get<unsigned>("index");
-        phy.local_port = v.second.get<unsigned>("port");
-        phy.local_addr = v.second.get<std::string>("address");
-        phy.duplex_mode = v.second.get<unsigned>("duplex_mode");
-
-        phy.dl_channel_bw_support = v.second.get<unsigned>("downlink_channel_bandwidth_support");
-        phy.ul_channel_bw_support = v.second.get<unsigned>("uplink_channel_bandwidth_support");
-        phy.num_dl_layers_supported = v.second.get<unsigned>("number_of_dl_layers");
-        phy.num_ul_layers_supported = v.second.get<unsigned>("number_of_ul_layers");
-        phy.release_supported = v.second.get<unsigned>("3gpp_release_supported");
-        phy.nmm_modes_supported = v.second.get<unsigned>("nmm_modes_supported");
-
-        for(const auto& v2 : v.second.get_child("rfs"))
-        {
-          if(v2.first == "index")
-            phy.rfs.push_back(v2.second.get_value<unsigned>());
-        }
-        for(const auto& v2 : v.second.get_child("excluded_rfs"))
-        {
-          if(v2.first == "index")
-            phy.excluded_rfs.push_back(v2.second.get_value<unsigned>());
-        }
-
-        boost::optional<const boost::property_tree::ptree&> d = v.second.get_child_optional("data.udp");
-        if(d.is_initialized())
-        {
-          phy.udp.enabled = true;
-          phy.udp.rx_port = d.get().get<unsigned>("rx_port");
-          phy.udp.tx_port = d.get().get<unsigned>("tx_port");
-          phy.udp.tx_addr = d.get().get<std::string>("tx_addr");
-        }
-        else
-        {
-          phy.udp.enabled = false;
-        }
-
-        phy.dl_ues_per_subframe = v.second.get<unsigned>("dl_ues_per_subframe");
-        phy.ul_ues_per_subframe = v.second.get<unsigned>("ul_ues_per_subframe");
-
-        pnf.phys.push_back(phy);
-      }
-    }	
-    for(const auto& v : pt.get_child("pnf.rfs"))
-    {
-      if(v.first == "rf")
-      {
-        rf_info rf;
-
-        rf.index = v.second.get<unsigned>("index");
-        rf.band = v.second.get<unsigned>("band");
-        rf.max_transmit_power = v.second.get<signed>("max_transmit_power");
-        rf.min_transmit_power = v.second.get<signed>("min_transmit_power");
-        rf.num_antennas_supported = v.second.get<unsigned>("num_antennas_supported");
-        rf.min_downlink_frequency = v.second.get<unsigned>("min_downlink_frequency");
-        rf.max_downlink_frequency = v.second.get<unsigned>("max_downlink_frequency");
-        rf.min_uplink_frequency = v.second.get<unsigned>("max_uplink_frequency");
-        rf.max_uplink_frequency = v.second.get<unsigned>("min_uplink_frequency");
-
-        pnf.rfs.push_back(rf);
-      }
-    }	
-  }
-  catch(std::exception& e)
-  {
-    printf("%s", e.what());
-    return -1;
-  }
-  catch(boost::exception& e)
-  {
-    printf("%s", boost::diagnostic_information(e).c_str());
-    return -1;
-  }
-
-#endif
-
-#if 0
-  pnf->phys[0].udp.enabled = 1;
-  pnf->phys[0].udp.rx_port = 50000; //DJP d.get().get<unsigned>("rx_port");
-  pnf->phys[0].udp.tx_port = 50001; //DJP d.get().get<unsigned>("tx_port");
-  strcpy(pnf->phys[0].udp.tx_addr, "127.0.0.2"); //DJP d.get().get<std::string>("tx_addr");
-  printf("%s() DJP HARD CODED PHY UDP address port to %s rx:%d tx:%d\n", 
-      __FUNCTION__, pnf->phys[0].udp.tx_addr, pnf->phys[0].udp.rx_port, pnf->phys[0].udp.tx_port);
-#endif
-
-  return 0;
-}
 
 void pnf_sim_trace(nfapi_trace_level_t level, const char* message, ...)
 {
@@ -643,117 +504,6 @@ int pnf_config_request(nfapi_pnf_config_t* config, nfapi_pnf_config_request_t* r
   return 0;
 }
 
-int fapi_param_response(fapi_t* fapi, fapi_param_resp_t* resp)
-{
-  printf("[PNF] fapi param response\n");
-  pnf_phy_user_data_t* data = (pnf_phy_user_data_t*)(fapi->user_data);
-
-  nfapi_param_response_t nfapi_resp;
-
-  printf("[PNF] fapi param response phy_id:%d number_of_tlvs:%u\n", data->phy_id, resp->number_of_tlvs);
-
-  memset(&nfapi_resp, 0, sizeof(nfapi_resp));
-  nfapi_resp.header.message_id = NFAPI_PARAM_RESPONSE;
-  nfapi_resp.header.phy_id = data->phy_id;
-  nfapi_resp.error_code = resp->error_code;
-
-  for(int i = 0; i < resp->number_of_tlvs; ++i)
-  {
-    switch(resp->tlvs[i].tag)
-    {
-      case FAPI_PHY_STATE_TAG:
-        nfapi_resp.l1_status.phy_state.tl.tag = NFAPI_L1_STATUS_PHY_STATE_TAG;
-        nfapi_resp.l1_status.phy_state.value = resp->tlvs[i].value;
-        nfapi_resp.num_tlv++;
-        break;
-
-      case FAPI_PHY_CAPABILITIES_DL_BANDWIDTH_SUPPORT_TAG:
-        nfapi_resp.phy_capabilities.dl_bandwidth_support.tl.tag = NFAPI_PHY_CAPABILITIES_DL_BANDWIDTH_SUPPORT_TAG;
-        nfapi_resp.phy_capabilities.dl_bandwidth_support.value = resp->tlvs[i].value;
-        nfapi_resp.num_tlv++;
-        printf("%s() DL BW support %d\n", __FUNCTION__, nfapi_resp.phy_capabilities.dl_bandwidth_support.value);
-        break;
-
-      case FAPI_PHY_CAPABILITIES_UL_BANDWIDTH_SUPPORT_TAG:
-        nfapi_resp.phy_capabilities.ul_bandwidth_support.tl.tag = NFAPI_PHY_CAPABILITIES_UL_BANDWIDTH_SUPPORT_TAG;
-        nfapi_resp.phy_capabilities.ul_bandwidth_support.value = resp->tlvs[i].value;
-        nfapi_resp.num_tlv++;
-        break;
-      default:
-        printf("%s() %s:%d Unhandled TLV:%d\n", __FUNCTION__, __FILE__, __LINE__, resp->tlvs[i].tag);
-        break;
-    }
-  }
-
-  {
-    //if(phy->state == NFAPI_PNF_PHY_IDLE)
-    //if(nfapi_resp.l1_status.phy_state.value == NFAPI_PNF_PHY_IDLE)
-    {
-      // -- NFAPI
-      // Downlink UEs per Subframe
-      nfapi_resp.nfapi_config.dl_ue_per_sf.tl.tag = NFAPI_NFAPI_DOWNLINK_UES_PER_SUBFRAME_TAG;
-      nfapi_resp.nfapi_config.dl_ue_per_sf.value = data->phy->dl_ues_per_subframe;
-      nfapi_resp.num_tlv++;
-      // Uplink UEs per Subframe
-      nfapi_resp.nfapi_config.ul_ue_per_sf.tl.tag = NFAPI_NFAPI_UPLINK_UES_PER_SUBFRAME_TAG;
-      nfapi_resp.nfapi_config.ul_ue_per_sf.value = data->phy->ul_ues_per_subframe;
-      nfapi_resp.num_tlv++;
-      // nFAPI RF Bands
-      nfapi_resp.nfapi_config.rf_bands.tl.tag = NFAPI_PHY_RF_BANDS_TAG;
-      nfapi_resp.nfapi_config.rf_bands.number_rf_bands = 2;
-      nfapi_resp.nfapi_config.rf_bands.rf_band[0] = 23;
-      nfapi_resp.nfapi_config.rf_bands.rf_band[1] = 7;
-
-      // P7 PNF Address IPv4
-      nfapi_resp.nfapi_config.p7_pnf_address_ipv4.tl.tag = NFAPI_NFAPI_P7_PNF_ADDRESS_IPV4_TAG;
-      struct sockaddr_in pnf_p7_sockaddr;
-      //DJP pnf_p7_sockaddr.sin_addr.s_addr = inet_addr(data->phy->local_addr.c_str());
-
-      //DJP
-      strcpy(data->phy->local_addr, "192.168.1.74");
-      NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DJP HARD CODED IP ADDRESS to %s\n", __FUNCTION__, data->phy->local_addr);
-      data->phy->local_port = 32123;
-      NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DJP HARD CODED PORT to %d\n", __FUNCTION__, data->phy->local_port);
-
-
-
-
-      pnf_p7_sockaddr.sin_addr.s_addr = inet_addr(data->phy->local_addr);
-      memcpy(&(nfapi_resp.nfapi_config.p7_pnf_address_ipv4.address[0]), &pnf_p7_sockaddr.sin_addr.s_addr, 4);
-      nfapi_resp.num_tlv++;
-      // P7 PNF Address IPv6
-      // P7 PNF Port
-      nfapi_resp.nfapi_config.p7_pnf_port.tl.tag = NFAPI_NFAPI_P7_PNF_PORT_TAG;
-      nfapi_resp.nfapi_config.p7_pnf_port.value = data->phy->local_port;
-      nfapi_resp.num_tlv++;
-      // NMM GSM Frequency Bands
-      nfapi_resp.nfapi_config.nmm_gsm_frequency_bands.tl.tag = NFAPI_NFAPI_NMM_GSM_FREQUENCY_BANDS_TAG;
-      nfapi_resp.nfapi_config.nmm_gsm_frequency_bands.number_of_rf_bands = 1;
-      nfapi_resp.nfapi_config.nmm_gsm_frequency_bands.bands[0] = 23;
-      nfapi_resp.num_tlv++;
-      // NMM UMTS Frequency Bands
-      nfapi_resp.nfapi_config.nmm_umts_frequency_bands.tl.tag = NFAPI_NFAPI_NMM_UMTS_FREQUENCY_BANDS_TAG;
-      nfapi_resp.nfapi_config.nmm_umts_frequency_bands.number_of_rf_bands = 1;
-      nfapi_resp.nfapi_config.nmm_umts_frequency_bands.bands[0] = 23;
-      nfapi_resp.num_tlv++;
-      // NMM LTE Frequency Bands
-      nfapi_resp.nfapi_config.nmm_lte_frequency_bands.tl.tag = NFAPI_NFAPI_NMM_LTE_FREQUENCY_BANDS_TAG;
-      nfapi_resp.nfapi_config.nmm_lte_frequency_bands.number_of_rf_bands = 1;
-      nfapi_resp.nfapi_config.nmm_lte_frequency_bands.bands[0] = 23;
-      nfapi_resp.num_tlv++;
-      // NMM Uplink RSSI supported
-      nfapi_resp.nfapi_config.nmm_uplink_rssi_supported.tl.tag = NFAPI_NFAPI_NMM_UPLINK_RSSI_SUPPORTED_TAG;
-      nfapi_resp.nfapi_config.nmm_uplink_rssi_supported.value = 1;
-      nfapi_resp.num_tlv++;
-
-    }
-  }
-
-  nfapi_pnf_param_resp(data->config, &nfapi_resp);
-
-  return 0;
-}
-
 void nfapi_send_pnf_start_resp(nfapi_pnf_config_t* config, uint16_t phy_id)
 {
   printf("Sending NFAPI_START_RESPONSE config:%p phy_id:%d\n", config, phy_id);
@@ -818,6 +568,8 @@ int param_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
 
   nfapi_param_response_t nfapi_resp;
 
+  pnf_info* pnf = (pnf_info*)(config->user_data);
+
   memset(&nfapi_resp, 0, sizeof(nfapi_resp));
   nfapi_resp.header.message_id = NFAPI_PARAM_RESPONSE;
   nfapi_resp.header.phy_id = req->header.phy_id;
@@ -826,9 +578,7 @@ int param_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
   char local_addr[80];
   struct sockaddr_in pnf_p7_sockaddr;
 
-  strcpy(local_addr, "192.168.1.74"); // DJP - hard code alert FIXME TODO
-
-  pnf_p7_sockaddr.sin_addr.s_addr = inet_addr(local_addr);
+  pnf_p7_sockaddr.sin_addr.s_addr = inet_addr(pnf->phys[0].local_addr);
   nfapi_resp.nfapi_config.p7_pnf_address_ipv4.tl.tag = NFAPI_NFAPI_P7_PNF_ADDRESS_IPV4_TAG;
   memcpy(nfapi_resp.nfapi_config.p7_pnf_address_ipv4.address, &pnf_p7_sockaddr.sin_addr.s_addr, 4);
   nfapi_resp.num_tlv++;
@@ -875,6 +625,8 @@ int config_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfap
 
   pnf_info* pnf = (pnf_info*)(config->user_data);
   uint8_t num_tlv = 0;
+  struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
+  LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
 
 #if 0
   //DJP
@@ -921,9 +673,9 @@ int config_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfap
   if(req->rf_config.dl_channel_bandwidth.tl.tag == NFAPI_RF_CONFIG_DL_CHANNEL_BANDWIDTH_TAG)
   {
     phy_info->dl_channel_bw_support = req->rf_config.dl_channel_bandwidth.value;
-    RC.eNB[0][0]->frame_parms.N_RB_DL = req->rf_config.dl_channel_bandwidth.value;
+    fp->N_RB_DL = req->rf_config.dl_channel_bandwidth.value;
     num_tlv++;
-    NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() NFAPI_RF_CONFIG_DL_CHANNEL_BANDWIDTH_TAG N_RB_DL:%u\n", __FUNCTION__, RC.eNB[0][0]->frame_parms.N_RB_DL);
+    NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() NFAPI_RF_CONFIG_DL_CHANNEL_BANDWIDTH_TAG N_RB_DL:%u\n", __FUNCTION__, fp->N_RB_DL);
   }
   else
   {
@@ -933,151 +685,140 @@ int config_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfap
   if(req->rf_config.ul_channel_bandwidth.tl.tag == NFAPI_RF_CONFIG_UL_CHANNEL_BANDWIDTH_TAG)
   {
     phy_info->ul_channel_bw_support = req->rf_config.ul_channel_bandwidth.value;
-    RC.eNB[0][0]->frame_parms.N_RB_UL = req->rf_config.ul_channel_bandwidth.value;
+    fp->N_RB_UL = req->rf_config.ul_channel_bandwidth.value;
     num_tlv++;
   }
 
   if(req->nfapi_config.rf_bands.tl.tag == NFAPI_NFAPI_RF_BANDS_TAG)
   {
     pnf->rfs[0].band = req->nfapi_config.rf_bands.rf_band[0];
-    RC.eNB[0][0]->frame_parms.eutra_band = req->nfapi_config.rf_bands.rf_band[0];
+    fp->eutra_band = req->nfapi_config.rf_bands.rf_band[0];
     num_tlv++;
   }
 
   if(req->nfapi_config.earfcn.tl.tag == NFAPI_NFAPI_EARFCN_TAG)
   {
-    RC.eNB[0][0]->frame_parms.dl_CarrierFreq = from_earfcn(RC.eNB[0][0]->frame_parms.eutra_band, req->nfapi_config.earfcn.value); // DJP - TODO FIXME - hard coded to first rf
-    RC.eNB[0][0]->frame_parms.ul_CarrierFreq = RC.eNB[0][0]->frame_parms.dl_CarrierFreq - (get_uldl_offset(RC.eNB[0][0]->frame_parms.eutra_band) * 1e5);
+    fp->dl_CarrierFreq = from_earfcn(fp->eutra_band, req->nfapi_config.earfcn.value); // DJP - TODO FIXME - hard coded to first rf
+    fp->ul_CarrierFreq = fp->dl_CarrierFreq - (get_uldl_offset(fp->eutra_band) * 1e5);
     num_tlv++;
 
     NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() earfcn:%u dl_carrierFreq:%u ul_CarrierFreq:%u band:%u N_RB_DL:%u\n", 
-        __FUNCTION__, req->nfapi_config.earfcn.value, RC.eNB[0][0]->frame_parms.dl_CarrierFreq, RC.eNB[0][0]->frame_parms.ul_CarrierFreq, pnf->rfs[0].band, RC.eNB[0][0]->frame_parms.N_RB_DL);
+        __FUNCTION__, req->nfapi_config.earfcn.value, fp->dl_CarrierFreq, fp->ul_CarrierFreq, pnf->rfs[0].band, fp->N_RB_DL);
   }
 
   if (req->subframe_config.duplex_mode.tl.tag == NFAPI_SUBFRAME_CONFIG_DUPLEX_MODE_TAG)
   {
-    RC.eNB[0][0]->frame_parms.frame_type = req->subframe_config.duplex_mode.value==0 ? TDD : FDD;
+    fp->frame_type = req->subframe_config.duplex_mode.value==0 ? TDD : FDD;
     num_tlv++;
-    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() frame_type:%d\n", __FUNCTION__, RC.eNB[0][0]->frame_parms.frame_type);
+    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() frame_type:%d\n", __FUNCTION__, fp->frame_type);
   }
   if (req->subframe_config.dl_cyclic_prefix_type.tl.tag == NFAPI_SUBFRAME_CONFIG_DL_CYCLIC_PREFIX_TYPE_TAG)
   {
-    RC.eNB[0][0]->frame_parms.Ncp = req->subframe_config.dl_cyclic_prefix_type.value;
+    fp->Ncp = req->subframe_config.dl_cyclic_prefix_type.value;
     num_tlv++;
   }
 
   if (req->subframe_config.ul_cyclic_prefix_type.tl.tag == NFAPI_SUBFRAME_CONFIG_UL_CYCLIC_PREFIX_TYPE_TAG)
   {
-    RC.eNB[0][0]->frame_parms.Ncp_UL = req->subframe_config.ul_cyclic_prefix_type.value;
+    fp->Ncp_UL = req->subframe_config.ul_cyclic_prefix_type.value;
     num_tlv++;
   }
 
-  RC.eNB[0][0]->frame_parms.num_MBSFN_config = 0; // DJP - hard code alert
+  fp->num_MBSFN_config = 0; // DJP - hard code alert
 
   if (req->sch_config.physical_cell_id.tl.tag == NFAPI_SCH_CONFIG_PHYSICAL_CELL_ID_TAG)
   {
-    RC.eNB[0][0]->frame_parms.Nid_cell = req->sch_config.physical_cell_id.value;
+    fp->Nid_cell = req->sch_config.physical_cell_id.value;
+    fp->nushift = fp->Nid_cell%6;
     num_tlv++;
   }
 
   if (req->rf_config.tx_antenna_ports.tl.tag == NFAPI_RF_CONFIG_TX_ANTENNA_PORTS_TAG)
   {
-    RC.eNB[0][0]->frame_parms.nb_antennas_tx = req->rf_config.tx_antenna_ports.value;
-    RC.eNB[0][0]->frame_parms.nb_antenna_ports_eNB = 1;
+    fp->nb_antennas_tx = req->rf_config.tx_antenna_ports.value;
+    fp->nb_antenna_ports_eNB = 1;
     num_tlv++;
   }
 
   if (req->rf_config.rx_antenna_ports.tl.tag == NFAPI_RF_CONFIG_RX_ANTENNA_PORTS_TAG)
   {
-    RC.eNB[0][0]->frame_parms.nb_antennas_rx = req->rf_config.rx_antenna_ports.value;
+    fp->nb_antennas_rx = req->rf_config.rx_antenna_ports.value;
     num_tlv++;
   }
-
-  if (req->rf_config.rx_antenna_ports.tl.tag == NFAPI_RF_CONFIG_RX_ANTENNA_PORTS_TAG)
-  {
-    RC.eNB[0][0]->frame_parms.nb_antennas_rx = req->rf_config.rx_antenna_ports.value;
-    num_tlv++;
-  }
-
-  RC.eNB[0][0]->frame_parms.nushift = 0;
 
   if (req->phich_config.phich_resource.tl.tag == NFAPI_PHICH_CONFIG_PHICH_RESOURCE_TAG)
   {
-    RC.eNB[0][0]->frame_parms.phich_config_common.phich_resource = req->phich_config.phich_resource.value;
+    fp->phich_config_common.phich_resource = req->phich_config.phich_resource.value;
     num_tlv++;
   }
 
   if (req->phich_config.phich_duration.tl.tag == NFAPI_PHICH_CONFIG_PHICH_DURATION_TAG)
   {
-    RC.eNB[0][0]->frame_parms.phich_config_common.phich_duration = req->phich_config.phich_duration.value;
+    fp->phich_config_common.phich_duration = req->phich_config.phich_duration.value;
     num_tlv++;
   }
 
   if (req->phich_config.phich_power_offset.tl.tag == NFAPI_PHICH_CONFIG_PHICH_POWER_OFFSET_TAG)
   {
     LOG_E(PHY, "%s() NFAPI_PHICH_CONFIG_PHICH_POWER_OFFSET_TAG tag:%d not supported\n", __FUNCTION__, req->phich_config.phich_power_offset.tl.tag);
-    //RC.eNB[0][0]->frame_parms.phich_config_common.phich_power_offset = req->phich_config.
+    //fp->phich_config_common.phich_power_offset = req->phich_config.
     num_tlv++;
   }
 
   // UL RS Config
   if (req->uplink_reference_signal_config.cyclic_shift_1_for_drms.tl.tag == NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_CYCLIC_SHIFT_1_FOR_DRMS_TAG)
   {
-    RC.eNB[0][0]->frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = req->uplink_reference_signal_config.cyclic_shift_1_for_drms.value;
+    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = req->uplink_reference_signal_config.cyclic_shift_1_for_drms.value;
     num_tlv++;
   }
 
   if (req->uplink_reference_signal_config.uplink_rs_hopping.tl.tag == NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_UPLINK_RS_HOPPING_TAG)
   {
-    RC.eNB[0][0]->frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = req->uplink_reference_signal_config.uplink_rs_hopping.value;
+    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = req->uplink_reference_signal_config.uplink_rs_hopping.value;
     num_tlv++;
   }
 
   if (req->uplink_reference_signal_config.group_assignment.tl.tag == NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_GROUP_ASSIGNMENT_TAG)
   {
-    RC.eNB[0][0]->frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = req->uplink_reference_signal_config.group_assignment.value;
+    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = req->uplink_reference_signal_config.group_assignment.value;
     num_tlv++;
   }
 
   if (req->pusch_config.hopping_mode.tl.tag == NFAPI_PUSCH_CONFIG_HOPPING_MODE_TAG) { }  // DJP - not being handled?
 
-  RC.eNB[0][0]->frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = 0; // DJP - not being handled
+  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = 0; // DJP - not being handled
 
   if (req->prach_config.configuration_index.tl.tag == NFAPI_PRACH_CONFIG_CONFIGURATION_INDEX_TAG)
   {
-    RC.eNB[0][0]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex=req->prach_config.configuration_index.value;
+    fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex=req->prach_config.configuration_index.value;
     num_tlv++;
   }
 
   if (req->prach_config.root_sequence_index.tl.tag == NFAPI_PRACH_CONFIG_ROOT_SEQUENCE_INDEX_TAG)
   {
-    RC.eNB[0][0]->frame_parms.prach_config_common.rootSequenceIndex=req->prach_config.root_sequence_index.value;
+    fp->prach_config_common.rootSequenceIndex=req->prach_config.root_sequence_index.value;
     num_tlv++;
   }
 
   if (req->prach_config.zero_correlation_zone_configuration.tl.tag == NFAPI_PRACH_CONFIG_ZERO_CORRELATION_ZONE_CONFIGURATION_TAG)
   {
-    RC.eNB[0][0]->frame_parms.prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig=req->prach_config.zero_correlation_zone_configuration.value;
+    fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig=req->prach_config.zero_correlation_zone_configuration.value;
     num_tlv++;
   }
 
   if (req->prach_config.high_speed_flag.tl.tag == NFAPI_PRACH_CONFIG_HIGH_SPEED_FLAG_TAG)
   {
-    RC.eNB[0][0]->frame_parms.prach_config_common.prach_ConfigInfo.highSpeedFlag=req->prach_config.high_speed_flag.value;
+    fp->prach_config_common.prach_ConfigInfo.highSpeedFlag=req->prach_config.high_speed_flag.value;
     num_tlv++;
   }
 
   if (req->prach_config.frequency_offset.tl.tag == NFAPI_PRACH_CONFIG_FREQUENCY_OFFSET_TAG)
   {
-    RC.eNB[0][0]->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset=req->prach_config.frequency_offset.value;
+    fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset=req->prach_config.frequency_offset.value;
     num_tlv++;
   }
 
   printf("[PNF] CONFIG_REQUEST[num_tlv:%d] TLVs processed:%d\n", req->num_tlv, num_tlv);
-
-  // DJP - commented out 19/9/17
-  //init_frame_parms(&RC.eNB[0][0]->frame_parms,1);
-  //init_lte_top(&RC.eNB[0][0]->frame_parms);
 
   printf("[PNF] Simulating PHY CONFIG - DJP\n");
   PHY_Config_t phy_config;
@@ -1087,7 +828,7 @@ int config_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfap
 
   phy_config_request(&phy_config);
 
-  dump_frame_parms(&RC.eNB[0][0]->frame_parms);
+  dump_frame_parms(fp);
 
   phy_info->remote_port = req->nfapi_config.p7_vnf_port.value;
 
@@ -1555,22 +1296,22 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
     NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] DJP - HACK - Set p7_config global ready for subframe ind%s\n", __FUNCTION__);
     p7_config_g = p7_config;
 
-    printf("[PNF] MARKING RC.eNB[0][0]->configured=1 %s()\n", __FUNCTION__);
-    RC.eNB[0][0]->configured = 1;
-
     // DJP - INIT PHY RELATED STUFF - this should be separate i think but is not currently...
     {
       printf("[PNF] %s() Calling phy_init_lte_eNB() and setting nb_antennas_rx = 1\n", __FUNCTION__);
       printf("[PNF] %s() TBD create frame_parms from NFAPI message\n", __FUNCTION__);
 
       phy_init_lte_eNB(RC.eNB[0][0],0,0);
-      RC.eNB[0][0]->frame_parms.nb_antennas_rx = 1;
+      //RC.eNB[0][0]->frame_parms.nb_antennas_rx = 1;
       for (int ce_level=0;ce_level<4;ce_level++)
 	RC.eNB[0][0]->prach_vars.rxsigF[ce_level] = (int16_t**)malloc16(64*sizeof(int16_t*));
 #ifdef Rel14
       for (int ce_level=0;ce_level<4;ce_level++)
 	RC.eNB[0][0]->prach_vars_br.rxsigF[ce_level] = (int16_t**)malloc16(64*sizeof(int16_t*));
 #endif
+
+      printf("[PNF] Calling mac_top_init_eNB() so that RC.mac[] is init\n");
+      mac_top_init_eNB();
     }
 
     while(sync_var<0)
@@ -1578,6 +1319,11 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
       usleep(5000000);
       printf("[PNF] waiting for OAI to be started\n");
     }
+
+    printf("[PNF] RC.nb_inst=1 DJP - this is because phy_init_RU() uses that to index and not RC.num_eNB - why the 2 similar variables?\n");
+    RC.nb_inst =1; // DJP - fepc_tx uses num_eNB but phy_init_RU uses nb_inst
+    printf("[PNF] About to call phy_init_RU()\n");
+    phy_init_RU(RC.ru[0]);
 
     printf("[PNF] Sending PNF_START_RESP\n");
     nfapi_send_pnf_start_resp(config, p7_config->phy_id);
@@ -1890,17 +1636,8 @@ void* pnf_start_thread(void* ptr)
   return (void*)0;
 }
 
-void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, int pnf_p7_port, int vnf_p7_port)
+void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, int pnf_p7_port, int vnf_p7_port)
 {
-  char *xml_file = 0;
-
-  //DJP if(read_pnf_xml(pnf, argv[3]) < 0)
-  if(read_pnf_xml(&pnf, xml_file) < 0)
-  {
-    printf("Failed to read xml file>\n");
-    return ;
-  }
-
   nfapi_pnf_config_t* config = nfapi_pnf_config_create();
 
   config->vnf_ip_addr = vnf_ip_addr;
@@ -1911,9 +1648,12 @@ void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, int pnf_p7_port, in
   pnf.phys[0].udp.tx_port = vnf_p7_port;
   strcpy(pnf.phys[0].udp.tx_addr, vnf_ip_addr);
 
-  printf("%s() VNF:%s:%d PNF_PHY[UDP:tx_addr:%s:%d rx:%d]\n", 
+  strcpy(pnf.phys[0].local_addr, pnf_ip_addr);
+
+  printf("%s() VNF:%s:%d PNF_PHY[addr:%s UDP:tx_addr:%s:%d rx:%d]\n", 
       __FUNCTION__, 
       config->vnf_ip_addr, config->vnf_p5_port, 
+      pnf.phys[0].local_addr,
       pnf.phys[0].udp.tx_addr, pnf.phys[0].udp.tx_port,
       pnf.phys[0].udp.rx_port);
 
