@@ -128,6 +128,7 @@ void schedule_ue_spec(module_id_t module_idP,frame_t frameP,sub_frame_t subframe
     @returns Po_NOMINAL_PUSCH (PREAMBLE_RECEIVED_TARGET_POWER+DELTA_PREAMBLE
 */
 int8_t get_Po_NOMINAL_PUSCH(module_id_t module_idP,uint8_t CC_id);
+int8_t get_Po_NOMINAL_PUSCH2(module_id_t module_idP,uint8_t CC_id);
 
 /** \brief Function to compute DELTA_PREAMBLE from 36.321 (for RA power ramping procedure and Msg3 PUSCH power control policy)
     @param Mod_id Module id of UE

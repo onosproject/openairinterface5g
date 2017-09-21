@@ -308,6 +308,7 @@ typedef struct {
   // MAC Helper functions
   /// Function for UE/PHY to compute PUSCH transmit power in power-control procedure (Po_NOMINAL_PUSCH parameter)
   int8_t (*get_Po_NOMINAL_PUSCH)(module_id_t Mod_id,uint8_t  CC_id);
+  int8_t (*get_Po_NOMINAL_PUSCH2)(module_id_t Mod_id,uint8_t  CC_id);
 
   /// Function for UE/PHY to compute PUSCH transmit power in power-control procedure (deltaP_rampup parameter)
   int8_t (*get_deltaP_rampup)(module_id_t Mod_id,uint8_t CC_id);
