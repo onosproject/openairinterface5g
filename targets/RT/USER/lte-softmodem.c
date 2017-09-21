@@ -282,6 +282,8 @@ uint8_t local_remote_radio = BBU_LOCAL_RADIO_HEAD;
 /* struct for ethernet specific parameters given in eNB conf file */
 eth_params_t *eth_params;
 
+int navail_cards = 0;
+
 openair0_config_t openair0_cfg[MAX_CARDS];
 
 double cpuf;
@@ -1123,7 +1125,7 @@ static void get_options (int argc, char **argv)
                    MAX_NUM_CCs, enb_properties->properties[i]->nb_cc, i);
       eth_params = (eth_params_t*)malloc(enb_properties->properties[i]->nb_rrh_gw * sizeof(eth_params_t));
       memset(eth_params, 0, enb_properties->properties[i]->nb_rrh_gw * sizeof(eth_params_t));
-
+      navail_cards = enb_properties->properties[i]->nb_rrh_gw;
       for (j=0; j<enb_properties->properties[i]->nb_rrh_gw; j++) {
         	
         if (enb_properties->properties[i]->rrh_gw_config[j].active == 1 ) {
@@ -1133,7 +1135,7 @@ static void get_options (int argc, char **argv)
           (eth_params+j)->my_port                   = enb_properties->properties[i]->rrh_gw_config[j].local_port;
           (eth_params+j)->remote_addr               = enb_properties->properties[i]->rrh_gw_config[j].remote_address;
           (eth_params+j)->remote_port               = enb_properties->properties[i]->rrh_gw_config[j].remote_port;
-          
+          printf("enb properties: rrh_gw_config : remote_address %s\n", enb_properties->properties[i]->rrh_gw_config[j].remote_address); 
           if (enb_properties->properties[i]->rrh_gw_config[j].raw == 1) {
             (eth_params+j)->transp_preference       = ETH_RAW_MODE; 
           } else if (enb_properties->properties[i]->rrh_gw_config[j].rawif4p5 == 1) {
@@ -1201,7 +1203,7 @@ static void get_options (int argc, char **argv)
       init_all_otg(0);
       g_otg->seed = 0;
       init_seeds(g_otg->seed);
-
+/*
       for (k=0; k<enb_properties->properties[i]->num_otg_elements; k++) {
         j=enb_properties->properties[i]->otg_ue_id[k]; // ue_id
         g_otg->application_idx[i][j] = 1;
@@ -1212,7 +1214,7 @@ static void get_options (int argc, char **argv)
         printf("[OTG] configuring traffic type %d for  eNB %d UE %d (Background traffic is %s)\n",
                g_otg->application_type[i][j][0], i, j,(g_otg->background[i][j][0]==1)?"Enabled":"Disabled");
       }
-
+*/
       init_predef_traffic(enb_properties->properties[i]->num_otg_elements, 1);
 
 
@@ -1330,8 +1332,8 @@ void init_openair0() {
 
   int card;
   int i;
-
-  for (card=0; card<MAX_CARDS; card++) {
+  printf("Available cards %d\n", navail_cards);
+  for (card=0; card<navail_cards; card++) {
 
     openair0_cfg[card].mmapped_dma=mmapped_dma;
     openair0_cfg[card].configFilename = NULL;
@@ -1380,24 +1382,26 @@ void init_openair0() {
       openair0_cfg[card].tdd_recip_calib = 0;
     
     if (local_remote_radio == BBU_REMOTE_RADIO_HEAD) {      
-      openair0_cfg[card].remote_addr    = (eth_params+card)->remote_addr;
-      openair0_cfg[card].remote_port    = (eth_params+card)->remote_port;
-      openair0_cfg[card].my_addr        = (eth_params+card)->my_addr;
-      openair0_cfg[card].my_port        = (eth_params+card)->my_port;    
+      openair0_cfg[card].remote_addr       = (eth_params+card)->remote_addr;
+      openair0_cfg[card].remote_port       = (eth_params+card)->remote_port;
+      openair0_cfg[card].my_addr           = (eth_params+card)->my_addr;
+      openair0_cfg[card].my_port           = (eth_params+card)->my_port;    
+      openair0_cfg[card].tx_sample_advance = (eth_params+card)->tx_sample_advance;    
+      openair0_cfg[card].iq_txshift        = (eth_params+card)->iq_txshift;    
     } 
     
-    printf("HW: Configuring card %d, nb_antennas_tx/rx %d/%d\n",card,
-           ((UE_flag==0) ? PHY_vars_eNB_g[0][0]->frame_parms.nb_antennas_tx : PHY_vars_UE_g[0][0]->frame_parms.nb_antennas_tx),
-           ((UE_flag==0) ? PHY_vars_eNB_g[0][0]->frame_parms.nb_antennas_rx : PHY_vars_UE_g[0][0]->frame_parms.nb_antennas_rx));
+    printf("HW: Configuring card %d with address %s, nb_antennas_tx/rx %d/%d\n",card,openair0_cfg[card].remote_addr,
+           ((UE_flag==0) ? PHY_vars_eNB_g[0][0]->frame_parms.nb_antennas_tx/navail_cards : PHY_vars_UE_g[0][0]->frame_parms.nb_antennas_tx),
+           ((UE_flag==0) ? PHY_vars_eNB_g[0][0]->frame_parms.nb_antennas_rx/navail_cards : PHY_vars_UE_g[0][0]->frame_parms.nb_antennas_rx));
     openair0_cfg[card].Mod_id = 0;
 
     if (UE_flag) {
       printf("ETHERNET: Configuring UE ETH for %s:%d\n",rrh_UE_ip,rrh_UE_port);
       openair0_cfg[card].remote_addr = &rrh_UE_ip[0];
       openair0_cfg[card].remote_port = rrh_UE_port;
+      openair0_cfg[card].tx_sample_advance = tx_sample_advance; //BS will set this in the config file
+      printf("Set tx_sample_advance to %d\n", openair0_cfg[card].tx_sample_advance);
     } 
-    openair0_cfg[card].tx_sample_advance = tx_sample_advance; //BS will set this in the config file
-    printf("Set tx_sample_advance to %d\n", openair0_cfg[card].tx_sample_advance);
 
     openair0_cfg[card].gain_calib_val = gain_calib_val; 
     printf("Set gain calibration value to %d\n", openair0_cfg[card].gain_calib_val);
@@ -1405,8 +1409,8 @@ void init_openair0() {
     openair0_cfg[card].num_rb_dl=frame_parms[0]->N_RB_DL;
 
 
-    openair0_cfg[card].tx_num_channels=min(4,((UE_flag==0) ? PHY_vars_eNB_g[0][0]->frame_parms.nb_antennas_tx : PHY_vars_UE_g[0][0]->frame_parms.nb_antennas_tx));
-    openair0_cfg[card].rx_num_channels=min(4,((UE_flag==0) ? PHY_vars_eNB_g[0][0]->frame_parms.nb_antennas_rx : PHY_vars_UE_g[0][0]->frame_parms.nb_antennas_rx));
+    openair0_cfg[card].tx_num_channels=min(4,((UE_flag==0) ? PHY_vars_eNB_g[0][0]->frame_parms.nb_antennas_tx/navail_cards : PHY_vars_UE_g[0][0]->frame_parms.nb_antennas_tx));
+    openair0_cfg[card].rx_num_channels=min(4,((UE_flag==0) ? PHY_vars_eNB_g[0][0]->frame_parms.nb_antennas_rx/navail_cards : PHY_vars_UE_g[0][0]->frame_parms.nb_antennas_rx));
 
     for (i=0; i<4; i++) {
 

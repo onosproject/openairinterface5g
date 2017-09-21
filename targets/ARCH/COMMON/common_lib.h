@@ -233,7 +233,7 @@ typedef struct {
   //! local Ethernet interface (eNB/BBU, UE)
   char *local_if_name;
   //! tx_sample_advance for RF + ETH
-  uint8_t tx_sample_advance;
+  int8_t tx_sample_advance;
   //! tx_scheduling_advance for RF + ETH
   uint8_t tx_scheduling_advance;
   //! iq_txshift  for RF + ETH

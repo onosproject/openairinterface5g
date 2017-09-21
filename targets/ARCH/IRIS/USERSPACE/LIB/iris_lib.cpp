@@ -474,7 +474,7 @@ extern "C" {
 */
   int device_init(openair0_device* device, openair0_config_t *openair0_cfg) {
 
-	size_t i;
+	size_t i,r,card;
 	int bw_gain_adjust=0;
 	openair0_cfg[0].rx_gain_calib_table = calib_table_iris;
 	iris_state_t *s = (iris_state_t*)malloc(sizeof(iris_state_t));
@@ -482,19 +482,24 @@ extern "C" {
 
 	// Initialize Iris device
 	device->openair0_cfg = openair0_cfg;
-	char* remote_addr = device->openair0_cfg->remote_addr;
-	char* drvtype = strtok(remote_addr, ",");
-	char *srl = strtok(NULL, ",");
-	while (srl != NULL)
-	{
-	    LOG_I(HW,"Attempting to open Iris device: %s\n", srl);
-	    std::string args = "driver="+std::string(drvtype)+",serial="+std::string(srl)+",remote:prot=tcp";
-	    s->iris.push_back(SoapySDR::Device::make(args));
-	    srl = strtok(NULL, ",");
-	}
+        for (card = 0; card < MAX_CARDS; card++)
+        {
+	    char* remote_addr = device->openair0_cfg[card].remote_addr;
+            if (remote_addr == NULL) {printf("Opened %d cards...\n", card);break;}
+	    char* drvtype = strtok(remote_addr, ",");
+	    char *srl = strtok(NULL, ",");
+	    while (srl != NULL)
+	    {
+	        LOG_I(HW,"Attempting to open Iris device: %s\n", srl);
+	        std::string args = "driver="+std::string(drvtype)+",serial="+std::string(srl)+",remote:prot=tcp";
+	        s->iris.push_back(SoapySDR::Device::make(args));
+	        srl = strtok(NULL, ",");
+	    }
+            //openair0_cfg[0].iq_txshift = 4;//if radio needs OAI to shift left the tx samples for preserving bit precision 
+        }
 	s->device_num = s->iris.size();
-        openair0_cfg[0].iq_txshift = 4;//if radio needs OAI to shift left the tx samples for preserving bit precision 
 	device->type=IRIS_DEV;
+
 	switch ((int)openair0_cfg[0].sample_rate) {
 	case 30720000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
@@ -531,9 +536,10 @@ extern "C" {
 		exit(-1);
 		break;
 	}
+
 	printf("tx_sample_advance %d\n", openair0_cfg[0].tx_sample_advance);
-	s->rx_num_channels = openair0_cfg[0].rx_num_channels / s->device_num;
-	s->tx_num_channels = openair0_cfg[0].tx_num_channels / s->device_num;
+	s->rx_num_channels = openair0_cfg[0].rx_num_channels; 
+	s->tx_num_channels = openair0_cfg[0].tx_num_channels;
 	if ((s->rx_num_channels == 1 || s->rx_num_channels == 2) && (s->tx_num_channels == 1 || s->tx_num_channels == 2))
 	    printf("Enabling %d rx and %d tx channel(s) on each device...\n", s->rx_num_channels, s->tx_num_channels);
 	else
@@ -541,7 +547,7 @@ extern "C" {
 	    printf("Invalid rx or tx number of channels (%d, %d)\n", s->rx_num_channels, s->tx_num_channels);
 	    exit(-1);
 	}
-	int r;
+
 	for (r = 0; r < s->device_num; r++)
 	{
 	    s->iris[r]->setMasterClockRate(8*openair0_cfg[0].sample_rate); // sample*8=clock_rate for Soapy
