@@ -282,7 +282,7 @@ uint8_t local_remote_radio = BBU_LOCAL_RADIO_HEAD;
 /* struct for ethernet specific parameters given in eNB conf file */
 eth_params_t *eth_params;
 
-int navail_cards = 0;
+int navail_cards = 1;
 
 openair0_config_t openair0_cfg[MAX_CARDS];
 
