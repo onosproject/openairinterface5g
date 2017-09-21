@@ -409,14 +409,12 @@ typedef enum {
   lastel = 5
 } RC_config_functions_t;
 
-void RCconfig_RU(void);
-void RCconfig_L1(void);
-void RCconfig_macrlc(void);
-int  RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc);
-int  RCconfig_S1(MessageDef *msg_p, uint32_t i);
+extern int mac_top_init_eNB(void );
+
+extern uint8_t  nfapi_pnf;
 
 
-int load_config_file(config_t *cfg) {
+void load_config_file(config_t *cfg) {
 
   config_init(cfg);
   
@@ -432,9 +430,8 @@ int load_config_file(config_t *cfg) {
   }
 
 }
-extern uint8_t  nfapi_pnf;
 
-void RCconfig_RU() {
+void RCconfig_RU(void) {
 
   config_t          cfg;
   config_setting_t *setting                       = NULL;
@@ -447,8 +444,8 @@ void RCconfig_RU() {
   char*             ipv4                          = NULL;
   char*             ipv4_remote                   = NULL;
   char              *local_rf                     = NULL;
-
   char*             tr_preference                 = NULL;
+
   libconfig_int     local_portc                   = 0;
   libconfig_int     remote_portc                  = 0;
   libconfig_int     local_portd                   = 0;
@@ -697,7 +694,7 @@ void RCconfig_RU() {
   
 }
 
-void RCconfig_L1() {
+void RCconfig_L1(void) {
 
   int               i,j;
 
@@ -815,7 +812,7 @@ void RCconfig_L1() {
         RC.eNB[j][0]->eth_params_n.remote_portd             = remote_n_portd;
         RC.eNB[j][0]->eth_params_n.transp_preference          = ETH_UDP_MODE;
 
-        configure_nfapi_pnf(RC.eNB[j][0]->eth_params_n.remote_addr, RC.eNB[j][0]->eth_params_n.remote_portc, RC.eNB[j][0]->eth_params_n.my_portd, RC.eNB[j][0]->eth_params_n.remote_portd);
+        configure_nfapi_pnf(RC.eNB[j][0]->eth_params_n.remote_addr, RC.eNB[j][0]->eth_params_n.remote_portc, RC.eNB[j][0]->eth_params_n.my_addr, RC.eNB[j][0]->eth_params_n.my_portd, RC.eNB[j][0]->eth_params_n.remote_portd);
 
         {
           extern uint8_t  nfapi_pnf;
@@ -829,12 +826,11 @@ void RCconfig_L1() {
   printf("Initializing northbound interface for L1\n");
   l1_north_init_eNB();
 
-  return;
 }
 
-void RCconfig_macrlc() {
+void RCconfig_macrlc(void) {
 
-  int               i,j;
+  int               j;
 
   config_t          cfg;
   config_setting_t *setting                         = NULL;
@@ -978,20 +974,11 @@ void RCconfig_macrlc() {
 int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
   config_t          cfg;
   config_setting_t *setting                       = NULL;
-  config_setting_t *subsetting                    = NULL;
   config_setting_t *setting_component_carriers    = NULL;
   config_setting_t *component_carrier             = NULL;
   config_setting_t *setting_srb1                  = NULL;
-  config_setting_t *setting_mme_addresses         = NULL;
-  config_setting_t *setting_mme_address           = NULL;
-  config_setting_t *setting_ru                    = NULL;
   config_setting_t *setting_enb                   = NULL;
-  config_setting_t *setting_otg                   = NULL;
-  config_setting_t *subsetting_otg                = NULL;
-  int               parse_errors                  = 0;
   int               num_enbs                      = 0;
-  int               num_mme_address               = 0;
-  int               num_otg_elements              = 0;
   int               num_component_carriers        = 0;
   int               j                             = 0;
   libconfig_int     enb_id                        = 0;
@@ -1024,10 +1011,6 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
   libconfig_int     Nid_cell_mbsfn                = 0;
   libconfig_int     N_RB_DL                       = 0;
   libconfig_int     nb_antenna_ports              = 0;
-  libconfig_int     nb_antennas_tx                = 0;
-  libconfig_int     nb_antennas_rx                = 0;
-  libconfig_int     tx_gain                       = 0;
-  libconfig_int     rx_gain                       = 0;
   libconfig_int     prach_root                    = 0;
   libconfig_int     prach_config_index            = 0;
   const char*            prach_high_speed         = NULL;
@@ -1101,38 +1084,7 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 
 
   const char*       active_enb[MAX_ENB];
-  char*             enb_interface_name_for_S1U    = NULL;
-  char*             enb_ipv4_address_for_S1U      = NULL;
-  libconfig_int     enb_port_for_S1U              = 0;
-  char*             enb_interface_name_for_S1_MME = NULL;
-  char*             enb_ipv4_address_for_S1_MME   = NULL;
-  char             *address                       = NULL;
-  char             *cidr                          = NULL;
   char             *astring                       = NULL;
-  char*             flexran_agent_interface_name      = NULL;
-  char*             flexran_agent_ipv4_address        = NULL;
-  libconfig_int     flexran_agent_port                = 0;
-  char*             flexran_agent_cache               = NULL;
-  libconfig_int     otg_ue_id                     = 0;
-  char*             otg_app_type                  = NULL;
-  char*             otg_bg_traffic                = NULL;
-  char*             glog_level                    = NULL;
-  char*             glog_verbosity                = NULL;
-  char*             hw_log_level                  = NULL;
-  char*             hw_log_verbosity              = NULL;
-  char*             phy_log_level                 = NULL;
-  char*             phy_log_verbosity             = NULL;
-  char*             mac_log_level                 = NULL;
-  char*             mac_log_verbosity             = NULL;
-  char*             rlc_log_level                 = NULL;
-  char*             rlc_log_verbosity             = NULL;
-  char*             pdcp_log_level                = NULL;
-  char*             pdcp_log_verbosity            = NULL;
-  char*             rrc_log_level                 = NULL;
-  char*             rrc_log_verbosity             = NULL;
-  char*             udp_log_verbosity             = NULL;
-  char*             osa_log_level                 = NULL;
-  char*             osa_log_verbosity             = NULL;
 
   // for no gcc warnings 
   (void)astring;
@@ -1684,7 +1636,7 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 			       "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for phich_resource choice: ONESIXTH,HALF,ONE,TWO!\n",
 			       RC.config_file_name, i, phich_resource);
 
-		printf("phich.resource %d (%s), phich.duration %d (%s)\n",
+		printf("phich.resource %ld (%s), phich.duration %ld (%s)\n",
 		       RRC_CONFIGURATION_REQ (msg_p).phich_resource[j],phich_resource,
 		       RRC_CONFIGURATION_REQ (msg_p).phich_duration[j],phich_duration);
 
@@ -2764,13 +2716,12 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
   }
 }
 
-int RCconfig_gtpu() {
+int RCconfig_gtpu(void) {
   config_t          cfg;
   config_setting_t *setting                       = NULL;
   config_setting_t *subsetting                    = NULL;
   config_setting_t *setting_enb                   = NULL;
   int               num_enbs                      = 0;
-  libconfig_int     enb_id                        = 0;
 
 
 
@@ -2847,20 +2798,15 @@ int RCconfig_gtpu() {
 }
 
 
-int RCconfig_S1(MessageDef *msg_p, uint32_t i) {
+void RCconfig_S1(MessageDef *msg_p, uint32_t i) {
   config_t          cfg;
   config_setting_t *setting                       = NULL;
   config_setting_t *subsetting                    = NULL;
   config_setting_t *setting_mme_addresses         = NULL;
   config_setting_t *setting_mme_address           = NULL;
   config_setting_t *setting_enb                   = NULL;
-  config_setting_t *setting_otg                   = NULL;
-  config_setting_t *subsetting_otg                = NULL;
-  int               parse_errors                  = 0;
   int               num_enbs                      = 0;
   int               num_mme_address               = 0;
-  int               num_otg_elements              = 0;
-  int               num_component_carriers        = 0;
   int               j                             = 0;
   libconfig_int     enb_id                        = 0;
 
@@ -2874,17 +2820,12 @@ int RCconfig_S1(MessageDef *msg_p, uint32_t i) {
   libconfig_int     my_int;
 
 
-  char*             if_name                       = NULL;
   char*             ipv4                          = NULL;
   char*             ipv4_remote                   = NULL;
   char*             ipv6                          = NULL;
-  char*             local_rf                      = NULL;
   char*             preference                    = NULL;
   char*             active                        = NULL;
 
-  char*             tr_preference                 = NULL;
-  libconfig_int     local_port                    = 0;
-  libconfig_int     remote_port                   = 0;
   const char*       active_enb[MAX_ENB];
   char*             enb_interface_name_for_S1U    = NULL;
   char*             enb_ipv4_address_for_S1U      = NULL;
@@ -3111,7 +3052,6 @@ int RCconfig_S1(MessageDef *msg_p, uint32_t i) {
       }
     }
   }
-  return;
 }
 
 void RCConfig(const char *config_file_name) {
