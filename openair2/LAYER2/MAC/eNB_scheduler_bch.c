@@ -701,6 +701,7 @@ schedule_SI(
 	dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE; 
 	dl_config_pdu->pdu_size                                               = (uint8_t)(sizeof(nfapi_dl_config_dci_dl_pdu));
         dl_req->number_dci++;
+        LOG_E(MAC, "%s() number_dci:%u\n", __FUNCTION__, dl_req->number_dci);
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                      = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1A;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = 4;

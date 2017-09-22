@@ -1734,8 +1734,16 @@ int main( int argc, char **argv )
     printf("RC.nb_RU:%d\n", RC.nb_RU);
     // once all RUs are ready intiailize the rest of the eNBs ((dependence on final RU parameters after configuration)
     printf("ALL RUs ready - init eNBs\n");
-    printf("DJP - commented out call to init_eNB_afterRU() will be called by nFAPI\n\n\n\n");
-    init_eNB_afterRU();
+
+    if (nfapi_pnf != 1 && nfapi_pnf != 2)
+    {
+      printf("Not NFAPI mode - call init_eNB_afterRU()\n");
+      init_eNB_afterRU();
+    }
+    else
+    {
+      printf("NFAPI mode - DO NOT call init_eNB_afterRU()\n");
+    }
     
     printf("ALL RUs ready - ALL eNBs ready\n");
   }

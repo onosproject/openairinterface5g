@@ -49,7 +49,7 @@ void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
   LTE_eNB_PDCCH *pdcch_vars       = &eNB->pdcch_vars[idx];
   nfapi_dl_config_dci_dl_pdu *pdu = &dl_config_pdu->dci_dl_pdu;
 
-  LOG_D(PHY,"Frame %d, Subframe %d: DCI processing\n",proc->frame_tx,proc->subframe_tx);
+  LOG_E(PHY,"Frame %d, Subframe %d: DCI processing\n",proc->frame_tx,proc->subframe_tx);
 
   // copy dci configuration into eNB structure
   fill_dci_and_dlsch(eNB,proc,&pdcch_vars->dci_alloc[pdcch_vars->num_dci],pdu);
@@ -643,7 +643,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
       //      handle_nfapi_mch_dl_pdu(eNB,dl_config_pdu);
       break;
     case NFAPI_DL_CONFIG_DLSCH_PDU_TYPE:
-      //LOG_D(PHY,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d\n", __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx);
+      LOG_E(PHY,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d\n", __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx);
 
       AssertFatal(dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index<TX_req->tx_request_body.number_of_pdus,
 		  "dlsch_pdu_rel8.pdu_index>=TX_req->number_of_pdus (%d>%d)\n",

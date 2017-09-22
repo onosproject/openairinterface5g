@@ -330,6 +330,8 @@ void check_ul_failure(module_id_t module_idP,int CC_id,int UE_id,
 		  "illegal dl_Bandwidth %d\n",(int)cc[CC_id].mib->message.dl_Bandwidth);
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding = pdcch_order_table[cc[CC_id].mib->message.dl_Bandwidth];
       DL_req[CC_id].dl_config_request_body.number_dci++;
+      LOG_E(MAC, "%s() number_dci:%u\n", __FUNCTION__, DL_req[CC_id].dl_config_request_body.number_dci);
+
       DL_req[CC_id].dl_config_request_body.number_pdu++;
      
       /* 

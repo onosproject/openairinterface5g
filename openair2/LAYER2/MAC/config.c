@@ -60,6 +60,7 @@ extern RAN_CONTEXT_t RC;
 extern int l2_init_eNB(void);
 extern int mac_top_init_eNB(void);
 extern void mac_init_cell_params(int Mod_idP,int CC_idP);
+extern void phy_reset_ue(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
 
 /* sec 5.9, 36.321: MAC Reset Procedure */
 void ue_mac_reset(module_id_t module_idP,uint8_t eNB_index)

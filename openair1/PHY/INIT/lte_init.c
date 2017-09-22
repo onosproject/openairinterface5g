@@ -32,6 +32,9 @@
 #include "assertions.h"
 #include <math.h>
 
+extern uint32_t from_earfcn(int eutra_bandP,uint32_t dl_earfcn);
+extern int32_t get_uldl_offset(int eutra_bandP);
+
 extern uint16_t prach_root_sequence_map0_3[838];
 extern uint16_t prach_root_sequence_map4[138];
 uint8_t dmrs1_tab[8] = {0,2,3,4,6,8,9,10};
@@ -1725,9 +1728,13 @@ int phy_init_RU(RU_t *ru) {
 #endif
     }
 
+    LOG_D(PHY,"[INIT] %s() RC.nb_inst:%d \n", __FUNCTION__, RC.nb_inst);
+
     for (i=0; i<RC.nb_inst; i++) {
       for (p=0;p<15;p++) {
+        LOG_D(PHY,"[INIT] %s() nb_antenna_ports_eNB:%d \n", __FUNCTION__, ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB);
 	if (p<ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB || p==5) {
+          //LOG_E(PHY,"[INIT] %s() DO BEAM WEIGHTS nb_antenna_ports_eNB:%d nb_tx:%d\n", __FUNCTION__, ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB, ru->nb_tx);
 	  ru->beam_weights[i][p] = (int32_t **)malloc16_clear(ru->nb_tx*sizeof(int32_t*));
 	  for (j=0; j<ru->nb_tx; j++) {
 	    ru->beam_weights[i][p][j] = (int32_t *)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t));
@@ -1739,14 +1746,14 @@ int phy_init_RU(RU_t *ru) {
               {
 		ru->beam_weights[i][p][j][re] = 0x00007fff; 
 
-                LOG_E(PHY,"[INIT] lte_common_vars->beam_weights[%d][%d][%d][%d] = %d\n", i,p,j,re,ru->beam_weights[i][p][j][re]);
+                LOG_D(PHY,"[INIT] lte_common_vars->beam_weights[%d][%d][%d][%d] = %d\n", i,p,j,re,ru->beam_weights[i][p][j][re]);
               }
 	    }
 	    else if (i>4) {
 	      for (re=0; re<fp->ofdm_symbol_size; re++) 
               {
 		ru->beam_weights[i][p][j][re] = 0x00007fff/ru->nb_tx; 
-                LOG_E(PHY,"[INIT] lte_common_vars->beam_weights[%d][%d][%d][%d] = %d\n", i,p,j,re,ru->beam_weights[i][p][j][re]);
+                LOG_D(PHY,"[INIT] lte_common_vars->beam_weights[%d][%d][%d][%d] = %d\n", i,p,j,re,ru->beam_weights[i][p][j][re]);
               }
 	    }  
 	    LOG_D(PHY,"[INIT] lte_common_vars->beam_weights[%d][%d] = %p (%lu bytes)\n",
@@ -1776,7 +1783,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
 #ifdef Rel14
   LTE_eNB_PRACH* const prach_vars_br = &eNB->prach_vars_br;
 #endif
-  int i,  eNB_id, UE_id; 
+  int i,  UE_id; 
 
   LOG_I(PHY,"[eNB %d] %s() About to wait for eNB to be configured", eNB->Mod_id, __FUNCTION__);
 

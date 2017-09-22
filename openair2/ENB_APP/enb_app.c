@@ -59,6 +59,12 @@ extern unsigned char NB_eNB_INST;
 
 extern RAN_CONTEXT_t RC;
 
+extern int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc);
+extern void RCconfig_S1(MessageDef *msg_p, uint32_t i);
+extern int RCconfig_gtpu(void);
+extern void RCconfig_L1(void );
+extern void RCconfig_macrlc(void );
+
 #if defined(ENABLE_ITTI)
 
 /*------------------------------------------------------------------------------*/
@@ -100,7 +106,7 @@ static void configure_rrc(uint32_t enb_id)
   msg_p = itti_alloc_new_message (TASK_ENB_APP, RRC_CONFIGURATION_REQ);
 
   if (RC.rrc[enb_id]) {
-    RCconfig_RRC(msg_p,enb_id,&RC.rrc[enb_id]);
+    RCconfig_RRC(msg_p,enb_id,RC.rrc[enb_id]);
     
   /*
   RRC_CONFIGURATION_REQ (msg_p).cell_identity =   enb_properties->properties[enb_id]->eNB_id;
@@ -211,11 +217,8 @@ static void configure_rrc(uint32_t enb_id)
 static uint32_t eNB_app_register(uint32_t enb_id_start, uint32_t enb_id_end)//, const Enb_properties_array_t *enb_properties)
 {
   uint32_t         enb_id;
-  uint32_t         mme_id;
   MessageDef      *msg_p;
   uint32_t         register_enb_pending = 0;
-  char            *str                  = NULL;
-  struct in_addr   addr;
 
 #   if defined(OAI_EMU)
 

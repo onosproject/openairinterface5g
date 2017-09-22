@@ -290,7 +290,7 @@ int vnf_unpack_vendor_extension_tlv(nfapi_tl_t* tl, uint8_t **ppReadPackedMessag
 
 void install_schedule_handlers(IF_Module_t *if_inst);
 extern int single_thread_flag;
-extern void init_eNB_afterRU();
+extern void init_eNB_afterRU(void);
 
 void oai_create_enb(void)
 {
@@ -330,6 +330,7 @@ void oai_create_enb(void)
   // See we need to wait for that to happen otherwise the NFAPI message exchanges won't contain the right parameter values
   if (RC.eNB[0][0]->if_inst->PHY_config_req==0 || RC.eNB[0][0]->if_inst->schedule_response==0)
   {
+    printf("RC.eNB[0][0]->if_inst->PHY_config_req is not installed - install it\n");
     install_schedule_handlers(RC.eNB[0][0]->if_inst);
   }
 
@@ -342,17 +343,7 @@ void oai_create_enb(void)
 
 void oai_enb_init(void)
 {
-  PHY_VARS_eNB *eNB = RC.eNB[0][0];
-
   init_eNB_afterRU();
-
-  //phy_init_lte_eNB(eNB,0,0);
-  
-  printf("%s() take this out - done properly now - eNB->frame_parms.nb_antennas_rx = 1;\n", __FUNCTION__);
-  eNB->frame_parms.nb_antennas_rx = 1; // DJP
-
-  //printf("%s() Mark eNB as configured\n", __FUNCTION__);
-  //eNB->configured = 1;
 }
 
 int pnf_connection_indication_cb(nfapi_vnf_config_t* config, int p5_idx)
@@ -1011,114 +1002,6 @@ printf("[VNF] DJP local_addr:%s\n", p7_vnf->local_addr);
         }
       }
 
-#if 0
-      req->nfapi_config.earfcn.tl.tag = NFAPI_NFAPI_EARFCN_TAG;
-      req->nfapi_config.earfcn.value = phy->earfcn;
-      req->num_tlv++;
-#endif
-
-      //req->rf_config.dl_channel_bandwidth.tl.tag = NFAPI_RF_CONFIG_DL_CHANNEL_BANDWIDTH_TAG;
-      //req->rf_config.dl_channel_bandwidth.value = RC.eNB[0][0]->frame_parms.N_RB_DL;
-      //req->num_tlv++;
-
-      //req->rf_config.ul_channel_bandwidth.tl.tag = NFAPI_RF_CONFIG_UL_CHANNEL_BANDWIDTH_TAG;
-      //req->rf_config.ul_channel_bandwidth.value = RC.eNB[0][0]->frame_parms.N_RB_UL;
-      //req->num_tlv++;
-
-      //req->nfapi_config.rf_bands.tl.tag = NFAPI_NFAPI_RF_BANDS_TAG;
-      //req->nfapi_config.rf_bands.number_rf_bands = 1;
-      //req->nfapi_config.rf_bands.rf_band[0] = RC.eNB[0][0]->frame_parms.eutra_band;
-      //req->num_tlv++;
-
-      //req->nfapi_config.earfcn.tl.tag = NFAPI_NFAPI_EARFCN_TAG;
-      //req->nfapi_config.earfcn.value = to_earfcn(RC.eNB[0][0]->frame_parms.eutra_band, RC.eNB[0][0]->frame_parms.dl_CarrierFreq, RC.eNB[0][0]->frame_parms.N_RB_DL);
-      //req->num_tlv++;
-
-      NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() EARFCN:%u BAND:%u dlCarrierFreq:%u N_RB_DL:%u (NFAPI:%d)\n", 
-          __FUNCTION__, req->nfapi_config.earfcn.value, RC.eNB[0][0]->frame_parms.eutra_band, RC.eNB[0][0]->frame_parms.dl_CarrierFreq, RC.eNB[0][0]->frame_parms.N_RB_DL, req->rf_config.ul_channel_bandwidth.value);
-
-
-
-    //RC.eNB[0][0]->frame_parms.ul_CarrierFreq = req->nfapi_config.earfcn.value;
-
-      //req->subframe_config.duplex_mode.tl.tag = NFAPI_SUBFRAME_CONFIG_DUPLEX_MODE_TAG;
-      //req->subframe_config.duplex_mode.value = RC.eNB[0][0]->frame_parms.frame_type;
-      //req->num_tlv++;
-
-      //req->subframe_config.dl_cyclic_prefix_type.tl.tag = NFAPI_SUBFRAME_CONFIG_DL_CYCLIC_PREFIX_TYPE_TAG;
-      //req->subframe_config.dl_cyclic_prefix_type.value = RC.eNB[0][0]->frame_parms.Ncp;
-      //req->num_tlv++;
-
-      //req->subframe_config.ul_cyclic_prefix_type.tl.tag = NFAPI_SUBFRAME_CONFIG_UL_CYCLIC_PREFIX_TYPE_TAG;
-      //req->subframe_config.ul_cyclic_prefix_type.value = RC.eNB[0][0]->frame_parms.Ncp_UL;
-      //req->num_tlv++;
-
-      //RC.eNB[0][0]->frame_parms.num_MBSFN_config = 0; // DJP - hard code alert
-
-      //req->sch_config.physical_cell_id.tl.tag = NFAPI_SCH_CONFIG_PHYSICAL_CELL_ID_TAG;
-      //req->sch_config.physical_cell_id.value = RC.eNB[0][0]->frame_parms.Nid_cell;
-      //req->num_tlv++;
-
-      //req->rf_config.tx_antenna_ports.tl.tag = NFAPI_RF_CONFIG_TX_ANTENNA_PORTS_TAG;
-      //req->rf_config.tx_antenna_ports.value = RC.eNB[0][0]->frame_parms.nb_antennas_tx;
-      //req->num_tlv++;
-      //RC.eNB[0][0]->frame_parms.nb_antenna_ports_eNB = 1;
-
-      //req->rf_config.rx_antenna_ports.tl.tag = NFAPI_RF_CONFIG_RX_ANTENNA_PORTS_TAG;
-      //req->rf_config.rx_antenna_ports.value = RC.eNB[0][0]->frame_parms.nb_antennas_rx;
-
-      //RC.eNB[0][0]->frame_parms.nushift = 0;
-
-      //req->phich_config.phich_resource.tl.tag = NFAPI_PHICH_CONFIG_PHICH_RESOURCE_TAG;
-      //req->phich_config.phich_resource.value = RC.eNB[0][0]->frame_parms.phich_config_common.phich_resource;
-      //req->num_tlv++;
-
-      //req->phich_config.phich_duration.tl.tag = NFAPI_PHICH_CONFIG_PHICH_DURATION_TAG;
-      //req->phich_config.phich_duration.value = RC.eNB[0][0]->frame_parms.phich_config_common.phich_duration;
-      //req->num_tlv++;
-
-      // DJP - not supported in OAI
-      //req->phich_config.phich_power_offset.tl.tag = NFAPI_PHICH_CONFIG_PHICH_POWER_OFFSET_TAG;
-      //req->phich_config.phich_power_offset.value = RC.eNB[0][0]->frame_parms.phich_config_common.
-      //req->num_tlv++;
-
-      // UL RS Config
-      //req->uplink_reference_signal_config.cyclic_shift_1_for_drms.tl.tag = NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_CYCLIC_SHIFT_1_FOR_DRMS_TAG;
-      //req->uplink_reference_signal_config.cyclic_shift_1_for_drms.value = RC.eNB[0][0]->frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift;
-      //req->num_tlv++;
-
-      //req->uplink_reference_signal_config.uplink_rs_hopping.tl.tag = NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_UPLINK_RS_HOPPING_TAG;
-      //req->uplink_reference_signal_config.uplink_rs_hopping.value = RC.eNB[0][0]->frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled;
-      //req->num_tlv++;
-
-      //req->uplink_reference_signal_config.group_assignment.tl.tag = NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_GROUP_ASSIGNMENT_TAG;
-      //req->uplink_reference_signal_config.group_assignment.value = RC.eNB[0][0]->frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH;
-      //req->num_tlv++;
-
-      //if (req->pusch_config.hopping_mode.tl.tag == NFAPI_PUSCH_CONFIG_HOPPING_MODE_TAG) { }  // DJP - not being handled?
-
-      //RC.eNB[0][0]->frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = 0; // DJP - not being handled
-
-      //req->prach_config.configuration_index.tl.tag = NFAPI_PRACH_CONFIG_CONFIGURATION_INDEX_TAG;
-      //req->prach_config.configuration_index.value = RC.eNB[0][0]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
-      //req->num_tlv++;
-
-      //req->prach_config.root_sequence_index.tl.tag = NFAPI_PRACH_CONFIG_ROOT_SEQUENCE_INDEX_TAG;
-      //req->prach_config.root_sequence_index.value = RC.eNB[0][0]->frame_parms.prach_config_common.rootSequenceIndex;
-      //req->num_tlv++;
-
-      //req->prach_config.zero_correlation_zone_configuration.tl.tag = NFAPI_PRACH_CONFIG_ZERO_CORRELATION_ZONE_CONFIGURATION_TAG;
-      //req->prach_config.zero_correlation_zone_configuration.value = RC.eNB[0][0]->frame_parms.prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig;
-      //req->num_tlv++;
-
-      //req->prach_config.high_speed_flag.tl.tag = NFAPI_PRACH_CONFIG_HIGH_SPEED_FLAG_TAG;
-      //req->prach_config.high_speed_flag.value = RC.eNB[0][0]->frame_parms.prach_config_common.prach_ConfigInfo.highSpeedFlag;
-      //req->num_tlv++;
-
-      //req->prach_config.frequency_offset.tl.tag = NFAPI_PRACH_CONFIG_FREQUENCY_OFFSET_TAG;
-      //req->prach_config.frequency_offset.value = RC.eNB[0][0]->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset;
-      //req->num_tlv++;
-
       vendor_ext_tlv_2 ve2;
       memset(&ve2, 0, sizeof(ve2));
       ve2.tl.tag = VENDOR_EXT_TLV_2_TAG;
@@ -1164,239 +1047,11 @@ int config_resp_cb(nfapi_vnf_config_t* config, int p5_idx, nfapi_config_response
   return 0;
 }
 
-void test_p4_requests(nfapi_vnf_config_t* config, int p5_idx, int phy_id)
-{
-#if 0
-	{
-		nfapi_measurement_request_t req;
-		memset(&req, 0, sizeof(req));
-		req.header.message_id = NFAPI_MEASUREMENT_REQUEST;
-		req.header.phy_id = phy_id;
-		
-		req.dl_rs_tx_power.tl.tag = NFAPI_MEASUREMENT_REQUEST_DL_RS_XTX_POWER_TAG;
-		req.dl_rs_tx_power.value = 42;
-		req.received_interference_power.tl.tag = NFAPI_MEASUREMENT_REQUEST_RECEIVED_INTERFERENCE_POWER_TAG;
-		req.received_interference_power.value = 42;
-		req.thermal_noise_power.tl.tag = NFAPI_MEASUREMENT_REQUEST_THERMAL_NOISE_POWER_TAG;
-		req.thermal_noise_power.value = 42;
-		
-		nfapi_vnf_measurement_req(config, p5_idx, &req);
-	}
-	{
-		nfapi_rssi_request_t lte_req;
-		memset(&lte_req, 0, sizeof(lte_req));
-		lte_req.header.message_id = NFAPI_RSSI_REQUEST;
-		lte_req.header.phy_id = phy_id;
-		
-		lte_req.rat_type = NFAPI_RAT_TYPE_LTE;
-		lte_req.lte_rssi_request.tl.tag = NFAPI_LTE_RSSI_REQUEST_TAG;
-		lte_req.lte_rssi_request.frequency_band_indicator = 2;
-		lte_req.lte_rssi_request.measurement_period = 1000;
-		lte_req.lte_rssi_request.bandwidth = 50;
-		lte_req.lte_rssi_request.timeout = 0;
-		lte_req.lte_rssi_request.number_of_earfcns = 2;
-		lte_req.lte_rssi_request.earfcn[0] = 389;
-		lte_req.lte_rssi_request.earfcn[1] = 123;
-		
-		nfapi_vnf_rssi_request(config, p5_idx, &lte_req);
-		
-		nfapi_rssi_request_t utran_req;
-		memset(&utran_req, 0, sizeof(utran_req));
-		utran_req.header.message_id = NFAPI_RSSI_REQUEST;
-		utran_req.header.phy_id = phy_id;
-		
-		utran_req.rat_type = NFAPI_RAT_TYPE_UTRAN;
-		utran_req.utran_rssi_request.tl.tag = NFAPI_UTRAN_RSSI_REQUEST_TAG;
-		utran_req.utran_rssi_request.frequency_band_indicator = 2;
-		utran_req.utran_rssi_request.measurement_period = 1000;
-		utran_req.utran_rssi_request.timeout = 0;
-		utran_req.utran_rssi_request.number_of_uarfcns = 2;
-		utran_req.utran_rssi_request.uarfcn[0] = 2348;
-		utran_req.utran_rssi_request.uarfcn[1] = 52;
-		
-		nfapi_vnf_rssi_request(config, p5_idx, &utran_req);		
-		
-		
-		nfapi_rssi_request_t geran_req;
-		memset(&geran_req, 0, sizeof(geran_req));
-		geran_req.header.message_id = NFAPI_RSSI_REQUEST;
-		geran_req.header.phy_id = phy_id;
-		
-		geran_req.rat_type = NFAPI_RAT_TYPE_GERAN;
-		geran_req.geran_rssi_request.tl.tag = NFAPI_GERAN_RSSI_REQUEST_TAG;
-		geran_req.geran_rssi_request.frequency_band_indicator = 2;
-		geran_req.geran_rssi_request.measurement_period = 1000;
-		geran_req.geran_rssi_request.timeout = 0;
-		geran_req.geran_rssi_request.number_of_arfcns = 1;
-		geran_req.geran_rssi_request.arfcn[0].arfcn = 34;
-		geran_req.geran_rssi_request.arfcn[0].direction = 0;
-		
-		nfapi_vnf_rssi_request(config, p5_idx, &geran_req);		
-	}
-	{
-		nfapi_cell_search_request_t lte_req;
-		memset(&lte_req, 0, sizeof(lte_req));
-		lte_req.header.message_id = NFAPI_CELL_SEARCH_REQUEST;
-		lte_req.header.phy_id = phy_id;		
-		
-		lte_req.rat_type = NFAPI_RAT_TYPE_LTE;
-		lte_req.lte_cell_search_request.tl.tag = NFAPI_LTE_CELL_SEARCH_REQUEST_TAG;
-		lte_req.lte_cell_search_request.earfcn = 1234;
-		lte_req.lte_cell_search_request.measurement_bandwidth = 50;
-		lte_req.lte_cell_search_request.exhaustive_search = 1;
-		lte_req.lte_cell_search_request.timeout = 1000;
-		lte_req.lte_cell_search_request.number_of_pci = 1;
-		lte_req.lte_cell_search_request.pci[0] = 234;
-		
-		nfapi_vnf_cell_search_request(config, p5_idx, &lte_req);
-		
-		nfapi_cell_search_request_t utran_req;
-		memset(&utran_req, 0, sizeof(utran_req));
-		utran_req.header.message_id = NFAPI_CELL_SEARCH_REQUEST;
-		utran_req.header.phy_id = phy_id;		
-		
-		utran_req.rat_type = NFAPI_RAT_TYPE_UTRAN;
-		utran_req.utran_cell_search_request.tl.tag = NFAPI_UTRAN_CELL_SEARCH_REQUEST_TAG;
-		utran_req.utran_cell_search_request.uarfcn = 1234;
-		utran_req.utran_cell_search_request.exhaustive_search = 0;
-		utran_req.utran_cell_search_request.timeout = 1000;
-		utran_req.utran_cell_search_request.number_of_psc = 1;
-		utran_req.utran_cell_search_request.psc[0] = 234;
-		
-		nfapi_vnf_cell_search_request(config, p5_idx, &utran_req);		
-		
-		nfapi_cell_search_request_t geran_req;
-		memset(&geran_req, 0, sizeof(geran_req));
-		geran_req.header.message_id = NFAPI_CELL_SEARCH_REQUEST;
-		geran_req.header.phy_id = phy_id;		
-		
-		geran_req.rat_type = NFAPI_RAT_TYPE_GERAN;
-		geran_req.geran_cell_search_request.tl.tag = NFAPI_GERAN_CELL_SEARCH_REQUEST_TAG;
-		geran_req.geran_cell_search_request.timeout = 1000;
-		geran_req.geran_cell_search_request.number_of_arfcn = 1;
-		geran_req.geran_cell_search_request.arfcn[0] = 8765;
-		
-		nfapi_vnf_cell_search_request(config, p5_idx, &geran_req);				
-	}
-	{
-		nfapi_broadcast_detect_request_t lte_req;
-		memset(&lte_req, 0, sizeof(lte_req));
-		lte_req.header.message_id = NFAPI_BROADCAST_DETECT_REQUEST;
-		lte_req.header.phy_id = phy_id;		
-		
-		lte_req.rat_type = NFAPI_RAT_TYPE_LTE;
-		lte_req.lte_broadcast_detect_request.tl.tag = NFAPI_LTE_BROADCAST_DETECT_REQUEST_TAG;
-		lte_req.lte_broadcast_detect_request.earfcn = 1234;
-		lte_req.lte_broadcast_detect_request.pci = 50;
-		lte_req.lte_broadcast_detect_request.timeout = 1000;
-		
-		lte_req.pnf_cell_search_state.tl.tag = NFAPI_PNF_CELL_SEARCH_STATE_TAG;
-		lte_req.pnf_cell_search_state.length = 3;
-		
-		nfapi_vnf_broadcast_detect_request(config, p5_idx, &lte_req);
-		
-		nfapi_broadcast_detect_request_t utran_req;
-		memset(&utran_req, 0, sizeof(utran_req));
-		utran_req.header.message_id = NFAPI_BROADCAST_DETECT_REQUEST;
-		utran_req.header.phy_id = phy_id;		
-		
-		utran_req.rat_type = NFAPI_RAT_TYPE_LTE;
-		utran_req.utran_broadcast_detect_request.tl.tag = NFAPI_UTRAN_BROADCAST_DETECT_REQUEST_TAG;
-		utran_req.utran_broadcast_detect_request.uarfcn = 1234;
-		utran_req.utran_broadcast_detect_request.psc = 50;
-		utran_req.utran_broadcast_detect_request.timeout = 1000;
-		
-		utran_req.pnf_cell_search_state.tl.tag = NFAPI_PNF_CELL_SEARCH_STATE_TAG;
-		utran_req.pnf_cell_search_state.length = 3;
-		
-		nfapi_vnf_broadcast_detect_request(config, p5_idx, &utran_req);		
-	}
-	{
-		nfapi_system_information_schedule_request_t lte_req;
-		memset(&lte_req, 0, sizeof(lte_req));
-		lte_req.header.message_id = NFAPI_SYSTEM_INFORMATION_SCHEDULE_REQUEST;
-		lte_req.header.phy_id = phy_id;		
-		
-		lte_req.rat_type = NFAPI_RAT_TYPE_LTE;
-		lte_req.lte_system_information_schedule_request.tl.tag = NFAPI_LTE_SYSTEM_INFORMATION_SCHEDULE_REQUEST_TAG;
-		lte_req.lte_system_information_schedule_request.earfcn = 1234;
-		lte_req.lte_system_information_schedule_request.pci = 50;
-		lte_req.lte_system_information_schedule_request.downlink_channel_bandwidth = 100;
-		lte_req.lte_system_information_schedule_request.phich_configuration = 3;
-		lte_req.lte_system_information_schedule_request.number_of_tx_antenna = 2;
-		lte_req.lte_system_information_schedule_request.retry_count = 4;
-		lte_req.lte_system_information_schedule_request.timeout = 1000;
-		
-		lte_req.pnf_cell_broadcast_state.tl.tag = NFAPI_PNF_CELL_BROADCAST_STATE_TAG;
-		lte_req.pnf_cell_broadcast_state.length = 3;
-		
-		nfapi_vnf_system_information_schedule_request(config, p5_idx, &lte_req);
-	}
-	{
-		nfapi_system_information_request_t lte_req;
-		memset(&lte_req, 0, sizeof(lte_req));
-		lte_req.header.message_id = NFAPI_SYSTEM_INFORMATION_REQUEST;
-		lte_req.header.phy_id = phy_id;		
-		
-		lte_req.rat_type = NFAPI_RAT_TYPE_LTE;		
-		lte_req.lte_system_information_request.tl.tag = NFAPI_LTE_SYSTEM_INFORMATION_REQUEST_TAG;
-		lte_req.lte_system_information_request.earfcn = 1234;
-		lte_req.lte_system_information_request.pci= 456;
-		lte_req.lte_system_information_request.downlink_channel_bandwidth = 5;
-		lte_req.lte_system_information_request.phich_configuration = 2;
-		lte_req.lte_system_information_request.number_of_tx_antenna = 2;
-		lte_req.lte_system_information_request.number_of_si_periodicity = 1;
-		lte_req.lte_system_information_request.si_periodicity[0].si_periodicity = 3;
-		lte_req.lte_system_information_request.si_periodicity[0].si_index = 3;
-		lte_req.lte_system_information_request.si_window_length = 15;
-		lte_req.lte_system_information_request.timeout = 1000;
-		
-		nfapi_vnf_system_information_request(config, p5_idx, &lte_req);
-		
-		nfapi_system_information_request_t utran_req;
-		memset(&utran_req, 0, sizeof(utran_req));
-		utran_req.header.message_id = NFAPI_SYSTEM_INFORMATION_REQUEST;
-		utran_req.header.phy_id = phy_id;		
-		
-		utran_req.rat_type = NFAPI_RAT_TYPE_UTRAN;
-		utran_req.utran_system_information_request.tl.tag = NFAPI_UTRAN_SYSTEM_INFORMATION_REQUEST_TAG;
-		utran_req.utran_system_information_request.uarfcn = 1234;
-		utran_req.utran_system_information_request.psc = 456;
-		utran_req.utran_system_information_request.timeout = 1000;
-		
-		nfapi_vnf_system_information_request(config, p5_idx, &utran_req);		
-		
-		nfapi_system_information_request_t geran_req;
-		memset(&geran_req, 0, sizeof(geran_req));
-		geran_req.header.message_id = NFAPI_SYSTEM_INFORMATION_REQUEST;
-		geran_req.header.phy_id = phy_id;		
-		
-		geran_req.rat_type = NFAPI_RAT_TYPE_GERAN;
-		geran_req.geran_system_information_request.tl.tag = NFAPI_GERAN_SYSTEM_INFORMATION_REQUEST_TAG;
-		geran_req.geran_system_information_request.arfcn = 1234;
-		geran_req.geran_system_information_request.bsic = 21;
-		geran_req.geran_system_information_request.timeout = 1000;
-		
-		nfapi_vnf_system_information_request(config, p5_idx, &geran_req);	
-	}
-	{
-		nfapi_nmm_stop_request_t req;
-		memset(&req, 0, sizeof(req));
-		req.header.message_id = NFAPI_NMM_STOP_REQUEST;
-		req.header.phy_id = phy_id;		
-		nfapi_vnf_nmm_stop_request(config, p5_idx, &req);	
-	}
-#endif
-}
-
 int start_resp_cb(nfapi_vnf_config_t* config, int p5_idx, nfapi_start_response_t* resp)
 {
   printf("[VNF] Received NFAPI_START_RESP idx:%d phy_id:%d\n", p5_idx, resp->header.phy_id);
 
   vnf_info* vnf = (vnf_info*)(config->user_data);
-
-  if(vnf->wireshark_test_mode)
-    test_p4_requests(config, p5_idx,  resp->header.phy_id);
 
 #if 0
   auto find_result = vnf->pnfs.find(p5_idx);

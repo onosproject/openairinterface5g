@@ -164,25 +164,23 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   }
   // *******************************************************************
 
-  //if (proc->subframe_tx==0) LOG_W(PHY, "sfn/sf:%d:%d eNB:%p eNB[0]:%p eNB[0][0]:%p dlsch:%p:%p:%p rnti:%d\n", proc->frame_tx, proc->subframe_tx, RC.eNB, RC.eNB[0], RC.eNB[0][0], RC.eNB[0][0]->dlsch, RC.eNB[0][0]->dlsch[0], RC.eNB[0][0]->dlsch[0][0], RC.eNB[0][0]->dlsch[0][0]->rnti);
-  if ( proc->frame_tx == 22 && proc->subframe_tx==5) { LOG_D(PHY,"22/5\n"); }
-
   // ****************************************
   // Common RX procedures subframe n
-
   // if this is IF5 or 3GPP_eNB
   if (eNB && eNB->RU_list && eNB->RU_list[0] && eNB->RU_list[0]->function < NGFI_RAU_IF4p5) {
-  LOG_D(PHY,"%s:%s() %u/%u Before wakeup_prach_eNB() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
+    LOG_D(PHY,"%s:%s() %u/%u Before wakeup_prach_eNB() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
     wakeup_prach_eNB(eNB,NULL,proc->frame_rx,proc->subframe_rx);
-  LOG_D(PHY,"%s:%s() %u/%u Before wakeup_prach_eNB_br() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
+    LOG_D(PHY,"%s:%s() %u/%u Before wakeup_prach_eNB_br() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
 #ifdef Rel14
     wakeup_prach_eNB_br(eNB,NULL,proc->frame_rx,proc->subframe_rx);
-  LOG_D(PHY,"%s:%s() %u/%u proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
+    LOG_D(PHY,"%s:%s() %u/%u proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
 #endif
   }
+
   // UE-specific RX processing for subframe n
   LOG_D(PHY,"%s:%s() %u/%u Before phy_procedures_eNB_uespec_RX() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
   phy_procedures_eNB_uespec_RX(eNB, proc, no_relay );
+
 
   LOG_D(PHY,"%s:%s() %u/%u Before UL_INFO_mutex proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
   pthread_mutex_lock(&eNB->UL_INFO_mutex);

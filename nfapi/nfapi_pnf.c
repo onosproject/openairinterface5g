@@ -26,6 +26,7 @@ extern RAN_CONTEXT_t RC;
 #define NUM_P5_PHY 2
 
 extern void phy_init_RU(RU_t*);
+extern int mac_top_init_eNB(void);
 
 
 
@@ -575,7 +576,6 @@ int param_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
   nfapi_resp.header.phy_id = req->header.phy_id;
   nfapi_resp.error_code = 0; // DJP - what value???
 
-  char local_addr[80];
   struct sockaddr_in pnf_p7_sockaddr;
 
   pnf_p7_sockaddr.sin_addr.s_addr = inet_addr(pnf->phys[0].local_addr);
@@ -866,18 +866,37 @@ void pnf_phy_deallocate_p7_vendor_ext(nfapi_p7_message_header_t* header)
   free(header);
 }
 
+int pnf_phy_ul_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
+{
+  //printf("[PNF] ul config request\n");
+  //phy_info* phy = (phy_info*)(pnf_p7->user_data);
+
+  return 0;
+}
+
+int pnf_phy_hi_dci0_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req)
+{
+  //printf("[PNF] hi dci0 request\n");
+  //phy_info* phy = (phy_info*)(pnf_p7->user_data);
+
+  return 0;
+}
+
+nfapi_dl_config_request_pdu_t* dlsch_pdu=0;
+
 int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
 {
-#if 0
-  printf("[PNF] dl config request sfn_sf:%d(%d) pdcch:%u dci:%u pdu:%d pdsch_rnti:%d pcfich:%u - DO  NOTHING\n", 
-      req->sfn_sf, 
-      NFAPI_SFNSF2DEC(req->sfn_sf), 
-      req->dl_config_request_body.number_pdcch_ofdm_symbols, 
-      req->dl_config_request_body.number_dci,
-      req->dl_config_request_body.number_pdu,
-      req->dl_config_request_body.number_pdsch_rnti,
-      req->dl_config_request_body.transmission_power_pcfich
-      );
+#if 1
+  if (NFAPI_SFNSF2SF(req->sfn_sf)==5)
+    printf("[PNF] dl config request sfn_sf:%d(%d) pdcch:%u dci:%u pdu:%d pdsch_rnti:%d pcfich:%u\n", 
+        req->sfn_sf, 
+        NFAPI_SFNSF2DEC(req->sfn_sf), 
+        req->dl_config_request_body.number_pdcch_ofdm_symbols, 
+        req->dl_config_request_body.number_dci,
+        req->dl_config_request_body.number_pdu,
+        req->dl_config_request_body.number_pdsch_rnti,
+        req->dl_config_request_body.transmission_power_pcfich
+        );
 #endif
 
   if (RC.ru == 0)
@@ -901,31 +920,55 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
   }
 
   //int sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
-  //int sf = NFAPI_SFNSF2SF(req->sfn_sf);
+  int sf = NFAPI_SFNSF2SF(req->sfn_sf);
 
-  //struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
-  //int num_pdcch_symbols = eNB->pdcch_vars[sf&1].num_pdcch_symbols;
+  struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
+  eNB_rxtx_proc_t *proc = &eNB->proc.proc_rxtx[0];
+  nfapi_dl_config_request_pdu_t* dl_config_pdu_list = req->dl_config_request_body.dl_config_pdu_list;
+  int total_number_of_pdus = req->dl_config_request_body.number_pdu;
+
+  eNB->pdcch_vars[sf&1].num_pdcch_symbols = req->dl_config_request_body.number_pdcch_ofdm_symbols;
+  eNB->pdcch_vars[sf&1].num_dci = 0;
+
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn_sf:%d DCI:%d PDU:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), req->dl_config_request_body.number_dci, req->dl_config_request_body.number_pdu);
+
+  // DJP - force proc to look like current frame!
+  proc->frame_tx = NFAPI_SFNSF2SFN(req->sfn_sf);
+  proc->subframe_tx = NFAPI_SFNSF2SF(req->sfn_sf);
+
+  for (int i=0;i<total_number_of_pdus;i++)
+  {
+    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() PDU[%d]:\n", __FUNCTION__, i);
+
+    if (dl_config_pdu_list[i].pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE)
+    {
+      NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DCI:\n", __FUNCTION__);
+
+      handle_nfapi_dci_dl_pdu(eNB,proc,&dl_config_pdu_list[i]);
+
+      eNB->pdcch_vars[sf&1].num_dci++; // Is actually number of DCI PDUs
+    }
+    else if (dl_config_pdu_list[i].pdu_type == NFAPI_DL_CONFIG_BCH_PDU_TYPE)
+    {
+      NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() BCH:\n", __FUNCTION__);
+    }
+    else if (dl_config_pdu_list[i].pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE)
+    {
+      NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DLSCH:\n", __FUNCTION__);
 
 
+      dlsch_pdu = &dl_config_pdu_list[i];
+
+      //handle_nfapi_dlsch_pdu(eNB,proc,dl_config_pdu, dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks-1, TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
+    }
+    else
+    {
+      NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() UNKNOWN:%d\n", __FUNCTION__, dl_config_pdu_list[i].pdu_type);
+    }
+  }
 
   if(req->vendor_extension)
     free(req->vendor_extension);
-
-  return 0;
-}
-
-int pnf_phy_ul_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
-{
-  //printf("[PNF] ul config request\n");
-  //phy_info* phy = (phy_info*)(pnf_p7->user_data);
-
-  return 0;
-}
-
-int pnf_phy_hi_dci0_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req)
-{
-  //printf("[PNF] hi dci0 request\n");
-  //phy_info* phy = (phy_info*)(pnf_p7->user_data);
 
   return 0;
 }
@@ -967,19 +1010,27 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
     uint16_t sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
     uint16_t sf = NFAPI_SFNSF2SF(req->sfn_sf);
     LTE_DL_FRAME_PARMS *fp = &RC.ru[0]->frame_parms;
-    //int ONE_SUBFRAME_OF_SAMPLES = fp->ofdm_symbol_size*fp->symbols_per_tti;
+    int ONE_SUBFRAME_OF_SAMPLES = fp->ofdm_symbol_size*fp->symbols_per_tti;
     //int ONE_SUBFRAME_OF_SAMPLES = fp->symbols_per_tti;
     //int ONE_SUBFRAME_OF_SAMPLES = fp->ofdm_symbol_size*fp->symbols_per_tti*sizeof(int32_t);
-    //int offset = sf * ONE_SUBFRAME_OF_SAMPLES;
+    int offset = sf * ONE_SUBFRAME_OF_SAMPLES;
     struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
-    //int aa;
+
+    //DJP - the proc does not seem to be getting filled - so let fill it
+
+    eNB->proc.proc_rxtx[0].frame_tx = sfn;
+    eNB->proc.proc_rxtx[0].subframe_tx = sf;
 
     // clear the transmit data array for the current subframe
-#if 0
-    for (aa=0; aa<fp->nb_antenna_ports_eNB; aa++) {      
-      memset(&eNB->common_vars.txdataF[aa][offset], 0, ONE_SUBFRAME_OF_SAMPLES);
+    for (int aa=0; aa<fp->nb_antenna_ports_eNB; aa++) {      
+      memset(&eNB->common_vars.txdataF[aa][offset], 0, ONE_SUBFRAME_OF_SAMPLES * sizeof(int32_t));
     }
-#endif
+
+    // clear previous allocation information for all UEs
+    for (int i=0; i<NUMBER_OF_UE_MAX; i++) {
+      if (eNB->dlsch[i][0])
+        eNB->dlsch[i][0]->subframe_tx[sf] = 0;
+    }
 
     if (
         0 
@@ -1000,12 +1051,12 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
           eNB->pbch_pdu[1] = req->tx_request_body.tx_pdu_list[i].segments[j].segment_data[1];
           eNB->pbch_pdu[0] = req->tx_request_body.tx_pdu_list[i].segments[j].segment_data[2];
 
-	  eNB->pbch_configured=1;
+          eNB->pbch_configured=1;
 
           if (
-          1 
-          //&& NFAPI_SFNSF2DEC(req->sfn_sf) % 500 == 0
-          )
+              1 
+              //&& NFAPI_SFNSF2DEC(req->sfn_sf) % 500 == 0
+             )
             NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() [PDU:%u] len:%u pdu_index:%u num_segments:%u segment[0]_length:%u pbch_pdu:%x %x %x\n", 
                 __FUNCTION__, i, req->tx_request_body.tx_pdu_list[i].pdu_length, req->tx_request_body.tx_pdu_list[i].pdu_index, req->tx_request_body.tx_pdu_list[i].num_segments,
                 req->tx_request_body.tx_pdu_list[i].segments[0].segment_length,
@@ -1016,45 +1067,36 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
         }
         else
         {
-          int num_dci = 1;	// DJP -HACK!!!!
-          int frame = sfn;
-          int subframe = sf;
-          int num_pdcch_symbols = 1; // DJP HARD CODe HACK -  this is zero - eNB->pdcch_vars[subframe&1].num_pdcch_symbols;
-
-	  if (num_dci > 0)
-	    LOG_E(PHY,"SFN/SF:%d/%d num_dci:%d num_pdcch_symbols:%d\n", frame, subframe, num_dci, num_pdcch_symbols);
-
-	  generate_dci_top(num_pdcch_symbols,
-	      num_dci,
-	      &eNB->pdcch_vars[subframe&1].dci_alloc[0],
-	      0,
-	      AMP,
-	      fp,
-	      eNB->common_vars.txdataF,
-	      subframe);
+          // Not bch
+          handle_nfapi_dlsch_pdu(
+              eNB,
+              &eNB->proc.proc_rxtx[0],
+              dlsch_pdu, 
+              dlsch_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks-1, 
+              req->tx_request_body.tx_pdu_list[dlsch_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data
+              );
         }
       }
     }
 
-#if 0
+    common_signal_procedures(eNB, sfn, sf);
+
+    if (eNB->pdcch_vars[sf&1].num_dci > 0)
     {
-      int sched_sfn = sf==0?sfn-1:sfn-0;
-      int sched_sf = sf==0?9:sf-1;
-
-      NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn_sf:%u sfn:%u sf:%u SCHED:%d/%d calling common_signal_procedures\n",
-          __FUNCTION__, 
-          NFAPI_SFNSF2DEC(req->sfn_sf), 
-          sfn, sf,
-          sched_sfn, sched_sf
-          );
-
-      common_signal_procedures(eNB, sched_sfn, sched_sf);
-
+      LOG_E(PHY,"SFN/SF:%d/%d eNB->pdcch_vars[sf&1].num_dci:%d num_pdcch_symbols:%d\n", sfn, sf, eNB->pdcch_vars[sf&1].num_dci, eNB->pdcch_vars[sf&1].num_pdcch_symbols);
     }
-#else
-      common_signal_procedures(eNB, sfn, sf);
-#endif
 
+    generate_dci_top(
+        eNB->pdcch_vars[sf&1].num_pdcch_symbols,
+        2, // DJP - not dci - pdus!!!  eNB->pdcch_vars[sf&1].num_dci,
+        &eNB->pdcch_vars[sf&1].dci_alloc[0],
+        0,
+        AMP,
+        fp,
+        eNB->common_vars.txdataF,
+        sf);
+
+#if 1
     // Now scan UE specific DLSCH
     for (int UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++)
     {
@@ -1069,8 +1111,9 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
         uint8_t harq_pid = dlsch0->harq_ids[sf];
         AssertFatal(harq_pid>=0,"harq_pid is negative\n");
         // generate pdsch
+        LOG_E(PHY,"PDSCH active %d/%d\n", sfn,sf);
         pdsch_procedures(eNB,
-            &eNB->proc.proc_rxtx[sf&1],
+            &eNB->proc.proc_rxtx[0],
             harq_pid,
             dlsch0,
             dlsch1,
@@ -1086,6 +1129,7 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
         dlsch0->subframe_tx[sf]=0;
       }
     }
+#endif
 
     if (0 && NFAPI_SFNSF2DEC(req->sfn_sf) % 500 == 0)
     {
@@ -1111,9 +1155,9 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
       }
       free(buf);
     }
-
-    return 0;
   }
+
+  return 0;
 }
 
 int pnf_phy_lbt_dl_config_req(nfapi_pnf_p7_config_t* config, nfapi_lbt_dl_config_request_t* req)
@@ -1157,7 +1201,7 @@ int pnf_phy_unpack_p7_vendor_extension(nfapi_p7_message_header_t* header, uint8_
     //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s\n", __FUNCTION__);
     vendor_ext_p7_req* req = (vendor_ext_p7_req*)(header);
     if(!(pull16(ppReadPackedMessage, &req->dummy1, end) &&
-	  pull16(ppReadPackedMessage, &req->dummy2, end)))
+          pull16(ppReadPackedMessage, &req->dummy2, end)))
       return 0;
     return 1;
   }
@@ -1297,6 +1341,7 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
     p7_config_g = p7_config;
 
     // DJP - INIT PHY RELATED STUFF - this should be separate i think but is not currently...
+    // Taken mostly from init_eNB_afterRU() dont think i can call it though...
     {
       printf("[PNF] %s() Calling phy_init_lte_eNB() and setting nb_antennas_rx = 1\n", __FUNCTION__);
       printf("[PNF] %s() TBD create frame_parms from NFAPI message\n", __FUNCTION__);
@@ -1309,6 +1354,8 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
       for (int ce_level=0;ce_level<4;ce_level++)
 	RC.eNB[0][0]->prach_vars_br.rxsigF[ce_level] = (int16_t**)malloc16(64*sizeof(int16_t*));
 #endif
+      init_transport(RC.eNB[0][0]);
+      //DJP - this crashes because RC.nb_RU is 1 but RC.ru[0] is NULL - init_precoding_weights(RC.eNB[0][0]);
 
       printf("[PNF] Calling mac_top_init_eNB() so that RC.mac[] is init\n");
       mac_top_init_eNB();
