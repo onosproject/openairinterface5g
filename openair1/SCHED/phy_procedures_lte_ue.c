@@ -81,7 +81,7 @@ extern double cpuf;
 
 
 
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
 extern uint32_t downlink_frequency[MAX_NUM_CCs][4];
 #endif
 
@@ -162,7 +162,7 @@ void dump_dlsch_SI(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t n
   exit(-1);
 }
 
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
 //unsigned int gain_table[31] = {100,112,126,141,158,178,200,224,251,282,316,359,398,447,501,562,631,708,794,891,1000,1122,1258,1412,1585,1778,1995,2239,2512,2818,3162};
 /*
   unsigned int get_tx_amp_prach(int power_dBm, int power_max_dBm, int N_RB_UL)
@@ -1245,7 +1245,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
   int frame_tx = proc->frame_tx;
   int ulsch_start;
   int overflow=0;
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
   int k,l;
   int dummy_tx_buffer[frame_parms->samples_per_subframe] __attribute__((aligned(16)));
 #endif
@@ -1256,7 +1256,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 #endif
   nsymb = (frame_parms->Ncp == 0) ? 14 : 12;
 
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)//this is the EXPRESS MIMO case
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)//this is the EXPRESS MIMO case
   ulsch_start = (ue->rx_offset+nr_tti_tx*frame_parms->samples_per_subframe-
          ue->hw_timing_advance-
          ue->timing_advance-
@@ -1274,7 +1274,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
   ulsch_start = (frame_parms->samples_per_subframe*nr_tti_tx)-ue->N_TA_offset; //-ue->timing_advance;
 #endif //else EXMIMO
 
-//#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+//#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
   if (empty_subframe)
   {
 //#if 1
@@ -1322,7 +1322,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
   for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
     if (frame_parms->Ncp == 1)
       PHY_ofdm_mod(&ue->common_vars.txdataF[aa][nr_tti_tx*nsymb*frame_parms->ofdm_symbol_size],
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
        dummy_tx_buffer,
 #else
        &ue->common_vars.txdata[aa][ulsch_start],
@@ -1333,7 +1333,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
        CYCLIC_PREFIX);
     else
       normal_prefix_mod(&ue->common_vars.txdataF[aa][nr_tti_tx*nsymb*frame_parms->ofdm_symbol_size],
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
       dummy_tx_buffer,
 #else
       &ue->common_vars.txdata[aa][ulsch_start],
@@ -1342,7 +1342,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
       &ue->frame_parms);
 
 
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
     apply_7_5_kHz(ue,dummy_tx_buffer,0);
     apply_7_5_kHz(ue,dummy_tx_buffer,1);
 #else
@@ -1351,7 +1351,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 #endif
 
 
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
     overflow = ulsch_start - 9*frame_parms->samples_per_subframe;
 
 
@@ -1463,7 +1463,7 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 
       ue->tx_total_RE[nr_tti_tx] = 96;
 
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
       ue->prach_vars[eNB_id]->amp = get_tx_amp(ue->tx_power_dBm[nr_tti_tx],
                  ue->tx_power_max_dBm,
                  ue->frame_parms.N_RB_UL,
@@ -1879,7 +1879,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       }
       ue->tx_total_RE[nr_tti_tx] = nb_rb*12;
 
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
       tx_amp = get_tx_amp(ue->tx_power_dBm[nr_tti_tx],
         ue->tx_power_max_dBm,
         ue->frame_parms.N_RB_UL,
@@ -1956,7 +1956,7 @@ void ue_srs_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8
       Po_SRS = ue->tx_power_max_dBm;
     }
 
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
     if (ue->mac_enabled==1)
     {
     tx_amp = get_tx_amp(Po_SRS,
@@ -2236,7 +2236,7 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
       ue->tx_power_dBm[nr_tti_tx] = Po_PUCCH;
       ue->tx_total_RE[nr_tti_tx] = 12;
 
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
       tx_amp = get_tx_amp(Po_PUCCH,
               ue->tx_power_max_dBm,
               ue->frame_parms.N_RB_UL,
@@ -2344,7 +2344,7 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
       ue->tx_power_dBm[nr_tti_tx] = Po_PUCCH;
       ue->tx_total_RE[nr_tti_tx] = 12;
 
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR) || defined(OAI_ADRV9371_ZC706)
       tx_amp =  get_tx_amp(Po_PUCCH,
               ue->tx_power_max_dBm,
               ue->frame_parms.N_RB_UL,
@@ -2677,7 +2677,9 @@ void ue_measurement_procedures(
 #ifndef OAI_USRP
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
+#ifndef OAI_ADRV9371_ZC706
     phy_adjust_gain (ue,dB_fixed(ue->measurements.rssi),0);
+#endif
 #endif
 #endif
 #endif

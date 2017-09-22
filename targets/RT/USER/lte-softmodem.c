@@ -608,7 +608,7 @@ static void get_options (int argc, char **argv) {
     //  char                          line[1000];
     //  int                           l;
     int k,i;//,j,k;
-#if defined(OAI_USRP) || defined(CPRIGW)
+#if defined(OAI_USRP) || defined(CPRIGW) || defined(OAI_ADRV9371_ZC706)
     int clock_src;
 #endif
     int CC_id;
@@ -1003,7 +1003,7 @@ static void get_options (int argc, char **argv) {
             break;
 
         case 's':
-#if defined(OAI_USRP) || defined(CPRIGW)
+#if defined(OAI_USRP) || defined(CPRIGW) || defined(OAI_ADRV9371_ZC706)
 
             clock_src = atoi(optarg);
 
@@ -1913,7 +1913,7 @@ int main( int argc, char **argv ) {
         for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
 
-#ifdef OAI_USRP
+#if defined(OAI_USRP) || defined(OAI_ADRV9371_ZC706)
             UE[CC_id]->hw_timing_advance = timing_advance;
 #else
             UE[CC_id]->hw_timing_advance = 160;

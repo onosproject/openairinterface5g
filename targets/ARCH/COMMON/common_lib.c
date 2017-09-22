@@ -59,6 +59,12 @@ case USRP_X300_DEV:
   case NONE_DEV:
     printf("[%s] has not loaded a HW device.\n",((device->host_type == BBU_HOST) ? "BBU": "RRH"));
     break;    
+  case ADRV9371_ZC706_DEV:
+    printf("[%s] has loaded ADRV9371_ZC706 device.\n",((device->host_type == BBU_HOST) ? "BBU": "RRH"));
+    break;
+  case UEDv2_DEV:
+    printf("[%s] has loaded UEDv2 device.\n",((device->host_type == BBU_HOST) ? "BBU": "RRH"));
+    break;
   default:
     printf("[%s] invalid HW device.\n",((device->host_type == BBU_HOST) ? "BBU": "RRH")); 
     return -1;
