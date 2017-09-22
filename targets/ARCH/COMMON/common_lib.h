@@ -97,6 +97,10 @@ typedef enum {
   LMSSDR_DEV,
   /*!\brief device is NONE*/
   NONE_DEV,
+  /*!\brief device is ADRV9371_ZC706 */
+  ADRV9371_ZC706_DEV,
+  /*!\brief device is UEDv2 */
+  UEDv2_DEV,
   MAX_RF_DEV_TYPE
 
 } dev_type_t;
@@ -207,6 +211,14 @@ typedef struct {
   int iq_rxrescale;
   //! Configuration file for LMS7002M
   char *configFilename;
+
+  //! number of samples per tti
+  unsigned int  samples_per_tti;
+  //! the sample rate for receive.
+  double rx_sample_rate;
+  //! the sample rate for transmit.
+  double tx_sample_rate;
+
 } openair0_config_t;
 
 /*! \brief RF mapping */ 

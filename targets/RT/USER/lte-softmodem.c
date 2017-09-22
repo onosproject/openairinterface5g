@@ -1292,7 +1292,7 @@ int main( int argc, char **argv )
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       
       
-#ifdef OAI_USRP
+#ifdef OAI_USRP  || defined(OAI_ADRV9371_ZC706)
       UE[CC_id]->hw_timing_advance = timing_advance;
 #else
       UE[CC_id]->hw_timing_advance = 160;
