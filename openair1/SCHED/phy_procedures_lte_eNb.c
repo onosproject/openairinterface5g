@@ -270,7 +270,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,
   //if (frame < 200) {
   if (1){
 
-    LOG_E(PHY,
+    LOG_D(PHY,
 	  "[eNB %"PRIu8"][PDSCH %"PRIx16"/%"PRIu8"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", pdsch_start %d, G %d, nb_rb %"PRIu16", rb0 %x, rb1 %x, TBS %"PRIu16", pmi_alloc %"PRIx64", rv %"PRIu8" (round %"PRIu8")\n",
 	  eNB->Mod_id, dlsch->rnti,harq_pid,
 	  frame, subframe, input_buffer_length, dlsch_harq->pdsch_start,
@@ -330,7 +330,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,
   }
 
 
-  LOG_E(PHY,"Generating DLSCH/PDSCH %d\n",ra_flag);
+  LOG_D(PHY,"Generating DLSCH/PDSCH %d\n",ra_flag);
   // 36-212 
   start_meas(&eNB->dlsch_encoding_stats);
   AssertFatal(dlsch_harq->pdu!=NULL,"dlsch_harq->pdu == NULL (rnti %x)\n",dlsch->rnti);
@@ -481,7 +481,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,(frame*10)+subframe);
 
   if (num_dci > 0)
-    LOG_E(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (num_dci %"PRIu8") num_pdcch_symbols:%d\n",eNB->Mod_id,frame, subframe, num_dci, num_pdcch_symbols);
+    LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (num_dci %"PRIu8") num_pdcch_symbols:%d\n",eNB->Mod_id,frame, subframe, num_dci, num_pdcch_symbols);
     
   generate_dci_top(num_pdcch_symbols,
 		   num_dci,

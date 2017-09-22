@@ -724,7 +724,7 @@ schedule_SI(
 	  dl_req->number_pdu++;
 	  dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 
-	  LOG_E(MAC,"Frame %d: Subframe %d : Adding common DCI for S_RNTI\n", frameP,subframeP);
+	  LOG_D(MAC,"Frame %d: Subframe %d : Adding common DCI for S_RNTI\n", frameP,subframeP);
 
 	  dl_config_pdu                                                                  = &dl_req->dl_config_pdu_list[dl_req->number_pdu]; 
 	  memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
@@ -732,6 +732,7 @@ schedule_SI(
 	  dl_config_pdu->pdu_size                                                        = (uint8_t)(sizeof(nfapi_dl_config_dlsch_pdu));
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
 
+	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.length                                 = bcch_sdu_length; // DJP - is the BCCH size the thing to put here? to match TX_REQ???
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = eNB->pdu_index[CC_id];
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = 0xFFFF;
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type               = 2;   // format 1A/1B/1D
@@ -779,8 +780,8 @@ schedule_SI(
           eNB->TX_req[CC_id].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
           eNB->TX_req[CC_id].header.message_id = NFAPI_TX_REQUEST;
 	  
-	  if (frameP%100==0) LOG_E(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
-              __FUNCTION__, eNB->TX_req[CC_id].sfn_sf, eNB->TX_req[CC_id].tx_request_body.number_of_pdus,
+	  if (frameP%100==0) LOG_D(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
+              __FUNCTION__, NFAPI_SFNSF2DEC(eNB->TX_req[CC_id].sfn_sf), eNB->TX_req[CC_id].tx_request_body.number_of_pdus,
               TX_req->pdu_length, TX_req->pdu_index, TX_req->num_segments, TX_req->segments[0].segment_length);
 	}
 	else {

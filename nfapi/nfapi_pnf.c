@@ -1032,11 +1032,7 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
         eNB->dlsch[i][0]->subframe_tx[sf] = 0;
     }
 
-    if (
-        0 
-        //&& NFAPI_SFNSF2DEC(req->sfn_sf) % 500 == 0
-       )
-      NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn_sf:%u first_carrier_offset:%d pdus:%u RC.ru:%p RC.eNB:%p RC.eNB[0][0]:%p RC.eNB[0][0]->pbch_pdu:%p\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), fp->first_carrier_offset, req->tx_request_body.number_of_pdus, RC.ru, RC.eNB, RC.eNB[0][0], RC.eNB[0][0]->pbch_pdu);
+    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn_sf:%u pdus:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), req->tx_request_body.number_of_pdus);
 
     for(int i = 0; i < req->tx_request_body.number_of_pdus; ++i)
     {
@@ -1044,6 +1040,8 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
 
       for(int j=0; j < req->tx_request_body.tx_pdu_list[i].num_segments; ++j)
       {
+        NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn_sf:%u pdu[%d] segment:%u segment_length:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), i, j, req->tx_request_body.tx_pdu_list[i].segments[j].segment_length);
+
         // DJP - hack - assume tx_req segment of length 3 = bch
         if (req->tx_request_body.tx_pdu_list[i].segments[0].segment_length == 3)
         {
@@ -1088,7 +1086,7 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
 
     generate_dci_top(
         eNB->pdcch_vars[sf&1].num_pdcch_symbols,
-        2, // DJP - not dci - pdus!!!  eNB->pdcch_vars[sf&1].num_dci,
+        eNB->pdcch_vars[sf&1].num_dci,
         &eNB->pdcch_vars[sf&1].dci_alloc[0],
         0,
         AMP,

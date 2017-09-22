@@ -49,7 +49,7 @@ void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
   LTE_eNB_PDCCH *pdcch_vars       = &eNB->pdcch_vars[idx];
   nfapi_dl_config_dci_dl_pdu *pdu = &dl_config_pdu->dci_dl_pdu;
 
-  LOG_E(PHY,"Frame %d, Subframe %d: DCI processing\n",proc->frame_tx,proc->subframe_tx);
+  LOG_D(PHY,"Frame %d, Subframe %d: DCI processing\n",proc->frame_tx,proc->subframe_tx);
 
   // copy dci configuration into eNB structure
   fill_dci_and_dlsch(eNB,proc,&pdcch_vars->dci_alloc[pdcch_vars->num_dci],pdu);

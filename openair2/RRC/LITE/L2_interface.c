@@ -81,7 +81,6 @@ mac_rrc_data_req(
   uint8_t sfn                     = (uint8_t)((frameP>>2)&0xff);
 
 
-  
 #ifdef DEBUG_RRC
   int i;
   LOG_I(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_id);
@@ -148,6 +147,7 @@ mac_rrc_data_req(
         return (RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB1);
       } // All RFN mod 8 transmit SIB2-3 in SF 5
       else if ((frameP%8) == 1) {
+      LOG_D(RRC, "%s() frameP%8==1 (frameP:%d) copy into buffer SIB23 size:%d\n", __FUNCTION__, frameP, RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB23);
         memcpy(&buffer_pP[0],
                RC.rrc[Mod_idP]->carrier[CC_id].SIB23,
                RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB23);
