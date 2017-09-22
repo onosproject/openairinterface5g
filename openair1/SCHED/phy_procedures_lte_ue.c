@@ -1339,7 +1339,7 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
     // ask L2 for RACH transport
     if ((mode != rx_calib_ue) && (mode != rx_calib_ue_med) && (mode != rx_calib_ue_byp) && (mode != no_L2_connect) ) {
       LOG_D(PHY,"Getting PRACH resources\n");
-      // Panos: Substitute the call to ue_get_rach with ue->prach_resources[eNB_id] = ue_rach_config, assuming that
+      // Panos: Substitute the call to ue_get_rach with ue->prach_resources[eNB_id] = UE_MAC_interface::ue_rach_config, assuming that
       // ue_get_rach() will have been called from the MAC layer.
       ue->prach_resources[eNB_id] = ue_get_rach(ue->Mod_id,
 						ue->CC_id,

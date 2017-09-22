@@ -163,6 +163,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 #endif
   }
   // UE-specific RX processing for subframe n
+  // Panos: Substitute with call to get_nfapi_indications() from the socket.
   phy_procedures_eNB_uespec_RX(eNB, proc, no_relay );
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
@@ -183,6 +184,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   
   if (oai_exit) return(-1);
   
+  // Panos: Substitute with call to send_nfapi_sched_response() to the UE through the socket.
   phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
   
   if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) return(-1);

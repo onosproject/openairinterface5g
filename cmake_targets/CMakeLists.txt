@@ -1123,6 +1123,7 @@ set(L2_SRC
   ${RRC_DIR}/L2_interface.c
   )
 set (MAC_SRC
+  ${PHY_INTERFACE_DIR}/phy_stub_UE.c
   ${PHY_INTERFACE_DIR}/IF_Module.c
   ${MAC_DIR}/main.c
   ${MAC_DIR}/ue_procedures.c

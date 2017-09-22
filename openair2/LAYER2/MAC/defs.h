@@ -235,6 +235,33 @@ typedef struct {
   uint8_t R:2;
 } __attribute__((__packed__))SCH_SUBHEADER_FIXED;
 
+
+// Panos:
+/*!\brief  MAC subheader long  with 24bit DST field */
+typedef struct {
+	uint8_t   V:4; //Version number: Possible values "0001", "0010", "0011" based on TS36.321 section 6.2.3.
+	uint32_t  SRC:24; //Prose UE source ID. Size 24 bits.
+	uint32_t  DST:24; //Prose UE destination ID. Size 16 or 24 bits.
+	uint8_t   LCID:5;
+	uint8_t   L:7;	// Length field indicating the size of the corresponding SDU in byes. Not sure about the size of this field (7).
+	uint8_t	  F:1;
+	uint8_t	  E:1;
+	uint8_t	  R:1;
+}__attribute__((__packed__))SLSCH_SUBHEADER_24_Bit_DST;
+
+/*!\brief  MAC subheader long  with 16bit DST field */
+typedef struct {
+	uint8_t   V:4; //Version number: Possible values "0001", "0010", "0011" based on TS36.321 section 6.2.3.
+	uint32_t  SRC:24; //Prose UE source ID. Size 24 bits.
+	uint32_t  DST:16; //Prose UE destination ID. Size 16 or 24 bits.
+	uint8_t   LCID:5;
+	uint8_t   L:7;	// Length field indicating the size of the corresponding SDU in byes. Not sure about the size of this field (7).
+	uint8_t	  F:1;
+	uint8_t	  E:1;
+	uint8_t	  R:1;
+}__attribute__((__packed__))SLSCH_SUBHEADER_16_Bit_DST;
+
+
 /*!\brief  mac control element: short buffer status report for a specific logical channel group ID*/
 typedef struct {
   uint8_t Buffer_size:6;  // octet 1 LSB
@@ -249,6 +276,30 @@ typedef struct {
   uint8_t Buffer_size1:6;
   uint8_t Buffer_size0:6;
 } __attribute__((__packed__))BSR_LONG;
+
+// Panos:
+/*!\brief  mac control element: sidelink buffer status report */
+typedef struct {
+	uint8_t DST_1:4;
+	uint8_t LCGID_1: 2;
+	uint8_t Buffer_size_1:6;
+	uint8_t DST_2:4;
+	uint8_t LCGID_2: 2;
+	uint8_t Buffer_size_2:6;
+}__attribute__((__packed__))SL_BSR;
+
+/*!\brief  mac control element: truncated sidelink buffer status report */
+typedef struct {
+	uint8_t DST:4;
+	uint8_t LCGID: 2;
+	uint8_t Buffer_size:6;
+	uint8_t R1:1;
+	uint8_t R2:1;
+	uint8_t R3:1;
+	uint8_t R4:1;
+}__attribute__((__packed__))SL_BSR_Truncated;
+
+
 
 #define BSR_LONG_SIZE  (sizeof(BSR_LONG))
 /*!\brief  mac control element: timing advance  */
@@ -1162,6 +1213,17 @@ typedef struct {
   MeasGapConfig_t  *measGapConfig;
   /// Pointers to LogicalChannelConfig indexed by LogicalChannelIdentity. Note NULL means LCHAN is inactive.
   LogicalChannelConfig_t *logicalChannelConfig[MAX_NUM_LCID];
+
+  /// Panos: Pointer to IF_Module_UE instance of the UE
+  IF_Module_UE_t *if_inst_ue;
+  /// Panos: UE_MAC interface: Config request structure.
+  UE_PHY_Config_t UE_config;
+  /// Panos: UE_MAC interface: UL Config Request Structure
+  UE_MAC_ul_config_request_t UL_req_ue[MAX_NUM_CCs];
+  /// Panos: UE_MAC interface: UL Transmission request structure.
+  UE_MAC_tx_request_t UL_TX_req[MAX_NUM_CCs];
+
+
   /// Scheduling Information
   UE_SCHEDULING_INFO scheduling_info;
   /// Outgoing CCCH pdu for PHY

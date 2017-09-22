@@ -1282,6 +1282,12 @@ typedef struct {
   /// N0 (used for abstraction)
   double N0;
 
+  /// Panos: Pointer to IF_Module_UE instance of the UE.
+  IF_Module_UE_t *if_inst_ue;
+
+  /// Panos: Pointer to DL.indication structure of the UE.
+  UE_DL_IND_t UE_DL_INFO;
+
   /// PDSCH Varaibles
   PDSCH_CONFIG_DEDICATED pdsch_config_dedicated[NUMBER_OF_CONNECTED_eNB_MAX];
 

@@ -6,6 +6,8 @@
 #include "LAYER2/MAC/proto.h"
 #include "common/ran_context.h"
 
+IF_Module_UE_t *if_inst_ue;
+
 
 
 void handle_bch(UE_DL_IND_t *UE_DL_INFO)
@@ -51,6 +53,8 @@ void UE_DL_indication(UE_DL_IND_t *UE_DL_INFO)
     /*Call handle functions to forward PDUs or control indications to the upper layers.
 	handle_bch(UE_DL_INFO);
 	handle_dlsch (UE_DL_INFO);
+
+	Trigger ue_scheduler() ?
 	*/
 }
 
@@ -71,7 +75,24 @@ void UE_Tx_indication(UE_Tx_IND_t *UE_Tx_INFO)
 	}
 }
 
+/// Panos: Not sure about the implementation of this function.
+IF_Module_UE_t *IF_Module_ue_init(int Mod_id){
 
+  AssertFatal(Mod_id<MAX_MODULES,"Asking for Module %d > %d\n",Mod_id,MAX_IF_MODULES);
 
+  if (if_inst_ue[Mod_id]==NULL) {
+    if_inst_ue[Mod_id] = (IF_Module_t*)malloc(sizeof(IF_Module_t));
+    memset((void*)if_inst_ue[Mod_id],0,sizeof(IF_Module_t));
+
+    //if_inst_ue[Mod_id]->CC_mask=0;
+    if_inst_ue[Mod_id]->UE_DL_indication = UE_DL_indication;
+    if_inst_ue[Mod_id]->UE_Tx_indication = UE_Tx_indication;
+
+    // Panos: Have to check about this.
+    /*AssertFatal(pthread_mutex_init(&if_inst_ue[Mod_id]->if_mutex,NULL)==0,
+		"allocation of if_inst[%d]->if_mutex fails\n",Mod_id);*/
+  }
+  return if_inst[Mod_id];
+}
 
 

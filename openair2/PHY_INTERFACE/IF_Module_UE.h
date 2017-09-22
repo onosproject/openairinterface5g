@@ -126,6 +126,8 @@ typedef struct{
   frame_t frame;
   /// subframe
   sub_frame_t subframe;
+  /// UE_Mode to be filled only after
+  UE_MODE_t UE_mode[NUMBER_OF_CONNECTED_eNB_MAX];
   /// MAC IFace UL Config Request
   UE_MAC_ul_config_request_t *UE_UL_req;
   /// MAC IFace SL Transmission Config Request
@@ -149,11 +151,11 @@ typedef struct IF_Module_UE_s{
 //define the function pointer
   void (*UE_DL_indication)(UE_DL_IND_t *UE_DL_INFO);
   void (*UE_SL_indication)(UE_SL_IND_t *UE_SL_INFO);
-  void (*UE_Tx1_indication)(UE_Tx_IND_t *UE_Tx_INFO);
+  void (*UE_Tx_indication)(UE_Tx_IND_t *UE_Tx_INFO);
   void (*UE_sched_response)(UE_Sched_Rsp_t *UE_Sched_INFO);
   void (*UE_config_req)(UE_PHY_Config_t* UE_config_INFO);
 //P: Perhaps an additional separate function for dedicated PHY configuration is needed.
-  uint32_t CC_mask;
+  //uint32_t CC_mask_ue;
   uint16_t current_frame;
   uint8_t current_subframe;
   pthread_mutex_t if_mutex;

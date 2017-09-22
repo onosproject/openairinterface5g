@@ -569,6 +569,10 @@ static void *UE_thread_rxn_txnp4(void *arg) {
     PHY_VARS_UE    *UE   = rtd->UE;
     int ret;
 
+    // Panos: Call (Sched_Rsp_t) get_nfapi_sched_response(UE->Mod_ID) to get all
+    //sched_response config messages which concern the specific UE. Inside this
+    //function we should somehow make the translation of rnti to Mod_ID.
+
     proc->instance_cnt_rxtx=-1;
     proc->subframe_rx=proc->sub_frame_start;
 
@@ -624,6 +628,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                        (sf_type==SF_UL? "SF_UL" :
                         (sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
             }
+            // Panos: Substitute with call to handle_nfapi_UE_Rx(Sched_Resp).
             phy_procedures_UE_RX( UE, proc, 0, 0, UE->mode, no_relay, NULL );
         }
 
@@ -666,8 +671,11 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 
         if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_UL) ||
 	    (UE->frame_parms.frame_type == FDD) )
-            if (UE->mode != loop_through_memory)
-                phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
+            if (UE->mode != loop_through_memory){
+            	// Panos: Substitute with call to generate_nfapi_UL_indications and then send_nfapi_UL_indications()
+            	phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
+            }
+
 
 
 

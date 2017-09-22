@@ -281,7 +281,7 @@ typedef struct {
 typedef struct {
 	int8_t referenceSignalPower;
 	uint8_t p_b;
-}UE_PHY_pdcch_config_t;
+}UE_PHY_pdsch_config_t;
 
 
 typedef struct {
@@ -335,8 +335,8 @@ typedef struct {
 	UE_PHY_tdd_frame_structure_t ue_tdd_frame_structure_config;
 	UE_PHY_prach_config_t ue_prach_config;
 	UE_PHY_pucch_config_t ue_pucch_config;
-	UE_PHY_pdcch_config_t ue_pdcch_config;
-	UE_PHY_pusch_config_t ue_pdsch_config;
+	UE_PHY_pdsch_config_t ue_pdsch_config;
+	UE_PHY_pusch_config_t ue_pusch_config;
 	UE_PHY_SRS_config_t   ue_srs_config;
 	UE_PHY_UL_power_control_config_t ue_ul_pow_cntl_config;
 	UE_PHY_HARQ_Msg3_config_t ue_harq_msg3_config;
