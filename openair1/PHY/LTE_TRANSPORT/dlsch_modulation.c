@@ -612,7 +612,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
   uint8_t precoder_index0;
 
   int use2ndpilots = (frame_parms->mode1_flag==1)?1:0;
-
+int cnt;
   uint32_t tti_offset; //,aa;
   uint8_t re;
   uint8_t qam64_table_offset_re = 0;
@@ -1759,6 +1759,16 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
 	      
 	      /* pointer to the frequency domain Tx signal */
 	      txdataF[p][tti_offset] = qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3] ;
+        if (p==7){
+          if (lprime==0){
+             cnt++;
+          }
+          printf("information : p %d, lprime %d, w %d, mprime2 %d, qpsk_p[pos] %d , qpsk_p[re] %d, qpsk_p[im] %d\n", p, lprime, w, mprime2, (phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3, ((int16_t *)&qpsk[phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb)&3])[0], ((int16_t *)&qpsk[phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb)&3])[1]);
+          printf("txdataF[re] %d, p %d, tti_offset %d\n", ((int16_t *)&txdataF[p][tti_offset])[0], p, tti_offset);
+          printf("txdataF[im] %d, p %d, tti_offset %d\n", ((int16_t *)&txdataF[p][tti_offset])[1], p, tti_offset);
+          printf("symbol_offset %d, re_off %d, re %d\n", symbol_offset, re_off, re);
+          printf("nscid %d, Ns %d, ind_dword %d\n", nscid, Ns, ind_dword);
+        }
 	    }
           }
 	  mprime2++ ;
@@ -1769,6 +1779,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
       }
     }
   }
+  printf("cnt %d\n", cnt);
   return(0);
 }
 
