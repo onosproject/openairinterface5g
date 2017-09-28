@@ -522,7 +522,7 @@ extern "C" {
 	case 7680000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
 		//openair0_cfg[0].tx_sample_advance     = 80;
-		openair0_cfg[0].tx_bw                 = 5e6;
+		openair0_cfg[0].tx_bw                 = 30e6;
 		openair0_cfg[0].rx_bw                 = 5e6;
 		break;
 	case 1920000:
@@ -554,6 +554,19 @@ extern "C" {
 	    // display Iris settings
 	    printf("Actual master clock: %fMHz...\n", (s->iris[r]->getMasterClockRate()/1e6));
 
+	    /* Setting TX/RX BW after streamers are created due to iris calibration issue */
+	    for(i = 0; i < s->tx_num_channels; i++) {
+		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_TX) ) {
+		    s->iris[r]->setBandwidth(SOAPY_SDR_TX, i, openair0_cfg[0].tx_bw);
+		    printf("Setting tx bandwidth on channel %lu/%lu: BW %f (readback %f)\n",i,s->iris[r]->getNumChannels(SOAPY_SDR_TX),openair0_cfg[0].tx_bw/1e6,s->iris[r]->getBandwidth(SOAPY_SDR_TX, i)/1e6);
+		}
+	    }
+	    for(i = 0; i < s->rx_num_channels; i++) {
+		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_RX)) {
+		    s->iris[r]->setBandwidth(SOAPY_SDR_RX, i, openair0_cfg[0].rx_bw);
+		    printf("Setting rx bandwidth on channel %lu/%lu : BW %f (readback %f)\n",i,s->iris[r]->getNumChannels(SOAPY_SDR_RX),openair0_cfg[0].rx_bw/1e6,s->iris[r]->getBandwidth(SOAPY_SDR_RX, i)/1e6);
+		}
+	    }
 
 	    for(i=0; i < s->iris[r]->getNumChannels(SOAPY_SDR_RX); i++) {
 		if (i < s->rx_num_channels) {
@@ -573,20 +586,6 @@ extern "C" {
 		    s->iris[r]->setSampleRate(SOAPY_SDR_TX, i, openair0_cfg[0].sample_rate/SAMPLE_RATE_DOWN);
 		    s->iris[r]->setFrequency(SOAPY_SDR_TX, i, "RF", openair0_cfg[0].tx_freq[i]);
 		    s->iris[r]->setGain(SOAPY_SDR_TX, i, openair0_cfg[0].tx_gain[i]);
-		}
-	    }
-
-	    /* Setting TX/RX BW after streamers are created due to iris calibration issue */
-	    for(i = 0; i < s->tx_num_channels; i++) {
-		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_TX) ) {
-		    s->iris[r]->setBandwidth(SOAPY_SDR_TX, i, openair0_cfg[0].tx_bw);
-		    printf("Setting tx bandwidth on channel %lu/%lu: BW %f (readback %f)\n",i,s->iris[r]->getNumChannels(SOAPY_SDR_TX),openair0_cfg[0].tx_bw/1e6,s->iris[r]->getBandwidth(SOAPY_SDR_TX, i)/1e6);
-		}
-	    }
-	    for(i = 0; i < s->rx_num_channels; i++) {
-		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_RX)) {
-		    s->iris[r]->setBandwidth(SOAPY_SDR_RX, i, openair0_cfg[0].rx_bw);
-		    printf("Setting rx bandwidth on channel %lu/%lu : BW %f (readback %f)\n",i,s->iris[r]->getNumChannels(SOAPY_SDR_RX),openair0_cfg[0].rx_bw/1e6,s->iris[r]->getBandwidth(SOAPY_SDR_RX, i)/1e6);
 		}
 	    }
 
@@ -612,6 +611,9 @@ extern "C" {
 		    printf("Actual RX sample rate: %fMSps...\n", (s->iris[r]->getSampleRate(SOAPY_SDR_RX, i)/1e6) );
 		    printf("Actual RX frequency: %fGHz...\n", (s->iris[r]->getFrequency(SOAPY_SDR_RX, i)/1e9) );
 		    printf("Actual RX gain: %f...\n", (s->iris[r]->getGain(SOAPY_SDR_RX, i)) );
+		    printf("Actual RX LNA gain: %f...\n", (s->iris[r]->getGain(SOAPY_SDR_RX, i, "LNA")) );
+		    printf("Actual RX PGA gain: %f...\n", (s->iris[r]->getGain(SOAPY_SDR_RX, i, "PGA")) );
+		    printf("Actual RX TIA gain: %f...\n", (s->iris[r]->getGain(SOAPY_SDR_RX, i, "TIA")) );
 		    printf("Actual RX bandwidth: %fM...\n", (s->iris[r]->getBandwidth(SOAPY_SDR_RX, i)/1e6) );
 		    printf("Actual RX antenna: %s...\n", (s->iris[r]->getAntenna(SOAPY_SDR_RX, i).c_str()) );
 		}
@@ -623,6 +625,7 @@ extern "C" {
 		    printf("Actual TX sample rate: %fMSps...\n", (s->iris[r]->getSampleRate(SOAPY_SDR_TX, i)/1e6) );
 		    printf("Actual TX frequency: %fGHz...\n", (s->iris[r]->getFrequency(SOAPY_SDR_TX, i)/1e9) );
 		    printf("Actual TX gain: %f...\n", (s->iris[r]->getGain(SOAPY_SDR_TX, i)) );
+		    printf("Actual TX PAD gain: %f...\n", (s->iris[r]->getGain(SOAPY_SDR_TX, i, "PAD")) );
 		    printf("Actual TX bandwidth: %fM...\n", (s->iris[r]->getBandwidth(SOAPY_SDR_TX, i)/1e6) );
 		    printf("Actual TX antenna: %s...\n", (s->iris[r]->getAntenna(SOAPY_SDR_TX, i).c_str()) );
 		}
