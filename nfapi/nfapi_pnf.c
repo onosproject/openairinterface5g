@@ -882,7 +882,7 @@ int pnf_phy_hi_dci0_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
   return 0;
 }
 
-nfapi_dl_config_request_pdu_t* dlsch_pdu=0;
+nfapi_dl_config_request_pdu_t* dlsch_pdu[1023][10];
 
 int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
 {
@@ -919,7 +919,7 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
     return -3;
   }
 
-  //int sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
+  int sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
   int sf = NFAPI_SFNSF2SF(req->sfn_sf);
 
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
@@ -957,9 +957,7 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
       NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DLSCH:\n", __FUNCTION__);
 
 
-      dlsch_pdu = &dl_config_pdu_list[i];
-
-      //handle_nfapi_dlsch_pdu(eNB,proc,dl_config_pdu, dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks-1, TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
+      dlsch_pdu[sfn][sf] = &dl_config_pdu_list[i];
     }
     else
     {
@@ -1069,9 +1067,9 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
           handle_nfapi_dlsch_pdu(
               eNB,
               &eNB->proc.proc_rxtx[0],
-              dlsch_pdu, 
-              dlsch_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks-1, 
-              req->tx_request_body.tx_pdu_list[dlsch_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data
+              dlsch_pdu[sfn][sf], 
+              dlsch_pdu[sfn][sf]->dlsch_pdu.dlsch_pdu_rel8.transport_blocks-1, 
+              req->tx_request_body.tx_pdu_list[dlsch_pdu[sfn][sf]->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data
               );
         }
       }
