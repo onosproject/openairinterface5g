@@ -45,6 +45,7 @@
 //#include "rrc_eNB_UE_context.h"
 //#include "proto_NB_IoT.h"
 #include "RRC/LITE/defs_NB_IoT.h"
+#include "RRC/LITE/vars_NB_IoT.h"
 
 #ifdef LOCALIZATION
 #include <sys/time.h>

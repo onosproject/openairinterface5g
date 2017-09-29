@@ -1153,7 +1153,6 @@ set(L2_SRC
   ${RLC_DIR}/rlc.c
   ${RLC_DIR}/rlc_rrc.c
   ${RLC_DIR}/rlc_mpls.c
-  ${RRC_DIR}/vars_NB_IoT.c
   ${RRC_DIR}/rrc_UE.c
   ${RRC_DIR}/rrc_eNB.c
   ${RRC_DIR}/rrc_eNB_NB_IoT.c
