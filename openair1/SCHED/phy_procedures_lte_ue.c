@@ -346,7 +346,7 @@ void process_timing_advance_rar(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint16_t ti
 
 
 #ifdef DEBUG_PHY_PROC
-  LOG_I(PHY,"[UE %d] AbsoluteSubFrame %d.%d, received (rar) timing_advance %d, HW timing advance %d\n",ue->Mod_id,proc->frame_rx, proc->subframe_rx, ue->timing_advance);
+  LOG_I(PHY,"[UE %d] AbsoluteSubFrame %d.%d, received (rar) timing_advance %d, HW timing advance %d\n",ue->Mod_id,proc->frame_rx, proc->subframe_rx, timing_advance, ue->timing_advance);
 #endif
 
 }
