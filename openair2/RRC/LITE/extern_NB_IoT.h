@@ -38,6 +38,8 @@
 #include "LAYER2/RLC/rlc.h"
 #include "LogicalChannelConfig-NB-r13.h"
 
+extern IF_Module_t *if_inst;
+
 //MP: NOTE:XXX some of the parameters defined in vars_nb_iot are called by the extern.h file so not replicated here
 
 extern UE_RRC_INST_NB_IoT 					*UE_rrc_inst_NB_IoT;

@@ -1045,7 +1045,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
           ulsch_harq->O_ACK,
           G,
           subframe);
-    mac_xface_NB_IoT->macphy_exit("ulsch_decoding.c: FATAL sumKr is 0!");
+    //mac_xface_NB_IoT->macphy_exit("ulsch_decoding.c: FATAL sumKr is 0!");
     return(-1);
   }
   // Compute Q_ri

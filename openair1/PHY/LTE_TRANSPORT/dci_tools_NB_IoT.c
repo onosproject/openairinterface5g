@@ -425,7 +425,7 @@ uint8_t subframe2harq_pid_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t fra
     case 2:
       if ((subframe!=2) && (subframe!=7)) {
         LOG_E(PHY,"subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",subframe,frame_parms->tdd_config);
-        mac_xface_NB_IoT->macphy_exit("subframe2_harq_pid_NB_IoT, Illegal subframe");
+        //mac_xface_NB_IoT->macphy_exit("subframe2_harq_pid_NB_IoT, Illegal subframe");
         ret = (255);
       }
 
@@ -468,7 +468,7 @@ uint8_t subframe2harq_pid_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t fra
 
   if (ret == 255) {
     LOG_E(PHY, "invalid harq_pid(%d) at SFN/SF = %d/%d\n", ret, frame, subframe);
-    mac_xface_NB_IoT->macphy_exit("invalid harq_pid");
+    //mac_xface_NB_IoT->macphy_exit("invalid harq_pid");
   }
   return ret;
 }

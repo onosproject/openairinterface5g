@@ -29,35 +29,7 @@
  *
  */
 
-#include "assertions.h"
-//#include "PHY/defs.h"
 
-/* (commented to remove warnings since this file is not used for the moment)
-#include "PHY/defs_NB_IoT.h"
-#include "PHY/extern.h"
-
-#include "SCHED/defs.h"
-#include "SCHED/extern.h"
-
-#include "LAYER2/MAC/defs.h"
-#include "LAYER2/MAC/extern.h"
-#include "LAYER2/MAC/proto.h"
-
-#include "LAYER2/MAC/defs_nb_iot.h"
-#include "LAYER2/MAC/proto_NB_IoT.h"
-#include "PHY_INTERFACE/IF_Module_NB_IoT.h"
-
-#include "RRC/LITE/extern.h"
-#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
-
-
-//#include "LAYER2/MAC/pre_processor.c"
-#include "pdcp.h"
-
-#if defined(ENABLE_ITTI)
-# include "intertask_interface.h"
-#endif
-*/
 
 
 

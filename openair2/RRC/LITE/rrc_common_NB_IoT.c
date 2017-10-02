@@ -251,18 +251,14 @@ void openair_rrc_top_init_eNB_NB_IoT(void)//MP: XXX Raymond put this directly th
 
 //not consider UE part
 
-  if (NB_eNB_INST > 0) {
-    eNB_rrc_inst_NB_IoT = (eNB_RRC_INST_NB_IoT*) malloc16(NB_eNB_INST*sizeof(eNB_RRC_INST_NB_IoT));
-    memset (eNB_rrc_inst_NB_IoT, 0, NB_eNB_INST * sizeof(eNB_RRC_INST_NB_IoT));
-    LOG_D(RRC, "ALLOCATE %d Bytes for eNB_RRC_INST NB-IoT @ %p\n", (unsigned int)(NB_eNB_INST*sizeof(eNB_RRC_INST_NB_IoT)), eNB_rrc_inst_NB_IoT);
+    eNB_rrc_inst_NB_IoT = (eNB_RRC_INST_NB_IoT*) malloc16(sizeof(eNB_RRC_INST_NB_IoT));
+    memset (eNB_rrc_inst_NB_IoT, 0, sizeof(eNB_RRC_INST_NB_IoT));
+    LOG_D(RRC, "ALLOCATE %d Bytes for eNB_RRC_INST NB-IoT @ %p\n", (unsigned int)(sizeof(eNB_RRC_INST_NB_IoT)), eNB_rrc_inst_NB_IoT);
 
 //no CBA, no LOcalization, no MBMS flag
 
     LOG_D(RRC,
-          "ALLOCATE %d Bytes for eNB_RRC_INST_NB @ %p\n", (unsigned int)(NB_eNB_INST*sizeof(eNB_RRC_INST_NB_IoT)), eNB_rrc_inst_NB_IoT);
-  } else {
-    eNB_rrc_inst_NB_IoT = NULL;
-  }
+          "ALLOCATE %d Bytes for eNB_RRC_INST_NB @ %p\n", (unsigned int)(sizeof(eNB_RRC_INST_NB_IoT)), eNB_rrc_inst_NB_IoT);
 
 
 }

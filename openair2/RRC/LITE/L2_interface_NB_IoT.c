@@ -54,14 +54,6 @@
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "openair1/SCHED/IF_Module_L1_primitives_NB_IoT.h"
 
-/*
-#ifdef PHY_EMUL
-#include "SIMULATION/simulation_defs.h"
-extern EMULATION_VARS *Emul_vars;
-extern eNB_MAC_INST *eNB_mac_inst;
-extern UE_MAC_INST *UE_mac_inst;
-#endif
-*/
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
 #endif
@@ -88,7 +80,7 @@ extern unsigned int           pdcp_eNB_UE_instance_to_rnti_index;
 extern rnti_t                 pdcp_eNB_UE_instance_to_rnti[NUMBER_OF_UE_MAX_NB_IoT];
 extern list_t                 pdcp_sdu_list;
 //extern struct mac_data_req rlc_am_mac_data_request (const protocol_ctxt_t* const ctxtP,void * const rlc_pP);
-//extern eNB_MAC_INST_NB_IoT *eNB;
+
 extern void rlc_tm_init ( const protocol_ctxt_t* const  ctxt_pP, rlc_tm_entity_t * const rlcP);
 extern void rlc_tm_set_debug_infos(
         const protocol_ctxt_t* const  ctxt_pP,
@@ -583,8 +575,8 @@ int rrc_mac_config_req_eNB_NB_IoT(
 
 
   int UE_id = -1;
-  //UE_list_NB_IoT_t *UE_list= &eNB_mac_inst_NB_IoT->UE_list;
-  UE_id     = find_UE_id_NB_IoT(Mod_idP, rntiP);
+
+  //find ue_id here
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
 
@@ -604,8 +596,8 @@ int rrc_mac_config_req_eNB_NB_IoT(
    //if(eNB_mac_inst == NULL) l2_init_eNB(); //TODO MP: to be included in the MAC/main.c
    //mac_top_init_eNB(); //TODO MP:  to be included in the MAC/main.c
 
-
-    eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].mib_NB_IoT       = mib_NB_IoT;
+    // add common channels parameters
+    /*eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].mib_NB_IoT       = mib_NB_IoT;
     eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].physCellId       = physCellId;
     eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].p_eNB            = p_eNB;
     eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].p_rx_eNB		      = p_rx_eNB;
@@ -613,7 +605,7 @@ int rrc_mac_config_req_eNB_NB_IoT(
     eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].Ncp_UL           = Ncp_UL;
     eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].eutra_band       = eutra_band;
     eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].dl_CarrierFreq   = dl_CarrierFreq;
-
+    */
     LOG_I(MAC,
  	        "Configuring MIB for instance %d, CCid %d : (band %ld,Nid_cell %d,TX antenna port (p) %d,DL freq %u\n",
  	        Mod_idP,
@@ -665,9 +657,9 @@ int rrc_mac_config_req_eNB_NB_IoT(
       LOG_I(MAC,"[CONFIG]npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13= %ld\n", radioResourceConfigCommon->npusch_ConfigCommon_r13.ul_ReferenceSignalsNPUSCH_r13.groupAssignmentNPUSCH_r13);
 
 
-      eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].radioResourceConfigCommon  = radioResourceConfigCommon;
+      //eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].radioResourceConfigCommon  = radioResourceConfigCommon;
       if (ul_CarrierFreq>0) 
-        eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].ul_CarrierFreq   = ul_CarrierFreq;
+        //eNB_mac_inst_NB_IoT[Mod_idP].common_channels[CC_idP].ul_CarrierFreq   = ul_CarrierFreq;
 
       config_sib2_fapi_NB_IoT(physCellId,radioResourceConfigCommon);
 
@@ -712,9 +704,9 @@ int rrc_mac_config_req_eNB_NB_IoT(
   }
 
   //Now trigger the phy_config_xxx for configuring PHY through the PHY_config_req
-  AssertFatal(if_inst->PHY_config_req != NULL, "rrc_mac_config_req_eNB_NB_IoT: PHY_config_req pointer function is NULL\n");
+  /*AssertFatal(if_inst->PHY_config_req != NULL, "rrc_mac_config_req_eNB_NB_IoT: PHY_config_req pointer function is NULL\n");
   if(if_inst->PHY_config_req)
-  	if_inst->PHY_config_req(config_INFO);
+  	if_inst->PHY_config_req(config_INFO);*/
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
 
@@ -1100,7 +1092,6 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
   mib_flag_t		mib_flag
 )
 {
-  //MAC_xface_NB_IoT *mac_xface_NB_IoT;
 
   SRB_INFO_NB_IoT *Srb_info;
   uint8_t Sdu_size=0;
@@ -1112,7 +1103,7 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
 #endif
 
 
-    if((Srb_id & RAB_OFFSET) == BCCH_NB_IoT){
+    if((Srb_id & RAB_OFFSET) == BCCH0_NB_IoT){
 
 
      // Requesting for the MIB-NB
@@ -1121,7 +1112,7 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
     	  //XXX to be check when MIB-NB should be initialized
     	  if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT == 255) {
     	       LOG_E(RRC,"[eNB %d] MAC Request for MIB-NB and MIB-NB not initialized\n",Mod_idP);
-    	       mac_xface_NB_IoT->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for MIB-NB and MIB-NB not initialized");
+    	       // exit here 
     	   }
 
     	  memcpy(&buffer_pP[0],
@@ -1160,12 +1151,12 @@ int8_t mac_rrc_data_req_eNB_NB_IoT(
       //FIXME to be check when both are initialize and if make sense to have it
             if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT == 255) {
               LOG_E(RRC,"[eNB %d] MAC Request for SIB1-NB and SIB1-NB_IoT not initialized\n",Mod_idP);
-              mac_xface_NB_IoT->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB1-NB_IoT and SIB1-NB_IoT not initialized");
+              // exit here 
             }
 
             if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT == 255) {
                     LOG_E(RRC,"[eNB %d] MAC Request for SIB23-NB and SIB23-NB_IoT not initialized\n",Mod_idP);
-                    mac_xface_NB_IoT->macphy_exit("mac_rrc_data_req_eNB_NB_IoT:  MAC Request for SIB23-NB_IoT and SIB23-NB_IoT not initialized");
+              // exit here
             }
 
 
@@ -1337,26 +1328,9 @@ void mac_eNB_rrc_ul_failure_NB_IoT(
   else {
     LOG_W(RRC,"Frame %d, Subframe %d: UL failure: UE %x unknown \n",frameP,subframeP,rntiP);
   }
-  rrc_mac_remove_ue_NB_IoT(mod_idP,rntiP);
+  //rrc_mac_remove_ue_NB_IoT(mod_idP,rntiP);
 }
 
-
-
-//defined in eNB_scheduler_primitives.c
-void dump_ue_list_NB_IoT(UE_list_NB_IoT_t *listP, int ul_flag)
-{
-  int j;
-
-  if ( ul_flag == 0 ) {
-    for (j=listP->head; j>=0; j=listP->next[j]) {
-      LOG_T(MAC,"node %d => %d\n",j,listP->next[j]);
-    }
-  } else {
-    for (j=listP->head_ul; j>=0; j=listP->next_ul[j]) {
-      LOG_T(MAC,"node %d => %d\n",j,listP->next_ul[j]);
-    }
-  }
-}
 
 //------------------------------------------------------------------------------
 int8_t mac_rrc_data_req_NB_IoT(
@@ -1384,7 +1358,7 @@ int8_t mac_rrc_data_req_NB_IoT(
 
   if( enb_flagP == ENB_FLAG_YES) {
 
-    if((Srb_id & RAB_OFFSET) == BCCH_NB_IoT) {
+    if((Srb_id & RAB_OFFSET) == BCCH0_NB_IoT) {
       if(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SI.Active==0) {
         return 0;
       }
@@ -1392,7 +1366,7 @@ int8_t mac_rrc_data_req_NB_IoT(
       // All even frames transmit SIB in SF 5
       if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT == 255) {
         LOG_E(RRC,"[eNB %d] MAC Request for SIB1 and SIB1 not initialized\n",Mod_idP);
-        mac_xface_NB_IoT->macphy_exit("mac_rrc_data_req:  MAC Request for SIB1 and SIB1 not initialized");
+        //exit here
       }
 
       if ((frameP%2) == 0) {
@@ -1531,11 +1505,6 @@ int8_t mac_rrc_data_req_NB_IoT(
         return 0;  // this parameter is set in function init_mcch in rrc_eNB.c
       }
 
-      // this part not needed as it is done in init_mcch
-      /*     if (eNB_rrc_inst[Mod_id].sizeof_MCCH_MESSAGE[mbsfn_sync_area] == 255) {
-      LOG_E(RRC,"[eNB %d] MAC Request for MCCH MESSAGE and MCCH MESSAGE is not initialized\n",Mod_id);
-      mac_xface->macphy_exit("");
-      }*/
 
 
 #if defined(ENABLE_ITTI)
@@ -1628,6 +1597,7 @@ int8_t mac_rrc_data_req_NB_IoT(
 
   return(0);
 }
+
 
 
 //defined in L2_interface
@@ -2385,8 +2355,6 @@ boolean_t pdcp_data_req_NB_IoT(
   const pdcp_transmission_mode_t modeP
 )
 {
-  //MAC_xface_NB_IoT *mac_xface_NB_IoT; //test_xface
-
   pdcp_t            *pdcp_p          = NULL;
   uint8_t            i               = 0;
   uint8_t            pdcp_header_len = 0;
@@ -2425,8 +2393,7 @@ boolean_t pdcp_data_req_NB_IoT(
   if (sdu_buffer_sizeP > MAX_IP_PACKET_SIZE) {
     LOG_E(PDCP, "Requested SDU size (%d) is bigger than that can be handled by PDCP (%u)!\n",
           sdu_buffer_sizeP, MAX_IP_PACKET_SIZE);
-    // XXX What does following call do?
-    mac_xface_NB_IoT->macphy_exit("PDCP sdu buffer size > MAX_IP_PACKET_SIZE");
+    // exit here
   }
 
   //check for MBMS not needed for NB-IoT*/

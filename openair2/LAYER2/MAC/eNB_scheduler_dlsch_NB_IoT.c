@@ -19,88 +19,12 @@
  *      contact@openairinterface.org
  */
 
-/*! \file eNB_scheduler_dlsch.c
+/*! \file eNB_scheduler_dlsch_NB_IoT.c
  * \brief procedures related to eNB for the DLSCH transport channel
- * \author  Navid Nikaein and Raymond Knopp
- * \date 2010 - 2014
+ * \author  TaiwanTech
+ * \date 2017
  * \email: navid.nikaein@eurecom.fr
  * \version 1.0
  * @ingroup _mac
 
  */
-
-//#include "assertions.h"
-//#include "PHY/defs.h"
-//#include "PHY/extern_NB_IoT.h"
-
-//#include "SCHED/defs.h"
-//#include "SCHED/extern.h"
-
-//#include "SCHED/defs_NB_IoT.h"
-//#include "SCHED/extern_NB_IoT.h"
-
-//#include "LAYER2/MAC/defs.h"
-//#include "LAYER2/MAC/proto.h"
-//#include "LAYER2/MAC/extern.h"
-#include "UTIL/LOG/log.h"
-//#include "UTIL/LOG/vcd_signal_dumper.h"
-//#include "UTIL/OPT/opt.h"
-//#include "OCG.h"
-//#include "OCG_extern.h"
-//NB-IoT
-//#include "PHY/defs_NB_IoT.h"
-//#include "LAYER2/MAC/defs_NB_IoT.h"
-#include "LAYER2/MAC/proto_NB_IoT.h"
-#include "LAYER2/MAC/extern_NB_IoT.h"
-//#include "RRC/LITE/extern_NB_IoT.h"
-//#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
-
-//#include "LAYER2/MAC/pre_processor.c"
-//#include "pdcp.h"
-//#include "COMMON/platform_types.h"
-//#include "SIMULATION/TOOLS/defs.h" // for taus
-
-/*
-#if defined(ENABLE_ITTI)
-# include "intertask_interface.h"
-#endif
-
-#include "T.h"
-*/
-#define ENABLE_MAC_PAYLOAD_DEBUG
-//#define DEBUG_eNB_SCHEDULER 1
-
-
-uint8_t *get_dlsch_sdu_NB_IoT(
-  module_id_t module_idP,
-  int CC_id,
-  frame_t frameP,
-  rnti_t rntiP,
-  uint8_t TBindex
-)
-//------------------------------------------------------------------------------
-{
-
-  int UE_id;
-  eNB_MAC_INST_NB_IoT *eNB=&eNB_mac_inst_NB_IoT[module_idP];
-
-  /*for SIBs*/
-  if (rntiP==SI_RNTI) {
-    LOG_D(MAC,"[eNB %d] CC_id %d Frame %d Get DLSCH sdu for BCCH \n", module_idP, CC_id, frameP);
-
-    return((unsigned char *)&eNB->common_channels[CC_id].BCCH_pdu.payload[0]);
-  }
-
-  UE_id = find_UE_id_NB_IoT(module_idP,rntiP);
-
-  if (UE_id != -1) {
-    LOG_D(MAC,"[eNB %d] Frame %d:  CC_id %d Get DLSCH sdu for rnti %x => UE_id %d\n",module_idP,frameP,CC_id,rntiP,UE_id);
-    return((unsigned char *)&eNB->UE_list.DLSCH_pdu[CC_id][TBindex][UE_id].payload[0]);
-  } else {
-    LOG_E(MAC,"[eNB %d] Frame %d: CC_id %d UE with RNTI %x does not exist\n", module_idP,frameP,CC_id,rntiP);
-    return NULL;
-  }
-
-}
-
-
