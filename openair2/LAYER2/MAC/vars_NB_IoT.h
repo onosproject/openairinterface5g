@@ -45,7 +45,15 @@
 IF_Module_t *if_inst;
 
 //NB-IoT--------------------------------------
-eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
+eNB_MAC_INST_NB_IoT *mac_inst;
+
+BCCH_BCH_Message_NB_t               MIB;
+BCCH_DL_SCH_Message_NB_t            SIB;
+RRCConnectionSetup_NB_r13_IEs_t     DED_Config;
+schedule_result_t *schedule_result_list_UL;
+schedule_result_t *schedule_result_list_DL;
+available_resource_DL_t *available_resource_DL;
+available_resource_tones_UL_t *available_resource_UL;
 //should be utilized in: schedule_RA_NB_IoT,rx_sdu_NB_IoT, mac_top_init_NB_IoT,
 uint8_t Is_rrc_registered_NB_IoT;
 

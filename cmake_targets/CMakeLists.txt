@@ -1180,12 +1180,15 @@ set (MAC_SRC
   ${MAC_DIR}/eNB_scheduler_ulsch_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_mch.c
   ${MAC_DIR}/eNB_scheduler_bch.c
+  ${MAC_DIR}/eNB_scheduler_bch_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_primitives.c
   ${MAC_DIR}/eNB_scheduler_primitives_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_RA.c
   ${MAC_DIR}/eNB_scheduler_RA_NB_IoT.c
   ${MAC_DIR}/pre_processor.c
   ${MAC_DIR}/config.c
+  ${MAC_DIR}/config_NB_IoT.c
+  ${MAC_DIR}/schedule_tool_NB_IoT.c
  )
 
 if (FLEXRAN_AGENT_SB_IF)

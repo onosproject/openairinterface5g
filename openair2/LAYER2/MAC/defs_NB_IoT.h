@@ -40,22 +40,15 @@
 //#include "COMMON/openair_defs.h"
 #include "COMMON/platform_constants.h"
 #include "COMMON/mac_rrc_primitives.h"
+#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 //#include "PHY/defs.h"
 #include "PHY/defs_NB_IoT.h"
-#include "RadioResourceConfigCommonSIB-NB-r13.h"
-#include "RadioResourceConfigDedicated-NB-r13.h"
-#include "RACH-ConfigCommon-NB-r13.h"
-#include "MasterInformationBlock-NB.h"
+#include "BCCH-DL-SCH-Message-NB.h"
+#include "RRCConnectionSetup-NB.h"
 #include "BCCH-BCH-Message-NB.h"
+#include "SIB-Type-NB-r13.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
-//#include "defs.h"
-//#ifdef PHY_EMUL
-//#include "SIMULATION/PHY_EMULATION/impl_defs.h"
-//#endif
-/** @defgroup _mac  MAC
- * @ingroup _oai2
- * @{
- */
+#include "config_NB_IoT.h"
 
 #define sim_end_time 100000
 
@@ -267,7 +260,7 @@ typedef struct{
 typedef struct {
 
   /// DCI template and MAC connection parameters for UEs
-  UE_TEMPLATE_NB_IoT UE_template[NUMBER_OF_UE_MAX_NB_IoT];
+  UE_TEMPLATE_NB_IoT UE_template_NB_IoT[NUMBER_OF_UE_MAX_NB_IoT];
 
   /// NPDCCH Period and searching space info
   NPDCCH_config_dedicated_NB_IoT_t NPDCCH_config_dedicated;
@@ -487,7 +480,7 @@ typedef enum ce_level_e{
 
 
 /*! \brief eNB template for the Random access information */
-typedef struct {
+typedef struct RA_TEMPLATE_NB_IoT_s{
 
   boolean_t active;
   uint32_t msg3_retransmit_count;
@@ -497,7 +490,7 @@ typedef struct {
   ce_level_t ce_level;
   rnti_t ue_rnti;
   rnti_t ra_rnti;
-  struct RA_template_s *next, *prev;
+  struct RA_TEMPLATE_NB_IoT_s *next, *prev;
   boolean_t wait_msg4_ack;
   boolean_t wait_msg3_ack;
   uint8_t rar_buffer[7];
@@ -548,7 +541,7 @@ typedef struct {
   uint32_t schedule_subframe_DL;
   uint32_t schedule_subframe_UL;
 
-  //rrc_config_NB_IoT_t rrc_config;
+  rrc_config_NB_IoT_t rrc_config;
 
 } eNB_MAC_INST_NB_IoT;
 
@@ -561,6 +554,7 @@ nprach_parameters_NB_IoT_t nprach_list[3];
 /******MAC Global Variable********/
 available_resource_tones_UL_t *available_resource_UL;
 available_resource_DL_t *available_resource_DL;
+available_resource_DL_t *available_resource_DL_last;
 
 /*
  schedule_result_t *schedule_result_list_UL;
@@ -605,19 +599,6 @@ DLSF_INFO_t DLSF_information;
 
 //static uint32_t ack_nack_delay[4]={13,15,17,18};
 //static uint32_t R_dl_table[16]={1,2,4,8,16,32,64,128,192,256,384,512,768,1024,1536,2048};
-
-//Prach parameters
-//static int rachperiod[8]={40,80,160,240,320,640,1280,2560};
-//static int rachstart[8]={8,16,32,64,128,256,512,1024};
-//static int rachrepeat[8]={1,2,4,8,16,32,64,128};
-//static int rawindow[8]={2,3,4,5,6,7,8,10}; // unit PP
-//static int rmax[12]={1,2,4,8,16,32,64,128,256,512,1024,2048};
-//static double gvalue[8]={1.5,2,4,8,16,32,48,64};
-//static int candidate[4]={1,2,4,8};
-//static double pdcchoffset[4]={0,0.125,0.25,0.375};
-//static int dlrepeat[16]={1,2,4,8,16,32,64,128,192,256,384,512,768,1024,1536,2048};
-//static int rachscofst[7]={0,12,24,36,2,18,34};
-//static int rachnumsc[4]={12,24,36,48};
 
 // NB_IoT-IoT------------------
 

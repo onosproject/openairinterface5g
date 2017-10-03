@@ -49,7 +49,7 @@
 
 //NB-IoT
 extern IF_Module_t *if_inst;
-extern eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
+extern eNB_MAC_INST_NB_IoT *mac_inst;
 
 // //extern uint32_t EBSR_Level[63];
 // extern const uint32_t Extended_BSR_TABLE[BSR_TABLE_SIZE];
@@ -96,9 +96,17 @@ extern EMULATION_VARS *Emul_vars;
 
 //NB-IoT---------------------------------
 
-extern eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
+extern eNB_MAC_INST_NB_IoT *mac_inst;
 extern uint8_t Is_rrc_registered_NB_IoT;
+extern BCCH_BCH_Message_NB_t               MIB;
+extern BCCH_DL_SCH_Message_NB_t            SIB;
+extern RRCConnectionSetup_NB_r13_IEs_t     DED_Config;
 
+extern available_resource_DL_t *available_resource_DL;
+extern available_resource_tones_UL_t *available_resource_UL;
+extern available_resource_DL_t *available_resource_DL_last;
+extern schedule_result_t *schedule_result_list_UL;
+extern schedule_result_t *schedule_result_list_DL;
 
 
 #endif //DEF_H
