@@ -56,322 +56,93 @@
  * @ingroup _oai2
  * @{
  */
-#define SCH_PAYLOAD_SIZE_MAX_NB_IoT 4096
 
-#define CCCH_PAYLOAD_SIZE_MAX_NB_IoT 128
-/*!\brief Maximum number of random access process */
-#define RA_PROC_MAX_NB_IoT 4
-/*!\brief Maximum number of logical channl group IDs */
-#define MAX_NUM_LCGID_NB_IoT 4
-/*!\brief Maximum number of logical chanels */
-#define MAX_NUM_LCID_NB_IoT 11
+#define sim_end_time 100000
 
-/*!\brief  UE ULSCH scheduling states*/
-typedef enum {
-  S_UL_NONE_NB_IoT =0,
-  S_UL_WAITING_NB_IoT,
-  S_UL_SCHEDULED_NB_IoT,
-  S_UL_BUFFERED_NB_IoT,
-  S_UL_NUM_STATUS_NB_IoT
-} UE_ULSCH_STATUS_NB_IoT;
+//  MAC definition
+#define MAX_FRAME 0xfffff
+#define MAX(a, b) ((a>b)?a:b)
 
-/*!\brief  UE DLSCH scheduling states*/
-typedef enum {
-  S_DL_NONE_NB_IoT =0,
-  S_DL_WAITING_NB_IoT,
-  S_DL_SCHEDULED_NB_IoT,
-  S_DL_BUFFERED_NB_IoT,
-  S_DL_NUM_STATUS_NB_IoT
-} UE_DLSCH_STATUS_NB_IoT;
+//  RA-RNTI: 1+SFN_id>>2
+#define RA_RNTI_LOW   0x0001  //  SFN_id = 0
+#define RA_RNTI_HIGH  0x0100  //  SFN_id = 1023
+#define C_RNTI_LOW  0x0101
+#define C_RNTI_HIGH
 
-/*! \brief temporary struct for ULSCH sched */
-typedef struct {
-  rnti_t rnti;
-  uint16_t subframe;
-  uint16_t serving_num;
-  UE_ULSCH_STATUS_NB_IoT status;
-} eNB_ULSCH_INFO_NB_IoT;
-/*! \brief temp struct for DLSCH sched */
-typedef struct {
-  rnti_t rnti;
-  uint16_t weight;
-  uint16_t subframe;
-  uint16_t serving_num;
-  UE_DLSCH_STATUS_NB_IoT status;
-} eNB_DLSCH_INFO_NB_IoT;
-
-/*! \brief Downlink SCH PDU Structure */
-typedef struct {
-  int8_t payload[8][SCH_PAYLOAD_SIZE_MAX_NB_IoT];
-  uint16_t Pdu_size[8];
-} __attribute__ ((__packed__)) DLSCH_PDU_NB_IoT;
-/*! \brief eNB template for UE context information  */
-typedef struct {
-  /// C-RNTI of UE
-  rnti_t rnti;
-  /// NDI from last scheduling
-  uint8_t oldNDI[8];
-  /// NDI from last UL scheduling
-  uint8_t oldNDI_UL[8];
-  /// Flag to indicate UL has been scheduled at least once
-  boolean_t ul_active;
-  /// Flag to indicate UE has been configured (ACK from RRCConnectionSetup received)
-  boolean_t configured;
-  /// MCS from last scheduling
-  uint8_t mcs[8];
-  // PHY interface infoerror
-  /// DCI format for DLSCH
-  uint16_t DLSCH_dci_fmt;
-  /// Current Aggregation Level for DCI
-  uint8_t DCI_aggregation_min;
-  /// size of DLSCH size in bit
-  uint8_t DLSCH_dci_size_bits;
-  /// DCI buffer for DLSCH
-  /* rounded to 32 bits unit (actual value should be 8 due to the logic
-   * of the function generate_dci0) */
-  // need to modify
-  uint8_t DLSCH_DCI[8][(((MAX_DCI_SIZE_BITS_NB_IoT)+31)>>5)*4];
-  /// pre-assigned MCS by the ulsch preprocessorerror
-  uint8_t pre_assigned_mcs_ul;
-  /// assigned MCS by the ulsch scheduler
-  uint8_t assigned_mcs_ul;
-  /// DCI buffer for ULSCH
-  /* rounded to 32 bits unit (actual value should be 8 due to the logic
-   * of the function generate_dci0) */
-  // need to modify
-  uint8_t ULSCH_DCI[8][(((MAX_DCI_SIZE_BITS_NB_IoT)+31)>>5)*4];
-  // Logical channel info for link with RLC
-  /// Last received UE BSR info for each logical channel group id
-  uint8_t bsr_info[MAX_NUM_LCGID_NB_IoT];
-  /// phr information, received from DPR MAC control element
-  int8_t phr_info;
-  /// phr information, received from DPR MAC control element
-  int8_t phr_info_configured;
-  ///dl buffer info
-  uint32_t dl_buffer_info[MAX_NUM_LCID_NB_IoT];
-  /// total downlink buffer info
-  uint32_t dl_buffer_total;
-  /// total downlink pdus
-  uint32_t dl_pdus_total;
-  /// downlink pdus for each LCID
-  uint32_t dl_pdus_in_buffer[MAX_NUM_LCID_NB_IoT];
-  /// creation time of the downlink buffer head for each LCID
-  uint32_t dl_buffer_head_sdu_creation_time[MAX_NUM_LCID_NB_IoT];
-  /// maximum creation time of the downlink buffer head across all LCID
-  uint32_t  dl_buffer_head_sdu_creation_time_max;
-  /// a flag indicating that the downlink head SDU is segmented
-  uint8_t    dl_buffer_head_sdu_is_segmented[MAX_NUM_LCID_NB_IoT];
-  /// size of remaining size to send for the downlink head SDU
-  uint32_t dl_buffer_head_sdu_remaining_size_to_send[MAX_NUM_LCID_NB_IoT];
-  /// total uplink buffer size
-  uint32_t ul_total_buffer;
-  /// uplink buffer creation time for each LCID
-  uint32_t ul_buffer_creation_time[MAX_NUM_LCGID_NB_IoT];
-  /// maximum uplink buffer creation time across all the LCIDs
-  uint32_t ul_buffer_creation_time_max;
-  /// uplink buffer size per LCID
-  uint32_t ul_buffer_info[MAX_NUM_LCGID_NB_IoT];
-  /// UE tx power
-  int32_t ue_tx_power;
-} UE_TEMPLATE_NB_IoT;
-/*! \brief eNB statistics for the connected UEs*/
-typedef struct {
-  /// CRNTI of UE
-  rnti_t crnti; ///user id (rnti) of connected UEs
-  // rrc status
-  uint8_t rrc_status;
-  /// harq pid
-  uint8_t harq_pid;
-  /// harq rounf
-  uint8_t harq_round;
-  /// DL Wideband CQI index (2 TBs)
-  uint8_t dl_cqi;
-  /// total available number of PRBs for a new transmission
-  uint16_t rbs_used;
-  /// total available number of PRBs for a retransmission
-  uint16_t rbs_used_retx;
-  /// total nccc used for a new transmission: num control channel element
-  uint16_t ncce_used;
-  /// total avilable nccc for a retransmission: num control channel element
-  uint16_t ncce_used_retx;
-  // mcs1 before the rate adaptaion
-  uint8_t dlsch_mcs1;
-  /// Target mcs2 after rate-adaptation
-  uint8_t dlsch_mcs2;
-  //  current TBS with mcs2
-  uint32_t TBS;
-  //  total TBS with mcs2
-  //  uint32_t total_TBS;
-  //  total rb used for a new transmission
-  uint32_t total_rbs_used;
-  //  total rb used for retransmission
-  uint32_t total_rbs_used_retx;
-   /// TX
-  /// Num pkt
-  uint32_t num_pdu_tx[NB_RB_MAX];
-  /// num bytes
-  uint32_t num_bytes_tx[NB_RB_MAX];
-  /// num retransmission / harq
-  uint32_t num_retransmission;
-  /// instantaneous tx throughput for each TTI
-  //  uint32_t tti_throughput[NB_RB_MAX];
-  /// overall
-  //
-  uint32_t  dlsch_bitrate;
-  //total
-  uint32_t  total_dlsch_bitrate;
-  /// headers+ CE +  padding bytes for a MAC PDU
-  uint64_t overhead_bytes;
-  /// headers+ CE +  padding bytes for a MAC PDU
-  uint64_t total_overhead_bytes;
-  /// headers+ CE +  padding bytes for a MAC PDU
-  uint64_t avg_overhead_bytes;
-  // MAC multiplexed payload
-  uint64_t total_sdu_bytes;
-  // total MAC pdu bytes
-  uint64_t total_pdu_bytes;
-  // total num pdu
-  uint32_t total_num_pdus;
-  //
-  //  uint32_t avg_pdu_size;
-  /// RX
-  /// preassigned mcs after rate adaptation
-  uint8_t ulsch_mcs1;
-  /// adjusted mcs
-  uint8_t ulsch_mcs2;
-  /// estimated average pdu inter-departure time
-  uint32_t avg_pdu_idt;
-  /// estimated average pdu size
-  uint32_t avg_pdu_ps;
-  ///
-  uint32_t aggregated_pdu_size;
-  uint32_t aggregated_pdu_arrival;
-  ///  uplink transport block size
-  uint32_t ulsch_TBS;
-  ///  total rb used for a new uplink transmission
-  uint32_t num_retransmission_rx;
-  ///  total rb used for a new uplink transmission
-  uint32_t rbs_used_rx;
-   ///  total rb used for a new uplink retransmission
-  uint32_t rbs_used_retx_rx;
-  ///  total rb used for a new uplink transmission
-  uint32_t total_rbs_used_rx;
-  /// normalized rx power
-  int32_t      normalized_rx_power;
-   /// target rx power
-  int32_t    target_rx_power;
-  /// num rx pdu
-  uint32_t num_pdu_rx[NB_RB_MAX];
-  /// num bytes rx
-  uint32_t num_bytes_rx[NB_RB_MAX];
-  /// instantaneous rx throughput for each TTI
-  //  uint32_t tti_goodput[NB_RB_MAX];
-  /// errors
-  uint32_t num_errors_rx;
-  uint64_t overhead_bytes_rx;
-  /// headers+ CE +  padding bytes for a MAC PDU
-  uint64_t total_overhead_bytes_rx;
-  /// headers+ CE +  padding bytes for a MAC PDU
-  uint64_t avg_overhead_bytes_rx;
- //
-  uint32_t  ulsch_bitrate;
-  //total
-  uint32_t  total_ulsch_bitrate;
-  /// overall
-  ///  MAC pdu bytes
-  uint64_t pdu_bytes_rx;
-  /// total MAC pdu bytes
-  uint64_t total_pdu_bytes_rx;
-  /// total num pdu
-  uint32_t total_num_pdus_rx;
-  /// num of error pdus
-  uint32_t total_num_errors_rx;
-} eNB_UE_STATS_NB_IoT;
-/*! \brief scheduling control information set through an API (not used)*/
-typedef struct {
-  ///UL transmission bandwidth in RBs
-  uint8_t ul_bandwidth[MAX_NUM_LCID_NB_IoT];
-  ///DL transmission bandwidth in RBs
-  uint8_t dl_bandwidth[MAX_NUM_LCID_NB_IoT];
-  //To do GBR bearer
-  uint8_t min_ul_bandwidth[MAX_NUM_LCID_NB_IoT];
-  uint8_t min_dl_bandwidth[MAX_NUM_LCID_NB_IoT];
-  ///aggregated bit rate of non-gbr bearer per UE
-  uint64_t  ue_AggregatedMaximumBitrateDL;
-  ///aggregated bit rate of non-gbr bearer per UE
-  uint64_t  ue_AggregatedMaximumBitrateUL;
-  ///CQI scheduling interval in subframes.
-  //Delete uint16_t cqiSchedInterval;
-  ///Contention resolution timer used during random access
-  uint8_t mac_ContentionResolutionTimer;
-  //Delete uint16_t max_allowed_rbs[MAX_NUM_LCID];
-  uint8_t max_mcs[MAX_NUM_LCID_NB_IoT];
-  uint16_t priority[MAX_NUM_LCID_NB_IoT];
-  // resource scheduling information
-  uint8_t       harq_pid[MAX_NUM_CCs];
-  uint8_t       round[MAX_NUM_CCs];
-  uint8_t       dl_pow_off[MAX_NUM_CCs];
-  //Delete uint16_t      pre_nb_available_rbs[MAX_NUM_CCs];
-  //Delete unsigned char rballoc_sub_UE[MAX_NUM_CCs][N_RBG_MAX];
-  uint16_t      ta_timer;
-  int16_t       ta_update;
-  int32_t       context_active_timer;
-  //Delete int32_t       cqi_req_timer;
-  int32_t       ul_inactivity_timer;
-  int32_t       ul_failure_timer;
-  int32_t       ul_scheduled;
-  int32_t       ra_pdcch_order_sent;
-  int32_t       ul_out_of_sync;
-  int32_t       phr_received;// received from Msg3 MAC Control Element
-} UE_sched_ctrl_NB_IoT;
-
-/*! \brief UE list used by eNB to order UEs/CC for scheduling*/
-typedef struct {
-  /// DLSCH pdu
-  DLSCH_PDU_NB_IoT DLSCH_pdu[MAX_NUM_CCs][2][NUMBER_OF_UE_MAX_NB_IoT];
-  /// DCI template and MAC connection parameters for UEs
-  UE_TEMPLATE_NB_IoT UE_template[MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT];
-  /// DCI template and MAC connection for RA processes
-  int pCC_id[NUMBER_OF_UE_MAX_NB_IoT];
-  /// eNB to UE statistics
-  eNB_UE_STATS_NB_IoT eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT];
-  /// scheduling control info
-  UE_sched_ctrl_NB_IoT UE_sched_ctrl[NUMBER_OF_UE_MAX_NB_IoT];
-
-  /// sorted downlink component carrier for the scheduler 
-  int ordered_CCids[MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT];
-  /// number of downlink active component carrier 
-  int numactiveCCs[NUMBER_OF_UE_MAX_NB_IoT];
-  /// sorted uplink component carrier for the scheduler 
-  int ordered_ULCCids[MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT];
-  /// number of uplink active component carrier 
-  int numactiveULCCs[NUMBER_OF_UE_MAX_NB_IoT];
-
-  int next[NUMBER_OF_UE_MAX_NB_IoT];
-  int head;
-  int next_ul[NUMBER_OF_UE_MAX_NB_IoT];
-  int head_ul;
-  int avail;
-  int num_UEs;
-  boolean_t active[NUMBER_OF_UE_MAX_NB_IoT];
-} UE_list_NB_IoT_t;
-
-/*!\brief MCCH logical channel */
-#define MCCH_NB_IoT 4 
-/*!\brief The power headroom reporting range is from -23 ...+40 dB and beyond, with step 1 */
-#define PHR_MAPPING_OFFSET_NB_IoT 23  // if ( x>= -23 ) val = floor (x + 23) 
+// ULSCH LCHAN IDs
+/*!\brief LCID of extended power headroom for ULSCH */
+#define EXTENDED_POWER_HEADROOM 25
+/*!\brief LCID of power headroom for ULSCH */
+#define POWER_HEADROOM 26
+/*!\brief LCID of CRNTI for ULSCH */
+#define CRNTI 27
+/*!\brief LCID of truncated BSR for ULSCH */
+#define TRUNCATED_BSR 28
+/*!\brief LCID of short BSR for ULSCH */
+#define SHORT_BSR 29
+/*!\brief LCID of long BSR for ULSCH */
+#define LONG_BSR 30
+/*! \brief Values of CCCH LCID for DLSCH */ 
+#define CCCH_LCHANID 0
 /*!\brief Values of BCCH logical channel */
-#define BCCH_NB_IoT 3  // SI 
+#define BCCH 3  // SI 
+/*!\brief Values of PCCH logical channel */
+#define PCCH 4  // Paging 
 /*!\brief Value of CCCH / SRB0 logical channel */
-#define CCCH_NB_IoT 0  // srb0
+#define CCCH 0  // srb0
 /*!\brief DCCH / SRB1 logical channel */
-#define DCCH_NB_IoT 1  // srb1
+#define DCCH 1  // srb1
+/*!\brief DCCH1 / SRB2  logical channel */
+#define DCCH1 2 // srb2
+/*!\brief DTCH DRB1  logical channel */
+#define DTCH 3 // LCID
+/*!\brief MCCH logical channel */
+#define MCCH 4 
+/*!\brief MTCH logical channel */
+#define MTCH 1 
+// DLSCH LCHAN ID
+/*!\brief LCID of UE contention resolution identity for DLSCH*/
+#define UE_CONT_RES 28
+/*!\brief LCID of timing advance for DLSCH */
+#define TIMING_ADV_CMD 29
+/*!\brief LCID of discontinous reception mode for DLSCH */
+#define DRX_CMD 30
+/*!\brief LCID of padding LCID for DLSCH */
+#define SHORT_PADDING 31
+
+
+typedef enum tone_type_e
+{
+  sixtone = 0,
+  threetone,
+  singletone1,
+  singletone2,
+  singletone3
+}tone_type_t;
+
+typedef enum channel_NB_IoT_e
+{
+  NPDCCH = 0,
+  NPUSCH,
+  NPDSCH
+}channel_NB_IoT_t;
+
+typedef enum{
+  UL = 0,
+  DL
+}message_direction_t;
+
+#define MAX_NUMBER_OF_UE_MAX_NB_IoT 20
+#define SCH_PAYLOAD_SIZE_MAX_NB_IoT 320
+#define MAX_NUMBER_OF_SIBs_NB_IoT 16
+
 /*!\brief Values of BCCH0 logical channel for MIB*/
-#define BCCH0_NB_IoT 11 // MIB-NB
+#define BCCH0_NB_IoT 11 // MIB-NB_IoT
 /*!\brief Values of BCCH1 logical channel for SIBs */
-#define BCCH1_NB_IoT 12 // SI-SIB-NBs
+#define BCCH1_NB_IoT 12 // SI-SIB-NB_IoTs
 /*!\brief Values of PCCH logical channel */
 #define PCCH_NB_IoT 13  // Paging XXX not used for the moment
+#define MCCH_NB_IoT 14
 /*!\brief Value of CCCH / SRB0 logical channel */
 #define CCCH_NB_IoT 0  // srb0 ---> XXX exactly the same as in LTE (commented for compilation purposes)
 /*!\brief DCCH0 / SRB1bis logical channel */
@@ -382,424 +153,507 @@ typedef struct {
 #define DTCH0_NB_IoT 4 // DRB0
 /*!\brief DTCH1 DRB1  logical channel */
 #define DTCH1_NB_IoT 5 // DRB1
-/*!\brief size of buffer status report table */
-#define BSR_TABLE_SIZE_NB_IoT 64
-/*!\brief LCID of short BSR for ULSCH */
-#define SHORT_BSR_NB_IoT 29
-/*!\brief LCID of CRNTI for ULSCH */
-#define CRNTI_NB_IoT 27
-/*!\brief Maximum number od control elemenets */
-#define MAX_NUM_CE_NB_IoT 5
-/*!\brief LCID of power headroom for ULSCH */
-#define POWER_HEADROOM_NB_IoT 26
-/*!\brief LCID of extended power headroom for ULSCH */
-#define EXTENDED_POWER_HEADROOM_NB_IoT 25
-/*!\brief LCID of padding LCID for DLSCH */
-#define SHORT_PADDING_NB_IoT 31
-/*!\brief LCID of long BSR for ULSCH */
-#define LONG_BSR_NB_IoT 30
-/*!\brief LCID of truncated BSR for ULSCH */
-#define TRUNCATED_BSR_NB_IoT 28
+/*Index of UE contention resoulution logical channel*/
+#define UE_CONTENTION_RESOLUTION 28
+/*Index of TIMING_ADVANCE logical channel*/
+#define TIMING_ADVANCE 29
+/*Index of DRX_COMMAND logical channel*/
+#define DRX_COMMAND 30
+/*Index of PADDING logical channel*/
+#define PADDING 31
 
-// DLSCH LCHAN ID all the same as NB-IoT
-/*!\brief  DCI PDU filled by MAC for the PHY  */
-/* 
- * eNB part 
- */ 
-/*!\brief UE layer 2 status */
-typedef enum {
-  CONNECTION_OK_NB_IoT=0,
-  CONNECTION_LOST_NB_IoT,
-  PHY_RESYNCH_NB_IoT,
-  PHY_HO_PRACH_NB_IoT
-} UE_L2_STATE_NB_IoT_t;
 
-/* 
- * UE/ENB common part 
- */ 
-/*!\brief MAC header of Random Access Response for Random access preamble identifier (RAPID) for NB-IoT */
+/// NPRACH-ParametersList-NB_IoT-r13 from 36.331 RRC spec defined in PHY
+/*typedef struct NPRACH_Parameters_NB_IoT{
+
+    /// the period time for nprach
+    int nprach_Periodicity;
+    /// for the start time for the NPRACH resource from 40ms-2560ms
+    int nprach_StartTime;
+    /// for the subcarrier of set to the NPRACH preamble from n0 - n34
+    int nprach_SubcarrierOffset;
+    ///number of subcarriers in a NPRACH resource allowed values (n12,n24,n36,n48)
+    int nprach_NumSubcarriers;
+    /// where is the region that in NPRACH resource to indicate if this UE support MSG3 for multi-tone or not. from 0 - 1
+    int nprach_SubcarrierMSG3_RangeStart;
+    /// The max preamble transmission attempt for the CE level from 1 - 128
+    int maxNumPreambleAttemptCE;
+    /// Number of NPRACH repetitions per attempt for each NPRACH resource
+    int numRepetitionsPerPreambleAttempt;
+    /// The number of the repetition for DCI use in RAR/MSG3/MSG4 from 1 - 2048 (Rmax)
+    int npdcch_NumRepetitions_RA;
+    /// Starting subframe for NPDCCH Common searching space for (RAR/MSG3/MSG4)
+    int npdcch_StartSF_CSS_RA;
+    /// Fractional period offset of starting subframe for NPDCCH common search space
+    int npdcch_Offset_RA;
+
+} nprach_parameters_NB_IoT_t;*/
+
+/*! \brief Downlink SCH PDU Structure */
 typedef struct {
-  uint8_t RAPID:6;
-  uint8_t T:1;
-  uint8_t E:1;
-} __attribute__((__packed__))RA_HEADER_RAPID_NB_IoT;
+  uint8_t payload[SCH_PAYLOAD_SIZE_MAX_NB_IoT];
+  uint32_t pdu_size;
+} __attribute__ ((__packed__)) DLSCH_PDU_NB_IoT;
 
-/*!\brief  MAC header of Random Access Response for backoff indicator (BI) for NB-IoT*/
+/*! \brief eNB template for UE context information  */
 typedef struct {
-  uint8_t BI:4;
-  uint8_t R:2;
-  uint8_t T:1;
-  uint8_t E:1;
-} __attribute__((__packed__))RA_HEADER_BI_NB_IoT;
+    // C-RNTI of UE
+  rnti_t rnti;
+  // UE CE level
+  int CE_level;
+  // Direction of transmission(DL:0\UL:1\NONE:-1)
+  int32_t direction;
+  // DCI Reptition
+  uint32_t R_dci;
+  // MAX repetition
+  uint32_t R_max;
 
-/*Seems not to do the packed of RAR pdu*/
+  // HARQ round
+  uint32_t HARQ_round;
+  /*Downlink information*/
+
+  /// DLSCH pdu
+  DLSCH_PDU_NB_IoT DLSCH_pdu;
+  // PDU size
+  uint32_t DLSCH_pdu_size;
+  // Data Reptition
+  uint32_t R_dl;
+  // MCS index
+  uint32_t I_mcs_dl;
+  // total downlink buffer DCCH0_NB_IoT
+  uint32_t dl_buffer_DCCH0_NB_IoT;
+  // NDI
+  int oldNDI_DL;
+  //HARQ ACK/NACK repetition
+  uint32_t R_harq;
+
+  /*Uplink information*/
+  int oldNDI_UL;
+  // Uplink data repeat, now just follow the rach repeat number
+  uint32_t R_ul;
+  // PHR value (0-3)
+  uint32_t PHR;
+  // The uplink data size from BSR or DVI
+  uint32_t ul_total_buffer;
+  // Determine if this UE support multi-tone transmission or not
+  int multi_tone;
+  // Next UE_template ID
+  int next;
+  // Previous UE_template ID
+  int prev;
+  // MSG4 complete
+  int RRC_connected;
+  // UE active flag
+  boolean_t active;
+
+} UE_TEMPLATE_NB_IoT;
+
+/*36331 NPDCCH-ConfigDedicated-NB_IoT*/
+typedef struct{
+  //npdcch-NumRepetitions-r13
+  uint32_t R_max;
+  //npdcch-StartSF-USS-r13
+  double G;
+  //npdcch-Offset-USS-r13
+  double a_offset;
+  //NPDCCH period
+  uint32_t T;
+  //Starting subfrane of Search Space which is mod T
+  uint32_t ss_start_uss;
+}NPDCCH_config_dedicated_NB_IoT_t;
+
+
+/*! \brief UE list used by eNB to order UEs/CC for scheduling*/
+typedef struct {
+
+  /// DCI template and MAC connection parameters for UEs
+  UE_TEMPLATE_NB_IoT UE_template[NUMBER_OF_UE_MAX_NB_IoT];
+
+  /// NPDCCH Period and searching space info
+  NPDCCH_config_dedicated_NB_IoT_t NPDCCH_config_dedicated;
+  //int next[MAX_NUMBER_OF_UE_MAX_NB_IoT];
+  // -1:No UE in list
+  int head;
+  // -1:No UE in list
+  int tail;
+  int num_UEs;
+  //boolean_t active[MAX_NUMBER_OF_UE_MAX_NB_IoT];
+
+} UE_list_NB_IoT_t;
+
+
+typedef struct{
+
+  // flag to indicate scheduing MIB-NB_IoT
+  uint8_t flag_MIB;
+  // flag to indicate scheduling SIB1-NB_IoT
+  uint8_t flag_SIB1;
+  // flag to indicate scheduling SIBs-NB_IoT
+  uint8_t flag_SIBs[MAX_NUMBER_OF_SIBs_NB_IoT];
+  // flag to indicate scheduling type2 NPDCCH CSS with different CE level
+  uint8_t flag_type2_css[3];
+  // flag to indicate scheduling type1 NPDCCH CSS with different CE level
+  uint8_t flag_type1_css[3];
+  // flag to indicate scheduling NPDCCH USS with UE list
+  uint8_t flag_uss[MAX_NUMBER_OF_UE_MAX_NB_IoT];
+  // flag to indicate scheduling sib1/MIB
+  uint8_t flag_fix_scheduling;
+  // number of the type2 css to schedule in this period
+  uint8_t num_type2_css_run;
+  // number of the type1 css to schedule in this period
+  uint8_t num_type1_css_run;
+  // number of the uss to schedule in this period
+  uint8_t num_uss_run;
+
+}scheduling_flag_t;
+
+typedef struct available_resource_UL_s{
+
+    ///Resource start subframe
+    uint32_t start_subframe;
+    ///Resource end subframe
+    uint32_t end_subframe;
+    // pointer to next node
+    struct available_resource_UL_s *next, *prev;
+
+}available_resource_UL_t;
+
+typedef struct available_resource_DL_s{
+  uint32_t start_subframe;
+  uint32_t end_subframe;
+  uint32_t DLSF_num;
+
+  struct available_resource_DL_s *next, *prev;
+}available_resource_DL_t;
+
+/*Structure used for scheduling*/
+typedef struct{
+  //resource position info.
+  uint32_t sf_end,sf_start;
+  //resource position info. separate by HyperSF, Frame, Subframe
+  uint32_t start_h, end_h;
+  uint32_t start_f, end_f;
+  uint32_t start_sf, end_sf;
+  //whcih available resource node is used
+  available_resource_DL_t *node;
+}sched_temp_DL_NB_IoT_t;
 
 /*!\brief  MAC subheader short with 7bit Length field */
 typedef struct {
   uint8_t LCID:5;  // octet 1 LSB
   uint8_t E:1;
-  uint8_t R:2;     // octet 1 MSB
+  uint8_t F2:1;
+  uint8_t R:1;     // octet 1 MSB
   uint8_t L:7;     // octet 2 LSB
   uint8_t F:1;     // octet 2 MSB
 } __attribute__((__packed__))SCH_SUBHEADER_SHORT_NB_IoT;
-/*!\brief  MAC subheader long  with 15bit Length field */
 typedef struct {
   uint8_t LCID:5;   // octet 1 LSB
   uint8_t E:1;
-  uint8_t R:2;      // octet 1 MSB
+  uint8_t F2:1;
+  uint8_t R:1;      // octet 1 MSB
   uint8_t L_MSB:7;
   uint8_t F:1;      // octet 2 MSB
   uint8_t L_LSB:8;
-  uint8_t padding;
 } __attribute__((__packed__))SCH_SUBHEADER_LONG_NB_IoT;
+typedef struct {
+  uint8_t LCID:5;   // octet 1 LSB
+  uint8_t E:1;
+  uint8_t F2:1;
+  uint8_t R:1;      // octet 1 MSB
+  uint8_t L_MSB:8;      // octet 2 MSB
+  uint8_t L_LSB:8;
+} __attribute__((__packed__))SCH_SUBHEADER_LONG_EXTEND_NB_IoT;
 /*!\brief MAC subheader short without length field */
 typedef struct {
   uint8_t LCID:5;
+  uint8_t F2:1;
   uint8_t E:1;
-  uint8_t R:2;
+  uint8_t R:1;
 } __attribute__((__packed__))SCH_SUBHEADER_FIXED_NB_IoT;
 
-/*!\brief  mac control element: short buffer status report for a specific logical channel group ID*/
-typedef struct {
-  uint8_t Buffer_size:6;  // octet 1 LSB
-  uint8_t LCGID:2;        // octet 1 MSB
-} __attribute__((__packed__))BSR_SHORT_NB_IoT;
 
-/*!\TRUNCATED BSR and Long BSR is not supported in NB-IoT*/
-
-/*!\brief  mac control element: timing advance  */
+/*! \brief Uplink SCH PDU Structure */
 typedef struct {
-  uint8_t TA:6;
-  uint8_t R:2;
-} __attribute__((__packed__))TIMING_ADVANCE_CMD_NB_IoT;
-/*!\brief  mac control element: power headroom report  */
+  int8_t payload[SCH_PAYLOAD_SIZE_MAX_NB_IoT];         /*!< \brief SACH payload */
+  uint16_t Pdu_size;
+} __attribute__ ((__packed__)) ULSCH_PDU_NB_IoT;
+
 typedef struct {
   uint8_t PH:6;
   uint8_t R:2;
 } __attribute__((__packed__))POWER_HEADROOM_CMD_NB_IoT;
 
 typedef struct {
-  uint8_t payload[BCCH_PAYLOAD_SIZE_MAX_NB_IoT] ;
-} __attribute__((__packed__))BCCH_PDU_NB_IoT;
-/*! \brief CCCH payload */
-typedef struct {
-  uint8_t payload[CCCH_PAYLOAD_SIZE_MAX_NB_IoT] ;
-} __attribute__((__packed__))CCCH_PDU_NB_IoT;
+  uint8_t RAPID:6;
+  uint8_t T:1;
+  uint8_t E:1;
+} __attribute__((__packed__))RA_HEADER_RAPID_NB_IoT;
+
+/*Structure used for UL scheduling*/
+typedef struct{
+  //resource position info.
+  uint32_t sf_end, sf_start;
+  //resource position info. separate by HyperSF, Frame, Subframe
+  //uint32_t start_h, end_h;
+  //uint32_t start_f, end_f;
+  //uint32_t start_sf, end_sf;
+  // information for allocating the resource
+  int tone;
+  int scheduling_delay;
+  int subcarrier_indication;
+  int ACK_NACK_resource_field;
+  available_resource_UL_t *node;
+}sched_temp_UL_NB_IoT_t;
+
+typedef struct Available_available_resource_DL{
+
+    ///Available Resoruce for sixtone
+    available_resource_UL_t *sixtone_Head;//, *sixtone_npusch_frame;
+  uint32_t sixtone_end_subframe;
+    ///Available Resoruce for threetone
+    available_resource_UL_t *threetone_Head;//, *threetone_npusch_frame;
+  uint32_t threetone_end_subframe;
+    ///Available Resoruce for singletone1
+    available_resource_UL_t *singletone1_Head;//, *singletone1_npusch_frame;
+  uint32_t singletone1_end_subframe;
+    ///Available Resoruce for singletone2
+    available_resource_UL_t *singletone2_Head;//, *singletone2_npusch_frame;
+    uint32_t singletone2_end_subframe;
+  ///Available Resoruce for singletone3
+    available_resource_UL_t *singletone3_Head;//, *singletone3_npusch_frame;
+  uint32_t singletone3_end_subframe;
+  
+}available_resource_tones_UL_t;
+
+typedef struct schedule_result{
+  // The subframe read by output handler
+  uint32_t output_subframe;
+  // SDU length
+  uint32_t sdu_length;
+  // MAC PDU
+  uint8_t *DLSCH_pdu;
+  // The data direction indicated by this DCI
+  uint8_t direction;
+  // pointer to DCI
+  void *DCI_pdu;
+  // when all the procedure related to this DCI, enable this flag
+  boolean_t DCI_release;
+  // Indicate the channel which to transmit
+  channel_NB_IoT_t channel;
+  // rnti
+  rnti_t rnti;
+  // 0 = TC-RNTI , 1 = RA-RNTI, 2 = P-RNTI, 3 = others
+  uint8_t rnti_type;
+  // 0 = data, 1 = ACK/NACK
+  uint8_t npusch_format;
+  //HARQ ACK/NACK repetition
+  uint32_t R_harq;
+  // pointer to next node
+  struct schedule_result *next;
+
+  uint32_t end_subframe;
+  
+  uint8_t *rar_buffer;
+  
+  uint8_t *debug_str;
+
+}schedule_result_t;
+
+/*Flag structure used for trigger each scheduler*/
+typedef struct{
+  scheduling_flag_t scheduling_flag;
+  //sched_temp_DL_NB_IoT_t sched_result_DL;
+  //resource grid for Uplink
+  available_resource_tones_UL_t *UL_resource;
+  //scheduling result read by output handler
+  schedule_result_t *schedule_result_list_UL;
+  schedule_result_t *schedule_result_list_DL;
+}SCHEDULE_NB_IoT_t;
+
+typedef struct{
+  uint32_t num_dlsf_per_period;
+  uint16_t *sf_to_dlsf_table;
+  uint16_t *dlsf_to_sf_table;
+}DLSF_INFO_t;
+
+typedef enum ce_level_e{
+  ce0=0,
+  ce1,
+  ce2,
+  ce_level_total
+}ce_level_t;
+
 
 
 /*! \brief eNB template for the Random access information */
 typedef struct {
-  /// Flag to indicate this process is active
-  boolean_t RA_active;
-  /// Size of DCI for RA-Response (bytes)
-  uint8_t RA_dci_size_bytes1;
-  /// Size of DCI for RA-Response (bits)
-  uint8_t RA_dci_size_bits1;
-  /// Actual DCI to transmit for RA-Response
-  uint8_t RA_alloc_pdu1[(MAX_DCI_SIZE_BITS_NB_IoT>>3)+1];
-  /// DCI format for RA-Response (should be N1 RAR)
-  uint8_t RA_dci_fmt1;
-  /// Size of DCI for Msg4/ContRes (bytes)
-  uint8_t RA_dci_size_bytes2;
-  /// Size of DCI for Msg4/ContRes (bits)
-  uint8_t RA_dci_size_bits2;
-  /// Actual DCI to transmit for Msg4/ContRes
-  uint8_t RA_alloc_pdu2[(MAX_DCI_SIZE_BITS_NB_IoT>>3)+1];
-  /// DCI format for Msg4/ContRes (should be 1A)
-  uint8_t RA_dci_fmt2;
-  /// Flag to indicate the eNB should generate RAR.  This is triggered by detection of PRACH
-  uint8_t generate_rar;
-  /// Subframe where preamble was received, Delete?
-  uint8_t preamble_subframe;
-  /// Subframe where Msg3 is to be sent
-  uint8_t Msg3_subframe;
-  /// Flag to indicate the eNB should generate Msg4 upon reception of SDU from RRC.  This is triggered by first ULSCH reception at eNB for new user.
-  uint8_t generate_Msg4;
-  /// Flag to indicate that eNB is waiting for ACK that UE has received Msg3.
-  uint8_t wait_ack_Msg4;
-  /// UE RNTI allocated during RAR
-  rnti_t rnti;
-  /// RA RNTI allocated from received PRACH
-  uint16_t RA_rnti;
-  /// Re-use preamble_index, but it would be subcarrier index (0-47)
+
+  boolean_t active;
+  uint32_t msg3_retransmit_count;
+  uint32_t msg4_retransmit_count;
+  uint16_t ta;
   uint8_t preamble_index;
-  /// Received UE Contention Resolution Identifier
-  uint8_t cont_res_id[6];
-  /// Timing offset indicated by PHY
-  int16_t timing_offset;
-  /// Timeout for RRC connection
-  int16_t RRC_timer;
+  ce_level_t ce_level;
+  rnti_t ue_rnti;
+  rnti_t ra_rnti;
+  struct RA_template_s *next, *prev;
+  boolean_t wait_msg4_ack;
+  boolean_t wait_msg3_ack;
+  uint8_t rar_buffer[7];
+
 } RA_TEMPLATE_NB_IoT;
-/*! \brief eNB common channels */
-typedef struct {
-  int                              physCellId;
-  int                              p_eNB; //number of tx antenna port
-  int							   p_rx_eNB; //number of Rx antenna port
-  int                              Ncp;
-  int							   Ncp_UL;
-  int                              eutra_band;
-  uint32_t                         dl_CarrierFreq;
-  BCCH_BCH_Message_NB_t               *mib_NB_IoT;
-  RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon;
-  ARFCN_ValueEUTRA_r9_t               ul_CarrierFreq;
-  struct MasterInformationBlock_NB__operationModeInfo_r13 operationModeInfo;
-  /// Outgoing DCI for PHY generated by eNB scheduler
-  DCI_PDU_NB_IoT DCI_pdu;
-  /// Outgoing BCCH pdu for PHY
-  BCCH_PDU_NB_IoT BCCH_pdu;
-  /// Outgoing BCCH DCI allocation
-  uint32_t BCCH_alloc_pdu;
-  /// Outgoing CCCH pdu for PHY
-  CCCH_PDU_NB_IoT CCCH_pdu;
-  RA_TEMPLATE_NB_IoT RA_template[RA_PROC_MAX_NB_IoT];
-  /// Delete VRB map for common channels
-  /// Delete MBSFN SubframeConfig
-  /// Delete number of subframe allocation pattern available for MBSFN sync area
-// #if defined(Rel10) || defined(Rel14)
-  /// Delete MBMS Flag
-  /// Delete Outgoing MCCH pdu for PHY
-  /// Delete MCCH active flag
-  /// Delete MCCH active flag
-  /// Delete MTCH active flag
-  /// Delete number of active MBSFN area
-  /// Delete MBSFN Area Info
-  /// Delete PMCH Config
-  /// Delete MBMS session info list
-  /// Delete Outgoing MCH pdu for PHY
-// #endif
-// #ifdef CBA
-  /// Delete number of CBA groups
-  /// Delete RNTI for each CBA group
-  /// Delete MCS for each CBA group
-// #endif
-}COMMON_channels_NB_IoT_t;
-/*! \brief eNB overall statistics */
-typedef struct {
-  /// num BCCH PDU per CC
-  uint32_t total_num_bcch_pdu;
-  /// BCCH buffer size
-  uint32_t bcch_buffer;
-  /// total BCCH buffer size
-  uint32_t total_bcch_buffer;
-  /// BCCH MCS
-  uint32_t bcch_mcs;
-  /// num CCCH PDU per CC
-  uint32_t total_num_ccch_pdu;
-  /// BCCH buffer size
-  uint32_t ccch_buffer;
-  /// total BCCH buffer size
-  uint32_t total_ccch_buffertotal_ccch_buffer;
-  /// BCCH MCS
-  uint32_t ccch_mcs;
-/// num active users
-  uint16_t num_dlactive_UEs;
-  ///  available number of PRBs for a give SF fixed in 1 in NB-IoT
-  uint16_t available_prbs;
-  /// total number of PRB available for the user plane fixed in 1 in NB-IoT
-  uint32_t total_available_prbs;
-  /// aggregation
-  /// total avilable nccc : num control channel element
-  uint16_t available_ncces;
-  // only for a new transmission, should be extended for retransmission
-  // current dlsch  bit rate for all transport channels
-  uint32_t dlsch_bitrate;
-  //
-  uint32_t dlsch_bytes_tx;
-  //
-  uint32_t dlsch_pdus_tx;
-  //
-  uint32_t total_dlsch_bitrate;
-  //
-  uint32_t total_dlsch_bytes_tx;
-  //
-  uint32_t total_dlsch_pdus_tx;
-  // here for RX
-  //
-  uint32_t ulsch_bitrate;
-  //
-  uint32_t ulsch_bytes_rx;
-  //
-  uint64_t ulsch_pdus_rx;
-  uint32_t total_ulsch_bitrate;
-  //
-  uint32_t total_ulsch_bytes_rx;
-  //
-  uint32_t total_ulsch_pdus_rx;
-  /// MAC agent-related stats
-  /// total number of scheduling decisions
-  int sched_decisions;
-  /// missed deadlines
-  int missed_deadlines;
-} eNB_STATS_NB_IoT;
+
+typedef struct RA_template_list_s{
+  RA_TEMPLATE_NB_IoT *head;
+  RA_TEMPLATE_NB_IoT *tail;
+}RA_template_list_t;
+
+
 /*! \brief top level eNB MAC structure */
 typedef struct {
 
-  ///
-  uint16_t Node_id;
-  /// frame counter
-  frame_t frame;
-  /// subframe counter
-  sub_frame_t subframe;
-  /// Common cell resources
-  COMMON_channels_NB_IoT_t common_channels[MAX_NUM_CCs];
-  UE_list_NB_IoT_t UE_list;
-  ///Delete subband bitmap configuration, no related CQI report
-  // / Modify CCE table used to build DCI scheduling information
-  int CCE_table[MAX_NUM_CCs][12];//180 khz for Anchor carrier
-  ///  active flag for Other lcid
-  uint8_t lcid_active[NB_RB_MAX];
-  /// eNB stats
-  eNB_STATS_NB_IoT eNB_stats[MAX_NUM_CCs];
-  // MAC function execution peformance profiler
-  /// processing time of eNB scheduler
-  time_stats_t eNB_scheduler;
-  /// processing time of eNB scheduler for SI
-  time_stats_t schedule_si;
-  /// processing time of eNB scheduler for Random access
-  time_stats_t schedule_ra;
-  /// processing time of eNB ULSCH scheduler
-  time_stats_t schedule_ulsch;
-  /// processing time of eNB DCI generation
-  time_stats_t fill_DLSCH_dci;
-  /// processing time of eNB MAC preprocessor
-  time_stats_t schedule_dlsch_preprocessor;
-  /// processing time of eNB DLSCH scheduler
-  time_stats_t schedule_dlsch; // include rlc_data_req + MAC header + preprocessor
-  /// Delete processing time of eNB MCH scheduler
-  /// processing time of eNB ULSCH reception
-  time_stats_t rx_ulsch_sdu_NB_IoT; // include rlc_data_ind
+  //  System
+  uint32_t hyper_system_frame;
+  uint32_t system_frame;
+  uint32_t sub_frame;
+
+  uint32_t current_subframe;
+
+  //  RA
+  RA_template_list_t RA_msg2_list;
+  RA_template_list_t RA_msg3_list;
+  RA_template_list_t RA_msg4_list;
+
+  RA_TEMPLATE_NB_IoT RA_template[MAX_NUMBER_OF_UE_MAX_NB_IoT];
+
+  //int32_t last_tx_subframe;
+
+  //  for tool
+  int32_t sib1_flag[64];
+  int32_t sib1_count[64];
+  int32_t sib1_period;
+  uint16_t dlsf_table[64];
+  int32_t sibs_table[256];
+
+  //  channel config
+
+  //USS list
+  //Number of USS period is used
+  int num_uss_list;
+  UE_list_NB_IoT_t *UE_list_spec;
+
+  scheduling_flag_t scheduling_flag;
+
+  uint32_t schedule_subframe_DL;
+  uint32_t schedule_subframe_UL;
+
+  //rrc_config_NB_IoT_t rrc_config;
+
 } eNB_MAC_INST_NB_IoT;
 
-/*!\brief Top level UE MAC structure */
-typedef struct {
-  uint16_t Node_id;
-  /// RX frame counter
-  frame_t     rxFrame;
-  /// RX subframe counter
-  sub_frame_t rxSubframe;
-  /// TX frame counter
-  frame_t     txFrame;
-  /// TX subframe counter
-  sub_frame_t txSubframe;
-  /// C-RNTI of UE
-  uint16_t crnti;
-  /// C-RNTI of UE before HO
-  rnti_t crnti_before_ho; ///user id (rnti) of connected UEs
-  /// uplink active flag
-  uint8_t ul_active;
-  /// pointer to RRC PHY configuration
-  RadioResourceConfigCommonSIB_t *radioResourceConfigCommon;
-  /// pointer to RACH_ConfigDedicated (NULL when not active, i.e. upon HO completion or T304 expiry)
-  struct RACH_ConfigDedicated *rach_ConfigDedicated;
-  /// pointer to RRC PHY configuration
-  struct PhysicalConfigDedicated *physicalConfigDedicated;
-#if defined(Rel10) || defined(Rel14)
-  /// pointer to RRC PHY configuration SCEll
-  struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10;
-#endif
-  /// pointer to TDD Configuration (NULL for FDD)
-  TDD_Config_t *tdd_Config;
-  /// Number of adjacent cells to measure
-  uint8_t  n_adj_cells;
-  /// Array of adjacent physical cell ids
-  uint32_t adj_cell_id[6];
-  /// Pointer to RRC MAC configuration
-  MAC_MainConfig_t *macConfig;
-  /// Pointer to RRC Measurement gap configuration
-  MeasGapConfig_t  *measGapConfig;
-  /// Pointers to LogicalChannelConfig indexed by LogicalChannelIdentity. Note NULL means LCHAN is inactive.
-  //////////////////////////////////////////////////////LogicalChannelConfig_t *logicalChannelConfig[MAX_NUM_LCID];
-  /// Scheduling Information
-  /////////////////////////////////////////////UE_SCHEDULING_INFO_NB_IoT scheduling_info;
-  /// Outgoing CCCH pdu for PHY
-  CCCH_PDU_NB_IoT CCCH_pdu;
-  /// Incoming DLSCH pdu for PHY
-  //DLSCH_PDU DLSCH_pdu[NUMBER_OF_UE_MAX][2];
-  /// number of attempt for rach
-  uint8_t RA_attempt_number;
-  /// Random-access procedure flag
-  uint8_t RA_active;
-  /// Random-access window counter
-  int8_t RA_window_cnt;
-  /// Random-access Msg3 size in bytes
-  uint8_t RA_Msg3_size;
-  /// Random-access prachMaskIndex
-  uint8_t RA_prachMaskIndex;
-  /// Flag indicating Preamble set (A,B) used for first Msg3 transmission
-  uint8_t RA_usedGroupA;
-  /// Random-access Resources
-  /////////////////////////////////////////////////////////////////////PRACH_RESOURCES_NB_IoT_t RA_prach_resources;
-  /// Random-access PREAMBLE_TRANSMISSION_COUNTER
-  uint8_t RA_PREAMBLE_TRANSMISSION_COUNTER;
-  /// Random-access backoff counter
-  int16_t RA_backoff_cnt;
-  /// Random-access variable for window calculation (frame of last change in window counter)
-  uint32_t RA_tx_frame;
-  /// Random-access variable for window calculation (subframe of last change in window counter)
-  uint8_t RA_tx_subframe;
-  /// Random-access Group B maximum path-loss
-  /// Random-access variable for backoff (frame of last change in backoff counter)
-  uint32_t RA_backoff_frame;
-  /// Random-access variable for backoff (subframe of last change in backoff counter)
-  uint8_t RA_backoff_subframe;
-  /// Random-access Group B maximum path-loss
-  uint16_t RA_maxPL;
-  /// Random-access Contention Resolution Timer active flag
-  uint8_t RA_contention_resolution_timer_active;
-  /// Random-access Contention Resolution Timer count value
-  uint8_t RA_contention_resolution_cnt;
-  /// power headroom reporitng reconfigured
-  uint8_t PHR_reconfigured;
-  /// power headroom state as configured by the higher layers
-  uint8_t PHR_state;
-  /// power backoff due to power management (as allowed by P-MPRc) for this cell
-  uint8_t PHR_reporting_active;
-  /// power backoff due to power management (as allowed by P-MPRc) for this cell
-  uint8_t power_backoff_db[NUMBER_OF_eNB_MAX];
-  /// BSR report falg management
-  uint8_t BSR_reporting_active;
-  /// retxBSR-Timer expires flag
-  uint8_t retxBSRTimer_expires_flag;
-  /// periodBSR-Timer expires flag
-  uint8_t periodBSRTimer_expires_flag;
+// global variables
 
-  /// MBSFN_Subframe Configuration
-  struct MBSFN_SubframeConfig *mbsfn_SubframeConfig[8]; // FIXME replace 8 by MAX_MBSFN_AREA?
-  /// number of subframe allocation pattern available for MBSFN sync area
-  uint8_t num_sf_allocation_pattern;
-// #if defined(Rel10) || defined(Rel14)
-//   /// number of active MBSFN area
-//   uint8_t num_active_mbsfn_area;
-//   /// MBSFN Area Info
-//   struct  MBSFN_AreaInfo_r9 *mbsfn_AreaInfo[MAX_MBSFN_AREA];
-//   /// PMCH Config
-//   struct PMCH_Config_r9 *pmch_Config[MAX_PMCH_perMBSFN];
-//   /// MCCH status
-//   uint8_t mcch_status;
-//   /// MSI status
-//   uint8_t msi_status;// could be an array if there are >1 MCH in one MBSFN area
-// #endif
-  //#ifdef CBA
-  /// CBA RNTI for each group 
-  uint16_t cba_rnti[NUM_MAX_CBA_GROUP];
-  /// last SFN for CBA channel access 
-  uint8_t cba_last_access[NUM_MAX_CBA_GROUP];
-  //#endif
-  /// total UE scheduler processing time 
-  time_stats_t ue_scheduler; // total
-  /// UE ULSCH tx  processing time inlcuding RLC interface (rlc_data_req) and mac header generation 
-  time_stats_t tx_ulsch_sdu;  
-  /// UE DLSCH rx  processing time inlcuding RLC interface (mac_rrc_data_ind or mac_rlc_status_ind+mac_rlc_data_ind) and mac header parser
-  time_stats_t rx_dlsch_sdu ; 
-  /// UE query for MCH subframe processing time 
-  time_stats_t ue_query_mch;
-  /// UE MCH rx processing time 
-  time_stats_t rx_mch_sdu;
-  /// UE BCCH rx processing time including RLC interface (mac_rrc_data_ind) 
-  time_stats_t rx_si; 
-  /// UE PCCH rx processing time including RLC interface (mac_rrc_data_ind) 
-  time_stats_t rx_p; 
-} UE_MAC_INST_NB_IoT;
+nprach_parameters_NB_IoT_t nprach_list[3];
+
+//SCHEDULE_NB_IoT_t *NB_IoT_schedule;
+
+/******MAC Global Variable********/
+available_resource_tones_UL_t *available_resource_UL;
+available_resource_DL_t *available_resource_DL;
+
+/*
+ schedule_result_t *schedule_result_list_UL;
+ schedule_result_t *schedule_result_list_DL;
+*/
+//DLSF Table
+DLSF_INFO_t DLSF_information;
+
+// array will be active when they are used
+
+// 10 -> single-tone / 12 -> multi-tone
+//static uint32_t max_mcs[2] = {10, 12};
+
+// [CE level] [0 - 3] -> single-tone / [CE level] [4-7] -> multi-tone
+/*static uint32_t mapped_mcs[3][8]={{1,5,9,10,3,7,11,12},
+                            {0,3,7,10,3,7,11,12},
+                            {0,2,6,10,0,4,8,12}};*/
+
+//TBS table for NPUSCH transmission TS 36.213 v14.2 table Table 16.5.1.2-2:
+/*static int UL_TBS_Table[14][8]=
+{
+  {16,2,56,88,120,152,208,256},
+  {24,56,88,144,176,208,256,344},
+  {32,72,144,176,208,256,328,424},
+  {40,104,176,208,256,328,440,568},
+  {56,120,208,256,328,408,552,680},
+  {72,144,224,328,424,504,680,872},
+  {88,176,256,392,504,600,808,1000},
+  {104,224,328,472,584,712,1000,1224},
+  {120,256,392,536,680,808,1096,1384},
+  {136,296,456,616,776,936,1256,1544},
+  {144,328,504,680,872,1000,1384,1736},
+  {176,376,584,776,1000,1192,1608,2024},
+  {208,440,680,1000,1128,1352,1800,2280},
+  {224,488,744,1128,1256,1544,2024,2536}
+};*/
+
+//static uint32_t RU_table[8]={1,2,3,4,5,6,8,10};
+
+//static uint32_t scheduling_delay[4]={8,16,32,64};
+//static uint32_t msg3_scheduling_delay_table[4] = {12,16,32,64};
+
+//static uint32_t ack_nack_delay[4]={13,15,17,18};
+//static uint32_t R_dl_table[16]={1,2,4,8,16,32,64,128,192,256,384,512,768,1024,1536,2048};
+
+//Prach parameters
+//static int rachperiod[8]={40,80,160,240,320,640,1280,2560};
+//static int rachstart[8]={8,16,32,64,128,256,512,1024};
+//static int rachrepeat[8]={1,2,4,8,16,32,64,128};
+//static int rawindow[8]={2,3,4,5,6,7,8,10}; // unit PP
+//static int rmax[12]={1,2,4,8,16,32,64,128,256,512,1024,2048};
+//static double gvalue[8]={1.5,2,4,8,16,32,48,64};
+//static int candidate[4]={1,2,4,8};
+//static double pdcchoffset[4]={0,0.125,0.25,0.375};
+//static int dlrepeat[16]={1,2,4,8,16,32,64,128,192,256,384,512,768,1024,1536,2048};
+//static int rachscofst[7]={0,12,24,36,2,18,34};
+//static int rachnumsc[4]={12,24,36,48};
+
+// NB_IoT-IoT------------------
+
+// TBS table for the case not containing SIB1-NB_IoT, Table 16.4.1.5.1-1 in TS 36.213 v14.2
+/*static uint32_t TBStable_NB_IoT[14][8] ={ //[ITBS][ISF]
+  {16,32,56,88,120.152,208,256},
+  {24,56,88,144,176,208,256,344},
+  {32,72,144,176,208,256,328,424},
+  {40,104,176,208,256,328,440,568},
+  {56,120,208,256,328,408,552,680},
+  {72,144,244,328,424,504,680,872},
+  {88,176,256,392,504,600,808,1032},
+  {104,224,328,472,584,680,968,1224},
+  {120,256,392,536,680,808,1096,1352},
+  {136,296,456,616,776,936,1256,1544},
+  {144,328,504,680,872,1032,1384,1736},
+  {176,376,584,776,1000,1192,1608,2024},
+  {208,440,680,904,1128,1352,1800,2280},
+  {224,488,744,1128,1256,1544,2024,2536}
+};*/
+
+//TBS table for the case containing S1B1-NB_IoT, Table 16.4.1.5.2-1 in TS 36.213 v14.2 (Itbs = 12 ~ 15 is reserved field
+//mapping ITBS to SIB1-NB_IoT
+//static unsigned int TBStable_NB_IoT_SIB1[16] = {208,208,208,328,328,328,440,440,440,680,680,680};
+
+//static int DV_table[16]={0,10,14,19,26,36,49,67,91,125,171,234,321,768,1500,1500};
+
+/*static int BSR_table[64]= {0,10,12,14,17,19,22,26,31,36,42,49,57,67,78,91,
+                           105,125,146,171,200,234,274,321,376,440,515,603,706,826,967,1132,
+                           1326,1552,1817,2127,2490,2915,3413,3995,4677,5467,6411,7505,8787,10287,12043,14099,
+                           16507,19325,22624,26487,31009,36304,42502,49759,58255,68201,79846,93479,109439,128125,150000,300000
+                           };*/
+
+//static int dl_rep[3] = {1, 2, 4};
+//static uint32_t dci_rep[3] = {1, 2, 4};
+//static uint32_t harq_rep[3] = {1, 2, 4};
 
 
 #endif /*__LAYER2_MAC_DEFS_NB_IoT_H__ */

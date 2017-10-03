@@ -1811,10 +1811,10 @@ int main( int argc, char **argv ) {
     if (node_function[0] <= NGFI_RAU_IF4p5) { // don't initialize L2 for RRU
 
         // MP, Nick: Initialization of IF module for NB-IoT should be here
-#ifdef NB_IOT
+
         	if_inst = malloc(sizeof(IF_Module_t));
         	LOG_I(PHY,"Allocate IF-Module for NB-IoT\n");
-#endif
+
         //---------------------------
 
         LOG_I(PHY,"Intializing L2\n");
@@ -1825,9 +1825,8 @@ int main( int argc, char **argv ) {
                 0); // HO flag
 
 //initialize L2 for NB-IoT stuff (complementary to legacy OAI initialization)
-#ifdef NB_IOT
+
         l2_init_eNB_NB_IoT();
-#endif
 
 
         mac_xface->macphy_exit = &exit_fun;

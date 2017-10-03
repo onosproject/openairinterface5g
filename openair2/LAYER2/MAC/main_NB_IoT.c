@@ -34,6 +34,7 @@
 #include "LAYER2/MAC/defs_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
+#include "vars_NB_IoT.h"
 #include "RRC/LITE/proto_NB_IoT.h"
 
 int mac_init_global_param_NB_IoT(void)
@@ -67,7 +68,6 @@ int mac_top_init_NB_IoT()
 
 int l2_init_eNB_NB_IoT()
 {
-
   LOG_I(MAC,"[MAIN] Mapping L2 IF-Module functions\n");
   IF_Module_init_L2();
 

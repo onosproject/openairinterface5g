@@ -45,15 +45,12 @@
 #include "openair2/PHY_INTERFACE/defs_NB_IoT.h" 
 //#include "RRC/LITE/defs_NB_IoT.h"
 
-//#ifdef NB_IOT
 #include "LAYER2/MAC/defs_NB_IoT.h"
 
 //NB-IoT
 extern IF_Module_t *if_inst;
 extern eNB_MAC_INST_NB_IoT *eNB_mac_inst_NB_IoT;
-//#endif
 
-extern const uint32_t BSR_TABLE_NB_IoT[BSR_TABLE_SIZE_NB_IoT];
 // //extern uint32_t EBSR_Level[63];
 // extern const uint32_t Extended_BSR_TABLE[BSR_TABLE_SIZE];
 // //extern uint32_t Extended_BSR_TABLE[63];  ----currently not used 
@@ -73,13 +70,8 @@ extern const uint32_t BSR_TABLE_NB_IoT[BSR_TABLE_SIZE_NB_IoT];
 // extern uint8_t Is_rrc_registered;
 
 
-extern eNB_ULSCH_INFO_NB_IoT eNB_ulsch_info_NB_IoT[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT]; // eNBxUE = 8x8
-extern eNB_DLSCH_INFO_NB_IoT eNB_dlsch_info_NB_IoT[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX_NB_IoT]; // eNBxUE = 8x8
-
-
-
 //#ifndef USER_MODE
-extern MAC_xface_NB_IoT *mac_xface_NB_IoT;
+
 // extern RRC_XFACE *Rrc_xface;          //// to uncomment when it is used
 
 extern uint8_t Is_rrc_registered;
@@ -100,33 +92,6 @@ extern EMULATION_VARS *Emul_vars;
 #endif //PHY_EMUL
 
 
-// extern int cqi_to_mcs[16];
-
-// extern uint32_t RRC_CONNECTION_FLAG;
-
-// extern uint8_t rb_table[33];
-
-// extern DCI0_5MHz_TDD_1_6_t       UL_alloc_pdu;
-
-extern DCI1A_5MHz_TDD_1_6_t      RA_alloc_pdu;
-extern DCI1A_5MHz_TDD_1_6_t      DLSCH_alloc_pdu1A;
-// extern DCI1A_5MHz_TDD_1_6_t      BCCH_alloc_pdu;
-
-// extern DCI1A_5MHz_TDD_1_6_t      CCCH_alloc_pdu;
-// extern DCI1_5MHz_TDD_t           DLSCH_alloc_pdu;
-
-// extern DCI0_5MHz_FDD_t       UL_alloc_pdu_fdd;
-
-// extern DCI1A_5MHz_FDD_t      DLSCH_alloc_pdu1A_fdd;
-// extern DCI1A_5MHz_FDD_t      RA_alloc_pdu_fdd;
-// extern DCI1A_5MHz_FDD_t      BCCH_alloc_pdu_fdd;
-
-// extern DCI1A_5MHz_FDD_t      CCCH_alloc_pdu_fdd;
-// extern DCI1_5MHz_FDD_t       DLSCH_alloc_pdu_fdd;
-
-// extern DCI2_5MHz_2A_TDD_t DLSCH_alloc_pdu1;
-// extern DCI2_5MHz_2A_TDD_t DLSCH_alloc_pdu2;
-// extern DCI1E_5MHz_2A_M10PRB_TDD_t DLSCH_alloc_pdu1E;
 
 
 //NB-IoT---------------------------------

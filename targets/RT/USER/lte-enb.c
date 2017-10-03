@@ -75,6 +75,7 @@
 #include "PHY/defs_NB_IoT.h"
 #include "SCHED/defs_NB_IoT.h"
 #include "PHY_INTERFACE/IF_Module_NB_IoT.h"
+#include "LAYER2/MAC/extern_NB_IoT.h"
 #include "PHY/extern_NB_IoT.h"
 #include "LAYER2/MAC/defs.h"
 #include "LAYER2/MAC/extern.h"
@@ -614,7 +615,7 @@ static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *p
    * (on its turn the scheduler will trigger the phy_procedure_eNB_TX through schedule_responce function
    */
 
-  //if(if_inst->UL_indication) if_inst->UL_indication(UL_INFO);
+  if(if_inst->UL_indication) if_inst->UL_indication(UL_INFO);
   
 
   if (oai_exit) return(-1);

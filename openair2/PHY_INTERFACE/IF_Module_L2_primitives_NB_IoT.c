@@ -10,6 +10,7 @@ void UL_indication(UL_IND_t *UL_INFO)
         {
           for(i=0;i<UL_INFO->NRACH.number_of_initial_scs_detected;i++)
             {
+              /*
               initiate_ra_proc_NB_IoT(UL_INFO->module_id,
                                       UL_INFO->CC_id,
                                       UL_INFO->frame,
@@ -17,7 +18,7 @@ void UL_indication(UL_IND_t *UL_INFO)
                                       //timing_offset = Timing_advance * 16
                                       (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance * 16,
                                       UL_INFO->subframe
-                                     );
+                                     );*/
             }
         }
         if(UL_INFO->RX_NPUSCH.number_of_pdus>0)
@@ -25,7 +26,7 @@ void UL_indication(UL_IND_t *UL_INFO)
             /*If there is a Uplink SDU (even MSG3, NAK) need to send to MAC*/
             for(i=0;i<UL_INFO->RX_NPUSCH.number_of_pdus;i++)
               {
-                /*For MSG3, Normal Uplink Data, NAK*/
+                /*For MSG3, Normal Uplink Data, NAK
                 rx_sdu_NB_IoT(UL_INFO->module_id,
                               UL_INFO->CC_id,
                               UL_INFO->frame,
@@ -34,7 +35,7 @@ void UL_indication(UL_IND_t *UL_INFO)
                               (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data,
                               (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length,
                               (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid
-                              );
+                              );*/
 
 
               }

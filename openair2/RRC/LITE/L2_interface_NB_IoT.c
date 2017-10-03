@@ -704,9 +704,9 @@ int rrc_mac_config_req_eNB_NB_IoT(
   }
 
   //Now trigger the phy_config_xxx for configuring PHY through the PHY_config_req
-  /*AssertFatal(if_inst->PHY_config_req != NULL, "rrc_mac_config_req_eNB_NB_IoT: PHY_config_req pointer function is NULL\n");
+  AssertFatal(if_inst->PHY_config_req != NULL, "rrc_mac_config_req_eNB_NB_IoT: PHY_config_req pointer function is NULL\n");
   if(if_inst->PHY_config_req)
-  	if_inst->PHY_config_req(config_INFO);*/
+  	if_inst->PHY_config_req(config_INFO);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
 
