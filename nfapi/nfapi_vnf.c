@@ -1161,9 +1161,12 @@ void vnf_start_thread(void* ptr)
 }
 
 static vnf_info vnf;
+extern uint8_t nfapi_pnf;
 /*------------------------------------------------------------------------------*/
 void configure_nfapi_vnf(char *vnf_addr, int vnf_p5_port)
 {
+  nfapi_pnf = 2;
+
   memset(&vnf, 0, sizeof(vnf));
 
   memset(vnf.p7_vnfs, 0, sizeof(vnf.p7_vnfs));

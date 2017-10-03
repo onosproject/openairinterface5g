@@ -49,7 +49,7 @@ void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
   LTE_eNB_PDCCH *pdcch_vars       = &eNB->pdcch_vars[idx];
   nfapi_dl_config_dci_dl_pdu *pdu = &dl_config_pdu->dci_dl_pdu;
 
-  LOG_D(PHY,"Frame %d, Subframe %d: DCI processing\n",proc->frame_tx,proc->subframe_tx);
+  LOG_D(PHY,"Frame %d, Subframe %d: DCI processing - populating pdcch_vars->dci_alloc[%d] subframe_tx:%d idx:%d pdcch_vars->num_dci:%d\n",proc->frame_tx,proc->subframe_tx, pdcch_vars->num_dci, proc->subframe_tx, idx, pdcch_vars->num_dci);
 
   // copy dci configuration into eNB structure
   fill_dci_and_dlsch(eNB,proc,&pdcch_vars->dci_alloc[pdcch_vars->num_dci],pdu);
@@ -582,6 +582,10 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
   // DJP - AssertFatal(proc->subframe_tx == subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
   // DJP - AssertFatal(proc->subframe_tx == subframe, "Current frame %d != NFAPI frame %d\n",proc->frame_tx,frame);
 
+  uint8_t number_dci                = DL_req->dl_config_request_body.number_dci;
+  uint8_t number_pdcch_ofdm_symbols = DL_req->dl_config_request_body.number_pdcch_ofdm_symbols;
+
+
   uint8_t number_dl_pdu             = DL_req->dl_config_request_body.number_pdu;
   uint8_t number_hi_dci0_pdu        = HI_DCI0_req->hi_dci0_request_body.number_of_dci+HI_DCI0_req->hi_dci0_request_body.number_of_hi;
   uint8_t number_ul_pdu             = UL_req->ul_config_request_body.number_of_pdus;
@@ -593,12 +597,14 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
 
   int i;
 
-  eNB->pdcch_vars[subframe&1].num_pdcch_symbols = DL_req->dl_config_request_body.number_pdcch_ofdm_symbols;
-  eNB->pdcch_vars[subframe&1].num_dci           = DL_req->dl_config_request_body.number_dci;
+  eNB->pdcch_vars[subframe&1].num_pdcch_symbols = number_pdcch_ofdm_symbols;
+  eNB->pdcch_vars[subframe&1].num_dci           = number_dci;
   eNB->phich_vars[subframe&1].num_hi            = 0;
 
-  LOG_D(PHY,"NFAPI: Frame %d, Subframe %d: received %d dl_pdu, %d tx_req, %d hi_dci0_config_req, %d UL_config \n",
-	frame,subframe,number_dl_pdu,TX_req->tx_request_body.number_of_pdus,number_hi_dci0_pdu,number_ul_pdu);
+  LOG_D(PHY,"NFAPI: Frame %d, Subframe %d: received %d dl_pdu, %d tx_req, %d hi_dci0_config_req, %d UL_config num_pdcch_symbols:%d\n",
+	frame,subframe,number_dl_pdu,TX_req->tx_request_body.number_of_pdus,number_hi_dci0_pdu,number_ul_pdu, 
+        eNB->pdcch_vars[subframe&1].num_pdcch_symbols
+        );
 
   int do_oai =0;
   
@@ -623,6 +629,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
     case NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE:
       handle_nfapi_dci_dl_pdu(eNB,proc,dl_config_pdu);
       eNB->pdcch_vars[subframe&1].num_dci++;
+      LOG_D(PHY,"Incremented num_dci:%d but already set??? dl_config:num_dci:%d\n", eNB->pdcch_vars[subframe&1].num_dci, number_dci);
       do_oai=1;
       break;
     case NFAPI_DL_CONFIG_BCH_PDU_TYPE:
@@ -643,7 +650,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
       //      handle_nfapi_mch_dl_pdu(eNB,dl_config_pdu);
       break;
     case NFAPI_DL_CONFIG_DLSCH_PDU_TYPE:
-      LOG_E(PHY,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d\n", __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx);
+      LOG_D(PHY,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d data:%p\n", __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx, dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks, dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index, TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
 
       AssertFatal(dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index<TX_req->tx_request_body.number_of_pdus,
 		  "dlsch_pdu_rel8.pdu_index>=TX_req->number_of_pdus (%d>%d)\n",

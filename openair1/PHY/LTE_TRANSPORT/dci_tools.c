@@ -801,6 +801,29 @@ void generate_RIV_tables()
 //       n_tilde_PRB(0,1) = (0,2)
 
 
+void check_dlsch(char *file, int line)
+{
+  PHY_VARS_eNB *eNB = RC.eNB[0][0];
+  static char oldbuf[13*NUMBER_OF_UE_MAX+100]="";
+  char buf[13*NUMBER_OF_UE_MAX+100];
+  char *pbuf=buf;
+
+  for (int i=0; i<NUMBER_OF_UE_MAX; i++) {
+    pbuf+=sprintf(pbuf, "[%02d]:%02x:%04x ", i, eNB->dlsch[i][0]->harq_mask, eNB->dlsch[i][0]->rnti);
+  }
+
+  int diff_size = memcmp(oldbuf, buf, strlen(buf));
+  
+  if (diff_size!=0)
+  {
+    LOG_I(PHY,"check_dlsch:%s:%d:%s\n", file, line, buf);
+    LOG_I(PHY,"check_dlsch:%s:%d:%s\n", file, line, oldbuf);
+  }
+
+  memcpy(oldbuf, buf, sizeof(buf));
+ 
+}
+
 int8_t find_dlsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
 {
   uint8_t i;
@@ -1990,6 +2013,7 @@ int fill_dci_and_dlsch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_
       computeRhoB_eNB(&eNB->pdsch_config_dedicated[UE_id],&(fp->pdsch_config_common),fp->nb_antenna_ports_eNB,dlsch1,dlsch1_harq->dl_power_off);
     }
     
+    LOG_D(PHY, "%s() dci_length:%d\n", __FUNCTION__, dci_alloc->dci_length);
     
 }
 
@@ -4485,7 +4509,7 @@ int dump_dci(LTE_DL_FRAME_PARMS *frame_parms, DCI_ALLOC_t *dci)
         break;
 
       case 25:
-        LOG_D(PHY,"DCI format0 (FDD, 5MHz), rnti %x (%x): hopping %d, rb_alloc %x, mcs %d, ndi %d, TPC %d, cshift %d, cqi_req %d\n",
+        LOG_I(PHY,"DCI format0 (FDD, 5MHz), rnti %x (%x): hopping %d, rb_alloc %x, mcs %d, ndi %d, TPC %d, cshift %d, cqi_req %d\n",
               dci->rnti,
               ((uint32_t*)&dci->dci_pdu[0])[0],
               ((DCI0_5MHz_FDD_t *)&dci->dci_pdu[0])->hopping,

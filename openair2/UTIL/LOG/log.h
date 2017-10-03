@@ -315,6 +315,19 @@ void *log_thread_function(void * list);
 #    define LOG_N(c, x...) /* */
 #    define LOG_F(c, x...) /* */
 #  else /* T_TRACER */
+extern log_t *g_log;
+#if 0
+#    define LOG_G(c, x...) do { if (g_log->log_component[c].level > g_log->level || LOG_EMERG   > g_log->log_component[c].level || LOG_EMERG   > g_log->level) logIt(c, LOG_EMERG, x); } while(0)
+#    define LOG_A(c, x...) do { if (g_log->log_component[c].level > g_log->level || LOG_ALERT   > g_log->log_component[c].level || LOG_ALERT   > g_log->level) logIt(c, LOG_ALERT, x); } while(0)
+#    define LOG_C(c, x...) do { if (g_log->log_component[c].level > g_log->level || LOG_CRIT    > g_log->log_component[c].level || LOG_CRIT    > g_log->level) logIt(c, LOG_CRIT, x); } while(0)
+#    define LOG_E(c, x...) do { if (g_log->log_component[c].level > g_log->level || LOG_ERR     > g_log->log_component[c].level || LOG_ERR     > g_log->level) logIt(c, LOG_ERR, x); } while(0)
+#    define LOG_W(c, x...) do { if (g_log->log_component[c].level > g_log->level || LOG_WARNING > g_log->log_component[c].level || LOG_WARNING > g_log->level) logIt(c, LOG_WARNING, x); } while(0)
+#    define LOG_N(c, x...) do { if (g_log->log_component[c].level > g_log->level || LOG_NOTICE  > g_log->log_component[c].level || LOG_NOTICE  > g_log->level) logIt(c, LOG_NOTICE, x); } while(0)
+#    define LOG_I(c, x...) do { if (g_log->log_component[c].level > g_log->level || LOG_INFO    > g_log->log_component[c].level || LOG_INFO    > g_log->level) logIt(c, LOG_INFO, x); } while(0)
+#    define LOG_D(c, x...) do { if (g_log->log_component[c].level > g_log->level || LOG_DEBUG   > g_log->log_component[c].level || LOG_DEBUG   > g_log->level) logIt(c, LOG_DEBUG, x); } while(0)
+#    define LOG_F(c, x...) do { if (g_log->log_component[c].level > g_log->level || LOG_FILE    > g_log->log_component[c].level || LOG_FILE    > g_log->level) logIt(c, LOG_FILE, x); } while(0)
+#    define LOG_T(c, x...) do { if (g_log->log_component[c].level > g_log->level || LOG_TRACE   > g_log->log_component[c].level || LOG_TRACE   > g_log->level) logIt(c, LOG_TRACE, x); } while(0)
+#else
 #    define LOG_G(c, x...) logIt(c, LOG_EMERG, x)
 #    define LOG_A(c, x...) logIt(c, LOG_ALERT, x)
 #    define LOG_C(c, x...) logIt(c, LOG_CRIT,  x)
@@ -325,6 +338,7 @@ void *log_thread_function(void * list);
 #    define LOG_D(c, x...) logIt(c, LOG_DEBUG, x)
 #    define LOG_F(c, x...) logIt(c, LOG_FILE, x)  // log to a file, useful for the MSC chart generation
 #    define LOG_T(c, x...) logIt(c, LOG_TRACE, x)
+#endif
 #  endif /* T_TRACER */
 #else /* USER_MODE */
 #  define LOG_G(c, x...) printk(x)

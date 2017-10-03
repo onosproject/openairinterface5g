@@ -180,7 +180,7 @@ void UL_indication(UL_IND_t *UL_info)
 
   handle_harq(UL_info);
 
-  // clear HI prior to hanling ULSCH
+  // clear HI prior to handling ULSCH
   mac->HI_DCI0_req[CC_id].hi_dci0_request_body.number_of_hi                     = 0;
   
   handle_ulsch(UL_info);

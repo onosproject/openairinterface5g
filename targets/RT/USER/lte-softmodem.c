@@ -97,7 +97,6 @@ unsigned short config_frames[4] = {2,9,11,13};
 #endif
 
 
-
 #ifdef XFORMS
 // current status is that every UE has a DL scope for a SINGLE eNB (eNB_id=0)
 // at eNB 0, an UL scope for every UE
@@ -116,6 +115,7 @@ int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 pthread_cond_t sync_cond;
 pthread_mutex_t sync_mutex;
 int sync_var=-1; //!< protected by mutex \ref sync_mutex.
+int config_sync_var=-1;
 
 uint16_t runtime_phy_rx[29][6]; // SISO [MCS 0-28][RBs 0-5 : 6, 15, 25, 50, 75, 100]
 uint16_t runtime_phy_tx[29][6]; // SISO [MCS 0-28][RBs 0-5 : 6, 15, 25, 50, 75, 100]
@@ -208,10 +208,12 @@ int16_t           glog_level         = LOG_INFO;
 int16_t           glog_verbosity     = LOG_MED;
 int16_t           hw_log_level       = LOG_INFO;
 int16_t           hw_log_verbosity   = LOG_MED;
-int16_t           phy_log_level      = LOG_TRACE;
+int16_t           phy_log_level      = LOG_DEBUG;
 int16_t           phy_log_verbosity  = LOG_FULL;
-int16_t           mac_log_level      = LOG_INFO;
-int16_t           mac_log_verbosity  = LOG_MED;
+int16_t           rach_log_level      = LOG_DEBUG;
+int16_t           rach_log_verbosity  = LOG_FULL;
+int16_t           mac_log_level      = LOG_DEBUG;
+int16_t           mac_log_verbosity  = LOG_FULL;
 int16_t           rlc_log_level      = LOG_INFO;
 int16_t           rlc_log_verbosity  = LOG_MED;
 int16_t           pdcp_log_level     = LOG_INFO;
@@ -1689,8 +1691,7 @@ int main( int argc, char **argv )
   pthread_cond_init(&sync_cond,NULL);
   pthread_mutex_init(&sync_mutex, NULL);
   
-  
-  if (nfapi_pnf==2)
+  if (nfapi_pnf==2) // VNF
     wait_nfapi_init("main?");
   
   printf("START MAIN THREADS\n");
@@ -1727,6 +1728,11 @@ int main( int argc, char **argv )
 	RC.ru[ru_id]->rf_map.chain=CC_id+chain_offset;
       }
     }
+
+    config_sync_var=0;
+
+    if (nfapi_pnf==1) // PNF
+      wait_nfapi_init("main?");
 
     printf("wait RUs\n");
     wait_RUs();

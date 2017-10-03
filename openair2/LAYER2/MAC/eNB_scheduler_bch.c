@@ -538,7 +538,7 @@ void schedule_mib(module_id_t   module_idP,
 				      module_idP,
 				      0); // not used in this case
 
-    LOG_E(MAC,"Frame %d, subframe %d: BCH PDU length %d\n",
+    LOG_D(MAC,"Frame %d, subframe %d: BCH PDU length %d\n",
 	  frameP,subframeP,mib_sdu_length);
 
     if (mib_sdu_length > 0) {
@@ -575,7 +575,7 @@ void schedule_mib(module_id_t   module_idP,
       eNB->TX_req[CC_id].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
       eNB->TX_req[CC_id].header.message_id = NFAPI_TX_REQUEST;
 
-      if (frameP%100==0) LOG_E(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
+      if (frameP%100==0) LOG_D(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
           __FUNCTION__, eNB->TX_req[CC_id].sfn_sf, eNB->TX_req[CC_id].tx_request_body.number_of_pdus,
           TX_req->pdu_length, TX_req->pdu_index, TX_req->num_segments, TX_req->segments[0].segment_length);
     }
@@ -701,7 +701,7 @@ schedule_SI(
 	dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE; 
 	dl_config_pdu->pdu_size                                               = (uint8_t)(sizeof(nfapi_dl_config_dci_dl_pdu));
         dl_req->number_dci++;
-        LOG_E(MAC, "%s() number_dci:%u\n", __FUNCTION__, dl_req->number_dci);
+        LOG_D(MAC, "%s() number_dci:%u\n", __FUNCTION__, dl_req->number_dci);
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                      = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1A;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = 4;
@@ -719,8 +719,9 @@ schedule_SI(
         dl_config_request->header.message_id = NFAPI_DL_CONFIG_REQUEST;
         dl_config_request->sfn_sf = sfn_sf;
 	
+        LOG_D(MAC, "%s() mcs:%d bcch_sdu_length:%d N_RB_DL:%d first_rb:%d resource_block_coding:%d\n", __FUNCTION__, mcs, bcch_sdu_length, N_RB_DL, first_rb, dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding);
+
 	if (!CCE_allocation_infeasible(module_idP,CC_id,1,subframeP,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,SI_RNTI)) {
-	  // DJP - dl_req->number_dci++;
 	  dl_req->number_pdu++;
 	  dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 

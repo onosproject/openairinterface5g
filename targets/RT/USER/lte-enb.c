@@ -889,7 +889,7 @@ void init_transport(PHY_VARS_eNB *eNB) {
   fp->pucch_config_common.deltaPUCCH_Shift = 1;
     
 } 
-void init_eNB_afterRU() {
+void init_eNB_afterRU(void) {
 
   int inst,CC_id,ru_id,i,aa;
   PHY_VARS_eNB *eNB;
@@ -972,7 +972,8 @@ void init_eNB_afterRU() {
     RC.ru[ru_id]->wakeup_rxtx         = wakeup_rxtx;
     RC.ru[ru_id]->wakeup_prach_eNB    = wakeup_prach_eNB;
     RC.ru[ru_id]->wakeup_prach_eNB_br = wakeup_prach_eNB_br;
-    RC.ru[ru_id]->eNB_top             = eNB_top;
+    if (nfapi_pnf!=1)
+      RC.ru[ru_id]->eNB_top             = eNB_top;
   }
 
   LOG_I(PHY,"%s() Exitting\n", __FUNCTION__);

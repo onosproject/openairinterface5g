@@ -720,19 +720,11 @@ void RCconfig_L1(void) {
 
   if (RC.eNB == NULL) {
     RC.eNB                               = (PHY_VARS_eNB ***)malloc((1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
-    LOG_I(PHY,"DJP - have malloced RC.eNB - RC.eNB = %p\n",RC.eNB);
+    LOG_I(PHY,"RC.eNB:%p\n",RC.eNB);
     memset(RC.eNB,0,(1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
     RC.nb_L1_CC = malloc((1+RC.nb_L1_inst)*sizeof(int));
-    printf("%s() RC.eNB:%p - RC.nb_L1_CC:%p\n", __FUNCTION__, RC.eNB, RC.nb_L1_CC);
+    LOG_I(PHY,"%s() RC.eNB:%p RC.nb_L1_CC:%p\n", __FUNCTION__, RC.eNB, RC.nb_L1_CC);
   }
-
-#if 0
-  if (RC.nb_L1_inst==0)
-  {
-    RC.nb_L1_inst = 1;
-    printf("********\n\n\n*********** DJP - hard coding RC.nb_L1_inst = 1 \n\n\n\n");
-  }
-#endif
 
   setting = config_lookup(&cfg, CONFIG_STRING_L1_LIST);
 
@@ -754,14 +746,6 @@ void RCconfig_L1(void) {
             "Failed to parse configuration file %s, L1 %d config !\n",
             RC.config_file_name, j);	
     }
-    else
-    {
-#if 0
-      RC.nb_L1_CC[j] = 1;
-
-      printf("****DJP - hard coding  nb_L1_CC[%d] = 1 *************\n", j, RC.nb_L1_CC[j]);
-#endif
-    }
 
     for (i=0;i<RC.nb_L1_CC[j];i++) {
       if (RC.eNB[j][i] == NULL) {
@@ -775,14 +759,14 @@ void RCconfig_L1(void) {
 
     printf("l1 %d/%d (nb CC %d)\n",j,RC.nb_inst,RC.nb_L1_CC[j]);
 
-    if (setting)
+    if (setting_l1)
     {
-      printf("RU %d: Transport %s\n",j,tr_n_preference);
       if (!(config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_TRANSPORT_N_PREFERENCE, (const char **)&tr_n_preference))) {
         AssertFatal (0,
             "Failed to parse configuration file %s, L1 %d config !\n",
             RC.config_file_name, j);
       }
+      printf("RU %d: Transport %s\n",j,tr_n_preference);
 
       if (strcmp(tr_n_preference, "local_mac") == 0) {
 
@@ -810,14 +794,23 @@ void RCconfig_L1(void) {
         RC.eNB[j][0]->eth_params_n.remote_portc             = remote_n_portc;
         RC.eNB[j][0]->eth_params_n.my_portd                 = local_n_portd;
         RC.eNB[j][0]->eth_params_n.remote_portd             = remote_n_portd;
-        RC.eNB[j][0]->eth_params_n.transp_preference          = ETH_UDP_MODE;
+        RC.eNB[j][0]->eth_params_n.transp_preference        = ETH_UDP_MODE;
 
         configure_nfapi_pnf(RC.eNB[j][0]->eth_params_n.remote_addr, RC.eNB[j][0]->eth_params_n.remote_portc, RC.eNB[j][0]->eth_params_n.my_addr, RC.eNB[j][0]->eth_params_n.my_portd, RC.eNB[j][0]->eth_params_n.remote_portd);
 
-        {
-          extern uint8_t  nfapi_pnf;
-          nfapi_pnf = 1;
-        }
+        RC.nb_macrlc_inst = 1;  // This is used by mac_top_init_eNB()
+
+        // This is used by init_eNB_afterRU()
+        RC.nb_CC = (int *)malloc((1+RC.nb_inst)*sizeof(int));
+        RC.nb_CC[0]=1;
+
+        RC.nb_inst =1; // DJP - feptx_prec uses num_eNB but phy_init_RU uses nb_inst
+
+        LOG_I(PHY,"%s() NFAPI PNF mode - RC.nb_inst=1 this is because phy_init_RU() uses that to index and not RC.num_eNB - why the 2 similar variables?\n", __FUNCTION__);
+        LOG_I(PHY,"%s() NFAPI PNF mode - RC.nb_CC[0]=1 for init_eNB_afterRU()\n", __FUNCTION__, RC.nb_CC[0]);
+        LOG_I(PHY,"%s() NFAPI PNF mode - RC.nb_macrlc_inst:%d because used by mac_top_init_eNB()\n", __FUNCTION__, RC.nb_macrlc_inst);
+
+        mac_top_init_eNB();
       }
       else { // other midhaul
       }	
@@ -854,13 +847,13 @@ void RCconfig_macrlc(void) {
   libconfig_int     local_n_portd                   = 0;
   libconfig_int     remote_n_portd                  = 0;
 
+  printf("%s() Enter\n" , __FUNCTION__);
+
   load_config_file(&cfg);
 
   setting = config_lookup(&cfg, CONFIG_STRING_MACRLC_LIST);
   
   if (setting != NULL) {
-    
-
     
     if ((RC.nb_macrlc_inst=config_setting_length(setting))>0) mac_top_init_eNB();
     else AssertFatal(1==0,"improper macrlc setting\n");
@@ -950,17 +943,9 @@ void RCconfig_macrlc(void) {
 	RC.mac[j]->eth_params_s.remote_portd             = remote_s_portd;
 	RC.mac[j]->eth_params_s.transp_preference        = ETH_UDP_MODE;
 
-        {
-          extern uint8_t  nfapi_pnf;
-          nfapi_pnf = 2;
-        }
-
-        {
-          printf("**************** vnf_port:%d\n", RC.mac[j]->eth_params_s.my_portc);
-          configure_nfapi_vnf(RC.mac[j]->eth_params_s.my_addr, RC.mac[j]->eth_params_s.my_portc);
-          printf("**************** RETURNED FROM configure_nfapi_vnf() vnf_port:%d\n", RC.mac[j]->eth_params_s.my_portc);
-
-        }
+        printf("**************** vnf_port:%d\n", RC.mac[j]->eth_params_s.my_portc);
+        configure_nfapi_vnf(RC.mac[j]->eth_params_s.my_addr, RC.mac[j]->eth_params_s.my_portc);
+        printf("**************** RETURNED FROM configure_nfapi_vnf() vnf_port:%d\n", RC.mac[j]->eth_params_s.my_portc);
       }
       
       else { // other midhaul
@@ -968,7 +953,10 @@ void RCconfig_macrlc(void) {
       }	
     }// j=0..num_inst
   }
-  return;
+  else
+  {
+    printf("No MAC/RLC instances\n");
+  }
 }
 	       
 int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {

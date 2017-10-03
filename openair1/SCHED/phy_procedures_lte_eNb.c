@@ -141,7 +141,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,int frame, int subframe) {
   int **txdataF = eNB->common_vars.txdataF;
   uint8_t *pbch_pdu=&eNB->pbch_pdu[0];
 
-  LOG_D(PHY,"common_signal_procedures: frame %d, subframe %d\n",frame,subframe); 
+  LOG_D(PHY,"common_signal_procedures: frame %d, subframe %d fdd:%s dir:%s\n",frame,subframe,fp->frame_type == FDD?"FDD":"TDD", subframe_select(fp,subframe) == SF_DL?"DL":"UL?"); 
 
   // generate Cell-Specific Reference Signals for both slots
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_RS_TX,1);
@@ -483,15 +483,20 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   if (num_dci > 0)
     LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (num_dci %"PRIu8") num_pdcch_symbols:%d\n",eNB->Mod_id,frame, subframe, num_dci, num_pdcch_symbols);
     
+  LOG_D(PHY,"Before generate_dci_top num_pdcch_symbols:%d num_dci:%d dci_alloc:dci_length:%d\n",
+      num_pdcch_symbols, 
+      num_dci, 
+      eNB->pdcch_vars[subframe&1].dci_alloc[0].dci_length);
+
   generate_dci_top(num_pdcch_symbols,
-		   num_dci,
-		   &eNB->pdcch_vars[subframe&1].dci_alloc[0],
-		   0,
-		   AMP,
-		   fp,
-		   eNB->common_vars.txdataF,
-		   subframe);
-  
+      num_dci,
+      &eNB->pdcch_vars[subframe&1].dci_alloc[0],
+      0,
+      AMP,
+      fp,
+      eNB->common_vars.txdataF,
+      subframe);
+
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,0);
 
@@ -1236,14 +1241,14 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       }
     
       if (SR_payload == 1) {
-	LOG_D(PHY,"[eNB %d][SR %x] Frame %d subframe %d Got SR for PUSCH, transmitting to MAC\n",eNB->Mod_id,
+	LOG_E(PHY,"[eNB %d][SR %x] Frame %d subframe %d Got SR for PUSCH, transmitting to MAC\n",eNB->Mod_id,
 	      uci->rnti,frame,subframe);
 	
 	if (eNB->first_sr[i] == 1) { // this is the first request for uplink after Connection Setup, so clear HARQ process 0 use for Msg4
 	  eNB->first_sr[i] = 0;
 	  eNB->dlsch[i][0]->harq_processes[0]->round=0;
 	  eNB->dlsch[i][0]->harq_processes[0]->status=SCH_IDLE;
-	  LOG_D(PHY,"[eNB %d][SR %x] Frame %d subframe %d First SR\n",
+	  LOG_E(PHY,"[eNB %d][SR %x] Frame %d subframe %d First SR\n",
 		eNB->Mod_id,
 		eNB->ulsch[i]->rnti,frame,subframe);
 	}
@@ -1582,7 +1587,10 @@ void release_harq(PHY_VARS_eNB *eNB,int UE_id,int tb,uint16_t frame,uint8_t subf
     if ((dlsch1_harq == NULL)||
 	((dlsch1_harq!=NULL)&&
 	 (dlsch1_harq->status == SCH_IDLE)))
+    {
       dlsch0->harq_mask   &= ~(1<<harq_pid);
+      LOG_I(PHY,"%s() UE_id:%d SFN/SF:%d/%d dlsch0->harq_mask:%02x\n", __FUNCTION__, UE_id, frame, subframe,dlsch0->harq_mask);
+    }
   }
   else { // release all processes in the bundle that was acked, based on mask
          // This is at most 4 for multiplexing and 9 for bundling/special bundling
@@ -1936,7 +1944,3 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
   stop_meas(&eNB->phy_proc_rx);
 
 }
-
-
-
-

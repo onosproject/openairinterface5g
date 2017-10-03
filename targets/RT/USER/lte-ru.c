@@ -1012,22 +1012,24 @@ static void* ru_thread_prach( void* param ) {
 
   thread_top_init("ru_thread_prach",1,500000L,1000000L,20000000L);
 
+  while (RC.ru_mask>0) {
+    usleep(1e6);
+    LOG_I(PHY,"%s() RACH waiting for RU to be configured\n");
+  }
+  LOG_I(PHY,"%s() RU configured - RACH processing thread running\n");
+
   while (!oai_exit) {
     
     if (oai_exit) break;
     if (wait_on_condition(&proc->mutex_prach,&proc->cond_prach,&proc->instance_cnt_prach,"ru_prach_thread") < 0) break;
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_RU_PRACH_RX, 1 );      
-    rx_prach(NULL,
-	     ru,
-	     NULL,
-             NULL,
-             NULL,
-             proc->frame_prach,
-             0
+    prach_procedures(
+        ru->eNB_list[0]
 #ifdef Rel14
-	     ,0
+        ,0
 #endif
-	     );
+        );
+
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_RU_PRACH_RX, 0 );      
     if (release_thread(&proc->mutex_prach,&proc->instance_cnt_prach,"ru_prach_thread") < 0) break;
   }
@@ -1252,6 +1254,7 @@ static inline int wakeup_prach_ru_br(RU_t *ru) {
 #endif
 
 void oai_subframe_ind(uint16_t frame, uint16_t subframe);
+void check_dlsch(char *file, int line);
 
 static void* ru_thread( void* param ) {
 
@@ -1347,24 +1350,41 @@ ru->openair0_cfg.tx_gain[3]=0.0;
       subframe++;
     }      
 
-    LOG_D(PHY,"RU thread (proc %p), frame %d (%p), subframe %d (%p)\n",
-	  proc, frame,&frame,subframe,&subframe);
+    LOG_D(PHY,"RU thread (proc %p), frame %d (%p), subframe %d (%p)\n", proc, frame,&frame,subframe,&subframe);
 
+
+    ru->proc.frame_rx = frame;
+    ru->proc.subframe_rx = subframe;
+
+    ru->proc.frame_tx = subframe>9 ? (frame+1)&1023 : frame;
+    ru->proc.subframe_tx = subframe+1 % 10;
+
+    proc->frame_rx = ru->proc.frame_rx;
+    proc->subframe_rx = ru->proc.subframe_rx;
 
     // synchronization on input FH interface, acquire signals/data and block
     if (ru->fh_south_in) ru->fh_south_in(ru,&frame,&subframe);
     else AssertFatal(1==0, "No fronthaul interface at south port");
 
+    check_dlsch(__FILE__, __LINE__);
+
     oai_subframe_ind(frame, subframe);
+
+    check_dlsch(__FILE__, __LINE__);
 
     LOG_D(PHY,"RU thread (do_prach %d, is_prach_subframe %d), received frame %d, subframe %d\n",
 	  ru->do_prach,
 	  is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx),
 	  proc->frame_rx,proc->subframe_rx);
  
-    if ((ru->do_prach>0) && (is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx)==1)) wakeup_prach_ru(ru);
+    if ((ru->do_prach>0) && (is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx)==1)) { 
+      wakeup_prach_ru(ru);
+      check_dlsch(__FILE__, __LINE__);
+    }
 #ifdef Rel14
-    else if ((ru->do_prach>0) && (is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx)>1)) wakeup_prach_ru_br(ru);
+    else if ((ru->do_prach>0) && (is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx)>1)) {
+      wakeup_prach_ru_br(ru);
+    }
 #endif
 
     // adjust for timing offset between RU
@@ -1374,33 +1394,41 @@ ru->openair0_cfg.tx_gain[3]=0.0;
     // do RX front-end processing (frequency-shift, dft) if needed
     if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 1 ); 
     if (ru->feprx) ru->feprx(ru);
-    if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 0 ); 
+    check_dlsch(__FILE__, __LINE__);
 
     T(T_ENB_MASTER_TICK, T_INT(0), T_INT(proc->frame_rx), T_INT(proc->subframe_rx));
 
     // At this point, all information for subframe has been received on FH interface
     // If this proc is to provide synchronization, do so
     wakeup_slaves(proc);
+    check_dlsch(__FILE__, __LINE__);
 
     //LOG_E(PHY,"RU %d/%d frame_tx %d, subframe_tx %d\n",0,ru->idx,proc->frame_tx,proc->subframe_tx);
     // wakeup all eNB processes waiting for this RU
     if (ru->num_eNB>0) wakeup_eNBs(ru);
+    check_dlsch(__FILE__, __LINE__);
 
     //LOG_E(PHY,"%s() Before wait_on_condition()\n", __FUNCTION__);
     // wait until eNBs are finished subframe RX n and TX n+4
     wait_on_condition(&proc->mutex_eNBs,&proc->cond_eNBs,&proc->instance_cnt_eNBs,"ru_thread");
+    check_dlsch(__FILE__, __LINE__);
     //LOG_E(PHY,"%s() AFTER wait_on_condition() ru->feptx_prec:%p ru->fh_north_asynch_in:%p ru->feptx_ofdm:%p ru->fh_south_out:%p ru->fh_north_out:%p\n", 
     //__FUNCTION__, ru->feptx_prec, ru->fh_north_asynch_in, ru->feptx_ofdm, ru->fh_south_out, ru->fh_north_out);
 
     // do TX front-end processing if needed (precoding and/or IDFTs)
     if (ru->feptx_prec) ru->feptx_prec(ru);
+    check_dlsch(__FILE__, __LINE__);
    
     // do OFDM if needed
     if ((ru->fh_north_asynch_in == NULL) && (ru->feptx_ofdm)) ru->feptx_ofdm(ru);
+    check_dlsch(__FILE__, __LINE__);
     // do outgoing fronthaul (south) if needed
     if ((ru->fh_north_asynch_in == NULL) && (ru->fh_south_out)) ru->fh_south_out(ru);
+    check_dlsch(__FILE__, __LINE__);
  
     if (ru->fh_north_out) ru->fh_north_out(ru);
+    check_dlsch(__FILE__, __LINE__);
+    if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 0 ); 
   }
   
 
@@ -1587,6 +1615,12 @@ void init_RU_proc(RU_t *ru) {
     pthread_setname_np( proc->pthread_FH, name );
     
   }
+  else if (ru->function == eNodeB_3GPP && ru->if_south == LOCAL_RF) { // DJP - need something else to distinguish between monolithic and PNF
+    LOG_E(PHY,"%s() DJP - added creation of pthread_prach\n", __FUNCTION__);
+    pthread_create( &proc->pthread_prach, attr_prach, ru_thread_prach, (void*)ru );
+  }
+
+
   
   
 }
@@ -2022,7 +2056,7 @@ void init_RU(const char *rf_config_file) {
 	malloc_IF4p5_buffer(ru);
       }
       else if (ru->function == eNodeB_3GPP) {  
-	ru->do_prach             = 0;                       // no prach processing in RU            
+	ru->do_prach             = 1;                       // no prach processing in RU            
 	ru->feprx                = fep_full;                // RX DFTs
 	ru->feptx_ofdm           = feptx_ofdm;              // this is fep with idft and precoding
 	ru->feptx_prec           = feptx_prec;              // this is fep with idft and precoding

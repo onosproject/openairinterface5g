@@ -72,6 +72,10 @@ int l1_north_init_eNB() {
       }
     }
   }
+  else
+  {
+    LOG_I(PHY,"%s() Not installing PHY callbacks - RC.nb_L1_inst:%d RC.nb_L1_CC:%p RC.eNB:%p\n", __FUNCTION__, RC.nb_L1_inst, RC.nb_L1_CC, RC.eNB);
+  }
   return(0);
 }
 
@@ -1728,13 +1732,13 @@ int phy_init_RU(RU_t *ru) {
 #endif
     }
 
-    LOG_D(PHY,"[INIT] %s() RC.nb_inst:%d \n", __FUNCTION__, RC.nb_inst);
+    LOG_E(PHY,"[INIT] %s() RC.nb_inst:%d \n", __FUNCTION__, RC.nb_inst);
 
     for (i=0; i<RC.nb_inst; i++) {
       for (p=0;p<15;p++) {
         LOG_D(PHY,"[INIT] %s() nb_antenna_ports_eNB:%d \n", __FUNCTION__, ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB);
 	if (p<ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB || p==5) {
-          //LOG_E(PHY,"[INIT] %s() DO BEAM WEIGHTS nb_antenna_ports_eNB:%d nb_tx:%d\n", __FUNCTION__, ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB, ru->nb_tx);
+          LOG_D(PHY,"[INIT] %s() DO BEAM WEIGHTS nb_antenna_ports_eNB:%d nb_tx:%d\n", __FUNCTION__, ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB, ru->nb_tx);
 	  ru->beam_weights[i][p] = (int32_t **)malloc16_clear(ru->nb_tx*sizeof(int32_t*));
 	  for (j=0; j<ru->nb_tx; j++) {
 	    ru->beam_weights[i][p][j] = (int32_t *)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t));
@@ -1838,7 +1842,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
     if (i<fp->nb_antenna_ports_eNB || i==5) {
       common_vars->txdataF[i] = (int32_t*)malloc16_clear(fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t) );
       
-      LOG_E(PHY,"[INIT] common_vars->txdataF[%d] = %p (%lu bytes)\n",
+      LOG_D(PHY,"[INIT] common_vars->txdataF[%d] = %p (%lu bytes)\n",
 	    i,common_vars->txdataF[i],
 	    fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t));
     }

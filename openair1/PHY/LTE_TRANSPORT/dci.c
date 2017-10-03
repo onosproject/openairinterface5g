@@ -2074,6 +2074,11 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
   int Msymb2;
   int split_flag=0;
 
+  if (num_dci>0)
+  {
+    LOG_D(PHY,"%s(num_pdcch_symbols:%d num_dci:%d dci_alloc:%p n_rnti:%04x amp:%d frame_parms:%p txdataF:%p subframe:%d)\n", __FUNCTION__, num_pdcch_symbols, num_dci, dci_alloc, n_rnti, amp, frame_parms, txdataF, subframe);
+  }
+
   switch (frame_parms->N_RB_DL) {
   case 100:
     Msymb2 = Msymb;
@@ -2148,7 +2153,9 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
   }
 
   // Scrambling
-  //  printf("pdcch scrambling\n");
+#ifdef DEBUG_DCI_ENCODING
+  printf("pdcch scrambling\n");
+#endif
   pdcch_scrambling(frame_parms,
                    subframe,
                    e,
@@ -2232,6 +2239,18 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
 
   // This is the REG allocation algorithm from 36-211, second part of Section 6.8.5
   //  printf("DCI (SF %d) : txdataF %p (0 %p)\n",subframe,&txdataF[0][512*14*subframe],&txdataF[0][0]);
+#ifdef DEBUG_DCI_ENCODING
+  printf("kprime loop - N_RB_DL:%d lprime:num_pdcch_symbols:%d Ncp:%d pcfich:%02x,%02x,%02x,%02x ofdm_symbol_size:%d first_carrier_offset:%d nb_antenna_ports_eNB:%d\n",
+  frame_parms->N_RB_DL, num_pdcch_symbols,frame_parms->Ncp,
+  frame_parms->pcfich_reg[0],
+  frame_parms->pcfich_reg[1],
+  frame_parms->pcfich_reg[2],
+  frame_parms->pcfich_reg[3],
+  frame_parms->ofdm_symbol_size,
+  frame_parms->first_carrier_offset,
+  frame_parms->nb_antenna_ports_eNB
+  );
+#endif
   for (kprime=0; kprime<frame_parms->N_RB_DL*12; kprime++) {
     for (lprime=0; lprime<num_pdcch_symbols; lprime++) {
 
