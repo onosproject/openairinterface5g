@@ -1,3 +1,13 @@
+
+/*! \file schedule_tool_NB_IoT.c
+ * \brief scheduler helper function
+ * \author  NTUST BMW Lab./
+ * \date 2017
+ * \email: 
+ * \version 1.0
+ *
+ */
+
 #include "defs_NB_IoT.h"
 #include "proto_NB_IoT.h"
 #include "extern_NB_IoT.h"

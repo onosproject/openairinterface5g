@@ -1,11 +1,11 @@
-/*! \file eNB_scheduler_ulsch.c
- * \brief eNB procedures for the ULSCH transport channel
- * \author Navid Nikaein and Raymond Knopp
- * \date 2010 - 2014
- * \email: navid.nikaein@eurecom.fr
- * \version 1.0
- * @ingroup _mac
 
+/*! \file eNB_scheduler_ulsch_NB_IoT.c
+ * \brief handle UL UE-specific scheduling
+ * \author  NTUST BMW Lab./
+ * \date 2017
+ * \email: 
+ * \version 1.0
+ *
  */
 
 #include "defs_NB_IoT.h"

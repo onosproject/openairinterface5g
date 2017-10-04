@@ -1,3 +1,13 @@
+
+/*! \file config_NB_IoT.h
+ * \brief configured structures used by scheduler
+ * \author  NTUST BMW Lab./
+ * \date 2017
+ * \email: 
+ * \version 1.0
+ *
+ */
+
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 

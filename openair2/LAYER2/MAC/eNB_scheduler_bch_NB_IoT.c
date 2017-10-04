@@ -1,4 +1,12 @@
-// function for schedule SI
+
+/*! \file eNB_scheduler_bch_NB_IoT.c
+ * \brief schedule functions for SIBs transmission in NB-IoT
+ * \author  NTUST BMW Lab./
+ * \date 2017
+ * \email: 
+ * \version 1.0
+ *
+ */
 
 #include "defs_NB_IoT.h"
 #include "proto_NB_IoT.h"

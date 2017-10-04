@@ -1,3 +1,13 @@
+
+/*! \file config_NB_IoT.c
+ * \brief configuration primitives between RRC and MAC
+ * \author  NTUST BMW Lab./
+ * \date 2017
+ * \email: 
+ * \version 1.0
+ *
+ */
+
 #include "LAYER2/MAC/defs_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
