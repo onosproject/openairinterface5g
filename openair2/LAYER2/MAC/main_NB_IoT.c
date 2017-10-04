@@ -236,8 +236,6 @@ int l2_init_eNB_NB_IoT()
 
   init_mac_NB_IoT(mac_inst);
 
-  
-
   return(1);
 }
 

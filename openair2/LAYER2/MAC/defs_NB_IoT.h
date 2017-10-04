@@ -545,6 +545,15 @@ typedef struct {
 
 } eNB_MAC_INST_NB_IoT;
 
+// actually not here, but for now put it here
+typedef  struct {
+  uint32_t       bytes_in_buffer; /*!< \brief Bytes buffered in RLC protocol instance. */
+  uint32_t       pdus_in_buffer;  /*!< \brief Number of PDUs buffered in RLC protocol instance (OBSOLETE). */
+  uint32_t       head_sdu_creation_time;           /*!< \brief Head SDU creation time. */
+  uint32_t       head_sdu_remaining_size_to_send;  /*!< \brief remaining size of sdu: could be the total size or the remaining size of already segmented sdu */
+  boolean_t      head_sdu_is_segmented;     /*!< \brief 0 if head SDU has not been segmented, 1 if already segmented */
+} mac_rlc_status_resp_NB_IoT_t;
+
 // global variables
 
 nprach_parameters_NB_IoT_t nprach_list[3];
@@ -552,9 +561,9 @@ nprach_parameters_NB_IoT_t nprach_list[3];
 //SCHEDULE_NB_IoT_t *NB_IoT_schedule;
 
 /******MAC Global Variable********/
-available_resource_tones_UL_t *available_resource_UL;
-available_resource_DL_t *available_resource_DL;
-available_resource_DL_t *available_resource_DL_last;
+//available_resource_tones_UL_t *available_resource_UL;
+//available_resource_DL_t *available_resource_DL;
+//available_resource_DL_t *available_resource_DL_last;
 
 /*
  schedule_result_t *schedule_result_list_UL;
@@ -562,79 +571,5 @@ available_resource_DL_t *available_resource_DL_last;
 */
 //DLSF Table
 DLSF_INFO_t DLSF_information;
-
-// array will be active when they are used
-
-// 10 -> single-tone / 12 -> multi-tone
-//static uint32_t max_mcs[2] = {10, 12};
-
-// [CE level] [0 - 3] -> single-tone / [CE level] [4-7] -> multi-tone
-/*static uint32_t mapped_mcs[3][8]={{1,5,9,10,3,7,11,12},
-                            {0,3,7,10,3,7,11,12},
-                            {0,2,6,10,0,4,8,12}};*/
-
-//TBS table for NPUSCH transmission TS 36.213 v14.2 table Table 16.5.1.2-2:
-/*static int UL_TBS_Table[14][8]=
-{
-  {16,2,56,88,120,152,208,256},
-  {24,56,88,144,176,208,256,344},
-  {32,72,144,176,208,256,328,424},
-  {40,104,176,208,256,328,440,568},
-  {56,120,208,256,328,408,552,680},
-  {72,144,224,328,424,504,680,872},
-  {88,176,256,392,504,600,808,1000},
-  {104,224,328,472,584,712,1000,1224},
-  {120,256,392,536,680,808,1096,1384},
-  {136,296,456,616,776,936,1256,1544},
-  {144,328,504,680,872,1000,1384,1736},
-  {176,376,584,776,1000,1192,1608,2024},
-  {208,440,680,1000,1128,1352,1800,2280},
-  {224,488,744,1128,1256,1544,2024,2536}
-};*/
-
-//static uint32_t RU_table[8]={1,2,3,4,5,6,8,10};
-
-//static uint32_t scheduling_delay[4]={8,16,32,64};
-//static uint32_t msg3_scheduling_delay_table[4] = {12,16,32,64};
-
-//static uint32_t ack_nack_delay[4]={13,15,17,18};
-//static uint32_t R_dl_table[16]={1,2,4,8,16,32,64,128,192,256,384,512,768,1024,1536,2048};
-
-// NB_IoT-IoT------------------
-
-// TBS table for the case not containing SIB1-NB_IoT, Table 16.4.1.5.1-1 in TS 36.213 v14.2
-/*static uint32_t TBStable_NB_IoT[14][8] ={ //[ITBS][ISF]
-  {16,32,56,88,120.152,208,256},
-  {24,56,88,144,176,208,256,344},
-  {32,72,144,176,208,256,328,424},
-  {40,104,176,208,256,328,440,568},
-  {56,120,208,256,328,408,552,680},
-  {72,144,244,328,424,504,680,872},
-  {88,176,256,392,504,600,808,1032},
-  {104,224,328,472,584,680,968,1224},
-  {120,256,392,536,680,808,1096,1352},
-  {136,296,456,616,776,936,1256,1544},
-  {144,328,504,680,872,1032,1384,1736},
-  {176,376,584,776,1000,1192,1608,2024},
-  {208,440,680,904,1128,1352,1800,2280},
-  {224,488,744,1128,1256,1544,2024,2536}
-};*/
-
-//TBS table for the case containing S1B1-NB_IoT, Table 16.4.1.5.2-1 in TS 36.213 v14.2 (Itbs = 12 ~ 15 is reserved field
-//mapping ITBS to SIB1-NB_IoT
-//static unsigned int TBStable_NB_IoT_SIB1[16] = {208,208,208,328,328,328,440,440,440,680,680,680};
-
-//static int DV_table[16]={0,10,14,19,26,36,49,67,91,125,171,234,321,768,1500,1500};
-
-/*static int BSR_table[64]= {0,10,12,14,17,19,22,26,31,36,42,49,57,67,78,91,
-                           105,125,146,171,200,234,274,321,376,440,515,603,706,826,967,1132,
-                           1326,1552,1817,2127,2490,2915,3413,3995,4677,5467,6411,7505,8787,10287,12043,14099,
-                           16507,19325,22624,26487,31009,36304,42502,49759,58255,68201,79846,93479,109439,128125,150000,300000
-                           };*/
-
-//static int dl_rep[3] = {1, 2, 4};
-//static uint32_t dci_rep[3] = {1, 2, 4};
-//static uint32_t harq_rep[3] = {1, 2, 4};
-
 
 #endif /*__LAYER2_MAC_DEFS_NB_IoT_H__ */

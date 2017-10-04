@@ -2,18 +2,6 @@
 #include "proto_NB_IoT.h"
 #include "extern_NB_IoT.h"
 
-int rachperiod[8]={40,80,160,240,320,640,1280,2560};
-int rachstart[8]={8,16,32,64,128,256,512,1024};
-int rachrepeat[8]={1,2,4,8,16,32,64,128};
-//int rawindow[8]={2,3,4,5,6,7,8,10}; // unit PP
-//int rmax[12]={1,2,4,8,16,32,64,128,256,512,1024,2048};
-//double gvalue[8]={1.5,2,4,8,16,32,48,64};
-//int candidate[4]={1,2,4,8};
-//double pdcchoffset[4]={0,0.125,0.25,0.375};
-//int dlrepeat[16]={1,2,4,8,16,32,64,128,192,256,384,512,768,1024,1536,2048};
-int rachscofst[7]={0,12,24,36,2,18,34};
-int rachnumsc[4]={12,24,36,48};
-
 void init_tool_sib1(eNB_MAC_INST_NB_IoT *mac_inst){
 	int i, j;
 
@@ -411,4 +399,478 @@ uint32_t calculate_DLSF(eNB_MAC_INST_NB_IoT *mac_inst, int abs_start_subframe, i
         }
     }
 	return num_dlsf;
+}
+
+
+void maintain_available_resource(eNB_MAC_INST_NB_IoT *mac_inst){
+
+	available_resource_DL_t *pfree;
+
+	if(mac_inst->current_subframe >= available_resource_DL->end_subframe){
+	    //DEBUG("[maintain before kill]=====t:%d=end:%d====%p\n", mac_inst->current_subframe, available_resource_DL->end_subframe, available_resource_DL->next);
+		//print_available_resource_DL();
+		
+        pfree = available_resource_DL;
+		available_resource_DL = available_resource_DL->next;
+		available_resource_DL->prev = (available_resource_DL_t *)0;
+		free((available_resource_DL_t *)pfree);
+		//DEBUG("[maintain after kill]=====t:%d=====\n", mac_inst->current_subframe);
+		//print_available_resource_DL();
+	}else{
+		available_resource_DL->start_subframe = mac_inst->current_subframe;
+	}
+
+	return ;
+}
+
+//	check_subframe must be DLSF, you can use is_dlsf() to check before call function
+available_resource_DL_t *check_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int check_subframe, int num_subframes, int *out_last_subframe, int *out_first_subframe){
+	available_resource_DL_t *pt;
+	pt = available_resource_DL;
+	int end_subframe = check_subframe + num_subframes - 1;
+	int diff_gap;
+
+	while((available_resource_DL_t *)0 != pt){
+		if(pt->start_subframe <= check_subframe && pt->end_subframe >= check_subframe){
+			break;
+		}
+		pt = pt->next;
+	}
+
+	if((available_resource_DL_t *)0 == pt){
+		return (available_resource_DL_t *)0;
+	}else{
+		if(num_subframes <= calculate_DLSF(mac_inst, check_subframe, pt->end_subframe)){
+
+			diff_gap = num_subframes - calculate_DLSF(mac_inst, check_subframe, end_subframe);
+
+			while(diff_gap){
+				++end_subframe;
+				if(is_dlsf(mac_inst, end_subframe)){
+					--diff_gap;
+				}
+			}
+			*out_last_subframe = end_subframe;
+			while(!is_dlsf(mac_inst, check_subframe)){
+				++check_subframe;
+			}
+			*out_first_subframe = check_subframe;
+			return pt;
+		}else{
+			return (available_resource_DL_t *)0;
+		}
+	}
+}
+
+int get_I_TBS_NB_IoT(int x,int y)
+{
+    int I_TBS = 0;
+    if(y==1) I_TBS=x;
+    else
+    {
+        if(x==1)    I_TBS=2;
+        else if(x==2)   I_TBS=1;
+        else
+        {
+            I_TBS=x;
+        }
+    }
+    return I_TBS;
+}
+
+
+int get_TBS_UL_NB_IoT(uint32_t mcs,uint32_t multi_tone,int Iru)
+{
+    int TBS;
+    uint32_t I_TBS=get_I_TBS_NB_IoT(mcs,multi_tone);
+    TBS=UL_TBS_Table[I_TBS][Iru];
+    //if((TBS==0)||(Iru>7))
+    //{
+        //--Iru;
+    //}
+    //TBS=UL_TBS_Table[I_TBS][Iru];
+
+    return TBS>>3;
+}
+
+void insert_schedule_result(schedule_result_t **list, int subframe, schedule_result_t *node){
+	schedule_result_t *tmp, *tmp1;
+	if((schedule_result_t *)0 == *list){
+            *list = node;
+        }else{
+            tmp = *list;
+            tmp1 = (schedule_result_t *)0;
+            while((schedule_result_t *)0 != tmp){
+                if(subframe < tmp->output_subframe){
+                    break;
+                }
+                tmp1 = tmp;
+                tmp = tmp->next;
+            }
+            if((schedule_result_t *)0 == tmp){
+                tmp1->next = node;
+            }else{
+		node->next = tmp;
+		if(tmp1){
+			tmp1->next = node;
+		}else{
+			*list = node;
+		}
+            }
+        }
+}
+
+void print_available_resource_DL(void){
+	available_resource_DL_t *pt;
+	pt = available_resource_DL;
+	int i=0;
+	printf("=== print available resource ===\n");
+	while(pt){
+		printf("[%2d] %p %3d-%3d\n", i, pt, pt->start_subframe, pt->end_subframe);
+		pt = pt->next;
+	}
+}
+
+/*Get MCS index*/
+uint32_t get_I_mcs_NB_IoT(int CE_level)
+{
+	if(CE_level==0)
+	{
+		return 13;
+	}
+	else if(CE_level==1)
+	{
+		return 8;
+	}
+	else
+	{
+		return 2;
+	}
+}
+
+uint32_t get_tbs(uint32_t data_size, uint32_t I_tbs, uint32_t *I_sf)
+{
+	for((*I_sf)=0;(*I_sf)<8;++(*I_sf))
+	{
+		//DEBUG("[get_tbs]TBS %d SF index %d\n", MAC_TBStable_NB_IoT[I_tbs][(*I_sf)], *I_sf);
+		if(MAC_TBStable_NB_IoT[I_tbs][(*I_sf)]>=data_size*8)
+		{
+			return MAC_TBStable_NB_IoT[I_tbs][(*I_sf)]/8;
+		}
+	}
+	printf("error\n");
+	return 0;
+}
+
+uint32_t get_num_sf(uint32_t I_sf)
+{
+	if(I_sf==6)
+	{
+		return 8;
+	}
+	else if(I_sf==7)
+	{
+		return 10;
+	}
+	else
+	{
+		return I_sf+1;
+	}
+}
+
+uint16_t find_suit_i_delay(uint32_t rmax, uint32_t r, uint32_t dci_candidate){
+    uint32_t i;
+	uint32_t num_candidates = rmax / r;
+	uint32_t left_candidates = num_candidates - dci_candidate - 1;	// 0-7
+	uint32_t resource_gap = left_candidates * r;
+	resource_gap = ((resource_gap * 10)>>3);	//	x1.125
+	for(i=0;i<8;++i){
+		if(resource_gap <= get_scheduling_delay(i, rmax)){
+			return i;
+		}
+	}
+	return 0;
+}
+
+uint32_t get_scheduling_delay(uint32_t I_delay, uint32_t R_max)
+{
+	if(I_delay==0)
+	{
+		return 0;
+	}
+	else
+	{
+		if(R_max<128)
+		{
+			if(I_delay<=4)
+				return 4*I_delay;
+			else
+				return (uint32_t)(2<<I_delay);//pow(2, I_delay);
+		}
+		else
+		{
+			return (uint32_t)(16<<(I_delay-1));//*pow(2, I_delay-1);
+		}
+	}
+}
+
+/*Subcarrier_spacing 0:3.75kHz \ 1 : 15kHz*/
+uint32_t get_HARQ_delay(int subcarrier_spacing, uint32_t HARQ_delay_index)
+{
+	if(subcarrier_spacing==1)
+	{
+		if(HARQ_delay_index==0)
+			return 13;
+		else if(HARQ_delay_index==1)
+			return 15;
+		else if(HARQ_delay_index==2)
+			return 17;
+		else
+			return 18;
+	}
+	else
+	{
+		if((HARQ_delay_index==0)&&(HARQ_delay_index==1))
+			return 13;
+		else
+			return 21;
+	}
+}
+
+int get_resource_field_value(int subcarrier, int k0)
+{
+    int value = 0;
+    if (k0 == 13)
+        value = subcarrier;
+    else if (k0 == 15)
+        value = subcarrier + 4;
+    else if (k0 == 17)
+        value = subcarrier + 8;
+    else if (k0 == 18)
+        value = subcarrier + 12;
+
+    return value;
+}
+
+//Transfrom source into hyperSF, Frame, Subframe format
+void convert_system_number(uint32_t source_sf,uint32_t *hyperSF, uint32_t *frame, uint32_t *subframe)
+{
+	*hyperSF = (source_sf/10)/1024;
+	*frame = (source_sf/10)%1024;
+	*subframe = (source_sf%1024)%10;
+}
+
+uint32_t get_max_tbs(uint32_t I_tbs)
+{
+	return MAC_TBStable_NB_IoT[I_tbs][7]/8;
+}
+
+//convert hyperSF, Frame, Subframe format into subframe unit
+uint32_t convert_system_number_sf(uint32_t hyperSF, uint32_t frame, uint32_t subframe)
+{
+	return hyperSF*1024*10+frame*10+subframe;
+}
+
+/*input start position amd num_dlsf DL subframe, caculate the last subframe number*/
+uint32_t cal_num_dlsf(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t hyperSF, uint32_t frame, uint32_t subframe, uint32_t* hyperSF_result, uint32_t* frame_result, uint32_t* subframe_result, uint32_t num_dlsf_require)
+{
+  uint16_t sf_dlsf_index;
+  uint16_t dlsf_num_temp;
+  uint32_t abs_sf_start = 0;
+  uint32_t abs_sf_end = 0;
+  uint8_t period_count=0;
+  uint8_t shift_flag=0;
+  uint8_t scale_flag=0;
+
+  abs_sf_start=convert_system_number_sf(hyperSF, frame, subframe);
+  sf_dlsf_index = abs_sf_start%2560%(mac_inst->sib1_period*10);
+  dlsf_num_temp = DLSF_information.sf_to_dlsf_table[sf_dlsf_index];
+  //DEBUG("[cal_num_dlsf]sf_dlsf_index %d dlsf_num_temp %d\n", sf_dlsf_index, dlsf_num_temp);
+
+  while(num_dlsf_require>DLSF_information.num_dlsf_per_period)
+  {
+    period_count++;
+    num_dlsf_require-=DLSF_information.num_dlsf_per_period;
+  }
+  abs_sf_end = abs_sf_start+period_count*mac_inst->sib1_period*10;
+  //DEBUG("[cal_num_dlsf]abs_sf_end %d after loop\n", abs_sf_end);
+  if(num_dlsf_require>DLSF_information.num_dlsf_per_period-dlsf_num_temp+1)
+  {
+    if(is_dlsf(mac_inst, sf_dlsf_index)==1)
+    {
+      num_dlsf_require-=DLSF_information.num_dlsf_per_period-dlsf_num_temp+1;
+    }
+    else
+    {
+      num_dlsf_require-=DLSF_information.num_dlsf_per_period-dlsf_num_temp;
+    }
+    abs_sf_end+=mac_inst->sib1_period*10-abs_sf_end%(mac_inst->sib1_period*10);
+    dlsf_num_temp = 0;
+    scale_flag = 1;
+    //DEBUG("[cal_num_dlsf]abs_sf_end %d after scale\n", abs_sf_end);
+  }
+  //DEBUG("[cal_num_dlsf]num_dlsf_require remain %d\n", num_dlsf_require);
+
+  if(num_dlsf_require!=0)
+  {
+    if(scale_flag!=1)
+    {
+      if(is_dlsf(mac_inst, abs_sf_end)==1)
+      {
+        shift_flag = 1;
+      }
+    }
+    if(abs_sf_end%(mac_inst->sib1_period*10)!=0)
+    {
+      abs_sf_end-=abs_sf_end%(mac_inst->sib1_period*10);
+      //DEBUG("[cal_num_dlsf] abs_sf_end is %d mod period =  %d\n", abs_sf_end, abs_sf_end%(mac_inst->sib1_NB_IoT_sched_config.sib1_period*10));
+    }
+    if(shift_flag==1)
+    {
+      abs_sf_end +=DLSF_information.dlsf_to_sf_table[dlsf_num_temp+num_dlsf_require-2];
+    }
+    else
+    {
+      abs_sf_end +=DLSF_information.dlsf_to_sf_table[dlsf_num_temp+num_dlsf_require-1];
+    }
+
+    //DEBUG("[cal_num_dlsf]2 DLSF_information.dlsf_to_sf_table = %d dlsf index %d\n", DLSF_information.dlsf_to_sf_table[num_dlsf_require], num_dlsf_require);
+  }
+  //DEBUG("[cal_num_dlsf]abs_sf_end %d\n", abs_sf_end);
+  convert_system_number(abs_sf_end, hyperSF_result, frame_result, subframe_result);
+  //DEBUG("[cal_num_dlsf]h %d f %d end %d\n", *hyperSF_result, *frame_result, *subframe_result);
+  return abs_sf_end;
+}
+
+int get_N_REP(int CE_level)
+{
+    int N_rep= 0;
+    if(CE_level == 0)
+    {
+        N_rep = (nprach_list)->numRepetitionsPerPreambleAttempt;
+    }else if (CE_level == 1)
+    {
+        N_rep = (nprach_list+1)->numRepetitionsPerPreambleAttempt;
+    }else if (CE_level == 2)
+    {
+        N_rep = (nprach_list+2)->numRepetitionsPerPreambleAttempt;
+    }else
+    {
+        printf("unknown CE level!\n");
+        return -1;
+    }
+
+    return N_rep;
+}
+
+int get_I_REP(int N_rep)
+{
+    int i;
+    for(i = 0; i < 8;i++)
+        {
+            if(N_rep == rachrepeat[i])
+                return i;
+        }
+    printf("unknown repetition value!\n");
+    return -1;
+}
+
+int get_DCI_REP(uint32_t R,uint32_t R_max)
+{
+    int value = -1;
+    if (R_max == 1)
+    {
+        if(R == 1)
+        {
+            value =0;
+        }
+
+    }else if (R_max == 2)
+    {
+        if(R == 1)
+            value = 0;
+        if(R == 2)
+            value = 1;
+     }else if (R_max == 4)
+     {
+        if(R == 1)
+            value = 0;
+        if(R == 2)
+            value = 1;
+        if(R == 4)
+            value = 2;
+     }else if (R_max >= 8)
+     {
+        if(R == R_max/8)
+            value = 0;
+        if(R == R_max/4)
+            value = 1;
+        if(R == R_max/2)
+            value = 2;
+        if(R == R_max)
+            value = 3;
+     }
+     return value;
+}
+
+void print_available_UL_resource(void){
+
+    int sixtone_num=0;
+    int threetone_num=0;
+    int singletone1_num=0;
+    int singletone2_num=0;
+    int singletone3_num=0;
+
+    available_resource_UL_t *available_resource;
+
+    ///sixtone
+    available_resource = available_resource_UL->sixtone_Head;
+
+    while(available_resource!=NULL)
+    {
+        sixtone_num++;
+        printf("[sixtone][Node %d] start %d , end %d\n",sixtone_num,available_resource->start_subframe,available_resource->end_subframe);
+        available_resource = available_resource->next;
+    }
+
+    ///threetone
+    available_resource = available_resource_UL->threetone_Head;
+
+    while(available_resource!=NULL)
+    {
+        threetone_num++;
+        printf("[threetone][Node %d] start %d, end %d\n",threetone_num,available_resource->start_subframe,available_resource->end_subframe);
+        available_resource = available_resource->next;
+    }
+
+    ///singletone1
+    available_resource = available_resource_UL->singletone1_Head;
+
+    while(available_resource!=NULL)
+    {
+        singletone1_num++;
+        printf("[singletone1][Node %d] start %d, end %d\n",singletone1_num,available_resource->start_subframe,available_resource->end_subframe);
+        available_resource = available_resource->next;
+    }
+
+    ///singletone1
+    available_resource = available_resource_UL->singletone2_Head;
+
+    while(available_resource!=NULL)
+    {
+        singletone2_num++;
+        printf("[singletone2][Node %d] start %d, end %d\n",singletone2_num,available_resource->start_subframe,available_resource->end_subframe);
+        available_resource = available_resource->next;
+    }
+
+    ///singletone1
+    available_resource = available_resource_UL->singletone3_Head;
+
+    while(available_resource!=NULL)
+    {
+        singletone3_num++;
+        printf("[singletone3][Node %d] start %d, end %d\n",singletone3_num,available_resource->start_subframe,available_resource->end_subframe);
+        available_resource = available_resource->next;
+    }
+
 }
