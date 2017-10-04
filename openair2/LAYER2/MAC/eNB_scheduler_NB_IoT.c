@@ -53,7 +53,7 @@ int extend_alpha_offset[num_flags] = {10, 10};
 int uss_space = 320;
 int uss_alpha_offset = 10;
 
-void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t abs_subframe, uint32_t *scheduler_flags, uint32_t *common_flags){
+void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t abs_subframe, int *scheduler_flags, int *common_flags){
 	uint32_t subframe = abs_subframe % 10;
 	uint32_t frame = abs_subframe / 10;
 	int i;
@@ -97,13 +97,14 @@ void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t
 void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t abs_subframe){
  // eNB_MAC_INST_NB_IoT *eNB = &eNB_mac_inst_NB_IoT[module_id];
 	int i, max_subframe, scheduler_flags, common_flags,MIB_flag,SIB1_flag;
+	int a = 0;
 	/*Check this subframe should schedule something, set the flag*/
 	scheduler_flags = 0;
 	common_flags = 0;
 	MIB_flag = 0;
 	SIB1_flag = 0;
-	int h,f,sf;
-	int a;
+	uint32_t h,f,sf;
+	//int a;
 	//DEBUG("--------------[%04d][eNB scheduler NB-IoT] Start Scheduling------------\n", mac_inst->current_subframe);
 	eNB_scheduler_computing_flag_NB_IoT(mac_inst, abs_subframe, &scheduler_flags, &common_flags);
 	/*Update the available resource list to current state*/
@@ -123,7 +124,7 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 	
 	maintain_available_resource(mac_inst);
 
-    static int test=2;
+    //static int test=2;
 	if((abs_subframe % rachperiod[4]) == rachstart[0]){
 
 		   add_UL_Resource();
@@ -173,7 +174,7 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 
 void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, uint32_t subframe, uint32_t frame, uint32_t hypersfn, int index_ss)
 {
-	int32_t i;
+	//int32_t i;
 	//SCHEDULE_NB_IoT_t *scheduler =  &eNB->scheduler;
   	mac_inst->scheduling_flag.flag_uss[0]=1;
   	mac_inst->scheduling_flag.flag_uss[1]=0;
@@ -219,7 +220,7 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
           break;
         //Uplink Scheduling
         case 0:
-			DEBUG("uss uplink scheduling.. \n");
+			printf("uss uplink scheduling.. \n");
           schedule_UL_NB_IoT(mac_inst, UE_template_temp, subframe, frame, hypersfn);
           break;
 		case -1:

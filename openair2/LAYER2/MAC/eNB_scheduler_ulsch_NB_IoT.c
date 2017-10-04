@@ -13,8 +13,8 @@
 #include "extern_NB_IoT.h"
 
 
-char str20[] = "DCI_uss";
-char str21[] = "DATA_uss";
+unsigned char str20[] = "DCI_uss";
+unsigned char str21[] = "DATA_uss";
 
 // scheduling UL
 int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info,uint32_t subframe, uint32_t frame, uint32_t H_SFN){
@@ -37,7 +37,7 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
 
     DCIFormatN0_t *DCI_N0 = (DCIFormatN0_t*)malloc(sizeof(DCIFormatN0_t));
 
-    available_resource_DL_t *node;
+    //available_resource_DL_t *node;
 
     // setting of the NDI
     if(UE_info->HARQ_round == 0)
@@ -269,7 +269,7 @@ int multi_tone_ru_allocation(uint32_t uplink_time, int total_ru, sched_temp_UL_N
 int Check_UL_resource(uint32_t uplink_time, int total_ru, sched_temp_UL_NB_IoT_t *NPUSCH_info, int multi_tone, int fmt2_flag)
 {
 
-    int i, result =-1;
+    int result =-1;
     if(fmt2_flag ==0)
     {
         if(multi_tone == 1)

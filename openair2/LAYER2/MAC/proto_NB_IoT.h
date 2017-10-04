@@ -37,9 +37,11 @@
  *  @{
  */
 
+int l2_init_eNB_NB_IoT(void);
+
 // main schedule functions
 
-void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t abs_subframe, uint32_t *scheduler_flags, uint32_t *common_flags);
+void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t abs_subframe, int *scheduler_flags, int *common_flags);
 
 /*function description:
 * top level of the scheduler, this will trigger in every subframe,
@@ -104,7 +106,7 @@ void rrc_mac_config_req_NB_IoT(rrc_config_NB_IoT_t *mac_config,
 
 void fill_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, available_resource_DL_t *node, int start_subframe, int end_subframe, schedule_result_t *new_node);
 
-available_resource_DL_t *check_sibs_resource(eNB_MAC_INST_NB_IoT *mac_inst, int check_start_subframe, int check_end_subframe, int num_subframe, int *residual_subframe, int *out_last_subframe, int *out_first_subframe);
+available_resource_DL_t *check_sibs_resource(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t check_start_subframe, uint32_t check_end_subframe, uint32_t num_subframe, uint32_t *residual_subframe, uint32_t *out_last_subframe, uint32_t *out_first_subframe);
 
 uint32_t calculate_DLSF(eNB_MAC_INST_NB_IoT *mac_inst, int abs_start_subframe, int abs_end_subframe);
 

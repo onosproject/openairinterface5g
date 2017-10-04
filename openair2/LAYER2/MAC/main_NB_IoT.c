@@ -221,7 +221,7 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
 }
 
 
-int l2_init_eNB_NB_IoT()
+int l2_init_eNB_NB_IoT(void)
 {
   LOG_I(MAC,"[MAIN] Mapping L2 IF-Module functions\n");
   IF_Module_init_L2();

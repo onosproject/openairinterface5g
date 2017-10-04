@@ -302,8 +302,8 @@ void fill_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, available_resource_DL_t *no
 	}
 }
 
-available_resource_DL_t *check_sibs_resource(eNB_MAC_INST_NB_IoT *mac_inst, int check_start_subframe, int check_end_subframe, int num_subframe, int *residual_subframe, int *out_last_subframe, int *out_first_subframe){
-	available_resource_DL_t *pt, *pt_free;
+available_resource_DL_t *check_sibs_resource(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t check_start_subframe, uint32_t check_end_subframe, uint32_t num_subframe, uint32_t *residual_subframe, uint32_t *out_last_subframe, uint32_t *out_first_subframe){
+	available_resource_DL_t *pt;
 	uint32_t num_dlsf;
 	uint8_t output = 0x0;
 	pt = available_resource_DL;
@@ -366,7 +366,7 @@ available_resource_DL_t *check_sibs_resource(eNB_MAC_INST_NB_IoT *mac_inst, int 
 uint32_t calculate_DLSF(eNB_MAC_INST_NB_IoT *mac_inst, int abs_start_subframe, int abs_end_subframe){
 	int i;
 	int num_dlsf=0;
-	int diff_subframe = abs_end_subframe - abs_start_subframe;
+	//int diff_subframe = abs_end_subframe - abs_start_subframe;
 
 	int start_frame = abs_start_subframe / 10;
 	int end_frame = abs_end_subframe / 10;

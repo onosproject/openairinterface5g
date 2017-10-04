@@ -33,18 +33,18 @@
 #include "proto_NB_IoT.h"
 #include "extern_NB_IoT.h"
 
-char str1[] = "rar_dci";
-char str2[] = "rar";
-char str3[] = "msg4_dci";
-char str4[] = "msg4";
-char str5[] = "ack_msg4";
-char str6[] = "msg3_dci(retransmit)";
-char str7[] = "msg3(retransmit)";
-char str8[] = "msg4_dci(retransmit)";
-char str9[] = "msg4(retransmit)";
-char str10[] = "ack_msg4(retransmit)";
-char str11[] = "msg3";
-char str12[] = "msg3(retransmit)";
+unsigned char str1[] = "rar_dci";
+unsigned char str2[] = "rar";
+unsigned char str3[] = "msg4_dci";
+unsigned char str4[] = "msg4";
+unsigned char str5[] = "ack_msg4";
+unsigned char str6[] = "msg3_dci(retransmit)";
+unsigned char str7[] = "msg3(retransmit)";
+unsigned char str8[] = "msg4_dci(retransmit)";
+unsigned char str9[] = "msg4(retransmit)";
+unsigned char str10[] = "ack_msg4(retransmit)";
+unsigned char str11[] = "msg3";
+unsigned char str12[] = "msg3(retransmit)";
 
 //  7bytes
 void fill_rar_NB_IoT(
@@ -58,9 +58,9 @@ void fill_rar_NB_IoT(
 {
 	uint8_t *dlsch_buffer = &ra_template->rar_buffer[0];
 	RA_HEADER_RAPID_NB_IoT *rarh = (RA_HEADER_RAPID_NB_IoT *)dlsch_buffer;
-	int i,ra_idx = -1;
-	uint16_t rballoc;
-	uint8_t mcs,TPC,ULdelay,cqireq;
+	int i;
+	//uint16_t rballoc;
+	//uint8_t mcs,TPC,ULdelay,cqireq;
 	
 	for(i=0; i<7; ++i){
 	    dlsch_buffer[i] = 0x0;
@@ -101,17 +101,17 @@ void schedule_msg3_retransimission_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst){
 
 	RA_TEMPLATE_NB_IoT *msg3_nodes = mac_inst->RA_msg3_list.head;
 
-	available_resource_DL_t *dci_node, *msg3_node;
+	available_resource_DL_t *dci_node;
 	int rmax, fail, res, r;
 	int dci_subframe, dci_end_subframe, dci_first_subframe, num_dci_subframe;
-	int msg3_subframe, msg3_end_subframe;
+	int msg3_subframe;
 
 	int dci_candidate, num_candidate;
 	int msg3_scheduling_delay;
 	schedule_result_t *dci_result;//, *msg3_result;
 
 	int rep=1;
-	sched_temp_UL_NB_IoT_t npusch_info;
+	//sched_temp_UL_NB_IoT_t npusch_info;
 
 	while((RA_TEMPLATE_NB_IoT *)0 != msg3_nodes){
 		if(msg3_nodes->wait_msg3_ack == 0){
@@ -225,16 +225,16 @@ void schedule_msg3_retransimission_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst){
 void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst){
 
 	RA_TEMPLATE_NB_IoT *msg2_nodes = mac_inst->RA_msg2_list.head;
-	RA_TEMPLATE_NB_IoT *msg3_list_tail = mac_inst->RA_msg3_list.tail;
+	//RA_TEMPLATE_NB_IoT *msg3_list_tail = mac_inst->RA_msg3_list.tail;
 	RA_TEMPLATE_NB_IoT *migrate_node;
 	schedule_result_t *dci_result, *msg2_result;
     DCIFormatN0_t *dci_n0;
     DCIFormatN1_t *dci_n1_rar;
-	available_resource_DL_t *dci_node, *msg2_node, *msg3_node;
+	available_resource_DL_t *dci_node, *msg2_node;
 	int rmax, fail, r, res;
 	int dci_subframe, dci_end_subframe, dci_first_subframe, num_dci_subframe;
 	int msg2_subframe, msg2_end_subframe, msg2_first_subframe, num_msg2_subframe;
-	int msg3_subframe, msg3_end_subframe;
+	int msg3_subframe;
 
 	int dci_candidate, i, num_candidate;
 	int msg2_i_delay;
@@ -444,7 +444,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst){
 //	msg4 scheduling: both first time or retransmit would be scheduled in this function(msg4_list).
 void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst){
 
-	RA_TEMPLATE_NB_IoT *msg4_nodes = mac_inst->RA_msg4_list.head, *migrate_node;
+	RA_TEMPLATE_NB_IoT *msg4_nodes = mac_inst->RA_msg4_list.head;
 
 	available_resource_DL_t *dci_node, *msg4_node;
 	int rmax, fail, r;

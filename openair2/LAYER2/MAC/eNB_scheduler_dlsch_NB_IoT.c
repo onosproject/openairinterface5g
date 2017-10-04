@@ -46,7 +46,7 @@ void schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE
 	//DCI N1
 	DCIFormatN1_t *DCI_N1 = (DCIFormatN1_t*)malloc(sizeof(DCIFormatN1_t));
 	//RLC Status
-	mac_rlc_status_resp_NB_IoT_t rlc_status;
+	//mac_rlc_status_resp_NB_IoT_t rlc_status;
 	/*Index in DCI_N1*/
 	uint32_t I_mcs, I_tbs, I_delay, I_sf;
 	/*value for corresponding index*/
@@ -60,13 +60,13 @@ void schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE
 
 	int HARQ_delay=0;
 	uint32_t data_size;
-	uint32_t mac_sdu_size;
+	//uint32_t mac_sdu_size;
 
-	uint8_t sdu_temp[SCH_PAYLOAD_SIZE_MAX_NB_IoT];
+	//uint8_t sdu_temp[SCH_PAYLOAD_SIZE_MAX_NB_IoT];
 	logical_chan_id_t logical_channel;
 
 	uint32_t subheader_length=2;
-	uint32_t payload_offset;
+	//uint32_t payload_offset;
 
 	uint32_t search_space_end_sf, h_temp, f_temp, sf_temp;
 
@@ -217,7 +217,7 @@ void schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE
 		                //DEBUG("[%04d][DLSchedulerUSS] finish generate scheduling result\n");
 		                //matain DL avialable resource
 		                maintain_resource_DL(mac_inst, NPDCCH_info, NPDSCH_info);
-		                available_resource_DL_t *temp=available_resource_DL;
+		                //available_resource_DL_t *temp=available_resource_DL;
 		                /*
 		                while(temp!=NULL)
 		                {
@@ -409,7 +409,7 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
             mac_header->F2=0;
             mac_header->R=0;
             offset++;
-            DEBUG("last sdu\n");
+            printf("last sdu\n");
         }
         else
         {
@@ -639,8 +639,8 @@ void maintain_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, sched_temp_DL_NB_IoT_t 
 	uint8_t flag_same=0;
 	int align_left;
 	int align_right;
-	int H_temp, f_temp, sf_temp;
-  int H_temp_r, f_temp_r, sf_temp_r;
+	uint32_t H_temp, f_temp, sf_temp;
+  uint32_t H_temp_r, f_temp_r, sf_temp_r;
 
 	if(NPDSCH_info==NULL)
 	{
@@ -861,4 +861,5 @@ uint8_t get_index_Rep_dl(uint16_t R)
     }
     printf("[get_index_Rep] error\n");
   }
+  return -1;
 }
