@@ -1732,9 +1732,9 @@ int phy_init_RU(RU_t *ru) {
 #endif
     }
 
-    LOG_E(PHY,"[INIT] %s() RC.nb_inst:%d \n", __FUNCTION__, RC.nb_inst);
+    LOG_E(PHY,"[INIT] %s() RC.nb_L1_inst:%d \n", __FUNCTION__, RC.nb_L1_inst);
 
-    for (i=0; i<RC.nb_inst; i++) {
+    for (i=0; i<RC.nb_L1_inst; i++) {
       for (p=0;p<15;p++) {
         LOG_D(PHY,"[INIT] %s() nb_antenna_ports_eNB:%d \n", __FUNCTION__, ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB);
 	if (p<ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB || p==5) {

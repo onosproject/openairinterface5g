@@ -912,6 +912,7 @@ void fill_nfapi_dl_dci_1A(nfapi_dl_config_request_pdu_t   *dl_config_pdu,
   memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
   dl_config_pdu->pdu_type                                                          = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE; 
   dl_config_pdu->pdu_size                                                          = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
+  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
   dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                             = NFAPI_DL_DCI_FORMAT_1A;
   dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level                      = aggregation_level;
   dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                                   = rnti;
@@ -986,6 +987,7 @@ void program_dlsch_acknak(module_id_t module_idP, int CC_idP,int UE_idP, frame_t
 	// Convert it to an NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE 
 	ulsch_harq_information = &ul_config_pdu->ulsch_harq_pdu.harq_information;
 	ul_config_pdu->pdu_type = NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE;
+	ul_config_pdu->ulsch_harq_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.tl.tag=NFAPI_UL_CONFIG_REQUEST_INITIAL_TRANSMISSION_PARAMETERS_REL8_TAG;
 	ul_config_pdu->ulsch_harq_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.n_srs_initial=0; // last symbol not punctured
 	ul_config_pdu->ulsch_harq_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.initial_number_of_resource_blocks=
 	  ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks; // we don't change the number of resource blocks across retransmissions yet
@@ -1011,6 +1013,7 @@ void program_dlsch_acknak(module_id_t module_idP, int CC_idP,int UE_idP, frame_t
 	// Convert it to an NFAPI_UL_CONFIG_ULSCH_CQI_RI_HARQ_PDU_TYPE 
 	ulsch_harq_information = &ul_config_pdu->ulsch_cqi_harq_ri_pdu.harq_information;
 	ul_config_pdu->pdu_type = NFAPI_UL_CONFIG_ULSCH_CQI_HARQ_RI_PDU_TYPE;
+	ul_config_pdu->ulsch_cqi_harq_ri_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.tl.tag=NFAPI_UL_CONFIG_REQUEST_INITIAL_TRANSMISSION_PARAMETERS_REL8_TAG;
 	ul_config_pdu->ulsch_cqi_harq_ri_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.n_srs_initial=0; // last symbol not punctured
 	ul_config_pdu->ulsch_cqi_harq_ri_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.initial_number_of_resource_blocks=
 	  ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks; // we don't change the number of resource blocks across retransmissions yet		
@@ -1093,6 +1096,7 @@ void fill_nfapi_ulsch_harq_information(module_id_t module_idP,
   if (UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->ext5) puschConfigDedicated_v1250 =  UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->ext5->pusch_ConfigDedicated_v1250;
   */
 #endif
+  harq_information->harq_information_rel10.tl.tag = NFAPI_UL_CONFIG_REQUEST_ULSCH_HARQ_INFORMATION_REL10_TAG;
   harq_information->harq_information_rel10.delta_offset_harq = puschConfigDedicated->betaOffset_ACK_Index;
   AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->pucch_ConfigDedicated!=NULL,"pucch_ConfigDedicated is null!\n");
   if ((UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->pucch_ConfigDedicated->tdd_AckNackFeedbackMode!=NULL)&&
@@ -1150,6 +1154,7 @@ void fill_nfapi_harq_information(module_id_t module_idP,
   AssertFatal(UE_list!=NULL,"UE_list is null\n");
   AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated!=NULL,"physicalConfigDedicated for rnti %x is null\n",rntiP);
 
+  harq_information->harq_information_rel11.tl.tag = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL11_TAG;
   harq_information->harq_information_rel11.num_ant_ports = 1;
 
   switch(get_tmode(module_idP,CC_idP,UE_id)) {
@@ -1170,9 +1175,11 @@ void fill_nfapi_harq_information(module_id_t module_idP,
 	harq_information->harq_information_rel10_tdd.harq_size     = 1;  // 1-bit ACK/NAK
 	harq_information->harq_information_rel10_tdd.ack_nack_mode = 0;  // bundling
       }
-      harq_information->harq_information_rel10_tdd.n_pucch_1_0   = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
+      harq_information->harq_information_rel10_tdd.tl.tag                    = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL10_TDD_TAG;
+      harq_information->harq_information_rel10_tdd.n_pucch_1_0               = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
       harq_information->harq_information_rel10_tdd.number_of_pucch_resources = 1;
     } else {
+      harq_information->harq_information_rel9_fdd.tl.tag                    = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL9_FDD_TAG;
       harq_information->harq_information_rel9_fdd.number_of_pucch_resources = 1;
       harq_information->harq_information_rel9_fdd.harq_size                 = 1;  // 1-bit ACK/NAK
       harq_information->harq_information_rel9_fdd.n_pucch_1_0               = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
@@ -1189,11 +1196,13 @@ void fill_nfapi_harq_information(module_id_t module_idP,
       else {
 	harq_information->harq_information_rel10_tdd.ack_nack_mode = 0;  // bundling
       }
+      harq_information->harq_information_rel10_tdd.tl.tag          = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL10_TDD_TAG;
       harq_information->harq_information_rel10_tdd.harq_size       = 2;  
       harq_information->harq_information_rel10_tdd.n_pucch_1_0   = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
       harq_information->harq_information_rel10_tdd.number_of_pucch_resources = 1;
     }
     else {
+      harq_information->harq_information_rel9_fdd.tl.tag           = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL9_FDD_TAG;
       harq_information->harq_information_rel9_fdd.number_of_pucch_resources = 1;
       harq_information->harq_information_rel9_fdd.ack_nack_mode    = 0;  // 1a/b
       harq_information->harq_information_rel9_fdd.harq_size        = 2;
@@ -1221,6 +1230,7 @@ uint16_t fill_nfapi_uci_acknak(module_id_t module_idP,
   memset((void*)ul_config_pdu,0,sizeof(nfapi_ul_config_request_pdu_t));
   ul_config_pdu->pdu_type                                                              = NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE; 
   ul_config_pdu->pdu_size                                                              = (uint8_t)(2+sizeof(nfapi_ul_config_uci_harq_pdu));
+  ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.tl.tag                = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL8_TAG;
   ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.handle                = 0; // don't know how to use this
   ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti                  = rntiP;
 
@@ -1232,6 +1242,7 @@ uint16_t fill_nfapi_uci_acknak(module_id_t module_idP,
   LOG_D(MAC,"Filled in HARQ for rnti %x, cce_idxP %d-> n1_pucch %d\n",rntiP,cce_idxP,ul_config_pdu->uci_harq_pdu.harq_information.harq_information_rel9_fdd.n_pucch_1_0);
 
   ul_req->number_of_pdus++;
+  ul_req->tl.tag = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
 
   return(((ackNAK_absSF/10)<<4) + (ackNAK_absSF%10));
 }
@@ -1268,6 +1279,7 @@ void fill_nfapi_dlsch_config(eNB_MAC_INST *eNB,
   memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
   dl_config_pdu->pdu_type                                                        = NFAPI_DL_CONFIG_DLSCH_PDU_TYPE; 
   dl_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_dl_config_dlsch_pdu));
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.length                                 = length;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = pdu_index;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = rnti;
@@ -1291,6 +1303,7 @@ void fill_nfapi_dlsch_config(eNB_MAC_INST *eNB,
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = num_bf_prb_per_subband;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = num_bf_vector;
   dl_req->number_pdu++;
+  dl_req->tl.tag=NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 }
 
 uint16_t fill_nfapi_tx_req(nfapi_tx_request_body_t *tx_req_body,uint16_t absSF,uint16_t pdu_length, uint16_t *pdu_index, uint8_t *pdu) {
@@ -1302,6 +1315,7 @@ uint16_t fill_nfapi_tx_req(nfapi_tx_request_body_t *tx_req_body,uint16_t absSF,u
   TX_req->num_segments                  = 1;
   TX_req->segments[0].segment_length    = pdu_length;
   TX_req->segments[0].segment_data      = pdu;
+  tx_req_body->tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
   tx_req_body->number_of_pdus++;
 
   return(((absSF/10)<<4) + (absSF%10));
@@ -2906,6 +2920,7 @@ boolean_t CCE_allocation_infeasible(int module_idP,
   boolean_t res=FALSE;
 
   if (format_flag!=2) { // DL DCI
+    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag            = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti              = rnti;
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level = aggregation;
     DL_req->number_pdu++;
@@ -2915,6 +2930,7 @@ boolean_t CCE_allocation_infeasible(int module_idP,
     DL_req->number_pdu--;
   }
   else if (format_flag == 2) { // ue-specific UL DCI
+    hi_dci0_pdu->dci_pdu.dci_pdu_rel8.tl.tag           = NFAPI_HI_DCI0_REQUEST_DCI_PDU_REL8_TAG;
     hi_dci0_pdu->dci_pdu.dci_pdu_rel8.rnti             = rnti;
     hi_dci0_pdu->dci_pdu.dci_pdu_rel8.aggregation_level = aggregation;
     HI_DCI0_req->number_of_dci++;

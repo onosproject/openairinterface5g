@@ -22,6 +22,7 @@ extern RAN_CONTEXT_t RC;
 
 #include <vendor_ext.h>
 #include "fapi_stub.h"
+//#include "fapi_l1.h"
 #include "UTIL/LOG/log.h"
 
 #define NUM_P5_PHY 2
@@ -1819,4 +1820,13 @@ void oai_subframe_ind(uint16_t frame, uint16_t subframe)
   else
   {
   }
+}
+
+int oai_nfapi_rach_ind(nfapi_rach_indication_t *rach_ind)
+{
+  rach_ind->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
+
+  LOG_I(PHY, "%s() sfn_sf:%d preambles:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(rach_ind->sfn_sf), rach_ind->rach_indication_body.number_of_preambles);
+
+  return nfapi_pnf_p7_rach_ind(p7_config_g, rach_ind);
 }

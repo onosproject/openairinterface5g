@@ -633,6 +633,34 @@ int phy_subframe_indication(struct nfapi_vnf_p7_config* config, uint16_t phy_id,
   return 0;
 }
 
+int phy_rach_indication(struct nfapi_vnf_p7_config* config, nfapi_rach_indication_t* ind)
+{
+  LOG_I(MAC, "%s() NFAPI SFN/SF:%d number_of_preambles:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rach_indication_body.number_of_preambles);
+
+  struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
+
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
+
+  eNB->UL_INFO.rach_ind.number_of_preambles=ind->rach_indication_body.number_of_preambles;
+
+  if (eNB->UL_INFO.rach_ind.preamble_list==0)
+  {
+    LOG_W(MAC, "%s() Mallocing eNB->UL_INFO.rach_ind.preamble_list but have no code to free it, but should only be needed once...\n", __FUNCTION__);
+    eNB->UL_INFO.rach_ind.preamble_list = malloc(sizeof(nfapi_preamble_pdu_t)*MAX_NUM_RX_PRACH_PREAMBLES);
+  }
+
+  for(int i=0;i<ind->rach_indication_body.number_of_preambles;i++)
+  {
+    eNB->UL_INFO.rach_ind.preamble_list[0]=ind->rach_indication_body.preamble_list[0];
+  }
+
+  pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+
+  // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
+  //mac_rach_ind(p7_vnf->mac, ind);
+  return 1;
+}
+
 int phy_harq_indication(struct nfapi_vnf_p7_config* config, nfapi_harq_indication_t* ind)
 {
 	// vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
@@ -650,12 +678,6 @@ int phy_rx_indication(struct nfapi_vnf_p7_config* config, nfapi_rx_indication_t*
 {
 	// vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
 	//mac_rx_ind(p7_vnf->mac, ind);
-	return 1;
-}
-int phy_rach_indication(struct nfapi_vnf_p7_config* config, nfapi_rach_indication_t* ind)
-{
-	// vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
-	//mac_rach_ind(p7_vnf->mac, ind);
 	return 1;
 }
 int phy_srs_indication(struct nfapi_vnf_p7_config* config, nfapi_srs_indication_t* ind)

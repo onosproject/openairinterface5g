@@ -543,10 +543,12 @@ void rx_sdu(const module_id_t enb_mod_idP,
   memset((void*)hi_dci0_pdu,0,sizeof(nfapi_hi_dci0_request_pdu_t));
   hi_dci0_pdu->pdu_type                                               = NFAPI_HI_DCI0_HI_PDU_TYPE; 
   hi_dci0_pdu->pdu_size                                               = 2+sizeof(nfapi_hi_dci0_hi_pdu);
+  hi_dci0_pdu->hi_pdu.hi_pdu_rel8.tl.tag                              = NFAPI_HI_DCI0_REQUEST_HI_PDU_REL8_TAG;
   hi_dci0_pdu->hi_pdu.hi_pdu_rel8.resource_block_start                = first_rb; 
   hi_dci0_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms             = 0;
   hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value                            = 1;
   hi_dci0_req->number_of_hi++;
+  hi_dci0_req->tl.tag = NFAPI_HI_DCI0_REQUEST_BODY_TAG;
 
   /* NN--> FK: we could either check the payload, or use a phy helper to detect a false msg3 */
   if ((num_sdu == 0) && (num_ce==0)) {
@@ -866,7 +868,8 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
   LOG_D(MAC,"exiting ulsch preprocesor\n");
 
   eNB->HI_DCI0_req[CC_id].sfn_sf = (frameP<<4)+subframeP;
-
+  eNB->HI_DCI0_req[CC_id].hi_dci0_request_body.tl.tag = NFAPI_HI_DCI0_REQUEST_BODY_TAG;
+  eNB->HI_DCI0_req[CC_id].header.message_id = NFAPI_HI_DCI0_REQUEST;
 
   // loop over all active UEs
   for (UE_id=UE_list->head_ul; UE_id>=0; UE_id=UE_list->next_ul[UE_id]) {
@@ -1083,6 +1086,7 @@ abort();
 	    memset((void*)hi_dci0_pdu,0,sizeof(nfapi_hi_dci0_request_pdu_t));
 	    hi_dci0_pdu->pdu_type                                               = NFAPI_HI_DCI0_DCI_PDU_TYPE; 
 	    hi_dci0_pdu->pdu_size                                               = 2+sizeof(nfapi_hi_dci0_dci_pdu);
+	    hi_dci0_pdu->dci_pdu.dci_pdu_rel8.tl.tag                            = NFAPI_HI_DCI0_REQUEST_DCI_PDU_REL8_TAG;
 	    hi_dci0_pdu->dci_pdu.dci_pdu_rel8.dci_format                        = NFAPI_UL_DCI_FORMAT_0;
 	    hi_dci0_pdu->dci_pdu.dci_pdu_rel8.aggregation_level                 = aggregation;
 	    hi_dci0_pdu->dci_pdu.dci_pdu_rel8.rnti                              = rnti;
@@ -1115,6 +1119,7 @@ abort();
 	      else
 		ul_config_pdu->pdu_type                                                      = NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE; 
 	      ul_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_pdu));
+	      ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.tl.tag                                 = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL8_TAG;
 	      ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.handle                                 = eNB->ul_handle++;
 	      ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti                                   = rnti;
 	      ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.resource_block_start                   = first_rb[CC_id];
@@ -1136,6 +1141,7 @@ abort();
 #ifdef Rel14
 	      // Re13 fields
 	      if (UE_template->rach_resource_type>0) { // This is a BL/CE UE allocation
+		ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.tl.tag                                = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL13_TAG;
 		ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.ue_type                               = UE_template->rach_resource_type>2 ? 2 : 1;
 		ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.total_number_of_repetitions           = 1;
 		ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.repetition_number                     = 1;
@@ -1143,6 +1149,7 @@ abort();
 	      }
 #endif
 	      ul_req_tmp->number_of_pdus++;
+	      ul_req_tmp->tl.tag=NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
 	      
 	      if (cqi_req == 1) {
 		// Add CQI portion 
@@ -1150,6 +1157,7 @@ abort();
 						
 		ul_config_pdu->pdu_type                                                           = NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE; 
 		ul_config_pdu->pdu_size                                                           = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_cqi_ri_pdu));
+		ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.tl.tag = NFAPI_UL_CONFIG_REQUEST_CQI_RI_INFORMATION_REL9_TAG;
 		ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.report_type             = 1;
 		ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.aperiodic_cqi_pmi_ri_report.number_of_cc = 1;
 		LOG_I(MAC,"report_type %d\n",ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.report_type);
@@ -1203,10 +1211,12 @@ abort();
 	    memset((void*)hi_dci0_pdu,0,sizeof(nfapi_hi_dci0_request_pdu_t));
 	    hi_dci0_pdu->pdu_type                                               = NFAPI_HI_DCI0_HI_PDU_TYPE; 
 	    hi_dci0_pdu->pdu_size                                               = 2+sizeof(nfapi_hi_dci0_hi_pdu);
+	    hi_dci0_pdu->hi_pdu.hi_pdu_rel8.tl.tag                              = NFAPI_HI_DCI0_REQUEST_HI_PDU_REL8_TAG;
 	    hi_dci0_pdu->hi_pdu.hi_pdu_rel8.resource_block_start                = UE_template->first_rb_ul[harq_pid];
 	    hi_dci0_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms             = UE_template->cshift[harq_pid];
 	    hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value                            = 0;
 	    hi_dci0_req->number_of_hi++;
+            hi_dci0_req->tl.tag = NFAPI_HI_DCI0_REQUEST_BODY_TAG;
             LOG_I(MAC,"[eNB %d][PUSCH %d/%x] CC_id %d Frame %d subframeP %d Scheduled (PHICH) UE %d (mcs %d, first rb %d, nb_rb %d, TBS %d, harq_pid %d,round %d)\n",
                   module_idP,harq_pid,rnti,CC_id,frameP,subframeP,UE_id,mcs,
                   UE_template->first_rb_ul[harq_pid], UE_template->nb_rb_ul[harq_pid],

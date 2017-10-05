@@ -86,10 +86,11 @@ void handle_nfapi_hi_dci0_hi_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
   LTE_eNB_PHICH *phich           = &eNB->phich_vars[proc->subframe_tx&1];
 
   // copy dci configuration in to eNB structure
-  LOG_D(PHY,"Received HI PDU which value %d (rbstart %d,cshift %d)\n",
+  LOG_D(PHY,"Received HI PDU which value %d (rbstart %d,cshift %d) pdu:%p\n",
 	hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.hi_value,
 	hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.resource_block_start,
-	hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms);
+	hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms,
+        pdu);
 
   phich->config[phich->num_hi].hi       = hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.hi_value;
   phich->config[phich->num_hi].first_rb = hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.resource_block_start;

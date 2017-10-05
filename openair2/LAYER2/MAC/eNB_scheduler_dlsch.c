@@ -705,6 +705,7 @@ schedule_ue_spec(
 	    memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
 	    dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE; 
 	    dl_config_pdu->pdu_size                                               = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
+	    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                      = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
 	    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1;
 	    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = get_aggregation(get_bw_index(module_idP,CC_id),eNB_UE_stats->dl_cqi,format1);
 	    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                        = rnti;
@@ -734,6 +735,7 @@ schedule_ue_spec(
 					   rnti)) {
 	      dl_req->number_dci++;
 	      dl_req->number_pdu++;
+	      dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 
 	      fill_nfapi_dlsch_config(eNB,dl_req,
 				      TBS,
@@ -1188,6 +1190,7 @@ schedule_ue_spec(
 	  memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
 	  dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE; 
 	  dl_config_pdu->pdu_size                                               = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
+	  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                      = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
 	  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1;
 	  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = get_aggregation(get_bw_index(module_idP,CC_id),eNB_UE_stats->dl_cqi,format1);
 	  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                        = rnti;
@@ -1219,6 +1222,7 @@ schedule_ue_spec(
 	    ue_sched_ctl->round[CC_id][harq_pid] = 0;
 	    dl_req->number_dci++;
 	    dl_req->number_pdu++;
+            dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 	    
 	    // Toggle NDI for next time
 	    LOG_D(MAC,"CC_id %d Frame %d, subframeP %d: Toggling Format1 NDI for UE %d (rnti %x/%d) oldNDI %d\n",
@@ -1362,11 +1366,13 @@ fill_DLSCH_dci(
 	  dl_config_pdu                    = &DL_req[CC_id].dl_config_request_body.dl_config_pdu_list[i];
 	  if ((dl_config_pdu->pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE)&&
 	      (dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti == rnti)) {
+	    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                   = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
 	    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding    = allocate_prbs_sub(nb_rb,N_RB_DL,N_RBG,rballoc_sub);
 	    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_allocation_type = 0;
 	  }
 	  else if ((dl_config_pdu->pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE)&&
 		   (dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti == rnti)) {
+	    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                   = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
 	    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_block_coding    = allocate_prbs_sub(nb_rb,N_RB_DL,N_RBG,rballoc_sub);
 	    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type = 0;
 	  }

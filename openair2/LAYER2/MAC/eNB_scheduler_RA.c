@@ -94,6 +94,7 @@ void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_
     memset((void*)ul_config_pdu,0,sizeof(nfapi_ul_config_request_pdu_t));
     ul_config_pdu->pdu_type                                                        = NFAPI_UL_CONFIG_ULSCH_PDU_TYPE; 
     ul_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_pdu));
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.tl.tag                                 = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL8_TAG;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.handle                                 = eNB->ul_handle++;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti                                   = RA_template->rnti;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.resource_block_start                   = narrowband_to_first_rb(cc,RA_template->msg34_narrowband)+RA_template->msg3_first_rb;
@@ -116,6 +117,7 @@ void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.repetition_number                     = 1;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.initial_transmission_sf_io            = (RA_template->Msg3_frame*10)+RA_template->Msg3_subframe;
     ul_req_body->number_of_pdus++;
+    ul_req_body->tl.tag                                                            = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
   } //  if (RA_template->rach_resource_type>0) {	 
   else
 #endif
@@ -131,6 +133,7 @@ void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_
       memset((void*)ul_config_pdu,0,sizeof(nfapi_ul_config_request_pdu_t));
       ul_config_pdu->pdu_type                                                        = NFAPI_UL_CONFIG_ULSCH_PDU_TYPE; 
       ul_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_pdu));
+      ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.tl.tag                                 = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL8_TAG;
       ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.handle                                 = eNB->ul_handle++;
       ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti                                   = RA_template->rnti;
       ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.resource_block_start                   = RA_template->msg3_first_rb;
@@ -148,15 +151,17 @@ void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_
       ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.n_srs                                  = 1;
       ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                                   = get_TBS_UL(10,RA_template->msg3_nb_rb);
       ul_req_body->number_of_pdus++;
+      ul_req_body->tl.tag                                                            = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
       // save UL scheduling information for preprocessor
       for (j=0;j<RA_template->msg3_nb_rb;j++) cc->vrb_map_UL[RA_template->msg3_first_rb+j]=1;
       
       
       if (RA_template->msg3_round != 0) { // program HI too
-	hi_dci0_pdu                                                         = &hi_dci0_req->hi_dci0_pdu_list[hi_dci0_req->number_of_dci+hi_dci0_req->number_of_hi]; 	
+	hi_dci0_pdu                                                         = &hi_dci0_req->hi_dci0_pdu_list[hi_dci0_req->number_of_dci+hi_dci0_req->number_of_hi];
 	memset((void*)hi_dci0_pdu,0,sizeof(nfapi_hi_dci0_request_pdu_t));
 	hi_dci0_pdu->pdu_type                                               = NFAPI_HI_DCI0_HI_PDU_TYPE; 
 	hi_dci0_pdu->pdu_size                                               = 2+sizeof(nfapi_hi_dci0_hi_pdu);
+	hi_dci0_pdu->hi_pdu.hi_pdu_rel8.tl.tag                              = NFAPI_HI_DCI0_REQUEST_HI_PDU_REL8_TAG;
 	hi_dci0_pdu->hi_pdu.hi_pdu_rel8.resource_block_start                = RA_template->msg3_first_rb; 
 	hi_dci0_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms             = 0;
 	hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value                            = 0;
@@ -258,6 +263,7 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
       memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
       dl_config_pdu->pdu_type                                                                  = NFAPI_DL_CONFIG_MPDCCH_PDU_TYPE; 
       dl_config_pdu->pdu_size                                                                  = (uint8_t)(2+sizeof(nfapi_dl_config_mpdcch_pdu));
+      dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.tl.tag                                        = NFAPI_DL_CONFIG_REQUEST_MPDCCH_PDU_REL13_TAG;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.dci_format                                    = (RA_template->rach_resource_type > 1) ? 11 : 10;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.mpdcch_narrow_band                            = RA_template->msg2_narrowband;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.number_of_prb_pairs                           = 6;
@@ -303,6 +309,7 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.number_of_tx_antenna_ports                    = 1;
       RA_template->msg2_mpdcch_repetition_cnt++;
       dl_req->number_pdu++;
+      dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
       RA_template->Msg2_subframe = (RA_template->Msg2_subframe+9)%10;
 
     } //repetition_count==0 && SF condition met
@@ -333,6 +340,7 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
 	dl_config_pdu->pdu_type                                                        = NFAPI_DL_CONFIG_DLSCH_PDU_TYPE; 
 	dl_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_dl_config_dlsch_pdu));
+	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = eNB->pdu_index[CC_idP];
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = RA_template->RA_rnti;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type               = 2;   
@@ -357,20 +365,25 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	//	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ; 
 
 	// Rel10 fields
+	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL10_TAG;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start                           = cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13->startSymbolBR_r13;
 	// Rel13 fields
+	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = (RA_template->rach_resource_type < 3) ? 1 : 2;;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2;  // not SI message
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = (10*frameP)+subframeP;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.drms_table_flag                       = 0;
 	dl_req->number_pdu++;
+        dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 	
 	// Program UL processing for Msg3, same as regular LTE
 	get_Msg3alloc(&cc[CC_idP],subframeP,frameP,&RA_template->Msg3_frame,&RA_template->Msg3_subframe);
 	add_msg3(module_idP,CC_idP, RA_template,frameP,subframeP);
 	fill_rar_br(eNB,CC_idP,RA_template,frameP,subframeP,cc[CC_idP].RAR_pdu.payload,RA_template->rach_resource_type-1);
 	// DL request
-	eNB->TX_req[CC_idP].sfn_sf                                            = (frameP<<3)+subframeP;
+	eNB->TX_req[CC_idP].sfn_sf                                            = (frameP<<4)+subframeP;
+        eNB->TX_req[CC_idP].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
+        eNB->TX_req[CC_idP].header.message_id = NFAPI_TX_REQUEST;
 	TX_req                                                                = &eNB->TX_req[CC_idP].tx_request_body.tx_pdu_list[eNB->TX_req[CC_idP].tx_request_body.number_of_pdus]; 		     
 	TX_req->pdu_length                                                    = 7;  // This should be changed if we have more than 1 preamble 
 	TX_req->pdu_index                                                     = eNB->pdu_index[CC_idP]++;
@@ -404,6 +417,7 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
 	dl_config_pdu->pdu_type                                                          = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE; 
 	dl_config_pdu->pdu_size                                                          = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                             = NFAPI_DL_DCI_FORMAT_1A;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level                      = 4;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                                   = RA_template->RA_rnti;
@@ -425,11 +439,13 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 		frameP,subframeP,RA_template->RA_rnti);
 	  dl_req->number_dci++;
 	  dl_req->number_pdu++;
+          dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 	  
 	  dl_config_pdu                                                                  = &dl_req->dl_config_pdu_list[dl_req->number_pdu]; 
 	  memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
 	  dl_config_pdu->pdu_type                                                        = NFAPI_DL_CONFIG_DLSCH_PDU_TYPE; 
 	  dl_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_dl_config_dlsch_pdu));
+	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = eNB->pdu_index[CC_idP];
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = RA_template->RA_rnti;
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type               = 2;   // format 1A/1B/1D
@@ -453,6 +469,7 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 1;
 	  //	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ; 
 	  dl_req->number_pdu++;
+          dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 	  
 	  // Program UL processing for Msg3
 	  get_Msg3alloc(&cc[CC_idP],subframeP,frameP,&RA_template->Msg3_frame,&RA_template->Msg3_subframe);
@@ -464,7 +481,9 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	  add_msg3(module_idP,CC_idP, RA_template,frameP,subframeP);
 
 	  // DL request
-	  eNB->TX_req[CC_idP].sfn_sf                                             = (frameP<<3)+subframeP;
+	  eNB->TX_req[CC_idP].sfn_sf                                             = (frameP<<4)+subframeP;
+          eNB->TX_req[CC_idP].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
+          eNB->TX_req[CC_idP].header.message_id = NFAPI_TX_REQUEST;
 	  TX_req                                                                = &eNB->TX_req[CC_idP].tx_request_body.tx_pdu_list[eNB->TX_req[CC_idP].tx_request_body.number_of_pdus]; 		     
 	  TX_req->pdu_length                                                    = 7;  // This should be changed if we have more than 1 preamble 
 	  TX_req->pdu_index                                                     = eNB->pdu_index[CC_idP]++;
@@ -621,6 +640,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
       memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
       dl_config_pdu->pdu_type                                                                  = NFAPI_DL_CONFIG_MPDCCH_PDU_TYPE; 
       dl_config_pdu->pdu_size                                                                  = (uint8_t)(2+sizeof(nfapi_dl_config_mpdcch_pdu));
+      dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.tl.tag                                        = NFAPI_DL_CONFIG_REQUEST_MPDCCH_PDU_REL13_TAG;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.dci_format                                    = (RA_template->rach_resource_type > 1) ? 11 : 10;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.mpdcch_narrow_band                            = RA_template->msg34_narrowband;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.number_of_prb_pairs                           = 6;
@@ -666,6 +686,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.number_of_tx_antenna_ports                    = 1;
       RA_template->msg4_mpdcch_repetition_cnt++;
       dl_req->number_pdu++;
+      dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
       
     } //repetition_count==0 && SF condition met
     else if (RA_template->msg4_mpdcch_repetition_cnt>0) { // we're in a stream of repetitions
@@ -693,6 +714,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
 	dl_config_pdu->pdu_type                                                        = NFAPI_DL_CONFIG_DLSCH_PDU_TYPE; 
 	dl_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_dl_config_dlsch_pdu));
+	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = eNB->pdu_index[CC_idP];
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = RA_template->rnti;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type               = 2;   // format 1A/1B/1D
@@ -716,13 +738,16 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 1;
 	//	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ; 
 
+	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL10_TAG;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start                           = cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13->startSymbolBR_r13;
 	
+	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = (RA_template->rach_resource_type < 3) ? 1 : 2;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2;  // not SI message
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = (10*frameP)+subframeP;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.drms_table_flag                       = 0;
 	dl_req->number_pdu++;
+        dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 	
 	RA_template->generate_Msg4=0;
 	RA_template->wait_ack_Msg4=1;
@@ -760,6 +785,8 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	
 	// DL request
 	eNB->TX_req[CC_idP].sfn_sf                                             = (frameP<<3)+subframeP;
+        eNB->TX_req[CC_idP].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
+        eNB->TX_req[CC_idP].header.message_id = NFAPI_TX_REQUEST;
 	TX_req                                                                = &eNB->TX_req[CC_idP].tx_request_body.tx_pdu_list[eNB->TX_req[CC_idP].tx_request_body.number_of_pdus]; 		     	      
 	TX_req->pdu_length                                                    = rrc_sdu_length;
 	TX_req->pdu_index                                                     = eNB->pdu_index[CC_idP]++;
@@ -864,6 +891,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	if (!CCE_allocation_infeasible(module_idP,CC_idP,0,subframeP,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,RA_template->rnti)) {
 	  dl_req->number_dci++;
 	  dl_req->number_pdu++;
+          dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 	  
 	  RA_template->generate_Msg4=0;
 	  RA_template->wait_ack_Msg4=1;
@@ -935,6 +963,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 							 rrc_sdu_length,
 							 &eNB->pdu_index[CC_idP],
 							 eNB->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0]); 
+          eNB->TX_req[CC_idP].header.message_id = NFAPI_TX_REQUEST;
 
 	  // Program PUCCH1a for ACK/NAK
 	  // Program ACK/NAK for Msg4 PDSCH
@@ -1061,6 +1090,7 @@ void check_Msg4_retransmission(module_id_t module_idP,int CC_idP,frame_t frameP,
 	  if (!CCE_allocation_infeasible(module_idP,CC_idP,0,subframeP,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,RA_template->rnti)) {
 	    dl_req->number_dci++;
 	    dl_req->number_pdu++;
+            dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 	    
 	    LOG_D(MAC,"msg4 retransmission for rnti %x (round %d) fsf %d/%d\n", RA_template->rnti, round, frameP, subframeP);
 	  }

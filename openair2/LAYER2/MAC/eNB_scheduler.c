@@ -125,7 +125,8 @@ void schedule_SRS(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP) {
 		memset((void*)ul_config_pdu,0,sizeof(nfapi_ul_config_request_pdu_t));
 		ul_config_pdu->pdu_type                                             = NFAPI_UL_CONFIG_SRS_PDU_TYPE;
 		ul_config_pdu->pdu_size                                             = 2+(uint8_t)(2+sizeof(nfapi_ul_config_srs_pdu));
-		ul_config_pdu->srs_pdu.srs_pdu_rel8.size                            = (uint8_t)sizeof(nfapi_ul_config_srs_pdu);;
+		ul_config_pdu->srs_pdu.srs_pdu_rel8.tl.tag                          = NFAPI_UL_CONFIG_REQUEST_SRS_PDU_REL8_TAG;
+		ul_config_pdu->srs_pdu.srs_pdu_rel8.size                            = (uint8_t)sizeof(nfapi_ul_config_srs_pdu);
 		ul_config_pdu->srs_pdu.srs_pdu_rel8.rnti                            = UE_list->UE_template[CC_id][UE_id].rnti;
 		ul_config_pdu->srs_pdu.srs_pdu_rel8.srs_bandwidth                   = soundingRS_UL_ConfigDedicated->choice.setup.srs_Bandwidth;
 		ul_config_pdu->srs_pdu.srs_pdu_rel8.frequency_domain_position       = soundingRS_UL_ConfigDedicated->choice.setup.freqDomainPosition;
@@ -136,6 +137,7 @@ void schedule_SRS(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP) {
 		//		ul_config_pdu->srs_pdu.srs_pdu_rel10.antenna_port                   = ;//
 		//		ul_config_pdu->srs_pdu.srs_pdu_rel13.number_of_combs                = ;//
 		RC.mac[module_idP]->UL_req[CC_id].sfn_sf = (frameP<<4)+subframeP;
+		RC.mac[module_idP]->UL_req[CC_id].header.message_id = NFAPI_UL_CONFIG_REQUEST;
 		ul_req->number_of_pdus++;
 	      } // if (((10*frameP+subframeP) % srsPeriodicity) == srsOffset) 
 	    } // if (soundingRS_UL_ConfigDedicated->present == SoundingRS_UL_ConfigDedicated_PR_setup) 
@@ -181,7 +183,9 @@ void schedule_CSI(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP) {
 	    memset((void*)ul_config_pdu,0,sizeof(nfapi_ul_config_request_pdu_t));
 	    ul_config_pdu->pdu_type                                                          = NFAPI_UL_CONFIG_UCI_CQI_PDU_TYPE;
 	    ul_config_pdu->pdu_size                                                          = 2+(uint8_t)(2+sizeof(nfapi_ul_config_uci_cqi_pdu));
+	    ul_config_pdu->uci_cqi_pdu.ue_information.ue_information_rel8.tl.tag             = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL8_TAG;
 	    ul_config_pdu->uci_cqi_pdu.ue_information.ue_information_rel8.rnti               = UE_list->UE_template[CC_id][UE_id].rnti;
+	    ul_config_pdu->uci_cqi_pdu.cqi_information.cqi_information_rel8.tl.tag           = NFAPI_UL_CONFIG_REQUEST_CQI_INFORMATION_REL8_TAG;
 	    ul_config_pdu->uci_cqi_pdu.cqi_information.cqi_information_rel8.pucch_index      = cqi_ReportPeriodic->choice.setup.cqi_PUCCH_ResourceIndex;
 	    ul_config_pdu->uci_cqi_pdu.cqi_information.cqi_information_rel8.dl_cqi_pmi_size  = get_rel8_dl_cqi_pmi_size(&UE_list->UE_sched_ctrl[UE_id],
 															CC_id,
@@ -189,6 +193,7 @@ void schedule_CSI(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP) {
 															get_tmode(module_idP,CC_id,UE_id),
 															cqi_ReportPeriodic);
 	    ul_req->number_of_pdus++;
+	    ul_req->tl.tag = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
 
 #if defined(Rel10) || defined(Rel14)
 	    // PUT rel10-13 UCI options here
@@ -202,11 +207,14 @@ void schedule_CSI(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP) {
 	    memset((void*)ul_config_pdu,0,sizeof(nfapi_ul_config_request_pdu_t));
 	    ul_config_pdu->pdu_type                                                          = NFAPI_UL_CONFIG_UCI_CQI_PDU_TYPE;
 	    ul_config_pdu->pdu_size                                                          = 2+(uint8_t)(2+sizeof(nfapi_ul_config_uci_cqi_pdu));
+	    ul_config_pdu->uci_cqi_pdu.ue_information.ue_information_rel8.tl.tag             = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL8_TAG;
 	    ul_config_pdu->uci_cqi_pdu.ue_information.ue_information_rel8.rnti               = UE_list->UE_template[CC_id][UE_id].rnti;
+	    ul_config_pdu->uci_cqi_pdu.cqi_information.cqi_information_rel8.tl.tag           = NFAPI_UL_CONFIG_REQUEST_CQI_INFORMATION_REL8_TAG;
 	    ul_config_pdu->uci_cqi_pdu.cqi_information.cqi_information_rel8.pucch_index      = cqi_ReportPeriodic->choice.setup.cqi_PUCCH_ResourceIndex;
 	    ul_config_pdu->uci_cqi_pdu.cqi_information.cqi_information_rel8.dl_cqi_pmi_size  = (cc->p_eNB==2)?1:2;
 	    RC.mac[module_idP]->UL_req[CC_id].sfn_sf = (frameP<<4)+subframeP;
 	    ul_req->number_of_pdus++;
+	    ul_req->tl.tag = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
 	  }
 
 	} // if ((cqi_ReportPeriodic = cqi_ReportConfig->cqi_ReportPeriodic)!=NULL) {
@@ -271,7 +279,8 @@ void schedule_SR(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP) {
       
       // if we get here then there is no UL grant so program the SR
       ul_req->ul_config_pdu_list[ul_req->number_of_pdus].pdu_type                                                 = NFAPI_UL_CONFIG_UCI_SR_PDU_TYPE;
-      ul_req->ul_config_pdu_list[ul_req->number_of_pdus].uci_sr_pdu.ue_information.ue_information_rel8.rnti = UE_list->UE_template[CC_id][UE_id].rnti;
+      ul_req->ul_config_pdu_list[ul_req->number_of_pdus].uci_sr_pdu.ue_information.ue_information_rel8.tl.tag     = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL8_TAG;
+      ul_req->ul_config_pdu_list[ul_req->number_of_pdus].uci_sr_pdu.ue_information.ue_information_rel8.rnti       = UE_list->UE_template[CC_id][UE_id].rnti;
 
       // check Rel10 or Rel8 SR
 #if defined(Rel10) || defined(Rel14)
@@ -279,6 +288,7 @@ void schedule_SR(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP) {
 	  (UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated->ext2->schedulingRequestConfig_v1020)&&
 	  (UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated->ext2->schedulingRequestConfig_v1020)) {
 
+	ul_req->ul_config_pdu_list[ul_req->number_of_pdus].uci_sr_pdu.sr_information.sr_information_rel10.tl.tag = NFAPI_UL_CONFIG_REQUEST_SR_INFORMATION_REL10_TAG;
 	ul_req->ul_config_pdu_list[ul_req->number_of_pdus].uci_sr_pdu.sr_information.sr_information_rel10.number_of_pucch_resources = 1;
 	ul_req->ul_config_pdu_list[ul_req->number_of_pdus].uci_sr_pdu.sr_information.sr_information_rel10.pucch_index_p1 = 
 	  *UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated->ext2->schedulingRequestConfig_v1020->sr_PUCCH_ResourceIndexP1_r10;
@@ -293,6 +303,7 @@ void schedule_SR(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP) {
 	  LOG_D(MAC,"Frame %d, Subframe %d : Scheduling SR for UE %d/%x\n",frameP,subframeP,UE_id,UE_list->UE_template[CC_id][UE_id].rnti);
 	}
       RC.mac[module_idP]->UL_req[CC_id].sfn_sf = (frameP<<4)+subframeP;
+      RC.mac[module_idP]->UL_req[CC_id].header.message_id = NFAPI_UL_CONFIG_REQUEST;
       ul_req->number_of_pdus++;
     } // for (UE_id=UE_list->head; UE_id>=0; UE_id=UE_list->next[UE_id])
   } // for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++)
@@ -320,6 +331,7 @@ void check_ul_failure(module_id_t module_idP,int CC_id,int UE_id,
       memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
       dl_config_pdu->pdu_type                                         = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE; 
       dl_config_pdu->pdu_size                                         = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format            = NFAPI_DL_DCI_FORMAT_1A;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level     = get_aggregation(get_bw_index(module_idP,CC_id),eNB_UE_stats->dl_cqi,format1A);
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                  = rnti;
@@ -333,6 +345,7 @@ void check_ul_failure(module_id_t module_idP,int CC_id,int UE_id,
       LOG_E(MAC, "%s() number_dci:%u\n", __FUNCTION__, DL_req[CC_id].dl_config_request_body.number_dci);
 
       DL_req[CC_id].dl_config_request_body.number_pdu++;
+      DL_req[CC_id].dl_config_request_body.tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
      
       /* 
 	 add_ue_spec_dci(&DL_req[CC_id],
@@ -539,6 +552,3 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER,VCD_FUNCTION_OUT);
 
 }
-
-
-

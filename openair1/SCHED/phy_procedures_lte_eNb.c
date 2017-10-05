@@ -50,6 +50,7 @@
 #   include "intertask_interface.h"
 #endif
 
+int oai_nfapi_rach_ind(nfapi_rach_indication_t *rach_ind);
 
 
 
@@ -584,7 +585,11 @@ void prach_procedures(PHY_VARS_eNB *eNB,
   for (i=0;i<eNB->num_RU;i++) {
     ru=eNB->RU_list[i];
     for (ru_aa=0,aa=0;ru_aa<ru->nb_rx;ru_aa++,aa++) {
+
+      // Hasn't this been done already by init_eNB_afterRU() ???
       eNB->prach_vars.rxsigF[0][aa] = eNB->RU_list[i]->prach_rxsigF[ru_aa];
+      //eNB->prach_vars.rxsigF[0][aa] = eNB->RU_list[i]->common.rxdata[0][subframe * eNB->frame_parms.samples_per_tti];
+
 #ifdef Rel14
       int ce_level;
 
@@ -607,9 +612,10 @@ void prach_procedures(PHY_VARS_eNB *eNB,
 	   );
 
   //#ifdef DEBUG_PHY_PROC
-  LOG_D(PHY,"[RAPROC] Frame %d, subframe %d : Most likely preamble %d, energy %d dB delay %d\n",
+  if (max_preamble_energy[0]/10 > 32)
+    LOG_E(PHY,"[RAPROC] Frame %d, subframe %d : Most likely preamble %d, energy %d dB delay %d\n",
         frame,subframe,
-	max_preamble[0],
+        max_preamble[0],
         max_preamble_energy[0]/10,
         max_preamble_delay[0]);
   //q#endif
@@ -663,7 +669,7 @@ void prach_procedures(PHY_VARS_eNB *eNB,
     {
       if (max_preamble_energy[0] > 350) {
 
-	LOG_D(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure with preamble %d, energy %d.%d dB, delay %d\n",
+	LOG_I(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure with preamble %d, energy %d.%d dB, delay %d\n",
 	      eNB->Mod_id,
 	      eNB->CC_id,
 	      frame,
@@ -681,19 +687,31 @@ void prach_procedures(PHY_VARS_eNB *eNB,
 	    pthread_mutex_lock(&eNB->UL_INFO_mutex);
 	    
 	    eNB->UL_INFO.rach_ind.number_of_preambles                 = 1;
-	    eNB->UL_INFO.rach_ind.preamble_list                       = eNB->preamble_list;
+	    eNB->UL_INFO.rach_ind.preamble_list                       = &eNB->preamble_list[0];
+	    eNB->UL_INFO.rach_ind.tl.tag                              = NFAPI_RACH_INDICATION_BODY_TAG;
 	    
+	    eNB->preamble_list[0].preamble_rel8.tl.tag                = NFAPI_PREAMBLE_REL8_TAG;
 	    eNB->preamble_list[0].preamble_rel8.timing_advance        = max_preamble_delay[0];
 	    eNB->preamble_list[0].preamble_rel8.preamble              = max_preamble[0];
 	    eNB->preamble_list[0].preamble_rel8.rnti                  = 1+subframe;  // note: fid is implicitly 0 here
 	    eNB->preamble_list[0].preamble_rel13.rach_resource_type   = 0;
 	    eNB->preamble_list[0].instance_length                     = 0; //don't know exactly what this is
 	    
-	    LOG_D(PHY,"Filling NFAPI indication for RACH : TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
+            nfapi_rach_indication_t rach_ind;
+            rach_ind.header.message_id = NFAPI_RACH_INDICATION;
+            rach_ind.sfn_sf = frame<<4 | subframe;
+            rach_ind.rach_indication_body = eNB->UL_INFO.rach_ind;
+
+	    LOG_I(PHY,"\n\n\n\nDJP - this needs to be sent to VNF **********************************************\n\n\n\n");
+	    LOG_I(PHY,"Filling NFAPI indication for RACH : TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
 		  eNB->preamble_list[0].preamble_rel8.timing_advance,
 		  eNB->preamble_list[0].preamble_rel8.preamble,
 		  eNB->preamble_list[0].preamble_rel8.rnti,
 		  eNB->preamble_list[0].preamble_rel13.rach_resource_type);	    
+
+
+            oai_nfapi_rach_ind(&rach_ind);
+
 	    pthread_mutex_unlock(&eNB->UL_INFO_mutex);
       
       } // max_preamble_energy > 350
@@ -1733,7 +1751,7 @@ void fill_ulsch_harq_indication(PHY_VARS_eNB *eNB,LTE_UL_eNB_HARQ_t *ulsch_harq,
 
 void fill_uci_harq_indication(PHY_VARS_eNB *eNB,LTE_eNB_UCI *uci,int frame,int subframe,uint8_t *harq_ack,uint8_t tdd_mapping_mode,uint16_t tdd_multiplexing_mask) {
 
-  int UE_id=find_dlsch(uci->rnti,eNB,SEARCH_EXIST),i;
+  int UE_id=find_dlsch(uci->rnti,eNB,SEARCH_EXIST);
 
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);

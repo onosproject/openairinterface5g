@@ -17,7 +17,7 @@ void handle_rach(UL_IND_t *UL_info) {
 
     AssertFatal(UL_info->rach_ind.number_of_preambles==1,"More than 1 preamble not supported\n");
     UL_info->rach_ind.number_of_preambles=0;
-    LOG_D(MAC,"Frame %d, Subframe %d Calling initiate_ra_proc\n",UL_info->frame,UL_info->subframe);
+    LOG_I(MAC,"Frame %d, Subframe %d Calling initiate_ra_proc\n",UL_info->frame,UL_info->subframe);
     initiate_ra_proc(UL_info->module_id,
 		     UL_info->CC_id,
 		     UL_info->frame,

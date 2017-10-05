@@ -1214,6 +1214,10 @@ static inline int wakeup_prach_ru(RU_t *ru) {
     ru->proc.frame_prach    = ru->proc.frame_rx;
     ru->proc.subframe_prach = ru->proc.subframe_rx;
 
+    // DJP - think prach_procedures() is looking at eNB frame_prach
+    ru->eNB_list[0]->proc.frame_prach = ru->proc.frame_rx;
+    ru->eNB_list[0]->proc.subframe_prach = ru->proc.subframe_rx;
+
     LOG_D(PHY,"RU %d: waking up PRACH thread\n",ru->idx);
     // the thread can now be woken up
     AssertFatal(pthread_cond_signal(&ru->proc.cond_prach) == 0, "ERROR pthread_cond_signal for RU prach thread\n");
