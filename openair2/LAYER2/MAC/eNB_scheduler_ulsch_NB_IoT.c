@@ -414,3 +414,149 @@ void adjust_UL_resource_list(sched_temp_UL_NB_IoT_t *NPUSCH_info)
 
 //	free(NPUSCH_info);
 }
+
+uint8_t *parse_ulsch_header_NB_IoT( uint8_t *mac_header,
+                             uint8_t *num_ce,
+                             uint8_t *num_sdu,
+                             uint8_t *rx_ces,
+                             uint8_t *rx_lcids,
+                             uint16_t *rx_lengths,
+                             uint16_t tb_length ){
+
+uint8_t not_done=1, num_ces=0, num_sdus=0, lcid,num_sdu_cnt;
+uint8_t *mac_header_ptr = mac_header;
+uint16_t length, ce_len=0;
+
+  while(not_done==1){
+
+    if(((SCH_SUBHEADER_FIXED_NB_IoT*)mac_header_ptr)->E == 0){
+      not_done = 0;
+    }
+
+    lcid = ((SCH_SUBHEADER_FIXED_NB_IoT*)mac_header_ptr)->LCID;
+
+    if(lcid < EXTENDED_POWER_HEADROOM){
+      if (not_done==0) { // last MAC SDU, length is implicit
+        mac_header_ptr++;
+        length = tb_length-(mac_header_ptr-mac_header)-ce_len;
+
+        for(num_sdu_cnt=0; num_sdu_cnt < num_sdus ; num_sdu_cnt++){
+          length -= rx_lengths[num_sdu_cnt];
+        }
+      }else{
+        if(((SCH_SUBHEADER_SHORT_NB_IoT *)mac_header_ptr)->F == 0){
+          length = ((SCH_SUBHEADER_SHORT_NB_IoT *)mac_header_ptr)->L;
+          mac_header_ptr += 2;//sizeof(SCH_SUBHEADER_SHORT);
+        }else{ // F = 1
+          length = ((((SCH_SUBHEADER_LONG_NB_IoT *)mac_header_ptr)->L_MSB & 0x7f ) << 8 ) | (((SCH_SUBHEADER_LONG_NB_IoT *)mac_header_ptr)->L_LSB & 0xff);
+          mac_header_ptr += 3;//sizeof(SCH_SUBHEADER_LONG);
+        }
+      }
+
+      rx_lcids[num_sdus] = lcid;
+      rx_lengths[num_sdus] = length;
+      num_sdus++;
+    }else{ // This is a control element subheader POWER_HEADROOM, BSR and CRNTI
+      if(lcid == SHORT_PADDING){
+        mac_header_ptr++;
+      }else{
+        rx_ces[num_ces] = lcid;
+        num_ces++;
+        mac_header_ptr++;
+
+        if(lcid==LONG_BSR){
+          ce_len+=3;
+        }else if(lcid==CRNTI){
+          ce_len+=2;
+        }else if((lcid==POWER_HEADROOM) || (lcid==TRUNCATED_BSR)|| (lcid== SHORT_BSR)) {
+          ce_len++;
+        }else{
+          // wrong lcid
+        }
+      }
+    }
+  }
+
+  *num_ce = num_ces;
+  *num_sdu = num_sdus;
+
+  return(mac_header_ptr);
+}
+
+
+void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t subframe, uint16_t rnti, uint8_t *sdu, uint16_t  length)
+{
+    unsigned char  rx_ces[5], num_ce = 0, num_sdu = 0, *payload_ptr, i; // MAX Control element
+    unsigned char  rx_lcids[5];//for NB_IoT-IoT, NB_IoT_RB_MAX should be fixed to 5 (2 DRB+ 3SRB) 
+  unsigned short rx_lengths[5];
+  int UE_id = 0;
+  int BSR_index=0;
+  int DVI_index = 0;
+  int PHR = 0;
+  int ul_total_buffer = 0;
+  //mac_NB_IoT_t *mac_inst;
+  UE_TEMPLATE_NB_IoT *UE_info;
+
+  //mac_inst = get_mac_inst(module_id);
+
+  // note: if lcid < 25 this is sdu, otherwise this is CE
+  payload_ptr = parse_ulsch_header_NB_IoT(sdu, &num_ce, &num_sdu,rx_ces, rx_lcids, rx_lengths, length);
+
+  //printf("num_CE= %d, num_sdu= %d, rx_ces[0] = %d, rx_lcids =  %d, rx_lengths[0] = %d, length = %d\n",num_ce,num_sdu,rx_ces[0],rx_lcids[0],rx_lengths[0],length);
+
+  for (i = 0; i < num_ce; i++)
+  {
+    switch(rx_ces[i])
+    {
+        case CRNTI:
+          // find UE id again, confirm the UE, intial some ue specific parameters
+          payload_ptr+=2;
+            break;
+        case SHORT_BSR:
+            // update BSR here
+        UE_info = get_ue_from_rnti(mac_inst, rnti);
+        BSR_index = payload_ptr[0] & 0x3f;
+        UE_info->ul_total_buffer = BSR_table[BSR_index];
+            payload_ptr+=1;
+            break;
+        default:
+        printf("Received unknown MAC header (0x%02x)\n", rx_ces[i]);
+                break;
+        }
+    }
+    for (i = 0; i < num_sdu; i++)
+    {
+        switch(rx_lcids[i])
+        {
+            case CCCH_NB_IoT:
+                
+                // MSG3 content: |R|R|PHR|PHR|DVI|DVI|DVI|DVI|CCCH payload
+                PHR = ((payload_ptr[0] >> 5) & 0x01)*2+((payload_ptr[0]>>4) & 0x01);
+                DVI_index = (payload_ptr[0] >>3 & 0x01)*8+ (payload_ptr[0] >>2 & 0x01)*4 + (payload_ptr[0] >>1 & 0x01)*2 +(payload_ptr[0] >>0 & 0x01);
+          //printf("DVI_index= %d\n",DVI_index);
+                ul_total_buffer = DV_table[DVI_index];
+                printf("PHR = %d, ul_total_buffer = %d\n",PHR,ul_total_buffer);
+                // go to payload
+                payload_ptr+=1; 
+                rx_lengths[i]-=1;
+                printf("rx_lengths : %d\n", rx_lengths[i]);
+                //NB_IoT_mac_rrc_data_ind(payload_ptr,mac_inst,rnti);
+                //NB_IoT_receive_msg3(mac_inst,rnti,PHR,ul_total_buffer);
+          break;
+            case DCCH0_NB_IoT:
+            case DCCH1_NB_IoT:
+                // UE specific here
+                //NB_IoT_mac_rlc_data_ind(payload_ptr,mac_inst,rnti);
+            
+          break;
+            // all the DRBS
+            case DTCH0_NB_IoT:
+            default:
+                //NB_IoT_mac_rlc_data_ind(payload_ptr,mac_inst,rnti);
+          break;
+        }
+        payload_ptr+=rx_lengths[i];
+    }
+
+   
+}

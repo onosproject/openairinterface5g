@@ -174,10 +174,18 @@ int get_I_TBS_NB_IoT(int x,int y);
 
 uint8_t get_index_Rep_dl(uint16_t R);
 
+UE_TEMPLATE_NB_IoT *get_ue_from_rnti(eNB_MAC_INST_NB_IoT *inst, rnti_t rnti);
+
 //debug function
 
 void print_available_resource_DL(void);
 
 void print_available_UL_resource(void);
+
+//interface with IF
+
+uint8_t *parse_ulsch_header_NB_IoT( uint8_t *mac_header, uint8_t *num_ce, uint8_t *num_sdu, uint8_t *rx_ces, uint8_t *rx_lcids, uint16_t *rx_lengths, uint16_t tb_length);
+
+void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t subframe, uint16_t rnti, uint8_t *sdu, uint16_t  length);
 
 #endif

@@ -535,17 +535,6 @@ typedef  struct {
 
 nprach_parameters_NB_IoT_t nprach_list[3];
 
-//SCHEDULE_NB_IoT_t *NB_IoT_schedule;
-
-/******MAC Global Variable********/
-//available_resource_tones_UL_t *available_resource_UL;
-//available_resource_DL_t *available_resource_DL;
-//available_resource_DL_t *available_resource_DL_last;
-
-/*
- schedule_result_t *schedule_result_list_UL;
- schedule_result_t *schedule_result_list_DL;
-*/
 //DLSF Table
 DLSF_INFO_t DLSF_information;
 
