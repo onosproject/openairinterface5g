@@ -226,7 +226,7 @@ int ulsch_decoding_data_2thread0(td_params* tdp) {
   LTE_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_processes[harq_pid];
   int Q_m = ulsch_harq->Qm;
   int G = ulsch_harq->G;
-  uint32_t E;
+  uint32_t E=0;
   uint32_t Gp,GpmodC,Nl=1;
   uint32_t C = ulsch_harq->C;
 
@@ -273,8 +273,7 @@ int ulsch_decoding_data_2thread0(td_params* tdp) {
     else if (Kr_bytes <= 768)
       iind = 123 + ((Kr_bytes-256)>>3);
     else {
-      LOG_E(PHY,"ulsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
-      return(-1);
+      AssertFatal(1==0,"ulsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
     }
 
     // This is stolen from rate-matching algorithm to get the value of E
@@ -865,7 +864,6 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
   unsigned int Qprime_ACK,Qprime_RI,len_ACK=0,len_RI=0;
   //  uint8_t q_ACK[MAX_ACK_PAYLOAD],q_RI[MAX_RI_PAYLOAD];
   int metric,metric_new;
-  uint8_t o_flip[8];
   uint32_t x1, x2, s=0;
   int16_t ys,c;
   uint32_t wACK_idx;
@@ -873,7 +871,7 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
   int16_t y[6*14*1200] __attribute__((aligned(32)));
   uint8_t ytag[14*1200];
   //  uint8_t ytag2[6*14*1200],*ytag2_ptr;
-  int16_t cseq[6*14*1200];
+  int16_t cseq[6*14*1200] __attribute__((aligned(32)));
   int off;
 
   int subframe = proc->subframe_rx;
@@ -954,7 +952,7 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
   }
 
   AssertFatal(sumKr>0,
-	      "[eNB %d] ulsch_decoding.c: FATAL sumKr is 0! (Nid_cell %d, rnti %x, x2 %x): harq_pid %d round %d, RV %d, O_RI %d, O_ACK %d, G %d, subframe %d\n",
+	      "[eNB] ulsch_decoding.c: FATAL sumKr is 0! (Nid_cell %d, rnti %x, x2 %x): harq_pid %d round %d, RV %d, O_RI %d, O_ACK %d, G %d, subframe %d\n",
 	      frame_parms->Nid_cell,ulsch->rnti,x2,
 	      harq_pid,
 	      ulsch_harq->round,
@@ -1562,28 +1560,11 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
                                 &ulsch_harq->o_d[96],
                                 &ulsch_harq->o_w[0]);
 
-    memset(o_flip,0,1+((8+ulsch_harq->Or1)/8));
-    phy_viterbi_lte_sse2(ulsch_harq->o_d+96,o_flip,8+ulsch_harq->Or1);
+    memset(ulsch_harq->o,0,(7+8+ulsch_harq->Or1) / 8);
+    phy_viterbi_lte_sse2(ulsch_harq->o_d+96,ulsch_harq->o,8+ulsch_harq->Or1);
 
-    if (extract_cqi_crc(o_flip,ulsch_harq->Or1) == (crc8(o_flip,ulsch_harq->Or1)>>24))
+    if (extract_cqi_crc(ulsch_harq->o,ulsch_harq->Or1) == (crc8(ulsch_harq->o,ulsch_harq->Or1)>>24))
       ulsch_harq->cqi_crc_status = 1;
-
-    if (ulsch->harq_processes[harq_pid]->Or1<=32) {
-      ulsch_harq->o[3] = o_flip[0] ;
-      ulsch_harq->o[2] = o_flip[1] ;
-      ulsch_harq->o[1] = o_flip[2] ;
-      ulsch_harq->o[0] = o_flip[3] ;
-    } else {
-      ulsch_harq->o[7] = o_flip[0] ;
-      ulsch_harq->o[6] = o_flip[1] ;
-      ulsch_harq->o[5] = o_flip[2] ;
-      ulsch_harq->o[4] = o_flip[3] ;
-      ulsch_harq->o[3] = o_flip[4] ;
-      ulsch_harq->o[2] = o_flip[5] ;
-      ulsch_harq->o[1] = o_flip[6] ;
-      ulsch_harq->o[0] = o_flip[7] ;
-
-    }
 
 #ifdef DEBUG_ULSCH_DECODING
     printf("ulsch_decoding: Or1=%d\n",ulsch_harq->Or1);
@@ -1592,9 +1573,9 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
       printf("ulsch_decoding: O[%d] %d\n",i,ulsch_harq->o[i]);
 
     if (ulsch_harq->cqi_crc_status == 1)
-      printf("RX CQI CRC OK (%x)\n",extract_cqi_crc(o_flip,ulsch_harq->Or1));
+      printf("RX CQI CRC OK (%x)\n",extract_cqi_crc(ulsch_harq->o,ulsch_harq->Or1));
     else
-      printf("RX CQI CRC NOT OK (%x)\n",extract_cqi_crc(o_flip,ulsch_harq->Or1));
+      printf("RX CQI CRC NOT OK (%x)\n",extract_cqi_crc(ulsch_harq->o,ulsch_harq->Or1));
 
 #endif
   }
@@ -1997,7 +1978,7 @@ uint32_t ulsch_decoding_emul(PHY_VARS_eNB *eNB, eNB_rxtx_proc_t *proc,
 #endif
 
   for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
-    if (rnti == PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[subframe & 0x1][0]->crnti)
+    if (rnti == PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[PHY_vars_UE_g[UE_id][CC_id]->current_thread_id[subframe]][0]->crnti)
       break;
 
   }

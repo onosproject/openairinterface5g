@@ -711,7 +711,7 @@ schedule_SI(
 	
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.harq_process                = 0;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tpc                         = 1; // no TPC
-	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1        = 1;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1        = 0;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_1                       = mcs;
 	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_1        = 0;
 	
@@ -721,7 +721,11 @@ schedule_SI(
 	
         LOG_D(MAC, "%s() mcs:%d bcch_sdu_length:%d N_RB_DL:%d first_rb:%d resource_block_coding:%d\n", __FUNCTION__, mcs, bcch_sdu_length, N_RB_DL, first_rb, dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding);
 
-	if (!CCE_allocation_infeasible(module_idP,CC_id,1,subframeP,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,SI_RNTI)) {
+	if (!CCE_allocation_infeasible(module_idP,CC_id,0,subframeP,
+				       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,SI_RNTI)) {
+	  LOG_D(MAC,"Frame %d: Subframe %d : Adding common DCI for S_RNTI\n",
+		frameP,subframeP);
+	  dl_req->number_dci++;
 	  dl_req->number_pdu++;
 	  dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 

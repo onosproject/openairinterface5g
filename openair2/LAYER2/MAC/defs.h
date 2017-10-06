@@ -515,8 +515,6 @@ typedef struct {
   uint8_t harq_pid;
   /// harq rounf
   uint8_t harq_round;
-  /// DL Wideband CQI index (2 TBs)
-  uint8_t dl_cqi;
   /// total available number of PRBs for a new transmission
   uint16_t rbs_used;
   /// total available number of PRBs for a retransmission
@@ -648,6 +646,10 @@ typedef struct {
   uint8_t oldmcs2[8];
   /// NDI from last UL scheduling
   uint8_t oldNDI_UL[8];
+  /// mcs from last UL scheduling
+  uint8_t mcs_UL[8];
+  /// TBS from last UL scheduling
+  uint8_t TBS_UL[8];
   /// Flag to indicate UL has been scheduled at least once
   boolean_t ul_active;
   /// Flag to indicate UE has been configured (ACK from RRCConnectionSetup received)
@@ -815,8 +817,11 @@ typedef struct {
   int32_t       phr_received;
   uint8_t       periodic_ri_received[NFAPI_CC_MAX];
   uint8_t       aperiodic_ri_received[NFAPI_CC_MAX];
+  uint8_t       pucch1_cqi_update[NFAPI_CC_MAX];
   uint8_t       pucch1_snr[NFAPI_CC_MAX];
+  uint8_t       pucch2_cqi_update[NFAPI_CC_MAX];
   uint8_t       pucch2_snr[NFAPI_CC_MAX];
+  uint8_t       pucch3_cqi_update[NFAPI_CC_MAX];
   uint8_t       pucch3_snr[NFAPI_CC_MAX];
   uint8_t       pusch_snr[NFAPI_CC_MAX];
   uint16_t      feedback_cnt[NFAPI_CC_MAX];
@@ -836,6 +841,7 @@ typedef struct {
   uint8_t       aperiodic_wideband_pmi[NFAPI_CC_MAX];
   uint8_t       aperiodic_wideband_cqi1[NFAPI_CC_MAX];
   uint8_t       aperiodic_wideband_pmi1[NFAPI_CC_MAX];
+  uint8_t       dl_cqi[NFAPI_CC_MAX];
 } UE_sched_ctrl;
 /*! \brief eNB template for the Random access information */
 typedef struct {
@@ -877,6 +883,8 @@ typedef struct {
   uint8_t generate_Msg4;
   /// Flag to indicate that eNB is waiting for ACK that UE has received Msg3.
   uint8_t wait_ack_Msg4;
+  /// harq_pid used for Msg4 transmission
+  uint8_t harq_pid;
   /// UE RNTI allocated during RAR
   rnti_t rnti;
   /// RA RNTI allocated from received PRACH

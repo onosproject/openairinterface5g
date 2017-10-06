@@ -238,6 +238,9 @@ add_boolean_option(XFORMS              False "This adds the possibility to see t
 add_boolean_option(PRINT_STATS         False "This adds the possibility to see the status")
 add_boolean_option(T_TRACER            False "Activate the T tracer, a debugging/monitoring framework" )
 add_boolean_option(UE_AUTOTEST_TRACE   False "Activate UE autotest specific logs")
+add_boolean_option(UE_DEBUG_TRACE      False "Activate UE debug trace")
+add_boolean_option(UE_TIMING_TRACE     False "Activate UE timing trace")
+add_boolean_option(DISABLE_LOG_X       False "Deactivate all LOG_* macros")
 
 add_boolean_option(DEBUG_CONSOLE False "makes debugging easier, disables stdout/stderr buffering")
 
@@ -500,6 +503,10 @@ set (CONFIG_LIBCONFIG_SOURCES
    )   
 add_library(params_libconfig MODULE ${CONFIG_LIBCONFIG_SOURCES} )
 target_link_libraries(params_libconfig config)  
+# shared library loader
+set (SHLIB_LOADER_SOURCES
+    ${OPENAIR_DIR}/common/utils/load_module_shlib.c
+)
 # include RF devices / transport protocols library modules
 ######################################################################
 
@@ -543,6 +550,19 @@ set(TPLIB_ETHERNET_SOURCE
   )
 add_library(oai_eth_transpro MODULE ${TPLIB_ETHERNET_SOURCE} )
 
+include_directories("${OPENAIR_TARGETS}/ARCH/mobipass/")
+set(TPLIB_MOBIPASS_SOURCE
+  ${OPENAIR_TARGETS}/ARCH/mobipass/interface.c
+  ${OPENAIR_TARGETS}/ARCH/mobipass/mobipass.c
+  ${OPENAIR_TARGETS}/ARCH/mobipass/queues.c
+  )
+add_library(oai_mobipass MODULE ${TPLIB_MOBIPASS_SOURCE} )
+
+# Hide all functions/variables in the mobipass library.
+# Use __attribute__((__visibility__("default")))
+# in the source code to unhide a function/variable.
+get_target_property(mobipas_cflags oai_mobipass COMPILE_FLAGS)
+set_target_properties(oai_mobipass PROPERTIES COMPILE_FLAGS "${mobipass_cflags} -fvisibility=hidden")
 
 ##########################################################
 
@@ -1738,9 +1758,25 @@ else()
 endif()
 
 # Atlas is required by some packages, but not found in pkg-config
-if(EXISTS "/usr/include/atlas/cblas.h")
+# So, here are some hacks here. Hope this gets fixed in future!
+if(EXISTS "/usr/include/atlas/cblas.h" OR EXISTS "/usr/include/cblas.h")
   include_directories("/usr/include/atlas")
-  list(APPEND ATLAS_LIBRARIES cblas atlas lapack)
+  LINK_DIRECTORIES("/usr/lib64")
+  LINK_DIRECTORIES("/usr/lib64/atlas") #Added because atlas libraries in CentOS 7 are here!
+  
+  if(EXISTS "/usr/lib64/libblas.so" OR EXISTS "/usr/lib/libblas.so") #Case for CentOS7
+     list(APPEND ATLAS_LIBRARIES blas)
+  else() # Case for Ubuntu
+     list(APPEND ATLAS_LIBRARIES cblas)
+  endif()
+
+  if(EXISTS "/usr/lib/atlas/libtatlas.so" OR EXISTS "/usr/lib64/atlas/libtatlas.so") #Case for CentOS7
+     list(APPEND ATLAS_LIBRARIES tatlas)
+  else()
+     list(APPEND ATLAS_LIBRARIES atlas) #Case for Ubuntu
+  endif()
+
+  list(APPEND ATLAS_LIBRARIES lapack)
 else()
   message("No Blas/Atlas libs found, some targets will fail")
 endif()
@@ -1828,6 +1864,7 @@ add_executable(lte-softmodem
   ${XFORMS_SOURCE_SOFTMODEM}
   ${T_SOURCE}
   ${CONFIG_SOURCES}
+  ${SHLIB_LOADER_SOURCES}
   )
 
 target_link_libraries (lte-softmodem
@@ -1864,6 +1901,8 @@ add_executable(lte-softmodem-nos1
   ${XFORMS_SOURCE}
   ${XFORMS_SOURCE_SOFTMODEM}
   ${T_SOURCE}
+  ${CONFIG_SOURCES}
+  ${SHLIB_LOADER_SOURCES}
   )
 target_link_libraries (lte-softmodem-nos1
   -Wl,--start-group
@@ -1951,6 +1990,8 @@ add_executable(oaisim
   ${OPENAIR_TARGETS}/COMMON/create_tasks.c
   ${XFORMS_SOURCE}
   ${T_SOURCE}
+  ${CONFIG_SOURCES}
+  ${SHLIB_LOADER_SOURCES}
 )
 
 #add_library( imp_nfapi STATIC IMPORTED)
@@ -2016,6 +2057,8 @@ add_executable(oaisim_nos1
   ${OPENAIR_DIR}/common/utils/system.c
   ${XFORMS_SOURCE}
   ${T_SOURCE}
+  ${CONFIG_SOURCES}
+  ${SHLIB_LOADER_SOURCES}
 )
 target_include_directories(oaisim_nos1 PUBLIC  ${OPENAIR_TARGETS}/SIMU/USER)
 target_link_libraries (oaisim_nos1

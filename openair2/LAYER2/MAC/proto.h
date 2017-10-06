@@ -141,9 +141,15 @@ int8_t get_deltaP_rampup(module_id_t module_idP,uint8_t CC_id);
 
 uint16_t mac_computeRIV(uint16_t N_RB_DL,uint16_t RBstart,uint16_t Lcrbs);
 
+void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_t frameP, sub_frame_t subframeP);
+
 //main.c
 
 int mac_top_init(int eMBMS_active, char *uecap_xer,uint8_t cba_group_active, uint8_t HO_active);
+
+void mac_top_init_eNB(void);
+
+void mac_init_cell_params(int Mod_idP,int CC_idP);
 
 char layer2_init_UE(module_id_t module_idP);
 
@@ -156,6 +162,8 @@ int mac_init_global_param(void);
 void mac_top_cleanup(void);
 
 void mac_UE_out_of_sync_ind(module_id_t module_idP,frame_t frameP, uint16_t eNB_index);
+
+void clear_nfapi_information(eNB_MAC_INST *eNB,int CC_idP,frame_t frameP,sub_frame_t subframeP);
 
 void dlsch_scheduler_pre_processor_reset (int module_idP,int UE_id,
     uint8_t  CC_id,
@@ -306,6 +314,27 @@ void SR_indication(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t s
 @param subframe Index of subframe where SR was received
 */
 void UL_failure_indication(module_id_t Mod_id,int CC_id,frame_t frameP,rnti_t rnti,sub_frame_t subframe);
+
+/* \brief Function to indicate an HARQ ACK/NAK.
+@param Mod_id Instance ID of eNB
+@param CC_id Component carrier
+@param frameP Frame index
+@param subframeP subframe index
+@param harq_pdu NFAPI HARQ PDU descriptor
+*/
+void harq_indication(module_id_t mod_idP, int CC_idP, frame_t frameP, sub_frame_t subframeP, nfapi_harq_indication_pdu_t *harq_pdu);
+
+/* \brief Function to indicate a received CQI pdu
+@param Mod_id Instance ID of eNB
+@param CC_id Component carrier
+@param frameP Frame index
+@param subframeP subframe index
+@param rntiP RNTI of incoming CQI information
+@param ul_cqi_information NFAPI UL CQI measurement
+*/
+void cqi_indication(module_id_t mod_idP, int CC_idP, frame_t frameP, sub_frame_t subframeP, rnti_t rntiP, 
+		    nfapi_cqi_indication_rel9_t *rel9,uint8_t *pdu,
+		    nfapi_ul_cqi_information_t *ul_cqi_information);
 
 uint8_t *get_dlsch_sdu(module_id_t module_idP,int CC_id,frame_t frameP,rnti_t rnti,uint8_t TBindex);
 
@@ -916,12 +945,42 @@ void get_csi_params(COMMON_channels_t *cc,struct CQI_ReportPeriodic *cqi_PMI_Con
 
 uint8_t get_rel8_dl_cqi_pmi_size(UE_sched_ctrl *sched_ctl,int CC_idP,COMMON_channels_t *cc,uint8_t tmode, struct CQI_ReportPeriodic *cqi_ReportPeriodic);
 
-uint8_t get_dl_cqi_pmi_size_pusch(UE_sched_ctrl *sched_ctl,COMMON_channels_t *cc,uint8_t tmode, uint8_t ri, CQI_ReportModeAperiodic_t *cqi_ReportModeAperiodic);
+uint8_t get_dl_cqi_pmi_size_pusch(COMMON_channels_t *cc,uint8_t tmode, uint8_t ri, CQI_ReportModeAperiodic_t *cqi_ReportModeAperiodic);
 void extract_pucch_csi(module_id_t mod_idP,int CC_idP,int UE_id, frame_t frameP,sub_frame_t subframeP, uint8_t *pdu, uint8_t length);
 
 void extract_pusch_csi(module_id_t mod_idP,int CC_idP,int UE_id, frame_t frameP,sub_frame_t subframeP,uint8_t *pdu, uint8_t length);
 
 uint16_t fill_nfapi_tx_req(nfapi_tx_request_body_t *tx_req_body,uint16_t absSF,uint16_t pdu_length, uint16_t *pdu_index, uint8_t *pdu );
+
+void fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t  *ul_config_pdu,
+					  uint8_t                        cqi_req,
+					  COMMON_channels_t              *cc,
+					  struct PhysicalConfigDedicated *physicalConfigDedicated,
+					  uint8_t                        tmode,
+					  uint32_t                       handle,
+					  uint16_t                       rnti,
+					  uint8_t                        resource_block_start,
+					  uint8_t                        number_of_resource_blocks,
+					  uint8_t                        mcs,
+					  uint8_t                        cyclic_shift_2_for_drms,
+					  uint8_t                        frequency_hopping_enabled_flag,
+					  uint8_t                        frequency_hopping_bits,
+					  uint8_t                        new_data_indication,
+					  uint8_t                        redundancy_version,
+					  uint8_t                        harq_process_number,
+					  uint8_t                        ul_tx_mode,
+					  uint8_t                        current_tx_nb,
+					  uint8_t                        n_srs,
+					  uint16_t                       size
+					  );
+
+#ifdef Rel14
+void fill_nfapi_ulsch_config_request_emtc(nfapi_ul_config_request_pdu_t  *ul_config_pdu,
+					  uint8_t ue_type,
+					  uint16_t total_number_of_repetitions,
+					  uint16_t repetition_number,
+					  uint16_t initial_transmission_sf_io);
+#endif
 
 void program_dlsch_acknak(module_id_t module_idP, int CC_idP,int UE_idP, frame_t frameP, sub_frame_t subframeP,uint8_t cce_idx);
 
@@ -996,6 +1055,8 @@ int get_numnarrowbands(long dl_Bandwidth);
 int narrowband_to_first_rb(COMMON_channels_t *cc, int nb_index);
 
 #endif
+
+int l2_init_eNB(void);
 
 
 

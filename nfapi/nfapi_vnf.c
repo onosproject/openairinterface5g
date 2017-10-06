@@ -311,16 +311,19 @@ void oai_create_enb(void)
     memset((void*)RC.eNB[bodge_counter][bodge_counter],0,sizeof(PHY_VARS_eNB));
 
     eNB = RC.eNB[bodge_counter][bodge_counter];
+  }
 
-    eNB->Mod_id  = bodge_counter;
-    eNB->CC_id   = bodge_counter;
+  eNB->Mod_id  = bodge_counter;
+  eNB->CC_id   = bodge_counter;
+  eNB->abstraction_flag   = 0;
+  eNB->single_thread_flag = 0;//single_thread_flag;
+  eNB->td                   = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
+  eNB->te                   = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
+
+  RC.nb_CC[bodge_counter] = 1;
+
+  if (eNB->if_inst==0) {
     eNB->if_inst = IF_Module_init(bodge_counter);
-    eNB->abstraction_flag   = 0;
-    eNB->single_thread_flag = 0;//single_thread_flag;
-    eNB->td                   = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
-    eNB->te                   = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
-
-    RC.nb_CC[bodge_counter] = 1;
   }
 
   //init_eNB_proc(bodge_counter);
@@ -328,7 +331,7 @@ void oai_create_enb(void)
   // This will cause phy_config_request to be installed. That will result in RRC configuring the PHY
   // that will result in eNB->configured being set to TRUE.
   // See we need to wait for that to happen otherwise the NFAPI message exchanges won't contain the right parameter values
-  if (RC.eNB[0][0]->if_inst->PHY_config_req==0 || RC.eNB[0][0]->if_inst->schedule_response==0)
+  if (RC.eNB[0][0]->if_inst==0 || RC.eNB[0][0]->if_inst->PHY_config_req==0 || RC.eNB[0][0]->if_inst->schedule_response==0)
   {
     printf("RC.eNB[0][0]->if_inst->PHY_config_req is not installed - install it\n");
     install_schedule_handlers(RC.eNB[0][0]->if_inst);

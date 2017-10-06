@@ -146,6 +146,8 @@ typedef struct {
   uint32_t cqi_alloc2;
   /// Current Number of RBs
   uint16_t nb_rb;
+  /// Current NDI
+  uint8_t ndi;
   /// downlink power offset field
   uint8_t dl_power_off;
   /// start symbold of pdsch
@@ -319,8 +321,8 @@ typedef struct {
   uint8_t srs_active;
   /// Pointers to 8 HARQ processes for the ULSCH
   LTE_UL_UE_HARQ_t *harq_processes[8];
-  /// Pointer to CQI data
-  uint8_t o[MAX_CQI_BYTES];
+  /// Pointer to CQI data (+1 for 8 bits crc)
+  uint8_t o[1+MAX_CQI_BYTES];
   /// Length of CQI data (bits)
   uint8_t O;
   /// Format of CQI data
@@ -566,6 +568,8 @@ typedef struct {
   uint16_t    n_pucch_3[2];
   /// TDD Bundling/multiplexing flag
   uint8_t     tdd_bundling;
+  /// Received Energy
+  uint32_t stat;
 #ifdef Rel14
   /// non BL/CE, CEmodeA, CEmodeB
   UE_type_t ue_type;
@@ -858,7 +862,10 @@ typedef enum {
 } RX_type_t;
 
 
-
+typedef enum {
+  DCI_COMMON_SPACE,
+  DCI_UE_SPACE
+} dci_space_t;
 
 
 /**@}*/

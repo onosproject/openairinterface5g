@@ -947,6 +947,7 @@ void nfapi_procedures(PHY_VARS_eNB *eNB, int sfn, int sf)
 
   common_signal_procedures(eNB, sfn, sf);
 
+  LOG_E(PHY,"SFN/SF:%d/%d pdcch_vars[num_dci:%d num_pdcch_symbols:%d dci_alloc:dci_length:%d]\n", sfn, sf, pdcch_vars->num_dci, pdcch_vars->num_pdcch_symbols, pdcch_vars->dci_alloc[0].dci_length);
   if (pdcch_vars->num_dci > 0)
   {
     LOG_D(PHY,"SFN/SF:%d/%d pdcch_vars[num_dci:%d num_pdcch_symbols:%d dci_alloc:dci_length:%d]\n", sfn, sf, pdcch_vars->num_dci, pdcch_vars->num_pdcch_symbols, pdcch_vars->dci_alloc[0].dci_length);
@@ -1011,9 +1012,9 @@ void nfapi_procedures(PHY_VARS_eNB *eNB, int sfn, int sf)
 
 int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
 {
-#if 0
-if (NFAPI_SFNSF2SF(req->sfn_sf)==5)
-    printf("[PNF] dl config request sfn_sf:%d pdcch:%u dci:%u pdu:%d pdsch_rnti:%d pcfich:%u RC.ru:%p RC.eNB:%p sync_var:%d\n", 
+#if 1
+//if (1)//NFAPI_SFNSF2SF(req->sfn_sf)==5)
+    LOG_E(PHY,"[PNF] dl config request sfn_sf:%d pdcch:%u dci:%u pdu:%d pdsch_rnti:%d pcfich:%u RC.ru:%p RC.eNB:%p sync_var:%d\n", 
         NFAPI_SFNSF2DEC(req->sfn_sf), 
         req->dl_config_request_body.number_pdcch_ofdm_symbols, 
         req->dl_config_request_body.number_dci,
@@ -1161,6 +1162,8 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
 {
   uint16_t sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
   uint16_t sf = NFAPI_SFNSF2SF(req->sfn_sf);
+
+  LOG_D(PHY,"%s() SFN/SF:%d/%d PDUs:%d\n", __FUNCTION__, sfn, sf, req->tx_request_body.number_of_pdus);
 
   if (req->tx_request_body.tl.tag==NFAPI_TX_REQUEST_BODY_TAG)
   {
@@ -1793,6 +1796,8 @@ void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, 
 
 void oai_subframe_ind(uint16_t frame, uint16_t subframe)
 {
+  LOG_D(PHY,"%s(frame:%d, subframe:%d)\n", __FUNCTION__, frame, subframe);
+
   //TODO FIXME - HACK - DJP - using a global to bodge it in 
 
   if (p7_config_g != NULL && sync_var==0)

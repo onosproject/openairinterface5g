@@ -115,7 +115,7 @@ extern volatile int                    oai_exit;
 
 extern void  phy_init_RU(RU_t*);
 
-void init_RU(const char*);
+void init_RU(char*);
 void stop_RU(RU_t *ru);
 void do_ru_sync(RU_t *ru);
 
@@ -133,7 +133,7 @@ int connect_rau(RU_t *ru);
 /*************************************************************/
 /* Functions to attach and configure RRU                     */
 
-extern void wait_eNBs();
+extern void wait_eNBs(void);
 
 int attach_rru(RU_t *ru) {
   
@@ -141,7 +141,7 @@ int attach_rru(RU_t *ru) {
   RRU_CONFIG_msg_t rru_config_msg;
   int received_capabilities=0;
 
-  wait_eNBs(ru);
+  wait_eNBs();
   // Wait for capabilities
   while (received_capabilities==0) {
     
@@ -480,7 +480,7 @@ void fh_if4p5_south_asynch_in(RU_t *ru,int *frame,int *subframe) {
   RU_proc_t *proc       = &ru->proc;
 
   uint16_t packet_type;
-  uint32_t symbol_number,symbol_mask,symbol_mask_full,prach_rx;
+  uint32_t symbol_number,symbol_mask,prach_rx;
   uint32_t got_prach_info=0;
 
   symbol_number = 0;
@@ -761,10 +761,9 @@ void rx_rf(RU_t *ru,int *frame,int *subframe) {
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
   
   if (rxs != fp->samples_per_tti)
-    exit_fun( "problem receiving samples" );
-  
-
-  
+  {
+    //exit_fun( "problem receiving samples" );
+  }
 }
 
 
@@ -775,6 +774,9 @@ void tx_rf(RU_t *ru) {
   void *txp[ru->nb_tx]; 
   unsigned int txs;
   int i;
+
+  T(T_ENB_PHY_OUTPUT_SIGNAL, T_INT(0), T_INT(0), T_INT(proc->frame_tx), T_INT(proc->subframe_tx),
+    T_INT(0), T_BUFFER(&ru->common.txdata[0][proc->subframe_tx * fp->samples_per_tti], fp->samples_per_tti * 4));
 
   lte_subframe_t SF_type     = subframe_select(fp,proc->subframe_tx%10);
   lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_tx+9)%10);
@@ -881,11 +883,8 @@ void tx_rf(RU_t *ru) {
 				      ru->nb_tx,
 				      flags);
     
-    if (0 && proc->frame_tx % 10 ==0 && proc->subframe_tx==0) 
-      LOG_E(PHY,"[TXPATH] RU %d tx_rf, writing to TS %llu, frame %d, unwrapped_frame %d, subframe %d flags:%d siglen:%d\n",
-          ru->idx,
-          proc->timestamp_tx,proc->frame_tx,proc->frame_tx_unwrap,proc->subframe_tx, flags, siglen);
-
+    LOG_D(PHY,"[TXPATH] RU %d tx_rf, writing to TS %llu, frame %d, unwrapped_frame %d, subframe %d\n",ru->idx,
+	  (long long unsigned int)proc->timestamp_tx,proc->frame_tx,proc->frame_tx_unwrap,proc->subframe_tx);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
     
     
@@ -1192,7 +1191,7 @@ void wakeup_eNBs(RU_t *ru) {
   else {
 
     for (i=0;i<ru->num_eNB;i++)
-      if (ru->wakeup_rxtx!=0 && ru->wakeup_rxtx(eNB_list[i],ru->proc.frame_rx,ru->proc.subframe_rx) < 0)
+      if (ru->wakeup_rxtx!=0 && ru->wakeup_rxtx(eNB_list[i],ru) < 0)
 	LOG_E(PHY,"could not wakeup eNB rxtx process for subframe %d\n", ru->proc.subframe_rx);
   }
 }
@@ -1258,7 +1257,143 @@ static inline int wakeup_prach_ru_br(RU_t *ru) {
 #endif
 
 void oai_subframe_ind(uint16_t frame, uint16_t subframe);
-void check_dlsch(char *file, int line);
+
+// this is for RU with local RF unit
+void fill_rf_config(RU_t *ru, char *rf_config_file) {
+
+  int i;
+
+  LTE_DL_FRAME_PARMS *fp   = &ru->frame_parms;
+  openair0_config_t *cfg   = &ru->openair0_cfg;
+
+  if(fp->N_RB_DL == 100) {
+    if (fp->threequarter_fs) {
+      cfg->sample_rate=23.04e6;
+      cfg->samples_per_frame = 230400; 
+      cfg->tx_bw = 10e6;
+      cfg->rx_bw = 10e6;
+    }
+    else {
+      cfg->sample_rate=30.72e6;
+      cfg->samples_per_frame = 307200; 
+      cfg->tx_bw = 10e6;
+      cfg->rx_bw = 10e6;
+    }
+  } else if(fp->N_RB_DL == 50) {
+    cfg->sample_rate=15.36e6;
+    cfg->samples_per_frame = 153600;
+    cfg->tx_bw = 5e6;
+    cfg->rx_bw = 5e6;
+  } else if (fp->N_RB_DL == 25) {
+    cfg->sample_rate=7.68e6;
+    cfg->samples_per_frame = 76800;
+    cfg->tx_bw = 2.5e6;
+    cfg->rx_bw = 2.5e6;
+  } else if (fp->N_RB_DL == 6) {
+    cfg->sample_rate=1.92e6;
+    cfg->samples_per_frame = 19200;
+    cfg->tx_bw = 1.5e6;
+    cfg->rx_bw = 1.5e6;
+  }
+  else AssertFatal(1==0,"Unknown N_RB_DL %d\n",fp->N_RB_DL);
+
+  if (fp->frame_type==TDD)
+    cfg->duplex_mode = duplex_mode_TDD;
+  else //FDD
+    cfg->duplex_mode = duplex_mode_FDD;
+
+  cfg->Mod_id = 0;
+  cfg->num_rb_dl=fp->N_RB_DL;
+  cfg->tx_num_channels=ru->nb_tx;
+  cfg->rx_num_channels=ru->nb_rx;
+  
+  for (i=0; i<ru->nb_tx; i++) {
+    
+    cfg->tx_freq[i] = (double)fp->dl_CarrierFreq;
+    cfg->rx_freq[i] = (double)fp->ul_CarrierFreq;
+
+    cfg->tx_gain[i] = (double)fp->att_tx;
+    cfg->rx_gain[i] = ru->max_rxgain-(double)fp->att_rx;
+
+    cfg->configFilename = rf_config_file;
+    printf("channel %d, Setting tx_gain offset %f, rx_gain offset %f, tx_freq %f, rx_freq %f\n",
+	   i, cfg->tx_gain[i],
+	   cfg->rx_gain[i],
+	   cfg->tx_freq[i],
+	   cfg->rx_freq[i]);
+  }
+}
+
+/* this function maps the RU tx and rx buffers to the available rf chains.
+   Each rf chain is is addressed by the card number and the chain on the card. The
+   rf_map specifies for each antenna port, on which rf chain the mapping should start. Multiple
+   antennas are mapped to successive RF chains on the same card. */
+int setup_RU_buffers(RU_t *ru) {
+
+  int i,j; 
+  int card,ant;
+
+  //uint16_t N_TA_offset = 0;
+
+  LTE_DL_FRAME_PARMS *frame_parms;
+  
+  if (ru) {
+    frame_parms = &ru->frame_parms;
+    printf("setup_RU_buffers: frame_parms = %p\n",frame_parms);
+  } else {
+    printf("RU[%d] not initialized\n", ru->idx);
+    return(-1);
+  }
+  
+  /*
+    if (frame_parms->frame_type == TDD) {
+    if (frame_parms->N_RB_DL == 100)
+    N_TA_offset = 624;
+    else if (frame_parms->N_RB_DL == 50)
+    N_TA_offset = 624/2;
+    else if (frame_parms->N_RB_DL == 25)
+    N_TA_offset = 624/4;
+    }
+  */
+  
+  
+  if (ru->openair0_cfg.mmapped_dma == 1) {
+    // replace RX signal buffers with mmaped HW versions
+    
+    for (i=0; i<ru->nb_rx; i++) {
+      card = i/4;
+      ant = i%4;
+      printf("Mapping RU id %d, rx_ant %d, on card %d, chain %d\n",ru->idx,i,ru->rf_map.card+card, ru->rf_map.chain+ant);
+      free(ru->common.rxdata[i]);
+      ru->common.rxdata[i] = ru->openair0_cfg.rxbase[ru->rf_map.chain+ant];
+      
+      printf("rxdata[%d] @ %p\n",i,ru->common.rxdata[i]);
+      for (j=0; j<16; j++) {
+	printf("rxbuffer %d: %x\n",j,ru->common.rxdata[i][j]);
+	ru->common.rxdata[i][j] = 16-j;
+      }
+    }
+    
+    for (i=0; i<ru->nb_tx; i++) {
+      card = i/4;
+      ant = i%4;
+      printf("Mapping RU id %d, tx_ant %d, on card %d, chain %d\n",ru->idx,i,ru->rf_map.card+card, ru->rf_map.chain+ant);
+      free(ru->common.txdata[i]);
+      ru->common.txdata[i] = ru->openair0_cfg.txbase[ru->rf_map.chain+ant];
+      
+      printf("txdata[%d] @ %p\n",i,ru->common.txdata[i]);
+      
+      for (j=0; j<16; j++) {
+	printf("txbuffer %d: %x\n",j,ru->common.txdata[i][j]);
+	ru->common.txdata[i][j] = 16-j;
+      }
+    }
+  }
+  else {  // not memory-mapped DMA 
+    //nothing to do, everything already allocated in lte_init
+  }
+  return(0);
+}
 
 static void* ru_thread( void* param ) {
 
@@ -1295,10 +1430,10 @@ static void* ru_thread( void* param ) {
         phy_init_RU(ru);
  //     }
 
-ru->openair0_cfg.tx_gain[0]=0.0;
-ru->openair0_cfg.tx_gain[1]=0.0;
-ru->openair0_cfg.tx_gain[2]=0.0;
-ru->openair0_cfg.tx_gain[3]=0.0;
+//ru->openair0_cfg.tx_gain[0]=0.0;
+//ru->openair0_cfg.tx_gain[1]=0.0;
+//ru->openair0_cfg.tx_gain[2]=0.0;
+//ru->openair0_cfg.tx_gain[3]=0.0;
 
       ret = openair0_device_load(&ru->rfdevice,&ru->openair0_cfg);
       if (setup_RU_buffers(ru)!=0) {
@@ -1370,11 +1505,7 @@ ru->openair0_cfg.tx_gain[3]=0.0;
     if (ru->fh_south_in) ru->fh_south_in(ru,&frame,&subframe);
     else AssertFatal(1==0, "No fronthaul interface at south port");
 
-    check_dlsch(__FILE__, __LINE__);
-
     oai_subframe_ind(frame, subframe);
-
-    check_dlsch(__FILE__, __LINE__);
 
     LOG_D(PHY,"RU thread (do_prach %d, is_prach_subframe %d), received frame %d, subframe %d\n",
 	  ru->do_prach,
@@ -1383,7 +1514,6 @@ ru->openair0_cfg.tx_gain[3]=0.0;
  
     if ((ru->do_prach>0) && (is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx)==1)) { 
       wakeup_prach_ru(ru);
-      check_dlsch(__FILE__, __LINE__);
     }
 #ifdef Rel14
     else if ((ru->do_prach>0) && (is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx)>1)) {
@@ -1398,40 +1528,30 @@ ru->openair0_cfg.tx_gain[3]=0.0;
     // do RX front-end processing (frequency-shift, dft) if needed
     if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 1 ); 
     if (ru->feprx) ru->feprx(ru);
-    check_dlsch(__FILE__, __LINE__);
-
-    T(T_ENB_MASTER_TICK, T_INT(0), T_INT(proc->frame_rx), T_INT(proc->subframe_rx));
 
     // At this point, all information for subframe has been received on FH interface
     // If this proc is to provide synchronization, do so
     wakeup_slaves(proc);
-    check_dlsch(__FILE__, __LINE__);
 
     //LOG_E(PHY,"RU %d/%d frame_tx %d, subframe_tx %d\n",0,ru->idx,proc->frame_tx,proc->subframe_tx);
     // wakeup all eNB processes waiting for this RU
     if (ru->num_eNB>0) wakeup_eNBs(ru);
-    check_dlsch(__FILE__, __LINE__);
 
     //LOG_E(PHY,"%s() Before wait_on_condition()\n", __FUNCTION__);
     // wait until eNBs are finished subframe RX n and TX n+4
     wait_on_condition(&proc->mutex_eNBs,&proc->cond_eNBs,&proc->instance_cnt_eNBs,"ru_thread");
-    check_dlsch(__FILE__, __LINE__);
     //LOG_E(PHY,"%s() AFTER wait_on_condition() ru->feptx_prec:%p ru->fh_north_asynch_in:%p ru->feptx_ofdm:%p ru->fh_south_out:%p ru->fh_north_out:%p\n", 
     //__FUNCTION__, ru->feptx_prec, ru->fh_north_asynch_in, ru->feptx_ofdm, ru->fh_south_out, ru->fh_north_out);
 
     // do TX front-end processing if needed (precoding and/or IDFTs)
     if (ru->feptx_prec) ru->feptx_prec(ru);
-    check_dlsch(__FILE__, __LINE__);
    
     // do OFDM if needed
     if ((ru->fh_north_asynch_in == NULL) && (ru->feptx_ofdm)) ru->feptx_ofdm(ru);
-    check_dlsch(__FILE__, __LINE__);
     // do outgoing fronthaul (south) if needed
     if ((ru->fh_north_asynch_in == NULL) && (ru->fh_south_out)) ru->fh_south_out(ru);
-    check_dlsch(__FILE__, __LINE__);
  
     if (ru->fh_north_out) ru->fh_north_out(ru);
-    check_dlsch(__FILE__, __LINE__);
     if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 0 ); 
   }
   
@@ -1629,152 +1749,6 @@ void init_RU_proc(RU_t *ru) {
   
 }
 
-/* this function maps the RU tx and rx buffers to the available rf chains.
-   Each rf chain is is addressed by the card number and the chain on the card. The
-   rf_map specifies for each antenna port, on which rf chain the mapping should start. Multiple
-   antennas are mapped to successive RF chains on the same card. */
-int setup_RU_buffers(RU_t *ru) {
-
-  int i,j; 
-  int card,ant;
-
-  //uint16_t N_TA_offset = 0;
-
-  LTE_DL_FRAME_PARMS *frame_parms;
-  
-  if (ru) {
-    frame_parms = &ru->frame_parms;
-    printf("setup_RU_buffers: frame_parms = %p\n",frame_parms);
-  } else {
-    printf("RU[%d] not initialized\n", ru->idx);
-    return(-1);
-  }
-  
-  /*
-    if (frame_parms->frame_type == TDD) {
-    if (frame_parms->N_RB_DL == 100)
-    N_TA_offset = 624;
-    else if (frame_parms->N_RB_DL == 50)
-    N_TA_offset = 624/2;
-    else if (frame_parms->N_RB_DL == 25)
-    N_TA_offset = 624/4;
-    }
-  */
-  
-  
-  printf("%s() nb_rx:%d dma:%d\n", __FUNCTION__, ru->nb_rx, ru->openair0_cfg.mmapped_dma);
-
-  if (ru->openair0_cfg.mmapped_dma == 1) {
-    // replace RX signal buffers with mmaped HW versions
-    
-    for (i=0; i<ru->nb_rx; i++) {
-      card = i/4;
-      ant = i%4;
-      printf("Mapping RU id %d, rx_ant %d, on card %d, chain %d\n",ru->idx,i,ru->rf_map.card+card, ru->rf_map.chain+ant);
-      free(ru->common.rxdata[i]);
-      ru->common.rxdata[i] = ru->openair0_cfg.rxbase[ru->rf_map.chain+ant];
-      
-      printf("rxdata[%d] @ %p\n",i,ru->common.rxdata[i]);
-      for (j=0; j<16; j++) {
-	printf("rxbuffer %d: %x\n",j,ru->common.rxdata[i][j]);
-	ru->common.rxdata[i][j] = 16-j;
-      }
-    }
-    
-    for (i=0; i<ru->nb_tx; i++) {
-      card = i/4;
-      ant = i%4;
-      printf("Mapping RU id %d, tx_ant %d, on card %d, chain %d\n",ru->idx,i,ru->rf_map.card+card, ru->rf_map.chain+ant);
-      free(ru->common.txdata[i]);
-      ru->common.txdata[i] = ru->openair0_cfg.txbase[ru->rf_map.chain+ant];
-      
-      printf("txdata[%d] @ %p\n",i,ru->common.txdata[i]);
-      
-      for (j=0; j<16; j++) {
-	printf("txbuffer %d: %x\n",j,ru->common.txdata[i][j]);
-	ru->common.txdata[i][j] = 16-j;
-      }
-    }
-  }
-  else {  // not memory-mapped DMA 
-    //nothing to do, everything already allocated in lte_init
-    printf("%s() Not memory-mapped DMA - nothing to do\n", __FUNCTION__);
-  }
-  return(0);
-}
-
-
-// this is for RU with local RF unit
-void fill_rf_config(RU_t *ru,const char *rf_config_file) {
-
-  int i;
-
-  LTE_DL_FRAME_PARMS *fp   = &ru->frame_parms;
-  openair0_config_t *cfg   = &ru->openair0_cfg;
-
-  if(fp->N_RB_DL == 100) {
-    if (fp->threequarter_fs) {
-      cfg->sample_rate=23.04e6;
-      cfg->samples_per_frame = 230400; 
-      cfg->tx_bw = 10e6;
-      cfg->rx_bw = 10e6;
-    }
-    else {
-      cfg->sample_rate=30.72e6;
-      cfg->samples_per_frame = 307200; 
-      cfg->tx_bw = 10e6;
-      cfg->rx_bw = 10e6;
-    }
-  } else if(fp->N_RB_DL == 50) {
-    cfg->sample_rate=15.36e6;
-    cfg->samples_per_frame = 153600;
-    cfg->tx_bw = 5e6;
-    cfg->rx_bw = 5e6;
-  } else if (fp->N_RB_DL == 25) {
-    cfg->sample_rate=7.68e6;
-    cfg->samples_per_frame = 76800;
-    cfg->tx_bw = 2.5e6;
-    cfg->rx_bw = 2.5e6;
-  } else if (fp->N_RB_DL == 6) {
-    cfg->sample_rate=1.92e6;
-    cfg->samples_per_frame = 19200;
-    cfg->tx_bw = 1.5e6;
-    cfg->rx_bw = 1.5e6;
-  }
-  else AssertFatal(1==0,"Unknown N_RB_DL %d\n",fp->N_RB_DL);
-
-  if (fp->frame_type==TDD)
-    cfg->duplex_mode = duplex_mode_TDD;
-  else //FDD
-    cfg->duplex_mode = duplex_mode_FDD;
-
-  cfg->Mod_id = 0;
-  cfg->num_rb_dl=fp->N_RB_DL;
-  cfg->tx_num_channels=ru->nb_tx;
-  cfg->rx_num_channels=ru->nb_rx;
-  
-  for (i=0; i<ru->nb_tx; i++) {
-    
-    cfg->tx_freq[i] = (double)fp->dl_CarrierFreq;
-    cfg->rx_freq[i] = (double)fp->ul_CarrierFreq;
-
-//fp->att_tx = 0;
-//printf("%s() DJP - HARD CODE ALERT - fp->att_tx:%d\n", __FUNCTION__);
-
-    cfg->tx_gain[i] = (double)fp->att_tx;
-    cfg->rx_gain[i] = ru->max_rxgain-(double)fp->att_rx;
-
-    cfg->configFilename = rf_config_file;
-    printf("channel %d, Setting tx_gain offset %f, rx_gain offset %f, tx_freq %f, rx_freq %f configFilename:%s fp->att_tx:%d\n",
-	   i, cfg->tx_gain[i],
-	   cfg->rx_gain[i],
-	   cfg->tx_freq[i],
-	   cfg->rx_freq[i],
-           cfg->configFilename,
-           fp->att_tx);
-  }
-}
-
 int check_capabilities(RU_t *ru,RRU_capabilities_t *cap) {
 
   FH_fmt_options_t fmt = cap->FH_fmt;
@@ -1815,6 +1789,7 @@ int check_capabilities(RU_t *ru,RRU_capabilities_t *cap) {
     return(-1);
   }
 
+  return(-1);
 }
 
 
@@ -1836,41 +1811,40 @@ void configure_ru(int idx,
 
 
   if (capabilities->FH_fmt < MAX_FH_FMTs) LOG_I(PHY, "RU FH options %s\n",rru_format_options[capabilities->FH_fmt]);
-  if ((ret=check_capabilities(ru,capabilities)) == 0) {
-    // Pass configuration to RRU
-    LOG_I(PHY, "Using %s fronthaul (%d), band %d \n",ru_if_formats[ru->if_south],ru->if_south,ru->frame_parms.eutra_band);
-    // wait for configuration 
-    config->FH_fmt                 = ru->if_south;
-    config->num_bands              = 1;
-    config->band_list[0]           = ru->frame_parms.eutra_band;
-    config->tx_freq[0]             = ru->frame_parms.dl_CarrierFreq;      
-    config->rx_freq[0]             = ru->frame_parms.ul_CarrierFreq;      
-    config->att_tx[0]              = ru->att_tx;
-    config->att_rx[0]              = ru->att_rx;
-    config->N_RB_DL[0]             = ru->frame_parms.N_RB_DL;
-    config->N_RB_UL[0]             = ru->frame_parms.N_RB_UL;
-    config->threequarter_fs[0]     = ru->frame_parms.threequarter_fs;
-    if (ru->if_south==REMOTE_IF4p5) {
-      config->prach_FreqOffset[0]  = ru->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset;
-      config->prach_ConfigIndex[0] = ru->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
-      LOG_I(PHY,"REMOTE_IF4p5: prach_FrequOffset %d, prach_ConfigIndex %d\n",
-	    config->prach_FreqOffset[0],config->prach_ConfigIndex[0]);
 
+  AssertFatal((ret=check_capabilities(ru,capabilities)) == 0,
+	      "Cannot configure RRU %d, check_capabilities returned %d\n", idx,ret);
+  // Pass configuration to RRU
+  LOG_I(PHY, "Using %s fronthaul (%d), band %d \n",ru_if_formats[ru->if_south],ru->if_south,ru->frame_parms.eutra_band);
+  // wait for configuration 
+  config->FH_fmt                 = ru->if_south;
+  config->num_bands              = 1;
+  config->band_list[0]           = ru->frame_parms.eutra_band;
+  config->tx_freq[0]             = ru->frame_parms.dl_CarrierFreq;      
+  config->rx_freq[0]             = ru->frame_parms.ul_CarrierFreq;      
+  config->att_tx[0]              = ru->att_tx;
+  config->att_rx[0]              = ru->att_rx;
+  config->N_RB_DL[0]             = ru->frame_parms.N_RB_DL;
+  config->N_RB_UL[0]             = ru->frame_parms.N_RB_UL;
+  config->threequarter_fs[0]     = ru->frame_parms.threequarter_fs;
+  if (ru->if_south==REMOTE_IF4p5) {
+    config->prach_FreqOffset[0]  = ru->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset;
+    config->prach_ConfigIndex[0] = ru->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
+    LOG_I(PHY,"REMOTE_IF4p5: prach_FrequOffset %d, prach_ConfigIndex %d\n",
+	  config->prach_FreqOffset[0],config->prach_ConfigIndex[0]);
+    
 #ifdef Rel14
-      for (i=0;i<4;i++) {
-	config->emtc_prach_CElevel_enable[0][i]  = ru->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[i];
-	config->emtc_prach_FreqOffset[0][i]      = ru->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[i];
-	config->emtc_prach_ConfigIndex[0][i]     = ru->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[i];
-      }
-#endif
+    for (i=0;i<4;i++) {
+      config->emtc_prach_CElevel_enable[0][i]  = ru->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[i];
+      config->emtc_prach_FreqOffset[0][i]      = ru->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[i];
+      config->emtc_prach_ConfigIndex[0][i]     = ru->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[i];
     }
-    // take antenna capabilities of RRU
-    ru->nb_tx                      = capabilities->nb_tx[0];
-    ru->nb_rx                      = capabilities->nb_rx[0];
+#endif
   }
-  else {
-    LOG_I(PHY,"Cannot configure RRU %d, check_capabilities returned %d\n", idx,ret);
-  }
+  // take antenna capabilities of RRU
+  ru->nb_tx                      = capabilities->nb_tx[0];
+  ru->nb_rx                      = capabilities->nb_rx[0];
+
 
   init_frame_parms(&ru->frame_parms,1);
   phy_init_RU(ru);
@@ -1942,7 +1916,9 @@ void init_precoding_weights(PHY_VARS_eNB *eNB) {
   }
 }
 
-void init_RU(const char *rf_config_file) {
+extern void RCconfig_RU(void);
+
+void init_RU(char *rf_config_file) {
   
   int ru_id;
   RU_t *ru;

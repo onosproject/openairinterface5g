@@ -38,12 +38,15 @@
 #include <stdlib.h>
 #include "common/config/config_paramdesc.h"
 #define CONFIG_MAX_OOPT_PARAMS    10     // maximum number of parameters in the -O option (-O <cfgmode>:P1:P2...
-#define CONFIG_MAX_ALLOCATEDPTRS  1024   // maximum number of parameters that can be dynamicaly alloted in the config module
+#define CONFIG_MAX_ALLOCATEDPTRS  1024   // maximum number of parameters that can be dynamicaly allocated in the config module
 
 /* rtflags bit position definitions */
 #define CONFIG_PRINTPARAMS    1        // print parameters values while processing
 #define CONFIG_DEBUGPTR       2        // print memory allocation/free debug messages
 #define CONFIG_DEBUGCMDLINE   4        // print command line processing messages
+#define CONFIG_HELP           8        // print help message
+#define CONFIG_ABORT          16       // config failed,abort execution 
+
 
 typedef int(*configmodule_initfunc_t)(char *cfgP[],int numP);
 typedef int(*configmodule_getfunc_t)(paramdef_t *,int numparams, char *prefix);
@@ -51,31 +54,38 @@ typedef int(*configmodule_getlistfunc_t)(paramlist_def_t *, paramdef_t *,int num
 typedef void(*configmodule_endfunc_t)(void);
 typedef struct configmodule_interface
 {
-  int   argc;
-  char  **argv;
+  int      argc;
+  char     **argv;
+  char     *cfgmode;
+  int      num_cfgP;
+  char     *cfgP[CONFIG_MAX_OOPT_PARAMS];
   configmodule_initfunc_t         init;
   configmodule_getfunc_t          get;
   configmodule_getlistfunc_t      getlist;
   configmodule_endfunc_t          end;
-  uint32_t                        numptrs;
-  uint32_t                        rtflags;
-  char  *ptrs[CONFIG_MAX_ALLOCATEDPTRS];  
+  uint32_t numptrs;
+  uint32_t rtflags;
+  char     *ptrs[CONFIG_MAX_ALLOCATEDPTRS];  
 } configmodule_interface_t;
 
 #ifdef CONFIG_LOADCONFIG_MAIN
 configmodule_interface_t *cfgptr=NULL;
 
-static char config_helpstr [] =" \
-      config debugflags: mask, 1->print parameters, 2->print memory allocations debug messages \
-                               4->print command line processing debug messages \
-          -O <config mode><:dbg> \
-          debugflags can also be defined in the config_libconfig section of the config file \
-";
+static char config_helpstr [] = "\n lte-softmodem -O [config mode]<:dbg[debugflags]> \n \
+          debugflags can also be defined in the config_libconfig section of the config file\n \
+          debugflags: mask,    1->print parameters, 2->print memory allocations debug messages\n \
+                               4->print command line processing debug messages\n ";
+			       
 #define CONFIG_SECTIONNAME "config"
-
 #define CONFIGPARAM_DEBUGFLAGS_IDX        0
+
+
 static paramdef_t Config_Params[] = {
-{"debugflags",         "",   config_helpstr,   0,   uptr:NULL,   defintval:0,        TYPE_UINT,  0}, 
+/*-----------------------------------------------------------------------------------------------------------------------*/
+/*                                            config parameters for config module                                        */
+/*   optname              helpstr           paramflags     XXXptr       defXXXval            type       numelt           */
+/*-----------------------------------------------------------------------------------------------------------------------*/
+{"debugflags",            config_helpstr,   0,             uptr:NULL,   defintval:0,        TYPE_MASK,  0}, 
 };
 
 #else

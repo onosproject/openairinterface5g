@@ -231,6 +231,7 @@ void schedule_SR(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP) {
   int CC_id,UE_id;  
   SchedulingRequestConfig_t      *SRconfig;
 
+
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
     for (UE_id=UE_list->head; UE_id>=0; UE_id=UE_list->next[UE_id]) {
@@ -265,18 +266,27 @@ void schedule_SR(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP) {
 
       // if we get here there is some PUCCH1 reception to schedule for SR
 
-      int ul_ulsch_only=0;
+      int skip_ue=0;
       // check that there is no existing UL grant for ULSCH which overrides the SR
       for (int i=0;i<ul_req->number_of_pdus;i++)
-	if ((ul_req->ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE) &&
+	if (((ul_req->ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE)||
+	     (ul_req->ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE)||
+	     (ul_req->ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE)||
+	     (ul_req->ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_HARQ_RI_PDU_TYPE))&&
 	    (ul_req->ul_config_pdu_list[i].ulsch_pdu.ulsch_pdu_rel8.rnti == UE_list->UE_template[CC_id][UE_id].rnti)) {
-	    ul_ulsch_only=1;
+	    skip_ue=1;
 	    break;
 	}
+	else if ((ul_req->ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE)&&
+		 (ul_req->ul_config_pdu_list[i].ulsch_pdu.ulsch_pdu_rel8.rnti == UE_list->UE_template[CC_id][UE_id].rnti))
+	  skip_ue=1;
 
       // drop the allocation because ULSCH with handle it with BSR
-      if (ul_ulsch_only==1) continue;
-      
+      if (skip_ue==1) continue;
+
+      // drop the allocation if the UE hasn't send RRCConnectionSetupComplete yet
+      if (mac_eNB_get_rrc_status(module_idP,UE_RNTI(module_idP,UE_id)) < RRC_CONNECTED) continue;
+       
       // if we get here then there is no UL grant so program the SR
       ul_req->ul_config_pdu_list[ul_req->number_of_pdus].pdu_type                                                 = NFAPI_UL_CONFIG_UCI_SR_PDU_TYPE;
       ul_req->ul_config_pdu_list[ul_req->number_of_pdus].uci_sr_pdu.ue_information.ue_information_rel8.tl.tag     = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL8_TAG;
@@ -315,7 +325,6 @@ void check_ul_failure(module_id_t module_idP,int CC_id,int UE_id,
   UE_list_t                           *UE_list      = &RC.mac[module_idP]->UE_list;
   nfapi_dl_config_request_t           *DL_req       = &RC.mac[module_idP]->DL_req[0];
   uint16_t                            rnti          = UE_RNTI(module_idP,UE_id);
-  eNB_UE_STATS                        *eNB_UE_stats = &RC.mac[module_idP]->UE_list.eNB_UE_stats[CC_id][UE_id];
   COMMON_channels_t                   *cc           = RC.mac[module_idP]->common_channels;
 
   // check uplink failure
@@ -333,7 +342,7 @@ void check_ul_failure(module_id_t module_idP,int CC_id,int UE_id,
       dl_config_pdu->pdu_size                                         = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format            = NFAPI_DL_DCI_FORMAT_1A;
-      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level     = get_aggregation(get_bw_index(module_idP,CC_id),eNB_UE_stats->dl_cqi,format1A);
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level     = get_aggregation(get_bw_index(module_idP,CC_id),UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format1A);
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                  = rnti;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type             = 1;    // CRNTI : see Table 4-10 from SCF082 - nFAPI specifications
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.transmission_power    = 6000; // equal to RS power
@@ -373,8 +382,6 @@ void check_ul_failure(module_id_t module_idP,int CC_id,int UE_id,
   
 }
 
-void clear_nfapi_information(eNB_MAC_INST *eNB,int CC_idP,frame_t frameP,sub_frame_t subframeP);
-
 void clear_nfapi_information(eNB_MAC_INST *eNB,int CC_idP,frame_t frameP,sub_frame_t subframeP) {
 
   nfapi_dl_config_request_t *DL_req         = &eNB->DL_req[0];
@@ -390,7 +397,7 @@ void clear_nfapi_information(eNB_MAC_INST *eNB,int CC_idP,frame_t frameP,sub_fra
   DL_req[CC_idP].dl_config_request_body.number_pdsch_rnti                   = 0;
   DL_req[CC_idP].dl_config_request_body.transmission_power_pcfich           = 6000;
   
-  HI_DCI0_req[CC_idP].hi_dci0_request_body.sfnsf                            = subframeP + (frameP<<3);
+  HI_DCI0_req[CC_idP].hi_dci0_request_body.sfnsf                            = subframeP + (frameP<<4);
   HI_DCI0_req[CC_idP].hi_dci0_request_body.number_of_dci                    = 0;
   
   
@@ -435,12 +442,6 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame
   int mbsfn_status[MAX_NUM_CCs];
   protocol_ctxt_t   ctxt;
 
-#if defined(ENABLE_ITTI)
-  MessageDef   *msg_p;
-  const char         *msg_name;
-  instance_t    instance;
-  int           result;
-#endif
   int CC_id,i; //,next_i;
   UE_list_t *UE_list=&RC.mac[module_idP]->UE_list;
   rnti_t rnti;
@@ -485,7 +486,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame
       LOG_D(MAC,"UE  rnti %x : %s, PHR %d dB CQI %d\n", rnti,
             UE_list->UE_sched_ctrl[i].ul_out_of_sync==0 ? "in synch" : "out of sync",
             UE_list->UE_template[CC_id][i].phr_info,
-            eNB_UE_stats->dl_cqi);
+            UE_list->UE_sched_ctrl[i].dl_cqi[CC_id]);
     }
 
     RC.eNB[module_idP][CC_id]->pusch_stats_bsr[i][(frameP*10)+subframeP]=-63;
@@ -495,7 +496,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame
     RC.mac[module_idP]->UE_list.UE_sched_ctrl[i].ul_inactivity_timer++;
 
     RC.mac[module_idP]->UE_list.UE_sched_ctrl[i].cqi_req_timer++;
-    LOG_I(MAC,"UE %d/%x : ul_inactivity %d, cqi_req %d\n",i,rnti, 
+    LOG_D(MAC,"UE %d/%x : ul_inactivity %d, cqi_req %d\n",i,rnti, 
 	  RC.mac[module_idP]->UE_list.UE_sched_ctrl[i].ul_inactivity_timer,
 	  RC.mac[module_idP]->UE_list.UE_sched_ctrl[i].cqi_req_timer);
     check_ul_failure(module_idP,CC_id,i,frameP,subframeP);
@@ -528,9 +529,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame
   schedule_SI(module_idP,frameP,subframeP);
   // This schedules Random-Access for legacy LTE and eMTC starting in subframeP
   schedule_RA(module_idP,frameP,subframeP);
-
   // copy previously scheduled UL resources (ULSCH + HARQ)
-
   copy_ulreq(module_idP,frameP,subframeP);
   // This schedules SRS in subframeP
   schedule_SRS(module_idP,frameP,subframeP);
@@ -545,10 +544,12 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame
   schedule_ue_spec(module_idP,frameP,subframeP,mbsfn_status);
 
   // Allocate CCEs for good after scheduling is done
+
   for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) allocate_CCEs(module_idP,CC_id,subframeP,0);
   
 
   stop_meas(&RC.mac[module_idP]->eNB_scheduler);
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER,VCD_FUNCTION_OUT);
 
 }

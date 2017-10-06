@@ -30,6 +30,8 @@
  * \warning
  */
 
+#define _GNU_SOURCE
+#include <pthread.h>
 
 #include "time_utils.h"
 
@@ -143,6 +145,7 @@ void exit_fun(const char* s);
 void init_eNB(int,int);
 void stop_eNB(int nb_inst);
 
+
 void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
 #ifdef Rel14
 void wakeup_prach_eNB_br(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
@@ -166,6 +169,9 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
   // ****************************************
   // Common RX procedures subframe n
+
+  T(T_ENB_PHY_DL_TICK, T_INT(eNB->Mod_id), T_INT(proc->frame_tx), T_INT(proc->subframe_tx));
+
   // if this is IF5 or 3GPP_eNB
   if (eNB && eNB->RU_list && eNB->RU_list[0] && eNB->RU_list[0]->function < NGFI_RAU_IF4p5) {
     LOG_D(PHY,"%s:%s() %u/%u Before wakeup_prach_eNB() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
@@ -276,8 +282,8 @@ static void* eNB_thread_rxtx( void* param ) {
 }
 
 
-#if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
-/* Wait for eNB application initialization to be complete (eNB registration to MME) */
+#if 0 //defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
+// Wait for eNB application initialization to be complete (eNB registration to MME)
 static void wait_system_ready (char *message, volatile int *start_flag) {
   
   static char *indicator[] = {".    ", "..   ", "...  ", ".... ", ".....",
@@ -299,25 +305,17 @@ static void wait_system_ready (char *message, volatile int *start_flag) {
 
 
 
-void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string) {
-
-
+void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string)
+{
   eNB_proc_t *proc           = &eNB->proc;
   eNB_rxtx_proc_t *proc_rxtx = &proc->proc_rxtx[0];
 
-
-
-
   proc->frame_rx    = frame_rx;
   proc->subframe_rx = subframe_rx;
-  
+
   if (!oai_exit) {
-
-
     LOG_D(PHY,"eNB_top in %p (proc %p, CC_id %d), frame %d, subframe %d, instance_cnt_prach %d\n",
-	  pthread_self(), proc, eNB->CC_id, proc->frame_rx,proc->subframe_rx,proc->instance_cnt_prach);
- 
-
+	  (void*)pthread_self(), proc, eNB->CC_id, proc->frame_rx,proc->subframe_rx,proc->instance_cnt_prach);
 
     T(T_ENB_MASTER_TICK, T_INT(0), T_INT(proc->frame_rx), T_INT(proc->subframe_rx));
 
@@ -330,9 +328,8 @@ void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string) {
 
     if (rxtx(eNB,proc_rxtx,string) < 0) LOG_E(PHY,"eNB %d CC_id %d failed during execution\n",eNB->Mod_id,eNB->CC_id);
     LOG_D(PHY,"eNB_top out %p (proc %p, CC_id %d), frame %d, subframe %d, instance_cnt_prach %d\n",
-	  pthread_self(), proc, eNB->CC_id, proc->frame_rx,proc->subframe_rx,proc->instance_cnt_prach);
+	  (void*)pthread_self(), proc, eNB->CC_id, proc->frame_rx,proc->subframe_rx,proc->instance_cnt_prach);
   }
-  
 }
 
 
@@ -371,15 +368,17 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   wait.tv_sec=0;
   wait.tv_nsec=5000000L;
 
+#if 0
   /* accept some delay in processing - up to 5ms */
   for (i = 0; i < 10 && proc_rxtx->instance_cnt_rxtx == 0; i++) {
-    LOG_W( PHY,"[eNB] Frame %d, eNB RXn-TXnp4 thread busy!! (cnt_rxtx %i)\n", proc_rxtx->frame_tx, proc_rxtx->instance_cnt_rxtx);
+    LOG_W( PHY,"[eNB] Frame %d Subframe %d, eNB RXn-TXnp4 thread busy!! (cnt_rxtx %i)\n", proc_rxtx->frame_tx, proc_rxtx->subframe_tx, proc_rxtx->instance_cnt_rxtx);
     usleep(500);
   }
   if (proc_rxtx->instance_cnt_rxtx == 0) {
-    exit_fun( "TX thread busy" );
+    //exit_fun( "TX thread busy" ); - DJP - this is commented out just whilst I work out what has gone wrong
     return(-1);
   }
+#endif
 
   // wake up TX for subframe n+4
   // lock the TX mutex and make sure the thread is ready
@@ -390,7 +389,7 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   }
   
   ++proc_rxtx->instance_cnt_rxtx;
-  LOG_E(PHY,"%s() %u/%u Just incremented proc->instance_cnt_rxtx:%d\n", __FUNCTION__, proc_rxtx->frame_tx, proc_rxtx->subframe_tx, proc_rxtx->instance_cnt_rxtx);
+  LOG_D(PHY,"%s() %u/%u Just incremented proc->instance_cnt_rxtx:%d\n", __FUNCTION__, proc_rxtx->frame_tx, proc_rxtx->subframe_tx, proc_rxtx->instance_cnt_rxtx);
   
   // We have just received and processed the common part of a subframe, say n. 
   // TS_rx is the last received timestamp (start of 1st slot), TS_tx is the desired 
@@ -435,7 +434,7 @@ void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe) {
     }
     if (proc->RU_mask_prach != (1<<eNB->num_RU)-1) {  // not all RUs have provided their information so return
       pthread_mutex_unlock(&proc->mutex_RU_PRACH);
-      return(0);
+      return;
     }
     else { // all RUs have provided their information so continue on and wakeup eNB processing
       proc->RU_mask_prach = 0;
@@ -495,7 +494,7 @@ void wakeup_prach_eNB_br(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe) {
     }
     if (proc->RU_mask_prach_br != (1<<eNB->num_RU)-1) {  // not all RUs have provided their information so return
       pthread_mutex_unlock(&proc->mutex_RU_PRACH_br);
-      return(0);
+      return;
     }
     else { // all RUs have provided their information so continue on and wakeup eNB processing
       proc->RU_mask_prach_br = 0;
@@ -553,11 +552,12 @@ static void* eNB_thread_prach( void* param ) {
 
   thread_top_init("eNB_thread_prach",1,500000L,1000000L,20000000L);
 
+
   while (!oai_exit) {
     
     if (oai_exit) break;
-    
 
+    
     if (wait_on_condition(&proc->mutex_prach,&proc->cond_prach,&proc->instance_cnt_prach,"eNB_prach_thread") < 0) break;
 
     LOG_D(PHY,"Running eNB prach procedures\n");
@@ -627,7 +627,8 @@ void init_eNB_proc(int inst) {
   PHY_VARS_eNB *eNB;
   eNB_proc_t *proc;
   eNB_rxtx_proc_t *proc_rxtx;
-  pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_FH=NULL,*attr_prach=NULL,*attr_asynch=NULL,*attr_single=NULL,*attr_fep=NULL,*attr_td=NULL,*attr_te=NULL,*attr_synch=NULL;
+  pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_prach=NULL;
+    //*attr_td=NULL,*attr_te=NULL;
 #ifdef Rel14
   pthread_attr_t *attr_prach_br=NULL;
 #endif
@@ -669,9 +670,8 @@ void init_eNB_proc(int inst) {
 
     pthread_attr_init( &proc->attr_prach);
     pthread_attr_init( &proc->attr_asynch_rxtx);
-    pthread_attr_init( &proc->attr_single);
-    pthread_attr_init( &proc->attr_td);
-    pthread_attr_init( &proc->attr_te);
+    //    pthread_attr_init( &proc->attr_td);
+    //    pthread_attr_init( &proc->attr_te);
     pthread_attr_init( &proc_rxtx[0].attr_rxtx);
     pthread_attr_init( &proc_rxtx[1].attr_rxtx);
 #ifdef Rel14
@@ -690,10 +690,8 @@ void init_eNB_proc(int inst) {
     attr_prach_br  = &proc->attr_prach_br;
 #endif
 
-    attr_asynch = &proc->attr_asynch_rxtx;
-    attr_single = &proc->attr_single;
-    attr_td     = &proc->attr_td;
-    attr_te     = &proc->attr_te; 
+    //    attr_td     = &proc->attr_td;
+    //    attr_te     = &proc->attr_te; 
 #endif
 
     LOG_I(PHY,"eNB->single_thread_flag:%d\n", eNB->single_thread_flag);
@@ -789,9 +787,9 @@ void kill_eNB_proc(int inst) {
     int i;
     if (eNB->single_thread_flag==0) {
       for (i=0;i<2;i++) {
-	LOG_I(PHY, "Joining rxtx[%d] mutex/cond\n");
+	LOG_I(PHY, "Joining rxtx[%d] mutex/cond\n",i);
 	pthread_join( proc_rxtx[i].pthread_rxtx, (void**)&status );
-	LOG_I(PHY, "Destroying rxtx[%d] mutex/cond\n");
+	LOG_I(PHY, "Destroying rxtx[%d] mutex/cond\n",i);
 	pthread_mutex_destroy( &proc_rxtx[i].mutex_rxtx );
 	pthread_cond_destroy( &proc_rxtx[i].cond_rxtx );
       }
@@ -889,6 +887,7 @@ void init_transport(PHY_VARS_eNB *eNB) {
   fp->pucch_config_common.deltaPUCCH_Shift = 1;
     
 } 
+
 void init_eNB_afterRU(void) {
 
   int inst,CC_id,ru_id,i,aa;
@@ -908,10 +907,10 @@ void init_eNB_afterRU(void) {
       if (0) AssertFatal(eNB->num_RU>0,"Number of RU attached to eNB %d is zero\n",eNB->Mod_id);
       LOG_I(PHY,"Mapping RX ports from %d RUs to eNB %d\n",eNB->num_RU,eNB->Mod_id);
       eNB->frame_parms.nb_antennas_rx       = 0;
-      eNB->prach_vars.rxsigF[0] = (int16_t*)malloc16(64*sizeof(int16_t*));
+      eNB->prach_vars.rxsigF[0] = (int16_t**)malloc16(64*sizeof(int16_t*));
 #ifdef Rel14
       for (int ce_level=0;ce_level<4;ce_level++)
-	eNB->prach_vars_br.rxsigF[ce_level] = (int16_t*)malloc16(64*sizeof(int16_t*));
+	eNB->prach_vars_br.rxsigF[ce_level] = (int16_t**)malloc16(64*sizeof(int16_t*));
 #endif
 
       LOG_I(PHY,"eNB->num_RU:%d\n", eNB->num_RU);
@@ -929,7 +928,11 @@ void init_eNB_afterRU(void) {
 
 	for (i=0;i<eNB->RU_list[ru_id]->nb_rx;aa++,i++) { 
 	  LOG_I(PHY,"Attaching RU %d antenna %d to eNB antenna %d\n",eNB->RU_list[ru_id]->idx,i,aa);
-	  eNB->prach_vars.rxsigF[aa]       =  eNB->RU_list[ru_id]->prach_rxsigF[i];
+	  eNB->prach_vars.rxsigF[0][aa]    =  eNB->RU_list[ru_id]->prach_rxsigF[i];
+#ifdef Rel14
+	  for (int ce_level=0;ce_level<4;ce_level++)
+	    eNB->prach_vars_br.rxsigF[ce_level][aa] = eNB->RU_list[ru_id]->prach_rxsigF_br[ce_level][i];
+#endif
 	  eNB->common_vars.rxdataF[aa]     =  eNB->RU_list[ru_id]->common.rxdataF[i];
 	}
       }
@@ -957,7 +960,7 @@ void init_eNB_afterRU(void) {
       LOG_I(PHY,"inst %d, CC_id %d : nb_antennas_rx %d\n",inst,CC_id,eNB->frame_parms.nb_antennas_rx);
 
       init_transport(eNB);
-      init_precoding_weights(RC.eNB[inst][CC_id]);
+      //init_precoding_weights(RC.eNB[inst][CC_id]);
     }
     printf("RC.nb_CC[inst:%d]:%d CC_id:%d AFTER LOOP - About to init_eNB_proc\n", inst, RC.nb_CC[inst], CC_id);
     init_eNB_proc(inst);
@@ -985,7 +988,7 @@ void init_eNB(int single_thread_flag,int wait_for_sync) {
   int inst;
   PHY_VARS_eNB *eNB;
 
-  LOG_I(PHY,"[lte-softmodem.c] eNB structure about to allocated\n");
+  LOG_I(PHY,"[lte-softmodem.c] eNB structure about to allocated RC.nb_L1_inst:%d RC.nb_L1_CC[0]:%d\n",RC.nb_L1_inst,RC.nb_L1_CC[0]);
 
   if (RC.eNB == NULL) RC.eNB = (PHY_VARS_eNB***) malloc(RC.nb_L1_inst*sizeof(PHY_VARS_eNB **));
   LOG_I(PHY,"[lte-softmodem.c] eNB structure RC.eNB allocated\n");
@@ -998,6 +1001,7 @@ void init_eNB(int single_thread_flag,int wait_for_sync) {
       eNB->single_thread_flag = single_thread_flag;
 
 
+      LOG_I(PHY,"Initializing eNB %d CC_id %d single_thread_flag:%d\n",inst,CC_id,single_thread_flag);
 #ifndef OCP_FRAMEWORK
       LOG_I(PHY,"Initializing eNB %d CC_id %d\n",inst,CC_id);
 #endif
