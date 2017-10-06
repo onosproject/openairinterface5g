@@ -1630,6 +1630,11 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       isBad = 1;
     }
 
+    if (20 < ue->ulsch[eNB_id]->harq_processes[harq_pid]->mcs) {
+       LOG_D(PHY,"Not supported MCS in OAI mcs=%d\n", ue->ulsch[eNB_id]->harq_processes[harq_pid]->mcs);
+       isBad = 1;
+    }
+
     if (isBad) {
       LOG_I(PHY,"Skip PUSCH generation!\n");
       ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 0;
