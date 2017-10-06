@@ -181,6 +181,7 @@ uint8_t exit_missed_slots=1;
 uint64_t num_missed_slots=0; // counter for the number of missed slots
 
 int transmission_mode=1;
+int numerology = 0;
 
 int16_t           glog_level         = LOG_INFO;
 int16_t           glog_verbosity     = LOG_MED;
@@ -701,7 +702,7 @@ static void get_options (int argc, char **argv) {
     {NULL, 0, NULL, 0}
   };
 
-  while ((c = getopt_long (argc, argv, "A:a:C:dEK:g:F:G:hqO:m:SUVRM:r:P:Ws:t:Tx:",long_options,NULL)) != -1) {
+  while ((c = getopt_long (argc, argv, "A:a:C:dEK:g:F:G:hqO:m:n:SUVRM:r:P:Ws:t:Tx:",long_options,NULL)) != -1) {
     switch (c) {
     case LONG_OPTION_RF_CONFIG_FILE:
       if ((strcmp("null", optarg) == 0) || (strcmp("NULL", optarg) == 0)) {
@@ -1054,6 +1055,10 @@ static void get_options (int argc, char **argv) {
                 frame_parms[CC_id]->frame_type = TDD;
             break;
 
+        case 'n':
+	  numerology=atoi(optarg);
+	  break;
+
         case 'h':
             help ();
             exit (-1);
@@ -1309,6 +1314,7 @@ void init_openair0() {
         openair0_cfg[card].configFilename = NULL;
 
         if(frame_parms[0]->N_RB_DL == 100) {
+	  if (numerology==0) {
             if (frame_parms[0]->threequarter_fs) {
                 openair0_cfg[card].sample_rate=23.04e6;
                 openair0_cfg[card].samples_per_frame = 230400;
@@ -1320,6 +1326,20 @@ void init_openair0() {
                 openair0_cfg[card].tx_bw = 10e6;
                 openair0_cfg[card].rx_bw = 10e6;
             }
+	  } else if (numerology==1) {
+	    openair0_cfg[card].sample_rate=61.44e6;
+	    openair0_cfg[card].samples_per_frame = 307200;
+	    openair0_cfg[card].tx_bw = 20e6;
+	    openair0_cfg[card].rx_bw = 20e6;
+	  } else if (numerology==2) {
+	    openair0_cfg[card].sample_rate=122.88e6;
+	    openair0_cfg[card].samples_per_frame = 307200;
+	    openair0_cfg[card].tx_bw = 40e6;
+	    openair0_cfg[card].rx_bw = 40e6;
+	  } else {
+	    LOG_E(PHY,"Unsupported numerology!\n");
+	    exit(-1);
+	  }
         } else if(frame_parms[0]->N_RB_DL == 50) {
             openair0_cfg[card].sample_rate=15.36e6;
             openair0_cfg[card].samples_per_frame = 153600;
