@@ -390,7 +390,60 @@ void mch_extract_rbs(int **rxdataF,
 
 
 }
+void mch_extract_rbs_freq(int **rxdataF,
+                     int **dl_ch_estimates,
+                     int **rxdataF_ext,
+                     int **dl_ch_estimates_ext,
+                     unsigned char symbol,
+                     unsigned char subframe,
+                     LTE_DL_FRAME_PARMS *frame_parms)
+{
 
+  int pilots=0,i,j,offset,aarx;
+
+  //  printf("Extracting PMCH: symbol %d\n",symbol);
+  if ((symbol==2)||
+      (symbol==10)) {
+    pilots = 1;
+    offset = 1;
+  } else if (symbol==6) {
+    pilots = 1;
+    offset = 0;
+  }
+
+
+  for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
+
+    if (pilots==1) {
+      for (i=offset,j=0; i<frame_parms->N_RB_DL*6; i+=2,j++) {
+        /*  printf("MCH with pilots: i %d, j %d => %d,%d\n",i,j,
+               *(int16_t*)&rxdataF[aarx][i+frame_parms->first_carrier_offset + (symbol*frame_parms->ofdm_symbol_size)],
+               *(int16_t*)(1+&rxdataF[aarx][i+frame_parms->first_carrier_offset + (symbol*frame_parms->ofdm_symbol_size)]));
+               */
+        rxdataF_ext[aarx][j+symbol*(frame_parms->N_RB_DL*12)]                                  = rxdataF[aarx][i+frame_parms->first_carrier_offset + (symbol*frame_parms->ofdm_symbol_size)+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
+        rxdataF_ext[aarx][(frame_parms->N_RB_DL*3)+j+symbol*(frame_parms->N_RB_DL*12)]         = rxdataF[aarx][i+1+ (symbol*frame_parms->ofdm_symbol_size)];
+        dl_ch_estimates_ext[aarx][j+symbol*(frame_parms->N_RB_DL*12)+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)]                          = dl_ch_estimates[aarx][i+(symbol*frame_parms->ofdm_symbol_size)];
+        dl_ch_estimates_ext[aarx][(frame_parms->N_RB_DL*3)+j+symbol*(frame_parms->N_RB_DL*12)] = dl_ch_estimates[aarx][i+(frame_parms->N_RB_DL*6)+(symbol*frame_parms->ofdm_symbol_size)];
+      }
+    } else {
+
+      memcpy((void*)&rxdataF_ext[aarx][symbol*(frame_parms->N_RB_DL*12)],
+             (void*)&rxdataF[aarx][frame_parms->first_carrier_offset + (symbol*frame_parms->ofdm_symbol_size)+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)],
+             frame_parms->N_RB_DL*24);
+      memcpy((void*)&rxdataF_ext[aarx][(frame_parms->N_RB_DL*6) + symbol*(frame_parms->N_RB_DL*12)],
+             (void*)&rxdataF[aarx][1 + (symbol*frame_parms->ofdm_symbol_size)+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)],
+             frame_parms->N_RB_DL*24);
+      memcpy((void*)&dl_ch_estimates_ext[aarx][symbol*(frame_parms->N_RB_DL*12)],
+             (void*)&dl_ch_estimates[aarx][(symbol*frame_parms->ofdm_symbol_size)],
+             frame_parms->N_RB_DL*48);
+
+    }
+
+  }
+
+
+
+}
 void mch_channel_level(int **dl_ch_estimates_ext,
                        LTE_DL_FRAME_PARMS *frame_parms,
                        int *avg,
@@ -968,7 +1021,15 @@ int rx_pmch(PHY_VARS_UE *ue,
   int avgs,aarx;
 
   //printf("*********************mch: symbol %d\n",symbol);
-
+  if (ue->do_ofdm_mod)
+  mch_extract_rbs_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                  common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+                  pdsch_vars[eNB_id]->rxdataF_ext,
+                  pdsch_vars[eNB_id]->dl_ch_estimates_ext,
+                  symbol,
+                  subframe,
+                  frame_parms);
+  else
   mch_extract_rbs(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
                   common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                   pdsch_vars[eNB_id]->rxdataF_ext,

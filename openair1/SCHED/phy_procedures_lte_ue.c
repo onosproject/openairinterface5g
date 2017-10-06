@@ -1320,6 +1320,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 
 
   for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
+   if (!ue->do_ofdm_mod){
     if (frame_parms->Ncp == 1)
       PHY_ofdm_mod(&ue->common_vars.txdataF[aa][subframe_tx*nsymb*frame_parms->ofdm_symbol_size],
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
@@ -1385,7 +1386,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
       write_output("txBuff.m","txSignal",&ue->common_vars.txdata[aa][ulsch_start],frame_parms->samples_per_tti,1,1);
     }
     */
-
+   }//skip time domain for frequency analysis
   } //nb_antennas_tx
 
 #if UE_TIMING_TRACE
@@ -2620,14 +2621,26 @@ void ue_measurement_procedures(
   if (l==0) {
     // UE measurements on symbol 0
     if (abstraction_flag==0) {
-      LOG_D(PHY,"Calling measurements subframe %d, rxdata %p\n",subframe_rx,ue->common_vars.rxdata);
+		if (ue->do_ofdm_mod){//frequency analysis
+      		LOG_D(PHY,"Calling measurements subframe %d, thread[%d].rxdataF %p\n",subframe_rx,(slot>>1)&0x1,ue->common_vars.common_vars_rx_data_per_thread[(slot>>1)&0x1].rxdataF);
+	      lte_ue_measurements(ue,
+		(subframe_rx*frame_parms->samples_per_tti+ue->rx_offset)%(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME),
+		(subframe_rx == 1) ? 1 : 0,
+		0,
+		0,
+		subframe_rx);
 
-      lte_ue_measurements(ue,
-        (subframe_rx*frame_parms->samples_per_tti+ue->rx_offset)%(frame_parms->samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME),
-        (subframe_rx == 1) ? 1 : 0,
-        0,
-        0,
-        subframe_rx);
+	}
+	else
+      	{
+		LOG_D(PHY,"Calling measurements subframe %d, rxdata %p\n",subframe_rx,ue->common_vars.rxdata);
+	      lte_ue_measurements(ue,
+		(subframe_rx*frame_parms->samples_per_tti+ue->rx_offset)%(frame_parms->samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME),
+		(subframe_rx == 1) ? 1 : 0,
+		0,
+		0,
+		subframe_rx);
+	}
     } else {
       lte_ue_measurements(ue,
         0,
@@ -2686,12 +2699,13 @@ void ue_measurement_procedures(
 
     if (abstraction_flag == 0) {
       if (ue->no_timing_correction==0)
-  lte_adjust_synch(&ue->frame_parms,
-       ue,
-       eNB_id,
-       subframe_rx,
-       0,
-       16384);
+	if (!ue->do_ofdm_mod)
+	  lte_adjust_synch(&ue->frame_parms,
+	       ue,
+	       eNB_id,
+	       subframe_rx,
+	       0,
+	       16384);
     }
 
   }
@@ -2867,7 +2881,11 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
   int frame_rx = proc->frame_rx;
   int subframe_rx = proc->subframe_rx;
+  printf("pbch0_before. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[0].frame_rx,ue->proc.proc_rxtx[0].subframe_rx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].frame_tx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].subframe_tx);
+  printf("pbch1_before. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[1].frame_rx,ue->proc.proc_rxtx[1].subframe_rx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].frame_tx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].subframe_tx);
 
+  printf("pbch0_after. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[0].frame_rx,ue->proc.proc_rxtx[0].subframe_rx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].frame_tx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].subframe_tx);
+  printf("pbch1_after. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[1].frame_rx,ue->proc.proc_rxtx[1].subframe_rx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[1].frame_tx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[1].subframe_tx);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_PBCH_PROCEDURES, VCD_FUNCTION_IN);
 
   pbch_phase=(frame_rx%4);
@@ -3515,7 +3533,12 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
 
       if (abstraction_flag == 0 ) {
   for (l=2; l<12; l++) {
-
+   if (ue->do_ofdm_mod)
+    slot_fep_mbsfn(ue,
+       l,
+       subframe_rx,
+       0,0);//ue->rx_offset,0);
+   else
     slot_fep_mbsfn(ue,
        l,
        subframe_rx,
@@ -5063,7 +5086,11 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
 
 #if T_TRACER
   T(T_UE_PHY_DL_TICK, T_INT(ue->Mod_id), T_INT(frame_rx%1024), T_INT(subframe_rx));
-
+if (ue->do_ofdm_mod)
+  T(T_UE_PHY_INPUT_SIGNAL, T_INT(ue->Mod_id), T_INT(frame_rx%1024), T_INT(subframe_rx), T_INT(0),
+    T_BUFFER(&ue->common_vars.rxdata[0][subframe_rx*ue->frame_parms.ofdm_symbol_size*subframe_rx*ue->frame_parms.symbols_per_tti],
+             ue->frame_parms.ofdm_symbol_size*subframe_rx*ue->frame_parms.symbols_per_tti * 4));
+else
   T(T_UE_PHY_INPUT_SIGNAL, T_INT(ue->Mod_id), T_INT(frame_rx%1024), T_INT(subframe_rx), T_INT(0),
     T_BUFFER(&ue->common_vars.rxdata[0][subframe_rx*ue->frame_parms.samples_per_tti],
              ue->frame_parms.samples_per_tti * 4));
@@ -5138,6 +5165,14 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
         start_meas(&ue->ofdm_demod_stats);
 #endif
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SLOT_FEP, VCD_FUNCTION_IN);
+     if (ue->do_ofdm_mod)
+      slot_fep_freq(ue,
+         l,
+         (subframe_rx<<1),
+         0,
+         0,
+         0);
+     else
       slot_fep(ue,
          l,
          (subframe_rx<<1),
@@ -5179,7 +5214,14 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
     ue_pmch_procedures(ue,proc,eNB_id,abstraction_flag);
     return 0;
   }
-
+  if (ue->do_ofdm_mod)
+  slot_fep_freq(ue,
+     0,
+     1+(subframe_rx<<1),
+     0,
+     0,
+     0);
+  else
   slot_fep(ue,
      0,
      1+(subframe_rx<<1),
@@ -5275,6 +5317,14 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
           start_meas(&ue->ofdm_demod_stats);
 #endif
 	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SLOT_FEP, VCD_FUNCTION_IN);
+       if (ue->do_ofdm_mod)
+	slot_fep_freq(ue,
+		 l,
+		 1+(subframe_rx<<1),
+		 0,
+		 0,
+		 0);
+       else
 	slot_fep(ue,
 		 l,
 		 1+(subframe_rx<<1),
@@ -5295,6 +5345,14 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
     int next_subframe_rx = (1+subframe_rx)%10;
     if (subframe_select(&ue->frame_parms,next_subframe_rx) != SF_UL)
     {
+     if (ue->do_ofdm_mod)
+      slot_fep_freq(ue,
+         0,
+         (next_subframe_rx<<1),
+         0,
+         0,
+         0);
+     else
       slot_fep(ue,
          0,
          (next_subframe_rx<<1),

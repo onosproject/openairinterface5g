@@ -70,10 +70,11 @@ typedef enum {
 
 void init_UE_threads(PHY_VARS_UE *UE);
 void *UE_thread(void *arg);
+void *UE_thread_freq(void *arg);
 void init_UE(int nb_inst);
 
-int32_t **rxdata;
-int32_t **txdata;
+int32_t **rxdata,**thread0_rxdataF, **thread1_rxdataF;
+int32_t **txdata, **txdataF;
 
 #define KHz (1000UL)
 #define MHz (1000*KHz)
@@ -183,7 +184,7 @@ void init_UE(int nb_inst)
     PHY_VARS_UE *UE = PHY_vars_UE_g[inst][0];
     AssertFatal(0 == pthread_create(&UE->proc.pthread_ue,
                                     &UE->proc.attr_ue,
-                                    UE_thread,
+                                    (UE->do_ofdm_mod)?UE_thread_freq:UE_thread,
                                     (void*)UE), "");
   }
 
@@ -475,6 +476,278 @@ static void *UE_thread_synch(void *arg) {
 
     return &UE_thread_synch_retval;
 }
+/*!
+ * \brief This is the UE synchronize thread for frequency analysis.
+ * It performs band scanning and synchonization.
+ * \param arg is a pointer to a \ref PHY_VARS_UE structure.
+ * \returns a pointer to an int. The storage is not on the heap and must not be freed.
+ */
+static void *UE_thread_synch_freq(void *arg) {
+    static int __thread UE_thread_synch_retval;
+    int i, hw_slot_offset;
+    PHY_VARS_UE *UE = (PHY_VARS_UE*) arg;
+    int current_band = 0;
+    int current_offset = 0;
+    sync_mode_t sync_mode = pbch;
+    int CC_id = UE->CC_id;
+    int freq_offset=0;
+    char threadname[128];
+
+    int do_ofdm_mod = UE->do_ofdm_mod;
+
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    if ( threads.iq != -1 )
+        CPU_SET(threads.iq, &cpuset);
+    // this thread priority must be lower that the main acquisition thread
+    sprintf(threadname, "sync UE %d\n", UE->Mod_id);
+    init_thread(100000, 500000, FIFO_PRIORITY-1, &cpuset, threadname);
+
+    UE->is_synchronized = 0;   
+
+	if (UE->UE_scan == 0) {
+	        int ind;
+		for ( ind=0;
+		        ind < sizeof(eutra_bands) / sizeof(eutra_bands[0]);
+		        ind++) {
+		    current_band = eutra_bands[ind].band;
+		    LOG_D(PHY, "Scanning band %d, dl_min %"PRIu32", ul_min %"PRIu32"\n", current_band, eutra_bands[ind].dl_min,eutra_bands[ind].ul_min);
+		    if ( eutra_bands[ind].dl_min <= downlink_frequency[0][0] && eutra_bands[ind].dl_max >= downlink_frequency[0][0] ) {
+		        for (i=0; i<4; i++)
+		            uplink_frequency_offset[CC_id][i] = eutra_bands[ind].ul_min - eutra_bands[ind].dl_min;
+		        break;
+		    }
+		}
+		AssertFatal( ind < sizeof(eutra_bands) / sizeof(eutra_bands[0]), "Can't find EUTRA band for frequency");
+
+		LOG_I( PHY, "[SCHED][UE] Check absolute frequency DL %"PRIu32", UL %"PRIu32" (oai_exit %d, rx_num_channels %d)\n",
+		       downlink_frequency[0][0], downlink_frequency[0][0]+uplink_frequency_offset[0][0],
+		       oai_exit, openair0_cfg[0].rx_num_channels);
+
+		for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
+		    openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][i];
+		    openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] =
+		        downlink_frequency[CC_id][i]+uplink_frequency_offset[CC_id][i];
+		    openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
+		    if (uplink_frequency_offset[CC_id][i] != 0) //
+		        openair0_cfg[UE->rf_map.card].duplex_mode = duplex_mode_FDD;
+		    else //FDD
+		        openair0_cfg[UE->rf_map.card].duplex_mode = duplex_mode_TDD;
+		}
+		sync_mode = pbch;
+
+	   } else {
+		current_band=0;
+		for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
+		    downlink_frequency[UE->rf_map.card][UE->rf_map.chain+i] = bands_to_scan.band_info[CC_id].dl_min;
+		    uplink_frequency_offset[UE->rf_map.card][UE->rf_map.chain+i] =
+		        bands_to_scan.band_info[CC_id].ul_min-bands_to_scan.band_info[CC_id].dl_min;
+		    openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][i];
+		    openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] =
+		        downlink_frequency[CC_id][i]+uplink_frequency_offset[CC_id][i];
+		    openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i] = UE->rx_total_gain_dB;
+		}
+	   }
+
+    while (oai_exit==0) {
+        AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+        while (UE->proc.instance_cnt_synch < 0)
+            // the thread waits here most of the time
+            pthread_cond_wait( &UE->proc.cond_synch, &UE->proc.mutex_synch );
+        AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
+
+        switch (sync_mode) {
+        case pss:
+	    //printf("pss case in UE_thread_synch\n");
+            LOG_I(PHY,"[SCHED][UE] Scanning band %d (%d), freq %u\n",bands_to_scan.band_info[current_band].band, current_band,bands_to_scan.band_info[current_band].dl_min+current_offset);
+            //lte_sync_freqtime(UE,current_band,bands_to_scan.band_info[current_band].dl_min+current_offset);
+            current_offset += 20000000; // increase by 20 MHz
+
+            if (current_offset > bands_to_scan.band_info[current_band].dl_max-bands_to_scan.band_info[current_band].dl_min) {
+                current_band++;
+                current_offset=0;
+            }
+
+            if (current_band==bands_to_scan.nbands) {
+                current_band=0;
+                oai_exit=1;
+            }
+
+            for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
+                downlink_frequency[UE->rf_map.card][UE->rf_map.chain+i] = bands_to_scan.band_info[current_band].dl_min+current_offset;
+                uplink_frequency_offset[UE->rf_map.card][UE->rf_map.chain+i] = bands_to_scan.band_info[current_band].ul_min-bands_to_scan.band_info[0].dl_min + current_offset;
+
+                openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][i];
+                openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][i]+uplink_frequency_offset[CC_id][i];
+                openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i] = UE->rx_total_gain_dB;
+                if (UE->UE_scan_carrier) {
+                    openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
+                }
+
+            }
+
+            break;
+
+        case pbch:
+
+            LOG_I(PHY,"[UE thread Synch] Running Initial frequency Synch (mode %d), initial_synch is %d\n",UE->mode,initial_sync_freq( UE, UE->mode ));
+	    //Pushed N_RB_DL, PHICH_CONFIG, FRAME_NUMBER
+            if (initial_sync_freq( UE, UE->mode ) == 0) {
+
+                hw_slot_offset = (UE->rx_offset<<1) / (UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti);
+                LOG_I( HW, "Got synch: hw_slot_offset %d, carrier off %d Hz, rxgain %d (DL %u, UL %u), UE_scan_carrier %d\n",
+                       hw_slot_offset,
+                       freq_offset,
+                       UE->rx_total_gain_dB,
+                       downlink_frequency[0][0]+freq_offset,
+                       downlink_frequency[0][0]+uplink_frequency_offset[0][0]+freq_offset,
+                       UE->UE_scan_carrier );
+		printf("UE_scan_carrier in case pbch %d\n",UE->UE_scan_carrier);
+
+                    // rerun with new cell parameters and frequency-offset
+                    for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
+                        openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
+			if (UE->UE_scan_carrier == 1) {
+                        if (freq_offset >= 0)
+                            openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] += abs(UE->common_vars.freq_offset);
+                        else
+                            openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] -= abs(UE->common_vars.freq_offset);
+                        openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] =
+                            openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i]+uplink_frequency_offset[CC_id][i];
+                        downlink_frequency[CC_id][i] = openair0_cfg[CC_id].rx_freq[i];
+                        freq_offset=0;
+                    }
+	  }
+
+                    // reconfigure for potentially different bandwidth
+                    switch(UE->frame_parms.N_RB_DL) {
+                    case 6:
+                        openair0_cfg[UE->rf_map.card].sample_rate =1.92e6;
+                        openair0_cfg[UE->rf_map.card].rx_bw          =.96e6;
+                        openair0_cfg[UE->rf_map.card].tx_bw          =.96e6;
+                        //            openair0_cfg[0].rx_gain[0] -= 12;
+                        break;
+                    case 25:
+                        openair0_cfg[UE->rf_map.card].sample_rate =7.68e6;
+                        openair0_cfg[UE->rf_map.card].rx_bw          =2.5e6;
+                        openair0_cfg[UE->rf_map.card].tx_bw          =2.5e6;
+                        //            openair0_cfg[0].rx_gain[0] -= 6;
+                        break;
+                    case 50:
+                        openair0_cfg[UE->rf_map.card].sample_rate =15.36e6;
+                        openair0_cfg[UE->rf_map.card].rx_bw          =5.0e6;
+                        openair0_cfg[UE->rf_map.card].tx_bw          =5.0e6;
+                        //            openair0_cfg[0].rx_gain[0] -= 3;
+                        break;
+                    case 100:
+                        openair0_cfg[UE->rf_map.card].sample_rate=30.72e6;
+                        openair0_cfg[UE->rf_map.card].rx_bw=10.0e6;
+                        openair0_cfg[UE->rf_map.card].tx_bw=10.0e6;
+                        //            openair0_cfg[0].rx_gain[0] -= 0;
+                        break;
+                    }
+
+                    UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
+                    //UE->rfdevice.trx_set_gains_func(&openair0,&openair0_cfg[0]);
+                    //UE->rfdevice.trx_stop_func(&UE->rfdevice);
+                    sleep(1);
+                    init_frame_parms(&UE->frame_parms,1);
+
+		    //UE->proc.proc_rxtx[0].frame_rx=PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].frame_tx;
+		    //UE->proc.proc_rxtx[1].frame_rx=PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].frame_tx;
+		    //UE->frame_parms.phich_config_common.phich_duration=PHY_vars_eNB_g[0][0]->frame_parms.phich_config_common.phich_duration;
+		    //UE->frame_parms.phich_config_common.phich_resource=PHY_vars_eNB_g[0][0]->frame_parms.phich_config_common.phich_resource;
+
+                    /*if (UE->rfdevice.trx_start_func(&UE->rfdevice) != 0 ) {
+                        LOG_E(HW,"Could not start the device\n");
+                        oai_exit=1;
+                    }*/
+		if (UE->UE_scan_carrier == 1) {
+
+		  UE->UE_scan_carrier = 0;
+                } else {
+
+                    AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+                    UE->is_synchronized = 1;
+                    AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
+
+                    /*if( UE->mode == rx_dump_frame ) {
+                        FILE *fd;
+                        if ((UE->proc.proc_rxtx[0].frame_rx&1) == 0) {  // this guarantees SIB1 is present
+                            if ((fd = fopen("rxsig_frame0.dat","w")) != NULL) {
+                                fwrite((void*)&UE->common_vars.rxdata[0][0],
+                                       sizeof(int32_t),
+                                       10*UE->frame_parms.samples_per_tti,
+                                       fd);
+                                LOG_I(PHY,"Dummping Frame ... bye bye \n");
+                                fclose(fd);
+                                exit(0);
+                            } else {
+                                LOG_E(PHY,"Cannot open file for writing\n");
+                                exit(0);
+                            }
+                        } else {
+                            AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+                            UE->is_synchronized = 0;
+                            AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
+
+                        }
+                    }*/
+		}
+	    /*} else {
+                // initial sync failed
+                // calculate new offset and try again
+                if (UE->UE_scan_carrier == 1) {
+                    if (freq_offset >= 0)
+                        freq_offset += 100;
+                    freq_offset *= -1;
+
+                    if (abs(freq_offset) > 7500) {
+                        LOG_I( PHY, "[initial_sync] No cell synchronization found, abandoning\n" );
+                        FILE *fd;
+                        if ((fd = fopen("rxsig_frame0.dat","w"))!=NULL) {
+                            fwrite((void*)&UE->common_vars.rxdata[0][0],
+                                   sizeof(int32_t),
+                                   10*UE->frame_parms.samples_per_tti,
+                                   fd);
+                            LOG_I(PHY,"Dummping Frame ... bye bye \n");
+                            fclose(fd);
+                            exit(0);
+                        }
+                        mac_xface->macphy_exit("No cell synchronization found, abandoning");
+                        return &UE_thread_synch_retval; // not reached
+                    }
+                }
+                LOG_I( PHY, "[initial_sync] trying carrier off %d Hz, rxgain %d (DL %u, UL %u)\n",
+                       freq_offset,
+                       UE->rx_total_gain_dB,
+                       downlink_frequency[0][0]+freq_offset,
+                       downlink_frequency[0][0]+uplink_frequency_offset[0][0]+freq_offset );
+
+                for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
+                    openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][i]+freq_offset;
+                    openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][i]+uplink_frequency_offset[CC_id][i]+freq_offset;
+                    openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
+                    if (UE->UE_scan_carrier==1)
+                        openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
+                }
+                UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);*/
+            }// initial_sync=0
+            break;
+        case si:
+        default:
+            break;
+        }
+        AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+        // indicate readiness
+        UE->proc.instance_cnt_synch--;
+        AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
+
+        VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_UE_THREAD_SYNCH, 0 );
+    }  // while !oai_exit
+
+    return &UE_thread_synch_retval;
+}
 
 /*!
  * \brief This is the UE thread for RX subframe n and TX subframe n+4.
@@ -754,11 +1027,18 @@ void *UE_thread(void *arg) {
             } else {
                 sub_frame++;
                 sub_frame%=10;
+		
                 UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[thread_idx];
                 // update thread index for received subframe
                 UE->current_thread_id[sub_frame] = thread_idx;
 
-                LOG_D(PHY,"Process Subframe %d thread Idx %d \n", sub_frame, UE->current_thread_id[sub_frame]);
+                LOG_D(PHY,"Process Subframe %d thread Idx %d , frame %d \n", sub_frame, UE->current_thread_id[sub_frame],proc->frame_rx);
+		    if (sub_frame==6 && ((proc->frame_rx&0x1)==0))
+		    {
+			write_output("lteue_rxsigF_frame0.m","lteue_rxsF0", UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
+			write_output("lteue_rxsigF_frame1.m","lteue_rxsF1", UE->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
+			exit(-1);
+		    }
 
                 thread_idx++;
                 if(thread_idx>=RX_NB_TH)
@@ -850,6 +1130,7 @@ void *UE_thread(void *arg) {
 
                     proc->instance_cnt_rxtx++;
                     LOG_D( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
+
                     if (proc->instance_cnt_rxtx == 0) {
                       if (pthread_cond_signal(&proc->cond_rxtx) != 0) {
                         LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
@@ -867,7 +1148,6 @@ void *UE_thread(void *arg) {
                     initStaticTime(lastTime);
                     updateTimes(lastTime, &t1, 20000, "Delay between two IQ acquisitions (case 1)");
                     pickStaticTime(lastTime);
-
                 } else {
                     printf("Processing subframe %d",proc->subframe_rx);
                     getchar();
@@ -878,7 +1158,282 @@ void *UE_thread(void *arg) {
     } // while !oai_exit
     return NULL;
 }
+/*!
+ * \brief This is the main UE thread for frequency analysis.
+ * This thread controls the other three UE threads:
+ * - UE_thread_rxn_txnp4 (even subframes)
+ * - UE_thread_rxn_txnp4 (odd subframes)
+ * - UE_thread_synch_freq
+ * \param arg unused
+ * \returns a pointer to an int. The storage is not on the heap and must not be freed.
+ */
 
+void *UE_thread_freq(void *arg) {
+
+    PHY_VARS_UE *UE = (PHY_VARS_UE *) arg;
+    //  int tx_enabled = 0;
+    int dummy_rx[UE->frame_parms.nb_antennas_rx][UE->frame_parms.symbols_per_tti*UE->frame_parms.ofdm_symbol_size] __attribute__((aligned(32)));
+    openair0_timestamp timestamp,timestamp1;
+    void* rxp_freq[NB_ANTENNAS_RX];
+    void* txp_freq[NB_ANTENNAS_TX];
+    int start_rx_stream = 0;
+    int i;
+    char threadname[128];
+    int th_id;
+
+    static uint8_t thread_idx = 0;
+
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+
+
+    if ( threads.iq != -1 )
+        CPU_SET(threads.iq, &cpuset);
+    init_thread(100000, 500000, FIFO_PRIORITY, &cpuset,
+                "UHD Threads");
+    if (oaisim_flag == 0)
+        AssertFatal(0== openair0_device_load(&(UE->rfdevice), &openair0_cfg[0]), "");
+    UE->rfdevice.host_type = BBU_HOST;
+    sprintf(threadname, "Main UE %d", UE->Mod_id);
+    pthread_setname_np(pthread_self(), threadname);
+    init_UE_threads(UE);
+
+#ifdef NAS_UE
+    MessageDef *message_p;
+    message_p = itti_alloc_new_message(TASK_NAS_UE, INITIALIZE_MESSAGE);
+    itti_send_msg_to_task (TASK_NAS_UE, UE->Mod_id + NB_eNB_INST, message_p);
+#endif
+
+    int sub_frame=-1;
+    //int cumulated_shift=0;
+    AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0, "Could not start the device\n");
+    while (!oai_exit) {
+        AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+        int instance_cnt_synch = UE->proc.instance_cnt_synch;
+        int is_synchronized    = UE->is_synchronized;
+	//printf("[ue_thread] UE is synchronized: %d, instance_cnt_synch: %d\n",is_synchronized,instance_cnt_synch);
+        AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
+
+        if (is_synchronized == 0) {
+            if (instance_cnt_synch < 0) {  // we can invoke the synch
+                // grab 10 ms of signal and wakeup synch thread
+        		for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
+			{
+		            rxp_freq[i] = (void*)&UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[i][0];	
+			}		
+                if (UE->mode != loop_through_memory)
+		{
+			printf("[ue_thread] UE->mode != loop_through_memory: %d\n",UE->mode != loop_through_memory);
+				AssertFatal( UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti*10 ==
+		                UE->rfdevice.trx_read_func(&UE->rfdevice,
+		                                                    &timestamp,
+		                                                    rxp_freq,
+		                                                    UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti*10,
+		                                                    UE->frame_parms.nb_antennas_rx), "");
+		}
+		AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+                instance_cnt_synch = ++UE->proc.instance_cnt_synch;
+                if (instance_cnt_synch == 0) {
+                    AssertFatal( 0 == pthread_cond_signal(&UE->proc.cond_synch), "");
+                } else {
+                    LOG_E( PHY, "[SCHED][UE] UE sync thread busy!!\n" );
+                    exit_fun("nothing to add");
+                }
+		AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
+            } else {
+#if OAISIM
+                (void)dummy_rx; /* avoid gcc warnings */
+                usleep(500);
+#else
+		printf("[ue_thread] is_synchronized == 0 and instance_cnt_synch == %d\n",instance_cnt_synch);
+                // grab 10 ms of signal into dummy buffer
+                if (UE->mode != loop_through_memory) {
+                    for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
+		    {
+				rxp_freq[i] = (void*)&dummy_rx[i][0];		
+		    }
+                    for (int sf=0; sf<10; sf++)
+		    {
+		                  UE->rfdevice.trx_read_func(&UE->rfdevice,
+		                                      &timestamp,
+		                                      rxp_freq,
+		                                      UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,
+		                                      UE->frame_parms.nb_antennas_rx);
+		    }
+                }
+#endif
+            }
+
+        } // UE->is_synchronized==0
+        else {
+		    if (start_rx_stream==0) {
+		        start_rx_stream=1;
+			//printf("[ue_thread] UE is synch and start_rx_stream change from 0 to %d, UE->rx_offset %d \n",start_rx_stream,UE->rx_offset);
+		        	if (UE->mode != loop_through_memory) {
+				   /*if (UE->no_timing_correction==0) {//no_timing_correction is loaded to 1 in oaisim_functions.c
+				        LOG_I(PHY,"Resynchronizing RX by %d samples (mode = %d)\n",UE->rx_offset,UE->mode);
+				        AssertFatal(UE->rx_offset ==
+				                    UE->rfdevice.trx_read_func(&UE->rfdevice,
+				                                               &timestamp,
+				                                               (void**)UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF,
+				                                               UE->rx_offset,
+				                                               UE->frame_parms.nb_antennas_rx),"");
+					AssertFatal(UE->rx_offset ==
+				                    UE->rfdevice.trx_read_func(&UE->rfdevice,
+				                                               &timestamp,
+				                                               (void**)UE->common_vars.common_vars_rx_data_per_thread[1].rxdataF,
+				                                               UE->rx_offset,
+				                                               UE->frame_parms.nb_antennas_rx),"");
+				    }*/
+				    UE->rx_offset=0;
+				    UE->time_sync_cell=0;
+				    //UE->proc.proc_rxtx[0].frame_rx++;
+				    //UE->proc.proc_rxtx[1].frame_rx++;
+				    for (th_id=0; th_id < RX_NB_TH; th_id++) {
+		                	UE->proc.proc_rxtx[th_id].frame_rx++;
+		            	    }
+
+				    // read in first symbol
+				    AssertFatal (UE->frame_parms.ofdm_symbol_size ==
+				                 UE->rfdevice.trx_read_func(&UE->rfdevice,
+				                                            &timestamp,
+				                                            (void**)UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF,
+				                                            UE->frame_parms.ofdm_symbol_size,
+				                                            UE->frame_parms.nb_antennas_rx),"");
+				    slot_fep_freq(UE,0, 0, 0, 0, 0);
+				    printf("slot_fep_freq in lte_ue (if)\n");
+			    	} //UE->mode != loop_through_memory
+		            	else
+				{
+				    rt_sleep_ns(1000*1000);
+				    printf("slot_fep_freq in lte_ue (else)\n");
+				} 
+	            }
+		    else {
+			//printf("[ue_thread] is synch %d, start_rx_stream= %d, instance_cnt_synch %d, openair0_cfg[0].tx_sample_advance %d \n",is_synchronized,start_rx_stream,instance_cnt_synch,openair0_cfg[0].tx_sample_advance);	
+                		sub_frame++;
+				sub_frame%=10;
+		
+				UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[thread_idx];
+				// update thread index for received subframe
+				UE->current_thread_id[sub_frame] = thread_idx;
+
+				LOG_D(PHY,"Process Subframe %d thread Idx %d , frame %d \n", sub_frame, UE->current_thread_id[sub_frame],proc->frame_rx);
+				    if (sub_frame==5 && ((proc->frame_rx&0x1)==0))
+				    {
+					write_output("lteue_rxsigF_frame0.m","lteue_rxsF0", UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
+					write_output("lteue_rxsigF_frame1.m","lteue_rxsF1", UE->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
+					//exit(-1);
+				    }
+
+				thread_idx++;
+				if(thread_idx>=RX_NB_TH)
+				    thread_idx = 0;
+
+				if (UE->mode != loop_through_memory) {
+				    for (i=0; i<UE->frame_parms.nb_antennas_rx; i++){
+				        rxp_freq[i] = (void*)&UE->common_vars.common_vars_rx_data_per_thread[sub_frame&0x1].rxdataF[i][UE->frame_parms.ofdm_symbol_size+sub_frame*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti];//14*1024->50RB
+				    }
+				    for (i=0; i<UE->frame_parms.nb_antennas_tx; i++)
+				        txp_freq[i] = (void*)&UE->common_vars.txdataF[i][
+					((sub_frame+2)%10)*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti];
+
+				    int readBlockSize, writeBlockSize;
+				    if (sub_frame<9) {
+				        readBlockSize= UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti;
+				        writeBlockSize=UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti;
+				    } else {
+				        /* set TO compensation to zero
+				        UE->rx_offset_diff = 0;
+				        // compute TO compensation that should be applied for this frame
+				        if ( UE->rx_offset < 5*UE->frame_parms.samples_per_tti  &&
+				                UE->rx_offset > 0 )
+				            UE->rx_offset_diff = -1 ;
+				        if ( UE->rx_offset > 5*UE->frame_parms.samples_per_tti &&
+				                UE->rx_offset < 10*UE->frame_parms.samples_per_tti )
+				            UE->rx_offset_diff = 1;
+
+				        LOG_D(PHY,"AbsSubframe %d.%d SET rx_off_diff to %d rx_offset %d \n",proc->frame_rx,sub_frame,UE->rx_offset_diff,UE->rx_offset);*/
+				        readBlockSize=UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti -
+				                      UE->frame_parms.ofdm_symbol_size;
+				        writeBlockSize=UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti;
+				    }
+				    LOG_D(PHY,"AbsSubframe %d.%d SET rx_off_diff to %d rx_offset %d \n",proc->frame_rx,sub_frame,UE->rx_offset_diff,UE->rx_offset);
+				    AssertFatal(readBlockSize == UE->rfdevice.trx_read_func(&UE->rfdevice,
+				                                           &timestamp,
+				                                           rxp_freq,
+				                                           readBlockSize,
+				                                           UE->frame_parms.nb_antennas_rx),"");
+				   AssertFatal( writeBlockSize ==
+		                         UE->rfdevice.trx_write_func(&UE->rfdevice,
+		                                 timestamp+
+		                                 (2*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti) -
+				                 UE->frame_parms.ofdm_symbol_size,
+		                                 txp_freq,
+		                                 writeBlockSize,
+		                                 UE->frame_parms.nb_antennas_tx,
+		                                 1),"");
+				    if( sub_frame==9) {
+				        // read in first symbol of next frame and adjust for timing drift
+					if ( writeBlockSize-readBlockSize > 0 )
+				        AssertFatal(writeBlockSize-readBlockSize ==
+				                        UE->rfdevice.trx_read_func(&UE->rfdevice,
+				                                                   &timestamp1,
+				                                                   (void**)UE->common_vars.common_vars_rx_data_per_thread[sub_frame&0x1].rxdataF,
+				                                                   writeBlockSize-readBlockSize,
+				                                                   UE->frame_parms.nb_antennas_rx),"");
+					if ( writeBlockSize-readBlockSize <0 )
+				            LOG_E(PHY,"can't compensate: diff =%d\n", writeBlockSize-readBlockSize);
+				    }
+				    //pickTime(gotIQs);
+				   // operate on thread sf mod 2
+				    AssertFatal(pthread_mutex_lock(&proc->mutex_rxtx) ==0,"");
+				    if(sub_frame == 0) {
+				        //UE->proc.proc_rxtx[0].frame_rx++;
+				        //UE->proc.proc_rxtx[1].frame_rx++;
+				        for (th_id=0; th_id < RX_NB_TH; th_id++) {
+				            UE->proc.proc_rxtx[th_id].frame_rx++;
+				        }
+				    }
+						    //UE->proc.proc_rxtx[0].gotIQs=readTime(gotIQs);
+				    //UE->proc.proc_rxtx[1].gotIQs=readTime(gotIQs);
+				    proc->subframe_rx=sub_frame;
+				    proc->subframe_tx=(sub_frame+4)%10;
+				    proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
+				    proc->timestamp_tx = timestamp+
+				                         (4*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)-
+				                         UE->frame_parms.ofdm_symbol_size;
+
+				    proc->instance_cnt_rxtx++;
+				    LOG_D( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
+				    if (proc->instance_cnt_rxtx == 0) {
+				      if (pthread_cond_signal(&proc->cond_rxtx) != 0) {
+				        LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
+				        exit_fun("nothing to add");
+				      }
+				    } else {
+				      LOG_E( PHY, "[SCHED][UE %d] UE RX thread busy (IC %d)!!\n", UE->Mod_id, proc->instance_cnt_rxtx);
+				      if (proc->instance_cnt_rxtx > 2)
+				        exit_fun("instance_cnt_rxtx > 2");
+				    }
+
+				    AssertFatal (pthread_cond_signal(&proc->cond_rxtx) ==0 ,"");
+				    AssertFatal(pthread_mutex_unlock(&proc->mutex_rxtx) ==0,"");
+				    //initRefTimes(t1);
+				    //initStaticTime(lastTime);
+				    //updateTimes(lastTime, &t1, 20000, "Delay between two IQ acquisitions (case 1)");
+				    //pickStaticTime(lastTime);
+
+				} else {
+				    	printf("Processing subframe %d",proc->subframe_rx);
+				    	getchar();
+				}
+		    } // start_rx_stream==1
+        } // UE->is_synchronized==1
+      
+    } // while !oai_exit
+    return NULL;
+}
 /*!
  * \brief Initialize the UE theads.
  * Creates the UE threads:
@@ -926,7 +1481,7 @@ void init_UE_threads(PHY_VARS_UE *UE) {
 #endif
 
     }
-    pthread_create(&UE->proc.pthread_synch,NULL,UE_thread_synch,(void*)UE);
+    pthread_create(&UE->proc.pthread_synch,NULL,(UE->do_ofdm_mod)?UE_thread_synch_freq:UE_thread_synch,(void*)UE);
 }
 
 
@@ -965,6 +1520,7 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
     int i, CC_id;
     LTE_DL_FRAME_PARMS *frame_parms;
     openair0_rf_map *rf_map;
+    int do_ofdm_mod = phy_vars_ue[0]->do_ofdm_mod;
 
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
         rf_map = &phy_vars_ue[CC_id]->rf_map;
@@ -973,29 +1529,57 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
         frame_parms = &(phy_vars_ue[CC_id]->frame_parms);
 
         // replace RX signal buffers with mmaped HW versions
-        rxdata = (int32_t**)malloc16( frame_parms->nb_antennas_rx*sizeof(int32_t*) );
-        txdata = (int32_t**)malloc16( frame_parms->nb_antennas_tx*sizeof(int32_t*) );
+	if (do_ofdm_mod){//if do_ofdm_mod, frequency analysis
+	thread0_rxdataF = (int32_t**)malloc16( frame_parms->nb_antennas_rx*sizeof(int32_t*) );
+	thread1_rxdataF = (int32_t**)malloc16( frame_parms->nb_antennas_rx*sizeof(int32_t*) );
+	txdataF = (int32_t**)malloc16( frame_parms->nb_antennas_tx*sizeof(int32_t*) );
+ 	}
+	else{//time analysis
+    	rxdata = (int32_t**)malloc16( frame_parms->nb_antennas_rx*sizeof(int32_t*) );
+    	txdata = (int32_t**)malloc16( frame_parms->nb_antennas_tx*sizeof(int32_t*) );
+	}
+	if (do_ofdm_mod){//if do_ofdm_mod, frequency analysis
+		for (i=0; i<frame_parms->nb_antennas_rx; i++) {
+		    LOG_I(PHY, "Mapping UE CC_id %d, rx_ant %d, freq %u on card %d, chain %d\n",
+		          CC_id, i, downlink_frequency[CC_id][i], rf_map->card, rf_map->chain+i );
+		    free( phy_vars_ue[CC_id]->common_vars.common_vars_rx_data_per_thread[0].rxdataF[i] );
+		    free( phy_vars_ue[CC_id]->common_vars.common_vars_rx_data_per_thread[1].rxdataF[i] );
+		    thread0_rxdataF[i] = (int32_t*)malloc16_clear( frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*sizeof(int32_t) );
+		    thread1_rxdataF[i] = (int32_t*)malloc16_clear( frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*sizeof(int32_t) );
+		    phy_vars_ue[CC_id]->common_vars.common_vars_rx_data_per_thread[0].rxdataF[i] = thread0_rxdataF[i]; // what about the "-N_TA_offset" ? // N_TA offset for TDD
+		    phy_vars_ue[CC_id]->common_vars.common_vars_rx_data_per_thread[1].rxdataF[i] = thread1_rxdataF[i]; // what about the "-N_TA_offset" ? // N_TA offset for TDD
+		}
 
-        for (i=0; i<frame_parms->nb_antennas_rx; i++) {
-            LOG_I(PHY, "Mapping UE CC_id %d, rx_ant %d, freq %u on card %d, chain %d\n",
-                  CC_id, i, downlink_frequency[CC_id][i], rf_map->card, rf_map->chain+i );
-            free( phy_vars_ue[CC_id]->common_vars.rxdata[i] );
-            rxdata[i] = (int32_t*)malloc16_clear( 307200*sizeof(int32_t) );
-            phy_vars_ue[CC_id]->common_vars.rxdata[i] = rxdata[i]; // what about the "-N_TA_offset" ? // N_TA offset for TDD
-        }
+		for (i=0; i<frame_parms->nb_antennas_tx; i++) {
+		    LOG_I(PHY, "Mapping UE CC_id %d, tx_ant %d, freq %u on card %d, chain %d\n",
+		          CC_id, i, downlink_frequency[CC_id][i], rf_map->card, rf_map->chain+i );
+		    free( phy_vars_ue[CC_id]->common_vars.txdataF[i] );
+		    txdataF[i] = (int32_t*)malloc16_clear( 10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*sizeof(int32_t) );
+		    phy_vars_ue[CC_id]->common_vars.txdataF[i] = txdataF[i];
+		}
+	}
+	else{//else, time analysis
+		for (i=0; i<frame_parms->nb_antennas_rx; i++) {
+		    LOG_I(PHY, "Mapping UE CC_id %d, rx_ant %d, freq %u on card %d, chain %d\n",
+		          CC_id, i, downlink_frequency[CC_id][i], rf_map->card, rf_map->chain+i );
+		    free( phy_vars_ue[CC_id]->common_vars.rxdata[i] );
+		    rxdata[i] = (int32_t*)malloc16_clear( 307200*sizeof(int32_t) );
+		    phy_vars_ue[CC_id]->common_vars.rxdata[i] = rxdata[i]; // what about the "-N_TA_offset" ? // N_TA offset for TDD
+		}
 
-        for (i=0; i<frame_parms->nb_antennas_tx; i++) {
-            LOG_I(PHY, "Mapping UE CC_id %d, tx_ant %d, freq %u on card %d, chain %d\n",
-                  CC_id, i, downlink_frequency[CC_id][i], rf_map->card, rf_map->chain+i );
-            free( phy_vars_ue[CC_id]->common_vars.txdata[i] );
-            txdata[i] = (int32_t*)malloc16_clear( 307200*sizeof(int32_t) );
-            phy_vars_ue[CC_id]->common_vars.txdata[i] = txdata[i];
-        }
+		for (i=0; i<frame_parms->nb_antennas_tx; i++) {
+		    LOG_I(PHY, "Mapping UE CC_id %d, tx_ant %d, freq %u on card %d, chain %d\n",
+		          CC_id, i, downlink_frequency[CC_id][i], rf_map->card, rf_map->chain+i );
+		    free( phy_vars_ue[CC_id]->common_vars.txdata[i] );
+		    txdata[i] = (int32_t*)malloc16_clear( 307200*sizeof(int32_t) );
+		    phy_vars_ue[CC_id]->common_vars.txdata[i] = txdata[i];
+		}
 
-        // rxdata[x] points now to the same memory region as phy_vars_ue[CC_id]->common_vars.rxdata[x]
-        // txdata[x] points now to the same memory region as phy_vars_ue[CC_id]->common_vars.txdata[x]
-        // be careful when releasing memory!
-        // because no "release_ue_buffers"-function is available, at least rxdata and txdata memory will leak (only some bytes)
+		// rxdata[x] points now to the same memory region as phy_vars_ue[CC_id]->common_vars.rxdata[x]
+		// txdata[x] points now to the same memory region as phy_vars_ue[CC_id]->common_vars.txdata[x]
+		// be careful when releasing memory!
+		// because no "release_ue_buffers"-function is available, at least rxdata and txdata memory will leak (only some bytes)
+	}
     }
     return 0;
 }

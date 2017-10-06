@@ -65,7 +65,20 @@ int slot_fep(PHY_VARS_UE *phy_vars_ue,
              int no_prefix,
 	     int reset_freq_est);
 
+int slot_fep_freq(PHY_VARS_UE *phy_vars_ue,
+             unsigned char l,
+             unsigned char Ns,
+             int sample_offset,
+             int no_prefix,
+	     int reset_freq_est);
+
 int slot_fep_mbsfn(PHY_VARS_UE *phy_vars_ue,
+                   unsigned char l,
+                   int subframe,
+                   int sample_offset,
+                   int no_prefix);
+
+int slot_fep_mbsfn_freq(PHY_VARS_UE *phy_vars_ue,
                    unsigned char l,
                    int subframe,
                    int sample_offset,

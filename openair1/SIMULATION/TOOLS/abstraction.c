@@ -139,6 +139,108 @@ int freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 
   return(0);
 }
+int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t prach_prb_offset)
+{
+
+
+  double delta_f,freq;  // 90 kHz spacing
+  double delay;
+  int16_t f,f1;
+  uint8_t l;
+  int prach_samples, prach_pbr_offset_samples, max_nb_rb_samples;
+
+  if ((n_samples&1)==0) {
+    fprintf(stderr, "freq_channel_init: n_samples has to be odd\n");
+    return(-1); 
+  }
+  if (nb_rb-prach_prb_offset<6) {
+    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, change prach_prb_offset\n");
+    return(-1); 
+  }
+  prach_samples = (prach_fmt<4)?864:144;  
+  cos_lut = (double **)malloc(prach_samples*sizeof(double*));
+  sin_lut = (double **)malloc(prach_samples*sizeof(double*));
+
+  delta_f = (prach_fmt<4)?nb_rb*180000/((n_samples-1)*12):nb_rb*180000/((n_samples-1)*2);//1.25 khz for preamble format 1,2,3. 7.5 khz for format 4
+  max_nb_rb_samples = nb_rb*180000/delta_f;//7200
+  prach_pbr_offset_samples = (prach_prb_offset+6)*180000/delta_f;//864 if prach_prb_offset=0,7200 if prach_prb_offset=44
+  printf("prach_samples = %d, delta_f = %e, max_nb_rb_samples= %d, prach_pbr_offset_samples = %d\n",prach_samples,delta_f,max_nb_rb_samples,prach_pbr_offset_samples);
+  for (f=max_nb_rb_samples/2-prach_pbr_offset_samples,f1=0; f<max_nb_rb_samples/2-prach_pbr_offset_samples+prach_samples; f++,f1++) {//3600-864,3600-864+864|3600-7200,3600-7200+839
+    freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
+
+    cos_lut[f1] = (double *)malloc((int)desc->nb_taps*sizeof(double));
+    sin_lut[f1] = (double *)malloc((int)desc->nb_taps*sizeof(double));
+
+
+    for (l=0; l<(int)desc->nb_taps; l++) {
+      if (desc->nb_taps==1)
+        delay = desc->delays[l];
+      else
+        delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
+
+      cos_lut[f1][l] = cos(2*M_PI*freq*delay);
+      sin_lut[f1][l] = sin(2*M_PI*freq*delay);
+      printf("freq: %e, f1: %d, f: %d, arg_sin_cos = %e,  cos () = %e, sin () =n %e)\n",freq, f1,f, 2*M_PI*freq*delay, cos_lut[f1][l], sin_lut[f1][l]);
+
+    }
+  }
+
+  return(0);
+}
+int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t prach_prb_offset)
+{
+
+
+  int16_t f;
+  uint8_t aarx,aatx,l;
+  double *clut,*slut;
+  int prach_samples;
+  static int freq_channel_init=0;
+  static int n_samples_max=0;
+
+  prach_samples = (prach_fmt<4)?864:144; 
+
+  // do some error checking
+  // n_samples has to be a odd number because we assume the spectrum is symmetric around the DC and includes the DC
+  if ((n_samples&1)==0) {
+    fprintf(stderr, "freq_channel: n_samples has to be odd\n");
+    return(-1); 
+  }
+  if (nb_rb-prach_prb_offset<6) {
+    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check prach_prb_offset\n");
+    return(-1); 
+  }
+  if (freq_channel_init == 0) {
+    // we are initializing the lut for the largets possible n_samples=12*nb_rb+1
+    // if called with n_samples<12*nb_rb+1, we decimate the lut
+    n_samples_max=12*nb_rb+1;
+    if (init_freq_channel_prach(desc,nb_rb,n_samples_max,prach_fmt,prach_prb_offset)==0)
+      freq_channel_init=1;
+    else
+      return(-1);
+  }
+
+  start_meas(&desc->interp_freq);
+  for (f=0; f<prach_samples; f++) {
+    clut = cos_lut[f];
+    slut = sin_lut[f];
+    for (aarx=0; aarx<desc->nb_rx; aarx++) {
+      for (aatx=0; aatx<desc->nb_tx; aatx++) {
+        desc->chF[aarx+(aatx*desc->nb_rx)][f].x=0.0;
+        desc->chF[aarx+(aatx*desc->nb_rx)][f].y=0.0;
+        for (l=0; l<(int)desc->nb_taps; l++) {
+
+          desc->chF[aarx+(aatx*desc->nb_rx)][f].x+=(desc->a[l][aarx+(aatx*desc->nb_rx)].x*clut[l]+
+              desc->a[l][aarx+(aatx*desc->nb_rx)].y*slut[l]);
+          desc->chF[aarx+(aatx*desc->nb_rx)][f].y+=(-desc->a[l][aarx+(aatx*desc->nb_rx)].x*slut[l]+
+              desc->a[l][aarx+(aatx*desc->nb_rx)].y*clut[l]);
+        }
+      }
+    }
+  }
+  stop_meas(&desc->interp_freq);
+  return(0);
+}
 
 double compute_pbch_sinr(channel_desc_t *desc,
                          channel_desc_t *desc_i1,

@@ -1074,7 +1074,144 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
 
   
 }
+void rx_rf_freq(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
 
+  eNB_proc_t *proc = &eNB->proc;
+  LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
+  void *rxp_freq[fp->nb_antennas_rx],*txp_freq[fp->nb_antennas_tx];
+  unsigned int rxs_freq,txs_freq;
+  int i;
+  int tx_sfoffset = (eNB->single_thread_flag == 1) ? 3 : 2;
+  openair0_timestamp ts,old_ts;
+
+  if (proc->first_rx==0) {
+    
+    // Transmit TX buffer based on timestamp from RX
+    //    printf("trx_write -> USRP TS %llu (sf %d)\n", (proc->timestamp_rx+(3*fp->samples_per_tti)),(proc->subframe_rx+2)%10);
+    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, (proc->timestamp_rx+(tx_sfoffset*fp->ofdm_symbol_size*fp->symbols_per_tti))&0xffffffff );
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
+    // prepare tx buffer pointers
+    lte_subframe_t SF_type     = subframe_select(fp,(proc->subframe_rx%10));
+    lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_rx+9)%10);
+    lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_rx+1)%10);
+    printf("[lte-enb]frame %d, subframe %d\n",*frame,*subframe);
+    if ((SF_type == SF_DL) ||
+	(SF_type == SF_S)) {
+
+	for (i=0; i<fp->nb_antennas_tx; i++)
+	txp_freq[i] = (void*)&eNB->common_vars.txdataF[0][i][proc->subframe_rx*fp->ofdm_symbol_size*fp->symbols_per_tti]; 
+
+      int siglen=fp->ofdm_symbol_size*fp->symbols_per_tti,flags=1;
+
+      if (SF_type == SF_S) {
+      siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size);
+      printf("siglen ->%d\n",siglen);
+      flags=3; // end of burst    
+      }
+      if ((fp->frame_type == TDD) &&
+         (SF_type == SF_DL)&&
+         (prevSF_type == SF_UL) &&
+         (nextSF_type == SF_DL))
+            flags = 2; // start of burst
+
+      if ((fp->frame_type == TDD) &&
+         (SF_type == SF_DL)&&
+	 (prevSF_type == SF_UL) &&
+	 (nextSF_type == SF_UL))
+	    flags = 4; // start of burst and end of burst (only one DL SF between two UL)
+
+      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
+      VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_WRITE_FLAGS,flags); 
+      txs_freq = eNB->rfdevice.trx_write_func(&eNB->rfdevice,
+					 proc->timestamp_rx+(tx_sfoffset*fp->ofdm_symbol_size*fp->symbols_per_tti),
+					 txp_freq,
+					 siglen,
+					 fp->nb_antennas_tx,
+					 flags);
+      clock_gettime( CLOCK_MONOTONIC, &end_rf);    
+      end_rf_ts = proc->timestamp_rx+(tx_sfoffset*fp->ofdm_symbol_size*fp->symbols_per_tti);
+      if (recv_if_count != 0 ) {
+        recv_if_count = recv_if_count-1;
+        LOG_D(HW,"[From Timestamp %"PRId64" to Timestamp %"PRId64"] RTT_RF: %"PRId64"; RTT_RF\n", start_rf_prev_ts, end_rf_ts, clock_difftime_ns(start_rf_prev, end_rf));
+        LOG_D(HW,"[From Timestamp %"PRId64" to Timestamp %"PRId64"] RTT_RF: %"PRId64"; RTT_RF\n",start_rf_prev2_ts, end_rf_ts, clock_difftime_ns(start_rf_prev2, end_rf));
+      }
+      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
+      
+      if (txs_freq !=  siglen) {
+		LOG_E(PHY,"TX : Timeout (sent %d/%d)\n",txs_freq, fp->ofdm_symbol_size*fp->symbols_per_tti);
+		exit_fun( "problem transmitting frequency samples" );
+      }	
+    }
+  }
+  for (i=0; i<fp->nb_antennas_rx; i++)
+      	rxp_freq[i] = (void*)&eNB->common_vars.rxdataF[0][i][*subframe*fp->ofdm_symbol_size*fp->symbols_per_tti];	
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
+
+  old_ts = proc->timestamp_rx;
+  rxs_freq = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
+				    &ts,
+				    rxp_freq,
+				    fp->ofdm_symbol_size*fp->symbols_per_tti,
+				    fp->nb_antennas_rx);
+  start_rf_prev2= start_rf_prev;
+  start_rf_prev2_ts= start_rf_prev_ts; 
+  start_rf_prev = start_rf_new;
+  start_rf_prev_ts = start_rf_new_ts;
+  clock_gettime( CLOCK_MONOTONIC, &start_rf_new);
+  start_rf_new_ts = ts;
+  LOG_D(PHY,"rx_rf_freq: first_rx %d received ts %"PRId64" (sptti %d)\n",proc->first_rx,ts,fp->ofdm_symbol_size*fp->symbols_per_tti);
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
+
+  proc->timestamp_rx = ts-eNB->ts_offset;
+  if (rxs_freq != fp->ofdm_symbol_size*fp->symbols_per_tti)
+    	LOG_E(PHY,"rx_rf_freq: Asked for %d samples, got %d from USRP\n",fp->ofdm_symbol_size*fp->symbols_per_tti,rxs_freq);
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
+ 
+  if (proc->first_rx == 1) {
+    eNB->ts_offset = proc->timestamp_rx;
+    proc->timestamp_rx=0;
+  }
+  else {
+	if (proc->timestamp_rx - old_ts != fp->ofdm_symbol_size*fp->symbols_per_tti) {
+	      LOG_I(PHY,"rx_rf_freq: rfdevice timing drift of %"PRId64" samples (ts_off %"PRId64")\n",proc->timestamp_rx - old_ts - fp->ofdm_symbol_size*fp->symbols_per_tti,eNB->ts_offset);
+	      eNB->ts_offset += (proc->timestamp_rx - old_ts - fp->ofdm_symbol_size*fp->symbols_per_tti);
+	      proc->timestamp_rx = ts-eNB->ts_offset;
+	}
+
+  }
+
+  proc->frame_rx    = (proc->timestamp_rx / (fp->ofdm_symbol_size*fp->symbols_per_tti*10))&1023;
+  proc->subframe_rx = (proc->timestamp_rx/(fp->ofdm_symbol_size*fp->symbols_per_tti))%10;
+  proc->frame_rx    = (proc->frame_rx+proc->frame_offset)&1023;
+  proc->frame_tx    = proc->frame_rx;
+  if (proc->subframe_rx > 5) proc->frame_tx=(proc->frame_tx+1)&1023;
+  // synchronize first reception to frame 0 subframe 0
+   	proc->timestamp_tx = proc->timestamp_rx+(4*fp->ofdm_symbol_size*fp->symbols_per_tti);
+  //  printf("trx_read <- USRP TS %lu (offset %d sf %d, f %d, first_rx %d)\n", proc->timestamp_rx,eNB->ts_offset,proc->subframe_rx,proc->frame_rx,proc->first_rx);  
+	  if (proc->first_rx == 0) {
+	    if (proc->subframe_rx != *subframe){
+	      LOG_E(PHY,"rx_rf_freq: Received Timestamp in frequency (%"PRId64") doesn't correspond to the time we think it is (proc->subframe_rx %d, subframe %d)\n",proc->timestamp_rx,proc->subframe_rx,*subframe);
+	      exit_fun("Exiting1");
+	    }
+	    int f2 = (*frame+proc->frame_offset)&1023;    
+	    if (proc->frame_rx != f2) {
+	      LOG_E(PHY,"rx_rf_freq: Received Timestamp in frequency (%"PRId64") doesn't correspond to the time we think it is (proc->frame_rx %d frame %d, frame_offset %d, f2 %d)\n",proc->timestamp_rx,proc->frame_rx,*frame,proc->frame_offset,f2);
+	      exit_fun("Exiting2");
+	    }
+	  } else {
+	    proc->first_rx--;
+	    *frame = proc->frame_rx;
+	    *subframe = proc->subframe_rx;        
+	  }
+	  
+  //printf("timestamp_rx %lu, frame %d(%d), subframe %d(%d)\n",proc->timestamp_rx,proc->frame_rx,frame,proc->subframe_rx,subframe);
+  
+  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
+	  if (rxs_freq != fp->ofdm_symbol_size*fp->symbols_per_tti)
+	    exit_fun( "problem receiving samples in frequency" );
+}
 void rx_fh_if5(PHY_VARS_eNB *eNB,int *frame, int *subframe) {
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
@@ -1346,6 +1483,7 @@ void *eNB_thread_synch(void *arg) {
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   int32_t sync_pos,sync_pos2;
   uint32_t peak_val;
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
 
   thread_top_init("eNB_thread_synch",0,5000000,10000000,10000000);
 
@@ -1366,7 +1504,9 @@ void *eNB_thread_synch(void *arg) {
     if (eNB->in_synch == 0) { 
       // run intial synch like UE
       LOG_I(PHY,"Running initial synchronization\n");
-      
+     if (do_ofdm_mod)
+	eNB->in_synch=1;
+     else{
       sync_pos = lte_sync_time_eNB(eNB->common_vars.rxdata[0],
 				   fp,
 				   fp->samples_per_tti*5,
@@ -1406,6 +1546,7 @@ void *eNB_thread_synch(void *arg) {
 	*/
 	eNB->in_synch=1;
       }
+     }
     }
 
     // release thread
@@ -1413,8 +1554,8 @@ void *eNB_thread_synch(void *arg) {
     eNB->proc.instance_cnt_synch--;
     pthread_mutex_unlock(&eNB->proc.mutex_synch);
   } // oai_exit
-
-  lte_sync_time_free();
+  if (!do_ofdm_mod)
+    lte_sync_time_free();
 
   return NULL;
 }
@@ -1579,22 +1720,33 @@ static void* eNB_thread_single( void* param ) {
   PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   eNB->CC_id =  proc->CC_id;
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
 
   void *rxp[2],*rxp2[2];
+  void *rxp_freq[2],*rxp2_freq[2];
 
   int subframe=0, frame=0; 
 
+  int32_t dummy_rx_freq[fp->nb_antennas_rx][fp->symbols_per_tti*fp->ofdm_symbol_size] __attribute__((aligned(32)));
   int32_t dummy_rx[fp->nb_antennas_rx][fp->samples_per_tti] __attribute__((aligned(32)));
 
   int ic;
 
-  int rxs;
+  int rxs, rxs_freq;
 
   int i;
 
   // initialize the synchronization buffer to the common_vars.rxdata
-  for (int i=0;i<fp->nb_antennas_rx;i++)
-    rxp[i] = &eNB->common_vars.rxdata[0][i][0];
+  if (do_ofdm_mod)
+  {
+	  for (int i=0;i<fp->nb_antennas_rx;i++)
+	    rxp_freq[i] = &eNB->common_vars.rxdataF[0][i][0];
+  }
+  else
+  {
+	  for (int i=0;i<fp->nb_antennas_rx;i++)
+	    rxp[i] = &eNB->common_vars.rxdata[0][i][0];
+  }
 
   // set default return value
   eNB_thread_single_status = 0;
@@ -1641,14 +1793,27 @@ static void* eNB_thread_single( void* param ) {
 
     while ((eNB->in_synch ==0)&&(!oai_exit)) {
       // read in frame
-      rxs = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
+      if (do_ofdm_mod){
+      	rxs_freq = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
+					&(proc->timestamp_rx),
+					rxp_freq,
+					fp->symbols_per_tti*fp->ofdm_symbol_size*10,
+					fp->nb_antennas_rx);
+
+        if (rxs_freq != (fp->symbols_per_tti*fp->ofdm_symbol_size*10))
+		exit_fun("Problem receiving samples in frequency\n");
+      }
+      else
+      {
+        rxs = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
 					&(proc->timestamp_rx),
 					rxp,
 					fp->samples_per_tti*10,
 					fp->nb_antennas_rx);
 
-      if (rxs != (fp->samples_per_tti*10))
-	exit_fun("Problem receiving samples\n");
+        if (rxs != (fp->samples_per_tti*10))
+		exit_fun("Problem receiving samples\n");
+      }
 
       // wakeup synchronization processing thread
       wakeup_synch(eNB);
@@ -1657,17 +1822,31 @@ static void* eNB_thread_single( void* param ) {
       while ((ic>=0)&&(!oai_exit)) {
 	// continuously read in frames, 1ms at a time, 
 	// until we are done with the synchronization procedure
-	
-	for (i=0; i<fp->nb_antennas_rx; i++)
-	  rxp2[i] = (void*)&dummy_rx[i][0];
-	for (i=0;i<10;i++)
-	  rxs = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
-					    &(proc->timestamp_rx),
-					    rxp2,
-					    fp->samples_per_tti,
-					    fp->nb_antennas_rx);
-	if (rxs != fp->samples_per_tti)
-	  exit_fun( "problem receiving samples" );
+	if (do_ofdm_mod){
+		for (i=0; i<fp->nb_antennas_rx; i++)
+		  rxp2_freq[i] = (void*)&dummy_rx_freq[i][0];
+		for (i=0;i<10;i++)
+		  rxs_freq = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
+						    &(proc->timestamp_rx),
+						    rxp2_freq,
+						    fp->symbols_per_tti*fp->ofdm_symbol_size,
+						    fp->nb_antennas_rx);
+		if (rxs_freq != fp->symbols_per_tti*fp->ofdm_symbol_size)
+		  exit_fun( "problem receiving samples in frequency" );
+	}
+	else
+	{	
+		for (i=0; i<fp->nb_antennas_rx; i++)
+		  rxp2[i] = (void*)&dummy_rx[i][0];
+		for (i=0;i<10;i++)
+		  rxs = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
+						    &(proc->timestamp_rx),
+						    rxp2,
+						    fp->samples_per_tti,
+						    fp->nb_antennas_rx);
+		if (rxs != fp->samples_per_tti)
+		  exit_fun( "problem receiving samples" );
+	}
 
 	pthread_mutex_lock(&eNB->proc.mutex_synch);
 	ic = eNB->proc.instance_cnt_synch;
@@ -1676,14 +1855,25 @@ static void* eNB_thread_single( void* param ) {
     } // in_synch==0
     // read in rx_offset samples
     LOG_I(PHY,"Resynchronizing by %d samples\n",eNB->rx_offset);
-    rxs = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
+    if (do_ofdm_mod){
+    	rxs_freq = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
+				      &(proc->timestamp_rx),
+				      rxp_freq,
+				      eNB->rx_offset,
+				      fp->nb_antennas_rx);
+    	if (rxs_freq != eNB->rx_offset)
+      		exit_fun( "problem receiving samples in frequency" );
+    }
+    else
+    {
+    	rxs = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
 				      &(proc->timestamp_rx),
 				      rxp,
 				      eNB->rx_offset,
 				      fp->nb_antennas_rx);
-    if (rxs != eNB->rx_offset)
-      exit_fun( "problem receiving samples" );
-
+    	if (rxs != eNB->rx_offset)
+      		exit_fun( "problem receiving samples" );
+    }
     for (i=0;i<4;i++) {
       eNB->rfdevice.openair0_cfg->rx_freq[i] = temp_freq1;
       eNB->rfdevice.openair0_cfg->tx_freq[i] = temp_freq2;
@@ -1926,7 +2116,7 @@ int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_c
 
   int i,j; 
   int CC_id,card,ant;
-
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
   //uint16_t N_TA_offset = 0;
 
   LTE_DL_FRAME_PARMS *frame_parms;
@@ -1954,35 +2144,66 @@ int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_c
 
     if (openair0_cfg[CC_id].mmapped_dma == 1) {
     // replace RX signal buffers with mmaped HW versions
-      
-      for (i=0; i<frame_parms->nb_antennas_rx; i++) {
-	card = i/4;
-	ant = i%4;
-	printf("Mapping eNB CC_id %d, rx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
-	free(phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
-	phy_vars_eNB[CC_id]->common_vars.rxdata[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].rxbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
+if (do_ofdm_mod){
+	      for (i=0; i<frame_parms->nb_antennas_rx; i++) {
+		card = i/4;
+		ant = i%4;
+		printf("Mapping eNB CC_id %d, rx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
+		free(phy_vars_eNB[CC_id]->common_vars.rxdataF[0][i]);
+		phy_vars_eNB[CC_id]->common_vars.rxdataF[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].rxbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
 	
-	printf("rxdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
-	for (j=0; j<16; j++) {
-	  printf("rxbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j]);
-	  phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j] = 16-j;
+		printf("rxdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.rxdataF[0][i]);
+		for (j=0; j<16; j++) {
+		  printf("rxbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.rxdataF[0][i][j]);
+		  phy_vars_eNB[CC_id]->common_vars.rxdataF[0][i][j] = 16-j;
+		}
+	      }
+	      
+	      for (i=0; i<frame_parms->nb_antennas_tx; i++) {
+		card = i/4;
+		ant = i%4;
+		printf("Mapping eNB CC_id %d, tx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
+		free(phy_vars_eNB[CC_id]->common_vars.txdataF[0][i]);
+		phy_vars_eNB[CC_id]->common_vars.txdataF[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].txbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
+	
+		printf("txdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.txdataF[0][i]);
+	
+		for (j=0; j<16; j++) {
+		  printf("txbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.txdataF[0][i][j]);
+		  phy_vars_eNB[CC_id]->common_vars.txdataF[0][i][j] = 16-j;
+		}
+	      }
+        }
+		else{      
+	      for (i=0; i<frame_parms->nb_antennas_rx; i++) {
+		card = i/4;
+		ant = i%4;
+		printf("Mapping eNB CC_id %d, rx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
+		free(phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
+		phy_vars_eNB[CC_id]->common_vars.rxdata[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].rxbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
+	
+		printf("rxdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
+		for (j=0; j<16; j++) {
+		  printf("rxbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j]);
+		  phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j] = 16-j;
+		}
+	      }
+	      
+	      for (i=0; i<frame_parms->nb_antennas_tx; i++) {
+		card = i/4;
+		ant = i%4;
+		printf("Mapping eNB CC_id %d, tx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
+		free(phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
+		phy_vars_eNB[CC_id]->common_vars.txdata[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].txbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
+	
+		printf("txdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
+	
+		for (j=0; j<16; j++) {
+		  printf("txbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.txdata[0][i][j]);
+		  phy_vars_eNB[CC_id]->common_vars.txdata[0][i][j] = 16-j;
+		}
+	      }
 	}
-      }
-      
-      for (i=0; i<frame_parms->nb_antennas_tx; i++) {
-	card = i/4;
-	ant = i%4;
-	printf("Mapping eNB CC_id %d, tx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
-	free(phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
-	phy_vars_eNB[CC_id]->common_vars.txdata[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].txbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
-	
-	printf("txdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
-	
-	for (j=0; j<16; j++) {
-	  printf("txbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.txdata[0][i][j]);
-	  phy_vars_eNB[CC_id]->common_vars.txdata[0][i][j] = 16-j;
-	}
-      }
     }
     else {  // not memory-mapped DMA 
       //nothing to do, everything already allocated in lte_init
@@ -2057,6 +2278,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
   int inst;
   PHY_VARS_eNB *eNB;
   int ret;
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
 
   for (inst=0;inst<nb_inst;inst++) {
     for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
@@ -2085,7 +2307,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->proc_uespec_rx       = NULL;
 	eNB->proc_tx              = NULL;
 	eNB->tx_fh                = NULL;
-	eNB->rx_fh                = rx_rf;
+	eNB->rx_fh                = (do_ofdm_mod)?rx_rf_freq:rx_rf;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = start_if;
 	eNB->fh_asynch            = fh_if5_asynch_DL;
@@ -2115,7 +2337,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->proc_uespec_rx       = NULL;
 	eNB->proc_tx              = NULL;//proc_tx_rru_if4p5;
 	eNB->tx_fh                = NULL;
-	eNB->rx_fh                = rx_rf;
+	eNB->rx_fh                = (do_ofdm_mod)?rx_rf_freq:rx_rf;
 	eNB->fh_asynch            = fh_if4p5_asynch_DL;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = start_if;
@@ -2148,7 +2370,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
 	eNB->proc_tx              = proc_tx_full;
 	eNB->tx_fh                = NULL;
-	eNB->rx_fh                = rx_rf;
+	eNB->rx_fh                = (do_ofdm_mod)?rx_rf_freq:rx_rf;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = NULL;
         eNB->fh_asynch            = NULL;

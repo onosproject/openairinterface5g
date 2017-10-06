@@ -122,6 +122,7 @@ int           map1,map2;
 double      **ShaF                  = NULL;
 // pointers signal buffers (s = transmit, r,r0 = receive)
 double      **s_re, **s_im, **r_re, **r_im, **r_re0, **r_im0;
+double      **s_re_f, **s_im_f, **r_re_f, **r_im_f, **r_re0_f, **r_im0_f;
 node_list*     ue_node_list          = NULL;
 node_list*     enb_node_list         = NULL;
 int           omg_period            = 10000;
@@ -1049,8 +1050,19 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
   openair0_timestamp last = last_eNB_rx_timestamp[eNB_id][CC_id];
 
   *ptimestamp = last_eNB_rx_timestamp[eNB_id][CC_id];
+ 
+  int do_ofdm_mod = PHY_vars_UE_g[0][CC_id]->do_ofdm_mod;
+  LTE_DL_FRAME_PARMS *frame_parms=&PHY_vars_UE_g[0][CC_id]->frame_parms;
 
-  LOG_D(EMU,"eNB_trx_read nsamps %d TS(%"PRId64",%"PRId64") => subframe %d\n",nsamps,
+  uint32_t frame;
+
+  if (do_ofdm_mod)
+  	LOG_D(EMU,"eNB_trx_read nsamps %d TS(%"PRId64",%"PRId64") => subframe %d\n",nsamps,
+        current_eNB_rx_timestamp[eNB_id][CC_id],
+        last_eNB_rx_timestamp[eNB_id][CC_id],
+	(int)((*ptimestamp/(PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.symbols_per_tti))%10));
+  else
+  	LOG_D(EMU,"eNB_trx_read nsamps %d TS(%"PRId64",%"PRId64") => subframe %d\n",nsamps,
         current_eNB_rx_timestamp[eNB_id][CC_id],
         last_eNB_rx_timestamp[eNB_id][CC_id],
 	(int)((*ptimestamp/PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti)%10));
@@ -1071,14 +1083,49 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
     nsamps -= read_samples;
 
     if (current_eNB_rx_timestamp[eNB_id][CC_id] == last) {
-      subframe = (last/PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti)%10;
       //subframe = (subframe+9) % 10;
-
+	if (do_ofdm_mod)
+	{
+      		subframe = (last/(PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.symbols_per_tti))%10;
+		frame = (last/(10*PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.symbols_per_tti))%1023;
+	}
+	else
+	{
+		subframe = (last/PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti)%10;
+		frame = (last/(10*PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti))%1023;
+	}
+      printf("[oaisim_functs] subframe %d, frame %d\n",subframe,frame);
       LOG_D(PHY,"eNB_trx_read generating UL subframe %d (Ts %llu, current TS %llu)\n",
             subframe,(unsigned long long)*ptimestamp,
             (unsigned long long)current_eNB_rx_timestamp[eNB_id][CC_id]);
-    
-      do_UL_sig(UE2eNB,
+      if (do_ofdm_mod)
+      {
+	write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][0]->prach_vars[0]->prachF,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,1);
+	//generate_prach(PHY_vars_UE_g[0][0],eNB_id,subframe,frame);
+	//PHY_vars_UE_g[0][0]->generate_prach=1;
+	if (is_prach_subframe(frame_parms,frame,subframe))
+	do_UL_prach(UE2eNB,
+                enb_data,
+                ue_data,
+                subframe,
+                0,  // abstraction_flag
+                &PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms,
+                0,  // frame is only used for abstraction
+                eNB_id,
+                CC_id);
+
+        do_UL_sig_freq(UE2eNB,
+                enb_data,
+                ue_data,
+                subframe,
+                0,  // abstraction_flag
+                &PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms,
+                0,  // frame is only used for abstraction
+                eNB_id,
+                CC_id);
+      }
+      else
+        do_UL_sig(UE2eNB,
                 enb_data,
                 ue_data,
                 subframe,
@@ -1102,11 +1149,13 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
   int ret = nsamps;
   int UE_id = device->Mod_id;
   int CC_id  = device->CC_id;
-  int subframe;
+  int subframe, frame;
   int read_samples, max_samples;
   openair0_timestamp last = last_UE_rx_timestamp[UE_id][CC_id];
 
   *ptimestamp = last_UE_rx_timestamp[UE_id][CC_id];
+
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
 
   LOG_D(EMU,"UE_trx_read nsamps %d TS(%llu,%llu) antenna %d\n",nsamps,
         (unsigned long long)current_UE_rx_timestamp[UE_id][CC_id],
@@ -1143,13 +1192,32 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
 
     if (current_UE_rx_timestamp[UE_id][CC_id] == last) {
       // we have one subframe here so generate the received signal
-      subframe = (last/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.samples_per_tti)%10;
+	if (do_ofdm_mod)
+	{
+      		subframe = (last/(PHY_vars_UE_g[UE_id][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_UE_g[UE_id][CC_id]->frame_parms.symbols_per_tti))%10;
+		frame = (last/(10*PHY_vars_UE_g[UE_id][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_UE_g[UE_id][CC_id]->frame_parms.symbols_per_tti))%1023;
+	}
+	else
+	{
+		subframe = (last/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.samples_per_tti)%10;
+		frame = (last/(10*PHY_vars_UE_g[UE_id][CC_id]->frame_parms.samples_per_tti))%1023;
+	}
+	printf("[oaisim_functs] subframe %d, frame %d\n",subframe,frame);
       //subframe = (subframe+9) % 10;
 
       LOG_D(PHY,"UE_trx_read generating DL subframe %d (Ts %llu, current TS %llu)\n",
             subframe,(unsigned long long)*ptimestamp,
             (unsigned long long)current_UE_rx_timestamp[UE_id][CC_id]);
-
+      if (do_ofdm_mod)
+      	do_DL_sig_freq(eNB2UE,
+                enb_data,
+                ue_data,
+                subframe,
+                0, //abstraction_flag,
+                &PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
+                UE_id,
+                CC_id);
+      else
       do_DL_sig(eNB2UE,
                 enb_data,
                 ue_data,
@@ -1273,6 +1341,9 @@ void init_devices(void){
       PHY_vars_eNB_g[eNB_id][CC_id]->rfdevice.trx_stop_func      = eNB_trx_stop;
       PHY_vars_eNB_g[eNB_id][CC_id]->rfdevice.trx_set_freq_func  = eNB_trx_set_freq;
       PHY_vars_eNB_g[eNB_id][CC_id]->rfdevice.trx_set_gains_func = eNB_trx_set_gains;
+      if (PHY_vars_UE_g[0][0]->do_ofdm_mod)
+      	current_eNB_rx_timestamp[eNB_id][CC_id] = PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.symbols_per_tti;
+      else
       current_eNB_rx_timestamp[eNB_id][CC_id] = PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti;
       last_eNB_rx_timestamp[eNB_id][CC_id] = 0;
     }
@@ -1286,7 +1357,10 @@ void init_devices(void){
       PHY_vars_UE_g[UE_id][CC_id]->rfdevice.trx_stop_func        = UE_trx_stop;
       PHY_vars_UE_g[UE_id][CC_id]->rfdevice.trx_set_freq_func    = UE_trx_set_freq;
       PHY_vars_UE_g[UE_id][CC_id]->rfdevice.trx_set_gains_func   = UE_trx_set_gains;
-      current_UE_rx_timestamp[UE_id][CC_id] = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.samples_per_tti;
+      if (PHY_vars_UE_g[0][0]->do_ofdm_mod)
+      	current_UE_rx_timestamp[UE_id][CC_id] = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_UE_g[UE_id][CC_id]->frame_parms.symbols_per_tti;
+      else
+	current_UE_rx_timestamp[UE_id][CC_id] = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.samples_per_tti;
       last_UE_rx_timestamp[UE_id][CC_id] = 0;
 
     }
@@ -1485,6 +1559,11 @@ void init_ocm(void)
 
   char* frame_type = "unknown";
 
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
+  int nb_rb, n_samples;
+  nb_rb=PHY_vars_UE_g[0][0]->frame_parms.N_RB_DL;
+  n_samples=nb_rb*12+1;
+
   switch (oai_emulation.info.frame_type[0]) {
   case FDD:
     frame_type = "FDD";
@@ -1537,7 +1616,11 @@ void init_ocm(void)
   }
 
   if (abstraction_flag == 0)
-    init_channel_vars (frame_parms[0], &s_re, &s_im, &r_re, &r_im, &r_re0, &r_im0);
+	if (do_ofdm_mod)
+		init_channel_vars_freq (frame_parms[0], &s_re_f, &s_im_f, &r_re_f, &r_im_f, &r_re0_f, &r_im0_f);
+    		
+	else
+		init_channel_vars (frame_parms[0], &s_re, &s_im, &r_re, &r_im, &r_re0, &r_im0);
 
   // initialize channel descriptors
   for (eNB_id = 0; eNB_id < NB_eNB_INST; eNB_id++) {
@@ -1556,7 +1639,15 @@ void init_ocm(void)
 			       forgetting_factor,
 			       0,
 			       0);
-        random_channel(eNB2UE[eNB_id][UE_id][CC_id],abstraction_flag);
+	if (do_ofdm_mod)
+	{
+		random_channel(eNB2UE[eNB_id][UE_id][CC_id],abstraction_flag);//Find a(l)
+		freq_channel(eNB2UE[eNB_id][UE_id][CC_id],nb_rb,n_samples);//Find desc->chF
+	}
+
+	else
+        	random_channel(eNB2UE[eNB_id][UE_id][CC_id],abstraction_flag);
+
         LOG_D(OCM,"[SIM] Initializing channel (%s, %d) from UE %d to eNB %d\n", oai_emulation.environment_system_config.fading.small_scale.selected_option,
               map_str_to_int(small_scale_names, oai_emulation.environment_system_config.fading.small_scale.selected_option),UE_id, eNB_id);
 
@@ -1569,8 +1660,13 @@ void init_ocm(void)
 			       forgetting_factor,
 			       0,
 			       0);
-
-        random_channel(UE2eNB[UE_id][eNB_id][CC_id],abstraction_flag);
+	if (do_ofdm_mod)
+	{
+		random_channel(UE2eNB[UE_id][eNB_id][CC_id],abstraction_flag);//Find a(l)
+		freq_channel(UE2eNB[UE_id][eNB_id][CC_id],nb_rb,n_samples);//Find desc->chF
+	}
+	else
+        	random_channel(UE2eNB[UE_id][eNB_id][CC_id],abstraction_flag);
 
         // to make channel reciprocal uncomment following line instead of previous. However this only works for SISO at the moment. For MIMO the channel would need to be transposed.
         //UE2eNB[UE_id][eNB_id] = eNB2UE[eNB_id][UE_id];

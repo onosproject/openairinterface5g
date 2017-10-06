@@ -1108,6 +1108,15 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
   // many memory allocation sizes are hard coded
   AssertFatal( fp->nb_antennas_rx <= 2, "hard coded allocation for ue_common_vars->dl_ch_estimates[eNB_id]" );
   AssertFatal( ue->n_connected_eNB <= NUMBER_OF_CONNECTED_eNB_MAX, "n_connected_eNB is too large" );
+
+  // do_ofdm_mod for frequency analysis
+  int do_ofdm_mod = ue->do_ofdm_mod=1;
+
+  if (do_ofdm_mod==0)
+	LOG_D(PHY,"Frequency domain deactivated. do_ofdm_mod flag is initialized in  %d.\n",ue->do_ofdm_mod);
+  else
+  	LOG_D(PHY,"Frequency domain activated. do_ofdm_mod flag is initialized in  %d.\n ",ue->do_ofdm_mod);
+
   // init phy_vars_ue
 
   for (i=0; i<4; i++) {
@@ -1138,7 +1147,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
     for (i=0; i<fp->nb_antennas_tx; i++) {
 
       common_vars->txdata[i]  = (int32_t*)malloc16_clear( fp->samples_per_tti*10*sizeof(int32_t) );
-      common_vars->txdataF[i] = (int32_t *)malloc16_clear( fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t) );
+      common_vars->txdataF[i] = (int32_t *)malloc16_clear( (fp->ofdm_symbol_size*fp->symbols_per_tti*10)*sizeof(int32_t) );
     }
 
     // init RX buffers
@@ -1151,7 +1160,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
     for (i=0; i<fp->nb_antennas_rx; i++) {
       common_vars->rxdata[i] = (int32_t*) malloc16_clear( (fp->samples_per_tti*10+2048)*sizeof(int32_t) );
       for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
-          common_vars->common_vars_rx_data_per_thread[th_id].rxdataF[i] = (int32_t*)malloc16_clear( sizeof(int32_t)*(fp->ofdm_symbol_size*14) );
+          common_vars->common_vars_rx_data_per_thread[th_id].rxdataF[i] = (int32_t*)malloc16_clear((fp->ofdm_symbol_size*14)*sizeof(int32_t));
       }
     }
   }

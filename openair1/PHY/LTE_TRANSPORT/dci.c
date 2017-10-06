@@ -1109,7 +1109,223 @@ void pdcch_extract_rbs_single(int32_t **rxdataF,
     }
   }
 }
+void pdcch_extract_rbs_single_freq(int32_t **rxdataF,
+                              int32_t **dl_ch_estimates,
+                              int32_t **rxdataF_ext,
+                              int32_t **dl_ch_estimates_ext,
+                              uint8_t symbol,
+			      uint8_t subframe,
+                              uint32_t high_speed_flag,
+                              LTE_DL_FRAME_PARMS *frame_parms)
+{
 
+
+  uint16_t rb,nb_rb=0;
+  uint8_t i,j,aarx;
+  int32_t *dl_ch0,*dl_ch0_ext,*rxF,*rxF_ext;
+
+
+  int nushiftmod3 = frame_parms->nushift%3;
+  uint8_t symbol_mod;
+
+  symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
+#ifdef DEBUG_DCI_DECODING
+  LOG_I(PHY, "extract_rbs_single: symbol_mod %d\n",symbol_mod);
+#endif
+
+  for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
+
+    if (high_speed_flag == 1)
+      dl_ch0     = &dl_ch_estimates[aarx][5+(symbol*(frame_parms->ofdm_symbol_size))];
+    else
+      dl_ch0     = &dl_ch_estimates[aarx][5];
+
+    dl_ch0_ext = &dl_ch_estimates_ext[aarx][symbol*(frame_parms->N_RB_DL*12)];
+
+    rxF_ext   = &rxdataF_ext[aarx][symbol*(frame_parms->N_RB_DL*12)];
+
+    rxF       = &rxdataF[aarx][(frame_parms->first_carrier_offset + (symbol*(frame_parms->ofdm_symbol_size)))+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
+
+    if ((frame_parms->N_RB_DL&1) == 0)  { // even number of RBs
+      for (rb=0; rb<frame_parms->N_RB_DL; rb++) {
+
+        // For second half of RBs skip DC carrier
+        if (rb==(frame_parms->N_RB_DL>>1)) {
+          rxF       = &rxdataF[aarx][(1 + (symbol*(frame_parms->ofdm_symbol_size)))+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
+
+          //dl_ch0++;
+        }
+
+        if (symbol_mod>0) {
+          memcpy(dl_ch0_ext,dl_ch0,12*sizeof(int32_t));
+
+          for (i=0; i<12; i++) {
+
+            rxF_ext[i]=rxF[i];
+
+          }
+
+          nb_rb++;
+          dl_ch0_ext+=12;
+          rxF_ext+=12;
+
+          dl_ch0+=12;
+          rxF+=12;
+        } else {
+          j=0;
+
+          for (i=0; i<12; i++) {
+            if ((i!=nushiftmod3) &&
+                (i!=(nushiftmod3+3)) &&
+                (i!=(nushiftmod3+6)) &&
+                (i!=(nushiftmod3+9))) {
+              rxF_ext[j]=rxF[i];
+              //                        printf("extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j],*(1+(short*)&rxF_ext[j]));
+              dl_ch0_ext[j++]=dl_ch0[i];
+              //                printf("ch %d => (%d,%d)\n",i,*(short *)&dl_ch0[i],*(1+(short*)&dl_ch0[i]));
+            }
+          }
+
+          nb_rb++;
+          dl_ch0_ext+=8;
+          rxF_ext+=8;
+
+          dl_ch0+=12;
+          rxF+=12;
+        }
+      }
+    } else { // Odd number of RBs
+      for (rb=0; rb<frame_parms->N_RB_DL>>1; rb++) {
+
+        if (symbol_mod>0) {
+          memcpy(dl_ch0_ext,dl_ch0,12*sizeof(int32_t));
+
+          for (i=0; i<12; i++)
+            rxF_ext[i]=rxF[i];
+
+          nb_rb++;
+          dl_ch0_ext+=12;
+          rxF_ext+=12;
+
+          dl_ch0+=12;
+          rxF+=12;
+        } else {
+          j=0;
+
+          for (i=0; i<12; i++) {
+            if ((i!=nushiftmod3) &&
+                (i!=(nushiftmod3+3)) &&
+                (i!=(nushiftmod3+6)) &&
+                (i!=(nushiftmod3+9))) {
+              rxF_ext[j]=rxF[i];
+              //                        printf("extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j],*(1+(short*)&rxF_ext[j]));
+              dl_ch0_ext[j++]=dl_ch0[i];
+              //                printf("ch %d => (%d,%d)\n",i,*(short *)&dl_ch0[i],*(1+(short*)&dl_ch0[i]));
+            }
+          }
+
+          nb_rb++;
+          dl_ch0_ext+=8;
+          rxF_ext+=8;
+
+          dl_ch0+=12;
+          rxF+=12;
+        }
+      }
+
+      // Do middle RB (around DC)
+      //  printf("dlch_ext %d\n",dl_ch0_ext-&dl_ch_estimates_ext[aarx][0]);
+
+      if (symbol_mod==0) {
+        j=0;
+
+        for (i=0; i<6; i++) {
+          if ((i!=nushiftmod3) &&
+              (i!=(nushiftmod3+3))) {
+            dl_ch0_ext[j]=dl_ch0[i];
+            rxF_ext[j++]=rxF[i];
+            //              printf("**extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j-1],*(1+(short*)&rxF_ext[j-1]));
+          }
+        }
+
+        rxF       = &rxdataF[aarx][((symbol*(frame_parms->ofdm_symbol_size)))+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
+
+        for (; i<12; i++) {
+          if ((i!=(nushiftmod3+6)) &&
+              (i!=(nushiftmod3+9))) {
+            dl_ch0_ext[j]=dl_ch0[i];
+            rxF_ext[j++]=rxF[(1+i-6)];
+            //              printf("**extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j-1],*(1+(short*)&rxF_ext[j-1]));
+          }
+        }
+
+
+        nb_rb++;
+        dl_ch0_ext+=8;
+        rxF_ext+=8;
+        dl_ch0+=12;
+        rxF+=7;
+        rb++;
+      } else {
+        for (i=0; i<6; i++) {
+          dl_ch0_ext[i]=dl_ch0[i];
+          rxF_ext[i]=rxF[i];
+        }
+
+        rxF       = &rxdataF[aarx][((symbol*(frame_parms->ofdm_symbol_size)))+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
+
+        for (; i<12; i++) {
+          dl_ch0_ext[i]=dl_ch0[i];
+          rxF_ext[i]=rxF[(1+i-6)];
+        }
+
+
+        nb_rb++;
+        dl_ch0_ext+=12;
+        rxF_ext+=12;
+        dl_ch0+=12;
+        rxF+=7;
+        rb++;
+      }
+
+      for (; rb<frame_parms->N_RB_DL; rb++) {
+        if (symbol_mod > 0) {
+          memcpy(dl_ch0_ext,dl_ch0,12*sizeof(int32_t));
+
+          for (i=0; i<12; i++)
+            rxF_ext[i]=rxF[i];
+
+          nb_rb++;
+          dl_ch0_ext+=12;
+          rxF_ext+=12;
+
+          dl_ch0+=12;
+          rxF+=12;
+        } else {
+          j=0;
+
+          for (i=0; i<12; i++) {
+            if ((i!=(nushiftmod3)) &&
+                (i!=(nushiftmod3+3)) &&
+                (i!=(nushiftmod3+6)) &&
+                (i!=(nushiftmod3+9))) {
+              rxF_ext[j]=rxF[i];
+              //                printf("extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j],*(1+(short*)&rxF_ext[j]));
+              dl_ch0_ext[j++]=dl_ch0[i];
+            }
+          }
+
+          nb_rb++;
+          dl_ch0_ext+=8;
+          rxF_ext+=8;
+
+          dl_ch0+=12;
+          rxF+=12;
+        }
+      }
+    }
+  }
+}
 void pdcch_extract_rbs_dual(int32_t **rxdataF,
                             int32_t **dl_ch_estimates,
                             int32_t **rxdataF_ext,
@@ -1362,7 +1578,259 @@ void pdcch_extract_rbs_dual(int32_t **rxdataF,
     }
   }
 }
+void pdcch_extract_rbs_dual_freq(int32_t **rxdataF,
+                            int32_t **dl_ch_estimates,
+                            int32_t **rxdataF_ext,
+                            int32_t **dl_ch_estimates_ext,
+                            uint8_t symbol,
+			    uint8_t subframe,
+                            uint32_t high_speed_flag,
+                            LTE_DL_FRAME_PARMS *frame_parms)
+{
 
+
+  uint16_t rb,nb_rb=0;
+  uint8_t i,aarx,j;
+  int32_t *dl_ch0,*dl_ch0_ext,*dl_ch1,*dl_ch1_ext,*rxF,*rxF_ext;
+  uint8_t symbol_mod;
+  int nushiftmod3 = frame_parms->nushift%3;
+
+  symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
+#ifdef DEBUG_DCI_DECODING
+  LOG_I(PHY, "extract_rbs_dual: symbol_mod %d\n",symbol_mod);
+#endif
+
+  for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
+
+    if (high_speed_flag==1) {
+      dl_ch0     = &dl_ch_estimates[aarx][5+(symbol*(frame_parms->ofdm_symbol_size))];
+      dl_ch1     = &dl_ch_estimates[2+aarx][5+(symbol*(frame_parms->ofdm_symbol_size))];
+    } else {
+      dl_ch0     = &dl_ch_estimates[aarx][5];
+      dl_ch1     = &dl_ch_estimates[2+aarx][5];
+    }
+
+    dl_ch0_ext = &dl_ch_estimates_ext[aarx][symbol*(frame_parms->N_RB_DL*12)];
+    dl_ch1_ext = &dl_ch_estimates_ext[2+aarx][symbol*(frame_parms->N_RB_DL*12)];
+
+    //    printf("pdcch extract_rbs: rxF_ext pos %d\n",symbol*(frame_parms->N_RB_DL*12));
+    rxF_ext   = &rxdataF_ext[aarx][symbol*(frame_parms->N_RB_DL*12)];
+
+    rxF       = &rxdataF[aarx][(frame_parms->first_carrier_offset + (symbol*(frame_parms->ofdm_symbol_size)))+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
+
+    if ((frame_parms->N_RB_DL&1) == 0)  // even number of RBs
+      for (rb=0; rb<frame_parms->N_RB_DL; rb++) {
+
+        // For second half of RBs skip DC carrier
+        if (rb==(frame_parms->N_RB_DL>>1)) {
+          rxF       = &rxdataF[aarx][(1 + (symbol*(frame_parms->ofdm_symbol_size)))+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
+          //    dl_ch0++;
+          //dl_ch1++;
+        }
+
+        if (symbol_mod>0) {
+          memcpy(dl_ch0_ext,dl_ch0,12*sizeof(int32_t));
+          memcpy(dl_ch1_ext,dl_ch1,12*sizeof(int32_t));
+
+          /*
+            printf("rb %d\n",rb);
+            for (i=0;i<12;i++)
+            printf("(%d %d)",((int16_t *)dl_ch0)[i<<1],((int16_t*)dl_ch0)[1+(i<<1)]);
+            printf("\n");
+          */
+          for (i=0; i<12; i++) {
+            rxF_ext[i]=rxF[i];
+            //      printf("%d : (%d,%d)\n",(rxF+(2*i)-&rxdataF[aarx][( (symbol*(frame_parms->ofdm_symbol_size)))*2])/2,
+            //  ((int16_t*)&rxF[i<<1])[0],((int16_t*)&rxF[i<<1])[0]);
+          }
+
+          nb_rb++;
+          dl_ch0_ext+=12;
+          dl_ch1_ext+=12;
+          rxF_ext+=12;
+        } else {
+          j=0;
+
+          for (i=0; i<12; i++) {
+            if ((i!=nushiftmod3) &&
+                (i!=nushiftmod3+3) &&
+                (i!=nushiftmod3+6) &&
+                (i!=nushiftmod3+9)) {
+              rxF_ext[j]=rxF[i];
+              //                            printf("extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j],*(1+(short*)&rxF_ext[j]));
+              dl_ch0_ext[j]  =dl_ch0[i];
+              dl_ch1_ext[j++]=dl_ch1[i];
+            }
+          }
+
+          nb_rb++;
+          dl_ch0_ext+=8;
+          dl_ch1_ext+=8;
+          rxF_ext+=8;
+        }
+
+        dl_ch0+=12;
+        dl_ch1+=12;
+        rxF+=12;
+      }
+
+    else {  // Odd number of RBs
+      for (rb=0; rb<frame_parms->N_RB_DL>>1; rb++) {
+
+        //  printf("rb %d: %d\n",rb,rxF-&rxdataF[aarx][(symbol*(frame_parms->ofdm_symbol_size))*2]);
+
+        if (symbol_mod>0) {
+          memcpy(dl_ch0_ext,dl_ch0,12*sizeof(int32_t));
+          memcpy(dl_ch1_ext,dl_ch1,12*sizeof(int32_t));
+
+          for (i=0; i<12; i++)
+            rxF_ext[i]=rxF[i];
+
+          nb_rb++;
+          dl_ch0_ext+=12;
+          dl_ch1_ext+=12;
+          rxF_ext+=12;
+
+          dl_ch0+=12;
+          dl_ch1+=12;
+          rxF+=12;
+
+        } else {
+          j=0;
+
+          for (i=0; i<12; i++) {
+            if ((i!=nushiftmod3) &&
+                (i!=nushiftmod3+3) &&
+                (i!=nushiftmod3+6) &&
+                (i!=nushiftmod3+9)) {
+              rxF_ext[j]=rxF[i];
+              //                        printf("extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j],*(1+(short*)&rxF_ext[j]));
+              dl_ch0_ext[j]=dl_ch0[i];
+              dl_ch1_ext[j++]=dl_ch1[i];
+              //                printf("ch %d => (%d,%d)\n",i,*(short *)&dl_ch0[i],*(1+(short*)&dl_ch0[i]));
+            }
+          }
+
+          nb_rb++;
+          dl_ch0_ext+=8;
+          dl_ch1_ext+=8;
+          rxF_ext+=8;
+
+
+          dl_ch0+=12;
+          dl_ch1+=12;
+          rxF+=12;
+        }
+      }
+
+      // Do middle RB (around DC)
+
+      if (symbol_mod > 0) {
+        for (i=0; i<6; i++) {
+          dl_ch0_ext[i]=dl_ch0[i];
+          dl_ch1_ext[i]=dl_ch1[i];
+          rxF_ext[i]=rxF[i];
+        }
+
+        rxF       = &rxdataF[aarx][((symbol*(frame_parms->ofdm_symbol_size)))+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
+
+        for (; i<12; i++) {
+          dl_ch0_ext[i]=dl_ch0[i];
+          dl_ch1_ext[i]=dl_ch1[i];
+          rxF_ext[i]=rxF[(1+i)];
+        }
+
+        nb_rb++;
+        dl_ch0_ext+=12;
+        dl_ch1_ext+=12;
+        rxF_ext+=12;
+
+        dl_ch0+=12;
+        dl_ch1+=12;
+        rxF+=7;
+        rb++;
+      } else {
+        j=0;
+
+        for (i=0; i<6; i++) {
+          if ((i!=nushiftmod3) &&
+              (i!=nushiftmod3+3)) {
+            dl_ch0_ext[j]=dl_ch0[i];
+            dl_ch1_ext[j]=dl_ch1[i];
+            rxF_ext[j++]=rxF[i];
+            //              printf("**extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j-1],*(1+(short*)&rxF_ext[j-1]));
+          }
+        }
+
+        rxF       = &rxdataF[aarx][((symbol*(frame_parms->ofdm_symbol_size)))+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
+
+        for (; i<12; i++) {
+          if ((i!=nushiftmod3+6) &&
+              (i!=nushiftmod3+9)) {
+            dl_ch0_ext[j]=dl_ch0[i];
+            dl_ch1_ext[j]=dl_ch1[i];
+            rxF_ext[j++]=rxF[(1+i-6)];
+            //              printf("**extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j-1],*(1+(short*)&rxF_ext[j-1]));
+          }
+        }
+
+
+        nb_rb++;
+        dl_ch0_ext+=8;
+        dl_ch1_ext+=8;
+        rxF_ext+=8;
+        dl_ch0+=12;
+        dl_ch1+=12;
+        rxF+=7;
+        rb++;
+      }
+
+      for (; rb<frame_parms->N_RB_DL; rb++) {
+
+        if (symbol_mod>0) {
+          //  printf("rb %d: %d\n",rb,rxF-&rxdataF[aarx][(symbol*(frame_parms->ofdm_symbol_size))*2]);
+          memcpy(dl_ch0_ext,dl_ch0,12*sizeof(int32_t));
+          memcpy(dl_ch1_ext,dl_ch1,12*sizeof(int32_t));
+
+          for (i=0; i<12; i++)
+            rxF_ext[i]=rxF[i];
+
+          nb_rb++;
+          dl_ch0_ext+=12;
+          dl_ch1_ext+=12;
+          rxF_ext+=12;
+
+          dl_ch0+=12;
+          dl_ch1+=12;
+          rxF+=12;
+        } else {
+          j=0;
+
+          for (i=0; i<12; i++) {
+            if ((i!=nushiftmod3) &&
+                (i!=nushiftmod3+3) &&
+                (i!=nushiftmod3+6) &&
+                (i!=nushiftmod3+9)) {
+              rxF_ext[j]=rxF[i];
+              //                printf("extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j],*(1+(short*)&rxF_ext[j]));
+              dl_ch0_ext[j]=dl_ch0[i];
+              dl_ch1_ext[j++]=dl_ch1[i];
+            }
+          }
+
+          nb_rb++;
+          dl_ch0_ext+=8;
+          dl_ch1_ext+=8;
+          rxF_ext+=8;
+
+          dl_ch0+=12;
+          dl_ch1+=12;
+          rxF+=12;
+        }
+      }
+    }
+  }
+}
 
 void pdcch_channel_compensation(int32_t **rxdataF_ext,
                                 int32_t **dl_ch_estimates_ext,
@@ -1706,7 +2174,17 @@ int32_t rx_pdcch(PHY_VARS_UE *ue,
   //printf("In rx_pdcch, subframe %d, eNB_id %d, pdcch_vars %d \n",subframe,eNB_id,pdcch_vars);
   // procress ofdm symbol 0
     if (is_secondary_ue == 1) {
-      pdcch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+		if (ue->do_ofdm_mod)
+      		pdcch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                               common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id+1], //add 1 to eNB_id to compensate for the shifted B/F'd pilots from the SeNB
+                               pdcch_vars[eNB_id]->rxdataF_ext,
+                               pdcch_vars[eNB_id]->dl_ch_estimates_ext,
+                               0,
+			       subframe,
+                               high_speed_flag,
+                               frame_parms);
+		else
+      		pdcch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
                                common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id+1], //add 1 to eNB_id to compensate for the shifted B/F'd pilots from the SeNB
                                pdcch_vars[eNB_id]->rxdataF_ext,
                                pdcch_vars[eNB_id]->dl_ch_estimates_ext,
@@ -1714,6 +2192,16 @@ int32_t rx_pdcch(PHY_VARS_UE *ue,
                                high_speed_flag,
                                frame_parms);
 #ifdef MU_RECEIVER
+if (ue->do_ofdm_mod)
+      pdcch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                               common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id_i - 1],//subtract 1 to eNB_id_i to compensate for the non-shifted pilots from the PeNB
+                               pdcch_vars[eNB_id_i]->rxdataF_ext,//shift by two to simulate transmission from a second antenna
+                               pdcch_vars[eNB_id_i]->dl_ch_estimates_ext,//shift by two to simulate transmission from a second antenna
+                               0,
+			       subframe,
+                               high_speed_flag,
+                               frame_parms);
+else
       pdcch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
                                common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id_i - 1],//subtract 1 to eNB_id_i to compensate for the non-shifted pilots from the PeNB
                                pdcch_vars[eNB_id_i]->rxdataF_ext,//shift by two to simulate transmission from a second antenna
@@ -1723,21 +2211,41 @@ int32_t rx_pdcch(PHY_VARS_UE *ue,
                                frame_parms);
 #endif //MU_RECEIVER
     } else if (frame_parms->nb_antenna_ports_eNB>1) {
-      pdcch_extract_rbs_dual(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
-                             common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
-                             pdcch_vars[eNB_id]->rxdataF_ext,
-                             pdcch_vars[eNB_id]->dl_ch_estimates_ext,
-                             0,
-                             high_speed_flag,
-                             frame_parms);
+	      if (ue->do_ofdm_mod)
+	      pdcch_extract_rbs_dual_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+		                     common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+		                     pdcch_vars[eNB_id]->rxdataF_ext,
+		                     pdcch_vars[eNB_id]->dl_ch_estimates_ext,
+		                     0,
+				     subframe,
+		                     high_speed_flag,
+		                     frame_parms);
+	      else
+	      pdcch_extract_rbs_dual(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+		                     common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+		                     pdcch_vars[eNB_id]->rxdataF_ext,
+		                     pdcch_vars[eNB_id]->dl_ch_estimates_ext,
+		                     0,
+		                     high_speed_flag,
+		                     frame_parms);
     } else {
-      pdcch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
-                               common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
-                               pdcch_vars[eNB_id]->rxdataF_ext,
-                               pdcch_vars[eNB_id]->dl_ch_estimates_ext,
-                               0,
-                               high_speed_flag,
-                               frame_parms);
+	      if (ue->do_ofdm_mod)
+	      pdcch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+		                       common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+		                       pdcch_vars[eNB_id]->rxdataF_ext,
+		                       pdcch_vars[eNB_id]->dl_ch_estimates_ext,
+		                       0,
+				       subframe,
+		                       high_speed_flag,
+		                       frame_parms);
+	      else
+	      pdcch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+		                       common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+		                       pdcch_vars[eNB_id]->rxdataF_ext,
+		                       pdcch_vars[eNB_id]->dl_ch_estimates_ext,
+		                       0,
+		                       high_speed_flag,
+		                       frame_parms);
     }
 
 
@@ -1890,14 +2398,34 @@ int32_t rx_pdcch(PHY_VARS_UE *ue,
   // process pdcch ofdm symbol 1 and 2 if necessary
   for (int s=1; s<n_pdcch_symbols; s++){
       if (is_secondary_ue == 1) {
-          pdcch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
-                  common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id+1], //add 1 to eNB_id to compensate for the shifted B/F'd pilots from the SeNB
-                  pdcch_vars[eNB_id]->rxdataF_ext,
-                  pdcch_vars[eNB_id]->dl_ch_estimates_ext,
-                  s,
-                  high_speed_flag,
-                  frame_parms);
+		if (ue->do_ofdm_mod)
+		  pdcch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+		          common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id+1], //add 1 to eNB_id to compensate for the shifted B/F'd pilots from the SeNB
+		          pdcch_vars[eNB_id]->rxdataF_ext,
+		          pdcch_vars[eNB_id]->dl_ch_estimates_ext,
+		          s,
+			  subframe,
+		          high_speed_flag,
+		          frame_parms);
+		else
+		  pdcch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+		          common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id+1], //add 1 to eNB_id to compensate for the shifted B/F'd pilots from the SeNB
+		          pdcch_vars[eNB_id]->rxdataF_ext,
+		          pdcch_vars[eNB_id]->dl_ch_estimates_ext,
+		          s,
+		          high_speed_flag,
+		          frame_parms);
 #ifdef MU_RECEIVER
+if (ue->do_ofdm_mod)
+pdcch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+        common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id_i - 1],//subtract 1 to eNB_id_i to compensate for the non-shifted pilots from the PeNB
+        pdcch_vars[eNB_id_i]->rxdataF_ext,//shift by two to simulate transmission from a second antenna
+        pdcch_vars[eNB_id_i]->dl_ch_estimates_ext,//shift by two to simulate transmission from a second antenna
+        s,
+	subframe,
+        high_speed_flag,
+        frame_parms);
+else
 pdcch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
         common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id_i - 1],//subtract 1 to eNB_id_i to compensate for the non-shifted pilots from the PeNB
         pdcch_vars[eNB_id_i]->rxdataF_ext,//shift by two to simulate transmission from a second antenna
@@ -1907,6 +2435,16 @@ pdcch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current
         frame_parms);
 #endif //MU_RECEIVER
       } else if (frame_parms->nb_antenna_ports_eNB>1) {
+	  if (ue->do_ofdm_mod)
+          pdcch_extract_rbs_dual_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                  common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+                  pdcch_vars[eNB_id]->rxdataF_ext,
+                  pdcch_vars[eNB_id]->dl_ch_estimates_ext,
+                  s,
+		  subframe,
+                  high_speed_flag,
+                  frame_parms);
+	  else
           pdcch_extract_rbs_dual(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
                   common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                   pdcch_vars[eNB_id]->rxdataF_ext,
@@ -1915,6 +2453,16 @@ pdcch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current
                   high_speed_flag,
                   frame_parms);
       } else {
+	  if (ue->do_ofdm_mod)
+          pdcch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                  common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+                  pdcch_vars[eNB_id]->rxdataF_ext,
+                  pdcch_vars[eNB_id]->dl_ch_estimates_ext,
+                  s,
+		  subframe,
+                  high_speed_flag,
+                  frame_parms);
+	  else
           pdcch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
                   common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                   pdcch_vars[eNB_id]->rxdataF_ext,

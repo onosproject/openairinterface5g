@@ -74,7 +74,11 @@ int write_output(const char *fname,const char *vname,void *data,int length,int d
 
 
     break;
-
+  case 16:
+    for (i=0; i<length<<1; i+=(2*dec)) {
+      fprintf(fp,"%d\t%d\t%d\n",i/2,((short *)data)[i],((short *)data)[i+1]);
+    }
+    break;
   case 2:  // real 32-bit
     for (i=0; i<length; i+=dec) {
       fprintf(fp,"%d\n",((int *)data)[i]);

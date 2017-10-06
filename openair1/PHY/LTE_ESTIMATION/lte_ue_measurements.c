@@ -452,6 +452,290 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
   }
 
 }
+void ue_rrc_measurements_freq(PHY_VARS_UE *ue,
+    uint8_t slot,
+    uint8_t abstraction_flag)
+{
+
+  uint8_t subframe = slot>>1;
+  int aarx,rb;
+  uint8_t pss_symb;
+  uint8_t sss_symb;
+
+  int32_t **rxdataF;
+  int16_t *rxF,*rxF_pss,*rxF_sss;
+
+  uint16_t Nid_cell = ue->frame_parms.Nid_cell;
+  uint8_t eNB_offset,nu,l,nushift,k;
+  uint16_t off;
+  uint8_t previous_thread_id = ue->current_thread_id[subframe]==0 ? (RX_NB_TH-1):(ue->current_thread_id[subframe]-1);
+
+   //uint8_t isPss; // indicate if this is a slot for extracting PSS
+  //uint8_t isSss; // indicate if this is a slot for extracting SSS
+  //int32_t pss_ext[4][72]; // contain the extracted 6*12 REs for mapping the PSS
+  //int32_t sss_ext[4][72]; // contain the extracted 6*12 REs for mapping the SSS
+  //int32_t (*xss_ext)[72]; // point to either pss_ext or sss_ext for common calculation
+  //int16_t *re,*im; // real and imag part of each 32-bit xss_ext[][] value
+
+  //LOG_I(PHY,"UE RRC MEAS Start Subframe %d Frame Type %d slot %d \n",subframe,ue->frame_parms.frame_type,slot);
+  for (eNB_offset = 0; eNB_offset<1+ue->measurements.n_adj_cells; eNB_offset++) {
+
+    if (eNB_offset==0) {
+      ue->measurements.rssi = 0;
+      //ue->measurements.n0_power_tot = 0;
+
+      if (abstraction_flag == 0) {
+        if ( ((ue->frame_parms.frame_type == FDD) && ((subframe == 0) || (subframe == 5))) ||
+             ((ue->frame_parms.frame_type == TDD) && ((subframe == 1) || (subframe == 6)))
+                )
+        {  // FDD PSS/SSS, compute noise in DTX REs
+
+          if (ue->frame_parms.Ncp==NORMAL) {
+            for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
+
+          if(ue->frame_parms.frame_type == FDD)
+          {
+	      rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(5*ue->frame_parms.ofdm_symbol_size)+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+	      rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(6*ue->frame_parms.ofdm_symbol_size)+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+          }
+          else
+          {
+              rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[previous_thread_id].rxdataF[aarx][(13*ue->frame_parms.ofdm_symbol_size)+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+              rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(2*ue->frame_parms.ofdm_symbol_size)+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+          }
+              //-ve spectrum from SSS
+
+              //+ve spectrum from SSS
+              ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+70]*rxF_sss[2+70])+((int32_t)rxF_sss[2+69]*rxF_sss[2+69]));
+              ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+68]*rxF_sss[2+68])+((int32_t)rxF_sss[2+67]*rxF_sss[2+67]));
+              ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+66]*rxF_sss[2+66])+((int32_t)rxF_sss[2+65]*rxF_sss[2+65]));
+              //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+64]*rxF_sss[2+64])+((int32_t)rxF_sss[2+63]*rxF_sss[2+63]));
+              //              printf("sssp32 %d\n",ue->measurements.n0_power[aarx]);
+              //+ve spectrum from PSS
+              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+70]*rxF_pss[2+70])+((int32_t)rxF_pss[2+69]*rxF_pss[2+69]));
+              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+68]*rxF_pss[2+68])+((int32_t)rxF_pss[2+67]*rxF_pss[2+67]));
+              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+66]*rxF_pss[2+66])+((int32_t)rxF_pss[2+65]*rxF_pss[2+65]));
+          //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+64]*rxF_pss[2+64])+((int32_t)rxF_pss[2+63]*rxF_pss[2+63]));
+          //          printf("pss32 %d\n",ue->measurements.n0_power[aarx]);              //-ve spectrum from PSS
+              if(ue->frame_parms.frame_type == FDD)
+              {
+                  rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(6*ue->frame_parms.ofdm_symbol_size)+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+                  rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(7*ue->frame_parms.ofdm_symbol_size)+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+              }
+              else
+              {
+                  rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[previous_thread_id].rxdataF[aarx][(14*ue->frame_parms.ofdm_symbol_size)+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+                  rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(3*ue->frame_parms.ofdm_symbol_size)+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+              }
+          //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-72]*rxF_pss[-72])+((int32_t)rxF_pss[-71]*rxF_pss[-71]));
+          //          printf("pssm36 %d\n",ue->measurements.n0_power[aarx]);
+              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-70]*rxF_pss[-70])+((int32_t)rxF_pss[-69]*rxF_pss[-69]));
+              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-68]*rxF_pss[-68])+((int32_t)rxF_pss[-67]*rxF_pss[-67]));
+              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-66]*rxF_pss[-66])+((int32_t)rxF_pss[-65]*rxF_pss[-65]));
+
+              ue->measurements.n0_power[aarx] = (((int32_t)rxF_sss[-70]*rxF_sss[-70])+((int32_t)rxF_sss[-69]*rxF_sss[-69]));
+              ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[-68]*rxF_sss[-68])+((int32_t)rxF_sss[-67]*rxF_sss[-67]));
+              ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[-66]*rxF_sss[-66])+((int32_t)rxF_sss[-65]*rxF_sss[-65]));
+
+          //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-64]*rxF_pss[-64])+((int32_t)rxF_pss[-63]*rxF_pss[-63]));
+          //          printf("pssm32 %d\n",ue->measurements.n0_power[aarx]);
+              ue->measurements.n0_power_dB[aarx] = (unsigned short) dB_fixed(ue->measurements.n0_power[aarx]/12);
+              ue->measurements.n0_power_tot /*+=*/ = ue->measurements.n0_power[aarx];
+        }
+
+            //LOG_I(PHY,"Subframe %d RRC UE MEAS Noise Level %d \n", subframe, ue->measurements.n0_power_tot);
+
+        ue->measurements.n0_power_tot_dB = (unsigned short) dB_fixed(ue->measurements.n0_power_tot/(12*aarx));
+        ue->measurements.n0_power_tot_dBm = ue->measurements.n0_power_tot_dB - ue->rx_total_gain_dB - dB_fixed(ue->frame_parms.ofdm_symbol_size);
+        } else {
+            LOG_E(PHY, "Not yet implemented: noise power calculation when prefix length = EXTENDED\n");
+        }
+        }
+        else if ((ue->frame_parms.frame_type == TDD) &&
+                 ((subframe == 1) || (subframe == 6))) {  // TDD PSS/SSS, compute noise in DTX REs // 2016-09-29 wilson fix incorrect noise power calculation
+
+
+          pss_symb = 2;
+          sss_symb = ue->frame_parms.symbols_per_tti-1;
+          if (ue->frame_parms.Ncp==NORMAL) {
+            for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
+
+                rxdataF  =  ue->common_vars.common_vars_rx_data_per_thread[(ue->current_thread_id[subframe])].rxdataF;
+                rxF_pss  = (int16_t *) &rxdataF[aarx][((pss_symb*(ue->frame_parms.ofdm_symbol_size)))+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+
+                rxdataF  =  ue->common_vars.common_vars_rx_data_per_thread[previous_thread_id].rxdataF;
+                rxF_sss  = (int16_t *) &rxdataF[aarx][((sss_symb*(ue->frame_parms.ofdm_symbol_size)))+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+
+                //-ve spectrum from SSS
+            //          printf("slot %d: SSS DTX: %d,%d, non-DTX %d,%d\n",slot,rxF_pss[-72],rxF_pss[-71],rxF_pss[-36],rxF_pss[-35]);
+
+            //              ue->measurements.n0_power[aarx] = (((int32_t)rxF_pss[-72]*rxF_pss[-72])+((int32_t)rxF_pss[-71]*rxF_pss[-71]));
+            //          printf("sssn36 %d\n",ue->measurements.n0_power[aarx]);
+                ue->measurements.n0_power[aarx] = (((int32_t)rxF_pss[-70]*rxF_pss[-70])+((int32_t)rxF_pss[-69]*rxF_pss[-69]));
+                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-68]*rxF_pss[-68])+((int32_t)rxF_pss[-67]*rxF_pss[-67]));
+                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-66]*rxF_pss[-66])+((int32_t)rxF_pss[-65]*rxF_pss[-65]));
+            //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-64]*rxF_pss[-64])+((int32_t)rxF_pss[-63]*rxF_pss[-63]));
+            //          printf("sssm32 %d\n",ue->measurements.n0_power[aarx]);
+                //+ve spectrum from SSS
+            ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+70]*rxF_sss[2+70])+((int32_t)rxF_sss[2+69]*rxF_sss[2+69]));
+                ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+68]*rxF_sss[2+68])+((int32_t)rxF_sss[2+67]*rxF_sss[2+67]));
+                ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+66]*rxF_sss[2+66])+((int32_t)rxF_sss[2+65]*rxF_sss[2+65]));
+            //          ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+64]*rxF_sss[2+64])+((int32_t)rxF_sss[2+63]*rxF_sss[2+63]));
+            //          printf("sssp32 %d\n",ue->measurements.n0_power[aarx]);
+                //+ve spectrum from PSS
+                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+70]*rxF_pss[2+70])+((int32_t)rxF_pss[2+69]*rxF_pss[2+69]));
+                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+68]*rxF_pss[2+68])+((int32_t)rxF_pss[2+67]*rxF_pss[2+67]));
+                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+66]*rxF_pss[2+66])+((int32_t)rxF_pss[2+65]*rxF_pss[2+65]));
+            //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+64]*rxF_pss[2+64])+((int32_t)rxF_pss[2+63]*rxF_pss[2+63]));
+            //          printf("pss32 %d\n",ue->measurements.n0_power[aarx]);              //-ve spectrum from PSS
+                rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(7*ue->frame_parms.ofdm_symbol_size)+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+            //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-72]*rxF_pss[-72])+((int32_t)rxF_pss[-71]*rxF_pss[-71]));
+            //          printf("pssm36 %d\n",ue->measurements.n0_power[aarx]);
+                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-70]*rxF_pss[-70])+((int32_t)rxF_pss[-69]*rxF_pss[-69]));
+                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-68]*rxF_pss[-68])+((int32_t)rxF_pss[-67]*rxF_pss[-67]));
+                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-66]*rxF_pss[-66])+((int32_t)rxF_pss[-65]*rxF_pss[-65]));
+            //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-64]*rxF_pss[-64])+((int32_t)rxF_pss[-63]*rxF_pss[-63]));
+            //          printf("pssm32 %d\n",ue->measurements.n0_power[aarx]);
+                ue->measurements.n0_power_dB[aarx] = (unsigned short) dB_fixed(ue->measurements.n0_power[aarx]/12);
+                ue->measurements.n0_power_tot /*+=*/ = ue->measurements.n0_power[aarx];
+        }
+
+        ue->measurements.n0_power_tot_dB = (unsigned short) dB_fixed(ue->measurements.n0_power_tot/(12*aarx));
+        ue->measurements.n0_power_tot_dBm = ue->measurements.n0_power_tot_dB - ue->rx_total_gain_dB - dB_fixed(ue->frame_parms.ofdm_symbol_size);
+
+        //LOG_I(PHY,"Subframe %d RRC UE MEAS Noise Level %d \n", subframe, ue->measurements.n0_power_tot);
+
+          }
+        }
+      }
+    }
+    // recompute nushift with eNB_offset corresponding to adjacent eNB on which to perform channel estimation
+    //    printf("[PHY][UE %d] Frame %d slot %d Doing ue_rrc_measurements rsrp/rssi (Nid_cell %d, Nid2 %d, nushift %d, eNB_offset %d)\n",ue->Mod_id,ue->frame,slot,Nid_cell,Nid2,nushift,eNB_offset);
+    if (eNB_offset > 0)
+      Nid_cell = ue->measurements.adj_cell_id[eNB_offset-1];
+
+
+    nushift =  Nid_cell%6;
+
+
+
+    ue->measurements.rsrp[eNB_offset] = 0;
+
+
+    if (abstraction_flag == 0) {
+
+      // compute RSRP using symbols 0 and 4-frame_parms->Ncp
+
+      for (l=0,nu=0; l<=(4-ue->frame_parms.Ncp); l+=(4-ue->frame_parms.Ncp),nu=3) {
+        k = (nu + nushift)%6;
+#ifdef DEBUG_MEAS_RRC
+        LOG_I(PHY,"[UE %d] Frame %d subframe %d Doing ue_rrc_measurements rsrp/rssi (Nid_cell %d, nushift %d, eNB_offset %d, k %d, l %d)\n",ue->Mod_id,ue->proc.proc_rxtx[subframe&1].frame_rx,subframe,Nid_cell,nushift,
+              eNB_offset,k,l);
+#endif
+
+        for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
+          rxF = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(l*ue->frame_parms.ofdm_symbol_size)+subframe*(ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti)];
+          off  = (ue->frame_parms.first_carrier_offset+k)<<1;
+
+          if (l==(4-ue->frame_parms.Ncp)) {
+            for (rb=0; rb<ue->frame_parms.N_RB_DL; rb++) {
+
+              //    printf("rb %d, off %d, off2 %d\n",rb,off,off2);
+
+              ue->measurements.rsrp[eNB_offset] += (((int32_t)(rxF[off])*rxF[off])+((int32_t)(rxF[off+1])*rxF[off+1]));
+              //        printf("rb %d, off %d : %d\n",rb,off,((((int32_t)rxF[off])*rxF[off])+((int32_t)(rxF[off+1])*rxF[off+1])));
+              //              if ((ue->frame_rx&0x3ff) == 0)
+              //                printf("rb %d, off %d : %d\n",rb,off,((rxF[off]*rxF[off])+(rxF[off+1]*rxF[off+1])));
+
+
+              off+=12;
+
+              if (off>=(ue->frame_parms.ofdm_symbol_size<<1))
+                off = (1+k)<<1;
+
+              ue->measurements.rsrp[eNB_offset] += (((int32_t)(rxF[off])*rxF[off])+((int32_t)(rxF[off+1])*rxF[off+1]));
+              //    printf("rb %d, off %d : %d\n",rb,off,(((int32_t)(rxF[off])*rxF[off])+((int32_t)(rxF[off+1])*rxF[off+1])));
+              /*
+                if ((ue->frame_rx&0x3ff) == 0)
+                printf("rb %d, off %d : %d\n",rb,off,((rxF[off]*rxF[off])+(rxF[off+1]*rxF[off+1])));
+              */
+              off+=12;
+
+              if (off>=(ue->frame_parms.ofdm_symbol_size<<1))
+                off = (1+k)<<1;
+
+            }
+
+            /*
+            if ((eNB_offset==0)&&(l==0)) {
+            for (i=0;i<6;i++,off2+=4)
+            ue->measurements.rssi += ((rxF[off2]*rxF[off2])+(rxF[off2+1]*rxF[off2+1]));
+            if (off2==(ue->frame_parms.ofdm_symbol_size<<2))
+            off2=4;
+            for (i=0;i<6;i++,off2+=4)
+            ue->measurements.rssi += ((rxF[off2]*rxF[off2])+(rxF[off2+1]*rxF[off2+1]));
+            }
+            */
+            //    printf("slot %d, rb %d => rsrp %d, rssi %d\n",slot,rb,ue->measurements.rsrp[eNB_offset],ue->measurements.rssi);
+          }
+        }
+      }
+
+      // 2 RE per PRB
+      //      ue->measurements.rsrp[eNB_offset]/=(24*ue->frame_parms.N_RB_DL);
+      ue->measurements.rsrp[eNB_offset]/=(2*ue->frame_parms.N_RB_DL*ue->frame_parms.ofdm_symbol_size);
+      //      LOG_I(PHY,"eNB: %d, RSRP: %d \n",eNB_offset,ue->measurements.rsrp[eNB_offset]);
+      if (eNB_offset == 0) {
+        //  ue->measurements.rssi/=(24*ue->frame_parms.N_RB_DL);
+        //  ue->measurements.rssi*=rx_power_correction;
+        //  ue->measurements.rssi=ue->measurements.rsrp[0]*24/2;
+        ue->measurements.rssi=ue->measurements.rsrp[0]*(12*ue->frame_parms.N_RB_DL);
+      }
+
+      if (ue->measurements.rssi>0)
+        ue->measurements.rsrq[eNB_offset] = 100*ue->measurements.rsrp[eNB_offset]*ue->frame_parms.N_RB_DL/ue->measurements.rssi;
+      else
+        ue->measurements.rsrq[eNB_offset] = -12000;
+
+      //((200*ue->measurements.rsrq[eNB_offset]) + ((1024-200)*100*ue->measurements.rsrp[eNB_offset]*ue->frame_parms.N_RB_DL/ue->measurements.rssi))>>10;
+    } else { // Do abstraction of RSRP and RSRQ
+      ue->measurements.rssi = ue->measurements.rx_power_avg[0];
+      // dummay value for the moment
+      ue->measurements.rsrp[eNB_offset] = -93 ;
+      ue->measurements.rsrq[eNB_offset] = 3;
+
+    }
+
+#ifdef DEBUG_MEAS_RRC
+
+    //    if (slot == 0) {
+
+      if (eNB_offset == 0)
+       LOG_I(PHY,"[UE %d] Frame %d, subframe %d RRC Measurements => rssi %3.1f dBm (digital: %3.1f dB, gain %d), N0 %d dBm\n",ue->Mod_id,
+              ue->proc.proc_rxtx[subframe&1].frame_rx,subframe,10*log10(ue->measurements.rssi)-ue->rx_total_gain_dB,
+              10*log10(ue->measurements.rssi),
+              ue->rx_total_gain_dB,
+              ue->measurements.n0_power_tot_dBm);
+
+      LOG_I(PHY,"[UE %d] Frame %d, subframe %d RRC Measurements (idx %d, Cell id %d) => rsrp: %3.1f dBm/RE (%d), rsrq: %3.1f dB\n",
+            ue->Mod_id,
+            ue->proc.proc_rxtx[subframe&1].frame_rx,subframe,eNB_offset,
+            (eNB_offset>0) ? ue->measurements.adj_cell_id[eNB_offset-1] : ue->frame_parms.Nid_cell,
+            10*log10(ue->measurements.rsrp[eNB_offset])-ue->rx_total_gain_dB,
+            ue->measurements.rsrp[eNB_offset],
+            (10*log10(ue->measurements.rsrq[eNB_offset])));
+      //LOG_D(PHY,"RSRP_total_dB: %3.2f \n",(dB_fixed_times10(ue->measurements.rsrp[eNB_offset])/10.0)-ue->rx_total_gain_dB-dB_fixed(ue->frame_parms.N_RB_DL*12));
+
+      //LOG_D(PHY,"RSRP_dB: %3.2f \n",(dB_fixed_times10(ue->measurements.rsrp[eNB_offset])/10.0));
+      //LOG_D(PHY,"gain_loss_dB: %d \n",ue->rx_total_gain_dB);
+      //LOG_D(PHY,"gain_fixed_dB: %d \n",dB_fixed(ue->frame_parms.N_RB_DL*12));
+
+      //    }
+
+#endif
+  }
+
+}
 
 void lte_ue_measurements(PHY_VARS_UE *ue,
                          unsigned int subframe_offset,

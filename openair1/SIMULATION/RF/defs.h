@@ -74,7 +74,36 @@ void adc(double *r_re[2],
          unsigned int length,
          unsigned char B);
 
+void adc_freq(double *r_re[2],
+         double *r_im[2],
+         unsigned int input_offset,
+         unsigned int output_offset,
+         int **output,
+         unsigned int nb_rx_antennas,
+         unsigned int length,
+         unsigned char B);
+
+void adc_prach(double *r_re[2],
+         double *r_im[2],
+         unsigned int input_offset,
+         unsigned int output_offset,
+         unsigned int *output,
+         unsigned int nb_rx_antennas,
+         unsigned int length,
+         unsigned char B);
+
 void dac(double *s_re[2],
+         double *s_im[2],
+         int **input,
+         unsigned int input_offset,
+         unsigned int nb_tx_antennas,
+         unsigned int length,
+         double amp_dBm,
+         unsigned char B,
+         unsigned int meas_length,
+         unsigned int meas_offset);
+
+void dac_prach(double *s_re[2],
          double *s_im[2],
          int **input,
          unsigned int input_offset,

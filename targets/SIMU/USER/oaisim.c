@@ -767,14 +767,21 @@ l2l1_task (void *args_p)
               < (oai_emulation.info.first_enb_local
                  + oai_emulation.info.nb_enb_local));
              eNB_inst++) {
-          for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++)
-            current_eNB_rx_timestamp[eNB_inst][CC_id] += PHY_vars_eNB_g[eNB_inst][CC_id]->frame_parms.samples_per_tti;
+          for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++){
+	     if (PHY_vars_UE_g[0][0]->do_ofdm_mod)//frequency analysis
+            	current_eNB_rx_timestamp[eNB_inst][CC_id] += PHY_vars_eNB_g[eNB_inst][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_eNB_g[eNB_inst][CC_id]->frame_parms.symbols_per_tti;
+	     else//time analysis
+                current_eNB_rx_timestamp[eNB_inst][CC_id] += PHY_vars_eNB_g[eNB_inst][CC_id]->frame_parms.samples_per_tti;
+	  }
         }
         for (UE_inst = 0; UE_inst<NB_UE_INST;UE_inst++) {
-          for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++)
-            current_UE_rx_timestamp[UE_inst][CC_id] += PHY_vars_UE_g[UE_inst][CC_id]->frame_parms.samples_per_tti;
-        }
-
+          for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++){
+            if (PHY_vars_UE_g[0][0]->do_ofdm_mod)//frequency analysis
+            	current_UE_rx_timestamp[UE_inst][CC_id] += PHY_vars_UE_g[UE_inst][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_UE_g[UE_inst][CC_id]->frame_parms.symbols_per_tti;
+	    else//time analysis
+		current_UE_rx_timestamp[UE_inst][CC_id] += PHY_vars_UE_g[UE_inst][CC_id]->frame_parms.samples_per_tti;	
+          }
+	}
         for (eNB_inst = oai_emulation.info.first_enb_local;
              (eNB_inst
               < (oai_emulation.info.first_enb_local

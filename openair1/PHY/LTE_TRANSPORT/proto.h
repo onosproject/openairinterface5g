@@ -1056,6 +1056,17 @@ uint16_t dlsch_extract_rbs_single(int32_t **rxdataF,
                                   uint8_t subframe,
                                   uint32_t high_speed_flag,
                                   LTE_DL_FRAME_PARMS *frame_parms);
+uint16_t dlsch_extract_rbs_single_freq(int32_t **rxdataF,
+                                  int32_t **dl_ch_estimates,
+                                  int32_t **rxdataF_ext,
+                                  int32_t **dl_ch_estimates_ext,
+                                  uint16_t pmi,
+                                  uint8_t *pmi_ext,
+                                  uint32_t *rb_alloc,
+                                  uint8_t symbol,
+                                  uint8_t subframe,
+                                  uint32_t high_speed_flag,
+                                  LTE_DL_FRAME_PARMS *frame_parms);
 
 /** \fn dlsch_extract_rbs_dual(int32_t **rxdataF,
     int32_t **dl_ch_estimates,
@@ -1093,6 +1104,19 @@ uint16_t dlsch_extract_rbs_dual(int32_t **rxdataF,
                                 LTE_DL_FRAME_PARMS *frame_parms,
                                 MIMO_mode_t mimo_mode);
 
+uint16_t dlsch_extract_rbs_dual_freq(int32_t **rxdataF,
+                                int32_t **dl_ch_estimates,
+                                int32_t **rxdataF_ext,
+                                int32_t **dl_ch_estimates_ext,
+                                uint16_t pmi,
+                                uint8_t *pmi_ext,
+                                uint32_t *rb_alloc,
+                                uint8_t symbol,
+                                uint8_t subframe,
+                                uint32_t high_speed_flag,
+                                LTE_DL_FRAME_PARMS *frame_parms,
+                                MIMO_mode_t mimo_mode);
+
 /** \fn dlsch_extract_rbs_TM7(int32_t **rxdataF,
     int32_t **dl_bf_ch_estimates,
     int32_t **rxdataF_ext,
@@ -1115,6 +1139,16 @@ uint16_t dlsch_extract_rbs_dual(int32_t **rxdataF,
     @param frame_parms Pointer to frame descriptor
 */
 uint16_t dlsch_extract_rbs_TM7(int32_t **rxdataF,
+                               int32_t **dl_bf_ch_estimates,
+                               int32_t **rxdataF_ext,
+                               int32_t **dl_bf_ch_estimates_ext,
+                               uint32_t *rb_alloc,
+                               uint8_t symbol,
+                               uint8_t subframe,
+                               uint32_t high_speed_flag,
+                               LTE_DL_FRAME_PARMS *frame_parms);
+
+uint16_t dlsch_extract_rbs_TM7_freq(int32_t **rxdataF,
                                int32_t **dl_bf_ch_estimates,
                                int32_t **rxdataF_ext,
                                int32_t **dl_bf_ch_estimates_ext,

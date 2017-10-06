@@ -116,6 +116,14 @@ int lte_dl_channel_estimation(PHY_VARS_UE *phy_vars_ue,
                               uint8_t l,
                               uint8_t symbol);
 
+int lte_dl_channel_estimation_freq(PHY_VARS_UE *phy_vars_ue,
+                              module_id_t eNB_id,
+                              uint8_t eNB_offset,
+                              uint8_t Ns,
+                              uint8_t p,
+                              uint8_t l,
+                              uint8_t symbol);
+
 int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
                                  module_id_t eNB_id,
                                  uint8_t eNB_offset,
@@ -124,6 +132,13 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
                                  uint8_t symbol);
 
 int lte_dl_msbfn_channel_estimation(PHY_VARS_UE *phy_vars_ue,
+                                    module_id_t eNB_id,
+                                    uint8_t eNB_offset,
+                                    int subframe,
+                                    unsigned char l,
+                                    unsigned char symbol);
+
+int lte_dl_msbfn_channel_estimation_freq(PHY_VARS_UE *phy_vars_ue,
                                     module_id_t eNB_id,
                                     uint8_t eNB_offset,
                                     int subframe,
@@ -194,6 +209,10 @@ void lte_ue_measurements(PHY_VARS_UE *phy_vars_ue,
 
 //! \brief This function performance RSRP/RSCP measurements
 void ue_rrc_measurements(PHY_VARS_UE *phy_vars_ue,
+                         uint8_t slot,
+                         uint8_t abstraction_flag);
+
+void ue_rrc_measurements_freq(PHY_VARS_UE *phy_vars_ue,
                          uint8_t slot,
                          uint8_t abstraction_flag);
 

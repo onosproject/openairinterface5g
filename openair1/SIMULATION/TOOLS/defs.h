@@ -245,6 +245,56 @@ void multipath_channel(channel_desc_t *desc,
                        double *rx_sig_im[2],
                        uint32_t length,
                        uint8_t keep_channel);
+
+/**\fn void multipath_channel_freq(channel_desc_t *desc,
+           double tx_sig_re[2],
+           double tx_sig_im[2],
+           double rx_sig_re[2],
+           double rx_sig_im[2],
+           uint32_t length,
+           uint8_t keep_channel)
+
+\brief This function generates and applys a random frequency selective random channel model.
+@param desc Pointer to channel descriptor
+@param tx_sig_re input signal (real component)
+@param tx_sig_im input signal (imaginary component)
+@param rx_sig_re output signal (real component)
+@param rx_sig_im output signal (imaginary component)
+@param length Length of input signal
+@param keep_channel Set to 1 to keep channel constant for null-B/F
+*/
+
+void multipath_channel_freq(channel_desc_t *desc,
+                       double *tx_sig_re[2],
+                       double *tx_sig_im[2],
+                       double *rx_sig_re[2],
+                       double *rx_sig_im[2],
+                       uint32_t length,
+                       uint8_t keep_channel);
+/**\fn void multipath_channel_prach(channel_desc_t *desc,
+           double tx_sig_re[2],
+           double tx_sig_im[2],
+           double rx_sig_re[2],
+           double rx_sig_im[2],
+           uint32_t length,
+           uint8_t keep_channel)
+\brief This function generates and applys a random frequency selective random channel model.
+@param desc Pointer to channel descriptor
+@param tx_sig_re input signal (real component)
+@param tx_sig_im input signal (imaginary component)
+@param rx_sig_re output signal (real component)
+@param rx_sig_im output signal (imaginary component)
+@param length Length of input signal
+@param keep_channel Set to 1 to keep channel constant for null-B/F
+*/
+
+void multipath_channel_freq_test(channel_desc_t *desc,
+                       double *tx_sig_re[2],
+                       double *tx_sig_im[2],
+                       double *rx_sig_re[2],
+                       double *rx_sig_im[2],
+                       uint32_t length,
+                       uint8_t keep_channel);
 /*
 \fn double compute_pbch_sinr(channel_desc_t *desc,
                              channel_desc_t *desc_i1,
