@@ -65,6 +65,6 @@ void UL_indication(UL_IND_t *UL_INFO)
           }
 
     //scheduler here
-    printf("Enter scheduler\n");
+    //Schedule subframe should be next four subframe, means that UL_INFO->frame*10+UL_INFO->subframe + 4
     //eNB_dlsch_ulsch_scheduler_NB_IoT(mac_inst,abs_subframe);
 }

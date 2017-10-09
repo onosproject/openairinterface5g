@@ -33,6 +33,7 @@
 
 # if defined(ENABLE_USE_MME)
 
+#include "defs.h"
 #include "UL-DCCH-Message.h"
 
 /* Up link procedures */

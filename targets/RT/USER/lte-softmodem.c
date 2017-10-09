@@ -1212,7 +1212,7 @@ int T_dont_fork = 0;  /* default is to fork, see 'T_init' to understand */
 #endif
 
 void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]);
-void A(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
+void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
 
     int CC_id;
 
@@ -1284,7 +1284,7 @@ void set_default_frame_parms_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms[MAX_NUM_C
         frame_parms[CC_id]->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupAssignmentNPUSCH = 0;
 
 
-        frame_parms[CC_id]->nprach_config_common.nprach_CP_Length
+        //frame_parms[CC_id]->nprach_config_common.nprach_CP_Length
 		//frame_parms[CC_id]->nprach_config_common.nprach_ParametersList.list.array[CC_id]
 		//frame_parms[CC_id]->nprach_config_common.rsrp_ThresholdsPrachInfoList
 
@@ -1442,9 +1442,9 @@ int main( int argc, char **argv ) {
 
     // set default parameters
     set_default_frame_parms(frame_parms);
-#ifdef NB_IOT
+
     set_default_frame_parms_NB_IoT(frame_parms_NB_IoT);
-#endif
+
 
 
     // initialize logging

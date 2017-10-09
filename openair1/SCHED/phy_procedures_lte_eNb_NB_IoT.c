@@ -177,6 +177,8 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 
   const int subframe    =   proc->subframe_rx;
   const int frame       =   proc->frame_rx;
+
+  // add hyper subframe here
   
   /*NB-IoT IF module Common setting*/
 

@@ -131,6 +131,8 @@ typedef struct{
  	frame_t frame;
  	//subframe
  	sub_frame_t subframe;
+ 	//Hyper frame for NB-IoT implementation
+ 	uint32_t hypersfn;
 
  	/*preamble part*/
 

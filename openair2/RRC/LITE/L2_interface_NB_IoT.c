@@ -53,6 +53,7 @@
 #include "UTIL/OTG/otg_rx.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "openair1/SCHED/IF_Module_L1_primitives_NB_IoT.h"
+#include "openair3/GTPV1-U/gtpv1u.h"
 
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
@@ -4026,6 +4027,7 @@ boolean_t pdcp_data_ind_NB_IoT(
 
 #else
 
+  /*
   if (otg_enabled==1) {
     LOG_D(OTG,"Discarding received packed\n");
     free_mem_block(sdu_buffer_pP, __func__);
@@ -4038,7 +4040,7 @@ boolean_t pdcp_data_ind_NB_IoT(
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_DATA_IND,VCD_FUNCTION_OUT);
     return TRUE;
-  }
+  }*/
 
 #endif
 

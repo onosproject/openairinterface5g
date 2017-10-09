@@ -14,6 +14,8 @@
 
 ///-------------------------------------------Function---------------------------------------------///
 
+// simulate MIB/SIB setting
+
 void init_rrc_NB_IoT(void)
 {
     int i;
