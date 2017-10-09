@@ -635,6 +635,9 @@ schedule_ue_spec(
       UE_list->eNB_UE_stats[CC_id][UE_id].harq_pid = harq_pid; 
       UE_list->eNB_UE_stats[CC_id][UE_id].harq_round = round;
 
+
+      if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status < RRC_CONNECTED) continue;
+
       sdu_length_total=0;
       num_sdus=0;
 
@@ -755,7 +758,7 @@ schedule_ue_spec(
 
 	      fill_nfapi_dlsch_config(eNB,dl_req,
 				      TBS,
-				      eNB->pdu_index[CC_id],
+				      -1            /* retransmission, no pdu_index */,
 				      rnti,
 				      0, // type 0 allocation from 7.1.6 in 36.213
 				      0, // virtual_resource_block_assignment_flag, unused here
@@ -780,7 +783,6 @@ schedule_ue_spec(
 
 	      LOG_D(MAC,"Filled NFAPI configuration for DCI/DLSCH %d, retransmission round %d\n",eNB->pdu_index[CC_id],round);
 
-	      eNB->pdu_index[CC_id]++;
 	      program_dlsch_acknak(module_idP,CC_id,UE_id,frameP,subframeP,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.cce_idx);
 	      // No TX request for retransmission (check if null request for FAPI)
 	    }
@@ -1281,7 +1283,7 @@ schedule_ue_spec(
 	    eNB->TX_req[CC_id].sfn_sf = fill_nfapi_tx_req(&eNB->TX_req[CC_id].tx_request_body,
 							  (frameP*10)+subframeP,
 							  TBS,
-							  &eNB->pdu_index[CC_id],
+							  eNB->pdu_index[CC_id],
 							  eNB->UE_list.DLSCH_pdu[CC_id][0][(unsigned char)UE_id].payload[0]);
 	    
 	    LOG_D(MAC,"Filled NFAPI configuration for DCI/DLSCH/TXREQ %d, new SDU\n",eNB->pdu_index[CC_id]);
@@ -1383,16 +1385,15 @@ fill_DLSCH_dci(
 	for (i=0;i<DL_req[CC_id].dl_config_request_body.number_pdu;i++) {
 	  dl_config_pdu                    = &DL_req[CC_id].dl_config_request_body.dl_config_pdu_list[i];
 	  if ((dl_config_pdu->pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE)&&
-	      (dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti == rnti)) {
-	    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                   = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
+	      (dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti == rnti) &&
+          (dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format != 1)) {
 	    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding    = allocate_prbs_sub(nb_rb,N_RB_DL,N_RBG,rballoc_sub);
 	    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_allocation_type = 0;
 	  }
 	  else if ((dl_config_pdu->pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE)&&
-		   (dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti == rnti)) {
-	    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                   = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
+		       (dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti == rnti) &&
+               (dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type==0)) {
 	    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_block_coding    = allocate_prbs_sub(nb_rb,N_RB_DL,N_RBG,rballoc_sub);
-	    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type = 0;
 	  }
 	}
       }

@@ -271,10 +271,10 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,
   int input_buffer_length = dlsch_harq->TBS/8;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
 
-  //if (frame < 200) {
   if (1){
+  //if (dlsch->rnti == 0x02) {//frame < 200) {
 
-    LOG_D(PHY,
+    LOG_I(PHY,
 	  "[eNB %"PRIu8"][PDSCH %"PRIx16"/%"PRIu8"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", pdsch_start %d, G %d, nb_rb %"PRIu16", rb0 %x, rb1 %x, TBS %"PRIu16", pmi_alloc %"PRIx64", rv %"PRIu8" (round %"PRIu8")\n",
 	  eNB->Mod_id, dlsch->rnti,harq_pid,
 	  frame, subframe, input_buffer_length, dlsch_harq->pdsch_start,
@@ -599,11 +599,7 @@ void prach_procedures(PHY_VARS_eNB *eNB,
   for (i=0;i<eNB->num_RU;i++) {
     ru=eNB->RU_list[i];
     for (ru_aa=0,aa=0;ru_aa<ru->nb_rx;ru_aa++,aa++) {
-
-      // Hasn't this been done already by init_eNB_afterRU() ???
       eNB->prach_vars.rxsigF[0][aa] = eNB->RU_list[i]->prach_rxsigF[ru_aa];
-      //eNB->prach_vars.rxsigF[0][aa] = eNB->RU_list[i]->common.rxdata[0][subframe * eNB->frame_parms.samples_per_tti];
-
 #ifdef Rel14
       int ce_level;
 
@@ -824,7 +820,7 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	(uci->frame == frame) &&
 	(uci->subframe == subframe)) {
 
-      LOG_I(PHY,"Frame %d, subframe %d: Running uci procedures (type %d) for %d \n",frame,subframe,uci->type,i);
+      LOG_D(PHY,"Frame %d, subframe %d: Running uci procedures (type %d) for %d \n",frame,subframe,uci->type,i);
       uci->active=0;
 
       // Null out PUCCH PRBs for noise measurement
@@ -887,7 +883,7 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	}
       case HARQ:
 	if (fp->frame_type == FDD) {
-	  LOG_I(PHY,"Frame %d Subframe %d Demodulating PUCCH (UCI %d) for ACK/NAK (uci->pucch_fmt %d,uci->type %d.uci->frame %d, uci->subframe %d): n1_pucch0 %d SR_payload %d\n",
+	  LOG_D(PHY,"Frame %d Subframe %d Demodulating PUCCH (UCI %d) for ACK/NAK (uci->pucch_fmt %d,uci->type %d.uci->frame %d, uci->subframe %d): n1_pucch0 %d SR_payload %d\n",
 		frame,subframe,i,
 		uci->pucch_fmt,uci->type,
 		uci->frame,uci->subframe,uci->n_pucch_1[0][0],
@@ -926,7 +922,7 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	  }
 	  
 
-	  LOG_I(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d pucch1a (FDD) payload %d (metric %d)\n",
+	  LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d pucch1a (FDD) payload %d (metric %d)\n",
 		eNB->Mod_id,
 		uci->rnti,
 		frame,subframe,
@@ -1303,6 +1299,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 
   uint32_t ret=0,i;
   uint32_t harq_pid;
+  uint8_t nPRS;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   LTE_eNB_ULSCH_t *ulsch;
   LTE_UL_eNB_HARQ_t *ulsch_harq;
@@ -1325,11 +1322,12 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
     if ((ulsch) &&
         (ulsch->rnti>0) &&
         (ulsch_harq->status == ACTIVE) &&
-	(ulsch_harq->frame == frame) &&
-	(ulsch_harq->subframe == subframe)) {
+	    (ulsch_harq->frame == frame) &&
+	    (ulsch_harq->subframe == subframe) &&
+        (ulsch_harq->handled == 0)) {
       
       
-      // UE is has ULSCH scheduling
+      // UE has ULSCH scheduling
  
       for (int rb=0;
            rb<=ulsch_harq->nb_rb;
@@ -1338,43 +1336,35 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 	eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
       }
 
-      if ((ulsch) &&
-          (ulsch->rnti>0) &&
-          (ulsch_harq->status == ACTIVE) &&
-          (ulsch_harq->frame == frame) &&
-          (ulsch_harq->subframe == subframe)) {
 
-        for (int rb=0;
-            rb<=ulsch_harq->nb_rb;
-            rb++) {
-          int rb2 = rb+ulsch_harq->first_rb;
-          eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
-        }
+      LOG_D(PHY,"[eNB %d] frame %d, subframe %d: Scheduling ULSCH Reception for UE %d \n",
+          eNB->Mod_id,
+          frame,
+          subframe,
+          i);
 
+      nPRS = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1];
 
-        LOG_D(PHY,"[eNB %d] frame %d, subframe %d: Scheduling ULSCH Reception for UE %d \n",
-            eNB->Mod_id,
-            frame,
-            subframe,
-            i);
-
+      ulsch->cyclicShift = (ulsch_harq->n_DMRS2 +
+          fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
+          nPRS)%12;
 
       LOG_D(PHY,
-            "[eNB %d][PUSCH %d] Frame %d Subframe %d Demodulating PUSCH: dci_alloc %d, rar_alloc %d, round %d, first_rb %d, nb_rb %d, Qm %d, TBS %d, rv %d, cyclic_shift %d (n_DMRS2 %d, cyclicShift_common %d, ), O_ACK %d, beta_cqi %d \n",
-            eNB->Mod_id,harq_pid,frame,subframe,
-            ulsch_harq->dci_alloc,
-            ulsch_harq->rar_alloc,
-            ulsch_harq->round,
-            ulsch_harq->first_rb,
-            ulsch_harq->nb_rb,
-            ulsch_harq->Qm,
-            ulsch_harq->TBS,
-            ulsch_harq->rvidx,
-            ulsch->cyclicShift,
-            ulsch_harq->n_DMRS2,
-            fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift,
-            ulsch_harq->O_ACK,
-	    ulsch->beta_offset_cqi_times8);
+          "[eNB %d][PUSCH %d] Frame %d Subframe %d Demodulating PUSCH: dci_alloc %d, rar_alloc %d, round %d, first_rb %d, nb_rb %d, Qm %d, TBS %d, rv %d, cyclic_shift %d (n_DMRS2 %d, cyclicShift_common %d, ), O_ACK %d, beta_cqi %d \n",
+          eNB->Mod_id,harq_pid,frame,subframe,
+          ulsch_harq->dci_alloc,
+          ulsch_harq->rar_alloc,
+          ulsch_harq->round,
+          ulsch_harq->first_rb,
+          ulsch_harq->nb_rb,
+          ulsch_harq->Qm,
+          ulsch_harq->TBS,
+          ulsch_harq->rvidx,
+          ulsch->cyclicShift,
+          ulsch_harq->n_DMRS2,
+          fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift,
+          ulsch_harq->O_ACK,
+          ulsch->beta_offset_cqi_times8);
 
         start_meas(&eNB->ulsch_demodulation_stats);
 
@@ -1421,6 +1411,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 #endif
 
 
+
 	fill_ulsch_cqi_indication(eNB,frame,subframe,
 				  ulsch_harq,
 				  ulsch->rnti);
@@ -1440,21 +1431,21 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 	      ulsch->Mlimit,
 	      ulsch_harq->o_ACK[0],
 	      ulsch_harq->o_ACK[1]);
-	/*
-	if (dB_fixed_times10(eNB->pusch_vars[i]->ulsch_power[0]) > 300) {
+	/*if (dB_fixed_times10(eNB->pusch_vars[i]->ulsch_power[0]) > 300) {
 	  dump_ulsch(eNB,frame,subframe,i); exit(-1);
-	  }*/
-
+	  }
+     */
 #if defined(MESSAGE_CHART_GENERATOR_PHY)
-          MSC_LOG_RX_DISCARDED_MESSAGE(
-              MSC_PHY_ENB,MSC_PHY_UE,
-              NULL,0,
-              "%05u:%02u ULSCH received rnti %x harq id %u round %d",
-              frame,subframe,
-              ulsch->rnti,harq_pid,
-              ulsch_harq->round-1
-              );
+        MSC_LOG_RX_DISCARDED_MESSAGE(
+            MSC_PHY_ENB,MSC_PHY_UE,
+            NULL,0,
+            "%05u:%02u ULSCH received rnti %x harq id %u round %d",
+            frame,subframe,
+            ulsch->rnti,harq_pid,
+            ulsch_harq->round-1
+            );
 #endif
+
 
 	fill_crc_indication(eNB,i,frame,subframe,0); // indicate ACK to MAC
 	fill_rx_indication(eNB,i,frame,subframe);  // indicate SDU to MAC
@@ -1488,10 +1479,9 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 
         }  // ulsch not in error
 
-        if (ulsch_harq->O_ACK>0) fill_ulsch_harq_indication(eNB,ulsch_harq,ulsch->rnti,frame,subframe,ulsch->bundling);
+      if (ulsch_harq->O_ACK>0) fill_ulsch_harq_indication(eNB,ulsch_harq,ulsch->rnti,frame,subframe,ulsch->bundling);
 
-
-        LOG_I(PHY,"[eNB %d] Frame %d subframe %d: received ULSCH harq_pid %d for UE %d, ret = %d, CQI CRC Status %d, ACK %d,%d, ulsch_errors %d/%d\n",
+      LOG_D(PHY,"[eNB %d] Frame %d subframe %d: received ULSCH harq_pid %d for UE %d, ret = %d, CQI CRC Status %d, ACK %d,%d, ulsch_errors %d/%d\n",
             eNB->Mod_id,frame,subframe,
             harq_pid,
             i,
@@ -1501,12 +1491,25 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
             ulsch_harq->o_ACK[1],
             eNB->UE_stats[i].ulsch_errors[harq_pid],
             eNB->UE_stats[i].ulsch_decoding_attempts[harq_pid][0]);
-
-      } //     if ((ulsch) &&
+      
+           ulsch_harq->handled = 1;
+    } //     if ((ulsch) &&
       //         (ulsch->rnti>0) &&
       //         (ulsch_harq->status == ACTIVE))
-    }   //   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-  }
+
+    else if ((ulsch) &&
+             (ulsch->rnti>0) &&
+             (ulsch_harq->status == ACTIVE) &&
+             (ulsch_harq->frame == frame) &&
+             (ulsch_harq->subframe == subframe) &&
+             (ulsch_harq->handled == 1)) {
+          // this harq process is stale, kill it, this 1024 frames later (10s), consider reducing that
+           ulsch_harq->status = SCH_IDLE;
+           ulsch->harq_mask   = 0;
+           LOG_W(PHY,"Removing stale ULSCH config for UE %x\n",ulsch->rnti);
+    }
+
+  }   //   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
 }
 
 extern int oai_exit;
@@ -1638,13 +1641,12 @@ void release_harq(PHY_VARS_eNB *eNB,int UE_id,int tb,uint16_t frame,uint8_t subf
     AssertFatal(dlsch0_harq!=NULL,"dlsch0_harq is null\n");
 
     dlsch0_harq->status = SCH_IDLE;
-    if ((dlsch1_harq == NULL)||
+    /*if ((dlsch1_harq == NULL)||
 	((dlsch1_harq!=NULL)&&
-	 (dlsch1_harq->status == SCH_IDLE)))
-    {
-      dlsch0->harq_mask   &= ~(1<<harq_pid);
-      LOG_I(PHY,"%s() UE_id:%d SFN/SF:%d/%d dlsch0->harq_mask:%02x\n", __FUNCTION__, UE_id, frame, subframe,dlsch0->harq_mask);
-    }
+	 (dlsch1_harq->status == SCH_IDLE)))*/
+    dlsch0->harq_mask   &= ~(1<<harq_pid);
+    LOG_D(PHY,"Frame %d, subframe %d: Releasing harq %d for UE %x\n",frame,subframe,harq_pid,dlsch0->rnti);
+
   }
   else { // release all processes in the bundle that was acked, based on mask
          // This is at most 4 for multiplexing and 9 for bundling/special bundling
