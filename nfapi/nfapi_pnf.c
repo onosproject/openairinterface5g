@@ -37,6 +37,8 @@ extern int nfapi_sync_var;
 extern int sync_var;
 
 extern void init_eNB_afterRU(void);
+extern  void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB, eNB_rxtx_proc_t *proc, nfapi_dl_config_request_pdu_t *dl_config_pdu);
+
 
 
 uint16_t phy_antenna_capability_values[] = { 1, 2, 4, 8, 16 };
@@ -947,7 +949,6 @@ void nfapi_procedures(PHY_VARS_eNB *eNB, int sfn, int sf)
 
   common_signal_procedures(eNB, sfn, sf);
 
-  LOG_E(PHY,"SFN/SF:%d/%d pdcch_vars[num_dci:%d num_pdcch_symbols:%d dci_alloc:dci_length:%d]\n", sfn, sf, pdcch_vars->num_dci, pdcch_vars->num_pdcch_symbols, pdcch_vars->dci_alloc[0].dci_length);
   if (pdcch_vars->num_dci > 0)
   {
     LOG_D(PHY,"SFN/SF:%d/%d pdcch_vars[num_dci:%d num_pdcch_symbols:%d dci_alloc:dci_length:%d]\n", sfn, sf, pdcch_vars->num_dci, pdcch_vars->num_pdcch_symbols, pdcch_vars->dci_alloc[0].dci_length);
@@ -1013,8 +1014,8 @@ void nfapi_procedures(PHY_VARS_eNB *eNB, int sfn, int sf)
 int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
 {
 #if 1
-//if (1)//NFAPI_SFNSF2SF(req->sfn_sf)==5)
-    LOG_E(PHY,"[PNF] dl config request sfn_sf:%d pdcch:%u dci:%u pdu:%d pdsch_rnti:%d pcfich:%u RC.ru:%p RC.eNB:%p sync_var:%d\n", 
+if (0)//NFAPI_SFNSF2SF(req->sfn_sf)==5)
+    LOG_D(PHY,"[PNF] dl config request sfn_sf:%d pdcch:%u dci:%u pdu:%d pdsch_rnti:%d pcfich:%u RC.ru:%p RC.eNB:%p sync_var:%d\n", 
         NFAPI_SFNSF2DEC(req->sfn_sf), 
         req->dl_config_request_body.number_pdcch_ofdm_symbols, 
         req->dl_config_request_body.number_dci,
@@ -1086,8 +1087,8 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
 
     if (dl_config_pdu_list[i].pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE)
     {
-      nfapi_dl_config_dci_dl_pdu *dci_pdu = &dl_config_pdu_list[i].dci_dl_pdu;
-      nfapi_dl_config_dci_dl_pdu_rel8_t *rel8_pdu = &dci_pdu->dci_dl_pdu_rel8;
+      //nfapi_dl_config_dci_dl_pdu *dci_pdu = &dl_config_pdu_list[i].dci_dl_pdu;
+      //nfapi_dl_config_dci_dl_pdu_rel8_t *rel8_pdu = &dci_pdu->dci_dl_pdu_rel8;
 
       //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DCI:transmission_power:%u\n", __FUNCTION__, rel8_pdu->transmission_power);
 
@@ -1400,12 +1401,10 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
     }
     printf("[PNF] OAI eNB/RU configured\n");
 
+    //printf("[PNF] About to call phy_init_RU() for RC.ru[0]:%p\n", RC.ru[0]);
+    //phy_init_RU(RC.ru[0]);
+
     printf("[PNF] About to call init_eNB_afterRU()\n");
-    init_eNB_afterRU();
-
-    printf("[PNF] About to call phy_init_RU()\n");
-    phy_init_RU(RC.ru[0]);
-
     init_eNB_afterRU();
 
     // Signal to main thread that it can carry on - otherwise RU will startup too quickly and it is not initialised
@@ -1796,14 +1795,14 @@ void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, 
 
 void oai_subframe_ind(uint16_t frame, uint16_t subframe)
 {
-  LOG_D(PHY,"%s(frame:%d, subframe:%d)\n", __FUNCTION__, frame, subframe);
+  //LOG_D(PHY,"%s(frame:%d, subframe:%d)\n", __FUNCTION__, frame, subframe);
 
   //TODO FIXME - HACK - DJP - using a global to bodge it in 
 
   if (p7_config_g != NULL && sync_var==0)
   {
-    uint16_t sfn = subframe>=9?frame+1:frame;
-    uint16_t sf = subframe>=9?0:subframe+1;
+    uint16_t sfn = frame;//subframe>=9?frame+1:frame;
+    uint16_t sf = subframe;//subframe>=9?0:subframe+1;
     uint16_t sfn_sf = sfn<<4 | sf;
 
     if ((frame % 100 == 0) && subframe==0)
@@ -1831,7 +1830,7 @@ int oai_nfapi_rach_ind(nfapi_rach_indication_t *rach_ind)
 {
   rach_ind->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
 
-  LOG_I(PHY, "%s() sfn_sf:%d preambles:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(rach_ind->sfn_sf), rach_ind->rach_indication_body.number_of_preambles);
+  LOG_E(PHY, "%s() sfn_sf:%d preambles:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(rach_ind->sfn_sf), rach_ind->rach_indication_body.number_of_preambles);
 
   return nfapi_pnf_p7_rach_ind(p7_config_g, rach_ind);
 }

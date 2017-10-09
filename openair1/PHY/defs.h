@@ -1577,7 +1577,7 @@ static inline int release_thread(pthread_mutex_t *mutex,int *instance_cnt,char *
     return(-1);
   }
 
-  LOG_D(PHY, "%s() name:%s instance_cnt:%u - about to decrement\n", __FUNCTION__, name, *instance_cnt);
+  //LOG_D(PHY, "%s() name:%s instance_cnt:%u - about to decrement\n", __FUNCTION__, name, *instance_cnt);
 
   *instance_cnt=*instance_cnt-1;
 

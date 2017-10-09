@@ -150,7 +150,7 @@ void feptx_ofdm(RU_t *ru) {
 	}
       }
       else {
-	LOG_D(PHY,"feptx_ofdm: Writing to position %d\n",slot_offset);
+	//LOG_D(PHY,"feptx_ofdm: Writing to position %d\n",slot_offset);
 	tx_offset = (int)slot_offset;
 	txdata = (int16_t*)&ru->common.txdata[aa][tx_offset];
 
@@ -185,9 +185,11 @@ void feptx_ofdm(RU_t *ru) {
          ru->common.txdata[aa][tx_offset] = 0x00000000;
        }
      }
+#if 0
      LOG_D(PHY,"feptx_ofdm (TXPATH): frame %d, subframe %d: txp (time %p) %d dB, txp (freq) %d dB\n",
 	   ru->proc.frame_tx,subframe,txdata,dB_fixed(signal_energy((int32_t*)txdata,fp->samples_per_tti)),
 	   dB_fixed(signal_energy_nodc(ru->common.txdataF_BF[aa],2*slot_sizeF)));
+#endif
     }
   }
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 0 );
@@ -235,9 +237,11 @@ void feptx_prec(RU_t *ru) {
 			 aa);
 	}
       }
+#if 0
       LOG_D(PHY,"feptx_prec: frame %d, subframe %d: txp (freq) %d dB\n",
 	    ru->proc.frame_tx,subframe,
 	    dB_fixed(signal_energy_nodc(ru->common.txdataF_BF[0],2*fp->symbols_per_tti*fp->ofdm_symbol_size)));
+#endif
     }
   }
 }

@@ -310,7 +310,6 @@ void *eNB_app_task(void *args_p)
   const char                      *msg_name        = NULL;
   instance_t                      instance;
   int                             result;
-  int                             j;
   /* for no gcc warnings */
   (void)instance;
 

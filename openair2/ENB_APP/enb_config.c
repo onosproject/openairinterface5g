@@ -140,6 +140,8 @@ void RCconfig_RU(void) {
       memset((void*)RC.ru[j],0,sizeof(RU_t));
       RC.ru[j]->idx                                 = j;
 
+      printf("Creating RC.ru[%d]:%p\n", j, RC.ru[j]);
+
       RC.ru[j]->if_timing                           = synch_to_ext_device;
       if (RC.nb_L1_inst >0)
         RC.ru[j]->num_eNB                           = RUParamList.paramarray[j][RU_ENB_LIST_IDX].numelt;
@@ -245,8 +247,8 @@ void RCconfig_L1(void) {
 
 
   if (RC.eNB == NULL) {
-    RC.eNB                       = (PHY_VARS_eNB **)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB**));
-    LOG_I(PHY,"RC.eNB[%d] = %p\n",j,RC.eNB[j]);
+    RC.eNB                       = (PHY_VARS_eNB ***)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB**));
+    LOG_I(PHY,"RC.eNB = %p\n",RC.eNB);
     memset(RC.eNB,0,(1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
     RC.nb_L1_CC = malloc((1+RC.nb_L1_inst)*sizeof(int));
   }
@@ -297,7 +299,7 @@ void RCconfig_L1(void) {
         RC.nb_inst =1; // DJP - feptx_prec uses num_eNB but phy_init_RU uses nb_inst
 
         LOG_I(PHY,"%s() NFAPI PNF mode - RC.nb_inst=1 this is because phy_init_RU() uses that to index and not RC.num_eNB - why the 2 similar variables?\n", __FUNCTION__);
-        LOG_I(PHY,"%s() NFAPI PNF mode - RC.nb_CC[0]=1 for init_eNB_afterRU()\n", __FUNCTION__, RC.nb_CC[0]);
+        LOG_I(PHY,"%s() NFAPI PNF mode - RC.nb_CC[0]=%d for init_eNB_afterRU()\n", __FUNCTION__, RC.nb_CC[0]);
         LOG_I(PHY,"%s() NFAPI PNF mode - RC.nb_macrlc_inst:%d because used by mac_top_init_eNB()\n", __FUNCTION__, RC.nb_macrlc_inst);
 
         mac_top_init_eNB();

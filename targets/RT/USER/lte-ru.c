@@ -679,6 +679,7 @@ void fh_if4p5_north_out(RU_t *ru) {
 
   if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 0 );
 }
+
 void rx_rf(RU_t *ru,int *frame,int *subframe) {
 
   RU_proc_t *proc = &ru->proc;
@@ -690,7 +691,7 @@ void rx_rf(RU_t *ru,int *frame,int *subframe) {
     
   for (i=0; i<ru->nb_rx; i++)
     rxp[i] = (void*)&ru->common.rxdata[i][*subframe*fp->samples_per_tti];
-  
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
 
   old_ts = proc->timestamp_rx;
@@ -728,11 +729,13 @@ void rx_rf(RU_t *ru,int *frame,int *subframe) {
   proc->subframe_tx  = (proc->subframe_rx+4)%10;
   proc->frame_tx     = (proc->subframe_rx>5) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
   
+#if 0
   LOG_D(PHY,"RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
 	ru->idx, 
 	0, 
 	(unsigned long long int)proc->timestamp_rx,
 	(int)ru->ts_offset,proc->frame_rx,proc->subframe_rx);
+#endif
 
     // dump VCD output for first RU in list
   if (ru == RC.ru[0]) {
@@ -799,7 +802,7 @@ void tx_rf(RU_t *ru) {
             (proc->frame_tx % 10 ==0 && proc->subframe_tx==5)
            )
         {
-          LOG_E(PHY,"%s() nb_tx:%d i:%d samples_per_tti:%u subframe_tx:%u txp[i]\n", __FUNCTION__, ru->nb_tx, i, fp->samples_per_tti, proc->subframe_tx, txp[i]);
+          LOG_E(PHY,"%s() nb_tx:%d i:%d samples_per_tti:%u subframe_tx:%u txp[%d]:%p\n", __FUNCTION__, ru->nb_tx, i, fp->samples_per_tti, proc->subframe_tx, i,txp[i]);
         }
       }
     }
@@ -813,7 +816,7 @@ void tx_rf(RU_t *ru) {
         )
        )
     {
-       uint32_t *tx0p = &txp[0];
+       uint32_t *tx0p = (uint32_t*)txp;
 
       LOG_E(PHY,"%s() nb_tx:%d first_carrier_offset:%u samples_per_tti:%u subframe_tx:%u sf:%u(%u) txp:%2x %2x %2x %2x %2x %2x %2x %2x\n", 
           __FUNCTION__, ru->nb_tx, fp->first_carrier_offset, fp->samples_per_tti, proc->subframe_tx,
@@ -885,8 +888,8 @@ void tx_rf(RU_t *ru) {
 				      ru->nb_tx,
 				      flags);
     
-    LOG_D(PHY,"[TXPATH] RU %d tx_rf, writing to TS %llu, frame %d, unwrapped_frame %d, subframe %d\n",ru->idx,
-	  (long long unsigned int)proc->timestamp_tx,proc->frame_tx,proc->frame_tx_unwrap,proc->subframe_tx);
+    //LOG_D(PHY,"[TXPATH] RU %d tx_rf, writing to TS %llu, frame %d, unwrapped_frame %d, subframe %d\n",ru->idx,
+	  //(long long unsigned int)proc->timestamp_tx,proc->frame_tx,proc->frame_tx_unwrap,proc->subframe_tx);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
     
     
@@ -1013,11 +1016,13 @@ static void* ru_thread_prach( void* param ) {
 
   thread_top_init("ru_thread_prach",1,500000L,1000000L,20000000L);
 
+LOG_E(PHY,"In rach thread\n");
+
   while (RC.ru_mask>0) {
     usleep(1e6);
-    LOG_I(PHY,"%s() RACH waiting for RU to be configured\n");
+    LOG_I(PHY,"%s() RACH waiting for RU to be configured\n", __FUNCTION__);
   }
-  LOG_I(PHY,"%s() RU configured - RACH processing thread running\n");
+  LOG_I(PHY,"%s() RU configured - RACH processing thread running\n", __FUNCTION__);
 
   while (!oai_exit) {
     
@@ -1180,14 +1185,14 @@ void wakeup_eNBs(RU_t *ru) {
   int i;
   PHY_VARS_eNB **eNB_list = ru->eNB_list;
 
-  LOG_D(PHY,"wakeup_eNBs (num %d) for RU %d\n",ru->num_eNB,ru->idx);
+  //LOG_D(PHY,"wakeup_eNBs (num %d) for RU %d\n",ru->num_eNB,ru->idx);
 
   if (ru->num_eNB==1 && ru->eNB_top!=0) {
     // call eNB function directly
 
     char string[20];
     sprintf(string,"Incoming RU %d",ru->idx);
-    LOG_D(PHY,"RU %d Waking up eNB\n",ru->idx);
+    //LOG_D(PHY,"RU %d Waking up eNB\n",ru->idx);
     ru->eNB_top(eNB_list[0],ru->proc.frame_rx,ru->proc.subframe_rx,string);
   }
   else {
@@ -1219,7 +1224,7 @@ static inline int wakeup_prach_ru(RU_t *ru) {
     ru->eNB_list[0]->proc.frame_prach = ru->proc.frame_rx;
     ru->eNB_list[0]->proc.subframe_prach = ru->proc.subframe_rx;
 
-    LOG_D(PHY,"RU %d: waking up PRACH thread\n",ru->idx);
+    //LOG_D(PHY,"RU %d: waking up PRACH thread\n",ru->idx);
     // the thread can now be woken up
     AssertFatal(pthread_cond_signal(&ru->proc.cond_prach) == 0, "ERROR pthread_cond_signal for RU prach thread\n");
   }
@@ -1486,28 +1491,19 @@ static void* ru_thread( void* param ) {
       subframe++;
     }      
 
-    LOG_D(PHY,"RU thread (proc %p), frame %d (%p), subframe %d (%p)\n", proc, frame,&frame,subframe,&subframe);
-
-
-    ru->proc.frame_rx = frame;
-    ru->proc.subframe_rx = subframe;
-
-    ru->proc.frame_tx = subframe>9 ? (frame+1)&1023 : frame;
-    ru->proc.subframe_tx = subframe+1 % 10;
-
-    proc->frame_rx = ru->proc.frame_rx;
-    proc->subframe_rx = ru->proc.subframe_rx;
-
     // synchronization on input FH interface, acquire signals/data and block
     if (ru->fh_south_in) ru->fh_south_in(ru,&frame,&subframe);
     else AssertFatal(1==0, "No fronthaul interface at south port");
 
-    oai_subframe_ind(frame, subframe);
+    //LOG_D(PHY,"AFTER fh_south_in - SFN/SF(RX):%d/%d (TX):%d/%d proc:%p ru->proc:%p\n",frame,subframe,proc->frame_tx,proc->subframe_tx,proc,&ru->proc);
 
-    LOG_D(PHY,"RU thread (do_prach %d, is_prach_subframe %d), received frame %d, subframe %d\n",
-	  ru->do_prach,
-	  is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx),
-	  proc->frame_rx,proc->subframe_rx);
+    oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
+
+    if (0 && is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx))
+      LOG_D(PHY,"RU thread (do_prach %d, is_prach_subframe %d), received frame %d, subframe %d\n",
+          ru->do_prach,
+          is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx),
+          proc->frame_rx,proc->subframe_rx);
  
     if ((ru->do_prach>0) && (is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx)==1)) { 
       wakeup_prach_ru(ru);
@@ -1666,6 +1662,7 @@ void init_RU_proc(RU_t *ru) {
 #endif
   char name[100];
 
+  LOG_E(PHY,"Initializing RU proc %d (%s,%s),\n",ru->idx,eNB_functions[ru->function],eNB_timing[ru->if_timing]);
 #ifndef OCP_FRAMEWORK
   LOG_I(PHY,"Initializing RU proc %d (%s,%s),\n",ru->idx,eNB_functions[ru->function],eNB_timing[ru->if_timing]);
 #endif
@@ -1719,6 +1716,8 @@ void init_RU_proc(RU_t *ru) {
 #endif
   
   pthread_create( &proc->pthread_FH, attr_FH, ru_thread, (void*)ru );
+
+  LOG_E(PHY,"%s() DJP - ru->function:%d\n", __FUNCTION__, ru->function);
 
   if (ru->function == NGFI_RRU_IF4p5) {
     pthread_create( &proc->pthread_prach, attr_prach, ru_thread_prach, (void*)ru );
@@ -1932,13 +1931,15 @@ void init_RU(char *rf_config_file) {
   // read in configuration file)
   printf("configuring RU from file\n");
   RCconfig_RU();
-  printf("number of L1 instances %d, number of RU %d\n",RC.nb_L1_inst,RC.nb_RU);
+  printf("number of L1 instances %d, number of RU %d RC.nb_CC[0]:%d\n",RC.nb_L1_inst,RC.nb_RU, RC.nb_CC[0]);
 
   if (RC.nb_CC != 0)
     for (i=0;i<RC.nb_L1_inst;i++) 
       for (CC_id=0;CC_id<RC.nb_CC[i];CC_id++) RC.eNB[i][CC_id]->num_RU=0;
 
+LOG_E(PHY,"Process RUs RC.nb_RU:%d\n",RC.nb_RU);
   for (ru_id=0;ru_id<RC.nb_RU;ru_id++) {
+LOG_E(PHY,"Process RC.ru[%d]\n",ru_id);
     ru               = RC.ru[ru_id];
     ru->rf_config_file = rf_config_file;
     ru->idx          = ru_id;              
@@ -1957,6 +1958,10 @@ void init_RU(char *rf_config_file) {
       // DJP - feptx_prec() / feptx_ofdm() parses the eNB_list (based on num_eNB) and copies the txdata_F to txdata in RU
       //
     }
+    else
+    {
+    LOG_E(PHY,"DJP - delete code above this %s:%d\n", __FILE__, __LINE__);
+    }
 
     eNB0             = ru->eNB_list[0];
     printf("RU FUnction:%d ru->if_south:%d\n", ru->function, ru->if_south);
@@ -1971,21 +1976,17 @@ void init_RU(char *rf_config_file) {
         memcpy((void*)&ru->frame_parms,(void*)&eNB0->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
 
         // attach all RU to all eNBs in its list/
+        LOG_E(PHY,"ru->num_eNB:%d eNB0->num_RU:%d\n", ru->num_eNB, eNB0->num_RU);
         for (i=0;i<ru->num_eNB;i++) {
           eNB0 = ru->eNB_list[i];
           eNB0->RU_list[eNB0->num_RU++] = ru;
         }
       }
     }
-    else
-    {
-      printf("eNB0 was NULL - DJP - missing out of copying of frame_params - NOT A GOOD THING TO MISS\n\n\n\n\n");
-      //extern uint8_t n_rb_dl;
-      //ru->frame_parms.N_RB_DL = n_rb_dl;
-      //printf("ru->frame_parms.N_RB_DL:%d\n", ru->frame_parms.N_RB_DL);
-    }
     //    LOG_I(PHY,"Initializing RRU descriptor %d : (%s,%s,%d)\n",ru_id,ru_if_types[ru->if_south],eNB_timing[ru->if_timing],ru->function);
 
+
+LOG_E(PHY,"ru->if_south:%d\n", ru->if_south);
 
     switch (ru->if_south) {
     case LOCAL_RF:   // this is an RU with integrated RF (RRU, eNB)

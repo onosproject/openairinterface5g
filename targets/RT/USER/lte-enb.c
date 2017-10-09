@@ -389,7 +389,7 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   }
   
   ++proc_rxtx->instance_cnt_rxtx;
-  LOG_D(PHY,"%s() %u/%u Just incremented proc->instance_cnt_rxtx:%d\n", __FUNCTION__, proc_rxtx->frame_tx, proc_rxtx->subframe_tx, proc_rxtx->instance_cnt_rxtx);
+  //LOG_D(PHY,"%s() %u/%u Just incremented proc->instance_cnt_rxtx:%d\n", __FUNCTION__, proc_rxtx->frame_tx, proc_rxtx->subframe_tx, proc_rxtx->instance_cnt_rxtx);
   
   // We have just received and processed the common part of a subframe, say n. 
   // TS_rx is the last received timestamp (start of 1st slot), TS_tx is the desired 
@@ -831,6 +831,8 @@ void init_transport(PHY_VARS_eNB *eNB) {
   int j;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
 
+  LOG_E(PHY, "Initialise transport\n");
+
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     LOG_I(PHY,"Allocating Transport Channel Buffers for DLSCH, UE %d\n",i);
     for (j=0; j<2; j++) {
@@ -899,7 +901,7 @@ void init_eNB_afterRU(void) {
     LOG_I(PHY,"RC.nb_CC[inst]:%d\n", RC.nb_CC[inst]);
     for (CC_id=0;CC_id<RC.nb_CC[inst];CC_id++) {
 
-      LOG_I(PHY,"RC.nb_CC[inst:%d][CC_id:%d]:%d\n", inst, CC_id, RC.eNB[inst][CC_id]);
+      LOG_I(PHY,"RC.nb_CC[inst:%d][CC_id:%d]:%p\n", inst, CC_id, RC.eNB[inst][CC_id]);
 
       eNB                                  =  RC.eNB[inst][CC_id];
       phy_init_lte_eNB(eNB,0,0);
@@ -907,10 +909,15 @@ void init_eNB_afterRU(void) {
       if (0) AssertFatal(eNB->num_RU>0,"Number of RU attached to eNB %d is zero\n",eNB->Mod_id);
       LOG_I(PHY,"Mapping RX ports from %d RUs to eNB %d\n",eNB->num_RU,eNB->Mod_id);
       eNB->frame_parms.nb_antennas_rx       = 0;
+
+      LOG_E(PHY,"Overwriting eNB->prach_vars.rxsigF[0]:%p\n", eNB->prach_vars.rxsigF[0]);
+
       eNB->prach_vars.rxsigF[0] = (int16_t**)malloc16(64*sizeof(int16_t*));
 #ifdef Rel14
-      for (int ce_level=0;ce_level<4;ce_level++)
-	eNB->prach_vars_br.rxsigF[ce_level] = (int16_t**)malloc16(64*sizeof(int16_t*));
+      for (int ce_level=0;ce_level<4;ce_level++) {
+        LOG_E(PHY,"Overwriting eNB->prach_vars_br.rxsigF.rxsigF[0]:%p\n", eNB->prach_vars_br.rxsigF[ce_level]);
+        eNB->prach_vars_br.rxsigF[ce_level] = (int16_t**)malloc16(64*sizeof(int16_t*));
+      }
 #endif
 
       LOG_I(PHY,"eNB->num_RU:%d\n", eNB->num_RU);
@@ -945,11 +952,19 @@ void init_eNB_afterRU(void) {
         LOG_I(PHY, "%s() ************* DJP ***** eNB->frame_parms.nb_antennas_rx:%d - GOING TO HARD CODE TO 1", __FUNCTION__, eNB->frame_parms.nb_antennas_rx);
         eNB->frame_parms.nb_antennas_rx = 1;
       }
+      else
+      {
+        LOG_I(PHY," Delete code\n");
+      }
 
       if (eNB->frame_parms.nb_antennas_tx < 1)
       {
         LOG_I(PHY, "%s() ************* DJP ***** eNB->frame_parms.nb_antennas_tx:%d - GOING TO HARD CODE TO 1", __FUNCTION__, eNB->frame_parms.nb_antennas_tx);
         eNB->frame_parms.nb_antennas_tx = 1;
+      }
+      else
+      {
+        LOG_I(PHY," Delete code\n");
       }
 
 

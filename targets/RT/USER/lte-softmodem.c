@@ -116,6 +116,8 @@ pthread_cond_t nfapi_sync_cond;
 pthread_mutex_t nfapi_sync_mutex;
 int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
+uint8_t nfapi_pnf = 0;
+
 pthread_cond_t sync_cond;
 pthread_mutex_t sync_mutex;
 int sync_var=-1; //!< protected by mutex \ref sync_mutex.
@@ -208,6 +210,12 @@ uint64_t num_missed_slots=0; // counter for the number of missed slots
 
 extern void reset_opp_meas(void);
 extern void print_opp_meas(void);
+
+extern PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
+			  uint8_t UE_id,
+			  uint8_t abstraction_flag);
+
+extern void init_eNB_afterRU(void);
 
 int transmission_mode=1;
 
@@ -838,7 +846,7 @@ void init_openair0() {
 
 void wait_RUs(void) {
 
-  LOG_I(PHY,"Waiting for RUs to be configured ...\n");
+  LOG_I(PHY,"Waiting for RUs to be configured ... RC.ru_mask:%02x\n", RC.ru_mask);
 
   // wait for all RUs to be configured over fronthaul
   pthread_mutex_lock(&RC.ru_mutex);
@@ -847,6 +855,7 @@ void wait_RUs(void) {
 
   while (RC.ru_mask>0) {
     pthread_cond_wait(&RC.ru_cond,&RC.ru_mutex);
+    printf("RC.ru_mask:%02x\n", RC.ru_mask);
   }
 
   LOG_I(PHY,"RUs configured\n");
@@ -889,8 +898,6 @@ static inline void wait_nfapi_init(char *thread_name) {
   
   printf( "NFAPI: got sync (%s)\n", thread_name);
 }
-
-uint8_t nfapi_pnf = 0;
 
 int main( int argc, char **argv )
 {
@@ -1189,7 +1196,24 @@ int main( int argc, char **argv )
     } 
   }
   
+  // Will have parsed the config files by now
   
+  printf("NFAPI_PNF:%d\n", nfapi_pnf);
+
+  if (nfapi_pnf==1) // PNF
+  {
+    set_comp_log(PHY, LOG_DEBUG, LOG_FULL, 1);
+    printf("DJP - forcing PHY to DEBUG - should see similar line if it works\n");
+    LOG_E(PHY,"%s() DJP - forcing PHY to LOG_DEBUG for PNF\n", __FUNCTION__);
+  }
+  else if (nfapi_pnf == 2)  // VNF
+  {
+    set_comp_log(MAC, LOG_DEBUG, LOG_FULL, 1);
+    set_comp_log(RRC, LOG_INFO, LOG_FULL, 1);
+    printf("DJP - forcing MAC to DEBUG - should see similar line if it works\n");
+    LOG_E(PHY,"%s() DJP - forcing MAC to LOG_DEBUG for VNF\n", __FUNCTION__);
+  }
+
   
   
   printf("mlock\n");
@@ -1279,7 +1303,7 @@ int main( int argc, char **argv )
       nfapi_mode_str = "VNF";
       break;
   }
-  printf("NFAPI MODE:%s (1-PNF 2-VNF)\n", nfapi_mode_str);
+  printf("NFAPI MODE:%s\n", nfapi_mode_str);
 
   if (nfapi_pnf==2) // VNF
     wait_nfapi_init("main?");
@@ -1323,7 +1347,13 @@ int main( int argc, char **argv )
     config_sync_var=0;
 
     if (nfapi_pnf==1) // PNF
+    {
+      //set_comp_log(PHY, LOG_DEBUG, LOG_FULL, 1);
+      //printf("DJP - forcing PHY to DEBUG - should see similar line if it works\n");
+      //LOG_E(PHY,"%s() DJP - forcing PHY to LOG_DEBUG for PNF\n", __FUNCTION__);
+
       wait_nfapi_init("main?");
+    }
 
     printf("wait RUs\n");
     wait_RUs();

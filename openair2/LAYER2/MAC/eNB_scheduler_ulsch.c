@@ -861,7 +861,6 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
   UE_list_t         *UE_list=&eNB->UE_list;
   UE_TEMPLATE       *UE_template;
   UE_sched_ctrl     *UE_sched_ctrl;
-  int               tmode;
   int               sched_frame=frameP;
   int               rvidx_tab[4] = {0,2,3,1};
 
@@ -870,13 +869,13 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
   nfapi_hi_dci0_request_body_t   *hi_dci0_req = &eNB->HI_DCI0_req[CC_id].hi_dci0_request_body;
   nfapi_hi_dci0_request_pdu_t    *hi_dci0_pdu;
 
-  nfapi_ul_config_request_pdu_t  *ul_config_pdu;
+  //nfapi_ul_config_request_pdu_t  *ul_config_pdu;
 
 
 
   nfapi_ul_config_request_body_t *ul_req_tmp       = &eNB->UL_req_tmp[CC_id][sched_subframeP].ul_config_request_body;
 
-  ul_config_pdu                                    = &ul_req_tmp->ul_config_pdu_list[0]; 
+  //ul_config_pdu                                    = &ul_req_tmp->ul_config_pdu_list[0]; 
 
 
   LOG_D(MAC,"entering ulsch preprocesor\n");
@@ -1195,7 +1194,7 @@ abort();
             LOG_I(MAC,"[eNB %d][PUSCH %d/%x] CC_id %d Frame %d subframeP %d Scheduled (PHICH) UE %d (mcs %d, first rb %d, nb_rb %d, TBS %d, harq_pid %d,round %d)\n",
                   module_idP,harq_pid,rnti,CC_id,frameP,subframeP,UE_id,UE_template->mcs_UL[harq_pid],
                   UE_template->first_rb_ul[harq_pid], UE_template->nb_rb_ul[harq_pid],
-                  UE_template->TBS_UL[harq_pid],round);
+                  UE_template->TBS_UL[harq_pid],harq_pid,round);
 	    // Add UL_config PDUs
 	    LOG_D(MAC,"[PUSCH %d] Frame %d, Subframe %d: Adding UL CONFIG.Request for UE %d/%x, ulsch_frame %d, ulsch_subframe %d\n",
 		  harq_pid,frameP,subframeP,UE_id,rnti,sched_frame,sched_subframeP);

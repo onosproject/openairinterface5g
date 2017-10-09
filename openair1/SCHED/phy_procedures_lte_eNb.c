@@ -145,7 +145,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,int frame, int subframe) {
   int **txdataF = eNB->common_vars.txdataF;
   uint8_t *pbch_pdu=&eNB->pbch_pdu[0];
 
-  LOG_D(PHY,"common_signal_procedures: frame %d, subframe %d fdd:%s dir:%s\n",frame,subframe,fp->frame_type == FDD?"FDD":"TDD", subframe_select(fp,subframe) == SF_DL?"DL":"UL?"); 
+  //LOG_D(PHY,"common_signal_procedures: frame %d, subframe %d fdd:%s dir:%s\n",frame,subframe,fp->frame_type == FDD?"FDD":"TDD", subframe_select(fp,subframe) == SF_DL?"DL":"UL?"); 
 
   // generate Cell-Specific Reference Signals for both slots
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_RS_TX,1);
@@ -568,7 +568,6 @@ void prach_procedures(PHY_VARS_eNB *eNB,
   uint16_t max_preamble[4],max_preamble_energy[4],max_preamble_delay[4];
   uint16_t i;
   int frame,subframe;
-  LTE_eNB_PRACH *prach_vars=NULL;
 
 #ifdef Rel14
   if (br_flag==1) {
@@ -679,7 +678,7 @@ void prach_procedures(PHY_VARS_eNB *eNB,
     {
       if (max_preamble_energy[0] > 350) {
 
-	LOG_I(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure with preamble %d, energy %d.%d dB, delay %d\n",
+	LOG_E(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure with preamble %d, energy %d.%d dB, delay %d\n",
 	      eNB->Mod_id,
 	      eNB->CC_id,
 	      frame,
@@ -715,8 +714,8 @@ void prach_procedures(PHY_VARS_eNB *eNB,
               rach_ind.sfn_sf = frame<<4 | subframe;
               rach_ind.rach_indication_body = eNB->UL_INFO.rach_ind;
 
-              LOG_I(PHY,"\n\n\n\nDJP - this needs to be sent to VNF **********************************************\n\n\n\n");
-              LOG_I(PHY,"Filling NFAPI indication for RACH : TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
+              LOG_E(PHY,"\n\n\n\nDJP - this needs to be sent to VNF **********************************************\n\n\n\n");
+              LOG_E(PHY,"Filling NFAPI indication for RACH : TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
                   eNB->preamble_list[0].preamble_rel8.timing_advance,
                   eNB->preamble_list[0].preamble_rel8.preamble,
                   eNB->preamble_list[0].preamble_rel8.rnti,
@@ -2022,9 +2021,10 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 
   uci_procedures(eNB,proc);
 
-  pusch_procedures(eNB,proc);
-
-
+  if (nfapi_pnf == 0 || nfapi_pnf == 1) // If PNF or monolithic
+  {
+    pusch_procedures(eNB,proc);
+  }
   
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_UESPEC, 0 );
 
