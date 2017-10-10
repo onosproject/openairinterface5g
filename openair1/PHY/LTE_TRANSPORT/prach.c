@@ -1115,7 +1115,9 @@ void rx_prach0(PHY_VARS_eNB *eNB,
   uint8_t            restricted_set;      
   uint8_t            n_ra_prb;
 
+#ifdef PRACH_DEBUG
   int                frame;
+#endif
   int                subframe;
   int16_t            *prachF=NULL;
   int16_t            **rxsigF=NULL;
@@ -1371,7 +1373,9 @@ void rx_prach0(PHY_VARS_eNB *eNB,
   if (((eNB!=NULL) && (ru->function != NGFI_RAU_IF4p5))||
       ((eNB==NULL) && (ru->function == NGFI_RRU_IF4p5))) { // compute the DFTs of the PRACH temporal resources
     // Do forward transform
+#ifdef PRACH_DEBUG
     LOG_D(PHY,"rx_prach: Doing FFT for N_RB_UL %d nb_rx:%d Ncp:%d\n",fp->N_RB_UL, nb_rx, Ncp);
+#endif
     for (aa=0; aa<nb_rx; aa++) {
       AssertFatal(prach[aa]!=NULL,"prach[%d] is null\n",aa);
       prach2 = prach[aa] + (Ncp<<1);

@@ -232,6 +232,13 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
     }
   }
 
+  LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d : In generate_Msg2, RA_template->rach_resource_type:%d frameP:%d/%d RA_template:Msg2:%d/%d\n",module_idP,frameP,subframeP,RA_template->rach_resource_type,
+  frameP,
+  subframeP,
+  RA_template->Msg2_frame, 
+  RA_template->Msg2_subframe
+  );
+
   if (RA_template->rach_resource_type > 0) {
     
     // This uses an MPDCCH Type 2 common allocation according to Section 9.1.5 36-213
@@ -376,7 +383,12 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.drms_table_flag                       = 0;
 	dl_req->number_pdu++;
         dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
+
+        eNB->DL_req[CC_idP].sfn_sf = (frameP<<4)+subframeP;
+        eNB->DL_req[CC_idP].header.message_id = NFAPI_DL_CONFIG_REQUEST;
 	
+        LOG_E(MAC,"DL_CONFIG SFN/SF:%d/%d MESSAGE2\n", frameP, subframeP);
+
 	// Program UL processing for Msg3, same as regular LTE
 	get_Msg3alloc(&cc[CC_idP],subframeP,frameP,&RA_template->Msg3_frame,&RA_template->Msg3_subframe);
 	add_msg3(module_idP,CC_idP, RA_template,frameP,subframeP);
@@ -392,6 +404,8 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	TX_req->segments[0].segment_length                                    = 7;
 	TX_req->segments[0].segment_data                                      = cc[CC_idP].RAR_pdu.payload;
 	eNB->TX_req[CC_idP].tx_request_body.number_of_pdus++;
+
+        LOG_E(MAC,"TX_REQ SFN/SF:%d/%d MESSAGE2\n", frameP, subframeP);
       }
     }      
     
@@ -404,7 +418,6 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	LOG_I(MAC,"[eNB %d] CC_id %d Frame %d, subframeP %d: Generating RAR DCI, RA_active %d format 1A (%d,%d))\n",
 	      module_idP, CC_idP, frameP, subframeP,
 	      RA_template->RA_active,
-	      
 	      RA_template->RA_dci_fmt1,
 	      RA_template->RA_dci_size_bits1);
 
@@ -436,8 +449,8 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 
 	// This checks if the above DCI allocation is feasible in current subframe
 	if (!CCE_allocation_infeasible(module_idP,CC_idP,0,subframeP,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,RA_template->RA_rnti)) {
-	  LOG_D(MAC,"Frame %d: Subframe %d : Adding common DCI for RA_RNTI %x\n",
-		frameP,subframeP,RA_template->RA_rnti);
+	  LOG_D(MAC,"Frame %d: Subframe %d : Adding common DCI for RA_RNTI %x pdu_index:%d\n",
+		frameP,subframeP,RA_template->RA_rnti, eNB->pdu_index[CC_idP]);
 	  dl_req->number_dci++;
 	  dl_req->number_pdu++;
           dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
@@ -472,6 +485,11 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	  dl_req->number_pdu++;
           dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 	  
+          eNB->DL_req[CC_idP].sfn_sf = (frameP<<4)+subframeP;
+          eNB->DL_req[CC_idP].header.message_id = NFAPI_DL_CONFIG_REQUEST;
+
+          LOG_E(MAC,"DL_CONFIG SFN/SF:%d/%d MESSAGE2\n", frameP, subframeP);
+
 	  // Program UL processing for Msg3
 	  get_Msg3alloc(&cc[CC_idP],subframeP,frameP,&RA_template->Msg3_frame,&RA_template->Msg3_subframe);
 
@@ -492,6 +510,9 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	  TX_req->segments[0].segment_length                                    = 7;
 	  TX_req->segments[0].segment_data                                      = cc[CC_idP].RAR_pdu.payload;
 	  eNB->TX_req[CC_idP].tx_request_body.number_of_pdus++;
+
+          LOG_E(MAC,"TX_REQ SFN/SF:%d/%d MESSAGE2\n", frameP, subframeP);
+
 	} // PDCCH CCE allocation is feasible
       } // Msg2 frame/subframe condition
     } // else BL/CE
@@ -1237,7 +1258,7 @@ void initiate_ra_proc(module_id_t module_idP,
     ext4_prach=cc->radioResourceConfigCommon_BR->ext4->prach_ConfigCommon_v1310;
     prach_ParametersListCE_r13= &ext4_prach->prach_ParametersListCE_r13;
   }
-  LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, Subframe %d  Initiating RA procedure for preamble index %d\n",module_idP,CC_id,frameP,subframeP,preamble_index);
+  LOG_E(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, Subframe %d  Initiating RA procedure for preamble index %d\n",module_idP,CC_id,frameP,subframeP,preamble_index);
 #ifdef Rel14
   LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, Subframe %d  PRACH resource type %d\n",module_idP,CC_id,frameP,subframeP,rach_resource_type);
 #endif
