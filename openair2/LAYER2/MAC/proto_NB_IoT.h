@@ -33,6 +33,7 @@
 #include "openair1/PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 #include "LAYER2/MAC/defs_NB_IoT.h"
 #include "COMMON/platform_types.h"
+#include "openair2/RRC/LITE/defs_NB_IoT.h"
 /** \addtogroup _mac
  *  @{
  */
@@ -96,11 +97,37 @@ void convert_system_number(uint32_t source_sf,uint32_t *hyperSF, uint32_t *frame
 
 uint32_t convert_system_number_sf(uint32_t hyperSF, uint32_t frame, uint32_t subframe);
 
-void rrc_mac_config_req_NB_IoT(rrc_config_NB_IoT_t *mac_config,
-							   uint8_t mib_flag,
-							   uint8_t sib_flag,
-							   uint8_t ded_flag,
-							   uint8_t ue_list_ded_num);
+void config_mib_fapi_NB_IoT(
+		int                     rntiP,
+        int                     physCellId,
+        uint8_t                 eutra_band,
+        int                     Ncp,
+        int                     Ncp_UL,
+        int                     p_eNB,
+        int                     p_rx_eNB,
+        int                     dl_CarrierFreq,
+        int                     ul_CarrierFreq,
+        long                    *eutraControlRegionSize,
+        BCCH_BCH_Message_NB_t   *mib_NB_IoT
+        );
+
+void config_sib2_fapi_NB_IoT(
+                        int physCellId,
+                        RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon
+                        );
+
+void rrc_mac_config_req_NB_IoT(
+    module_id_t                             Mod_idP,
+    int                                     CC_idP,
+    int                                     rntiP,
+    rrc_eNB_carrier_data_NB_IoT_t           *carrier,
+    SystemInformationBlockType1_NB_t        *sib1_NB_IoT,
+    RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon,
+    PhysicalConfigDedicated_NB_r13_t        *physicalConfigDedicated,
+    LogicalChannelConfig_NB_r13_t           *logicalChannelConfig,            //FIXME: decide how to use it
+    rrc_config_NB_IoT_t                     *mac_config,
+    uint8_t                                 ded_flag,
+    uint8_t                                 ue_list_ded_num);
 
 // schedule helper functinons
 
@@ -125,7 +152,7 @@ void insert_schedule_result(schedule_result_t **list, int subframe, schedule_res
 
 void adjust_UL_resource_list(sched_temp_UL_NB_IoT_t *NPUSCH_info);
 
-void generate_scheduling_result_UL(int32_t DCI_subframe, int32_t DCI_end_subframe, uint32_t UL_subframe, uint32_t UL_end_subframe, DCIFormatN0_t *DCI, rnti_t rnti, uint8_t *ul_debug_str, uint8_t *dl_debug_str);
+void generate_scheduling_result_UL(int32_t DCI_subframe, int32_t DCI_end_subframe, uint32_t UL_subframe, uint32_t UL_end_subframe, DCIFormatN0_t *DCI_pdu, rnti_t rnti, uint8_t *ul_debug_str, uint8_t *dl_debug_str);
 
 uint32_t get_I_mcs_NB_IoT(int CE_level);
 

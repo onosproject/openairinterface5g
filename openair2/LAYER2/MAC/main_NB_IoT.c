@@ -51,7 +51,7 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
     mac_inst->sib1_count[i] = 0;
   }
   
-  rrc_mac_config_req_NB_IoT(&mac_inst->rrc_config, 1, 1, 0, 0);
+  //rrc_mac_config_req_NB_IoT(&mac_inst->rrc_config, 1, 1, 0, 0);
   init_tool_sib1(mac_inst);
 
   //  output handler 
@@ -137,7 +137,7 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
   mac_inst->num_uss_list = NUM_USS_PP;
   for(i=0;i<NUM_USS_PP;++i)
   {
-    rrc_mac_config_req_NB_IoT(&mac_inst->rrc_config, 0, 0, 1, i);
+    //rrc_mac_config_req_NB_IoT(&mac_inst->rrc_config, 0, 0, 1, i);
     (mac_inst->UE_list_spec+i)->head = -1;
     (mac_inst->UE_list_spec+i)->tail = -1;
     (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max = mac_inst->rrc_config.npdcch_ConfigDedicated[i].R_max;

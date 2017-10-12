@@ -28,6 +28,8 @@
 * \email: navid.nikaein@eurecom.fr, michele.paffetti@studio.unibo.it
 */
 
+#ifndef __RRC_VARS_NB_IOT_H__
+#define __RRC_VARS_NB_IOT_H__
 
 #include "defs_NB_IoT.h"
 #include "LAYER2/RLC/rlc.h"
@@ -106,3 +108,4 @@ uint16_t N311_NB_IoT[8] = {1,2,3,4,5,6,8,10};
 /* MP: 36.133 Section 9.1.4 RSRP Measurement Report Mapping and RSRQ Mapping, Table: 9.1.4-1 --> not for NB-IoT*/
 
 
+#endif

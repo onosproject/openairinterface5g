@@ -52,7 +52,7 @@
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 #include "LAYER2/RLC/rlc.h"
 //#include "LAYER2/MAC/proto.h"
-//#include "LAYER2/MAC/proto_NB_IoT.h"
+#include "LAYER2/MAC/proto_NB_IoT.h"
 #include "UTIL/LOG/log.h"
 #include "COMMON/mac_rrc_primitives.h"
 #include "rlc.h"
@@ -559,7 +559,7 @@ void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
         //XXX: Maybe some problem if Connection Setup could be called also after security activation
 
         //configure the MAC for SRB1bis/SRb1 (but in principle this configuration should be not LCID dependent)
-        rrc_mac_config_req_eNB_NB_IoT(
+        /*rrc_mac_config_req_eNB_NB_IoT(
           ctxt_pP->module_id,
           ue_context_pP->ue_context.primaryCC_id,
           ue_context_pP->ue_context.rnti,
@@ -584,7 +584,7 @@ void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
           ue_context_pP->ue_context.mac_MainConfig_NB_IoT, //XXX most probably is not needed since is only at UE side
           DCCH0_NB_IoT, //LCID  = 3 of SRB1bis
           SRB1bis_logicalChannelConfig
-		  );
+		  );*/
         break;
     }
   }
@@ -787,7 +787,7 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
           }
 
           //MP: for each DRB I send a rrc_mac_config_req--> what change is the DRB2LCHAN_NB_IoT and logicalChannelConfig_r13
-          rrc_mac_config_req_eNB_NB_IoT(
+          /*rrc_mac_config_req_eNB_NB_IoT(
             ctxt_pP->module_id,
             ue_context_pP->ue_context.primaryCC_id,
             ue_context_pP->ue_context.rnti,
@@ -812,7 +812,7 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
             ue_context_pP->ue_context.mac_MainConfig_NB_IoT,
             DRB2LCHAN_NB_IoT[i], //over the logical channel id of the DRB (>=4)
             DRB_configList2->list.array[i]->logicalChannelConfig_r13
-			);
+			);*/
 
         } else { //ue_context_pP->ue_context.DRB_active[drb_id] == 1 (means that DRB has been modified)
 
@@ -831,7 +831,7 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
 
           //MP: The only change w.r.t previous case is that we not put logicalChannelConfig
 
-          rrc_mac_config_req_eNB_NB_IoT(
+          /*rrc_mac_config_req_eNB_NB_IoT(
                       ctxt_pP->module_id,
                       ue_context_pP->ue_context.primaryCC_id,
                       ue_context_pP->ue_context.rnti,
@@ -856,7 +856,7 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
                       ue_context_pP->ue_context.mac_MainConfig_NB_IoT,
                       DRB2LCHAN_NB_IoT[i], //over the logical channel id of the DRB (>=4)
                       (LogicalChannelConfig_NB_r13_t*)NULL
-          			);
+          			);*/
         }
       }
     }
@@ -1709,33 +1709,18 @@ static void init_SI_NB_IoT(
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
 
     //
-    rrc_mac_config_req_eNB_NB_IoT(ctxt_pP->module_id,
-    							CC_id,
-								0,//rnti
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].physCellId,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].p_eNB,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].p_rx_eNB,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Ncp,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Ncp_UL,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->freqBandIndicator_r13, //eutra_band
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->freqBandInfo_r13,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->multiBandInfoList_r13,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->downlinkBitmap_r13,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->eutraControlRegionSize_r13,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT->nrs_CRS_PowerOffset_r13,
-//								&SIwindowsize,
-//								&SIperiod,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].dl_CarrierFreq,
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].ul_CarrierFreq,
-								(BCCH_BCH_Message_NB_t*) &
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].mib_NB_IoT,
-								(RadioResourceConfigCommonSIB_NB_r13_t *) &
-								eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib2_NB_IoT->radioResourceConfigCommon_r13,
-								(struct PhysicalConfigDedicated_NB_r13 *)NULL,
-								(MAC_MainConfig_NB_r13_t *) NULL,
-								0,// MP:logicalChannelID  //TODO still have to be properly managed in the interface
-								(struct LogicalChannelConfig_NB_r13 *)NULL
-								);
+         rrc_mac_config_req_NB_IoT(ctxt_pP->module_id,
+                                  CC_id,
+                                  0,
+                                  &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id],
+                                  (SystemInformationBlockType1_NB_t*) &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib1_NB_IoT,
+                                  (RadioResourceConfigCommonSIB_NB_r13_t *) &eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sib2_NB_IoT->radioResourceConfigCommon_r13,
+                                  (struct PhysicalConfigDedicated_NB_r13 *)NULL,
+                                  (struct LogicalChannelConfig_NB_r13 *)NULL,
+                                  &mac_inst->rrc_config,
+                                  0,
+                                  0
+                                  );
   } else {
     LOG_E(RRC, PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for SIB2/3_NB allocated\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));

@@ -24,7 +24,7 @@
 #include "openair2/PHY_INTERFACE/defs_NB_IoT.h" 
 //#include "RRC/LITE/defs_NB_IoT.h"
 
-#include "LAYER2/MAC/defs_NB_IoT.h"
+//#include "LAYER2/MAC/vars_NB_IoT.h"
 
 //NB-IoT
 extern IF_Module_t *if_inst;

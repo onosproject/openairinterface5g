@@ -37,8 +37,11 @@
 //#include "LAYER2/MAC/extern.h"
 #include "LAYER2/RLC/rlc.h"
 #include "LogicalChannelConfig-NB-r13.h"
+#include "LAYER2/MAC/defs_NB_IoT.h"
 
 extern IF_Module_t *if_inst;
+extern eNB_MAC_INST_NB_IoT *mac_inst;
+
 
 //MP: NOTE:XXX some of the parameters defined in vars_nb_iot are called by the extern.h file so not replicated here
 
