@@ -26,9 +26,9 @@ IF_Module_t *if_inst;
 //NB-IoT--------------------------------------
 eNB_MAC_INST_NB_IoT *mac_inst;
 
-BCCH_BCH_Message_NB_t               MIB;
-BCCH_DL_SCH_Message_NB_t            SIB;
-RRCConnectionSetup_NB_r13_IEs_t     DED_Config;
+//BCCH_BCH_Message_NB_t               MIB;
+//BCCH_DL_SCH_Message_NB_t            SIB;
+//RRCConnectionSetup_NB_r13_IEs_t     DED_Config;
 schedule_result_t *schedule_result_list_UL;
 schedule_result_t *schedule_result_list_DL;
 available_resource_DL_t *available_resource_DL;

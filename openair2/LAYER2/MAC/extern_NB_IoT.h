@@ -77,9 +77,9 @@ extern EMULATION_VARS *Emul_vars;
 
 extern eNB_MAC_INST_NB_IoT *mac_inst;
 extern uint8_t Is_rrc_registered_NB_IoT;
-extern BCCH_BCH_Message_NB_t               MIB;
-extern BCCH_DL_SCH_Message_NB_t            SIB;
-extern RRCConnectionSetup_NB_r13_IEs_t     DED_Config;
+//extern BCCH_BCH_Message_NB_t               MIB;
+//extern BCCH_DL_SCH_Message_NB_t            SIB;
+//extern RRCConnectionSetup_NB_r13_IEs_t     DED_Config;
 
 extern available_resource_DL_t *available_resource_DL;
 extern available_resource_tones_UL_t *available_resource_UL;

@@ -11,6 +11,10 @@
 #include "LAYER2/MAC/defs_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
+#include "BCCH-DL-SCH-Message-NB.h"
+#include "RRCConnectionSetup-NB.h"
+#include "BCCH-BCH-Message-NB.h"
+#include "SIB-Type-NB-r13.h"
 
 
 void config_mib_fapi_NB_IoT(
@@ -532,9 +536,9 @@ void rrc_mac_config_req_NB_IoT(
     return 0;
 
 
-   if( ded_flag!=0 )
+   /*if( ded_flag!=0 )
    {
-    /*
+    
     mac_config->npdcch_ConfigDedicated[0].R_max         =DED_Config.radioResourceConfigDedicated_r13.physicalConfigDedicated_r13[0].npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13;
     mac_config->npdcch_ConfigDedicated[1].R_max         =DED_Config.radioResourceConfigDedicated_r13.physicalConfigDedicated_r13[1].npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13;
     mac_config->npdcch_ConfigDedicated[2].R_max         =DED_Config.radioResourceConfigDedicated_r13.physicalConfigDedicated_r13[2].npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13;
@@ -546,7 +550,7 @@ void rrc_mac_config_req_NB_IoT(
     mac_config->npdcch_ConfigDedicated[0].a_offset      =DED_Config.radioResourceConfigDedicated_r13.physicalConfigDedicated_r13[0].npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13;
     mac_config->npdcch_ConfigDedicated[1].a_offset      =DED_Config.radioResourceConfigDedicated_r13.physicalConfigDedicated_r13[1].npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13;
     mac_config->npdcch_ConfigDedicated[2].a_offset      =DED_Config.radioResourceConfigDedicated_r13.physicalConfigDedicated_r13[2].npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13;
-    */
+    
     // now we only have 3 UE list USS
     mac_config->npdcch_ConfigDedicated[ue_list_ded_num].R_max         =DED_Config.radioResourceConfigDedicated_r13.physicalConfigDedicated_r13[ue_list_ded_num].npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13;
 
@@ -556,7 +560,7 @@ void rrc_mac_config_req_NB_IoT(
     }
 
 
-    return 0;
+    return 0;*/
 
 
 }
