@@ -62,8 +62,8 @@ unsigned short fill_rar(
   //  RAR_PDU *rar = (RAR_PDU *)(dlsch_buffer+1);
   uint8_t *rar = (uint8_t *)(dlsch_buffer+1);
   int i,ra_idx = -1;
-  uint16_t rballoc;
-  uint8_t mcs,TPC,ULdelay,cqireq;
+  RA_TEMPLATE *RA_template;
+
   AssertFatal(CC_id < MAX_NUM_CCs, "CC_id %u < MAX_NUM_CCs %u", CC_id, MAX_NUM_CCs);
 
   for (i=0; i<NB_RA_PROC_MAX; i++) {
@@ -73,7 +73,8 @@ unsigned short fill_rar(
       break;
     }
   }
-
+  RA_template = &RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx];
+ 
   //DevAssert( ra_idx != -1 );
   if (ra_idx==-1)
     return(0);
@@ -81,59 +82,50 @@ unsigned short fill_rar(
   // subheader fixed
   rarh->E                     = 0; // First and last RAR
   rarh->T                     = 1; // 0 for E/T/R/R/BI subheader, 1 for E/T/RAPID subheader
-  rarh->RAPID                 = RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx].preamble_index; // Respond to Preamble 0 only for the moment
-  /*
-  rar->R                      = 0;
-  rar->Timing_Advance_Command = eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset/4;
-  rar->hopping_flag           = 0;
-  rar->rb_alloc               = mac_xface->computeRIV(N_RB_UL,12,2);  // 2 RB
-  rar->mcs                    = 2;                                   // mcs 2
-  rar->TPC                    = 4;   // 2 dB power adjustment
-  rar->UL_delay               = 0;
-  rar->cqi_req                = 1;
-  rar->t_crnti                = eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti;
-   */
-  rar[4] = (uint8_t)(RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx].rnti>>8);
-  rar[5] = (uint8_t)(RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx].rnti&0xff);
-  //RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx].timing_offset = 0;
-  RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx].timing_offset /= 16; //T_A = N_TA/16, where N_TA should be on a 30.72Msps
-  rar[0] = (uint8_t)(RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx].timing_offset>>(2+4)); // 7 MSBs of timing advance + divide by 4
-  rar[1] = (uint8_t)(RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx].timing_offset<<(4-2))&0xf0; // 4 LSBs of timing advance + divide by 4
-  rballoc = mac_computeRIV(N_RB_UL,1,1); // first PRB only for UL Grant
+  rarh->RAPID                 = RA_template->preamble_index; // Respond to Preamble 0 only for the moment
+  rar[4] = (uint8_t)(RA_template->rnti>>8);
+  rar[5] = (uint8_t)(RA_template->rnti&0xff);
+  //RA_template->timing_offset = 0;
+  RA_template->timing_offset /= 16; //T_A = N_TA/16, where N_TA should be on a 30.72Msps
+  rar[0] = (uint8_t)(RA_template->timing_offset>>(2+4)); // 7 MSBs of timing advance + divide by 4
+  rar[1] = (uint8_t)(RA_template->timing_offset<<(4-2))&0xf0; // 4 LSBs of timing advance + divide by 4
+  RA_template->msg3_first_rb=6;
+  RA_template->msg3_nb_rb=1;
+  uint16_t rballoc = mac_computeRIV(N_RB_UL,RA_template->msg3_first_rb,RA_template->msg3_nb_rb); // first PRB only for UL Grant
   rar[1] |= (rballoc>>7)&7; // Hopping = 0 (bit 3), 3 MSBs of rballoc
   rar[2] = ((uint8_t)(rballoc&0xff))<<1; // 7 LSBs of rballoc
-  mcs = 10;
-  TPC = 3;
-  ULdelay = 0;
-  cqireq = 0;
-  rar[2] |= ((mcs&0x8)>>3);  // mcs 10
-  rar[3] = (((mcs&0x7)<<5)) | ((TPC&7)<<2) | ((ULdelay&1)<<1) | (cqireq&1);
+  RA_template->msg3_mcs = 10;
+  RA_template->msg3_TPC = 3;
+  RA_template->msg3_ULdelay = 0;
+  RA_template->msg3_cqireq = 0;
+  rar[2] |= ((RA_template->msg3_mcs&0x8)>>3);  // mcs 10
+  rar[3] = (((RA_template->msg3_mcs&0x7)<<5)) | ((RA_template->msg3_TPC&7)<<2) | ((RA_template->msg3_ULdelay&1)<<1) | (RA_template->msg3_cqireq&1);
 
   LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Generating RAR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for ra_idx %d, CRNTI %x,preamble %d/%d,TIMING OFFSET %d\n",
         module_idP, CC_id,
         frameP,
         *(uint8_t*)rarh,rar[0],rar[1],rar[2],rar[3],rar[4],rar[5],
         ra_idx,
-        RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx].rnti,
+        RA_template->rnti,
         rarh->RAPID,RC.mac[module_idP]->common_channels[CC_id].RA_template[0].preamble_index,
-        RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx].timing_offset);
+        RA_template->timing_offset);
 
   if (opt_enabled) {
     trace_pdu(1, dlsch_buffer, input_buffer_length, module_idP, 2, 1,
         RC.mac[module_idP]->frame, RC.mac[module_idP]->subframe, 0, 0);
     LOG_D(OPT,"[eNB %d][RAPROC] CC_id %d RAR Frame %d trace pdu for rnti %x and  rapid %d size %d\n",
-          module_idP, CC_id, frameP, RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx].rnti,
+          module_idP, CC_id, frameP, RA_template->rnti,
           rarh->RAPID, input_buffer_length);
   }
 
-  return(RC.mac[module_idP]->common_channels[CC_id].RA_template[ra_idx].rnti);
+  return(RA_template->rnti);
 }
 
 #ifdef Rel14
 //------------------------------------------------------------------------------
 unsigned short fill_rar_br(eNB_MAC_INST *eNB,
-			   const int          CC_id,
-			   const int          ra_idx,
+			   int CC_id,
+			   RA_TEMPLATE        *RA_template,      
 			   const frame_t      frameP,
 			   const sub_frame_t  subframeP,
 			   uint8_t*    const  dlsch_buffer,
@@ -143,47 +135,44 @@ unsigned short fill_rar_br(eNB_MAC_INST *eNB,
 {
 
   RA_HEADER_RAPID *rarh = (RA_HEADER_RAPID *)dlsch_buffer;
-
-  uint8_t *rar = (uint8_t *)(dlsch_buffer+1);
-  int i;
-  uint8_t nb,rballoc,reps;
-  uint8_t mcs,TPC,ULdelay,cqireq;
   COMMON_channels_t *cc = &eNB->common_channels[CC_id];
+  uint8_t *rar = (uint8_t *)(dlsch_buffer+1);
+  //  uint8_t nb,reps;
+  uint8_t rballoc;
+  uint8_t mcs,TPC,ULdelay,cqireq;
   int input_buffer_length;
 
 
-  AssertFatal(CC_id < MAX_NUM_CCs, "CC_id %u < MAX_NUM_CCs %u", CC_id, MAX_NUM_CCs);
-
-  AssertFatal(ra_idx >= 0 && ra_idx < 4, "RA index not in [0..3]\n");
+  AssertFatal(RA_template != NULL, "RA is null \n");
 
   // subheader fixed
   rarh->E                     = 0; // First and last RAR
   rarh->T                     = 1; // 0 for E/T/R/R/BI subheader, 1 for E/T/RAPID subheader
-  rarh->RAPID                 = cc->RA_template[ra_idx].preamble_index; // Respond to Preamble 0 only for the moment
-  cc->RA_template[ra_idx].timing_offset /= 16; //T_A = N_TA/16, where N_TA should be on a 30.72Msps
-  rar[0] = (uint8_t)(cc->RA_template[ra_idx].timing_offset>>(2+4)); // 7 MSBs of timing advance + divide by 4
-  rar[1] = (uint8_t)(cc->RA_template[ra_idx].timing_offset<<(4-2))&0xf0; // 4 LSBs of timing advance + divide by 4
+  rarh->RAPID                 = RA_template->preamble_index; // Respond to Preamble 0 only for the moment
+  RA_template->timing_offset /= 16; //T_A = N_TA/16, where N_TA should be on a 30.72Msps
+  rar[0] = (uint8_t)(RA_template->timing_offset>>(2+4)); // 7 MSBs of timing advance + divide by 4
+  rar[1] = (uint8_t)(RA_template->timing_offset<<(4-2))&0xf0; // 4 LSBs of timing advance + divide by 4
 
   int N_NB_index;
 
   AssertFatal(1==0,"RAR for BL/CE Still to be finished ...\n"); 
 
   // Copy the Msg2 narrowband
-  cc->RA_template[ra_idx].msg34_narrowband = cc->RA_template[ra_idx].msg2_narrowband; 
+  RA_template->msg34_narrowband = RA_template->msg2_narrowband; 
 
   if (ce_level<2) { //CE Level 0,1, CEmodeA
     input_buffer_length =6;
 
     N_NB_index = get_numnarrowbandbits(cc->mib->message.dl_Bandwidth);
 
-    rar[4] = (uint8_t)(cc->RA_template[ra_idx].rnti>>8);
-    rar[5] = (uint8_t)(cc->RA_template[ra_idx].rnti&0xff);
+    rar[4] = (uint8_t)(RA_template->rnti>>8);
+    rar[5] = (uint8_t)(RA_template->rnti&0xff);
     //cc->RA_template[ra_idx].timing_offset = 0;
-    nb      = 0;
-    rballoc = mac_computeRIV(6,1+ra_idx,1); // one PRB only for UL Grant in position 1+ra_idx within Narrowband
+    //    nb      = 0;
+    rballoc = mac_computeRIV(6,1+ce_level,1); // one PRB only for UL Grant in position 1+ce_level within Narrowband
     rar[1] |= (rballoc&15)<<(4-N_NB_index); // Hopping = 0 (bit 3), 3 MSBs of rballoc
 
-    reps    = 4;
+    //    reps    = 4;
     mcs     = 7;
     TPC     = 3; // no power increase
     ULdelay = 0;
@@ -195,27 +184,26 @@ unsigned short fill_rar_br(eNB_MAC_INST *eNB,
 
     input_buffer_length =5;
 
-    rar[3] = (uint8_t)(cc->RA_template[ra_idx].rnti>>8);
-    rar[4] = (uint8_t)(cc->RA_template[ra_idx].rnti&0xff);
+    rar[3] = (uint8_t)(RA_template->rnti>>8);
+    rar[4] = (uint8_t)(RA_template->rnti&0xff);
   }
-  LOG_D(MAC,"[RAPROC] CC_id %d Frame %d Generating RAR BR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for ra_idx %d, CRNTI %x,preamble %d/%d,TIMING OFFSET %d\n",
-        CC_id,
+  LOG_D(MAC,"[RAPROC] Frame %d Generating RAR BR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for ce_level %d, CRNTI %x,preamble %d/%d,TIMING OFFSET %d\n",
         frameP,
         *(uint8_t*)rarh,rar[0],rar[1],rar[2],rar[3],rar[4],rar[5],
-        ra_idx,
-        cc->RA_template[ra_idx].rnti,
-        rarh->RAPID,cc->RA_template[0].preamble_index,
-        cc->RA_template[ra_idx].timing_offset);
+        ce_level,
+        RA_template->rnti,
+        rarh->RAPID,RA_template->preamble_index,
+        RA_template->timing_offset);
 
   if (opt_enabled) {
     trace_pdu(1, dlsch_buffer, input_buffer_length, eNB->Mod_id, 2, 1,
         eNB->frame, eNB->subframe, 0, 0);
-    LOG_D(OPT,"[eNB %d][RAPROC] CC_id %d RAR Frame %d trace pdu for rnti %x and  rapid %d size %d\n",
-          eNB->Mod_id, CC_id, frameP, cc->RA_template[ra_idx].rnti,
+    LOG_D(OPT,"[RAPROC] RAR Frame %d trace pdu for rnti %x and  rapid %d size %d\n",
+          frameP, RA_template->rnti,
           rarh->RAPID, input_buffer_length);
   }
 
-  return(cc->RA_template[ra_idx].rnti);
+  return(RA_template->rnti);
 }
 #endif
 

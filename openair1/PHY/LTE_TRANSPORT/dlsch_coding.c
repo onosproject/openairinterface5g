@@ -120,8 +120,6 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(unsigned char Kmimo,unsigned char Mdlharq,uint32_
   unsigned char exit_flag = 0,i,j,r,aa,layer;
   int re;
   unsigned char bw_scaling =1;
-  RU_t *ru;
-  int ru_id;
 
   switch (N_RB_DL) {
   case 6:
@@ -147,7 +145,7 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(unsigned char Kmimo,unsigned char Mdlharq,uint32_
     bzero(dlsch,sizeof(LTE_eNB_DLSCH_t));
     dlsch->Kmimo = Kmimo;
     dlsch->Mdlharq = Mdlharq;
-    dlsch->Mlimit = 4;
+    dlsch->Mlimit = 8;
     dlsch->Nsoft = Nsoft;
     
     for (layer=0; layer<4; layer++) {
@@ -604,7 +602,9 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 
   //  if (dlsch->harq_processes[harq_pid]->Ndi == 1) {  // this is a new packet
   if (dlsch->harq_processes[harq_pid]->round == 0) {  // this is a new packet
-
+#ifdef DEBUG_DLSCH_CODING
+  printf("encoding thinks this is a new packet \n");
+#endif
     /*
     int i;
     printf("dlsch (tx): \n");
@@ -711,6 +711,9 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 #endif
 
     start_meas(rm_stats);
+#ifdef DEBUG_DLSCH_CODING
+  printf("rvidx in encoding = %d\n", dlsch->harq_processes[harq_pid]->rvidx);
+#endif
     r_offset += lte_rate_matching_turbo(dlsch->harq_processes[harq_pid]->RTC[r],
                                         G,  //G
                                         dlsch->harq_processes[harq_pid]->w[r],
@@ -781,7 +784,9 @@ int dlsch_encoding_SIC(PHY_VARS_UE *ue,
 
   //  if (dlsch->harq_processes[harq_pid]->Ndi == 1) {  // this is a new packet
   if (dlsch->harq_processes[harq_pid]->round == 0) {  // this is a new packet
-
+#ifdef DEBUG_DLSCH_CODING
+  printf("SIC encoding thinks this is a new packet \n");
+#endif
     /*
     int i;
     printf("dlsch (tx): \n");
@@ -888,6 +893,9 @@ int dlsch_encoding_SIC(PHY_VARS_UE *ue,
 #endif
 
     start_meas(rm_stats);
+#ifdef DEBUG_DLSCH_CODING
+    printf("rvidx in SIC encoding = %d\n", dlsch->harq_processes[harq_pid]->rvidx);
+#endif
     r_offset += lte_rate_matching_turbo(dlsch->harq_processes[harq_pid]->RTC[r],
                                         G,  //G
                                         dlsch->harq_processes[harq_pid]->w[r],

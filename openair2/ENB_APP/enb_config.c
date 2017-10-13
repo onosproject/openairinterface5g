@@ -28,7 +28,6 @@
 */
 
 #include <string.h>
-#include <libconfig.h>
 #include <inttypes.h>
 
 #include "log.h"
@@ -53,298 +52,12 @@
 #include "LAYER2/MAC/extern.h"
 #include "PHY/extern.h"
 #include "targets/ARCH/ETHERNET/USERSPACE/LIB/ethernet_lib.h"
-
-/* those macros are here to help diagnose problems in configuration files
- * if the lookup fails, a warning is printed
- * (yes we can use the function name for the macro itself, the C preprocessor
- * won't die in an infinite loop)
- */
-#define config_setting_lookup_int(setting, name, value)			\
-  (config_setting_lookup_int(setting, name, value) ||			\
-   (printf("WARNING: setting '%s' not found in configuration file\n", name), 0))
-#define config_setting_lookup_int64(setting, name, value)		\
-  (config_setting_lookup_int64(setting, name, value) ||			\
-   (printf("WARNING: setting '%s' not found in configuration file\n", name), 0))
-#define config_setting_lookup_float(setting, name, value)		\
-  (config_setting_lookup_float(setting, name, value) ||			\
-   (printf("WARNING: setting '%s' not found in configuration file\n", name), 0))
-#define config_setting_lookup_bool(setting, name, value)		\
-  (config_setting_lookup_bool(setting, name, value) ||			\
-   (printf("WARNING: setting '%s' not found in configuration file\n", name), 0))
-#define config_setting_lookup_string(setting, name, value)		\
-  (config_setting_lookup_string(setting, name, value) ||		\
-   (printf("WARNING: setting '%s' not found in configuration file\n", name), 0))
-
-#define ENB_CONFIG_STRING_ACTIVE_ENBS                   "Active_eNBs"
-
-#define ENB_CONFIG_STRING_ENB_LIST                      "eNBs"
-#define ENB_CONFIG_STRING_ENB_ID                        "eNB_ID"
-#define ENB_CONFIG_STRING_CELL_TYPE                     "cell_type"
-#define ENB_CONFIG_STRING_ENB_NAME                      "eNB_name"
-
-#define ENB_CONFIG_STRING_TRACKING_AREA_CODE            "tracking_area_code"
-#define ENB_CONFIG_STRING_MOBILE_COUNTRY_CODE           "mobile_country_code"
-#define ENB_CONFIG_STRING_MOBILE_NETWORK_CODE           "mobile_network_code"
-
-#define ENB_CONFIG_STRING_LOCAL_S_IF_NAME               "local_s_if_name"
-#define ENB_CONFIG_STRING_LOCAL_S_ADDRESS               "local_s_address"
-#define ENB_CONFIG_STRING_REMOTE_S_ADDRESS              "remote_s_address"
-#define ENB_CONFIG_STRING_LOCAL_S_PORTC                 "local_s_portc"
-#define ENB_CONFIG_STRING_REMOTE_S_PORTC                "remote_s_portc"
-#define ENB_CONFIG_STRING_LOCAL_S_PORTD                 "local_s_portd"
-#define ENB_CONFIG_STRING_REMOTE_S_PORTD                "remote_s_portd"
-#define ENB_CONFIG_STRING_TRANSPORT_S_PREFERENCE        "tr_s_preference"
+#include "enb_paramdef.h"
+#include "common/config/config_userapi.h"
 
 
-#define ENB_CONFIG_STRING_COMPONENT_CARRIERS                            "component_carriers"
-
-#define ENB_CONFIG_STRING_CC_NODE_FUNCTION                              "node_function"
-#define ENB_CONFIG_STRING_CC_NODE_TIMING                                "node_timing"   
-#define ENB_CONFIG_STRING_CC_NODE_SYNCH_REF                             "node_synch_ref"   
-
-#define ENB_CONFIG_STRING_FRAME_TYPE                                    "frame_type"
-#define ENB_CONFIG_STRING_TDD_CONFIG                                    "tdd_config"
-#define ENB_CONFIG_STRING_TDD_CONFIG_S                                  "tdd_config_s"
-#define ENB_CONFIG_STRING_PREFIX_TYPE                                   "prefix_type"
-#define ENB_CONFIG_STRING_PBCH_REPETITION                               "pbch_repetition"
-#define ENB_CONFIG_STRING_EUTRA_BAND                                    "eutra_band"
-#define ENB_CONFIG_STRING_DOWNLINK_FREQUENCY                            "downlink_frequency"
-#define ENB_CONFIG_STRING_UPLINK_FREQUENCY_OFFSET                       "uplink_frequency_offset"
-
-#define ENB_CONFIG_STRING_NID_CELL                                      "Nid_cell"
-#define ENB_CONFIG_STRING_N_RB_DL                                       "N_RB_DL"
-#define ENB_CONFIG_STRING_CELL_MBSFN                                  "Nid_cell_mbsfn"
-#define ENB_CONFIG_STRING_NB_ANT_PORTS                              "nb_antenna_ports"
-#define ENB_CONFIG_STRING_NB_ANT_TX                                 "nb_antennas_tx"
-#define ENB_CONFIG_STRING_NB_ANT_RX                                 "nb_antennas_rx"
-#define ENB_CONFIG_STRING_TX_GAIN                                       "tx_gain"
-#define ENB_CONFIG_STRING_RX_GAIN                                       "rx_gain"
-#define ENB_CONFIG_STRING_PRACH_ROOT                                  "prach_root"
-#define ENB_CONFIG_STRING_PRACH_CONFIG_INDEX                          "prach_config_index"
-#define ENB_CONFIG_STRING_PRACH_HIGH_SPEED                          "prach_high_speed"
-#define ENB_CONFIG_STRING_PRACH_ZERO_CORRELATION                  "prach_zero_correlation"
-#define ENB_CONFIG_STRING_PRACH_FREQ_OFFSET                         "prach_freq_offset"
-#define ENB_CONFIG_STRING_PUCCH_DELTA_SHIFT                         "pucch_delta_shift"
-#define ENB_CONFIG_STRING_PUCCH_NRB_CQI                                 "pucch_nRB_CQI"
-#define ENB_CONFIG_STRING_PUCCH_NCS_AN                                  "pucch_nCS_AN"
-#if !defined(Rel10) && !defined(Rel14)
-#define ENB_CONFIG_STRING_PUCCH_N1_AN                                 "pucch_n1_AN"
-#endif
-#define ENB_CONFIG_STRING_PDSCH_RS_EPRE                                 "pdsch_referenceSignalPower"
-#define ENB_CONFIG_STRING_PDSCH_PB                                  "pdsch_p_b"
-#define ENB_CONFIG_STRING_PUSCH_N_SB                                  "pusch_n_SB"
-#define ENB_CONFIG_STRING_PUSCH_HOPPINGMODE                             "pusch_hoppingMode"
-#define ENB_CONFIG_STRING_PUSCH_HOPPINGOFFSET                           "pusch_hoppingOffset"
-#define ENB_CONFIG_STRING_PUSCH_ENABLE64QAM                         "pusch_enable64QAM"
-#define ENB_CONFIG_STRING_PUSCH_GROUP_HOPPING_EN                  "pusch_groupHoppingEnabled"
-#define ENB_CONFIG_STRING_PUSCH_GROUP_ASSIGNMENT                  "pusch_groupAssignment"
-#define ENB_CONFIG_STRING_PUSCH_SEQUENCE_HOPPING_EN                 "pusch_sequenceHoppingEnabled"
-#define ENB_CONFIG_STRING_PUSCH_NDMRS1                                  "pusch_nDMRS1"
-#define ENB_CONFIG_STRING_PHICH_DURATION                          "phich_duration"
-#define ENB_CONFIG_STRING_PHICH_RESOURCE                          "phich_resource"
-#define ENB_CONFIG_STRING_SRS_ENABLE                                  "srs_enable"
-#define ENB_CONFIG_STRING_SRS_BANDWIDTH_CONFIG                          "srs_BandwidthConfig"
-#define ENB_CONFIG_STRING_SRS_SUBFRAME_CONFIG                         "srs_SubframeConfig"
-#define ENB_CONFIG_STRING_SRS_ACKNACKST_CONFIG                          "srs_ackNackST"
-#define ENB_CONFIG_STRING_SRS_MAXUPPTS                                  "srs_MaxUpPts"
-#define ENB_CONFIG_STRING_PUSCH_PO_NOMINAL                          "pusch_p0_Nominal"
-#define ENB_CONFIG_STRING_PUSCH_ALPHA                                 "pusch_alpha"
-#define ENB_CONFIG_STRING_PUCCH_PO_NOMINAL                          "pucch_p0_Nominal"
-#define ENB_CONFIG_STRING_MSG3_DELTA_PREAMBLE                         "msg3_delta_Preamble"
-#define ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT1                          "pucch_deltaF_Format1"
-#define ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT1b                         "pucch_deltaF_Format1b"
-#define ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT2                          "pucch_deltaF_Format2"
-#define ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT2A                         "pucch_deltaF_Format2a"
-#define ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT2B                         "pucch_deltaF_Format2b"
-#define ENB_CONFIG_STRING_RACH_NUM_RA_PREAMBLES                         "rach_numberOfRA_Preambles"
-#define ENB_CONFIG_STRING_RACH_PREAMBLESGROUPACONFIG                  "rach_preamblesGroupAConfig"
-#define ENB_CONFIG_STRING_RACH_SIZEOFRA_PREAMBLESGROUPA                 "rach_sizeOfRA_PreamblesGroupA"
-#define ENB_CONFIG_STRING_RACH_MESSAGESIZEGROUPA                        "rach_messageSizeGroupA"
-#define ENB_CONFIG_STRING_RACH_MESSAGEPOWEROFFSETGROUPB                 "rach_messagePowerOffsetGroupB"
-#define ENB_CONFIG_STRING_RACH_POWERRAMPINGSTEP                         "rach_powerRampingStep"
-#define ENB_CONFIG_STRING_RACH_PREAMBLEINITIALRECEIVEDTARGETPOWER "rach_preambleInitialReceivedTargetPower"
-#define ENB_CONFIG_STRING_RACH_PREAMBLETRANSMAX                         "rach_preambleTransMax"
-#define ENB_CONFIG_STRING_RACH_RARESPONSEWINDOWSIZE                 "rach_raResponseWindowSize"
-#define ENB_CONFIG_STRING_RACH_MACCONTENTIONRESOLUTIONTIMER         "rach_macContentionResolutionTimer"
-#define ENB_CONFIG_STRING_RACH_MAXHARQMSG3TX                          "rach_maxHARQ_Msg3Tx"
-#define ENB_CONFIG_STRING_PCCH_DEFAULT_PAGING_CYCLE                     "pcch_default_PagingCycle"
-#define ENB_CONFIG_STRING_PCCH_NB                                       "pcch_nB"
-#define ENB_CONFIG_STRING_BCCH_MODIFICATIONPERIODCOEFF                  "bcch_modificationPeriodCoeff"
-#define ENB_CONFIG_STRING_UETIMERS_T300                                 "ue_TimersAndConstants_t300"
-#define ENB_CONFIG_STRING_UETIMERS_T301                                 "ue_TimersAndConstants_t301"
-#define ENB_CONFIG_STRING_UETIMERS_T310                                 "ue_TimersAndConstants_t310"
-#define ENB_CONFIG_STRING_UETIMERS_T311                                 "ue_TimersAndConstants_t311"
-#define ENB_CONFIG_STRING_UETIMERS_N310                                 "ue_TimersAndConstants_n310"
-#define ENB_CONFIG_STRING_UETIMERS_N311                                 "ue_TimersAndConstants_n311"
-#define ENB_CONFIG_STRING_UE_TRANSMISSION_MODE                          "ue_TransmissionMode"
-
-#define ENB_CONFIG_STRING_SRB1                                          "srb1_parameters"
-#define ENB_CONFIG_STRING_SRB1_TIMER_POLL_RETRANSMIT                    "timer_poll_retransmit"
-#define ENB_CONFIG_STRING_SRB1_TIMER_REORDERING                         "timer_reordering"
-#define ENB_CONFIG_STRING_SRB1_TIMER_STATUS_PROHIBIT                    "timer_status_prohibit"
-#define ENB_CONFIG_STRING_SRB1_POLL_PDU                                 "poll_pdu"
-#define ENB_CONFIG_STRING_SRB1_POLL_BYTE                                "poll_byte"
-#define ENB_CONFIG_STRING_SRB1_MAX_RETX_THRESHOLD                       "max_retx_threshold"
-#define ENB_CONFIG_STRING_MME_IP_ADDRESS                "mme_ip_address"
-#define ENB_CONFIG_STRING_MME_IPV4_ADDRESS              "ipv4"
-#define ENB_CONFIG_STRING_MME_IPV6_ADDRESS              "ipv6"
-#define ENB_CONFIG_STRING_MME_IP_ADDRESS_ACTIVE         "active"
-#define ENB_CONFIG_STRING_MME_IP_ADDRESS_PREFERENCE     "preference"
-
-#define ENB_CONFIG_STRING_SCTP_CONFIG                    "SCTP"
-#define ENB_CONFIG_STRING_SCTP_INSTREAMS                 "SCTP_INSTREAMS"
-#define ENB_CONFIG_STRING_SCTP_OUTSTREAMS                "SCTP_OUTSTREAMS"
-
-#define ENB_CONFIG_STRING_NETWORK_INTERFACES_CONFIG     "NETWORK_INTERFACES"
-#define ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_S1_MME "ENB_INTERFACE_NAME_FOR_S1_MME"
-#define ENB_CONFIG_STRING_ENB_IPV4_ADDRESS_FOR_S1_MME   "ENB_IPV4_ADDRESS_FOR_S1_MME"
-#define ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_S1U    "ENB_INTERFACE_NAME_FOR_S1U"
-#define ENB_CONFIG_STRING_ENB_IPV4_ADDR_FOR_S1U         "ENB_IPV4_ADDRESS_FOR_S1U"
-#define ENB_CONFIG_STRING_ENB_PORT_FOR_S1U              "ENB_PORT_FOR_S1U"
-
-#define ENB_CONFIG_STRING_NETWORK_CONTROLLER_CONFIG     "NETWORK_CONTROLLER"
-#define ENB_CONFIG_STRING_FLEXRAN_AGENT_INTERFACE_NAME      "FLEXRAN_AGENT_INTERFACE_NAME"
-#define ENB_CONFIG_STRING_FLEXRAN_AGENT_IPV4_ADDRESS        "FLEXRAN_AGENT_IPV4_ADDRESS"
-#define ENB_CONFIG_STRING_FLEXRAN_AGENT_PORT                "FLEXRAN_AGENT_PORT"
-#define ENB_CONFIG_STRING_FLEXRAN_AGENT_CACHE               "FLEXRAN_AGENT_CACHE"
-
-
-
-
-#define ENB_CONFIG_STRING_ASN1_VERBOSITY                   "Asn1_verbosity"
-#define ENB_CONFIG_STRING_ASN1_VERBOSITY_NONE              "none"
-#define ENB_CONFIG_STRING_ASN1_VERBOSITY_ANNOYING          "annoying"
-#define ENB_CONFIG_STRING_ASN1_VERBOSITY_INFO              "info"
-
-// OTG config per ENB-UE DL
-#define ENB_CONF_STRING_OTG_CONFIG                         "otg_config"
-#define ENB_CONF_STRING_OTG_UE_ID                          "ue_id"
-#define ENB_CONF_STRING_OTG_APP_TYPE                       "app_type"
-#define ENB_CONF_STRING_OTG_BG_TRAFFIC                     "bg_traffic"
-
-// per eNB configuration
-#define ENB_CONFIG_STRING_LOG_CONFIG                       "log_config"
-#define ENB_CONFIG_STRING_GLOBAL_LOG_LEVEL                 "global_log_level"
-#define ENB_CONFIG_STRING_GLOBAL_LOG_VERBOSITY             "global_log_verbosity"
-#define ENB_CONFIG_STRING_HW_LOG_LEVEL                     "hw_log_level"
-#define ENB_CONFIG_STRING_HW_LOG_VERBOSITY                 "hw_log_verbosity"
-#define ENB_CONFIG_STRING_PHY_LOG_LEVEL                    "phy_log_level"
-#define ENB_CONFIG_STRING_PHY_LOG_VERBOSITY                "phy_log_verbosity"
-#define ENB_CONFIG_STRING_MAC_LOG_LEVEL                    "mac_log_level"
-#define ENB_CONFIG_STRING_MAC_LOG_VERBOSITY                "mac_log_verbosity"
-#define ENB_CONFIG_STRING_RLC_LOG_LEVEL                    "rlc_log_level"
-#define ENB_CONFIG_STRING_RLC_LOG_VERBOSITY                "rlc_log_verbosity"
-#define ENB_CONFIG_STRING_PDCP_LOG_LEVEL                   "pdcp_log_level"
-#define ENB_CONFIG_STRING_PDCP_LOG_VERBOSITY               "pdcp_log_verbosity"
-#define ENB_CONFIG_STRING_RRC_LOG_LEVEL                    "rrc_log_level"
-#define ENB_CONFIG_STRING_RRC_LOG_VERBOSITY                "rrc_log_verbosity"
-#define ENB_CONFIG_STRING_GTPU_LOG_LEVEL                   "gtpu_log_level"
-#define ENB_CONFIG_STRING_GTPU_LOG_VERBOSITY               "gtpu_log_verbosity"
-#define ENB_CONFIG_STRING_UDP_LOG_LEVEL                    "udp_log_level"
-#define ENB_CONFIG_STRING_UDP_LOG_VERBOSITY                "udp_log_verbosity"
-#define ENB_CONFIG_STRING_OSA_LOG_LEVEL                    "osa_log_level"
-#define ENB_CONFIG_STRING_OSA_LOG_VERBOSITY                "osa_log_verbosity"
-
-#define CONFIG_STRING_MACRLC_LIST                          "MACRLCs"
-#define CONFIG_STRING_MACRLC_CONFIG                        "macrlc_config"
-#define CONFIG_STRING_MACRLC_CC                            "num_cc"
-#define CONFIG_STRING_MACRLC_LOCAL_N_IF_NAME               "local_n_if_name"
-#define CONFIG_STRING_MACRLC_LOCAL_N_ADDRESS               "local_n_address"
-#define CONFIG_STRING_MACRLC_REMOTE_N_ADDRESS              "remote_n_address"
-#define CONFIG_STRING_MACRLC_LOCAL_N_PORTC                 "local_n_portc"
-#define CONFIG_STRING_MACRLC_REMOTE_N_PORTC                "remote_n_portc"
-#define CONFIG_STRING_MACRLC_LOCAL_N_PORTD                 "local_n_portd"
-#define CONFIG_STRING_MACRLC_REMOTE_N_PORTD                "remote_n_portd"
-#define CONFIG_STRING_MACRLC_LOCAL_S_IF_NAME               "local_s_if_name"
-#define CONFIG_STRING_MACRLC_LOCAL_S_ADDRESS               "local_s_address"
-#define CONFIG_STRING_MACRLC_REMOTE_S_ADDRESS              "remote_s_address"
-#define CONFIG_STRING_MACRLC_LOCAL_S_PORTC                 "local_s_portc"
-#define CONFIG_STRING_MACRLC_REMOTE_S_PORTC                "remote_s_portc"
-#define CONFIG_STRING_MACRLC_LOCAL_S_PORTD                 "local_s_portd"
-#define CONFIG_STRING_MACRLC_REMOTE_S_PORTD                "remote_s_portd"
-#define CONFIG_STRING_MACRLC_TRANSPORT_S_PREFERENCE        "tr_s_preference"
-#define CONFIG_STRING_MACRLC_TRANSPORT_N_PREFERENCE        "tr_n_preference"
-
-#define CONFIG_STRING_L1_LIST                              "L1s"
-#define CONFIG_STRING_L1_CONFIG                            "l1_config"
-#define CONFIG_STRING_L1_CC                                "num_cc"
-#define CONFIG_STRING_L1_LOCAL_N_IF_NAME                   "local_n_if_name"
-#define CONFIG_STRING_L1_LOCAL_N_ADDRESS                   "local_n_address"
-#define CONFIG_STRING_L1_REMOTE_N_ADDRESS                  "remote_n_address"
-#define CONFIG_STRING_L1_LOCAL_N_PORTC                     "local_n_portc"
-#define CONFIG_STRING_L1_REMOTE_N_PORTC                    "remote_n_portc"
-#define CONFIG_STRING_L1_LOCAL_N_PORTD                     "local_n_portd"
-#define CONFIG_STRING_L1_REMOTE_N_PORTD                    "remote_n_portd"
-#define CONFIG_STRING_L1_TRANSPORT_N_PREFERENCE            "tr_n_preference"
-
-#define CONFIG_STRING_ACTIVE_RUS                  "Active_RUs"
-#define CONFIG_STRING_RU_LIST                     "RUs"
-#define CONFIG_STRING_RU_CONFIG                   "ru_config"
-#define CONFIG_STRING_RU_LOCAL_IF_NAME            "local_if_name"
-#define CONFIG_STRING_RU_LOCAL_ADDRESS            "local_address"
-#define CONFIG_STRING_RU_REMOTE_ADDRESS           "remote_address"
-#define CONFIG_STRING_RU_LOCAL_PORTC              "local_portc"
-#define CONFIG_STRING_RU_REMOTE_PORTC             "remote_portc"
-#define CONFIG_STRING_RU_LOCAL_PORTD              "local_portd"
-#define CONFIG_STRING_RU_REMOTE_PORTD             "remote_portd"
-#define CONFIG_STRING_RU_LOCAL_RF                 "local_rf"
-#define CONFIG_STRING_RU_TRANSPORT_PREFERENCE     "tr_preference"
-#define CONFIG_STRING_RU_BAND_LIST                "bands"
-#define CONFIG_STRING_RU_ENB_LIST                 "eNB_instances"
-#define CONFIG_STRING_RU_NB_TX                    "nb_tx"
-#define CONFIG_STRING_RU_NB_RX                    "nb_rx"
-#define CONFIG_STRING_RU_ATT_TX                   "att_tx"
-#define CONFIG_STRING_RU_ATT_RX                   "att_rx"
-#define CONFIG_STRING_RU_MAX_RS_EPRE              "max_pdschReferenceSignalPower"
-#define CONFIG_STRING_RU_MAX_RXGAIN               "max_rxgain"
-#define CONFIG_STRING_RU_IF_COMPRESSION           "if_compression"
-
-#define KHz (1000UL)
-#define MHz (1000 * KHz)
-
-typedef struct eutra_band_s {
-  int16_t             band;
-  uint32_t            ul_min;
-  uint32_t            ul_max;
-  uint32_t            dl_min;
-  uint32_t            dl_max;
-  lte_frame_type_t    frame_type;
-} eutra_band_t;
-
-static const eutra_band_t eutra_bands[] = {
-  { 1, 1920    * MHz, 1980    * MHz, 2110    * MHz, 2170    * MHz, FDD},
-  { 2, 1850    * MHz, 1910    * MHz, 1930    * MHz, 1990    * MHz, FDD},
-  { 3, 1710    * MHz, 1785    * MHz, 1805    * MHz, 1880    * MHz, FDD},
-  { 4, 1710    * MHz, 1755    * MHz, 2110    * MHz, 2155    * MHz, FDD},
-  { 5,  824    * MHz,  849    * MHz,  869    * MHz,  894    * MHz, FDD},
-  { 6,  830    * MHz,  840    * MHz,  875    * MHz,  885    * MHz, FDD},
-  { 7, 2500    * MHz, 2570    * MHz, 2620    * MHz, 2690    * MHz, FDD},
-  { 8,  880    * MHz,  915    * MHz,  925    * MHz,  960    * MHz, FDD},
-  { 9, 1749900 * KHz, 1784900 * KHz, 1844900 * KHz, 1879900 * KHz, FDD},
-  {10, 1710    * MHz, 1770    * MHz, 2110    * MHz, 2170    * MHz, FDD},
-  {11, 1427900 * KHz, 1452900 * KHz, 1475900 * KHz, 1500900 * KHz, FDD},
-  {12,  698    * MHz,  716    * MHz,  728    * MHz,  746    * MHz, FDD},
-  {13,  777    * MHz,  787    * MHz,  746    * MHz,  756    * MHz, FDD},
-  {14,  788    * MHz,  798    * MHz,  758    * MHz,  768    * MHz, FDD},
-
-  {17,  704    * MHz,  716    * MHz,  734    * MHz,  746    * MHz, FDD},
-  {20,  832    * MHz,  862    * MHz,  791    * MHz,  821    * MHz, FDD},
-  {33, 1900    * MHz, 1920    * MHz, 1900    * MHz, 1920    * MHz, TDD},
-  {33, 1900    * MHz, 1920    * MHz, 1900    * MHz, 1920    * MHz, TDD},
-  {34, 2010    * MHz, 2025    * MHz, 2010    * MHz, 2025    * MHz, TDD},
-  {35, 1850    * MHz, 1910    * MHz, 1850    * MHz, 1910    * MHz, TDD},
-  {36, 1930    * MHz, 1990    * MHz, 1930    * MHz, 1990    * MHz, TDD},
-  {37, 1910    * MHz, 1930    * MHz, 1910    * MHz, 1930    * MHz, TDD},
-  {38, 2570    * MHz, 2620    * MHz, 2570    * MHz, 2630    * MHz, TDD},
-  {39, 1880    * MHz, 1920    * MHz, 1880    * MHz, 1920    * MHz, TDD},
-  {40, 2300    * MHz, 2400    * MHz, 2300    * MHz, 2400    * MHz, TDD},
-  {41, 2496    * MHz, 2690    * MHz, 2496    * MHz, 2690    * MHz, TDD},
-  {42, 3400    * MHz, 3600    * MHz, 3400    * MHz, 3600    * MHz, TDD},
-  {43, 3600    * MHz, 3800    * MHz, 3600    * MHz, 3800    * MHz, TDD},
-  {44, 703    * MHz, 803    * MHz, 703    * MHz, 803    * MHz, TDD},
-};
-
-
+int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc);
+int RCconfig_S1(MessageDef *msg_p, uint32_t i);
 
 
 static int enb_check_band_frequencies(char* lib_config_file_name_pP,
@@ -384,247 +97,136 @@ static int enb_check_band_frequencies(char* lib_config_file_name_pP,
     }
   }
 
+
   return errors;
 }
 
-#if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
-extern int asn_debug;
-extern int asn1_xer_print;
-#endif
-
-#ifdef LIBCONFIG_LONG
-#define libconfig_int long
-#else
-#define libconfig_int int
-#endif
-
-typedef enum {
-  RU     = 0,
-  L1     = 1,
-  L2     = 2,
-  L3     = 3,
-  S1     = 4,
-  lastel = 5
-} RC_config_functions_t;
-
-void RCconfig_RU(void);
-void RCconfig_L1(void);
-void RCconfig_macrlc(void);
-int  RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc);
-int  RCconfig_S1(MessageDef *msg_p, uint32_t i);
 
 
-int load_config_file(config_t *cfg) {
 
-  config_init(cfg);
+
+
+
+/* --------------------------------------------------------*/
+/* from here function to use configuration module          */
+void RCconfig_RU(void) {
   
-  if (RC.config_file_name != NULL) {
-    // Read the file. If there is an error, report it and exit. 
-    if (! config_read_file(cfg, RC.config_file_name)) {
-      config_destroy(cfg);
-      AssertFatal (0, "Failed to parse eNB configuration file %s!\n", RC.config_file_name);
-    }
-  } else {
-    config_destroy(cfg);
-    AssertFatal (0, "No eNB configuration file provided!\n");
-  }
-
-}
-void RCconfig_RU() {
-
-  config_t          cfg;
-  config_setting_t *setting                       = NULL;
-  config_setting_t *setting_ru                    = NULL;
-  config_setting_t *setting_band                  = NULL;
-  config_setting_t *setting_band_elem             = NULL;
-  config_setting_t *setting_eNB_list              = NULL;
-  config_setting_t *setting_eNB_list_elem         = NULL;
-  char*             if_name                       = NULL;
-  char*             ipv4                          = NULL;
-  char*             ipv4_remote                   = NULL;
-  char              *local_rf                     = NULL;
-
-  char*             tr_preference                 = NULL;
-  libconfig_int     local_portc                   = 0;
-  libconfig_int     remote_portc                  = 0;
-  libconfig_int     local_portd                   = 0;
-  libconfig_int     remote_portd                  = 0;
-
-  libconfig_int     nb_tx                         = 0;
-  libconfig_int     nb_rx                         = 0;
-  libconfig_int     att_tx                        = 0;
-  libconfig_int     att_rx                        = 0;
-  libconfig_int     max_pdschReferenceSignalPower = 0;
-  libconfig_int     max_rxgain                    = 0;
   int               j                             = 0;
   int               i                             = 0;
-  int               num_bands                     = 0;
-  libconfig_int     band[256];
-  int               num_eNB4RU                    = 0;
-  libconfig_int     eNB_list[256];
-  int               fronthaul_flag                = CONFIG_TRUE;
 
-  load_config_file(&cfg);
-
-  // Output a list of all RUs. 
-  setting = config_lookup(&cfg, CONFIG_STRING_RU_LIST);
   
-  if (setting != NULL) {
+  paramdef_t RUParams[] = RUPARAMS_DESC;
+  paramlist_def_t RUParamList = {CONFIG_STRING_RU_LIST,NULL,0};
+
+
+  config_getlist( &RUParamList,RUParams,sizeof(RUParams)/sizeof(paramdef_t), NULL);  
+
+  
+  if ( RUParamList.numelt > 0) {
 
 
     RC.ru = (RU_t**)malloc(RC.nb_RU*sizeof(RU_t*));
    
-    RC.ru_mask=(1<<NB_RU) - 1;
 
+
+
+    RC.ru_mask=(1<<NB_RU) - 1;
+    printf("Set RU mask to %lx\n",RC.ru_mask);
 
     for (j = 0; j < RC.nb_RU; j++) {
-      
-      setting_ru = config_setting_get_elem(setting, j);
-      printf("rru %d/%d\n",j,RC.nb_RU);
 
-
-      if (  !(
-	      config_setting_lookup_string(setting_ru, CONFIG_STRING_RU_LOCAL_IF_NAME,(const char **)&if_name)
-	      )
-	    ) {
-	fronthaul_flag = CONFIG_FALSE;
-      }			  
-      
-      if (fronthaul_flag != CONFIG_TRUE) { // no fronthaul
-	
-	AssertFatal((setting_band = config_setting_get_member(setting_ru, CONFIG_STRING_RU_BAND_LIST))!=NULL,"No allowable LTE bands\n");
-	
-	if (setting_band != NULL) num_bands    = config_setting_length(setting_band);
-	else num_bands=0;
-	
-	for (i=0;i<num_bands;i++) {
-	  setting_band_elem = config_setting_get_elem(setting_band,i);
-	  band[i] = config_setting_get_int(setting_band_elem);
-	  printf("RU %d: band %d\n",j,band[i]);
-	}
-      } // fronthaul_flag == CONFIG_FALSE
-      else { // fronthaul_flag == CONFIG_TRUE
-	if (  !(
-		config_setting_lookup_string(setting_ru, CONFIG_STRING_RU_LOCAL_ADDRESS,        (const char **)&ipv4)
-	 	&& config_setting_lookup_string(setting_ru, CONFIG_STRING_RU_REMOTE_ADDRESS,       (const char **)&ipv4_remote)
-		&& config_setting_lookup_int   (setting_ru, CONFIG_STRING_RU_LOCAL_PORTC,          &local_portc)
-		&& config_setting_lookup_int   (setting_ru, CONFIG_STRING_RU_REMOTE_PORTC,         &remote_portc)
-		&& config_setting_lookup_int   (setting_ru, CONFIG_STRING_RU_LOCAL_PORTD,          &local_portd)
-		&& config_setting_lookup_int   (setting_ru, CONFIG_STRING_RU_REMOTE_PORTD,         &remote_portd)
-		&& config_setting_lookup_string(setting_ru, CONFIG_STRING_RU_TRANSPORT_PREFERENCE, (const char **)&tr_preference)
-		)
-	      ) {
-	  AssertFatal (0,
-		       "Failed to parse configuration file %s, RU %d config !\n",
-		       RC.config_file_name, j);
-	  continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
-	}
-      }
-
-      AssertFatal((setting_eNB_list = config_setting_get_member(setting_ru, CONFIG_STRING_RU_ENB_LIST))!=NULL,"No RU<->eNB mappings\n");
-      
-      if (setting_eNB_list != NULL) num_eNB4RU    = config_setting_length(setting_eNB_list);
-      else num_eNB4RU=0;
-      AssertFatal(num_eNB4RU>0,"Number of eNBs is zero\n");
-      
-      for (i=0;i<num_eNB4RU;i++) {
-	setting_eNB_list_elem = config_setting_get_elem(setting_eNB_list,i);
-	eNB_list[i] = config_setting_get_int(setting_eNB_list_elem);
-	printf("RU %d: eNB %d\n",j,eNB_list[i]);
-      }
-      
-      if ( !(
-	               config_setting_lookup_int(setting_ru, CONFIG_STRING_RU_NB_TX,  &nb_tx)
-		    && config_setting_lookup_int(setting_ru, CONFIG_STRING_RU_NB_RX,  &nb_rx)
-		    && config_setting_lookup_int(setting_ru, CONFIG_STRING_RU_ATT_TX, &att_tx)
-		    && config_setting_lookup_int(setting_ru, CONFIG_STRING_RU_ATT_RX, &att_rx)
-		    && config_setting_lookup_string(setting_ru, CONFIG_STRING_RU_LOCAL_RF,(const char **)&local_rf)
-		    )) {
-	AssertFatal (0,
-	  "Failed to parse configuration file %s, RU %d config !\n",
-	  RC.config_file_name, j);
-	continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
-      }
-      
       RC.ru[j]                                    = (RU_t*)malloc(sizeof(RU_t));
       memset((void*)RC.ru[j],0,sizeof(RU_t));
-      
       RC.ru[j]->idx                                 = j;
-      
-      RC.ru[j]->if_timing                           = synch_to_ext_device;
-      RC.ru[j]->num_eNB                             = num_eNB4RU;
 
-      for (i=0;i<num_eNB4RU;i++) RC.ru[j]->eNB_list[i] = RC.eNB[eNB_list[i]][0];
-      
-      if (strcmp(local_rf, "yes") == 0) {
-	if (fronthaul_flag == CONFIG_FALSE) {
+      RC.ru[j]->if_timing                           = synch_to_ext_device;
+      if (RC.nb_L1_inst >0)
+        RC.ru[j]->num_eNB                           = RUParamList.paramarray[j][RU_ENB_LIST_IDX].numelt;
+      else
+	    RC.ru[j]->num_eNB                           = 0;
+      for (i=0;i<RC.ru[j]->num_eNB;i++) RC.ru[j]->eNB_list[i] = RC.eNB[RUParamList.paramarray[j][RU_ENB_LIST_IDX].iptr[i]][0];     
+
+
+      if (strcmp(*(RUParamList.paramarray[j][RU_LOCAL_RF_IDX].strptr), "yes") == 0) {
+	if ( !(config_isparamset(RUParamList.paramarray[j],RU_LOCAL_IF_NAME_IDX)) ) {
 	  RC.ru[j]->if_south                        = LOCAL_RF;
 	  RC.ru[j]->function                        = eNodeB_3GPP;
+	  printf("Setting function for RU %d to eNodeB_3GPP\n",j);
         }
         else { 
-	  if (strcmp(tr_preference, "udp") == 0) {
+          RC.ru[j]->eth_params.local_if_name            = strdup(*(RUParamList.paramarray[j][RU_LOCAL_IF_NAME_IDX].strptr));    
+          RC.ru[j]->eth_params.my_addr                  = strdup(*(RUParamList.paramarray[j][RU_LOCAL_ADDRESS_IDX].strptr)); 
+          RC.ru[j]->eth_params.remote_addr              = strdup(*(RUParamList.paramarray[j][RU_REMOTE_ADDRESS_IDX].strptr));
+          RC.ru[j]->eth_params.my_portc                 = *(RUParamList.paramarray[j][RU_LOCAL_PORTC_IDX].uptr);
+          RC.ru[j]->eth_params.remote_portc             = *(RUParamList.paramarray[j][RU_REMOTE_PORTC_IDX].uptr);
+          RC.ru[j]->eth_params.my_portd                 = *(RUParamList.paramarray[j][RU_LOCAL_PORTD_IDX].uptr);
+          RC.ru[j]->eth_params.remote_portd             = *(RUParamList.paramarray[j][RU_REMOTE_PORTD_IDX].uptr);
+
+	  if (strcmp(*(RUParamList.paramarray[j][RU_TRANSPORT_PREFERENCE_IDX].strptr), "udp") == 0) {
 	    RC.ru[j]->if_south                        = LOCAL_RF;
 	    RC.ru[j]->function                        = NGFI_RRU_IF5;
 	    RC.ru[j]->eth_params.transp_preference    = ETH_UDP_MODE;
-	  } else if (strcmp(tr_preference, "raw") == 0) {
+	    printf("Setting function for RU %d to NGFI_RRU_IF5 (udp)\n",j);
+	  } else if (strcmp(*(RUParamList.paramarray[j][RU_TRANSPORT_PREFERENCE_IDX].strptr), "raw") == 0) {
 	    RC.ru[j]->if_south                        = LOCAL_RF;
 	    RC.ru[j]->function                        = NGFI_RRU_IF5;
 	    RC.ru[j]->eth_params.transp_preference    = ETH_RAW_MODE;
-	  } else if (strcmp(tr_preference, "udp_if4p5") == 0) {
+	    printf("Setting function for RU %d to NGFI_RRU_IF5 (raw)\n",j);
+	  } else if (strcmp(*(RUParamList.paramarray[j][RU_TRANSPORT_PREFERENCE_IDX].strptr), "udp_if4p5") == 0) {
 	    RC.ru[j]->if_south                        = LOCAL_RF;
 	    RC.ru[j]->function                        = NGFI_RRU_IF4p5;
 	    RC.ru[j]->eth_params.transp_preference    = ETH_UDP_IF4p5_MODE;
-	  } else if (strcmp(tr_preference, "raw_if4p5") == 0) {
+	    printf("Setting function for RU %d to NGFI_RRU_IF4p5 (udp)\n",j);
+	  } else if (strcmp(*(RUParamList.paramarray[j][RU_TRANSPORT_PREFERENCE_IDX].strptr), "raw_if4p5") == 0) {
 	    RC.ru[j]->if_south                        = LOCAL_RF;
 	    RC.ru[j]->function                        = NGFI_RRU_IF4p5;
 	    RC.ru[j]->eth_params.transp_preference    = ETH_RAW_IF4p5_MODE;
+	    printf("Setting function for RU %d to NGFI_RRU_IF4p5 (raw)\n",j);
 	  }
 	}
-
-	RC.ru[j]->max_pdschReferenceSignalPower     = max_pdschReferenceSignalPower;
-	RC.ru[j]->max_rxgain                        = max_rxgain;
-	RC.ru[j]->num_bands                         = num_bands;
-	for (i=0;i<num_bands;i++) RC.ru[j]->band[i] = band[i]; 
-      }
+	RC.ru[j]->max_pdschReferenceSignalPower     = *(RUParamList.paramarray[j][RU_MAX_RS_EPRE_IDX].uptr);;
+	RC.ru[j]->max_rxgain                        = *(RUParamList.paramarray[j][RU_MAX_RXGAIN_IDX].uptr);
+	RC.ru[j]->num_bands                         = RUParamList.paramarray[j][RU_BAND_LIST_IDX].numelt;
+	for (i=0;i<RC.ru[j]->num_bands;i++) RC.ru[j]->band[i] = RUParamList.paramarray[j][RU_BAND_LIST_IDX].iptr[i]; 
+      } //strcmp(local_rf, "yes") == 0
       else {
-	printf("RU %d: Transport %s\n",j,tr_preference);
+	printf("RU %d: Transport %s\n",j,*(RUParamList.paramarray[j][RU_TRANSPORT_PREFERENCE_IDX].strptr));
 
-	RC.ru[j]->eth_params.local_if_name            = strdup(if_name);
-	RC.ru[j]->eth_params.my_addr                  = strdup(ipv4);
-	RC.ru[j]->eth_params.remote_addr              = strdup(ipv4_remote);
-	RC.ru[j]->eth_params.my_portc                 = local_portc;
-	RC.ru[j]->eth_params.remote_portc             = remote_portc;
-	RC.ru[j]->eth_params.my_portd                 = local_portd;
-	RC.ru[j]->eth_params.remote_portd             = remote_portd;
-
-	if (strcmp(tr_preference, "udp") == 0) {
+        RC.ru[j]->eth_params.local_if_name	      = strdup(*(RUParamList.paramarray[j][RU_LOCAL_IF_NAME_IDX].strptr));    
+        RC.ru[j]->eth_params.my_addr		      = strdup(*(RUParamList.paramarray[j][RU_LOCAL_ADDRESS_IDX].strptr)); 
+        RC.ru[j]->eth_params.remote_addr	      = strdup(*(RUParamList.paramarray[j][RU_REMOTE_ADDRESS_IDX].strptr));
+        RC.ru[j]->eth_params.my_portc		      = *(RUParamList.paramarray[j][RU_LOCAL_PORTC_IDX].uptr);
+        RC.ru[j]->eth_params.remote_portc	      = *(RUParamList.paramarray[j][RU_REMOTE_PORTC_IDX].uptr);
+        RC.ru[j]->eth_params.my_portd		      = *(RUParamList.paramarray[j][RU_LOCAL_PORTD_IDX].uptr);
+        RC.ru[j]->eth_params.remote_portd	      = *(RUParamList.paramarray[j][RU_REMOTE_PORTD_IDX].uptr);
+	if (strcmp(*(RUParamList.paramarray[j][RU_TRANSPORT_PREFERENCE_IDX].strptr), "udp") == 0) {
 	  RC.ru[j]->if_south                     = REMOTE_IF5;
 	  RC.ru[j]->function                     = NGFI_RAU_IF5;
 	  RC.ru[j]->eth_params.transp_preference = ETH_UDP_MODE;
-	} else if (strcmp(tr_preference, "raw") == 0) {
+	} else if (strcmp(*(RUParamList.paramarray[j][RU_TRANSPORT_PREFERENCE_IDX].strptr), "raw") == 0) {
 	  RC.ru[j]->if_south                     = REMOTE_IF5;
 	  RC.ru[j]->function                     = NGFI_RAU_IF5;
 	  RC.ru[j]->eth_params.transp_preference = ETH_RAW_MODE;
-	} else if (strcmp(tr_preference, "udp_if4p5") == 0) {
+	} else if (strcmp(*(RUParamList.paramarray[j][RU_TRANSPORT_PREFERENCE_IDX].strptr), "udp_if4p5") == 0) {
 	  RC.ru[j]->if_south                     = REMOTE_IF4p5;
 	  RC.ru[j]->function                     = NGFI_RAU_IF4p5;
 	  RC.ru[j]->eth_params.transp_preference = ETH_UDP_IF4p5_MODE;
-	} else if (strcmp(tr_preference, "raw_if4p5") == 0) {
+	} else if (strcmp(*(RUParamList.paramarray[j][RU_TRANSPORT_PREFERENCE_IDX].strptr), "raw_if4p5") == 0) {
 	  RC.ru[j]->if_south                     = REMOTE_IF4p5;
 	  RC.ru[j]->function                     = NGFI_RAU_IF4p5;
 	  RC.ru[j]->eth_params.transp_preference = ETH_RAW_IF4p5_MODE;
-	} else if (strcmp(tr_preference, "raw_if5_mobipass") == 0) {
+	} else if (strcmp(*(RUParamList.paramarray[j][RU_TRANSPORT_PREFERENCE_IDX].strptr), "raw_if5_mobipass") == 0) {
 	  RC.ru[j]->if_south                     = REMOTE_IF5;
 	  RC.ru[j]->function                     = NGFI_RAU_IF5;
 	  RC.ru[j]->if_timing                    = synch_to_other;
 	  RC.ru[j]->eth_params.transp_preference = ETH_RAW_IF5_MOBIPASS;
 	}
-	RC.ru[j]->att_tx                         = att_tx; 
-	RC.ru[j]->att_rx                         = att_rx; 
-      }
+	RC.ru[j]->att_tx                         = *(RUParamList.paramarray[j][RU_ATT_TX_IDX].uptr); 
+	RC.ru[j]->att_rx                         = *(RUParamList.paramarray[j][RU_ATT_TX_IDX].uptr); 
+      }  /* strcmp(local_rf, "yes") != 0 */
 
-      RC.ru[j]->nb_tx                             = nb_tx;
-      RC.ru[j]->nb_rx                             = nb_rx;
+      RC.ru[j]->nb_tx                             = *(RUParamList.paramarray[j][RU_NB_TX_IDX].uptr);
+      RC.ru[j]->nb_rx                             = *(RUParamList.paramarray[j][RU_NB_RX_IDX].uptr);
       
     }// j=0..num_rus
   } else {
@@ -636,28 +238,13 @@ void RCconfig_RU() {
 }
 
 void RCconfig_L1() {
-
   int               i,j;
+  paramdef_t L1_Params[] = L1PARAMS_DESC;
+  paramlist_def_t L1_ParamList = {CONFIG_STRING_L1_LIST,NULL,0};
 
-  config_t          cfg;
-  config_setting_t *setting                         = NULL;
-  config_setting_t *setting_l1                      = NULL;
 
-  char*             if_name_n                       = NULL;
-  char*             ipv4_n                          = NULL;
-  char*             ipv4_n_remote                   = NULL;
- 
-  char*             tr_n_preference                 = NULL;
-  libconfig_int     local_n_portc                   = 0;
-  libconfig_int     remote_n_portc                  = 0;
-  libconfig_int     local_n_portd                   = 0;
-  libconfig_int     remote_n_portd                  = 0;
-
-  load_config_file(&cfg);
-
-  setting = config_lookup(&cfg, CONFIG_STRING_L1_LIST);
-  
-  if (setting != NULL) {
+  config_getlist( &L1_ParamList,L1_Params,sizeof(L1_Params)/sizeof(paramdef_t), NULL);    
+  if (L1_ParamList.numelt > 0) {
 
     if (RC.eNB == NULL) {
       RC.eNB                               = (PHY_VARS_eNB ***)malloc((1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB***));
@@ -667,12 +254,8 @@ void RCconfig_L1() {
     }
 
     for (j = 0; j < RC.nb_L1_inst; j++) {
+      RC.nb_L1_CC[j] = *(L1_ParamList.paramarray[j][L1_CC_IDX].uptr);
 
-      setting_l1 = config_setting_get_elem(setting, j);
-      if (!config_setting_lookup_int   (setting_l1,CONFIG_STRING_L1_CC,&RC.nb_L1_CC[j]))
-	AssertFatal (0,
-		     "Failed to parse configuration file %s, L1 %d config !\n",
-		     RC.config_file_name, j);	
 
       if (RC.eNB[j] == NULL) {
 	RC.eNB[j]                       = (PHY_VARS_eNB **)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB**));
@@ -691,45 +274,18 @@ void RCconfig_L1() {
 	}
       }
 
-
-      
-      printf("l1 %d/%d (nb CC %d)\n",j,RC.nb_inst,RC.nb_CC[j]);
-      
-
-      printf("RU %d: Transport %s\n",j,tr_n_preference);
-      if (!(config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_TRANSPORT_N_PREFERENCE, (const char **)&tr_n_preference))) {
-	  AssertFatal (0,
-		       "Failed to parse configuration file %s, L1 %d config !\n",
-		       RC.config_file_name, j);
-      }
-
-      if (strcmp(tr_n_preference, "local_mac") == 0) {
+      if (strcmp(*(L1_ParamList.paramarray[j][L1_TRANSPORT_N_PREFERENCE_IDX].strptr), "local_mac") == 0) {
 
       }
-      else if (strcmp(tr_n_preference, "nfapi") == 0) {
-	if (  !(
-		config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_LOCAL_N_IF_NAME,        (const char **)&if_name_n)
-		&& config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_LOCAL_N_ADDRESS,        (const char **)&ipv4_n)
-		&& config_setting_lookup_string(setting_l1, CONFIG_STRING_L1_REMOTE_N_ADDRESS,       (const char **)&ipv4_n_remote)
-		&& config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_LOCAL_N_PORTC,          &local_n_portc)
-		&& config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_REMOTE_N_PORTC,         &remote_n_portc)
-		&& config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_LOCAL_N_PORTD,          &local_n_portd)
-		&& config_setting_lookup_int   (setting_l1, CONFIG_STRING_L1_REMOTE_N_PORTD,         &remote_n_portd)
-		)
-	      ) {
-	  AssertFatal (0,
-		       "Failed to parse configuration file %s, L1 %d config !\n",
-		       RC.config_file_name, j);
-	  continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
-	}
-	RC.eNB[j][0]->eth_params_n.local_if_name            = strdup(if_name_n);
-	RC.eNB[j][0]->eth_params_n.my_addr                  = strdup(ipv4_n);
-	RC.eNB[j][0]->eth_params_n.remote_addr              = strdup(ipv4_n_remote);
-	RC.eNB[j][0]->eth_params_n.my_portc                 = local_n_portc;
-	RC.eNB[j][0]->eth_params_n.remote_portc             = remote_n_portc;
-	RC.eNB[j][0]->eth_params_n.my_portd                 = local_n_portd;
-	RC.eNB[j][0]->eth_params_n.remote_portd             = remote_n_portd;
-	RC.eNB[j][0]->eth_params_n.transp_preference          = ETH_UDP_MODE;
+      else if (strcmp(*(L1_ParamList.paramarray[j][L1_TRANSPORT_N_PREFERENCE_IDX].strptr), "nfapi") == 0) {
+	RC.eNB[j][0]->eth_params_n.local_if_name            = strdup(*(L1_ParamList.paramarray[j][L1_LOCAL_N_IF_NAME_IDX].strptr));
+	RC.eNB[j][0]->eth_params_n.my_addr                  = strdup(*(L1_ParamList.paramarray[j][L1_LOCAL_N_ADDRESS_IDX].strptr));
+	RC.eNB[j][0]->eth_params_n.remote_addr              = strdup(*(L1_ParamList.paramarray[j][L1_REMOTE_N_ADDRESS_IDX].strptr));
+	RC.eNB[j][0]->eth_params_n.my_portc                 = *(L1_ParamList.paramarray[j][L1_LOCAL_N_PORTC_IDX].iptr);
+	RC.eNB[j][0]->eth_params_n.remote_portc             = *(L1_ParamList.paramarray[j][L1_REMOTE_N_PORTC_IDX].iptr);
+	RC.eNB[j][0]->eth_params_n.my_portd                 = *(L1_ParamList.paramarray[j][L1_LOCAL_N_PORTD_IDX].iptr);
+	RC.eNB[j][0]->eth_params_n.remote_portd             = *(L1_ParamList.paramarray[j][L1_REMOTE_N_PORTD_IDX].iptr);
+	RC.eNB[j][0]->eth_params_n.transp_preference        = ETH_UDP_MODE;
       }
       
       else { // other midhaul
@@ -737,278 +293,169 @@ void RCconfig_L1() {
     }// j=0..num_inst
     printf("Initializing northbound interface for L1\n");
     l1_north_init_eNB();
+  } else {
+    LOG_I(PHY,"No " CONFIG_STRING_L1_LIST " configuration found");    
   }
 }
 
 void RCconfig_macrlc() {
+  int               j;
 
-  int               i,j;
 
-  config_t          cfg;
-  config_setting_t *setting                         = NULL;
-  config_setting_t *setting_macrlc                  = NULL;
-  char*             if_name_s                       = NULL;
-  char*             ipv4_s                          = NULL;
-  char*             ipv4_s_remote                   = NULL;
- 
-  char*             tr_s_preference                 = NULL;
-  libconfig_int     local_s_portc                   = 0;
-  libconfig_int     remote_s_portc                  = 0;
-  libconfig_int     local_s_portd                   = 0;
-  libconfig_int     remote_s_portd                  = 0;
-  char*             if_name_n                       = NULL;
-  char*             ipv4_n                          = NULL;
-  char*             ipv4_n_remote                   = NULL;
- 
-  char*             tr_n_preference                 = NULL;
-  libconfig_int     local_n_portc                   = 0;
-  libconfig_int     remote_n_portc                  = 0;
-  libconfig_int     local_n_portd                   = 0;
-  libconfig_int     remote_n_portd                  = 0;
+  paramdef_t MacRLC_Params[] = MACRLCPARAMS_DESC;
+  paramlist_def_t MacRLC_ParamList = {CONFIG_STRING_MACRLC_LIST,NULL,0};
 
-  load_config_file(&cfg);
-
-  setting = config_lookup(&cfg, CONFIG_STRING_MACRLC_LIST);
+  config_getlist( &MacRLC_ParamList,MacRLC_Params,sizeof(MacRLC_Params)/sizeof(paramdef_t), NULL);    
   
-  if (setting != NULL) {
-    
 
-    
-    if ((RC.nb_macrlc_inst=config_setting_length(setting))>0) mac_top_init_eNB();
-    else AssertFatal(1==0,"improper macrlc setting\n");
-    
+  if ( MacRLC_ParamList.numelt > 0) {
+
+    RC.nb_macrlc_inst=MacRLC_ParamList.numelt; 
+    mac_top_init_eNB();   
     for (j=0;j<RC.nb_macrlc_inst;j++) {
-      setting_macrlc = config_setting_get_elem(setting, j);
-      
-      printf("macrlc %d/%d \n",j,RC.nb_macrlc_inst);
-      
-      if (!(config_setting_lookup_string(setting_macrlc, CONFIG_STRING_MACRLC_TRANSPORT_N_PREFERENCE, (const char **)&tr_n_preference))) {
-	AssertFatal (0,
-		     "Failed to parse configuration file %s, L1 %d config !\n",
-		     RC.config_file_name, j);
-      }
 
-      printf("MACRLC %d: Northbound Transport %s\n",j,tr_n_preference);
-      
-      if (strcmp(tr_n_preference, "local_RRC") == 0) {
+      if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_TRANSPORT_N_PREFERENCE_IDX].strptr), "local_RRC") == 0) {
 	// check number of instances is same as RRC/PDCP
 	
-      }
-      else if (strcmp(tr_n_preference, "cudu") == 0) {
-	if (  !(
-		config_setting_lookup_string(setting_macrlc, CONFIG_STRING_MACRLC_LOCAL_N_IF_NAME,        (const char **)&if_name_n)
-		&& config_setting_lookup_string(setting_macrlc, CONFIG_STRING_MACRLC_LOCAL_N_ADDRESS,        (const char **)&ipv4_n)
-		&& config_setting_lookup_string(setting_macrlc, CONFIG_STRING_MACRLC_REMOTE_N_ADDRESS,       (const char **)&ipv4_n_remote)
-		&& config_setting_lookup_int   (setting_macrlc, CONFIG_STRING_MACRLC_LOCAL_N_PORTC,          &local_n_portc)
-		&& config_setting_lookup_int   (setting_macrlc, CONFIG_STRING_MACRLC_REMOTE_N_PORTC,         &remote_n_portc)
-		&& config_setting_lookup_int   (setting_macrlc, CONFIG_STRING_MACRLC_LOCAL_N_PORTD,          &local_n_portd)
-		&& config_setting_lookup_int   (setting_macrlc, CONFIG_STRING_MACRLC_REMOTE_N_PORTD,         &remote_n_portd)
-		)
-	      ) {
-	  AssertFatal (0,
-		       "Failed to parse configuration file %s, L1 %d config !\n",
-		       RC.config_file_name, j);
-	  continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
-	}
-	RC.mac[j]->eth_params_n.local_if_name            = strdup(if_name_n);
-	RC.mac[j]->eth_params_n.my_addr                  = strdup(ipv4_n);
-	RC.mac[j]->eth_params_n.remote_addr              = strdup(ipv4_n_remote);
-	RC.mac[j]->eth_params_n.my_portc                 = local_n_portc;
-	RC.mac[j]->eth_params_n.remote_portc             = remote_n_portc;
-	RC.mac[j]->eth_params_n.my_portd                 = local_n_portd;
-	RC.mac[j]->eth_params_n.remote_portd             = remote_n_portd;
+      } else if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_TRANSPORT_N_PREFERENCE_IDX].strptr), "cudu") == 0) {
+	RC.mac[j]->eth_params_n.local_if_name            = strdup(*(MacRLC_ParamList.paramarray[j][MACRLC_LOCAL_N_IF_NAME_IDX].strptr));
+	RC.mac[j]->eth_params_n.my_addr                  = strdup(*(MacRLC_ParamList.paramarray[j][MACRLC_LOCAL_N_ADDRESS_IDX].strptr));
+	RC.mac[j]->eth_params_n.remote_addr              = strdup(*(MacRLC_ParamList.paramarray[j][MACRLC_REMOTE_N_ADDRESS_IDX].strptr));
+	RC.mac[j]->eth_params_n.my_portc                 = *(MacRLC_ParamList.paramarray[j][MACRLC_LOCAL_N_PORTC_IDX].iptr);
+	RC.mac[j]->eth_params_n.remote_portc             = *(MacRLC_ParamList.paramarray[j][MACRLC_REMOTE_N_PORTC_IDX].iptr);
+	RC.mac[j]->eth_params_n.my_portd                 = *(MacRLC_ParamList.paramarray[j][MACRLC_LOCAL_N_PORTD_IDX].iptr);
+	RC.mac[j]->eth_params_n.remote_portd             = *(MacRLC_ParamList.paramarray[j][MACRLC_REMOTE_N_PORTD_IDX].iptr);;
 	RC.mac[j]->eth_params_n.transp_preference        = ETH_UDP_MODE;
-      }
-      
-      else { // other midhaul
-	AssertFatal(1==0,"MACRLC %d: unknown northbound midhaul\n",j);
+      } else { // other midhaul
+	AssertFatal(1==0,"MACRLC %d: %s unknown northbound midhaul\n",j, *(MacRLC_ParamList.paramarray[j][MACRLC_TRANSPORT_N_PREFERENCE_IDX].strptr));
       }	
 
-      if (!(config_setting_lookup_string(setting_macrlc, CONFIG_STRING_MACRLC_TRANSPORT_S_PREFERENCE, (const char **)&tr_s_preference))) {
-	AssertFatal (0,
-		     "Failed to parse configuration file %s, L1 %d config !\n",
-		     RC.config_file_name, j);
-	continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
-      }
-
-      printf("MACRLC %d: Southbound Transport %s\n",j,tr_s_preference);
-      
-      if (strcmp(tr_s_preference, "local_L1") == 0) {
+      if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_TRANSPORT_S_PREFERENCE_IDX].strptr), "local_L1") == 0) {
 
 	
-      }
-      else if (strcmp(tr_s_preference, "nfapi") == 0) {
-	if (  !( 
-		config_setting_lookup_string(setting_macrlc, CONFIG_STRING_MACRLC_LOCAL_S_IF_NAME,        (const char **)&if_name_s)
-		&& config_setting_lookup_string(setting_macrlc, CONFIG_STRING_MACRLC_LOCAL_S_ADDRESS,        (const char **)&ipv4_s)
-		&& config_setting_lookup_string(setting_macrlc, CONFIG_STRING_MACRLC_REMOTE_S_ADDRESS,       (const char **)&ipv4_s_remote)
-		&& config_setting_lookup_int   (setting_macrlc, CONFIG_STRING_MACRLC_LOCAL_S_PORTC,          &local_s_portc)
-		&& config_setting_lookup_int   (setting_macrlc, CONFIG_STRING_MACRLC_REMOTE_S_PORTC,         &remote_s_portc)
-		&& config_setting_lookup_int   (setting_macrlc, CONFIG_STRING_MACRLC_LOCAL_S_PORTD,          &local_s_portd)
-		&& config_setting_lookup_int   (setting_macrlc, CONFIG_STRING_MACRLC_REMOTE_S_PORTD,         &remote_s_portd)
-		 )){
-	  AssertFatal (0,
-		       "Failed to parse configuration file %s, L1 %d config !\n",
-		       RC.config_file_name, j);
-	  continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
-	}
-
-	RC.mac[j]->eth_params_s.local_if_name            = strdup(if_name_s);
-	RC.mac[j]->eth_params_s.my_addr                  = strdup(ipv4_s);
-	RC.mac[j]->eth_params_s.remote_addr              = strdup(ipv4_s_remote);
-	RC.mac[j]->eth_params_s.my_portc                 = local_s_portc;
-	RC.mac[j]->eth_params_s.remote_portc             = remote_s_portc;
-	RC.mac[j]->eth_params_s.my_portd                 = local_s_portd;
-	RC.mac[j]->eth_params_s.remote_portd             = remote_s_portd;
+      } else if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_TRANSPORT_S_PREFERENCE_IDX].strptr), "nfapi") == 0) {
+	RC.mac[j]->eth_params_s.local_if_name            = strdup(*(MacRLC_ParamList.paramarray[j][MACRLC_LOCAL_S_IF_NAME_IDX].strptr));
+	RC.mac[j]->eth_params_s.my_addr                  = strdup(*(MacRLC_ParamList.paramarray[j][MACRLC_LOCAL_S_ADDRESS_IDX].strptr));
+	RC.mac[j]->eth_params_s.remote_addr              = strdup(*(MacRLC_ParamList.paramarray[j][MACRLC_REMOTE_S_ADDRESS_IDX].strptr));
+	RC.mac[j]->eth_params_s.my_portc                 = *(MacRLC_ParamList.paramarray[j][MACRLC_LOCAL_S_PORTC_IDX].iptr);
+	RC.mac[j]->eth_params_s.remote_portc             = *(MacRLC_ParamList.paramarray[j][MACRLC_REMOTE_S_PORTC_IDX].iptr);
+	RC.mac[j]->eth_params_s.my_portd                 = *(MacRLC_ParamList.paramarray[j][MACRLC_LOCAL_S_PORTD_IDX].iptr);
+	RC.mac[j]->eth_params_s.remote_portd             = *(MacRLC_ParamList.paramarray[j][MACRLC_REMOTE_S_PORTD_IDX].iptr);
 	RC.mac[j]->eth_params_s.transp_preference        = ETH_UDP_MODE;
-      }
-      
-      else { // other midhaul
-	AssertFatal(1==0,"MACRLC %d: unknown southbound midhaul\n",j);
+      } else { // other midhaul
+	AssertFatal(1==0,"MACRLC %d: %s unknown southbound midhaul\n",j,*(MacRLC_ParamList.paramarray[j][MACRLC_TRANSPORT_S_PREFERENCE_IDX].strptr));
       }	
     }// j=0..num_inst
+  } else {// MacRLC_ParamList.numelt > 0
+	  AssertFatal (0,
+		       "No " CONFIG_STRING_MACRLC_LIST " configuration found");     
   }
 }
 	       
 int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
-  config_t          cfg;
-  config_setting_t *setting                       = NULL;
-  config_setting_t *subsetting                    = NULL;
-  config_setting_t *setting_component_carriers    = NULL;
-  config_setting_t *component_carrier             = NULL;
-  config_setting_t *setting_srb1                  = NULL;
-  config_setting_t *setting_mme_addresses         = NULL;
-  config_setting_t *setting_mme_address           = NULL;
-  config_setting_t *setting_ru                    = NULL;
-  config_setting_t *setting_enb                   = NULL;
-  config_setting_t *setting_otg                   = NULL;
-  config_setting_t *subsetting_otg                = NULL;
-  int               parse_errors                  = 0;
+
   int               num_enbs                      = 0;
-  int               num_mme_address               = 0;
-  int               num_otg_elements              = 0;
+ 
   int               num_component_carriers        = 0;
-  int               j                             = 0;
-  libconfig_int     enb_id                        = 0;
+  int               j,k                           = 0;
+  int32_t     enb_id                        = 0;
   int               nb_cc                         = 0;
 
-  char*             if_name_s                       = NULL;
-  char*             ipv4_s                          = NULL;
-  char*             ipv4_s_remote                   = NULL;
- 
-  char*             tr_s_preference                 = NULL;
-  libconfig_int     local_s_portc                   = 0;
-  libconfig_int     remote_s_portc                  = 0;
-  libconfig_int     local_s_portd                   = 0;
-  libconfig_int     remote_s_portd                  = 0;
 
-  const char*       cell_type                     = NULL;
-  const char*       tac                           = 0;
-  const char*       enb_name                      = NULL;
-  const char*       mcc                           = 0;
-  const char*       mnc                           = 0;
-  const char*       frame_type                    = NULL;
-  libconfig_int     tdd_config                    = 0;
-  libconfig_int     tdd_config_s                  = 0;
-  const char*       prefix_type                   = NULL;
-  const char*       pbch_repetition               = NULL;
-  libconfig_int     eutra_band                    = 0;
+  char*       frame_type                    = NULL;
+  int32_t     tdd_config                    = 0;
+  int32_t     tdd_config_s                  = 0;
+
+  char*       prefix_type                   = NULL;
+  char*       pbch_repetition               = NULL;
+  
+  int32_t     eutra_band                    = 0;
   long long int     downlink_frequency            = 0;
-  libconfig_int     uplink_frequency_offset       = 0;
-  libconfig_int     Nid_cell                      = 0;
-  libconfig_int     Nid_cell_mbsfn                = 0;
-  libconfig_int     N_RB_DL                       = 0;
-  libconfig_int     nb_antenna_ports              = 0;
-  libconfig_int     nb_antennas_tx                = 0;
-  libconfig_int     nb_antennas_rx                = 0;
-  libconfig_int     tx_gain                       = 0;
-  libconfig_int     rx_gain                       = 0;
-  libconfig_int     prach_root                    = 0;
-  libconfig_int     prach_config_index            = 0;
-  const char*            prach_high_speed         = NULL;
-  libconfig_int     prach_zero_correlation        = 0;
-  libconfig_int     prach_freq_offset             = 0;
-  libconfig_int     pucch_delta_shift             = 0;
-  libconfig_int     pucch_nRB_CQI                 = 0;
-  libconfig_int     pucch_nCS_AN                  = 0;
-#if !defined(Rel10) && !defined(Rel14)
-  libconfig_int     pucch_n1_AN                   = 0;
-#endif
-  libconfig_int     pdsch_referenceSignalPower    = 0;
-  libconfig_int     pdsch_p_b                     = 0;
-  libconfig_int     pusch_n_SB                    = 0;
-  const char *      pusch_hoppingMode             = NULL;
-  libconfig_int     pusch_hoppingOffset           = 0;
-  const char*          pusch_enable64QAM          = NULL;
-  const char*          pusch_groupHoppingEnabled  = NULL;
-  libconfig_int     pusch_groupAssignment         = 0;
-  const char*          pusch_sequenceHoppingEnabled = NULL;
-  libconfig_int     pusch_nDMRS1                  = 0;
-  const char*       phich_duration                = NULL;
-  const char*       phich_resource                = NULL;
-  const char*       srs_enable                    = NULL;
-  libconfig_int     srs_BandwidthConfig           = 0;
-  libconfig_int     srs_SubframeConfig            = 0;
-  const char*       srs_ackNackST                 = NULL;
-  const char*       srs_MaxUpPts                  = NULL;
-  libconfig_int     pusch_p0_Nominal              = 0;
-  const char*       pusch_alpha                   = NULL;
-  libconfig_int     pucch_p0_Nominal              = 0;
-  libconfig_int     msg3_delta_Preamble           = 0;
-  //libconfig_int     ul_CyclicPrefixLength         = 0;
-  const char*       pucch_deltaF_Format1          = NULL;
+  int32_t     uplink_frequency_offset       = 0;
+  int32_t     Nid_cell                      = 0;
+  int32_t     Nid_cell_mbsfn                = 0;
+  int32_t     N_RB_DL                       = 0;
+  int32_t     nb_antenna_ports              = 0;
+
+  int32_t     prach_root                    = 0;
+  int32_t     prach_config_index            = 0;
+  char*            prach_high_speed         = NULL;
+  int32_t     prach_zero_correlation        = 0;
+  int32_t     prach_freq_offset             = 0;
+  int32_t     pucch_delta_shift             = 0;
+  int32_t     pucch_nRB_CQI                 = 0;
+  int32_t     pucch_nCS_AN                  = 0;
+//#if !defined(Rel10) && !defined(Rel14)
+  int32_t     pucch_n1_AN                   = 0;
+//#endif
+  int32_t     pdsch_referenceSignalPower    = 0;
+  int32_t     pdsch_p_b                     = 0;
+  int32_t     pusch_n_SB                    = 0;
+  char *      pusch_hoppingMode             = NULL;
+  int32_t     pusch_hoppingOffset           = 0;
+  char*          pusch_enable64QAM          = NULL;
+  char*          pusch_groupHoppingEnabled  = NULL;
+  int32_t     pusch_groupAssignment         = 0;
+  char*          pusch_sequenceHoppingEnabled = NULL;
+  int32_t     pusch_nDMRS1                  = 0;
+  char*       phich_duration                = NULL;
+  char*       phich_resource                = NULL;
+  char*       srs_enable                    = NULL;
+  int32_t     srs_BandwidthConfig           = 0;
+  int32_t     srs_SubframeConfig            = 0;
+  char*       srs_ackNackST                 = NULL;
+  char*       srs_MaxUpPts                  = NULL;
+  int32_t     pusch_p0_Nominal              = 0;
+  char*       pusch_alpha                   = NULL;
+  int32_t     pucch_p0_Nominal              = 0;
+  int32_t     msg3_delta_Preamble           = 0;
+  //int32_t     ul_CyclicPrefixLength         = 0;
+  char*       pucch_deltaF_Format1          = NULL;
   //const char*       pucch_deltaF_Format1a         = NULL;
-  const char*       pucch_deltaF_Format1b         = NULL;
-  const char*       pucch_deltaF_Format2          = NULL;
-  const char*       pucch_deltaF_Format2a         = NULL;
-  const char*       pucch_deltaF_Format2b         = NULL;
-  libconfig_int     rach_numberOfRA_Preambles     = 0;
-  const char*       rach_preamblesGroupAConfig    = NULL;
-  libconfig_int     rach_sizeOfRA_PreamblesGroupA = 0;
-  libconfig_int     rach_messageSizeGroupA        = 0;
-  const char*       rach_messagePowerOffsetGroupB = NULL;
-  libconfig_int     rach_powerRampingStep         = 0;
-  libconfig_int     rach_preambleInitialReceivedTargetPower    = 0;
-  libconfig_int     rach_preambleTransMax         = 0;
-  libconfig_int     rach_raResponseWindowSize     = 0;
-  libconfig_int     rach_macContentionResolutionTimer = 0;
-  libconfig_int     rach_maxHARQ_Msg3Tx           = 0;
-  libconfig_int     pcch_defaultPagingCycle       = 0;
-  const char*       pcch_nB                       = NULL;
-  libconfig_int     bcch_modificationPeriodCoeff  = 0;
-  libconfig_int     ue_TimersAndConstants_t300    = 0;
-  libconfig_int     ue_TimersAndConstants_t301    = 0;
-  libconfig_int     ue_TimersAndConstants_t310    = 0;
-  libconfig_int     ue_TimersAndConstants_t311    = 0;
-  libconfig_int     ue_TimersAndConstants_n310    = 0;
-  libconfig_int     ue_TimersAndConstants_n311    = 0;
-  libconfig_int     ue_TransmissionMode           = 0;
+  char*       pucch_deltaF_Format1b         = NULL;
+  char*       pucch_deltaF_Format2          = NULL;
+  char*       pucch_deltaF_Format2a         = NULL;
+  char*       pucch_deltaF_Format2b         = NULL;
+  int32_t     rach_numberOfRA_Preambles     = 0;
+  char*       rach_preamblesGroupAConfig    = NULL;
+  int32_t     rach_sizeOfRA_PreamblesGroupA = 0;
+  int32_t     rach_messageSizeGroupA        = 0;
+  char*       rach_messagePowerOffsetGroupB = NULL;
+  int32_t     rach_powerRampingStep         = 0;
+  int32_t     rach_preambleInitialReceivedTargetPower    = 0;
+  int32_t     rach_preambleTransMax         = 0;
+  int32_t     rach_raResponseWindowSize     = 0;
+  int32_t     rach_macContentionResolutionTimer = 0;
+  int32_t     rach_maxHARQ_Msg3Tx           = 0;
+  int32_t     pcch_defaultPagingCycle       = 0;
+  char*       pcch_nB                       = NULL;
+  int32_t     bcch_modificationPeriodCoeff  = 0;
+  int32_t     ue_TimersAndConstants_t300    = 0;
+  int32_t     ue_TimersAndConstants_t301    = 0;
+  int32_t     ue_TimersAndConstants_t310    = 0;
+  int32_t     ue_TimersAndConstants_t311    = 0;
+  int32_t     ue_TimersAndConstants_n310    = 0;
+  int32_t     ue_TimersAndConstants_n311    = 0;
+  int32_t     ue_TransmissionMode           = 0;
 
 
-  libconfig_int     srb1_timer_poll_retransmit    = 0;
-  libconfig_int     srb1_timer_reordering         = 0;
-  libconfig_int     srb1_timer_status_prohibit    = 0;
-  libconfig_int     srb1_poll_pdu                 = 0;
-  libconfig_int     srb1_poll_byte                = 0;
-  libconfig_int     srb1_max_retx_threshold       = 0;
+  int32_t     srb1_timer_poll_retransmit    = 0;
+  int32_t     srb1_timer_reordering         = 0;
+  int32_t     srb1_timer_status_prohibit    = 0;
+  int32_t     srb1_poll_pdu                 = 0;
+  int32_t     srb1_poll_byte                = 0;
+  int32_t     srb1_max_retx_threshold       = 0;
 
-  libconfig_int     my_int;
+  int32_t     my_int;
 
 
-  const char*       active_enb[MAX_ENB];
-  char*             enb_interface_name_for_S1U    = NULL;
-  char*             enb_ipv4_address_for_S1U      = NULL;
-  libconfig_int     enb_port_for_S1U              = 0;
-  char*             enb_interface_name_for_S1_MME = NULL;
-  char*             enb_ipv4_address_for_S1_MME   = NULL;
-  char             *address                       = NULL;
-  char             *cidr                          = NULL;
-  char             *astring                       = NULL;
+  
+/* 
   char*             flexran_agent_interface_name      = NULL;
   char*             flexran_agent_ipv4_address        = NULL;
-  libconfig_int     flexran_agent_port                = 0;
+  int32_t     flexran_agent_port                = 0;
   char*             flexran_agent_cache               = NULL;
-  libconfig_int     otg_ue_id                     = 0;
+  int32_t     otg_ue_id                     = 0;
   char*             otg_app_type                  = NULL;
   char*             otg_bg_traffic                = NULL;
   char*             glog_level                    = NULL;
@@ -1019,80 +466,70 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
   char*             phy_log_verbosity             = NULL;
   char*             mac_log_level                 = NULL;
   char*             mac_log_verbosity             = NULL;
-  char*             rlc_log_level                 = NULL;
-  char*             rlc_log_verbosity             = NULL;
-  char*             pdcp_log_level                = NULL;
-  char*             pdcp_log_verbosity            = NULL;
-  char*             rrc_log_level                 = NULL;
-  char*             rrc_log_verbosity             = NULL;
-  char*             udp_log_verbosity             = NULL;
-  char*             osa_log_level                 = NULL;
-  char*             osa_log_verbosity             = NULL;
+  char* 	    rlc_log_level		  = NULL;
+  char* 	    rlc_log_verbosity		  = NULL;
+  char* 	    pdcp_log_level		  = NULL;
+  char* 	    pdcp_log_verbosity  	  = NULL;
+  char* 	    rrc_log_level		  = NULL;
+  char* 	    rrc_log_verbosity		  = NULL;
+  char* 	    udp_log_verbosity		  = NULL;
+  char* 	    osa_log_level		  = NULL;
+  char* 	    osa_log_verbosity		  = NULL;
+*/  
 
+  
   // for no gcc warnings 
-  (void)astring;
   (void)my_int;
+  paramdef_t ENBSParams[] = ENBSPARAMS_DESC;
+  
+  paramdef_t ENBParams[]  = ENBPARAMS_DESC;
+  paramlist_def_t ENBParamList = {ENB_CONFIG_STRING_ENB_LIST,NULL,0};  
 
-  memset((char*)active_enb,     0 , MAX_ENB * sizeof(char*));
+  paramdef_t CCsParams[] = CCPARAMS_DESC;
+  paramlist_def_t CCsParamList = {ENB_CONFIG_STRING_COMPONENT_CARRIERS,NULL,0};
+  
+  paramdef_t SRB1Params[] = SRB1PARAMS_DESC;  
 
-  config_init(&cfg);
+  
 
-  if (RC.config_file_name != NULL) {
-    // Read the file. If there is an error, report it and exit. 
-    if (! config_read_file(&cfg, RC.config_file_name)) {
-      config_destroy(&cfg);
-      AssertFatal (0, "Failed to parse eNB configuration file %s!\n", RC.config_file_name);
-    }
-  } else {
-    config_destroy(&cfg);
-    AssertFatal (0, "No eNB configuration file provided!\n");
-  }
 
+/* get global parameters, defined outside any section in the config file */
+  
+  config_get( ENBSParams,sizeof(ENBSParams)/sizeof(paramdef_t),NULL); 
+  num_enbs = ENBSParams[ENB_ACTIVE_ENBS_IDX].numelt;
+  AssertFatal (i<num_enbs,
+   	       "Failed to parse config file no %ith element in %s \n",i, ENB_CONFIG_STRING_ACTIVE_ENBS);
+  
 #if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
 
-  if (  (config_lookup_string( &cfg, ENB_CONFIG_STRING_ASN1_VERBOSITY, (const char **)&astring) )) {
-    if (strcasecmp(astring , ENB_CONFIG_STRING_ASN1_VERBOSITY_NONE) == 0) {
+
+    if (strcasecmp( *(ENBSParams[ENB_ASN1_VERBOSITY_IDX].strptr), ENB_CONFIG_STRING_ASN1_VERBOSITY_NONE) == 0) {
       asn_debug      = 0;
       asn1_xer_print = 0;
-    } else if (strcasecmp(astring , ENB_CONFIG_STRING_ASN1_VERBOSITY_INFO) == 0) {
+    } else if (strcasecmp( *(ENBSParams[ENB_ASN1_VERBOSITY_IDX].strptr), ENB_CONFIG_STRING_ASN1_VERBOSITY_INFO) == 0) {
       asn_debug      = 1;
       asn1_xer_print = 1;
-    } else if (strcasecmp(astring , ENB_CONFIG_STRING_ASN1_VERBOSITY_ANNOYING) == 0) {
+    } else if (strcasecmp(*(ENBSParams[ENB_ASN1_VERBOSITY_IDX].strptr) , ENB_CONFIG_STRING_ASN1_VERBOSITY_ANNOYING) == 0) {
       asn_debug      = 1;
       asn1_xer_print = 2;
     } else {
       asn_debug      = 0;
       asn1_xer_print = 0;
     }
-  }
+
 
 #endif
-
-  // Get list of active eNBs, (only these will be configured)
-  setting = config_lookup(&cfg, ENB_CONFIG_STRING_ACTIVE_ENBS);
-
-  if (setting != NULL) {
-    num_enbs = config_setting_length(setting);
-    setting_enb   = config_setting_get_elem(setting, i);
-    active_enb[i] = config_setting_get_string (setting_enb);
-    AssertFatal (active_enb[i] != NULL,
-		 "Failed to parse config file %s, %uth attribute %s \n",
-		 RC.config_file_name, i, ENB_CONFIG_STRING_ACTIVE_ENBS);
-    active_enb[i] = strdup(active_enb[i]);
-  }
   
+
   
   if (num_enbs>0) {
     // Output a list of all eNBs.
-    setting = config_lookup(&cfg, ENB_CONFIG_STRING_ENB_LIST);
+    config_getlist( &ENBParamList,ENBParams,sizeof(ENBParams)/sizeof(paramdef_t),NULL); 
     
-    if (setting != NULL) {
-      num_enbs = config_setting_length(setting);
+    
       
-
-      setting_enb = config_setting_get_elem(setting, i);
       
-      if (! config_setting_lookup_int(setting_enb, ENB_CONFIG_STRING_ENB_ID, &enb_id)) {
+      if (ENBParamList.paramarray[i][ENB_ENB_ID_IDX].uptr == NULL) {
 	// Calculate a default eNB ID
 # if defined(ENABLE_USE_MME)
 	uint32_t hash;
@@ -1102,48 +539,25 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 # else
 	enb_id = i;
 # endif
+      } else {
+          enb_id = *(ENBParamList.paramarray[i][ENB_ENB_ID_IDX].uptr);
       }
 
-      if (  !(       config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_CELL_TYPE,           &cell_type)
-		     && config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_ENB_NAME,            &enb_name)
-		     && config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_TRACKING_AREA_CODE,  &tac)
-		     && config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_MOBILE_COUNTRY_CODE, &mcc)
-		     && config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_MOBILE_NETWORK_CODE, &mnc)
-		     && config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_TRANSPORT_S_PREFERENCE, (const char **)&tr_s_preference)
-		     )
-	    ) {
-	AssertFatal (0,
-		     "Failed to parse eNB configuration file %s, %u th enb\n",
-		     RC.config_file_name, i);
-      }
       
-      printf("RRC %d: Southbound Transport %s\n",j,tr_s_preference);
+      printf("RRC %d: Southbound Transport %s\n",i,*(ENBParamList.paramarray[i][ENB_TRANSPORT_S_PREFERENCE_IDX].strptr));
 	    
-      if (strcmp(tr_s_preference, "local_mac") == 0) {
+      if (strcmp(*(ENBParamList.paramarray[i][ENB_TRANSPORT_S_PREFERENCE_IDX].strptr), "local_mac") == 0) {
 
 
       }
-      else if (strcmp(tr_s_preference, "cudu") == 0) {
-	if (  !(config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_LOCAL_S_IF_NAME,        (const char **)&if_name_s)
-		&& config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_LOCAL_S_ADDRESS,        (const char **)&ipv4_s)
-		&& config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_REMOTE_S_ADDRESS,       (const char **)&ipv4_s_remote)
-		&& config_setting_lookup_int   (setting_enb, ENB_CONFIG_STRING_LOCAL_S_PORTC,          &local_s_portc)
-		&& config_setting_lookup_int   (setting_enb, ENB_CONFIG_STRING_REMOTE_S_PORTC,         &remote_s_portc)
-		&& config_setting_lookup_int   (setting_enb, ENB_CONFIG_STRING_LOCAL_S_PORTD,          &local_s_portd)
-		&& config_setting_lookup_int   (setting_enb, ENB_CONFIG_STRING_REMOTE_S_PORTD,         &remote_s_portd)	
-		)
-	    ) {
-	  AssertFatal (0,
-		       "Failed to parse eNB configuration file %s, %u th enb\n",
-		       RC.config_file_name, i);
-	}
-	rrc->eth_params_s.local_if_name            = strdup(if_name_s);
-	rrc->eth_params_s.my_addr                  = strdup(ipv4_s);
-	rrc->eth_params_s.remote_addr              = strdup(ipv4_s_remote);
-	rrc->eth_params_s.my_portc                 = local_s_portc;
-	rrc->eth_params_s.remote_portc             = remote_s_portc;
-	rrc->eth_params_s.my_portd                 = local_s_portd;
-	rrc->eth_params_s.remote_portd             = remote_s_portd;
+      else if (strcmp(*(ENBParamList.paramarray[i][ENB_TRANSPORT_S_PREFERENCE_IDX].strptr), "cudu") == 0) {
+	rrc->eth_params_s.local_if_name            = strdup(*(ENBParamList.paramarray[i][ENB_LOCAL_S_IF_NAME_IDX].strptr));
+	rrc->eth_params_s.my_addr                  = strdup(*(ENBParamList.paramarray[i][ENB_LOCAL_S_ADDRESS_IDX].strptr));
+	rrc->eth_params_s.remote_addr              = strdup(*(ENBParamList.paramarray[i][ENB_REMOTE_S_ADDRESS_IDX].strptr));
+	rrc->eth_params_s.my_portc                 = *(ENBParamList.paramarray[i][ENB_LOCAL_S_PORTC_IDX].uptr);
+	rrc->eth_params_s.remote_portc             = *(ENBParamList.paramarray[i][ENB_REMOTE_S_PORTC_IDX].uptr);
+	rrc->eth_params_s.my_portd                 = *(ENBParamList.paramarray[i][ENB_LOCAL_S_PORTD_IDX].uptr);
+	rrc->eth_params_s.remote_portd             = *(ENBParamList.paramarray[i][ENB_REMOTE_S_PORTD_IDX].uptr);
 	rrc->eth_params_s.transp_preference        = ETH_UDP_MODE;
       }
       
@@ -1152,13 +566,20 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 
       // search if in active list
 
-      for (j=0; j < num_enbs; j++) {
-	if (strcmp(active_enb[j], enb_name) == 0) {
+     
+   
+   
+ 
+
+      for (k=0; k <num_enbs ; k++) {
+	if (strcmp(ENBSParams[ENB_ACTIVE_ENBS_IDX].strlistptr[k], *(ENBParamList.paramarray[i][ENB_ENB_NAME_IDX].strptr) )== 0) {
+	  char enbpath[MAX_OPTNAME_SIZE + 8];
+
 	  
 	  RRC_CONFIGURATION_REQ (msg_p).cell_identity = enb_id;
 	  
 	  /*    
-		if (strcmp(cell_type, "CELL_MACRO_ENB") == 0) {
+		if (strcmp(*(ENBParamList.paramarray[i][ENB_CELL_TYPE_IDX].strptr), "CELL_MACRO_ENB") == 0) {
 		enb_properties_loc.properties[enb_properties_loc_index]->cell_type = CELL_MACRO_ENB;
 		} else  if (strcmp(cell_type, "CELL_HOME_ENB") == 0) {
 		enb_properties_loc.properties[enb_properties_loc_index]->cell_type = CELL_HOME_ENB;
@@ -1170,108 +591,41 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 		
 		enb_properties_loc.properties[enb_properties_loc_index]->eNB_name         = strdup(enb_name);
 	  */
-	  RRC_CONFIGURATION_REQ (msg_p).tac              = (uint16_t)atoi(tac);
-	  RRC_CONFIGURATION_REQ (msg_p).mcc              = (uint16_t)atoi(mcc);
-	  RRC_CONFIGURATION_REQ (msg_p).mnc              = (uint16_t)atoi(mnc);
-	  RRC_CONFIGURATION_REQ (msg_p).mnc_digit_length = strlen(mnc);
+	  RRC_CONFIGURATION_REQ (msg_p).tac              = (uint16_t)atoi( *(ENBParamList.paramarray[i][ENB_TRACKING_AREA_CODE_IDX].strptr) );
+	  RRC_CONFIGURATION_REQ (msg_p).mcc              = (uint16_t)atoi( *(ENBParamList.paramarray[i][ENB_MOBILE_COUNTRY_CODE_IDX].strptr) );
+	  RRC_CONFIGURATION_REQ (msg_p).mnc              = (uint16_t)atoi( *(ENBParamList.paramarray[i][ENB_MOBILE_NETWORK_CODE_IDX].strptr) );
+	  RRC_CONFIGURATION_REQ (msg_p).mnc_digit_length = strlen(*(ENBParamList.paramarray[i][ENB_MOBILE_NETWORK_CODE_IDX].strptr));
 	  AssertFatal((RRC_CONFIGURATION_REQ (msg_p).mnc_digit_length == 2) ||
 		      (RRC_CONFIGURATION_REQ (msg_p).mnc_digit_length == 3),
 		      "BAD MNC DIGIT LENGTH %d",
 		      RRC_CONFIGURATION_REQ (msg_p).mnc_digit_length);
 	  
-	  LOG_I(RRC,"RRC config (%s,%s,%s)\n",mcc,mnc,tac);
+	
 	  // Parse optional physical parameters
+	  sprintf(enbpath,"%s.[%i]",ENB_CONFIG_STRING_ENB_LIST,k),
+	  config_getlist( &CCsParamList,NULL,0,enbpath); 
 	  
-	  
-	  setting_component_carriers = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_COMPONENT_CARRIERS);
-	  nb_cc = 0;
-	  
-	  if (setting_component_carriers != NULL) {
+	  LOG_I(RRC,"num component carriers %d \n", num_component_carriers);  
+	  if ( CCsParamList.numelt> 0) {
+	    char ccspath[MAX_OPTNAME_SIZE*2 + 16];
 	    
-	    num_component_carriers     = config_setting_length(setting_component_carriers);
-	    LOG_I(RRC,"num component carriers %d \n", num_component_carriers);
+
+	    
+
 	    
 	    //enb_properties_loc.properties[enb_properties_loc_index]->nb_cc = num_component_carriers;
-	    for (j = 0; j < num_component_carriers ;j++) { // && j < MAX_NUM_CCs; j++) {
-	      component_carrier = config_setting_get_elem(setting_component_carriers, j);
-	      
-	      //printf("Component carrier %d\n",component_carrier);
-	      if (!(config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_FRAME_TYPE, &frame_type)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_TDD_CONFIG, &tdd_config)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_TDD_CONFIG_S, &tdd_config_s)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PREFIX_TYPE, &prefix_type)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PBCH_REPETITION, &pbch_repetition)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_EUTRA_BAND, &eutra_band)
-		    && config_setting_lookup_int64(component_carrier, ENB_CONFIG_STRING_DOWNLINK_FREQUENCY, &downlink_frequency)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UPLINK_FREQUENCY_OFFSET, &uplink_frequency_offset)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NID_CELL, &Nid_cell)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_N_RB_DL, &N_RB_DL)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_CELL_MBSFN, &Nid_cell_mbsfn)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NB_ANT_PORTS, &nb_antenna_ports)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PRACH_ROOT, &prach_root)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PRACH_CONFIG_INDEX, &prach_config_index)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PRACH_HIGH_SPEED, &prach_high_speed)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PRACH_ZERO_CORRELATION, &prach_zero_correlation)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PRACH_FREQ_OFFSET, &prach_freq_offset)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PUCCH_DELTA_SHIFT, &pucch_delta_shift)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PUCCH_NRB_CQI, &pucch_nRB_CQI)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PUCCH_NCS_AN, &pucch_nCS_AN)
-#if !defined(Rel10) && !defined(Rel14)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PUCCH_N1_AN, &pucch_n1_AN)
-#endif
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PDSCH_RS_EPRE, &pdsch_referenceSignalPower)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PDSCH_PB, &pdsch_p_b)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PUSCH_N_SB, &pusch_n_SB)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PUSCH_HOPPINGMODE, &pusch_hoppingMode)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PUSCH_HOPPINGOFFSET, &pusch_hoppingOffset)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PUSCH_ENABLE64QAM, &pusch_enable64QAM)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PUSCH_GROUP_HOPPING_EN, &pusch_groupHoppingEnabled)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PUSCH_GROUP_ASSIGNMENT, &pusch_groupAssignment)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PUSCH_SEQUENCE_HOPPING_EN, &pusch_sequenceHoppingEnabled)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PUSCH_NDMRS1, &pusch_nDMRS1)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PHICH_DURATION, &phich_duration)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PHICH_RESOURCE, &phich_resource)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_SRS_ENABLE, &srs_enable)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PUSCH_PO_NOMINAL, &pusch_p0_Nominal)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PUSCH_ALPHA, &pusch_alpha)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PUCCH_PO_NOMINAL, &pucch_p0_Nominal)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_MSG3_DELTA_PREAMBLE, &msg3_delta_Preamble)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT1, &pucch_deltaF_Format1)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT1b, &pucch_deltaF_Format1b)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT2, &pucch_deltaF_Format2)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT2A, &pucch_deltaF_Format2a)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PUCCH_DELTAF_FORMAT2B, &pucch_deltaF_Format2b)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_NUM_RA_PREAMBLES, &rach_numberOfRA_Preambles)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_RACH_PREAMBLESGROUPACONFIG, &rach_preamblesGroupAConfig)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_POWERRAMPINGSTEP, &rach_powerRampingStep)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_PREAMBLEINITIALRECEIVEDTARGETPOWER, &rach_preambleInitialReceivedTargetPower)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_PREAMBLETRANSMAX, &rach_preambleTransMax)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_RARESPONSEWINDOWSIZE, &rach_raResponseWindowSize)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_MACCONTENTIONRESOLUTIONTIMER, &rach_macContentionResolutionTimer)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_MAXHARQMSG3TX, &rach_maxHARQ_Msg3Tx)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_MAXHARQMSG3TX, &bcch_modificationPeriodCoeff)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PCCH_DEFAULT_PAGING_CYCLE,  &pcch_defaultPagingCycle)
-		    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_PCCH_NB,  &pcch_nB)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_BCCH_MODIFICATIONPERIODCOEFF,  &bcch_modificationPeriodCoeff)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T300,  &ue_TimersAndConstants_t300)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T301,  &ue_TimersAndConstants_t301)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T310,  &ue_TimersAndConstants_t310)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T311,  &ue_TimersAndConstants_t311)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N310,  &ue_TimersAndConstants_n310)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N311,  &ue_TimersAndConstants_n311)
-		    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UE_TRANSMISSION_MODE,  &ue_TransmissionMode)
-		    
-#if defined(Rel10) || defined(Rel14)
+
+
+	    for (j = 0; j < CCsParamList.numelt ;j++) { 
+
+	      sprintf(ccspath,"%s.%s.[%i]",enbpath,ENB_CONFIG_STRING_COMPONENT_CARRIERS,j);
+	      config_get( CCsParams,sizeof(CCsParams)/sizeof(paramdef_t),ccspath);	      
+
+
+	      //printf("Component carrier %d\n",component_carrier);	     
+
 		    
 
-#endif
-		    )) {
-		AssertFatal (0,
-			     "Failed to parse eNB configuration file %s, Component Carrier %d!\n",
-			     RC.config_file_name, nb_cc++);
-		continue; // FIXME this prevents segfaults below, not sure what happens after function exit
-	      }
-	      
 	      nb_cc++;
 	      /*
 		if (strcmp(cc_node_function, "eNodeB_3GPP") == 0) {
@@ -1627,7 +981,7 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 			       "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for phich_resource choice: ONESIXTH,HALF,ONE,TWO!\n",
 			       RC.config_file_name, i, phich_resource);
 
-		printf("phich.resource %d (%s), phich.duration %d (%s)\n",
+		printf("phich.resource %ld (%s), phich.duration %ld (%s)\n",
 		       RRC_CONFIGURATION_REQ (msg_p).phich_resource[j],phich_resource,
 		       RRC_CONFIGURATION_REQ (msg_p).phich_duration[j],phich_duration);
 
@@ -1641,14 +995,6 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 			       RC.config_file_name, i, srs_enable);
 
 		if (RRC_CONFIGURATION_REQ (msg_p).srs_enable[j] == TRUE) {
-		  if (!(config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_SRS_BANDWIDTH_CONFIG, &srs_BandwidthConfig)
-			&& config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_SRS_SUBFRAME_CONFIG, &srs_SubframeConfig)
-			&& config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_SRS_ACKNACKST_CONFIG, &srs_ackNackST)
-			&& config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_SRS_MAXUPPTS, &srs_MaxUpPts)
-			))
-		    AssertFatal(0,
-				"Failed to parse eNB configuration file %s, enb %d unknown values for srs_BandwidthConfig, srs_SubframeConfig, srs_ackNackST, srs_MaxUpPts\n",
-				RC.config_file_name, i);
 
 		  RRC_CONFIGURATION_REQ (msg_p).srs_BandwidthConfig[j] = srs_BandwidthConfig;
 
@@ -1817,12 +1163,6 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 		if (strcmp(rach_preamblesGroupAConfig, "ENABLE") == 0) {
 		  RRC_CONFIGURATION_REQ (msg_p).rach_preamblesGroupAConfig[j] = TRUE;
 
-		  if (!(config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_SIZEOFRA_PREAMBLESGROUPA, &rach_sizeOfRA_PreamblesGroupA)
-			&& config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_MESSAGESIZEGROUPA, &rach_messageSizeGroupA)
-			&& config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_RACH_MESSAGEPOWEROFFSETGROUPB, &rach_messagePowerOffsetGroupB)))
-		    AssertFatal (0,
-				 "Failed to parse eNB configuration file %s, enb %d  rach_sizeOfRA_PreamblesGroupA, messageSizeGroupA,messagePowerOffsetGroupB!\n",
-				 RC.config_file_name, i);
 
 		  RRC_CONFIGURATION_REQ (msg_p).rach_sizeOfRA_PreamblesGroupA[j] = (rach_sizeOfRA_PreamblesGroupA/4)-1;
 
@@ -2379,21 +1719,10 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 		}
 	      }
 	    }
-
-	    setting_srb1 = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_SRB1);
-
-	    if (setting_srb1 != NULL) {
-	      if (!(config_setting_lookup_int(setting_srb1, ENB_CONFIG_STRING_SRB1_TIMER_POLL_RETRANSMIT, &srb1_timer_poll_retransmit)
-		    && config_setting_lookup_int(setting_srb1, ENB_CONFIG_STRING_SRB1_TIMER_REORDERING,      &srb1_timer_reordering)
-		    && config_setting_lookup_int(setting_srb1, ENB_CONFIG_STRING_SRB1_TIMER_STATUS_PROHIBIT, &srb1_timer_status_prohibit)
-		    && config_setting_lookup_int(setting_srb1, ENB_CONFIG_STRING_SRB1_MAX_RETX_THRESHOLD,    &srb1_max_retx_threshold)
-		    && config_setting_lookup_int(setting_srb1, ENB_CONFIG_STRING_SRB1_POLL_PDU,              &srb1_poll_pdu)
-		    && config_setting_lookup_int(setting_srb1, ENB_CONFIG_STRING_SRB1_POLL_BYTE,             &srb1_poll_byte)))
-		AssertFatal (0,
-			     "Failed to parse eNB configuration file %s, enb %d  timer_poll_retransmit, timer_reordering, "
-			     "timer_status_prohibit, poll_pdu, poll_byte, max_retx_threshold !\n",
-			     RC.config_file_name, i);
-
+	    char srb1path[MAX_OPTNAME_SIZE*2 + 8];
+	    sprintf(srb1path,"%s.%s",enbpath,ENB_CONFIG_STRING_SRB1);
+	    int npar = config_get( SRB1Params,sizeof(SRB1Params)/sizeof(paramdef_t), srb1path);
+	    if (npar == sizeof(SRB1Params)/sizeof(paramdef_t)) {
 	      switch (srb1_max_retx_threshold) {
 	      case 1:
 		rrc->srb1_max_retx_threshold = UL_AM_RLC__maxRetxThreshold_t1;
@@ -3003,74 +2332,42 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 	    */
 	    break;
 	}
-      }
+      
     }
   }
+return 0;
 }
 
-int RCconfig_gtpu() {
-  config_t          cfg;
-  config_setting_t *setting                       = NULL;
-  config_setting_t *subsetting                    = NULL;
-  config_setting_t *setting_enb                   = NULL;
+int RCconfig_gtpu(void ) {
+
   int               num_enbs                      = 0;
-  libconfig_int     enb_id                        = 0;
 
 
 
   char*             enb_interface_name_for_S1U    = NULL;
   char*             enb_ipv4_address_for_S1U      = NULL;
-  libconfig_int     enb_port_for_S1U              = 0;
+  uint32_t          enb_port_for_S1U              = 0;
   char             *address                       = NULL;
   char             *cidr                          = NULL;
-  char             *astring                       = NULL;
+  char gtpupath[MAX_OPTNAME_SIZE*2 + 8];
+	  
 
-  // for no gcc warnings 
-  (void)astring;
-
-
+  paramdef_t ENBSParams[] = ENBSPARAMS_DESC;
+  
+  paramdef_t GTPUParams[]  = GTPUPARAMS_DESC;
   LOG_I(GTPU,"Configuring GTPu\n");
 
-  config_init(&cfg);
-
-  if (RC.config_file_name != NULL) {
-    // Read the file. If there is an error, report it and exit. 
-    if (! config_read_file(&cfg, RC.config_file_name)) {
-      config_destroy(&cfg);
-      AssertFatal (0, "Failed to parse eNB configuration file %s!\n", RC.config_file_name);
-    }
-  } else {
-    config_destroy(&cfg);
-    AssertFatal (0, "No eNB configuration file provided!\n");
-  }
-
-  // Get list of active eNBs, (only these will be configured)
-  setting = config_lookup(&cfg, ENB_CONFIG_STRING_ACTIVE_ENBS);
-
-  if (setting != NULL) {
-    num_enbs = config_setting_length(setting);
-    setting_enb   = config_setting_get_elem(setting, 0);
-  }
-  
-  if (num_enbs>0) {
-    // Output a list of all eNBs.
-    setting = config_lookup(&cfg, ENB_CONFIG_STRING_ENB_LIST);
-    
-    if (setting != NULL) {
+/* get number of active eNodeBs */
+  config_get( ENBSParams,sizeof(ENBSParams)/sizeof(paramdef_t),NULL); 
+  num_enbs = ENBSParams[ENB_ACTIVE_ENBS_IDX].numelt;
+  AssertFatal (num_enbs >0,
+   	       "Failed to parse config file no active eNodeBs in %s \n", ENB_CONFIG_STRING_ACTIVE_ENBS);
 
 
-      setting_enb = config_setting_get_elem(setting, 0);
-      subsetting = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_NETWORK_INTERFACES_CONFIG);
+  sprintf(gtpupath,"%s.[%i].%s",ENB_CONFIG_STRING_ENB_LIST,0,ENB_CONFIG_STRING_NETWORK_INTERFACES_CONFIG);
+  config_get( GTPUParams,sizeof(GTPUParams)/sizeof(paramdef_t),gtpupath);    
 
-      if (subsetting != NULL) {
-	if (  (config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_S1U,
-					     (const char **)&enb_interface_name_for_S1U)
-	       && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_ENB_IPV4_ADDR_FOR_S1U,
-						(const char **)&enb_ipv4_address_for_S1U)
-	       && config_setting_lookup_int(subsetting, ENB_CONFIG_STRING_ENB_PORT_FOR_S1U,
-					    &enb_port_for_S1U)
-	       )
-	      ) {
+
 
 	  cidr = enb_ipv4_address_for_S1U;
 	  address = strtok(cidr, "/");
@@ -3083,217 +2380,145 @@ int RCconfig_gtpu() {
 	  }
 
 	  RC.gtpv1u_data_g->enb_port_for_S1u_S12_S4_up = enb_port_for_S1U;
-
-	}
-      }
-    }
-  }
+return 0;
 }
 
 
 int RCconfig_S1(MessageDef *msg_p, uint32_t i) {
-  config_t          cfg;
-  config_setting_t *setting                       = NULL;
-  config_setting_t *subsetting                    = NULL;
-  config_setting_t *setting_mme_addresses         = NULL;
-  config_setting_t *setting_mme_address           = NULL;
-  config_setting_t *setting_enb                   = NULL;
-  config_setting_t *setting_otg                   = NULL;
-  config_setting_t *subsetting_otg                = NULL;
-  int               parse_errors                  = 0;
-  int               num_enbs                      = 0;
-  int               num_mme_address               = 0;
-  int               num_otg_elements              = 0;
-  int               num_component_carriers        = 0;
-  int               j                             = 0;
-  libconfig_int     enb_id                        = 0;
+
+  int               j,k                           = 0;
+  
+  
+  int enb_id;
+
+  int32_t     my_int;
 
 
-  const char*       cell_type                     = NULL;
-  const char*       tac                           = 0;
-  const char*       enb_name                      = NULL;
-  const char*       mcc                           = 0;
-  const char*       mnc                           = 0;
 
-  libconfig_int     my_int;
-
-
-  char*             if_name                       = NULL;
-  char*             ipv4                          = NULL;
-  char*             ipv4_remote                   = NULL;
-  char*             ipv6                          = NULL;
-  char*             local_rf                      = NULL;
-  char*             preference                    = NULL;
-  char*             active                        = NULL;
-
-  char*             tr_preference                 = NULL;
-  libconfig_int     local_port                    = 0;
-  libconfig_int     remote_port                   = 0;
   const char*       active_enb[MAX_ENB];
-  char*             enb_interface_name_for_S1U    = NULL;
-  char*             enb_ipv4_address_for_S1U      = NULL;
-  libconfig_int     enb_port_for_S1U              = 0;
-  char*             enb_interface_name_for_S1_MME = NULL;
-  char*             enb_ipv4_address_for_S1_MME   = NULL;
+
+
   char             *address                       = NULL;
   char             *cidr                          = NULL;
-  char             *astring                       = NULL;
+
 
   // for no gcc warnings 
-  (void)astring;
+
   (void)my_int;
 
   memset((char*)active_enb,     0 , MAX_ENB * sizeof(char*));
 
-  config_init(&cfg);
+  paramdef_t ENBSParams[] = ENBSPARAMS_DESC;
+  
+  paramdef_t ENBParams[]  = ENBPARAMS_DESC;
+  paramlist_def_t ENBParamList = {ENB_CONFIG_STRING_ENB_LIST,NULL,0};
 
-  if (RC.config_file_name != NULL) {
-    // Read the file. If there is an error, report it and exit. 
-    if (! config_read_file(&cfg, RC.config_file_name)) {
-      config_destroy(&cfg);
-      AssertFatal (0, "Failed to parse eNB configuration file %s!\n", RC.config_file_name);
-    }
-  } else {
-    config_destroy(&cfg);
-    AssertFatal (0, "No eNB configuration file provided!\n");
-  }
-
+/* get global parameters, defined outside any section in the config file */
+  
+  config_get( ENBSParams,sizeof(ENBSParams)/sizeof(paramdef_t),NULL); 
 #if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
-
-  if (  (config_lookup_string( &cfg, ENB_CONFIG_STRING_ASN1_VERBOSITY, (const char **)&astring) )) {
-    if (strcasecmp(astring , ENB_CONFIG_STRING_ASN1_VERBOSITY_NONE) == 0) {
+    if (strcasecmp( *(ENBSParams[ENB_ASN1_VERBOSITY_IDX].strptr), ENB_CONFIG_STRING_ASN1_VERBOSITY_NONE) == 0) {
       asn_debug      = 0;
       asn1_xer_print = 0;
-    } else if (strcasecmp(astring , ENB_CONFIG_STRING_ASN1_VERBOSITY_INFO) == 0) {
+    } else if (strcasecmp( *(ENBSParams[ENB_ASN1_VERBOSITY_IDX].strptr), ENB_CONFIG_STRING_ASN1_VERBOSITY_INFO) == 0) {
       asn_debug      = 1;
       asn1_xer_print = 1;
-    } else if (strcasecmp(astring , ENB_CONFIG_STRING_ASN1_VERBOSITY_ANNOYING) == 0) {
+    } else if (strcasecmp(*(ENBSParams[ENB_ASN1_VERBOSITY_IDX].strptr) , ENB_CONFIG_STRING_ASN1_VERBOSITY_ANNOYING) == 0) {
       asn_debug      = 1;
       asn1_xer_print = 2;
     } else {
       asn_debug      = 0;
       asn1_xer_print = 0;
     }
-  }
 
 #endif
 
-  // Get list of active eNBs, (only these will be configured)
-  setting = config_lookup(&cfg, ENB_CONFIG_STRING_ACTIVE_ENBS);
-
-  if (setting != NULL) {
-    num_enbs = config_setting_length(setting);
-    setting_enb   = config_setting_get_elem(setting, i);
-    active_enb[i] = config_setting_get_string (setting_enb);
-    AssertFatal (active_enb[i] != NULL,
+    AssertFatal (i<ENBSParams[ENB_ACTIVE_ENBS_IDX].numelt,
 		 "Failed to parse config file %s, %uth attribute %s \n",
 		 RC.config_file_name, i, ENB_CONFIG_STRING_ACTIVE_ENBS);
-    active_enb[i] = strdup(active_enb[i]);
-  }
-  
-  
-  if (num_enbs>0) {
-    // Output a list of all eNBs.
-    setting = config_lookup(&cfg, ENB_CONFIG_STRING_ENB_LIST);
     
-    if (setting != NULL) {
-      num_enbs = config_setting_length(setting);
+  
+  if (ENBSParams[ENB_ACTIVE_ENBS_IDX].numelt>0) {
+    // Output a list of all eNBs.
+       config_getlist( &ENBParamList,ENBParams,sizeof(ENBParams)/sizeof(paramdef_t),NULL); 
+    
+    
       
-      for (i = 0; i < num_enbs; i++) {
-	setting_enb = config_setting_get_elem(setting, i);
-	
-	if (! config_setting_lookup_int(setting_enb, ENB_CONFIG_STRING_ENB_ID, &enb_id)) {
+      
+    
+    if (ENBParamList.numelt > 0) {
+      for (k = 0; k < ENBParamList.numelt; k++) {
+	if (ENBParamList.paramarray[k][ENB_ENB_ID_IDX].uptr == NULL) {
 	  // Calculate a default eNB ID
 
 # if defined(ENABLE_USE_MME)
 	  uint32_t hash;
 	  
 	  hash = s1ap_generate_eNB_id ();
-	  enb_id = i + (hash & 0xFFFF8);
+	  enb_id = k + (hash & 0xFFFF8);
 # else
-	  enb_id = i;
+	  enb_id = k;
 # endif
-	}
+	} else {
+          enb_id = *(ENBParamList.paramarray[k][ENB_ENB_ID_IDX].uptr);
+        }
 	
-	if (  !(       config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_CELL_TYPE,           &cell_type)
-		       && config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_ENB_NAME,            &enb_name)
-		       && config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_TRACKING_AREA_CODE,  &tac)
-		       && config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_MOBILE_COUNTRY_CODE, &mcc)
-		       && config_setting_lookup_string(setting_enb, ENB_CONFIG_STRING_MOBILE_NETWORK_CODE, &mnc)
-		       
-		       
-		       )
-	      ) {
-	  AssertFatal (0,
-		       "Failed to parse eNB configuration file %s, %u th enb\n",
-		       RC.config_file_name, i);
-	  continue; // FIXME this prevents segfaults below, not sure what happens after function exit
-	}
 	
 	// search if in active list
-	for (j=0; j < num_enbs; j++) {
-	  if (strcmp(active_enb[j], enb_name) == 0) {
+	for (j=0; j < ENBSParams[ENB_ACTIVE_ENBS_IDX].numelt; j++) {
+	  if (strcmp(ENBSParams[ENB_ACTIVE_ENBS_IDX].strlistptr[j], *(ENBParamList.paramarray[k][ENB_ENB_NAME_IDX].strptr)) == 0) {
+             paramdef_t S1Params[]  = S1PARAMS_DESC;
+             paramlist_def_t S1ParamList = {ENB_CONFIG_STRING_MME_IP_ADDRESS,NULL,0};
+
+             paramdef_t SCTPParams[]  = SCTPPARAMS_DESC;
+             paramdef_t NETParams[]  =  NETPARAMS_DESC;
+             char aprefix[MAX_OPTNAME_SIZE*2 + 8];
 	    
 	    S1AP_REGISTER_ENB_REQ (msg_p).eNB_id = enb_id;
 	    
-	    if (strcmp(cell_type, "CELL_MACRO_ENB") == 0) {
+	    if (strcmp(*(ENBParamList.paramarray[k][ENB_CELL_TYPE_IDX].strptr), "CELL_MACRO_ENB") == 0) {
 	      S1AP_REGISTER_ENB_REQ (msg_p).cell_type = CELL_MACRO_ENB;
-	    } else  if (strcmp(cell_type, "CELL_HOME_ENB") == 0) {
+	    } else  if (strcmp(*(ENBParamList.paramarray[k][ENB_CELL_TYPE_IDX].strptr), "CELL_HOME_ENB") == 0) {
 	      S1AP_REGISTER_ENB_REQ (msg_p).cell_type = CELL_HOME_ENB;
 	    } else {
 	      AssertFatal (0,
 			   "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for cell_type choice: CELL_MACRO_ENB or CELL_HOME_ENB !\n",
-			   RC.config_file_name, i, cell_type);
+			   RC.config_file_name, i, *(ENBParamList.paramarray[k][ENB_CELL_TYPE_IDX].strptr));
 	    }
 	    
-	    S1AP_REGISTER_ENB_REQ (msg_p).eNB_name         = strdup(enb_name);
-	    S1AP_REGISTER_ENB_REQ (msg_p).tac              = (uint16_t)atoi(tac);
-	    S1AP_REGISTER_ENB_REQ (msg_p).mcc              = (uint16_t)atoi(mcc);
-	    S1AP_REGISTER_ENB_REQ (msg_p).mnc              = (uint16_t)atoi(mnc);
-	    S1AP_REGISTER_ENB_REQ (msg_p).mnc_digit_length = strlen(mnc);
+	    S1AP_REGISTER_ENB_REQ (msg_p).eNB_name         = strdup(*(ENBParamList.paramarray[k][ENB_ENB_NAME_IDX].strptr));
+	    S1AP_REGISTER_ENB_REQ (msg_p).tac              = (uint16_t)atoi(*(ENBParamList.paramarray[k][ENB_TRACKING_AREA_CODE_IDX].strptr));
+	    S1AP_REGISTER_ENB_REQ (msg_p).mcc              = (uint16_t)atoi(*(ENBParamList.paramarray[k][ENB_MOBILE_COUNTRY_CODE_IDX].strptr));
+	    S1AP_REGISTER_ENB_REQ (msg_p).mnc              = (uint16_t)atoi(*(ENBParamList.paramarray[k][ENB_MOBILE_NETWORK_CODE_IDX].strptr));
+	    S1AP_REGISTER_ENB_REQ (msg_p).mnc_digit_length = strlen(*(ENBParamList.paramarray[k][ENB_MOBILE_NETWORK_CODE_IDX].strptr));
 	    S1AP_REGISTER_ENB_REQ (msg_p).default_drx      = 0;
 	    AssertFatal((S1AP_REGISTER_ENB_REQ (msg_p).mnc_digit_length == 2) ||
 			(S1AP_REGISTER_ENB_REQ (msg_p).mnc_digit_length == 3),
 			"BAD MNC DIGIT LENGTH %d",
 			S1AP_REGISTER_ENB_REQ (msg_p).mnc_digit_length);
 	    
+	    sprintf(aprefix,"%s.[%i]",ENB_CONFIG_STRING_ENB_LIST,k);
+            config_getlist( &S1ParamList,S1Params,sizeof(S1Params)/sizeof(paramdef_t),aprefix); 
 	    
-
-	    setting_mme_addresses = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_MME_IP_ADDRESS);
-	    num_mme_address     = config_setting_length(setting_mme_addresses);
 	    S1AP_REGISTER_ENB_REQ (msg_p).nb_mme = 0;
 
-	    for (j = 0; j < num_mme_address; j++) {
-	      setting_mme_address = config_setting_get_elem(setting_mme_addresses, j);
-
-	      if (  !(
-		      config_setting_lookup_string(setting_mme_address, ENB_CONFIG_STRING_MME_IPV4_ADDRESS, (const char **)&ipv4)
-		      && config_setting_lookup_string(setting_mme_address, ENB_CONFIG_STRING_MME_IPV6_ADDRESS, (const char **)&ipv6)
-		      && config_setting_lookup_string(setting_mme_address, ENB_CONFIG_STRING_MME_IP_ADDRESS_ACTIVE, (const char **)&active)
-		      && config_setting_lookup_string(setting_mme_address, ENB_CONFIG_STRING_MME_IP_ADDRESS_PREFERENCE, (const char **)&preference)
-		      )
-		    ) {
-		AssertFatal (0,
-			     "Failed to parse eNB configuration file %s, %u th enb %u th mme address !\n",
-			     RC.config_file_name, i, j);
-		continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
-	      }
+	    for (int l = 0; l < S1ParamList.numelt; l++) {
 
 	      S1AP_REGISTER_ENB_REQ (msg_p).nb_mme += 1;
 
-	      strcpy(S1AP_REGISTER_ENB_REQ (msg_p).mme_ip_address[j].ipv4_address,ipv4);
-	      strcpy(S1AP_REGISTER_ENB_REQ (msg_p).mme_ip_address[j].ipv6_address,ipv6);
+	      strcpy(S1AP_REGISTER_ENB_REQ (msg_p).mme_ip_address[l].ipv4_address,*(S1ParamList.paramarray[l][ENB_MME_IPV4_ADDRESS_IDX].strptr));
+	      strcpy(S1AP_REGISTER_ENB_REQ (msg_p).mme_ip_address[l].ipv6_address,*(S1ParamList.paramarray[l][ENB_MME_IPV6_ADDRESS_IDX].strptr));
 
-	      if (strcmp(active, "yes") == 0) {
+	      if (strcmp(*(S1ParamList.paramarray[l][ENB_MME_IP_ADDRESS_ACTIVE_IDX].strptr), "yes") == 0) {
 #if defined(ENABLE_USE_MME)
 		EPC_MODE_ENABLED = 1;
 #endif
 	      } 
-	      if (strcmp(preference, "ipv4") == 0) {
+	      if (strcmp(*(S1ParamList.paramarray[l][ENB_MME_IP_ADDRESS_PREFERENCE_IDX].strptr), "ipv4") == 0) {
 		S1AP_REGISTER_ENB_REQ (msg_p).mme_ip_address[j].ipv4 = 1;
-	      } else if (strcmp(preference, "ipv6") == 0) {
+	      } else if (strcmp(*(S1ParamList.paramarray[l][ENB_MME_IP_ADDRESS_PREFERENCE_IDX].strptr), "ipv6") == 0) {
 		S1AP_REGISTER_ENB_REQ (msg_p).mme_ip_address[j].ipv6 = 1;
-	      } else if (strcmp(preference, "no") == 0) {
+	      } else if (strcmp(*(S1ParamList.paramarray[l][ENB_MME_IP_ADDRESS_PREFERENCE_IDX].strptr), "no") == 0) {
 		S1AP_REGISTER_ENB_REQ (msg_p).mme_ip_address[j].ipv4 = 1;
 		S1AP_REGISTER_ENB_REQ (msg_p).mme_ip_address[j].ipv6 = 1;
 	      }
@@ -3304,38 +2529,18 @@ int RCconfig_S1(MessageDef *msg_p, uint32_t i) {
 	    S1AP_REGISTER_ENB_REQ (msg_p).sctp_out_streams = SCTP_OUT_STREAMS;
 	    S1AP_REGISTER_ENB_REQ (msg_p).sctp_in_streams  = SCTP_IN_STREAMS;
 # if defined(ENABLE_USE_MME)
-	    subsetting = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_SCTP_CONFIG);
-
-	    if (subsetting != NULL) {
-	      if ( (config_setting_lookup_int( subsetting, ENB_CONFIG_STRING_SCTP_INSTREAMS, &my_int) )) {
-            	S1AP_REGISTER_ENB_REQ (msg_p).sctp_in_streams = (uint16_t)my_int;
-	      }
-
-	      if ( (config_setting_lookup_int( subsetting, ENB_CONFIG_STRING_SCTP_OUTSTREAMS, &my_int) )) {
-            	S1AP_REGISTER_ENB_REQ (msg_p).sctp_out_streams = (uint16_t)my_int;
-	      }
-	    }
+	    sprintf(aprefix,"%s.[%i].%s",ENB_CONFIG_STRING_ENB_LIST,k,ENB_CONFIG_STRING_SCTP_CONFIG);
+            config_get( SCTPParams,sizeof(SCTPParams)/sizeof(paramdef_t),aprefix); 
+            S1AP_REGISTER_ENB_REQ (msg_p).sctp_in_streams = (uint16_t)*(SCTPParams[ENB_SCTP_INSTREAMS_IDX].uptr);
+            S1AP_REGISTER_ENB_REQ (msg_p).sctp_out_streams = (uint16_t)*(SCTPParams[ENB_SCTP_OUTSTREAMS_IDX].uptr);
 #endif
 
+            sprintf(aprefix,"%s.[%i].%s",ENB_CONFIG_STRING_ENB_LIST,k,ENB_CONFIG_STRING_NETWORK_INTERFACES_CONFIG);
 	    // NETWORK_INTERFACES
-	    subsetting = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_NETWORK_INTERFACES_CONFIG);
+            config_get( NETParams,sizeof(NETParams)/sizeof(paramdef_t),aprefix); 
 
-	    if (subsetting != NULL) {
-	      if (  (
-		     config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_S1_MME,
-						   (const char **)&enb_interface_name_for_S1_MME)
-		     && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_ENB_IPV4_ADDRESS_FOR_S1_MME,
-						      (const char **)&enb_ipv4_address_for_S1_MME)
-		     && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_ENB_INTERFACE_NAME_FOR_S1U,
-						      (const char **)&enb_interface_name_for_S1U)
-		     && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_ENB_IPV4_ADDR_FOR_S1U,
-						      (const char **)&enb_ipv4_address_for_S1U)
-		     && config_setting_lookup_int(subsetting, ENB_CONFIG_STRING_ENB_PORT_FOR_S1U,
-						  &enb_port_for_S1U)
-		     )
-		    ) {
 		//		S1AP_REGISTER_ENB_REQ (msg_p).enb_interface_name_for_S1U = strdup(enb_interface_name_for_S1U);
-		cidr = enb_ipv4_address_for_S1U;
+		cidr = *(NETParams[ENB_IPV4_ADDRESS_FOR_S1_MME_IDX].strptr);
 		address = strtok(cidr, "/");
 
 		S1AP_REGISTER_ENB_REQ (msg_p).enb_ip_address.ipv6 = 0;
@@ -3360,9 +2565,7 @@ int RCconfig_S1(MessageDef *msg_p, uint32_t i) {
 		if (address) {
 		  IPV4_STR_ADDR_TO_INT_NWBO ( address, S1AP_REGISTER_ENB_REQ(msg_p).enb_ipv4_address_for_S1_MME, "BAD IP ADDRESS FORMAT FOR eNB S1_MME !\n" );
 		}
-		*/
-	      }
-	    }
+*/
 	  
 
 
@@ -3373,56 +2576,47 @@ int RCconfig_S1(MessageDef *msg_p, uint32_t i) {
       }
     }
   }
+return 0;
 }
 
-void RCConfig(const char *config_file_name) {
+void RCConfig(void) {
 
-  config_t          cfg;
-  config_setting_t *setting                       = NULL;
-  config_setting_t *setting_enb                   = NULL;
-  config_setting_t *setting_component_carriers    = NULL;
-  config_init(&cfg);
+  paramlist_def_t MACRLCParamList = {CONFIG_STRING_MACRLC_LIST,NULL,0};
+  paramlist_def_t L1ParamList = {CONFIG_STRING_L1_LIST,NULL,0};
+  paramlist_def_t RUParamList = {CONFIG_STRING_RU_LIST,NULL,0};
+  paramdef_t ENBSParams[] = ENBSPARAMS_DESC;
+  paramlist_def_t CCsParamList = {ENB_CONFIG_STRING_COMPONENT_CARRIERS,NULL,0};
+  
+  char aprefix[MAX_OPTNAME_SIZE*2 + 8];  
+  
 
-  if (config_file_name != NULL) {
 
-    RC.config_file_name = config_file_name;
-    if (! config_read_file(&cfg, RC.config_file_name)) {
-      config_destroy(&cfg);
-      AssertFatal (0, "Failed to parse eNB configuration file %s!\n", RC.config_file_name);
+/* get global parameters, defined outside any section in the config file */
+  
+  config_get( ENBSParams,sizeof(ENBSParams)/sizeof(paramdef_t),NULL); 
+  RC.nb_inst = ENBSParams[ENB_ACTIVE_ENBS_IDX].numelt;
+ 
+  if (RC.nb_inst > 0) {
+    RC.nb_CC = (int *)malloc((1+RC.nb_inst)*sizeof(int));
+    for (int i=0;i<RC.nb_inst;i++) {
+      sprintf(aprefix,"%s.[%i]",ENB_CONFIG_STRING_ENB_LIST,i);
+      config_getlist( &CCsParamList,NULL,0, aprefix);
+      RC.nb_CC[i]		 = CCsParamList.numelt;
     }
-    // Get num eNB instances
-    setting = config_lookup(&cfg, ENB_CONFIG_STRING_ACTIVE_ENBS);
-    
-    if (setting != NULL) RC.nb_inst = config_setting_length(setting);
-    if (RC.nb_inst > 0) {
-      printf("Number of eNB RRC instances %d\n",RC.nb_inst);
-      setting = config_lookup(&cfg, ENB_CONFIG_STRING_ENB_LIST);
-      RC.nb_CC = (int *)malloc((1+RC.nb_inst)*sizeof(int));
-      for (int i=0;i<RC.nb_inst;i++) {
-	setting_enb                  = config_setting_get_elem(setting, i);
-	setting_component_carriers   = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_COMPONENT_CARRIERS);
-	AssertFatal(setting_component_carriers != NULL, "No component carrier definitions in %s\n",RC.config_file_name); 
-	RC.nb_CC[i]                = config_setting_length(setting_component_carriers);
-	printf("Setting nb_CC to %d for instance %d\n",RC.nb_CC[i],i);
-
-      }
-    }
+  }
 
     // Get num MACRLC instances
-    setting = config_lookup(&cfg, CONFIG_STRING_MACRLC_LIST);
-    if (setting != NULL) RC.nb_macrlc_inst = config_setting_length(setting);
-
+    
+ 
+    config_getlist( &MACRLCParamList,NULL,0, NULL);
+    RC.nb_macrlc_inst  = MACRLCParamList.numelt;
     // Get num L1 instances
-    setting = config_lookup(&cfg, CONFIG_STRING_L1_LIST);
-    if (setting != NULL) RC.nb_L1_inst = config_setting_length(setting);
+    config_getlist( &L1ParamList,NULL,0, NULL);
+    RC.nb_L1_inst = L1ParamList.numelt;
 
     // Get num RU instances
-    setting = config_lookup(&cfg, CONFIG_STRING_RU_LIST);
-    if (setting != NULL) RC.nb_RU     = config_setting_length(setting); 
-  }
-  else {
-    config_destroy(&cfg);
-    AssertFatal(0,"Configuration file is null\n");
-  }
+    config_getlist( &RUParamList,NULL,0, NULL);  
+    RC.nb_RU     = RUParamList.numelt; 
+ 
 
 }

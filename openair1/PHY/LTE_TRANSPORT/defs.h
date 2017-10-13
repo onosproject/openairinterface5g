@@ -96,7 +96,7 @@ typedef enum { SEARCH_EXIST=0,
 	       SEARCH_EXIST_OR_FREE} find_type_t;
 
 typedef enum {
-  SCH_IDLE,
+  SCH_IDLE=0,
   ACTIVE,
   CBA_ACTIVE,
   DISABLED
@@ -146,8 +146,12 @@ typedef struct {
   uint32_t cqi_alloc2;
   /// Current Number of RBs
   uint16_t nb_rb;
+  /// Current NDI
+  uint8_t ndi;
   /// downlink power offset field
   uint8_t dl_power_off;
+  /// start symbold of pdsch
+  uint8_t pdsch_start;
   /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
   uint8_t e[MAX_NUM_CHANNEL_BITS] __attribute__((aligned(32)));
   /// Turbo-code outputs (36-212 V8.6 2009-03, p.12
@@ -172,7 +176,7 @@ typedef struct {
   uint8_t Nlayers;
   /// First layer for this PSCH transmission
   uint8_t first_layer;
-   /// codeword this transport block is mapped to
+  /// codeword this transport block is mapped to
   uint8_t codeword;
 } LTE_DL_eNB_HARQ_t;
 
@@ -250,6 +254,13 @@ typedef struct {
   uint8_t decode_phich;
 } LTE_UL_UE_HARQ_t; 
 
+#ifdef Rel14
+typedef enum {
+  CEmodeA = 0,
+  CEmodeB = 1
+} CEmode_t;
+#endif
+
 typedef struct {
   /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
   int32_t *txdataF[8];
@@ -291,7 +302,13 @@ typedef struct {
   int16_t sqrt_rho_a;
   /// amplitude of PDSCH (compared to RS) in symbols containing pilots
   int16_t sqrt_rho_b;
-
+#ifdef Rel14
+  /// indicator that this DLSCH corresponds to SIB1-BR, needed for c_init for scrambling
+  uint8_t sib1_br_flag;
+  /// initial absolute subframe (see 36.211 Section 6.3.1), needed for c_init for scrambling
+  uint16_t i0;
+  CEmode_t CEmode;
+#endif
 } LTE_eNB_DLSCH_t;
 
 #define PUSCH_x 2
@@ -304,8 +321,8 @@ typedef struct {
   uint8_t srs_active;
   /// Pointers to 8 HARQ processes for the ULSCH
   LTE_UL_UE_HARQ_t *harq_processes[8];
-  /// Pointer to CQI data
-  uint8_t o[MAX_CQI_BYTES];
+  /// Pointer to CQI data (+1 for 8 bits crc)
+  uint8_t o[1+MAX_CQI_BYTES];
   /// Length of CQI data (bits)
   uint8_t O;
   /// Format of CQI data
@@ -383,14 +400,12 @@ typedef struct {
   uint8_t subframe;
   /// Frame for reception
   uint32_t frame;
-  /// Subframe cba scheduling indicator (i.e. CBA Transmission opportunity indicator)
-  uint8_t subframe_cba_scheduling_flag;
+  /// Flag to indicate that the UL configuration has been handled. Used to remove a stale ULSCH when frame wraps around
+  uint8_t handled;
   /// PHICH active flag
   uint8_t phich_active;
   /// PHICH ACK
   uint8_t phich_ACK;
-  /// Last TPC command
-  uint8_t TPC;
   /// First Allocated RB
   uint16_t first_rb;
   /// First Allocated RB - previous scheduling
@@ -398,7 +413,9 @@ typedef struct {
   /// is done after a new scheduling
   uint16_t previous_first_rb;
   /// Current Number of RBs
-  uint16_t nb_rb;
+  uint16_t nb_rb; 
+  /// Current Modulation order
+  uint8_t Qm;
   /// Transport block size
   uint32_t TBS;
   /// The payload + CRC size in bits
@@ -451,10 +468,10 @@ typedef struct {
   uint8_t Nsymb_pusch;
   /// SRS active flag
   uint8_t srs_active;
+  /// NDI
+  uint8_t ndi;
   /// Index of current HARQ round for this ULSCH
   uint8_t round;
-  /// MCS format for this ULSCH
-  uint8_t mcs;
   /// Redundancy-version of the current sub-frame
   uint8_t rvidx;
   /// soft bits for each received segment ("w"-sequence)(for definition see 36-212 V8.6 2009-03, p.15)
@@ -492,6 +509,88 @@ typedef struct {
   /// delta_TF for power control
   int32_t delta_TF;
 } LTE_UL_eNB_HARQ_t;
+
+
+typedef enum {
+  pucch_format1=0,
+  pucch_format1a,
+  pucch_format1b,
+  pucch_format1b_csA2,
+  pucch_format1b_csA3,
+  pucch_format1b_csA4,
+  pucch_format2,
+  pucch_format2a,
+  pucch_format2b,
+  pucch_format3    // PUCCH format3
+} PUCCH_FMT_t;
+
+typedef enum {
+  SR,
+  HARQ,
+  CQI,
+  HARQ_SR,
+  HARQ_CQI,
+  SR_CQI,
+  HARQ_SR_CQI  
+} UCI_type_t;
+
+#ifdef Rel14
+typedef enum {
+  NOCE,
+  CEMODEA,
+  CEMODEB
+} UE_type_t;
+#endif
+
+typedef struct {
+  uint8_t     active;
+  /// Absolute frame for this UCI
+  uint16_t    frame;
+  /// Absolute subframe for this UCI
+  uint8_t     subframe;
+  /// corresponding UE RNTI
+  uint16_t    rnti;
+  /// Type (SR,HARQ,CQI,HARQ_SR,HARQ_CQI,SR_CQI,HARQ_SR_CQI)
+  UCI_type_t  type;
+  /// SRS active flag
+  uint8_t     srs_active;
+  /// PUCCH format to use
+  PUCCH_FMT_t pucch_fmt;
+  /// number of PUCCH antenna ports 
+  uint8_t     num_antenna_ports;
+  /// number of PUCCH resources
+  uint8_t     num_pucch_resources;
+  /// two antenna n1_pucch 1_0
+  uint16_t    n_pucch_1[4][2];
+  /// two antenna n1_pucch 1_0 for SR
+  uint16_t    n_pucch_1_0_sr[2];
+   /// two antenna n2_pucch
+  uint16_t    n_pucch_2[2];
+  /// two antenna n3_pucch
+  uint16_t    n_pucch_3[2];
+  /// TDD Bundling/multiplexing flag
+  uint8_t     tdd_bundling;
+  /// Received Energy
+  uint32_t stat;
+#ifdef Rel14
+  /// non BL/CE, CEmodeA, CEmodeB
+  UE_type_t ue_type;
+  /// Indicates the symbols that are left empty due to eMTC retuning.
+  uint8_t empty_symbols;
+  /// number of repetitions for BL/CE
+  uint16_t total_repetitions;
+  /// The size of the DL CQI/PMI in bits.
+  uint16_t dl_cqi_pmi_size2;
+  /// The starting PRB for the PUCCH
+  uint8_t starting_prb;
+  /// The number of PRB in PUCCH
+  uint8_t n_PRB;
+  /// Selected CDM option
+  uint8_t cdm_Index;
+  // Indicates if the resource blocks allocated for this grant overlap with the SRS configuration.
+  uint8_t Nsrs;
+#endif
+} LTE_eNB_UCI;
 
 typedef struct {
   /// HARQ process mask, indicates which processes are currently active
@@ -764,17 +863,11 @@ typedef enum {
   rx_SIC_dual_stream
 } RX_type_t;
 
+
 typedef enum {
-  pucch_format1=0,
-  pucch_format1a,
-  pucch_format1b,
-  pucch_format2,
-  pucch_format2a,
-  pucch_format2b,
-  pucch_format3    // PUCCH format3
-} PUCCH_FMT_t;
-
-
+  DCI_COMMON_SPACE,
+  DCI_UE_SPACE
+} dci_space_t;
 
 
 /**@}*/

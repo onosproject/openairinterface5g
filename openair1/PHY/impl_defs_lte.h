@@ -39,6 +39,11 @@
 //#include "defs.h"
 #include "openair2/COMMON/platform_types.h"
 
+#define RX_NB_TH_MAX 2
+#define RX_NB_TH 2
+
+#define LTE_SLOTS_PER_SUBFRAME 2
+
 #define LTE_NUMBER_OF_SUBFRAMES_PER_FRAME 10
 #define LTE_SLOTS_PER_FRAME  20
 #define LTE_CE_FILTER_LENGTH 5
@@ -350,6 +355,14 @@ typedef struct {
 
 /// SoundingRS-UL-ConfigDedicated Information Element from 36.331 RRC spec
 typedef struct {
+  /// This descriptor is active
+  uint8_t active;
+  /// This descriptor's frame
+  uint16_t frame;
+  /// This descriptor's subframe
+  uint8_t  subframe;
+  /// rnti
+  uint16_t rnti;
   /// Parameter: \f$B_\text{SRS}\f$, see TS 36.211 (table 5.5.3.2-1, 5.5.3.2-2, 5.5.3.2-3 and 5.5.3.2-4). \vr{[0..3]} \note the specification sais it is an enumerated value.
   uint8_t srs_Bandwidth;
   /// Parameter: SRS hopping bandwidth \f$b_\text{hop}\in\{0,1,2,3\}\f$, see TS 36.211 (5.5.3.2) \vr{[0..3]} \note the specification sais it is an enumerated value.
@@ -804,9 +817,9 @@ typedef struct {
   uint8_t narrowband;
   /// number of PRB pairs for MPDCCH
   uint8_t number_of_prb_pairs;
-  /// mpdcch resource assignement (0=localized,1=distributed) 
+  /// mpdcch resource assignement (combinatorial index r)
   uint8_t resource_block_assignment;
-  /// transmission type
+  /// transmission type (0=localized,1=distributed) 
   uint8_t transmission_type;
   /// mpdcch start symbol
   uint8_t start_symbol;
@@ -815,7 +828,11 @@ typedef struct {
   /// 0-503 n_EPDCCHid_i
   uint16_t dmrs_scrambling_init;
   /// Absolute subframe of the initial transmission (0-10239)
-  uint16_t initial_transmission_sf_io;
+  uint16_t i0;
+  /// number of mdpcch repetitions
+  uint16_t reps;
+  /// current absolute subframe number
+  uint16_t absSF;
   /// DCI pdu
   uint8_t dci_pdu[8];
 } mDCI_ALLOC_t;
@@ -827,6 +844,16 @@ typedef struct {
   DCI_ALLOC_t dci_alloc[32];
 } LTE_eNB_PDCCH;
 
+typedef struct {
+  uint8_t hi;
+  uint8_t first_rb;
+  uint8_t n_DMRS;
+} phich_config_t;
+
+typedef struct {
+  uint8_t num_hi;
+  phich_config_t config[32];
+} LTE_eNB_PHICH;
 
 typedef struct {
   uint8_t     num_dci;
@@ -834,8 +861,12 @@ typedef struct {
 } LTE_eNB_EPDCCH;
 
 typedef struct {
+  /// number of active MPDCCH allocations
   uint8_t     num_dci;
+  /// MPDCCH DCI allocations from MAC
   mDCI_ALLOC_t mdci_alloc[32];
+  // MAX SIZE of an EPDCCH set is 16EREGs * 9REs/EREG * 8 PRB pairs = 2304 bits 
+  uint8_t e[2304];
 } LTE_eNB_MPDCCH;
 
 
@@ -928,7 +959,7 @@ typedef struct {
   /// - second index: sample [0..FRAME_LENGTH_COMPLEX_SAMPLES+2048[
   int32_t **rxdata;
 
-  LTE_UE_COMMON_PER_THREAD common_vars_rx_data_per_thread[2];
+  LTE_UE_COMMON_PER_THREAD common_vars_rx_data_per_thread[RX_NB_TH_MAX];
 
   /// holds output of the sync correlator
   int32_t *sync_corr;
@@ -1031,6 +1062,10 @@ typedef struct {
   //uint32_t *rb_alloc;
   //uint8_t Qm[2];
   //MIMO_mode_t mimo_mode;
+  // llr offset per ofdm symbol
+  uint32_t llr_offset[14];
+  // llr length per ofdm symbol
+  uint32_t llr_length[14];
 } LTE_UE_PDSCH;
 
 typedef struct {
@@ -1131,6 +1166,9 @@ typedef struct {
   uint32_t dci_missed;
   /// nCCE for PUCCH per subframe
   uint8_t nCCE[10];
+  //Check for specific DCIFormat and AgregationLevel
+  uint8_t dciFormat;
+  uint8_t agregationLevel;
 } LTE_UE_PDCCH;
 
 #define PBCH_A 24
@@ -1182,13 +1220,15 @@ typedef struct {
   /// first index: ? [0..1023] (hard coded)
   int16_t *prachF;
   /// \brief ?.
-  /// first index: rx antenna [0..63] (hard coded) \note Hard coded array size indexed by \c nb_antennas_rx.
-  /// second index: ? [0..ofdm_symbol_size*12[
-  int16_t **rxsigF;
+  /// first index: ce_level [0..3]
+  /// second index: rx antenna [0..63] (hard coded) \note Hard coded array size indexed by \c nb_antennas_rx.
+  /// third index: frequency-domain sample [0..ofdm_symbol_size*12[
+  int16_t **rxsigF[4];
   /// \brief local buffer to compute prach_ifft (necessary in case of multiple CCs)
-  /// first index: rx antenna [0..63] (hard coded) \note Hard coded array size indexed by \c nb_antennas_rx.
-  /// second index: ? [0..2047] (hard coded)
-  int32_t ***prach_ifft;
+  /// first index: ce_level [0..3] (hard coded) \note Hard coded array size indexed by \c nb_antennas_rx.
+  /// second index: ? [0..63] (hard coded)
+  /// third index: ? [0..63] (hard coded)
+  int32_t **prach_ifft[4];
 
   /// repetition number
 #ifdef Rel14
