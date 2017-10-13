@@ -234,8 +234,8 @@ void multipath_channel_freq(channel_desc_t *desc,
   ofdm_symbol_size=length/PHY_vars_UE_g[0][0]->frame_parms.symbols_per_tti;
   symbols_per_tti=length/PHY_vars_UE_g[0][0]->frame_parms.ofdm_symbol_size;
 
-  FILE *file;
-  file = fopen("multipath.txt","w");
+  //FILE *file;
+  //file = fopen("multipath.txt","w");
 
 #ifdef DEBUG_CH
   printf("[CHANNEL_FREQ] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, dd %d, len %d \n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,dd,desc->channel_length);
@@ -313,11 +313,11 @@ void multipath_channel_freq_test(channel_desc_t *desc,
   int dd;
   dd = abs(desc->channel_offset);
 
-  int nb_rb, n_samples, ofdm_symbol_size, symbols_per_tti;
-  nb_rb=PHY_vars_UE_g[0][0]->frame_parms.N_RB_DL;
-  n_samples=PHY_vars_UE_g[0][0]->frame_parms.N_RB_DL*12+1;
-  ofdm_symbol_size=length/PHY_vars_UE_g[0][0]->frame_parms.symbols_per_tti;
-  symbols_per_tti=length/PHY_vars_UE_g[0][0]->frame_parms.ofdm_symbol_size;
+  //int nb_rb, n_samples, ofdm_symbol_size, symbols_per_tti;
+  //nb_rb=PHY_vars_UE_g[0][0]->frame_parms.N_RB_DL;
+  //n_samples=PHY_vars_UE_g[0][0]->frame_parms.N_RB_DL*12+1;
+  int ofdm_symbol_size=length/PHY_vars_UE_g[0][0]->frame_parms.symbols_per_tti;
+  int symbols_per_tti=length/PHY_vars_UE_g[0][0]->frame_parms.ofdm_symbol_size;
 
 
   printf("[CHANNEL_FREQ] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, dd %d, len %d , symbols tti %d\n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,dd,desc->channel_length,symbols_per_tti);
@@ -353,8 +353,8 @@ void multipath_channel_prach(channel_desc_t *desc,
   int ii,j,k,f,l;
   struct complex rx_tmp;
   double delta_f;
-  FILE *file_prach;
-  file_prach = fopen("multipath_prach.txt","w");
+  //FILE *file_prach;
+  //file_prach = fopen("multipath_prach.txt","w");
   prach_samples = (prach_fmt<4)?13+839+12:3+139+2;
   double path_loss = pow(10,desc->path_loss_dB/20);
   int nb_rb, n_samples, ofdm_symbol_size, symbols_per_tti;

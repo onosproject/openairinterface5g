@@ -78,10 +78,13 @@ void adc_freq(double *r_re[2],
          double *r_im[2],
          unsigned int input_offset,
          unsigned int output_offset,
-         int **output,
+         unsigned int **output1,//ue->current_thread_id[subframe]
+         unsigned int **output2,//thread 0
+         unsigned int **output3,//thread 1
          unsigned int nb_rx_antennas,
          unsigned int length,
-         unsigned char B);
+         unsigned char B,
+	 int thread);
 
 void adc_prach(double *r_re[2],
          double *r_im[2],
@@ -115,6 +118,18 @@ void dac_prach(double *s_re[2],
          unsigned int meas_offset);
 
 double dac_fixed_gain(double *s_re[2],
+                      double *s_im[2],
+                      int **input,
+                      unsigned int input_offset,
+                      unsigned int nb_tx_antennas,
+                      unsigned int length,
+                      unsigned int input_offset_meas,
+                      unsigned int length_meas,
+                      unsigned char B,
+                      double gain,
+                      int NB_RE);
+
+double dac_fixed_gain_prach(double *s_re[2],
                       double *s_im[2],
                       int **input,
                       unsigned int input_offset,

@@ -1846,7 +1846,7 @@ void generate_RIV_tables(void);
   @param phy_vars_ue Pointer to UE variables
 */
 int initial_sync(PHY_VARS_UE *phy_vars_ue, runmode_t mode);
-
+int initial_sync_freq(PHY_VARS_UE *phy_vars_ue, runmode_t mode);
 void rx_ulsch(PHY_VARS_eNB *phy_vars_eNB,
               eNB_rxtx_proc_t *proc,
               uint8_t eNB_id,  // this is the effective sector id

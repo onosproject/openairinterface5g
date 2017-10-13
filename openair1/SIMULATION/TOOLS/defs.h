@@ -295,6 +295,14 @@ void multipath_channel_freq_test(channel_desc_t *desc,
                        double *rx_sig_im[2],
                        uint32_t length,
                        uint8_t keep_channel);
+
+void multipath_channel_prach(channel_desc_t *desc,
+                       double *tx_sig_re[2],
+                       double *tx_sig_im[2],
+                       double *rx_sig_re[2],
+                       double *rx_sig_im[2],
+                       uint32_t length,
+                       uint8_t keep_channel);
 /*
 \fn double compute_pbch_sinr(channel_desc_t *desc,
                              channel_desc_t *desc_i1,
@@ -407,7 +415,9 @@ double gaussdouble(double,double);
 void randominit(unsigned int seed_init);
 double uniformrandom(void);
 int freq_channel(channel_desc_t *desc,uint16_t nb_rb, int16_t n_samples);
+int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t prach_prb_offset);
 int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples);
+int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t prach_prb_offset);
 uint8_t multipath_channel_nosigconv(channel_desc_t *desc);
 void multipath_tv_channel(channel_desc_t *desc,
                           double **tx_sig_re,

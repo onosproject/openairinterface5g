@@ -73,7 +73,7 @@ void *UE_thread(void *arg);
 void *UE_thread_freq(void *arg);
 void init_UE(int nb_inst);
 
-int32_t **rxdata,**thread0_rxdataF, **thread1_rxdataF;
+int32_t **rxdata;
 int32_t **txdata, **txdataF;
 
 #define KHz (1000UL)
@@ -1037,7 +1037,7 @@ void *UE_thread(void *arg) {
 		    {
 			write_output("lteue_rxsigF_frame0.m","lteue_rxsF0", UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
 			write_output("lteue_rxsigF_frame1.m","lteue_rxsF1", UE->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
-			exit(-1);
+			//exit(-1);
 		    }
 
                 thread_idx++;
@@ -1319,12 +1319,12 @@ void *UE_thread_freq(void *arg) {
 				UE->current_thread_id[sub_frame] = thread_idx;
 
 				LOG_D(PHY,"Process Subframe %d thread Idx %d , frame %d \n", sub_frame, UE->current_thread_id[sub_frame],proc->frame_rx);
-				    if (sub_frame==5 && ((proc->frame_rx&0x1)==0))
-				    {
+				    //if (sub_frame==5 && ((proc->frame_rx&0x1)==0))
+				    //{
 					write_output("lteue_rxsigF_frame0.m","lteue_rxsF0", UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
 					write_output("lteue_rxsigF_frame1.m","lteue_rxsF1", UE->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
 					//exit(-1);
-				    }
+				    //}
 
 				thread_idx++;
 				if(thread_idx>=RX_NB_TH)
@@ -1332,7 +1332,7 @@ void *UE_thread_freq(void *arg) {
 
 				if (UE->mode != loop_through_memory) {
 				    for (i=0; i<UE->frame_parms.nb_antennas_rx; i++){
-				        rxp_freq[i] = (void*)&UE->common_vars.common_vars_rx_data_per_thread[sub_frame&0x1].rxdataF[i][UE->frame_parms.ofdm_symbol_size+sub_frame*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti];//14*1024->50RB
+				        rxp_freq[i] = (void*)&UE->common_vars.common_vars_rx_data_per_thread[UE->current_thread_id[sub_frame]].rxdataF[i][UE->frame_parms.ofdm_symbol_size+sub_frame*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti];//14*1024->50RB
 				    }
 				    for (i=0; i<UE->frame_parms.nb_antennas_tx; i++)
 				        txp_freq[i] = (void*)&UE->common_vars.txdataF[i][
@@ -1379,7 +1379,7 @@ void *UE_thread_freq(void *arg) {
 				        AssertFatal(writeBlockSize-readBlockSize ==
 				                        UE->rfdevice.trx_read_func(&UE->rfdevice,
 				                                                   &timestamp1,
-				                                                   (void**)UE->common_vars.common_vars_rx_data_per_thread[sub_frame&0x1].rxdataF,
+				                                                   (void**)UE->common_vars.common_vars_rx_data_per_thread[UE->current_thread_id[sub_frame]].rxdataF,
 				                                                   writeBlockSize-readBlockSize,
 				                                                   UE->frame_parms.nb_antennas_rx),"");
 					if ( writeBlockSize-readBlockSize <0 )
@@ -1447,6 +1447,24 @@ void *UE_thread_freq(void *arg) {
  * and the locking between them.
  */
 void init_UE_threads(PHY_VARS_UE *UE) {
+
+    // init RX buffers
+  /*int UE_id, CC_id, th_id,i;
+  for (UE_id=0;UE_id<NB_UE_INST;UE_id++){
+	for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++){
+	    for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
+		PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[th_id].rxdataF  = (int32_t**)malloc16( UE->frame_parms.nb_antennas_rx*sizeof(int32_t*) );
+		printf("[lte_init] address of rxdataF in memory: %p, thread %d\n",&PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[th_id].rxdataF,th_id);
+	    }
+
+	    for (i=0; i<UE->frame_parms.nb_antennas_rx; i++) {
+	      for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
+		  PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[th_id].rxdataF[i] = (int32_t*)malloc16_clear((UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)*sizeof(int32_t));
+		  printf("[lte_init] address of rxdataF in memory: %p, thread %d, antenna %d\n",&PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[th_id].rxdataF[i],th_id,i);
+	      }
+	    }
+	}
+  }*/
     struct rx_tx_thread_data *rtd;
 
     pthread_attr_init (&UE->proc.attr_ue);
@@ -1521,6 +1539,7 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
     LTE_DL_FRAME_PARMS *frame_parms;
     openair0_rf_map *rf_map;
     int do_ofdm_mod = phy_vars_ue[0]->do_ofdm_mod;
+    int th_id;
 
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
         rf_map = &phy_vars_ue[CC_id]->rf_map;
@@ -1530,24 +1549,23 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
 
         // replace RX signal buffers with mmaped HW versions
 	if (do_ofdm_mod){//if do_ofdm_mod, frequency analysis
-	thread0_rxdataF = (int32_t**)malloc16( frame_parms->nb_antennas_rx*sizeof(int32_t*) );
-	thread1_rxdataF = (int32_t**)malloc16( frame_parms->nb_antennas_rx*sizeof(int32_t*) );
-	txdataF = (int32_t**)malloc16( frame_parms->nb_antennas_tx*sizeof(int32_t*) );
+   		for (th_id=0; th_id<RX_NB_TH_MAX; th_id++)
+        		phy_vars_ue[CC_id]->common_vars.common_vars_rx_data_per_thread[th_id].rxdataF  = (int32_t**)malloc16( frame_parms->nb_antennas_rx*sizeof(int32_t*) );
+		txdataF = (int32_t**)malloc16( frame_parms->nb_antennas_tx*sizeof(int32_t*) );
  	}
 	else{//time analysis
-    	rxdata = (int32_t**)malloc16( frame_parms->nb_antennas_rx*sizeof(int32_t*) );
-    	txdata = (int32_t**)malloc16( frame_parms->nb_antennas_tx*sizeof(int32_t*) );
+    		rxdata = (int32_t**)malloc16( frame_parms->nb_antennas_rx*sizeof(int32_t*) );
+    		txdata = (int32_t**)malloc16( frame_parms->nb_antennas_tx*sizeof(int32_t*) );
 	}
 	if (do_ofdm_mod){//if do_ofdm_mod, frequency analysis
 		for (i=0; i<frame_parms->nb_antennas_rx; i++) {
 		    LOG_I(PHY, "Mapping UE CC_id %d, rx_ant %d, freq %u on card %d, chain %d\n",
 		          CC_id, i, downlink_frequency[CC_id][i], rf_map->card, rf_map->chain+i );
-		    free( phy_vars_ue[CC_id]->common_vars.common_vars_rx_data_per_thread[0].rxdataF[i] );
-		    free( phy_vars_ue[CC_id]->common_vars.common_vars_rx_data_per_thread[1].rxdataF[i] );
-		    thread0_rxdataF[i] = (int32_t*)malloc16_clear( frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*sizeof(int32_t) );
-		    thread1_rxdataF[i] = (int32_t*)malloc16_clear( frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*sizeof(int32_t) );
-		    phy_vars_ue[CC_id]->common_vars.common_vars_rx_data_per_thread[0].rxdataF[i] = thread0_rxdataF[i]; // what about the "-N_TA_offset" ? // N_TA offset for TDD
-		    phy_vars_ue[CC_id]->common_vars.common_vars_rx_data_per_thread[1].rxdataF[i] = thread1_rxdataF[i]; // what about the "-N_TA_offset" ? // N_TA offset for TDD
+		    for (th_id=0; th_id < RX_NB_TH; th_id++)
+		    {
+		    	free( phy_vars_ue[CC_id]->common_vars.common_vars_rx_data_per_thread[th_id].rxdataF[i] );
+		    	phy_vars_ue[CC_id]->common_vars.common_vars_rx_data_per_thread[th_id].rxdataF[i] = (int32_t*)malloc16_clear( frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*sizeof(int32_t) ); // what about the "-N_TA_offset" ? // N_TA offset for TDD
+		    }
 		}
 
 		for (i=0; i<frame_parms->nb_antennas_tx; i++) {

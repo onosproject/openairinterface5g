@@ -1101,6 +1101,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
   int i,j,k,l;
   int eNB_id;
   int th_id;
+  int **rxdataF_temp;
 
   printf("Initializing UE vars (abstraction %"PRIu8") for eNB TXant %"PRIu8", UE RXant %"PRIu8"\n",abstraction_flag,fp->nb_antennas_tx,fp->nb_antennas_rx);
   LOG_D(PHY,"[MSC_NEW][FRAME 00000][PHY_UE][MOD %02u][]\n", ue->Mod_id+NB_eNB_INST);
@@ -1151,20 +1152,47 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
     }
 
     // init RX buffers
-
+  if (do_ofdm_mod)
+  {
     common_vars->rxdata   = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
-    for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
-        common_vars->common_vars_rx_data_per_thread[th_id].rxdataF  = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
-    }
-
     for (i=0; i<fp->nb_antennas_rx; i++) {
       common_vars->rxdata[i] = (int32_t*) malloc16_clear( (fp->samples_per_tti*10+2048)*sizeof(int32_t) );
-      for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
-          common_vars->common_vars_rx_data_per_thread[th_id].rxdataF[i] = (int32_t*)malloc16_clear((fp->ofdm_symbol_size*14)*sizeof(int32_t));
-      }
     }
-  }
 
+    common_vars->common_vars_rx_data_per_thread[0].rxdataF  = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*));
+    printf("[lte_init_f] address of rxdataF in memory: %p, thread %d\n",&common_vars->common_vars_rx_data_per_thread[0].rxdataF,0);
+    for (i=0; i<fp->nb_antennas_rx; i++) {
+          common_vars->common_vars_rx_data_per_thread[0].rxdataF[i] = (int32_t*)calloc(sizeof(int32_t),fp->ofdm_symbol_size*fp->symbols_per_tti);
+	  printf("[lte_init_f] address of rxdataF[i] in memory: %p, thread %d, antenna %d\n",&common_vars->common_vars_rx_data_per_thread[0].rxdataF[i],0,i);
+    }
+
+    //rxdata_temp
+    rxdataF_temp = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
+    for (i=0; i<fp->nb_antennas_rx; i++) {
+	rxdataF_temp[i] = (int32_t*)malloc16_clear((14313)*sizeof(int32_t));
+    }
+
+    common_vars->common_vars_rx_data_per_thread[1].rxdataF  = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
+    printf("[lte_init_f] address of rxdataF in memory: %p, thread %d\n",&common_vars->common_vars_rx_data_per_thread[1].rxdataF,1);
+    for (i=0; i<fp->nb_antennas_rx; i++) {
+      common_vars->common_vars_rx_data_per_thread[1].rxdataF[i] = (int32_t*)malloc16_clear((fp->ofdm_symbol_size*fp->symbols_per_tti)*sizeof(int32_t));
+      printf("[lte_init_f address of rxdataF[i] in memory: %p, thread %d, antenna %d\n",&common_vars->common_vars_rx_data_per_thread[1].rxdataF[i],1,i);
+    }
+
+  }
+  else
+  {
+    for (th_id=0; th_id<RX_NB_TH_MAX; th_id++){
+    	common_vars->common_vars_rx_data_per_thread[th_id].rxdataF  = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
+        printf("[lte_init_t] address of rxdataF in memory: %p, thread %d\n",&common_vars->common_vars_rx_data_per_thread[th_id].rxdataF,th_id);
+    }
+    for (i=0; i<fp->nb_antennas_rx; i++) {
+      for (th_id=0; th_id<RX_NB_TH_MAX; th_id++){
+      common_vars->common_vars_rx_data_per_thread[th_id].rxdataF[i] = (int32_t*)malloc16_clear((fp->ofdm_symbol_size*fp->symbols_per_tti)*sizeof(int32_t));
+      printf("[lte_init_t] address of rxdataF[%d] in memory: %p, thread %d, antenna %d\n",th_id,&common_vars->common_vars_rx_data_per_thread[th_id].rxdataF[i],th_id,i);
+      }
+    }	
+  }
   // Channel estimates
   for (eNB_id=0; eNB_id<7; eNB_id++) {
     for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
@@ -1180,6 +1208,20 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
             common_vars->common_vars_rx_data_per_thread[th_id].dl_ch_estimates_time[eNB_id][idx] = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->ofdm_symbol_size*2 );
         }
       }
+  }
+
+	/*for (i=0; i<fp->ofdm_symbol_size*fp->symbols_per_tti; i++) {
+	    for (int aa=0; aa<fp->nb_antennas_rx; aa++) {
+	      ((short *)common_vars->common_vars_rx_data_per_thread[1].rxdataF[aa])[((i+fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)]   = (short)(i);
+	      ((short *)common_vars->common_vars_rx_data_per_thread[1].rxdataF[aa])[1+((i+fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)] = (short)(1);
+	      if (i < 300) {
+		printf("[lte-init] rxdataF (thread[%d]) %d: (%d,%d), memory addr %p\n",1,i,((short *)common_vars->common_vars_rx_data_per_thread[1].rxdataF[aa])[((i+fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)],((short *)common_vars->common_vars_rx_data_per_thread[1].rxdataF[aa])[1+((i+fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)],&common_vars->common_vars_rx_data_per_thread[1].rxdataF[aa][1+((i+fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)]);
+		printf("[lte-init] rxdataF (thread[%d]) %d: (%d,%d), memory addr %p\n",0,i,((short *)common_vars->common_vars_rx_data_per_thread[0].rxdataF[aa])[((i+4+2*fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)],((short *)common_vars->common_vars_rx_data_per_thread[0].rxdataF[aa])[1+((i+4+2*fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)],&common_vars->common_vars_rx_data_per_thread[0].rxdataF[aa][1+((i+4+2*fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)]);
+	      }
+	    }
+	}*/
+
+
   }
 
   // DLSCH

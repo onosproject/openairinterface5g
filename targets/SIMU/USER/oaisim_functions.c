@@ -1098,6 +1098,8 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
       LOG_D(PHY,"eNB_trx_read generating UL subframe %d (Ts %llu, current TS %llu)\n",
             subframe,(unsigned long long)*ptimestamp,
             (unsigned long long)current_eNB_rx_timestamp[eNB_id][CC_id]);
+
+      printf("is Prach generated? %d, is prach_subframe? %d, frame %d, subframe %d, mode %d, n_ra_prb %d\n",PHY_vars_UE_g[0][CC_id]->generate_prach,is_prach_subframe(frame_parms,frame,subframe),frame,subframe,PHY_vars_UE_g[0][CC_id]->UE_mode[eNB_id], 11111);
       if (do_ofdm_mod)
       {
 	write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][0]->prach_vars[0]->prachF,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,1);
@@ -1615,12 +1617,13 @@ void init_ocm(void)
           oai_emulation.topology_config.area.y_m);
   }
 
-  if (abstraction_flag == 0)
+  if (abstraction_flag == 0){
 	if (do_ofdm_mod)
 		init_channel_vars_freq (frame_parms[0], &s_re_f, &s_im_f, &r_re_f, &r_im_f, &r_re0_f, &r_im0_f);
     		
 	else
 		init_channel_vars (frame_parms[0], &s_re, &s_im, &r_re, &r_im, &r_re0, &r_im0);
+  }
 
   // initialize channel descriptors
   for (eNB_id = 0; eNB_id < NB_eNB_INST; eNB_id++) {

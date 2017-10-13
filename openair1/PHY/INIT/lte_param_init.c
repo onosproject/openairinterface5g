@@ -46,7 +46,6 @@ void lte_param_init(unsigned char N_tx_port_eNB,
                     uint8_t osf,
 		    uint32_t perfect_ce)
 {
-
   LTE_DL_FRAME_PARMS *frame_parms;
   int i;
 
@@ -108,6 +107,7 @@ void lte_param_init(unsigned char N_tx_port_eNB,
     lte_gold(frame_parms,UE->lte_gold_table[i],Nid_cell+i);
 
   phy_init_lte_ue(UE,1,0);
+
   phy_init_lte_eNB(eNB,0,0);
 
   generate_pcfich_reg_mapping(&UE->frame_parms);

@@ -380,16 +380,16 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 	       int CC_id)
 {
   int32_t att_eNB_id=-1;
-  int32_t **txdata,**txdataF,**rxdata,**rxdataF;
+  int32_t **txdataF,**rxdataF;
 
   uint8_t eNB_id=0;
   double tx_pwr;
   double rx_pwr;
-  int32_t rx_pwr0,rx_pwr1,rx_pwr2, rx_pwr3;
+  //int32_t rx_pwr0,rx_pwr1,rx_pwr2, rx_pwr3;
   uint32_t i,aa;
   uint32_t sf_offset;
 
-  double min_path_loss=-200;
+  //double min_path_loss=-200;
   uint8_t hold_channel=0;
   uint8_t nb_antennas_rx = eNB2UE[0][0][CC_id]->nb_rx; // number of rx antennas at UE
   uint8_t nb_antennas_tx = eNB2UE[0][0][CC_id]->nb_tx; // number of tx antennas at eNB
@@ -407,7 +407,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
   double r_im01_f[2048*14];//ofdm_symbol_size*symbols_per_tti;
 
   double *r_im0_f[2];
-  int x,y;
+  //int x,y;
 
   s_re_f[0] = s_re0_f;
   s_im_f[0] = s_im0_f;
@@ -419,10 +419,10 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
   r_re0_f[1] = r_re01_f;
   r_im0_f[1] = r_im01_f;
 
-  FILE *file1;
-  file1 = fopen("sre_sim.txt","w");
+  //FILE *file1;
+  //file1 = fopen("sre_sim.txt","w");
 
-  int j;
+  //int j;
   if (subframe==0)
     hold_channel = 0;
   else
@@ -522,7 +522,8 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
     if (eNB_output_mask[UE_id] == 0) {  //  This is the first eNodeB for this UE, clear the buffer
 	      for (aa=0; aa<nb_antennas_rx; aa++) {
 			memset((void*)r_re_DL_f[UE_id][aa],0,(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)*sizeof(double));
-			memset((void*)r_im_DL_f[UE_id][aa],0,(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)*sizeof(double));		
+			memset((void*)r_im_DL_f[UE_id][aa],0,(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)*sizeof(double));
+    			//memset(&PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[aa][subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti],0,(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)*sizeof(int));		
 	      }
     }
     pthread_mutex_unlock(&eNB_output_mutex[UE_id]);
@@ -653,6 +654,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 	for (int idx=0;idx<10;idx++) printf("dumping raw rx subframe (input) %d: rxdataF[%d] = (%f,%f)\n", subframe, idx, r_re_p_f[0][idx],r_im_p_f[0][idx]);
 		rxdataF = PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF;
 		sf_offset = subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;
+		
 		printf("[ch_sim] sf_offset %d\n",sf_offset);
 
 	         adc(r_re_p_f,
@@ -663,7 +665,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 		    nb_antennas_rx,
 		    frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,
 		    12);
-             for (int idx=0;idx<10;idx++) printf("dumping raw rx subframe %d: rxdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&rxdataF[0][sf_offset+idx])[0], ((short*)&rxdataF[0][sf_offset+idx])[1]);
+             for (int idx=0;idx<10;idx++) printf("dumping raw rx subframe %d: rxdataF[%d] = (%d,%d)=====>%s\n", subframe, idx, ((short*)&rxdataF[0][sf_offset+idx])[0], ((short*)&rxdataF[0][sf_offset+idx])[1],(((((r_re_p_f[0][idx]<0)&&(((short*)&rxdataF[0][sf_offset+idx])[0]<0))||((r_re_p_f[0][idx]>=0)&&(((short*)&rxdataF[0][sf_offset+idx])[0]>=0))))&&(((r_im_p_f[0][idx]<0)&&(((short*)&rxdataF[0][sf_offset+idx])[1]<0))||((r_im_p_f[0][idx]>=0)&&(((short*)&rxdataF[0][sf_offset+idx])[1]>=0))))?"OK":"ERROR");
 
 			write_output("chsim_rxsigF_frame0.m","chsm_rxsF0", PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 			write_output("chsim_rxsigF_frame1.m","chsm_rxsF1", PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
@@ -672,9 +674,9 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 		rx_pwr2 = signal_energy((rxdataF[0])+sf_offset,frame_parms->ofdm_symbol_size)/(12.0*frame_parms->N_RB_DL);
 		LOG_D(OCM,"[SIM][DL] UE %d : rx_pwr(rxdafaF) (ADC out) %f dB/RE (%d) for subframe %d, writing to %p\n",UE_id, 10*log10((double)rx_pwr2),rx_pwr2,subframe,rxdataF);
 #else
-	UNUSED_VARIABLE(rx_pwr2);
-	UNUSED_VARIABLE(tx_pwr);
-	UNUSED_VARIABLE(rx_pwr);
+	//UNUSED_VARIABLE(rx_pwr2);
+	//UNUSED_VARIABLE(tx_pwr);
+	//UNUSED_VARIABLE(rx_pwr);
 #endif
 		
       } // eNB_output_mask
@@ -893,7 +895,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 	       uint32_t frame,int eNB_id,uint8_t CC_id)
 {
   printf("do_UL_sig\n");
-  int32_t **txdata,**txdataF,**rxdata,**rxdataF;
+  int32_t **txdataF,**rxdataF;
 #ifdef PHY_ABSTRACTION_UL
   int32_t att_eNB_id=-1;
 #endif
@@ -941,7 +943,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
   r_re0_f[1] = r_re01_f;
   r_im0_f[1] = r_im01_f;
 
-  uint8_t do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
+  //uint8_t do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
 
   if (abstraction_flag!=0)  {
 #ifdef PHY_ABSTRACTION_UL
@@ -1325,11 +1327,20 @@ void init_channel_vars_freq(LTE_DL_FRAME_PARMS *frame_parms, double ***s_re_f,do
 		    PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[th_id].dl_ch_estimates[eNB_id][idx] = (int32_t*)malloc16_clear( sizeof(int32_t)*frame_parms->symbols_per_tti*(frame_parms->ofdm_symbol_size+LTE_CE_FILTER_LENGTH) );
 		}
 	      }
-	  }
-	  }
+          /* //init RX buffers
+	    for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
+		PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[th_id].rxdataF  = (int32_t**)malloc16( frame_parms->nb_antennas_rx*sizeof(int32_t*) );
+	    }
 
+	    for (i=0; i<frame_parms->nb_antennas_rx; i++) {
+	      for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
+		  PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[th_id].rxdataF[i] = (int32_t*)malloc16_clear((frame_parms->ofdm_symbol_size*14)*sizeof(int32_t));
+      }
+    }*/
+
+	  }
 	}
 
+  }
+
 }
-
-
