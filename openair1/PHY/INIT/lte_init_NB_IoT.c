@@ -23,7 +23,7 @@
 #include "SCHED/defs_NB_IoT.h"
 //#include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"   	// PHY/defs_NB_IoT.h is called here , log.h & LTE_TRANSPORT/defs_NB_IoT.h are included through PHY/defs_NB_IoT.h
-#include "RRC/LITE/proto_NB_IoT.h"	// for functions: from_earfcn_NB_IoT, get_uldl_offset_NB_IoT
+#include "openair2/LAYER2/MAC/proto_NB_IoT.h"	// for functions: from_earfcn_NB_IoT, get_uldl_offset_NB_IoT
 //#include "SIMULATION/TOOLS/defs.h"
 //#include "RadioResourceConfigCommonSIB.h"
 //#include "RadioResourceConfigDedicated.h"

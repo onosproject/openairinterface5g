@@ -63,36 +63,6 @@ RRC_status_t rrc_rx_tx_NB_IoT(protocol_ctxt_t* const ctxt_pP, const uint8_t  enb
 //long binary_search_int(int elements[], long numElem, int value);--> seems not to be used
 //long binary_search_float(float elements[], long numElem, float value);--> used only at UE side
 
-/*------------------------L2_interface_nb_iot.c (temporary location for most of the interfaces)--------*/
-
-//defined in MAC/config.c
-//FIXME: this function has no implication in terms of logical channel configuration for MAC
-int rrc_mac_config_req_eNB_NB_IoT(
-			   module_id_t       				Mod_idP,
-			   int                              CC_idP,
-			   int								rntiP,
-			   int                              physCellId,
-			   int                              p_eNB,
-			   int								p_rx_eNB,// number of rx antenna ports
-			   int                              Ncp,
-			   int								Ncp_UL,
-			   long                             eutra_band,//FIXME: frequencyBandIndicator in sib1 (is a long not an int!!)
-			   struct NS_PmaxList_NB_r13        *frequencyBandInfo, //optional SIB1
-			   struct MultiBandInfoList_NB_r13  *multiBandInfoList, //optional SIB1
-			   struct DL_Bitmap_NB_r13          *dl_bitmap, //optional SIB1
-			   long*                            eutraControlRegionSize, //optional sib1
-			   long*							nrs_CRS_PowerOffset, //optional
-//			   uint8_t                          *SIwindowsize, //maybe no more needed because TDD only
-//			   uint16_t                         *SIperiod, //maybe no more needed because TDD only
-			   uint32_t                         dl_CarrierFreq,
-			   uint32_t                         ul_CarrierFreq,
-			   BCCH_BCH_Message_NB_t            *mib_NB,
-			   RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon,
-			   struct PhysicalConfigDedicated_NB_r13  *physicalConfigDedicated,
-			   MAC_MainConfig_NB_r13_t                *mac_MainConfig,
-			   long                             logicalChannelIdentity,//FIXME: decide how to use it
-			   LogicalChannelConfig_NB_r13_t          *logicalChannelConfig //FIXME: decide how to use it
-			   );
 
 //----------------------------------------
 
@@ -578,10 +548,6 @@ uint8_t rrc_eNB_get_next_transaction_identifier_NB_IoT(module_id_t module_idP);
 
 
 int rrc_init_global_param_NB_IoT(void);
-
-uint32_t from_earfcn_NB_IoT(int eutra_bandP,uint32_t dl_earfcn, float m_dl);
-
-int32_t get_uldl_offset_NB_IoT(int eutra_band);
 
 //L2_interface.c
 int8_t mac_rrc_data_req_NB_IoT(

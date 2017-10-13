@@ -97,6 +97,12 @@ void convert_system_number(uint32_t source_sf,uint32_t *hyperSF, uint32_t *frame
 
 uint32_t convert_system_number_sf(uint32_t hyperSF, uint32_t frame, uint32_t subframe);
 
+uint32_t to_earfcn(int eutra_bandP,uint32_t dl_CarrierFreq, float m_dl);
+
+uint32_t from_earfcn_NB_IoT(int eutra_bandP,uint32_t dl_earfcn, float m_dl);
+
+int32_t get_uldl_offset_NB_IoT(int eutra_band);
+
 void config_mib_fapi_NB_IoT(
 		int                     rntiP,
         int                     physCellId,

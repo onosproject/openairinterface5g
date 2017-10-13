@@ -658,7 +658,7 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst){
 
 void schedule_RA_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst){
 
-    uint32_t current_subframe = mac_inst->current_subframe;
+    //uint32_t current_subframe = mac_inst->current_subframe;
     
     schedule_msg3_retransimission_NB_IoT(mac_inst);
     schedule_rar_NB_IoT(mac_inst);

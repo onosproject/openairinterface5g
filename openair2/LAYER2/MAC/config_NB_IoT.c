@@ -14,7 +14,87 @@
 #include "BCCH-DL-SCH-Message-NB.h"
 #include "RRCConnectionSetup-NB.h"
 #include "BCCH-BCH-Message-NB.h"
-#include "SIB-Type-NB-r13.h"
+//#include "SIB-Type-NB-r13.h"
+
+typedef struct eutra_bandentry_NB_s {
+  //this should be the colum order of the table below
+    int16_t   band;
+    uint32_t  ul_min;
+    uint32_t  ul_max;
+    uint32_t  dl_min;
+    uint32_t  dl_max;
+    uint32_t  N_OFFs_DL;
+} eutra_bandentry_NB_IoT_t;
+
+typedef struct band_info_s {
+
+    int                        nbands;
+    eutra_bandentry_NB_IoT_t   band_info[100];
+
+} band_info_t;
+
+static const eutra_bandentry_NB_IoT_t eutra_bandtable[] = {
+//[BAND] [FUL_low] [FUL_hi] [FDL_low] [FDL_hig] [NOFF_DL]
+  { 1, 19200, 19800, 21100, 21700, 0},
+  { 2, 18500, 19100, 19300, 19900, 6000},
+  { 3, 17100, 17850, 18050, 18800, 12000},
+  { 5,  8240,  8490,  8690,  8940, 24000},
+  { 8,  8800, 9150,  9250,  9600, 34500},
+  {11, 14279, 14529, 14759, 15009, 47500},
+  {12,  6980,  7160,  7280,  7460, 50100},
+  {13,  7770,  7870,  7460,  7560, 51800},
+  {17,  7040,  7160,  7340,  7460, 57300},
+  {18,  8150,  9650,  8600, 10100, 58500},
+  {19,  8300,  8450,  8750,  8900, 60000},
+  {20,  8320,  8620,  7910,  8210, 61500},
+  {25, 18500, 19150, 19300, 19950, 80400},
+  {26, 8140,  8490,  8590,  8940, 86900},
+  {28, 7030,  7580,  7580,  8130, 92100},
+  {31, 45250, 34900, 46250, 35900, 98700},
+  {66, 17100, 18000, 21100, 22000, 664360},
+  {70, 16950 , 17100,  19950,  20200, 683360}}; //may not used for Rel.13 equipment
+
+//this function is used in phy_config_mib_NB for getting the DL Carrier Frequency from the EARFCN
+uint32_t from_earfcn_NB_IoT(int eutra_bandP,uint32_t dl_earfcn, float m_dl) {
+
+  int i;
+
+ // float m_dl = 0; //for the moment we fix but maybe should be dynamic (anyway the 0 works for any case)
+
+  AssertFatal(eutra_bandP <= 70,"eutra_band %d > 70\n",eutra_bandP);
+  for (i=0;i<= 70 && eutra_bandtable[i].band!=eutra_bandP;i++);
+
+  return(eutra_bandtable[i].dl_min + 0.0025*(2*m_dl+1)+(dl_earfcn-(eutra_bandtable[i].N_OFFs_DL/10)))*100000;
+}
+
+
+int32_t get_uldl_offset_NB_IoT(int eutra_band) {
+  return(-eutra_bandtable[eutra_band].dl_min + eutra_bandtable[eutra_band].ul_min);
+}
+
+uint32_t to_earfcn(int eutra_bandP,uint32_t dl_CarrierFreq, float m_dl) {
+
+  uint32_t dl_CarrierFreq_by_100k = dl_CarrierFreq/100000;
+
+  int i;
+
+  AssertFatal(eutra_bandP < 70,"eutra_band %d > 70\n",eutra_bandP);
+  for (i=0;i<69 && eutra_bandtable[i].band!=eutra_bandP;i++);
+
+  AssertFatal(dl_CarrierFreq_by_100k>=eutra_bandtable[i].dl_min,
+        "Band %d : DL carrier frequency %u Hz < %u\n",
+        eutra_bandP,dl_CarrierFreq,eutra_bandtable[i].dl_min);
+
+  //I would say that for sure the EUTRA band is larger that 1 PRB for NB-IoT so this check may is unuseful
+//  AssertFatal(dl_CarrierFreq_by_100k<=(eutra_bandtable[i].dl_max-bw_by_100),
+//        "Band %d, bw %u: DL carrier frequency %u Hz > %d\n",
+//        eutra_bandP,bw,dl_CarrierFreq,eutra_bandtable[i].dl_max-bw_by_100);
+
+
+  //based on formula TS 36.101 5.7.3F
+  return(dl_CarrierFreq_by_100k - eutra_bandtable[i].dl_min - 0.0025*(2*m_dl+ 1)+ (eutra_bandtable[i].N_OFFs_DL/10));
+}
+
 
 
 void config_mib_fapi_NB_IoT(
@@ -533,7 +613,7 @@ void rrc_mac_config_req_NB_IoT(
     if(if_inst->PHY_config_req)
         if_inst->PHY_config_req(config_INFO);
 
-    return 0;
+    //return 0;
 
 
    /*if( ded_flag!=0 )

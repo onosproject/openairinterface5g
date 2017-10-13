@@ -148,6 +148,8 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 		SIB1_flag = 1;
 	convert_system_number(abs_subframe, &h, &f, &sf);
 	a = output_handler(mac_inst, 0,0,h,f,sf,MIB_flag,SIB1_flag, abs_subframe);
+
+	printf("Output_handler_return value : %d", a);
 	//DEBUG("--------------[%04d][eNB scheduler NB-IoT] End Scheduling------------\n", mac_inst->current_subframe);
 }
 

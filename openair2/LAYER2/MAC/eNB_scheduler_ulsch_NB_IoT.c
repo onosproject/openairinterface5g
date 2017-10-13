@@ -489,7 +489,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
     unsigned char  rx_ces[5], num_ce = 0, num_sdu = 0, *payload_ptr, i; // MAX Control element
     unsigned char  rx_lcids[5];//for NB_IoT-IoT, NB_IoT_RB_MAX should be fixed to 5 (2 DRB+ 3SRB) 
   unsigned short rx_lengths[5];
-  int UE_id = 0;
+  //int UE_id = 0;
   int BSR_index=0;
   int DVI_index = 0;
   int PHR = 0;

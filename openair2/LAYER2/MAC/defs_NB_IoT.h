@@ -20,10 +20,6 @@
 #include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 //#include "PHY/defs.h"
 #include "PHY/defs_NB_IoT.h"
-//#include "BCCH-DL-SCH-Message-NB.h"
-//#include "RRCConnectionSetup-NB.h"
-//#include "BCCH-BCH-Message-NB.h"
-//#include "SIB-Type-NB-r13.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "config_NB_IoT.h"
 

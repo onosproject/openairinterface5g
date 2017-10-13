@@ -53,36 +53,10 @@
 #endif
 
 
-
-//----Not needed for NB-IoT??-------- (but have to left for UE?)
-//#include "SystemInformationBlockType1.h"
-//#include "SystemInformation.h"
-//#include "RRCConnectionReconfiguration.h"
-//#include "RRCConnectionReconfigurationComplete.h"
-//#include "RRCConnectionSetup.h"
-//#include "RRCConnectionSetupComplete.h"
-//#include "RRCConnectionRequest.h"
-//#include "RRCConnectionReestablishmentRequest.h"
-//#include "BCCH-DL-SCH-Message.h"
-//#include "BCCH-BCH-Message.h"
-//
-//#if defined(Rel10) || defined(Rel14)
-//#include "MCCH-Message.h"
-//#include "MBSFNAreaConfiguration-r9.h"
-//#include "SCellToAddMod-r10.h"
-//#endif
-//
-//#include "AS-Config.h"
-//#include "AS-Context.h"
-//#include "UE-EUTRA-Capability.h"
-//#include "MeasResults.h"
-//--------------------------------------
-
-
 //-----NB-IoT #include files-------
 
-#include "SystemInformationBlockType1-NB.h"
-#include "SystemInformation-NB.h"
+//#include "SystemInformationBlockType1-NB.h"
+//#include "SystemInformation-NB.h"
 #include "RRCConnectionReconfiguration-NB.h"
 #include "RRCConnectionReconfigurationComplete-NB.h"
 #include "RRCConnectionSetup-NB.h"
@@ -95,83 +69,6 @@
 #include "AS-Context-NB.h"
 #include "UE-Capability-NB-r13.h" //equivalent of UE-EUTRA-Capability.h
 //-------------------
-
-
-/* correct Rel(8|10)/Rel14 differences
- * the code is in favor of Rel14, those defines do the translation
- */
-/*
-#if !defined(Rel14)
-#  define CipheringAlgorithm_r12_t e_SecurityAlgorithmConfig__cipheringAlgorithm
-#  define CipheringAlgorithm_r12_t e_CipheringAlgorithm_r12 //maybe this solve the problem of the previous line
-#  define CipheringAlgorithm_r12_eea0 SecurityAlgorithmConfig__cipheringAlgorithm_eea0
-#  define CipheringAlgorithm_r12_eea1 SecurityAlgorithmConfig__cipheringAlgorithm_eea1
-#  define CipheringAlgorithm_r12_eea2 SecurityAlgorithmConfig__cipheringAlgorithm_eea2
-#  define CipheringAlgorithm_r12_spare1 SecurityAlgorithmConfig__cipheringAlgorithm_spare1
-#  define Alpha_r12_al0 UplinkPowerControlCommon__alpha_al0
-#  define Alpha_r12_al04 UplinkPowerControlCommon__alpha_al04
-#  define Alpha_r12_al05 UplinkPowerControlCommon__alpha_al05
-#  define Alpha_r12_al06 UplinkPowerControlCommon__alpha_al06
-#  define Alpha_r12_al07 UplinkPowerControlCommon__alpha_al07
-#  define Alpha_r12_al08 UplinkPowerControlCommon__alpha_al08
-#  define Alpha_r12_al09 UplinkPowerControlCommon__alpha_al09
-#  define Alpha_r12_al1 UplinkPowerControlCommon__alpha_al1
-#  define PreambleTransMax_t e_PreambleTransMax //maybe this solve problem (asn1_msg_nb_iot.c line 726)
-#  define PreambleTransMax_n3 RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n3
-#  define PreambleTransMax_n4 RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n4
-#  define PreambleTransMax_n5 RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n5
-#  define PreambleTransMax_n6 RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n6
-#  define PreambleTransMax_n7 RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n7
-#  define PreambleTransMax_n8 RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n8
-#  define PreambleTransMax_n10 RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n10
-#  define PreambleTransMax_n20 RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n20
-#  define PreambleTransMax_n50 RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n50
-#  define PreambleTransMax_n100 RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n100
-#  define PreambleTransMax_n200 RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n200
-#  define PeriodicBSR_Timer_r12_sf5 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf5
-#  define PeriodicBSR_Timer_r12_sf10 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf10
-#  define PeriodicBSR_Timer_r12_sf16 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf16
-#  define PeriodicBSR_Timer_r12_sf20 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf20
-#  define PeriodicBSR_Timer_r12_sf32 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf32
-#  define PeriodicBSR_Timer_r12_sf40 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf40
-#  define PeriodicBSR_Timer_r12_sf64 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf64
-#  define PeriodicBSR_Timer_r12_sf80 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf80
-#  define PeriodicBSR_Timer_r12_sf128 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf128
-#  define PeriodicBSR_Timer_r12_sf160 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf160
-#  define PeriodicBSR_Timer_r12_sf320 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf320
-#  define PeriodicBSR_Timer_r12_sf640 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf640
-#  define PeriodicBSR_Timer_r12_sf1280 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf1280
-#  define PeriodicBSR_Timer_r12_sf2560 MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_sf2560
-#  define PeriodicBSR_Timer_r12_infinity MAC_MainConfig__ul_SCH_Config__periodicBSR_Timer_infinity
-#  define RetxBSR_Timer_r12_sf320 MAC_MainConfig__ul_SCH_Config__retxBSR_Timer_sf320
-#  define RetxBSR_Timer_r12_sf640 MAC_MainConfig__ul_SCH_Config__retxBSR_Timer_sf640
-#  define RetxBSR_Timer_r12_sf1280 MAC_MainConfig__ul_SCH_Config__retxBSR_Timer_sf1280
-#  define RetxBSR_Timer_r12_sf2560 MAC_MainConfig__ul_SCH_Config__retxBSR_Timer_sf2560
-#  define RetxBSR_Timer_r12_sf5120 MAC_MainConfig__ul_SCH_Config__retxBSR_Timer_sf5120
-#  define RetxBSR_Timer_r12_sf10240 MAC_MainConfig__ul_SCH_Config__retxBSR_Timer_sf10240
-#endif
-
-// This corrects something generated by asn1c which is different between Rel8 and Rel10
-#if !defined(Rel10) && !defined(Rel14)
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member SystemInformation_r8_IEs_sib_TypeAndInfo_Member
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib2 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib2
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib3 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib3
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib4 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib4
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib5 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib5
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib6 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib6
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib7 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib7
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib8 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib8
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib9 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib9
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib10 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib10
-#define SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib11 SystemInformation_r8_IEs_sib_TypeAndInfo_Member_PR_sib11
-#endif
-*/
-
-#ifndef NO_RRM
-#include "L3_rrc_interface.h"
-#include "rrc_rrm_msg.h"
-#include "rrc_rrm_interface.h"
-#endif
 
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
