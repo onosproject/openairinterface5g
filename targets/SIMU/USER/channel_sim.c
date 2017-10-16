@@ -531,7 +531,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 
 	      txdataF = PHY_vars_eNB_g[eNB_id][CC_id]->common_vars.txdataF[0];
 	      sf_offset = subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;              
-              for (int idx=0;idx<10;idx++) printf("dumping raw subframe %d: txdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdataF[0][sf_offset+idx])[0], ((short*)&txdataF[0][sf_offset+idx])[1]);
+              //for (int idx=0;idx<10;idx++) printf("dumping raw subframe %d: txdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdataF[0][sf_offset+idx])[0], ((short*)&txdataF[0][sf_offset+idx])[1]);
               
 
 	      tx_pwr = dac_fixed_gain(s_re_f,
@@ -550,7 +550,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 			//}
 			write_output("txsigFrame.m","txsF", PHY_vars_eNB_g[eNB_id][CC_id]->common_vars.txdataF[0][0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 
-	for (int idx=0;idx<10;idx++) printf("dumping raw tx subframe (input) %d: s_f[%d] = (%f,%f)\n", subframe, idx, s_re_f[0][idx],s_im_f[0][idx]);
+	//for (int idx=0;idx<10;idx++) printf("dumping raw tx subframe (input) %d: s_f[%d] = (%f,%f)\n", subframe, idx, s_re_f[0][idx],s_im_f[0][idx]);
 
 #ifdef DEBUG_SIM
       LOG_D(OCM,"[SIM][DL] eNB %d (CCid %d): tx_pwr %.1f dBm/RE (target %d dBm/RE), for subframe %d\n",

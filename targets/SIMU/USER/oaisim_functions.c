@@ -1100,21 +1100,24 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
             (unsigned long long)current_eNB_rx_timestamp[eNB_id][CC_id]);
 
       printf("is Prach generated? %d, is prach_subframe? %d, frame %d, subframe %d, mode %d, n_ra_prb %d\n",PHY_vars_UE_g[0][CC_id]->generate_prach,is_prach_subframe(frame_parms,frame,subframe),frame,subframe,PHY_vars_UE_g[0][CC_id]->UE_mode[eNB_id], 11111);
+
       if (do_ofdm_mod)
       {
-	write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][0]->prach_vars[0]->prachF,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,1);
+	if (is_prach_subframe(frame_parms,frame,subframe) && PHY_vars_UE_g[0][CC_id]->generate_prach)
+	{
+		do_UL_prach(UE2eNB,
+		        enb_data,
+		        ue_data,
+		        subframe,
+		        0,  // abstraction_flag
+		        &PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms,
+		        0,  // frame is only used for abstraction
+		        eNB_id,
+		        CC_id);
+		write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][0]->prach_vars[0]->prachF,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,1);
 	//generate_prach(PHY_vars_UE_g[0][0],eNB_id,subframe,frame);
 	//PHY_vars_UE_g[0][0]->generate_prach=1;
-	if (is_prach_subframe(frame_parms,frame,subframe))
-	do_UL_prach(UE2eNB,
-                enb_data,
-                ue_data,
-                subframe,
-                0,  // abstraction_flag
-                &PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms,
-                0,  // frame is only used for abstraction
-                eNB_id,
-                CC_id);
+	}
 
         do_UL_sig_freq(UE2eNB,
                 enb_data,

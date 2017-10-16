@@ -493,7 +493,7 @@ static void *UE_thread_synch_freq(void *arg) {
     int freq_offset=0;
     char threadname[128];
 
-    int do_ofdm_mod = UE->do_ofdm_mod;
+    //int do_ofdm_mod = UE->do_ofdm_mod;
 
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
@@ -1033,12 +1033,12 @@ void *UE_thread(void *arg) {
                 UE->current_thread_id[sub_frame] = thread_idx;
 
                 LOG_D(PHY,"Process Subframe %d thread Idx %d , frame %d \n", sub_frame, UE->current_thread_id[sub_frame],proc->frame_rx);
-		    if (sub_frame==6 && ((proc->frame_rx&0x1)==0))
+		    /*if (sub_frame==6 && ((proc->frame_rx&0x1)==0))
 		    {
 			write_output("lteue_rxsigF_frame0.m","lteue_rxsF0", UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
 			write_output("lteue_rxsigF_frame1.m","lteue_rxsF1", UE->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
 			//exit(-1);
-		    }
+		    }*/
 
                 thread_idx++;
                 if(thread_idx>=RX_NB_TH)
@@ -1319,12 +1319,6 @@ void *UE_thread_freq(void *arg) {
 				UE->current_thread_id[sub_frame] = thread_idx;
 
 				LOG_D(PHY,"Process Subframe %d thread Idx %d , frame %d \n", sub_frame, UE->current_thread_id[sub_frame],proc->frame_rx);
-				    //if (sub_frame==5 && ((proc->frame_rx&0x1)==0))
-				    //{
-					write_output("lteue_rxsigF_frame0.m","lteue_rxsF0", UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
-					write_output("lteue_rxsigF_frame1.m","lteue_rxsF1", UE->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
-					//exit(-1);
-				    //}
 
 				thread_idx++;
 				if(thread_idx>=RX_NB_TH)
@@ -1394,6 +1388,12 @@ void *UE_thread_freq(void *arg) {
 				        for (th_id=0; th_id < RX_NB_TH; th_id++) {
 				            UE->proc.proc_rxtx[th_id].frame_rx++;
 				        }
+				    }
+				    if (sub_frame<10 && ((proc->frame_rx&0x1)==0)){
+				    
+					write_output("lteue_rxsigF_frame0.m","lteue_rxsF0", UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
+					write_output("lteue_rxsigF_frame1.m","lteue_rxsF1", UE->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
+					//exit(-1);
 				    }
 						    //UE->proc.proc_rxtx[0].gotIQs=readTime(gotIQs);
 				    //UE->proc.proc_rxtx[1].gotIQs=readTime(gotIQs);
