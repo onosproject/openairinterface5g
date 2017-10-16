@@ -531,7 +531,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 
 	      txdataF = PHY_vars_eNB_g[eNB_id][CC_id]->common_vars.txdataF[0];
 	      sf_offset = subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;              
-              //for (int idx=0;idx<10;idx++) printf("dumping raw subframe %d: txdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdataF[0][sf_offset+idx])[0], ((short*)&txdataF[0][sf_offset+idx])[1]);
+              for (int idx=0;idx<10;idx++) printf("dumping raw subframe %d: txdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdataF[0][sf_offset+idx])[0], ((short*)&txdataF[0][sf_offset+idx])[1]);
               
 
 	      tx_pwr = dac_fixed_gain(s_re_f,
@@ -1156,7 +1156,7 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
   if (abstraction_flag!=0)  {
 #ifdef PHY_ABSTRACTION_UL
 	LOG_D(OCM,"[SIM][UL] UE %d, Abstraction for do_UL_prach is not implemented in frequency domain\n",UE_id);
-	exit(1);
+	exit(-1);
 #else
 #endif
   } else { //without abstraction

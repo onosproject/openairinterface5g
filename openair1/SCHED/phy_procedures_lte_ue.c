@@ -1483,7 +1483,10 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 
       //      start_meas(&ue->tx_prach);
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_GENERATE_PRACH, VCD_FUNCTION_IN);
-      prach_power = generate_prach(ue,eNB_id,subframe_tx,frame_tx);
+      if (ue->do_ofdm_mod)
+        prach_power = generate_prach_freq(ue,eNB_id,subframe_tx,frame_tx);   
+      else
+      	prach_power = generate_prach(ue,eNB_id,subframe_tx,frame_tx);
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_GENERATE_PRACH, VCD_FUNCTION_OUT);
       //      stop_meas(&ue->tx_prach);
       LOG_D(PHY,"[UE  %d][RAPROC] PRACH PL %d dB, power %d dBm, digital power %d dB (amp %d)\n",

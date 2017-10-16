@@ -1046,6 +1046,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
   int CC_id  = device->CC_id;
 
   int subframe;
+  int n_ra_prb;
   int read_samples, max_samples;
   openair0_timestamp last = last_eNB_rx_timestamp[eNB_id][CC_id];
 
@@ -1114,7 +1115,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 		        0,  // frame is only used for abstraction
 		        eNB_id,
 		        CC_id);
-		write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][0]->prach_vars[0]->prachF,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,1);
+		write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][0]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,1);
 	//generate_prach(PHY_vars_UE_g[0][0],eNB_id,subframe,frame);
 	//PHY_vars_UE_g[0][0]->generate_prach=1;
 	}

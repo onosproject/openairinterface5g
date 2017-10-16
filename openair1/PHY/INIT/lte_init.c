@@ -1152,13 +1152,12 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
     }
 
     // init RX buffers
-  if (do_ofdm_mod)
-  {
     common_vars->rxdata   = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
     for (i=0; i<fp->nb_antennas_rx; i++) {
       common_vars->rxdata[i] = (int32_t*) malloc16_clear( (fp->samples_per_tti*10+2048)*sizeof(int32_t) );
     }
-
+  if (do_ofdm_mod)
+  {
     common_vars->common_vars_rx_data_per_thread[0].rxdataF  = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*));
     printf("[lte_init_f] address of rxdataF in memory: %p, thread %d\n",&common_vars->common_vars_rx_data_per_thread[0].rxdataF,0);
     for (i=0; i<fp->nb_antennas_rx; i++) {
