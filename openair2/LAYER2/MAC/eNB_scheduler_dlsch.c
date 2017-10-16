@@ -756,6 +756,9 @@ schedule_ue_spec(
 	      dl_req->number_pdu++;
 	      dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 
+              eNB->DL_req[CC_id].sfn_sf = frameP<<4 | subframeP;
+              eNB->DL_req[CC_id].header.message_id = NFAPI_DL_CONFIG_REQUEST;
+
 	      fill_nfapi_dlsch_config(eNB,dl_req,
 				      TBS,
 				      -1            /* retransmission, no pdu_index */,
@@ -1245,6 +1248,9 @@ schedule_ue_spec(
 	    dl_req->number_pdu++;
             dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 	    
+            eNB->DL_req[CC_id].sfn_sf = frameP<<4 | subframeP;
+            eNB->DL_req[CC_id].header.message_id = NFAPI_DL_CONFIG_REQUEST;
+
 	    // Toggle NDI for next time
 	    LOG_D(MAC,"CC_id %d Frame %d, subframeP %d: Toggling Format1 NDI for UE %d (rnti %x/%d) oldNDI %d\n",
 		  CC_id, frameP,subframeP,UE_id,
@@ -1350,7 +1356,7 @@ fill_DLSCH_dci(
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_FILL_DLSCH_DCI,VCD_FUNCTION_IN);
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-    LOG_D(MAC,"Doing fill DCI for CC_id %d\n",CC_id);
+    //LOG_D(MAC,"Doing fill DCI for CC_id %d\n",CC_id);
 
     if (mbsfn_flagP[CC_id]>0)
       continue;

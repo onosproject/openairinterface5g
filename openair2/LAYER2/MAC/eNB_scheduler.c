@@ -245,6 +245,8 @@ void schedule_SR(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 
       ul_req        = &RC.mac[module_idP]->UL_req[CC_id].ul_config_request_body;
 
+      LOG_E(MAC, "UE active UE_id:%d ul_req->number_of_pdus:%d\n", UE_id, ul_req->number_of_pdus);
+
       AssertFatal(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated != NULL, "physicalConfigDedicated is null for UE %d\n",UE_id);
 
       // drop the allocation if the UE hasn't send RRCConnectionSetupComplete yet
@@ -417,23 +419,29 @@ void copy_ulreq(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP)
 {
   int CC_id;
   eNB_MAC_INST *eNB;
-  nfapi_ul_config_request_body_t *ul_req_tmp;
-  nfapi_ul_config_request_body_t *ul_req;
+  nfapi_ul_config_request_body_t *ul_req_body_tmp;
+  nfapi_ul_config_request_body_t *ul_req_body;
 
   eNB = RC.mac[module_idP];
 
   for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
 
-    ul_req_tmp       = &eNB->UL_req_tmp[CC_id][subframeP].ul_config_request_body;
-    ul_req           = &eNB->UL_req[CC_id].ul_config_request_body;
+    ul_req_body_tmp       = &eNB->UL_req_tmp[CC_id][subframeP].ul_config_request_body;
+    ul_req_body           = &eNB->UL_req[CC_id].ul_config_request_body;
 
     eNB->UL_req[CC_id].sfn_sf   = (frameP<<4) + subframeP;
-    ul_req->number_of_pdus                     = ul_req_tmp->number_of_pdus;
-    ul_req_tmp->number_of_pdus = 0;
+    eNB->UL_req[CC_id].header   = eNB->UL_req_tmp[CC_id][subframeP].header;
+    ul_req_body->number_of_pdus                     = ul_req_body_tmp->number_of_pdus;
+    ul_req_body_tmp->number_of_pdus = 0;
 
-    memcpy((void*)ul_req->ul_config_pdu_list,
-	   (void*)ul_req_tmp->ul_config_pdu_list,
-	   ul_req->number_of_pdus*sizeof(nfapi_ul_config_request_pdu_t));
+    if (ul_req_body->number_of_pdus>0)
+    {
+      LOG_E(PHY, "%s() Copy ul_req pdus:%d\n", __FUNCTION__, ul_req_body->number_of_pdus);
+    }
+
+    memcpy((void*)ul_req_body->ul_config_pdu_list,
+	   (void*)ul_req_body_tmp->ul_config_pdu_list,
+	   ul_req_body->number_of_pdus*sizeof(nfapi_ul_config_request_pdu_t));
 
   }
 }

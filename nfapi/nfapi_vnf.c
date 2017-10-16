@@ -294,24 +294,10 @@ extern void init_eNB_afterRU(void);
 
 void oai_create_enb(void)
 {
-  static int bodge_counter = 0;
-  PHY_VARS_eNB *eNB;
+  int bodge_counter=0;
+  PHY_VARS_eNB *eNB = RC.eNB[0][0];
 
-  if (RC.eNB && RC.eNB[0] && RC.eNB[0][0])
-  {
-    eNB = RC.eNB[0][0];
-    printf("[VNF] RC.eNB[0][0]. Mod_id:%d CC_id:%d\n", eNB->Mod_id, eNB->CC_id);
-  }
-  else
-  {
-    printf("[VNF] DJP ***** RC.eNB[] and RC.eNB[%d][%d] RC.nb_CC[%d]=1 MALLOCING structure and zeroing *******\n", bodge_counter, bodge_counter, bodge_counter);
-
-    RC.eNB[bodge_counter] = (PHY_VARS_eNB **)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB**));
-    RC.eNB[bodge_counter][bodge_counter] = (PHY_VARS_eNB *)malloc(sizeof(PHY_VARS_eNB));
-    memset((void*)RC.eNB[bodge_counter][bodge_counter],0,sizeof(PHY_VARS_eNB));
-
-    eNB = RC.eNB[bodge_counter][bodge_counter];
-  }
+  printf("[VNF] RC.eNB[0][0]. Mod_id:%d CC_id:%d nb_CC[0]:%d abstraction_flag:%d single_thread_flag:%d td:%p te:%p if_inst:%p\n", eNB->Mod_id, eNB->CC_id, RC.nb_CC[0], eNB->abstraction_flag, eNB->single_thread_flag, eNB->td, eNB->te, eNB->if_inst);
 
   eNB->Mod_id  = bodge_counter;
   eNB->CC_id   = bodge_counter;
@@ -325,8 +311,6 @@ void oai_create_enb(void)
   if (eNB->if_inst==0) {
     eNB->if_inst = IF_Module_init(bodge_counter);
   }
-
-  //init_eNB_proc(bodge_counter);
 
   // This will cause phy_config_request to be installed. That will result in RRC configuring the PHY
   // that will result in eNB->configured being set to TRUE.
@@ -342,7 +326,6 @@ void oai_create_enb(void)
     usleep(50000);
   } while(eNB->configured != 1);
 }
-
 
 void oai_enb_init(void)
 {
@@ -598,9 +581,6 @@ int phy_sync_indication(struct nfapi_vnf_p7_config* config, uint8_t sync)
     }
   }
 
-  //if (RC.eNB && RC.eNB[0][0]->configured)
-  //wake_eNB_rxtx(RC.eNB[0][0], 0, 0);
-
   return(0);
 }
 
@@ -679,22 +659,101 @@ int phy_rach_indication(struct nfapi_vnf_p7_config* config, nfapi_rach_indicatio
 
 int phy_harq_indication(struct nfapi_vnf_p7_config* config, nfapi_harq_indication_t* ind)
 {
-	// vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
-	//mac_harq_ind(p7_vnf->mac, ind);
-	return 1;
+  LOG_E(MAC, "%s() NFAPI SFN/SF:%d number_of_preambles:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->harq_indication_body.number_of_harqs);
+
+  for (int i=0; i<ind->harq_indication_body.number_of_harqs; i++)
+  {
+    harq_indication(
+        0, // DJP - fixme
+        0, // DJP - fixme
+        NFAPI_SFNSF2SFN(ind->sfn_sf),
+        NFAPI_SFNSF2SF(ind->sfn_sf),
+        &ind->harq_indication_body.harq_pdu_list[i]
+        );
+  }
+
+  // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
+  //mac_harq_ind(p7_vnf->mac, ind);
+  return 1;
 }
 
 int phy_crc_indication(struct nfapi_vnf_p7_config* config, nfapi_crc_indication_t* ind)
 {
-	// vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
+  struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
+
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
+
+  eNB->UL_INFO.crc_ind = *ind;
+
+  nfapi_crc_indication_t *dest_ind = &eNB->UL_INFO.crc_ind;
+  nfapi_crc_indication_pdu_t *dest_pdu_list = eNB->crc_pdu_list;
+
+  *dest_ind = *ind;
+  dest_ind->crc_indication_body.crc_pdu_list = dest_pdu_list;
+
+  LOG_E(MAC, "%s() NFAPI SFN/SF:%d IND:number_of_crcs:%u UL_INFO:crcs:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->crc_indication_body.number_of_crcs, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs);
+
+  for (int i=0; i<ind->crc_indication_body.number_of_crcs; i++)
+  {
+    LOG_D(MAC, "%s() PDU[%d] rnti:%04x UL_INFO:rnti:%04x\n", 
+        __FUNCTION__,
+        i, 
+        ind->crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti, 
+        eNB->UL_INFO.crc_ind.crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti);
+
+    memcpy(&dest_ind->crc_indication_body.crc_pdu_list[i], &ind->crc_indication_body.crc_pdu_list[i], sizeof(ind->crc_indication_body.crc_pdu_list[0]));
+  }
+
+  pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+
+  // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
 	//mac_crc_ind(p7_vnf->mac, ind);
-	return 1;
+  return 1;
 }
+
 int phy_rx_indication(struct nfapi_vnf_p7_config* config, nfapi_rx_indication_t* ind)
 {
-	// vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
-	//mac_rx_ind(p7_vnf->mac, ind);
-	return 1;
+  struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
+
+  LOG_E(MAC, "%s() NFAPI SFN/SF:%d number_of_pdus:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rx_indication_body.number_of_pdus);
+
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
+
+  nfapi_rx_indication_t *dest_ind = &eNB->UL_INFO.rx_ind;
+  nfapi_rx_indication_pdu_t *dest_pdu_list = eNB->rx_pdu_list;
+
+  *dest_ind = *ind;
+  dest_ind->rx_indication_body.rx_pdu_list = dest_pdu_list;
+
+  for(int i=0; i<ind->rx_indication_body.number_of_pdus; i++)
+  {
+    nfapi_rx_indication_pdu_t *dest_pdu = &dest_ind->rx_indication_body.rx_pdu_list[i];
+    nfapi_rx_indication_pdu_t *src_pdu = &ind->rx_indication_body.rx_pdu_list[i];
+
+    memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
+
+    // DJP - TODO FIXME - intentional memory leak
+    dest_pdu->data = malloc(dest_pdu->rx_indication_rel8.length);
+
+    memcpy(dest_pdu->data, src_pdu->data, dest_pdu->rx_indication_rel8.length);
+
+    LOG_E(PHY, "%s() handle:%d rnti:%04x length:%d offset:%d ul_cqi:%d ta:%d data:%p\n",
+        __FUNCTION__,
+        dest_pdu->rx_ue_information.handle,
+        dest_pdu->rx_ue_information.rnti,
+        dest_pdu->rx_indication_rel8.length,
+        dest_pdu->rx_indication_rel8.offset,
+        dest_pdu->rx_indication_rel8.ul_cqi,
+        dest_pdu->rx_indication_rel8.timing_advance,
+        dest_pdu->data
+        );
+  }
+
+  pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+
+  // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
+  //mac_rx_ind(p7_vnf->mac, ind);
+  return 1;
 }
 int phy_srs_indication(struct nfapi_vnf_p7_config* config, nfapi_srs_indication_t* ind)
 {
@@ -710,10 +769,21 @@ int phy_sr_indication(struct nfapi_vnf_p7_config* config, nfapi_sr_indication_t*
 }
 int phy_cqi_indication(struct nfapi_vnf_p7_config* config, nfapi_cqi_indication_t* ind)
 {
-	// vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
-	//mac_cqi_ind(p7_vnf->mac, ind);
-	return 1;
+  // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
+  //mac_cqi_ind(p7_vnf->mac, ind);
+  struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
+
+  LOG_E(MAC, "%s() NFAPI SFN/SF:%d number_of_cqis:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->cqi_indication_body.number_of_cqis);
+
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
+
+  eNB->UL_INFO.cqi_ind = ind->cqi_indication_body;
+
+  pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+
+  return 1;
 }
+
 int phy_lbt_dl_indication(struct nfapi_vnf_p7_config* config, nfapi_lbt_dl_indication_t* ind)
 {
 	// vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
@@ -1024,6 +1094,7 @@ printf("[VNF] DJP local_addr:%s\n", p7_vnf->local_addr);
 
       req->nfapi_config.timing_window.tl.tag = NFAPI_NFAPI_TIMING_WINDOW_TAG;
       req->nfapi_config.timing_window.value = p7_vnf->timing_window;
+printf("[VNF] Timing window:%d\n", p7_vnf->timing_window);
       req->num_tlv++;
 
       if(p7_vnf->periodic_timing_enabled || p7_vnf->aperiodic_timing_enabled)
@@ -1300,3 +1371,49 @@ int oai_nfapi_tx_req(nfapi_tx_request_t *tx_req)
   }
   return retval;
 }
+
+int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req)
+{
+  nfapi_vnf_p7_config_t *p7_config = vnf.p7_vnfs[0].config;
+
+  hi_dci0_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
+
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() HI_DCI0_REQ p7_config:%p phy_id:%d message_id:%d sfn_sf:%d number_of_dci:%d number_of_hi:%d\n", __FUNCTION__, p7_config, hi_dci0_req->header.phy_id, hi_dci0_req->header.message_id, NFAPI_SFNSF2DEC(hi_dci0_req->sfn_sf), hi_dci0_req->hi_dci0_request_body.number_of_dci, hi_dci0_req->hi_dci0_request_body.number_of_hi);
+
+  int retval = nfapi_vnf_p7_hi_dci0_req(p7_config, hi_dci0_req);
+
+  if (retval!=0)
+  {
+    NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() Problem sending retval:%d\n", __FUNCTION__, retval);
+  }
+  return retval;
+}
+
+int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req)
+{
+  nfapi_vnf_p7_config_t *p7_config = vnf.p7_vnfs[0].config;
+
+  ul_config_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
+
+  //NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() header message_id:%d\n", __FUNCTION__, ul_config_req->header.message_id);
+
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() UL_CONFIG p7_config:%p phy_id:%d message_id:%d sfn_sf:%d PDUs:%d rach_prach_frequency_resources:%d srs_present:%d\n", 
+  __FUNCTION__, p7_config, ul_config_req->header.phy_id, ul_config_req->header.message_id, NFAPI_SFNSF2DEC(ul_config_req->sfn_sf), 
+  ul_config_req->ul_config_request_body.number_of_pdus,
+  ul_config_req->ul_config_request_body.rach_prach_frequency_resources,
+  ul_config_req->ul_config_request_body.srs_present);
+
+  int retval = nfapi_vnf_p7_ul_config_req(p7_config, ul_config_req);
+
+  if (retval!=0)
+  {
+    NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() Problem sending retval:%d\n", __FUNCTION__, retval);
+  }
+  else
+  {
+    // Reset number of PDUs so that it is not resent
+    ul_config_req->ul_config_request_body.number_of_pdus=0;
+  }
+  return retval;
+}
+

@@ -846,7 +846,7 @@ void init_openair0() {
 
 void wait_RUs(void) {
 
-  LOG_I(PHY,"Waiting for RUs to be configured ... RC.ru_mask:%02x\n", RC.ru_mask);
+  LOG_I(PHY,"Waiting for RUs to be configured ... RC.ru_mask:%02lx\n", RC.ru_mask);
 
   // wait for all RUs to be configured over fronthaul
   pthread_mutex_lock(&RC.ru_mutex);
@@ -855,7 +855,7 @@ void wait_RUs(void) {
 
   while (RC.ru_mask>0) {
     pthread_cond_wait(&RC.ru_cond,&RC.ru_mutex);
-    printf("RC.ru_mask:%02x\n", RC.ru_mask);
+    printf("RC.ru_mask:%02lx\n", RC.ru_mask);
   }
 
   LOG_I(PHY,"RUs configured\n");

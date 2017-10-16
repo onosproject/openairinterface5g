@@ -108,7 +108,7 @@ void rx_sdu(const module_id_t enb_mod_idP,
 
   if (UE_id!=-1) {
 
-    LOG_D(MAC,"[eNB %d][PUSCH %d] CC_id %d Received ULSCH sdu round %d from PHY (rnti %x, UE_id %d) ul_cqi %d\n",enb_mod_idP,harq_pid,CC_idP, UE_list->UE_sched_ctrl[UE_id].round_UL[CC_idP][harq_pid],
+    LOG_D(MAC,"[eNB %d][PUSCH %d] CC_id %d Received ULSCH sdu(%p) round %d from PHY (rnti %x, UE_id %d) ul_cqi %d\n",enb_mod_idP,harq_pid,CC_idP,sduP,UE_list->UE_sched_ctrl[UE_id].round_UL[CC_idP][harq_pid],
 	  rntiP,UE_id,ul_cqi);
 
     AssertFatal(UE_list->UE_sched_ctrl[UE_id].round_UL[CC_idP][harq_pid] < 8,
@@ -571,6 +571,8 @@ void rx_sdu(const module_id_t enb_mod_idP,
   hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value                            = 1;
   hi_dci0_req->number_of_hi++;
   hi_dci0_req->tl.tag = NFAPI_HI_DCI0_REQUEST_BODY_TAG;
+  eNB->HI_DCI0_req[CC_idP].sfn_sf = frameP<<4|subframeP;
+  eNB->HI_DCI0_req[CC_idP].header.message_id = NFAPI_HI_DCI0_REQUEST;
 
   /* NN--> FK: we could either check the payload, or use a phy helper to detect a false msg3 */
   if ((num_sdu == 0) && (num_ce==0)) {
@@ -878,13 +880,13 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
   //ul_config_pdu                                    = &ul_req_tmp->ul_config_pdu_list[0]; 
 
 
-  LOG_D(MAC,"entering ulsch preprocesor\n");
+  //LOG_D(MAC,"entering ulsch preprocesor\n");
   ulsch_scheduler_pre_processor(module_idP,
                                 frameP,
                                 subframeP,
                                 first_rb);
 
-  LOG_D(MAC,"exiting ulsch preprocesor\n");
+  //LOG_D(MAC,"exiting ulsch preprocesor\n");
 
   eNB->HI_DCI0_req[CC_id].sfn_sf = (frameP<<4)+subframeP;
   eNB->HI_DCI0_req[CC_id].hi_dci0_request_body.tl.tag = NFAPI_HI_DCI0_REQUEST_BODY_TAG;
@@ -895,8 +897,7 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
 
     // don't schedule if Msg4 is not received yet
     if (UE_list->UE_template[UE_PCCID(module_idP,UE_id)][UE_id].configured==FALSE) {
-      LOG_D(MAC,"[eNB %d] frame %d subfarme %d, UE %d: not configured, skipping UE scheduling \n", 
-	    module_idP,frameP,subframeP,UE_id);
+      //LOG_D(MAC,"[eNB %d] frame %d subfarme %d, UE %d: not configured, skipping UE scheduling \n", module_idP,frameP,subframeP,UE_id);
       continue;
     }
 
@@ -975,8 +976,7 @@ abort();
       harq_pid      = subframe2harqpid(&cc[CC_id],sched_frame,sched_subframeP);
       round         = UE_sched_ctrl->round_UL[CC_id][harq_pid];
       AssertFatal(round<8,"round %d > 7 for UE %d/%x\n",round,UE_id,rnti);
-      LOG_D(MAC,"[eNB %d] frame %d subframe %d,Checking PUSCH %d for UE %d/%x CC %d : aggregation level %d, N_RB_UL %d\n", 
-	    module_idP,frameP,subframeP,harq_pid,UE_id,rnti,CC_id, aggregation,N_RB_UL);
+      //LOG_D(MAC,"[eNB %d] frame %d subframe %d,Checking PUSCH %d for UE %d/%x CC %d : aggregation level %d, N_RB_UL %d\n", module_idP,frameP,subframeP,harq_pid,UE_id,rnti,CC_id, aggregation,N_RB_UL);
 
       RC.eNB[module_idP][CC_id]->pusch_stats_BO[UE_id][(frameP*10)+subframeP] = UE_template->ul_total_buffer;
       VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_UE0_BO,RC.eNB[module_idP][CC_id]->pusch_stats_BO[UE_id][(frameP*10)+subframeP]);	

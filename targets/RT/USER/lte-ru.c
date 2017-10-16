@@ -1185,21 +1185,29 @@ void wakeup_eNBs(RU_t *ru) {
   int i;
   PHY_VARS_eNB **eNB_list = ru->eNB_list;
 
-  //LOG_D(PHY,"wakeup_eNBs (num %d) for RU %d\n",ru->num_eNB,ru->idx);
+  //LOG_D(PHY,"wakeup_eNBs (num %d) for RU %d ru->eNB_top:%p\n",ru->num_eNB,ru->idx, ru->eNB_top);
 
   if (ru->num_eNB==1 && ru->eNB_top!=0) {
     // call eNB function directly
 
     char string[20];
     sprintf(string,"Incoming RU %d",ru->idx);
-    //LOG_D(PHY,"RU %d Waking up eNB\n",ru->idx);
+    //LOG_D(PHY,"RU %d Call eNB_top\n",ru->idx);
     ru->eNB_top(eNB_list[0],ru->proc.frame_rx,ru->proc.subframe_rx,string);
   }
   else {
 
+    LOG_D(PHY,"ru->num_eNB:%d\n", ru->num_eNB);
+
     for (i=0;i<ru->num_eNB;i++)
+    {
+      LOG_D(PHY,"ru->wakeup_rxtx:%p\n", ru->wakeup_rxtx);
+
       if (ru->wakeup_rxtx!=0 && ru->wakeup_rxtx(eNB_list[i],ru) < 0)
+      {
 	LOG_E(PHY,"could not wakeup eNB rxtx process for subframe %d\n", ru->proc.subframe_rx);
+      }
+    }
   }
 }
 
@@ -1262,8 +1270,6 @@ static inline int wakeup_prach_ru_br(RU_t *ru) {
   return(0);
 }
 #endif
-
-void oai_subframe_ind(uint16_t frame, uint16_t subframe);
 
 // this is for RU with local RF unit
 void fill_rf_config(RU_t *ru, char *rf_config_file) {
@@ -1495,9 +1501,14 @@ static void* ru_thread( void* param ) {
     if (ru->fh_south_in) ru->fh_south_in(ru,&frame,&subframe);
     else AssertFatal(1==0, "No fronthaul interface at south port");
 
-    //LOG_D(PHY,"AFTER fh_south_in - SFN/SF(RX):%d/%d (TX):%d/%d proc:%p ru->proc:%p\n",frame,subframe,proc->frame_tx,proc->subframe_tx,proc,&ru->proc);
-
-    oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
+    LOG_D(PHY,"AFTER fh_south_in - SFN/SF:%d/%d RX:%d/%d TX:%d/%d RC.eNB[0][0]:[RX:%d/%d TX(SFN):%d] eNB:%p RU:eNB:%p proc:%p ru->proc:%p\n",
+        frame,subframe,
+        proc->frame_rx,proc->subframe_rx,
+        proc->frame_tx,proc->subframe_tx,
+        RC.eNB[0][0]->proc.frame_rx,RC.eNB[0][0]->proc.subframe_rx,
+        RC.eNB[0][0]->proc.frame_tx,
+        RC.eNB[0][0], ru->eNB_list[0],
+        proc,&ru->proc);
 
     if (0 && is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx))
       LOG_D(PHY,"RU thread (do_prach %d, is_prach_subframe %d), received frame %d, subframe %d\n",
@@ -1526,13 +1537,14 @@ static void* ru_thread( void* param ) {
     // If this proc is to provide synchronization, do so
     wakeup_slaves(proc);
 
-    //LOG_E(PHY,"RU %d/%d frame_tx %d, subframe_tx %d\n",0,ru->idx,proc->frame_tx,proc->subframe_tx);
+    //LOG_E(PHY,"RU %d/%d frame_tx %d, subframe_tx %d - wakeup_eNBs...\n",0,ru->idx,proc->frame_tx,proc->subframe_tx);
     // wakeup all eNB processes waiting for this RU
     if (ru->num_eNB>0) wakeup_eNBs(ru);
 
     //LOG_E(PHY,"%s() Before wait_on_condition()\n", __FUNCTION__);
     // wait until eNBs are finished subframe RX n and TX n+4
     wait_on_condition(&proc->mutex_eNBs,&proc->cond_eNBs,&proc->instance_cnt_eNBs,"ru_thread");
+
     //LOG_E(PHY,"%s() AFTER wait_on_condition() ru->feptx_prec:%p ru->fh_north_asynch_in:%p ru->feptx_ofdm:%p ru->fh_south_out:%p ru->fh_north_out:%p\n", 
     //__FUNCTION__, ru->feptx_prec, ru->fh_north_asynch_in, ru->feptx_ofdm, ru->fh_south_out, ru->fh_north_out);
 
@@ -2034,7 +2046,7 @@ LOG_E(PHY,"ru->if_south:%d\n", ru->if_south);
 	malloc_IF4p5_buffer(ru);
       }
       else if (ru->function == eNodeB_3GPP) {  
-	ru->do_prach             = 1;                       // no prach processing in RU            
+	ru->do_prach             = 0;                       // no prach processing in RU            
 	ru->feprx                = fep_full;                // RX DFTs
 	ru->feptx_ofdm           = feptx_ofdm;              // this is fep with idft and precoding
 	ru->feptx_prec           = feptx_prec;              // this is fep with idft and precoding

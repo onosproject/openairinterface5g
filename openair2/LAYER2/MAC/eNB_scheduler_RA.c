@@ -62,6 +62,35 @@
 
 #include "T.h"
 
+
+void add_subframe(int *frameP, int *subframeP, int offset)
+{
+    *frameP    = *frameP + ((*subframeP + offset) / 10);
+
+    *subframeP = ((*subframeP + offset) % 10);
+}
+
+uint16_t sfnsf_add_subframe(int frameP, int subframeP, int offset)
+{
+  add_subframe(&frameP, &subframeP, offset);
+  return frameP<<4|subframeP;
+}
+
+void subtract_subframe(int *frameP, int *subframeP, int offset)
+{
+  if (*subframeP < offset)
+  {
+    *frameP = (*frameP+1024-1)%1024;
+  }
+  *subframeP = (*subframeP+10-offset)%10;
+}
+
+uint16_t sfnsf_subtrace_subframe(int frameP, int subframeP, int offset)
+{
+  subtract_subframe(&frameP, &subframeP, offset);
+  return frameP<<4|subframeP;
+}
+
 void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_t frameP, sub_frame_t subframeP) {
 
   eNB_MAC_INST                    *eNB = RC.mac[module_idP];
@@ -112,12 +141,18 @@ void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                                   = get_TBS_UL(RA_template->msg3_mcs,
 												RA_template->msg3_nb_rb);
     // Re13 fields
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.tl.tag                                = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL13_TAG;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.ue_type                               = RA_template->rach_resource_type>2 ? 2 : 1;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.total_number_of_repetitions           = 1;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.repetition_number                     = 1;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.initial_transmission_sf_io            = (RA_template->Msg3_frame*10)+RA_template->Msg3_subframe;
+
     ul_req_body->number_of_pdus++;
     ul_req_body->tl.tag                                                            = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
+
+    // nFAPI on PNF is running at TX SFN/SF (so 4 ahead), so we need to add 4 to the SFN/SF so that the receive happens at the right time
+    ul_req->sfn_sf = sfnsf_add_subframe(RA_template->Msg3_frame, RA_template->Msg3_subframe, 4);
+    ul_req->header.message_id = NFAPI_UL_CONFIG_REQUEST;
   } //  if (RA_template->rach_resource_type>0) {	 
   else
 #endif
@@ -153,6 +188,8 @@ void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_
       ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                                   = get_TBS_UL(10,RA_template->msg3_nb_rb);
       ul_req_body->number_of_pdus++;
       ul_req_body->tl.tag                                                            = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
+      ul_req->sfn_sf = sfnsf_add_subframe(RA_template->Msg3_frame, RA_template->Msg3_subframe, 4);
+      ul_req->header.message_id = NFAPI_UL_CONFIG_REQUEST;
       // save UL scheduling information for preprocessor
       for (j=0;j<RA_template->msg3_nb_rb;j++) cc->vrb_map_UL[RA_template->msg3_first_rb+j]=1;
       
@@ -167,6 +204,11 @@ void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_
 	hi_dci0_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms             = 0;
 	hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value                            = 0;
 	hi_dci0_req->number_of_hi++;
+
+        eNB->HI_DCI0_req[CC_id].sfn_sf = sfnsf_add_subframe(RA_template->Msg3_frame, RA_template->Msg3_subframe, 4);
+        eNB->HI_DCI0_req[CC_id].hi_dci0_request_body.tl.tag = NFAPI_HI_DCI0_REQUEST_BODY_TAG;
+        eNB->HI_DCI0_req[CC_id].header.message_id = NFAPI_HI_DCI0_REQUEST;
+
 	// save UL scheduling information for preprocessor
 	for (j=0;j<RA_template->msg3_nb_rb;j++) cc->vrb_map_UL[RA_template->msg3_first_rb+j]=1;
 	
@@ -319,6 +361,9 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
       dl_req->number_pdu++;
       dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
       RA_template->Msg2_subframe = (RA_template->Msg2_subframe+9)%10;
+
+      eNB->DL_req[CC_idP].sfn_sf = sfnsf_add_subframe(RA_template->Msg2_frame, RA_template->Msg2_subframe, 4);	// nFAPI is runnning at TX SFN/SF - ie 4 ahead
+      eNB->DL_req[CC_idP].header.message_id = NFAPI_DL_CONFIG_REQUEST;
 
     } //repetition_count==0 && SF condition met
     if (RA_template->msg2_mpdcch_repetition_cnt>0) { // we're in a stream of repetitions
@@ -537,7 +582,8 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
   nfapi_tx_request_pdu_t          *TX_req;
   UE_list_t                       *UE_list=&eNB->UE_list;
   nfapi_dl_config_request_body_t *dl_req;
-  nfapi_ul_config_request_body_t *ul_req;
+  nfapi_ul_config_request_body_t *ul_req_body;
+  nfapi_ul_config_request_t      *ul_req;
   uint8_t                         lcid;
   uint8_t                         offset;
 
@@ -709,6 +755,9 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
       dl_req->number_pdu++;
       dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
       
+      eNB->DL_req[CC_idP].sfn_sf = (frameP<<4)+subframeP;
+      eNB->DL_req[CC_idP].header.message_id = NFAPI_DL_CONFIG_REQUEST;
+
     } //repetition_count==0 && SF condition met
     else if (RA_template->msg4_mpdcch_repetition_cnt>0) { // we're in a stream of repetitions
       RA_template->msg4_mpdcch_repetition_cnt++;	      
@@ -769,6 +818,9 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.drms_table_flag                       = 0;
 	dl_req->number_pdu++;
         dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
+
+	eNB->DL_req[CC_idP].sfn_sf = (frameP<<4)+subframeP;
+	eNB->DL_req[CC_idP].header.message_id = NFAPI_DL_CONFIG_REQUEST;
 	
 	RA_template->generate_Msg4=0;
 	RA_template->wait_ack_Msg4=1;
@@ -805,9 +857,10 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	       rrc_sdu_length);
 	
 	// DL request
-	eNB->TX_req[CC_idP].sfn_sf                                             = (frameP<<4)+subframeP;
-        eNB->TX_req[CC_idP].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
-        eNB->TX_req[CC_idP].header.message_id = NFAPI_TX_REQUEST;
+	eNB->TX_req[CC_idP].sfn_sf                                            = (frameP<<4)+subframeP;
+        eNB->TX_req[CC_idP].tx_request_body.tl.tag 			      = NFAPI_TX_REQUEST_BODY_TAG;
+        eNB->TX_req[CC_idP].header.message_id 				      = NFAPI_TX_REQUEST;
+
 	TX_req                                                                = &eNB->TX_req[CC_idP].tx_request_body.tx_pdu_list[eNB->TX_req[CC_idP].tx_request_body.number_of_pdus]; 		     	      
 	TX_req->pdu_length                                                    = rrc_sdu_length;
 	TX_req->pdu_index                                                     = eNB->pdu_index[CC_idP]++;
@@ -821,17 +874,26 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	// see Section 10.2 from 36.213
 	int ackNAK_absSF = absSF + reps + 4;
 	AssertFatal(reps>2,"Have to handle programming of ACK when PDSCH repetitions is > 2\n");
-	ul_req        = &eNB->UL_req_tmp[CC_idP][ackNAK_absSF%10].ul_config_request_body;
-	ul_config_pdu = &ul_req->ul_config_pdu_list[ul_req->number_of_pdus]; 
+	ul_req             = &eNB->UL_req_tmp[CC_idP][ackNAK_absSF%10];
+	ul_req_body        = &ul_req->ul_config_request_body;
+	ul_config_pdu = &ul_req_body->ul_config_pdu_list[ul_req_body->number_of_pdus]; 
 
 	ul_config_pdu->pdu_type                                                                     = NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE; 
 	ul_config_pdu->pdu_size                                                                     = (uint8_t)(2+sizeof(nfapi_ul_config_uci_harq_pdu));
+	ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.tl.tag                       = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL8_TAG;
 	ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.handle                       = 0; // don't know how to use this
 	ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti                         = RA_template->rnti;
+	ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.tl.tag			    = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL13_TAG;
 	ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.ue_type                     = (RA_template->rach_resource_type < 3) ? 1 : 2;
 	ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.empty_symbols               = 0;
 	ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.total_number_of_repetitions = pucchreps[RA_template->rach_resource_type-1];
 	ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.repetition_number           = 0;
+
+	ul_req_body->tl.tag                                                                         = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
+
+	ul_req->sfn_sf  									    = sfnsf_add_subframe(RA_template->Msg3_frame, RA_template->Msg3_subframe, 4);	// this is for +4 frame, but nFAPI already running at +4 (because 4 is latency of Tx)
+	ul_req->header.message_id  								    = NFAPI_UL_CONFIG_REQUEST;
+
 	// Note need to keep sending this across reptitions!!!! Not really for PUCCH, to ask small-cell forum, we'll see for the other messages, maybe parameters change across repetitions and FAPI has to provide for that
 	if (cc[CC_idP].tdd_Config==NULL) { // FDD case
 	  ul_config_pdu->uci_harq_pdu.harq_information.harq_information_rel8_fdd.n_pucch_1_0   = n1pucchan[RA_template->rach_resource_type-1];
@@ -844,7 +906,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	else {
 	  AssertFatal(1==0,"PUCCH configuration for ACK/NAK not handled yet for TDD BL/CE case\n");
 	}
-	ul_req->number_of_pdus++;
+	ul_req_body->number_of_pdus++;
 	T(T_ENB_MAC_UE_DL_PDU_WITH_DATA, T_INT(module_idP), T_INT(CC_idP), T_INT(RA_template->rnti), T_INT(frameP), T_INT(subframeP),
 	  T_INT(0 /*harq_pid always 0?*/), T_BUFFER(&eNB->UE_list.DLSCH_pdu[CC_idP][0][UE_id].payload[0], RA_template->msg4_TBsize));
 	

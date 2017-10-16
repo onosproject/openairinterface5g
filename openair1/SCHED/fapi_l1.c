@@ -39,6 +39,10 @@
 
 int oai_nfapi_dl_config_req(nfapi_dl_config_request_t *dl_config_req);
 int oai_nfapi_tx_req(nfapi_tx_request_t *tx_req);
+int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req);
+int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req);
+
+extern uint8_t nfapi_pnf;
 
 
 void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
@@ -640,7 +644,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     case NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE:
       handle_nfapi_dci_dl_pdu(eNB,proc,dl_config_pdu);
       eNB->pdcch_vars[subframe&1].num_dci++;
-      LOG_D(PHY,"Incremented num_dci:%d but already set??? dl_config:num_dci:%d\n", eNB->pdcch_vars[subframe&1].num_dci, number_dci);
+      LOG_E(PHY,"Incremented num_dci:%d but already set??? dl_config:num_dci:%d\n", eNB->pdcch_vars[subframe&1].num_dci, number_dci);
       do_oai=1;
       break;
     case NFAPI_DL_CONFIG_BCH_PDU_TYPE:
@@ -661,7 +665,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
       //      handle_nfapi_mch_dl_pdu(eNB,dl_config_pdu);
       break;
     case NFAPI_DL_CONFIG_DLSCH_PDU_TYPE:
-      LOG_D(PHY,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d data:%p\n", __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx, dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks, dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index, TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
+      LOG_E(PHY,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d data:%p\n", __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx, dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks, dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index, TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
 
       /*
       AssertFatal(dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index<TX_req->tx_request_body.number_of_pdus,
@@ -712,14 +716,17 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     }
   }
   
-#if 1
-  if (do_oai)
+  if (nfapi_pnf && do_oai)
   {
     oai_nfapi_tx_req(Sched_INFO->TX_req);
 
     oai_nfapi_dl_config_req(Sched_INFO->DL_req); // DJP - .dl_config_request_body.dl_config_pdu_list[0]); // DJP - FIXME TODO - yuk - only copes with 1 pdu
   }
-#endif
+
+  if (nfapi_pnf && number_hi_dci0_pdu!=0)
+  {
+    oai_nfapi_hi_dci0_req(HI_DCI0_req);
+  }
 
   for (i=0;i<number_hi_dci0_pdu;i++) {
 
@@ -731,7 +738,9 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 
 
     case NFAPI_HI_DCI0_DCI_PDU_TYPE:
+
       handle_nfapi_hi_dci0_dci_pdu(eNB,proc,hi_dci0_req_pdu);
+
       eNB->pdcch_vars[subframe&1].num_dci++;
       break;
 
@@ -739,6 +748,20 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
       handle_nfapi_hi_dci0_hi_pdu(eNB,proc,hi_dci0_req_pdu);
 
       break;
+    }
+  }
+
+  if (nfapi_pnf)
+  {
+    for (int future_subframe=0;future_subframe<10;future_subframe++)
+    { 
+      // DJP - indexing directly into the mac - not good - ??????
+      if (RC.mac[0]->UL_req_tmp[CC_id][future_subframe].ul_config_request_body.number_of_pdus > 0)
+      {
+        LOG_D(PHY,"UL_CONFIG for the future future_subframe:%d PDUs:%d\n", future_subframe, RC.mac[0]->UL_req_tmp[CC_id][future_subframe].ul_config_request_body.number_of_pdus);
+
+        oai_nfapi_ul_config_req(&RC.mac[0]->UL_req_tmp[CC_id][future_subframe]);
+      }
     }
   }
 

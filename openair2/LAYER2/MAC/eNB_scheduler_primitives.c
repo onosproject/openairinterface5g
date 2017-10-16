@@ -1159,7 +1159,7 @@ void fill_nfapi_harq_information(module_id_t module_idP,
 
   AssertFatal(UE_id>=0,"UE_id cannot be found, impossible\n");
   AssertFatal(UE_list!=NULL,"UE_list is null\n");
-  AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated!=NULL,"physicalConfigDedicated for rnti %x is null\n",rntiP);
+  AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated!=NULL,"physicalConfigDedicated for rnti %x is null CC_idP:%d UE_id:%d UE_list:rnti:%04x\n",rntiP,CC_idP,UE_id,UE_list->UE_template[CC_idP][UE_id].rnti);
 
   harq_information->harq_information_rel11.tl.tag = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL11_TAG;
   harq_information->harq_information_rel11.num_ant_ports = 1;
@@ -1194,6 +1194,7 @@ void fill_nfapi_harq_information(module_id_t module_idP,
     break;
   default: // for any other TM we need 2 bits harq
     if (cc->tdd_Config!=NULL) {
+      AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated!=NULL,"physicalConfigDedicated for rnti %x is null\n",rntiP);
       AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->pucch_ConfigDedicated!=NULL,
                   "pucch_ConfigDedicated is null for TDD!\n");
       if ((UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->pucch_ConfigDedicated->tdd_AckNackFeedbackMode!=NULL)&&
