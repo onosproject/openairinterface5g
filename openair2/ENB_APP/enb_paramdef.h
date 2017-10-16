@@ -371,6 +371,22 @@ static int DEFENBS[] = {0};
 #define ENB_CONFIG_STRING_UETIMERS_N310                                 "ue_TimersAndConstants_n310"
 #define ENB_CONFIG_STRING_UETIMERS_N311                                 "ue_TimersAndConstants_n311"
 #define ENB_CONFIG_STRING_UE_TRANSMISSION_MODE                          "ue_TransmissionMode"
+
+//TTN - for D2D
+#define ENB_CONFIG_STRING_RXPOOL_SC_CP_LEN                              "rxPool_sc_CP_Len"
+#define ENB_CONFIG_STRING_RXPOOL_SC_PRIOD                               "rxPool_sc_Period"
+#define ENB_CONFIG_STRING_RXPOOL_DATA_CP_LEN                            "rxPool_data_CP_Len"
+#define ENB_CONFIG_STRING_RXPOOL_RC_PRB_NUM                             "rxPool_ResourceConfig_prb_Num"
+#define ENB_CONFIG_STRING_RXPOOL_RC_PRB_START                           "rxPool_ResourceConfig_prb_Start"
+#define ENB_CONFIG_STRING_RXPOOL_RC_PRB_END                             "rxPool_ResourceConfig_prb_End"
+#define ENB_CONFIG_STRING_RXPOOL_RC_OFFSETIND_PRESENT                   "rxPool_ResourceConfig_offsetIndicator_present"
+#define ENB_CONFIG_STRING_RXPOOL_RC_OFFSETIND_CHOICE              "rxPool_ResourceConfig_offsetIndicator_choice"
+#define ENB_CONFIG_STRING_RXPOOL_RC_SFBITMAP_PRESENT                    "rxPool_ResourceConfig_subframeBitmap_present"
+#define ENB_CONFIG_STRING_RXPOOL_RC_SFBITMAP_CHOICE_BS_BUF            "rxPool_ResourceConfig_subframeBitmap_choice_bs_buf"
+#define ENB_CONFIG_STRING_RXPOOL_RC_SFBITMAP_CHOICE_BS_SIZE            "rxPool_ResourceConfig_subframeBitmap_choice_bs_size"
+#define ENB_CONFIG_STRING_RXPOOL_RC_SFBITMAP_CHOICE_BS_ASN_BITS_UNUSED "rxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused"
+
+
 		
 /*-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*                                     component carriers configuration parameters                                                                                                     */
@@ -444,7 +460,19 @@ static int DEFENBS[] = {0};
 {ENB_CONFIG_STRING_UETIMERS_T311,                                NULL,   0,           iptr:&ue_TimersAndConstants_t311,               defintval:10000,           TYPE_UINT,       0},  \
 {ENB_CONFIG_STRING_UETIMERS_N310,                                NULL,   0,           iptr:&ue_TimersAndConstants_n310,               defintval:20,              TYPE_UINT,       0},  \
 {ENB_CONFIG_STRING_UETIMERS_N311,                                NULL,   0,           iptr:&ue_TimersAndConstants_n311,               defintval:1,               TYPE_UINT,       0},  \
-{ENB_CONFIG_STRING_UE_TRANSMISSION_MODE,                         NULL,   0,           iptr:&ue_TransmissionMode,                      defintval:1,               TYPE_UINT,       0}   \
+{ENB_CONFIG_STRING_UE_TRANSMISSION_MODE,                         NULL,   0,           iptr:&ue_TransmissionMode,                      defintval:1,               TYPE_UINT,       0},  \
+{ENB_CONFIG_STRING_RXPOOL_SC_CP_LEN,                             NULL,   0,   strptr:&rxPool_sc_CP_Len,          defstrval:"normal",  TYPE_STRING,  0}, \
+{ENB_CONFIG_STRING_RXPOOL_SC_PRIOD,                              NULL,   0,   strptr:&rxPool_sc_Period,          defstrval:"sf40",  TYPE_STRING,  0}, \
+{ENB_CONFIG_STRING_RXPOOL_DATA_CP_LEN,                           NULL,   0,   strptr:&rxPool_data_CP_Len,          defstrval:"normal",  TYPE_STRING,  0}, \
+{ENB_CONFIG_STRING_RXPOOL_RC_PRB_NUM,                            NULL,   0,   iptr:&rxPool_ResourceConfig_prb_Num,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_RXPOOL_RC_PRB_START,                          NULL,   0,   iptr:&rxPool_ResourceConfig_prb_Start,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_RXPOOL_RC_PRB_END,                            NULL,   0,   iptr:&rxPool_ResourceConfig_prb_End,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_RXPOOL_RC_OFFSETIND_PRESENT,                  NULL,   0,   strptr:&rxPool_ResourceConfig_offsetIndicator_present,            defstrval:"prNothing",  TYPE_STRING,  0}, \
+{ENB_CONFIG_STRING_RXPOOL_RC_OFFSETIND_CHOICE,                   NULL,   0,   iptr:&rxPool_ResourceConfig_offsetIndicator_choice,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_RXPOOL_RC_SFBITMAP_PRESENT,                   NULL,   0,   strptr:&rxPool_ResourceConfig_subframeBitmap_present,            defstrval:"prNothing",  TYPE_STRING,  0}, \
+{ENB_CONFIG_STRING_RXPOOL_RC_SFBITMAP_CHOICE_BS_BUF,             NULL,   0,   strptr:&rxPool_ResourceConfig_subframeBitmap_choice_bs_buf,            defstrval:"001001",  TYPE_STRING,  0}, \
+{ENB_CONFIG_STRING_RXPOOL_RC_SFBITMAP_CHOICE_BS_SIZE,           NULL,   0,   iptr:&rxPool_ResourceConfig_subframeBitmap_choice_bs_size,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_RXPOOL_RC_SFBITMAP_CHOICE_BS_ASN_BITS_UNUSED,NULL,   0,   iptr:&rxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused,         defintval:1,       TYPE_UINT,    0} \
 }
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

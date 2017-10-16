@@ -495,6 +495,11 @@ typedef struct {
   MBSFNAreaConfiguration_r9_t       *mcch_message;
   SRB_INFO                          MCCH_MESS[8];// MAX_MBSFN_AREA
 #endif
+  //TTN - SIB 18,19,21 for D2D
+  SystemInformationBlockType18_r12_t *sib18;
+  SystemInformationBlockType19_r12_t *sib19;
+  SystemInformationBlockType21_r14_t *sib21;
+  // End - TTN
   SRB_INFO                          SI;
   SRB_INFO                          Srb0;
 } rrc_eNB_carrier_data_t;
@@ -584,6 +589,9 @@ typedef struct UE_RRC_INST_s {
   SystemInformationBlockType9_t *sib9[NB_CNX_UE];
   SystemInformationBlockType10_t *sib10[NB_CNX_UE];
   SystemInformationBlockType11_t *sib11[NB_CNX_UE];
+  //TTN - SIB18
+  SystemInformationBlockType18_r12_t *sib18[NB_CNX_UE];
+
 
 #if defined(Rel10) || defined(Rel14)
   uint8_t                           MBMS_flag;

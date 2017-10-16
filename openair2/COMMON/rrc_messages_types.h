@@ -37,6 +37,11 @@
 #else
 #include "RRC/LITE/MESSAGES/SystemInformationBlockType2.h"
 #endif
+#include "SL-OffsetIndicator-r12.h"
+#include "SubframeBitmapSL-r12.h"
+#include "SL-CP-Len-r12.h"
+#include "SL-PeriodComm-r12.h"
+
 
 //-------------------------------------------------------------------------------------------//
 // Messages for RRC logging
@@ -166,6 +171,23 @@ typedef struct RrcConfigurationReq_s {
   long                    ue_TimersAndConstants_n310[MAX_NUM_CCs];
   long                    ue_TimersAndConstants_n311[MAX_NUM_CCs];
   long                    ue_TransmissionMode[MAX_NUM_CCs];
+
+//TTN - for D2D
+  e_SL_CP_Len_r12     rxPool_sc_CP_Len[MAX_NUM_CCs];
+  e_SL_PeriodComm_r12     rxPool_sc_Period[MAX_NUM_CCs];
+  e_SL_CP_Len_r12     rxPool_data_CP_Len[MAX_NUM_CCs];
+  long     rxPool_ResourceConfig_prb_Num[MAX_NUM_CCs];
+  long     rxPool_ResourceConfig_prb_Start[MAX_NUM_CCs];
+  long     rxPool_ResourceConfig_prb_End[MAX_NUM_CCs];
+  SL_OffsetIndicator_r12_PR      rxPool_ResourceConfig_offsetIndicator_present[MAX_NUM_CCs];
+  long     rxPool_ResourceConfig_offsetIndicator_choice[MAX_NUM_CCs];
+  SubframeBitmapSL_r12_PR       rxPool_ResourceConfig_subframeBitmap_present[MAX_NUM_CCs];
+  char*       rxPool_ResourceConfig_subframeBitmap_choice_bs_buf[MAX_NUM_CCs];
+  long     rxPool_ResourceConfig_subframeBitmap_choice_bs_size[MAX_NUM_CCs];
+  long     rxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[MAX_NUM_CCs];
+
+
+
 } RrcConfigurationReq;
 
 // UE: NAS -> RRC messages

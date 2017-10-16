@@ -3520,6 +3520,24 @@ static void dump_sib13( SystemInformationBlockType13_r9_t *sib13 )
 }
 #endif
 
+//TTN
+//-----------------------------------------------------------------------------
+static void dump_sib18(SystemInformationBlockType18_r12_t *sib18){
+   LOG_I( RRC, "[UE] Dumping SIB18\n" );
+   for (int i = 0; i < sib18->commConfig_r12->commRxPool_r12.list.count; i++) {
+       LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, sib18->commConfig_r12->commRxPool_r12.list.count);
+       LOG_I(RRC, " SIB18 rxPool_sc_CP_Len: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_CP_Len_r12);
+       LOG_I(RRC, " SIB18 sc_Period_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_Period_r12);
+       LOG_I(RRC, " SIB18 data_CP_Len_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->data_CP_Len_r12);
+       LOG_I(RRC, " SIB18 prb_Num_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Num_r12);
+       LOG_I(RRC, " SIB18 prb_Start_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Start_r12);
+       LOG_I(RRC, " SIB18 prb_End_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_End_r12);
+       //to add more log
+
+     }
+
+
+}
 //-----------------------------------------------------------------------------
 static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
@@ -3531,7 +3549,10 @@ static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_in
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_UE_DECODE_SI, VCD_FUNCTION_IN );
 
   // Dump contents
-  if ((*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_systemInformation_r8) {
+  //TTN - should be modified since we use SystemInformation__criticalExtensions_PR_criticalExtensionsFuture
+  // instead of SystemInformation__criticalExtensions_PR_systemInformation_r8
+  //if ((*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_systemInformation_r8) {
+  if ((*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_criticalExtensionsFuture) {
     LOG_D( RRC, "[UE] (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count %d\n",
            (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count );
   } else {
@@ -3767,6 +3788,24 @@ static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_in
 	break;
       }
 #endif
+    //TTN - SIB18
+    case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib18_v1250:
+       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&8192) == 0) {
+          UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=8192;
+          new_sib=1;
+
+          memcpy( UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index], &typeandinfo->choice.sib18_v1250, sizeof(SystemInformationBlockType18_r12_t) );
+          LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB18 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
+          dump_sib18( UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index] );
+          // adding here function to store necessary parameters to transfer to PHY layer
+          LOG_I( RRC, "[FRAME %05"PRIu32"][RRC_UE][MOD %02"PRIu8"][][--- MAC_CONFIG_REQ (SIB18 params eNB %"PRIu8") --->][MAC_UE][MOD %02"PRIu8"][]\n",
+                    ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
+          //should modify function rrc_mac_config_req_ue() to transfer SL-related parameters to PHY
+          //rrc_mac_config_req_ue();
+
+       }
+       break;
+
     default:
       break;
     }
