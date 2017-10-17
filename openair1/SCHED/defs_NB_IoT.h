@@ -42,6 +42,12 @@ NB_IoT_DL_FRAME_PARMS *get_NB_IoT_frame_parms(module_id_t Mod_id, uint8_t CC_id)
 
 int16_t get_hundred_times_delta_IF_eNB_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,uint8_t UE_id,uint8_t harq_pid, uint8_t bw_factor);
 
+uint32_t is_SIB1_NB_IoT(const frame_t          frameP,
+                        long                   schedulingInfoSIB1,   //from the mib
+                        int                    physCellId,           //by configuration
+                        NB_IoT_eNB_NDLSCH_t   *ndlsch_SIB1
+                        );
+
 #endif
 
 

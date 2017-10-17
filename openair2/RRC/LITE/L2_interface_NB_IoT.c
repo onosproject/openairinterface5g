@@ -128,541 +128,88 @@ extern void (*rlc_rrc_data_conf)(
 
 /*---------------------------------RRC-MAC-----------------------------------*/
 
-
-//NB1/NB2 Offset of category (XXX for the moment we choose a random number but i don't know if whould be like this- TS 36.101 ch 5.7.3F)
-float Category_Offset_NB_IoT[21]       = {-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,-0.5,0,1,2,3,4,5,6,7,8,9}; //-0.5 is not applicable for in-band and guard band
-float Category_Offset_short_NB_IoT[2]  = {-0.5,0};                                                  //for guard band operating mode
-float Category_Offset_anchor_NB_IoT[4] = {-2,-1,0,1};                                               //for in band and guard band mode over anchor carrier (include nsss and npsss)
-
-//-------------------------------------------------------
-//New
-int npdsch_rep_to_array[3]      = {4,8,16}; //TS 36.213 Table 16.4.1.3-3
-int sib1_startFrame_to_array[4] = {0,16,32,48};//TS 36.213 Table 16.4.1.3-4
-//New----------------------------------------------------
-//return -1 whenever no SIB1-NB transmission occur.
-//return sib1_startFrame when transmission occur in the current frame
-uint32_t is_SIB1_NB_IoT(const frame_t    		   frameP,
-		                    long					         schedulingInfoSIB1,   //from the mib
-		                    int						         physCellId,           //by configuration
-		                    NB_IoT_eNB_NDLSCH_t		*ndlsch_SIB1
-		                    )
-{
-	uint8_t    nb_rep=0; // number of sib1-nb repetitions within the 256 radio frames
-	uint32_t   sib1_startFrame;
-	uint32_t   sib1_period_NB_IoT = 256;//from specs TS 36.331 (rf)
-	uint8_t    index;
-	int        offset;
-	int        period_nb; // the number of the actual period over the 1024 frames
-
-
-
-			/*SIB1
-	         *
-	         * the entire scheduling of SIB1-NB is based on the SchedulingInfoSIB1 of MIB-NB
-	         *
-	         * SIB1-NB transmission occurs in subframe #4 of every other frame in 16 continuous frames (i.e. alternate frames)
-	         * schedule with a periodicity of 2560 ms (256 Radio Frames) and repetitions (4, 8 or 16) are made, equally spaced
-	         * within the 2560 ms period
-	         *
-	         * 0.0) check the input parameters
-	         * 0)find the SIB1-NB period number over the 1024 frames in which the actual frame fall
-	         * 1)from the schedulingInfoSIB1 of MIB-NB and the physCell_id we deduce the starting radio frame
-	         * 2)check if the actual frame is after the staring radio frame
-	         * 3)check if the actual frame is within a SIB1-transmission interval
-	         * 4)based on the starting radio frame we can state  when SIB1-NB is transmitted in odd or even frame (commented)
-	         * (if the starting frame is even (0,16,32,48) then SIB1-NB is transmitted in even frames, if starting frame is odd (1)
-	         * we can state that SIB1-NB will be transmitted in every odd frame since repetitions are 16 in 256 radio frame period)
-	         * 4bis) we do a for loop over the 16 continuous frame (hopping by 2) for check if the frame is considered in that interval
-
-	         *
-	         * *0) is necessary because at least i need to know in which of the even frames the repetition are -> is based on the offset
-	         * *in 1023 frames there are exactly 4 period of SIB1-NB
-	         **/
-
-
-
-    		if(schedulingInfoSIB1 > 11 || schedulingInfoSIB1 < 0){
-    			LOG_E(RRC, "is_SIB1_NB_IoT: schedulingInfoSIB1 value not allowed");
-    			return 0;
-    		}
-
-
-		    //SIB1-NB period number
-		    period_nb = (int) frameP/sib1_period_NB_IoT;
-
-
-	      //number of repetitions
-	      nb_rep = npdsch_rep_to_array[schedulingInfoSIB1%3];
-
-	      //based on number of rep. and the physical cell id we derive the starting radio frame (TS 36.213 Table 16.4.1.3-3/4)
-	      switch(nb_rep)
-	      {
-	      case 4:
-	    	  //physCellId%4 possible value are 0,1,2,3
-	    	  sib1_startFrame = sib1_startFrame_to_array[physCellId%4];
-	    	  break;
-	      case 8:
-	    	  //physCellId%2possible value are 0,1
-	    	  sib1_startFrame = sib1_startFrame_to_array[physCellId%2];
-	    	  break;
-	      case 16:
-	    	  //physCellId%2 possible value are 0,1
-	    	  if(physCellId%2 == 0)
-	    		  sib1_startFrame = 0;
-	    	  else
-	    		  sib1_startFrame = 1; // the only case in which the starting frame is odd
-	    	  break;
-	      default:
-	    	  LOG_E(RRC, "Number of repetitions %d not allowed", nb_rep);
-	    	  return -1;
-	      }
-
-	      //check the actual frame w.r.t SIB1-NB starting frame
-	      if(frameP < sib1_startFrame + period_nb*256){
-	    	  LOG_T(RRC, "the actual frame %d is before the SIB1-NB starting frame %d of the period--> bcch_sdu_legnth = 0", frameP, sib1_startFrame + period_nb*256);
-	    	  return -1;
-	      }
-
-
-	      //calculate offset between SIB1-NB repetitions (repetitions are equally spaced)
-	      offset = (sib1_period_NB_IoT-(16*nb_rep))/nb_rep;
-	      /*
-	       * possible offset results (even numbers):
-	       * nb_rep= 4 ---> offset = 48
-	       * nb_rep = 8 --> offset = 16
-	       * nb_rep = 16 --> offset = 0
-	       */
-
-
-
-	      //loop over the SIB1-NB period
-	      for( int i = 0; i < nb_rep; i++)
-	      {
-	    	  //find the correct sib1-nb repetition interval in which the actual frame is
-
-	    	  //this is the start frame of a repetition
-	    	  index = sib1_startFrame+ i*(16+offset) + period_nb*256;
-
-	    	  //the actual frame is in a gap between two consecutive repetitions
-	    	  if(frameP < index)
-	    	  {
-	    		  	ndlsch_SIB1->sib1_rep_start      = 0;
-	    		  	ndlsch_SIB1->relative_sib1_frame = 0;
-	    	  	    return -1;
-	    	  }
-	    	  //this is needed for ndlsch_procedure
-	    	  else if(frameP == index)
-	    	  {
-	    		  //the actual frame is the start of a new repetition (SIB1-NB should be retransmitted)
-	    		  ndlsch_SIB1->sib1_rep_start      = 1;
-	    		  ndlsch_SIB1->relative_sib1_frame = 1;
-	    		  return sib1_startFrame;
-	    	  }
-	    	  else
-	    		  ndlsch_SIB1->sib1_rep_start = 0;
-
-	    	  //check in the current SIB1_NB repetition
-	    	  if(frameP>= index && frameP <= (index+15))
-	    	  {
-	    		  //find if the actual frame is one of the "every other frame in 16 continuous frame" in which SIB1-NB is transmitted
-
-	    		  for(int y = 0; y < 16; y += 2) //every other frame (increment by 2)
-	    		  {
-	    			  if(frameP == index + y)
-	    			  {
-	    				  //this flag tell which is the number of the current frame w.r.t the 8th (over the continuous 16) in a repetition
-	    				  ndlsch_SIB1->relative_sib1_frame = y/2 + 1; //1st, 2nd, 3rd,...
-	    				  return sib1_startFrame;
-	    			  }
-	    		  }
-
-	    		  //if we are here means that the frame was inside the repetition interval but not considered for SIB1-NB transmission
-	    		  ndlsch_SIB1->relative_sib1_frame = 0;
-	    		  return -1;
-
-//XXX this part has been commented because in case that the "relative_sib1_frame" flag is not needed is necessary just a simple check if even or odd frame depending on sib1_startFrame
-
-//	    		  if(sib1_startFrame%2 != 0){ // means that the starting frame was 1 --> sib1-NB is transmitted in every odd frame
-//	    			  if(frameP%2 == 1){ //the actual frame is odd
-//	    				  return sib1_startFrame;
-//	    			 }
-//	    		  }
-//
-//	    		  //in all other starting frame cases SIB1-NB is transmitted in the even frames inside the corresponding repetition interval
-//	    		  if(frameP%2 == 0){ // SIB1-NB is transmitted
-//	    			  return sib1_startFrame;
-//	    		  }
-//---------------------------------------------------------------------------------------------------------------------------------------------------------
-	    	  }
-
-	      }
-
-	      return -1;
-}
-
-//New----------------------------------------------------
-//Function for check if the current frame is the start of a new SIB1-NB period
-uint8_t is_SIB1_start_NB_IoT(const frame_t    		frameP,
-		                         long					        schedulingInfoSIB1,   //from the mib
-		                         int						      physCellId            //by configuration
-		                        )
-{
-	uint8_t    nb_rep = 0;        // number of sib1-nb repetitions within the 256 radio frames
-	uint32_t   sib1_startFrame;
-  //	uint32_t sib1_period_NB_IoT = 256;//from specs TS 36.331 (rf)
-  //	uint8_t index;
-  //	int offset;
-  //	int period_nb; // the number of the actual period over the 1024 frames
-
-
-    		if(schedulingInfoSIB1 > 11 || schedulingInfoSIB1 < 0){
-    			LOG_E(RRC, "is_SIB1_NB_IoT: schedulingInfoSIB1 value not allowed");
-    			return 0;
-    		}
-
-	      //number of repetitions
-	      nb_rep = npdsch_rep_to_array[schedulingInfoSIB1%3];
-
-	      //based on number of rep. and the physical cell id we derive the starting radio frame (TS 36.213 Table 16.4.1.3-3/4)
-	      switch(nb_rep)
-	      {
-	      case 4:
-	    	  //physCellId%4 possible value are 0,1,2,3
-	    	  sib1_startFrame = sib1_startFrame_to_array[physCellId%4];
-	    	  break;
-	      case 8:
-	    	  //physCellId%2possible value are 0,1
-	    	  sib1_startFrame = sib1_startFrame_to_array[physCellId%2];
-	    	  break;
-	      case 16:
-	    	  //physCellId%2 possible value are 0,1
-	    	  if(physCellId%2 == 0)
-	    		  sib1_startFrame = 0;
-	    	  else
-	    		  sib1_startFrame = 1; // the only case in which the starting frame is odd
-	    	  break;
-	      default:
-	    	  LOG_E(RRC, "Number of repetitions %d not allowed", nb_rep);
-	    	  return -1;
-	      }
-
-	      if((frameP-sib1_startFrame)%256 == 0)
-	    	  return 0;
-	      else
-	    	  return -1;
-
-}
-//-------------------------------------------------------
-
-//---------------------------------------------------------------------------
-//New
-int si_windowLength_to_rf[7] = {16,32,48,64,96,128,160}; //TS 36.331  v14.2.1 pag 587
-int si_repPattern_to_nb[4]   = {2,4,8,16};
-int si_period_to_nb[7]       = {64,128,256,512,1024,2048,4096};
-//New---------------------------------------------------------------------------
-boolean_t is_SIB23_NB_IoT(const frame_t     frameP,
-		                      const frame_t		  h_frameP,               // the HSFN (increased by 1 every SFN wrap around) (10 bits)
-		                      long				      si_period,              //SI-periodicity (value given by the Enumerative of the SIB1-NB)
-		                      long				      si_windowLength_ms,     //Si-windowlength (ms) received as an enumerative (see the IE of SIB1-NB)
-		                      long*				      si_RadioFrameOffset,    //Optional
-		                      long				      si_RepetitionPattern    // is given as an Enumerated
-		                      )
-{
-
-	long w_start; //start of the si-window
-	long nb_periods; // number of si_periodicity inside an HSFN (1024 rf)
-	long si_offset; // offset for the starting of the SI-window
-	long si_windowLength;
-	long si_pattern;
-	long hsfn_in_periodicity;
-	long si_periodicity;
-
-
-	/*
-	 * SIB23-NB
-	 *
-	 * The entire scheduling of the SI-Message is given by SIB1-NB information
-	 *
-	 * Parameters:
-	 * -si_windowlenght(w) (millisecond) (same for all SI messages)
-	 * -si_radioFrameOffset (radio frame) (same for all SI messages) //optional
-	 * -si_periodicity (T) (radioframe)
-	 * -si_repetitionPattern (long)
-	 *
-	 * Staring of the SI-Window: (TS 36.331 ch 5.2.3a)
-	 * >Since we have only 1 entry in the SchedulingInfoList (SIB23-NB) --> n=1
-	 * >therefore  x = (n-1)*w = 0
-	 * >Staring subframe = #0
-	 * >Starting Frame = (HSFN*1024 + SFN) mod T = FLOOR(x/10 = 0) + si_radioFrameOffset = si_radioFrameOffset
-	 *
-	 *Procedure
-	 *0) get the si_period in frame and check if the actual frame is in an HSFN interval that will include an si-window
-	 *0.1)check si_window value is not a spare and get the si_windowLength in radio frames
-	 *0.2)check si-window length and si-periodicity relation make sense
-	 *0.3) get the si_repetitionPattern
-	 *0.4)Since the si_offset is optional, whenever is not defined we put to 0 that value otherwise we use the value defined
-	 *1)consider the number of time of si_periodiciy within 1 HFSN (1024) because after SFN wrap around
-	 *2)evaluate the start of the si_window and check over the nb_periodicity if the current frame is within one of them
-	 *3)check is the si_offset is even or odd
-	 *
-	 *NOTE1:
-	 *(due to the si_repetitionPattern that start from the first frame of the si_window used and any value is even)
-	 *-if si_offset is even: the radio frame for SI-Transmission must be even (following the repPattern)
-	 *-if si_offset is odd:  the radio frame for the SI-Transmission must be odd (following the pattern)
-	 *
-	 *NOTE2:
-	 *the starting frame (thanks to HSFN) is always between 0-1023 --> the working interval to be considered
-	 *the nb_periods is not affected by the offset since maxOffset = 15 but the minPeriodicity = 64
-	 *
-	 */
-
-	if(si_period == SchedulingInfo_NB_r13__si_Periodicity_r13_spare)
-	{
-		LOG_E(RRC, "is_SIB23_NB_IoT: Invalid parameters in SIB1-NB --> si_periodicity not defined (spare value)\n");
-						return FALSE;
-	}
-
-	//translate the enumerative into numer of Radio Frames
-	si_periodicity = si_period_to_nb[si_period];
-
-	//check if the actual frame is within an HSFN interval that will include si-window (relation with the si-periodicity)
-	//this could happen when the si-periodicity is larger than a HSFN interval (1024 rf)
-	hsfn_in_periodicity = (int) si_periodicity/1024;
-
-	if(hsfn_in_periodicity > 1){//periodicity is larger than 1024rf (HSFN) and  not in all the hsfn a transmission will occurr
-
-		if(h_frameP%hsfn_in_periodicity != 0)// is not an hsfn inside the periodicity in which a transmission will occurr
-		{
-		LOG_I(RRC, "the actual HSFN correspond to an interval in which a SIB23 transmission will not occurr\n");
-		return FALSE;
-		}
-	}
-
-	if(si_windowLength_ms == SystemInformationBlockType1_NB__si_WindowLength_r13_spare1){
-		LOG_E(RRC, "is_SIB23_NB_IoT: Invalid parameters in SIB1-NB --> si_windowLength not defined (spare value)\n");
-				return FALSE;
-	}
-
-	//get the si_window from enumerative into Radio FRames
-	si_windowLength = si_windowLength_to_rf[si_windowLength_ms];
-
-	if(si_windowLength > si_periodicity){
-		LOG_E(RRC, "is_SIB23_NB_IoT: Invalid parameters in SIB1-NB --> si_windowLength > si_periodicity\n");
-		return FALSE;
-	}
-
-	//get the si_pattern from the enumerative
-	si_pattern = si_repPattern_to_nb[si_RepetitionPattern];
-
-	if(si_RadioFrameOffset == NULL)//may is not defined since is optional
-	{
-		LOG_I(RRC, "si_RadioFrame offset was NULL --> set = 0\n");
-		si_offset = 0;
-	}
-	else{
-		si_offset = *(si_RadioFrameOffset);
-	}
-
-
-	//check how many nb_of periods in 1 hsfn
-	if(si_periodicity >= 1024){
-		nb_periods = 1;
-	}
-	else
-		nb_periods = 1024L / si_periodicity; // can get: 16,8,4,2 based on si_peridicity values
-
-
-	for(int i = 0; i < nb_periods; i++) {
-
-		w_start = si_offset+(i*si_periodicity); //if si_periodicity >= 1024--> imax =0
-
-	    if(frameP >= w_start && frameP <= w_start + si_windowLength -1)
-	    {
-	    	//this implementation is quite inefficent --> loop through the si-window
-	    	for(int x= 0; x < si_windowLength/si_pattern; x++)
-	    	{
-	    		 if(frameP == w_start +x*si_pattern)
-	    			 return 1;
-	    	}
-
-	    	return 0; //the frame is in the si_window bu not belongs to the repetition pattern
-	    }
-
-	    if(w_start > frameP)// the frame is out of the si_window in the current period
-	    	return FALSE;
-	}
-
-	return FALSE;
-}
-
-//defined in L2_interface
-//function called by eNB_dlsch_ulsch_scheduler--> Schedule_SI (eNB_scheduler_bch) for getting the bcch_sdu_legnth (BCCH case for SIBs and MIB)
-//Function called in schedule_RA for getting RRCConnectionSetup message (Msg4) length of rrc_sdu_length (CCCH case)
-//Function will be called by schedule_MIB??? when subframe#0
 int8_t mac_rrc_data_req_eNB_NB_IoT(
   const module_id_t Mod_idP,
   const int         CC_id,
   const frame_t     frameP,
   const frame_t		h_frameP,
-  const sub_frame_t   subframeP, //need for the case in which both SIB1-NB and SIB23-NB will be scheduled in the same frame
+  const sub_frame_t   subframeP, //need for the case in which both SIB1-NB_IoT and SIB23-NB_IoT will be scheduled in the same frame
   const rb_id_t     Srb_id,
   uint8_t*    const buffer_pP,
-  long				schedulingInfoSIB1,//from the mib
-  int				physCellId, //from the MAC instance-> common_channel
-  mib_flag_t		mib_flag
+  uint8_t		flag
 )
 {
+    SRB_INFO_NB_IoT *Srb_info;
+    uint8_t Sdu_size=0;
 
-  SRB_INFO_NB_IoT *Srb_info;
-  uint8_t Sdu_size=0;
+    ///MIB
+    if( flag == 1 )
+    {
+        if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT == 255)
+        {
+            printf("[eNB %d] MAC Request for MIB-NB and MIB-NB not initialized\n",Mod_idP);
+            // exit here
+        }
 
+        memcpy(&buffer_pP[0],eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].MIB_NB_IoT,eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT);
 
-#ifdef DEBUG_RRC
-  int i;
-  LOG_T(RRC,"[eNB %d] mac_rrc_data_req_eNB_NB_IoT to SRB ID=%d\n",Mod_idP,Srb_id);
-#endif
+        return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT);
+    }
+    ///SIB1
+    else if( flag == 2 )
+    {
+        if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT == 255)
+        {
+            printf("[eNB %d] MAC Request for SIB1-NB and SIB1-NB_IoT not initialized\n",Mod_idP);
+            // exit here
+        }
 
+        memcpy(&buffer_pP[0],eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB1_NB_IoT,eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT);
 
-    if((Srb_id & RAB_OFFSET) == BCCH0_NB_IoT){
+        return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT);
+    }
+    ///SIB23
+    else if( flag == 3 )
+    {
+        if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT == 255)
+        {
+            printf("[eNB %d] MAC Request for SIB23-NB and SIB23-NB_IoT not initialized\n",Mod_idP);
+            // exit here
+        }
 
+        memcpy(&buffer_pP[0],eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB23_NB_IoT,eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT);
+        return(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT);
+    }
+    ///Msg4 transmission (RRCConnectionSetup)
+    else
+    {
+        printf("[eNB %d] Frame %d CCCH request (Srb_id %d)\n",Mod_idP,frameP, Srb_id);
 
-     // Requesting for the MIB-NB
-      if(mib_flag == MIB_FLAG_YES){
+        if(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].Srb0.Active==0)
+        {
+            printf("[eNB %d] CCCH Not active\n",Mod_idP);
+            return -1;
+        }
 
-    	  //XXX to be check when MIB-NB should be initialized
-    	  if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT == 255) {
-    	       LOG_E(RRC,"[eNB %d] MAC Request for MIB-NB and MIB-NB not initialized\n",Mod_idP);
-    	       // exit here 
-    	   }
+        Srb_info = &eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].Srb0;
 
-    	  memcpy(&buffer_pP[0],
-    	      	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].MIB_NB_IoT,
-    	      	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT);
+        // check if data is there for MAC
+        if(Srb_info->Tx_buffer.payload_size>0) //Fill buffer
+        {
+            printf("[eNB %d] CCCH (%p) has %d bytes (dest: %p, src %p)\n",Mod_idP,Srb_info,Srb_info->Tx_buffer.payload_size,buffer_pP,Srb_info->Tx_buffer.Payload);
 
-    	  	//XXX RRC_MAC_BCCH_DATA_REQ message not implemented in MAC layer (eNB_scheduler.c under ITTI)
+            //RRC_MAC_CCCH_DATA_REQ not implemented in MAC/eNB_scheduler.c
 
-    	  	#ifdef DEBUG_RRC
-    	      LOG_T(RRC,"[eNB %d] Frame %d : BCCH request => MIB_NB\n",Mod_idP,frameP);
+            memcpy(buffer_pP, //CCCH_pdu.payload[0]
+                    Srb_info->Tx_buffer.Payload,Srb_info->Tx_buffer.payload_size);
 
-    	     for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT; i++) {
-    	      		    LOG_T(RRC,"%x.",buffer_pP[i]);
-    	      	}
+            Sdu_size = Srb_info->Tx_buffer.payload_size;
+            Srb_info->Tx_buffer.payload_size=0;
+        }
 
-    	      		    LOG_T(RRC,"\n");
-    	    #endif
-
-    	    return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_MIB_NB_IoT); //exit from the function
-      }
-
-      //Requesting for SI Message
-      //XXX to be check when it is initialized
-      if(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SI.Active==0) { //is set when we call openair_rrc_on function
-    	  LOG_E(RRC, "SI value on the carrier = 0");
-        return 0;
-      }
-
-      if(schedulingInfoSIB1 > 11 || schedulingInfoSIB1 < 0){
-    	  LOG_E(RRC, "schedulingInfoSIB1 value incorrect");
-    	  return 0;
-      }
-
-
-      /*check if SIBs are initialized*/
-      //FIXME to be check when both are initialize and if make sense to have it
-            if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT == 255) {
-              LOG_E(RRC,"[eNB %d] MAC Request for SIB1-NB and SIB1-NB_IoT not initialized\n",Mod_idP);
-              // exit here 
-            }
-
-            if (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT == 255) {
-                    LOG_E(RRC,"[eNB %d] MAC Request for SIB23-NB and SIB23-NB_IoT not initialized\n",Mod_idP);
-              // exit here
-            }
-
-
-///XXX Following FAPI implementation in principle we should only take care of get the PDU from the MAC only when the SIB1-NB period Start
-
-         //sib1-NB scheduled in subframe #4
-         if(subframeP == 4 && is_SIB1_start_NB_IoT(frameP,schedulingInfoSIB1, physCellId)!= -1){
-
-			  memcpy(&buffer_pP[0],
-					  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB1_NB_IoT,
-					  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT);
-
-			  //XXX RRC_MAC_BCCH_DATA_REQ message not implemented in MAC layer (eNB_scheduler.c under ITTI)
-
-
-			#ifdef DEBUG_RRC
-			   LOG_T(RRC,"[eNB %d] Frame %d : BCCH request => SIB1_NB\n",Mod_idP,frameP);
-
-			   for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT; i++) {
-			    LOG_T(RRC,"%x.",buffer_pP[i]);
-			    }
-
-			    LOG_T(RRC,"\n");
-			#endif
-
-			    return (eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB1_NB_IoT);
-         }
-
-         //check for SIB23-Transmission
-
-         for(int i = 0; i<  eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB_IoT->schedulingInfoList_r13.list.count; i++){
-        	 if(is_SIB23_NB_IoT(frameP,h_frameP,
-        		 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB_IoT->schedulingInfoList_r13.list.array[i]->si_Periodicity_r13,
-				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB_IoT->si_WindowLength_r13,
-				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB_IoT->si_RadioFrameOffset_r13,
-				 eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sib1_NB_IoT->schedulingInfoList_r13.list.array[i]->si_RepetitionPattern_r13))
-        	 {
-
-        	 memcpy(&buffer_pP[0],
-        			eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].SIB23_NB_IoT,
-        	    	eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT);
-
-        	    #ifdef DEBUG_RRC
-        	    	LOG_T(RRC,"[eNB %d] Frame %d BCCH request => SIB 2-3\n",Mod_idP,frameP);
-
-        	    	for (i=0; i<eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT; i++) {
-        	    		    LOG_T(RRC,"%x.",buffer_pP[i]);
-        	    		 }
-
-        	    		 LOG_T(RRC,"\n");
-        	    #endif
-
-        	    return(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].sizeof_SIB23_NB_IoT);
-        	 }
-         }
-        return(0);
+        return (Sdu_size);
     }
 
-    //called when is requested the Msg4 transmission (RRCConnectionSetup)
-    if( (Srb_id & RAB_OFFSET ) == CCCH_NB_IoT) {
-      LOG_T(RRC,"[eNB %d] Frame %d CCCH request (Srb_id %d)\n",Mod_idP,frameP, Srb_id);
-
-      if(eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].Srb0.Active==0) {
-        LOG_E(RRC,"[eNB %d] CCCH Not active\n",Mod_idP);
-        return -1;
-      }
-
-      Srb_info=&eNB_rrc_inst_NB_IoT[Mod_idP].carrier[CC_id].Srb0;
-
-      // check if data is there for MAC
-      if(Srb_info->Tx_buffer.payload_size>0) { //Fill buffer
-        LOG_D(RRC,"[eNB %d] CCCH (%p) has %d bytes (dest: %p, src %p)\n",Mod_idP,Srb_info,Srb_info->Tx_buffer.payload_size,buffer_pP,Srb_info->Tx_buffer.Payload);
-
-        //RRC_MAC_CCCH_DATA_REQ not implemented in MAC/eNB_scheduler.c
-
-        memcpy(buffer_pP, //CCCH_pdu.payload[0]
-        	   Srb_info->Tx_buffer.Payload,Srb_info->Tx_buffer.payload_size);
-
-        Sdu_size = Srb_info->Tx_buffer.payload_size;
-        Srb_info->Tx_buffer.payload_size=0;
-      }
-
-      return (Sdu_size);
-    }
-
-  return(0);
 }
 
 //defined in L2_interface

@@ -64,63 +64,7 @@ RRC_status_t rrc_rx_tx_NB_IoT(protocol_ctxt_t* const ctxt_pP, const uint8_t  enb
 //long binary_search_float(float elements[], long numElem, float value);--> used only at UE side
 
 
-//----------------------------------------
 
-//New
-/**\brief function for evaluate if the SIB1-NB transmission occur
- * return the SIB1 starting frame
- * called by phy_procedure_eNB_Tx before calling the npdsch_procedure
- */
-uint32_t is_SIB1_NB_IoT(
-		const frame_t    	frameP,
-		long					  schedulingInfoSIB1,//from the mib
-		int						  physCellId, //by configuration
-		NB_IoT_eNB_NDLSCH_t	*ndlsch_SIB1
-		);
-//--------------------------------------
-
-//New
-/**\brief function for evaluate if the SIB1-NB period start
- * return 0 = TRUE
- * return -1 = FALSE
- * called by the NB_mac_rrc_data_req
- */
-uint8_t is_SIB1_start_NB_IoT(
-		const frame_t    		frameP,
-		long					schedulingInfoSIB1,//from the mib
-		int						physCellId //by configuration
-		);
-
-
-//New
-/**\brief function for evaluate if the SIB23-NB transmission occurr
- * called by the NB_mac_rrc_data_req
- *
- */
-boolean_t is_SIB23_NB_IoT(
-		const frame_t     	frameP,
-		const frame_t		h_frameP, // the HSFN (increased by 1 every SFN wrap around) (10 bits)
-		long				si_period, //SI-periodicity (rf)
-		long				si_windowLength_ms, //Si-windowlength (ms) XXX received as an enumerative (see the IE of SIB1-NB)
-		long*				si_RadioFrameOffset, //Optional
-		long				si_RepetitionPattern // is given as an Enumerated
-		);
-//-----------------------------------
-
-
-//defined in L2_interface
-int8_t mac_rrc_data_req_eNB_NB_IoT(
-  const module_id_t Mod_idP,
-  const int         CC_id,
-  const frame_t     frameP,
-  const frame_t		h_frameP,
-  const sub_frame_t   subframeP,
-  const rb_id_t     Srb_id,
-  uint8_t*    const buffer_pP,
-  long				schedulingInfoSIB1,//from the mib
-  int				physCellId, //from the MAC instance-> common_channel
-  mib_flag_t		mib_flag
-);
 //---------------------------------------
 
 
@@ -550,16 +494,15 @@ uint8_t rrc_eNB_get_next_transaction_identifier_NB_IoT(module_id_t module_idP);
 int rrc_init_global_param_NB_IoT(void);
 
 //L2_interface.c
-int8_t mac_rrc_data_req_NB_IoT(
+int8_t mac_rrc_data_req_eNB_NB_IoT(
   const module_id_t Mod_idP,
   const int         CC_id,
   const frame_t     frameP,
+  const frame_t   h_frameP,
+  const sub_frame_t   subframeP, //need for the case in which both SIB1-NB_IoT and SIB23-NB_IoT will be scheduled in the same frame
   const rb_id_t     Srb_id,
-  const uint8_t     Nb_tb,
-  uint8_t*    const buffer_pP,
-  const eNB_flag_t  enb_flagP,
-  const uint8_t     eNB_index,
-  const uint8_t     mbsfn_sync_area
+  uint8_t* const buffer_pP,
+  uint8_t   flag
 );
 
 
