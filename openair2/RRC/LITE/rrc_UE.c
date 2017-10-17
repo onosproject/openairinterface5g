@@ -3520,7 +3520,7 @@ static void dump_sib13( SystemInformationBlockType13_r9_t *sib13 )
 }
 #endif
 
-//TTN
+//TTN - SIB18
 //-----------------------------------------------------------------------------
 static void dump_sib18(SystemInformationBlockType18_r12_t *sib18){
    LOG_I( RRC, "[UE] Dumping SIB18\n" );
@@ -3533,11 +3533,26 @@ static void dump_sib18(SystemInformationBlockType18_r12_t *sib18){
        LOG_I(RRC, " SIB18 prb_Start_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Start_r12);
        LOG_I(RRC, " SIB18 prb_End_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_End_r12);
        //to add more log
-
      }
-
-
 }
+
+//TTN -  SIB19
+//-----------------------------------------------------------------------------
+static void dump_sib19(SystemInformationBlockType19_r12_t *sib19){
+   LOG_I( RRC, "[UE] Dumping SIB19\n" );
+   for (int i = 0; i < sib19->discConfig_r12->discRxPool_r12.list.count; i++) {
+       LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, sib19->discConfig_r12->discRxPool_r12.list.count);
+       LOG_I(RRC, " SIB19 cp_Len_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->cp_Len_r12);
+       LOG_I(RRC, " SIB19 discPeriod_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->discPeriod_r12);
+       LOG_I(RRC, " SIB19 numRetx_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRetx_r12);
+       LOG_I(RRC, " SIB19 numRepetition_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRepetition_r12);
+       LOG_I(RRC, " SIB19 prb_Num_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Num_r12);
+       LOG_I(RRC, " SIB19 prb_Start_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Start_r12);
+       LOG_I(RRC, " SIB19 prb_End_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_End_r12);
+       //to add more log
+     }
+}
+
 //-----------------------------------------------------------------------------
 static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
@@ -3805,6 +3820,24 @@ static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_in
 
        }
        break;
+
+       //TTN - SIB19
+       case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib19_v1250:
+          if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&16384) == 0) {
+             UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=16384;
+             new_sib=1;
+
+             memcpy( UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index], &typeandinfo->choice.sib19_v1250, sizeof(SystemInformationBlockType19_r12_t) );
+             LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB19 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
+             dump_sib19( UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index] );
+             // adding here function to store necessary parameters to transfer to PHY layer
+             LOG_I( RRC, "[FRAME %05"PRIu32"][RRC_UE][MOD %02"PRIu8"][][--- MAC_CONFIG_REQ (SIB19 params eNB %"PRIu8") --->][MAC_UE][MOD %02"PRIu8"][]\n",
+                       ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
+             //should modify function rrc_mac_config_req_ue() to transfer SL-related parameters to PHY
+             //rrc_mac_config_req_ue();
+
+          }
+          break;
 
     default:
       break;

@@ -591,7 +591,7 @@ typedef struct UE_RRC_INST_s {
   SystemInformationBlockType11_t *sib11[NB_CNX_UE];
   //TTN - SIB18
   SystemInformationBlockType18_r12_t *sib18[NB_CNX_UE];
-
+  SystemInformationBlockType19_r12_t *sib19[NB_CNX_UE];
 
 #if defined(Rel10) || defined(Rel14)
   uint8_t                           MBMS_flag;
