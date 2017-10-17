@@ -226,5 +226,18 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t                **rxdataF,
 
 void extract_CQI_NB_IoT(void *o,UCI_format_NB_IoT_t uci_format,NB_IoT_eNB_UE_stats *stats,uint8_t N_RB_DL, uint16_t * crnti, uint8_t * access_mode);
 
+//*****************vincent part for nprach ******************//
+void RX_NPRACH_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, int16_t *Rx_buffer); 
 
+uint32_t TA_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, 
+                              int16_t *Rx_sub_sampled_buffer, 
+                              uint16_t sub_sampling_rate, 
+                              uint16_t FRAME_LENGTH_COMPLEX_SUB_SAMPLES, 
+                              uint32_t estimated_TA_coarse, 
+                              char coarse); 
+
+uint8_t NPRACH_detection_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, int16_t *Rx_sub_sampled_buffer, uint16_t sub_sampling_rate, uint32_t FRAME_LENGTH_COMPLEX_SUB_SAMPLES); 
+
+int16_t* sub_sampling_NB_IoT(int16_t *input_buffer, uint32_t length_input, uint32_t *length_ouput, uint16_t sub_sampling_rate);
+//************************************************************//
 #endif
