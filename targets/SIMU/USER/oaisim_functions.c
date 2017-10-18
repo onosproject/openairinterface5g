@@ -1046,7 +1046,6 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
   int CC_id  = device->CC_id;
 
   int subframe;
-  int n_ra_prb;
   int read_samples, max_samples;
   openair0_timestamp last = last_eNB_rx_timestamp[eNB_id][CC_id];
 
@@ -1056,6 +1055,8 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
   LTE_DL_FRAME_PARMS *frame_parms=&PHY_vars_UE_g[0][CC_id]->frame_parms;
 
   uint32_t frame;
+  int n_ra_prb;
+  //uint8_t tdd_mapindex       = PHY_vars_UE_g[0][0]->prach_resources[eNB_id]->ra_TDD_map_index;
 
   if (do_ofdm_mod)
   	LOG_D(EMU,"eNB_trx_read nsamps %d TS(%"PRId64",%"PRId64") => subframe %d\n",nsamps,
@@ -1071,7 +1072,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 
   while (nsamps) {
     while (current_eNB_rx_timestamp[eNB_id][CC_id] == last) {
-      LOG_D(EMU,"eNB: current TS %"PRId64", last TS %"PRId64", sleeping\n",current_eNB_rx_timestamp[eNB_id][CC_id],last_eNB_rx_timestamp[eNB_id][CC_id]);
+      //LOG_D(EMU,"eNB: current TS %"PRId64", last TS %"PRId64", sleeping\n",current_eNB_rx_timestamp[eNB_id][CC_id],last_eNB_rx_timestamp[eNB_id][CC_id]);
       usleep(500);
     }
 
@@ -1095,13 +1096,13 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 		subframe = (last/PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti)%10;
 		frame = (last/(10*PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti))%1023;
 	}
+      //n_ra_prb = get_prach_prb_offset(frame_parms, PHY_vars_UE_g[0][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index, PHY_vars_UE_g[0][CC_id]->proc.proc_rxtx[subframe&0x1].frame_tx);
       printf("[oaisim_functs] subframe %d, frame %d\n",subframe,frame);
       LOG_D(PHY,"eNB_trx_read generating UL subframe %d (Ts %llu, current TS %llu)\n",
             subframe,(unsigned long long)*ptimestamp,
             (unsigned long long)current_eNB_rx_timestamp[eNB_id][CC_id]);
 
-      printf("is Prach generated? %d, is prach_subframe? %d, frame %d, subframe %d, mode %d, n_ra_prb %d\n",PHY_vars_UE_g[0][CC_id]->generate_prach,is_prach_subframe(frame_parms,frame,subframe),frame,subframe,PHY_vars_UE_g[0][CC_id]->UE_mode[eNB_id], 11111);
-
+      printf("is Prach generated? %d, is prach_subframe? %d, frame %d, subframe %d, mode %d\n",PHY_vars_UE_g[0][CC_id]->generate_prach,is_prach_subframe(frame_parms,frame,subframe),frame,subframe,PHY_vars_UE_g[0][CC_id]->UE_mode[eNB_id]);
       if (do_ofdm_mod)
       {
 	if (is_prach_subframe(frame_parms,frame,subframe) && PHY_vars_UE_g[0][CC_id]->generate_prach)
@@ -1115,7 +1116,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 		        0,  // frame is only used for abstraction
 		        eNB_id,
 		        CC_id);
-		write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][0]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,1);
+		write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][CC_id]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 	//generate_prach(PHY_vars_UE_g[0][0],eNB_id,subframe,frame);
 	//PHY_vars_UE_g[0][0]->generate_prach=1;
 	}
@@ -1131,6 +1132,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
                 CC_id);
       }
       else
+      {
         do_UL_sig(UE2eNB,
                 enb_data,
                 ue_data,
@@ -1140,6 +1142,9 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
                 0,  // frame is only used for abstraction
                 eNB_id,
                 CC_id);
+      if (is_prach_subframe(frame_parms,frame,subframe))
+	write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][CC_id]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
+      }
 
       last_eNB_rx_timestamp[eNB_id][CC_id] = last;
     }
@@ -1181,7 +1186,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
       usleep(500);
     }
     while (current_UE_rx_timestamp[UE_id][CC_id] == last) {
-      LOG_D(EMU,"UE_trx_read : current TS %"PRId64", last TS %"PRId64", sleeping\n",current_UE_rx_timestamp[UE_id][CC_id],last_UE_rx_timestamp[UE_id][CC_id]);
+      //LOG_D(EMU,"UE_trx_read : current TS %"PRId64", last TS %"PRId64", sleeping\n",current_UE_rx_timestamp[UE_id][CC_id],last_UE_rx_timestamp[UE_id][CC_id]);
 
       usleep(500);
     }

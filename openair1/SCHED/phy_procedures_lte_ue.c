@@ -3733,7 +3733,10 @@ void ue_pdsch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, PDSC
         if (ue->frame_parms.Ncp==0) {
           if ((m==3) || (m==6) || (m==9) || (m==12))
             //LOG_D(PHY,"[UE %d] dlsch->active in subframe %d => %d, l=%d\n",phy_vars_ue->Mod_id,subframe_rx,phy_vars_ue->dlsch_ue[eNB_id][0]->active, l);
-            lte_dl_bf_channel_estimation(ue,eNB_id,0,subframe_rx*2+(m>6?1:0),5,m);
+	    if (ue->do_ofdm_mod)
+		lte_dl_bf_channel_estimation_freq(ue,eNB_id,0,subframe_rx*2+(m>6?1:0),5,m);
+	    else
+            	lte_dl_bf_channel_estimation(ue,eNB_id,0,subframe_rx*2+(m>6?1:0),5,m);
         } else {
           LOG_E(PHY,"[UE %d]Beamforming channel estimation not supported yet for TM7 extented CP.\n",ue->Mod_id);
         }

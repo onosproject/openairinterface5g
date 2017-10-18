@@ -218,7 +218,11 @@ void multipath_channel_freq(channel_desc_t *desc,
                        double *rx_sig_re[2],
                        double *rx_sig_im[2],
                        uint32_t length,
-                       uint8_t keep_channel)
+                       uint8_t keep_channel,
+		       uint8_t eNB_id,
+		       uint8_t UE_id,
+		       uint8_t CC_id,
+		       uint8_t th_id)
 {
 
   int ii,j,k,f,f2;
@@ -229,10 +233,10 @@ void multipath_channel_freq(channel_desc_t *desc,
   dd = abs(desc->channel_offset);
 
   int nb_rb, n_samples, ofdm_symbol_size, symbols_per_tti;
-  nb_rb=PHY_vars_UE_g[0][0]->frame_parms.N_RB_DL;
-  n_samples=PHY_vars_UE_g[0][0]->frame_parms.N_RB_DL*12+1;
-  ofdm_symbol_size=length/PHY_vars_UE_g[0][0]->frame_parms.symbols_per_tti;
-  symbols_per_tti=length/PHY_vars_UE_g[0][0]->frame_parms.ofdm_symbol_size;
+  nb_rb=PHY_vars_UE_g[UE_id][CC_id]->frame_parms.N_RB_DL;
+  n_samples=PHY_vars_UE_g[UE_id][CC_id]->frame_parms.N_RB_DL*12+1;
+  ofdm_symbol_size=length/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.symbols_per_tti;
+  symbols_per_tti=length/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.ofdm_symbol_size;
 
   //FILE *file;
   //file = fopen("multipath.txt","w");
@@ -342,30 +346,32 @@ void multipath_channel_prach(channel_desc_t *desc,
                        double *rx_sig_re[2],
                        double *rx_sig_im[2],
 		       uint32_t length,
-                       uint8_t keep_channel)
+                       uint8_t keep_channel,
+		       uint8_t eNB_id,
+		       uint8_t UE_id,
+		       uint8_t CC_id,
+		       uint8_t th_id)
 {
-  LTE_DL_FRAME_PARMS* const fp      = &PHY_vars_UE_g[0][0]->frame_parms;
+  LTE_DL_FRAME_PARMS* const fp      = &PHY_vars_UE_g[UE_id][CC_id]->frame_parms;
   int prach_samples;
-  lte_frame_type_t frame_type = PHY_vars_eNB_g[0][0]->frame_parms.frame_type;
-  uint8_t prach_ConfigIndex   = PHY_vars_eNB_g[0][0]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
+  lte_frame_type_t frame_type = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.frame_type;
+  uint8_t prach_ConfigIndex   = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
   uint8_t prach_fmt = get_prach_fmt(prach_ConfigIndex,frame_type);
   int n_ra_prb;
   int ii,j,k,f,l;
   struct complex rx_tmp;
   double delta_f;
-  //FILE *file_prach;
-  //file_prach = fopen("multipath_prach.txt","w");
   prach_samples = (prach_fmt<4)?13+839+12:3+139+2;
   double path_loss = pow(10,desc->path_loss_dB/20);
   int nb_rb, n_samples, ofdm_symbol_size, symbols_per_tti;
   
-  n_ra_prb = get_prach_prb_offset(fp, PHY_vars_UE_g[0][0]->prach_resources[0]->ra_TDD_map_index, PHY_vars_eNB_g[0][0]->proc.frame_prach);
+  n_ra_prb = get_prach_prb_offset(fp, PHY_vars_UE_g[UE_id][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index, PHY_vars_UE_g[UE_id][CC_id]->proc.proc_rxtx[th_id].frame_tx);
   nb_rb=fp->N_RB_DL;
   n_samples=fp->N_RB_DL*12+1;
   ofdm_symbol_size=fp->ofdm_symbol_size;
   symbols_per_tti=fp->symbols_per_tti;
   delta_f = (prach_fmt<4)?nb_rb*180000/((n_samples-1)*12):nb_rb*180000/((n_samples-1)*2);
-  printf("prach_samples %d, n_ra_prb %d, delta_f %e\n",prach_samples,get_prach_prb_offset(fp, PHY_vars_UE_g[0][0]->prach_resources[0]->ra_TDD_map_index, PHY_vars_eNB_g[0][0]->proc.frame_prach), delta_f);
+  printf("prach_samples %d, n_ra_prb %d, delta_f %e, prach_fmt %d\n",prach_samples,get_prach_prb_offset(fp, PHY_vars_UE_g[UE_id][CC_id]->prach_resources[0]->ra_TDD_map_index, PHY_vars_eNB_g[0][0]->proc.frame_prach), delta_f,prach_fmt);
   #ifdef DEBUG_CH
   printf("[CHANNEL_PRACH] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, len %d \n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,desc->channel_length);
 #endif		
@@ -382,7 +388,8 @@ void multipath_channel_prach(channel_desc_t *desc,
 				k+=fp->ofdm_symbol_size;
 			k*=12;	
 			//k+=13; 
-			k+=1; 		
+			k+=1; 	
+			printf("[multipath prach] k: %d\n",k);	
 			for (f=0;f<prach_samples; f++) {
 				if (k>=((prach_fmt<4)?12:2)*ofdm_symbol_size)
 					k=0;
@@ -397,8 +404,6 @@ void multipath_channel_prach(channel_desc_t *desc,
 				         }  // j 
 					rx_sig_re[ii][k+l*ofdm_symbol_size*12] =   rx_tmp.x*path_loss;
 					rx_sig_im[ii][k+l*ofdm_symbol_size*12] =   rx_tmp.y*path_loss;
-					//fprintf(file_prach,"%d\t%d\t%e\t%e\t%e\t%e\t%e\t%e\n",f,k,tx_sig_re[ii][k+l*ofdm_symbol_size*12],tx_sig_im[ii][k+l*ofdm_symbol_size*12],rx_sig_re[ii][k+l*ofdm_symbol_size*12],rx_sig_im[ii][k+l*ofdm_symbol_size*12],desc->chF[0][f].x,desc->chF[0][f].y);
-					//fflush(file_prach);
 				 } // ii
 			k++;
 			} // f

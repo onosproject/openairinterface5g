@@ -1343,12 +1343,12 @@ int32_t generate_prach_freq( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, 
     Xu_im = (((int32_t)Xu[1+(offset<<1)]*amp)>>15);
     prachF[k++]= ((Xu_re*ru[offset2<<1]) - (Xu_im*ru[1+(offset2<<1)]))>>15;
     prachF[k++]= ((Xu_im*ru[offset2<<1]) + (Xu_re*ru[1+(offset2<<1)]))>>15;
-
+    printf("[prach] k %d\n",k);
     if (k==(12*2*ue->frame_parms.ofdm_symbol_size))
       k=0;
   }
 
-  switch (prach_fmt) {
+  /*switch (prach_fmt) {
   case 0:
     Ncp = 3168;
     break;
@@ -1446,8 +1446,8 @@ int32_t generate_prach_freq( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, 
       prach_len = 1024+Ncp;
     } else {
       idft6144(prachF,prach2);
-      /*for (i=0;i<6144*2;i++)
-      prach2[i]<<=1;*/
+      //for (i=0;i<6144*2;i++)
+      //prach2[i]<<=1;
       memmove( prach, prach+12288, Ncp<<2 );
       prach_len = 6144+Ncp;
 
@@ -1532,7 +1532,7 @@ int32_t generate_prach_freq( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, 
     }
 
     break;
-  }
+  }*/
 
   //LOG_D(PHY,"prach_len=%d\n",prach_len);
 
@@ -1547,30 +1547,30 @@ int32_t generate_prach_freq( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, 
     LOG_D( PHY, "prach_start=%d, overflow=%d\n", prach_start, overflow );
 
     for (i=prach_start,j=0; i<min(ue->frame_parms.ue->frame_parms.symbols_per_tti*ue->frame_parms.ofdm_symbol_size*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME,prach_start+prach_len); i++,j++) {
-      ((int16_t*)ue->common_vars.txdata[0])[2*i] = prach[2*j]<<4;
-      ((int16_t*)ue->common_vars.txdata[0])[2*i+1] = prach[2*j+1]<<4;
+      ((int16_t*)ue->common_vars.txdataF[0])[2*i] = prachF[2*j]<<4;
+      ((int16_t*)ue->common_vars.txdataF[0])[2*i+1] = prachF[2*j+1]<<4;
     }
 
     for (i=0; i<overflow; i++,j++) {
-      ((int16_t*)ue->common_vars.txdata[0])[2*i] = prach[2*j]<<4;
-      ((int16_t*)ue->common_vars.txdata[0])[2*i+1] = prach[2*j+1]<<4;
+      ((int16_t*)ue->common_vars.txdataF[0])[2*i] = prachF[2*j]<<4;
+      ((int16_t*)ue->common_vars.txdataF[0])[2*i+1] = prachF[2*j+1]<<4;
     }
 #if defined(EXMIMO)
     // handle switch before 1st TX subframe, guarantee that the slot prior to transmission is switch on
     for (k=prach_start - (ue->frame_parms.ue->frame_parms.symbols_per_tti*ue->frame_parms.ofdm_symbol_size>>1) ; k<prach_start ; k++) {
       if (k<0)
-	ue->common_vars.txdata[0][k+ue->frame_parms.ue->frame_parms.symbols_per_tti*ue->frame_parms.ofdm_symbol_size*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
+	ue->common_vars.txdataF[0][k+ue->frame_parms.ue->frame_parms.symbols_per_tti*ue->frame_parms.ofdm_symbol_size*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
       else if (k>(ue->frame_parms.ue->frame_parms.symbols_per_tti*ue->frame_parms.ofdm_symbol_size*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME))
-	ue->common_vars.txdata[0][k-ue->frame_parms.ue->frame_parms.symbols_per_tti*ue->frame_parms.ofdm_symbol_size*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
+	ue->common_vars.txdataF[0][k-ue->frame_parms.ue->frame_parms.symbols_per_tti*ue->frame_parms.ofdm_symbol_size*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
       else
-	ue->common_vars.txdata[0][k] &= 0xFFFEFFFE;
+	ue->common_vars.txdataF[0][k] &= 0xFFFEFFFE;
     }
 #endif
 #else
     
     for (i=0; i<prach_len; i++) {
-      ((int16_t*)(&ue->common_vars.txdata[0][prach_start]))[2*i] = prach[2*i];
-      ((int16_t*)(&ue->common_vars.txdata[0][prach_start]))[2*i+1] = prach[2*i+1];
+      ((int16_t*)(&ue->common_vars.txdataF[0][prach_start]))[2*i] = prachF[2*i];
+      ((int16_t*)(&ue->common_vars.txdataF[0][prach_start]))[2*i+1] = prachF[2*i+1];
     }
 
 #endif
@@ -1580,11 +1580,11 @@ int32_t generate_prach_freq( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, 
 #ifdef PRACH_DEBUG
   write_output("prach_txF0.m","prachtxF0",prachF,prach_len-Ncp,1,1);
   write_output("prach_tx0.m","prachtx0",prach+(Ncp<<1),prach_len-Ncp,1,1);
-  write_output("txsig.m","txs",(int16_t*)(&ue->common_vars.txdata[0][0]),2*ue->frame_parms.symbols_per_tti*ue->frame_parms.ofdm_symbol_size,1,1);
+  write_output("txsig.m","txs",(int16_t*)(&ue->common_vars.txdataF[0][0]),2*ue->frame_parms.symbols_per_tti*ue->frame_parms.ofdm_symbol_size,1,1);
   exit(-1);
 #endif
 
-  return signal_energy( (int*)prach, 256 );
+  return signal_energy( (int*)prachF, 256 );
 }
 //__m128i mmtmpX0,mmtmpX1,mmtmpX2,mmtmpX3;
 

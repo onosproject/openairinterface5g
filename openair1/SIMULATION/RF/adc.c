@@ -51,7 +51,7 @@ void adc_freq(double *r_re[2],
          double *r_im[2],
          unsigned int input_offset,
          unsigned int output_offset,
-         unsigned int **output1,
+         unsigned int **output1,//thread th_id
          unsigned int **output2,//thread 0
          unsigned int **output3,//thread 1
          unsigned int nb_rx_antennas,

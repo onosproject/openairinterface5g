@@ -270,7 +270,11 @@ void multipath_channel_freq(channel_desc_t *desc,
                        double *rx_sig_re[2],
                        double *rx_sig_im[2],
                        uint32_t length,
-                       uint8_t keep_channel);
+                       uint8_t keep_channel,
+		       uint8_t eNB_id,
+		       uint8_t UE_id,
+		       uint8_t CC_id,
+		       uint8_t th_id);
 /**\fn void multipath_channel_prach(channel_desc_t *desc,
            double tx_sig_re[2],
            double tx_sig_im[2],
@@ -302,7 +306,11 @@ void multipath_channel_prach(channel_desc_t *desc,
                        double *rx_sig_re[2],
                        double *rx_sig_im[2],
                        uint32_t length,
-                       uint8_t keep_channel);
+                       uint8_t keep_channel,
+		       uint8_t eNB_id,
+		       uint8_t UE_id,
+		       uint8_t CC_id,
+		       uint8_t th_id);
 /*
 \fn double compute_pbch_sinr(channel_desc_t *desc,
                              channel_desc_t *desc_i1,

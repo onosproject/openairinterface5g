@@ -154,16 +154,17 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
     return(-1); 
   }
   if (nb_rb-prach_prb_offset<6) {
-    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, change prach_prb_offset\n");
+    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, modify prach_prb_offset value\n");
     return(-1); 
   }
-  prach_samples = (prach_fmt<4)?864:144;  
+  prach_samples = (prach_fmt<4)?13+839+12:3+139+2;
+  
   cos_lut = (double **)malloc(prach_samples*sizeof(double*));
   sin_lut = (double **)malloc(prach_samples*sizeof(double*));
 
-  delta_f = (prach_fmt<4)?nb_rb*180000/((n_samples-1)*12):nb_rb*180000/((n_samples-1)*2);//1.25 khz for preamble format 1,2,3. 7.5 khz for format 4
-  max_nb_rb_samples = nb_rb*180000/delta_f;//7200
-  prach_pbr_offset_samples = (prach_prb_offset+6)*180000/delta_f;//864 if prach_prb_offset=0,7200 if prach_prb_offset=44
+  delta_f = (prach_fmt<4)?nb_rb*180000/((n_samples-1)*12):nb_rb*180000/((n_samples-1)*2);//1.25 khz for preamble format 1,2,3. 7.5 khz for preample format 4
+  max_nb_rb_samples = nb_rb*180000/delta_f;//7200 if prach_fmt<4
+  prach_pbr_offset_samples = (prach_prb_offset+6)*180000/delta_f;//864 if prach_prb_offset=0,7200 if prach_prb_offset=44=50-6
   printf("prach_samples = %d, delta_f = %e, max_nb_rb_samples= %d, prach_pbr_offset_samples = %d\n",prach_samples,delta_f,max_nb_rb_samples,prach_pbr_offset_samples);
   for (f=max_nb_rb_samples/2-prach_pbr_offset_samples,f1=0; f<max_nb_rb_samples/2-prach_pbr_offset_samples+prach_samples; f++,f1++) {//3600-864,3600-864+864|3600-7200,3600-7200+839
     freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
@@ -198,7 +199,7 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
   static int freq_channel_init=0;
   static int n_samples_max=0;
 
-  prach_samples = (prach_fmt<4)?864:144; 
+  prach_samples = (prach_fmt<4)?13+839+12:3+139+2; 
 
   // do some error checking
   // n_samples has to be a odd number because we assume the spectrum is symmetric around the DC and includes the DC
@@ -207,7 +208,7 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
     return(-1); 
   }
   if (nb_rb-prach_prb_offset<6) {
-    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check prach_prb_offset\n");
+    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check prach_prb_offset value\n");
     return(-1); 
   }
   if (freq_channel_init == 0) {
