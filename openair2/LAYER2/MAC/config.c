@@ -850,7 +850,7 @@ int rrc_mac_config_req_eNB(module_id_t                      Mod_idP,
     if (UE_id == -1)
       LOG_E(MAC,"%s:%d:%s: ERROR, UE_id == -1\n", __FILE__, __LINE__, __FUNCTION__);
     else
-      config_dedicated(Mod_idP, CC_idP, UE_RNTI(Mod_idP, UE_id), physicalConfigDedicated);
+      UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated=physicalConfigDedicated;
   } 
 
 

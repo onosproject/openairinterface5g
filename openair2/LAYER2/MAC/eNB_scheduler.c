@@ -113,6 +113,9 @@ void schedule_SRS(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP)
 	  ul_req        = &RC.mac[module_idP]->UL_req[CC_id].ul_config_request_body;
 
 
+          // drop the allocation if the UE hasn't send RRCConnectionSetupComplete yet
+          if (mac_eNB_get_rrc_status(module_idP,UE_RNTI(module_idP,UE_id)) < RRC_CONNECTED) continue;
+
 	  AssertFatal(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated != NULL, "physicalConfigDedicated is null for UE %d\n",UE_id);
 
 	  if ((soundingRS_UL_ConfigDedicated = UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated->soundingRS_UL_ConfigDedicated)!=NULL) {
@@ -167,6 +170,9 @@ void schedule_CSI(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP)
       if (UE_list->active[UE_id] != TRUE) continue;
 
       ul_req        = &RC.mac[module_idP]->UL_req[CC_id].ul_config_request_body;
+
+      // drop the allocation if the UE hasn't send RRCConnectionSetupComplete yet
+      if (mac_eNB_get_rrc_status(module_idP,UE_RNTI(module_idP,UE_id)) < RRC_CONNECTED) continue;
 
       AssertFatal(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated != NULL, "physicalConfigDedicated is null for UE %d\n",UE_id);
 
@@ -491,10 +497,12 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame
     CC_id        = UE_PCCID(module_idP, i);
 
     if ((frameP==0)&&(subframeP==0)) {
-      LOG_D(MAC,"UE  rnti %x : %s, PHR %d dB CQI %d\n", rnti,
+      LOG_I(MAC,"UE  rnti %x : %s, PHR %d dB DL CQI %d PUSCH SNR %d PUCCH SNR %d\n", rnti,
             UE_list->UE_sched_ctrl[i].ul_out_of_sync==0 ? "in synch" : "out of sync",
             UE_list->UE_template[CC_id][i].phr_info,
-            UE_list->UE_sched_ctrl[i].dl_cqi[CC_id]);
+            UE_list->UE_sched_ctrl[i].dl_cqi[CC_id],
+	    (UE_list->UE_sched_ctrl[i].pusch_snr[CC_id]-128)/2,
+	    (UE_list->UE_sched_ctrl[i].pucch1_snr[CC_id]-128)/2);
     }
 
     RC.eNB[module_idP][CC_id]->pusch_stats_bsr[i][(frameP*10)+subframeP]=-63;

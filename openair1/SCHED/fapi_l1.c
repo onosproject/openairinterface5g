@@ -594,13 +594,12 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   ul_subframe = pdcch_alloc2ul_subframe(fp,subframe);
   ul_frame    = pdcch_alloc2ul_frame(fp,frame,subframe);
 
-// DJP - subframe assert will fail - not sure why yet
+  // DJP - subframe assert will fail - not sure why yet
   // DJP - AssertFatal(proc->subframe_tx == subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
   // DJP - AssertFatal(proc->subframe_tx == subframe, "Current frame %d != NFAPI frame %d\n",proc->frame_tx,frame);
 
   uint8_t number_dci                = DL_req->dl_config_request_body.number_dci;
   uint8_t number_pdcch_ofdm_symbols = DL_req->dl_config_request_body.number_pdcch_ofdm_symbols;
-
 
   uint8_t number_dl_pdu             = DL_req->dl_config_request_body.number_pdu;
   uint8_t number_hi_dci0_pdu        = HI_DCI0_req->hi_dci0_request_body.number_of_dci+HI_DCI0_req->hi_dci0_request_body.number_of_hi;

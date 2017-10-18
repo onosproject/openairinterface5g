@@ -48,6 +48,8 @@
 
 #include "SIMULATION/TOOLS/defs.h" // for taus
 
+extern UE_MODE_t get_ue_mode(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
+
 int8_t get_DELTA_PREAMBLE(module_id_t module_idP,int CC_id)
 {
 

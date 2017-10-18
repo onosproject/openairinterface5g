@@ -1408,6 +1408,22 @@ int setup_RU_buffers(RU_t *ru) {
   return(0);
 }
 
+static void* ru_stats_thread(void* param) {
+
+  RU_t               *ru      = (RU_t*)param;
+
+  wait_sync("ru_stats_thread");
+
+  while (!oai_exit) {
+     sleep(1);
+     if (opp_enabled == 1) {
+       if (ru->feprx) print_meas(&ru->ofdm_demod_stats,"feprx",NULL,NULL);
+       if (ru->feptx_ofdm) print_meas(&ru->ofdm_mod_stats,"feptx_ofdm",NULL,NULL);
+     }
+  }
+  return(NULL);
+}
+
 static void* ru_thread( void* param ) {
 
   static int ru_thread_status;
@@ -1557,7 +1573,6 @@ static void* ru_thread( void* param ) {
     if ((ru->fh_north_asynch_in == NULL) && (ru->fh_south_out)) ru->fh_south_out(ru);
  
     if (ru->fh_north_out) ru->fh_north_out(ru);
-    if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 0 ); 
   }
   
 
@@ -1659,9 +1674,12 @@ int start_rf(RU_t *ru) {
 }
 
 extern void fep_full(RU_t *ru);
-extern void fep_full_2thread(RU_t *ru);
+extern void ru_fep_full_2thread(RU_t *ru);
 extern void feptx_ofdm(RU_t *ru);
+extern void feptx_ofdm_2thread(RU_t *ru);
 extern void feptx_prec(RU_t *ru);
+extern void init_fep_thread(RU_t *ru,pthread_attr_t *attr);
+extern void init_feptx_thread(RU_t *ru,pthread_attr_t *attr);
 
 void init_RU_proc(RU_t *ru) {
    
@@ -1752,8 +1770,11 @@ void init_RU_proc(RU_t *ru) {
     pthread_create( &proc->pthread_prach, attr_prach, ru_thread_prach, (void*)ru );
   }
 
-
-  
+  if (get_nprocs()>=2) { 
+    if (ru->feprx) init_fep_thread(ru,NULL); 
+    if (ru->feptx_ofdm) init_feptx_thread(ru,NULL);
+  } 
+  if (opp_enabled == 1) pthread_create(&ru->ru_stats_thread,NULL,ru_stats_thread,(void*)ru); 
   
 }
 
@@ -2029,8 +2050,8 @@ LOG_E(PHY,"ru->if_south:%d\n", ru->if_south);
 	ru->fh_north_out          = fh_if4p5_north_out;       // send_IF4p5 on reception
 	ru->fh_south_out          = tx_rf;                    // send output to RF
 	ru->fh_north_asynch_in    = fh_if4p5_north_asynch_in; // TX packets come asynchronously
-	ru->feprx                 = fep_full;                 // RX DFTs
-	ru->feptx_ofdm            = feptx_ofdm;               // this is fep with idft only (no precoding in RRU)
+	ru->feprx                 = (get_nprocs()<=4) ? fep_full :ru_fep_full_2thread;                 // RX DFTs
+	ru->feptx_ofdm            = (get_nprocs()<=4) ? feptx_ofdm : feptx_ofdm_2thread;               // this is fep with idft only (no precoding in RRU)
 	ru->feptx_prec            = NULL;
 	ru->start_if              = start_if;                 // need to start the if interface for if4p5
 	ru->ifdevice.host_type    = RRU_HOST;
@@ -2047,8 +2068,8 @@ LOG_E(PHY,"ru->if_south:%d\n", ru->if_south);
       }
       else if (ru->function == eNodeB_3GPP) {  
 	ru->do_prach             = 0;                       // no prach processing in RU            
-	ru->feprx                = fep_full;                // RX DFTs
-	ru->feptx_ofdm           = feptx_ofdm;              // this is fep with idft and precoding
+	ru->feprx                = (get_nprocs()<=2) ? fep_full : ru_fep_full_2thread;                // RX DFTs
+	ru->feptx_ofdm           = (get_nprocs()<=2) ? feptx_ofdm : feptx_ofdm_2thread;              // this is fep with idft and precoding
 	ru->feptx_prec           = feptx_prec;              // this is fep with idft and precoding
 	ru->fh_north_in          = NULL;                    // no incoming fronthaul from north
 	ru->fh_north_out         = NULL;                    // no outgoing fronthaul to north
@@ -2076,9 +2097,9 @@ LOG_E(PHY,"ru->if_south:%d\n", ru->if_south);
 
     case REMOTE_IF5: // the remote unit is IF5 RRU
       ru->do_prach               = 0;
-      ru->feprx                  = fep_full;                   // this is frequency-shift + DFTs
+      ru->feprx                  = (get_nprocs()<=2) ? fep_full : fep_full;                   // this is frequency-shift + DFTs
       ru->feptx_prec             = feptx_prec;                 // need to do transmit Precoding + IDFTs 
-      ru->feptx_ofdm             = feptx_ofdm;                 // need to do transmit Precoding + IDFTs 
+      ru->feptx_ofdm             = (get_nprocs()<=2) ? feptx_ofdm : feptx_ofdm_2thread;                 // need to do transmit Precoding + IDFTs 
       if (ru->if_timing == synch_to_other) {
 	ru->fh_south_in          = fh_slave_south_in;                  // synchronize to master
 	ru->fh_south_out         = fh_if5_mobipass_south_out;          // use send_IF5 for mobipass

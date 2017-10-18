@@ -1739,6 +1739,8 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP
     memset((void*)&UE_list->UE_sched_ctrl[UE_id],0,sizeof(UE_sched_ctrl));
     memset((void*)&UE_list->eNB_UE_stats[cc_idP][UE_id],0,sizeof(eNB_UE_STATS));
 
+    UE_list->UE_sched_ctrl[UE_id].ta_update = 31;
+
     for (j=0; j<8; j++) {
       UE_list->UE_template[cc_idP][UE_id].oldNDI[j]    = (j==0)?1:0;   // 1 because first transmission is with format1A (Msg4) for harq_pid 0
       UE_list->UE_template[cc_idP][UE_id].oldNDI_UL[j] = (j==harq_pidP)?0:1; // 1st transmission is with Msg3;
@@ -2825,7 +2827,7 @@ try_again:
   } // for i = 0 ... num_UL_DCIs
 
   for (i=0;i<DL_req->number_pdu;i++) {
-    // allocate DL common DCIs first
+    // allocate DL UE specific DCIs
     if ((dl_config_pdu[i].pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE)&&
         (dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti_type==1)) {
       LOG_D(MAC,"Trying to allocate DL UE-SPECIFIC DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
@@ -3573,6 +3575,10 @@ void cqi_indication(module_id_t mod_idP, int CC_idP, frame_t frameP, sub_frame_t
 {
   int UE_id = find_UE_id(mod_idP, rntiP);
   UE_list_t *UE_list = &RC.mac[mod_idP]->UE_list;
+  if (UE_id == -1) {
+    LOG_W(MAC, "cqi_indication: UE %x not found\n", rntiP);
+    return;
+  }
   UE_sched_ctrl *sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 
   if (UE_id  >= 0) {
@@ -3615,10 +3621,13 @@ void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, sub_frame_t 
     if (mac_eNB_get_rrc_status(mod_idP,UE_RNTI(mod_idP,UE_id)) < RRC_CONNECTED)
       LOG_D(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d on CC_id %d\n",mod_idP,rntiP,frameP,subframeP, UE_id,cc_idP);
 
+#if 0
     UE_sched_ctrl *sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 
+    /* for the moment don't use ul_cqi from SR, value is too different from harq */
     sched_ctl->pucch1_snr[cc_idP]        = ul_cqi;
     sched_ctl->pucch1_cqi_update[cc_idP] = 1;
+#endif
 
     UE_list->UE_template[cc_idP][UE_id].ul_SR = 1;
     UE_list->UE_template[cc_idP][UE_id].ul_active = TRUE;
@@ -3655,6 +3664,10 @@ void harq_indication(module_id_t mod_idP, int CC_idP, frame_t frameP, sub_frame_
   uint8_t ul_cqi           = harq_pdu->ul_cqi_information.ul_cqi;
   uint8_t channel          = harq_pdu->ul_cqi_information.channel;
   int UE_id                = find_UE_id(mod_idP, rnti);
+  if (UE_id == -1) {
+    LOG_W(MAC, "harq_indication: UE %x not found\n", rnti);
+    return;
+  }
   UE_list_t *UE_list       = &RC.mac[mod_idP]->UE_list;
   UE_sched_ctrl *sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
   COMMON_channels_t *cc    = &RC.mac[mod_idP]->common_channels[CC_idP];

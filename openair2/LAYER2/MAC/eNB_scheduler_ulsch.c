@@ -73,9 +73,8 @@ void rx_sdu(const module_id_t enb_mod_idP,
 	    uint8_t          *sduP,
 	    const uint16_t    sdu_lenP,
 	    const uint16_t    timing_advance,
-	    const uint8_t     ul_cqi) {
-
-
+            const uint8_t     ul_cqi)
+{
   unsigned char  rx_ces[MAX_NUM_CE],num_ce,num_sdu,i,*payload_ptr;
   unsigned char  rx_lcids[NB_RB_MAX];
   unsigned short rx_lengths[NB_RB_MAX];
@@ -105,9 +104,7 @@ void rx_sdu(const module_id_t enb_mod_idP,
     		  enb_mod_idP, frameP, rntiP, sdu_lenP);
   }
   
-
   if (UE_id!=-1) {
-
     LOG_D(MAC,"[eNB %d][PUSCH %d] CC_id %d Received ULSCH sdu(%p) round %d from PHY (rnti %x, UE_id %d) ul_cqi %d\n",enb_mod_idP,harq_pid,CC_idP,sduP,UE_list->UE_sched_ctrl[UE_id].round_UL[CC_idP][harq_pid],
 	  rntiP,UE_id,ul_cqi);
 
@@ -117,8 +114,10 @@ void rx_sdu(const module_id_t enb_mod_idP,
        UE_list->UE_sched_ctrl[UE_id].ul_inactivity_timer   = 0;
        UE_list->UE_sched_ctrl[UE_id].ul_failure_timer      = 0;
        UE_list->UE_sched_ctrl[UE_id].ul_scheduled         &= (~(1<<harq_pid));
+       /* don't take into account TA if timer is running */
+       if (UE_list->UE_sched_ctrl[UE_id].ta_timer == 0)
        UE_list->UE_sched_ctrl[UE_id].ta_update             = timing_advance;
-       UE_list->UE_sched_ctrl[UE_id].ul_cqi                = ul_cqi;
+       UE_list->UE_sched_ctrl[UE_id].pusch_snr[CC_idP]       = ul_cqi;
        UE_list->UE_sched_ctrl[UE_id].ul_consecutive_errors = 0;
        first_rb =  UE_list->UE_template[CC_idP][UE_id].first_rb_ul[harq_pid];
 
@@ -220,6 +219,8 @@ void rx_sdu(const module_id_t enb_mod_idP,
 	  UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync=0;
 	  mac_eNB_rrc_ul_in_sync(enb_mod_idP,CC_idP,frameP,subframeP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
 	}
+printf("TODO: deal with CRNTI\n");
+abort();
       }
       crnti_rx=1;
       payload_ptr+=2;
@@ -597,10 +598,8 @@ void rx_sdu(const module_id_t enb_mod_idP,
   stop_meas(&eNB->rx_ulsch_sdu);
 }
 
-
 uint32_t bytes_to_bsr_index(int32_t nbytes)
 {
-
   uint32_t i=0;
 
   if (nbytes<0) {
@@ -617,13 +616,11 @@ uint32_t bytes_to_bsr_index(int32_t nbytes)
 
 void add_ue_ulsch_info(module_id_t module_idP, int CC_id, int UE_id, sub_frame_t subframeP, UE_ULSCH_STATUS status)
 {
-
   eNB_ulsch_info[module_idP][CC_id][UE_id].rnti             = UE_RNTI(module_idP,UE_id);
   eNB_ulsch_info[module_idP][CC_id][UE_id].subframe         = subframeP;
   eNB_ulsch_info[module_idP][CC_id][UE_id].status           = status;
 
   eNB_ulsch_info[module_idP][CC_id][UE_id].serving_num++;
-
 }
 
 unsigned char *parse_ulsch_header(unsigned char *mac_header,
@@ -634,7 +631,6 @@ unsigned char *parse_ulsch_header(unsigned char *mac_header,
                                   unsigned short *rx_lengths,
                                   unsigned short tb_length)
 {
-
   unsigned char not_done=1,num_ces=0,num_sdus=0,lcid,num_sdu_cnt;
   unsigned char *mac_header_ptr = mac_header;
   unsigned short length, ce_len=0;
@@ -725,19 +721,14 @@ void set_msg3_subframe(module_id_t Mod_id,
 
 void schedule_ulsch(module_id_t module_idP, 
 		    frame_t frameP,
-		    sub_frame_t subframeP) { 
-
-
-
-
-
+                    sub_frame_t subframeP)
+{
   uint16_t first_rb[MAX_NUM_CCs],i;
   int CC_id;
   eNB_MAC_INST *eNB=RC.mac[module_idP];
   COMMON_channels_t *cc;
 
   start_meas(&eNB->schedule_ulsch);
-
 
   int sched_subframe = (subframeP+4)%10;
 
@@ -831,10 +822,7 @@ void schedule_ulsch(module_id_t module_idP,
   schedule_ulsch_rnti(module_idP, frameP, subframeP, sched_subframe,first_rb);
 
   stop_meas(&eNB->schedule_ulsch);
-
 }
-
-
 
 void schedule_ulsch_rnti(module_id_t   module_idP,
                          frame_t       frameP,
@@ -842,7 +830,6 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
                          unsigned char sched_subframeP,
                          uint16_t     *first_rb)
 {
-
   int               UE_id;
   uint8_t           aggregation    = 2;
   rnti_t            rnti           = -1;
@@ -872,8 +859,6 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
   nfapi_hi_dci0_request_pdu_t    *hi_dci0_pdu;
 
   //nfapi_ul_config_request_pdu_t  *ul_config_pdu;
-
-
 
   nfapi_ul_config_request_body_t *ul_req_tmp       = &eNB->UL_req_tmp[CC_id][sched_subframeP].ul_config_request_body;
 
@@ -955,7 +940,7 @@ abort();
 				  format0);
       */
 
-      if (CCE_allocation_infeasible(module_idP,CC_id,2,subframeP,aggregation,rnti)) {
+      if (CCE_allocation_infeasible(module_idP,CC_id,1,subframeP,aggregation,rnti)) {
         LOG_W(MAC,"[eNB %d] frame %d subframe %d, UE %d/%x CC %d: not enough nCCE\n", module_idP,frameP,subframeP,UE_id,rnti,CC_id);
         continue; // break;
       } 
@@ -966,8 +951,6 @@ abort();
 	      module_idP,frameP,subframeP,UE_id,rnti,CC_id);
         continue;
       }
-
-
 
       //      if (eNB_UE_stats->mode == PUSCH) { // ue has a ulsch channel
 
@@ -1002,13 +985,12 @@ abort();
 	  else
 	    cqi_req = 0;
 	  
-
           //power control
           //compute the expected ULSCH RX power (for the stats)
 	  
           // this is the normalized RX power and this should be constant (regardless of mcs
           normalized_rx_power = UE_sched_ctrl->pusch_snr[CC_id];
-          target_rx_power = 20;
+          target_rx_power = 178;
 	  
           // this assumes accumulated tpc
 	  // make sure that we are only sending a tpc update once a frame, otherwise the control loop will freak out
@@ -1018,10 +1000,10 @@ abort();
 	    {
 	      UE_template->pusch_tpc_tx_frame=frameP;
 	      UE_template->pusch_tpc_tx_subframe=subframeP;
-	      if (normalized_rx_power>(target_rx_power+1)) {
+              if (normalized_rx_power>(target_rx_power+4)) {
 		tpc = 0; //-1
 		tpc_accumulated--;
-	      } else if (normalized_rx_power<(target_rx_power-1)) {
+              } else if (normalized_rx_power<(target_rx_power-4)) {
 		tpc = 2; //+1
 		tpc_accumulated++;
 	      } else {
@@ -1030,7 +1012,7 @@ abort();
 	    } else {
             tpc = 1; //0
           }
-	  tpc = 1;
+          //tpc = 1;
 	  if (tpc!=1) {
 	    LOG_D(MAC,"[eNB %d] ULSCH scheduler: frame %d, subframe %d, harq_pid %d, tpc %d, accumulated %d, normalized/target rx power %d/%d\n",
 		  module_idP,frameP,subframeP,harq_pid,tpc,
@@ -1118,7 +1100,6 @@ abort();
 	    hi_dci0_pdu->dci_pdu.dci_pdu_rel8.cqi_csi_request                   = cqi_req;
 	    hi_dci0_pdu->dci_pdu.dci_pdu_rel8.dl_assignment_index               = UE_template->DAI_ul[sched_subframeP];
 
-	    
 	    eNB->HI_DCI0_req[CC_id].hi_dci0_request_body.number_of_dci++;
 	    
 	    LOG_D(MAC,"[PUSCH %d] Frame %d, Subframe %d: Adding UL CONFIG.Request for UE %d/%x, ulsch_frame %d, ulsch_subframe %d\n",
@@ -1159,8 +1140,6 @@ abort();
 	    ul_req_tmp->number_of_pdus++;
 	    eNB->ul_handle++;
 	    
-	    
-	  	
 	    add_ue_ulsch_info(module_idP,
 			      CC_id,
 			      UE_id,
@@ -1169,10 +1148,8 @@ abort();
 	    
 	    LOG_D(MAC,"[eNB %d] CC_id %d Frame %d, subframeP %d: Generated ULSCH DCI for next UE_id %d, format 0\n", module_idP,CC_id,frameP,subframeP,UE_id);
 
-
             // increment first rb for next UE allocation
             first_rb[CC_id]+=rb_table[rb_table_index];
-	    
 	  }
 	  else { // round > 0 => retransmission
             T(T_ENB_MAC_UE_UL_SCHEDULE_RETRANSMISSION, T_INT(module_idP), T_INT(CC_id), T_INT(rnti), T_INT(frameP),
@@ -1265,4 +1242,3 @@ abort();
     } // loop over UE_id
   } // loop of CC_id
 }
-

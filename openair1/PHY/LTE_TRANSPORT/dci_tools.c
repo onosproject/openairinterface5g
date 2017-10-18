@@ -835,11 +835,13 @@ int8_t find_dlsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
     LOG_D(PHY,"searching for rnti %x : UE index %d=> harq_mask %x, rnti %x, first_free_index %d\n",
 	  rnti,i,eNB->dlsch[i][0]->harq_mask,eNB->dlsch[i][0]->rnti,first_free_index);
     if ((eNB->dlsch[i][0]->harq_mask >0) &&
-	(eNB->dlsch[i][0]->rnti==rnti))       return(i); 
+        (eNB->dlsch[i][0]->rnti==rnti))       return i;
     else if ((eNB->dlsch[i][0]->harq_mask == 0) && (first_free_index==-1)) first_free_index=i;
   }
-  if (type == SEARCH_EXIST) return(-1);
-  else return(first_free_index);
+  if (type == SEARCH_EXIST) return -1;
+  if (first_free_index != -1)
+    eNB->dlsch[first_free_index][0]->rnti = 0;
+  return first_free_index;
 }
 
 int8_t find_ulsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
@@ -849,13 +851,15 @@ int8_t find_ulsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
 
   AssertFatal(eNB!=NULL,"eNB is null\n");
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-    AssertFatal(eNB->ulsch[i]!=NULL,"eNB->dlsch[%d] is null\n",i);
+    AssertFatal(eNB->ulsch[i]!=NULL,"eNB->ulsch[%d] is null\n",i);
     if ((eNB->ulsch[i]->harq_mask >0) &&
-	(eNB->ulsch[i]->rnti==rnti))       return(i); 
+        (eNB->ulsch[i]->rnti==rnti))       return i;
     else if ((eNB->ulsch[i]->harq_mask == 0) && (first_free_index==-1)) first_free_index=i;
   }
-  if (type == SEARCH_EXIST) return(-1);
-  else return(first_free_index);
+  if (type == SEARCH_EXIST) return -1;
+  if (first_free_index != -1)
+    eNB->ulsch[first_free_index]->rnti = 0;
+  return first_free_index;
 }
 
 
@@ -929,7 +933,6 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci
       dlsch0_harq->round=0;
   }
   else  { // process is inactive, so activate and set round to 0
-    dlsch0->harq_mask                         |= (1<<rel8->harq_process);
     dlsch0_harq->round=0;
   }
   dlsch0_harq->ndi = rel8->new_data_indicator_1;
@@ -937,8 +940,8 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci
   dlsch0->active        = 1;
   if (rel8->rnti_type == 2)
       dlsch0_harq->round    = 0;
-LOG_D(PHY,"NFAPI: harq_pid %d harq_mask %x, round %d ndi (%d,%d) \n",rel8->harq_process,dlsch0->harq_mask,dlsch0_harq->round,
-	dlsch0_harq->ndi,rel8->new_data_indicator_1);
+LOG_D(PHY,"NFAPI: harq_pid %d harq_mask %x, round %d ndi (%d,%d) rnti type %d\n",rel8->harq_process,dlsch0->harq_mask,dlsch0_harq->round,
+	dlsch0_harq->ndi,rel8->new_data_indicator_1, rel8->rnti_type);
 
   switch (rel8->dci_format) {
 
@@ -1127,6 +1130,8 @@ LOG_D(PHY,"NFAPI: harq_pid %d harq_mask %x, round %d ndi (%d,%d) \n",rel8->harq_
     if (dlsch0_harq->round == 0)
       dlsch0_harq->status = ACTIVE;
 
+    dlsch0->harq_mask            |= (1<<rel8->harq_process);
+
     if (rel8->rnti_type == 1) LOG_I(PHY,"DCI 1A: round %d, mcs %d, rballoc %x,rv %d, rnti %x\n",dlsch0_harq->round,rel8->mcs_1,rel8->resource_block_coding,rel8->redundancy_version_1,rel8->rnti);
 
     break;
@@ -1288,6 +1293,7 @@ LOG_D(PHY,"NFAPI: harq_pid %d harq_mask %x, round %d ndi (%d,%d) \n",rel8->harq_
     LOG_D(PHY,"DCI: Set harq_ids[%d] to %d (%p)\n",subframe,rel8->harq_process,dlsch0);
     dlsch0->harq_ids[subframe] = rel8->harq_process;
 
+    dlsch0->harq_mask          |= (1<<rel8->harq_process);
 
 
     dlsch0->rnti = rel8->rnti;
@@ -2283,11 +2289,6 @@ void fill_mdci_and_dlsch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,mDCI_ALLOC_t *d
 void fill_dci0(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,
                nfapi_hi_dci0_dci_pdu *pdu)
 {
-  uint8_t UE_id;
-
-  AssertFatal((UE_id=find_ulsch(pdu->dci_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
-	      "No existing UE ULSCH for rnti %x\n",pdu->dci_pdu_rel8.rnti);
-
   LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
 
   uint32_t cqi_req = pdu->dci_pdu_rel8.cqi_csi_request;
@@ -2447,16 +2448,14 @@ void fill_dci0(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,
   }
 }
 
-void fill_ulsch(PHY_VARS_eNB *eNB,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame,int subframe) {
-
+void fill_ulsch(PHY_VARS_eNB *eNB,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame,int subframe)
+{
   uint8_t harq_pid;
-
   uint8_t UE_id;
+  boolean_t new_ulsch = (find_ulsch(ulsch_pdu->ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST)==-1) ? TRUE : FALSE;
 
   AssertFatal((UE_id=find_ulsch(ulsch_pdu->ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
 	      "No existing/free UE ULSCH for rnti %x\n",ulsch_pdu->ulsch_pdu_rel8.rnti);
-
-  boolean_t new_ulsch = (find_ulsch(ulsch_pdu->ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST)==-1) ? TRUE : FALSE;
 
   LTE_eNB_ULSCH_t *ulsch=eNB->ulsch[UE_id];
   LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
@@ -2465,6 +2464,7 @@ void fill_ulsch(PHY_VARS_eNB *eNB,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame
 
   harq_pid = ulsch_pdu->ulsch_pdu_rel8.harq_process_number;
 
+  ulsch->harq_mask |= 1 << harq_pid;
 
   ulsch->harq_processes[harq_pid]->frame                                 = frame;
   ulsch->harq_processes[harq_pid]->subframe                              = subframe;
@@ -2500,11 +2500,9 @@ void fill_ulsch(PHY_VARS_eNB *eNB,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame
   else if(ulsch->harq_processes[harq_pid]->n_DMRS == 7)
     ulsch->harq_processes[harq_pid]->n_DMRS2 = 9;
   
-   
   LOG_D(PHY,"[eNB %d][PUSCH %d] Programming PUSCH with n_DMRS2 %d (cshift %d) for Frame %d, Subframe %d\n",
 	eNB->Mod_id,harq_pid,ulsch->harq_processes[harq_pid]->n_DMRS2,ulsch->harq_processes[harq_pid]->n_DMRS,
 	frame,subframe);
-  
   
   ulsch->harq_processes[harq_pid]->rvidx = ulsch_pdu->ulsch_pdu_rel8.redundancy_version;
   ulsch->harq_processes[harq_pid]->Qm    = ulsch_pdu->ulsch_pdu_rel8.modulation_type;
@@ -2531,8 +2529,10 @@ void fill_ulsch(PHY_VARS_eNB *eNB,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame
   else  ulsch->harq_processes[harq_pid]->round++;
 
   ulsch->rnti = ulsch_pdu->ulsch_pdu_rel8.rnti;
-  LOG_D(PHY,"Filling ULSCH %x (new_ulsch %d) for Frame %d, Subframe %d : harq_pid %d, first_rb %d, nb_rb %d, rvidx %d, Qm %d, TBS %d, round %d \n",
-	ulsch->rnti, new_ulsch,
+  LOG_D(PHY,"Filling ULSCH %x (UE_id %d) (new_ulsch %d) for Frame %d, Subframe %d : harq_pid %d, first_rb %d, nb_rb %d, rvidx %d, Qm %d, TBS %d, round %d \n",
+	ulsch->rnti,
+        UE_id,
+        new_ulsch,
 	frame,
 	subframe,
 	harq_pid,
@@ -2542,11 +2542,7 @@ void fill_ulsch(PHY_VARS_eNB *eNB,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame
 	ulsch->harq_processes[harq_pid]->Qm,
 	ulsch->harq_processes[harq_pid]->TBS,
 	ulsch->harq_processes[harq_pid]->round);  
-  
-  
 }
-
-
 
 int dump_dci(LTE_DL_FRAME_PARMS *frame_parms, DCI_ALLOC_t *dci)
 {
@@ -6420,12 +6416,11 @@ uint8_t ul_subframe2pdcch_alloc_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t
     return(9);
   else
     return((n+6)%10);
-
 }
 
 uint32_t pdcch_alloc2ul_frame(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame, uint8_t n)
 {
-  uint32_t ul_frame = 255;
+  uint32_t ul_frame;
 
   if ((frame_parms->frame_type == TDD) &&
       (frame_parms->tdd_config == 1) &&
@@ -6443,8 +6438,7 @@ uint32_t pdcch_alloc2ul_frame(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame, ui
     ul_frame = (frame+(n>=6 ? 1 : 0));
 
   LOG_D(PHY, "frame %d subframe %d: PUSCH frame = %d\n", frame, n, ul_frame);
-  return ul_frame;
-
+  return ul_frame % 1024;
 }
 
 int32_t pmi_convert_rank1_from_rank2(uint16_t pmi_alloc, int tpmi, int nb_rb)
