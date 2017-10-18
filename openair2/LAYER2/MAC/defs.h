@@ -1381,7 +1381,9 @@ typedef struct {
   /// UE BCCH rx processing time including RLC interface (mac_rrc_data_ind) 
   time_stats_t rx_si; 
   /// UE PCCH rx processing time including RLC interface (mac_rrc_data_ind) 
-  time_stats_t rx_p; 
+  time_stats_t rx_p;
+  /// Panos: Mutex for nfapi UL_INFO
+  pthread_mutex_t      UL_INFO_mutex;
 } UE_MAC_INST;
 /*! \brief ID of the neighboring cells used for HO*/
 typedef struct {

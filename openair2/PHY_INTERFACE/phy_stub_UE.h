@@ -33,5 +33,18 @@ UL_IND_t generate_nfapi_UL_indications(Sched_Rsp_t sched_response);
 // This function should pass the UL indication messages to the eNB side through the socket interface.
 void send_nfapi_UL_indications(UL_IND_t UL_INFO);
 
+// This function should be filling the nfapi ULSCH indications at the MAC level of the UE in a similar manner
+// as fill_rx_indication() does. It should get called from ue_get_SDU()
+void fill_rx_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t *ulsch_buffer, uint16_t buflen);
+
+
+// This function should be indicating directly to the eNB when there is a planned scheduling request at the MAC layer
+// of the UE. It should get called from ue_get_SR()
+void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO);
+
+// In our case the this function will be always indicating ACK to the MAC of the eNB (i.e. always assuming)
+// successful decoding.
+void fill_crc_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t crc_flag);
+
 
 #endif /* PHY_STUB_UE_H_ */
