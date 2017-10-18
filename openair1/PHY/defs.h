@@ -331,6 +331,8 @@ typedef struct RU_proc_t_s {
   int instance_cnt_asynch_rxtx;
   /// \internal This variable is protected by \ref mutex_fep
   int instance_cnt_fep;
+  /// \internal This variable is protected by \ref mutex_fep
+  int instance_cnt_feptx;
   /// pthread structure for RU FH processing thread
   pthread_t pthread_FH;
   /// pthread structure for RU prach processing thread
@@ -341,8 +343,10 @@ typedef struct RU_proc_t_s {
 #endif
   /// pthread struct for RU synch thread
   pthread_t pthread_synch;
-  /// pthread struct for RU RX FEP thread
+  /// pthread struct for RU RX FEP worker thread
   pthread_t pthread_fep;
+  /// pthread struct for RU RX FEPTX worker thread
+  pthread_t pthread_feptx;
   /// pthread structure for asychronous RX/TX processing thread
   pthread_t pthread_asynch_rxtx;
   /// flag to indicate first RX acquisition
@@ -361,8 +365,10 @@ typedef struct RU_proc_t_s {
   pthread_attr_t attr_synch;
   /// pthread attributes for asynchronous RX thread
   pthread_attr_t attr_asynch_rxtx;
-  /// pthread attributes for parallel fep thread
+  /// pthread attributes for worker fep thread
   pthread_attr_t attr_fep;
+  /// pthread attributes for worker feptx thread
+  pthread_attr_t attr_feptx;
   /// scheduling parameters for RU FH thread
   struct sched_param sched_param_FH;
   /// scheduling parameters for RU prach thread
@@ -389,6 +395,8 @@ typedef struct RU_proc_t_s {
   pthread_cond_t cond_asynch_rxtx;
   /// condition varaible for RU RX FEP thread
   pthread_cond_t cond_fep;
+  /// condition varaible for RU RX FEPTX thread
+  pthread_cond_t cond_feptx;
   /// condition variable for eNB signal
   pthread_cond_t cond_eNBs;
   /// mutex for RU FH
@@ -405,8 +413,10 @@ typedef struct RU_proc_t_s {
   pthread_mutex_t mutex_eNBs;
   /// mutex for asynch RX/TX thread
   pthread_mutex_t mutex_asynch_rxtx;
-  /// mutex for fep RX
+  /// mutex for fep RX worker thread
   pthread_mutex_t mutex_fep;
+  /// mutex for fep TX worker thread
+  pthread_mutex_t mutex_feptx;
   /// symbol mask for IF4p5 reception per subframe
   uint32_t symbol_mask[10];
   /// number of slave threads
@@ -741,6 +751,8 @@ typedef struct RU_t_s{
   void (*eNB_top)(struct PHY_VARS_eNB_s *eNB, int frame_rx, int subframe_rx, char *string);
   /// Timing statistics
   time_stats_t ofdm_demod_stats;
+  /// Timing statistics (TX)
+  time_stats_t ofdm_mod_stats;
   /// RX and TX buffers for precoder output
   RU_COMMON            common;
   /// beamforming weight vectors per eNB
@@ -756,6 +768,8 @@ typedef struct RU_t_s{
   openair0_timestamp   ts_offset;
   /// process scheduling variables
   RU_proc_t            proc;
+  /// stats thread pthread descriptor
+  pthread_t            ru_stats_thread;
 } RU_t;
 
 
