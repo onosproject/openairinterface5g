@@ -43,7 +43,7 @@ extern void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,  nfa
 extern void handle_nfapi_hi_dci0_dci_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, nfapi_hi_dci0_request_pdu_t *hi_dci0_config_pdu);
 extern void handle_nfapi_hi_dci0_hi_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, nfapi_hi_dci0_request_pdu_t *hi_dci0_config_pdu);
 
-extern uint8_t  nfapi_pnf;
+extern uint8_t  nfapi_mode;
 
 nfapi_tx_request_pdu_t* tx_request_pdu[1023][10][10]; // [frame][subframe][max_num_pdus]
 
@@ -923,18 +923,12 @@ void pnf_phy_deallocate_p7_vendor_ext(nfapi_p7_message_header_t* header)
 
 int pnf_phy_hi_dci0_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req)
 {
-  //printf("[PNF] hi dci0 request\n");
+  LOG_D(PHY,"[PNF] hi dci0 request sfn_sf:%d number_of_dci:%d number_of_hi:%d\n", NFAPI_SFNSF2DEC(req->sfn_sf), req->hi_dci0_request_body.number_of_dci, req->hi_dci0_request_body.number_of_hi);
+
   //phy_info* phy = (phy_info*)(pnf_p7->user_data);
 
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
   eNB_rxtx_proc_t *proc = &eNB->proc.proc_rxtx[0];
-
-  LOG_D(PHY,"[PNF] HI_DCI0_REQ sfn_sf:%d sfnsf:%u DCIs:%d HIs:%d\n", 
-      NFAPI_SFNSF2DEC(req->sfn_sf), 
-      req->hi_dci0_request_body.sfnsf, 
-      req->hi_dci0_request_body.number_of_dci,
-      req->hi_dci0_request_body.number_of_hi
-      );
 
   for (int i=0; i<req->hi_dci0_request_body.number_of_dci + req->hi_dci0_request_body.number_of_hi; i++)
   {
@@ -959,6 +953,10 @@ int pnf_phy_hi_dci0_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
       handle_nfapi_hi_dci0_hi_pdu(eNB, proc, hi_dci0_req_pdu);
 
       eNB->pdcch_vars[NFAPI_SFNSF2SF(req->sfn_sf)&1].num_dci++;
+    }
+    else
+    {
+      LOG_E(PHY,"[PNF] HI_DCI0_REQ sfn_sf:%d PDU[%d] - unknown pdu type:%d\n", NFAPI_SFNSF2DEC(req->sfn_sf), i, req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type);
     }
   }
 
@@ -1752,7 +1750,7 @@ void* pnf_start_thread(void* ptr)
 
 void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, int pnf_p7_port, int vnf_p7_port)
 {
-  nfapi_pnf = 1;  // PNF!
+  nfapi_mode = 1;  // PNF!
 
   nfapi_pnf_config_t* config = nfapi_pnf_config_create();
 
@@ -1820,7 +1818,7 @@ void oai_subframe_ind(eNB_rxtx_proc_t *proc)
     //PHY_VARS_eNB *eNB = RC.eNB[0][0];
     //int even_frame_thread = eNB->proc.proc_rxtx[0] == proc ? 0 : 1;
 
-    int pnf = nfapi_pnf==1 ? 1 : 0;
+    int pnf = nfapi_mode==1 ? 1 : 0;
     uint16_t sfn = pnf ? proc->frame_tx : proc->frame_rx;
     uint16_t sf = pnf ? proc->subframe_tx : proc->frame_rx;
     uint16_t sfn_sf_tx = sfn<<4 | sf;

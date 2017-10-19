@@ -116,7 +116,7 @@ pthread_cond_t nfapi_sync_cond;
 pthread_mutex_t nfapi_sync_mutex;
 int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
-uint8_t nfapi_pnf = 0;
+uint8_t nfapi_mode = 0;
 
 pthread_cond_t sync_cond;
 pthread_mutex_t sync_mutex;
@@ -1198,15 +1198,15 @@ int main( int argc, char **argv )
   
   // Will have parsed the config files by now
   
-  printf("NFAPI_PNF:%d\n", nfapi_pnf);
+  printf("NFAPI MODE:%d\n", nfapi_mode);
 
-  if (nfapi_pnf==1) // PNF
+  if (nfapi_mode==1) // PNF
   {
     set_comp_log(PHY, LOG_DEBUG, LOG_FULL, 1);
     printf("DJP - forcing PHY to DEBUG - should see similar line if it works\n");
     LOG_E(PHY,"%s() DJP - forcing PHY to LOG_DEBUG for PNF\n", __FUNCTION__);
   }
-  else if (nfapi_pnf == 2)  // VNF
+  else if (nfapi_mode == 2)  // VNF
   {
     set_comp_log(MAC, LOG_DEBUG, LOG_FULL, 1);
     set_comp_log(RRC, LOG_INFO, LOG_FULL, 1);
@@ -1283,7 +1283,7 @@ int main( int argc, char **argv )
   
   rt_sleep_ns(10*100000000ULL);
   
-  if (nfapi_pnf)
+  if (nfapi_mode)
   {
     printf("NFAPI*** - mutex and cond created - will block shortly for completion of PNF connection\n");
     pthread_cond_init(&sync_cond,NULL);
@@ -1292,7 +1292,7 @@ int main( int argc, char **argv )
   
   const char *nfapi_mode_str = "<UNKNOWN>";
 
-  switch(nfapi_pnf)
+  switch(nfapi_mode)
   {
     case 0:
       nfapi_mode_str = "MONOLITHIC";
@@ -1305,7 +1305,7 @@ int main( int argc, char **argv )
   }
   printf("NFAPI MODE:%s\n", nfapi_mode_str);
 
-  if (nfapi_pnf==2) // VNF
+  if (nfapi_mode==2) // VNF
     wait_nfapi_init("main?");
 
   printf("START MAIN THREADS\n");
@@ -1346,7 +1346,7 @@ int main( int argc, char **argv )
 
     config_sync_var=0;
 
-    if (nfapi_pnf==1) // PNF
+    if (nfapi_mode==1) // PNF
     {
       //set_comp_log(PHY, LOG_DEBUG, LOG_FULL, 1);
       //printf("DJP - forcing PHY to DEBUG - should see similar line if it works\n");
@@ -1362,7 +1362,7 @@ int main( int argc, char **argv )
     // once all RUs are ready intiailize the rest of the eNBs ((dependence on final RU parameters after configuration)
     printf("ALL RUs ready - init eNBs\n");
 
-    if (nfapi_pnf != 1 && nfapi_pnf != 2)
+    if (nfapi_mode != 1 && nfapi_mode != 2)
     {
       printf("Not NFAPI mode - call init_eNB_afterRU()\n");
       init_eNB_afterRU();

@@ -42,7 +42,7 @@ int oai_nfapi_tx_req(nfapi_tx_request_t *tx_req);
 int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req);
 int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req);
 
-extern uint8_t nfapi_pnf;
+extern uint8_t nfapi_mode;
 
 
 void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
@@ -715,14 +715,14 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     }
   }
   
-  if (nfapi_pnf && do_oai)
+  if (nfapi_mode && do_oai)
   {
     oai_nfapi_tx_req(Sched_INFO->TX_req);
 
     oai_nfapi_dl_config_req(Sched_INFO->DL_req); // DJP - .dl_config_request_body.dl_config_pdu_list[0]); // DJP - FIXME TODO - yuk - only copes with 1 pdu
   }
 
-  if (nfapi_pnf && number_hi_dci0_pdu!=0)
+  if (nfapi_mode && number_hi_dci0_pdu!=0)
   {
     oai_nfapi_hi_dci0_req(HI_DCI0_req);
   }
@@ -750,7 +750,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     }
   }
 
-  if (nfapi_pnf)
+  if (nfapi_mode)
   {
     for (int future_subframe=0;future_subframe<10;future_subframe++)
     { 

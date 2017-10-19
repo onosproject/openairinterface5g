@@ -14,7 +14,7 @@ extern int oai_nfapi_harq_indication(nfapi_harq_indication_t *harq_ind);
 extern int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind);
 extern int oai_nfapi_cqi_indication(nfapi_cqi_indication_t *cqi_ind);
 extern int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind);
-extern uint8_t nfapi_pnf;
+extern uint8_t nfapi_mode;
 
 void handle_rach(UL_IND_t *UL_info) {
   int i;
@@ -79,7 +79,7 @@ void handle_cqi(UL_IND_t *UL_info) {
 
   int i;
 
-  if (nfapi_pnf == 1)
+  if (nfapi_mode == 1)
   {
     if (UL_info->cqi_ind.number_of_cqis>0)
     {
@@ -113,9 +113,9 @@ void handle_harq(UL_IND_t *UL_info) {
 
   //if (UL_info->harq_ind.number_of_harqs>0)
 
-  if (nfapi_pnf == 1 && UL_info->harq_ind.number_of_harqs>0) // PNF
+  if (nfapi_mode == 1 && UL_info->harq_ind.harq_indication_body.number_of_harqs>0) // PNF
   {
-    LOG_E(PHY, "UL_info->harq_ind.number_of_harqs:%d Send to VNF\n", UL_info->harq_ind.number_of_harqs);
+    LOG_E(PHY, "UL_info->harq_ind.harq_indication_body.number_of_harqs:%d Send to VNF\n", UL_info->harq_ind.harq_indication_body.number_of_harqs);
 
     nfapi_harq_indication_t ind;
 
@@ -130,21 +130,21 @@ void handle_harq(UL_IND_t *UL_info) {
     }
   }
 
-  for (i=0;i<UL_info->harq_ind.number_of_harqs;i++) 
+  for (i=0;i<UL_info->harq_ind.harq_indication_body.number_of_harqs;i++) 
     harq_indication(UL_info->module_id,
 		    UL_info->CC_id,
 		    UL_info->frame,
 		    UL_info->subframe,
-		    &UL_info->harq_ind.harq_pdu_list[i]);
+		    &UL_info->harq_ind.harq_indication_body.harq_pdu_list[i]);
 
-  UL_info->harq_ind.number_of_harqs=0;
+  UL_info->harq_ind.harq_indication_body.number_of_harqs=0;
 }
 
 void handle_ulsch(UL_IND_t *UL_info) {
 
   int i,j;
 
-  if(nfapi_pnf == 1)
+  if(nfapi_mode == 1)
   {
     if (UL_info->crc_ind.crc_indication_body.number_of_crcs>0)
     {
@@ -155,7 +155,7 @@ void handle_ulsch(UL_IND_t *UL_info) {
   }
 
 
-  if (nfapi_pnf == 1 && UL_info->rx_ind.rx_indication_body.number_of_pdus>0)
+  if (nfapi_mode == 1 && UL_info->rx_ind.rx_indication_body.number_of_pdus>0)
   {
     LOG_D(PHY,"UL_info->rx_ind.number_of_pdus:%d\n", UL_info->rx_ind.rx_indication_body.number_of_pdus);
     oai_nfapi_rx_ind(&UL_info->rx_ind);
@@ -251,9 +251,9 @@ static void dump_ul(UL_IND_t *u)
   A("XXXX UL  mod %d CC %d f.sf %d.%d\n",
     u->module_id, u->CC_id, u->frame, u->subframe);
 
-  A("XXXX     harq_ind %d\n", u->harq_ind.number_of_harqs);
-      for (i = 0; i < u->harq_ind.number_of_harqs; i++) {
-        nfapi_harq_indication_pdu_t *v = &u->harq_ind.harq_pdu_list[i];
+  A("XXXX     harq_ind %d\n", u->harq_ind.harq_indication_body.number_of_harqs);
+      for (i = 0; i < u->harq_ind.harq_indication_body.number_of_harqs; i++) {
+        nfapi_harq_indication_pdu_t *v = &u->harq_ind.harq_indication_body.harq_pdu_list[i];
   A("XXXX         harq ind %d\n", i);
   A("XXXX         rnti %d\n", v->rx_ue_information.rnti);
   A("XXXX         tb1 %d tb2 %d\n", v->harq_indication_fdd_rel8.harq_tb1,
@@ -513,7 +513,7 @@ void UL_indication(UL_IND_t *UL_info)
 	UL_info->frame,UL_info->subframe,
 	module_id,CC_id);
 
-  if (nfapi_pnf != 1)
+  if (nfapi_mode != 1)
   {
     if (ifi->CC_mask==0) {
       ifi->current_frame    = UL_info->frame;
@@ -531,7 +531,7 @@ void UL_indication(UL_IND_t *UL_info)
   clear_nfapi_information(RC.mac[module_id],CC_id,
 			  UL_info->frame,UL_info->subframe);
 
-  LOG_D(PHY, "UL_info[rx_ind:%d number_of_harqs:%d number_of_crcs:%d number_of_cqis:%d number_of_preambles:%d]\n", UL_info->rx_ind.rx_indication_body.number_of_pdus, UL_info->harq_ind.number_of_harqs, UL_info->crc_ind.crc_indication_body.number_of_crcs, UL_info->cqi_ind.number_of_cqis, UL_info->rach_ind.number_of_preambles);
+  LOG_D(PHY, "UL_info[rx_ind:%d number_of_harqs:%d number_of_crcs:%d number_of_cqis:%d number_of_preambles:%d]\n", UL_info->rx_ind.rx_indication_body.number_of_pdus, UL_info->harq_ind.harq_indication_body.number_of_harqs, UL_info->crc_ind.crc_indication_body.number_of_crcs, UL_info->cqi_ind.number_of_cqis, UL_info->rach_ind.number_of_preambles);
 
   handle_rach(UL_info);
 
@@ -546,7 +546,7 @@ void UL_indication(UL_IND_t *UL_info)
   
   handle_ulsch(UL_info);
 
-  if (nfapi_pnf != 1)
+  if (nfapi_mode != 1)
   {
     if (ifi->CC_mask == ((1<<MAX_NUM_CCs)-1)) {
 

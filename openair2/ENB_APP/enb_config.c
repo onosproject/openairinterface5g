@@ -105,7 +105,7 @@ static int enb_check_band_frequencies(char* lib_config_file_name_pP,
 }
 
 extern void mac_top_init_eNB(void );
-extern uint8_t  nfapi_pnf;
+extern uint8_t  nfapi_mode;
 
 
 
@@ -288,7 +288,7 @@ void RCconfig_L1(void) {
 	RC.eNB[j][0]->eth_params_n.remote_portd             = *(L1_ParamList.paramarray[j][L1_REMOTE_N_PORTD_IDX].iptr);
 	RC.eNB[j][0]->eth_params_n.transp_preference        = ETH_UDP_MODE;
 
-        nfapi_pnf = 1;
+        nfapi_mode = 1;
 
         RC.nb_macrlc_inst = 1;  // This is used by mac_top_init_eNB()
 
@@ -386,7 +386,7 @@ void RCconfig_macrlc() {
 	RC.mac[j]->eth_params_s.remote_portd             = *(MacRLC_ParamList.paramarray[j][MACRLC_REMOTE_S_PORTD_IDX].iptr);
 	RC.mac[j]->eth_params_s.transp_preference        = ETH_UDP_MODE;
 
-        nfapi_pnf = 2;
+        nfapi_mode = 2;
 
         printf("**************** vnf_port:%d\n", RC.mac[j]->eth_params_s.my_portc);
         configure_nfapi_vnf(RC.mac[j]->eth_params_s.my_addr, RC.mac[j]->eth_params_s.my_portc);

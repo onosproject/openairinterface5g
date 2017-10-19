@@ -50,7 +50,7 @@
 #   include "intertask_interface.h"
 #endif
 
-extern uint8_t nfapi_pnf;
+extern uint8_t nfapi_mode;
 int oai_nfapi_rach_ind(nfapi_rach_indication_t *rach_ind);
 
 
@@ -703,7 +703,7 @@ void prach_procedures(PHY_VARS_eNB *eNB,
 	    eNB->preamble_list[0].instance_length                     = 0; //don't know exactly what this is
 	    
             // If NFAPI PNF then we need to send the message to the VNF
-            if (nfapi_pnf == 1)
+            if (nfapi_mode == 1)
             {
               nfapi_rach_indication_t rach_ind;
               rach_ind.header.message_id = NFAPI_RACH_INDICATION;
@@ -711,7 +711,8 @@ void prach_procedures(PHY_VARS_eNB *eNB,
               rach_ind.rach_indication_body = eNB->UL_INFO.rach_ind;
 
               LOG_E(PHY,"\n\n\n\nDJP - this needs to be sent to VNF **********************************************\n\n\n\n");
-              LOG_E(PHY,"Filling NFAPI indication for RACH : TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
+              LOG_E(PHY,"Filling NFAPI indication for RACH : SFN_SF:%d TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
+                  NFAPI_SFNSF2DEC(rach_ind.sfn_sf),
                   eNB->preamble_list[0].preamble_rel8.timing_advance,
                   eNB->preamble_list[0].preamble_rel8.preamble,
                   eNB->preamble_list[0].preamble_rel8.rnti,
@@ -1727,7 +1728,7 @@ void fill_ulsch_harq_indication(PHY_VARS_eNB *eNB,LTE_UL_eNB_HARQ_t *ulsch_harq,
   AssertFatal(UE_id>=0,"UE_id doesn't exist\n");
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
-  nfapi_harq_indication_pdu_t *pdu =   &eNB->UL_INFO.harq_ind.harq_pdu_list[eNB->UL_INFO.harq_ind.number_of_harqs];
+  nfapi_harq_indication_pdu_t *pdu =   &eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list[eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs];
   int M;
   int i;
 
@@ -1782,8 +1783,8 @@ void fill_ulsch_harq_indication(PHY_VARS_eNB *eNB,LTE_UL_eNB_HARQ_t *ulsch_harq,
     }	
   }
 
-  LOG_E(PHY,"eNB->UL_INFO.harq_ind.number_of_harqs:%d\n", eNB->UL_INFO.harq_ind.number_of_harqs);
-  eNB->UL_INFO.harq_ind.number_of_harqs++;
+  LOG_E(PHY,"eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs:%d\n", eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs);
+  eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs++;
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 }
@@ -1801,7 +1802,7 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
 
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
-  nfapi_harq_indication_pdu_t *pdu =   &eNB->UL_INFO.harq_ind.harq_pdu_list[eNB->UL_INFO.harq_ind.number_of_harqs];
+  nfapi_harq_indication_pdu_t *pdu =   &eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list[eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs];
 
   pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
@@ -1945,8 +1946,8 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
   } //TDD
 
 
-  eNB->UL_INFO.harq_ind.number_of_harqs++;
-  LOG_E(PHY,"Incremented eNB->UL_INFO.harq_ind.number_of_harqs:%d\n", eNB->UL_INFO.harq_ind.number_of_harqs);
+  eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs++;
+  LOG_E(PHY,"Incremented eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs:%d\n", eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs);
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);  
 
 }
@@ -2021,7 +2022,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 
   uci_procedures(eNB,proc);
 
-  if (nfapi_pnf == 0 || nfapi_pnf == 1) // If PNF or monolithic
+  if (nfapi_mode == 0 || nfapi_mode == 1) // If PNF or monolithic
   {
     pusch_procedures(eNB,proc);
   }

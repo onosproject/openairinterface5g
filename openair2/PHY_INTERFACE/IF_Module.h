@@ -61,7 +61,7 @@ typedef struct{
   sub_frame_t subframe;
 
   /// harq indication list
-  nfapi_harq_indication_body_t harq_ind;
+  nfapi_harq_indication_t harq_ind;
 
   /// crc indication list
   nfapi_crc_indication_t crc_ind;

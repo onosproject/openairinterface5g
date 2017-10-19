@@ -446,7 +446,7 @@ int pnf_param_resp_cb(nfapi_vnf_config_t* config, int p5_idx, nfapi_pnf_param_re
 
 int pnf_config_resp_cb(nfapi_vnf_config_t* config, int p5_idx, nfapi_pnf_config_response_t* resp)
 {
-  printf("[VNF] pnf config response idx:%d resp[header[phy_id:%u message_id:%u message_length:%u]]\n", p5_idx, resp->header.phy_id, resp->header.message_id, resp->header.message_length);
+  printf("[VNF] pnf config response idx:%d resp[header[phy_id:%u message_id:%02x message_length:%u]]\n", p5_idx, resp->header.phy_id, resp->header.message_id, resp->header.message_length);
 
   if(1)
   {
@@ -659,18 +659,21 @@ int phy_rach_indication(struct nfapi_vnf_p7_config* config, nfapi_rach_indicatio
 
 int phy_harq_indication(struct nfapi_vnf_p7_config* config, nfapi_harq_indication_t* ind)
 {
-  LOG_E(MAC, "%s() NFAPI SFN/SF:%d number_of_preambles:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->harq_indication_body.number_of_harqs);
+  struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
+
+  LOG_E(MAC, "%s() NFAPI SFN/SF:%d number_of_harqs:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->harq_indication_body.number_of_harqs);
+
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
+
+  eNB->UL_INFO.harq_ind = *ind;
+  eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list = eNB->harq_pdu_list;
 
   for (int i=0; i<ind->harq_indication_body.number_of_harqs; i++)
   {
-    harq_indication(
-        0, // DJP - fixme
-        0, // DJP - fixme
-        NFAPI_SFNSF2SFN(ind->sfn_sf),
-        NFAPI_SFNSF2SF(ind->sfn_sf),
-        &ind->harq_indication_body.harq_pdu_list[i]
-        );
+    memcpy(&eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list[i], &ind->harq_indication_body.harq_pdu_list[i], sizeof(eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list[i]));
   }
+
+  pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
   // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
   //mac_harq_ind(p7_vnf->mac, ind);
@@ -832,7 +835,7 @@ int phy_vendor_ext(struct nfapi_vnf_p7_config* config, nfapi_p7_message_header_t
 	}
 	else
 	{
-		printf("[VNF] unknown %d\n", msg->message_id);
+		printf("[VNF] unknown %02x\n", msg->message_id);
 	}
 	return 0;
 }
@@ -1270,11 +1273,11 @@ void vnf_start_thread(void* ptr)
 }
 
 static vnf_info vnf;
-extern uint8_t nfapi_pnf;
+extern uint8_t nfapi_mode;
 /*------------------------------------------------------------------------------*/
 void configure_nfapi_vnf(char *vnf_addr, int vnf_p5_port)
 {
-  nfapi_pnf = 2;
+  nfapi_mode = 2;
 
   memset(&vnf, 0, sizeof(vnf));
 
@@ -1342,9 +1345,9 @@ int oai_nfapi_dl_config_req(nfapi_dl_config_request_t *dl_config_req)
   dl_config_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
   //dl_config_req->header.message_id = NFAPI_DL_CONFIG_BCH_PDU_TYPE;
 
-  //NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() header message_id:%d\n", __FUNCTION__, dl_config_req->header.message_id);
+  //NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() header message_id:%02x\n", __FUNCTION__, dl_config_req->header.message_id);
 
-  NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() DL_CONFIG p7_config:%p phy_id:%d message_id:%d sfn_sf:%d pdcch:%d dci:%d pdu:%d pdsch_rnti:%d pcfich:%d\n", __FUNCTION__, p7_config, dl_config_req->header.phy_id, dl_config_req->header.message_id, NFAPI_SFNSF2DEC(dl_config_req->sfn_sf), dl_config_req->dl_config_request_body.number_pdcch_ofdm_symbols, dl_config_req->dl_config_request_body.number_dci, dl_config_req->dl_config_request_body.number_pdu, dl_config_req->dl_config_request_body.number_pdsch_rnti, dl_config_req->dl_config_request_body.transmission_power_pcfich);
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() DL_CONFIG p7_config:%p phy_id:%d message_id:%02x sfn_sf:%d pdcch:%d dci:%d pdu:%d pdsch_rnti:%d pcfich:%d\n", __FUNCTION__, p7_config, dl_config_req->header.phy_id, dl_config_req->header.message_id, NFAPI_SFNSF2DEC(dl_config_req->sfn_sf), dl_config_req->dl_config_request_body.number_pdcch_ofdm_symbols, dl_config_req->dl_config_request_body.number_dci, dl_config_req->dl_config_request_body.number_pdu, dl_config_req->dl_config_request_body.number_pdsch_rnti, dl_config_req->dl_config_request_body.transmission_power_pcfich);
 
   int retval = nfapi_vnf_p7_dl_config_req(p7_config, dl_config_req);
 
@@ -1361,7 +1364,7 @@ int oai_nfapi_tx_req(nfapi_tx_request_t *tx_req)
 
   tx_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
 
-  NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() TX_REQ p7_config:%p phy_id:%d message_id:%d sfn_sf:%d number_of_pdus:%d\n", __FUNCTION__, p7_config, tx_req->header.phy_id, tx_req->header.message_id, NFAPI_SFNSF2DEC(tx_req->sfn_sf), tx_req->tx_request_body.number_of_pdus);
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() TX_REQ p7_config:%p phy_id:%d message_id:%02x sfn_sf:%d number_of_pdus:%d\n", __FUNCTION__, p7_config, tx_req->header.phy_id, tx_req->header.message_id, NFAPI_SFNSF2DEC(tx_req->sfn_sf), tx_req->tx_request_body.number_of_pdus);
 
   int retval = nfapi_vnf_p7_tx_req(p7_config, tx_req);
 
@@ -1378,7 +1381,7 @@ int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req)
 
   hi_dci0_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
 
-  NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() HI_DCI0_REQ p7_config:%p phy_id:%d message_id:%d sfn_sf:%d number_of_dci:%d number_of_hi:%d\n", __FUNCTION__, p7_config, hi_dci0_req->header.phy_id, hi_dci0_req->header.message_id, NFAPI_SFNSF2DEC(hi_dci0_req->sfn_sf), hi_dci0_req->hi_dci0_request_body.number_of_dci, hi_dci0_req->hi_dci0_request_body.number_of_hi);
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() HI_DCI0_REQ p7_config:%p phy_id:%d message_id:%02x sfn_sf:%d number_of_dci:%d number_of_hi:%d\n", __FUNCTION__, p7_config, hi_dci0_req->header.phy_id, hi_dci0_req->header.message_id, NFAPI_SFNSF2DEC(hi_dci0_req->sfn_sf), hi_dci0_req->hi_dci0_request_body.number_of_dci, hi_dci0_req->hi_dci0_request_body.number_of_hi);
 
   int retval = nfapi_vnf_p7_hi_dci0_req(p7_config, hi_dci0_req);
 
@@ -1395,9 +1398,9 @@ int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req)
 
   ul_config_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
 
-  //NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() header message_id:%d\n", __FUNCTION__, ul_config_req->header.message_id);
+  //NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() header message_id:%02x\n", __FUNCTION__, ul_config_req->header.message_id);
 
-  NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() UL_CONFIG p7_config:%p phy_id:%d message_id:%d sfn_sf:%d PDUs:%d rach_prach_frequency_resources:%d srs_present:%d\n", 
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] %s() UL_CONFIG p7_config:%p phy_id:%d message_id:%02x sfn_sf:%d PDUs:%d rach_prach_frequency_resources:%d srs_present:%d\n", 
   __FUNCTION__, p7_config, ul_config_req->header.phy_id, ul_config_req->header.message_id, NFAPI_SFNSF2DEC(ul_config_req->sfn_sf), 
   ul_config_req->ul_config_request_body.number_of_pdus,
   ul_config_req->ul_config_request_body.rach_prach_frequency_resources,
