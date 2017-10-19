@@ -91,20 +91,24 @@ void handle_cqi(UL_IND_t *UL_info) {
       ind.cqi_indication_body = UL_info->cqi_ind;
 
       oai_nfapi_cqi_indication(&ind);
+
+      UL_info->cqi_ind.number_of_cqis=0;
     }
   }
+  else
+  {
+    for (i=0;i<UL_info->cqi_ind.number_of_cqis;i++) 
+      cqi_indication(UL_info->module_id,
+          UL_info->CC_id,
+          UL_info->frame,
+          UL_info->subframe,
+          UL_info->cqi_ind.cqi_pdu_list[i].rx_ue_information.rnti,
+          &UL_info->cqi_ind.cqi_pdu_list[i].cqi_indication_rel9,
+          UL_info->cqi_ind.cqi_raw_pdu_list[i].pdu,
+          &UL_info->cqi_ind.cqi_pdu_list[i].ul_cqi_information);
 
-  for (i=0;i<UL_info->cqi_ind.number_of_cqis;i++) 
-    cqi_indication(UL_info->module_id,
-		   UL_info->CC_id,
-		   UL_info->frame,
-		   UL_info->subframe,
-		   UL_info->cqi_ind.cqi_pdu_list[i].rx_ue_information.rnti,
-		   &UL_info->cqi_ind.cqi_pdu_list[i].cqi_indication_rel9,
-		   UL_info->cqi_ind.cqi_raw_pdu_list[i].pdu,
-		   &UL_info->cqi_ind.cqi_pdu_list[i].ul_cqi_information);
-
-  UL_info->cqi_ind.number_of_cqis=0;
+    UL_info->cqi_ind.number_of_cqis=0;
+  }
 }
 
 void handle_harq(UL_IND_t *UL_info) {
@@ -117,27 +121,26 @@ void handle_harq(UL_IND_t *UL_info) {
   {
     LOG_E(PHY, "UL_info->harq_ind.harq_indication_body.number_of_harqs:%d Send to VNF\n", UL_info->harq_ind.harq_indication_body.number_of_harqs);
 
-    nfapi_harq_indication_t ind;
-
-    ind.header.message_id = NFAPI_HARQ_INDICATION;
-    ind.sfn_sf = UL_info->frame<<4 | UL_info->subframe;
-
-    int retval = oai_nfapi_harq_indication(&ind);
+    int retval = oai_nfapi_harq_indication(&UL_info->harq_ind);
 
     if (retval!=0)
     {
       LOG_E(PHY, "Failed to encode NFAPI HARQ_IND retval:%d\n", retval);
     }
+
+    UL_info->harq_ind.harq_indication_body.number_of_harqs = 0;
   }
+  else
+  {
+    for (i=0;i<UL_info->harq_ind.harq_indication_body.number_of_harqs;i++) 
+      harq_indication(UL_info->module_id,
+          UL_info->CC_id,
+          UL_info->frame,
+          UL_info->subframe,
+          &UL_info->harq_ind.harq_indication_body.harq_pdu_list[i]);
 
-  for (i=0;i<UL_info->harq_ind.harq_indication_body.number_of_harqs;i++) 
-    harq_indication(UL_info->module_id,
-		    UL_info->CC_id,
-		    UL_info->frame,
-		    UL_info->subframe,
-		    &UL_info->harq_ind.harq_indication_body.harq_pdu_list[i]);
-
-  UL_info->harq_ind.harq_indication_body.number_of_harqs=0;
+    UL_info->harq_ind.harq_indication_body.number_of_harqs=0;
+  }
 }
 
 void handle_ulsch(UL_IND_t *UL_info) {
@@ -152,53 +155,54 @@ void handle_ulsch(UL_IND_t *UL_info) {
 
       oai_nfapi_crc_indication(&UL_info->crc_ind);
     }
+
+    if (UL_info->rx_ind.rx_indication_body.number_of_pdus>0)
+    {
+      LOG_D(PHY,"UL_info->rx_ind.number_of_pdus:%d\n", UL_info->rx_ind.rx_indication_body.number_of_pdus);
+      oai_nfapi_rx_ind(&UL_info->rx_ind);
+    }
   }
-
-
-  if (nfapi_mode == 1 && UL_info->rx_ind.rx_indication_body.number_of_pdus>0)
+  else
   {
-    LOG_D(PHY,"UL_info->rx_ind.number_of_pdus:%d\n", UL_info->rx_ind.rx_indication_body.number_of_pdus);
-    oai_nfapi_rx_ind(&UL_info->rx_ind);
+    for (i=0;i<UL_info->rx_ind.rx_indication_body.number_of_pdus;i++) {
+      for (j=0;j<UL_info->crc_ind.crc_indication_body.number_of_crcs;j++) {
+        // find crc_indication j corresponding rx_indication i
+        LOG_D(PHY,"UL_info->crc_ind.crc_indication_body.crc_pdu_list[%d].rx_ue_information.rnti:%04x UL_info->rx_ind.rx_indication_body.rx_pdu_list[%d].rx_ue_information.rnti:%04x\n", j, UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].rx_ue_information.rnti, i, UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti);
+        if (UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].rx_ue_information.rnti ==
+            UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti) {
+          LOG_D(PHY, "UL_info->crc_ind.crc_indication_body.crc_pdu_list[%d].crc_indication_rel8.crc_flag:%d\n", j, UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].crc_indication_rel8.crc_flag);
+          if (UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].crc_indication_rel8.crc_flag == 1) { // CRC error indication
+            LOG_D(MAC,"Frame %d, Subframe %d Calling rx_sdu (CRC error) \n",UL_info->frame,UL_info->subframe);
+            rx_sdu(UL_info->module_id,
+                UL_info->CC_id,
+                UL_info->frame,
+                UL_info->subframe,
+                UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti,
+                (uint8_t *)NULL,
+                UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.length,
+                UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.timing_advance,
+                UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.ul_cqi);
+          }
+          else {
+            LOG_D(MAC,"Frame %d, Subframe %d Calling rx_sdu (CRC ok) \n",UL_info->frame,UL_info->subframe);
+            rx_sdu(UL_info->module_id,
+                UL_info->CC_id,
+                UL_info->frame,
+                UL_info->subframe,
+                UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti,
+                UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].data,
+                UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.length,
+                UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.timing_advance,
+                UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.ul_cqi);
+          }
+          break;
+        } //if (UL_info->crc_ind.crc_pdu_list[j].rx_ue_information.rnti ==
+        //    UL_info->rx_ind.rx_pdu_list[i].rx_ue_information.rnti)
+      } //    for (j=0;j<UL_info->crc_ind.crc_indication_body.number_of_crcs;j++)
+      AssertFatal(j<UL_info->crc_ind.crc_indication_body.number_of_crcs,"Couldn't find matchin CRC indication\n");
+    } //   for (i=0;i<UL_info->rx_ind.number_of_pdus;i++)
   }
 
-  for (i=0;i<UL_info->rx_ind.rx_indication_body.number_of_pdus;i++) {
-    for (j=0;j<UL_info->crc_ind.crc_indication_body.number_of_crcs;j++) {
-      // find crc_indication j corresponding rx_indication i
-      LOG_D(PHY,"UL_info->crc_ind.crc_indication_body.crc_pdu_list[%d].rx_ue_information.rnti:%04x UL_info->rx_ind.rx_indication_body.rx_pdu_list[%d].rx_ue_information.rnti:%04x\n", j, UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].rx_ue_information.rnti, i, UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti);
-      if (UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].rx_ue_information.rnti ==
-          UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti) {
-        LOG_D(PHY, "UL_info->crc_ind.crc_indication_body.crc_pdu_list[%d].crc_indication_rel8.crc_flag:%d\n", j, UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].crc_indication_rel8.crc_flag);
-        if (UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].crc_indication_rel8.crc_flag == 1) { // CRC error indication
-          LOG_D(MAC,"Frame %d, Subframe %d Calling rx_sdu (CRC error) \n",UL_info->frame,UL_info->subframe);
-          rx_sdu(UL_info->module_id,
-              UL_info->CC_id,
-              UL_info->frame,
-              UL_info->subframe,
-              UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti,
-		 (uint8_t *)NULL,
-		 UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.length,
-		 UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.timing_advance,
-		 UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.ul_cqi);
-	}
-	else {
-	  LOG_D(MAC,"Frame %d, Subframe %d Calling rx_sdu (CRC ok) \n",UL_info->frame,UL_info->subframe);
-	  rx_sdu(UL_info->module_id,
-		 UL_info->CC_id,
-		 UL_info->frame,
-		 UL_info->subframe,
-		 UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti,
-		 UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].data,
-		 UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.length,
-		 UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.timing_advance,
-		 UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.ul_cqi);
-	}
-	break;
-      } //if (UL_info->crc_ind.crc_pdu_list[j].rx_ue_information.rnti ==
-	//    UL_info->rx_ind.rx_pdu_list[i].rx_ue_information.rnti) {
-    } //    for (j=0;j<UL_info->crc_ind.crc_indication_body.number_of_crcs;j++) {
-    AssertFatal(j<UL_info->crc_ind.crc_indication_body.number_of_crcs,"Couldn't find matchin CRC indication\n");
-  } //   for (i=0;i<UL_info->rx_ind.number_of_pdus;i++) {
-    
   if (NFAPI_SFNSF2SFN(UL_info->rx_ind.sfn_sf) == UL_info->frame && NFAPI_SFNSF2SF(UL_info->rx_ind.sfn_sf) == UL_info->subframe && UL_info->rx_ind.rx_indication_body.number_of_pdus>0)
   {
     UL_info->rx_ind.rx_indication_body.number_of_pdus = 0;
