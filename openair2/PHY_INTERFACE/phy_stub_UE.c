@@ -10,6 +10,7 @@
 
 
 
+//extern uint8_t nfapi_pnf;
 
 
 
@@ -78,8 +79,8 @@ void handle_nfapi_UE_Rx(uint8_t Mod_id, Sched_Rsp_t *Sched_INFO, int eNB_id){
 					// elements.
 
 					// C-RNTI parameter not actually used. Provided only to comply with existing function definition.
-					// Not sure about parameters to fill the preamble index. Originally it comes from PHY.
-					const rnti_t c_rnti;
+					// Not sure about parameters to fill the preamble index.
+					const rnti_t c_rnti = UE_mac_inst[Mod_id].crnti;
 					ue_process_rar(Mod_id, CC_id, frame,
 							dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.rnti, //RA-RNTI
 							Tx_req->tx_request_body.tx_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
@@ -228,6 +229,93 @@ void fill_crc_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_
 
   pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 }
+
+void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t ra_PreambleIndex, uint16_t ra_RNTI) {
+
+	pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
+
+	    UL_INFO->rach_ind.number_of_preambles                 = 1;
+	    //eNB->UL_INFO.rach_ind.preamble_list                       = &eNB->preamble_list[0];
+	    UL_INFO->rach_ind.tl.tag                              = NFAPI_RACH_INDICATION_BODY_TAG;
+
+	    UL_INFO->rach_ind.preamble_list[0].preamble_rel8.tl.tag   		= NFAPI_PREAMBLE_REL8_TAG;
+	    UL_INFO->rach_ind.preamble_list[0].preamble_rel8.timing_advance = 0; //Panos: Not sure about that
+
+	    //Panos: The two following should get extracted from the call to get_prach_resources().
+	    UL_INFO->rach_ind.preamble_list[0].preamble_rel8.preamble = ra_PreambleIndex;
+	    UL_INFO->rach_ind.preamble_list[0].preamble_rel8.rnti 	  = ra_RNTI;
+
+
+	    UL_INFO->rach_ind.preamble_list[0].preamble_rel13.rach_resource_type = 0;
+	    UL_INFO->rach_ind.preamble_list[0].instance_length					 = 0;
+
+
+	        // If NFAPI PNF then we need to send the message to the VNF
+	        //if (nfapi_pnf == 1)
+	        //{
+	          nfapi_rach_indication_t rach_ind;
+	          rach_ind.header.message_id = NFAPI_RACH_INDICATION;
+	          rach_ind.sfn_sf = frame<<4 | subframe;
+	          rach_ind.rach_indication_body = UL_INFO->rach_ind;
+
+	          LOG_E(PHY,"\n\n\n\nDJP - this needs to be sent to VNF **********************************************\n\n\n\n");
+	          LOG_E(PHY,"UE Filling NFAPI indication for RACH : TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
+	        	  UL_INFO->rach_ind.preamble_list[0].preamble_rel8.timing_advance,
+	        	  UL_INFO->rach_ind.preamble_list[0].preamble_rel8.preamble,
+	        	  UL_INFO->rach_ind.preamble_list[0].preamble_rel8.rnti,
+	        	  UL_INFO->rach_ind.preamble_list[0].preamble_rel13.rach_resource_type);
+
+	          //Panos: This function is currently defined only in the nfapi-RU-RAU-split so we should call it when we merge
+	          // with that branch.
+	          //oai_nfapi_rach_ind(&rach_ind);
+
+
+	        //}
+	      pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
+
+}
+
+void fill_ulsch_cqi_indication(int Mod_id, uint16_t frame,uint8_t subframe, UL_IND_t *UL_INFO) {
+	pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
+	nfapi_cqi_indication_pdu_t *pdu         = &UL_INFO->cqi_ind.cqi_pdu_list[UL_INFO->cqi_ind.number_of_cqis];
+	nfapi_cqi_indication_raw_pdu_t *raw_pdu = &UL_INFO->cqi_ind.cqi_raw_pdu_list[UL_INFO->cqi_ind.number_of_cqis];
+
+	pdu->rx_ue_information.rnti = UE_mac_inst[Mod_id].crnti;;
+	//if (ulsch_harq->cqi_crc_status != 1)
+	//Panos: Since we assume that CRC flag is always 0 (ACK) I guess that data_offset should always be 0.
+	pdu->cqi_indication_rel9.data_offset = 0;
+	//else               pdu->cqi_indication_rel9.data_offset = 1; // fill in after all cqi_indications have been generated when non-zero
+
+	// by default set O to rank 1 value
+	//pdu->cqi_indication_rel9.length = (ulsch_harq->Or1>>3) + ((ulsch_harq->Or1&7) > 0 ? 1 : 0);
+	// Panos: Not useful field for our case
+	pdu->cqi_indication_rel9.length = 0;
+	pdu->cqi_indication_rel9.ri[0]  = 0;
+
+  // if we have RI bits, set them and if rank2 overwrite O
+  /*if (ulsch_harq->O_RI>0) {
+    pdu->cqi_indication_rel9.ri[0] = ulsch_harq->o_RI[0];
+    if (ulsch_harq->o_RI[0] == 2)   pdu->cqi_indication_rel9.length = (ulsch_harq->Or2>>3) + ((ulsch_harq->Or2&7) > 0 ? 1 : 0);
+    pdu->cqi_indication_rel9.timing_advance = 0;
+  }*/
+
+	pdu->cqi_indication_rel9.timing_advance = 0;
+  pdu->cqi_indication_rel9.number_of_cc_reported = 1;
+  pdu->ul_cqi_information.channel = 1; // PUSCH
+
+  //Panos: Not sure how to substitute this. This should be the actual CQI value? So can
+  // we hardcode it to a specific value?
+  //memcpy((void*)raw_pdu->pdu,ulsch_harq->o,pdu->cqi_indication_rel9.length);
+  raw_pdu->pdu[0] = 7;
+
+
+
+  UL_INFO->cqi_ind.number_of_cqis++;
+  pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
+
+}
+
+
 
 
 

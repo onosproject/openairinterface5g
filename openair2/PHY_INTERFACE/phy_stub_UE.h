@@ -47,4 +47,10 @@ void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_I
 void fill_crc_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t crc_flag);
 
 
+void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t ra_PreambleIndex, uint16_t ra_RNTI);
+
+
+void fill_ulsch_cqi_indication(int Mod_id, uint16_t frame,uint8_t subframe, UL_IND_t *UL_INFO);
+
+
 #endif /* PHY_STUB_UE_H_ */
