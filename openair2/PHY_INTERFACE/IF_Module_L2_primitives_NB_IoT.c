@@ -6,7 +6,7 @@
 void UL_indication(UL_IND_t *UL_INFO)
 {
     int i=0;
-    UE_TEMPLATE_NB_IoT *UE_info;
+    //UE_TEMPLATE_NB_IoT *UE_info;
     //mac_NB_IoT_t *mac_inst;
 
       //If there is a preamble, do the initiate RA procedure
@@ -39,7 +39,7 @@ void UL_indication(UL_IND_t *UL_INFO)
             {
               //unsuccessfully received this UE PDU
               //UE_info = get_ue_from_rnti(mac_inst,((UL_INFO->crc_ind.crc_pdu_list)+i)->rx_ue_information.rnti);
-              UE_info->HARQ_round++;
+              //UE_info->HARQ_round++;
             }
           }
         }

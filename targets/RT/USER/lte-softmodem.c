@@ -49,9 +49,16 @@
 #include "LAYER2/MAC/defs.h"
 #include "LAYER2/MAC/vars.h"
 #include "LAYER2/MAC/proto.h"
+
 #include "RRC/LITE/vars.h"
 #include "PHY_INTERFACE/vars.h"
 #include "PHY_INTERFACE/defs.h"
+
+//NB-IoT Parameters here
+
+#include "LAYER2/MAC/proto_NB_IoT.h"
+//#include "LAYER2/MAC/defs_NB_IoT.h"
+//#include "LAYER2/MAC/vars_NB_IoT.h"
 
 #ifdef SMBV
 #include "PHY/TOOLS/smbv.h"

@@ -764,7 +764,7 @@ void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_
   
   //LOG for ULSCH DCI Resource allocation
   //CBA is not used in NB-IoT
-    eNB->nulsch[(uint32_t)UE_id]->harq_process->subframe_scheduling_flag = 1;
+    eNB->nulsch[UE_id]->harq_process->subframe_scheduling_flag = 1;
   
 }
 

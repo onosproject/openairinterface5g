@@ -34,6 +34,7 @@
 #include "LAYER2/MAC/extern_NB_IoT.h"
 //#include "RRC/LITE/proto_NB_IoT.h"
 #include "defs_NB_IoT.h"
+#include "openair1/SCHED/defs_NB_IoT.h"
 #include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
 #include "RRCConnectionRequest-NB.h"
 #include "RRCConnectionReestablishmentRequest-NB.h"
@@ -139,7 +140,8 @@ void rrc_eNB_free_UE_NB_IoT(const module_id_t enb_mod_idP,const struct rrc_eNB_u
     LOG_W(RRC, "[eNB %d] Removing UE RNTI %x\n", enb_mod_idP, rnti);
 
 #if defined(ENABLE_USE_MME)
-    rrc_eNB_send_S1AP_UE_CONTEXT_RELEASE_REQ(enb_mod_idP, ue_context_pP, S1AP_CAUSE_RADIO_NETWORK, 21); // send cause 21: connection with ue lost
+    // warning here because of  we don't have NB-IoT S1AP functions
+    //rrc_eNB_send_S1AP_UE_CONTEXT_RELEASE_REQ(enb_mod_idP, ue_context_pP, S1AP_CAUSE_RADIO_NETWORK, 21); // send cause 21: connection with ue lost
     /* From 3GPP 36300v10 p129 : 19.2.2.2.2 S1 UE Context Release Request (eNB triggered)
      * If the E-UTRAN internal reason is a radio link failure detected in the eNB, the eNB shall wait a sufficient time before
      *  triggering the S1 UE Context Release Request procedure
@@ -1153,11 +1155,11 @@ void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
 #if defined(ENABLE_USE_MME)
 
   if (EPC_MODE_ENABLED == 1) {
-    // Forward message to S1AP layer
-    rrc_eNB_send_S1AP_NAS_FIRST_REQ(
+    // Forward message to S1AP layer we don't have S1 AP functions for the moment
+    /*rrc_eNB_send_S1AP_NAS_FIRST_REQ(
       ctxt_pP,
       ue_context_pP,
-      rrcConnectionSetupComplete_NB);
+      rrcConnectionSetupComplete_NB);*/
   } else
 #endif
   {
