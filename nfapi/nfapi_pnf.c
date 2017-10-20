@@ -42,6 +42,7 @@ extern void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, nfapi_u
 extern void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,  nfapi_dl_config_request_pdu_t *dl_config_pdu, uint8_t codeword_index, uint8_t *sdu);
 extern void handle_nfapi_hi_dci0_dci_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, nfapi_hi_dci0_request_pdu_t *hi_dci0_config_pdu);
 extern void handle_nfapi_hi_dci0_hi_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, nfapi_hi_dci0_request_pdu_t *hi_dci0_config_pdu);
+extern void handle_nfapi_bch_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, nfapi_dl_config_request_pdu_t *dl_config_pdu, uint8_t *sdu);
 
 extern uint8_t  nfapi_mode;
 
@@ -951,8 +952,6 @@ int pnf_phy_hi_dci0_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
       nfapi_hi_dci0_request_pdu_t *hi_dci0_req_pdu = &req->hi_dci0_request_body.hi_dci0_pdu_list[i];
 
       handle_nfapi_hi_dci0_hi_pdu(eNB, proc, hi_dci0_req_pdu);
-
-      eNB->pdcch_vars[NFAPI_SFNSF2SF(req->sfn_sf)&1].num_dci++;
     }
     else
     {
@@ -965,20 +964,7 @@ int pnf_phy_hi_dci0_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
 
 int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
 {
-#if 1
-if (0)//NFAPI_SFNSF2SF(req->sfn_sf)==5)
-    LOG_D(PHY,"[PNF] dl config request sfn_sf:%d pdcch:%u dci:%u pdu:%d pdsch_rnti:%d pcfich:%u RC.ru:%p RC.eNB:%p sync_var:%d\n", 
-        NFAPI_SFNSF2DEC(req->sfn_sf), 
-        req->dl_config_request_body.number_pdcch_ofdm_symbols, 
-        req->dl_config_request_body.number_dci,
-        req->dl_config_request_body.number_pdu,
-        req->dl_config_request_body.number_pdsch_rnti,
-        req->dl_config_request_body.transmission_power_pcfich,
-        RC.ru,
-        RC.eNB,
-        sync_var
-        );
-#endif
+  LOG_D(PHY,"[PNF] dl config request sfn_sf:%d pdcch:%u dci:%u pdu:%d pdsch_rnti:%d pcfich:%u RC.ru:%p RC.eNB:%p sync_var:%d\n", NFAPI_SFNSF2DEC(req->sfn_sf), req->dl_config_request_body.number_pdcch_ofdm_symbols, req->dl_config_request_body.number_dci, req->dl_config_request_body.number_pdu, req->dl_config_request_body.number_pdsch_rnti, req->dl_config_request_body.transmission_power_pcfich, RC.ru, RC.eNB, sync_var);
 
   if (RC.ru == 0)
   {
@@ -1030,35 +1016,32 @@ if (0)//NFAPI_SFNSF2SF(req->sfn_sf)==5)
     {
       nfapi_dl_config_bch_pdu *bch_pdu = &dl_config_pdu_list[i].bch_pdu;
       uint16_t pdu_index = bch_pdu->bch_pdu_rel8.pdu_index;
-      uint8_t *sdu = tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_data;
 
-      //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() BCH: pdu_index:%u pdu_length:%d sdu_length:%d BCH_SDU:%x,%x,%x\n", __FUNCTION__, pdu_index, bch_pdu->bch_pdu_rel8.length, tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_length, sdu[0], sdu[1], sdu[2]);
+      if (tx_request_pdu[sfn][sf][pdu_index] != NULL)
+      {
+        uint8_t *sdu = malloc(tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_length);
 
-#if 0
-      handle_nfapi_bch_pdu(eNB, proc, dl_config_pdu_list[i], sdu);
-#else
-      eNB->pbch_pdu[0] = sdu[2];
-      eNB->pbch_pdu[1] = sdu[1];
-      eNB->pbch_pdu[2] = sdu[0];
-#endif
+        memcpy(sdu, tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_data, tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_length);
 
-      eNB->pbch_configured=1;
+        //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() PDU:%d BCH: pdu_index:%u pdu_length:%d sdu_length:%d BCH_SDU:%x,%x,%x\n", __FUNCTION__, i, pdu_index, bch_pdu->bch_pdu_rel8.length, tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_length, sdu[0], sdu[1], sdu[2]);
 
-      if (0 && NFAPI_SFNSF2DEC(req->sfn_sf) % 500 == 0)
-        NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() [PDU:%u] len:%u pdu_index:%u segment[0]_length:%u pbch_sdu:%x %x %x\n", 
-            __FUNCTION__, i, 
-            bch_pdu->bch_pdu_rel8.length,
-            bch_pdu->bch_pdu_rel8.pdu_index,
-            tx_request_pdu[sfn][sf][bch_pdu->bch_pdu_rel8.pdu_index]->segments[0].segment_length,
-            sdu[0],
-            sdu[1],
-            sdu[2]);
+        handle_nfapi_bch_pdu(eNB, proc, &dl_config_pdu_list[i], sdu);
+
+        eNB->pbch_configured=1;
+      }
+      else
+      {
+        NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() BCH NULL TX PDU SFN/SF:%d PDU_INDEX:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), pdu_index); 
+      }
     }
     else if (dl_config_pdu_list[i].pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE)
     {
       nfapi_dl_config_dlsch_pdu *dlsch_pdu = &dl_config_pdu_list[i].dlsch_pdu;
       nfapi_dl_config_dlsch_pdu_rel8_t *rel8_pdu = &dlsch_pdu->dlsch_pdu_rel8;
-      uint8_t *dlsch_sdu = malloc(tx_request_pdu[sfn][sf][rel8_pdu->pdu_index]->segments[0].segment_length);
+
+      if (tx_request_pdu[sfn][sf][rel8_pdu->pdu_index] != NULL)
+      {
+        uint8_t *dlsch_sdu = malloc(tx_request_pdu[sfn][sf][rel8_pdu->pdu_index]->segments[0].segment_length);
 
 // **********************************************************************
 // THIS IS CREATING AN INTENTIONAL LEAK - I think...
@@ -1072,16 +1055,7 @@ if (0)//NFAPI_SFNSF2SF(req->sfn_sf)==5)
 // **********************************************************************
       memcpy(dlsch_sdu, tx_request_pdu[sfn][sf][rel8_pdu->pdu_index]->segments[0].segment_data, tx_request_pdu[sfn][sf][rel8_pdu->pdu_index]->segments[0].segment_length);
 
-      if (0)
-      {
-        NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DLSCH:pdu_index:%d handle_nfapi_dlsch_pdu(eNB, proc_rxtx, dlsch_pdu, transport_blocks:%d sdu:%p) eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols:%d\n", 
-            __FUNCTION__, 
-            rel8_pdu->pdu_index,
-            rel8_pdu->transport_blocks, 
-            dlsch_sdu,
-            eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols
-            );
-      }
+      //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DLSCH:pdu_index:%d handle_nfapi_dlsch_pdu(eNB, proc_rxtx, dlsch_pdu, transport_blocks:%d sdu:%p) eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols:%d\n", __FUNCTION__, rel8_pdu->pdu_index, rel8_pdu->transport_blocks, dlsch_sdu, eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols);
 
       handle_nfapi_dlsch_pdu(
           eNB,
@@ -1089,6 +1063,11 @@ if (0)//NFAPI_SFNSF2SF(req->sfn_sf)==5)
           &dl_config_pdu_list[i],
           rel8_pdu->transport_blocks-1,
           dlsch_sdu);
+      }
+      else
+      {
+        NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() DLSCH NULL TX PDU SFN/SF:%d PDU_INDEX:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), rel8_pdu->pdu_index);
+      }
     }
     else
     {
@@ -1113,9 +1092,10 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
   {
     for (int i=0; i<req->tx_request_body.number_of_pdus; i++)
     {
-      LOG_D(PHY,"%s() SFN/SF:%d/%d [PDU:%d] pdu_length:%d pdu_index:%d num_segments:%d\n",
+      LOG_D(PHY,"%s() SFN/SF:%d/%d number_of_pdus:%d [PDU:%d] pdu_length:%d pdu_index:%d num_segments:%d\n",
           __FUNCTION__,
           sfn, sf,
+          req->tx_request_body.number_of_pdus,
           i,
           req->tx_request_body.tx_pdu_list[i].pdu_length,
           req->tx_request_body.tx_pdu_list[i].pdu_index,
@@ -1858,9 +1838,11 @@ int oai_nfapi_harq_indication(nfapi_harq_indication_t *harq_ind)
 
   LOG_E(PHY, "%s() sfn_sf:%d number_of_harqs:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(harq_ind->sfn_sf), harq_ind->harq_indication_body.number_of_harqs);
 
-  return nfapi_pnf_p7_harq_ind(p7_config_g, harq_ind);
-}
+  int retval = nfapi_pnf_p7_harq_ind(p7_config_g, harq_ind);
 
+  if (retval != 0) LOG_E(PHY, "%s() sfn_sf:%d number_of_harqs:%d nfapi_pnf_p7_harq_ind()=%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(harq_ind->sfn_sf), harq_ind->harq_indication_body.number_of_harqs, retval);
+  return retval;
+}
 
 int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind)
 {
@@ -1887,49 +1869,6 @@ int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind)
   ind->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
   ind->header.message_id = NFAPI_RX_ULSCH_INDICATION;
 
-#if 0
-  //ind.rx_indication_body.rx_pdu_list = malloc(sizeof(nfapi_rx_indication_pdu_t)*body->number_of_pdus);
-  
-  nfapi_rx_indication_pdu_t pdu[ind->rx_indication_body.number_of_pdus];
-
-  memset(pdu, 0, sizeof(pdu));
-
-  ind->rx_indication_body.rx_pdu_list = pdu;
-
-  LOG_E(PHY, "%s() sfn_sf:%d number_of_pdus:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind.sfn_sf), ind.rx_indication_body.number_of_pdus);
-
-  for(int i=0; i<ind.rx_indication_body.number_of_pdus; i++)
-  {
-    //nfapi_rx_indication_pdu_t *pdu = &ind.rx_indication_body.rx_pdu_list[i];
-
-    pdu[i].rx_ue_information.tl.tag = body->rx_pdu_list[i].rx_ue_information.tl.tag;
-    pdu[i].rx_ue_information.handle = body->rx_pdu_list[i].rx_ue_information.handle;
-    pdu[i].rx_ue_information.rnti = body->rx_pdu_list[i].rx_ue_information.rnti;
-
-    pdu[i].rx_indication_rel8.tl.tag = body->rx_pdu_list[i].rx_indication_rel8.tl.tag;
-    pdu[i].rx_indication_rel8.length = body->rx_pdu_list[i].rx_indication_rel8.length;
-    pdu[i].rx_indication_rel8.offset = body->rx_pdu_list[i].rx_indication_rel8.offset;
-    pdu[i].rx_indication_rel8.ul_cqi = body->rx_pdu_list[i].rx_indication_rel8.ul_cqi;
-    pdu[i].rx_indication_rel8.timing_advance = body->rx_pdu_list[i].rx_indication_rel8.timing_advance;
-
-    pdu[i].rx_indication_rel9.tl.tag = 0; // Clear it
-
-    pdu[i].data = body->rx_pdu_list[i].data;
-
-    LOG_E(PHY, "%s() handle:%d rnti:%04x length:%d offset:%d ul_cqi:%d ta:%d data:%p body->rx_pdu_list[0].data:%p\n", 
-        __FUNCTION__,
-        pdu->rx_ue_information.handle,
-        pdu->rx_ue_information.rnti,
-        pdu->rx_indication_rel8.length,
-        pdu->rx_indication_rel8.offset,
-        pdu->rx_indication_rel8.ul_cqi,
-        pdu->rx_indication_rel8.timing_advance,
-        pdu->data,
-        body->rx_pdu_list[0].data
-        );
-  }
-
-#endif
   int retval = nfapi_pnf_p7_rx_ind(p7_config_g, ind);
 
   LOG_E(PHY,"%s() retval:%d\n", __FUNCTION__, retval);

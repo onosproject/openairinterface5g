@@ -560,20 +560,21 @@ abort();
   }
 
   // Program ACK for PHICH
-  LOG_D(MAC,"Programming PHICH ACK for rnti %x harq_pid %d (first_rb %d)\n",rntiP,harq_pid,first_rb);
-  nfapi_hi_dci0_request_body_t   *hi_dci0_req = &eNB->HI_DCI0_req[CC_idP].hi_dci0_request_body;
-  nfapi_hi_dci0_request_pdu_t    *hi_dci0_pdu = &hi_dci0_req->hi_dci0_pdu_list[hi_dci0_req->number_of_dci+hi_dci0_req->number_of_hi]; 	
+  LOG_D(MAC,"SFN/SF:%d/%d Programming PHICH ACK for rnti %x harq_pid %d (first_rb %d)\n",frameP,subframeP,rntiP,harq_pid,first_rb);
+  nfapi_hi_dci0_request_t        *hi_dci0_req = &eNB->HI_DCI0_req[CC_idP];
+  nfapi_hi_dci0_request_body_t   *hi_dci0_req_body = &hi_dci0_req->hi_dci0_request_body;
+  nfapi_hi_dci0_request_pdu_t    *hi_dci0_pdu = &hi_dci0_req_body->hi_dci0_pdu_list[hi_dci0_req_body->number_of_dci+hi_dci0_req_body->number_of_hi]; 	
   memset((void*)hi_dci0_pdu,0,sizeof(nfapi_hi_dci0_request_pdu_t));
   hi_dci0_pdu->pdu_type                                               = NFAPI_HI_DCI0_HI_PDU_TYPE; 
   hi_dci0_pdu->pdu_size                                               = 2+sizeof(nfapi_hi_dci0_hi_pdu);
   hi_dci0_pdu->hi_pdu.hi_pdu_rel8.tl.tag                              = NFAPI_HI_DCI0_REQUEST_HI_PDU_REL8_TAG;
   hi_dci0_pdu->hi_pdu.hi_pdu_rel8.resource_block_start                = first_rb; 
   hi_dci0_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms             = 0;
-  hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value                            = 1;
-  hi_dci0_req->number_of_hi++;
-  hi_dci0_req->tl.tag = NFAPI_HI_DCI0_REQUEST_BODY_TAG;
-  eNB->HI_DCI0_req[CC_idP].sfn_sf = frameP<<4|subframeP;
-  eNB->HI_DCI0_req[CC_idP].header.message_id = NFAPI_HI_DCI0_REQUEST;
+  hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value                            = 1; // DJP - wireshark shows this as a NAK who is right?
+  hi_dci0_req_body->number_of_hi++;
+  hi_dci0_req_body->tl.tag = NFAPI_HI_DCI0_REQUEST_BODY_TAG;
+  hi_dci0_req->sfn_sf = frameP<<4|subframeP;
+  hi_dci0_req->header.message_id = NFAPI_HI_DCI0_REQUEST;
 
   /* NN--> FK: we could either check the payload, or use a phy helper to detect a false msg3 */
   if ((num_sdu == 0) && (num_ce==0)) {

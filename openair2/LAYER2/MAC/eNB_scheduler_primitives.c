@@ -971,6 +971,7 @@ void program_dlsch_acknak(module_id_t module_idP, int CC_idP,int UE_idP, frame_t
         // Convert it to an NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE
         ulsch_harq_information = &ul_config_pdu->ulsch_harq_pdu.harq_information;
         ul_config_pdu->pdu_type = NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE;
+        ul_config_pdu->ulsch_harq_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.tl.tag=NFAPI_UL_CONFIG_REQUEST_INITIAL_TRANSMISSION_PARAMETERS_REL8_TAG;
         ul_config_pdu->ulsch_harq_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.n_srs_initial=0; // last symbol not punctured
         ul_config_pdu->ulsch_harq_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.initial_number_of_resource_blocks=
           ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks; // we don't change the number of resource blocks across retransmissions yet
@@ -998,6 +999,7 @@ void program_dlsch_acknak(module_id_t module_idP, int CC_idP,int UE_idP, frame_t
        * Those two types are not compatible. 'initial_transmission_parameters' is not at the
        * place in both.
        */
+      ul_config_pdu->ulsch_cqi_harq_ri_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.tl.tag=NFAPI_UL_CONFIG_REQUEST_INITIAL_TRANSMISSION_PARAMETERS_REL8_TAG;
       ul_config_pdu->ulsch_cqi_harq_ri_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.n_srs_initial=0; // last symbol not punctured
       ul_config_pdu->ulsch_cqi_harq_ri_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.initial_number_of_resource_blocks=
         ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks; // we don't change the number of resource blocks across retransmissions yet
@@ -1229,8 +1231,9 @@ uint16_t fill_nfapi_uci_acknak(module_id_t module_idP,
   COMMON_channels_t              *cc           = &eNB->common_channels[CC_idP];
 
   int ackNAK_absSF                             = get_pucch1_absSF(cc,absSFP);
-  nfapi_ul_config_request_body_t *ul_req       = &eNB->UL_req_tmp[CC_idP][ackNAK_absSF%10].ul_config_request_body;
-  nfapi_ul_config_request_pdu_t *ul_config_pdu = &ul_req->ul_config_pdu_list[ul_req->number_of_pdus];
+  nfapi_ul_config_request_t      *ul_req       = &eNB->UL_req_tmp[CC_idP][ackNAK_absSF%10];
+  nfapi_ul_config_request_body_t *ul_req_body  = &ul_req->ul_config_request_body;
+  nfapi_ul_config_request_pdu_t *ul_config_pdu = &ul_req_body->ul_config_pdu_list[ul_req_body->number_of_pdus];
 
   memset((void*)ul_config_pdu,0,sizeof(nfapi_ul_config_request_pdu_t));
   ul_config_pdu->pdu_type                                                              = NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE;
@@ -1247,8 +1250,11 @@ uint16_t fill_nfapi_uci_acknak(module_id_t module_idP,
   LOG_D(MAC,"Filled in UCI HARQ request for rnti %x SF %d.%d acknakSF %d.%d, cce_idxP %d-> n1_pucch %d\n",rntiP,
         absSFP/10,absSFP%10,ackNAK_absSF/10,ackNAK_absSF%10,cce_idxP,ul_config_pdu->uci_harq_pdu.harq_information.harq_information_rel9_fdd.n_pucch_1_0);
 
-  ul_req->number_of_pdus++;
-  ul_req->tl.tag = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
+  ul_req_body->number_of_pdus++;
+  ul_req_body->tl.tag = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
+  ul_req->header.message_id = NFAPI_UL_CONFIG_REQUEST;
+  //ul_req->sfn_sf = sfnsf_add_subframe(ackNAK_absSF/10, ackNAK_absSF%10, 4); // Still need to add 4 to ACK/NAK SFN/SF because of NFAPI running off TX frame 
+  ul_req->sfn_sf = (ackNAK_absSF/10) << 4 | ackNAK_absSF%10;
 
   return(((ackNAK_absSF/10)<<4) + (ackNAK_absSF%10));
 }
@@ -1314,7 +1320,7 @@ void fill_nfapi_dlsch_config(eNB_MAC_INST *eNB,
 uint16_t fill_nfapi_tx_req(nfapi_tx_request_body_t *tx_req_body,uint16_t absSF,uint16_t pdu_length, uint16_t pdu_index, uint8_t *pdu)
 {
   nfapi_tx_request_pdu_t *TX_req        = &tx_req_body->tx_pdu_list[tx_req_body->number_of_pdus];
-  LOG_D(MAC,"Filling TX_req %d for pdu length %d\n",tx_req_body->number_of_pdus,pdu_length);
+
   TX_req->pdu_length                    = pdu_length;
   TX_req->pdu_index                     = pdu_index;
   TX_req->num_segments                  = 1;
@@ -1322,6 +1328,8 @@ uint16_t fill_nfapi_tx_req(nfapi_tx_request_body_t *tx_req_body,uint16_t absSF,u
   TX_req->segments[0].segment_data      = pdu;
   tx_req_body->tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
   tx_req_body->number_of_pdus++;
+
+  LOG_D(MAC,"Filling TX_req SFN/SF:%d/%d PDUs:%d for pdu length %d pdu_index:%d\n",absSF/10,absSF%10,tx_req_body->number_of_pdus,pdu_length,pdu_index);
 
   return(((absSF/10)<<4) + (absSF%10));
 }

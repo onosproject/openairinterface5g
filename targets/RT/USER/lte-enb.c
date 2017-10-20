@@ -177,15 +177,14 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 #endif
   }
 
-  LOG_D(PHY, "RX_IND:SFN/SF:%d/%d proc:SFN/SF:%d/%d [rx_ind:num_pdus:%d]\n", NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf), proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus);
+  LOG_D(PHY, "RX_IND:SFN/SF:%d proc:SFN/SF:%d/%d [rx_ind:num_pdus:%d]\n", NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf), proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus);
 
   if (eNB->UL_INFO.rx_ind.sfn_sf == (proc->frame_rx<<4|proc->subframe_rx) && eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus>0)
   {
     // Fix me here, these should be locked
     for (int i=0; i<eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus; i++)
     {
-      LOG_E(PHY, "SFN/SF:%d/%d eNB->UL_INFO.rx_ind.number_of_pdus:%d Resetting!\n", proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus);
-      LOG_E(PHY, "NOT ZERO ING RX INDs\n\n\n\n\n\n\n");
+      LOG_E(PHY, "SFN/SF(RX):%d/%d eNB->UL_INFO.rx_ind.number_of_pdus:%d NOT ZEROING!\n\n\n\n\n", proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus);
       //eNB->UL_INFO.rx_ind[proc->subframe_rx&1].number_of_pdus  = 0;
     }
   }
@@ -194,8 +193,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   {
     for (int i=0; i<eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs; i++)
     {
-      LOG_E(PHY, "SFN/SF:%d/%d eNB->UL_INFO.crc_ind.number_of_crcs:%d Resetting!\n", proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs);
-      LOG_E(PHY, "NOT ZERO ING CRCs\n\n\n\n\n\n\n");
+      LOG_E(PHY, "SFN/SF(RX):%d/%d eNB->UL_INFO.crc_ind.number_of_crcs:%d NOT ZEROING!\n\n\n\n\n", proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs);
       //eNB->UL_INFO.crc_ind.number_of_crcs = 0;
     }
   }
@@ -275,20 +273,20 @@ static void* eNB_thread_rxtx( void* param ) {
   while (!oai_exit) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 0 );
 
-    LOG_D(PHY,"%s:%s() %u/%u About to wait on proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
+    LOG_D(PHY,"%s:%s() TX:%u/%u About to wait on proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
     if (wait_on_condition(&proc->mutex_rxtx,&proc->cond_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) break;
 
-    LOG_D(PHY,"%s:%s() %u/%u - WOKEN on proc->instance_cnt_rxtx proc->instance_cnt_rxtx:%d \n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
+    LOG_D(PHY,"%s:%s() TX:%u/%u - WOKEN on proc->instance_cnt_rxtx proc->instance_cnt_rxtx:%d \n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 1 );
 
     if (oai_exit) break;
 
-    LOG_D(PHY,"%s:%s() %u/%u About to rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
+    LOG_D(PHY,"%s:%s() TX:%u/%u About to rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
     if (eNB->CC_id==0)
       if (rxtx(eNB,proc,thread_name) < 0) break;
 
-    LOG_D(PHY,"%s:%s() %u/%u DONE rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
+    LOG_D(PHY,"%s:%s() TX:%u/%u DONE rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
 
     if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) break;
 

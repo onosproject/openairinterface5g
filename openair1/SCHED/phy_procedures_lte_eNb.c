@@ -1727,13 +1727,19 @@ void fill_ulsch_harq_indication(PHY_VARS_eNB *eNB,LTE_UL_eNB_HARQ_t *ulsch_harq,
   int UE_id = find_dlsch(rnti,eNB,SEARCH_EXIST);
   AssertFatal(UE_id>=0,"UE_id doesn't exist\n");
 
+  LOG_I(PHY,"%s(eNB, ulsch_harq, rnti:%04x, frame:%d, subframe:%d, bundling:%d)\n", __FUNCTION__, rnti, frame, subframe, bundling);
+
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
   nfapi_harq_indication_pdu_t *pdu =   &eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list[eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs];
   int M;
   int i;
 
+  eNB->UL_INFO.harq_ind.header.message_id = NFAPI_HARQ_INDICATION;
+  eNB->UL_INFO.harq_ind.sfn_sf = frame<<4|subframe;
+
   pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
+  pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
   pdu->rx_ue_information.rnti                         = rnti;
 
   if (eNB->frame_parms.frame_type == FDD) {
@@ -1800,15 +1806,24 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
   int UE_id=find_dlsch(uci->rnti,eNB,SEARCH_EXIST);
   AssertFatal(UE_id>=0,"UE_id doesn't exist\n");
 
-
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
-  nfapi_harq_indication_pdu_t *pdu =   &eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list[eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs];
 
+  nfapi_harq_indication_t *ind       = &eNB->UL_INFO.harq_ind;
+  nfapi_harq_indication_body_t *body = &ind->harq_indication_body;
+  nfapi_harq_indication_pdu_t *pdu   = &body->harq_pdu_list[eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs];
+
+  ind->sfn_sf = frame<<4|subframe;
+  ind->header.message_id = NFAPI_HARQ_INDICATION;
+
+  body->tl.tag = NFAPI_HARQ_INDICATION_BODY_TAG;
+ 
   pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
+  pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
   pdu->rx_ue_information.rnti                         = uci->rnti;
 
   // estimate UL_CQI for MAC (from antenna port 0 only)
+  pdu->ul_cqi_information.tl.tag = NFAPI_UL_CQI_INFORMATION_TAG;
   int SNRtimes10 = dB_fixed_times10(uci->stat) - 200;//(10*eNB->measurements.n0_power_dB[0]);
 
   if (SNRtimes10 < -100) LOG_I(PHY,"uci->stat %d \n",uci->stat);
@@ -1820,6 +1835,7 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
 
   if (eNB->frame_parms.frame_type == FDD) {
     if (uci->pucch_fmt == pucch_format1a) {
+      pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_FDD_REL13_TAG;
       pdu->harq_indication_fdd_rel13.mode = 0;  
       pdu->harq_indication_fdd_rel13.number_of_ack_nack = 1;
       
@@ -1838,6 +1854,7 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
 #endif
     }
     else if (uci->pucch_fmt == pucch_format1b) {
+      pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_FDD_REL13_TAG;
       pdu->harq_indication_fdd_rel13.mode = 0;  
       pdu->harq_indication_fdd_rel13.number_of_ack_nack = 2;
       AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[1] == 4, "harq_ack[0] is %d, should be 0,1 or 4\n",harq_ack[0]);
@@ -1855,12 +1872,14 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
     AssertFatal(tdd_mapping_mode==0 || tdd_mapping_mode==1 || tdd_mapping_mode==2,
 		"Illegal tdd_mapping_mode %d\n",tdd_mapping_mode);
 
+    pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
     pdu->harq_indication_tdd_rel13.mode = tdd_mapping_mode;  
 
     switch (tdd_mapping_mode) {
     case 0: // bundling
 
       if (uci->pucch_fmt == pucch_format1a) {
+        pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
 	pdu->harq_indication_tdd_rel13.number_of_ack_nack = 1;	
 	AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[0] == 4, "harq_ack[0] is %d, should be 1,2 or 4\n",harq_ack[0]);
 	pdu->harq_indication_tdd_rel13.harq_data[0].bundling.value_0 = harq_ack[0];
@@ -1871,6 +1890,7 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
 	pdu->harq_indication_tdd_rel13.number_of_ack_nack = 2;
 	AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[1] == 4, "harq_ack[0] is %d, should be 0,1 or 4\n",harq_ack[0]);
 	AssertFatal(harq_ack[1] == 1 || harq_ack[1] == 2 || harq_ack[1] == 4, "harq_ack[1] is %d, should be 0,1 or 4\n",harq_ack[1]);
+        pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
 	pdu->harq_indication_tdd_rel13.harq_data[0].bundling.value_0 = harq_ack[0];
 	pdu->harq_indication_tdd_rel13.harq_data[1].bundling.value_0 = harq_ack[1]; 
 	// release all DLSCH if needed
@@ -1882,6 +1902,7 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
       AssertFatal(uci->pucch_fmt == pucch_format1b,"uci->pucch_format %d is not format1b\n",uci->pucch_fmt);
       
       if (uci->num_pucch_resources == 1 && uci->pucch_fmt == pucch_format1a) {
+        pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
 	pdu->harq_indication_tdd_rel13.number_of_ack_nack = 1;	
 	AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[0] == 4, "harq_ack[0] is %d, should be 1,2 or 4\n",harq_ack[0]);
 	pdu->harq_indication_tdd_rel13.harq_data[0].multiplex.value_0 = harq_ack[0];
@@ -1889,6 +1910,7 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
 	if (harq_ack[0] == 1) release_harq(eNB,UE_id,0,frame,subframe,0xffff);
       }
       else if (uci->num_pucch_resources == 1 && uci->pucch_fmt == pucch_format1b) {
+        pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
 	pdu->harq_indication_tdd_rel13.number_of_ack_nack = 2;
 	AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[1] == 4, "harq_ack[0] is %d, should be 0,1 or 4\n",harq_ack[0]);
 	AssertFatal(harq_ack[1] == 1 || harq_ack[1] == 2 || harq_ack[1] == 4, "harq_ack[1] is %d, should be 0,1 or 4\n",harq_ack[1]);
@@ -1899,6 +1921,7 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
 	if (harq_ack[1] == 1) release_harq(eNB,UE_id,1,frame,subframe,0xffff);
       }
       else { // num_pucch_resources (M) > 1
+        pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
 	pdu->harq_indication_tdd_rel13.number_of_ack_nack = uci->num_pucch_resources;
 
 	pdu->harq_indication_tdd_rel13.harq_data[0].multiplex.value_0 = harq_ack[0];
@@ -1911,6 +1934,7 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
       }
       break;
     case 2: // special bundling (SR collision)
+      pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
       pdu->harq_indication_tdd_rel13.number_of_ack_nack = 1;
       int tdd_config5_sf2scheds=0;
       if (eNB->frame_parms.tdd_config==5) tdd_config5_sf2scheds = getM(eNB,frame,subframe);
@@ -1959,6 +1983,7 @@ void fill_crc_indication(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint
   nfapi_crc_indication_pdu_t *pdu =   &eNB->UL_INFO.crc_ind.crc_indication_body.crc_pdu_list[eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs];
 
   eNB->UL_INFO.crc_ind.sfn_sf                         = frame<<4 | subframe;
+  eNB->UL_INFO.crc_ind.header.message_id              = NFAPI_CRC_INDICATION;
   eNB->UL_INFO.crc_ind.crc_indication_body.tl.tag     = NFAPI_CRC_INDICATION_BODY_TAG;
 
   pdu->instance_length                                = 0; // don't know what to do with this
@@ -1970,7 +1995,7 @@ void fill_crc_indication(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint
 
   eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs++;
 
-  LOG_D(PHY, "%s() rnti:%04x pdus:%d\n", __FUNCTION__, pdu->rx_ue_information.rnti, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs);
+  LOG_D(PHY, "%s() rnti:%04x crcs:%d\n", __FUNCTION__, pdu->rx_ue_information.rnti, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs);
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 }

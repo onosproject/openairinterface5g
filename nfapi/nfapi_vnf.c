@@ -291,6 +291,8 @@ int vnf_unpack_vendor_extension_tlv(nfapi_tl_t* tl, uint8_t **ppReadPackedMessag
 void install_schedule_handlers(IF_Module_t *if_inst);
 extern int single_thread_flag;
 extern void init_eNB_afterRU(void);
+extern void add_subframe(int *frameP, int *subframeP, int offset);
+extern void subtract_subframe(int *frameP, int *subframeP, int offset);
 
 void oai_create_enb(void)
 {
@@ -545,6 +547,8 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf)
   proc_rxtx->subframe_rx  = proc->subframe_rx;
   proc_rxtx->frame_tx     = (proc_rxtx->subframe_rx > 5) ? (proc_rxtx->frame_rx+1)&1023 : proc_rxtx->frame_rx;
   proc_rxtx->subframe_tx  = (proc_rxtx->subframe_rx + 4)%10;
+
+  LOG_E(PHY, "sfn/sf:%d:%d proc[frame_rx:%d subframe_rx:%d timestamp_rx:%ld timestamp_tx:%ld] proc_rxtx[instance_cnt_rxtx:%d frame_rx:%d subframe_rx:%d]\n", sfn, sf, proc->frame_rx, proc->subframe_rx, proc->timestamp_rx, proc->timestamp_tx, proc_rxtx->instance_cnt_rxtx, proc_rxtx->frame_rx, proc_rxtx->subframe_rx);
 
   // the thread can now be woken up
   if (pthread_cond_signal(&proc_rxtx->cond_rxtx) != 0) {

@@ -154,12 +154,15 @@ void handle_ulsch(UL_IND_t *UL_info) {
       LOG_D(PHY,"UL_info->crc_ind.crc_indication_body.number_of_crcs:%d\n", UL_info->crc_ind.crc_indication_body.number_of_crcs);
 
       oai_nfapi_crc_indication(&UL_info->crc_ind);
+
+      UL_info->crc_ind.crc_indication_body.number_of_crcs = 0;
     }
 
     if (UL_info->rx_ind.rx_indication_body.number_of_pdus>0)
     {
       LOG_D(PHY,"UL_info->rx_ind.number_of_pdus:%d\n", UL_info->rx_ind.rx_indication_body.number_of_pdus);
       oai_nfapi_rx_ind(&UL_info->rx_ind);
+      UL_info->rx_ind.rx_indication_body.number_of_pdus = 0;
     }
   }
   else
