@@ -1807,20 +1807,14 @@ void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, 
   pthread_create(&pnf_start_pthread, NULL, &pnf_start_thread, config);
 }
 
-void oai_subframe_ind(eNB_rxtx_proc_t *proc)
+void oai_subframe_ind(uint16_t sfn, uint16_t sf)
 {
-  //LOG_D(PHY,"%s(frame:%d, subframe:%d)\n", __FUNCTION__, proc->frame_tx, proc->subframe_tx);
+  //LOG_D(PHY,"%s(sfn:%d, sf:%d)\n", __FUNCTION__, sfn, sf);
 
   //TODO FIXME - HACK - DJP - using a global to bodge it in 
 
   if (p7_config_g != NULL && sync_var==0)
   {
-    //PHY_VARS_eNB *eNB = RC.eNB[0][0];
-    //int even_frame_thread = eNB->proc.proc_rxtx[0] == proc ? 0 : 1;
-
-    int pnf = nfapi_mode==1 ? 1 : 0;
-    uint16_t sfn = pnf ? proc->frame_tx : proc->frame_rx;
-    uint16_t sf = pnf ? proc->subframe_tx : proc->frame_rx;
     uint16_t sfn_sf_tx = sfn<<4 | sf;
 
     if ((sfn % 100 == 0) && sf==0)
@@ -1829,7 +1823,7 @@ void oai_subframe_ind(eNB_rxtx_proc_t *proc)
 
       clock_gettime(CLOCK_MONOTONIC, &ts);
 
-      NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] %s %d.%d (frame:%u subframe:%u) SFN/SF(TX):%u\n", __FUNCTION__, ts.tv_sec, ts.tv_nsec, sfn, sf, NFAPI_SFNSF2DEC(sfn_sf_tx));
+      NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] %s %d.%d (sfn:%u sf:%u) SFN/SF(TX):%u\n", __FUNCTION__, ts.tv_sec, ts.tv_nsec, sfn, sf, NFAPI_SFNSF2DEC(sfn_sf_tx));
     }
 
     int subframe_ret = nfapi_pnf_p7_subframe_ind(p7_config_g, p7_config_g->phy_id, sfn_sf_tx);

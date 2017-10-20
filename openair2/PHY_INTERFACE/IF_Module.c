@@ -513,9 +513,10 @@ void UL_indication(UL_IND_t *UL_info)
   IF_Module_t  *ifi        = if_inst[module_id];
   eNB_MAC_INST *mac        = RC.mac[module_id];
 
-  LOG_D(PHY,"UL_Indication: frame %d, subframe %d, module_id %d, CC_id %d\n",
-	UL_info->frame,UL_info->subframe,
-	module_id,CC_id);
+  LOG_D(PHY,"frame %d, subframe %d, module_id %d, CC_id %d UL_info[rx_ind:%d number_of_harqs:%d number_of_crcs:%d number_of_cqis:%d number_of_preambles:%d]\n", 
+      UL_info->frame,UL_info->subframe,
+      module_id,CC_id,
+      UL_info->rx_ind.rx_indication_body.number_of_pdus, UL_info->harq_ind.harq_indication_body.number_of_harqs, UL_info->crc_ind.crc_indication_body.number_of_crcs, UL_info->cqi_ind.number_of_cqis, UL_info->rach_ind.number_of_preambles);
 
   if (nfapi_mode != 1)
   {
@@ -534,8 +535,6 @@ void UL_indication(UL_IND_t *UL_info)
   // clear DL/UL info for new scheduling round
   clear_nfapi_information(RC.mac[module_id],CC_id,
 			  UL_info->frame,UL_info->subframe);
-
-  LOG_D(PHY, "UL_info[rx_ind:%d number_of_harqs:%d number_of_crcs:%d number_of_cqis:%d number_of_preambles:%d]\n", UL_info->rx_ind.rx_indication_body.number_of_pdus, UL_info->harq_ind.harq_indication_body.number_of_harqs, UL_info->crc_ind.crc_indication_body.number_of_crcs, UL_info->cqi_ind.number_of_cqis, UL_info->rach_ind.number_of_preambles);
 
   handle_rach(UL_info);
 

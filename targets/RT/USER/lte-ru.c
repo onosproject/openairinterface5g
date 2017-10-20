@@ -129,6 +129,8 @@ int attach_rru(RU_t *ru);
 
 int connect_rau(RU_t *ru);
 
+extern uint8_t nfapi_mode;
+extern void oai_subframe_ind(uint16_t frame, uint16_t subframe);
 
 /*************************************************************/
 /* Functions to attach and configure RRU                     */
@@ -1271,6 +1273,40 @@ static inline int wakeup_prach_ru_br(RU_t *ru) {
 }
 #endif
 
+#if 0
+static inline int wakeup_nfapi_subframe_thread(RU_t *ru) {
+
+  int i;
+  PHY_VARS_eNB **eNB_list = ru->eNB_list;
+
+  LOG_D(PHY,"wakeup_nfapi_subframe_thread (num %d) for RU %d ru->eNB_top:%p\n",ru->num_eNB,ru->idx, ru->eNB_top);
+
+  if (ru->num_eNB==1 && ru->eNB_top!=0) {
+    // call eNB function directly
+
+    char string[20];
+    sprintf(string,"Incoming RU %d",ru->idx);
+    //LOG_D(PHY,"RU %d Call eNB_top\n",ru->idx);
+    ru->eNB_top(eNB_list[0],ru->proc.frame_rx,ru->proc.subframe_rx,string);
+  }
+  else {
+
+    LOG_D(PHY,"ru->num_eNB:%d\n", ru->num_eNB);
+
+    for (i=0;i<ru->num_eNB;i++)
+    {
+      LOG_D(PHY,"ru->wakeup_rxtx:%p\n", ru->wakeup_rxtx);
+
+      if (ru->wakeup_rxtx!=0 && ru->wakeup_rxtx(eNB_list[i],ru) < 0)
+      {
+	LOG_E(PHY,"could not wakeup eNB rxtx process for subframe %d\n", ru->proc.subframe_rx);
+      }
+    }
+  }
+}
+#endif
+
+
 // this is for RU with local RF unit
 void fill_rf_config(RU_t *ru, char *rf_config_file) {
 
@@ -1517,7 +1553,7 @@ static void* ru_thread( void* param ) {
     if (ru->fh_south_in) ru->fh_south_in(ru,&frame,&subframe);
     else AssertFatal(1==0, "No fronthaul interface at south port");
 
-    LOG_D(PHY,"AFTER fh_south_in - SFN/SF:%d/%d RX:%d/%d TX:%d/%d RC.eNB[0][0]:[RX:%d/%d TX(SFN):%d] eNB:%p RU:eNB:%p proc:%p ru->proc:%p\n",
+    LOG_D(PHY,"AFTER fh_south_in - SFN/SF:%d/%d RU->proc[RX:%d/%d TX:%d/%d] RC.eNB[0][0]:[RX:%d/%d TX(SFN):%d] eNB:%p RU:eNB:%p proc:%p ru->proc:%p\n",
         frame,subframe,
         proc->frame_rx,proc->subframe_rx,
         proc->frame_tx,proc->subframe_tx,
@@ -1525,6 +1561,32 @@ static void* ru_thread( void* param ) {
         RC.eNB[0][0]->proc.frame_tx,
         RC.eNB[0][0], ru->eNB_list[0],
         proc,&ru->proc);
+
+#if 0
+    // This needs to be here, because we need to be as close to the interrupt as possible, any later and you get jitter
+    // However, putting it here causes the PNF to go horribly wrong and get bad harq_pid!
+    //
+    if (nfapi_mode == 1)  // PNF
+    {
+      struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
+
+      //oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
+      //LOG_D(PHY, "oai_subframe_ind(frame:%u, subframe:%d) NOT CALLED **************************************\n", frame, subframe);
+
+      //uint16_t frame = proc->frame_tx;
+      //uint16_t subframe = proc->subframe_tx;
+
+      //add_subframe(&frame, &subframe, 4);
+
+      //oai_subframe_ind(frame, subframe);
+      //LOG_D(PHY, "oai_subframe_ind(frame:%u, subframe:%d) UL_info[rx_ind:%d number_of_harqs:%d number_of_crcs:%d number_of_cqis:%d number_of_preambles:%d]\n", frame, subframe, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, eNB->UL_INFO.cqi_ind.number_of_cqis, eNB->UL_INFO.rach_ind.number_of_preambles);
+    }
+#endif
+    if (nfapi_mode == 1) // PNF
+    {
+      // This is the earliest I think we can do this
+      //wakeup_nfapi_subframe_thread();
+    }
 
     if (0 && is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx))
       LOG_D(PHY,"RU thread (do_prach %d, is_prach_subframe %d), received frame %d, subframe %d\n",

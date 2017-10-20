@@ -151,8 +151,9 @@ void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
 void wakeup_prach_eNB_br(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
 #endif
 
-extern void oai_subframe_ind(eNB_rxtx_proc_t *proc);
 extern uint8_t nfapi_mode;
+extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
+extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 
 static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
@@ -176,7 +177,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 #endif
   }
 
-  LOG_D(PHY, "SFN/SF proc:%d/%d rx_ind:%d/%d [num_pdus:%d]\n", NFAPI_SFNSF2SFN(eNB->UL_INFO.rx_ind.sfn_sf), NFAPI_SFNSF2SF(eNB->UL_INFO.rx_ind.sfn_sf), proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus);
+  LOG_D(PHY, "RX_IND:SFN/SF:%d/%d proc:SFN/SF:%d/%d [rx_ind:num_pdus:%d]\n", NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf), proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus);
 
   if (eNB->UL_INFO.rx_ind.sfn_sf == (proc->frame_rx<<4|proc->subframe_rx) && eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus>0)
   {
@@ -199,10 +200,18 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
     }
   }
 
-  if (nfapi_mode)
+  if (nfapi_mode == 1)
   {
-    oai_subframe_ind(proc); // PNF ---> P7:subframe_ind --> VNF 
-    //LOG_E(PHY, "Returned from oai_subframe_ind()\n");
+    // I am a PNF and I need to let nFAPI know that we have a (sub)frame tick
+    uint16_t frame = proc->frame_rx;
+    uint16_t subframe = proc->subframe_rx;
+
+    add_subframe(&frame, &subframe, 4);
+
+    //oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
+    //LOG_D(PHY, "oai_subframe_ind(frame:%u, subframe:%d) - NOT CALLED ********\n", frame, subframe);
+    oai_subframe_ind(frame, subframe);
+
     LOG_D(PHY, "UL_info[rx_ind:%d number_of_harqs:%d number_of_crcs:%d number_of_cqis:%d number_of_preambles:%d]\n", eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, eNB->UL_INFO.cqi_ind.number_of_cqis, eNB->UL_INFO.rach_ind.number_of_preambles);
   }
 
@@ -339,8 +348,7 @@ void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string)
     proc_rxtx->timestamp_tx = proc->timestamp_tx;
 
     if (rxtx(eNB,proc_rxtx,string) < 0) LOG_E(PHY,"eNB %d CC_id %d failed during execution\n",eNB->Mod_id,eNB->CC_id);
-    LOG_D(PHY,"eNB_top out %p (proc %p, CC_id %d), frame %d, subframe %d, instance_cnt_prach %d\n",
-	  (void*)pthread_self(), proc, eNB->CC_id, proc->frame_rx,proc->subframe_rx,proc->instance_cnt_prach);
+    //LOG_D(PHY,"eNB_top out %p (proc %p, CC_id %d), frame %d, subframe %d, instance_cnt_prach %d\n", (void*)pthread_self(), proc, eNB->CC_id, proc->frame_rx,proc->subframe_rx,proc->instance_cnt_prach);
   }
 }
 
