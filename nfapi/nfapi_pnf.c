@@ -1109,7 +1109,7 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
   return 0;
 }
 
-extern void subtract_subframe(int *frameP, int *subframeP, int offset);
+extern void subtract_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 
 int pnf_phy_ul_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
 {

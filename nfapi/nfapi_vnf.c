@@ -291,8 +291,8 @@ int vnf_unpack_vendor_extension_tlv(nfapi_tl_t* tl, uint8_t **ppReadPackedMessag
 void install_schedule_handlers(IF_Module_t *if_inst);
 extern int single_thread_flag;
 extern void init_eNB_afterRU(void);
-extern void add_subframe(int *frameP, int *subframeP, int offset);
-extern void subtract_subframe(int *frameP, int *subframeP, int offset);
+extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
+extern void subtract_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 
 void oai_create_enb(void)
 {

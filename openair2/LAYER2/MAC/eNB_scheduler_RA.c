@@ -63,20 +63,20 @@
 #include "T.h"
 
 
-void add_subframe(int *frameP, int *subframeP, int offset)
+void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset)
 {
     *frameP    = *frameP + ((*subframeP + offset) / 10);
 
     *subframeP = ((*subframeP + offset) % 10);
 }
 
-uint16_t sfnsf_add_subframe(int frameP, int subframeP, int offset)
+uint16_t sfnsf_add_subframe(uint16_t frameP, uint16_t subframeP, int offset)
 {
   add_subframe(&frameP, &subframeP, offset);
   return frameP<<4|subframeP;
 }
 
-void subtract_subframe(int *frameP, int *subframeP, int offset)
+void subtract_subframe(uint16_t *frameP, uint16_t *subframeP, int offset)
 {
   if (*subframeP < offset)
   {
@@ -85,7 +85,7 @@ void subtract_subframe(int *frameP, int *subframeP, int offset)
   *subframeP = (*subframeP+10-offset)%10;
 }
 
-uint16_t sfnsf_subtrace_subframe(int frameP, int subframeP, int offset)
+uint16_t sfnsf_subtract_subframe(uint16_t frameP, uint16_t subframeP, int offset)
 {
   subtract_subframe(&frameP, &subframeP, offset);
   return frameP<<4|subframeP;
