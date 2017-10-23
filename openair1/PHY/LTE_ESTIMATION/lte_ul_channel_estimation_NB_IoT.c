@@ -31,15 +31,16 @@
 
 // For Channel Estimation in Distributed Alamouti Scheme
 //static int16_t temp_out_ifft[2048*4] __attribute__((aligned(16)));
+/*
 static int16_t temp_out_fft_0[2048*4] __attribute__((aligned(16)));
 static int16_t temp_out_fft_1[2048*4] __attribute__((aligned(16)));
 static int16_t temp_out_ifft_0[2048*4] __attribute__((aligned(16)));
 static int16_t temp_out_ifft_1[2048*4] __attribute__((aligned(16)));
-
+*/
 
 static int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
-static int32_t temp_in_ifft_1[2048*2] __attribute__((aligned(32)));
-static int32_t temp_in_fft_0[2048*2] __attribute__((aligned(16)));
+//static int32_t temp_in_ifft_1[2048*2] __attribute__((aligned(32)));
+//static int32_t temp_in_fft_0[2048*2] __attribute__((aligned(16)));
 static int32_t temp_in_fft_1[2048*2] __attribute__((aligned(16)));
 
 // round(exp(sqrt(-1)*(pi/2)*[0:1:N-1]/N)*pow2(15))
@@ -62,8 +63,8 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
   NB_IoT_eNB_PUSCH *pusch_vars = eNB->pusch_vars[UE_id];
   int32_t **ul_ch_estimates=pusch_vars->drs_ch_estimates[eNB_id];
   int32_t **ul_ch_estimates_time=  pusch_vars->drs_ch_estimates_time[eNB_id];
-  int32_t **ul_ch_estimates_0=  pusch_vars->drs_ch_estimates_0[eNB_id];
-  int32_t **ul_ch_estimates_1=  pusch_vars->drs_ch_estimates_1[eNB_id];
+  //int32_t **ul_ch_estimates_0=  pusch_vars->drs_ch_estimates_0[eNB_id];
+  //int32_t **ul_ch_estimates_1=  pusch_vars->drs_ch_estimates_1[eNB_id];
   int32_t **rxdataF_ext=  pusch_vars->rxdataF_ext[eNB_id];
   int subframe = proc->subframe_rx;
   //uint8_t harq_pid = subframe2harq_pid_NB_IoT(frame_parms,proc->frame_rx,subframe);
@@ -77,7 +78,7 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
   int k,pilot_pos1 = 3 - frame_parms->Ncp, pilot_pos2 = 10 - 2*frame_parms->Ncp;
   int16_t alpha, beta;
   int32_t *ul_ch1=NULL, *ul_ch2=NULL;
-  int32_t *ul_ch1_0=NULL,*ul_ch2_0=NULL,*ul_ch1_1=NULL,*ul_ch2_1=NULL;
+  //int32_t *ul_ch1_0=NULL,*ul_ch2_0=NULL,*ul_ch1_1=NULL,*ul_ch2_1=NULL;
   int16_t ul_ch_estimates_re,ul_ch_estimates_im;
   int32_t rx_power_correction;
 
@@ -87,10 +88,11 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
   uint32_t alpha_ind;
   uint32_t u=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.grouphop[Ns+(subframe<<1)];
-  uint32_t v=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.seqhop[Ns+(subframe<<1)];
+  //uint32_t v=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.seqhop[Ns+(subframe<<1)];
   int32_t tmp_estimates[N_rb_alloc*12] __attribute__((aligned(16)));
 
-  int symbol_offset,i,j;
+  int symbol_offset,i;
+  //int j;
 
   //debug_msg("lte_ul_channel_estimation: cyclic shift %d\n",cyclicShift);
 
@@ -98,10 +100,12 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
   int16_t alpha_re[12] = {32767, 28377, 16383,     0,-16384,  -28378,-32768,-28378,-16384,    -1, 16383, 28377};
   int16_t alpha_im[12] = {0,     16383, 28377, 32767, 28377,   16383,     0,-16384,-28378,-32768,-28378,-16384};
 
-  int32_t *in_fft_ptr_0 = (int32_t*)0,*in_fft_ptr_1 = (int32_t*)0,
+ /* 
+      int32_t *in_fft_ptr_0 = (int32_t*)0,*in_fft_ptr_1 = (int32_t*)0,
            *temp_out_fft_0_ptr = (int32_t*)0,*out_fft_ptr_0 = (int32_t*)0,
             *temp_out_fft_1_ptr = (int32_t*)0,*out_fft_ptr_1 = (int32_t*)0,
-             *temp_in_ifft_ptr = (int32_t*)0;
+             *temp_in_ifft_ptr = (int32_t*)0; 
+*/
 
 #if defined(__x86_64__) || defined(__i386__)
   __m128i *rxdataF128,*ul_ref128,*ul_ch128;
@@ -160,11 +164,11 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 #if defined(__x86_64__) || defined(__i386__)
       rxdataF128 = (__m128i *)&rxdataF_ext[aa][symbol_offset];
       ul_ch128   = (__m128i *)&ul_ch_estimates[aa][symbol_offset];
-      ul_ref128  = (__m128i *)ul_ref_sigs_rx[u][v][Msc_RS_idx];
+      ul_ref128  = (__m128i *)ul_ref_sigs_rx[u][Msc_RS_idx];
 #elif defined(__arm__)
       rxdataF128 = (int16x8_t *)&rxdataF_ext[aa][symbol_offset];
       ul_ch128   = (int16x8_t *)&ul_ch_estimates[aa][symbol_offset];
-      ul_ref128  = (int16x8_t *)ul_ref_sigs_rx[u][v][Msc_RS_idx];
+      ul_ref128  = (int16x8_t *)ul_ref_sigs_rx[u][Msc_RS_idx];
 #endif
 
       for (i=0; i<Msc_RS/12; i++) {
@@ -263,8 +267,9 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
       alpha_ind = 0;
 
-      if((cyclic_shift != 0)) {
-        // Compensating for the phase shift introduced at the transmitte
+      if((cyclic_shift != 0) && Msc_RS != 12) {
+        // Compensating for the phase shift introduced at the transmitter
+        // In NB-IoT, phase alpha is zero when 12 subcarriers are allocated
 #ifdef DEBUG_CH
         write_output("drs_est_pre.m","drsest_pre",ul_ch_estimates[0],300*12,1,1);
 #endif
@@ -349,192 +354,192 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 #endif
 
 
-      if(cooperation_flag == 2) {
-        memset(temp_in_ifft_0,0,frame_parms->ofdm_symbol_size*sizeof(int32_t*)*2);
-        memset(temp_in_ifft_1,0,frame_parms->ofdm_symbol_size*sizeof(int32_t*)*2);
-        memset(temp_in_fft_0,0,frame_parms->ofdm_symbol_size*sizeof(int32_t*)*2);
-        memset(temp_in_fft_1,0,frame_parms->ofdm_symbol_size*sizeof(int32_t*)*2);
+//       if(cooperation_flag == 2) {
+//         memset(temp_in_ifft_0,0,frame_parms->ofdm_symbol_size*sizeof(int32_t*)*2);
+//         memset(temp_in_ifft_1,0,frame_parms->ofdm_symbol_size*sizeof(int32_t*)*2);
+//         memset(temp_in_fft_0,0,frame_parms->ofdm_symbol_size*sizeof(int32_t*)*2);
+//         memset(temp_in_fft_1,0,frame_parms->ofdm_symbol_size*sizeof(int32_t*)*2);
 
-        temp_in_ifft_ptr = &temp_in_ifft_0[0];
+//         temp_in_ifft_ptr = &temp_in_ifft_0[0];
 
-        i = symbol_offset;
+//         i = symbol_offset;
 
-        for(j=0; j<(frame_parms->N_RB_UL*12); j++) {
-          temp_in_ifft_ptr[j] = ul_ch_estimates[aa][i];
-          i++;
-        }
+//         for(j=0; j<(frame_parms->N_RB_UL*12); j++) {
+//           temp_in_ifft_ptr[j] = ul_ch_estimates[aa][i];
+//           i++;
+//         }
 
-        alpha_ind = 0;
+//         alpha_ind = 0;
 
-        // Compensating for the phase shift introduced at the transmitter
-        for(i=symbol_offset; i<symbol_offset+Msc_RS; i++) {
-          ul_ch_estimates_re = ((int16_t*) ul_ch_estimates[aa])[i<<1];
-          ul_ch_estimates_im = ((int16_t*) ul_ch_estimates[aa])[(i<<1)+1];
-          //    ((int16_t*) ul_ch_estimates[aa])[i<<1] =  (i%2 == 1? 1:-1) * ul_ch_estimates_re;
-          ((int16_t*) ul_ch_estimates[aa])[i<<1] =
-            (int16_t) (((int32_t) (alpha_re[alpha_ind]) * (int32_t) (ul_ch_estimates_re) +
-                        (int32_t) (alpha_im[alpha_ind]) * (int32_t) (ul_ch_estimates_im))>>15);
+//         // Compensating for the phase shift introduced at the transmitter
+//         for(i=symbol_offset; i<symbol_offset+Msc_RS; i++) {
+//           ul_ch_estimates_re = ((int16_t*) ul_ch_estimates[aa])[i<<1];
+//           ul_ch_estimates_im = ((int16_t*) ul_ch_estimates[aa])[(i<<1)+1];
+//           //    ((int16_t*) ul_ch_estimates[aa])[i<<1] =  (i%2 == 1? 1:-1) * ul_ch_estimates_re;
+//           ((int16_t*) ul_ch_estimates[aa])[i<<1] =
+//             (int16_t) (((int32_t) (alpha_re[alpha_ind]) * (int32_t) (ul_ch_estimates_re) +
+//                         (int32_t) (alpha_im[alpha_ind]) * (int32_t) (ul_ch_estimates_im))>>15);
 
-          //((int16_t*) ul_ch_estimates[aa])[(i<<1)+1] =  (i%2 == 1? 1:-1) * ul_ch_estimates_im;
-          ((int16_t*) ul_ch_estimates[aa])[(i<<1)+1] =
-            (int16_t) (((int32_t) (alpha_re[alpha_ind]) * (int32_t) (ul_ch_estimates_im) -
-                        (int32_t) (alpha_im[alpha_ind]) * (int32_t) (ul_ch_estimates_re))>>15);
+//           //((int16_t*) ul_ch_estimates[aa])[(i<<1)+1] =  (i%2 == 1? 1:-1) * ul_ch_estimates_im;
+//           ((int16_t*) ul_ch_estimates[aa])[(i<<1)+1] =
+//             (int16_t) (((int32_t) (alpha_re[alpha_ind]) * (int32_t) (ul_ch_estimates_im) -
+//                         (int32_t) (alpha_im[alpha_ind]) * (int32_t) (ul_ch_estimates_re))>>15);
 
-          alpha_ind+=10;
+//           alpha_ind+=10;
 
-          if (alpha_ind>11)
-            alpha_ind-=12;
-        }
+//           if (alpha_ind>11)
+//             alpha_ind-=12;
+//         }
 
-        //Extracting Channel Estimates for Distributed Alamouti Receiver Combining
+//         //Extracting Channel Estimates for Distributed Alamouti Receiver Combining
 
-        temp_in_ifft_ptr = &temp_in_ifft_1[0];
+//         temp_in_ifft_ptr = &temp_in_ifft_1[0];
 
-        i = symbol_offset;
+//         i = symbol_offset;
 
-        for(j=0; j<(frame_parms->N_RB_UL*12); j++) {
-          temp_in_ifft_ptr[j] = ul_ch_estimates[aa][i];
-          i++;
-        }
+//         for(j=0; j<(frame_parms->N_RB_UL*12); j++) {
+//           temp_in_ifft_ptr[j] = ul_ch_estimates[aa][i];
+//           i++;
+//         }
 
-	switch (frame_parms->N_RB_DL) {
-	case 6:
-	  idft128((int16_t*) &temp_in_ifft_0[0],                          // Performing IFFT on Combined Channel Estimates
-		  temp_out_ifft_0,
-		  1);
-	  idft128((int16_t*) &temp_in_ifft_1[0],                          // Performing IFFT on Combined Channel Estimates
-		  temp_out_ifft_1,
-		  1);
-	  break;
-	case 25:
-	  idft512((int16_t*) &temp_in_ifft_0[0],                          // Performing IFFT on Combined Channel Estimates
-		  temp_out_ifft_0,
-		  1);
-	  idft512((int16_t*) &temp_in_ifft_1[0],                          // Performing IFFT on Combined Channel Estimates
-		  temp_out_ifft_1,
-		  1);
-	  break;
-	case 50:
-	  idft1024((int16_t*) &temp_in_ifft_0[0],                          // Performing IFFT on Combined Channel Estimates
-		  temp_out_ifft_0,
-		  1);
-	  idft1024((int16_t*) &temp_in_ifft_1[0],                          // Performing IFFT on Combined Channel Estimates
-		  temp_out_ifft_1,
-		  1);
-	  break;
-	case 100:
-	  idft2048((int16_t*) &temp_in_ifft_0[0],                          // Performing IFFT on Combined Channel Estimates
-		  temp_out_ifft_0,
-		  1);
-	  idft2048((int16_t*) &temp_in_ifft_1[0],                          // Performing IFFT on Combined Channel Estimates
-		  temp_out_ifft_1,
-		  1);
-	  break;
-	}
+// 	switch (frame_parms->N_RB_DL) {
+// 	case 6:
+// 	  idft128((int16_t*) &temp_in_ifft_0[0],                          // Performing IFFT on Combined Channel Estimates
+// 		  temp_out_ifft_0,
+// 		  1);
+// 	  idft128((int16_t*) &temp_in_ifft_1[0],                          // Performing IFFT on Combined Channel Estimates
+// 		  temp_out_ifft_1,
+// 		  1);
+// 	  break;
+// 	case 25:
+// 	  idft512((int16_t*) &temp_in_ifft_0[0],                          // Performing IFFT on Combined Channel Estimates
+// 		  temp_out_ifft_0,
+// 		  1);
+// 	  idft512((int16_t*) &temp_in_ifft_1[0],                          // Performing IFFT on Combined Channel Estimates
+// 		  temp_out_ifft_1,
+// 		  1);
+// 	  break;
+// 	case 50:
+// 	  idft1024((int16_t*) &temp_in_ifft_0[0],                          // Performing IFFT on Combined Channel Estimates
+// 		  temp_out_ifft_0,
+// 		  1);
+// 	  idft1024((int16_t*) &temp_in_ifft_1[0],                          // Performing IFFT on Combined Channel Estimates
+// 		  temp_out_ifft_1,
+// 		  1);
+// 	  break;
+// 	case 100:
+// 	  idft2048((int16_t*) &temp_in_ifft_0[0],                          // Performing IFFT on Combined Channel Estimates
+// 		  temp_out_ifft_0,
+// 		  1);
+// 	  idft2048((int16_t*) &temp_in_ifft_1[0],                          // Performing IFFT on Combined Channel Estimates
+// 		  temp_out_ifft_1,
+// 		  1);
+// 	  break;
+// 	}
 
-        // because the ifft is not power preserving, we should apply the factor sqrt(power_correction) here, but we rather apply power_correction here and nothing after the next fft
-        in_fft_ptr_0 = &temp_in_fft_0[0];
-        in_fft_ptr_1 = &temp_in_fft_1[0];
+//         // because the ifft is not power preserving, we should apply the factor sqrt(power_correction) here, but we rather apply power_correction here and nothing after the next fft
+//         in_fft_ptr_0 = &temp_in_fft_0[0];
+//         in_fft_ptr_1 = &temp_in_fft_1[0];
 
-        for(j=0; j<(frame_parms->ofdm_symbol_size)/12; j++) {
-          if (j>19) {
-            ((int16_t*)in_fft_ptr_0)[-40+(2*j)] = ((int16_t*)temp_out_ifft_0)[-80+(2*j)]*rx_power_correction;
-            ((int16_t*)in_fft_ptr_0)[-40+(2*j)+1] = ((int16_t*)temp_out_ifft_0)[-80+(2*j+1)]*rx_power_correction;
-            ((int16_t*)in_fft_ptr_1)[-40+(2*j)] = ((int16_t*)temp_out_ifft_1)[-80+(2*j)]*rx_power_correction;
-            ((int16_t*)in_fft_ptr_1)[-40+(2*j)+1] = ((int16_t*)temp_out_ifft_1)[-80+(2*j)+1]*rx_power_correction;
-          } else {
-            ((int16_t*)in_fft_ptr_0)[2*(frame_parms->ofdm_symbol_size-20+j)] = ((int16_t*)temp_out_ifft_0)[2*(frame_parms->ofdm_symbol_size-20+j)]*rx_power_correction;
-            ((int16_t*)in_fft_ptr_0)[2*(frame_parms->ofdm_symbol_size-20+j)+1] = ((int16_t*)temp_out_ifft_0)[2*(frame_parms->ofdm_symbol_size-20+j)+1]*rx_power_correction;
-            ((int16_t*)in_fft_ptr_1)[2*(frame_parms->ofdm_symbol_size-20+j)] = ((int16_t*)temp_out_ifft_1)[2*(frame_parms->ofdm_symbol_size-20+j)]*rx_power_correction;
-            ((int16_t*)in_fft_ptr_1)[2*(frame_parms->ofdm_symbol_size-20+j)+1] = ((int16_t*)temp_out_ifft_1)[2*(frame_parms->ofdm_symbol_size-20+j)+1]*rx_power_correction;
-          }
-        }
+//         for(j=0; j<(frame_parms->ofdm_symbol_size)/12; j++) {
+//           if (j>19) {
+//             ((int16_t*)in_fft_ptr_0)[-40+(2*j)] = ((int16_t*)temp_out_ifft_0)[-80+(2*j)]*rx_power_correction;
+//             ((int16_t*)in_fft_ptr_0)[-40+(2*j)+1] = ((int16_t*)temp_out_ifft_0)[-80+(2*j+1)]*rx_power_correction;
+//             ((int16_t*)in_fft_ptr_1)[-40+(2*j)] = ((int16_t*)temp_out_ifft_1)[-80+(2*j)]*rx_power_correction;
+//             ((int16_t*)in_fft_ptr_1)[-40+(2*j)+1] = ((int16_t*)temp_out_ifft_1)[-80+(2*j)+1]*rx_power_correction;
+//           } else {
+//             ((int16_t*)in_fft_ptr_0)[2*(frame_parms->ofdm_symbol_size-20+j)] = ((int16_t*)temp_out_ifft_0)[2*(frame_parms->ofdm_symbol_size-20+j)]*rx_power_correction;
+//             ((int16_t*)in_fft_ptr_0)[2*(frame_parms->ofdm_symbol_size-20+j)+1] = ((int16_t*)temp_out_ifft_0)[2*(frame_parms->ofdm_symbol_size-20+j)+1]*rx_power_correction;
+//             ((int16_t*)in_fft_ptr_1)[2*(frame_parms->ofdm_symbol_size-20+j)] = ((int16_t*)temp_out_ifft_1)[2*(frame_parms->ofdm_symbol_size-20+j)]*rx_power_correction;
+//             ((int16_t*)in_fft_ptr_1)[2*(frame_parms->ofdm_symbol_size-20+j)+1] = ((int16_t*)temp_out_ifft_1)[2*(frame_parms->ofdm_symbol_size-20+j)+1]*rx_power_correction;
+//           }
+//         }
 
-	switch (frame_parms->N_RB_DL) {
-        case 6:
-	  dft128((int16_t*) &temp_in_fft_0[0],     
-		 // Performing FFT to obtain the Channel Estimates for UE0 to eNB1
-		 temp_out_fft_0,
-		 1);
-	  break;
-        case 25:
-	  dft512((int16_t*) &temp_in_fft_0[0],     
-		 // Performing FFT to obtain the Channel Estimates for UE0 to eNB1
-		 temp_out_fft_0,
-		 1);
-	  break;
-        case 50:
-	  dft1024((int16_t*) &temp_in_fft_0[0],     
-		 // Performing FFT to obtain the Channel Estimates for UE0 to eNB1
-		 temp_out_fft_0,
-		 1);
-	  break;
-        case 100:
-	  dft2048((int16_t*) &temp_in_fft_0[0],     
-		 // Performing FFT to obtain the Channel Estimates for UE0 to eNB1
-		 temp_out_fft_0,
-		 1);
-	  break;
-	}
+// 	switch (frame_parms->N_RB_DL) {
+//         case 6:
+// 	  dft128((int16_t*) &temp_in_fft_0[0],     
+// 		 // Performing FFT to obtain the Channel Estimates for UE0 to eNB1
+// 		 temp_out_fft_0,
+// 		 1);
+// 	  break;
+//         case 25:
+// 	  dft512((int16_t*) &temp_in_fft_0[0],     
+// 		 // Performing FFT to obtain the Channel Estimates for UE0 to eNB1
+// 		 temp_out_fft_0,
+// 		 1);
+// 	  break;
+//         case 50:
+// 	  dft1024((int16_t*) &temp_in_fft_0[0],     
+// 		 // Performing FFT to obtain the Channel Estimates for UE0 to eNB1
+// 		 temp_out_fft_0,
+// 		 1);
+// 	  break;
+//         case 100:
+// 	  dft2048((int16_t*) &temp_in_fft_0[0],     
+// 		 // Performing FFT to obtain the Channel Estimates for UE0 to eNB1
+// 		 temp_out_fft_0,
+// 		 1);
+// 	  break;
+// 	}
 
-        out_fft_ptr_0 = &ul_ch_estimates_0[aa][symbol_offset]; // CHANNEL ESTIMATES FOR UE0 TO eNB1
-        temp_out_fft_0_ptr = (int32_t*) temp_out_fft_0;
+//         out_fft_ptr_0 = &ul_ch_estimates_0[aa][symbol_offset]; // CHANNEL ESTIMATES FOR UE0 TO eNB1
+//         temp_out_fft_0_ptr = (int32_t*) temp_out_fft_0;
 
-        i=0;
+//         i=0;
 
-        for(j=0; j<frame_parms->N_RB_UL*12; j++) {
-          out_fft_ptr_0[i] = temp_out_fft_0_ptr[j];
-          i++;
-        }
-	switch (frame_parms->N_RB_DL) {
-	case 6:
-	  dft128((int16_t*) &temp_in_fft_1[0],                          // Performing FFT to obtain the Channel Estimates for UE1 to eNB1
-		 temp_out_fft_1,
-		 1);
-	  break;
-	case 25:
-	  dft512((int16_t*) &temp_in_fft_1[0],                          // Performing FFT to obtain the Channel Estimates for UE1 to eNB1
-		 temp_out_fft_1,
-		 1);
-	  break;
-	case 50:
-	  dft1024((int16_t*) &temp_in_fft_1[0],                          // Performing FFT to obtain the Channel Estimates for UE1 to eNB1
-		 temp_out_fft_1,
-		 1);
-	  break;
-	case 100:
-	  dft2048((int16_t*) &temp_in_fft_1[0],                          // Performing FFT to obtain the Channel Estimates for UE1 to eNB1
-		 temp_out_fft_1,
-		 1);
-	  break;
-	}
+//         for(j=0; j<frame_parms->N_RB_UL*12; j++) {
+//           out_fft_ptr_0[i] = temp_out_fft_0_ptr[j];
+//           i++;
+//         }
+// 	switch (frame_parms->N_RB_DL) {
+// 	case 6:
+// 	  dft128((int16_t*) &temp_in_fft_1[0],                          // Performing FFT to obtain the Channel Estimates for UE1 to eNB1
+// 		 temp_out_fft_1,
+// 		 1);
+// 	  break;
+// 	case 25:
+// 	  dft512((int16_t*) &temp_in_fft_1[0],                          // Performing FFT to obtain the Channel Estimates for UE1 to eNB1
+// 		 temp_out_fft_1,
+// 		 1);
+// 	  break;
+// 	case 50:
+// 	  dft1024((int16_t*) &temp_in_fft_1[0],                          // Performing FFT to obtain the Channel Estimates for UE1 to eNB1
+// 		 temp_out_fft_1,
+// 		 1);
+// 	  break;
+// 	case 100:
+// 	  dft2048((int16_t*) &temp_in_fft_1[0],                          // Performing FFT to obtain the Channel Estimates for UE1 to eNB1
+// 		 temp_out_fft_1,
+// 		 1);
+// 	  break;
+// 	}
 
-        out_fft_ptr_1 = &ul_ch_estimates_1[aa][symbol_offset];   // CHANNEL ESTIMATES FOR UE1 TO eNB1
-        temp_out_fft_1_ptr = (int32_t*) temp_out_fft_1;
+//         out_fft_ptr_1 = &ul_ch_estimates_1[aa][symbol_offset];   // CHANNEL ESTIMATES FOR UE1 TO eNB1
+//         temp_out_fft_1_ptr = (int32_t*) temp_out_fft_1;
 
-        i=0;
+//         i=0;
 
-        for(j=0; j<frame_parms->N_RB_UL*12; j++) {
-          out_fft_ptr_1[i] = temp_out_fft_1_ptr[j];
-          i++;
-        }
+//         for(j=0; j<frame_parms->N_RB_UL*12; j++) {
+//           out_fft_ptr_1[i] = temp_out_fft_1_ptr[j];
+//           i++;
+//         }
 
-#ifdef DEBUG_CH
-#ifdef USER_MODE
+// #ifdef DEBUG_CH
+// #ifdef USER_MODE
 
-        if((aa == 0)&& (cooperation_flag == 2)) {
-          write_output("test1.m","t1",temp_in_ifft_0,512,1,1);
-          write_output("test2.m","t2",temp_out_ifft_0,512*2,2,1);
-          write_output("test3.m","t3",temp_in_fft_0,512,1,1);
-          write_output("test4.m","t4",temp_out_fft_0,512,1,1);
-          write_output("test5.m","t5",temp_in_fft_1,512,1,1);
-          write_output("test6.m","t6",temp_out_fft_1,512,1,1);
-        }
+//         if((aa == 0)&& (cooperation_flag == 2)) {
+//           write_output("test1.m","t1",temp_in_ifft_0,512,1,1);
+//           write_output("test2.m","t2",temp_out_ifft_0,512*2,2,1);
+//           write_output("test3.m","t3",temp_in_fft_0,512,1,1);
+//           write_output("test4.m","t4",temp_out_fft_0,512,1,1);
+//           write_output("test5.m","t5",temp_in_fft_1,512,1,1);
+//           write_output("test6.m","t6",temp_out_fft_1,512,1,1);
+//         }
 
-#endif
-#endif
+// #endif
+// #endif
 
-      }//cooperation_flag == 2
+//       }//cooperation_flag == 2
 
       if (Ns&1) {//we are in the second slot of the sub-frame, so do the interpolation
 
@@ -542,13 +547,13 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
         ul_ch2 = &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos2];
 
 
-        if(cooperation_flag == 2) { // For Distributed Alamouti
-          ul_ch1_0 = &ul_ch_estimates_0[aa][frame_parms->N_RB_UL*12*pilot_pos1];
-          ul_ch2_0 = &ul_ch_estimates_0[aa][frame_parms->N_RB_UL*12*pilot_pos2];
+        // if(cooperation_flag == 2) { // For Distributed Alamouti
+        //   ul_ch1_0 = &ul_ch_estimates_0[aa][frame_parms->N_RB_UL*12*pilot_pos1];
+        //   ul_ch2_0 = &ul_ch_estimates_0[aa][frame_parms->N_RB_UL*12*pilot_pos2];
 
-          ul_ch1_1 = &ul_ch_estimates_1[aa][frame_parms->N_RB_UL*12*pilot_pos1];
-          ul_ch2_1 = &ul_ch_estimates_1[aa][frame_parms->N_RB_UL*12*pilot_pos2];
-        }
+        //   ul_ch1_1 = &ul_ch_estimates_1[aa][frame_parms->N_RB_UL*12*pilot_pos1];
+        //   ul_ch2_1 = &ul_ch_estimates_1[aa][frame_parms->N_RB_UL*12*pilot_pos2];
+        // }
 
         // Estimation of phase difference between the 2 channel estimates
         delta_phase = lte_ul_freq_offset_estimation_NB_IoT(frame_parms,
@@ -633,13 +638,13 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
             */
 
             //      memcpy(&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],ul_ch1,Msc_RS*sizeof(int32_t));
-            if(cooperation_flag == 2) { // For Distributed Alamouti
-              multadd_complex_vector_real_scalar((int16_t*) ul_ch1_0,beta ,(int16_t*) &ul_ch_estimates_0[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
-              multadd_complex_vector_real_scalar((int16_t*) ul_ch2_0,alpha,(int16_t*) &ul_ch_estimates_0[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
+            // if(cooperation_flag == 2) { // For Distributed Alamouti
+            //   multadd_complex_vector_real_scalar((int16_t*) ul_ch1_0,beta ,(int16_t*) &ul_ch_estimates_0[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
+            //   multadd_complex_vector_real_scalar((int16_t*) ul_ch2_0,alpha,(int16_t*) &ul_ch_estimates_0[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
 
-              multadd_complex_vector_real_scalar((int16_t*) ul_ch1_1,beta ,(int16_t*) &ul_ch_estimates_1[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
-              multadd_complex_vector_real_scalar((int16_t*) ul_ch2_1,alpha,(int16_t*) &ul_ch_estimates_1[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
-            }
+            //   multadd_complex_vector_real_scalar((int16_t*) ul_ch1_1,beta ,(int16_t*) &ul_ch_estimates_1[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
+            //   multadd_complex_vector_real_scalar((int16_t*) ul_ch2_1,alpha,(int16_t*) &ul_ch_estimates_1[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
+            // }
 
           }
         } //for(k=...
@@ -649,13 +654,13 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
         //    multadd_complex_vector_real_scalar((int16_t*) ul_ch1,SCALE,(int16_t*) ul_ch1,1,Msc_RS);
         //    multadd_complex_vector_real_scalar((int16_t*) ul_ch2,SCALE,(int16_t*) ul_ch2,1,Msc_RS);
 
-        if(cooperation_flag == 2) { // For Distributed Alamouti
-          multadd_complex_vector_real_scalar((int16_t*) ul_ch1_0,SCALE,(int16_t*) ul_ch1_0,1,Msc_RS);
-          multadd_complex_vector_real_scalar((int16_t*) ul_ch2_0,SCALE,(int16_t*) ul_ch2_0,1,Msc_RS);
+        // if(cooperation_flag == 2) { // For Distributed Alamouti
+        //   multadd_complex_vector_real_scalar((int16_t*) ul_ch1_0,SCALE,(int16_t*) ul_ch1_0,1,Msc_RS);
+        //   multadd_complex_vector_real_scalar((int16_t*) ul_ch2_0,SCALE,(int16_t*) ul_ch2_0,1,Msc_RS);
 
-          multadd_complex_vector_real_scalar((int16_t*) ul_ch1_1,SCALE,(int16_t*) ul_ch1_1,1,Msc_RS);
-          multadd_complex_vector_real_scalar((int16_t*) ul_ch2_1,SCALE,(int16_t*) ul_ch2_1,1,Msc_RS);
-        }
+        //   multadd_complex_vector_real_scalar((int16_t*) ul_ch1_1,SCALE,(int16_t*) ul_ch1_1,1,Msc_RS);
+        //   multadd_complex_vector_real_scalar((int16_t*) ul_ch2_1,SCALE,(int16_t*) ul_ch2_1,1,Msc_RS);
+        // }
 
 
       } //if (Ns&1)

@@ -1062,6 +1062,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold_mbsfn.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_mbsfn.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref.c
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation.c
   ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte.c

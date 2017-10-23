@@ -317,19 +317,19 @@ void freq_equalization_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
 
     if (Qm==4)
       ul_ch_mag128[re]  = _mm_set1_epi16(324);  // this is 512*2/sqrt(10)
-    else {
-      ul_ch_mag128[re]  = _mm_set1_epi16(316);  // this is 512*4/sqrt(42)
-      ul_ch_magb128[re] = _mm_set1_epi16(158);  // this is 512*2/sqrt(42)
-    }
+   // else {
+    //  ul_ch_mag128[re]  = _mm_set1_epi16(316);  // this is 512*4/sqrt(42)
+    //  ul_ch_magb128[re] = _mm_set1_epi16(158);  // this is 512*2/sqrt(42)
+   // }
 #elif defined(__arm__)
     rxdataF_comp128[re] = vmulq_s16(rxdataF_comp128[re],*((int16x8_t *)&inv_ch_NB_IoT[8*amp]));
 
     if (Qm==4)
       ul_ch_mag128[re]  = vdupq_n_s16(324);  // this is 512*2/sqrt(10)
-    else {
-      ul_ch_mag128[re]  = vdupq_n_s16(316);  // this is 512*4/sqrt(42)
-      ul_ch_magb128[re] = vdupq_n_s16(158);  // this is 512*2/sqrt(42)
-    }
+    //else {
+    //  ul_ch_mag128[re]  = vdupq_n_s16(316);  // this is 512*4/sqrt(42)
+    //  ul_ch_magb128[re] = vdupq_n_s16(158);  // this is 512*2/sqrt(42)
+    //}
 #endif
     //            printf("(%d,%d)\n",*(int16_t*)&(rxdataF_comp128[re]),*(1+(int16_t*)&(rxdataF_comp128[re])));
 

@@ -172,7 +172,9 @@ uint8_t subframe2harq_pid_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t fra
 
 /** \brief Compute Q (modulation order) based on I_MCS for PUSCH.  Implements table 8.6.1-1 from 36.213.
     @param I_MCS */
-uint8_t get_Qm_ul_NB_IoT(uint8_t I_MCS);
+
+//uint8_t get_Qm_ul_NB_IoT(uint8_t I_MCS);
+unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS, uint8_t N_sc_RU);
 
 /** \fn dlsch_encoding(PHY_VARS_eNB *eNB,
     uint8_t *input_buffer,

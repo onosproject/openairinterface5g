@@ -68,7 +68,7 @@ void lte_idft_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Ms
 
   //  printf("Doing lte_idft for Msc_PUSCH %d\n",Msc_PUSCH);
 
-  if (frame_parms->Ncp == 0) { // Normal prefix
+   // Normal prefix
     z0 = z;
     z1 = z0+(frame_parms->N_RB_DL*12);
     z2 = z1+(frame_parms->N_RB_DL*12);
@@ -85,23 +85,7 @@ void lte_idft_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Ms
     z10 = z9+(frame_parms->N_RB_DL*12);
     // srs
     z11 = z10+(frame_parms->N_RB_DL*12);
-  } else { // extended prefix
-    z0 = z;
-    z1 = z0+(frame_parms->N_RB_DL*12);
-    //pilot
-    z2 = z1+(2*frame_parms->N_RB_DL*12);
-    z3 = z2+(frame_parms->N_RB_DL*12);
-    z4 = z3+(frame_parms->N_RB_DL*12);
-
-    z5 = z4+(frame_parms->N_RB_DL*12);
-    z6 = z5+(frame_parms->N_RB_DL*12);
-    //pilot
-    z7 = z6+(2*frame_parms->N_RB_DL*12);
-    z8 = z7+(frame_parms->N_RB_DL*12);
-    // srs
-    z9 = z8+(frame_parms->N_RB_DL*12);
-  }
-
+  
   // conjugate input
   for (i=0; i<(Msc_PUSCH>>2); i++) {
 #if defined(__x86_64__)||defined(__i386__)
@@ -185,197 +169,197 @@ void lte_idft_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Ms
 
     break;
 
-  case 24:
-    dft24(idft_in0,idft_out0,1);
-    dft24(idft_in1,idft_out1,1);
-    dft24(idft_in2,idft_out2,1);
-    break;
+  // case 24:
+  //   dft24(idft_in0,idft_out0,1);
+  //   dft24(idft_in1,idft_out1,1);
+  //   dft24(idft_in2,idft_out2,1);
+  //   break;
 
-  case 36:
-    dft36(idft_in0,idft_out0,1);
-    dft36(idft_in1,idft_out1,1);
-    dft36(idft_in2,idft_out2,1);
-    break;
+  // case 36:
+  //   dft36(idft_in0,idft_out0,1);
+  //   dft36(idft_in1,idft_out1,1);
+  //   dft36(idft_in2,idft_out2,1);
+  //   break;
 
-  case 48:
-    dft48(idft_in0,idft_out0,1);
-    dft48(idft_in1,idft_out1,1);
-    dft48(idft_in2,idft_out2,1);
-    break;
+  // case 48:
+  //   dft48(idft_in0,idft_out0,1);
+  //   dft48(idft_in1,idft_out1,1);
+  //   dft48(idft_in2,idft_out2,1);
+  //   break;
 
-  case 60:
-    dft60(idft_in0,idft_out0,1);
-    dft60(idft_in1,idft_out1,1);
-    dft60(idft_in2,idft_out2,1);
-    break;
+  // case 60:
+  //   dft60(idft_in0,idft_out0,1);
+  //   dft60(idft_in1,idft_out1,1);
+  //   dft60(idft_in2,idft_out2,1);
+  //   break;
 
-  case 72:
-    dft72(idft_in0,idft_out0,1);
-    dft72(idft_in1,idft_out1,1);
-    dft72(idft_in2,idft_out2,1);
-    break;
+  // case 72:
+  //   dft72(idft_in0,idft_out0,1);
+  //   dft72(idft_in1,idft_out1,1);
+  //   dft72(idft_in2,idft_out2,1);
+  //   break;
 
-  case 96:
-    dft96(idft_in0,idft_out0,1);
-    dft96(idft_in1,idft_out1,1);
-    dft96(idft_in2,idft_out2,1);
-    break;
+  // case 96:
+  //   dft96(idft_in0,idft_out0,1);
+  //   dft96(idft_in1,idft_out1,1);
+  //   dft96(idft_in2,idft_out2,1);
+  //   break;
 
-  case 108:
-    dft108(idft_in0,idft_out0,1);
-    dft108(idft_in1,idft_out1,1);
-    dft108(idft_in2,idft_out2,1);
-    break;
+  // case 108:
+  //   dft108(idft_in0,idft_out0,1);
+  //   dft108(idft_in1,idft_out1,1);
+  //   dft108(idft_in2,idft_out2,1);
+  //   break;
 
-  case 120:
-    dft120(idft_in0,idft_out0,1);
-    dft120(idft_in1,idft_out1,1);
-    dft120(idft_in2,idft_out2,1);
-    break;
+  // case 120:
+  //   dft120(idft_in0,idft_out0,1);
+  //   dft120(idft_in1,idft_out1,1);
+  //   dft120(idft_in2,idft_out2,1);
+  //   break;
 
-  case 144:
-    dft144(idft_in0,idft_out0,1);
-    dft144(idft_in1,idft_out1,1);
-    dft144(idft_in2,idft_out2,1);
-    break;
+  // case 144:
+  //   dft144(idft_in0,idft_out0,1);
+  //   dft144(idft_in1,idft_out1,1);
+  //   dft144(idft_in2,idft_out2,1);
+  //   break;
 
-  case 180:
-    dft180(idft_in0,idft_out0,1);
-    dft180(idft_in1,idft_out1,1);
-    dft180(idft_in2,idft_out2,1);
-    break;
+  // case 180:
+  //   dft180(idft_in0,idft_out0,1);
+  //   dft180(idft_in1,idft_out1,1);
+  //   dft180(idft_in2,idft_out2,1);
+  //   break;
 
-  case 192:
-    dft192(idft_in0,idft_out0,1);
-    dft192(idft_in1,idft_out1,1);
-    dft192(idft_in2,idft_out2,1);
-    break;
+  // case 192:
+  //   dft192(idft_in0,idft_out0,1);
+  //   dft192(idft_in1,idft_out1,1);
+  //   dft192(idft_in2,idft_out2,1);
+  //   break;
 
-  case 216:
-    dft216(idft_in0,idft_out0,1);
-    dft216(idft_in1,idft_out1,1);
-    dft216(idft_in2,idft_out2,1);
-    break;
+  // case 216:
+  //   dft216(idft_in0,idft_out0,1);
+  //   dft216(idft_in1,idft_out1,1);
+  //   dft216(idft_in2,idft_out2,1);
+  //   break;
 
-  case 240:
-    dft240(idft_in0,idft_out0,1);
-    dft240(idft_in1,idft_out1,1);
-    dft240(idft_in2,idft_out2,1);
-    break;
+  // case 240:
+  //   dft240(idft_in0,idft_out0,1);
+  //   dft240(idft_in1,idft_out1,1);
+  //   dft240(idft_in2,idft_out2,1);
+  //   break;
 
-  case 288:
-    dft288(idft_in0,idft_out0,1);
-    dft288(idft_in1,idft_out1,1);
-    dft288(idft_in2,idft_out2,1);
-    break;
+  // case 288:
+  //   dft288(idft_in0,idft_out0,1);
+  //   dft288(idft_in1,idft_out1,1);
+  //   dft288(idft_in2,idft_out2,1);
+  //   break;
 
-  case 300:
-    dft300(idft_in0,idft_out0,1);
-    dft300(idft_in1,idft_out1,1);
-    dft300(idft_in2,idft_out2,1);
-    break;
+  // case 300:
+  //   dft300(idft_in0,idft_out0,1);
+  //   dft300(idft_in1,idft_out1,1);
+  //   dft300(idft_in2,idft_out2,1);
+  //   break;
 
-  case 324:
-    dft324((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft324((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft324((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 324:
+  //   dft324((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft324((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft324((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 360:
-    dft360((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft360((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft360((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 360:
+  //   dft360((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft360((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft360((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 384:
-    dft384((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft384((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft384((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 384:
+  //   dft384((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft384((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft384((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 432:
-    dft432((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft432((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft432((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 432:
+  //   dft432((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft432((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft432((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 480:
-    dft480((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft480((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft480((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 480:
+  //   dft480((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft480((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft480((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 540:
-    dft540((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft540((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft540((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 540:
+  //   dft540((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft540((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft540((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 576:
-    dft576((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft576((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft576((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 576:
+  //   dft576((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft576((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft576((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 600:
-    dft600((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft600((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft600((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 600:
+  //   dft600((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft600((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft600((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 648:
-    dft648((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft648((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft648((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 648:
+  //   dft648((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft648((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft648((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 720:
-    dft720((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft720((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft720((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 720:
+  //   dft720((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft720((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft720((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 864:
-    dft864((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft864((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft864((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 864:
+  //   dft864((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft864((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft864((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 900:
-    dft900((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft900((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft900((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 900:
+  //   dft900((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft900((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft900((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 960:
-    dft960((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft960((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft960((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 960:
+  //   dft960((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft960((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft960((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 972:
-    dft972((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft972((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft972((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 972:
+  //   dft972((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft972((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft972((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 1080:
-    dft1080((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft1080((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft1080((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 1080:
+  //   dft1080((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft1080((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft1080((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 1152:
-    dft1152((int16_t*)idft_in0,(int16_t*)idft_out0,1);
-    dft1152((int16_t*)idft_in1,(int16_t*)idft_out1,1);
-    dft1152((int16_t*)idft_in2,(int16_t*)idft_out2,1);
-    break;
+  // case 1152:
+  //   dft1152((int16_t*)idft_in0,(int16_t*)idft_out0,1);
+  //   dft1152((int16_t*)idft_in1,(int16_t*)idft_out1,1);
+  //   dft1152((int16_t*)idft_in2,(int16_t*)idft_out2,1);
+  //   break;
 
-  case 1200:
-    dft1200(idft_in0,idft_out0,1);
-    dft1200(idft_in1,idft_out1,1);
-    dft1200(idft_in2,idft_out2,1);
-    break;
+  // case 1200:
+  //   dft1200(idft_in0,idft_out0,1);
+  //   dft1200(idft_in1,idft_out1,1);
+  //   dft1200(idft_in2,idft_out2,1);
+  //   break;
 
   default:
     // should not be reached
@@ -952,299 +936,299 @@ void ulsch_channel_compensation_NB_IoT(int32_t **rxdataF_ext,
 
 
 
-#if defined(__x86_64__) || defined(__i386__)
-__m128i QAM_amp128U_0,QAM_amp128bU_0,QAM_amp128U_1,QAM_amp128bU_1;
-#endif
+// #if defined(__x86_64__) || defined(__i386__)
+// __m128i QAM_amp128U_0,QAM_amp128bU_0,QAM_amp128U_1,QAM_amp128bU_1;
+// #endif
 
-void ulsch_channel_compensation_alamouti_NB_IoT(int32_t **rxdataF_ext,                 // For Distributed Alamouti Combining
-    int32_t **ul_ch_estimates_ext_0,
-    int32_t **ul_ch_estimates_ext_1,
-    int32_t **ul_ch_mag_0,
-    int32_t **ul_ch_magb_0,
-    int32_t **ul_ch_mag_1,
-    int32_t **ul_ch_magb_1,
-    int32_t **rxdataF_comp_0,
-    int32_t **rxdataF_comp_1,
-    NB_IoT_DL_FRAME_PARMS *frame_parms,
-    uint8_t symbol,
-    uint8_t Qm,
-    uint16_t nb_rb,
-    uint8_t output_shift)
-{
-#if defined(__x86_64__) || defined(__i386__)
-  uint16_t rb;
-  __m128i *ul_ch128_0,*ul_ch128_1,*ul_ch_mag128_0,*ul_ch_mag128_1,*ul_ch_mag128b_0,*ul_ch_mag128b_1,*rxdataF128,*rxdataF_comp128_0,*rxdataF_comp128_1;
-  uint8_t aarx;//,symbol_mod;
-  __m128i mmtmpU0,mmtmpU1,mmtmpU2,mmtmpU3;
+// void ulsch_channel_compensation_alamouti_NB_IoT(int32_t **rxdataF_ext,                 // For Distributed Alamouti Combining
+//     int32_t **ul_ch_estimates_ext_0,
+//     int32_t **ul_ch_estimates_ext_1,
+//     int32_t **ul_ch_mag_0,
+//     int32_t **ul_ch_magb_0,
+//     int32_t **ul_ch_mag_1,
+//     int32_t **ul_ch_magb_1,
+//     int32_t **rxdataF_comp_0,
+//     int32_t **rxdataF_comp_1,
+//     NB_IoT_DL_FRAME_PARMS *frame_parms,
+//     uint8_t symbol,
+//     uint8_t Qm,
+//     uint16_t nb_rb,
+//     uint8_t output_shift)
+// {
+// #if defined(__x86_64__) || defined(__i386__)
+//   uint16_t rb;
+//   __m128i *ul_ch128_0,*ul_ch128_1,*ul_ch_mag128_0,*ul_ch_mag128_1,*ul_ch_mag128b_0,*ul_ch_mag128b_1,*rxdataF128,*rxdataF_comp128_0,*rxdataF_comp128_1;
+//   uint8_t aarx;//,symbol_mod;
+//   __m128i mmtmpU0,mmtmpU1,mmtmpU2,mmtmpU3;
 
-  //  symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
+//   //  symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
 
-  //    printf("comp: symbol %d\n",symbol);
+//   //    printf("comp: symbol %d\n",symbol);
 
 
-  if (Qm == 4) {
-    QAM_amp128U_0 = _mm_set1_epi16(QAM16_n1);
-    QAM_amp128U_1 = _mm_set1_epi16(QAM16_n1);
-  } else if (Qm == 6) {
-    QAM_amp128U_0  = _mm_set1_epi16(QAM64_n1);
-    QAM_amp128bU_0 = _mm_set1_epi16(QAM64_n2);
+//   if (Qm == 4) {
+//     QAM_amp128U_0 = _mm_set1_epi16(QAM16_n1);
+//     QAM_amp128U_1 = _mm_set1_epi16(QAM16_n1);
+//   } else if (Qm == 6) {
+//     QAM_amp128U_0  = _mm_set1_epi16(QAM64_n1);
+//     QAM_amp128bU_0 = _mm_set1_epi16(QAM64_n2);
 
-    QAM_amp128U_1  = _mm_set1_epi16(QAM64_n1);
-    QAM_amp128bU_1 = _mm_set1_epi16(QAM64_n2);
-  }
+//     QAM_amp128U_1  = _mm_set1_epi16(QAM64_n1);
+//     QAM_amp128bU_1 = _mm_set1_epi16(QAM64_n2);
+//   }
 
-  for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
+//   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
 
-    ul_ch128_0          = (__m128i *)&ul_ch_estimates_ext_0[aarx][symbol*frame_parms->N_RB_DL*12];
-    ul_ch_mag128_0      = (__m128i *)&ul_ch_mag_0[aarx][symbol*frame_parms->N_RB_DL*12];
-    ul_ch_mag128b_0     = (__m128i *)&ul_ch_magb_0[aarx][symbol*frame_parms->N_RB_DL*12];
-    ul_ch128_1          = (__m128i *)&ul_ch_estimates_ext_1[aarx][symbol*frame_parms->N_RB_DL*12];
-    ul_ch_mag128_1      = (__m128i *)&ul_ch_mag_1[aarx][symbol*frame_parms->N_RB_DL*12];
-    ul_ch_mag128b_1     = (__m128i *)&ul_ch_magb_1[aarx][symbol*frame_parms->N_RB_DL*12];
-    rxdataF128        = (__m128i *)&rxdataF_ext[aarx][symbol*frame_parms->N_RB_DL*12];
-    rxdataF_comp128_0   = (__m128i *)&rxdataF_comp_0[aarx][symbol*frame_parms->N_RB_DL*12];
-    rxdataF_comp128_1   = (__m128i *)&rxdataF_comp_1[aarx][symbol*frame_parms->N_RB_DL*12];
+//     ul_ch128_0          = (__m128i *)&ul_ch_estimates_ext_0[aarx][symbol*frame_parms->N_RB_DL*12];
+//     ul_ch_mag128_0      = (__m128i *)&ul_ch_mag_0[aarx][symbol*frame_parms->N_RB_DL*12];
+//     ul_ch_mag128b_0     = (__m128i *)&ul_ch_magb_0[aarx][symbol*frame_parms->N_RB_DL*12];
+//     ul_ch128_1          = (__m128i *)&ul_ch_estimates_ext_1[aarx][symbol*frame_parms->N_RB_DL*12];
+//     ul_ch_mag128_1      = (__m128i *)&ul_ch_mag_1[aarx][symbol*frame_parms->N_RB_DL*12];
+//     ul_ch_mag128b_1     = (__m128i *)&ul_ch_magb_1[aarx][symbol*frame_parms->N_RB_DL*12];
+//     rxdataF128        = (__m128i *)&rxdataF_ext[aarx][symbol*frame_parms->N_RB_DL*12];
+//     rxdataF_comp128_0   = (__m128i *)&rxdataF_comp_0[aarx][symbol*frame_parms->N_RB_DL*12];
+//     rxdataF_comp128_1   = (__m128i *)&rxdataF_comp_1[aarx][symbol*frame_parms->N_RB_DL*12];
 
 
-    for (rb=0; rb<nb_rb; rb++) {
-      //      printf("comp: symbol %d rb %d\n",symbol,rb);
-      if (Qm>2) {
-        // get channel amplitude if not QPSK
+//     for (rb=0; rb<nb_rb; rb++) {
+//       //      printf("comp: symbol %d rb %d\n",symbol,rb);
+//       if (Qm>2) {
+//         // get channel amplitude if not QPSK
 
-        mmtmpU0 = _mm_madd_epi16(ul_ch128_0[0],ul_ch128_0[0]);
+//         mmtmpU0 = _mm_madd_epi16(ul_ch128_0[0],ul_ch128_0[0]);
 
-        mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
+//         mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
 
-        mmtmpU1 = _mm_madd_epi16(ul_ch128_0[1],ul_ch128_0[1]);
-        mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-        mmtmpU0 = _mm_packs_epi32(mmtmpU0,mmtmpU1);
+//         mmtmpU1 = _mm_madd_epi16(ul_ch128_0[1],ul_ch128_0[1]);
+//         mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
+//         mmtmpU0 = _mm_packs_epi32(mmtmpU0,mmtmpU1);
 
-        ul_ch_mag128_0[0] = _mm_unpacklo_epi16(mmtmpU0,mmtmpU0);
-        ul_ch_mag128b_0[0] = ul_ch_mag128_0[0];
-        ul_ch_mag128_0[0] = _mm_mulhi_epi16(ul_ch_mag128_0[0],QAM_amp128U_0);
-        ul_ch_mag128_0[0] = _mm_slli_epi16(ul_ch_mag128_0[0],2); // 2 to compensate the scale channel estimate
+//         ul_ch_mag128_0[0] = _mm_unpacklo_epi16(mmtmpU0,mmtmpU0);
+//         ul_ch_mag128b_0[0] = ul_ch_mag128_0[0];
+//         ul_ch_mag128_0[0] = _mm_mulhi_epi16(ul_ch_mag128_0[0],QAM_amp128U_0);
+//         ul_ch_mag128_0[0] = _mm_slli_epi16(ul_ch_mag128_0[0],2); // 2 to compensate the scale channel estimate
 
-        ul_ch_mag128_0[1] = _mm_unpackhi_epi16(mmtmpU0,mmtmpU0);
-        ul_ch_mag128b_0[1] = ul_ch_mag128_0[1];
-        ul_ch_mag128_0[1] = _mm_mulhi_epi16(ul_ch_mag128_0[1],QAM_amp128U_0);
-        ul_ch_mag128_0[1] = _mm_slli_epi16(ul_ch_mag128_0[1],2); // 2 to scale compensate the scale channel estimate
+//         ul_ch_mag128_0[1] = _mm_unpackhi_epi16(mmtmpU0,mmtmpU0);
+//         ul_ch_mag128b_0[1] = ul_ch_mag128_0[1];
+//         ul_ch_mag128_0[1] = _mm_mulhi_epi16(ul_ch_mag128_0[1],QAM_amp128U_0);
+//         ul_ch_mag128_0[1] = _mm_slli_epi16(ul_ch_mag128_0[1],2); // 2 to scale compensate the scale channel estimate
 
-        mmtmpU0 = _mm_madd_epi16(ul_ch128_0[2],ul_ch128_0[2]);
-        mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-        mmtmpU1 = _mm_packs_epi32(mmtmpU0,mmtmpU0);
-
-        ul_ch_mag128_0[2] = _mm_unpacklo_epi16(mmtmpU1,mmtmpU1);
-        ul_ch_mag128b_0[2] = ul_ch_mag128_0[2];
-
-        ul_ch_mag128_0[2] = _mm_mulhi_epi16(ul_ch_mag128_0[2],QAM_amp128U_0);
-        ul_ch_mag128_0[2] = _mm_slli_epi16(ul_ch_mag128_0[2],2);  //  2 to scale compensate the scale channel estimat
-
-
-        ul_ch_mag128b_0[0] = _mm_mulhi_epi16(ul_ch_mag128b_0[0],QAM_amp128bU_0);
-        ul_ch_mag128b_0[0] = _mm_slli_epi16(ul_ch_mag128b_0[0],2);  //  2 to scale compensate the scale channel estima
-
-
-        ul_ch_mag128b_0[1] = _mm_mulhi_epi16(ul_ch_mag128b_0[1],QAM_amp128bU_0);
-        ul_ch_mag128b_0[1] = _mm_slli_epi16(ul_ch_mag128b_0[1],2);   //  2 to scale compensate the scale channel estima
-
-        ul_ch_mag128b_0[2] = _mm_mulhi_epi16(ul_ch_mag128b_0[2],QAM_amp128bU_0);
-        ul_ch_mag128b_0[2] = _mm_slli_epi16(ul_ch_mag128b_0[2],2);   //  2 to scale compensate the scale channel estima
-
-
-
-
-        mmtmpU0 = _mm_madd_epi16(ul_ch128_1[0],ul_ch128_1[0]);
-
-        mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-
-        mmtmpU1 = _mm_madd_epi16(ul_ch128_1[1],ul_ch128_1[1]);
-        mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-        mmtmpU0 = _mm_packs_epi32(mmtmpU0,mmtmpU1);
-
-        ul_ch_mag128_1[0] = _mm_unpacklo_epi16(mmtmpU0,mmtmpU0);
-        ul_ch_mag128b_1[0] = ul_ch_mag128_1[0];
-        ul_ch_mag128_1[0] = _mm_mulhi_epi16(ul_ch_mag128_1[0],QAM_amp128U_1);
-        ul_ch_mag128_1[0] = _mm_slli_epi16(ul_ch_mag128_1[0],2); // 2 to compensate the scale channel estimate
-
-        ul_ch_mag128_1[1] = _mm_unpackhi_epi16(mmtmpU0,mmtmpU0);
-        ul_ch_mag128b_1[1] = ul_ch_mag128_1[1];
-        ul_ch_mag128_1[1] = _mm_mulhi_epi16(ul_ch_mag128_1[1],QAM_amp128U_1);
-        ul_ch_mag128_1[1] = _mm_slli_epi16(ul_ch_mag128_1[1],2); // 2 to scale compensate the scale channel estimate
-
-        mmtmpU0 = _mm_madd_epi16(ul_ch128_1[2],ul_ch128_1[2]);
-        mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-        mmtmpU1 = _mm_packs_epi32(mmtmpU0,mmtmpU0);
-
-        ul_ch_mag128_1[2] = _mm_unpacklo_epi16(mmtmpU1,mmtmpU1);
-        ul_ch_mag128b_1[2] = ul_ch_mag128_1[2];
-
-        ul_ch_mag128_1[2] = _mm_mulhi_epi16(ul_ch_mag128_1[2],QAM_amp128U_0);
-        ul_ch_mag128_1[2] = _mm_slli_epi16(ul_ch_mag128_1[2],2);  //  2 to scale compensate the scale channel estimat
-
-
-        ul_ch_mag128b_1[0] = _mm_mulhi_epi16(ul_ch_mag128b_1[0],QAM_amp128bU_1);
-        ul_ch_mag128b_1[0] = _mm_slli_epi16(ul_ch_mag128b_1[0],2);  //  2 to scale compensate the scale channel estima
-
-
-        ul_ch_mag128b_1[1] = _mm_mulhi_epi16(ul_ch_mag128b_1[1],QAM_amp128bU_1);
-        ul_ch_mag128b_1[1] = _mm_slli_epi16(ul_ch_mag128b_1[1],2);   //  2 to scale compensate the scale channel estima
-
-        ul_ch_mag128b_1[2] = _mm_mulhi_epi16(ul_ch_mag128b_1[2],QAM_amp128bU_1);
-        ul_ch_mag128b_1[2] = _mm_slli_epi16(ul_ch_mag128b_1[2],2);   //  2 to scale compensate the scale channel estima
-      }
-
-
-      /************************For Computing (y)*(h0*)********************************************/
-
-      // multiply by conjugated channel
-      mmtmpU0 = _mm_madd_epi16(ul_ch128_0[0],rxdataF128[0]);
-      //  print_ints("re",&mmtmpU0);
-
-      // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-      mmtmpU1 = _mm_shufflelo_epi16(ul_ch128_0[0],_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)&conjugate[0]);
-      //  print_ints("im",&mmtmpU1);
-      mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[0]);
-      // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-      mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-      //  print_ints("re(shift)",&mmtmpU0);
-      mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-      //  print_ints("im(shift)",&mmtmpU1);
-      mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-      mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-      //        print_ints("c0",&mmtmpU2);
-      //  print_ints("c1",&mmtmpU3);
-      rxdataF_comp128_0[0] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-      //        print_shorts("rx:",rxdataF128[0]);
-      //        print_shorts("ch:",ul_ch128_0[0]);
-      //        print_shorts("pack:",rxdataF_comp128_0[0]);
-
-      // multiply by conjugated channel
-      mmtmpU0 = _mm_madd_epi16(ul_ch128_0[1],rxdataF128[1]);
-      // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-      mmtmpU1 = _mm_shufflelo_epi16(ul_ch128_0[1],_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
-      mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[1]);
-      // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-      mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-      mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-      mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-      mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-
-      rxdataF_comp128_0[1] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-      //        print_shorts("rx:",rxdataF128[1]);
-      //        print_shorts("ch:",ul_ch128_0[1]);
-      //        print_shorts("pack:",rxdataF_comp128_0[1]);
-      //       multiply by conjugated channel
-      mmtmpU0 = _mm_madd_epi16(ul_ch128_0[2],rxdataF128[2]);
-      // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-      mmtmpU1 = _mm_shufflelo_epi16(ul_ch128_0[2],_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
-      mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[2]);
-      // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-      mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-      mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-      mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-      mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-
-      rxdataF_comp128_0[2] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-      //        print_shorts("rx:",rxdataF128[2]);
-      //        print_shorts("ch:",ul_ch128_0[2]);
-      //        print_shorts("pack:",rxdataF_comp128_0[2]);
-
-
-
-
-      /*************************For Computing (y*)*(h1)************************************/
-      // multiply by conjugated signal
-      mmtmpU0 = _mm_madd_epi16(ul_ch128_1[0],rxdataF128[0]);
-      //  print_ints("re",&mmtmpU0);
-
-      // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-      mmtmpU1 = _mm_shufflelo_epi16(rxdataF128[0],_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)&conjugate[0]);
-      //  print_ints("im",&mmtmpU1);
-      mmtmpU1 = _mm_madd_epi16(mmtmpU1,ul_ch128_1[0]);
-      // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-      mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-      //  print_ints("re(shift)",&mmtmpU0);
-      mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-      //  print_ints("im(shift)",&mmtmpU1);
-      mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-      mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-      //        print_ints("c0",&mmtmpU2);
-      //  print_ints("c1",&mmtmpU3);
-      rxdataF_comp128_1[0] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-      //        print_shorts("rx:",rxdataF128[0]);
-      //        print_shorts("ch_conjugate:",ul_ch128_1[0]);
-      //        print_shorts("pack:",rxdataF_comp128_1[0]);
-
-
-      // multiply by conjugated signal
-      mmtmpU0 = _mm_madd_epi16(ul_ch128_1[1],rxdataF128[1]);
-      // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-      mmtmpU1 = _mm_shufflelo_epi16(rxdataF128[1],_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
-      mmtmpU1 = _mm_madd_epi16(mmtmpU1,ul_ch128_1[1]);
-      // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-      mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-      mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-      mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-      mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-
-      rxdataF_comp128_1[1] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-      //        print_shorts("rx:",rxdataF128[1]);
-      //        print_shorts("ch_conjugate:",ul_ch128_1[1]);
-      //        print_shorts("pack:",rxdataF_comp128_1[1]);
-
-
-      //       multiply by conjugated signal
-      mmtmpU0 = _mm_madd_epi16(ul_ch128_1[2],rxdataF128[2]);
-      // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-      mmtmpU1 = _mm_shufflelo_epi16(rxdataF128[2],_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-      mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
-      mmtmpU1 = _mm_madd_epi16(mmtmpU1,ul_ch128_1[2]);
-      // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-      mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-      mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-      mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-      mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-
-      rxdataF_comp128_1[2] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-      //        print_shorts("rx:",rxdataF128[2]);
-      //        print_shorts("ch_conjugate:",ul_ch128_0[2]);
-      //        print_shorts("pack:",rxdataF_comp128_1[2]);
-
-
-
-      ul_ch128_0+=3;
-      ul_ch_mag128_0+=3;
-      ul_ch_mag128b_0+=3;
-      ul_ch128_1+=3;
-      ul_ch_mag128_1+=3;
-      ul_ch_mag128b_1+=3;
-      rxdataF128+=3;
-      rxdataF_comp128_0+=3;
-      rxdataF_comp128_1+=3;
-
-    }
-  }
-
-
-  _mm_empty();
-  _m_empty();
-#endif
-}
-
-
-
-
+//         mmtmpU0 = _mm_madd_epi16(ul_ch128_0[2],ul_ch128_0[2]);
+//         mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
+//         mmtmpU1 = _mm_packs_epi32(mmtmpU0,mmtmpU0);
+
+//         ul_ch_mag128_0[2] = _mm_unpacklo_epi16(mmtmpU1,mmtmpU1);
+//         ul_ch_mag128b_0[2] = ul_ch_mag128_0[2];
+
+//         ul_ch_mag128_0[2] = _mm_mulhi_epi16(ul_ch_mag128_0[2],QAM_amp128U_0);
+//         ul_ch_mag128_0[2] = _mm_slli_epi16(ul_ch_mag128_0[2],2);  //  2 to scale compensate the scale channel estimat
+
+
+//         ul_ch_mag128b_0[0] = _mm_mulhi_epi16(ul_ch_mag128b_0[0],QAM_amp128bU_0);
+//         ul_ch_mag128b_0[0] = _mm_slli_epi16(ul_ch_mag128b_0[0],2);  //  2 to scale compensate the scale channel estima
+
+
+//         ul_ch_mag128b_0[1] = _mm_mulhi_epi16(ul_ch_mag128b_0[1],QAM_amp128bU_0);
+//         ul_ch_mag128b_0[1] = _mm_slli_epi16(ul_ch_mag128b_0[1],2);   //  2 to scale compensate the scale channel estima
+
+//         ul_ch_mag128b_0[2] = _mm_mulhi_epi16(ul_ch_mag128b_0[2],QAM_amp128bU_0);
+//         ul_ch_mag128b_0[2] = _mm_slli_epi16(ul_ch_mag128b_0[2],2);   //  2 to scale compensate the scale channel estima
+
+
+
+
+//         mmtmpU0 = _mm_madd_epi16(ul_ch128_1[0],ul_ch128_1[0]);
+
+//         mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
+
+//         mmtmpU1 = _mm_madd_epi16(ul_ch128_1[1],ul_ch128_1[1]);
+//         mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
+//         mmtmpU0 = _mm_packs_epi32(mmtmpU0,mmtmpU1);
+
+//         ul_ch_mag128_1[0] = _mm_unpacklo_epi16(mmtmpU0,mmtmpU0);
+//         ul_ch_mag128b_1[0] = ul_ch_mag128_1[0];
+//         ul_ch_mag128_1[0] = _mm_mulhi_epi16(ul_ch_mag128_1[0],QAM_amp128U_1);
+//         ul_ch_mag128_1[0] = _mm_slli_epi16(ul_ch_mag128_1[0],2); // 2 to compensate the scale channel estimate
+
+//         ul_ch_mag128_1[1] = _mm_unpackhi_epi16(mmtmpU0,mmtmpU0);
+//         ul_ch_mag128b_1[1] = ul_ch_mag128_1[1];
+//         ul_ch_mag128_1[1] = _mm_mulhi_epi16(ul_ch_mag128_1[1],QAM_amp128U_1);
+//         ul_ch_mag128_1[1] = _mm_slli_epi16(ul_ch_mag128_1[1],2); // 2 to scale compensate the scale channel estimate
+
+//         mmtmpU0 = _mm_madd_epi16(ul_ch128_1[2],ul_ch128_1[2]);
+//         mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
+//         mmtmpU1 = _mm_packs_epi32(mmtmpU0,mmtmpU0);
+
+//         ul_ch_mag128_1[2] = _mm_unpacklo_epi16(mmtmpU1,mmtmpU1);
+//         ul_ch_mag128b_1[2] = ul_ch_mag128_1[2];
+
+//         ul_ch_mag128_1[2] = _mm_mulhi_epi16(ul_ch_mag128_1[2],QAM_amp128U_0);
+//         ul_ch_mag128_1[2] = _mm_slli_epi16(ul_ch_mag128_1[2],2);  //  2 to scale compensate the scale channel estimat
+
+
+//         ul_ch_mag128b_1[0] = _mm_mulhi_epi16(ul_ch_mag128b_1[0],QAM_amp128bU_1);
+//         ul_ch_mag128b_1[0] = _mm_slli_epi16(ul_ch_mag128b_1[0],2);  //  2 to scale compensate the scale channel estima
+
+
+//         ul_ch_mag128b_1[1] = _mm_mulhi_epi16(ul_ch_mag128b_1[1],QAM_amp128bU_1);
+//         ul_ch_mag128b_1[1] = _mm_slli_epi16(ul_ch_mag128b_1[1],2);   //  2 to scale compensate the scale channel estima
+
+//         ul_ch_mag128b_1[2] = _mm_mulhi_epi16(ul_ch_mag128b_1[2],QAM_amp128bU_1);
+//         ul_ch_mag128b_1[2] = _mm_slli_epi16(ul_ch_mag128b_1[2],2);   //  2 to scale compensate the scale channel estima
+//       }
+
+
+//       /************************For Computing (y)*(h0*)********************************************/
+
+//       // multiply by conjugated channel
+//       mmtmpU0 = _mm_madd_epi16(ul_ch128_0[0],rxdataF128[0]);
+//       //  print_ints("re",&mmtmpU0);
+
+//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
+//       mmtmpU1 = _mm_shufflelo_epi16(ul_ch128_0[0],_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)&conjugate[0]);
+//       //  print_ints("im",&mmtmpU1);
+//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[0]);
+//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
+//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
+//       //  print_ints("re(shift)",&mmtmpU0);
+//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
+//       //  print_ints("im(shift)",&mmtmpU1);
+//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
+//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
+//       //        print_ints("c0",&mmtmpU2);
+//       //  print_ints("c1",&mmtmpU3);
+//       rxdataF_comp128_0[0] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
+//       //        print_shorts("rx:",rxdataF128[0]);
+//       //        print_shorts("ch:",ul_ch128_0[0]);
+//       //        print_shorts("pack:",rxdataF_comp128_0[0]);
+
+//       // multiply by conjugated channel
+//       mmtmpU0 = _mm_madd_epi16(ul_ch128_0[1],rxdataF128[1]);
+//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
+//       mmtmpU1 = _mm_shufflelo_epi16(ul_ch128_0[1],_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
+//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[1]);
+//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
+//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
+//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
+//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
+//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
+
+//       rxdataF_comp128_0[1] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
+//       //        print_shorts("rx:",rxdataF128[1]);
+//       //        print_shorts("ch:",ul_ch128_0[1]);
+//       //        print_shorts("pack:",rxdataF_comp128_0[1]);
+//       //       multiply by conjugated channel
+//       mmtmpU0 = _mm_madd_epi16(ul_ch128_0[2],rxdataF128[2]);
+//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
+//       mmtmpU1 = _mm_shufflelo_epi16(ul_ch128_0[2],_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
+//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[2]);
+//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
+//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
+//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
+//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
+//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
+
+//       rxdataF_comp128_0[2] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
+//       //        print_shorts("rx:",rxdataF128[2]);
+//       //        print_shorts("ch:",ul_ch128_0[2]);
+//       //        print_shorts("pack:",rxdataF_comp128_0[2]);
+
+
+
+
+//       /*************************For Computing (y*)*(h1)************************************/
+//       // multiply by conjugated signal
+//       mmtmpU0 = _mm_madd_epi16(ul_ch128_1[0],rxdataF128[0]);
+//       //  print_ints("re",&mmtmpU0);
+
+//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
+//       mmtmpU1 = _mm_shufflelo_epi16(rxdataF128[0],_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)&conjugate[0]);
+//       //  print_ints("im",&mmtmpU1);
+//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,ul_ch128_1[0]);
+//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
+//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
+//       //  print_ints("re(shift)",&mmtmpU0);
+//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
+//       //  print_ints("im(shift)",&mmtmpU1);
+//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
+//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
+//       //        print_ints("c0",&mmtmpU2);
+//       //  print_ints("c1",&mmtmpU3);
+//       rxdataF_comp128_1[0] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
+//       //        print_shorts("rx:",rxdataF128[0]);
+//       //        print_shorts("ch_conjugate:",ul_ch128_1[0]);
+//       //        print_shorts("pack:",rxdataF_comp128_1[0]);
+
+
+//       // multiply by conjugated signal
+//       mmtmpU0 = _mm_madd_epi16(ul_ch128_1[1],rxdataF128[1]);
+//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
+//       mmtmpU1 = _mm_shufflelo_epi16(rxdataF128[1],_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
+//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,ul_ch128_1[1]);
+//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
+//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
+//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
+//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
+//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
+
+//       rxdataF_comp128_1[1] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
+//       //        print_shorts("rx:",rxdataF128[1]);
+//       //        print_shorts("ch_conjugate:",ul_ch128_1[1]);
+//       //        print_shorts("pack:",rxdataF_comp128_1[1]);
+
+
+//       //       multiply by conjugated signal
+//       mmtmpU0 = _mm_madd_epi16(ul_ch128_1[2],rxdataF128[2]);
+//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
+//       mmtmpU1 = _mm_shufflelo_epi16(rxdataF128[2],_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
+//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
+//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,ul_ch128_1[2]);
+//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
+//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
+//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
+//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
+//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
+
+//       rxdataF_comp128_1[2] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
+//       //        print_shorts("rx:",rxdataF128[2]);
+//       //        print_shorts("ch_conjugate:",ul_ch128_0[2]);
+//       //        print_shorts("pack:",rxdataF_comp128_1[2]);
+
+
+
+//       ul_ch128_0+=3;
+//       ul_ch_mag128_0+=3;
+//       ul_ch_mag128b_0+=3;
+//       ul_ch128_1+=3;
+//       ul_ch_mag128_1+=3;
+//       ul_ch_mag128b_1+=3;
+//       rxdataF128+=3;
+//       rxdataF_comp128_0+=3;
+//       rxdataF_comp128_1+=3;
+
+//     }
+//   }
+
+
+//   _mm_empty();
+//   _m_empty();
+// #endif
+// }
+
+
+
+/*
 void ulsch_alamouti_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,// For Distributed Alamouti Receiver Combining
                     int32_t **rxdataF_comp,
                     int32_t **rxdataF_comp_0,
@@ -1318,7 +1302,7 @@ void ulsch_alamouti_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,// For Distributed
 #endif
 }
 
-
+*/
 
 
 
@@ -1410,8 +1394,8 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
   int32_t    avgs;
   uint8_t    log2_maxh = 0,aarx;
 
-  int32_t    avgs_0,avgs_1;
-  uint32_t   log2_maxh_0 = 0,log2_maxh_1 = 0;
+ // int32_t    avgs_0,avgs_1;
+ // uint32_t   log2_maxh_0 = 0,log2_maxh_1 = 0;
 
   uint8_t    harq_pid;
   uint8_t    Qm;
@@ -1420,7 +1404,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
   int        subframe = proc->subframe_rx;
 
   harq_pid = subframe2harq_pid_NB_IoT(frame_parms,proc->frame_rx,subframe);
-  Qm       = get_Qm_ul_NB_IoT(ulsch[UE_id]->harq_process->mcs);
+  Qm       = get_Qm_ul_NB_IoT(ulsch[UE_id]->harq_process->mcs,ulsch[UE_id]->harq_process->N_sc_RU);
 
   rx_power_correction = 1;
 
@@ -1429,7 +1413,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
     return;
   }
 
-  for (l=0; l<(frame_parms->symbols_per_tti-ulsch[UE_id]->harq_process->srs_active); l++) {
+  for (l=0; l<frame_parms->symbols_per_tti; l++) { 
 
     ulsch_extract_rbs_single_NB_IoT(common_vars->rxdataF[eNB_id],
                                     pusch_vars->rxdataF_ext[eNB_id],
@@ -1447,21 +1431,21 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
                                      cooperation_flag);
   }
 
-  if(cooperation_flag == 2) {
-    for (i=0; i<frame_parms->nb_antennas_rx; i++) {
-      pusch_vars->ulsch_power_0[i] = signal_energy(pusch_vars->drs_ch_estimates_0[eNB_id][i],
-                                         ulsch[UE_id]->harq_process->nb_rb*12)*rx_power_correction;
-      pusch_vars->ulsch_power_1[i] = signal_energy(pusch_vars->drs_ch_estimates_1[eNB_id][i],
-                                         ulsch[UE_id]->harq_process->nb_rb*12)*rx_power_correction;
-    }
-  } else {
+  // if(cooperation_flag == 2) {
+  //   for (i=0; i<frame_parms->nb_antennas_rx; i++) {
+  //     pusch_vars->ulsch_power_0[i] = signal_energy(pusch_vars->drs_ch_estimates_0[eNB_id][i],
+  //                                        ulsch[UE_id]->harq_process->nb_rb*12)*rx_power_correction;
+  //     pusch_vars->ulsch_power_1[i] = signal_energy(pusch_vars->drs_ch_estimates_1[eNB_id][i],
+  //                                        ulsch[UE_id]->harq_process->nb_rb*12)*rx_power_correction;
+  //   }
+  // } else {
     for (i=0; i<frame_parms->nb_antennas_rx; i++) {
       /*
       pusch_vars->ulsch_power[i] = signal_energy_nodc(pusch_vars->drs_ch_estimates[eNB_id][i],
                                        ulsch[UE_id]->harq_processes[harq_pid]->nb_rb*12)*rx_power_correction;
 
       */
-      
+      //////////////////////// NB_IoT: maybe, should be defined for NB-IoT
       pusch_vars->ulsch_power[i] = signal_energy_nodc(pusch_vars->drs_ch_estimates[eNB_id][i],
 							  ulsch[UE_id]->harq_process->nb_rb*12);
       
@@ -1471,50 +1455,50 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
                                           ulsch[UE_id]->harq_process->nb_rb*12, pusch_vars->subcarrier_power, rx_power_correction);
 #endif
     }
-  }
+ // }
 
   //write_output("rxdataF_ext.m","rxF_ext",pusch_vars->rxdataF_ext[eNB_id][0],300*(frame_parms->symbols_per_tti-ulsch[UE_id]->srs_active),1,1);
   //write_output("ulsch_chest.m","drs_est",pusch_vars->drs_ch_estimates[eNB_id][0],300*(frame_parms->symbols_per_tti-ulsch[UE_id]->srs_active),1,1);
 
 
-  if(cooperation_flag == 2) {
-    ulsch_channel_level_NB_IoT(pusch_vars->drs_ch_estimates_0[eNB_id],
-                               frame_parms,
-                               avgU_0,
-                               ulsch[UE_id]->harq_process->nb_rb);
+//   if(cooperation_flag == 2) {
+//     ulsch_channel_level_NB_IoT(pusch_vars->drs_ch_estimates_0[eNB_id],
+//                                frame_parms,
+//                                avgU_0,
+//                                ulsch[UE_id]->harq_process->nb_rb);
 
-    //  printf("[ULSCH] avg_0[0] %d\n",avgU_0[0]);
-
-
-    avgs_0 = 0;
-
-    for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
-      avgs_0 = cmax(avgs_0,avgU_0[(aarx<<1)]);
-
-    log2_maxh_0 = (log2_approx(avgs_0)/2)+ log2_approx(frame_parms->nb_antennas_rx-1)+3;
-#ifdef DEBUG_ULSCH
-    printf("[ULSCH] log2_maxh_0 = %d (%d,%d)\n",log2_maxh_0,avgU_0[0],avgs_0);
-#endif
-
-    ulsch_channel_level_NB_IoT(pusch_vars->drs_ch_estimates_1[eNB_id],
-                              frame_parms,
-                              avgU_1,
-                              ulsch[UE_id]->harq_process->nb_rb);
-
-    //  printf("[ULSCH] avg_1[0] %d\n",avgU_1[0]);
+//     //  printf("[ULSCH] avg_0[0] %d\n",avgU_0[0]);
 
 
-    avgs_1 = 0;
+//     avgs_0 = 0;
 
-    for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
-      avgs_1 = cmax(avgs_1,avgU_1[(aarx<<1)]);
+//     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
+//       avgs_0 = cmax(avgs_0,avgU_0[(aarx<<1)]);
 
-    log2_maxh_1 = (log2_approx(avgs_1)/2) + log2_approx(frame_parms->nb_antennas_rx-1)+3;
-#ifdef DEBUG_ULSCH
-    printf("[ULSCH] log2_maxh_1 = %d (%d,%d)\n",log2_maxh_1,avgU_1[0],avgs_1);
-#endif
-    log2_maxh = max(log2_maxh_0,log2_maxh_1);
-  } else {
+//     log2_maxh_0 = (log2_approx(avgs_0)/2)+ log2_approx(frame_parms->nb_antennas_rx-1)+3;
+// #ifdef DEBUG_ULSCH
+//     printf("[ULSCH] log2_maxh_0 = %d (%d,%d)\n",log2_maxh_0,avgU_0[0],avgs_0);
+// #endif
+
+//     ulsch_channel_level_NB_IoT(pusch_vars->drs_ch_estimates_1[eNB_id],
+//                               frame_parms,
+//                               avgU_1,
+//                               ulsch[UE_id]->harq_process->nb_rb);
+
+//     //  printf("[ULSCH] avg_1[0] %d\n",avgU_1[0]);
+
+
+//     avgs_1 = 0;
+
+//     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
+//       avgs_1 = cmax(avgs_1,avgU_1[(aarx<<1)]);
+
+//     log2_maxh_1 = (log2_approx(avgs_1)/2) + log2_approx(frame_parms->nb_antennas_rx-1)+3;
+// #ifdef DEBUG_ULSCH
+//     printf("[ULSCH] log2_maxh_1 = %d (%d,%d)\n",log2_maxh_1,avgU_1[0],avgs_1);
+// #endif
+//     log2_maxh = max(log2_maxh_0,log2_maxh_1);
+//   } else {
     ulsch_channel_level_NB_IoT(pusch_vars->drs_ch_estimates[eNB_id],
                                frame_parms,
                                avgU,
@@ -1535,46 +1519,46 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 #ifdef DEBUG_ULSCH
     printf("[ULSCH] log2_maxh = %d (%d,%d)\n",log2_maxh,avgU[0],avgs);
 #endif
-  }
+  //}
 
-  for (l=0; l<frame_parms->symbols_per_tti-ulsch[UE_id]->harq_process->srs_active; l++) {
+  for (l=0; l<frame_parms->symbols_per_tti; l++) {
 
     if (((frame_parms->Ncp == 0) && ((l==3) || (l==10)))||   // skip pilots
         ((frame_parms->Ncp == 1) && ((l==2) || (l==8)))) {
       l++;
     }
 
-    if(cooperation_flag == 2) {
+    // if(cooperation_flag == 2) {
 
-      ulsch_channel_compensation_alamouti_NB_IoT(
-        pusch_vars->rxdataF_ext[eNB_id],
-        pusch_vars->drs_ch_estimates_0[eNB_id],
-        pusch_vars->drs_ch_estimates_1[eNB_id],
-        pusch_vars->ul_ch_mag_0[eNB_id],
-        pusch_vars->ul_ch_magb_0[eNB_id],
-        pusch_vars->ul_ch_mag_1[eNB_id],
-        pusch_vars->ul_ch_magb_1[eNB_id],
-        pusch_vars->rxdataF_comp_0[eNB_id],
-        pusch_vars->rxdataF_comp_1[eNB_id],
-        frame_parms,
-        l,
-        Qm,
-        ulsch[UE_id]->harq_process->nb_rb,
-        log2_maxh);
+    //   ulsch_channel_compensation_alamouti_NB_IoT(
+    //     pusch_vars->rxdataF_ext[eNB_id],
+    //     pusch_vars->drs_ch_estimates_0[eNB_id],
+    //     pusch_vars->drs_ch_estimates_1[eNB_id],
+    //     pusch_vars->ul_ch_mag_0[eNB_id],
+    //     pusch_vars->ul_ch_magb_0[eNB_id],
+    //     pusch_vars->ul_ch_mag_1[eNB_id],
+    //     pusch_vars->ul_ch_magb_1[eNB_id],
+    //     pusch_vars->rxdataF_comp_0[eNB_id],
+    //     pusch_vars->rxdataF_comp_1[eNB_id],
+    //     frame_parms,
+    //     l,
+    //     Qm,
+    //     ulsch[UE_id]->harq_process->nb_rb,
+    //     log2_maxh);
 
-      ulsch_alamouti_NB_IoT(frame_parms,
-                     pusch_vars->rxdataF_comp[eNB_id],
-                     pusch_vars->rxdataF_comp_0[eNB_id],
-                     pusch_vars->rxdataF_comp_1[eNB_id],
-                     pusch_vars->ul_ch_mag[eNB_id],
-                     pusch_vars->ul_ch_magb[eNB_id],
-                     pusch_vars->ul_ch_mag_0[eNB_id],
-                     pusch_vars->ul_ch_magb_0[eNB_id],
-                     pusch_vars->ul_ch_mag_1[eNB_id],
-                     pusch_vars->ul_ch_magb_1[eNB_id],
-                     l,
-                     ulsch[UE_id]->harq_process->nb_rb);
-    } else {
+    //   ulsch_alamouti_NB_IoT(frame_parms,
+    //                  pusch_vars->rxdataF_comp[eNB_id],
+    //                  pusch_vars->rxdataF_comp_0[eNB_id],
+    //                  pusch_vars->rxdataF_comp_1[eNB_id],
+    //                  pusch_vars->ul_ch_mag[eNB_id],
+    //                  pusch_vars->ul_ch_magb[eNB_id],
+    //                  pusch_vars->ul_ch_mag_0[eNB_id],
+    //                  pusch_vars->ul_ch_magb_0[eNB_id],
+    //                  pusch_vars->ul_ch_mag_1[eNB_id],
+    //                  pusch_vars->ul_ch_magb_1[eNB_id],
+    //                  l,
+    //                  ulsch[UE_id]->harq_process->nb_rb);
+    // } else {
       ulsch_channel_compensation_NB_IoT(
         pusch_vars->rxdataF_ext[eNB_id],
         pusch_vars->drs_ch_estimates[eNB_id],
@@ -1587,7 +1571,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
         ulsch[UE_id]->harq_process->nb_rb,
         log2_maxh); // log2_maxh+I0_shift
 
-    }
+   // }
 
 
     //eren
@@ -1648,7 +1632,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
     T_BUFFER(pusch_vars->rxdataF_comp[eNB_id][0],
              2 * /* ulsch[UE_id]->harq_processes[harq_pid]->nb_rb */ frame_parms->N_RB_UL *12*frame_parms->symbols_per_tti*2));
 
-  for (l=0; l<frame_parms->symbols_per_tti-ulsch[UE_id]->harq_process->srs_active; l++) {
+  for (l=0; l<frame_parms->symbols_per_tti; l++) {
 
     if (((frame_parms->Ncp == 0) && ((l==3) || (l==10)))||   // skip pilots
         ((frame_parms->Ncp == 1) && ((l==2) || (l==8)))) {
@@ -1656,6 +1640,9 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
     }
 
     switch (Qm) {
+    case 1: 
+      printf("To be developped\n");
+    break; 
     case 2 :
       ulsch_qpsk_llr_NB_IoT(frame_parms,
                             pusch_vars->rxdataF_comp[eNB_id],

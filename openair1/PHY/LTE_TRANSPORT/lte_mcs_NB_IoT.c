@@ -19,13 +19,13 @@
  *      contact@openairinterface.org
  */
 
-/*! \file PHY/LTE_TRANSPORT/lte_mcs.c
+/*! \file PHY/LTE_TRANSPORT/lte_mcs_NB_IoT.c
 * \brief Some support routines for MCS computations
-* \author R. Knopp
-* \date 2011
+* \author V. Savaux
+* \date 2017
 * \version 0.1
-* \company Eurecom
-* \email: knopp@eurecom.fr
+* \company b<>com
+* \email: 
 * \note
 * \warning
 */
@@ -34,16 +34,24 @@
 //#include "PHY/extern.h"
 #include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
 
-
-unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS)
+// 36213 Section 16.5.1.2, Table 
+unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS, uint8_t N_sc_RU)
 {
 
-  if (I_MCS < 11)
-    return(2);
-  else if (I_MCS < 21)
-    return(4);
-  else
-    return(6);
+	if (N_sc_RU)
+		return(2);
+	else
+		if (I_MCS<2)
+			return(1); 
+		else
+			return(2);
+		
+  // if (I_MCS < 11)
+  //   return(2);
+  // else if (I_MCS < 21)
+  //   return(4);
+  // else
+  //   return(6);
 
 }
 
