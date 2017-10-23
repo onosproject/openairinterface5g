@@ -4984,6 +4984,11 @@ rrc_eNB_decode_dcch(
               PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
               DCCH,
               sdu_sizeP);
+
+        rrc_eNB_process_SidelinkUEInformation(
+              ctxt_pP,
+              ue_context_p,
+              &ul_dcch_msg->message.choice.messageClassExtension.choice.c2.choice.sidelinkUEInformation_r12);
         break;
      default:
         break;
