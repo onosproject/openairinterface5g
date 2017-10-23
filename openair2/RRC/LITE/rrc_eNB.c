@@ -4950,6 +4950,45 @@ rrc_eNB_decode_dcch(
     }
 
     return 0;
+    //TTN for D2D
+  } else if (ul_dcch_msg->message.present == UL_DCCH_MessageType_PR_messageClassExtension){
+
+     switch (ul_dcch_msg->message.choice.messageClassExtension.present) {
+     case UL_DCCH_MessageType__messageClassExtension__c2_PR_NOTHING: /* No components present */
+        break;
+     case UL_DCCH_MessageType__messageClassExtension__c2_PR_sidelinkUEInformation_r12: //SidelinkUEInformation
+
+#ifdef RRC_MSG_PRINT
+        LOG_F(RRC,"[MSG] SidelinkUEInformation\n");
+
+        for (i = 0; i < sdu_sizeP; i++) {
+           LOG_F(RRC,"%02x ", ((uint8_t*)Rx_sdu)[i]);
+        }
+
+        LOG_F(RRC,"\n");
+#endif
+
+        MSC_LOG_RX_MESSAGE(
+              MSC_RRC_ENB,
+              MSC_RRC_UE,
+              Rx_sdu,
+              sdu_sizeP,
+              MSC_AS_TIME_FMT" SidelinkUEInformation UE %x size %u",
+              MSC_AS_TIME_ARGS(ctxt_pP),
+              ue_context_p->ue_context.rnti,
+              sdu_sizeP);
+
+        LOG_I(RRC,
+              PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
+              "(SidelinkUEInformation) ---> RRC_eNB\n",
+              PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+              DCCH,
+              sdu_sizeP);
+        break;
+     default:
+        break;
+     }
+     //end TTN
   } else {
     LOG_E(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Unknown error %s:%u\n",
           PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
@@ -5198,39 +5237,39 @@ rrc_top_cleanup_eNB(
 //TTN - for D2D
 void
 rrc_eNB_process_SidelinkUEInformation(
-      const protocol_ctxt_t* const ctxt_pP,
-      rrc_eNB_ue_context_t*         ue_context_pP,
-      SidelinkUEInformation_r12_t * sidelinkUEInformation
+  const protocol_ctxt_t* const ctxt_pP,
+  rrc_eNB_ue_context_t*         ue_context_pP,
+  SidelinkUEInformation_r12_t * sidelinkUEInformation
 )
 //-----------------------------------------------------------------------------
 {
-   LOG_I(RRC,
-         PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel UL-DCCH, " "processing SidelinkUEInformation from UE (SRB1 Active)\n",
-         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
+  LOG_I(RRC,
+        PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel UL-DCCH, " "processing SidelinkUEInformation from UE (SRB1 Active)\n",
+        PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
    //generate RRC Reconfiguration
-   rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP);
+  rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP);
 
 }
 
 //-----------------------------------------------------------------------------
 int
 rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
-      const protocol_ctxt_t* const ctxt_pP,
-      rrc_eNB_ue_context_t* const ue_context_pP
+  const protocol_ctxt_t* const ctxt_pP,
+  rrc_eNB_ue_context_t* const ue_context_pP
 )
 //-----------------------------------------------------------------------------
 {
 
-   uint8_t size;
-   uint8_t buffer[100];
+  uint8_t size;
+  uint8_t buffer[100];
 
-   //size = do_RRCConnectionReconfiguration(ctxt_pP, buffer );
-   LOG_I(RRC,"[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration_Sidelink (bytes %d, UE id %x)\n",
-         ctxt_pP->module_id,ctxt_pP->frame, size, ue_context_pP->ue_context.rnti);
+  //size = do_RRCConnectionReconfiguration(ctxt_pP, buffer );
+  LOG_I(RRC,"[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration_Sidelink (bytes %d, UE id %x)\n",
+        ctxt_pP->module_id,ctxt_pP->frame, size, ue_context_pP->ue_context.rnti);
 
-   // rrc_data_req();
+  // rrc_data_req();
 
-   return(0);
+  return(0);
 }
 
 
