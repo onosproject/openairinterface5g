@@ -287,6 +287,27 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   const uint32_t                nas_length
 );
 
+/**\brief Generate/decode the RRCConnectionReconfiguration for Sidelink at eNB
+   \param module_idP Instance ID for eNB/CH
+   \param frame Frame index
+   \param ue_module_idP Index of UE transmitting the messages*/
+int
+rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
+      const protocol_ctxt_t* const ctxt_pP,
+      rrc_eNB_ue_context_t*           const ue_context_pP
+);
+
+/** \brief process the received SidelinkUEInformation message at UE
+    \param ctxt_pP Running context
+    \param *rrcConnectionReconfiguration pointer to the sturcture
+    \param eNB_index Index of corresponding eNB/CH*/
+void
+rrc_eNB_process_SidelinkUEInformation(
+      const protocol_ctxt_t* const ctxt_pP,
+      rrc_eNB_ue_context_t*         ue_context_pP,
+      SidelinkUEInformation_r12_t * sidelinkUEInformation
+);
+
 //L2_interface.c
 int8_t
 mac_rrc_data_req(

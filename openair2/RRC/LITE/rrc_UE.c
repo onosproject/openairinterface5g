@@ -4864,3 +4864,18 @@ rrc_top_cleanup_ue(
   
 
 }
+
+
+//-----------------------------------------------------------------------------
+void rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, uint8_t mode )
+{
+   uint8_t    size;
+   uint8_t buffer[100];
+
+   //Generate SidelinkUEInformation
+   size = do_SidelinkUEInformation(ctxt_pP->module_id, buffer, destinationInfoList, discTxResourceReq, mode);
+   LOG_I(RRC,"[UE %d][RRC_UE] Frame %d : Logical Channel UL-DCCH, Generating SidelinkUEInformation (bytes%d, eNB %d)\n",
+         ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
+
+
+}

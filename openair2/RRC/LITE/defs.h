@@ -71,6 +71,7 @@
 #include "AS-Context.h"
 #include "UE-EUTRA-Capability.h"
 #include "MeasResults.h"
+#include "SidelinkUEInformation-r12.h"
 
 /* correct Rel(8|10)/Rel14 differences
  * the code is in favor of Rel14, those defines do the translation

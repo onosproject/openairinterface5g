@@ -1359,6 +1359,116 @@ uint8_t do_RRCConnectionRequest(uint8_t Mod_id, uint8_t *buffer,uint8_t *rv)
 
 }
 
+
+//TTN for D2D - 3GPP TS 36.331 (Section 5.10.2.3)
+uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, uint8_t mode)
+{
+
+   asn_enc_rval_t enc_rval;
+
+   UL_DCCH_Message_t ul_dcch_msg;
+
+   SidelinkUEInformation_r12_t *sidelinkUEInformation;
+   ARFCN_ValueEUTRA_r9_t   commRxInterestedFreq[] = {2565000000.0}; //sidelink communication frequency
+   ARFCN_ValueEUTRA_r9_t carrierFreq[] = {2565000000.0};
+
+   memset((void *)&ul_dcch_msg,0,sizeof(UL_DCCH_Message_t));
+
+   ul_dcch_msg.message.present                     = UL_DCCH_MessageType_PR_messageClassExtension;
+   ul_dcch_msg.message.choice.c1.present           = UL_DCCH_MessageType__messageClassExtension__c2_PR_sidelinkUEInformation_r12;
+   sidelinkUEInformation            = &ul_dcch_msg.message.choice.messageClassExtension.choice.c2.choice.sidelinkUEInformation_r12;
+
+   //3GPP TS 36.331 (Section 5.10.2.3)
+   sidelinkUEInformation->criticalExtensions.choice.c1.present = SidelinkUEInformation_r12__criticalExtensions__c1_PR_sidelinkUEInformation_r12;
+   switch(mode) {
+   //if SIB18 is available case 1,2,3,4
+   case 1: // to receive sidelink communication
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12 = &commRxInterestedFreq[0];
+      break;
+   case 2: //to transmit non-relay related one-to-many sidelink communication
+      //commTxResourceReq
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12 = &carrierFreq[0];
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12 = *destinationInfoList;
+      break;
+   case 3://transmit non-relay related one-to-one sidelink communication
+      //if commTxResourceUC-ReqAllowed is included in SIB18
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12 = &carrierFreq[0];
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12 = *destinationInfoList;
+      break;
+   case 4: //transmit relay related one-to-one sidelink communication
+      //if SIB19 includes discConfigRelay and UE acts a relay or UE has a selected relay
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12 = *destinationInfoList;
+      //set ue-type to relayUE or remoteUE
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_relayUE;
+      //sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12->nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_remoteUE;
+      break;
+   case 5: //transmit relay related one-to-many sidelink communication
+      //if SIB19 includes discConfigRelay and UE acts a relay
+      //set ue-type to relayUE
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_relayUE;
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12 = *destinationInfoList;
+      break;
+
+      //if SIB19 is available
+      //TTN - for case 6,7, and 8, we consider only one frequency  - a serving frequency
+   case 6: //receive sidelink discovery announcements
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discRxInterest_r12 = SidelinkUEInformation_r12_IEs__discRxInterest_r12_true;
+      break;
+   case 7://to transmit non-PS related sidelink discovery announcements
+      //for the first frequency
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12 = discTxResourceReq;
+      //for additional frequency
+      break;
+   case 8://to transmit PS related sidelink discovery announcements
+      //if to transmit non-relay PS related discovery announcements and SIB19 includes discConfigPS
+      //if UE is acting as relay UE and SIB includes discConfigRelay (relay threshold condition)
+      //if relay UE/has a selected relay UE and if SIB19 includes discConfigRelay
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13->discTxResourceReq_r13 = discTxResourceReq;
+      //sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12->nonCriticalExtension->discTxResourceReqPS_r13->carrierFreqDiscTx_r13
+      break;
+      //TODO: SIB21
+      //TODO: request sidelink discovery transmission/reception gaps
+      //TODO: report the system information parameters related to sidelink discovery of carriers other than the primary
+   default:
+      break;
+   }
+
+
+   enc_rval = uper_encode_to_buffer(&asn_DEF_UL_DCCH_Message,
+         (void*)&ul_dcch_msg,
+         buffer,
+         100);
+   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
+         enc_rval.failed_type->name, enc_rval.encoded);
+
+#if defined(ENABLE_ITTI)
+# if !defined(DISABLE_XER_SPRINT)
+   {
+      char        message_string[20000];
+      size_t      message_string_size;
+
+      if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_UL_DCCH_Message, (void *) &ul_dcch_msg)) > 0) {
+         MessageDef *msg_p;
+
+         msg_p = itti_alloc_new_message_sized (TASK_RRC_UE, RRC_UL_DCCH, message_string_size + sizeof (IttiMsgText));
+         msg_p->ittiMsg.rrc_ul_dcch.size = message_string_size;
+         memcpy(&msg_p->ittiMsg.rrc_ul_dcch.text, message_string, message_string_size);
+
+         itti_send_msg_to_task(TASK_UNKNOWN, NB_eNB_INST + Mod_id, msg_p);
+      }
+   }
+# endif
+#endif
+
+#ifdef USER_MODE
+   LOG_D(RRC,"SidelinkUEInformation Encoded %d bits (%d bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
+#endif
+
+   return((enc_rval.encoded+7)/8);
+
+}
+
+
 uint8_t do_RRCConnectionSetupComplete(uint8_t Mod_id, uint8_t *buffer, const uint8_t Transaction_id, const int dedicatedInfoNASLength, const char *dedicatedInfoNAS)
 {
 

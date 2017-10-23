@@ -5193,3 +5193,44 @@ rrc_top_cleanup_eNB(
   free(RC.rrc);
 }
 
+
+//-----------------------------------------------------------------------------
+//TTN - for D2D
+void
+rrc_eNB_process_SidelinkUEInformation(
+      const protocol_ctxt_t* const ctxt_pP,
+      rrc_eNB_ue_context_t*         ue_context_pP,
+      SidelinkUEInformation_r12_t * sidelinkUEInformation
+)
+//-----------------------------------------------------------------------------
+{
+   LOG_I(RRC,
+         PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel UL-DCCH, " "processing SidelinkUEInformation from UE (SRB1 Active)\n",
+         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
+   //generate RRC Reconfiguration
+   rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP);
+
+}
+
+//-----------------------------------------------------------------------------
+int
+rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
+      const protocol_ctxt_t* const ctxt_pP,
+      rrc_eNB_ue_context_t* const ue_context_pP
+)
+//-----------------------------------------------------------------------------
+{
+
+   uint8_t size;
+   uint8_t buffer[100];
+
+   //size = do_RRCConnectionReconfiguration(ctxt_pP, buffer );
+   LOG_I(RRC,"[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration_Sidelink (bytes %d, UE id %x)\n",
+         ctxt_pP->module_id,ctxt_pP->frame, size, ue_context_pP->ue_context.rnti);
+
+   // rrc_data_req();
+
+   return(0);
+}
+
+
