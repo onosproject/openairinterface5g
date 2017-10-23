@@ -212,7 +212,7 @@ int l2_init_eNB_NB_IoT(void)
   mac_init_global_param_NB_IoT();
   Is_rrc_registered_NB_IoT=1;
 
-  init_mac_NB_IoT(mac_inst);
+  //init_mac_NB_IoT(mac_inst);
 
   return(1);
 }

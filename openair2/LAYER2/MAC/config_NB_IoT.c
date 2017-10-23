@@ -615,6 +615,8 @@ void rrc_mac_config_req_NB_IoT(
 
     //return 0;
 
+      init_mac_NB_IoT(mac_inst);
+
 
    /*if( ded_flag!=0 )
    {
