@@ -157,7 +157,7 @@ uint32_t TA_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 							  uint32_t estimated_TA_coarse, 
 							  char coarse){
 
-	uint16_t length_seq_NPRACH,length_CP,length_sequence,length_symbol; // in number of samples, per NPRACH preamble: 4 sequences ; length of CP in number of samples 
+	uint16_t length_seq_NPRACH,length_CP,length_symbol; // in number of samples, per NPRACH preamble: 4 sequences ; length of CP in number of samples 
 	uint16_t length_CP_0 = eNB->frame_parms.nprach_config_common.nprach_CP_Length; //NB-IoT: 0: short, 1: long 
 	uint32_t fs; //NB-IoT: sampling frequency of Rx_buffer, must be defined somewhere
 	uint32_t fs_sub_sampled; 
@@ -326,6 +326,8 @@ uint32_t TA_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 	free(sub_sequence_reference_re); 
 	free(sub_sequence_reference_im); 
 
+	return TA_sample_estimated; 
+
 } 
 
 int16_t* sub_sampling_NB_IoT(int16_t *input_buffer, uint32_t length_input, uint32_t *length_ouput, uint16_t sub_sampling_rate){
@@ -354,14 +356,12 @@ int16_t* sub_sampling_NB_IoT(int16_t *input_buffer, uint32_t length_input, uint3
 void RX_NPRACH_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, int16_t *Rx_buffer){ 
 
 	uint32_t estimated_TA, estimated_TA_coarse; 
-	int16_t *Rx_sub_sampled_buffer_128,*Rx_sub_sampled_buffer_16;
-	int16_t *Rx_sub_sampled_buffer;
+	int16_t *Rx_sub_sampled_buffer_128,*Rx_sub_sampled_buffer_16; 
 	uint16_t sub_sampling_rate; //NB-IoT: to be defined somewhere
 	uint32_t FRAME_LENGTH_COMPLEX_SAMPLES; // NB-IoT: length of input buffer, to be defined somewhere 
 	uint32_t FRAME_LENGTH_COMPLEX_SUB_SAMPLES; // Length of buffer after sub-sampling
 	uint32_t *length_ouput; // Length of buffer after sub-sampling 
-	char coarse; // flag that indicate the level of TA estimation
-	int k; 
+	char coarse=1; // flag that indicate the level of TA estimation
 
 	/* 1. Coarse TA estimation using sub sampling rate = 128, i.e. fs = 240 kHz  */
 
