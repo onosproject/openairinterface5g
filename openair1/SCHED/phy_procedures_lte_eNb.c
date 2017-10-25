@@ -488,18 +488,23 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     
   //LOG_D(PHY,"Before generate_dci_top num_pdcch_symbols:%d num_dci:%d dci_alloc:dci_length:%d\n", num_pdcch_symbols, num_dci, eNB->pdcch_vars[subframe&1].dci_alloc[0].dci_length);
 
-  generate_dci_top(num_pdcch_symbols,
-      num_dci,
-      &eNB->pdcch_vars[subframe&1].dci_alloc[0],
-      0,
-      AMP,
-      fp,
-      eNB->common_vars.txdataF,
-      subframe);
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,1);
+
+  if (nfapi_mode == 0 || nfapi_mode == 1) {
+    generate_dci_top(num_pdcch_symbols,
+        num_dci,
+        &eNB->pdcch_vars[subframe&1].dci_alloc[0],
+        0,
+        AMP,
+        fp,
+        eNB->common_vars.txdataF,
+        subframe);
+  }
 
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,0);
 
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,1);
   // Now scan UE specific DLSCH
   LTE_eNB_DLSCH_t *dlsch0,*dlsch1;
   for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++)
@@ -543,12 +548,15 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
         dlsch0->subframe_tx[subframe]=0;
       }
     }
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,0);
 
 
 
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_PHICH,0);
   generate_phich_top(eNB,
 		     proc,
 		     AMP);
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_PHICH,1);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_TX+offset,0);
   if (do_meas==1) stop_meas(&eNB->phy_proc_tx);
@@ -570,14 +578,14 @@ void prach_procedures(PHY_VARS_eNB *eNB,
     subframe = eNB->proc.subframe_prach_br;
     frame = eNB->proc.frame_prach_br;
     pthread_mutex_lock(&eNB->UL_INFO_mutex);
-    eNB->UL_INFO.rach_ind_br.number_of_preambles=0;
+    eNB->UL_INFO.rach_ind_br.rach_indication_body.number_of_preambles=0;
     pthread_mutex_unlock(&eNB->UL_INFO_mutex);
   }
   else
 #endif
     {
       pthread_mutex_lock(&eNB->UL_INFO_mutex);
-      eNB->UL_INFO.rach_ind.number_of_preambles=0;
+      eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles=0;
       pthread_mutex_unlock(&eNB->UL_INFO_mutex);
       subframe = eNB->proc.subframe_prach;
       frame = eNB->proc.frame_prach;
@@ -632,7 +640,7 @@ void prach_procedures(PHY_VARS_eNB *eNB,
       
     prach_mask = is_prach_subframe(&eNB->frame_parms,eNB->proc.frame_prach_br,eNB->proc.subframe_prach_br);
     
-    eNB->UL_INFO.rach_ind_br.preamble_list                              = eNB->preamble_list_br;
+    eNB->UL_INFO.rach_ind_br.rach_indication_body.preamble_list                              = eNB->preamble_list_br;
     int ind=0;
     int ce_level=0;
     /* Save for later, it doesn't work    
@@ -645,7 +653,7 @@ void prach_procedures(PHY_VARS_eNB *eNB,
     */ 
     if (eNB->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[0]==1){ 
       if (max_preamble_energy[0] > 350) {
-	eNB->UL_INFO.rach_ind_br.number_of_preambles++;
+	eNB->UL_INFO.rach_ind_br.rach_indication_body.number_of_preambles++;
 	
 	eNB->preamble_list_br[ind].preamble_rel8.timing_advance        = max_preamble_delay[ind];//
 	eNB->preamble_list_br[ind].preamble_rel8.preamble              = max_preamble[ind];
@@ -691,9 +699,11 @@ void prach_procedures(PHY_VARS_eNB *eNB,
 	    
 	    pthread_mutex_lock(&eNB->UL_INFO_mutex);
 	    
-	    eNB->UL_INFO.rach_ind.number_of_preambles                 = 1;
-	    eNB->UL_INFO.rach_ind.preamble_list                       = &eNB->preamble_list[0];
-	    eNB->UL_INFO.rach_ind.tl.tag                              = NFAPI_RACH_INDICATION_BODY_TAG;
+	    eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles  = 1;
+	    eNB->UL_INFO.rach_ind.rach_indication_body.preamble_list        = &eNB->preamble_list[0];
+	    eNB->UL_INFO.rach_ind.rach_indication_body.tl.tag               = NFAPI_RACH_INDICATION_BODY_TAG;
+            eNB->UL_INFO.rach_ind.header.message_id                         = NFAPI_RACH_INDICATION;
+            eNB->UL_INFO.rach_ind.sfn_sf                                    = frame<<4 | subframe;
 	    
 	    eNB->preamble_list[0].preamble_rel8.tl.tag                = NFAPI_PREAMBLE_REL8_TAG;
 	    eNB->preamble_list[0].preamble_rel8.timing_advance        = max_preamble_delay[0];
@@ -705,21 +715,17 @@ void prach_procedures(PHY_VARS_eNB *eNB,
             // If NFAPI PNF then we need to send the message to the VNF
             if (nfapi_mode == 1)
             {
-              nfapi_rach_indication_t rach_ind;
-              rach_ind.header.message_id = NFAPI_RACH_INDICATION;
-              rach_ind.sfn_sf = frame<<4 | subframe;
-              rach_ind.rach_indication_body = eNB->UL_INFO.rach_ind;
-
               LOG_E(PHY,"\n\n\n\nDJP - this needs to be sent to VNF **********************************************\n\n\n\n");
               LOG_E(PHY,"Filling NFAPI indication for RACH : SFN_SF:%d TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
-                  NFAPI_SFNSF2DEC(rach_ind.sfn_sf),
+                  NFAPI_SFNSF2DEC(eNB->UL_INFO.rach_ind.sfn_sf),
                   eNB->preamble_list[0].preamble_rel8.timing_advance,
                   eNB->preamble_list[0].preamble_rel8.preamble,
                   eNB->preamble_list[0].preamble_rel8.rnti,
                   eNB->preamble_list[0].preamble_rel13.rach_resource_type);	    
 
+              oai_nfapi_rach_ind(&eNB->UL_INFO.rach_ind);
 
-              oai_nfapi_rach_ind(&rach_ind);
+              eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles = 0;
             }
 
 	    pthread_mutex_unlock(&eNB->UL_INFO_mutex);
@@ -1315,8 +1321,9 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     ulsch = eNB->ulsch[i];
     ulsch_harq = ulsch->harq_processes[harq_pid];
-    if (ulsch->rnti>0) LOG_D(PHY,"Frame %d, subframe %d: PUSCH procedures, harq_pid %d, UE %d/%x\n",
-			     frame,subframe,harq_pid,i,ulsch->rnti);
+    if (ulsch->rnti>0) LOG_D(PHY,"eNB->ulsch[%d]->harq_processes[harq_pid:%d] Frame %d, subframe %d: PUSCH procedures, harq_pid %d, UE %d/%x ulsch_harq[status:%d frame:%d subframe:%d handled:%d]\n",
+			     i, harq_pid, frame,subframe,harq_pid,i,ulsch->rnti,
+                             ulsch_harq->status, ulsch_harq->frame, ulsch_harq->subframe, ulsch_harq->handled);
     
     if ((ulsch) &&
         (ulsch->rnti>0) &&
@@ -1995,7 +2002,7 @@ void fill_crc_indication(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint
 
   eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs++;
 
-  LOG_D(PHY, "%s() rnti:%04x crcs:%d\n", __FUNCTION__, pdu->rx_ue_information.rnti, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs);
+  LOG_D(PHY, "%s() rnti:%04x crcs:%d crc_flag:%d\n", __FUNCTION__, pdu->rx_ue_information.rnti, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, crc_flag);
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 }

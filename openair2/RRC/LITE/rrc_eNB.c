@@ -282,7 +282,7 @@ init_SI(
   }
 #endif
 
-  LOG_I(RRC, "About to call rrc_mac_config_req_eNB");
+  LOG_I(RRC, "About to call rrc_mac_config_req_eNB\n");
 
   rrc_mac_config_req_eNB(ctxt_pP->module_id, CC_id,
 			 RC.rrc[ctxt_pP->module_id]->carrier[CC_id].physCellId,

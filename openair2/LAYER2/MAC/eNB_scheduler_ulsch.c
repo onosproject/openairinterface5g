@@ -62,6 +62,10 @@
 
 extern void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_t frameP, sub_frame_t subframeP);
 
+extern int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req);
+extern uint16_t sfnsf_add_subframe(uint16_t frameP, uint16_t subframeP, int offset);
+
+
 // This table holds the allowable PRB sizes for ULSCH transmissions
 uint8_t rb_table[34] = {1,2,3,4,5,6,8,9,10,12,15,16,18,20,24,25,27,30,32,36,40,45,48,50,54,60,64,72,75,80,81,90,96,100};
 
@@ -573,8 +577,11 @@ abort();
   hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value                            = 1; // DJP - wireshark shows this as a NAK who is right?
   hi_dci0_req_body->number_of_hi++;
   hi_dci0_req_body->tl.tag = NFAPI_HI_DCI0_REQUEST_BODY_TAG;
-  hi_dci0_req->sfn_sf = frameP<<4|subframeP;
+  hi_dci0_req->sfn_sf = sfnsf_add_subframe(frameP,subframeP, 4);
   hi_dci0_req->header.message_id = NFAPI_HI_DCI0_REQUEST;
+
+  oai_nfapi_hi_dci0_req(hi_dci0_req);
+  hi_dci0_req_body->number_of_hi=0;
 
   /* NN--> FK: we could either check the payload, or use a phy helper to detect a false msg3 */
   if ((num_sdu == 0) && (num_ce==0)) {

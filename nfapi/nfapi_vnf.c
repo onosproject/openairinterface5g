@@ -291,8 +291,6 @@ int vnf_unpack_vendor_extension_tlv(nfapi_tl_t* tl, uint8_t **ppReadPackedMessag
 void install_schedule_handlers(IF_Module_t *if_inst);
 extern int single_thread_flag;
 extern void init_eNB_afterRU(void);
-extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
-extern void subtract_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 
 void oai_create_enb(void)
 {
@@ -327,10 +325,12 @@ void oai_create_enb(void)
     printf("%s() Waiting for eNB to become configured (by RRC/PHY) - need to wait otherwise NFAPI messages won't contain correct values\n", __FUNCTION__);
     usleep(50000);
   } while(eNB->configured != 1);
+  printf("%s() eNB is now configured\n", __FUNCTION__);
 }
 
 void oai_enb_init(void)
 {
+  printf("%s() About to call init_eNB_afterRU()\n", __FUNCTION__);
   init_eNB_afterRU();
 }
 
@@ -492,6 +492,8 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf)
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
 
+  //printf("%s(eNB:%p, sfn:%d, sf:%d)\n", __FUNCTION__, eNB, sfn, sf);
+
   //int i;
   struct timespec wait;
 
@@ -593,7 +595,7 @@ int phy_subframe_indication(struct nfapi_vnf_p7_config* config, uint16_t phy_id,
   static uint8_t first_time = 1;
   if (first_time)
   {
-    printf("[VNF] subframe indication %d\n", sfn_sf);
+    printf("[VNF] subframe indication %d\n", NFAPI_SFNSF2DEC(sfn_sf));
     first_time = 0;
   }
 
@@ -601,6 +603,8 @@ int phy_subframe_indication(struct nfapi_vnf_p7_config* config, uint16_t phy_id,
   //mac_subframe_ind(p7_vnf->mac, phy_id, sfn_sf);
 
 #if 1
+  //if (RC.eNB) printf("RC.eNB[0][0]->configured:%d\n", RC.eNB[0][0]->configured);
+
   if (RC.eNB && RC.eNB[0][0]->configured)
   {
     uint16_t sfn = NFAPI_SFNSF2SFN(sfn_sf);
@@ -630,9 +634,8 @@ int phy_rach_indication(struct nfapi_vnf_p7_config* config, nfapi_rach_indicatio
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
-  eNB->UL_INFO.rach_ind.number_of_preambles                 = ind->rach_indication_body.number_of_preambles;
-  eNB->UL_INFO.rach_ind.preamble_list                       = eNB->preamble_list;
-  eNB->UL_INFO.rach_ind.tl.tag                              = NFAPI_RACH_INDICATION_BODY_TAG;
+  eNB->UL_INFO.rach_ind = *ind;
+  eNB->UL_INFO.rach_ind.rach_indication_body.preamble_list                       = eNB->preamble_list;
 
   for (int i=0;i<ind->rach_indication_body.number_of_preambles++;i++)
   {
@@ -702,13 +705,14 @@ int phy_crc_indication(struct nfapi_vnf_p7_config* config, nfapi_crc_indication_
 
   for (int i=0; i<ind->crc_indication_body.number_of_crcs; i++)
   {
+    memcpy(&dest_ind->crc_indication_body.crc_pdu_list[i], &ind->crc_indication_body.crc_pdu_list[i], sizeof(ind->crc_indication_body.crc_pdu_list[0]));
+
     LOG_D(MAC, "%s() PDU[%d] rnti:%04x UL_INFO:rnti:%04x\n", 
         __FUNCTION__,
         i, 
         ind->crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti, 
         eNB->UL_INFO.crc_ind.crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti);
 
-    memcpy(&dest_ind->crc_indication_body.crc_pdu_list[i], &ind->crc_indication_body.crc_pdu_list[i], sizeof(ind->crc_indication_body.crc_pdu_list[0]));
   }
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);

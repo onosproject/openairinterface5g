@@ -130,7 +130,6 @@ int attach_rru(RU_t *ru);
 int connect_rau(RU_t *ru);
 
 extern uint8_t nfapi_mode;
-extern void oai_subframe_ind(uint16_t frame, uint16_t subframe);
 
 /*************************************************************/
 /* Functions to attach and configure RRU                     */
@@ -797,71 +796,10 @@ void tx_rf(RU_t *ru) {
     for (i=0; i<ru->nb_tx; i++)
     {
       txp[i] = (void*)&ru->common.txdata[i][proc->subframe_tx*fp->samples_per_tti]; 
-      if (0)
-      {
-        if (
-            (proc->frame_tx % 10 ==0 && proc->subframe_tx==0)  ||
-            (proc->frame_tx % 10 ==0 && proc->subframe_tx==5)
-           )
-        {
-          LOG_E(PHY,"%s() nb_tx:%d i:%d samples_per_tti:%u subframe_tx:%u txp[%d]:%p\n", __FUNCTION__, ru->nb_tx, i, fp->samples_per_tti, proc->subframe_tx, i,txp[i]);
-        }
-      }
     }
     
     int siglen=fp->samples_per_tti,flags=1;
     
-    if (0 &&
-    (
-        (proc->frame_tx % 300 ==0 && proc->subframe_tx==0)  ||
-        (proc->frame_tx % 300 ==0 && proc->subframe_tx==5)
-        )
-       )
-    {
-       uint32_t *tx0p = (uint32_t*)txp;
-
-      LOG_E(PHY,"%s() nb_tx:%d first_carrier_offset:%u samples_per_tti:%u subframe_tx:%u sf:%u(%u) txp:%2x %2x %2x %2x %2x %2x %2x %2x\n", 
-          __FUNCTION__, ru->nb_tx, fp->first_carrier_offset, fp->samples_per_tti, proc->subframe_tx,
-          SF_type, SF_type==SF_S,
-          tx0p[fp->first_carrier_offset],
-          tx0p[fp->first_carrier_offset+1],
-          tx0p[fp->first_carrier_offset+2],
-          tx0p[fp->first_carrier_offset+3],
-          tx0p[fp->first_carrier_offset+4],
-          tx0p[fp->first_carrier_offset+5],
-          tx0p[fp->first_carrier_offset+6],
-          tx0p[fp->first_carrier_offset+7]
-          );
-    }
-    if ( 0 &&
-        (
-         (proc->frame_tx % 300 ==0 && proc->subframe_tx==0)  ||
-         (proc->frame_tx % 300 ==0 && proc->subframe_tx==5)
-        )
-       )
-    {
-      int32_t *txpbuf = RC.ru[0]->common.txdata[0];
-
-      char *buf = malloc(fp->symbols_per_tti * 3 + 100);
-      char *pbuf = buf;
-
-      for (int i=0;i<10;i++)
-      {
-        buf[0]='\0';
-        pbuf = buf;
-
-        pbuf += sprintf(pbuf, "SF%d:", proc->subframe_tx);
-
-        for (int k=0;k<fp->symbols_per_tti;k++)
-        {
-          pbuf += sprintf(pbuf, "%2x ", txpbuf[k]);
-        }
-        LOG_E(PHY, "%s\n", buf);
-
-      }
-      free(buf);
-    }
-
     if (SF_type == SF_S) {
       siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);
       flags=3; // end of burst
@@ -1562,26 +1500,6 @@ static void* ru_thread( void* param ) {
         RC.eNB[0][0], ru->eNB_list[0],
         proc,&ru->proc);
 
-#if 0
-    // This needs to be here, because we need to be as close to the interrupt as possible, any later and you get jitter
-    // However, putting it here causes the PNF to go horribly wrong and get bad harq_pid!
-    //
-    if (nfapi_mode == 1)  // PNF
-    {
-      struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
-
-      //oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
-      //LOG_D(PHY, "oai_subframe_ind(frame:%u, subframe:%d) NOT CALLED **************************************\n", frame, subframe);
-
-      //uint16_t frame = proc->frame_tx;
-      //uint16_t subframe = proc->subframe_tx;
-
-      //add_subframe(&frame, &subframe, 4);
-
-      //oai_subframe_ind(frame, subframe);
-      //LOG_D(PHY, "oai_subframe_ind(frame:%u, subframe:%d) UL_info[rx_ind:%d number_of_harqs:%d number_of_crcs:%d number_of_cqis:%d number_of_preambles:%d]\n", frame, subframe, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, eNB->UL_INFO.cqi_ind.number_of_cqis, eNB->UL_INFO.rach_ind.number_of_preambles);
-    }
-#endif
     if (nfapi_mode == 1) // PNF
     {
       // This is the earliest I think we can do this

@@ -47,6 +47,8 @@ functions.pdsch_thread
 functions.nfapi_subframe
 functions.generate_pcfich
 functions.generate_dci0
+functions.generate_dlsch
+functions.generate_phich
 functions.pdcch_scrambling
 functions.pdcch_modulation
 functions.pdcch_interleaving

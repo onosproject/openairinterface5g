@@ -161,6 +161,27 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
   // *******************************************************************
 
+  if (nfapi_mode == 1)
+  {
+    // I am a PNF and I need to let nFAPI know that we have a (sub)frame tick
+    uint16_t frame = proc->frame_rx;
+    uint16_t subframe = proc->subframe_rx;
+
+    //add_subframe(&frame, &subframe, 4);
+
+    //oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
+    //LOG_D(PHY, "oai_subframe_ind(frame:%u, subframe:%d) - NOT CALLED ********\n", frame, subframe);
+    oai_subframe_ind(frame, subframe);
+
+    LOG_D(PHY, "UL_info[rx_ind:%d number_of_harqs:%d number_of_crcs:%d number_of_cqis:%d number_of_preambles:%d]\n", eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, eNB->UL_INFO.cqi_ind.number_of_cqis, eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles);
+  }
+
+  if (nfapi_mode == 1 && eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols == 0)
+  {
+    LOG_E(PHY, "eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols == 0");
+    return 0;
+  }
+
   // ****************************************
   // Common RX procedures subframe n
 
@@ -177,7 +198,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 #endif
   }
 
-  LOG_D(PHY, "RX_IND:SFN/SF:%d proc:SFN/SF:%d/%d [rx_ind:num_pdus:%d]\n", NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf), proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus);
+  LOG_D(PHY, "RX_IND:SFN/SF:%d proc:SFN/SF:%d/%d [rx_ind:num_pdus:%d] TX:%d/%d eNB->pdcch_vars[subframe&1].num_pdcch_symbols:%d\n", NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf), proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, proc->frame_tx, proc->subframe_tx, eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols);
 
   if (eNB->UL_INFO.rx_ind.sfn_sf == (proc->frame_rx<<4|proc->subframe_rx) && eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus>0)
   {
@@ -198,23 +219,10 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
     }
   }
 
-  if (nfapi_mode == 1)
-  {
-    // I am a PNF and I need to let nFAPI know that we have a (sub)frame tick
-    uint16_t frame = proc->frame_rx;
-    uint16_t subframe = proc->subframe_rx;
-
-    add_subframe(&frame, &subframe, 4);
-
-    //oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
-    //LOG_D(PHY, "oai_subframe_ind(frame:%u, subframe:%d) - NOT CALLED ********\n", frame, subframe);
-    oai_subframe_ind(frame, subframe);
-
-    LOG_D(PHY, "UL_info[rx_ind:%d number_of_harqs:%d number_of_crcs:%d number_of_cqis:%d number_of_preambles:%d]\n", eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, eNB->UL_INFO.cqi_ind.number_of_cqis, eNB->UL_INFO.rach_ind.number_of_preambles);
-  }
-
   // UE-specific RX processing for subframe n
-  phy_procedures_eNB_uespec_RX(eNB, proc, no_relay );
+  if (nfapi_mode == 0 || nfapi_mode == 1) {
+    phy_procedures_eNB_uespec_RX(eNB, proc, no_relay );
+  }
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
 

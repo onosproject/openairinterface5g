@@ -1196,6 +1196,7 @@ int main( int argc, char **argv )
     } 
   }
   
+#if 0
   // Will have parsed the config files by now
   
   printf("NFAPI MODE:%d\n", nfapi_mode);
@@ -1209,11 +1210,12 @@ int main( int argc, char **argv )
   else if (nfapi_mode == 2)  // VNF
   {
     set_comp_log(MAC, LOG_DEBUG, LOG_FULL, 1);
-    set_comp_log(RRC, LOG_INFO, LOG_FULL, 1);
+    set_comp_log(RRC, LOG_DEBUG, LOG_FULL, 1);
+    set_comp_log(PHY, LOG_DEBUG, LOG_FULL, 1);
     printf("DJP - forcing MAC to DEBUG - should see similar line if it works\n");
     LOG_E(PHY,"%s() DJP - forcing MAC to LOG_DEBUG for VNF\n", __FUNCTION__);
   }
-
+#endif
   
   
   printf("mlock\n");
@@ -1301,6 +1303,9 @@ int main( int argc, char **argv )
       break;
     case 2:
       nfapi_mode_str = "VNF";
+      break;
+    default:
+      nfapi_mode_str = "<UNKNOWN NFAPI MODE>";
       break;
   }
   printf("NFAPI MODE:%s\n", nfapi_mode_str);

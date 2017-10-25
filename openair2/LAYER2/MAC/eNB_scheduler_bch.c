@@ -561,7 +561,7 @@ void schedule_mib(module_id_t   module_idP,
       dl_config_request->header.message_id = NFAPI_DL_CONFIG_REQUEST;
       dl_config_request->sfn_sf = sfn_sf;
 
-      //LOG_E(MAC,"eNB->DL_req[0].number_pdu %d (%p) sfn_sf:%d\n", dl_req->number_pdu,&dl_req->number_pdu, NFAPI_SFNSF2DEC(dl_config_request->sfn_sf));
+      LOG_E(MAC,"eNB->DL_req[0].number_pdu %d (%p) sfn_sf:%d\n", dl_req->number_pdu,&dl_req->number_pdu, NFAPI_SFNSF2DEC(dl_config_request->sfn_sf));
       // DL request
 
       TX_req                                                                = &eNB->TX_req[CC_id].tx_request_body.tx_pdu_list[eNB->TX_req[CC_id].tx_request_body.number_of_pdus]; 
@@ -575,8 +575,9 @@ void schedule_mib(module_id_t   module_idP,
       eNB->TX_req[CC_id].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
       eNB->TX_req[CC_id].header.message_id = NFAPI_TX_REQUEST;
 
-      if (frameP%100==0) LOG_D(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
-          __FUNCTION__, eNB->TX_req[CC_id].sfn_sf, eNB->TX_req[CC_id].tx_request_body.number_of_pdus,
+      if (frameP%100==0){}
+      LOG_D(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
+          __FUNCTION__, NFAPI_SFNSF2DEC(eNB->TX_req[CC_id].sfn_sf), eNB->TX_req[CC_id].tx_request_body.number_of_pdus,
           TX_req->pdu_length, TX_req->pdu_index, TX_req->num_segments, TX_req->segments[0].segment_length);
     }
   }

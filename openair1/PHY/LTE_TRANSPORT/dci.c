@@ -43,6 +43,7 @@
 #include "assertions.h" 
 #include "T.h"
 #include "UTIL/LOG/log.h"
+#include "UTIL/LOG/vcd_signal_dumper.h"
 
 //#define DEBUG_DCI_ENCODING 1
 //#define DEBUG_DCI_DECODING 1
@@ -2065,6 +2066,8 @@ void pdcch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
   uint8_t reset;
   uint32_t x1, x2, s=0;
 
+  //LOG_D(PHY, "%s(fp, subframe:%d, e, length:%d)\n", __FUNCTION__, subframe, length);
+
   reset = 1;
   // x1 is set in lte_gold_generic
 
@@ -2252,11 +2255,13 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
   }
 
 
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_PCFICH,1);
   generate_pcfich(num_pdcch_symbols,
                   amp,
                   frame_parms,
                   txdataF,
                   subframe);
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_PCFICH,0);
   wbar[0] = &wbar0[0];
   wbar[1] = &wbar1[0];
   y[0] = &yseq0[0];
@@ -2277,6 +2282,7 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
 
   e_ptr = e;
 
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DCI0,1);
 
   // generate DCIs in order of decreasing aggregation level, then common/ue spec
   // MAC is assumed to have ordered the UE spec DCI according to the RNTI-based randomization
@@ -2303,20 +2309,26 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
       }
     }
   }
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DCI0,0);
 
   // Scrambling
 #ifdef DEBUG_DCI_ENCODING
   printf("pdcch scrambling\n");
 #endif
+  //LOG_D(PHY, "num_pdcch_symbols:%d mi:%d nquad:%d\n", num_pdcch_symbols, mi, get_nquad(num_pdcch_symbols, frame_parms, mi));
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCCH_SCRAMBLING,1);
   pdcch_scrambling(frame_parms,
                    subframe,
                    e,
                    8*get_nquad(num_pdcch_symbols, frame_parms, mi));
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCCH_SCRAMBLING,0);
   //72*get_nCCE(num_pdcch_symbols,frame_parms,mi));
 
 
 
 
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCCH_MODULATION,1);
   // Now do modulation
   if (frame_parms->nb_antenna_ports_eNB==1)
     gain_lin_QPSK = (int16_t)((amp*ONE_OVER_SQRT2_Q15)>>15);
@@ -2329,6 +2341,7 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
   printf(" PDCCH Modulation, Msymb %d, Msymb2 %d,gain_lin_QPSK %d\n",Msymb,Msymb2,gain_lin_QPSK);
 #endif
 
+  //LOG_D(PHY,"%s() Msymb2:%d\n", __FUNCTION__, Msymb2);
 
   if (frame_parms->nb_antenna_ports_eNB==1) { //SISO
 
@@ -2375,16 +2388,20 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
 
     }
   }
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCCH_MODULATION,0);
 
 
 #ifdef DEBUG_DCI_ENCODING
   printf(" PDCCH Interleaving\n");
 #endif
 
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCCH_INTERLEAVING,1);
   //  printf("y %p (%p,%p), wbar %p (%p,%p)\n",y,y[0],y[1],wbar,wbar[0],wbar[1]);
   // This is the interleaving procedure defined in 36-211, first part of Section 6.8.5
   pdcch_interleaving(frame_parms,&y[0],&wbar[0],num_pdcch_symbols,mi);
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCCH_INTERLEAVING,0);
 
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCCH_TX,1);
   mprime=0;
   nsymb = (frame_parms->Ncp==0) ? 14:12;
   re_offset = frame_parms->first_carrier_offset;
@@ -2519,6 +2536,7 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
     if (re_offset == (frame_parms->ofdm_symbol_size))
       re_offset = 1;
   } // kprime loop
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCCH_TX,0);
 
   return(num_pdcch_symbols);
 }

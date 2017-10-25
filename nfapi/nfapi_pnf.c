@@ -1109,8 +1109,6 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
   return 0;
 }
 
-extern void subtract_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
-
 int pnf_phy_ul_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
 {
   LOG_D(PHY,"[PNF] UL_CONFIG_REQ %s() sfn_sf:%d pdu:%d rach_prach_frequency_resources:%d srs_present:%u\n", 
@@ -1142,16 +1140,12 @@ int pnf_phy_ul_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
     return -4;
   }
 
-  int sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
-  int sf = NFAPI_SFNSF2SF(req->sfn_sf);
+  uint16_t sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
+  uint16_t sf = NFAPI_SFNSF2SF(req->sfn_sf);
 
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
   eNB_rxtx_proc_t *proc = &eNB->proc.proc_rxtx[0];
   nfapi_ul_config_request_pdu_t* ul_config_pdu_list = req->ul_config_request_body.ul_config_pdu_list;
-
-  // subframe works off TX SFN/SF which is 4 ahead, need to put it back to RX SFN/SF
-  // probably could just use proc->frame_rx
-  subtract_subframe(&sfn, &sf, 4);
 
   for (int i=0;i<req->ul_config_request_body.number_of_pdus;i++)
   {

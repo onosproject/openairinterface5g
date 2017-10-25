@@ -747,18 +747,21 @@ int rrc_mac_config_req_eNB(module_id_t                      Mod_idP,
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
 
-  
-  if (mib!=NULL) {
-    if (RC.mac == NULL) l2_init_eNB();
+  LOG_D(MAC, "RC.mac:%p mib:%p\n", RC.mac, mib);
+
+  if (RC.mac == NULL) {
+    l2_init_eNB();
 
     mac_top_init_eNB();
+  }
 
-    RC.mac[Mod_idP]->common_channels[CC_idP].mib             = mib;
-    RC.mac[Mod_idP]->common_channels[CC_idP].physCellId      = physCellId;
-    RC.mac[Mod_idP]->common_channels[CC_idP].p_eNB           = p_eNB;
-    RC.mac[Mod_idP]->common_channels[CC_idP].Ncp             = Ncp;
-    RC.mac[Mod_idP]->common_channels[CC_idP].eutra_band      = eutra_band;
-    RC.mac[Mod_idP]->common_channels[CC_idP].dl_CarrierFreq  = dl_CarrierFreq;
+  if (mib!=NULL) {
+      RC.mac[Mod_idP]->common_channels[CC_idP].mib             = mib;
+      RC.mac[Mod_idP]->common_channels[CC_idP].physCellId      = physCellId;
+      RC.mac[Mod_idP]->common_channels[CC_idP].p_eNB           = p_eNB;
+      RC.mac[Mod_idP]->common_channels[CC_idP].Ncp             = Ncp;
+      RC.mac[Mod_idP]->common_channels[CC_idP].eutra_band      = eutra_band;
+      RC.mac[Mod_idP]->common_channels[CC_idP].dl_CarrierFreq  = dl_CarrierFreq;
 
     LOG_I(MAC,
 	  "Configuring MIB for instance %d, CCid %d : (band %d,N_RB_DL %d,Nid_cell %d,p %d,DL freq %u,phich_config.resource %d, phich_config.duration %d)\n",
@@ -787,7 +790,6 @@ int rrc_mac_config_req_eNB(module_id_t                      Mod_idP,
 	       );
 
     mac_init_cell_params(Mod_idP,CC_idP);
-  }
   if (schedulingInfoList!=NULL)  {
     RC.mac[Mod_idP]->common_channels[CC_idP].tdd_Config         = tdd_Config;    
     RC.mac[Mod_idP]->common_channels[CC_idP].schedulingInfoList = schedulingInfoList;    
@@ -827,6 +829,7 @@ int rrc_mac_config_req_eNB(module_id_t                      Mod_idP,
 
 
   }
+  } // mib != NULL
 
 
   // SRB2_lchan_config->choice.explicitValue.ul_SpecificParameters->logicalChannelGroup
@@ -926,23 +929,27 @@ int rrc_mac_config_req_eNB(module_id_t                      Mod_idP,
 
 #endif
 
-  while(RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL) {
-    // DJP AssertFatal(RC.mac[Mod_idP]->if_inst->PHY_config_req != NULL,"if_inst->phy_config_request is null\n");
-    usleep(100 * 1000);
-    printf("Waiting for PHY_config_req\n");
+
+  if (RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL)
+  {
+    while(RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL) {
+      // DJP AssertFatal(RC.mac[Mod_idP]->if_inst->PHY_config_req != NULL,"if_inst->phy_config_request is null\n");
+      usleep(100 * 1000);
+      printf("Waiting for PHY_config_req\n");
+    }
+    PHY_Config_t phycfg;
+    phycfg.Mod_id = Mod_idP;
+    phycfg.CC_id  = CC_idP;
+    phycfg.cfg    = &RC.mac[Mod_idP]->config[CC_idP];
+
+    if (RC.mac[Mod_idP]->if_inst->PHY_config_req) RC.mac[Mod_idP]->if_inst->PHY_config_req(&phycfg); 
   }
-  PHY_Config_t phycfg;
-  phycfg.Mod_id = Mod_idP;
-  phycfg.CC_id  = CC_idP;
-  phycfg.cfg    = &RC.mac[Mod_idP]->config[CC_idP];
-
-  if (RC.mac[Mod_idP]->if_inst->PHY_config_req) RC.mac[Mod_idP]->if_inst->PHY_config_req(&phycfg); 
-
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
 
   return(0);			   
 
 }
+
 int
 rrc_mac_config_req_ue(
   module_id_t                      Mod_idP,

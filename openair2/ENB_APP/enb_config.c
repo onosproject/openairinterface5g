@@ -307,6 +307,9 @@ void RCconfig_L1(void) {
 
         configure_nfapi_pnf(RC.eNB[j][0]->eth_params_n.remote_addr, RC.eNB[j][0]->eth_params_n.remote_portc, RC.eNB[j][0]->eth_params_n.my_addr, RC.eNB[j][0]->eth_params_n.my_portd, RC.eNB[j][0]->eth_params_n     .remote_portd);
 
+        set_comp_log(PHY, LOG_DEBUG, LOG_FULL, 1);
+        printf("DJP - forcing PHY to DEBUG - should see similar line if it works\n");
+        LOG_E(PHY,"%s() DJP - forcing PHY to LOG_DEBUG for NFAPI PNF\n", __FUNCTION__);
       }
       else { // other midhaul
       }	
@@ -391,6 +394,14 @@ void RCconfig_macrlc() {
         printf("**************** vnf_port:%d\n", RC.mac[j]->eth_params_s.my_portc);
         configure_nfapi_vnf(RC.mac[j]->eth_params_s.my_addr, RC.mac[j]->eth_params_s.my_portc);
         printf("**************** RETURNED FROM configure_nfapi_vnf() vnf_port:%d\n", RC.mac[j]->eth_params_s.my_portc);
+
+        set_comp_log(MAC, LOG_DEBUG, LOG_FULL, 1);
+        set_comp_log(RRC, LOG_DEBUG, LOG_FULL, 1);
+        set_comp_log(PHY, LOG_DEBUG, LOG_FULL, 1);
+        printf("DJP - forcing MAC/RRC/PHY to DEBUG - should see similar line if it works\n");
+        LOG_D(MAC,"%s() DJP - forcing MAC to LOG_DEBUG for VNF\n", __FUNCTION__);
+        LOG_D(RRC,"%s() DJP - forcing RRC to LOG_DEBUG for VNF\n", __FUNCTION__);
+        LOG_I(PHY,"%s() DJP - forcing PHY to LOG_DEBUG for VNF\n", __FUNCTION__);
       
       } else { // other midhaul
 	AssertFatal(1==0,"MACRLC %d: %s unknown southbound midhaul\n",j,*(MacRLC_ParamList.paramarray[j][MACRLC_TRANSPORT_S_PREFERENCE_IDX].strptr));
@@ -474,7 +485,7 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
   int32_t     rach_powerRampingStep         = 0;
   int32_t     rach_preambleInitialReceivedTargetPower    = 0;
   int32_t     rach_preambleTransMax         = 0;
-  int32_t     rach_raResponseWindowSize     = 0;
+  int32_t     rach_raResponseWindowSize     = 10;
   int32_t     rach_macContentionResolutionTimer = 0;
   int32_t     rach_maxHARQ_Msg3Tx           = 0;
   int32_t     pcch_defaultPagingCycle       = 0;

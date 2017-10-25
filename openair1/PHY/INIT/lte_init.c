@@ -107,6 +107,11 @@ void phy_config_request(PHY_Config_t *phy_config) {
   AssertFatal(RC.eNB[Mod_id][CC_id] != NULL, "PHY instance %d, CCid %d doesn't exist\n",Mod_id,CC_id);
 
 
+  if (RC.eNB[Mod_id][CC_id]->configured == 1)
+  {
+    LOG_E(PHY,"Already eNB already configured, do nothing\n");
+    return;
+  }
 
   RC.eNB[Mod_id][CC_id]->mac_enabled     = 1;
 

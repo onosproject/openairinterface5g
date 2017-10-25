@@ -1101,11 +1101,11 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
   UE_TEMPLATE        *UE_template               = 0;
   int                N_RB_DL;
   int                N_RB_UL;
-  LOG_D(MAC,"In ulsch_preprocessor: assign max mcs min rb\n");
+  //LOG_D(MAC,"In ulsch_preprocessor: assign max mcs min rb\n");
   // maximize MCS and then allocate required RB according to the buffer occupancy with the limit of max available UL RB
   assign_max_mcs_min_rb(module_idP,frameP, subframeP, first_rb);
 
-  LOG_D(MAC,"In ulsch_preprocessor: sort ue \n");
+  //LOG_D(MAC,"In ulsch_preprocessor: sort ue \n");
   // sort ues
   sort_ue_ul (module_idP,frameP, subframeP);
 
