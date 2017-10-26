@@ -690,14 +690,16 @@ typedef struct {
   //  int calibration_flag;
   /// delta_TF for power control
   int32_t               delta_TF;
-  ///////////////////////////////////////////// 3 parameter added by vincent ///////////////////////////////////////////////
+  ///////////////////////////////////////////// 4 parameter added by vincent ///////////////////////////////////////////////
   // NB_IoT: Nsymb_UL and Nslot_UL are defined in 36.211, Section 10.1.2.3, Table 10.1.2.3-1
   // The number of symbol in a resource unit is given by Nsymb_UL*Nslot_UL
   uint8_t               Nsymb_UL; 
   // Number of NPUSCH slots
   uint8_t               Nslot_UL; 
-  // Number of subcarrier for NPUSH
-  uint8_t               N_sc_RU;
+  // Number of subcarrier for NPUSH, can be 1, 3, 6, 12
+  uint8_t               N_sc_RU; 
+  // index of UL NB_IoT resource block
+  uint32_t              UL_RB_ID_NB_IoT; 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 } NB_IoT_UL_eNB_HARQ_t;

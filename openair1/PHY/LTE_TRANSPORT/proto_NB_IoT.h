@@ -220,7 +220,9 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT      *phy_vars_eNB,
 
 void ulsch_extract_rbs_single_NB_IoT(int32_t                **rxdataF,
                                      int32_t                **rxdataF_ext,
-                                     uint32_t               first_rb,
+                                     // uint32_t               first_rb, 
+                                     uint32_t               UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
+                                     uint8_t                N_sc_RU, // number of subcarriers in UL
                                      uint32_t               nb_rb,
                                      uint8_t                l,
                                      uint8_t                Ns,

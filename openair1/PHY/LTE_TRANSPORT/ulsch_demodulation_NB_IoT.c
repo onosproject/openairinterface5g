@@ -546,49 +546,65 @@ void ulsch_detection_mrc_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
 
 void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
                                      int32_t **rxdataF_ext,
-                                     uint32_t first_rb,
+                                     // uint32_t first_rb, 
+                                     uint32_t UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block
+                                     uint8_t N_sc_RU, // number of subcarriers in UL
                                      uint32_t nb_rb,
                                      uint8_t l,
                                      uint8_t Ns,
                                      NB_IoT_DL_FRAME_PARMS *frame_parms)
 {
-  uint16_t  nb_rb1,nb_rb2;
-  uint8_t   aarx;
-  int32_t   *rxF,*rxF_ext;
+  uint16_t  nb_rb1; 
+  // uint16_t  nb_rb2; 
+  uint8_t   aarx,n;
+  // int32_t   *rxF,*rxF_ext;
 
   //uint8_t symbol = l+Ns*frame_parms->symbols_per_tti/2;
   uint8_t   symbol = l+((7-frame_parms->Ncp)*(Ns&1)); ///symbol within sub-frame
 
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
 
+    nb_rb1 = cmin(cmax((int)(frame_parms->N_RB_UL) - (int)(2*UL_RB_ID_NB_IoT),(int)0),(int)(2));    // 2 times no. RBs before the DC
+                                 // 2 times no. RBs after the DC
 
-    nb_rb1 = cmin(cmax((int)(frame_parms->N_RB_UL) - (int)(2*first_rb),(int)0),(int)(2*nb_rb));    // 2 times no. RBs before the DC
-    nb_rb2 = 2*nb_rb - nb_rb1;                                   // 2 times no. RBs after the DC
+    // rxF_ext   = &rxdataF_ext[aarx][(symbol*frame_parms->N_RB_UL*12)];
 
-    rxF_ext   = &rxdataF_ext[aarx][(symbol*frame_parms->N_RB_UL*12)];
+    if (nb_rb1) { // RB NB-IoT is in the first half
 
-    if (nb_rb1) {
-      rxF = &rxdataF[aarx][(first_rb*12 + frame_parms->first_carrier_offset + symbol*frame_parms->ofdm_symbol_size)];
-      memcpy(rxF_ext, rxF, nb_rb1*6*sizeof(int));
-      rxF_ext += nb_rb1*6;
-
-      if (nb_rb2)  {
-        //#ifdef OFDMA_ULSCH
-        //  rxF = &rxdataF[aarx][(1 + symbol*frame_parms->ofdm_symbol_size)*2];
-        //#else
-        rxF = &rxdataF[aarx][(symbol*frame_parms->ofdm_symbol_size)];
-        //#endif
-        memcpy(rxF_ext, rxF, nb_rb2*6*sizeof(int));
-        rxF_ext += nb_rb2*6;
+      for (n=0;n<N_sc_RU;n++){
+        // Note that FFT split the RBs 
+        rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][UL_RB_ID_NB_IoT*12 + frame_parms->first_carrier_offset + symbol*frame_parms->ofdm_symbol_size + n];
+      
       }
-    } else { //there is only data in the second half
+
+      // rxF = &rxdataF[aarx][(first_rb*12 + frame_parms->first_carrier_offset + symbol*frame_parms->ofdm_symbol_size)];
+      // memcpy(rxF_ext, rxF, nb_rb1*6*sizeof(int));
+      // rxF_ext += nb_rb1*6;
+
+      // if (nb_rb2)  {
+      //   //#ifdef OFDMA_ULSCH
+      //   //  rxF = &rxdataF[aarx][(1 + symbol*frame_parms->ofdm_symbol_size)*2];
+      //   //#else
+      //   rxF = &rxdataF[aarx][(symbol*frame_parms->ofdm_symbol_size)];
+      //   //#endif
+      //   memcpy(rxF_ext, rxF, nb_rb2*6*sizeof(int));
+      //   rxF_ext += nb_rb2*6;
+      // }
+    } else { // RB NB-IoT is in the second half 
+
+      for (n=0;n<N_sc_RU;n++){
+        // Note that FFT split the RBs 
+        rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][6*(2*UL_RB_ID_NB_IoT - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size + n];
+      
+      }
+
       //#ifdef OFDMA_ULSCH
       //      rxF = &rxdataF[aarx][(1 + 6*(2*first_rb - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size)*2];
       //#else
-      rxF = &rxdataF[aarx][(6*(2*first_rb - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size)];
-      //#endif
-      memcpy(rxF_ext, rxF, nb_rb2*6*sizeof(int));
-      rxF_ext += nb_rb2*6;
+      // rxF = &rxdataF[aarx][(6*(2*first_rb - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size)]; 
+      // //#endif
+      // memcpy(rxF_ext, rxF, nb_rb2*6*sizeof(int));
+      // rxF_ext += nb_rb2*6;
     }
   }
 
@@ -1417,7 +1433,9 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
     ulsch_extract_rbs_single_NB_IoT(common_vars->rxdataF[eNB_id],
                                     pusch_vars->rxdataF_ext[eNB_id],
-                                    ulsch[UE_id]->harq_process->first_rb,
+                                    // ulsch[UE_id]->harq_process->first_rb, 
+                                    ulsch[UE_id]->harq_process->UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
+                                    ulsch[UE_id]->harq_process-> N_sc_RU, // number of subcarriers in UL
                                     ulsch[UE_id]->harq_process->nb_rb,
                                     l%(frame_parms->symbols_per_tti/2),
                                     l/(frame_parms->symbols_per_tti/2),
