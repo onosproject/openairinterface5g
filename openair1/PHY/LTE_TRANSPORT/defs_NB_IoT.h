@@ -698,8 +698,10 @@ typedef struct {
   uint8_t               Nslot_UL; 
   // Number of subcarrier for NPUSH, can be 1, 3, 6, 12
   uint8_t               N_sc_RU; 
-  // index of UL NB_IoT resource block
+  // Index of UL NB_IoT resource block
   uint32_t              UL_RB_ID_NB_IoT; 
+  // Subcarrier indication fields, obtained through DCI, Section 16.5.1.1 in 36.213
+  uint32_t              I_sc; 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 } NB_IoT_UL_eNB_HARQ_t;

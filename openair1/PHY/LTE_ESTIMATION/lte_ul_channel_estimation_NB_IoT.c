@@ -154,7 +154,7 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
   rx_power_correction = 1;
 
-  if (l == (3 - frame_parms->Ncp)) {
+  if (l == (3 - frame_parms->Ncp)) { 
 
     symbol_offset = frame_parms->N_RB_UL*12*(l+((7-frame_parms->Ncp)*(Ns&1)));
 
