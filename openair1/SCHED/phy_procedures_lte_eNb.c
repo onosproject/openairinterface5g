@@ -1996,21 +1996,34 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
   int subframe = eNB->proc.subframe_prach;
   int frame = eNB->proc.frame_prach;
   uint8_t CC_id = eNB->CC_id;
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,1);
   memset(&preamble_energy_list[0],0,64*sizeof(uint16_t));
   memset(&preamble_delay_list[0],0,64*sizeof(uint16_t));
 
   if (eNB->abstraction_flag == 0) {
-    LOG_D(PHY,"[eNB %d][RAPROC] Frame %d, Subframe %d : PRACH RX Signal Power : %d dBm\n",eNB->Mod_id, 
-          frame,subframe,dB_fixed(signal_energy(&eNB->common_vars.rxdata[0][0][subframe*fp->samples_per_tti],512)) - eNB->rx_total_gain_dB);
-
-
-    rx_prach(eNB,
+    if (do_ofdm_mod)
+    {
+    	LOG_D(PHY,"[eNB %d][RAPROC] Frame %d, Subframe %d : PRACH RX Signal Power : %d dBm\n",eNB->Mod_id, 
+          frame,subframe,dB_fixed(signal_energy(&eNB->common_vars.rxdataF[0][0][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],512)) - eNB->rx_total_gain_dB);
+	rx_prach_freq(eNB,
              preamble_energy_list,
              preamble_delay_list,
              frame,
              0);
+    }
+    else
+    {
+    	LOG_D(PHY,"[eNB %d][RAPROC] Frame %d, Subframe %d : PRACH RX Signal Power : %d dBm\n",eNB->Mod_id, 
+          frame,subframe,dB_fixed(signal_energy(&eNB->common_vars.rxdata[0][0][subframe*fp->samples_per_tti],512)) - eNB->rx_total_gain_dB);
+
+    	rx_prach(eNB,
+             preamble_energy_list,
+             preamble_delay_list,
+             frame,
+             0);
+    }
   } else {
     for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
 

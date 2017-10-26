@@ -154,7 +154,7 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
     return(-1); 
   }
   if (nb_rb-prach_prb_offset<6) {
-    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, modify prach_prb_offset value\n");
+    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check prach_prb_offset value (r_ra_prb=%d)\n",prach_prb_offset);
     return(-1); 
   }
   prach_samples = (prach_fmt<4)?13+839+12:3+139+2;
@@ -165,10 +165,10 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
   delta_f = (prach_fmt<4)?nb_rb*180000/((n_samples-1)*12):nb_rb*180000/((n_samples-1)*2);//1.25 khz for preamble format 1,2,3. 7.5 khz for preample format 4
   max_nb_rb_samples = nb_rb*180000/delta_f;//7200 if prach_fmt<4
   prach_pbr_offset_samples = (prach_prb_offset+6)*180000/delta_f;//864 if prach_prb_offset=0,7200 if prach_prb_offset=44=50-6
-  printf("prach_samples = %d, delta_f = %e, max_nb_rb_samples= %d, prach_pbr_offset_samples = %d\n",prach_samples,delta_f,max_nb_rb_samples,prach_pbr_offset_samples);
+  printf("prach_samples = %d, delta_f = %e, max_nb_rb_samples= %d, prach_pbr_offset_samples = %d, nb_taps = %d\n",prach_samples,delta_f,max_nb_rb_samples,prach_pbr_offset_samples,desc->nb_taps);
   for (f=max_nb_rb_samples/2-prach_pbr_offset_samples,f1=0; f<max_nb_rb_samples/2-prach_pbr_offset_samples+prach_samples; f++,f1++) {//3600-864,3600-864+864|3600-7200,3600-7200+839
     freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
-
+    printf("[init_freq_channel_prach] freq %e\n",freq);
     cos_lut[f1] = (double *)malloc((int)desc->nb_taps*sizeof(double));
     sin_lut[f1] = (double *)malloc((int)desc->nb_taps*sizeof(double));
 
@@ -208,7 +208,7 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
     return(-1); 
   }
   if (nb_rb-prach_prb_offset<6) {
-    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check prach_prb_offset value\n");
+    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check r_ra_prb value (r_ra_prb=%d)\n",prach_prb_offset);
     return(-1); 
   }
   if (freq_channel_init == 0) {
@@ -227,17 +227,18 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
     slut = sin_lut[f];
     for (aarx=0; aarx<desc->nb_rx; aarx++) {
       for (aatx=0; aatx<desc->nb_tx; aatx++) {
-        desc->chF[aarx+(aatx*desc->nb_rx)][f].x=0.0;
-        desc->chF[aarx+(aatx*desc->nb_rx)][f].y=0.0;
+        desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].x=0.0;
+        desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].y=0.0;
         for (l=0; l<(int)desc->nb_taps; l++) {
 
-          desc->chF[aarx+(aatx*desc->nb_rx)][f].x+=(desc->a[l][aarx+(aatx*desc->nb_rx)].x*clut[l]+
+          desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].x+=(desc->a[l][aarx+(aatx*desc->nb_rx)].x*clut[l]+
               desc->a[l][aarx+(aatx*desc->nb_rx)].y*slut[l]);
-          desc->chF[aarx+(aatx*desc->nb_rx)][f].y+=(-desc->a[l][aarx+(aatx*desc->nb_rx)].x*slut[l]+
+          desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].y+=(-desc->a[l][aarx+(aatx*desc->nb_rx)].x*slut[l]+
               desc->a[l][aarx+(aatx*desc->nb_rx)].y*clut[l]);
         }
       }
     }
+	printf("chF_prach[0][%d], (x,y) = (%e,%e)\n",f,desc->chF_prach[0][f].x,desc->chF_prach[0][f].y);
   }
   stop_meas(&desc->interp_freq);
   return(0);

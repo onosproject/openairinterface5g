@@ -59,6 +59,8 @@ typedef struct {
   struct complex **ch;
   ///Sampled frequency response (90 kHz resolution)
   struct complex **chF;
+  ///Sampled prach frequency response (frequency analysis)
+  struct complex **chF_prach;
   ///Maximum path delay in mus.
   double Td;
   ///Channel bandwidth in MHz.
@@ -310,7 +312,8 @@ void multipath_channel_prach(channel_desc_t *desc,
 		       uint8_t eNB_id,
 		       uint8_t UE_id,
 		       uint8_t CC_id,
-		       uint8_t th_id);
+		       uint8_t th_id,
+		       uint8_t subframe);
 /*
 \fn double compute_pbch_sinr(channel_desc_t *desc,
                              channel_desc_t *desc_i1,

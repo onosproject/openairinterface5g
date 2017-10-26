@@ -148,7 +148,7 @@ double dac_fixed_gain_prach(double *s_re[2],
   amp1 = 0;
 
   for (aa=0; aa<nb_tx_antennas; aa++) {
-    amp1 += sqrt((double)signal_energy((int32_t*)&input[input_offset_meas],length_meas)/NB_RE);
+    amp1 += sqrt((double)signal_energy_prach((int32_t*)&input[input_offset_meas],length_meas*2)/NB_RE);
   }
 
   amp1/=nb_tx_antennas;
@@ -166,11 +166,12 @@ double dac_fixed_gain_prach(double *s_re[2],
     //printf("DL: amp1 %f dB (%d,%d), tx_power %f\n",20*log10(amp1),input_offset,input_offset_meas,txpwr_dBm);
   */
 
-
-  for (i=0; i<length; i++) {
+  printf("[dac_fixed_gain_prach] input_offset %d\n",input_offset);
+  for (i=0; i<length*2; i+=2) {
     for (aa=0; aa<nb_tx_antennas; aa++) {
-      s_re[aa][i] = amp*((double)(((short *)input))[((i+input_offset)<<1)])/amp1; ///(1<<(B-1));
-      s_im[aa][i] = amp*((double)(((short *)input))[((i+input_offset)<<1)+1])/amp1; ///(1<<(B-1));
+      printf("[dac_fixed_gain_prach] input (%d,%d)\n",(((short *)input))[((i+input_offset))],(((short *)input))[((i+input_offset))+1]);
+      s_re[aa][i/2] = amp*((double)(((short *)input))[((i+input_offset))])/amp1; ///(1<<(B-1));
+      s_im[aa][i/2] = amp*((double)(((short *)input))[((i+input_offset))+1])/amp1; ///(1<<(B-1));
     }
   }
 

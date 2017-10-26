@@ -2671,6 +2671,11 @@ void ue_measurement_procedures(
          // LOG_I(PHY," l==(6-ue->frame_parms.Ncp) ue_rrc_measurements\n");
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_RRC_MEASUREMENTS, VCD_FUNCTION_IN);
+    if (ue->do_ofdm_mod)
+    ue_rrc_measurements_freq(ue,
+      slot,
+      abstraction_flag);
+    else
     ue_rrc_measurements(ue,
       slot,
       abstraction_flag);
@@ -3731,12 +3736,13 @@ void ue_pdsch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, PDSC
       //TM7 UE specific channel estimation here!!!
       if (ue->transmission_mode[eNB_id]==7) {
         if (ue->frame_parms.Ncp==0) {
-          if ((m==3) || (m==6) || (m==9) || (m==12))
+          if ((m==3) || (m==6) || (m==9) || (m==12)){
             //LOG_D(PHY,"[UE %d] dlsch->active in subframe %d => %d, l=%d\n",phy_vars_ue->Mod_id,subframe_rx,phy_vars_ue->dlsch_ue[eNB_id][0]->active, l);
 	    if (ue->do_ofdm_mod)
 		lte_dl_bf_channel_estimation_freq(ue,eNB_id,0,subframe_rx*2+(m>6?1:0),5,m);
 	    else
             	lte_dl_bf_channel_estimation(ue,eNB_id,0,subframe_rx*2+(m>6?1:0),5,m);
+	  }
         } else {
           LOG_E(PHY,"[UE %d]Beamforming channel estimation not supported yet for TM7 extented CP.\n",ue->Mod_id);
         }
