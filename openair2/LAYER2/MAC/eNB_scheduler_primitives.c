@@ -1692,8 +1692,7 @@ unsigned char get_aggregation (uint8_t bw_index, uint8_t cqi, uint8_t dci_fmt)
     LOG_W(MAC,"unsupported DCI format %d\n",dci_fmt);
   }
 
-  LOG_D(MAC,"Aggregation level %d (cqi %d, bw_index %d, format %d)\n",
-        1<<aggregation, cqi,bw_index,dci_fmt);
+  //LOG_D(MAC,"Aggregation level %d (cqi %d, bw_index %d, format %d)\n", 1<<aggregation, cqi,bw_index,dci_fmt);
 
   return 1<<aggregation;
 }
@@ -2700,7 +2699,7 @@ int allocate_CCEs(int module_idP,
   int i,j,idci;
   int nCCE=0;
 
-  LOG_D(MAC,"Allocate CCEs subframe %d, test %d : (DL PDU %d, DL DCI %d, UL %d)\n",subframeP,test_onlyP,DL_req->number_pdu,DL_req->number_dci,HI_DCI0_req->number_of_dci);
+  //LOG_D(MAC,"Allocate CCEs subframe %d, test %d : (DL PDU %d, DL DCI %d, UL %d)\n",subframeP,test_onlyP,DL_req->number_pdu,DL_req->number_dci,HI_DCI0_req->number_of_dci);
   DL_req->number_pdcch_ofdm_symbols=1;
 
 try_again:
@@ -2712,7 +2711,7 @@ try_again:
     if ((dl_config_pdu[i].pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE)&&
         (dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti_type==2)
         ) {
-      LOG_D(MAC,"Trying to allocate COMMON DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
+      if (0) LOG_D(MAC,"Trying to allocate COMMON DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
             idci,DL_req->number_dci+HI_DCI0_req->number_of_dci,
             DL_req->number_dci,HI_DCI0_req->number_of_dci,
             dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti,
@@ -2761,10 +2760,10 @@ try_again:
 
       // the allocation is feasible, rnti rule passes
       nCCE += dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level;
-      LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
+      //LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
       if (test_onlyP == 0) {
         dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.cce_idx=fCCE;
-        LOG_D(MAC,"Allocate COMMON DCI CCEs subframe %d, test %d => L %d fCCE %d\n",subframeP,test_onlyP,dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,fCCE);
+        //LOG_D(MAC,"Allocate COMMON DCI CCEs subframe %d, test %d => L %d fCCE %d\n",subframeP,test_onlyP,dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,fCCE);
       }
       idci++;
     }
@@ -2838,7 +2837,7 @@ try_again:
     // allocate DL UE specific DCIs
     if ((dl_config_pdu[i].pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE)&&
         (dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti_type==1)) {
-      LOG_D(MAC,"Trying to allocate DL UE-SPECIFIC DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
+      if (0)LOG_D(MAC,"Trying to allocate DL UE-SPECIFIC DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
             idci,DL_req->number_dci+HI_DCI0_req->number_of_dci,
             DL_req->number_dci,HI_DCI0_req->number_of_dci,
             dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti,dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,
@@ -2887,10 +2886,10 @@ try_again:
 
       // the allocation is feasible, rnti rule passes
       nCCE += dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level;
-      LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
+      //LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
       if (test_onlyP == 0) {
         dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.cce_idx=fCCE;
-        LOG_D(MAC,"Allocate CCEs subframe %d, test %d\n",subframeP,test_onlyP);
+        //LOG_D(MAC,"Allocate CCEs subframe %d, test %d\n",subframeP,test_onlyP);
       }
       idci++;
     }

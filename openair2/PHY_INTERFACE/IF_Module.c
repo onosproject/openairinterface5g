@@ -15,6 +15,7 @@ extern int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind);
 extern int oai_nfapi_cqi_indication(nfapi_cqi_indication_t *cqi_ind);
 extern int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind);
 extern uint8_t nfapi_mode;
+extern uint16_t sf_ahead;
 
 void handle_rach(UL_IND_t *UL_info) {
   int i;
@@ -135,8 +136,8 @@ void handle_harq(UL_IND_t *UL_info) {
     for (i=0;i<UL_info->harq_ind.harq_indication_body.number_of_harqs;i++) 
       harq_indication(UL_info->module_id,
           UL_info->CC_id,
-          UL_info->frame,
-          UL_info->subframe,
+          NFAPI_SFNSF2SFN(UL_info->harq_ind.sfn_sf),
+          NFAPI_SFNSF2SF(UL_info->harq_ind.sfn_sf),
           &UL_info->harq_ind.harq_indication_body.harq_pdu_list[i]);
 
     UL_info->harq_ind.harq_indication_body.number_of_harqs=0;
@@ -206,13 +207,13 @@ void handle_ulsch(UL_IND_t *UL_info) {
     } //   for (i=0;i<UL_info->rx_ind.number_of_pdus;i++)
   }
 
-  if (NFAPI_SFNSF2SFN(UL_info->rx_ind.sfn_sf) == UL_info->frame && NFAPI_SFNSF2SF(UL_info->rx_ind.sfn_sf) == UL_info->subframe && UL_info->rx_ind.rx_indication_body.number_of_pdus>0)
+  if (UL_info->rx_ind.rx_indication_body.number_of_pdus>0)
   {
     UL_info->rx_ind.rx_indication_body.number_of_pdus = 0;
     LOG_D(PHY, "UL_INFO:SFN/SF:%d/%d ZEROING rx_ind.number_of_pdus:%d \n", UL_info->frame, UL_info->subframe, UL_info->rx_ind.rx_indication_body.number_of_pdus);
   }
 
-  if (NFAPI_SFNSF2SFN(UL_info->rx_ind.sfn_sf) == UL_info->frame && NFAPI_SFNSF2SF(UL_info->rx_ind.sfn_sf) == UL_info->subframe && UL_info->crc_ind.crc_indication_body.number_of_crcs>0)
+  if (UL_info->subframe && UL_info->crc_ind.crc_indication_body.number_of_crcs>0)
   {
     LOG_D(PHY, "UL_INFO:SFN/SF:%d/%d crcs:%d Reset to zero\n", UL_info->frame, UL_info->subframe, UL_info->crc_ind.crc_indication_body.number_of_crcs);
     UL_info->crc_ind.crc_indication_body.number_of_crcs=0;
@@ -557,19 +558,19 @@ void UL_indication(UL_IND_t *UL_info)
     if (ifi->CC_mask == ((1<<MAX_NUM_CCs)-1)) {
 
       eNB_dlsch_ulsch_scheduler(module_id,
-          (UL_info->frame+((UL_info->subframe>5)?1:0)) % 1024,
-          (UL_info->subframe+4)%10);
+          (UL_info->frame+((UL_info->subframe>(9-sf_ahead))?1:0)) % 1024,
+          (UL_info->subframe+sf_ahead)%10);
 
       ifi->CC_mask            = 0;
 
       sched_info->module_id   = module_id;
       sched_info->CC_id       = CC_id;
-      sched_info->frame       = (UL_info->frame + ((UL_info->subframe>5) ? 1 : 0)) % 1024;
-      sched_info->subframe    = (UL_info->subframe+4)%10;
+      sched_info->frame       = (UL_info->frame + ((UL_info->subframe>(9-sf_ahead)) ? 1 : 0)) % 1024;
+      sched_info->subframe    = (UL_info->subframe+sf_ahead)%10;
       sched_info->DL_req      = &mac->DL_req[CC_id];
       sched_info->HI_DCI0_req = &mac->HI_DCI0_req[CC_id];
       if ((mac->common_channels[CC_id].tdd_Config==NULL) ||
-          (is_UL_sf(&mac->common_channels[CC_id],(sched_info->subframe+4)%10)>0)) 
+          (is_UL_sf(&mac->common_channels[CC_id],(sched_info->subframe+sf_ahead)%10)>0)) 
         sched_info->UL_req      = &mac->UL_req[CC_id];
       else
         sched_info->UL_req      = NULL;

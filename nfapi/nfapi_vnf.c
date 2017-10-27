@@ -291,6 +291,7 @@ int vnf_unpack_vendor_extension_tlv(nfapi_tl_t* tl, uint8_t **ppReadPackedMessag
 void install_schedule_handlers(IF_Module_t *if_inst);
 extern int single_thread_flag;
 extern void init_eNB_afterRU(void);
+extern uint16_t sf_ahead;
 
 void oai_create_enb(void)
 {
@@ -512,7 +513,7 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf)
   }
 #endif
 
-  // wake up TX for subframe n+4
+  // wake up TX for subframe n+sf_ahead
   // lock the TX mutex and make sure the thread is ready
   if (pthread_mutex_timedlock(&proc_rxtx->mutex_rxtx,&wait) != 0) {
     LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", proc_rxtx->subframe_rx&1,proc_rxtx->instance_cnt_rxtx );
@@ -542,13 +543,13 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf)
   // TS_rx is the last received timestamp (start of 1st slot), TS_tx is the desired
   // transmitted timestamp of the next TX slot (first).
   // The last (TS_rx mod samples_per_frame) was n*samples_per_tti,
-  // we want to generate subframe (n+4), so TS_tx = TX_rx+4*samples_per_tti,
-  // and proc->subframe_tx = proc->subframe_rx+4
-  proc_rxtx->timestamp_tx = proc->timestamp_rx + (4*fp->samples_per_tti);
+  // we want to generate subframe (n+N), so TS_tx = TX_rx+N*samples_per_tti,
+  // and proc->subframe_tx = proc->subframe_rx+sf_ahead
+  proc_rxtx->timestamp_tx = proc->timestamp_rx + (sf_ahead*fp->samples_per_tti);
   proc_rxtx->frame_rx     = proc->frame_rx;
   proc_rxtx->subframe_rx  = proc->subframe_rx;
-  proc_rxtx->frame_tx     = (proc_rxtx->subframe_rx > 5) ? (proc_rxtx->frame_rx+1)&1023 : proc_rxtx->frame_rx;
-  proc_rxtx->subframe_tx  = (proc_rxtx->subframe_rx + 4)%10;
+  proc_rxtx->frame_tx     = (proc_rxtx->subframe_rx > (9-sf_ahead)) ? (proc_rxtx->frame_rx+1)&1023 : proc_rxtx->frame_rx;
+  proc_rxtx->subframe_tx  = (proc_rxtx->subframe_rx + sf_ahead)%10;
 
   LOG_E(PHY, "sfn/sf:%d:%d proc[frame_rx:%d subframe_rx:%d timestamp_rx:%ld timestamp_tx:%ld] proc_rxtx[instance_cnt_rxtx:%d frame_rx:%d subframe_rx:%d]\n", sfn, sf, proc->frame_rx, proc->subframe_rx, proc->timestamp_rx, proc->timestamp_tx, proc_rxtx->instance_cnt_rxtx, proc_rxtx->frame_rx, proc_rxtx->subframe_rx);
 

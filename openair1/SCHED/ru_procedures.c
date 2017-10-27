@@ -74,9 +74,12 @@ void feptx0(RU_t *ru,int slot) {
                    ((fp->Ncp==1) ? 6 : 7);
   int subframe = ru->proc.subframe_tx;
 
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+slot , 1 );
+
   slot_offset = subframe*fp->samples_per_tti + (slot*(fp->samples_per_tti>>1));
 
-  //    LOG_D(HW,"Frame %d: Generating slot %d\n",frame,next_slot);
+  //LOG_D(PHY,"SFN/SF:RU:TX:%d/%d Generating slot %d\n",ru->proc.frame_tx, ru->proc.subframe_tx,slot);
 
   for (aa=0; aa<ru->nb_tx; aa++) {
     if (fp->Ncp == EXTENDED) PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot*slot_sizeF],
@@ -132,6 +135,7 @@ void feptx0(RU_t *ru,int slot) {
       }
     }
   }
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+slot , 0);
 }
 
 static void *feptx_thread(void *param) {
@@ -359,6 +363,10 @@ void feptx_prec(RU_t *ru) {
     eNB = eNB_list[0];
     fp  = &eNB->frame_parms;
     
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC , 1);
+
+    //LOG_D(PHY, "%s() subframe:%d\n", __FUNCTION__, subframe);
+
     if (0) LOG_E(PHY,"%s() run->nb_tx:%u subframe:%u fp->symbols_per_tti:%u fp->ofdm_symbol_size:%u symbols:(%d, %d), (%d,%d)\n", 
     __FUNCTION__, ru->nb_tx, subframe, fp->symbols_per_tti, fp->ofdm_symbol_size,
     ((short*)&eNB->common_vars.txdataF[0][1])[0],
@@ -371,6 +379,8 @@ void feptx_prec(RU_t *ru) {
       memcpy((void*)ru->common.txdataF_BF[aa],
 	     (void*)&eNB->common_vars.txdataF[aa][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],
 	     fp->symbols_per_tti*fp->ofdm_symbol_size*sizeof(int32_t));
+
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC , 0);
   }
   else {
     for (i=0;i<ru->num_eNB;i++) {
@@ -406,6 +416,8 @@ void fep0(RU_t *ru,int slot) {
 
   //  printf("fep0: slot %d\n",slot);
 
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+slot, 1);
+
   remove_7_5_kHz(ru,(slot&1)+(proc->subframe_rx<<1));
   for (l=0; l<fp->symbols_per_tti/2; l++) {
     slot_fep_ul(ru,
@@ -414,6 +426,7 @@ void fep0(RU_t *ru,int slot) {
 		0
 		);
   }
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+slot, 0);
 }
 
 

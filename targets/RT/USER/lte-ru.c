@@ -130,6 +130,7 @@ int attach_rru(RU_t *ru);
 int connect_rau(RU_t *ru);
 
 extern uint8_t nfapi_mode;
+extern uint16_t sf_ahead;
 
 /*************************************************************/
 /* Functions to attach and configure RRU                     */
@@ -388,8 +389,8 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
   proc->frame_rx     = f;
   proc->timestamp_rx = ((proc->frame_rx * 10)  + proc->subframe_rx ) * fp->samples_per_tti ;
   //  proc->timestamp_tx = proc->timestamp_rx +  (4*fp->samples_per_tti);
-  proc->subframe_tx  = (sf+4)%10;
-  proc->frame_tx     = (sf>5) ? (f+1)&1023 : f;
+  proc->subframe_tx  = (sf+sf_ahead)%10;
+  proc->frame_tx     = (sf>(9-sf_ahead)) ? (f+1)&1023 : f;
  
   if (proc->first_rx == 0) {
     if (proc->subframe_rx != *subframe){
@@ -726,9 +727,9 @@ void rx_rf(RU_t *ru,int *frame,int *subframe) {
   proc->subframe_rx  = (proc->timestamp_rx / fp->samples_per_tti)%10;
   // synchronize first reception to frame 0 subframe 0
 
-  proc->timestamp_tx = proc->timestamp_rx+(4*fp->samples_per_tti);
-  proc->subframe_tx  = (proc->subframe_rx+4)%10;
-  proc->frame_tx     = (proc->subframe_rx>5) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
+  proc->timestamp_tx = proc->timestamp_rx+(sf_ahead*fp->samples_per_tti);
+  proc->subframe_tx  = (proc->subframe_rx+sf_ahead)%10;
+  proc->frame_tx     = (proc->subframe_rx>(9-sf_ahead)) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
   
 #if 0
   LOG_D(PHY,"RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
@@ -788,7 +789,9 @@ void tx_rf(RU_t *ru) {
   lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_tx+9)%10);
   lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_tx+1)%10);
 
-  //LOG_E(PHY,"%s() nb_tx:%d sf:%d tti:%d\n", __FUNCTION__, ru->nb_tx, proc->subframe_tx, fp->samples_per_tti);
+  //struct timespec t;
+  //clock_gettime(CLOCK_MONOTONIC, &t);
+  //LOG_E(PHY,"%s() nb_tx:%d sf:%d tti:%d t:%ld.%09ld\n", __FUNCTION__, ru->nb_tx, proc->subframe_tx, fp->samples_per_tti, t.tv_sec, t.tv_nsec);
 
   if ((SF_type == SF_DL) ||
       (SF_type == SF_S)) {
@@ -1526,7 +1529,7 @@ static void* ru_thread( void* param ) {
 
 
     // do RX front-end processing (frequency-shift, dft) if needed
-    if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 1 ); 
+    //if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 1 ); 
     if (ru->feprx) ru->feprx(ru);
 
     // At this point, all information for subframe has been received on FH interface
@@ -1538,11 +1541,10 @@ static void* ru_thread( void* param ) {
     if (ru->num_eNB>0) wakeup_eNBs(ru);
 
     //LOG_E(PHY,"%s() Before wait_on_condition()\n", __FUNCTION__);
-    // wait until eNBs are finished subframe RX n and TX n+4
+    // wait until eNBs are finished subframe RX n and TX n+sf_ahead
     wait_on_condition(&proc->mutex_eNBs,&proc->cond_eNBs,&proc->instance_cnt_eNBs,"ru_thread");
 
-    //LOG_E(PHY,"%s() AFTER wait_on_condition() ru->feptx_prec:%p ru->fh_north_asynch_in:%p ru->feptx_ofdm:%p ru->fh_south_out:%p ru->fh_north_out:%p\n", 
-    //__FUNCTION__, ru->feptx_prec, ru->fh_north_asynch_in, ru->feptx_ofdm, ru->fh_south_out, ru->fh_north_out);
+    //LOG_E(PHY,"%s() AFTER wait_on_condition() ru->feptx_prec:%p ru->fh_north_asynch_in:%p ru->feptx_ofdm:%p ru->fh_south_out:%p ru->fh_north_out:%p\n", __FUNCTION__, ru->feptx_prec, ru->fh_north_asynch_in, ru->feptx_ofdm, ru->fh_south_out, ru->fh_north_out);
 
     // do TX front-end processing if needed (precoding and/or IDFTs)
     if (ru->feptx_prec) ru->feptx_prec(ru);

@@ -615,7 +615,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   eNB->pdcch_vars[subframe&1].num_dci           = number_dci;
   eNB->phich_vars[subframe&1].num_hi            = 0;
 
-  LOG_D(PHY,"NFAPI: Frame %d, Subframe %d: received %d dl_pdu, %d tx_req, %d hi_dci0_config_req, %d UL_config num_pdcch_symbols:%d\n",
+  LOG_D(PHY,"NFAPI: Sched_INFO[Frame %d, Subframe %d]: %d dl_pdu, %d tx_req, %d hi_dci0_config_req, %d UL_config num_pdcch_symbols:%d\n",
 	frame,subframe,number_dl_pdu,TX_req->tx_request_body.number_of_pdus,number_hi_dci0_pdu,number_ul_pdu, 
         eNB->pdcch_vars[subframe&1].num_pdcch_symbols
         );

@@ -891,7 +891,7 @@ void dlsch_scheduler_pre_processor_reset (int module_idP,
 #endif
 
 
-  LOG_D(MAC,"Running preprocessor for UE %d (%x)\n",UE_id,rnti);
+  //LOG_D(MAC,"Running preprocessor for UE %d (%x)\n",UE_id,rnti);
   // initialize harq_pid and round
 
   if (ue_sched_ctl->ta_timer) ue_sched_ctl->ta_timer--;
@@ -1014,11 +1014,11 @@ void dlsch_scheduler_pre_processor_reset (int module_idP,
     for (j = 0; j < rb_size; j++) {
       if (vrb_map[j+(i*RBGsize)] != 0)  {
 	rballoc_sub[CC_id][i] = 1;
-	LOG_D(MAC,"Frame %d, subframe %d : vrb %d allocated\n",frameP,subframeP,j+(i*RBGsize));
+	//LOG_D(MAC,"Frame %d, subframe %d : vrb %d allocated\n",frameP,subframeP,j+(i*RBGsize));
 	break;
       }
     }
-    LOG_D(MAC,"Frame %d Subframe %d CC_id %d RBG %i : rb_alloc %d\n",frameP,subframeP,CC_id,i,rballoc_sub[CC_id][i]);
+    //LOG_D(MAC,"Frame %d Subframe %d CC_id %d RBG %i : rb_alloc %d\n",frameP,subframeP,CC_id,i,rballoc_sub[CC_id][i]);
     MIMO_mode_indicator[CC_id][i] = 2;
   }
 }
@@ -1124,7 +1124,7 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
     }
   }
 
-  LOG_D(MAC,"In ulsch_preprocessor: step2 \n");
+  //LOG_D(MAC,"In ulsch_preprocessor: step2 \n");
   // step 2: calculate the average rb per UE
   total_ue_count =0;
   max_num_ue_to_be_scheduled=0;
@@ -1142,11 +1142,11 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
 
     UE_id = i;
 
-    LOG_D(MAC,"In ulsch_preprocessor: handling UE %d/%x\n",UE_id,rnti);
+    //LOG_D(MAC,"In ulsch_preprocessor: handling UE %d/%x\n",UE_id,rnti);
     for (n=0; n<UE_list->numactiveULCCs[UE_id]; n++) {
       // This is the actual CC_id in the list
       CC_id = UE_list->ordered_ULCCids[n][UE_id];
-      LOG_D(MAC,"In ulsch_preprocessor: handling UE %d/%x CCid %d\n",UE_id,rnti,CC_id);
+      //LOG_D(MAC,"In ulsch_preprocessor: handling UE %d/%x CCid %d\n",UE_id,rnti,CC_id);
       UE_template = &UE_list->UE_template[CC_id][UE_id];
       average_rbs_per_user[CC_id]=0;
 
@@ -1177,9 +1177,7 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
       }
     }
   }
-  if (total_ue_count > 0)
-    LOG_D(MAC,"[eNB %d] Frame %d subframe %d: total ue to be scheduled %d/%d\n",
-	  module_idP, frameP, subframeP,total_ue_count, max_num_ue_to_be_scheduled);
+  //if (total_ue_count > 0) LOG_D(MAC,"[eNB %d] Frame %d subframe %d: total ue to be scheduled %d/%d\n", module_idP, frameP, subframeP,total_ue_count, max_num_ue_to_be_scheduled);
 
   //LOG_D(MAC,"step3\n");
 
@@ -1209,7 +1207,7 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
       }
 
       total_allocated_rbs[CC_id]+= nb_allocated_rbs[CC_id][UE_id];
-      LOG_D(MAC,"In ulsch_preprocessor: assigning %d RBs for UE %d/%x CCid %d, harq_pid %d\n",nb_allocated_rbs[CC_id][UE_id],UE_id,rnti,CC_id,harq_pid);
+      //LOG_D(MAC,"In ulsch_preprocessor: assigning %d RBs for UE %d/%x CCid %d, harq_pid %d\n",nb_allocated_rbs[CC_id][UE_id],UE_id,rnti,CC_id,harq_pid);
     }
   }
 
@@ -1245,8 +1243,8 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
           }
         } else {
           UE_template->pre_allocated_nb_rb_ul= nb_allocated_rbs[CC_id][UE_id];
-          LOG_D(MAC,"******************UL Scheduling Information for UE%d CC_id %d ************************\n",UE_id, CC_id);
-          LOG_D(MAC,"[eNB %d] total RB allocated for UE%d CC_id %d  = %d\n", module_idP, UE_id, CC_id, UE_template->pre_allocated_nb_rb_ul);
+          //LOG_D(MAC,"******************UL Scheduling Information for UE%d CC_id %d ************************\n",UE_id, CC_id);
+          //LOG_D(MAC,"[eNB %d] total RB allocated for UE%d CC_id %d  = %d\n", module_idP, UE_id, CC_id, UE_template->pre_allocated_nb_rb_ul);
         }
       }
     }
@@ -1255,7 +1253,7 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
     if (total_allocated_rbs[CC_id]>0) {
-      LOG_D(MAC,"[eNB %d] total RB allocated for all UEs = %d/%d\n", module_idP, total_allocated_rbs[CC_id], N_RB_UL - first_rb[CC_id]);
+      //LOG_D(MAC,"[eNB %d] total RB allocated for all UEs = %d/%d\n", module_idP, total_allocated_rbs[CC_id], N_RB_UL - first_rb[CC_id]);
     }
   }
 }

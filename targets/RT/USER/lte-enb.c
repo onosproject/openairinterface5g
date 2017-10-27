@@ -121,6 +121,8 @@ extern int transmission_mode;
 
 extern int oaisim_flag;
 
+uint16_t sf_ahead=2;
+
 //pthread_t                       main_eNB_thread;
 
 time_stats_t softmodem_stats_mt; // main thread
@@ -236,7 +238,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
   // *****************************************
-  // TX processing for subframe n+4
+  // TX processing for subframe n+sf_ahead
   // run PHY TX procedures the one after the other for all CCs to avoid race conditions
   // (may be relaxed in the future for performance reasons)
   // *****************************************
@@ -348,8 +350,8 @@ void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string)
 
     proc_rxtx->subframe_rx = proc->subframe_rx;
     proc_rxtx->frame_rx    = proc->frame_rx;
-    proc_rxtx->subframe_tx = (proc->subframe_rx+4)%10;
-    proc_rxtx->frame_tx    = (proc->subframe_rx>5) ? (1+proc->frame_rx)&1023 : proc->frame_rx;
+    proc_rxtx->subframe_tx = (proc->subframe_rx+sf_ahead)%10;
+    proc_rxtx->frame_tx    = (proc->subframe_rx>(9-sf_ahead)) ? (1+proc->frame_rx)&1023 : proc->frame_rx;
     proc->frame_tx         = proc_rxtx->frame_tx;
     proc_rxtx->timestamp_tx = proc->timestamp_tx;
 
@@ -412,7 +414,7 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   }
 #endif
 
-  // wake up TX for subframe n+4
+  // wake up TX for subframe n+2
   // lock the TX mutex and make sure the thread is ready
   if (pthread_mutex_timedlock(&proc_rxtx->mutex_rxtx,&wait) != 0) {
     LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", proc_rxtx->subframe_rx&1,proc_rxtx->instance_cnt_rxtx );
@@ -427,13 +429,13 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   // TS_rx is the last received timestamp (start of 1st slot), TS_tx is the desired 
   // transmitted timestamp of the next TX slot (first).
   // The last (TS_rx mod samples_per_frame) was n*samples_per_tti, 
-  // we want to generate subframe (n+4), so TS_tx = TX_rx+4*samples_per_tti,
-  // and proc->subframe_tx = proc->subframe_rx+4
-  proc_rxtx->timestamp_tx = proc->timestamp_rx + (4*fp->samples_per_tti);
+  // we want to generate subframe (n+sf_ahead), so TS_tx = TX_rx+sf_ahead*samples_per_tti,
+  // and proc->subframe_tx = proc->subframe_rx+sf_ahead
+  proc_rxtx->timestamp_tx = proc->timestamp_rx + (sf_ahead*fp->samples_per_tti);
   proc_rxtx->frame_rx     = proc->frame_rx;
   proc_rxtx->subframe_rx  = proc->subframe_rx;
-  proc_rxtx->frame_tx     = (proc_rxtx->subframe_rx > 5) ? (proc_rxtx->frame_rx+1)&1023 : proc_rxtx->frame_rx;
-  proc_rxtx->subframe_tx  = (proc_rxtx->subframe_rx + 4)%10;
+  proc_rxtx->frame_tx     = (proc_rxtx->subframe_rx > (9-sf_ahead)) ? (proc_rxtx->frame_rx+1)&1023 : proc_rxtx->frame_rx;
+  proc_rxtx->subframe_tx  = (proc_rxtx->subframe_rx + sf_ahead)%10;
   
   LOG_D(PHY,"Signal &proc_rxtx->cond_rxtx\n");
 

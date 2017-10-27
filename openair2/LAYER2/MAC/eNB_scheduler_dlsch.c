@@ -538,7 +538,7 @@ schedule_ue_spec(
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_DLSCH_PREPROCESSOR,VCD_FUNCTION_OUT);
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-    LOG_D(MAC, "doing schedule_ue_spec for CC_id %d\n",CC_id);
+    //LOG_D(MAC, "doing schedule_ue_spec for CC_id %d\n",CC_id);
 
     dl_req        = &eNB->DL_req[CC_id].dl_config_request_body;
 
@@ -585,8 +585,7 @@ schedule_ue_spec(
       if ((ue_sched_ctl->pre_nb_available_rbs[CC_id] == 0) ||  // no RBs allocated 
 	  CCE_allocation_infeasible(module_idP,CC_id,1,subframeP,aggregation,rnti)
 	  ) {
-        LOG_D(MAC,"[eNB %d] Frame %d : no RB allocated for UE %d on CC_id %d: continue \n",
-              module_idP, frameP, UE_id, CC_id);
+        //LOG_D(MAC,"[eNB %d] Frame %d : no RB allocated for UE %d on CC_id %d: continue \n", module_idP, frameP, UE_id, CC_id);
         continue_flag=1; //to next user (there might be rbs availiable for other UEs in TM5
       }
 
