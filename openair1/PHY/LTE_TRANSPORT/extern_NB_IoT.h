@@ -34,7 +34,7 @@ extern int8_t wACK_RX_NB_IoT[5][4];
 
 
 extern short conjugate[8],conjugate2[8];
-extern short *ul_ref_sigs_rx[30][2][33];
+extern short *ul_ref_sigs_rx[30][4];
 extern unsigned short dftsizes[33];
 
 #endif

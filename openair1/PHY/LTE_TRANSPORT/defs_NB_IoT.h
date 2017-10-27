@@ -701,7 +701,7 @@ typedef struct {
   // Index of UL NB_IoT resource block
   uint32_t              UL_RB_ID_NB_IoT; 
   // Subcarrier indication fields, obtained through DCI, Section 16.5.1.1 in 36.213
-  uint32_t              I_sc; 
+  uint16_t              I_sc; 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 } NB_IoT_UL_eNB_HARQ_t;

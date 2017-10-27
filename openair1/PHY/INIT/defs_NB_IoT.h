@@ -70,7 +70,9 @@ void phy_config_sib2_eNB_NB_IoT(uint8_t Mod_id,
 void phy_config_dedicated_eNB_NB_IoT(module_id_t Mod_id,
                               	 	 int CC_id,
                               	 	 rnti_t rnti,
-							     	 extra_phyConfig_t* extra_phy_parms);
+							     	 extra_phyConfig_t* extra_phy_parms); 
+
+// void phy_init_lte_top_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms); 
 
 
 

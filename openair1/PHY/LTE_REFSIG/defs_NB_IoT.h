@@ -53,8 +53,8 @@ unsigned int lte_gold_generic_NB_IoT(unsigned int  *x1,
 									 unsigned int  *x2,
 									 unsigned char reset);
 		
-void generate_ul_ref_sigs_rx(void);
+void generate_ul_ref_sigs_rx_NB_IoT(void);
 
-void free_ul_ref_sigs(void);
+void free_ul_ref_sigs_NB_IoT(void);
 			 
 #endif
