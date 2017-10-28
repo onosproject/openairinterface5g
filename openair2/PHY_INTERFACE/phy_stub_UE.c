@@ -7,11 +7,15 @@
 #include "openair2/LAYER2/MAC/vars.h"
 //#include "common/ran_context.h"
 #include "openair2/PHY_INTERFACE/phy_stub_UE.h"
+//#include "nfapi_pnf_interface.h"
+//#include "nfapi.h"
+//#include "nfapi_pnf.h"
+
 
 
 
 //extern uint8_t nfapi_pnf;
-
+//UL_IND_t *UL_INFO;
 
 
 void handle_nfapi_UE_Rx(uint8_t Mod_id, Sched_Rsp_t *Sched_INFO, int eNB_id){
@@ -80,11 +84,11 @@ void handle_nfapi_UE_Rx(uint8_t Mod_id, Sched_Rsp_t *Sched_INFO, int eNB_id){
 
 					// C-RNTI parameter not actually used. Provided only to comply with existing function definition.
 					// Not sure about parameters to fill the preamble index.
-					const rnti_t c_rnti = UE_mac_inst[Mod_id].crnti;
+					rnti_t c_rnti = UE_mac_inst[Mod_id].crnti;
 					ue_process_rar(Mod_id, CC_id, frame,
 							dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.rnti, //RA-RNTI
 							Tx_req->tx_request_body.tx_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
-							c_rnti,
+							&c_rnti,
 							UE_mac_inst[Mod_id].RA_prach_resources.ra_PreambleIndex,
 							Tx_req->tx_request_body.tx_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
 				}
@@ -102,15 +106,18 @@ void handle_nfapi_UE_Rx(uint8_t Mod_id, Sched_Rsp_t *Sched_INFO, int eNB_id){
 }
 
 
-void fill_rx_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t *ulsch_buffer, uint16_t buflen)
+
+void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND_t* UL_INFO, uint8_t *ulsch_buffer, uint16_t buflen, uint16_t rnti)
 {
 	  nfapi_rx_indication_pdu_t *pdu;
 
 	  int timing_advance_update;
 	  //int sync_pos;
 
-	  /*uint32_t harq_pid = subframe2harq_pid(&eNB->frame_parms,
-						frame,subframe);*/
+	  //uint32_t harq_pid = subframe2harq_pid(&eNB->frame_parms,
+	 //					frame,subframe);
+
+	  //UL_IND_t *UL_INFO = (UL_IND_t*)malloc16(sizeof(UL_IND_t));
 
 
 	  pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
@@ -122,7 +129,7 @@ void fill_rx_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_I
 
 	  //  pdu->rx_ue_information.handle          = eNB->ulsch[UE_id]->handle;
 	  pdu->rx_ue_information.tl.tag          = NFAPI_RX_UE_INFORMATION_TAG;
-	  pdu->rx_ue_information.rnti            = UE_mac_inst[Mod_id].crnti;
+	  pdu->rx_ue_information.rnti            = rnti;
 	  pdu->rx_indication_rel8.tl.tag         = NFAPI_RX_INDICATION_REL8_TAG;
 	  //pdu->rx_indication_rel8.length         = eNB->ulsch[UE_id]->harq_processes[harq_pid]->TBS>>3;
 	  pdu->rx_indication_rel8.length         = buflen;
@@ -134,7 +141,7 @@ void fill_rx_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_I
 	  pdu->rx_indication_rel8.timing_advance = timing_advance_update;
 
 	  //  if (timing_advance_update > 10) { dump_ulsch(eNB,frame,subframe,UE_id); exit(-1);}
-	  //  if (timing_advance_update < -10) { dump_ulsch(eNB,frame,subframe,UE_id); exit(-1);}
+	  //  if (timing_advance_update < -10) { dump_ulsch(eNB,frame,subframe,UE_id); exit(-1);}*/
 	  /*switch (eNB->frame_parms.N_RB_DL) {
 	  case 6:
 	    pdu->rx_indication_rel8.timing_advance = timing_advance_update;
@@ -182,7 +189,7 @@ void fill_rx_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_I
 
 }
 
-void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO) {
+void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint16_t rnti) {
 
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
   nfapi_sr_indication_pdu_t *pdu =   &UL_INFO->sr_ind.sr_pdu_list[UL_INFO->rx_ind.number_of_pdus];
@@ -190,7 +197,7 @@ void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_I
   pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
   pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
-  pdu->rx_ue_information.rnti                         = UE_mac_inst[Mod_id].crnti;; //Panos: Is this the right RNTI?
+  pdu->rx_ue_information.rnti                         = rnti; //UE_mac_inst[Mod_id].crnti;; //Panos: Is this the right RNTI?
 
 
   // Panos dependency from PHY not sure how to substitute this. Should we hardcode it?
@@ -244,6 +251,7 @@ void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL
 	    //Panos: The two following should get extracted from the call to get_prach_resources().
 	    UL_INFO->rach_ind.preamble_list[0].preamble_rel8.preamble = ra_PreambleIndex;
 	    UL_INFO->rach_ind.preamble_list[0].preamble_rel8.rnti 	  = ra_RNTI;
+	    UL_INFO->rach_ind.number_of_preambles++;
 
 
 	    UL_INFO->rach_ind.preamble_list[0].preamble_rel13.rach_resource_type = 0;
@@ -253,10 +261,14 @@ void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL
 	        // If NFAPI PNF then we need to send the message to the VNF
 	        //if (nfapi_pnf == 1)
 	        //{
-	          nfapi_rach_indication_t rach_ind;
-	          rach_ind.header.message_id = NFAPI_RACH_INDICATION;
-	          rach_ind.sfn_sf = frame<<4 | subframe;
-	          rach_ind.rach_indication_body = UL_INFO->rach_ind;
+	        //Panos: Not sure if we need the following. They refer to nfapi_rach_indication_t type
+	        //so we cannot insert it to the UL_INFO which has an nfapi_rach_indication_body_t type.
+	    	//Probably it should be part of UL_indication() function before calling oai_nfapi_rach_ind(&rach_ind).
+
+	    	  /*nfapi_rach_indication_t *rach_ind;
+	          rach_ind->header.message_id = NFAPI_RACH_INDICATION;
+	          rach_ind->sfn_sf = frame<<4 | subframe;
+	          rach_ind->rach_indication_body = UL_INFO->rach_ind;*/
 
 	          LOG_E(PHY,"\n\n\n\nDJP - this needs to be sent to VNF **********************************************\n\n\n\n");
 	          LOG_E(PHY,"UE Filling NFAPI indication for RACH : TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
@@ -275,12 +287,12 @@ void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL
 
 }
 
-void fill_ulsch_cqi_indication(int Mod_id, uint16_t frame,uint8_t subframe, UL_IND_t *UL_INFO) {
+void fill_ulsch_cqi_indication_UE_MAC(int Mod_id, uint16_t frame,uint8_t subframe, UL_IND_t *UL_INFO, uint16_t rnti) {
 	pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 	nfapi_cqi_indication_pdu_t *pdu         = &UL_INFO->cqi_ind.cqi_pdu_list[UL_INFO->cqi_ind.number_of_cqis];
 	nfapi_cqi_indication_raw_pdu_t *raw_pdu = &UL_INFO->cqi_ind.cqi_raw_pdu_list[UL_INFO->cqi_ind.number_of_cqis];
 
-	pdu->rx_ue_information.rnti = UE_mac_inst[Mod_id].crnti;;
+	pdu->rx_ue_information.rnti = rnti;
 	//if (ulsch_harq->cqi_crc_status != 1)
 	//Panos: Since we assume that CRC flag is always 0 (ACK) I guess that data_offset should always be 0.
 	pdu->cqi_indication_rel9.data_offset = 0;
@@ -314,6 +326,452 @@ void fill_ulsch_cqi_indication(int Mod_id, uint16_t frame,uint8_t subframe, UL_I
   pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 
 }
+
+void fill_ulsch_harq_indication_UE_MAC(int Mod_id, int frame,int subframe, UL_IND_t *UL_INFO, nfapi_ul_config_ulsch_harq_information *harq_information, uint16_t rnti)
+{
+
+  //int UE_id = find_dlsch(rnti,eNB,SEARCH_EXIST);
+  //AssertFatal(UE_id>=0,"UE_id doesn't exist\n");
+
+  pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
+  nfapi_harq_indication_pdu_t *pdu =   &UL_INFO->harq_ind.harq_pdu_list[UL_INFO->harq_ind.number_of_harqs];
+  int i;
+
+  pdu->instance_length                                = 0; // don't know what to do with this
+  //  pdu->rx_ue_information.handle                       = handle;
+  pdu->rx_ue_information.rnti                         = rnti;
+
+  //Panos: For now we consider only FDD
+  //if (eNB->frame_parms.frame_type == FDD) {
+    pdu->harq_indication_fdd_rel13.mode = 0;
+    pdu->harq_indication_fdd_rel13.number_of_ack_nack = harq_information->harq_information_rel10.harq_size;
+
+    //Panos: Could this be wrong? Is the number_of_ack_nack field equivalent to O_ACK?
+    //pdu->harq_indication_fdd_rel13.number_of_ack_nack = ulsch_harq->O_ACK;
+
+    for (i=0;i<harq_information->harq_information_rel10.harq_size;i++) {
+      //AssertFatal(ulsch_harq->o_ACK[i] == 0 || ulsch_harq->o_ACK[i] == 1, "harq_ack[%d] is %d, should be 1,2 or 4\n",i,ulsch_harq->o_ACK[i]);
+
+      pdu->harq_indication_fdd_rel13.harq_tb_n[i] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
+      // release DLSCH if needed
+      //if (ulsch_harq->o_ACK[i] == 1) release_harq(eNB,UE_id,i,frame,subframe,0xffff);
+
+    }
+  //}
+  /*else { // TDD
+    M=ul_ACK_subframe2_M(&eNB->frame_parms,
+			 subframe);
+
+    pdu->harq_indication_fdd_rel13.mode = 1-bundling;
+    pdu->harq_indication_fdd_rel13.number_of_ack_nack = ulsch_harq->O_ACK;
+
+    for (i=0;i<ulsch_harq->O_ACK;i++) {
+      AssertFatal(ulsch_harq->o_ACK[i] == 0 || ulsch_harq->o_ACK[i] == 1, "harq_ack[%d] is %d, should be 1,2 or 4\n",i,ulsch_harq->o_ACK[i]);
+
+      pdu->harq_indication_tdd_rel13.harq_data[0].multiplex.value_0 = 2-ulsch_harq->o_ACK[i];
+      // release DLSCH if needed
+      if (ulsch_harq->o_ACK[i] == 1) release_harq(eNB,UE_id,i,frame,subframe,0xffff);
+      if      (M==1 && ulsch_harq->O_ACK==1 && ulsch_harq->o_ACK[i] == 1) release_harq(eNB,UE_id,0,frame,subframe,0xffff);
+      else if (M==1 && ulsch_harq->O_ACK==2 && ulsch_harq->o_ACK[i] == 1) release_harq(eNB,UE_id,i,frame,subframe,0xffff);
+      else if (M>1 && ulsch_harq->o_ACK[i] == 1) {
+	// spatial bundling
+	release_harq(eNB,UE_id,0,frame,subframe,1<<i);
+	release_harq(eNB,UE_id,1,frame,subframe,1<<i);
+      }
+    }
+  }*/
+
+  UL_INFO->harq_ind.number_of_harqs++;
+  pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
+}
+
+
+void fill_uci_harq_indication_UE_MAC(int Mod_id,
+			      int frame,
+			      int subframe,
+			      UL_IND_t *UL_INFO,
+			      nfapi_ul_config_harq_information *harq_information,
+			      uint16_t rnti
+			      /*uint8_t tdd_mapping_mode,
+			      uint16_t tdd_multiplexing_mask*/) {
+
+  //int UE_id=find_dlsch(uci->rnti,eNB,SEARCH_EXIST);
+  //AssertFatal(UE_id>=0,"UE_id doesn't exist\n");
+
+
+  pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
+  nfapi_harq_indication_pdu_t *pdu =   &UL_INFO->harq_ind.harq_pdu_list[UL_INFO->harq_ind.number_of_harqs];
+
+  pdu->instance_length                                = 0; // don't know what to do with this
+  //  pdu->rx_ue_information.handle                       = handle;
+  pdu->rx_ue_information.rnti                         = rnti;
+
+  // estimate UL_CQI for MAC (from antenna port 0 only)
+
+  // Panos: Set static SNR for now
+  //int SNRtimes10 = dB_fixed_times10(uci->stat) - 200;//(10*eNB->measurements.n0_power_dB[0]);
+  int SNRtimes10 = 640;
+
+  //if (SNRtimes10 < -100) LOG_I(PHY,"uci->stat %d \n",uci->stat);
+
+  if      (SNRtimes10 < -640) pdu->ul_cqi_information.ul_cqi=0;
+  else if (SNRtimes10 >  635) pdu->ul_cqi_information.ul_cqi=255;
+  else                        pdu->ul_cqi_information.ul_cqi=(640+SNRtimes10)/5;
+  pdu->ul_cqi_information.channel = 0;
+
+  //Panos: Considering only FDD for now
+  //if (eNB->frame_parms.frame_type == FDD) {
+
+    //Panos: Condition taken from fapi_l1::handle_uci_harq_information() function
+    if ((harq_information->harq_information_rel9_fdd.ack_nack_mode == 0) &&
+          (harq_information->harq_information_rel9_fdd.harq_size == 1)) {
+    //if (uci->pucch_fmt == pucch_format1a) {
+      pdu->harq_indication_fdd_rel13.mode = 0;
+      pdu->harq_indication_fdd_rel13.number_of_ack_nack = 1;
+
+      //AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[0] == 4, "harq_ack[0] is %d, should be 1,2 or 4\n",harq_ack[0]);
+      pdu->harq_indication_fdd_rel13.harq_tb_n[0] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
+
+
+    }
+    else if ((harq_information->harq_information_rel9_fdd.ack_nack_mode == 0) &&
+                 (harq_information->harq_information_rel9_fdd.harq_size == 2)) {
+      pdu->harq_indication_fdd_rel13.mode = 0;
+      pdu->harq_indication_fdd_rel13.number_of_ack_nack = 2;
+      //AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[1] == 4, "harq_ack[0] is %d, should be 0,1 or 4\n",harq_ack[0]);
+      //AssertFatal(harq_ack[1] == 1 || harq_ack[1] == 2 || harq_ack[1] == 4, "harq_ack[1] is %d, should be 0,1 or 4\n",harq_ack[1]);
+      pdu->harq_indication_fdd_rel13.harq_tb_n[0] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
+      pdu->harq_indication_fdd_rel13.harq_tb_n[1] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
+      // release DLSCH if needed
+      //if (harq_ack[0] == 1) release_harq(eNB,UE_id,0,frame,subframe,0xffff);
+      //if (harq_ack[1] == 1) release_harq(eNB,UE_id,1,frame,subframe,0xffff);
+    }
+    else AssertFatal(1==0,"only format 1a/b for now, received \n");
+  //}
+  /*else { // TDD
+
+    AssertFatal(tdd_mapping_mode==0 || tdd_mapping_mode==1 || tdd_mapping_mode==2,
+		"Illegal tdd_mapping_mode %d\n",tdd_mapping_mode);
+
+    pdu->harq_indication_tdd_rel13.mode = tdd_mapping_mode;
+
+    switch (tdd_mapping_mode) {
+    case 0: // bundling
+
+      if (uci->pucch_fmt == pucch_format1a) {
+	pdu->harq_indication_tdd_rel13.number_of_ack_nack = 1;
+	AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[0] == 4, "harq_ack[0] is %d, should be 1,2 or 4\n",harq_ack[0]);
+	pdu->harq_indication_tdd_rel13.harq_data[0].bundling.value_0 = harq_ack[0];
+	// release all bundled DLSCH if needed
+	if (harq_ack[0] == 1) release_harq(eNB,UE_id,0,frame,subframe,0xffff);
+      }
+      else if (uci->pucch_fmt == pucch_format1b) {
+	pdu->harq_indication_tdd_rel13.number_of_ack_nack = 2;
+	AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[1] == 4, "harq_ack[0] is %d, should be 0,1 or 4\n",harq_ack[0]);
+	AssertFatal(harq_ack[1] == 1 || harq_ack[1] == 2 || harq_ack[1] == 4, "harq_ack[1] is %d, should be 0,1 or 4\n",harq_ack[1]);
+	pdu->harq_indication_tdd_rel13.harq_data[0].bundling.value_0 = harq_ack[0];
+	pdu->harq_indication_tdd_rel13.harq_data[1].bundling.value_0 = harq_ack[1];
+	// release all DLSCH if needed
+	if (harq_ack[0] == 1) release_harq(eNB,UE_id,0,frame,subframe,0xffff);
+	if (harq_ack[1] == 1) release_harq(eNB,UE_id,1,frame,subframe,0xffff);
+      }
+      break;
+    case 1: // multiplexing
+      AssertFatal(uci->pucch_fmt == pucch_format1b,"uci->pucch_format %d is not format1b\n",uci->pucch_fmt);
+
+      if (uci->num_pucch_resources == 1 && uci->pucch_fmt == pucch_format1a) {
+	pdu->harq_indication_tdd_rel13.number_of_ack_nack = 1;
+	AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[0] == 4, "harq_ack[0] is %d, should be 1,2 or 4\n",harq_ack[0]);
+	pdu->harq_indication_tdd_rel13.harq_data[0].multiplex.value_0 = harq_ack[0];
+	// release all DLSCH if needed
+	if (harq_ack[0] == 1) release_harq(eNB,UE_id,0,frame,subframe,0xffff);
+      }
+      else if (uci->num_pucch_resources == 1 && uci->pucch_fmt == pucch_format1b) {
+	pdu->harq_indication_tdd_rel13.number_of_ack_nack = 2;
+	AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[1] == 4, "harq_ack[0] is %d, should be 0,1 or 4\n",harq_ack[0]);
+	AssertFatal(harq_ack[1] == 1 || harq_ack[1] == 2 || harq_ack[1] == 4, "harq_ack[1] is %d, should be 0,1 or 4\n",harq_ack[1]);
+	pdu->harq_indication_tdd_rel13.harq_data[0].multiplex.value_0 = harq_ack[0];
+	pdu->harq_indication_tdd_rel13.harq_data[1].multiplex.value_0 = harq_ack[1];
+	// release all DLSCH if needed
+	if (harq_ack[0] == 1) release_harq(eNB,UE_id,0,frame,subframe,0xffff);
+	if (harq_ack[1] == 1) release_harq(eNB,UE_id,1,frame,subframe,0xffff);
+      }
+      else { // num_pucch_resources (M) > 1
+	pdu->harq_indication_tdd_rel13.number_of_ack_nack = uci->num_pucch_resources;
+
+	pdu->harq_indication_tdd_rel13.harq_data[0].multiplex.value_0 = harq_ack[0];
+	pdu->harq_indication_tdd_rel13.harq_data[1].multiplex.value_0 = harq_ack[1];
+	if (uci->num_pucch_resources == 3) 	pdu->harq_indication_tdd_rel13.harq_data[2].multiplex.value_0 = harq_ack[2];
+	if (uci->num_pucch_resources == 4) 	pdu->harq_indication_tdd_rel13.harq_data[3].multiplex.value_0 = harq_ack[3];
+	// spatial-bundling in this case so release both HARQ if necessary
+	release_harq(eNB,UE_id,0,frame,subframe,tdd_multiplexing_mask);
+	release_harq(eNB,UE_id,1,frame,subframe,tdd_multiplexing_mask);
+      }
+      break;
+    case 2: // special bundling (SR collision)
+      pdu->harq_indication_tdd_rel13.number_of_ack_nack = 1;
+      int tdd_config5_sf2scheds=0;
+      if (eNB->frame_parms.tdd_config==5) tdd_config5_sf2scheds = getM(eNB,frame,subframe);
+
+      switch (harq_ack[0]) {
+      case 0:
+	break;
+      case 1: // check if M=1,4,7
+	if (uci->num_pucch_resources == 1 || uci->num_pucch_resources == 4 ||
+	    tdd_config5_sf2scheds == 1 || tdd_config5_sf2scheds == 4 || tdd_config5_sf2scheds == 7) {
+	  release_harq(eNB,UE_id,0,frame,subframe,0xffff);
+	  release_harq(eNB,UE_id,1,frame,subframe,0xffff);
+	}
+	break;
+      case 2: // check if M=2,5,8
+	if (uci->num_pucch_resources == 2 || tdd_config5_sf2scheds == 2 ||
+	    tdd_config5_sf2scheds == 5 || tdd_config5_sf2scheds == 8) {
+	  release_harq(eNB,UE_id,0,frame,subframe,0xffff);
+	  release_harq(eNB,UE_id,1,frame,subframe,0xffff);
+	}
+	break;
+      case 3: // check if M=3,6,9
+	if (uci->num_pucch_resources == 3 || tdd_config5_sf2scheds == 3 ||
+	    tdd_config5_sf2scheds == 6 || tdd_config5_sf2scheds == 9) {
+	  release_harq(eNB,UE_id,0,frame,subframe,0xffff);
+	  release_harq(eNB,UE_id,1,frame,subframe,0xffff);
+	}
+	break;
+      }
+      break;
+
+    }
+  } //TDD*/
+
+
+  UL_INFO->harq_ind.number_of_harqs++;
+  LOG_E(PHY,"Incremented eNB->UL_INFO.harq_ind.number_of_harqs:%d\n", UL_INFO->harq_ind.number_of_harqs);
+  pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
+
+}
+
+
+void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
+                         nfapi_ul_config_request_pdu_t *ul_config_pdu,
+                         uint16_t frame,uint8_t subframe,uint8_t srs_present)
+{
+  nfapi_ul_config_ulsch_pdu_rel8_t *rel8 = &ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8;
+
+  //int8_t UE_id;
+
+  // check if we have received a dci for this ue and ulsch descriptor is configured
+
+  if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE) {
+    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No existing UE ULSCH for rnti %x\n",rel8->rnti);
+    LOG_D(PHY,"Applying UL config for UE, rnti %x for frame %d, subframe %d\n",
+         rel8->rnti,frame,subframe);
+    uint8_t ulsch_buffer[5477] __attribute__ ((aligned(32)));
+    uint16_t buflen = ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size;
+
+    uint16_t rnti = ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti;
+    uint8_t access_mode=SCHEDULED_ACCESS;
+    if(buflen>0){
+    	ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
+    	fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+    }
+  }
+
+  else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE) {
+    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+	  uint8_t ulsch_buffer[5477] __attribute__ ((aligned(32)));
+	  uint16_t buflen = ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.size;
+	  nfapi_ul_config_ulsch_harq_information *ulsch_harq_information = &ul_config_pdu->ulsch_harq_pdu.harq_information;
+	  uint16_t rnti = ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti;
+	  uint8_t access_mode=SCHEDULED_ACCESS;
+	  if(buflen>0){
+		  	ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
+	      	fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+	  }
+
+	  if(ulsch_harq_information)
+		  fill_ulsch_harq_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_harq_information, rnti);
+
+  }
+  else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE) {
+    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,
+    //                                eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+	  uint8_t ulsch_buffer[5477] __attribute__ ((aligned(32)));
+	  uint16_t buflen = ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.size;
+
+	  uint16_t rnti = ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti;
+	  uint8_t access_mode=SCHEDULED_ACCESS;
+	  if(buflen>0){
+		  ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
+		  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+	  }
+	  fill_ulsch_cqi_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, rnti);
+
+  }
+  else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_HARQ_RI_PDU_TYPE) {
+    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,
+    //                                eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+
+	  uint8_t ulsch_buffer[5477] __attribute__ ((aligned(32)));
+	  uint16_t buflen = ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.size;
+	  nfapi_ul_config_ulsch_harq_information *ulsch_harq_information = &ul_config_pdu->ulsch_cqi_harq_ri_pdu.harq_information;
+
+	  uint16_t rnti = ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti;
+	  uint8_t access_mode=SCHEDULED_ACCESS;
+	  if(buflen>0){
+	      	ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
+	      	fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+	  }
+
+	  if(ulsch_harq_information)
+		  fill_ulsch_harq_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_harq_information, rnti);
+	  fill_ulsch_cqi_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, rnti);
+
+  }
+  else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE) {
+  //  AssertFatal((UE_id = find_uci(ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti,
+  //                                proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
+  //              "No available UE UCI for rnti %x\n",ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti);
+
+	  uint16_t rnti = ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti;
+
+	  nfapi_ul_config_harq_information *ulsch_harq_information = &ul_config_pdu->uci_harq_pdu.harq_information;
+
+	  fill_uci_harq_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO,ulsch_harq_information, rnti);
+  }
+  else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_CQI_PDU_TYPE) {
+    AssertFatal(1==0,"NFAPI_UL_CONFIG_UCI_CQI_PDU_TYPE not handled yet\n");
+  }
+  else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_CQI_HARQ_PDU_TYPE) {
+    AssertFatal(1==0,"NFAPI_UL_CONFIG_UCI_CQI_HARQ_PDU_TYPE not handled yet\n");
+  }
+  else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_CQI_SR_PDU_TYPE) {
+    AssertFatal(1==0,"NFAPI_UL_CONFIG_UCI_CQI_SR_PDU_TYPE not handled yet\n");
+  }
+  else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_SR_PDU_TYPE) {
+    //AssertFatal((UE_id = find_uci(ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti,
+    //                              proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No available UE UCI for rnti %x\n",ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti);
+	  uint16_t rnti = ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti;
+
+	  fill_sr_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, rnti);
+
+  }
+  else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_SR_HARQ_PDU_TYPE) {
+    //AssertFatal((UE_id = find_uci(rel8->rnti,proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No available UE UCI for rnti %x\n",ul_config_pdu->uci_sr_harq_pdu.ue_information.ue_information_rel8.rnti);
+
+	  uint16_t rnti = ul_config_pdu->uci_sr_harq_pdu.ue_information.ue_information_rel8.rnti;
+
+	  // We fill the sr_indication only if ue_get_sr() would normally instruct PHY to send a SR.
+	  if (ue_get_SR(Mod_id ,0,frame, 0, rnti, subframe))
+		  fill_sr_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO,rnti);
+
+	  nfapi_ul_config_harq_information *ulsch_harq_information = &ul_config_pdu->uci_sr_harq_pdu.harq_information;
+	  fill_uci_harq_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO,ulsch_harq_information, rnti);
+
+  }
+  /*else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_SRS_PDU_TYPE) {
+    handle_srs_pdu(eNB,ul_config_pdu,frame,subframe);
+  }*/
+}
+
+
+
+
+
+
+int ul_config_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
+{
+  LOG_D(PHY,"[PNF] UL_CONFIG_REQ %s() sfn_sf:%d pdu:%d rach_prach_frequency_resources:%d srs_present:%u\n",
+      __FUNCTION__,
+      NFAPI_SFNSF2DEC(req->sfn_sf),
+      req->ul_config_request_body.number_of_pdus,
+      req->ul_config_request_body.rach_prach_frequency_resources,
+      req->ul_config_request_body.srs_present
+      );
+
+  /*if (RC.ru == 0)
+  {
+    return -1;
+  }
+
+  if (RC.eNB == 0)
+  {
+    return -2;
+  }
+
+  if (RC.eNB[0][0] == 0)
+  {
+    return -3;
+  }
+
+  if (sync_var != 0)
+  {
+    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() Main system not up - is this a dummy subframe?\n", __FUNCTION__);
+    return -4;
+  }*/
+
+  int sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
+  int sf = NFAPI_SFNSF2SF(req->sfn_sf);
+
+  //struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
+  //eNB_rxtx_proc_t *proc = &eNB->proc.proc_rxtx[0];
+
+  module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
+  nfapi_ul_config_request_pdu_t* ul_config_pdu_list = req->ul_config_request_body.ul_config_pdu_list;
+
+  //Panos: Not sure whether we should put the memory allocation here.
+  //*** Note we should find the right place to call free(UL_INFO).
+  UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
+
+  uint8_t is_rach = req->ul_config_request_body.rach_prach_frequency_resources;
+  if(is_rach) {
+	  PRACH_RESOURCES_t *prach_resources = ue_get_rach(Mod_id, 0, sfn, 0, sf);
+	  fill_rach_indication_UE_MAC(Mod_id, sfn ,sf, UL_INFO, prach_resources->ra_PreambleIndex, prach_resources->ra_RNTI);
+  }
+
+  // subframe works off TX SFN/SF which is 4 ahead, need to put it back to RX SFN/SF
+  // probably could just use proc->frame_rx
+
+  // PanosQ: This an eNB MAC function. Are we allowed to call it from here?
+  // Also, it is only in the nfapi-RU-RAU-split
+  //subtract_subframe(&sfn, &sf, 4);
+
+
+  for (int i=0;i<req->ul_config_request_body.number_of_pdus;i++)
+  {
+    //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn/sf:%d PDU[%d] size:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), i, ul_config_pdu_list[i].pdu_size);
+
+    if (
+        ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE ||
+        ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE ||
+        ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE ||
+        ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_HARQ_RI_PDU_TYPE ||
+        ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE ||
+        ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_UCI_SR_PDU_TYPE ||
+        ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_UCI_SR_HARQ_PDU_TYPE
+       )
+    {
+      //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() handle_nfapi_ul_pdu() for PDU:%d\n", __FUNCTION__, i);
+
+
+      handle_nfapi_ul_pdu_UE_MAC(Mod_id,&ul_config_pdu_list[i],sfn,sf,req->ul_config_request_body.srs_present);
+    }
+    else
+    {
+      //NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() PDU:%i UNKNOWN type :%d\n", __FUNCTION__, i, ul_config_pdu_list[i].pdu_type);
+    }
+  }
+
+  return 0;
+}
+
+
+
 
 
 

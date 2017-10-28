@@ -52,6 +52,7 @@
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
 #include "OCG_extern.h"
+#include "openair2/PHY_INTERFACE/phy_stub_UE.h"
 
 #ifdef PHY_EMUL
 # include "SIMULATION/simulation_defs.h"
@@ -70,6 +71,8 @@
 #define ENABLE_MAC_PAYLOAD_DEBUG 1
 
 extern uint8_t usim_test;
+
+extern UL_IND_t *UL_INFO;
 
 /*
 #ifndef USER_MODE
@@ -1586,7 +1589,9 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
 
   // build PHR and update the timers
   if (phr_ce_len == sizeof(POWER_HEADROOM_CMD)) {
-    phr_p->PH = get_phr_mapping(module_idP,CC_id,eNB_index);
+	  //Panos: Substitute with a static value for the MAC layer abstraction
+    //phr_p->PH = get_phr_mapping(module_idP,CC_id,eNB_index);
+	  phr_p->PH = 40;
     phr_p->R  = 0;
     LOG_D(MAC,"[UE %d] Frame %d report PHR with mapping (%d->%d) for LCID %d\n",
           module_idP,frameP, get_PHR(module_idP,CC_id,eNB_index), phr_p->PH,POWER_HEADROOM);
@@ -1594,6 +1599,7 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
   } else {
     phr_p=NULL;
   }
+
 
   LOG_T(MAC,"[UE %d] Frame %d: bsr s %p bsr_l %p, phr_p %p\n",  module_idP,frameP,bsr_s, bsr_l, phr_p);
 
@@ -1804,7 +1810,6 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
   stop_meas(&UE_mac_inst[module_idP].tx_ulsch_sdu);
 #endif
   
-  // Panos: Tx_request should be filled from the ulsch_buffer here.
 
   if (opt_enabled) {
     trace_pdu(0, ulsch_buffer, buflen, module_idP, 3, UE_mac_inst[module_idP].crnti, UE_mac_inst[module_idP].txFrame, UE_mac_inst[module_idP].txSubframe, 0, 0);
@@ -1812,6 +1817,8 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
           module_idP, frameP, subframe, UE_mac_inst[module_idP].crnti, buflen);
   }
 }
+
+
 
 //------------------------------------------------------------------------------
 // called at each subframe

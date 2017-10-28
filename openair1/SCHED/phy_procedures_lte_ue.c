@@ -1766,7 +1766,6 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       if (ue->mac_enabled == 1) {
 
 	// signal MAC that Msg3 was sent
-    // Substitute call to this function by call to fill_Tx_indication (UE_MAC_Tx_IND_Msg3_TYPE)
 	Msg3_transmitted(Mod_id,
 			 CC_id,
 			 frame_tx,
@@ -1783,9 +1782,6 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
 	if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->round==0) {
 	  //if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->calibration_flag == 0) {
 	  access_mode=SCHEDULED_ACCESS;
-
-	  // Panos: Remove the call to ue_get_sdu here and use
-	  // the corresponding Tx.request PDU, instead of ulsch_input_buffer, below.
 
 	  ue_get_sdu(Mod_id,
 		     CC_id,
