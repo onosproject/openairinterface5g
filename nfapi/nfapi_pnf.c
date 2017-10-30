@@ -1140,8 +1140,8 @@ int pnf_phy_ul_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
     return -4;
   }
 
-  uint16_t sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
-  uint16_t sf = NFAPI_SFNSF2SF(req->sfn_sf);
+  uint16_t curr_sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
+  uint16_t curr_sf = NFAPI_SFNSF2SF(req->sfn_sf);
 
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
   eNB_rxtx_proc_t *proc = &eNB->proc.proc_rxtx[0];
@@ -1163,7 +1163,7 @@ int pnf_phy_ul_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
     {
       NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() handle_nfapi_ul_pdu() for PDU:%d\n", __FUNCTION__, i);
 
-      handle_nfapi_ul_pdu(eNB,proc,&ul_config_pdu_list[i],sfn,sf,req->ul_config_request_body.srs_present);
+      handle_nfapi_ul_pdu(eNB,proc,&ul_config_pdu_list[i],curr_sfn,curr_sf,req->ul_config_request_body.srs_present);
     }
     else
     {

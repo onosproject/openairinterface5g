@@ -1570,6 +1570,10 @@ int find_UE_id(module_id_t mod_idP, rnti_t rntiP)
   UE_list_t *UE_list = &RC.mac[mod_idP]->UE_list;
 
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
+
+    LOG_D(PHY,"%s(mod_idP:%d, rntiP:%04x) UE_id:%d active:%d UE_PCCID(mod_idP,UE_id):%d UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti:%04x\n", 
+        __FUNCTION__, mod_idP, rntiP, UE_id, UE_list->active[UE_id], UE_PCCID(mod_idP,UE_id), UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti);
+
     if (UE_list->active[UE_id] != TRUE) continue;
     if (UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti==rntiP) {
       return(UE_id);

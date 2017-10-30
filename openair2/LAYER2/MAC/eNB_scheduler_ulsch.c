@@ -97,6 +97,8 @@ void rx_sdu(const module_id_t enb_mod_idP,
 
   start_meas(&eNB->rx_ulsch_sdu);
 
+  LOG_D(PHY,"%s() rntiP:%04x UE_id:%d harq_pid:%d\n", __FUNCTION__, rntiP, UE_id, harq_pid);
+
   if ((UE_id >  NUMBER_OF_UE_MAX) || (UE_id == -1)  )
     for(ii=0; ii<NB_RB_MAX; ii++) {
       rx_lengths[ii] = 0;
@@ -372,7 +374,7 @@ abort();
   }
 
   for (i=0; i<num_sdu; i++) {
-    LOG_D(MAC,"SDU Number %d MAC Subheader SDU_LCID %d, length %d\n",i,rx_lcids[i],rx_lengths[i]);
+    LOG_D(MAC,"SDU Number %d MAC Subheader SDU_LCID %d, length %d UE_id %d\n",i,rx_lcids[i],rx_lengths[i],UE_id);
 
     T(T_ENB_MAC_UE_UL_SDU, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
       T_INT(rx_lcids[i]), T_INT(rx_lengths[i]));

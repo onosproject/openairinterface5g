@@ -289,7 +289,7 @@ index 74f29a0..7310fc0 100644
  	}
  
 diff --git a/pnf/src/pnf_p7.c b/pnf/src/pnf_p7.c
-index 0fd7828..5a87c6c 100644
+index 0fd7828..6d9a332 100644
 --- a/pnf/src/pnf_p7.c
 +++ b/pnf/src/pnf_p7.c
 @@ -25,12 +25,64 @@
@@ -543,7 +543,7 @@ index 0fd7828..5a87c6c 100644
  			pnf_p7->sfn_sf_shift = 0;
  		}
  
-@@ -558,77 +646,113 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
+@@ -558,77 +646,119 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
  
  		nfapi_pnf_p7_subframe_buffer_t* subframe_buffer = &(pnf_p7->subframe_buffer[buffer_index]);
  
@@ -657,7 +657,13 @@ index 0fd7828..5a87c6c 100644
 +                          tx_subframe_buffer->hi_dci0_req = 0;
 +                        }
 +                }
-+                else if(subframe_buffer->sfn_sf == sfn_sf)
++		else
++		{
++                  // If we ever need to "send" a dummy ul_config this won't work!!!
++                  send_dummy_subframe(pnf_p7, sfn_sf_tx);
++		}
++
++                if(subframe_buffer->sfn_sf == sfn_sf)
 +		{
 +
 +			if(subframe_buffer->ul_config_req != 0)
@@ -683,7 +689,7 @@ index 0fd7828..5a87c6c 100644
  				}
  			}
  
-@@ -637,7 +761,7 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
+@@ -637,7 +767,7 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
  				if(pnf_p7->_public.lbt_dl_config_req)
  					(pnf_p7->_public.lbt_dl_config_req)(&(pnf_p7->_public), subframe_buffer->lbt_dl_config_req);
  
@@ -692,13 +698,16 @@ index 0fd7828..5a87c6c 100644
  			}
  			else
  			{
-@@ -650,14 +774,42 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
+@@ -650,14 +780,35 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
  
  			}
  
 -			memset(&(pnf_p7->subframe_buffer[buffer_index]), 0, sizeof(nfapi_pnf_p7_subframe_buffer_t));
 -			pnf_p7->subframe_buffer[buffer_index].sfn_sf = -1;
 -		}
+-		else
+-		{
+-			send_dummy_subframe(pnf_p7, sfn_sf);
 +                        //if(subframe_buffer->dl_config_req != 0)
 +                          //deallocate_nfapi_dl_config_request(subframe_buffer->dl_config_req, pnf_p7);
 +			//if(subframe_buffer->tx_req != 0)
@@ -717,21 +726,13 @@ index 0fd7828..5a87c6c 100644
 +                          subframe_buffer->lbt_dl_config_req = 0;
 +                        }
 +                } // sfn_sf match
- 		else
- 		{
--			send_dummy_subframe(pnf_p7, sfn_sf);
-+                  //printf("NOT CALLING //send_dummy_subframe\n");
-+
-+			send_dummy_subframe(pnf_p7, sfn_sf_tx);
- 		}
- 
 +
 +                if (subframe_buffer->dl_config_req == 0 && subframe_buffer->tx_req == 0 && subframe_buffer->ul_config_req == 0 && subframe_buffer->lbt_dl_config_req == 0)
 +                {
 +                  memset(&(pnf_p7->subframe_buffer[buffer_index]), 0, sizeof(nfapi_pnf_p7_subframe_buffer_t));
 +                  pnf_p7->subframe_buffer[buffer_index].sfn_sf = -1;
-+		}
-+
+ 		}
+ 
 +                //printf("pnf_p7->_public.timing_info_mode_periodic:%d pnf_p7->timing_info_period_counter:%d pnf_p7->_public.timing_info_period:%d\n", pnf_p7->_public.timing_info_mode_periodic, pnf_p7->timing_info_period_counter, pnf_p7->_public.timing_info_period);
 +                //printf("pnf_p7->_public.timing_info_mode_aperiodic:%d pnf_p7->timing_info_aperiodic_send:%d\n", pnf_p7->_public.timing_info_mode_aperiodic, pnf_p7->timing_info_aperiodic_send);
 +                //printf("pnf_p7->timing_info_ms_counter:%d\n", pnf_p7->timing_info_ms_counter);
@@ -739,7 +740,7 @@ index 0fd7828..5a87c6c 100644
  		// send the periodic timing info if configured
  		if(pnf_p7->_public.timing_info_mode_periodic && (pnf_p7->timing_info_period_counter++) == pnf_p7->_public.timing_info_period)
  		{
-@@ -678,14 +830,15 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
+@@ -678,14 +829,15 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
  	}
  	else
  	{
@@ -757,7 +758,7 @@ index 0fd7828..5a87c6c 100644
  					pnf_p7->stats.dl_conf_ontime, pnf_p7->stats.dl_conf_late, 
  					pnf_p7->stats.ul_conf_ontime, pnf_p7->stats.ul_conf_late, 
  					pnf_p7->stats.hi_dci0_ontime, pnf_p7->stats.hi_dci0_late, 
-@@ -694,6 +847,7 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
+@@ -694,6 +846,7 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
  		memset(&pnf_p7->stats, 0, sizeof(pnf_p7->stats));
  	}
  	pnf_p7->tick++;
@@ -765,7 +766,7 @@ index 0fd7828..5a87c6c 100644
  
  	if(pthread_mutex_unlock(&(pnf_p7->mutex)) != 0)
  	{
-@@ -724,7 +878,7 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
+@@ -724,7 +877,7 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
  			if(recv_sfn_sf_dec > ((current_sfn_sf_dec + timing_window) % NFAPI_MAX_SFNSFDEC))
  			{
  				// out of window
@@ -774,7 +775,7 @@ index 0fd7828..5a87c6c 100644
  			}
  			else
  			{
-@@ -736,7 +890,7 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
+@@ -736,7 +889,7 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
  		else
  		{
  			// too late
@@ -783,7 +784,7 @@ index 0fd7828..5a87c6c 100644
  		}
  
  	}
-@@ -751,8 +905,8 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
+@@ -751,8 +904,8 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
  		}
  		else
  		{
@@ -794,7 +795,7 @@ index 0fd7828..5a87c6c 100644
  		}
  
  	}
-@@ -785,15 +939,32 @@ void pnf_handle_dl_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
+@@ -785,15 +938,32 @@ void pnf_handle_dl_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
  			return;
  		}
  
@@ -832,7 +833,25 @@ index 0fd7828..5a87c6c 100644
  				//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] Freeing dl_config_req at index %d (%d/%d)", 
  				//			pMyPhyInfo->sfnSf, bufferIdx,
  				//			SFNSF2SFN(dreq->sfn_sf), SFNSF2SF(dreq->sfn_sf));
-@@ -994,6 +1165,16 @@ void pnf_handle_tx_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7)
+@@ -860,6 +1030,8 @@ void pnf_handle_ul_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
+ 			uint32_t sfn_sf_dec = NFAPI_SFNSF2DEC(req->sfn_sf);
+ 			uint8_t buffer_index = sfn_sf_dec % pnf_p7->_public.subframe_buffer_size;
+ 
++                        printf("%s() POPULATE UL_CONFIG_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, sfn_sf_dec, buffer_index);
++
+ 			if(pnf_p7->subframe_buffer[buffer_index].ul_config_req != 0)
+ 			{
+ 				//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] Freeing ul_config_req at index %d (%d/%d)", 
+@@ -876,7 +1048,7 @@ void pnf_handle_ul_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
+ 		}
+ 		else
+ 		{
+-			//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] NOT storing ul_config_req SFN/SF %d/%d\n", pMyPhyInfo->sfnSf, SFNSF2SFN(req->sfn_sf), SFNSF2SF(req->sfn_sf));
++			NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] NOT storing ul_config_req OUTSIDE OF TRANSMIT BUFFER WINDOW SFN/SF %d\n", NFAPI_SFNSF2DEC(pnf_p7->sfn_sf), NFAPI_SFNSF2DEC(req->sfn_sf));
+ 			deallocate_nfapi_ul_config_request(req, pnf_p7);
+ 
+ 			if(pnf_p7->_public.timing_info_mode_aperiodic)
+@@ -994,6 +1166,16 @@ void pnf_handle_tx_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7)
  			uint32_t sfn_sf_dec = NFAPI_SFNSF2DEC(req->sfn_sf);
  			uint8_t buffer_index = sfn_sf_dec % pnf_p7->_public.subframe_buffer_size;
  
@@ -849,7 +868,7 @@ index 0fd7828..5a87c6c 100644
  			if(pnf_p7->subframe_buffer[buffer_index].tx_req != 0)
  			{
  				//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] Freeing tx_req at index %d (%d/%d)", 
-@@ -1010,6 +1191,8 @@ void pnf_handle_tx_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7)
+@@ -1010,6 +1192,8 @@ void pnf_handle_tx_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7)
  		}
  		else
  		{
@@ -858,7 +877,7 @@ index 0fd7828..5a87c6c 100644
  			deallocate_nfapi_tx_request(req, pnf_p7);
  
  			if(pnf_p7->_public.timing_info_mode_aperiodic)
-@@ -1126,12 +1309,27 @@ uint32_t calculate_t2(uint32_t now_time_hr, uint16_t sfn_sf, uint32_t sf_start_t
+@@ -1126,12 +1310,27 @@ uint32_t calculate_t2(uint32_t now_time_hr, uint16_t sfn_sf, uint32_t sf_start_t
  	uint32_t sf_time_us = get_sf_time(now_time_hr, sf_start_time_hr);
  	uint32_t t2 = (NFAPI_SFNSF2DEC(sfn_sf) * 1000) + sf_time_us;
  
@@ -887,7 +906,7 @@ index 0fd7828..5a87c6c 100644
  
  	uint32_t sf_time_us = get_sf_time(now_time_hr, sf_start_time_hr);
  
-@@ -1391,6 +1589,8 @@ void pnf_nfapi_p7_read_dispatch_message(pnf_p7_t* pnf_p7, uint32_t now_hr_time)
+@@ -1391,6 +1590,8 @@ void pnf_nfapi_p7_read_dispatch_message(pnf_p7_t* pnf_p7, uint32_t now_hr_time)
  			// read the segment
  			recvfrom_result = recvfrom(pnf_p7->p7_sock, pnf_p7->rx_message_buffer, header.message_length, MSG_DONTWAIT, (struct sockaddr*)&remote_addr, &remote_addr_size);
  
@@ -896,7 +915,7 @@ index 0fd7828..5a87c6c 100644
  			if(recvfrom_result > 0)
  			{
  				pnf_handle_p7_message(pnf_p7->rx_message_buffer, recvfrom_result, pnf_p7, now_hr_time);
-@@ -1417,7 +1617,10 @@ void pnf_nfapi_p7_read_dispatch_message(pnf_p7_t* pnf_p7, uint32_t now_hr_time)
+@@ -1417,7 +1618,10 @@ void pnf_nfapi_p7_read_dispatch_message(pnf_p7_t* pnf_p7, uint32_t now_hr_time)
  
  		// need to update the time as we would only use the value from the
  		// select
@@ -908,7 +927,7 @@ index 0fd7828..5a87c6c 100644
  	}
  	while(recvfrom_result > 0);
  }
-@@ -1512,7 +1715,7 @@ int pnf_p7_message_pump(pnf_p7_t* pnf_p7)
+@@ -1512,7 +1716,7 @@ int pnf_p7_message_pump(pnf_p7_t* pnf_p7)
  
  		selectRetval = select(pnf_p7->p7_sock+1, &rfds, NULL, NULL, &timeout);
  

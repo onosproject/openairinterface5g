@@ -78,6 +78,9 @@ void handle_nfapi_hi_dci0_dci_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
 {
   int idx                         = proc->subframe_tx&1;
   LTE_eNB_PDCCH *pdcch_vars       = &eNB->pdcch_vars[idx];
+
+  LOG_D(PHY,"%s() Before num_dci:%d\n", __FUNCTION__, pdcch_vars->num_dci);
+
   // copy dci configuration in to eNB structure
   fill_dci0(eNB,proc,&pdcch_vars->dci_alloc[pdcch_vars->num_dci], &hi_dci0_config_pdu->dci_pdu);
 }
@@ -88,7 +91,7 @@ void handle_nfapi_hi_dci0_hi_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
   LTE_eNB_PHICH *phich           = &eNB->phich_vars[proc->subframe_tx&1];
 
   // copy dci configuration in to eNB structure
-  LOG_D(PHY,"Received HI PDU which value %d (rbstart %d,cshift %d)\n",
+  LOG_D(PHY,"Received HI PDU with value %d (rbstart %d,cshift %d)\n",
         hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.hi_value,
         hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.resource_block_start,
         hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms);
@@ -754,12 +757,17 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   {
     for (int future_subframe=0;future_subframe<10;future_subframe++)
     { 
-      // DJP - indexing directly into the mac - not good - ??????
-      if (RC.mac[0]->UL_req_tmp[CC_id][future_subframe].ul_config_request_body.number_of_pdus > 0)
-      {
-        LOG_D(PHY,"UL_CONFIG for the future future_subframe:%d PDUs:%d\n", future_subframe, RC.mac[0]->UL_req_tmp[CC_id][future_subframe].ul_config_request_body.number_of_pdus);
+      nfapi_ul_config_request_t *ul_req_tmp = &RC.mac[0]->UL_req_tmp[CC_id][future_subframe];
 
-        oai_nfapi_ul_config_req(&RC.mac[0]->UL_req_tmp[CC_id][future_subframe]);
+      // DJP - indexing directly into the mac - not good - ??????
+      if (ul_req_tmp->ul_config_request_body.number_of_pdus > 0)
+      {
+        LOG_D(PHY,"UL_CONFIG for the future future_subframe:%d UL_req_tmp[PDUs:%d SFN/SF:%d]\n", 
+            future_subframe, 
+            ul_req_tmp->ul_config_request_body.number_of_pdus, 
+            NFAPI_SFNSF2DEC(ul_req_tmp->sfn_sf));
+
+        oai_nfapi_ul_config_req(ul_req_tmp);
       }
     }
   }

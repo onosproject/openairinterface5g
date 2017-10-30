@@ -2315,9 +2315,10 @@ void fill_dci0(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,
 
   void *dci_pdu = (void*)dci_alloc->dci_pdu;
 
-  LOG_D(PHY,"Filling DCI0 with cqi %d, mcs %d, hopping %d, rballoc %x (%d,%d) ndi %d TPC %d cshift %d\n",cqi_req,
-	mcs,hopping,rballoc,pdu->dci_pdu_rel8.resource_block_start,pdu->dci_pdu_rel8.number_of_resource_block,
-	ndi,TPC,cshift);
+  LOG_D(PHY,"Filling DCI0 with rnti %x cqi %d, mcs %d, hopping %d, rballoc %x (%d,%d) ndi %d TPC %d cshift %d\n",
+      pdu->dci_pdu_rel8.rnti,cqi_req, mcs,hopping,rballoc,
+      pdu->dci_pdu_rel8.resource_block_start,
+      pdu->dci_pdu_rel8.number_of_resource_block, ndi,TPC,cshift);
 
   dci_alloc->format   = format0;
   dci_alloc->firstCCE = pdu->dci_pdu_rel8.cce_index;
