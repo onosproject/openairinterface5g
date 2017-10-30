@@ -246,7 +246,8 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   
   if (oai_exit) return(-1);
   
-  phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
+  if (nfapi_mode == 0 || nfapi_mode == 1)
+    phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
 
   stop_meas( &softmodem_stats_rxtx_sf );
   
@@ -283,20 +284,20 @@ static void* eNB_thread_rxtx( void* param ) {
   while (!oai_exit) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 0 );
 
-    LOG_D(PHY,"%s:%s() TX:%u/%u About to wait on proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
+    //LOG_D(PHY,"%s:%s() TX:%u/%u About to wait on proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
     if (wait_on_condition(&proc->mutex_rxtx,&proc->cond_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) break;
 
-    LOG_D(PHY,"%s:%s() TX:%u/%u - WOKEN on proc->instance_cnt_rxtx proc->instance_cnt_rxtx:%d \n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
+    //LOG_D(PHY,"%s:%s() TX:%u/%u - WOKEN on proc->instance_cnt_rxtx proc->instance_cnt_rxtx:%d \n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 1 );
 
     if (oai_exit) break;
 
-    LOG_D(PHY,"%s:%s() TX:%u/%u About to rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
+    //LOG_D(PHY,"%s:%s() TX:%u/%u About to rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
     if (eNB->CC_id==0)
       if (rxtx(eNB,proc,thread_name) < 0) break;
 
-    LOG_D(PHY,"%s:%s() TX:%u/%u DONE rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
+    //LOG_D(PHY,"%s:%s() TX:%u/%u DONE rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
 
     if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) break;
 

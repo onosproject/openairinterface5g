@@ -6306,7 +6306,7 @@ uint8_t subframe2harq_pid(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t
   uint8_t ret = 255;
 
   if (frame_parms->frame_type == FDD) {
-    ret = (((frame<<1)+subframe)&7);
+    ret = (((frame*10)+subframe)&7);
   } else {
 
     switch (frame_parms->tdd_config) {

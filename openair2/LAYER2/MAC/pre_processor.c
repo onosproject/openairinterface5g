@@ -1275,10 +1275,14 @@ void assign_max_mcs_min_rb(module_id_t module_idP,int frameP, sub_frame_t subfra
   int Ncp;
   int N_RB_UL;
 
+  LOG_D(MAC, "%s() Enter\n", __FUNCTION__);
+
   for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
     if (UE_list->active[i] != TRUE) continue;
 
     rnti = UE_RNTI(module_idP,i);
+
+    LOG_D(MAC, "%s() UE active rnti:%04x UE_list->UE_sched_ctrl[i].ul_out_of_sync:%d UE_list->UE_sched_ctrl[i].phr_received:%d numactiveULCCs[UE_id]:%d UE_list->UE_template[CC_id][UE_id].ul_total_buffer:%d\n", __FUNCTION__, rnti, UE_list->UE_sched_ctrl[i].ul_out_of_sync, UE_list->UE_sched_ctrl[i].phr_received, UE_list->numactiveULCCs[i], UE_list->UE_template[CC_id][i].ul_total_buffer);
 
     if (rnti==NOT_A_RNTI)
       continue;
@@ -1328,7 +1332,7 @@ void assign_max_mcs_min_rb(module_id_t module_idP,int frameP, sub_frame_t subfra
 
         while ((((UE_template->phr_info - tx_power) < 0 ) || (tbs > UE_template->ul_total_buffer))&&
                (mcs > 3)) {
-          // LOG_I(MAC,"UE_template->phr_info %d tx_power %d mcs %d\n", UE_template->phr_info,tx_power, mcs);
+          LOG_I(MAC,"UE_template->phr_info %d tx_power %d mcs %d\n", UE_template->phr_info,tx_power, mcs);
           mcs--;
           tbs = get_TBS_UL(mcs,rb_table[rb_table_index])<<3;
           tx_power = estimate_ue_tx_power(tbs,rb_table[rb_table_index],0,Ncp,0); // fixme: set use_srs
@@ -1365,13 +1369,17 @@ void assign_max_mcs_min_rb(module_id_t module_idP,int frameP, sub_frame_t subfra
               UE_template->pre_allocated_nb_rb_ul,
               UE_template->phr_info,tx_power);
       } else {
+        LOG_E(MAC,"no ul buffer");
+
         /* if UE has pending scheduling request then pre-allocate 3 RBs */
         //if (UE_template->ul_active == 1 && UE_template->ul_SR == 1) {
         if (UE_is_to_be_scheduled(module_idP, CC_id, i)) {
+          UE_template->pre_assigned_mcs_ul             = 10;
           UE_template->pre_allocated_rb_table_index_ul = 2;
           UE_template->pre_allocated_nb_rb_ul          = 3;
         } else {
-          UE_template->pre_allocated_rb_table_index_ul=-1;
+          UE_template->pre_assigned_mcs_ul             = 0;
+          UE_template->pre_allocated_rb_table_index_ul =-1;
           UE_template->pre_allocated_nb_rb_ul=0;
         }
       }

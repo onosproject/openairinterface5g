@@ -918,7 +918,7 @@ int is_srs_occasion_common(LTE_DL_FRAME_PARMS *frame_parms,int frame_tx,int subf
   if(frame_parms->soundingrs_ul_config_common.enabled_flag)
   {
 
-    LOG_D(PHY," SRS SUBFRAMECONFIG: %d\n", frame_parms->soundingrs_ul_config_common.srs_SubframeConfig);
+    //LOG_D(PHY," SRS SUBFRAMECONFIG: %d\n", frame_parms->soundingrs_ul_config_common.srs_SubframeConfig);
 
       uint8_t  TSFC;
       uint16_t deltaTSFC; // bitmap

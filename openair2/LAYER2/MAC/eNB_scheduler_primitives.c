@@ -311,7 +311,7 @@ uint8_t subframe2harqpid(COMMON_channels_t *cc,frame_t frame,sub_frame_t subfram
   AssertFatal(cc!=NULL,"cc is null\n");
 
   if (cc->tdd_Config == NULL) { // FDD
-    ret = (((frame<<1)+subframe)&7);
+    ret = (((frame*10)+subframe)&7);
   } else {
     switch (cc->tdd_Config->subframeAssignment) {
     case 1:
@@ -1729,6 +1729,7 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP
   for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
     if (UE_list->active[i] == TRUE) continue;
     UE_id = i;
+    memset(&UE_list->UE_template[cc_idP][UE_id], 0, sizeof(UE_TEMPLATE));
     UE_list->UE_template[cc_idP][UE_id].rnti       = rntiP;
     UE_list->UE_template[cc_idP][UE_id].configured = FALSE;
     UE_list->numactiveCCs[UE_id]                   = 1;

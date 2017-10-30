@@ -538,14 +538,13 @@ void schedule_mib(module_id_t   module_idP,
 				      module_idP,
 				      0); // not used in this case
 
-    LOG_D(MAC,"Frame %d, subframe %d: BCH PDU length %d\n",
-	  frameP,subframeP,mib_sdu_length);
+    //LOG_D(MAC,"Frame %d, subframe %d: BCH PDU length %d\n", frameP,subframeP,mib_sdu_length);
 
     if (mib_sdu_length > 0) {
 
-      LOG_D(MAC,"Frame %d, subframe %d: Adding BCH PDU in position %d (length %d)\n", frameP,subframeP,dl_req->number_pdu,mib_sdu_length);
+      //LOG_D(MAC,"Frame %d, subframe %d: Adding BCH PDU in position %d (length %d)\n", frameP,subframeP,dl_req->number_pdu,mib_sdu_length);
 
-      if ((frameP&1023) < 40) LOG_D(MAC,"[eNB %d] Frame %d : MIB->BCH  CC_id %d, Received %d bytes (cc->mib->message.schedulingInfoSIB1_BR_r13 %ld)\n",module_idP,frameP,CC_id,mib_sdu_length,cc->mib->message.schedulingInfoSIB1_BR_r13);
+      if (0 && (frameP&1023) < 40) LOG_D(MAC,"[eNB %d] Frame %d : MIB->BCH  CC_id %d, Received %d bytes (cc->mib->message.schedulingInfoSIB1_BR_r13 %ld)\n",module_idP,frameP,CC_id,mib_sdu_length,cc->mib->message.schedulingInfoSIB1_BR_r13);
 
       dl_config_pdu                                                         = &dl_req->dl_config_pdu_list[dl_req->number_pdu]; 
       memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
@@ -575,10 +574,10 @@ void schedule_mib(module_id_t   module_idP,
       eNB->TX_req[CC_id].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
       eNB->TX_req[CC_id].header.message_id = NFAPI_TX_REQUEST;
 
-      if (frameP%100==0){}
-      LOG_D(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
-          __FUNCTION__, NFAPI_SFNSF2DEC(eNB->TX_req[CC_id].sfn_sf), eNB->TX_req[CC_id].tx_request_body.number_of_pdus,
-          TX_req->pdu_length, TX_req->pdu_index, TX_req->num_segments, TX_req->segments[0].segment_length);
+      if (0 && frameP%100==0)
+        LOG_D(MAC,"%s() TX_REQ: sfn_sf:%u pdus:%u pdu_length:%u pdu_index:%u segments:%u segment_length:%u\n", 
+            __FUNCTION__, NFAPI_SFNSF2DEC(eNB->TX_req[CC_id].sfn_sf), eNB->TX_req[CC_id].tx_request_body.number_of_pdus,
+            TX_req->pdu_length, TX_req->pdu_index, TX_req->num_segments, TX_req->segments[0].segment_length);
     }
   }
 }

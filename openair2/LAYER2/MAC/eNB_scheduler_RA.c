@@ -206,6 +206,7 @@ void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_
 	hi_dci0_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms             = 0;
 	hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value                            = 0;
 	hi_dci0_req_body->number_of_hi++;
+	hi_dci0_req_body->sfnsf = sfnsf_add_subframe(RA_template->Msg3_frame, RA_template->Msg3_subframe, 0);
         hi_dci0_req_body->tl.tag = NFAPI_HI_DCI0_REQUEST_BODY_TAG;
 
         hi_dci0_req->sfn_sf = sfnsf_add_subframe(RA_template->Msg3_frame, RA_template->Msg3_subframe, 4);
@@ -1172,8 +1173,8 @@ void check_Msg4_retransmission(module_id_t module_idP,int CC_idP,frame_t frameP,
   dl_config_pdu = &dl_req_body->dl_config_pdu_list[dl_req_body->number_pdu]; 
   N_RB_DL       = to_prb(cc[CC_idP].mib->message.dl_Bandwidth);
   
-  LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 for harq_pid %d was acknowledged (round %d)\n",
-	module_idP,CC_idP,frameP,subframeP,RA_template->harq_pid,round);
+  LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 for harq_pid %d was acknowledged (round %d) RA_template[Msg4:SFN/SF:%d/%d]\n",
+	module_idP,CC_idP,frameP,subframeP,RA_template->harq_pid,round, RA_template->Msg4_frame, RA_template->Msg4_subframe);
 
   if (round!=8) {
     
