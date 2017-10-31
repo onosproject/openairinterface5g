@@ -246,6 +246,10 @@ uint8_t NPRACH_detection_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, int16_t *Rx_sub_sample
 int16_t* sub_sampling_NB_IoT(int16_t *input_buffer, uint32_t length_input, uint32_t *length_ouput, uint16_t sub_sampling_rate);
 //************************************************************//
 //*****************Vincent part for ULSCH demodulation ******************//
-uint16_t get_UL_sc_start(uint16_t I_sc); 
+uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc); 
+
+void generate_grouphop_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms); 
+
+void init_ul_hopping_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms); 
 //************************************************************//
 #endif

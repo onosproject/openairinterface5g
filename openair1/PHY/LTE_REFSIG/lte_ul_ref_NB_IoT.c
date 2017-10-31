@@ -42,7 +42,7 @@ uint16_t dftsizes[33] = {12,24,36,48,60,72,96,108,120,144,180,192,216,240,288,30
 
 uint16_t ref_primes[33] = {11,23,31,47,59,71,89,107,113,139,179,191,211,239,283,293,317,359,383,431,479,523,571,599,647,719,863,887,953,971,1069,1151,1193};
 
-uint16_t sequence_length[4] = {32,3,6,12}; //the "32" value corresponds to the max gold sequence length 
+uint16_t sequence_length[4] = {2048,3,6,12}; //the "32" value corresponds to the max gold sequence length 
 
 // int16_t *ul_ref_sigs[30][33];
 int16_t *ul_ref_sigs_rx[30][4]; //these contain the sequences in repeated format and quantized to QPSK ifdef IFFT_FPGA
@@ -62,10 +62,6 @@ char ref3[36] = {1,  -3,  -3, 1, -3,  -1, 1, -3,  3, 1, -1,  -1, 1, -1,  1, 1, -
 // 36.211, Section 10.1.4.1.2, Table 10.1.4.1.2-2 
 char ref6[84] = {1,  1, 1, 1, 3, -3, 1, 1, 3, 1, -3,  3, 1, -1,  -1,  -1,  1, -3, 1, -1,  3, -3,  -1,  -1, 1, 3, 1, -1,  -1,  3, 1, -3,  -3,  1, 3, 1, -1,  -1,  1, -3,  -3,  -1, 
                 -1,  -1,  -1,  3, -3,  -1, 3, -1,  1, -3,  -3,  3, 3, -1,  3, -3,  -1,  1, 3, -3,  3, -1,  3, 3, -3,  1, 3, 1, -3,  -1, -3,  1, -3,  3, -3,  -1, -3,  3, -3,  1, 1, -3};
-
-// 36.211, Section 10.1.4.1.2, Table 10.1.4.1.2-3 
-double alpha3[3] = {0 , M_PI*2/3, M_PI*4/3}; 
-double alpha6[4] = {0 , M_PI*2/6, M_PI*4/6, M_PI*8/6}; 
 
 // NB-IoT: 36.211, Section 10.1.4.1.1, Table 10.1.4.1.1-1
 int16_t w_n[256] = {
@@ -157,12 +153,10 @@ void generate_ul_ref_sigs_rx_NB_IoT(void)
 {
 
   unsigned int u,index_Nsc_RU,n; // Vincent: index_Nsc_RU 0,1,2,3 ---> number of sc 1,3,6,12 
-  uint8_t threetnecyclicshift=0, sixtonecyclichift=0;// NB-IoT: to be defined from higher layer, see 36.211 Section 10.1.4.1.2
-  uint8_t npusch_format = 1; // NB-IoT: format 1 (data), or 2: ack 
+  uint8_t npusch_format = 1; // NB-IoT: format 1 (data), or 2: ack. Should be defined in higher layer 
   int16_t  a;
   int16_t   qpsk[2]; 
-  unsigned int x1=1; 
-  unsigned int x2=35; // NB-IoT: defined in 36.211, Section 10.1.4.1.1
+  unsigned int x1, x2=35; // NB-IoT: defined in 36.211, Section 10.1.4.1.1
   int16_t ref_sigs_sc1[2*sequence_length[0]]; 
   uint32_t s; 
 
@@ -173,17 +167,22 @@ void generate_ul_ref_sigs_rx_NB_IoT(void)
 
   for (index_Nsc_RU=0; index_Nsc_RU<4; index_Nsc_RU++) {
     for (u=0; u<u_max[index_Nsc_RU]; u++) { 
-      ul_ref_sigs_rx[u][index_Nsc_RU] = (int16_t*)malloc16(2*sizeof(int16_t)*sequence_length[index_Nsc_RU]); 
+      // ul_ref_sigs_rx[u][index_Nsc_RU] = (int16_t*)malloc16(2*sizeof(int16_t)*sequence_length[index_Nsc_RU]); 
       switch (index_Nsc_RU){
         case 0: // 36.211, Section 10.1.4.1.1
+          ul_ref_sigs_rx[u][index_Nsc_RU] = (int16_t*)malloc16(sizeof(int16_t)*(2*sequence_length[index_Nsc_RU]*12+24)); // *12 is mandatory to fit channel estimation functions
+          // NB-IoT: for same reason, +24 is added in order to fit the possible subcarrier start shift when index_Nsc_RU = 0, 1, 2 --> see ul_sc_start in channel estimation function
           for (n=0; n<sequence_length[index_Nsc_RU]; n++) {
             ref_sigs_sc1[n<<1]    = qpsk[(s>>n)&1]*w_n[16*u+n%16]; 
-            ref_sigs_sc1[1+(n<<1)] = qpsk[(s>>n)&1]*w_n[16*u+n%16];  
+            // ref_sigs_sc1[1+(n<<1)] = qpsk[(s>>n)&1]*w_n[16*u+n%16];
+            ref_sigs_sc1[1+(n<<1)] = ref_sigs_sc1[n<<1];  
           }
           if (npusch_format==1){
             for (n=0; n<sequence_length[index_Nsc_RU]; n++) {
-              ul_ref_sigs_rx[u][index_Nsc_RU][n<<1]    = ref_sigs_sc1[n<<1]; 
-              ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)]= ref_sigs_sc1[1+(n<<1)];  
+              // ul_ref_sigs_rx[u][index_Nsc_RU][n<<1]    = ref_sigs_sc1[n<<1];
+              // ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)]= ref_sigs_sc1[1+(n<<1)];
+              ul_ref_sigs_rx[u][index_Nsc_RU][12*n<<1+24]    = ref_sigs_sc1[n<<1]; // ul_ref_sigs_rx is filled every 12 RE, real part
+              ul_ref_sigs_rx[u][index_Nsc_RU][1+12*(n<<1)+24]= ref_sigs_sc1[1+(n<<1)]; // ul_ref_sigs_rx is filled every 12 RE, imaginary part    
             }
           }
           if (npusch_format==2){// NB-IoT: to be implemented
@@ -191,18 +190,25 @@ void generate_ul_ref_sigs_rx_NB_IoT(void)
           }
           break; 
         case 1: // 36.211, Section 10.1.4.1.2
+          ul_ref_sigs_rx[u][index_Nsc_RU] = (int16_t*)malloc16(sizeof(int16_t)*(2*12+24)); // *12 is mandatory to fit channel estimation functions
           for (n=0; n<sequence_length[index_Nsc_RU]; n++) {
-            ul_ref_sigs_rx[u][index_Nsc_RU][n<<1]    = (int16_t)(floor(32767*cos(M_PI*ref3[(u*3) + n]/4 + alpha3[threetnecyclicshift])));
-            ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)]= (int16_t)(floor(32767*sin(M_PI*ref3[(u*3) + n]/4 + alpha3[threetnecyclicshift])));
+            // ul_ref_sigs_rx[u][index_Nsc_RU][n<<1]    = (int16_t)(floor(32767*cos(M_PI*ref3[(u*3) + n]/4 + alpha3[threetnecyclicshift])));
+            // ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)]= (int16_t)(floor(32767*sin(M_PI*ref3[(u*3) + n]/4 + alpha3[threetnecyclicshift]))); 
+            ul_ref_sigs_rx[u][index_Nsc_RU][n<<1+24]    = (int16_t)(floor(32767*cos(M_PI*ref3[(u*3) + n]/4 )));
+            ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)+24]= (int16_t)(floor(32767*sin(M_PI*ref3[(u*3) + n]/4 )));
           }
           break; 
         case 2:
+          ul_ref_sigs_rx[u][index_Nsc_RU] = (int16_t*)malloc16(sizeof(int16_t)*(2*12+24)); // *12 is mandatory to fit channel estimation functions
           for (n=0; n<sequence_length[index_Nsc_RU]; n++) {
-            ul_ref_sigs_rx[u][index_Nsc_RU][n<<1]    = (int16_t)(floor(32767*cos(M_PI*ref6[(u*6) + n]/4 + alpha6[sixtonecyclichift])));
-            ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)]= (int16_t)(floor(32767*sin(M_PI*ref6[(u*6) + n]/4 + alpha6[sixtonecyclichift])));
+            // ul_ref_sigs_rx[u][index_Nsc_RU][n<<1]    = (int16_t)(floor(32767*cos(M_PI*ref6[(u*6) + n]/4 + alpha6[sixtonecyclichift])));
+            // ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)]= (int16_t)(floor(32767*sin(M_PI*ref6[(u*6) + n]/4 + alpha6[sixtonecyclichift])));
+            ul_ref_sigs_rx[u][index_Nsc_RU][n<<1+24]    = (int16_t)(floor(32767*cos(M_PI*ref6[(u*6) + n]/4 )));
+            ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)+24]= (int16_t)(floor(32767*sin(M_PI*ref6[(u*6) + n]/4 )));
           }
           break; 
         case 3:
+          ul_ref_sigs_rx[u][index_Nsc_RU] = (int16_t*)malloc16(sizeof(int16_t)*(2*12+24)); // *12 is mandatory to fit channel estimation functions
           for (n=0; n<sequence_length[index_Nsc_RU]; n++) {
             ul_ref_sigs_rx[u][index_Nsc_RU][n<<1]    = (int16_t)(floor(32767*cos(M_PI*ref12[(u*12) + n]/4)));
             ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)]= (int16_t)(floor(32767*sin(M_PI*ref12[(u*12) + n]/4)));

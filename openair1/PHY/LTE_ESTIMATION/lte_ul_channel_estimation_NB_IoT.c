@@ -22,6 +22,7 @@
 #include "PHY/defs_NB_IoT.h"
 #include "PHY/extern_NB_IoT.h"
 //#include "PHY/sse_intrin.h"
+#include <math.h>
 
 #include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
 #include "PHY/LTE_TRANSPORT/extern_NB_IoT.h"
@@ -87,7 +88,7 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
   uint8_t cyclic_shift;
 
   uint32_t alpha_ind;
-  uint32_t u=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.grouphop[Ns+(subframe<<1)];
+  uint32_t u;//=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.grouphop[Ns+(subframe<<1)];
   //uint32_t v=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.seqhop[Ns+(subframe<<1)];
   int32_t tmp_estimates[N_rb_alloc*12] __attribute__((aligned(16)));
 
@@ -98,7 +99,20 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
 
   int16_t alpha_re[12] = {32767, 28377, 16383,     0,-16384,  -28378,-32768,-28378,-16384,    -1, 16383, 28377};
-  int16_t alpha_im[12] = {0,     16383, 28377, 32767, 28377,   16383,     0,-16384,-28378,-32768,-28378,-16384};
+  int16_t alpha_im[12] = {0,     16383, 28377, 32767, 28377,   16383,     0,-16384,-28378,-32768,-28378,-16384}; 
+
+  ////// NB-IoT specific //////
+
+  uint32_t I_sc = eNB->ulsch[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
+  uint16_t ul_sc_start; // subcarrier start index into UL RB 
+
+  // 36.211, Section 10.1.4.1.2, Table 10.1.4.1.2-3 
+  double alpha3[3] = {0 , M_PI*2/3, M_PI*4/3}; 
+  double alpha6[4] = {0 , M_PI*2/6, M_PI*4/6, M_PI*8/6}; 
+  uint8_t threetnecyclicshift=0, sixtonecyclichift=0; // NB-IoT: to be defined from higher layer, see 36.211 Section 10.1.4.1.2
+  uint16_t Nsc_RU; // Vincent: number of sc 1,3,6,12 
+  unsigned int index_Nsc_RU; // Vincent: index_Nsc_RU 0,1,2,3 ---> number of sc 1,3,6,12 
+
 
  /* 
       int32_t *in_fft_ptr_0 = (int32_t*)0,*in_fft_ptr_1 = (int32_t*)0,
@@ -145,18 +159,21 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 #ifdef USER_MODE
 
   if (Ns==0)
-    write_output("drs_seq0.m","drsseq0",ul_ref_sigs_rx[u][v][Msc_RS_idx],2*Msc_RS,2,1);
+    write_output("drs_seq0.m","drsseq0",ul_ref_sigs_rx[u][Msc_RS_idx],2*Msc_RS,2,1);
   else
-    write_output("drs_seq1.m","drsseq1",ul_ref_sigs_rx[u][v][Msc_RS_idx],2*Msc_RS,2,1);
+    write_output("drs_seq1.m","drsseq1",ul_ref_sigs_rx[u][Msc_RS_idx],2*Msc_RS,2,1);
 
 #endif
 #endif
 
   rx_power_correction = 1;
+  ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
+  u=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.grouphop[Ns+(subframe<<1)][index_Nsc_RU]; // Vincent: may be adapted for Nsc_RU, see 36.211, Section 10.1.4.1.3
 
   if (l == (3 - frame_parms->Ncp)) { 
 
-    symbol_offset = frame_parms->N_RB_UL*12*(l+((7-frame_parms->Ncp)*(Ns&1)));
+    // symbol_offset = frame_parms->N_RB_UL*12*(l+((7-frame_parms->Ncp)*(Ns&1))); 
+    symbol_offset = frame_parms->N_RB_UL*12*(l+(7*(Ns&1)));
 
     for (aa=0; aa<nb_antennas_rx; aa++) {
       //           msg("Componentwise prod aa %d, symbol_offset %d,ul_ch_estimates %p,ul_ch_estimates[aa] %p,ul_ref_sigs_rx[0][0][Msc_RS_idx] %p\n",aa,symbol_offset,ul_ch_estimates,ul_ch_estimates[aa],ul_ref_sigs_rx[0][0][Msc_RS_idx]);
@@ -164,11 +181,19 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 #if defined(__x86_64__) || defined(__i386__)
       rxdataF128 = (__m128i *)&rxdataF_ext[aa][symbol_offset];
       ul_ch128   = (__m128i *)&ul_ch_estimates[aa][symbol_offset];
-      ul_ref128  = (__m128i *)ul_ref_sigs_rx[u][Msc_RS_idx];
+      if (index_Nsc_RU){
+        ul_ref128  = (__m128i *)ul_ref_sigs_rx[u][index_Nsc_RU][24-(ul_sc_start<<1)]; // pilot values are the same every slots
+        }else{
+        ul_ref128  = (__m128i *)ul_ref_sigs_rx[u][index_Nsc_RU][24 + 12*(subframe<<1)-(ul_sc_start<<1)]; // pilot values depends on the slots
+      }
 #elif defined(__arm__)
       rxdataF128 = (int16x8_t *)&rxdataF_ext[aa][symbol_offset];
-      ul_ch128   = (int16x8_t *)&ul_ch_estimates[aa][symbol_offset];
-      ul_ref128  = (int16x8_t *)ul_ref_sigs_rx[u][Msc_RS_idx];
+      ul_ch128   = (int16x8_t *)&ul_ch_estimates[aa][symbol_offset]; 
+      if (index_Nsc_RU){
+        ul_ref128  = (int16x8_t *)ul_ref_sigs_rx[u][index_Nsc_RU][24-(ul_sc_start<<1)]; 
+      }else{
+        ul_ref128  = (int16x8_t *)ul_ref_sigs_rx[u][index_Nsc_RU][24 + 12*(subframe<<1)-(ul_sc_start<<1)]; 
+      }
 #endif
 
       for (i=0; i<Msc_RS/12; i++) {
@@ -268,6 +293,7 @@ int32_t lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
       alpha_ind = 0;
 
       if((cyclic_shift != 0) && Msc_RS != 12) {
+      // if(Nsc_RU != 1 && Nsc_RU != 12) {
         // Compensating for the phase shift introduced at the transmitter
         // In NB-IoT, phase alpha is zero when 12 subcarriers are allocated
 #ifdef DEBUG_CH

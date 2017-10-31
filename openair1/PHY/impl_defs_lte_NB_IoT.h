@@ -356,8 +356,8 @@ typedef struct {
   uint8_t cyclicShift;
   /// nPRS for cyclic shift of DRS \note not part of offical UL-ReferenceSignalsPUSCH ASN1 specification.
   uint8_t nPRS[20];
-  /// group hopping sequence for DRS \note not part of offical UL-ReferenceSignalsPUSCH ASN1 specification.
-  uint8_t grouphop[20];
+  /// group hopping sequence for DMRS, 36.211, Section 10.1.4.1.3. Second index corresponds to the four possible subcarrier configurations
+  uint8_t grouphop[20][4];
   /// sequence hopping sequence for DRS \note not part of offical UL-ReferenceSignalsPUSCH ASN1 specification.
   uint8_t seqhop[20];
 } UL_REFERENCE_SIGNALS_NPUSCH_t;

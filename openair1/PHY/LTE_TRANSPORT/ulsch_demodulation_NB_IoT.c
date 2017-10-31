@@ -549,7 +549,7 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
                                      // uint32_t first_rb, 
                                      uint32_t UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
                                      uint8_t N_sc_RU, // number of subcarriers in UL 
-                                     uint32_t I_sc, // subcarrier indication field
+                                     uint32_t I_sc, // NB_IoT: subcarrier indication field: must be defined in higher layer
                                      uint32_t nb_rb,
                                      uint8_t l,
                                      uint8_t Ns,
@@ -563,7 +563,7 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
   uint8_t   symbol = l+((7-frame_parms->Ncp)*(Ns&1)); ///symbol within sub-frame 
   uint16_t ul_sc_start; // subcarrier start index into UL RB 
 
-  ul_sc_start = get_UL_sc_start(I_sc); 
+  ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); 
 
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
 
