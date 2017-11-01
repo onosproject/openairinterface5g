@@ -75,6 +75,7 @@ add_ue_dlsch_info(
 )
 //------------------------------------------------------------------------------
 {
+  //LOG_D(MAC, "%s(module_idP:%d, CC_id:%d, UE_id:%d, subframeP:%d, status:%d) serving_num:%d rnti:%x\n", __FUNCTION__, module_idP, CC_id, UE_id, subframeP, status, eNB_dlsch_info[module_idP][CC_id][UE_id].serving_num, UE_RNTI(module_idP,UE_id));
 
   eNB_dlsch_info[module_idP][CC_id][UE_id].rnti             = UE_RNTI(module_idP,UE_id);
   //  eNB_dlsch_info[module_idP][CC_id][ue_mod_idP].weight           = weight;
@@ -542,6 +543,8 @@ schedule_ue_spec(
 
     dl_req        = &eNB->DL_req[CC_id].dl_config_request_body;
 
+    //LOG_D(MAC,"%s() BEFORE mbsfn_flag[CC_id]:%d dl_config dci:%d pdu:%d TX_REQ[pdus:%d]\n", __FUNCTION__, mbsfn_flag[CC_id], dl_req->number_dci, dl_req->number_pdu, eNB->TX_req[CC_id].tx_request_body.number_of_pdus);
+
     if (mbsfn_flag[CC_id]>0)
       continue;
 
@@ -551,6 +554,7 @@ schedule_ue_spec(
       eNB_UE_stats = &UE_list->eNB_UE_stats[CC_id][UE_id];
       ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 
+      //LOG_D(MAC,"%s() rnti:%x, eNB_UE_stats:%p, ue_sched_ctl:%p tmode:%d\n", __FUNCTION__, rnti, eNB_UE_stats, ue_sched_ctl, get_tmode(module_idP,CC_id,UE_id));
 
       if (rnti==NOT_A_RNTI) {
         LOG_D(MAC,"Cannot find rnti for UE_id %d (num_UEs %d)\n",UE_id,UE_list->num_UEs);
@@ -582,6 +586,7 @@ schedule_ue_spec(
         }
       } /* if (continue_flag != 1 */
 
+    //LOG_D(MAC,"%s() BEFORE mbsfn_flag[CC_id]:%d dl_config dci:%d pdu:%d TX_REQ[pdus:%d]\n", __FUNCTION__, mbsfn_flag[CC_id], dl_req->number_dci, dl_req->number_pdu, eNB->TX_req[CC_id].tx_request_body.number_of_pdus);
       if ((ue_sched_ctl->pre_nb_available_rbs[CC_id] == 0) ||  // no RBs allocated 
 	  CCE_allocation_infeasible(module_idP,CC_id,1,subframeP,aggregation,rnti)
 	  ) {
@@ -599,14 +604,18 @@ schedule_ue_spec(
         set_ul_DAI(module_idP,UE_id,CC_id,frameP,subframeP);
       }
 
+    //LOG_D(MAC,"%s() BEFORE mbsfn_flag[CC_id]:%d continue_flag:%d dl_config dci:%d pdu:%d TX_REQ[pdus:%d]\n", __FUNCTION__, mbsfn_flag[CC_id], continue_flag, dl_req->number_dci, dl_req->number_pdu, eNB->TX_req[CC_id].tx_request_body.number_of_pdus);
       if (continue_flag == 1 ) {
+        //LOG_D(MAC,"[eNB %d] Frame %d : UE %d on CC_id %d: continue flag - add_ue_dlsch_info\n", module_idP, frameP, UE_id, CC_id);
         add_ue_dlsch_info(module_idP,
                           CC_id,
                           UE_id,
                           subframeP,
                           S_DL_NONE);
+    //LOG_D(MAC,"%s() BEFORE mbsfn_flag[CC_id]:%d continue_flag:%d dl_config dci:%d pdu:%d TX_REQ[pdus:%d]\n", __FUNCTION__, mbsfn_flag[CC_id], continue_flag, dl_req->number_dci, dl_req->number_pdu, eNB->TX_req[CC_id].tx_request_body.number_of_pdus);
         continue;
       }
+    //LOG_D(MAC,"%s() BEFORE mbsfn_flag[CC_id]:%d continue_flag:%d dl_config dci:%d pdu:%d TX_REQ[pdus:%d]\n", __FUNCTION__, mbsfn_flag[CC_id], continue_flag, dl_req->number_dci, dl_req->number_pdu, eNB->TX_req[CC_id].tx_request_body.number_of_pdus);
 
 #warning RK->CR This old API call has to be revisited for FAPI, or logic must be changed
 #if 0
@@ -715,6 +724,7 @@ schedule_ue_spec(
           }
 	  */
 
+    LOG_D(MAC,"%s() BEFORE dl_config dci:%d pdu:%d TX_REQ[pdus:%d]\n", __FUNCTION__, dl_req->number_dci, dl_req->number_pdu, eNB->TX_req[CC_id].tx_request_body.number_of_pdus);
           switch (get_tmode(module_idP,CC_id,UE_id)) {
           case 1:
           case 2:
@@ -787,7 +797,9 @@ schedule_ue_spec(
 	      LOG_D(MAC,"Filled NFAPI configuration for DCI/DLSCH %d, retransmission round %d\n",eNB->pdu_index[CC_id],round);
              
 
+    LOG_D(MAC,"%s() BEFORE dl_config dci:%d pdu:%d TX_REQ[pdus:%d]\n", __FUNCTION__, dl_req->number_dci, dl_req->number_pdu, eNB->TX_req[CC_id].tx_request_body.number_of_pdus);
 	      program_dlsch_acknak(module_idP,CC_id,UE_id,frameP,subframeP,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.cce_idx);
+    LOG_D(MAC,"%s() BEFORE dl_config dci:%d pdu:%d TX_REQ[pdus:%d]\n", __FUNCTION__, dl_req->number_dci, dl_req->number_pdu, eNB->TX_req[CC_id].tx_request_body.number_of_pdus);
 	      // No TX request for retransmission (check if null request for FAPI)
 	    }
 	    else {
@@ -949,7 +961,7 @@ schedule_ue_spec(
 	  
 	  header_len_dtch+=3; 
 	  header_len_dtch_last=3;
-	  LOG_D(MAC,"[eNB %d], Frame %d, DTCH%d->DLSCH, Checking RLC status (tbs %d, len %d)\n",
+	  if (0)LOG_D(MAC,"[eNB %d], Frame %d, DTCH%d->DLSCH, Checking RLC status (tbs %d, len %d)\n",
 		module_idP,frameP,lcid,TBS,
 		TBS-ta_len-header_len_dcch-sdu_length_total-header_len_dtch);
 	  
@@ -1223,6 +1235,8 @@ schedule_ue_spec(
 	    tpc = 1; //0
 	  }
 
+    LOG_D(MAC,"%s() BEFORE 2 dl_config dci:%d pdu:%d\n", __FUNCTION__, dl_req->number_dci, dl_req->number_pdu);
+
 	  dl_config_pdu                                                         = &dl_req->dl_config_pdu_list[dl_req->number_pdu]; 
 	  memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
 	  dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE; 
@@ -1300,12 +1314,14 @@ schedule_ue_spec(
 				    0, //number of PRBs treated as one subband, not used here
 				    0 // number of beamforming vectors, not used here
 				    );  
+    LOG_D(MAC,"%s() BEFORE dl_config dci:%d pdu:%d TX_REQ[pdus:%d]\n", __FUNCTION__, dl_req->number_dci, dl_req->number_pdu, eNB->TX_req[CC_id].tx_request_body.number_of_pdus);
 	    eNB->TX_req[CC_id].sfn_sf = fill_nfapi_tx_req(&eNB->TX_req[CC_id].tx_request_body,
 							  (frameP*10)+subframeP,
 							  TBS,
 							  eNB->pdu_index[CC_id],
 							  eNB->UE_list.DLSCH_pdu[CC_id][0][(unsigned char)UE_id].payload[0]);
 	    
+    LOG_D(MAC,"%s() BEFORE dl_config dci:%d pdu:%d TX_REQ[pdus:%d]\n", __FUNCTION__, dl_req->number_dci, dl_req->number_pdu, eNB->TX_req[CC_id].tx_request_body.number_of_pdus);
             LOG_D(MAC,"SFN/SF:%d Filled NFAPI configuration for DCI/DLSCH/TXREQ %d, new SDU\n",NFAPI_SFNSF2DEC(eNB->TX_req[CC_id].sfn_sf), eNB->pdu_index[CC_id]);
 
 	    eNB->pdu_index[CC_id]++;
@@ -1325,10 +1341,11 @@ schedule_ue_spec(
         set_ul_DAI(module_idP,UE_id,CC_id,frameP,subframeP);
       }
 
-    } // UE_id loop
-  }  // CC_id loop
+    } // round != 8
+  }  // UE_id loop
 
 
+    //LOG_D(MAC,"%s() AFTER dl_config dci:%d pdu:%d TX_REQ[pdus:%d]\n", __FUNCTION__, dl_req->number_dci, dl_req->number_pdu, eNB->TX_req[0].tx_request_body.number_of_pdus);
      
   fill_DLSCH_dci(module_idP,frameP,subframeP,mbsfn_flag);
 

@@ -560,7 +560,7 @@ void schedule_mib(module_id_t   module_idP,
       dl_config_request->header.message_id = NFAPI_DL_CONFIG_REQUEST;
       dl_config_request->sfn_sf = sfn_sf;
 
-      LOG_E(MAC,"eNB->DL_req[0].number_pdu %d (%p) sfn_sf:%d\n", dl_req->number_pdu,&dl_req->number_pdu, NFAPI_SFNSF2DEC(dl_config_request->sfn_sf));
+      //LOG_D(MAC,"eNB->DL_req[0].number_pdu %d (%p) sfn_sf:%d\n", dl_req->number_pdu,&dl_req->number_pdu, NFAPI_SFNSF2DEC(dl_config_request->sfn_sf));
       // DL request
 
       TX_req                                                                = &eNB->TX_req[CC_id].tx_request_body.tx_pdu_list[eNB->TX_req[CC_id].tx_request_body.number_of_pdus]; 
@@ -694,6 +694,7 @@ schedule_SI(
 
 
 
+        //LOG_D(MAC,"%s() Before ADDING SI dl_req->number_pdu:%d dl_req->number_dci:%d eNB->TX_req[CC_id].tx_request_body.number_of_pdus:%d\n", __FUNCTION__, dl_req->number_pdu, dl_req->number_dci, eNB->TX_req[CC_id].tx_request_body.number_of_pdus);
 
 
 	dl_config_pdu                                                         = &dl_req->dl_config_pdu_list[dl_req->number_pdu]; 

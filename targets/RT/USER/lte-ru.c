@@ -1494,14 +1494,12 @@ static void* ru_thread( void* param ) {
     if (ru->fh_south_in) ru->fh_south_in(ru,&frame,&subframe);
     else AssertFatal(1==0, "No fronthaul interface at south port");
 
-    LOG_D(PHY,"AFTER fh_south_in - SFN/SF:%d/%d RU->proc[RX:%d/%d TX:%d/%d] RC.eNB[0][0]:[RX:%d/%d TX(SFN):%d] eNB:%p RU:eNB:%p proc:%p ru->proc:%p\n",
+    LOG_D(PHY,"AFTER fh_south_in - SFN/SF:%d%d RU->proc[RX:%d%d TX:%d%d] RC.eNB[0][0]:[RX:%d%d TX(SFN):%d]\n",
         frame,subframe,
         proc->frame_rx,proc->subframe_rx,
         proc->frame_tx,proc->subframe_tx,
         RC.eNB[0][0]->proc.frame_rx,RC.eNB[0][0]->proc.subframe_rx,
-        RC.eNB[0][0]->proc.frame_tx,
-        RC.eNB[0][0], ru->eNB_list[0],
-        proc,&ru->proc);
+        RC.eNB[0][0]->proc.frame_tx);
 
     if (nfapi_mode == 1) // PNF
     {

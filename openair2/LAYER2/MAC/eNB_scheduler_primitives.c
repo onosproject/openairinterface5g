@@ -1315,6 +1315,8 @@ void fill_nfapi_dlsch_config(eNB_MAC_INST *eNB,
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = num_bf_vector;
   dl_req->number_pdu++;
   dl_req->tl.tag=NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
+
+  LOG_D(MAC,"Filled DL_CONFIG_PDU - DLSCH - dl_req->number_pdu:%d\n", dl_req->number_pdu);
 }
 
 uint16_t fill_nfapi_tx_req(nfapi_tx_request_body_t *tx_req_body,uint16_t absSF,uint16_t pdu_length, uint16_t pdu_index, uint8_t *pdu)
@@ -1358,31 +1360,31 @@ void fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t  *ul_con
 {
   memset((void*)ul_config_pdu,0,sizeof(nfapi_ul_config_request_pdu_t));
 
-  ul_config_pdu->pdu_type                                                        = NFAPI_UL_CONFIG_ULSCH_PDU_TYPE;
-  ul_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_pdu));
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.tl.tag                                 = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL8_TAG;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.handle                                 = handle;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti                                   = rnti;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.resource_block_start                   = resource_block_start;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks              = number_of_resource_blocks;
-  if      (mcs<11) ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 2;
-  else if (mcs<21) ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 4;
-  else             ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 6;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.cyclic_shift_2_for_drms                = cyclic_shift_2_for_drms;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_enabled_flag         = frequency_hopping_enabled_flag;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_bits                 = frequency_hopping_bits;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.new_data_indication                    = new_data_indication;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.redundancy_version                     = redundancy_version;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.harq_process_number                    = harq_process_number;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.ul_tx_mode                             = ul_tx_mode;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.current_tx_nb                          = current_tx_nb;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.n_srs                                  = n_srs;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                                   = size;
-
   if (cqi_req == 1) {
+
+    ul_config_pdu->pdu_type                                                                         = NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE;
+    ul_config_pdu->pdu_size                                                                         = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_cqi_ri_pdu));
+
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.tl.tag                                 = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL8_TAG;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.handle                                 = handle;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti                                   = rnti;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.resource_block_start                   = resource_block_start;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks              = number_of_resource_blocks;
+    if      (mcs<11) ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 2;
+    else if (mcs<21) ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 4;
+    else             ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 6;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.cyclic_shift_2_for_drms                = cyclic_shift_2_for_drms;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_enabled_flag         = frequency_hopping_enabled_flag;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_bits                 = frequency_hopping_bits;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.new_data_indication                    = new_data_indication;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.redundancy_version                     = redundancy_version;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.harq_process_number                    = harq_process_number;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.ul_tx_mode                             = ul_tx_mode;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.current_tx_nb                          = current_tx_nb;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.n_srs                                  = n_srs;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.size                                   = size;
+
     // Add CQI portion
-    ul_config_pdu->pdu_type                                                           = NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE;
-    ul_config_pdu->pdu_size                                                           = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_cqi_ri_pdu));
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.tl.tag                  = NFAPI_UL_CONFIG_REQUEST_CQI_RI_INFORMATION_REL9_TAG;
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.report_type             = 1;
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.aperiodic_cqi_pmi_ri_report.number_of_cc = 1;
@@ -1410,18 +1412,43 @@ void fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t  *ul_con
 
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.delta_offset_cqi        = physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_CQI_Index;
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.delta_offset_ri         = physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_RI_Index;
+
+    LOG_D(MAC,"%s() ri_size:%d\n",__FUNCTION__, ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.aperiodic_cqi_pmi_ri_report.cc[0].ri_size);
+  }
+  else
+  {
+    ul_config_pdu->pdu_type                                                        = NFAPI_UL_CONFIG_ULSCH_PDU_TYPE;
+    ul_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_pdu));
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.tl.tag                                 = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL8_TAG;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.handle                                 = handle;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti                                   = rnti;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.resource_block_start                   = resource_block_start;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks              = number_of_resource_blocks;
+    if      (mcs<11) ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 2;
+    else if (mcs<21) ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 4;
+    else             ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 6;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.cyclic_shift_2_for_drms                = cyclic_shift_2_for_drms;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_enabled_flag         = frequency_hopping_enabled_flag;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_bits                 = frequency_hopping_bits;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.new_data_indication                    = new_data_indication;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.redundancy_version                     = redundancy_version;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.harq_process_number                    = harq_process_number;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.ul_tx_mode                             = ul_tx_mode;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.current_tx_nb                          = current_tx_nb;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.n_srs                                  = n_srs;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                                   = size;
   }
 }
 
 #ifdef Rel14
 void fill_nfapi_ulsch_config_request_emtc(nfapi_ul_config_request_pdu_t  *ul_config_pdu,
-                                          uint8_t ue_type,
-                                          uint16_t total_number_of_repetitions,
-                                          uint16_t repetition_number,
-                                          uint16_t initial_transmission_sf_io)
+    uint8_t ue_type,
+    uint16_t total_number_of_repetitions,
+    uint16_t repetition_number,
+    uint16_t initial_transmission_sf_io)
 {
   // Re13 fields
-  
+
   ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.tl.tag                                = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL13_TAG;
   ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.ue_type                               = ue_type;
   ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.total_number_of_repetitions           = total_number_of_repetitions;
@@ -1571,8 +1598,8 @@ int find_UE_id(module_id_t mod_idP, rnti_t rntiP)
 
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
 
-    LOG_D(PHY,"%s(mod_idP:%d, rntiP:%04x) UE_id:%d active:%d UE_PCCID(mod_idP,UE_id):%d UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti:%04x\n", 
-        __FUNCTION__, mod_idP, rntiP, UE_id, UE_list->active[UE_id], UE_PCCID(mod_idP,UE_id), UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti);
+    //LOG_D(PHY,"%s(mod_idP:%d, rntiP:%04x) UE_id:%d active:%d UE_PCCID(mod_idP,UE_id):%d UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti:%04x\n", 
+        //__FUNCTION__, mod_idP, rntiP, UE_id, UE_list->active[UE_id], UE_PCCID(mod_idP,UE_id), UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti);
 
     if (UE_list->active[UE_id] != TRUE) continue;
     if (UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti==rntiP) {
@@ -1593,10 +1620,7 @@ int find_RA_id(module_id_t mod_idP, int CC_idP, rnti_t rntiP)
   RA_TEMPLATE *RA_template = (RA_TEMPLATE *)&RC.mac[mod_idP]->common_channels[CC_idP].RA_template[0];
 
   for (RA_id = 0; RA_id < NB_RA_PROC_MAX; RA_id++) {
-    LOG_D(MAC,"Checking RA_id %d for %x : RA_active %d, wait_ack_Msg4 %d\n",
-          RA_id,rntiP,
-          RA_template[RA_id].RA_active,
-          RA_template[RA_id].wait_ack_Msg4);
+    //LOG_D(MAC,"Checking RA_id %d for %x : RA_active %d, wait_ack_Msg4 %d\n", RA_id,rntiP, RA_template[RA_id].RA_active, RA_template[RA_id].wait_ack_Msg4);
 
     if (RA_template[RA_id].RA_active==TRUE &&
         RA_template[RA_id].wait_ack_Msg4 == 0 &&

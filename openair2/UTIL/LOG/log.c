@@ -512,7 +512,7 @@ void nfapi_log(char *file, char *func, int line, int comp, int level, const char
 }
 
 //log record: add to a list
-void logRecord(const char *file, const char *func, int line,  int comp,
+void logRecord(const char *file, const char *func, int line, pthread_t thread_id, int comp,
                int level, const char *format, ...)
 {
   va_list    args;
@@ -527,6 +527,7 @@ void logRecord(const char *file, const char *func, int line,  int comp,
   log_params.file = strdup(file);
   log_params.func = strdup(func);
   log_params.line = line;
+  log_params.thread_id = thread_id;
   log_params.comp = comp;
   log_params.level = level;
   log_params.format = format;
@@ -565,7 +566,7 @@ void logRecord(const char *file, const char *func, int line,  int comp,
 }
 
 void logRecord_thread_safe(const char *file, const char *func,
-                           int line,  int comp, int level,
+                           int line, pthread_t thread_id, int comp, int level, 
                            int len, const char *params_string)
 {
   log_component_t *c;
@@ -616,6 +617,8 @@ void logRecord_thread_safe(const char *file, const char *func,
       total_len += snprintf(&log_buffer[total_len], MAX_LOG_TOTAL - total_len, "[%s] ",
                             func);
     }
+
+    total_len += snprintf(&log_buffer[total_len], MAX_LOG_TOTAL - total_len, "[%08lx] ", thread_id);
 
     if ((g_log->flag & FLAG_FILE_LINE) || (c->flag & FLAG_FILE_LINE) )  {
       total_len += snprintf(&log_buffer[total_len], MAX_LOG_TOTAL - total_len, "[%s:%d]",
@@ -716,6 +719,7 @@ void *log_thread_function(void *list)
     logRecord_thread_safe(log_params.file,
                           log_params.func,
                           log_params.line,
+                          log_params.thread_id,
                           log_params.comp,
                           log_params.level,
                           log_params.len,
@@ -1004,8 +1008,8 @@ void logRecord_mt(const char *file, const char *func, int line, int comp,
 #endif /* #if 0 */
 
 //log record, format, and print:  executed in the main thread (mt)
-void logRecord_mt(const char *file, const char *func, int line, int comp,
-                  int level, const char *format, ...)
+void logRecord_mt(const char *file, const char *func, int line, 
+    pthread_t thread_id, int comp, int level, const char *format, ...)
 {
   int len = 0;
   va_list args;
@@ -1100,13 +1104,16 @@ void logRecord_mt(const char *file, const char *func, int line, int comp,
       if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     }
 
+    len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%08lx]", thread_id);
+    if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+
     len += vsnprintf(&log_buffer[len], MAX_LOG_TOTAL - len, format, args);
     if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     log_end = log_buffer + len;
 
     if ( (g_log->flag & FLAG_COLOR) || (c->flag & FLAG_COLOR) ) {
       len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "%s",
-                      log_level_highlight_end[level]);
+          log_level_highlight_end[level]);
       if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     }
   }
@@ -1125,7 +1132,7 @@ void logRecord_mt(const char *file, const char *func, int line, int comp,
   }
 
 #else
-    fwrite(log_buffer, len, 1, stdout);
+  fwrite(log_buffer, len, 1, stdout);
 #endif
 
 #ifndef RTAI

@@ -784,7 +784,14 @@ void srs_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 void fill_sr_indication(PHY_VARS_eNB *eNB,uint16_t rnti,int frame,int subframe,uint32_t stat) {
   
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
-  nfapi_sr_indication_pdu_t *pdu =   &eNB->UL_INFO.sr_ind.sr_pdu_list[eNB->UL_INFO.sr_ind.number_of_srs];
+  nfapi_sr_indication_t       *sr_ind =         &eNB->UL_INFO.sr_ind;
+  nfapi_sr_indication_body_t  *sr_ind_body =    &sr_ind->sr_indication_body;
+  nfapi_sr_indication_pdu_t *pdu =   &sr_ind_body->sr_pdu_list[sr_ind_body->number_of_srs];
+
+  sr_ind.sfn_sf = frame<<4|subframe;
+  sr_ind.header.message_id = NFAPI_RX_SR_INDICATION;
+
+  sr_ind_body->tl.tag = NFAPI_SR_INDICATION_BODY_TAG;
 
   pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
@@ -794,12 +801,14 @@ void fill_sr_indication(PHY_VARS_eNB *eNB,uint16_t rnti,int frame,int subframe,u
   int SNRtimes10 = dB_fixed_times10(stat) - 200;//(10*eNB->measurements.n0_power_dB[0]);
 
 
+  pdu->ul_cqi_information.tl.tag = NFAPI_UL_CQI_INFORMATION_TAG;
+
   if      (SNRtimes10 < -640) pdu->ul_cqi_information.ul_cqi=0;
   else if (SNRtimes10 >  635) pdu->ul_cqi_information.ul_cqi=255;
   else                        pdu->ul_cqi_information.ul_cqi=(640+SNRtimes10)/5;
   pdu->ul_cqi_information.channel = 0;
 
-  eNB->UL_INFO.sr_ind.number_of_srs++;
+  sr_ind_body->number_of_srs++;
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 }
 

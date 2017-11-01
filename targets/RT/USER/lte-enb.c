@@ -175,7 +175,14 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
     //LOG_D(PHY, "oai_subframe_ind(frame:%u, subframe:%d) - NOT CALLED ********\n", frame, subframe);
     oai_subframe_ind(frame, subframe);
 
-    LOG_D(PHY, "UL_info[rx_ind:%d number_of_harqs:%d number_of_crcs:%d number_of_cqis:%d number_of_preambles:%d]\n", eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, eNB->UL_INFO.cqi_ind.number_of_cqis, eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles);
+    LOG_D(PHY, "UL_info[rx_ind:%d:%d number_of_harqs:%d:%d number_of_crcs:%d:%d number_of_preambles:%d:%d number_of_cqis:%d] RX:%d%d TX:%d%d num_pdcch_symbols:%d\n", 
+      NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf),   eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, 
+      NFAPI_SFNSF2DEC(eNB->UL_INFO.harq_ind.sfn_sf), eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs, 
+      NFAPI_SFNSF2DEC(eNB->UL_INFO.crc_ind.sfn_sf),  eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, 
+      NFAPI_SFNSF2DEC(eNB->UL_INFO.rach_ind.sfn_sf), eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles,
+      eNB->UL_INFO.cqi_ind.number_of_cqis, 
+      proc->frame_rx, proc->subframe_rx, 
+      proc->frame_tx, proc->subframe_tx, eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols);
   }
 
   if (nfapi_mode == 1 && eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols == 0)
@@ -198,27 +205,6 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
     wakeup_prach_eNB_br(eNB,NULL,proc->frame_rx,proc->subframe_rx);
     //LOG_D(PHY,"%s:%s() %u/%u proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
 #endif
-  }
-
-  LOG_D(PHY, "RX_IND:SFN/SF:%d proc:SFN/SF:%d/%d [rx_ind:num_pdus:%d] TX:%d/%d eNB->pdcch_vars[subframe&1].num_pdcch_symbols:%d\n", NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf), proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, proc->frame_tx, proc->subframe_tx, eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols);
-
-  if (eNB->UL_INFO.rx_ind.sfn_sf == (proc->frame_rx<<4|proc->subframe_rx) && eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus>0)
-  {
-    // Fix me here, these should be locked
-    for (int i=0; i<eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus; i++)
-    {
-      LOG_E(PHY, "SFN/SF(RX):%d/%d eNB->UL_INFO.rx_ind.number_of_pdus:%d NOT ZEROING!\n\n\n\n\n", proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus);
-      //eNB->UL_INFO.rx_ind[proc->subframe_rx&1].number_of_pdus  = 0;
-    }
-  }
-
-  if (eNB->UL_INFO.crc_ind.sfn_sf == (proc->frame_rx<<4|proc->subframe_rx))
-  {
-    for (int i=0; i<eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs; i++)
-    {
-      LOG_E(PHY, "SFN/SF(RX):%d/%d eNB->UL_INFO.crc_ind.number_of_crcs:%d NOT ZEROING!\n\n\n\n\n", proc->frame_rx, proc->subframe_rx, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs);
-      //eNB->UL_INFO.crc_ind.number_of_crcs = 0;
-    }
   }
 
   // UE-specific RX processing for subframe n
@@ -250,6 +236,8 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
     phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
 
   stop_meas( &softmodem_stats_rxtx_sf );
+
+  LOG_D(PHY,"%s() Exit proc[rx:%d%d tx:%d%d]\n\n", __FUNCTION__, proc->frame_rx, proc->subframe_rx, proc->frame_tx, proc->subframe_tx);
   
   return(0);
 }
@@ -295,7 +283,10 @@ static void* eNB_thread_rxtx( void* param ) {
 
     //LOG_D(PHY,"%s:%s() TX:%u/%u About to rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
     if (eNB->CC_id==0)
+    {
       if (rxtx(eNB,proc,thread_name) < 0) break;
+
+    }
 
     //LOG_D(PHY,"%s:%s() TX:%u/%u DONE rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
 
@@ -481,7 +472,7 @@ void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe) {
     
   // check if we have to detect PRACH first
   if (is_prach_subframe(fp,frame,subframe)>0) { 
-    LOG_D(PHY,"Triggering prach processing, frame %d, subframe %d\n",frame,subframe);
+    //LOG_D(PHY,"Triggering prach processing, frame %d, subframe %d\n",frame,subframe);
     if (proc->instance_cnt_prach == 0) {
       LOG_W(PHY,"[eNB] Frame %d Subframe %d, dropping PRACH\n", frame,subframe);
       return;
@@ -597,7 +588,7 @@ static void* eNB_thread_prach( void* param ) {
     
     if (wait_on_condition(&proc->mutex_prach,&proc->cond_prach,&proc->instance_cnt_prach,"eNB_prach_thread") < 0) break;
 
-    LOG_D(PHY,"Running eNB prach procedures\n");
+    //LOG_D(PHY,"Running eNB prach procedures\n");
     prach_procedures(eNB
 #ifdef Rel14
 		     ,0
@@ -638,7 +629,7 @@ static void* eNB_thread_prach_br( void* param ) {
 
     if (wait_on_condition(&proc->mutex_prach_br,&proc->cond_prach_br,&proc->instance_cnt_prach_br,"eNB_prach_thread_br") < 0) break;
 
-    LOG_D(PHY,"Running eNB prach procedures for BL/CE UEs\n");
+    //LOG_D(PHY,"Running eNB prach procedures for BL/CE UEs\n");
     prach_procedures(eNB,1);
     
     if (release_thread(&proc->mutex_prach_br,&proc->instance_cnt_prach_br,"eNB_prach_thread_br") < 0) break;

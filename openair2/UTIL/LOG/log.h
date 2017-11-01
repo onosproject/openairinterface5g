@@ -240,6 +240,7 @@ typedef struct LOG_params {
     const char *file;
     const char *func;
     int line;
+    pthread_t thread_id;
     int comp;
     int level;
     const char *format;
@@ -262,8 +263,8 @@ void log_set_instance_type (log_instance_type_t instance);
 #    include "log_if.h"
 /*----------------------------------------------------------------------------*/
 int  logInit (void);
-void logRecord_mt(const char *file, const char *func, int line,int comp, int level, const char *format, ...) __attribute__ ((format (printf, 6, 7)));
-void logRecord(const char *file, const char *func, int line,int comp, int level, const char *format, ...) __attribute__ ((format (printf, 6, 7)));
+void logRecord_mt(const char *file, const char *func, int line,pthread_t thread_id, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 7, 8)));
+void logRecord(const char *file, const char *func, int line, pthread_t thread_id, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 7, 8)));
 int  set_comp_log(int component, int level, int verbosity, int interval);
 int  set_log(int component, int level, int interval);
 void set_glog(int level, int verbosity);
@@ -285,15 +286,15 @@ void *log_thread_function(void * list);
 #ifdef USER_MODE
 //#define logIt(component, level, format, args...) do {logRecord(__FILE__, __FUNCTION__, __LINE__, component, level, format, ##args);} while(0);
 #ifdef LOG_NO_THREAD
-#define logIt(component, level, format, args...) logRecord_mt(__FILE__, __FUNCTION__, __LINE__, component, level, format, ##args)
+#define logIt(component, level, format, args...) logRecord_mt(__FILE__, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
 #else //default
-#define logIt(component, level, format, args...) logRecord(__FILE__, __FUNCTION__, __LINE__, component, level, format, ##args)
+#define logIt(component, level, format, args...) logRecord(__FILE__, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
 #endif
 #else
 #ifdef LOG_NO_THREAD
-#define logIt(component, level, format, args...) logRecord_mt(NULL, __FUNCTION__, __LINE__, component, level, format, ##args)
+#define logIt(component, level, format, args...) logRecord_mt(NULL, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
 #else // default
-#define logIt(component, level, format, args...) logRecord(NULL, __FUNCTION__, __LINE__, component, level, format, ##args)
+#define logIt(component, level, format, args...) logRecord(NULL, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
 #endif
 #endif
 /* @}*/

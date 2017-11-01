@@ -13,6 +13,7 @@ Sched_Rsp_t Sched_INFO[MAX_IF_MODULES][MAX_NUM_CCs];
 extern int oai_nfapi_harq_indication(nfapi_harq_indication_t *harq_ind);
 extern int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind);
 extern int oai_nfapi_cqi_indication(nfapi_cqi_indication_t *cqi_ind);
+extern int oai_nfapi_sr_indication(nfapi_sr_indication_t *ind);
 extern int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind);
 extern uint8_t nfapi_mode;
 extern uint16_t sf_ahead;
@@ -65,15 +66,22 @@ void handle_sr(UL_IND_t *UL_info) {
 
   int i;
 
-  for (i=0;i<UL_info->sr_ind.number_of_srs;i++) 
-    SR_indication(UL_info->module_id,
-		  UL_info->CC_id,
-		  UL_info->frame,
-		  UL_info->subframe,
-		  UL_info->sr_ind.sr_pdu_list[i].rx_ue_information.rnti,
-		  UL_info->sr_ind.sr_pdu_list[i].ul_cqi_information.ul_cqi);
+  if (nfapi_mode == 1)
+  {
+    oai_nfapi_sr_indication(&UL_info->sr_ind);
+  }
+  else
+  {
+    for (i=0;i<UL_info->sr_ind.sr_indication_body.number_of_srs;i++) 
+      SR_indication(UL_info->module_id,
+          UL_info->CC_id,
+          UL_info->frame,
+          UL_info->subframe,
+          UL_info->sr_ind.sr_indication_body.sr_pdu_list[i].rx_ue_information.rnti,
+          UL_info->sr_ind.sr_indication_body.sr_pdu_list[i].ul_cqi_information.ul_cqi);
+  }
 
-  UL_info->sr_ind.number_of_srs=0;
+  UL_info->sr_ind.sr_indication_body.number_of_srs=0;
 }
 
 void handle_cqi(UL_IND_t *UL_info) {
@@ -517,7 +525,7 @@ void UL_indication(UL_IND_t *UL_info)
   IF_Module_t  *ifi        = if_inst[module_id];
   eNB_MAC_INST *mac        = RC.mac[module_id];
 
-  LOG_D(PHY,"frame %d, subframe %d, module_id %d, CC_id %d UL_info[rx_ind:%d number_of_harqs:%d number_of_crcs:%d number_of_cqis:%d number_of_preambles:%d]\n", 
+  LOG_D(PHY,"SFN/SF:%d%d module_id:%d CC_id:%d UL_info[rx_ind:%d harqs:%d crcs:%d cqis:%d preambles:%d]\n", 
       UL_info->frame,UL_info->subframe,
       module_id,CC_id,
       UL_info->rx_ind.rx_indication_body.number_of_pdus, UL_info->harq_ind.harq_indication_body.number_of_harqs, UL_info->crc_ind.crc_indication_body.number_of_crcs, UL_info->cqi_ind.number_of_cqis, UL_info->rach_ind.rach_indication_body.number_of_preambles);
@@ -536,9 +544,12 @@ void UL_indication(UL_IND_t *UL_info)
   }
 
 
+  //LOG_D(PHY,"%s() SFN_SF:%d%d About to call clear_nfapi_information()\n", __FUNCTION__, UL_info->frame, UL_info->subframe);
+
   // clear DL/UL info for new scheduling round
   clear_nfapi_information(RC.mac[module_id],CC_id,
 			  UL_info->frame,UL_info->subframe);
+  //LOG_D(PHY,"%s() SFN_SF:%d%d Returned from call clear_nfapi_information()\n", __FUNCTION__, UL_info->frame, UL_info->subframe);
 
   handle_rach(UL_info);
 
@@ -590,8 +601,7 @@ void UL_indication(UL_IND_t *UL_info)
         ifi->schedule_response(sched_info);
       }
 
-      LOG_D(PHY,"Schedule_response: frame %d, subframe %d (dl_pdus %d / %p)\n",sched_info->frame,sched_info->subframe,sched_info->DL_req->dl_config_request_body.number_pdu,
-          &sched_info->DL_req->dl_config_request_body.number_pdu);
+      LOG_D(PHY,"Schedule_response: SFN_SF:%d%d dl_pdus:%d\n",sched_info->frame,sched_info->subframe,sched_info->DL_req->dl_config_request_body.number_pdu);
     }						 
   }
 }

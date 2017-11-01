@@ -886,6 +886,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	// see Section 10.2 from 36.213
 	int ackNAK_absSF = absSF + reps + 4;
 	AssertFatal(reps>2,"Have to handle programming of ACK when PDSCH repetitions is > 2\n");
+
 	ul_req             = &eNB->UL_req_tmp[CC_idP][ackNAK_absSF%10];
 	ul_req_body        = &ul_req->ul_config_request_body;
 	ul_config_pdu = &ul_req_body->ul_config_pdu_list[ul_req_body->number_of_pdus]; 
@@ -905,6 +906,8 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 
 	ul_req->sfn_sf  									    = sfnsf_add_subframe(RA_template->Msg3_frame, RA_template->Msg3_subframe, 4);
 	ul_req->header.message_id  								    = NFAPI_UL_CONFIG_REQUEST;
+
+        LOG_D(MAC,"UL_req_tmp[CC_idP:%d][ackNAK_absSF mod 10:%d] RA_template->Msg3_frame:%d RA_template->Msg3_subframe:%d + 4 sfn_sf:%d\n", CC_idP, ackNAK_absSF%10, RA_template->Msg3_frame, RA_template->Msg3_subframe, NFAPI_SFNSF2DEC(ul_req->sfn_sf));
 
 	// Note need to keep sending this across reptitions!!!! Not really for PUCCH, to ask small-cell forum, we'll see for the other messages, maybe parameters change across repetitions and FAPI has to provide for that
 	if (cc[CC_idP].tdd_Config==NULL) { // FDD case

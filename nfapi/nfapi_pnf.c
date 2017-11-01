@@ -964,7 +964,7 @@ int pnf_phy_hi_dci0_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
 
 int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
 {
-  LOG_D(PHY,"[PNF] dl config request sfn_sf:%d pdcch:%u dci:%u pdu:%d pdsch_rnti:%d pcfich:%u RC.ru:%p RC.eNB:%p sync_var:%d\n", NFAPI_SFNSF2DEC(req->sfn_sf), req->dl_config_request_body.number_pdcch_ofdm_symbols, req->dl_config_request_body.number_dci, req->dl_config_request_body.number_pdu, req->dl_config_request_body.number_pdsch_rnti, req->dl_config_request_body.transmission_power_pcfich, RC.ru, RC.eNB, sync_var);
+  LOG_D(PHY,"[PNF] %s() sfn_sf:%d pdcch:%u dl_cfg[dci:%u pdus:%d pdsch_rnti:%d] pcfich:%u\n", __FUNCTION__,NFAPI_SFNSF2DEC(req->sfn_sf), req->dl_config_request_body.number_pdcch_ofdm_symbols, req->dl_config_request_body.number_dci, req->dl_config_request_body.number_pdu, req->dl_config_request_body.number_pdsch_rnti, req->dl_config_request_body.transmission_power_pcfich);
 
   if (RC.ru == 0)
   {
@@ -1038,10 +1038,11 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
     {
       nfapi_dl_config_dlsch_pdu *dlsch_pdu = &dl_config_pdu_list[i].dlsch_pdu;
       nfapi_dl_config_dlsch_pdu_rel8_t *rel8_pdu = &dlsch_pdu->dlsch_pdu_rel8;
+      nfapi_tx_request_pdu_t *tx_pdu = tx_request_pdu[sfn][sf][rel8_pdu->pdu_index];
 
-      if (tx_request_pdu[sfn][sf][rel8_pdu->pdu_index] != NULL)
+      if (tx_pdu != NULL)
       {
-        uint8_t *dlsch_sdu = malloc(tx_request_pdu[sfn][sf][rel8_pdu->pdu_index]->segments[0].segment_length);
+        uint8_t *dlsch_sdu = malloc(tx_pdu->segments[0].segment_length);
 
 // **********************************************************************
 // THIS IS CREATING AN INTENTIONAL LEAK - I think...
@@ -1053,7 +1054,7 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
 // I THINK I NEED TO FIX THIS - unless it IS getting freed by the stack
 //
 // **********************************************************************
-      memcpy(dlsch_sdu, tx_request_pdu[sfn][sf][rel8_pdu->pdu_index]->segments[0].segment_data, tx_request_pdu[sfn][sf][rel8_pdu->pdu_index]->segments[0].segment_length);
+      memcpy(dlsch_sdu, tx_pdu->segments[0].segment_data, tx_pdu->segments[0].segment_length);
 
       //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DLSCH:pdu_index:%d handle_nfapi_dlsch_pdu(eNB, proc_rxtx, dlsch_pdu, transport_blocks:%d sdu:%p) eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols:%d\n", __FUNCTION__, rel8_pdu->pdu_index, rel8_pdu->transport_blocks, dlsch_sdu, eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols);
 
@@ -1086,13 +1087,13 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
   uint16_t sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
   uint16_t sf = NFAPI_SFNSF2SF(req->sfn_sf);
 
-  LOG_D(PHY,"%s() SFN/SF:%d/%d PDUs:%d\n", __FUNCTION__, sfn, sf, req->tx_request_body.number_of_pdus);
+  LOG_D(PHY,"%s() SFN/SF:%d%d PDUs:%d\n", __FUNCTION__, sfn, sf, req->tx_request_body.number_of_pdus);
 
   if (req->tx_request_body.tl.tag==NFAPI_TX_REQUEST_BODY_TAG)
   {
     for (int i=0; i<req->tx_request_body.number_of_pdus; i++)
     {
-      LOG_D(PHY,"%s() SFN/SF:%d/%d number_of_pdus:%d [PDU:%d] pdu_length:%d pdu_index:%d num_segments:%d\n",
+      LOG_D(PHY,"%s() SFN/SF:%d%d number_of_pdus:%d [PDU:%d] pdu_length:%d pdu_index:%d num_segments:%d\n",
           __FUNCTION__,
           sfn, sf,
           req->tx_request_body.number_of_pdus,
@@ -1149,7 +1150,7 @@ int pnf_phy_ul_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
 
   for (int i=0;i<req->ul_config_request_body.number_of_pdus;i++)
   {
-    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn/sf:%d PDU[%d] size:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), i, ul_config_pdu_list[i].pdu_size);
+    LOG_D(PHY, "%s() sfn/sf:%d PDU[%d] size:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), i, ul_config_pdu_list[i].pdu_size);
 
     if (
         ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE ||
@@ -1161,7 +1162,7 @@ int pnf_phy_ul_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
         ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_UCI_SR_HARQ_PDU_TYPE
        )
     {
-      NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() handle_nfapi_ul_pdu() for PDU:%d\n", __FUNCTION__, i);
+      LOG_D(PHY, "%s() handle_nfapi_ul_pdu() for PDU:%d\n", __FUNCTION__, i);
 
       handle_nfapi_ul_pdu(eNB,proc,&ul_config_pdu_list[i],curr_sfn,curr_sf,req->ul_config_request_body.srs_present);
     }
@@ -1864,6 +1865,19 @@ int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind)
   ind->header.message_id = NFAPI_RX_ULSCH_INDICATION;
 
   int retval = nfapi_pnf_p7_rx_ind(p7_config_g, ind);
+
+  LOG_E(PHY,"%s() retval:%d\n", __FUNCTION__, retval);
+
+  //free(ind.rx_indication_body.rx_pdu_list);
+
+  return retval;
+}
+
+int oai_nfapi_sr_indication(nfapi_sr_indication_t *ind)
+{
+  ind->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
+
+  int retval = nfapi_pnf_p7_sr_ind(p7_config_g, ind);
 
   LOG_E(PHY,"%s() retval:%d\n", __FUNCTION__, retval);
 

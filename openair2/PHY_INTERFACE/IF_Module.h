@@ -67,7 +67,7 @@ typedef struct{
   nfapi_crc_indication_t crc_ind;
 
   /// SR indication list
-  nfapi_sr_indication_body_t sr_ind;
+  nfapi_sr_indication_t sr_ind;
 
   /// CQI indication list
   nfapi_cqi_indication_body_t cqi_ind;

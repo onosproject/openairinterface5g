@@ -668,7 +668,7 @@ if (nb_rbs_required_remaining[CC_id][i]<0) abort();
         }
 
         if (nb_rbs_required[CC_id][i]> 0 )
-          LOG_D(MAC,"round %d : nb_rbs_required_remaining[%d][%d]= %d (remaining_1 %d, required %d,  pre_nb_available_rbs %d, N_RBG %d, rb_unit %d)\n",
+          if (0)LOG_D(MAC,"round %d : nb_rbs_required_remaining[%d][%d]= %d (remaining_1 %d, required %d,  pre_nb_available_rbs %d, N_RBG %d, rb_unit %d)\n",
                 r1, CC_id, i,
                 nb_rbs_required_remaining[CC_id][i],
                 nb_rbs_required_remaining_1[CC_id][i],
@@ -848,17 +848,17 @@ if (nb_rbs_required_remaining[CC_id][i]<0) abort();
       //PHY_vars_eNB_g[Mod_id]->mu_mimo_mode[UE_id].dl_pow_off = dl_pow_off[UE_id];
 
       if (ue_sched_ctl->pre_nb_available_rbs[CC_id] > 0 ) {
-        LOG_D(MAC,"******************DL Scheduling Information for UE%d ************************\n",UE_id);
-        LOG_D(MAC,"dl power offset UE%d = %d \n",UE_id,ue_sched_ctl->dl_pow_off[CC_id]);
-        LOG_D(MAC,"***********RB Alloc for every subband for UE%d ***********\n",UE_id);
+        //LOG_D(MAC,"******************DL Scheduling Information for UE%d ************************\n",UE_id);
+        //LOG_D(MAC,"dl power offset UE%d = %d \n",UE_id,ue_sched_ctl->dl_pow_off[CC_id]);
+        //LOG_D(MAC,"***********RB Alloc for every subband for UE%d ***********\n",UE_id);
 
         for(j=0; j<N_RBG[CC_id]; j++) {
           //PHY_vars_eNB_g[Mod_id]->mu_mimo_mode[UE_id].rballoc_sub[i] = rballoc_sub_UE[CC_id][UE_id][i];
-          LOG_D(MAC,"RB Alloc for UE%d and Subband%d = %d\n",UE_id,j,ue_sched_ctl->rballoc_sub_UE[CC_id][j]);
+          //LOG_D(MAC,"RB Alloc for UE%d and Subband%d = %d\n",UE_id,j,ue_sched_ctl->rballoc_sub_UE[CC_id][j]);
         }
 
         //PHY_vars_eNB_g[Mod_id]->mu_mimo_mode[UE_id].pre_nb_available_rbs = pre_nb_available_rbs[CC_id][UE_id];
-        LOG_D(MAC,"Total RBs allocated for UE%d = %d\n",UE_id,ue_sched_ctl->pre_nb_available_rbs[CC_id]);
+        //LOG_D(MAC,"Total RBs allocated for UE%d = %d\n",UE_id,ue_sched_ctl->pre_nb_available_rbs[CC_id]);
       }
     }
   }
@@ -881,7 +881,6 @@ void dlsch_scheduler_pre_processor_reset (int module_idP,
   int i,j;
   UE_list_t *UE_list=&RC.mac[module_idP]->UE_list;
   UE_sched_ctrl *ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
-  rnti_t rnti = UE_RNTI(module_idP,UE_id);
 
   uint8_t *vrb_map = RC.mac[module_idP]->common_channels[CC_id].vrb_map;
   int N_RB_DL = to_prb(RC.mac[module_idP]->common_channels[CC_id].mib->message.dl_Bandwidth);
@@ -891,6 +890,7 @@ void dlsch_scheduler_pre_processor_reset (int module_idP,
 #endif
 
 
+  //rnti_t rnti = UE_RNTI(module_idP,UE_id);
   //LOG_D(MAC,"Running preprocessor for UE %d (%x)\n",UE_id,rnti);
   // initialize harq_pid and round
 
@@ -1275,14 +1275,14 @@ void assign_max_mcs_min_rb(module_id_t module_idP,int frameP, sub_frame_t subfra
   int Ncp;
   int N_RB_UL;
 
-  LOG_D(MAC, "%s() Enter\n", __FUNCTION__);
+  //LOG_D(MAC, "%s() Enter\n", __FUNCTION__);
 
   for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
     if (UE_list->active[i] != TRUE) continue;
 
     rnti = UE_RNTI(module_idP,i);
 
-    LOG_D(MAC, "%s() UE active rnti:%04x UE_list->UE_sched_ctrl[i].ul_out_of_sync:%d UE_list->UE_sched_ctrl[i].phr_received:%d numactiveULCCs[UE_id]:%d UE_list->UE_template[CC_id][UE_id].ul_total_buffer:%d\n", __FUNCTION__, rnti, UE_list->UE_sched_ctrl[i].ul_out_of_sync, UE_list->UE_sched_ctrl[i].phr_received, UE_list->numactiveULCCs[i], UE_list->UE_template[CC_id][i].ul_total_buffer);
+    //LOG_D(MAC, "%s() UE active rnti:%04x UE_list->UE_sched_ctrl[i].ul_out_of_sync:%d UE_list->UE_sched_ctrl[i].phr_received:%d numactiveULCCs[UE_id]:%d UE_list->UE_template[CC_id][UE_id].ul_total_buffer:%d\n", __FUNCTION__, rnti, UE_list->UE_sched_ctrl[i].ul_out_of_sync, UE_list->UE_sched_ctrl[i].phr_received, UE_list->numactiveULCCs[i], UE_list->UE_template[CC_id][i].ul_total_buffer);
 
     if (rnti==NOT_A_RNTI)
       continue;
@@ -1369,7 +1369,7 @@ void assign_max_mcs_min_rb(module_id_t module_idP,int frameP, sub_frame_t subfra
               UE_template->pre_allocated_nb_rb_ul,
               UE_template->phr_info,tx_power);
       } else {
-        LOG_E(MAC,"no ul buffer");
+        //LOG_E(MAC,"no ul buffer");
 
         /* if UE has pending scheduling request then pre-allocate 3 RBs */
         //if (UE_template->ul_active == 1 && UE_template->ul_SR == 1) {

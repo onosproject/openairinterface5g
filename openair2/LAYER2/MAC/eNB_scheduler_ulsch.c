@@ -577,7 +577,8 @@ abort();
   hi_dci0_pdu->hi_pdu.hi_pdu_rel8.tl.tag                              = NFAPI_HI_DCI0_REQUEST_HI_PDU_REL8_TAG;
   hi_dci0_pdu->hi_pdu.hi_pdu_rel8.resource_block_start                = first_rb; 
   hi_dci0_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms             = 0;
-  hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value                            = 1; // DJP - wireshark shows this as a NAK who is right?
+  hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value                            = 1;
+  //hi_dci0_pdu->hi_pdu.hi_pdu_rel8.transmission_power = 6000; // DJP - TODO FIXME - not used??
   hi_dci0_req_body->number_of_hi++;
   hi_dci0_req_body->sfnsf = sfnsf_add_subframe(frameP,subframeP, 0);
   hi_dci0_req_body->tl.tag = NFAPI_HI_DCI0_REQUEST_BODY_TAG;
@@ -999,6 +1000,9 @@ abort();
 	  else
 	    cqi_req = 0;
 	  
+	  LOG_D(MAC,"[eNB %d][PUSCH %d] Frame %d subframe %d Scheduling UE %d/%x cqi_req %d RRC Status %d\n",
+		module_idP,harq_pid,frameP,subframeP,UE_id,rnti,cqi_req,status);
+
           //power control
           //compute the expected ULSCH RX power (for the stats)
 	  
@@ -1121,9 +1125,6 @@ abort();
             hi_dci0_req->sfn_sf = frameP<<4|subframeP; // sfnsf_add_subframe(sched_frame, sched_subframeP, 0); // sunday!
             hi_dci0_req->header.message_id = NFAPI_HI_DCI0_REQUEST;
 
-	    LOG_D(MAC,"[PUSCH %d] Frame %d, Subframe %d: Adding UL CONFIG.Request for UE %d/%x, ulsch_frame %d, ulsch_subframe %d\n",
-		  harq_pid,frameP,subframeP,UE_id,rnti,sched_frame,sched_subframeP);
-	    
 	    // Add UL_config PDUs
 	    fill_nfapi_ulsch_config_request_rel8(&ul_req_tmp_body->ul_config_pdu_list[ul_req_tmp_body->number_of_pdus],
 						 cqi_req,
@@ -1166,6 +1167,9 @@ abort();
             ul_req_tmp->sfn_sf = sched_frame<<4|sched_subframeP;
             ul_req_tmp->header.message_id = NFAPI_UL_CONFIG_REQUEST;
 
+	    LOG_D(MAC,"[PUSCH %d] Frame %d, Subframe %d: Adding UL CONFIG.Request for UE %d/%x, ulsch_frame %d, ulsch_subframe %d\n",
+		  harq_pid,frameP,subframeP,UE_id,rnti,sched_frame,sched_subframeP);
+	    
 
             // Scheduler dips into this structure to work out if UE has a grant, so in nfapi mode we still need to populate it
             // but we can send it right here, right now
@@ -1214,8 +1218,6 @@ abort();
                   UE_template->first_rb_ul[harq_pid], UE_template->nb_rb_ul[harq_pid],
                   UE_template->TBS_UL[harq_pid],harq_pid,round);
 	    // Add UL_config PDUs
-	    LOG_D(MAC,"[PUSCH %d] Frame %d, Subframe %d: Adding UL CONFIG.Request for UE %d/%x, ulsch_frame %d, ulsch_subframe %d\n",
-		  harq_pid,frameP,subframeP,UE_id,rnti,sched_frame,sched_subframeP);
 	    fill_nfapi_ulsch_config_request_rel8(&ul_req_tmp_body->ul_config_pdu_list[ul_req_tmp_body->number_of_pdus],
 						 cqi_req,
 						 cc,
@@ -1254,6 +1256,8 @@ abort();
               ul_req_tmp->sfn_sf = sched_frame<<4|sched_subframeP;
               ul_req_tmp->header.message_id = NFAPI_UL_CONFIG_REQUEST;
 
+              LOG_D(MAC,"[PUSCH %d] Frame %d, Subframe %d: Adding UL CONFIG.Request for UE %d/%x, ulsch_frame %d, ulsch_subframe %d cqi_req %d\n",
+                  harq_pid,frameP,subframeP,UE_id,rnti,sched_frame,sched_subframeP,cqi_req);
 	  }/* 
 	  else if (round > 0) { //we schedule a retransmission
 
