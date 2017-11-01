@@ -712,8 +712,7 @@ void prach_procedures(PHY_VARS_eNB *eNB,
 	    eNB->preamble_list[0].preamble_rel13.rach_resource_type   = 0;
 	    eNB->preamble_list[0].instance_length                     = 0; //don't know exactly what this is
 	    
-            // If NFAPI PNF then we need to send the message to the VNF
-            if (nfapi_mode == 1)
+            if (nfapi_mode == 1)    // If NFAPI PNF then we need to send the message to the VNF
             {
               LOG_E(PHY,"\n\n\n\nDJP - this needs to be sent to VNF **********************************************\n\n\n\n");
               LOG_E(PHY,"Filling NFAPI indication for RACH : SFN_SF:%d TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
@@ -1750,7 +1749,7 @@ void fill_ulsch_harq_indication(PHY_VARS_eNB *eNB,LTE_UL_eNB_HARQ_t *ulsch_harq,
   pdu->rx_ue_information.rnti                         = rnti;
 
   if (eNB->frame_parms.frame_type == FDD) {
-    pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
+    pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_FDD_REL13_TAG;
     pdu->harq_indication_fdd_rel13.mode = 0;
     pdu->harq_indication_fdd_rel13.number_of_ack_nack = ulsch_harq->O_ACK;
 
@@ -1776,9 +1775,9 @@ void fill_ulsch_harq_indication(PHY_VARS_eNB *eNB,LTE_UL_eNB_HARQ_t *ulsch_harq,
     M=ul_ACK_subframe2_M(&eNB->frame_parms,
 			 subframe);
 
-    pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
-    pdu->harq_indication_fdd_rel13.mode = 1-bundling;
-    pdu->harq_indication_fdd_rel13.number_of_ack_nack = ulsch_harq->O_ACK;
+    pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
+    pdu->harq_indication_tdd_rel13.mode = 1-bundling;
+    pdu->harq_indication_tdd_rel13.number_of_ack_nack = ulsch_harq->O_ACK;
 
     for (i=0;i<ulsch_harq->O_ACK;i++) {
       AssertFatal(ulsch_harq->o_ACK[i] == 0 || ulsch_harq->o_ACK[i] == 1, "harq_ack[%d] is %d, should be 1,2 or 4\n",i,ulsch_harq->o_ACK[i]);
@@ -1811,7 +1810,7 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
 			      uint16_t tdd_multiplexing_mask) {
 
   int UE_id=find_dlsch(uci->rnti,eNB,SEARCH_EXIST);
-  AssertFatal(UE_id>=0,"UE_id doesn't exist\n");
+  AssertFatal(UE_id>=0,"UE_id doesn't exist rnti:%x\n", uci->rnti);
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
