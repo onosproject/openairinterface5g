@@ -1384,6 +1384,13 @@ typedef struct {
   time_stats_t rx_p;
   /// Panos: Mutex for nfapi UL_INFO
   pthread_mutex_t      UL_INFO_mutex;
+  /// Panos: UE_Mode variable should be used in the case of Phy_stub operation since we won't have access to PHY_VARS_UE
+  /// where the UE_mode originally is for the full stack operation mode. The transitions between the states of the UE_Mode
+  /// will be triggered within phy_stub_ue.c in this case
+  UE_MODE_t        UE_mode[NUMBER_OF_CONNECTED_eNB_MAX];
+  /// Panos: Phy_stub mode: Boolean variable to distinguish whether a Msg3 or a regular ULSCH data pdu should be generated
+  /// after the reception of NFAPI_UL_CONFIG_ULSCH_PDU_TYPE.
+  uint8_t first_ULSCH_Tx;
 } UE_MAC_INST;
 /*! \brief ID of the neighboring cells used for HO*/
 typedef struct {

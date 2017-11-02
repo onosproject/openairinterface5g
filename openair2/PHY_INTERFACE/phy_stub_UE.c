@@ -82,15 +82,21 @@ void handle_nfapi_UE_Rx(uint8_t Mod_id, Sched_Rsp_t *Sched_INFO, int eNB_id){
 					// ue_process_rar should be called but the problem is that this function currently uses PHY_VARS_UE
 					// elements.
 
-					// C-RNTI parameter not actually used. Provided only to comply with existing function definition.
+					// RNTI parameter not actually used. Provided only to comply with existing function definition.
 					// Not sure about parameters to fill the preamble index.
-					rnti_t c_rnti = UE_mac_inst[Mod_id].crnti;
-					ue_process_rar(Mod_id, CC_id, frame,
-							dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.rnti, //RA-RNTI
-							Tx_req->tx_request_body.tx_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
-							&c_rnti,
-							UE_mac_inst[Mod_id].RA_prach_resources.ra_PreambleIndex,
-							Tx_req->tx_request_body.tx_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
+					//rnti_t c_rnti = UE_mac_inst[Mod_id].crnti;
+					rnti_t ra_rnti = UE_mac_inst[Mod_id].RA_prach_resources.ra_RNTI;
+					if ((UE_mac_inst[Mod_id].UE_mode[0] != PUSCH) &&
+					  (UE_mac_inst[Mod_id].RA_prach_resources.Msg3!=NULL)) {
+						ue_process_rar(Mod_id, CC_id, frame,
+								ra_rnti, //RA-RNTI
+								Tx_req->tx_request_body.tx_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
+								&dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.rnti, //t-crnti
+								UE_mac_inst[Mod_id].RA_prach_resources.ra_PreambleIndex,
+								Tx_req->tx_request_body.tx_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
+						UE_mac_inst[Mod_id].UE_mode[0] = RA_RESPONSE;
+						UE_mac_inst[Mod_id].first_ULSCH_Tx = 1; //Expecting an UL_CONFIG_ULSCH_PDU to enable Msg3 Txon (first ULSCH Txon for the UE)
+					}
 				}
 				else {
 					LOG_E(MAC,"[UE %d] CCid %d Frame %d, subframe %d : Cannot extract DLSCH PDU from NFAPI\n",Mod_id, CC_id,frame,subframe);
@@ -572,8 +578,17 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
     uint16_t rnti = ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti;
     uint8_t access_mode=SCHEDULED_ACCESS;
     if(buflen>0){
-    	ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
-    	fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+    	if(UE_mac_inst[Mod_id].first_ULSCH_Tx){ // Msg3 case
+    		fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
+    		fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
+    		Msg3_transmitted(Mod_id, 0, frame, 0);
+    		UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+    	}
+    	else {
+    		ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
+    		fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
+    		fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+    	}
     }
   }
 
@@ -586,8 +601,18 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 	  uint16_t rnti = ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti;
 	  uint8_t access_mode=SCHEDULED_ACCESS;
 	  if(buflen>0){
-		  	ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
-	      	fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+		  if(UE_mac_inst[Mod_id].first_ULSCH_Tx){ // Msg3 case
+			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
+			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
+			  Msg3_transmitted(Mod_id, 0, frame, 0);
+			  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+		  }
+		  else {
+			  ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
+			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
+			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+		  }
+
 	  }
 
 	  if(ulsch_harq_information)
@@ -604,8 +629,17 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 	  uint16_t rnti = ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti;
 	  uint8_t access_mode=SCHEDULED_ACCESS;
 	  if(buflen>0){
-		  ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
-		  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+		  if(UE_mac_inst[Mod_id].first_ULSCH_Tx){ // Msg3 case
+			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
+			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
+			  Msg3_transmitted(Mod_id, 0, frame, 0);
+			  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+		  }
+		  else {
+			  ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
+			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
+			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+		  }
 	  }
 	  fill_ulsch_cqi_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, rnti);
 
@@ -622,8 +656,17 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 	  uint16_t rnti = ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti;
 	  uint8_t access_mode=SCHEDULED_ACCESS;
 	  if(buflen>0){
-	      	ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
-	      	fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+		  if(UE_mac_inst[Mod_id].first_ULSCH_Tx){ // Msg3 case
+			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
+			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
+			  Msg3_transmitted(Mod_id, 0, frame, 0);
+			  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+		  }
+		  else {
+			  ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
+			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
+			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti);
+		  }
 	  }
 
 	  if(ulsch_harq_information)
@@ -728,11 +771,14 @@ int ul_config_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_
   //*** Note we should find the right place to call free(UL_INFO).
   UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
 
+  //Panos: Additional checks needed here to check if the UE is in PRACH mode.
   uint8_t is_rach = req->ul_config_request_body.rach_prach_frequency_resources;
-  if(is_rach) {
+  if(is_rach && UE_mac_inst[Mod_id].UE_mode[0] == PRACH) {
 	  PRACH_RESOURCES_t *prach_resources = ue_get_rach(Mod_id, 0, sfn, 0, sf);
 	  fill_rach_indication_UE_MAC(Mod_id, sfn ,sf, UL_INFO, prach_resources->ra_PreambleIndex, prach_resources->ra_RNTI);
+	  Msg1_transmitted(Mod_id, 0, sfn, 0);
   }
+
 
   // subframe works off TX SFN/SF which is 4 ahead, need to put it back to RX SFN/SF
   // probably could just use proc->frame_rx

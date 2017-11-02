@@ -404,7 +404,10 @@ ue_send_sdu(
 
         LOG_I(MAC,"[UE %d][RAPROC] Frame %d : Clearing contention resolution timer\n", module_idP, frameP);
         UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
-        ra_succeeded(module_idP,CC_id,eNB_index);
+
+        //Panos: Modification for phy_stub mode operation here. We only need to change the ue_mode to PUSCH
+        UE_mac_inst[module_idP].UE_mode[eNB_index] = PUSCH;
+        //ra_succeeded(module_idP,CC_id,eNB_index);
       }
 
       payload_ptr+=6;

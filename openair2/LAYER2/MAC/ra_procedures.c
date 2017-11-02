@@ -287,7 +287,11 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
 
 
   uint8_t                  Size               = 0;
-  UE_MODE_t                UE_mode            = get_ue_mode(module_idP,0,eNB_indexP);
+
+  // Panos: Modification for phy_stub_ue operation
+  //UE_MODE_t                UE_mode            = get_ue_mode(module_idP,0,eNB_indexP);
+  UE_MODE_t                UE_mode            = UE_mac_inst[module_idP].UE_mode[0];
+
   uint8_t                  lcid               = CCCH;
   uint16_t                 Size16;
   struct RACH_ConfigCommon *rach_ConfigCommon = (struct RACH_ConfigCommon *)NULL;
