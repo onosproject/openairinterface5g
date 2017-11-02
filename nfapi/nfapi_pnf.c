@@ -924,7 +924,7 @@ void pnf_phy_deallocate_p7_vendor_ext(nfapi_p7_message_header_t* header)
 
 int pnf_phy_hi_dci0_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req)
 {
-  LOG_D(PHY,"[PNF] hi dci0 request sfn_sf:%d number_of_dci:%d number_of_hi:%d\n", NFAPI_SFNSF2DEC(req->sfn_sf), req->hi_dci0_request_body.number_of_dci, req->hi_dci0_request_body.number_of_hi);
+  LOG_D(PHY,"[PNF] hi dci0 request sfn_sf:%d dci:%d hi:%d\n", NFAPI_SFNSF2DEC(req->sfn_sf), req->hi_dci0_request_body.number_of_dci, req->hi_dci0_request_body.number_of_hi);
 
   //phy_info* phy = (phy_info*)(pnf_p7->user_data);
 
@@ -933,7 +933,7 @@ int pnf_phy_hi_dci0_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
 
   for (int i=0; i<req->hi_dci0_request_body.number_of_dci + req->hi_dci0_request_body.number_of_hi; i++)
   {
-    LOG_D(PHY,"[PNF] HI_DCI0_REQ sfn_sf:%d PDU[%d]\n", NFAPI_SFNSF2DEC(req->sfn_sf), i);
+    //LOG_D(PHY,"[PNF] HI_DCI0_REQ sfn_sf:%d PDU[%d]\n", NFAPI_SFNSF2DEC(req->sfn_sf), i);
 
     if (req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type == NFAPI_HI_DCI0_DCI_PDU_TYPE)
     {
@@ -1866,7 +1866,7 @@ int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind)
 
   int retval = nfapi_pnf_p7_rx_ind(p7_config_g, ind);
 
-  LOG_E(PHY,"%s() retval:%d\n", __FUNCTION__, retval);
+  LOG_D(PHY,"%s() SFN/SF:%d pdus:%d retval:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rx_indication_body.number_of_pdus, retval);
 
   //free(ind.rx_indication_body.rx_pdu_list);
 

@@ -63,6 +63,7 @@
 #include "T.h"
 
 extern uint8_t nfapi_mode;
+extern uint8_t sf_ahead;
 extern int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req);
 
 void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset)
@@ -664,10 +665,9 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
   
   // set HARQ process round to 0 for this UE
   
-  if (cc->tdd_Config) RA_template->harq_pid = ((frameP*10)+subframeP)%10;
-  else RA_template->harq_pid = ((frameP*10)+subframeP)&7;
+  if (cc->tdd_Config) RA_template->harq_pid = ((RA_template->Msg4_frame*10)+RA_template->Msg4_subframe)%10;
+  else RA_template->harq_pid = ((RA_template->Msg4_frame*10)+RA_template->Msg4_subframe)&7;
 
-  
   // Get RRCConnectionSetup for Piggyback
   rrc_sdu_length = mac_rrc_data_req(module_idP,
 				    CC_idP,
@@ -683,8 +683,8 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	      "[MAC][eNB Scheduler] CCCH not allocated\n");
   
   
-  LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: UE_id %d, rrc_sdu_length %d\n",
-	module_idP, CC_idP, frameP, subframeP,UE_id, rrc_sdu_length);
+  LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d MSG4:SFN/SF:%d%d UE_id %d, rrc_sdu_length %d\n",
+	module_idP, CC_idP, frameP, subframeP,RA_template->Msg4_frame,RA_template->Msg4_subframe,UE_id, rrc_sdu_length);
   
   
 #ifdef Rel14
@@ -711,7 +711,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
     first_rb = narrowband_to_first_rb(&cc[CC_idP],RA_template->msg34_narrowband);
 
     if ((RA_template->msg4_mpdcch_repetition_cnt == 0) &&
-    (mpdcch_sf_condition(eNB,CC_idP,frameP,subframeP,rmax,TYPE2,-1)>0)){
+    (mpdcch_sf_condition(eNB,CC_idP,RA_template->Msg4_frame,RA_template->Msg4_subframe,rmax,TYPE2,-1)>0)){
       // MPDCCH configuration for RAR
       
       memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
@@ -732,7 +732,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.rnti                                          = RA_template->RA_rnti;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.ce_mode                                       = (RA_template->rach_resource_type < 3) ? 1 : 2;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.drms_scrambling_init                          = cc[CC_idP].physCellId;  /// Check this is still N_id_cell for type2 common
-      dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.initial_transmission_sf_io                    = (frameP*10)+subframeP;
+      dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.initial_transmission_sf_io                    = (RA_template->Msg4_frame*10)+RA_template->Msg4_subframe;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.transmission_power                            = 6000; // 0dB
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.resource_block_coding                         = getRIV(6,0,6);// check if not getRIV(N_RB_DL,first_rb,6);
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.mcs                                           = 4; // adjust according to size of Msg4, 208 bits with N1A_PRB=3
@@ -765,7 +765,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
       dl_req_body->number_pdu++;
       dl_req_body->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
       
-      dl_req->sfn_sf = (frameP<<4)+subframeP;
+      dl_req->sfn_sf = (RA_template->Msg4_frame<<4)+RA_template->Msg4_subframe;
       dl_req->header.message_id = NFAPI_DL_CONFIG_REQUEST;
 
     } //repetition_count==0 && SF condition met
@@ -774,9 +774,9 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
       if (RA_template->msg4_mpdcch_repetition_cnt==reps) { // this is the last mpdcch repetition
 	if (cc[CC_idP].tdd_Config==NULL) { // FDD case
 	  // wait 2 subframes for PDSCH transmission
-	  if (subframeP>7) RA_template->Msg4_frame = (frameP+1)&1023;
+	  if (RA_template->Msg4_subframe>7) RA_template->Msg4_frame = (frameP+1)&1023;
 	  else             RA_template->Msg4_frame = frameP;
-	  RA_template->Msg4_subframe               = (subframeP+2)%10; 
+	  RA_template->Msg4_subframe               = (RA_template->Msg4_subframe+2)%10; 
 	}
 	else {
 	  AssertFatal(1==0,"TDD case not done yet\n");
@@ -939,7 +939,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
   else
 #endif
     { // This is normal LTE case
-      if ((RA_template->Msg4_frame == frameP) && (RA_template->Msg4_subframe == subframeP)) {	      
+      if (1){     // || (RA_template->Msg4_frame == frameP) && (RA_template->Msg4_subframe == subframeP)) {	      
 	LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Generating Msg4 with RRC Piggyback (RNTI %x)\n",
 	      module_idP, CC_idP, frameP, subframeP,RA_template->rnti);
 	
@@ -986,9 +986,10 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 			     1,                           // ndi
 			     0,                           // rv
 			     0);                          // vrb_flag
-    LOG_D(MAC,"Frame %d, subframe %d: Msg4 DCI pdu_num %d (rnti %x,rnti_type %d,harq_pid %d, resource_block_coding (%p) %d\n",
+    LOG_D(MAC,"Frame %d, subframe %d: Msg4 SFN/SF:%d%d DCI pdu_num %d (rnti %x,rnti_type %d,harq_pid %d, resource_block_coding (%p) %d\n",
 		  frameP,
 	      subframeP,
+              RA_template->Msg4_frame, RA_template->Msg4_subframe,
           dl_req_body->number_pdu,
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti,
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type,
@@ -999,31 +1000,48 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 				"resource_block_coding %u < 8192\n",
                 dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding);	
 	if (!CCE_allocation_infeasible(module_idP,CC_idP,1,
-				       subframeP,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,
+				       RA_template->Msg4_subframe,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,
 				       RA_template->rnti)) {
 	  dl_req_body->number_dci++;
 	  dl_req_body->number_pdu++;
           dl_req_body->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 
-          dl_req->sfn_sf = frameP<<4|subframeP;
+          dl_req->sfn_sf = RA_template->Msg4_frame<<4|RA_template->Msg4_subframe;
           dl_req->header.message_id = NFAPI_DL_CONFIG_REQUEST;
 	  
 	  RA_template->generate_Msg4=0;
 	  RA_template->wait_ack_Msg4=1;
 	  
+          uint16_t orig_Msg4_frame    = RA_template->Msg4_frame;
+          uint16_t orig_Msg4_subframe = RA_template->Msg4_subframe;
+
 	  // increment Absolute subframe by 8 for Msg4 retransmission
 	  LOG_D(MAC,"Frame %d, Subframe %d: Preparing for Msg4 retransmission currently %d.%d\n",
 		frameP,subframeP,RA_template->Msg4_frame,RA_template->Msg4_subframe);
-	  if (RA_template->Msg4_subframe > 1) RA_template->Msg4_frame++;
-	  RA_template->Msg4_frame&=1023;
-	  RA_template->Msg4_subframe = (RA_template->Msg4_subframe+8)%10;
-	  LOG_D(MAC,"Frame %d, Subframe %d: Msg4 retransmission in %d.%d\n",
+
+	  //if (RA_template->Msg4_subframe > 1) RA_template->Msg4_frame++;
+	  //RA_template->Msg4_frame&=1023;
+	  //RA_template->Msg4_subframe = (RA_template->Msg4_subframe+8)%10;
+
+          // Expect +8 for TX->UL:ACK
+          uint16_t retrans_frame = RA_template->Msg4_frame;
+          uint16_t retrans_subframe = RA_template->Msg4_subframe;
+
+          add_subframe(&retrans_frame, &retrans_subframe, 8+sf_ahead);
+
+          RA_template->Msg4_frame = retrans_frame;
+          RA_template->Msg4_subframe = retrans_subframe;
+
+          LOG_D(MAC,"Frame %d, Subframe %d: Msg4 retransmission in %d.%d\n",
 		frameP,subframeP,RA_template->Msg4_frame,RA_template->Msg4_subframe);
 	  lcid=0;
 	  
+          // DJP - FIXME TODO TDD broken
+          //
 	  // put HARQ process round to 0
-	  if (cc->tdd_Config) RA_template->harq_pid = ((frameP*10)+subframeP)%10;
-	  else RA_template->harq_pid = ((frameP*10)+subframeP)&7;
+	  if (cc->tdd_Config) RA_template->harq_pid = ((RA_template->Msg4_frame*10)+RA_template->Msg4_subframe)%10;
+	  else RA_template->harq_pid = dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.harq_process;
+	  //else RA_template->harq_pid = ((RA_template->Msg4_frame*10)+RA_template->Msg4_subframe)&7;
 	  UE_list->UE_sched_ctrl[UE_id].round[CC_idP][RA_template->harq_pid] = 0;
 	  
 	  if ((RA_template->msg4_TBsize - rrc_sdu_length - msg4_header) <= 2) {
@@ -1034,8 +1052,8 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	    msg4_post_padding = RA_template->msg4_TBsize - rrc_sdu_length - msg4_header -1;
 	  }
 	  
-	  LOG_D(MAC,"[eNB %d][RAPROC] CC_idP %d Frame %d subframeP %d Msg4 : TBS %d, sdu_len %d, msg4_header %d, msg4_padding %d, msg4_post_padding %d\n",
-		module_idP,CC_idP,frameP,subframeP,RA_template->msg4_TBsize,rrc_sdu_length,msg4_header,msg4_padding,msg4_post_padding);
+	  LOG_D(MAC,"[eNB %d][RAPROC] CC_idP %d Frame %d subframeP %d Msg4 : SFN/SF:%d%d TBS %d, sdu_len %d, msg4_header %d, msg4_padding %d, msg4_post_padding %d\n",
+		module_idP,CC_idP,frameP,subframeP,orig_Msg4_frame,orig_Msg4_subframe,RA_template->msg4_TBsize,rrc_sdu_length,msg4_header,msg4_padding,msg4_post_padding);
 	  DevAssert( UE_id != UE_INDEX_INVALID ); // FIXME not sure how to gracefully return
 	  // CHECK THIS: &cc[CC_idP].CCCH_pdu.payload[0]
 	  offset = generate_dlsch_header((unsigned char*)eNB->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0],
@@ -1081,7 +1099,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 
 	  // DL request
 	  eNB->TX_req[CC_idP].sfn_sf = fill_nfapi_tx_req(&eNB->TX_req[CC_idP].tx_request_body,
-							 (frameP*10)+subframeP,
+							 (orig_Msg4_frame*10)+orig_Msg4_subframe,
 							 rrc_sdu_length,
 							 eNB->pdu_index[CC_idP],
 							 eNB->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0]); 
@@ -1094,7 +1112,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	  fill_nfapi_uci_acknak(module_idP,
 				CC_idP,
 				RA_template->rnti,
-				(frameP*10)+subframeP,
+				(orig_Msg4_frame*10)+orig_Msg4_subframe,
 				dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.cce_idx);
 
 	  
@@ -1300,8 +1318,8 @@ void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP)
 
       if (RA_template->RA_active == TRUE) {
 
-        LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d : CC_id %d RA %d is active (generate RAR %d, generate_Msg4 %d, wait_ack_Msg4 %d, rnti %x)\n",
-              module_idP,frameP,subframeP,CC_id,i,RA_template->generate_rar,RA_template->generate_Msg4,RA_template->wait_ack_Msg4, RA_template->rnti);
+        LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d : CC_id %d RA %d is active (generate RAR %d, generate_Msg4 %d[SFN/SF:%d%d], wait_ack_Msg4 %d, rnti %x)\n",
+              module_idP,frameP,subframeP,CC_id,i,RA_template->generate_rar,RA_template->generate_Msg4,RA_template->Msg4_frame,RA_template->Msg4_subframe,RA_template->wait_ack_Msg4, RA_template->rnti);
 
         if      (RA_template->generate_rar == 1)  generate_Msg2(module_idP,CC_id,frameP,subframeP,RA_template);
 	else if (RA_template->generate_Msg4 == 1) generate_Msg4(module_idP,CC_id,frameP,subframeP,RA_template);

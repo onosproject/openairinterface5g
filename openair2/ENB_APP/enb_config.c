@@ -106,6 +106,7 @@ static int enb_check_band_frequencies(char* lib_config_file_name_pP,
 
 extern void mac_top_init_eNB(void );
 extern uint8_t  nfapi_mode;
+extern uint8_t  sf_ahead;
 
 
 
@@ -390,6 +391,7 @@ void RCconfig_macrlc() {
 	RC.mac[j]->eth_params_s.transp_preference        = ETH_UDP_MODE;
 
         nfapi_mode = 2;
+        sf_ahead=3;
 
         printf("**************** vnf_port:%d\n", RC.mac[j]->eth_params_s.my_portc);
         configure_nfapi_vnf(RC.mac[j]->eth_params_s.my_addr, RC.mac[j]->eth_params_s.my_portc);

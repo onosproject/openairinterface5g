@@ -66,9 +66,12 @@ void handle_sr(UL_IND_t *UL_info) {
 
   int i;
 
-  if (nfapi_mode == 1)
+  if (nfapi_mode == 1)  // PNF
   {
-    oai_nfapi_sr_indication(&UL_info->sr_ind);
+    if (UL_info->sr_ind.sr_indication_body.number_of_srs>0)
+    {
+      oai_nfapi_sr_indication(&UL_info->sr_ind);
+    }
   }
   else
   {
@@ -218,12 +221,12 @@ void handle_ulsch(UL_IND_t *UL_info) {
   if (UL_info->rx_ind.rx_indication_body.number_of_pdus>0)
   {
     UL_info->rx_ind.rx_indication_body.number_of_pdus = 0;
-    LOG_D(PHY, "UL_INFO:SFN/SF:%d/%d ZEROING rx_ind.number_of_pdus:%d \n", UL_info->frame, UL_info->subframe, UL_info->rx_ind.rx_indication_body.number_of_pdus);
+    LOG_D(PHY, "UL_INFO:SFN/SF:%d%d ZEROING rx_ind[SFN/SF:%d number_of_pdus:%d]\n", UL_info->frame, UL_info->subframe, NFAPI_SFNSF2DEC(UL_info->rx_ind.sfn_sf), UL_info->rx_ind.rx_indication_body.number_of_pdus);
   }
 
   if (UL_info->subframe && UL_info->crc_ind.crc_indication_body.number_of_crcs>0)
   {
-    LOG_D(PHY, "UL_INFO:SFN/SF:%d/%d crcs:%d Reset to zero\n", UL_info->frame, UL_info->subframe, UL_info->crc_ind.crc_indication_body.number_of_crcs);
+    LOG_D(PHY, "UL_INFO:SFN/SF:%d%d ZEROING crc_ind[SFN/SF:%d crcs:%d]\n", UL_info->frame, UL_info->subframe, NFAPI_SFNSF2DEC(UL_info->crc_ind.sfn_sf), UL_info->crc_ind.crc_indication_body.number_of_crcs);
     UL_info->crc_ind.crc_indication_body.number_of_crcs=0;
   }
 }
@@ -525,10 +528,10 @@ void UL_indication(UL_IND_t *UL_info)
   IF_Module_t  *ifi        = if_inst[module_id];
   eNB_MAC_INST *mac        = RC.mac[module_id];
 
-  LOG_D(PHY,"SFN/SF:%d%d module_id:%d CC_id:%d UL_info[rx_ind:%d harqs:%d crcs:%d cqis:%d preambles:%d]\n", 
+  LOG_D(PHY,"SFN/SF:%d%d module_id:%d CC_id:%d UL_info[rx_ind:%d harqs:%d crcs:%d cqis:%d preambles:%d sr_ind:%d]\n", 
       UL_info->frame,UL_info->subframe,
       module_id,CC_id,
-      UL_info->rx_ind.rx_indication_body.number_of_pdus, UL_info->harq_ind.harq_indication_body.number_of_harqs, UL_info->crc_ind.crc_indication_body.number_of_crcs, UL_info->cqi_ind.number_of_cqis, UL_info->rach_ind.rach_indication_body.number_of_preambles);
+      UL_info->rx_ind.rx_indication_body.number_of_pdus, UL_info->harq_ind.harq_indication_body.number_of_harqs, UL_info->crc_ind.crc_indication_body.number_of_crcs, UL_info->cqi_ind.number_of_cqis, UL_info->rach_ind.rach_indication_body.number_of_preambles, UL_info->sr_ind.sr_indication_body.number_of_srs);
 
   if (nfapi_mode != 1)
   {

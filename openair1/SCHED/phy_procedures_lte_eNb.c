@@ -788,8 +788,8 @@ void fill_sr_indication(PHY_VARS_eNB *eNB,uint16_t rnti,int frame,int subframe,u
   nfapi_sr_indication_body_t  *sr_ind_body =    &sr_ind->sr_indication_body;
   nfapi_sr_indication_pdu_t *pdu =   &sr_ind_body->sr_pdu_list[sr_ind_body->number_of_srs];
 
-  sr_ind.sfn_sf = frame<<4|subframe;
-  sr_ind.header.message_id = NFAPI_RX_SR_INDICATION;
+  sr_ind->sfn_sf = frame<<4|subframe;
+  sr_ind->header.message_id = NFAPI_RX_SR_INDICATION;
 
   sr_ind_body->tl.tag = NFAPI_SR_INDICATION_BODY_TAG;
 

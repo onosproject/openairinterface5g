@@ -454,6 +454,8 @@ abort();
 	  // Program Msg4 PDCCH+DLSCH/MPDCCH transmission 4 subframes from now, // Check if this is ok for BL/CE, or if the rule is different
 	  RA_template->Msg4_frame    = frameP + ((subframeP>5) ? 1 : 0);
 	  RA_template->Msg4_subframe = (subframeP+4)%10;
+
+          LOG_D(MAC,"CCCH: rnti matches RA_active : Msg4 scheduled for frame:%d subframe:%d (current frame:%d subframe:%d)\n",RA_template->Msg4_frame, RA_template->Msg4_subframe,frameP,subframeP);
 	  
         } // if process is active
       } // loop on RA processes
@@ -567,7 +569,7 @@ abort();
   }
 
   // Program ACK for PHICH
-  LOG_D(MAC,"SFN/SF:%d/%d Programming PHICH ACK for rnti %x harq_pid %d (first_rb %d)\n",frameP,subframeP,rntiP,harq_pid,first_rb);
+  LOG_D(MAC,"SFN/SF:%d%d Programming PHICH ACK for rnti %x harq_pid %d (first_rb %d)\n",frameP,subframeP,rntiP,harq_pid,first_rb);
   nfapi_hi_dci0_request_t        *hi_dci0_req = &eNB->HI_DCI0_req[CC_idP];
   nfapi_hi_dci0_request_body_t   *hi_dci0_req_body = &hi_dci0_req->hi_dci0_request_body;
   nfapi_hi_dci0_request_pdu_t    *hi_dci0_pdu = &hi_dci0_req_body->hi_dci0_pdu_list[hi_dci0_req_body->number_of_dci+hi_dci0_req_body->number_of_hi]; 	

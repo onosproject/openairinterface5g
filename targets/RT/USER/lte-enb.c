@@ -237,7 +237,8 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
   stop_meas( &softmodem_stats_rxtx_sf );
 
-  LOG_D(PHY,"%s() Exit proc[rx:%d%d tx:%d%d]\n\n", __FUNCTION__, proc->frame_rx, proc->subframe_rx, proc->frame_tx, proc->subframe_tx);
+  LOG_D(PHY,"%s() Exit proc[rx:%d%d tx:%d%d] time[in:%lld diff:%lld max:%lld]\n\n", __FUNCTION__, proc->frame_rx, proc->subframe_rx, proc->frame_tx, proc->subframe_tx, 
+      softmodem_stats_rxtx_sf.in, softmodem_stats_rxtx_sf.diff_now, softmodem_stats_rxtx_sf.max);
   
   return(0);
 }
@@ -1062,7 +1063,7 @@ void init_eNB(int single_thread_flag,int wait_for_sync) {
       LOG_I(PHY,"Setting indication lists\n");
       eNB->UL_INFO.rx_ind.rx_indication_body.rx_pdu_list   = eNB->rx_pdu_list;
       eNB->UL_INFO.crc_ind.crc_indication_body.crc_pdu_list = eNB->crc_pdu_list;
-      eNB->UL_INFO.sr_ind.sr_pdu_list = eNB->sr_pdu_list;
+      eNB->UL_INFO.sr_ind.sr_indication_body.sr_pdu_list = eNB->sr_pdu_list;
       eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list = eNB->harq_pdu_list;
       eNB->UL_INFO.cqi_ind.cqi_pdu_list = eNB->cqi_pdu_list;
       eNB->UL_INFO.cqi_ind.cqi_raw_pdu_list = eNB->cqi_raw_pdu_list;

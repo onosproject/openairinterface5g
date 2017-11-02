@@ -551,7 +551,7 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf)
   proc_rxtx->frame_tx     = (proc_rxtx->subframe_rx > (9-sf_ahead)) ? (proc_rxtx->frame_rx+1)&1023 : proc_rxtx->frame_rx;
   proc_rxtx->subframe_tx  = (proc_rxtx->subframe_rx + sf_ahead)%10;
 
-  LOG_D(PHY, "sfn/sf:%d%d proc[rx:%d%d] proc_rxtx[instance_cnt_rxtx:%d rx:%d%d]\n\n", sfn, sf, proc->frame_rx, proc->subframe_rx, proc_rxtx->instance_cnt_rxtx, proc_rxtx->frame_rx, proc_rxtx->subframe_rx);
+  LOG_D(PHY, "sfn/sf:%d%d proc[rx:%d%d] proc_rxtx[instance_cnt_rxtx:%d rx:%d%d] About to wake rxtx thread\n\n", sfn, sf, proc->frame_rx, proc->subframe_rx, proc_rxtx->instance_cnt_rxtx, proc_rxtx->frame_rx, proc_rxtx->subframe_rx);
 
   // the thread can now be woken up
   if (pthread_cond_signal(&proc_rxtx->cond_rxtx) != 0) {
@@ -704,14 +704,16 @@ int phy_crc_indication(struct nfapi_vnf_p7_config* config, nfapi_crc_indication_
   *dest_ind = *ind;
   dest_ind->crc_indication_body.crc_pdu_list = dest_pdu_list;
 
-  LOG_E(MAC, "%s() NFAPI SFN/SF:%d IND:number_of_crcs:%u UL_INFO:crcs:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->crc_indication_body.number_of_crcs, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs);
+  if (ind->crc_indication_body.number_of_crcs==0)
+    LOG_E(MAC, "%s() NFAPI SFN/SF:%d IND:number_of_crcs:%u UL_INFO:crcs:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->crc_indication_body.number_of_crcs, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs);
 
   for (int i=0; i<ind->crc_indication_body.number_of_crcs; i++)
   {
     memcpy(&dest_ind->crc_indication_body.crc_pdu_list[i], &ind->crc_indication_body.crc_pdu_list[i], sizeof(ind->crc_indication_body.crc_pdu_list[0]));
 
-    LOG_D(MAC, "%s() PDU[%d] rnti:%04x UL_INFO:rnti:%04x\n", 
+    LOG_D(MAC, "%s() NFAPI SFN/SF:%d CRC_IND:number_of_crcs:%u UL_INFO:crcs:%d PDU[%d] rnti:%04x UL_INFO:rnti:%04x\n", 
         __FUNCTION__,
+        NFAPI_SFNSF2DEC(ind->sfn_sf), ind->crc_indication_body.number_of_crcs, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs,
         i, 
         ind->crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti, 
         eNB->UL_INFO.crc_ind.crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti);
@@ -729,7 +731,10 @@ int phy_rx_indication(struct nfapi_vnf_p7_config* config, nfapi_rx_indication_t*
 {
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
 
-  LOG_E(MAC, "%s() NFAPI SFN/SF:%d number_of_pdus:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rx_indication_body.number_of_pdus);
+  if (ind->rx_indication_body.number_of_pdus==0)
+  {
+    LOG_E(MAC, "%s() NFAPI SFN/SF:%d number_of_pdus:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rx_indication_body.number_of_pdus);
+  }
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
@@ -751,8 +756,9 @@ int phy_rx_indication(struct nfapi_vnf_p7_config* config, nfapi_rx_indication_t*
 
     memcpy(dest_pdu->data, src_pdu->data, dest_pdu->rx_indication_rel8.length);
 
-    LOG_E(PHY, "%s() handle:%d rnti:%04x length:%d offset:%d ul_cqi:%d ta:%d data:%p\n",
+    LOG_E(PHY, "%s() NFAPI SFN/SF:%d PDUs:%d [PDU:%d] handle:%d rnti:%04x length:%d offset:%d ul_cqi:%d ta:%d data:%p\n",
         __FUNCTION__,
+        NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rx_indication_body.number_of_pdus, i,
         dest_pdu->rx_ue_information.handle,
         dest_pdu->rx_ue_information.rnti,
         dest_pdu->rx_indication_rel8.length,
@@ -780,17 +786,17 @@ int phy_sr_indication(struct nfapi_vnf_p7_config* config, nfapi_sr_indication_t*
 
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
 
-  LOG_D(MAC, "%s() NFAPI SFN/SF:%d srs:%d\n", NFAPI_SFNSF2DEC(ind->sfn_sf), ind->sr_indication_body.number_of_srs);
+  LOG_D(MAC, "%s() NFAPI SFN/SF:%d srs:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->sr_indication_body.number_of_srs);
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
   nfapi_sr_indication_t *dest_ind = &eNB->UL_INFO.sr_ind;
-  nfapi_rx_indication_pdu_t *dest_pdu_list = eNB->sr_pdu_list;
+  nfapi_sr_indication_pdu_t *dest_pdu_list = eNB->sr_pdu_list;
 
   *dest_ind = *ind;
   dest_ind->sr_indication_body.sr_pdu_list = dest_pdu_list;
 
-  for (i=0;i<UL_info->sr_ind.sr_indication_body.number_of_srs;i++)
+  for (int i=0;i<eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs;i++)
   {
     nfapi_sr_indication_pdu_t *dest_pdu = &dest_ind->sr_indication_body.sr_pdu_list[i];
     nfapi_sr_indication_pdu_t *src_pdu = &ind->sr_indication_body.sr_pdu_list[i];
@@ -1382,7 +1388,7 @@ int oai_nfapi_dl_config_req(nfapi_dl_config_request_t *dl_config_req)
 
   //LOG_D(PHY, "[VNF] %s() header message_id:%02x\n", __FUNCTION__, dl_config_req->header.message_id);
 
-  LOG_D(PHY, "[VNF] %s() DL_CONFIG p7_config:%p phy_id:%d message_id:%02x sfn_sf:%d pdcch:%d dci:%d pdu:%d pdsch_rnti:%d pcfich:%d\n", __FUNCTION__, p7_config, dl_config_req->header.phy_id, dl_config_req->header.message_id, NFAPI_SFNSF2DEC(dl_config_req->sfn_sf), dl_config_req->dl_config_request_body.number_pdcch_ofdm_symbols, dl_config_req->dl_config_request_body.number_dci, dl_config_req->dl_config_request_body.number_pdu, dl_config_req->dl_config_request_body.number_pdsch_rnti, dl_config_req->dl_config_request_body.transmission_power_pcfich);
+  LOG_D(PHY, "[VNF] %s() DL_CONFIG sfn_sf:%d pdcch:%d dci:%d pdu:%d pdsch_rnti:%d pcfich:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(dl_config_req->sfn_sf), dl_config_req->dl_config_request_body.number_pdcch_ofdm_symbols, dl_config_req->dl_config_request_body.number_dci, dl_config_req->dl_config_request_body.number_pdu, dl_config_req->dl_config_request_body.number_pdsch_rnti, dl_config_req->dl_config_request_body.transmission_power_pcfich);
 
   int retval = nfapi_vnf_p7_dl_config_req(p7_config, dl_config_req);
 
@@ -1404,7 +1410,7 @@ int oai_nfapi_tx_req(nfapi_tx_request_t *tx_req)
 
   tx_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
 
-  LOG_D(PHY, "[VNF] %s() TX_REQ p7_config:%p phy_id:%d message_id:%02x sfn_sf:%d number_of_pdus:%d\n", __FUNCTION__, p7_config, tx_req->header.phy_id, tx_req->header.message_id, NFAPI_SFNSF2DEC(tx_req->sfn_sf), tx_req->tx_request_body.number_of_pdus);
+  LOG_D(PHY, "[VNF] %s() TX_REQ sfn_sf:%d number_of_pdus:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(tx_req->sfn_sf), tx_req->tx_request_body.number_of_pdus);
 
   int retval = nfapi_vnf_p7_tx_req(p7_config, tx_req);
 
@@ -1426,7 +1432,7 @@ int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req)
 
   hi_dci0_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
 
-  LOG_D(PHY, "[VNF] %s() HI_DCI0_REQ p7_config:%p phy_id:%d message_id:%02x sfn_sf:%d number_of_dci:%d number_of_hi:%d\n", __FUNCTION__, p7_config, hi_dci0_req->header.phy_id, hi_dci0_req->header.message_id, NFAPI_SFNSF2DEC(hi_dci0_req->sfn_sf), hi_dci0_req->hi_dci0_request_body.number_of_dci, hi_dci0_req->hi_dci0_request_body.number_of_hi);
+  LOG_D(PHY, "[VNF] %s() HI_DCI0_REQ sfn_sf:%d dci:%d hi:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(hi_dci0_req->sfn_sf), hi_dci0_req->hi_dci0_request_body.number_of_dci, hi_dci0_req->hi_dci0_request_body.number_of_hi);
 
   int retval = nfapi_vnf_p7_hi_dci0_req(p7_config, hi_dci0_req);
 
@@ -1451,8 +1457,8 @@ int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req)
 
   //LOG_D(PHY, "[VNF] %s() header message_id:%02x\n", __FUNCTION__, ul_config_req->header.message_id);
 
-  LOG_D(PHY, "[VNF] %s() UL_CONFIG p7_config:%p phy_id:%d message_id:%02x sfn_sf:%d PDUs:%d rach_prach_frequency_resources:%d srs_present:%d\n", 
-  __FUNCTION__, p7_config, ul_config_req->header.phy_id, ul_config_req->header.message_id, NFAPI_SFNSF2DEC(ul_config_req->sfn_sf), 
+  LOG_D(PHY, "[VNF] %s() UL_CONFIG sfn_sf:%d PDUs:%d rach_prach_frequency_resources:%d srs_present:%d\n", 
+  __FUNCTION__, NFAPI_SFNSF2DEC(ul_config_req->sfn_sf), 
   ul_config_req->ul_config_request_body.number_of_pdus,
   ul_config_req->ul_config_request_body.rach_prach_frequency_resources,
   ul_config_req->ul_config_request_body.srs_present);

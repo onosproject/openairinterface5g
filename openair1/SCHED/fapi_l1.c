@@ -623,6 +623,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 	frame,subframe,number_dl_pdu,TX_req->tx_request_body.number_of_pdus,number_hi_dci0_pdu,number_ul_pdu, eNB->pdcch_vars[subframe&1].num_pdcch_symbols);
 
   int do_oai =0;
+  int dont_send =0;
   
   if ((subframe_select(fp,ul_subframe)==SF_UL) ||
       (fp->frame_type == FDD)) {
@@ -666,7 +667,15 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
       //      handle_nfapi_mch_dl_pdu(eNB,dl_config_pdu);
       break;
     case NFAPI_DL_CONFIG_DLSCH_PDU_TYPE:
-      LOG_D(PHY,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d data:%p\n", __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx, dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks, dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index, TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
+      {
+        nfapi_dl_config_dlsch_pdu_rel8_t *dlsch_pdu_rel8 = &dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8;
+        uint16_t pdu_index = dlsch_pdu_rel8->pdu_index;
+        uint16_t tx_pdus = TX_req->tx_request_body.number_of_pdus;
+        uint16_t invalid_pdu = pdu_index == -1;
+        uint8_t *sdu = invalid_pdu ? NULL : pdu_index >= tx_pdus ? NULL : TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_data;
+
+        LOG_D(PHY,"%s() [PDU:%d] NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d sdu:%p\n", 
+            __FUNCTION__, i, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx, dlsch_pdu_rel8->transport_blocks, pdu_index, sdu);
 
       /*
       AssertFatal(dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index<TX_req->tx_request_body.number_of_pdus,
@@ -674,14 +683,20 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
                   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index,
                   TX_req->tx_request_body.number_of_pdus);
       */
-      AssertFatal((dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks<3) &&
-                  (dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks>0),
-                  "dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks = %d not in [1,2]\n",
-                  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks);
-      handle_nfapi_dlsch_pdu(eNB,proc,dl_config_pdu,
-                             dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks-1,
-                             dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index == -1 ? NULL
-                               : TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
+      AssertFatal((dlsch_pdu_rel8->transport_blocks<3) &&
+                  (dlsch_pdu_rel8->transport_blocks>0),
+                  "dlsch_pdu_rel8->transport_blocks = %d not in [1,2]\n",
+                  dlsch_pdu_rel8->transport_blocks);
+      if (sdu != NULL)
+      {
+        handle_nfapi_dlsch_pdu(eNB,proc,dl_config_pdu, dlsch_pdu_rel8->transport_blocks-1, sdu);
+      }
+      else
+      {
+        dont_send=1;
+
+        LOG_E(MAC,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE sdu is NULL DL_CFG:SFN/SF:%d:pdu_index:%d TX_REQ:SFN/SF:%d:pdus:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(DL_req->sfn_sf), pdu_index, NFAPI_SFNSF2DEC(TX_req->sfn_sf), tx_pdus);
+      }
 
       // Send the data first so that the DL_CONFIG can just pluck it out of the buffer
       // DJP - OAI was here - moved to bottom
@@ -697,6 +712,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
                                            subframe);
 
                                            }        */
+      }
       break;
     case NFAPI_DL_CONFIG_PCH_PDU_TYPE:
       //      handle_nfapi_pch_pdu(eNB,dl_config_pdu);
@@ -717,7 +733,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     }
   }
   
-  if (nfapi_mode && do_oai) {
+  if (nfapi_mode && do_oai && !dont_send) {
     oai_nfapi_tx_req(Sched_INFO->TX_req);
 
     oai_nfapi_dl_config_req(Sched_INFO->DL_req); // DJP - .dl_config_request_body.dl_config_pdu_list[0]); // DJP - FIXME TODO - yuk - only copes with 1 pdu

@@ -144,7 +144,7 @@ void store_dlsch_buffer (module_id_t Mod_id,
        */
       if (UE_template->dl_buffer_info[i]>0)
         LOG_D(MAC,
-              "[eNB %d] Frame %d Subframe %d : RLC status for UE %d in LCID%d: total of %d pdus and size %d, head sdu queuing time %d, remaining size %d, is segmeneted %d \n",
+              "[eNB %d] Frame %d Subframe %d : RLC status for UE %d in LCID%d: total of %d pdus and size %d, head sdu queuing time %d, remaining size %d, is segmented %d \n",
               Mod_id, frameP, subframeP, UE_id,
               i, UE_template->dl_pdus_in_buffer[i],UE_template->dl_buffer_info[i],
               UE_template->dl_buffer_head_sdu_creation_time[i],
@@ -230,7 +230,7 @@ void assign_rbs_required (module_id_t Mod_id,
 
         TBS = get_TBS_DL(eNB_UE_stats->dlsch_mcs1,nb_rbs_required[CC_id][UE_id]);
 
-        LOG_D(MAC,"[preprocessor] start RB assignement for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
+        LOG_D(MAC,"[preprocessor] start RB assignment for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
               UE_id, CC_id, UE_list->UE_template[pCCid][UE_id].dl_buffer_total,
               nb_rbs_required[CC_id][UE_id],eNB_UE_stats->dlsch_mcs1,TBS);
 
@@ -607,7 +607,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
       /*
        * If schedule is enabled and if the priority of the UEs is modified
        * The average rbs per logical channel per user will depend on the level of
-       * priority. Concerning the hypothetical assignement, we should assign more
+       * priority. Concerning the hypothetical assignment, we should assign more
        * rbs to prioritized users. Maybe, we can do a mapping between the
        * average rbs per user and the level of priority or multiply the average rbs
        * per user by a coefficient which represents the degree of priority.
