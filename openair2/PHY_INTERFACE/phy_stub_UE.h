@@ -19,6 +19,8 @@
 
 UL_IND_t *UL_INFO;
 
+nfapi_tx_request_pdu_t* tx_request_pdu_list;
+
 
 
 // Panos: This function should return all the sched_response config messages which concern a specific UE. Inside this
@@ -27,7 +29,7 @@ Sched_Rsp_t get_nfapi_sched_response(uint8_t Mod_id);
 
 // This function will be processing DL_config and Tx.requests and trigger all the MAC Rx related calls at the UE side,
 // namely:ue_send_sdu(), or ue_decode_si(), or ue_decode_p(), or ue_process_rar() based on the rnti type.
-void handle_nfapi_UE_Rx(uint8_t Mod_id, Sched_Rsp_t *Sched_INFO, int eNB_id);
+//void handle_nfapi_UE_Rx(uint8_t Mod_id, Sched_Rsp_t *Sched_INFO, int eNB_id);
 
 int pnf_ul_config_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req);
 
@@ -74,6 +76,8 @@ int ul_config_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_
 void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
                          nfapi_ul_config_request_pdu_t *ul_config_pdu,
                          uint16_t frame,uint8_t subframe,uint8_t srs_present);
+
+int tx_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req);
 
 
 
