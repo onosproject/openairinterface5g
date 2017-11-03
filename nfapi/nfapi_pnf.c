@@ -1879,7 +1879,7 @@ int oai_nfapi_sr_indication(nfapi_sr_indication_t *ind)
 
   int retval = nfapi_pnf_p7_sr_ind(p7_config_g, ind);
 
-  LOG_E(PHY,"%s() retval:%d\n", __FUNCTION__, retval);
+  LOG_E(PHY,"%s() SFN/SF:%d srs:%d retval:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->sr_indication_body.number_of_srs, retval);
 
   //free(ind.rx_indication_body.rx_pdu_list);
 

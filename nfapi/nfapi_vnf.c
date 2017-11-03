@@ -796,10 +796,14 @@ int phy_sr_indication(struct nfapi_vnf_p7_config* config, nfapi_sr_indication_t*
   *dest_ind = *ind;
   dest_ind->sr_indication_body.sr_pdu_list = dest_pdu_list;
 
+  LOG_D(MAC,"%s() eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs:%d\n", eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs);
+
   for (int i=0;i<eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs;i++)
   {
     nfapi_sr_indication_pdu_t *dest_pdu = &dest_ind->sr_indication_body.sr_pdu_list[i];
     nfapi_sr_indication_pdu_t *src_pdu = &ind->sr_indication_body.sr_pdu_list[i];
+
+    LOG_D(MAC, "SR_IND[PDU:%d][rnti:%x cqi:%d channel:%d]\n", i, dest_pdu->rx_ue_information.rnti, dest_pdu->ul_cqi_information.ul_cqi, dest_pdu->ul_cqi_information.channel);
 
     memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
   }
