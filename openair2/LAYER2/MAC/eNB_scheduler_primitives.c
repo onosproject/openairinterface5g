@@ -1316,7 +1316,7 @@ void fill_nfapi_dlsch_config(eNB_MAC_INST *eNB,
   dl_req->number_pdu++;
   dl_req->tl.tag=NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 
-  LOG_D(MAC,"Filled DL_CONFIG_PDU - DLSCH - dl_req->number_pdu:%d\n", dl_req->number_pdu);
+  LOG_D(MAC,"Filled DL_CONFIG_PDU - DLSCH - dl_req->number_pdu:%d pdu_index:%d\n", dl_req->number_pdu, pdu_index);
 }
 
 uint16_t fill_nfapi_tx_req(nfapi_tx_request_body_t *tx_req_body,uint16_t absSF,uint16_t pdu_length, uint16_t pdu_index, uint8_t *pdu)
