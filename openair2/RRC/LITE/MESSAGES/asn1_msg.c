@@ -1369,8 +1369,7 @@ uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_Destinatio
    UL_DCCH_Message_t ul_dcch_msg;
 
    SidelinkUEInformation_r12_t *sidelinkUEInformation;
-   ARFCN_ValueEUTRA_r9_t   commRxInterestedFreq[] = {2565000000.0}; //sidelink communication frequency
-   ARFCN_ValueEUTRA_r9_t carrierFreq[] = {2565000000.0};
+   ARFCN_ValueEUTRA_r9_t carrierFreq[] = {2565000000.0};//sidelink communication frequency
 
    memset((void *)&ul_dcch_msg,0,sizeof(UL_DCCH_Message_t));
 
@@ -1383,7 +1382,8 @@ uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_Destinatio
    switch(mode) {
    //if SIB18 is available case 1,2,3,4
    case 1: // to receive sidelink communication
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12 = &commRxInterestedFreq[0];
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12 = &carrierFreq[0];
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12[0] = carrierFreq[0];
       break;
    case 2: //to transmit non-relay related one-to-many sidelink communication
       //commTxResourceReq
@@ -2186,11 +2186,13 @@ do_RRCConnectionReconfiguration(
   RSRP_Range_t                       *rsrp,
   C_RNTI_t                           *cba_rnti,
   struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList
-  *dedicatedInfoNASList
-
+  *dedicatedInfoNASList,
+  SL_CommConfig_r12_t                *sl_CommConfig,
+  SL_DiscConfig_r12_t                *sl_DiscConfig
 #if defined(Rel10) || defined(Rel14)
   , SCellToAddMod_r10_t  *SCell_config
 #endif
+
 )
 //------------------------------------------------------------------------------
 {
@@ -2281,6 +2283,18 @@ do_RRCConnectionReconfiguration(
 
   rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.dedicatedInfoNASList = dedicatedInfoNASList;
   rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.securityConfigHO     = NULL;
+
+  //TTN for D2D
+  //allocate dedicated resource pools for SL communication (sl_CommConfig_r12)
+  if (sl_CommConfig) {
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12 = sl_CommConfig;
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12[0] = sl_CommConfig[0];
+  }
+  //allocate dedicated resource pools for SL discovery (sl_DiscConfig)
+  if (sl_DiscConfig){
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12 = sl_DiscConfig;
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12[0] = sl_DiscConfig[0];
+  }
 
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message,
                                    (void*)&dl_dcch_msg,

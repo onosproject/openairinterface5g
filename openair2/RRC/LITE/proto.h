@@ -294,7 +294,10 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
 int
 rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
       const protocol_ctxt_t* const ctxt_pP,
-      rrc_eNB_ue_context_t*           const ue_context_pP
+      rrc_eNB_ue_context_t*           const ue_context_pP,
+      SL_DestinationIdentity_r12_t* SL_DestinationIdentity,
+      int n_destinations,
+      int n_discoveryMessages
 );
 
 /** \brief process the received SidelinkUEInformation message at UE
@@ -305,7 +308,7 @@ void
 rrc_eNB_process_SidelinkUEInformation(
       const protocol_ctxt_t* const ctxt_pP,
       rrc_eNB_ue_context_t*         ue_context_pP,
-      SidelinkUEInformation_r12_t * sidelinkUEInformation
+      SidelinkUEInformation_r12_t*  sidelinkUEInformation
 );
 
 //L2_interface.c

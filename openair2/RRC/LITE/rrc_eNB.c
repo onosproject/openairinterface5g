@@ -56,6 +56,7 @@
 #include "rrc_eNB_UE_context.h"
 #include "platform_types.h"
 #include "msc.h"
+#include "SL-CommConfig-r12.h"
 
 #include "T.h"
 
@@ -1414,7 +1415,9 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration(const protocol_ctxt_t* co
                                          (struct SPS_Config*)NULL,    // *sps_Config,
 					  NULL, NULL, NULL, NULL,NULL,
 					  NULL, NULL,  NULL, NULL, NULL, NULL, 
-					  (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
+					  (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList,
+					  (SL_CommConfig_r12_t*)NULL,
+					  (SL_DiscConfig_r12_t*)NULL
 #if defined(Rel10) || defined(Rel14)
                                          , (SCellToAddMod_r10_t*)NULL
 #endif
@@ -2147,7 +2150,9 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
                                          (struct MeasConfig__speedStatePars*)Sparams,
                                          (RSRP_Range_t*)rsrp,
                                          (C_RNTI_t*)cba_RNTI,
-                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
+                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList,
+                                         (SL_CommConfig_r12_t*)NULL,
+                                         (SL_DiscConfig_r12_t*)NULL
 #if defined(Rel10) || defined(Rel14)
                                          , (SCellToAddMod_r10_t*)NULL
 #endif
@@ -2251,7 +2256,9 @@ rrc_eNB_generate_RRCConnectionReconfiguration_SCell(
                                          (struct MeasConfig__speedStatePars*)NULL,
                                          (RSRP_Range_t*)NULL,
                                          (C_RNTI_t*)NULL,
-                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL
+                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL,
+                                         (SL_CommConfig_r12_t*)NULL,
+                                         (SL_DiscConfig_r12_t*)NULL
 
 #if defined(Rel10) || defined(Rel14)
                                          , ue_context_pP->ue_context.sCell_config
@@ -3367,7 +3374,9 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
            Sparams,
            NULL,
            NULL,
-           dedicatedInfoNASList
+           dedicatedInfoNASList,
+           (SL_CommConfig_r12_t*)NULL,
+           (SL_DiscConfig_r12_t*)NULL
 #if defined(Rel10) || defined(Rel14)
            , NULL   // SCellToAddMod_r10_t
 #endif
@@ -5248,11 +5257,66 @@ rrc_eNB_process_SidelinkUEInformation(
 )
 //-----------------------------------------------------------------------------
 {
+  SL_DestinationIdentity_r12_t sl_DestinationIdentityList[16];
+  int n_destinations = 0;
+  int ue_type = 0;
+  int n_discoveryMessages = 0;
+
   LOG_I(RRC,
         PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel UL-DCCH, " "processing SidelinkUEInformation from UE (SRB1 Active)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
-   //generate RRC Reconfiguration
-  rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP);
+
+  //For SL Commmunication
+  // express its interest to receive SL communication
+  if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12){
+
+  }
+  // express its interest to transmit  non-relay one-to-many SL communication
+  if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12){
+     n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.count;
+     for (int i=0; i< n_destinations; i++ ){
+        sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.array[i]);
+     }
+  }
+  // express its interest to transmit  non-relay one-to-one SL communication
+  if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12){
+     n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.count;
+     for (int i=0; i< n_destinations; i++ ){
+        sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.array[i]);
+     }
+  }
+
+  // express its interest to transmit relay related one-to-one SL communication
+  if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count>0){
+     n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count;
+     ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
+     for (int i=0; i< n_destinations; i++ ){
+        sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.array[i]);
+     }
+  }
+
+  //express its interest to transmit relay related one-to-many SL communication
+  if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count>0){
+     n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count;
+     ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
+     for (int i=0; i< n_destinations; i++ ){
+        sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.array[i]);
+     }
+  }
+  //For SL Discovery
+  //express its interest to receive SL discovery announcements
+
+  //express its interest to transmit non-PS related discovery announcements
+  if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12 > 0){
+     n_discoveryMessages = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12;
+  }
+  //express its interest to transmit PS related discovery announcements
+  if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13->discTxResourceReq_r13 > 0){
+     n_discoveryMessages = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13->discTxResourceReq_r13;
+  }
+
+  //generate RRC Reconfiguration
+  rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, sl_DestinationIdentityList, n_destinations, n_discoveryMessages);
 
 }
 
@@ -5260,17 +5324,70 @@ rrc_eNB_process_SidelinkUEInformation(
 int
 rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_t* const ue_context_pP
+  rrc_eNB_ue_context_t* const ue_context_pP,
+  SL_DestinationIdentity_r12_t *SL_DestinationIdentity,
+  int n_destinations,
+  int n_discoveryMessages
 )
 //-----------------------------------------------------------------------------
 {
 
-  uint8_t size;
-  uint8_t buffer[100];
+  uint8_t                             buffer[RRC_BUF_SIZE];
+  uint16_t                            size;
+  memset(buffer, 0, RRC_BUF_SIZE);
 
-  //size = do_RRCConnectionReconfiguration(ctxt_pP, buffer );
+  // allocate dedicated pools for UE -sl-CommConfig/sl-DiscConfig (sl-V2X-ConfigDedicated)
+  //populate dedicated resources for SL communication (sl-CommConfig)
+  if (n_destinations > 0) {
+     //get dedicated resources from available pool and assign to the UE
+     SL_CommConfig_r12_t  sl_CommConfig[n_destinations];
+     //get a RP from the available RPs
+     //sl_CommConfig[0] = rrc_eNB_get_sidelink_commTXPool(ctxt_pP, ue_context_pP, SL_DestinationIdentity, n_destinations );
+
+     size = do_RRCConnectionReconfiguration(ctxt_pP,
+                   buffer,
+                   rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),   //Transaction_id
+                   (SRB_ToAddModList_t*)NULL,
+                   (DRB_ToAddModList_t*)NULL,
+                   (DRB_ToReleaseList_t*)NULL,  // DRB2_list,
+                   (struct SPS_Config*)NULL,    // *sps_Config,
+                   NULL, NULL, NULL, NULL,NULL,
+                   NULL, NULL,  NULL, NULL, NULL, NULL,
+                   (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL,
+                   (SL_CommConfig_r12_t*)sl_CommConfig,
+                   (SL_DiscConfig_r12_t*)NULL
+  #if defined(Rel10) || defined(Rel14)
+                                           , (SCellToAddMod_r10_t*)NULL
+  #endif
+                                           );
+     //
+  }
+  //populate dedicated resources for SL discovery (sl-DiscConfig)
+  if (n_discoveryMessages > 0){
+     SL_DiscConfig_r12_t sl_DiscConfig[n_discoveryMessages];
+     //get a RP from the available RPs
+     //SL_DiscConfig[0] = rrc_eNB_get_sidelink_discTXPool(ctxt_pP, ue_context_pP, n_discoveryMessages );
+     size = do_RRCConnectionReconfiguration(ctxt_pP,
+                   buffer,
+                   rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),   //Transaction_id
+                   (SRB_ToAddModList_t*)NULL,
+                   (DRB_ToAddModList_t*)NULL,
+                   (DRB_ToReleaseList_t*)NULL,  // DRB2_list,
+                   (struct SPS_Config*)NULL,    // *sps_Config,
+                   NULL, NULL, NULL, NULL,NULL,
+                   NULL, NULL,  NULL, NULL, NULL, NULL,
+                   (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL,
+                   (SL_CommConfig_r12_t*)NULL,
+                   (SL_DiscConfig_r12_t*)sl_DiscConfig
+  #if defined(Rel10) || defined(Rel14)
+                                           , (SCellToAddMod_r10_t*)NULL
+  #endif
+                                           );
+  }
+
   LOG_I(RRC,"[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration_Sidelink (bytes %d, UE id %x)\n",
         ctxt_pP->module_id,ctxt_pP->frame, size, ue_context_pP->ue_context.rnti);
+
 
   // rrc_data_req();
 

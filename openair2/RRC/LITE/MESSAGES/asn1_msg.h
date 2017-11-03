@@ -199,7 +199,9 @@ do_RRCConnectionReconfiguration(
     struct MeasConfig__speedStatePars  *speedStatePars,
     RSRP_Range_t                       *rsrp,
     C_RNTI_t                           *cba_rnti,
-  struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList* dedicatedInfoNASList
+  struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList* dedicatedInfoNASList,
+  SL_CommConfig_r12_t                *sl_CommConfig,
+  SL_DiscConfig_r12_t                *sl_DiscConfig
 #if defined(Rel10) || defined(Rel14)
     , SCellToAddMod_r10_t  *SCell_config
 #endif

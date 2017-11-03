@@ -1898,6 +1898,19 @@ rrc_ue_process_rrcConnectionReconfiguration(
         rrc_ue_process_radioResourceConfigDedicated(ctxt_pP,eNB_index, rrcConnectionReconfiguration_r8->radioResourceConfigDedicated);
       }
 
+      //TTN for D2D
+      //if RRCConnectionReconfiguration message includes the sl-CommConfig
+      if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12->commTxResources_r12->present != SL_CommConfig_r12__commTxResources_r12_PR_NOTHING){
+         LOG_I(RRC,"sl-CommConfig is present\n");
+         //rrc_ue_process_sidelink_commTxPool()
+      }
+      //if RRCConnectionReconfiguration message includes the sl-DiscConfig
+      if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12->discTxResources_r12->present != SL_DiscConfig_r12__discTxResources_r12_PR_NOTHING ){
+         LOG_I(RRC,"sl-CommConfig is present\n");
+         //rrc_ue_process_sidelink_discTxPool()
+      }
+
+
 #if defined(ENABLE_ITTI)
 
       /* Check if there is dedicated NAS information to forward to NAS */
@@ -4873,9 +4886,18 @@ void rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt_pP
    uint8_t buffer[100];
 
    //Generate SidelinkUEInformation
-   size = do_SidelinkUEInformation(ctxt_pP->module_id, buffer, destinationInfoList, discTxResourceReq, mode);
-   LOG_I(RRC,"[UE %d][RRC_UE] Frame %d : Logical Channel UL-DCCH, Generating SidelinkUEInformation (bytes%d, eNB %d)\n",
-         ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
+
+   if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&8192) != 0) {//if SIB18 is available
+      size = do_SidelinkUEInformation(ctxt_pP->module_id, buffer, destinationInfoList, NULL, mode);
+      LOG_I(RRC,"[UE %d][RRC_UE] Frame %d : Logical Channel UL-DCCH, Generating SidelinkUEInformation (bytes%d, eNB %d)\n",
+            ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
+   }
+   if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&16384) != 0) {//if SIB19 is available
+      size = do_SidelinkUEInformation(ctxt_pP->module_id, buffer, NULL, discTxResourceReq, mode);
+      LOG_I(RRC,"[UE %d][RRC_UE] Frame %d : Logical Channel UL-DCCH, Generating SidelinkUEInformation (bytes%d, eNB %d)\n",
+            ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
+   }
+
 
 
 }
