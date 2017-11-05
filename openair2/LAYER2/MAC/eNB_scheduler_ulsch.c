@@ -574,7 +574,7 @@ abort();
   }
 
   // Program ACK for PHICH
-  LOG_D(MAC,"SFN/SF:%d%d Programming PHICH ACK for rnti %x harq_pid %d (first_rb %d)\n",frameP,subframeP,rntiP,harq_pid,first_rb);
+  //LOG_D(MAC,"SFN/SF:%d%d Programming PHICH ACK for rnti %x harq_pid %d (first_rb %d)\n",frameP,subframeP,rntiP,harq_pid,first_rb);
   nfapi_hi_dci0_request_t        *hi_dci0_req = &eNB->HI_DCI0_req[CC_idP];
   nfapi_hi_dci0_request_body_t   *hi_dci0_req_body = &hi_dci0_req->hi_dci0_request_body;
   nfapi_hi_dci0_request_pdu_t    *hi_dci0_pdu = &hi_dci0_req_body->hi_dci0_pdu_list[hi_dci0_req_body->number_of_dci+hi_dci0_req_body->number_of_hi]; 	
@@ -1191,8 +1191,7 @@ abort();
             ul_req_tmp->sfn_sf = sched_frame<<4|sched_subframeP;
             ul_req_tmp->header.message_id = NFAPI_UL_CONFIG_REQUEST;
 
-	    LOG_D(MAC,"[PUSCH %d] Frame %d, Subframe %d: Adding UL CONFIG.Request for UE %d/%x, ulsch_frame %d, ulsch_subframe %d\n",
-		  harq_pid,frameP,subframeP,UE_id,rnti,sched_frame,sched_subframeP);
+	    //LOG_D(MAC,"[PUSCH %d] Frame %d, Subframe %d: Adding UL CONFIG.Request for UE %d/%x, ulsch_frame %d, ulsch_subframe %d\n", harq_pid,frameP,subframeP,UE_id,rnti,sched_frame,sched_subframeP);
 	    
 
             // Scheduler dips into this structure to work out if UE has a grant, so in nfapi mode we still need to populate it

@@ -79,7 +79,7 @@ void handle_nfapi_hi_dci0_dci_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
   int idx                         = proc->subframe_tx&1;
   LTE_eNB_PDCCH *pdcch_vars       = &eNB->pdcch_vars[idx];
 
-  LOG_D(PHY,"%s() Before num_dci:%d\n", __FUNCTION__, pdcch_vars->num_dci);
+  //LOG_D(PHY,"%s() Before num_dci:%d\n", __FUNCTION__, pdcch_vars->num_dci);
 
   // copy dci configuration in to eNB structure
   fill_dci0(eNB,proc,&pdcch_vars->dci_alloc[pdcch_vars->num_dci], &hi_dci0_config_pdu->dci_pdu);
@@ -789,7 +789,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   if (nfapi_mode) {
     if (number_ul_pdu>0)
     {
-      LOG_D(PHY, "UL_CONFIG to send to PNF\n");
+      //LOG_D(PHY, "UL_CONFIG to send to PNF\n");
       oai_nfapi_ul_config_req(UL_req);
       UL_req->ul_config_request_body.number_of_pdus=0;
       number_ul_pdu=0;

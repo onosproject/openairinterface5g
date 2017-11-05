@@ -484,7 +484,9 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,(frame*10)+subframe);
 
   if (num_dci > 0)
-    LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (num_dci %"PRIu8") num_pdcch_symbols:%d\n",eNB->Mod_id,frame, subframe, num_dci, num_pdcch_symbols);
+  {
+    //LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (num_dci %"PRIu8") num_pdcch_symbols:%d\n",eNB->Mod_id,frame, subframe, num_dci, num_pdcch_symbols);
+  }
     
   //LOG_D(PHY,"Before generate_dci_top num_pdcch_symbols:%d num_dci:%d dci_alloc:dci_length:%d\n", num_pdcch_symbols, num_dci, eNB->pdcch_vars[subframe&1].dci_alloc[0].dci_length);
 
@@ -1349,11 +1351,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
       }
 
-      LOG_D(PHY,"[eNB %d] frame %d, subframe %d: Scheduling ULSCH Reception for UE %d \n",
-          eNB->Mod_id,
-          frame,
-          subframe,
-          i);
+      //LOG_D(PHY,"[eNB %d] frame %d, subframe %d: Scheduling ULSCH Reception for UE %d \n", eNB->Mod_id, frame, subframe, i);
 
       nPRS = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1];
 
@@ -1533,7 +1531,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     }
   }   //   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
   clock_gettime(CLOCK_MONOTONIC,&t_end);
-  LOG_E(PHY,"%s() TIMING:decode:%ld.%09ld crc:%ld.%09ld rx_ind:%ld.%09ld-%ld.%09ld harq:%ld.%09ld-%ld.%09ld end:%ld.%09ld\n", __FUNCTION__, 
+  if (0)LOG_E(PHY,"%s() TIMING:decode:%ld.%09ld crc:%ld.%09ld rx_ind:%ld.%09ld-%ld.%09ld harq:%ld.%09ld-%ld.%09ld end:%ld.%09ld\n", __FUNCTION__, 
       t_decode.tv_sec, t_decode.tv_nsec, 
       t_crc.tv_sec, t_crc.tv_nsec, 
       t_rx_ind.tv_sec, t_rx_ind.tv_nsec, 
@@ -2029,7 +2027,7 @@ void fill_crc_indication(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint
 
   eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs++;
 
-  LOG_D(PHY, "%s() rnti:%04x crcs:%d crc_flag:%d\n", __FUNCTION__, pdu->rx_ue_information.rnti, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, crc_flag);
+  //LOG_D(PHY, "%s() rnti:%04x crcs:%d crc_flag:%d\n", __FUNCTION__, pdu->rx_ue_information.rnti, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, crc_flag);
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 }
@@ -2053,7 +2051,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_UESPEC, 1 );
 
-  LOG_D(PHY,"[eNB %d] Frame %d: Doing phy_procedures_eNB_uespec_RX(%d)\n",eNB->Mod_id,frame, subframe);
+  //LOG_D(PHY,"[eNB %d] Frame %d: Doing phy_procedures_eNB_uespec_RX(%d)\n",eNB->Mod_id,frame, subframe);
 
   eNB->rb_mask_ul[0]=0;
   eNB->rb_mask_ul[1]=0;

@@ -216,7 +216,7 @@ void assign_rbs_required (module_id_t Mod_id,
     }
 
     if (UE_list->UE_template[pCCid][UE_id].dl_buffer_total> 0) {
-      LOG_D(MAC,"[preprocessor] assign RB for UE %d\n",UE_id);
+      //LOG_D(MAC,"[preprocessor] assign RB for UE %d\n",UE_id);
 
       for (i=0; i<UE_list->numactiveCCs[UE_id]; i++) {
         CC_id = UE_list->ordered_CCids[i][UE_id];
@@ -230,7 +230,7 @@ void assign_rbs_required (module_id_t Mod_id,
 
         TBS = get_TBS_DL(eNB_UE_stats->dlsch_mcs1,nb_rbs_required[CC_id][UE_id]);
 
-        LOG_D(MAC,"[preprocessor] start RB assignment for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
+        if(0)LOG_D(MAC,"[preprocessor] start RB assignment for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
               UE_id, CC_id, UE_list->UE_template[pCCid][UE_id].dl_buffer_total,
               nb_rbs_required[CC_id][UE_id],eNB_UE_stats->dlsch_mcs1,TBS);
 

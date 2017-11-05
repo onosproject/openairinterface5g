@@ -474,7 +474,7 @@ void copy_ulreq(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP)
 
     if (ul_req->ul_config_request_body.number_of_pdus>0)
     {
-      LOG_E(PHY, "%s() Copying stored UL_req_tmp to UL_req for activation NOW (frameP:%d subframeP:%d) ul_req_body->number_of_pdus:%d\n", __FUNCTION__, frameP, subframeP, ul_req->ul_config_request_body.number_of_pdus);
+      LOG_E(PHY, "%s() active NOW (frameP:%d subframeP:%d) pdus:%d\n", __FUNCTION__, frameP, subframeP, ul_req->ul_config_request_body.number_of_pdus);
     }
 
     memcpy((void*)ul_req->ul_config_request_body.ul_config_pdu_list,

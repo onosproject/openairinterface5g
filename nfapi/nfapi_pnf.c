@@ -1113,7 +1113,7 @@ int  pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
 
 int pnf_phy_ul_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
 {
-  LOG_D(PHY,"[PNF] UL_CONFIG_REQ %s() sfn_sf:%d pdu:%d rach_prach_frequency_resources:%d srs_present:%u\n", 
+  if (0)LOG_D(PHY,"[PNF] UL_CONFIG_REQ %s() sfn_sf:%d pdu:%d rach_prach_frequency_resources:%d srs_present:%u\n", 
       __FUNCTION__,
       NFAPI_SFNSF2DEC(req->sfn_sf), 
       req->ul_config_request_body.number_of_pdus,
@@ -1719,6 +1719,10 @@ void* pnf_start_thread(void* ptr)
 
   nfapi_pnf_config_t *config = (nfapi_pnf_config_t*)ptr;
 
+  struct sched_param sp;
+  sp.sched_priority = 20;
+  pthread_setschedparam(pthread_self(),SCHED_FIFO,&sp);
+
   nfapi_pnf_start(config);
 
   return (void*)0;
@@ -1781,6 +1785,9 @@ void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, 
 
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Creating PNF NFAPI start thread %s\n", __FUNCTION__);
   pthread_create(&pnf_start_pthread, NULL, &pnf_start_thread, config);
+
+  pthread_setname_np(pnf_start_pthread, "NFAPI_PNF");
+
 }
 
 void oai_subframe_ind(uint16_t sfn, uint16_t sf)
@@ -1845,7 +1852,7 @@ int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind)
   crc_ind->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
   crc_ind->header.message_id = NFAPI_CRC_INDICATION;
 
-  LOG_E(PHY, "%s() sfn_sf:%d number_of_crcs:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(crc_ind->sfn_sf), crc_ind->crc_indication_body.number_of_crcs);
+  //LOG_E(PHY, "%s() sfn_sf:%d number_of_crcs:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(crc_ind->sfn_sf), crc_ind->crc_indication_body.number_of_crcs);
 
   return nfapi_pnf_p7_crc_ind(p7_config_g, crc_ind);
 }
@@ -1855,7 +1862,7 @@ int oai_nfapi_cqi_indication(nfapi_cqi_indication_t *ind)
   ind->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
   ind->header.message_id = NFAPI_RX_CQI_INDICATION;
 
-  LOG_E(PHY, "%s() sfn_sf:%d number_of_cqis:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->cqi_indication_body.number_of_cqis);
+  //LOG_E(PHY, "%s() sfn_sf:%d number_of_cqis:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->cqi_indication_body.number_of_cqis);
 
   return nfapi_pnf_p7_cqi_ind(p7_config_g, ind);
 }
@@ -1867,7 +1874,7 @@ int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind)
 
   int retval = nfapi_pnf_p7_rx_ind(p7_config_g, ind);
 
-  LOG_D(PHY,"%s() SFN/SF:%d pdus:%d retval:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rx_indication_body.number_of_pdus, retval);
+  //LOG_D(PHY,"%s() SFN/SF:%d pdus:%d retval:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rx_indication_body.number_of_pdus, retval);
 
   //free(ind.rx_indication_body.rx_pdu_list);
 
@@ -1880,7 +1887,7 @@ int oai_nfapi_sr_indication(nfapi_sr_indication_t *ind)
 
   int retval = nfapi_pnf_p7_sr_ind(p7_config_g, ind);
 
-  LOG_E(PHY,"%s() SFN/SF:%d srs:%d retval:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->sr_indication_body.number_of_srs, retval);
+  //LOG_E(PHY,"%s() SFN/SF:%d srs:%d retval:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->sr_indication_body.number_of_srs, retval);
 
   //free(ind.rx_indication_body.rx_pdu_list);
 

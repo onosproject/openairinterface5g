@@ -128,6 +128,7 @@ uint16_t sf_ahead=2;
 time_stats_t softmodem_stats_mt; // main thread
 time_stats_t softmodem_stats_hw; //  hw acquisition
 time_stats_t softmodem_stats_rxtx_sf; // total tx time
+time_stats_t nfapi_meas; // total tx time
 time_stats_t softmodem_stats_rx_sf; // total rx time
 
 /* mutex, cond and variable to serialize phy proc TX calls
@@ -157,7 +158,9 @@ extern uint8_t nfapi_mode;
 extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
 extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 
-#define TICK_TO_US(ts) (ts.diff/ts.trials/cpu_freq_GHz)
+//#define TICK_TO_US(ts) (ts.diff)
+#define TICK_TO_US(ts) (ts.trials==0?0:ts.diff/ts.trials)
+
 
 static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
@@ -181,7 +184,9 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
     //oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
     //LOG_D(PHY, "oai_subframe_ind(frame:%u, subframe:%d) - NOT CALLED ********\n", frame, subframe);
+  start_meas(&nfapi_meas);
     oai_subframe_ind(frame, subframe);
+  stop_meas(&nfapi_meas);
 
     LOG_D(PHY, "UL_info[rx_ind:%d:%d harqs:%d:%d crcs:%d:%d preambles:%d:%d cqis:%d] RX:%d%d TX:%d%d num_pdcch_symbols:%d\n", 
       NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf),   eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, 
@@ -240,19 +245,23 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   
   if (oai_exit) return(-1);
   
-  if (nfapi_mode == 0 || nfapi_mode == 1)
-    phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
+  phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
 
   stop_meas( &softmodem_stats_rxtx_sf );
 
-  LOG_D(PHY,"%s() Exit proc[rx:%d%d tx:%d%d] rxtx:%lld phy:%15.3f tx:%15.3f rx:%15.3f prach:%15.3f ofdm:%15.3f dlsch[enc:%15.3f mod:%15.3f scr:%15.3f rm:%15.3f t:%15.3f i:%15.3f] rx_dft:%15.3f ",
-      __FUNCTION__, proc->frame_rx, proc->subframe_rx, proc->frame_tx, proc->subframe_tx, 
-      softmodem_stats_rxtx_sf.diff_now,
+  LOG_D(PHY,"%s() Exit proc[rx:%d%d tx:%d%d] rxtx:%lld nfapi:%lld",
+      __FUNCTION__, proc->frame_rx, proc->subframe_rx, proc->frame_tx, proc->subframe_tx,
+      softmodem_stats_rxtx_sf.diff_now, nfapi_meas.diff_now);
+
+  LOG_D(PHY, "phy:%lld tx:%lld rx:%lld prach:%lld ofdm:%lld ",
       TICK_TO_US(eNB->phy_proc),
       TICK_TO_US(eNB->phy_proc_tx),
       TICK_TO_US(eNB->phy_proc_rx),
       TICK_TO_US(eNB->rx_prach),
-      TICK_TO_US(eNB->ofdm_mod_stats),
+      TICK_TO_US(eNB->ofdm_mod_stats));
+
+  LOG_D(PHY,
+    "dlsch[enc:%lld mod:%lld scr:%lld rm:%lld t:%lld i:%lld] rx_dft:%lld ",
       TICK_TO_US(eNB->dlsch_encoding_stats),
       TICK_TO_US(eNB->dlsch_modulation_stats),
       TICK_TO_US(eNB->dlsch_scrambling_stats),
@@ -261,17 +270,20 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
       TICK_TO_US(eNB->dlsch_interleaving_stats),
       TICK_TO_US(eNB->rx_dft_stats));
 
-  LOG_D(PHY," ulsch[ch:%15.3f freq:%15.3f dec:%15.3f demod:%15.3f ru:%15.3f td:%15.3f dei:%15.3f dem:%15.3f llr:%15.3f tci:%15.3f tca:%15.3f tcb:%15.3f tcg:%15.3f tce:%15.3f l1:%15.3f l2:%15.3f]\n\n", 
+  LOG_D(PHY," ulsch[ch:%lld freq:%lld dec:%lld demod:%lld ru:%lld ",
       TICK_TO_US(eNB->ulsch_channel_estimation_stats),
       TICK_TO_US(eNB->ulsch_freq_offset_estimation_stats),
       TICK_TO_US(eNB->ulsch_decoding_stats),
       TICK_TO_US(eNB->ulsch_demodulation_stats),
-      TICK_TO_US(eNB->ulsch_rate_unmatching_stats),
+      TICK_TO_US(eNB->ulsch_rate_unmatching_stats));
+
+  LOG_D(PHY, "td:%lld dei:%lld dem:%lld llr:%lld tci:%lld ",
       TICK_TO_US(eNB->ulsch_turbo_decoding_stats),
       TICK_TO_US(eNB->ulsch_deinterleaving_stats),
       TICK_TO_US(eNB->ulsch_demultiplexing_stats),
       TICK_TO_US(eNB->ulsch_llr_stats),
-      TICK_TO_US(eNB->ulsch_tc_init_stats),
+      TICK_TO_US(eNB->ulsch_tc_init_stats));
+  LOG_D(PHY, "tca:%lld tcb:%lld tcg:%lld tce:%lld l1:%lld l2:%lld]\n\n", 
       TICK_TO_US(eNB->ulsch_tc_alpha_stats),
       TICK_TO_US(eNB->ulsch_tc_beta_stats),
       TICK_TO_US(eNB->ulsch_tc_gamma_stats),

@@ -2221,7 +2221,7 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
 
   if (num_dci>0)
   {
-    LOG_D(PHY,"%s(num_pdcch_symbols:%d num_dci:%d dci_alloc:%p n_rnti:%04x amp:%d frame_parms:%p txdataF:%p subframe:%d)\n", __FUNCTION__, num_pdcch_symbols, num_dci, dci_alloc, n_rnti, amp, frame_parms, txdataF, subframe);
+    //LOG_D(PHY,"%s(num_pdcch_symbols:%d num_dci:%d dci_alloc:%p n_rnti:%04x amp:%d frame_parms:%p txdataF:%p subframe:%d)\n", __FUNCTION__, num_pdcch_symbols, num_dci, dci_alloc, n_rnti, amp, frame_parms, txdataF, subframe);
   }
 
   switch (frame_parms->N_RB_DL) {

@@ -163,7 +163,7 @@ void handle_ulsch(UL_IND_t *UL_info) {
   {
     if (UL_info->crc_ind.crc_indication_body.number_of_crcs>0)
     {
-      LOG_D(PHY,"UL_info->crc_ind.crc_indication_body.number_of_crcs:%d CRC_IND:SFN/SF:%d\n", UL_info->crc_ind.crc_indication_body.number_of_crcs, NFAPI_SFNSF2DEC(UL_info->crc_ind.sfn_sf));
+      //LOG_D(PHY,"UL_info->crc_ind.crc_indication_body.number_of_crcs:%d CRC_IND:SFN/SF:%d\n", UL_info->crc_ind.crc_indication_body.number_of_crcs, NFAPI_SFNSF2DEC(UL_info->crc_ind.sfn_sf));
 
       oai_nfapi_crc_indication(&UL_info->crc_ind);
 
@@ -172,7 +172,7 @@ void handle_ulsch(UL_IND_t *UL_info) {
 
     if (UL_info->rx_ind.rx_indication_body.number_of_pdus>0)
     {
-      LOG_D(PHY,"UL_info->rx_ind.number_of_pdus:%d RX_IND:SFN/SF:%d\n", UL_info->rx_ind.rx_indication_body.number_of_pdus, NFAPI_SFNSF2DEC(UL_info->rx_ind.sfn_sf));
+      //LOG_D(PHY,"UL_info->rx_ind.number_of_pdus:%d RX_IND:SFN/SF:%d\n", UL_info->rx_ind.rx_indication_body.number_of_pdus, NFAPI_SFNSF2DEC(UL_info->rx_ind.sfn_sf));
       oai_nfapi_rx_ind(&UL_info->rx_ind);
       UL_info->rx_ind.rx_indication_body.number_of_pdus = 0;
     }
@@ -221,12 +221,12 @@ void handle_ulsch(UL_IND_t *UL_info) {
   if (UL_info->rx_ind.rx_indication_body.number_of_pdus>0)
   {
     UL_info->rx_ind.rx_indication_body.number_of_pdus = 0;
-    LOG_D(PHY, "UL_INFO:SFN/SF:%d%d ZEROING rx_ind[SFN/SF:%d number_of_pdus:%d]\n", UL_info->frame, UL_info->subframe, NFAPI_SFNSF2DEC(UL_info->rx_ind.sfn_sf), UL_info->rx_ind.rx_indication_body.number_of_pdus);
+    //LOG_D(PHY, "UL_INFO:SFN/SF:%d%d ZEROING rx_ind[SFN/SF:%d number_of_pdus:%d]\n", UL_info->frame, UL_info->subframe, NFAPI_SFNSF2DEC(UL_info->rx_ind.sfn_sf), UL_info->rx_ind.rx_indication_body.number_of_pdus);
   }
 
   if (UL_info->subframe && UL_info->crc_ind.crc_indication_body.number_of_crcs>0)
   {
-    LOG_D(PHY, "UL_INFO:SFN/SF:%d%d ZEROING crc_ind[SFN/SF:%d crcs:%d]\n", UL_info->frame, UL_info->subframe, NFAPI_SFNSF2DEC(UL_info->crc_ind.sfn_sf), UL_info->crc_ind.crc_indication_body.number_of_crcs);
+    //LOG_D(PHY, "UL_INFO:SFN/SF:%d%d ZEROING crc_ind[SFN/SF:%d crcs:%d]\n", UL_info->frame, UL_info->subframe, NFAPI_SFNSF2DEC(UL_info->crc_ind.sfn_sf), UL_info->crc_ind.crc_indication_body.number_of_crcs);
     UL_info->crc_ind.crc_indication_body.number_of_crcs=0;
   }
 }

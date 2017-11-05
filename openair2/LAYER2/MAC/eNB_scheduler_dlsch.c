@@ -1082,7 +1082,7 @@ schedule_ue_spec(
             TBS = get_TBS_DL(mcs,nb_rb);
           }
 
-          LOG_D(MAC,"dlsch_mcs before and after the rate matching = (%d, %d)\n",eNB_UE_stats->dlsch_mcs1, mcs);
+          //LOG_D(MAC,"dlsch_mcs before and after the rate matching = (%d, %d)\n",eNB_UE_stats->dlsch_mcs1, mcs);
 
 #ifdef DEBUG_eNB_SCHEDULER
           LOG_D(MAC,"[eNB %d] CC_id %d Generated DLSCH header (mcs %d, TBS %d, nb_rb %d)\n",
@@ -1213,7 +1213,7 @@ schedule_ue_spec(
 		tpc = 1; //0
 	      }
 	      	      
-	      LOG_D(MAC,"[eNB %d] DLSCH scheduler: frame %d, subframe %d, harq_pid %d, tpc %d, accumulated %d, normalized/target rx power %d/%d\n",
+	      if(0)LOG_D(MAC,"[eNB %d] DLSCH scheduler: frame %d, subframe %d, harq_pid %d, tpc %d, accumulated %d, normalized/target rx power %d/%d\n",
 		    module_idP,frameP, subframeP,harq_pid,tpc,
 		    tpc_accumulated,normalized_rx_power,target_rx_power);
 
@@ -1257,7 +1257,7 @@ schedule_ue_spec(
 		  module_idP,CC_id,harq_pid,mcs,t.tv_sec,t.tv_nsec);
 	    
 	  }
-	  LOG_D(MAC,"Checking feasibility pdu %d (new sdu)\n",dl_req->number_pdu);
+	  //LOG_D(MAC,"Checking feasibility pdu %d (new sdu)\n",dl_req->number_pdu);
 	  if (!CCE_allocation_infeasible(module_idP,CC_id,1,subframeP,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,rnti)) {
 
 

@@ -1424,7 +1424,7 @@ int oai_nfapi_dl_config_req(nfapi_dl_config_request_t *dl_config_req)
 
   //LOG_D(PHY, "[VNF] %s() header message_id:%02x\n", __FUNCTION__, dl_config_req->header.message_id);
 
-  LOG_D(PHY, "[VNF] %s() DL_CONFIG sfn_sf:%d pdcch:%d dci:%d pdu:%d pdsch_rnti:%d pcfich:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(dl_config_req->sfn_sf), dl_config_req->dl_config_request_body.number_pdcch_ofdm_symbols, dl_config_req->dl_config_request_body.number_dci, dl_config_req->dl_config_request_body.number_pdu, dl_config_req->dl_config_request_body.number_pdsch_rnti, dl_config_req->dl_config_request_body.transmission_power_pcfich);
+  //LOG_D(PHY, "[VNF] %s() DL_CONFIG sfn_sf:%d pdcch:%d dci:%d pdu:%d pdsch_rnti:%d pcfich:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(dl_config_req->sfn_sf), dl_config_req->dl_config_request_body.number_pdcch_ofdm_symbols, dl_config_req->dl_config_request_body.number_dci, dl_config_req->dl_config_request_body.number_pdu, dl_config_req->dl_config_request_body.number_pdsch_rnti, dl_config_req->dl_config_request_body.transmission_power_pcfich);
 
   int retval = nfapi_vnf_p7_dl_config_req(p7_config, dl_config_req);
 
@@ -1446,7 +1446,7 @@ int oai_nfapi_tx_req(nfapi_tx_request_t *tx_req)
 
   tx_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
 
-  LOG_D(PHY, "[VNF] %s() TX_REQ sfn_sf:%d number_of_pdus:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(tx_req->sfn_sf), tx_req->tx_request_body.number_of_pdus);
+  //LOG_D(PHY, "[VNF] %s() TX_REQ sfn_sf:%d number_of_pdus:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(tx_req->sfn_sf), tx_req->tx_request_body.number_of_pdus);
 
   int retval = nfapi_vnf_p7_tx_req(p7_config, tx_req);
 
@@ -1468,7 +1468,7 @@ int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req)
 
   hi_dci0_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
 
-  LOG_D(PHY, "[VNF] %s() HI_DCI0_REQ sfn_sf:%d dci:%d hi:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(hi_dci0_req->sfn_sf), hi_dci0_req->hi_dci0_request_body.number_of_dci, hi_dci0_req->hi_dci0_request_body.number_of_hi);
+  //LOG_D(PHY, "[VNF] %s() HI_DCI0_REQ sfn_sf:%d dci:%d hi:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(hi_dci0_req->sfn_sf), hi_dci0_req->hi_dci0_request_body.number_of_dci, hi_dci0_req->hi_dci0_request_body.number_of_hi);
 
   int retval = nfapi_vnf_p7_hi_dci0_req(p7_config, hi_dci0_req);
 
@@ -1493,11 +1493,7 @@ int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req)
 
   //LOG_D(PHY, "[VNF] %s() header message_id:%02x\n", __FUNCTION__, ul_config_req->header.message_id);
 
-  LOG_D(PHY, "[VNF] %s() UL_CONFIG sfn_sf:%d PDUs:%d rach_prach_frequency_resources:%d srs_present:%d\n", 
-  __FUNCTION__, NFAPI_SFNSF2DEC(ul_config_req->sfn_sf), 
-  ul_config_req->ul_config_request_body.number_of_pdus,
-  ul_config_req->ul_config_request_body.rach_prach_frequency_resources,
-  ul_config_req->ul_config_request_body.srs_present);
+  //LOG_D(PHY, "[VNF] %s() UL_CONFIG sfn_sf:%d PDUs:%d rach_prach_frequency_resources:%d srs_present:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ul_config_req->sfn_sf), ul_config_req->ul_config_request_body.number_of_pdus, ul_config_req->ul_config_request_body.rach_prach_frequency_resources, ul_config_req->ul_config_request_body.srs_present);
 
   int retval = nfapi_vnf_p7_ul_config_req(p7_config, ul_config_req);
 

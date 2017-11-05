@@ -1,3 +1,17 @@
+diff --git a/common/public_inc/debug.h b/common/public_inc/debug.h
+index 05e9870..14f97a1 100644
+--- a/common/public_inc/debug.h
++++ b/common/public_inc/debug.h
+@@ -39,7 +39,8 @@ extern nfapi_trace_fn_t nfapi_trace_g;
+ extern nfapi_trace_level_t nfapi_trace_level_g;
+ 
+ /*! NFAPI trace macro */
+-#define NFAPI_TRACE(level, format, ...) { if(nfapi_trace_g && ((nfapi_trace_level_t)level <= nfapi_trace_level_g)) (*nfapi_trace_g)(level, format, ##__VA_ARGS__); }
++//#define NFAPI_TRACE(level, format, ...) { if(nfapi_trace_g && ((nfapi_trace_level_t)level <= nfapi_trace_level_g)) (*nfapi_trace_g)(level, format, ##__VA_ARGS__); }
++#define NFAPI_TRACE(level, format, ...) { if (nfapi_trace_g) (*nfapi_trace_g)(level, format, ##__VA_ARGS__); }
+ 
+ /*! Function to change the trace level 
+  * \param new_level The modified trace level
 diff --git a/nfapi/public_inc/nfapi_interface.h b/nfapi/public_inc/nfapi_interface.h
 index 2d58c2a..f665d11 100644
 --- a/nfapi/public_inc/nfapi_interface.h
@@ -27,7 +41,7 @@ index 0e06963..3f017bc 100644
  
  	return 1;
 diff --git a/nfapi/src/nfapi_p7.c b/nfapi/src/nfapi_p7.c
-index a3b0141..4083a47 100644
+index a3b0141..69ff860 100644
 --- a/nfapi/src/nfapi_p7.c
 +++ b/nfapi/src/nfapi_p7.c
 @@ -111,6 +111,8 @@ static uint8_t pack_dl_config_dci_dl_pdu_rel8_value(void* tlv, uint8_t **ppWrite
@@ -100,7 +114,20 @@ index a3b0141..4083a47 100644
  }
  
  static uint8_t pack_ul_config_request_ulsch_rel8_value(void *tlv, uint8_t **ppWritePackedMsg, uint8_t * end)
-@@ -1518,7 +1539,21 @@ static uint8_t pack_tx_request_body_value(void* tlv, uint8_t **ppWritePackedMsg,
+@@ -796,9 +817,10 @@ static uint8_t pack_ul_config_request_cqi_ri_rel9_value(void *tlv, uint8_t **ppW
+ 					if(push8(cqi_ri_info_rel9->aperiodic_cqi_pmi_ri_report.cc[i].ri_size, ppWritePackedMsg, end) == 0)
+ 						return 0;
+ 
+-					if(cqi_ri_info_rel9->aperiodic_cqi_pmi_ri_report.cc[i].ri_size > 0)
++                                        uint8_t j;
++                                        for(j = 0; j < 8; ++j)
+ 					{
+-						if(push8(cqi_ri_info_rel9->aperiodic_cqi_pmi_ri_report.cc[i].dl_cqi_pmi_size, ppWritePackedMsg, end) == 0)
++                                              if(push8(cqi_ri_info_rel9->aperiodic_cqi_pmi_ri_report.cc[i].dl_cqi_pmi_size[j], ppWritePackedMsg, end) == 0)
+ 							return 0;
+ 					}
+ 				}
+@@ -1518,7 +1540,21 @@ static uint8_t pack_tx_request_body_value(void* tlv, uint8_t **ppWritePackedMsg,
  		for(j = 0; j < pdu->num_segments; ++j)
  		{
  			// Use -1 as it is unbounded 
@@ -123,7 +150,7 @@ index a3b0141..4083a47 100644
  			{
  				return 0;
  			}
-@@ -1532,9 +1567,13 @@ static uint8_t pack_tx_request(void *msg, uint8_t **ppWritePackedMsg, uint8_t *e
+@@ -1532,9 +1568,13 @@ static uint8_t pack_tx_request(void *msg, uint8_t **ppWritePackedMsg, uint8_t *e
  {
  	nfapi_tx_request_t *pNfapiMsg = (nfapi_tx_request_t*)msg;
  	
@@ -140,43 +167,43 @@ index a3b0141..4083a47 100644
  }
  
  static uint8_t pack_rx_ue_information_value(void* tlv, uint8_t **ppWritePackedMsg, uint8_t *end)
-@@ -1844,6 +1883,8 @@ static uint8_t pack_rx_ulsch_indication_body_value(void *tlv, uint8_t **ppWriteP
+@@ -1844,6 +1884,8 @@ static uint8_t pack_rx_ulsch_indication_body_value(void *tlv, uint8_t **ppWriteP
  {
  	nfapi_rx_indication_body_t* value = (nfapi_rx_indication_body_t*)tlv;
  
-+        printf("RX ULSCH BODY\n");
++        //printf("RX ULSCH BODY\n");
 +
  	if( push16(value->number_of_pdus, ppWritePackedMsg, end) == 0)
  		return 0;
  
-@@ -1851,21 +1892,26 @@ static uint8_t pack_rx_ulsch_indication_body_value(void *tlv, uint8_t **ppWriteP
+@@ -1851,21 +1893,26 @@ static uint8_t pack_rx_ulsch_indication_body_value(void *tlv, uint8_t **ppWriteP
  	uint16_t i = 0;
  	uint16_t offset = 2; // taking into account the number_of_pdus
  	uint16_t total_number_of_pdus = value->number_of_pdus;
-+        printf("ULSCH:pdus:%d\n", total_number_of_pdus);
++        //printf("ULSCH:pdus:%d\n", total_number_of_pdus);
 +
  	for(i = 0; i < total_number_of_pdus; ++i)
  	{
  		nfapi_rx_indication_pdu_t* pdu = &(value->rx_pdu_list[i]);
  		if(pdu->rx_ue_information.tl.tag == NFAPI_RX_UE_INFORMATION_TAG)
  		{
-+                  printf("NFAPI_RX_UE_INFORMATION_TAG\n");
++                  //printf("NFAPI_RX_UE_INFORMATION_TAG\n");
  			offset += 4 + 6; 
  		}
  				
  		if(pdu->rx_indication_rel8.tl.tag == NFAPI_RX_INDICATION_REL8_TAG)
  		{
-+                  printf("NFAPI_RX_INDICATION_REL8_TAG\n");
++                  //printf("NFAPI_RX_INDICATION_REL8_TAG\n");
  			offset += 4 + 7;
  		}
  
  		if(pdu->rx_indication_rel9.tl.tag == NFAPI_RX_INDICATION_REL9_TAG)
  		{
-+                  printf("NFAPI_RX_INDICATION_REL9_TAG\n");
++                  //printf("NFAPI_RX_INDICATION_REL9_TAG\n");
  			offset += 4 + 2;
  		}
  	}
-@@ -2592,11 +2638,16 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
+@@ -2592,11 +2639,16 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
  		return -1;
  	}
  
@@ -193,7 +220,7 @@ index a3b0141..4083a47 100644
  			result = pack_dl_config_request(pMessageHeader, &pWritePackedMessage, end, config);
  			break;
  
-@@ -2609,6 +2660,7 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
+@@ -2609,6 +2661,7 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
  			break;
  
  		case NFAPI_TX_REQUEST:
@@ -201,15 +228,28 @@ index a3b0141..4083a47 100644
  			result = pack_tx_request(pMessageHeader, &pWritePackedMessage, end, config);
  			break;
  
-@@ -2621,6 +2673,7 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
+@@ -2621,6 +2674,7 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
  			break;
  
  		case NFAPI_RX_ULSCH_INDICATION:
-+                        printf("RX ULSCH\n");
++                        //printf("RX ULSCH\n");
  			result = pack_rx_ulsch_indication(pMessageHeader, &pWritePackedMessage, end, config);
  			break;
  
-@@ -4394,6 +4447,14 @@ static uint8_t unpack_tx_request(uint8_t **ppReadPackedMsg, uint8_t *end, void *
+@@ -3482,9 +3536,10 @@ static uint8_t unpack_ul_config_cqi_ri_info_rel9_value(void *tlv, uint8_t **ppRe
+ 					if(pull8(ppReadPackedMsg, &cqi_ri_info_rel9->aperiodic_cqi_pmi_ri_report.cc[i].ri_size, end) == 0)
+ 						return 0;
+ 
+-					if(cqi_ri_info_rel9->aperiodic_cqi_pmi_ri_report.cc[i].ri_size > 0)
++                                        uint8_t j;
++                                        for(j = 0; j < 8; ++j)
+ 					{
+-						if(pull8(ppReadPackedMsg, &cqi_ri_info_rel9->aperiodic_cqi_pmi_ri_report.cc[i].dl_cqi_pmi_size, end) == 0)
++						if(pull8(ppReadPackedMsg, &cqi_ri_info_rel9->aperiodic_cqi_pmi_ri_report.cc[i].dl_cqi_pmi_size[j], end) == 0)
+ 							return 0;
+ 					}
+ 				}
+@@ -4394,6 +4449,14 @@ static uint8_t unpack_tx_request(uint8_t **ppReadPackedMsg, uint8_t *end, void *
  					{
  						if(!pullarray8(ppReadPackedMsg, pdu->segments[0].segment_data, pdu->segments[0].segment_length, pdu->segments[0].segment_length, end))
  							return 0;
@@ -289,7 +329,7 @@ index 74f29a0..7310fc0 100644
  	}
  
 diff --git a/pnf/src/pnf_p7.c b/pnf/src/pnf_p7.c
-index 0fd7828..6d9a332 100644
+index 0fd7828..02b828d 100644
 --- a/pnf/src/pnf_p7.c
 +++ b/pnf/src/pnf_p7.c
 @@ -25,12 +25,64 @@
@@ -795,7 +835,7 @@ index 0fd7828..6d9a332 100644
  		}
  
  	}
-@@ -785,15 +938,32 @@ void pnf_handle_dl_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
+@@ -785,15 +938,35 @@ void pnf_handle_dl_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
  			return;
  		}
  
@@ -823,7 +863,10 @@ index 0fd7828..6d9a332 100644
 +                  uint32_t sfn_sf_dec = NFAPI_SFNSF2DEC(req->sfn_sf);
 +                  uint8_t buffer_index = sfn_sf_dec % pnf_p7->_public.subframe_buffer_size;
 +
-+                  printf("%s() POPULATE DL_CONFIG_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, sfn_sf_dec, buffer_index);
++                        struct timespec t;
++                        clock_gettime(CLOCK_MONOTONIC, &t);
++
++                  NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() %ld.%09ld POPULATE DL_CONFIG_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, t.tv_sec, t.tv_nsec, sfn_sf_dec, buffer_index);
  
  			// if there is already an dl_config_req make sure we free it.
  			if(pnf_p7->subframe_buffer[buffer_index].dl_config_req != 0)
@@ -833,16 +876,19 @@ index 0fd7828..6d9a332 100644
  				//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] Freeing dl_config_req at index %d (%d/%d)", 
  				//			pMyPhyInfo->sfnSf, bufferIdx,
  				//			SFNSF2SFN(dreq->sfn_sf), SFNSF2SF(dreq->sfn_sf));
-@@ -860,6 +1030,8 @@ void pnf_handle_ul_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
+@@ -860,6 +1033,11 @@ void pnf_handle_ul_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
  			uint32_t sfn_sf_dec = NFAPI_SFNSF2DEC(req->sfn_sf);
  			uint8_t buffer_index = sfn_sf_dec % pnf_p7->_public.subframe_buffer_size;
  
-+                        printf("%s() POPULATE UL_CONFIG_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, sfn_sf_dec, buffer_index);
++                        struct timespec t;
++                        clock_gettime(CLOCK_MONOTONIC, &t);
++
++                        NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() %ld.%09ld POPULATE UL_CONFIG_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, t.tv_sec, t.tv_nsec, sfn_sf_dec, buffer_index);
 +
  			if(pnf_p7->subframe_buffer[buffer_index].ul_config_req != 0)
  			{
  				//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] Freeing ul_config_req at index %d (%d/%d)", 
-@@ -876,7 +1048,7 @@ void pnf_handle_ul_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
+@@ -876,7 +1054,7 @@ void pnf_handle_ul_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
  		}
  		else
  		{
@@ -851,14 +897,14 @@ index 0fd7828..6d9a332 100644
  			deallocate_nfapi_ul_config_request(req, pnf_p7);
  
  			if(pnf_p7->_public.timing_info_mode_aperiodic)
-@@ -994,6 +1166,16 @@ void pnf_handle_tx_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7)
+@@ -994,6 +1172,16 @@ void pnf_handle_tx_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7)
  			uint32_t sfn_sf_dec = NFAPI_SFNSF2DEC(req->sfn_sf);
  			uint8_t buffer_index = sfn_sf_dec % pnf_p7->_public.subframe_buffer_size;
  
 +                        struct timespec t;
 +                        clock_gettime(CLOCK_MONOTONIC, &t);
 +
-+                        printf("%s() %ld.%09ld POPULATE TX_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, t.tv_sec, t.tv_nsec, sfn_sf_dec, buffer_index);
++                        NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() %ld.%09ld POPULATE TX_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, t.tv_sec, t.tv_nsec, sfn_sf_dec, buffer_index);
 +
 +                        if (0 && NFAPI_SFNSF2DEC(req->sfn_sf)%100==0) NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() TX_REQ.req sfn_sf:%d pdus:%d - TX_REQ is within window\n",
 +                            __FUNCTION__,
@@ -868,16 +914,16 @@ index 0fd7828..6d9a332 100644
  			if(pnf_p7->subframe_buffer[buffer_index].tx_req != 0)
  			{
  				//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] Freeing tx_req at index %d (%d/%d)", 
-@@ -1010,6 +1192,8 @@ void pnf_handle_tx_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7)
+@@ -1010,6 +1198,8 @@ void pnf_handle_tx_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7)
  		}
  		else
  		{
-+                  printf("%s() TX_REQUEST Request is outside of window REQ:SFN_SF:%d CURR:SFN_SF:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), NFAPI_SFNSF2DEC(pnf_p7->sfn_sf));
++                  NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() TX_REQUEST Request is outside of window REQ:SFN_SF:%d CURR:SFN_SF:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), NFAPI_SFNSF2DEC(pnf_p7->sfn_sf));
 +
  			deallocate_nfapi_tx_request(req, pnf_p7);
  
  			if(pnf_p7->_public.timing_info_mode_aperiodic)
-@@ -1126,12 +1310,27 @@ uint32_t calculate_t2(uint32_t now_time_hr, uint16_t sfn_sf, uint32_t sf_start_t
+@@ -1126,12 +1316,27 @@ uint32_t calculate_t2(uint32_t now_time_hr, uint16_t sfn_sf, uint32_t sf_start_t
  	uint32_t sf_time_us = get_sf_time(now_time_hr, sf_start_time_hr);
  	uint32_t t2 = (NFAPI_SFNSF2DEC(sfn_sf) * 1000) + sf_time_us;
  
@@ -906,7 +952,7 @@ index 0fd7828..6d9a332 100644
  
  	uint32_t sf_time_us = get_sf_time(now_time_hr, sf_start_time_hr);
  
-@@ -1391,6 +1590,8 @@ void pnf_nfapi_p7_read_dispatch_message(pnf_p7_t* pnf_p7, uint32_t now_hr_time)
+@@ -1391,6 +1596,8 @@ void pnf_nfapi_p7_read_dispatch_message(pnf_p7_t* pnf_p7, uint32_t now_hr_time)
  			// read the segment
  			recvfrom_result = recvfrom(pnf_p7->p7_sock, pnf_p7->rx_message_buffer, header.message_length, MSG_DONTWAIT, (struct sockaddr*)&remote_addr, &remote_addr_size);
  
@@ -915,7 +961,7 @@ index 0fd7828..6d9a332 100644
  			if(recvfrom_result > 0)
  			{
  				pnf_handle_p7_message(pnf_p7->rx_message_buffer, recvfrom_result, pnf_p7, now_hr_time);
-@@ -1417,7 +1618,10 @@ void pnf_nfapi_p7_read_dispatch_message(pnf_p7_t* pnf_p7, uint32_t now_hr_time)
+@@ -1417,7 +1624,10 @@ void pnf_nfapi_p7_read_dispatch_message(pnf_p7_t* pnf_p7, uint32_t now_hr_time)
  
  		// need to update the time as we would only use the value from the
  		// select
@@ -927,7 +973,7 @@ index 0fd7828..6d9a332 100644
  	}
  	while(recvfrom_result > 0);
  }
-@@ -1512,7 +1716,7 @@ int pnf_p7_message_pump(pnf_p7_t* pnf_p7)
+@@ -1512,7 +1722,7 @@ int pnf_p7_message_pump(pnf_p7_t* pnf_p7)
  
  		selectRetval = select(pnf_p7->p7_sock+1, &rfds, NULL, NULL, &timeout);
  
@@ -1060,7 +1106,7 @@ index e559730..0aba0a2 100644
  	info->timing_info_period = 128;
  
 diff --git a/vnf/src/vnf_p7.c b/vnf/src/vnf_p7.c
-index 8630385..70f97d6 100644
+index 8630385..1304176 100644
 --- a/vnf/src/vnf_p7.c
 +++ b/vnf/src/vnf_p7.c
 @@ -15,6 +15,8 @@
@@ -1277,7 +1323,7 @@ index 8630385..70f97d6 100644
 +          //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() PNF:SFN/SF:%d VNF:SFN/SF:%d deltaSFNSF:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind.last_sfn_sf), NFAPI_SFNSF2DEC(vnf_p7->p7_connections[0].sfn_sf), vnf_pnf_sfnsf_delta);
 +          if (vnf_pnf_sfnsf_delta>1 || vnf_pnf_sfnsf_delta < -1)
 +          {
-+            NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() LARGE SFN/SF DELTA between PNF and VNF\n\n\n\n\n\n\n\n\n", __FUNCTION__);
++            NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() LARGE SFN/SF DELTA between PNF and VNF delta:%d VNF:%d PNF:%d\n\n\n\n\n\n\n\n\n", __FUNCTION__, vnf_pnf_sfnsf_delta, NFAPI_SFNSF2DEC(vnf_p7->p7_connections[0].sfn_sf), NFAPI_SFNSF2DEC(ind.last_sfn_sf));
 +          }
 +        }
  }
