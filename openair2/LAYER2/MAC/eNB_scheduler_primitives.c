@@ -2127,9 +2127,10 @@ uint8_t UE_is_to_be_scheduled(module_id_t module_idP,int CC_id,uint8_t UE_id)
   if (UE_sched_ctl->ul_out_of_sync>0)
     return(0);
 
-  LOG_D(MAC,"[eNB %d][PUSCH] Checking UL requirements UE %d/%x\n",module_idP,UE_id,UE_RNTI(module_idP,UE_id));
+  LOG_D(MAC,"[eNB %d][PUSCH] Checking UL requirements UE %d/%x bsr_info:%d:%d:%d:%d ul_SR:%d ul_inactivity_timer:%d ul_scheduled:%d rrc_status:%d\n",module_idP,UE_id,UE_RNTI(module_idP,UE_id),UE_template->bsr_info[LCGID0], UE_template->bsr_info[LCGID1],UE_template->bsr_info[LCGID2],UE_template->bsr_info[LCGID3],UE_template->ul_SR, UE_sched_ctl->ul_inactivity_timer, UE_sched_ctl->ul_scheduled,mac_eNB_get_rrc_status(module_idP,UE_RNTI(module_idP,UE_id)));
 
-  if ((UE_template->bsr_info[LCGID0]>0) ||
+  if (1|| // DJP - no check in
+      (UE_template->bsr_info[LCGID0]>0) ||
       (UE_template->bsr_info[LCGID1]>0) ||
       (UE_template->bsr_info[LCGID2]>0) ||
       (UE_template->bsr_info[LCGID3]>0) ||
@@ -3134,7 +3135,6 @@ void extract_harq(module_id_t mod_idP,int CC_idP,int UE_id,frame_t frameP,sub_fr
           AssertFatal(sched_ctl->round[CC_idP][harq_pid]<8,"Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",harq_pid,UE_id,rnti);
           AssertFatal(pdu[0] == 1 || pdu[0] == 2 || pdu[0] == 4,
                       "Received ACK/NAK %d which is not 1 or 2 for harq_pid %d from UE %d/%x\n",pdu[0],harq_pid,UE_id,rnti);
-          LOG_D(MAC,"Received %d for harq_pid %d\n",pdu[0],harq_pid);
 
           if (pdu[0] == 1) { // ACK
             sched_ctl->round[CC_idP][harq_pid]=8; // release HARQ process
@@ -3142,10 +3142,13 @@ void extract_harq(module_id_t mod_idP,int CC_idP,int UE_id,frame_t frameP,sub_fr
           }
           else if (pdu[0] == 2 || pdu[0] == 4) // NAK (treat DTX as NAK)
             sched_ctl->round[CC_idP][harq_pid]++; // increment round
+
+          LOG_D(MAC,"Received PDU[0]:%d for harq_pid %d [round:%d tbcnt:%d]\n",pdu[0],harq_pid,sched_ctl->round[CC_idP][harq_pid],sched_ctl->tbcnt[CC_idP][harq_pid]);
         }
         else {
           // one or two ACK/NAK bits
           AssertFatal(num_ack_nak>2,"num_ack_nak %d > 2 for 1 CC and TM3/4/8/9/10\n",num_ack_nak);
+          LOG_D(MAC,"Received PDU[0]:%d:[1]:%d for harq_pid %d [round:%d tbcnt:%d]\n",pdu[0],pdu[1],harq_pid,sched_ctl->round[CC_idP][harq_pid],sched_ctl->tbcnt[CC_idP][harq_pid]);
           if ((num_ack_nak==2) && (sched_ctl->round[CC_idP][harq_pid]<8) && (sched_ctl->tbcnt[CC_idP][harq_pid]==1) && (pdu[0] == 1) && (pdu[1] == 1)) {
             sched_ctl->round[CC_idP][harq_pid]=8;
             sched_ctl->tbcnt[CC_idP][harq_pid]=0;
@@ -3162,6 +3165,7 @@ void extract_harq(module_id_t mod_idP,int CC_idP,int UE_id,frame_t frameP,sub_fr
           else AssertFatal(1==0,"Illegal ACK/NAK/round combination (%d,%d,%d,%d,%d) for harq_pid %d, UE %d/%x\n",
                            num_ack_nak,sched_ctl->round[CC_idP][harq_pid],sched_ctl->round[CC_idP][harq_pid],pdu[0],pdu[1], harq_pid,UE_id,
                            rnti);
+          LOG_D(MAC,"AFTER Received PDU[0]:%d:[1]:%d for harq_pid %d [round:%d tbcnt:%d]\n",pdu[0],pdu[1],harq_pid,sched_ctl->round[CC_idP][harq_pid],sched_ctl->tbcnt[CC_idP][harq_pid]);
         }
         break;
       case 1: // FDD Channel Selection (10.1.2.2.1), must be received for 2 serving cells
@@ -3653,9 +3657,11 @@ void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, sub_frame_t 
   int UE_id = find_UE_id(mod_idP, rntiP);
   UE_list_t *UE_list = &RC.mac[mod_idP]->UE_list;
 
+  LOG_D(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d on CC_id %d\n",mod_idP,rntiP,frameP,subframeP,UE_id,cc_idP);
+
   if (UE_id  != -1) {
-    if (mac_eNB_get_rrc_status(mod_idP,UE_RNTI(mod_idP,UE_id)) < RRC_CONNECTED)
-      LOG_D(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d on CC_id %d\n",mod_idP,rntiP,frameP,subframeP, UE_id,cc_idP);
+    //if (mac_eNB_get_rrc_status(mod_idP,UE_RNTI(mod_idP,UE_id)) < RRC_CONNECTED)
+      //LOG_D(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d on CC_id %d\n",mod_idP,rntiP,frameP,subframeP,UE_id,cc_idP);
 
 #if 0
     UE_sched_ctrl *sched_ctl = &UE_list->UE_sched_ctrl[UE_id];

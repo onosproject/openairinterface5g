@@ -618,7 +618,7 @@ void logRecord_thread_safe(const char *file, const char *func,
                             func);
     }
 
-    total_len += snprintf(&log_buffer[total_len], MAX_LOG_TOTAL - total_len, "[%08lx] ", thread_id);
+    //total_len += snprintf(&log_buffer[total_len], MAX_LOG_TOTAL - total_len, "[%08lx] ", thread_id);
 
     if ((g_log->flag & FLAG_FILE_LINE) || (c->flag & FLAG_FILE_LINE) )  {
       total_len += snprintf(&log_buffer[total_len], MAX_LOG_TOTAL - total_len, "[%s:%d]",
@@ -1104,8 +1104,8 @@ void logRecord_mt(const char *file, const char *func, int line,
       if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     }
 
-    len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%08lx]", thread_id);
-    if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+    //len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%08lx]", thread_id);
+    //if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
 
     len += vsnprintf(&log_buffer[len], MAX_LOG_TOTAL - len, format, args);
     if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;

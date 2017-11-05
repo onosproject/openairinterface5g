@@ -455,31 +455,31 @@ void clear_nfapi_information(eNB_MAC_INST *eNB,int CC_idP,frame_t frameP,sub_fra
 void copy_ulreq(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP)
 {
   int CC_id;
-  eNB_MAC_INST *eNB;
-  nfapi_ul_config_request_body_t *ul_req_body_tmp;
-  nfapi_ul_config_request_body_t *ul_req_body;
-
-  eNB = RC.mac[module_idP];
+  eNB_MAC_INST *eNB = RC.mac[module_idP];
 
   for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
 
-    ul_req_body_tmp       = &eNB->UL_req_tmp[CC_id][subframeP].ul_config_request_body;
-    ul_req_body           = &eNB->UL_req[CC_id].ul_config_request_body;
+    nfapi_ul_config_request_t *ul_req_tmp = &eNB->UL_req_tmp[CC_id][subframeP];
+    nfapi_ul_config_request_t *ul_req     = &eNB->UL_req[CC_id];
+    nfapi_ul_config_request_pdu_t *ul_req_pdu = ul_req->ul_config_request_body.ul_config_pdu_list;
 
-    eNB->UL_req[CC_id].sfn_sf   = (frameP<<4) + subframeP;
-    eNB->UL_req[CC_id].header   = eNB->UL_req_tmp[CC_id][subframeP].header;
-    ul_req_body->number_of_pdus                     = ul_req_body_tmp->number_of_pdus;
-    ul_req_body_tmp->number_of_pdus = 0;
+    *ul_req = *ul_req_tmp;
 
-    if (ul_req_body->number_of_pdus>0)
+    // Restore the pointer
+    ul_req->ul_config_request_body.ul_config_pdu_list = ul_req_pdu;
+
+    ul_req->sfn_sf   = (frameP<<4) + subframeP;
+
+    ul_req_tmp->ul_config_request_body.number_of_pdus = 0;
+
+    if (ul_req->ul_config_request_body.number_of_pdus>0)
     {
-      LOG_E(PHY, "%s() Copying stored UL_req_tmp to UL_req for activation NOW (frameP:%d subframeP:%d) ul_req_body->number_of_pdus:%d\n", __FUNCTION__, frameP, subframeP, ul_req_body->number_of_pdus);
+      LOG_E(PHY, "%s() Copying stored UL_req_tmp to UL_req for activation NOW (frameP:%d subframeP:%d) ul_req_body->number_of_pdus:%d\n", __FUNCTION__, frameP, subframeP, ul_req->ul_config_request_body.number_of_pdus);
     }
 
-    memcpy((void*)ul_req_body->ul_config_pdu_list,
-	   (void*)ul_req_body_tmp->ul_config_pdu_list,
-	   ul_req_body->number_of_pdus*sizeof(nfapi_ul_config_request_pdu_t));
-
+    memcpy((void*)ul_req->ul_config_request_body.ul_config_pdu_list,
+	   (void*)ul_req_tmp->ul_config_request_body.ul_config_pdu_list,
+	   ul_req->ul_config_request_body.number_of_pdus*sizeof(nfapi_ul_config_request_pdu_t));
   }
 }
 
@@ -581,7 +581,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame
   // This schedules ULSCH in subframeP (dci0)
   schedule_ulsch(module_idP,frameP,subframeP);
   // This schedules UCI_SR in subframeP
-  schedule_SR(module_idP,frameP,subframeP);
+  //schedule_SR(module_idP,frameP,subframeP);
   // This schedules UCI_CSI in subframeP
   schedule_CSI(module_idP, frameP, subframeP);
 

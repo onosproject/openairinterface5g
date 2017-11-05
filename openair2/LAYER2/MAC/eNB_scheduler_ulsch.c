@@ -121,9 +121,14 @@ void rx_sdu(const module_id_t enb_mod_idP,
        UE_list->UE_sched_ctrl[UE_id].ul_inactivity_timer   = 0;
        UE_list->UE_sched_ctrl[UE_id].ul_failure_timer      = 0;
        UE_list->UE_sched_ctrl[UE_id].ul_scheduled         &= (~(1<<harq_pid));
-       /* don't take into account TA if timer is running */
-       if (UE_list->UE_sched_ctrl[UE_id].ta_timer == 0)
-       UE_list->UE_sched_ctrl[UE_id].ta_update             = timing_advance;
+       /* Update with smoothing: 3/4 of old value and 1/4 of new.
+        * This is the logic that was done in the function
+        * lte_est_timing_advance_pusch, maybe it's not necessary?
+        * maybe it's even not correct at all?
+        */
+       UE_list->UE_sched_ctrl[UE_id].ta_update             =
+         (UE_list->UE_sched_ctrl[UE_id].ta_update * 3 + timing_advance)/4;
+
        UE_list->UE_sched_ctrl[UE_id].pusch_snr[CC_idP]       = ul_cqi;
        UE_list->UE_sched_ctrl[UE_id].ul_consecutive_errors = 0;
        first_rb =  UE_list->UE_template[CC_idP][UE_id].first_rb_ul[harq_pid];
@@ -482,7 +487,7 @@ abort();
 	else
 	  UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] = 0;
 
-          LOG_D(MAC,"[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DCCH, received %d bytes form UE %d on LCID %d \n",
+          LOG_D(MAC,"[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DCCH, received %d bytes from UE %d on LCID %d \n",
                 enb_mod_idP,CC_idP,frameP, rx_lengths[i], UE_id, rx_lcids[i]);
 
           mac_rlc_data_ind(
@@ -996,7 +1001,24 @@ abort();
 	  if (status < RRC_CONNECTED)
 	    cqi_req = 0;
 	  else if (UE_sched_ctrl->cqi_req_timer>30) {
-	    cqi_req = 1;
+            //
+            //
+            //
+            //
+            //
+            //
+            //
+            //
+	    cqi_req = 0;
+
+            //
+            //
+            //
+            //
+            //
+            //
+            //
+            //
 	    UE_sched_ctrl->cqi_req_timer=0;
 	  }
 	  else

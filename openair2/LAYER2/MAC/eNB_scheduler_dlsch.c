@@ -648,8 +648,7 @@ schedule_ue_spec(
       DevCheck(((eNB_UE_stats->dl_cqi < MIN_CQI_VALUE) || (eNB_UE_stats->dl_cqi > MAX_CQI_VALUE)),
       eNB_UE_stats->dl_cqi, MIN_CQI_VALUE, MAX_CQI_VALUE);
       */
-      eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[ue_sched_ctl->dl_cqi[CC_id]];
-      eNB_UE_stats->dlsch_mcs1 = eNB_UE_stats->dlsch_mcs1;//cmin(eNB_UE_stats->dlsch_mcs1, openair_daq_vars.target_ue_dl_mcs);
+      eNB_UE_stats->dlsch_mcs1 = 10;//cqi_to_mcs[ue_sched_ctl->dl_cqi[CC_id]];
 
 
       // store stats
@@ -1252,8 +1251,10 @@ schedule_ue_spec(
 		  (UE_list->UE_template[CC_id][UE_id].DAI-1),
 		  mcs);
 	  } else {
-	    LOG_D(MAC,"[eNB %d] Initial transmission CC_id %d : harq_pid %d, mcs %d\n",
-		  module_idP,CC_id,harq_pid,mcs);
+  struct timespec t;
+  clock_gettime(CLOCK_MONOTONIC, &t);
+	    LOG_D(MAC,"[eNB %d] Initial transmission CC_id %d : harq_pid %d, mcs %d t:%ld.%09ld\n",
+		  module_idP,CC_id,harq_pid,mcs,t.tv_sec,t.tv_nsec);
 	    
 	  }
 	  LOG_D(MAC,"Checking feasibility pdu %d (new sdu)\n",dl_req->number_pdu);

@@ -469,11 +469,13 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
     {
 
       if ((RA_template->Msg2_frame == frameP) && (RA_template->Msg2_subframe == subframeP)) {
-	LOG_D(MAC,"[eNB %d] CC_id %d Frame %d, subframeP %d: Generating RAR DCI, RA_active %d format 1A (%d,%d))\n",
+  struct timespec t;
+  clock_gettime(CLOCK_MONOTONIC, &t);
+	LOG_D(MAC,"[eNB %d] CC_id %d Frame %d, subframeP %d: Generating RAR DCI, RA_active %d format 1A (%d,%d)) t:%ld.%09ld\n",
 	      module_idP, CC_idP, frameP, subframeP,
 	      RA_template->RA_active,
 	      RA_template->RA_dci_fmt1,
-	      RA_template->RA_dci_size_bits1);
+	      RA_template->RA_dci_size_bits1, t.tv_sec,t.tv_nsec);
 
 	// Allocate 4 PRBS starting in RB 0
 	first_rb = 0;
@@ -986,7 +988,9 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 			     1,                           // ndi
 			     0,                           // rv
 			     0);                          // vrb_flag
-    LOG_D(MAC,"Frame %d, subframe %d: Msg4 SFN/SF:%d%d DCI pdu_num %d (rnti %x,rnti_type %d,harq_pid %d, resource_block_coding (%p) %d\n",
+  struct timespec t;
+  clock_gettime(CLOCK_MONOTONIC, &t);
+    LOG_D(MAC,"Frame %d, subframe %d: Msg4 SFN/SF:%d%d DCI pdu_num %d (rnti %x,rnti_type %d,harq_pid %d, resource_block_coding (%p) %d t:%ld.%09ld\n",
 		  frameP,
 	      subframeP,
               RA_template->Msg4_frame, RA_template->Msg4_subframe,
@@ -995,7 +999,7 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type,
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.harq_process,
           &dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding,
-          dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding);
+          dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding,t.tv_sec,t.tv_nsec);
     AssertFatal(dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding < 8192,
 				"resource_block_coding %u < 8192\n",
                 dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding);	

@@ -1196,29 +1196,6 @@ int main( int argc, char **argv )
     } 
   }
   
-#if 0
-  // Will have parsed the config files by now
-  
-  printf("NFAPI MODE:%d\n", nfapi_mode);
-
-  if (nfapi_mode==1) // PNF
-  {
-    set_comp_log(PHY, LOG_DEBUG, LOG_FULL, 1);
-    printf("DJP - forcing PHY to DEBUG - should see similar line if it works\n");
-    LOG_E(PHY,"%s() DJP - forcing PHY to LOG_DEBUG for PNF\n", __FUNCTION__);
-  }
-  else if (nfapi_mode == 2)  // VNF
-  {
-    set_comp_log(MAC, LOG_DEBUG, LOG_FULL, 1);
-    set_comp_log(RRC, LOG_DEBUG, LOG_FULL, 1);
-    set_comp_log(PHY, LOG_DEBUG, LOG_FULL, 1);
-    printf("DJP - forcing MAC to DEBUG - should see similar line if it works\n");
-    LOG_E(PHY,"%s() DJP - forcing MAC to LOG_DEBUG for VNF\n", __FUNCTION__);
-  }
-#endif
-  
-  
-  printf("mlock\n");
   mlockall(MCL_CURRENT | MCL_FUTURE);
   
   pthread_cond_init(&sync_cond,NULL);
@@ -1353,10 +1330,6 @@ int main( int argc, char **argv )
 
     if (nfapi_mode==1) // PNF
     {
-      //set_comp_log(PHY, LOG_DEBUG, LOG_FULL, 1);
-      //printf("DJP - forcing PHY to DEBUG - should see similar line if it works\n");
-      //LOG_E(PHY,"%s() DJP - forcing PHY to LOG_DEBUG for PNF\n", __FUNCTION__);
-
       wait_nfapi_init("main?");
     }
 

@@ -157,7 +157,15 @@ extern uint8_t nfapi_mode;
 extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
 extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 
+#define TICK_TO_US(ts) (ts.diff/ts.trials/cpu_freq_GHz)
+
 static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
+
+  static double cpu_freq_GHz = 0.0;
+
+  if (cpu_freq_GHz == 0.0)
+    cpu_freq_GHz = get_cpu_freq_GHz();
+
 
   start_meas(&softmodem_stats_rxtx_sf);
 
@@ -175,7 +183,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
     //LOG_D(PHY, "oai_subframe_ind(frame:%u, subframe:%d) - NOT CALLED ********\n", frame, subframe);
     oai_subframe_ind(frame, subframe);
 
-    LOG_D(PHY, "UL_info[rx_ind:%d:%d number_of_harqs:%d:%d number_of_crcs:%d:%d number_of_preambles:%d:%d number_of_cqis:%d] RX:%d%d TX:%d%d num_pdcch_symbols:%d\n", 
+    LOG_D(PHY, "UL_info[rx_ind:%d:%d harqs:%d:%d crcs:%d:%d preambles:%d:%d cqis:%d] RX:%d%d TX:%d%d num_pdcch_symbols:%d\n", 
       NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf),   eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, 
       NFAPI_SFNSF2DEC(eNB->UL_INFO.harq_ind.sfn_sf), eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs, 
       NFAPI_SFNSF2DEC(eNB->UL_INFO.crc_ind.sfn_sf),  eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, 
@@ -237,9 +245,43 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
   stop_meas( &softmodem_stats_rxtx_sf );
 
-  LOG_D(PHY,"%s() Exit proc[rx:%d%d tx:%d%d] time[in:%lld diff:%lld max:%lld]\n\n", __FUNCTION__, proc->frame_rx, proc->subframe_rx, proc->frame_tx, proc->subframe_tx, 
-      softmodem_stats_rxtx_sf.in, softmodem_stats_rxtx_sf.diff_now, softmodem_stats_rxtx_sf.max);
+  LOG_D(PHY,"%s() Exit proc[rx:%d%d tx:%d%d] rxtx:%lld phy:%15.3f tx:%15.3f rx:%15.3f prach:%15.3f ofdm:%15.3f dlsch[enc:%15.3f mod:%15.3f scr:%15.3f rm:%15.3f t:%15.3f i:%15.3f] rx_dft:%15.3f ",
+      __FUNCTION__, proc->frame_rx, proc->subframe_rx, proc->frame_tx, proc->subframe_tx, 
+      softmodem_stats_rxtx_sf.diff_now,
+      TICK_TO_US(eNB->phy_proc),
+      TICK_TO_US(eNB->phy_proc_tx),
+      TICK_TO_US(eNB->phy_proc_rx),
+      TICK_TO_US(eNB->rx_prach),
+      TICK_TO_US(eNB->ofdm_mod_stats),
+      TICK_TO_US(eNB->dlsch_encoding_stats),
+      TICK_TO_US(eNB->dlsch_modulation_stats),
+      TICK_TO_US(eNB->dlsch_scrambling_stats),
+      TICK_TO_US(eNB->dlsch_rate_matching_stats),
+      TICK_TO_US(eNB->dlsch_turbo_encoding_stats),
+      TICK_TO_US(eNB->dlsch_interleaving_stats),
+      TICK_TO_US(eNB->rx_dft_stats));
+
+  LOG_D(PHY," ulsch[ch:%15.3f freq:%15.3f dec:%15.3f demod:%15.3f ru:%15.3f td:%15.3f dei:%15.3f dem:%15.3f llr:%15.3f tci:%15.3f tca:%15.3f tcb:%15.3f tcg:%15.3f tce:%15.3f l1:%15.3f l2:%15.3f]\n\n", 
+      TICK_TO_US(eNB->ulsch_channel_estimation_stats),
+      TICK_TO_US(eNB->ulsch_freq_offset_estimation_stats),
+      TICK_TO_US(eNB->ulsch_decoding_stats),
+      TICK_TO_US(eNB->ulsch_demodulation_stats),
+      TICK_TO_US(eNB->ulsch_rate_unmatching_stats),
+      TICK_TO_US(eNB->ulsch_turbo_decoding_stats),
+      TICK_TO_US(eNB->ulsch_deinterleaving_stats),
+      TICK_TO_US(eNB->ulsch_demultiplexing_stats),
+      TICK_TO_US(eNB->ulsch_llr_stats),
+      TICK_TO_US(eNB->ulsch_tc_init_stats),
+      TICK_TO_US(eNB->ulsch_tc_alpha_stats),
+      TICK_TO_US(eNB->ulsch_tc_beta_stats),
+      TICK_TO_US(eNB->ulsch_tc_gamma_stats),
+      TICK_TO_US(eNB->ulsch_tc_ext_stats),
+      TICK_TO_US(eNB->ulsch_tc_intl1_stats),
+      TICK_TO_US(eNB->ulsch_tc_intl2_stats)
+      );
   
+      //softmodem_stats_rxtx_sf.in, softmodem_stats_rxtx_sf.diff_now, softmodem_stats_rxtx_sf.max,
+
   return(0);
 }
 

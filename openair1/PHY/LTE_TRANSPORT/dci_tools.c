@@ -923,6 +923,12 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci
   dlsch1_harq                               = dlsch1->harq_processes[rel8->harq_process];
   dlsch1_harq->codeword                     = 1;
   dlsch0->subframe_tx[subframe]             = 1;
+
+  LOG_D(PHY,"NFAPI: dlsch0[rnti:%x] dci_pdu[rnti:%x rnti_type:%d harq_process:%d ndi1:%d] dlsch0_harq[round:%d harq_mask:%x ndi:%d]\n", 
+      dlsch0->rnti, 
+      rel8->rnti, rel8->rnti_type, rel8->harq_process, rel8->new_data_indicator_1,
+      dlsch0_harq->round, dlsch0->harq_mask, dlsch0_harq->ndi);
+
   if (dlsch0->rnti != rel8->rnti) { // if rnti of dlsch is not the same as in the config, this is a new entry
     dlsch0_harq->round=0;
     dlsch0->harq_mask=0;
@@ -939,8 +945,9 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci
   dlsch0->active        = 1;
   if (rel8->rnti_type == 2)
       dlsch0_harq->round    = 0;
-LOG_D(PHY,"NFAPI: harq_pid %d harq_mask %x, round %d ndi (%d,%d) rnti type %d\n",rel8->harq_process,dlsch0->harq_mask,dlsch0_harq->round,
-	dlsch0_harq->ndi,rel8->new_data_indicator_1, rel8->rnti_type);
+
+  LOG_D(PHY,"NFAPI: harq_pid %d harq_mask %x, round %d ndi (%d,%d) rnti type %d\n",rel8->harq_process,dlsch0->harq_mask,dlsch0_harq->round,
+      dlsch0_harq->ndi,rel8->new_data_indicator_1, rel8->rnti_type);
 
   switch (rel8->dci_format) {
 
@@ -2500,9 +2507,11 @@ void fill_ulsch(PHY_VARS_eNB *eNB,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame
   else if(ulsch->harq_processes[harq_pid]->n_DMRS == 7)
     ulsch->harq_processes[harq_pid]->n_DMRS2 = 9;
   
-  LOG_D(PHY,"[eNB %d][PUSCH %d] Programming PUSCH with n_DMRS2 %d (cshift %d) for Frame %d, Subframe %d\n",
-	eNB->Mod_id,harq_pid,ulsch->harq_processes[harq_pid]->n_DMRS2,ulsch->harq_processes[harq_pid]->n_DMRS,
-	frame,subframe);
+  LOG_D(PHY,"[eNB %d][PUSCH %d] Frame %d, Subframe %d Programming PUSCH with n_DMRS2 %d (cshift %d) ulsch:ndi:%d ulsch_pdu:ndi:%d new_ulsch:%d status:%d\n",
+	eNB->Mod_id,harq_pid,frame,subframe,
+        ulsch->harq_processes[harq_pid]->n_DMRS2,
+        ulsch->harq_processes[harq_pid]->n_DMRS,
+	ulsch->harq_processes[harq_pid]->ndi, ulsch_pdu->ulsch_pdu_rel8.new_data_indication, new_ulsch, ulsch->harq_processes[harq_pid]->status);
   
   ulsch->harq_processes[harq_pid]->rvidx = ulsch_pdu->ulsch_pdu_rel8.redundancy_version;
   ulsch->harq_processes[harq_pid]->Qm    = ulsch_pdu->ulsch_pdu_rel8.modulation_type;

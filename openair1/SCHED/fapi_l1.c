@@ -53,7 +53,7 @@ void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
   LTE_eNB_PDCCH *pdcch_vars       = &eNB->pdcch_vars[idx];
   nfapi_dl_config_dci_dl_pdu *pdu = &dl_config_pdu->dci_dl_pdu;
 
-  LOG_D(PHY,"Frame %d, Subframe %d: DCI processing - populating pdcch_vars->dci_alloc[%d] subframe_tx:%d idx:%d pdcch_vars->num_dci:%d\n",proc->frame_tx,proc->subframe_tx, pdcch_vars->num_dci, proc->subframe_tx, idx, pdcch_vars->num_dci);
+  LOG_D(PHY,"Frame %d, Subframe %d: DCI processing - populating pdcch_vars->dci_alloc[%d] proc:subframe_tx:%d idx:%d pdcch_vars->num_dci:%d\n",proc->frame_tx,proc->subframe_tx, pdcch_vars->num_dci, proc->subframe_tx, idx, pdcch_vars->num_dci);
 
   // copy dci configuration into eNB structure
   fill_dci_and_dlsch(eNB,proc,&pdcch_vars->dci_alloc[pdcch_vars->num_dci],pdu);
@@ -180,9 +180,9 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
   dlsch0_harq->pdsch_start = eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols;
 
   if (dlsch0_harq->round==0) {  //get pointer to SDU if this a new SDU
-    AssertFatal(sdu!=NULL,"NFAPI: frame %d, subframe %d: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d : sdu is null for pdu_index %d\n",
+    AssertFatal(sdu!=NULL,"NFAPI: frame %d, subframe %d: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d : sdu is null for pdu_index %d dlsch0_harq[round:%d SFN/SF:%d%d pdu:%p mcs:%d ndi:%d pdschstart:%d]\n",
                 proc->frame_tx,proc->subframe_tx,rel8->rnti,UE_id,harq_pid,
-                dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index);
+                dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index,dlsch0_harq->round,dlsch0_harq->frame,dlsch0_harq->subframe,dlsch0_harq->pdu,dlsch0_harq->mcs,dlsch0_harq->ndi,dlsch0_harq->pdsch_start);
     if (rel8->rnti != 0xFFFF) LOG_D(PHY,"NFAPI: frame %d, subframe %d: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d\n",
                                     proc->frame_tx,proc->subframe_tx,rel8->rnti,UE_id,harq_pid);
     if (codeword_index == 0) dlsch0_harq->pdu                    = sdu;
@@ -687,7 +687,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
                   (dlsch_pdu_rel8->transport_blocks>0),
                   "dlsch_pdu_rel8->transport_blocks = %d not in [1,2]\n",
                   dlsch_pdu_rel8->transport_blocks);
-      if (sdu != NULL)
+      if (1)//sdu != NULL)
       {
         handle_nfapi_dlsch_pdu(eNB,proc,dl_config_pdu, dlsch_pdu_rel8->transport_blocks-1, sdu);
       }
@@ -741,6 +741,8 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 
   if (nfapi_mode && number_hi_dci0_pdu!=0) {
     oai_nfapi_hi_dci0_req(HI_DCI0_req);
+    eNB->pdcch_vars[subframe&1].num_dci=0;
+    eNB->pdcch_vars[subframe&1].num_pdcch_symbols=0;
   }
 
   for (i=0;i<number_hi_dci0_pdu;i++) {
@@ -765,8 +767,10 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     }
   }
 
-  if (nfapi_mode) {
-    for (int future_subframe=0;future_subframe<10;future_subframe++) { 
+  if (0){//nfapi_mode) {
+    int future_subframe=subframe;
+    //for (int future_subframe=0;future_subframe<10;future_subframe++) { 
+    {
       nfapi_ul_config_request_t *ul_req_tmp = &RC.mac[0]->UL_req_tmp[CC_id][future_subframe];
 
       // DJP - indexing directly into the mac - not good - ??????

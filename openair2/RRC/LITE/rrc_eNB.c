@@ -4800,6 +4800,7 @@ rrc_eNB_decode_dcch(
       T(T_ENB_RRC_UL_INFORMATION_TRANSFER, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
         T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
+      LOG_D(RRC,"[MSG] RRC UL Information Transfer \n");
 #ifdef RRC_MSG_PRINT
       LOG_F(RRC,"[MSG] RRC UL Information Transfer \n");
 

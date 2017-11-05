@@ -671,7 +671,7 @@ int phy_harq_indication(struct nfapi_vnf_p7_config* config, nfapi_harq_indicatio
 {
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
 
-  LOG_E(MAC, "%s() NFAPI SFN/SF:%d number_of_harqs:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->harq_indication_body.number_of_harqs);
+  LOG_D(MAC, "%s() NFAPI SFN/SF:%d number_of_harqs:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->harq_indication_body.number_of_harqs);
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
@@ -796,14 +796,14 @@ int phy_sr_indication(struct nfapi_vnf_p7_config* config, nfapi_sr_indication_t*
   *dest_ind = *ind;
   dest_ind->sr_indication_body.sr_pdu_list = dest_pdu_list;
 
-  LOG_D(MAC,"%s() eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs:%d\n", eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs);
+  LOG_D(MAC,"%s() eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs:%d\n", __FUNCTION__, eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs);
 
   for (int i=0;i<eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs;i++)
   {
     nfapi_sr_indication_pdu_t *dest_pdu = &dest_ind->sr_indication_body.sr_pdu_list[i];
     nfapi_sr_indication_pdu_t *src_pdu = &ind->sr_indication_body.sr_pdu_list[i];
 
-    LOG_D(MAC, "SR_IND[PDU:%d][rnti:%x cqi:%d channel:%d]\n", i, dest_pdu->rx_ue_information.rnti, dest_pdu->ul_cqi_information.ul_cqi, dest_pdu->ul_cqi_information.channel);
+    LOG_D(MAC, "SR_IND[PDU:%d][rnti:%x cqi:%d channel:%d]\n", i, src_pdu->rx_ue_information.rnti, src_pdu->ul_cqi_information.ul_cqi, src_pdu->ul_cqi_information.channel);
 
     memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
   }
@@ -863,12 +863,44 @@ void vnf_deallocate(void* ptr)
 	free(ptr);
 }
 
-void vnf_trace(nfapi_trace_level_t level, const char* message, ...)
+extern void nfapi_log(char *file, char *func, int line, int comp, int level, const char* format, va_list args);
+void vnf_trace(nfapi_trace_level_t nfapi_level, const char* message, ...)
 {
-	va_list args;
-	va_start(args, message);
-	vprintf(message, args);
-	va_end(args);
+#if 1
+
+  va_list    args;
+  int oai_level;
+
+  if (nfapi_level==NFAPI_TRACE_ERROR)
+  {
+    oai_level = LOG_ERR;
+  }
+  else if (nfapi_level==NFAPI_TRACE_WARN)
+  {
+    oai_level = LOG_WARNING;
+  }
+  else if (nfapi_level==NFAPI_TRACE_NOTE)
+  {
+    oai_level = LOG_INFO;
+  }
+  else if (nfapi_level==NFAPI_TRACE_INFO)
+  {
+    oai_level = LOG_INFO;
+  }
+  else
+  {
+    oai_level = LOG_INFO;
+  }
+
+  va_start(args, message);
+  nfapi_log("FILE>", "FUNC", 999, PHY, oai_level, message, args);
+  va_end(args);
+#else
+  va_list args;
+  va_start(args, message);
+  vprintf(message, args);
+  va_end(args);
+#endif
 }
 
 int phy_vendor_ext(struct nfapi_vnf_p7_config* config, nfapi_p7_message_header_t* msg)
