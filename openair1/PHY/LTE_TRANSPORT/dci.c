@@ -3537,7 +3537,7 @@ void dci_decoding_procedure0(LTE_UE_PDCCH **pdcch_vars,
               dci_decoded_output[current_thread_id][4],dci_decoded_output[current_thread_id][5],dci_decoded_output[current_thread_id][6],dci_decoded_output[current_thread_id][7]);
 #endif
         }
-
+        printf("[dci] crc %x\n",crc);
         if (crc==si_rnti) {
           dci_alloc[*dci_cnt].format     = format_si;
           *dci_cnt = *dci_cnt+1;
@@ -4011,9 +4011,10 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
     printf("[DCI search] doing common search/format0 aggregation 4\n");
 #endif
 
-    if (ue->prach_resources[eNB_id])
+    if (ue->prach_resources[eNB_id]){
       ra_rnti = ue->prach_resources[eNB_id]->ra_RNTI;
-
+      printf("[dci] ra_RNTI %d, ue->decode_SIB? %d\n",ra_rnti,ue->decode_SIB);
+    }
     // First check common search spaces at aggregation 4 (SI_RNTI, P_RNTI and RA_RNTI format 0/1A),
     // and UE_SPEC format0 (PUSCH) too while we're at it
     dci_decoding_procedure0(pdcch_vars,1,mode,subframe,
@@ -4038,7 +4039,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+    printf("[dci]1 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff) ||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4067,7 +4068,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+    printf("[dci]2 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff) ||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4100,7 +4101,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+    printf("[dci]3 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4130,7 +4131,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap1,
                             &CCEmap2);
     //#endif
-
+    printf("[dci]4 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
   }
 
   if (ue->UE_mode[eNB_id] <= PRACH)
@@ -4164,7 +4165,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                           &CCEmap0,
                           &CCEmap1,
                           &CCEmap2);
-
+  printf("[dci]5 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
   if ((CCEmap0==0xffff)||
       ((format0_found==1)&&(format_c_found==1)))
     return(dci_cnt);
@@ -4197,7 +4198,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                           &CCEmap0,
                           &CCEmap1,
                           &CCEmap2);
-
+  printf("[dci]6 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
   if ((CCEmap0==0xffff)||
       ((format0_found==1)&&(format_c_found==1)))
     return(dci_cnt);
@@ -4232,7 +4233,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                           &CCEmap0,
                           &CCEmap1,
                           &CCEmap2);
-
+  printf("[dci]7 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
   if ((CCEmap0==0xffff)||
       ((format0_found==1)&&(format_c_found==1)))
     return(dci_cnt);
@@ -4266,7 +4267,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                           &CCEmap0,
                           &CCEmap1,
                           &CCEmap2);
-
+  printf("[dci]8 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
   if ((CCEmap0==0xffff)||
       ((format0_found==1)&&(format_c_found==1)))
     return(dci_cnt);
@@ -4301,7 +4302,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap1,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 1 dci_cnt %d\n",dci_cnt);
-
+  printf("[dci]9 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff) ||
         (format_c_found==1))
       return(dci_cnt);
@@ -4334,7 +4335,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap1,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 2 dci_cnt %d\n",dci_cnt);
-
+  printf("[dci]10 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         (format_c_found==1))
       return(dci_cnt);
@@ -4367,7 +4368,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap1,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 4 dci_cnt %d\n",dci_cnt);
-
+  printf("[dci]11 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4401,7 +4402,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap1,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 8 dci_cnt %d\n",dci_cnt);
-
+  printf("[dci]12 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4439,7 +4440,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+  printf("[dci]13 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     LOG_D(PHY," format 2A_2A search CCEmap0 %x, format0_found %d, format_c_found %d \n", CCEmap0, format0_found, format_c_found);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
@@ -4475,7 +4476,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+  printf("[dci]14 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4510,7 +4511,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+  printf("[dci]15 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4546,6 +4547,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
+  printf("[dci]16 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     //#endif
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
@@ -4581,7 +4583,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+  printf("[dci]17 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4614,7 +4616,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+  printf("[dci]18 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4647,7 +4649,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+  printf("[dci]19 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4681,6 +4683,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
+  printf("[dci]20 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     //#endif
   } else if ((tmode==5) || (tmode==6)) { // This is MU-MIMO
 
@@ -4712,7 +4715,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+  printf("[dci]21 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
 
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
@@ -4746,7 +4749,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+  printf("[dci]22 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4779,7 +4782,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+  printf("[dci]23 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -4814,7 +4817,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap0,
                             &CCEmap1,
                             &CCEmap2);
-
+  printf("[dci]24 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);

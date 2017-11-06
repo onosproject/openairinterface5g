@@ -377,37 +377,27 @@ void multipath_channel_prach(channel_desc_t *desc,
   printf("[CHANNEL_PRACH] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, len %d \n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,desc->channel_length);
 #endif		
   printf("[CHANNEL_PRACH] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, len %d , symbols tti %d\n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,desc->channel_length,symbols_per_tti);
-   	if (keep_channel) {
+   		if (keep_channel) {
 		// do nothing - keep channel
 		} else {
 		random_channel(desc,0);//Find a(l)
 		freq_channel_prach(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
-		}
-		for (l=0;l<symbols_per_tti;l++){//0-13  normal cyclic prefix	
-			k = (12*n_ra_prb) - 6*fp->N_RB_UL;
-			if (k<0)
-				k+=fp->ofdm_symbol_size;
-			k*=12;	
-			k+=13;
-			k*=2; 	
+		}	
 			for (f=0;f<prach_samples; f++) {
-				if (k>=((prach_fmt<4)?12:2)*ofdm_symbol_size)
-					k=0;
 				rx_tmp.x = 0;
 				rx_tmp.y = 0;
 				for (ii=0; ii<desc->nb_rx; ii++) {
 					for (j=0; j<desc->nb_tx; j++) {		
 						//RX_RE(k) = TX_RE(k).chF(k).x	- TX_IM(k).chF(k).y	
-						 rx_tmp.x += ((tx_sig_re[ii][k+l*ofdm_symbol_size*12] * desc->chF_prach[ii+(j*desc->nb_rx)][f].x)-(tx_sig_im[ii][k+l*ofdm_symbol_size*12] * desc->chF_prach[ii+(j*desc->nb_rx)][f].y));
+						 rx_tmp.x += (tx_sig_re[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].x)-(tx_sig_im[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].y);
 						//RX_IM(k) = TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
-						 rx_tmp.y += ((tx_sig_im[ii][k+l*ofdm_symbol_size*12] * desc->chF_prach[ii+(j*desc->nb_rx)][f].x)+(tx_sig_re[ii][k+l*ofdm_symbol_size*12] * desc->chF_prach[ii+(j*desc->nb_rx)][f].y));
+						 rx_tmp.y += (tx_sig_im[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].x)+(tx_sig_re[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].y);
 				         }  // j 
-					//printf("[multipath prach] k: %d\n",k/2);
-					rx_sig_re[ii][(k++)+l*ofdm_symbol_size*12] =   rx_tmp.x*path_loss;
-					rx_sig_im[ii][(k++)+l*ofdm_symbol_size*12] =   rx_tmp.y*path_loss;	
-				 } // ii
+				//printf("[multipath prach] k: %d\n",k/2);
+				rx_sig_re[ii][f]  =   rx_tmp.x*path_loss;
+				rx_sig_im[ii][f]  =   rx_tmp.y*path_loss;	
+				} // ii
 			} // f
-		}//l
 }
 
 

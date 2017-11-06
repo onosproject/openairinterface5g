@@ -2023,6 +2023,8 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
              preamble_delay_list,
              frame,
              0);
+	  	printf("[prach] ook\n");
+      write_output("prach_rxF_comp1.m","prach_rxF_comp1",eNB->prach_vars.prachF,1024,1,1);
     }
   } else {
     for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {

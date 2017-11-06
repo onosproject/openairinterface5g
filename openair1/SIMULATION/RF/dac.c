@@ -148,7 +148,7 @@ double dac_fixed_gain_prach(double *s_re[2],
   amp1 = 0;
 
   for (aa=0; aa<nb_tx_antennas; aa++) {
-    amp1 += sqrt((double)signal_energy_prach((int32_t*)&input[input_offset_meas],length_meas*2)/NB_RE);
+    amp1 += sqrt((double)signal_energy_prach((int32_t*)&input[input_offset_meas],length_meas)/NB_RE);
   }
 
   amp1/=nb_tx_antennas;

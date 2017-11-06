@@ -125,7 +125,7 @@ int32_t signal_energy_prach(int32_t *input,uint32_t length)
   mm0 = _mm_setzero_si64();//pxor(mm0,mm0);
   mm3 = _mm_setzero_si64();//pxor(mm3,mm3);
 
-  for (i=0; i<length; i+=2) {
+  for (i=0; i<2*length; i+=2) {
 
     mm1 = in[i];
     mm2 = mm1;
@@ -140,7 +140,7 @@ int32_t signal_energy_prach(int32_t *input,uint32_t length)
   mm0 = _m_psrlqi(mm0,32);
   mm0 = _m_paddd(mm0,mm1);
   temp = _m_to_int(mm0);
-  temp/=(length/2);
+  temp/=(length);
   temp<<=shift;   // this is the average of x^2
 
   // now remove the DC component
@@ -150,7 +150,7 @@ int32_t signal_energy_prach(int32_t *input,uint32_t length)
   mm2 = _m_paddw(mm2,mm3);
   mm2 = _m_pmaddwd(mm2,mm2);
   temp2 = _m_to_int(mm2);
-  temp2/=(length*length/4);
+  temp2/=(length*length);
   //  temp2<<=(2*shift_DC);
   temp -= temp2;
 

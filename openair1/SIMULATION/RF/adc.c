@@ -119,7 +119,7 @@ void adc_prach(double *r_re[2],
     for (aa=0; aa<nb_rx_antennas; aa++) {
       ((short *)output)[((i+output_offset)<<1)]   = (short)(r_re[aa][i+input_offset]*gain);
       ((short *)output)[1+((i+output_offset)<<1)] = (short)(r_im[aa][i+input_offset]*gain);
-
+      printf("[adc_prach]i %d output (%d,%d)\n",i,((short *)output)[((i+output_offset)<<1)],((short *)output)[1+((i+output_offset)<<1)]);
       if ((r_re[aa][i+input_offset]*gain) > 30000) {
         //("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
       }
