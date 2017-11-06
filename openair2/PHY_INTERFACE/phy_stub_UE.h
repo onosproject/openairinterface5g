@@ -80,5 +80,8 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 int tx_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req);
 
 
+int hi_dci0_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req);
+
+
 
 #endif /* PHY_STUB_UE_H_ */
