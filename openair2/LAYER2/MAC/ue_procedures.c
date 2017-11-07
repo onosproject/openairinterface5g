@@ -396,7 +396,10 @@ ue_send_sdu(
         for (i=0; i<6; i++)
           if (tx_sdu[i] != payload_ptr[i]) {
             LOG_E(MAC,"[UE %d][RAPROC] Contention detected, RA failed\n",module_idP);
-            ra_failed(module_idP,CC_id,eNB_index);
+            // Panos: Modification for phy_stub mode operation here. We only need to make sure that the ue_mode is back to
+            // PRACH state.
+            UE_mac_inst[module_idP].UE_mode[eNB_index] = PRACH;
+            //ra_failed(module_idP,CC_id,eNB_index);
             UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
             VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SEND_SDU, VCD_FUNCTION_OUT);
             return;
@@ -417,7 +420,8 @@ ue_send_sdu(
 #ifdef DEBUG_HEADER_PARSING
       LOG_D(MAC,"[UE] CE %d : UE Timing Advance : %d\n",i,payload_ptr[0]);
 #endif
-      process_timing_advance(module_idP,CC_id,payload_ptr[0]);
+      // Panos: Eliminate call to process_timing_advance for the phy_stub UE operation mode. Is this correct?
+      //process_timing_advance(module_idP,CC_id,payload_ptr[0]);
       payload_ptr++;
       break;
 
@@ -1592,7 +1596,7 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
 
   // build PHR and update the timers
   if (phr_ce_len == sizeof(POWER_HEADROOM_CMD)) {
-	  //Panos: Substitute with a static value for the MAC layer abstraction
+	  //Panos: Substitute with a static value for the MAC layer abstraction (phy_stub mode)
     //phr_p->PH = get_phr_mapping(module_idP,CC_id,eNB_index);
 	  phr_p->PH = 40;
     phr_p->R  = 0;

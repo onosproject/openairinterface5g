@@ -17,6 +17,9 @@
 //extern uint8_t nfapi_pnf;
 //UL_IND_t *UL_INFO;
 
+void Msg1_transmitted(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id);
+void Msg3_transmitted(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id);
+
 
 
 void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND_t* UL_INFO, uint8_t *ulsch_buffer, uint16_t buflen, uint16_t rnti)
@@ -859,6 +862,50 @@ int dl_config_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_
 
   if(req->vendor_extension)
     free(req->vendor_extension);
+
+  return 0;
+}
+
+
+
+int hi_dci0_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req)
+{
+  LOG_D(PHY,"[UE-PHY_STUB] hi dci0 request sfn_sf:%d number_of_dci:%d number_of_hi:%d\n", NFAPI_SFNSF2DEC(req->sfn_sf), req->hi_dci0_request_body.number_of_dci, req->hi_dci0_request_body.number_of_hi);
+
+  //phy_info* phy = (phy_info*)(pnf_p7->user_data);
+
+  module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
+
+  /*struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
+  eNB_rxtx_proc_t *proc = &eNB->proc.proc_rxtx[0];*/
+
+  for (int i=0; i<req->hi_dci0_request_body.number_of_dci + req->hi_dci0_request_body.number_of_hi; i++)
+  {
+    LOG_D(PHY,"[UE-PHY_STUB] HI_DCI0_REQ sfn_sf:%d PDU[%d]\n", NFAPI_SFNSF2DEC(req->sfn_sf), i);
+
+    if (req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type == NFAPI_HI_DCI0_DCI_PDU_TYPE)
+    {
+      LOG_D(PHY,"[UE-PHY_STUB] HI_DCI0_REQ sfn_sf:%d PDU[%d] - NFAPI_HI_DCI0_DCI_PDU_TYPE not used \n", NFAPI_SFNSF2DEC(req->sfn_sf), i);
+
+    }
+    else if (req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type == NFAPI_HI_DCI0_HI_PDU_TYPE)
+    {
+      LOG_D(PHY,"[UE-PHY_STUB] HI_DCI0_REQ sfn_sf:%d PDU[%d] - NFAPI_HI_DCI0_HI_PDU_TYPE\n", NFAPI_SFNSF2DEC(req->sfn_sf), i);
+
+      nfapi_hi_dci0_request_pdu_t *hi_dci0_req_pdu = &req->hi_dci0_request_body.hi_dci0_pdu_list[i];
+
+      // This is meaningful only after ACKnowledging the first ULSCH Txon (i.e. Msg3)
+      if(hi_dci0_req_pdu->hi_pdu.hi_pdu_rel8.hi_value == 1 && UE_mac_inst[Mod_id].first_ULSCH_Tx == 1){
+    	  UE_mac_inst[Mod_id].UE_mode[0] = PUSCH;
+    	  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+      }
+
+    }
+    else
+    {
+      LOG_E(PHY,"[UE-PHY_STUB] HI_DCI0_REQ sfn_sf:%d PDU[%d] - unknown pdu type:%d\n", NFAPI_SFNSF2DEC(req->sfn_sf), i, req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type);
+    }
+  }
 
   return 0;
 }
