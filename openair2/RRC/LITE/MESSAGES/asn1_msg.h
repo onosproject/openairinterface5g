@@ -112,9 +112,9 @@ uint8_t do_RRCConnectionRequest(uint8_t Mod_id, uint8_t *buffer,uint8_t *rv);
 \brief Generate an SidelinkUEInformation UL-DCCH-Message (UE).
 @param destinationInfoList Pointer to a list of destination for which UE requests E-UTRAN to assign dedicated resources
 @param discTxResourceReq Pointer to  number of discovery messages for discovery announcements for which  UE requests E-UTRAN to assign dedicated resources
-@param mode Indicates different requests from UE
+@param mode Indicates different requests from upper layers
 @returns Size of encoded bit stream in bytes*/
-uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer, SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, uint8_t mode);
+uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer, SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, SL_TRIGGER_t mode);
 
 /** \brief Generate an RRCConnectionSetupComplete UL-DCCH-Message (UE)
 @param buffer Pointer to PER-encoded ASN.1 description of UL-DCCH-Message PDU

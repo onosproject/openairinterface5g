@@ -61,6 +61,7 @@
 #include "RRCConnectionRequest.h"
 #include "RRCConnectionReestablishmentRequest.h"
 #include "BCCH-DL-SCH-Message.h"
+#include "SBCCH-SL-BCH-MessageType.h"
 #include "BCCH-BCH-Message.h"
 #if defined(Rel10) || defined(Rel14)
 #include "MCCH-Message.h"
@@ -223,6 +224,21 @@ typedef enum HO_STATE_e {
   HO_CMD, // initiated by the src eNB
   HO_COMPLETE // initiated by the target eNB
 } HO_STATE_t;
+
+typedef enum SL_TRIGGER_e {
+  SL_RECEIVE_COMMUNICATION=0,
+  SL_TRANSMIT_RELAY_ONE_TO_ONE,
+  SL_TRANSMIT_RELAY_ONE_TO_MANY,
+  SL_TRANSMIT_NON_RELAY_ONE_TO_ONE,
+  SL_TRANSMIT_NON_RELAY_ONE_TO_MANY,
+  SL_RECEIVE_DISCOVERY,
+  SL_TRANSMIT_NON_PS_DISCOVERY,
+  SL_TRANSMIT_PS_DISCOVERY,
+  SL_RECEIVE_V2X,
+  SL_TRANSMIT_V2X,
+  SL_REQUEST_DISCOVERY_TRANSMISSION_GAPS,
+  SL_REQUEST_DISCOVERY_RECEPTION_GAPS
+} SL_TRIGGER_t;
 
 //#define NUMBER_OF_UE_MAX MAX_MOBILES_PER_RG
 #define RRM_FREE(p)       if ( (p) != NULL) { free(p) ; p=NULL ; }
@@ -593,6 +609,8 @@ typedef struct UE_RRC_INST_s {
   //TTN - SIB18
   SystemInformationBlockType18_r12_t *sib18[NB_CNX_UE];
   SystemInformationBlockType19_r12_t *sib19[NB_CNX_UE];
+  uint8_t                           *MIB;
+  SBCCH_SL_BCH_MessageType_t   mib_sl[NB_CNX_UE];
 
 #if defined(Rel10) || defined(Rel14)
   uint8_t                           MBMS_flag;

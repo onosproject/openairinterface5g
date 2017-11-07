@@ -76,6 +76,8 @@
 #include "SIB-Type.h"
 
 #include "BCCH-DL-SCH-Message.h"
+#include "SBCCH-SL-BCH-MessageType.h"
+#include "SBCCH-SL-BCH-Message.h"
 
 #include "PHY/defs.h"
 
@@ -284,6 +286,67 @@ uint8_t do_MIB(rrc_eNB_carrier_data_t *carrier, uint32_t N_RB_DL, uint32_t phich
 
   return((enc_rval.encoded+7)/8);
 }
+
+//TTN for D2D
+// 3GPP 36.331 (Section 5.10.7.4)
+uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, uint32_t frame, uint8_t subframe, uint8_t in_coverage, uint8_t mode)
+{
+
+   asn_enc_rval_t enc_rval;
+   SBCCH_SL_BCH_MessageType_t *mib_sl = &UE_rrc_inst[ctxt_pP->module_id].mib_sl[eNB_index];
+   uint8_t sfn = (uint8_t)((frame>>2)&0xff);
+   UE_rrc_inst[ctxt_pP->module_id].MIB = (uint8_t*) malloc16(4);
+
+   if (in_coverage > 0 ){
+      //in coverage
+      mib_sl->inCoverage_r12 = TRUE;
+      mib_sl->sl_Bandwidth_r12 = UE_rrc_inst[ctxt_pP->module_id].sib2[eNB_index]->freqInfo.ul_Bandwidth;
+      if (UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index]->tdd_Config) {
+         mib_sl->tdd_ConfigSL_r12.subframeAssignmentSL_r12 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index]->tdd_Config->subframeAssignment;
+      } else {
+         mib_sl->tdd_ConfigSL_r12.subframeAssignmentSL_r12 = TDD_ConfigSL_r12__subframeAssignmentSL_r12_none;
+      }
+      //if triggered by sl communication
+      if (UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12){
+         mib_sl->reserved_r12 = *UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12;
+      }
+      //if triggered by sl discovery
+      if (UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index]->discConfig_r12->discSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12){
+              mib_sl->reserved_r12 = *UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index]->discConfig_r12->discSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12;
+       }
+      //Todo - if triggered by v2x
+   } else {
+   //Todo - out of coverage for V2X
+   // Todo - UE has a selected SyncRef UE
+   mib_sl->inCoverage_r12 = FALSE;
+   //set sl-Bandwidth, subframeAssignmentSL and reserved from the pre-configured parameters
+   }
+
+   //set FrameNumber, subFrameNumber
+   mib_sl->directFrameNumber_r12.buf =  &sfn;
+   mib_sl->directFrameNumber_r12.size = 1;
+   mib_sl->directFrameNumber_r12.bits_unused=0;
+   mib_sl->directSubframeNumber_r12 = subframe;
+
+
+  LOG_I(RRC,"[MIB-SL] sfn %x, subframe %x\n", (uint32_t)sfn, (uint8_t)subframe);
+
+
+  enc_rval = uper_encode_to_buffer(&asn_DEF_SBCCH_SL_BCH_Message,
+                                   (void*)mib_sl,
+                                   UE_rrc_inst[ctxt_pP->module_id].MIB,
+                                   24);
+  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
+               enc_rval.failed_type->name, enc_rval.encoded);
+
+
+  if (enc_rval.encoded==-1) {
+    return(-1);
+  }
+
+  return((enc_rval.encoded+7)/8);
+}
+
 
 uint8_t do_SIB1(rrc_eNB_carrier_data_t *carrier,
 		int Mod_id,int CC_id
@@ -1361,7 +1424,7 @@ uint8_t do_RRCConnectionRequest(uint8_t Mod_id, uint8_t *buffer,uint8_t *rv)
 
 
 //TTN for D2D - 3GPP TS 36.331 (Section 5.10.2.3)
-uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, uint8_t mode)
+uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, SL_TRIGGER_t mode)
 {
 
    asn_enc_rval_t enc_rval;
@@ -1381,28 +1444,28 @@ uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_Destinatio
    sidelinkUEInformation->criticalExtensions.choice.c1.present = SidelinkUEInformation_r12__criticalExtensions__c1_PR_sidelinkUEInformation_r12;
    switch(mode) {
    //if SIB18 is available case 1,2,3,4
-   case 1: // to receive sidelink communication
+   case SL_RECEIVE_COMMUNICATION: // to receive sidelink communication
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12 = &carrierFreq[0];
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12[0] = carrierFreq[0];
       break;
-   case 2: //to transmit non-relay related one-to-many sidelink communication
+   case SL_TRANSMIT_NON_RELAY_ONE_TO_MANY: //to transmit non-relay related one-to-many sidelink communication
       //commTxResourceReq
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12 = &carrierFreq[0];
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12 = *destinationInfoList;
       break;
-   case 3://transmit non-relay related one-to-one sidelink communication
+   case SL_TRANSMIT_NON_RELAY_ONE_TO_ONE://transmit non-relay related one-to-one sidelink communication
       //if commTxResourceUC-ReqAllowed is included in SIB18
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12 = &carrierFreq[0];
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12 = *destinationInfoList;
       break;
-   case 4: //transmit relay related one-to-one sidelink communication
+   case SL_TRANSMIT_RELAY_ONE_TO_ONE: //transmit relay related one-to-one sidelink communication
       //if SIB19 includes discConfigRelay and UE acts a relay or UE has a selected relay
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12 = *destinationInfoList;
       //set ue-type to relayUE or remoteUE
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_relayUE;
       //sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12->nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_remoteUE;
       break;
-   case 5: //transmit relay related one-to-many sidelink communication
+   case SL_TRANSMIT_RELAY_ONE_TO_MANY: //transmit relay related one-to-many sidelink communication
       //if SIB19 includes discConfigRelay and UE acts a relay
       //set ue-type to relayUE
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_relayUE;
@@ -1411,22 +1474,28 @@ uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_Destinatio
 
       //if SIB19 is available
       //TTN - for case 6,7, and 8, we consider only one frequency  - a serving frequency
-   case 6: //receive sidelink discovery announcements
+   case SL_RECEIVE_DISCOVERY: //receive sidelink discovery announcements
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discRxInterest_r12 = SidelinkUEInformation_r12_IEs__discRxInterest_r12_true;
       break;
-   case 7://to transmit non-PS related sidelink discovery announcements
+   case SL_TRANSMIT_NON_PS_DISCOVERY://to transmit non-PS related sidelink discovery announcements
       //for the first frequency
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12 = discTxResourceReq;
       //for additional frequency
       break;
-   case 8://to transmit PS related sidelink discovery announcements
+   case SL_TRANSMIT_PS_DISCOVERY://to transmit PS related sidelink discovery announcements
       //if to transmit non-relay PS related discovery announcements and SIB19 includes discConfigPS
       //if UE is acting as relay UE and SIB includes discConfigRelay (relay threshold condition)
       //if relay UE/has a selected relay UE and if SIB19 includes discConfigRelay
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13->discTxResourceReq_r13 = discTxResourceReq;
       //sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12->nonCriticalExtension->discTxResourceReqPS_r13->carrierFreqDiscTx_r13
       break;
-      //TODO: SIB21
+   //SIB21
+   case SL_RECEIVE_V2X:
+      //TODO
+      break;
+   case SL_TRANSMIT_V2X:
+      //TODO
+      break;
       //TODO: request sidelink discovery transmission/reception gaps
       //TODO: report the system information parameters related to sidelink discovery of carriers other than the primary
    default:
@@ -2286,12 +2355,12 @@ do_RRCConnectionReconfiguration(
 
   //TTN for D2D
   //allocate dedicated resource pools for SL communication (sl_CommConfig_r12)
-  if (sl_CommConfig) {
+  if (sl_CommConfig != NULL) {
      rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12 = sl_CommConfig;
      rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12[0] = sl_CommConfig[0];
   }
   //allocate dedicated resource pools for SL discovery (sl_DiscConfig)
-  if (sl_DiscConfig){
+  if (sl_DiscConfig != NULL){
      rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12 = sl_DiscConfig;
      rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12[0] = sl_DiscConfig[0];
   }

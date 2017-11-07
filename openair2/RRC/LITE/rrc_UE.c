@@ -4880,24 +4880,70 @@ rrc_top_cleanup_ue(
 
 
 //-----------------------------------------------------------------------------
-void rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, uint8_t mode )
+void rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, SL_TRIGGER_t mode)
 {
    uint8_t    size;
    uint8_t buffer[100];
 
    //Generate SidelinkUEInformation
 
-   if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&8192) != 0) {//if SIB18 is available
+   if (((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&8192) > 0) && (destinationInfoList != NULL)) {//if SIB18 is available
       size = do_SidelinkUEInformation(ctxt_pP->module_id, buffer, destinationInfoList, NULL, mode);
       LOG_I(RRC,"[UE %d][RRC_UE] Frame %d : Logical Channel UL-DCCH, Generating SidelinkUEInformation (bytes%d, eNB %d)\n",
             ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
    }
-   if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&16384) != 0) {//if SIB19 is available
+   if (((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&16384) > 0) && (discTxResourceReq != NULL)) {//if SIB19 is available
       size = do_SidelinkUEInformation(ctxt_pP->module_id, buffer, NULL, discTxResourceReq, mode);
       LOG_I(RRC,"[UE %d][RRC_UE] Frame %d : Logical Channel UL-DCCH, Generating SidelinkUEInformation (bytes%d, eNB %d)\n",
             ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
    }
 
+}
 
 
+// 3GPP 36.331 (Section 5.10.7.3)
+uint8_t fill_SLSS(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, SLSSID_r12_t *slss_id, uint8_t *subframe, uint8_t mode)
+{
+   long syncOffsetIndicator = 0;
+   switch(mode) {
+   case 1: //if triggered by SL discovery announcement and in-coverage
+      //discSyncConfig_r12 contains only one element
+      *slss_id = UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index]->discConfig_r12->discSyncConfig_r12->list.array[0]->slssid_r12;
+      syncOffsetIndicator = UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index]->discConfig_r12->discSyncConfig_r12->list.array[0]->syncOffsetIndicator_r12;
+      //select subframe for SLSS
+      break;
+   case 2: //if triggered by SL communication and in-coverage
+
+      if (UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->txParameters_r12) {
+         *slss_id = UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->slssid_r12;
+         syncOffsetIndicator = UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->syncOffsetIndicator_r12;
+
+         //if RRC_CONNECTED (Todo: and if networkControlledSyncTx is configured and set to On)
+         if (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State == RRC_CONNECTED){
+            //select subframe(s) indicated by syncOffsetIndicator
+            subframe = syncOffsetIndicator;
+         } else {
+            //select subframe(s) indicated by syncOffsetIndicator within SC period
+         }
+         break;
+   case 3: //if triggered by V2X communication and in coverage
+
+      break;
+   case 4: //if triggered by V2X communication and out-of-coverage
+
+      break;
+   case 5: //if triggered by V2X communication and UE has GNSS as the synchronization reference
+
+   default:
+      //if UE has a selected SyncRefUE
+      //TODO
+      //else (no SyncRefUE Selected)
+         //Todo  if trigger by V2X
+         //else randomly select an SLSSID from the set defined for out-of-coverage
+         *slss_id = 170;//hardcoded
+         //select the subframe according to syncOffsetIndicator1/2 from the preconfigured parameters
+      break;
+      }
+   }
+  return 0;
 }

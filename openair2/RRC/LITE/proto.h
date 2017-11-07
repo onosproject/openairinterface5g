@@ -288,27 +288,36 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
 );
 
 /**\brief Generate/decode the RRCConnectionReconfiguration for Sidelink at eNB
-   \param module_idP Instance ID for eNB/CH
-   \param frame Frame index
-   \param ue_module_idP Index of UE transmitting the messages*/
+   \param ctxt_pP       Running context
+   \param ue_context_pP RRC UE context
+   \param destinationInfoList List of the destinations
+   \param n_discoveryMessages Number of discovery messages*/
 int
 rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
       const protocol_ctxt_t* const ctxt_pP,
       rrc_eNB_ue_context_t*           const ue_context_pP,
-      SL_DestinationIdentity_r12_t* SL_DestinationIdentity,
-      int n_destinations,
+      SL_DestinationInfoList_r12_t  *destinationInfoList,
       int n_discoveryMessages
 );
 
-/** \brief process the received SidelinkUEInformation message at UE
+/** \brief process the received SidelinkUEInformation message at eNB
     \param ctxt_pP Running context
-    \param *rrcConnectionReconfiguration pointer to the sturcture
-    \param eNB_index Index of corresponding eNB/CH*/
-void
+    \param sidelinkUEInformation sidelinkUEInformation message from UE*/
+uint8_t
 rrc_eNB_process_SidelinkUEInformation(
       const protocol_ctxt_t* const ctxt_pP,
       rrc_eNB_ue_context_t*         ue_context_pP,
       SidelinkUEInformation_r12_t*  sidelinkUEInformation
+);
+
+/** \brief Get a Resource Pool for TX
+    \param ctxt_pP Running context
+    \param ue_context_pP UE context
+    \param destinationInfoList Pointer to the list of SL destinations*/
+SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool(
+      const protocol_ctxt_t* const ctxt_pP,
+      rrc_eNB_ue_context_t* const ue_context_pP,
+      SL_DestinationInfoList_r12_t  *destinationInfoList
 );
 
 //L2_interface.c
