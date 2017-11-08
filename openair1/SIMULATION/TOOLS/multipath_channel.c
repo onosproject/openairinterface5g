@@ -359,7 +359,7 @@ void multipath_channel_prach(channel_desc_t *desc,
   uint8_t prach_ConfigIndex   = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
   uint8_t prach_fmt = get_prach_fmt(prach_ConfigIndex,frame_type);
   int n_ra_prb;
-  int ii,j,k,f,l;
+  int ii,j,f;
   struct complex rx_tmp;
   double delta_f;
   prach_samples = (prach_fmt<4)?13+839+12:3+139+2;
@@ -399,5 +399,3 @@ void multipath_channel_prach(channel_desc_t *desc,
 				} // ii
 			} // f
 }
-
-

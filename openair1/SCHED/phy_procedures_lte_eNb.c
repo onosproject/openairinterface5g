@@ -2005,7 +2005,7 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
   if (eNB->abstraction_flag == 0) {
     if (do_ofdm_mod)
     {
-    	LOG_D(PHY,"[eNB %d][RAPROC] Frame %d, Subframe %d : PRACH RX Signal Power : %d dBm\n",eNB->Mod_id, 
+    	LOG_D(PHY,"[eNB %d][RAPROC][Freq] Frame %d, Subframe %d : PRACH RX Signal Power : %d dBm\n",eNB->Mod_id, 
           frame,subframe,dB_fixed(signal_energy(&eNB->common_vars.rxdataF[0][0][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],512)) - eNB->rx_total_gain_dB);
 	rx_prach_freq(eNB,
              preamble_energy_list,
@@ -2023,7 +2023,6 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
              preamble_delay_list,
              frame,
              0);
-	  	printf("[prach] ook\n");
       write_output("prach_rxF_comp1.m","prach_rxF_comp1",eNB->prach_vars.prachF,1024,1,1);
     }
   } else {

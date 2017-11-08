@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-//#define DEBUG_DAC 1
+//#define DEBUG_DAC
 #include <math.h>
 #include <stdio.h>
 #include "PHY/TOOLS/defs.h"
@@ -165,13 +165,19 @@ double dac_fixed_gain_prach(double *s_re[2],
     amp1 = amp1*sqrt(512.0/300.0); //account for loss due to null carriers
     //printf("DL: amp1 %f dB (%d,%d), tx_power %f\n",20*log10(amp1),input_offset,input_offset_meas,txpwr_dBm);
   */
-
-  printf("[dac_fixed_gain_prach] input_offset %d\n",input_offset);
+#ifdef DEBUG_DAC
+  printf("DAC: input_offset %d, amp %e, amp1 %e\n",input_offset,amp,amp1);
+#endif
   for (i=0; i<length*2; i+=2) {
     for (aa=0; aa<nb_tx_antennas; aa++) {
-      printf("[dac_fixed_gain_prach] input (%d,%d)\n",(((short *)input))[((i+input_offset))],(((short *)input))[((i+input_offset))+1]);
       s_re[aa][i/2] = amp*((double)(((short *)input))[((i+input_offset))])/amp1; ///(1<<(B-1));
       s_im[aa][i/2] = amp*((double)(((short *)input))[((i+input_offset))+1])/amp1; ///(1<<(B-1));
+#ifdef DEBUG_DAC
+      if(i<20)
+      	printf("DAC[%d]: input (%d,%d). output (%e,%e)\n",i/2,(((short *)input))[((i+input_offset))],(((short *)input))[((i+input_offset))+1],s_re[aa][i/2],s_im[aa][i/2]);
+      if (i>length*2-20&&i<length*2)
+	printf("DAC[%d]: input (%d,%d). output (%e,%e)\n",i/2,(((short *)input))[((i+input_offset))],(((short *)input))[((i+input_offset))+1],s_re[aa][i/2],s_im[aa][i/2]);
+#endif
     }
   }
 

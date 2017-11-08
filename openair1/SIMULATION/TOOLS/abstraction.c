@@ -181,8 +181,8 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
 
       cos_lut[f1][l] = cos(2*M_PI*freq*delay);
       sin_lut[f1][l] = sin(2*M_PI*freq*delay);
-      printf("freq: %e, f1: %d, f: %d, arg_sin_cos = %e,  cos () = %e, sin () =n %e)\n",freq, f1,f, 2*M_PI*freq*delay, cos_lut[f1][l], sin_lut[f1][l]);
-
+      if (f<max_nb_rb_samples/2-prach_pbr_offset_samples+10)
+      	printf("freq: %e, f1: %d, f: %d, arg_sin_cos = %e,  cos () = %e, sin () =n %e)\n",freq, f1,f, 2*M_PI*freq*delay, cos_lut[f1][l], sin_lut[f1][l]);
     }
   }
 
@@ -238,7 +238,8 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
         }
       }
     }
-	printf("chF_prach[0][%d], (x,y) = (%e,%e)\n",f,desc->chF_prach[0][f].x,desc->chF_prach[0][f].y);
+	if (f<10 || (f>829&&f<839))
+		printf("chF_prach[0][%d], (x,y) = (%e,%e)\n",f,desc->chF_prach[0][f].x,desc->chF_prach[0][f].y);
   }
   stop_meas(&desc->interp_freq);
   return(0);

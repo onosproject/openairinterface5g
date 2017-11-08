@@ -2164,7 +2164,6 @@ int32_t generate_prach_freq(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t subf
 */
 void rx_prach(PHY_VARS_eNB *phy_vars_eNB,uint16_t *preamble_energy_list, uint16_t *preamble_delay_list, uint16_t Nf, uint8_t tdd_mapindex);
 void rx_prach_freq(PHY_VARS_eNB *phy_vars_eNB,uint16_t *preamble_energy_list, uint16_t *preamble_delay_list, uint16_t Nf, uint8_t tdd_mapindex);
-
 /*!
   \brief Helper for MAC, returns number of available PRACH in TDD for a particular configuration index
   @param frame_parms Pointer to LTE_DL_FRAME_PARMS structure
