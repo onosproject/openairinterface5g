@@ -96,73 +96,20 @@ rrc_init_global_param(
 //-----------------------------------------------------------------------------
 {
 
-  //#ifdef USER_MODE
-  //  Rrc_xface = (RRC_XFACE*)malloc16(sizeof(RRC_XFACE));
-  //#endif //USRE_MODE
 
-  //  Rrc_xface->openair_rrc_top_init = openair_rrc_top_init;
-  //  Rrc_xface->openair_rrc_eNB_init = openair_rrc_eNB_init;
-  //  Rrc_xface->openair_rrc_UE_init  = openair_rrc_ue_init;
-  //  Rrc_xface->mac_rrc_data_ind     = mac_rrc_data_ind;
-  //Rrc_xface->mac_rrc_data_req     = mac_rrc_data_req;
-  // Rrc_xface->rrc_data_indP        = (void *)rlcrrc_data_ind;
-  //  Rrc_xface->rrc_rx_tx            = rrc_rx_tx;
-  //  Rrc_xface->mac_rrc_meas_ind     = mac_rrc_meas_ind;
-  //  Rrc_xface->get_rrc_status       = get_rrc_status;
-
-  //Rrc_xface->rrc_get_status = ...
-
-  //  Mac_rlc_xface->mac_out_of_sync_ind=mac_out_of_sync_ind;
-
-#ifndef NO_RRM
-  //  Rrc_xface->fn_rrc=fn_rrc;
-#endif
-  //  LOG_D(RRC, "[RRC]INIT_GLOBAL_PARAM: Mac_rlc_xface %p, rrc_rlc_register %p,rlcrrc_data_ind%p\n",Mac_rlc_xface,Mac_rlc_xface->rrc_rlc_register_rrc,rlcrrc_data_ind);
-  /*
-   if((Mac_rlc_xface==NULL) || (Mac_rlc_xface->rrc_rlc_register_rrc==NULL) ||
-   (rlcrrc_data_ind==NULL)) {
-   LOG_E(RRC,"Data structured is not initialized \n");
-   return -1;
-   }
-   */
   rrc_rlc_register_rrc (rrc_data_ind, NULL); //register with rlc
 
-  DCCH_LCHAN_DESC.transport_block_size = 4;
-  DCCH_LCHAN_DESC.max_transport_blocks = 16;
-  DCCH_LCHAN_DESC.Delay_class = 1;
-  DTCH_DL_LCHAN_DESC.transport_block_size = 52;
-  DTCH_DL_LCHAN_DESC.max_transport_blocks = 20;
-  DTCH_DL_LCHAN_DESC.Delay_class = 1;
-  DTCH_UL_LCHAN_DESC.transport_block_size = 52;
-  DTCH_UL_LCHAN_DESC.max_transport_blocks = 20;
-  DTCH_UL_LCHAN_DESC.Delay_class = 1;
+  //no more LCHAN_DESCH used
+  //no more static configuration of RLC params
+  //no more L3_xface_init called
 
-  Rlc_info_um.rlc_mode = RLC_MODE_UM;
-  Rlc_info_um.rlc.rlc_um_info.timer_reordering = 5;
-  Rlc_info_um.rlc.rlc_um_info.sn_field_length = 10;
-  Rlc_info_um.rlc.rlc_um_info.is_mXch = 0;
-  //Rlc_info_um.rlc.rlc_um_info.sdu_discard_mode=16;
-
-  Rlc_info_am_config.rlc_mode = RLC_MODE_AM;
-  Rlc_info_am_config.rlc.rlc_am_info.max_retx_threshold = 50;
-  Rlc_info_am_config.rlc.rlc_am_info.poll_pdu = 8;
-  Rlc_info_am_config.rlc.rlc_am_info.poll_byte = 1000;
-  Rlc_info_am_config.rlc.rlc_am_info.t_poll_retransmit = 15;
-  Rlc_info_am_config.rlc.rlc_am_info.t_reordering = 50;
-  Rlc_info_am_config.rlc.rlc_am_info.t_status_prohibit = 10;
-#ifndef NO_RRM
-
-  if (L3_xface_init ()) {
-    return (-1);
-  }
-
-#endif
 
   return 0;
 }
 
 #ifndef NO_RRM
 //-----------------------------------------------------------------------------
+//NO more USED
 int
 L3_xface_init(
   void
@@ -191,6 +138,7 @@ L3_xface_init(
 
 #else
 
+  //MP: rtf_create(fifo ID, size in bytes) --> for creating FIFO
   ret=rtf_create(RRC2RRM_FIFO,32768);
 
   if (ret < 0) {
@@ -324,18 +272,19 @@ openair_rrc_top_init(
     eNB_rrc_inst = NULL;
   }
 
-#ifndef NO_RRM
-#ifndef USER_MODE
-
-  Header_buf=(char*)malloc16(sizeof(msg_head_t));
-  Data=(char*)malloc16(2400);
-  Header_read_idx=0;
-  Data_read_idx=0;
-  Header_size=sizeof(msg_head_t);
-
-#endif //NO_RRM
-  Data_to_read = 0;
-#endif //USER_MODE
+//#ifndef NO_RRM
+//#ifndef USER_MODE
+//
+//  //no more used since are exploited by RRC_xface
+//  Header_buf=(char*)malloc16(sizeof(msg_head_t));
+//  Data=(char*)malloc16(2400);
+//  Header_read_idx=0;
+//  Data_read_idx=0;
+//  Header_size=sizeof(msg_head_t);
+//
+//#endif //NO_RRM
+//  Data_to_read = 0;
+//#endif //USER_MODE
 }
 
 //-----------------------------------------------------------------------------

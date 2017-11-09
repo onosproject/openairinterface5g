@@ -12,21 +12,19 @@
 * \warning
 */
 
-#include "defs.h"
-#include "defs_NB_IoT.h"
+//#include "defs.h"
+#include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 
-void lte_gold_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_table_NB_IoT[20][2][14],uint16_t Nid_cell)  //  Nid_cell = Nid_cell_NB_IoT
+void lte_gold_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_table_NB_IoT[20][2][14],uint16_t Nid_cell)  //  Nid_cell = Nid_cell_NB_IoT
 {
   unsigned char ns,l,Ncp=1;
-  unsigned int n,x1,x2;
+  unsigned int  n,x1,x2;
 
   for (ns=0; ns<20; ns++) {
 
     for (l=0; l<2; l++) {
 
-      x2 = Ncp +
-           (Nid_cell<<1) +
-		   (((1+(Nid_cell<<1))*(1 + (l+5) + (7*(1+ns))))<<10); //cinit
+      x2 = Ncp + (Nid_cell<<1) + (((1+(Nid_cell<<1))*(1 + (l+5) + (7*(1+ns))))<<10); //cinit
      
       x1 = 1+ (1<<31);
       x2 = x2 ^ ((x2 ^ (x2>>1) ^ (x2>>2) ^ (x2>>3))<<31);

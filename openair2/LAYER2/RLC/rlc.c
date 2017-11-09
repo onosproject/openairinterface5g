@@ -48,6 +48,13 @@ extern boolean_t pdcp_data_ind(
 //#define TRACE_RLC_PAYLOAD 1
 #define DEBUG_RLC_DATA_REQ 1
 
+#ifdef NB_IOT
+#include "openair2/RRC/LITE/proto_NB_IoT.h"
+#undef maxDRB
+#define maxDRB maxDRB_NB_r13
+#endif
+
+
 //-----------------------------------------------------------------------------
 void rlc_util_print_hex_octets(comp_name_t componentP, unsigned char* dataP, const signed long sizeP)
 //-----------------------------------------------------------------------------
@@ -613,6 +620,12 @@ rlc_module_init (void)
   rlc_rrc_data_ind  = NULL;
   rlc_rrc_data_conf = NULL;
 
+#ifdef NB_IOT
+  //MP: change variable maxDRB for NB-IoT --> see ifdef at the beginning
+  rlc_rrc_data_ind_NB_IoT = NULL;
+#endif
+
+
   rlc_coll_p = hashtable_create ((maxDRB + 2) * 16, NULL, rb_free_rlc_union);
   AssertFatal(rlc_coll_p != NULL, "UNRECOVERABLE error, RLC hashtable_create failed");
 
@@ -650,6 +663,8 @@ rlc_module_init (void)
 
   return(0);
 }
+//-----------------------------------------------------------------------------
+
 //-----------------------------------------------------------------------------
 void
 rlc_module_cleanup (void)

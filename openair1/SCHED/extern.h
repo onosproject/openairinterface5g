@@ -42,8 +42,6 @@
 #include <asm/page.h>
 
 
-
-
 #ifdef RTAI_ENABLED
 #include <rtai.h>
 //#include <rtai_posix.h>
@@ -77,5 +75,6 @@ extern fifo_dump_emos_UE emos_dump_UE;
 extern fifo_dump_emos_eNB emos_dump_eNB;
 #endif
 */
+
 
 #endif /*__SCHED_EXTERN_H__ */

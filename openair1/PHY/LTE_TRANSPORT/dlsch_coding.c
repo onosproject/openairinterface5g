@@ -234,6 +234,136 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(unsigned char Kmimo,unsigned char Mdlharq,uint32_
 
 
 }
+/*
+NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(//unsigned char Kmimo,
+									//unsigned char Mdlharq,
+									uint32_t Nsoft,
+									//unsigned char N_RB_DL,
+									uint8_t abstraction_flag,
+									NB_IoT_DL_FRAME_PARMS* frame_parms)
+{
+
+  NB_IoT_eNB_NDLSCH_t *dlsch;
+  unsigned char exit_flag = 0,i,j,r,aa,layer;
+  int re;
+  unsigned char bw_scaling =1;
+
+//  switch (N_RB_DL) {
+//  case 6:
+//    bw_scaling =16;
+//    break;
+//
+//  case 25:
+//    bw_scaling =4;
+//    break;
+//
+//  case 50:
+//    bw_scaling =2;
+//    break;
+//
+//  default:
+//    bw_scaling =1;
+//    break;
+//  }
+
+  dlsch = (NB_IoT_eNB_NDLSCH_t *)malloc16(sizeof(NB_IoT_eNB_NDLSCH_t));
+
+  if (dlsch) {
+    bzero(dlsch,sizeof(NB_IoT_eNB_NDLSCH_t));
+
+    dlsch->Mlimit = 4;//max number of retransmission
+    dlsch->Nsoft = Nsoft;
+
+    for (layer=0; layer<4; layer++) {
+      dlsch->ue_spec_bf_weights[layer] = (int32_t**)malloc16(frame_parms->nb_antennas_tx*sizeof(int32_t*));
+
+       for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
+         dlsch->ue_spec_bf_weights[layer][aa] = (int32_t *)malloc16(OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES*sizeof(int32_t));
+         for (re=0;re<OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES; re++) {
+           dlsch->ue_spec_bf_weights[layer][aa][re] = 0x00007fff;
+         }
+       }
+     }
+
+     dlsch->calib_dl_ch_estimates = (int32_t**)malloc16(frame_parms->nb_antennas_tx*sizeof(int32_t*));
+     for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
+       dlsch->calib_dl_ch_estimates[aa] = (int32_t *)malloc16(OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES*sizeof(int32_t));
+
+     }
+
+
+
+
+    //In NB-IoT we have only 1 HARQ process for each User-------------
+ 
+      dlsch->harq_process = (LTE_DL_eNB_HARQ_t *)malloc16(sizeof(LTE_DL_eNB_HARQ_t));
+      LOG_T(PHY, "[NB-IoT] Required mem size %d (bw scaling %d), dlsch->harq_process %p\n",
+            MAX_DLSCH_PAYLOAD_BYTES/bw_scaling,bw_scaling,dlsch->harq_process);
+
+      if (dlsch->harq_process) {
+        bzero(dlsch->harq_process,sizeof(LTE_DL_eNB_HARQ_t));
+        //    dlsch->harq_processes[i]->first_tx=1;
+        dlsch->harq_process->b = (unsigned char*)malloc16(MAX_DLSCH_PAYLOAD_BYTES/bw_scaling);
+
+        if (dlsch->harq_process->b) {
+          bzero(dlsch->harq_process->b,MAX_DLSCH_PAYLOAD_BYTES/bw_scaling);
+        } else {
+          printf("Can't get b\n");
+          exit_flag=1;
+        }
+
+        if (abstraction_flag==0) {
+
+        //XXX MAX_NUM_DLSCH_SEGMENTS may should be changed for NB-IoT
+          for (r=0; r<MAX_NUM_DLSCH_SEGMENTS/bw_scaling; r++) {
+            // account for filler in first segment and CRCs for multiple segment case
+            dlsch->harq_process->c[r] = (uint8_t*)malloc16(((r==0)?8:0) + 3+ 768);
+            dlsch->harq_process->d[r] = (uint8_t*)malloc16((96+12+3+(3*6144)));
+            if (dlsch->harq_process->c[r]) {
+              bzero(dlsch->harq_process->c[r],((r==0)?8:0) + 3+ 768);
+            } else {
+              printf("Can't get c\n");
+              exit_flag=2;
+            }
+            if (dlsch->harq_process->d[r]) {
+              bzero(dlsch->harq_process->d[r],(96+12+3+(3*6144)));
+            } else {
+              printf("Can't get d\n");
+              exit_flag=2;
+            }
+          }
+        }
+      } else {
+        printf("Can't get harq_p %d\n",i);
+        exit_flag=3;
+      }
+    //---------------------------------------------
+
+    if (exit_flag==0) {
+
+      dlsch->harq_process->round=0;
+
+      for (j=0; j<96; j++)
+    	  for (r=0; r<MAX_NUM_DLSCH_SEGMENTS/bw_scaling; r++) {
+    		  //      printf("dlsch->harq_processes[%d]->d[%d] %p\n",i,r,dlsch->harq_processes[i]->d[r]);
+    		  if (dlsch->harq_process->d[r])
+    			  dlsch->harq_process->d[r][j] = LTE_NULL;
+    	  }
+      return(dlsch);
+    }
+  }
+
+ // memory allocation failed for ndlsch
+
+  LOG_D(PHY,"new_eNB_ndlsch exit flag %d, size of  %ld\n",
+	exit_flag, sizeof(LTE_eNB_DLSCH_t));
+  free_eNB_dlsch(dlsch);
+  return(NULL);
+
+
+}
+
+*/
 
 void clean_eNb_dlsch(LTE_eNB_DLSCH_t *dlsch)
 {
@@ -265,7 +395,7 @@ void clean_eNb_dlsch(LTE_eNB_DLSCH_t *dlsch)
   }
 }
 
-
+/*
 int dlsch_encoding_2threads0(te_params *tep) {
 
   LTE_eNB_DLSCH_t *dlsch          = tep->dlsch;
@@ -556,6 +686,7 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
 
   return(0);
 }
+*/
 
 int dlsch_encoding(PHY_VARS_eNB *eNB,
 		   unsigned char *a,

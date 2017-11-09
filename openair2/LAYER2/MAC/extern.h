@@ -38,14 +38,12 @@
 #endif //USER_MODE
 #include "PHY/defs.h"
 #include "defs.h"
-#include "defs_nb_iot.h"
 #include "COMMON/mac_rrc_primitives.h"
 #ifdef PHY_EMUL
 //#include "SIMULATION/simulation_defs.h"
 #endif //PHY_EMUL
 #include "PHY_INTERFACE/defs.h"
 #include "RRC/LITE/defs.h"
-#include "defs_nb_iot.h"
 
 extern const uint32_t BSR_TABLE[BSR_TABLE_SIZE];
 //extern uint32_t EBSR_Level[63];
@@ -66,8 +64,6 @@ extern UE_MAC_INST *ue_mac_inst;
 extern MAC_RLC_XFACE *Mac_rlc_xface;
 extern uint8_t Is_rrc_registered;
 
-//NB-IoT
-extern eNB_MAC_INST_NB *eNB_mac_inst_NB;
 
 extern eNB_ULSCH_INFO eNB_ulsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX]; // eNBxUE = 8x8
 extern eNB_DLSCH_INFO eNB_dlsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX]; // eNBxUE = 8x8
@@ -123,6 +119,7 @@ extern DCI1_5MHz_FDD_t       DLSCH_alloc_pdu_fdd;
 extern DCI2_5MHz_2A_TDD_t DLSCH_alloc_pdu1;
 extern DCI2_5MHz_2A_TDD_t DLSCH_alloc_pdu2;
 extern DCI1E_5MHz_2A_M10PRB_TDD_t DLSCH_alloc_pdu1E;
+
 
 #endif //DEF_H
 

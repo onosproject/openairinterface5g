@@ -2120,6 +2120,8 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
   // generate DCIs in order of decreasing aggregation level, then common/ue spec
   // MAC is assumed to have ordered the UE spec DCI according to the RNTI-based randomization
   for (L=3; L>=0; L--) {
+
+	  //first common DCI
     for (i=0; i<num_common_dci; i++) {
 
       if (dci_alloc[i].L == (uint8_t)L) {
@@ -2140,6 +2142,7 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
       }
     }
 
+    //start the second loop from the end of the previous one for ue specific DCI
     for (; i<num_ue_spec_dci + num_common_dci; i++) {
 
       if (dci_alloc[i].L == (uint8_t)L) {
@@ -2157,9 +2160,9 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
                                 dci_alloc[i].L,
                                 dci_alloc[i].rnti);
         }
-	else {
-	  
-	}
+  else {
+    
+  }
       }
     }
   }
@@ -2368,7 +2371,6 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
 
   return(num_pdcch_symbols);
 }
-
 #ifdef PHY_ABSTRACTION
 uint8_t generate_dci_top_emul(PHY_VARS_eNB *phy_vars_eNB,
                               uint8_t num_ue_spec_dci,

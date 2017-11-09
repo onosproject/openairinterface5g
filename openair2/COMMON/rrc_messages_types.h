@@ -108,6 +108,7 @@ typedef struct RrcConfigurationReq_s {
   uint8_t                 tdd_config[MAX_NUM_CCs];
   uint8_t                 tdd_config_s[MAX_NUM_CCs];
   lte_prefix_type_t       prefix_type[MAX_NUM_CCs];
+  lte_prefix_type_t		  prefix_type_UL[MAX_NUM_CCs];
   int16_t                 eutra_band[MAX_NUM_CCs];
   uint32_t                downlink_frequency[MAX_NUM_CCs];
   int32_t                 uplink_frequency_offset[MAX_NUM_CCs];
@@ -115,10 +116,11 @@ typedef struct RrcConfigurationReq_s {
   int16_t                 Nid_cell[MAX_NUM_CCs];// for testing, change later
   int16_t                 N_RB_DL[MAX_NUM_CCs];// for testing, change later
 
-  int                  	  nb_antennas_tx[MAX_NUM_CCs]; //MP: may no more used
-  int                     nb_antennas_rx[MAX_NUM_CCs]; //MP: may no more used
+  int                  	  nb_antennas_tx[MAX_NUM_CCs];
+  int                     nb_antennas_rx[MAX_NUM_CCs];
 
   int					  nb_antenna_ports[MAX_NUM_CCs];
+  int					  nb_antenna_ports_rx[MAX_NUM_CCs];
 
   //PRACH
   long                    prach_root[MAX_NUM_CCs];
@@ -200,7 +202,7 @@ typedef struct RrcConfigurationReq_s {
   long					  rach_macContentionResolutionTimer_NB[MAX_NUM_CCs];
   long					  rach_powerRampingStep_NB[MAX_NUM_CCs];
   long					  rach_preambleInitialReceivedTargetPower_NB[MAX_NUM_CCs];
-  long					  preambleTransMax_CE_NB[MAX_NUM_CCs]; //da ricontrollare se va bene il tipo
+  long					  rach_preambleTransMax_CE_NB[MAX_NUM_CCs];
   //BCCH
   long					  bcch_modificationPeriodCoeff_NB[MAX_NUM_CCs];
   //PCCH
@@ -209,7 +211,7 @@ typedef struct RrcConfigurationReq_s {
   long					  pcch_npdcch_NumRepetitionPaging_NB[MAX_NUM_CCs];
   //NPRACH
   long					  nprach_CP_Length[MAX_NUM_CCs];
-  long					  nprach_rsrp_range_NB[MAX_NUM_CCs];
+  long					  nprach_rsrp_range[MAX_NUM_CCs];
   long					  nprach_Periodicity[MAX_NUM_CCs];
   long					  nprach_StartTime[MAX_NUM_CCs];
   long					  nprach_SubcarrierOffset[MAX_NUM_CCs];
@@ -230,19 +232,14 @@ typedef struct RrcConfigurationReq_s {
   BOOLEAN_t				  npusch_groupHoppingEnabled[MAX_NUM_CCs];
   long					  npusch_groupAssignmentNPUSCH_r13[MAX_NUM_CCs];
 
-   /*NPUCCH
-   * all data are sent over the NPUSCH. This includes also the UL control information (UCI), which is transmitted using a different format.
-   * Consequently there is no equivalent to the PUCCH of LTE in NB-IoT.
-   */
-
   //DL_GapConfig
   long					  dl_GapThreshold_NB[MAX_NUM_CCs];
   long	 				  dl_GapPeriodicity_NB[MAX_NUM_CCs];
   long	 				  dl_GapDurationCoeff_NB[MAX_NUM_CCs];
   //Uplink power control Common
-  long					  npusch_p0_NominalNPUSCH_r13[MAX_NUM_CCs];
-  long					  npusch_alpha_r13[MAX_NUM_CCs];
-  long					  deltaPreambleMsg3_r13[MAX_NUM_CCs];
+  long					  npusch_p0_NominalNPUSCH[MAX_NUM_CCs];
+  long					  npusch_alpha[MAX_NUM_CCs];
+  long					  deltaPreambleMsg3[MAX_NUM_CCs];
   //UE timers and constants
   long					  ue_TimersAndConstants_t300_NB[MAX_NUM_CCs];
   long					  ue_TimersAndConstants_t301_NB[MAX_NUM_CCs];

@@ -101,9 +101,7 @@ LogicalChannelConfig_t SRB2_logicalChannelConfig_defaultValue = {ul_SpecificPara
                                                                 };
 
 //CONSTANTS
-rlc_info_t Rlc_info_um,Rlc_info_am_config,
-//NB-IoT
-Rlc_info_am;
+rlc_info_t Rlc_info_um,Rlc_info_am_config;
 
 uint16_t RACH_FREQ_ALLOC;
 //uint8_t NB_RACH;

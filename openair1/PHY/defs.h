@@ -128,6 +128,7 @@ static inline void* malloc16_clear( size_t size )
 #ifdef OPENAIR_LTE
 
 #include "PHY/LTE_TRANSPORT/defs.h"
+
 #include <pthread.h>
 
 #include "targets/ARCH/COMMON/common_lib.h"
@@ -137,6 +138,8 @@ static inline void* malloc16_clear( size_t size )
 #define NUMBER_OF_eNB_SECTORS_MAX 3
 
 #define NB_BANDS_MAX 8
+
+#include "defs_common.h"
 
 #ifdef OCP_FRAMEWORK
 #include <enums.h>
@@ -187,34 +190,7 @@ typedef struct {
 
 } PHY_VARS_RN;
 
-/// Context data structure for RX/TX portion of subframe processing
-typedef struct {
-  /// Component Carrier index
-  uint8_t              CC_id;
-  /// timestamp transmitted to HW
-  openair0_timestamp timestamp_tx;
-  /// subframe to act upon for transmission
-  int subframe_tx;
-  /// subframe to act upon for reception
-  int subframe_rx;
-  /// frame to act upon for transmission
-  int frame_tx;
-  /// frame to act upon for reception
-  int frame_rx;
-  /// \brief Instance count for RXn-TXnp4 processing thread.
-  /// \internal This variable is protected by \ref mutex_rxtx.
-  int instance_cnt_rxtx;
-  /// pthread structure for RXn-TXnp4 processing thread
-  pthread_t pthread_rxtx;
-  /// pthread attributes for RXn-TXnp4 processing thread
-  pthread_attr_t attr_rxtx;
-  /// condition variable for tx processing thread
-  pthread_cond_t cond_rxtx;
-  /// mutex for RXn-TXnp4 processing thread
-  pthread_mutex_t mutex_rxtx;
-  /// scheduling parameters for RXn-TXnp4 thread
-  struct sched_param sched_param_rxtx;
-} eNB_rxtx_proc_t;
+
 
 typedef struct {
   struct PHY_VARS_eNB_s *eNB;
@@ -230,137 +206,7 @@ typedef struct {
   int G;
 } te_params;
 
-/// Context data structure for eNB subframe processing
-typedef struct eNB_proc_t_s {
-  /// Component Carrier index
-  uint8_t              CC_id;
-  /// thread index
-  int thread_index;
-  /// timestamp received from HW
-  openair0_timestamp timestamp_rx;
-  /// timestamp to send to "slave rru"
-  openair0_timestamp timestamp_tx;
-  /// subframe to act upon for reception
-  int subframe_rx;
-  /// symbol mask for IF4p5 reception per subframe
-  uint32_t symbol_mask[10];
-  /// subframe to act upon for PRACH
-  int subframe_prach;
-  /// frame to act upon for reception
-  int frame_rx;
-  /// frame to act upon for transmission
-  int frame_tx;
-  /// frame offset for secondary eNBs (to correct for frame asynchronism at startup)
-  int frame_offset;
-  /// frame to act upon for PRACH
-  int frame_prach;
-  /// \internal This variable is protected by \ref mutex_fep.
-  int instance_cnt_fep;
-  /// \internal This variable is protected by \ref mutex_td.
-  int instance_cnt_td;
-  /// \internal This variable is protected by \ref mutex_te.
-  int instance_cnt_te;
-  /// \brief Instance count for FH processing thread.
-  /// \internal This variable is protected by \ref mutex_FH.
-  int instance_cnt_FH;
-  /// \brief Instance count for rx processing thread.
-  /// \internal This variable is protected by \ref mutex_prach.
-  int instance_cnt_prach;
-  // instance count for over-the-air eNB synchronization
-  int instance_cnt_synch;
-  /// \internal This variable is protected by \ref mutex_asynch_rxtx.
-  int instance_cnt_asynch_rxtx;
-  /// pthread structure for FH processing thread
-  pthread_t pthread_FH;
-  /// pthread structure for eNB single processing thread
-  pthread_t pthread_single;
-  /// pthread structure for asychronous RX/TX processing thread
-  pthread_t pthread_asynch_rxtx;
-  /// flag to indicate first RX acquisition
-  int first_rx;
-  /// flag to indicate first TX transmission
-  int first_tx;
-  /// pthread attributes for parallel fep thread
-  pthread_attr_t attr_fep;
-  /// pthread attributes for parallel turbo-decoder thread
-  pthread_attr_t attr_td;
-  /// pthread attributes for parallel turbo-encoder thread
-  pthread_attr_t attr_te;
-  /// pthread attributes for FH processing thread
-  pthread_attr_t attr_FH;
-  /// pthread attributes for single eNB processing thread
-  pthread_attr_t attr_single;
-  /// pthread attributes for prach processing thread
-  pthread_attr_t attr_prach;
-  /// pthread attributes for over-the-air synch thread
-  pthread_attr_t attr_synch;
-  /// pthread attributes for asynchronous RX thread
-  pthread_attr_t attr_asynch_rxtx;
-  /// scheduling parameters for parallel fep thread
-  struct sched_param sched_param_fep;
-  /// scheduling parameters for parallel turbo-decoder thread
-  struct sched_param sched_param_td;
-  /// scheduling parameters for parallel turbo-encoder thread
-  struct sched_param sched_param_te;
-  /// scheduling parameters for FH thread
-  struct sched_param sched_param_FH;
-  /// scheduling parameters for single eNB thread
-  struct sched_param sched_param_single;
-  /// scheduling parameters for prach thread
-  struct sched_param sched_param_prach;
-  /// scheduling parameters for over-the-air synchronization thread
-  struct sched_param sched_param_synch;
-  /// scheduling parameters for asynch_rxtx thread
-  struct sched_param sched_param_asynch_rxtx;
-  /// pthread structure for parallel fep thread
-  pthread_t pthread_fep;
-  /// pthread structure for parallel turbo-decoder thread
-  pthread_t pthread_td;
-  /// pthread structure for parallel turbo-encoder thread
-  pthread_t pthread_te;
-  /// pthread structure for PRACH thread
-  pthread_t pthread_prach;
-  /// pthread structure for eNB synch thread
-  pthread_t pthread_synch;
-  /// condition variable for parallel fep thread
-  pthread_cond_t cond_fep;
-  /// condition variable for parallel turbo-decoder thread
-  pthread_cond_t cond_td;
-  /// condition variable for parallel turbo-encoder thread
-  pthread_cond_t cond_te;
-  /// condition variable for FH thread
-  pthread_cond_t cond_FH;
-  /// condition variable for PRACH processing thread;
-  pthread_cond_t cond_prach;
-  // condition variable for over-the-air eNB synchronization
-  pthread_cond_t cond_synch;
-  /// condition variable for asynch RX/TX thread
-  pthread_cond_t cond_asynch_rxtx;
-  /// mutex for parallel fep thread
-  pthread_mutex_t mutex_fep;
-  /// mutex for parallel turbo-decoder thread
-  pthread_mutex_t mutex_td;
-  /// mutex for parallel turbo-encoder thread
-  pthread_mutex_t mutex_te;
-  /// mutex for FH
-  pthread_mutex_t mutex_FH;
-  /// mutex for PRACH thread
-  pthread_mutex_t mutex_prach;
-  // mutex for over-the-air eNB synchronization
-  pthread_mutex_t mutex_synch;
-  /// mutex for asynch RX/TX thread
-  pthread_mutex_t mutex_asynch_rxtx;
-  /// parameters for turbo-decoding worker thread
-  td_params tdp;
-  /// parameters for turbo-encoding worker thread
-  te_params tep;
-  /// set of scheduling variables RXn-TXnp4 threads
-  eNB_rxtx_proc_t proc_rxtx[2];
-  /// number of slave threads
-  int                  num_slaves;
-  /// array of pointers to slaves
-  struct eNB_proc_t_s           **slave_proc;
-} eNB_proc_t;
+
 
 
 /// Context data structure for RX/TX portion of subframe processing
@@ -426,6 +272,8 @@ typedef struct {
   UE_rxtx_proc_t proc_rxtx[2];
 } UE_proc_t;
 
+
+
 /// Top-level PHY Data Structure for eNB
 typedef struct PHY_VARS_eNB_s {
   /// Module ID indicator for this instance
@@ -466,11 +314,12 @@ typedef struct PHY_VARS_eNB_s {
   LTE_eNB_PUSCH       *pusch_vars[NUMBER_OF_UE_MAX];
   LTE_eNB_PRACH        prach_vars;
   LTE_eNB_DLSCH_t     *dlsch[NUMBER_OF_UE_MAX][2];   // Nusers times two spatial streams
-  LTE_eNB_ULSCH_t     *ulsch[NUMBER_OF_UE_MAX+1];      // Nusers + number of RA
+  LTE_eNB_ULSCH_t     *ulsch[NUMBER_OF_UE_MAX+1];      // Nusers + number of RA (the ulsch[0] contains RAR)
   LTE_eNB_DLSCH_t     *dlsch_SI,*dlsch_ra;
   LTE_eNB_DLSCH_t     *dlsch_MCH;
   LTE_eNB_UE_stats     UE_stats[NUMBER_OF_UE_MAX];
   LTE_eNB_UE_stats    *UE_stats_ptr[NUMBER_OF_UE_MAX];
+
 
   /// cell-specific reference symbols
   uint32_t         lte_gold_table[20][2][14];
@@ -562,7 +411,6 @@ typedef struct PHY_VARS_eNB_s {
 
   // Pointers for active physicalConfigDedicated to be applied in current subframe
   struct PhysicalConfigDedicated *physicalConfigDedicated[NUMBER_OF_UE_MAX];
-
 
   uint32_t rb_mask_ul[4];
 
@@ -935,6 +783,7 @@ void exit_fun(const char* s);
 
 static inline int wait_on_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
 
+  // lock the mutex, if lock successfully, it would return the 0, the other value means failed
   if (pthread_mutex_lock(mutex) != 0) {
     LOG_E( PHY, "[SCHED][eNB] error locking mutex for %s\n",name);
     exit_fun("nothing to add");

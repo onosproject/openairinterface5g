@@ -12,27 +12,33 @@
 * \warning
 */
 
-#include "PHY/defs.h"
-#include "PHY/extern.h"
+//#include "PHY/defs.h"
+///////////////#include "PHY/defs_nb_iot.h"
+//#include "PHY/extern.h"
+#include <math.h>
+#include "PHY/impl_defs_lte_NB_IoT.h"
+#include "PHY/impl_defs_top_NB_IoT.h"
+//or #include "PHY/defs_nb_iot.h"
+#include "PHY/LTE_REFSIG/primary_synch_NB_IoT.h"
 
-int generate_npss_NB_IoT(int32_t **txdataF,
-						short amp,
-						LTE_DL_FRAME_PARMS *frame_parms,
-						unsigned short symbol_offset,				// symbol_offset should equal to 3 for NB-IoT 
-						unsigned short slot_offset,
-						unsigned short RB_IoT_ID)					// new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
+int generate_npss_NB_IoT(int32_t 				**txdataF,
+						short 					amp,
+						NB_IoT_DL_FRAME_PARMS   *frame_parms,
+						unsigned short 			symbol_offset,				// symbol_offset should equal to 3 for NB-IoT 
+						unsigned short 			slot_offset,
+						unsigned short 			RB_IoT_ID)					// new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
 {
-   unsigned short c,aa,a,s;
-   unsigned short slot_id;
-   short *primary_sync;
-   unsigned short NB_IoT_start; 			// Index of the first RE in the RB dedicated for NB-IoT
-   unsigned short bandwidth_even_odd;
+   unsigned short  c,aa,a,s;
+   unsigned short  slot_id;
+   short 		   *primary_sync;
+   unsigned short  NB_IoT_start; 			// Index of the first RE in the RB dedicated for NB-IoT
+   unsigned short  bandwidth_even_odd;
 
-   slot_id = slot_offset;  							// The id(0..19) of the slot including the NPSS signal // For NB-IoT, slod_id should be 10 (SF5)
+   slot_id 		= slot_offset;  					// The id(0..19) of the slot including the NPSS signal // For NB-IoT, slod_id should be 10 (SF5)
    primary_sync = primary_synch_NB_IoT;     		// primary_synch_NB_IoT[264] of primary_synch_NB_IoT.h
 
    // Signal amplitude
-   a = (frame_parms->nb_antennas_tx == 1) ? amp: (amp*ONE_OVER_SQRT2_Q15)>>15;
+   a = (frame_parms->nb_antennas_tx == 1) ? amp: (amp*ONE_OVER_SQRT2_Q15_NB_IoT)>>15;
 
    // Testing if the total number of RBs is even or odd (i.e. Identification of the bandwidth: 1.4, 3, 5, 10, ... MHz)
    bandwidth_even_odd = frame_parms->N_RB_DL % 2;  		// 0 for even, 1 for odd
@@ -41,9 +47,9 @@ int generate_npss_NB_IoT(int32_t **txdataF,
 	
 		if(RB_IoT_ID < (frame_parms->N_RB_DL/2))
 		{
-			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(ceil(frame_parms->N_RB_DL/(float)2)));
+			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		} else {
-			NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(ceil(frame_parms->N_RB_DL/(float)2)));
+			NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		}
 		// For the In-band or Stand-alone case the REs of NPSS signal have the same positions
 		for (s=0; s<11; s++ )   				// loop on OFDM symbols
@@ -65,7 +71,7 @@ int generate_npss_NB_IoT(int32_t **txdataF,
 }
 
 /* (for LTE)
-int generate_pss_emul(PHY_VARS_eNB *phy_vars_eNb,uint8_t sect_id)
+int generate_pss_emul(PHY_VARS_eNB_NB_IoT *phy_vars_eNb,uint8_t sect_id)
 {
 
   msg("[PHY] EMUL eNB generate_pss_emul eNB %d, sect_id %d\n",phy_vars_eNb->Mod_id,sect_id);

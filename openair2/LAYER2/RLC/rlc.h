@@ -137,7 +137,7 @@ typedef volatile struct {
   rlc_mode_t             rlc_mode;
   union {
     rlc_am_info_t              rlc_am_info; /*!< \sa rlc_am.h. */
-    rlc_am_info_NB_t		rlc_am_info_NB;
+    rlc_am_info_NB_IoT_t		   rlc_am_info_NB_IoT; //integrate NB-IoT
     rlc_tm_info_t              rlc_tm_info; /*!< \sa rlc_tm.h. */
     rlc_um_info_t              rlc_um_info; /*!< \sa rlc_um.h. */
   } rlc;
@@ -177,6 +177,8 @@ typedef struct {
 #define  RLC_MAX_MBMS_LC (maxSessionPerPMCH * maxServiceCount)
 #define  RLC_MAX_LC  ((max_val_DRB_Identity+1)* NUMBER_OF_UE_MAX)
 
+
+//pointer functions
 protected_rlc(void (*rlc_rrc_data_ind)(
                 const protocol_ctxt_t* const ctxtP,
                 const rb_id_t     rb_idP,
@@ -189,6 +191,7 @@ protected_rlc(void (*rlc_rrc_data_conf)(
                 const mui_t           muiP,
                 const rlc_tx_status_t statusP);)
 
+//define the type of the function that return void and take in input that parameters
 typedef void (rrc_data_ind_cb_t)(
   const protocol_ctxt_t* const ctxtP,
   const rb_id_t     rb_idP,
@@ -202,6 +205,28 @@ typedef void (rrc_data_conf_cb_t)(
   const rlc_tx_status_t statusP);
 
 
+//------------------------------------------------
+// NB-IoT (may this stuff are no more used)
+//------------------------------------------------
+//pointer functions
+protected_rlc(void (*rlc_rrc_data_ind_NB_IoT)(
+                const protocol_ctxt_t* const ctxtP,
+                const rb_id_t     rb_idP,
+                const sdu_size_t  sdu_sizeP,
+                const uint8_t   * const sduP,
+				const srb1bis_flag_t srb1bis_flag);)
+
+typedef void (rrc_data_ind_cb_NB_IoT_t)(
+  const protocol_ctxt_t* const ctxtP,
+  const rb_id_t     rb_idP,
+  const sdu_size_t  sdu_sizeP,
+  const uint8_t   * const sduP,
+  const srb1bis_flag_t srb1bis_flag);
+
+
+//------------------------------------------------
+
+
 /*! \struct  rlc_t
 * \brief Structure to be instanciated to allocate memory for RLC protocol instances.
 */
@@ -209,7 +234,7 @@ typedef struct rlc_union_s {
   rlc_mode_t           mode;
   union {
     rlc_am_entity_t  am;
-    rlc_um_entity_t  um;
+    rlc_um_entity_t  um; //not allowed for NB-IoT
     rlc_tm_entity_t  tm;
   } rlc;
 } rlc_union_t;

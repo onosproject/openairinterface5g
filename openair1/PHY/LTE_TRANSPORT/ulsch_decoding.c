@@ -164,6 +164,86 @@ LTE_eNB_ULSCH_t *new_eNB_ulsch(uint8_t max_turbo_iterations,uint8_t N_RB_UL, uin
   return(NULL);
 }
 
+/*
+NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB(uint8_t abstraction_flag)
+{
+
+	NB_IoT_eNB_NULSCH_t *ulsch;
+  uint8_t exit_flag = 0,i,r;
+  unsigned char bw_scaling =1;
+
+//  switch (N_RB_UL) {
+//  case 6:
+//    bw_scaling =16;
+//    break;
+//
+//  case 25:
+//    bw_scaling =4;
+//    break;
+//
+//  case 50:
+//    bw_scaling =2;
+//    break;
+//
+//  default:
+//    bw_scaling =1;
+//    break;
+//  }
+
+  ulsch = (NB_IoT_eNB_NULSCH_t *)malloc16(sizeof(NB_IoT_eNB_NULSCH_t));
+
+  if (ulsch) {
+    memset(ulsch,0,sizeof(LTE_eNB_ULSCH_t));
+    //MP: add some parameters in npusch structure for convolutional coding to be set
+    ulsch->Mlimit = 4;
+
+
+      ulsch->harq_process = (LTE_UL_eNB_HARQ_t *)malloc16(sizeof(LTE_UL_eNB_HARQ_t));
+
+      if (ulsch->harq_process) {
+        memset(ulsch->harq_process,0,sizeof(LTE_UL_eNB_HARQ_t));
+        ulsch->harq_process->b = (uint8_t*)malloc16(MAX_ULSCH_PAYLOAD_BYTES/bw_scaling);
+
+        if (ulsch->harq_process->b)
+          memset(ulsch->harq_process->b,0,MAX_ULSCH_PAYLOAD_BYTES/bw_scaling);
+        else
+          exit_flag=3;
+
+        if (abstraction_flag==0) {
+          for (r=0; r<MAX_NUM_ULSCH_SEGMENTS/bw_scaling; r++) {
+            ulsch->harq_process->c[r] = (uint8_t*)malloc16(((r==0)?8:0) + 3+768);
+            if (ulsch->harq_process->c[r])
+              memset(ulsch->harq_process->c[r],0,((r==0)?8:0) + 3+768);
+            else
+              exit_flag=2;
+
+            ulsch->harq_process->d[r] = (short*)malloc16(((3*8*6144)+12+96)*sizeof(short));
+
+            if (ulsch->harq_process->d[r])
+              memset(ulsch->harq_process->d[r],0,((3*8*6144)+12+96)*sizeof(short));
+            else
+              exit_flag=2;
+          }
+
+          ulsch->harq_process->subframe_scheduling_flag = 0;
+        }
+      } else {
+        exit_flag=1;
+      }
+
+
+    if (exit_flag==0)
+      return(ulsch);
+  }
+
+  LOG_E(PHY,"new_ue_ulsch: exit_flag = %d\n",exit_flag);
+  free_eNB_ulsch(ulsch);
+
+  return(NULL);
+}
+
+*/
+
 void clean_eNb_ulsch(LTE_eNB_ULSCH_t *ulsch)
 {
 
@@ -212,7 +292,7 @@ uint8_t extract_cqi_crc(uint8_t *cqi,uint8_t CQI_LENGTH)
 
 
 
-
+/*
 int ulsch_decoding_data_2thread0(td_params* tdp) {
 
   PHY_VARS_eNB *eNB = tdp->eNB;
@@ -648,6 +728,7 @@ int ulsch_decoding_data_2thread(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr
 
   return( (ret>proc->tdp.ret) ? ret : proc->tdp.ret );
 }
+*/
 
 int ulsch_decoding_data(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr8_flag) {
 

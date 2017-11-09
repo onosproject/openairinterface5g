@@ -399,8 +399,12 @@ int mac_init_global_param(void)
   //  Mac_rlc_xface->mrbch_phy_sync_failure=mrbch_phy_sync_failure;
   //  Mac_rlc_xface->dl_phy_sync_success=dl_phy_sync_success;
 
+
+
   LOG_I(MAC,"[MAIN] RLC interface setup and init\n");
   rrc_init_global_param();
+  //MP: otherwise we call the initialization of the RRC NB-IoT module (see mac_init_global_param_NB_IoT)
+
 
 #ifdef USER_MODE
   pdcp_layer_init ();
@@ -434,7 +438,6 @@ void mac_top_cleanup(void)
 
 int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,uint8_t cba_group_active, uint8_t HO_active)
 {
-
 
 
   LOG_I(MAC,"[MAIN] MAC_INIT_GLOBAL_PARAM IN...\n");

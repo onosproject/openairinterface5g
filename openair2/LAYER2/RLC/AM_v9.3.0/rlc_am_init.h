@@ -71,10 +71,12 @@ typedef volatile struct {
 } rlc_am_info_t;
 
 typedef volatile struct {
-uint16_t max_retx_threshold;
-uint32_t t_poll_retransmit;
-uint32_t enableStatusReportSN_Gap;
-}rlc_am_info_NB_t;
+//UL-AM-RLC Configurations
+uint16_t max_retx_threshold_NB_IoT;
+uint32_t t_poll_retransmit_NB_IoT;
+//DL-AM-RLC Configurations
+uint32_t* enableStatusReportSN_Gap_NB_IoT; /*OPTIONAL*/
+}rlc_am_info_NB_IoT_t;
 
 //-----------------------------------------------------------------------------
 /*! \fn void rlc_am_init   (const protocol_ctxt_t* const ctxtP, rlc_am_entity_t * const rlc_pP)

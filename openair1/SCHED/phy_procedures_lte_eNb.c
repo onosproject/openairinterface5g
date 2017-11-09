@@ -764,7 +764,8 @@ void generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC
       
 #endif
 
-      LOG_D(PHY,"Generating dlsch params for RNTI %x\n",dci_alloc->rnti);      
+      LOG_D(PHY,"Generating dlsch params for RNTI %x\n",dci_alloc->rnti);
+      //fill the dlsch structures
       generate_eNB_dlsch_params_from_dci(frame,
 					 subframe,
 					 &dci_alloc->dci_pdu[0],
@@ -911,7 +912,13 @@ void generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC
     T_INT(dci_alloc->firstCCE));
 }
 
-void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *dlsch, LTE_eNB_DLSCH_t *dlsch1,LTE_eNB_UE_stats *ue_stats,int ra_flag,int num_pdcch_symbols) {
+void pdsch_procedures(PHY_VARS_eNB *eNB,
+					  eNB_rxtx_proc_t *proc,
+					  LTE_eNB_DLSCH_t *dlsch,
+					  LTE_eNB_DLSCH_t *dlsch1,
+					  LTE_eNB_UE_stats *ue_stats,
+					  int ra_flag,
+					  int num_pdcch_symbols) {
 
   int frame=proc->frame_tx;
   int subframe=proc->subframe_tx;
@@ -1008,6 +1015,20 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 	  // Initialize indicator for first SR (to be cleared after ConnectionSetup is acknowledged)
 	  eNB->first_sr[(uint32_t)UE_id] = 1;
 	      
+
+	  /*
+	   * In FAPI style we don-t need to process the RAR because we have all the parameters for getting the MSG3 given by the
+	   * UL_CONFIG.request
+	   * 1) this data are given at the same time with the DLSCH PDU containing the RAR
+	   * 2) wee need to do a mapping of this parameters OAI->FAPI
+	   */
+
+
+	  /*this for MSG3*/
+	  //the problem of OAI is that i don't have any DCI0 for scheduling the info for getting Msg3 (because is direclty given in RAR)
+	  //so i should gather the information directly form RAR before sending it
+	  //In FAPI style apporach so we directly get it from the next UL-config given in the Sched_rsp
+	  //so most probably i don't care about it because i will receive all the information for get Msg3
 	  generate_eNB_ulsch_params_from_rar(DLSCH_pdu,
 					     frame,
 					     subframe,
@@ -1089,6 +1110,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
     LOG_D(PHY,"Generating DLSCH/PDSCH %d\n",ra_flag);
     // 36-212
     start_meas(&eNB->dlsch_encoding_stats);
+    //encoding
     eNB->te(eNB,
 	    DLSCH_pdu,
 	    num_pdcch_symbols,
@@ -1100,6 +1122,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
     stop_meas(&eNB->dlsch_encoding_stats);
     // 36-211
     start_meas(&eNB->dlsch_scrambling_stats);
+    //scrambling
     dlsch_scrambling(fp,
 		     0,
 		     dlsch,
@@ -1118,6 +1141,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
     start_meas(&eNB->dlsch_modulation_stats);
 
 
+    //modulation
     dlsch_modulation(eNB,
 		     eNB->common_vars.txdataF[0],
 		     AMP,
@@ -1422,7 +1446,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 #endif
 
   // Check for SI activity
-
+  //MP: eNB->dlsch_SI->active is set by the function generate_dlsch_params_from_dci (depending on the DCI content)
   if ((eNB->dlsch_SI) && (eNB->dlsch_SI->active == 1)) {
 
     pdsch_procedures(eNB,proc,eNB->dlsch_SI,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,0,num_pdcch_symbols);
@@ -2655,6 +2679,7 @@ void init_fep_thread(PHY_VARS_eNB *eNB,pthread_attr_t *attr_fep) {
 
 }
 
+/*
 extern void *td_thread(void*);
 
 void init_td_thread(PHY_VARS_eNB *eNB,pthread_attr_t *attr_td) {
@@ -2670,6 +2695,7 @@ void init_td_thread(PHY_VARS_eNB *eNB,pthread_attr_t *attr_td) {
   pthread_create(&proc->pthread_td, attr_td, td_thread, (void*)&proc->tdp);
 
 }
+
 
 extern void *te_thread(void*);
 
@@ -2687,7 +2713,7 @@ void init_te_thread(PHY_VARS_eNB *eNB,pthread_attr_t *attr_te) {
   pthread_create(&proc->pthread_te, attr_te, te_thread, (void*)&proc->tep);
 
 }
-
+*/
 
 void eNB_fep_full_2thread(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
 

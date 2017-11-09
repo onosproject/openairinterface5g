@@ -37,8 +37,8 @@
 #include "LAYER2/RLC/rlc.h"
 
 ///NB_IoT
-#include "defs_nb_iot.h"
-extern eNB_RRC_INST_NB *eNB_rrc_inst_NB;
+#include "defs_NB_IoT.h"
+extern eNB_RRC_INST_NB_IoT *eNB_rrc_inst_NB_IoT;
 
 extern UE_RRC_INST *UE_rrc_inst;
 extern eNB_RRC_INST *eNB_rrc_inst;

@@ -587,6 +587,7 @@ typedef struct {
 
   struct MBSFN_SubframeConfig *mbsfn_SubframeConfig[MAX_MBSFN_AREA];
 
+
 } LTE_DL_FRAME_PARMS;
 
 typedef enum {

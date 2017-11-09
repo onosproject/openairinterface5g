@@ -27,4 +27,7 @@
 #        endif
 #endif
 
+
+#define NUMBER_OF_UE_MAX_NB_IoT 16
+
 #endif /* OPENAIRINTERFACE5G_LIMITS_H_ */

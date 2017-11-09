@@ -60,6 +60,7 @@ void clean_eNb_dlsch(LTE_eNB_DLSCH_t *dlsch);
 */
 LTE_eNB_DLSCH_t *new_eNB_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_t N_RB_DL, uint8_t abstraction_flag, LTE_DL_FRAME_PARMS* frame_parms);
 
+
 /** \fn free_ue_dlsch(LTE_UE_DLSCH_t *dlsch)
     \brief This function frees memory allocated for a particular DLSCH at UE
     @param dlsch Pointer to DLSCH to be removed
@@ -83,6 +84,7 @@ void clean_eNb_ulsch(LTE_eNB_ULSCH_t *ulsch);
 void free_ue_ulsch(LTE_UE_ULSCH_t *ulsch);
 
 LTE_eNB_ULSCH_t *new_eNB_ulsch(uint8_t max_turbo_iterations,uint8_t N_RB_UL, uint8_t abstraction_flag);
+
 
 LTE_UE_ULSCH_t *new_ue_ulsch(unsigned char N_RB_UL, uint8_t abstraction_flag);
 
@@ -122,14 +124,14 @@ int32_t dlsch_encoding(PHY_VARS_eNB *eNB,
                        time_stats_t *i_stats);
 
 int32_t dlsch_encoding_SIC(PHY_VARS_UE *ue,
-                       uint8_t *a,
-                       uint8_t num_pdcch_symbols,
-                       LTE_eNB_DLSCH_t *dlsch,
-                       int frame,
-                       uint8_t subframe,
-                       time_stats_t *rm_stats,
-                       time_stats_t *te_stats,
-                       time_stats_t *i_stats);
+                           uint8_t *a,
+                           uint8_t num_pdcch_symbols,
+                           LTE_eNB_DLSCH_t *dlsch,
+                           int frame,
+                           uint8_t subframe,
+                           time_stats_t *rm_stats,
+                           time_stats_t *te_stats,
+                           time_stats_t *i_stats);
 
 
 
@@ -269,7 +271,6 @@ int32_t allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
                            int *P1_SHIFT,
                            int *P2_SHIFT);
 
-
 /** \fn int32_t dlsch_modulation(int32_t **txdataF,
     int16_t amp,
     uint32_t sub_frame_offset,
@@ -295,11 +296,11 @@ int32_t dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
                          LTE_eNB_DLSCH_t *dlsch1);
 
 int32_t dlsch_modulation_SIC(int32_t **sic_buffer,
-                         uint32_t sub_frame_offset,
-                         LTE_DL_FRAME_PARMS *frame_parms,
-                         uint8_t num_pdcch_symbols,
-                         LTE_eNB_DLSCH_t *dlsch0,
-                         int G);
+                             uint32_t sub_frame_offset,
+                             LTE_DL_FRAME_PARMS *frame_parms,
+                             uint8_t num_pdcch_symbols,
+                             LTE_eNB_DLSCH_t *dlsch0,
+                             int G);
 /*
   \brief This function is the top-level routine for generation of the sub-frame signal (frequency-domain) for MCH.
   @param txdataF Table of pointers for frequency-domain TX signals
@@ -396,7 +397,6 @@ void generate_ue_spec_pilots(PHY_VARS_eNB *phy_vars_eNB,
                              int16_t amp,
                              uint16_t Ntti,
                              uint8_t beamforming_mode);
-
 int32_t generate_pss(int32_t **txdataF,
                      int16_t amp,
                      LTE_DL_FRAME_PARMS *frame_parms,
@@ -1742,7 +1742,7 @@ int32_t generate_ue_ulsch_params_from_rar(PHY_VARS_UE *phy_vars_ue,
                                           uint8_t eNB_id);
 double sinr_eff_cqi_calc(PHY_VARS_UE *phy_vars_ue,
                          uint8_t eNB_id,
-                                                 uint8_t subframe);
+                         uint8_t subframe);
 
 uint8_t sinr2cqi(double sinr,uint8_t trans_mode);
 

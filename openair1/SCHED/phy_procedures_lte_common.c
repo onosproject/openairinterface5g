@@ -1086,6 +1086,7 @@ LTE_eNB_UE_stats* get_UE_stats(uint8_t Mod_id, uint8_t  CC_id,uint16_t rnti)
 
 int8_t find_ue(uint16_t rnti, PHY_VARS_eNB *eNB)
 {
+
   uint8_t i;
 
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
@@ -1109,6 +1110,7 @@ int8_t find_ue(uint16_t rnti, PHY_VARS_eNB *eNB)
 
   return(-1);
 }
+
 
 LTE_DL_FRAME_PARMS* get_lte_frame_parms(module_id_t Mod_id, uint8_t  CC_id)
 {
