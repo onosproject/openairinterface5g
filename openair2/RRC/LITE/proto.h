@@ -164,6 +164,23 @@ void rrc_ue_process_radioResourceConfigDedicated(
   uint8_t eNB_index,
   RadioResourceConfigDedicated_t *radioResourceConfigDedicated);
 
+
+/** \brief Process a RadioResourceConfig and configure PHY/MAC for SL communication/discovery
+    \param Mod_idP
+    \param eNB_index Index of corresponding CH/eNB
+    \param sib18 Pointer to SIB18 from SI message
+    \param sib19 Pointer to SIB19 from SI message
+    \param sl_CommConfig Pointer to SL_CommConfig RRCConnectionConfiguration
+    \param sl_DiscConfig Pointer to SL_DiscConfig RRCConnectionConfiguration */
+void rrc_ue_process_radioResourceConfig(
+  module_id_t Mod_idP,
+  uint8_t eNB_index,
+  SystemInformationBlockType18_r12_t     *sib18,
+  SystemInformationBlockType19_r12_t     *sib19,
+  SL_CommConfig_r12_t* sl_CommConfig,
+  SL_DiscConfig_r12_t* sl_DiscConfig);
+
+
 // eNB/CH RRC Procedures
 
 /**\brief Function to get the next transaction identifier.
@@ -310,7 +327,7 @@ rrc_eNB_process_SidelinkUEInformation(
       SidelinkUEInformation_r12_t*  sidelinkUEInformation
 );
 
-/** \brief Get a Resource Pool for TX
+/** \brief Get a Resource Pool to transmit SL communication
     \param ctxt_pP Running context
     \param ue_context_pP UE context
     \param destinationInfoList Pointer to the list of SL destinations*/
@@ -319,6 +336,18 @@ SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool(
       rrc_eNB_ue_context_t* const ue_context_pP,
       SL_DestinationInfoList_r12_t  *destinationInfoList
 );
+
+/** \brief Get a Resource Pool for Discovery
+    \param ctxt_pP Running context
+    \param ue_context_pP UE context
+    \param n_discoveryMessages Number of discovery messages*/
+SL_DiscConfig_r12_t rrc_eNB_get_sidelink_discTXPool(
+      const protocol_ctxt_t* const ctxt_pP,
+      rrc_eNB_ue_context_t* const ue_context_pP,
+      int n_discoveryMessages
+);
+
+
 
 //L2_interface.c
 int8_t

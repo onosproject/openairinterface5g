@@ -1432,7 +1432,7 @@ uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_Destinatio
    UL_DCCH_Message_t ul_dcch_msg;
 
    SidelinkUEInformation_r12_t *sidelinkUEInformation;
-   ARFCN_ValueEUTRA_r9_t carrierFreq[] = {2565000000.0};//sidelink communication frequency
+   ARFCN_ValueEUTRA_r9_t carrierFreq[] = {2565000000.0};//sidelink communication frequency (hardcoded - should come from SIB2)
 
    memset((void *)&ul_dcch_msg,0,sizeof(UL_DCCH_Message_t));
 
@@ -1445,49 +1445,99 @@ uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_Destinatio
    switch(mode) {
    //if SIB18 is available case 1,2,3,4
    case SL_RECEIVE_COMMUNICATION: // to receive sidelink communication
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12 = &carrierFreq[0];
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12[0] = carrierFreq[0];
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12 = CALLOC(1,
+                  sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12));
+      memcpy((void*)sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12, (void*)carrierFreq,
+             sizeof(ARFCN_ValueEUTRA_r9_t));
       break;
+
    case SL_TRANSMIT_NON_RELAY_ONE_TO_MANY: //to transmit non-relay related one-to-many sidelink communication
       //commTxResourceReq
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12 = &carrierFreq[0];
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12 = *destinationInfoList;
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12 = CALLOC(1,
+                       sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12));
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12 = CALLOC(1,
+                             sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12));
+      memcpy((void*)sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12, (void*)carrierFreq,
+             sizeof(ARFCN_ValueEUTRA_r9_t));
+      memcpy(&sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12,
+            destinationInfoList,
+            sizeof(*destinationInfoList));
       break;
+
    case SL_TRANSMIT_NON_RELAY_ONE_TO_ONE://transmit non-relay related one-to-one sidelink communication
       //if commTxResourceUC-ReqAllowed is included in SIB18
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12 = &carrierFreq[0];
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12 = *destinationInfoList;
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension = CALLOC(1,
+            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension));
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13 = CALLOC(1,
+            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13));
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12 = CALLOC(1,
+            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12));
+      memcpy((void*)sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12, (void*)carrierFreq,
+            sizeof (ARFCN_ValueEUTRA_r9_t));
+      memcpy(&sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12,
+            destinationInfoList,
+            sizeof(*destinationInfoList));
       break;
+
    case SL_TRANSMIT_RELAY_ONE_TO_ONE: //transmit relay related one-to-one sidelink communication
       //if SIB19 includes discConfigRelay and UE acts a relay or UE has a selected relay
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12 = *destinationInfoList;
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension = CALLOC(1,
+            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension));
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13= CALLOC(1,
+            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13));
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13 = CALLOC(1,
+            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13));
+      memcpy(&sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12,
+            destinationInfoList,
+            sizeof(*destinationInfoList));
       //set ue-type to relayUE or remoteUE
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_relayUE;
       //sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12->nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_remoteUE;
       break;
+
    case SL_TRANSMIT_RELAY_ONE_TO_MANY: //transmit relay related one-to-many sidelink communication
       //if SIB19 includes discConfigRelay and UE acts a relay
       //set ue-type to relayUE
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension = CALLOC(1,
+           sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension));
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13= CALLOC(1,
+           sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13));
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13 = CALLOC(1,
+           sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13));
       sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_relayUE;
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12 = *destinationInfoList;
+      memcpy(&sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12,
+            destinationInfoList,
+            sizeof(*destinationInfoList));
       break;
 
       //if SIB19 is available
       //TTN - for case 6,7, and 8, we consider only one frequency  - a serving frequency
    case SL_RECEIVE_DISCOVERY: //receive sidelink discovery announcements
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discRxInterest_r12 = SidelinkUEInformation_r12_IEs__discRxInterest_r12_true;
+
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discRxInterest_r12 = CALLOC(1,
+            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discRxInterest_r12));
+      *sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discRxInterest_r12 = SidelinkUEInformation_r12_IEs__discRxInterest_r12_true;
       break;
    case SL_TRANSMIT_NON_PS_DISCOVERY://to transmit non-PS related sidelink discovery announcements
       //for the first frequency
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12 = discTxResourceReq;
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12 = CALLOC(1,
+            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12));
+
+      memcpy((void*)sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12,
+            (void*)discTxResourceReq,
+            sizeof(long));
       //for additional frequency
       break;
+
    case SL_TRANSMIT_PS_DISCOVERY://to transmit PS related sidelink discovery announcements
       //if to transmit non-relay PS related discovery announcements and SIB19 includes discConfigPS
       //if UE is acting as relay UE and SIB includes discConfigRelay (relay threshold condition)
       //if relay UE/has a selected relay UE and if SIB19 includes discConfigRelay
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13->discTxResourceReq_r13 = discTxResourceReq;
-      //sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12->nonCriticalExtension->discTxResourceReqPS_r13->carrierFreqDiscTx_r13
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension = CALLOC(1,
+            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension));
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13 = CALLOC(1,
+            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13));
+      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13->discTxResourceReq_r13 = *discTxResourceReq;
       break;
    //SIB21
    case SL_RECEIVE_V2X:
@@ -2356,13 +2406,42 @@ do_RRCConnectionReconfiguration(
   //TTN for D2D
   //allocate dedicated resource pools for SL communication (sl_CommConfig_r12)
   if (sl_CommConfig != NULL) {
-     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12 = sl_CommConfig;
-     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12[0] = sl_CommConfig[0];
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension = CALLOC(1,
+           sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension));
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension = CALLOC(1,
+           sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension));
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension = CALLOC(1,
+           sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension));
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension = CALLOC(1,
+           sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension));
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension = CALLOC(1,
+           sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension));
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12 = CALLOC(1,
+           sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12));
+     memcpy((void*)rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12, (void*)sl_CommConfig,
+           sizeof(SL_CommConfig_r12_t));
+  } else {
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12 = NULL;
   }
+
   //allocate dedicated resource pools for SL discovery (sl_DiscConfig)
   if (sl_DiscConfig != NULL){
-     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12 = sl_DiscConfig;
-     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12[0] = sl_DiscConfig[0];
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension = CALLOC(1,
+            sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension));
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension = CALLOC(1,
+            sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension));
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension = CALLOC(1,
+            sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension));
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension = CALLOC(1,
+            sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension));
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension = CALLOC(1,
+            sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension));
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12 = CALLOC(1,
+            sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12));
+     memcpy((void*)rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12, (void*)sl_DiscConfig,
+            sizeof(SL_DiscConfig_r12_t));
+  } else {
+     rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12 = NULL;
   }
 
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message,

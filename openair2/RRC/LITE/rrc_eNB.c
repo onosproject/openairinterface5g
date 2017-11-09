@@ -57,6 +57,8 @@
 #include "platform_types.h"
 #include "msc.h"
 #include "SL-CommConfig-r12.h"
+#include "PeriodicBSR-Timer-r12.h"
+#include "RetxBSR-Timer-r12.h"
 
 #include "T.h"
 
@@ -5257,7 +5259,6 @@ rrc_eNB_process_SidelinkUEInformation(
 )
 //-----------------------------------------------------------------------------
 {
-   //SL_DestinationIdentity_r12_t sl_DestinationIdentityList[16];
    SL_DestinationInfoList_r12_t  *destinationInfoList;
    int n_destinations = 0;
    int ue_type = 0;
@@ -5269,12 +5270,12 @@ rrc_eNB_process_SidelinkUEInformation(
 
    //For SL Communication
    // express its interest to receive SL communication
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12){
+   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12 !=  NULL){
 
    }
 
    // express its interest to transmit  non-relay one-to-many SL communication
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12){
+   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12 != NULL){
       n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.count;
       destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
       for (int i=0; i< n_destinations; i++ ){
@@ -5288,7 +5289,7 @@ rrc_eNB_process_SidelinkUEInformation(
    }
 
    // express its interest to transmit  non-relay one-to-one SL communication
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12){
+   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12 != NULL){
       n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.count;
       destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
       for (int i=0; i< n_destinations; i++ ){
@@ -5301,7 +5302,7 @@ rrc_eNB_process_SidelinkUEInformation(
    }
 
    // express its interest to transmit relay related one-to-one SL communication
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count>0){
+   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count > 0){
       n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count;
       ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
       destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
@@ -5315,7 +5316,7 @@ rrc_eNB_process_SidelinkUEInformation(
    }
 
    //express its interest to transmit relay related one-to-many SL communication
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count>0){
+   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count > 0){
       n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count;
       ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
       destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
@@ -5331,8 +5332,8 @@ rrc_eNB_process_SidelinkUEInformation(
    //express its interest to receive SL discovery announcements
 
    //express its interest to transmit non-PS related discovery announcements
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12 > 0){
-      n_discoveryMessages = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12;
+   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12 != NULL){
+      n_discoveryMessages = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12);
       //generate RRC Reconfiguration
       rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, NULL, n_discoveryMessages);
       return 0;
@@ -5365,7 +5366,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
 
   // allocate dedicated pools for UE -sl-CommConfig/sl-DiscConfig (sl-V2X-ConfigDedicated)
   //populate dedicated resources for SL communication (sl-CommConfig)
-  if (destinationInfoList->list.count > 0) {
+  if ((destinationInfoList != NULL) && (destinationInfoList->list.count > 0)) {
      //get dedicated resources from available pool and assign to the UE
      SL_CommConfig_r12_t  sl_CommConfig[destinationInfoList->list.count];
      //get a RP from the available RPs
@@ -5390,10 +5391,10 @@ rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
      //
   }
   //populate dedicated resources for SL discovery (sl-DiscConfig)
-  if (n_discoveryMessages > 0){
+  if (n_discoveryMessages > 0) {
      SL_DiscConfig_r12_t sl_DiscConfig[n_discoveryMessages];
      //get a RP from the available RPs
-     //SL_DiscConfig[0] = rrc_eNB_get_sidelink_discTXPool(ctxt_pP, ue_context_pP, n_discoveryMessages );
+     sl_DiscConfig[0] = rrc_eNB_get_sidelink_discTXPool(ctxt_pP, ue_context_pP, n_discoveryMessages );
      size = do_RRCConnectionReconfiguration(ctxt_pP,
                    buffer,
                    rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),   //Transaction_id
@@ -5418,11 +5419,35 @@ rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
 
   // rrc_data_req();
 
-  return(0);
+  return size;
 }
 
 SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool( const protocol_ctxt_t* const ctxt_pP, rrc_eNB_ue_context_t* const ue_context_pP,  SL_DestinationInfoList_r12_t  *destinationInfoList ){
+   // for the moment, use scheduled resource allocation
    SL_CommConfig_r12_t  sl_CommConfig;
+   sl_CommConfig.commTxResources_r12 = CALLOC(1, sizeof(*sl_CommConfig.commTxResources_r12));
+   sl_CommConfig.commTxResources_r12->present = SL_CommConfig_r12__commTxResources_r12_PR_setup;
+   sl_CommConfig.commTxResources_r12->choice.setup.present = SL_CommConfig_r12__commTxResources_r12__setup_PR_scheduled_r12;
+   //sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12 =  ue_context_pP->ue_context.rnti;//rnti
+   //sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.mcs_r12; //Msc
+   sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.retx_BSR_TimerSL = RetxBSR_Timer_r12_sf320; //MacConfig, for testing only
+   sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.periodic_BSR_TimerSL = CALLOC(1,
+         sizeof(*sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.periodic_BSR_TimerSL));
+   *(sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.periodic_BSR_TimerSL) =  PeriodicBSR_Timer_r12_sf40; //MacConfig, for testing only
+   //sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.sc_CommTxConfig_r12; //RP
+
    return sl_CommConfig;
 }
 
+
+SL_DiscConfig_r12_t rrc_eNB_get_sidelink_discTXPool( const protocol_ctxt_t* const ctxt_pP, rrc_eNB_ue_context_t* const ue_context_pP,  int n_discoveryMessages ){
+   //TODO
+   SL_DiscConfig_r12_t  sl_DiscConfig;
+   sl_DiscConfig.discTxResources_r12 = CALLOC(1,sizeof(*sl_DiscConfig.discTxResources_r12));
+   sl_DiscConfig.discTxResources_r12->present = SL_DiscConfig_r12__discTxResources_r12_PR_setup;
+   sl_DiscConfig.discTxResources_r12->choice.setup.present = SL_DiscConfig_r12__discTxResources_r12__setup_PR_scheduled_r12;
+   //sl_DiscConfig.discTxResources_r12->choice.setup.choice.scheduled_r12.discHoppingConfig_r12;
+   //sl_DiscConfig.discTxResources_r12->choice.setup.choice.scheduled_r12.discTF_IndexList_r12;
+   //sl_DiscConfig.discTxResources_r12->choice.setup.choice.scheduled_r12.discTxConfig_r12;
+   return sl_DiscConfig;
+}
