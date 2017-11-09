@@ -2677,6 +2677,7 @@ void init_fep_thread(PHY_VARS_eNB *eNB,pthread_attr_t *attr_fep) {
 
 }
 
+/*
 extern void *td_thread(void*);
 
 void init_td_thread(PHY_VARS_eNB *eNB,pthread_attr_t *attr_td) {
@@ -2692,6 +2693,7 @@ void init_td_thread(PHY_VARS_eNB *eNB,pthread_attr_t *attr_td) {
   pthread_create(&proc->pthread_td, attr_td, td_thread, (void*)&proc->tdp);
 
 }
+
 
 extern void *te_thread(void*);
 
@@ -2709,7 +2711,7 @@ void init_te_thread(PHY_VARS_eNB *eNB,pthread_attr_t *attr_te) {
   pthread_create(&proc->pthread_te, attr_te, te_thread, (void*)&proc->tep);
 
 }
-
+*/
 
 void eNB_fep_full_2thread(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
 

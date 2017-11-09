@@ -584,7 +584,7 @@ int wait_CCs(eNB_rxtx_proc_t *proc) {
  *
  * For the moment the NB-IoT implementation foresees a single thread implementation
  * */
-static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc, char *thread_name) {
+static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
   //Allocate memory for the structures used by PHY and MAC
   UL_IND_t *UL_INFO;
@@ -1599,10 +1599,12 @@ static void* eNB_thread_single( void* param ) {
 
   static int eNB_thread_single_status;
 
-  eNB_proc_t *proc = (eNB_proc_t*)param;
-  eNB_rxtx_proc_t *proc_rxtx = &proc->proc_rxtx[0];
+  eNB_proc_t             *proc = (eNB_proc_t*)param;
+  eNB_rxtx_proc_t        *proc_rxtx = &proc->proc_rxtx[0];
   PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
+  PHY_VARS_eNB_NB_IoT *eNB_NB_IoT = PHY_vars_eNB_NB_IoT_g[0][proc->CC_id];
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
+  NB_IoT_DL_FRAME_PARMS *fp_NB_IoT = &eNB_NB_IoT->frame_parms;
   eNB->CC_id =  proc->CC_id;
 
   void *rxp[2],*rxp2[2];
@@ -1754,6 +1756,7 @@ static void* eNB_thread_single( void* param ) {
     wakeup_slaves(proc);
 
     if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
+    if (rxtx_NB_IoT(eNB_NB_IoT,proc_rxtx,"eNB_thread_single") < 0) break;
   }
   
 
@@ -1764,10 +1767,13 @@ static void* eNB_thread_single( void* param ) {
 
 }
 
-extern void init_fep_thread(PHY_VARS_eNB *, pthread_attr_t *);
-extern void init_td_thread(PHY_VARS_eNB *, pthread_attr_t *);
-extern void init_te_thread(PHY_VARS_eNB *, pthread_attr_t *);
 
+
+
+extern void init_fep_thread(PHY_VARS_eNB *, pthread_attr_t *);
+/*extern void init_td_thread(PHY_VARS_eNB *, pthread_attr_t *);
+extern void init_te_thread(PHY_VARS_eNB *, pthread_attr_t *);
+*/
 void init_eNB_proc(int inst) {
   
   int i=0;
@@ -1845,8 +1851,10 @@ void init_eNB_proc(int inst) {
     else {
       pthread_create(&proc->pthread_single, attr_single, eNB_thread_single, &eNB->proc);
       init_fep_thread(eNB,attr_fep);
+      /*
       init_td_thread(eNB,attr_td);
       init_te_thread(eNB,attr_te);
+      */
     }
     pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, &eNB->proc );
     pthread_create( &proc->pthread_synch, attr_synch, eNB_thread_synch, eNB);

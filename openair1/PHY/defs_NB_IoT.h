@@ -146,6 +146,8 @@ static inline void* malloc16_clear( size_t size )
 
 #define NB_BANDS_MAX_NB_IoT 8
 
+#include "defs_common.h"
+
 #ifdef OCP_FRAMEWORK
 #include <enums.h>
 #else

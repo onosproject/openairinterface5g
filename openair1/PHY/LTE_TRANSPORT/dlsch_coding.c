@@ -395,7 +395,7 @@ void clean_eNb_dlsch(LTE_eNB_DLSCH_t *dlsch)
   }
 }
 
-
+/*
 int dlsch_encoding_2threads0(te_params *tep) {
 
   LTE_eNB_DLSCH_t *dlsch          = tep->dlsch;
@@ -686,6 +686,7 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
 
   return(0);
 }
+*/
 
 int dlsch_encoding(PHY_VARS_eNB *eNB,
 		   unsigned char *a,
