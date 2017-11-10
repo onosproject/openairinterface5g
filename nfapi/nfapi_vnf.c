@@ -640,7 +640,7 @@ int phy_rach_indication(struct nfapi_vnf_p7_config* config, nfapi_rach_indicatio
   eNB->UL_INFO.rach_ind = *ind;
   eNB->UL_INFO.rach_ind.rach_indication_body.preamble_list                       = eNB->preamble_list;
 
-  for (int i=0;i<ind->rach_indication_body.number_of_preambles++;i++)
+  for (int i=0;i<ind->rach_indication_body.number_of_preambles;i++)
   {
     if (ind->rach_indication_body.preamble_list[i].preamble_rel8.tl.tag == NFAPI_PREAMBLE_REL8_TAG)
     {
