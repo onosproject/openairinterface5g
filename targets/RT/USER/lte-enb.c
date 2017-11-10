@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -699,7 +699,6 @@ static void* eNB_thread_prach_br( void* param ) {
 #endif
 
 
-extern void init_fep_thread(PHY_VARS_eNB *, pthread_attr_t *);
 extern void init_td_thread(PHY_VARS_eNB *, pthread_attr_t *);
 extern void init_te_thread(PHY_VARS_eNB *, pthread_attr_t *);
 
@@ -1121,6 +1120,7 @@ void init_eNB(int single_thread_flag,int wait_for_sync) {
       eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list = eNB->harq_pdu_list;
       eNB->UL_INFO.cqi_ind.cqi_pdu_list = eNB->cqi_pdu_list;
       eNB->UL_INFO.cqi_ind.cqi_raw_pdu_list = eNB->cqi_raw_pdu_list;
+      eNB->prach_energy_counter = 0;
     }
 
   }

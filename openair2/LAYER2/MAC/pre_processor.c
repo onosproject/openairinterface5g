@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -1374,13 +1374,14 @@ void assign_max_mcs_min_rb(module_id_t module_idP,int frameP, sub_frame_t subfra
         /* if UE has pending scheduling request then pre-allocate 3 RBs */
         //if (UE_template->ul_active == 1 && UE_template->ul_SR == 1) {
         if (UE_is_to_be_scheduled(module_idP, CC_id, i)) {
+          /* use QPSK mcs */
           UE_template->pre_assigned_mcs_ul             = 10;
           UE_template->pre_allocated_rb_table_index_ul = 2;
           UE_template->pre_allocated_nb_rb_ul          = 3;
         } else {
           UE_template->pre_assigned_mcs_ul             = 0;
-          UE_template->pre_allocated_rb_table_index_ul =-1;
-          UE_template->pre_allocated_nb_rb_ul=0;
+          UE_template->pre_allocated_rb_table_index_ul = -1;
+          UE_template->pre_allocated_nb_rb_ul          = 0;
         }
       }
     }

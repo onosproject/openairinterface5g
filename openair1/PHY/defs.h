@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -752,6 +752,10 @@ typedef struct RU_t_s{
   time_stats_t ofdm_demod_stats;
   /// Timing statistics (TX)
   time_stats_t ofdm_mod_stats;
+  /// Timing statistics (RX Fronthaul + Compression)
+  time_stats_t rx_fhaul;
+  /// Timing statistics (TX Fronthaul + Compression)
+  time_stats_t tx_fhaul; 
   /// RX and TX buffers for precoder output
   RU_COMMON            common;
   /// beamforming weight vectors per eNB
@@ -915,7 +919,8 @@ typedef struct {
   int            subband_cqi_dB[NUMBER_OF_UE_MAX][MAX_NUM_RU_PER_eNB][100];
   /// Total Subband CQI and RB
   int            subband_cqi_tot_dB[NUMBER_OF_UE_MAX][100];
-
+  /// PRACH background noise level
+  int            prach_I0;
 } PHY_MEASUREMENTS_eNB;
 
 
@@ -1031,8 +1036,8 @@ typedef struct PHY_VARS_eNB_s {
 
   /// if ==0 enables phy only test mode
   int mac_enabled;
-
-
+  /// counter to average prach energh over first 100 prach opportunities
+  int prach_energy_counter;
 
   // PDSCH Varaibles
   PDSCH_CONFIG_DEDICATED pdsch_config_dedicated[NUMBER_OF_UE_MAX];
@@ -1498,6 +1503,10 @@ typedef struct RRU_config_s {
   uint8_t num_bands;
   /// EUTRA band list configured in RRU
   uint8_t band_list[MAX_BANDS_PER_RRU];
+  /// TDD configuration (0-6)
+  uint8_t tdd_config[MAX_BANDS_PER_RRU];
+  /// TDD special subframe configuration (0-10)
+  uint8_t tdd_config_S[MAX_BANDS_PER_RRU];
   /// TX frequency
   uint32_t tx_freq[MAX_BANDS_PER_RRU];
   /// RX frequency

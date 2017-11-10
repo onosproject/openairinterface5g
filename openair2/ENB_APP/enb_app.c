@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -58,12 +58,6 @@ extern unsigned char NB_eNB_INST;
 #endif
 
 extern RAN_CONTEXT_t RC;
-
-extern int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc);
-extern void RCconfig_S1(MessageDef *msg_p, uint32_t i);
-extern int RCconfig_gtpu(void);
-extern void RCconfig_L1(void );
-extern void RCconfig_macrlc(void );
 
 #if defined(ENABLE_ITTI)
 
@@ -220,13 +214,8 @@ static uint32_t eNB_app_register(uint32_t enb_id_start, uint32_t enb_id_end)//, 
   MessageDef      *msg_p;
   uint32_t         register_enb_pending = 0;
 
-#   if defined(OAI_EMU)
-
-#   endif
-
   for (enb_id = enb_id_start; (enb_id < enb_id_end) ; enb_id++) {
 #   if defined(OAI_EMU)
-
     if (oai_emulation.info.cli_start_enb[enb_id] == 1)
 #   endif
     {

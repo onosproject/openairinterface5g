@@ -314,7 +314,8 @@ static inline void fh_if5_mobipass_south_out(RU_t *ru) {
 static inline void fh_if4p5_south_out(RU_t *ru) {
   if (ru == RC.ru[0]) VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, ru->proc.timestamp_tx&0xffffffff );
   LOG_D(PHY,"Sending IF4p5 for frame %d subframe %d\n",ru->proc.frame_tx,ru->proc.subframe_tx);
-  send_IF4p5(ru,ru->proc.frame_tx, ru->proc.subframe_tx, IF4p5_PDLFFT);
+  if (subframe_select(&ru->frame_parms,ru->proc.subframe_tx)!=SF_UL) 
+    send_IF4p5(ru,ru->proc.frame_tx, ru->proc.subframe_tx, IF4p5_PDLFFT);
 }
 
 /*************************************************************/
@@ -576,14 +577,10 @@ void fh_if5_north_asynch_in(RU_t *ru,int *frame,int *subframe) {
     proc->first_tx = 0;
   }
   else {
-    if (subframe_tx != *subframe) {
-      LOG_E(PHY,"subframe_tx %d is not what we expect %d\n",subframe_tx,*subframe);
-      exit_fun("Exiting");
-    }
-    if (frame_tx != *frame) { 
-      LOG_E(PHY,"frame_tx %d is not what we expect %d\n",frame_tx,*frame);
-      exit_fun("Exiting");
-    }
+    AssertFatal(subframe_tx == *subframe,
+                "subframe_tx %d is not what we expect %d\n",subframe_tx,*subframe);
+    AssertFatal(frame_tx == *frame, 
+                "frame_tx %d is not what we expect %d\n",frame_tx,*frame);
   }
 }
 
@@ -599,34 +596,30 @@ void fh_if4p5_north_asynch_in(RU_t *ru,int *frame,int *subframe) {
 LOG_E(PHY, "%s(ru:%p frame, subframe)\n", __FUNCTION__, ru);
   symbol_number = 0;
   symbol_mask = 0;
-  symbol_mask_full = (1<<fp->symbols_per_tti)-1;
-
+  symbol_mask_full = ((subframe_select(fp,*subframe) == SF_S) ? (1<<fp->dl_symbols_in_S_subframe) : (1<<fp->symbols_per_tti))-1;
   do {   
     recv_IF4p5(ru, &frame_tx, &subframe_tx, &packet_type, &symbol_number);
-    LOG_E(PHY, "%s(ru:%p frame, subframe) frame_tx:%d/%d packet_type:%u symbol_number:%u proc->first_tx:%d\n", __FUNCTION__, ru, frame_tx, subframe_tx, packet_type, symbol_number, proc->first_tx);
+    if ((subframe_select(fp,*subframe) == SF_DL) && (symbol_number == 0)) start_meas(&ru->rx_fhaul);
+    LOG_D(PHY,"subframe %d (%d): frame %d, subframe %d, symbol %d\n",
+         *subframe,subframe_select(fp,*subframe),frame_tx,subframe_tx,symbol_number);
     if (proc->first_tx != 0) {
       *frame    = frame_tx;
       *subframe = subframe_tx;
       proc->first_tx = 0;
     }
     else {
-      if (frame_tx != *frame) {
-	LOG_E(PHY,"frame_tx %d is not what we expect %d\n",frame_tx,*frame);
-	exit_fun("Exiting");
-      }
-      if (subframe_tx != *subframe) {
-	LOG_E(PHY,"subframe_tx %d is not what we expect %d\n",subframe_tx,*subframe);
-	exit_fun("Exiting");
-      }
+      AssertFatal(frame_tx == *frame,
+	          "frame_tx %d is not what we expect %d\n",frame_tx,*frame);
+      AssertFatal(subframe_tx == *subframe,
+		  "subframe_tx %d is not what we expect %d\n",subframe_tx,*subframe);
     }
     if (packet_type == IF4p5_PDLFFT) {
       symbol_mask = symbol_mask | (1<<symbol_number);
     }
-    else {
-      LOG_E(PHY,"Illegal IF4p5 packet type (should only be IF4p5_PDLFFT%d\n",packet_type);
-      exit_fun("Exiting");
-    }
+    else AssertFatal(1==0,"Illegal IF4p5 packet type (should only be IF4p5_PDLFFT%d\n",packet_type);
   } while (symbol_mask != symbol_mask_full);    
+
+  if (subframe_select(fp,*subframe) == SF_DL) stop_meas(&ru->rx_fhaul);
 
   proc->subframe_tx  = subframe_tx;
   proc->frame_tx     = frame_tx;
@@ -670,16 +663,11 @@ void fh_if4p5_north_out(RU_t *ru) {
     send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULTICK);
     return;
   }
-  if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 1 ); 
 
-  AssertFatal(ru->feprx!=NULL,"No northbound FEP function, exiting\n");
-  if (ru->feprx) { 
-    LOG_D(PHY,"Doing FEP/IF4p5 for frame %d, subframe %d\n",proc->frame_rx,proc->subframe_rx);
-    ru->feprx(ru);
-    send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULFFT);
-  }
+  start_meas(&ru->tx_fhaul);
+  send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULFFT);
+  stop_meas(&ru->tx_fhaul);
 
-  if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 0 );
 }
 
 void rx_rf(RU_t *ru,int *frame,int *subframe) {
@@ -708,8 +696,9 @@ void rx_rf(RU_t *ru,int *frame,int *subframe) {
  
   proc->timestamp_rx = ts-ru->ts_offset;
 
-  if (rxs != fp->samples_per_tti)
-    LOG_E(PHY,"rx_rf: Asked for %d samples, got %d from USRP\n",fp->samples_per_tti,rxs);
+  //AssertFatal(rxs == fp->samples_per_tti,
+	      //"rx_rf: Asked for %d samples, got %d from USRP\n",fp->samples_per_tti,rxs);
+  if (rxs != fp->samples_per_tti) LOG_E(PHY, "rx_rf: Asked for %d samples, got %d from USRP\n",fp->samples_per_tti,rxs);
 
   if (proc->first_rx == 1) {
     ru->ts_offset = proc->timestamp_rx;
@@ -788,18 +777,10 @@ void tx_rf(RU_t *ru) {
   lte_subframe_t SF_type     = subframe_select(fp,proc->subframe_tx%10);
   lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_tx+9)%10);
   lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_tx+1)%10);
-
-  //struct timespec t;
-  //clock_gettime(CLOCK_MONOTONIC, &t);
-  //LOG_E(PHY,"%s() nb_tx:%d sf:%d tti:%d t:%ld.%09ld\n", __FUNCTION__, ru->nb_tx, proc->subframe_tx, fp->samples_per_tti, t.tv_sec, t.tv_nsec);
+  int sf_extension = 0;
 
   if ((SF_type == SF_DL) ||
       (SF_type == SF_S)) {
-    
-    for (i=0; i<ru->nb_tx; i++)
-    {
-      txp[i] = (void*)&ru->common.txdata[i][proc->subframe_tx*fp->samples_per_tti]; 
-    }
     
     int siglen=fp->samples_per_tti,flags=1;
     
@@ -810,24 +791,31 @@ void tx_rf(RU_t *ru) {
     if ((fp->frame_type == TDD) &&
 	(SF_type == SF_DL)&&
 	(prevSF_type == SF_UL) &&
-	(nextSF_type == SF_DL))
+	(nextSF_type == SF_DL)) { 
       flags = 2; // start of burst
+      sf_extension = ru->N_TA_offset<<1;
+    }
     
     if ((fp->frame_type == TDD) &&
 	(SF_type == SF_DL)&&
 	(prevSF_type == SF_UL) &&
-	(nextSF_type == SF_UL))
+	(nextSF_type == SF_UL)) {
       flags = 4; // start of burst and end of burst (only one DL SF between two UL)
-  
+      sf_extension = ru->N_TA_offset<<1;
+    } 
+
+    for (i=0; i<ru->nb_tx; i++)
+      txp[i] = (void*)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)-sf_extension];
+
     
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, (proc->timestamp_tx-ru->openair0_cfg.tx_sample_advance)&0xffffffff );
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
     // prepare tx buffer pointers
     
     txs = ru->rfdevice.trx_write_func(&ru->rfdevice,
-				      proc->timestamp_tx+ru->ts_offset-ru->openair0_cfg.tx_sample_advance,
+				      proc->timestamp_tx+ru->ts_offset-ru->openair0_cfg.tx_sample_advance-sf_extension,
 				      txp,
-				      siglen,
+				      siglen+sf_extension,
 				      ru->nb_tx,
 				      flags);
     
@@ -836,10 +824,8 @@ void tx_rf(RU_t *ru) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
     
     
-    if (txs !=  fp->samples_per_tti) {
-      LOG_E(PHY,"TX : Timeout (sent %d/%d)\n",txs, fp->samples_per_tti);
-      exit_fun( "problem transmitting samples" );
-    }	
+    AssertFatal(txs ==  siglen+sf_extension,"TX : Timeout (sent %d/%d)\n",txs, siglen);
+
   }
 }
 
@@ -1335,18 +1321,12 @@ int setup_RU_buffers(RU_t *ru) {
     return(-1);
   }
   
-  /*
-    if (frame_parms->frame_type == TDD) {
-    if (frame_parms->N_RB_DL == 100)
-    N_TA_offset = 624;
-    else if (frame_parms->N_RB_DL == 50)
-    N_TA_offset = 624/2;
-    else if (frame_parms->N_RB_DL == 25)
-    N_TA_offset = 624/4;
-    }
-  */
   
-  
+  if (frame_parms->frame_type == TDD) {
+    if      (frame_parms->N_RB_DL == 100) ru->N_TA_offset = 624;
+    else if (frame_parms->N_RB_DL == 50)  ru->N_TA_offset = 624/2;
+    else if (frame_parms->N_RB_DL == 25)  ru->N_TA_offset = 624/4;
+  } 
   if (ru->openair0_cfg.mmapped_dma == 1) {
     // replace RX signal buffers with mmaped HW versions
     
@@ -1396,6 +1376,9 @@ static void* ru_stats_thread(void* param) {
      if (opp_enabled == 1) {
        if (ru->feprx) print_meas(&ru->ofdm_demod_stats,"feprx",NULL,NULL);
        if (ru->feptx_ofdm) print_meas(&ru->ofdm_mod_stats,"feptx_ofdm",NULL,NULL);
+       if (ru->fh_north_asynch_in) print_meas(&ru->rx_fhaul,"rx_fhaul",NULL,NULL);
+       if (ru->fh_north_out) print_meas(&ru->tx_fhaul,"tx_fhaul",NULL,NULL);
+
      }
   }
   return(NULL);
@@ -1527,7 +1510,6 @@ static void* ru_thread( void* param ) {
 
 
     // do RX front-end processing (frequency-shift, dft) if needed
-    //if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 1 ); 
     if (ru->feprx) ru->feprx(ru);
 
     // At this point, all information for subframe has been received on FH interface
@@ -1823,6 +1805,10 @@ void configure_ru(int idx,
 
   AssertFatal((ret=check_capabilities(ru,capabilities)) == 0,
 	      "Cannot configure RRU %d, check_capabilities returned %d\n", idx,ret);
+  // take antenna capabilities of RRU
+  ru->nb_tx                      = capabilities->nb_tx[0];
+  ru->nb_rx                      = capabilities->nb_rx[0];
+
   // Pass configuration to RRU
   LOG_I(PHY, "Using %s fronthaul (%d), band %d \n",ru_if_formats[ru->if_south],ru->if_south,ru->frame_parms.eutra_band);
   // wait for configuration 
@@ -1831,6 +1817,8 @@ void configure_ru(int idx,
   config->band_list[0]           = ru->frame_parms.eutra_band;
   config->tx_freq[0]             = ru->frame_parms.dl_CarrierFreq;      
   config->rx_freq[0]             = ru->frame_parms.ul_CarrierFreq;      
+  config->tdd_config[0]          = ru->frame_parms.tdd_config;
+  config->tdd_config_S[0]        = ru->frame_parms.tdd_config_S;
   config->att_tx[0]              = ru->att_tx;
   config->att_rx[0]              = ru->att_rx;
   config->N_RB_DL[0]             = ru->frame_parms.N_RB_DL;
@@ -1850,10 +1838,6 @@ void configure_ru(int idx,
     }
 #endif
   }
-  // take antenna capabilities of RRU
-  ru->nb_tx                      = capabilities->nb_tx[0];
-  ru->nb_rx                      = capabilities->nb_rx[0];
-
 
   init_frame_parms(&ru->frame_parms,1);
   phy_init_RU(ru);
@@ -1868,6 +1852,13 @@ void configure_rru(int idx,
   ru->frame_parms.eutra_band                                               = config->band_list[0];
   ru->frame_parms.dl_CarrierFreq                                           = config->tx_freq[0];
   ru->frame_parms.ul_CarrierFreq                                           = config->rx_freq[0];
+  if (ru->frame_parms.dl_CarrierFreq == ru->frame_parms.ul_CarrierFreq) {
+     ru->frame_parms.frame_type                                            = TDD;
+     ru->frame_parms.tdd_config                                            = config->tdd_config[0];
+     ru->frame_parms.tdd_config_S                                          = config->tdd_config_S[0]; 
+  }
+  else
+     ru->frame_parms.frame_type                                            = FDD;
   ru->att_tx                                                               = config->att_tx[0];
   ru->att_rx                                                               = config->att_rx[0];
   ru->frame_parms.N_RB_DL                                                  = config->N_RB_DL[0];
@@ -1944,7 +1935,7 @@ void init_RU(char *rf_config_file) {
   // read in configuration file)
   printf("configuring RU from file\n");
   RCconfig_RU();
-  printf("number of L1 instances %d, number of RU %d RC.nb_CC[0]:%d\n",RC.nb_L1_inst,RC.nb_RU, RC.nb_CC[0]);
+  LOG_I(PHY,"number of L1 instances %d, number of RU %d, number of CPU cores %d\n",RC.nb_L1_inst,RC.nb_RU,get_nprocs());
 
   if (RC.nb_CC != 0)
     for (i=0;i<RC.nb_L1_inst;i++) 
@@ -2016,6 +2007,8 @@ LOG_E(PHY,"ru->if_south:%d\n", ru->if_south);
 	ru->ifdevice.host_type    = RRU_HOST;
 	ru->rfdevice.host_type    = RRU_HOST;
 	ru->ifdevice.eth_params   = &ru->eth_params;
+    reset_meas(&ru->rx_fhaul);
+    reset_meas(&ru->tx_fhaul);
 
 	ret = openair0_transport_load(&ru->ifdevice,&ru->openair0_cfg,&ru->eth_params);
 	printf("openair0_transport_init returns %d for ru_id %d\n",ret,ru_id);
@@ -2030,13 +2023,15 @@ LOG_E(PHY,"ru->if_south:%d\n", ru->if_south);
 	ru->fh_north_out          = fh_if4p5_north_out;       // send_IF4p5 on reception
 	ru->fh_south_out          = tx_rf;                    // send output to RF
 	ru->fh_north_asynch_in    = fh_if4p5_north_asynch_in; // TX packets come asynchronously
-	ru->feprx                 = (get_nprocs()<=4) ? fep_full :ru_fep_full_2thread;                 // RX DFTs
-	ru->feptx_ofdm            = (get_nprocs()<=4) ? feptx_ofdm : feptx_ofdm_2thread;               // this is fep with idft only (no precoding in RRU)
+	ru->feprx                 = (get_nprocs()<=2) ? fep_full :ru_fep_full_2thread;                 // RX DFTs
+	ru->feptx_ofdm            = (get_nprocs()<=2) ? feptx_ofdm : feptx_ofdm_2thread;               // this is fep with idft only (no precoding in RRU)
 	ru->feptx_prec            = NULL;
 	ru->start_if              = start_if;                 // need to start the if interface for if4p5
 	ru->ifdevice.host_type    = RRU_HOST;
 	ru->rfdevice.host_type    = RRU_HOST;
 	ru->ifdevice.eth_params   = &ru->eth_params;
+    reset_meas(&ru->rx_fhaul);
+    reset_meas(&ru->tx_fhaul);
 
 	ret = openair0_transport_load(&ru->ifdevice,&ru->openair0_cfg,&ru->eth_params);
 	printf("openair0_transport_init returns %d for ru_id %d\n",ret,ru_id);

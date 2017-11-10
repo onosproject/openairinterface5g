@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -80,10 +80,11 @@ void rx_sdu(const module_id_t enb_mod_idP,
 	    const uint16_t    timing_advance,
             const uint8_t     ul_cqi)
 {
+  int current_rnti = rntiP;
   unsigned char  rx_ces[MAX_NUM_CE],num_ce,num_sdu,i,*payload_ptr;
   unsigned char  rx_lcids[NB_RB_MAX];
   unsigned short rx_lengths[NB_RB_MAX];
-  int    UE_id = find_UE_id(enb_mod_idP,rntiP);
+  int    UE_id = find_UE_id(enb_mod_idP, current_rnti);
   int RA_id;
   int ii,j;
   eNB_MAC_INST *eNB = RC.mac[enb_mod_idP];
@@ -106,14 +107,14 @@ void rx_sdu(const module_id_t enb_mod_idP,
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RX_SDU,1);
   if (opt_enabled == 1) {
-    trace_pdu(0, sduP,sdu_lenP, 0, 3, rntiP, frameP, subframeP, 0,0);
+    trace_pdu(0, sduP,sdu_lenP, 0, 3, current_rnti, frameP, subframeP, 0,0);
     LOG_D(OPT,"[eNB %d][ULSCH] Frame %d  rnti %x  with size %d\n",
-    		  enb_mod_idP, frameP, rntiP, sdu_lenP);
+                      enb_mod_idP, frameP, current_rnti, sdu_lenP);
   }
   
   if (UE_id!=-1) {
     LOG_D(MAC,"[eNB %d][PUSCH %d] CC_id %d Received ULSCH sdu(%p) round %d from PHY (rnti %x, UE_id %d) ul_cqi %d\n",enb_mod_idP,harq_pid,CC_idP,sduP,UE_list->UE_sched_ctrl[UE_id].round_UL[CC_idP][harq_pid],
-	  rntiP,UE_id,ul_cqi);
+          current_rnti, UE_id,ul_cqi);
 
     AssertFatal(UE_list->UE_sched_ctrl[UE_id].round_UL[CC_idP][harq_pid] < 8,
 		"round >= 8\n");
@@ -127,8 +128,7 @@ void rx_sdu(const module_id_t enb_mod_idP,
         * maybe it's even not correct at all?
         */
        UE_list->UE_sched_ctrl[UE_id].ta_update             =
-         (UE_list->UE_sched_ctrl[UE_id].ta_update * 3 + timing_advance)/4;
-
+           (UE_list->UE_sched_ctrl[UE_id].ta_update * 3 + timing_advance)/4;
        UE_list->UE_sched_ctrl[UE_id].pusch_snr[CC_idP]       = ul_cqi;
        UE_list->UE_sched_ctrl[UE_id].ul_consecutive_errors = 0;
        first_rb =  UE_list->UE_template[CC_idP][UE_id].first_rb_ul[harq_pid];
@@ -154,23 +154,23 @@ void rx_sdu(const module_id_t enb_mod_idP,
 
     }
   }
-  else if ((RA_id = find_RA_id(enb_mod_idP,CC_idP,rntiP))!=-1) { // Check if this is an RA process for the rnti
+  else if ((RA_id = find_RA_id(enb_mod_idP,CC_idP,current_rnti))!=-1) { // Check if this is an RA process for the rnti
     AssertFatal(eNB->common_channels[CC_idP].radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx>1,
 		"maxHARQ %d should be greater than 1\n",
 		(int)eNB->common_channels[CC_idP].radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx);
 
     LOG_D(MAC,"[eNB %d][PUSCH %d] CC_id %d Received ULSCH sdu round %d from PHY (rnti %x, RA_id %d) ul_cqi %d\n",enb_mod_idP,harq_pid,CC_idP,
      RA_template[RA_id].msg3_round,
-     rntiP,RA_id,ul_cqi);
+     current_rnti,RA_id,ul_cqi);
 
     first_rb                   = RA_template->msg3_first_rb; 
 
     if (sduP==NULL) { // we've got an error on Msg3
       LOG_D(MAC,"[eNB %d] CC_id %d, RA %d ULSCH in error in round %d/%d\n",enb_mod_idP,CC_idP,RA_id,
-	    RA_template[RA_id].msg3_round,
-	    (int)eNB->common_channels[CC_idP].radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx);
-      if (RA_template[RA_id].msg3_round == eNB->common_channels[CC_idP].radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx-1) { 
-	cancel_ra_proc(enb_mod_idP,CC_idP,frameP,rntiP);
+            RA_template[RA_id].msg3_round,
+            (int)eNB->common_channels[CC_idP].radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx);
+      if (RA_template[RA_id].msg3_round == eNB->common_channels[CC_idP].radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx-1) {
+        cancel_ra_proc(enb_mod_idP,CC_idP,frameP,current_rnti);
       }
 
       else {
@@ -185,15 +185,14 @@ void rx_sdu(const module_id_t enb_mod_idP,
     }
   }
   else  {
-    LOG_W(MAC,"Cannot find UE or RA corresponding to ULSCH rnti %x, dropping it\n",
-          rntiP);
+    LOG_W(MAC,"Cannot find UE or RA corresponding to ULSCH rnti %x, dropping it\n", current_rnti);
     return;
   }
   payload_ptr = parse_ulsch_header(sduP,&num_ce,&num_sdu,rx_ces,rx_lcids,rx_lengths,sdu_lenP);
 
-  T(T_ENB_MAC_UE_UL_PDU, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
+  T(T_ENB_MAC_UE_UL_PDU, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(current_rnti), T_INT(frameP), T_INT(subframeP),
     T_INT(harq_pid), T_INT(sdu_lenP), T_INT(num_ce), T_INT(num_sdu));
-  T(T_ENB_MAC_UE_UL_PDU_WITH_DATA, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
+  T(T_ENB_MAC_UE_UL_PDU_WITH_DATA, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(current_rnti), T_INT(frameP), T_INT(subframeP),
     T_INT(harq_pid), T_INT(sdu_lenP), T_INT(num_ce), T_INT(num_sdu), T_BUFFER(sduP, sdu_lenP));
 
   eNB->eNB_stats[CC_idP].ulsch_bytes_rx=sdu_lenP;
@@ -205,7 +204,7 @@ void rx_sdu(const module_id_t enb_mod_idP,
   // control element
   for (i=0; i<num_ce; i++) {
 
-    T(T_ENB_MAC_UE_UL_CE, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
+    T(T_ENB_MAC_UE_UL_CE, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(current_rnti), T_INT(frameP), T_INT(subframeP),
       T_INT(rx_ces[i]));
     
     switch (rx_ces[i]) { // implement and process BSR + CRNTI +
@@ -220,28 +219,38 @@ void rx_sdu(const module_id_t enb_mod_idP,
       payload_ptr+=sizeof(POWER_HEADROOM_CMD);
       break;
 
-    case CRNTI:
-      UE_id = find_UE_id(enb_mod_idP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
+    case CRNTI: {
+      int old_rnti = (((uint16_t)payload_ptr[0])<<8) + payload_ptr[1];
+      int old_UE_id = find_UE_id(enb_mod_idP, old_rnti);
       LOG_D(MAC, "[eNB %d] Frame %d, Subframe %d CC_id %d MAC CE_LCID %d (ce %d/%d): CRNTI %x (UE_id %d) in Msg3\n",
-	    frameP,subframeP,enb_mod_idP, CC_idP, rx_ces[i], i,num_ce,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1],UE_id);
-      if (UE_id!=-1) {
-	UE_list->UE_sched_ctrl[UE_id].ul_inactivity_timer=0;
-	UE_list->UE_sched_ctrl[UE_id].ul_failure_timer=0;
-	if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync > 0) {
-	  UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync=0;
-	  mac_eNB_rrc_ul_in_sync(enb_mod_idP,CC_idP,frameP,subframeP,(((uint16_t)payload_ptr[0])<<8) + payload_ptr[1]);
-	}
-printf("TODO: deal with CRNTI\n");
-abort();
+            enb_mod_idP, frameP, subframeP, CC_idP, rx_ces[i], i, num_ce, old_rnti, old_UE_id);
+      if (old_UE_id != -1) {
+        /* TODO: if the UE did random access (followed by a MAC uplink with
+         * CRNTI) because none of its scheduling request was granted, then
+         * according to 36.321 5.4.4 the UE's MAC will notify RRC to release
+         * PUCCH/SRS. According to 36.331 5.3.13 the UE will then apply
+         * default configuration for CQI reporting and scheduling requests,
+         * which basically means that the CQI requests won't work anymore and
+         * that the UE won't do any scheduling request anymore as long as the
+         * eNB doesn't reconfigure the UE.
+         * We have to take care of this. As the code is, nothing is done and
+         * the UE state in the eNB is wrong.
+         */
+        UE_id = old_UE_id;
+        UE_list->UE_sched_ctrl[UE_id].ul_inactivity_timer = 0;
+        UE_list->UE_sched_ctrl[UE_id].ul_failure_timer    = 0;
+        if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync > 0) {
+          UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync = 0;
+          mac_eNB_rrc_ul_in_sync(enb_mod_idP, CC_idP, frameP, subframeP, old_rnti);
+        }
+        /* receiving CRNTI means that the current rnti has to go away */
+        cancel_ra_proc(enb_mod_idP,CC_idP,frameP,current_rnti);
+        current_rnti = old_rnti;
       }
       crnti_rx=1;
       payload_ptr+=2;
-      /*
-      if (msg3_flagP != NULL) {
-	*msg3_flagP = 0;
-	}*/
-
       break;
+    }
 
     case TRUNCATED_BSR:
     case SHORT_BSR: {
@@ -381,9 +390,9 @@ abort();
   for (i=0; i<num_sdu; i++) {
     LOG_D(MAC,"SDU Number %d MAC Subheader SDU_LCID %d, length %d UE_id %d\n",i,rx_lcids[i],rx_lengths[i],UE_id);
 
-    T(T_ENB_MAC_UE_UL_SDU, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
+    T(T_ENB_MAC_UE_UL_SDU, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(current_rnti), T_INT(frameP), T_INT(subframeP),
       T_INT(rx_lcids[i]), T_INT(rx_lengths[i]));
-    T(T_ENB_MAC_UE_UL_SDU_WITH_DATA, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(rntiP), T_INT(frameP), T_INT(subframeP),
+    T(T_ENB_MAC_UE_UL_SDU_WITH_DATA, T_INT(enb_mod_idP), T_INT(CC_idP), T_INT(current_rnti), T_INT(frameP), T_INT(subframeP),
       T_INT(rx_lcids[i]), T_INT(rx_lengths[i]), T_BUFFER(payload_ptr, rx_lengths[i]));
 
     switch (rx_lcids[i]) {
@@ -395,7 +404,7 @@ abort();
       }
       LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, Received CCCH:  %x.%x.%x.%x.%x.%x, Terminating RA procedure for UE rnti %x\n",
             enb_mod_idP,CC_idP,frameP,
-            payload_ptr[0],payload_ptr[1],payload_ptr[2],payload_ptr[3],payload_ptr[4], payload_ptr[5], rntiP);
+            payload_ptr[0],payload_ptr[1],payload_ptr[2],payload_ptr[3],payload_ptr[4], payload_ptr[5], current_rnti);
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_TERMINATE_RA_PROC,1);
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_TERMINATE_RA_PROC,0);
       for (ii=0; ii<NB_RA_PROC_MAX; ii++) {
@@ -403,10 +412,10 @@ abort();
 
         LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Checking proc %d : rnti (%x, %x), active %d\n",
               enb_mod_idP, CC_idP, ii,
-              RA_template->rnti, rntiP,
+              RA_template->rnti, current_rnti,
               RA_template->RA_active);
 
-        if ((RA_template->rnti==rntiP) &&
+        if ((RA_template->rnti==current_rnti) &&
             (RA_template->RA_active==TRUE)) {
 
           //payload_ptr = parse_ulsch_header(msg3,&num_ce,&num_sdu,rx_ces,rx_lcids,rx_lengths,msg3_len);
@@ -432,16 +441,16 @@ abort();
 	    // kill RA procedure
           }
 
-	  mac_rrc_data_ind(
-			   enb_mod_idP,
-			   CC_idP,
-			   frameP,subframeP,
-			   rntiP,
-			   CCCH,
-			   (uint8_t*)payload_ptr,
-			   rx_lengths[i],
-			   ENB_FLAG_YES,
-			   enb_mod_idP,
+          mac_rrc_data_ind(
+                           enb_mod_idP,
+                           CC_idP,
+                           frameP,subframeP,
+                           current_rnti,
+                           CCCH,
+                           (uint8_t*)payload_ptr,
+                           rx_lengths[i],
+                           ENB_FLAG_YES,
+                           enb_mod_idP,
                            0
                            );
 	  
@@ -491,17 +500,17 @@ abort();
                 enb_mod_idP,CC_idP,frameP, rx_lengths[i], UE_id, rx_lcids[i]);
 
           mac_rlc_data_ind(
-			   enb_mod_idP,
-			   rntiP,
-			   enb_mod_idP,
-			   frameP,
-			   ENB_FLAG_YES,
-			   MBMS_FLAG_NO,
-			   rx_lcids[i],
-			   (char *)payload_ptr,
-			   rx_lengths[i],
-			   1,
-			   NULL);//(unsigned int*)crc_status);
+                           enb_mod_idP,
+                           current_rnti,
+                           enb_mod_idP,
+                           frameP,
+                           ENB_FLAG_YES,
+                           MBMS_FLAG_NO,
+                           rx_lcids[i],
+                           (char *)payload_ptr,
+                           rx_lengths[i],
+                           1,
+                           NULL);//(unsigned int*)crc_status);
           UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]]+=1;
           UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]]+=rx_lengths[i];
 
@@ -524,47 +533,47 @@ abort();
       LOG_T(MAC,"\n");
 #endif
       if (rx_lcids[i]  < NB_RB_MAX ) {
-	LOG_D(MAC,"[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DTCH, received %d bytes from UE %d for lcid %d\n",
-	      enb_mod_idP,CC_idP,frameP, rx_lengths[i], UE_id, rx_lcids[i]);
-	
-	if (UE_id != -1) {
-	  // adjust buffer occupancy of the correponding logical channel group
-	  LOG_D(MAC,"[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DTCH, received %d bytes from UE %d for lcid %d, removing from LCGID %ld, %d\n",
-		enb_mod_idP,CC_idP,frameP, rx_lengths[i], UE_id,rx_lcids[i],
-		UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]],
-		UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]]);
-	  
-	  if (UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] >= rx_lengths[i])
-	    UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] -= rx_lengths[i];
-	  else
-	    UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] = 0;
-	  if ((rx_lengths[i] <SCH_PAYLOAD_SIZE_MAX) &&  (rx_lengths[i] > 0) ) {   // MAX SIZE OF transport block
-	    mac_rlc_data_ind(
-			     enb_mod_idP,
-			     rntiP,
-			     enb_mod_idP,
-			     frameP,
-			     ENB_FLAG_YES,
-			     MBMS_FLAG_NO,
-			     rx_lcids[i],
-			     (char *)payload_ptr,
-			     rx_lengths[i],
-			     1,
-			     NULL);//(unsigned int*)crc_status);
-	    
-	    UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]]+=1;
-	    UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]]+=rx_lengths[i];
-	  }
-	  else { /* rx_length[i] */
-	    UE_list->eNB_UE_stats[CC_idP][UE_id].num_errors_rx+=1;
-	    LOG_E(MAC,"[eNB %d] CC_id %d Frame %d : Max size of transport block reached LCID %d from UE %d ",
-		  enb_mod_idP, CC_idP, frameP, rx_lcids[i], UE_id);
-	  }
-	}    
-	else {/*(UE_id != -1*/ 
-	  LOG_E(MAC,"[eNB %d] CC_id %d Frame %d : received unsupported or unknown LCID %d from UE %d ",
-		enb_mod_idP, CC_idP, frameP, rx_lcids[i], UE_id);
-	}
+        LOG_D(MAC,"[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DTCH, received %d bytes from UE %d for lcid %d\n",
+              enb_mod_idP,CC_idP,frameP, rx_lengths[i], UE_id, rx_lcids[i]);
+
+        if (UE_id != -1) {
+          // adjust buffer occupancy of the correponding logical channel group
+          LOG_D(MAC,"[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DTCH, received %d bytes from UE %d for lcid %d, removing from LCGID %ld, %d\n",
+                enb_mod_idP,CC_idP,frameP, rx_lengths[i], UE_id,rx_lcids[i],
+                UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]],
+                UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]]);
+
+          if (UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] >= rx_lengths[i])
+            UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] -= rx_lengths[i];
+          else
+            UE_list->UE_template[CC_idP][UE_id].ul_buffer_info[UE_list->UE_template[CC_idP][UE_id].lcgidmap[rx_lcids[i]]] = 0;
+          if ((rx_lengths[i] <SCH_PAYLOAD_SIZE_MAX) &&  (rx_lengths[i] > 0) ) {   // MAX SIZE OF transport block
+            mac_rlc_data_ind(
+                             enb_mod_idP,
+                             current_rnti,
+                             enb_mod_idP,
+                             frameP,
+                             ENB_FLAG_YES,
+                             MBMS_FLAG_NO,
+                             rx_lcids[i],
+                             (char *)payload_ptr,
+                             rx_lengths[i],
+                             1,
+                             NULL);//(unsigned int*)crc_status);
+
+            UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]]+=1;
+            UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]]+=rx_lengths[i];
+          }
+          else { /* rx_length[i] */
+            UE_list->eNB_UE_stats[CC_idP][UE_id].num_errors_rx+=1;
+            LOG_E(MAC,"[eNB %d] CC_id %d Frame %d : Max size of transport block reached LCID %d from UE %d ",
+                  enb_mod_idP, CC_idP, frameP, rx_lcids[i], UE_id);
+          }
+        }
+        else {/*(UE_id != -1*/
+          LOG_E(MAC,"[eNB %d] CC_id %d Frame %d : received unsupported or unknown LCID %d from UE %d ",
+                enb_mod_idP, CC_idP, frameP, rx_lcids[i], UE_id);
+        }
       }
 
       break;
@@ -574,7 +583,7 @@ abort();
   }
 
   // Program ACK for PHICH
-  //LOG_D(MAC,"SFN/SF:%d%d Programming PHICH ACK for rnti %x harq_pid %d (first_rb %d)\n",frameP,subframeP,rntiP,harq_pid,first_rb);
+  LOG_D(MAC,"SFN/SF:%d%d Programming PHICH ACK for rnti %x harq_pid %d (first_rb %d)\n",frameP,subframeP,rntiP,harq_pid,first_rb);
   nfapi_hi_dci0_request_t        *hi_dci0_req = &eNB->HI_DCI0_req[CC_idP];
   nfapi_hi_dci0_request_body_t   *hi_dci0_req_body = &hi_dci0_req->hi_dci0_request_body;
   nfapi_hi_dci0_request_pdu_t    *hi_dci0_pdu = &hi_dci0_req_body->hi_dci0_pdu_list[hi_dci0_req_body->number_of_dci+hi_dci0_req_body->number_of_hi]; 	
@@ -883,7 +892,7 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
   nfapi_ul_config_request_t *ul_req_tmp            = &eNB->UL_req_tmp[CC_id][sched_subframeP];
   nfapi_ul_config_request_body_t *ul_req_tmp_body  = &ul_req_tmp->ul_config_request_body;
 
-  //LOG_D(MAC,"entering ulsch preprocesor\n");
+  LOG_D(MAC,"entering ulsch preprocesor\n");
   ulsch_scheduler_pre_processor(module_idP,
                                 frameP,
                                 subframeP,

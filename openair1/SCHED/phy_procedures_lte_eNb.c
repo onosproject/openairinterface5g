@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -439,33 +439,33 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   }
 
   /* save old HARQ information needed for PHICH generation */
-  for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-    harq_pid = subframe2harq_pid(fp,ul_frame,ul_subframe);
-    if (eNB->ulsch[i]) {
-      ulsch_harq = eNB->ulsch[i]->harq_processes[harq_pid];
-
-      /* Store first_rb and n_DMRS for correct PHICH generation below.
-       * For PHICH generation we need "old" values of last scheduling
-       * for this HARQ process. 'generate_eNB_dlsch_params' below will
-       * overwrite first_rb and n_DMRS and 'generate_phich_top', done
-       * after 'generate_eNB_dlsch_params', would use the "new" values
-       * instead of the "old" ones.
-       *
-       * This has been tested for FDD only, may be wrong for TDD.
-       *
-       * TODO: maybe we should restructure the code to be sure it
-       *       is done correctly. The main concern is if the code
-       *       changes and first_rb and n_DMRS are modified before
-       *       we reach here, then the PHICH processing will be wrong,
-       *       using wrong first_rb and n_DMRS values to compute
-       *       ngroup_PHICH and nseq_PHICH.
-       *
-       * TODO: check if that works with TDD.
-       */
-      if ((subframe_select(fp,ul_subframe)==SF_UL) ||
-          (fp->frame_type == FDD)) {
-        ulsch_harq->previous_first_rb = ulsch_harq->first_rb;
-        ulsch_harq->previous_n_DMRS   = ulsch_harq->n_DMRS;
+  if (ul_subframe < 10) { // This means that there is a potential UL subframe that will be scheduled here
+    for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+      harq_pid = subframe2harq_pid(fp,ul_frame,ul_subframe);
+      if (eNB->ulsch[i]) {
+	ulsch_harq = eNB->ulsch[i]->harq_processes[harq_pid];
+	
+	/* Store first_rb and n_DMRS for correct PHICH generation below.
+	 * For PHICH generation we need "old" values of last scheduling
+	 * for this HARQ process. 'generate_eNB_dlsch_params' below will
+	 * overwrite first_rb and n_DMRS and 'generate_phich_top', done
+	 * after 'generate_eNB_dlsch_params', would use the "new" values
+	 * instead of the "old" ones.
+	 *
+	 * This has been tested for FDD only, may be wrong for TDD.
+	 *
+	 * TODO: maybe we should restructure the code to be sure it
+	 *       is done correctly. The main concern is if the code
+	 *       changes and first_rb and n_DMRS are modified before
+	 *       we reach here, then the PHICH processing will be wrong,
+	 *       using wrong first_rb and n_DMRS values to compute
+	 *       ngroup_PHICH and nseq_PHICH.
+	 *
+	 * TODO: check if that works with TDD.
+	 */
+	ulsch_harq->previous_first_rb = ulsch_harq->first_rb;
+	ulsch_harq->previous_n_DMRS   = ulsch_harq->n_DMRS;
+	
       }
     }
   }
@@ -654,7 +654,8 @@ void prach_procedures(PHY_VARS_eNB *eNB,
 	   eNB->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[ce_level])) {
     */ 
     if (eNB->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[0]==1){ 
-      if (max_preamble_energy[0] > 350) {
+      if ((eNB->prach_energy_counter == 100) && 
+          (max_preamble_energy[0] > eNB->measurements.prach_I0 + 100)) {
 	eNB->UL_INFO.rach_ind_br.rach_indication_body.number_of_preambles++;
 	
 	eNB->preamble_list_br[ind].preamble_rel8.timing_advance        = max_preamble_delay[ind];//
@@ -682,7 +683,8 @@ void prach_procedures(PHY_VARS_eNB *eNB,
 #endif
 
     {
-      if (max_preamble_energy[0] > 350) {
+      if ((eNB->prach_energy_counter == 100) && 
+          (max_preamble_energy[0] > eNB->measurements.prach_I0+100)) {
 
 	LOG_E(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure with preamble %d, energy %d.%d dB, delay %d\n",
 	      eNB->Mod_id,
@@ -696,8 +698,6 @@ void prach_procedures(PHY_VARS_eNB *eNB,
 	
 	    T(T_ENB_PHY_INITIATE_RA_PROCEDURE, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe),
 	      T_INT(max_preamble[0]), T_INT(max_preamble_energy[0]), T_INT(max_preamble_delay[0]));
-	    
-	    
 	    
 	    pthread_mutex_lock(&eNB->UL_INFO_mutex);
 	    
@@ -731,22 +731,13 @@ void prach_procedures(PHY_VARS_eNB *eNB,
 
 	    pthread_mutex_unlock(&eNB->UL_INFO_mutex);
       
-      } // max_preamble_energy > 350
+      } // max_preamble_energy > prach_I0 + 100 
+      else {
+         eNB->measurements.prach_I0 = ((eNB->measurements.prach_I0*900)>>10) + ((max_preamble_energy[0]*124)>>10); 
+         if (frame==0) LOG_I(PHY,"prach_I0 = %d.%d dB\n",eNB->measurements.prach_I0/10,eNB->measurements.prach_I0%10);
+         if (eNB->prach_energy_counter < 100) eNB->prach_energy_counter++;
+      }
     } // else br_flag
-      /*
-	mac_xface->initiate_ra_proc(eNB->Mod_id,
-	eNB->CC_id,
-	frame,
-	preamble_max,
-	preamble_delay_list[preamble_max]*update_TA/update_TA2,
-	0,subframe,0);*/
-      
-    
-    /*  } else {
-    MSC_LOG_EVENT(MSC_PHY_ENB, "0 RA Failed add user, too many");
-    LOG_I(PHY,"[eNB %d][RAPROC] frame %d, subframe %d: Unable to add user, max user count reached\n",
-	  eNB->Mod_id,frame, subframe);
-	  }*/
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,0);
 }
@@ -1602,7 +1593,7 @@ void fill_rx_indication(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe)
   pdu->data                              = eNB->ulsch[UE_id]->harq_processes[harq_pid]->b;  
   // estimate timing advance for MAC
   sync_pos                               = lte_est_timing_advance_pusch(eNB,UE_id);
-  timing_advance_update                  = sync_pos;
+  timing_advance_update                  = sync_pos; // - eNB->frame_parms.nb_prefix_samples/4; //to check
 
   //  if (timing_advance_update > 10) { dump_ulsch(eNB,frame,subframe,UE_id); exit(-1);}
   //  if (timing_advance_update < -10) { dump_ulsch(eNB,frame,subframe,UE_id); exit(-1);}
@@ -2069,12 +2060,6 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
       first_time=0;
     }
   }
-#if 0
-  lte_eNB_I0_measurements(eNB,
-			  subframe,
-			  0,
-			  eNB->first_run_I0_measurements);
-#endif
   eNB->first_run_I0_measurements = 0;
 
   uci_procedures(eNB,proc);
@@ -2083,7 +2068,25 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
   {
     pusch_procedures(eNB,proc);
   }
-  
+
+#if 0
+  lte_eNB_I0_measurements(eNB,
+                          subframe,
+                          0,
+                          eNB->first_run_I0_measurements);
+#endif
+
+  int min_I0=1000,max_I0=0;
+  if ((frame==0) && (subframe==6)) { 
+    for (int i=0;i<eNB->frame_parms.N_RB_UL;i++) {
+      if (i==(eNB->frame_parms.N_RB_UL>>1) - 1) i+=2;
+ 
+      if (eNB->measurements.n0_subband_power_tot_dB[i]<min_I0) min_I0 = eNB->measurements.n0_subband_power_tot_dB[i];
+      if (eNB->measurements.n0_subband_power_tot_dB[i]>max_I0) max_I0 = eNB->measurements.n0_subband_power_tot_dB[i];
+    }
+    LOG_I(PHY,"max_I0 %d, min_I0 %d\n",max_I0,min_I0);
+  }
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_UESPEC, 0 );
 
   stop_meas(&eNB->phy_proc_rx);
