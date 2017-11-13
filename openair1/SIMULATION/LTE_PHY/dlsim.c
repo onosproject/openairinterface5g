@@ -2383,7 +2383,7 @@ int main(int argc, char **argv)
 
           //  printf("Trial %d : Round %d, pmi_feedback %d \n",trials,round,pmi_feedback);
 	  for (p=0; p<NB_ANTENNA_PORTS_ENB; p++) {
-	    if (p<frame_parms->nb_antenna_ports_eNB || p==5 || i==7 || i==8) {
+	    if (p<frame_parms->nb_antenna_ports_eNB || p==5 || p==7 || p==8) {
 	      memset(&eNB->common_vars.txdataF[eNB_id][p][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(int32_t));
 	    }
 	  }
