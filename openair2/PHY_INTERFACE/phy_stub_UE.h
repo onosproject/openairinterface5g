@@ -71,16 +71,32 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id, int frame, int subframe, UL_IND
 			      /*uint8_t tdd_mapping_mode,
 			      uint16_t tdd_multiplexing_mask*/);
 
-int ul_config_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req);
+int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req);
 
 void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
                          nfapi_ul_config_request_pdu_t *ul_config_pdu,
                          uint16_t frame,uint8_t subframe,uint8_t srs_present);
 
-int tx_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req);
+int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req);
+
+int tx_req_UE_MAC(nfapi_tx_request_t* req);
 
 
-int hi_dci0_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req);
+int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req);
+
+// The following set of memcpy functions should be getting called as callback functions from
+// pnf_p7_subframe_ind.
+
+void memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req);
+
+
+void memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req);
+
+
+void memcpy_tx_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req);
+
+
+void memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req);
 
 
 

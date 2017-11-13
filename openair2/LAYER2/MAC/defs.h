@@ -1280,14 +1280,14 @@ typedef struct {
   /// Pointers to LogicalChannelConfig indexed by LogicalChannelIdentity. Note NULL means LCHAN is inactive.
   LogicalChannelConfig_t *logicalChannelConfig[MAX_NUM_LCID];
 
-  /// Panos: Pointer to IF_Module_UE instance of the UE
+  /*/// Panos: Pointer to IF_Module_UE instance of the UE
   IF_Module_UE_t *if_inst_ue;
   /// Panos: UE_MAC interface: Config request structure.
   UE_PHY_Config_t UE_config;
   /// Panos: UE_MAC interface: UL Config Request Structure
   UE_MAC_ul_config_request_t UL_req_ue[MAX_NUM_CCs];
   /// Panos: UE_MAC interface: UL Transmission request structure.
-  UE_MAC_tx_request_t UL_TX_req[MAX_NUM_CCs];
+  UE_MAC_tx_request_t UL_TX_req[MAX_NUM_CCs];*/
 
 
   /// Scheduling Information
@@ -1391,6 +1391,15 @@ typedef struct {
   /// Panos: Phy_stub mode: Boolean variable to distinguish whether a Msg3 or a regular ULSCH data pdu should be generated
   /// after the reception of NFAPI_UL_CONFIG_ULSCH_PDU_TYPE.
   uint8_t first_ULSCH_Tx;
+
+  /// Panos: Pointers to config_request types. Used from nfapi callback functions.
+  nfapi_dl_config_request_t* dl_config_req;
+  nfapi_ul_config_request_t* ul_config_req;
+  nfapi_hi_dci0_request_t* hi_dci0_req;
+  nfapi_tx_request_t* tx_req;
+
+
+
 } UE_MAC_INST;
 /*! \brief ID of the neighboring cells used for HO*/
 typedef struct {

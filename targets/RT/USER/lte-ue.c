@@ -37,6 +37,7 @@
 #include "LAYER2/MAC/defs.h"
 #include "RRC/LITE/extern.h"
 #endif
+#include "PHY_INTERFACE/phy_stub_UE.h"
 #include "PHY_INTERFACE/extern.h"
 
 #undef MALLOC //there are two conflicting definitions, so we better make sure we don't use it at all
@@ -46,6 +47,8 @@
 #include "SCHED/extern.h"
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/proto.h"
+//#include "openair2/PHY_INTERFACE/phy_stub_UE.h"
+
 
 #include "UTIL/LOG/log_extern.h"
 #include "UTIL/OTG/otg_tx.h"
@@ -71,6 +74,7 @@ typedef enum {
 void init_UE_threads(int);
 void *UE_thread(void *arg);
 void init_UE(int nb_inst,int,int);
+//extern int tx_req_UE_MAC1();
 
 int32_t **rxdata;
 int32_t **txdata;
@@ -560,6 +564,7 @@ static void *UE_thread_synch(void *arg)
  */
 
 static void *UE_thread_rxn_txnp4(void *arg) {
+	module_id_t Mod_id = 0;
     static __thread int UE_thread_rxtx_retval;
     struct rx_tx_thread_data *rtd = arg;
     UE_rxtx_proc_t *proc = rtd->proc;
@@ -633,8 +638,18 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 #ifdef UE_SLOT_PARALLELISATION
             phy_procedures_slot_parallelization_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
 #else
-			// Panos: Substitute with call to handle_nfapi_UE_Rx(Sched_Resp).
-            phy_procedures_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
+			// Panos: Substitute call to phy_procedures Rx with call to phy_stub functions in order to trigger
+            // UE Rx procedures directly at the MAC layer, based on the received nfapi requests from the vnf (eNB).
+            // Hardcode Mod_id for now. Will be changed later.
+
+            if(UE_mac_inst[Mod_id].tx_req)
+            	tx_req_UE_MAC(UE_mac_inst[Mod_id].tx_req);
+            if(UE_mac_inst[Mod_id].dl_config_req)
+            	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req);
+            if(UE_mac_inst[Mod_id].hi_dci0_req)
+            	hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req);
+
+            //phy_procedures_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
 #endif
         }
 
@@ -680,8 +695,14 @@ static void *UE_thread_rxn_txnp4(void *arg) {
         if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_UL) ||
 	    (UE->frame_parms.frame_type == FDD) )
             if (UE->mode != loop_through_memory){
-            	// Panos: Substitute with call to generate_nfapi_UL_indications and then send_nfapi_UL_indications()
-            	phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
+            	// Panos: Substitute call to phy_procedures Tx with call to phy_stub functions in order to trigger
+                // UE Tx procedures directly at the MAC layer, based on the received ul_config requests from the vnf (eNB).
+            	// Generate UL_indications which corresponf to UL traffic.
+            	if(UE_mac_inst[Mod_id].ul_config_req){
+            		ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req);
+            		UL_indication(UL_INFO);
+            	}
+            	//phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
             }
 
 

@@ -2,9 +2,11 @@
 //#include "openair1/PHY/defs.h"
 //#include "openair2/PHY_INTERFACE/IF_Module.h"
 //#include "openair1/PHY/extern.h"
-#include "LAYER2/MAC/extern.h"
-//#include "LAYER2/MAC/proto.h"
-#include "openair2/LAYER2/MAC/vars.h"
+#include "openair2/LAYER2/MAC/extern.h"
+#include "openair2/LAYER2/MAC/defs.h"
+#include "openair2/LAYER2/MAC/proto.h"
+//#include "openair2/LAYER2/MAC/vars.h"
+#include "openair1/SCHED/defs.h"
 //#include "common/ran_context.h"
 #include "openair2/PHY_INTERFACE/phy_stub_UE.h"
 //#include "nfapi_pnf_interface.h"
@@ -636,7 +638,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 
 
 
-int ul_config_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
+int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req)
 {
   LOG_D(PHY,"[PNF] UL_CONFIG_REQ %s() sfn_sf:%d pdu:%d rach_prach_frequency_resources:%d srs_present:%u\n",
       __FUNCTION__,
@@ -725,8 +727,12 @@ int ul_config_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_
   return 0;
 }
 
+int tx_req_UE_MAC1( int k) {
+	return 0;
+}
 
-int tx_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
+
+int tx_req_UE_MAC(nfapi_tx_request_t* req)
 {
   uint16_t sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
   uint16_t sf = NFAPI_SFNSF2SF(req->sfn_sf);
@@ -756,7 +762,7 @@ int tx_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
 }
 
 
-int dl_config_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
+int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req)
 {
 
   int sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
@@ -856,7 +862,7 @@ int dl_config_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_
 
     else
     {
-      NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() UNKNOWN:%d\n", __FUNCTION__, dl_config_pdu_list[i].pdu_type);
+      //NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() UNKNOWN:%d\n", __FUNCTION__, dl_config_pdu_list[i].pdu_type);
     }
   }
 
@@ -868,7 +874,7 @@ int dl_config_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_
 
 
 
-int hi_dci0_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req)
+int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req)
 {
   LOG_D(PHY,"[UE-PHY_STUB] hi dci0 request sfn_sf:%d number_of_dci:%d number_of_hi:%d\n", NFAPI_SFNSF2DEC(req->sfn_sf), req->hi_dci0_request_body.number_of_dci, req->hi_dci0_request_body.number_of_hi);
 
@@ -908,6 +914,32 @@ int hi_dci0_req_UE_MAC(nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* r
   }
 
   return 0;
+}
+
+// The following set of memcpy functions should be getting called as callback functions from
+// pnf_p7_subframe_ind.
+void memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
+{
+	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
+	UE_mac_inst[Mod_id].dl_config_req = req;
+}
+
+void memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
+{
+	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
+	UE_mac_inst[Mod_id].ul_config_req = req;
+}
+
+void memcpy_tx_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
+{
+	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
+	UE_mac_inst[Mod_id].tx_req = req;
+}
+
+void memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req)
+{
+	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
+	UE_mac_inst[Mod_id].hi_dci0_req = req;
 }
 
 
