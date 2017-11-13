@@ -1247,7 +1247,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
   int overflow=0;
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
   int k,l;
-  int dummy_tx_buffer[frame_parms->samples_per_tti] __attribute__((aligned(16)));
+  int dummy_tx_buffer[ue->do_ofdm_mod?frame_parms->symbols_per_tti*frame_parms->ofdm_symbol_size:frame_parms->samples_per_tti] __attribute__((aligned(16)));
 #endif
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_UE_TX_ULSCH_COMMON,VCD_FUNCTION_IN);
@@ -1909,7 +1909,8 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
            subframe_tx,
            &ue->frame_parms,
            ue->ulsch[eNB_id]);
-      for (aa=0; aa<1/*frame_parms->nb_antennas_tx*/; aa++)
+      for (aa=0; aa<1/*frame_parms->nb_antennas_tx*/; aa++){
+	printf("Generating drs pusch\n");
 	generate_drs_pusch(ue,
 			   proc,
 			   eNB_id,
@@ -1918,6 +1919,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
 			   first_rb,
 			   nb_rb,
 			   aa);
+      }
 #if UE_TIMING_TRACE
       stop_meas(&ue->ulsch_modulation_stats);
 #endif
@@ -3108,7 +3110,6 @@ int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint
   if (abstraction_flag == 0)  {
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RX_PDCCH, VCD_FUNCTION_IN);
-    printf("[phy_procedures_lte_ue]before is %s\n","ok");
     rx_pdcch(ue,
              proc->frame_rx,
              subframe_rx,
@@ -3116,7 +3117,6 @@ int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint
              (ue->frame_parms.mode1_flag == 1) ? SISO : ALAMOUTI,
              ue->high_speed_flag,
              ue->is_secondary_ue);
-    printf("[phy_procedures_lte_ue]after is %s\n","ok");
     printf("[phy_procedures_lte_ue] ue->prach_resources[%d] %d\n",eNB_id,ue->prach_resources[eNB_id]);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RX_PDCCH, VCD_FUNCTION_OUT);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_DCI_DECODING, VCD_FUNCTION_IN);

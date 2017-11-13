@@ -136,12 +136,14 @@ double dac_fixed_gain_prach(double *s_re[2],
                       uint32_t length_meas,
                       uint8_t B,
                       double txpwr_dBm,
-                      int NB_RE)
+                      int NB_RE,
+		      int ofdm_symbol_size)
 {
 
   int i;
   int aa;
   double amp,amp1;
+  int k;
 
   amp = //sqrt(NB_RE)*pow(10.0,.05*txpwr_dBm)/sqrt(nb_tx_antennas); //this is amp per tx antenna
     pow(10.0,.05*txpwr_dBm)/sqrt(nb_tx_antennas); //this is amp per tx antenna
@@ -168,16 +170,20 @@ double dac_fixed_gain_prach(double *s_re[2],
 #ifdef DEBUG_DAC
   printf("DAC: input_offset %d, amp %e, amp1 %e\n",input_offset,amp,amp1);
 #endif
+  k=input_offset;
   for (i=0; i<length*2; i+=2) {
     for (aa=0; aa<nb_tx_antennas; aa++) {
-      s_re[aa][i/2] = amp*((double)(((short *)input))[((i+input_offset))])/amp1; ///(1<<(B-1));
-      s_im[aa][i/2] = amp*((double)(((short *)input))[((i+input_offset))+1])/amp1; ///(1<<(B-1));
+      s_re[aa][i/2] = amp*((double)(((short *)input))[((k))])/amp1; ///(1<<(B-1));
+      s_im[aa][i/2] = amp*((double)(((short *)input))[((k))+1])/amp1; ///(1<<(B-1));
 #ifdef DEBUG_DAC
       if(i<20)
-      	printf("DAC[%d]: input (%d,%d). output (%e,%e)\n",i/2,(((short *)input))[((i+input_offset))],(((short *)input))[((i+input_offset))+1],s_re[aa][i/2],s_im[aa][i/2]);
+      	printf("DAC[%d]: input (%d,%d). output (%e,%e)\n",i/2,(((short *)input))[((k))],(((short *)input))[((k))+1],s_re[aa][i/2],s_im[aa][i/2]);
       if (i>length*2-20&&i<length*2)
-	printf("DAC[%d]: input (%d,%d). output (%e,%e)\n",i/2,(((short *)input))[((i+input_offset))],(((short *)input))[((i+input_offset))+1],s_re[aa][i/2],s_im[aa][i/2]);
+	printf("DAC[%d]: input (%d,%d). output (%e,%e)\n",i/2,(((short *)input))[((k))],(((short *)input))[((k))+1],s_re[aa][i/2],s_im[aa][i/2]);
 #endif
+      k+=2;
+      if (k==12*2*ofdm_symbol_size)
+ 	k=0;
     }
   }
 

@@ -127,4 +127,5 @@ double dac_fixed_gain_prach(double *s_re[2],
                       unsigned int length_meas,
                       unsigned char B,
                       double gain,
-                      int NB_RE);
+                      int NB_RE,
+		      int ofdm_symbol_size);

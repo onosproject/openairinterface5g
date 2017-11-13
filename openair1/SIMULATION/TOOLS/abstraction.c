@@ -168,7 +168,7 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
   printf("prach_samples = %d, delta_f = %e, max_nb_rb_samples= %d, prach_pbr_offset_samples = %d, nb_taps = %d\n",prach_samples,delta_f,max_nb_rb_samples,prach_pbr_offset_samples,desc->nb_taps);
   for (f=max_nb_rb_samples/2-prach_pbr_offset_samples,f1=0; f<max_nb_rb_samples/2-prach_pbr_offset_samples+prach_samples; f++,f1++) {//3600-864,3600-864+864|3600-7200,3600-7200+839
     freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
-    printf("[init_freq_channel_prach] freq %e\n",freq);
+    //printf("[init_freq_channel_prach] freq %e\n",freq);
     cos_lut[f1] = (double *)malloc((int)desc->nb_taps*sizeof(double));
     sin_lut[f1] = (double *)malloc((int)desc->nb_taps*sizeof(double));
 
