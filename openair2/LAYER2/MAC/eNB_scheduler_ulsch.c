@@ -892,7 +892,7 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
   nfapi_ul_config_request_t *ul_req_tmp            = &eNB->UL_req_tmp[CC_id][sched_subframeP];
   nfapi_ul_config_request_body_t *ul_req_tmp_body  = &ul_req_tmp->ul_config_request_body;
 
-  LOG_D(MAC,"entering ulsch preprocesor\n");
+  //LOG_D(MAC,"entering ulsch preprocesor\n");
   ulsch_scheduler_pre_processor(module_idP,
                                 frameP,
                                 subframeP,

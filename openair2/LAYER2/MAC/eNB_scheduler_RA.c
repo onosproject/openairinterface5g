@@ -221,7 +221,7 @@ void add_msg3(module_id_t module_idP,int CC_id, RA_TEMPLATE *RA_template, frame_
 	// save UL scheduling information for preprocessor
 	for (j=0;j<RA_template->msg3_nb_rb;j++) cc->vrb_map_UL[RA_template->msg3_first_rb+j]=1;
 	
-	LOG_D(MAC,"[eNB %d][PUSCH-RA %x] CC_id %d Frame %d subframeP %d Scheduled (PHICH) RA (mcs %d, first rb %d, nb_rb %d,round %d)\n",
+	LOG_I(MAC,"[eNB %d][PUSCH-RA %x] CC_id %d Frame %d subframeP %d Scheduled (PHICH) RA (mcs %d, first rb %d, nb_rb %d,round %d)\n",
 	      module_idP,RA_template->rnti,CC_id,frameP,subframeP,10,
 	      1,1,
 	      RA_template->msg3_round-1);
@@ -283,12 +283,8 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
     }
   }
 
-  LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d : In generate_Msg2, RA_template->rach_resource_type:%d frameP:%d/%d RA_template:Msg2:%d/%d\n",module_idP,frameP,subframeP,RA_template->rach_resource_type,
-  frameP,
-  subframeP,
-  RA_template->Msg2_frame, 
-  RA_template->Msg2_subframe
-  );
+  LOG_I(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d : In generate_Msg2, RA_template[rach_resource_type:%d Msg2:%d/%d]\n",module_idP,frameP,subframeP,
+      RA_template->rach_resource_type,RA_template->Msg2_frame,RA_template->Msg2_subframe);
 
   if (RA_template->rach_resource_type > 0) {
     
@@ -467,6 +463,7 @@ void generate_Msg2(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
   else
 #endif
     {
+      LOG_E(MAC,"%s() Compare SFN/SF:%04d%d Msg2:%04d%d\n", __FUNCTION__,frameP,subframeP,RA_template->Msg2_frame,RA_template->Msg2_subframe);
 
       if ((RA_template->Msg2_frame == frameP) && (RA_template->Msg2_subframe == subframeP)) {
   struct timespec t;
@@ -685,8 +682,8 @@ void generate_Msg4(module_id_t module_idP,int CC_idP,frame_t frameP,sub_frame_t 
 	      "[MAC][eNB Scheduler] CCCH not allocated\n");
   
   
-  LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d MSG4:SFN/SF:%d%d UE_id %d, rrc_sdu_length %d\n",
-	module_idP, CC_idP, frameP, subframeP,RA_template->Msg4_frame,RA_template->Msg4_subframe,UE_id, rrc_sdu_length);
+  LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d MSG4:SFN/SF:%d%d UE_id %d, rrc_sdu_length %d harq_pid %d\n",
+	module_idP, CC_idP, frameP, subframeP,RA_template->Msg4_frame,RA_template->Msg4_subframe,UE_id, rrc_sdu_length, RA_template->harq_pid);
   
   
 #ifdef Rel14
@@ -1198,7 +1195,7 @@ void check_Msg4_retransmission(module_id_t module_idP,int CC_idP,frame_t frameP,
   dl_config_pdu = &dl_req_body->dl_config_pdu_list[dl_req_body->number_pdu]; 
   N_RB_DL       = to_prb(cc[CC_idP].mib->message.dl_Bandwidth);
   
-  LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 for harq_pid %d was acknowledged (round %d) RA_template[Msg4:SFN/SF:%d/%d]\n",
+  LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 for harq_pid %d was acknowledged (round %d) RA_template[Msg4:SFN/SF:%d/%d]\n",
 	module_idP,CC_idP,frameP,subframeP,RA_template->harq_pid,round, RA_template->Msg4_frame, RA_template->Msg4_subframe);
 
   if (round!=8) {
@@ -1322,8 +1319,8 @@ void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP)
 
       if (RA_template->RA_active == TRUE) {
 
-        LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d : CC_id %d RA %d is active (generate RAR %d, generate_Msg4 %d[SFN/SF:%d%d], wait_ack_Msg4 %d, rnti %x)\n",
-              module_idP,frameP,subframeP,CC_id,i,RA_template->generate_rar,RA_template->generate_Msg4,RA_template->Msg4_frame,RA_template->Msg4_subframe,RA_template->wait_ack_Msg4, RA_template->rnti);
+        LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d : CC_id %d RA %d is active (generate RAR %d[SFN/SF:%d%d], generate_Msg4 %d[SFN/SF:%d%d], wait_ack_Msg4 %d, rnti %x)\n",
+              module_idP,frameP,subframeP,CC_id,i,RA_template->generate_rar,RA_template->Msg2_frame,RA_template->Msg2_subframe,RA_template->generate_Msg4,RA_template->Msg4_frame,RA_template->Msg4_subframe,RA_template->wait_ack_Msg4, RA_template->rnti);
 
         if      (RA_template->generate_rar == 1)  generate_Msg2(module_idP,CC_id,frameP,subframeP,RA_template);
 	else if (RA_template->generate_Msg4 == 1) generate_Msg4(module_idP,CC_id,frameP,subframeP,RA_template);
@@ -1365,7 +1362,7 @@ void initiate_ra_proc(module_id_t module_idP,
     ext4_prach=cc->radioResourceConfigCommon_BR->ext4->prach_ConfigCommon_v1310;
     prach_ParametersListCE_r13= &ext4_prach->prach_ParametersListCE_r13;
   }
-  LOG_E(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, Subframe %d  Initiating RA procedure for preamble index %d\n",module_idP,CC_id,frameP,subframeP,preamble_index);
+  LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, Subframe %d  Initiating RA procedure for preamble index %d\n",module_idP,CC_id,frameP,subframeP,preamble_index);
 #ifdef Rel14
   LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, Subframe %d  PRACH resource type %d\n",module_idP,CC_id,frameP,subframeP,rach_resource_type);
 #endif
@@ -1389,7 +1386,6 @@ void initiate_ra_proc(module_id_t module_idP,
       uint16_t msg2_frame = frameP;
       uint16_t msg2_subframe = subframeP;
       int offset;
-      LOG_D(MAC,"Frame %d, Subframe %d: Activating RA process %d\n",frameP,subframeP,i);
       RA_template[i].RA_active          = TRUE;
       RA_template[i].generate_rar       = 1;
       RA_template[i].generate_Msg4      = 0;
@@ -1406,12 +1402,14 @@ void initiate_ra_proc(module_id_t module_idP,
       if (nfapi_mode)
         offset = 7;
       else
-        offset = 4;
+        offset = 5;
 
       add_subframe(&msg2_frame, &msg2_subframe, offset);
 
       RA_template[i].Msg2_frame         = msg2_frame;
       RA_template[i].Msg2_subframe      = msg2_subframe;
+
+      LOG_E(MAC,"%s() Msg2[%04d%d] SFN/SF:%04d%d offset:%d\n", __FUNCTION__,RA_template[i].Msg2_frame,RA_template[i].Msg2_subframe,frameP,subframeP,offset);
 
       /* TODO: find better procedure to allocate RNTI */
       do {
@@ -1427,8 +1425,9 @@ void initiate_ra_proc(module_id_t module_idP,
       if (loop == 100) { printf("%s:%d:%s: FATAL ERROR! contact the authors\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
       RA_template[i].RA_rnti        = ra_rnti;
       RA_template[i].preamble_index = preamble_index;
-      LOG_E(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Activating RAR generation in Frame %d, subframe %d for process %d, rnti %x, RA_active %d\n",
-            module_idP,CC_id,frameP,
+
+      LOG_E(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Subframe %d: Activating RAR generation (Msg2) in Frame %d, subframe %d for process %d, rnti %x, RA_active %d\n",
+            module_idP,CC_id,frameP,subframeP,
 	    RA_template[i].Msg2_frame,
 	    RA_template[i].Msg2_subframe,
 	    i,RA_template[i].rnti,

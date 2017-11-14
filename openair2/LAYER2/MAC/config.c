@@ -63,6 +63,8 @@ extern void mac_top_init_eNB(void);
 extern void mac_init_cell_params(int Mod_idP,int CC_idP);
 extern void phy_reset_ue(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
 
+extern uint8_t nfapi_mode;
+
 /* sec 5.9, 36.321: MAC Reset Procedure */
 void ue_mac_reset(module_id_t module_idP,uint8_t eNB_index)
 {
@@ -748,15 +750,20 @@ int rrc_mac_config_req_eNB(module_id_t                      Mod_idP,
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
 
-  LOG_D(MAC, "RC.mac:%p mib:%p\n", RC.mac, mib);
+  LOG_E(MAC, "RC.mac:%p mib:%p\n", RC.mac, mib);
 
   if (RC.mac == NULL) {
+    LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
+
     l2_init_eNB();
 
+    LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
     mac_top_init_eNB();
+    LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
   }
 
   if (mib!=NULL) {
+    LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
       RC.mac[Mod_idP]->common_channels[CC_idP].mib             = mib;
       RC.mac[Mod_idP]->common_channels[CC_idP].physCellId      = physCellId;
       RC.mac[Mod_idP]->common_channels[CC_idP].p_eNB           = p_eNB;
@@ -906,6 +913,7 @@ int rrc_mac_config_req_eNB(module_id_t                      Mod_idP,
     }
   } 
 
+    LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
   if (pmch_InfoList != NULL) {
 
     //    LOG_I(MAC,"DUY: lcid when entering rrc_mac config_req is %02d\n",(pmch_InfoList->list.array[0]->mbms_SessionInfoList_r9.list.array[0]->logicalChannelIdentity_r9));
@@ -930,21 +938,30 @@ int rrc_mac_config_req_eNB(module_id_t                      Mod_idP,
 
 #endif
 
+  LOG_E(MAC, "%s() %s:%d RC.mac[Mod_idP]->if_inst->PHY_config_req:%p\n", __FUNCTION__, __FILE__, __LINE__, RC.mac[Mod_idP]->if_inst->PHY_config_req);
 
-  if (RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL)
+  // if in nFAPI mode 
+  if (
+      (nfapi_mode == 1 || nfapi_mode == 2) &&
+      (RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL)
+    )
   {
     while(RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL) {
       // DJP AssertFatal(RC.mac[Mod_idP]->if_inst->PHY_config_req != NULL,"if_inst->phy_config_request is null\n");
       usleep(100 * 1000);
       printf("Waiting for PHY_config_req\n");
     }
-    PHY_Config_t phycfg;
-    phycfg.Mod_id = Mod_idP;
-    phycfg.CC_id  = CC_idP;
-    phycfg.cfg    = &RC.mac[Mod_idP]->config[CC_idP];
-
-    if (RC.mac[Mod_idP]->if_inst->PHY_config_req) RC.mac[Mod_idP]->if_inst->PHY_config_req(&phycfg); 
   }
+
+  PHY_Config_t phycfg;
+  phycfg.Mod_id = Mod_idP;
+  phycfg.CC_id  = CC_idP;
+  phycfg.cfg    = &RC.mac[Mod_idP]->config[CC_idP];
+
+  LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
+  if (RC.mac[Mod_idP]->if_inst->PHY_config_req) RC.mac[Mod_idP]->if_inst->PHY_config_req(&phycfg); 
+  LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
 
   return(0);			   

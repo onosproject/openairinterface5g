@@ -3132,7 +3132,7 @@ void extract_harq(module_id_t mod_idP,int CC_idP,int UE_id,frame_t frameP,sub_fr
         if (tmode[0]==1 || tmode[0]==2 || tmode[0]==5 || tmode[0]==6 || tmode[0]==7) { // NOTE: have to handle the case of TM9-10 with 1 antenna port
           // single ACK/NAK bit
           AssertFatal(num_ack_nak==1,"num_ack_nak %d > 1 for 1 CC and single-layer transmission\n",num_ack_nak);
-          AssertFatal(sched_ctl->round[CC_idP][harq_pid]<8,"Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",harq_pid,UE_id,rnti);
+          AssertFatal(sched_ctl->round[CC_idP][harq_pid]<8,"Got ACK/NAK for inactive harq_pid %d for UE %d/%x SFN/SF:%d%d\n",harq_pid,UE_id,rnti,frameP,subframeP);
           AssertFatal(pdu[0] == 1 || pdu[0] == 2 || pdu[0] == 4,
                       "Received ACK/NAK %d which is not 1 or 2 for harq_pid %d from UE %d/%x\n",pdu[0],harq_pid,UE_id,rnti);
 

@@ -50,6 +50,7 @@
 #include "sctp_default_values.h"
 #include "SystemInformationBlockType2.h"
 #include "LAYER2/MAC/extern.h"
+#include "LAYER2/MAC/proto.h"
 #include "PHY/extern.h"
 #include "targets/ARCH/ETHERNET/USERSPACE/LIB/ethernet_lib.h"
 #include "nfapi_vnf.h"
@@ -58,10 +59,7 @@
 #include "enb_paramdef.h"
 #include "common/config/config_userapi.h"
 
-
-int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc);
-int RCconfig_S1(MessageDef *msg_p, uint32_t i);
-
+extern uint16_t sf_ahead;
 
 static int enb_check_band_frequencies(char* lib_config_file_name_pP,
                                       int ind,
@@ -103,10 +101,6 @@ static int enb_check_band_frequencies(char* lib_config_file_name_pP,
 
   return errors;
 }
-
-extern void mac_top_init_eNB(void );
-extern uint8_t  nfapi_mode;
-
 
 
 /* --------------------------------------------------------*/
@@ -277,6 +271,7 @@ void RCconfig_L1(void) {
 
       if (strcmp(*(L1_ParamList.paramarray[j][L1_TRANSPORT_N_PREFERENCE_IDX].strptr), "local_mac") == 0) {
 
+        sf_ahead = 4; // Need 4 subframe gap between RX and TX
       }
       else if (strcmp(*(L1_ParamList.paramarray[j][L1_TRANSPORT_N_PREFERENCE_IDX].strptr), "nfapi") == 0) {
         RC.eNB[j][0]->eth_params_n.local_if_name            = strdup(*(L1_ParamList.paramarray[j][L1_LOCAL_N_IF_NAME_IDX].strptr));
@@ -288,7 +283,7 @@ void RCconfig_L1(void) {
 	RC.eNB[j][0]->eth_params_n.remote_portd             = *(L1_ParamList.paramarray[j][L1_REMOTE_N_PORTD_IDX].iptr);
 	RC.eNB[j][0]->eth_params_n.transp_preference        = ETH_UDP_MODE;
 
-        nfapi_mode = 1;
+        sf_ahead = 2; // Cannot cope with 4 subframes betweem RX and TX - set it to 2
 
         RC.nb_macrlc_inst = 1;  // This is used by mac_top_init_eNB()
 
@@ -303,7 +298,6 @@ void RCconfig_L1(void) {
         LOG_I(PHY,"%s() NFAPI PNF mode - RC.nb_macrlc_inst:%d because used by mac_top_init_eNB()\n", __FUNCTION__, RC.nb_macrlc_inst);
 
         mac_top_init_eNB();
-
 
         configure_nfapi_pnf(RC.eNB[j][0]->eth_params_n.remote_addr, RC.eNB[j][0]->eth_params_n.remote_portc, RC.eNB[j][0]->eth_params_n.my_addr, RC.eNB[j][0]->eth_params_n.my_portd, RC.eNB[j][0]->eth_params_n     .remote_portd);
       }
@@ -385,7 +379,7 @@ void RCconfig_macrlc() {
 	RC.mac[j]->eth_params_s.remote_portd             = *(MacRLC_ParamList.paramarray[j][MACRLC_REMOTE_S_PORTD_IDX].iptr);
 	RC.mac[j]->eth_params_s.transp_preference        = ETH_UDP_MODE;
 
-        nfapi_mode = 2;
+        sf_ahead = 2; // Cannot cope with 4 subframes betweem RX and TX - set it to 2
 
         printf("**************** vnf_port:%d\n", RC.mac[j]->eth_params_s.my_portc);
         configure_nfapi_vnf(RC.mac[j]->eth_params_s.my_addr, RC.mac[j]->eth_params_s.my_portc);

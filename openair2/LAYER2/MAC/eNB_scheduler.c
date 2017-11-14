@@ -436,7 +436,7 @@ void clear_nfapi_information(eNB_MAC_INST *eNB,int CC_idP,frame_t frameP,sub_fra
 
     TX_req[CC_idP].tx_request_body.number_of_pdus                 = 0;
 
-    LOG_D(MAC,"%s() SFN_SF:%d%d ZERO PDUs of TX_req:(SFN_SF:%d):%d UL_req:(SFN_SF:%d):%d HI_DCI0_req:(SFN_SF:%d):dci:%d hi:%d DL:(SFN_SF:%d):dci:%d DL:pdu:%d\n", 
+    if (0) LOG_D(MAC,"%s() SFN_SF:%d%d ZERO PDUs of TX_req:(SFN_SF:%d):%d UL_req:(SFN_SF:%d):%d HI_DCI0_req:(SFN_SF:%d):dci:%d hi:%d DL:(SFN_SF:%d):dci:%d DL:pdu:%d\n", 
         __FUNCTION__,
         frameP, subframeP,
         NFAPI_SFNSF2DEC(TX_req[CC_idP].sfn_sf),
@@ -474,7 +474,7 @@ void copy_ulreq(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP)
 
     if (ul_req->ul_config_request_body.number_of_pdus>0)
     {
-      LOG_E(PHY, "%s() active NOW (frameP:%d subframeP:%d) pdus:%d\n", __FUNCTION__, frameP, subframeP, ul_req->ul_config_request_body.number_of_pdus);
+      LOG_D(PHY, "%s() active NOW (frameP:%d subframeP:%d) pdus:%d\n", __FUNCTION__, frameP, subframeP, ul_req->ul_config_request_body.number_of_pdus);
     }
 
     memcpy((void*)ul_req->ul_config_request_body.ul_config_pdu_list,

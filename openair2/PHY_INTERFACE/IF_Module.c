@@ -214,7 +214,7 @@ void handle_ulsch(UL_IND_t *UL_info) {
         } //if (UL_info->crc_ind.crc_pdu_list[j].rx_ue_information.rnti ==
         //    UL_info->rx_ind.rx_pdu_list[i].rx_ue_information.rnti)
       } //    for (j=0;j<UL_info->crc_ind.crc_indication_body.number_of_crcs;j++)
-      AssertFatal(j<UL_info->crc_ind.crc_indication_body.number_of_crcs,"Couldn't find matchin CRC indication\n");
+      AssertFatal(j<UL_info->crc_ind.crc_indication_body.number_of_crcs,"SFN/SF:%d Couldn't find matchin CRC indication RX_IND:PDUs:%d CRCs:%d\n", NFAPI_SFNSF2DEC(UL_info->rx_ind.sfn_sf),UL_info->rx_ind.rx_indication_body.number_of_pdus, UL_info->crc_ind.crc_indication_body.number_of_crcs);
     } //   for (i=0;i<UL_info->rx_ind.number_of_pdus;i++)
   }
 

@@ -1275,6 +1275,7 @@ int main( int argc, char **argv )
   {
     case 0:
       nfapi_mode_str = "MONOLITHIC";
+      break;
     case 1:
       nfapi_mode_str = "PNF";
       break;
@@ -1394,7 +1395,9 @@ int main( int argc, char **argv )
   sync_var=0;
   pthread_cond_broadcast(&sync_cond);
   pthread_mutex_unlock(&sync_mutex);
+  printf("About to call end_configmodule() from %s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
   end_configmodule();
+  printf("Called end_configmodule() from %s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
 
   // wait for end of program
   printf("TYPE <CTRL-C> TO TERMINATE\n");
@@ -1403,11 +1406,14 @@ int main( int argc, char **argv )
 #if defined(ENABLE_ITTI)
   printf("Entering ITTI signals handler\n");
   itti_wait_tasks_end();
+  printf("Returned from ITTI signal handler\n");
   oai_exit=1;
+  printf("oai_exit=%d\n",oai_exit);
 #else
 
   while (oai_exit==0)
     rt_sleep_ns(100000000ULL);
+  printf("Terminating application - oai_exit=%d\n",oai_exit);
 
 #endif
 

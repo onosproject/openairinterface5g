@@ -27,6 +27,8 @@ extern RAN_CONTEXT_t RC;
 
 #define NUM_P5_PHY 2
 
+#define _GNU_SOURCE
+
 extern void phy_init_RU(RU_t*);
 extern int config_sync_var;
 
@@ -1730,6 +1732,8 @@ void* pnf_start_thread(void* ptr)
 
 void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, int pnf_p7_port, int vnf_p7_port)
 {
+  printf("%s() PNF\n\n\n\n\n\n", __FUNCTION__);
+
   nfapi_mode = 1;  // PNF!
 
   nfapi_pnf_config_t* config = nfapi_pnf_config_create();
