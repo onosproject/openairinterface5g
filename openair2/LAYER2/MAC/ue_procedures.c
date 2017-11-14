@@ -74,6 +74,8 @@ extern uint8_t usim_test;
 
 extern UL_IND_t *UL_INFO;
 
+extern uint8_t  nfapi_mode;
+
 /*
 #ifndef USER_MODE
 #define msg debug_msg
@@ -395,12 +397,16 @@ ue_send_sdu(
         // (other possibility is 1 for TBS=7 (SCH_SUBHEADER_FIXED), or 2 for TBS=8 (SCH_SUBHEADER_FIXED+PADDING or SCH_SUBHEADER_SHORT)
         for (i=0; i<6; i++)
           if (tx_sdu[i] != payload_ptr[i]) {
-            LOG_E(MAC,"[UE %d][RAPROC] Contention detected, RA failed\n",module_idP);
-            // Panos: Modification for phy_stub mode operation here. We only need to make sure that the ue_mode is back to
-            // PRACH state.
-            UE_mac_inst[module_idP].UE_mode[eNB_index] = PRACH;
-            //ra_failed(module_idP,CC_id,eNB_index);
-            UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
+        	  LOG_E(MAC,"[UE %d][RAPROC] Contention detected, RA failed\n",module_idP);
+        	  if(nfapi_mode == 3) { // Panos: phy_stub mode
+        		  // Panos: Modification for phy_stub mode operation here. We only need to make sure that the ue_mode is back to
+        		  // PRACH state.
+        		  UE_mac_inst[module_idP].UE_mode[eNB_index] = PRACH;
+        		  //ra_failed(module_idP,CC_id,eNB_index);UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
+        	  }
+        	  else { // Full stack mode
+        		  ra_failed(module_idP,CC_id,eNB_index);
+        	  }
             VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SEND_SDU, VCD_FUNCTION_OUT);
             return;
           }
@@ -408,9 +414,14 @@ ue_send_sdu(
         LOG_I(MAC,"[UE %d][RAPROC] Frame %d : Clearing contention resolution timer\n", module_idP, frameP);
         UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
 
-        //Panos: Modification for phy_stub mode operation here. We only need to change the ue_mode to PUSCH
-        UE_mac_inst[module_idP].UE_mode[eNB_index] = PUSCH;
-        //ra_succeeded(module_idP,CC_id,eNB_index);
+        if(nfapi_mode == 3) // phy_stub mode
+        {
+        	//Panos: Modification for phy_stub mode operation here. We only need to change the ue_mode to PUSCH
+        	UE_mac_inst[module_idP].UE_mode[eNB_index] = PUSCH;
+        }
+        else { // Full stack mode
+        	ra_succeeded(module_idP,CC_id,eNB_index);
+        }
       }
 
       payload_ptr+=6;
@@ -421,7 +432,10 @@ ue_send_sdu(
       LOG_D(MAC,"[UE] CE %d : UE Timing Advance : %d\n",i,payload_ptr[0]);
 #endif
       // Panos: Eliminate call to process_timing_advance for the phy_stub UE operation mode. Is this correct?
-      //process_timing_advance(module_idP,CC_id,payload_ptr[0]);
+      if (nfapi_mode!=3)
+      {
+    	  process_timing_advance(module_idP,CC_id,payload_ptr[0]);
+      }
       payload_ptr++;
       break;
 
@@ -1596,9 +1610,14 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
 
   // build PHR and update the timers
   if (phr_ce_len == sizeof(POWER_HEADROOM_CMD)) {
-	  //Panos: Substitute with a static value for the MAC layer abstraction (phy_stub mode)
-    //phr_p->PH = get_phr_mapping(module_idP,CC_id,eNB_index);
-	  phr_p->PH = 40;
+	  if (nfapi_mode == 3){ //phy_stub mode
+		  //Panos: Substitute with a static value for the MAC layer abstraction (phy_stub mode)
+		  phr_p->PH = 40;
+	  }
+	  else { // Full stack mode
+		  phr_p->PH = get_phr_mapping(module_idP,CC_id,eNB_index);
+	  }
+
     phr_p->R  = 0;
     LOG_D(MAC,"[UE %d] Frame %d report PHR with mapping (%d->%d) for LCID %d\n",
           module_idP,frameP, get_PHR(module_idP,CC_id,eNB_index), phr_p->PH,POWER_HEADROOM);

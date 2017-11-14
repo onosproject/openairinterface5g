@@ -60,6 +60,7 @@
 #include "T.h"
 
 extern double cpuf;
+extern uint8_t  nfapi_mode;
 
 #define FRAME_PERIOD    100000000ULL
 #define DAQ_PERIOD      66667ULL
@@ -642,14 +643,17 @@ static void *UE_thread_rxn_txnp4(void *arg) {
             // UE Rx procedures directly at the MAC layer, based on the received nfapi requests from the vnf (eNB).
             // Hardcode Mod_id for now. Will be changed later.
 
-            if(UE_mac_inst[Mod_id].tx_req)
-            	tx_req_UE_MAC(UE_mac_inst[Mod_id].tx_req);
-            if(UE_mac_inst[Mod_id].dl_config_req)
-            	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req);
-            if(UE_mac_inst[Mod_id].hi_dci0_req)
-            	hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req);
-
-            //phy_procedures_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
+            if(nfapi_mode == 3){
+            	if(UE_mac_inst[Mod_id].tx_req)
+            		tx_req_UE_MAC(UE_mac_inst[Mod_id].tx_req);
+            	if(UE_mac_inst[Mod_id].dl_config_req)
+            		dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req);
+            	if(UE_mac_inst[Mod_id].hi_dci0_req)
+            		hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req);
+            }
+            else{
+            phy_procedures_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
+            }
 #endif
         }
 
@@ -698,11 +702,13 @@ static void *UE_thread_rxn_txnp4(void *arg) {
             	// Panos: Substitute call to phy_procedures Tx with call to phy_stub functions in order to trigger
                 // UE Tx procedures directly at the MAC layer, based on the received ul_config requests from the vnf (eNB).
             	// Generate UL_indications which corresponf to UL traffic.
-            	if(UE_mac_inst[Mod_id].ul_config_req){
+            	if(nfapi_mode == 3 && UE_mac_inst[Mod_id].ul_config_req){
             		ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req);
             		UL_indication(UL_INFO);
             	}
-            	//phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
+            	else{
+            	phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
+            	}
             }
 
 

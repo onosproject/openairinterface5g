@@ -717,6 +717,7 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req)
 
 
       handle_nfapi_ul_pdu_UE_MAC(Mod_id,&ul_config_pdu_list[i],sfn,sf,req->ul_config_request_body.srs_present);
+      free(UL_INFO);
     }
     else
     {

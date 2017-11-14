@@ -48,6 +48,8 @@
 
 #include "SIMULATION/TOOLS/defs.h" // for taus
 
+extern uint8_t  nfapi_mode;
+
 int8_t get_DELTA_PREAMBLE(module_id_t module_idP,int CC_id)
 {
 
@@ -287,10 +289,15 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
 
 
   uint8_t                  Size               = 0;
-
+  UE_MODE_t UE_mode;
   // Panos: Modification for phy_stub_ue operation
-  //UE_MODE_t                UE_mode            = get_ue_mode(module_idP,0,eNB_indexP);
-  UE_MODE_t                UE_mode            = UE_mac_inst[module_idP].UE_mode[0];
+  if(nfapi_mode == 3) { // Panos: phy_stub_ue mode
+	  UE_mode = UE_mac_inst[module_idP].UE_mode[0];
+  }
+  else { // Full stack mode
+	  UE_mode = get_ue_mode(module_idP,0,eNB_indexP);
+  }
+
 
   uint8_t                  lcid               = CCCH;
   uint16_t                 Size16;

@@ -677,6 +677,7 @@ int rrc_mac_config_req_eNB(module_id_t                      Mod_idP,
   return(0);			     
 }
 
+/*
 // P: New function supporting the MAC interface
 void config_sib1_ue()
 {
@@ -714,7 +715,7 @@ void config_dedicated_ue()
 {
 
 }
-
+*/
 
 int
 rrc_mac_config_req_ue(
