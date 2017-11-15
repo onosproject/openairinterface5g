@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -71,20 +71,29 @@ int slot_fep_mbsfn(PHY_VARS_UE *phy_vars_ue,
                    int sample_offset,
                    int no_prefix);
 
-int slot_fep_ul(LTE_DL_FRAME_PARMS *frame_parms,
-                LTE_eNB_COMMON *eNb_common_vars,
+int slot_fep_ul(RU_t *ru,
                 unsigned char l,
                 unsigned char Ns,
-                unsigned char eNb_id,
                 int no_prefix);
+
+int front_end_fft(PHY_VARS_UE *ue,
+             unsigned char l,
+             unsigned char Ns,
+             int sample_offset,
+             int no_prefix);
+
+int front_end_chanEst(PHY_VARS_UE *ue,
+             unsigned char l,
+             unsigned char Ns,
+            int reset_freq_est);
 
 void normal_prefix_mod(int32_t *txdataF,int32_t *txdata,uint8_t nsymb,LTE_DL_FRAME_PARMS *frame_parms);
 
 void do_OFDM_mod(int32_t **txdataF, int32_t **txdata, uint32_t frame,uint16_t next_slot, LTE_DL_FRAME_PARMS *frame_parms);
 
-void do_OFDM_mod_symbol(LTE_eNB_COMMON *eNB_common_vars, int eNB_id, uint16_t next_slot, LTE_DL_FRAME_PARMS *frame_parms,int do_precoding);
+void do_OFDM_mod_symbol(LTE_eNB_COMMON *eNB_common_vars, RU_COMMON *common, uint16_t next_slot, LTE_DL_FRAME_PARMS *frame_parms,int do_precoding);
 
-void remove_7_5_kHz(PHY_VARS_eNB *phy_vars_eNB,uint8_t subframe);
+void remove_7_5_kHz(RU_t *ru,uint8_t subframe);
 
 void apply_7_5_kHz(PHY_VARS_UE *phy_vars_ue,int32_t*txdata,uint8_t subframe);
 

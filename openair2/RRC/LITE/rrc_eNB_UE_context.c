@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -127,7 +127,7 @@ rrc_eNB_allocate_new_UE_context(
 //------------------------------------------------------------------------------
 {
   struct rrc_eNB_ue_context_s* new_p;
-  new_p = malloc(sizeof(struct rrc_eNB_ue_context_s));
+  new_p = (struct rrc_eNB_ue_context_s* )malloc(sizeof(struct rrc_eNB_ue_context_s));
 
   if (new_p == NULL) {
     LOG_E(RRC, "Cannot allocate new ue context\n");

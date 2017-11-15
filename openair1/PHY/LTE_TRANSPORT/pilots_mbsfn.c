@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -46,7 +46,7 @@ int generate_mbsfn_pilot(PHY_VARS_eNB *eNB,
 
 
   if (subframe<0 || subframe>= 10) {
-    msg("generate_mbsfn_pilots_subframe: subframe not in range (%d)\n",subframe);
+    LOG_E(PHY,"generate_mbsfn_pilots_subframe: subframe not in range (%d)\n",subframe);
     return(-1);
   }
 

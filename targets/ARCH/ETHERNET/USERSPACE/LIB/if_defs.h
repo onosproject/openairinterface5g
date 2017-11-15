@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -68,8 +68,8 @@
 
 // Packet sizes for IF4p5 interface format
 #define DATA_BLOCK_SIZE_BYTES(scaled_nblocks) (sizeof(uint16_t)*scaled_nblocks)
-#define PRACH_HARD_CODED_NUM_SAMPLES (839*2)
-#define PRACH_BLOCK_SIZE_BYTES (sizeof(int16_t)*PRACH_HARD_CODED_NUM_SAMPLES)  // FIX hard coded prach size
+#define PRACH_NUM_SAMPLES (839*2)
+#define PRACH_BLOCK_SIZE_BYTES (sizeof(int16_t)*PRACH_NUM_SAMPLES)  
  
 #define RAW_IF4p5_PDLFFT_SIZE_BYTES(nblocks) (MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t + DATA_BLOCK_SIZE_BYTES(nblocks))  
 #define RAW_IF4p5_PULFFT_SIZE_BYTES(nblocks) (MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t + DATA_BLOCK_SIZE_BYTES(nblocks))  

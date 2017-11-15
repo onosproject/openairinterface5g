@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -38,11 +38,11 @@
 //#include "RRC/LITE/extern.h"
 //#include "LAYER2/PDCP/pdcp.h"
 #include "proto.h"
-#ifndef USER_MODE
-static int openair2_stats_read(char *buffer, char **my_buffer, off_t off, int length)
-#else
+
+extern RAN_CONTEXT_t RC;
+
 int openair2_stats_read(char *buffer, char **my_buffer, off_t off, int length)
-#endif
+
 {
 
   int len = 0,fg,Overhead, Sign;

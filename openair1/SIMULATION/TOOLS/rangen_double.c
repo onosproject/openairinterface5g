@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -44,7 +44,7 @@ void randominit(unsigned seed_init)
 {
   int i;
   // this need to be integrated with the existing rng, like taus: navid
-  msg("Initializing random number generator, seed %x\n",seed_init);
+  printf("Initializing random number generator, seed %x\n",seed_init);
 
   if (seed_init == 0) {
     srand((unsigned)time(NULL));
@@ -70,7 +70,7 @@ void randominit(unsigned seed_init)
 {
   int i;
   // this need to be integrated with the existing rng, like taus: navid
-  msg("Initializing random number generator, seed %x\n",seed_init);
+  LOG_D(PHY,"Initializing random number generator, seed %x\n",seed_init);
 
   seed_init = 62110;
 

@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -118,7 +118,7 @@ int lte_est_freq_offset(int **dl_ch_estimates,
   ch_offset = (l*(frame_parms->ofdm_symbol_size));
 
   if ((l!=0) && (l!=(4-frame_parms->Ncp))) {
-    msg("lte_est_freq_offset: l (%d) must be 0 or %d\n",l,4-frame_parms->Ncp);
+    LOG_D(PHY,"lte_est_freq_offset: l (%d) must be 0 or %d\n",l,4-frame_parms->Ncp);
     return(-1);
   }
 
@@ -208,7 +208,7 @@ int lte_mbsfn_est_freq_offset(int **dl_ch_estimates,
   ch_offset = (l*(frame_parms->ofdm_symbol_size));
 
   if ((l!=2) && (l!=6) && (l!=10)) {
-    msg("lte_est_freq_offset: l (%d) must be 2 or 6 or 10", l);
+    LOG_D(PHY,"lte_est_freq_offset: l (%d) must be 2 or 6 or 10", l);
     return(-1);
   }
 

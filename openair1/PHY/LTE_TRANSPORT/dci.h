@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -29,11 +29,8 @@
 * \note
 * \warning
 */
-#ifndef USER_MODE
-#include "PHY/types.h"
-#else
+
 #include <stdint.h>
-#endif
 
 ///  DCI Format Type 0 (5 MHz,TDD0, 27 bits)
 struct DCI0_5MHz_TDD0 {

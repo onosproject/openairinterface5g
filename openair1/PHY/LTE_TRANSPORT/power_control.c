@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -52,7 +52,7 @@ double computeRhoA_eNB(PDSCH_CONFIG_DEDICATED *pdsch_config_dedicated,
     rho_a_dB-=10*log10(2);
 
   if(n_antenna_port==4) // see TS 36.213 Section 5.2
-    rho_a_dB=+10*log10(2);
+    rho_a_dB+=10*log10(2);
 
   sqrt_rho_a_lin= pow(10,(0.05*rho_a_dB));
 

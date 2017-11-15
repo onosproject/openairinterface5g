@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -40,6 +40,10 @@
 #   include "intertask_interface.h"
 # endif
 
+# include "common/ran_context.h"
+
+extern RAN_CONTEXT_t RC;
+
 int
 rrc_eNB_process_GTPV1U_CREATE_TUNNEL_RESP(
   const protocol_ctxt_t* const ctxt_pP,
@@ -57,7 +61,7 @@ rrc_eNB_process_GTPV1U_CREATE_TUNNEL_RESP(
 
     rnti = create_tunnel_resp_pP->rnti;
     ue_context_p = rrc_eNB_get_ue_context(
-                     &eNB_rrc_inst[ctxt_pP->module_id],
+                     RC.rrc[ctxt_pP->module_id],
                      ctxt_pP->rnti);
 
     for (i = 0; i < create_tunnel_resp_pP->num_tunnels; i++) {

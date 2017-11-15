@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -41,7 +41,7 @@
 #include "common_lib.h"
 extern openair0_config_t openair0_cfg[];
 
-//#define DEBUG_INITIAL_SYNCH
+#define DEBUG_INITIAL_SYNCH
 
 int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
 {
@@ -157,7 +157,6 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
     frame_parms->nb_antenna_ports_eNB = pbch_tx_ant;
 
     // set initial transmission mode to 1 or 2 depending on number of detected TX antennas
-    frame_parms->mode1_flag = (pbch_tx_ant==1);
     // openair_daq_vars.dlsch_transmission_mode = (pbch_tx_ant>1) ? 2 : 1;
 
 
@@ -233,23 +232,21 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
       break;
     }
 
-    ue->proc.proc_rxtx[0].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
-    ue->proc.proc_rxtx[0].frame_rx += frame_mod4;
-
-    ue->proc.proc_rxtx[1].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
-    ue->proc.proc_rxtx[1].frame_rx += frame_mod4;
+    for(int i=0; i<RX_NB_TH;i++)
+    {
+        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
+        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
 
 #ifndef USER_MODE
-    // one frame delay
-    ue->proc.proc_rxtx[0].frame_rx ++;
-    ue->proc.proc_rxtx[1].frame_rx ++;
+        // one frame delay
+        ue->proc.proc_rxtx[i].frame_rx ++;
 #endif
-    ue->proc.proc_rxtx[0].frame_tx = ue->proc.proc_rxtx[0].frame_rx;
-    ue->proc.proc_rxtx[1].frame_tx = ue->proc.proc_rxtx[1].frame_rx;
+        ue->proc.proc_rxtx[i].frame_tx = ue->proc.proc_rxtx[0].frame_rx;
+    }
 #ifdef DEBUG_INITIAL_SYNCH
-    LOG_I(PHY,"[UE%d] Initial sync: pbch decoded sucessfully mode1_flag %d, tx_ant %d, frame %d, N_RB_DL %d, phich_duration %d, phich_resource %s!\n",
+    LOG_I(PHY,"[UE%d] Initial sync: pbch decoded sucessfully p %d, tx_ant %d, frame %d, N_RB_DL %d, phich_duration %d, phich_resource %s!\n",
           ue->Mod_id,
-          frame_parms->mode1_flag,
+          frame_parms->nb_antenna_ports_eNB,
           pbch_tx_ant,
           ue->proc.proc_rxtx[0].frame_rx,
           frame_parms->N_RB_DL,
@@ -285,6 +282,8 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   // First try FDD normal prefix
   frame_parms->Ncp=NORMAL;
   frame_parms->frame_type=FDD;
+  frame_parms->nb_antenna_ports_eNB = 2;
+
   init_frame_parms(frame_parms,1);
   /*
   write_output("rxdata0.m","rxd0",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
@@ -495,15 +494,18 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
               ue->common_vars.freq_offset );
     #endif
 
+// send sync status to higher layers later when timing offset converge to target timing
+#if OAISIM
       if (ue->mac_enabled==1) {
 	LOG_I(PHY,"[UE%d] Sending synch status to higher layers\n",ue->Mod_id);
 	//mac_resynch();
-	mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,0,1);//ue->common_vars.eNb_id);
+	dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,0,1);//ue->common_vars.eNb_id);
 	ue->UE_mode[0] = PRACH;
       }
       else {
 	ue->UE_mode[0] = PUSCH;
       }
+#endif
 
       generate_pcfich_reg_mapping(frame_parms);
       generate_phich_reg_mapping(frame_parms);

@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -371,7 +371,7 @@ void init_snr(channel_desc_t* eNB2UE, node_desc_t *enb_data, node_desc_t *ue_dat
             break;
 
           default:
-            msg("Problem in SINR Calculation for TM5 \n");
+            LOG_E(EMU,"Problem in SINR Calculation for TM5 \n");
             break;
 
           }//switch(q)
@@ -451,7 +451,7 @@ void init_snr(channel_desc_t* eNB2UE, node_desc_t *enb_data, node_desc_t *ue_dat
             break;
 
           default:
-            msg("Problem in SINR Calculation for TM6 \n");
+            LOG_E(EMU,"Problem in SINR Calculation for TM6 \n");
             break;
 
           }//switch(q)
@@ -470,7 +470,7 @@ void init_snr(channel_desc_t* eNB2UE, node_desc_t *enb_data, node_desc_t *ue_dat
     break;
 
   default:
-    msg("Problem in SINR Initialization in sinr_sim.c\n");
+    LOG_E(EMU,"Problem in SINR Initialization in sinr_sim.c\n");
     break;
   }//switch
 }//function ends
@@ -726,7 +726,7 @@ void get_MIESM_param()
         break;
 
       default:
-        msg("Error, bad input, quitting\n");
+        LOG_E(EMU,"Error, bad input, quitting\n");
         break;
       }
 
