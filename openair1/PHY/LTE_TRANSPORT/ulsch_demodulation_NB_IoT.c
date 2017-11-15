@@ -549,7 +549,7 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
                                      // uint32_t first_rb, 
                                      uint32_t UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
                                      uint8_t N_sc_RU, // number of subcarriers in UL 
-                                     uint32_t I_sc, // NB_IoT: subcarrier indication field: must be defined in higher layer
+                                     // uint32_t I_sc, // NB_IoT: subcarrier indication field: must be defined in higher layer
                                      uint32_t nb_rb,
                                      uint8_t l,
                                      uint8_t Ns,
@@ -560,10 +560,10 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
   uint8_t   aarx,n;
   // int32_t   *rxF,*rxF_ext;
   //uint8_t symbol = l+Ns*frame_parms->symbols_per_tti/2;
-  uint8_t   symbol = l+((7-frame_parms->Ncp)*(Ns&1)); ///symbol within sub-frame 
-  uint16_t ul_sc_start; // subcarrier start index into UL RB 
+  uint8_t   symbol = l+(7*(Ns&1)); ///symbol within sub-frame 
+  // uint16_t ul_sc_start; // subcarrier start index into UL RB 
 
-  ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); 
+  // ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); 
 
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
 
@@ -574,9 +574,10 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
 
     if (nb_rb1) { // RB NB-IoT is in the first half
 
-      for (n=0;n<N_sc_RU;n++){
+      for (n=0;n<12;n++){ // extract whole RB of 12 subcarriers
         // Note that FFT splits the RBs 
-        rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][UL_RB_ID_NB_IoT*12 + ul_sc_start + frame_parms->first_carrier_offset + symbol*frame_parms->ofdm_symbol_size + n];
+        // rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][UL_RB_ID_NB_IoT*12 + ul_sc_start + frame_parms->first_carrier_offset + symbol*frame_parms->ofdm_symbol_size + n];
+        rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][UL_RB_ID_NB_IoT*12 + frame_parms->first_carrier_offset + symbol*frame_parms->ofdm_symbol_size + n];
       
       }
 
@@ -595,9 +596,11 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
       // }
     } else { // RB NB-IoT is in the second half 
 
-      for (n=0;n<N_sc_RU;n++){
+      for (n=0;n<12;n++){ // extract whole RB of 12 subcarriers
         // Note that FFT splits the RBs 
-        rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][6*(2*UL_RB_ID_NB_IoT - frame_parms->N_RB_UL) +  ul_sc_start + symbol*frame_parms->ofdm_symbol_size + n];
+        // rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][6*(2*UL_RB_ID_NB_IoT - frame_parms->N_RB_UL) +  ul_sc_start + symbol*frame_parms->ofdm_symbol_size + n]; 
+        rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][6*(2*UL_RB_ID_NB_IoT - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size + n];
+
       
       }
 
@@ -1350,7 +1353,7 @@ void ulsch_channel_level_NB_IoT(int32_t **drs_ch_estimates_ext,
     avg128U = _mm_setzero_si128();
     ul_ch128=(__m128i *)drs_ch_estimates_ext[aarx];
 
-    for (rb=0; rb<nb_rb; rb++) {
+    // for (rb=0; rb<nb_rb; rb++) {
 
       avg128U = _mm_add_epi32(avg128U,_mm_madd_epi16(ul_ch128[0],ul_ch128[0]));
       avg128U = _mm_add_epi32(avg128U,_mm_madd_epi16(ul_ch128[1],ul_ch128[1]));
@@ -1359,13 +1362,13 @@ void ulsch_channel_level_NB_IoT(int32_t **drs_ch_estimates_ext,
       ul_ch128+=3;
 
 
-    }
+    // }
 
 #elif defined(__arm__)
     avg128U = vdupq_n_s32(0);
     ul_ch128=(int16x4_t *)drs_ch_estimates_ext[aarx];
 
-    for (rb=0; rb<nb_rb; rb++) {
+    // for (rb=0; rb<nb_rb; rb++) {
 
        avg128U = vqaddq_s32(avg128U,vmull_s16(ul_ch128[0],ul_ch128[0]));
        avg128U = vqaddq_s32(avg128U,vmull_s16(ul_ch128[1],ul_ch128[1]));
@@ -1376,7 +1379,7 @@ void ulsch_channel_level_NB_IoT(int32_t **drs_ch_estimates_ext,
        ul_ch128+=6;
 
 
-    }
+    // }
 
 #endif
 
@@ -1439,7 +1442,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
                                     // ulsch[UE_id]->harq_process->first_rb, 
                                     ulsch[UE_id]->harq_process->UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
                                     ulsch[UE_id]->harq_process->N_sc_RU, // number of subcarriers in UL
-                                    ulsch[UE_id]->harq_process->I_sc, // subcarrier indication field
+                                    // ulsch[UE_id]->harq_process->I_sc, // subcarrier indication field
                                     ulsch[UE_id]->harq_process->nb_rb,
                                     l%(frame_parms->symbols_per_tti/2),
                                     l/(frame_parms->symbols_per_tti/2),
@@ -1450,7 +1453,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
                                      UE_id,
                                      l%(frame_parms->symbols_per_tti/2),
                                      l/(frame_parms->symbols_per_tti/2),
-                                     cooperation_flag);
+                                     cooperation_flag); 
   }
 
   // if(cooperation_flag == 2) {
@@ -1468,14 +1471,15 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
       */
       //////////////////////// NB_IoT: maybe, should be defined for NB-IoT
-      pusch_vars->ulsch_power[i] = signal_energy_nodc(pusch_vars->drs_ch_estimates[eNB_id][i],
-							  ulsch[UE_id]->harq_process->nb_rb*12);
+      // pusch_vars->ulsch_power[i] = signal_energy_nodc(pusch_vars->drs_ch_estimates[eNB_id][i],
+						// 	  ulsch[UE_id]->harq_process->nb_rb*12); 
+      pusch_vars->ulsch_power[i] = signal_energy_nodc(pusch_vars->drs_ch_estimates[eNB_id][i], 12);
       
-#ifdef LOCALIZATION
-      pusch_vars->subcarrier_power = (int32_t *)malloc(ulsch[UE_id]->harq_process->nb_rb*12*sizeof(int32_t));
-      pusch_vars->active_subcarrier = subcarrier_energy(pusch_vars->drs_ch_estimates[eNB_id][i],
-                                          ulsch[UE_id]->harq_process->nb_rb*12, pusch_vars->subcarrier_power, rx_power_correction);
-#endif
+// #ifdef LOCALIZATION
+//       pusch_vars->subcarrier_power = (int32_t *)malloc(ulsch[UE_id]->harq_process->nb_rb*12*sizeof(int32_t));
+//       pusch_vars->active_subcarrier = subcarrier_energy(pusch_vars->drs_ch_estimates[eNB_id][i],
+//                                           ulsch[UE_id]->harq_process->nb_rb*12, pusch_vars->subcarrier_power, rx_power_correction);
+// #endif
     }
  // }
 
@@ -1636,9 +1640,15 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
   //#ifdef DEBUG_ULSCH
   // Inverse-Transform equalized outputs
   //  printf("Doing IDFTs\n");
-  lte_idft_NB_IoT(frame_parms,
+  // lte_idft_NB_IoT(frame_parms,
+  //                 (uint32_t*)pusch_vars->rxdataF_comp[eNB_id][0],
+  //                 ulsch[UE_id]->harq_process->nb_rb*12); 
+    // lte_idft_NB_IoT(frame_parms,
+    //               (uint32_t*)pusch_vars->rxdataF_comp[eNB_id][0],
+    //               ulsch[UE_id]->harq_process->12); 
+    lte_idft_NB_IoT(frame_parms,
                   (uint32_t*)pusch_vars->rxdataF_comp[eNB_id][0],
-                  ulsch[UE_id]->harq_process->nb_rb*12);
+                  12); 
   //  printf("Done\n");
   //#endif //DEBUG_ULSCH
 
@@ -1665,7 +1675,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
     case 1: 
       printf("To be developped\n");
     break; 
-    case 2 :
+    case 2: 
       ulsch_qpsk_llr_NB_IoT(frame_parms,
                             pusch_vars->rxdataF_comp[eNB_id],
                             pusch_vars->llr,

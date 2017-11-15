@@ -45,6 +45,17 @@ int lte_ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *phy_vars_eNB,
                               		 uint8_t                  Ns,
                               		 uint8_t                  cooperation_flag);
 
+////////// Vincent: NB-IoT specific adapted function for channel estimation ////////////////////
+
+int ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
+                                         eNB_rxtx_proc_NB_IoT_t   *proc,
+                                         uint8_t                  eNB_id,
+                                         uint8_t                  UE_id,
+                                         unsigned char            l,
+                                         unsigned char            Ns,
+                                         uint8_t                  cooperation_flag); 
+////////////////////////////////////////////////////////////////////////////////////////////////
+
 int16_t lte_ul_freq_offset_estimation_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
                                       		 int32_t *ul_ch_estimates,
                                       		 uint16_t nb_rb);

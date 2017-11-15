@@ -42,7 +42,7 @@ uint16_t dftsizes[33] = {12,24,36,48,60,72,96,108,120,144,180,192,216,240,288,30
 
 uint16_t ref_primes[33] = {11,23,31,47,59,71,89,107,113,139,179,191,211,239,283,293,317,359,383,431,479,523,571,599,647,719,863,887,953,971,1069,1151,1193};
 
-uint16_t sequence_length[4] = {2048,3,6,12}; //the "32" value corresponds to the max gold sequence length 
+uint16_t sequence_length[4] = {32,3,6,12}; //the "32" value corresponds to the max gold sequence length 
 
 // int16_t *ul_ref_sigs[30][33];
 int16_t *ul_ref_sigs_rx[30][4]; //these contain the sequences in repeated format and quantized to QPSK ifdef IFFT_FPGA
@@ -82,6 +82,8 @@ int16_t w_n[256] = {
   1, 1,-1,-1,-1,-1, 1, 1,-1,-1, 1, 1, 1, 1,-1,-1,
   1,-1,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1,-1, 1
 }; 
+
+
 
 // void generate_ul_ref_sigs(void)
 // {
@@ -181,7 +183,7 @@ void generate_ul_ref_sigs_rx_NB_IoT(void)
             for (n=0; n<sequence_length[index_Nsc_RU]; n++) {
               // ul_ref_sigs_rx[u][index_Nsc_RU][n<<1]    = ref_sigs_sc1[n<<1];
               // ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)]= ref_sigs_sc1[1+(n<<1)];
-              ul_ref_sigs_rx[u][index_Nsc_RU][12*n<<1+24]    = ref_sigs_sc1[n<<1]; // ul_ref_sigs_rx is filled every 12 RE, real part
+              ul_ref_sigs_rx[u][index_Nsc_RU][12*(n<<1)+24]    = ref_sigs_sc1[n<<1]; // ul_ref_sigs_rx is filled every 12 RE, real part
               ul_ref_sigs_rx[u][index_Nsc_RU][1+12*(n<<1)+24]= ref_sigs_sc1[1+(n<<1)]; // ul_ref_sigs_rx is filled every 12 RE, imaginary part    
             }
           }
@@ -194,7 +196,7 @@ void generate_ul_ref_sigs_rx_NB_IoT(void)
           for (n=0; n<sequence_length[index_Nsc_RU]; n++) {
             // ul_ref_sigs_rx[u][index_Nsc_RU][n<<1]    = (int16_t)(floor(32767*cos(M_PI*ref3[(u*3) + n]/4 + alpha3[threetnecyclicshift])));
             // ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)]= (int16_t)(floor(32767*sin(M_PI*ref3[(u*3) + n]/4 + alpha3[threetnecyclicshift]))); 
-            ul_ref_sigs_rx[u][index_Nsc_RU][n<<1+24]    = (int16_t)(floor(32767*cos(M_PI*ref3[(u*3) + n]/4 )));
+            ul_ref_sigs_rx[u][index_Nsc_RU][(n<<1)+24]    = (int16_t)(floor(32767*cos(M_PI*ref3[(u*3) + n]/4 )));
             ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)+24]= (int16_t)(floor(32767*sin(M_PI*ref3[(u*3) + n]/4 )));
           }
           break; 
@@ -203,7 +205,7 @@ void generate_ul_ref_sigs_rx_NB_IoT(void)
           for (n=0; n<sequence_length[index_Nsc_RU]; n++) {
             // ul_ref_sigs_rx[u][index_Nsc_RU][n<<1]    = (int16_t)(floor(32767*cos(M_PI*ref6[(u*6) + n]/4 + alpha6[sixtonecyclichift])));
             // ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)]= (int16_t)(floor(32767*sin(M_PI*ref6[(u*6) + n]/4 + alpha6[sixtonecyclichift])));
-            ul_ref_sigs_rx[u][index_Nsc_RU][n<<1+24]    = (int16_t)(floor(32767*cos(M_PI*ref6[(u*6) + n]/4 )));
+            ul_ref_sigs_rx[u][index_Nsc_RU][(n<<1)+24]    = (int16_t)(floor(32767*cos(M_PI*ref6[(u*6) + n]/4 )));
             ul_ref_sigs_rx[u][index_Nsc_RU][1+(n<<1)+24]= (int16_t)(floor(32767*sin(M_PI*ref6[(u*6) + n]/4 )));
           }
           break; 
