@@ -84,6 +84,7 @@ int eNB_output_mask[NUMBER_OF_UE_MAX];
 int UE_output_mask[NUMBER_OF_eNB_MAX];
 pthread_mutex_t eNB_output_mutex[NUMBER_OF_UE_MAX];
 pthread_mutex_t UE_output_mutex[NUMBER_OF_eNB_MAX];
+pthread_mutex_t UE_PRACH_output_mutex[NUMBER_OF_eNB_MAX];
 
 void do_DL_sig(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][MAX_NUM_CCs],
 	       node_desc_t *enb_data[NUMBER_OF_eNB_MAX],
@@ -466,7 +467,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 			//}
 			//write_output("chsim_txsigF_DL.m","chsm_txsF_DL", PHY_vars_eNB_g[eNB_id][CC_id]->common_vars.txdataF[0][0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 
-	//for (int idx=0;idx<10;idx++) printf("dumping raw tx subframe (input) %d: s_f[%d] = (%f,%f)\n", subframe, idx, s_re_f[0][idx],s_im_f[0][idx]);
+	//for (int idx=0;idx<10;idx++) printf("dumping DL raw tx subframe (input) %d: s_f[%d] = (%f,%f)\n", subframe, idx, s_re_f[0][idx],s_im_f[0][idx]);
 
 #ifdef DEBUG_SIM
       LOG_D(OCM,"[SIM][DL] eNB %d (CCid %d): tx_pwr %.1f dBm/RE (target %d dBm/RE), for subframe %d\n",
@@ -705,8 +706,8 @@ void do_UL_sig(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX_N
       printf("ue->generate_ul_signal[%d] %d\n",eNB_id,PHY_vars_UE_g[UE_id][CC_id]->generate_ul_signal[eNB_id]);
       txdata = PHY_vars_UE_g[UE_id][CC_id]->common_vars.txdata;
       sf_offset = subframe*frame_parms->samples_per_tti;
-      for (int idx=0;idx<10;idx++) printf("dumping UL raw subframe %d: txdata[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdata[0][sf_offset+idx])[0], ((short*)&txdata[0][sf_offset+idx])[1]);
-      write_output("chsim_txsigF_UL.m","chsm_txsF_UL", &PHY_vars_UE_g[UE_id][CC_id]->common_vars.txdataF[0][0],10*frame_parms->samples_per_tti,1,16);
+      //for (int idx=0;idx<10;idx++) printf("dumping UL raw subframe %d: txdata[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdata[0][sf_offset+idx])[0], ((short*)&txdata[0][sf_offset+idx])[1]);
+     //write_output("chsim_txsigF_UL.m","chsm_txsF_UL", &PHY_vars_UE_g[UE_id][CC_id]->common_vars.txdataF[0][0],10*frame_parms->samples_per_tti,1,16);
       
       if (((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
 	   UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB) <= -125.0) {
@@ -908,9 +909,13 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
     for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
 	printf("ue->generate_ul_signal[%d] %d\n",eNB_id,PHY_vars_UE_g[UE_id][CC_id]->generate_ul_signal[eNB_id]);
 	txdataF = PHY_vars_UE_g[UE_id][CC_id]->common_vars.txdataF;
+        AssertFatal(txdataF != NULL,"txdataF is null\n");
       	sf_offset = subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;
- 	for (int idx=0;idx<10;idx++) printf("dumping UL raw subframe %d: txdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdataF[0][sf_offset+idx])[0], ((short*)&txdataF[0][sf_offset+idx])[1]);
-	write_output("chsim_txsigF_UL.m","chsm_txsF_UL", &PHY_vars_UE_g[UE_id][CC_id]->common_vars.txdataF[0][0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
+ 	for (int idx=subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx<(subframe+1)*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx++){
+		if (((short*)&txdataF[0][idx])[0]!=0 || ((short*)&txdataF[0][idx])[1]!=0)
+			printf("dumping UL raw subframet %d: txdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdataF[0][idx])[0], ((short*)&txdataF[0][idx])[1]);
+	}
+	write_output("chsim_txsigF_UL.m","chsm_txsF_UL", &txdataF[0][0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
       
       if (((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
 	   UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB) <= -125.0) {
@@ -931,19 +936,27 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 					frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,
 					sf_offset,
 					frame_parms->ofdm_symbol_size,
-					frame_parms->symbols_per_tti,
+					14,
 					(double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe]-10*log10((double)PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe]),
 					PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe]);  // This make the previous argument the total power
+	        /*for (int idx=subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx<(subframe+1)*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx++){
+			if (((short*)&txdataF[0][idx])[0]!=0 || ((short*)&txdataF[0][idx])[1]!=0)
+				printf("dumping raw UL tx subframe (output) %d: s_re_f[%d] = (%f,%f)\n", subframe, idx, s_re_f[0][idx-subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti],s_im_f[0][idx-subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti]);
+		}*/
 		LOG_D(OCM,"[SIM][UL] UE %d tx_pwr %f dBm (target %d dBm, num_RE %d) for subframe %d (sf_offset %d)\n",
 		      UE_id,
 		      10*log10(tx_pwr),
 		      PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe],
 		      PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe],
 		      subframe,sf_offset);
-
+		//write_output("chsim_s_re_f_UL.m","chsm_sref_UL", s_re_f,10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 	      	multipath_channel_freq(UE2eNB[UE_id][eNB_id][CC_id],s_re_f,s_im_f,r_re0_f,r_im0_f,
-			  frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,hold_channel,eNB_id,UE_id,CC_id,subframe&0x1);
-		//write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][0]->prach_vars[0]->prachF,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,1);
+			  frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,hold_channel,eNB_id,UE_id,CC_id,subframe&0x1);//ue timer subframe&0x1
+	        /*for (int idx=subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx<(subframe+1)*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx++){
+			if (((short*)&txdataF[0][idx])[0]!=0 || ((short*)&txdataF[0][idx])[1]!=0)
+				printf("dumping raw UL tx subframe (output) %d: r_re0_f[%d] = (%f,%f)\n", subframe, idx, r_re0_f[0][idx-subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti],r_im0_f[0][idx-subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti]);
+		}*/
+		write_output("chsim_r_re0_f_UL.m","chsim_rre0f_UL.m", r_re0_f,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 
 		rx_pwr = signal_energy_fp2(UE2eNB[UE_id][eNB_id][CC_id]->ch[0],UE2eNB[UE_id][eNB_id][CC_id]->channel_length)*UE2eNB[UE_id][eNB_id][CC_id]->channel_length;
 #ifdef DEBUG_SIM
@@ -988,12 +1001,15 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 		 frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,
 		 1e3/UE2eNB[0][eNB_id][CC_id]->sampling_rate,  // sampling time (ns)
 		 (double)PHY_vars_eNB_g[eNB_id][CC_id]->rx_total_gain_dB - 66.227);   // rx_gain (dB) (66.227 = 20*log10(pow2(11)) = gain from the adc that will be applied later)
-	for (int idx=0;idx<10;idx++) printf("dumping UL raw rx subframe (input) %d: rxdataF[%d] = (%f,%f)\n", subframe, idx, r_re_p_f[0][idx],r_im_p_f[0][idx]);
+	        for (int idx=subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx<(subframe+1)*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx++){
+			if (((short*)&txdataF[0][idx])[0]!=0 || ((short*)&txdataF[0][idx])[1]!=0)
+				printf("dumping UL raw rx subframe (input) %d: rxdataF[%d] = (%f,%f)\n", subframe, idx, r_re_p_f[0][idx-subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti],r_im_p_f[0][idx-subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti]);
+		}
+	
 #ifdef DEBUG_SIM
 	    rx_pwr = signal_energy_fp(r_re_p_f,r_im_p_f,nb_antennas_rx,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,0)*(double)frame_parms->ofdm_symbol_size/(12.0*frame_parms->N_RB_DL);
 	    LOG_D(OCM,"[SIM][UL] rx_pwr (ADC in) %f dB for subframe %d\n",10*log10(rx_pwr),subframe);
 #endif
-
 	    rxdataF = PHY_vars_eNB_g[eNB_id][CC_id]->common_vars.rxdataF[0];
 	    sf_offset = subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;
 	        adc(r_re_p_f,
@@ -1002,11 +1018,13 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 		sf_offset,
 		rxdataF,
 		nb_antennas_rx,
-		subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,
+		frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,
 		12);
-               for (int idx=0;idx<10;idx++) printf("dumping UL raw rx subframe %d: rxdataF[%d] = (%d,%d)=====>%s\n", subframe, idx, ((short*)&rxdataF[0][sf_offset+idx])[0], ((short*)&rxdataF[0][sf_offset+idx])[1],(((((r_re_p_f[0][idx]<0)&&(((short*)&rxdataF[0][sf_offset+idx])[0]<0))||((r_re_p_f[0][idx]>=0)&&(((short*)&rxdataF[0][sf_offset+idx])[0]>=0))))&&(((r_im_p_f[0][idx]<0)&&(((short*)&rxdataF[0][sf_offset+idx])[1]<0))||((r_im_p_f[0][idx]>=0)&&(((short*)&rxdataF[0][sf_offset+idx])[1]>=0))))?"OK":"ERROR");
-
-		write_output("chsim_rxsigF_UL.m","chsm_rxsF_UL", PHY_vars_eNB_g[eNB_id][CC_id]->common_vars.rxdataF[0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);  
+	        for (int idx=subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx<(subframe+1)*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx++){
+			if (((short*)&txdataF[0][idx])[0]!=0 || ((short*)&txdataF[0][idx])[1]!=0)
+				printf("dumping UL raw rx subframe %d: rxdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&rxdataF[0][idx])[0], ((short*)&rxdataF[0][idx])[1]);
+		}
+		write_output("chsim_rxsigF_UL.m","chsm_rxsF_UL", &rxdataF[0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);  
     
 #ifdef DEBUG_SIM
 	    //rx_pwr2 = signal_energy(rxdataF[0]+sf_offset,subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)*(double)frame_parms->ofdm_symbol_size/(12.0*frame_parms->N_RB_DL);
@@ -1017,7 +1035,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
     UNUSED_VARIABLE(rx_pwr);
     UNUSED_VARIABLE(rx_pwr2);
 #endif
-    
+
   } // abstraction_flag==0
 
 }
@@ -1087,7 +1105,7 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
 #endif
   } else { //without abstraction
 
-    pthread_mutex_lock(&UE_output_mutex[eNB_id]);
+    pthread_mutex_lock(&UE_PRACH_output_mutex[eNB_id]);
     // Clear RX signal for eNB = eNB_id
     	for (i=0; i<frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*12; i++) {
 	      for (aa=0; aa<nb_antennas_rx; aa++) {
@@ -1095,7 +1113,7 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
 		r_im_UL_f_prach[eNB_id][aa][i]=0.0;
 	      }
         }
-    pthread_mutex_unlock(&UE_output_mutex[eNB_id]);
+    pthread_mutex_unlock(&UE_PRACH_output_mutex[eNB_id]);
 
     // Compute RX signal for eNB = eNB_id
     for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
@@ -1176,21 +1194,21 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
 	  UE2eNB[UE_id][eNB_id][CC_id]->first_run = 0;
 	
 	
-	pthread_mutex_lock(&UE_output_mutex[eNB_id]);
+	pthread_mutex_lock(&UE_PRACH_output_mutex[eNB_id]);
 	for (aa=0; aa<nb_antennas_rx; aa++) {
 		for (i=0; i<frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti; i++) {
 		    r_re_UL_f_prach[eNB_id][aa][i]+=r_re0_f_prach[aa][i];
 		    r_im_UL_f_prach[eNB_id][aa][i]+=r_im0_f_prach[aa][i];
 		}
 	}
-	pthread_mutex_unlock(&UE_output_mutex[eNB_id]);
+	pthread_mutex_unlock(&UE_PRACH_output_mutex[eNB_id]);
       }
     } //UE_id
     
     double *r_re_p_f_prach[2] = {r_re_UL_f_prach[eNB_id][0],r_re_UL_f_prach[eNB_id][1]};
     double *r_im_p_f_prach[2] = {r_im_UL_f_prach[eNB_id][0],r_im_UL_f_prach[eNB_id][1]};
-    for (int idx=0;idx<10;idx++) printf("dumping raw PRACH UL tx subframe (output) %d: r_re_im_p_f_prach[%d] = (%d,%d)\n", subframe, idx, (short)(r_re_p_f_prach[0][idx]),(short)(r_im_p_f_prach[0][idx]));
-    for (int idx=829;idx<839;idx++) printf("dumping raw PRACH UL tx subframe (output) %d: r_re_im_p_f_prach[%d] = (%d,%d)\n", subframe, idx, (short)(r_re_p_f_prach[0][idx]),(short)(r_im_p_f_prach[0][idx]));
+    /*for (int idx=0;idx<10;idx++) printf("dumping raw PRACH UL tx subframe (output) %d: r_re_im_p_f_prach[%d] = (%d,%d)\n", subframe, idx, (short)(r_re_p_f_prach[0][idx]),(short)(r_im_p_f_prach[0][idx]));
+    for (int idx=829;idx<839;idx++) printf("dumping raw PRACH UL tx subframe (output) %d: r_re_im_p_f_prach[%d] = (%d,%d)\n", subframe, idx, (short)(r_re_p_f_prach[0][idx]),(short)(r_im_p_f_prach[0][idx]));*/
     rf_rx_simple(r_re_p_f_prach,
 		 r_im_p_f_prach,
 		 nb_antennas_rx,
@@ -1255,8 +1273,10 @@ void init_channel_vars_freq(LTE_DL_FRAME_PARMS *frame_parms, double ***s_re_f,do
     pthread_mutex_init(&eNB_output_mutex[i],NULL);
 
   memset(UE_output_mask,0,sizeof(int)*NUMBER_OF_eNB_MAX);
-  for (i=0;i<NB_eNB_INST;i++)
+  for (i=0;i<NB_eNB_INST;i++){
     pthread_mutex_init(&UE_output_mutex[i],NULL);
+    pthread_mutex_init(&UE_PRACH_output_mutex[i],NULL);
+  }
 
   // Channel estimates initialization
   for (UE_id=0;UE_id<NB_UE_INST;UE_id++){

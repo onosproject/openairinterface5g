@@ -1165,7 +1165,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
 	  printf("[lte_init_f] address of rxdataF[i] in memory: %p, thread %d, antenna %d\n",&common_vars->common_vars_rx_data_per_thread[0].rxdataF[i],0,i);
     }
 
-    //rxdata_temp
+    //rxdata_temp. Please remove this dummy allocation when all arrays are size fixed. If not, the multichannel does not work.
     rxdataF_temp = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
     for (i=0; i<fp->nb_antennas_rx; i++) {
 	rxdataF_temp[i] = (int32_t*)malloc16_clear((14313)*sizeof(int32_t));
@@ -1452,8 +1452,8 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
       if (eNB->node_function != NGFI_RCC_IF4p5)
 
         common_vars->txdata[eNB_id]  = (int32_t**)malloc16(fp->nb_antennas_tx*sizeof(int32_t*));
-      common_vars->txdataF[eNB_id] = (int32_t **)malloc16(NB_ANTENNA_PORTS_ENB*sizeof(int32_t*));
-      common_vars->txdataF_BF[eNB_id] = (int32_t **)malloc16(fp->nb_antennas_tx*sizeof(int32_t*));
+        common_vars->txdataF[eNB_id] = (int32_t **)malloc16(NB_ANTENNA_PORTS_ENB*sizeof(int32_t*));
+        common_vars->txdataF_BF[eNB_id] = (int32_t **)malloc16(fp->nb_antennas_tx*sizeof(int32_t*));
 
       if (eNB->node_function != NGFI_RRU_IF5) {
         for (i=0; i<NB_ANTENNA_PORTS_ENB; i++) {
@@ -1512,11 +1512,12 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
         common_vars->rxdata[eNB_id]        = (int32_t**)malloc16(fp->nb_antennas_rx*sizeof(int32_t*) );
         common_vars->rxdata_7_5kHz[eNB_id] = (int32_t**)malloc16(fp->nb_antennas_rx*sizeof(int32_t*) );
       }
-
+      if (eNB->node_function != NGFI_RRU_IF5)
       common_vars->rxdataF[eNB_id]       = (int32_t**)malloc16(fp->nb_antennas_rx*sizeof(int32_t*) );
 
 
       for (i=0; i<fp->nb_antennas_rx; i++) {
+
         if (eNB->node_function != NGFI_RCC_IF4p5) {
           // allocate 2 subframes of I/Q signal data (time) if not an RCC (no time-domain signals)
           common_vars->rxdata[eNB_id][i] = (int32_t*)malloc16_clear( fp->samples_per_tti*10*sizeof(int32_t) );
@@ -1525,17 +1526,14 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
             // allocate 2 subframes of I/Q signal data (time, 7.5 kHz offset)
             common_vars->rxdata_7_5kHz[eNB_id][i] = (int32_t*)malloc16_clear( 2*fp->samples_per_tti*2*sizeof(int32_t) );
         }
-
         if (eNB->node_function != NGFI_RRU_IF5)
           // allocate 2 subframes of I/Q signal data (frequency)
           common_vars->rxdataF[eNB_id][i] = (int32_t*)malloc16_clear(sizeof(int32_t)*(2*fp->ofdm_symbol_size*fp->symbols_per_tti) );
-
 #ifdef DEBUG_PHY
         printf("[openair][LTE_PHY][INIT] common_vars->rxdata[%d][%d] = %p (%lu bytes)\n",eNB_id,i,common_vars->rxdata[eNB_id][i],fp->samples_per_tti*10*sizeof(int32_t));
         if (eNB->node_function != NGFI_RRU_IF5)
           printf("[openair][LTE_PHY][INIT] common_vars->rxdata_7_5kHz[%d][%d] = %p (%lu bytes)\n",eNB_id,i,common_vars->rxdata_7_5kHz[eNB_id][i],fp->samples_per_tti*2*sizeof(int32_t));
 #endif
-        common_vars->rxdataF[eNB_id][i] = (int32_t*)malloc16_clear(sizeof(int32_t)*(fp->ofdm_symbol_size*fp->symbols_per_tti) );
       }
 
 

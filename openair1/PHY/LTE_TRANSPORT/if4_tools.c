@@ -51,11 +51,13 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
   int16_t **rxsigF       = eNB->prach_vars.rxsigF;  
   void *tx_buffer        = eNB->ifbuffer.tx[subframe&1];
   void *tx_buffer_prach  = eNB->ifbuffer.tx_prach;
+  
       
   uint16_t symbol_id=0, element_id=0;
   uint16_t db_fulllength, db_halflength; 
   int slotoffsetF=0, blockoffsetF=0; 
-
+  // write_output("sendif405_rxsigF_UL.m","sendif4p5_rxsF_UL", &eNB->common_vars.rxdata[0][0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,16); 
+  //write_output("sendif405_txsigF_UL.m","sendif4p5_txsF_UL", &eNB->common_vars.txdata[0][0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,16);
   uint16_t *data_block=NULL, *i=NULL;
 
   IF4p5_header_t *packet_header=NULL;

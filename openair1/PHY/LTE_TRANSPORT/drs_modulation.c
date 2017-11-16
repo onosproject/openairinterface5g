@@ -141,7 +141,7 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
               (ref_im*alpha_re[alpha_ind]))>>15);
           ((short*) txdataF)[2*(symbol_offset + re_offset)]   = (short) ((((short*) txdataF)[2*(symbol_offset + re_offset)]*(int32_t)amp)>>15);
           ((short*) txdataF)[2*(symbol_offset + re_offset)+1] = (short) ((((short*) txdataF)[2*(symbol_offset + re_offset)+1]*(int32_t)amp)>>15);
-	  printf("[drs_modulation]txdataF drs(%d,%d)\n",((short*) txdataF)[2*(symbol_offset + re_offset)],((short*) txdataF)[2*(symbol_offset + re_offset)+1]);
+	  //printf("[drs_modulation]subframe %d, txdataF[%d] drs(%d,%d)\n",subframe,(symbol_offset + re_offset),((short*) txdataF)[2*(symbol_offset + re_offset)],((short*) txdataF)[2*(symbol_offset + re_offset)+1]);
 
 
           alpha_ind = (alpha_ind + cyclic_shift);

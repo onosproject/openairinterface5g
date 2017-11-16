@@ -1559,7 +1559,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
              frame_tx,
              subframe_tx);
 
-
+  printf("[phy_procedures_lte_ue] ue->ulsch_Msg3_active [%d] %d\n",eNB_id,ue->ulsch_Msg3_active[eNB_id]);
   if (ue->mac_enabled == 1) {
     if ((ue->ulsch_Msg3_active[eNB_id] == 1) &&
   (ue->ulsch_Msg3_frame[eNB_id] == frame_tx) &&
