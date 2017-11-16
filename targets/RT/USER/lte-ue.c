@@ -80,6 +80,10 @@ void init_UE(int nb_inst,int,int);
 int32_t **rxdata;
 int32_t **txdata;
 
+int timer_subframe;
+int timer_frame;
+SF_ticking *phy_stub_ticking;
+
 #define KHz (1000UL)
 #define MHz (1000*KHz)
 
@@ -745,7 +749,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
  * \param arg unused
  * \returns a pointer to an int. The storage is not on the heap and must not be freed.
  */
-
+// Panos: Modified function to support nfapi_mode=3 (phy_stub mode).
 void *UE_thread(void *arg) {
 
 
@@ -776,9 +780,10 @@ void *UE_thread(void *arg) {
     int sub_frame=-1;
     //int cumulated_shift=0;
 
-    
+
     while (!oai_exit) {
-        AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+    	if(nfapi_mode!=3) {
+    	AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
         int instance_cnt_synch = UE->proc.instance_cnt_synch;
         int is_synchronized    = UE->is_synchronized;
         AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
@@ -937,6 +942,7 @@ void *UE_thread(void *arg) {
                     pickTime(gotIQs);
                     // operate on thread sf mod 2
                     AssertFatal(pthread_mutex_lock(&proc->mutex_rxtx) ==0,"");
+
                     if(sub_frame == 0) {
                         //UE->proc.proc_rxtx[0].frame_rx++;
                         //UE->proc.proc_rxtx[1].frame_rx++;
@@ -983,9 +989,76 @@ void *UE_thread(void *arg) {
             } // start_rx_stream==1
         } // UE->is_synchronized==1
 
+    } // nfapi_mode!=3
+    	else { // nfapi_mode==3
+
+    		//AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_ticking), "");
+    		AssertFatal ( 0== pthread_mutex_lock(&phy_stub_ticking->mutex_ticking), "");
+    		while (phy_stub_ticking->ticking_var<0)
+    			pthread_cond_wait( &phy_stub_ticking->cond_ticking, &phy_stub_ticking->mutex_ticking);
+    		AssertFatal ( 0== pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking), "");
+
+    		UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[thread_idx];
+    		// update thread index for received subframe
+    		UE->current_thread_id[sub_frame] = thread_idx;
+    		LOG_D(PHY,"Process Subframe %d thread Idx %d \n", sub_frame, UE->current_thread_id[sub_frame]);
+    		thread_idx++;
+    		if(thread_idx>=RX_NB_TH)
+    			thread_idx = 0;
+
+    		// Panos: timer_subframe/timer_frame (phy_stub mode SFN/SF counter) acquired from thread_timer.
+    		if(timer_subframe == 0) {
+    			//UE->proc.proc_rxtx[0].frame_rx++;
+    			//UE->proc.proc_rxtx[1].frame_rx++;
+    			for (th_id=0; th_id < RX_NB_TH; th_id++) {
+    				//UE->proc.proc_rxtx[th_id].frame_rx++;
+    				UE->proc.proc_rxtx[th_id].frame_rx = timer_frame;
+    			}
+    		}
+    		//UE->proc.proc_rxtx[0].gotIQs=readTime(gotIQs);
+    		//UE->proc.proc_rxtx[1].gotIQs=readTime(gotIQs);
+
+    		// Panos: Remove for phy_stub
+    		/*for (th_id=0; th_id < RX_NB_TH; th_id++) {
+    			UE->proc.proc_rxtx[th_id].gotIQs=readTime(gotIQs);
+    		}*/
+
+    		proc->subframe_rx=timer_subframe;
+    		proc->subframe_tx=(sub_frame+4)%10;
+    		proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
+
+    		// Panos: Do we need the timestamp_tx indication for phy_stub mode?
+    		proc->timestamp_tx = timestamp+
+    				(4*UE->frame_parms.samples_per_tti)-
+    				UE->frame_parms.ofdm_symbol_size-UE->frame_parms.nb_prefix_samples0;
+    		proc->instance_cnt_rxtx++;
+
+    		LOG_D( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
+    		if (proc->instance_cnt_rxtx == 0) {
+    			if (pthread_cond_signal(&proc->cond_rxtx) != 0) {
+    				LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
+    				exit_fun("nothing to add");
+    			}
+    		} else {
+    			LOG_E( PHY, "[SCHED][UE %d] UE RX thread busy (IC %d)!!\n", UE->Mod_id, proc->instance_cnt_rxtx);
+    			if (proc->instance_cnt_rxtx > 2)
+    				exit_fun("instance_cnt_rxtx > 2");
+    		}
+    		AssertFatal (pthread_cond_signal(&proc->cond_rxtx) ==0 ,"");
+    		AssertFatal(pthread_mutex_unlock(&proc->mutex_rxtx) ==0,"");
+
+    		// Panos: Do we need these function calls for the phy_stub?
+    		/*initRefTimes(t1);
+    		initStaticTime(lastTime);
+    		updateTimes(lastTime, &t1, 20000, "Delay between two IQ acquisitions (case 1)");
+    		pickStaticTime(lastTime);*/
+    		phy_stub_ticking->ticking_var--;
+    		}
+
     } // while !oai_exit
     return NULL;
 }
+
 
 /*!
  * \brief Initialize the UE theads.
@@ -1113,4 +1186,48 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
     }
     return 0;
 }
+
+// Panos: This timer thread is used only in the phy_sub mode as an independent timer
+// which will be ticking and provide the SFN/SF values that will be used from the UE threads
+// playing the role of nfapi-pnf.
+static void* timer_thread( void* param ) {
+	timer_subframe =9;
+	timer_frame    =1023;
+	phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
+	phy_stub_ticking->ticking_var = -1;
+	wait_sync("timer_thread");
+
+	while (!oai_exit) {
+	    usleep(1000);
+	    // these are local subframe/frame counters to check that we are in synch with the fronthaul timing.
+	    // They are set on the first rx/tx in the underly FH routines.
+	    if (timer_subframe==9) {
+	    	timer_subframe=0;
+	    	timer_frame++;
+	    	timer_frame&=1023;
+	    } else {
+	    	timer_subframe++;
+	    }
+	    phy_stub_ticking->ticking_var++;
+	    //AssertFatal( 0 == pthread_cond_signal(&phy_stub_ticking->cond_ticking), "");
+	    if (pthread_cond_signal(&phy_stub_ticking->cond_ticking) != 0) {
+	    	//LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
+	    	LOG_E( PHY, "timer_thread ERROR pthread_cond_signal for UE_thread\n");
+	    	exit_fun("nothing to add");
+	    }
+	    //UE->proc.ticking_var++;
+	    // pthread_cond_signal() //Send signal to ue_thread()?
+	    // We also need to somehow pass the information of SFN/SF
+	  }
+	free(phy_stub_ticking);
+	return 0;
+
+}
+
+
+
+
+
+
+
 
