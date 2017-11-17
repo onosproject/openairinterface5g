@@ -648,6 +648,8 @@ static void *UE_thread_rxn_txnp4(void *arg) {
             // Hardcode Mod_id for now. Will be changed later.
 
             if(nfapi_mode == 3){
+            	// Panos: is this the right place to call oai_subframe_indication to invoke p7 nfapi callbacks here?
+            	//oai_subframe_insdication()
             	if(UE_mac_inst[Mod_id].tx_req)
             		tx_req_UE_MAC(UE_mac_inst[Mod_id].tx_req);
             	if(UE_mac_inst[Mod_id].dl_config_req)
@@ -778,6 +780,10 @@ void *UE_thread(void *arg) {
 #endif
 
     int sub_frame=-1;
+    if(nfapi_mode==3) {
+    	phy_stub_ticking->ticking_var = -1;
+    }
+
     //int cumulated_shift=0;
 
 

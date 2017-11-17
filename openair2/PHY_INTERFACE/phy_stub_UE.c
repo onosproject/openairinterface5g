@@ -493,7 +493,9 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
     		fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
     		fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
     		Msg3_transmitted(Mod_id, 0, frame, 0);
-    		UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+
+    		// Panos: This should be done after the reception of the respective hi_dci0
+    		//UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
     	}
     	else {
     		ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
@@ -516,7 +518,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
 			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
 			  Msg3_transmitted(Mod_id, 0, frame, 0);
-			  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+			  //UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
 		  }
 		  else {
 			  ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
@@ -544,7 +546,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
 			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
 			  Msg3_transmitted(Mod_id, 0, frame, 0);
-			  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+			  //UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
 		  }
 		  else {
 			  ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
@@ -571,7 +573,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
 			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
 			  Msg3_transmitted(Mod_id, 0, frame, 0);
-			  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+			  //UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
 		  }
 		  else {
 			  ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
