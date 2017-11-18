@@ -64,6 +64,7 @@ char quantize(double D,double x,unsigned char B)
   return((char)qxd);
 }
 
+//#define MAX_BLOCK_LENGTH 6000
 #define MAX_BLOCK_LENGTH 8448
 /*
 int test_ldpc(unsigned int coded_bits,
@@ -86,14 +87,15 @@ int test_ldpc(short No_iteration,
 	      unsigned int *errors, 	      
 	      unsigned int *crc_misses)
 {
- 
+
+  //unsigned char test_input[block_length+1];
   short test_input[block_length];
   short *c; //padded codeword  
-  short *esimated_output;
+short *esimated_output;
   short *channel_input;
-  double *channel_output;
+double *channel_output;
   double *modulated_input;
-  short *channel_output_fixed;
+short *channel_output_fixed;
   unsigned int i,trial=0;   
   unsigned char crc_type;
 
@@ -103,12 +105,20 @@ int i1,i2,i3,i4,t;
 
 //Table of possible lifting sizes
   short lift_size[51]={2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
+
+
+
   
   *errors=0;
   *crc_misses=0;
+ 
+
 
   while (trial++ < ntrials) {
-        
+
+    //    printf("encoding\n");
+    //    test_input[0] = 0x80;
+    
 // generate input block
 for (i=0; i<block_length; i++) {
 
@@ -226,7 +236,6 @@ channel_output_fixed  = (short *)malloc( (Kb+nrows) * Zc*sizeof(short));
    }
      // information part
      memcpy(channel_input,c,Kb*Zc*sizeof(short));
-
  //for (i=0;i<(Kb+nrows) * Zc;i++)
   // printf("channel_input[%d]=%d\n",i,channel_input[i]);
 
@@ -241,8 +250,11 @@ channel_output_fixed  = (short *)malloc( (Kb+nrows) * Zc*sizeof(short));
                    &PHY_vars_eNB->dlsch_rate_matching_stats,
                    &PHY_vars_eNB->dlsch_turbo_encoding_stats,
                    &PHY_vars_eNB->dlsch_interleaving_stats);
-    */ 
-  
+    */
+   // uerr=0;
+
+
+    //for (i = 0; i < coded_bits; i++) {
 for (i = 0; i < (Kb+nrows) * Zc; i++) {
 #ifdef DEBUG_CODER
       if ((i&0xf)==0)
