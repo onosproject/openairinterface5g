@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -311,7 +311,7 @@ uint8_t subframe2harqpid(COMMON_channels_t *cc,frame_t frame,sub_frame_t subfram
   AssertFatal(cc!=NULL,"cc is null\n");
 
   if (cc->tdd_Config == NULL) { // FDD
-    ret = (((frame<<1)+subframe)&7);
+    ret = (((frame*10)+subframe)&7);
   } else {
     switch (cc->tdd_Config->subframeAssignment) {
     case 1:
@@ -895,6 +895,7 @@ void fill_nfapi_dl_dci_1A(nfapi_dl_config_request_pdu_t   *dl_config_pdu,
   memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
   dl_config_pdu->pdu_type                                                          = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE;
   dl_config_pdu->pdu_size                                                          = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
+  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
   dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                             = NFAPI_DL_DCI_FORMAT_1A;
   dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level                      = aggregation_level;
   dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                                   = rnti;
@@ -970,6 +971,7 @@ void program_dlsch_acknak(module_id_t module_idP, int CC_idP,int UE_idP, frame_t
         // Convert it to an NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE
         ulsch_harq_information = &ul_config_pdu->ulsch_harq_pdu.harq_information;
         ul_config_pdu->pdu_type = NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE;
+        ul_config_pdu->ulsch_harq_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.tl.tag=NFAPI_UL_CONFIG_REQUEST_INITIAL_TRANSMISSION_PARAMETERS_REL8_TAG;
         ul_config_pdu->ulsch_harq_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.n_srs_initial=0; // last symbol not punctured
         ul_config_pdu->ulsch_harq_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.initial_number_of_resource_blocks=
           ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks; // we don't change the number of resource blocks across retransmissions yet
@@ -997,6 +999,7 @@ void program_dlsch_acknak(module_id_t module_idP, int CC_idP,int UE_idP, frame_t
        * Those two types are not compatible. 'initial_transmission_parameters' is not at the
        * place in both.
        */
+      ul_config_pdu->ulsch_cqi_harq_ri_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.tl.tag=NFAPI_UL_CONFIG_REQUEST_INITIAL_TRANSMISSION_PARAMETERS_REL8_TAG;
       ul_config_pdu->ulsch_cqi_harq_ri_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.n_srs_initial=0; // last symbol not punctured
       ul_config_pdu->ulsch_cqi_harq_ri_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.initial_number_of_resource_blocks=
         ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks; // we don't change the number of resource blocks across retransmissions yet
@@ -1105,6 +1108,7 @@ void fill_nfapi_ulsch_harq_information(module_id_t module_idP,
   if (UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->ext5) puschConfigDedicated_v1250 =  UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->ext5->pusch_ConfigDedicated_v1250;
   */
 #endif
+  harq_information->harq_information_rel10.tl.tag = NFAPI_UL_CONFIG_REQUEST_ULSCH_HARQ_INFORMATION_REL10_TAG;
   harq_information->harq_information_rel10.delta_offset_harq = puschConfigDedicated->betaOffset_ACK_Index;
   AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->pucch_ConfigDedicated!=NULL,"pucch_ConfigDedicated is null!\n");
   if ((UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->pucch_ConfigDedicated->tdd_AckNackFeedbackMode!=NULL)&&
@@ -1157,8 +1161,9 @@ void fill_nfapi_harq_information(module_id_t module_idP,
 
   AssertFatal(UE_id>=0,"UE_id cannot be found, impossible\n");
   AssertFatal(UE_list!=NULL,"UE_list is null\n");
-  AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated!=NULL,"physicalConfigDedicated for rnti %x is null\n",rntiP);
+  AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated!=NULL,"physicalConfigDedicated for rnti %x is null CC_idP:%d UE_id:%d UE_list:rnti:%04x\n",rntiP,CC_idP,UE_id,UE_list->UE_template[CC_idP][UE_id].rnti);
 
+  harq_information->harq_information_rel11.tl.tag = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL11_TAG;
   harq_information->harq_information_rel11.num_ant_ports = 1;
 
   switch(get_tmode(module_idP,CC_idP,UE_id)) {
@@ -1179,9 +1184,11 @@ void fill_nfapi_harq_information(module_id_t module_idP,
         harq_information->harq_information_rel10_tdd.harq_size     = 1;  // 1-bit ACK/NAK
         harq_information->harq_information_rel10_tdd.ack_nack_mode = 0;  // bundling
       }
-      harq_information->harq_information_rel10_tdd.n_pucch_1_0   = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
+      harq_information->harq_information_rel10_tdd.tl.tag                    = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL10_TDD_TAG;
+      harq_information->harq_information_rel10_tdd.n_pucch_1_0               = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
       harq_information->harq_information_rel10_tdd.number_of_pucch_resources = 1;
     } else {
+      harq_information->harq_information_rel9_fdd.tl.tag                    = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL9_FDD_TAG;
       harq_information->harq_information_rel9_fdd.number_of_pucch_resources = 1;
       harq_information->harq_information_rel9_fdd.harq_size                 = 1;  // 1-bit ACK/NAK
       harq_information->harq_information_rel9_fdd.n_pucch_1_0               = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
@@ -1189,6 +1196,7 @@ void fill_nfapi_harq_information(module_id_t module_idP,
     break;
   default: // for any other TM we need 2 bits harq
     if (cc->tdd_Config!=NULL) {
+      AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated!=NULL,"physicalConfigDedicated for rnti %x is null\n",rntiP);
       AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->pucch_ConfigDedicated!=NULL,
                   "pucch_ConfigDedicated is null for TDD!\n");
       if ((UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->pucch_ConfigDedicated->tdd_AckNackFeedbackMode!=NULL)&&
@@ -1198,11 +1206,12 @@ void fill_nfapi_harq_information(module_id_t module_idP,
       else {
         harq_information->harq_information_rel10_tdd.ack_nack_mode = 0;  // bundling
       }
-      harq_information->harq_information_rel10_tdd.harq_size       = 2;
+      harq_information->harq_information_rel10_tdd.tl.tag          = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL10_TDD_TAG;
       harq_information->harq_information_rel10_tdd.n_pucch_1_0   = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
       harq_information->harq_information_rel10_tdd.number_of_pucch_resources = 1;
     }
     else {
+      harq_information->harq_information_rel9_fdd.tl.tag           = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL9_FDD_TAG;
       harq_information->harq_information_rel9_fdd.number_of_pucch_resources = 1;
       harq_information->harq_information_rel9_fdd.ack_nack_mode    = 0;  // 1a/b
       harq_information->harq_information_rel9_fdd.harq_size        = 2;
@@ -1222,12 +1231,14 @@ uint16_t fill_nfapi_uci_acknak(module_id_t module_idP,
   COMMON_channels_t              *cc           = &eNB->common_channels[CC_idP];
 
   int ackNAK_absSF                             = get_pucch1_absSF(cc,absSFP);
-  nfapi_ul_config_request_body_t *ul_req       = &eNB->UL_req_tmp[CC_idP][ackNAK_absSF%10].ul_config_request_body;
-  nfapi_ul_config_request_pdu_t *ul_config_pdu = &ul_req->ul_config_pdu_list[ul_req->number_of_pdus];
+  nfapi_ul_config_request_t      *ul_req       = &eNB->UL_req_tmp[CC_idP][ackNAK_absSF%10];
+  nfapi_ul_config_request_body_t *ul_req_body  = &ul_req->ul_config_request_body;
+  nfapi_ul_config_request_pdu_t *ul_config_pdu = &ul_req_body->ul_config_pdu_list[ul_req_body->number_of_pdus];
 
   memset((void*)ul_config_pdu,0,sizeof(nfapi_ul_config_request_pdu_t));
   ul_config_pdu->pdu_type                                                              = NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE;
   ul_config_pdu->pdu_size                                                              = (uint8_t)(2+sizeof(nfapi_ul_config_uci_harq_pdu));
+  ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.tl.tag                = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL8_TAG;
   ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.handle                = 0; // don't know how to use this
   ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti                  = rntiP;
 
@@ -1239,7 +1250,11 @@ uint16_t fill_nfapi_uci_acknak(module_id_t module_idP,
   LOG_D(MAC,"Filled in UCI HARQ request for rnti %x SF %d.%d acknakSF %d.%d, cce_idxP %d-> n1_pucch %d\n",rntiP,
         absSFP/10,absSFP%10,ackNAK_absSF/10,ackNAK_absSF%10,cce_idxP,ul_config_pdu->uci_harq_pdu.harq_information.harq_information_rel9_fdd.n_pucch_1_0);
 
-  ul_req->number_of_pdus++;
+  ul_req_body->number_of_pdus++;
+  ul_req_body->tl.tag = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
+  ul_req->header.message_id = NFAPI_UL_CONFIG_REQUEST;
+  //ul_req->sfn_sf = sfnsf_add_subframe(ackNAK_absSF/10, ackNAK_absSF%10, 4); // Still need to add 4 to ACK/NAK SFN/SF because of NFAPI running off TX frame 
+  ul_req->sfn_sf = (ackNAK_absSF/10) << 4 | ackNAK_absSF%10;
 
   return(((ackNAK_absSF/10)<<4) + (ackNAK_absSF%10));
 }
@@ -1275,6 +1290,7 @@ void fill_nfapi_dlsch_config(eNB_MAC_INST *eNB,
 
   dl_config_pdu->pdu_type                                                        = NFAPI_DL_CONFIG_DLSCH_PDU_TYPE;
   dl_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_dl_config_dlsch_pdu));
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.length                                 = length;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = pdu_index;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = rnti;
@@ -1298,18 +1314,24 @@ void fill_nfapi_dlsch_config(eNB_MAC_INST *eNB,
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = num_bf_prb_per_subband;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = num_bf_vector;
   dl_req->number_pdu++;
+  dl_req->tl.tag=NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
+
+  //LOG_D(MAC,"Filled DL_CONFIG_PDU - DLSCH - dl_req->number_pdu:%d pdu_index:%d\n", dl_req->number_pdu, pdu_index);
 }
 
 uint16_t fill_nfapi_tx_req(nfapi_tx_request_body_t *tx_req_body,uint16_t absSF,uint16_t pdu_length, uint16_t pdu_index, uint8_t *pdu)
 {
   nfapi_tx_request_pdu_t *TX_req        = &tx_req_body->tx_pdu_list[tx_req_body->number_of_pdus];
-  LOG_D(MAC,"Filling TX_req %d for pdu length %d\n",tx_req_body->number_of_pdus,pdu_length);
+
   TX_req->pdu_length                    = pdu_length;
   TX_req->pdu_index                     = pdu_index;
   TX_req->num_segments                  = 1;
   TX_req->segments[0].segment_length    = pdu_length;
   TX_req->segments[0].segment_data      = pdu;
+  tx_req_body->tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
   tx_req_body->number_of_pdus++;
+
+  //LOG_D(MAC,"Filling TX_req SFN/SF:%d/%d PDUs:%d for pdu length %d pdu_index:%d\n",absSF/10,absSF%10,tx_req_body->number_of_pdus,pdu_length,pdu_index);
 
   return(((absSF/10)<<4) + (absSF%10));
 }
@@ -1338,30 +1360,32 @@ void fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t  *ul_con
 {
   memset((void*)ul_config_pdu,0,sizeof(nfapi_ul_config_request_pdu_t));
 
-  ul_config_pdu->pdu_type                                                        = NFAPI_UL_CONFIG_ULSCH_PDU_TYPE;
-  ul_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_pdu));
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.handle                                 = handle;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti                                   = rnti;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.resource_block_start                   = resource_block_start;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks              = number_of_resource_blocks;
-  if      (mcs<11) ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 2;
-  else if (mcs<21) ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 4;
-  else             ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 6;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.cyclic_shift_2_for_drms                = cyclic_shift_2_for_drms;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_enabled_flag         = frequency_hopping_enabled_flag;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_bits                 = frequency_hopping_bits;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.new_data_indication                    = new_data_indication;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.redundancy_version                     = redundancy_version;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.harq_process_number                    = harq_process_number;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.ul_tx_mode                             = ul_tx_mode;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.current_tx_nb                          = current_tx_nb;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.n_srs                                  = n_srs;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                                   = size;
-
   if (cqi_req == 1) {
+
+    ul_config_pdu->pdu_type                                                                         = NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE;
+    ul_config_pdu->pdu_size                                                                         = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_cqi_ri_pdu));
+
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.tl.tag                                 = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL8_TAG;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.handle                                 = handle;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti                                   = rnti;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.resource_block_start                   = resource_block_start;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks              = number_of_resource_blocks;
+    if      (mcs<11) ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 2;
+    else if (mcs<21) ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 4;
+    else             ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 6;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.cyclic_shift_2_for_drms                = cyclic_shift_2_for_drms;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_enabled_flag         = frequency_hopping_enabled_flag;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_bits                 = frequency_hopping_bits;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.new_data_indication                    = new_data_indication;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.redundancy_version                     = redundancy_version;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.harq_process_number                    = harq_process_number;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.ul_tx_mode                             = ul_tx_mode;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.current_tx_nb                          = current_tx_nb;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.n_srs                                  = n_srs;
+    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.size                                   = size;
+
     // Add CQI portion
-    ul_config_pdu->pdu_type                                                           = NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE;
-    ul_config_pdu->pdu_size                                                           = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_cqi_ri_pdu));
+    ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.tl.tag                  = NFAPI_UL_CONFIG_REQUEST_CQI_RI_INFORMATION_REL9_TAG;
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.report_type             = 1;
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.aperiodic_cqi_pmi_ri_report.number_of_cc = 1;
     LOG_D(MAC,"report_type %d\n",ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.report_type);
@@ -1388,18 +1412,44 @@ void fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t  *ul_con
 
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.delta_offset_cqi        = physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_CQI_Index;
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.delta_offset_ri         = physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_RI_Index;
+
+    LOG_D(MAC,"%s() ri_size:%d\n",__FUNCTION__, ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.aperiodic_cqi_pmi_ri_report.cc[0].ri_size);
+  }
+  else
+  {
+    ul_config_pdu->pdu_type                                                        = NFAPI_UL_CONFIG_ULSCH_PDU_TYPE;
+    ul_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_pdu));
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.tl.tag                                 = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL8_TAG;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.handle                                 = handle;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti                                   = rnti;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.resource_block_start                   = resource_block_start;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks              = number_of_resource_blocks;
+    if      (mcs<11) ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 2;
+    else if (mcs<21) ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 4;
+    else             ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 6;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.cyclic_shift_2_for_drms                = cyclic_shift_2_for_drms;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_enabled_flag         = frequency_hopping_enabled_flag;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_bits                 = frequency_hopping_bits;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.new_data_indication                    = new_data_indication;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.redundancy_version                     = redundancy_version;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.harq_process_number                    = harq_process_number;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.ul_tx_mode                             = ul_tx_mode;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.current_tx_nb                          = current_tx_nb;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.n_srs                                  = n_srs;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                                   = size;
   }
 }
 
 #ifdef Rel14
 void fill_nfapi_ulsch_config_request_emtc(nfapi_ul_config_request_pdu_t  *ul_config_pdu,
-                                          uint8_t ue_type,
-                                          uint16_t total_number_of_repetitions,
-                                          uint16_t repetition_number,
-                                          uint16_t initial_transmission_sf_io)
+    uint8_t ue_type,
+    uint16_t total_number_of_repetitions,
+    uint16_t repetition_number,
+    uint16_t initial_transmission_sf_io)
 {
   // Re13 fields
 
+  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.tl.tag                                = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL13_TAG;
   ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.ue_type                               = ue_type;
   ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.total_number_of_repetitions           = total_number_of_repetitions;
   ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.repetition_number                     = repetition_number;
@@ -1547,6 +1597,10 @@ int find_UE_id(module_id_t mod_idP, rnti_t rntiP)
   UE_list_t *UE_list = &RC.mac[mod_idP]->UE_list;
 
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
+
+    //LOG_D(PHY,"%s(mod_idP:%d, rntiP:%04x) UE_id:%d active:%d UE_PCCID(mod_idP,UE_id):%d UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti:%04x\n", 
+        //__FUNCTION__, mod_idP, rntiP, UE_id, UE_list->active[UE_id], UE_PCCID(mod_idP,UE_id), UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti);
+
     if (UE_list->active[UE_id] != TRUE) continue;
     if (UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti==rntiP) {
       return(UE_id);
@@ -1566,10 +1620,7 @@ int find_RA_id(module_id_t mod_idP, int CC_idP, rnti_t rntiP)
   RA_TEMPLATE *RA_template = (RA_TEMPLATE *)&RC.mac[mod_idP]->common_channels[CC_idP].RA_template[0];
 
   for (RA_id = 0; RA_id < NB_RA_PROC_MAX; RA_id++) {
-    LOG_D(MAC,"Checking RA_id %d for %x : RA_active %d, wait_ack_Msg4 %d\n",
-          RA_id,rntiP,
-          RA_template[RA_id].RA_active,
-          RA_template[RA_id].wait_ack_Msg4);
+    //LOG_D(MAC,"Checking RA_id %d for %x : RA_active %d, wait_ack_Msg4 %d\n", RA_id,rntiP, RA_template[RA_id].RA_active, RA_template[RA_id].wait_ack_Msg4);
 
     if (RA_template[RA_id].RA_active==TRUE &&
         RA_template[RA_id].wait_ack_Msg4 == 0 &&
@@ -1669,8 +1720,7 @@ unsigned char get_aggregation (uint8_t bw_index, uint8_t cqi, uint8_t dci_fmt)
     LOG_W(MAC,"unsupported DCI format %d\n",dci_fmt);
   }
 
-  LOG_D(MAC,"Aggregation level %d (cqi %d, bw_index %d, format %d)\n",
-        1<<aggregation, cqi,bw_index,dci_fmt);
+  //LOG_D(MAC,"Aggregation level %d (cqi %d, bw_index %d, format %d)\n", 1<<aggregation, cqi,bw_index,dci_fmt);
 
   return 1<<aggregation;
 }
@@ -1707,6 +1757,7 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP
   for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
     if (UE_list->active[i] == TRUE) continue;
     UE_id = i;
+    memset(&UE_list->UE_template[cc_idP][UE_id], 0, sizeof(UE_TEMPLATE));
     UE_list->UE_template[cc_idP][UE_id].rnti       = rntiP;
     UE_list->UE_template[cc_idP][UE_id].configured = FALSE;
     UE_list->numactiveCCs[UE_id]                   = 1;
@@ -2076,9 +2127,10 @@ uint8_t UE_is_to_be_scheduled(module_id_t module_idP,int CC_id,uint8_t UE_id)
   if (UE_sched_ctl->ul_out_of_sync>0)
     return(0);
 
-  LOG_D(MAC,"[eNB %d][PUSCH] Checking UL requirements UE %d/%x\n",module_idP,UE_id,UE_RNTI(module_idP,UE_id));
+  //LOG_D(MAC,"[eNB %d][PUSCH] Checking UL requirements UE %d/%x bsr_info:%d:%d:%d:%d ul_SR:%d ul_inactivity_timer:%d ul_scheduled:%d rrc_status:%d\n",module_idP,UE_id,UE_RNTI(module_idP,UE_id),UE_template->bsr_info[LCGID0], UE_template->bsr_info[LCGID1],UE_template->bsr_info[LCGID2],UE_template->bsr_info[LCGID3],UE_template->ul_SR, UE_sched_ctl->ul_inactivity_timer, UE_sched_ctl->ul_scheduled,mac_eNB_get_rrc_status(module_idP,UE_RNTI(module_idP,UE_id)));
 
-  if ((UE_template->bsr_info[LCGID0]>0) ||
+  if (1|| // DJP - no check in
+      (UE_template->bsr_info[LCGID0]>0) ||
       (UE_template->bsr_info[LCGID1]>0) ||
       (UE_template->bsr_info[LCGID2]>0) ||
       (UE_template->bsr_info[LCGID3]>0) ||
@@ -2677,7 +2729,7 @@ int allocate_CCEs(int module_idP,
   int i,j,idci;
   int nCCE=0;
 
-  LOG_D(MAC,"Allocate CCEs subframe %d, test %d : (DL PDU %d, DL DCI %d, UL %d)\n",subframeP,test_onlyP,DL_req->number_pdu,DL_req->number_dci,HI_DCI0_req->number_of_dci);
+  //LOG_D(MAC,"Allocate CCEs subframe %d, test %d : (DL PDU %d, DL DCI %d, UL %d)\n",subframeP,test_onlyP,DL_req->number_pdu,DL_req->number_dci,HI_DCI0_req->number_of_dci);
   DL_req->number_pdcch_ofdm_symbols=1;
 
 try_again:
@@ -2689,7 +2741,7 @@ try_again:
     if ((dl_config_pdu[i].pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE)&&
         (dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti_type==2)
         ) {
-      LOG_D(MAC,"Trying to allocate COMMON DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
+      if (0) LOG_D(MAC,"Trying to allocate COMMON DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
             idci,DL_req->number_dci+HI_DCI0_req->number_of_dci,
             DL_req->number_dci,HI_DCI0_req->number_of_dci,
             dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti,
@@ -2699,7 +2751,7 @@ try_again:
       if (nCCE + (dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level) > nCCE_max) {
         if (DL_req->number_pdcch_ofdm_symbols == 3)
           goto failed;
-        LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols, increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
+        //LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols, increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(&RC.mac[module_idP]->common_channels[CC_idP],DL_req->number_pdcch_ofdm_symbols,subframeP);
         goto try_again;
@@ -2729,7 +2781,7 @@ try_again:
           //dump_CCE_table(CCE_table,nCCE_max,subframeP,dci_alloc->rnti,1<<dci_alloc->L);
           goto failed;
         }
-        LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols (rnti condition), increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
+        //LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols (rnti condition), increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
 
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(&RC.mac[module_idP]->common_channels[CC_idP],DL_req->number_pdcch_ofdm_symbols,subframeP);
@@ -2738,10 +2790,10 @@ try_again:
 
       // the allocation is feasible, rnti rule passes
       nCCE += dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level;
-      LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
+      //LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
       if (test_onlyP == 0) {
         dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.cce_idx=fCCE;
-        LOG_D(MAC,"Allocate COMMON DCI CCEs subframe %d, test %d => L %d fCCE %d\n",subframeP,test_onlyP,dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,fCCE);
+        //LOG_D(MAC,"Allocate COMMON DCI CCEs subframe %d, test %d => L %d fCCE %d\n",subframeP,test_onlyP,dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,fCCE);
       }
       idci++;
     }
@@ -2753,7 +2805,7 @@ try_again:
     // allocate UL DCIs
     if (hi_dci0_pdu[i].pdu_type == NFAPI_HI_DCI0_DCI_PDU_TYPE) {
 
-      LOG_D(MAC,"Trying to allocate format 0 DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
+      if (0)LOG_D(MAC,"Trying to allocate format 0 DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
             idci,DL_req->number_dci+HI_DCI0_req->number_of_dci,
             DL_req->number_dci,HI_DCI0_req->number_of_dci,
             hi_dci0_pdu[i].dci_pdu.dci_pdu_rel8.rnti,hi_dci0_pdu[i].dci_pdu.dci_pdu_rel8.aggregation_level,
@@ -2762,7 +2814,7 @@ try_again:
       if (nCCE + (hi_dci0_pdu[i].dci_pdu.dci_pdu_rel8.aggregation_level) > nCCE_max) {
         if (DL_req->number_pdcch_ofdm_symbols == 3)
           goto failed;
-        LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols, increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
+        //LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols, increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
 
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(&RC.mac[module_idP]->common_channels[CC_idP],DL_req->number_pdcch_ofdm_symbols,subframeP);
@@ -2793,7 +2845,7 @@ try_again:
           //dump_CCE_table(CCE_table,nCCE_max,subframeP,dci_alloc->rnti,1<<dci_alloc->L);
           goto failed;
         }
-        LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols (rnti condition), increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
+        //LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols (rnti condition), increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
 
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(&RC.mac[module_idP]->common_channels[CC_idP],DL_req->number_pdcch_ofdm_symbols,subframeP);
@@ -2802,10 +2854,10 @@ try_again:
 
       // the allocation is feasible, rnti rule passes
       nCCE += hi_dci0_pdu[i].dci_pdu.dci_pdu_rel8.aggregation_level;
-      LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
+      //LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
       if (test_onlyP == 0) {
         hi_dci0_pdu[i].dci_pdu.dci_pdu_rel8.cce_index=fCCE;
-        LOG_D(MAC,"Allocate CCEs subframe %d, test %d\n",subframeP,test_onlyP);
+        //LOG_D(MAC,"Allocate CCEs subframe %d, test %d\n",subframeP,test_onlyP);
       }
       idci++;
     }
@@ -2815,7 +2867,7 @@ try_again:
     // allocate DL UE specific DCIs
     if ((dl_config_pdu[i].pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE)&&
         (dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti_type==1)) {
-      LOG_D(MAC,"Trying to allocate DL UE-SPECIFIC DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
+      if (0)LOG_D(MAC,"Trying to allocate DL UE-SPECIFIC DCI %d/%d (%d,%d) : rnti %x, aggreg %d nCCE %d / %d (num_pdcch_symbols %d)\n",
             idci,DL_req->number_dci+HI_DCI0_req->number_of_dci,
             DL_req->number_dci,HI_DCI0_req->number_of_dci,
             dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti,dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,
@@ -2824,7 +2876,7 @@ try_again:
       if (nCCE + (dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level) > nCCE_max) {
         if (DL_req->number_pdcch_ofdm_symbols == 3)
           goto failed;
-        LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols, increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
+        //LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols, increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
 
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(&RC.mac[module_idP]->common_channels[CC_idP],DL_req->number_pdcch_ofdm_symbols,subframeP);
@@ -2855,7 +2907,7 @@ try_again:
           //dump_CCE_table(CCE_table,nCCE_max,subframeP,dci_alloc->rnti,1<<dci_alloc->L);
           goto failed;
         }
-        LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols (rnti condition), increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
+        //LOG_D(MAC,"Can't fit DCI allocations with %d PDCCH symbols (rnti condition), increasing by 1\n",DL_req->number_pdcch_ofdm_symbols);
 
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(&RC.mac[module_idP]->common_channels[CC_idP],DL_req->number_pdcch_ofdm_symbols,subframeP);
@@ -2864,10 +2916,10 @@ try_again:
 
       // the allocation is feasible, rnti rule passes
       nCCE += dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level;
-      LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
+      //LOG_D(MAC,"Allocating at nCCE %d\n",fCCE);
       if (test_onlyP == 0) {
         dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.cce_idx=fCCE;
-        LOG_D(MAC,"Allocate CCEs subframe %d, test %d\n",subframeP,test_onlyP);
+        //LOG_D(MAC,"Allocate CCEs subframe %d, test %d\n",subframeP,test_onlyP);
       }
       idci++;
     }
@@ -2923,7 +2975,7 @@ nfapi_ul_config_request_pdu_t* has_ul_grant(module_id_t module_idP,int CC_idP,ui
 
   ul_req        = &RC.mac[module_idP]->UL_req_tmp[CC_idP][absSFP%10].ul_config_request_body;
   ul_config_pdu = &ul_req->ul_config_pdu_list[0];
-  LOG_D(MAC,"Checking for rnti %x UL grant in subframeP %d (num pdu %d)\n",rnti,absSFP%10,ul_req->number_of_pdus);
+  //LOG_D(MAC,"Checking for rnti %x UL grant in subframeP %d (num pdu %d)\n",rnti,absSFP%10,ul_req->number_of_pdus);
 
   for (int i=0; i<ul_req->number_of_pdus;i++){
     LOG_D(MAC,"PDU %d : type %d,rnti %x\n",i,ul_config_pdu[i].pdu_type,rnti);
@@ -2982,11 +3034,12 @@ boolean_t CCE_allocation_infeasible(int module_idP,
             subframe, rnti);
     } else {
       dl_config_pdu->pdu_type                                     = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE;
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag            = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti              = rnti;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type         = (format_flag == 0)?2:1;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level = aggregation;
       DL_req->number_pdu++;
-      LOG_D(MAC,"Subframe %d: Checking CCE feasibility format %d : (%x,%d) (%x,%d,%d)\n",
+      if(0)LOG_D(MAC,"Subframe %d: Checking CCE feasibility format %d : (%x,%d) (%x,%d,%d)\n",
         subframe,format_flag,rnti,aggregation,
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti,
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,
@@ -3003,6 +3056,7 @@ boolean_t CCE_allocation_infeasible(int module_idP,
             subframe, rnti);
     } else {
       hi_dci0_pdu->pdu_type                               = NFAPI_HI_DCI0_DCI_PDU_TYPE;
+      hi_dci0_pdu->dci_pdu.dci_pdu_rel8.tl.tag            = NFAPI_HI_DCI0_REQUEST_DCI_PDU_REL8_TAG;
       hi_dci0_pdu->dci_pdu.dci_pdu_rel8.rnti              = rnti;
       hi_dci0_pdu->dci_pdu.dci_pdu_rel8.aggregation_level = aggregation;
       HI_DCI0_req->number_of_dci++;
@@ -3078,10 +3132,9 @@ void extract_harq(module_id_t mod_idP,int CC_idP,int UE_id,frame_t frameP,sub_fr
         if (tmode[0]==1 || tmode[0]==2 || tmode[0]==5 || tmode[0]==6 || tmode[0]==7) { // NOTE: have to handle the case of TM9-10 with 1 antenna port
           // single ACK/NAK bit
           AssertFatal(num_ack_nak==1,"num_ack_nak %d > 1 for 1 CC and single-layer transmission\n",num_ack_nak);
-          AssertFatal(sched_ctl->round[CC_idP][harq_pid]<8,"Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",harq_pid,UE_id,rnti);
+          AssertFatal(sched_ctl->round[CC_idP][harq_pid]<8,"Got ACK/NAK for inactive harq_pid %d for UE %d/%x SFN/SF:%d%d\n",harq_pid,UE_id,rnti,frameP,subframeP);
           AssertFatal(pdu[0] == 1 || pdu[0] == 2 || pdu[0] == 4,
                       "Received ACK/NAK %d which is not 1 or 2 for harq_pid %d from UE %d/%x\n",pdu[0],harq_pid,UE_id,rnti);
-          LOG_D(MAC,"Received %d for harq_pid %d\n",pdu[0],harq_pid);
 
           if (pdu[0] == 1) { // ACK
             sched_ctl->round[CC_idP][harq_pid]=8; // release HARQ process
@@ -3089,10 +3142,13 @@ void extract_harq(module_id_t mod_idP,int CC_idP,int UE_id,frame_t frameP,sub_fr
           }
           else if (pdu[0] == 2 || pdu[0] == 4) // NAK (treat DTX as NAK)
             sched_ctl->round[CC_idP][harq_pid]++; // increment round
+
+          LOG_D(MAC,"Received PDU[0]:%d for harq_pid %d [round:%d tbcnt:%d]\n",pdu[0],harq_pid,sched_ctl->round[CC_idP][harq_pid],sched_ctl->tbcnt[CC_idP][harq_pid]);
         }
         else {
           // one or two ACK/NAK bits
           AssertFatal(num_ack_nak>2,"num_ack_nak %d > 2 for 1 CC and TM3/4/8/9/10\n",num_ack_nak);
+          LOG_D(MAC,"Received PDU[0]:%d:[1]:%d for harq_pid %d [round:%d tbcnt:%d]\n",pdu[0],pdu[1],harq_pid,sched_ctl->round[CC_idP][harq_pid],sched_ctl->tbcnt[CC_idP][harq_pid]);
           if ((num_ack_nak==2) && (sched_ctl->round[CC_idP][harq_pid]<8) && (sched_ctl->tbcnt[CC_idP][harq_pid]==1) && (pdu[0] == 1) && (pdu[1] == 1)) {
             sched_ctl->round[CC_idP][harq_pid]=8;
             sched_ctl->tbcnt[CC_idP][harq_pid]=0;
@@ -3109,6 +3165,7 @@ void extract_harq(module_id_t mod_idP,int CC_idP,int UE_id,frame_t frameP,sub_fr
           else AssertFatal(1==0,"Illegal ACK/NAK/round combination (%d,%d,%d,%d,%d) for harq_pid %d, UE %d/%x\n",
                            num_ack_nak,sched_ctl->round[CC_idP][harq_pid],sched_ctl->round[CC_idP][harq_pid],pdu[0],pdu[1], harq_pid,UE_id,
                            rnti);
+          LOG_D(MAC,"AFTER Received PDU[0]:%d:[1]:%d for harq_pid %d [round:%d tbcnt:%d]\n",pdu[0],pdu[1],harq_pid,sched_ctl->round[CC_idP][harq_pid],sched_ctl->tbcnt[CC_idP][harq_pid]);
         }
         break;
       case 1: // FDD Channel Selection (10.1.2.2.1), must be received for 2 serving cells
@@ -3600,13 +3657,15 @@ void SR_indication(module_id_t mod_idP, int cc_idP, frame_t frameP, sub_frame_t 
   int UE_id = find_UE_id(mod_idP, rntiP);
   UE_list_t *UE_list = &RC.mac[mod_idP]->UE_list;
 
-  if (UE_id  != -1) {
-    if (mac_eNB_get_rrc_status(mod_idP,UE_RNTI(mod_idP,UE_id)) < RRC_CONNECTED)
-      LOG_D(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d on CC_id %d\n",mod_idP,rntiP,frameP,subframeP, UE_id,cc_idP);
+  LOG_D(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d on CC_id %d\n",mod_idP,rntiP,frameP,subframeP,UE_id,cc_idP);
 
-    UE_sched_ctrl *sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
+  if (UE_id  != -1) {
+    //if (mac_eNB_get_rrc_status(mod_idP,UE_RNTI(mod_idP,UE_id)) < RRC_CONNECTED)
+      //LOG_D(MAC,"[eNB %d][SR %x] Frame %d subframeP %d Signaling SR for UE %d on CC_id %d\n",mod_idP,rntiP,frameP,subframeP,UE_id,cc_idP);
 
 #if 0
+    UE_sched_ctrl *sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
+
     /* for the moment don't use ul_cqi from SR, value is too different from harq */
     sched_ctl->pucch1_snr[cc_idP]        = ul_cqi;
     sched_ctl->pucch1_cqi_update[cc_idP] = 1;

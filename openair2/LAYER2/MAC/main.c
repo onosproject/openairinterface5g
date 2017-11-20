@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -47,6 +47,7 @@
 #include "common/ran_context.h"
 
 extern RAN_CONTEXT_t RC;
+extern void openair_rrc_top_init_ue( int eMBMS_active, char* uecap_xer, uint8_t cba_group_active, uint8_t HO_active);
 
 void dl_phy_sync_success(module_id_t   module_idP,
                          frame_t       frameP,
@@ -112,7 +113,7 @@ int mac_top_init_ue(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
 }
 
 
-void mac_top_init_eNB()
+void mac_top_init_eNB(void)
 {
 
   module_id_t    i,j;
@@ -343,7 +344,7 @@ int l2_init_ue(int eMBMS_active, char *uecap_xer,uint8_t cba_group_active, uint8
   return(1);
 }
 
-int l2_init_eNB()
+int l2_init_eNB(void)
 {
 
 

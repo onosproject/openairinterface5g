@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -211,19 +211,11 @@ static void configure_rrc(uint32_t enb_id)
 static uint32_t eNB_app_register(uint32_t enb_id_start, uint32_t enb_id_end)//, const Enb_properties_array_t *enb_properties)
 {
   uint32_t         enb_id;
-  uint32_t         mme_id;
   MessageDef      *msg_p;
   uint32_t         register_enb_pending = 0;
-  char            *str                  = NULL;
-  struct in_addr   addr;
-
-#   if defined(OAI_EMU)
-
-#   endif
 
   for (enb_id = enb_id_start; (enb_id < enb_id_end) ; enb_id++) {
 #   if defined(OAI_EMU)
-
     if (oai_emulation.info.cli_start_enb[enb_id] == 1)
 #   endif
     {
@@ -307,15 +299,18 @@ void *eNB_app_task(void *args_p)
   const char                      *msg_name        = NULL;
   instance_t                      instance;
   int                             result;
-  int                             j;
   /* for no gcc warnings */
   (void)instance;
 
   itti_mark_task_ready (TASK_ENB_APP);
 
+  LOG_I(PHY, "%s() Task ready initialise structures\n", __FUNCTION__);
+
   RCconfig_L1();
 
   RCconfig_macrlc();
+
+  LOG_I(PHY, "%s() RC.nb_L1_inst:%d\n", __FUNCTION__, RC.nb_L1_inst);
 
   if (RC.nb_L1_inst>0) AssertFatal(l1_north_init_eNB()==0,"could not initialize L1 north interface\n");
 
@@ -339,9 +334,11 @@ void *eNB_app_task(void *args_p)
   LOG_I(ENB_APP,"Allocating eNB_RRC_INST for %d instances\n",RC.nb_inst);
 
   RC.rrc = (eNB_RRC_INST **)malloc(RC.nb_inst*sizeof(eNB_RRC_INST *));
+  LOG_I(PHY, "%s() RC.nb_inst:%d RC.rrc:%p\n", __FUNCTION__, RC.nb_inst, RC.rrc);
 
   for (enb_id = enb_id_start; (enb_id < enb_id_end) ; enb_id++) {
     RC.rrc[enb_id] = (eNB_RRC_INST*)malloc(sizeof(eNB_RRC_INST));
+    LOG_I(PHY, "%s() Creating RRC instance RC.rrc[%d]:%p (%d of %d)\n", __FUNCTION__, enb_id, RC.rrc[enb_id], enb_id+1, enb_id_end);
     memset((void *)RC.rrc[enb_id],0,sizeof(eNB_RRC_INST));
     configure_rrc(enb_id);
   }

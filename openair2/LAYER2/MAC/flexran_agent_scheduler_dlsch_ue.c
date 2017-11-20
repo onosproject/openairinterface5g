@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -178,7 +178,7 @@ void _store_dlsch_buffer (module_id_t Mod_id,
        */
       if (UE_template->dl_buffer_info[i]>0)
         LOG_D(MAC,
-              "[eNB %d][SLICE %d] Frame %d Subframe %d : RLC status for UE %d in LCID%d: total of %d pdus and size %d, head sdu queuing time %d, remaining size %d, is segmeneted %d \n",
+              "[eNB %d][SLICE %d] Frame %d Subframe %d : RLC status for UE %d in LCID%d: total of %d pdus and size %d, head sdu queuing time %d, remaining size %d, is segmented %d \n",
               Mod_id, slice_id,frameP, subframeP, UE_id,
               i, UE_template->dl_pdus_in_buffer[i],UE_template->dl_buffer_info[i],
               UE_template->dl_buffer_head_sdu_creation_time[i],
@@ -275,7 +275,7 @@ void _assign_rbs_required (module_id_t Mod_id,
         TBS = mac_xface->get_TBS_DL(cqi_to_mcs[flexran_get_ue_wcqi(Mod_id, UE_id)], nb_rbs_required[CC_id][UE_id]);
 	nb_rbs_allowed_slice[CC_id][slice_id] = flexran_nb_rbs_allowed_slice(slice_percentage[slice_id],
 									     flexran_get_N_RB_DL(Mod_id, CC_id));
-        LOG_D(MAC,"[preprocessor] start RB assignement for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
+        LOG_D(MAC,"[preprocessor] start RB assignment for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
               UE_id, CC_id, UE_list->UE_template[pCCid][UE_id].dl_buffer_total,
               nb_rbs_required[CC_id][UE_id], flexran_get_ue_wcqi(Mod_id, UE_id), TBS);
 
@@ -548,11 +548,11 @@ void _dlsch_scheduler_pre_processor (module_id_t   Mod_id,
       }
 
 
-      // hypotetical assignement
+      // hypotetical assignment
       /*
        * If schedule is enabled and if the priority of the UEs is modified
        * The average rbs per logical channel per user will depend on the level of
-       * priority. Concerning the hypothetical assignement, we should assign more
+       * priority. Concerning the hypothetical assignment, we should assign more
        * rbs to prioritized users. Maybe, we can do a mapping between the
        * average rbs per user and the level of priority or multiply the average rbs
        * per user by a coefficient which represents the degree of priority.

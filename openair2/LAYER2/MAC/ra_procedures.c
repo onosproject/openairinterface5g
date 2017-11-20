@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -35,6 +35,7 @@
 #include "proto.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 #include "PHY_INTERFACE/extern.h"
+#include "SCHED/defs.h"
 #include "COMMON/mac_rrc_primitives.h"
 #include "RRC/LITE/extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
@@ -49,6 +50,8 @@
 #include "SIMULATION/TOOLS/defs.h" // for taus
 
 extern uint8_t  nfapi_mode;
+extern UE_MODE_t get_ue_mode(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
+
 
 int8_t get_DELTA_PREAMBLE(module_id_t module_idP,int CC_id)
 {

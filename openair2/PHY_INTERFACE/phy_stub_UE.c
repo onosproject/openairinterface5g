@@ -42,7 +42,7 @@ void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND
 	  //eNB->UL_INFO.rx_ind.sfn_sf                    = frame<<4| subframe;
 	  //eNB->UL_INFO.rx_ind.rx_indication_body.tl.tag = NFAPI_RX_INDICATION_BODY_TAG;
 
-	  pdu                                    = &UL_INFO->rx_ind.rx_pdu_list[UL_INFO->rx_ind.number_of_pdus];
+	  pdu                                    = &UL_INFO->rx_ind.rx_indication_body.rx_pdu_list[UL_INFO->rx_ind.rx_indication_body.number_of_pdus];
 
 	  //  pdu->rx_ue_information.handle          = eNB->ulsch[UE_id]->handle;
 	  pdu->rx_ue_information.tl.tag          = NFAPI_RX_UE_INFORMATION_TAG;
@@ -100,7 +100,7 @@ void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND
 		harq_pid,SNRtimes10,pdu->rx_indication_rel8.ul_cqi,pdu->rx_indication_rel8.timing_advance,
 		timing_advance_update);*/
 
-	  UL_INFO->rx_ind.number_of_pdus++;
+	  UL_INFO->rx_ind.rx_indication_body.number_of_pdus++;
 	  pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 
 
@@ -109,7 +109,7 @@ void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND
 void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint16_t rnti) {
 
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
-  nfapi_sr_indication_pdu_t *pdu =   &UL_INFO->sr_ind.sr_pdu_list[UL_INFO->rx_ind.number_of_pdus];
+  nfapi_sr_indication_pdu_t *pdu =   &UL_INFO->sr_ind.sr_indication_body.sr_pdu_list[UL_INFO->rx_ind.rx_indication_body.number_of_pdus];
 
   pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
@@ -127,7 +127,7 @@ void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_I
   else                        pdu->ul_cqi_information.ul_cqi=(640+SNRtimes10)/5;
   pdu->ul_cqi_information.channel = 0;
 
-  UL_INFO->rx_ind.number_of_pdus++;
+  UL_INFO->rx_ind.rx_indication_body.number_of_pdus++;
   pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 }
 
@@ -135,7 +135,7 @@ void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_I
 void fill_crc_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t crc_flag) {
 
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
-  nfapi_crc_indication_pdu_t *pdu =   &UL_INFO->crc_ind.crc_pdu_list[UL_INFO->crc_ind.number_of_crcs];
+  nfapi_crc_indication_pdu_t *pdu =   &UL_INFO->crc_ind.crc_indication_body.crc_pdu_list[UL_INFO->crc_ind.crc_indication_body.number_of_crcs];
 
   //eNB->UL_INFO.crc_ind.sfn_sf                         = frame<<4 | subframe;
   //eNB->UL_INFO.crc_ind.crc_indication_body.tl.tag     = NFAPI_CRC_INDICATION_BODY_TAG;
@@ -147,9 +147,9 @@ void fill_crc_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_
   pdu->crc_indication_rel8.tl.tag                     = NFAPI_CRC_INDICATION_REL8_TAG;
   pdu->crc_indication_rel8.crc_flag                   = crc_flag;
 
-  UL_INFO->crc_ind.number_of_crcs++;
+  UL_INFO->crc_ind.crc_indication_body.number_of_crcs++;
 
-  LOG_D(PHY, "%s() rnti:%04x pdus:%d\n", __FUNCTION__, pdu->rx_ue_information.rnti, UL_INFO->crc_ind.number_of_crcs);
+  LOG_D(PHY, "%s() rnti:%04x pdus:%d\n", __FUNCTION__, pdu->rx_ue_information.rnti, UL_INFO->crc_ind.crc_indication_body.number_of_crcs);
 
   pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 }
@@ -158,21 +158,21 @@ void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL
 
 	pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 
-	    UL_INFO->rach_ind.number_of_preambles                 = 1;
+	    UL_INFO->rach_ind.rach_indication_body.number_of_preambles                 = 1;
 	    //eNB->UL_INFO.rach_ind.preamble_list                       = &eNB->preamble_list[0];
-	    UL_INFO->rach_ind.tl.tag                              = NFAPI_RACH_INDICATION_BODY_TAG;
+	    UL_INFO->rach_ind.rach_indication_body.tl.tag                              = NFAPI_RACH_INDICATION_BODY_TAG;
 
-	    UL_INFO->rach_ind.preamble_list[0].preamble_rel8.tl.tag   		= NFAPI_PREAMBLE_REL8_TAG;
-	    UL_INFO->rach_ind.preamble_list[0].preamble_rel8.timing_advance = 0; //Panos: Not sure about that
+	    UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.tl.tag   		= NFAPI_PREAMBLE_REL8_TAG;
+	    UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.timing_advance = 0; //Panos: Not sure about that
 
 	    //Panos: The two following should get extracted from the call to get_prach_resources().
-	    UL_INFO->rach_ind.preamble_list[0].preamble_rel8.preamble = ra_PreambleIndex;
-	    UL_INFO->rach_ind.preamble_list[0].preamble_rel8.rnti 	  = ra_RNTI;
-	    UL_INFO->rach_ind.number_of_preambles++;
+	    UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.preamble = ra_PreambleIndex;
+	    UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.rnti 	  = ra_RNTI;
+	    UL_INFO->rach_ind.rach_indication_body.number_of_preambles++;
 
 
-	    UL_INFO->rach_ind.preamble_list[0].preamble_rel13.rach_resource_type = 0;
-	    UL_INFO->rach_ind.preamble_list[0].instance_length					 = 0;
+	    UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel13.rach_resource_type = 0;
+	    UL_INFO->rach_ind.rach_indication_body.preamble_list[0].instance_length					 = 0;
 
 
 	        // If NFAPI PNF then we need to send the message to the VNF
@@ -189,10 +189,10 @@ void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL
 
 	          LOG_E(PHY,"\n\n\n\nDJP - this needs to be sent to VNF **********************************************\n\n\n\n");
 	          LOG_E(PHY,"UE Filling NFAPI indication for RACH : TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
-	        	  UL_INFO->rach_ind.preamble_list[0].preamble_rel8.timing_advance,
-	        	  UL_INFO->rach_ind.preamble_list[0].preamble_rel8.preamble,
-	        	  UL_INFO->rach_ind.preamble_list[0].preamble_rel8.rnti,
-	        	  UL_INFO->rach_ind.preamble_list[0].preamble_rel13.rach_resource_type);
+	        	  UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.timing_advance,
+	        	  UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.preamble,
+	        	  UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.rnti,
+	        	  UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel13.rach_resource_type);
 
 	          //Panos: This function is currently defined only in the nfapi-RU-RAU-split so we should call it when we merge
 	          // with that branch.
@@ -251,7 +251,7 @@ void fill_ulsch_harq_indication_UE_MAC(int Mod_id, int frame,int subframe, UL_IN
   //AssertFatal(UE_id>=0,"UE_id doesn't exist\n");
 
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
-  nfapi_harq_indication_pdu_t *pdu =   &UL_INFO->harq_ind.harq_pdu_list[UL_INFO->harq_ind.number_of_harqs];
+  nfapi_harq_indication_pdu_t *pdu =   &UL_INFO->harq_ind.harq_indication_body.harq_pdu_list[UL_INFO->harq_ind.harq_indication_body.number_of_harqs];
   int i;
 
   pdu->instance_length                                = 0; // don't know what to do with this
@@ -298,7 +298,7 @@ void fill_ulsch_harq_indication_UE_MAC(int Mod_id, int frame,int subframe, UL_IN
     }
   }*/
 
-  UL_INFO->harq_ind.number_of_harqs++;
+  UL_INFO->harq_ind.harq_indication_body.number_of_harqs++;
   pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 }
 
@@ -317,7 +317,7 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
 
 
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
-  nfapi_harq_indication_pdu_t *pdu =   &UL_INFO->harq_ind.harq_pdu_list[UL_INFO->harq_ind.number_of_harqs];
+  nfapi_harq_indication_pdu_t *pdu =   &UL_INFO->harq_ind.harq_indication_body.harq_pdu_list[UL_INFO->harq_ind.harq_indication_body.number_of_harqs];
 
   pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
@@ -461,8 +461,8 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
   } //TDD*/
 
 
-  UL_INFO->harq_ind.number_of_harqs++;
-  LOG_E(PHY,"Incremented eNB->UL_INFO.harq_ind.number_of_harqs:%d\n", UL_INFO->harq_ind.number_of_harqs);
+  UL_INFO->harq_ind.harq_indication_body.number_of_harqs++;
+  LOG_E(PHY,"Incremented eNB->UL_INFO.harq_ind.number_of_harqs:%d\n", UL_INFO->harq_ind.harq_indication_body.number_of_harqs);
   pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 
 }

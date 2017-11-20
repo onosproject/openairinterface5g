@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -173,6 +173,8 @@ int generate_pbch(LTE_eNB_PBCH *eNB_pbch,
 
   pbch_E  = (frame_parms->Ncp==NORMAL) ? 1920 : 1728; //RE/RB * #RB * bits/RB (QPSK)
   //  pbch_E_bytes = pbch_coded_bits>>3;
+
+  LOG_D(PHY,"%s(eNB_pbch:%p txdataF:%p amp:%d frame_parms:%p pbch_pdu:%p frame_mod4:%d)\n", __FUNCTION__, eNB_pbch, txdataF, amp, frame_parms, pbch_pdu, frame_mod4==0);
 
   if (frame_mod4==0) {
     bzero(pbch_a,PBCH_A>>3);

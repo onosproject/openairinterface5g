@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -399,6 +399,17 @@ const char* eurecomFunctionsNames[] = {
 
   "compress_if",
   "decompress_if",
+
+  "nfapi_subframe",
+  "generate_pcfich",
+  "generate_dci0",
+  "generate_dlsch",
+  "generate_phich",
+  "pdcch_scrambling",
+  "pdcch_modulation",
+  "pdcch_interleaving",
+  "pdcch_tx",
+
 };
 
 struct vcd_module_s vcd_modules[] = {

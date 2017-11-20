@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -185,7 +185,7 @@ int generate_eNB_ulsch_params_from_rar(PHY_VARS_eNB *eNB,
   LOG_D(PHY,"ulsch ra (eNB): harq_pid %d\n",harq_pid);
   LOG_D(PHY,"ulsch ra (eNB): round    %d\n",ulsch_harq->round);
   LOG_D(PHY,"ulsch ra (eNB): TBS      %d\n",ulsch_harq->TBS);
-  LOG_D(PHY,"ulsch ra (eNB): mcs      %d\n",ulsch_harq->mcs);
+  LOG_D(PHY,"ulsch ra (eNB): mcs      %d\n",ulsch_harq->Msc_initial);
   LOG_D(PHY,"ulsch ra (eNB): Or1      %d\n",ulsch_harq->Or1);
   LOG_D(PHY,"ulsch ra (eNB): ORI      %d\n",ulsch_harq->O_RI);
 #endif
