@@ -27,7 +27,7 @@
 #include "SIMULATION/TOOLS/defs.h"
 
 #include "Gen_shift_value.h"
-#include "test.h"
+
 // 4-bit quantizer
 char quantize4bit(double D,double x)
 {
@@ -95,7 +95,6 @@ int test_ldpc(short No_iteration,
   double *modulated_input;
   short *channel_output_fixed;
   unsigned int i,trial=0;   
-  unsigned char crc_type;
 
 short *Gen_shift_values, *no_shift_values, *pointer_shift_values;
 short BG,Zc,Kb,nrows,ncols;
@@ -302,17 +301,16 @@ int main(int argc, char *argv[])
   
   unsigned int errors,crc_misses;
   unsigned int block_length=1280;
-short No_iteration=25;
-double rate=0.2;
+  short No_iteration=25;
+  double rate=0.2;
   double SNR,SNR_lin;
   unsigned char qbits;
+  time_stats_t time;
   
-  unsigned char NB_RB=25;
+  int i=0;
 
-  int num_pdcch_symbols = 1;
-  int subframe = 6;
-
-int i=0;
+  opp_enabled=1;
+  cpu_freq_GHz = get_cpu_freq_GHz();
 
   randominit(0);
   //logInit();
@@ -324,9 +322,9 @@ int i=0;
 
   //printf("Quantization bits %d\n",qbits);
 
-unsigned int decoded_errors[2]; // initiate the size of matrix equivalent to
-				// size of SNR
-for (SNR=-3; SNR<-2.8; SNR+=.1) {
+  unsigned int decoded_errors[100]; // initiate the size of matrix equivalent to
+  // size of SNR
+  for (SNR=-3.5; SNR<-2.5; SNR+=.1) {
 
     SNR_lin = pow(10,SNR/10);
     
@@ -342,22 +340,26 @@ for (SNR=-3; SNR<-2.8; SNR+=.1) {
 		      &crc_misses,
 		      &iterations);
 */
-decoded_errors[i]=test_ldpc(No_iteration,
+
+    start_meas(&time);
+    decoded_errors[i]=test_ldpc(No_iteration,
 		      rate,		     
 		      SNR_lin,   // noise standard deviation
 		      qbits,
 		      block_length,   // block length bytes
 		      NTRIALS,
 		      &errors,
-		      
-		      
 		      &crc_misses);
-i=i+1;
+    stop_meas(&time);
+
+    print_meas_now(&time, "", stdout);
+
+    printf("SNR %f, BLER %f (%d/%d)\n",SNR,(float)decoded_errors[i]/(float)NTRIALS,decoded_errors[i],NTRIALS);
+
+    i=i+1;
    
   }
-printf("%d\n",decoded_errors[0]);
-printf("%d\n",decoded_errors[1]);
-//printf("%d\n",errors[2]);
+
   return(0);
 }
 
