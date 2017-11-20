@@ -74,6 +74,15 @@ void adc(double *r_re[2],
          unsigned int length,
          unsigned char B);
 
+void adc_freq(double *r_re[2],
+         double *r_im[2],
+         unsigned int input_offset,
+         unsigned int output_offset,
+         int **output,
+         unsigned int nb_rx_antennas,
+         unsigned int length,
+         unsigned char B);
+
 void adc_prach(double *r_re[2],
          double *r_im[2],
          unsigned int input_offset,

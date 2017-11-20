@@ -2636,10 +2636,11 @@ void fep0(PHY_VARS_eNB *eNB,int slot) {
   eNB_proc_t *proc       = &eNB->proc;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   int l;
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
 
   //  printf("fep0: slot %d\n",slot);
-
-  remove_7_5_kHz(eNB,(slot&1)+(proc->subframe_rx<<1));
+  if (!do_ofdm_mod)
+  	remove_7_5_kHz(eNB,(slot&1)+(proc->subframe_rx<<1));
   for (l=0; l<fp->symbols_per_tti/2; l++) {
     slot_fep_ul(fp,
 		&eNB->common_vars,
@@ -2775,27 +2776,30 @@ void eNB_fep_full_2thread(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
 void eNB_fep_full(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
 
   int l;
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_SLOT_FEP,1);
   start_meas(&eNB->ofdm_demod_stats);
-  remove_7_5_kHz(eNB,proc_rxtx->subframe_rx<<1);
-  remove_7_5_kHz(eNB,1+(proc_rxtx->subframe_rx<<1));
-  for (l=0; l<fp->symbols_per_tti/2; l++) {
-    slot_fep_ul(fp,
-		&eNB->common_vars,
-		l,
-		(proc_rxtx->subframe_rx)<<1,
-		0,
-		0
-		);
-    slot_fep_ul(fp,
-		&eNB->common_vars,
-		l,
-		1+((proc_rxtx->subframe_rx)<<1),
-		0,
-		0
-		);
+  if (!do_ofdm_mod){
+  	  remove_7_5_kHz(eNB,proc_rxtx->subframe_rx<<1);
+  	  remove_7_5_kHz(eNB,1+(proc_rxtx->subframe_rx<<1));
+	  for (l=0; l<fp->symbols_per_tti/2; l++) {
+	    slot_fep_ul(fp,
+			&eNB->common_vars,
+			l,
+			(proc_rxtx->subframe_rx)<<1,
+			0,
+			0
+			);
+	    slot_fep_ul(fp,
+			&eNB->common_vars,
+			l,
+			1+((proc_rxtx->subframe_rx)<<1),
+			0,
+			0
+			);
+	  }
   }
   stop_meas(&eNB->ofdm_demod_stats);
   

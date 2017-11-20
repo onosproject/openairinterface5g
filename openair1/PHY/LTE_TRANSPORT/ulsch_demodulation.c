@@ -1582,6 +1582,7 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
   LTE_eNB_COMMON *common_vars = &eNB->common_vars;
   LTE_eNB_PUSCH *pusch_vars = eNB->pusch_vars[UE_id];
   LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
 
   uint32_t l,i;
   int32_t avgs;
@@ -1622,7 +1623,6 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
         common_vars->rxdataF[eNB_id],
         pusch_vars->rxdataF_ext[eNB_id]);
 #endif //DEBUG_ULSCH
-
     ulsch_extract_rbs_single(common_vars->rxdataF[eNB_id],
                              pusch_vars->rxdataF_ext[eNB_id],
                              ulsch[UE_id]->harq_processes[harq_pid]->first_rb,
