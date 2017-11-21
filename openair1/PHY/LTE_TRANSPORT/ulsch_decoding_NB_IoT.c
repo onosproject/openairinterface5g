@@ -733,6 +733,7 @@ int ulsch_decoding_data_2thread(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr
   return( (ret>proc->tdp.ret) ? ret : proc->tdp.ret );
 }
 */
+
 /*
 // NB_IoT: functions in ulsch_decoding_data_NB_IoT must be defined
 
@@ -983,7 +984,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
   // x1 is set in lte_gold_generic
   // x2 should not reinitialized each subframe
   // x2 should be reinitialized according to 36.211 Sections 10.1.3.1 and 10.1.3.6
-  x2         =  ((uint32_t)ulsch->rnti<<14) + ((uint32_t)subframe<<9) + (((uint32_t)proc->frame_rx%2)<<13) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.3.1
+  x2         =  ((uint32_t)ulsch->rnti<<14) + ((uint32_t)subframe<<9) + (((uint32_t)proc->frame_rx%2)<<13) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 10.1.3.1
   ulsch_harq =  ulsch->harq_process;
 
   if (harq_pid==255) {
@@ -1000,7 +1001,8 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
 /* ----------------------- Segmentation */
 
-  nb_rb = ulsch_harq->nb_rb;  // nb_rb set but not used ??
+  // nb_rb = ulsch_harq->nb_rb;  // nb_rb set but not used ??
+  nb_rb = 1;  // nb_rb set but not used ??
   A     = ulsch_harq->TBS;
   Q_m   = get_Qm_ul_NB_IoT(ulsch_harq->mcs,ulsch_harq->N_sc_RU);
   //G     = nb_rb * (12 * Q_m) * ulsch_harq->Nsymb_pusch;

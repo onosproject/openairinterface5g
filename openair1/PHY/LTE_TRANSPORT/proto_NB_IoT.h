@@ -251,5 +251,40 @@ uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc);
 void generate_grouphop_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms); 
 
 void init_ul_hopping_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms); 
+
+void rotate_single_carrier_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, 
+                                  NB_IoT_DL_FRAME_PARMS *frame_parms,
+                                  int32_t **rxdataF_comp, 
+                                  uint8_t UE_id,
+                                  uint8_t symbol, 
+                                  uint8_t Qm); 
+
+void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, 
+                                  NB_IoT_DL_FRAME_PARMS *frame_parms,
+                                  int32_t **rxdataF_comp, 
+                                  uint8_t UE_id,
+                                  uint8_t symbol); 
+
+int32_t ulsch_bpsk_llr_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, 
+                              NB_IoT_DL_FRAME_PARMS *frame_parms,
+                              int32_t **rxdataF_comp,
+                              int16_t *ulsch_llr,
+                              uint8_t symbol, 
+                              uint8_t uint8_t, 
+                              int16_t **llrp); 
+
+int32_t ulsch_qpsk_llr_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, 
+                              NB_IoT_DL_FRAME_PARMS *frame_parms,
+                              int32_t **rxdataF_comp,
+                              int16_t *ulsch_llr, 
+                              uint8_t symbol, 
+                              uint8_t UE_id, 
+                              int16_t **llrp); 
+
+void rotate_bpsk_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, 
+                        NB_IoT_DL_FRAME_PARMS *frame_parms,
+                        int32_t **rxdataF_comp, 
+                        uint8_t UE_id,
+                        uint8_t symbol); 
 //************************************************************//
 #endif
