@@ -29,7 +29,16 @@
 * \note
 * \warning
 */
-
+/*! \file PHY/LTE_TRANSPORT/ulsch_decoding.c
+* \brief Top-level routines for decoding  the ULSCH transport channel from 36.212 V8.6 2009-03
+* \author V. Savaux
+* \date 2017
+* \version 0.1
+* \company b<>com
+* \email: vincent.savaux@b-com.com
+* \note
+* \warning
+*/
 //#include "defs.h"
 
 //#include "PHY/defs.h"
@@ -37,7 +46,7 @@
 #include "PHY/extern_NB_IoT.h"
 #include "PHY/LTE_TRANSPORT/vars_NB_IoT.h"
 #include "PHY/CODING/defs_NB_IoT.h"
-//#include "PHY/CODING/extern.h"
+#include "PHY/CODING/extern.h"
 //#include "extern_NB_IoT.h"
 //#include "SCHED/extern.h"
 /*
@@ -734,7 +743,7 @@ int ulsch_decoding_data_2thread(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr
 }
 */
 
-/*
+
 // NB_IoT: functions in ulsch_decoding_data_NB_IoT must be defined
 
 int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,int llr8_flag) {
@@ -743,9 +752,10 @@ int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,i
   uint8_t crc_type;
   int offset = 0;
   int ret = 1;
-  int16_t dummy_w[MAX_NUM_ULSCH_SEGMENTS][3*(6144+64)];
-  LTE_eNB_ULSCH_t *ulsch = eNB->ulsch[UE_id];
-  LTE_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_processes[harq_pid];
+  int16_t dummy_w[MAX_NUM_ULSCH_SEGMENTS_NB_IoT][3*(6144+64)];
+  NB_IoT_eNB_NULSCH_t *ulsch = eNB->ulsch[UE_id];
+  // NB_IoT_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_process[harq_pid];
+  NB_IoT_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_process;
   //int Q_m = get_Qm_ul(ulsch_harq->mcs);
   int G = ulsch_harq->G;
   unsigned int E;
@@ -758,13 +768,13 @@ int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,i
                 uint8_t,
                 uint8_t,
                 uint8_t,
-                time_stats_t *,
-                time_stats_t *,
-                time_stats_t *,
-                time_stats_t *,
-                time_stats_t *,
-                time_stats_t *,
-                time_stats_t *);
+                time_stats_t_NB_IoT *,
+                time_stats_t_NB_IoT *,
+                time_stats_t_NB_IoT *,
+                time_stats_t_NB_IoT *,
+                time_stats_t_NB_IoT *,
+                time_stats_t_NB_IoT *,
+                time_stats_t_NB_IoT *);
 
   if (llr8_flag == 0)
     tc = phy_threegpplte_turbo_decoder16;
@@ -900,7 +910,7 @@ int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,i
   return(ret);
 }
 
-*/
+
 
 // NB_IoT: functions in ulsch_decoding_data_NB_IoT must be defined :ulsch_decoding_data_NB_IoT (defined in this file)
 
@@ -1006,7 +1016,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
   A     = ulsch_harq->TBS;
   Q_m   = get_Qm_ul_NB_IoT(ulsch_harq->mcs,ulsch_harq->N_sc_RU);
   //G     = nb_rb * (12 * Q_m) * ulsch_harq->Nsymb_pusch;
-  G     = (ulsch_harq->N_sc_RU * Q_m) * ulsch_harq->Nsymb_UL * ulsch_harq->Nslot_UL;
+  G     = (ulsch_harq->N_sc_RU * Q_m) * ulsch_harq->Nsymb_UL * ulsch_harq->Nslot_UL; // see 36.212, Section 5.1.4.1.2
 
 #ifdef DEBUG_ULSCH_DECODING
   printf("ulsch_decoding (Nid_cell %d, rnti %x, x2 %x): round %d, RV %d, mcs %d, O_RI %d, O_ACK %d, G %d, subframe %d\n",
@@ -1145,7 +1155,9 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
   // Cmux       = ulsch_harq->Nsymb_pusch;
   // unsigned int Nsymb_UL, Nslot_UL; // NB_IoT: these parameters should included in ulsch_harq
   // Cmux       = (Nsymb_UL-1)*Nslot_UL; 
-  Cmux       = (ulsch_harq->Nsymb_UL-1)*ulsch_harq->Nslot_UL;
+  // Cmux       = (ulsch_harq->Nsymb_UL-1)*ulsch_harq->Nslot_UL; // see definition in 36.212, Section 6.3.2, but not consistent with definition
+  // of RU in 36.211, Section 10.1.2.3. Maybe prefer the following: 
+  Cmux       = (ulsch_harq->Nsymb_UL)*ulsch_harq->Nslot_UL; 
 
   Rmux_prime = Hpp/Cmux;
 
@@ -1247,8 +1259,10 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
   switch (Q_m) {
 
-    // why the case 1 ??????????????????
   case 1: 
+    for (j=0; j<Cmux; j++) { 
+      y[j] = cseq[j]*ulsch_llr[j];
+    }
     break; 
   case 2:
     for (j=0; j<Cmux; j++) {
