@@ -2173,8 +2173,8 @@ if (do_ofdm_mod){
 		  phy_vars_eNB[CC_id]->common_vars.txdataF[0][i][j] = 16-j;
 		}
 	      }
-        }
-		else{      
+}
+else{      
 	      for (i=0; i<frame_parms->nb_antennas_rx; i++) {
 		card = i/4;
 		ant = i%4;
@@ -2204,7 +2204,7 @@ if (do_ofdm_mod){
 		}
 	      }
 	}
-    }
+}
     else {  // not memory-mapped DMA 
       //nothing to do, everything already allocated in lte_init
       /*

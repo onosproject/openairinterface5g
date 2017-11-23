@@ -2626,10 +2626,10 @@ void ue_measurement_procedures(
   if (l==0) {
     // UE measurements on symbol 0
     if (abstraction_flag==0) {
-		if (ue->do_ofdm_mod){//frequency analysis
+	if (ue->do_ofdm_mod){//frequency analysis
       		LOG_D(PHY,"Calling measurements subframe %d, thread[%d].rxdataF %p\n",subframe_rx,(slot>>1)&0x1,ue->common_vars.common_vars_rx_data_per_thread[(slot>>1)&0x1].rxdataF);
 	      lte_ue_measurements(ue,
-		(subframe_rx*frame_parms->samples_per_tti+ue->rx_offset)%(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME),
+		(subframe_rx*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti+ue->rx_offset)%(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME),
 		(subframe_rx == 1) ? 1 : 0,
 		0,
 		0,
@@ -3543,7 +3543,7 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
       if (abstraction_flag == 0 ) {
   for (l=2; l<12; l++) {
    if (ue->do_ofdm_mod)
-    slot_fep_mbsfn(ue,
+    slot_fep_mbsfn_freq(ue,
        l,
        subframe_rx,
        0,0);//ue->rx_offset,0);

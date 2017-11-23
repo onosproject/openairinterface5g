@@ -1097,7 +1097,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 		frame = (last/(10*PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti))%1023;
 	}
       //n_ra_prb = get_prach_prb_offset(frame_parms, PHY_vars_UE_g[0][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index, PHY_vars_UE_g[0][CC_id]->proc.proc_rxtx[subframe&0x1].frame_tx);
-      printf("[oaisim_functs] subframe %d, frame %d\n",subframe,frame);
+      printf("[oaisim_functs]eNB_trx_read UL subframe %d, frame %d\n",subframe,frame);
       LOG_D(PHY,"eNB_trx_read generating UL subframe %d (Ts %llu, current TS %llu)\n",
             subframe,(unsigned long long)*ptimestamp,
             (unsigned long long)current_eNB_rx_timestamp[eNB_id][CC_id]);
@@ -1116,7 +1116,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 		        0,  // frame is only used for abstraction
 		        eNB_id,
 		        CC_id);
-		write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][CC_id]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
+		//write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][CC_id]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 	//generate_prach(PHY_vars_UE_g[0][0],eNB_id,subframe,frame);
 	//PHY_vars_UE_g[0][0]->generate_prach=1;
 	}
@@ -1142,8 +1142,8 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
                 0,  // frame is only used for abstraction
                 eNB_id,
                 CC_id);
-      if (is_prach_subframe(frame_parms,frame,subframe))
-	write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][CC_id]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
+      //if (is_prach_subframe(frame_parms,frame,subframe))
+	//write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][CC_id]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
       }
 
       last_eNB_rx_timestamp[eNB_id][CC_id] = last;
@@ -1213,7 +1213,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
 		subframe = (last/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.samples_per_tti)%10;
 		frame = (last/(10*PHY_vars_UE_g[UE_id][CC_id]->frame_parms.samples_per_tti))%1023;
 	}
-	printf("[oaisim_functs] subframe %d, frame %d\n",subframe,frame);
+	printf("[oaisim_functs]UE_trx_read DL subframe %d, frame %d\n",subframe,frame);
       //subframe = (subframe+9) % 10;
 
       LOG_D(PHY,"UE_trx_read generating DL subframe %d (Ts %llu, current TS %llu)\n",

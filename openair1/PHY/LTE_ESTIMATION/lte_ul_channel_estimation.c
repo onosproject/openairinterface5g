@@ -680,7 +680,7 @@ int32_t lte_srs_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
   int aa;
   int N_symb,symbol;
   uint8_t nb_antennas_rx = frame_parms->nb_antennas_rx;
-  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
+
 #ifdef DEBUG_SRS
   char fname[40], vname[40];
 #endif

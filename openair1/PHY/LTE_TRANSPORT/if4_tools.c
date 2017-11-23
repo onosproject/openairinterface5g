@@ -56,8 +56,10 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
   uint16_t symbol_id=0, element_id=0;
   uint16_t db_fulllength, db_halflength; 
   int slotoffsetF=0, blockoffsetF=0; 
-  // write_output("sendif405_rxsigF_UL.m","sendif4p5_rxsF_UL", &eNB->common_vars.rxdata[0][0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,16); 
-  //write_output("sendif405_txsigF_UL.m","sendif4p5_txsF_UL", &eNB->common_vars.txdata[0][0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,16);
+   write_output("sendif405_rxsigF_UL.m","sendif4p5_rxsF_UL",rxdataF[0],2*fp->ofdm_symbol_size*fp->symbols_per_tti,1,16); 
+   write_output("sendif405_txsigF_UL.m","sendif4p5_txsF_UL",&PHY_vars_UE_g[0][0]->common_vars.txdataF[0][0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,16);
+   for (int idx=0;idx<10;idx++)
+       printf("dumping UL raw rx send_if4p5  subframe %d: rxdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&rxdataF[0][idx])[0], ((short*)&rxdataF[0][idx])[1]);
   uint16_t *data_block=NULL, *i=NULL;
 
   IF4p5_header_t *packet_header=NULL;
@@ -229,7 +231,8 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
   uint16_t db_fulllength, db_halflength; 
   int slotoffsetF=0, blockoffsetF=0; 
   eth_state_t *eth = (eth_state_t*) (eNB->ifdevice.priv);
-
+for (int idx=0;idx<10;idx++)
+  // printf("dumping UL raw rx rvc_if4p5 subframe %d: rxdataF[%d] = (%d,%d)\n", *subframe, idx, ((short*)&rxdataF[0][idx])[0], ((short*)&rxdataF[0][idx])[1]);
   if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 1 );   
   
   if (eNB->node_function == NGFI_RRU_IF4p5) {

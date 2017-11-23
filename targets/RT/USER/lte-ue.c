@@ -493,8 +493,6 @@ static void *UE_thread_synch_freq(void *arg) {
     int freq_offset=0;
     char threadname[128];
 
-    //int do_ofdm_mod = UE->do_ofdm_mod;
-
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
     if ( threads.iq != -1 )

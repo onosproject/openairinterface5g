@@ -2383,7 +2383,6 @@ void rx_prach_freq(PHY_VARS_eNB *eNB,
 >>>>>>> origin/fix-if4p5
 #endif
 	write_output("rxsigF.m","prach_rxF",rxsigF[0],24576,1,16);
-        printf("ok in prach2 \n");
     return;
   } else if (eNB->node_function == NGFI_RCC_IF4p5) {
     k = (12*n_ra_prb) - 6*eNB->frame_parms.N_RB_UL;

@@ -421,7 +421,7 @@ void mch_extract_rbs_freq(int **rxdataF,
                *(int16_t*)(1+&rxdataF[aarx][i+frame_parms->first_carrier_offset + (symbol*frame_parms->ofdm_symbol_size)]));
                */
         rxdataF_ext[aarx][j+symbol*(frame_parms->N_RB_DL*12)]                                  = rxdataF[aarx][i+frame_parms->first_carrier_offset + (symbol*frame_parms->ofdm_symbol_size)+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
-        rxdataF_ext[aarx][(frame_parms->N_RB_DL*3)+j+symbol*(frame_parms->N_RB_DL*12)]         = rxdataF[aarx][i+1+ (symbol*frame_parms->ofdm_symbol_size)];
+        rxdataF_ext[aarx][(frame_parms->N_RB_DL*3)+j+symbol*(frame_parms->N_RB_DL*12)]         = rxdataF[aarx][i+1+ (symbol*frame_parms->ofdm_symbol_size)+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
         dl_ch_estimates_ext[aarx][j+symbol*(frame_parms->N_RB_DL*12)+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)]                          = dl_ch_estimates[aarx][i+(symbol*frame_parms->ofdm_symbol_size)];
         dl_ch_estimates_ext[aarx][(frame_parms->N_RB_DL*3)+j+symbol*(frame_parms->N_RB_DL*12)] = dl_ch_estimates[aarx][i+(frame_parms->N_RB_DL*6)+(symbol*frame_parms->ofdm_symbol_size)];
       }
