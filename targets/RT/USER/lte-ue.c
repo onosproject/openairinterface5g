@@ -73,8 +73,10 @@ typedef enum {
 } sync_mode_t;
 
 void init_UE_threads(int);
+void init_UE_threads_stub(int);
 void *UE_thread(void *arg);
 void init_UE(int nb_inst,int,int);
+extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
 //extern int tx_req_UE_MAC1();
 
 int32_t **rxdata;
@@ -162,10 +164,15 @@ PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
 
   ue->Mod_id      = UE_id;
   ue->mac_enabled = 1;
+
+  // Panos: In phy_stub_UE (MAC-to-MAC) mode these init functions don't need to get called. Is this correct?
+  if (nfapi_mode!=3)
+  {
   // initialize all signal buffers
   init_lte_ue_signal(ue,1,abstraction_flag);
   // intialize transport
   init_lte_ue_transport(ue,abstraction_flag);
+  }
 
   return(ue);
 }
@@ -257,6 +264,58 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in) {
 #endif
 #endif
 }
+
+
+void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in) {
+
+  PHY_VARS_UE *UE;
+  int         inst;
+  //int         ret;
+
+  LOG_I(PHY,"UE : Calling Layer 2 for initialization\n");
+
+  l2_init_ue(eMBMS_active,(uecap_xer_in==1)?uecap_xer:NULL,
+	     0,// cba_group_active
+	     0); // HO flag
+
+  for (inst=0;inst<nb_inst;inst++) {
+
+    LOG_I(PHY,"Initializing memory for UE instance %d (%p)\n",inst,PHY_vars_UE_g[inst]);
+    PHY_vars_UE_g[inst][0] = init_ue_vars(NULL,inst,0);
+
+    LOG_I(PHY,"Intializing UE Threads for instance %d (%p,%p)...\n",inst,PHY_vars_UE_g[inst],PHY_vars_UE_g[inst][0]);
+    init_UE_threads_stub(inst);
+    UE = PHY_vars_UE_g[inst][0];
+
+    /*if (oaisim_flag == 0) {
+      ret = openair0_device_load(&(UE->rfdevice), &openair0_cfg[0]);
+      if (ret !=0){
+	exit_fun("Error loading device library");
+      }
+    }*/
+    //UE->rfdevice.host_type = RAU_HOST;
+    //    UE->rfdevice.type      = NONE_DEV;
+
+    /*PHY_VARS_UE *UE = PHY_vars_UE_g[inst][0];
+    AssertFatal(0 == pthread_create(&UE->proc.pthread_ue,
+                                    &UE->proc.attr_ue,
+                                    UE_thread,
+                                    (void*)UE), "");*/
+  }
+
+  printf("UE threads created \n");
+#if 0
+#if defined(ENABLE_USE_MME)
+  extern volatile int start_UE;
+  while (start_UE == 0) {
+    sleep(1);
+  }
+#endif
+#endif
+}
+
+
+
 
 /*!
  * \brief This is the UE synchronize thread.
@@ -569,16 +628,11 @@ static void *UE_thread_synch(void *arg)
  */
 
 static void *UE_thread_rxn_txnp4(void *arg) {
-	module_id_t Mod_id = 0;
     static __thread int UE_thread_rxtx_retval;
     struct rx_tx_thread_data *rtd = arg;
     UE_rxtx_proc_t *proc = rtd->proc;
     PHY_VARS_UE    *UE   = rtd->UE;
     int ret;
-
-    // Panos: Call (Sched_Rsp_t) get_nfapi_sched_response(UE->Mod_ID) to get all
-    //sched_response config messages which concern the specific UE. Inside this
-    //function we should somehow make the translation of rnti to Mod_ID.
 
     proc->instance_cnt_rxtx=-1;
     proc->subframe_rx=proc->sub_frame_start;
@@ -639,28 +693,195 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                        (sf_type==SF_UL? "SF_UL" :
                         (sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
             }
-
 #ifdef UE_SLOT_PARALLELISATION
             phy_procedures_slot_parallelization_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
 #else
+            phy_procedures_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
+#endif
+        }
+
+#if UE_TIMING_TRACE
+        start_meas(&UE->generic_stat);
+#endif
+        if (UE->mac_enabled==1) {
+
+            ret = ue_scheduler(UE->Mod_id,
+			       proc->frame_rx,
+			       proc->subframe_rx,
+			       proc->frame_tx,
+			       proc->subframe_tx,
+			       subframe_select(&UE->frame_parms,proc->subframe_tx),
+			       0,
+			       0/*FIXME CC_id*/);
+            if ( ret != CONNECTION_OK) {
+                char *txt;
+                switch (ret) {
+                case CONNECTION_LOST:
+                    txt="RRC Connection lost, returning to PRACH";
+                    break;
+                case PHY_RESYNCH:
+                    txt="RRC Connection lost, trying to resynch";
+                    break;
+                case RESYNCH:
+                    txt="return to PRACH and perform a contention-free access";
+                    break;
+                default:
+                    txt="UNKNOWN RETURN CODE";
+                };
+                LOG_E( PHY, "[UE %"PRIu8"] Frame %"PRIu32", subframe %u %s\n",
+                       UE->Mod_id, proc->frame_rx, proc->subframe_tx,txt );
+            }
+        }
+#if UE_TIMING_TRACE
+        stop_meas(&UE->generic_stat);
+#endif
+
+
+        // Prepare the future Tx data
+
+        if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_UL) ||
+	    (UE->frame_parms.frame_type == FDD) )
+            if (UE->mode != loop_through_memory)
+                phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
+
+
+
+        if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_S) &&
+                (UE->frame_parms.frame_type == TDD))
+            if (UE->mode != loop_through_memory)
+                phy_procedures_UE_S_TX(UE,0,0,no_relay);
+        updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");
+
+        if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
+          LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
+          exit_fun("noting to add");
+        }
+        proc->instance_cnt_rxtx--;
+        if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
+          LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
+          exit_fun("noting to add");
+        }
+    }
+
+// thread finished
+    free(arg);
+    return &UE_thread_rxtx_retval;
+}
+
+
+
+
+
+/*!
+ * \brief This is the UE thread for RX subframe n and TX subframe n+4.
+ * This thread performs the phy_procedures_UE_RX() on every received slot.
+ * then, if TX is enabled it performs TX for n+4.
+ * \param arg is a pointer to a \ref PHY_VARS_UE structure.
+ * \returns a pointer to an int. The storage is not on the heap and must not be freed.
+ */
+
+static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
+	module_id_t Mod_id = 0;
+    static __thread int UE_thread_rxtx_retval;
+    struct rx_tx_thread_data *rtd = arg;
+    UE_rxtx_proc_t *proc = rtd->proc;
+    PHY_VARS_UE    *UE   = rtd->UE;
+    int ret;
+
+    // Panos: Call (Sched_Rsp_t) get_nfapi_sched_response(UE->Mod_ID) to get all
+    //sched_response config messages which concern the specific UE. Inside this
+    //function we should somehow make the translation of rnti to Mod_ID.
+
+    //proc->instance_cnt_rxtx=-1;
+
+    phy_stub_ticking->ticking_var = -1;
+    proc->subframe_rx=proc->sub_frame_start;
+
+    char threadname[256];
+    sprintf(threadname,"UE_%d_proc_%d", UE->Mod_id, proc->sub_frame_start);
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+
+    if ( (proc->sub_frame_start+1)%RX_NB_TH == 0 && threads.one != -1 )
+        CPU_SET(threads.one, &cpuset);
+    if ( (proc->sub_frame_start+1)%RX_NB_TH == 1 && threads.two != -1 )
+        CPU_SET(threads.two, &cpuset);
+    if ( (proc->sub_frame_start+1)%RX_NB_TH == 2 && threads.three != -1 )
+        CPU_SET(threads.three, &cpuset);
+            //CPU_SET(threads.three, &cpuset);
+    init_thread(900000,1000000 , FIFO_PRIORITY-1, &cpuset,
+                threadname);
+
+    while (!oai_exit) {
+        if (pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) != 0) {
+          LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
+          exit_fun("nothing to add");
+        }
+        while (phy_stub_ticking->ticking_var < 0) {
+          // most of the time, the thread is waiting here
+          //pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx );
+          pthread_cond_wait( &phy_stub_ticking->cond_ticking, &phy_stub_ticking->mutex_ticking);
+        }
+        if (pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) != 0) {
+          LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXn_TXnp4\n" );
+          exit_fun("nothing to add");
+        }
+
+        proc->subframe_rx=timer_subframe;
+        proc->frame_rx = timer_frame;
+        proc->subframe_tx=(timer_subframe+4)%10;
+        proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
+
+
+        // Panos: Guessing that the next 4 lines are not needed for the phy_stub mode.
+        /*initRefTimes(t2);
+        initRefTimes(t3);
+        pickTime(current);
+        updateTimes(proc->gotIQs, &t2, 10000, "Delay to wake up UE_Thread_Rx (case 2)");*/
+
+
+        // Process Rx data for one sub-frame
+        lte_subframe_t sf_type = subframe_select( &UE->frame_parms, proc->subframe_rx);
+        if ((sf_type == SF_DL) ||
+                (UE->frame_parms.frame_type == FDD) ||
+                (sf_type == SF_S)) {
+
+            if (UE->frame_parms.frame_type == TDD) {
+                LOG_D(PHY, "%s,TDD%d,%s: calling UE_RX\n",
+                      threadname,
+                      UE->frame_parms.tdd_config,
+                      (sf_type==SF_DL? "SF_DL" :
+                       (sf_type==SF_UL? "SF_UL" :
+                        (sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
+            } else {
+                LOG_D(PHY, "%s,%s,%s: calling UE_RX\n",
+                      threadname,
+                      (UE->frame_parms.frame_type==FDD? "FDD":
+                       (UE->frame_parms.frame_type==TDD? "TDD":"UNKNOWN_DUPLEX_MODE")),
+                      (sf_type==SF_DL? "SF_DL" :
+                       (sf_type==SF_UL? "SF_UL" :
+                        (sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
+            }
+
+/*
+#ifdef UE_SLOT_PARALLELISATION
+            phy_procedures_slot_parallelization_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
+#else
+*/
 			// Panos: Substitute call to phy_procedures Rx with call to phy_stub functions in order to trigger
             // UE Rx procedures directly at the MAC layer, based on the received nfapi requests from the vnf (eNB).
             // Hardcode Mod_id for now. Will be changed later.
 
-            if(nfapi_mode == 3){
-            	// Panos: is this the right place to call oai_subframe_indication to invoke p7 nfapi callbacks here?
-            	//oai_subframe_insdication()
-            	if(UE_mac_inst[Mod_id].tx_req)
-            		tx_req_UE_MAC(UE_mac_inst[Mod_id].tx_req);
-            	if(UE_mac_inst[Mod_id].dl_config_req)
-            		dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req);
-            	if(UE_mac_inst[Mod_id].hi_dci0_req)
-            		hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req);
-            }
-            else{
-            phy_procedures_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
-            }
-#endif
+            // Panos: is this the right place to call oai_subframe_indication to invoke p7 nfapi callbacks here?
+            oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
+            if(UE_mac_inst[Mod_id].tx_req!= NULL)
+            	tx_req_UE_MAC(UE_mac_inst[Mod_id].tx_req);
+            if(UE_mac_inst[Mod_id].dl_config_req!= NULL)
+            	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req);
+            if(UE_mac_inst[Mod_id].hi_dci0_req!= NULL)
+            	hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req);
+
+//#endif
         }
 
 #if UE_TIMING_TRACE
@@ -708,30 +929,31 @@ static void *UE_thread_rxn_txnp4(void *arg) {
             	// Panos: Substitute call to phy_procedures Tx with call to phy_stub functions in order to trigger
                 // UE Tx procedures directly at the MAC layer, based on the received ul_config requests from the vnf (eNB).
             	// Generate UL_indications which corresponf to UL traffic.
-            	if(nfapi_mode == 3 && UE_mac_inst[Mod_id].ul_config_req){
+            	if(UE_mac_inst[Mod_id].ul_config_req!= NULL){
             		ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req);
             		UL_indication(UL_INFO);
-            	}
-            	else{
-            	phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
             	}
             }
 
 
 
 
-        if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_S) &&
+        /*if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_S) &&
                 (UE->frame_parms.frame_type == TDD))
             if (UE->mode != loop_through_memory)
                 phy_procedures_UE_S_TX(UE,0,0,no_relay);
-        updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");
+        updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");*/
 
-        if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
+        //if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
+        if (pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) != 0) {
           LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
           exit_fun("noting to add");
         }
-        proc->instance_cnt_rxtx--;
-        if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
+
+        //proc->instance_cnt_rxtx--;
+        phy_stub_ticking->ticking_var--;
+        //if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
+        if (pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) != 0) {
           LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
           exit_fun("noting to add");
         }
@@ -742,6 +964,8 @@ static void *UE_thread_rxn_txnp4(void *arg) {
     return &UE_thread_rxtx_retval;
 }
 
+
+
 /*!
  * \brief This is the main UE thread.
  * This thread controls the other three UE threads:
@@ -751,7 +975,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
  * \param arg unused
  * \returns a pointer to an int. The storage is not on the heap and must not be freed.
  */
-// Panos: Modified function to support nfapi_mode=3 (phy_stub mode).
+
 void *UE_thread(void *arg) {
 
 
@@ -780,16 +1004,11 @@ void *UE_thread(void *arg) {
 #endif
 
     int sub_frame=-1;
-    if(nfapi_mode==3) {
-    	phy_stub_ticking->ticking_var = -1;
-    }
-
     //int cumulated_shift=0;
 
 
     while (!oai_exit) {
-    	if(nfapi_mode!=3) {
-    	AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+        AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
         int instance_cnt_synch = UE->proc.instance_cnt_synch;
         int is_synchronized    = UE->is_synchronized;
         AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
@@ -948,7 +1167,6 @@ void *UE_thread(void *arg) {
                     pickTime(gotIQs);
                     // operate on thread sf mod 2
                     AssertFatal(pthread_mutex_lock(&proc->mutex_rxtx) ==0,"");
-
                     if(sub_frame == 0) {
                         //UE->proc.proc_rxtx[0].frame_rx++;
                         //UE->proc.proc_rxtx[1].frame_rx++;
@@ -994,72 +1212,6 @@ void *UE_thread(void *arg) {
                 }
             } // start_rx_stream==1
         } // UE->is_synchronized==1
-
-    } // nfapi_mode!=3
-    	else { // nfapi_mode==3
-
-    		//AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_ticking), "");
-    		AssertFatal ( 0== pthread_mutex_lock(&phy_stub_ticking->mutex_ticking), "");
-    		while (phy_stub_ticking->ticking_var<0)
-    			pthread_cond_wait( &phy_stub_ticking->cond_ticking, &phy_stub_ticking->mutex_ticking);
-    		AssertFatal ( 0== pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking), "");
-
-    		UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[thread_idx];
-    		// update thread index for received subframe
-    		UE->current_thread_id[sub_frame] = thread_idx;
-    		LOG_D(PHY,"Process Subframe %d thread Idx %d \n", sub_frame, UE->current_thread_id[sub_frame]);
-    		thread_idx++;
-    		if(thread_idx>=RX_NB_TH)
-    			thread_idx = 0;
-
-    		// Panos: timer_subframe/timer_frame (phy_stub mode SFN/SF counter) acquired from thread_timer.
-    		if(timer_subframe == 0) {
-    			//UE->proc.proc_rxtx[0].frame_rx++;
-    			//UE->proc.proc_rxtx[1].frame_rx++;
-    			for (th_id=0; th_id < RX_NB_TH; th_id++) {
-    				//UE->proc.proc_rxtx[th_id].frame_rx++;
-    				UE->proc.proc_rxtx[th_id].frame_rx = timer_frame;
-    			}
-    		}
-    		//UE->proc.proc_rxtx[0].gotIQs=readTime(gotIQs);
-    		//UE->proc.proc_rxtx[1].gotIQs=readTime(gotIQs);
-
-    		// Panos: Remove for phy_stub
-    		/*for (th_id=0; th_id < RX_NB_TH; th_id++) {
-    			UE->proc.proc_rxtx[th_id].gotIQs=readTime(gotIQs);
-    		}*/
-
-    		proc->subframe_rx=timer_subframe;
-    		proc->subframe_tx=(sub_frame+4)%10;
-    		proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
-
-    		// Panos: Do we need the timestamp_tx indication for phy_stub mode?
-    		proc->timestamp_tx = timestamp+
-    				(4*UE->frame_parms.samples_per_tti)-
-    				UE->frame_parms.ofdm_symbol_size-UE->frame_parms.nb_prefix_samples0;
-    		proc->instance_cnt_rxtx++;
-
-    		LOG_D( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
-    		if (proc->instance_cnt_rxtx == 0) {
-    			if (pthread_cond_signal(&proc->cond_rxtx) != 0) {
-    				LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
-    				exit_fun("nothing to add");
-    			}
-    		} else {
-    			LOG_E( PHY, "[SCHED][UE %d] UE RX thread busy (IC %d)!!\n", UE->Mod_id, proc->instance_cnt_rxtx);
-    			if (proc->instance_cnt_rxtx > 2)
-    				exit_fun("instance_cnt_rxtx > 2");
-    		}
-    		AssertFatal (pthread_cond_signal(&proc->cond_rxtx) ==0 ,"");
-    		AssertFatal(pthread_mutex_unlock(&proc->mutex_rxtx) ==0,"");
-
-    		// Panos: Do we need these function calls for the phy_stub?
-    		/*initRefTimes(t1);
-    		initStaticTime(lastTime);
-    		updateTimes(lastTime, &t1, 20000, "Delay between two IQ acquisitions (case 1)");
-    		pickStaticTime(lastTime);*/
-    		phy_stub_ticking->ticking_var--;
-    		}
 
     } // while !oai_exit
     return NULL;
@@ -1121,6 +1273,69 @@ void init_UE_threads(int inst) {
     }
     pthread_create(&UE->proc.pthread_synch,NULL,UE_thread_synch,(void*)UE);
 }
+
+
+
+/*!
+ * \brief Initialize the UE theads.
+ * Creates the UE threads:
+ * - UE_thread_rxtx0
+ * - UE_thread_synch
+ * - UE_thread_fep_slot0
+ * - UE_thread_fep_slot1
+ * - UE_thread_dlsch_proc_slot0
+ * - UE_thread_dlsch_proc_slot1
+ * and the locking between them.
+ */
+void init_UE_threads_stub(int inst) {
+    struct rx_tx_thread_data *rtd;
+    PHY_VARS_UE *UE;
+
+    AssertFatal(PHY_vars_UE_g!=NULL,"PHY_vars_UE_g is NULL\n");
+    AssertFatal(PHY_vars_UE_g[inst]!=NULL,"PHY_vars_UE_g[inst] is NULL\n");
+    AssertFatal(PHY_vars_UE_g[inst][0]!=NULL,"PHY_vars_UE_g[inst][0] is NULL\n");
+    UE = PHY_vars_UE_g[inst][0];
+
+    pthread_attr_init (&UE->proc.attr_ue);
+    pthread_attr_setstacksize(&UE->proc.attr_ue,8192);//5*PTHREAD_STACK_MIN);
+
+    // Panos: Don't need synch for phy_stub mode
+    //pthread_mutex_init(&UE->proc.mutex_synch,NULL);
+    //pthread_cond_init(&UE->proc.cond_synch,NULL);
+
+    // the threads are not yet active, therefore access is allowed without locking
+    // Panos: In phy_stub_UE mode due to less heavy processing operations we don't need two threads
+    //int nb_threads=RX_NB_TH;
+    int nb_threads=1;
+    for (int i=0; i<nb_threads; i++) {
+        rtd = calloc(1, sizeof(struct rx_tx_thread_data));
+        if (rtd == NULL) abort();
+        rtd->UE = UE;
+        rtd->proc = &UE->proc.proc_rxtx[i];
+
+        pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_rxtx,NULL);
+        pthread_cond_init(&UE->proc.proc_rxtx[i].cond_rxtx,NULL);
+        UE->proc.proc_rxtx[i].sub_frame_start=i;
+        UE->proc.proc_rxtx[i].sub_frame_step=nb_threads;
+        printf("Init_UE_threads rtd %d proc %d nb_threads %d i %d\n",rtd->proc->sub_frame_start, UE->proc.proc_rxtx[i].sub_frame_start,nb_threads, i);
+        pthread_create(&UE->proc.proc_rxtx[i].pthread_rxtx, NULL, UE_phy_stub_thread_rxn_txnp4, rtd);
+/*
+#ifdef UE_SLOT_PARALLELISATION
+        //pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_slot0_dl_processing,NULL);
+        //pthread_cond_init(&UE->proc.proc_rxtx[i].cond_slot0_dl_processing,NULL);
+        //pthread_create(&UE->proc.proc_rxtx[i].pthread_slot0_dl_processing,NULL,UE_thread_slot0_dl_processing, rtd);
+
+        pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_slot1_dl_processing,NULL);
+        pthread_cond_init(&UE->proc.proc_rxtx[i].cond_slot1_dl_processing,NULL);
+        pthread_create(&UE->proc.proc_rxtx[i].pthread_slot1_dl_processing,NULL,UE_thread_slot1_dl_processing, rtd);
+#endif*/
+
+    }
+    // Panos: Remove thread for UE_sync in phy_stub_UE mode.
+    //pthread_create(&UE->proc.pthread_synch,NULL,UE_thread_synch,(void*)UE);
+}
+
+
 
 
 #ifdef OPENAIR2
@@ -1202,6 +1417,8 @@ static void* timer_thread( void* param ) {
 	phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
 	phy_stub_ticking->ticking_var = -1;
 	wait_sync("timer_thread");
+    pthread_mutex_init(&phy_stub_ticking->mutex_ticking,NULL);
+    pthread_cond_init(&phy_stub_ticking->cond_ticking,NULL);
 
 	while (!oai_exit) {
 	    usleep(1000);
@@ -1214,18 +1431,25 @@ static void* timer_thread( void* param ) {
 	    } else {
 	    	timer_subframe++;
 	    }
-	    phy_stub_ticking->ticking_var++;
 	    //AssertFatal( 0 == pthread_cond_signal(&phy_stub_ticking->cond_ticking), "");
-	    if (pthread_cond_signal(&phy_stub_ticking->cond_ticking) != 0) {
-	    	//LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
-	    	LOG_E( PHY, "timer_thread ERROR pthread_cond_signal for UE_thread\n");
-	    	exit_fun("nothing to add");
+	    AssertFatal(pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) ==0,"");
+	    phy_stub_ticking->ticking_var++;
+	    // This should probably be a call to pthread_cond_broadcast when we introduce support for multiple UEs (threads)
+	    if(phy_stub_ticking->ticking_var == 0) {
+	    	if (pthread_cond_signal(&phy_stub_ticking->cond_ticking) != 0) {
+	    		//LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
+	    		LOG_E( PHY, "timer_thread ERROR pthread_cond_signal for UE_thread\n");
+	    		exit_fun("nothing to add");
+	    	}
 	    }
+	    AssertFatal(pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) ==0,"");
 	    //UE->proc.ticking_var++;
 	    // pthread_cond_signal() //Send signal to ue_thread()?
 	    // We also need to somehow pass the information of SFN/SF
 	  }
 	free(phy_stub_ticking);
+	pthread_cond_destroy(&phy_stub_ticking->cond_ticking);
+	pthread_mutex_destroy(&phy_stub_ticking->mutex_ticking);
 	return 0;
 
 }

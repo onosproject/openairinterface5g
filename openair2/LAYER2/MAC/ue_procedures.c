@@ -137,6 +137,16 @@ void ue_init_mac(module_id_t module_idP)
     UE_mac_inst[module_idP].scheduling_info.LCID_buffer_remain[i] = 0;
   }
 
+  if(nfapi_mode == 3) {
+	  pthread_mutex_init(&UE_mac_inst[module_idP].UL_INFO_mutex,NULL);
+	  UE_mac_inst[module_idP].UE_mode[0] = PRACH;
+	  UE_mac_inst[module_idP].first_ULSCH_Tx =0;
+	  UE_mac_inst[module_idP].dl_config_req = NULL;
+	  UE_mac_inst[module_idP].ul_config_req = NULL;
+	  UE_mac_inst[module_idP].hi_dci0_req = NULL;
+	  UE_mac_inst[module_idP].tx_req = NULL;
+  }
+
 #ifdef CBA
 
   for (i=0; i <NUM_MAX_CBA_GROUP; i++) {

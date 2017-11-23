@@ -9,6 +9,7 @@
 #include "nfapi.h"
 #include "nfapi_pnf.h"
 #include "common/ran_context.h"
+#include "openair2/PHY_INTERFACE/phy_stub_UE.h"
 //#include "openair1/PHY/vars.h"
 extern RAN_CONTEXT_t RC;
 
@@ -1338,10 +1339,18 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
       p7_config->timing_info_mode_aperiodic = 1;
     }
 
-    p7_config->dl_config_req = &pnf_phy_dl_config_req;
-    p7_config->ul_config_req = &pnf_phy_ul_config_req;
-    p7_config->hi_dci0_req = &pnf_phy_hi_dci0_req;
-    p7_config->tx_req = &pnf_phy_tx_req;
+    if (nfapi_mode==3) {
+    	p7_config->dl_config_req = &memcpy_dl_config_req;
+    	p7_config->ul_config_req = &memcpy_ul_config_req;
+    	p7_config->hi_dci0_req = &memcpy_hi_dci0_req;
+    	p7_config->tx_req = &memcpy_tx_req;
+    }
+    else {
+    	p7_config->dl_config_req = &pnf_phy_dl_config_req;
+    	p7_config->ul_config_req = &pnf_phy_ul_config_req;
+    	p7_config->hi_dci0_req = &pnf_phy_hi_dci0_req;
+    	p7_config->tx_req = &pnf_phy_tx_req;
+    }
     p7_config->lbt_dl_config_req = &pnf_phy_lbt_dl_config_req;
 
     memset(&dummy_dl_config_req, 0, sizeof(dummy_dl_config_req));

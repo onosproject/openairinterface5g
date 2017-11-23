@@ -489,7 +489,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
     uint16_t rnti = ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti;
     uint8_t access_mode=SCHEDULED_ACCESS;
     if(buflen>0){
-    	if(UE_mac_inst[Mod_id].first_ULSCH_Tx){ // Msg3 case
+    	if(UE_mac_inst[Mod_id].first_ULSCH_Tx == 1){ // Msg3 case
     		fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
     		fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
     		Msg3_transmitted(Mod_id, 0, frame, 0);
@@ -514,7 +514,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 	  uint16_t rnti = ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti;
 	  uint8_t access_mode=SCHEDULED_ACCESS;
 	  if(buflen>0){
-		  if(UE_mac_inst[Mod_id].first_ULSCH_Tx){ // Msg3 case
+		  if(UE_mac_inst[Mod_id].first_ULSCH_Tx == 1){ // Msg3 case
 			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
 			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
 			  Msg3_transmitted(Mod_id, 0, frame, 0);
@@ -542,7 +542,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 	  uint16_t rnti = ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti;
 	  uint8_t access_mode=SCHEDULED_ACCESS;
 	  if(buflen>0){
-		  if(UE_mac_inst[Mod_id].first_ULSCH_Tx){ // Msg3 case
+		  if(UE_mac_inst[Mod_id].first_ULSCH_Tx == 1){ // Msg3 case
 			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
 			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
 			  Msg3_transmitted(Mod_id, 0, frame, 0);
@@ -569,7 +569,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 	  uint16_t rnti = ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti;
 	  uint8_t access_mode=SCHEDULED_ACCESS;
 	  if(buflen>0){
-		  if(UE_mac_inst[Mod_id].first_ULSCH_Tx){ // Msg3 case
+		  if(UE_mac_inst[Mod_id].first_ULSCH_Tx == 1){ // Msg3 case
 			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0);
 			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti);
 			  Msg3_transmitted(Mod_id, 0, frame, 0);
@@ -921,28 +921,32 @@ int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req)
 
 // The following set of memcpy functions should be getting called as callback functions from
 // pnf_p7_subframe_ind.
-void memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
+int memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
 {
 	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 	UE_mac_inst[Mod_id].dl_config_req = req;
+	return 0;
 }
 
-void memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
+int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
 {
 	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 	UE_mac_inst[Mod_id].ul_config_req = req;
+	return 0;
 }
 
-void memcpy_tx_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
+int memcpy_tx_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
 {
 	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 	UE_mac_inst[Mod_id].tx_req = req;
+	return 0;
 }
 
-void memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req)
+int memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req)
 {
 	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 	UE_mac_inst[Mod_id].hi_dci0_req = req;
+	return 0;
 }
 
 
