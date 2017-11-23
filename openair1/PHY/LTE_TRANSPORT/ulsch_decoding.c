@@ -738,7 +738,8 @@ int ulsch_decoding_data(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr8_flag) 
   int ret = 1;
   int16_t dummy_w[MAX_NUM_ULSCH_SEGMENTS][3*(6144+64)];
   LTE_eNB_ULSCH_t *ulsch = eNB->ulsch[UE_id];
-  LTE_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_processes[harq_pid];
+  LTE_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_processes[harq_pid]; 
+  
   //int Q_m = get_Qm_ul(ulsch_harq->mcs);
   int G = ulsch_harq->G;
   unsigned int E;
