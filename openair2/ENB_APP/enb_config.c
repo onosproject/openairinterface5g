@@ -234,6 +234,74 @@ void RCconfig_RU(void) {
   
 }
 
+
+
+void UE_config_stub_pnf(void) {
+  int               j;
+  paramdef_t L1_Params[] = L1PARAMS_DESC;
+  paramlist_def_t L1_ParamList = {CONFIG_STRING_L1_LIST,NULL,0};
+
+  config_getlist( &L1_ParamList,L1_Params,sizeof(L1_Params)/sizeof(paramdef_t), NULL);
+  if (L1_ParamList.numelt > 0) {
+	  for (j=0; j<L1_ParamList.numelt; j++){
+		  //nb_L1_CC = *(L1_ParamList.paramarray[j][L1_CC_IDX].uptr); // Number of component carriers is of no use for the
+	                                                            // phy_stub mode UE pnf. Maybe we can completely skip it.
+
+		  if (strcmp(*(L1_ParamList.paramarray[j][L1_TRANSPORT_N_PREFERENCE_IDX].strptr), "local_mac") == 0) {
+			  sf_ahead = 4; // Need 4 subframe gap between RX and TX
+			  }
+		  // Panos: Right now that we have only one UE (thread) it is ok to put the eth_params in the UE_mac_inst.
+		  // Later I think we have to change that to attribute eth_params to a global element for all the UEs.
+		  else if (strcmp(*(L1_ParamList.paramarray[j][L1_TRANSPORT_N_PREFERENCE_IDX].strptr), "nfapi") == 0) {
+			  UE_mac_inst[0].eth_params_n.local_if_name            = strdup(*(L1_ParamList.paramarray[j][L1_LOCAL_N_IF_NAME_IDX].strptr));
+			  UE_mac_inst[0].eth_params_n.my_addr                  = strdup(*(L1_ParamList.paramarray[j][L1_LOCAL_N_ADDRESS_IDX].strptr));
+			  UE_mac_inst[0].eth_params_n.remote_addr              = strdup(*(L1_ParamList.paramarray[j][L1_REMOTE_N_ADDRESS_IDX].strptr));
+			  UE_mac_inst[0].eth_params_n.my_portc                 = *(L1_ParamList.paramarray[j][L1_LOCAL_N_PORTC_IDX].iptr);
+			  UE_mac_inst[0].eth_params_n.remote_portc             = *(L1_ParamList.paramarray[j][L1_REMOTE_N_PORTC_IDX].iptr);
+			  UE_mac_inst[0].eth_params_n.my_portd                 = *(L1_ParamList.paramarray[j][L1_LOCAL_N_PORTD_IDX].iptr);
+			  UE_mac_inst[0].eth_params_n.remote_portd             = *(L1_ParamList.paramarray[j][L1_REMOTE_N_PORTD_IDX].iptr);
+			  UE_mac_inst[0].eth_params_n.transp_preference        = ETH_UDP_MODE;
+
+			  sf_ahead = 4; // Cannot cope with 4 subframes betweem RX and TX - set it to 2
+			  configure_nfapi_pnf(UE_mac_inst[0].eth_params_n.remote_addr, UE_mac_inst[0].eth_params_n.remote_portc, UE_mac_inst[0].eth_params_n.my_addr, UE_mac_inst[0].eth_params_n.my_portd, UE_mac_inst[0].eth_params_n.remote_portd);
+		  }
+		  else { // other midhaul
+		  }
+	  }
+  }
+  else {
+
+    /*LOG_I(PHY,"No " CONFIG_STRING_L1_LIST " configuration found");
+
+    // DJP need to create some structures for VNF
+
+    j = 0;
+
+    RC.nb_L1_CC = malloc((1+RC.nb_L1_inst)*sizeof(int)); // DJP - 1 lot then???
+
+    RC.nb_L1_CC[j]=1; // DJP - hmmm
+
+    if (RC.eNB[j] == NULL) {
+      RC.eNB[j]                       = (PHY_VARS_eNB **)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB**));
+      LOG_I(PHY,"RC.eNB[%d] = %p\n",j,RC.eNB[j]);
+      memset(RC.eNB[j],0,(1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB***));
+    }
+
+    for (i=0;i<RC.nb_L1_CC[j];i++) {
+      if (RC.eNB[j][i] == NULL) {
+        RC.eNB[j][i] = (PHY_VARS_eNB *)malloc(sizeof(PHY_VARS_eNB));
+        memset((void*)RC.eNB[j][i],0,sizeof(PHY_VARS_eNB));
+        LOG_I(PHY,"RC.eNB[%d][%d] = %p\n",j,i,RC.eNB[j][i]);
+        RC.eNB[j][i]->Mod_id  = j;
+        RC.eNB[j][i]->CC_id   = i;
+      }
+    }*/
+  }
+}
+
+
+
+
 void RCconfig_L1(void) {
   int               i,j;
   paramdef_t L1_Params[] = L1PARAMS_DESC;
@@ -2866,6 +2934,7 @@ void RCConfig(void) {
     RC.nb_macrlc_inst  = MACRLCParamList.numelt;
     // Get num L1 instances
     config_getlist( &L1ParamList,NULL,0, NULL);
+    //config_getlist( &L1_ParamList,L1_Params,sizeof(L1_Params)/sizeof(paramdef_t), NULL);
     RC.nb_L1_inst = L1ParamList.numelt;
 
     // Get num RU instances

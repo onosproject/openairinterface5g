@@ -1398,6 +1398,8 @@ typedef struct {
   nfapi_hi_dci0_request_t* hi_dci0_req;
   nfapi_tx_request_t* tx_req;
 
+  eth_params_t         eth_params_n;
+
 
 
 } UE_MAC_INST;
