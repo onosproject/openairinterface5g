@@ -1389,8 +1389,8 @@ void *UE_thread_freq(void *arg) {
 				    }
 				    if (sub_frame<10 && ((proc->frame_rx&0x1)==0)){
 				    
-					write_output("lteue_rxsigF_frame0.m","lteue_rxsF0", UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
-					write_output("lteue_rxsigF_frame1.m","lteue_rxsF1", UE->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
+					//write_output("lteue_rxsigF_frame0.m","lteue_rxsF0", UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
+					//write_output("lteue_rxsigF_frame1.m","lteue_rxsF1", UE->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
 					//exit(-1);
 				    }
 						    //UE->proc.proc_rxtx[0].gotIQs=readTime(gotIQs);

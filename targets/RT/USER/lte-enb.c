@@ -948,6 +948,7 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
     lte_subframe_t SF_type     = subframe_select(fp,(proc->subframe_rx+tx_sfoffset)%10);
     lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_rx+tx_sfoffset+9)%10);
     lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_rx+tx_sfoffset+1)%10);
+    printf("[lte-enb_time]frame %d, subframe %d\n",*frame,*subframe);
     if ((SF_type == SF_DL) ||
 	(SF_type == SF_S)) {
 
@@ -1094,7 +1095,7 @@ void rx_rf_freq(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
     lte_subframe_t SF_type     = subframe_select(fp,(proc->subframe_rx%10));
     lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_rx+9)%10);
     lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_rx+1)%10);
-    printf("[lte-enb]frame %d, subframe %d\n",*frame,*subframe);
+    printf("[lte-enb_freq]frame %d, subframe %d\n",*frame,*subframe);
     if ((SF_type == SF_DL) ||
 	(SF_type == SF_S)) {
 
@@ -1490,7 +1491,8 @@ void *eNB_thread_synch(void *arg) {
   wait_sync("eNB_thread_synch");
 
   // initialize variables for PSS detection
-  lte_sync_time_init(&eNB->frame_parms);
+  if (!do_ofdm_mod)
+  	lte_sync_time_init(&eNB->frame_parms);
 
   while (!oai_exit) {
 
@@ -1727,8 +1729,7 @@ static void* eNB_thread_single( void* param ) {
 
   int subframe=0, frame=0; 
 
-  int32_t dummy_rx_freq[fp->nb_antennas_rx][fp->symbols_per_tti*fp->ofdm_symbol_size] __attribute__((aligned(32)));
-  int32_t dummy_rx[fp->nb_antennas_rx][fp->samples_per_tti] __attribute__((aligned(32)));
+  int32_t dummy_rx[fp->nb_antennas_rx][(do_ofdm_mod)?fp->symbols_per_tti*fp->ofdm_symbol_size:fp->samples_per_tti] __attribute__((aligned(32)));
 
   int ic;
 
@@ -1824,7 +1825,7 @@ static void* eNB_thread_single( void* param ) {
 	// until we are done with the synchronization procedure
 	if (do_ofdm_mod){
 		for (i=0; i<fp->nb_antennas_rx; i++)
-		  rxp2_freq[i] = (void*)&dummy_rx_freq[i][0];
+		  rxp2_freq[i] = (void*)&dummy_rx[i][0];
 		for (i=0;i<10;i++)
 		  rxs_freq = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
 						    &(proc->timestamp_rx),
@@ -1854,6 +1855,7 @@ static void* eNB_thread_single( void* param ) {
       } // ic>=0
     } // in_synch==0
     // read in rx_offset samples
+    printf("[lte-enb] rx_offset %d/n",eNB->rx_offset);
     LOG_I(PHY,"Resynchronizing by %d samples\n",eNB->rx_offset);
     if (do_ofdm_mod){
     	rxs_freq = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
@@ -1913,7 +1915,7 @@ static void* eNB_thread_single( void* param ) {
     proc_rxtx->timestamp_tx = proc->timestamp_tx;
     // adjust for timing offset between RRU
     if (eNB->CC_id!=0) proc_rxtx->frame_tx = (proc_rxtx->frame_tx+proc->frame_offset)&1023;
-
+    printf("[lte-enb] frame offset %d\n",proc->frame_offset);
     // At this point, all information for subframe has been received on FH interface
     // If this proc is to provide synchronization, do so
     wakeup_slaves(proc);

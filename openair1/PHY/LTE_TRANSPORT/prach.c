@@ -1782,7 +1782,6 @@ void rx_prach(PHY_VARS_eNB *eNB,
 	break;
 	
       case 50:
-	printf("[prach.c] prach2 %x, +24576 %x\n",prach2,prach2+24576);
 	if (prach_fmt == 4) {
 	  dft2048(prach2,rxsigF[aa],1);//7.5Khz*2=15Khz-->2*1024=2048 PRACH subcarriers
 	} else {
