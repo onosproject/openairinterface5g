@@ -762,12 +762,6 @@ schedule_SI(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 		    dci_dl_pdu_rel8.resource_block_coding =
 		    getRIV(N_RB_DL, first_rb, 4);
 
-		// Rel10 fields
-		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start = 3;
-		// Rel13 fields
-		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = 0;	// regular UE
-		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type = 2;	// not BR
-		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io = 0xFFFF;	// absolute SF 
 
 		if (!CCE_allocation_infeasible
 		    (module_idP, CC_id, 0, subframeP,
@@ -823,6 +817,14 @@ schedule_SI(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 		    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector =
 			1;
 		    //    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ; 
+
+                    // Rel10 fields
+                    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start = 3;
+                    // Rel13 fields
+                    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = 0;   // regular UE
+                    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type = 2;        // not BR
+                    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io = 0xFFFF;   // absolute SF
+
 		    dl_req->number_pdu++;
 
 		    // Program TX Request
