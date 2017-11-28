@@ -46,6 +46,7 @@
 #include "SCHED/extern.h"
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/proto.h"
+#include "PHY/LTE_TRANSPORT/proto.h"
 
 #include "UTIL/LOG/log_extern.h"
 #include "UTIL/OTG/otg_tx.h"
@@ -929,6 +930,12 @@ void init_UE_threads(PHY_VARS_UE *UE) {
         UE->proc.proc_rxtx[i].sub_frame_step=nb_threads;
         printf("Init_UE_threads rtd %d proc %d nb_threads %d i %d\n",rtd->proc->sub_frame_start, UE->proc.proc_rxtx[i].sub_frame_start,nb_threads, i);
         pthread_create(&UE->proc.proc_rxtx[i].pthread_rxtx, NULL, UE_thread_rxn_txnp4, rtd);
+
+#ifdef UE_DLSCH_PARALLELISATION
+        pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_dlsch_td,NULL);
+        pthread_cond_init(&UE->proc.proc_rxtx[i].cond_dlsch_td,NULL);
+        pthread_create(&UE->proc.proc_rxtx[i].pthread_dlsch_td,NULL,dlsch_decoding_2thread0, rtd);
+#endif
 
 #ifdef UE_SLOT_PARALLELISATION
         //pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_slot0_dl_processing,NULL);

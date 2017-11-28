@@ -3553,6 +3553,17 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
          ue->dlsch_MCH[0]->harq_processes[0]->G,
          ue->pdsch_vars_MCH[0]->llr[0],0,nr_tti_rx<<1);
 
+#ifdef UE_DLSCH_PARALLELISATION
+  ret = dlsch_decoding_mthread(ue,proc, eNB_id,
+             ue->pdsch_vars_MCH[0]->llr[0],
+             &ue->frame_parms,
+             ue->dlsch_MCH[0],
+             ue->dlsch_MCH[0]->harq_processes[0],
+             frame_rx,
+             nr_tti_rx,
+             0,
+             0,1);
+#else
   ret = dlsch_decoding(ue,
            ue->pdsch_vars_MCH[0]->llr[0],
            &ue->frame_parms,
@@ -3562,6 +3573,8 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
            nr_tti_rx,
            0,
            0,1);
+  printf("start pmch dlsch decoding\n");
+#endif
       } else { // abstraction
 #ifdef PHY_ABSTRACTION
   ret = dlsch_decoding_emul(ue,
@@ -3973,6 +3986,19 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 #if UE_TIMING_TRACE
       start_meas(&ue->dlsch_decoding_stats[ue->current_thread_id[nr_tti_rx]]);
 #endif
+
+#ifdef UE_DLSCH_PARALLELISATION
+		 ret = dlsch_decoding_mthread(ue,proc,eNB_id,
+			   pdsch_vars->llr[0],
+			   &ue->frame_parms,
+			   dlsch0,
+			   dlsch0->harq_processes[harq_pid],
+			   frame_rx,
+			   nr_tti_rx,
+			   harq_pid,
+			   pdsch==PDSCH?1:0,
+			   dlsch0->harq_processes[harq_pid]->TBS>256?1:0);
+#else
       ret = dlsch_decoding(ue,
 			   pdsch_vars->llr[0],
 			   &ue->frame_parms,
@@ -3983,6 +4009,8 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 			   harq_pid,
 			   pdsch==PDSCH?1:0,
 			   dlsch0->harq_processes[harq_pid]->TBS>256?1:0);
+      printf("start cW0 dlsch decoding\n");
+#endif
 
 #if UE_TIMING_TRACE
       stop_meas(&ue->dlsch_decoding_stats[ue->current_thread_id[nr_tti_rx]]);
@@ -4039,6 +4067,19 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
           start_meas(&ue->dlsch_decoding_stats[ue->current_thread_id[nr_tti_rx]]);
 #endif
 
+#ifdef UE_DLSCH_PARALLELISATION
+          ret1 = dlsch_decoding_mthread(ue,proc, eNB_id,
+                            pdsch_vars->llr[1],
+                            &ue->frame_parms,
+                            dlsch1,
+                            dlsch1->harq_processes[harq_pid],
+                            frame_rx,
+                            nr_tti_rx,
+                            harq_pid,
+                            pdsch==PDSCH?1:0,
+                            dlsch1->harq_processes[harq_pid]->TBS>256?1:0);
+#else
+
           ret1 = dlsch_decoding(ue,
                   pdsch_vars->llr[1],
                   &ue->frame_parms,
@@ -4049,6 +4090,8 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
                   harq_pid,
                   pdsch==PDSCH?1:0,
                   dlsch1->harq_processes[harq_pid]->TBS>256?1:0);
+          printf("start cw1 dlsch decoding\n");
+#endif
 
 #if UE_TIMING_TRACE
           stop_meas(&ue->dlsch_decoding_stats[ue->current_thread_id[nr_tti_rx]]);

@@ -649,6 +649,9 @@ static void get_options (int argc, char **argv) {
         LONG_OPTION_THREADSLOT1PROCONE,
         LONG_OPTION_THREADSLOT1PROCTWO,
         LONG_OPTION_THREADSLOT1PROCTHREE,
+		LONG_OPTION_THREADDLSCHTDONE,
+		LONG_OPTION_THREADDLSCHTDTWO,
+		LONG_OPTION_THREADDLSCHTDTHREE,
         LONG_OPTION_DCIFORMAT,
         LONG_OPTION_AGREGATIONLEVEL,
         LONG_OPTION_DEMOD_SHIFT,
@@ -691,6 +694,9 @@ static void get_options (int argc, char **argv) {
         {"threadSlot1ProcOne",  required_argument, NULL, LONG_OPTION_THREADSLOT1PROCONE},
         {"threadSlot1ProcTwo",  required_argument, NULL, LONG_OPTION_THREADSLOT1PROCTWO},
         {"threadSlot1ProcThree",  required_argument, NULL, LONG_OPTION_THREADSLOT1PROCTHREE},
+		{"threadDlschTdOne",  required_argument, NULL, LONG_OPTION_THREADDLSCHTDONE},
+		{"threadDlschTdTwo",  required_argument, NULL, LONG_OPTION_THREADDLSCHTDTWO},
+		{"threadDlschTdThree",  required_argument, NULL, LONG_OPTION_THREADDLSCHTDTHREE},
         {"DCIformat",  required_argument, NULL, LONG_OPTION_DCIFORMAT},
         {"AgregationLevel",  required_argument, NULL, LONG_OPTION_AGREGATIONLEVEL},
         {"dlsch-demod-shift", required_argument,  NULL, LONG_OPTION_DEMOD_SHIFT},
@@ -836,6 +842,15 @@ static void get_options (int argc, char **argv) {
     case LONG_OPTION_THREADSLOT1PROCTHREE:
        threads.slot1_proc_three=atoi(optarg);
        break;
+    case LONG_OPTION_THREADDLSCHTDONE:
+       threads.dlsch_td_one=atoi(optarg);
+       break;
+	case LONG_OPTION_THREADDLSCHTDTWO:
+       threads.dlsch_td_two=atoi(optarg);
+	   break;
+	case LONG_OPTION_THREADDLSCHTDTHREE:
+       threads.dlsch_td_three=atoi(optarg);
+    break;
     case LONG_OPTION_DCIFORMAT:
         dci_Format = atoi(optarg);
        break;

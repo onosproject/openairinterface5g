@@ -166,6 +166,8 @@ int32_t dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
                                 time_stats_t *te_stats,
                                 time_stats_t *i_stats);
 
+uint32_t  dlsch_decoding_2thread0(void *arg);
+
 void dlsch_encoding_emul(PHY_VARS_eNB *phy_vars_eNB,
                          uint8_t *DLSCH_pdu,
                          LTE_eNB_DLSCH_t *dlsch);
@@ -1324,6 +1326,19 @@ uint32_t dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                         uint8_t harq_pid,
                         uint8_t is_crnti,
                         uint8_t llr8_flag);
+/*
+uint32_t dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,
+						UE_rxtx_proc_t *proc,
+                        int eNB_id,
+                        int16_t *dlsch_llr,
+                        LTE_DL_FRAME_PARMS *lte_frame_parms,
+                        LTE_UE_DLSCH_t *dlsch,
+                        LTE_DL_UE_HARQ_t *harq_process,
+                        uint32_t frame,
+                        uint8_t subframe,
+                        uint8_t harq_pid,
+                        uint8_t is_crnti,
+                        uint8_t llr8_flag);*/
 
 uint32_t dlsch_decoding_emul(PHY_VARS_UE *phy_vars_ue,
                              uint8_t subframe,

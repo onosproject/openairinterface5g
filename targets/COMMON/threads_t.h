@@ -9,6 +9,9 @@ typedef struct threads_s {
     int slot1_proc_one;
     int slot1_proc_two;
     int slot1_proc_three;
+    int dlsch_td_one;
+	int dlsch_td_two;
+	int dlsch_td_three;
 } threads_t;
 
 #endif /* _THREADS_T_H_ */

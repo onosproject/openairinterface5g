@@ -424,6 +424,20 @@ typedef struct {
   /// mutex for UE synch thread
   //pthread_mutex_t mutex_slot0_dl_processing;
   pthread_mutex_t mutex_slot1_dl_processing;
+  //int instance_cnt_slot0_dl_processing;
+  int instance_cnt_dlsch_td;
+  /// pthread descriptor fep_slot1 thread
+  //pthread_t pthread_slot0_dl_processing;
+  pthread_t pthread_dlsch_td;
+  /// pthread attributes for fep_slot1 processing thread
+ // pthread_attr_t attr_slot0_dl_processing;
+  pthread_attr_t attr_dlsch_td;
+  /// condition variable for UE fep_slot1 thread;
+  //pthread_cond_t cond_slot0_dl_processing;
+  pthread_cond_t cond_dlsch_td;
+  /// mutex for UE synch thread
+  //pthread_mutex_t mutex_slot0_dl_processing;
+  pthread_mutex_t mutex_dlsch_td;
   //
   uint8_t chan_est_pilot0_slot1_available;
   uint8_t chan_est_slot1_available;
@@ -431,6 +445,9 @@ typedef struct {
   uint8_t dci_slot0_available;
   uint8_t first_symbol_available;
   //uint8_t channel_level;
+  int eNB_id;
+  int harq_pid;
+  int llr8_flag;
   /// scheduling parameters for fep_slot1 thread
   struct sched_param sched_param_fep_slot1;
 
