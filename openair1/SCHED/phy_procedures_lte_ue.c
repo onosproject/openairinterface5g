@@ -2892,7 +2892,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
   int frame_rx = proc->frame_rx;
   int subframe_rx = proc->subframe_rx;
   printf("pbch0_before. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[0].frame_rx,ue->proc.proc_rxtx[0].subframe_rx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].frame_tx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].subframe_tx);
-  printf("pbch1_before. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[1].frame_rx,ue->proc.proc_rxtx[1].subframe_rx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].frame_tx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].subframe_tx);
+  printf("pbch1_before. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[1].frame_rx,ue->proc.proc_rxtx[1].subframe_rx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[1].frame_tx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[1].subframe_tx);
 
   printf("pbch0_after. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[0].frame_rx,ue->proc.proc_rxtx[0].subframe_rx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].frame_tx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].subframe_tx);
   printf("pbch1_after. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[1].frame_rx,ue->proc.proc_rxtx[1].subframe_rx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[1].frame_tx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[1].subframe_tx);

@@ -1124,7 +1124,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
         do_UL_sig_freq(UE2eNB,
                 enb_data,
                 ue_data,
-                subframe,
+                (subframe-1<0)?9:subframe-1,
                 0,  // abstraction_flag
                 &PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms,
                 0,  // frame is only used for abstraction
@@ -1355,7 +1355,7 @@ void init_devices(void){
       if (PHY_vars_UE_g[0][0]->do_ofdm_mod)
       	current_eNB_rx_timestamp[eNB_id][CC_id] = PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.symbols_per_tti;
       else
-      current_eNB_rx_timestamp[eNB_id][CC_id] = PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti;
+      	current_eNB_rx_timestamp[eNB_id][CC_id] = PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti;
       last_eNB_rx_timestamp[eNB_id][CC_id] = 0;
     }
     for (UE_id=0;UE_id<NB_UE_INST;UE_id++) {

@@ -2814,7 +2814,8 @@ void eNB_fep_full(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
     start_fh_prev_sf = start_fh_sf;
     clock_gettime( CLOCK_MONOTONIC, &start_fh);
     start_fh_sf = proc_rxtx->subframe_rx;
-  }    
+  }   
+ 
 }
 
 void eNB_fep_rru_if5(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
@@ -2891,6 +2892,7 @@ void phy_procedures_eNB_common_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc){
 
     if (eNB->node_function == NGFI_RRU_IF4p5) {
       /// **** in TDD during DL send_IF4 of ULTICK to RCC **** ///
+      LOG_D(PHY,"send_IF4p5 (phy_procedures_eNB_common_RX): frame %d, subframe %d\n",proc->frame_rx,proc->subframe_rx);
       send_IF4p5(eNB, proc->frame_rx, proc->subframe_rx, IF4p5_PULTICK, 0);
     }    
     return;
