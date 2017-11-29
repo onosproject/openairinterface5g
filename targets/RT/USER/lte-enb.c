@@ -948,7 +948,7 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
     lte_subframe_t SF_type     = subframe_select(fp,(proc->subframe_rx+tx_sfoffset)%10);
     lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_rx+tx_sfoffset+9)%10);
     lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_rx+tx_sfoffset+1)%10);
-    printf("[lte-enb_time]frame %d, subframe %d\n",*frame,*subframe);
+    //printf("[lte-enb_time]frame %d, subframe %d\n",*frame,*subframe);
     if ((SF_type == SF_DL) ||
 	(SF_type == SF_S)) {
 
@@ -1095,7 +1095,7 @@ void rx_rf_freq(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
     lte_subframe_t SF_type     = subframe_select(fp,(proc->subframe_rx%10));
     lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_rx+9)%10);
     lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_rx+1)%10);
-    printf("[lte-enb_freq]frame %d, subframe %d\n",*frame,*subframe);
+    //printf("[lte-enb_freq]frame %d, subframe %d\n",*frame,*subframe);
     if ((SF_type == SF_DL) ||
 	(SF_type == SF_S)) {
 
@@ -1855,7 +1855,7 @@ static void* eNB_thread_single( void* param ) {
       } // ic>=0
     } // in_synch==0
     // read in rx_offset samples
-    printf("[lte-enb] rx_offset %d/n",eNB->rx_offset);
+    //printf("[lte-enb] rx_offset %d/n",eNB->rx_offset);
     LOG_I(PHY,"Resynchronizing by %d samples\n",eNB->rx_offset);
     if (do_ofdm_mod){
     	rxs_freq = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
@@ -1915,7 +1915,7 @@ static void* eNB_thread_single( void* param ) {
     proc_rxtx->timestamp_tx = proc->timestamp_tx;
     // adjust for timing offset between RRU
     if (eNB->CC_id!=0) proc_rxtx->frame_tx = (proc_rxtx->frame_tx+proc->frame_offset)&1023;
-    printf("[lte-enb] frame offset %d\n",proc->frame_offset);
+    //printf("[lte-enb] frame offset %d\n",proc->frame_offset);
     // At this point, all information for subframe has been received on FH interface
     // If this proc is to provide synchronization, do so
     wakeup_slaves(proc);

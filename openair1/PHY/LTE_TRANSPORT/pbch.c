@@ -1023,22 +1023,18 @@ uint16_t rx_pbch(LTE_UE_COMMON *lte_ue_common_vars,
 
   if (crc == 0x0000)
   {
-    printf("[pbch] 1\n");
     return(1);
   }
   else if (crc == 0xffff)
   {
-    printf("[pbch] 2\n");
     return(2);
   }
   else if (crc == 0x5555)
   {
-    printf("[pbch] 4\n");
     return(4);
   }
   else
   {
-    printf("[pbch] -1\n");
     return(-1);
   }
 

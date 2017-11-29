@@ -45,7 +45,7 @@
 #include "SCHED/phy_procedures_emos.h"
 #endif
 
-#define DEBUG_PHY_PROC
+//#define DEBUG_PHY_PROC
 
 #ifndef PUCCH
 #define PUCCH
@@ -1559,7 +1559,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
              frame_tx,
              subframe_tx);
 
-  printf("[phy_procedures_lte_ue] ue->ulsch_Msg3_active [%d] %d\n",eNB_id,ue->ulsch_Msg3_active[eNB_id]);
+  //printf("[phy_procedures_lte_ue] ue->ulsch_Msg3_active [%d] %d\n",eNB_id,ue->ulsch_Msg3_active[eNB_id]);
   if (ue->mac_enabled == 1) {
     if ((ue->ulsch_Msg3_active[eNB_id] == 1) &&
   (ue->ulsch_Msg3_frame[eNB_id] == frame_tx) &&
@@ -1910,7 +1910,6 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
            &ue->frame_parms,
            ue->ulsch[eNB_id]);
       for (aa=0; aa<1/*frame_parms->nb_antennas_tx*/; aa++){
-	printf("Generating drs pusch\n");
 	generate_drs_pusch(ue,
 			   proc,
 			   eNB_id,
@@ -2891,11 +2890,9 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
   int frame_rx = proc->frame_rx;
   int subframe_rx = proc->subframe_rx;
-  printf("pbch0_before. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[0].frame_rx,ue->proc.proc_rxtx[0].subframe_rx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].frame_tx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].subframe_tx);
-  printf("pbch1_before. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[1].frame_rx,ue->proc.proc_rxtx[1].subframe_rx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[1].frame_tx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[1].subframe_tx);
+  //printf("pbch0_before. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[0].frame_rx,ue->proc.proc_rxtx[0].subframe_rx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].frame_tx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].subframe_tx);
+  //printf("pbch1_before. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[1].frame_rx,ue->proc.proc_rxtx[1].subframe_rx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[1].frame_tx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[1].subframe_tx);
 
-  printf("pbch0_after. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[0].frame_rx,ue->proc.proc_rxtx[0].subframe_rx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].frame_tx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].subframe_tx);
-  printf("pbch1_after. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[1].frame_rx,ue->proc.proc_rxtx[1].subframe_rx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[1].frame_tx,PHY_vars_eNB_g[0][0]->proc.proc_rxtx[1].subframe_tx);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_PBCH_PROCEDURES, VCD_FUNCTION_IN);
 
   pbch_phase=(frame_rx%4);
@@ -3117,7 +3114,7 @@ int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint
              (ue->frame_parms.mode1_flag == 1) ? SISO : ALAMOUTI,
              ue->high_speed_flag,
              ue->is_secondary_ue);
-    printf("[phy_procedures_lte_ue] ue->prach_resources[%d] %d\n",eNB_id,ue->prach_resources[eNB_id]);
+    //printf("[phy_procedures_lte_ue] ue->prach_resources[%d] %d\n",eNB_id,ue->prach_resources[eNB_id]);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RX_PDCCH, VCD_FUNCTION_OUT);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_DCI_DECODING, VCD_FUNCTION_IN);
 
@@ -3227,7 +3224,7 @@ int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint
 #endif
 
   for (i=0; i<dci_cnt; i++) {
-    printf("[phy_procedures_lte_ue] rnti[%d] %x, crnti %x\n",i,dci_alloc_rx[i].rnti,ue->pdcch_vars[ue->current_thread_id[subframe_rx]][eNB_id]->crnti);
+    //printf("[phy_procedures_lte_ue] rnti[%d] %x, crnti %x\n",i,dci_alloc_rx[i].rnti,ue->pdcch_vars[ue->current_thread_id[subframe_rx]][eNB_id]->crnti);
     if ((ue->UE_mode[eNB_id]>PRACH) &&
 	(dci_alloc_rx[i].rnti == ue->pdcch_vars[ue->current_thread_id[subframe_rx]][eNB_id]->crnti) &&
 	(dci_alloc_rx[i].format != format0)) {
@@ -3330,7 +3327,7 @@ int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint
   ue->dlsch_SI_received[eNB_id]++;
 
 
-  LOG_I(PHY,"[UE  %d] Frame %d, subframe %d : Generate UE DLSCH SI_RNTI format 1%s\n",ue->Mod_id,frame_rx,subframe_rx,dci_alloc_rx[i].format==format1A?"A":"C");
+  //LOG_I(PHY,"[UE  %d] Frame %d, subframe %d : Generate UE DLSCH SI_RNTI format 1%s\n",ue->Mod_id,frame_rx,subframe_rx,dci_alloc_rx[i].format==format1A?"A":"C");
   //dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
 
       }
@@ -3372,7 +3369,7 @@ int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint
 
 #ifdef DEBUG_PHY_PROC
       LOG_D(PHY,"[UE  %d][RAPROC] subframe %d: Found RA rnti %x, format 1A, dci_cnt %d\n",ue->Mod_id,subframe_rx,dci_alloc_rx[i].rnti,i);
-      printf("[UE  %d][RAPROC] ue->prach_resources[eNB_id] %d, ue->prach_resources[eNB_id]->ra_RNTI %d\n",ue->Mod_id,ue->prach_resources[eNB_id],ue->prach_resources[eNB_id]->ra_RNTI);
+      //printf("[UE  %d][RAPROC] ue->prach_resources[eNB_id] %d, ue->prach_resources[eNB_id]->ra_RNTI %d\n",ue->Mod_id,ue->prach_resources[eNB_id],ue->prach_resources[eNB_id]->ra_RNTI);
       //if (((frame_rx%100) == 0) || (frame_rx < 20))
       //dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
       //mac_xface->macphy_exit("so far so good...\n");

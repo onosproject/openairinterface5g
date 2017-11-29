@@ -244,7 +244,7 @@ void multipath_channel_freq(channel_desc_t *desc,
 #ifdef DEBUG_CH
   printf("[CHANNEL_FREQ] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, dd %d, len %d \n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,dd,desc->channel_length);
 #endif		
-  printf("[CHANNEL_FREQ] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, dd %d, len %d , symbols tti %d\n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,dd,desc->channel_length,symbols_per_tti);
+  //printf("[CHANNEL_FREQ] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, dd %d, len %d , symbols tti %d\n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,dd,desc->channel_length,symbols_per_tti);
 
   if (keep_channel) {
   	// do nothing - keep channel
@@ -324,7 +324,7 @@ void multipath_channel_freq_test(channel_desc_t *desc,
   int symbols_per_tti=length/PHY_vars_UE_g[0][0]->frame_parms.ofdm_symbol_size;
 
 
-  printf("[CHANNEL_FREQ] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, dd %d, len %d , symbols tti %d\n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,dd,desc->channel_length,symbols_per_tti);
+  //printf("[CHANNEL_FREQ] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, dd %d, len %d , symbols tti %d\n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,dd,desc->channel_length,symbols_per_tti);
 
 
   for (k=0;k<symbols_per_tti;k++){//k = 0-13  normal cyclic prefix	  
@@ -372,11 +372,11 @@ void multipath_channel_prach(channel_desc_t *desc,
   ofdm_symbol_size=fp->ofdm_symbol_size;
   symbols_per_tti=fp->symbols_per_tti;
   delta_f = (prach_fmt<4)?nb_rb*180000/((n_samples-1)*12):nb_rb*180000/((n_samples-1)*2);
-  printf("prach_samples %d, n_ra_prb %d, delta_f %e, prach_fmt %d\n",prach_samples,get_prach_prb_offset(fp, PHY_vars_UE_g[UE_id][CC_id]->prach_resources[0]->ra_TDD_map_index, PHY_vars_eNB_g[0][0]->proc.frame_prach), delta_f,prach_fmt);
+  //printf("prach_samples %d, n_ra_prb %d, delta_f %e, prach_fmt %d\n",prach_samples,get_prach_prb_offset(fp, PHY_vars_UE_g[UE_id][CC_id]->prach_resources[0]->ra_TDD_map_index, PHY_vars_eNB_g[0][0]->proc.frame_prach), delta_f,prach_fmt);
   #ifdef DEBUG_CH
   printf("[CHANNEL_PRACH] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, len %d \n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,desc->channel_length);
 #endif		
-  printf("[CHANNEL_PRACH] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, len %d , symbols tti %d\n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,desc->channel_length,symbols_per_tti);
+  //printf("[CHANNEL_PRACH] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, len %d , symbols tti %d\n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,desc->channel_length,symbols_per_tti);
    		if (keep_channel) {
 		// do nothing - keep channel
 		} else {

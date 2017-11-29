@@ -21,7 +21,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define DEBUG_ADC
+//#define DEBUG_ADC
 void adc(double *r_re[2],
          double *r_im[2],
          unsigned int input_offset,

@@ -674,7 +674,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
   }
 
   n_ra_prb = get_prach_prb_offset(&(ue->frame_parms), tdd_mapindex, Nf);
-  printf("[prach.c] n_ra_prb %d\n",n_ra_prb);
+  //printf("[prach.c] n_ra_prb %d\n",n_ra_prb);
   prach_root_sequence_map = (prach_fmt<4) ? prach_root_sequence_map0_3 : prach_root_sequence_map4;
 
   /*
@@ -711,7 +711,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
 
   // This is the relative offset (for unrestricted case) in the root sequence table (5.7.2-4 from 36.211) for the given preamble index
   preamble_offset = ((NCS==0)? preamble_index : (preamble_index/(N_ZC/NCS)));
-  printf("[prach] preamble_offset %d\n",preamble_offset);
+  //printf("[prach] preamble_offset %d\n",preamble_offset);
 
   if (restricted_set == 0) {
     // This is the \nu corresponding to the preamble index
@@ -1181,7 +1181,7 @@ int32_t generate_prach_freq( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, 
   }
 
   n_ra_prb = get_prach_prb_offset(&(ue->frame_parms), tdd_mapindex, Nf);
-  printf("[prach.c] n_ra_prb %d\n",n_ra_prb);
+  //printf("[prach.c] n_ra_prb %d\n",n_ra_prb);
   prach_root_sequence_map = (prach_fmt<4) ? prach_root_sequence_map0_3 : prach_root_sequence_map4;
 
   /*
@@ -1218,7 +1218,7 @@ int32_t generate_prach_freq( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, 
 
   // This is the relative offset (for unrestricted case) in the root sequence table (5.7.2-4 from 36.211) for the given preamble index
   preamble_offset = ((NCS==0)? preamble_index : (preamble_index/(N_ZC/NCS)));
-  printf("[prach] preamble_offset %d\n",preamble_offset);
+  //printf("[prach] preamble_offset %d\n",preamble_offset);
 
   if (restricted_set == 0) {
     // This is the \nu corresponding to the preamble index
@@ -1352,8 +1352,8 @@ int32_t generate_prach_freq( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, 
 
     Xu_re = (((int32_t)Xu[offset<<1]*amp)>>15);
     Xu_im = (((int32_t)Xu[1+(offset<<1)]*amp)>>15);
-    if (offset<10 || (offset>829&&offset<839))
-    printf("[prach] k %d, offset %d, offset2 %d, PRACH (%d,%d)\n",k,offset,offset2,((Xu_re*ru[offset2<<1]) - (Xu_im*ru[1+(offset2<<1)]))>>15,((Xu_im*ru[offset2<<1]) + (Xu_re*ru[1+(offset2<<1)]))>>15);
+    //if (offset<10 || (offset>829&&offset<839))
+    //printf("[prach] k %d, offset %d, offset2 %d, PRACH (%d,%d)\n",k,offset,offset2,((Xu_re*ru[offset2<<1]) - (Xu_im*ru[1+(offset2<<1)]))>>15,((Xu_im*ru[offset2<<1]) + (Xu_re*ru[1+(offset2<<1)]))>>15);
     prachF[k++]= ((Xu_re*ru[offset2<<1]) - (Xu_im*ru[1+(offset2<<1)]))>>15;
     prachF[k++]= ((Xu_im*ru[offset2<<1]) + (Xu_re*ru[1+(offset2<<1)]))>>15;
     
@@ -1864,7 +1864,7 @@ void rx_prach(PHY_VARS_eNB *eNB,
           printf("PRACH: Frame %d, Subframe %d => %d dB\n",eNB->proc.frame_rx,eNB->proc.subframe_rx,en);
 >>>>>>> origin/fix-if4p5
 #endif
-	write_output("rxsigF.m","prach_rxF",rxsigF[0],24576,1,16);
+	//write_output("rxsigF.m","prach_rxF",rxsigF[0],24576,1,16);
     return;
   } else if (eNB->node_function == NGFI_RCC_IF4p5) {
     k = (12*n_ra_prb) - 6*eNB->frame_parms.N_RB_UL;
@@ -2381,7 +2381,7 @@ void rx_prach_freq(PHY_VARS_eNB *eNB,
           printf("PRACH: Frame %d, Subframe %d => %d dB\n",eNB->proc.frame_rx,eNB->proc.subframe_rx,en);
 >>>>>>> origin/fix-if4p5
 #endif
-	write_output("rxsigF.m","prach_rxF",rxsigF[0],24576,1,16);
+	//write_output("rxsigF.m","prach_rxF",rxsigF[0],24576,1,16);
     return;
   } else if (eNB->node_function == NGFI_RCC_IF4p5) {
     k = (12*n_ra_prb) - 6*eNB->frame_parms.N_RB_UL;

@@ -165,7 +165,7 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
   delta_f = (prach_fmt<4)?nb_rb*180000/((n_samples-1)*12):nb_rb*180000/((n_samples-1)*2);//1.25 khz for preamble format 1,2,3. 7.5 khz for preample format 4
   max_nb_rb_samples = nb_rb*180000/delta_f;//7200 if prach_fmt<4
   prach_pbr_offset_samples = (prach_prb_offset+6)*180000/delta_f;//864 if prach_prb_offset=0,7200 if prach_prb_offset=44=50-6
-  printf("prach_samples = %d, delta_f = %e, max_nb_rb_samples= %d, prach_pbr_offset_samples = %d, nb_taps = %d\n",prach_samples,delta_f,max_nb_rb_samples,prach_pbr_offset_samples,desc->nb_taps);
+  //printf("prach_samples = %d, delta_f = %e, max_nb_rb_samples= %d, prach_pbr_offset_samples = %d, nb_taps = %d\n",prach_samples,delta_f,max_nb_rb_samples,prach_pbr_offset_samples,desc->nb_taps);
   for (f=max_nb_rb_samples/2-prach_pbr_offset_samples,f1=0; f<max_nb_rb_samples/2-prach_pbr_offset_samples+prach_samples; f++,f1++) {//3600-864,3600-864+864|3600-7200,3600-7200+839
     freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
     //printf("[init_freq_channel_prach] freq %e\n",freq);
@@ -181,8 +181,8 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
 
       cos_lut[f1][l] = cos(2*M_PI*freq*delay);
       sin_lut[f1][l] = sin(2*M_PI*freq*delay);
-      if (f<max_nb_rb_samples/2-prach_pbr_offset_samples+10)
-      	printf("freq: %e, f1: %d, f: %d, arg_sin_cos = %e,  cos () = %e, sin () =n %e)\n",freq, f1,f, 2*M_PI*freq*delay, cos_lut[f1][l], sin_lut[f1][l]);
+      //if (f<max_nb_rb_samples/2-prach_pbr_offset_samples+10)
+      	//printf("freq: %e, f1: %d, f: %d, arg_sin_cos = %e,  cos () = %e, sin () =n %e)\n",freq, f1,f, 2*M_PI*freq*delay, cos_lut[f1][l], sin_lut[f1][l]);
     }
   }
 
@@ -238,8 +238,8 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
         }
       }
     }
-	if (f<10 || (f>829&&f<839))
-		printf("chF_prach[0][%d], (x,y) = (%e,%e)\n",f,desc->chF_prach[0][f].x,desc->chF_prach[0][f].y);
+	//if (f<10 || (f>829&&f<839))
+	//	printf("chF_prach[0][%d], (x,y) = (%e,%e)\n",f,desc->chF_prach[0][f].x,desc->chF_prach[0][f].y);
   }
   stop_meas(&desc->interp_freq);
   return(0);

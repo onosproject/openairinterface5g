@@ -703,8 +703,8 @@ void do_UL_sig(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX_N
 
     // Compute RX signal for eNB = eNB_id
     for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
-      printf("ue->generate_ul_signal[%d] %d\n",eNB_id,PHY_vars_UE_g[UE_id][CC_id]->generate_ul_signal[eNB_id]);
-      printf("[channel_sim_UL_time] subframe %d\n",subframe);
+      //printf("ue->generate_ul_signal[%d] %d\n",eNB_id,PHY_vars_UE_g[UE_id][CC_id]->generate_ul_signal[eNB_id]);
+      //printf("[channel_sim_UL_time] subframe %d\n",subframe);
       txdata = PHY_vars_UE_g[UE_id][CC_id]->common_vars.txdata;
       sf_offset = subframe*frame_parms->samples_per_tti;
       //for (int idx=0;idx<10;idx++) printf("dumping UL raw subframe %d: txdata[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdata[0][sf_offset+idx])[0], ((short*)&txdata[0][sf_offset+idx])[1]);
@@ -908,16 +908,16 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 
     // Compute RX signal for eNB = eNB_id
     for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
-	printf("ue->generate_ul_signal[%d] %d\n",eNB_id,PHY_vars_UE_g[UE_id][CC_id]->generate_ul_signal[eNB_id]);
+	//printf("ue->generate_ul_signal[%d] %d\n",eNB_id,PHY_vars_UE_g[UE_id][CC_id]->generate_ul_signal[eNB_id]);
 	txdataF = PHY_vars_UE_g[UE_id][CC_id]->common_vars.txdataF;
         AssertFatal(txdataF != NULL,"txdataF is null\n");
       	sf_offset = subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;
-        printf("[channel_sim_UL_freq] subframe %d\n",subframe);
+        //printf("[channel_sim_UL_freq] subframe %d\n",subframe);
  	/*for (int idx=subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx<(subframe+1)*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx++){
 		if (((short*)&txdataF[0][idx])[0]!=0 || ((short*)&txdataF[0][idx])[1]!=0)
 			printf("dumping UL raw subframet %d: txdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdataF[0][idx])[0], ((short*)&txdataF[0][idx])[1]);
 	}*/
-	write_output("chsim_txsigF_UL.m","chsm_txsF_UL", &txdataF[0][0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
+	//write_output("chsim_txsigF_UL.m","chsm_txsF_UL", &txdataF[0][0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
       
       if (((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
 	   UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB) <= -125.0) {
@@ -927,8 +927,8 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 	      PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe],
 	      PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe],
 	      subframe,sf_offset);
-	printf("multipath_channel, UE too weak %e\n", ((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
-	   UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB));	
+	//printf("multipath_channel, UE too weak %e\n", ((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
+	//   UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB));	
       } else {
 		tx_pwr = dac_fixed_gain((double**)s_re_f,
 					(double**)s_im_f,
@@ -1026,7 +1026,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 			if (((short*)&txdataF[0][idx+subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti])[0]!=0 || ((short*)&txdataF[0][idx+subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti])[1]!=0)
 				printf("dumping UL raw rx subframe %d: rxdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&rxdataF[0][idx])[0], ((short*)&rxdataF[0][idx])[1]);
 		}*/
-		write_output("chsim_rxsigF_UL.m","chsm_rxsF_UL", (void*)rxdataF[0],2*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16); 
+		//write_output("chsim_rxsigF_UL.m","chsm_rxsF_UL", (void*)rxdataF[0],2*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16); 
     
 #ifdef DEBUG_SIM
 	    //rx_pwr2 = signal_energy(rxdataF[0]+sf_offset,subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)*(double)frame_parms->ofdm_symbol_size/(12.0*frame_parms->N_RB_DL);
@@ -1197,11 +1197,11 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 	sf_offset_prach = pointer_firstvalue_PRACH;
 //----------------prach----------------------------------------------
 
-	printf("ue->generate_ul_signal[%d] %d\n",eNB_id,PHY_vars_UE_g[UE_id][CC_id]->generate_ul_signal[eNB_id]);
+	//printf("ue->generate_ul_signal[%d] %d\n",eNB_id,PHY_vars_UE_g[UE_id][CC_id]->generate_ul_signal[eNB_id]);
 	txdataF = PHY_vars_UE_g[UE_id][CC_id]->common_vars.txdataF;
         AssertFatal(txdataF != NULL,"txdataF is null\n");
       	sf_offset = subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;
-        printf("[channel_sim_UL_freq] subframe %d\n",subframe);
+        //printf("[channel_sim_UL_freq] subframe %d\n",subframe);
  	/*for (int idx=subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx<(subframe+1)*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;idx++){
 		if (((short*)&txdataF[0][idx])[0]!=0 || ((short*)&txdataF[0][idx])[1]!=0)
 			printf("dumping UL raw subframet %d: txdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdataF[0][idx])[0], ((short*)&txdataF[0][idx])[1]);
@@ -1216,8 +1216,8 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 	      PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe],
 	      PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe],
 	      subframe,sf_offset);
-	printf("multipath_channel, UE too weak %e\n", ((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
-	   UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB));	
+	//printf("multipath_channel, UE too weak %e\n", ((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
+	//   UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB));	
       } else {
 //----------------prach----------------------------------------------
 	     tx_pwr = dac_fixed_gain_prach((double**)s_re_f_prach,
@@ -1266,7 +1266,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 			if (((short*)&txdataF[0][idx])[0]!=0 || ((short*)&txdataF[0][idx])[1]!=0)
 				printf("dumping raw UL tx subframe (output) %d: r_re0_f[%d] = (%f,%f)\n", subframe, idx, r_re0_f[0][idx-subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti],r_im0_f[0][idx-subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti]);
 		}*/
-		write_output("chsim_r_re0_f_UL.m","chsim_rre0f_UL.m", r_re0_f,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
+		//write_output("chsim_r_re0_f_UL.m","chsim_rre0f_UL.m", r_re0_f,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 
 		rx_pwr = signal_energy_fp2(UE2eNB[UE_id][eNB_id][CC_id]->ch[0],UE2eNB[UE_id][eNB_id][CC_id]->channel_length)*UE2eNB[UE_id][eNB_id][CC_id]->channel_length;
 #ifdef DEBUG_SIM
@@ -1364,7 +1364,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 			if (((short*)&txdataF[0][idx+subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti])[0]!=0 || ((short*)&txdataF[0][idx+subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti])[1]!=0)
 				printf("dumping UL raw rx subframe %d: rxdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&rxdataF[0][idx])[0], ((short*)&rxdataF[0][idx])[1]);
 		}*/
-		write_output("chsim_rxsigF_UL.m","chsm_rxsF_UL", (void*)rxdataF[0],2*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16); 
+		//write_output("chsim_rxsigF_UL.m","chsm_rxsF_UL", (void*)rxdataF[0],2*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16); 
     
 #ifdef DEBUG_SIM
 	    //rx_pwr2 = signal_energy(rxdataF[0]+sf_offset,subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)*(double)frame_parms->ofdm_symbol_size/(12.0*frame_parms->N_RB_DL);
@@ -1435,8 +1435,8 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
   r_im0_f_prach[1] = r_im01_f_prach;
 
   uint8_t prach_ConfigIndex;
-  uint8_t prach_fmt;
-  int pointer_firstvalue_PRACH;
+  uint8_t prach_fmt=0;
+  int pointer_firstvalue_PRACH=0;
 
   if (abstraction_flag!=0)  {
 #ifdef PHY_ABSTRACTION_UL
@@ -1482,8 +1482,8 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
 	      PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe],
 	      PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe],
 	      subframe,sf_offset);
-	      printf("multipath_channel_prach, UE too weak %e\n", ((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
-	   UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB));	
+	      //printf("multipath_channel_prach, UE too weak %e\n", ((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
+	   //UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB));	
       } else {
 	     printf("multipath_channel_prach\n");
 	     tx_pwr = dac_fixed_gain_prach((double**)s_re_f_prach,
@@ -1606,7 +1606,7 @@ void init_channel_vars(LTE_DL_FRAME_PARMS *frame_parms, double ***s_re,double **
 void init_channel_vars_freq(LTE_DL_FRAME_PARMS *frame_parms, double ***s_re_f,double ***s_im_f,double ***r_re_f,double ***r_im_f,double ***r_re0_f,double ***r_im0_f)
 {
 
-  int i,j,eNB_id,UE_id,CC_id,th_id;
+  int i;
 
   memset(eNB_output_mask,0,sizeof(int)*NUMBER_OF_UE_MAX);
   for (i=0;i<NB_UE_INST;i++)

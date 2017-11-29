@@ -1097,12 +1097,12 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 		frame = (last/(10*PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti))%1023;
 	}
       //n_ra_prb = get_prach_prb_offset(frame_parms, PHY_vars_UE_g[0][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index, PHY_vars_UE_g[0][CC_id]->proc.proc_rxtx[subframe&0x1].frame_tx);
-      printf("[oaisim_functs]eNB_trx_read UL subframe %d, frame %d\n",subframe,frame);
+      //printf("[oaisim_functs]eNB_trx_read UL subframe %d, frame %d\n",subframe,frame);
       LOG_D(PHY,"eNB_trx_read generating UL subframe %d (Ts %llu, current TS %llu)\n",
             subframe,(unsigned long long)*ptimestamp,
             (unsigned long long)current_eNB_rx_timestamp[eNB_id][CC_id]);
 
-      printf("is Prach generated? %d, is prach_subframe? %d, frame %d, subframe %d, mode %d\n",PHY_vars_UE_g[0][CC_id]->generate_prach,is_prach_subframe(frame_parms,frame,subframe),frame,subframe,PHY_vars_UE_g[0][CC_id]->UE_mode[eNB_id]);
+      //printf("is Prach generated? %d, is prach_subframe? %d, frame %d, subframe %d, mode %d\n",PHY_vars_UE_g[0][CC_id]->generate_prach,is_prach_subframe(frame_parms,frame,subframe),frame,subframe,PHY_vars_UE_g[0][CC_id]->UE_mode[eNB_id]);
       if (do_ofdm_mod)
       {
 	if (is_prach_subframe(frame_parms,frame,subframe) && PHY_vars_UE_g[0][CC_id]->generate_prach)
@@ -1213,7 +1213,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
 		subframe = (last/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.samples_per_tti)%10;
 		frame = (last/(10*PHY_vars_UE_g[UE_id][CC_id]->frame_parms.samples_per_tti))%1023;
 	}
-	printf("[oaisim_functs]UE_trx_read DL subframe %d, frame %d\n",subframe,frame);
+	//printf("[oaisim_functs]UE_trx_read DL subframe %d, frame %d\n",subframe,frame);
       //subframe = (subframe+9) % 10;
 
       LOG_D(PHY,"UE_trx_read generating DL subframe %d (Ts %llu, current TS %llu)\n",
