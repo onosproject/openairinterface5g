@@ -1461,6 +1461,7 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
         lte_frame_type_t frame_type = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.frame_type;
         prach_ConfigIndex   = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
         prach_fmt = get_prach_fmt(prach_ConfigIndex,frame_type);
+        printf("UE[%d], ra_TDD_map_index %d\n",UE_id,PHY_vars_UE_g[UE_id][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index);
         n_ra_prb = get_prach_prb_offset(frame_parms, PHY_vars_UE_g[UE_id][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index, PHY_vars_UE_g[UE_id][CC_id]->proc.proc_rxtx[subframe&0x1].frame_tx);
 
 	tx_prachF = PHY_vars_UE_g[UE_id][CC_id]->prach_vars[eNB_id]->prachF;

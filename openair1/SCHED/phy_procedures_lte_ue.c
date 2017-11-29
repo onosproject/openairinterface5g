@@ -1441,7 +1441,7 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 
     if (abstraction_flag == 0) {
 
-      LOG_I(PHY,"mode %d\n",mode);
+      //LOG_I(PHY,"mode %d\n",mode);
 
       if ((ue->mac_enabled==1) && (mode != calib_prach_tx)) {
   ue->tx_power_dBm[subframe_tx] = ue->prach_resources[eNB_id]->ra_PREAMBLE_RECEIVED_TARGET_POWER+get_PL(ue->Mod_id,ue->CC_id,eNB_id);
