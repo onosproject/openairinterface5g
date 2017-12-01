@@ -1358,13 +1358,13 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   if (Qm == 1){
     rxdataF_comp16[0] = (int16_t)(((int32_t)pi_2_re[symbol%2] * (int32_t)rxdataF_comp16_re + 
                         (int32_t)pi_2_im[symbol%2] * (int32_t)rxdataF_comp16_im)>>15); 
-    rxdataF_comp16[1] = (int16_t)(((int32_t)pi_2_re[symbol%1] * (int32_t)rxdataF_comp16_im - 
+    rxdataF_comp16[1] = (int16_t)(((int32_t)pi_2_re[symbol%2] * (int32_t)rxdataF_comp16_im - 
                         (int32_t)pi_2_im[symbol%2] * (int32_t)rxdataF_comp16_re)>>15); 
   }
   if(Qm == 2){
     rxdataF_comp16[0] = (int16_t)(((int32_t)pi_4_re[symbol%2] * (int32_t)rxdataF_comp16_re + 
                         (int32_t)pi_4_im[symbol%2] * (int32_t)rxdataF_comp16_im)>>15); 
-    rxdataF_comp16[1] = (int16_t)(((int32_t)pi_4_re[symbol%1] * (int32_t)rxdataF_comp16_im - 
+    rxdataF_comp16[1] = (int16_t)(((int32_t)pi_4_re[symbol%2] * (int32_t)rxdataF_comp16_im - 
                         (int32_t)pi_4_im[symbol%2] * (int32_t)rxdataF_comp16_re)>>15); 
   }
 
@@ -1573,16 +1573,35 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
   int        subframe = proc->subframe_rx; 
 
   uint8_t npusch_format = 1; // NB-IoT: format 1 (data), or 2: ack. Should be defined in higher layer 
-  uint8_t Nsc_RU = eNB->ulsch[UE_id]->harq_process->N_sc_RU; // Vincent: number of sc 1,3,6,12
+  uint8_t Nsc_RU = eNB->ulsch[UE_id]->harq_process->N_sc_RU; // Vincent: number of sc 1,3,6,12 
+  uint8_t subcarrier_spacing = frame_parms->subcarrier_spacing; // 15 kHz or 3.75 kHz 
+
+  int pilot_pos1_15k = 3, pilot_pos2_15k = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
+  int pilot_pos_format2_15k[2] = {2,9}; // holds for npusch format 2, and 15 kHz subcarrier bandwidth 
+  int pilot_pos1_3_75k = 4, pilot_pos2_3_75k = 11; // holds for npusch format 1, and 3.75 kHz subcarrier bandwidth
+  int pilot_pos_format2_3_75k[2] = {0,7}; // holds for npusch format 2, and 3.75 kHz subcarrier bandwidth 
+
+  int pilot_pos1, pilot_pos2; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
+  int *pilot_pos_format2; // holds for npusch format 2, and 15 kHz subcarrier bandwidth
 
   harq_pid = subframe2harq_pid_NB_IoT(frame_parms,proc->frame_rx,subframe);
-  Qm       = get_Qm_ul_NB_IoT(ulsch[UE_id]->harq_process->mcs,ulsch[UE_id]->harq_process->N_sc_RU);
+  Qm       = get_Qm_ul_NB_IoT(ulsch[UE_id]->harq_process->mcs,Nsc_RU);
 
   rx_power_correction = 1;
 
   if (ulsch[UE_id]->harq_process->nb_rb == 0) {
     LOG_E(PHY,"PUSCH (%d/%x) nb_rb=0!\n", harq_pid,ulsch[UE_id]->rnti);
     return;
+  }
+
+  if (subcarrier_spacing){
+    pilot_pos_format2 = pilot_pos_format2_15k; 
+    pilot_pos1 = pilot_pos1_15k; 
+    pilot_pos2 = pilot_pos2_15k;
+  }else{
+    pilot_pos_format2 = pilot_pos_format2_3_75k; 
+    pilot_pos1 = pilot_pos1_3_75k; 
+    pilot_pos2 = pilot_pos2_3_75k;
   }
 
   for (l=0; l<frame_parms->symbols_per_tti; l++) { 
@@ -1706,13 +1725,13 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
   for (l=0; l<frame_parms->symbols_per_tti; l++) {
     if (npusch_format == 1){
-      if (l==3 || l==10)   // skip pilots
+      if (l==pilot_pos1 || l==pilot_pos2)   // skip pilots
       {
         l++;
       }
     }
     if (npusch_format == 2){
-      if (l == 2 || l == 9)   // skip 3 pilots
+      if (l == pilot_pos_format2[0] || l == pilot_pos_format2[1])   // skip 3 pilots
       {
         l = l + 3;
       }
@@ -1849,7 +1868,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
     //   l++;
     // } 
     if (npusch_format == 1){
-      if (l==3 || l==10)   // skip pilots
+      if (l==pilot_pos1 || l==pilot_pos2)   // skip pilots
       {
         l++;
       }
@@ -1868,7 +1887,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
     }
     if (npusch_format == 2){
-      if (l == 2 || l == 9)   // skip 3 pilots
+      if (l == pilot_pos_format2[0] || l == pilot_pos_format2[1])   // skip 3 pilots
       {
         l = l + 3;
       }

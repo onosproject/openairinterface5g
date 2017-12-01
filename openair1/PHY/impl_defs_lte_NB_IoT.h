@@ -509,6 +509,11 @@ typedef struct {
    */
   uint16_t eutra_NumCRS_ports;
 
+  /* Subcarrier bandwidth
+  0 -> 3.75 kHz
+  1 -> 15 kHz
+  */
+  uint8_t subcarrier_spacing; 
 
 } NB_IoT_DL_FRAME_PARMS;
 

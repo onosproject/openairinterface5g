@@ -62,6 +62,37 @@ static int16_t temp_out_ifft_1[2048*4] __attribute__((aligned(16)));
 
 #define SCALE 0x3FFF 
 
+
+void rotate_channel_single_carrier_NB_IoT(int16_t *estimated_channel,unsigned char l, uint8_t Qm)
+{
+  int16_t pi_2_re[2] = {32767 , 0}; 
+  int16_t pi_2_im[2] = {0 , 32768}; 
+  int16_t pi_4_re[2] = {32767 , 25735}; 
+  int16_t pi_4_im[2] = {0 , 25736}; 
+  int k; 
+  int16_t est_channel_re, est_channel_im;    
+
+  for (k=0;k<12;k++){
+    est_channel_re = estimated_channel[k<<1]; 
+    est_channel_im = estimated_channel[(k<<1)+1]; 
+
+    if (Qm == 1){
+      estimated_channel[k<<1] = (int16_t)(((int32_t)pi_2_re[l%2] * (int32_t)est_channel_re + 
+                          (int32_t)pi_2_im[l%2] * (int32_t)est_channel_im)>>15); 
+      estimated_channel[(k<<1)+1] = (int16_t)(((int32_t)pi_2_re[l%2] * (int32_t)est_channel_im - 
+                          (int32_t)pi_2_im[l%2] * (int32_t)est_channel_re)>>15); 
+    }
+    if(Qm == 2){
+      estimated_channel[k<<1] = (int16_t)(((int32_t)pi_4_re[l%2] * (int32_t)est_channel_re + 
+                          (int32_t)pi_4_im[l%2] * (int32_t)est_channel_im)>>15); 
+      estimated_channel[(k<<1)+1] = (int16_t)(((int32_t)pi_4_re[l%2] * (int32_t)est_channel_im - 
+                          (int32_t)pi_4_im[l%2] * (int32_t)est_channel_re)>>15); 
+    }
+
+  }
+
+} 
+
 int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
                                          eNB_rxtx_proc_NB_IoT_t   *proc,
                                          uint8_t                  eNB_id,
@@ -88,8 +119,13 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
   uint16_t aa; //,Msc_RS,Msc_RS_idx;
   //uint16_t * Msc_idx_ptr;
   // int k,pilot_pos1 = 3 - frame_parms->Ncp, pilot_pos2 = 10 - 2*frame_parms->Ncp; 
-  int pilot_pos1 = 3, pilot_pos2 = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
-  int pilot_pos_format2[6] = {2,3,4,9,10,11}; // holds for npusch format 2, and 15 kHz subcarrier bandwidth
+  int pilot_pos1_15k = 3, pilot_pos2_15k = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
+  int pilot_pos_format2_15k[6] = {2,3,4,9,10,11}; // holds for npusch format 2, and 15 kHz subcarrier bandwidth 
+  int pilot_pos1_3_75k = 4, pilot_pos2_3_75k = 11; // holds for npusch format 1, and 3.75 kHz subcarrier bandwidth
+  int pilot_pos_format2_3_75k[6] = {0,1,2,7,8,9}; // holds for npusch format 2, and 3.75 kHz subcarrier bandwidth 
+
+  int pilot_pos1, pilot_pos2; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
+  int *pilot_pos_format2; // holds for npusch format 2, and 15 kHz subcarrier bandwidth
   int16_t *ul_ch1=NULL, *ul_ch2=NULL, *ul_ch3=NULL, *ul_ch4=NULL, *ul_ch5=NULL, *ul_ch6=NULL; 
   int16_t average_channel[24]; // average channel over a RB and 2 slots
   int32_t *p_average_channel = (int32_t *)&average_channel; 
@@ -97,9 +133,10 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
   int16_t ul_ch_estimates_re,ul_ch_estimates_im;
 
   //uint8_t nb_antennas_rx = frame_parms->nb_antenna_ports_eNB;
-  uint8_t nb_antennas_rx = frame_parms->nb_antennas_rx;
-  //uint8_t cyclic_shift;
+  uint8_t nb_antennas_rx = frame_parms->nb_antennas_rx; 
+  uint8_t subcarrier_spacing = frame_parms->subcarrier_spacing; // 15 kHz or 3.75 kHz 
 
+  uint8_t Qm; // needed to rotate the estimated channel
   //uint32_t alpha_ind;
   uint32_t u;//=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.grouphop[Ns+(subframe<<1)];
   //uint32_t v=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.seqhop[Ns+(subframe<<1)];
@@ -181,11 +218,21 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
       break;
   }
 
+  if (subcarrier_spacing){
+    pilot_pos_format2 = pilot_pos_format2_15k; 
+    pilot_pos1 = pilot_pos1_15k; 
+    pilot_pos2 = pilot_pos2_15k;
+  }else{
+    pilot_pos_format2 = pilot_pos_format2_3_75k; 
+    pilot_pos1 = pilot_pos1_3_75k; 
+    pilot_pos2 = pilot_pos2_3_75k;
+  }
+
   ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
   u=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.grouphop[n_s][index_Nsc_RU]; // Vincent: may be adapted for Nsc_RU, see 36.211, Section 10.1.4.1.3
   switch (npusch_format){
   case 1: 
-      if (l == 3) { // NB-IoT: no extended CP 
+      if (l == pilot_pos1) { // NB-IoT: no extended CP 
 
         symbol_offset = frame_parms->N_RB_UL*12*(l+(7*(Ns&1)));
 
@@ -205,6 +252,12 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
                         (int32_t)received_data[(k<<1)+1]*(int32_t)pilot_sig[(k<<1)+1])>>15); //real part of estimated channel 
             estimated_channel[(k<<1)+1] = (int16_t)(((int32_t)received_data[(k<<1)+1]*(int32_t)pilot_sig[k<<1] - 
                         (int32_t)received_data[k<<1]*(int32_t)pilot_sig[(k<<1)+1])>>15); //imaginary part of estimated channel 
+          }
+
+          if (Nsc_RU == 1){ // rotate the estimated channel by pi/2 or pi/4, due to mapping b2c
+            Qm       = get_Qm_ul_NB_IoT(eNB->ulsch[UE_id]->harq_process->mcs,Nsc_RU);
+            rotate_channel_single_carrier_NB_IoT(estimated_channel,l,Qm); 
+
           }
 
           if(Nsc_RU != 1 && Nsc_RU != 12) {
@@ -273,7 +326,7 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
       }
     break; 
   case 2: 
-    if (l == 2 || l == 3 || l == 4){ 
+    if (l == pilot_pos_format2[0] || l == pilot_pos_format2[1] || l == pilot_pos_format2[2]){ 
 
       symbol_offset = frame_parms->N_RB_UL*12*(l+(7*(Ns&1))); 
       index_w = (uint8_t)l-2 + 3*(((uint8_t*)&s)[n_s&3]%3); // base index in w_format2_re and w_format2_im, see 36.211, Section 10.1.4.1.1
@@ -292,6 +345,9 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
                       (int32_t)received_data[k<<1]*(int32_t)pilot_sig[(k<<1)+1])>>15); //imaginary part of estimated channel 
         }
 
+        // rotate the estimated channel by pi/2 or pi/4, due to mapping b2c
+        rotate_channel_single_carrier_NB_IoT(estimated_channel,l,1); // last input: Qm = 1 in format 2
+
         // Compensating for the phase shift introduced at the transmitter
         // In NB-IoT NPUSCH format 1, phase alpha is zero when 1 and 12 subcarriers are allocated
         // else (still format 1), alpha is defined in 36.211, Table 10.1.4.1.2-3
@@ -308,7 +364,7 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
           (int16_t) (((int32_t) (w_format2_re[index_w]) * (int32_t) (ul_ch_estimates_im) -
                       (int32_t) (w_format2_im[index_w]) * (int32_t) (ul_ch_estimates_re))>>15); 
 
-        if (Ns&1 && l==4) {//we are in the second slot of the sub-frame, so do the interpolation
+        if (Ns&1 && l==pilot_pos_format2[2]) {//we are in the second slot of the sub-frame, so do the interpolation
 
           ul_ch1 = (int16_t *)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos_format2[0]];
           ul_ch2 = (int16_t *)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos_format2[1]]; 
