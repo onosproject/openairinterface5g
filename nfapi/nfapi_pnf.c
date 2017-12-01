@@ -38,8 +38,10 @@ extern pthread_mutex_t nfapi_sync_mutex;
 extern int nfapi_sync_var;
 
 extern int sync_var;
+char uecap_xer_in;
 
 extern void init_eNB_afterRU(void);
+extern void init_UE_stub(int nb_inst,int,int);
 extern void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB, eNB_rxtx_proc_t *proc, nfapi_dl_config_request_pdu_t *dl_config_pdu);
 extern void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, nfapi_ul_config_request_pdu_t *ul_config_pdu, uint16_t frame,uint8_t subframe,uint8_t srs_present);
 extern void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,  nfapi_dl_config_request_pdu_t *dl_config_pdu, uint8_t codeword_index, uint8_t *sdu);
@@ -1409,7 +1411,16 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
     //phy_init_RU(RC.ru[0]);
 
     printf("[PNF] About to call init_eNB_afterRU()\n");
-    init_eNB_afterRU();
+
+    // Panos: Instead
+    /*if (nfapi_mode == 3) {
+    	init_UE_stub(1,0,uecap_xer_in);
+    }*/
+    //else{
+    if (nfapi_mode != 3) {
+    	// Panos
+    	init_eNB_afterRU();
+    }
 
     // Signal to main thread that it can carry on - otherwise RU will startup too quickly and it is not initialised
     {

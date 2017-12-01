@@ -1,4 +1,12 @@
 /*
+ * lte-softmodem-stub.c
+ *
+ *  Created on: Nov 27, 2017
+ *      Author: montre
+ */
+
+
+/*
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -116,7 +124,7 @@ pthread_cond_t nfapi_sync_cond;
 pthread_mutex_t nfapi_sync_mutex;
 int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
-uint8_t nfapi_mode = 0;
+uint8_t nfapi_mode = 3;
 
 uint16_t sf_ahead=4;
 
@@ -218,6 +226,8 @@ extern PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
 			  uint8_t abstraction_flag);
 
 extern void init_eNB_afterRU(void);
+extern void init_UE_stub(int nb_inst,int,int);
+extern int init_timer_thread(void);
 
 int transmission_mode=1;
 
@@ -335,7 +345,7 @@ void exit_fun(const char* s)
       if (RC.ru[ru_id]->rfdevice.trx_end_func)
 	RC.ru[ru_id]->rfdevice.trx_end_func(&RC.ru[ru_id]->rfdevice);
       if (RC.ru[ru_id]->ifdevice.trx_end_func)
-	RC.ru[ru_id]->ifdevice.trx_end_func(&RC.ru[ru_id]->ifdevice);  
+	RC.ru[ru_id]->ifdevice.trx_end_func(&RC.ru[ru_id]->ifdevice);
     }
   }
 
@@ -455,7 +465,7 @@ static void *scope_thread(void *arg) {
       }
 
     }
-	
+
     //printf("doing forms\n");
     //usleep(100000); // 100 ms
     sleep(1);
@@ -565,150 +575,11 @@ void *l2l1_task(void *arg) {
 }
 #endif
 
-
-static void get_options(void) {
-  int CC_id;
-  int tddflag;
-  char *loopfile=NULL;
-  int dumpframe;
-  uint32_t online_log_messages;
-  uint32_t glog_level, glog_verbosity;
-  uint32_t start_telnetsrv;
-
-  paramdef_t cmdline_params[] =CMDLINE_PARAMS_DESC ;
-  paramdef_t cmdline_logparams[] =CMDLINE_LOGPARAMS_DESC ;
-
-  config_process_cmdline( cmdline_params,sizeof(cmdline_params)/sizeof(paramdef_t),NULL); 
-
-  if (strlen(in_path) > 0) {
-      opt_type = OPT_PCAP;
-      opt_enabled=1;
-      printf("Enabling OPT for PCAP  with the following file %s \n",in_path);
-  }
-  if (strlen(in_ip) > 0) {
-      opt_enabled=1;
-      opt_type = OPT_WIRESHARK;
-      printf("Enabling OPT for wireshark for local interface");
-  }
-
-  config_process_cmdline( cmdline_logparams,sizeof(cmdline_logparams)/sizeof(paramdef_t),NULL);
-  if(config_isparamset(cmdline_logparams,CMDLINE_ONLINELOG_IDX)) {
-      set_glog_onlinelog(online_log_messages);
-  }
-  if(config_isparamset(cmdline_logparams,CMDLINE_GLOGLEVEL_IDX)) {
-      set_glog(glog_level, -1);
-  }
-  if(config_isparamset(cmdline_logparams,CMDLINE_GLOGVERBO_IDX)) {
-      set_glog(-1, glog_verbosity);
-  }
-  if (start_telnetsrv) {
-     load_module_shlib("telnetsrv",NULL,0);
-  }
-
-  
-  if (UE_flag > 0) {
-     paramdef_t cmdline_uemodeparams[] =CMDLINE_UEMODEPARAMS_DESC;
-     paramdef_t cmdline_ueparams[] =CMDLINE_UEPARAMS_DESC;
-
-
-
-     config_process_cmdline( cmdline_uemodeparams,sizeof(cmdline_uemodeparams)/sizeof(paramdef_t),NULL);
-     config_process_cmdline( cmdline_ueparams,sizeof(cmdline_ueparams)/sizeof(paramdef_t),NULL);
-      if (loopfile != NULL) {
-  	  printf("Input file for hardware emulation: %s",loopfile);
-  	  mode=loop_through_memory;
-  	  input_fd = fopen(loopfile,"r");
-  	  AssertFatal(input_fd != NULL,"Please provide a valid input file\n");
-      }
-      if ( (cmdline_uemodeparams[CMDLINE_CALIBUERX_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = rx_calib_ue;
-      if ( (cmdline_uemodeparams[CMDLINE_CALIBUERXMED_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = rx_calib_ue_med;
-      if ( (cmdline_uemodeparams[CMDLINE_CALIBUERXBYP_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = rx_calib_ue_byp;
-      if ( *(cmdline_uemodeparams[CMDLINE_DEBUGUEPRACH_IDX].uptr) > 0) mode = debug_prach;
-      if ( *(cmdline_uemodeparams[CMDLINE_NOL2CONNECT_IDX].uptr) > 0)  mode = no_L2_connect;
-      if ( *(cmdline_uemodeparams[CMDLINE_CALIBPRACHTX_IDX].uptr) > 0) mode = calib_prach_tx; 
-      if (dumpframe  > 0)  mode = rx_dump_frame;
-      
-      if ( downlink_frequency[0][0] > 0) {
-  	  for (CC_id=1; CC_id<MAX_NUM_CCs; CC_id++) {
-  	    downlink_frequency[CC_id][1] = downlink_frequency[0][0];
-  	    downlink_frequency[CC_id][2] = downlink_frequency[0][0];
-  	    downlink_frequency[CC_id][3] = downlink_frequency[0][0];
-  	    printf("Downlink for CC_id %d frequency set to %u\n", CC_id, downlink_frequency[CC_id][0]);
-  	  }
-      UE_scan=0;
-      } 
-
-      if (tddflag > 0) {
-         for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) 
-	     frame_parms[CC_id]->frame_type = TDD;
-      }
-
-      if (frame_parms[0]->N_RB_DL !=0) {
-  	  if ( frame_parms[0]->N_RB_DL < 6 ) {
-  	     frame_parms[0]->N_RB_DL = 6;
-  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 6\n",frame_parms[0]->N_RB_DL);
-  	  }
-  	  if ( frame_parms[0]->N_RB_DL > 100 ) {
-  	     frame_parms[0]->N_RB_DL = 100;
-  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 100\n",frame_parms[0]->N_RB_DL);
-  	  }
-  	  if ( frame_parms[0]->N_RB_DL > 50 && frame_parms[0]->N_RB_DL < 100 ) {
-  	     frame_parms[0]->N_RB_DL = 50;
-  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 50\n",frame_parms[0]->N_RB_DL);
-  	  }
-  	  if ( frame_parms[0]->N_RB_DL > 25 && frame_parms[0]->N_RB_DL < 50 ) {
-  	     frame_parms[0]->N_RB_DL = 25;
-  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 25\n",frame_parms[0]->N_RB_DL);
-  	  }
-  	  UE_scan = 0;
-  	  frame_parms[0]->N_RB_UL=frame_parms[0]->N_RB_DL;
-  	  for (CC_id=1; CC_id<MAX_NUM_CCs; CC_id++) {
-  	      frame_parms[CC_id]->N_RB_DL=frame_parms[0]->N_RB_DL;
-  	      frame_parms[CC_id]->N_RB_UL=frame_parms[0]->N_RB_UL;
-  	  }
-      }
-
-
-      for (CC_id=1;CC_id<MAX_NUM_CCs;CC_id++) {
-  	    tx_max_power[CC_id]=tx_max_power[0];
-	    rx_gain[0][CC_id] = rx_gain[0][0];
-	    tx_gain[0][CC_id] = tx_gain[0][0];
-      }
-  } /* UE_flag > 0 */
-#if T_TRACER
-  paramdef_t cmdline_ttraceparams[] =CMDLINE_TTRACEPARAMS_DESC ;
-  config_process_cmdline( cmdline_ttraceparams,sizeof(cmdline_ttraceparams)/sizeof(paramdef_t),NULL);   
-#endif
-
-  if ( !(CONFIG_ISFLAGSET(CONFIG_ABORT)) ) {
-    if (UE_flag == 0) {
-      memset((void*)&RC,0,sizeof(RC));
-      /* Read RC configuration file */
-      RCConfig();
-      NB_eNB_INST = RC.nb_inst;
-      NB_RU	  = RC.nb_RU;
-      printf("Configuration: nb_rrc_inst %d, nb_L1_inst %d, nb_ru %d\n",NB_eNB_INST,RC.nb_L1_inst,NB_RU);
-    }
-  } else if (UE_flag == 1 && (CONFIG_GETCONFFILE != NULL)) {
-    // Here the configuration file is the XER encoded UE capabilities
-    // Read it in and store in asn1c data structures
-    strcpy(uecap_xer,CONFIG_GETCONFFILE);
-    uecap_xer_in=1;
-  } /* UE with config file  */
-}
-
-
-#if T_TRACER
-int T_nowait = 0;     /* by default we wait for the tracer */
-int T_port = 2021;    /* default port to listen to to wait for the tracer */
-int T_dont_fork = 0;  /* default is to fork, see 'T_init' to understand */
-#endif
-
-
 void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]);
 void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
 
   int CC_id;
+  printf("Panos: set_default_frame_parms1 %d \n",MAX_NUM_CCs);
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     frame_parms[CC_id] = (LTE_DL_FRAME_PARMS*) malloc(sizeof(LTE_DL_FRAME_PARMS));
@@ -717,6 +588,7 @@ void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
     frame_parms[CC_id]->tdd_config          = 3;
     frame_parms[CC_id]->tdd_config_S        = 0;
     frame_parms[CC_id]->N_RB_DL             = 100;
+
     frame_parms[CC_id]->N_RB_UL             = 100;
     frame_parms[CC_id]->Ncp                 = NORMAL;
     frame_parms[CC_id]->Ncp_UL              = NORMAL;
@@ -751,6 +623,168 @@ void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
   }
 
 }
+
+
+static void get_options(void) {
+  int CC_id;
+  int tddflag;
+  char *loopfile=NULL;
+  int dumpframe;
+  uint32_t online_log_messages;
+  uint32_t glog_level, glog_verbosity;
+  uint32_t start_telnetsrv;
+  printf("Panos: get_options 1 \n");
+
+  paramdef_t cmdline_params[] =CMDLINE_PARAMS_DESC ;
+  paramdef_t cmdline_logparams[] =CMDLINE_LOGPARAMS_DESC ;
+
+  config_process_cmdline( cmdline_params,sizeof(cmdline_params)/sizeof(paramdef_t),NULL);
+  printf("get_options 0, UE_flag: %d", UE_flag);
+
+  printf("Panos: get_options 2 \n");
+  if (strlen(in_path) > 0) {
+      opt_type = OPT_PCAP;
+      opt_enabled=1;
+      printf("Enabling OPT for PCAP  with the following file %s \n",in_path);
+  }
+  if (strlen(in_ip) > 0) {
+      opt_enabled=1;
+      opt_type = OPT_WIRESHARK;
+      printf("Enabling OPT for wireshark for local interface");
+  }
+  printf("Panos: get_options 3 \n");
+  config_process_cmdline( cmdline_logparams,sizeof(cmdline_logparams)/sizeof(paramdef_t),NULL);
+  if(config_isparamset(cmdline_logparams,CMDLINE_ONLINELOG_IDX)) {
+      set_glog_onlinelog(online_log_messages);
+  }
+  if(config_isparamset(cmdline_logparams,CMDLINE_GLOGLEVEL_IDX)) {
+      set_glog(glog_level, -1);
+  }
+  if(config_isparamset(cmdline_logparams,CMDLINE_GLOGVERBO_IDX)) {
+      set_glog(-1, glog_verbosity);
+  }
+  if (start_telnetsrv) {
+     load_module_shlib("telnetsrv",NULL,0);
+  }
+
+  printf("Panos: get_options 4 \n");
+  if (UE_flag > 0) {
+	  // set default parameters
+	  set_default_frame_parms(frame_parms);
+     paramdef_t cmdline_uemodeparams[] =CMDLINE_UEMODEPARAMS_DESC;
+     paramdef_t cmdline_ueparams[] =CMDLINE_UEPARAMS_DESC;
+     printf("Panos: get_options 5 \n");
+
+
+     config_process_cmdline( cmdline_uemodeparams,sizeof(cmdline_uemodeparams)/sizeof(paramdef_t),NULL);
+     config_process_cmdline( cmdline_ueparams,sizeof(cmdline_ueparams)/sizeof(paramdef_t),NULL);
+     printf("Panos: get_options 6 \n");
+      if (loopfile != NULL) {
+  	  printf("Input file for hardware emulation: %s",loopfile);
+  	  mode=loop_through_memory;
+  	  input_fd = fopen(loopfile,"r");
+  	  AssertFatal(input_fd != NULL,"Please provide a valid input file\n");
+      }
+      printf("Panos: get_options 7 \n");
+      if ( (cmdline_uemodeparams[CMDLINE_CALIBUERX_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = rx_calib_ue;
+      printf("Panos: get_options 8 \n");
+      if ( (cmdline_uemodeparams[CMDLINE_CALIBUERXMED_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = rx_calib_ue_med;
+      printf("Panos: get_options 9 \n");
+      if ( (cmdline_uemodeparams[CMDLINE_CALIBUERXBYP_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = rx_calib_ue_byp;
+      printf("Panos: get_options 10 \n");
+      if ( cmdline_uemodeparams[CMDLINE_DEBUGUEPRACH_IDX].uptr != NULL) {
+    	  if ( *(cmdline_uemodeparams[CMDLINE_DEBUGUEPRACH_IDX].uptr) > 0) mode = debug_prach;
+    	  if ( *(cmdline_uemodeparams[CMDLINE_NOL2CONNECT_IDX].uptr) > 0)  mode = no_L2_connect;
+    	  if ( *(cmdline_uemodeparams[CMDLINE_CALIBPRACHTX_IDX].uptr) > 0) mode = calib_prach_tx;
+      }
+      printf("Panos: get_options 11 \n");
+      if (dumpframe  > 0)  mode = rx_dump_frame;
+      if ( downlink_frequency[0][0] > 0) {
+    	  printf("Panos: get_options 8 \n");
+    	  for (CC_id=1; CC_id<MAX_NUM_CCs; CC_id++) {
+  	    downlink_frequency[CC_id][1] = downlink_frequency[0][0];
+  	    downlink_frequency[CC_id][2] = downlink_frequency[0][0];
+  	    downlink_frequency[CC_id][3] = downlink_frequency[0][0];
+  	    printf("Downlink for CC_id %d frequency set to %u\n", CC_id, downlink_frequency[CC_id][0]);
+  	  }
+      UE_scan=0;
+      }
+      printf("Panos: get_options 15 \n");
+
+      if (tddflag > 0) {
+         for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++)
+	     frame_parms[CC_id]->frame_type = TDD;
+      }
+      printf("Panos: get_options 16 \n");
+
+      if (frame_parms != NULL){
+    	  printf("Panos: get_options 17 \n");
+      if (frame_parms[0]->N_RB_DL !=0) {
+    	  printf("Panos: get_options 17 \n");
+  	  if ( frame_parms[0]->N_RB_DL < 6 ) {
+  	     frame_parms[0]->N_RB_DL = 6;
+  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 6\n",frame_parms[0]->N_RB_DL);
+  	  }
+  	  if ( frame_parms[0]->N_RB_DL > 100 ) {
+  	     frame_parms[0]->N_RB_DL = 100;
+  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 100\n",frame_parms[0]->N_RB_DL);
+  	  }
+  	  if ( frame_parms[0]->N_RB_DL > 50 && frame_parms[0]->N_RB_DL < 100 ) {
+  	     frame_parms[0]->N_RB_DL = 50;
+  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 50\n",frame_parms[0]->N_RB_DL);
+  	  }
+  	  if ( frame_parms[0]->N_RB_DL > 25 && frame_parms[0]->N_RB_DL < 50 ) {
+  	     frame_parms[0]->N_RB_DL = 25;
+  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 25\n",frame_parms[0]->N_RB_DL);
+  	  }
+  	  UE_scan = 0;
+  	  frame_parms[0]->N_RB_UL=frame_parms[0]->N_RB_DL;
+  	  for (CC_id=1; CC_id<MAX_NUM_CCs; CC_id++) {
+  	      frame_parms[CC_id]->N_RB_DL=frame_parms[0]->N_RB_DL;
+  	      frame_parms[CC_id]->N_RB_UL=frame_parms[0]->N_RB_UL;
+  	  }
+      }
+      }
+      printf("Panos: get_options 17 \n");
+
+      for (CC_id=1;CC_id<MAX_NUM_CCs;CC_id++) {
+  	    tx_max_power[CC_id]=tx_max_power[0];
+	    rx_gain[0][CC_id] = rx_gain[0][0];
+	    tx_gain[0][CC_id] = tx_gain[0][0];
+      }
+      printf("Panos: get_options 6 \n");
+  } /* UE_flag > 0 */
+#if T_TRACER
+  paramdef_t cmdline_ttraceparams[] =CMDLINE_TTRACEPARAMS_DESC ;
+  config_process_cmdline( cmdline_ttraceparams,sizeof(cmdline_ttraceparams)/sizeof(paramdef_t),NULL);
+#endif
+
+  if ( !(CONFIG_ISFLAGSET(CONFIG_ABORT)) ) {
+    if (UE_flag == 0) {
+      memset((void*)&RC,0,sizeof(RC));
+      /* Read RC configuration file */
+      RCConfig();
+      NB_eNB_INST = RC.nb_inst;
+      NB_RU	  = RC.nb_RU;
+      printf("Configuration: nb_rrc_inst %d, nb_L1_inst %d, nb_ru %d\n",NB_eNB_INST,RC.nb_L1_inst,NB_RU);
+    }
+  } else if (UE_flag == 1 && (CONFIG_GETCONFFILE != NULL)) {
+    // Here the configuration file is the XER encoded UE capabilities
+    // Read it in and store in asn1c data structures
+    strcpy(uecap_xer,CONFIG_GETCONFFILE);
+    uecap_xer_in=1;
+    printf("Panos: get_options 7 \n");
+  } /* UE with config file  */
+}
+
+
+#if T_TRACER
+int T_nowait = 0;     /* by default we wait for the tracer */
+int T_port = 2021;    /* default port to listen to to wait for the tracer */
+int T_dont_fork = 0;  /* default is to fork, see 'T_init' to understand */
+#endif
+
+
 
 void init_openair0(void);
 
@@ -881,7 +915,7 @@ void wait_eNBs(void) {
 	if (RC.eNB[i][j]->configured==0) {
 	  waiting=1;
 	  break;
-        } 
+        }
       }
     }
   }
@@ -892,12 +926,12 @@ static inline void wait_nfapi_init(char *thread_name) {
 
   printf( "waiting for NFAPI PNF connection and population of global structure (%s)\n",thread_name);
   pthread_mutex_lock( &nfapi_sync_mutex );
-  
+
   while (nfapi_sync_var<0)
     pthread_cond_wait( &nfapi_sync_cond, &nfapi_sync_mutex );
-  
+
   pthread_mutex_unlock(&nfapi_sync_mutex);
-  
+
   printf( "NFAPI: got sync (%s)\n", thread_name);
 }
 
@@ -920,8 +954,8 @@ int main( int argc, char **argv )
   start_background_system();
   if ( load_configmodule(argc,argv) == NULL) {
     exit_fun("[SOFTMODEM] Error, configuration module init failed\n");
-  } 
-      
+  }
+
 #ifdef DEBUG_CONSOLE
   setvbuf(stdout, NULL, _IONBF, 0);
   setvbuf(stderr, NULL, _IONBF, 0);
@@ -930,20 +964,22 @@ int main( int argc, char **argv )
   PHY_VARS_UE *UE[MAX_NUM_CCs];
 
   mode = normal_txrx;
-  memset(&openair0_cfg[0],0,sizeof(openair0_config_t)*MAX_CARDS);
 
-  memset(tx_max_power,0,sizeof(int)*MAX_NUM_CCs);
+  //Panos: RF-sepcific part should get dropped (next 3 lines)?
+  //memset(&openair0_cfg[0],0,sizeof(openair0_config_t)*MAX_CARDS);
 
-  set_latency_target();
+  //memset(tx_max_power,0,sizeof(int)*MAX_NUM_CCs);
 
+  //set_latency_target();
 
   // set default parameters
-  if (UE_flag == 1) set_default_frame_parms(frame_parms);
+  //if (UE_flag == 1) set_default_frame_parms(frame_parms);
+
   logInit();
 
   printf("Reading in command-line options\n");
 
-  get_options (); 
+  get_options ();
   if (CONFIG_ISFLAGSET(CONFIG_ABORT)) {
       fprintf(stderr,"Getting configuration failed\n");
       exit(-1);
@@ -988,10 +1024,11 @@ int main( int argc, char **argv )
       VCD_SIGNAL_DUMPER_INIT("/tmp/openair_dump_eNB.vcd");
   }
 
-  if (opp_enabled ==1) {
+  // Panos: Not required for phy_stub_UE mode
+  /*if (opp_enabled ==1) {
     reset_opp_meas();
   }
-  cpuf=get_cpu_freq_GHz();
+  cpuf=get_cpu_freq_GHz();*/
 
 #if defined(ENABLE_ITTI)
 
@@ -1044,14 +1081,16 @@ int main( int argc, char **argv )
   LOG_I(HW, "Version: %s\n", PACKAGE_VERSION);
 
   // init the parameters
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  // Panos: Probably don't need next lines for the stub.
+
+  /*for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
     if (UE_flag==1) {
       frame_parms[CC_id]->nb_antennas_tx     = nb_antenna_tx;
       frame_parms[CC_id]->nb_antennas_rx     = nb_antenna_rx;
       frame_parms[CC_id]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
     }
-  }
+  }*/
 
 
 
@@ -1060,41 +1099,41 @@ int main( int argc, char **argv )
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
 
-    if (UE_flag==1) {     
-      NB_UE_INST=1;     
-      NB_INST=1;     
-      PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**));     
+    if (UE_flag==1) {
+      NB_UE_INST=1;
+      NB_INST=1;
+      PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**));
       PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
-      
-      
-      
+
+
+
       PHY_vars_UE_g[0][CC_id] = init_ue_vars(frame_parms[CC_id], 0,abstraction_flag);
       UE[CC_id] = PHY_vars_UE_g[0][CC_id];
       printf("PHY_vars_UE_g[0][%d] = %p\n",CC_id,UE[CC_id]);
-      
+
       if (phy_test==1)
 	UE[CC_id]->mac_enabled = 0;
-      else 
+      else
 	UE[CC_id]->mac_enabled = 1;
-      
-      if (UE[CC_id]->mac_enabled == 0) {  //set default UL parameters for testing mode
+
+      /*if (UE[CC_id]->mac_enabled == 0) {  //set default UL parameters for testing mode
 	for (i=0; i<NUMBER_OF_CONNECTED_eNB_MAX; i++) {
 	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
 	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
 	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
-	  
+
 	  UE[CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = 0;
 	  UE[CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(0%3);
 	  UE[CC_id]->scheduling_request_config[i].dsr_TransMax = sr_n4;
 	}
       }
-      
+
       UE[CC_id]->UE_scan = UE_scan;
       UE[CC_id]->UE_scan_carrier = UE_scan_carrier;
       UE[CC_id]->mode    = mode;
       printf("UE[%d]->mode = %d\n",CC_id,mode);
-      
-      if (UE[CC_id]->mac_enabled == 1) { 
+
+      if (UE[CC_id]->mac_enabled == 1) {
 	UE[CC_id]->pdcch_vars[0][0]->crnti = 0x1234;
 	UE[CC_id]->pdcch_vars[1][0]->crnti = 0x1234;
       }else {
@@ -1103,7 +1142,7 @@ int main( int argc, char **argv )
       }
       UE[CC_id]->rx_total_gain_dB =  (int)rx_gain[CC_id][0] + rx_gain_off;
       UE[CC_id]->tx_power_max_dBm = tx_max_power[CC_id];
-      
+
       if (frame_parms[CC_id]->frame_type==FDD) {
 	UE[CC_id]->N_TA_offset = 0;
       }
@@ -1114,22 +1153,23 @@ int main( int argc, char **argv )
 	  UE[CC_id]->N_TA_offset = 624/2;
 	else if (frame_parms[CC_id]->N_RB_DL == 25)
 	  UE[CC_id]->N_TA_offset = 624/4;
-      }
-      
+      }*/
+
     }
   }
 
-  printf("Runtime table\n");
+  // Panos: Probably don't need these lines for phy_stub
+  /*printf("Runtime table\n");
   fill_modeled_runtime_table(runtime_phy_rx,runtime_phy_tx);
-  cpuf=get_cpu_freq_GHz();
-  
-  
-  
+  cpuf=get_cpu_freq_GHz();*/
+
+
+
 #ifndef DEADLINE_SCHEDULER
-  
+
   printf("NO deadline scheduler\n");
   /* Currently we set affinity for UHD to CPU 0 for eNB/UE and only if number of CPUS >2 */
-  
+
   cpu_set_t cpuset;
   int s;
   char cpu_affinity[1024];
@@ -1145,7 +1185,7 @@ int main( int argc, char **argv )
     LOG_I(HW, "Setting the affinity of main function to CPU 0, for device library to use CPU 0 only!\n");
   }
 #endif
-  
+
   /* Check the actual affinity mask assigned to the thread */
   s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
   if (s != 0) {
@@ -1162,25 +1202,26 @@ int main( int argc, char **argv )
   }
   LOG_I(HW, "CPU Affinity of main() function is... %s\n", cpu_affinity);
 #endif
-  
 
-  
-  
+
+
+
 #if defined(ENABLE_ITTI)
-  
+
   printf("ITTI enabled\n");
-  
+
   printf("UE_flag:%d\n", UE_flag);
   printf("RC.nb_inst:%d\n", RC.nb_inst);
-  if ((UE_flag == 1)||
-      (RC.nb_inst > 0))  {
-    
+  /*if ((UE_flag == 1)||
+      (RC.nb_inst > 0))  {*/
+
+  if (UE_flag == 1) {
     // don't create if node doesn't connect to RRC/S1/GTP
     if (create_tasks(UE_flag ? 0 : 1, UE_flag ? 1 : 0) < 0) {
       printf("cannot create ITTI tasks\n");
       exit(-1); // need a softer mode
     }
-    
+    UE_config_stub_pnf();
     printf("ITTI tasks created\n");
   }
   else {
@@ -1188,40 +1229,41 @@ int main( int argc, char **argv )
     RCconfig_L1();
   }
 #endif
-  
-  if (phy_test==0) {
+
+  /*if (phy_test==0) {
     if (UE_flag==1) {
       printf("Filling UE band info\n");
       fill_ue_band_info();
       dl_phy_sync_success (0, 0, 0, 1);
-    } 
-  }
-  
+    }
+  }*/
+
   mlockall(MCL_CURRENT | MCL_FUTURE);
-  
+
+  // Panos: Why we have these initializations twice if in nfapi_mode?
   pthread_cond_init(&sync_cond,NULL);
   pthread_mutex_init(&sync_mutex, NULL);
-  
+
 #ifdef XFORMS
   int UE_id;
-  
+
   printf("XFORMS\n");
 
   if (do_forms==1) {
     fl_initialize (&argc, argv, NULL, 0, 0);
-    
+
     if (UE_flag==0) {
       form_stats_l2 = create_form_stats_form();
       fl_show_form (form_stats_l2->stats_form, FL_PLACE_HOTSPOT, FL_FULLBORDER, "l2 stats");
       form_stats = create_form_stats_form();
       fl_show_form (form_stats->stats_form, FL_PLACE_HOTSPOT, FL_FULLBORDER, "stats");
-      
+
       for(UE_id=0; UE_id<scope_enb_num_ue; UE_id++) {
 	for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 	  form_enb[CC_id][UE_id] = create_lte_phy_scope_enb();
 	  sprintf (title, "LTE UL SCOPE eNB for CC_id %d, UE %d",CC_id,UE_id);
 	  fl_show_form (form_enb[CC_id][UE_id]->lte_phy_scope_enb, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
-	  
+
 	  if (otg_enabled) {
 	    fl_set_button(form_enb[CC_id][UE_id]->button_0,1);
 	    fl_set_object_label(form_enb[CC_id][UE_id]->button_0,"DL Traffic ON");
@@ -1238,7 +1280,7 @@ int main( int argc, char **argv )
       form_ue[UE_id] = create_lte_phy_scope_ue();
       sprintf (title, "LTE DL SCOPE UE");
       fl_show_form (form_ue[UE_id]->lte_phy_scope_ue, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
-      
+
       /*
 	if (openair_daq_vars.use_ia_receiver) {
 	fl_set_button(form_ue[UE_id]->button_0,1);
@@ -1250,26 +1292,26 @@ int main( int argc, char **argv )
       fl_set_button(form_ue[UE_id]->button_0,0);
       fl_set_object_label(form_ue[UE_id]->button_0, "IA Receiver OFF");
     }
-    
+
     ret = pthread_create(&forms_thread, NULL, scope_thread, NULL);
-    
+
     if (ret == 0)
       pthread_setname_np( forms_thread, "xforms" );
-    
+
     printf("Scope thread created, ret=%d\n",ret);
   }
-  
+
 #endif
-  
+
   rt_sleep_ns(10*100000000ULL);
-  
+
   if (nfapi_mode)
   {
     printf("NFAPI*** - mutex and cond created - will block shortly for completion of PNF connection\n");
     pthread_cond_init(&sync_cond,NULL);
     pthread_mutex_init(&sync_mutex, NULL);
   }
-  
+
   const char *nfapi_mode_str = "<UNKNOWN>";
 
   switch(nfapi_mode)
@@ -1283,30 +1325,43 @@ int main( int argc, char **argv )
     case 2:
       nfapi_mode_str = "VNF";
       break;
+    case 3:
+      nfapi_mode_str = "UE_STUB_PNF";
+      break;
     default:
       nfapi_mode_str = "<UNKNOWN NFAPI MODE>";
       break;
   }
   printf("NFAPI MODE:%s\n", nfapi_mode_str);
 
+  // Panos: We should never enter here since we are always going to run with nfapi_mode=3
   if (nfapi_mode==2) // VNF
     wait_nfapi_init("main?");
 
   printf("START MAIN THREADS\n");
-  
+
   // start the main threads
   if (UE_flag == 1) {
     int eMBMS_active = 0;
-    init_UE(1,eMBMS_active,uecap_xer_in);
+    // Panos: Call init_UE_stub instead of init_UE as we are always on nfapi_mode=3
+    //phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
+    init_timer_thread();
+    init_UE_stub(1,eMBMS_active,uecap_xer_in);
+    //init_UE(1,eMBMS_active,uecap_xer_in);
     number_of_cards = 1;
-    
-    for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+    if (nfapi_mode==3) // UE-STUB-PNF
+    	{
+    	wait_nfapi_init("main?");
+    	}
+
+    /*for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       PHY_vars_UE_g[0][CC_id]->rf_map.card=0;
       PHY_vars_UE_g[0][CC_id]->rf_map.chain=CC_id+chain_offset;
-    }
+    }*/
   }
-  else { 
-    number_of_cards = 1;    
+  // Panos: We should never enter this else case for nfapi_mode=3.
+  /*else {
+    number_of_cards = 1;
     printf("RC.nb_L1_inst:%d\n", RC.nb_L1_inst);
     if (RC.nb_L1_inst > 0) {
       printf("Initializing eNB threads single_thread_flag:%d wait_for_sync:%d\n", single_thread_flag,wait_for_sync);
@@ -1351,47 +1406,55 @@ int main( int argc, char **argv )
     {
       printf("NFAPI mode - DO NOT call init_eNB_afterRU()\n");
     }
-    
+
     printf("ALL RUs ready - ALL eNBs ready\n");
-  }
-  
-  
+  }*/
+  if (phy_test==0) {
+      if (UE_flag==1) {
+        printf("Filling UE band info\n");
+        fill_ue_band_info();
+        dl_phy_sync_success (0, 0, 0, 1);
+      }
+    }
+
+
   // connect the TX/RX buffers
   if (UE_flag==1) {
-    
+
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-      
-      
+
+
 #ifdef OAI_USRP
       UE[CC_id]->hw_timing_advance = timing_advance;
 #else
       UE[CC_id]->hw_timing_advance = 160;
 #endif
     }
-    if (setup_ue_buffers(UE,&openair0_cfg[0])!=0) {
+    // Panos: No need to call setup_ue_buffers() for nfapi_mode=3
+    /*if (setup_ue_buffers(UE,&openair0_cfg[0])!=0) {
       printf("Error setting up eNB buffer\n");
       exit(-1);
-    }
-    
-    
-    
-    if (input_fd) {
+    }*/
+
+
+    // Panos: Similar for nfapi_mode=3
+    /*if (input_fd) {
       printf("Reading in from file to antenna buffer %d\n",0);
       if (fread(UE[0]->common_vars.rxdata[0],
 		sizeof(int32_t),
 		frame_parms[0]->samples_per_tti*10,
 		input_fd) != frame_parms[0]->samples_per_tti*10)
 	printf("error reading from file\n");
-    }
+    }*/
     //p_exmimo_config->framing.tdd_config = TXRXSWITCH_TESTRX;
   } else {
-    
+
     printf("eNB mode\n");
-    
+
   }
-  
+
   printf("Sending sync to all threads\n");
-  
+
   pthread_mutex_lock(&sync_mutex);
   sync_var=0;
   pthread_cond_broadcast(&sync_cond);
@@ -1449,9 +1512,9 @@ int main( int argc, char **argv )
 
   // cleanup
   if (UE_flag == 1) {
-  } else {
+  } /*else {
     stop_eNB(1);
-  }
+  }*/
 
 
   pthread_cond_destroy(&sync_cond);
@@ -1461,28 +1524,28 @@ int main( int argc, char **argv )
   pthread_mutex_destroy(&nfapi_sync_mutex);
 
 
-
+  // Panos: No RF in phy_stub mode: Exclude the following lines
   // *** Handle per CC_id openair0
-  if (UE_flag==1) {
+  /*if (UE_flag==1) {
     if (PHY_vars_UE_g[0][0]->rfdevice.trx_end_func)
       PHY_vars_UE_g[0][0]->rfdevice.trx_end_func(&PHY_vars_UE_g[0][0]->rfdevice);
   }
   else {
     for(ru_id=0; ru_id<NB_RU; ru_id++) {
       if (RC.ru[ru_id]->rfdevice.trx_end_func)
-	RC.ru[ru_id]->rfdevice.trx_end_func(&RC.ru[ru_id]->rfdevice);  
+	RC.ru[ru_id]->rfdevice.trx_end_func(&RC.ru[ru_id]->rfdevice);
       if (RC.ru[ru_id]->ifdevice.trx_end_func)
-	RC.ru[ru_id]->ifdevice.trx_end_func(&RC.ru[ru_id]->ifdevice);  
+	RC.ru[ru_id]->ifdevice.trx_end_func(&RC.ru[ru_id]->ifdevice);
 
     }
-  }
+  }*/
   if (ouput_vcd)
     VCD_SIGNAL_DUMPER_CLOSE();
-  
+
   if (opt_enabled == 1)
     terminate_opt();
-  
+
   logClean();
-  
+
   return 0;
 }

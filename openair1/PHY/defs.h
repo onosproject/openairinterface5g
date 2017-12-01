@@ -654,6 +654,7 @@ typedef struct {
 
 /// Panos: Structure holding timer_thread related elements (phy_stub_UE mode)
 typedef struct{
+	pthread_t pthread_timer;
 	/// Panos: mutex for waiting SF ticking
 	pthread_mutex_t mutex_ticking;
 	/// Panos: \brief ticking var for ticking thread.

@@ -121,7 +121,8 @@ extern int transmission_mode;
 
 extern int oaisim_flag;
 
-uint16_t sf_ahead=4;
+//uint16_t sf_ahead=4;
+extern uint16_t sf_ahead;
 
 //pthread_t                       main_eNB_thread;
 

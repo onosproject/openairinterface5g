@@ -506,6 +506,7 @@ function main() {
   else
       lte_build_dir=lte_build_oai
       lte_exec=lte-softmodem
+      #lte_exec=lte-softmodem-stub
   fi
 
 # configuration module libraries, one currently available, using libconfig 

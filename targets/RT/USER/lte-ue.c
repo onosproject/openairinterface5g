@@ -76,6 +76,7 @@ void init_UE_threads(int);
 void init_UE_threads_stub(int);
 void *UE_thread(void *arg);
 void init_UE(int nb_inst,int,int);
+void init_UE_stub(int nb_inst,int,int);
 extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
 //extern int tx_req_UE_MAC1();
 
@@ -1408,17 +1409,18 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
     return 0;
 }
 
+
 // Panos: This timer thread is used only in the phy_sub mode as an independent timer
 // which will be ticking and provide the SFN/SF values that will be used from the UE threads
 // playing the role of nfapi-pnf.
 static void* timer_thread( void* param ) {
 	timer_subframe =9;
 	timer_frame    =1023;
-	phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
+	//phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
 	phy_stub_ticking->ticking_var = -1;
 	wait_sync("timer_thread");
-    pthread_mutex_init(&phy_stub_ticking->mutex_ticking,NULL);
-    pthread_cond_init(&phy_stub_ticking->cond_ticking,NULL);
+    //pthread_mutex_init(&phy_stub_ticking->mutex_ticking,NULL);
+    //pthread_cond_init(&phy_stub_ticking->cond_ticking,NULL);
 
 	while (!oai_exit) {
 	    usleep(1000);
@@ -1452,6 +1454,14 @@ static void* timer_thread( void* param ) {
 	pthread_mutex_destroy(&phy_stub_ticking->mutex_ticking);
 	return 0;
 
+}
+
+int init_timer_thread(void) {
+	phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
+	pthread_mutex_init(&phy_stub_ticking->mutex_ticking,NULL);
+	pthread_cond_init(&phy_stub_ticking->cond_ticking,NULL);
+	pthread_create(phy_stub_ticking->pthread_timer, NULL, &timer_thread, NULL);
+	return 0;
 }
 
 
