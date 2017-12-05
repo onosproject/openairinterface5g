@@ -685,8 +685,18 @@ int config_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfap
 
   pnf_info* pnf = (pnf_info*)(config->user_data);
   uint8_t num_tlv = 0;
-  struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
-  LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
+
+  // Panos: In the case of nfapi_mode = 3 (UE = PNF) we should not have dependency on any eNB var. So we aim
+  // to keep only the necessary just to keep the nfapi FSM rolling by sending a dummy response.
+  LTE_DL_FRAME_PARMS *fp;
+  if (nfapi_mode!=3) {
+	  struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
+	  fp = &eNB->frame_parms;
+  }
+  else{
+	  fp = (LTE_DL_FRAME_PARMS*) malloc(sizeof(LTE_DL_FRAME_PARMS));
+  }
+
 
 #if 0
   //DJP
@@ -701,6 +711,7 @@ int config_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfap
   //DJP 
   phy_info* phy_info = pnf->phys;
 
+  //if(nfapi_mode!=3) {
   if(req->nfapi_config.timing_window.tl.tag == NFAPI_NFAPI_TIMING_WINDOW_TAG)
   {
     phy_info->timing_window = req->nfapi_config.timing_window.value;
@@ -879,6 +890,7 @@ int config_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfap
     num_tlv++;
   }
 
+  if(nfapi_mode!=3) {
   printf("[PNF] CONFIG_REQUEST[num_tlv:%d] TLVs processed:%d\n", req->num_tlv, num_tlv);
 
   printf("[PNF] Simulating PHY CONFIG - DJP\n");
@@ -890,6 +902,7 @@ int config_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfap
   phy_config_request(&phy_config);
 
   dump_frame_parms(fp);
+  }
 
   phy_info->remote_port = req->nfapi_config.p7_vnf_port.value;
 
@@ -907,6 +920,8 @@ int config_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfap
   nfapi_resp.error_code = 0; // DJP - some value resp->error_code;
   nfapi_pnf_config_resp(config, &nfapi_resp);
   printf("[PNF] Sent NFAPI_CONFIG_RESPONSE phy_id:%d\n", phy_info->id);
+  if(nfapi_mode ==3)
+	  free(fp);
 
   return 0;
 }
@@ -1399,6 +1414,8 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
     NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] DJP - HACK - Set p7_config global ready for subframe ind%s\n", __FUNCTION__);
     p7_config_g = p7_config;
 
+    printf("Panos-D: start_request, bUFFER SIZE: %d", p7_config_g->subframe_buffer_size);
+
     // Need to wait for main thread to create RU structures
     while(config_sync_var<0)
     {
@@ -1754,7 +1771,9 @@ void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, 
 {
   printf("%s() PNF\n\n\n\n\n\n", __FUNCTION__);
 
+  if(nfapi_mode!=3) {
   nfapi_mode = 1;  // PNF!
+  }
 
   nfapi_pnf_config_t* config = nfapi_pnf_config_create();
 
@@ -1822,7 +1841,9 @@ void oai_subframe_ind(uint16_t sfn, uint16_t sf)
 
   if (p7_config_g != NULL && sync_var==0)
   {
-    uint16_t sfn_sf_tx = sfn<<4 | sf;
+	  printf("Panos-D: oai_subframe_ind 1, buffer size:%d", p7_config_g->subframe_buffer_size);
+
+	  uint16_t sfn_sf_tx = sfn<<4 | sf;
 
     if ((sfn % 100 == 0) && sf==0)
     {

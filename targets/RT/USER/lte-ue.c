@@ -875,12 +875,19 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 
             // Panos: is this the right place to call oai_subframe_indication to invoke p7 nfapi callbacks here?
             oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
-            if(UE_mac_inst[Mod_id].tx_req!= NULL)
+            printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind \n");
+            if(UE_mac_inst[Mod_id].tx_req!= NULL){
+            	printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 2\n");
             	tx_req_UE_MAC(UE_mac_inst[Mod_id].tx_req);
-            if(UE_mac_inst[Mod_id].dl_config_req!= NULL)
+            }
+            if(UE_mac_inst[Mod_id].dl_config_req!= NULL) {
+            	printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 3\n");
             	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req);
-            if(UE_mac_inst[Mod_id].hi_dci0_req!= NULL)
+            }
+            if(UE_mac_inst[Mod_id].hi_dci0_req!= NULL){
+            	printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 4\n");
             	hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req);
+            }
 
 //#endif
         }
