@@ -47,6 +47,91 @@
 
 #include "LAYER2/MAC/defs.h"
 
+//TTN-for D2D
+#define CONTROL_SOCKET_PORT_NO 8888
+#define DEBUG_CTRL_SOCKET
+#define BUFSIZE 1024
+#define CONTROL_SOCKET_PORT_NO 8888
+
+//netlink
+//#define DEBUG_PDCP
+#define UE_IP_PDCP_NETLINK_ID 31
+#define PDCP_PID 1
+#define NETLINK_HEADER_SIZE 16
+#define SL_DEFAULT_RAB_ID     1
+#define SLRB_ID              11
+
+#define MAX_PAYLOAD 1024 /* maximum payload size*/
+
+#define UE_STATE_NOTIFICATION_INTERVAL      50
+
+#define IPV4_ADDR    "%u.%u.%u.%u"
+#define IPV4_ADDR_FORMAT(aDDRESS)                 \
+      (uint8_t)((aDDRESS)  & 0x000000ff),         \
+      (uint8_t)(((aDDRESS) & 0x0000ff00) >> 8 ),  \
+      (uint8_t)(((aDDRESS) & 0x00ff0000) >> 16),  \
+      (uint8_t)(((aDDRESS) & 0xff000000) >> 24)
+
+
+//-----------------------------------------------------
+// header for Control socket
+
+//Primitives
+#define SESSION_INIT_REQ                    1
+#define UE_STATUS_INFO                      2
+#define GROUP_COMMUNICATION_ESTABLISH_REQ   3
+#define GROUP_COMMUNICATION_ESTABLISH_RSP   4
+#define DIRECT_COMMUNICATION_ESTABLISH_REQ  5
+#define DIRECT_COMMUNICATION_ESTABLISH_RSP  6
+#define GROUP_COMMUNICATION_RELEASE_REQ     7
+#define GROUP_COMMUNICATION_RELEASE_RSP     8
+
+typedef enum {
+   UE_STATE_OFF_NETWORK,
+   UE_STATE_ON_NETWORK
+} SL_UE_STATE_t;
+
+typedef enum {
+   GROUP_COMMUNICATION_RELEASE_OK = 0,
+   GROUP_COMMUNICATION_RELEASE_FAILURE
+} Group_Communication_Status_t;
+
+struct GroupCommunicationEstablishReq {
+   uint8_t type; //0 - rx, 1 - tx
+   uint32_t sourceL2Id;
+   uint32_t groupL2Id;
+   uint32_t groupIpAddress;
+   uint8_t pppp;
+};
+
+struct DirectCommunicationEstablishReq {
+   uint32_t sourceL2Id;
+   uint32_t destinationL2Id;
+};
+
+struct sidelink_ctrl_element {
+   unsigned short type;
+   union {
+      struct GroupCommunicationEstablishReq group_comm_establish_req;
+      struct DirectCommunicationEstablishReq direct_comm_estblish_req;
+      Group_Communication_Status_t group_comm_release_rsp;
+      //struct DirectCommunicationReleaseReq  direct_comm_release_req;
+      SL_UE_STATE_t ue_state;
+      int slrb_id;
+
+   } sidelinkPrimitive;
+};
+
+//global variables
+extern struct sockaddr_in clientaddr;
+extern int slrb_id;
+extern pthread_mutex_t slrb_mutex;
+
+//the thread function
+void *send_UE_status_notification(void *);
+
+//end TTN
+
 //#include "COMMON/openair_defs.h"
 #ifndef USER_MODE
 #include <rtai.h>
