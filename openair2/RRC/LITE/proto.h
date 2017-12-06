@@ -172,7 +172,7 @@ void rrc_ue_process_radioResourceConfigDedicated(
     \param sib19 Pointer to SIB19 from SI message
     \param sl_CommConfig Pointer to SL_CommConfig RRCConnectionConfiguration
     \param sl_DiscConfig Pointer to SL_DiscConfig RRCConnectionConfiguration */
-void rrc_ue_process_radioResourceConfig(
+void rrc_ue_process_sidelink_radioResourceConfig(
   module_id_t Mod_idP,
   uint8_t eNB_index,
   SystemInformationBlockType18_r12_t     *sib18,

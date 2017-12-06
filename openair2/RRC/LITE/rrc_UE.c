@@ -1903,7 +1903,7 @@ rrc_ue_process_rrcConnectionReconfiguration(
       if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12->commTxResources_r12->present != SL_CommConfig_r12__commTxResources_r12_PR_NOTHING){
          LOG_I(RRC,"sl-CommConfig is present\n");
          //process sl-CommConfig
-         rrc_ue_process_radioResourceConfig(ctxt_pP->module_id,eNB_index,
+         rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
                (SystemInformationBlockType18_r12_t *)NULL,
                (SystemInformationBlockType19_r12_t *)NULL,
                rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12,
@@ -1914,7 +1914,7 @@ rrc_ue_process_rrcConnectionReconfiguration(
       if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12->discTxResources_r12->present != SL_DiscConfig_r12__discTxResources_r12_PR_NOTHING ){
          LOG_I(RRC,"sl-DiscConfig is present\n");
          //process sl-DiscConfig
-         rrc_ue_process_radioResourceConfig(ctxt_pP->module_id,eNB_index,
+         rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
                (SystemInformationBlockType18_r12_t *)NULL,
                (SystemInformationBlockType19_r12_t *)NULL,
                (SL_CommConfig_r12_t* )NULL,
@@ -3842,7 +3842,7 @@ static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_in
                     ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
 
           //process SIB18 to transfer SL-related parameters to PHY
-          rrc_ue_process_radioResourceConfig(ctxt_pP->module_id,eNB_index,
+          rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
                 UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index],
                 (SystemInformationBlockType19_r12_t *)NULL,
                 (SL_CommConfig_r12_t *)NULL,
@@ -3865,7 +3865,7 @@ static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_in
              LOG_I( RRC, "[FRAME %05"PRIu32"][RRC_UE][MOD %02"PRIu8"][][--- MAC_CONFIG_REQ (SIB19 params eNB %"PRIu8") --->][MAC_UE][MOD %02"PRIu8"][]\n",
                        ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
              //process SIB19 to transfer SL-related parameters to PHY
-             rrc_ue_process_radioResourceConfig(ctxt_pP->module_id,eNB_index,
+             rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
                    (SystemInformationBlockType18_r12_t *)NULL,
                    UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index],
                    (SL_CommConfig_r12_t *)NULL,
@@ -4941,7 +4941,7 @@ uint8_t fill_SLSS(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
          *slss_id = UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->slssid_r12;
          syncOffsetIndicator = UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->syncOffsetIndicator_r12;
 
-         //if RRC_CONNECTED (Todo: and if networkControlledSyncTx is configured and set to On)
+         //if RRC_CONNECTED (Todo: and if networkControlledSyncTx (RRCConnectionReconfiguration) is configured and set to On)
          if (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State == RRC_CONNECTED){
             //select subframe(s) indicated by syncOffsetIndicator
             subframe = syncOffsetIndicator;
@@ -4974,7 +4974,7 @@ uint8_t fill_SLSS(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
 
 //-----------------------------------------------------------------------------
 void
-rrc_ue_process_radioResourceConfig(
+rrc_ue_process_sidelink_radioResourceConfig(
       module_id_t                      Mod_idP,
       uint8_t                          eNB_index,
       SystemInformationBlockType18_r12_t     *sib18,
@@ -4984,19 +4984,39 @@ rrc_ue_process_radioResourceConfig(
 )
 //-----------------------------------------------------------------------------
 {
-   //process SIB18
+   //process SIB18, configure MAC/PHY for receiving SL communication (RRC_IDLE and RRC_CONNECTED), for transmitting SL communication (RRC_IDLE)
    if (sib18 != NULL) {
-      //commRxPool - to receive SL communication
-      //commTxPoolNormalCommon - to transmit SL communication in RRC_IDLE
-      //do not consider commTXPoolExceptional for the moment
+      if (sib18->commConfig_r12 != NULL) {
+         //do not consider commTXPoolExceptional for the moment
+         //configure PHY/MAC to receive SL communication by using the RPs indicated by commRxPool
+         //sib18->commConfig_r12->commRxPool_r12
+         //we can configure a default SLRB to receive one-to-many communication [should be verified]
 
+
+         if (sib18->commConfig_r12->commTxPoolNormalCommon_r12 !=NULL) { //commTxPoolNormalCommon - to transmit SL communication in RRC_IDLE
+            //maybe we don't consider this case for the moment since UE will immediately establish a RRC connection after receiving SIB messages
+            //configure PHY/MAC to transmit SL communication using the RPs indicated by the first entry in commTxPoolNormalCommon
+            //SL_CommResourcePool_r12_t sl_CommResourcePool = sib18->commConfig_r12->commTxPoolNormalCommon_r12->list.array[0];
+         }
+      }
    }
 
-   //process SIB19
+   //process SIB19, configure MAC/PHY for receiving SL discovery (RRC_IDLE and RRC_CONNECTED), for transmitting SL discovery (RRC_IDLE)
    if (sib19 != NULL) {
+      //to receive non-PS related discovery announcements (discRxPool)
+      //sib19->discConfig_r12->discRxPool_r12;
 
+      //to receive PS related discovery announcements (discRxPoolPS)
+      //sib19->ext1->discConfigPS_13->discRxPoolPS_r13;
+
+      //to transmit non-PS related discovery in RRC_IDLE
+      //sib19->discConfig_r12->discTxPoolCommon_r12;
+
+      //to transmit PS related discovery in RRC_IDLE
+      //sib19->ext1->discConfigPS_13->discTxPoolPS_Common_r13;
    }
-   //process sl_CommConfig
+
+   //process sl_CommConfig, configure MAC/PHY for transmitting SL communication (RRC_CONNECTED)
    if (sl_CommConfig != NULL) {
 
       if (sl_CommConfig->commTxResources_r12 != NULL) {
@@ -5020,7 +5040,7 @@ rrc_ue_process_radioResourceConfig(
             break;
 
          case SL_CommConfig_r12__commTxResources_r12_PR_release:
-            //release dedicated resources for SL
+            //release dedicated resources for SL communication
             break;
 
          case SL_CommConfig_r12__commTxResources_r12_PR_NOTHING: /* No components present */
@@ -5033,7 +5053,9 @@ rrc_ue_process_radioResourceConfig(
 
    }
 
+   //process sl_DiscConfig, configure MAC/PHY for transmitting SL discovery announcements (RRC_CONNECTED)
    if (sl_DiscConfig != NULL) {
+      //dedicated resources for transmitting non-PS related discovery
       if (sl_DiscConfig->discTxResources_r12 != NULL) {
 
          switch (sl_DiscConfig->discTxResources_r12->present) {
@@ -5049,7 +5071,7 @@ rrc_ue_process_radioResourceConfig(
             }
             break;
          case SL_DiscConfig_r12__discTxResources_r12_PR_release:
-            //sl_DiscConfig->discTxResources_r12->choice.release;
+            //release dedicated resources for SL discovery
             break;
          case SL_DiscConfig_r12__discTxResources_r12_PR_NOTHING: /* No components present */
             break;
@@ -5057,6 +5079,29 @@ rrc_ue_process_radioResourceConfig(
             break;
          }
 
+      }
+      //dedicated resources for transmitting PS related discovery
+      if (sl_DiscConfig->ext2->discTxResourcesPS_r13 != NULL){
+         switch (sl_DiscConfig->ext2->discTxResourcesPS_r13->present) {
+         case SL_DiscConfig_r12__ext2__discTxResourcesPS_r13_PR_setup:
+            if (sl_DiscConfig->ext2->discTxResourcesPS_r13->choice.setup.present == SL_DiscConfig_r12__ext2__discTxResourcesPS_r13__setup_PR_scheduled_r13) {
+               //sl_DiscConfig->ext2->discTxResourcesPS_r13->choice.setup.choice.scheduled_r13.discHoppingConfig_r13;
+               //sl_DiscConfig->ext2->discTxResourcesPS_r13->choice.setup.choice.scheduled_r13.discTxConfig_r13
+            } else if (sl_DiscConfig->ext2->discTxResourcesPS_r13->choice.setup.present == SL_DiscConfig_r12__ext2__discTxResourcesPS_r13__setup_PR_ue_Selected_r13) {
+               //sl_DiscConfig->ext2->discTxResourcesPS_r13->choice.setup.choice.ue_Selected_r13.discTxPoolPS_Dedicated_r13;
+            } else {
+               //SL_DiscConfig_r12__ext2__discTxResourcesPS_r13__setup_PR_NOTHING, /* No components present */
+            }
+
+            break;
+         case SL_DiscConfig_r12__ext2__discTxResourcesPS_r13_PR_release:
+            break;
+         case SL_DiscConfig_r12__ext2__discTxResourcesPS_r13_PR_NOTHING:
+            /* No components present */
+            break;
+         default:
+            break;
+         }
       }
    }
 }

@@ -386,7 +386,7 @@ static int DEFENBS[] = {0};
 #define ENB_CONFIG_STRING_RXPOOL_RC_SFBITMAP_CHOICE_BS_BUF              "rxPool_ResourceConfig_subframeBitmap_choice_bs_buf"
 #define ENB_CONFIG_STRING_RXPOOL_RC_SFBITMAP_CHOICE_BS_SIZE             "rxPool_ResourceConfig_subframeBitmap_choice_bs_size"
 #define ENB_CONFIG_STRING_RXPOOL_RC_SFBITMAP_CHOICE_BS_ASN_BITS_UNUSED  "rxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused"
-//SIB19
+//SIB19 for DiscRxPool
 #define ENB_CONFIG_STRING_DISCRXPOOL_CP_LEN                                 "discRxPool_cp_Len"
 #define ENB_CONFIG_STRING_DISCRXPOOL_DISCPERIOD                             "discRxPool_discPeriod"
 #define ENB_CONFIG_STRING_DISCRXPOOL_NUMRETX                                "discRxPool_numRetx"
@@ -401,7 +401,20 @@ static int DEFENBS[] = {0};
 #define ENB_CONFIG_STRING_DISCRXPOOL_RC_SFBITMAP_CHOICE_BS_SIZE             "discRxPool_ResourceConfig_subframeBitmap_choice_bs_size"
 #define ENB_CONFIG_STRING_DISCRXPOOL_RC_SFBITMAP_CHOICE_BS_ASN_BITS_UNUSED  "discRxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused"
 
-
+//SIB19 for DiscRxPoolPS
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_CP_LEN                                 "DISCRXPOOLPS_cp_Len"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_DISCPERIOD                             "DISCRXPOOLPS_discPeriod"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_NUMRETX                                "DISCRXPOOLPS_numRetx"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_NUMREPETITION                          "DISCRXPOOLPS_numRepetition"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_PRB_NUM                             "DISCRXPOOLPS_ResourceConfig_prb_Num"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_PRB_START                           "DISCRXPOOLPS_ResourceConfig_prb_Start"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_PRB_END                             "DISCRXPOOLPS_ResourceConfig_prb_End"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_OFFSETIND_PRESENT                   "DISCRXPOOLPS_ResourceConfig_offsetIndicator_present"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_OFFSETIND_CHOICE                    "DISCRXPOOLPS_ResourceConfig_offsetIndicator_choice"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_SFBITMAP_PRESENT                    "DISCRXPOOLPS_ResourceConfig_subframeBitmap_present"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_SFBITMAP_CHOICE_BS_BUF              "DISCRXPOOLPS_ResourceConfig_subframeBitmap_choice_bs_buf"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_SFBITMAP_CHOICE_BS_SIZE             "DISCRXPOOLPS_ResourceConfig_subframeBitmap_choice_bs_size"
+#define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_SFBITMAP_CHOICE_BS_ASN_BITS_UNUSED  "DISCRXPOOLPS_ResourceConfig_subframeBitmap_choice_bs_bits_unused"
 		
 /*-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*                                     component carriers configuration parameters                                                                                                     */
@@ -500,7 +513,20 @@ static int DEFENBS[] = {0};
 {ENB_CONFIG_STRING_DISCRXPOOL_RC_SFBITMAP_PRESENT,               NULL,   0,   strptr:&discRxPool_ResourceConfig_subframeBitmap_present,            defstrval:"prNothing",  TYPE_STRING,  0}, \
 {ENB_CONFIG_STRING_DISCRXPOOL_RC_SFBITMAP_CHOICE_BS_BUF,         NULL,   0,   strptr:&discRxPool_ResourceConfig_subframeBitmap_choice_bs_buf,            defstrval:"001001",  TYPE_STRING,  0}, \
 {ENB_CONFIG_STRING_DISCRXPOOL_RC_SFBITMAP_CHOICE_BS_SIZE,        NULL,   0,   iptr:&discRxPool_ResourceConfig_subframeBitmap_choice_bs_size,         defintval:1,       TYPE_UINT,    0}, \
-{ENB_CONFIG_STRING_DISCRXPOOL_RC_SFBITMAP_CHOICE_BS_ASN_BITS_UNUSED,NULL,   0,   iptr:&discRxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused,         defintval:1,       TYPE_UINT,    0} \
+{ENB_CONFIG_STRING_DISCRXPOOL_RC_SFBITMAP_CHOICE_BS_ASN_BITS_UNUSED,NULL,   0,   iptr:&discRxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_CP_LEN,                            NULL,   0,   strptr:&discRxPoolPS_cp_Len,          defstrval:"normal",  TYPE_STRING,  0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_DISCPERIOD,                        NULL,   0,   strptr:&discRxPoolPS_discPeriod,          defstrval:"rf32",  TYPE_STRING,  0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_NUMRETX,                           NULL,   0,   iptr:&discRxPoolPS_numRetx,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_NUMREPETITION,                     NULL,   0,   iptr:&discRxPoolPS_numRepetition,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_RC_PRB_NUM,                        NULL,   0,   iptr:&discRxPoolPS_ResourceConfig_prb_Num,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_RC_PRB_START,                      NULL,   0,   iptr:&discRxPoolPS_ResourceConfig_prb_Start,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_RC_PRB_END,                        NULL,   0,   iptr:&discRxPoolPS_ResourceConfig_prb_End,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_RC_OFFSETIND_PRESENT,              NULL,   0,   strptr:&discRxPoolPS_ResourceConfig_offsetIndicator_present,            defstrval:"prNothing",  TYPE_STRING,  0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_RC_OFFSETIND_CHOICE,               NULL,   0,   iptr:&discRxPoolPS_ResourceConfig_offsetIndicator_choice,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_RC_SFBITMAP_PRESENT,               NULL,   0,   strptr:&discRxPoolPS_ResourceConfig_subframeBitmap_present,            defstrval:"prNothing",  TYPE_STRING,  0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_RC_SFBITMAP_CHOICE_BS_BUF,         NULL,   0,   strptr:&discRxPoolPS_ResourceConfig_subframeBitmap_choice_bs_buf,            defstrval:"001001",  TYPE_STRING,  0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_RC_SFBITMAP_CHOICE_BS_SIZE,        NULL,   0,   iptr:&discRxPoolPS_ResourceConfig_subframeBitmap_choice_bs_size,         defintval:1,       TYPE_UINT,    0}, \
+{ENB_CONFIG_STRING_DISCRXPOOLPS_RC_SFBITMAP_CHOICE_BS_ASN_BITS_UNUSED,NULL,   0,   iptr:&discRxPoolPS_ResourceConfig_subframeBitmap_choice_bs_bits_unused,         defintval:1,       TYPE_UINT,    0} \
 }
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

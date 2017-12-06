@@ -189,6 +189,7 @@ typedef struct RrcConfigurationReq_s {
   long                           rxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[MAX_NUM_CCs];
 
   //SIB19
+  //for discRxPool
   SL_CP_Len_r12_t                discRxPool_cp_Len[MAX_NUM_CCs];
   e_SL_DiscResourcePool_r12__discPeriod_r12                   discRxPool_discPeriod[MAX_NUM_CCs];
   long                           discRxPool_numRetx[MAX_NUM_CCs];
@@ -202,6 +203,20 @@ typedef struct RrcConfigurationReq_s {
   char*                          discRxPool_ResourceConfig_subframeBitmap_choice_bs_buf[MAX_NUM_CCs];
   long                           discRxPool_ResourceConfig_subframeBitmap_choice_bs_size[MAX_NUM_CCs];
   long                           discRxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[MAX_NUM_CCs];
+  //for discRxPoolPS
+  SL_CP_Len_r12_t                discRxPoolPS_cp_Len[MAX_NUM_CCs];
+  e_SL_DiscResourcePool_r12__discPeriod_r12                   discRxPoolPS_discPeriod[MAX_NUM_CCs];
+  long                           discRxPoolPS_numRetx[MAX_NUM_CCs];
+  long                           discRxPoolPS_numRepetition[MAX_NUM_CCs];
+  long                           discRxPoolPS_ResourceConfig_prb_Num[MAX_NUM_CCs];
+  long                           discRxPoolPS_ResourceConfig_prb_Start[MAX_NUM_CCs];
+  long                           discRxPoolPS_ResourceConfig_prb_End[MAX_NUM_CCs];
+  SL_OffsetIndicator_r12_PR      discRxPoolPS_ResourceConfig_offsetIndicator_present[MAX_NUM_CCs];
+  long                           discRxPoolPS_ResourceConfig_offsetIndicator_choice[MAX_NUM_CCs];
+  SubframeBitmapSL_r12_PR        discRxPoolPS_ResourceConfig_subframeBitmap_present[MAX_NUM_CCs];
+  char*                          discRxPoolPS_ResourceConfig_subframeBitmap_choice_bs_buf[MAX_NUM_CCs];
+  long                           discRxPoolPS_ResourceConfig_subframeBitmap_choice_bs_size[MAX_NUM_CCs];
+  long                           discRxPoolPS_ResourceConfig_subframeBitmap_choice_bs_bits_unused[MAX_NUM_CCs];
 
 
 
