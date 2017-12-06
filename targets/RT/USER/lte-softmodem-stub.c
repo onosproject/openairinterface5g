@@ -1358,6 +1358,8 @@ int main( int argc, char **argv )
     init_UE_stub(1,eMBMS_active,uecap_xer_in);
     //init_UE(1,eMBMS_active,uecap_xer_in);
     number_of_cards = 1;
+
+    config_sync_var=0;
     if (nfapi_mode==3) // UE-STUB-PNF
     	{
     	wait_nfapi_init("main?");
