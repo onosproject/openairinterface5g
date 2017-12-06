@@ -116,7 +116,7 @@ pthread_cond_t nfapi_sync_cond;
 pthread_mutex_t nfapi_sync_mutex;
 int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
-uint8_t nfapi_mode = 0;
+uint8_t nfapi_mode = 2;
 
 uint16_t sf_ahead=4;
 

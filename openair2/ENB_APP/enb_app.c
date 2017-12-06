@@ -59,6 +59,8 @@ extern unsigned char NB_eNB_INST;
 
 extern RAN_CONTEXT_t RC;
 
+extern uint8_t nfapi_mode;
+
 #if defined(ENABLE_ITTI)
 
 /*------------------------------------------------------------------------------*/
@@ -306,7 +308,10 @@ void *eNB_app_task(void *args_p)
 
   LOG_I(PHY, "%s() Task ready initialise structures\n", __FUNCTION__);
 
+  // Panos
+  //if (nfapi_mode!= 2 && nfapi_mode!= 3){
   RCconfig_L1();
+  //}
 
   RCconfig_macrlc();
 
