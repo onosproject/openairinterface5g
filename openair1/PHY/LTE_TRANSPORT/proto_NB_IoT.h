@@ -208,8 +208,7 @@ int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
                               unsigned int               G,          // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
                               time_stats_t_NB_IoT        *rm_stats,
                               time_stats_t_NB_IoT        *te_stats,
-                              time_stats_t_NB_IoT        *i_stats);
-
+                              time_stats_t_NB_IoT        *i_stats); 
 
 void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT      *phy_vars_eNB,
                      eNB_rxtx_proc_NB_IoT_t   *proc,
@@ -286,5 +285,34 @@ void rotate_bpsk_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
                         int32_t **rxdataF_comp, 
                         uint8_t UE_id,
                         uint8_t symbol); 
+//************************************************************// 
+
 //************************************************************//
+//*****************Vincent part for DLSCH demodulation ******************//
+
+int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
+                      unsigned char eNB_id,
+                      unsigned char eNB_id_i, //if this == ue->n_connected_eNB, we assume MU interference
+                      uint32_t frame,
+                      uint8_t subframe,
+                      unsigned char symbol,
+                      unsigned char first_symbol_flag,
+                      unsigned char i_mod,
+                      unsigned char harq_pid); 
+
+unsigned short dlsch_extract_rbs_single_NB_IoT(int **rxdataF,
+                                        int **dl_ch_estimates,
+                                        int **rxdataF_ext,
+                                        int **dl_ch_estimates_ext,
+                                        unsigned short pmi,
+                                        unsigned char *pmi_ext,
+                                        unsigned int *rb_alloc,
+                                        unsigned char symbol,
+                                        unsigned char subframe,
+                                        uint32_t high_speed_flag,
+                                        NB_IoT_DL_FRAME_PARMS *frame_parms); 
+
+//************************************************************//
+
+
 #endif

@@ -372,7 +372,8 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 
   
 
-          rx_ulsch_NB_IoT(eNB,proc,
+          rx_ulsch_NB_IoT(eNB,
+                          proc,
                           eNB->UE_stats[i].sector,  // this is the effective sector id
                           i,
                           eNB->nulsch,

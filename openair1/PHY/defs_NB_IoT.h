@@ -813,8 +813,9 @@ typedef struct {
   /// \brief Frame parame before ho used to recover if ho fails.
   NB_IoT_DL_FRAME_PARMS         frame_parms_before_ho;
   NB_IoT_UE_COMMON              common_vars;
+
+  NB_IoT_UE_PDSCH     *pdsch_vars[2][NUMBER_OF_CONNECTED_eNB_MAX+1]; // two RxTx Threads
 /*
-  LTE_UE_PDSCH     *pdsch_vars[2][NUMBER_OF_CONNECTED_eNB_MAX+1]; // two RxTx Threads
   LTE_UE_PDSCH_FLP *pdsch_vars_flp[NUMBER_OF_CONNECTED_eNB_MAX+1];
   LTE_UE_PDSCH     *pdsch_vars_SI[NUMBER_OF_CONNECTED_eNB_MAX+1];
   LTE_UE_PDSCH     *pdsch_vars_ra[NUMBER_OF_CONNECTED_eNB_MAX+1];
@@ -823,7 +824,9 @@ typedef struct {
   LTE_UE_PBCH      *pbch_vars[NUMBER_OF_CONNECTED_eNB_MAX];
   LTE_UE_PDCCH     *pdcch_vars[2][NUMBER_OF_CONNECTED_eNB_MAX];
   LTE_UE_PRACH     *prach_vars[NUMBER_OF_CONNECTED_eNB_MAX];
-  LTE_UE_DLSCH_t   *dlsch[2][NUMBER_OF_CONNECTED_eNB_MAX][2]; // two RxTx Threads
+*/
+  NB_IoT_UE_DLSCH_t   *dlsch[2][NUMBER_OF_CONNECTED_eNB_MAX][2]; // two RxTx Threads
+/*
   LTE_UE_ULSCH_t   *ulsch[NUMBER_OF_CONNECTED_eNB_MAX];
   LTE_UE_DLSCH_t   *dlsch_SI[NUMBER_OF_CONNECTED_eNB_MAX];
   LTE_UE_DLSCH_t   *dlsch_ra[NUMBER_OF_CONNECTED_eNB_MAX];
