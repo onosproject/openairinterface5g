@@ -220,7 +220,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT      *phy_vars_eNB,
 void ulsch_extract_rbs_single_NB_IoT(int32_t                **rxdataF,
                                      int32_t                **rxdataF_ext,
                                      // uint32_t               first_rb, 
-                                     uint32_t               UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
+                                     // uint32_t               UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
                                      uint8_t                N_sc_RU, // number of subcarriers in UL
 				                             // uint32_t               I_sc, // subcarrier indication field
                                      uint32_t               nb_rb,
@@ -309,6 +309,7 @@ unsigned short dlsch_extract_rbs_single_NB_IoT(int **rxdataF,
                                         unsigned int *rb_alloc,
                                         unsigned char symbol,
                                         unsigned char subframe,
+                                        uint32_t frame,
                                         uint32_t high_speed_flag,
                                         NB_IoT_DL_FRAME_PARMS *frame_parms); 
 

@@ -604,7 +604,7 @@ void ulsch_detection_mrc_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
 void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
                                      int32_t **rxdataF_ext,
                                      // uint32_t first_rb, 
-                                     uint32_t UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
+                                     // uint32_t UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block !!! may be defined twice : in frame_parms and in NB_IoT_UL_eNB_HARQ_t
                                      uint8_t N_sc_RU, // number of subcarriers in UL 
                                      // uint32_t I_sc, // NB_IoT: subcarrier indication field: must be defined in higher layer
                                      uint32_t nb_rb,
@@ -619,8 +619,10 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
   //uint8_t symbol = l+Ns*frame_parms->symbols_per_tti/2;
   uint8_t   symbol = l+(7*(Ns&1)); ///symbol within sub-frame 
   // uint16_t ul_sc_start; // subcarrier start index into UL RB 
+  unsigned short UL_RB_ID_NB_IoT; 
 
   // ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); 
+  UL_RB_ID_NB_IoT = frame_parms->NB_IoT_RB_ID; 
 
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
 
@@ -633,6 +635,7 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
 
       for (n=0;n<12;n++){ // extract whole RB of 12 subcarriers
         // Note that FFT splits the RBs 
+        // !!! Note that frame_parms->N_RB_UL is the number of RB in LTE
         // rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][UL_RB_ID_NB_IoT*12 + ul_sc_start + frame_parms->first_carrier_offset + symbol*frame_parms->ofdm_symbol_size + n];
         rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][UL_RB_ID_NB_IoT*12 + frame_parms->first_carrier_offset + symbol*frame_parms->ofdm_symbol_size + n];
       
@@ -1609,7 +1612,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
     ulsch_extract_rbs_single_NB_IoT(common_vars->rxdataF[eNB_id],
                                     pusch_vars->rxdataF_ext[eNB_id],
                                     // ulsch[UE_id]->harq_process->first_rb, 
-                                    ulsch[UE_id]->harq_process->UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
+                                    //ulsch[UE_id]->harq_process->UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
                                     ulsch[UE_id]->harq_process->N_sc_RU, // number of subcarriers in UL
                                     // ulsch[UE_id]->harq_process->I_sc, // subcarrier indication field
                                     ulsch[UE_id]->harq_process->nb_rb,
