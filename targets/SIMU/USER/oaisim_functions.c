@@ -782,14 +782,10 @@ void get_simulation_options(int argc, char *argv[])
     }
   }
 
-<<<<<<< HEAD
   if ( load_configmodule(argc,argv) == NULL) {
     exit_fun("[SOFTMODEM] Error, configuration module init failed\n");
   } 
  
-=======
-  
->>>>>>> issue271_sim
   if (RC.config_file_name != NULL) {
     /* Read eNB configuration file */
     RCConfig();

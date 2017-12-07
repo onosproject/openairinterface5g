@@ -389,12 +389,12 @@ int8_t find_ue_ulsch(uint16_t rnti, PHY_VARS_eNB *phy_vars_eNB);
 //int32_t add_ue(int16_t rnti, PHY_VARS_eNB *phy_vars_eNB);
 //int mac_phy_remove_ue(module_id_t Mod_idP,rnti_t rnti);
 
-void process_timing_advance(uint8_t Mod_id,uint8_t CC_id,int16_t timing_advance);
+void process_timing_advance(module_id_t Mod_id,uint8_t CC_id,int16_t timing_advance);
 void process_timing_advance_rar(PHY_VARS_UE *phy_vars_ue,UE_rxtx_proc_t *proc,uint16_t timing_advance);
 
 unsigned int get_tx_amp(int power_dBm, int power_max_dBm, int N_RB_UL, int nb_rb);
 
-void phy_reset_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
+void phy_reset_ue(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
 
 /*! \brief This function retrives the resource (n1_pucch) corresponding to a PDSCH transmission in
 subframe n-4 which is acknowledged in subframe n (for FDD) according to n1_pucch = Ncce + N1_pucch.  For

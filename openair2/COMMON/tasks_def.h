@@ -59,6 +59,7 @@ TASK_DEF(TASK_ENB_APP,  TASK_PRIORITY_MED,          200)
 TASK_DEF(TASK_FLEXRAN_AGENT,  TASK_PRIORITY_MED,          200)
 
 // UE tasks and sub-tasks:
+#ifndef UE_EXPANSION_SIM2
 //// Layer 2 and Layer 1 sub-tasks
 SUB_TASK_DEF(TASK_L2L1,     TASK_PHY_UE,                200)
 SUB_TASK_DEF(TASK_L2L1,     TASK_MAC_UE,                200)
@@ -70,6 +71,20 @@ TASK_DEF(TASK_RRC_UE,   TASK_PRIORITY_MED,          200)
 ///   Non Access Stratum task
 TASK_DEF(TASK_NAS_UE,   TASK_PRIORITY_MED,          200)
 TASK_DEF(TASK_RAL_UE,   TASK_PRIORITY_MED,          200)
+#else
+//// Layer 2 and Layer 1 sub-tasks
+SUB_TASK_DEF(TASK_L2L1,     TASK_PHY_UE,                300)
+SUB_TASK_DEF(TASK_L2L1,     TASK_MAC_UE,                300)
+SUB_TASK_DEF(TASK_L2L1,     TASK_RLC_UE,                300)
+SUB_TASK_DEF(TASK_L2L1,     TASK_PDCP_UE,               300)
+
+///   Radio Resource Control task
+TASK_DEF(TASK_RRC_UE,   TASK_PRIORITY_MED,          300)
+///   Non Access Stratum task
+TASK_DEF(TASK_NAS_UE,   TASK_PRIORITY_MED,          300)
+TASK_DEF(TASK_RAL_UE,   TASK_PRIORITY_MED,          300)
+#endif
+
 
 //MESSAGE GENERATOR TASK
 TASK_DEF(TASK_MSC,      TASK_PRIORITY_MED,          200)

@@ -2596,14 +2596,14 @@ void fill_dci0(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,
   }
 }
 
-void fill_ulsch(PHY_VARS_eNB *eNB,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame,int subframe)
+void fill_ulsch(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame,int subframe)
 {
   uint8_t harq_pid;
-  uint8_t UE_id;
+  //uint8_t UE_id;
   boolean_t new_ulsch = (find_ulsch(ulsch_pdu->ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST)==-1) ? TRUE : FALSE;
 
-  AssertFatal((UE_id=find_ulsch(ulsch_pdu->ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
-	      "No existing/free UE ULSCH for rnti %x\n",ulsch_pdu->ulsch_pdu_rel8.rnti);
+  //AssertFatal((UE_id=find_ulsch(ulsch_pdu->ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
+  //      "No existing/free UE ULSCH for rnti %x\n",ulsch_pdu->ulsch_pdu_rel8.rnti);
 
   LTE_eNB_ULSCH_t *ulsch=eNB->ulsch[UE_id];
   LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
@@ -6544,7 +6544,7 @@ uint8_t pdcch_alloc2ul_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t n)
   else
     ul_subframe = ((n+4)%10);
 
-  if (subframe_select(frame_parms,ul_subframe) != SF_UL) return(255);
+  if ((subframe_select(frame_parms,ul_subframe) != SF_UL) && (frame_parms->frame_type == TDD)) return(255);
 
   LOG_D(PHY, "subframe %d: PUSCH subframe = %d\n", n, ul_subframe);
   return ul_subframe;

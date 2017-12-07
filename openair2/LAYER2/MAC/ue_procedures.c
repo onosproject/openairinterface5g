@@ -806,7 +806,7 @@ ue_get_mbsfn_sf_alloction(module_id_t module_idP,
 }
 
 int
-ue_query_mch(uint8_t module_idP, uint8_t CC_id, uint32_t frameP,
+ue_query_mch(module_id_t module_idP, uint8_t CC_id, uint32_t frameP,
 	     sub_frame_t subframe, uint8_t eNB_index, uint8_t * sync_area,
 	     uint8_t * mcch_active)
 {

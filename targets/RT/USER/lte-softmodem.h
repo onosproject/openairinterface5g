@@ -128,6 +128,11 @@
 {"ue-scan-carrier",  	       CONFIG_HLP_UESCAN,     PARAMFLAG_BOOL,	iptr:&UE_scan_carrier,  	    defintval:0,    TYPE_INT,	   0},     \
 {"ue-max-power",     	       NULL,		      0,		iptr:&(tx_max_power[0]),	    defintval:90,   TYPE_INT,	   0},     \
 {"r"  ,                        CONFIG_HLP_PRB,        0,                u8ptr:&n_rb_dl,                     defintval:0,    TYPE_UINT8,    0},     \
+{"enb-socket-ip",              NULL,                  0,        strptr:&enb_socket_ip,          defstrval:"127.0.0.1",  TYPE_STRING,   0},   \
+{"enb-socket-port",            NULL,                  0,        iptr:&udp_socket_port_enb,      defintval:0,            TYPE_INT,      0},    \
+{"ue-socket-ip",               NULL,                  0,        strptr:&ue_socket_ip,           defstrval:"127.0.0.1",  TYPE_STRING,   0},    \
+{"ue-socket-port",             NULL,                  0,        iptr:&udp_socket_port_ue,       defintval:0,            TYPE_INT,      0},    \
+{"ue-nb-inst",                 NULL,                  0,        iptr:&NB_UE_INST,               defintval:0,            TYPE_INT,      0},    \
 }
 
 

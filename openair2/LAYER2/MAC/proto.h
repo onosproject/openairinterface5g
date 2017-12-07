@@ -512,7 +512,7 @@ void ue_send_mch_sdu(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 @param[out] sync_area return the sync area
 @param[out] mcch_active flag indicating whether this MCCH is active in this SF
 */
-int ue_query_mch(uint8_t Mod_id, uint8_t CC_id, uint32_t frame,
+int ue_query_mch(module_id_t Mod_id, uint8_t CC_id, uint32_t frame,
 		 sub_frame_t subframe, uint8_t eNB_index,
 		 uint8_t * sync_area, uint8_t * mcch_active);
 
@@ -1032,7 +1032,7 @@ void extract_pusch_csi(module_id_t mod_idP, int CC_idP, int UE_id,
 
 uint16_t fill_nfapi_tx_req(nfapi_tx_request_body_t * tx_req_body,
 			   uint16_t absSF, uint16_t pdu_length,
-			   uint16_t pdu_index, uint8_t * pdu);
+			   int16_t pdu_index, uint8_t * pdu);
 
 void fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t *
 					  ul_config_pdu, uint8_t cqi_req,
@@ -1072,7 +1072,7 @@ void program_dlsch_acknak(module_id_t module_idP, int CC_idP, int UE_idP,
 
 void fill_nfapi_dlsch_config(eNB_MAC_INST * eNB,
 			     nfapi_dl_config_request_body_t * dl_req,
-			     uint16_t length, uint16_t pdu_index,
+			     uint16_t length, int16_t pdu_index,
 			     uint16_t rnti,
 			     uint8_t resource_allocation_type,
 			     uint8_t

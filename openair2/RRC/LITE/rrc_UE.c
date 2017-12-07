@@ -137,7 +137,7 @@ static void rrc_ue_generate_RRCConnectionReconfigurationComplete( const protocol
 static void rrc_ue_generate_MeasurementReport(protocol_ctxt_t* const ctxt_pP, uint8_t eNB_index );
 
 static uint8_t check_trigger_meas_event(
-  uint8_t module_idP,
+  module_id_t module_idP,
   frame_t frameP,
   uint8_t eNB_index,
   uint8_t ue_cnx_index,
@@ -4046,7 +4046,7 @@ void ue_measurement_report_triggering(protocol_ctxt_t* const ctxt_pP, const uint
 //-----------------------------------------------------------------------------
 
 static uint8_t check_trigger_meas_event(
-  uint8_t         ue_mod_idP,
+  module_id_t     ue_mod_idP,
   frame_t         frameP,
   uint8_t         eNB_index,
   uint8_t         ue_cnx_index,
