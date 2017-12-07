@@ -808,7 +808,7 @@ pdcp_data_ind(
       // Here there is no virtualization possible
       // set ((pdcp_data_ind_header_t *) new_sdu_p->data)->inst for IP layer here
       if (ctxt_pP->enb_flag == ENB_FLAG_NO) {
-        ((pdcp_data_ind_header_t *) new_sdu_p->data)->rb_id = rb_id;
+        ((pdcp_data_ind_header_t *) new_sdu_p->data)->rb_id = rb_id + (ctxt_pP->module_id * maxDRB);
 #if defined(OAI_EMU)
         ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id + oai_emulation.info.nb_enb_local - oai_emulation.info.first_ue_local;
 #else
@@ -1472,8 +1472,13 @@ pdcp_config_req_asn1 (
     if (ctxt_pP->enb_flag == ENB_FLAG_YES) {
       pdcp_pP->is_ue = FALSE;
       //pdcp_eNB_UE_instance_to_rnti[ctxtP->module_id] = ctxt_pP->rnti;
-      pdcp_eNB_UE_instance_to_rnti[pdcp_eNB_UE_instance_to_rnti_index] = ctxt_pP->rnti;
+      //pdcp_eNB_UE_instance_to_rnti[pdcp_eNB_UE_instance_to_rnti_index] = ctxt_pP->rnti;
       //pdcp_eNB_UE_instance_to_rnti_index = (pdcp_eNB_UE_instance_to_rnti_index + 1) % NUMBER_OF_UE_MAX;
+      if( srb_flagP == SRB_FLAG_NO )
+      {
+          pdcp_eNB_UE_instance_to_rnti[pdcp_eNB_UE_instance_to_rnti_index] = ctxt_pP->rnti;
+          pdcp_eNB_UE_instance_to_rnti_index = (pdcp_eNB_UE_instance_to_rnti_index + 1) % NUMBER_OF_UE_MAX;
+      }
     } else {
       pdcp_pP->is_ue = TRUE;
       pdcp_UE_UE_module_id_to_rnti[ctxt_pP->module_id] = ctxt_pP->rnti;

@@ -2192,10 +2192,10 @@ void compute_prach_seq(uint16_t rootSequenceIndex,
 
 
 void init_prach_tables(int N_ZC);
-
+#ifndef UE_EXPANSION_SIM2
 void init_unscrambling_lut(void);
 void init_scrambling_lut(void);
-
+#endif
 /*!
   \brief Return the status of MBSFN in this frame/subframe
   @param frame Frame index
@@ -2253,12 +2253,18 @@ uint8_t get_prach_prb_offset(LTE_DL_FRAME_PARMS *frame_parms,
 
 uint8_t ul_subframe2pdcch_alloc_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t n);
 
-
+#ifndef UE_EXPANSION_SIM2
 int8_t find_dlsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type);
 
 int8_t find_ulsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type);
 
 int8_t find_uci(uint16_t rnti, int frame, int subframe, PHY_VARS_eNB *eNB,find_type_t type);
+#else
+int16_t find_dlsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type);
 
+int16_t find_ulsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type);
+
+int16_t find_uci(uint16_t rnti, int frame, int subframe, PHY_VARS_eNB *eNB,find_type_t type);
+#endif
 /**@}*/
 #endif

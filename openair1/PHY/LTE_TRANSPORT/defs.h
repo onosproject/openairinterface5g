@@ -207,20 +207,24 @@ typedef struct {
   uint8_t O_ACK;
   /// Pointer to the payload
   uint8_t *b;
+#ifndef UE_EXPANSION_SIM2
   /// Pointers to transport block segments
   uint8_t *c[MAX_NUM_ULSCH_SEGMENTS];
   /// RTC values for each segment (for definition see 36-212 V8.6 2009-03, p.15)
   uint32_t RTC[MAX_NUM_ULSCH_SEGMENTS];
+#endif
   /// Index of current HARQ round for this ULSCH
   uint8_t round;
   /// MCS format of this ULSCH
   uint8_t mcs;
   /// Redundancy-version of the current sub-frame
   uint8_t rvidx;
+#ifndef UE_EXPANSION_SIM2
   /// Turbo-code outputs (36-212 V8.6 2009-03, p.12
   uint8_t d[MAX_NUM_ULSCH_SEGMENTS][(96+3+(3*6144))];
   /// Sub-block interleaver outputs (36-212 V8.6 2009-03, p.16-17)
   uint8_t w[MAX_NUM_ULSCH_SEGMENTS][3*6144];
+#endif
   /// Number of code segments (for definition see 36-212 V8.6 2009-03, p.9)
   uint32_t C;
   /// Number of "small" code segments (for definition see 36-212 V8.6 2009-03, p.10)
@@ -645,10 +649,12 @@ typedef struct {
   uint32_t B;
   /// Pointer to the payload
   uint8_t *b;
+#ifndef UE_EXPANSION_SIM2
   /// Pointers to transport block segments
   uint8_t *c[MAX_NUM_DLSCH_SEGMENTS];
   /// RTC values for each segment (for definition see 36-212 V8.6 2009-03, p.15)
   uint32_t RTC[MAX_NUM_DLSCH_SEGMENTS];
+#endif
   /// Index of current HARQ round for this DLSCH
   uint8_t round;
   /// MCS format for this DLSCH
@@ -659,12 +665,14 @@ typedef struct {
   uint8_t rvidx;
   /// MIMO mode for this DLSCH
   MIMO_mode_t mimo_mode;
+#ifndef UE_EXPANSION_SIM2
   /// soft bits for each received segment ("w"-sequence)(for definition see 36-212 V8.6 2009-03, p.15)
   int16_t w[MAX_NUM_DLSCH_SEGMENTS][3*(6144+64)];
   /// for abstraction soft bits for each received segment ("w"-sequence)(for definition see 36-212 V8.6 2009-03, p.15)
   double w_abs[MAX_NUM_DLSCH_SEGMENTS][3*(6144+64)];
   /// soft bits for each received segment ("d"-sequence)(for definition see 36-212 V8.6 2009-03, p.15)
   int16_t *d[MAX_NUM_DLSCH_SEGMENTS];
+#endif
   /// Number of code segments (for definition see 36-212 V8.6 2009-03, p.9)
   uint32_t C;
   /// Number of "small" code segments (for definition see 36-212 V8.6 2009-03, p.10)

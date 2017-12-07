@@ -621,8 +621,11 @@ void phy_config_sib13_eNB(uint8_t Mod_id,int CC_id,int mbsfn_Area_idx,
 
 void phy_config_dedicated_eNB_step2(PHY_VARS_eNB *eNB)
 {
-
+#ifndef UE_EXPANSION_SIM2
   uint8_t UE_id;
+#else
+  uint16_t UE_id;
+#endif
   struct PhysicalConfigDedicated *physicalConfigDedicated;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
 
@@ -1262,22 +1265,26 @@ void init_lte_top(LTE_DL_FRAME_PARMS *frame_parms)
 
   phy_generate_viterbi_tables();
   phy_generate_viterbi_tables_lte();
+#ifndef UE_EXPANSION_SIM2
   init_td8();
   init_td16();
+#endif
 #ifdef __AVX2__
   init_td16avx2();
 #endif
+#ifndef UE_EXPANSION_SIM2
   lte_sync_time_init(frame_parms);
 
   generate_ul_ref_sigs();
   generate_ul_ref_sigs_rx();
-
+#endif
   generate_64qam_table();
   generate_16qam_table();
   generate_RIV_tables();
-
+#ifndef UE_EXPANSION_SIM2
   init_unscrambling_lut();
   init_scrambling_lut();
+#endif
   //set_taus_seed(1328);
 
 
@@ -1343,14 +1350,18 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
   // create shortcuts
   LTE_DL_FRAME_PARMS* const fp            = &ue->frame_parms;
   LTE_UE_COMMON* const common_vars        = &ue->common_vars;
+#ifndef UE_EXPANSION_SIM2
   LTE_UE_PDSCH** const pdsch_vars_SI      = ue->pdsch_vars_SI;
   LTE_UE_PDSCH** const pdsch_vars_ra      = ue->pdsch_vars_ra;
   LTE_UE_PDSCH** const pdsch_vars_p       = ue->pdsch_vars_p;
   LTE_UE_PDSCH** const pdsch_vars_mch     = ue->pdsch_vars_MCH;
+#endif
   LTE_UE_PDSCH* (*pdsch_vars_th)[][NUMBER_OF_CONNECTED_eNB_MAX+1] = &ue->pdsch_vars;
   LTE_UE_PDCCH* (*pdcch_vars_th)[][NUMBER_OF_CONNECTED_eNB_MAX]   = &ue->pdcch_vars;
+#ifndef UE_EXPANSION_SIM2
   LTE_UE_PBCH** const pbch_vars           = ue->pbch_vars;
   LTE_UE_PRACH** const prach_vars         = ue->prach_vars;
+#endif
 
 
 
@@ -1392,7 +1403,7 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
     ue->tx_power_dBm[i]=-127;
 
 
-
+#ifndef UE_EXPANSION_SIM2
   // init TX buffers
   
   common_vars->txdata  = (int32_t**)malloc16( fp->nb_antennas_tx*sizeof(int32_t*) );
@@ -1433,6 +1444,7 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
         }
       }
   }
+#endif
 
   // DLSCH
   for (eNB_id=0; eNB_id<ue->n_connected_eNB; eNB_id++) {
@@ -1444,13 +1456,14 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
         (*pdcch_vars_th)[th_id][eNB_id] = (LTE_UE_PDCCH *)malloc16_clear(sizeof(LTE_UE_PDCCH));
     }
 
+#ifndef UE_EXPANSION_SIM2
     pdsch_vars_SI[eNB_id]  = (LTE_UE_PDSCH *)malloc16_clear(sizeof(LTE_UE_PDSCH));
     pdsch_vars_ra[eNB_id]  = (LTE_UE_PDSCH *)malloc16_clear(sizeof(LTE_UE_PDSCH));
     pdsch_vars_p[eNB_id]   = (LTE_UE_PDSCH *)malloc16_clear(sizeof(LTE_UE_PDSCH));
     pdsch_vars_mch[eNB_id] = (LTE_UE_PDSCH *)malloc16_clear(sizeof(LTE_UE_PDSCH));
     prach_vars[eNB_id]     = (LTE_UE_PRACH *)malloc16_clear(sizeof(LTE_UE_PRACH));
     pbch_vars[eNB_id]      = (LTE_UE_PBCH *)malloc16_clear(sizeof(LTE_UE_PBCH));
-
+#endif
     for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
       phy_init_lte_ue__PDSCH( (*pdsch_vars_th)[th_id][eNB_id], fp );
     }
@@ -1507,10 +1520,12 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
 	  }
       }
     }
+#ifndef UE_EXPANSION_SIM2
     phy_init_lte_ue__PDSCH( pdsch_vars_SI[eNB_id], fp );
     phy_init_lte_ue__PDSCH( pdsch_vars_ra[eNB_id], fp );
     phy_init_lte_ue__PDSCH( pdsch_vars_p[eNB_id], fp );
     phy_init_lte_ue__PDSCH( pdsch_vars_mch[eNB_id], fp );
+#endif
     
     // 100 PRBs * 12 REs/PRB * 4 PDCCH SYMBOLS * 2 LLRs/RE
     for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
@@ -1544,10 +1559,12 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
 	}
       }
     }
+#ifndef UE_EXPANSION_SIM2
     phy_init_lte_ue__PDSCH( pdsch_vars_SI[eNB_id], fp );
     phy_init_lte_ue__PDSCH( pdsch_vars_ra[eNB_id], fp );
     phy_init_lte_ue__PDSCH( pdsch_vars_p[eNB_id], fp );
     phy_init_lte_ue__PDSCH( pdsch_vars_mch[eNB_id], fp );
+#endif
     
     // 100 PRBs * 12 REs/PRB * 4 PDCCH SYMBOLS * 2 LLRs/RE
     for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
@@ -1583,6 +1600,7 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
       }
     }
     
+#ifndef UE_EXPANSION_SIM2
     // PBCH
     pbch_vars[eNB_id]->rxdataF_ext         = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
     pbch_vars[eNB_id]->rxdataF_comp        = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
@@ -1603,6 +1621,7 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
   
     
     pbch_vars[eNB_id]->decoded_output = (uint8_t*)malloc16_clear( 64 );
+#endif
   }
 
   // initialization for the last instance of pdsch_vars (used for MU-MIMO)
@@ -1610,9 +1629,11 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
       (*pdsch_vars_th)[th_id][eNB_id]     = (LTE_UE_PDSCH *)malloc16_clear( sizeof(LTE_UE_PDSCH) );
   }
 
+#ifndef UE_EXPANSION_SIM2
   pdsch_vars_SI[eNB_id]  = (LTE_UE_PDSCH *)malloc16_clear( sizeof(LTE_UE_PDSCH) );
   pdsch_vars_ra[eNB_id]  = (LTE_UE_PDSCH *)malloc16_clear( sizeof(LTE_UE_PDSCH) );
   pdsch_vars_p[eNB_id]   = (LTE_UE_PDSCH *)malloc16_clear( sizeof(LTE_UE_PDSCH) );
+#endif
 
   for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
     phy_init_lte_ue__PDSCH( (*pdsch_vars_th)[th_id][eNB_id], fp );

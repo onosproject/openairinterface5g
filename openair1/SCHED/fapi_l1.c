@@ -37,6 +37,12 @@
 #include "nfapi_interface.h"
 #include "fapi_l1.h"
 
+#ifdef UE_EXPANSION_SIM2
+#include "common/utils/udp/udp_com.h"
+extern int enb_sd_c;
+extern eNB_TX_PDU_INFO enb_tx_pdu_info;
+#endif
+
 void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
                              eNB_rxtx_proc_t *proc,
                              nfapi_dl_config_request_pdu_t *dl_config_pdu)
@@ -485,9 +491,11 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
                          uint16_t frame,uint8_t subframe,uint8_t srs_present)
 {
   nfapi_ul_config_ulsch_pdu_rel8_t *rel8 = &ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8;
-
+#ifndef UE_EXPANSION_SIM2
   int8_t UE_id;
-
+#else
+  int16_t UE_id;
+#endif
   // check if we have received a dci for this ue and ulsch descriptor is configured
 
   if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE) {
@@ -556,6 +564,36 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
     handle_srs_pdu(eNB,ul_config_pdu,frame,subframe);
   }
 }
+
+#ifdef UE_EXPANSION_SIM2
+void enb_tx_pdu_send_info(eNB_TX_PDU_INFO *pdu_info)
+ {
+  int header_len = sizeof(T_MSGHEAD);
+  int data_len = 0;
+  T_UDP_MSG data = {0};
+
+  eNB_TX_PDU_INFO *tx_pdu_p = (eNB_TX_PDU_INFO *)(data.data);
+
+  memcpy(tx_pdu_p, pdu_info, sizeof(eNB_TX_PDU_INFO));
+
+  data_len = header_len + sizeof(eNB_TX_PDU_INFO);
+
+  data.msgHead.msgid = STUB_UE_RX_PDU;
+  data.msgHead.msgLen = data_len;
+
+  int retval = PacketWrite(enb_sd_c,
+                           &data,
+                           data_len,
+                           RC.rrc[pdu_info->Mod_id]->udp_socket_ip_ue,
+                           RC.rrc[pdu_info->Mod_id]->udp_socket_port_ue);
+  if (retval == -1) {  // error
+    LOG_E(PHY, "enb_tx_pdu_send_info notify from eNB to UE failed\n");
+    return;
+  }
+  // success
+  LOG_D(PHY, "enb_tx_pdu_send_info notify from eNB to UE successfully\n");
+}
+#endif
 
 void schedule_response(Sched_Rsp_t *Sched_INFO)
 {
@@ -657,6 +695,27 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
                              dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks-1,
                              dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index == -1 ? NULL
                                : TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
+#ifdef UE_EXPANSION_SIM2
+      if (ue_rx_enb_tx_info.pdu_info[ue_rx_enb_tx_info.pdu_num].pdsch_type != PDSCH_NULL) {
+        memcpy(&ue_rx_enb_tx_info.pdu_buffer[ue_rx_enb_tx_info.pdu_info[ue_rx_enb_tx_info.pdu_num].pdu_start_index],
+               TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
+               TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_length);
+        ue_rx_enb_tx_info.pdu_info[ue_rx_enb_tx_info.pdu_num].pdu_length =
+            TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_length;
+        ue_rx_enb_tx_info.pdu_num++;
+      } else {
+        memcpy(enb_tx_pdu_info.pdu_buffer,
+               TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
+               TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_length);
+        enb_tx_pdu_info.pdu_length =
+            TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_length;
+        enb_tx_pdu_info.Mod_id = Mod_id;
+        enb_tx_pdu_info.CC_id = CC_id;
+        enb_tx_pdu_info.frame = frame;
+        enb_tx_pdu_info.subframe = subframe;
+        enb_tx_pdu_send_info(&enb_tx_pdu_info);
+      }
+#endif
       /*
       if (dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti == eNB->preamble_list[0].preamble_rel8.rnti) {// is RAR pdu
         LOG_D(PHY,"Frame %d, Subframe %d: Received LTE RAR pdu, programming based on UL Grant\n",frame,subframe);

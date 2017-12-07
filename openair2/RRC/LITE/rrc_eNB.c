@@ -4533,12 +4533,13 @@ rrc_eNB_decode_dcch(
 						       ue_context_p);
 	}
       }    
-#else  // establish a dedicated bearer 
+#else  // establish a dedicated bearer
+#ifndef UE_EXPANSION_SIM2
       if (dedicated_DRB == 0 ) {
 	//	ue_context_p->ue_context.e_rab[0].status = E_RAB_STATUS_ESTABLISHED;
 	rrc_eNB_reconfigure_DRBs(ctxt_pP,ue_context_p);
       }
-      
+#endif
 #endif
 #endif 
       break;

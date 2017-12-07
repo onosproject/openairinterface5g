@@ -68,6 +68,11 @@ fifo_dump_emos_UE emos_dump_UE;
 
 #include "T.h"
 
+#ifdef UE_EXPANSION_SIM2
+#include "common/utils/udp/udp_com.h"
+extern UE_TX_INFO ue_tx_info[RX_NB_TH][NUMBER_OF_UE_MAX];
+#endif
+
 #define DLSCH_RB_ALLOC 0x1fbf  // skip DC RB (total 23/25 RBs)
 #define DLSCH_RB_ALLOC_12 0x0aaa  // skip DC RB (total 23/25 RBs)
 
@@ -75,7 +80,14 @@ fifo_dump_emos_UE emos_dump_UE;
 
 extern double cpuf;
 
-
+#ifdef UE_EXPANSION_SIM2
+extern int ue_sd_c;
+extern int ue_sd_s;
+extern int udp_socket_ip_enb;
+extern int udp_socket_port_enb;
+extern int udp_socket_ip_ue;
+extern int udp_socket_port_ue;
+#endif
 
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
 extern uint32_t downlink_frequency[MAX_NUM_CCs][4];
@@ -1416,6 +1428,15 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
       LOG_D(PHY,"Prach resources %p\n",ue->prach_resources[eNB_id]);
     }
   }
+#ifdef UE_EXPANSION_SIM2
+  if (ue->prach_resources[eNB_id]!=NULL) {
+    ue->generate_prach=1;
+    ue->prach_cnt=0;
+
+    ue_tx_info[proc->sub_frame_start][ue->Mod_id].pusch_type = MSG1_PUSCH;
+    ue_tx_info[proc->sub_frame_start][ue->Mod_id].preamble = ue->prach_resources[eNB_id]->ra_PreambleIndex;
+  }
+#else
 
   if (ue->prach_resources[eNB_id]!=NULL) {
 
@@ -1498,6 +1519,7 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 	ue->prach_resources[eNB_id]->ra_PREAMBLE_RECEIVED_TARGET_POWER+get_PL(ue->Mod_id,ue->CC_id,eNB_id),
 	get_PL(ue->Mod_id,ue->CC_id,eNB_id));
   
+#endif
 
 
   // if we're calibrating the PRACH kill the pointer to its resources so that the RA protocol doesn't continue
@@ -2383,6 +2405,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
 #if T_TRACER
   T(T_UE_PHY_UL_TICK, T_INT(ue->Mod_id), T_INT(frame_tx%1024), T_INT(subframe_tx));
 #endif
+#ifndef UE_EXPANSION_SIM2
 
   ue->generate_ul_signal[eNB_id] = 0;
 #if UE_TIMING_TRACE
@@ -2426,6 +2449,84 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
   	
   ulsch_common_procedures(ue,proc, (ue->generate_ul_signal[eNB_id] == 0));
         
+#else
+  int harq_pid = subframe2harq_pid(&ue->frame_parms,
+                                   proc->frame_tx,
+                                   proc->subframe_tx);
+  uint8_t  SR_payload = 0;
+  unsigned int input_buffer_length;
+  uint8_t access_mode;
+  UE_TX_PDU_INFO ue_tx_pdu_info;
+
+  memset(&ue_tx_pdu_info, 0, sizeof(ue_tx_pdu_info));
+
+  ue_tx_info[proc->sub_frame_start][ue->Mod_id].rnti = UE_mac_inst[ue->Mod_id].crnti;
+
+  if ((ue->UE_mode[eNB_id] != PRACH) && (ue->mac_enabled == 1)) {
+
+      memset(&ue_tx_pdu_info,0,sizeof(ue_tx_pdu_info));
+
+      if ((ue->ulsch_Msg3_active[eNB_id] == 1) &&
+          (ue->ulsch_Msg3_frame[eNB_id] == frame_tx) &&
+          (ue->ulsch_Msg3_subframe[eNB_id] == subframe_tx)){
+          //todo
+          if(ue->prach_resources[eNB_id]->Msg3!=NULL){
+            ue_tx_pdu_info.pusch_type = MSG3_PUSCH;
+            memcpy(&ue_tx_pdu_info.rx_pdu[0],
+                &UE_mac_inst[ue->Mod_id].CCCH_pdu.payload[0],
+                UE_mac_inst[ue->Mod_id].RA_Msg3_size);
+            ue_tx_pdu_info.pdu_length = UE_mac_inst[ue->Mod_id].RA_Msg3_size;
+
+            ue_tx_pdu_info.rnti = UE_mac_inst[ue->Mod_id].crnti;
+            ue_tx_pdu_info.Mod_id = eNB_id;
+            ue_tx_pdu_info.CC_id = ue->CC_id;
+            ue_tx_pdu_info.frame = proc->frame_tx;
+            ue_tx_pdu_info.subframe = proc->subframe_tx;
+            ue_tx_pdu_send_info(&ue_tx_pdu_info);
+          }
+      }
+      if(ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag == 1){
+
+          //todo
+          input_buffer_length = ue->ulsch[eNB_id]->harq_processes[harq_pid]->TBS/8;
+
+          if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->round==0) {
+
+           access_mode=SCHEDULED_ACCESS;
+           ue_get_sdu(ue->Mod_id,
+                      ue->CC_id,
+                      proc->frame_tx,
+                      proc->subframe_tx,
+                      eNB_id,
+                      ue_tx_pdu_info.rx_pdu,
+                      input_buffer_length,
+                      &access_mode);
+           ue_tx_pdu_info.pdu_length = input_buffer_length;
+           ue_tx_pdu_info.pusch_type = UL_PUSCH;
+           ue_tx_pdu_info.rnti = UE_mac_inst[ue->Mod_id].crnti;
+           ue_tx_pdu_info.Mod_id = eNB_id;
+           ue_tx_pdu_info.CC_id = ue->CC_id;
+           ue_tx_pdu_info.frame = proc->frame_tx;
+           ue_tx_pdu_info.subframe = proc->subframe_tx;
+
+           ue_tx_pdu_send_info(&ue_tx_pdu_info);
+        }
+      }
+  }
+  if (ue->UE_mode[eNB_id] == PUSCH) {
+      if (is_SR_TXOp(ue,proc,eNB_id)==1)
+      {
+          SR_payload = ue_get_SR(ue->Mod_id,
+                                 ue->CC_id,
+                                 proc->frame_tx,
+                                 eNB_id,
+                                 ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->crnti,
+                                 proc->subframe_tx); // subframe used for meas gap
+          ue_tx_info[proc->sub_frame_start][ue->Mod_id].sr_flag = SR_payload;
+      }
+
+  }
+#endif
   if ((ue->UE_mode[eNB_id] == PRACH) && 
       (ue->frame_parms.prach_config_common.prach_Config_enabled==1)) {
 
@@ -2439,6 +2540,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
   else {
     ue->generate_prach=0;
   }
+#ifndef UE_EXPANSION_SIM2
 
   // reset DL ACK/NACK status
   uint8_t N_bundled = 0;
@@ -2476,6 +2578,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
              &N_bundled,
              0);
 
+#endif
 
   LOG_D(PHY,"****** end TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, subframe_tx);
 
@@ -2975,8 +3078,8 @@ int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint
 	  LOG_I(PHY,"[UE  %d] Frame %d, subframe %d : Generate UE DLSCH SI_RNTI format 1%s\n",ue->Mod_id,frame_rx,subframe_rx,dci_alloc_rx[i].format==format1A?"A":"C");
 	  //dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
 	
-	}
       }
+    }
 
     else if ((dci_alloc_rx[i].rnti == P_RNTI) &&
        ((dci_alloc_rx[i].format == format1A) || (dci_alloc_rx[i].format == format1C))) {
@@ -5336,5 +5439,60 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
 #endif
   } // slot
 }
+#ifdef UE_EXPANSION_SIM2
+void ue_tx_send_info(UES_TX_INFO *ulsch_info)
+ {
+  int header_len = sizeof(T_MSGHEAD);
+  int data_len = 0;
+  T_UDP_MSG data = {0};
+
+  UES_TX_INFO *tx_pdu_p = (UES_TX_INFO *)(data.data);
+
+  memcpy(tx_pdu_p, ulsch_info, sizeof(UES_TX_INFO));
+
+  data_len = header_len + sizeof(UES_TX_INFO);
+
+  data.msgHead.msgid = STUB_ENB_RX;
+  data.msgHead.msgLen = data_len;
+
+  int retval = PacketWrite(ue_sd_c,
+                           &data,
+                           data_len,
+                           udp_socket_ip_enb,
+                           udp_socket_port_enb);
+  if (retval == -1) {  // error
+    LOG_E(PHY, "ue_tx_send_info notify from UE to eNB failed\n");
+    return;
+  }
+  // success
+  LOG_D(PHY, "ue_tx_send_info notify from UE to eNB successfully\n");
+}
+
+void ue_tx_pdu_send_info(UE_TX_PDU_INFO *ue_tx_pdu_info)
+ {
+  int header_len = sizeof(T_MSGHEAD);
+  int data_len = 0;
+  T_UDP_MSG data = {0};
+
+  UE_TX_PDU_INFO *tx_pdu_p = (UE_TX_PDU_INFO *)(data.data);
+  memcpy(tx_pdu_p, ue_tx_pdu_info, sizeof(UE_TX_PDU_INFO));
+
+  data_len = header_len + sizeof(UE_TX_PDU_INFO);
+  data.msgHead.msgid = STUB_ENB_RX_PDU;
+  data.msgHead.msgLen = data_len;
+
+  int retval = PacketWrite(ue_sd_c,
+                           &data,
+                           data_len,
+                           udp_socket_ip_enb,
+                           udp_socket_port_enb);
+  if (retval == -1) {  // error
+    LOG_E(PHY, "ue_tx_pdu_send_info notify from UE to eNB failed\n");
+    return;
+  }
+  // success
+  LOG_D(PHY, "ue_tx_pdu_send_info notify from UE to eNB successfully\n");
+}
+#endif
 
 

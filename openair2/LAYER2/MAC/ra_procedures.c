@@ -304,7 +304,6 @@ Msg1_transmitted(module_id_t module_idP, uint8_t CC_id,
 	      "[UE %d][RAPROC] TX MSG1 Frame %d trace pdu for rnti %x  with size %d\n",
 	      module_idP, frameP, 1, UE_mac_inst[module_idP].RA_Msg3_size);
     }
-
 }
 
 

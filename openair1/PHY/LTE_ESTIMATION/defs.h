@@ -109,7 +109,7 @@ int lte_sync_time_eNB_emul(PHY_VARS_eNB *phy_vars_eNb,
 \param symbol symbol within frame
 */
 int lte_dl_channel_estimation(PHY_VARS_UE *phy_vars_ue,
-                              module_id_t eNB_id,
+                              uint8_t eNB_id,
                               uint8_t eNB_offset,
                               uint8_t Ns,
                               uint8_t p,
@@ -117,7 +117,7 @@ int lte_dl_channel_estimation(PHY_VARS_UE *phy_vars_ue,
                               uint8_t symbol);
 
 int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
-                                 module_id_t eNB_id,
+                                 uint8_t eNB_id,
                                  uint8_t eNB_offset,
                                  uint8_t Ns,
                                  uint8_t p,
@@ -131,7 +131,7 @@ int lte_dl_msbfn_channel_estimation(PHY_VARS_UE *phy_vars_ue,
                                     unsigned char symbol);
 
 int lte_dl_mbsfn_channel_estimation(PHY_VARS_UE *phy_vars_ue,
-                                    module_id_t eNB_id,
+                                    uint8_t eNB_id,
                                     uint8_t eNB_offset,
                                     int subframe,
                                     unsigned char l);
@@ -179,7 +179,7 @@ This function computes the time domain channel response, finds the peak and adju
 
 void lte_adjust_synch(LTE_DL_FRAME_PARMS *frame_parms,
                       PHY_VARS_UE *phy_vars_ue,
-                      module_id_t eNb_id,
+                      unsigned char eNb_id,
                       uint8_t subframe,
                       unsigned char clear,
                       short coef);
@@ -204,14 +204,14 @@ void lte_ue_measurements_emul(PHY_VARS_UE *phy_vars_ue,uint8_t last_slot,uint8_t
 @param eNB_index Index of eNB on which to act
 @returns Path loss in dB
  */
-int16_t get_PL(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
-double get_RSRP(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
-uint32_t get_RSRQ(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
-uint8_t get_n_adj_cells(module_id_t Mod_id,uint8_t CC_id);
-uint32_t get_rx_total_gain_dB(module_id_t Mod_id,uint8_t CC_id);
-uint32_t get_RSSI(module_id_t Mod_id,uint8_t CC_id);
-int8_t set_RSRP_filtered(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index,float rsrp);
-int8_t set_RSRQ_filtered(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index,float rstq);
+int16_t get_PL(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
+double get_RSRP(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
+uint32_t get_RSRQ(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
+uint8_t get_n_adj_cells(uint8_t Mod_id,uint8_t CC_id);
+uint32_t get_rx_total_gain_dB(uint8_t Mod_id,uint8_t CC_id);
+uint32_t get_RSSI(uint8_t Mod_id,uint8_t CC_id);
+int8_t set_RSRP_filtered(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index,float rsrp);
+int8_t set_RSRQ_filtered(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index,float rstq);
 
 //! Automatic gain control
 void phy_adjust_gain (PHY_VARS_UE *phy_vars_ue,
@@ -220,7 +220,7 @@ void phy_adjust_gain (PHY_VARS_UE *phy_vars_ue,
 
 int lte_ul_channel_estimation(PHY_VARS_eNB *phy_vars_eNB,
 			      eNB_rxtx_proc_t *proc,
-                              module_id_t UE_id,
+                              uint8_t UE_id,
                               uint8_t l,
                               uint8_t Ns);
 
@@ -243,11 +243,11 @@ int lte_est_timing_advance(LTE_DL_FRAME_PARMS *frame_parms,
                            unsigned char number_of_cards,
                            short coef);
 
-int lte_est_timing_advance_pusch(PHY_VARS_eNB* phy_vars_eNB,module_id_t UE_id);
+int lte_est_timing_advance_pusch(PHY_VARS_eNB* phy_vars_eNB,uint8_t UE_id);
 
 void lte_eNB_I0_measurements(PHY_VARS_eNB *phy_vars_eNB,
                  int subframe,
-                             module_id_t eNB_id,
+                             unsigned char eNB_id,
                              unsigned char clear);
 
 void lte_eNB_I0_measurements_emul(PHY_VARS_eNB *phy_vars_eNB,
@@ -255,8 +255,8 @@ void lte_eNB_I0_measurements_emul(PHY_VARS_eNB *phy_vars_eNB,
 
 
 void lte_eNB_srs_measurements(PHY_VARS_eNB *phy_vars_eNBy,
-                              module_id_t eNB_id,
-                              module_id_t UE_id,
+                              unsigned char eNB_id,
+                              unsigned char UE_id,
                               unsigned char init_averaging);
 
 

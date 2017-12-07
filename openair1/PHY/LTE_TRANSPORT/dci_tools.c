@@ -44,6 +44,9 @@
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/defs.h"
 
+#ifdef UE_EXPANSION_SIM2
+extern eNB_TX_PDU_INFO enb_tx_pdu_info;
+#endif
 //#define DEBUG_DCI
 
 uint32_t localRIV2alloc_LUT6[32];
@@ -801,10 +804,20 @@ void generate_RIV_tables()
 //       n_tilde_PRB(0,1) = (0,2)
 
 
+
+#ifndef UE_EXPANSION_SIM2
 int8_t find_dlsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
+#else
+int16_t find_dlsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
+#endif
 {
+#ifndef UE_EXPANSION_SIM2
   uint8_t i;
   int8_t first_free_index=-1;
+#else
+  uint16_t i;
+  int16_t first_free_index=-1;
+#endif
 
   AssertFatal(eNB!=NULL,"eNB is null\n");
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
@@ -821,12 +834,19 @@ int8_t find_dlsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
     eNB->dlsch[first_free_index][0]->rnti = 0;
   return first_free_index;
 }
-
+#ifndef UE_EXPANSION_SIM2
 int8_t find_ulsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
+#else
+int16_t find_ulsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
+#endif
 {
+#ifndef UE_EXPANSION_SIM2
   uint8_t i;
   int8_t first_free_index=-1;
-
+#else
+  uint16_t i;
+  int16_t first_free_index=-1;
+#endif
   AssertFatal(eNB!=NULL,"eNB is null\n");
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     AssertFatal(eNB->ulsch[i]!=NULL,"eNB->ulsch[%d] is null\n",i);
@@ -1017,6 +1037,10 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci
   int TB1_active;
   uint16_t DL_pmi_single=0; // This should be taken from DLSCH parameters for PUSCH precoding
   uint8_t I_mcs = 0;
+#ifdef UE_EXPANSION_SIM2
+  int i = 0;
+  uint32_t tatol_index = 0;
+#endif
  
   dci_alloc->firstCCE = rel8->cce_idx;
   dci_alloc->L        = rel8->aggregation_level;
@@ -1027,6 +1051,34 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci
   LOG_D(PHY,"NFAPI: DCI format %d, nCCE %d, L %d, rnti %x,harq_pid %d\n",
 	rel8->dci_format,rel8->cce_idx,rel8->aggregation_level,rel8->rnti,rel8->harq_process);
   if ((rel8->rnti_type == 2 ) && (rel8->rnti != SI_RNTI) && (rel8->rnti != P_RNTI)) dci_alloc->ra_flag = 1;
+
+#ifdef UE_EXPANSION_SIM2
+  if ((rel8->rnti_type == 2) && (rel8->rnti == SI_RNTI)) {
+    ue_rx_enb_tx_info.pdu_info[ue_rx_enb_tx_info.pdu_num].pdsch_type = PDSCH_SI;
+    for (i = 0; i < ue_rx_enb_tx_info.pdu_num; i++) {
+      tatol_index += ue_rx_enb_tx_info.pdu_info[i].pdu_length;
+    }
+    ue_rx_enb_tx_info.pdu_info[ue_rx_enb_tx_info.pdu_num].pdu_start_index = tatol_index;
+  }
+  if ((rel8->rnti_type == 2) && (rel8->rnti == P_RNTI)) {
+    ue_rx_enb_tx_info.pdu_info[ue_rx_enb_tx_info.pdu_num].pdsch_type = PDSCH_P;
+    for (i = 0; i < ue_rx_enb_tx_info.pdu_num; i++) {
+      tatol_index += ue_rx_enb_tx_info.pdu_info[i].pdu_length;
+    }
+    ue_rx_enb_tx_info.pdu_info[ue_rx_enb_tx_info.pdu_num].pdu_start_index = tatol_index;
+  }
+  if ((rel8->rnti_type == 2) && (dci_alloc->ra_flag == 1)) {
+    ue_rx_enb_tx_info.pdu_info[ue_rx_enb_tx_info.pdu_num].pdsch_type = PDSCH_RA;
+    for (i = 0; i < ue_rx_enb_tx_info.pdu_num; i++) {
+      tatol_index += ue_rx_enb_tx_info.pdu_info[i].pdu_length;
+    }
+    ue_rx_enb_tx_info.pdu_info[ue_rx_enb_tx_info.pdu_num].pdu_start_index = tatol_index;
+  }
+  if (rel8->rnti_type == 1) {
+    memset(&enb_tx_pdu_info,0,sizeof(eNB_TX_PDU_INFO));
+    enb_tx_pdu_info.rnti = rel8->rnti;
+  }
+#endif
 
   UE_id = find_dlsch(rel8->rnti,eNB,SEARCH_EXIST_OR_FREE);
   AssertFatal(UE_id!=-1,"no free or exiting dlsch_context\n");

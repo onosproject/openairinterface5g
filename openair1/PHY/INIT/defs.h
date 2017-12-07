@@ -133,7 +133,7 @@ void phy_config_sib1_eNB(module_id_t    Mod_id,
 @param tdd_Config TDD UL/DL and S-subframe configurations
 @param SIwindowsize Size of a SI window in frames where repetitions of a unique System Information message block is repeated
 @param SIperiod Periodicity of System Information Messages (in multiples of a frame)*/
-void phy_config_sib1_ue(module_id_t   Mod_id,
+void phy_config_sib1_ue(uint8_t   Mod_id,
                         int CC_id,
                         uint8_t          CH_index,
                         TDD_Config_t *tdd_Config,
@@ -159,7 +159,7 @@ void phy_config_sib1_ue(module_id_t   Mod_id,
   @param additionalSpectrumEmission UL parameter (see 36.101)
   @param mbsfn_SubframeConfigList MBSFN subframe configuration
  */
-void phy_config_sib2_ue(module_id_t                     Mod_id,
+void phy_config_sib2_ue(uint8_t                     Mod_id,
                         int                         CC_id,
                         uint8_t                         CH_index,
                         RadioResourceConfigCommonSIB_t  *radioResourceConfigCommon,
@@ -178,7 +178,7 @@ void phy_config_sib2_ue(module_id_t                     Mod_id,
   @param mobilityControlInfo pointer to the mobility control information for handover
   @param ho_failed flag to indicated whether the ho was successful or not
  */
-void phy_config_afterHO_ue(module_id_t Mod_id,
+void phy_config_afterHO_ue(uint8_t Mod_id,
                            uint8_t CC_id,
                            uint8_t eNB_index,
                            MobilityControlInfo_t *mobilityControlInfo,
@@ -219,7 +219,7 @@ void phy_config_sib2_eNB(module_id_t                            Mod_id,
 @param physicalConfigDedicated PHY Configuration information
 
  */
-void phy_config_dedicated_ue(module_id_t Mod_id,
+void phy_config_dedicated_ue(uint8_t Mod_id,
                              int CC_id,
                              uint8_t CH_index,
                              struct PhysicalConfigDedicated *physicalConfigDedicated);
@@ -235,7 +235,7 @@ void phy_config_dedicated_ue(module_id_t Mod_id,
 @param max_harq_tx max harq tx information
 
  */
-void phy_config_harq_ue(module_id_t Mod_id,int CC_id,uint8_t CH_index,
+void phy_config_harq_ue(uint8_t Mod_id,int CC_id,uint8_t CH_index,
                            uint16_t max_harq_tx);
 /**
 \brief Configure UE MBSFN common parameters.
@@ -247,7 +247,7 @@ void phy_config_harq_ue(module_id_t Mod_id,int CC_id,uint8_t CH_index,
 @param mbsfn_AreaId_r9 MBSFN-Area Id
  */
 
-void phy_config_sib13_ue(module_id_t Mod_id,
+void phy_config_sib13_ue(uint8_t Mod_id,
                          int CC_id,uint8_t CH_index,int mbsfn_Area_idx,
                          long mbsfn_AreaId_r9);
 
@@ -259,7 +259,7 @@ void phy_config_sib13_ue(module_id_t Mod_id,
 @param mbsfn_Area_idx Index of MBSFN-Area for which this command operates
 @param mbsfn_AreaId_r9 MBSFN-Area Id
  */
-void phy_config_sib13_eNB(module_id_t Mod_id,
+void phy_config_sib13_eNB(uint8_t Mod_id,
                           int CC_id,
                           int mbsfn_Area_idx,
                           long mbsfn_AreaId_r9);
@@ -282,7 +282,7 @@ void  phy_config_cba_rnti (module_id_t Mod_id,int CC_id,eNB_flag_t eNB_flag, uin
 @param n_adj_cells Number of adjacent cells on which to perform the measuremnts
 @param adj_cell_id Array of cell ids of adjacent cells
  */
-void phy_config_meas_ue(module_id_t Mod_id,
+void phy_config_meas_ue(uint8_t Mod_id,
                         uint8_t CC_id,
                         uint8_t eNB_index,
                         uint8_t n_adj_cells,

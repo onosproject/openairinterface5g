@@ -142,11 +142,18 @@ char eNB_functions[6][20]={"eNodeB_3GPP","eNodeB_3GPP_BBU","NGFI_RAU_IF4p5","NGF
 char eNB_timing[2][20]={"synch_to_ext_device","synch_to_other"};
 char ru_if_types[MAX_RU_IF_TYPES][20]={"local RF","IF5 RRU","IF5 Mobipass","IF4p5 RRU","IF1pp RRU"};
 #endif
-
+#ifndef UE_EXPANSION_SIM2
 /// lookup table for unscrambling in RX
 int16_t unscrambling_lut[65536*16] __attribute__((aligned(32)));
 /// lookup table for scrambling in TX
 uint8_t scrambling_lut[65536*16] __attribute__((aligned(32)));
-
+#endif
+#ifdef UE_EXPANSION_SIM2
+/// DL Data from eNB to UE
+eNB_TX_INFO ue_rx_enb_tx_info = {0};
+eNB_TX_PDU_INFO enb_tx_pdu_info = {0};
+eNB_RX_RECEIVE_INFO enb_rx_receive_info[10];  // subframe
+UE_TX_INFO ue_tx_info[RX_NB_TH][NUMBER_OF_UE_MAX];
+#endif
 
 #endif /*__PHY_VARS_H__ */

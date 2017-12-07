@@ -112,7 +112,11 @@ eNB_DLSCH_INFO eNB_dlsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_UE_MAX];
 
 #ifdef OPENAIR2
 unsigned char NB_eNB_INST = 0;
+#ifndef UE_EXPANSION_SIM2
 unsigned char NB_UE_INST = 0;
+#else
+uint16_t NB_UE_INST = 0;
+#endif
 unsigned char NB_RN_INST = 0;
 unsigned char NB_INST = 0;
 #endif

@@ -806,8 +806,8 @@ ue_get_mbsfn_sf_alloction(module_id_t module_idP,
 }
 
 int
-ue_query_mch(module_id_t module_idP, uint8_t CC_id, uint32_t frameP,
-	     uint32_t subframe, uint8_t eNB_index, uint8_t * sync_area,
+ue_query_mch(uint8_t module_idP, uint8_t CC_id, uint32_t frameP,
+	     sub_frame_t subframe, uint8_t eNB_index, uint8_t * sync_area,
 	     uint8_t * mcch_active)
 {
 
@@ -2830,7 +2830,6 @@ locate_BsrIndexByBufferSize(const uint32_t * table, int size, int value)
     } else {
 	return jl + 1;		//equally  ju
     }
-
 }
 
 int get_sf_periodicBSRTimer(uint8_t sf_offset)

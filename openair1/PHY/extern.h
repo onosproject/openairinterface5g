@@ -111,10 +111,10 @@ extern double beta2_dlsch[6][MCS_COUNT];
 extern char eNB_functions[6][20];
 extern char eNB_timing[2][20];
 extern char ru_if_types[MAX_RU_IF_TYPES][20];
-
+#ifndef UE_EXPANSION_SIM2
 extern int16_t unscrambling_lut[65536*16];
 extern uint8_t scrambling_lut[65536*16];
-
+#endif
 extern unsigned short msrsb_6_40[8][4];
 extern unsigned short msrsb_41_60[8][4];
 extern unsigned short msrsb_61_80[8][4];
@@ -126,6 +126,12 @@ extern unsigned short Nb_81_110[8][4];
 
 extern uint16_t hundred_times_log10_NPRB[100];
 extern uint8_t alpha_lut[8];
+
+#ifdef UE_EXPANSION_SIM2
+extern eNB_TX_INFO ue_rx_enb_tx_info;
+extern eNB_RX_RECEIVE_INFO enb_rx_receive_info[10];
+extern UE_TX_INFO ue_tx_info[RX_NB_TH][NUMBER_OF_UE_MAX];
+#endif
 
 #endif /*__PHY_EXTERN_H__ */
 

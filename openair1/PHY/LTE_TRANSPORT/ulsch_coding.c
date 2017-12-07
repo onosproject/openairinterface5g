@@ -87,6 +87,7 @@ void free_ue_ulsch(LTE_UE_ULSCH_t *ulsch)
         printf("Freeing ulsch process %d c (%p)\n",i,ulsch->harq_processes[i]->c);
 #endif
 
+#ifndef UE_EXPANSION_SIM2
         for (r=0; r<MAX_NUM_ULSCH_SEGMENTS; r++) {
 
 #ifdef DEBUG_ULSCH_FREE
@@ -98,6 +99,7 @@ void free_ue_ulsch(LTE_UE_ULSCH_t *ulsch)
             ulsch->harq_processes[i]->c[r] = NULL;
           }
         }
+#endif
 
         free16(ulsch->harq_processes[i],sizeof(LTE_UL_UE_HARQ_t));
         ulsch->harq_processes[i] = NULL;
@@ -157,7 +159,7 @@ LTE_UE_ULSCH_t *new_ue_ulsch(unsigned char N_RB_UL, uint8_t abstraction_flag)
           LOG_E(PHY,"Can't get b\n");
           exit_flag=1;
         }
-
+#ifndef UE_EXPANSION_SIM2
         if (abstraction_flag==0) {
           for (r=0; r<MAX_NUM_ULSCH_SEGMENTS; r++) {
             ulsch->harq_processes[i]->c[r] = (unsigned char*)malloc16(((r==0)?8:0) + 3+768);  // account for filler in first segment and CRCs for multiple segment case
@@ -170,6 +172,7 @@ LTE_UE_ULSCH_t *new_ue_ulsch(unsigned char N_RB_UL, uint8_t abstraction_flag)
             }
           }
         }
+#endif
 
         ulsch->harq_processes[i]->subframe_scheduling_flag = 0;
         ulsch->harq_processes[i]->first_tx = 1;
@@ -180,10 +183,12 @@ LTE_UE_ULSCH_t *new_ue_ulsch(unsigned char N_RB_UL, uint8_t abstraction_flag)
     }
 
     if ((abstraction_flag == 0) && (exit_flag==0)) {
+#ifndef UE_EXPANSION_SIM2
       for (i=0; i<8; i++)
         for (j=0; j<96; j++)
           for (r=0; r<MAX_NUM_ULSCH_SEGMENTS; r++)
             ulsch->harq_processes[i]->d[r][j] = LTE_NULL;
+#endif
 
       return(ulsch);
     } else if (abstraction_flag==1)
@@ -207,7 +212,7 @@ uint32_t ulsch_encoding(uint8_t *a,
                         uint8_t control_only_flag,
                         uint8_t Nbundled)
 {
-
+#ifndef UE_EXPANSION_SIM2
   time_stats_t *seg_stats=&ue->ulsch_segmentation_stats;
   time_stats_t *rm_stats=&ue->ulsch_rate_matching_stats;
   time_stats_t *te_stats=&ue->ulsch_turbo_encoding_stats;
@@ -950,6 +955,7 @@ uint32_t ulsch_encoding(uint8_t *a,
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_ULSCH_ENCODING, VCD_FUNCTION_OUT);
+#endif
   return(0);
 }
 

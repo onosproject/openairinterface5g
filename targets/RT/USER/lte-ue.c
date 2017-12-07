@@ -56,11 +56,25 @@
 
 #include "T.h"
 
+#ifdef UE_EXPANSION_SIM2
+#include "common/utils/udp/udp_com.h"
+#endif
+
 extern double cpuf;
 
 #define FRAME_PERIOD    100000000ULL
 #define DAQ_PERIOD      66667ULL
 #define FIFO_PRIORITY   40
+
+#ifdef UE_EXPANSION_SIM2
+extern long TTI;
+
+volatile int start_time_flag = 0;
+struct timespec enb_start_time = { .tv_sec = 0, .tv_nsec = 0 };
+void* UE_time_sync(void *arg);
+static void* UE_phy_rev(void* arg);
+static void* UE_phy_send(void* param);
+#endif
 
 typedef enum {
     pss=0,
@@ -74,6 +88,27 @@ void init_UE(int nb_inst,int,int);
 
 int32_t **rxdata;
 int32_t **txdata;
+
+#ifdef UE_EXPANSION_SIM2
+UE_RX_RECEIVE_INFO ue_rx_receive_info[10];
+
+int ue_sd_c;
+int ue_sd_s;
+extern int udp_socket_ip_enb;
+extern int udp_socket_port_enb;
+extern int udp_socket_ip_ue;
+extern int udp_socket_port_ue;
+
+int instance_cnt_send[RX_NB_TH] = {-1,-1};
+
+extern pthread_mutex_t mutex_send[RX_NB_TH];
+extern pthread_cond_t cond_send[RX_NB_TH];
+
+extern pthread_cond_t cond_rxtx[RX_NB_TH];
+/// mutex for RXn-TXnp4 processing thread
+extern pthread_mutex_t mutex_rxtx[RX_NB_TH];
+
+#endif
 
 #define KHz (1000UL)
 #define MHz (1000*KHz)
@@ -210,6 +245,15 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in) {
 
   LOG_I(PHY,"UE : Calling Layer 2 for initialization\n");
     
+#ifdef UE_EXPANSION_SIM2
+  uecap_xer_in=0;
+
+  pthread_cond_init(&cond_rxtx[0],NULL);
+  pthread_cond_init(&cond_rxtx[1],NULL);
+  pthread_mutex_init(&mutex_rxtx[0], NULL);
+  pthread_mutex_init(&mutex_rxtx[1], NULL);
+
+#endif
   l2_init_ue(eMBMS_active,(uecap_xer_in==1)?uecap_xer:NULL,
 	     0,// cba_group_active
 	     0); // HO flag
@@ -217,27 +261,43 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in) {
   for (inst=0;inst<nb_inst;inst++) {
 
     LOG_I(PHY,"Initializing memory for UE instance %d (%p)\n",inst,PHY_vars_UE_g[inst]);
+#ifndef UE_EXPANSION_SIM2
     PHY_vars_UE_g[inst][0] = init_ue_vars(NULL,inst,0);
+#endif
 
     LOG_I(PHY,"Intializing UE Threads for instance %d (%p,%p)...\n",inst,PHY_vars_UE_g[inst],PHY_vars_UE_g[inst][0]);
     init_UE_threads(inst);
-    UE = PHY_vars_UE_g[inst][0];
 
+    UE = PHY_vars_UE_g[inst][0];
+#ifndef UE_EXPANSION_SIM2
     if (oaisim_flag == 0) {
       ret = openair0_device_load(&(UE->rfdevice), &openair0_cfg[0]);
       if (ret !=0){
 	exit_fun("Error loading device library");
       }
     }
+
     UE->rfdevice.host_type = RAU_HOST;
     //    UE->rfdevice.type      = NONE_DEV;
     PHY_VARS_UE *UE = PHY_vars_UE_g[inst][0];
-    AssertFatal(0 == pthread_create(&UE->proc.pthread_ue,
-                                    &UE->proc.attr_ue,
-                                    UE_thread,
-                                    (void*)UE), "");
+#else
+#ifdef NAS_UE
+    MessageDef *message_p;
+    message_p = itti_alloc_new_message(TASK_NAS_UE, INITIALIZE_MESSAGE);
+    itti_send_msg_to_task (TASK_NAS_UE, UE->Mod_id + NB_eNB_INST, message_p);
+#endif
+#endif
   }
 
+#ifdef UE_EXPANSION_SIM2
+    pthread_mutex_init(&mutex_send, NULL);
+    pthread_cond_init(&cond_send, NULL);
+
+    pthread_create(&PHY_vars_UE_g[0][0]->proc.pthread_phy_send, NULL, UE_phy_send, (void*)PHY_vars_UE_g[0][0]);
+    pthread_create(&PHY_vars_UE_g[0][0]->proc.pthread_time, NULL, UE_time_sync,(void*)NULL);
+    pthread_create(&PHY_vars_UE_g[0][0]->proc.pthread_phy_stub, NULL, UE_phy_rev, (void*)NULL);
+
+#endif
   printf("UE threads created by %ld\n", gettid());
 #if 0
 #if defined(ENABLE_USE_MME)
@@ -586,6 +646,20 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                 threadname);
 
     while (!oai_exit) {
+          // most of the time, the thread is waiting here
+#ifdef UE_EXPANSION_SIM2
+        if (pthread_mutex_lock(&mutex_rxtx[proc->sub_frame_start]) != 0){
+          LOG_E( PHY, "[SCHED][UE] error locking mutex for RXn_TXnp4\n" );
+          exit_fun("nothing to add");
+        }
+
+        pthread_cond_wait(&cond_rxtx[proc->sub_frame_start],&mutex_rxtx[proc->sub_frame_start]) ;
+
+        if (pthread_mutex_unlock(&mutex_rxtx[proc->sub_frame_start]) != 0) {
+          LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXn_TXnp4\n" );
+          exit_fun("nothing to add");
+        }
+#else
         if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
           LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
           exit_fun("nothing to add");
@@ -598,12 +672,23 @@ static void *UE_thread_rxn_txnp4(void *arg) {
           LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXn_TXnp4\n" );
           exit_fun("nothing to add");
         }
+#endif
+
 
         initRefTimes(t2);
         initRefTimes(t3);
         pickTime(current);
         updateTimes(proc->gotIQs, &t2, 10000, "Delay to wake up UE_Thread_Rx (case 2)");
 
+#ifdef UE_EXPANSION_SIM2
+        if (UE->Mod_id != 0) {
+          proc->frame_rx = PHY_vars_UE_g[0][UE->CC_id]->proc.proc_rxtx[proc->sub_frame_start].frame_rx;
+          proc->subframe_rx = PHY_vars_UE_g[0][UE->CC_id]->proc.proc_rxtx[proc->sub_frame_start].subframe_rx;
+          proc->frame_tx = PHY_vars_UE_g[0][UE->CC_id]->proc.proc_rxtx[proc->sub_frame_start].frame_tx;
+          proc->subframe_tx = PHY_vars_UE_g[0][UE->CC_id]->proc.proc_rxtx[proc->sub_frame_start].subframe_tx;
+        }
+        if(UE->UE_mode[0] >= PRACH){
+#endif
         // Process Rx data for one sub-frame
         lte_subframe_t sf_type = subframe_select( &UE->frame_parms, proc->subframe_rx);
         if ((sf_type == SF_DL) ||
@@ -626,10 +711,100 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                        (sf_type==SF_UL? "SF_UL" :
                         (sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
             }
+#ifndef UE_EXPANSION_SIM2
 #ifdef UE_SLOT_PARALLELISATION
             phy_procedures_slot_parallelization_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
 #else
             phy_procedures_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
+#endif
+#else
+            //DLSCH RX
+            UE_RX_RECEIVE_INFO*    rx_info = &ue_rx_receive_info[proc->subframe_rx];
+            //ULSCH ACK
+            if (is_phich_subframe(&UE->frame_parms,proc->subframe_rx)) {
+                uint8_t harq_pid = phich_subframe_to_harq_pid(&UE->frame_parms,proc->frame_rx,proc->subframe_rx);
+                if (UE->ulsch[0]->harq_processes[harq_pid]->status == ACTIVE) {
+                    UE->ulsch[0]->harq_processes[harq_pid]->status                   = SCH_IDLE;
+                	UE->ulsch[0]->harq_processes[harq_pid]->round                    = 0;
+                	UE->ulsch[0]->harq_processes[harq_pid]->subframe_scheduling_flag = 0;
+                	UE->ulsch_Msg3_active[0] = 0;
+                }
+            }
+            //DCI
+            for(int i = 0;i< rx_info->dci_num;i++){
+                //SI DCI
+                if((rx_info->dci_alloc[i].format == format1A) && (rx_info->dci_alloc[i].rnti == SI_RNTI)){
+                    for(int j = 0;j<rx_info->pdu_num;j++){
+                        if(rx_info->pdu_info[j].pdsch_type == PDSCH_SI){
+                          ue_decode_si(UE->Mod_id,
+                                       UE->CC_id,
+                                       proc->frame_rx,
+                                       0,
+                                       &rx_info->pdu_buffer[rx_info->pdu_info[j].pdu_start_index],
+                                       rx_info->pdu_info[j].pdu_length);
+                          break;
+                        }
+                    }
+                }else if((rx_info->dci_alloc[i].format == format1A) && (rx_info->dci_alloc[i].rnti == P_RNTI)){  //P DCI
+                    for(int j = 0;j<rx_info->pdu_num;j++){
+                        if(rx_info->pdu_info[j].pdsch_type == PDSCH_P){
+                          ue_decode_p(UE->Mod_id,
+                                       UE->CC_id,
+                                       proc->frame_rx,
+                                       0,
+                                       &rx_info->pdu_buffer[rx_info->pdu_info[j].pdu_start_index],
+                                       rx_info->pdu_info[j].pdu_length);
+                          break;
+                        }
+                    }
+                }else if((UE->UE_mode[0] == PRACH) && (UE->prach_resources[0]) &&//RA DCI
+                   (rx_info->dci_alloc[i].format == format1A) &&
+                   (rx_info->dci_alloc[i].rnti == UE->prach_resources[0]->ra_RNTI)){
+                    for(int j = 0;j<rx_info->pdu_num;j++){
+                        if(rx_info->pdu_info[j].pdsch_type == PDSCH_RA){
+                          memcpy(UE->dlsch_ra[0]->harq_processes[0]->b,
+                                   &rx_info->pdu_buffer[rx_info->pdu_info[j].pdu_start_index],
+                                   rx_info->pdu_info[j].pdu_length);
+                          process_rar(UE,proc,0,UE->mode,0);
+                          break;
+                        }
+                    }
+                }else if((UE->UE_mode[0] > PRACH) &&  //DLSCH DCI
+                   (rx_info->dci_alloc[i].rnti == UE->pdcch_vars[UE->current_thread_id[proc->subframe_rx]][0]->crnti) &&
+                   (rx_info->dci_alloc[i].format != format0)){
+                    for(int j = 0;j<rx_info->ue_num;j++){
+                        if(rx_info->ue_rx_info[j].rnti == rx_info->dci_alloc[i].rnti){
+                          ue_send_sdu(UE->Mod_id,
+                                UE->CC_id,
+                                proc->frame_rx,
+                                proc->subframe_rx,
+                                &rx_info->ue_rx_info[j].pdu_buffer[0],
+                                rx_info->ue_rx_info[j].pdu_length,
+                                0);
+                          break;
+                        }
+                    }
+                }else if((UE->UE_mode[0] > PRACH) &&  //ULSCH DCI
+                   (rx_info->dci_alloc[i].rnti == UE->pdcch_vars[UE->current_thread_id[proc->subframe_rx]][0]->crnti) &&
+                   (rx_info->dci_alloc[i].format == format0)){
+                    if (generate_ue_ulsch_params_from_dci(
+                                (void *)&rx_info->dci_alloc[i].dci_pdu,
+                                 UE->pdcch_vars[UE->current_thread_id[proc->subframe_rx]][0]->crnti,
+                                 proc->subframe_rx,
+                                 format0,
+                                 UE,
+                                 proc,
+                                 SI_RNTI,
+                                 0,
+                                 P_RNTI,
+                                 CBA_RNTI,
+                                 0,
+                                 0)==0) {
+                        LOG_D(PHY,"[UE  %d] Generate UE ULSCH C_RNTI format 0 (subframe %d)\n",UE->Mod_id,proc->subframe_rx);
+                    }
+                }
+            }
+            //memset(rx_info,0,sizeof(UE_RX_RECEIVE_INFO));
 #endif
         }
 
@@ -651,6 +826,9 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                 switch (ret) {
                 case CONNECTION_LOST:
                     txt="RRC Connection lost, returning to PRACH";
+#ifdef UE_EXPANSION_SIM2
+                    UE->UE_mode[0] = PRACH;
+#endif
                     break;
                 case PHY_RESYNCH:
                     txt="RRC Connection lost, trying to resynch";
@@ -678,13 +856,21 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                 phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
 
 
+#ifndef UE_EXPANSION_SIM2
 
         if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_S) &&
                 (UE->frame_parms.frame_type == TDD))
             if (UE->mode != loop_through_memory)
                 phy_procedures_UE_S_TX(UE,0,0,no_relay);
+#else
+        }
+        ue_tx_info[proc->sub_frame_start][UE->Mod_id].flag = 1;
+#endif
         updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");
 
+
+
+#ifndef UE_EXPANSION_SIM2
         if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
           LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
           exit_fun("noting to add");
@@ -694,12 +880,164 @@ static void *UE_thread_rxn_txnp4(void *arg) {
           LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
           exit_fun("noting to add");
         }
+#endif
+
     }
 
 // thread finished
     free(arg);
     return &UE_thread_rxtx_retval;
 }
+
+#ifdef UE_EXPANSION_SIM2
+static void wait_system_ready (char *message, volatile int *start_flag) {
+
+  static char *indicator[] = {".    ", "..   ", "...  ", ".... ", ".....",
+                  " ....", "  ...", "   ..", "    .", "     "};
+  int i = 0;
+
+  while ((!oai_exit) && (*start_flag == 0)) {
+    LOG_N(EMU, message, indicator[i]);
+    fflush(stdout);
+    i = (i + 1) % (sizeof(indicator) / sizeof(indicator[0]));
+    usleep(10000);
+  }
+
+  LOG_D(EMU,"\n");
+}
+void* UE_time_sync(void *arg){
+    static __thread int UE_time_sync_retval;
+
+    //PHY_VARS_UE *UE = (PHY_VARS_UE*) arg;
+    long n;
+    uint16_t  frame;
+    uint8_t   subframe;
+    uint8_t next_ue_start = 0;
+    struct timespec now_time,req_time;
+    struct timespec tti_time = { .tv_sec = 0, .tv_nsec = 0 };
+    struct timespec rem_time = { .tv_sec = 0, .tv_nsec = 0 };
+    char threadname[16];
+    long int diff_sec,diff_nsec,usleep_time;
+    int inst;
+    uint8_t CC_id;
+    int ue_inst = 0;
+
+    volatile uint8_t thread_idx = 0;
+    sprintf(threadname,"UE_time_sync");
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+
+    if ( threads.iq != -1 )
+      CPU_SET(threads.iq, &cpuset);
+    init_thread(900000,1000000 , FIFO_PRIORITY-1, &cpuset,
+                threadname);
+
+    for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
+      PHY_vars_UE_g[0][CC_id]->UE_mode[0] = PRACH;
+    }
+    for (inst = 1; inst < NB_UE_INST; inst++) {
+      for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
+        PHY_vars_UE_g[inst][CC_id]->UE_mode[0] = NOT_SYNCHED;
+      }
+    }
+    memset(&ue_tx_info[0][0], 0, sizeof(UE_TX_INFO)*NUMBER_OF_UE_MAX*RX_NB_TH);
+    wait_system_ready ("Waiting for eNB start time %s\r", &start_time_flag);
+    clock_gettime( CLOCK_REALTIME, &now_time );
+
+    diff_sec = now_time.tv_sec - enb_start_time.tv_sec;
+    diff_nsec = now_time.tv_nsec - enb_start_time.tv_nsec;
+    n = (diff_sec * 1000000000 + diff_nsec)/TTI;
+    
+    subframe = n%10;
+    frame = n/10;
+
+    tti_time.tv_nsec = enb_start_time.tv_nsec + (n*TTI)%1000000000;
+    tti_time.tv_sec  = enb_start_time.tv_sec + (n*TTI)/1000000000;
+
+    while (!oai_exit) {
+      if (ue_inst < NB_UE_INST-1 ) {
+        next_ue_start = 0;
+        for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
+          if (PHY_vars_UE_g[ue_inst][CC_id]->UE_mode[0] != PUSCH) {
+            next_ue_start = 1;
+            break;
+          }
+        }
+
+        if (next_ue_start == 0) {
+            ue_inst++;
+          for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+            PHY_vars_UE_g[ue_inst][CC_id]->UE_mode[0] = PRACH;
+          }
+        }
+      }
+
+      tti_time.tv_nsec = tti_time.tv_nsec + TTI;
+
+      if (tti_time.tv_nsec > 999999999) {
+          tti_time.tv_nsec -= 1000000000;
+          tti_time.tv_sec += 1;
+      }
+      clock_gettime( CLOCK_REALTIME, &now_time );
+
+      diff_sec = tti_time.tv_sec - now_time.tv_sec;
+      diff_nsec = tti_time.tv_nsec - now_time.tv_nsec;
+      usleep_time = diff_sec * 1000000000 + diff_nsec;
+
+      if ( usleep_time > 0 ) {
+          req_time.tv_sec = usleep_time / 1000000000;
+          req_time.tv_nsec = usleep_time % 1000000000;
+          nanosleep(&req_time,&rem_time);
+      }
+
+      if (subframe==9) {
+          subframe=0;
+          frame++;
+          frame&=1023;
+      } else {
+          subframe++;
+      }
+
+      if ((instance_cnt_send[thread_idx] < 0) || (oai_exit == 1)) {
+        for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+          PHY_vars_UE_g[0][CC_id]->proc.proc_rxtx[thread_idx].frame_rx = frame;
+          PHY_vars_UE_g[0][CC_id]->proc.proc_rxtx[thread_idx].subframe_rx = subframe;
+          PHY_vars_UE_g[0][CC_id]->proc.proc_rxtx[thread_idx].frame_tx = (frame + (subframe > 5 ? 1: 0))&1023;
+          PHY_vars_UE_g[0][CC_id]->proc.proc_rxtx[thread_idx].subframe_tx = (subframe +4)%10;
+        }
+
+        if(pthread_mutex_lock(&mutex_rxtx[thread_idx]) != 0){
+            LOG_E( MAC, "[UE] ERROR locking mutex for cond rxtx[%d] \n", thread_idx );
+            exit_fun( "ERROR pthread_mutex_lock cond_rxtx" );
+        }
+
+        pthread_cond_broadcast(&cond_rxtx[thread_idx]);
+
+        if(pthread_mutex_unlock(&mutex_rxtx[thread_idx]) != 0){
+            LOG_E( MAC, "[UE] ERROR unlocking mutex_signal for cond rxtx[%d] \n", thread_idx );
+            exit_fun( "ERROR pthread_mutex_unlock cond_rxtx" );
+        }
+
+        if (pthread_mutex_lock(&mutex_send[thread_idx])!= 0) {
+          LOG_E( MAC, "[UE] error locking MAC proc mutex for mutex send\n");
+          exit_fun("error locking mutex_send");
+        }
+        instance_cnt_send[thread_idx]++;
+        pthread_cond_signal(&cond_send[thread_idx]);
+
+        if (pthread_mutex_unlock(&mutex_send[thread_idx])!= 0) {
+          LOG_E( MAC, "[UE] error unlocking MAC proc mutex for mutex send\n");
+          exit_fun("error unlocking mutex_send");
+        }
+      }else{
+            LOG_E(PHY,"frame %d subframe %d : thread_rxn_txnp4 busy (instance_cnt_send[%d] %d UE_num %d) \n",
+        		frame,subframe,thread_idx,instance_cnt_send[thread_idx],NB_UE_INST);
+      }
+      thread_idx = (thread_idx+1)%RX_NB_TH;
+    }
+    return &UE_time_sync_retval;
+}
+#endif
 
 /*!
  * \brief This is the main UE thread.
@@ -738,10 +1076,10 @@ void *UE_thread(void *arg) {
     itti_send_msg_to_task (TASK_NAS_UE, UE->Mod_id + NB_eNB_INST, message_p);
 #endif
 
+#ifndef UE_EXPANSION_SIM2
     int sub_frame=-1;
     //int cumulated_shift=0;
 
-    
     while (!oai_exit) {
         AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
         int instance_cnt_synch = UE->proc.instance_cnt_synch;
@@ -949,8 +1287,205 @@ void *UE_thread(void *arg) {
         } // UE->is_synchronized==1
 
     } // while !oai_exit
+#endif
     return NULL;
 }
+
+#ifdef UE_EXPANSION_SIM2
+void ue_time_sync_info()
+ {
+  int header_len = sizeof(T_MSGHEAD);
+  int data_len = 0;
+  T_UDP_MSG data = {0};
+
+  data_len = header_len;
+
+  data.msgHead.msgid = STUB_ENB_TIME_SYNC;
+  data.msgHead.msgLen = data_len;
+
+  int retval = PacketWrite(ue_sd_c,
+                           &data,
+                           data_len,
+                           udp_socket_ip_enb,
+                           udp_socket_port_enb);
+  if (retval == -1) {  // error
+    LOG_E(PHY, "ue_time_sync_info notify from UE to eNB failed\n");
+    return;
+  }
+  // success
+  LOG_D(PHY, "ue_time_sync_info notify from UE to eNB successfully\n");
+}
+
+/**
+ * param arg unused
+ */
+static void* UE_phy_rev( void* arg ) {
+  static int UE_phy_stub_status;
+
+  T_UDP_MSG buffer;
+  eNB_TX_INFO *enb_tx_info_p;
+  eNB_TX_PDU_INFO *enb_tx_pdu_p;
+  int addr;
+  int port;
+  int ue_num;
+
+  // set default return value
+  UE_phy_stub_status = 0;
+
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  if ( threads.iq != -1 )
+      CPU_SET(threads.iq, &cpuset);
+  init_thread(100000, 500000, FIFO_PRIORITY-1, &cpuset,
+              "UE_phy_rev");
+
+  addr = udp_socket_ip_ue;
+  port = udp_socket_port_ue;
+
+  if (DataLinkSocket(addr, port, &ue_sd_s) == -1) {
+    LOG_E(PHY, "socket descriptor(ue_sd_s) create error\n");
+    printf("socket ue_sd_s create error\n");
+    exit(-1);
+  }
+  LOG_D(PHY, "[UE STUB] receive socket descriptor[%d]\n", ue_sd_s);
+
+  if (SendSocket(&ue_sd_c) == -1) {
+    closeSocket_fd(ue_sd_s);
+    LOG_E(PHY, "socket descriptor(ue_sd_c) create error\n");
+    printf("socket ue_sd_c create error\n");
+    exit(-1);
+  }
+  LOG_D(PHY, "[UE STUB] send socket descriptor[%d]\n", ue_sd_c);
+
+  memset(&ue_rx_receive_info[0], 0, sizeof(UE_RX_RECEIVE_INFO)*10);
+
+  ue_time_sync_info();
+
+  while (!oai_exit) {
+
+    if (oai_exit) break;
+
+    if (PacketRead(ue_sd_s, &buffer, sizeof(buffer)) > 0) {
+      switch (buffer.msgHead.msgid) {
+      case STUB_UE_RX:
+        enb_tx_info_p = (eNB_TX_INFO *)(buffer.data);
+        memcpy(&ue_rx_receive_info[enb_tx_info_p->subframe], enb_tx_info_p, sizeof(eNB_TX_INFO));
+        break;
+      case STUB_UE_RX_PDU:
+        enb_tx_pdu_p = (eNB_TX_PDU_INFO *)(buffer.data);
+        ue_num = ue_rx_receive_info[enb_tx_pdu_p->subframe].ue_num;
+        ue_rx_receive_info[enb_tx_pdu_p->subframe].ue_rx_info[ue_num].rnti = enb_tx_pdu_p->rnti;
+        ue_rx_receive_info[enb_tx_pdu_p->subframe].ue_rx_info[ue_num].pdu_length = enb_tx_pdu_p->pdu_length;
+
+        memcpy(&ue_rx_receive_info[enb_tx_pdu_p->subframe].ue_rx_info[ue_num].pdu_buffer,
+            enb_tx_pdu_p->pdu_buffer,
+            enb_tx_pdu_p->pdu_length);
+        ue_rx_receive_info[enb_tx_pdu_p->subframe].ue_num++;
+        break;
+      case STUB_UE_TIME_SYNC:
+        enb_start_time = *(struct timespec *)(buffer.data);
+        start_time_flag = 1;
+        break;
+      default:
+        LOG_E(PHY, "[UE STUB] receive unknown message(id:0x%X)\n", buffer.msgHead.msgid);
+        break;
+      }
+    }
+  }
+
+  closeSocket_fd(ue_sd_s);
+  closeSocket_fd(ue_sd_c);
+
+  LOG_I(PHY, "Exiting UE PHY STUB\n");
+
+  UE_phy_stub_status = 0;
+  return &UE_phy_stub_status;
+}
+
+static void* UE_phy_send( void* param ) {
+  static int UE_phy_send_status;
+
+  int thread_idx = *((int *)param);
+  int end_flag;
+  int inst;
+  UES_TX_INFO enb_rx_info;
+  // set default return value
+  UE_phy_send_status = 0;
+  uint8_t eNB_index = 0;
+  UE_rxtx_proc_t *proc_p = &PHY_vars_UE_g[0][0]->proc.proc_rxtx[thread_idx];
+
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  if ( threads.iq != -1 )
+      CPU_SET(threads.iq, &cpuset);
+  init_thread(100000, 500000, FIFO_PRIORITY-1, &cpuset,
+              "UE_phy_send");
+
+  while (!oai_exit) {
+
+    if (pthread_mutex_lock(&mutex_send[thread_idx]) != 0){
+      LOG_E( PHY, "[SCHED][UE] error locking mutex for phy_send\n" );
+      exit_fun("nothing to add");
+    }
+    while (instance_cnt_send[thread_idx] < 0) {
+      pthread_cond_wait(&cond_send[thread_idx], &mutex_send[thread_idx]);
+    }
+
+    if (pthread_mutex_unlock(&mutex_send[thread_idx]) != 0){
+      LOG_E( PHY, "[SCHED][UE] error unlocking mutex for phy_send\n" );
+      exit_fun("nothing to add");
+    }
+
+    memset(&enb_rx_info, 0, sizeof(enb_rx_info));
+    enb_rx_info.Mod_id = eNB_index;
+    enb_rx_info.CC_id = PHY_vars_UE_g[0][0]->CC_id;
+    enb_rx_info.frame = proc_p->frame_tx;
+    enb_rx_info.subframe = proc_p->subframe_tx;
+
+    do {
+      end_flag = 1;
+
+      for (inst = 0; inst < NB_UE_INST; inst++) {
+        if (ue_tx_info[thread_idx][inst].flag == 1) {
+          ue_tx_info[thread_idx][inst].flag = 2;
+
+          if (ue_tx_info[thread_idx][inst].sr_flag == 1) {
+            enb_rx_info.sr_rnti_list[enb_rx_info.sr_num] = ue_tx_info[thread_idx][inst].rnti;
+            enb_rx_info.sr_num++;
+          }
+
+          if (ue_tx_info[thread_idx][inst].pusch_type == MSG1_PUSCH) {
+            enb_rx_info.pusch_type = ue_tx_info[thread_idx][inst].pusch_type;
+            enb_rx_info.preamble = ue_tx_info[thread_idx][inst].preamble;
+          }
+        }
+
+        if (ue_tx_info[thread_idx][inst].flag == 0) {
+          end_flag = 0;
+        }
+      }
+    } while (end_flag == 0);
+
+    if (oai_exit) break;
+
+    if (enb_rx_info.sr_num > 0 || enb_rx_info.pusch_type == MSG1_PUSCH) {
+      ue_tx_send_info(&enb_rx_info);
+    }
+
+    memset(&ue_tx_info[thread_idx][0], 0, sizeof(UE_TX_INFO)*NUMBER_OF_UE_MAX);
+    memset(&ue_rx_receive_info[proc_p->subframe_rx],0,sizeof(UE_RX_RECEIVE_INFO));
+
+    pthread_mutex_lock(&mutex_send[thread_idx]);
+    instance_cnt_send[thread_idx]--;
+    pthread_mutex_unlock(&mutex_send[thread_idx]);
+  }
+
+  LOG_I(PHY, "Exiting UE PHY SEND\n");
+
+  UE_phy_send_status = 0;
+  return &UE_phy_send_status;
+}
+#endif
 
 /*!
  * \brief Initialize the UE theads.
@@ -1005,7 +1540,9 @@ void init_UE_threads(int inst) {
 #endif
 
     }
+#ifndef UE_EXPANSION_SIM2
     pthread_create(&UE->proc.pthread_synch,NULL,UE_thread_synch,(void*)UE);
+#endif
 }
 
 

@@ -53,7 +53,11 @@ extern LogicalChannelConfig_t SRB2_logicalChannelConfig_defaultValue;
 extern unsigned char NB_INST;
 #endif
 extern unsigned char NB_eNB_INST;
+#ifndef UE_EXPANSION_SIM2
 extern unsigned char NB_UE_INST;
+#else
+extern uint16_t NB_UE_INST;
+#endif
 extern unsigned short NODE_ID[1];
 extern void* bigphys_malloc(int);
 #endif

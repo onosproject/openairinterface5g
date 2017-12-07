@@ -4046,7 +4046,7 @@ void ue_measurement_report_triggering(protocol_ctxt_t* const ctxt_pP, const uint
 //-----------------------------------------------------------------------------
 
 static uint8_t check_trigger_meas_event(
-  module_id_t     ue_mod_idP,
+  uint8_t         ue_mod_idP,
   frame_t         frameP,
   uint8_t         eNB_index,
   uint8_t         ue_cnx_index,

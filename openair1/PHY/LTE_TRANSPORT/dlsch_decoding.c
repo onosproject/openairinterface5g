@@ -52,7 +52,7 @@ void free_ue_dlsch(LTE_UE_DLSCH_t *dlsch)
           free16(dlsch->harq_processes[i]->b,MAX_DLSCH_PAYLOAD_BYTES);
           dlsch->harq_processes[i]->b = NULL;
         }
-
+#ifndef UE_EXPANSION_SIM2
         for (r=0; r<MAX_NUM_DLSCH_SEGMENTS; r++) {
           free16(dlsch->harq_processes[i]->c[r],((r==0)?8:0) + 3+768);
           dlsch->harq_processes[i]->c[r] = NULL;
@@ -63,6 +63,7 @@ void free_ue_dlsch(LTE_UE_DLSCH_t *dlsch)
             free16(dlsch->harq_processes[i]->d[r],((3*8*6144)+12+96)*sizeof(short));
             dlsch->harq_processes[i]->d[r] = NULL;
           }
+#endif
 
         free16(dlsch->harq_processes[i],sizeof(LTE_DL_UE_HARQ_t));
         dlsch->harq_processes[i] = NULL;
@@ -123,6 +124,7 @@ LTE_UE_DLSCH_t *new_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_
         else
           exit_flag=3;
 
+#ifndef UE_EXPANSION_SIM2
         if (abstraction_flag == 0) {
           for (r=0; r<MAX_NUM_DLSCH_SEGMENTS/bw_scaling; r++) {
             dlsch->harq_processes[i]->c[r] = (uint8_t*)malloc16(((r==0)?8:0) + 3+ 768);
@@ -140,6 +142,7 @@ LTE_UE_DLSCH_t *new_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_
               exit_flag=2;
           }
         }
+#endif
       } else {
         exit_flag=1;
       }
@@ -166,7 +169,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                          uint8_t is_crnti,
                          uint8_t llr8_flag)
 {
-
+#ifndef UE_EXPANSION_SIM2
 #if UE_TIMING_TRACE
   time_stats_t *dlsch_rate_unmatching_stats=&phy_vars_ue->dlsch_rate_unmatching_stats;
   time_stats_t *dlsch_turbo_decoding_stats=&phy_vars_ue->dlsch_turbo_decoding_stats;
@@ -756,6 +759,9 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   dlsch->last_iteration_cnt = ret;
 
   return(ret);
+#else
+  return 0;
+#endif
 }
 
 #ifdef PHY_ABSTRACTION

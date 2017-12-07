@@ -68,7 +68,11 @@ extern eNB_DLSCH_INFO eNB_dlsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][NUMBER_OF_U
 extern unsigned char NB_INST;
 #endif
 extern unsigned char NB_eNB_INST;
+#ifndef UE_EXPANSION_SIM2
 extern unsigned char NB_UE_INST;
+#else
+extern uint16_t NB_UE_INST;
+#endif
 extern unsigned char NB_RN_INST;
 extern unsigned short NODE_ID[1];
 

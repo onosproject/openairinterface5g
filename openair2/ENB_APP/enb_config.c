@@ -446,6 +446,13 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
   int32_t     srb1_poll_byte                = 0;
   int32_t     srb1_max_retx_threshold       = 0;
 
+#ifdef UE_EXPANSION_SIM2
+  char*       udp_socket_ip_enb             = NULL;
+  int32_t     udp_socket_port_enb           = 0;
+  char*       udp_socket_ip_ue              = NULL;
+  int32_t     udp_socket_port_ue            = 0;
+#endif
+
   int32_t     my_int;
 
 
@@ -490,7 +497,9 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
   
   paramdef_t SRB1Params[] = SRB1PARAMS_DESC;  
 
-  
+#ifdef UE_EXPANSION_SIM2
+  paramdef_t UDPParams[] = UDPPARAMS_DESC;
+#endif
 
 
 /* get global parameters, defined outside any section in the config file */
@@ -2028,6 +2037,23 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 	      rrc->srb1_poll_byte             = PollByte_kBinfinity;
 	      rrc->srb1_max_retx_threshold    = UL_AM_RLC__maxRetxThreshold_t8;
 	    }
+#ifdef UE_EXPANSION_SIM2
+        char udppath[MAX_OPTNAME_SIZE*3 + 8];
+        sprintf(udppath,"%s.%s",enbpath,ENB_CONFIG_STRING_UDP);
+        int unpar = config_get( UDPParams,sizeof(UDPParams)/sizeof(paramdef_t), udppath);
+        if (unpar == sizeof(UDPParams)/sizeof(paramdef_t)) {
+          if (udp_socket_ip_enb) {
+            IPV4_STR_ADDR_TO_INT_NWBO ( udp_socket_ip_enb, rrc->udp_socket_ip_enb, "BAD IP ADDRESS FORMAT FOR eNB UDP !\n" );
+          }
+          rrc->udp_socket_port_enb = udp_socket_port_enb;
+          if (udp_socket_ip_ue) {
+            IPV4_STR_ADDR_TO_INT_NWBO ( udp_socket_ip_ue, rrc->udp_socket_ip_ue, "BAD IP ADDRESS FORMAT FOR UE UDP !\n" );
+          }
+          rrc->udp_socket_port_ue = udp_socket_port_ue;
+        } else {
+          // set default value
+        }
+#endif
 	    /*
 	    // Network Controller 
 	    subsetting = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_NETWORK_CONTROLLER_CONFIG);

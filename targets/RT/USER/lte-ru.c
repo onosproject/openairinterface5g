@@ -1356,7 +1356,13 @@ static void* ru_thread( void* param ) {
 
   LOG_I(PHY,"Starting RU %d (%s,%s),\n",ru->idx,eNB_functions[ru->function],eNB_timing[ru->if_timing]);
 
-
+#ifdef UE_EXPANSION_SIM2
+  PHY_VARS_eNB *eNB0;
+  eNB0  = ru->eNB_list[0];
+  eNB0->proc.instance_cnt_time = -1;
+  proc->frame_rx = 1023;
+  proc->subframe_rx = 9;
+#endif
   // Start IF device if any
   if (ru->start_if) {
     LOG_I(PHY,"Starting IF interface for RU %d\n",ru->idx);
@@ -1365,6 +1371,7 @@ static void* ru_thread( void* param ) {
     else ret = attach_rru(ru);
     AssertFatal(ret==0,"Cannot connect to radio\n");
   }
+#ifndef UE_EXPANSION_SIM2
   if (ru->if_south == LOCAL_RF) { // configure RF parameters only 
         fill_rf_config(ru,ru->rf_config_file);
         init_frame_parms(&ru->frame_parms,1);
@@ -1377,7 +1384,7 @@ static void* ru_thread( void* param ) {
         printf("Exiting, cannot initialize RU Buffers\n");
         exit(-1);
   }
-
+#endif
   LOG_I(PHY, "Signaling main thread that RU %d is ready\n",ru->idx);
   pthread_mutex_lock(&RC.ru_mutex);
   RC.ru_mask &= ~(1<<ru->idx);
@@ -1397,7 +1404,7 @@ static void* ru_thread( void* param ) {
   }
   else LOG_I(PHY,"RU %d no rf device\n",ru->idx);
 
-
+#ifndef UE_EXPANSION_SIM2
   // if an asnych_rxtx thread exists
   // wakeup the thread because the devices are ready at this point
  
@@ -1411,11 +1418,12 @@ static void* ru_thread( void* param ) {
 
   // if this is a slave RRU, try to synchronize on the DL frequency
   if ((ru->is_slave) && (ru->if_south == LOCAL_RF)) do_ru_synch(ru);
+#endif
 
 
   // This is a forever while loop, it loops over subframes which are scheduled by incoming samples from HW devices
   while (!oai_exit) {
-
+#ifndef UE_EXPANSION_SIM2
     // these are local subframe/frame counters to check that we are in synch with the fronthaul timing.
     // They are set on the first rx/tx in the underly FH routines.
     if (subframe==9) { 
@@ -1444,21 +1452,39 @@ static void* ru_thread( void* param ) {
 #ifdef Rel14
     else if ((ru->do_prach>0) && (is_prach_subframe(fp, proc->frame_rx, proc->subframe_rx)>1)) wakeup_prach_ru_br(ru);
 #endif
-
+#endif  // end #ifndef UE_EXPANSION_SIM2
     // adjust for timing offset between RU
     if (ru->idx!=0) proc->frame_tx = (proc->frame_tx+proc->frame_offset)&1023;
 
-
+#ifndef UE_EXPANSION_SIM2
     // do RX front-end processing (frequency-shift, dft) if needed
     if (ru->feprx) ru->feprx(ru);
 
     // At this point, all information for subframe has been received on FH interface
     // If this proc is to provide synchronization, do so
     wakeup_slaves(proc);
+#endif
+#ifdef UE_EXPANSION_SIM2
+    pthread_mutex_lock(&eNB0->proc.mutex_time );
+    if (eNB0->proc.instance_cnt_time < 0) {
+      pthread_cond_wait(&eNB0->proc.cond_time, &eNB0->proc.mutex_time);
+    }
+    pthread_mutex_unlock(&eNB0->proc.mutex_time);
 
+    if (proc->subframe_rx == 9) {
+      proc->subframe_rx = 0;
+      proc->frame_rx=(proc->frame_rx+1)&1023;
+    } else {
+      proc->subframe_rx++;
+    }
+#endif
     // wakeup all eNB processes waiting for this RU
     if (ru->num_eNB>0) wakeup_eNBs(ru);
-
+#ifdef UE_EXPANSION_SIM2
+    pthread_mutex_lock(&eNB0->proc.mutex_time );
+    eNB0->proc.instance_cnt_time--;
+    pthread_mutex_unlock(&eNB0->proc.mutex_time);
+#else
     // wait until eNBs are finished subframe RX n and TX n+4
     wait_on_condition(&proc->mutex_eNBs,&proc->cond_eNBs,&proc->instance_cnt_eNBs,"ru_thread");
 
@@ -1472,7 +1498,7 @@ static void* ru_thread( void* param ) {
     if ((ru->fh_north_asynch_in == NULL) && (ru->fh_south_out)) ru->fh_south_out(ru);
  
     if (ru->fh_north_out) ru->fh_north_out(ru);
-
+#endif
   }
   
 
@@ -1662,11 +1688,12 @@ void init_RU_proc(RU_t *ru) {
     pthread_setname_np( proc->pthread_FH, name );
     
   }
-
-  if (get_nprocs()>=2) { 
-    if (ru->feprx) init_fep_thread(ru,NULL); 
+#ifndef UE_EXPANSION_SIM2
+  if (get_nprocs()>=2) {
+    if (ru->feprx) init_fep_thread(ru,NULL);
     if (ru->feptx_ofdm) init_feptx_thread(ru,NULL);
-  } 
+  }
+#endif
   if (opp_enabled == 1) pthread_create(&ru->ru_stats_thread,NULL,ru_stats_thread,(void*)ru); 
   
 }
@@ -1956,17 +1983,29 @@ void init_RU(char *rf_config_file) {
       }
       else if (ru->function == eNodeB_3GPP) {  
 	ru->do_prach             = 0;                       // no prach processing in RU            
+#ifdef UE_EXPANSION_SIM2
+	ru->feprx                = NULL;                // RX DFTs
+	ru->feptx_ofdm           = NULL;              // this is fep with idft and precoding
+	ru->feptx_prec           = NULL;
+#else
 	ru->feprx                = (get_nprocs()<=2) ? fep_full : ru_fep_full_2thread;                // RX DFTs
 	ru->feptx_ofdm           = (get_nprocs()<=2) ? feptx_ofdm : feptx_ofdm_2thread;              // this is fep with idft and precoding
 	ru->feptx_prec           = feptx_prec;              // this is fep with idft and precoding
+#endif
 	ru->fh_north_in          = NULL;                    // no incoming fronthaul from north
 	ru->fh_north_out         = NULL;                    // no outgoing fronthaul to north
 	ru->start_if             = NULL;                    // no if interface
 	ru->rfdevice.host_type   = RAU_HOST;
       }
+#ifdef UE_EXPANSION_SIM2
+      ru->fh_south_in            = NULL;                               // local synchronous RF RX
+      ru->fh_south_out           = NULL;                               // local synchronous RF TX
+      ru->start_rf               = NULL;                            // need to start the local RF interface
+#else
       ru->fh_south_in            = rx_rf;                               // local synchronous RF RX
       ru->fh_south_out           = tx_rf;                               // local synchronous RF TX
       ru->start_rf               = start_rf;                            // need to start the local RF interface
+#endif
       printf("configuring ru_id %d (start_rf %p)\n",ru_id,start_rf);
 /*
       if (ru->function == eNodeB_3GPP) { // configure RF parameters only for 3GPP eNodeB, we need to get them from RAU otherwise

@@ -843,7 +843,7 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
                              uint8_t llr8_flag)
 {
 
-
+#ifndef UE_EXPANSION_SIM2
   int16_t *ulsch_llr = eNB->pusch_vars[UE_id]->llr;
   LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
   LTE_eNB_ULSCH_t *ulsch = eNB->ulsch[UE_id];
@@ -1580,6 +1580,9 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_ULSCH_DECODING0+harq_pid,0);
 
   return(ret);
+#else
+  return 0;
+#endif
 }
 
 #ifdef PHY_ABSTRACTION

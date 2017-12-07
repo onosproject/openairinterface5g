@@ -242,6 +242,7 @@ add_boolean_option(UE_DEBUG_TRACE      False "Activate UE debug trace")
 add_boolean_option(UE_TIMING_TRACE     False "Activate UE timing trace")
 add_boolean_option(DISABLE_LOG_X       False "Deactivate all LOG_* macros")
 add_boolean_option(USRP_REC_PLAY       False "Enable USRP record playback mode")
+add_boolean_option(UE_EXPANSION_SIM2   False "UE EXPANSION SIM2")
 
 add_boolean_option(DEBUG_CONSOLE False "makes debugging easier, disables stdout/stderr buffering")
 
@@ -261,6 +262,14 @@ if (${ENABLE_ITTI})
   set(ITTI_LIB ITTI)
   set(GTPU_need_ITTI ${OPENAIR3_DIR}/GTPV1-U/gtpv1u_eNB.c)
 endif (${ENABLE_ITTI})
+
+set (UDP_DIR ${OPENAIR_DIR}/common/utils/udp)
+  add_library(UDP_L1L2
+    # add .h files if depend on (this one is generated)
+    ${UDP_DIR}/udp_com.h
+    ${UDP_DIR}/udp_com.c
+    )
+  set(UDP_LIB UDP_L1L2)
 
 add_boolean_option(RTAI False "Use RTAI")
 
@@ -1787,7 +1796,7 @@ add_executable(lte-softmodem
 
 target_link_libraries (lte-softmodem -ldl 
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
+  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} ${UDP_LIB} LFDS7
   -Wl,--end-group )
 
 target_link_libraries (lte-softmodem ${LIBXML2_LIBRARIES})
@@ -1823,7 +1832,7 @@ add_executable(lte-softmodem-nos1
   )
 target_link_libraries (lte-softmodem-nos1
   -Wl,--start-group
-  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
+  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} ${UDP_LIB} LFDS7
   -Wl,--end-group )
 
 target_link_libraries (lte-softmodem-nos1 ${LIBXML2_LIBRARIES})
@@ -1915,7 +1924,7 @@ add_executable(oaisim
 target_include_directories(oaisim PUBLIC  ${OPENAIR_TARGETS}/SIMU/USER)
 target_link_libraries (oaisim
   -Wl,-ldl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB GTPV1U SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} LIB_NAS_UE SIMU SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
+  RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB GTPV1U SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} LIB_NAS_UE SIMU SECU_OSA ${ITTI_LIB}  ${MIH_LIB} ${UDP_LIB}
   -Wl,--end-group )
 
 target_link_libraries (oaisim ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})
@@ -1936,6 +1945,7 @@ add_executable(oaisim_nos1
   ${OPENAIR_BIN_DIR}/messages_xml.h
   ${OPENAIR_TARGETS}/RT/USER/lte-ue.c
   ${OPENAIR_TARGETS}/RT/USER/lte-ru.c
+  ${OPENAIR_TARGETS}/RT/USER/lte-enb.c
   ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
   ${OPENAIR_TARGETS}/SIMU/USER/channel_sim.c
   ${OPENAIR_TARGETS}/SIMU/USER/init_lte.c
@@ -1958,7 +1968,7 @@ add_executable(oaisim_nos1
 target_include_directories(oaisim_nos1 PUBLIC  ${OPENAIR_TARGETS}/SIMU/USER)
 target_link_libraries (oaisim_nos1
   -Wl,--start-group
-  RRC_LIB X2AP_LIB SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} SIMU SECU_OSA ${ITTI_LIB}  ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
+  RRC_LIB X2AP_LIB SECU_CN UTIL HASHTABLE SCHED_LIB PHY LFDS ${MSC_LIB} L2 ${RAL_LIB} SIMU SECU_OSA ${ITTI_LIB}  ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} ${UDP_LIB} LFDS7
   -Wl,--end-group )
 
 target_link_libraries (oaisim_nos1 ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})
@@ -2105,6 +2115,7 @@ endforeach()
 # we can't use cXX standard as pthread_rwlock_t is gnu standard
 list(APPEND itti_compiler_options "-std=gnu89")
 set (ITTI_H ${ITTI_DIR}/intertask_interface_types.h)
+set (UDP_H ${UDP_DIR}/udp_com.h)
 if(EXISTS /usr/bin/gccxml)
    set(xml_command gccxml ${itti_compiler_options} -fxml=${OPENAIR_BIN_DIR}/messages.xml ${ITTI_H})
 else()

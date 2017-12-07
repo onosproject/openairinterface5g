@@ -65,7 +65,6 @@ void schedule_RA(module_id_t module_idP, frame_t frameP,
 */
 void schedule_SI(module_id_t module_idP, frame_t frameP,
 		 sub_frame_t subframeP);
-
 /** \brief MBMS scheduling: Checking the position for MBSFN subframes. Create MSI, transfer MCCH from RRC to MAC, transfer MTCHs from RLC to MAC. Multiplexing MSI,MCCH&MTCHs. Return 1 if there are MBSFN data being allocated, otherwise return 0;
 @param Mod_id Instance ID of eNB
 @param frame Frame index

@@ -389,12 +389,12 @@ int8_t find_ue_ulsch(uint16_t rnti, PHY_VARS_eNB *phy_vars_eNB);
 //int32_t add_ue(int16_t rnti, PHY_VARS_eNB *phy_vars_eNB);
 //int mac_phy_remove_ue(module_id_t Mod_idP,rnti_t rnti);
 
-void process_timing_advance(module_id_t Mod_id,uint8_t CC_id,int16_t timing_advance);
+void process_timing_advance(uint8_t Mod_id,uint8_t CC_id,int16_t timing_advance);
 void process_timing_advance_rar(PHY_VARS_UE *phy_vars_ue,UE_rxtx_proc_t *proc,uint16_t timing_advance);
 
 unsigned int get_tx_amp(int power_dBm, int power_max_dBm, int N_RB_UL, int nb_rb);
 
-void phy_reset_ue(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
+void phy_reset_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
 
 /*! \brief This function retrives the resource (n1_pucch) corresponding to a PDSCH transmission in
 subframe n-4 which is acknowledged in subframe n (for FDD) according to n1_pucch = Ncce + N1_pucch.  For
@@ -503,9 +503,12 @@ LTE_DL_FRAME_PARMS *get_lte_frame_parms(module_id_t Mod_id, uint8_t CC_id);
 MU_MIMO_mode* get_mu_mimo_mode (module_id_t Mod_id, uint8_t CC_id, rnti_t rnti);
 
 int16_t get_hundred_times_delta_IF(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t harq_pid);
-
+#ifndef UE_EXPANSION_SIM2
 int16_t get_hundred_times_delta_IF_eNB(PHY_VARS_eNB *phy_vars_eNB,uint8_t UE_id,uint8_t harq_pid, uint8_t bw_factor);
+#else
+int16_t get_hundred_times_delta_IF_eNB(PHY_VARS_eNB *phy_vars_eNB,uint16_t UE_id,uint8_t harq_pid, uint8_t bw_factor);
 
+#endif
 int16_t get_hundred_times_delta_IF_mac(module_id_t module_idP, uint8_t CC_id, rnti_t rnti, uint8_t harq_pid);
 
 int16_t get_target_pusch_rx_power(module_id_t module_idP, uint8_t CC_id);
@@ -524,6 +527,10 @@ int is_srs_occasion_common(LTE_DL_FRAME_PARMS *frame_parms,int frame_tx,int subf
 
 void compute_srs_pos(lte_frame_type_t frameType,uint16_t isrs,uint16_t *psrsPeriodicity,uint16_t *psrsOffset);
 
+#ifdef UE_EXPANSION_SIM2
+void ue_tx_send_info(UES_TX_INFO *ulsch_info);
+void ue_tx_pdu_send_info(UE_TX_PDU_INFO *ue_tx_pdu_info);
+#endif
 /*@}*/
 
 

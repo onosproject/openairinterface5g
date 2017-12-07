@@ -394,7 +394,11 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   int subframe=proc->subframe_tx;
   uint32_t i,aa;
   uint8_t harq_pid;
+#ifndef UE_EXPANSION_SIM2
   int8_t UE_id=0;
+#else
+  int16_t UE_id=0;
+#endif
   uint8_t num_pdcch_symbols=0;
   uint8_t num_dci=0;
   uint8_t ul_subframe;
@@ -813,7 +817,17 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       switch (uci->type) {
       case SR:
       case HARQ_SR:
-		
+#ifdef UE_EXPANSION_SIM2
+      {
+    	  eNB_RX_RECEIVE_INFO *enb_rx_info = &enb_rx_receive_info[proc->subframe_rx];
+          for (int j=0; j < enb_rx_info->sr_num; j++) {
+              if (uci->rnti == enb_rx_info->sr_rnti_list[j]) {
+                  SR_payload = 1;
+                  break;
+              }
+          }
+      }
+#else
 	metric_SR = rx_pucch(eNB,
 			      uci->pucch_fmt,
 			      i,
@@ -831,13 +845,14 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	      subframe,
 	      SR_payload,
 	      uci->n_pucch_1_0_sr[0]);
-	if (uci->type == SR) {
-	  if (SR_payload == 1) {
-	    fill_sr_indication(eNB,uci->rnti,frame,subframe,metric_SR);
-	    return;
-	  }
+#endif
+    if (uci->type == SR) {
+      if (SR_payload == 1) {
+        fill_sr_indication(eNB,uci->rnti,frame,subframe,metric_SR);
+        continue;
+      }
 	  else {
-	    return;
+        continue;
 	  }
 	}
       case HARQ:
@@ -847,7 +862,7 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 		uci->pucch_fmt,uci->type,
 		uci->frame,uci->subframe,uci->n_pucch_1[0][0],
 		SR_payload);
-	  
+#ifndef UE_EXPANSION_SIM2
 	  metric[0] = rx_pucch(eNB,
 			       uci->pucch_fmt,
 			       i,
@@ -858,8 +873,14 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 			       frame,
 			       subframe,
 			       PUCCH1a_THRES);
-	  
-	  
+#endif
+#ifdef UE_EXPANSION_SIM2
+    if (SR_payload == 1) fill_sr_indication(eNB,uci->rnti,frame,subframe,metric_SR);
+
+    // ACK
+    pucch_b0b1[0][0] = 1;
+    pucch_b0b1[0][1] = 1;
+#else
 	  /* cancel SR detection if reception on n1_pucch0 is better than on SR PUCCH resource index, otherwise send it up to MAC */
 	  if (uci->type==HARQ_SR && metric[0] > metric_SR) SR_payload = 0;
 	  else if (SR_payload == 1) fill_sr_indication(eNB,uci->rnti,frame,subframe,metric_SR);
@@ -879,7 +900,7 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 			       subframe,
 			       PUCCH1a_THRES);
 	  }
-	  
+#endif
 
 	  LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d pucch1a (FDD) payload %d (metric %d)\n",
 		eNB->Mod_id,
@@ -1286,7 +1307,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
             (ulsch_harq->frame == frame) &&
             (ulsch_harq->subframe == subframe) &&
         (ulsch_harq->handled == 0)) {
-
+#ifndef UE_EXPANSION_SIM2
       // UE has ULSCH scheduling
       for (int rb=0;
            rb<=ulsch_harq->nb_rb;
@@ -1366,7 +1387,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                   ulsch_harq,
                                   ulsch->rnti);
       }
-
+#endif
       if (ret == (1+MAX_TURBO_ITERATIONS)) {
         T(T_ENB_PHY_ULSCH_UE_NACK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(ulsch->rnti),
           T_INT(harq_pid));
@@ -1438,7 +1459,13 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 #endif
       }  // ulsch not in error
 
-      if (ulsch_harq->O_ACK>0) fill_ulsch_harq_indication(eNB,ulsch_harq,ulsch->rnti,frame,subframe,ulsch->bundling);
+      if (ulsch_harq->O_ACK>0) {
+#ifdef UE_EXPANSION_SIM2
+        for(int ack_num = 0;ack_num<ulsch_harq->O_ACK ;ack_num++)
+          ulsch_harq->o_ACK[ack_num]= 1;
+#endif
+        fill_ulsch_harq_indication(eNB,ulsch_harq,ulsch->rnti,frame,subframe,ulsch->bundling);
+      }
 
       LOG_D(PHY,"[eNB %d] Frame %d subframe %d: received ULSCH harq_pid %d for UE %d, ret = %d, CQI CRC Status %d, ACK %d,%d, ulsch_errors %d/%d\n",
             eNB->Mod_id,frame,subframe,

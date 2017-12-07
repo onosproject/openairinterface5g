@@ -545,6 +545,13 @@ typedef struct eNB_RRC_INST_s {
   int srb1_timer_reordering;
   int srb1_timer_status_prohibit;
   int srs_enable[MAX_NUM_CCs];
+
+#ifdef UE_EXPANSION_SIM2
+  int udp_socket_ip_enb;
+  int udp_socket_port_enb;
+  int udp_socket_ip_ue;
+  int udp_socket_port_ue;
+#endif
 } eNB_RRC_INST;
 
 #define MAX_UE_CAPABILITY_SIZE 255

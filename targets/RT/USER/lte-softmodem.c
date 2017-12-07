@@ -193,6 +193,22 @@ int                             otg_enabled;
 #endif
 //int                             number_of_cards =   1;
 
+#ifdef UE_EXPANSION_SIM2
+char* enb_socket_ip = NULL;
+char* ue_socket_ip  = NULL;
+int   udp_socket_ip_enb;
+int   udp_socket_port_enb;
+int   udp_socket_ip_ue;
+int   udp_socket_port_ue;
+
+long TTI = 10000000;
+pthread_mutex_t mutex_send[RX_NB_TH];
+pthread_cond_t cond_send[RX_NB_TH];
+
+pthread_cond_t cond_rxtx[RX_NB_TH];
+/// mutex for RXn-TXnp4 processing thread
+pthread_mutex_t mutex_rxtx[RX_NB_TH];
+#endif
 
 static LTE_DL_FRAME_PARMS      *frame_parms[MAX_NUM_CCs];
 uint32_t target_dl_mcs = 28; //maximum allowed mcs
@@ -312,6 +328,9 @@ void exit_fun(const char* s)
 {
   int CC_id;
   int ru_id;
+#ifdef UE_EXPANSION_SIM2
+  int inst;
+#endif
 
   if (s != NULL) {
     printf("%s %s() Exiting OAI softmodem: %s\n",__FILE__, __FUNCTION__, s);
@@ -335,8 +354,15 @@ void exit_fun(const char* s)
     for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       if (UE_flag == 0) {
       } else {
+#ifdef UE_EXPANSION_SIM2
+        for (inst = 0; inst < NB_UE_INST; inst++) {
+          if (PHY_vars_UE_g[inst][CC_id]->rfdevice.trx_end_func)
+            PHY_vars_UE_g[inst][CC_id]->rfdevice.trx_end_func(&PHY_vars_UE_g[0][CC_id]->rfdevice);
+        }
+#else
 	if (PHY_vars_UE_g[0][CC_id]->rfdevice.trx_end_func)
 	  PHY_vars_UE_g[0][CC_id]->rfdevice.trx_end_func(&PHY_vars_UE_g[0][CC_id]->rfdevice);
+#endif
       }
     }
 
@@ -662,8 +688,16 @@ static void get_options(void) {
 	rx_gain[0][CC_id] = rx_gain[0][0];
 	tx_gain[0][CC_id] = tx_gain[0][0];
       }
-  } /* UE_flag > 0 */
 
+#ifdef UE_EXPANSION_SIM2
+      if (enb_socket_ip) {
+        IPV4_STR_ADDR_TO_INT_NWBO ( enb_socket_ip, udp_socket_ip_enb, "BAD IP ADDRESS FORMAT FOR eNB UDP !\n" );
+      }
+      if (ue_socket_ip) {
+        IPV4_STR_ADDR_TO_INT_NWBO ( ue_socket_ip, udp_socket_ip_ue, "BAD IP ADDRESS FORMAT FOR UE UDP !\n" );
+      }
+#endif
+  } /* UE_flag > 0 */
 #if T_TRACER
   paramdef_t cmdline_ttraceparams[] =CMDLINE_TTRACEPARAMS_DESC ;
   config_process_cmdline( cmdline_ttraceparams,sizeof(cmdline_ttraceparams)/sizeof(paramdef_t),NULL);   
@@ -889,6 +923,10 @@ int main( int argc, char **argv )
   int ret;
 #endif
 
+#ifdef UE_EXPANSION_SIM2
+  int inst = 0;
+#endif
+
   start_background_system();
   if ( load_configmodule(argc,argv) == NULL) {
     exit_fun("[SOFTMODEM] Error, configuration module init failed\n");
@@ -902,7 +940,9 @@ int main( int argc, char **argv )
   PHY_VARS_UE *UE[MAX_NUM_CCs];
 
   mode = normal_txrx;
+#ifndef UE_EXPANSION_SIM2
   memset(&openair0_cfg[0],0,sizeof(openair0_config_t)*MAX_CARDS);
+#endif
 
   memset(tx_max_power,0,sizeof(int)*MAX_NUM_CCs);
 
@@ -1024,24 +1064,31 @@ int main( int argc, char **argv )
     }
   }
 
+  if (UE_flag==1) {
+#ifdef UE_EXPANSION_SIM2
+    NB_INST=1;
+    PHY_vars_UE_g = malloc(NB_UE_INST * sizeof(PHY_VARS_UE**));
+    for(inst = 0; inst < NB_UE_INST; inst++) {
+      PHY_vars_UE_g[inst] = malloc(sizeof(PHY_VARS_UE*) * MAX_NUM_CCs);
+      for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+        PHY_vars_UE_g[inst][CC_id] = init_ue_vars(frame_parms[CC_id], inst, abstraction_flag);
+        UE[CC_id] = PHY_vars_UE_g[inst][CC_id];
+        printf("PHY_vars_UE_g[%d][%d] = %p\n", inst, CC_id, UE[CC_id]);
 
-
-
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-
-
-    if (UE_flag==1) {     
-      NB_UE_INST=1;     
+#else
+    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+      NB_UE_INST=1;
       NB_INST=1;     
-      PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**));     
+      PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**));
+
       PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
-      
-      
-      
+
       PHY_vars_UE_g[0][CC_id] = init_ue_vars(frame_parms[CC_id], 0,abstraction_flag);
       UE[CC_id] = PHY_vars_UE_g[0][CC_id];
       printf("PHY_vars_UE_g[0][%d] = %p\n",CC_id,UE[CC_id]);
       
+#endif
+
       if (phy_test==1)
 	UE[CC_id]->mac_enabled = 0;
       else 
@@ -1085,8 +1132,10 @@ int main( int argc, char **argv )
 	else if (frame_parms[CC_id]->N_RB_DL == 25)
 	  UE[CC_id]->N_TA_offset = 624/4;
       }
-    init_openair0();      
-    }
+#ifdef UE_EXPANSION_SIM2
+        }
+#endif
+      }
 
   }
 
@@ -1219,22 +1268,36 @@ int main( int argc, char **argv )
   rt_sleep_ns(10*100000000ULL);
   
   
+  
+  
   // start the main threads
   if (UE_flag == 1) {
     int eMBMS_active = 0;
+#ifdef UE_EXPANSION_SIM2
+    init_UE(NB_UE_INST,eMBMS_active,uecap_xer_in);
+#else
     init_UE(1,eMBMS_active,uecap_xer_in);
+#endif
+    number_of_cards = 1;
 
     if (phy_test==0) {
-      printf("Filling UE band info\n");
-      fill_ue_band_info();
-      dl_phy_sync_success (0, 0, 0, 1);
+        printf("Filling UE band info\n");
+        fill_ue_band_info();
+#ifdef UE_EXPANSION_SIM2
+        for (inst=0;inst<NB_UE_INST;inst++) {
+          dl_phy_sync_success (inst, 0, 0, 1);
+        }
+#else
+        dl_phy_sync_success (0, 0, 0, 1);
+#endif
     }
 
-    number_of_cards = 1;
+#ifndef UE_EXPANSION_SIM2
     for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       PHY_vars_UE_g[0][CC_id]->rf_map.card=0;
       PHY_vars_UE_g[0][CC_id]->rf_map.chain=CC_id+chain_offset;
     }
+#endif
   }
   else { 
     number_of_cards = 1;    
@@ -1262,7 +1325,7 @@ int main( int argc, char **argv )
     
   }
   
-  
+#ifndef UE_EXPANSION_SIM2
   // connect the TX/RX buffers
   if (UE_flag==1) {
     
@@ -1281,7 +1344,6 @@ int main( int argc, char **argv )
     }
     
     
-    
     if (input_fd) {
       printf("Reading in from file to antenna buffer %d\n",0);
       if (fread(UE[0]->common_vars.rxdata[0],
@@ -1298,7 +1360,8 @@ int main( int argc, char **argv )
     
     
   }
-  
+#endif
+
   
   
   
@@ -1371,8 +1434,27 @@ int main( int argc, char **argv )
 
   // *** Handle per CC_id openair0
   if (UE_flag==1) {
+#ifdef UE_EXPANSION_SIM2
+    pthread_cond_destroy(&cond_rxtx[0]);
+    pthread_cond_destroy(&cond_rxtx[1]);
+    pthread_cond_destroy(&cond_send[0]);
+    pthread_cond_destroy(&cond_send[1]);
+
+    pthread_mutex_destroy(&mutex_rxtx[0]);
+    pthread_mutex_destroy(&mutex_rxtx[1]);
+    pthread_mutex_destroy(&mutex_send[0]);
+    pthread_mutex_destroy(&mutex_send[1]);
+
+
+    int inst;
+    for (inst = 0; inst < NB_UE_INST; inst++) {
+      if (PHY_vars_UE_g[inst][0]->rfdevice.trx_end_func)
+        PHY_vars_UE_g[inst][0]->rfdevice.trx_end_func(&PHY_vars_UE_g[0][CC_id]->rfdevice);
+    }
+#else
     if (PHY_vars_UE_g[0][0]->rfdevice.trx_end_func)
       PHY_vars_UE_g[0][0]->rfdevice.trx_end_func(&PHY_vars_UE_g[0][0]->rfdevice);
+#endif
   }
   else {
     for(ru_id=0; ru_id<NB_RU; ru_id++) {

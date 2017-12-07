@@ -474,6 +474,27 @@ static int DEFENBS[] = {0};
 }
 /*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
+/* UDP configuration parameters section name */
+#define ENB_CONFIG_STRING_UDP                                           "udp_socket_conf"
+
+/* UDP configuration parameters names   */
+#define ENB_CONFIG_STRING_UDP_SOCKET_IP_ENB                             "udp_socket_ip_enb"
+#define ENB_CONFIG_STRING_UDP_SOCKET_PORT_ENB                           "udp_socket_port_enb"
+#define ENB_CONFIG_STRING_UDP_SOCKET_IP_UE                              "udp_socket_ip_ue"
+#define ENB_CONFIG_STRING_UDP_SOCKET_PORT_UE                            "udp_socket_port_ue"
+
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*                                            UDP configuration parameters                                                                                  */
+/*   optname                                          helpstr   paramflags    XXXptr                             defXXXval         type           numelt     */
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+#define UDPPARAMS_DESC {                                                                                                \
+{ENB_CONFIG_STRING_UDP_SOCKET_IP_ENB,                  NULL,   0,            strptr:&udp_socket_ip_enb,          defstrval:NULL,   TYPE_STRING,    0},       \
+{ENB_CONFIG_STRING_UDP_SOCKET_PORT_ENB,                NULL,   0,            iptr:&udp_socket_port_enb,          defintval:0,      TYPE_UINT,      0},       \
+{ENB_CONFIG_STRING_UDP_SOCKET_IP_UE,                   NULL,   0,            strptr:&udp_socket_ip_ue,           defstrval:NULL,   TYPE_STRING,    0},       \
+{ENB_CONFIG_STRING_UDP_SOCKET_PORT_UE,                 NULL,   0,            iptr:&udp_socket_port_ue,           defintval:0,      TYPE_UINT,      0}        \
+}
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
 /* MME configuration parameters section name */
 #define ENB_CONFIG_STRING_MME_IP_ADDRESS                "mme_ip_address"
 

@@ -556,7 +556,26 @@ typedef struct eNB_proc_t_s {
   te_params tep;
   /// set of scheduling variables RXn-TXnp4 threads
   eNB_rxtx_proc_t proc_rxtx[2];
+#ifdef UE_EXPANSION_SIM2
+  /// pthread attributes for phy_stub processing thread
+  pthread_attr_t attr_phy_stub;
+  /// pthread attributes for time processing thread
+  pthread_attr_t attr_time;
+  /// pthread structure for time thread
+  pthread_t pthread_time_sync;
+  /// pthread structure for phy_stub thread
+  pthread_t pthread_phy_stub;
+
+
+  /// condition variable for time processing thread
+  pthread_cond_t cond_time;
+  /// mutex for time thread
+  pthread_mutex_t mutex_time;
+
+  int instance_cnt_time;
+#endif
 } eNB_proc_t;
+
 
 
 /// Context data structure for RX/TX portion of subframe processing
@@ -644,6 +663,22 @@ typedef struct {
   pthread_cond_t cond_synch;
   /// mutex for UE synch thread
   pthread_mutex_t mutex_synch;
+#ifdef UE_EXPANSION_SIM2
+  /// pthread attributes for phy_stub processing thread
+  pthread_attr_t attr_phy_stub;
+  /// pthread descriptor phy_stub thread
+  pthread_t pthread_phy_stub;
+
+  /// pthread descriptor UE time thread
+  pthread_t pthread_time;
+  /// pthread attributes for UE time processing thread
+  pthread_attr_t attr_time;
+
+  /// pthread descriptor phy_send thread
+  pthread_t pthread_phy_send;
+  /// pthread attributes for phy_send processing thread
+  pthread_attr_t attr_phy_send;
+#endif
   /// instance count for eNBs
   int instance_cnt_eNBs;
   /// set of scheduling variables RXn-TXnp4 threads
@@ -1537,6 +1572,162 @@ typedef struct RRU_config_s {
   int emtc_prach_ConfigIndex[MAX_BANDS_PER_RRU][4];
 #endif
 } RRU_config_t;
+
+#ifdef UE_EXPANSION_SIM2
+typedef enum {
+  PDSCH_NULL= 0,
+  PDSCH_SI,
+  PDSCH_RA,
+  PDSCH_P,
+} PDSCH_TYPE;
+
+enum STUB_MSG_ID {
+  STUB_ENB_RX=0,
+  STUB_ENB_RX_PDU,
+  STUB_ENB_TIME_SYNC,
+  STUB_UE_RX,
+  STUB_UE_RX_PDU,
+  STUB_UE_TIME_SYNC
+};
+
+typedef struct PDU_INFO_s {
+  PDSCH_TYPE  pdsch_type;
+  uint16_t    pdu_start_index;
+  uint16_t    pdu_length;
+}DLSCH_PDU_INFO;
+
+typedef struct UE_RX_INFO_s {
+  /// Allocated CRNTI for UE
+  rnti_t        rnti;
+  uint8_t       pdu_buffer[9422];
+  uint16_t      pdu_length;
+} UE_RX_INFO;
+
+typedef struct eNB_TX_INFO_s {
+  module_id_t    Mod_id;
+  uint8_t        CC_id;
+  frame_t        frame;
+  sub_frame_t    subframe;
+  uint8_t        dci_num;
+  DCI_ALLOC_t    dci_alloc[32];
+  uint8_t        pdu_num;
+  DLSCH_PDU_INFO pdu_info[3];
+  uint8_t        pdu_buffer[300];
+}eNB_TX_INFO;
+
+typedef struct eNB_TX_PDU_INFO_s {
+  module_id_t    Mod_id;
+  uint8_t        CC_id;
+  frame_t        frame;
+  sub_frame_t    subframe;
+  rnti_t         rnti;
+  uint8_t        pdu_buffer[9422];
+  uint16_t       pdu_length;
+} eNB_TX_PDU_INFO;
+
+typedef enum {
+  PUSCH_NULL= 0,
+  MSG1_PUSCH,
+  MSG3_PUSCH,
+  UL_PUSCH,
+} PUSCH_t;
+
+typedef struct eNB_RX_INFO_s {
+  /// Allocated CRNTI for UE
+  rnti_t        rnti;
+  PUSCH_t       pusch_type;
+  uint8_t       preamble;
+  uint8_t       pdu_length;
+  uint8_t       rx_pdu[9422];
+} eNB_RX_INFO;
+
+
+
+typedef struct UE_TX_PDU_INFO_s {
+  /// Module ID indicator for this instance
+  module_id_t     Mod_id;
+  /// Component Carrier index
+  uint8_t         CC_id;
+  /// subframe to act upon for reception
+  frame_t         frame;
+  /// subframe to act upon for transmission
+  sub_frame_t     subframe;
+  rnti_t          rnti;
+  PUSCH_t         pusch_type;
+  uint8_t         pdu_length;
+  uint8_t         rx_pdu[5744];
+} UE_TX_PDU_INFO;
+
+
+typedef struct UE_TX_INFO_s {
+  uint8_t       flag ;
+  rnti_t        rnti;
+  uint8_t       sr_flag;
+  PUSCH_t       pusch_type;
+  uint8_t       preamble;
+} UE_TX_INFO;
+
+typedef struct UES_TX_INFO_s {
+  /// Module ID indicator for this instance
+  module_id_t     Mod_id;
+  /// Component Carrier index
+  uint8_t         CC_id;
+  /// subframe to act upon for reception
+  frame_t         frame;
+  /// subframe to act upon for transmission
+  sub_frame_t     subframe;
+  ///sr num
+  uint16_t        sr_num;
+  /// sr ue rnit
+  rnti_t          sr_rnti_list[26];
+  // MSG1 flag
+  PUSCH_t        pusch_type;
+  // MSG1 Preamble
+  uint8_t         preamble;
+} UES_TX_INFO;
+
+typedef struct UE_RX_RECEIVE_INFO_s {
+  /// Module ID indicator for this instance
+  module_id_t    Mod_id;
+  /// Component Carrier index
+  uint8_t        CC_id;
+  /// subframe to act upon for reception
+  frame_t        frame;
+  /// subframe to act upon for transmission
+  sub_frame_t    subframe;
+  /// DCI num
+  uint8_t        dci_num;
+  /// DCI
+  DCI_ALLOC_t    dci_alloc[32];
+  //SI Paging RAR
+  uint8_t        pdu_num;
+  DLSCH_PDU_INFO pdu_info[3];
+  uint8_t        pdu_buffer[300];
+  /// ue_num
+  uint16_t       ue_num;
+  /// DLSCH info
+  UE_RX_INFO     ue_rx_info[20];
+} UE_RX_RECEIVE_INFO;
+
+typedef struct eNB_RX_RECEIVE_INFO_s {
+  /// Module ID indicator for this instance
+  module_id_t     Mod_id;
+  /// Component Carrier index
+  uint8_t         CC_id;
+  /// subframe to act upon for reception
+  frame_t         frame;
+  /// subframe to act upon for transmission
+  sub_frame_t     subframe;
+  ///sr num
+  uint16_t        sr_num;
+  /// sr ue rnit
+  rnti_t          sr_rnti_list[26];
+  /// ue_num
+  uint16_t        ue_num;
+  // ULSCH info
+  eNB_RX_INFO     ulsch_info[20];
+} eNB_RX_RECEIVE_INFO;
+#endif
 
 
 static inline void wait_sync(char *thread_name) {

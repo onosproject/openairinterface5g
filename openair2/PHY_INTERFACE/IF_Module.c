@@ -5,7 +5,16 @@
 #include "LAYER2/MAC/proto.h"
 #include "common/ran_context.h"
 
+#ifdef UE_EXPANSION_SIM2
+#include "common/utils/udp/udp_com.h"
+#endif
+
 #define MAX_IF_MODULES 100
+
+#ifdef UE_EXPANSION_SIM2
+extern int enb_sd_c;
+extern int enb_sd_s;
+#endif
 
 IF_Module_t *if_inst[MAX_IF_MODULES];
 Sched_Rsp_t Sched_INFO[MAX_IF_MODULES][MAX_NUM_CCs];
@@ -525,6 +534,42 @@ void UL_indication(UL_IND_t *UL_info)
 		module_id,
 		CC_id);
     ifi->schedule_response(sched_info);
+
+#ifdef UE_EXPANSION_SIM2
+    // only one module and one CC_id is supported
+    int header_len = sizeof(T_MSGHEAD);
+    int data_len = 0;
+    T_UDP_MSG data = {0};
+    eNB_TX_INFO *tx_pdu_p = (eNB_TX_INFO *)(data.data);
+    tx_pdu_p->Mod_id = module_id;
+    tx_pdu_p->CC_id = CC_id;
+    tx_pdu_p->frame = sched_info->frame;
+    tx_pdu_p->subframe = sched_info->subframe;
+    tx_pdu_p->dci_num = RC.eNB[module_id][CC_id]->pdcch_vars[sched_info->subframe&1].num_dci;
+    if (tx_pdu_p->dci_num > 0) {
+      memcpy(tx_pdu_p->dci_alloc, RC.eNB[module_id][CC_id]->pdcch_vars[sched_info->subframe&1].dci_alloc, sizeof(DCI_ALLOC_t)*32);
+      tx_pdu_p->pdu_num = ue_rx_enb_tx_info.pdu_num;
+      if(tx_pdu_p->pdu_num > 0){
+          memcpy(tx_pdu_p->pdu_buffer, &ue_rx_enb_tx_info.pdu_buffer,300);
+          memcpy(tx_pdu_p->pdu_info, &ue_rx_enb_tx_info.pdu_info,sizeof(DLSCH_PDU_INFO)*3);
+      }
+
+      data_len = header_len + sizeof(eNB_TX_INFO);
+      data.msgHead.msgid = STUB_UE_RX;
+      data.msgHead.msgLen = data_len;
+      int retval = PacketWrite(enb_sd_c,
+                               &data,
+                               data_len,
+                               RC.rrc[module_id]->udp_socket_ip_ue,
+                               RC.rrc[module_id]->udp_socket_port_ue);
+      if (retval == -1) {  // error
+        LOG_D(PHY,"Schedule_response: frame %d, subframe %d (dl_pdus %d / %p) error\n",sched_info->frame,sched_info->subframe,sched_info->DL_req->dl_config_request_body.number_pdu,
+            &sched_info->DL_req->dl_config_request_body.number_pdu);
+        return;
+      }
+      memset(&ue_rx_enb_tx_info,0,sizeof(eNB_TX_INFO));
+    }
+#endif
 
     LOG_D(PHY,"Schedule_response: frame %d, subframe %d (dl_pdus %d / %p)\n",sched_info->frame,sched_info->subframe,sched_info->DL_req->dl_config_request_body.number_pdu,
 	  &sched_info->DL_req->dl_config_request_body.number_pdu);

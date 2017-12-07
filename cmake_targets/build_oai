@@ -68,6 +68,7 @@ UE_TIMING_TRACE="False"
 DISABLE_LOG_X="False"
 USRP_REC_PLAY="False"
 BUILD_ECLIPSE=0
+UE_EXPANSION_SIM2="False"
 trap handle_ctrl_c INT
 
 function print_help() {
@@ -161,6 +162,8 @@ Options
    Build eclipse project files. Paths are auto corrected by fixprj.sh
 --usrp-recplay
    Build for I/Q record-playback modes
+--ues-sim
+   Enable UE Expansion SIM2
 Usage (first build):
  oaisim (eNB + UE): ./build_oai -I  --oaisim -x --install-system-files
  Eurecom EXMIMO + COTS UE : ./build_oai -I  --eNB -x --install-system-files
@@ -335,6 +338,10 @@ function main() {
         --ue-timing)
             UE_TIMING_TRACE="True"
             echo_info "Enabling UE timing trace"
+            shift 1;;
+        --ues-sim)
+            UE_EXPANSION_SIM2="True"
+            echo_info "Enabling UE Expansion SIM2"
             shift 1;;
         --disable-log)
             DISABLE_LOG_X="True"
@@ -548,6 +555,7 @@ function main() {
     echo "set (UE_TIMING_TRACE $UE_TIMING_TRACE)"        >>  $cmake_file
     echo "set (DISABLE_LOG_X $DISABLE_LOG_X)"        >>  $cmake_file
     echo "set (USRP_REC_PLAY $USRP_REC_PLAY)"        >>  $cmake_file
+    echo "set (UE_EXPANSION_SIM2 $UE_EXPANSION_SIM2)"    >> $cmake_file
     if [ "$UE" = 1 -a "$NOS1" = "0" ] ; then
      echo_info "Compiling UE S1 build : enabling Linux and NETLINK"
      echo "set (LINUX True )"              >>  $cmake_file
@@ -701,6 +709,7 @@ function main() {
     echo "set ( RRC_ASN1_VERSION \"${REL}\")" >>  $cmake_file
     echo "set ( ENABLE_VCD_FIFO $VCD_TIMING )" >>  $cmake_file
     echo "set ( T_TRACER $T_TRACER )"          >>  $cmake_file
+    echo "set (UE_EXPANSION_SIM2 $UE_EXPANSION_SIM2)"    >> $cmake_file
     echo 'include(${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)' >> $cmake_file
     [ "$CLEAN" = "1" ] && rm -rf $DIR/$oaisim_build_dir/build
     mkdir -p $DIR/$oaisim_build_dir/build

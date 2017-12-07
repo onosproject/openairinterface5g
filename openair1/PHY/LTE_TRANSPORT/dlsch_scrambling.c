@@ -224,7 +224,7 @@ void dlsch_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
     s = lte_gold_scram(&x1, &x2, 0);
   }
 }
-
+#ifndef UE_EXPANSION_SIM2
 void init_unscrambling_lut() {
 
   uint32_t s;
@@ -248,3 +248,4 @@ void init_scrambling_lut() {
     }
   }
 }
+#endif
