@@ -1706,7 +1706,7 @@ typedef struct UE_RX_RECEIVE_INFO_s {
   /// ue_num
   uint16_t       ue_num;
   /// DLSCH info
-  UE_RX_INFO     ue_rx_info[20];
+  UE_RX_INFO     ue_rx_info[25];
 } UE_RX_RECEIVE_INFO;
 
 typedef struct eNB_RX_RECEIVE_INFO_s {
@@ -1725,7 +1725,7 @@ typedef struct eNB_RX_RECEIVE_INFO_s {
   /// ue_num
   uint16_t        ue_num;
   // ULSCH info
-  eNB_RX_INFO     ulsch_info[20];
+  eNB_RX_INFO     ulsch_info[35];
 } eNB_RX_RECEIVE_INFO;
 #endif
 

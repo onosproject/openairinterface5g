@@ -280,6 +280,10 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in) {
     UE->rfdevice.host_type = RAU_HOST;
     //    UE->rfdevice.type      = NONE_DEV;
     PHY_VARS_UE *UE = PHY_vars_UE_g[inst][0];
+   AssertFatal(0 == pthread_create(&UE->proc.pthread_ue,
+                                    &UE->proc.attr_ue,
+                                    UE_thread,
+                                    (void*)UE), "");
 #else
 #ifdef NAS_UE
     MessageDef *message_p;
@@ -290,13 +294,17 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in) {
   }
 
 #ifdef UE_EXPANSION_SIM2
-    pthread_mutex_init(&mutex_send, NULL);
-    pthread_cond_init(&cond_send, NULL);
+  pthread_mutex_init(&mutex_send[0], NULL);
+  pthread_mutex_init(&mutex_send[1], NULL);
+  pthread_cond_init(&cond_send[0], NULL);
+  pthread_cond_init(&cond_send[1], NULL);
 
-    pthread_create(&PHY_vars_UE_g[0][0]->proc.pthread_phy_send, NULL, UE_phy_send, (void*)PHY_vars_UE_g[0][0]);
-    pthread_create(&PHY_vars_UE_g[0][0]->proc.pthread_time, NULL, UE_time_sync,(void*)NULL);
-    pthread_create(&PHY_vars_UE_g[0][0]->proc.pthread_phy_stub, NULL, UE_phy_rev, (void*)NULL);
-
+  for(inst=0;inst<RX_NB_TH;inst++){
+    pthread_create(&PHY_vars_UE_g[0][0]->proc.pthread_phy_send, NULL, UE_phy_send, (void*)&inst);
+    usleep(1000);
+  }
+  pthread_create(&PHY_vars_UE_g[0][0]->proc.pthread_time, NULL, UE_time_sync,(void*)NULL);
+  pthread_create(&PHY_vars_UE_g[0][0]->proc.pthread_phy_stub, NULL, UE_phy_rev, (void*)NULL);
 #endif
   printf("UE threads created by %ld\n", gettid());
 #if 0
