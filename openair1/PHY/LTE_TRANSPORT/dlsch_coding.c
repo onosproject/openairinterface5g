@@ -665,18 +665,27 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       printf("mod_order %d\n",mod_order);
 #endif
 
+      double rate = 0.33;
 
 #ifdef DEBUG_DLSCH_CODING
       printf("Encoding ... iind %d f1 %d, f2 %d\n",iind,f1f2mat_old[iind*2],f1f2mat_old[(iind*2)+1]);
 #endif
       start_meas(te_stats);
-      threegpplte_turbo_encoder(dlsch->harq_processes[harq_pid]->c[r],
+      /*threegpplte_turbo_encoder(dlsch->harq_processes[harq_pid]->c[r],
                                 Kr>>3,
                                 &dlsch->harq_processes[harq_pid]->d[r][96],
                                 (r==0) ? dlsch->harq_processes[harq_pid]->F : 0,
                                 f1f2mat_old[iind*2],   // f1 (see 36121-820, page 14)
                                 f1f2mat_old[(iind*2)+1]  // f2 (see 36121-820, page 14)
-                               );
+                               );*/
+      printf("start ldpc encoder\n");
+      printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
+
+      dlsch->harq_processes[harq_pid]->d[r][96] = ldpc_encoder_header((short *)dlsch->harq_processes[harq_pid]->c[r],dlsch->harq_processes[harq_pid]->B,rate);
+
+      printf("end ldpc encoder\n");
+      printf("output %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->d[r][96], dlsch->harq_processes[harq_pid]->d[r][96+1], dlsch->harq_processes[harq_pid]->d[r][96+2],dlsch->harq_processes[harq_pid]->d[r][96+3], dlsch->harq_processes[harq_pid]->d[r][96+4]);
+
       stop_meas(te_stats);
 #ifdef DEBUG_DLSCH_CODING
 

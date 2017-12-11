@@ -492,6 +492,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
     PHY_VARS_UE    *UE   = rtd->UE;
     int ret;
 
+    //proc->counter_decoder = 0;
     proc->instance_cnt_rxtx=-1;
     proc->subframe_rx=proc->sub_frame_start;
 
@@ -658,6 +659,9 @@ void *UE_thread(void *arg) {
     int i;
     char threadname[128];
     int th_id;
+    UE->proc.proc_rxtx[0].counter_decoder = 0;
+    UE->proc.proc_rxtx[1].counter_decoder = 0;
+    UE->proc.proc_rxtx[2].counter_decoder = 0;
 
     static uint8_t thread_idx = 0;
 

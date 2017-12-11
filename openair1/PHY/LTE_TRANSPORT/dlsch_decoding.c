@@ -37,7 +37,13 @@
 #include "SCHED/extern.h"
 #include "SIMULATION/TOOLS/defs.h"
 #include "targets/RT/USER/lte-softmodem.h"
+#include "PHY/CODING/nrLDPC_types.h"
 //#define DEBUG_DLSCH_DECODING
+
+#define OAI_LDPC_MAX_NUM_LLR 26112 // NR_LDPC_NCOL_BG1*NR_LDPC_ZMAX
+
+static int8_t llrRes    [OAI_LDPC_MAX_NUM_LLR] __attribute__ ((aligned(32)));
+static int8_t llrProcBuf[OAI_LDPC_MAX_NUM_LLR] __attribute__ ((aligned(32)));
 
 extern double cpuf;
 
@@ -165,6 +171,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                          uint8_t nr_tti_rx,
                          uint8_t harq_pid,
                          uint8_t is_crnti,
+						 uint8_t decoder_switch,
                          uint8_t llr8_flag)
 {
 
@@ -181,6 +188,23 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   short dummy_w[MAX_NUM_DLSCH_SEGMENTS][3*(6144+64)];
   uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0;
   uint8_t crc_type;
+  t_nrLDPC_dec_params decParams;
+  t_nrLDPC_dec_params* p_decParams = &decParams;
+  int8_t llrOut_inter;
+  int8_t* p_llrOut_inter = &llrOut_inter;
+
+        t_nrLDPC_proc_time procTime;
+        t_nrLDPC_proc_time* p_procTime =&procTime ;
+        p_procTime->llr2llrProcBuf = 0.0;
+        p_procTime->llr2CnProcBuf= 0.0;
+        p_procTime->cnProc= 0.0;
+        p_procTime->bnProcPc=0.0;
+        p_procTime->bnProc=0.0;
+        p_procTime->cn2bnProcBuf=0.0;
+        p_procTime->bn2cnProcBuf=0.0;
+        p_procTime->llrRes2llrOut=0.0;
+        p_procTime->llr2bit=0.0;
+        p_procTime->total=0.0;
 #ifdef DEBUG_DLSCH_DECODING
   uint16_t i;
 #endif
@@ -305,7 +329,13 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                      &harq_process->Kminus,
                      &harq_process->F);
     //  CLEAR LLR's HERE for first packet in process
+
   }
+
+  	  	  p_decParams->Z = 128;
+          p_decParams->BG = 2;
+          p_decParams->R = 13;
+          p_decParams->numMaxIter = 5;
 
   /*
   else {
@@ -473,6 +503,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
     */
 
     //#ifndef __AVX2__
+
 #if 1
     if (err_flag == 0) {
 /*
@@ -488,6 +519,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
         start_meas(dlsch_turbo_decoding_stats);
 #endif
       LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
+//if (decoder_switch ==0){
       ret = tc
             (&harq_process->d[r][96],
              harq_process->c[r],
@@ -503,7 +535,43 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
              &phy_vars_ue->dlsch_tc_gamma_stats,
              &phy_vars_ue->dlsch_tc_ext_stats,
              &phy_vars_ue->dlsch_tc_intl1_stats,
-             &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
+             &phy_vars_ue->dlsch_tc_intl2_stats);
+              //(is_crnti==0)?harq_pid:harq_pid+1);
+
+//}
+//else{
+
+	/*nr_segmentation(NULL,
+	                    NULL,
+	                    harq_process->B,
+	                    &harq_process->C,
+	                    &harq_process->Kplus,
+	                    &harq_process->Kminus,
+						&harq_process->Z,
+	                    &harq_process->F);
+	p_decParams->Z = harq_process->Z;*/
+	/*nrLDPC_decoder(p_decParams,
+    		  	  	 &harq_process->d[r][96],
+					 harq_process->c[r],
+					 p_procTime);}
+					 */
+
+	//__m256i *m11_128
+	//llrRes       = (__m256i *)harq_process->d[r][96];
+
+	//printf("start LDPC decoder\n");
+    /*nrLDPC_decoder(p_decParams,
+    		llrRes,
+			llrProcBuf,
+					 p_procTime);*/
+    //harq_process->c[r] = (uint8_t *) p_llrOut_inter;
+	/*printf("harq process dr %d\n",harq_process->d[r][96]);
+    nrLDPC_decoder(p_decParams,
+    		&harq_process->d[r][96],
+			harq_process->c[r],
+    					 p_procTime);*/
+//}
+
 
 #if UE_TIMING_TRACE
       stop_meas(dlsch_turbo_decoding_stats);
@@ -657,6 +725,13 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
     }
 #endif
 
+    /*printf("Segmentation: C %d r %d, dlsch_rate_unmatching_stats %5.3f dlsch_deinterleaving_stats %5.3f  dlsch_turbo_decoding_stats %5.3f \n",
+                  harq_process->C,
+                  r,
+                  dlsch_rate_unmatching_stats->p_time/(cpuf*1000.0),
+                  dlsch_deinterleaving_stats->p_time/(cpuf*1000.0),
+                  dlsch_turbo_decoding_stats->p_time/(cpuf*1000.0));*/
+
 
     if ((err_flag == 0) && (ret>=(1+dlsch->max_turbo_iterations))) {// a Code segment is in error so break;
       LOG_D(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
@@ -698,8 +773,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
     return((1+dlsch->max_turbo_iterations));
   } else {
 #if UE_DEBUG_TRACE
-      LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for nr_tti_rx %d TBS %d mcs %d nb_rb %d\n",
-           phy_vars_ue->Mod_id,nr_tti_rx,harq_process->TBS,harq_process->mcs,harq_process->nb_rb);
+      LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for nr_tti_rx %d TBS %d mcs %d nb_rb %d harq_process->round %d\n",
+           phy_vars_ue->Mod_id,nr_tti_rx,harq_process->TBS,harq_process->mcs,harq_process->nb_rb, harq_process->round);
 #endif
 
     harq_process->status = SCH_IDLE;
@@ -2225,7 +2300,7 @@ int dlsch_abstraction_MIESM(double* sinr_dB,uint8_t TM, uint32_t rb_alloc[4], ui
 }
 
 uint32_t dlsch_decoding_emul(PHY_VARS_UE *phy_vars_ue,
-                             uint8_t nr_tti_rx,
+                             uint8_t subframe,
                              PDSCH_t dlsch_id,
                              uint8_t eNB_id)
 {
@@ -2251,7 +2326,7 @@ uint32_t dlsch_decoding_emul(PHY_VARS_UE *phy_vars_ue,
     mac_xface->macphy_exit("Could not find attached eNB for DLSCH emulation");
   }
 
-  LOG_D(PHY,"[UE] dlsch_decoding_emul : nr_tti_rx %d, eNB_id %d, dlsch_id %d\n",nr_tti_rx,eNB_id2,dlsch_id);
+  LOG_D(PHY,"[UE] dlsch_decoding_emul : subframe %d, eNB_id %d, dlsch_id %d\n",subframe,eNB_id2,dlsch_id);
 
   //  printf("dlsch_eNB_ra->harq_processes[0] %p\n",PHY_vars_eNB_g[eNB_id]->dlsch_eNB_ra->harq_processes[0]);
 

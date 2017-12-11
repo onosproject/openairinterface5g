@@ -3572,7 +3572,7 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
            frame_rx,
            nr_tti_rx,
            0,
-           0,1);
+           0,0,1);
   printf("start pmch dlsch decoding\n");
 #endif
       } else { // abstraction
@@ -4007,7 +4007,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 			   frame_rx,
 			   nr_tti_rx,
 			   harq_pid,
-			   pdsch==PDSCH?1:0,
+			   pdsch==PDSCH?1:0,proc->decoder_switch,
 			   dlsch0->harq_processes[harq_pid]->TBS>256?1:0);
       printf("start cW0 dlsch decoding\n");
 #endif
@@ -4020,9 +4020,9 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
       printf("AbsSubframe %d.%d --> Turbo Decoding for CW0 %5.3f\n",
               frame_rx%1024, nr_tti_rx,(ue->dlsch_decoding_stats[ue->current_thread_id[nr_tti_rx]].p_time)/(cpuf*1000.0));
 #else
-      LOG_D(PHY, " --> Unscrambling for CW0 %5.3f\n",
+      LOG_I(PHY, " --> Unscrambling for CW0 %5.3f\n",
               (ue->dlsch_unscrambling_stats.p_time)/(cpuf*1000.0));
-      LOG_D(PHY, "AbsSubframe %d.%d --> Turbo Decoding for CW0 %5.3f\n",
+      LOG_I(PHY, "AbsSubframe %d.%d --> Turbo Decoding for CW0 %5.3f\n",
               frame_rx%1024, nr_tti_rx,(ue->dlsch_decoding_stats[ue->current_thread_id[nr_tti_rx]].p_time)/(cpuf*1000.0));
 #endif
 
@@ -4088,7 +4088,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
                   frame_rx,
                   nr_tti_rx,
                   harq_pid,
-                  pdsch==PDSCH?1:0,
+                  pdsch==PDSCH?1:0,proc->decoder_switch,
                   dlsch1->harq_processes[harq_pid]->TBS>256?1:0);
           printf("start cw1 dlsch decoding\n");
 #endif
@@ -4108,7 +4108,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 #endif
 
 #endif
-          LOG_D(PHY,"AbsSubframe %d.%d --> Turbo Decoding for CW1 %5.3f\n",
+          LOG_I(PHY,"AbsSubframe %d.%d --> Turbo Decoding for CW1 %5.3f\n",
                   frame_rx%1024, nr_tti_rx,(ue->dlsch_decoding_stats[ue->current_thread_id[nr_tti_rx]].p_time)/(cpuf*1000.0));
       }
 
@@ -5107,6 +5107,8 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
   int pmch_flag=0;
   int frame_rx = proc->frame_rx;
   int nr_tti_rx = proc->nr_tti_rx;
+  proc->decoder_switch = 0;
+  //int counter_decoder = 0;
 
   uint8_t next1_thread_id = ue->current_thread_id[nr_tti_rx]== (RX_NB_TH-1) ? 0:(ue->current_thread_id[nr_tti_rx]+1);
   uint8_t next2_thread_id = next1_thread_id== (RX_NB_TH-1) ? 0:(next1_thread_id+1);
@@ -5377,9 +5379,16 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
   // do procedures for C-RNTI
   LOG_D(PHY," ------ --> PDSCH ChannelComp/LLR slot 0: AbsSubframe %d.%d ------  \n", frame_rx%1024, nr_tti_rx);
   if (ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id][0]->active == 1) {
+	proc->counter_decoder++;
+	printf("counter decoder %d\n", proc->counter_decoder);
+	if (proc->counter_decoder > 6)
+		{
+			proc->decoder_switch = 1;
+			printf("switch to LDPC\n");
+		}
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDSCH_PROC, VCD_FUNCTION_IN);
 #if UE_TIMING_TRACE
-    start_meas(&ue->pdsch_procedures_stat[ue->current_thread_id[nr_tti_rx]);
+    start_meas(&ue->pdsch_procedures_stat[ue->current_thread_id[nr_tti_rx]]);
 #endif
     ue_pdsch_procedures(ue,
 			proc,
@@ -5391,7 +5400,7 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
 			ue->frame_parms.symbols_per_tti-1,
 			abstraction_flag);
     LOG_D(PHY," ------ end PDSCH ChannelComp/LLR slot 0: AbsSubframe %d.%d ------  \n", frame_rx%1024, nr_tti_rx);
-    LOG_D(PHY," ------ --> PDSCH Turbo Decoder slot 0/1: AbsSubframe %d.%d ------  \n", frame_rx%1024, nr_tti_rx);
+    LOG_I(PHY," ------ --> PDSCH Turbo Decoder slot 0/1: AbsSubframe %d.%d ------  \n", frame_rx%1024, nr_tti_rx);
 #if UE_TIMING_TRACE
     stop_meas(&ue->pdsch_procedures_stat[ue->current_thread_id[nr_tti_rx]]);
     start_meas(&ue->dlsch_procedures_stat[ue->current_thread_id[nr_tti_rx]]);

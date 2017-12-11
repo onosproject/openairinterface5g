@@ -1325,6 +1325,7 @@ uint32_t dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                         uint8_t subframe,
                         uint8_t harq_pid,
                         uint8_t is_crnti,
+						uint8_t decoder_switch,
                         uint8_t llr8_flag);
 /*
 uint32_t dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,

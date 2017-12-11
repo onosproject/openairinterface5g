@@ -570,6 +570,8 @@ typedef struct {
   uint32_t Kplus;
   /// Number of "Filler" bits (for definition see 36-212 V8.6 2009-03, p.10)
   uint32_t F;
+  /// LDPC lifting factor
+  uint32_t Z;
   /// Number of MIMO layers (streams) (for definition see 36-212 V8.6 2009-03, p.17)
   uint8_t Nl;
   /// current delta_pucch
