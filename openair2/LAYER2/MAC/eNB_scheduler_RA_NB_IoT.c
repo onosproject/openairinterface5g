@@ -480,6 +480,8 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst){
 	schedule_result_t *msg4_result;
 	schedule_result_t *harq_result;
 
+	msg4_node = (available_resource_DL_t *)0;
+
 	//print_available_resource_DL();
 
 	while((RA_TEMPLATE_NB_IoT *)0 != msg4_nodes){

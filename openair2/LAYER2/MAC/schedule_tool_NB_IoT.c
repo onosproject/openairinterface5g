@@ -179,11 +179,10 @@ void Initialize_Resource(void){
 //	extend subframe align to si-period
 void extend_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int max_subframe){	//	assume max_subframe is found.
     
-	available_resource_DL_t *pt, *new_node;
+	available_resource_DL_t *new_node;
 	//int temp;
 	uint32_t i, i_div_si_window;
 	//uint32_t si_period_div_window;
-	pt = available_resource_DL;
     
     printf("%d %d\n", max_subframe, mac_inst->schedule_subframe_DL);
     

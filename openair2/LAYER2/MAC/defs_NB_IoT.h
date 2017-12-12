@@ -233,7 +233,7 @@ typedef struct{
 typedef struct {
 
   /// DCI template and MAC connection parameters for UEs
-  UE_TEMPLATE_NB_IoT UE_template_NB_IoT[NUMBER_OF_UE_MAX_NB_IoT];
+  UE_TEMPLATE_NB_IoT UE_template_NB_IoT[MAX_NUMBER_OF_UE_MAX_NB_IoT];
 
   /// NPDCCH Period and searching space info
   NPDCCH_config_dedicated_NB_IoT_t NPDCCH_config_dedicated;

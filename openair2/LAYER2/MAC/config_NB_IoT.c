@@ -72,7 +72,7 @@ int32_t get_uldl_offset_NB_IoT(int eutra_band) {
   return(-eutra_bandtable[eutra_band].dl_min + eutra_bandtable[eutra_band].ul_min);
 }
 
-uint32_t to_earfcn(int eutra_bandP,uint32_t dl_CarrierFreq, float m_dl) {
+uint32_t to_earfcn_NB_IoT(int eutra_bandP,uint32_t dl_CarrierFreq, float m_dl) {
 
   uint32_t dl_CarrierFreq_by_100k = dl_CarrierFreq/100000;
 
@@ -198,7 +198,7 @@ void config_mib_fapi_NB_IoT(
      * 1) takes a random number from the offset of category NB1 and NB2 based on the operating mode (we assume always the usage of anchor carrier)
      * 2)evaluate the EARFCN value based on the corresponding formula
      */
-    config_INFO->cfg->nfapi_config.earfcn.value = to_earfcn(eutra_band,dl_CarrierFreq, m_dl);
+    config_INFO->cfg->nfapi_config.earfcn.value = to_earfcn_NB_IoT(eutra_band,dl_CarrierFreq, m_dl);
 
 }
 
