@@ -26,10 +26,6 @@
 
 #include "SIMULATION/TOOLS/defs.h"
 
-#include "Gen_shift_value.h"
-#include "choose_generator_matrix.h"
-#include "ldpc_encoder_header.h"
-
 // 4-bit quantizer
 char quantize4bit(double D,double x)
 {
@@ -84,10 +80,10 @@ int test_ldpc(short No_iteration,
  cpu_freq_GHz = get_cpu_freq_GHz();
  
   //short test_input[block_length];
-  short *test_input;
+  char *test_input;
   //short *c; //padded codeword  
   short *esimated_output;
-  short *channel_input;
+  char *channel_input;
   double *channel_output;
   double *modulated_input;
   short *channel_output_fixed;
@@ -104,16 +100,18 @@ int no_punctured_columns;  //new
   *errors=0;
   *crc_misses=0;
 
+  // generate input block
+  test_input=(char*)malloc(sizeof(char) * block_length/8);
+  channel_input = (char*)malloc(sizeof(char) * 68*384/8);
+  
   while (trial++ < ntrials) 
    {        
-     // generate input block
-	 test_input=(short*)malloc(sizeof(short) * block_length);
-     for (i=0; i<block_length; i++) 
+     for (i=0; i<block_length/8; i++) 
        {    
-          test_input[i]=rand()%2;
-          //test_input[i]=i%2;
+	 test_input[i]=(char) rand();
+	 //test_input[i]=i%2;
        }
-        
+     
 /*
      //determine number of bits in codeword
      if (block_length>3840)
@@ -150,12 +148,12 @@ int no_punctured_columns;  //new
        }
 
      no_punctured_columns=(int)((nrows+Kb-2)*Zc-block_length/rate)/Zc; 
-//printf("%d\n",no_punctured_columns);
-	*/
+     //printf("%d\n",no_punctured_columns);
+     */
     start_meas(&time);
     //// encoder
    
-    channel_input=ldpc_encoder_header(test_input, block_length,rate);
+    ldpc_encoder(test_input, channel_input,block_length,rate);
     stop_meas(&time);
     print_meas_now(&time, "", stdout);
 
@@ -193,6 +191,7 @@ int no_punctured_columns;  //new
     printf("\n");
     exit(-1);
 #endif
+ */
 /*
      // decode the sequence
      esimated_output=ldpc_decoder(channel_output_fixed, block_length, No_iteration, rate);
