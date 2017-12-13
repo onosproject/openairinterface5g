@@ -313,6 +313,26 @@ unsigned short dlsch_extract_rbs_single_NB_IoT(int **rxdataF,
                                         uint32_t high_speed_flag,
                                         NB_IoT_DL_FRAME_PARMS *frame_parms); 
 
+void dlsch_channel_level_NB_IoT(int **dl_ch_estimates_ext,
+                                NB_IoT_DL_FRAME_PARMS *frame_parms,
+                                int32_t *avg,
+                                uint8_t symbol,
+                                unsigned short nb_rb); 
+
+void dlsch_channel_compensation_NB_IoT(int **rxdataF_ext,
+                                        int **dl_ch_estimates_ext,
+                                        int **dl_ch_mag,
+                                        int **dl_ch_magb,
+                                        int **rxdataF_comp,
+                                        int **rho,
+                                        NB_IoT_DL_FRAME_PARMS *frame_parms,
+                                        unsigned char symbol,
+                                        uint8_t first_symbol_flag,
+                                        unsigned char mod_order,
+                                        unsigned short nb_rb,
+                                        unsigned char output_shift,
+                                        PHY_MEASUREMENTS_NB_IoT *measurements); 
+
 //************************************************************//
 
 

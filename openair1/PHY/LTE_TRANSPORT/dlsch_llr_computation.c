@@ -643,7 +643,7 @@ int dlsch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
   uint32_t *rxF = (uint32_t*)&rxdataF_comp[0][((int32_t)symbol*frame_parms->N_RB_DL*12)];
   uint32_t *llr32;
   int i,len;
-  uint8_t symbol_mod = (symbol >= (7-frame_parms->Ncp))? (symbol-(7-frame_parms->Ncp)) : symbol;
+  uint8_t symbol_mod = (symbol >= 7)? (symbol-7) : symbol;
 
   if (first_symbol_flag==1) {
     llr32 = (uint32_t*)dlsch_llr;
@@ -657,7 +657,7 @@ int dlsch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
   }
 
 
-  if ((symbol_mod==0) || (symbol_mod==(4-frame_parms->Ncp))) {
+  if (symbol_mod==0 || symbol_mod==4) {
     if (frame_parms->mode1_flag==0)
       len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
     else
