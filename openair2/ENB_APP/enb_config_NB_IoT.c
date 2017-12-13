@@ -579,7 +579,7 @@ extern int asn1_xer_print;
 #else
 #define libconfig_int int
 #endif
-const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
+const Enb_properties_array_t *enb_config_init_NB_IoT(char* lib_config_file_name_pP)
 {
   config_t          cfg;
   config_setting_t *setting                       = NULL;
@@ -753,6 +753,52 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   char*             udp_log_verbosity             = NULL;
   char*             osa_log_level                 = NULL;
   char*             osa_log_verbosity             = NULL;
+
+//
+//*********************** NB-IoT parameters *********************
+//
+  libconfig_int     rach_raResponseWindowSize_NB                 = 0;
+  libconfig_int     rach_macContentionResolutionTimer_NB         = 0;
+  libconfig_int     rach_powerRampingStep_NB                     = 0;
+  libconfig_int     rach_preambleInitialReceivedTargetPower_NB   = 0;
+  libconfig_int     rach_preambleTransMax_CE_NB                  = 0;
+  libconfig_int     bcch_modificationPeriodCoeff_NB              = 0;
+  libconfig_int     pcch_defaultPagingCycle_NB                   = 0;
+  libconfig_int     nprach_CP_Length                             = 0;
+  libconfig_int     nprach_rsrp_range                            = 0;
+  const char*       nprach_SubcarrierMSG3_RangeStart             = NULL;
+  libconfig_int     maxNumPreambleAttemptCE_NB                   = 0;
+  libconfig_int     npdsch_nrs_Power                             = 0;
+  libconfig_int     npusch_ack_nack_numRepetitions_NB            = 0;
+  libconfig_int     npusch_srs_SubframeConfig_NB                 = 0;
+  libconfig_int     npusch_threeTone_CyclicShift_r13             = 0;
+  libconfig_int     npusch_sixTone_CyclicShift_r13               = 0;
+  libconfig_int     npusch_groupHoppingEnabled                   = 0;
+  libconfig_int     npusch_groupAssignmentNPUSCH_r13             = 0;
+  libconfig_int     dl_GapThreshold_NB                           = 0;
+  libconfig_int     dl_GapPeriodicity_NB                         = 0;
+  const char*       dl_GapDurationCoeff_NB                       = NULL;
+  libconfig_int     npusch_p0_NominalNPUSCH                      = 0;
+  libconfig_int     npusch_alpha                                 = 0;
+  libconfig_int     deltaPreambleMsg3                            = 0;
+
+  libconfig_int     ue_TimersAndConstants_t300_NB      = 0;
+  libconfig_int     ue_TimersAndConstants_t301_NB      = 0;
+  libconfig_int     ue_TimersAndConstants_t310_NB      = 0;
+  libconfig_int     ue_TimersAndConstants_t311_NB      = 0;
+  libconfig_int     ue_TimersAndConstants_n310_NB      = 0;
+  libconfig_int     ue_TimersAndConstants_n311_NB      = 0;
+
+  libconfig_int     nprach_Periodicity                 = 0;
+  libconfig_int     nprach_StartTime                   = 0;
+  libconfig_int     nprach_SubcarrierOffset            = 0;
+  libconfig_int     nprach_NumSubcarriers              = 0;
+  libconfig_int     numRepetitionsPerPreambleAttempt   = 0;
+  libconfig_int     npdcch_NumRepetitions_RA           = 0;
+  libconfig_int     npdcch_StartSF_CSS_RA              = 0;
+  const char*       npdcch_Offset_RA                   = NULL;
+
+
 
   /* for no gcc warnings */
   (void)astring;
