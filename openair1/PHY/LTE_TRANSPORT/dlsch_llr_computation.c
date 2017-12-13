@@ -657,17 +657,26 @@ int dlsch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
   }
 
 
-  if (symbol_mod==0 || symbol_mod==4) {
-    if (frame_parms->mode1_flag==0)
-      len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
-    else
-      len = (nb_rb*10) - (5*pbch_pss_sss_adjust/6);
-  } else if((beamforming_mode==7) && (frame_parms->Ncp==0) && (symbol==3 || symbol==6 || symbol==9 || symbol==12)){
-      len = (nb_rb*9) - (3*pbch_pss_sss_adjust/4);
-  } else if((beamforming_mode==7) && (frame_parms->Ncp==1) && (symbol==4 || symbol==7 || symbol==10)){
-      len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
+  // if (symbol_mod==0 || symbol_mod==4) {
+  //   if (frame_parms->mode1_flag==0)
+  //     len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
+  //   else
+  //     len = (nb_rb*10) - (5*pbch_pss_sss_adjust/6);
+  // } else if((beamforming_mode==7) && (frame_parms->Ncp==0) && (symbol==3 || symbol==6 || symbol==9 || symbol==12)){
+  //     len = (nb_rb*9) - (3*pbch_pss_sss_adjust/4);
+  // } else if((beamforming_mode==7) && (frame_parms->Ncp==1) && (symbol==4 || symbol==7 || symbol==10)){
+  //     len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
+  // } else {
+  //   len = (nb_rb*12) - pbch_pss_sss_adjust;
+  // }
+
+    if (symbol_mod==0 || symbol_mod==4 || symbol_mod==5 || symbol_mod==6) {
+    if (frame_parms->mode1_flag==0) // MIMO
+      len = 8 ; 
+    else // SISO
+      len = 10; 
   } else {
-    len = (nb_rb*12) - pbch_pss_sss_adjust;
+    len = nb_rb*12;
   }
 
 

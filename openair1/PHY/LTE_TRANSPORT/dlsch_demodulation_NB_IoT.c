@@ -762,25 +762,23 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
   switch (dlsch0_harq->Qm) {
   case 2 :
     if (codeword_TB1 == -1) {
-        dlsch_qpsk_llr(frame_parms,
+        dlsch_qpsk_llr_NB_IoT(frame_parms,
                        pdsch_vars[eNB_id]->rxdataF_comp0,
                        pdsch_vars[eNB_id]->llr[0],
                        symbol,
                        first_symbol_flag,
                        nb_rb,
-                       adjust_G2(frame_parms,dlsch0_harq->rb_alloc_even,2,subframe,symbol),
                        pdsch_vars[eNB_id]->llr128,
                        beamforming_mode);
 
     } else if (codeword_TB0 == -1){
 
-        dlsch_qpsk_llr(frame_parms,
+        dlsch_qpsk_llr_NB_IoT(frame_parms,
                        pdsch_vars[eNB_id]->rxdataF_comp0,
                        pdsch_vars[eNB_id]->llr[1],
                        symbol,
                        first_symbol_flag,
                        nb_rb,
-                       adjust_G2(frame_parms,dlsch0_harq->rb_alloc_even,2,subframe,symbol),
                        pdsch_vars[eNB_id]->llr128_2ndstream,
                        beamforming_mode);
     }
@@ -1048,11 +1046,10 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
   switch (get_Qm(dlsch1_harq->mcs)) {
   case 2 :
     //if (rx_type==rx_standard) {
-        dlsch_qpsk_llr(frame_parms,
+        dlsch_qpsk_llr_NB_IoT(frame_parms,
                        pdsch_vars[eNB_id]->rxdataF_comp0,
                        pdsch_vars[eNB_id]->llr[0],
                        symbol,first_symbol_flag,nb_rb,
-                       adjust_G2(frame_parms,dlsch0_harq->rb_alloc_even,2,subframe,symbol),
                        pdsch_vars[eNB_id]->llr128,
                        beamforming_mode);
     //}
@@ -6126,4 +6123,68 @@ void print_ints(char *s,__m128i *x)
          tempb[0],tempb[1],tempb[2],tempb[3]);
 
 }*/
-#endif
+#endif 
+
+int dlsch_qpsk_llr_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
+                   int32_t **rxdataF_comp,
+                   int16_t *dlsch_llr,
+                   uint8_t symbol,
+                   uint8_t first_symbol_flag,
+                   uint16_t nb_rb,
+                   int16_t **llr32p,
+                   uint8_t beamforming_mode)
+{
+
+  uint32_t *rxF = (uint32_t*)&rxdataF_comp[0][((int32_t)symbol*frame_parms->N_RB_DL*12)];
+  uint32_t *llr32;
+  int i,len;
+  uint8_t symbol_mod = (symbol >= 7)? (symbol-7) : symbol;
+
+  if (first_symbol_flag==1) {
+    llr32 = (uint32_t*)dlsch_llr;
+  } else {
+    llr32 = (uint32_t*)(*llr32p);
+  }
+
+  if (!llr32) {
+    msg("dlsch_qpsk_llr: llr is null, symbol %d, llr32=%p\n",symbol, llr32);
+    return(-1);
+  }
+
+
+  // if (symbol_mod==0 || symbol_mod==4) {
+  //   if (frame_parms->mode1_flag==0)
+  //     len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
+  //   else
+  //     len = (nb_rb*10) - (5*pbch_pss_sss_adjust/6);
+  // } else if((beamforming_mode==7) && (frame_parms->Ncp==0) && (symbol==3 || symbol==6 || symbol==9 || symbol==12)){
+  //     len = (nb_rb*9) - (3*pbch_pss_sss_adjust/4);
+  // } else if((beamforming_mode==7) && (frame_parms->Ncp==1) && (symbol==4 || symbol==7 || symbol==10)){
+  //     len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
+  // } else {
+  //   len = (nb_rb*12) - pbch_pss_sss_adjust;
+  // }
+
+    if (symbol_mod==0 || symbol_mod==4 || symbol_mod==5 || symbol_mod==6) {
+    if (frame_parms->mode1_flag==0) // MIMO
+      len = 8 ; 
+    else // SISO
+      len = 10; 
+  } else {
+    len = 12;
+  }
+
+
+  //printf("dlsch_qpsk_llr: symbol %d,nb_rb %d, len %d,pbch_pss_sss_adjust %d\n",symbol,nb_rb,len,pbch_pss_sss_adjust);
+  //printf("ll32p=%p , dlsch_llr=%p, symbol=%d, flag=%d \n", llr32, dlsch_llr, symbol, first_symbol_flag);
+  for (i=0; i<len; i++) {
+    *llr32 = *rxF;
+     //printf("llr %d : (%d,%d)\n",i,((int16_t*)llr32)[0],((int16_t*)llr32)[1]);
+    rxF++;
+    llr32++;
+  }
+
+  *llr32p = (int16_t *)llr32;
+
+  return(0);
+}
