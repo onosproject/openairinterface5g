@@ -88,6 +88,15 @@
 
 #include "SIMULATION/TOOLS/defs.h" // for taus
 
+//TTN - for D2D
+#define D2D_MODE //enable d2d
+int ctrl_sock_fd;
+#define BUFSIZE 1024
+struct sockaddr_in prose_app_addr;
+int slrb_id;
+pthread_mutex_t slrb_mutex;
+static void *rrc_control_socket_thread_fct(void *arg);
+//end TTN
 
 #ifdef PHY_EMUL
 extern EMULATION_VARS *Emul_vars;
@@ -5117,3 +5126,225 @@ rrc_ue_process_sidelink_radioResourceConfig(
       }
    }
 }
+
+#ifdef D2D_MODE
+//-----------------------------------------------------------
+void
+rrc_control_socket_init(){
+
+   struct sockaddr_in rrc_ctrl_socket_addr;
+   pthread_attr_t     attr;
+   struct sched_param sched_param;
+   int optval; // flag value for setsockopt
+   int n; // message byte size
+
+   //init the mutex
+   //pthread_mutex_init(&slrb_mutex, NULL);
+
+   // create the control socket
+   ctrl_sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+   if (ctrl_sock_fd == -1) {
+      LOG_E(RRC,"[rrc_control_socket_init] :Error opening socket %d (%d:%s)\n",ctrl_sock_fd,errno, strerror(errno));
+      exit(EXIT_FAILURE);
+   }
+   //   if (ctrl_sock_fd < 0)
+   //      error("ERROR: Failed on opening socket");
+   optval = 1;
+   setsockopt(ctrl_sock_fd, SOL_SOCKET, SO_REUSEADDR,
+         (const void *)&optval , sizeof(int));
+
+   //build the server's  address
+   bzero((char *) &rrc_ctrl_socket_addr, sizeof(rrc_ctrl_socket_addr));
+   rrc_ctrl_socket_addr.sin_family = AF_INET;
+   rrc_ctrl_socket_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+   rrc_ctrl_socket_addr.sin_port = htons(CONTROL_SOCKET_PORT_NO);
+   // associate the parent socket with a port
+   if (bind(ctrl_sock_fd, (struct sockaddr *) &rrc_ctrl_socket_addr,
+         sizeof(rrc_ctrl_socket_addr)) < 0) {
+      LOG_E(RRC,"[rrc_control_socket_init] ERROR: Failed on binding the socket\n");
+      exit(1);
+   }
+   //create thread to listen to incoming packets
+   if (pthread_attr_init(&attr) != 0) {
+      LOG_E(RRC, "[rrc_control_socket_init]Failed to initialize pthread attribute for ProSe -> RRC communication (%d:%s)\n",
+            errno, strerror(errno));
+      exit(EXIT_FAILURE);
+   }
+
+   sched_param.sched_priority = 10;
+
+   pthread_attr_setschedpolicy(&attr, SCHED_RR);
+   pthread_attr_setschedparam(&attr, &sched_param);
+
+   pthread_t rrc_control_socket_thread;
+
+   if (pthread_create(&rrc_control_socket_thread, &attr, rrc_control_socket_thread_fct, NULL) != 0) {
+      LOG_E(RRC, "[rrc_control_socket_init]Failed to create new thread for RRC/ProSeApp communication (%d:%s)\n",
+            errno, strerror(errno));
+      exit(EXIT_FAILURE);
+   }
+
+   pthread_setname_np( rrc_control_socket_thread, "RRC Control Socket" );
+
+}
+
+//--------------------------------------------------------
+static void *rrc_control_socket_thread_fct(void *arg)
+{
+
+   int prose_addr_len;
+   char send_buf[BUFSIZE];
+   char receive_buf[BUFSIZE];
+   int optval; // flag value for setsockopt
+   int n; // message byte size
+   struct sidelink_ctrl_element *sl_ctrl_msg_recv = NULL;
+   struct sidelink_ctrl_element *sl_ctrl_msg_send = NULL;
+
+
+   //from the main program, listen for the incoming messages from control socket (ProSe App)
+   prose_addr_len = sizeof(prose_app_addr);
+   int enable_notification = 1;
+   while (1) {
+      LOG_I(RRC,"[rrc_control_socket_thread_fct]: Listening to incoming connection from ProSe App \n");
+      // receive a message from ProSe App
+      memset(receive_buf, 0, BUFSIZE);
+      n = recvfrom(ctrl_sock_fd, receive_buf, BUFSIZE, 0,
+            (struct sockaddr *) &prose_app_addr, &prose_addr_len);
+      if (n < 0){
+         LOG_E(RRC, "ERROR: Failed to receive from ProSe App\n");
+         exit(EXIT_FAILURE);
+      }
+      //TODO: should store the address of ProSeApp [UE_rrc_inst] to be able to send UE state notification to the App
+
+
+      //sl_ctrl_msg_recv = (struct sidelink_ctrl_element *) receive_buf;
+      sl_ctrl_msg_recv = calloc(1, sizeof(struct sidelink_ctrl_element));
+      memcpy((void *)sl_ctrl_msg_recv, (void *)receive_buf, sizeof(struct sidelink_ctrl_element));
+
+      //process the message
+      switch (sl_ctrl_msg_recv->type) {
+      case SESSION_INIT_REQ:
+#ifdef DEBUG_CTRL_SOCKET
+         LOG_I(RRC,"[rrc_control_socket_thread_fct]: Received SessionInitializationRequest on socket from ProSe App (msg type: %d)\n", sl_ctrl_msg_recv->type);
+#endif
+         //TODO: get SL_UE_STATE from lower layer
+
+         LOG_I(RRC,"[rrc_control_socket_thread_fct]: Send UEStateInformation to ProSe App \n");
+         memset(send_buf, 0, BUFSIZE);
+
+         sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
+         sl_ctrl_msg_send->type = UE_STATUS_INFO;
+         sl_ctrl_msg_send->sidelinkPrimitive.ue_state = UE_STATE_OFF_NETWORK; //off-network
+         memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
+         free(sl_ctrl_msg_send);
+
+         prose_addr_len = sizeof(prose_app_addr);
+         n = sendto(ctrl_sock_fd, (char *)send_buf, sizeof(struct sidelink_ctrl_element), 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
+         if (n < 0) {
+            LOG_E(RRC, "ERROR: Failed to send to ProSe App\n");
+            exit(EXIT_FAILURE);
+         }
+
+
+#ifdef DEBUG_CTRL_SOCKET
+         struct sidelink_ctrl_element *ptr_ctrl_msg = NULL;
+         ptr_ctrl_msg = (struct sidelink_ctrl_element *) send_buf;
+         LOG_I(RRC,"[rrc_control_socket_thread_fct][UEStateInformation] msg type: %d\n",ptr_ctrl_msg->type);
+         LOG_I(RRC,"[rrc_control_socket_thread_fct][UEStateInformation] UE state: %d\n",ptr_ctrl_msg->sidelinkPrimitive.ue_state);
+#endif
+
+         /*  if (enable_notification > 0) {
+              //create thread to send status notification (for testing purpose, status notification will be sent e.g., every 20 seconds)
+              pthread_t notification_thread;
+              if( pthread_create( &notification_thread , NULL ,  send_UE_status_notification , (void*) &sockfd) < 0)
+                 error("ERROR: could not create thread");
+           }
+           enable_notification = 0;
+          */
+         break;
+
+      case GROUP_COMMUNICATION_ESTABLISH_REQ:
+#ifdef DEBUG_CTRL_SOCKET
+         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
+         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.type);
+         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] source Id: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.sourceL2Id);
+         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] group Id: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupL2Id);
+         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] group IP Address: " IPV4_ADDR "\n",IPV4_ADDR_FORMAT(sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupIpAddress));
+#endif
+         // configure lower layers PDCP/MAC/PHY for this communication
+
+         LOG_I(RRC,"[rrc_control_socket_thread_fct]Send GroupCommunicationEstablishResp to ProSe App\n");
+         memset(send_buf, 0, BUFSIZE);
+         sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
+         sl_ctrl_msg_send->type = GROUP_COMMUNICATION_ESTABLISH_RSP;
+         //in case of TX, assign a new SLRB and prepare for the filter
+         if (sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.type == 1) {
+#ifdef DEBUG_CTRL_SOCKET
+            LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq]  PPPP: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.pppp);
+#endif
+            sl_ctrl_msg_send->sidelinkPrimitive.slrb_id = SLRB_ID; //slrb_id
+            //pthread_mutex_lock(&slrb_mutex);
+            slrb_id = SLRB_ID;
+            //pthread_mutex_unlock(&slrb_mutex);
+         } else{ //RX
+            sl_ctrl_msg_send->sidelinkPrimitive.slrb_id = SL_DEFAULT_RAB_ID;
+         }
+
+         memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
+         free(sl_ctrl_msg_send);
+
+         prose_addr_len = sizeof(prose_app_addr);
+         n = sendto(ctrl_sock_fd, (char *)send_buf, sizeof(struct sidelink_ctrl_element), 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
+         if (n < 0){
+            LOG_E(RRC, "ERROR: Failed to send to ProSe App\n");
+            exit(EXIT_FAILURE);
+         }
+
+
+#ifdef DEBUG_CTRL_SOCKET
+         ptr_ctrl_msg = (struct sidelink_ctrl_element *) send_buf;
+         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishResponse]  msg type: %d\n",ptr_ctrl_msg->type);
+         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishResponse]  slrb_id: %d\n",ptr_ctrl_msg->sidelinkPrimitive.slrb_id);
+#endif
+         break;
+      case GROUP_COMMUNICATION_RELEASE_REQ:
+         printf("-----------------------------------\n");
+#ifdef DEBUG_CTRL_SOCKET
+         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationReleaseRequest] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
+         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationReleaseRequest] Slrb Id: %i\n",sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id);
+#endif
+         LOG_I(RRC,"[rrc_control_socket_thread_fct]Send GroupCommunicationReleaseResponse to ProSe App \n");
+         memset(send_buf, 0, BUFSIZE);
+
+         sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
+         sl_ctrl_msg_send->type = GROUP_COMMUNICATION_RELEASE_RSP;
+         //if the requested id exists -> release this ID
+         if (sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id == slrb_id) {
+            sl_ctrl_msg_send->sidelinkPrimitive.group_comm_release_rsp = GROUP_COMMUNICATION_RELEASE_OK;
+            // pthread_mutex_lock(&slrb_mutex);
+            slrb_id = 0; //Reset slrb_id
+            //pthread_mutex_unlock(&slrb_mutex);
+         } else {
+            sl_ctrl_msg_send->sidelinkPrimitive.group_comm_release_rsp = GROUP_COMMUNICATION_RELEASE_FAILURE;
+         }
+         memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
+         free(sl_ctrl_msg_send);
+
+         prose_addr_len = sizeof(prose_app_addr);
+         n = sendto(ctrl_sock_fd, (char *)send_buf, sizeof(struct sidelink_ctrl_element), 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
+         if (n < 0){
+            LOG_E(RRC, "ERROR: Failed to send to ProSe App\n");
+            exit(EXIT_FAILURE);
+         }
+         break;
+
+      default:
+         break;
+      }
+   }
+   free (sl_ctrl_msg_recv);
+   return 0;
+}
+
+
+#endif

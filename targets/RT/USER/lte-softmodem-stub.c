@@ -96,6 +96,8 @@ unsigned short config_frames[4] = {2,9,11,13};
 #include "UTIL/OTG/otg_vars.h"
 #endif
 
+#define D2D_MODE
+
 #if defined(ENABLE_ITTI)
 #include "intertask_interface_init.h"
 #include "create_tasks.h"
@@ -1057,6 +1059,13 @@ int main( int argc, char **argv )
   pdcp_netlink_init();
 #endif
 #endif
+
+//TTN for D2D
+#ifdef D2D_MODE
+  printf ("RRC control socket\n");
+  rrc_control_socket_init();
+#endif
+
 
 #if !defined(ENABLE_ITTI)
   // to make a graceful exit when ctrl-c is pressed
