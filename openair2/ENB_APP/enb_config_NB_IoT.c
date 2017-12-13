@@ -294,8 +294,6 @@
 #define ENB_CONFIG_STRING_NPDCCH_OFFSET_RA_NB_IOT                          "npdcch_Offset_RA"
 
 
-nprach_CP_Length
-
 #define KHz (1000UL)
 #define MHz (1000 * KHz)
 
