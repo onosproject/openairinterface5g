@@ -333,6 +333,15 @@ void dlsch_channel_compensation_NB_IoT(int **rxdataF_ext,
                                         unsigned char output_shift,
                                         PHY_MEASUREMENTS_NB_IoT *measurements); 
 
+int dlsch_qpsk_llr_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
+                           int32_t **rxdataF_comp,
+                           int16_t *dlsch_llr,
+                           uint8_t symbol,
+                           uint8_t first_symbol_flag,
+                           uint16_t nb_rb,
+                           int16_t **llr32p,
+                           uint8_t beamforming_mode); 
+
 //************************************************************//
 
 
