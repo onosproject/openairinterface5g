@@ -502,11 +502,12 @@ function main() {
   DIR=$OPENAIR_DIR/cmake_targets
   if [ "$NOS1" =  "1" ] ; then
       lte_build_dir=lte_noS1_build_oai
-      lte_exec=lte-softmodem-nos1
+      #lte_exec=lte-softmodem-nos1
+      lte_exec=lte-softmodem-stub
   else
       lte_build_dir=lte_build_oai
-      lte_exec=lte-softmodem
-      #lte_exec=lte-softmodem-stub
+      #lte_exec=lte-softmodem
+      lte_exec=lte-softmodem-stub
   fi
 
 # configuration module libraries, one currently available, using libconfig 

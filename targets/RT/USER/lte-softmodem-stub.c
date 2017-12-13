@@ -633,7 +633,6 @@ static void get_options(void) {
   uint32_t online_log_messages;
   uint32_t glog_level, glog_verbosity;
   uint32_t start_telnetsrv;
-  printf("Panos: get_options 1 \n");
 
   paramdef_t cmdline_params[] =CMDLINE_PARAMS_DESC ;
   paramdef_t cmdline_logparams[] =CMDLINE_LOGPARAMS_DESC ;
@@ -641,7 +640,6 @@ static void get_options(void) {
   config_process_cmdline( cmdline_params,sizeof(cmdline_params)/sizeof(paramdef_t),NULL);
   printf("get_options 0, UE_flag: %d", UE_flag);
 
-  printf("Panos: get_options 2 \n");
   if (strlen(in_path) > 0) {
       opt_type = OPT_PCAP;
       opt_enabled=1;
@@ -652,7 +650,6 @@ static void get_options(void) {
       opt_type = OPT_WIRESHARK;
       printf("Enabling OPT for wireshark for local interface");
   }
-  printf("Panos: get_options 3 \n");
   config_process_cmdline( cmdline_logparams,sizeof(cmdline_logparams)/sizeof(paramdef_t),NULL);
   if(config_isparamset(cmdline_logparams,CMDLINE_ONLINELOG_IDX)) {
       set_glog_onlinelog(online_log_messages);
@@ -667,27 +664,23 @@ static void get_options(void) {
      load_module_shlib("telnetsrv",NULL,0);
   }
 
-  printf("Panos: get_options 4 \n");
   if (UE_flag > 0) {
 	  // set default parameters
 	  set_default_frame_parms(frame_parms);
      paramdef_t cmdline_uemodeparams[] =CMDLINE_UEMODEPARAMS_DESC;
      paramdef_t cmdline_ueparams[] =CMDLINE_UEPARAMS_DESC;
-     printf("Panos: get_options 5 \n");
 
 
      config_process_cmdline( cmdline_uemodeparams,sizeof(cmdline_uemodeparams)/sizeof(paramdef_t),NULL);
      config_process_cmdline( cmdline_ueparams,sizeof(cmdline_ueparams)/sizeof(paramdef_t),NULL);
-     printf("Panos: get_options 6 \n");
+
       if (loopfile != NULL) {
   	  printf("Input file for hardware emulation: %s",loopfile);
   	  mode=loop_through_memory;
   	  input_fd = fopen(loopfile,"r");
   	  AssertFatal(input_fd != NULL,"Please provide a valid input file\n");
       }
-      printf("Panos: get_options 7 \n");
       if ( (cmdline_uemodeparams[CMDLINE_CALIBUERX_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = rx_calib_ue;
-      printf("Panos: get_options 8 \n");
       if ( (cmdline_uemodeparams[CMDLINE_CALIBUERXMED_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = rx_calib_ue_med;
       printf("Panos: get_options 9 \n");
       if ( (cmdline_uemodeparams[CMDLINE_CALIBUERXBYP_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = rx_calib_ue_byp;
@@ -1305,12 +1298,13 @@ int main( int argc, char **argv )
 
   rt_sleep_ns(10*100000000ULL);
 
-  if (nfapi_mode)
+  // Panos: I have commented these lines because cond_init and mutex_init take place above in any case.
+  /*if (nfapi_mode)
   {
     printf("NFAPI*** - mutex and cond created - will block shortly for completion of PNF connection\n");
     pthread_cond_init(&sync_cond,NULL);
     pthread_mutex_init(&sync_mutex, NULL);
-  }
+  }*/
 
   const char *nfapi_mode_str = "<UNKNOWN>";
 
@@ -1343,10 +1337,6 @@ int main( int argc, char **argv )
   // start the main threads
   if (UE_flag == 1) {
     int eMBMS_active = 0;
-    // Panos: Call init_UE_stub instead of init_UE as we are always on nfapi_mode=3
-    //phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
-    init_timer_thread();
-    init_UE_stub(1,eMBMS_active,uecap_xer_in);
     //init_UE(1,eMBMS_active,uecap_xer_in);
     number_of_cards = 1;
 
@@ -1355,6 +1345,10 @@ int main( int argc, char **argv )
     	{
     	wait_nfapi_init("main?");
     	}
+    // Panos: Call init_UE_stub instead of init_UE as we are always on nfapi_mode=3
+    //phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
+    init_timer_thread();
+    init_UE_stub(1,eMBMS_active,uecap_xer_in);
 
     /*for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       PHY_vars_UE_g[0][CC_id]->rf_map.card=0;

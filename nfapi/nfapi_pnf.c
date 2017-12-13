@@ -1414,7 +1414,8 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
     NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] DJP - HACK - Set p7_config global ready for subframe ind%s\n", __FUNCTION__);
     p7_config_g = p7_config;
 
-    printf("Panos-D: start_request, bUFFER SIZE: %d", p7_config_g->subframe_buffer_size);
+    NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Panos-D: start_request, BUFFER SIZE: %d", p7_config_g->subframe_buffer_size);
+    //printf("Panos-D: start_request, bUFFER SIZE: %d", p7_config_g->subframe_buffer_size);
 
     // Need to wait for main thread to create RU structures
     while(config_sync_var<0)
@@ -1841,7 +1842,8 @@ void oai_subframe_ind(uint16_t sfn, uint16_t sf)
 
   if (p7_config_g != NULL && sync_var==0)
   {
-	  printf("Panos-D: oai_subframe_ind 1, buffer size:%d", p7_config_g->subframe_buffer_size);
+	  NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Panos-D: oai_subframe_ind 1, buffer size: %d", p7_config_g->subframe_buffer_size);
+	  //printf("Panos-D: oai_subframe_ind 1, buffer size:%d", p7_config_g->subframe_buffer_size);
 
 	  uint16_t sfn_sf_tx = sfn<<4 | sf;
 

@@ -2742,6 +2742,9 @@ int decode_BCCH_DLSCH_Message(
                   (void*)&bcch_message->message.choice.c1.choice.systemInformationBlockType1,
                   sizeof(SystemInformationBlockType1_t) );
           LOG_D( RRC, "[UE %"PRIu8"] Decoding First SIB1\n", ctxt_pP->module_id );
+
+          LOG_I( RRC, "Panos-D: decode_BCCH_DLSCH_Message1 BEFORE decode_SIB1");
+          //printf("Panos-D: decode_BCCH_DLSCH_Message1 BEFORE decode_SIB1");
           decode_SIB1( ctxt_pP, eNB_index, rsrq, rsrp );
         }
       }
@@ -2760,7 +2763,8 @@ int decode_BCCH_DLSCH_Message(
         LOG_D( RRC, "[UE %"PRIu8"] Decoding SI for frameP %"PRIu32"\n",
                ctxt_pP->module_id,
                ctxt_pP->frame );
-
+        LOG_I( RRC, "Panos-D: decode_BCCH_DLSCH_Message1 BEFORE OTHER decode_SI");
+        //printf("Panos-D: decode_BCCH_DLSCH_Message1 BEFORE OTHER decode_SI");
         decode_SI( ctxt_pP, eNB_index );
       }
 
@@ -3581,25 +3585,31 @@ static void dump_sib19(SystemInformationBlockType19_r12_t *sib19){
 //-----------------------------------------------------------------------------
 static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
-
+	LOG_I( RRC, "Panos-D: decode_SI 1 \n");
+	//printf("Panos-D: decode_SI 1 \n");
   SystemInformation_t** si = &UE_rrc_inst[ctxt_pP->module_id].si[eNB_index];
   int new_sib = 0;
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
 
+  LOG_I( RRC, "Panos-D: decode_SI 2 \n");
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_UE_DECODE_SI, VCD_FUNCTION_IN );
 
   // Dump contents
   //TTN - should be modified since we use SystemInformation__criticalExtensions_PR_criticalExtensionsFuture
   // instead of SystemInformation__criticalExtensions_PR_systemInformation_r8
-  //if ((*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_systemInformation_r8) {
-  if ((*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_criticalExtensionsFuture) {
+  // Panos: I brought this if condition back to previous form in order to prevent crashing. Pending to
+  // modify for SystemInformation__criticalExtensions_PR_criticalExtensionsFuture
+  if ((*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_systemInformation_r8) {
+  //if ((*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_criticalExtensionsFuture) {
     LOG_D( RRC, "[UE] (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count %d\n",
            (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count );
   } else {
+	  LOG_I( RRC, "Panos-D: decode_SI 2.3 \n");
     LOG_D( RRC, "[UE] Unknown criticalExtension version (not Rel8)\n" );
     return -1;
   }
 
+  LOG_I( RRC, "Panos-D: decode_SI 3 \n");
   for (int i=0; i<(*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count; i++) {
     LOG_D( RRC, "SI count %d\n", i );
     struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *typeandinfo;
@@ -3607,6 +3617,7 @@ static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_in
 
     switch(typeandinfo->present) {
     case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib2:
+    	LOG_I( RRC, "Panos-D: decode_SI 4 \n");
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&2) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=2;
 	new_sib=1;
@@ -3690,6 +3701,7 @@ static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_in
       break; // case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib2
 
     case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib3:
+    	LOG_I( RRC, "Panos-D: decode_SI 5 \n");
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&4) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=4;
 	new_sib=1;

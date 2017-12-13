@@ -9,6 +9,9 @@
 #include "openair1/SCHED/defs.h"
 //#include "common/ran_context.h"
 #include "openair2/PHY_INTERFACE/phy_stub_UE.h"
+
+//#define DEADLINE_SCHEDULER 1
+
 //#include "nfapi_pnf_interface.h"
 //#include "nfapi.h"
 //#include "nfapi_pnf.h"
@@ -18,6 +21,7 @@
 
 //extern uint8_t nfapi_pnf;
 //UL_IND_t *UL_INFO;
+extern nfapi_tx_request_pdu_t* tx_request_pdu[1023][10][10];
 
 void Msg1_transmitted(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id);
 void Msg3_transmitted(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id);
@@ -742,8 +746,11 @@ int tx_req_UE_MAC(nfapi_tx_request_t* req)
 
   LOG_D(PHY,"%s() SFN/SF:%d/%d PDUs:%d\n", __FUNCTION__, sfn, sf, req->tx_request_body.number_of_pdus);
 
-  if (req->tx_request_body.tl.tag==NFAPI_TX_REQUEST_BODY_TAG)
-  {
+  LOG_I(MAC, "Panos-D: tx_req_UE_MAC 1 \n");
+  //printf("Panos-D: tx_req_UE_MAC 1 \n");
+  //if (req->tx_request_body.tl.tag==NFAPI_TX_REQUEST_BODY_TAG)
+  //{
+
     for (int i=0; i<req->tx_request_body.number_of_pdus; i++)
     {
       LOG_D(PHY,"%s() SFN/SF:%d/%d number_of_pdus:%d [PDU:%d] pdu_length:%d pdu_index:%d num_segments:%d\n",
@@ -756,10 +763,10 @@ int tx_req_UE_MAC(nfapi_tx_request_t* req)
           req->tx_request_body.tx_pdu_list[i].num_segments
           );
 
-      tx_request_pdu_list = req->tx_request_body.tx_pdu_list;
-      //tx_request_pdu_UE_MAC[sfn][sf][i] = &req->tx_request_body.tx_pdu_list[i];
+      //tx_request_pdu_list = req->tx_request_body.tx_pdu_list;
+      //tx_request_pdu[sfn][sf][i] = &req->tx_request_body.tx_pdu_list[i];
     }
-  }
+  //}
 
   return 0;
 }
@@ -767,7 +774,7 @@ int tx_req_UE_MAC(nfapi_tx_request_t* req)
 
 int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req)
 {
-
+	LOG_I(MAC, "Panos-D: dl_config_req_UE_MAC 1 \n");
   int sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
   int sf = NFAPI_SFNSF2SF(req->sfn_sf);
   module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
@@ -784,10 +791,15 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req)
 
   //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() TX:%d/%d RX:%d/%d sfn_sf:%d DCI:%d PDU:%d\n", __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx, NFAPI_SFNSF2DEC(req->sfn_sf), req->dl_config_request_body.number_dci, req->dl_config_request_body.number_pdu);
 
+
+
+  //LOG_D(PHY,"NFAPI: Sched_INFO:SFN/SF:%d%d dl_pdu:%d tx_req:%d hi_dci0:%d ul_cfg:%d num_pdcch_symbols:%d\n",
+  //	frame,subframe,number_dl_pdu,TX_req->tx_request_body.number_of_pdus,number_hi_dci0_pdu,number_ul_pdu, eNB->pdcch_vars[subframe&1].num_pdcch_symbols);
+
   for (int i=0;i<req->dl_config_request_body.number_pdu;i++)
   {
     //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn/sf:%d PDU[%d] size:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size);
-
+	  LOG_E(MAC, "%s() sfn/sf:%d PDU[%d] size:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size);
     if (dl_config_pdu_list[i].pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE)
     {
 		if (dl_config_pdu_list[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti_type == 1) {
@@ -810,6 +822,8 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req)
 			dl_config_pdu_tmp = &dl_config_pdu_list[i+1];
 			if(dl_config_pdu_tmp->pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE && dl_config_pdu_list[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti == 0xFFFF){
 				//pdu = Tx_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data;
+				LOG_D(PHY,"%s() [PDU:%d] NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d sdu:%p\n",
+				            __FUNCTION__, i, sfn, sf, sfn, sf, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.transport_blocks, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index, tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
 				if(tx_request_pdu_list + dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index!= NULL){
 					ue_decode_si(Mod_id, 0, sfn, 0,
 							tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
@@ -868,12 +882,23 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req)
       //NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() UNKNOWN:%d\n", __FUNCTION__, dl_config_pdu_list[i].pdu_type);
     }
   }
+  //deallocate_mem_nfapi_dl
 
   if(req->vendor_extension)
     free(req->vendor_extension);
 
+  /*if(tx_request_pdu_list)
+	  free(tx_request_pdu_list);
+  free(req);*/
+
   return 0;
 }
+
+
+int deallocate_mem_nfapi_dl(nfapi_dl_config_request_t* req, nfapi_tx_request_pdu_t* tx_pdu_list){
+
+}
+
 
 
 
@@ -919,13 +944,40 @@ int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req)
   return 0;
 }
 
+
+
+
+
 // The following set of memcpy functions should be getting called as callback functions from
 // pnf_p7_subframe_ind.
 int memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
 {
+
 	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
-	UE_mac_inst[Mod_id].dl_config_req = req;
+	UE_mac_inst[Mod_id].dl_config_req = (nfapi_dl_config_request_t*)malloc(sizeof(nfapi_dl_config_request_t));
+	LOG_I(MAC, "Panos-D: memcpy_dl_config_req 1 \n");
+
+	/*if(req->header!=NULL){
+		UE_mac_inst[Mod_id].dl_config_req->header = req->header;
+	}*/
+
+	UE_mac_inst[Mod_id].dl_config_req->sfn_sf = req->sfn_sf;
+	UE_mac_inst[Mod_id].dl_config_req->vendor_extension = req->vendor_extension;
+
+	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_dci = req->dl_config_request_body.number_dci;
+	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdcch_ofdm_symbols = req->dl_config_request_body.number_pdcch_ofdm_symbols;
+	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdsch_rnti = req->dl_config_request_body.number_pdsch_rnti;
+	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdu = req->dl_config_request_body.number_pdu;
+	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.tl = req->dl_config_request_body.tl;
+
+	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.dl_config_pdu_list = (nfapi_dl_config_request_pdu_t*) malloc(req->dl_config_request_body.number_pdu*sizeof(nfapi_dl_config_request_pdu_t));
+	for(int i=0; i<UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdu; i++) {
+		UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.dl_config_pdu_list[i] = req->dl_config_request_body.dl_config_pdu_list[i];
+	}
+
+	//UE_mac_inst[Mod_id].dl_config_req = req;
 	return 0;
+
 }
 
 int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
@@ -937,8 +989,43 @@ int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
 
 int memcpy_tx_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
 {
+	LOG_I(MAC, "Panos-D: memcpy_tx_req 1, req->tx_request_body.number_of_pdus: %d \n", req->tx_request_body.number_of_pdus);
+	LOG_I(MAC, "Panos-D: memcpy_tx_req 1, req->tx_request_body.tx_pdu_list[i].pdu_length: %d \n", req->tx_request_body.tx_pdu_list[0].pdu_length);
+	LOG_I(MAC, "Panos-D: memcpy_tx_req 1, req->tx_request_body.tx_pdu_list[i].pdu_index: %d \n", req->tx_request_body.tx_pdu_list[0].pdu_index);
+	LOG_I(MAC, "Panos-D: memcpy_tx_req 1, req->tx_request_body.tx_pdu_list[i].num_segments: %d \n", req->tx_request_body.tx_pdu_list[0].num_segments);
+	LOG_I(MAC, "Panos-D: memcpy_tx_req 1, req->tx_request_body.tx_pdu_list[i].segments[j].segment_data: %d \n", *req->tx_request_body.tx_pdu_list[0].segments[0].segment_data);
+	//printf("Panos-D: memcpy_tx_req 1, req->tx_request_body.number_of_pdus: %d \n", req->tx_request_body.number_of_pdus);
+	//printf("Panos-D: memcpy_tx_req 1, req->tx_request_body.tx_pdu_list[i].pdu_length: %d \n", req->tx_request_body.tx_pdu_list[0].pdu_length);
+	//printf("Panos-D: memcpy_tx_req 1, req->tx_request_body.tx_pdu_list[i].pdu_index: %d \n", req->tx_request_body.tx_pdu_list[0].pdu_index);
+	//printf("Panos-D: memcpy_tx_req 1, req->tx_request_body.tx_pdu_list[i].num_segments: %d \n", req->tx_request_body.tx_pdu_list[0].num_segments);
+	//printf("Panos-D: memcpy_tx_req 1, req->tx_request_body.tx_pdu_list[i].segments[j].segment_data: %d \n", *req->tx_request_body.tx_pdu_list[0].segments[0].segment_data);
+
 	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
-	UE_mac_inst[Mod_id].tx_req = req;
+
+	int num_elem = req->tx_request_body.number_of_pdus;
+	tx_request_pdu_list = (nfapi_tx_request_pdu_t*) malloc(num_elem*sizeof(nfapi_tx_request_pdu_t));
+	//UE_mac_inst[Mod_id].tx_req = (nfapi_tx_request_t*) malloc(sizeof(nfapi_tx_request_t));
+	//memcpy(UE_mac_inst[Mod_id].tx_req, req, sizeof(req));
+	for (int i=0; i<num_elem; i++) {
+		tx_request_pdu_list[i].num_segments = req->tx_request_body.tx_pdu_list[i].num_segments;
+		tx_request_pdu_list[i].pdu_index = req->tx_request_body.tx_pdu_list[i].pdu_index;
+		tx_request_pdu_list[i].pdu_length = req->tx_request_body.tx_pdu_list[i].pdu_length;
+		for (int j=0; j<req->tx_request_body.tx_pdu_list[i].num_segments; j++){
+			//*tx_request_pdu_list[i].segments[j].segment_data = *req->tx_request_body.tx_pdu_list[i].segments[j].segment_data;
+			tx_request_pdu_list[i].segments[j].segment_length = req->tx_request_body.tx_pdu_list[i].segments[j].segment_length;
+			if(tx_request_pdu_list[i].segments[j].segment_length > 0){
+			tx_request_pdu_list[i].segments[j].segment_data = (uint8_t*)malloc(tx_request_pdu_list[i].segments[j].segment_length*sizeof (uint8_t));
+			memcpy(tx_request_pdu_list[i].segments[j].segment_data, req->tx_request_body.tx_pdu_list[i].segments[j].segment_data, tx_request_pdu_list[i].segments[j].segment_length);
+			}
+			//tx_request_pdu_list[i].segments[j].segment_length = req->tx_request_body.tx_pdu_list[i].segments[j].segment_length;
+		}
+
+		//tx_request_pdu_list[i].segments = req->tx_request_body.tx_pdu_list[i].segments;
+	}
+
+
+	// Panos: Old way. Not possible to use because by the time we call tx_req_UE_MAC tx_req memory has been deallocated within nfapi.
+	//UE_mac_inst[Mod_id].tx_req = req;
 	return 0;
 }
 

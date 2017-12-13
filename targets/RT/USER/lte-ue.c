@@ -57,6 +57,7 @@
 #include "UTIL/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 
+
 #include "T.h"
 
 extern double cpuf;
@@ -812,6 +813,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
             //CPU_SET(threads.three, &cpuset);
     init_thread(900000,1000000 , FIFO_PRIORITY-1, &cpuset,
                 threadname);
+    wait_sync("UE_phy_stub_thread_rxn_txnp4");
 
     while (!oai_exit) {
         if (pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) != 0) {
@@ -830,7 +832,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 
         proc->subframe_rx=timer_subframe;
         proc->frame_rx = timer_frame;
-        proc->subframe_tx=(timer_subframe+4)%10;
+        proc->subframe_tx=(timer_subframe+2)%10;
         proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
 
 
@@ -875,17 +877,18 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 
             // Panos: is this the right place to call oai_subframe_indication to invoke p7 nfapi callbacks here?
             oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
-            printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind \n");
-            if(UE_mac_inst[Mod_id].tx_req!= NULL){
+            LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind \n");
+            //printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind \n");
+            /*if(UE_mac_inst[Mod_id].tx_req!= NULL){
             	printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 2\n");
             	tx_req_UE_MAC(UE_mac_inst[Mod_id].tx_req);
-            }
+            }*/
             if(UE_mac_inst[Mod_id].dl_config_req!= NULL) {
-            	printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 3\n");
+            	LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 3 \n");
             	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req);
             }
             if(UE_mac_inst[Mod_id].hi_dci0_req!= NULL){
-            	printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 4\n");
+            	LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 4 \n");
             	hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req);
             }
 
@@ -1421,16 +1424,24 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
 // which will be ticking and provide the SFN/SF values that will be used from the UE threads
 // playing the role of nfapi-pnf.
 static void* timer_thread( void* param ) {
+	thread_top_init("timer_thread",1,870000L,1000000L,1000000L);
 	timer_subframe =9;
 	timer_frame    =1023;
 	//phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
 	phy_stub_ticking->ticking_var = -1;
+	PHY_VARS_UE *UE;
+	UE = PHY_vars_UE_g[0][0];
+	double t_diff;
 	wait_sync("timer_thread");
     //pthread_mutex_init(&phy_stub_ticking->mutex_ticking,NULL);
     //pthread_cond_init(&phy_stub_ticking->cond_ticking,NULL);
 
+	struct timespec start = {0};
+	struct timespec end = {0};
+	//sleepValue.tv_nsec = 1000000;
+	opp_enabled = 1;
 	while (!oai_exit) {
-	    usleep(1000);
+
 	    // these are local subframe/frame counters to check that we are in synch with the fronthaul timing.
 	    // They are set on the first rx/tx in the underly FH routines.
 	    if (timer_subframe==9) {
@@ -1440,18 +1451,45 @@ static void* timer_thread( void* param ) {
 	    } else {
 	    	timer_subframe++;
 	    }
+	    //printf("[timer_thread] Frame: %d, Subframe: %d \n", timer_frame, timer_subframe);
+	    LOG_I(MAC," Panos-D [timer_thread] Frame: %d, Subframe: %d \n", timer_frame, timer_subframe);
 	    //AssertFatal( 0 == pthread_cond_signal(&phy_stub_ticking->cond_ticking), "");
 	    AssertFatal(pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) ==0,"");
 	    phy_stub_ticking->ticking_var++;
 	    // This should probably be a call to pthread_cond_broadcast when we introduce support for multiple UEs (threads)
-	    if(phy_stub_ticking->ticking_var == 0) {
-	    	if (pthread_cond_signal(&phy_stub_ticking->cond_ticking) != 0) {
+	    if(phy_stub_ticking->ticking_var == 0){
+	    //AssertFatal(phy_stub_ticking->ticking_var == 0,"phy_stub_ticking->ticking_var = %d",
+	    //		phy_stub_ticking->ticking_var);
+	    if (pthread_cond_signal(&phy_stub_ticking->cond_ticking) != 0) {
 	    		//LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
 	    		LOG_E( PHY, "timer_thread ERROR pthread_cond_signal for UE_thread\n");
 	    		exit_fun("nothing to add");
-	    	}
 	    }
+	    }
+
 	    AssertFatal(pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) ==0,"");
+        start_meas(&UE->timer_stats);
+
+
+	    //clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start); // get initial time-stamp
+	    usleep(1000);
+
+	    //clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);   // get final time-stamp
+
+	    //double t_ns = (double)(end.tv_sec - start.tv_sec) * 1.0e9 +
+	    //              (double)(end.tv_nsec - start.tv_nsec);
+	    //printf("Panos-D: [timer_thread] REAL TIME difference: %f", t_ns);
+
+
+	    //nanosleep(&sleepValue, NULL);
+
+	    stop_meas(&UE->timer_stats);
+	    t_diff = get_time_meas_us(&UE->timer_stats);
+	    //printf("Panos-D: Absolute time: %lld, diff: %lld, diff_now: %lld \n",UE->timer_stats.p_time, UE->timer_stats.diff, UE->timer_stats.diff_now);
+	    //LOG_I(MAC,"[UE%d] Applying default macMainConfig\n",module_idP);
+	    if (t_diff > 1100) LOG_E(MAC," Panos-D Absolute time: %f\n", t_diff);
+	    //printf("Panos-D: Absolute time: %f", t_diff);
+
 	    //UE->proc.ticking_var++;
 	    // pthread_cond_signal() //Send signal to ue_thread()?
 	    // We also need to somehow pass the information of SFN/SF

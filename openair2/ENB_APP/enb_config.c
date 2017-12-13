@@ -272,7 +272,7 @@ void UE_config_stub_pnf(void) {
 			  UE_mac_inst[0].eth_params_n.remote_portd             = *(L1_ParamList.paramarray[j][L1_REMOTE_N_PORTD_IDX].iptr);
 			  UE_mac_inst[0].eth_params_n.transp_preference        = ETH_UDP_MODE;*/
 
-			  sf_ahead = 4; // Cannot cope with 4 subframes betweem RX and TX - set it to 2
+			  sf_ahead = 2; // Cannot cope with 4 subframes betweem RX and TX - set it to 2
 			  //configure_nfapi_pnf(UE_mac_inst[0].eth_params_n.remote_addr, UE_mac_inst[0].eth_params_n.remote_portc, UE_mac_inst[0].eth_params_n.my_addr, UE_mac_inst[0].eth_params_n.my_portd, UE_mac_inst[0].eth_params_n.remote_portd);
 			  configure_nfapi_pnf(stub_eth_params.remote_addr, stub_eth_params.remote_portc, stub_eth_params.my_addr, stub_eth_params.my_portd, stub_eth_params.remote_portd);
 		  }
@@ -335,13 +335,13 @@ void RCconfig_L1(void) {
 	RC.eNB[j]                       = (PHY_VARS_eNB **)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB**));
 	LOG_I(PHY,"RC.eNB[%d] = %p\n",j,RC.eNB[j]);
 	memset(RC.eNB[j],0,(1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB***));
-	printf("Panos-D: RCconfig_L1 99");
+	//printf("Panos-D: RCconfig_L1 99");
       }
 
       for (i=0;i<RC.nb_L1_CC[j];i++) {
-    	  printf("Panos-D: RCconfig_L1 9");
+    	  //printf("Panos-D: RCconfig_L1 9");
         if (RC.eNB[j][i] == NULL) {
-        	printf("Panos-D: RCconfig_L1 10");
+        	//printf("Panos-D: RCconfig_L1 10");
         	RC.eNB[j][i] = (PHY_VARS_eNB *)malloc(sizeof(PHY_VARS_eNB));
           memset((void*)RC.eNB[j][i],0,sizeof(PHY_VARS_eNB));
           LOG_I(PHY,"RC.eNB[%d][%d] = %p\n",j,i,RC.eNB[j][i]);
@@ -364,7 +364,7 @@ void RCconfig_L1(void) {
 	RC.eNB[j][0]->eth_params_n.remote_portd             = *(L1_ParamList.paramarray[j][L1_REMOTE_N_PORTD_IDX].iptr);
 	RC.eNB[j][0]->eth_params_n.transp_preference        = ETH_UDP_MODE;
 
-	printf("Panos-D: RCconfig_L1 11");
+	//printf("Panos-D: RCconfig_L1 11");
         sf_ahead = 2; // Cannot cope with 4 subframes betweem RX and TX - set it to 2
 
         RC.nb_macrlc_inst = 1;  // This is used by mac_top_init_eNB()
@@ -384,7 +384,7 @@ void RCconfig_L1(void) {
         configure_nfapi_pnf(RC.eNB[j][0]->eth_params_n.remote_addr, RC.eNB[j][0]->eth_params_n.remote_portc, RC.eNB[j][0]->eth_params_n.my_addr, RC.eNB[j][0]->eth_params_n.my_portd, RC.eNB[j][0]->eth_params_n     .remote_portd);
       }
       else { // other midhaul
-    	  printf("Panos-D: RCconfig_L1 12 \n");
+    	  //printf("Panos-D: RCconfig_L1 12 \n");
       }	
     }// j=0..num_inst
     printf("Initializing northbound interface for L1\n");
@@ -400,22 +400,22 @@ void RCconfig_L1(void) {
 
     RC.nb_L1_CC[j]=1; // DJP - hmmm
 
-    printf("Panos-D: RCconfig_L1 13 \n");
+    //printf("Panos-D: RCconfig_L1 13 \n");
     if (RC.eNB[j] == NULL) {
       RC.eNB[j]                       = (PHY_VARS_eNB **)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB*));
-      printf("Panos-D: RCconfig_L1 13 \n");
+      //printf("Panos-D: RCconfig_L1 13 \n");
       LOG_I(PHY,"RC.eNB[%d] = %p\n",j,RC.eNB[j]);
       memset(RC.eNB[j],0,(1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB*));
-      printf("Panos-D: RCconfig_L1 14 \n");
+      //printf("Panos-D: RCconfig_L1 14 \n");
     }
 
     for (i=0;i<RC.nb_L1_CC[j];i++) {
       if (RC.eNB[j][i] == NULL) {
-    	  printf("Panos-D: RCconfig_L1 15 \n");
+    	  //printf("Panos-D: RCconfig_L1 15 \n");
         RC.eNB[j][i] = (PHY_VARS_eNB *)malloc(sizeof(PHY_VARS_eNB));
-        printf("Panos-D: RCconfig_L1 16 \n");
+        //printf("Panos-D: RCconfig_L1 16 \n");
         memset((void*)RC.eNB[j][i],0,sizeof(PHY_VARS_eNB));
-        printf("Panos-D: RCconfig_L1 17 \n");
+        //printf("Panos-D: RCconfig_L1 17 \n");
         LOG_I(PHY,"RC.eNB[%d][%d] = %p\n",j,i,RC.eNB[j][i]);
         RC.eNB[j][i]->Mod_id  = j;
         RC.eNB[j][i]->CC_id   = i;

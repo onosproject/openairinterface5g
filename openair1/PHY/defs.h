@@ -662,6 +662,7 @@ typedef struct{
 	int ticking_var;
 	/// condition variable for timer_thread;
 	pthread_cond_t cond_ticking;
+	//time_stats_t timer_stats;
 }SF_ticking;
 
 
@@ -1449,6 +1450,7 @@ typedef struct {
   time_stats_t dlsch_tc_intl1_stats;
   time_stats_t dlsch_tc_intl2_stats;
   time_stats_t tx_prach;
+  time_stats_t timer_stats;
 
   /// RF and Interface devices per CC
 
