@@ -1209,6 +1209,7 @@ endif()
 set (ENB_APP_SRC
   ${OPENAIR2_DIR}/ENB_APP/enb_app.c
   ${OPENAIR2_DIR}/ENB_APP/enb_config.c
+  ${OPENAIR2_DIR}/ENB_APP/enb_config_NB_IoT.c
   )
 
 add_library(L2
