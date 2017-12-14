@@ -244,7 +244,7 @@
 #define ENB_CONFIG_STRING_OSA_LOG_LEVEL                    "osa_log_level"
 #define ENB_CONFIG_STRING_OSA_LOG_VERBOSITY                "osa_log_verbosity"
 //
-//******************************** NB-IoT parameters *************************************
+//******************************** NB-IoT parameters **************************************************************
 //
 
 //************* RRC parameters in the config file of merge branch
@@ -292,7 +292,7 @@
 #define ENB_CONFIG_STRING_NPDCCH_NUMREPETITIONS_RA_NB_IOT                  "npdcch_NumRepetitions_RA"
 #define ENB_CONFIG_STRING_NPDCCH_STARTSF_CSS_RA_NB_IOT                     "npdcch_StartSF_CSS_RA"
 #define ENB_CONFIG_STRING_NPDCCH_OFFSET_RA_NB_IOT                          "npdcch_Offset_RA"
-
+//*********************************************************************************************************************
 
 #define KHz (1000UL)
 #define MHz (1000 * KHz)
