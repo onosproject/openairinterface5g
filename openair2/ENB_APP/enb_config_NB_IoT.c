@@ -244,7 +244,7 @@
 #define ENB_CONFIG_STRING_OSA_LOG_LEVEL                    "osa_log_level"
 #define ENB_CONFIG_STRING_OSA_LOG_VERBOSITY                "osa_log_verbosity"
 //
-//******************************** NB-IoT parameters *************************************
+//******************************** NB-IoT parameters **************************************************************
 //
 
 //************* RRC parameters in the config file of merge branch
@@ -292,7 +292,7 @@
 #define ENB_CONFIG_STRING_NPDCCH_NUMREPETITIONS_RA_NB_IOT                  "npdcch_NumRepetitions_RA"
 #define ENB_CONFIG_STRING_NPDCCH_STARTSF_CSS_RA_NB_IOT                     "npdcch_StartSF_CSS_RA"
 #define ENB_CONFIG_STRING_NPDCCH_OFFSET_RA_NB_IOT                          "npdcch_Offset_RA"
-
+//*********************************************************************************************************************
 
 #define KHz (1000UL)
 #define MHz (1000 * KHz)
@@ -579,7 +579,7 @@ extern int asn1_xer_print;
 #else
 #define libconfig_int int
 #endif
-const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
+const Enb_properties_array_t *enb_config_init_NB_IoT(char* lib_config_file_name_pP)
 {
   config_t          cfg;
   config_setting_t *setting                       = NULL;
@@ -753,6 +753,52 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   char*             udp_log_verbosity             = NULL;
   char*             osa_log_level                 = NULL;
   char*             osa_log_verbosity             = NULL;
+
+//
+//*********************** NB-IoT parameters *********************
+//
+  libconfig_int     rach_raResponseWindowSize_NB                 = 0;
+  libconfig_int     rach_macContentionResolutionTimer_NB         = 0;
+  libconfig_int     rach_powerRampingStep_NB                     = 0;
+  libconfig_int     rach_preambleInitialReceivedTargetPower_NB   = 0;
+  libconfig_int     rach_preambleTransMax_CE_NB                  = 0;
+  libconfig_int     bcch_modificationPeriodCoeff_NB              = 0;
+  libconfig_int     pcch_defaultPagingCycle_NB                   = 0;
+  libconfig_int     nprach_CP_Length                             = 0;
+  libconfig_int     nprach_rsrp_range                            = 0;
+  const char*       nprach_SubcarrierMSG3_RangeStart             = NULL;
+  libconfig_int     maxNumPreambleAttemptCE_NB                   = 0;
+  libconfig_int     npdsch_nrs_Power                             = 0;
+  libconfig_int     npusch_ack_nack_numRepetitions_NB            = 0;
+  libconfig_int     npusch_srs_SubframeConfig_NB                 = 0;
+  libconfig_int     npusch_threeTone_CyclicShift_r13             = 0;
+  libconfig_int     npusch_sixTone_CyclicShift_r13               = 0;
+  libconfig_int     npusch_groupHoppingEnabled                   = 0;
+  libconfig_int     npusch_groupAssignmentNPUSCH_r13             = 0;
+  libconfig_int     dl_GapThreshold_NB                           = 0;
+  libconfig_int     dl_GapPeriodicity_NB                         = 0;
+  const char*       dl_GapDurationCoeff_NB                       = NULL;
+  libconfig_int     npusch_p0_NominalNPUSCH                      = 0;
+  libconfig_int     npusch_alpha                                 = 0;
+  libconfig_int     deltaPreambleMsg3                            = 0;
+
+  libconfig_int     ue_TimersAndConstants_t300_NB      = 0;
+  libconfig_int     ue_TimersAndConstants_t301_NB      = 0;
+  libconfig_int     ue_TimersAndConstants_t310_NB      = 0;
+  libconfig_int     ue_TimersAndConstants_t311_NB      = 0;
+  libconfig_int     ue_TimersAndConstants_n310_NB      = 0;
+  libconfig_int     ue_TimersAndConstants_n311_NB      = 0;
+
+  libconfig_int     nprach_Periodicity                 = 0;
+  libconfig_int     nprach_StartTime                   = 0;
+  libconfig_int     nprach_SubcarrierOffset            = 0;
+  libconfig_int     nprach_NumSubcarriers              = 0;
+  libconfig_int     numRepetitionsPerPreambleAttempt   = 0;
+  libconfig_int     npdcch_NumRepetitions_RA           = 0;
+  libconfig_int     npdcch_StartSF_CSS_RA              = 0;
+  const char*       npdcch_Offset_RA                   = NULL;
+
+
 
   /* for no gcc warnings */
   (void)astring;
@@ -966,6 +1012,48 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N310,  &ue_TimersAndConstants_n310)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N311,  &ue_TimersAndConstants_n311)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UE_TRANSMISSION_MODE,  &ue_TransmissionMode)
+
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_POWERRAMPINGSTEP_NB_IOT,  &rach_powerRampingStep_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_PREAMBLEINITIALRECEIVEDTARGETPOWER_NB_IOT,  &rach_preambleInitialReceivedTargetPower_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_PREAMBLETRANSMAX_CE_NB_IOT,  &rach_preambleTransMax_CE_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_RARESPONSEWINDOWSIZE_NB_IOT,  &rach_raResponseWindowSize_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_MACCONTENTIONRESOLUTIONTIMER_NB_IOT,  &rach_macContentionResolutionTimer_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_BCCH_MODIFICATIONPERIODCOEFF_NB_IOT,  &bcch_modificationPeriodCoeff_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PCCH_DEFAULT_PAGING_CYCLE_NB_IOT,  &pcch_defaultPagingCycle_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_CP_LENGTH_NB_IOT,  &nprach_CP_Length)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_RSRP_RANGE_NB_IOT,  &nprach_rsrp_range)
+                   && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_NPRACH_SUBCARRIERMSG3_RANGESTART_NB_IOT,  &nprach_SubcarrierMSG3_RangeStart)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_MAXNUM_PREAMBLE_ATTEMPT_CE_NB_IOT,  &maxNumPreambleAttemptCE_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPDSCH_NRS_POWER_NB_IOT,  &npdsch_nrs_Power)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_ACK_NACK_NUMREPETITIONS_NB_IOT,  &npusch_ack_nack_numRepetitions_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_SRS_SUBFRAMECONFIG_NB_IOT,  &npusch_srs_SubframeConfig_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_THREETONE_CYCLICSHIFT_R13_NB_IOT,  &npusch_threeTone_CyclicShift_r13)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_SIXTONE_CYCLICSHIFT_R13_NB_IOT,  &npusch_sixTone_CyclicShift_r13)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_GROUPHOPPINGENABLED_NB_IOT,  &npusch_groupHoppingEnabled)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_GROUPASSIGNMENTNPUSH_R13_NB_IOT,  &npusch_groupAssignmentNPUSCH_r13)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_DL_GAPTHRESHOLD_NB_IOT,  &dl_GapThreshold_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_DL_GAPPERIODICITY_NB_IOT,  &dl_GapPeriodicity_NB)
+                   && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_DL_GAPDURATIONCOEFF_NB_IOT,  &dl_GapDurationCoeff_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_P0NOMINALPUSH_NB_IOT,  &npusch_p0_NominalNPUSCH)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_ALFA_NB_IOT,  &npusch_alpha)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_DELTAPREAMBLEMSG3_NB_IOT,  &deltaPreambleMsg3)
+                   
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T300_NB_IOT,  &ue_TimersAndConstants_t300_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T301_NB_IOT,  &ue_TimersAndConstants_t301_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T310_NB_IOT,  &ue_TimersAndConstants_t310_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T311_NB_IOT,  &ue_TimersAndConstants_t311_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N310_NB_IOT,  &ue_TimersAndConstants_n310_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N311_NB_IOT,  &ue_TimersAndConstants_n311_NB)
+                   
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_PERIODICITY_NB_IOT,  &nprach_Periodicity)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_STARTTIME_NB_IOT,  &nprach_StartTime)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_SUBCARRIEROFFSET_NB_IOT,  &nprach_SubcarrierOffset)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_NUMSUBCARRIERS_NB_IOT,  &nprach_NumSubcarriers)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NUMREPETITIONSPERPREAMBLEATTEMPT_NB_IOT,  &numRepetitionsPerPreambleAttempt)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPDCCH_NUMREPETITIONS_RA_NB_IOT,  &npdcch_NumRepetitions_RA)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPDCCH_STARTSF_CSS_RA_NB_IOT,  &npdcch_StartSF_CSS_RA)
+                   && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_NPDCCH_OFFSET_RA_NB_IOT,  &npdcch_Offset_RA)
+
 
 #if defined(Rel10) || defined(Rel14)
 
@@ -2019,6 +2107,22 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                              lib_config_file_name_pP, i, ue_TransmissionMode);
 		break;
 	      }
+
+        //************************************ NB-IoT part *****************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //*******************************************************************************
             }
           }
 
