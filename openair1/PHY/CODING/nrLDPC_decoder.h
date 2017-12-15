@@ -8,11 +8,11 @@
 *
 ===============================================================================*/
 
-#ifndef _NR_LDPC_DECODER_
-#define _NR_LDPC_DECODER_
+#ifndef __NR_LDPC_DECODER__H__
+#define __NR_LDPC_DECODER__H__
 
 #include "nrLDPC_types.h"
 
-void nrLDPC_decoder(t_nrLDPC_dec_params* p_decParams, int16_t* p_llr, int8_t* p_llrOut, t_nrLDPC_proc_time* p_procTime);
+void nrLDPC_decoder(t_nrLDPC_dec_params* p_decParams, int8_t* p_llr, int8_t* p_llrOut, t_nrLDPC_time_stats* p_profiler);
 
 #endif

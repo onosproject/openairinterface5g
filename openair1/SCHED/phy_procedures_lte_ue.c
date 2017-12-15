@@ -3572,7 +3572,7 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
            frame_rx,
            nr_tti_rx,
            0,
-           0,0,1);
+           0,1);
   printf("start pmch dlsch decoding\n");
 #endif
       } else { // abstraction
@@ -4007,7 +4007,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 			   frame_rx,
 			   nr_tti_rx,
 			   harq_pid,
-			   pdsch==PDSCH?1:0,proc->decoder_switch,
+			   pdsch==PDSCH?1:0,//proc->decoder_switch,
 			   dlsch0->harq_processes[harq_pid]->TBS>256?1:0);
       printf("start cW0 dlsch decoding\n");
 #endif
@@ -4088,7 +4088,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
                   frame_rx,
                   nr_tti_rx,
                   harq_pid,
-                  pdsch==PDSCH?1:0,proc->decoder_switch,
+                  pdsch==PDSCH?1:0,//proc->decoder_switch,
                   dlsch1->harq_processes[harq_pid]->TBS>256?1:0);
           printf("start cw1 dlsch decoding\n");
 #endif

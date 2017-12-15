@@ -18,146 +18,166 @@
 #include "nrLDPC_cnProc.h"
 #include "nrLDPC_bnProc.h"
 
-#ifdef MEAS_TIME
-#include <time.h>
-#include <string.h>
-#endif
+static inline void nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, uint32_t numLLR, t_nrLDPC_lut* p_lut, t_nrLDPC_dec_params* p_decParams, t_nrLDPC_time_stats* p_profiler);
 
-static inline void nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_llrOut, uint32_t numLLR, t_nrLDPC_lut* p_lut, t_nrLDPC_dec_params* p_decParams, t_nrLDPC_proc_time* p_procTime);
-
-void nrLDPC_decoder(t_nrLDPC_dec_params* p_decParams, int16_t* p_llr, int8_t* p_llrOut, t_nrLDPC_proc_time* p_procTime)
+void nrLDPC_decoder(t_nrLDPC_dec_params* p_decParams, int8_t* p_llr, int8_t* p_out, t_nrLDPC_time_stats* p_profiler)
 {
     uint32_t numLLR;
     t_nrLDPC_lut lut;
     t_nrLDPC_lut* p_lut = &lut;
-    //int8_t llrOut_inter;
-    //int8_t* p_llrOut_inter=&llrOut_inter;
 
     // Initialize decoder core(s) with correct LUTs
     numLLR = nrLDPC_init(p_decParams, p_lut);
 
     // Launch LDPC decoder core for one segment
-    nrLDPC_decoder_core((int8_t *)p_llr, p_llrOut, numLLR, p_lut, p_decParams, p_procTime);
-    //nrLDPC_decoder_core((int8_t *) p_llr, p_llrOut_inter, numLLR, p_lut, p_decParams, p_procTime);
-    //p_llrOut = (uint8_t *) p_llrOut_inter;
+    nrLDPC_decoder_core(p_llr, p_out, numLLR, p_lut, p_decParams, p_profiler);
 }
 
-static inline void nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_llrOut, uint32_t numLLR, t_nrLDPC_lut* p_lut, t_nrLDPC_dec_params* p_decParams, t_nrLDPC_proc_time* p_procTime)
+static inline void nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, uint32_t numLLR, t_nrLDPC_lut* p_lut, t_nrLDPC_dec_params* p_decParams, t_nrLDPC_time_stats* p_profiler)
 {
-	printf("LDPC core p_llr %d\n",*p_llr);
     uint16_t Z          = p_decParams->Z;
+    uint8_t  BG         = p_decParams->BG;
     uint8_t  numMaxIter = p_decParams->numMaxIter;
+    e_nrLDPC_outMode outMode = p_decParams->outMode;
 
-    uint32_t i = 0;
+    uint32_t i = 1;
+    int8_t* p_llrOut;
 
-#ifdef MEAS_TIME
-    clock_t start_all, end_all, start, end;
-    memset(p_procTime, 0, sizeof(t_nrLDPC_proc_time));
-#endif
+    if (outMode == nrLDPC_outMode_LLRINT8)
+    {
+        p_llrOut = p_out;
+    }
+    else
+    {
+        // Use LLR processing buffer as temporary output buffer
+        p_llrOut = (int8_t*) llrProcBuf;
+    }
 
-#ifdef MEAS_TIME
-    start_all = clock();
-#endif
 
     // Initialization
-#ifdef MEAS_TIME
-    start = clock();
+#ifdef NR_LDPC_PROFILER_DETAIL
+    start_meas(&p_profiler->llr2llrProcBuf);
 #endif
-    nrLDPC_llr2llrProcBuf(p_lut, p_llr, numLLR);
-#ifdef MEAS_TIME
-    end = clock();
-    p_procTime->llr2llrProcBuf += ((double) (end - start));
+    nrLDPC_llr2llrProcBuf(p_lut, p_llr, Z, BG);
+#ifdef NR_LDPC_PROFILER_DETAIL
+    stop_meas(&p_profiler->llr2llrProcBuf);
 #endif
 
-#ifdef MEAS_TIME
-    start = clock();
+#ifdef NR_LDPC_PROFILER_DETAIL
+    start_meas(&p_profiler->llr2CnProcBuf);
 #endif
-    nrLDPC_llr2CnProcBuf(p_lut, p_llr, numLLR);
-#ifdef MEAS_TIME
-    end = clock();
-    p_procTime->llr2CnProcBuf += ((double) (end - start));
+    nrLDPC_llr2CnProcBuf(p_lut, p_llr, numLLR, Z, BG);
+#ifdef NR_LDPC_PROFILER_DETAIL
+    stop_meas(&p_profiler->llr2CnProcBuf);
 #endif
 
     // First iteration
-#ifdef MEAS_TIME
-    start = clock();
+#ifdef NR_LDPC_PROFILER_DETAIL
+    start_meas(&p_profiler->cnProc);
 #endif
-    nrLDPC_cnProc(p_lut, Z);
-
-#ifdef MEAS_TIME
-    end = clock();
-    p_procTime->cnProc += ((double) (end - start));
-#endif
-
-#ifdef MEAS_TIME
-    start = clock();
-#endif
-    nrLDPC_cn2bnProcBuf(p_lut, Z);
-#ifdef MEAS_TIME
-    end = clock();
-    p_procTime->cn2bnProcBuf += ((double) (end - start));
+    if (BG == 1)
+    {
+        nrLDPC_cnProc_BG1(p_lut, Z);
+    }
+    else
+    {
+        nrLDPC_cnProc(p_lut, Z);
+    }
+#ifdef NR_LDPC_PROFILER_DETAIL
+    stop_meas(&p_profiler->cnProc);
 #endif
 
-#ifdef MEAS_TIME
-    start = clock();
+#ifdef NR_LDPC_PROFILER_DETAIL
+    start_meas(&p_profiler->cn2bnProcBuf);
+#endif
+    if (BG == 1)
+    {
+        nrLDPC_cn2bnProcBuf_BG1(p_lut, Z);
+    }
+    else
+    {
+        nrLDPC_cn2bnProcBuf(p_lut, Z);
+    }
+#ifdef NR_LDPC_PROFILER_DETAIL
+    stop_meas(&p_profiler->cn2bnProcBuf);
+#endif
+
+#ifdef NR_LDPC_PROFILER_DETAIL
+    start_meas(&p_profiler->bnProcPc);
 #endif
     nrLDPC_bnProcPc(p_lut, Z);
-#ifdef MEAS_TIME
-    end = clock();
-    p_procTime->bnProcPc += ((double) (end - start));
+#ifdef NR_LDPC_PROFILER_DETAIL
+    stop_meas(&p_profiler->bnProcPc);
 #endif
 
     // Parity check should occur here
+    // First iteration finished
 
     while (i < numMaxIter)
     {
         // BN processing
-#ifdef MEAS_TIME
-        start = clock();
+#ifdef NR_LDPC_PROFILER_DETAIL
+        start_meas(&p_profiler->bnProc);
 #endif
         nrLDPC_bnProc(p_lut, Z);
-#ifdef MEAS_TIME
-        end = clock();
-        p_procTime->bnProc += ((double) (end - start));
+#ifdef NR_LDPC_PROFILER_DETAIL
+        stop_meas(&p_profiler->bnProc);
 #endif
 
         // BN results to CN processing buffer
-#ifdef MEAS_TIME
-        start = clock();
+#ifdef NR_LDPC_PROFILER_DETAIL
+        start_meas(&p_profiler->bn2cnProcBuf);
 #endif
-        nrLDPC_bn2cnProcBuf(p_lut, Z);
-#ifdef MEAS_TIME
-        end = clock();
-        p_procTime->bn2cnProcBuf += ((double) (end - start));
+        if (BG == 1)
+        {
+            nrLDPC_bn2cnProcBuf_BG1(p_lut, Z);
+        }
+        else
+        {
+            nrLDPC_bn2cnProcBuf(p_lut, Z);
+        }
+#ifdef NR_LDPC_PROFILER_DETAIL
+        stop_meas(&p_profiler->bn2cnProcBuf);
 #endif
 
         // CN processing
-#ifdef MEAS_TIME
-        start = clock();
+#ifdef NR_LDPC_PROFILER_DETAIL
+        start_meas(&p_profiler->cnProc);
 #endif
-        nrLDPC_cnProc(p_lut, Z);
-#ifdef MEAS_TIME
-        end = clock();
-        p_procTime->cnProc += ((double) (end - start));
+        if (BG == 1)
+        {
+            nrLDPC_cnProc_BG1(p_lut, Z);
+        }
+        else
+        {
+            nrLDPC_cnProc(p_lut, Z);
+        }
+#ifdef NR_LDPC_PROFILER_DETAIL
+        stop_meas(&p_profiler->cnProc);
 #endif
 
         // Send CN results back to BNs
-#ifdef MEAS_TIME
-        start = clock();
+#ifdef NR_LDPC_PROFILER_DETAIL
+        start_meas(&p_profiler->cn2bnProcBuf);
 #endif
-        nrLDPC_cn2bnProcBuf(p_lut, Z);
-#ifdef MEAS_TIME
-        end = clock();
-        p_procTime->cn2bnProcBuf += ((double) (end - start));
+        if (BG == 1)
+        {
+            nrLDPC_cn2bnProcBuf_BG1(p_lut, Z);
+        }
+        else
+        {
+            nrLDPC_cn2bnProcBuf(p_lut, Z);
+        }
+#ifdef NR_LDPC_PROFILER_DETAIL
+        stop_meas(&p_profiler->cn2bnProcBuf);
 #endif
 
-#ifdef MEAS_TIME
-        start = clock();
+#ifdef NR_LDPC_PROFILER_DETAIL
+        start_meas(&p_profiler->bnProcPc);
 #endif
         nrLDPC_bnProcPc(p_lut, Z);
-#ifdef MEAS_TIME
-        end = clock();
-        p_procTime->bnProcPc += ((double) (end - start));
+#ifdef NR_LDPC_PROFILER_DETAIL
+        stop_meas(&p_profiler->bnProcPc);
 #endif
 
         // Do parity check
@@ -166,40 +186,29 @@ static inline void nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_llrOut, uint32_t
     }
 
     // Assign results from processing buffer to output
-#ifdef MEAS_TIME
-    start = clock();
+#ifdef NR_LDPC_PROFILER_DETAIL
+    start_meas(&p_profiler->llrRes2llrOut);
 #endif
     nrLDPC_llrRes2llrOut(p_lut, p_llrOut, numLLR);
-#ifdef MEAS_TIME
-    end = clock();
-    p_procTime->llrRes2llrOut += ((double) (end - start));
+#ifdef NR_LDPC_PROFILER_DETAIL
+    stop_meas(&p_profiler->llrRes2llrOut);
 #endif
 
     // Hard-decision
-#ifdef MEAS_TIME
-    start = clock();
+#ifdef NR_LDPC_PROFILER_DETAIL
+    start_meas(&p_profiler->llr2bit);
 #endif
-    nrLDPC_llr2bit(p_llrOut, numLLR);
-#ifdef MEAS_TIME
-    end = clock();
-    p_procTime->llr2bit += ((double) (end - start));
-#endif
+    if (outMode == nrLDPC_outMode_BIT)
+    {
+        nrLDPC_llr2bitPacked(p_out, p_llrOut, numLLR);
+    }
+    else if (outMode == nrLDPC_outMode_BITINT8)
+    {
+        nrLDPC_llr2bit(p_out, p_llrOut, numLLR);
+    }
 
-
-#ifdef MEAS_TIME
-    end_all = clock();
-    p_procTime->total = ((double) (end_all - start_all));
-
-    p_procTime->llr2llrProcBuf /= CLOCKS_PER_SEC;
-    p_procTime->llr2CnProcBuf  /= CLOCKS_PER_SEC;
-    p_procTime->cnProc         /= CLOCKS_PER_SEC;
-    p_procTime->bnProcPc       /= CLOCKS_PER_SEC;
-    p_procTime->bnProc         /= CLOCKS_PER_SEC;
-    p_procTime->cn2bnProcBuf   /= CLOCKS_PER_SEC;
-    p_procTime->bn2cnProcBuf   /= CLOCKS_PER_SEC;
-    p_procTime->llrRes2llrOut  /= CLOCKS_PER_SEC;
-    p_procTime->llr2bit        /= CLOCKS_PER_SEC;
-    p_procTime->total          /= CLOCKS_PER_SEC;
+#ifdef NR_LDPC_PROFILER_DETAIL
+    stop_meas(&p_profiler->llr2bit);
 #endif
 
 }

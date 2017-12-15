@@ -584,7 +584,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_IN);
 
   A = dlsch->harq_processes[harq_pid]->TBS; //6228
-  // printf("Encoder: A: %d\n",A);
+  printf("Encoder: A: %d\n",A);
   mod_order = get_Qm(dlsch->harq_processes[harq_pid]->mcs);
 
   if(dlsch->harq_processes[harq_pid]->mimo_mode == TM7)
@@ -620,6 +620,8 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
     //    dlsch->harq_processes[harq_pid]->b = a;
     memcpy(dlsch->harq_processes[harq_pid]->b,a,(A/8)+4);
 
+
+
     if (lte_segmentation(dlsch->harq_processes[harq_pid]->b,
                          dlsch->harq_processes[harq_pid]->c,
                          dlsch->harq_processes[harq_pid]->B,
@@ -631,6 +633,8 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
                          &dlsch->harq_processes[harq_pid]->F)<0)
       return(-1);
 
+
+    printf("Encoder: B %d F %d \n",dlsch->harq_processes[harq_pid]->B, dlsch->harq_processes[harq_pid]->F);
     for (r=0; r<dlsch->harq_processes[harq_pid]->C; r++) {
 
       if (r<dlsch->harq_processes[harq_pid]->Cminus)
@@ -671,21 +675,27 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       printf("Encoding ... iind %d f1 %d, f2 %d\n",iind,f1f2mat_old[iind*2],f1f2mat_old[(iind*2)+1]);
 #endif
       start_meas(te_stats);
-      /*threegpplte_turbo_encoder(dlsch->harq_processes[harq_pid]->c[r],
+      printf("start turbo encoder kr %d kr>>3 %d\n", Kr, Kr>>3);
+      for (int tbc_counter = 0; tbc_counter< Kr; tbc_counter++){
+      printf("turbo tbc number %d input %d\n",tbc_counter, dlsch->harq_processes[harq_pid]->c[r][tbc_counter]);
+      }
+
+      threegpplte_turbo_encoder(dlsch->harq_processes[harq_pid]->c[r],
                                 Kr>>3,
                                 &dlsch->harq_processes[harq_pid]->d[r][96],
                                 (r==0) ? dlsch->harq_processes[harq_pid]->F : 0,
                                 f1f2mat_old[iind*2],   // f1 (see 36121-820, page 14)
                                 f1f2mat_old[(iind*2)+1]  // f2 (see 36121-820, page 14)
-                               );*/
-      printf("start ldpc encoder\n");
+                               );
+
+      /*printf("start ldpc encoder\n");
       printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
 
       ldpc_encoder((char*)dlsch->harq_processes[harq_pid]->c[r],(char*)&dlsch->harq_processes[harq_pid]->d[r][96],dlsch->harq_processes[harq_pid]->B,rate);
 
       printf("end ldpc encoder\n");
       printf("output %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->d[r][96], dlsch->harq_processes[harq_pid]->d[r][96+1], dlsch->harq_processes[harq_pid]->d[r][96+2],dlsch->harq_processes[harq_pid]->d[r][96+3], dlsch->harq_processes[harq_pid]->d[r][96+4]);
-
+*/
       stop_meas(te_stats);
 #ifdef DEBUG_DLSCH_CODING
 
@@ -775,7 +785,7 @@ int dlsch_encoding_SIC(PHY_VARS_UE *ue,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_IN);
 
   A = dlsch->harq_processes[harq_pid]->TBS; //6228
-  // printf("Encoder: A: %d\n",A);
+  printf("Encoder: A: %d\n",A);
   mod_order = get_Qm(dlsch->harq_processes[harq_pid]->mcs);
 
   if(dlsch->harq_processes[harq_pid]->mimo_mode == TM7)
