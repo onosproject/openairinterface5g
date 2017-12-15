@@ -4138,17 +4138,17 @@ unsigned short dlsch_extract_rbs_single_NB_IoT(int **rxdataF,
           //dl_ch0++;
         }
 
-        // PBCH
-        if (subframe==0) {
+        // // PBCH
+        // if (subframe==0) {
+        //   rb_alloc_ind = 0;
+        // }
+
+        //NSSS subframe
+        if (subframe==9 && frame%2==0) {
           rb_alloc_ind = 0;
         }
 
-        //SSS
-        if (subframe==0 && frame%2==0) {
-          rb_alloc_ind = 0;
-        }
-
-        //PSS
+        //NPSS subframe
         if (subframe==5) {
           rb_alloc_ind = 0;
         }

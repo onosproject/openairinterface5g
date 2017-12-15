@@ -33,6 +33,19 @@ int lte_est_timing_advance(NB_IoT_DL_FRAME_PARMS *frame_parms,
                            short coef);
 */
 
+////////// Vincent: NB-IoT DL synchronization //////////////////////////////////////////////////
+
+int lte_sync_time_init_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms ); 
+
+void lte_sync_time_free_NB_IoT(void); 
+
+int lte_sync_time_NB_IoT(int **rxdata, ///rx data in time domain
+                  NB_IoT_DL_FRAME_PARMS *frame_parms,
+                  int *eNB_id);
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
 int NB_IoT_est_timing_advance_pusch(PHY_VARS_eNB_NB_IoT* phy_vars_eNB,module_id_t UE_id);
 
 
@@ -61,10 +74,10 @@ int16_t lte_ul_freq_offset_estimation_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
                                       		 uint16_t nb_rb);
 
 void freq_equalization_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
-                       		  int **rxdataF_comp,
-                       		  int **ul_ch_mag,
-                       		  int **ul_ch_mag_b,
-                       		  unsigned char symbol,
+                         		  int **rxdataF_comp,
+                         		  int **ul_ch_mag,
+                         		  int **ul_ch_mag_b,
+                         		  unsigned char symbol,
                        	      unsigned short Msc_RS,
                               unsigned char Qm);
 
