@@ -283,7 +283,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP);
 const Enb_properties_array_t *enb_config_get(void);
 
 
-// *** NB-IoT *** //
+// ******************************************************** NB-IoT ********************************************************** //
 
 typedef struct Enb_properties_NB_IoT_s {
   /* Unique eNB_id to identify the eNB within EPC.
@@ -409,18 +409,18 @@ typedef struct Enb_properties_NB_IoT_s {
   long              pcch_defaultPagingCycle_NB[1+MAX_NUM_CCs];
   long              nprach_CP_Length[1+MAX_NUM_CCs];
   long              nprach_rsrp_range[1+MAX_NUM_CCs];
-  const char*       nprach_SubcarrierMSG3_RangeStart;
+  char*             nprach_SubcarrierMSG3_RangeStart;
   long              maxNumPreambleAttemptCE_NB[1+MAX_NUM_CCs];
   long              npdsch_nrs_Power[1+MAX_NUM_CCs];
   long              npusch_ack_nack_numRepetitions_NB[1+MAX_NUM_CCs];
   long              npusch_srs_SubframeConfig_NB[1+MAX_NUM_CCs];
   long              npusch_threeTone_CyclicShift_r13[1+MAX_NUM_CCs];
   long              npusch_sixTone_CyclicShift_r13[1+MAX_NUM_CCs];
-  long              npusch_groupHoppingEnabled[1+MAX_NUM_CCs];
+  BOOLEAN_t         npusch_groupHoppingEnabled[1+MAX_NUM_CCs];
   long              npusch_groupAssignmentNPUSCH_r13[1+MAX_NUM_CCs];
   long              dl_GapThreshold_NB[1+MAX_NUM_CCs];
   long              dl_GapPeriodicity_NB[1+MAX_NUM_CCs];
-  const char*       dl_GapDurationCoeff_NB;
+  char*       dl_GapDurationCoeff_NB;
   long              npusch_p0_NominalNPUSCH[1+MAX_NUM_CCs];
   long              npusch_alpha[1+MAX_NUM_CCs];
   long              deltaPreambleMsg3[1+MAX_NUM_CCs];
@@ -439,7 +439,7 @@ typedef struct Enb_properties_NB_IoT_s {
   long              numRepetitionsPerPreambleAttempt[1+MAX_NUM_CCs];
   long              npdcch_NumRepetitions_RA[1+MAX_NUM_CCs];
   long              npdcch_StartSF_CSS_RA[1+MAX_NUM_CCs];
-  const char*       npdcch_Offset_RA;
+  char*             npdcch_Offset_RA;
 
   //****************************************
   long                    srb1_timer_poll_retransmit;
@@ -506,9 +506,16 @@ typedef struct Enb_properties_NB_IoT_s {
 #endif
 } Enb_properties_NB_IoT_t;
 
-const Enb_properties_array_t *enb_config_init_NB_IoT(char* lib_config_file_name_pP);
+typedef struct Enb_properties_array_NB_IoT_s {
+  int                  number;
+  Enb_properties_NB_IoT_t    *properties[MAX_ENB];
+} Enb_properties_array_NB_IoT_t;
 
+void                          enb_config_display_NB_IoT(void);
 
+const Enb_properties_array_NB_IoT_t *enb_config_init_NB_IoT(char* lib_config_file_name_pP);
+
+const Enb_properties_array_NB_IoT_t *enb_config_get_NB_IoT(void);
 
 #endif /* ENB_CONFIG_H_ */
 /** @} */
