@@ -58,18 +58,20 @@ extern PHY_VARS_eNB_NB_IoT * PHY_vars_eNB_NB_IoT_g[MAX_eNB_NB_IoT][MAX_NUM_CCs];
 //extern MAC_xface_NB_IoT *mac_xface_NB_IoT;
 
 extern IF_Module_t *if_inst;
-/*
 
-extern short primary_synch0[144];
+
+extern short primary_synch_NB_IoT[264];
+/*
 extern short primary_synch1[144];
 extern short primary_synch2[144];
 extern unsigned char primary_synch0_tab[72];
 extern unsigned char primary_synch1_tab[72];
-extern unsigned char primary_synch2_tab[72];
-extern int16_t *primary_synch0_time; //!< index: [0..ofdm_symbol_size*2[
-extern int16_t *primary_synch1_time; //!< index: [0..ofdm_symbol_size*2[
-extern int16_t *primary_synch2_time; //!< index: [0..ofdm_symbol_size*2[
-extern int *sync_corr_ue0; //!< index [0..10*samples_per_tti[
+extern unsigned char primary_synch2_tab[72]; */
+extern int16_t *primary_synch0_time_NB_IoT; //!< index: [0..ofdm_symbol_size*2[
+// extern int16_t *primary_synch1_time; //!< index: [0..ofdm_symbol_size*2[
+// extern int16_t *primary_synch2_time; //!< index: [0..ofdm_symbol_size*2[
+extern int *sync_corr_ue0_NB_IoT; //!< index [0..10*samples_per_tti[
+/*
 extern int *sync_corr_ue1; //!< index [0..10*samples_per_tti[
 extern int *sync_corr_ue2; //!< index [0..10*samples_per_tti[
 
