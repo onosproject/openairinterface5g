@@ -2290,8 +2290,8 @@ const Enb_properties_array_NB_IoT_t *enb_config_init_NB_IoT(char* lib_config_fil
 
               default:
                 AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_120 choice: 120,118,116,114,112,110,108,106,104,102,100,98,96,94,92,90 ",
-                             lib_config_file_name_pP, i, PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_120);
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for rach_preambleInitialReceivedTargetPower_NB choice: -120,-118,-116,-114,-112,-110,-108,-106,-104,-102,-100,-98,-96,-94,-92,-90 ",
+                             lib_config_file_name_pP, i, rach_preambleInitialReceivedTargetPower_NB);
                 break;
 
               }
@@ -2678,47 +2678,6 @@ const Enb_properties_array_NB_IoT_t *enb_config_init_NB_IoT(char* lib_config_fil
                 AssertFatal (0,
                              "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for deltaPreambleMsg3 choice: -1..6 !\n",
                              lib_config_file_name_pP, i, deltaPreambleMsg3);
-
-        enb_properties.properties[enb_properties_index]->rach_raResponseWindowSize_NB[j] =  (rach_raResponseWindowSize_NB==10)?7:rach_raResponseWindowSize_NB-2;
- 
-              if ((rach_raResponseWindowSize_NB<0)||(rach_raResponseWindowSize_NB==9)||(rach_raResponseWindowSize_NB>10))
-                AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for rach_raResponseWindowSize_NB choice: 2,3,4,5,6,7,8,10!\n",
-                             lib_config_file_name_pP, i, rach_preambleTransMax);
-        enb_properties.properties[enb_properties_index]->rach_powerRampingStep[j] = rach_powerRampingStep/2;
-
-              if ((rach_powerRampingStep<0) || (rach_powerRampingStep>6) || ((rach_powerRampingStep&1)!=0))
-                AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for rach_powerRampingStep choice: 0,2,4,6 !\n",
-                             lib_config_file_name_pP, i, rach_powerRampingStep);
-
-
-
-        switch (bcch_modificationPeriodCoeff_NB) {
-              case 2:
-                enb_properties.properties[enb_properties_index]->bcch_modificationPeriodCoeff_NB[j] = BCCH_Config_NB_r13__modificationPeriodCoeff_r13_n16;
-                break;
-
-              case 4:
-                enb_properties.properties[enb_properties_index]->bcch_modificationPeriodCoeff_NB[j] = BCCH_Config_NB_r13__modificationPeriodCoeff_r13_n32;
-                break;
-
-              case 8:
-                enb_properties.properties[enb_properties_index]->bcch_modificationPeriodCoeff_NB[j] = BCCH_Config_NB_r13__modificationPeriodCoeff_r13_n64;
-                break;
-
-              case 16:
-                enb_properties.properties[enb_properties_index]->bcch_modificationPeriodCoeff_NB[j] = BCCH_Config_NB_r13__modificationPeriodCoeff_r13_n128;
-                break;
-
-              default:
-                AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for bcch_modificationPeriodCoeff_NB choice: 16,32,64,128",
-                             lib_config_file_name_pP, i, bcch_modificationPeriodCoeff_NB);
-
-                break;
-              }
-
       
 
         //************************************************************************* NB-IoT Timer ************************************************************
