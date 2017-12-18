@@ -24,6 +24,7 @@
 
 #include "PHY/defs.h"
 
+#include "PHY/defs_NB_IoT.h"
 
 #include "SystemInformationBlockType2.h"
 //#include "RadioResourceConfigCommonSIB.h"
@@ -338,6 +339,9 @@ void phy_cleanup(void);
 
 
 int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf);
+
+
+
 void dump_frame_parms(LTE_DL_FRAME_PARMS *frame_parms);
 
 void lte_param_init(unsigned char N_tx_port_eNB, 
@@ -353,5 +357,30 @@ void lte_param_init(unsigned char N_tx_port_eNB,
                     uint8_t osf,
 		    uint32_t perfect_ce);
 /** @} */
+
+
+// for NB-IoT 
+int init_frame_parms_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint8_t osf);
+
+void phy_init_lte_top_NB_IoT(NB_IoT_DL_FRAME_PARMS *lte_frame_parms);
+
+
+/*!
+\brief Allocate and initialize the PHY variables relevant to the LTE implementation (eNB).
+\details Only a subset of phy_vars_eNb is initialized.
+@param[out] phy_vars_eNb Pointer to eNB Variables
+@param is_secondary_eNb Flag to indicate this eNB gets synch from another
+@param abstraction_flag 1 indicates memory should be allocated for abstracted MODEM
+@returns 0 on success
+@returns -1 if any memory allocation failed
+@note The current implementation will never return -1, but segfault.
+ */
+int phy_init_lte_eNB_NB_IoT(PHY_VARS_eNB_NB_IoT *phy_vars_eNb,
+                     unsigned char is_secondary_eNb,
+                     unsigned char abstraction_flag);
+
+
+
+
 #endif
 
