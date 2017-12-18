@@ -789,6 +789,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
     UE_rxtx_proc_t *proc = rtd->proc;
     PHY_VARS_UE    *UE   = rtd->UE;
     int ret;
+    double t_diff;
 
     // Panos: Call (Sched_Rsp_t) get_nfapi_sched_response(UE->Mod_ID) to get all
     //sched_response config messages which concern the specific UE. Inside this
@@ -816,8 +817,9 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
     wait_sync("UE_phy_stub_thread_rxn_txnp4");
 
     while (!oai_exit) {
+
         if (pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) != 0) {
-          LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
+          LOG_E( MAC, "[SCHED][UE] error locking mutex for UE RXTX\n" );
           exit_fun("nothing to add");
         }
         while (phy_stub_ticking->ticking_var < 0) {
@@ -825,15 +827,20 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
           //pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx );
           pthread_cond_wait( &phy_stub_ticking->cond_ticking, &phy_stub_ticking->mutex_ticking);
         }
+        phy_stub_ticking->ticking_var--;
         if (pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) != 0) {
-          LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXn_TXnp4\n" );
+          LOG_E( MAC, "[SCHED][UE] error unlocking mutex for UE RXn_TXnp4\n" );
           exit_fun("nothing to add");
         }
+        LOG_I(MAC," Panos-D [UE_phy_stub_thread_rxn_txnp4 1] Frame: %d, Subframe: %d \n" "\n" "\n", timer_frame, timer_subframe);
+
 
         proc->subframe_rx=timer_subframe;
         proc->frame_rx = timer_frame;
         proc->subframe_tx=(timer_subframe+2)%10;
-        proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
+        proc->frame_tx = proc->frame_rx + (proc->subframe_rx>7?1:0);
+        //oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
+
 
 
         // Panos: Guessing that the next 4 lines are not needed for the phy_stub mode.
@@ -866,6 +873,8 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
                         (sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
             }
 
+
+
 /*
 #ifdef UE_SLOT_PARALLELISATION
             phy_procedures_slot_parallelization_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
@@ -876,8 +885,14 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
             // Hardcode Mod_id for now. Will be changed later.
 
             // Panos: is this the right place to call oai_subframe_indication to invoke p7 nfapi callbacks here?
-            oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
-            LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind \n");
+
+            //oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
+            //oai_subframe_ind(timer_frame, timer_subframe);
+
+            //start_meas(&UE->timer_stats);
+            //oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
+            oai_subframe_ind(timer_frame, timer_subframe);
+            //LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind \n");
             //printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind \n");
             /*if(UE_mac_inst[Mod_id].tx_req!= NULL){
             	printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 2\n");
@@ -891,6 +906,9 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
             	LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 4 \n");
             	hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req);
             }
+            //stop_meas(&UE->timer_stats);
+            //t_diff = get_time_meas_us(&UE->timer_stats);
+            //LOG_E(MAC," Panos-D Absolute time: %f\n", t_diff);
 
 //#endif
         }
@@ -962,7 +980,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
         }
 
         //proc->instance_cnt_rxtx--;
-        phy_stub_ticking->ticking_var--;
+
         //if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
         if (pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) != 0) {
           LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
@@ -1466,6 +1484,9 @@ static void* timer_thread( void* param ) {
 	    		exit_fun("nothing to add");
 	    }
 	    }
+	    else{
+	    	LOG_I(MAC," Panos-D: Problemmm");
+	    }
 
 	    AssertFatal(pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) ==0,"");
         start_meas(&UE->timer_stats);
@@ -1485,9 +1506,14 @@ static void* timer_thread( void* param ) {
 
 	    stop_meas(&UE->timer_stats);
 	    t_diff = get_time_meas_us(&UE->timer_stats);
+
 	    //printf("Panos-D: Absolute time: %lld, diff: %lld, diff_now: %lld \n",UE->timer_stats.p_time, UE->timer_stats.diff, UE->timer_stats.diff_now);
 	    //LOG_I(MAC,"[UE%d] Applying default macMainConfig\n",module_idP);
-	    if (t_diff > 1100) LOG_E(MAC," Panos-D Absolute time: %f\n", t_diff);
+	    //if (t_diff > 1100)
+
+
+	    LOG_E(MAC," Panos-D Absolute time: %f\n", t_diff);
+
 	    //printf("Panos-D: Absolute time: %f", t_diff);
 
 	    //UE->proc.ticking_var++;

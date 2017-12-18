@@ -645,7 +645,7 @@ int param_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
 
   // P7 PNF Port
   nfapi_resp.nfapi_config.p7_pnf_port.tl.tag = NFAPI_NFAPI_P7_PNF_PORT_TAG;
-  nfapi_resp.nfapi_config.p7_pnf_port.value = 32123; // DJP - hard code alert!!!! FIXME TODO
+  nfapi_resp.nfapi_config.p7_pnf_port.value = 32123; // 32123; // DJP - hard code alert!!!! FIXME TODO
   nfapi_resp.num_tlv++;
 
   nfapi_pnf_param_resp(config, &nfapi_resp);
@@ -1326,7 +1326,7 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
 
     p7_config->remote_p7_port = phy_info->remote_port;
     p7_config->remote_p7_addr = phy_info->remote_addr;
-    p7_config->local_p7_port = 32123; // DJP - good grief cannot seem to get the right answer phy_info->local_port;
+    p7_config->local_p7_port = 32123; //32123; // DJP - good grief cannot seem to get the right answer phy_info->local_port;
     //DJP p7_config->local_p7_addr = (char*)phy_info->local_addr.c_str();
     p7_config->local_p7_addr = phy_info->local_addr;
 
@@ -1353,6 +1353,7 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
 
     if(phy_info->timing_info_mode & 0x2)
     {
+    	LOG_I(MAC, "Panos-D: Configure timing info aperiodic");
       p7_config->timing_info_mode_aperiodic = 1;
     }
 
@@ -1846,6 +1847,7 @@ void oai_subframe_ind(uint16_t sfn, uint16_t sf)
 	  //printf("Panos-D: oai_subframe_ind 1, buffer size:%d", p7_config_g->subframe_buffer_size);
 
 	  uint16_t sfn_sf_tx = sfn<<4 | sf;
+	  //LOG_I(MAC, " Panos-D: oai_subframe_ind SFN/SF: %d.%d, SFN_Tx: %d \n", sfn, sf, sfn_sf_tx);
 
     if ((sfn % 100 == 0) && sf==0)
     {

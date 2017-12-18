@@ -1356,6 +1356,8 @@ int main( int argc, char **argv )
     	}
     // Panos: Call init_UE_stub instead of init_UE as we are always on nfapi_mode=3
     //phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
+
+
     init_timer_thread();
     init_UE_stub(1,eMBMS_active,uecap_xer_in);
 
