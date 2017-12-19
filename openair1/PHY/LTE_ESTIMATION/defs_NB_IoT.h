@@ -41,7 +41,9 @@ void lte_sync_time_free_NB_IoT(void);
 
 int lte_sync_time_NB_IoT(int **rxdata, ///rx data in time domain
                   NB_IoT_DL_FRAME_PARMS *frame_parms,
-                  int *eNB_id);
+                  int *eNB_id); 
+
+void lte_sync_timefreq_NB_IoT(PHY_VARS_UE_NB_IoT *ue,int band,unsigned int DL_freq); 
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

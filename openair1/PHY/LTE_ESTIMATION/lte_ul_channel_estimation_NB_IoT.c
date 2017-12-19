@@ -240,10 +240,10 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
           received_data = (int16_t *)&rxdataF_ext[aa][symbol_offset];
           estimated_channel   = (int16_t *)&ul_ch_estimates[aa][symbol_offset]; 
-          if (index_Nsc_RU){ // NB-IoT: a shift ul_sc_start is added in order to get the same position of the first pilot in rxdataF_ext and ul_ref_sigs_rx
-            pilot_sig  = &ul_ref_sigs_rx[u][index_Nsc_RU][24-(ul_sc_start<<1)]; // pilot values are the same every slots
+          if (index_Nsc_RU){ // NB-IoT: a shift ul_sc_start is added in order to get the same position of the first pilot in rxdataF_ext and ul_ref_sigs_rx_NB_IoT
+            pilot_sig  = &ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][24-(ul_sc_start<<1)]; // pilot values are the same every slots
           }else{
-            pilot_sig  = &ul_ref_sigs_rx[u][index_Nsc_RU][24 + 2*12*(n_s)-(ul_sc_start<<1)]; // pilot values depends on the slots
+            pilot_sig  = &ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][24 + 2*12*(n_s)-(ul_sc_start<<1)]; // pilot values depends on the slots
           }
 
           for (k=0;k<12;k++){
@@ -335,7 +335,7 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
         received_data = (int16_t *)&rxdataF_ext[aa][symbol_offset];
         estimated_channel   = (int16_t *)&ul_ch_estimates[aa][symbol_offset]; 
-        pilot_sig  = &ul_ref_sigs_rx[u][index_Nsc_RU][24 + 2*12*(n_s)-(ul_sc_start<<1)]; // pilot values is the same during 3 symbols l = 1, 2, 3
+        pilot_sig  = &ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][24 + 2*12*(n_s)-(ul_sc_start<<1)]; // pilot values is the same during 3 symbols l = 1, 2, 3
 
         for (k=0;k<12;k++){
           // Multiplication by the complex conjugate of the pilot

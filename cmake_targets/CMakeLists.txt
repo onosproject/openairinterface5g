@@ -1047,6 +1047,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_time.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_time_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_timefreq.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_timefreq_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_adjust_sync.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_adjust_sync_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_channel_estimation.c

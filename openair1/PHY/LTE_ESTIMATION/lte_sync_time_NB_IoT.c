@@ -183,9 +183,9 @@ int lte_sync_time_init_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms )   // LTE_UE_C
     }
 
     for (i=0; i<frame_parms->ofdm_symbol_size; i++)
-      if (l < 4){ // Skip CP length
+      if (l < 4){ // Skip longest CP length
         ((int32_t*)primary_synch0_time_NB_IoT)[l*(frame_parms->nb_prefix_samples + frame_parms->ofdm_symbol_size) + i] = sync_tmp[i];
-      }else{
+      }else{ // take into account the longest CP length is second slot of subframe
         ((int32_t*)primary_synch0_time_NB_IoT)[frame_parms->nb_prefix_samples0 + frame_parms->ofdm_symbol_size + 
                                       (l-1)*(frame_parms->nb_prefix_samples + frame_parms->ofdm_symbol_size) + i] = sync_tmp[i];
       }
