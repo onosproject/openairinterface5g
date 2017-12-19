@@ -106,20 +106,20 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
   NB_IoT_UE_DLSCH_t   **dlsch;
 
   int avg[4];
-  int avg_0[2];
-  int avg_1[2];
+  // int avg_0[2];
+  // int avg_1[2];
 
   unsigned char aatx,aarx;
 
-  unsigned short nb_rb = 0, round;
-  int avgs, rb;
+  unsigned short nb_rb = 0 , round;
+  int avgs /*,rb*/;
   NB_IoT_DL_UE_HARQ_t *dlsch0_harq,*dlsch1_harq = 0;
 
   uint8_t beamforming_mode;
   uint32_t *rballoc;
 
-  int32_t **rxdataF_comp_ptr;
-  int32_t **dl_ch_mag_ptr;
+  // int32_t **rxdataF_comp_ptr;
+  // int32_t **dl_ch_mag_ptr;
   int32_t codeword_TB0 = -1;
   int32_t codeword_TB1 = -1;
 
@@ -752,8 +752,8 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
   //   dl_ch_mag_ptr = pdsch_vars[eNB_id]->dl_ch_mag1[harq_pid][round];
   // }
   // else {
-    rxdataF_comp_ptr = pdsch_vars[eNB_id_i]->rxdataF_comp0;
-    dl_ch_mag_ptr = pdsch_vars[eNB_id_i]->dl_ch_mag0;
+    // rxdataF_comp_ptr = pdsch_vars[eNB_id_i]->rxdataF_comp0;
+    // dl_ch_mag_ptr = pdsch_vars[eNB_id_i]->dl_ch_mag0;
     //i_mod should have been passed as a parameter
   // }
 
@@ -1161,7 +1161,7 @@ void dlsch_channel_compensation_NB_IoT(int **rxdataF_ext,
   unsigned short rb;
   unsigned char aatx,aarx,symbol_mod,pilots=0;
   __m128i *dl_ch128,*dl_ch128_2,*dl_ch_mag128,*dl_ch_mag128b,*rxdataF128,*rxdataF_comp128,*rho128;
-  __m128i mmtmpD0,mmtmpD1,mmtmpD2,mmtmpD3,QAM_amp128,QAM_amp128b;
+  __m128i mmtmpD0,mmtmpD1,mmtmpD2,mmtmpD3/*,QAM_amp128,QAM_amp128b*/;
 
   // symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
   symbol_mod = (symbol>=7) ? symbol-7 : symbol;
@@ -4067,7 +4067,7 @@ unsigned short dlsch_extract_rbs_single_NB_IoT(int **rxdataF,
 
   unsigned short  rb,nb_rb=0;
   unsigned char   rb_alloc_ind;
-  unsigned char   i,aarx=0,/*l,*/nsymb,/*skip_half=0,*/sss_symb,pss_symb=0;
+  unsigned char   i,aarx=0/*,l,nsymb /*,skip_half=0,sss_symb,pss_symb=0*/;
   int             *dl_ch0,*dl_ch0_ext,*rxF,*rxF_ext;
   unsigned short  UL_RB_ID_NB_IoT; // index of the NB-IoT RB
   uint8_t         id_offset; // offset of pilot position in symbols: 0,1,2 
@@ -4080,7 +4080,7 @@ unsigned short dlsch_extract_rbs_single_NB_IoT(int **rxdataF,
   crs_pilots = ((symbol_mod==0)||(symbol_mod==4)) ? 1 : 0; 
   nrs_pilots = ((symbol_mod==5)||(symbol_mod==6)) ? 1 : 0; 
   // l=symbol;
-  nsymb = 14; // normal CP in NB-IoT 
+  //nsymb = 14; // normal CP in NB-IoT 
   UL_RB_ID_NB_IoT = frame_parms->NB_IoT_RB_ID; // index of RB dedicated to NB-IoT
   id_offset = frame_parms->Nid_cell % 6; // frequency offset for NRS
 
@@ -4088,8 +4088,8 @@ unsigned short dlsch_extract_rbs_single_NB_IoT(int **rxdataF,
   //   sss_symb = nsymb-1;
   //   pss_symb = 2;
   // } else {
-    sss_symb = (nsymb>>1)-2;
-    pss_symb = (nsymb>>1)-1;
+    // sss_symb = (nsymb>>1)-2;
+    // pss_symb = (nsymb>>1)-1;
   // }
 
   // Define the frequency offsets of CRS and NRS  
@@ -4160,7 +4160,7 @@ unsigned short dlsch_extract_rbs_single_NB_IoT(int **rxdataF,
         //   }
         // }
 
-        if (rb_alloc_ind==1) {
+        if (rb_alloc_ind==1) { // If subframe not including NPSS, NSSS
           *pmi_ext = (pmi>>((rb>>2)<<1))&3;
           memcpy(dl_ch0_ext,dl_ch0,12*sizeof(int));
 
