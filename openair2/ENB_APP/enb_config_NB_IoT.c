@@ -53,6 +53,10 @@
 #include "LAYER2/MAC/extern.h"
 #include "PHY/extern.h"
 
+#include "SystemInformationBlockType2-NB-r13.h"
+//#include "RACH-ConfigCommon-NB-r13.h"
+//#include "DL-GapConfig-NB-r13"
+
 /* those macros are here to help diagnose problems in configuration files
  * if the lookup fails, a warning is printed
  * (yes we can use the function name for the macro itself, the C preprocessor
@@ -244,7 +248,7 @@
 #define ENB_CONFIG_STRING_OSA_LOG_LEVEL                    "osa_log_level"
 #define ENB_CONFIG_STRING_OSA_LOG_VERBOSITY                "osa_log_verbosity"
 //
-//******************************** NB-IoT parameters **************************************************************
+//************************************* NB-IoT parameters **************************************************************
 //
 
 //************* RRC parameters in the config file of merge branch
@@ -258,20 +262,18 @@
 #define ENB_CONFIG_STRING_PCCH_DEFAULT_PAGING_CYCLE_NB_IOT                 "pcch_defaultPagingCycle_NB"
 #define ENB_CONFIG_STRING_NPRACH_CP_LENGTH_NB_IOT                          "nprach_CP_Length"
 #define ENB_CONFIG_STRING_NPRACH_RSRP_RANGE_NB_IOT                         "nprach_rsrp_range"
-#define ENB_CONFIG_STRING_NPRACH_SUBCARRIERMSG3_RANGESTART_NB_IOT          "nprach_SubcarrierMSG3_RangeStart"
-#define ENB_CONFIG_STRING_MAXNUM_PREAMBLE_ATTEMPT_CE_NB_IOT                "maxNumPreambleAttemptCE_NB"
 #define ENB_CONFIG_STRING_NPDSCH_NRS_POWER_NB_IOT                          "npdsch_nrs_Power"
 #define ENB_CONFIG_STRING_NPUSCH_ACK_NACK_NUMREPETITIONS_NB_IOT            "npusch_ack_nack_numRepetitions_NB"
 #define ENB_CONFIG_STRING_NPUSCH_SRS_SUBFRAMECONFIG_NB_IOT                 "npusch_srs_SubframeConfig_NB"
 #define ENB_CONFIG_STRING_NPUSCH_THREETONE_CYCLICSHIFT_R13_NB_IOT          "npusch_threeTone_CyclicShift_r13"
 #define ENB_CONFIG_STRING_NPUSCH_SIXTONE_CYCLICSHIFT_R13_NB_IOT            "npusch_sixTone_CyclicShift_r13"
-#define ENB_CONFIG_STRING_NPUSCH_GROUPHOPPINGENABLED_NB_IOT                "npusch_groupHoppingEnabled"
+#define ENB_CONFIG_STRING_NPUSCH_GROUP_HOPPING_EN_NB_IOT                   "npusch_groupHoppingEnabled"
 #define ENB_CONFIG_STRING_NPUSCH_GROUPASSIGNMENTNPUSH_R13_NB_IOT           "npusch_groupAssignmentNPUSCH_r13"
 #define ENB_CONFIG_STRING_DL_GAPTHRESHOLD_NB_IOT                           "dl_GapThreshold_NB"
 #define ENB_CONFIG_STRING_DL_GAPPERIODICITY_NB_IOT                         "dl_GapPeriodicity_NB"
 #define ENB_CONFIG_STRING_DL_GAPDURATIONCOEFF_NB_IOT                       "dl_GapDurationCoeff_NB"
 #define ENB_CONFIG_STRING_NPUSCH_P0NOMINALPUSH_NB_IOT                      "npusch_p0_NominalNPUSCH"
-#define ENB_CONFIG_STRING_NPUSCH_ALFA_NB_IOT                               "npusch_alpha"
+#define ENB_CONFIG_STRING_NPUSCH_ALPHA_NB_IOT                              "npusch_alpha"
 #define ENB_CONFIG_STRING_DELTAPREAMBLEMSG3_NB_IOT                         "deltaPreambleMsg3"
 
 #define ENB_CONFIG_STRING_UETIMERS_T300_NB_IOT                             "ue_TimersAndConstants_t300_NB"
@@ -288,10 +290,13 @@
 #define ENB_CONFIG_STRING_NPRACH_STARTTIME_NB_IOT                          "nprach_StartTime"
 #define ENB_CONFIG_STRING_NPRACH_SUBCARRIEROFFSET_NB_IOT                   "nprach_SubcarrierOffset"
 #define ENB_CONFIG_STRING_NPRACH_NUMSUBCARRIERS_NB_IOT                     "nprach_NumSubcarriers"
+#define ENB_CONFIG_STRING_NPRACH_SUBCARRIERMSG3_RANGESTART_NB_IOT          "nprach_SubcarrierMSG3_RangeStart"
+#define ENB_CONFIG_STRING_MAXNUM_PREAMBLE_ATTEMPT_CE_NB_IOT                "maxNumPreambleAttemptCE_NB"
 #define ENB_CONFIG_STRING_NUMREPETITIONSPERPREAMBLEATTEMPT_NB_IOT          "numRepetitionsPerPreambleAttempt"
 #define ENB_CONFIG_STRING_NPDCCH_NUMREPETITIONS_RA_NB_IOT                  "npdcch_NumRepetitions_RA"
 #define ENB_CONFIG_STRING_NPDCCH_STARTSF_CSS_RA_NB_IOT                     "npdcch_StartSF_CSS_RA"
 #define ENB_CONFIG_STRING_NPDCCH_OFFSET_RA_NB_IOT                          "npdcch_Offset_RA"
+
 //*********************************************************************************************************************
 
 #define KHz (1000UL)
@@ -339,9 +344,9 @@ static const eutra_band_t eutra_bands[] = {
   {44, 703    * MHz, 803    * MHz, 703    * MHz, 803    * MHz, TDD},
 };
 
-Enb_properties_array_t enb_properties;
+Enb_properties_array_NB_IoT_t enb_properties;
 
-void enb_config_display(void)
+void enb_config_display_NB_IoT(void)
 {
   int i,j;
 
@@ -579,7 +584,7 @@ extern int asn1_xer_print;
 #else
 #define libconfig_int int
 #endif
-const Enb_properties_array_t *enb_config_init_NB_IoT(char* lib_config_file_name_pP)
+const Enb_properties_array_NB_IoT_t *enb_config_init_NB_IoT(char* lib_config_file_name_pP)
 {
   config_t          cfg;
   config_setting_t *setting                       = NULL;
@@ -726,10 +731,10 @@ const Enb_properties_array_t *enb_config_init_NB_IoT(char* lib_config_file_name_
   char             *address                       = NULL;
   char             *cidr                          = NULL;
   char             *astring                       = NULL;
-  char*             flexran_agent_interface_name      = NULL;
-  char*             flexran_agent_ipv4_address        = NULL;
-  libconfig_int     flexran_agent_port                = 0;
-  char*             flexran_agent_cache               = NULL;
+  char*             flexran_agent_interface_name  = NULL;
+  char*             flexran_agent_ipv4_address    = NULL;
+  libconfig_int     flexran_agent_port            = 0;
+  char*             flexran_agent_cache           = NULL;
   libconfig_int     otg_ue_id                     = 0;
   char*             otg_app_type                  = NULL;
   char*             otg_bg_traffic                = NULL;
@@ -766,20 +771,18 @@ const Enb_properties_array_t *enb_config_init_NB_IoT(char* lib_config_file_name_
   libconfig_int     pcch_defaultPagingCycle_NB                   = 0;
   libconfig_int     nprach_CP_Length                             = 0;
   libconfig_int     nprach_rsrp_range                            = 0;
-  const char*       nprach_SubcarrierMSG3_RangeStart             = NULL;
-  libconfig_int     maxNumPreambleAttemptCE_NB                   = 0;
   libconfig_int     npdsch_nrs_Power                             = 0;
   libconfig_int     npusch_ack_nack_numRepetitions_NB            = 0;
   libconfig_int     npusch_srs_SubframeConfig_NB                 = 0;
   libconfig_int     npusch_threeTone_CyclicShift_r13             = 0;
   libconfig_int     npusch_sixTone_CyclicShift_r13               = 0;
-  libconfig_int     npusch_groupHoppingEnabled                   = 0;
+  const char*       npusch_groupHoppingEnabled                   = NULL;
   libconfig_int     npusch_groupAssignmentNPUSCH_r13             = 0;
   libconfig_int     dl_GapThreshold_NB                           = 0;
   libconfig_int     dl_GapPeriodicity_NB                         = 0;
   const char*       dl_GapDurationCoeff_NB                       = NULL;
   libconfig_int     npusch_p0_NominalNPUSCH                      = 0;
-  libconfig_int     npusch_alpha                                 = 0;
+  const char*       npusch_alpha                                 = NULL;
   libconfig_int     deltaPreambleMsg3                            = 0;
 
   libconfig_int     ue_TimersAndConstants_t300_NB      = 0;
@@ -793,6 +796,8 @@ const Enb_properties_array_t *enb_config_init_NB_IoT(char* lib_config_file_name_
   libconfig_int     nprach_StartTime                   = 0;
   libconfig_int     nprach_SubcarrierOffset            = 0;
   libconfig_int     nprach_NumSubcarriers              = 0;
+  const char*       nprach_SubcarrierMSG3_RangeStart   = NULL;
+  libconfig_int     maxNumPreambleAttemptCE_NB         = 0;
   libconfig_int     numRepetitionsPerPreambleAttempt   = 0;
   libconfig_int     npdcch_NumRepetitions_RA           = 0;
   libconfig_int     npdcch_StartSF_CSS_RA              = 0;
@@ -1013,29 +1018,27 @@ const Enb_properties_array_t *enb_config_init_NB_IoT(char* lib_config_file_name_
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N311,  &ue_TimersAndConstants_n311)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UE_TRANSMISSION_MODE,  &ue_TransmissionMode)
 
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_RARESPONSEWINDOWSIZE_NB_IOT,  &rach_raResponseWindowSize_NB)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_MACCONTENTIONRESOLUTIONTIMER_NB_IOT,  &rach_macContentionResolutionTimer_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_POWERRAMPINGSTEP_NB_IOT,  &rach_powerRampingStep_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_PREAMBLEINITIALRECEIVEDTARGETPOWER_NB_IOT,  &rach_preambleInitialReceivedTargetPower_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_PREAMBLETRANSMAX_CE_NB_IOT,  &rach_preambleTransMax_CE_NB)
-                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_RARESPONSEWINDOWSIZE_NB_IOT,  &rach_raResponseWindowSize_NB)
-                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_MACCONTENTIONRESOLUTIONTIMER_NB_IOT,  &rach_macContentionResolutionTimer_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_BCCH_MODIFICATIONPERIODCOEFF_NB_IOT,  &bcch_modificationPeriodCoeff_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_PCCH_DEFAULT_PAGING_CYCLE_NB_IOT,  &pcch_defaultPagingCycle_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_CP_LENGTH_NB_IOT,  &nprach_CP_Length)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_RSRP_RANGE_NB_IOT,  &nprach_rsrp_range)
-                   && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_NPRACH_SUBCARRIERMSG3_RANGESTART_NB_IOT,  &nprach_SubcarrierMSG3_RangeStart)
-                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_MAXNUM_PREAMBLE_ATTEMPT_CE_NB_IOT,  &maxNumPreambleAttemptCE_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPDSCH_NRS_POWER_NB_IOT,  &npdsch_nrs_Power)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_ACK_NACK_NUMREPETITIONS_NB_IOT,  &npusch_ack_nack_numRepetitions_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_SRS_SUBFRAMECONFIG_NB_IOT,  &npusch_srs_SubframeConfig_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_THREETONE_CYCLICSHIFT_R13_NB_IOT,  &npusch_threeTone_CyclicShift_r13)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_SIXTONE_CYCLICSHIFT_R13_NB_IOT,  &npusch_sixTone_CyclicShift_r13)
-                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_GROUPHOPPINGENABLED_NB_IOT,  &npusch_groupHoppingEnabled)
+                   && config_setting_lookup_string(component_carrier,ENB_CONFIG_STRING_NPUSCH_GROUP_HOPPING_EN_NB_IOT,  &npusch_groupHoppingEnabled)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_GROUPASSIGNMENTNPUSH_R13_NB_IOT,  &npusch_groupAssignmentNPUSCH_r13)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_DL_GAPTHRESHOLD_NB_IOT,  &dl_GapThreshold_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_DL_GAPPERIODICITY_NB_IOT,  &dl_GapPeriodicity_NB)
                    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_DL_GAPDURATIONCOEFF_NB_IOT,  &dl_GapDurationCoeff_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_P0NOMINALPUSH_NB_IOT,  &npusch_p0_NominalNPUSCH)
-                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_ALFA_NB_IOT,  &npusch_alpha)
+                   && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_NPUSCH_ALPHA_NB_IOT,  &npusch_alpha)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_DELTAPREAMBLEMSG3_NB_IOT,  &deltaPreambleMsg3)
                    
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T300_NB_IOT,  &ue_TimersAndConstants_t300_NB)
@@ -1049,6 +1052,8 @@ const Enb_properties_array_t *enb_config_init_NB_IoT(char* lib_config_file_name_
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_STARTTIME_NB_IOT,  &nprach_StartTime)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_SUBCARRIEROFFSET_NB_IOT,  &nprach_SubcarrierOffset)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_NUMSUBCARRIERS_NB_IOT,  &nprach_NumSubcarriers)
+                   && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_NPRACH_SUBCARRIERMSG3_RANGESTART_NB_IOT,  &nprach_SubcarrierMSG3_RangeStart)
+                   && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_MAXNUM_PREAMBLE_ATTEMPT_CE_NB_IOT,  &maxNumPreambleAttemptCE_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NUMREPETITIONSPERPREAMBLEATTEMPT_NB_IOT,  &numRepetitionsPerPreambleAttempt)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPDCCH_NUMREPETITIONS_RA_NB_IOT,  &npdcch_NumRepetitions_RA)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPDCCH_STARTSF_CSS_RA_NB_IOT,  &npdcch_StartSF_CSS_RA)
@@ -2107,22 +2112,1168 @@ const Enb_properties_array_t *enb_config_init_NB_IoT(char* lib_config_file_name_
                              lib_config_file_name_pP, i, ue_TransmissionMode);
 		break;
 	      }
+        //****************************************************************************************************************
+        //************************************ NB-IoT part ***************************************************************
+        //****************************************************************************************************************
 
-        //************************************ NB-IoT part *****************************
+    switch (rach_raResponseWindowSize_NB) {
+              case 2:
+                enb_properties.properties[enb_properties_index]->rach_raResponseWindowSize_NB[j] = RACH_Info_NB_r13__ra_ResponseWindowSize_r13_pp2;
+                break;
+
+              case 3:
+                enb_properties.properties[enb_properties_index]->rach_raResponseWindowSize_NB[j] = RACH_Info_NB_r13__ra_ResponseWindowSize_r13_pp3;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->rach_raResponseWindowSize_NB[j] = RACH_Info_NB_r13__ra_ResponseWindowSize_r13_pp4;
+                break;
+
+              case 5:
+                enb_properties.properties[enb_properties_index]->rach_raResponseWindowSize_NB[j] = RACH_Info_NB_r13__ra_ResponseWindowSize_r13_pp5;
+                break;
+
+              case 6:
+                enb_properties.properties[enb_properties_index]->rach_raResponseWindowSize_NB[j] = RACH_Info_NB_r13__ra_ResponseWindowSize_r13_pp6;
+                break;
+
+              case 7:
+                enb_properties.properties[enb_properties_index]->rach_raResponseWindowSize_NB[j] = RACH_Info_NB_r13__ra_ResponseWindowSize_r13_pp7;
+                break;
+
+              case 8:
+                enb_properties.properties[enb_properties_index]->rach_raResponseWindowSize_NB[j] = RACH_Info_NB_r13__ra_ResponseWindowSize_r13_pp8;
+                break;
+
+              case 10:
+                enb_properties.properties[enb_properties_index]->rach_raResponseWindowSize_NB[j] = RACH_Info_NB_r13__ra_ResponseWindowSize_r13_pp10;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for rach_raResponseWindowSize_NB choice: 2,3,4,5,6,7,8,10 ",
+                             lib_config_file_name_pP, i, rach_raResponseWindowSize_NB);
+                break;
+
+              }
+
+      switch (rach_macContentionResolutionTimer_NB) {
+              case 1:
+                enb_properties.properties[enb_properties_index]->rach_macContentionResolutionTimer_NB[j] = RACH_Info_NB_r13__mac_ContentionResolutionTimer_r13_pp1;
+                break;
+
+              case 2:
+                enb_properties.properties[enb_properties_index]->rach_macContentionResolutionTimer_NB[j] = RACH_Info_NB_r13__mac_ContentionResolutionTimer_r13_pp2;
+                break;
+
+              case 3:
+                enb_properties.properties[enb_properties_index]->rach_macContentionResolutionTimer_NB[j] = RACH_Info_NB_r13__mac_ContentionResolutionTimer_r13_pp3;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->rach_macContentionResolutionTimer_NB[j] = RACH_Info_NB_r13__mac_ContentionResolutionTimer_r13_pp4;
+                break;
+
+              case 8:
+                enb_properties.properties[enb_properties_index]->rach_macContentionResolutionTimer_NB[j] = RACH_Info_NB_r13__mac_ContentionResolutionTimer_r13_pp8;
+                break;
+
+              case 16:
+                enb_properties.properties[enb_properties_index]->rach_macContentionResolutionTimer_NB[j] = RACH_Info_NB_r13__mac_ContentionResolutionTimer_r13_pp16;
+                break;
+
+              case 32:
+                enb_properties.properties[enb_properties_index]->rach_macContentionResolutionTimer_NB[j] = RACH_Info_NB_r13__mac_ContentionResolutionTimer_r13_pp32;
+                break;
+
+              case 64:
+                enb_properties.properties[enb_properties_index]->rach_macContentionResolutionTimer_NB[j] = RACH_Info_NB_r13__mac_ContentionResolutionTimer_r13_pp64;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for rach_macContentionResolutionTimer_NB choice: 1,2,3,4,8,16,32,64 ",
+                             lib_config_file_name_pP, i, rach_macContentionResolutionTimer_NB);
+                break;
+
+              }
+
+      switch (rach_powerRampingStep_NB) {
+              case 0:
+                enb_properties.properties[enb_properties_index]->rach_powerRampingStep_NB[j] = PowerRampingParameters__powerRampingStep_dB0;
+                break;
+
+              case 2:
+                enb_properties.properties[enb_properties_index]->rach_powerRampingStep_NB[j] = PowerRampingParameters__powerRampingStep_dB2;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->rach_powerRampingStep_NB[j] = PowerRampingParameters__powerRampingStep_dB4;
+                break;
+
+              case 6:
+                enb_properties.properties[enb_properties_index]->rach_powerRampingStep_NB[j] = PowerRampingParameters__powerRampingStep_dB6;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for rach_powerRampingStep_NB choice: 0,2,4,6 ",
+                             lib_config_file_name_pP, i, rach_powerRampingStep_NB);
+                break;
+
+              }
+
+      switch (rach_preambleInitialReceivedTargetPower_NB) {
+              case -120:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_120;
+                break;
+
+              case -118:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_118;
+                break;
+
+              case -116:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_116;
+                break;
+
+              case -114:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_114;
+                break;
+
+              case -112:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_112;
+                break;
+
+              case -110:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_110;
+                break;
+
+              case -108:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_108;
+                break;
+
+              case -106:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_106;
+                break;
+
+              case -104:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_104;
+                break;
+
+              case -102:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_102;
+                break;
+
+              case -100:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_100;
+                break;
+
+              case -98:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_98;
+                break;
+
+              case -96:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_96;
+                break;
+
+              case -94:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_94;
+                break;
+
+              case -92:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_92;
+                break;
+
+              case -90:
+                enb_properties.properties[enb_properties_index]->rach_preambleInitialReceivedTargetPower_NB[j] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_90;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for rach_preambleInitialReceivedTargetPower_NB choice: -120,-118,-116,-114,-112,-110,-108,-106,-104,-102,-100,-98,-96,-94,-92,-90 ",
+                             lib_config_file_name_pP, i, rach_preambleInitialReceivedTargetPower_NB);
+                break;
+
+              }
+
+      switch (rach_preambleTransMax_CE_NB) {
+              case 3:
+                enb_properties.properties[enb_properties_index]->rach_preambleTransMax_CE_NB[j] = PreambleTransMax_n3;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->rach_preambleTransMax_CE_NB[j] = PreambleTransMax_n4;
+                break;
+
+              case 5:
+                enb_properties.properties[enb_properties_index]->rach_preambleTransMax_CE_NB[j] = PreambleTransMax_n5;
+                break;
+
+              case 6:
+                enb_properties.properties[enb_properties_index]->rach_preambleTransMax_CE_NB[j] = PreambleTransMax_n6;
+                break;
+
+              case 7:
+                enb_properties.properties[enb_properties_index]->rach_preambleTransMax_CE_NB[j] = PreambleTransMax_n7;
+                break;
+
+              case 8:
+                enb_properties.properties[enb_properties_index]->rach_preambleTransMax_CE_NB[j] = PreambleTransMax_n8;
+                break;
+
+              case 10:
+                enb_properties.properties[enb_properties_index]->rach_preambleTransMax_CE_NB[j] = PreambleTransMax_n10;
+                break;
+
+              case 20:
+                enb_properties.properties[enb_properties_index]->rach_preambleTransMax_CE_NB[j] = PreambleTransMax_n20;
+                break;
+
+              case 50:
+                enb_properties.properties[enb_properties_index]->rach_preambleTransMax_CE_NB[j] = PreambleTransMax_n50;
+                break;
+
+              case 100:
+                enb_properties.properties[enb_properties_index]->rach_preambleTransMax_CE_NB[j] = PreambleTransMax_n100;
+                break;
+
+              case 200:
+                enb_properties.properties[enb_properties_index]->rach_preambleTransMax_CE_NB[j] = PreambleTransMax_n200;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for rach_preambleTransMax_CE_NB choice: 3,4,5,6,7,8,10,20,50,100,200 ",
+                             lib_config_file_name_pP, i, rach_preambleTransMax_CE_NB);
+                break;
+
+              }
+
+      switch (bcch_modificationPeriodCoeff_NB) {
+              case 16:
+                enb_properties.properties[enb_properties_index]->bcch_modificationPeriodCoeff_NB[j] = BCCH_Config_NB_r13__modificationPeriodCoeff_r13_n16;
+                break;
+
+              case 32:
+                enb_properties.properties[enb_properties_index]->bcch_modificationPeriodCoeff_NB[j] = BCCH_Config_NB_r13__modificationPeriodCoeff_r13_n16;
+                break;
+
+              case 64:
+                enb_properties.properties[enb_properties_index]->bcch_modificationPeriodCoeff_NB[j] = BCCH_Config_NB_r13__modificationPeriodCoeff_r13_n16;
+                break;
+
+              case 128:
+                enb_properties.properties[enb_properties_index]->bcch_modificationPeriodCoeff_NB[j] = BCCH_Config_NB_r13__modificationPeriodCoeff_r13_n16;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for bcch_modificationPeriodCoeff_NB choice: 16,32,64,128 ",
+                             lib_config_file_name_pP, i, bcch_modificationPeriodCoeff_NB);
+                break;
+
+              }
+
+      switch (pcch_defaultPagingCycle_NB) {
+              case 128:
+                enb_properties.properties[enb_properties_index]->pcch_defaultPagingCycle_NB[j] = PCCH_Config_NB_r13__defaultPagingCycle_r13_rf128;
+                break;
+
+              case 256:
+                enb_properties.properties[enb_properties_index]->pcch_defaultPagingCycle_NB[j] = PCCH_Config_NB_r13__defaultPagingCycle_r13_rf256;
+                break;
+
+              case 512:
+                enb_properties.properties[enb_properties_index]->pcch_defaultPagingCycle_NB[j] = PCCH_Config_NB_r13__defaultPagingCycle_r13_rf512;
+                break;
+
+              case 1024:
+                enb_properties.properties[enb_properties_index]->pcch_defaultPagingCycle_NB[j] = PCCH_Config_NB_r13__defaultPagingCycle_r13_rf1024;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for pcch_defaultPagingCycle_NB choice: 128,256,512,1024 ",
+                             lib_config_file_name_pP, i, pcch_defaultPagingCycle_NB);
+                break;
+
+              }
+
+      switch (nprach_CP_Length) {
+              case 0:
+                enb_properties.properties[enb_properties_index]->nprach_CP_Length[j] = NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7;
+                break;
+
+              case 1:
+                enb_properties.properties[enb_properties_index]->nprach_CP_Length[j] = NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us266dot7;
+                break;
 
 
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for nprach_CP_Length choice: 0,1 ",
+                             lib_config_file_name_pP, i, nprach_CP_Length);
+                break;
+
+              }
+
+      enb_properties.properties[enb_properties_index]->nprach_rsrp_range[j] =  nprach_rsrp_range;
+ 
+              if ((nprach_rsrp_range<0)||(nprach_rsrp_range>96))
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for nprach_rsrp_range choice: 0..96 !\n",
+                             lib_config_file_name_pP, i, nprach_rsrp_range);
+
+      enb_properties.properties[enb_properties_index]->npdsch_nrs_Power[j] =  npdsch_nrs_Power;
+ 
+              if ((npdsch_nrs_Power<-60)||(npdsch_nrs_Power>50))
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npdsch_nrs_Power choice: -60..50 !\n",
+                             lib_config_file_name_pP, i, npdsch_nrs_Power);
+
+      
+      switch (npusch_ack_nack_numRepetitions_NB) {
+              case 1:
+                enb_properties.properties[enb_properties_index]->npusch_ack_nack_numRepetitions_NB[j] = ACK_NACK_NumRepetitions_NB_r13_r1;
+                break;
+
+              case 2:
+                enb_properties.properties[enb_properties_index]->npusch_ack_nack_numRepetitions_NB[j] = ACK_NACK_NumRepetitions_NB_r13_r2;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->npusch_ack_nack_numRepetitions_NB[j] = ACK_NACK_NumRepetitions_NB_r13_r4;
+                break;
+
+              case 8:
+                enb_properties.properties[enb_properties_index]->npusch_ack_nack_numRepetitions_NB[j] = ACK_NACK_NumRepetitions_NB_r13_r8;
+                break;
+
+              case 16:
+                enb_properties.properties[enb_properties_index]->npusch_ack_nack_numRepetitions_NB[j] = ACK_NACK_NumRepetitions_NB_r13_r16;
+                break;
+
+              case 32:
+                enb_properties.properties[enb_properties_index]->npusch_ack_nack_numRepetitions_NB[j] = ACK_NACK_NumRepetitions_NB_r13_r32;
+                break;
+
+              case 64:
+                enb_properties.properties[enb_properties_index]->npusch_ack_nack_numRepetitions_NB[j] = ACK_NACK_NumRepetitions_NB_r13_r64;
+                break;
+
+              case 128:
+                enb_properties.properties[enb_properties_index]->npusch_ack_nack_numRepetitions_NB[j] = ACK_NACK_NumRepetitions_NB_r13_r128;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npusch_ack_nack_numRepetitions_NB choice: 1,2,4,8,16,32,64,128 ",
+                             lib_config_file_name_pP, i, npusch_ack_nack_numRepetitions_NB);
+                break;
+
+              }
+
+      switch (npusch_srs_SubframeConfig_NB) {
+              case 0:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc0;
+                break;
+
+              case 1:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc1;
+                break;
+
+              case 2:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc2;
+                break;
+
+              case 3:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc3;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc4;
+                break;
+
+              case 5:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc5;
+                break;
+
+              case 6:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc6;
+                break;
+
+              case 7:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc7;
+                break;
+
+              case 8:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc8;
+                break;
+
+              case 9:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc9;
+                break;
+
+              case 10:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc10;
+                break;
+
+              case 11:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc11;
+                break;
+
+              case 12:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc12;
+                break;
+
+              case 13:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc13;
+                break;
+
+              case 14:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc14;
+                break;
+
+              case 15:
+                enb_properties.properties[enb_properties_index]->npusch_srs_SubframeConfig_NB[j] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc15;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npusch_srs_SubframeConfig_NB choice: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 ",
+                             lib_config_file_name_pP, i, npusch_srs_SubframeConfig_NB);
+                break;
+
+              }
+
+      enb_properties.properties[enb_properties_index]->npusch_threeTone_CyclicShift_r13[j] =  npusch_threeTone_CyclicShift_r13;
+ 
+              if ((npusch_threeTone_CyclicShift_r13<0)||(npusch_threeTone_CyclicShift_r13>2))
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npusch_threeTone_CyclicShift_r13 choice: 0..2 !\n",
+                             lib_config_file_name_pP, i, npusch_threeTone_CyclicShift_r13);
+
+      enb_properties.properties[enb_properties_index]->npusch_sixTone_CyclicShift_r13[j] =  npusch_sixTone_CyclicShift_r13;
+ 
+              if ((npusch_sixTone_CyclicShift_r13<0)||(npusch_sixTone_CyclicShift_r13>3))
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npusch_sixTone_CyclicShift_r13 choice: 0..3 !\n",
+                             lib_config_file_name_pP, i, npusch_sixTone_CyclicShift_r13);
+
+      if (!npusch_groupHoppingEnabled)
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d define %s: ENABLE,DISABLE!\n",
+                             lib_config_file_name_pP, i, ENB_CONFIG_STRING_NPUSCH_GROUP_HOPPING_EN_NB_IOT);
+              else if (strcmp(npusch_groupHoppingEnabled, "ENABLE") == 0) {
+                enb_properties.properties[enb_properties_index]->npusch_groupHoppingEnabled[j] = TRUE;
+              }  else if (strcmp(npusch_groupHoppingEnabled, "DISABLE") == 0) {
+                enb_properties.properties[enb_properties_index]->npusch_groupHoppingEnabled[j] = FALSE;
+              } else
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for npusch_groupHoppingEnabled choice: ENABLE,DISABLE!\n",
+                             lib_config_file_name_pP, i, npusch_groupHoppingEnabled);
 
 
+      enb_properties.properties[enb_properties_index]->npusch_groupAssignmentNPUSCH_r13[j] = npusch_groupAssignmentNPUSCH_r13;
+
+              if ((npusch_groupAssignmentNPUSCH_r13<0)||(npusch_groupAssignmentNPUSCH_r13>29))
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npusch_groupAssignmentNPUSCH_r13 choice: 0..29!\n",
+                             lib_config_file_name_pP, i, npusch_groupAssignmentNPUSCH_r13);
+
+      switch (dl_GapThreshold_NB) {
+              case 32:
+                enb_properties.properties[enb_properties_index]->dl_GapThreshold_NB[j] = DL_GapConfig_NB_r13__dl_GapThreshold_r13_n32;
+                break;
+
+              case 64:
+                enb_properties.properties[enb_properties_index]->dl_GapThreshold_NB[j] = DL_GapConfig_NB_r13__dl_GapThreshold_r13_n64;
+                break;
+
+              case 128:
+                enb_properties.properties[enb_properties_index]->dl_GapThreshold_NB[j] = DL_GapConfig_NB_r13__dl_GapThreshold_r13_n128;
+                break;
+
+              case 256:
+                enb_properties.properties[enb_properties_index]->dl_GapThreshold_NB[j] = DL_GapConfig_NB_r13__dl_GapThreshold_r13_n256;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for dl_GapThreshold_NB choice: 32,64,128,256 ",
+                             lib_config_file_name_pP, i, dl_GapThreshold_NB);
+                break;
+
+              }
+
+      switch (dl_GapPeriodicity_NB) {
+              case 64:
+                enb_properties.properties[enb_properties_index]->dl_GapPeriodicity_NB[j] = DL_GapConfig_NB_r13__dl_GapPeriodicity_r13_sf64;
+                break;
+
+              case 128:
+                enb_properties.properties[enb_properties_index]->dl_GapPeriodicity_NB[j] = DL_GapConfig_NB_r13__dl_GapPeriodicity_r13_sf128;
+                break;
+
+              case 256:
+                enb_properties.properties[enb_properties_index]->dl_GapPeriodicity_NB[j] = DL_GapConfig_NB_r13__dl_GapPeriodicity_r13_sf256;
+                break;
+
+              case 512:
+                enb_properties.properties[enb_properties_index]->dl_GapPeriodicity_NB[j] = DL_GapConfig_NB_r13__dl_GapPeriodicity_r13_sf512;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for dl_GapPeriodicity_NB choice: 64,128,256,512 ",
+                             lib_config_file_name_pP, i, dl_GapPeriodicity_NB);
+                break;
+
+              }
+
+      if (strcmp(dl_GapDurationCoeff_NB, "oneEighth") == 0) {
+                enb_properties.properties[enb_properties_index]->dl_GapDurationCoeff_NB[j] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_oneEighth;
+              } else if (strcmp(dl_GapDurationCoeff_NB, "oneFourth") == 0) {
+                enb_properties.properties[enb_properties_index]->dl_GapDurationCoeff_NB[j] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_oneFourth;
+              } else if (strcmp(dl_GapDurationCoeff_NB, "threeEighth") == 0) {
+                enb_properties.properties[enb_properties_index]->dl_GapDurationCoeff_NB[j] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_threeEighth;
+              } else if (strcmp(dl_GapDurationCoeff_NB, "oneHalf") == 0) {
+                enb_properties.properties[enb_properties_index]->dl_GapDurationCoeff_NB[j] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_oneHalf;
+              } else
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for dl_GapDurationCoeff_NB choice: oneEighth,oneFourth,threeEighth,oneHalf !\n",
+                             lib_config_file_name_pP, i, dl_GapDurationCoeff_NB);
+
+      enb_properties.properties[enb_properties_index]->npusch_p0_NominalNPUSCH[j] =  npusch_p0_NominalNPUSCH;
+ 
+              if ((npusch_p0_NominalNPUSCH < -126)||(npusch_p0_NominalNPUSCH> 24))
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npusch_p0_NominalNPUSCH choice: -126..24 !\n",
+                             lib_config_file_name_pP, i, npusch_p0_NominalNPUSCH);
+
+     if (strcmp(npusch_alpha,"AL0")==0) {
+                enb_properties.properties[enb_properties_index]->npusch_alpha[j] = UplinkPowerControlCommon_NB_r13__alpha_r13_al0;
+              } else if (strcmp(npusch_alpha,"AL04")==0) {
+                enb_properties.properties[enb_properties_index]->npusch_alpha[j] = UplinkPowerControlCommon_NB_r13__alpha_r13_al04;
+              } else if (strcmp(npusch_alpha,"AL05")==0) {
+                enb_properties.properties[enb_properties_index]->npusch_alpha[j] = UplinkPowerControlCommon_NB_r13__alpha_r13_al05;
+              } else if (strcmp(npusch_alpha,"AL06")==0) {
+                enb_properties.properties[enb_properties_index]->npusch_alpha[j] = UplinkPowerControlCommon_NB_r13__alpha_r13_al06;
+              } else if (strcmp(npusch_alpha,"AL07")==0) {
+                enb_properties.properties[enb_properties_index]->npusch_alpha[j] = UplinkPowerControlCommon_NB_r13__alpha_r13_al07;
+              } else if (strcmp(npusch_alpha,"AL08")==0) {
+                enb_properties.properties[enb_properties_index]->npusch_alpha[j] = UplinkPowerControlCommon_NB_r13__alpha_r13_al08;
+              } else if (strcmp(npusch_alpha,"AL09")==0) {
+                enb_properties.properties[enb_properties_index]->npusch_alpha[j] = UplinkPowerControlCommon_NB_r13__alpha_r13_al09;
+              } else if (strcmp(npusch_alpha,"AL1")==0) {
+                enb_properties.properties[enb_properties_index]->npusch_alpha[j] = UplinkPowerControlCommon_NB_r13__alpha_r13_al1;
+              } else
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for npusch_alpha choice: AL0,AL04,AL05,AL06,AL07,AL08,AL09,AL1!\n",
+                             lib_config_file_name_pP, i, npusch_alpha);
+
+        enb_properties.properties[enb_properties_index]->deltaPreambleMsg3[j] =  deltaPreambleMsg3;
+ 
+              if ((deltaPreambleMsg3 < -1)||(deltaPreambleMsg3> 6))
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for deltaPreambleMsg3 choice: -1..6 !\n",
+                             lib_config_file_name_pP, i, deltaPreambleMsg3);
+      
+
+        //************************************************************************* NB-IoT Timer ************************************************************
+        switch (ue_TimersAndConstants_t300_NB) {
+              case 2500:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t300_NB[j] = UE_TimersAndConstants_NB_r13__t300_r13_ms2500;
+                break;
+
+              case 4000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t300_NB[j] = UE_TimersAndConstants_NB_r13__t300_r13_ms4000;
+                break;
+
+              case 6000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t300_NB[j] = UE_TimersAndConstants_NB_r13__t300_r13_ms6000;
+                break;
+
+              case 10000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t300_NB[j] = UE_TimersAndConstants_NB_r13__t300_r13_ms10000;
+                break;
+
+              case 15000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t300_NB[j] = UE_TimersAndConstants_NB_r13__t300_r13_ms15000;
+                break;
+
+              case 25000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t300_NB[j] = UE_TimersAndConstants_NB_r13__t300_r13_ms25000;
+                break;
+
+              case 40000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t300_NB[j] = UE_TimersAndConstants_NB_r13__t300_r13_ms40000;
+                break;
+
+              case 60000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t300_NB[j] = UE_TimersAndConstants_NB_r13__t300_r13_ms60000;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for ue_TimersAndConstants_t300_NB choice: 2500,4000,6000,10000,15000,25000,40000,60000 ",
+                             lib_config_file_name_pP, i, ue_TimersAndConstants_t300_NB);
+                break;
+
+              }
+        switch (ue_TimersAndConstants_t301_NB) {
+              case 2500:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t301_NB[j] = UE_TimersAndConstants_NB_r13__t301_r13_ms2500;
+                break;
+
+              case 4000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t301_NB[j] = UE_TimersAndConstants_NB_r13__t301_r13_ms4000;
+                break;
+
+              case 6000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t301_NB[j] = UE_TimersAndConstants_NB_r13__t301_r13_ms6000;
+                break;
+
+              case 10000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t301_NB[j] = UE_TimersAndConstants_NB_r13__t301_r13_ms10000;
+                break;
+
+              case 15000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t301_NB[j] = UE_TimersAndConstants_NB_r13__t301_r13_ms15000;
+                break;
+
+              case 25000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t301_NB[j] = UE_TimersAndConstants_NB_r13__t301_r13_ms25000;
+                break;
+
+              case 40000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t301_NB[j] = UE_TimersAndConstants_NB_r13__t301_r13_ms40000;
+                break;
+
+              case 60000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t301_NB[j] = UE_TimersAndConstants_NB_r13__t301_r13_ms60000;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for ue_TimersAndConstants_t301_NB choice: 2500,4000,6000,10000,15000,25000,40000,60000 ",
+                             lib_config_file_name_pP, i, ue_TimersAndConstants_t301_NB);
+                break;
+
+              }
+
+        switch (ue_TimersAndConstants_t310_NB) {
+              case 0:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t310_NB[j] = UE_TimersAndConstants_NB_r13__t310_r13_ms0;
+                break;
+
+              case 200:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t310_NB[j] = UE_TimersAndConstants_NB_r13__t310_r13_ms200;
+                break;
+
+              case 500:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t310_NB[j] = UE_TimersAndConstants_NB_r13__t310_r13_ms500;
+                break;
+
+              case 1000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t310_NB[j] = UE_TimersAndConstants_NB_r13__t310_r13_ms1000;
+                break;
+
+              case 2000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t310_NB[j] = UE_TimersAndConstants_NB_r13__t310_r13_ms2000;
+                break;
+
+              case 4000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t310_NB[j] = UE_TimersAndConstants_NB_r13__t310_r13_ms4000;
+                break;
+
+              case 8000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t310_NB[j] = UE_TimersAndConstants_NB_r13__t310_r13_ms8000;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for ue_TimersAndConstants_t310_NB choice: 0,200,500,1000,2000,4000,8000 ",
+                             lib_config_file_name_pP, i, ue_TimersAndConstants_t310_NB);
+                break;
+
+              }
+
+        switch (ue_TimersAndConstants_t311_NB) {
+              case 1000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t311_NB[j] = UE_TimersAndConstants_NB_r13__t311_r13_ms1000;
+                break;
+
+              case 3000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t311_NB[j] = UE_TimersAndConstants_NB_r13__t311_r13_ms3000;
+                break;
+
+              case 5000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t311_NB[j] = UE_TimersAndConstants_NB_r13__t311_r13_ms5000;
+                break;
+
+              case 10000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t311_NB[j] = UE_TimersAndConstants_NB_r13__t311_r13_ms10000;
+                break;
+
+              case 15000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t311_NB[j] = UE_TimersAndConstants_NB_r13__t311_r13_ms15000;
+                break;
+
+              case 20000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t311_NB[j] = UE_TimersAndConstants_NB_r13__t311_r13_ms20000;
+                break;
+
+              case 30000:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t311_NB[j] = UE_TimersAndConstants_NB_r13__t311_r13_ms30000;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for ue_TimersAndConstants_t311_NB choice: 1000,3000,5000,10000,150000,20000,30000",
+                             lib_config_file_name_pP, i, ue_TimersAndConstants_t311_NB);
+                break;
+
+              }
+
+        switch (ue_TimersAndConstants_n310_NB) {
+              case 1:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n310_NB[j] = UE_TimersAndConstants_NB_r13__n310_r13_n1;
+                break;
+
+              case 2:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n310_NB[j] = UE_TimersAndConstants_NB_r13__n310_r13_n2;
+                break;
+
+              case 3:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n310_NB[j] = UE_TimersAndConstants_NB_r13__n310_r13_n3;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n310_NB[j] = UE_TimersAndConstants_NB_r13__n310_r13_n4;
+                break;
+
+              case 6:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n310_NB[j] = UE_TimersAndConstants_NB_r13__n310_r13_n6;
+                break;
+
+              case 8:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n310_NB[j] = UE_TimersAndConstants_NB_r13__n310_r13_n8;
+                break;
+
+              case 10:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n310_NB[j] = UE_TimersAndConstants_NB_r13__n310_r13_n10;
+                break;
+
+              case 20:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n310_NB[j] = UE_TimersAndConstants_NB_r13__n310_r13_n20;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for ue_TimersAndConstants_n310_NB choice: 1,2,3,4,6,8,10,20",
+                             lib_config_file_name_pP, i, ue_TimersAndConstants_n310_NB);
+                break;
+
+              }
+
+        switch (ue_TimersAndConstants_n311_NB) {
+              case 1:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n311_NB[j] = UE_TimersAndConstants_NB_r13__n311_r13_n1;
+                break;
+
+              case 2:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n311_NB[j] = UE_TimersAndConstants_NB_r13__n311_r13_n2;
+                break;
+
+              case 3:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n311_NB[j] = UE_TimersAndConstants_NB_r13__n311_r13_n3;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n311_NB[j] = UE_TimersAndConstants_NB_r13__n311_r13_n4;
+                break;
+
+              case 5:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n311_NB[j] = UE_TimersAndConstants_NB_r13__n311_r13_n5;
+                break;
+
+              case 6:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n311_NB[j] = UE_TimersAndConstants_NB_r13__n311_r13_n6;
+                break;
+
+              case 8:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n311_NB[j] = UE_TimersAndConstants_NB_r13__n311_r13_n8;
+                break;
+
+              case 10:
+                enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_n311_NB[j] = UE_TimersAndConstants_NB_r13__n311_r13_n10;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for ue_TimersAndConstants_n311_NB choice: 1,2,3,4,5,6,8,10",
+                             lib_config_file_name_pP, i, ue_TimersAndConstants_n311_NB);
+                break;
+
+              }
+
+        //************************************************************************** NBPRACH NB-IoT *****************************************************
+        switch (nprach_Periodicity) {
+              case 40:
+                enb_properties.properties[enb_properties_index]->nprach_Periodicity[j] = NPRACH_Parameters_NB_r13__nprach_Periodicity_r13_ms40;
+                break;
+
+              case 80:
+                enb_properties.properties[enb_properties_index]->nprach_Periodicity[j] = NPRACH_Parameters_NB_r13__nprach_Periodicity_r13_ms80;
+                break;
+
+              case 160:
+                enb_properties.properties[enb_properties_index]->nprach_Periodicity[j] = NPRACH_Parameters_NB_r13__nprach_Periodicity_r13_ms160;
+                break;
+
+              case 240:
+                enb_properties.properties[enb_properties_index]->nprach_Periodicity[j] = NPRACH_Parameters_NB_r13__nprach_Periodicity_r13_ms240;
+                break;
+
+                case 320:
+                enb_properties.properties[enb_properties_index]->nprach_Periodicity[j] = NPRACH_Parameters_NB_r13__nprach_Periodicity_r13_ms320;
+                break;
+
+              case 640:
+                enb_properties.properties[enb_properties_index]->nprach_Periodicity[j] = NPRACH_Parameters_NB_r13__nprach_Periodicity_r13_ms640;
+                break;
+
+              case 1280:
+                enb_properties.properties[enb_properties_index]->nprach_Periodicity[j] = NPRACH_Parameters_NB_r13__nprach_Periodicity_r13_ms1280;
+                break;
+
+              case 2560:
+                enb_properties.properties[enb_properties_index]->nprach_Periodicity[j] = NPRACH_Parameters_NB_r13__nprach_Periodicity_r13_ms2560;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for nprach_Periodicity choice: 40,80,160,240,320,640,1280,2560",
+                             lib_config_file_name_pP, i, nprach_Periodicity);
+
+                break;
+              }
+
+      switch (nprach_StartTime) {
+              case 8:
+                enb_properties.properties[enb_properties_index]->nprach_StartTime[j] = NPRACH_Parameters_NB_r13__nprach_StartTime_r13_ms8;
+                break;
+
+              case 16:
+                enb_properties.properties[enb_properties_index]->nprach_StartTime[j] = NPRACH_Parameters_NB_r13__nprach_StartTime_r13_ms16;
+                break;
+
+              case 32:
+                enb_properties.properties[enb_properties_index]->nprach_StartTime[j] = NPRACH_Parameters_NB_r13__nprach_StartTime_r13_ms32;
+                break;
+
+              case 64:
+                enb_properties.properties[enb_properties_index]->nprach_StartTime[j] = NPRACH_Parameters_NB_r13__nprach_StartTime_r13_ms64;
+                break;
+
+                case 128:
+                enb_properties.properties[enb_properties_index]->nprach_StartTime[j] = NPRACH_Parameters_NB_r13__nprach_StartTime_r13_ms128;
+                break;
+
+              case 256:
+                enb_properties.properties[enb_properties_index]->nprach_StartTime[j] = NPRACH_Parameters_NB_r13__nprach_StartTime_r13_ms256;
+                break;
+
+              case 512:
+                enb_properties.properties[enb_properties_index]->nprach_StartTime[j] = NPRACH_Parameters_NB_r13__nprach_StartTime_r13_ms512;
+                break;
+
+              case 1024:
+                enb_properties.properties[enb_properties_index]->nprach_StartTime[j] = NPRACH_Parameters_NB_r13__nprach_StartTime_r13_ms1024;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for nprach_StartTime choice: 8,16,32,64,128,256,512,1024",
+                             lib_config_file_name_pP, i, nprach_StartTime);
+
+                break;
+              }
+
+        switch (nprach_SubcarrierOffset) {
+              case 40:
+                enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n0;
+                break;
+
+              case 80:
+                enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n12;
+                break;
+
+              case 160:
+                enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n24;
+                break;
+
+              case 240:
+                enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n36;
+                break;
+
+                case 32:
+                enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n2;
+                break;
+
+              case 18:
+                enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n18;
+                break;
+
+              case 34:
+                enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n34;
+                break;
+
+              //case 1:
+               // enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_spare1;
+               // break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for nprach_SubcarrierOffset choice: 0,12,24,36,2,18,34",
+                             lib_config_file_name_pP, i, nprach_SubcarrierOffset);
+
+                break;
+              }
+
+        switch (nprach_NumSubcarriers) {
+              case 12:
+                enb_properties.properties[enb_properties_index]->nprach_NumSubcarriers[j] = NPRACH_Parameters_NB_r13__nprach_NumSubcarriers_r13_n12;
+                break;
+
+              case 24:
+                enb_properties.properties[enb_properties_index]->nprach_NumSubcarriers[j] = NPRACH_Parameters_NB_r13__nprach_NumSubcarriers_r13_n24;
+                break;
+
+              case 36:
+                enb_properties.properties[enb_properties_index]->nprach_NumSubcarriers[j] = NPRACH_Parameters_NB_r13__nprach_NumSubcarriers_r13_n36;
+                break;
+
+              case 48:
+                enb_properties.properties[enb_properties_index]->nprach_NumSubcarriers[j] = NPRACH_Parameters_NB_r13__nprach_NumSubcarriers_r13_n48;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for nprach_NumSubcarriers choice: 12,24,36,48",
+                             lib_config_file_name_pP, i, nprach_NumSubcarriers);
+
+                break;
+              }
+                
+        if (strcmp(nprach_SubcarrierMSG3_RangeStart, "zero") == 0) {
+                enb_properties.properties[enb_properties_index]->nprach_SubcarrierMSG3_RangeStart[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierMSG3_RangeStart_r13_zero;
+              } else if (strcmp(nprach_SubcarrierMSG3_RangeStart, "oneThird") == 0) {
+                enb_properties.properties[enb_properties_index]->nprach_SubcarrierMSG3_RangeStart[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierMSG3_RangeStart_r13_oneThird;
+              } else if (strcmp(nprach_SubcarrierMSG3_RangeStart, "twoThird") == 0) {
+                enb_properties.properties[enb_properties_index]->nprach_SubcarrierMSG3_RangeStart[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierMSG3_RangeStart_r13_twoThird;
+              } else if (strcmp(nprach_SubcarrierMSG3_RangeStart, "one") == 0) {
+                enb_properties.properties[enb_properties_index]->nprach_SubcarrierMSG3_RangeStart[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierMSG3_RangeStart_r13_one;
+              } else
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for nprach_SubcarrierMSG3_RangeStart choice: zero,oneThird,twoThird,one !\n",
+                             lib_config_file_name_pP, i, nprach_SubcarrierMSG3_RangeStart);
+
+        switch (maxNumPreambleAttemptCE_NB) {
+              case 3:
+                enb_properties.properties[enb_properties_index]->maxNumPreambleAttemptCE_NB[j] = NPRACH_Parameters_NB_r13__maxNumPreambleAttemptCE_r13_n3;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->maxNumPreambleAttemptCE_NB[j] = NPRACH_Parameters_NB_r13__maxNumPreambleAttemptCE_r13_n4;
+                break;
+
+              case 5:
+                enb_properties.properties[enb_properties_index]->maxNumPreambleAttemptCE_NB[j] = NPRACH_Parameters_NB_r13__maxNumPreambleAttemptCE_r13_n5;
+                break;
+
+              case 6:
+                enb_properties.properties[enb_properties_index]->maxNumPreambleAttemptCE_NB[j] = NPRACH_Parameters_NB_r13__maxNumPreambleAttemptCE_r13_n6;
+                break;
+
+              case 7:
+                enb_properties.properties[enb_properties_index]->maxNumPreambleAttemptCE_NB[j] = NPRACH_Parameters_NB_r13__maxNumPreambleAttemptCE_r13_n7;
+                break;
+
+              case 8:
+                enb_properties.properties[enb_properties_index]->maxNumPreambleAttemptCE_NB[j] = NPRACH_Parameters_NB_r13__maxNumPreambleAttemptCE_r13_n8;
+                break;
+
+              case 10:
+                enb_properties.properties[enb_properties_index]->maxNumPreambleAttemptCE_NB[j] = NPRACH_Parameters_NB_r13__maxNumPreambleAttemptCE_r13_n10;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for maxNumPreambleAttemptCE_NB choice: 3,4,5,6,7,8,10",
+                             lib_config_file_name_pP, i, maxNumPreambleAttemptCE_NB);
+
+                break;
+              }
+
+        switch (numRepetitionsPerPreambleAttempt) {
+              case 1:
+                enb_properties.properties[enb_properties_index]->numRepetitionsPerPreambleAttempt[j] = NPRACH_Parameters_NB_r13__numRepetitionsPerPreambleAttempt_r13_n1;
+                break;
+
+              case 2:
+                enb_properties.properties[enb_properties_index]->numRepetitionsPerPreambleAttempt[j] = NPRACH_Parameters_NB_r13__numRepetitionsPerPreambleAttempt_r13_n2;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->numRepetitionsPerPreambleAttempt[j] = NPRACH_Parameters_NB_r13__numRepetitionsPerPreambleAttempt_r13_n4;
+                break;
+
+              case 8:
+                enb_properties.properties[enb_properties_index]->numRepetitionsPerPreambleAttempt[j] = NPRACH_Parameters_NB_r13__numRepetitionsPerPreambleAttempt_r13_n8;
+                break;
+
+              case 16:
+                enb_properties.properties[enb_properties_index]->numRepetitionsPerPreambleAttempt[j] = NPRACH_Parameters_NB_r13__numRepetitionsPerPreambleAttempt_r13_n16;
+                break;
+
+              case 32:
+                enb_properties.properties[enb_properties_index]->numRepetitionsPerPreambleAttempt[j] = NPRACH_Parameters_NB_r13__numRepetitionsPerPreambleAttempt_r13_n32;
+                break;
+
+              case 64:
+                enb_properties.properties[enb_properties_index]->numRepetitionsPerPreambleAttempt[j] = NPRACH_Parameters_NB_r13__numRepetitionsPerPreambleAttempt_r13_n64;
+                break;
+
+              case 128:
+                enb_properties.properties[enb_properties_index]->numRepetitionsPerPreambleAttempt[j] = NPRACH_Parameters_NB_r13__numRepetitionsPerPreambleAttempt_r13_n128;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for numRepetitionsPerPreambleAttempt choice: 1,2,4,8,16,32,64,128",
+                             lib_config_file_name_pP, i, numRepetitionsPerPreambleAttempt);
+
+                break;
+              }
+
+        switch (npdcch_NumRepetitions_RA) {
+              case 1:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r1;
+                break;
+
+              case 2:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r2;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r4;
+                break;
+
+              case 8:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r8;
+                break;
+
+              case 16:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r16;
+                break;
+
+              case 32:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r32;
+                break;
+
+              case 64:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r64;
+                break;
+
+              case 128:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r128;
+                break;
+
+              case 256:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r256;
+                break;
+
+              case 512:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r512;
+                break;
+
+              case 1024:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r1024;
+                break;
+
+              case 2048:
+                enb_properties.properties[enb_properties_index]->npdcch_NumRepetitions_RA[j] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r2048;
+                break; 
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npdcch_NumRepetitions_RA choice: 1,2,4,8,16,32,64,128,512,1024,2048",
+                             lib_config_file_name_pP, i, npdcch_NumRepetitions_RA);
+
+                break;
+              }
+
+      switch (npdcch_StartSF_CSS_RA) {
+              case 1:
+                enb_properties.properties[enb_properties_index]->npdcch_StartSF_CSS_RA[j] = NPRACH_Parameters_NB_r13__npdcch_StartSF_CSS_RA_r13_v1dot5;
+                break;
+
+              case 2:
+                enb_properties.properties[enb_properties_index]->npdcch_StartSF_CSS_RA[j] = NPRACH_Parameters_NB_r13__npdcch_StartSF_CSS_RA_r13_v2;
+                break;
+
+              case 4:
+                enb_properties.properties[enb_properties_index]->npdcch_StartSF_CSS_RA[j] = NPRACH_Parameters_NB_r13__npdcch_StartSF_CSS_RA_r13_v4;
+                break;
+
+              case 8:
+                enb_properties.properties[enb_properties_index]->npdcch_StartSF_CSS_RA[j] = NPRACH_Parameters_NB_r13__npdcch_StartSF_CSS_RA_r13_v8;
+                break;
+
+              case 16:
+                enb_properties.properties[enb_properties_index]->npdcch_StartSF_CSS_RA[j] = NPRACH_Parameters_NB_r13__npdcch_StartSF_CSS_RA_r13_v16;
+                break;
+
+              case 32:
+                enb_properties.properties[enb_properties_index]->npdcch_StartSF_CSS_RA[j] = NPRACH_Parameters_NB_r13__npdcch_StartSF_CSS_RA_r13_v32;
+                break;
+
+              case 64:
+                enb_properties.properties[enb_properties_index]->npdcch_StartSF_CSS_RA[j] = NPRACH_Parameters_NB_r13__npdcch_StartSF_CSS_RA_r13_v48;
+                break;
+
+              case 128:
+                enb_properties.properties[enb_properties_index]->npdcch_StartSF_CSS_RA[j] = NPRACH_Parameters_NB_r13__npdcch_StartSF_CSS_RA_r13_v64;
+                break;
+
+              default:
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npdcch_StartSF_CSS_RA choice: 1.5,2,4,8,16,32,48,64",
+                             lib_config_file_name_pP, i, npdcch_StartSF_CSS_RA);
+
+                break;
+              }
+
+        if (strcmp(npdcch_Offset_RA, "zero") == 0) {
+                enb_properties.properties[enb_properties_index]->npdcch_Offset_RA[j] = NPRACH_Parameters_NB_r13__npdcch_Offset_RA_r13_zero;
+              } else if (strcmp(npdcch_Offset_RA, "oneEighth") == 0) {
+                enb_properties.properties[enb_properties_index]->npdcch_Offset_RA[j] = NPRACH_Parameters_NB_r13__npdcch_Offset_RA_r13_oneEighth;
+              } else if (strcmp(npdcch_Offset_RA, "oneFourth") == 0) {
+                enb_properties.properties[enb_properties_index]->npdcch_Offset_RA[j] = NPRACH_Parameters_NB_r13__npdcch_Offset_RA_r13_oneFourth;
+              } else if (strcmp(npdcch_Offset_RA, "threeEighth") == 0) {
+                enb_properties.properties[enb_properties_index]->npdcch_Offset_RA[j] = NPRACH_Parameters_NB_r13__npdcch_Offset_RA_r13_threeEighth;
+              } else
+                AssertFatal (0,
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for npdcch_Offset_RA choice: zero,oneEighth,oneFourth,threeEighth !\n",
+                             lib_config_file_name_pP, i, npdcch_Offset_RA);
 
 
+        //****************************************************************************************************************
+        //****************************************************************************************************************
+        //****************************************************************************************************************
 
-
-
-
-
-
-
-        //*******************************************************************************
             }
           }
 
@@ -2961,12 +4112,12 @@ const Enb_properties_array_t *enb_config_init_NB_IoT(char* lib_config_file_name_
                "Failed to parse eNB configuration file %s, mismatch between %u active eNBs and %u corresponding defined eNBs !\n",
                lib_config_file_name_pP, num_enb_properties, enb_properties_index);
 
-  enb_config_display();
+  enb_config_display_NB_IoT();
   return &enb_properties;
 
 }
 
-const Enb_properties_array_t *enb_config_get(void)
+const Enb_properties_array_NB_IoT_t *enb_config_get_NB_IoT(void)
 {
   return &enb_properties;
 }

@@ -50,3 +50,12 @@ void init_lte_vars(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs],
                    int nb_antennas_tx,
                    int nb_antennas_rx_ue,
                    uint8_t eMBMS_active_state);
+
+
+// for NB-IoT testing  
+
+PHY_VARS_eNB_NB_IoT* init_lte_eNB_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
+                                          uint8_t eNB_id,
+                                          uint8_t Nid_cell,
+                                          eNB_func_NB_IoT_t node_function,
+                                          uint8_t abstraction_flag);

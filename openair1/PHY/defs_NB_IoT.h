@@ -217,7 +217,7 @@ typedef enum  {
   eNodeB_3GPP_BBU_NB_IoT, // eNodeB with NGFI IF5
   NGFI_RCC_IF4p5_NB_IoT,  // NGFI_RCC (NGFI radio cloud center)
   NGFI_RAU_IF4p5_NB_IoT,
-  NGFI_RRU_IF5_Nb_IoT,    // NGFI_RRU (NGFI remote radio-unit,IF5)
+  NGFI_RRU_IF5_NB_IoT,    // NGFI_RRU (NGFI remote radio-unit,IF5)
   NGFI_RRU_IF4p5_NB_IoT   // NGFI_RRU (NGFI remote radio-unit,IF4p5)
 } eNB_func_NB_IoT_t;
 

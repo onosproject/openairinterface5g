@@ -533,7 +533,7 @@ typedef struct {
   /// flag to indicate SISO transmission
   uint8_t mode1_flag;
   /// Indicator that 20 MHz channel uses 3/4 sampling frequency
-  //uint8_t threequarter_fs;
+  uint8_t threequarter_fs;
   /// Size of FFT
   uint16_t ofdm_symbol_size;
   /// Number of prefix samples in all but first symbol of slot
