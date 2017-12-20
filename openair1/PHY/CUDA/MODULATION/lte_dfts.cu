@@ -1,3 +1,7 @@
+/*
+	Author: Shi-Yi Oh, Judy Wang, Shao-Ying Yeh, Yuan-Te Liao, Jian-Ya Chu, Wei-Shin Huang, Ying-Liang Chen, Terng-Yin Hsu
+	From ISIP CS/NCTU, Hsinchu, Taiwan
+*/
 #include "stdio.h"
 #include "cufft.h"
 #include "defs.h"
