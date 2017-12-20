@@ -1,3 +1,7 @@
+/*
+	Author: Shi-Yi Oh, Judy Wang, Shao-Ying Yeh, Yuan-Te Liao, Jian-Ya Chu, Wei-Shin Huang, Ying-Liang Chen, Terng-Yin Hsu
+*/
+
 #include "defs.h"
 #include "PHY/CUDA/extern.h"
 #ifndef CUFFT_H

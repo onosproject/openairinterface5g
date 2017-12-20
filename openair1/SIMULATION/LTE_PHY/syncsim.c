@@ -1,24 +1,31 @@
-/*
- * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.1  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.openairinterface.org/?page_id=698
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *-------------------------------------------------------------------------------
- * For more information about the OpenAirInterface (OAI) Software Alliance:
- *      contact@openairinterface.org
- */
+/*******************************************************************************
+    OpenAirInterface
+    Copyright(c) 1999 - 2014 Eurecom
 
+    OpenAirInterface is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+
+    OpenAirInterface is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenAirInterface.The full GNU General Public License is
+   included in this distribution in the file called "COPYING". If not,
+   see <http://www.gnu.org/licenses/>.
+
+  Contact Information
+  OpenAirInterface Admin: openair_admin@eurecom.fr
+  OpenAirInterface Tech : openair_tech@eurecom.fr
+  OpenAirInterface Dev  : openair4g-devel@lists.eurecom.fr
+
+  Address      : Eurecom, Campus SophiaTech, 450 Route des Chappes, CS 50193 - 06904 Biot Sophia Antipolis cedex, FRANCE
+
+ *******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -406,7 +413,7 @@ int main(int argc, char **argv)
 
   DCI_ALLOC_t dci_alloc[8],dci_alloc_rx[8];
   uint16_t n_rnti=1234,dci_cnt;
-  unsigned int coded_bits_per_codeword;
+  uint16_t coded_bits_per_codeword;
   double tmp_re,tmp_im,foff,deltaF=0.0,cs,sn;
   uint32_t carrier_freq[4]= {1907600000,1907600000,1907600000,1907600000};
   uint32_t rf_mode[4]     = {55759,55759,55759,55759};
@@ -1101,12 +1108,11 @@ int main(int argc, char **argv)
       ((DCI1_5MHz_FDD_t*)&DLSCH_alloc_pdu)->mcs             = 0;
       ((DCI1_5MHz_FDD_t*)&DLSCH_alloc_pdu)->ndi             = 1;
       ((DCI1_5MHz_FDD_t*)&DLSCH_alloc_pdu)->rv              = 0;
-      dci_alloc[0].dci_length   = sizeof_DCI1_5MHz_FDD_t;
+      dci_alloc[0].dci_length = sizeof_DCI1_5MHz_FDD_t;
       memcpy(&dci_alloc[0].dci_pdu[0],&DLSCH_alloc_pdu,sizeof(DCI1_5MHz_FDD_t));
-      dci_alloc[0].L            = 2;
-      dci_alloc[0].rnti         = n_rnti;
-      dci_alloc[0].format       = format1;
-      dci_alloc[0].search_space = DCI_UE_SPACE;
+      dci_alloc[0].L          = 2;
+      dci_alloc[0].rnti       = n_rnti;
+      dci_alloc[0].format     = format1;
     } else {
       ((DCI1E_5MHz_2A_M10PRB_TDD_t*)&DLSCH_alloc_pdu)->rah             = 0;
       ((DCI1E_5MHz_2A_M10PRB_TDD_t*)&DLSCH_alloc_pdu)->rballoc         = DLSCH_RB_ALLOC;
@@ -1118,15 +1124,15 @@ int main(int argc, char **argv)
       ((DCI1E_5MHz_2A_M10PRB_TDD_t*)&DLSCH_alloc_pdu)->rv              = 0;
       ((DCI1E_5MHz_2A_M10PRB_TDD_t*)&DLSCH_alloc_pdu)->tpmi            = (transmission_mode>=5 ? 5 : 0);  // precoding
       ((DCI1E_5MHz_2A_M10PRB_TDD_t*)&DLSCH_alloc_pdu)->dl_power_off    = (transmission_mode==5 ? 0 : 1);
-      dci_alloc[0].dci_length   = sizeof_DCI1E_5MHz_2A_M10PRB_TDD_t;
+      dci_alloc[0].dci_length = sizeof_DCI1E_5MHz_2A_M10PRB_TDD_t;
       memcpy(&dci_alloc[0].dci_pdu[0],&DLSCH_alloc_pdu,sizeof(DCI1E_5MHz_2A_M10PRB_TDD_t));
-      dci_alloc[0].L            = 2;
-      dci_alloc[0].rnti         = n_rnti;
-      dci_alloc[0].format       = format1E_2A_M10PRB;
-      dci_alloc[0].search_space = DCI_UE_SPACE;
+      dci_alloc[0].L          = 2;
+      dci_alloc[0].rnti       = n_rnti;
+      dci_alloc[0].format     = format1E_2A_M10PRB;
     }
 
     num_pdcch_symbols = generate_dci_top(1,
+                                         0,
                                          dci_alloc,
                                          0,
                                          AMP,
@@ -1135,6 +1141,7 @@ int main(int argc, char **argv)
                                          subframe);
     /*
     num_pdcch_symbols = generate_dci_top(1,
+           0,
            dci_alloc,
            0,
            AMP,
@@ -1490,7 +1497,6 @@ int main(int argc, char **argv)
             rx_pdcch(&PHY_vars_UE[UE_idx]->lte_ue_common_vars,
                      PHY_vars_UE[UE_idx]->lte_ue_pdcch_vars,
                      &PHY_vars_UE[UE_idx]->lte_frame_parms,
-                     frame,
                      subframe,
                      0,
                      (PHY_vars_UE[UE_idx]->lte_frame_parms.mode1_flag == 1) ? SISO : ALAMOUTI,
@@ -1535,7 +1541,6 @@ int main(int argc, char **argv)
                          PDSCH,
                          0,
                          1,
-                         frame,
                          subframe,  // subframe,
                          l,  // symbol
                          (l==PHY_vars_UE[UE_idx]->lte_ue_pdcch_vars[0]->num_pdcch_symbols)?1:0,   // first_symbol_flag
@@ -1566,7 +1571,6 @@ int main(int argc, char **argv)
                          PDSCH,
                          0,
                          1,
-                         frame,
                          subframe,  // subframe,
                          l,  // symbol
                          0,   // first_symbol_flag
@@ -1591,7 +1595,6 @@ int main(int argc, char **argv)
                          PDSCH,
                          0,
                          1,
-                         frame,
                          subframe,  // subframe,
                          l,  // symbol
                          0,   // first_symbol_flag
@@ -1622,7 +1625,6 @@ int main(int argc, char **argv)
                          PDSCH,
                          0,
                          1,
-                         frame,
                          subframe,  // subframe,
                          l,  // symbol
                          0,   // first_symbol_flag
@@ -1656,7 +1658,6 @@ int main(int argc, char **argv)
                                    PHY_vars_UE[UE_idx]->lte_ue_pdsch_vars[0]->llr[0],
                                    &PHY_vars_UE[UE_idx]->lte_frame_parms,
                                    PHY_vars_UE[UE_idx]->dlsch_ue[0][0],
-                                   frame,
                                    subframe,
                                    0,
                                    PHY_vars_UE[UE_idx]->lte_ue_pdcch_vars[0]->num_pdcch_symbols);
@@ -1683,9 +1684,9 @@ int main(int argc, char **argv)
                     frame_parms,
                     PHY_vars_UE[0]->lte_ue_pdcch_vars[0]->num_pdcch_symbols,
                     (int16_t**)PHY_vars_UE[0]->lte_ue_common_vars.dl_ch_estimates_time,
-                    (int16_t**)PHY_vars_UE[0]->lte_ue_common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[0],
+                    (int16_t**)PHY_vars_UE[0]->lte_ue_common_vars.dl_ch_estimates[0],
                     (int16_t**)PHY_vars_UE[0]->lte_ue_common_vars.rxdata,
-                    (int16_t**)PHY_vars_UE[0]->lte_ue_common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF,
+                    (int16_t**)PHY_vars_UE[0]->lte_ue_common_vars.rxdataF,
                     (int16_t*)PHY_vars_UE[0]->lte_ue_pdcch_vars[0]->rxdataF_comp[0],
                     (int16_t*)PHY_vars_UE[0]->lte_ue_pdsch_vars[0]->rxdataF_comp[0],
                     (int16_t*)PHY_vars_UE[0]->lte_ue_pdsch_vars[1]->rxdataF_comp[0],
@@ -1699,9 +1700,9 @@ int main(int argc, char **argv)
                       frame_parms,
                       PHY_vars_UE[1]->lte_ue_pdcch_vars[0]->num_pdcch_symbols,
                       (int16_t**)PHY_vars_UE[1]->lte_ue_common_vars.dl_ch_estimates_time,
-                      (int16_t**)PHY_vars_UE[1]->lte_ue_common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[0],
+                      (int16_t**)PHY_vars_UE[1]->lte_ue_common_vars.dl_ch_estimates[0],
                       (int16_t**)PHY_vars_UE[1]->lte_ue_common_vars.rxdata,
-                      (int16_t**)PHY_vars_UE[1]->lte_ue_common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF,
+                      (int16_t**)PHY_vars_UE[1]->lte_ue_common_vars.rxdataF,
                       (int16_t*)PHY_vars_UE[1]->lte_ue_pdcch_vars[0]->rxdataF_comp[0],
                       (int16_t*)PHY_vars_UE[1]->lte_ue_pdsch_vars[0]->rxdataF_comp[0],
                       (int16_t*)PHY_vars_UE[1]->lte_ue_pdsch_vars[3]->rxdataF_comp[0],
@@ -1718,10 +1719,10 @@ int main(int argc, char **argv)
 
     if (n_frames==1) {
 
-      write_output("H00.m","h00",&(PHY_vars_UE[0]->lte_ue_common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[0][0][0]),((frame_parms->Ncp==0)?7:6)*(PHY_vars_eNB->lte_frame_parms.ofdm_symbol_size),1,1);
+      write_output("H00.m","h00",&(PHY_vars_UE[0]->lte_ue_common_vars.dl_ch_estimates[0][0][0]),((frame_parms->Ncp==0)?7:6)*(PHY_vars_eNB->lte_frame_parms.ofdm_symbol_size),1,1);
 
       if (n_tx==2)
-        write_output("H10.m","h10",&(PHY_vars_UE[0]->lte_ue_common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[0][2][0]),((frame_parms->Ncp==0)?7:6)*(PHY_vars_eNB->lte_frame_parms.ofdm_symbol_size),1,1);
+        write_output("H10.m","h10",&(PHY_vars_UE[0]->lte_ue_common_vars.dl_ch_estimates[0][2][0]),((frame_parms->Ncp==0)?7:6)*(PHY_vars_eNB->lte_frame_parms.ofdm_symbol_size),1,1);
 
       write_output("rxsig0.m","rxs0", PHY_vars_UE[0]->lte_ue_common_vars.rxdata[0],FRAME_LENGTH_COMPLEX_SAMPLES,1,1);
       write_output("rxsigF0.m","rxsF0", PHY_vars_UE[0]->lte_ue_common_vars.rxdataF[0],NUMBER_OF_OFDM_CARRIERS*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*nsymb,2,1);
@@ -1739,7 +1740,7 @@ int main(int argc, char **argv)
                                       PHY_vars_UE[0]->lte_ue_pdcch_vars[0]->num_pdcch_symbols,
                                       0);
 
-      dump_dlsch2(PHY_vars_UE[0],0,0,&coded_bits_per_codeword);
+      dump_dlsch2(PHY_vars_UE[0],0,coded_bits_per_codeword);
 
     }
   } else {
