@@ -139,7 +139,7 @@ void ue_init_mac(module_id_t module_idP)
 
   if(nfapi_mode == 3) {
 	  pthread_mutex_init(&UE_mac_inst[module_idP].UL_INFO_mutex,NULL);
-	  UE_mac_inst[module_idP].UE_mode[0] = PRACH;
+	  UE_mac_inst[module_idP].UE_mode[0] = NOT_SYNCHED; //PRACH;
 	  UE_mac_inst[module_idP].first_ULSCH_Tx =0;
 	  UE_mac_inst[module_idP].dl_config_req = NULL;
 	  UE_mac_inst[module_idP].ul_config_req = NULL;

@@ -955,13 +955,38 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
         if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_UL) ||
 	    (UE->frame_parms.frame_type == FDD) )
             if (UE->mode != loop_through_memory){
+
+            	if ((UE_mac_inst[Mod_id].UE_mode[0] == PRACH) ) {
+            		LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH \n");
+
+            	    // check if we have PRACH opportunity
+
+            	    if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx)) {
+            	    	LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH 2 \n");
+            	    	PRACH_RESOURCES_t *prach_resources = ue_get_rach(Mod_id, 0, proc->frame_tx, 0, proc->subframe_tx);
+            	    	if(prach_resources!=NULL) {
+            	    		LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH 3 \n");
+            	    		fill_rach_indication_UE_MAC(Mod_id, proc->frame_tx ,proc->subframe_tx, UL_INFO, prach_resources->ra_PreambleIndex, prach_resources->ra_RNTI);
+            	    		Msg1_transmitted(Mod_id, 0, proc->frame_tx, 0);
+            	    		UE_mac_inst[Mod_id].UE_mode[0] = RA_RESPONSE;
+            	    	}
+
+            	    	//ue_prach_procedures(ue,proc,eNB_id,abstraction_flag,mode);
+            	    }
+            	  } // mode is PRACH
+
             	// Panos: Substitute call to phy_procedures Tx with call to phy_stub functions in order to trigger
                 // UE Tx procedures directly at the MAC layer, based on the received ul_config requests from the vnf (eNB).
             	// Generate UL_indications which corresponf to UL traffic.
             	if(UE_mac_inst[Mod_id].ul_config_req!= NULL){
+            		LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 ul_config_req is not NULL \n");
             		ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req);
-            		UL_indication(UL_INFO);
+            		//UL_indication(UL_INFO);
             	}
+            	/*else{
+            		AssertFatal(UE_mac_inst[Mod_id].ul_config_req!= NULL, "Panos-D: Copy of ul_config_req is NULL");
+            	}*/
+
             }
 
 

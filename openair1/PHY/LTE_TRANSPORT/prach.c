@@ -584,9 +584,12 @@ int is_prach_subframe0(LTE_DL_FRAME_PARMS *frame_parms,uint8_t prach_ConfigIndex
 }
 
 int is_prach_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame, uint8_t subframe) {
+
   
   uint8_t prach_ConfigIndex  = frame_parms->prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
+  //LOG_I(MAC, "Panos-D: is_prach_subframe 2 \n");
   int prach_mask             = is_prach_subframe0(frame_parms,prach_ConfigIndex,frame,subframe);
+  //LOG_I(MAC, "Panos-D: is_prach_subframe 3 \n");
 
 #ifdef Rel14
   int i;
@@ -596,6 +599,7 @@ int is_prach_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame, uint8_t su
       prach_mask|=(is_prach_subframe0(frame_parms,frame_parms->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[i],frame,subframe)<<(i+1));
   }
 #endif
+  //LOG_I(MAC, "Panos-D: is_prach_subframe 4 \n");
   return(prach_mask);
 }
 
