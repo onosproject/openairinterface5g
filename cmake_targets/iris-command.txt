@@ -1,0 +1,17 @@
+
+BS TDD:
+
+sudo -E ./lte-softmodem-nos1 -d -O /usr/git/openairinterface5g/targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band38.tm1.iris030.tdd.conf --tx-sample-advance -40 2>&1
+
+UE TDD:
+
+sudo -E ./lte-softmodem-nos1  -U -T -C2580000000 -r25 --ue-txgain 52 --ue-rxgain 113 --rrh-remote-address 0118 -d -g 9 -G 0x75 --tx-sample-advance -40 >&1
+
+BS FDD:
+
+sudo -E ./lte-softmodem-nos1 -d -O /usr/git/openairinterface5g/targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.tm1.iris030.conf --tx-sample-advance -40 2>&1
+
+UE FDD:
+
+sudo -E ./lte-softmodem-nos1  -U -C2660000000 -r25 --ue-txgain 52 --ue-rxgain 113 --rrh-remote-address 0118 -d -g 9 -G 0x75 --tx-sample-advance -40 >&1 
+
