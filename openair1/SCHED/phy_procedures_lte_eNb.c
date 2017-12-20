@@ -1174,6 +1174,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 			   int do_meas,
 			   int do_pdcch_flag)
 {
+
   UNUSED(rn);
   int frame=proc->frame_tx;
   int subframe=proc->subframe_tx;
@@ -1534,7 +1535,6 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_TX+offset,0);
   if (do_meas==1) stop_meas(&eNB->phy_proc_tx);
-  
 }
 
 void process_Msg3(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t UE_id, uint8_t harq_pid)

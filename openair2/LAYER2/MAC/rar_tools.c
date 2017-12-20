@@ -183,7 +183,7 @@ ue_process_rar(
     return(0xffff);
   }
 
-  LOG_I(MAC,"[eNB %d][RAPROC] Frame %d Received RAR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for preamble %d/%d\n",module_idP,frameP,
+  LOG_I(MAC,"[UE %d][RAPROC] Frame %d Received RAR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for preamble %d/%d\n",module_idP,frameP,
         *(uint8_t*)rarh,rar[0],rar[1],rar[2],rar[3],rar[4],rar[5],
         rarh->RAPID,preamble_index);
 #ifdef DEBUG_RAR

@@ -2405,7 +2405,17 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 }
 
 void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag,runmode_t mode,relaying_type_t r_type) {
-
+  /*static int first_run=0;
+  static double sum;
+  static int count;
+  if (!first_run)
+  {
+     first_run=1;
+     sum=0;
+     count=0;
+  } 
+  count++;
+  clock_t start=clock();*/
 
   LTE_DL_FRAME_PARMS *frame_parms=&ue->frame_parms;
   //int32_t ulsch_start=0;
@@ -2582,6 +2592,9 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
 #if UE_TIMING_TRACE
   stop_meas(&ue->phy_proc_tx);
 #endif
+      /*clock_t stop=clock();
+      printf("UE_TX time is %f s, AVERAGE UE_TX time is %f s, frame %d, subframe %d, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),frame_tx,subframe_tx,count,sum+stop-start);
+      sum=(sum+stop-start);*/
 }
 
 void phy_procedures_UE_S_TX(PHY_VARS_UE *ue,uint8_t eNB_id,uint8_t abstraction_flag,relaying_type_t r_type)
@@ -5082,6 +5095,18 @@ int phy_procedures_slot_parallelization_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *pr
 int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
 			 uint8_t abstraction_flag,uint8_t do_pdcch_flag,runmode_t mode,
 			 relaying_type_t r_type,PHY_VARS_RN *phy_vars_rn) {
+  /*static int first_run=0;
+  static double sum;
+  static int count;
+  if (!first_run)
+  {
+     first_run=1;
+     sum=0;
+     count=0;
+  } 
+  count++;
+  clock_t start=clock();*/
+
 
   int l,l2;
   int pilot1;
@@ -5593,6 +5618,11 @@ else
 #endif
 
   LOG_D(PHY," ****** end RX-Chain  for AbsSubframe %d.%d ******  \n", frame_rx%1024, subframe_rx);
+
+      /*clock_t stop=clock();
+      printf("UE_RX time is %f s, AVERAGE UE_RX time is %f s, frame %d, subframe %d, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),frame_rx,subframe_rx,count,sum+stop-start);
+      sum=(sum+stop-start);*/
+
   return (0);
 }
 

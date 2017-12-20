@@ -1041,6 +1041,20 @@ extern int subframe_eNB_mask,subframe_UE_mask;
 
 int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
+  /*time_stats_t ul_chan_stats_f;
+  static int first_meas=0;*/
+  static int first_run=0;
+  static double sum;
+  static int count;
+  if (!first_run)
+  {
+     first_run=1;
+     sum=0;
+     count=0;
+  } 
+  count++;
+
+
   int ret = nsamps;
   int eNB_id = device->Mod_id;
   int CC_id  = device->CC_id;
@@ -1118,11 +1132,27 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 				eNB_id,
 				CC_id);
 			//write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][CC_id]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
-		//generate_prach(PHY_vars_UE_g[0][0],eNB_id,subframe,frame);
-		//PHY_vars_UE_g[0][0]->generate_prach=1;
 			break;
 		}
 	}
+	  
+	  //// oai performance profiler is disabled, opp=0. Use ./oaisim -q option
+	  /*if (!first_meas || ul_chan_stats_f.trials<0) 
+	  {
+		printf("first_meas %d\n",first_meas);
+		reset_meas(&ul_chan_stats_f);
+		first_meas=1;
+	  }
+	  printf("trials %d, diff %d, diff_now %d, p_time %d diff_square %d, max %d, meas_flag %d\n",(int)ul_chan_stats_f.trials,
+	  (int)ul_chan_stats_f.diff,
+	  (int)ul_chan_stats_f.diff_now,
+	  (int)ul_chan_stats_f.p_time,
+	  (int)ul_chan_stats_f.diff_square,
+	  (int)ul_chan_stats_f.max,
+	  (int)ul_chan_stats_f.meas_flag);
+	start_meas(&ul_chan_stats_f);*/
+
+        
 
         do_UL_sig_freq(UE2eNB,
                 enb_data,
@@ -1133,9 +1163,14 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
                 0,  // frame is only used for abstraction
                 eNB_id,
                 CC_id);
+
+	/*stop_meas(&ul_chan_stats_f);
+	print_meas(&ul_chan_stats_f,"UL_Channel Stats Frequency Domain",&ul_chan_stats_f,&ul_chan_stats_f);*/
       }
       else
       {
+        //clock_t start=clock();
+
         do_UL_sig(UE2eNB,
                 enb_data,
                 ue_data,
@@ -1145,6 +1180,9 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
                 0,  // frame is only used for abstraction
                 eNB_id,
                 CC_id);
+  	/*clock_t stop=clock();
+  	printf("do_UL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
+  	sum=(sum+stop-start);*/
       //if (is_prach_subframe(frame_parms,frame,subframe))
 	//write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][CC_id]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
       }
@@ -1160,6 +1198,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 
 int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
+  time_stats_t dl_chan_stats_f;
   int ret = nsamps;
   int UE_id = device->Mod_id;
   int CC_id  = device->CC_id;
@@ -1224,6 +1263,8 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
             subframe,(unsigned long long)*ptimestamp,
             (unsigned long long)current_UE_rx_timestamp[UE_id][CC_id]);
       if (do_ofdm_mod)
+      {
+	start_meas(&dl_chan_stats_f);
       	do_DL_sig_freq(eNB2UE,
                 enb_data,
                 ue_data,
@@ -1232,7 +1273,11 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
                 &PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
                 UE_id,
                 CC_id);
+	stop_meas(&dl_chan_stats_f);
+	print_meas(&dl_chan_stats_f,"DL_Channel Stats Frequency Domain",&dl_chan_stats_f,&dl_chan_stats_f);
+      }
       else
+      {
       do_DL_sig(eNB2UE,
                 enb_data,
                 ue_data,
@@ -1241,6 +1286,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
                 &PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
                 UE_id,
                 CC_id);
+      }
 
       last_UE_rx_timestamp[UE_id][CC_id] = last;
     }

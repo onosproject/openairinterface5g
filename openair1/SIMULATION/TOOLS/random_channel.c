@@ -253,6 +253,9 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
                                      int32_t channel_offset,
                                      double path_loss_dB)
 {
+  /*static int first_run=0;
+  static double sum;
+  static int count;*/
 
   channel_desc_t *chan_desc = (channel_desc_t *)malloc(sizeof(channel_desc_t));
   uint16_t i,j;
@@ -915,6 +918,17 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
       break;
 
   case AWGN:
+
+  /*if (!first_run)
+  {
+     first_run=1;
+     sum=0;
+     count=0;
+  } 
+  count++;
+
+  clock_t start=clock();*/
+
       nb_taps = 1;
       Td = 0;
       channel_length = 1;
@@ -939,8 +953,10 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
                                    channel_offset,
                                    path_loss_dB,
                                    0);
-      printf("AWGN: ricean_factor %f\n",chan_desc->ricean_factor);
-
+      /*printf("AWGN: ricean_factor %f\n",chan_desc->ricean_factor);
+  clock_t stop=clock();
+  printf("fill_chan_desc AWGN time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
+  sum=(sum+stop-start);*/
       break;
 
   case TS_SHIFT:

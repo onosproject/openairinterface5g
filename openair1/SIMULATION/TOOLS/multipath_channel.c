@@ -151,6 +151,17 @@ void multipath_channel(channel_desc_t *desc,
                        uint32_t length,
                        uint8_t keep_channel)
 {
+  /*static int first_run=0;
+  static double sum;
+  static int count;
+  if (!first_run)
+  {
+     first_run=1;
+     sum=0;
+     count=0;
+  } 
+  count++;
+  clock_t start=clock();*/
 
   int i,ii,j,l;
   struct complex rx_tmp,tx;
@@ -166,7 +177,20 @@ void multipath_channel(channel_desc_t *desc,
   if (keep_channel) {
     // do nothing - keep channel
   } else {
-    random_channel(desc,0);
+	/*if (!first_run)
+  	{
+     		first_run=1;
+     		sum=0;
+     		count=0;
+  	} 
+  	count++;
+
+	clock_t start=clock();*/
+  	random_channel(desc,0);//Find a(l)
+      	/*clock_t stop=clock();
+      	printf("UE_freq_channel time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
+      	sum=(sum+stop-start);*/
+
   }
 
 #ifdef DEBUG_CH
@@ -210,6 +234,9 @@ void multipath_channel(channel_desc_t *desc,
 
     } // ii
   } // i
+  /*clock_t stop=clock();
+  printf("UE_channel time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
+  sum=(sum+stop-start);*/
 }
 #endif
 void multipath_channel_freq(channel_desc_t *desc,
@@ -224,6 +251,17 @@ void multipath_channel_freq(channel_desc_t *desc,
 		       uint8_t CC_id,
 		       uint8_t th_id)
 {
+  /*static int first_run=0;
+  static double sum;
+  static int count;
+  if (!first_run)
+  {
+     first_run=1;
+     sum=0;
+     count=0;
+  } 
+  count++;*/
+
 
   int ii,j,k,f,f2;
   struct complex rx_tmp;
@@ -249,10 +287,16 @@ void multipath_channel_freq(channel_desc_t *desc,
   if (keep_channel) {
   	// do nothing - keep channel
   } else {
+
   	random_channel(desc,0);//Find a(l)
+      	/*clock_t stop=clock();
+      	printf("UE_freq_channel time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
+      	sum=(sum+stop-start);*/
+
   	freq_channel(desc,nb_rb,n_samples);//Find desc->chF
   	//freq_channel_prach(desc,nb_rb,n_samples,1,44);//Find desc->chF
   }
+  //clock_t start=clock();
   for (k=0;k<symbols_per_tti;k++){//k = 0-13  normal cyclic prefix
 	f2 = 0;	  
 	for (f=0;f<ofdm_symbol_size; f++) {//f2 = 0-1023 for 10 Mhz BW
@@ -300,7 +344,10 @@ void multipath_channel_freq(channel_desc_t *desc,
 		} // ii
 	} // f,f2,f3
   }//k	 
-//fclose(file);    	
+  /*clock_t stop=clock();
+  printf("UE_freq_channel time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
+  sum=(sum+stop-start);*/
+//fclose(file); 
 }
 void multipath_channel_freq_test(channel_desc_t *desc,
                        double *tx_sig_re[2],
@@ -345,20 +392,16 @@ void multipath_channel_prach(channel_desc_t *desc,
                        double *tx_sig_im[2],
                        double *rx_sig_re[2],
                        double *rx_sig_im[2],
+		       LTE_DL_FRAME_PARMS* const fp,
 		       uint32_t length,
                        uint8_t keep_channel,
 		       uint8_t eNB_id,
-		       uint8_t UE_id,
-		       uint8_t CC_id,
-		       uint8_t th_id,
-		       uint8_t subframe)
+		       uint8_t prach_fmt,
+		       uint8_t n_ra_prb)
 {
-  LTE_DL_FRAME_PARMS* const fp      = &PHY_vars_UE_g[UE_id][CC_id]->frame_parms;
+
+
   int prach_samples;
-  lte_frame_type_t frame_type = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.frame_type;
-  uint8_t prach_ConfigIndex   = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
-  uint8_t prach_fmt = get_prach_fmt(prach_ConfigIndex,frame_type);
-  int n_ra_prb;
   int ii,j,f;
   struct complex rx_tmp;
   double delta_f;
@@ -366,7 +409,6 @@ void multipath_channel_prach(channel_desc_t *desc,
   double path_loss = pow(10,desc->path_loss_dB/20);
   int nb_rb, n_samples, ofdm_symbol_size, symbols_per_tti;
   
-  n_ra_prb = get_prach_prb_offset(fp, PHY_vars_UE_g[UE_id][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index, PHY_vars_UE_g[UE_id][CC_id]->proc.proc_rxtx[th_id].frame_tx);
   nb_rb=fp->N_RB_DL;
   n_samples=fp->N_RB_DL*12+1;
   ofdm_symbol_size=fp->ofdm_symbol_size;

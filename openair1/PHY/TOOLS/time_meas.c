@@ -61,7 +61,7 @@ void print_meas_now(time_stats_t *ts, const char* name, FILE* file_name){
 
 void print_meas(time_stats_t *ts, const char* name, time_stats_t * total_exec_time, time_stats_t * sf_exec_time)
 {
-
+  //printf("ts->trials is %d\n",ts->trials);
   if (opp_enabled) {
 
     static int first_time = 0;
@@ -81,7 +81,7 @@ void print_meas(time_stats_t *ts, const char* name, time_stats_t * total_exec_ti
 
     if (ts->trials>0) {
       //printf("%20s: total: %10.3f ms, average: %10.3f us (%10d trials)\n", name, ts->diff/cpu_freq_GHz/1000000.0, ts->diff/ts->trials/cpu_freq_GHz/1000.0, ts->trials);
-
+	//printf("ts->trials>0 is %d\n",ts->trials);
       if ((total_exec_time == NULL) || (sf_exec_time== NULL)) {
         fprintf(stderr, "%25s:  %15.3f ms ;  %15.3f us; %15d;\n",
                 name,

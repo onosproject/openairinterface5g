@@ -139,7 +139,7 @@ int freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 
   return(0);
 }
-int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t prach_prb_offset)
+int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
 {
 
 
@@ -153,8 +153,8 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
     fprintf(stderr, "freq_channel_init: n_samples has to be odd\n");
     return(-1); 
   }
-  if (nb_rb-prach_prb_offset<6) {
-    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check prach_prb_offset value (r_ra_prb=%d)\n",prach_prb_offset);
+  if (nb_rb-n_ra_prb<6) {
+    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check n_ra_prb value (r_ra_prb=%d)\n",n_ra_prb);
     return(-1); 
   }
   prach_samples = (prach_fmt<4)?13+839+12:3+139+2;
@@ -164,7 +164,7 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
 
   delta_f = (prach_fmt<4)?nb_rb*180000/((n_samples-1)*12):nb_rb*180000/((n_samples-1)*2);//1.25 khz for preamble format 1,2,3. 7.5 khz for preample format 4
   max_nb_rb_samples = nb_rb*180000/delta_f;//7200 if prach_fmt<4
-  prach_pbr_offset_samples = (prach_prb_offset+6)*180000/delta_f;//864 if prach_prb_offset=0,7200 if prach_prb_offset=44=50-6
+  prach_pbr_offset_samples = (n_ra_prb+6)*180000/delta_f;//864 if n_ra_prb=0,7200 if n_ra_prb=44=50-6
   //printf("prach_samples = %d, delta_f = %e, max_nb_rb_samples= %d, prach_pbr_offset_samples = %d, nb_taps = %d\n",prach_samples,delta_f,max_nb_rb_samples,prach_pbr_offset_samples,desc->nb_taps);
   for (f=max_nb_rb_samples/2-prach_pbr_offset_samples,f1=0; f<max_nb_rb_samples/2-prach_pbr_offset_samples+prach_samples; f++,f1++) {//3600-864,3600-864+864|3600-7200,3600-7200+839
     freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
@@ -188,9 +188,8 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
 
   return(0);
 }
-int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t prach_prb_offset)
+int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
 {
-
 
   int16_t f;
   uint8_t aarx,aatx,l;
@@ -207,15 +206,15 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
     fprintf(stderr, "freq_channel: n_samples has to be odd\n");
     return(-1); 
   }
-  if (nb_rb-prach_prb_offset<6) {
-    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check r_ra_prb value (r_ra_prb=%d)\n",prach_prb_offset);
+  if (nb_rb-n_ra_prb<6) {
+    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check r_ra_prb value (r_ra_prb=%d)\n",n_ra_prb);
     return(-1); 
   }
   if (freq_channel_init == 0) {
     // we are initializing the lut for the largets possible n_samples=12*nb_rb+1
     // if called with n_samples<12*nb_rb+1, we decimate the lut
     n_samples_max=12*nb_rb+1;
-    if (init_freq_channel_prach(desc,nb_rb,n_samples_max,prach_fmt,prach_prb_offset)==0)
+    if (init_freq_channel_prach(desc,nb_rb,n_samples_max,prach_fmt,n_ra_prb)==0)
       freq_channel_init=1;
     else
       return(-1);

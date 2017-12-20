@@ -419,8 +419,8 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
   r_re0_f[1] = r_re01_f;
   r_im0_f[1] = r_im01_f;
 
-  FILE *file1;
-  file1 = fopen("chsim_chF.m","w");
+  //FILE *file1;
+  //file1 = fopen("chsim_chF.m","w");
   //printf("chsim thread %d. ue->proc->frame_rx %d, ue->subframe_rx %d, ue->proc->frame_tx %d, ue->subframe_tx %d\n",subframe&0x1,PHY_vars_UE_g[0][0]->proc.proc_rxtx[subframe&0x1].frame_rx,PHY_vars_UE_g[0][0]->proc.proc_rxtx[subframe&0x1].subframe_rx,PHY_vars_UE_g[0][0]->proc.proc_rxtx[subframe&0x1].frame_tx,PHY_vars_UE_g[0][0]->proc.proc_rxtx[subframe&0x1].subframe_tx);
 
 
@@ -809,7 +809,6 @@ void do_UL_sig(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX_N
 #endif
     
   } // abstraction_flag==0
-
 }
 void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX_NUM_CCs],
                node_desc_t *enb_data[NUMBER_OF_eNB_MAX],node_desc_t *ue_data[NUMBER_OF_UE_MAX],
@@ -831,8 +830,8 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
   uint32_t sf_offset;
 
   uint8_t hold_channel=0;
-  FILE *file1;
-  file1 = fopen("chsim_chF_UL.m","w");
+  //FILE *file1;
+  //file1 = fopen("chsim_chF_UL.m","w");
 
 #ifdef PHY_ABSTRACTION_UL
   double min_path_loss=-200;
@@ -1054,7 +1053,18 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
 	       uint16_t subframe,uint8_t abstraction_flag,LTE_DL_FRAME_PARMS *frame_parms, 
 	       uint32_t frame,int eNB_id,uint8_t CC_id)
 {
-  //int32_t **txdata,**txdataF,**rxdata,**rxdataF;
+  static int first_run=0;
+  static double sum;
+  static int count;
+  if (!first_run)
+  {
+     first_run=1;
+     sum=0;
+     count=0;
+  } 
+  count++;
+ 
+
 #ifdef PHY_ABSTRACTION_UL
   int32_t att_eNB_id=-1;
 #endif
@@ -1126,15 +1136,13 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
     pthread_mutex_unlock(&UE_output_mutex[eNB_id]);
 
     for (int i=0;i<NB_UE_INST;i++)
-	printf("UE %d, PRACH TDD Resource index %d\n",i,PHY_vars_UE_g[0][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index);
     // Compute RX signal for eNB = eNB_id
     for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
       
         lte_frame_type_t frame_type = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.frame_type;
         prach_ConfigIndex   = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
         prach_fmt = get_prach_fmt(prach_ConfigIndex,frame_type);
-        //printf("UE[%d], ra_TDD_map_index %d\n",UE_id,PHY_vars_UE_g[UE_id][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index);
-        n_ra_prb = get_prach_prb_offset(frame_parms, PHY_vars_UE_g[0][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index, PHY_vars_UE_g[UE_id][CC_id]->proc.proc_rxtx[subframe&0x1].frame_tx);
+        n_ra_prb = get_prach_prb_offset(frame_parms, PHY_vars_UE_g[UE_id][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index, PHY_vars_UE_g[UE_id][CC_id]->proc.proc_rxtx[subframe&0x1].frame_tx);
 
 	tx_prachF = PHY_vars_UE_g[UE_id][CC_id]->prach_vars[eNB_id]->prachF;
 	//write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][0]->prach_vars[0]->prachF,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*12,1,1);
@@ -1158,7 +1166,7 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
 	      //printf("multipath_channel_prach, UE too weak %e\n", ((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
 	   //UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB));	
       } else {
-	     printf("multipath_channel_prach\n");
+
 	     tx_pwr = dac_fixed_gain_prach((double**)s_re_f_prach,
 					(double**)s_im_f_prach,
 					(int *)tx_prachF,
@@ -1180,9 +1188,12 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
 		      PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe],
 		      subframe,sf_offset);
 
+	    
+
 	    // write_output("s_re_f_prach.m","s_re_f_prach_txF", s_re_f_prach,frame_parms->ofdm_symbol_size*12,1,1);
-	    multipath_channel_prach(UE2eNB[UE_id][eNB_id][CC_id],s_re_f_prach,s_im_f_prach,r_re0_f_prach,r_im0_f_prach,
-			  frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*12,hold_channel,eNB_id,UE_id,CC_id,subframe&0x1,subframe);
+	    multipath_channel_prach(UE2eNB[UE_id][eNB_id][CC_id],s_re_f_prach,s_im_f_prach,r_re0_f_prach,r_im0_f_prach,&PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
+			  frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*12,hold_channel,eNB_id,prach_fmt,n_ra_prb);
+
 	    //for (int idx=0;idx<10;idx++) printf("dumping raw PRACH UL tx subframe (output) %d: r_f[%d] = (%f,%f)\n", subframe, idx, r_re0_f_prach[0][idx],r_im0_f_prach[0][idx]);
 	    //for (int idx=829;idx<839;idx++) printf("dumping raw PRACH UL tx subframe (output) %d: r_f[%d] = (%f,%f)\n", subframe, idx, r_re0_f_prach[0][idx],r_im0_f_prach[0][idx]);
 		//write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][0]->prach_vars[0]->prachF,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,1);
@@ -1222,14 +1233,17 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
     double *r_im_p_f_prach[2] = {r_im_UL_f_prach[eNB_id][0],r_im_UL_f_prach[eNB_id][1]};
     /*for (int idx=0;idx<10;idx++) printf("dumping raw PRACH UL tx subframe (output) %d: r_re_im_p_f_prach[%d] = (%d,%d)\n", subframe, idx, (short)(r_re_p_f_prach[0][idx]),(short)(r_im_p_f_prach[0][idx]));
     for (int idx=829;idx<839;idx++) printf("dumping raw PRACH UL tx subframe (output) %d: r_re_im_p_f_prach[%d] = (%d,%d)\n", subframe, idx, (short)(r_re_p_f_prach[0][idx]),(short)(r_im_p_f_prach[0][idx]));*/
+		clock_t start=clock();
     rf_rx_simple(r_re_p_f_prach,
 		 r_im_p_f_prach,
 		 nb_antennas_rx,
-		 frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*12,
+		 (prach_fmt<4)?839:139,
 		 1e3/UE2eNB[0][eNB_id][CC_id]->sampling_rate,  // sampling time (ns)
 		 (double)PHY_vars_eNB_g[eNB_id][CC_id]->rx_total_gain_dB - 66.227);   // rx_gain (dB) (66.227 = 20*log10(pow2(11)) = gain from the adc that will be applied later)
 
-
+  clock_t stop=clock();
+  printf("UE_PRACH_channel time is %f s, AVERAGE time is %f s, count %d, sum %e, subframe %d\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start,subframe);
+  sum=(sum+stop-start);
 #ifdef DEBUG_SIM
 
     rx_pwr = signal_energy_fp(r_re_p_f_prach,r_im_p_f_prach,nb_antennas_rx,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*12,0)*(double)frame_parms->ofdm_symbol_size/(12.0*frame_parms->N_RB_DL);
@@ -1238,6 +1252,7 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
 #endif
      rx_prachF = PHY_vars_eNB_g[eNB_id][CC_id]->prach_vars.rxsigF;
      sf_offset = pointer_firstvalue_PRACH;
+
       adc_prach(r_re_p_f_prach,
 		r_im_p_f_prach,
 		0,
@@ -1246,6 +1261,7 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
 		nb_antennas_rx,
 		(prach_fmt<4)?839:139,
 		12);
+
     //write_output("chsim_rxsigF.m","chsim_rx_sigF", PHY_vars_eNB_g[eNB_id][CC_id]->prach_vars.rxsigF[0],4*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 #ifdef DEBUG_SIM
 
@@ -1259,7 +1275,6 @@ void do_UL_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX
 #endif
     
   } // abstraction_flag==0
-
 }
 
 void init_channel_vars(LTE_DL_FRAME_PARMS *frame_parms, double ***s_re,double ***s_im,double ***r_re,double ***r_im,double ***r_re0,double ***r_im0)

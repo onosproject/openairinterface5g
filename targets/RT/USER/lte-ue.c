@@ -1221,7 +1221,6 @@ void *UE_thread_freq(void *arg) {
 			}		
                 if (UE->mode != loop_through_memory)
 		{
-			printf("[ue_thread] UE->mode != loop_through_memory: %d\n",UE->mode != loop_through_memory);
 				AssertFatal( UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti*10 ==
 		                UE->rfdevice.trx_read_func(&UE->rfdevice,
 		                                                    &timestamp,
@@ -1243,7 +1242,6 @@ void *UE_thread_freq(void *arg) {
                 (void)dummy_rx; /* avoid gcc warnings */
                 usleep(500);
 #else
-		printf("[ue_thread] is_synchronized == 0 and instance_cnt_synch == %d\n",instance_cnt_synch);
                 // grab 10 ms of signal into dummy buffer
                 if (UE->mode != loop_through_memory) {
                     for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
