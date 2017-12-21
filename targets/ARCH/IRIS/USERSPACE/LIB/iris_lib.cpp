@@ -21,7 +21,7 @@
 #include "UTIL/LOG/log_extern.h"
 #include "common_lib.h"
 
-#define SAMPLE_RATE_DOWN 4
+#define SAMPLE_RATE_DOWN 1
 
 /*! \brief Iris Configuration */
 typedef struct
@@ -170,6 +170,7 @@ static int trx_iris_write(openair0_device *device, openair0_timestamp timestamp,
 		printf("Unable to write stream!\n");
 		break;
 	    }
+	    flag = 0;
 	    samples_sent += ret;
 	    samps[0] += ret;
 	    if (cc % 2 == 0)
@@ -482,6 +483,7 @@ extern "C" {
 
 	// Initialize Iris device
 	device->openair0_cfg = openair0_cfg;
+        SoapySDR::Kwargs args;
         for (card = 0; card < MAX_CARDS; card++)
         {
 	    char* remote_addr = device->openair0_cfg[card].remote_addr;
@@ -491,7 +493,8 @@ extern "C" {
 	    while (srl != NULL)
 	    {
 	        LOG_I(HW,"Attempting to open Iris device: %s\n", srl);
-	        std::string args = "driver="+std::string(drvtype)+",serial="+std::string(srl)+",remote:prot=tcp";
+                args["driver"] = drvtype;
+                args["serial"] = srl;
 	        s->iris.push_back(SoapySDR::Device::make(args));
 	        srl = strtok(NULL, ",");
 	    }
@@ -523,7 +526,7 @@ extern "C" {
 		//openair0_cfg[0].samples_per_packet    = 1024;
 		//openair0_cfg[0].tx_sample_advance     = 80;
 		openair0_cfg[0].tx_bw                 = 30e6;
-		openair0_cfg[0].rx_bw                 = 5e6;
+		openair0_cfg[0].rx_bw                 = 30e6;
 		break;
 	case 1920000:
 		//openair0_cfg[0].samples_per_packet    = 1024;
@@ -590,19 +593,19 @@ extern "C" {
 	    }
 
 	    // create tx & rx streamer
-	    const SoapySDR::Kwargs &arg = SoapySDR::Kwargs();
-	    std::vector<size_t> channels={};
+	    //const SoapySDR::Kwargs &arg = SoapySDR::Kwargs();
+	    std::vector<size_t> channels;
 	    for (i = 0; i < s->rx_num_channels; i++)
 		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_RX))
 		    channels.push_back(i);
-	    s->rxStream.push_back(s->iris[r]->setupStream(SOAPY_SDR_RX, SOAPY_SDR_CS16, channels, arg));
+	    s->rxStream.push_back(s->iris[r]->setupStream(SOAPY_SDR_RX, SOAPY_SDR_CS16, channels)); //, arg));
 
 	    std::vector<size_t> tx_channels={};
 	    for (i = 0; i < s->tx_num_channels; i++)
 		if (i < s->iris[r]->getNumChannels(SOAPY_SDR_TX))
 		    tx_channels.push_back(i);
-	    s->txStream.push_back(s->iris[r]->setupStream(SOAPY_SDR_TX, SOAPY_SDR_CS16, tx_channels, arg));
-	    s->iris[r]->setHardwareTime(0, "");
+	    s->txStream.push_back(s->iris[r]->setupStream(SOAPY_SDR_TX, SOAPY_SDR_CS16, tx_channels)); //, arg));
+	    //s->iris[r]->setHardwareTime(0, "");
 
 
 	    for (i = 0; i < s->rx_num_channels; i++) {
