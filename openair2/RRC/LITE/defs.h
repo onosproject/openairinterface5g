@@ -691,11 +691,16 @@ typedef struct UE_RRC_INST_s {
   SystemInformationBlockType9_t *sib9[NB_CNX_UE];
   SystemInformationBlockType10_t *sib10[NB_CNX_UE];
   SystemInformationBlockType11_t *sib11[NB_CNX_UE];
+  uint8_t                           *MIB;
+#ifdef Rel14
   //TTN - SIB18
   SystemInformationBlockType18_r12_t *sib18[NB_CNX_UE];
   SystemInformationBlockType19_r12_t *sib19[NB_CNX_UE];
-  uint8_t                           *MIB;
+
   SBCCH_SL_BCH_MessageType_t   mib_sl[NB_CNX_UE];
+  /// Preconfiguration for Sidelink
+  struct SL_Preconfiguration_r12 *SL_Preconfiguration[NB_CNX_UE];
+#endif
 
 #if defined(Rel10) || defined(Rel14)
   uint8_t                           MBMS_flag;

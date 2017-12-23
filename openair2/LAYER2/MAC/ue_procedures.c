@@ -1,11 +1,11 @@
 /*
- * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.1  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the OpenAirInterface (OAI) Software Alliance under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information regarding
+ * copyright ownership.  The OpenAirInterface Software Alliance
+ * licenses this file to You under the OAI Public License, Version 1.1
+ * (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  *      http://www.openairinterface.org/?page_id=698
  *
@@ -1493,14 +1493,14 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
 
 
 		  sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP,
-							 UE_mac_inst[module_idP].crnti,
-							 eNB_index,
-							 frameP,
-							 ENB_FLAG_NO,
-							 MBMS_FLAG_NO,
-							 lcid,
-							 buflen_remain,
-							 (char *)&ulsch_buff[sdu_length_total]);
+							   UE_mac_inst[module_idP].crnti,
+							   eNB_index,
+							   frameP,
+							   ENB_FLAG_NO,
+							   MBMS_FLAG_NO,
+							   lcid,
+							   buflen_remain,
+							   (char *)&ulsch_buff[sdu_length_total]);
 
 
 		  AssertFatal (buflen_remain >= sdu_lengths[num_sdus], "LCID=%d RLC has segmented %d bytes but MAC has max=%d\n",
@@ -2665,4 +2665,76 @@ int get_db_dl_PathlossChange(uint8_t dl_PathlossChange)
     return -1;
     break;
   }
+}
+
+
+SLSS_t *ue_get_slss(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t subframe_tx) {
+
+  return((SLSS_t*)NULL);
+}
+
+SLDCH_t *ue_get_sldch(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t subframe_tx) {
+
+  return((SLDCH_t*)NULL);
+}
+
+
+SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframeP) {
+
+  mac_rlc_status_resp_t rlc_status;
+  uint32_t absSF = (frameP*10)+subframeP;
+  UE_MAC_INST *ue = &UE_mac_inst[module_idP];
+  int rvtab[4] = {0,2,3,1};
+  int sdu_length;
+  // Note: this is hard-coded for now for the default SL configuration (4 SF PSCCH, 36 SF PSSCH)
+  SLSCH_t *slsch = &UE_mac_inst[module_idP].slsch;
+
+  LOG_D(MAC,"Checking SLSCH for absSF %d\n",absSF);
+
+  if ((absSF%40) == 0) { // fill PSCCH data later in first subframe of SL period
+    ue->sltx_active = 0;
+    rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+				    3,
+				    0xFFFF);
+    if (rlc_status.bytes_in_buffer > 0) {
+      LOG_I(MAC,"Scheduling for %d bytes in Sidelink buffer\n",rlc_status.bytes_in_buffer);
+      // Fill in group id for off-network communications
+      ue->sltx_active = 1;
+    }
+  } // we're not in the SCCH period
+  else if (((absSF & 3) == 0 ) && 
+	   (ue->sltx_active == 1)) { // every 4th subframe, check for new data from RLC
+    // 10 PRBs, mcs 19
+    int TBS = 4584/8;
+    int req;
+
+    rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+				    3,
+				    0xFFFF);
+    if (TBS<=rlc_status.bytes_in_buffer) req=TBS;
+    else req = rlc_status.bytes_in_buffer;
+
+    sdu_length = mac_rlc_data_req(module_idP,
+				  0x1234,
+				  0,
+				  frameP,
+				  ENB_FLAG_NO,
+				  MBMS_FLAG_NO,
+				  3,
+				  req,
+				  (char*)ue->slsch_pdu.payload);
+    LOG_I(MAC,"got %d bytes from Sidelink buffer (%d requested)\n",sdu_length,req);
+    if (sdu_length > 0) {
+      slsch->payload = (unsigned char*)ue->slsch_pdu.payload;
+      slsch->rvidx   = 0;
+      // fill in SLSCH configuration
+      return(&ue->slsch);
+    }
+    else { // handle retransmission of SDU
+      slsch->rvidx = rvtab[absSF&3];
+      return(&ue->slsch);
+    }
+  }
+  
+  return(NULL);
 }

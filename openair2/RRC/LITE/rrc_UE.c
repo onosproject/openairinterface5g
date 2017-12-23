@@ -88,6 +88,11 @@
 
 #include "SIMULATION/TOOLS/defs.h" // for taus
 
+#ifdef Rel14
+#include "SL-Preconfiguration-r12.h"
+
+#endif
+
 //TTN - for D2D
 #define D2D_MODE //enable d2d
 int ctrl_sock_fd;
@@ -249,7 +254,7 @@ static int rrc_set_sub_state( module_id_t ue_mod_idP, Rrc_Sub_State_t subState )
 }
 
 //-----------------------------------------------------------------------------
-static void init_SI_UE( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
+void init_SI_UE( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
   UE_rrc_inst[ctxt_pP->module_id].sizeof_SIB1[eNB_index] = 0;
   UE_rrc_inst[ctxt_pP->module_id].sizeof_SI[eNB_index] = 0;
@@ -277,10 +282,109 @@ static void init_SI_UE( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIcnt    = 0;
 }
 
+#ifdef Rel14
+void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
+{
+  LOG_I(RRC,"Initializing Sidelink Pre-configuration for UE\n");
+
+  UE->SL_Preconfiguration[eNB_index] = malloc16_clear( sizeof(struct SL_Preconfiguration_r12) );
+  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.rohc_Profiles_r12.profile0x0001_r12       = true;
+  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.carrierFreq_r12                           = 3350;
+  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.maxTxPower_r12                            = 0;
+  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.additionalSpectrumEmission_r12            = 0;
+  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.sl_bandwidth_r12                          = SL_PreconfigGeneral_r12__sl_bandwidth_r12_n50;
+  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.tdd_ConfigSL_r12.subframeAssignmentSL_r12 = TDD_ConfigSL_r12__subframeAssignmentSL_r12_none;
+
+  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncCP_Len_r12            = SL_CP_Len_r12_normal;
+  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncOffsetIndicator1_r12  = 0;
+  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncOffsetIndicator2_r12  = 0;
+  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncTxParameters_r12      = 0;
+  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncTxThreshOoC_r12       = 0;
+  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.filterCoefficient_r12     = FilterCoefficient_fc0;
+  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncRefMinHyst_r12        = SL_PreconfigSync_r12__syncRefMinHyst_r12_dB0;
+  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncRefDiffHyst_r12       = SL_PreconfigSync_r12__syncRefDiffHyst_r12_dB0;
+  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.ext1                      = malloc16_clear(sizeof(struct SL_PreconfigSync_r12__ext1));
+  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.ext1->syncTxPeriodic_r13  = NULL;
+
+  struct SL_PreconfigCommPool_r12 *preconfigpool = malloc16_clear(sizeof(struct SL_PreconfigCommPool_r12));
+  preconfigpool->sc_CP_Len_r12                                                    = SL_CP_Len_r12_normal;
+  preconfigpool->sc_Period_r12                                                    = SL_PeriodComm_r12_sf40;
+  // 20 PRBs for SL communications
+  preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12                             = 20; 
+  preconfigpool->sc_TF_ResourceConfig_r12.prb_Start_r12                           = 5; 
+  preconfigpool->sc_TF_ResourceConfig_r12.prb_End_r12                             = 44;
+  // Offset set to 0 subframes
+  preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present             = SL_OffsetIndicator_r12_PR_small_r12;
+  preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0; 
+  // 40 ms SL Period
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present              = SubframeBitmapSL_r12_PR_bs40_r12;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf         = CALLOC(1,5);
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size        = 5;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = 0;
+  // 1st 4 subframes for PSCCH
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[0]      = 0xF;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[1]      = 0;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[2]      = 0;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[3]      = 0;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[4]      = 0;
+  preconfigpool->sc_TxParameters_r12                                              = 0;
+
+  preconfigpool->data_CP_Len_r12                                                  = SL_CP_Len_r12_normal;
+  // 20 PRBs for SL communications
+  preconfigpool->data_TF_ResourceConfig_r12.prb_Num_r12                             = 20; 
+  preconfigpool->data_TF_ResourceConfig_r12.prb_Start_r12                           = 5; 
+  preconfigpool->data_TF_ResourceConfig_r12.prb_End_r12                             = 44;
+  // Offset set to 0 subframes
+  preconfigpool->data_TF_ResourceConfig_r12.offsetIndicator_r12.present             = SL_OffsetIndicator_r12_PR_small_r12;
+  preconfigpool->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0; 
+  // 40 ms SL Period
+  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.present              = SubframeBitmapSL_r12_PR_bs40_r12;
+  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf         = CALLOC(1,5);
+  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size        = 5;
+  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = 0;
+  // last 36 subframes for PSCCH
+  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[0]      = 0xF0;
+  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[1]      = 0xFF;
+  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[2]      = 0xFF;
+  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[3]      = 0xFF;
+  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[5]      = 0xFF;
+
+  preconfigpool->dataHoppingConfig_r12.hoppingParameter_r12                         = 0;
+  preconfigpool->dataHoppingConfig_r12.numSubbands_r12                              = SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
+  preconfigpool->dataHoppingConfig_r12.rb_Offset_r12                                = 0;
+
+  preconfigpool->dataTxParameters_r12                                               = 0;
+
+  ASN_SEQUENCE_ADD(&UE->SL_Preconfiguration[eNB_index]->preconfigComm_r12.list,preconfigpool);
+
+  // Rel13 extensions
+  UE->SL_Preconfiguration[eNB_index]->ext1 = NULL;
+
+  // Establish a SLRB (using DRB for now)
+  protocol_ctxt_t ctxt;
+  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
+
+  rrc_pdcp_config_req (&ctxt,SRB_FLAG_NO, CONFIG_ACTION_ADD,
+                       3, UNDEF_SECURITY_MODE);
+
+  rlc_info_t rlc_info;
+
+  rlc_info.rlc_mode = RLC_MODE_UM;
+  rlc_info.rlc.rlc_um_info.timer_reordering = 5;
+  rlc_info.rlc.rlc_um_info.sn_field_length = 10;
+  rlc_info.rlc.rlc_um_info.is_mXch = 0;
+
+  rrc_rlc_config_req(&ctxt,SRB_FLAG_NO,MBMS_FLAG_NO,CONFIG_ACTION_ADD,
+		     3,
+		     rlc_info);
+}
+
+#endif
+
 #if defined(Rel10) || defined(Rel14)
 //-----------------------------------------------------------------------------
 #if 0
-static void init_MCCH_UE(module_id_t ue_mod_idP, uint8_t eNB_index)
+void init_MCCH_UE(module_id_t ue_mod_idP, uint8_t eNB_index)
 {
   int i;
   UE_rrc_inst[ue_mod_idP].sizeof_MCCH_MESSAGE[eNB_index] = 0;
@@ -296,7 +400,7 @@ static void init_MCCH_UE(module_id_t ue_mod_idP, uint8_t eNB_index)
 #endif
 
 //-----------------------------------------------------------------------------
-static void openair_rrc_ue_init_security( const protocol_ctxt_t* const ctxt_pP )
+void openair_rrc_ue_init_security( const protocol_ctxt_t* const ctxt_pP )
 {
 #if defined(ENABLE_SECURITY)
   //    uint8_t *kRRCenc;
@@ -348,6 +452,12 @@ char openair_rrc_ue_init( const module_id_t ue_mod_idP, const unsigned char eNB_
   init_SI_UE(&ctxt,eNB_index);
   LOG_D(RRC,PROTOCOL_RRC_CTXT_FMT"  INIT: phy_sync_2_ch_ind\n",
         PROTOCOL_RRC_CTXT_ARGS(&ctxt));
+
+
+
+#ifndef NO_RRM
+  send_msg(&S_rrc,msg_rrc_phy_synch_to_CH_ind(ctxt.module_id,eNB_index,UE_rrc_inst[ctxt.module_id].Mac_id));
+#endif
 
 #ifndef NO_RRM
   send_msg(&S_rrc,msg_rrc_phy_synch_to_CH_ind(ctxt.module_id,eNB_index,UE_rrc_inst[ctxt.module_id].Mac_id));
@@ -446,7 +556,7 @@ static const char const nas_attach_req_guti[] = {
 #endif
 
 //-----------------------------------------------------------------------------
-static void rrc_ue_generate_RRCConnectionSetupComplete( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, const uint8_t Transaction_id )
+void rrc_ue_generate_RRCConnectionSetupComplete( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, const uint8_t Transaction_id )
 {
 
   uint8_t    buffer[100];
@@ -480,7 +590,7 @@ static void rrc_ue_generate_RRCConnectionSetupComplete( const protocol_ctxt_t* c
 }
 
 //-----------------------------------------------------------------------------
-static void rrc_ue_generate_RRCConnectionReconfigurationComplete( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, const uint8_t Transaction_id )
+void rrc_ue_generate_RRCConnectionReconfigurationComplete( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, const uint8_t Transaction_id )
 {
 
   uint8_t buffer[32], size;
@@ -2506,7 +2616,7 @@ const char SIBType[12][6] = {"SIB3","SIB4","SIB5","SIB6","SIB7","SIB8","SIB9","S
 const char SIBPeriod[8][6]= {"rf8","rf16","rf32","rf64","rf128","rf256","rf512","ERR"};
 int siPeriod_int[7] = {80,160,320,640,1280,2560,5120};
 
-static const char* SIBreserved( long value )
+const char* SIBreserved( long value )
 {
   if (value < 0 || value > 1)
     return "ERR";
@@ -2516,7 +2626,7 @@ static const char* SIBreserved( long value )
 
   return "reserved";
 }
-static const char* SIBbarred( long value )
+const char* SIBbarred( long value )
 {
   if (value < 0 || value > 1)
     return "ERR";
@@ -2526,7 +2636,7 @@ static const char* SIBbarred( long value )
 
   return "barred";
 }
-static const char* SIBallowed( long value )
+const char* SIBallowed( long value )
 {
   if (value < 0 || value > 1)
     return "ERR";
@@ -2536,7 +2646,7 @@ static const char* SIBallowed( long value )
 
   return "allowed";
 }
-static const char* SIB2SoundingPresent( int value )
+const char* SIB2SoundingPresent( int value )
 {
   switch (value) {
   case SoundingRS_UL_ConfigCommon_PR_NOTHING:
@@ -2551,7 +2661,7 @@ static const char* SIB2SoundingPresent( int value )
 
   return "ERR";
 }
-static const char* SIB2numberOfRA_Preambles( long value )
+const char* SIB2numberOfRA_Preambles( long value )
 {
   static char temp[4] = {0};
 
@@ -2562,7 +2672,7 @@ static const char* SIB2numberOfRA_Preambles( long value )
   temp[3] = 0; // terminate string
   return temp;
 }
-static const char* SIB2powerRampingStep( long value )
+const char* SIB2powerRampingStep( long value )
 {
   if (value < 0 || value > 3)
     return "ERR";
@@ -2570,7 +2680,7 @@ static const char* SIB2powerRampingStep( long value )
   static const char str[4][4] = {"dB0","dB2","dB4","dB6"};
   return str[value];
 }
-static const char* SIB2preambleInitialReceivedTargetPower( long value )
+const char* SIB2preambleInitialReceivedTargetPower( long value )
 {
   static char temp[8] = {0};
 
@@ -2581,7 +2691,7 @@ static const char* SIB2preambleInitialReceivedTargetPower( long value )
   temp[7] = 0; // terminate string
   return temp;
 }
-static const char* SIB2preambleTransMax( long value )
+const char* SIB2preambleTransMax( long value )
 {
   static char temp[5] = {0};
 
@@ -2613,7 +2723,7 @@ static const char* SIB2preambleTransMax( long value )
   /* unreachable but gcc warns... */
   return "ERR";
 }
-static const char* SIB2ra_ResponseWindowSize( long value )
+const char* SIB2ra_ResponseWindowSize( long value )
 {
   static char temp[4] = {0};
 
@@ -2626,7 +2736,7 @@ static const char* SIB2ra_ResponseWindowSize( long value )
   snprintf( temp, sizeof(temp), "sf%ld", value+2 );
   return temp;
 }
-static const char* SIB2mac_ContentionResolutionTimer( long value )
+const char* SIB2mac_ContentionResolutionTimer( long value )
 {
   static char temp[5] = {0};
 
@@ -2636,7 +2746,7 @@ static const char* SIB2mac_ContentionResolutionTimer( long value )
   snprintf( temp, sizeof(temp), "sf%ld", 8 + value*8 );
   return temp;
 }
-static const char* SIB2modificationPeriodCoeff( long value )
+const char* SIB2modificationPeriodCoeff( long value )
 {
   static char temp[32] = {0};
 
@@ -2646,7 +2756,7 @@ static const char* SIB2modificationPeriodCoeff( long value )
   snprintf( temp, sizeof(temp), "n%d", (int)pow(2,value+1) );
   return temp;
 }
-static const char* SIB2defaultPagingCycle( long value )
+const char* SIB2defaultPagingCycle( long value )
 {
   static char temp[32] = {0};
 
@@ -2656,7 +2766,7 @@ static const char* SIB2defaultPagingCycle( long value )
   snprintf( temp, sizeof(temp), "rf%d", (int)pow(2,value+4) );
   return temp;
 }
-static const char* SIB2nB( long value )
+const char* SIB2nB( long value )
 {
   if (value < 0 || value > 7)
     return "ERR";
@@ -2834,7 +2944,7 @@ int decode_PCCH_DLSCH_Message(
 }
 
 //-----------------------------------------------------------------------------
-static int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, const uint8_t rsrq, const uint8_t rsrp )
+int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, const uint8_t rsrq, const uint8_t rsrp )
 {
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
 
@@ -3065,7 +3175,7 @@ static int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
 
 
 //-----------------------------------------------------------------------------
-static void dump_sib2( SystemInformationBlockType2_t *sib2 )
+ void dump_sib2( SystemInformationBlockType2_t *sib2 )
 {
   // ac_BarringInfo
   if (sib2->ac_BarringInfo) {
@@ -3306,7 +3416,7 @@ static void dump_sib2( SystemInformationBlockType2_t *sib2 )
 }
 
 //-----------------------------------------------------------------------------
-static void dump_sib3( SystemInformationBlockType3_t *sib3 )
+ void dump_sib3( SystemInformationBlockType3_t *sib3 )
 {
   LOG_I( RRC, "Dumping SIB3 (see TS36.331 V8.21.0)\n" );
 
@@ -3455,7 +3565,7 @@ uint64_t arfcn_to_freq(long arfcn) {
     exit(1);
   }
 }
-static void dump_sib5( SystemInformationBlockType5_t *sib5 )
+ void dump_sib5( SystemInformationBlockType5_t *sib5 )
 {
   InterFreqCarrierFreqList_t interFreqCarrierFreqList = sib5->interFreqCarrierFreqList;
   int i,j;
@@ -3548,7 +3658,7 @@ static void dump_sib5( SystemInformationBlockType5_t *sib5 )
 }
   
 #if defined(Rel10) || defined(Rel14)
-static void dump_sib13( SystemInformationBlockType13_r9_t *sib13 )
+ void dump_sib13( SystemInformationBlockType13_r9_t *sib13 )
 {
   LOG_I( RRC, "[UE] Dumping SIB13\n" );
   LOG_I( RRC, "[UE] dumping sib13 second time\n" );
@@ -3560,7 +3670,7 @@ static void dump_sib13( SystemInformationBlockType13_r9_t *sib13 )
 
 //TTN - SIB18
 //-----------------------------------------------------------------------------
-static void dump_sib18(SystemInformationBlockType18_r12_t *sib18){
+ void dump_sib18(SystemInformationBlockType18_r12_t *sib18){
    LOG_I( RRC, "[UE] Dumping SIB18\n" );
    for (int i = 0; i < sib18->commConfig_r12->commRxPool_r12.list.count; i++) {
        LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, sib18->commConfig_r12->commRxPool_r12.list.count);
@@ -3576,7 +3686,7 @@ static void dump_sib18(SystemInformationBlockType18_r12_t *sib18){
 
 //TTN -  SIB19
 //-----------------------------------------------------------------------------
-static void dump_sib19(SystemInformationBlockType19_r12_t *sib19){
+ void dump_sib19(SystemInformationBlockType19_r12_t *sib19){
    LOG_I( RRC, "[UE] Dumping SIB19\n" );
    for (int i = 0; i < sib19->discConfig_r12->discRxPool_r12.list.count; i++) {
        LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, sib19->discConfig_r12->discRxPool_r12.list.count);
@@ -3592,7 +3702,7 @@ static void dump_sib19(SystemInformationBlockType19_r12_t *sib19){
 }
 
 //-----------------------------------------------------------------------------
-static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
+ int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
 	LOG_I( RRC, "Panos-D: decode_SI 1 \n");
 	//printf("Panos-D: decode_SI 1 \n");
@@ -3980,7 +4090,7 @@ void ue_meas_filtering( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
 
 //Below routine implements Measurement Reporting procedure from 36.331 Section 5.5.5
 //-----------------------------------------------------------------------------
-static void rrc_ue_generate_MeasurementReport(protocol_ctxt_t* const ctxt_pP, uint8_t eNB_index )
+ void rrc_ue_generate_MeasurementReport(protocol_ctxt_t* const ctxt_pP, uint8_t eNB_index )
 {
 
   uint8_t             buffer[32], size;
@@ -4174,7 +4284,7 @@ void ue_measurement_report_triggering(protocol_ctxt_t* const ctxt_pP, const uint
 //check_trigger_meas_event(ue_mod_idP, frameP, eNB_index, i,j,ofn,ocn,hys,ofs,ocs,a3_offset,ttt_ms)
 //-----------------------------------------------------------------------------
 
-static uint8_t check_trigger_meas_event(
+ uint8_t check_trigger_meas_event(
   module_id_t     ue_mod_idP,
   frame_t         frameP,
   uint8_t         eNB_index,
@@ -4301,7 +4411,7 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
 }
 
 //-----------------------------------------------------------------------------
-static void decode_MBSFNAreaConfiguration( module_id_t ue_mod_idP, uint8_t eNB_index, frame_t frameP, uint8_t mbsfn_sync_area )
+ void decode_MBSFNAreaConfiguration( module_id_t ue_mod_idP, uint8_t eNB_index, frame_t frameP, uint8_t mbsfn_sync_area )
 {
   protocol_ctxt_t               ctxt;
 
@@ -4903,6 +5013,11 @@ openair_rrc_top_init_ue(
     }
 
 #endif
+
+#ifdef Rel14
+  init_SL_preconfig(&UE_rrc_inst[module_id],0);
+#endif
+
   } else {
     UE_rrc_inst = NULL;
   }
@@ -5189,7 +5304,7 @@ rrc_control_socket_init(){
 }
 
 //--------------------------------------------------------
-static void *rrc_control_socket_thread_fct(void *arg)
+void *rrc_control_socket_thread_fct(void *arg)
 {
 
    int prose_addr_len;

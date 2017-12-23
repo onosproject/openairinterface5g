@@ -37,7 +37,7 @@
 #include "assertions.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 
-//#define DEBUG_MAC_INTERFACE 1
+#define DEBUG_MAC_INTERFACE 1
 
 //-----------------------------------------------------------------------------
 struct mac_data_ind mac_rlc_deserialize_tb (
@@ -143,7 +143,7 @@ tbs_size_t mac_rlc_data_req(
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MAC_RLC_DATA_REQ,VCD_FUNCTION_IN);
 #ifdef DEBUG_MAC_INTERFACE
-  LOG_D(RLC, PROTOCOL_CTXT_FMT" MAC_RLC_DATA_REQ channel %d (%d) MAX RB %d, Num_tb %d\n",
+  LOG_I(RLC, PROTOCOL_CTXT_FMT" MAC_RLC_DATA_REQ channel %d (%d) MAX RB %d, Num_tb %d\n",
         PROTOCOL_CTXT_ARGS((&ctxt)),
         channel_idP,
         RLC_MAX_LC,
@@ -196,7 +196,7 @@ tbs_size_t mac_rlc_data_req(
     break;
 
   case RLC_MODE_UM:
-	if (!enb_flagP) rlc_um_set_nb_bytes_requested_by_mac(&rlc_union_p->rlc.um,tb_sizeP);
+    if (!enb_flagP) rlc_um_set_nb_bytes_requested_by_mac(&rlc_union_p->rlc.um,tb_sizeP);
 	data_request = rlc_um_mac_data_request(&ctxt, &rlc_union_p->rlc.um,enb_flagP);
     ret_tb_size = mac_rlc_serialize_tb(buffer_pP, data_request.data);
     break;
@@ -390,7 +390,7 @@ mac_rlc_status_resp_t mac_rlc_status_ind(
     rlc_mode = rlc_union_p->mode;
   } else {
     rlc_mode = RLC_MODE_NONE;
-    //LOG_W(RLC , "[%s] RLC not configured rb id %u lcid %u module %u!\n", __FUNCTION__, rb_id, channel_idP, ue_module_idP);
+    LOG_W(RLC , "[%s] RLC not configured lcid %u module %u!\n", __FUNCTION__, channel_idP, module_idP);
     //LOG_D(RLC , "[%s] RLC not configured rb id %u lcid %u module %u!\n", __FUNCTION__, rb_id, channel_idP, ue_module_idP);
   }
 

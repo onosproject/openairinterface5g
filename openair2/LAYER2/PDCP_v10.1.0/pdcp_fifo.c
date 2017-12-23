@@ -421,7 +421,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
     AssertFatal (rab_id    < maxDRB,                       "RB id is too high (%u/%d)!\n", rab_id, maxDRB);
 
     if (rab_id != 0) {
-        LOG_D(PDCP, "[FRAME %05d][%s][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ "
+        LOG_I(PDCP, "[FRAME %05d][%s][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ "
             "/ %d Bytes --->][PDCP][MOD %u][RB %u]\n",
               ctxt_cpy.frame,
               (ctxt_cpy.enb_flag) ? "eNB" : "UE",
@@ -583,7 +583,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
           ctxt.enb_flag      = ctxt_cpy.enb_flag;
 
 #ifdef PDCP_DEBUG
-          LOG_D(PDCP, "[PDCP][NETLINK] pdcp_read_header_g.rb_id = %d\n", pdcp_read_header_g.rb_id);
+          LOG_I(PDCP, "[PDCP][NETLINK] pdcp_read_header_g.rb_id = %d\n", pdcp_read_header_g.rb_id);
 #endif
 
           if (ctxt_cpy.enb_flag) {
@@ -682,13 +682,13 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
           } else { // enb_flag
             if (rab_id != 0) {
               if (rab_id == UE_IP_DEFAULT_RAB_ID) {
-                LOG_D(PDCP, "PDCP_COLL_KEY_DEFAULT_DRB_VALUE(module_id=%d, rnti=%x, enb_flag=%d)\n",
+                LOG_I(PDCP, "PDCP_COLL_KEY_DEFAULT_DRB_VALUE(module_id=%d, rnti=%x, enb_flag=%d)\n",
                     ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
                 key = PDCP_COLL_KEY_DEFAULT_DRB_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
                 h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
               } else {
                 rab_id = rab_id % maxDRB;
-                LOG_D(PDCP, "PDCP_COLL_KEY_VALUE(module_id=%d, rnti=%x, enb_flag=%d, rab_id=%d, SRB_FLAG=%d)\n",
+                LOG_I(PDCP, "PDCP_COLL_KEY_VALUE(module_id=%d, rnti=%x, enb_flag=%d, rab_id=%d, SRB_FLAG=%d)\n",
                     ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
                 key = PDCP_COLL_KEY_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
                 h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
@@ -697,14 +697,14 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
               if (h_rc == HASH_TABLE_OK) {
                 rab_id = pdcp_p->rb_id;
 #ifdef PDCP_DEBUG
-                LOG_D(PDCP, "[FRAME %5u][UE][NETLINK][IP->PDCP] INST %d: Received socket with length %d (nlmsg_len = %zu) on Rab %d \n",
+                LOG_I(PDCP, "[FRAME %5u][UE][NETLINK][IP->PDCP] INST %d: Received socket with length %d (nlmsg_len = %zu) on Rab %d \n",
                       ctxt.frame,
                       pdcp_read_header_g.inst,
                       len,
                       nas_nlh_rx->nlmsg_len-sizeof(struct nlmsghdr),
                       pdcp_read_header_g.rb_id);
 
-                LOG_D(PDCP, "[FRAME %5u][UE][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes --->][PDCP][MOD %u][UE %u][RB %u]\n",
+                LOG_I(PDCP, "[FRAME %5u][UE][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes --->][PDCP][MOD %u][UE %u][RB %u]\n",
                       ctxt.frame,
                       pdcp_read_header_g.inst,
                       pdcp_read_header_g.rb_id,

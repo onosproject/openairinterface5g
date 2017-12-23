@@ -183,8 +183,7 @@ void rrc_ue_process_sidelink_radioResourceConfig(
 /** \brief Init control socket to listen to incoming packets from ProSe App
  *
  */
-void
-rrc_control_socket_init();
+void rrc_control_socket_init(void);
 
 
 // eNB/CH RRC Procedures

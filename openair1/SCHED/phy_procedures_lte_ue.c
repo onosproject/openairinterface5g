@@ -2368,6 +2368,27 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 
 }
 
+void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
+
+  int subframe_tx = proc->subframe_tx;
+  int frame_tx = proc->frame_tx;
+  SLSS_t *slss;
+  SLDCH_t *sldch;
+  SLSCH_t *slsch;
+
+  LOG_D(PHY,"****** start Sidelink TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, subframe_tx);
+
+  // check for SLBCH/SLSS
+  if ((slss = ue_get_slss(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_slss(ue,slss);
+
+  // check for SLDCH
+  if ((sldch = ue_get_sldch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_sldch(ue,sldch);
+
+  // check for SLSCH
+  if ((slsch = ue_get_slsch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_slsch(ue,slsch);
+
+}
+
 void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag,runmode_t mode,relaying_type_t r_type) {
 
 
@@ -4756,6 +4777,11 @@ int phy_procedures_slot_parallelization_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *pr
 }
 #endif
 
+
+void phy_procedures_UE_SL_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
+
+
+}
 
 int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
 			 uint8_t abstraction_flag,uint8_t do_pdcch_flag,runmode_t mode,

@@ -1096,6 +1096,9 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/prach.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pmch.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pch.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/slss.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/sldch.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/slsch.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/group_hopping.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/srs_modulation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/drs_modulation.c
@@ -1946,7 +1949,7 @@ add_executable(lte-softmodem-stub
   ${OPENAIR_TARGETS}/COMMON/create_tasks.c
   ${OPENAIR_TARGETS}/ARCH/COMMON/common_lib.c
   ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c
-  #${OPENAIR3_DIR}/NAS/UE/nas_ue_task.c
+  ${OPENAIR3_DIR}/NAS/UE/nas_ue_task.c
   ${OPENAIR_DIR}/common/utils/utils.c
   ${OPENAIR_DIR}/common/utils/system.c
   ${GTPU_need_ITTI}

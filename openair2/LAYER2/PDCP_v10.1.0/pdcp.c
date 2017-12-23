@@ -1701,6 +1701,7 @@ rrc_pdcp_config_req (
 
     if (ctxt_pP->enb_flag == ENB_FLAG_NO) {
       pdcp_p->is_ue = TRUE;
+      pdcp_UE_UE_module_id_to_rnti[ctxt_pP->module_id] = ctxt_pP->rnti;
     } else {
       pdcp_p->is_ue = FALSE;
     }
@@ -1719,9 +1720,9 @@ rrc_pdcp_config_req (
     }
 
     pdcp_p->first_missing_pdu = -1;
-      LOG_D(PDCP,PROTOCOL_PDCP_CTXT_FMT" Config request : Action ADD:  radio bearer id %d (already added) configured\n",
-            PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP,pdcp_p),
-            rb_idP);
+    LOG_I(PDCP,PROTOCOL_PDCP_CTXT_FMT" Config request : Action ADD:  radio bearer id %d (already added) configured\n",
+	  PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP,pdcp_p),
+	  rb_idP);
     break;
 
   case CONFIG_ACTION_MODIFY:
@@ -1778,10 +1779,10 @@ rrc_pdcp_config_req (
 
         if (ctxt_pP->enb_flag == ENB_FLAG_NO) {
           pdcp_p->is_ue = TRUE;
-
+	  pdcp_UE_UE_module_id_to_rnti[ctxt_pP->module_id] = ctxt_pP->rnti;
         } else {
           pdcp_p->is_ue = FALSE;
-}
+	}
 
         pdcp_p->next_pdcp_tx_sn = 0;
         pdcp_p->next_pdcp_rx_sn = 0;
@@ -1798,9 +1799,9 @@ rrc_pdcp_config_req (
         }
 
         pdcp_p->first_missing_pdu = -1;
-        LOG_D(PDCP,PROTOCOL_PDCP_CTXT_FMT" Inserting PDCP instance in collection key 0x%"PRIx64"\n",
+        LOG_I(PDCP,PROTOCOL_PDCP_CTXT_FMT" Inserting PDCP instance in collection key 0x%"PRIx64"\n",
               PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP,pdcp_p), key);
-        LOG_D(PDCP,PROTOCOL_PDCP_CTXT_FMT" Config request : Action ADD:  radio bearer id %d configured\n",
+        LOG_I(PDCP,PROTOCOL_PDCP_CTXT_FMT" Config request : Action ADD:  radio bearer id %d configured\n",
               PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP,pdcp_p),
               rb_idP);
       }

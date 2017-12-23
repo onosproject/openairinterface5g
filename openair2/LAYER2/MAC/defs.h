@@ -69,8 +69,9 @@
 #endif
 #ifdef Rel14
 #include "SystemInformationBlockType1-v1310-IEs.h"
+#include "SystemInformationBlockType18-r12.h"
 #endif
-
+#include "RadioResourceConfigCommonSIB.h"
 #include "nfapi_interface.h"
 #include "PHY_INTERFACE/IF_Module.h"
 
@@ -978,7 +979,7 @@ typedef struct {
 
 /*! \brief subband bitmap confguration (for ALU icic algo purpose), in test phase */
 typedef struct {
-  uint8_t sbmap[NUMBER_OF_SUBBANDS_MAX]; //13 = number of SB MAX for 100 PRB
+  uint8_t sbmap[13]; 
   uint8_t periodicity;
   uint8_t first_subframe;
   uint8_t sb_size;
@@ -1266,6 +1267,22 @@ typedef struct {
 #if defined(Rel10) || defined(Rel14)
   /// pointer to RRC PHY configuration SCEll
   struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10;
+  /// Preconfiguration for Sidelink
+  struct SL_Preconfiguration_r12 *SL_Preconfiguration;
+  /// RX Pool for Sidelink from SIB18
+  SL_CommRxPoolList_r12_t	 commRxPool_r12;
+  /// TX Pool Normal for Sidelink from SIB18
+  struct SL_CommTxPoolList_r12	*commTxPoolNormalCommon_r12;
+  /// TX Pool Exceptional for Sidelink from SIB18
+  struct SL_CommTxPoolList_r12	*commTxPoolExceptional_r12;
+  /// Common Sync Config for Sidelink from SIB18
+  struct SL_SyncConfigList_r12	*commSyncConfig_r12;
+  /// Dedicated Sync TX control for Sidelink
+  struct SL_SyncTxControl_r12 *sl_SyncTxControl_r12;
+  /// Dedicated Discovery TX control for Sidelink
+  struct SL_DiscConfig_r12	*sl_DiscConfig_r12;
+  /// Dedicated TX config for Sidelink
+  struct SL_CommConfig_r12	*sl_CommConfig_r12;
 #endif
   /// pointer to TDD Configuration (NULL for FDD)
   TDD_Config_t *tdd_Config;
@@ -1298,6 +1315,11 @@ typedef struct {
   RAR_PDU RAR_pdu;
   /// Incoming DLSCH pdu for PHY
   DLSCH_PDU DLSCH_pdu[NUMBER_OF_UE_MAX][2];
+#ifdef Rel14
+  int sltx_active;
+  SLSCH_t slsch;
+  ULSCH_PDU slsch_pdu;
+#endif
   /// number of attempt for rach
   uint8_t RA_attempt_number;
   /// Random-access procedure flag
@@ -1408,6 +1430,8 @@ typedef struct {
   uint16_t cell_ids[6];
   uint8_t n_adj_cells;
 } neigh_cell_id_t;
+
+
 
 #include "proto.h"
 /*@}*/

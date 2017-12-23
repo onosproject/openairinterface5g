@@ -864,11 +864,80 @@ typedef enum {
 } RX_type_t;
 
 
+#ifdef Rel14
 typedef enum {
   DCI_COMMON_SPACE,
   DCI_UE_SPACE
 } dci_space_t;
 
+
+typedef struct {
+  uint16_t slss_id;
+  uint8_t *slmib;
+} SLSS_t;
+
+typedef struct {
+  // SL Configuration
+  /// Number of SL resource blocks (1-100) 
+  uint32_t N_SL_RB;
+  /// prb-start (0-99)
+  uint32_t prb_Start;
+  /// prb-End (0-99)
+  uint32_t prb_End;
+  /// SL-OffsetIndicator (0-10239)
+  uint32_t SL_OffsetIndicator;
+  /// PSCCH subframe bitmap, first 64-bits (up to 40 bits for Rel 12)
+  uint64_t bitmap1;
+  /// PSCCH subframe bitmap, 2nd 64-bits (up to 100 bits for Rel 14)
+  uint64_t bitmap2;
+
+  // SCI parameters
+  /// npscch resource index
+  uint32_t n_pscch;
+  /// format of SCI (0,1)
+  uint32_t format;
+  /// SCI0 frequency hopping flag
+  uint32_t freq_hopping_flag;
+  /// SCI0 Resource Block Coding
+  uint32_t resource_block_coding;
+  /// SCI0 Time Resource Pattern for SLSCH
+  uint32_t time_resource_pattern;
+  /// SCI0 MCS for SLSCH
+  uint32_t mcs;
+  /// SCI0 Timing advance indication for SLSCH
+  uint32_t timing_advance_indication;
+  /// SCI0 Group Destination ID for SLSCH
+  uint32_t group_destination_id;
+
+  // SLSCH Parameters
+  /// Number of Subbands (36.213 14.1.1.2)
+  uint32_t Nsb; 
+  /// N_RB_HO (36.213 14.1.1.2)
+  uint32_t N_RB_HO;
+  /// n_ss_PSSCH (36.211 9.2.4)
+  uint32_t n_ss_PSSCH;
+  /// n_ssf_PSSCH
+  uint32_t n_ssf_PSSCH;
+  /// cinit (36.331 hoppingParameter-r12)
+  uint32_t cinit;
+  /// redundancy version
+  uint32_t rvidx;
+  /// n_prime_VRB (36.213 14.1.1.2.1)
+  uint32_t n_prime_VRB;
+  /// M_RB_PSSCH_RP (36.213 14.1.3
+  uint32_t M_RB_PSSCH_RP;
+  /// n_prime_PRB (36.213 14.1.1.4
+  uint32_t n_prime_PRB;
+  /// m_nprime_PRB_PSSCH (36.213 14.1.3)
+  uint32_t m_nprime_PRB_PSCCH;
+  uint8_t *payload;
+} SLSCH_t;
+
+typedef struct {
+
+} SLDCH_t;
+
+#endif
 
 /**@}*/
 #endif

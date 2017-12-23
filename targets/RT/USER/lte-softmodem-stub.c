@@ -639,6 +639,7 @@ static void get_options(void) {
   paramdef_t cmdline_params[] =CMDLINE_PARAMS_DESC ;
   paramdef_t cmdline_logparams[] =CMDLINE_LOGPARAMS_DESC ;
 
+
   config_process_cmdline( cmdline_params,sizeof(cmdline_params)/sizeof(paramdef_t),NULL);
   printf("get_options 0, UE_flag: %d", UE_flag);
 
@@ -667,11 +668,13 @@ static void get_options(void) {
   }
 
   if (UE_flag > 0) {
-	  // set default parameters
-	  set_default_frame_parms(frame_parms);
+
+     uint8_t n_rb_dl;
+
      paramdef_t cmdline_uemodeparams[] =CMDLINE_UEMODEPARAMS_DESC;
      paramdef_t cmdline_ueparams[] =CMDLINE_UEPARAMS_DESC;
 
+     set_default_frame_parms(frame_parms);
 
      config_process_cmdline( cmdline_uemodeparams,sizeof(cmdline_uemodeparams)/sizeof(paramdef_t),NULL);
      config_process_cmdline( cmdline_ueparams,sizeof(cmdline_ueparams)/sizeof(paramdef_t),NULL);
@@ -687,67 +690,55 @@ static void get_options(void) {
       printf("Panos: get_options 9 \n");
       if ( (cmdline_uemodeparams[CMDLINE_CALIBUERXBYP_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = rx_calib_ue_byp;
       printf("Panos: get_options 10 \n");
-      if ( cmdline_uemodeparams[CMDLINE_DEBUGUEPRACH_IDX].uptr != NULL) {
-    	  if ( *(cmdline_uemodeparams[CMDLINE_DEBUGUEPRACH_IDX].uptr) > 0) mode = debug_prach;
-    	  if ( *(cmdline_uemodeparams[CMDLINE_NOL2CONNECT_IDX].uptr) > 0)  mode = no_L2_connect;
-    	  if ( *(cmdline_uemodeparams[CMDLINE_CALIBPRACHTX_IDX].uptr) > 0) mode = calib_prach_tx;
-      }
+      if ( (cmdline_uemodeparams[CMDLINE_DEBUGUEPRACH_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = debug_prach;
+      if ( (cmdline_uemodeparams[CMDLINE_NOL2CONNECT_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0)  mode = no_L2_connect;
+      if ( (cmdline_uemodeparams[CMDLINE_CALIBPRACHTX_IDX].paramflags &  PARAMFLAG_PARAMSET) != 0) mode = calib_prach_tx; 
       printf("Panos: get_options 11 \n");
       if (dumpframe  > 0)  mode = rx_dump_frame;
       if ( downlink_frequency[0][0] > 0) {
-    	  printf("Panos: get_options 8 \n");
-    	  for (CC_id=1; CC_id<MAX_NUM_CCs; CC_id++) {
-  	    downlink_frequency[CC_id][1] = downlink_frequency[0][0];
-  	    downlink_frequency[CC_id][2] = downlink_frequency[0][0];
-  	    downlink_frequency[CC_id][3] = downlink_frequency[0][0];
-  	    printf("Downlink for CC_id %d frequency set to %u\n", CC_id, downlink_frequency[CC_id][0]);
-  	  }
-      UE_scan=0;
-      }
-      printf("Panos: get_options 15 \n");
-
+        printf("Downlink frequency set to %u\n", downlink_frequency[0][0]);
+        for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+          frame_parms[CC_id]->dl_CarrierFreq = downlink_frequency[0][0];
+        }
+        UE_scan=0;
+      } 
+      
       if (tddflag > 0) {
-         for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++)
-	     frame_parms[CC_id]->frame_type = TDD;
+	for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) 
+	  frame_parms[CC_id]->frame_type = TDD;
       }
-      printf("Panos: get_options 16 \n");
-
-      if (frame_parms != NULL){
-    	  printf("Panos: get_options 17 \n");
-      if (frame_parms[0]->N_RB_DL !=0) {
-    	  printf("Panos: get_options 17 \n");
-  	  if ( frame_parms[0]->N_RB_DL < 6 ) {
-  	     frame_parms[0]->N_RB_DL = 6;
-  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 6\n",frame_parms[0]->N_RB_DL);
-  	  }
-  	  if ( frame_parms[0]->N_RB_DL > 100 ) {
-  	     frame_parms[0]->N_RB_DL = 100;
-  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 100\n",frame_parms[0]->N_RB_DL);
-  	  }
-  	  if ( frame_parms[0]->N_RB_DL > 50 && frame_parms[0]->N_RB_DL < 100 ) {
-  	     frame_parms[0]->N_RB_DL = 50;
-  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 50\n",frame_parms[0]->N_RB_DL);
-  	  }
-  	  if ( frame_parms[0]->N_RB_DL > 25 && frame_parms[0]->N_RB_DL < 50 ) {
-  	     frame_parms[0]->N_RB_DL = 25;
-  	     printf ( "%i: Invalid number of ressource blocks, adjusted to 25\n",frame_parms[0]->N_RB_DL);
-  	  }
-  	  UE_scan = 0;
-  	  frame_parms[0]->N_RB_UL=frame_parms[0]->N_RB_DL;
-  	  for (CC_id=1; CC_id<MAX_NUM_CCs; CC_id++) {
-  	      frame_parms[CC_id]->N_RB_DL=frame_parms[0]->N_RB_DL;
-  	      frame_parms[CC_id]->N_RB_UL=frame_parms[0]->N_RB_UL;
-  	  }
+      
+      if (n_rb_dl !=0) {
+        printf("NB_RB set to %d\n",n_rb_dl);
+        if ( n_rb_dl < 6 ) {
+          n_rb_dl = 6;
+          printf ( "%i: Invalid number of ressource blocks, adjusted to 6\n",n_rb_dl);
+        }
+        if ( n_rb_dl > 100 ) {
+          n_rb_dl = 100;
+          printf ( "%i: Invalid number of ressource blocks, adjusted to 100\n",n_rb_dl);
+        }
+        if ( n_rb_dl > 50 && n_rb_dl < 100 ) {
+          n_rb_dl = 50;
+          printf ( "%i: Invalid number of ressource blocks, adjusted to 50\n",n_rb_dl);
+        }
+        if ( n_rb_dl > 25 && n_rb_dl < 50 ) {
+          n_rb_dl = 25;
+          printf ( "%i: Invalid number of ressource blocks, adjusted to 25\n",n_rb_dl);
+        }
+        UE_scan = 0;
+        for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+          frame_parms[CC_id]->N_RB_DL=n_rb_dl;
+          frame_parms[CC_id]->N_RB_UL=n_rb_dl;
+        }
       }
-      }
-      printf("Panos: get_options 17 \n");
-
+      
+      
       for (CC_id=1;CC_id<MAX_NUM_CCs;CC_id++) {
   	    tx_max_power[CC_id]=tx_max_power[0];
 	    rx_gain[0][CC_id] = rx_gain[0][0];
 	    tx_gain[0][CC_id] = tx_gain[0][0];
       }
-      printf("Panos: get_options 6 \n");
   } /* UE_flag > 0 */
 #if T_TRACER
   paramdef_t cmdline_ttraceparams[] =CMDLINE_TTRACEPARAMS_DESC ;
@@ -767,7 +758,7 @@ static void get_options(void) {
     // Here the configuration file is the XER encoded UE capabilities
     // Read it in and store in asn1c data structures
     strcpy(uecap_xer,CONFIG_GETCONFFILE);
-    uecap_xer_in=1;
+    uecap_xer_in=0;
     printf("Panos: get_options 7 \n");
   } /* UE with config file  */
 }
@@ -976,10 +967,16 @@ int main( int argc, char **argv )
 
   get_options ();
   if (CONFIG_ISFLAGSET(CONFIG_ABORT)) {
+    if (UE_flag == 0) {
       fprintf(stderr,"Getting configuration failed\n");
       exit(-1);
+    }
+    else { 
+      printf("Setting nfapi mode to UE_STUB_OFFNET\n");
+      nfapi_mode = 4;
+    }
   }
-
+    
 
 #if T_TRACER
   T_init(T_port, 1-T_nowait, T_dont_fork);
@@ -993,10 +990,10 @@ int main( int argc, char **argv )
   if (UE_flag==1) {
     printf("configuring for UE\n");
 
-    set_comp_log(HW,      LOG_DEBUG,  LOG_HIGH, 1);
-    set_comp_log(PHY,     LOG_DEBUG,   LOG_HIGH, 1);
-    set_comp_log(MAC,     LOG_INFO,   LOG_HIGH, 1);
-    set_comp_log(RLC,     LOG_INFO,   LOG_HIGH | FLAG_THREAD, 1);
+    set_comp_log(HW,      LOG_INFO,  LOG_HIGH, 1);
+    set_comp_log(PHY,     LOG_INFO,   LOG_HIGH, 1);
+    set_comp_log(MAC,     LOG_TRACE,   LOG_HIGH, 1);
+    set_comp_log(RLC,     LOG_TRACE,   LOG_HIGH | FLAG_THREAD, 1);
     set_comp_log(PDCP,    LOG_INFO,   LOG_HIGH, 1);
     set_comp_log(OTG,     LOG_INFO,   LOG_HIGH, 1);
     set_comp_log(RRC,     LOG_INFO,   LOG_HIGH, 1);
@@ -1223,7 +1220,7 @@ int main( int argc, char **argv )
       printf("cannot create ITTI tasks\n");
       exit(-1); // need a softer mode
     }
-    UE_config_stub_pnf();
+    //    UE_config_stub_pnf();
     printf("ITTI tasks created\n");
   }
   else {
@@ -1331,14 +1328,17 @@ int main( int argc, char **argv )
     case 3:
       nfapi_mode_str = "UE_STUB_PNF";
       break;
+    case 4:
+      nfapi_mode_str = "UE_STUB_OFFNET";
+      break;
     default:
       nfapi_mode_str = "<UNKNOWN NFAPI MODE>";
       break;
   }
   printf("NFAPI MODE:%s\n", nfapi_mode_str);
 
-  // Panos: We should never enter here since we are always going to run with nfapi_mode=3
-  if (nfapi_mode==2) // VNF
+
+  if (nfapi_mode<3) // VNF
     wait_nfapi_init("main?");
 
   printf("START MAIN THREADS\n");
