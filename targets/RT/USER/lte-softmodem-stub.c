@@ -992,9 +992,9 @@ int main( int argc, char **argv )
 
     set_comp_log(HW,      LOG_INFO,  LOG_HIGH, 1);
     set_comp_log(PHY,     LOG_INFO,   LOG_HIGH, 1);
-    set_comp_log(MAC,     LOG_TRACE,   LOG_HIGH, 1);
-    set_comp_log(RLC,     LOG_TRACE,   LOG_HIGH | FLAG_THREAD, 1);
-    set_comp_log(PDCP,    LOG_INFO,   LOG_HIGH, 1);
+    set_comp_log(MAC,     LOG_INFO,   LOG_HIGH, 1);
+    set_comp_log(RLC,     LOG_INFO,   LOG_HIGH | FLAG_THREAD, 1);
+    set_comp_log(PDCP,    LOG_DEBUG,   LOG_HIGH, 1);
     set_comp_log(OTG,     LOG_INFO,   LOG_HIGH, 1);
     set_comp_log(RRC,     LOG_INFO,   LOG_HIGH, 1);
 #if defined(ENABLE_ITTI)
@@ -1356,6 +1356,8 @@ int main( int argc, char **argv )
     	}
     // Panos: Call init_UE_stub instead of init_UE as we are always on nfapi_mode=3
     //phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
+
+
     init_timer_thread();
     init_UE_stub(1,eMBMS_active,uecap_xer_in);
 

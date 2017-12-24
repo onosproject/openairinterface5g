@@ -930,12 +930,35 @@ typedef struct {
   uint32_t n_prime_PRB;
   /// m_nprime_PRB_PSSCH (36.213 14.1.3)
   uint32_t m_nprime_PRB_PSCCH;
+  /// payload length 
+  int payload_length;
+  /// pointer to payload
   uint8_t *payload;
 } SLSCH_t;
 
 typedef struct {
 
 } SLDCH_t;
+
+#define TTI_SYNC 0
+#define SLSS 1
+#define SLDCH 2
+#define SLSCH 3
+
+typedef struct UE_tport_header_s {
+  int packet_type;
+  uint16_t absSF;
+} UE_tport_header_t;
+
+typedef struct UE_tport_s {
+  UE_tport_header_t header; 
+  union {
+    SLSS_t slss;
+    SLDCH_t sldch;
+    SLSCH_t slsch;
+  };
+  uint8_t payload[1500];  
+} UE_tport_t;
 
 #endif
 

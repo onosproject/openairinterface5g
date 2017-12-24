@@ -686,12 +686,16 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                     ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
                 key = PDCP_COLL_KEY_DEFAULT_DRB_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
                 h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
+		LOG_I(PDCP,"request key %x : (%d,%x,%d,%d)\n",
+		      key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
               } else {
                 rab_id = rab_id % maxDRB;
                 LOG_I(PDCP, "PDCP_COLL_KEY_VALUE(module_id=%d, rnti=%x, enb_flag=%d, rab_id=%d, SRB_FLAG=%d)\n",
                     ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
                 key = PDCP_COLL_KEY_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
                 h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
+		LOG_I(PDCP,"request key %x : (%d,%x,%d,%d)\n",
+		      key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
               }
 
               if (h_rc == HASH_TABLE_OK) {

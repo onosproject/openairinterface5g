@@ -21,6 +21,7 @@
 
 #define RLC_UM_MODULE 1
 #define RLC_UM_C 1
+//#define TRACE_RLC_UM_PDU 1
 //-----------------------------------------------------------------------------
 //#include "rtos_header.h"
 #include "platform_types.h"
@@ -105,6 +106,7 @@ rlc_um_get_pdus (const protocol_ctxt_t* const ctxt_pP, void *argP)
     // establishment, the RLC entity:
     //   - is created; and
     //   - enters the DATA_TRANSFER_READY state.
+    LOG_D(RLC,"RLC-UM in RLC_NULL_STATE\n");
     break;
 
   case RLC_DATA_TRANSFER_READY_STATE:
@@ -124,6 +126,8 @@ rlc_um_get_pdus (const protocol_ctxt_t* const ctxt_pP, void *argP)
     // Upon reception of a CRLC-SUSPEND-Req from upper layers, the RLC
     // entity:
     // - enters the LOCAL_SUSPEND state.
+
+    LOG_D(RLC,"RLC-UM in RLC_DATA_TRANSFER_READY_STATE\n");
 
     // SEND DATA TO MAC
     if (rlc_p->tx_sn_length == 10) {
@@ -155,6 +159,9 @@ rlc_um_get_pdus (const protocol_ctxt_t* const ctxt_pP, void *argP)
     //   upper layers.
 
     // TO DO TAKE CARE OF SN : THE IMPLEMENTATION OF THIS FUNCTIONNALITY IS NOT CRITICAL
+
+    LOG_D(RLC,"RLC-UM in RLC_LOCAL_SUSPEND_STATE\n");
+
     break;
 
   default:
@@ -656,7 +663,6 @@ rlc_um_mac_data_request (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP,cons
       memcpy(&msg_p->ittiMsg.rlc_um_data_pdu_req.text, message_string, message_string_size);
 
       itti_send_msg_to_task(TASK_UNKNOWN, ctxt_pP->instance, msg_p);
-
 # else
       LOG_T(RLC, "%s", message_string);
 # endif
@@ -776,7 +782,6 @@ rlc_um_data_req (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, mem_block_t
   memcpy(&msg_p->ittiMsg.rlc_um_sdu_req.text, message_string, message_string_size);
 
   itti_send_msg_to_task(TASK_UNKNOWN, ctxt_pP->instance, msg_p);
-
 #else
   LOG_T(RLC, "%s", message_string);
 #endif
@@ -785,7 +790,7 @@ rlc_um_data_req (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, mem_block_t
   rlc_p->buffer_occupancy += ((struct rlc_um_tx_sdu_management *) (sdu_pP->data))->sdu_size;
   list_add_tail_eurecom(sdu_pP, &rlc_p->input_sdus);
   RLC_UM_MUTEX_UNLOCK(&rlc_p->lock_input_sdus);
-#if DEBUG_RLC_CONGESTION
+#if 1//DEBUG_RLC_CONGESTION
 #if MESSAGE_CHART_GENERATOR
   if (rlc_p->buffer_occupancy > 4096) {
       MSC_LOG_EVENT((ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_RLC_ENB:MSC_RLC_UE,\

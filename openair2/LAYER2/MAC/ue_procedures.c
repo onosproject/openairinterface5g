@@ -139,7 +139,7 @@ void ue_init_mac(module_id_t module_idP)
 
   if(nfapi_mode == 3) {
 	  pthread_mutex_init(&UE_mac_inst[module_idP].UL_INFO_mutex,NULL);
-	  UE_mac_inst[module_idP].UE_mode[0] = PRACH;
+	  UE_mac_inst[module_idP].UE_mode[0] = NOT_SYNCHED; //PRACH;
 	  UE_mac_inst[module_idP].first_ULSCH_Tx =0;
 	  UE_mac_inst[module_idP].dl_config_req = NULL;
 	  UE_mac_inst[module_idP].ul_config_req = NULL;
@@ -2696,8 +2696,8 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
     rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
 				    3,
 				    0xFFFF);
-    if (rlc_status.bytes_in_buffer > 0) {
-      LOG_I(MAC,"Scheduling for %d bytes in Sidelink buffer\n",rlc_status.bytes_in_buffer);
+    if (rlc_status.bytes_in_buffer > 2) {
+      LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
       // Fill in group id for off-network communications
       ue->sltx_active = 1;
     }
@@ -2707,34 +2707,42 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
     // 10 PRBs, mcs 19
     int TBS = 4584/8;
     int req;
-
+    
+    
     rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
 				    3,
 				    0xFFFF);
     if (TBS<=rlc_status.bytes_in_buffer) req=TBS;
     else req = rlc_status.bytes_in_buffer;
+    
+    if (req>0) {
+      sdu_length = mac_rlc_data_req(module_idP,
+				    0x1234,
+				    0,
+				    frameP,
+				    ENB_FLAG_NO,
+				    MBMS_FLAG_NO,
+				    3,				    
+				    req,
+				    (char*)ue->slsch_pdu.payload);
+      
+      if (sdu_length > 0) {
+	LOG_I(MAC,"SFN.SF %d.%d : got %d bytes from Sidelink buffer (%d requested)\n",frameP,subframeP,sdu_length,req);
+	slsch->payload = (unsigned char*)ue->slsch_pdu.payload;
+	slsch->rvidx   = 0;
+	slsch->payload_length = TBS;
+	// fill in SLSCH configuration
+	return(&ue->slsch);
+      }
+      else ue->sltx_active = 0;
+    }
 
-    sdu_length = mac_rlc_data_req(module_idP,
-				  0x1234,
-				  0,
-				  frameP,
-				  ENB_FLAG_NO,
-				  MBMS_FLAG_NO,
-				  3,
-				  req,
-				  (char*)ue->slsch_pdu.payload);
-    LOG_I(MAC,"got %d bytes from Sidelink buffer (%d requested)\n",sdu_length,req);
-    if (sdu_length > 0) {
-      slsch->payload = (unsigned char*)ue->slsch_pdu.payload;
-      slsch->rvidx   = 0;
-      // fill in SLSCH configuration
-      return(&ue->slsch);
-    }
-    else { // handle retransmission of SDU
-      slsch->rvidx = rvtab[absSF&3];
-      return(&ue->slsch);
-    }
+  } else if ((absSF%40)>3 && ue->sltx_active == 1) { // handle retransmission of SDU
+    LOG_I(MAC,"SFN.SF %d.%d : retransmission\n",frameP,subframeP);
+    slsch->rvidx = rvtab[absSF&3];
+    return(&ue->slsch);
   }
+
   
   return(NULL);
 }

@@ -360,23 +360,86 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
   // Rel13 extensions
   UE->SL_Preconfiguration[eNB_index]->ext1 = NULL;
 
-  // Establish a SLRB (using DRB for now)
+  // Establish a SLRB (using DRB 3 for now)
   protocol_ctxt_t ctxt;
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
 
-  rrc_pdcp_config_req (&ctxt,SRB_FLAG_NO, CONFIG_ACTION_ADD,
-                       3, UNDEF_SECURITY_MODE);
+  UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
+  UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
+  UE->DRB_config[0][0]->drb_Identity =  3;
+  UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
+  // allowed value 5..15, value : x+4
+  *(UE->DRB_config[0][0]->eps_BearerIdentity) = 3;
+  UE->DRB_config[0][0]->logicalChannelIdentity = CALLOC(1, sizeof(long));
+  *(UE->DRB_config[0][0]->logicalChannelIdentity) = UE->DRB_config[0][0]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
+  
 
-  rlc_info_t rlc_info;
 
-  rlc_info.rlc_mode = RLC_MODE_UM;
-  rlc_info.rlc.rlc_um_info.timer_reordering = 5;
-  rlc_info.rlc.rlc_um_info.sn_field_length = 10;
-  rlc_info.rlc.rlc_um_info.is_mXch = 0;
 
-  rrc_rlc_config_req(&ctxt,SRB_FLAG_NO,MBMS_FLAG_NO,CONFIG_ACTION_ADD,
-		     3,
-		     rlc_info);
+  struct RLC_Config                  *DRB_rlc_config                   = CALLOC(1,sizeof(struct RLC_Config));
+  struct PDCP_Config                 *DRB_pdcp_config                  = CALLOC(1,sizeof(struct PDCP_Config));
+  struct PDCP_Config__rlc_UM         *PDCP_rlc_UM                      = CALLOC(1,sizeof(struct PDCP_Config__rlc_UM));
+  struct LogicalChannelConfig        *DRB_lchan_config                 = CALLOC(1,sizeof(struct LogicalChannelConfig));
+  struct LogicalChannelConfig__ul_SpecificParameters
+    *DRB_ul_SpecificParameters                                         = CALLOC(1, sizeof(struct LogicalChannelConfig__ul_SpecificParameters));
+  long                               *logicalchannelgroup_drb          = CALLOC(1, sizeof(long));
+
+  DRB_rlc_config->present = RLC_Config_PR_um_Bi_Directional;
+  DRB_rlc_config->choice.um_Bi_Directional.ul_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
+  DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
+  DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.t_Reordering = T_Reordering_ms35;
+  UE->DRB_config[0][0]->rlc_Config = DRB_rlc_config;
+
+  DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
+  UE->DRB_config[0][0]->pdcp_Config = DRB_pdcp_config;
+  DRB_pdcp_config->discardTimer = CALLOC(1, sizeof(long));
+  *DRB_pdcp_config->discardTimer = PDCP_Config__discardTimer_infinity;
+  DRB_pdcp_config->rlc_AM = NULL;
+  DRB_pdcp_config->rlc_UM = NULL;
+
+  /* avoid gcc warnings */
+  (void)PDCP_rlc_UM;
+
+  DRB_pdcp_config->rlc_UM = PDCP_rlc_UM;
+  PDCP_rlc_UM->pdcp_SN_Size = PDCP_Config__rlc_UM__pdcp_SN_Size_len12bits;
+  DRB_pdcp_config->headerCompression.present = PDCP_Config__headerCompression_PR_notUsed;
+
+  UE->DRB_config[0][0]->logicalChannelConfig = DRB_lchan_config;
+  DRB_ul_SpecificParameters = CALLOC(1, sizeof(*DRB_ul_SpecificParameters));
+  DRB_lchan_config->ul_SpecificParameters = DRB_ul_SpecificParameters;
+
+  DRB_ul_SpecificParameters->priority = 12;    // lower priority than srb1, srb2 and other dedicated bearer
+  DRB_ul_SpecificParameters->prioritisedBitRate =LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_kBps8 ;
+    //LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_infinity;
+  DRB_ul_SpecificParameters->bucketSizeDuration =
+    LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
+
+  // LCG for DTCH can take the value from 1 to 3 as defined in 36331: normally controlled by upper layers (like RRM)
+
+  *logicalchannelgroup_drb = 1;
+  DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
+
+  UE->DRB_configList = CALLOC(1,sizeof(DRB_ToAddModList_t));
+  ASN_SEQUENCE_ADD(&UE->DRB_configList->list,UE->DRB_config[0][0]);
+
+  rrc_pdcp_config_asn1_req(&ctxt,
+			   (SRB_ToAddModList_t *) NULL,
+			   UE->DRB_configList,
+			   (DRB_ToReleaseList_t*) NULL,
+			   0xff, NULL, NULL, NULL
+#if defined(Rel10) || defined(Rel14)
+                           , (PMCH_InfoList_r9_t *) NULL
+#endif
+                           ,NULL);	   
+  
+  rrc_rlc_config_asn1_req(&ctxt,
+			  (SRB_ToAddModList_t*)NULL,
+			  UE->DRB_configList,
+			  (DRB_ToReleaseList_t*)NULL
+#if defined(Rel10) || defined(Rel14)
+			  ,(PMCH_InfoList_r9_t *)NULL
+#endif
+			  );
 }
 
 #endif

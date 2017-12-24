@@ -1454,6 +1454,10 @@ typedef struct {
   time_stats_t tx_prach;
   time_stats_t timer_stats;
 
+  pthread_mutex_t timer_mutex;
+  pthread_cond_t timer_cond;
+  int instance_cnt_timer;
+
   /// RF and Interface devices per CC
 
   openair0_device rfdevice; 
@@ -1573,6 +1577,26 @@ static inline void wait_sync(char *thread_name) {
   
   printf( "got sync (%s)\n", thread_name);
 
+}
+
+static inline int wakeup_thread(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
+
+  if (pthread_mutex_lock(mutex) != 0) {
+    LOG_E( PHY, "error locking mutex for %s\n",name);
+    exit_fun("nothing to add");
+    return(-1);
+  }
+  *instance_cnt = *instance_cnt + 1;
+
+  // the thread can now be woken up
+  if (pthread_cond_signal(cond) != 0) {
+    LOG_E( PHY, "ERROR pthread_cond_signal\n");
+    exit_fun( "ERROR pthread_cond_signal" );
+    return(-1);
+  }
+  
+  pthread_mutex_unlock(mutex);
+  return(0);
 }
 
 static inline int wait_on_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {

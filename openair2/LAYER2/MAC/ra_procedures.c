@@ -106,6 +106,7 @@ void get_prach_resources(module_id_t module_idP,
                          uint8_t first_Msg3,
                          RACH_ConfigDedicated_t *rach_ConfigDedicated)
 {
+	LOG_I(MAC, "Panos-D: get_prach_resources 1");
 
   uint8_t Msg3_size = UE_mac_inst[module_idP].RA_Msg3_size;
   PRACH_RESOURCES_t *prach_resources = &UE_mac_inst[module_idP].RA_prach_resources;
@@ -195,17 +196,20 @@ void get_prach_resources(module_id_t module_idP,
 
   if (first_Msg3 == 1) {
     if (noGroupB == 1) {
+    	LOG_I(MAC, "Panos-D: get_prach_resources 2");
       // use Group A procedure
       UE_mac_inst[module_idP].RA_prach_resources.ra_PreambleIndex  = (taus())%numberOfRA_Preambles;
       UE_mac_inst[module_idP].RA_prach_resources.ra_RACH_MaskIndex = 0;
       UE_mac_inst[module_idP].RA_usedGroupA = 1;
     } else if ((Msg3_size <messageSizeGroupA) ||
                (get_PL(module_idP,0,eNB_index) > PLThreshold)) {
+    	LOG_I(MAC, "Panos-D: get_prach_resources 3");
       // use Group A procedure
       UE_mac_inst[module_idP].RA_prach_resources.ra_PreambleIndex  = (taus())%sizeOfRA_PreamblesGroupA;
       UE_mac_inst[module_idP].RA_prach_resources.ra_RACH_MaskIndex = 0;
       UE_mac_inst[module_idP].RA_usedGroupA = 1;
     } else { // use Group B
+    	LOG_I(MAC, "Panos-D: get_prach_resources 4");
       UE_mac_inst[module_idP].RA_prach_resources.ra_PreambleIndex  = sizeOfRA_PreamblesGroupA +
         (taus())%(numberOfRA_Preambles - sizeOfRA_PreamblesGroupA);
       UE_mac_inst[module_idP].RA_prach_resources.ra_RACH_MaskIndex = 0;
@@ -246,6 +250,7 @@ void get_prach_resources(module_id_t module_idP,
 
   // choose RA-RNTI
   UE_mac_inst[module_idP].RA_prach_resources.ra_RNTI = 1 + t_id + 10*f_id;
+  LOG_I(MAC, "Panos-D: get_prach_resources 4");
 }
 
 void Msg1_transmitted(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id)
@@ -290,12 +295,13 @@ void Msg3_transmitted(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8
 PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, uint8_t eNB_indexP,sub_frame_t subframeP)
 {
 
-
+  LOG_I(MAC, "Panos-D: ue_get_rach 1");
   uint8_t                  Size               = 0;
   UE_MODE_t UE_mode;
   // Panos: Modification for phy_stub_ue operation
   if(nfapi_mode == 3) { // Panos: phy_stub_ue mode
 	  UE_mode = UE_mac_inst[module_idP].UE_mode[0];
+	  LOG_I(MAC, "Panos-D: ue_get_rach 2, E_mode: %d", UE_mode);
   }
   else { // Full stack mode
 	  UE_mode = get_ue_mode(module_idP,0,eNB_indexP);
@@ -315,13 +321,16 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
 	      "Transmission on secondary CCs is not supported yet\n");
 
   if (UE_mode == PRACH) {
+	  LOG_I(MAC, "Panos-D: ue_get_rach 3");
     if (UE_mac_inst[module_idP].radioResourceConfigCommon) {
       rach_ConfigCommon = &UE_mac_inst[module_idP].radioResourceConfigCommon->rach_ConfigCommon;
     } else {
+    	//AssertFatal(UE_mac_inst[module_idP].radioResourceConfigCommon!=NULL,"RadioResourceConfigCommon Null");
       return(NULL);
     }
 
     if (UE_mac_inst[module_idP].RA_active == 0) {
+    	LOG_I(MAC, "Panos-D: ue_get_rach 4");
       LOG_I(MAC,"RA not active\n");
       // check if RRC is ready to initiate the RA procedure
       Size = mac_rrc_data_req(module_idP,
@@ -339,7 +348,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
       LOG_I(MAC,"[UE %d] Frame %d: Requested RRCConnectionRequest, got %d bytes\n",module_idP,frameP,Size);
       
       if (Size>0) {
-	
+    	  LOG_I(MAC, "Panos-D: ue_get_rach 5");
 	UE_mac_inst[module_idP].RA_active                        = 1;
 	UE_mac_inst[module_idP].RA_PREAMBLE_TRANSMISSION_COUNTER = 1;
 	UE_mac_inst[module_idP].RA_Msg3_size                     = Size+sizeof(SCH_SUBHEADER_SHORT)+sizeof(SCH_SUBHEADER_SHORT);

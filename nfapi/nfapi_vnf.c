@@ -1362,7 +1362,7 @@ void configure_nfapi_vnf(char *vnf_addr, int vnf_p5_port)
 
   vnf.p7_vnfs[0].timing_window = 32;
   vnf.p7_vnfs[0].periodic_timing_enabled = 1;
-  vnf.p7_vnfs[0].aperiodic_timing_enabled = 0;
+  vnf.p7_vnfs[0].aperiodic_timing_enabled = 1;
   vnf.p7_vnfs[0].periodic_timing_period = 10;
 
   vnf.p7_vnfs[0].config = nfapi_vnf_p7_config_create();

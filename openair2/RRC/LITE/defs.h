@@ -746,6 +746,11 @@ typedef struct UE_RRC_INST_s {
   /* Used integrity/ciphering algorithms */
   CipheringAlgorithm_r12_t                          ciphering_algorithm;
   e_SecurityAlgorithmConfig__integrityProtAlgorithm integrity_algorithm;
+
+#ifdef Rel14
+  /// Used for Sidelink Preconfiguration
+  DRB_ToAddModList_t *DRB_configList;
+#endif
 } UE_RRC_INST;
 
 #include "proto.h"

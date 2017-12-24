@@ -37,7 +37,7 @@
 #include "assertions.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 
-#define DEBUG_MAC_INTERFACE 1
+//#define DEBUG_MAC_INTERFACE 1
 
 //-----------------------------------------------------------------------------
 struct mac_data_ind mac_rlc_deserialize_tb (
@@ -143,7 +143,7 @@ tbs_size_t mac_rlc_data_req(
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MAC_RLC_DATA_REQ,VCD_FUNCTION_IN);
 #ifdef DEBUG_MAC_INTERFACE
-  LOG_I(RLC, PROTOCOL_CTXT_FMT" MAC_RLC_DATA_REQ channel %d (%d) MAX RB %d, Num_tb %d\n",
+  LOG_D(RLC, PROTOCOL_CTXT_FMT" MAC_RLC_DATA_REQ channel %d (%d) MAX RB %d\n",
         PROTOCOL_CTXT_ARGS((&ctxt)),
         channel_idP,
         RLC_MAX_LC,

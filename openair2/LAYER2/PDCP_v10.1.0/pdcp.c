@@ -893,7 +893,7 @@ pdcp_run (
   int           result;
   protocol_ctxt_t  ctxt;
 #endif
-
+  
   if (ctxt_pP->enb_flag) {
     start_meas(&eNB_pdcp_stats[ctxt_pP->module_id].pdcp_run);
   } else {
@@ -1720,7 +1720,7 @@ rrc_pdcp_config_req (
     }
 
     pdcp_p->first_missing_pdu = -1;
-    LOG_I(PDCP,PROTOCOL_PDCP_CTXT_FMT" Config request : Action ADD:  radio bearer id %d (already added) configured\n",
+    LOG_D(PDCP,PROTOCOL_PDCP_CTXT_FMT" Config request : Action ADD:  radio bearer id %d (already added) configured\n",
 	  PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP,pdcp_p),
 	  rb_idP);
     break;
@@ -1799,9 +1799,9 @@ rrc_pdcp_config_req (
         }
 
         pdcp_p->first_missing_pdu = -1;
-        LOG_I(PDCP,PROTOCOL_PDCP_CTXT_FMT" Inserting PDCP instance in collection key 0x%"PRIx64"\n",
+        LOG_D(PDCP,PROTOCOL_PDCP_CTXT_FMT" Inserting PDCP instance in collection key 0x%"PRIx64"\n",
               PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP,pdcp_p), key);
-        LOG_I(PDCP,PROTOCOL_PDCP_CTXT_FMT" Config request : Action ADD:  radio bearer id %d configured\n",
+        LOG_D(PDCP,PROTOCOL_PDCP_CTXT_FMT" Config request : Action ADD:  radio bearer id %d configured\n",
               PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP,pdcp_p),
               rb_idP);
       }
