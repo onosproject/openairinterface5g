@@ -447,6 +447,14 @@ void ue_decode_p(module_id_t module_idP, int CC_id,frame_t frame, uint8_t CH_ind
 
 void ue_send_sdu(module_id_t module_idP, uint8_t CC_id,frame_t frame, sub_frame_t subframe, uint8_t *sdu,uint16_t sdu_len,uint8_t CH_index);
 
+void ue_send_sl_sdu(module_id_t module_idP,
+		    uint8_t CC_id,
+		    frame_t frameP,
+		    sub_frame_t subframeP,
+		    uint8_t* sdu,
+		    uint16_t sdu_len,
+		    uint8_t eNB_index
+		    );
 
 #if defined(Rel10) || defined(Rel14)
 /* \brief Called by PHY to transfer MCH transport block to ue MAC.

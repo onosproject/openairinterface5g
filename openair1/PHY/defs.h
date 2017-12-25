@@ -1587,7 +1587,6 @@ static inline int wakeup_thread(pthread_mutex_t *mutex,pthread_cond_t *cond,int 
     return(-1);
   }
   *instance_cnt = *instance_cnt + 1;
-
   // the thread can now be woken up
   if (pthread_cond_signal(cond) != 0) {
     LOG_E( PHY, "ERROR pthread_cond_signal\n");
