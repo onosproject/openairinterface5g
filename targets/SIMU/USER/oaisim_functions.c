@@ -1042,7 +1042,7 @@ extern int subframe_eNB_mask,subframe_UE_mask;
 int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
   /*time_stats_t ul_chan_stats_f;
-  static int first_meas=0;*/
+  static int first_meas=0;
   static int first_run=0;
   static double sum;
   static int count;
@@ -1052,7 +1052,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
      sum=0;
      count=0;
   } 
-  count++;
+  count++;*/
 
 
   int ret = nsamps;
@@ -1199,6 +1199,17 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
   time_stats_t dl_chan_stats_f;
+  static int first_run=0;
+  static double sum;
+  static int count;
+  if (!first_run)
+  {
+     first_run=1;
+     sum=0;
+     count=0;
+  } 
+  count++;
+
   int ret = nsamps;
   int UE_id = device->Mod_id;
   int CC_id  = device->CC_id;
@@ -1264,7 +1275,8 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
             (unsigned long long)current_UE_rx_timestamp[UE_id][CC_id]);
       if (do_ofdm_mod)
       {
-	start_meas(&dl_chan_stats_f);
+	//start_meas(&dl_chan_stats_f);
+        clock_t start=clock();
       	do_DL_sig_freq(eNB2UE,
                 enb_data,
                 ue_data,
@@ -1273,8 +1285,11 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
                 &PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
                 UE_id,
                 CC_id);
-	stop_meas(&dl_chan_stats_f);
-	print_meas(&dl_chan_stats_f,"DL_Channel Stats Frequency Domain",&dl_chan_stats_f,&dl_chan_stats_f);
+  	clock_t stop=clock();
+  	printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
+  	sum=(sum+stop-start);
+	//stop_meas(&dl_chan_stats_f);
+	//print_meas(&dl_chan_stats_f,"DL_Channel Stats Frequency Domain",&dl_chan_stats_f,&dl_chan_stats_f);
       }
       else
       {

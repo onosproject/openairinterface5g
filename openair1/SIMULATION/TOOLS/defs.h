@@ -221,7 +221,6 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
 \param desc Pointer to the channel descriptor
 */
 int random_channel(channel_desc_t *desc, uint8_t abstraction_flag);
-
 /**\fn void multipath_channel(channel_desc_t *desc,
            double tx_sig_re[2],
            double tx_sig_im[2],
