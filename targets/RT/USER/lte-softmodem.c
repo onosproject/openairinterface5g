@@ -120,6 +120,8 @@ uint8_t nfapi_mode = 2;
 
 uint16_t sf_ahead=4;
 
+char emul_iface[100];
+
 pthread_cond_t sync_cond;
 pthread_mutex_t sync_mutex;
 int sync_var=-1; //!< protected by mutex \ref sync_mutex.
@@ -609,6 +611,7 @@ static void get_options(void) {
   if (UE_flag > 0) {
      uint8_t n_rb_dl;
      nfapi_mode=0;
+
      paramdef_t cmdline_uemodeparams[] =CMDLINE_UEMODEPARAMS_DESC;
      paramdef_t cmdline_ueparams[] =CMDLINE_UEPARAMS_DESC;
 

@@ -130,6 +130,8 @@ uint8_t nfapi_mode = 3;
 
 uint16_t sf_ahead=4;
 
+char *emul_iface;
+
 pthread_cond_t sync_cond;
 pthread_mutex_t sync_mutex;
 int sync_var=-1; //!< protected by mutex \ref sync_mutex.
@@ -228,7 +230,7 @@ extern PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
 			  uint8_t abstraction_flag);
 
 extern void init_eNB_afterRU(void);
-extern void init_UE_stub(int nb_inst,int,int);
+extern void init_UE_stub(int nb_inst,int,int,char*);
 extern int init_timer_thread(void);
 
 int transmission_mode=1;
@@ -672,12 +674,15 @@ static void get_options(void) {
      uint8_t n_rb_dl;
 
      paramdef_t cmdline_uemodeparams[] =CMDLINE_UEMODEPARAMS_DESC;
-     paramdef_t cmdline_ueparams[] =CMDLINE_UEPARAMS_DESC;
+     paramdef_t cmdline_ueparams[] =CMDLINE_UEPARAMS_DESC; 
 
      set_default_frame_parms(frame_parms);
 
+     emul_iface=malloc(100);
+
      config_process_cmdline( cmdline_uemodeparams,sizeof(cmdline_uemodeparams)/sizeof(paramdef_t),NULL);
      config_process_cmdline( cmdline_ueparams,sizeof(cmdline_ueparams)/sizeof(paramdef_t),NULL);
+
 
       if (loopfile != NULL) {
   	  printf("Input file for hardware emulation: %s",loopfile);
@@ -739,6 +744,7 @@ static void get_options(void) {
 	    rx_gain[0][CC_id] = rx_gain[0][0];
 	    tx_gain[0][CC_id] = tx_gain[0][0];
       }
+      printf("Emulation interface : %s (%p,%p)\n",emul_iface,emul_iface,&emul_iface);
   } /* UE_flag > 0 */
 #if T_TRACER
   paramdef_t cmdline_ttraceparams[] =CMDLINE_TTRACEPARAMS_DESC ;
@@ -1359,7 +1365,7 @@ int main( int argc, char **argv )
 
 
     init_timer_thread();
-    init_UE_stub(1,eMBMS_active,uecap_xer_in);
+    init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
 
     /*for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       PHY_vars_UE_g[0][CC_id]->rf_map.card=0;

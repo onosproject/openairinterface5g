@@ -77,7 +77,7 @@ void init_UE_threads(int);
 void init_UE_threads_stub(int);
 void *UE_thread(void *arg);
 void init_UE(int nb_inst,int,int);
-void init_UE_stub(int nb_inst,int,int);
+void init_UE_stub(int nb_inst,int,int,char*);
 extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
 //extern int tx_req_UE_MAC1();
 
@@ -270,7 +270,7 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in) {
 }
 
 
-void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in) {
+void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_iface) {
 
   int         inst;
 
@@ -291,7 +291,8 @@ void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in) {
 
   printf("UE threads created \n");
 
-  multicast_link_start(ue_stub_rx_handler,0,"lo");
+  LOG_I(PHY,"Starting multicast link on %s\n",emul_iface);
+  multicast_link_start(ue_stub_rx_handler,0,emul_iface);
 
 
 }
