@@ -201,7 +201,7 @@ int   udp_socket_port_enb;
 int   udp_socket_ip_ue;
 int   udp_socket_port_ue;
 
-long TTI = 10000000;
+long TTI = 1000000;
 pthread_mutex_t mutex_send[RX_NB_TH];
 pthread_cond_t cond_send[RX_NB_TH];
 
