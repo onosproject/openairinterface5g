@@ -2724,11 +2724,44 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 				    MBMS_FLAG_NO,
 				    3,				    
 				    req,
-				    (char*)ue->slsch_pdu.payload);
+				    (char*)(ue->slsch_pdu.payload + sizeof(SLSCH_SUBHEADER_24_Bit_DST_LONG)));
       
+      // Notes: 1. hard-coded to 24-bit destination format for now
+      //        2. LCID hard-coded to 3
+      //        3. SRC/DST IDs with debug values
       if (sdu_length > 0) {
 	LOG_I(MAC,"SFN.SF %d.%d : got %d bytes from Sidelink buffer (%d requested)\n",frameP,subframeP,sdu_length,req);
 	slsch->payload = (unsigned char*)ue->slsch_pdu.payload;
+	if (sdu_length < 128) { 
+	  slsch->payload++;
+	  SLSCH_SUBHEADER_24_Bit_DST_SHORT *shorth= (SLSCH_SUBHEADER_24_Bit_DST_SHORT *)slsch->payload;
+	  shorth->F=0;
+	  shorth->L=sdu_length;
+	  shorth->E=1;
+	  shorth->LCID=3;
+	  shorth->SRC07=0x12;
+	  shorth->SRC815=0x34;
+	  shorth->SRC1623=0x56;
+	  shorth->DST07=0x78;
+	  shorth->DST815=0x9A;
+	  shorth->DST1623=0xBC;
+	  shorth->V=0x1;
+	}
+	else {
+	  SLSCH_SUBHEADER_24_Bit_DST_LONG *longh= (SLSCH_SUBHEADER_24_Bit_DST_LONG *)slsch->payload;
+	  longh->F=1;
+	  longh->L_LSB=sdu_length&0xff;
+	  longh->L_MSB=(sdu_length>>8)&0x7f;
+	  longh->E=1;
+	  longh->LCID=3;
+	  longh->SRC07=0x12;
+	  longh->SRC815=0x34;
+	  longh->SRC1623=0x56;
+	  longh->DST07=0x78;
+	  longh->DST815=0x9A;
+	  longh->DST1623=0xBC;
+	  longh->V=0x1;
+	}
 	slsch->rvidx   = 0;
 	slsch->payload_length = TBS;
 	// fill in SLSCH configuration

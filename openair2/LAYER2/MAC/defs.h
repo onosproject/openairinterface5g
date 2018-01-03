@@ -237,31 +237,73 @@ typedef struct {
 } __attribute__((__packed__))SCH_SUBHEADER_FIXED;
 
 
-// Panos:
+
 /*!\brief  MAC subheader long  with 24bit DST field */
 typedef struct {
-	uint8_t   V:4; //Version number: Possible values "0001", "0010", "0011" based on TS36.321 section 6.2.3.
-	uint32_t  SRC:24; //Prose UE source ID. Size 24 bits.
-	uint32_t  DST:24; //Prose UE destination ID. Size 16 or 24 bits.
-	uint8_t   LCID:5;
-	uint8_t   L:7;	// Length field indicating the size of the corresponding SDU in byes. Not sure about the size of this field (7).
-	uint8_t	  F:1;
-	uint8_t	  E:1;
-	uint8_t	  R:1;
-}__attribute__((__packed__))SLSCH_SUBHEADER_24_Bit_DST;
+  uint8_t   R0:4; 
+  uint8_t   V:4;//Version number: Possible values "0001", "0010", "0011" based on TS36.321 section 6.2.3.
+  uint8_t  SRC07; //Prose UE source ID. Size 24 bits.
+  uint8_t  SRC815; //Prose UE source ID. Size 24 bits.
+  uint8_t  SRC1623; //Prose UE source ID. Size 24 bits.
+  uint8_t  DST07; //Prose UE destination ID. Size 24 bits.
+  uint8_t  DST815; //Prose UE destination ID. Size 24 bits.
+  uint8_t  DST1623; //Prose UE destination ID. Size 24 bits.
+  uint8_t  LCID:5;
+  uint8_t  E:1;
+  uint8_t  R1:2;
+  uint8_t  L:7;	// Length field indicating the size of the corresponding SDU in bytes. 
+  uint8_t  F:1;
+}__attribute__((__packed__))SLSCH_SUBHEADER_24_Bit_DST_SHORT;
 
-/*!\brief  MAC subheader long  with 16bit DST field */
+/*!\brief  MAC subheader long  with 24bit DST field */
 typedef struct {
-	uint8_t   V:4; //Version number: Possible values "0001", "0010", "0011" based on TS36.321 section 6.2.3.
-	uint32_t  SRC:24; //Prose UE source ID. Size 24 bits.
-	uint32_t  DST:16; //Prose UE destination ID. Size 16 or 24 bits.
-	uint8_t   LCID:5;
-	uint8_t   L:7;	// Length field indicating the size of the corresponding SDU in byes. Not sure about the size of this field (7).
-	uint8_t	  F:1;
-	uint8_t	  E:1;
-	uint8_t	  R:1;
-}__attribute__((__packed__))SLSCH_SUBHEADER_16_Bit_DST;
+  uint8_t   R0:4; 
+  uint8_t   V:4;//Version number: Possible values "0001", "0010", "0011" based on TS36.321 section 6.2.3.
+  uint8_t  SRC07; //Prose UE source ID. Size 24 bits.
+  uint8_t  SRC815; //Prose UE source ID. Size 24 bits.
+  uint8_t  SRC1623; //Prose UE source ID. Size 24 bits.
+  uint8_t  DST07; //Prose UE destination ID. Size 24 bits.
+  uint8_t  DST815; //Prose UE destination ID. Size 24 bits.
+  uint8_t  DST1623; //Prose UE destination ID. Size 24 bits.
+  uint8_t  LCID:5;
+  uint8_t  E:1;
+  uint8_t  R1:2;
+  uint8_t  L_MSB:7;	// Length field indicating the size of the corresponding SDU in bytes. 
+  uint8_t  F:1;
+  uint8_t  L_LSB:8;
+}__attribute__((__packed__))SLSCH_SUBHEADER_24_Bit_DST_LONG;
 
+/*!\brief  MAC subheader long  with 24bit DST field */
+typedef struct {
+  uint8_t   R0:4; 
+  uint8_t   V:4;//Version number: Possible values "0001", "0010", "0011" based on TS36.321 section 6.2.3.
+  uint8_t  SRC07; //Prose UE source ID. Size 24 bits.
+  uint8_t  SRC815; //Prose UE source ID. Size 24 bits.
+  uint8_t  DST07; //Prose UE destination ID. Size 16 bits.
+  uint8_t  DST815; //Prose UE destination ID. Size 16 bits.
+  uint8_t  LCID:5;
+  uint8_t  E:1;
+  uint8_t  R1:2;
+  uint8_t  L:7;	// Length field indicating the size of the corresponding SDU in bytes. 
+  uint8_t  F:1;
+}__attribute__((__packed__))SLSCH_SUBHEADER_16_Bit_DST_SHORT;
+
+/*!\brief  MAC subheader long  with 24bit DST field */
+typedef struct {
+  uint8_t   R0:4; 
+  uint8_t   V:4;//Version number: Possible values "0001", "0010", "0011" based on TS36.321 section 6.2.3.
+  uint8_t  SRC07; //Prose UE source ID. Size 24 bits.
+  uint8_t  SRC815; //Prose UE source ID. Size 24 bits.
+  uint8_t  SRC1623; //Prose UE source ID. Size 24 bits.
+  uint8_t  DST07; //Prose UE destination ID. Size 16 bits.
+  uint8_t  DST815; //Prose UE destination ID. Size 16 bits.
+  uint8_t  LCID:5;
+  uint8_t  E:1;
+  uint8_t  R1:2;
+  uint8_t  L_MSB:7;	// Length field indicating the size of the corresponding SDU in bytes. 
+  uint8_t  F:1;
+  uint8_t  L_LSB:8;
+}__attribute__((__packed__))SLSCH_SUBHEADER_16_Bit_DST_LONG;
 
 /*!\brief  mac control element: short buffer status report for a specific logical channel group ID*/
 typedef struct {
