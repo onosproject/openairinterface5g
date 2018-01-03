@@ -751,6 +751,24 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		    uint8_t eNB_index
 		    ) {
 
+  int rlc_sdu_len;
+  char *rlc_sdu;
+
+  // Notes: 1. no control elements are supported yet
+  //        2. we exit with error if LCID != 3
+  //        3. we exit with error if E=1 (more than one SDU/CE)
+  // extract header
+  SLSCH_SUBHEADER_24_Bit_DST_LONG *longh = (SLSCH_SUBHEADER_24_Bit_DST_LONG *)sdu;
+  AssertFatal(longh->E==0,"E is non-zero\n");
+  AssertFatal(longh->LCID==3,"LCID is %d (not 3)\n",longh->LCID);
+  if (longh->F==1) {
+    rlc_sdu_len = ((longh->L_MSB<<8)&0x7F00)|(longh->L_LSB&0xFF);
+    rlc_sdu = sdu+sizeof(SLSCH_SUBHEADER_24_Bit_DST_LONG);
+  }
+  else {
+    rlc_sdu_len = ((SLSCH_SUBHEADER_24_Bit_DST_SHORT *)sdu)->L;
+    rlc_sdu = sdu+sizeof(SLSCH_SUBHEADER_24_Bit_DST_SHORT);
+  }
   mac_rlc_data_ind(
 		   module_idP,
 		   0x1234,
@@ -759,8 +777,8 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		   ENB_FLAG_NO,
 		   MBMS_FLAG_NO,
 		   3,
-		   (char *)sdu,
-		   sdu_len,
+		   rlc_sdu,
+		   rlc_sdu_len,
 		   1,
 		   NULL);
 }
@@ -2762,7 +2780,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 	  SLSCH_SUBHEADER_24_Bit_DST_SHORT *shorth= (SLSCH_SUBHEADER_24_Bit_DST_SHORT *)slsch->payload;
 	  shorth->F=0;
 	  shorth->L=sdu_length;
-	  shorth->E=1;
+	  shorth->E=0;
 	  shorth->LCID=3;
 	  shorth->SRC07=0x12;
 	  shorth->SRC815=0x34;
@@ -2777,7 +2795,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 	  longh->F=1;
 	  longh->L_LSB=sdu_length&0xff;
 	  longh->L_MSB=(sdu_length>>8)&0x7f;
-	  longh->E=1;
+	  longh->E=0;
 	  longh->LCID=3;
 	  longh->SRC07=0x12;
 	  longh->SRC815=0x34;
