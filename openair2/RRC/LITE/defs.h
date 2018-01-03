@@ -47,7 +47,7 @@
 
 #include "LAYER2/MAC/defs.h"
 
-//TTN-for D2D
+//for D2D
 #define CONTROL_SOCKET_PORT_NO 8888
 #define DEBUG_CTRL_SOCKET
 #define BUFSIZE 1024
@@ -58,8 +58,8 @@
 #define UE_IP_PDCP_NETLINK_ID 31
 #define PDCP_PID 1
 #define NETLINK_HEADER_SIZE 16
-#define SL_DEFAULT_RAB_ID     1
-#define SLRB_ID              11
+#define SL_DEFAULT_RAB_ID     3
+#define SLRB_ID              3
 
 #define MAX_PAYLOAD 1024 /* maximum payload size*/
 
@@ -130,7 +130,7 @@ extern pthread_mutex_t slrb_mutex;
 //the thread function
 void *send_UE_status_notification(void *);
 
-//end TTN
+
 
 //#include "COMMON/openair_defs.h"
 #ifndef USER_MODE

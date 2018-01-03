@@ -91,17 +91,13 @@
 #ifdef Rel14
 #include "SL-Preconfiguration-r12.h"
 
-#endif
-
-//TTN - for D2D
-#define D2D_MODE //enable d2d
+//for D2D
 int ctrl_sock_fd;
 #define BUFSIZE 1024
 struct sockaddr_in prose_app_addr;
 int slrb_id;
 pthread_mutex_t slrb_mutex;
-static void *rrc_control_socket_thread_fct(void *arg);
-//end TTN
+#endif
 
 #ifdef PHY_EMUL
 extern EMULATION_VARS *Emul_vars;
@@ -5305,7 +5301,7 @@ rrc_ue_process_sidelink_radioResourceConfig(
    }
 }
 
-#ifdef D2D_MODE
+#ifdef Rel14
 //-----------------------------------------------------------
 void
 rrc_control_socket_init(){
@@ -5450,6 +5446,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] group IP Address: " IPV4_ADDR "\n",IPV4_ADDR_FORMAT(sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupIpAddress));
 #endif
          // configure lower layers PDCP/MAC/PHY for this communication
+         //init_SL_preconfig()
 
          LOG_I(RRC,"[rrc_control_socket_thread_fct]Send GroupCommunicationEstablishResp to ProSe App\n");
          memset(send_buf, 0, BUFSIZE);

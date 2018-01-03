@@ -352,7 +352,10 @@ SL_DiscConfig_r12_t rrc_eNB_get_sidelink_discTXPool(
       int n_discoveryMessages
 );
 
-
+/** \brief Process request from control socket
+ *  \param arg
+ */
+static void *rrc_control_socket_thread_fct(void *arg);
 
 //L2_interface.c
 int8_t

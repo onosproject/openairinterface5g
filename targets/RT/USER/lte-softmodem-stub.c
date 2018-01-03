@@ -1064,7 +1064,7 @@ int main( int argc, char **argv )
 #endif
 
 //TTN for D2D
-#ifdef D2D_MODE
+#ifdef Rel14
   printf ("RRC control socket\n");
   rrc_control_socket_init();
 #endif
