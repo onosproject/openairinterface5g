@@ -741,6 +741,31 @@ void ue_send_mch_sdu(module_id_t module_idP, uint8_t CC_id, frame_t frameP, uint
 #endif
 }
 
+
+void ue_send_sl_sdu(module_id_t module_idP,
+		    uint8_t CC_id,
+		    frame_t frameP,
+		    sub_frame_t subframeP,
+		    uint8_t* sdu,
+		    uint16_t sdu_len,
+		    uint8_t eNB_index
+		    ) {
+
+  mac_rlc_data_ind(
+		   module_idP,
+		   0x1234,
+		   eNB_index,
+		   frameP,
+		   ENB_FLAG_NO,
+		   MBMS_FLAG_NO,
+		   3,
+		   (char *)sdu,
+		   sdu_len,
+		   1,
+		   NULL);
+}
+
+
 int8_t ue_get_mbsfn_sf_alloction (module_id_t module_idP, uint8_t mbsfn_sync_area, unsigned char eNB_index)
 {
   // currently there is one-to-one mapping between sf allocation pattern and sync area

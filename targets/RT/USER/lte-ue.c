@@ -760,7 +760,8 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
   PHY_VARS_UE *UE;
   UE = PHY_vars_UE_g[0][0];
 
-  LOG_I(PHY,"Received %d bytes on UE-UE link, packet type %d\n",num_bytes,((UE_tport_header_t*)rx_buffer)->packet_type);
+  UE_tport_t *pdu = (UE_tport_t*)rx_buffer;
+  SLSCH_t *slsch = (SLSCH_t*)&pdu->slsch;
 
   switch (((UE_tport_header_t*)rx_buffer)->packet_type) {
   case TTI_SYNC:
@@ -768,6 +769,23 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
     wakeup_thread(&UE->timer_mutex,&UE->timer_cond,&UE->instance_cnt_timer,"timer_thread");
     break;
   case SLSCH:
+    
+    
+    LOG_I(PHY,"Emulator SFN.SF %d.%d, Got SLSCH packet\n",emulator_absSF/10,emulator_absSF%10);
+    LOG_I(PHY,"Received %d bytes on UE-UE link for SFN.SF %d.%d, sending SLSCH payload (%d bytes) to MAC\n",num_bytes,
+	  pdu->header.absSF/10,pdu->header.absSF%10,
+	  slsch->payload_length);
+    printf("SLSCH:");
+    for (int i=0;i<sizeof(SLSCH_t);i++) printf("%x ",((uint8_t*)slsch)[i]);
+    printf("\n");
+    
+    ue_send_sl_sdu(0,
+		   0,
+		   pdu->header.absSF/10,
+		   pdu->header.absSF%10,
+		   pdu->payload,
+		   slsch->payload_length,
+		   0);
     break;
   }
 }
@@ -1498,6 +1516,7 @@ static void* timer_thread( void* param ) {
     timer_subframe = absSFm1%10;
     pthread_mutex_lock(&UE->timer_mutex);
     UE->instance_cnt_timer = -1;
+    pthread_mutex_unlock(&UE->timer_mutex);
     LOG_I(PHY,"Running with external timer\n");
   }
   else LOG_I(PHY,"Running with internal timer\n");
@@ -1514,7 +1533,7 @@ static void* timer_thread( void* param ) {
       timer_subframe++;
     }
     //printf("[timer_thread] Frame: %d, Subframe: %d \n", timer_frame, timer_subframe);
-    LOG_D(MAC," Panos-D [timer_thread] Frame: %d, Subframe: %d \n", timer_frame, timer_subframe);
+    //LOG_I(MAC," Panos-D [timer_thread] Frame: %d, Subframe: %d \n", timer_frame, timer_subframe);
     //AssertFatal( 0 == pthread_cond_signal(&phy_stub_ticking->cond_ticking), "");
     AssertFatal(pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) ==0,"");
     phy_stub_ticking->ticking_var++;
@@ -1544,7 +1563,7 @@ static void* timer_thread( void* param ) {
 				sizeof(UE_tport_header_t));
     
     }
-    else { 
+    else {
       wait_on_condition(&UE->timer_mutex,&UE->timer_cond,&UE->instance_cnt_timer,"timer_thread");
       release_thread(&UE->timer_mutex,&UE->instance_cnt_timer,"timer_thread");
     }
@@ -1587,7 +1606,11 @@ static void* timer_thread( void* param ) {
 }
 
 int init_timer_thread(void) {
+  PHY_VARS_UE *UE=PHY_vars_UE_g[0];
   phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
+  pthread_mutex_init(&UE->timer_mutex,NULL);
+  pthread_mutex_init(&UE->timer_cond,NULL);
+  UE->instance_cnt_timer = -1;
   pthread_mutex_init(&phy_stub_ticking->mutex_ticking,NULL);
   pthread_cond_init(&phy_stub_ticking->cond_ticking,NULL);
   pthread_create(&phy_stub_ticking->pthread_timer, NULL, &timer_thread, NULL);
