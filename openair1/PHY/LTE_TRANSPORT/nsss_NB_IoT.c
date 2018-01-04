@@ -135,4 +135,11 @@ int generate_sss_NB_IoT(int32_t 				**txdataF,
   return(0);
 }
 
+// int rx_nsss_NB_IoT(PHY_VARS_UE_NB_IoT *ue)
+// {
+// 	uint8_t Nid2 = ue->common_vars.eNb_id;
+// 	NB_IoT_DL_FRAME_PARMS *frame_parms=&ue->frame_parms;
+
+// 	return(0); 
+// }
 
