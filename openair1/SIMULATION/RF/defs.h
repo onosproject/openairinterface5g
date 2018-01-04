@@ -63,7 +63,15 @@ void rf_rx_simple(double *r_re[2],
                   unsigned int length,
                   double s_time,
                   double rx_gain_dB);
-
+void rf_rx_simple_freq(double *r_re[2],
+                  double *r_im[2],
+                  unsigned int nb_rx_antennas,
+                  unsigned int length,
+                  double s_time,
+                  double rx_gain_dB,
+		  unsigned int symbols_per_tti,
+		  unsigned int ofdm_symbol_size,
+		  unsigned int n_samples);
 
 void adc(double *r_re[2],
          double *r_im[2],

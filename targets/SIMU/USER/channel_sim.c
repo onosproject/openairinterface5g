@@ -380,7 +380,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 	       uint8_t UE_id,
 	       int CC_id)
 {
-  /*time_stats_t dl_chan_stats_f;
+  time_stats_t dl_chan_stats_f;
   static int first_run=0;
   static double sum;
   static int count;
@@ -390,7 +390,6 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
      sum=0;
      count=0;
   } 
-  count++;*/
   //int32_t att_eNB_id=-1;
   int32_t **txdataF,**rxdataF;
 
@@ -430,8 +429,8 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
   r_re0_f[1] = r_re01_f;
   r_im0_f[1] = r_im01_f;
 
-  //FILE *file1;
-  //file1 = fopen("chsim_chF.m","w");
+  FILE *file1;
+  file1 = fopen("chsim_s_re_im.m","w");
   //printf("chsim thread %d. ue->proc->frame_rx %d, ue->subframe_rx %d, ue->proc->frame_tx %d, ue->subframe_tx %d\n",subframe&0x1,PHY_vars_UE_g[0][0]->proc.proc_rxtx[subframe&0x1].frame_rx,PHY_vars_UE_g[0][0]->proc.proc_rxtx[subframe&0x1].subframe_rx,PHY_vars_UE_g[0][0]->proc.proc_rxtx[subframe&0x1].frame_tx,PHY_vars_UE_g[0][0]->proc.proc_rxtx[subframe&0x1].subframe_tx);
 
 
@@ -490,9 +489,12 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
             subframe);
 #endif
       		//eNB2UE[eNB_id][UE_id]->path_loss_dB = 0;
-                
+                //clock_t start=clock();
       		multipath_channel_freq(eNB2UE[eNB_id][UE_id][CC_id],s_re_f,s_im_f,r_re0_f,r_im0_f,
                         frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,hold_channel,eNB_id,UE_id,CC_id,subframe&0x1);
+       		/*clock_t stop=clock();
+  		printf("multipath_channel DL time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
+  		sum=(sum+stop-start);*/
 			//for (int x=0;x<frame_parms->N_RB_DL*12;x++){
 			//	fprintf(file1,"%d\t%e\t%e\n",x,eNB2UE[eNB_id][UE_id][CC_id]->chF[0][x].x,eNB2UE[eNB_id][UE_id][CC_id]->chF[0][x].y);
 			//}
@@ -543,17 +545,23 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
       LOG_D(OCM,"[SIM][DL] UE %d (CCid %d): rx_gain %d dB (-ADC %f) for subframe %d\n",UE_id,CC_id,PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB,
             PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB-66.227,subframe);
 #endif
-//clock_t start=clock();
-      		rf_rx_simple(r_re0_f,
+		count++;
+		clock_t start=clock();
+      		rf_rx_simple_freq(r_re0_f,
                    		r_im0_f,
                    		nb_antennas_rx,
                    		frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,
                    		1e3/eNB2UE[eNB_id][UE_id][CC_id]->sampling_rate,  // sampling time (ns)
-                   		(double)PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB - 66.227);   // rx_gain (dB) (66.227 = 20*log10(pow2(11)) = gain from the adc that will be applied later)
-  	/*clock_t stop=clock();
-  	printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
-  	sum=(sum+stop-start);*/
-
+                   		(double)PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB - 66.227,   // rx_gain (dB) (66.227 = 20*log10(pow2(11)) = gain from the adc that will be applied later)
+				frame_parms->symbols_per_tti,
+				frame_parms->ofdm_symbol_size,
+				12.0*frame_parms->N_RB_DL);
+  		clock_t stop=clock();
+  		printf("rf_rx DL time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
+  		sum=(sum+stop-start);
+		for (int x=0;x<frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;x++){
+			fprintf(file1,"%d\t%e\t%e\n",x,r_re0_f[0][x],r_im0_f[0][x]);
+		}
 #ifdef DEBUG_SIM
       		rx_pwr = signal_energy_fp(r_re0_f,r_im0_f,
                                 nb_antennas_rx,
