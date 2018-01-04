@@ -3,6 +3,14 @@ SynchREF UE (UE1)
 
 UE1(eth0 - 10.10.10.1)--------UE2(eth0 - 10.10.10.2)
 
+Here's an example of /etc/network/interfaces configuration for UE1
+auto eth0
+   iface eth0 inet static
+   address 10.10.10.1
+   netmask 255.255.255.0
+   gateway 10.10.10.1
+
+
 
 Prepare the environment:
  - git clone https://gitlab.eurecom.fr/matzakos/LTE-D2D.git
