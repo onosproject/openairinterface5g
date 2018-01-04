@@ -1032,6 +1032,11 @@ rrc_ue_process_measConfig(
 			  0,
 			  0
 #endif
+#if defined(Rel14)
+           ,
+           NULL,
+           NULL
+#endif
 			  );
   }
 
@@ -1544,6 +1549,11 @@ rrc_ue_process_radioResourceConfigDedicated(
 				0,
 				0
 #endif
+#if defined(Rel14)
+           ,
+           NULL,
+           NULL
+#endif
 				);
         }
       } else {
@@ -1602,6 +1612,11 @@ rrc_ue_process_radioResourceConfigDedicated(
 				,
 				0,
 				0
+#endif
+#if defined(Rel14)
+           ,
+           NULL,
+           NULL
 #endif
 				);
         }
@@ -1709,6 +1724,11 @@ rrc_ue_process_radioResourceConfigDedicated(
 			      ,
 			      UE_rrc_inst[ue_mod_idP].num_active_cba_groups, //
 			      UE_rrc_inst[ue_mod_idP].cba_rnti[0]
+#endif
+#if defined(Rel14)
+           ,
+           NULL,
+           NULL
 #endif
 			      );
 	
@@ -2292,6 +2312,11 @@ rrc_ue_process_mobilityControlInfo(
 #ifdef CBA
 			,0,
 			0
+#endif
+#if defined(Rel14)
+           ,
+           NULL,
+           NULL
 #endif
 			);
   
@@ -3155,6 +3180,11 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
 			0,
 			0
 #endif
+#if defined(Rel14)
+           ,
+           NULL,
+           NULL
+#endif
 			);
   
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus = 1;
@@ -3834,6 +3864,11 @@ uint64_t arfcn_to_freq(long arfcn) {
 			      ,0,
 			      0
 #endif
+#if defined(Rel14)
+           ,
+           NULL,
+           NULL
+#endif
 			      );
 	// After SI is received, prepare RRCConnectionRequest
 #if defined(Rel10) || defined(Rel14)
@@ -4013,6 +4048,11 @@ uint64_t arfcn_to_freq(long arfcn) {
 #ifdef CBA
 			      ,0,
 			      0
+#endif
+#if defined(Rel14)
+           ,
+           NULL,
+           NULL
 #endif
 			      );
 	break;
@@ -4509,6 +4549,11 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
 			,
 			0,
 			0
+#endif
+#if defined(Rel14)
+           ,
+           NULL,
+           NULL
 #endif
 			);
   
@@ -5373,6 +5418,9 @@ void *rrc_control_socket_thread_fct(void *arg)
    int n; // message byte size
    struct sidelink_ctrl_element *sl_ctrl_msg_recv = NULL;
    struct sidelink_ctrl_element *sl_ctrl_msg_send = NULL;
+   uint32_t sourceL2Id;
+   uint32_t groupL2Id;
+   module_id_t         module_id;
 
 
    //from the main program, listen for the incoming messages from control socket (ProSe App)
@@ -5438,6 +5486,10 @@ void *rrc_control_socket_thread_fct(void *arg)
          break;
 
       case GROUP_COMMUNICATION_ESTABLISH_REQ:
+         sourceL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.sourceL2Id;
+         groupL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupL2Id;
+         //sourceL2Id = 0x123456;
+         //groupL2Id = 0x789ABC;
 #ifdef DEBUG_CTRL_SOCKET
          LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
          LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.type);
@@ -5447,6 +5499,45 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
          // configure lower layers PDCP/MAC/PHY for this communication
          //init_SL_preconfig()
+         //configure MAC with sourceL2Id/groupL2ID (to be used in MAC/ue_procedures.c)
+         module_id = 0 ; //hardcoded for testing only
+         rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
+                (RadioResourceConfigCommonSIB_t *)NULL,
+                (struct PhysicalConfigDedicated *)NULL,
+     #if defined(Rel10) || defined(Rel14)
+                (SCellToAddMod_r10_t *)NULL,
+                //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
+     #endif
+                (MeasObjectToAddMod_t **)NULL,
+                (MAC_MainConfig_t *)NULL,
+                0,
+                (struct LogicalChannelConfig *)NULL,
+                (MeasGapConfig_t *)NULL,
+                (TDD_Config_t *)NULL,
+                (MobilityControlInfo_t *)NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+     #if defined(Rel10) || defined(Rel14)
+                ,0,
+                (MBSFN_AreaInfoList_r9_t *)NULL,
+                (PMCH_InfoList_r9_t *)NULL
+
+     #endif
+     #ifdef CBA
+                ,
+                0,
+                0
+     #endif
+     #if defined(Rel10) || defined(Rel14)
+                ,
+                &sourceL2Id,
+                &groupL2Id
+     #endif
+                );
 
          LOG_I(RRC,"[rrc_control_socket_thread_fct]Send GroupCommunicationEstablishResp to ProSe App\n");
          memset(send_buf, 0, BUFSIZE);

@@ -929,6 +929,11 @@ int rrc_mac_config_req_ue(module_id_t     module_idP,
 			  uint8_t num_active_cba_groups,
 			  uint16_t cba_rnti
 #endif
+#if defined(Rel14)
+           ,
+           uint32_t *sourceL2Id,
+           uint32_t *groupL2Id
+#endif
 			  );
 
 uint16_t getRIV(uint16_t N_RB_DL,uint16_t RBstart,uint16_t Lcrbs);

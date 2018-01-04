@@ -1325,6 +1325,13 @@ typedef struct {
   struct SL_DiscConfig_r12	*sl_DiscConfig_r12;
   /// Dedicated TX config for Sidelink
   struct SL_CommConfig_r12	*sl_CommConfig_r12;
+  //SL sourceL2ID
+  uint32_t sourceL2Id;
+  //SL groupL2Id
+  uint32_t groupL2Id;
+  //SL destinationL2Id
+  uint32_t destinationL2Id;
+
 #endif
   /// pointer to TDD Configuration (NULL for FDD)
   TDD_Config_t *tdd_Config;

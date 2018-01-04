@@ -753,6 +753,8 @@ void ue_send_sl_sdu(module_id_t module_idP,
 
   int rlc_sdu_len;
   char *rlc_sdu;
+  uint32_t sourceL2Id;
+  uint32_t destinationL2Id =0x00000000;
 
   // Notes: 1. no control elements are supported yet
   //        2. we exit with error if LCID != 3
@@ -761,6 +763,16 @@ void ue_send_sl_sdu(module_id_t module_idP,
   SLSCH_SUBHEADER_24_Bit_DST_LONG *longh = (SLSCH_SUBHEADER_24_Bit_DST_LONG *)sdu;
   AssertFatal(longh->E==0,"E is non-zero\n");
   AssertFatal(longh->LCID==3,"LCID is %d (not 3)\n",longh->LCID);
+  //filter incoming packet based on destination address
+  destinationL2Id = (longh->DST07<<16) | (longh->DST815 <<8) | (longh->DST1623);
+  LOG_I( MAC, "[DestinationL2Id:  %"PRIu32"]  \n", destinationL2Id );
+  //match the destinationL2Id with UE L2Id or groupL2ID
+  if (!((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) | (destinationL2Id == UE_mac_inst[module_idP].groupL2Id))){
+     LOG_I( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
+     return;
+  }
+  //AssertFatal(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) | (destinationL2Id == UE_mac_inst[module_idP].groupL2Id)), "Destination Id is neither matched with Source Id nor with Group Id \n")
+
   if (longh->F==1) {
     rlc_sdu_len = ((longh->L_MSB<<8)&0x7F00)|(longh->L_LSB&0xFF);
     rlc_sdu = sdu+sizeof(SLSCH_SUBHEADER_24_Bit_DST_LONG);
@@ -2773,7 +2785,11 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
       //        2. LCID hard-coded to 3
       //        3. SRC/DST IDs with debug values
       if (sdu_length > 0) {
+
 	LOG_I(MAC,"SFN.SF %d.%d : got %d bytes from Sidelink buffer (%d requested)\n",frameP,subframeP,sdu_length,req);
+	LOG_I(MAC,"sourceL2Id %d: \n",ue->sourceL2Id);
+	LOG_I(MAC,"groupL2Id %d: \n",ue->groupL2Id);
+
 	slsch->payload = (unsigned char*)ue->slsch_pdu.payload;
 	if (sdu_length < 128) { 
 	  slsch->payload++;
@@ -2782,12 +2798,20 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 	  shorth->L=sdu_length;
 	  shorth->E=0;
 	  shorth->LCID=3;
-	  shorth->SRC07=0x12;
-	  shorth->SRC815=0x34;
+	  /* shorth->SRC07=0x12;
 	  shorth->SRC1623=0x56;
+	  shorth->SRC815=0x34;
 	  shorth->DST07=0x78;
 	  shorth->DST815=0x9A;
-	  shorth->DST1623=0xBC;
+	  shorth->DST1623=0xBC;*/
+
+	  shorth->SRC07 = (ue->sourceL2Id>>16) & 0x000000ff;
+	  shorth->SRC815 = (ue->sourceL2Id>>8) & 0x000000ff;
+	  shorth->SRC1623 = ue->sourceL2Id & 0x000000ff;
+     shorth->DST07 = (ue->groupL2Id >>16) & 0x000000ff;
+     shorth->DST815 = (ue->groupL2Id>>8) & 0x000000ff;
+	  shorth->DST1623 = ue->groupL2Id & 0x000000ff;
+
 	  shorth->V=0x1;
 	}
 	else {
@@ -2797,12 +2821,21 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 	  longh->L_MSB=(sdu_length>>8)&0x7f;
 	  longh->E=0;
 	  longh->LCID=3;
+	  /*
 	  longh->SRC07=0x12;
 	  longh->SRC815=0x34;
 	  longh->SRC1623=0x56;
 	  longh->DST07=0x78;
 	  longh->DST815=0x9A;
 	  longh->DST1623=0xBC;
+	  */
+	  longh->SRC07 = (ue->sourceL2Id >>16) & 0x000000ff;
+	  longh->SRC815 = (ue->sourceL2Id>>8) & 0x000000ff;
+	  longh->SRC1623 = ue->sourceL2Id & 0x000000ff;
+	  longh->DST07 = (ue->groupL2Id >>16) & 0x000000ff;
+	  longh->DST815 = (ue->groupL2Id>>8) & 0x000000ff;
+	  longh->DST1623 = ue->groupL2Id & 0x000000ff;
+
 	  longh->V=0x1;
 	}
 	slsch->rvidx   = 0;

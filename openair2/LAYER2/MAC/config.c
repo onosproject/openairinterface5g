@@ -65,6 +65,7 @@ extern void phy_reset_ue(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
 
 extern uint8_t nfapi_mode;
 
+
 /* sec 5.9, 36.321: MAC Reset Procedure */
 void ue_mac_reset(module_id_t module_idP,uint8_t eNB_index)
 {
@@ -1046,6 +1047,11 @@ rrc_mac_config_req_ue(
   ,uint8_t                              num_active_cba_groups,
   uint16_t                              cba_rnti
 #endif
+#if defined(Rel14)
+  ,uint32_t                        *sourceL2Id,
+  uint32_t                         *groupL2Id
+#endif
+
                       )
 {
 
@@ -1363,6 +1369,13 @@ rrc_mac_config_req_ue(
 
   // Panos: Call to the phy_config_request_ue() function of the interface to copy the UE_PHY_Config_t interface
   // configuration to the PHY common and dedicated configuration originating from RRC.
+//for D2D
+#if defined(Rel10) || defined(Rel14)
+  if ( sourceL2Id && groupL2Id) {
+     UE_mac_inst[Mod_idP].sourceL2Id = *sourceL2Id;
+     UE_mac_inst[Mod_idP].groupL2Id = *groupL2Id;
+  }
+#endif
 
   return(0);
 }

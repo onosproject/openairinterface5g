@@ -10,8 +10,6 @@ auto eth0
    netmask 255.255.255.0
    gateway 10.10.10.1
 
-
-
 Prepare the environment:
  - git clone https://gitlab.eurecom.fr/matzakos/LTE-D2D.git
 This branch contains all the current development for DDPS
