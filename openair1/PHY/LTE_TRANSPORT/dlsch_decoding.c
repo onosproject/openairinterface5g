@@ -37,16 +37,18 @@
 #include "SCHED/extern.h"
 #include "SIMULATION/TOOLS/defs.h"
 #include "targets/RT/USER/lte-softmodem.h"
+#include "PHY/CODING/nrLDPC_decoder.h"
 #include "PHY/CODING/nrLDPC_types.h"
 //#define DEBUG_DLSCH_DECODING
+//#define TD_DECODING
 
 #define OAI_LDPC_MAX_NUM_LLR 26112 // NR_LDPC_NCOL_BG1*NR_LDPC_ZMAX
 
 static int8_t llrRes    [OAI_LDPC_MAX_NUM_LLR] __attribute__ ((aligned(32)));
 static int8_t llrProcBuf[OAI_LDPC_MAX_NUM_LLR] __attribute__ ((aligned(32)));
 
-//__m128i* p_llrRes;
-//__m128i* p_llrRes    = (__m128i*) &llrRes   [0];
+static uint8_t ullrProcBuf[OAI_LDPC_MAX_NUM_LLR] __attribute__ ((aligned(32)));
+
 
 extern double cpuf;
 
@@ -193,22 +195,20 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   uint8_t crc_type;
   t_nrLDPC_dec_params decParams;
   t_nrLDPC_dec_params* p_decParams = &decParams;
-  int8_t llrOut_inter;
-  int8_t* p_llrOut_inter = &llrOut_inter;
-  __m256i ymm0, ymm1, ymmRes0, ymmRes1;
+  t_nrLDPC_time_stats procTime;
+  t_nrLDPC_time_stats* p_procTime =&procTime ;
+  int16_t z [68*128];
+  int8_t l [68*128];
+  //__m128i l;
 
-  	  	t_nrLDPC_time_stats procTime;
-  	  	t_nrLDPC_time_stats* p_procTime =&procTime ;
-        /*p_procTime->llr2llrProcBuf = 0.0;
-        p_procTime->llr2CnProcBuf= 0.0;
-        p_procTime->cnProc= 0.0;
-        p_procTime->bnProcPc=0.0;
-        p_procTime->bnProc=0.0;
-        p_procTime->cn2bnProcBuf=0.0;
-        p_procTime->bn2cnProcBuf=0.0;
-        p_procTime->llrRes2llrOut=0.0;
-        p_procTime->llr2bit=0.0;
-        p_procTime->total=0.0;*/
+  uint32_t i,j;
+  uint32_t k;
+
+  __m128i *pv = (__m128i*)&z;
+  __m128i *pl = (__m128i*)&l;
+
+
+
 #ifdef DEBUG_DLSCH_DECODING
   uint16_t i;
 #endif
@@ -346,10 +346,12 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 
   }
 
-  	  	  p_decParams->Z = 128;
-          p_decParams->BG = 2;
-          p_decParams->R = 13;
-          p_decParams->numMaxIter = 5;
+  	  p_decParams->Z = 128;
+      p_decParams->BG = 1;
+      p_decParams->R = 13;
+      p_decParams->numMaxIter = 2;
+      Kr = p_decParams->Z*22;
+      p_decParams->outMode= 0;
 
   /*
   else {
@@ -533,8 +535,23 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
         start_meas(dlsch_turbo_decoding_stats);
 #endif
       LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
-//if (decoder_switch ==0){
-      /*ret = tc
+
+      printf("harq process dr \n");
+
+      for (int cnt =0; cnt < 66*p_decParams->Z; cnt++){
+      printf("%d \n", harq_process->d[r][96+cnt]);
+      }
+
+      printf(" \n");
+
+      /*printf("end dr \n");
+      for (int cnt =(50*p_decParams->Z-16) ; cnt < 50*p_decParams->Z; cnt++){
+            printf("%d ", harq_process->d[r][96+cnt]);
+            }
+      printf(" \n");*/
+
+#ifdef TD_DECODING
+      ret = tc
             (&harq_process->d[r][96],
              harq_process->c[r],
              Kr,
@@ -549,36 +566,33 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
              &phy_vars_ue->dlsch_tc_gamma_stats,
              &phy_vars_ue->dlsch_tc_ext_stats,
              &phy_vars_ue->dlsch_tc_intl1_stats,
-             &phy_vars_ue->dlsch_tc_intl2_stats);*/
+             &phy_vars_ue->dlsch_tc_intl2_stats);
               //(is_crnti==0)?harq_pid:harq_pid+1);
 
-//}
-//else{
+#else
 
+		memset(pv,0,2*p_decParams->Z*sizeof(int16_t));
+        //memset(pl,0,2*p_decParams->Z*sizeof(int8_t));
 
-	/*nrLDPC_decoder(p_decParams,
-    		  	  	 &harq_process->d[r][96],
-					 harq_process->c[r],
-					 p_procTime);}
-					 */
+      	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
+      	{
+      		pv[i]= _mm_loadu_si128((__m128i*)&harq_process->d[r][96+8*j]);
+      	}
 
-	//__m256i *m11_128
-	//llrRes       = &harq_process->d[r][96];
+		for (i=0, j=0; j < (68*p_decParams->Z/16);  i+=2, j++)
+      	      	{
+      				//printf("mm packs i %d j %d\n", i, j);
+      				//print128_num(pv[i]);
+      				//print128_num(pv[i+1]);
+      	      		pl[j] = _mm_packs_epi16(pv[i],pv[i+1]);
+      	      		//print128_num2bytes(pl[j]);
+      	      	}
 
-	printf("start LDPC decoder\n");
-    /*nrLDPC_decoder(p_decParams,
-    		llrRes,
-			llrProcBuf,
-					 p_procTime);*/
-    //harq_process->c[r] = (uint8_t *) p_llrOut_inter;
-	printf("harq process dr %d @dr %d llrRes %d \n",harq_process->d[r][96], &harq_process->d[r][96], llrRes);
-
-    nrLDPC_decoder(p_decParams,
-    		&harq_process->d[r][96],
-    	//	llrRes,
-			harq_process->c[r],
-    		p_procTime);
-//}
+		nrLDPC_decoder(p_decParams,
+      			&pl[0],
+				llrProcBuf,
+          		p_procTime);
+#endif
 
 
 #if UE_TIMING_TRACE
