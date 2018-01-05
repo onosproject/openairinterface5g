@@ -53,9 +53,9 @@ int32_t nr_segmentation(unsigned char *input_buffer,
       *C=*C+1;
 
     Bprime = B+((*C)*L);
-#ifdef DEBUG_SEGMENTATION
+//#ifdef DEBUG_SEGMENTATION
     printf("Bprime %d\n",Bprime);
-#endif
+//#endif
   }
 
   if ((*C)>MAX_NUM_DLSCH_SEGMENTS) {
@@ -65,7 +65,7 @@ int32_t nr_segmentation(unsigned char *input_buffer,
 
   // Find K+
   Bprime_by_C = Bprime/(*C);
-  if (Bprime <=192) {
+  /*if (Bprime <=192) {
 	  Kb = 6;
   } else if (Bprime <=560) {
 	  Kb = 8;
@@ -73,11 +73,17 @@ int32_t nr_segmentation(unsigned char *input_buffer,
 	  Kb = 9;
   } else if (Bprime <=3840) {
 	  Kb = 10;;
-  } else {
+  } else {*/
 	  Kb = 22;
-  }
+  //}
 
+
+if ((Bprime_by_C%Kb) > 0)
   Z  = (Bprime_by_C/Kb)+1;
+else
+	Z = (Bprime_by_C/Kb);
+
+  printf("nr segmetation B %d Bprime %d Bprime_by_C %d z %d \n", B, Bprime, Bprime_by_C, Z);
 	  
   if (Z <= 2) {
     *Kplus = 2;
@@ -106,9 +112,9 @@ int32_t nr_segmentation(unsigned char *input_buffer,
     if (*Kplus < Z)
       *Kplus = *Kplus + 8;
 
-#ifdef DEBUG_SEGMENTATION
+//#ifdef DEBUG_SEGMENTATION
     printf("Z_by_C %d , Kplus2 %d\n",Z,*Kplus);
-#endif
+//#endif
     *Kminus = (*Kplus - 8);
   } else if (Z <= 256) { // increase by 4 bytes til here
       *Kplus = (Z>>4)<<4;
@@ -128,13 +134,14 @@ int32_t nr_segmentation(unsigned char *input_buffer,
     //msg("nr_segmentation.c: Illegal codeword size !!!\n");
     return(-1);
   }
-  
+  *Zout = *Kplus;
   *Kplus = *Kplus*Kb;
   *Kminus = *Kminus*Kb;
-  *Zout = Z;
+
   
 
   *F = ((*C)*(*Kplus) - (Bprime));
+  printf("final nr seg output Z %d Kplus %d F %d \n", *Zout, *Kplus, *F);
 #ifdef DEBUG_SEGMENTATION
   printf("C %d, Kplus %d, Kminus %d, Bprime_bytes %d, Bprime %d, F %d\n",*C,*Kplus,*Kminus,Bprime>>3,Bprime,*F);
 #endif
@@ -149,10 +156,10 @@ int32_t nr_segmentation(unsigned char *input_buffer,
 
     for (r=0; r<*C; r++) {
 
-      if (r<(B%(*C)))
+      //if (r<(B%(*C)))
         Kprime = *Kplus;
-      else
-        Kprime = *Kminus;
+      //else
+      //  Kprime = *Kminus;
 
       while (k<((Kprime - L)>>3)) {
         output_buffers[r][k] = input_buffer[s];

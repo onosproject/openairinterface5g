@@ -571,7 +571,8 @@ uint32_t crcbit (uint8_t * ,
 int16_t reverseBits(int32_t ,int32_t);
 void phy_viterbi_dot11(int8_t *,uint8_t *,uint16_t);
 
-short *ldpc_decoder(short *msgChannel,short block_length,short No_iteration,double rate);
-short *ldpc_encoder(char *test_input,char* channel_input,short block_length,double rate);
+//short *ldpc_decoder(short *msgChannel,short block_length,short No_iteration,double rate);
+//short *ldpc_encoder(char *test_input,char* channel_input,short block_length,double rate);
+int ldpc_encoder(unsigned char *test_input,unsigned char* channel_input,short block_length,double rate);
 
 #endif

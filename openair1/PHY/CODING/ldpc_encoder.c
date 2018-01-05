@@ -116,11 +116,14 @@ short *choose_generator_matrix(short BG,short Zc)
                 break;
         }
     }
-/*
+
     else if (BG==2)
     {
+       switch (Zc)
+         {
             case 2: Gen_shift_values=(short*) Gen_shift_values_BG2_Z_2;
                 break;
+/*
             case 3: Gen_shift_values=(short*) Gen_shift_values_BG2_Z_3;
                 break;
             case 4: Gen_shift_values=(short*) Gen_shift_values_BG2_Z_4;
@@ -195,8 +198,10 @@ short *choose_generator_matrix(short BG,short Zc)
                 break;
             case 120: Gen_shift_values=(short*) Gen_shift_values_BG2_Z_120;
                 break;
+            */
             case 128: Gen_shift_values=(short*) Gen_shift_values_BG2_Z_128;
                 break;
+            /*
             case 144: Gen_shift_values=(short*) Gen_shift_values_BG2_Z_144;
                 break;
             case 160: Gen_shift_values=(short*) Gen_shift_values_BG2_Z_160;
@@ -221,31 +226,34 @@ short *choose_generator_matrix(short BG,short Zc)
                 break;
             case 384: Gen_shift_values=(short*) Gen_shift_values_BG2_Z_384;
                 break;
-    }
 */
+	}
+    }
+
     return Gen_shift_values;
 }
 
-int ldpc_encoder(char *test_input,char* channel_input,short block_length,double rate)
+int ldpc_encoder(unsigned char *test_input,unsigned char* channel_input,short block_length,double rate)
 	{
-		char c[22*384]; //padded input, unpacked, max size
-		char d[68*384]; //coded output, unpacked, max size 
+		unsigned char c[22*384]; //padded input, unpacked, max size
+		unsigned char d[68*384]; //coded output, unpacked, max size 
+		unsigned char channel_temp,temp;
 		short *Gen_shift_values, *no_shift_values, *pointer_shift_values;
-		short BG,Zc,Kb,nrows,ncols,channel_temp;
-		int i,i1,i2,i3,i4,i5,t,temp,temp_prime;
-		int no_punctured_columns,output_length;  
+		short BG,Zc,Kb,nrows,ncols;
+		int i,i1,i2,i3,i4,i5,t,t1,temp_prime;
+		int no_punctured_columns,removed_bit;  
 
 		//Table of possible lifting sizes
 		short lift_size[51]={2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
 	
 		 //determine number of bits in codeword
-		 if (block_length>3840)
-		   {
+		 //if (block_length>3840)
+		 //  {
 			  BG=1;
 			  Kb = 22;
 			  nrows=46;	//parity check bits
 			  ncols=22;	//info bits
-		   }
+		 /*  }
 		 else if (block_length<=3840)
 		   {
 			  BG=2;
@@ -259,7 +267,7 @@ int ldpc_encoder(char *test_input,char* channel_input,short block_length,double 
 				 Kb = 8;
 			  else
 				 Kb = 6;
-		   }
+		   }*/
 
 		 //find minimum value in all sets of lifting size
 		 for (i1=0; i1 < 51; i1++)
@@ -275,8 +283,8 @@ int ldpc_encoder(char *test_input,char* channel_input,short block_length,double 
 		 // load base graph of generator matrix
 		 if (BG==1)
 		   {
-			  no_shift_values=(short*) no_shift_values_BG1;
-			  pointer_shift_values=(short*) pointer_shift_values_BG1;          
+			no_shift_values=(short*) no_shift_values_BG1;
+			pointer_shift_values=(short*) pointer_shift_values_BG1;          
 		   }
 
 		 else if (BG==2)
@@ -286,15 +294,22 @@ int ldpc_encoder(char *test_input,char* channel_input,short block_length,double 
 			   
 		   }
 		 Gen_shift_values=choose_generator_matrix(BG,Zc);
+
 		 no_punctured_columns=(int)((nrows+Kb-2)*Zc-block_length/rate)/Zc; 
+		 removed_bit=(Kb+nrows-no_punctured_columns-2) * Zc-(int)(block_length/rate);
 		//printf("%d\n",no_punctured_columns);
 
-		 output_length = (Kb+nrows-no_punctured_columns) * Zc;
+		 //output_length = (Kb+nrows-no_punctured_columns) * Zc;
 		
 		 // unpack input
+	        memset(c,0,sizeof(unsigned char) * Kb * Zc);
 		for (i=0;i<block_length;i++) 
-		  c[i] = (test_input[i/8]>>(i%8))&1;
-		
+		  {
+		     //c[i] = test_input[i/8]<<(i%8);
+               //      c[i]=c[i]>>7&1;
+                     c[i]=(test_input[i/8]&(1<<(i&7)))>>(i&7);
+		  }		
+
 		// parity check part
 		 for (i2=0; i2 < Zc; i2++)
 		   {
@@ -303,7 +318,7 @@ int ldpc_encoder(char *test_input,char* channel_input,short block_length,double 
 		  for (i5=0; i5 < Kb; i5++)
 			{
 			   temp = c[i5*Zc];
-			   memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(short));
+			   memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
 			   c[i5*Zc+Zc-1] = temp;           
 			}   
 			 
@@ -321,17 +336,31 @@ int ldpc_encoder(char *test_input,char* channel_input,short block_length,double 
 					 }
 
 			   d[t+i1*Zc]=channel_temp;
-			
+			   //channel_input[t+i1*Zc]=channel_temp;
 			   }
 		   }
 
 		// information part
-		memcpy(d,c,Kb*Zc*sizeof(short));
+		memcpy(d,c,Kb*Zc*sizeof(unsigned char));
 
+		// puncture columns
+		for (i = 2*Zc,t1=0; i < (Kb+nrows-no_punctured_columns) * Zc-removed_bit; i++) 
+		  {
+		     channel_input[t1]=d[i];
+		     t1++;
+		  }
+
+		//memcpy(channel_input,c,Kb*Zc*sizeof(unsigned char));
+/*
 		//pack into output
-		memset(channel_input,0,output_length/8*sizeof(char));
+		memset(channel_input,0,output_length/8*sizeof(unsigned char));
 		for (i=0;i<output_length;i++)
-		  channel_input[i/8] = channel_input[i/8] | (d[i] << (i%8));
-		
+		  {
+//printf("[%d]=%d\n",i,d[i]);
+		      d[i]=d[i] << 7;            
+                      channel_input[i/8] = channel_input[i/8] | (d[i] >> (i%8));
+		  }
+*/
+
 		return 0;
 	}
