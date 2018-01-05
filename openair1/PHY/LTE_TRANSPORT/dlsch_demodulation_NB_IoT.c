@@ -4071,7 +4071,7 @@ unsigned short dlsch_extract_rbs_single_NB_IoT(int **rxdataF,
   int             *dl_ch0,*dl_ch0_ext,*rxF,*rxF_ext;
   unsigned short  UL_RB_ID_NB_IoT; // index of the NB-IoT RB
   uint8_t         id_offset; // offset of pilot position in symbols: 0,1,2 
-
+  unsigned short  NB_IoT_start,bandwidth_even_odd;      // Index of the first RE in the RB dedicated for NB-IoT, bandwidth_even_odd = 0 even 1 odd
   unsigned char symbol_mod,crs_pilots=0,j=0,poffset=0; 
   unsigned char nrs_pilots=0,nrs_offset=0; // nrs_pilots: flag of presence of pilot, nrs_offset: offset from first subcarrier
 
@@ -4110,117 +4110,117 @@ unsigned short dlsch_extract_rbs_single_NB_IoT(int **rxdataF,
 
     rxF_ext   = &rxdataF_ext[aarx][symbol*(frame_parms->N_RB_DL*12)];
     
+    bandwidth_even_odd = frame_parms->N_RB_DL % 2;     // 0 for even, 1 for odd
 
-    // if ((frame_parms->N_RB_DL&1) == 0)  // even number of RBs
+    if(UL_RB_ID_NB_IoT <= (frame_parms->N_RB_DL>>1))
+    { // RB in first half (below DC)
+      NB_IoT_start = UL_RB_ID_NB_IoT*12 + frame_parms->first_carrier_offset;
+    } else { // RB in the second half (above DC): DC is taken into account
+      NB_IoT_start = 1 + bandwidth_even_odd*6 + 6*(2*UL_RB_ID_NB_IoT - (frame_parms->N_RB_DL+bandwidth_even_odd));  
+    }
 
-      for (rb=0;rb<1;rb++) {
+    for (rb=0;rb<1;rb++) {
 
-        // if (rb < 32)
-          rb_alloc_ind = (rb_alloc[0]>>rb) & 1;
-        // else if (rb < 64)
-        //   rb_alloc_ind = (rb_alloc[1]>>(rb-32)) & 1;
-        // else if (rb < 96)
-        //   rb_alloc_ind = (rb_alloc[2]>>(rb-64)) & 1;
-        // else if (rb < 100)
-        //   rb_alloc_ind = (rb_alloc[3]>>(rb-96)) & 1;
-        // else
-        //   rb_alloc_ind = 0;
+      // if (rb < 32)
+        rb_alloc_ind = (rb_alloc[0]>>rb) & 1;
+      // else if (rb < 64)
+      //   rb_alloc_ind = (rb_alloc[1]>>(rb-32)) & 1;
+      // else if (rb < 96)
+      //   rb_alloc_ind = (rb_alloc[2]>>(rb-64)) & 1;
+      // else if (rb < 100)
+      //   rb_alloc_ind = (rb_alloc[3]>>(rb-96)) & 1;
+      // else
+      //   rb_alloc_ind = 0;
 
-        if (rb_alloc_ind == 1)
-          nb_rb++;
-        
-        // if (rb==(frame_parms->N_RB_DL>>1)) {
-        if (UL_RB_ID_NB_IoT <= (frame_parms->N_RB_DL>>1)) { // NB-IoT RB is in the first half 
-          rxF       = &rxdataF[aarx][(UL_RB_ID_NB_IoT*12 + frame_parms->first_carrier_offset + (symbol*(frame_parms->ofdm_symbol_size)))];
-        }// For second half of RBs skip DC carrier
-        else{ // NB-IoT RB is in the second half 
-          rxF       = &rxdataF[aarx][(1 + 6*(2*UL_RB_ID_NB_IoT - frame_parms->N_RB_DL) + (symbol*(frame_parms->ofdm_symbol_size)))];
-          //dl_ch0++;
-        }
+      if (rb_alloc_ind == 1)
+        nb_rb++;
+      
+        rxF       = &rxdataF[aarx][NB_IoT_start + (symbol*(frame_parms->ofdm_symbol_size))];
 
-        // // PBCH
-        // if (subframe==0) {
-        //   rb_alloc_ind = 0;
-        // }
 
-        //NSSS subframe
-        if (subframe==9 && frame%2==0) {
-          rb_alloc_ind = 0;
-        }
+      // // PBCH
+      // if (subframe==0) {
+      //   rb_alloc_ind = 0;
+      // }
 
-        //NPSS subframe
-        if (subframe==5) {
-          rb_alloc_ind = 0;
-        }
+      //NSSS subframe
+      if (subframe==9 && frame%2==0) {
+        rb_alloc_ind = 0;
+      }
 
-        // if ((frame_parms->frame_type == TDD) &&
-        //     (subframe==6)) { //TDD Subframe 6
-        //   if ((rb>=((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb) ) {
-        //     rb_alloc_ind = 0;
-        //   }
-        // }
+      //NPSS subframe
+      if (subframe==5) {
+        rb_alloc_ind = 0;
+      }
 
-        if (rb_alloc_ind==1) { // If subframe not including NPSS, NSSS
-          *pmi_ext = (pmi>>((rb>>2)<<1))&3;
-          memcpy(dl_ch0_ext,dl_ch0,12*sizeof(int));
+      // if ((frame_parms->frame_type == TDD) &&
+      //     (subframe==6)) { //TDD Subframe 6
+      //   if ((rb>=((frame_parms->N_RB_DL>>1)-3)) && (rb<((frame_parms->N_RB_DL>>1)+3)) && (l==pss_symb) ) {
+      //     rb_alloc_ind = 0;
+      //   }
+      // }
 
-          /*
-            printf("rb %d\n",rb);
-            for (i=0;i<12;i++)
-            printf("(%d %d)",((short *)dl_ch0)[i<<1],((short*)dl_ch0)[1+(i<<1)]);
-            printf("\n");
-          */
-          if (crs_pilots==0 && nrs_pilots==0) {
-            for (i=0; i<12; i++) {
-              rxF_ext[i]=rxF[i];
-              /*
-                printf("%d : (%d,%d)\n",(rxF+i-&rxdataF[aarx][( (symbol*(frame_parms->ofdm_symbol_size)))]),
-                ((short*)&rxF[i])[0],((short*)&rxF[i])[1]);*/
-            }
+      if (rb_alloc_ind==1) { // If subframe not including NPSS, NSSS
+        *pmi_ext = (pmi>>((rb>>2)<<1))&3;
+        memcpy(dl_ch0_ext,dl_ch0,12*sizeof(int));
 
-            dl_ch0_ext+=12;
-            rxF_ext+=12;
-          } 
-          else if (crs_pilots==1 && nrs_pilots==0) {
-            j=0;
-
-            for (i=0; i<12; i++) {
-              if ((i!=(frame_parms->nushift+poffset)) &&
-                  (i!=((frame_parms->nushift+poffset+6)%12))) {
-                rxF_ext[j]=rxF[i];
-                //            printf("extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j],*(1+(short*)&rxF_ext[j]));
-                dl_ch0_ext[j++]=dl_ch0[i];
-
-              }
-            }
-
-            dl_ch0_ext+=10;
-            rxF_ext+=10;
-          }
-          else if (crs_pilots==0 && nrs_pilots==1) {
-            j=0;
-
-            for (i=0; i<12; i++) {
-              if ((i!=(id_offset+nrs_offset)) &&
-                  (i!=((id_offset+nrs_offset+6)%12))) {
-                rxF_ext[j]=rxF[i];
-                //            printf("extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j],*(1+(short*)&rxF_ext[j]));
-                dl_ch0_ext[j++]=dl_ch0[i];
-
-              }
-            }
-
-            dl_ch0_ext+=10;
-            rxF_ext+=10;
+        /*
+          printf("rb %d\n",rb);
+          for (i=0;i<12;i++)
+          printf("(%d %d)",((short *)dl_ch0)[i<<1],((short*)dl_ch0)[1+(i<<1)]);
+          printf("\n");
+        */
+        if (crs_pilots==0 && nrs_pilots==0) {
+          for (i=0; i<12; i++) {
+            rxF_ext[i]=rxF[i];
+            /*
+              printf("%d : (%d,%d)\n",(rxF+i-&rxdataF[aarx][( (symbol*(frame_parms->ofdm_symbol_size)))]),
+              ((short*)&rxF[i])[0],((short*)&rxF[i])[1]);*/
           }
 
+          dl_ch0_ext+=12;
+          rxF_ext+=12;
+        } 
+        else if (crs_pilots==1 && nrs_pilots==0) {
+          j=0;
 
+          for (i=0; i<12; i++) {
+            if ((i!=(frame_parms->nushift+poffset)) &&
+                (i!=((frame_parms->nushift+poffset+6)%12))) {
+              rxF_ext[j]=rxF[i];
+              //            printf("extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j],*(1+(short*)&rxF_ext[j]));
+              dl_ch0_ext[j++]=dl_ch0[i];
+
+            }
+          }
+
+          dl_ch0_ext+=10;
+          rxF_ext+=10;
+        }
+        else if (crs_pilots==0 && nrs_pilots==1) {
+          j=0;
+
+          for (i=0; i<12; i++) {
+            if ((i!=(id_offset+nrs_offset)) &&
+                (i!=((id_offset+nrs_offset+6)%12))) {
+              rxF_ext[j]=rxF[i];
+              //            printf("extract rb %d, re %d => (%d,%d)\n",rb,i,*(short *)&rxF_ext[j],*(1+(short*)&rxF_ext[j]));
+              dl_ch0_ext[j++]=dl_ch0[i];
+
+            }
+          }
+
+          dl_ch0_ext+=10;
+          rxF_ext+=10;
         }
 
-        dl_ch0+=12;
-        rxF+=12;
 
       }
+
+      dl_ch0+=12;
+      rxF+=12;
+
+    }
       //     if (crs_pilots==0) {
       //       for (i=0; i<12; i++) {
       //         rxF_ext[i]=rxF[i];

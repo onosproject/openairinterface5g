@@ -212,10 +212,10 @@ int rx_nsss_NB_IoT(PHY_VARS_UE_NB_IoT *ue,int32_t *tot_metric)
 			return(-1);
 		}
 
-		for (k=0;k<126;k++){ 
+		for (k=0;k<126;k++){ // corresponds to u in standard
 			metric = 0;  
 
-			for (m=0;m<132;m++){
+			for (m=0;m<132;m++){ // 132 resource elements in NSSS subframe
 
 				metric += (int32_t)d[(k*126+m)<<1] * (int32_t)nsss_sf[(k*126+m)<<1] + 
 						(int32_t)d[((k*126+m)<<1)+1] * (int32_t)nsss_sf[((k*126+m)<<1)+1]; // real part of correlation
