@@ -28,10 +28,12 @@ OAI build/execute
  - export NFAPI_DIR=XXX (place where NFAPI was installed)
  - cd cmake_targets
  - ./build_oai --UE
+ (if necessary, use ./build_oai -I --UE to install required packages)
  - cd lte_build_oai/build/
  - cp ../../../targets/bin/.ue* .
  - cp ../../../targets/bin/.usim* .
  - sudo insmod ../../../targets/bin/ue_ip.ko
+ 
  UE1: 
  - sudo ifconfig oip0 10.0.0.1
  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.1 -j MARK --set-mark 3
