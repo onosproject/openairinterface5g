@@ -35,7 +35,8 @@ uint8_t multipath_channel_nosigconv(channel_desc_t *desc)
   return(1);
 }
 
-//#define CHANNEL_SSE
+#define CHANNEL_SSE
+//#define __AVX2__
 #ifdef CHANNEL_SSE
 void multipath_channel(channel_desc_t *desc,
                        double *tx_sig_re[2],
@@ -277,8 +278,8 @@ void multipath_channel_freq(channel_desc_t *desc,
   ofdm_symbol_size=length/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.symbols_per_tti;
   symbols_per_tti=length/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.ofdm_symbol_size;
 
-  FILE *file;
-  file = fopen("multipath.txt","w");
+  /*FILE *file;
+  file = fopen("multipath.txt","w");*/
 
 #ifdef DEBUG_CH
   printf("[CHANNEL_FREQ] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, dd %d, len %d \n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,dd,desc->channel_length);
@@ -291,12 +292,17 @@ void multipath_channel_freq(channel_desc_t *desc,
       	/*clock_t stop=clock();
       	printf("UE_freq_channel time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
       	sum=(sum+stop-start);*/
-
   	freq_channel(desc,nb_rb,n_samples);//Find desc->chF
   	//freq_channel_prach(desc,nb_rb,n_samples,1,44);//Find desc->chF
   }
   //clock_t start=clock();
-  //for (k=0;k<symbols_per_tti;k++){//k = 0-6  normal cyclic prefix 
+  //for (k=0;k<symbols_per_tti;k++){//k = 0-6  normal cyclic prefix
+	for (j=0;j<(symbols_per_tti>>1);j++){
+		for (ii=0; ii<desc->nb_rx; ii++) {
+			_mm_storeu_pd(&rx_sig_re[ii][2*j*ofdm_symbol_size],_mm_setzero_pd());
+			_mm_storeu_pd(&rx_sig_im[ii][2*j*ofdm_symbol_size],_mm_setzero_pd());
+		}
+	}
 	for (f=0;f<((ofdm_symbol_size*symbols_per_tti)>>1); f++) {//f2 = 0-1024*14-1 ---- for 10 Mhz BW
 		//printf("f is %d\n",f);
 		for (ii=0; ii<desc->nb_rx; ii++) {
@@ -331,15 +337,16 @@ void multipath_channel_freq(channel_desc_t *desc,
 				//rx_sig_im[ii][f+k*ofdm_symbol_size] =  rx_tmp.y*path_loss;
 				rx_tmp128_re_f = _mm_mul_pd(rx_tmp128_re_f,pathloss128);
 			        rx_tmp128_im_f = _mm_mul_pd(rx_tmp128_im_f,pathloss128);
-			        _mm_storeu_pd(&rx_sig_re[ii][(2*f+1)],rx_tmp128_re_f); // max index: length-dd -1 + dd = length -1
+			        _mm_storeu_pd(&rx_sig_re[ii][(2*f+1)],rx_tmp128_re_f);
 			        _mm_storeu_pd(&rx_sig_im[ii][(2*f+1)],rx_tmp128_im_f);
 			}
 			else if (f%(ofdm_symbol_size>>1)>(n_samples>>1) && f%(ofdm_symbol_size>>1)<(ofdm_symbol_size>>1)-(n_samples>>1))
 			{
 				//rx_sig_re[ii][f+k*ofdm_symbol_size] =  0;
 				//rx_sig_im[ii][f+k*ofdm_symbol_size] =  0;
-			        _mm_storeu_pd(&rx_sig_re[ii][2*f],_mm_setzero_pd()); // max index: length-dd -1 + dd = length -1
-			        _mm_storeu_pd(&rx_sig_im[ii][2*f],_mm_setzero_pd());
+			        //_mm_storeu_pd(&rx_sig_re[ii][2*f],_mm_setzero_pd());
+			        //_mm_storeu_pd(&rx_sig_im[ii][2*f],_mm_setzero_pd());
+				break;
 			}
 			else
 			{
@@ -349,8 +356,8 @@ void multipath_channel_freq(channel_desc_t *desc,
 					//RX_IM(k) += TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
 					tx128_re = _mm_loadu_pd(&tx_sig_re[j][2*f]);
             				tx128_im = _mm_loadu_pd(&tx_sig_im[j][2*f]);
-          				chF128_x = _mm_set1_pd(desc->ch[ii+(j*desc->nb_rx)][2*(f%(ofdm_symbol_size>>1))-((ofdm_symbol_size>>1)-(n_samples>>1))].x);
-          				chF128_y = _mm_set1_pd(desc->ch[ii+(j*desc->nb_rx)][2*(f%(ofdm_symbol_size>>1))-((ofdm_symbol_size>>1)-(n_samples>>1))].y);
+          				chF128_x = _mm_set1_pd(desc->ch[ii+(j*desc->nb_rx)][2*(f%(ofdm_symbol_size>>1)-((ofdm_symbol_size>>1)-(n_samples>>1)))].x);
+          				chF128_y = _mm_set1_pd(desc->ch[ii+(j*desc->nb_rx)][2*(f%(ofdm_symbol_size>>1)-((ofdm_symbol_size>>1)-(n_samples>>1)))].y);
 					//rx_tmp.x += (tx_sig_re[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].x)
 					//	     -(tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].y);
 					//rx_tmp.y += (tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].x)
@@ -371,16 +378,15 @@ void multipath_channel_freq(channel_desc_t *desc,
 			        _mm_storeu_pd(&rx_sig_re[ii][2*f],rx_tmp128_re_f); // max index: length-dd -1 + dd = length -1
 			        _mm_storeu_pd(&rx_sig_im[ii][2*f],rx_tmp128_im_f);
 			}
-
-			fprintf(file,"%d\t%e\t%e\t%e\t%e\t%e\t%e\n",f,tx_sig_re[ii][f],tx_sig_im[ii][f],rx_sig_re[ii][f],rx_sig_im[ii][f],desc->chF[0][f].x,desc->chF[0][f].y);
-		//fflush(file);
 		//printf("number of taps%d\n",desc->channel_length); 
 		} // ii
 	} // f,f2,f3
-  //}//k	 
+  //}//k
   /*clock_t stop=clock();
   printf("UE_freq_channel time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
   sum=(sum+stop-start);*/
+  /*for (f=0;f<ofdm_symbol_size*symbols_per_tti;f++)
+  	fprintf(file,"%d\t%e\t%e\t%e\t%e\t%e\t%e\n",f,tx_sig_re[0][f],tx_sig_im[0][f],rx_sig_re[0][f],rx_sig_im[0][f],desc->chF[0][f%n_samples].x,desc->chF[0][f%n_samples].y);	*/ 
 //fclose(file); 
 }
 #else
@@ -463,7 +469,7 @@ void multipath_channel_freq(channel_desc_t *desc,
 				rx_sig_im[ii][f+k*ofdm_symbol_size] =  0;
 			}
 
-			fprintf(file,"%d\t%d\t%d\t%e\t%e\t%e\t%e\t%e\t%e\n",f+k*ofdm_symbol_size,f2,k,tx_sig_re[ii][f+k*ofdm_symbol_size],tx_sig_im[ii][f+k*ofdm_symbol_size],rx_sig_re[ii][f+k*ofdm_symbol_size],rx_sig_im[ii][f+k*ofdm_symbol_size],desc->chF[0][f].x,desc->chF[0][f].y);
+			//fprintf(file,"%d\t%d\t%d\t%e\t%e\t%e\t%e\t%e\t%e\n",f+k*ofdm_symbol_size,f2,k,tx_sig_re[ii][f+k*ofdm_symbol_size],tx_sig_im[ii][f+k*ofdm_symbol_size],rx_sig_re[ii][f+k*ofdm_symbol_size],rx_sig_im[ii][f+k*ofdm_symbol_size],desc->chF[0][f].x,desc->chF[0][f].y);
 		//fflush(file);
 		//printf("number of taps%d\n",desc->channel_length); 
 		} // ii

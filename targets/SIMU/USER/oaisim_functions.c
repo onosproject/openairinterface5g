@@ -1041,8 +1041,7 @@ extern int subframe_eNB_mask,subframe_UE_mask;
 
 int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
-  /*time_stats_t ul_chan_stats_f;
-  static int first_meas=0;
+  /*static int first_meas=0;
   static int first_run=0;
   static double sum;
   static int count;
@@ -1051,7 +1050,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
      first_run=1;
      sum=0;
      count=0;
-  } */
+  }*/
 
 
   int ret = nsamps;
@@ -1121,9 +1120,9 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 	for (UE_id=0; UE_id<NB_UE_INST; UE_id++){
 		if (is_prach_subframe(&PHY_vars_UE_g[UE_id][CC_id]->frame_parms,frame,subframe) && PHY_vars_UE_g[UE_id][CC_id]->generate_prach)
 		{
-			//count++;
-			//clock_t start=clock();
-			do_UL_prach(UE2eNB,
+			/*count++;
+			clock_t start=clock();*/
+			do_UL_sig_freq_prach(UE2eNB,
 				enb_data,
 				ue_data,
 				subframe,
@@ -1157,7 +1156,8 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 	start_meas(&ul_chan_stats_f);*/
 
         
-
+        /*count++;
+	clock_t start=clock();*/
         do_UL_sig_freq(UE2eNB,
                 enb_data,
                 ue_data,
@@ -1167,7 +1167,9 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
                 0,  // frame is only used for abstraction
                 eNB_id,
                 CC_id);
-
+  	/*clock_t stop=clock();
+  	printf("do_UL_sig freq is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
+  	sum=(sum+stop-start);*/
 	/*stop_meas(&ul_chan_stats_f);
 	print_meas(&ul_chan_stats_f,"UL_Channel Stats Frequency Domain",&ul_chan_stats_f,&ul_chan_stats_f);*/
       }
@@ -1202,8 +1204,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 
 int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
-  /*time_stats_t dl_chan_stats_f;
-  static int first_run=0;
+  /*static int first_run=0;
   static double sum;
   static int count;
   if (!first_run)

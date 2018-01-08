@@ -94,6 +94,16 @@ typedef struct {
   time_stats_t interp_time;
   time_stats_t interp_freq;
   time_stats_t convolution;
+  /// frequency measurements
+  time_stats_t DL_multipath_channel_freq;
+  time_stats_t DL_dac_fixed_gain;
+  time_stats_t DL_rf_rx_simple_freq;
+  time_stats_t DL_adc;
+  time_stats_t UL_multipath_channel_freq;
+  time_stats_t multipath_channel_freq_PRACH;
+  time_stats_t UL_dac_fixed_gain;
+  time_stats_t UL_rf_rx_simple_freq;
+  time_stats_t UL_adc;
 } channel_desc_t;
 
 typedef struct {

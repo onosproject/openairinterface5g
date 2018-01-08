@@ -1481,6 +1481,19 @@ reset_opp_meas_oaisim (void)
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->interp_time);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->interp_freq);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->convolution);
+
+      //Frequency domain  -  Time consumption analysis
+
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_multipath_channel_freq);
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_dac_fixed_gain);
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_rf_rx_simple_freq);
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_adc);
+
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->multipath_channel_freq_PRACH);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_multipath_channel_freq);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_dac_fixed_gain);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_rf_rx_simple_freq);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_adc);
     }
 
     reset_meas (&PHY_vars_eNB_g[eNB_id][0]->phy_proc);

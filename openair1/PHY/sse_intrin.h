@@ -36,7 +36,6 @@
 #ifndef SSE_INTRIN_H
 #define SSE_INTRIN_H
 
-
 #if defined(__x86_64) || defined(__i386__)
 
 #ifndef __SSE2__
