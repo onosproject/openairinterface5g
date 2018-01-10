@@ -118,7 +118,7 @@ static inline void stop_meas(time_stats_t *ts)
     
     ts->diff_now = (out-ts->in);
     
-    ts->diff_now = (out-ts->in);
+    //ts->diff_now = (out-ts->in);
     ts->diff += (out-ts->in);
     /// process duration is the difference between two clock points
     ts->p_time = (out-ts->in);

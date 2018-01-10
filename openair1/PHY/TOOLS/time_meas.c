@@ -23,6 +23,7 @@
 #include "time_meas.h"
 #include <math.h>
 #include <unistd.h>
+#include "PHY/extern.h"
 
 // global var for openair performance profiler
 int opp_enabled = 0;
@@ -89,7 +90,16 @@ void print_meas(time_stats_t *ts, const char* name, time_stats_t * total_exec_ti
                 (ts->diff/ts->trials/cpu_freq_GHz/1000.0),
                 ts->trials);
       } else {
-        fprintf(stderr, "%25s:  %15.3f ms (%5.2f%%); %15.3f us (%5.2f%%); %15d;\n",
+	if (PHY_vars_UE_g[0][0]->do_ofdm_mod)
+           fprintf(stderr, "%25s:  %15.3f us (%5.2f%%); %15.3f us (%5.2f%%); %15d;\n",
+                name,
+                (ts->diff_now/cpu_freq_GHz/1000.0),
+                ((ts->diff_now/cpu_freq_GHz/1000.0)/(total_exec_time->diff/cpu_freq_GHz/1000.0))*100,  // percentage
+                (ts->diff/ts->trials/cpu_freq_GHz/1000.0),
+                ((ts->diff/ts->trials/cpu_freq_GHz/1000.0)/(sf_exec_time->diff/sf_exec_time->trials/cpu_freq_GHz/1000.0))*100,  // percentage
+                ts->trials);
+	else
+           fprintf(stderr, "%25s:  %15.3f ms (%5.2f%%); %15.3f us (%5.2f%%); %15d;\n",
                 name,
                 (ts->diff/cpu_freq_GHz/1000000.0),
                 ((ts->diff/cpu_freq_GHz/1000000.0)/(total_exec_time->diff/cpu_freq_GHz/1000000.0))*100,  // percentage

@@ -21,7 +21,42 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "PHY/sse_intrin.h"
 //#define DEBUG_ADC
+//#define adc_SSE
+#ifdef adc_SSE
+void adc(double *r_re[2],
+         double *r_im[2],
+         unsigned int input_offset,
+         unsigned int output_offset,
+         unsigned int **output,
+         unsigned int nb_rx_antennas,
+         unsigned int length,
+         unsigned char B)
+{
+  int i;
+  int aa;
+  __m128i r_re128, r_im128, output_re128, output_im128;
+  __m128d gain128
+  double gain = (double)(1<<(B-1));
+  gain128=_mm_set1_pd(gain);
+  for (i=0; i<(length>>1); i++) {//SSE can process 8 shorts in parallel (length>>3)
+    for (aa=0; aa<nb_rx_antennas; aa++) {
+      r_re128=_mm_loadu_pd(&r_re[aa][2*i+input_offset]]);
+      r_im128=_mm_loadu_pd(&r_im[aa][2*i+input_offset]]);
+      r_re128=_mm_mul_pd(r_re128,gain128);
+      r_im128=_mm_mul_pd(r_im128,gain128);
+      ((short *)output[aa])[((i+output_offset)<<1)]   = (short)(r_re[aa][i+input_offset]*gain);
+      ((short *)output[aa])[1+((i+output_offset)<<1)] = (short)(r_im[aa][i+input_offset]*gain);
+
+      if ((r_re[aa][i+input_offset]*gain) > 30000) {
+        //("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
+      }
+    }
+    //printf("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
+  } 
+}
+#else
 void adc(double *r_re[2],
          double *r_im[2],
          unsigned int input_offset,
@@ -55,6 +90,7 @@ void adc(double *r_re[2],
     //printf("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
   } 
 }
+#endif
 void adc_freq(double *r_re[2],
          double *r_im[2],
          unsigned int input_offset,
