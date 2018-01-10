@@ -2440,7 +2440,7 @@ int main(int argc, char **argv)
           */
 
 
-	    proc_eNB->nr_tti_tx = subframe;
+	    proc_eNB->subframe_tx = subframe;
 	    eNB->abstraction_flag=0;
 
 	    phy_procedures_eNB_TX(eNB,proc_eNB,no_relay,NULL,1,dci_flag);
@@ -2477,7 +2477,7 @@ int main(int argc, char **argv)
 
 	    // generate next subframe for channel estimation
 
-	    proc_eNB->nr_tti_tx = subframe+1;
+	    proc_eNB->subframe_tx = subframe+1;
 
 	    phy_procedures_eNB_TX(eNB,proc_eNB,no_relay,NULL,0,dci_flag);
 
