@@ -2440,7 +2440,7 @@ int main(int argc, char **argv)
           */
 
 
-	    proc_eNB->subframe_tx = subframe;
+	    proc_eNB->nr_tti_tx = subframe;
 	    eNB->abstraction_flag=0;
 
 	    phy_procedures_eNB_TX(eNB,proc_eNB,no_relay,NULL,1,dci_flag);
@@ -2477,7 +2477,7 @@ int main(int argc, char **argv)
 
 	    // generate next subframe for channel estimation
 
-	    proc_eNB->subframe_tx = subframe+1;
+	    proc_eNB->nr_tti_tx = subframe+1;
 
 	    phy_procedures_eNB_TX(eNB,proc_eNB,no_relay,NULL,0,dci_flag);
 
@@ -2518,13 +2518,13 @@ int main(int argc, char **argv)
 
 
 	  UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[UE->current_thread_id[subframe]];
-	  proc->subframe_rx = subframe;
+	  proc->nr_tti_rx = subframe;
 	  UE->UE_mode[0] = PUSCH;
 
 	  // first symbol has to be done separately in one-shot mode
 	  slot_fep(UE,
 		   0,
-		   (proc->subframe_rx<<1),
+		   (proc->nr_tti_rx<<1),
 		   UE->rx_offset,
 		   0,
 		   0);
@@ -2535,13 +2535,13 @@ int main(int argc, char **argv)
 	    if (n_frames==1)
 	      printf("bypassing PDCCH/DCI detection\n");
 	    if  (generate_ue_dlsch_params_from_dci(proc->frame_rx,
-						   proc->subframe_rx,
+						   proc->nr_tti_rx,
 						   (void *)&dci_alloc[0].dci_pdu,
 						   n_rnti,
 						   dci_alloc[0].format,
-						   UE->pdcch_vars[UE->current_thread_id[proc->subframe_rx]][eNB_id],
-						   UE->pdsch_vars[UE->current_thread_id[proc->subframe_rx]][eNB_id],
-                           UE->dlsch[UE->current_thread_id[proc->subframe_rx]][0],
+						   UE->pdcch_vars[UE->current_thread_id[proc->nr_tti_rx]][eNB_id],
+						   UE->pdsch_vars[UE->current_thread_id[proc->nr_tti_rx]][eNB_id],
+                           UE->dlsch[UE->current_thread_id[proc->nr_tti_rx]][0],
 						   &UE->frame_parms,
 						   UE->pdsch_config_dedicated,
 						   SI_RNTI,
@@ -2555,7 +2555,7 @@ int main(int argc, char **argv)
 		UE->dlsch[UE->current_thread_id[proc->nr_tti_rx]][eNB_id][0]->active = 1;
 		UE->dlsch[UE->current_thread_id[proc->nr_tti_rx]][eNB_id][1]->active = 1;
 
-		UE->pdcch_vars[UE->current_thread_id[proc->subframe_rx]][eNB_id]->num_pdcch_symbols = num_pdcch_symbols;
+		UE->pdcch_vars[UE->current_thread_id[proc->nr_tti_rx]][eNB_id]->num_pdcch_symbols = num_pdcch_symbols;
 
 		UE->dlsch_received[eNB_id]++;
 	    } else {
@@ -2563,11 +2563,11 @@ int main(int argc, char **argv)
 	    }
 	  }
 
-	  dci_received = UE->pdcch_vars[UE->current_thread_id[proc->subframe_rx]][eNB_id]->dci_received;
+	  dci_received = UE->pdcch_vars[UE->current_thread_id[proc->nr_tti_rx]][eNB_id]->dci_received;
 
 	  phy_procedures_UE_RX(UE,proc,0,0,dci_flag,normal_txrx,no_relay,NULL);
 
-	  dci_received = dci_received - UE->pdcch_vars[UE->current_thread_id[proc->subframe_rx]][eNB_id]->dci_received;
+	  dci_received = dci_received - UE->pdcch_vars[UE->current_thread_id[proc->nr_tti_rx]][eNB_id]->dci_received;
 
 	  if (dci_flag && (dci_received == 0)) {
 	    //printf("DCI not received\n");
