@@ -2552,8 +2552,8 @@ int main(int argc, char **argv)
 
 		dump_dci(&UE->frame_parms, &dci_alloc[0]);
 
-		//UE->dlsch[UE->current_thread_id[proc->subframe_rx]][eNB_id][0]->active = 1;
-		//UE->dlsch[UE->current_thread_id[proc->subframe_rx]][eNB_id][1]->active = 1;
+		UE->dlsch[UE->current_thread_id[proc->nr_tti_rx]][eNB_id][0]->active = 1;
+		UE->dlsch[UE->current_thread_id[proc->nr_tti_rx]][eNB_id][1]->active = 1;
 
 		UE->pdcch_vars[UE->current_thread_id[proc->subframe_rx]][eNB_id]->num_pdcch_symbols = num_pdcch_symbols;
 
