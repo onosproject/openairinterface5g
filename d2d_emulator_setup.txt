@@ -43,6 +43,8 @@ UE2:
  - sudo iptables -A POSTROUTING  -t mangle -o oip1 -d 224.0.0.1 -j MARK --set-mark 3
  - (if necessary) sudo route add default gw 10.10.10.1 eth0
 
+
+
 TEST ONE-TO-MANY
 Run UE1 then UE2, for example:
 UE1: sudo ./lte-softmodem-stub -U --emul_iface eth0
@@ -56,7 +58,28 @@ Test with Iperf
 - Sender - UE1: iperf -c 224.0.0.1 -u -b 0.1M --bind 10.0.0.1 -t 100
 - Receiver - UE2: sudo ./mcreceive 224.0.0.1 5001 
 
+Filter the incomming packets according to GroupL2Id: receiver (one-to-many) can discard the packets if it doesn't belong to this group. 
+For the moment, both sender and receiver use the same set of Ids (hardcoded)  
+UE1 (sender)
+ - sudo ./lte-softmodem-stub -U --emul_iface eth0
+ - ./velcore_app  #send the sourceL2Id, groupL2Id to OAI
+ - ping -I oip0 224.0.0.1
+ UE2(receiver)
+  - sudo ./lte-softmodem-stub -U --emul_iface eno1 
+  #we can see the incomming packets from OAI log, however, cannot see from Wireshark -> they are discarded at MAC layer
+  - ./velcore_app  #we can see the packets appearing in Wireshark
  
+ 
+ 
+ 
+ TEST PC5-S (UE1 -sender, UE2 - receiver)
+step 1:
+- UE1: sudo ./lte-softmodem-stub -U --emul_iface eth0
+step 2:
+- UE2: sudo ./lte-softmodem-stub -U --emul_iface eno1
+- UE2: ./velcore_app -r #listen to incomming message from PC5-S 
+step 3: 
+- UE1: ./velcore_app -s #send a message via PC5-S (e.g., DirectCommunicationRequest)
  
 
 
