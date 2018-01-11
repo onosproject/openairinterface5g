@@ -77,6 +77,7 @@ extern UL_IND_t *UL_INFO;
 extern uint8_t  nfapi_mode;
 
 /*
+ *
 #ifndef USER_MODE
 #define msg debug_msg
 #endif
@@ -753,7 +754,6 @@ void ue_send_sl_sdu(module_id_t module_idP,
 
   int rlc_sdu_len;
   char *rlc_sdu;
-  uint32_t sourceL2Id;
   uint32_t destinationL2Id =0x00000000;
 
   // Notes: 1. no control elements are supported yet
@@ -762,7 +762,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
   // extract header
   SLSCH_SUBHEADER_24_Bit_DST_LONG *longh = (SLSCH_SUBHEADER_24_Bit_DST_LONG *)sdu;
   AssertFatal(longh->E==0,"E is non-zero\n");
-  AssertFatal(longh->LCID==3,"LCID is %d (not 3)\n",longh->LCID);
+  AssertFatal(((longh->LCID==3)|(longh->LCID==10)),"LCID is %d (not 3 or 10)\n",longh->LCID);
   //filter incoming packet based on destination address
   destinationL2Id = (longh->DST07<<16) | (longh->DST815 <<8) | (longh->DST1623);
   LOG_I( MAC, "[DestinationL2Id:  %"PRIu32"]  \n", destinationL2Id );
@@ -771,7 +771,6 @@ void ue_send_sl_sdu(module_id_t module_idP,
      LOG_I( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
      return;
   }
-  //AssertFatal(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) | (destinationL2Id == UE_mac_inst[module_idP].groupL2Id)), "Destination Id is neither matched with Source Id nor with Group Id \n")
 
   if (longh->F==1) {
     rlc_sdu_len = ((longh->L_MSB<<8)&0x7F00)|(longh->L_LSB&0xFF);
@@ -788,7 +787,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		   frameP,
 		   ENB_FLAG_NO,
 		   MBMS_FLAG_NO,
-		   3,
+		   longh->LCID, //3/10
 		   rlc_sdu,
 		   rlc_sdu_len,
 		   1,
@@ -2736,11 +2735,12 @@ SLDCH_t *ue_get_sldch(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t 
 
 SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframeP) {
 
-  mac_rlc_status_resp_t rlc_status;
+  mac_rlc_status_resp_t rlc_status, rlc_status_data;
   uint32_t absSF = (frameP*10)+subframeP;
   UE_MAC_INST *ue = &UE_mac_inst[module_idP];
   int rvtab[4] = {0,2,3,1};
   int sdu_length;
+
   // Note: this is hard-coded for now for the default SL configuration (4 SF PSCCH, 36 SF PSSCH)
   SLSCH_t *slsch = &UE_mac_inst[module_idP].slsch;
 
@@ -2748,13 +2748,25 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 
   if ((absSF%40) == 0) { // fill PSCCH data later in first subframe of SL period
     ue->sltx_active = 0;
+
     rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
-				    3,
-				    0xFFFF);
-    if (rlc_status.bytes_in_buffer > 2) {
-      LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
-      // Fill in group id for off-network communications
-      ue->sltx_active = 1;
+				    10,
+				    0xFFFF);//for signaling - hardcoded
+    rlc_status_data = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                3,
+                0xFFFF); //for data - hardcoded
+
+    if (rlc_status.bytes_in_buffer > 2){
+       LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
+       // Fill in group id for off-network communications
+       ue->sltx_active = 1;
+       ue->slsch_lcid = 10;
+    }
+    else if (rlc_status_data.bytes_in_buffer >2){
+       LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status_data.bytes_in_buffer);
+       // Fill in group id for off-network communications
+       ue->sltx_active = 1;
+       ue->slsch_lcid = 3;
     }
   } // we're not in the SCCH period
   else if (((absSF & 3) == 0 ) && 
@@ -2762,14 +2774,15 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
     // 10 PRBs, mcs 19
     int TBS = 4584/8;
     int req;
-    
-    
-    rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
-				    3,
-				    0xFFFF);
+
+    if (ue->slsch_lcid == 10) {
     if (TBS<=rlc_status.bytes_in_buffer) req=TBS;
     else req = rlc_status.bytes_in_buffer;
-    
+    } else if (ue->slsch_lcid == 3){
+       if (TBS<=rlc_status_data.bytes_in_buffer) req=TBS;
+       else req = rlc_status_data.bytes_in_buffer;
+    }
+
     if (req>0) {
       sdu_length = mac_rlc_data_req(module_idP,
 				    0x1234,
@@ -2777,7 +2790,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 				    frameP,
 				    ENB_FLAG_NO,
 				    MBMS_FLAG_NO,
-				    3,				    
+				    ue->slsch_lcid,
 				    req,
 				    (char*)(ue->slsch_pdu.payload + sizeof(SLSCH_SUBHEADER_24_Bit_DST_LONG)));
       
@@ -2787,8 +2800,8 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
       if (sdu_length > 0) {
 
 	LOG_I(MAC,"SFN.SF %d.%d : got %d bytes from Sidelink buffer (%d requested)\n",frameP,subframeP,sdu_length,req);
-	LOG_I(MAC,"sourceL2Id %d: \n",ue->sourceL2Id);
-	LOG_I(MAC,"groupL2Id %d: \n",ue->groupL2Id);
+	LOG_I(MAC,"sourceL2Id: %d \n",ue->sourceL2Id);
+	LOG_I(MAC,"groupL2Id: %d \n",ue->groupL2Id);
 
 	slsch->payload = (unsigned char*)ue->slsch_pdu.payload;
 	if (sdu_length < 128) { 
@@ -2797,14 +2810,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 	  shorth->F=0;
 	  shorth->L=sdu_length;
 	  shorth->E=0;
-	  shorth->LCID=3;
-	  /* shorth->SRC07=0x12;
-	  shorth->SRC1623=0x56;
-	  shorth->SRC815=0x34;
-	  shorth->DST07=0x78;
-	  shorth->DST815=0x9A;
-	  shorth->DST1623=0xBC;*/
-
+	  shorth->LCID=ue->slsch_lcid;
 	  shorth->SRC07 = (ue->sourceL2Id>>16) & 0x000000ff;
 	  shorth->SRC815 = (ue->sourceL2Id>>8) & 0x000000ff;
 	  shorth->SRC1623 = ue->sourceL2Id & 0x000000ff;
@@ -2820,15 +2826,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 	  longh->L_LSB=sdu_length&0xff;
 	  longh->L_MSB=(sdu_length>>8)&0x7f;
 	  longh->E=0;
-	  longh->LCID=3;
-	  /*
-	  longh->SRC07=0x12;
-	  longh->SRC815=0x34;
-	  longh->SRC1623=0x56;
-	  longh->DST07=0x78;
-	  longh->DST815=0x9A;
-	  longh->DST1623=0xBC;
-	  */
+	  longh->LCID=ue->slsch_lcid;
 	  longh->SRC07 = (ue->sourceL2Id >>16) & 0x000000ff;
 	  longh->SRC815 = (ue->sourceL2Id>>8) & 0x000000ff;
 	  longh->SRC1623 = ue->sourceL2Id & 0x000000ff;

@@ -403,6 +403,54 @@ struct pdcp_netlink_element_s {
   uint8_t *data;
 };
 
+//TTN for D2D (PC5S)
+#ifdef Rel14
+#define PDCP_SOCKET_PORT_NO 9999 //temporary value
+int pdcp_pc5_sockfd;
+struct sockaddr_in prose_app_addr;
+struct sockaddr_in pdcp_sin;
+int pdcp_pc5_socket_init();
+
+typedef enum SL_PC5S_TYPES_e {
+  SL_PC5S_INIT=1,
+  SL_DIRECT_COMMUNICATION_REQUEST,
+  SL_DIRECT_COMMUNICATION_ACCEPT,
+  SL_DIRECT_COMMUNICATION_REJECT,
+  SL_DIRECT_SECURITY_MODE_COMMAND,
+  SL_DIRECT_SECURITY_MODE_COMPLETE
+} SL_PC5S_TYPES_t;
+
+typedef struct  {
+   SL_PC5S_TYPES_t   msg_type;
+   uint16_t  rb_id;
+   int32_t   data_size;
+   uint8_t   inst;
+} __attribute__((__packed__)) pdcp_data_header_t;
+
+//should be completed with other IEs (3GPP TS 24.334)
+typedef struct {
+   uint16_t sequenceNumber;
+   uint8_t ipAddressConfig;
+} __attribute__((__packed__)) PC5SDirectCommunicationRequest;
+
+typedef struct {
+   uint16_t sequenceNumber;
+   uint8_t ipAddressConfig;
+} __attribute__((__packed__)) PC5SDirectCommunicationAccept;
+
+//example of PC5-S messages
+typedef struct  {
+   pdcp_data_header_t pdcp_data_header;
+   union {
+      PC5SDirectCommunicationRequest pc5s_direct_communication_req;
+      PC5SDirectCommunicationAccept pc5s_direct_communication_accept;
+      uint8_t status;
+   } pc5sPrimitive;
+} __attribute__((__packed__)) sidelink_pc5s_element;
+
+#endif
+
+
 #if 0
 /*
  * Missing PDU information struct, a copy of this will be enqueued

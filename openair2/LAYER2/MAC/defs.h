@@ -1368,6 +1368,7 @@ typedef struct {
   int sltx_active;
   SLSCH_t slsch;
   ULSCH_PDU slsch_pdu;
+  int slsch_lcid;
 #endif
   /// number of attempt for rach
   uint8_t RA_attempt_number;

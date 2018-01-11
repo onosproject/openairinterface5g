@@ -1067,6 +1067,8 @@ int main( int argc, char **argv )
 #ifdef Rel14
   printf ("RRC control socket\n");
   rrc_control_socket_init();
+  printf ("PDCP PC5S socket\n");
+  pdcp_pc5_socket_init();
 #endif
 
 

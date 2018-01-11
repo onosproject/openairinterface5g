@@ -104,10 +104,18 @@ struct GroupCommunicationEstablishReq {
    uint8_t pppp;
 };
 
+struct GroupCommunicationReleaseReq {
+   uint32_t sourceL2Id;
+   uint32_t groupL2Id;
+   int slrb_id;
+};
+
 struct DirectCommunicationEstablishReq {
    uint32_t sourceL2Id;
    uint32_t destinationL2Id;
+   uint32_t pppp;
 };
+
 
 struct sidelink_ctrl_element {
    unsigned short type;
@@ -117,6 +125,7 @@ struct sidelink_ctrl_element {
       Group_Communication_Status_t group_comm_release_rsp;
       //struct DirectCommunicationReleaseReq  direct_comm_release_req;
       SL_UE_STATE_t ue_state;
+      //struct GroupCommunicationReleaseReq group_comm_release_req;
       int slrb_id;
 
    } sidelinkPrimitive;
@@ -693,13 +702,19 @@ typedef struct UE_RRC_INST_s {
   SystemInformationBlockType11_t *sib11[NB_CNX_UE];
   uint8_t                           *MIB;
 #ifdef Rel14
-  //TTN - SIB18
+  //SIB18
   SystemInformationBlockType18_r12_t *sib18[NB_CNX_UE];
   SystemInformationBlockType19_r12_t *sib19[NB_CNX_UE];
 
   SBCCH_SL_BCH_MessageType_t   mib_sl[NB_CNX_UE];
   /// Preconfiguration for Sidelink
   struct SL_Preconfiguration_r12 *SL_Preconfiguration[NB_CNX_UE];
+  //source L2 Id
+  uint32_t sourceL2Id;
+  //group L2 Id
+  uint32_t groupL2Id;
+  //destination L2 Id
+  uint32_t destinationL2Id;
 #endif
 
 #if defined(Rel10) || defined(Rel14)

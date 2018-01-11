@@ -63,4 +63,7 @@ extern void     pdcp_process_input_sdus_tr (struct pdcp_entity *pdcpP);
 extern void     init_pdcp (struct pdcp_entity *pdcpP, struct rb_dispatcher *rbP, uint8_t rb_idP);
 extern void    *pdcp_tx (void *argP);
 #endif
+
+void pdcp_pc5_socket_init();
+
 #endif

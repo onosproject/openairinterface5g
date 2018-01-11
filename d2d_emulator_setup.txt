@@ -33,8 +33,8 @@ OAI build/execute
  - cp ../../../targets/bin/.ue* .
  - cp ../../../targets/bin/.usim* .
  - sudo insmod ../../../targets/bin/ue_ip.ko
- 
- UE1: 
+
+UE1: 
  - sudo ifconfig oip0 10.0.0.1
  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.1 -j MARK --set-mark 3
  - (if necessary) sudo route add default gw 10.10.10.1 eth0
@@ -42,8 +42,11 @@ UE2:
  - sudo ifconfig oip1 10.0.0.2
  - sudo iptables -A POSTROUTING  -t mangle -o oip1 -d 224.0.0.1 -j MARK --set-mark 3
  - (if necessary) sudo route add default gw 10.10.10.1 eth0
-Run UE1, then UE2
-- sudo ./lte-softmodem-stub -U --emul_iface eth0
+
+TEST ONE-TO-MANY
+Run UE1 then UE2, for example:
+UE1: sudo ./lte-softmodem-stub -U --emul_iface eth0
+UE2: sudo ./lte-softmodem-stub -U --emul_iface eno1
 
 Test with Ping
 - Sender - UE1: ping -I oip0 224.0.0.1
@@ -52,8 +55,6 @@ Test with Ping
 Test with Iperf
 - Sender - UE1: iperf -c 224.0.0.1 -u -b 0.1M --bind 10.0.0.1 -t 100
 - Receiver - UE2: sudo ./mcreceive 224.0.0.1 5001 
-
-
 
  
  

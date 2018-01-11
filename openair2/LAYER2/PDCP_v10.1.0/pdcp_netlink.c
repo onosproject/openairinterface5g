@@ -84,8 +84,6 @@ static uint32_t *pdcp_netlink_nb_element_ue = NULL;
 
 time_stats_t ip_pdcp_stats_tmp;
 
-static void *pdcp_netlink_thread_fct(void *arg);
-
 //-----------------------------------------------------------------------------
 int
 pdcp_netlink_init(
@@ -152,6 +150,8 @@ pdcp_netlink_init(
       exit(EXIT_FAILURE);
     }
 
+
+
     sched_param.sched_priority = 10;
 
     pthread_attr_setschedpolicy(&attr, SCHED_RR);
@@ -168,6 +168,7 @@ pdcp_netlink_init(
     }
 
     pthread_setname_np( pdcp_netlink_thread, "PDCP netlink" );
+
   }
 
   return 0;
@@ -217,6 +218,7 @@ void *pdcp_netlink_thread_fct(void *arg)
   while (1) {
 
     len = recvmsg(nas_sock_fd, &nas_msg_rx, 0);
+
 
     if (len == 0) {
       /* Other peer (kernel) has performed an orderly shutdown
@@ -311,8 +313,11 @@ void *pdcp_netlink_thread_fct(void *arg)
         }
       }
     }
+
   }
 
   return NULL;
 }
 #endif
+
+

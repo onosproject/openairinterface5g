@@ -369,8 +369,15 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
   UE->DRB_config[0][0]->logicalChannelIdentity = CALLOC(1, sizeof(long));
   *(UE->DRB_config[0][0]->logicalChannelIdentity) = UE->DRB_config[0][0]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
   
-
-
+  // TTN - Establish a new SLRB for PC5-S (using DRB 10 for now)
+  UE->DRB_config[0][1] = CALLOC(1,sizeof(struct DRB_ToAddMod));
+  UE->DRB_config[0][1]->eps_BearerIdentity = CALLOC(1, sizeof(long));
+  UE->DRB_config[0][1]->drb_Identity =  10;
+  UE->DRB_config[0][1]->eps_BearerIdentity = CALLOC(1, sizeof(long));
+  // allowed value 5..15, value : x+4
+  *(UE->DRB_config[0][1]->eps_BearerIdentity) = 10;
+  UE->DRB_config[0][1]->logicalChannelIdentity = CALLOC(1, sizeof(long));
+  *(UE->DRB_config[0][1]->logicalChannelIdentity) = UE->DRB_config[0][1]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
 
   struct RLC_Config                  *DRB_rlc_config                   = CALLOC(1,sizeof(struct RLC_Config));
   struct PDCP_Config                 *DRB_pdcp_config                  = CALLOC(1,sizeof(struct PDCP_Config));
@@ -385,9 +392,11 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
   DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
   DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.t_Reordering = T_Reordering_ms35;
   UE->DRB_config[0][0]->rlc_Config = DRB_rlc_config;
+  UE->DRB_config[0][1]->rlc_Config = DRB_rlc_config;
 
   DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
   UE->DRB_config[0][0]->pdcp_Config = DRB_pdcp_config;
+  UE->DRB_config[0][1]->pdcp_Config = DRB_pdcp_config;
   DRB_pdcp_config->discardTimer = CALLOC(1, sizeof(long));
   *DRB_pdcp_config->discardTimer = PDCP_Config__discardTimer_infinity;
   DRB_pdcp_config->rlc_AM = NULL;
@@ -401,6 +410,7 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
   DRB_pdcp_config->headerCompression.present = PDCP_Config__headerCompression_PR_notUsed;
 
   UE->DRB_config[0][0]->logicalChannelConfig = DRB_lchan_config;
+  UE->DRB_config[0][1]->logicalChannelConfig = DRB_lchan_config;
   DRB_ul_SpecificParameters = CALLOC(1, sizeof(*DRB_ul_SpecificParameters));
   DRB_lchan_config->ul_SpecificParameters = DRB_ul_SpecificParameters;
 
@@ -417,6 +427,7 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
 
   UE->DRB_configList = CALLOC(1,sizeof(DRB_ToAddModList_t));
   ASN_SEQUENCE_ADD(&UE->DRB_configList->list,UE->DRB_config[0][0]);
+  ASN_SEQUENCE_ADD(&UE->DRB_configList->list,UE->DRB_config[0][1]);
 
   rrc_pdcp_config_asn1_req(&ctxt,
 			   (SRB_ToAddModList_t *) NULL,
@@ -5422,6 +5433,7 @@ void *rrc_control_socket_thread_fct(void *arg)
    uint32_t groupL2Id;
    module_id_t         module_id;
 
+   module_id = 0 ; //hardcoded for testing only
 
    //from the main program, listen for the incoming messages from control socket (ProSe App)
    prose_addr_len = sizeof(prose_app_addr);
@@ -5488,8 +5500,7 @@ void *rrc_control_socket_thread_fct(void *arg)
       case GROUP_COMMUNICATION_ESTABLISH_REQ:
          sourceL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.sourceL2Id;
          groupL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupL2Id;
-         //sourceL2Id = 0x123456;
-         //groupL2Id = 0x789ABC;
+
 #ifdef DEBUG_CTRL_SOCKET
          LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
          LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.type);
@@ -5497,10 +5508,14 @@ void *rrc_control_socket_thread_fct(void *arg)
          LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] group Id: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupL2Id);
          LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] group IP Address: " IPV4_ADDR "\n",IPV4_ADDR_FORMAT(sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupIpAddress));
 #endif
+
+         //store sourceL2Id
+         UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
+         UE_rrc_inst[module_id].groupL2Id = groupL2Id;
          // configure lower layers PDCP/MAC/PHY for this communication
          //init_SL_preconfig()
          //configure MAC with sourceL2Id/groupL2ID (to be used in MAC/ue_procedures.c)
-         module_id = 0 ; //hardcoded for testing only
+
          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                 (RadioResourceConfigCommonSIB_t *)NULL,
                 (struct PhysicalConfigDedicated *)NULL,
@@ -5573,12 +5588,56 @@ void *rrc_control_socket_thread_fct(void *arg)
          LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishResponse]  slrb_id: %d\n",ptr_ctrl_msg->sidelinkPrimitive.slrb_id);
 #endif
          break;
+
       case GROUP_COMMUNICATION_RELEASE_REQ:
          printf("-----------------------------------\n");
 #ifdef DEBUG_CTRL_SOCKET
          LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationReleaseRequest] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
          LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationReleaseRequest] Slrb Id: %i\n",sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id);
 #endif
+         //reset groupL2ID from MAC LAYER
+         UE_rrc_inst[module_id].groupL2Id = 0x00000000;
+         sourceL2Id = UE_rrc_inst[module_id].sourceL2Id;
+
+         rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
+                    (RadioResourceConfigCommonSIB_t *)NULL,
+                    (struct PhysicalConfigDedicated *)NULL,
+         #if defined(Rel10) || defined(Rel14)
+                    (SCellToAddMod_r10_t *)NULL,
+                    //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
+         #endif
+                    (MeasObjectToAddMod_t **)NULL,
+                    (MAC_MainConfig_t *)NULL,
+                    0,
+                    (struct LogicalChannelConfig *)NULL,
+                    (MeasGapConfig_t *)NULL,
+                    (TDD_Config_t *)NULL,
+                    (MobilityControlInfo_t *)NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL
+         #if defined(Rel10) || defined(Rel14)
+                    ,0,
+                    (MBSFN_AreaInfoList_r9_t *)NULL,
+                    (PMCH_InfoList_r9_t *)NULL
+
+         #endif
+         #ifdef CBA
+                    ,
+                    0,
+                    0
+         #endif
+         #if defined(Rel10) || defined(Rel14)
+                    ,
+                    &sourceL2Id,
+                    NULL
+         #endif
+                    );
+
+
          LOG_I(RRC,"[rrc_control_socket_thread_fct]Send GroupCommunicationReleaseResponse to ProSe App \n");
          memset(send_buf, 0, BUFSIZE);
 
