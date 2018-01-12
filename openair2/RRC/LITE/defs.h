@@ -85,6 +85,9 @@
 #define DIRECT_COMMUNICATION_ESTABLISH_RSP  6
 #define GROUP_COMMUNICATION_RELEASE_REQ     7
 #define GROUP_COMMUNICATION_RELEASE_RSP     8
+#define PC5S_ESTABLISH_REQ                  9
+#define PC5S_ESTABLISH_RSP                  10
+
 
 typedef enum {
    UE_STATE_OFF_NETWORK,
@@ -116,6 +119,16 @@ struct DirectCommunicationEstablishReq {
    uint32_t pppp;
 };
 
+struct PC5SEstablishReq{
+   uint32_t sourceL2Id;
+   uint32_t destinationL2Id;
+};
+
+struct PC5SEstablishRsp{
+   uint32_t sourceL2Id;
+   uint32_t destinationL2Id;
+   uint8_t status;
+};
 
 struct sidelink_ctrl_element {
    unsigned short type;
@@ -127,7 +140,8 @@ struct sidelink_ctrl_element {
       SL_UE_STATE_t ue_state;
       //struct GroupCommunicationReleaseReq group_comm_release_req;
       int slrb_id;
-
+      struct PC5SEstablishReq pc5s_establish_req;
+      struct PC5SEstablishRsp pc5s_establish_rsp;
    } sidelinkPrimitive;
 };
 

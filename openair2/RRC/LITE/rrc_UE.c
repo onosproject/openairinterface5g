@@ -1046,6 +1046,7 @@ rrc_ue_process_measConfig(
 #if defined(Rel14)
            ,
            NULL,
+           NULL,
            NULL
 #endif
 			  );
@@ -1563,6 +1564,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #if defined(Rel14)
            ,
            NULL,
+           NULL,
            NULL
 #endif
 				);
@@ -1626,6 +1628,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #endif
 #if defined(Rel14)
            ,
+           NULL,
            NULL,
            NULL
 #endif
@@ -1738,6 +1741,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #endif
 #if defined(Rel14)
            ,
+           NULL,
            NULL,
            NULL
 #endif
@@ -2326,6 +2330,7 @@ rrc_ue_process_mobilityControlInfo(
 #endif
 #if defined(Rel14)
            ,
+           NULL,
            NULL,
            NULL
 #endif
@@ -3194,6 +3199,7 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
 #if defined(Rel14)
            ,
            NULL,
+           NULL,
            NULL
 #endif
 			);
@@ -3878,6 +3884,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 #if defined(Rel14)
            ,
            NULL,
+           NULL,
            NULL
 #endif
 			      );
@@ -4062,6 +4069,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 #endif
 #if defined(Rel14)
            ,
+           NULL,
            NULL,
            NULL
 #endif
@@ -4563,6 +4571,7 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
 #endif
 #if defined(Rel14)
            ,
+           NULL,
            NULL,
            NULL
 #endif
@@ -5425,21 +5434,18 @@ void *rrc_control_socket_thread_fct(void *arg)
    int prose_addr_len;
    char send_buf[BUFSIZE];
    char receive_buf[BUFSIZE];
-   int optval; // flag value for setsockopt
-   int n; // message byte size
+   int optval;
+   int n;
    struct sidelink_ctrl_element *sl_ctrl_msg_recv = NULL;
    struct sidelink_ctrl_element *sl_ctrl_msg_send = NULL;
-   uint32_t sourceL2Id;
-   uint32_t groupL2Id;
-   module_id_t         module_id;
-
-   module_id = 0 ; //hardcoded for testing only
+   uint32_t sourceL2Id, groupL2Id, destinationL2Id;
+   module_id_t         module_id = 0; //hardcoded for testing only
 
    //from the main program, listen for the incoming messages from control socket (ProSe App)
    prose_addr_len = sizeof(prose_app_addr);
    int enable_notification = 1;
    while (1) {
-      LOG_I(RRC,"[rrc_control_socket_thread_fct]: Listening to incoming connection from ProSe App \n");
+      LOG_I(RRC,"Listening to incoming connection from ProSe App \n");
       // receive a message from ProSe App
       memset(receive_buf, 0, BUFSIZE);
       n = recvfrom(ctrl_sock_fd, receive_buf, BUFSIZE, 0,
@@ -5450,7 +5456,6 @@ void *rrc_control_socket_thread_fct(void *arg)
       }
       //TODO: should store the address of ProSeApp [UE_rrc_inst] to be able to send UE state notification to the App
 
-
       //sl_ctrl_msg_recv = (struct sidelink_ctrl_element *) receive_buf;
       sl_ctrl_msg_recv = calloc(1, sizeof(struct sidelink_ctrl_element));
       memcpy((void *)sl_ctrl_msg_recv, (void *)receive_buf, sizeof(struct sidelink_ctrl_element));
@@ -5459,11 +5464,11 @@ void *rrc_control_socket_thread_fct(void *arg)
       switch (sl_ctrl_msg_recv->type) {
       case SESSION_INIT_REQ:
 #ifdef DEBUG_CTRL_SOCKET
-         LOG_I(RRC,"[rrc_control_socket_thread_fct]: Received SessionInitializationRequest on socket from ProSe App (msg type: %d)\n", sl_ctrl_msg_recv->type);
+         LOG_I(RRC,"Received SessionInitializationRequest on socket from ProSe App (msg type: %d)\n", sl_ctrl_msg_recv->type);
 #endif
          //TODO: get SL_UE_STATE from lower layer
 
-         LOG_I(RRC,"[rrc_control_socket_thread_fct]: Send UEStateInformation to ProSe App \n");
+         LOG_I(RRC,"Send UEStateInformation to ProSe App \n");
          memset(send_buf, 0, BUFSIZE);
 
          sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
@@ -5483,8 +5488,8 @@ void *rrc_control_socket_thread_fct(void *arg)
 #ifdef DEBUG_CTRL_SOCKET
          struct sidelink_ctrl_element *ptr_ctrl_msg = NULL;
          ptr_ctrl_msg = (struct sidelink_ctrl_element *) send_buf;
-         LOG_I(RRC,"[rrc_control_socket_thread_fct][UEStateInformation] msg type: %d\n",ptr_ctrl_msg->type);
-         LOG_I(RRC,"[rrc_control_socket_thread_fct][UEStateInformation] UE state: %d\n",ptr_ctrl_msg->sidelinkPrimitive.ue_state);
+         LOG_I(RRC,"[UEStateInformation] msg type: %d\n",ptr_ctrl_msg->type);
+         LOG_I(RRC,"[UEStateInformation] UE state: %d\n",ptr_ctrl_msg->sidelinkPrimitive.ue_state);
 #endif
 
          /*  if (enable_notification > 0) {
@@ -5502,11 +5507,11 @@ void *rrc_control_socket_thread_fct(void *arg)
          groupL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupL2Id;
 
 #ifdef DEBUG_CTRL_SOCKET
-         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
-         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.type);
-         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] source Id: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.sourceL2Id);
-         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] group Id: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupL2Id);
-         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq] group IP Address: " IPV4_ADDR "\n",IPV4_ADDR_FORMAT(sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupIpAddress));
+         LOG_I(RRC,"[GroupCommunicationEstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
+         LOG_I(RRC,"[GroupCommunicationEstablishReq] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.type);
+         LOG_I(RRC,"[GroupCommunicationEstablishReq] source Id: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.sourceL2Id);
+         LOG_I(RRC,"[GroupCommunicationEstablishReq] group Id: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupL2Id);
+         LOG_I(RRC,"[GroupCommunicationEstablishReq] group IP Address: " IPV4_ADDR "\n",IPV4_ADDR_FORMAT(sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupIpAddress));
 #endif
 
          //store sourceL2Id
@@ -5550,18 +5555,19 @@ void *rrc_control_socket_thread_fct(void *arg)
      #if defined(Rel10) || defined(Rel14)
                 ,
                 &sourceL2Id,
-                &groupL2Id
+                &groupL2Id,
+                NULL
      #endif
                 );
 
-         LOG_I(RRC,"[rrc_control_socket_thread_fct]Send GroupCommunicationEstablishResp to ProSe App\n");
+         LOG_I(RRC,"Send GroupCommunicationEstablishResp to ProSe App\n");
          memset(send_buf, 0, BUFSIZE);
          sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
          sl_ctrl_msg_send->type = GROUP_COMMUNICATION_ESTABLISH_RSP;
          //in case of TX, assign a new SLRB and prepare for the filter
          if (sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.type == 1) {
 #ifdef DEBUG_CTRL_SOCKET
-            LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishReq]  PPPP: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.pppp);
+            LOG_I(RRC,"[GroupCommunicationEstablishReq]  PPPP: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.pppp);
 #endif
             sl_ctrl_msg_send->sidelinkPrimitive.slrb_id = SLRB_ID; //slrb_id
             //pthread_mutex_lock(&slrb_mutex);
@@ -5584,16 +5590,16 @@ void *rrc_control_socket_thread_fct(void *arg)
 
 #ifdef DEBUG_CTRL_SOCKET
          ptr_ctrl_msg = (struct sidelink_ctrl_element *) send_buf;
-         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishResponse]  msg type: %d\n",ptr_ctrl_msg->type);
-         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationEstablishResponse]  slrb_id: %d\n",ptr_ctrl_msg->sidelinkPrimitive.slrb_id);
+         LOG_I(RRC,"[GroupCommunicationEstablishResponse]  msg type: %d\n",ptr_ctrl_msg->type);
+         LOG_I(RRC,"[GroupCommunicationEstablishResponse]  slrb_id: %d\n",ptr_ctrl_msg->sidelinkPrimitive.slrb_id);
 #endif
          break;
 
       case GROUP_COMMUNICATION_RELEASE_REQ:
          printf("-----------------------------------\n");
 #ifdef DEBUG_CTRL_SOCKET
-         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationReleaseRequest] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
-         LOG_I(RRC,"[rrc_control_socket_thread_fct][GroupCommunicationReleaseRequest] Slrb Id: %i\n",sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id);
+         LOG_I(RRC,"[GroupCommunicationReleaseRequest] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
+         LOG_I(RRC,"[GroupCommunicationReleaseRequest] Slrb Id: %i\n",sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id);
 #endif
          //reset groupL2ID from MAC LAYER
          UE_rrc_inst[module_id].groupL2Id = 0x00000000;
@@ -5633,12 +5639,13 @@ void *rrc_control_socket_thread_fct(void *arg)
          #if defined(Rel10) || defined(Rel14)
                     ,
                     &sourceL2Id,
+                    NULL,
                     NULL
          #endif
                     );
 
 
-         LOG_I(RRC,"[rrc_control_socket_thread_fct]Send GroupCommunicationReleaseResponse to ProSe App \n");
+         LOG_I(RRC,"Send GroupCommunicationReleaseResponse to ProSe App \n");
          memset(send_buf, 0, BUFSIZE);
 
          sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
@@ -5657,6 +5664,76 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          prose_addr_len = sizeof(prose_app_addr);
          n = sendto(ctrl_sock_fd, (char *)send_buf, sizeof(struct sidelink_ctrl_element), 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
+         if (n < 0){
+            LOG_E(RRC, "ERROR: Failed to send to ProSe App\n");
+            exit(EXIT_FAILURE);
+         }
+         break;
+
+
+      case PC5S_ESTABLISH_REQ:
+         sourceL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.sourceL2Id;
+         destinationL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.destinationL2Id;
+#ifdef DEBUG_CTRL_SOCKET
+         LOG_I(RRC,"[PC5EstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
+         LOG_I(RRC,"[PC5EstablishReq] source Id: 0x%08x \n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.sourceL2Id);
+         LOG_I(RRC,"[PC5EstablishReq] destination Id: 0x%08x \n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.destinationL2Id);
+#endif
+         //store sourceL2Id, destinationL2Id
+         UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
+         UE_rrc_inst[module_id].destinationL2Id = destinationL2Id;
+         // configure lower layers PDCP/MAC/PHY
+         rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
+                (RadioResourceConfigCommonSIB_t *)NULL,
+                (struct PhysicalConfigDedicated *)NULL,
+     #if defined(Rel10) || defined(Rel14)
+                (SCellToAddMod_r10_t *)NULL,
+                //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
+     #endif
+                (MeasObjectToAddMod_t **)NULL,
+                (MAC_MainConfig_t *)NULL,
+                0,
+                (struct LogicalChannelConfig *)NULL,
+                (MeasGapConfig_t *)NULL,
+                (TDD_Config_t *)NULL,
+                (MobilityControlInfo_t *)NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL
+     #if defined(Rel10) || defined(Rel14)
+                ,0,
+                (MBSFN_AreaInfoList_r9_t *)NULL,
+                (PMCH_InfoList_r9_t *)NULL
+
+     #endif
+     #ifdef CBA
+                ,
+                0,
+                0
+     #endif
+     #if defined(Rel10) || defined(Rel14)
+                ,
+                &sourceL2Id,
+                &destinationL2Id,
+                &destinationL2Id
+     #endif
+                );
+
+         LOG_I(RRC,"Send PC5EstablishRsp to ProSe App\n");
+         memset(send_buf, 0, BUFSIZE);
+         sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
+         sl_ctrl_msg_send->type = PC5S_ESTABLISH_RSP;
+         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.sourceL2Id = sourceL2Id;
+         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.destinationL2Id = destinationL2Id;
+         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.status = 1;
+         memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
+
+         prose_addr_len = sizeof(prose_app_addr);
+         n = sendto(ctrl_sock_fd, (char *)send_buf, sizeof(struct sidelink_ctrl_element), 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
+         free(sl_ctrl_msg_send);
          if (n < 0){
             LOG_E(RRC, "ERROR: Failed to send to ProSe App\n");
             exit(EXIT_FAILURE);

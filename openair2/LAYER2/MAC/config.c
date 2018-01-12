@@ -1049,7 +1049,8 @@ rrc_mac_config_req_ue(
 #endif
 #if defined(Rel14)
   ,uint32_t                        *sourceL2Id,
-  uint32_t                         *groupL2Id
+  uint32_t                         *groupL2Id,
+  uint32_t                         *destinationL2Id
 #endif
 
                       )
@@ -1369,12 +1370,20 @@ rrc_mac_config_req_ue(
 
   // Panos: Call to the phy_config_request_ue() function of the interface to copy the UE_PHY_Config_t interface
   // configuration to the PHY common and dedicated configuration originating from RRC.
+
 //for D2D
 #if defined(Rel10) || defined(Rel14)
   if ( sourceL2Id && groupL2Id) {
      UE_mac_inst[Mod_idP].sourceL2Id = *sourceL2Id;
      UE_mac_inst[Mod_idP].groupL2Id = *groupL2Id;
+  } else if (sourceL2Id) { //reset groupL2Id
+     UE_mac_inst[Mod_idP].groupL2Id = 0x00000000;
   }
+  if ( sourceL2Id && destinationL2Id) {
+       UE_mac_inst[Mod_idP].sourceL2Id = *sourceL2Id;
+       UE_mac_inst[Mod_idP].destinationL2Id = *destinationL2Id;
+  }
+
 #endif
 
   return(0);

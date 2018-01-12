@@ -932,7 +932,8 @@ int rrc_mac_config_req_ue(module_id_t     module_idP,
 #if defined(Rel14)
            ,
            uint32_t *sourceL2Id,
-           uint32_t *groupL2Id
+           uint32_t *groupL2Id,
+           uint32_t *destinationL2Id
 #endif
 			  );
 

@@ -2740,6 +2740,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
   UE_MAC_INST *ue = &UE_mac_inst[module_idP];
   int rvtab[4] = {0,2,3,1};
   int sdu_length;
+  uint32_t destL2Id; //groupL2Id/destinationL2Id
 
   // Note: this is hard-coded for now for the default SL configuration (4 SF PSCCH, 36 SF PSSCH)
   SLSCH_t *slsch = &UE_mac_inst[module_idP].slsch;
@@ -2776,11 +2777,13 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
     int req;
 
     if (ue->slsch_lcid == 10) {
-    if (TBS<=rlc_status.bytes_in_buffer) req=TBS;
-    else req = rlc_status.bytes_in_buffer;
+       if (TBS<=rlc_status.bytes_in_buffer) req=TBS;
+       else req = rlc_status.bytes_in_buffer;
+       destL2Id = ue->destinationL2Id;
     } else if (ue->slsch_lcid == 3){
        if (TBS<=rlc_status_data.bytes_in_buffer) req=TBS;
        else req = rlc_status_data.bytes_in_buffer;
+       destL2Id = ue->groupL2Id;
     }
 
     if (req>0) {
@@ -2800,8 +2803,8 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
       if (sdu_length > 0) {
 
 	LOG_I(MAC,"SFN.SF %d.%d : got %d bytes from Sidelink buffer (%d requested)\n",frameP,subframeP,sdu_length,req);
-	LOG_I(MAC,"sourceL2Id: %d \n",ue->sourceL2Id);
-	LOG_I(MAC,"groupL2Id: %d \n",ue->groupL2Id);
+	LOG_I(MAC,"sourceL2Id: 0x%08x \n",ue->sourceL2Id);
+	LOG_I(MAC,"groupL2Id/destinationL2Id: 0x%08x \n",destL2Id);
 
 	slsch->payload = (unsigned char*)ue->slsch_pdu.payload;
 	if (sdu_length < 128) { 
@@ -2814,9 +2817,9 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 	  shorth->SRC07 = (ue->sourceL2Id>>16) & 0x000000ff;
 	  shorth->SRC815 = (ue->sourceL2Id>>8) & 0x000000ff;
 	  shorth->SRC1623 = ue->sourceL2Id & 0x000000ff;
-     shorth->DST07 = (ue->groupL2Id >>16) & 0x000000ff;
-     shorth->DST815 = (ue->groupL2Id>>8) & 0x000000ff;
-	  shorth->DST1623 = ue->groupL2Id & 0x000000ff;
+     shorth->DST07 = (destL2Id >>16) & 0x000000ff;
+     shorth->DST815 = (destL2Id>>8) & 0x000000ff;
+	  shorth->DST1623 = destL2Id & 0x000000ff;
 
 	  shorth->V=0x1;
 	}
@@ -2830,9 +2833,9 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 	  longh->SRC07 = (ue->sourceL2Id >>16) & 0x000000ff;
 	  longh->SRC815 = (ue->sourceL2Id>>8) & 0x000000ff;
 	  longh->SRC1623 = ue->sourceL2Id & 0x000000ff;
-	  longh->DST07 = (ue->groupL2Id >>16) & 0x000000ff;
-	  longh->DST815 = (ue->groupL2Id>>8) & 0x000000ff;
-	  longh->DST1623 = ue->groupL2Id & 0x000000ff;
+	  longh->DST07 = (destL2Id >>16) & 0x000000ff;
+	  longh->DST815 = (destL2Id>>8) & 0x000000ff;
+	  longh->DST1623 = destL2Id & 0x000000ff;
 
 	  longh->V=0x1;
 	}
