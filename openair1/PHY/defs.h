@@ -444,6 +444,8 @@ typedef struct {
   uint8_t llr_slot1_available;
   uint8_t dci_slot0_available;
   uint8_t first_symbol_available;
+  uint8_t decoder_thread_available;
+  uint8_t decoder_main_available;
   uint8_t decoder_switch;
   int counter_decoder;
   uint8_t channel_level;

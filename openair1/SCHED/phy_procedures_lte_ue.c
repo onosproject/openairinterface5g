@@ -5379,13 +5379,13 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
   // do procedures for C-RNTI
   LOG_D(PHY," ------ --> PDSCH ChannelComp/LLR slot 0: AbsSubframe %d.%d ------  \n", frame_rx%1024, nr_tti_rx);
   if (ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id][0]->active == 1) {
-	proc->counter_decoder++;
+	/*proc->counter_decoder++;
 	printf("counter decoder %d\n", proc->counter_decoder);
 	if (proc->counter_decoder > 6)
 		{
 			proc->decoder_switch = 1;
 			printf("switch to LDPC\n");
-		}
+		}*/
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDSCH_PROC, VCD_FUNCTION_IN);
 #if UE_TIMING_TRACE
     start_meas(&ue->pdsch_procedures_stat[ue->current_thread_id[nr_tti_rx]]);

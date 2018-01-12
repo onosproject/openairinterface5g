@@ -40,7 +40,7 @@
 #include "PHY/CODING/nrLDPC_decoder.h"
 #include "PHY/CODING/nrLDPC_types.h"
 //#define DEBUG_DLSCH_DECODING
-//#define TD_DECODING
+#define TD_DECODING
 
 #define OAI_LDPC_MAX_NUM_LLR 26112 // NR_LDPC_NCOL_BG1*NR_LDPC_ZMAX
 
@@ -985,6 +985,7 @@ uint32_t  dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,
   }
   */
 
+
   harq_process->trials[harq_process->round]++;
 
   A = harq_process->TBS; //2072 for QPSK 1/3
@@ -1050,6 +1051,7 @@ uint32_t  dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,
 #endif
 
   opp_enabled=1;
+  printf("harq process C %d half %d\n", harq_process->C, harq_process->C/2);
 if (harq_process->C>1) { // wakeup worker if more than 1 segment
      if (pthread_mutex_lock(&proc->mutex_dlsch_td) != 0) {
          LOG_E( PHY, "[SCHED][UE %d][Slot0] error locking mutex for UE dlsch td\n",phy_vars_ue->Mod_id );
@@ -1120,6 +1122,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
 
 
      Cby2 = harq_process->C/2;
+     proc->decoder_main_available = 1;
    }
    else {
      Cby2 = 1;
@@ -1504,6 +1507,13 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
   printf("F %d, Fbytes %d\n",harq_process->F,harq_process->F>>3);
   printf("C %d\n",harq_process->C);
   */
+  uint32_t wait = 0;
+  while((proc->decoder_thread_available == 0) &&(harq_process->C>1))
+  {
+          usleep(1);
+          wait++;
+  }
+
   for (r=0; r<harq_process->C; r++) {
     if (r<harq_process->Cminus)
       Kr = harq_process->Kminus;
@@ -1533,6 +1543,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
   }
 
   dlsch->last_iteration_cnt = ret;
+  proc->decoder_thread_available == 0;
 
 
   //wait for worker to finish
@@ -1555,6 +1566,8 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 
     proc->instance_cnt_dlsch_td=-1;
     proc->nr_tti_rx=proc->sub_frame_start;
+
+    printf("start thread 0\n");
 
     char threadname[256];
     sprintf(threadname,"UE_thread_dlsch_td_%d", proc->sub_frame_start);
@@ -1657,6 +1670,13 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   }
   */
 
+	        uint32_t wait = 0;
+	          while(proc->decoder_main_available == 0)
+	          {
+	                  usleep(1);
+	                  wait++;
+	          }
+
   harq_process->trials[harq_process->round]++;
 
   A = harq_process->TBS; //2072 for QPSK 1/3
@@ -1723,8 +1743,9 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 #endif
 
   opp_enabled=1;
+  printf("harq process thread 0 half C %d\n",harq_process->C/2);
 
-  for (r=(harq_process->C)/2; r<harq_process->C; r++) {
+  for (r=(harq_process->C/2); r<harq_process->C; r++) {
 
 
     // Get Turbo interleaver parameters
@@ -1745,7 +1766,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
       iind = 123 + ((Kr_bytes-256)>>3);
     else {
       printf("dlsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
-      return(dlsch->max_turbo_iterations);
+      //return(dlsch->max_turbo_iterations);
     }
 
 #ifdef DEBUG_DLSCH_DECODING
@@ -1794,7 +1815,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
       stop_meas(dlsch_rate_unmatching_stats);
 #endif
       LOG_E(PHY,"dlsch_decoding.c: Problem in rate_matching\n");
-      return(dlsch->max_turbo_iterations);
+      //return(dlsch->max_turbo_iterations);
     } else
     {
 #if UE_TIMING_TRACE
@@ -2052,7 +2073,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 
   if (err_flag == 1) {
 #if UE_DEBUG_TRACE
-    LOG_I(PHY,"[UE %d] DLSCH: Setting NAK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d) Kr %d r %d harq_process->round %d\n",
+    LOG_I(PHY,"[UE %d] THREAD 0 DLSCH: Setting NAK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d) Kr %d r %d harq_process->round %d\n",
         phy_vars_ue->Mod_id, frame, subframe, harq_pid,harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs,Kr,r,harq_process->round);
 #endif
     dlsch->harq_ack[subframe].ack = 0;
@@ -2074,10 +2095,10 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
     }*/
 
 
-    return((1+dlsch->max_turbo_iterations));
+    //return((1+dlsch->max_turbo_iterations));
   } else {
 #if UE_DEBUG_TRACE
-      LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d TBS %d mcs %d nb_rb %d\n",
+      LOG_I(PHY,"[UE %d] THREAD 0 DLSCH: Setting ACK for subframe %d TBS %d mcs %d nb_rb %d\n",
            phy_vars_ue->Mod_id,subframe,harq_process->TBS,harq_process->mcs,harq_process->nb_rb);
 #endif
 
@@ -2135,8 +2156,11 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 
   dlsch->last_iteration_cnt = ret;
 
-  return(ret);
+  //return(ret);
   }
+
+  proc->decoder_thread_available = 1;
+  proc->decoder_main_available = 0;
 
   if (pthread_mutex_lock(&proc->mutex_dlsch_td) != 0) {
               LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
@@ -2322,7 +2346,7 @@ int dlsch_abstraction_MIESM(double* sinr_dB,uint8_t TM, uint32_t rb_alloc[4], ui
 }
 
 uint32_t dlsch_decoding_emul(PHY_VARS_UE *phy_vars_ue,
-                             uint8_t subframe,
+                             uint8_t nr_tti_rx,
                              PDSCH_t dlsch_id,
                              uint8_t eNB_id)
 {
@@ -2348,7 +2372,7 @@ uint32_t dlsch_decoding_emul(PHY_VARS_UE *phy_vars_ue,
     mac_xface->macphy_exit("Could not find attached eNB for DLSCH emulation");
   }
 
-  LOG_D(PHY,"[UE] dlsch_decoding_emul : subframe %d, eNB_id %d, dlsch_id %d\n",subframe,eNB_id2,dlsch_id);
+  LOG_D(PHY,"[UE] dlsch_decoding_emul : nr_tti_rx %d, eNB_id %d, dlsch_id %d\n",nr_tti_rx,eNB_id2,dlsch_id);
 
   //  printf("dlsch_eNB_ra->harq_processes[0] %p\n",PHY_vars_eNB_g[eNB_id]->dlsch_eNB_ra->harq_processes[0]);
 
