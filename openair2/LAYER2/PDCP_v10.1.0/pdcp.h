@@ -407,7 +407,8 @@ struct pdcp_netlink_element_s {
 #ifdef Rel14
 #define PDCP_SOCKET_PORT_NO 9999 //temporary value
 int pdcp_pc5_sockfd;
-struct sockaddr_in prose_app_addr;
+struct sockaddr_in prose_ctrl_addr;
+struct sockaddr_in prose_pdcp_addr;
 struct sockaddr_in pdcp_sin;
 int pdcp_pc5_socket_init();
 

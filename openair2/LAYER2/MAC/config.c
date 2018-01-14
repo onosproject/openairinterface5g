@@ -1373,15 +1373,14 @@ rrc_mac_config_req_ue(
 
 //for D2D
 #if defined(Rel10) || defined(Rel14)
-  if ( sourceL2Id && groupL2Id) {
+  if (sourceL2Id){
      UE_mac_inst[Mod_idP].sourceL2Id = *sourceL2Id;
-     UE_mac_inst[Mod_idP].groupL2Id = *groupL2Id;
-  } else if (sourceL2Id) { //reset groupL2Id
-     UE_mac_inst[Mod_idP].groupL2Id = 0x00000000;
   }
-  if ( sourceL2Id && destinationL2Id) {
-       UE_mac_inst[Mod_idP].sourceL2Id = *sourceL2Id;
-       UE_mac_inst[Mod_idP].destinationL2Id = *destinationL2Id;
+  if (groupL2Id) {
+     UE_mac_inst[Mod_idP].groupL2Id = *groupL2Id;
+  }
+  if (destinationL2Id) {
+     UE_mac_inst[Mod_idP].destinationL2Id = *destinationL2Id;
   }
 
 #endif

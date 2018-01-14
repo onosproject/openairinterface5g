@@ -765,7 +765,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
   AssertFatal(((longh->LCID==3)|(longh->LCID==10)),"LCID is %d (not 3 or 10)\n",longh->LCID);
   //filter incoming packet based on destination address
   destinationL2Id = (longh->DST07<<16) | (longh->DST815 <<8) | (longh->DST1623);
-  LOG_I( MAC, "[DestinationL2Id:  %"PRIu32"]  \n", destinationL2Id );
+  LOG_I( MAC, "[DestinationL2Id:  0x%08x]  \n", destinationL2Id );
   //match the destinationL2Id with UE L2Id or groupL2ID
   if (!((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) | (destinationL2Id == UE_mac_inst[module_idP].groupL2Id))){
      LOG_I( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");

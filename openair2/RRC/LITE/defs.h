@@ -120,6 +120,7 @@ struct DirectCommunicationEstablishReq {
 };
 
 struct PC5SEstablishReq{
+   uint8_t type;
    uint32_t sourceL2Id;
    uint32_t destinationL2Id;
 };

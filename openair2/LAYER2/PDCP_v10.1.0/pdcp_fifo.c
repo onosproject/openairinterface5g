@@ -218,25 +218,25 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
          sl_pc5s_msg_recv = calloc(1, sizeof(sidelink_pc5s_element));
          memcpy((void*)sl_pc5s_msg_recv, (void*)(sdu_p->data+sizeof(pdcp_data_ind_header_t)), sizeof(sidelink_pc5s_element));
 
-         LOG_D(PDCP,"[pdcp_fifo_flush_sdus]: Received DirectCommunicationRequest (PC5-S), header msg_type: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.msg_type);
-         LOG_D(PDCP,"[pdcp_fifo_flush_sdus]: Received DirectCommunicationRequest (PC5-S), header rb_id: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.rb_id);
-         LOG_D(PDCP,"[pdcp_fifo_flush_sdus]: Received DirectCommunicationRequest (PC5-S), header data_size: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.data_size);
-         LOG_D(PDCP,"[pdcp_fifo_flush_sdus]: Received DirectCommunicationRequest (PC5-S), header inst: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.inst);
+         LOG_D(PDCP,"Received PC5S message, header msg_type: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.msg_type);
+         LOG_D(PDCP,"Received PC5S message, header rb_id: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.rb_id);
+         LOG_D(PDCP,"Received PC5S message, header data_size: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.data_size);
+         LOG_D(PDCP,"Received PC5S message, header inst: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.inst);
 
          if (sl_pc5s_msg_recv->pdcp_data_header.msg_type == SL_DIRECT_COMMUNICATION_REQUEST){
-            LOG_D(PDCP,"[pdcp_pc5_socket_thread_fct]: Received DirectCommunicationRequest (PC5-S), seqno: %d)\n", sl_pc5s_msg_recv->pc5sPrimitive.pc5s_direct_communication_req.sequenceNumber);
-            LOG_D(PDCP,"[pdcp_pc5_socket_thread_fct]: Received DirectCommunicationRequest (PC5-S), ipAddressConfig: %d)\n", sl_pc5s_msg_recv->pc5sPrimitive.pc5s_direct_communication_req.ipAddressConfig);
+            LOG_D(PDCP,"PC5S message (SL_DIRECT_COMMUNICATION_REQUEST), seqno: %d)\n", sl_pc5s_msg_recv->pc5sPrimitive.pc5s_direct_communication_req.sequenceNumber);
+            LOG_D(PDCP,"PC5S message (SL_DIRECT_COMMUNICATION_REQUEST), ipAddressConfig: %d)\n", sl_pc5s_msg_recv->pc5sPrimitive.pc5s_direct_communication_req.ipAddressConfig);
          }
          //send to ProSe app
-         LOG_D(RRC,"[pdcp_fifo_flush_sdus]: Send DirectCommunicationRequest to ProSe App \n");
+         LOG_D(PDCP,"Send DirectCommunicationRequest to ProSe App \n");
 #endif
          memset(send_buf, 0, BUFSIZE);
          //memcpy((void *)send_buf, (void *)sl_pc5s_msg_recv, sizeof(sidelink_pc5s_element));
          memcpy((void *)send_buf, (void*)(sdu_p->data+sizeof(pdcp_data_ind_header_t)), sizeof(sidelink_pc5s_element));
          //free(sl_ctrl_msg_send);
 
-         int prose_addr_len = sizeof(prose_app_addr);
-         int n = sendto(pdcp_pc5_sockfd, (char *)send_buf, sizeof(sidelink_pc5s_element), 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
+         int prose_addr_len = sizeof(prose_pdcp_addr);
+         int n = sendto(pdcp_pc5_sockfd, (char *)send_buf, sizeof(sidelink_pc5s_element), 0, (struct sockaddr *)&prose_pdcp_addr, prose_addr_len);
          if (n < 0) {
             LOG_E(PDCP, "ERROR: Failed to send to ProSe App\n");
             exit(EXIT_FAILURE);
@@ -570,11 +570,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 //TTN for D2D (PC5S)
 #ifdef Rel14
   // module_id = 0 ; //hardcoded for testing only
-   prose_addr_len = sizeof(prose_app_addr);
+   prose_addr_len = sizeof(prose_pdcp_addr);
    // receive a message from ProSe App
    memset(receive_buf, 0, BUFSIZE);
    bytes_received = recvfrom(pdcp_pc5_sockfd, receive_buf, BUFSIZE, 0,
-         (struct sockaddr *) &prose_app_addr, &prose_addr_len);
+         (struct sockaddr *) &prose_pdcp_addr, &prose_addr_len);
    //  if (bytes_received < 0){
    //    LOG_E(RRC, "ERROR: Failed to receive from ProSe App\n");
    //    exit(EXIT_FAILURE);
@@ -592,8 +592,8 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
          sl_pc5s_msg_send->pc5sPrimitive.status = 1;
 
          memcpy((void *)send_buf, (void *)sl_pc5s_msg_send, sizeof(sidelink_pc5s_element));
-         int prose_addr_len = sizeof(prose_app_addr);
-         int bytes_sent = sendto(pdcp_pc5_sockfd, (char *)send_buf, sizeof(sidelink_pc5s_element), 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
+         int prose_addr_len = sizeof(prose_pdcp_addr);
+         int bytes_sent = sendto(pdcp_pc5_sockfd, (char *)send_buf, sizeof(sidelink_pc5s_element), 0, (struct sockaddr *)&prose_pdcp_addr, prose_addr_len);
          if (bytes_sent < 0) {
             LOG_E(PDCP, "ERROR: Failed to send to ProSe App\n");
             exit(EXIT_FAILURE);
@@ -1306,14 +1306,14 @@ void *pdcp_pc5_socket_thread_fct(void *arg)
 
    LOG_I(PDCP,"*****************[pdcp_pc5_socket_thread_fct]**************\n");
    //from the main program, listen for the incoming messages from control socket (ProSe App)
-   prose_addr_len = sizeof(prose_app_addr);
+   prose_addr_len = sizeof(prose_pdcp_addr);
 
    while (1) {
       LOG_I(RRC,"[pdcp_pc5_socket_thread_fct]: Listening to incoming connection from ProSe App \n");
       // receive a message from ProSe App
       memset(receive_buf, 0, BUFSIZE);
       n = recvfrom(pdcp_pc5_sockfd, receive_buf, BUFSIZE, 0,
-            (struct sockaddr *) &prose_app_addr, &prose_addr_len);
+            (struct sockaddr *) &prose_pdcp_addr, &prose_addr_len);
       if (n < 0){
          LOG_E(RRC, "ERROR: Failed to receive from ProSe App\n");
          exit(EXIT_FAILURE);
