@@ -687,13 +687,13 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       printf("Encoding ... iind %d f1 %d, f2 %d\n",iind,f1f2mat_old[iind*2],f1f2mat_old[(iind*2)+1]);
 #endif
       start_meas(te_stats);
-      printf("start turbo encoder kr %d kr>>3 %d\n", Kr, Kr>>3);
+      /*printf("start turbo encoder kr %d kr>>3 %d\n", Kr, Kr>>3);
       for (int tbc_counter = 0; tbc_counter< Kr; tbc_counter++){
       printf("turbo tbc number %d input %d\n",tbc_counter, dlsch->harq_processes[harq_pid]->c[r][tbc_counter]);
-      }
+      }*/
 
       printf("start encoder kr %d kr>>3 %d\n", Kr, Kr>>3);
-            for (int tbs_counter = 0; tbs_counter< Kr>>3; tbs_counter++){
+            for (int tbs_counter = 0; tbs_counter< 8; tbs_counter++){
             printf("%d\n", dlsch->harq_processes[harq_pid]->c[r][tbs_counter]);
             }
 
@@ -720,11 +720,11 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
             printf("end ldpc encoder -- output\n");
 
             //printf("output %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->d[r][96], dlsch->harq_processes[harq_pid]->d[r][96+1], dlsch->harq_processes[harq_pid]->d[r][96+2],dlsch->harq_processes[harq_pid]->d[r][96+3], dlsch->harq_processes[harq_pid]->d[r][96+4]);
-            for (int cnt =0 ; cnt < 66*128; cnt ++){
+            /*for (int cnt =0 ; cnt < 66*128; cnt ++){
             printf("%d \n",  dlsch->harq_processes[harq_pid]->d[r][96+cnt]);
 
             }
-            printf("\n");
+            printf("\n");*/
             stop_meas(te_stats);
 #ifdef DEBUG_DLSCH_CODING
 

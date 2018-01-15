@@ -537,8 +537,9 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
 
       printf("harq process dr \n");
+      //66*p_decParams->Z
 
-      for (int cnt =0; cnt < 66*p_decParams->Z; cnt++){
+      for (int cnt =0; cnt < 8; cnt++){
       printf("%d \n", harq_process->d[r][96+cnt]);
       }
 
@@ -592,7 +593,30 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       			&pl[0],
 				llrProcBuf,
           		p_procTime);
+
+		for (int m=0; m < Kr>>3; m ++)
+		      	      	{
+		      				harq_process->c[r][m]= (uint8_t) llrProcBuf[m];
+		      	      	}
+
+		      	for (int u=0; u < Kr>>3; u ++)
+		      	      	      	{
+		      						ullrProcBuf[u]= (uint8_t) llrProcBuf[u];
+		      	      	      	}
+
+
+		      	printf("output unsigned ullrProcBuf \n");
+
+		      	for (int j=0; j < Kr>>3; j ++)
+		      	      	       	      	{
+
+		      	      						printf(" %d \n", ullrProcBuf[j]);
+
+		      	      	      	      	}
+		     	printf(" \n");
 #endif
+
+		 printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
 
 
 #if UE_TIMING_TRACE
