@@ -1391,6 +1391,7 @@ static void* ru_stats_thread(void* param) {
 
 #ifdef UE_EXPANSION
 int first_phy_tx = 1;
+volatile int16_t phy_tx_txdataF_end;
 volatile int16_t phy_tx_end;
 #endif
 static void* ru_thread( void* param ) {
@@ -1410,6 +1411,11 @@ static void* ru_thread( void* param ) {
   dlsch_ue_select_tbl_in_use = 1;
 #endif
 
+#ifdef UE_EXPANSION
+  struct timespec time_req, time_rem;
+  time_req.tv_sec = 0;
+  time_req.tv_nsec = 10000;
+#endif
 
   // set default return value
   thread_top_init("ru_thread",0,870000,1000000,1000000);
@@ -1504,6 +1510,7 @@ static void* ru_thread( void* param ) {
     if(first_phy_tx == 0)
     {
         phy_tx_end = 0;
+        phy_tx_txdataF_end = 0;
         if(pthread_mutex_lock(&ru->proc.mutex_phy_tx) != 0){
           LOG_E( PHY, "[RU] ERROR pthread_mutex_lock for phy tx thread (IC %d)\n", ru->proc.instance_cnt_phy_tx);
           exit_fun( "error locking mutex_rxtx" );
@@ -1518,6 +1525,7 @@ static void* ru_thread( void* param ) {
         pthread_mutex_unlock( &ru->proc.mutex_phy_tx );
     } else {
         phy_tx_end = 1;
+        phy_tx_txdataF_end = 1;
     }
     first_phy_tx = 0;
 #endif
@@ -1587,7 +1595,7 @@ static void* ru_thread( void* param ) {
     if (ru->fh_north_out) ru->fh_north_out(ru);
 #else
     while((!oai_exit)&&(phy_tx_end == 0)){
-        usleep(200);
+        nanosleep(&time_req,&time_rem);
         continue;
     }
 #endif
@@ -1719,6 +1727,8 @@ static void* eNB_thread_phy_tx( void* param ) {
        ru->proc.frame_tx = proc->frame_phy_tx;
        ru->proc.subframe_tx = proc->subframe_phy_tx;
        ru->proc.timestamp_tx = proc->timestamp_phy_tx;
+       phy_tx_txdataF_end = 1;
+
        // do TX front-end processing if needed (precoding and/or IDFTs)
        if (ru->feptx_prec) ru->feptx_prec(ru);
 
