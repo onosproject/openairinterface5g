@@ -749,12 +749,15 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		    sub_frame_t subframeP,
 		    uint8_t* sdu,
 		    uint16_t sdu_len,
-		    uint8_t eNB_index
+		    uint8_t eNB_index,
+		    sl_discovery_flag_t sl_discovery_flag
 		    ) {
 
   int rlc_sdu_len;
   char *rlc_sdu;
   uint32_t destinationL2Id =0x00000000;
+
+  if (sl_discovery_flag == SL_DISCOVERY_FLAG_NO) {
 
   // Notes: 1. no control elements are supported yet
   //        2. we exit with error if LCID != 3
@@ -792,6 +795,23 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		   rlc_sdu_len,
 		   1,
 		   NULL);
+  } else { //SL_DISCOVERY
+
+     LOG_I( MAC, "SL DISCOVERY \n");
+    //call mac_rrc_data_ind
+     uint16_t len;
+     mac_rrc_data_ind(module_idP,
+                      CC_id,
+                      frameP,subframeP,
+                      UE_mac_inst[module_idP].crnti,
+                      SL_DISCOVERY,
+                      sdu, //(uint8_t*)&UE_mac_inst[Mod_id].SL_Discovery[0].Rx_buffer.Payload[0],
+                      len,
+                      ENB_FLAG_NO,
+                      eNB_index,
+                      0);
+
+  }
 }
 
 
@@ -2728,8 +2748,25 @@ SLSS_t *ue_get_slss(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t su
 }
 
 SLDCH_t *ue_get_sldch(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t subframe_tx) {
+/*  int sdu_length;
+    UE_MAC_INST *ue = &UE_mac_inst[Mod_id];
+    SLDCH_t *sldch = &UE_mac_inst[Mod_id].sldch;
+   LOG_I(MAC, "[ue_get_sldch]");
+   int sdu_length = mac_rrc_data_req(Mod_id,
+            CC_id,
+            frame_tx,
+            SL_DISCOVERY,
+            1,
+            (char*)(ue->sldch_pdu.payload), //&UE_mac_inst[Mod_id].SL_Discovery[0].Tx_buffer.Payload[0],
+            0,
+            0, //eNB_indexP
+            0);
 
-  return((SLDCH_t*)NULL);
+
+   if (sdu_length >0 ) return (&ue->sldch);
+   else
+   */
+   return((SLDCH_t*)NULL);
 }
 
 

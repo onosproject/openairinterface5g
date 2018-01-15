@@ -4721,6 +4721,15 @@ void *rrc_ue_task( void *args_p )
         RRC_MAC_MCCH_DATA_IND (msg_p).sdu_size,
         RRC_MAC_MCCH_DATA_IND (msg_p).mbsfn_sync_area);
       break;
+
+  /*  //TTN (for D2D)
+    case RRC_MAC_SL_DISCOVERY_DATA_IND:
+       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
+             RRC_MAC_SL_DISCOVERY_DATA_IND (msg_p).frame, RRC_MAC_SL_DISCOVERY_DATA_IND (msg_p).enb_index);
+       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, M_RNTI, RRC_MAC_SL_DISCOVERY_DATA_IND (msg_p).frame, 0,RRC_MAC_SL_DISCOVERY_DATA_IND (msg_p).enb_index);
+       //send to ProSeApp
+       break;
+*/
 # endif
 
       /* PDCP messages */
@@ -5792,6 +5801,20 @@ void *rrc_control_socket_thread_fct(void *arg)
          }
          break;
 
+
+      case PC5_DISCOVERY_ANNOUNCEMENT:
+
+ #ifdef DEBUG_CTRL_SOCKET
+           LOG_I(RRC,"[PC5DiscoveryAnnouncement] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
+           LOG_I(RRC,"[PC5DiscoveryAnnouncement] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.msg_type);
+           LOG_I(RRC,"[PC5DiscoveryAnnouncement] discoveryGroupId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.discoveryGroupId);
+           LOG_I(RRC,"[PC5DiscoveryAnnouncement] proSeUEId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.proSeUEId);
+ #endif
+        //prepare SL_Discovery buffer
+         memcpy((void*)&UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.Payload[0], (void*)receive_buf, n);
+         UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.payload_size = n;
+
+         break;
       default:
          break;
       }
@@ -5800,5 +5823,40 @@ void *rrc_control_socket_thread_fct(void *arg)
    return 0;
 }
 
+
+//-----------------------------------------------------------------------------
+int decode_SL_DISCOVERY_Message(
+  const protocol_ctxt_t* const ctxt_pP,
+  const uint8_t                eNB_index,
+  uint8_t*               const Sdu,
+  const uint8_t                Sdu_len)
+{
+
+   int prose_addr_len;
+   char send_buf[BUFSIZE];
+   int n;
+
+   //from the main program, listen for the incoming messages from control socket (ProSe App)
+   prose_addr_len = sizeof(prose_app_addr);
+
+   //Store in Rx_buffer
+   memcpy((void*)&UE_rrc_inst[ctxt_pP->module_id].SL_Discovery[0].Rx_buffer.Payload[0], (void*)Sdu, Sdu_len);
+   UE_rrc_inst[ctxt_pP->module_id].SL_Discovery[0].Rx_buffer.payload_size = Sdu_len;
+
+   memset(send_buf, 0, BUFSIZE);
+   //send to ProSeApp
+   memcpy((void *)send_buf, (void*)Sdu, Sdu_len);
+   prose_addr_len = sizeof(prose_app_addr);
+   n = sendto(ctrl_sock_fd, (char *)send_buf, Sdu_len, 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
+//         free(sl_ctrl_msg_send);
+   if (n < 0){
+      LOG_E(RRC, "ERROR: Failed to send to ProSe App\n");
+      exit(EXIT_FAILURE);
+   }
+
+
+
+  return(0);
+}
 
 #endif

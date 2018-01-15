@@ -86,6 +86,7 @@
 #define RAR_PAYLOAD_SIZE_MAX 128
 
 #define SCH_PAYLOAD_SIZE_MAX 4096
+#define DCH_PAYLOAD_SIZE_MAX 4096
 /// Logical channel ids from 36-311 (Note BCCH is not specified in 36-311, uses the same as first DRB)
 
 #if defined(Rel10) || defined(Rel14)
@@ -442,6 +443,8 @@ typedef struct {
 #define MCH_SCHDL_INFO 3
 /*!\brief LCID of Carrier component activation/deactivation */
 #define CC_ACT_DEACT 27
+//TTN (for D2D)
+#define SL_DISCOVERY 8 //LCID (fake)
 #endif
 
 // ULSCH LCHAN IDs
@@ -487,6 +490,13 @@ typedef struct {
   int8_t payload[SCH_PAYLOAD_SIZE_MAX];         /*!< \brief SACH payload */
   uint16_t Pdu_size;
 } __attribute__ ((__packed__)) ULSCH_PDU;
+
+
+/*! \brief Uplink SCH PDU Structure */
+typedef struct {
+  int8_t payload[DCH_PAYLOAD_SIZE_MAX];         /*!< \brief SACH payload */
+  uint16_t Pdu_size;
+} __attribute__ ((__packed__)) ULDCH_PDU;
 
 #include "PHY/impl_defs_top.h"
 
@@ -1367,6 +1377,8 @@ typedef struct {
 #ifdef Rel14
   int sltx_active;
   SLSCH_t slsch;
+  SLDCH_t sldch;
+  ULDCH_PDU sldch_pdu;
   ULSCH_PDU slsch_pdu;
   int slsch_lcid;
 #endif

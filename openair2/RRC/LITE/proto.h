@@ -89,6 +89,14 @@ rrc_ue_decode_dcch(
   const uint8_t                eNB_indexP
 );
 
+#ifdef Rel14
+int decode_SL_DISCOVERY_Message(
+  const protocol_ctxt_t* const ctxt_pP,
+  const uint8_t                eNB_index,
+  uint8_t*               const Sdu,
+  const uint8_t                Sdu_len);
+#endif
+
 /** \brief Generate/Encodes RRCConnnectionRequest message at UE
     \param ctxt_pP Running context
     \param eNB_index Index of corresponding eNB/CH*/

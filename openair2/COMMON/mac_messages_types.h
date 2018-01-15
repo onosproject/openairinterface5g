@@ -49,6 +49,7 @@
 #define CCCH_SDU_SIZE                           (512)
 #define MCCH_SDU_SIZE                           (512)
 
+
 //-------------------------------------------------------------------------------------------//
 // Messages between RRC and MAC layers
 typedef struct RrcMacInSyncInd_s {

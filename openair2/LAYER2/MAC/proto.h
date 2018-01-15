@@ -453,7 +453,8 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		    sub_frame_t subframeP,
 		    uint8_t* sdu,
 		    uint16_t sdu_len,
-		    uint8_t eNB_index
+		    uint8_t eNB_index,
+	       sl_discovery_flag_t sl_discovery_flag
 		    );
 
 #if defined(Rel10) || defined(Rel14)

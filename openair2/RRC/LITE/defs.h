@@ -87,6 +87,7 @@
 #define GROUP_COMMUNICATION_RELEASE_RSP     8
 #define PC5S_ESTABLISH_REQ                  9
 #define PC5S_ESTABLISH_RSP                  10
+#define PC5_DISCOVERY_ANNOUNCEMENT          11
 
 
 typedef enum {
@@ -131,6 +132,14 @@ struct PC5SEstablishRsp{
    uint8_t status;
 };
 
+//example of PC5_DSICOVERY ANNOUNCEMENT (for testing only)
+typedef struct  {
+   uint8_t msg_type;
+   uint32_t discoveryGroupId;
+   //AnnouncerInfo
+   uint32_t proSeUEId;
+}  __attribute__((__packed__)) PC5DiscoveryAnnouncement;
+
 struct sidelink_ctrl_element {
    unsigned short type;
    union {
@@ -139,12 +148,13 @@ struct sidelink_ctrl_element {
       Group_Communication_Status_t group_comm_release_rsp;
       //struct DirectCommunicationReleaseReq  direct_comm_release_req;
       SL_UE_STATE_t ue_state;
-      //struct GroupCommunicationReleaseReq group_comm_release_req;
       int slrb_id;
       struct PC5SEstablishReq pc5s_establish_req;
       struct PC5SEstablishRsp pc5s_establish_rsp;
+      PC5DiscoveryAnnouncement pc5_discovery_announcement;
    } sidelinkPrimitive;
 };
+
 
 //global variables
 extern struct sockaddr_in clientaddr;
@@ -730,6 +740,8 @@ typedef struct UE_RRC_INST_s {
   uint32_t groupL2Id;
   //destination L2 Id
   uint32_t destinationL2Id;
+  //sl_discovery..
+  SRB_INFO SL_Discovery[NB_CNX_UE];
 #endif
 
 #if defined(Rel10) || defined(Rel14)

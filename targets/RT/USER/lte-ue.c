@@ -785,7 +785,8 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
 		   pdu->header.absSF%10,
 		   pdu->payload,
 		   slsch->payload_length,
-		   0);
+		   0,
+		   SL_DISCOVERY_FLAG_NO);
     break;
   }
 }

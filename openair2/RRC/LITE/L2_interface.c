@@ -324,6 +324,18 @@ mac_rrc_data_req(
 
   } else {  //This is an UE
 
+#ifdef Rel14
+     LOG_D(RRC,"[UE %d] Frame %d Filling SL DISCOVERY SRB_ID %d\n",Mod_idP,frameP,Srb_id);
+     LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size);
+
+   //TTN (for D2D)
+     if ((Srb_id & RAB_OFFSET) == SL_DISCOVERY){
+        memcpy(&buffer_pP[0],&UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.Payload[0],UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size);
+        uint8_t Ret_size=UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size;
+        //      msg("[RRC][UE %d] Sending SL_Discovery\n",Mod_id);
+        return(Ret_size);
+     }
+#endif
 
     LOG_D(RRC,"[UE %d] Frame %d Filling CCCH SRB_ID %d\n",Mod_idP,frameP,Srb_id);
     LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size);
@@ -500,6 +512,11 @@ mac_rrc_data_ind(
 #endif
     }
 
+    //TTN (for D2D)
+    if((srb_idP & RAB_OFFSET) == SL_DISCOVERY) {
+       decode_SL_Discovery_Message(&ctxt, eNB_indexP, sduP, sdu_lenP);
+    }
+
 #endif // Rel10 || Rel14
 
   } else { // This is an eNB
@@ -544,6 +561,7 @@ mac_rrc_data_ind(
   return(0);
 
 }
+
 
 //-------------------------------------------------------------------------------------------//
 // this function is Not USED anymore

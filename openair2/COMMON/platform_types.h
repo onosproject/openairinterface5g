@@ -87,6 +87,10 @@ typedef boolean_t             srb_flag_t;
 #define  SRB_FLAG_NO          FALSE
 #define  SRB_FLAG_YES         TRUE
 
+typedef boolean_t             sl_discovery_flag_t;
+#define  SL_DISCOVERY_FLAG_NO          FALSE
+#define  SL_DISCOVERY_FLAG_YES         TRUE
+
 typedef enum link_direction_e {
   UNKNOWN_DIR          = 0,
   DIR_UPLINK           = 1,
