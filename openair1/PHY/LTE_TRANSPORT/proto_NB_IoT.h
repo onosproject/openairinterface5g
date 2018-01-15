@@ -52,7 +52,16 @@ int generate_sss_NB_IoT(int32_t                **txdataF,
                         uint16_t               symbol_offset,             // symbol_offset = 3 for NB-IoT 
                         uint16_t               slot_offset, 
                         unsigned short         frame_number,        // new attribute (Get value from higher layer), it does not exist for LTE
-                        unsigned short         RB_IoT_ID);          // new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
+                        unsigned short         RB_IoT_ID);          // new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE 
+
+//*****************Vincent part for Cell ID estimation from NSSS ******************// 
+
+int rx_nsss_NB_IoT(PHY_VARS_UE_NB_IoT *ue,int32_t *tot_metric); 
+
+int nsss_extract_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
+            NB_IoT_DL_FRAME_PARMS *frame_parms,
+            int32_t **nsss_ext,
+            int l);
 
 //NRS
 

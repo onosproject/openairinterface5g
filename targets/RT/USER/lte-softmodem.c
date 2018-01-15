@@ -56,6 +56,8 @@
 
 /////////////////////////////NB-IoT Parameters here////////////////////////////////////////
 
+#include "PHY/vars_NB_IoT.h"
+
 #include "LAYER2/MAC/proto_NB_IoT.h"
 
 //#include "LAYER2/MAC/defs_NB_IoT.h"
