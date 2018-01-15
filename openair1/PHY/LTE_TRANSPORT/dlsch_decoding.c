@@ -1058,10 +1058,14 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
          exit_fun("nothing to add");
      }
 
+     printf("mthread instance_cnt_dlsch_td %d\n",  proc->instance_cnt_dlsch_td);
+
      proc->instance_cnt_dlsch_td++;
      proc->eNB_id    = eNB_id;
      proc->harq_pid  = harq_pid;
      proc->llr8_flag = llr8_flag;
+
+     printf("after mthread instance_cnt_dlsch_td %d\n",  proc->instance_cnt_dlsch_td);
 
      if (proc->instance_cnt_dlsch_td == 0)
      {
@@ -1543,7 +1547,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
   }
 
   dlsch->last_iteration_cnt = ret;
-  proc->decoder_thread_available == 0;
+  //proc->decoder_thread_available == 0;
 
 
   //wait for worker to finish
@@ -1568,6 +1572,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
     proc->nr_tti_rx=proc->sub_frame_start;
 
     printf("start thread 0\n");
+    proc->decoder_thread_available == 0;
 
     char threadname[256];
     sprintf(threadname,"UE_thread_dlsch_td_%d", proc->sub_frame_start);
@@ -2162,6 +2167,8 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   proc->decoder_thread_available = 1;
   proc->decoder_main_available = 0;
 
+  printf("2thread0 proc->instance_cnt_dlsch_td %d\n", proc->instance_cnt_dlsch_td);
+
   if (pthread_mutex_lock(&proc->mutex_dlsch_td) != 0) {
               LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
               exit_fun("noting to add");
@@ -2172,6 +2179,8 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
               exit_fun("noting to add");
           }
       }
+
+	 printf("after 2thread0 proc->instance_cnt_dlsch_td %d\n", proc->instance_cnt_dlsch_td);
       // thread finished
           free(arg);
           return &UE_dlsch_td_retval;
