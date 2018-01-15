@@ -208,6 +208,51 @@ typedef struct Enb_properties_s {
    RrcConfigurationReq    RrcReq;
 #endif
   long                    ue_TransmissionMode[1+MAX_NUM_CCs];
+  //
+  //*************************************** NB-IoT **********************************************
+  //
+  long              rach_raResponseWindowSize_NB[1+MAX_NUM_CCs];
+  long              rach_macContentionResolutionTimer_NB[1+MAX_NUM_CCs];
+  long              rach_powerRampingStep_NB[1+MAX_NUM_CCs];
+  long              rach_preambleInitialReceivedTargetPower_NB[1+MAX_NUM_CCs];
+  long              rach_preambleTransMax_CE_NB[1+MAX_NUM_CCs];
+  long              bcch_modificationPeriodCoeff_NB[1+MAX_NUM_CCs];
+  long              pcch_defaultPagingCycle_NB[1+MAX_NUM_CCs];
+  long              nprach_CP_Length[1+MAX_NUM_CCs];
+  long              nprach_rsrp_range[1+MAX_NUM_CCs];
+  char*             nprach_SubcarrierMSG3_RangeStart;
+  long              maxNumPreambleAttemptCE_NB[1+MAX_NUM_CCs];
+  long              npdsch_nrs_Power[1+MAX_NUM_CCs];
+  long              npusch_ack_nack_numRepetitions_NB[1+MAX_NUM_CCs];
+  long              npusch_srs_SubframeConfig_NB[1+MAX_NUM_CCs];
+  long              npusch_threeTone_CyclicShift_r13[1+MAX_NUM_CCs];
+  long              npusch_sixTone_CyclicShift_r13[1+MAX_NUM_CCs];
+  BOOLEAN_t         npusch_groupHoppingEnabled[1+MAX_NUM_CCs];
+  long              npusch_groupAssignmentNPUSCH_r13[1+MAX_NUM_CCs];
+  long              dl_GapThreshold_NB[1+MAX_NUM_CCs];
+  long              dl_GapPeriodicity_NB[1+MAX_NUM_CCs];
+  char*       dl_GapDurationCoeff_NB;
+  long              npusch_p0_NominalNPUSCH[1+MAX_NUM_CCs];
+  long              npusch_alpha[1+MAX_NUM_CCs];
+  long              deltaPreambleMsg3[1+MAX_NUM_CCs];
+
+  long              ue_TimersAndConstants_t300_NB[1+MAX_NUM_CCs];
+  long              ue_TimersAndConstants_t301_NB[1+MAX_NUM_CCs];
+  long              ue_TimersAndConstants_t310_NB[1+MAX_NUM_CCs];
+  long              ue_TimersAndConstants_t311_NB[1+MAX_NUM_CCs];
+  long              ue_TimersAndConstants_n310_NB[1+MAX_NUM_CCs];
+  long              ue_TimersAndConstants_n311_NB[1+MAX_NUM_CCs];
+
+  long              nprach_Periodicity[1+MAX_NUM_CCs];
+  long              nprach_StartTime[1+MAX_NUM_CCs];
+  long              nprach_SubcarrierOffset[1+MAX_NUM_CCs];
+  long              nprach_NumSubcarriers[1+MAX_NUM_CCs];
+  long              numRepetitionsPerPreambleAttempt[1+MAX_NUM_CCs];
+  long              npdcch_NumRepetitions_RA[1+MAX_NUM_CCs];
+  long              npdcch_StartSF_CSS_RA[1+MAX_NUM_CCs];
+  char*             npdcch_Offset_RA;
+
+  //********************************************END******************************************************
   long                    srb1_timer_poll_retransmit;
   long                    srb1_timer_reordering;
   long                    srb1_timer_status_prohibit;
@@ -285,36 +330,36 @@ const Enb_properties_array_t *enb_config_get(void);
 
 // ******************************************************** NB-IoT ********************************************************** //
 
-typedef struct Enb_properties_NB_IoT_s {
+//typedef struct Enb_properties_NB_IoT_s {
   /* Unique eNB_id to identify the eNB within EPC.
    * For macro eNB ids this field should be 20 bits long.
    * For home eNB ids this field should be 28 bits long.
    */
-  uint32_t            eNB_id;
+//  uint32_t            eNB_id;
 
   /* The type of the cell */
-  enum cell_type_e    cell_type;
+ // enum cell_type_e    cell_type;
 
   /* Optional name for the cell
    * NOTE: the name can be NULL (i.e no name) and will be cropped to 150
    * characters.
    */
-  char               *eNB_name;
+ // char               *eNB_name;
 
 
   /* Tracking area code */
-  uint16_t            tac;
+//  uint16_t            tac;
 
   /* Mobile Country Code
    * Mobile Network Code
    */
-  uint16_t            mcc;
+ /* uint16_t            mcc;
   uint16_t            mnc;
   uint8_t             mnc_digit_length;
+*/
 
-
-
-  /* Physical parameters */
+/*
+  // Physical parameters //
   int16_t                 nb_cc;
 #ifndef OCP_FRAMEWORK
   eNB_func_t              cc_node_function[1+MAX_NUM_CCs];
@@ -398,7 +443,7 @@ typedef struct Enb_properties_NB_IoT_s {
 #endif
   long                    ue_TransmissionMode[1+MAX_NUM_CCs];
   //
-  //*************** NB-IoT *****************
+  /////////////////////////////////// NB-IoT /////////////////////////////////////////////////////////
   //
   long              rach_raResponseWindowSize_NB[1+MAX_NUM_CCs];
   long              rach_macContentionResolutionTimer_NB[1+MAX_NUM_CCs];
@@ -441,16 +486,16 @@ typedef struct Enb_properties_NB_IoT_s {
   long              npdcch_StartSF_CSS_RA[1+MAX_NUM_CCs];
   char*             npdcch_Offset_RA;
 
-  //****************************************
+  /////////////////////////////////////////////END///////////////////////////////////////////////////////
   long                    srb1_timer_poll_retransmit;
   long                    srb1_timer_reordering;
   long                    srb1_timer_status_prohibit;
   long                    srb1_poll_pdu;
   long                    srb1_poll_byte;
   long                    srb1_max_retx_threshold;
-  /* Nb of MME to connect to */
+  // Nb of MME to connect to /
   uint8_t             nb_mme;
-  /* List of MME to connect to */
+  // List of MME to connect to /
   mme_ip_address_t    mme_ip_address[S1AP_MAX_NB_MME_IP_ADDRESS];
 
   int                 sctp_in_streams;
@@ -468,17 +513,17 @@ typedef struct Enb_properties_NB_IoT_s {
   tcp_udp_port_t      flexran_agent_port;
   char               *flexran_agent_cache;
 
-  /* Nb of RRH to connect to */
+  // Nb of RRH to connect to /
   uint8_t             nb_rrh_gw;
   char               *rrh_gw_if_name;
-  /* List of MME to connect to */
+  // List of MME to connect to /
   rrh_gw_config_t       rrh_gw_config[4];
 
 #ifndef OCP_FRAMEWORK
   // otg config
-  /* Nb of OTG elements */
+  // Nb of OTG elements 
   uint8_t            num_otg_elements;
-  /* element config*/
+  // element config
   uint16_t          otg_ue_id[NB_MODULES_MAX+1];
   uint8_t          otg_app_type[NB_MODULES_MAX+1];
   uint8_t            otg_bg_traffic[NB_MODULES_MAX+1];
@@ -505,7 +550,8 @@ typedef struct Enb_properties_NB_IoT_s {
   int16_t           osa_log_verbosity;
 #endif
 } Enb_properties_NB_IoT_t;
-
+*/
+/*
 typedef struct Enb_properties_array_NB_IoT_s {
   int                  number;
   Enb_properties_NB_IoT_t    *properties[MAX_ENB];
@@ -516,6 +562,8 @@ void                          enb_config_display_NB_IoT(void);
 const Enb_properties_array_NB_IoT_t *enb_config_init_NB_IoT(char* lib_config_file_name_pP);
 
 const Enb_properties_array_NB_IoT_t *enb_config_get_NB_IoT(void);
+*/
+#endif 
 
-#endif /* ENB_CONFIG_H_ */
+/* ENB_CONFIG_H_ */
 /** @} */

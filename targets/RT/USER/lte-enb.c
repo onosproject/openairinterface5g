@@ -587,19 +587,19 @@ int wait_CCs(eNB_rxtx_proc_t *proc) {
 static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
   //Allocate memory for the structures used by PHY and MAC
-  UL_IND_t *UL_INFO;
-  Sched_Rsp_t *Sched_Rsp; 
+ // UL_IND_t *UL_INFO;
+ // Sched_Rsp_t *Sched_Rsp; 
 
-  UL_INFO = (UL_IND_t*) malloc(sizeof(UL_IND_t));
-  Sched_Rsp = (Sched_Rsp_t*) malloc(sizeof(Sched_Rsp_t)); 
+  //UL_INFO = (UL_IND_t*) malloc(sizeof(UL_IND_t));
+  //Sched_Rsp = (Sched_Rsp_t*) malloc(sizeof(Sched_Rsp_t)); 
 
   start_meas(&softmodem_stats_rxtx_sf);
 
   // ****************************************
   // Common RX procedures subframe n
-
-  if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5_NB_IoT)))
-    eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
+// for NB-IoT testing  // do_prach commented
+ // if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5_NB_IoT)))
+ //   eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
   
   /*UE-specific RX processing for subframe n*/
 
@@ -608,14 +608,14 @@ static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, ch
    * stored the Upink information in UL_info struct, process it and made it into FAPI style,
    */
 
-  phy_procedures_eNB_uespec_RX_NB_IoT(eNB,proc,UL_INFO);
+  // phy_procedures_eNB_uespec_RX_NB_IoT(eNB,proc,UL_INFO);
 
   /*
    * send the UL_Indication to higher layer that also provide a tick to the scheduler_dlsch_ulsch
    * (on its turn the scheduler will trigger the phy_procedure_eNB_TX through schedule_responce function
    */
 
-  if(if_inst->UL_indication) if_inst->UL_indication(UL_INFO);
+  // if(if_inst->UL_indication) if_inst->UL_indication(UL_INFO);
   
 
   if (oai_exit) return(-1);
@@ -636,12 +636,14 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   // ****************************************
   // Common RX procedures subframe n
 
-  if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5)))
+  
+   if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5)))
     eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
   phy_procedures_eNB_common_RX(eNB,proc);
   
   // UE-specific RX processing for subframe n
-  if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc, no_relay );
+  // for NB-IoT testing  // activating only TX part
+  //if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc, no_relay );
   
   // *****************************************
   // TX processing for subframe n+4
@@ -1755,8 +1757,9 @@ static void* eNB_thread_single( void* param ) {
     // If this proc is to provide synchronization, do so
     wakeup_slaves(proc);
 
-    if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
+   
     if (rxtx_NB_IoT(eNB_NB_IoT,proc_rxtx,"eNB_thread_single") < 0) break;
+    if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
   }
   
 

@@ -226,7 +226,7 @@ void dump_frame_parms(LTE_DL_FRAME_PARMS *frame_parms)
 
 
 
-// NB-IoT 
+/////////////////////////////////////////////////  NB-IoT  ///////////////////////////////////////////////////////////////
 
 int init_frame_parms_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint8_t osf)
 {

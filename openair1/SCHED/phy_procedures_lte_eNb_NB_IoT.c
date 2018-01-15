@@ -30,7 +30,7 @@
  * \warning
  */
 
-//#include "PHY/defs.h"
+#include "PHY/defs.h"
 #include "PHY/defs_NB_IoT.h"
 #include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
 //#include "PHY/extern_NB_IoT.h" //where we get the global Sched_Rsp_t structure filled
@@ -213,14 +213,15 @@ uint32_t is_SIB1_NB_IoT(const frame_t          frameP,
 * It generates NRS/NPSS/NSSS
 *
 */
-void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc) 
+void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) 
 {
-  NB_IoT_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms_NB_IoT;
+  //LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms_NB_IoT;
+  LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms;
   int                     **txdataF =  eNB->common_vars.txdataF[0];
   int                     subframe  =  proc->subframe_tx;
   int                     frame     =  proc->frame_tx;
   uint16_t                Ntti      =  10;                      //ntti = 10
-  int                     RB_IoT_ID;                            // XXX should be initialized (RB reserved for NB-IoT, PRB index)
+  int                     RB_IoT_ID=19 ;                          // XXX should be initialized (RB reserved for NB-IoT, PRB index)
   int                     With_NSSS;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
   
   /*NSSS only happened in the even frame*/
@@ -259,12 +260,12 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *p
   else
   {
     /*NRS*/
-    generate_pilots_NB_IoT(eNB,
+   /* generate_pilots_NB_IoT(eNB,
                            txdataF,
                            AMP,
                            Ntti,
                            RB_IoT_ID,
-                           With_NSSS);
+                           With_NSSS); */
   }
   
 }

@@ -359,7 +359,8 @@ void lte_param_init(unsigned char N_tx_port_eNB,
 /** @} */
 
 
-// for NB-IoT 
+//////////////////////// for NB-IoT ////////////////////////////////////////////
+
 int init_frame_parms_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint8_t osf);
 
 void phy_init_lte_top_NB_IoT(NB_IoT_DL_FRAME_PARMS *lte_frame_parms);

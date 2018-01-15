@@ -13,17 +13,18 @@
 */
 
 //#include <math.h>
-//#include "PHY/defs.h"
-#include "PHY/defs_NB_IoT.h" // not can be replaced by impl_defs_lte_NB_IoT & impl_defs_top_NB_IoT if "msg" function is not used
+#include "PHY/defs.h"
+//#include "PHY/defs_NB_IoT.h" // not can be replaced by impl_defs_lte_NB_IoT & impl_defs_top_NB_IoT if "msg" function is not used
 //#include "defs.h"
 //#include "PHY/extern_NB_IoT.h"
+#include "PHY/extern.h"
 //#include "PHY/impl_defs_lte_NB_IoT.h"
 //#include "PHY/impl_defs_top_NB_IoT.h"
 #include "nsss_NB_IoT.h"
 
 int generate_sss_NB_IoT(int32_t 				**txdataF,
 						int16_t 				amp,
-						NB_IoT_DL_FRAME_PARMS   *frame_parms, 
+						LTE_DL_FRAME_PARMS   *frame_parms, 
 						uint16_t 				symbol_offset, 	// symbol_offset = 3 for NB-IoT 
 						uint16_t 				slot_offset, 
 						unsigned short 			frame_number, 	// new attribute (Get value from higher layer), it does not exist for LTE

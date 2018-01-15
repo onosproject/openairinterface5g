@@ -32,13 +32,14 @@
 #ifndef __LTE_TRANSPORT_PROTO_NB_IOT__H__
 #define __LTE_TRANSPORT_PROTO_NB_IOT__H__
 #include "PHY/defs_NB_IoT.h"
+#include "PHY/impl_defs_lte.h"
 //#include <math.h>
 
 //NPSS
 
 int generate_npss_NB_IoT(int32_t                **txdataF,
                          short                  amp,
-                         NB_IoT_DL_FRAME_PARMS  *frame_parms,
+                         LTE_DL_FRAME_PARMS  *frame_parms,
                          unsigned short         symbol_offset,          // symbol_offset should equal to 3 for NB-IoT 
                          unsigned short         slot_offset,
                          unsigned short         RB_IoT_ID);             // new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
@@ -47,7 +48,7 @@ int generate_npss_NB_IoT(int32_t                **txdataF,
 
 int generate_sss_NB_IoT(int32_t                **txdataF,
                         int16_t                amp,
-                        NB_IoT_DL_FRAME_PARMS  *frame_parms, 
+                        LTE_DL_FRAME_PARMS  *frame_parms, 
                         uint16_t               symbol_offset,             // symbol_offset = 3 for NB-IoT 
                         uint16_t               slot_offset, 
                         unsigned short         frame_number,        // new attribute (Get value from higher layer), it does not exist for LTE

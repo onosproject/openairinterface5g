@@ -20,22 +20,26 @@
 
 int mac_init_global_param_NB_IoT(void)
 {
-
-  if (rlc_module_init()!=0) {
-    return(-1);
- }
-
+  ///// removed since already called by mac_init_global_param //////////////
+  /*
+   if (rlc_module_init()!=0) {
+     return(-1);
+   }
+   */
+  /////////////////////////////////////////////////////////////////////////////
   LOG_I(MAC,"[MAIN] RRC NB-IoT initialization of global params\n");
   rrc_init_global_param_NB_IoT();
 
-
+ ///// removed since already called by mac_init_global_param //////////////
+  /*
   LOG_I(MAC,"[MAIN] PDCP layer init\n");
-#ifdef USER_MODE
+  #ifdef USER_MODE
   pdcp_layer_init ();
-#else
+  #else
   pdcp_module_init ();
-#endif
-
+  #endif
+  */
+  ////////////////////////////////////////////////////////////////////////
   return 0;
 }
 

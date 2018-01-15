@@ -54,11 +54,14 @@
 #include "PHY_INTERFACE/vars.h"
 #include "PHY_INTERFACE/defs.h"
 
-//NB-IoT Parameters here
+/////////////////////////////NB-IoT Parameters here////////////////////////////////////////
 
 #include "LAYER2/MAC/proto_NB_IoT.h"
+
 //#include "LAYER2/MAC/defs_NB_IoT.h"
 //#include "LAYER2/MAC/vars_NB_IoT.h"
+
+///////////////////////////////////////END/////////////////////////////////////////////////
 
 #ifdef SMBV
 #include "PHY/TOOLS/smbv.h"
@@ -175,14 +178,17 @@ int                             otg_enabled;
 //int                             number_of_cards =   1;
 
 static LTE_DL_FRAME_PARMS      *frame_parms[MAX_NUM_CCs];
-//NB-IoT
-static NB_IoT_DL_FRAME_PARMS *frame_parms_NB_IoT[MAX_NUM_CCs]; // this will be still inside the PHY_VARS of LTE
 
 eNB_func_t node_function[MAX_NUM_CCs];
 eNB_timing_t node_timing[MAX_NUM_CCs];
 
+//////////////////////////////////////  NB-IoT  //////////////////////////////////////////////
+static NB_IoT_DL_FRAME_PARMS *frame_parms_NB_IoT[MAX_NUM_CCs]; // this will be still inside the PHY_VARS of LTE
+
 eNB_func_NB_IoT_t node_function_NB_IoT[MAX_NUM_CCs];
 eNB_timing_NB_IoT_t node_timing_NB_IoT[MAX_NUM_CCs];
+
+/////////////////////////////////////////END/////////////////////////////////////////////////
 
 int16_t   node_synch_ref[MAX_NUM_CCs];
 
@@ -624,9 +630,7 @@ static void get_options (int argc, char **argv) {
     int CC_id;
 
 
-  // const Enb_properties_array_t *enb_properties;             // temporarily replaced for NB_IoT testing
-
-  const Enb_properties_array_NB_IoT_t *enb_properties;
+  const Enb_properties_array_t *enb_properties;
 
     enum long_option_e {
         LONG_OPTION_START = 0x100, /* Start after regular single char options */
@@ -953,7 +957,7 @@ static void get_options (int argc, char **argv) {
 
         case 'r':
             UE_scan = 0;
-
+///////////////////////////////////////////////////////////////// frame_parms for NB-IoT are added for test
             for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
                 switch(atoi(optarg)) {
                 case 6:
@@ -1066,7 +1070,7 @@ static void get_options (int argc, char **argv) {
         /* Read eNB configuration file */
        // enb_properties = enb_config_init(conf_config_file_name);
 
-        enb_properties = enb_config_init_NB_IoT(conf_config_file_name);
+        enb_properties = enb_config_init(conf_config_file_name);
 
         AssertFatal (NB_eNB_INST <= enb_properties->number,
                      "Number of eNB is greater than eNB defined in configuration file %s (%d/%d)!",
@@ -1153,7 +1157,7 @@ static void get_options (int argc, char **argv) {
                 frame_parms[CC_id]->nb_antenna_ports_eNB  =  enb_properties->properties[i]->nb_antenna_ports[CC_id];
                 frame_parms[CC_id]->nb_antennas_rx      =  enb_properties->properties[i]->nb_antennas_rx[CC_id];
 
-                frame_parms_NB_IoT[CC_id]->Nid_cell            =  enb_properties->properties[i]->Nid_cell[CC_id];
+                frame_parms_NB_IoT[CC_id]->Nid_cell            =  enb_properties->properties[i]->Nid_cell[CC_id]; // in case different CellID this value can be modified
                 frame_parms_NB_IoT[CC_id]->N_RB_DL             =  enb_properties->properties[i]->N_RB_DL[CC_id];
                 frame_parms_NB_IoT[CC_id]->N_RB_UL             =  enb_properties->properties[i]->N_RB_DL[CC_id];
                 frame_parms_NB_IoT[CC_id]->nb_antennas_tx      =  enb_properties->properties[i]->nb_antennas_tx[CC_id];
@@ -1634,14 +1638,14 @@ int main( int argc, char **argv ) {
 
       LOG_I(PHY,"Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms[CC_id]->nb_antennas_rx, frame_parms[CC_id]->nb_antennas_tx);
 
-//#ifdef NB_IOT     // for NB-IoT testing
+//#ifdef NB_IOT     /////////////// for NB-IoT testing  ///////////////////////////
       frame_parms_NB_IoT[CC_id]->nb_antennas_tx     = nb_antenna_tx;
       frame_parms_NB_IoT[CC_id]->nb_antennas_rx     = nb_antenna_rx;
       frame_parms_NB_IoT[CC_id]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
 
       LOG_I(PHY,"[NB-IoT] Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms_NB_IoT[CC_id]->nb_antennas_rx, frame_parms_NB_IoT[CC_id]->nb_antennas_tx);
 
-//#endif
+//#endif     //////////////////////////// END //////////////////////////////////
     }
 
 
@@ -1651,12 +1655,17 @@ int main( int argc, char **argv ) {
     //   phy_init_top(frame_parms[CC_id]);
     phy_init_lte_top(frame_parms[CC_id]);
 
+
     // for testing
     //XXXX we need to modify it for NB-IoT????
     //init_ul_hopping(frame_parms[CC_id]);
+
+   /////////////////////////////////////////////////////// NB-IoT //////////////////////////////////////////////////////// 
     init_frame_parms_NB_IoT(frame_parms_NB_IoT[CC_id],1);
     //   phy_init_top(frame_parms[CC_id]);
     phy_init_lte_top_NB_IoT(frame_parms_NB_IoT[CC_id]);
+    /////////////////////////////////////////////////////// END //////////////////////////////////////////////////////////
+
   }
 
 
@@ -1736,15 +1745,15 @@ int main( int argc, char **argv ) {
 
         //  printf("tx_max_power = %d -> amp %d\n",tx_max_power,get_tx_amp(tx_max_poHwer,tx_max_power));
     } else {
-        //this is eNB
+      /////////////////////////////////////////////////// this is eNB /////////////////////////////////////////////////////////////
         PHY_vars_eNB_g = malloc(sizeof(PHY_VARS_eNB**)); //global PHY_vars --> is a matrix
         PHY_vars_eNB_g[0] = malloc(sizeof(PHY_VARS_eNB*));
 
-        // for NB-IoT testing
-        
+        ///////////////////////// for NB-IoT testing ////////////////////////
         PHY_vars_eNB_NB_IoT_g = malloc(sizeof(PHY_VARS_eNB_NB_IoT**)); //global PHY_vars --> is a matrix
         PHY_vars_eNB_NB_IoT_g[0] = malloc(sizeof(PHY_VARS_eNB_NB_IoT*));
- 
+        ///////////////////////////// END //////////////////////////////////
+
         for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
         	//we initialiaze DL/UL buffer and HARQ (inside the LTE_eNB_DLSCH)
 
@@ -1827,7 +1836,7 @@ int main( int argc, char **argv ) {
 
             // for NB-IoT testing 
 
-            PHY_vars_eNB__NB_IoT_g[0][CC_id]->rx_total_gain_dB = (int)rx_gain[CC_id][0];
+            PHY_vars_eNB_NB_IoT_g[0][CC_id]->rx_total_gain_dB = (int)rx_gain[CC_id][0];
 
             if (frame_parms_NB_IoT[CC_id]->frame_type==FDD) {
                 PHY_vars_eNB_NB_IoT_g[0][CC_id]->N_TA_offset = 0;
