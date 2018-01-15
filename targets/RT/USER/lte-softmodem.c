@@ -56,6 +56,8 @@
 
 //NB-IoT Parameters here
 
+#include "PHY/vars_NB_IoT.h"
+
 #include "LAYER2/MAC/proto_NB_IoT.h"
 //#include "LAYER2/MAC/defs_NB_IoT.h"
 //#include "LAYER2/MAC/vars_NB_IoT.h"
@@ -1827,7 +1829,7 @@ int main( int argc, char **argv ) {
 
             // for NB-IoT testing 
 
-            PHY_vars_eNB__NB_IoT_g[0][CC_id]->rx_total_gain_dB = (int)rx_gain[CC_id][0];
+            PHY_vars_eNB_NB_IoT_g[0][CC_id]->rx_total_gain_dB = (int)rx_gain[CC_id][0];
 
             if (frame_parms_NB_IoT[CC_id]->frame_type==FDD) {
                 PHY_vars_eNB_NB_IoT_g[0][CC_id]->N_TA_offset = 0;
