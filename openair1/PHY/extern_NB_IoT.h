@@ -50,8 +50,8 @@ extern NB_IoT_DL_FRAME_PARMS *nb_iot_frame_parms_g;
 #else
 #define MAX_UE 10
 #define MAX_eNB_NB_IoT 20
-extern PHY_VARS_UE_NB_IoT * PHY_vars_UE_NB_IoT_g[MAX_UE][MAX_NUM_CCs];
-extern PHY_VARS_eNB_NB_IoT * PHY_vars_eNB_NB_IoT_g[MAX_eNB_NB_IoT][MAX_NUM_CCs];
+extern PHY_VARS_UE_NB_IoT *PHY_vars_UE_NB_IoT_g[MAX_UE][MAX_NUM_CCs];
+extern PHY_VARS_eNB_NB_IoT *PHY_vars_eNB_NB_IoT_g[MAX_eNB_NB_IoT][MAX_NUM_CCs];
 #endif
 
 

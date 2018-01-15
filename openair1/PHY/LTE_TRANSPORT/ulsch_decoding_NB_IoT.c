@@ -824,7 +824,7 @@ int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,i
         ulsch_harq->Nl);
 #endif
 
-    start_meas(&eNB->ulsch_rate_unmatching_stats);
+    //start_meas(&eNB->ulsch_rate_unmatching_stats);
 
     if (lte_rate_matching_turbo_rx(ulsch_harq->RTC[r],
                                    G,
@@ -845,21 +845,21 @@ int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,i
       return(-1);
     }
 
-    stop_meas(&eNB->ulsch_rate_unmatching_stats);
+   // stop_meas(&eNB->ulsch_rate_unmatching_stats);
     r_offset += E;
 
-    start_meas(&eNB->ulsch_deinterleaving_stats);
+   // start_meas(&eNB->ulsch_deinterleaving_stats);
     sub_block_deinterleaving_turbo(4+Kr,
                                    &ulsch_harq->d[r][96],
                                    ulsch_harq->w[r]);
-    stop_meas(&eNB->ulsch_deinterleaving_stats);
+   // stop_meas(&eNB->ulsch_deinterleaving_stats);
 
     if (ulsch_harq->C == 1)
       crc_type = CRC24_A;
     else
       crc_type = CRC24_B;
    
-    start_meas(&eNB->ulsch_turbo_decoding_stats);
+   // start_meas(&eNB->ulsch_turbo_decoding_stats);
     
     ret = tc(&ulsch_harq->d[r][96],
 	     ulsch_harq->c[r],
@@ -877,7 +877,7 @@ int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,i
 	     &eNB->ulsch_tc_intl1_stats,
 	     &eNB->ulsch_tc_intl2_stats);
     
-    stop_meas(&eNB->ulsch_turbo_decoding_stats);
+   // stop_meas(&eNB->ulsch_turbo_decoding_stats);
     
   // Reassembly of Transport block here
 

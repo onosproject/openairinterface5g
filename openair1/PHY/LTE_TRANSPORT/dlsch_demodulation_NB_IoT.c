@@ -4067,7 +4067,7 @@ unsigned short dlsch_extract_rbs_single_NB_IoT(int **rxdataF,
 
   unsigned short  rb,nb_rb=0;
   unsigned char   rb_alloc_ind;
-  unsigned char   i,aarx=0/*,l,nsymb /*,skip_half=0,sss_symb,pss_symb=0*/;
+  unsigned char   i,aarx=0;/*,l,nsymb /*,skip_half=0,sss_symb,pss_symb=0*/
   int             *dl_ch0,*dl_ch0_ext,*rxF,*rxF_ext;
   unsigned short  UL_RB_ID_NB_IoT; // index of the NB-IoT RB
   uint8_t         id_offset; // offset of pilot position in symbols: 0,1,2 
