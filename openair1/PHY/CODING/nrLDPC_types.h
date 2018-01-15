@@ -46,6 +46,7 @@ typedef struct nrLDPC_time_stats {
     time_stats_t llr2llrProcBuf;
     time_stats_t llr2CnProcBuf;
     time_stats_t cnProc;
+    time_stats_t cnProcPc;
     time_stats_t bnProcPc;
     time_stats_t bnProc;
     time_stats_t cn2bnProcBuf;

@@ -2737,11 +2737,9 @@ static inline void nrLDPC_llr2bitPacked(int8_t* out, int8_t* llrOut, uint16_t nu
     uint32_t M  = numLLR>>5;
     uint32_t Mr = numLLR&31;
 
-    const __m256i* p_zeros = (__m256i*) zeros256_epi8;
-
     for (i=0; i<M; i++)
     {
-        *p_bits++ = _mm256_movemask_epi8(_mm256_cmpgt_epi8(*p_zeros, *p_llrOut));
+        *p_bits++ = _mm256_movemask_epi8(*p_llrOut);
         p_llrOut++;
     }
 

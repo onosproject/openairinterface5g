@@ -805,4 +805,674 @@ static inline void nrLDPC_cnProc_BG1(t_nrLDPC_lut* p_lut, uint16_t Z)
 
 }
 
+static inline uint32_t nrLDPC_cnProcPc_BG1(t_nrLDPC_lut* p_lut, uint16_t Z)
+{
+    const uint8_t*  lut_numCnInCnGroups   = p_lut->numCnInCnGroups;
+    const uint32_t* lut_startAddrCnGroups = p_lut->startAddrCnGroups;
+
+    __m256i* p_cnProcBuf;
+    __m256i* p_cnProcBufRes;
+
+    // Number of CNs in Groups
+    uint32_t M;
+    uint32_t i;
+    uint32_t j;
+    uint32_t pcRes = 0;
+    uint32_t pcResSum = 0;
+
+    __m256i ymm0, ymm1;
+
+    // =====================================================================
+    // Process group with 3 BNs
+
+    if (lut_numCnInCnGroups[0] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[0]*Z)>>5;
+
+        // Set pointers to start of group 3
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[0]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[0]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<3; j++)
+            {
+                // BN offset is units of (1*384/32) = 12
+                ymm0 = p_cnProcBuf   [j*12 + i];
+                ymm1 = p_cnProcBufRes[j*12 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 4 BNs
+
+    if (lut_numCnInCnGroups[1] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[1]*Z)>>5;
+
+        // Set pointers to start of group 4
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[1]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[1]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<4; j++)
+            {
+                // BN offset is units of 5*384/32 = 60
+                ymm0 = p_cnProcBuf   [j*60 + i];
+                ymm1 = p_cnProcBufRes[j*60 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 5 BNs
+
+    if (lut_numCnInCnGroups[2] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[2]*Z)>>5;
+
+        // Set pointers to start of group 5
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[2]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[2]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<5; j++)
+            {
+                // BN offset is units of 18*384/32 = 216
+                ymm0 = p_cnProcBuf   [j*216 + i];
+                ymm1 = p_cnProcBufRes[j*216 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 6 BNs
+
+    if (lut_numCnInCnGroups[3] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[3]*Z)>>5;
+
+        // Set pointers to start of group 6
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[3]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[3]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<6; j++)
+            {
+                // BN offset is units of 8*384/32 = 96
+                ymm0 = p_cnProcBuf   [j*96 + i];
+                ymm1 = p_cnProcBufRes[j*96 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 7 BNs
+
+    if (lut_numCnInCnGroups[4] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[4]*Z)>>5;
+
+        // Set pointers to start of group 7
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[4]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[4]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<7; j++)
+            {
+                // BN offset is units of 5*384/32 = 60
+                ymm0 = p_cnProcBuf   [j*60 + i];
+                ymm1 = p_cnProcBufRes[j*60 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 8 BNs
+
+    if (lut_numCnInCnGroups[5] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[5]*Z)>>5;
+
+        // Set pointers to start of group 8
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[5]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[5]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<8; j++)
+            {
+                // BN offset is units of 2*384/32 = 24
+                ymm0 = p_cnProcBuf   [j*24 + i];
+                ymm1 = p_cnProcBufRes[j*24 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 9 BNs
+
+    if (lut_numCnInCnGroups[6] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[6]*Z)>>5;
+
+        // Set pointers to start of group 9
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[6]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[6]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<9; j++)
+            {
+                // BN offset is units of 2*384/32 = 24
+                ymm0 = p_cnProcBuf   [j*24 + i];
+                ymm1 = p_cnProcBufRes[j*24 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 10 BNs
+
+    if (lut_numCnInCnGroups[7] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[7]*Z)>>5;
+
+        // Set pointers to start of group 10
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[7]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[7]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<10; j++)
+            {
+                // BN offset is units of 1*384/32 = 12
+                ymm0 = p_cnProcBuf   [j*12 + i];
+                ymm1 = p_cnProcBufRes[j*12 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 19 BNs
+
+    if (lut_numCnInCnGroups[8] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[8]*Z)>>5;
+
+        // Set pointers to start of group 19
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[8]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[8]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN (Last BN is connected to multiple CNs)
+            // Compute PC for 32 CNs at once
+            for (j=0; j<19; j++)
+            {
+                // BN offset is units of 4*384/32 = 48
+                ymm0 = p_cnProcBuf   [j*48 + i];
+                ymm1 = p_cnProcBufRes[j*48 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    return pcResSum;
+}
+
+static inline uint32_t nrLDPC_cnProcPc_BG2(t_nrLDPC_lut* p_lut, uint16_t Z)
+{
+    const uint8_t*  lut_numCnInCnGroups   = p_lut->numCnInCnGroups;
+    const uint32_t* lut_startAddrCnGroups = p_lut->startAddrCnGroups;
+
+    __m256i* p_cnProcBuf;
+    __m256i* p_cnProcBufRes;
+
+    // Number of CNs in Groups
+    uint32_t M;
+    uint32_t i;
+    uint32_t j;
+    uint32_t pcRes = 0;
+    uint32_t pcResSum = 0;
+
+    __m256i ymm0, ymm1;
+
+    // =====================================================================
+    // Process group with 3 BNs
+
+    if (lut_numCnInCnGroups[0] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[0]*Z)>>5;
+
+        // Set pointers to start of group 3
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[0]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[0]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<3; j++)
+            {
+                // BN offset is units of (6*384/32) = 72
+                ymm0 = p_cnProcBuf   [j*72 + i];
+                ymm1 = p_cnProcBufRes[j*72 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 4 BNs
+
+    if (lut_numCnInCnGroups[1] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[1]*Z)>>5;
+
+        // Set pointers to start of group 4
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[1]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[1]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<4; j++)
+            {
+                // BN offset is units of 20*384/32 = 240
+                ymm0 = p_cnProcBuf   [j*240 + i];
+                ymm1 = p_cnProcBufRes[j*240 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 5 BNs
+
+    if (lut_numCnInCnGroups[2] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[2]*Z)>>5;
+
+        // Set pointers to start of group 5
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[2]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[2]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<5; j++)
+            {
+                // BN offset is units of 9*384/32 = 108
+                ymm0 = p_cnProcBuf   [j*108 + i];
+                ymm1 = p_cnProcBufRes[j*108 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 6 BNs
+
+    if (lut_numCnInCnGroups[3] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[3]*Z)>>5;
+
+        // Set pointers to start of group 6
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[3]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[3]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<6; j++)
+            {
+                // BN offset is units of 3*384/32 = 36
+                ymm0 = p_cnProcBuf   [j*36 + i];
+                ymm1 = p_cnProcBufRes[j*36 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 8 BNs
+
+    if (lut_numCnInCnGroups[4] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[4]*Z)>>5;
+
+        // Set pointers to start of group 8
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[4]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[4]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<8; j++)
+            {
+                // BN offset is units of 2*384/32 = 24
+                ymm0 = p_cnProcBuf   [j*24 + i];
+                ymm1 = p_cnProcBufRes[j*24 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    // =====================================================================
+    // Process group with 10 BNs
+
+    if (lut_numCnInCnGroups[5] > 0)
+    {
+        // Reset results
+        pcResSum = 0;
+
+        // Number of groups of 32 CNs for parallel processing
+        M = (lut_numCnInCnGroups[5]*Z)>>5;
+
+        // Set pointers to start of group 10
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[5]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[5]];
+
+        // Loop over CNs
+        for (i=0; i<M; i++)
+        {
+            pcRes = 0;
+            // Loop over every BN
+            // Compute PC for 32 CNs at once
+            for (j=0; j<10; j++)
+            {
+                // BN offset is units of 2*384/32 = 24
+                ymm0 = p_cnProcBuf   [j*24 + i];
+                ymm1 = p_cnProcBufRes[j*24 + i];
+
+                // Add BN and input LLR, extract the sign bit
+                // and add in GF(2) (xor)
+                pcRes ^= _mm256_movemask_epi8(_mm256_adds_epi8(ymm0,ymm1));
+            }
+
+            // If no error pcRes should be 0
+            pcResSum |= pcRes;
+        }
+        // If PC failed we can stop here
+        if (pcResSum > 0)
+        {
+            return pcResSum;
+        }
+    }
+
+    return pcResSum;
+}
+
 #endif
