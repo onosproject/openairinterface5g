@@ -396,10 +396,14 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 
 
     // Get Turbo interleaver parameters
-    //if (r<harq_process->Cminus)
-    //  Kr = harq_process->Kminus;
-    //else
+#ifdef TD_DECODING
+	  if (r<harq_process->Cminus)
+      Kr = harq_process->Kminus;
+    else
       Kr = harq_process->Kplus;
+#else
+	  Kr = harq_process->Kplus;
+#endif
 
     Kr_bytes = Kr>>3;
 
@@ -537,8 +541,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
 
       printf("harq process dr \n");
-
-      for (int cnt =0; cnt < 66*p_decParams->Z; cnt++){
+//66*p_decParams->Z
+      for (int cnt =0; cnt < 8; cnt++){
       printf("%d \n", harq_process->d[r][96+cnt]);
       }
 
@@ -593,6 +597,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 				llrProcBuf,
           		p_procTime);
 #endif
+		printf("output channel decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
 
 
 #if UE_TIMING_TRACE
@@ -1272,7 +1277,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
 #if UE_TIMING_TRACE
         start_meas(dlsch_turbo_decoding_stats);
 #endif
-      LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
+      LOG_I(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
       ret = tc
             (&harq_process->d[r][96],
              harq_process->c[r],
@@ -1289,6 +1294,9 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
              &phy_vars_ue->dlsch_tc_ext_stats,
              &phy_vars_ue->dlsch_tc_intl1_stats,
              &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
+
+      printf("main thread output channel decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+
 
 #if UE_TIMING_TRACE
       stop_meas(dlsch_turbo_decoding_stats);
@@ -2355,7 +2363,7 @@ int dlsch_abstraction_MIESM(double* sinr_dB,uint8_t TM, uint32_t rb_alloc[4], ui
 }
 
 uint32_t dlsch_decoding_emul(PHY_VARS_UE *phy_vars_ue,
-                             uint8_t nr_tti_rx,
+                             uint8_t subframe,
                              PDSCH_t dlsch_id,
                              uint8_t eNB_id)
 {
@@ -2381,7 +2389,7 @@ uint32_t dlsch_decoding_emul(PHY_VARS_UE *phy_vars_ue,
     mac_xface->macphy_exit("Could not find attached eNB for DLSCH emulation");
   }
 
-  LOG_D(PHY,"[UE] dlsch_decoding_emul : nr_tti_rx %d, eNB_id %d, dlsch_id %d\n",nr_tti_rx,eNB_id2,dlsch_id);
+  LOG_I(PHY,"[UE] dlsch_decoding_emul : subframe %d, eNB_id %d, dlsch_id %d\n",subframe,eNB_id2,dlsch_id);
 
   //  printf("dlsch_eNB_ra->harq_processes[0] %p\n",PHY_vars_eNB_g[eNB_id]->dlsch_eNB_ra->harq_processes[0]);
 
