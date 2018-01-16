@@ -323,6 +323,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   if (harq_process->round == 0) {
     // This is a new packet, so compute quantities regarding segmentation
     harq_process->B = A+24;
+#ifdef TD_DECODING
     lte_segmentation(NULL,
                      NULL,
                      harq_process->B,
@@ -333,8 +334,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                      &harq_process->Kminus,
                      &harq_process->F);
     //  CLEAR LLR's HERE for first packet in process
-
-    /*nr_segmentation(NULL,
+#else
+    nr_segmentation(NULL,
     	                    NULL,
     	                    harq_process->B,
     	                    &harq_process->C,
@@ -342,11 +343,14 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
     	                    &harq_process->Kminus,
     						&harq_process->Z,
     	                    &harq_process->F);
-    	p_decParams->Z = harq_process->Z;*/
+    	p_decParams->Z = harq_process->Z;
+    	printf("dlsch decoding nr segmentation Z %d\n", p_decParams->Z);
+    	printf("Kplus %d C %d nl %d \n", harq_process->Kplus, harq_process->C, harq_process->Nl);
+#endif
 
   }
 
-  	  p_decParams->Z = 128;
+  //	  p_decParams->Z = 128;
       p_decParams->BG = 1;
       p_decParams->R = 13;
       p_decParams->numMaxIter = 2;
@@ -536,7 +540,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 #endif
       LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
 
-      printf("harq process dr \n");
+      printf("harq process dr iteration %d\n", p_decParams->numMaxIter);
       //66*p_decParams->Z
 
       for (int cnt =0; cnt < 8; cnt++){
