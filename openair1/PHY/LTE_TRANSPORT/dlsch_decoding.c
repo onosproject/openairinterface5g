@@ -538,7 +538,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 #if UE_TIMING_TRACE
         start_meas(dlsch_turbo_decoding_stats);
 #endif
-      LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
+      LOG_I(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
 
       printf("harq process dr \n");
 //66*p_decParams->Z
@@ -1295,7 +1295,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
              &phy_vars_ue->dlsch_tc_intl1_stats,
              &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
 
-      printf("main thread output channel decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+      printf("main thread output channel decoder r=%d cr %d %d %d %d %d \n", r,harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
 
 
 #if UE_TIMING_TRACE
@@ -1600,11 +1600,12 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 	int llr8_flag1     				= proc->llr8_flag;
 	//UE_rxtx_proc_t *proc    		= tdp->proc;
 	int frame                       = proc->frame_rx;
-	int subframe      				= proc->subframe_rx;
+	int subframe      				= proc->nr_tti_rx;
 	LTE_UE_DLSCH_t *dlsch 			= phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0];
 	LTE_DL_UE_HARQ_t *harq_process  = dlsch->harq_processes[harq_pid];
 	short *dlsch_llr 				= phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->llr[0];
 	//printf("2thread0 llr flag %d tdp flag %d\n",llr8_flag1, tdp->llr8_flag);
+	printf("nr_tti_tx %d subframe %d thread id %d \n", proc->nr_tti_rx, subframe, phy_vars_ue->current_thread_id[subframe]);
 
 #if UE_TIMING_TRACE
   time_stats_t *dlsch_rate_unmatching_stats=&phy_vars_ue->dlsch_rate_unmatching_stats;
@@ -1700,7 +1701,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   G = harq_process->G;
   //get_G(frame_parms,nb_rb,dlsch->rb_alloc,mod_order,num_pdcch_symbols,phy_vars_ue->frame,subframe);
 
-  //  printf("DLSCH Decoding, harq_pid %d Ndi %d\n",harq_pid,harq_process->Ndi);
+    printf("DLSCH Decoding,  A %d harq_pid %d G %d\n",A, harq_pid,harq_process->G);
 
   if (harq_process->round == 0) {
     // This is a new packet, so compute quantities regarding segmentation
@@ -1756,7 +1757,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 #endif
 
   opp_enabled=1;
-  printf("harq process thread 0 half C %d\n",harq_process->C/2);
+  printf("harq process thread 0 half C %d harq_process->C %d \n",harq_process->C/2, harq_process->C);
 
   for (r=(harq_process->C/2); r<harq_process->C; r++) {
 
@@ -1916,6 +1917,9 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
              &phy_vars_ue->dlsch_tc_ext_stats,
              &phy_vars_ue->dlsch_tc_intl1_stats,
              &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
+
+      printf("sub thread output channel decoder r=%d cr %d %d %d %d %d \n", r,harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+
 
 #if UE_TIMING_TRACE
       stop_meas(dlsch_turbo_decoding_stats);
@@ -2083,12 +2087,12 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
     subframe_rx_prev += 10;
   }
   frame_rx_prev = frame_rx_prev%1024;*/
-
+#if 0
   if (err_flag == 1) {
-#if UE_DEBUG_TRACE
+//#if UE_DEBUG_TRACE
     LOG_I(PHY,"[UE %d] THREAD 0 DLSCH: Setting NAK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d) Kr %d r %d harq_process->round %d\n",
         phy_vars_ue->Mod_id, frame, subframe, harq_pid,harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs,Kr,r,harq_process->round);
-#endif
+//#endif
     dlsch->harq_ack[subframe].ack = 0;
     dlsch->harq_ack[subframe].harq_id = harq_pid;
     dlsch->harq_ack[subframe].send_harq_status = 1;
@@ -2171,6 +2175,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 
   //return(ret);
   }
+#endif
 
   proc->decoder_thread_available = 1;
   proc->decoder_main_available = 0;
