@@ -442,8 +442,8 @@ clock_t start=clock();*/
 	      else
 	      {
 		      //rx128_gain_lin=mm_mul_set1_ps(rx_gain_lin);
-		      gauss0_sqrt_NOW=sqrt_NOW*gaussdouble(0.0,1.0);
-		      gauss1_sqrt_NOW=sqrt_NOW*gaussdouble(0.0,1.0);
+		      gauss0_sqrt_NOW=sqrt_NOW*ziggurat();
+		      gauss1_sqrt_NOW=sqrt_NOW*ziggurat();
 		      rx128_re =  _mm_loadu_pd(&r_re[a][2*i]);//r_re[a][i],r_re[a][i+1]
 		      rx128_im =  _mm_loadu_pd(&r_im[a][2*i]);//r_im[a][i],r_im[a][i+1]
 		      rx128_gain_lin = _mm_set1_pd(rx_gain_lin);

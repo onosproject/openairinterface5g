@@ -990,10 +990,12 @@ void init_seed(uint8_t set_seed)
   if(set_seed) {
 
     randominit (oai_emulation.info.seed);
+    setup_nor();//Setup for the normal probability distribution function
     set_taus_seed (oai_emulation.info.seed);
 
   } else {
     randominit (0);
+    setup_nor();//Setup for the normal probability distribution function
     set_taus_seed (0);
   }
 }
@@ -1042,7 +1044,6 @@ extern int subframe_eNB_mask,subframe_UE_mask;
 int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
   static int count=0;
-  int eNB,UE,CC;
   if (count==500)
   {
      //Use ./oaisim -q option to enable the oai performance profiler.
