@@ -626,6 +626,7 @@
 #include "lut_llr2llrProcBuf_BG1_Z384_R89.h"
 
 // BG2
+// Z = 2
 #include "lut_llr2CnProcBuf_BG2_Z2_R15.h"
 #include "lut_cn2bnProcBuf_BG2_Z2_R15.h"
 #include "lut_llr2llrProcBuf_BG2_Z2_R15.h"
@@ -637,7 +638,7 @@
 #include "lut_llr2CnProcBuf_BG2_Z2_R23.h"
 #include "lut_cn2bnProcBuf_BG2_Z2_R23.h"
 #include "lut_llr2llrProcBuf_BG2_Z2_R23.h"
-
+// Z = 80
 #include "lut_llr2CnProcBuf_BG2_Z80_R15.h"
 #include "lut_cn2bnProcBuf_BG2_Z80_R15.h"
 #include "lut_llr2llrProcBuf_BG2_Z80_R15.h"
@@ -649,7 +650,7 @@
 #include "lut_llr2CnProcBuf_BG2_Z80_R23.h"
 #include "lut_cn2bnProcBuf_BG2_Z80_R23.h"
 #include "lut_llr2llrProcBuf_BG2_Z80_R23.h"
-
+// Z = 128
 #include "lut_llr2CnProcBuf_BG2_Z128_R15.h"
 #include "lut_cn2bnProcBuf_BG2_Z128_R15.h"
 #include "lut_llr2llrProcBuf_BG2_Z128_R15.h"
@@ -661,7 +662,19 @@
 #include "lut_llr2CnProcBuf_BG2_Z128_R23.h"
 #include "lut_cn2bnProcBuf_BG2_Z128_R23.h"
 #include "lut_llr2llrProcBuf_BG2_Z128_R23.h"
+// Z = 208
+#include "lut_llr2CnProcBuf_BG2_Z208_R15.h"
+#include "lut_cn2bnProcBuf_BG2_Z208_R15.h"
+#include "lut_llr2llrProcBuf_BG2_Z208_R15.h"
 
+#include "lut_llr2CnProcBuf_BG2_Z208_R13.h"
+#include "lut_cn2bnProcBuf_BG2_Z208_R13.h"
+#include "lut_llr2llrProcBuf_BG2_Z208_R13.h"
+
+#include "lut_llr2CnProcBuf_BG2_Z208_R23.h"
+#include "lut_cn2bnProcBuf_BG2_Z208_R23.h"
+#include "lut_llr2llrProcBuf_BG2_Z208_R23.h"
+// Z = 384
 #include "lut_llr2CnProcBuf_BG2_Z384_R15.h"
 #include "lut_cn2bnProcBuf_BG2_Z384_R15.h"
 #include "lut_llr2llrProcBuf_BG2_Z384_R15.h"

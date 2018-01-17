@@ -123,6 +123,28 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             }
 
         }
+        else if (Z == 208)
+        {
+            if (R == 15)
+            {
+                p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG2_Z208_R15;
+                p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG2_Z208_R15;
+                p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG2_Z208_R15;
+            }
+            else if (R == 13)
+            {
+                p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG2_Z208_R13;
+                p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG2_Z208_R13;
+                p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG2_Z208_R13;
+            }
+            else if (R == 23)
+            {
+                p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG2_Z208_R23;
+                p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG2_Z208_R23;
+                p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG2_Z208_R23;
+            }
+
+        }
         else if (Z == 384)
         {
             if (R == 15)
