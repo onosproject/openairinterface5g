@@ -110,6 +110,10 @@ unsigned short config_frames[4] = {2,9,11,13};
 
 #include "T.h"
 
+#if defined(UE_EXPANSION) || defined(UE_EXPANSION_SIM2)
+#include "pdcp.h"
+#endif
+
 extern volatile int                    oai_exit;
 
 
@@ -1553,25 +1557,25 @@ static void* ru_thread( void* param ) {
     memcpy(&pre_scd_activeUE, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
     memcpy(&pre_scd_ordered_CCids, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.ordered_CCids, sizeof(int)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
     memcpy(&pre_scd_numactiveCCs, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.numactiveCCs, sizeof(int)*NUMBER_OF_UE_MAX);
-    if (pthread_mutex_lock(&ru->eNB_list[0]->proc.mutex_pre_scd)!= 0) {
-        LOG_E( MAC, "[eNB] error locking MAC proc mutex for eNB pre scd\n");
+    if (pthread_mutex_lock(&ru->proc.mutex_pre_scd)!= 0) {
+        LOG_E( PHY, "[eNB] error locking proc mutex for eNB pre scd\n");
         exit_fun("error locking mutex_time");
     }
 
-    ru->eNB_list[0]->proc.instance_pre_scd++;
+    ru->proc.instance_pre_scd++;
 
-    if (ru->eNB_list[0]->proc.instance_pre_scd == 0) {
-        if (pthread_cond_signal(&ru->eNB_list[0]->proc.cond_pre_scd) != 0) {
-            LOG_E( MAC, "[eNB] ERROR pthread_cond_signal for eNB time sync\n" );
+    if (ru->proc.instance_pre_scd == 0) {
+        if (pthread_cond_signal(&ru->proc.cond_pre_scd) != 0) {
+            LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB time sync\n" );
             exit_fun( "ERROR pthread_cond_signal cond_pre_scd" );
         }
     }else{
-        LOG_E( MAC, "[eNB] frame %d subframe %d rxtx busy instance_pre_scd %d\n",
-               frame,subframe,ru->eNB_list[0]->proc.instance_pre_scd );
+        LOG_E( PHY, "[eNB] frame %d subframe %d rxtx busy instance_pre_scd %d\n",
+               frame,subframe,ru->proc.instance_pre_scd );
     }
 
-    if (pthread_mutex_unlock(&ru->eNB_list[0]->proc.mutex_pre_scd)!= 0) {
-        LOG_E( MAC, "[eNB] error unlocking mutex_pre_scd mutex for eNB pre scd\n");
+    if (pthread_mutex_unlock(&ru->proc.mutex_pre_scd)!= 0) {
+        LOG_E( PHY, "[eNB] error unlocking mutex_pre_scd mutex for eNB pre scd\n");
         exit_fun("error unlocking mutex_pre_scd");
     }
 #endif
@@ -1689,6 +1693,60 @@ void *ru_thread_synch(void *arg) {
   return &ru_thread_synch_status;
 
 }
+
+#if defined(UE_EXPANSION) || defined(UE_EXPANSION_SIM2)
+void* pre_scd_thread( void* param ){
+    static int              eNB_pre_scd_status;
+    protocol_ctxt_t         ctxt;
+    int                     frame;
+    int                     subframe;
+    int                     min_rb_unit[MAX_NUM_CCs];
+    int                     CC_id;
+    int                     Mod_id;
+    RU_t               *ru      = (RU_t*)param;
+    Mod_id = ru->eNB_list[0]->Mod_id;
+
+    frame = 0;
+    subframe = 4;
+    thread_top_init("pre_scd_thread",0,870000,1000000,1000000);
+
+    while (!oai_exit) {
+        if(oai_exit){
+            break;
+        }
+        pthread_mutex_lock(&ru->proc.mutex_pre_scd );
+        if (ru->proc.instance_pre_scd < 0) {
+          pthread_cond_wait(&ru->proc.cond_pre_scd, &ru->proc.mutex_pre_scd);
+        }
+        pthread_mutex_unlock(&ru->proc.mutex_pre_scd);
+        PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, Mod_id, ENB_FLAG_YES,
+                 NOT_A_RNTI, frame, subframe,Mod_id);
+        pdcp_run(&ctxt);
+
+        for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
+
+          rrc_rx_tx(&ctxt, 0,     // eNB index, unused in eNB
+              CC_id);
+          min_rb_unit[CC_id] = get_min_rb_unit(Mod_id, CC_id);
+        }
+
+        pre_scd_nb_rbs_required(Mod_id, frame, subframe,min_rb_unit,pre_nb_rbs_required[new_dlsch_ue_select_tbl_in_use]);
+
+        if (subframe==9) {
+          subframe=0;
+          frame++;
+          frame&=1023;
+        } else {
+          subframe++;
+        }
+        pthread_mutex_lock(&ru->proc.mutex_pre_scd );
+        ru->proc.instance_pre_scd--;
+        pthread_mutex_unlock(&ru->proc.mutex_pre_scd);
+    }
+    eNB_pre_scd_status = 0;
+    return &eNB_pre_scd_status;
+}
+#endif
 
 #ifdef UE_EXPANSION
 /*!
@@ -1838,6 +1896,13 @@ void init_RU_proc(RU_t *ru) {
 #endif
   
   pthread_create( &proc->pthread_FH, attr_FH, ru_thread, (void*)ru );
+#if defined(UE_EXPANSION) || defined(UE_EXPANSION_SIM2)
+    proc->instance_pre_scd = -1;
+    pthread_mutex_init( &proc->mutex_pre_scd, NULL);
+    pthread_cond_init( &proc->cond_pre_scd, NULL);
+    pthread_create(&proc->pthread_pre_scd, NULL, pre_scd_thread, (void*)ru);
+    pthread_setname_np(proc->pthread_pre_scd, "pre_scd_thread");
+#endif
 
 #ifdef UE_EXPANSION
     pthread_create( &proc->pthread_phy_tx, NULL, eNB_thread_phy_tx, (void*)ru );
@@ -2263,6 +2328,15 @@ void stop_ru(RU_t *ru) {
     int *status;
 #endif
   printf("Stopping RU %p processing threads\n",(void*)ru);
+#if defined(UE_EXPANSION) || defined(UE_EXPANSION_SIM2)
+  if(ru){
+    ru->proc.instance_pre_scd = 0;
+    pthread_cond_signal( &ru->proc.cond_pre_scd );
+    pthread_join(ru->proc.pthread_pre_scd, (void**)&status );
+    pthread_mutex_destroy(&ru->proc.mutex_pre_scd );
+    pthread_cond_destroy(&ru->proc.cond_pre_scd );
+  }
+#endif
 #ifdef UE_EXPANSION
   if(ru){
       ru->proc.instance_cnt_phy_tx = 0;
