@@ -891,6 +891,11 @@ uint32_t  dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,
   uint8_t crc_type;
   //UE_rxtx_proc_t *proc = &phy_vars_ue->proc;
   int Cby2;
+  /*uint8_t C;
+  uint8_t Qm;
+  uint8_t Nl;
+  uint8_t r_thread;
+  uint32_t Er, Gp,GpmodC;*/
 #ifdef DEBUG_DLSCH_DECODING
   uint16_t i;
 #endif
@@ -1063,12 +1068,29 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
          exit_fun("nothing to add");
      }
 
-     printf("mthread instance_cnt_dlsch_td %d\n",  proc->instance_cnt_dlsch_td);
+     /*Qm= harq_process->Qm;
+     Nl=harq_process->Nl;
+     r_thread = harq_process->C/2-1;
+     C= harq_process->C;
+
+     Gp = G/Nl/Qm;
+      GpmodC = Gp%C;
+
+
+
+      if (r_thread < (C-(GpmodC)))
+        Er = Nl*Qm * (Gp/C);
+      else
+        Er = Nl*Qm * ((GpmodC==0?0:1) + (Gp/C));
+     printf("mthread Er %d\n", Er);
+
+     printf("mthread instance_cnt_dlsch_td %d\n",  proc->instance_cnt_dlsch_td);*/
 
      proc->instance_cnt_dlsch_td++;
-     proc->eNB_id    = eNB_id;
-     proc->harq_pid  = harq_pid;
-     proc->llr8_flag = llr8_flag;
+               proc->eNB_id    = eNB_id;
+               proc->harq_pid  = harq_pid;
+               proc->llr8_flag = llr8_flag;
+              // proc->Er = Er;
 
      printf("after mthread instance_cnt_dlsch_td %d\n",  proc->instance_cnt_dlsch_td);
 
@@ -1213,6 +1235,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
       stop_meas(dlsch_rate_unmatching_stats);
 #endif
     }
+    printf("mthread rate matching E %d\n", E);
     r_offset += E;
 
     /*
@@ -1277,7 +1300,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
 #if UE_TIMING_TRACE
         start_meas(dlsch_turbo_decoding_stats);
 #endif
-      LOG_I(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
+      LOG_I(PHY,"mthread AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
       ret = tc
             (&harq_process->d[r][96],
              harq_process->c[r],
@@ -1576,6 +1599,8 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
     UE_rxtx_proc_t *proc = rtd->proc;
     PHY_VARS_UE    *phy_vars_ue   = rtd->UE;
 
+    int llr8_flag1;
+
     proc->instance_cnt_dlsch_td=-1;
     proc->nr_tti_rx=proc->sub_frame_start;
 
@@ -1594,18 +1619,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
     if ( (proc->sub_frame_start+1)%RX_NB_TH == 2 && threads.dlsch_td_three != -1 )
     	CPU_SET(threads.dlsch_td_three, &cpuset);
 
-	//PHY_VARS_UE *phy_vars_ue   		= tdp->UE;
-	int eNB_id         				= proc->eNB_id;
-	int harq_pid      				= proc->harq_pid;
-	int llr8_flag1     				= proc->llr8_flag;
-	//UE_rxtx_proc_t *proc    		= tdp->proc;
-	int frame                       = proc->frame_rx;
-	int subframe      				= proc->nr_tti_rx;
-	LTE_UE_DLSCH_t *dlsch 			= phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0];
-	LTE_DL_UE_HARQ_t *harq_process  = dlsch->harq_processes[harq_pid];
-	short *dlsch_llr 				= phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->llr[0];
-	//printf("2thread0 llr flag %d tdp flag %d\n",llr8_flag1, tdp->llr8_flag);
-	printf("nr_tti_tx %d subframe %d thread id %d \n", proc->nr_tti_rx, subframe, phy_vars_ue->current_thread_id[subframe]);
+
 
 #if UE_TIMING_TRACE
   time_stats_t *dlsch_rate_unmatching_stats=&phy_vars_ue->dlsch_rate_unmatching_stats;
@@ -1620,6 +1634,10 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   short dummy_w[MAX_NUM_DLSCH_SEGMENTS][3*(6144+64)];
   uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0;
   uint8_t crc_type;
+  uint8_t C;
+   uint8_t Qm;
+   uint8_t Nl;
+   uint32_t Er, Gp,GpmodC;
 #ifdef DEBUG_DLSCH_DECODING
   uint16_t i;
 #endif
@@ -1669,6 +1687,27 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 	            exit_fun("nothing to add");
 	        }
 
+	        uint32_t wait = 0;
+	        	          while(proc->decoder_main_available == 0)
+	        	          {
+	        	                  usleep(1);
+	        	                  wait++;
+	        	          }
+
+	        //PHY_VARS_UE *phy_vars_ue   		= tdp->UE;
+	        	int eNB_id         				= proc->eNB_id;
+	        	int harq_pid      				= proc->harq_pid;
+	        	llr8_flag1     					= proc->llr8_flag;
+	        	//r_offset						= proc->Er;
+	        	//UE_rxtx_proc_t *proc    		= tdp->proc;
+	        	int frame                       = proc->frame_rx;
+	        	int subframe      				= proc->nr_tti_rx;
+	        	LTE_UE_DLSCH_t *dlsch 			= phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0];
+	        	LTE_DL_UE_HARQ_t *harq_process  = dlsch->harq_processes[harq_pid];
+	        	short *dlsch_llr 				= phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->llr[0];
+	        	//printf("2thread0 llr flag %d tdp flag %d\n",llr8_flag1, tdp->llr8_flag);
+	        	printf("nr_tti_tx %d subframe %d thread id %d r_offset %d\n", proc->nr_tti_rx, subframe, phy_vars_ue->current_thread_id[subframe], r_offset);
+
   //  nb_rb = dlsch->nb_rb;
 
   /*
@@ -1684,12 +1723,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   }
   */
 
-	        uint32_t wait = 0;
-	          while(proc->decoder_main_available == 0)
-	          {
-	                  usleep(1);
-	                  wait++;
-	          }
+
 
   harq_process->trials[harq_process->round]++;
 
@@ -1725,7 +1759,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   }
   */
   err_flag = 0;
-  r_offset = 0;
+  //r_offset = 0;
 
   /*
   unsigned char bw_scaling =1;
@@ -1759,7 +1793,25 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   opp_enabled=1;
   printf("harq process thread 0 half C %d harq_process->C %d \n",harq_process->C/2, harq_process->C);
 
+  Qm= harq_process->Qm;
+  	       Nl=harq_process->Nl;
+  	       //r_thread = harq_process->C/2-1;
+  	       C= harq_process->C;
+
+  	       Gp = G/Nl/Qm;
+  	        GpmodC = Gp%C;
+
+
+
+  	        if ((C/2-1) < (C-(GpmodC)))
+  	        	r_offset = Nl*Qm * (Gp/C);
+  	        else
+  	        	r_offset = Nl*Qm * ((GpmodC==0?0:1) + (Gp/C));
+  	       printf("sub thread r_offset %d\n", r_offset);
+
   for (r=(harq_process->C/2); r<harq_process->C; r++) {
+
+	  printf("thread0 r=%d\n",r);
 
 
     // Get Turbo interleaver parameters

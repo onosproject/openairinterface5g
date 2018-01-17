@@ -587,7 +587,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_IN);
 
   A = dlsch->harq_processes[harq_pid]->TBS; //6228
-  printf("Encoder: A: %d subframe %d \n",A, subframe);
+  printf("Encoder: A: %d frame.subframe %d.%d \n",A, frame,subframe);
   mod_order = get_Qm(dlsch->harq_processes[harq_pid]->mcs);
 
   if(dlsch->harq_processes[harq_pid]->mimo_mode == TM7)
@@ -646,7 +646,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 								&dlsch->harq_processes[harq_pid]->F);
 #endif
 
-    printf("Encoder: B %d F %d \n",dlsch->harq_processes[harq_pid]->B, dlsch->harq_processes[harq_pid]->F);
+    printf("Encoder: B %d F %d harq_pid %d \n",dlsch->harq_processes[harq_pid]->B, dlsch->harq_processes[harq_pid]->F, harq_pid);
     for (r=0; r<dlsch->harq_processes[harq_pid]->C; r++) {
 
 #ifdef TD_DECODING
