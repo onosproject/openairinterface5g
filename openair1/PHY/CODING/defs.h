@@ -34,6 +34,7 @@
 #else
 #include "PHY/TOOLS/time_meas.h"
 #endif
+#include "nrLDPC_decoder.h"
 
 #define CRC24_A 0
 #define CRC24_B 1
@@ -78,6 +79,15 @@ int32_t lte_segmentation(uint8_t *input_buffer,
                          uint32_t *Kplus,
                          uint32_t *Kminus,
                          uint32_t *F);
+
+int32_t nr_segmentation(unsigned char *input_buffer,
+                     unsigned char **output_buffers,
+                     unsigned int B,
+                     unsigned int *C,
+                     unsigned int *Kplus,
+                     unsigned int *Kminus,
+					 unsigned int *Zout,
+                     unsigned int *F);
 
 /** \fn int16_t estimate_ue_tx_power(uint32_t tbs, uint32_t nb_rb, uint8_t control_only, lte_prefix_type_t ncp, uint8_t use_srs)
     \brief this functions calculates the delta MCS in dB based on the lte_segmentation function
@@ -560,5 +570,8 @@ uint32_t crcbit (uint8_t * ,
 
 int16_t reverseBits(int32_t ,int32_t);
 void phy_viterbi_dot11(int8_t *,uint8_t *,uint16_t);
+
+short *ldpc_decoder(short *msgChannel,short block_length,short No_iteration,double rate);
+int ldpc_encoder(unsigned char *test_input,unsigned char* channel_input,short block_length,double rate);
 
 #endif

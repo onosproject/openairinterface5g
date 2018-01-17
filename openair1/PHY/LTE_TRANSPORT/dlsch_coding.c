@@ -45,6 +45,7 @@
 
 //#define DEBUG_DLSCH_CODING
 //#define DEBUG_DLSCH_FREE 1
+//#define TD_DECODING
 
 /*
 #define is_not_pilot(pilots,first_pilot,re) (pilots==0) || \
@@ -1023,11 +1024,13 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
   LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
   unsigned char harq_pid = dlsch->harq_ids[subframe];
   unsigned short nb_rb = dlsch->harq_processes[harq_pid]->nb_rb;
-  unsigned int A;
+  unsigned int A, Z;
+  unsigned *pz = &Z;
   unsigned char mod_order;
   unsigned int Kr=0,Kr_bytes,r,r_offset=0;
   //  unsigned short m=dlsch->harq_processes[harq_pid]->mcs;
   uint8_t beamforming_mode=0;
+  double rate = 0.33;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_IN);
 
@@ -1068,6 +1071,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
     //    dlsch->harq_processes[harq_pid]->b = a;
     memcpy(dlsch->harq_processes[harq_pid]->b,a,(A/8)+4);
 
+#ifdef TD_DECODING
     if (lte_segmentation(dlsch->harq_processes[harq_pid]->b,
                          dlsch->harq_processes[harq_pid]->c,
                          dlsch->harq_processes[harq_pid]->B,
@@ -1078,12 +1082,23 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
                          &dlsch->harq_processes[harq_pid]->Kminus,
                          &dlsch->harq_processes[harq_pid]->F)<0)
       return(-1);
+#else
+
+    nr_segmentation(dlsch->harq_processes[harq_pid]->b,
+		    dlsch->harq_processes[harq_pid]->c,
+		    dlsch->harq_processes[harq_pid]->B,
+		    &dlsch->harq_processes[harq_pid]->C,
+		    &dlsch->harq_processes[harq_pid]->Kplus,
+		    &dlsch->harq_processes[harq_pid]->Kminus,
+		    pz,
+		    &dlsch->harq_processes[harq_pid]->F);
+#endif
 
     for (r=0; r<dlsch->harq_processes[harq_pid]->C; r++) {
 
-      if (r<dlsch->harq_processes[harq_pid]->Cminus)
-        Kr = dlsch->harq_processes[harq_pid]->Kminus;
-      else
+      //if (r<dlsch->harq_processes[harq_pid]->Cminus)
+      //  Kr = dlsch->harq_processes[harq_pid]->Kminus;
+      //else
         Kr = dlsch->harq_processes[harq_pid]->Kplus;
 
       Kr_bytes = Kr>>3;
@@ -1099,7 +1114,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
         iind = 123 + ((Kr_bytes-256)>>3);
       else {
         printf("dlsch_coding: Illegal codeword size %d!!!\n",Kr_bytes);
-        return(-1);
+       // return(-1);
       }
 
 
@@ -1111,13 +1126,24 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       printf("N_RB = %d\n",nb_rb);
       printf("Ncp %d\n",frame_parms->Ncp);
       printf("mod_order %d\n",mod_order);
-#endif
 
-
-#ifdef DEBUG_DLSCH_CODING
       printf("Encoding ... iind %d f1 %d, f2 %d\n",iind,f1f2mat_old[iind*2],f1f2mat_old[(iind*2)+1]);
+
+      printf("start turbo encoder kr %d kr>>3 %d\n", Kr, Kr>>3);
+
+      /*
+      for (int tbc_counter = 0; tbc_counter< Kr; tbc_counter++){
+	printf("turbo tbc number %d input %d\n",tbc_counter, dlsch->harq_processes[harq_pid]->c[r][tbc_counter]);
+      }
+      */
+      printf("encoder input\n");
+      for (int tbs_counter = 0; tbs_counter< Kr>>3; tbs_counter++){
+	printf("c[%d][%d]=%d\n", r,tbs_counter,dlsch->harq_processes[harq_pid]->c[r][tbs_counter]);
+      }
 #endif
+
       start_meas(te_stats);
+#ifdef TD_DECODING
       threegpplte_turbo_encoder(dlsch->harq_processes[harq_pid]->c[r],
                                 Kr>>3,
                                 &dlsch->harq_processes[harq_pid]->d[r][96],
@@ -1125,13 +1151,34 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
                                 f1f2mat_old[iind*2],   // f1 (see 36121-820, page 14)
                                 f1f2mat_old[(iind*2)+1]  // f2 (see 36121-820, page 14)
                                );
-      stop_meas(te_stats);
-#ifdef DEBUG_DLSCH_CODING
+#else
 
-      if (r==0)
-        write_output("enc_output0.m","enc0",&dlsch->harq_processes[harq_pid]->d[r][96],(3*8*Kr_bytes)+12,1,4);
+#ifdef DEBUG_DLSCH_CODING
+      printf("start ldpc encoder B %d, rate %f\n",dlsch->harq_processes[harq_pid]->B,rate);
+      printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
+#endif
+
+      ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],dlsch->harq_processes[harq_pid]->B,rate);
 
 #endif
+      stop_meas(te_stats);
+
+#if 0
+      printf("end ldpc encoder -- output\n");
+
+      //printf("output %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->d[r][96], dlsch->harq_processes[harq_pid]->d[r][96+1], dlsch->harq_processes[harq_pid]->d[r][96+2],dlsch->harq_processes[harq_pid]->d[r][96+3], dlsch->harq_processes[harq_pid]->d[r][96+4]);
+	    
+      for (int cnt =0 ; cnt < 66*128; cnt ++){
+	printf("%d \n",  dlsch->harq_processes[harq_pid]->d[r][96+cnt]);
+      }
+      printf("\n");
+#endif
+ 
+#ifdef DEBUG_DLSCH_CODING
+      if (r==0)
+        write_output("enc_output0.m","enc0",&dlsch->harq_processes[harq_pid]->d[r][96],(3*8*Kr_bytes)+12,1,4);
+#endif
+
       start_meas(i_stats);
       dlsch->harq_processes[harq_pid]->RTC[r] =
         sub_block_interleaving_turbo(4+(Kr_bytes*8),

@@ -1078,10 +1078,15 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_mbsfn.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref.c
   ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation.c
+  ${OPENAIR1_DIR}/PHY/CODING/nr_segmentation.c
+  ${OPENAIR1_DIR}/PHY/CODING/nrLDPC_decoder.c
+  ${OPENAIR1_DIR}/PHY/CODING/ldpc_encoder.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_lte.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_sse.c
   ${OPENAIR1_DIR}/PHY/CODING/crc_byte.c
+  ${OPENAIR1_DIR}/PHY/CODING/ldpc_decoder.c
+  ${OPENAIR1_DIR}/PHY/CODING/ldpc_encoder.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_8bit.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_16bit.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_avx2_16bit.c
@@ -1987,6 +1992,9 @@ target_link_libraries (dlsim_tm4
   -Wl,--start-group SIMU UTIL SCHED_LIB PHY LFDS ${ITTI_LIB} -Wl,--end-group
   pthread m rt ${CONFIG_LIBRARIES} ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${T_LIB}
   )
+
+add_executable(ldpctest  ${OPENAIR1_DIR}/PHY/CODING/TESTBENCH/ldpctest.c)
+target_link_libraries(ldpctest m SIMU PHY ${ATLAS_LIBRARIES})
 
 foreach(myExe dlsim dlsim_tm7 ulsim pbchsim scansim mbmssim pdcchsim pucchsim prachsim syncsim)
 
