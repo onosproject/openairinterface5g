@@ -1555,8 +1555,6 @@ static void* ru_thread( void* param ) {
     dlsch_ue_select_tbl_in_use = !dlsch_ue_select_tbl_in_use;
     memcpy(&pre_scd_eNB_UE_stats,&RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
     memcpy(&pre_scd_activeUE, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
-    memcpy(&pre_scd_ordered_CCids, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.ordered_CCids, sizeof(int)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
-    memcpy(&pre_scd_numactiveCCs, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.numactiveCCs, sizeof(int)*NUMBER_OF_UE_MAX);
     if (pthread_mutex_lock(&ru->proc.mutex_pre_scd)!= 0) {
         LOG_E( PHY, "[eNB] error locking proc mutex for eNB pre scd\n");
         exit_fun("error locking mutex_time");
@@ -1566,7 +1564,7 @@ static void* ru_thread( void* param ) {
 
     if (ru->proc.instance_pre_scd == 0) {
         if (pthread_cond_signal(&ru->proc.cond_pre_scd) != 0) {
-            LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB time sync\n" );
+            LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB pre scd\n" );
             exit_fun( "ERROR pthread_cond_signal cond_pre_scd" );
         }
     }else{
