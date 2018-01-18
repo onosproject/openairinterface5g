@@ -319,6 +319,7 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
   } */
 
   //find minimum value in all sets of lifting size
+  Zc=0;
   for (i1=0; i1 < 51; i1++)
   {
     if (lift_size[i1] >= (double) block_length/Kb)
@@ -328,6 +329,11 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
       break;
     }
   }
+  if (Zc==0) {
+    printf("ldpc_encoder: no lift_size found, problem in block_length %d\n",block_length);
+    return(-1);
+  }
+
 
   // load base graph of generator matrix
   /*  if (BG==1)
@@ -577,6 +583,14 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
         d[t+45*Zc]=c[518]^c[2452]^c[3854];
       }
     }
+    else {
+      printf("lifting size Zc %d not optimized\n",Zc);
+      return(-1);
+    }
+  }
+  else {
+    printf("BG %d not optimized\n",BG);
+    return(-1);
   }
 
   // information part and puncture columns
@@ -621,6 +635,7 @@ int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,sho
     }*/
 
   //find minimum value in all sets of lifting size
+  Zc=0;
   for (i1=0; i1 < 51; i1++)
   {
     if (lift_size[i1] >= (double) block_length/Kb)
@@ -629,6 +644,10 @@ int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,sho
       //printf("%d\n",Zc);
       break;
     }
+  }
+  if (Zc==0) {
+    printf("ldpc_encoder: no lift_size found, problem in block_length %d\n",block_length);
+    return(-1);
   }
 
   // load base graph of generator matrix

@@ -1019,7 +1019,9 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 
   unsigned int G;
   unsigned int crc=1;
+#ifdef TD_DECODING
   unsigned short iind;
+#endif
 
   LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
   unsigned char harq_pid = dlsch->harq_ids[subframe];
@@ -1103,6 +1105,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 
       Kr_bytes = Kr>>3;
 
+#ifdef TD_DECODING
       // get interleaver index for Turbo code (lookup in Table 5.1.3-3 36-212, V8.6 2009-03, p. 13-14)
       if (Kr_bytes<=64)
         iind = (Kr_bytes-5);
@@ -1114,9 +1117,9 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
         iind = 123 + ((Kr_bytes-256)>>3);
       else {
         printf("dlsch_coding: Illegal codeword size %d!!!\n",Kr_bytes);
-       // return(-1);
+        return(-1);
       }
-
+#endif
 
 #ifdef DEBUG_DLSCH_CODING
       printf("Generating Code Segment %d (%d bits)\n",r,Kr);
