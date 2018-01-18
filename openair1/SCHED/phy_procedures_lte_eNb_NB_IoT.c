@@ -221,7 +221,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   int                     subframe  =  proc->subframe_tx;
   int                     frame     =  proc->frame_tx;
   uint16_t                Ntti      =  10;                      //ntti = 10
-  int                     RB_IoT_ID=19 ;                          // XXX should be initialized (RB reserved for NB-IoT, PRB index)
+  int                     RB_IoT_ID=9 ;                          // XXX should be initialized (RB reserved for NB-IoT, PRB index)
   int                     With_NSSS;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
   
   /*NSSS only happened in the even frame*/
@@ -1072,7 +1072,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
     } 
 
   //generate NPSS/NSSS
-  common_signal_procedures_NB_IoT(eNB,proc);
+ // common_signal_procedures_NB_IoT(eNB,proc);  // to uncomment after NB-IoT testing
 
     //Generate MIB
     if(subframe ==0 && (eNB->npbch != NULL))

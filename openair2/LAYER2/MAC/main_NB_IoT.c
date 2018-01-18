@@ -27,8 +27,8 @@ int mac_init_global_param_NB_IoT(void)
    }
    */
   /////////////////////////////////////////////////////////////////////////////
-  LOG_I(MAC,"[MAIN] RRC NB-IoT initialization of global params\n");
-  rrc_init_global_param_NB_IoT();
+ // LOG_I(MAC,"[MAIN] RRC NB-IoT initialization of global params\n");
+ // rrc_init_global_param_NB_IoT();
 
  ///// removed since already called by mac_init_global_param //////////////
   /*

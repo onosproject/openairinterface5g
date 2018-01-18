@@ -363,10 +363,10 @@ int lte_sync_time_NB_IoT(int **rxdata, ///rx data in time domain
   // perform a time domain correlation using the oversampled sync sequence
 
   unsigned int n, ar, /*s,*/ peak_pos, peak_val/*, sync_source*/;
-  int result,result2;
+  int result;//result2;
   // int sync_out[3] = {0,0,0},sync_out2[3] = {0,0,0};
   // int tmp[3] = {0,0,0};
-  int sync_out = 0,sync_out2 = 0;
+  int sync_out = 0;//sync_out2 = 0;
   int tmp = 0;
   // int length =   LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_tti>>1;
   int length =   LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_tti;

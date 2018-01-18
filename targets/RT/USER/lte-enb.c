@@ -586,21 +586,26 @@ int wait_CCs(eNB_rxtx_proc_t *proc) {
  * */
 static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
+///////////////////////////////////////////////////// Remove comments after testing phase 1 //////////////////////////
   //Allocate memory for the structures used by PHY and MAC
- // UL_IND_t *UL_INFO;
- // Sched_Rsp_t *Sched_Rsp; 
 
-  //UL_INFO = (UL_IND_t*) malloc(sizeof(UL_IND_t));
-  //Sched_Rsp = (Sched_Rsp_t*) malloc(sizeof(Sched_Rsp_t)); 
+  ///////////////////////////////////// for NB-IoT testing  ////////////////////////
+///  UL_IND_t *UL_INFO;
+///  Sched_Rsp_t *Sched_Rsp; 
 
-  start_meas(&softmodem_stats_rxtx_sf);
+///  UL_INFO = (UL_IND_t*) malloc(sizeof(UL_IND_t));
+///  Sched_Rsp = (Sched_Rsp_t*) malloc(sizeof(Sched_Rsp_t)); 
+  /////////////////////////////////////// END ///////////////////////////////////////////
+  //start_meas(&softmodem_stats_rxtx_sf);
 
   // ****************************************
   // Common RX procedures subframe n
-// for NB-IoT testing  // do_prach commented
- // if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5_NB_IoT)))
- //   eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
-  
+
+  ///////////////////////////////////// for NB-IoT testing  ////////////////////////
+///  if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5_NB_IoT)))
+///    eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
+  ///////////////////////////////////////// END //////////////////////////////////////
+
   /*UE-specific RX processing for subframe n*/
 
 
@@ -608,14 +613,14 @@ static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, ch
    * stored the Upink information in UL_info struct, process it and made it into FAPI style,
    */
 
-  // phy_procedures_eNB_uespec_RX_NB_IoT(eNB,proc,UL_INFO);
+ ///  phy_procedures_eNB_uespec_RX_NB_IoT(eNB,proc,UL_INFO);
 
   /*
    * send the UL_Indication to higher layer that also provide a tick to the scheduler_dlsch_ulsch
    * (on its turn the scheduler will trigger the phy_procedure_eNB_TX through schedule_responce function
    */
 
-  // if(if_inst->UL_indication) if_inst->UL_indication(UL_INFO);
+  /// if(if_inst->UL_indication) if_inst->UL_indication(UL_INFO);
   
 
   if (oai_exit) return(-1);
@@ -623,7 +628,7 @@ static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, ch
   
   if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) return(-1);
 
-  stop_meas( &softmodem_stats_rxtx_sf );
+  //stop_meas( &softmodem_stats_rxtx_sf );
   
   return(0);
 }
@@ -631,7 +636,7 @@ static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, ch
 
 static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
-  start_meas(&softmodem_stats_rxtx_sf);
+  ///start_meas(&softmodem_stats_rxtx_sf);
 
   // ****************************************
   // Common RX procedures subframe n
@@ -642,9 +647,11 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   phy_procedures_eNB_common_RX(eNB,proc);
   
   // UE-specific RX processing for subframe n
+  ///////////////////////////////////// for NB-IoT testing  ////////////////////////
   // for NB-IoT testing  // activating only TX part
-  //if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc, no_relay );
-  
+  /// if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc, no_relay );
+   ////////////////////////////////////END///////////////////////
+
   // *****************************************
   // TX processing for subframe n+4
   // run PHY TX procedures the one after the other for all CCs to avoid race conditions
@@ -658,7 +665,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   
   if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) return(-1);
 
-  stop_meas( &softmodem_stats_rxtx_sf );
+ /// stop_meas( &softmodem_stats_rxtx_sf );
   
   return(0);
 }
@@ -673,11 +680,11 @@ static void* eNB_thread_rxtx( void* param ) {
   static int eNB_thread_rxtx_status;
 
   eNB_rxtx_proc_t *proc = (eNB_rxtx_proc_t*)param;
-  eNB_rxtx_proc_NB_IoT_t *proc_NB_IoT = (eNB_rxtx_proc_NB_IoT_t*)param;  // to remove when eNB_thread_rxtx_status is duplicated for NB-IoT
+  ///eNB_rxtx_proc_NB_IoT_t *proc_NB_IoT = (eNB_rxtx_proc_NB_IoT_t*)param;  // to remove when eNB_thread_rxtx_status is duplicated for NB-IoT
 
   PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
 
-  PHY_VARS_eNB_NB_IoT *eNB_NB_IoT = PHY_vars_eNB_NB_IoT_g[0][proc_NB_IoT->CC_id]; // to remove when eNB_thread_rxtx_status is duplicated for NB-IoT
+  ///PHY_VARS_eNB_NB_IoT *eNB_NB_IoT = PHY_vars_eNB_NB_IoT_g[0][proc_NB_IoT->CC_id]; // to remove when eNB_thread_rxtx_status is duplicated for NB-IoT
 
   char thread_name[100];
 
@@ -702,11 +709,11 @@ static void* eNB_thread_rxtx( void* param ) {
 
     if (eNB->CC_id==0)
     {
-#ifdef NB_IOT
-      if(rxtx_NB_IoT(eNB_NB_IoT, proc_NB_IoT,thread_name)<0) break;
-#else
+//#ifdef NB_IOT
+    //  if(rxtx_NB_IoT(eNB,proc,thread_name)<0) break;
+//#else
       if (rxtx(eNB,proc,thread_name) < 0) break;
-#endif
+//#endif
     }
 
   } // while !oai_exit
@@ -1604,9 +1611,9 @@ static void* eNB_thread_single( void* param ) {
   eNB_proc_t             *proc = (eNB_proc_t*)param;
   eNB_rxtx_proc_t        *proc_rxtx = &proc->proc_rxtx[0];
   PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
-  PHY_VARS_eNB_NB_IoT *eNB_NB_IoT = PHY_vars_eNB_NB_IoT_g[0][proc->CC_id];
+  //PHY_VARS_eNB_NB_IoT *eNB_NB_IoT = PHY_vars_eNB_NB_IoT_g[0][proc->CC_id];
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
-  NB_IoT_DL_FRAME_PARMS *fp_NB_IoT = &eNB_NB_IoT->frame_parms;
+ // NB_IoT_DL_FRAME_PARMS *fp_NB_IoT = &eNB_NB_IoT->frame_parms_NB_IoT;
   eNB->CC_id =  proc->CC_id;
 
   void *rxp[2],*rxp2[2];
@@ -1758,7 +1765,7 @@ static void* eNB_thread_single( void* param ) {
     wakeup_slaves(proc);
 
    
-    if (rxtx_NB_IoT(eNB_NB_IoT,proc_rxtx,"eNB_thread_single") < 0) break;
+    //if (rxtx_NB_IoT(eNB_NB_IoT,proc_rxtx,"eNB_thread_single") < 0) break;
     if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
   }
   

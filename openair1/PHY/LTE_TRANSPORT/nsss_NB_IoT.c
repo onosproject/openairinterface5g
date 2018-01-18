@@ -142,6 +142,7 @@ int rx_nsss_NB_IoT(PHY_VARS_UE_NB_IoT *ue,int32_t *tot_metric)
 	uint8_t Nid2,q_est,u_est;
 	NB_IoT_DL_FRAME_PARMS *frame_parms = &ue->frame_parms; 
 	int l,k,m; 
+	int toto=0;
 	int16_t *d, *nsss_sf;
 	int32_t nsss_ext[2][132]; // up to 2 rx antennas ? 
 	int32_t metric; // correlation metric
@@ -149,7 +150,7 @@ int rx_nsss_NB_IoT(PHY_VARS_UE_NB_IoT *ue,int32_t *tot_metric)
 	// we suppose we are in NSSS subframe, after DFT
 	// this could be changed in further version
 	for (l=0;l<11;l++){
-		nsss_extract_NB_IoT(ue,frame_parms,nsss_ext,l);  
+		toto = nsss_extract_NB_IoT(ue,frame_parms,nsss_ext,l);  
 	} 
 
 	// now do the Cell ID estimation based on the precomputed sequences in PHY/LTE_TRANSPORT/nsss_NB_IoT.h

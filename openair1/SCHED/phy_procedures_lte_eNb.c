@@ -37,6 +37,7 @@
 
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
 #include "PHY/LTE_TRANSPORT/if5_tools.h"
+#include "openair1/SCHED/defs_NB_IoT.h"
 
 #ifdef EMOS
 #include "SCHED/phy_procedures_emos.h"
@@ -520,6 +521,8 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_RS_TX,0);
   }    
 
+//////////////////////////// for NB-IoT testing /////////////////////////////
+/*
   // First half of PSS/SSS (FDD, slot 0)
   if (subframe == 0) {
     if ((fp->frame_type == FDD) &&
@@ -536,7 +539,11 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 		   0);
       
     }
-    
+  */
+  ///////////////////////////////////////////////////////////////////////////////////// 
+
+  //////////////////////////// for NB-IoT testing /////////////////////////////
+  /*
     // generate PBCH (Physical Broadcast CHannel) info
     if ((frame&3) == 0) {
       pbch_pdu[2] = 0;
@@ -602,7 +609,10 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
       pbch_pdu[1] = frame&0xfc;
       pbch_pdu[0] = 0;
     }
-      
+     */
+  ////////////////////////////////////////////////////////////////END////////////////////////////////////////////////    
+   /*
+  //////////////////////////// for NB-IoT testing /////////////////////////////
     /// First half of SSS (TDD, slot 1)
     
     if ((fp->frame_type == TDD)&&
@@ -678,7 +688,8 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 		 2,
 		 12);
   }
-
+  */
+  /////////////////////////////////////////////////////////////////////////
 }
 
 void generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,const int UE_id) {
@@ -2877,8 +2888,8 @@ void phy_procedures_eNB_common_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc){
   const int frame        = proc->frame_rx;
   int offset             = (eNB->single_thread_flag==1) ? 0 : (subframe&1);
 
-  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_RX0_ENB+offset, proc->frame_rx );
-  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_SUBFRAME_NUMBER_RX0_ENB+offset, proc->subframe_rx );
+ /// VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_RX0_ENB+offset, proc->frame_rx );
+ /// VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_SUBFRAME_NUMBER_RX0_ENB+offset, proc->subframe_rx );
 
   if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) {
 
@@ -2890,14 +2901,14 @@ void phy_procedures_eNB_common_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc){
   }
 
 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_COMMON+offset, 1 ); 
-  start_meas(&eNB->phy_proc_rx);
+  ///VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_COMMON+offset, 1 ); 
+  /// start_meas(&eNB->phy_proc_rx);
   LOG_D(PHY,"[eNB %d] Frame %d: Doing phy_procedures_eNB_common_RX(%d)\n",eNB->Mod_id,frame,subframe);
 
 
   if (eNB->fep) eNB->fep(eNB,proc);
 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_COMMON+offset, 0 );
+  ///VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_COMMON+offset, 0 );
 }
 
 

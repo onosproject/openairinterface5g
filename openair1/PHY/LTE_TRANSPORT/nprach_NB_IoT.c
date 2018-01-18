@@ -44,15 +44,15 @@ uint8_t NPRACH_detection_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 								uint16_t sub_sampling_rate, 
 								uint32_t FRAME_LENGTH_COMPLEX_SUB_SAMPLES){
 
-	uint32_t P_noise ; // needs to be defined or calculated
-	uint16_t FFT_size; 
-	uint16_t delta_t; // size, in samples, between 2 successive FFTs
+	//  uint32_t P_noise ; // to uncomment when needed // needs to be defined or calculated
+	uint16_t FFT_size=0; 
+	uint16_t delta_t=0; // size, in samples, between 2 successive FFTs
 	uint16_t Nb_packets,n_subcarriers; 
-	uint16_t N_sample_per_sc; // number of samples per subcarrier
+	uint16_t N_sample_per_sc=0; // number of samples per subcarrier
 	int16_t **mat_from_buffer,**mat_to_detector; 
 	uint32_t **mat_energy;  
 	uint64_t energy_per_subcarrier;  
-	uint32_t threshold_gamma; // threshold for signal detection
+	uint32_t threshold_gamma=0; // threshold for signal detection
 	int k,n,m; 
 	uint8_t is_NPRACH_present = 0; 
 
@@ -159,7 +159,7 @@ uint32_t TA_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
 	uint16_t length_seq_NPRACH,length_CP,length_symbol; // in number of samples, per NPRACH preamble: 4 sequences ; length of CP in number of samples 
 	uint16_t length_CP_0 = eNB->frame_parms.nprach_config_common.nprach_CP_Length; //NB-IoT: 0: short, 1: long 
-	uint32_t fs; //NB-IoT: sampling frequency of Rx_buffer, must be defined somewhere
+	uint32_t fs=0; //NB-IoT: sampling frequency of Rx_buffer, must be defined somewhere
 	uint32_t fs_sub_sampled; 
 	uint16_t length_correl_window,base_length; 
 	int64_t *vec_correlation; 
@@ -355,10 +355,11 @@ int16_t* sub_sampling_NB_IoT(int16_t *input_buffer, uint32_t length_input, uint3
 
 void RX_NPRACH_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, int16_t *Rx_buffer){ 
 
-	uint32_t estimated_TA, estimated_TA_coarse; 
+	uint32_t estimated_TA =0;
+	uint32_t estimated_TA_coarse=0;  
 	int16_t *Rx_sub_sampled_buffer_128,*Rx_sub_sampled_buffer_16; 
 	uint16_t sub_sampling_rate; //NB-IoT: to be defined somewhere
-	uint32_t FRAME_LENGTH_COMPLEX_SAMPLES; // NB-IoT: length of input buffer, to be defined somewhere 
+	uint32_t FRAME_LENGTH_COMPLEX_SAMPLES=0; // NB-IoT: length of input buffer, to be defined somewhere 
 	uint32_t FRAME_LENGTH_COMPLEX_SUB_SAMPLES; // Length of buffer after sub-sampling
 	uint32_t *length_ouput; // Length of buffer after sub-sampling 
 	char coarse=1; // flag that indicate the level of TA estimation

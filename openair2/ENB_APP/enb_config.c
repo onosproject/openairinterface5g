@@ -54,7 +54,7 @@
 #include "PHY/extern.h"
 
 /////////   for NB-IoT /////////////////////////
-#include "SystemInformationBlockType2-NB-r13.h"
+//#include "SystemInformationBlockType2-NB-r13.h"
 //////////////////END/////////////////////
 
 /* those macros are here to help diagnose problems in configuration files
@@ -249,10 +249,10 @@
 #define ENB_CONFIG_STRING_OSA_LOG_VERBOSITY                "osa_log_verbosity"
 
 //
-//************************************* NB-IoT parameters **************************************************************
+/////////////////////////////////////////////////NB-IoT parameters ///////////////////////////////////////////////
 //
-
-//************* RRC parameters in the config file of merge branch
+/*
+///////////////////////////////////////////////// RRC parameters in the config file of merge branch
 #define ENB_CONFIG_STRING_RACH_POWERRAMPINGSTEP_NB_IOT                     "rach_powerRampingStep_NB"
 #define ENB_CONFIG_STRING_RACH_PREAMBLEINITIALRECEIVEDTARGETPOWER_NB_IOT   "rach_preambleInitialReceivedTargetPower_NB"
 #define ENB_CONFIG_STRING_RACH_PREAMBLETRANSMAX_CE_NB_IOT                  "rach_preambleTransMax_CE_NB"
@@ -297,8 +297,8 @@
 #define ENB_CONFIG_STRING_NPDCCH_NUMREPETITIONS_RA_NB_IOT                  "npdcch_NumRepetitions_RA"
 #define ENB_CONFIG_STRING_NPDCCH_STARTSF_CSS_RA_NB_IOT                     "npdcch_StartSF_CSS_RA"
 #define ENB_CONFIG_STRING_NPDCCH_OFFSET_RA_NB_IOT                          "npdcch_Offset_RA"
-
-//*********************************************END*********************************************************************
+*/
+/////////////////////////////////////////////////END///////////////////////////////////////////////
 
 #define KHz (1000UL)
 #define MHz (1000 * KHz)
@@ -761,8 +761,9 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   char*             osa_log_verbosity             = NULL;
 
   //
-  //********************************** NB-IoT parameters ************************************
+  /////////////////////////////////////////////////NB-IoT parameters ///////////////////////////////////////////////
   //
+  /*
   libconfig_int     rach_raResponseWindowSize_NB                 = 0;
   libconfig_int     rach_macContentionResolutionTimer_NB         = 0;
   libconfig_int     rach_powerRampingStep_NB                     = 0;
@@ -803,8 +804,8 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   libconfig_int     npdcch_NumRepetitions_RA           = 0;
   libconfig_int     npdcch_StartSF_CSS_RA              = 0;
   const char*       npdcch_Offset_RA                   = NULL;
-
-  //************************************END***************************************************
+  */
+  ////////////////////////////////////////////////END///////////////////////////////////////////////
 
 
   /* for no gcc warnings */
@@ -1019,8 +1020,9 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N310,  &ue_TimersAndConstants_n310)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N311,  &ue_TimersAndConstants_n311)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UE_TRANSMISSION_MODE,  &ue_TransmissionMode)
+                   /*
                    //
-                   //************************************************************ NB-IoT ***********************************************************************************
+                   /////////////////////////////////////////////// NB-IoT ///////////////////////////////////////////////
                    //
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_RARESPONSEWINDOWSIZE_NB_IOT,  &rach_raResponseWindowSize_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_MACCONTENTIONRESOLUTIONTIMER_NB_IOT,  &rach_macContentionResolutionTimer_NB)
@@ -1062,7 +1064,8 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPDCCH_NUMREPETITIONS_RA_NB_IOT,  &npdcch_NumRepetitions_RA)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPDCCH_STARTSF_CSS_RA_NB_IOT,  &npdcch_StartSF_CSS_RA)
                    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_NPDCCH_OFFSET_RA_NB_IOT,  &npdcch_Offset_RA)
-/////******************************************************************END*******************************************************************************************
+                   */
+////////////////////////////////////////////////////END///////////////////////////////////////////////
 
 #if defined(Rel10) || defined(Rel14)
 
@@ -2116,10 +2119,10 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                              lib_config_file_name_pP, i, ue_TransmissionMode);
 		break;
 	      }
-
-        //****************************************************************************************************************
-        //************************************ NB-IoT part ***************************************************************
-        //****************************************************************************************************************
+/*
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////// NB-IoT part ///////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////
 
     switch (rach_raResponseWindowSize_NB) {
               case 2:
@@ -2685,7 +2688,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                              lib_config_file_name_pP, i, deltaPreambleMsg3);
       
 
-        //************************************************************************* NB-IoT Timer ************************************************************
+        /////////////////////////////////////////////////NB-IoT Timer ///////////////////////////////////////////////
         switch (ue_TimersAndConstants_t300_NB) {
               case 2500:
                 enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t300_NB[j] = UE_TimersAndConstants_NB_r13__t300_r13_ms2500;
@@ -2923,7 +2926,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
 
               }
 
-        //************************************************************************** NBPRACH NB-IoT *****************************************************
+        ///////////////////////////////////////////////// NBPRACH NB-IoT ///////////////////////////////////////////////
         switch (nprach_Periodicity) {
               case 40:
                 enb_properties.properties[enb_properties_index]->nprach_Periodicity[j] = NPRACH_Parameters_NB_r13__nprach_Periodicity_r13_ms40;
@@ -3274,11 +3277,10 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                              "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for npdcch_Offset_RA choice: zero,oneEighth,oneFourth,threeEighth !\n",
                              lib_config_file_name_pP, i, npdcch_Offset_RA);
 
-
-        //****************************************************************************************************************
-        //***********************************************END**************************************************************
-        //****************************************************************************************************************
-
+*/
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////END//////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
           }
 

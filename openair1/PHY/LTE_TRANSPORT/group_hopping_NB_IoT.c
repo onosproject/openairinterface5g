@@ -167,7 +167,7 @@ void generate_grouphop_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms)
 void init_ul_hopping_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms)
 {
 
-  generate_grouphop(frame_parms);
+  ////////////////////////////////////////generate_grouphop(frame_parms);
   // generate_seqhop(frame_parms);
   // generate_nPRS(frame_parms);
 }

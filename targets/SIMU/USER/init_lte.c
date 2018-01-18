@@ -157,7 +157,7 @@ PHY_VARS_eNB_NB_IoT* init_lte_eNB_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
                                          uint8_t abstraction_flag)
 {
 
-  int i;
+  //int i;
   PHY_VARS_eNB_NB_IoT* PHY_vars_eNB = malloc(sizeof(PHY_VARS_eNB_NB_IoT));
   memset(PHY_vars_eNB,0,sizeof(PHY_VARS_eNB_NB_IoT));
   PHY_vars_eNB->Mod_id=eNB_id;
