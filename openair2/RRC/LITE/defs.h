@@ -134,11 +134,9 @@ struct PC5SEstablishRsp{
 
 //example of PC5_DSICOVERY ANNOUNCEMENT (for testing only)
 typedef struct  {
-   uint8_t msg_type;
-   uint32_t discoveryGroupId;
-   //AnnouncerInfo
-   uint32_t proSeUEId;
-}  __attribute__((__packed__)) PC5DiscoveryAnnouncement;
+   unsigned char bytes[29];
+}  __attribute__((__packed__)) PC5DiscoveryAnnouncement ;
+
 
 struct sidelink_ctrl_element {
    unsigned short type;
@@ -310,7 +308,7 @@ typedef struct uid_linear_allocator_s {
 
 #define PROTOCOL_RRC_CTXT_FMT           PROTOCOL_CTXT_FMT
 #define PROTOCOL_RRC_CTXT_ARGS(CTXT_Pp) PROTOCOL_CTXT_ARGS(CTXT_Pp)
-/** @defgroup _rrc RRC 
+/** @defgroup _rrc RRC
  * @ingroup _oai2
  * @{
  */
@@ -488,7 +486,7 @@ typedef struct SRB_INFO_TABLE_ENTRY_s {
   SRB_INFO Srb_info;
   uint8_t Active;
   uint8_t Status;
-  uint32_t Next_check_frame; 
+  uint32_t Next_check_frame;
 } SRB_INFO_TABLE_ENTRY;
 
 typedef struct MEAS_REPORT_LIST_s {

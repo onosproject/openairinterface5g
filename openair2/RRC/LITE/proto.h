@@ -25,7 +25,7 @@
  * \date 2010 - 2014
  * \email navid.nikaein@eurecom.fr
  * \version 1.0
- 
+
  */
 /** \addtogroup _rrc
  *  @{
@@ -90,7 +90,7 @@ rrc_ue_decode_dcch(
 );
 
 #ifdef Rel14
-int decode_SL_DISCOVERY_Message(
+int decode_SL_Discovery_Message(
   const protocol_ctxt_t* const ctxt_pP,
   const uint8_t                eNB_index,
   uint8_t*               const Sdu,
@@ -291,7 +291,7 @@ rrc_eNB_generate_dedeicatedRRCConnectionReconfiguration(
   const uint8_t                ho_state
 );
 
-void 
+void
 rrc_eNB_reconfigure_DRBs (const protocol_ctxt_t* const ctxt_pP,
 			  rrc_eNB_ue_context_t*  ue_context_pP);
 
@@ -396,14 +396,14 @@ mac_rrc_data_ind(
 
 void mac_sync_ind( module_id_t Mod_instP, uint8_t status);
 
-void mac_eNB_rrc_ul_failure(const module_id_t Mod_instP, 
-			    const int CC_id, 
+void mac_eNB_rrc_ul_failure(const module_id_t Mod_instP,
+			    const int CC_id,
 			    const frame_t frameP,
 			    const sub_frame_t subframeP,
 			    const rnti_t rnti);
 
-void mac_eNB_rrc_ul_in_sync(const module_id_t Mod_instP, 
-			    const int CC_id, 
+void mac_eNB_rrc_ul_in_sync(const module_id_t Mod_instP,
+			    const int CC_id,
 			    const frame_t frameP,
 			    const sub_frame_t subframeP,
 			    const rnti_t rnti);

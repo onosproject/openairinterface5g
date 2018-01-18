@@ -102,7 +102,7 @@ mac_rrc_data_req(
       }
 
       // All even frames transmit SIB in SF 5
-      AssertFatal(RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB1 != 255, 
+      AssertFatal(RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB1 != 255,
 		  "[eNB %d] MAC Request for SIB1 and SIB1 not initialized\n",Mod_idP);
 
       if ((frameP%2) == 0) {
@@ -312,7 +312,7 @@ mac_rrc_data_req(
                RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB1_BR);
         return (RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB1_BR);
     }
- 
+
     if ((Srb_id & RAB_OFFSET) == BCCH_SI_BR){ // First SI message with SIB2/3
         memcpy(&buffer_pP[0],
                RC.rrc[Mod_idP]->carrier[CC_id].SIB23_BR,
@@ -329,10 +329,11 @@ mac_rrc_data_req(
      LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size);
 
    //TTN (for D2D)
-     if ((Srb_id & RAB_OFFSET) == SL_DISCOVERY){
+     if (Srb_id  == SL_DISCOVERY && UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size > 0){
         memcpy(&buffer_pP[0],&UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.Payload[0],UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size);
         uint8_t Ret_size=UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size;
-        //      msg("[RRC][UE %d] Sending SL_Discovery\n",Mod_id);
+        LOG_I(RRC,"[UE %d] Sending SL_Discovery, size %d bytes\n",Mod_idP,Ret_size);
+        UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size = 0;
         return(Ret_size);
      }
 #endif
@@ -513,7 +514,7 @@ mac_rrc_data_ind(
     }
 
     //TTN (for D2D)
-    if((srb_idP & RAB_OFFSET) == SL_DISCOVERY) {
+    if(srb_idP == SL_DISCOVERY) {
        decode_SL_Discovery_Message(&ctxt, eNB_indexP, sduP, sdu_lenP);
     }
 
@@ -522,7 +523,7 @@ mac_rrc_data_ind(
   } else { // This is an eNB
     Srb_info = &RC.rrc[module_idP]->carrier[CC_id].Srb0;
     LOG_D(RRC,"[eNB %d] Received SDU for CCCH on SRB %d\n",module_idP,Srb_info->Srb_id);
-    
+
 #if 0 //defined(ENABLE_ITTI)
     {
       MessageDef *message_p;
@@ -740,7 +741,7 @@ void rrc_out_of_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index
 	  UE_rrc_inst[Mod_idP].Info[eNB_index].T310_cnt,
 	  UE_rrc_inst[Mod_idP].Info[eNB_index].N310_cnt,
 	  UE_rrc_inst[Mod_idP].Info[eNB_index].N311_cnt);
-  
+
 #if defined(ENABLE_ITTI)
   {
     MessageDef *message_p;
@@ -797,8 +798,8 @@ void mac_eNB_rrc_ul_failure(const module_id_t Mod_instP,
   rrc_mac_remove_ue(Mod_instP,rntiP);
 }
 
-void mac_eNB_rrc_ul_in_sync(const module_id_t Mod_instP, 
-			    const int CC_idP, 
+void mac_eNB_rrc_ul_in_sync(const module_id_t Mod_instP,
+			    const int CC_idP,
 			    const frame_t frameP,
 			    const sub_frame_t subframeP,
 			    const rnti_t rntiP)

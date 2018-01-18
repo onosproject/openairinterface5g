@@ -252,7 +252,7 @@ typedef struct {
 
   // decode phich
   uint8_t decode_phich;
-} LTE_UL_UE_HARQ_t; 
+} LTE_UL_UE_HARQ_t;
 
 #ifdef Rel14
 typedef enum {
@@ -265,7 +265,7 @@ typedef struct {
   /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
   int32_t *txdataF[8];
   /// beamforming weights for UE-spec transmission (antenna ports 5 or 7..14), for each codeword, maximum 4 layers?
-  int32_t **ue_spec_bf_weights[4]; 
+  int32_t **ue_spec_bf_weights[4];
   /// dl channel estimates (estimated from ul channel estimates)
   int32_t **calib_dl_ch_estimates;
   /// Allocated RNTI (0 means DLSCH_t is not currently used)
@@ -413,7 +413,7 @@ typedef struct {
   /// is done after a new scheduling
   uint16_t previous_first_rb;
   /// Current Number of RBs
-  uint16_t nb_rb; 
+  uint16_t nb_rb;
   /// Current Modulation order
   uint8_t Qm;
   /// Transport block size
@@ -531,7 +531,7 @@ typedef enum {
   HARQ_SR,
   HARQ_CQI,
   SR_CQI,
-  HARQ_SR_CQI  
+  HARQ_SR_CQI
 } UCI_type_t;
 
 #ifdef Rel14
@@ -556,7 +556,7 @@ typedef struct {
   uint8_t     srs_active;
   /// PUCCH format to use
   PUCCH_FMT_t pucch_fmt;
-  /// number of PUCCH antenna ports 
+  /// number of PUCCH antenna ports
   uint8_t     num_antenna_ports;
   /// number of PUCCH resources
   uint8_t     num_pucch_resources;
@@ -878,7 +878,7 @@ typedef struct {
 
 typedef struct {
   // SL Configuration
-  /// Number of SL resource blocks (1-100) 
+  /// Number of SL resource blocks (1-100)
   uint32_t N_SL_RB;
   /// prb-start (0-99)
   uint32_t prb_Start;
@@ -911,7 +911,7 @@ typedef struct {
 
   // SLSCH Parameters
   /// Number of Subbands (36.213 14.1.1.2)
-  uint32_t Nsb; 
+  uint32_t Nsb;
   /// N_RB_HO (36.213 14.1.1.2)
   uint32_t N_RB_HO;
   /// n_ss_PSSCH (36.211 9.2.4)
@@ -930,17 +930,16 @@ typedef struct {
   uint32_t n_prime_PRB;
   /// m_nprime_PRB_PSSCH (36.213 14.1.3)
   uint32_t m_nprime_PRB_PSCCH;
-  /// payload length 
+  /// payload length
   int payload_length;
   /// pointer to payload
   uint8_t *payload;
 } SLSCH_t;
 
 typedef struct {
-  /// payload length 
+  /// payload length
   int payload_length;
-  /// pointer to payload
-  uint8_t *payload;
+	uint8_t payload[100];
 } SLDCH_t;
 
 #define TTI_SYNC 0
@@ -954,13 +953,13 @@ typedef struct UE_tport_header_s {
 } UE_tport_header_t;
 
 typedef struct UE_tport_s {
-  UE_tport_header_t header; 
+  UE_tport_header_t header;
   union {
     SLSS_t slss;
     SLDCH_t sldch;
     SLSCH_t slsch;
   };
-  uint8_t payload[1500];  
+  uint8_t payload[1500];
 } UE_tport_t;
 
 #endif

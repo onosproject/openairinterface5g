@@ -306,12 +306,12 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
   preconfigpool->sc_CP_Len_r12                                                    = SL_CP_Len_r12_normal;
   preconfigpool->sc_Period_r12                                                    = SL_PeriodComm_r12_sf40;
   // 20 PRBs for SL communications
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12                             = 20; 
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_Start_r12                           = 5; 
+  preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12                             = 20;
+  preconfigpool->sc_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
   preconfigpool->sc_TF_ResourceConfig_r12.prb_End_r12                             = 44;
   // Offset set to 0 subframes
   preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present             = SL_OffsetIndicator_r12_PR_small_r12;
-  preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0; 
+  preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0;
   // 40 ms SL Period
   preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present              = SubframeBitmapSL_r12_PR_bs40_r12;
   preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf         = CALLOC(1,5);
@@ -327,12 +327,12 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
 
   preconfigpool->data_CP_Len_r12                                                  = SL_CP_Len_r12_normal;
   // 20 PRBs for SL communications
-  preconfigpool->data_TF_ResourceConfig_r12.prb_Num_r12                             = 20; 
-  preconfigpool->data_TF_ResourceConfig_r12.prb_Start_r12                           = 5; 
+  preconfigpool->data_TF_ResourceConfig_r12.prb_Num_r12                             = 20;
+  preconfigpool->data_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
   preconfigpool->data_TF_ResourceConfig_r12.prb_End_r12                             = 44;
   // Offset set to 0 subframes
   preconfigpool->data_TF_ResourceConfig_r12.offsetIndicator_r12.present             = SL_OffsetIndicator_r12_PR_small_r12;
-  preconfigpool->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0; 
+  preconfigpool->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0;
   // 40 ms SL Period
   preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.present              = SubframeBitmapSL_r12_PR_bs40_r12;
   preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf         = CALLOC(1,5);
@@ -368,7 +368,7 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
   *(UE->DRB_config[0][0]->eps_BearerIdentity) = 3;
   UE->DRB_config[0][0]->logicalChannelIdentity = CALLOC(1, sizeof(long));
   *(UE->DRB_config[0][0]->logicalChannelIdentity) = UE->DRB_config[0][0]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
-  
+
   // TTN - Establish a new SLRB for PC5-S (using DRB 10 for now)
   UE->DRB_config[0][1] = CALLOC(1,sizeof(struct DRB_ToAddMod));
   UE->DRB_config[0][1]->eps_BearerIdentity = CALLOC(1, sizeof(long));
@@ -437,8 +437,8 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
 #if defined(Rel10) || defined(Rel14)
                            , (PMCH_InfoList_r9_t *) NULL
 #endif
-                           ,NULL);	   
-  
+                           ,NULL);
+
   rrc_rlc_config_asn1_req(&ctxt,
 			  (SRB_ToAddModList_t*)NULL,
 			  UE->DRB_configList,
@@ -1746,11 +1746,11 @@ rrc_ue_process_radioResourceConfigDedicated(
            NULL
 #endif
 			      );
-	
+
       }
     }
   }
-  
+
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State = RRC_CONNECTED;
   LOG_I(RRC,"[UE %d] State = RRC_CONNECTED (eNB %d)\n",ctxt_pP->module_id,eNB_index);
 #if !defined(ENABLE_USE_MME) && defined(OAI_EMU)
@@ -2335,7 +2335,7 @@ rrc_ue_process_mobilityControlInfo(
            NULL
 #endif
 			);
-  
+
   // Re-establish PDCP for all RBs that are established
   // rrc_pdcp_config_req (ue_mod_idP+NB_eNB_INST, frameP, 0, CONFIG_ACTION_ADD, ue_mod_idP+DCCH);
   // rrc_pdcp_config_req (ue_mod_idP+NB_eNB_INST, frameP, 0, CONFIG_ACTION_ADD, ue_mod_idP+DCCH1);
@@ -3203,7 +3203,7 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
            NULL
 #endif
 			);
-  
+
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus = 1;
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIB1systemInfoValueTag = sib1->systemInfoValueTag;
 
@@ -3597,7 +3597,7 @@ int Qoffsettab[31] = {-24,-22,-20,-18,-16,-14,-12,-10,-8,-6,-5,-4,-3,-2,-1,0,1,2
 int PhysCellIdRange[16] = {4,8,12,16,24,32,48,64,84,96,128,168,252,504,0,0};
 
 uint64_t arfcn_to_freq(long arfcn) {
-  
+
   if (arfcn < 600)  // Band 1
     return((uint64_t)2110000000 + (arfcn*100000));
   else if (arfcn <1200) // Band 2
@@ -3678,7 +3678,7 @@ uint64_t arfcn_to_freq(long arfcn) {
   InterFreqCarrierFreqInfo_t *ifcfInfo;
 
   LOG_I( RRC, "Dumping SIB5 (see TS36.331 V8.21.0)\n" );
-  
+
   for (i=0;i<interFreqCarrierFreqList.list.count;i++) {
     LOG_I(RRC, "SIB5 InterFreqCarrierFreq element %d/%d\n",i,interFreqCarrierFreqList.list.count);
     ifcfInfo = interFreqCarrierFreqList.list.array[i];
@@ -3732,16 +3732,16 @@ uint64_t arfcn_to_freq(long arfcn) {
     if (ifcfInfo->q_OffsetFreq)
       LOG_I(RRC,"   Q_OffsetFreq : %d\n",Qoffsettab[*ifcfInfo->q_OffsetFreq]);
     if (ifcfInfo->interFreqNeighCellList) {
-      
+
       for (j=0;j<ifcfInfo->interFreqNeighCellList->list.count;j++) {
 	LOG_I(RRC,"   Cell %d\n", j);
 	LOG_I(RRC,"      PhysCellId : %ld\n",ifcfInfo->interFreqNeighCellList->list.array[j]->physCellId);
 	LOG_I(RRC,"      Q_OffsetRange : %ld\n",ifcfInfo->interFreqNeighCellList->list.array[j]->q_OffsetCell);
-	
+
       }
     }
     if (ifcfInfo->interFreqBlackCellList) {
-      
+
       for (j=0;j<ifcfInfo->interFreqBlackCellList->list.count;j++) {
 	LOG_I(RRC,"   Cell %d\n", j);
 	LOG_I(RRC,"      PhysCellId start: %ld\n",ifcfInfo->interFreqBlackCellList->list.array[j]->start);
@@ -3753,16 +3753,16 @@ uint64_t arfcn_to_freq(long arfcn) {
 #if defined(Rel10) || defined(Rel14)
     if (ifcfInfo->ext1 && ifcfInfo->ext1->q_QualMin_r9)
       LOG_I(RRC,"   Q_QualMin_r9 : %ld\n",*ifcfInfo->ext1->q_QualMin_r9);
-    
+
     if (ifcfInfo->ext1 && ifcfInfo->ext1->threshX_Q_r9) {
       LOG_I(RRC,"   threshX_HighQ_r9 : %ld\n",ifcfInfo->ext1->threshX_Q_r9->threshX_HighQ_r9);
       LOG_I(RRC,"   threshX_LowQ_r9: %ld\n",ifcfInfo->ext1->threshX_Q_r9->threshX_LowQ_r9);
     }
 #endif
   }
-  
+
 }
-  
+
 #if defined(Rel10) || defined(Rel14)
  void dump_sib13( SystemInformationBlockType13_r9_t *sib13 )
 {
@@ -3895,9 +3895,9 @@ uint64_t arfcn_to_freq(long arfcn) {
 #endif
 #if !(defined(ENABLE_ITTI) && defined(ENABLE_USE_MME))
 	  rrc_ue_generate_RRCConnectionRequest( ctxt_pP, eNB_index );
-	
+
 #endif
-	
+
 	if (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State == RRC_IDLE) {
 	  LOG_I( RRC, "[UE %d] Received SIB1/SIB2/SIB3 Switching to RRC_SI_RECEIVED\n", ctxt_pP->module_id );
 	  UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State = RRC_SI_RECEIVED;
@@ -3905,7 +3905,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 	  {
 	    MessageDef                            *message_ral_p = NULL;
 	    rrc_ral_system_information_ind_t       ral_si_ind;
-	    
+
 	    message_ral_p = itti_alloc_new_message (TASK_RRC_UE, RRC_RAL_SYSTEM_INFORMATION_IND);
 	    memset(&ral_si_ind, 0, sizeof(rrc_ral_system_information_ind_t));
 	    ral_si_ind.plmn_id.MCCdigit2 = '0';
@@ -3957,7 +3957,7 @@ uint64_t arfcn_to_freq(long arfcn) {
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&16) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=16;
 	new_sib=1;
-     
+
 	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib5[eNB_index], &typeandinfo->choice.sib5, sizeof(SystemInformationBlockType5_t) );
 	LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB5 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
 	dump_sib5(UE_rrc_inst[ctxt_pP->module_id].sib5[eNB_index]);
@@ -3968,7 +3968,7 @@ uint64_t arfcn_to_freq(long arfcn) {
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&32) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=32;
 	new_sib=1;
-     
+
 	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib6[eNB_index], &typeandinfo->choice.sib6, sizeof(SystemInformationBlockType6_t) );
 	LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB6 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
       }
@@ -3996,7 +3996,7 @@ uint64_t arfcn_to_freq(long arfcn) {
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&256) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=256;
 	new_sib=1;
-      
+
 	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib9[eNB_index], &typeandinfo->choice.sib9, sizeof(SystemInformationBlockType9_t) );
 	LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB9 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
       }
@@ -4031,12 +4031,12 @@ uint64_t arfcn_to_freq(long arfcn) {
 	LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB12 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
       }
       break;
-	
+
     case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib13_v920:
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&4096) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=4096;
 	new_sib=1;
-	
+
 	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib13[eNB_index], &typeandinfo->choice.sib13_v920, sizeof(SystemInformationBlockType13_r9_t) );
 	LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB13 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
 	dump_sib13( UE_rrc_inst[ctxt_pP->module_id].sib13[eNB_index] );
@@ -4135,7 +4135,7 @@ uint64_t arfcn_to_freq(long arfcn) {
     if (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIcnt == sib1->schedulingInfoList.list.count)
       rrc_set_sub_state( ctxt_pP->module_id, RRC_SUB_STATE_IDLE_SIB_COMPLETE );
 
-    LOG_I(RRC,"SIStatus %x, SIcnt %d/%d\n", 
+    LOG_I(RRC,"SIStatus %x, SIcnt %d/%d\n",
 	  UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus,
 	  UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIcnt,
 	  sib1->schedulingInfoList.list.count);
@@ -4576,7 +4576,7 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
            NULL
 #endif
 			);
-  
+
   UE_rrc_inst[ue_mod_idP].Info[eNB_index].MCCHStatus[mbsfn_sync_area] = 1;
 
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_idP, ENB_FLAG_NO, UE_rrc_inst[ue_mod_idP].Info[eNB_index].rnti, frameP, 0,eNB_index);
@@ -4909,7 +4909,7 @@ void *rrc_ue_task( void *args_p )
       /* Transfer data to PDCP */
       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[0].rnti, 0, 0,0);
 
-      // check if SRB2 is created, if yes request data_req on DCCH1 (SRB2) 
+      // check if SRB2 is created, if yes request data_req on DCCH1 (SRB2)
       if(UE_rrc_inst[ue_mod_id].SRB2_config[0] == NULL)
       {
           rrc_data_req (&ctxt,
@@ -4930,7 +4930,7 @@ void *rrc_ue_task( void *args_p )
       }
       break;
     }
-      
+
 # endif
 
 # if ENABLE_RAL
@@ -5166,7 +5166,7 @@ rrc_top_cleanup_ue(
 {
 
   if (NB_UE_INST > 0) free (UE_rrc_inst);
-  
+
 
 }
 
@@ -5806,14 +5806,16 @@ void *rrc_control_socket_thread_fct(void *arg)
 
  #ifdef DEBUG_CTRL_SOCKET
            LOG_I(RRC,"[PC5DiscoveryAnnouncement] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
-           LOG_I(RRC,"[PC5DiscoveryAnnouncement] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.msg_type);
-           LOG_I(RRC,"[PC5DiscoveryAnnouncement] discoveryGroupId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.discoveryGroupId);
-           LOG_I(RRC,"[PC5DiscoveryAnnouncement] proSeUEId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.proSeUEId);
+        //   LOG_I(RRC,"[PC5DiscoveryAnnouncement] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.msg_type);
+        //   LOG_D(RRC,"[PC5DiscoveryAnnouncement] discoveryGroupId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.discoveryGroupId);
+        //   LOG_D(RRC,"[PC5DiscoveryAnnouncement] proSeUEId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.proSeUEId);
  #endif
         //prepare SL_Discovery buffer
-         memcpy((void*)&UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.Payload[0], (void*)receive_buf, n);
-         UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.payload_size = n;
-
+         if (UE_rrc_inst) {
+           memcpy((void*)&UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.Payload[0], (void*)receive_buf, n);
+           UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.payload_size = n;
+           LOG_I(RRC,"[PC5DiscoveryAnnouncement] Copied %d bytes\n",n);
+         }
          break;
       default:
          break;
@@ -5825,7 +5827,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 
 
 //-----------------------------------------------------------------------------
-int decode_SL_DISCOVERY_Message(
+int decode_SL_Discovery_Message(
   const protocol_ctxt_t* const ctxt_pP,
   const uint8_t                eNB_index,
   uint8_t*               const Sdu,

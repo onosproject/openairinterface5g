@@ -162,7 +162,7 @@ PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
     ue = (PHY_VARS_UE *)malloc(sizeof(PHY_VARS_UE));
     memset(ue,0,sizeof(PHY_VARS_UE));
     memcpy(&(ue->frame_parms), frame_parms, sizeof(LTE_DL_FRAME_PARMS));
-  }					
+  }
   else ue = PHY_vars_UE_g[UE_id][0];
 
 
@@ -229,11 +229,11 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in) {
   int         ret;
 
   LOG_I(PHY,"UE : Calling Layer 2 for initialization\n");
-    
+
   l2_init_ue(eMBMS_active,(uecap_xer_in==1)?uecap_xer:NULL,
 	     0,// cba_group_active
 	     0); // HO flag
-  
+
   for (inst=0;inst<nb_inst;inst++) {
 
     LOG_I(PHY,"Initializing memory for UE instance %d (%p)\n",inst,PHY_vars_UE_g[inst]);
@@ -331,7 +331,7 @@ static void *UE_thread_synch(void *arg)
   // this thread priority must be lower that the main acquisition thread
   sprintf(threadname, "sync UE %d\n", UE->Mod_id);
   init_thread(100000, 500000, FIFO_PRIORITY-1, &cpuset, threadname);
-  
+
   printf("starting UE synch thread (IC %d)\n",UE->proc.instance_cnt_synch);
   ind = 0;
   found = 0;
@@ -352,7 +352,7 @@ static void *UE_thread_synch(void *arg)
 
       ind++;
     } while (ind < sizeof(eutra_bands) / sizeof(eutra_bands[0]));
-  
+
     if (found == 0) {
       exit_fun("Can't find EUTRA band for frequency");
       return &UE_thread_synch_retval;
@@ -365,7 +365,7 @@ static void *UE_thread_synch(void *arg)
       openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = UE->frame_parms.dl_CarrierFreq;
       openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = UE->frame_parms.ul_CarrierFreq;
       openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
-      if (uplink_frequency_offset[CC_id][i] != 0) // 
+      if (uplink_frequency_offset[CC_id][i] != 0) //
 	openair0_cfg[UE->rf_map.card].duplex_mode = duplex_mode_FDD;
       else //FDD
 	openair0_cfg[UE->rf_map.card].duplex_mode = duplex_mode_TDD;
@@ -387,15 +387,15 @@ static void *UE_thread_synch(void *arg)
     }
   }
 
-  while (sync_var<0)     
-    pthread_cond_wait(&sync_cond, &sync_mutex);   
-  pthread_mutex_unlock(&sync_mutex);   
+  while (sync_var<0)
+    pthread_cond_wait(&sync_cond, &sync_mutex);
+  pthread_mutex_unlock(&sync_mutex);
 
-  printf("Started device, unlocked sync_mutex (UE_sync_thread)\n");   
+  printf("Started device, unlocked sync_mutex (UE_sync_thread)\n");
 
-  if (UE->rfdevice.trx_start_func(&UE->rfdevice) != 0 ) {     
-    LOG_E(HW,"Could not start the device\n");     
-    oai_exit=1;   
+  if (UE->rfdevice.trx_start_func(&UE->rfdevice) != 0 ) {
+    LOG_E(HW,"Could not start the device\n");
+    oai_exit=1;
   }
 
   while (oai_exit==0) {
@@ -404,13 +404,13 @@ static void *UE_thread_synch(void *arg)
       // the thread waits here most of the time
       pthread_cond_wait( &UE->proc.cond_synch, &UE->proc.mutex_synch );
     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
-    
+
     switch (sync_mode) {
     case pss:
       LOG_I(PHY,"[SCHED][UE] Scanning band %d (%d), freq %u\n",bands_to_scan.band_info[current_band].band, current_band,bands_to_scan.band_info[current_band].dl_min+current_offset);
       lte_sync_timefreq(UE,current_band,bands_to_scan.band_info[current_band].dl_min+current_offset);
       current_offset += 20000000; // increase by 20 MHz
-      
+
       if (current_offset > bands_to_scan.band_info[current_band].dl_max-bands_to_scan.band_info[current_band].dl_min) {
 	current_band++;
 	current_offset=0;
@@ -434,7 +434,7 @@ static void *UE_thread_synch(void *arg)
       }
 
       break;
- 
+
     case pbch:
 
 #if DISABLE_LOG_X
@@ -770,8 +770,8 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
     wakeup_thread(&UE->timer_mutex,&UE->timer_cond,&UE->instance_cnt_timer,"timer_thread");
     break;
   case SLSCH:
-    
-    
+
+
     LOG_I(PHY,"Emulator SFN.SF %d.%d, Got SLSCH packet\n",emulator_absSF/10,emulator_absSF%10);
     LOG_I(PHY,"Received %d bytes on UE-UE link for SFN.SF %d.%d, sending SLSCH payload (%d bytes) to MAC\n",num_bytes,
 	  pdu->header.absSF/10,pdu->header.absSF%10,
@@ -779,7 +779,7 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
     printf("SLSCH:");
     for (int i=0;i<sizeof(SLSCH_t);i++) printf("%x ",((uint8_t*)slsch)[i]);
     printf("\n");
-    
+
     ue_send_sl_sdu(0,
 		   0,
 		   pdu->header.absSF/10,
@@ -980,9 +980,9 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
     stop_meas(&UE->generic_stat);
 #endif
 
-	
+
     // Prepare the future Tx data
-	
+
     if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_UL) ||
 	(UE->frame_parms.frame_type == FDD) )
       if (UE->mode != loop_through_memory){
@@ -1473,14 +1473,14 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     rf_map = &phy_vars_ue[CC_id]->rf_map;
-      
+
     AssertFatal( phy_vars_ue[CC_id] !=0, "");
     frame_parms = &(phy_vars_ue[CC_id]->frame_parms);
-      
+
     // replace RX signal buffers with mmaped HW versions
     rxdata = (int32_t**)malloc16( frame_parms->nb_antennas_rx*sizeof(int32_t*) );
     txdata = (int32_t**)malloc16( frame_parms->nb_antennas_tx*sizeof(int32_t*) );
-      
+
     for (i=0; i<frame_parms->nb_antennas_rx; i++) {
       LOG_I(PHY, "Mapping UE CC_id %d, rx_ant %d, freq %u on card %d, chain %d\n",
 	    CC_id, i, downlink_frequency[CC_id][i], rf_map->card, rf_map->chain+i );
@@ -1488,7 +1488,7 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
       rxdata[i] = (int32_t*)malloc16_clear( 307200*sizeof(int32_t) );
       phy_vars_ue[CC_id]->common_vars.rxdata[i] = rxdata[i]; // what about the "-N_TA_offset" ? // N_TA offset for TDD
     }
-		
+
     for (i=0; i<frame_parms->nb_antennas_tx; i++) {
       LOG_I(PHY, "Mapping UE CC_id %d, tx_ant %d, freq %u on card %d, chain %d\n",
 	    CC_id, i, downlink_frequency[CC_id][i], rf_map->card, rf_map->chain+i );
@@ -1496,7 +1496,7 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
       txdata[i] = (int32_t*)malloc16_clear( 307200*sizeof(int32_t) );
       phy_vars_ue[CC_id]->common_vars.txdata[i] = txdata[i];
     }
-      
+
     // rxdata[x] points now to the same memory region as phy_vars_ue[CC_id]->common_vars.rxdata[x]
     // txdata[x] points now to the same memory region as phy_vars_ue[CC_id]->common_vars.txdata[x]
     // be careful when releasing memory!
@@ -1520,7 +1520,7 @@ static void* timer_thread( void* param ) {
   UE = PHY_vars_UE_g[0][0];
   double t_diff;
   int external_timer = 0;
-  
+
   wait_sync("timer_thread");
 
   //pthread_mutex_init(&phy_stub_ticking->mutex_ticking,NULL);
@@ -1582,10 +1582,10 @@ static void* timer_thread( void* param ) {
       UE_tport_t pdu;
       pdu.header.packet_type = TTI_SYNC;
       pdu.header.absSF = (timer_frame*10)+timer_subframe;
-      multicast_link_write_sock(0, 
-				&pdu, 
+      multicast_link_write_sock(0,
+				&pdu,
 				sizeof(UE_tport_header_t));
-    
+
     }
     else {
       wait_on_condition(&UE->timer_mutex,&UE->timer_cond,&UE->instance_cnt_timer,"timer_thread");
@@ -1640,11 +1640,3 @@ int init_timer_thread(void) {
   pthread_create(&phy_stub_ticking->pthread_timer, NULL, &timer_thread, NULL);
   return 0;
 }
-
-
-
-
-
-
-
-

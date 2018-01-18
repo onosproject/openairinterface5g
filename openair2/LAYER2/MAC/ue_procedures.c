@@ -117,7 +117,7 @@ void ue_init_mac(module_id_t module_idP)
   UE_mac_inst[module_idP].scheduling_info.periodicBSR_SF  =  MAC_UE_BSR_TIMER_NOT_RUNNING;
   UE_mac_inst[module_idP].scheduling_info.retxBSR_SF     =  MAC_UE_BSR_TIMER_NOT_RUNNING;
   UE_mac_inst[module_idP].BSR_reporting_active = BSR_TRIGGER_NONE;
-  
+
   UE_mac_inst[module_idP].scheduling_info.periodicPHR_SF =  get_sf_perioidicPHR_Timer(UE_mac_inst[module_idP].scheduling_info.periodicPHR_Timer);
   UE_mac_inst[module_idP].scheduling_info.prohibitPHR_SF =  get_sf_prohibitPHR_Timer(UE_mac_inst[module_idP].scheduling_info.prohibitPHR_Timer);
   UE_mac_inst[module_idP].scheduling_info.PathlossChange_db =  get_db_dl_PathlossChange(UE_mac_inst[module_idP].scheduling_info.PathlossChange);
@@ -463,7 +463,7 @@ ue_send_sdu(
 #ifdef DEBUG_HEADER_PARSING
     LOG_D(MAC,"[UE] SDU %d : LCID %d, length %d\n",i,rx_lcids[i],rx_lengths[i]);
 #endif
-    
+
     if (rx_lcids[i] == CCCH) {
 
       LOG_D(MAC,"[UE %d] rnti %x Frame %d : DLSCH -> DL-CCCH, RRC message (eNB %d, %d bytes)\n",
@@ -506,9 +506,9 @@ ue_send_sdu(
                        rx_lengths[i],
                        1,
                        NULL);
- 
+
     } else if ((rx_lcids[i]  < NB_RB_MAX) && (rx_lcids[i] > DCCH1 )) {
-      
+
       LOG_D(MAC,"[UE %d] Frame %d : DLSCH -> DL-DTCH%d (eNB %d, %d bytes)\n", module_idP, frameP,rx_lcids[i], eNB_index,rx_lengths[i]);
 
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)
@@ -534,7 +534,7 @@ ue_send_sdu(
     payload_ptr+= rx_lengths[i];
   }
   } // end if (payload_ptr != NULL)
-  
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SEND_SDU, VCD_FUNCTION_OUT);
 #if UE_TIMING_TRACE
   stop_meas(&UE_mac_inst[module_idP].rx_dlsch_sdu);
@@ -1416,7 +1416,7 @@ void ue_get_sdu(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subf
   int highest_priority = 16;
   int num_lcg_id_with_data = 0;
   rlc_buffer_occupancy_t lcid_buffer_occupancy_old=0, lcid_buffer_occupancy_new=0;
-  
+
   LOG_D(MAC,"[UE %d] MAC PROCESS UL TRANSPORT BLOCK at frame%d subframe %d TBS=%d\n",
                         module_idP, frameP, subframe, buflen);
 
@@ -1919,7 +1919,7 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
 #if UE_TIMING_TRACE
   stop_meas(&UE_mac_inst[module_idP].tx_ulsch_sdu);
 #endif
-  
+
 
   if (opt_enabled) {
     trace_pdu(0, ulsch_buffer, buflen, module_idP, 3, UE_mac_inst[module_idP].crnti, UE_mac_inst[module_idP].txFrame, UE_mac_inst[module_idP].txSubframe, 0, 0);
@@ -2118,9 +2118,9 @@ ue_scheduler(
 
 
       /*
-      if (lcid == DCCH) {    
-        LOG_D(MAC,"[UE %d][SR] Frame %d subframe %d Pending data for SRB1=%d for LCGID %d \n",                  
-        module_idP, txFrameP,txSubframeP,UE_mac_inst[module_idP].scheduling_info.BSR[UE_mac_inst[module_idP].scheduling_info.LCGID[lcid]],                  
+      if (lcid == DCCH) {
+        LOG_D(MAC,"[UE %d][SR] Frame %d subframe %d Pending data for SRB1=%d for LCGID %d \n",
+        module_idP, txFrameP,txSubframeP,UE_mac_inst[module_idP].scheduling_info.BSR[UE_mac_inst[module_idP].scheduling_info.LCGID[lcid]],
 //         UE_mac_inst[module_idP].scheduling_info.LCGID[lcid]);
       }
       */
@@ -2748,24 +2748,27 @@ SLSS_t *ue_get_slss(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t su
 }
 
 SLDCH_t *ue_get_sldch(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t subframe_tx) {
-/*  int sdu_length;
+
     UE_MAC_INST *ue = &UE_mac_inst[Mod_id];
     SLDCH_t *sldch = &UE_mac_inst[Mod_id].sldch;
-   LOG_I(MAC, "[ue_get_sldch]");
-   int sdu_length = mac_rrc_data_req(Mod_id,
+
+    sldch->payload_length = mac_rrc_data_req(Mod_id,
             CC_id,
             frame_tx,
             SL_DISCOVERY,
             1,
-            (char*)(ue->sldch_pdu.payload), //&UE_mac_inst[Mod_id].SL_Discovery[0].Tx_buffer.Payload[0],
+            (char*)(sldch->payload), //&UE_mac_inst[Mod_id].SL_Discovery[0].Tx_buffer.Payload[0],
             0,
             0, //eNB_indexP
             0);
 
 
-   if (sdu_length >0 ) return (&ue->sldch);
+   if (sldch->payload_length >0 ) {
+     LOG_I(MAC,"Got %d bytes from RRC for SLDCH @ %p\n",sldch->payload_length,sldch);
+     return (sldch);
+   }
    else
-   */
+
    return((SLDCH_t*)NULL);
 }
 
@@ -2807,7 +2810,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
        ue->slsch_lcid = 3;
     }
   } // we're not in the SCCH period
-  else if (((absSF & 3) == 0 ) && 
+  else if (((absSF & 3) == 0 ) &&
 	   (ue->sltx_active == 1)) { // every 4th subframe, check for new data from RLC
     // 10 PRBs, mcs 19
     int TBS = 4584/8;
@@ -2833,7 +2836,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 				    ue->slsch_lcid,
 				    req,
 				    (char*)(ue->slsch_pdu.payload + sizeof(SLSCH_SUBHEADER_24_Bit_DST_LONG)));
-      
+
       // Notes: 1. hard-coded to 24-bit destination format for now
       //        2. LCID hard-coded to 3
       //        3. SRC/DST IDs with debug values
@@ -2844,7 +2847,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 	LOG_I(MAC,"groupL2Id/destinationL2Id: 0x%08x \n",destL2Id);
 
 	slsch->payload = (unsigned char*)ue->slsch_pdu.payload;
-	if (sdu_length < 128) { 
+	if (sdu_length < 128) {
 	  slsch->payload++;
 	  SLSCH_SUBHEADER_24_Bit_DST_SHORT *shorth= (SLSCH_SUBHEADER_24_Bit_DST_SHORT *)slsch->payload;
 	  shorth->F=0;
@@ -2890,6 +2893,6 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
     return(&ue->slsch);
   }
 
-  
+
   return(NULL);
 }
