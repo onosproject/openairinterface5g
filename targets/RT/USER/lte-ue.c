@@ -762,6 +762,7 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
 
   UE_tport_t *pdu = (UE_tport_t*)rx_buffer;
   SLSCH_t *slsch = (SLSCH_t*)&pdu->slsch;
+  SLDCH_t *sldch = (SLDCH_t*)&pdu->sldch;
 
   switch (((UE_tport_header_t*)rx_buffer)->packet_type) {
   case TTI_SYNC:
@@ -788,6 +789,28 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
 		   0,
 		   SL_DISCOVERY_FLAG_NO);
     break;
+
+  case SLDCH:
+
+
+    LOG_I(PHY,"Emulator SFN.SF %d.%d, Got SLDCH packet\n",emulator_absSF/10,emulator_absSF%10);
+    LOG_I(PHY,"Received %d bytes on UE-UE link for SFN.SF %d.%d, sending SLDCH payload (%d bytes) to MAC\n",num_bytes,
+          pdu->header.absSF/10,pdu->header.absSF%10,
+          sldch->payload_length);
+    printf("SLDCH:");
+    for (int i=0;i<sizeof(SLDCH_t);i++) printf("%x ",((uint8_t*)sldch)[i]);
+    printf("\n");
+
+    ue_send_sl_sdu(0,
+                   0,
+                   pdu->header.absSF/10,
+                   pdu->header.absSF%10,
+                   pdu->payload,
+                   sldch->payload_length,
+                   0,
+                   SL_DISCOVERY_FLAG_YES);
+    break;
+
   }
 }
 

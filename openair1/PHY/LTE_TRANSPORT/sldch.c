@@ -36,8 +36,31 @@
 
 void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx) {
 
-  AssertFatal(1==0,"Should get here yet for UE %d\n",ue->Mod_id);
+  UE_tport_t pdu;
+  size_t sldch_header_len = sizeof(UE_tport_header_t);
+
+  pdu.header.packet_type = SLDCH;
+  pdu.header.absSF = (frame_tx*10)+subframe_tx;
+
+  memcpy((void*)&pdu.sldch,(void*)sldch,sizeof(SLDCH_t)-sizeof(uint8_t*));
+
+  AssertFatal(sldch->payload_length <=1500-sldch_header_len - sizeof(SLDCH_t) + sizeof(uint8_t*),
+                "SLDCH payload length > %d\n",
+                1500-sldch_header_len - sizeof(SLDCH_t) + sizeof(uint8_t*));
+  memcpy((void*)&pdu.payload[0],
+         (void*)sldch->payload,
+         sldch->payload_length);
+
+  LOG_I(PHY,"SLDCH configuration %d bytes, TBS payload %d bytes => %d bytes\n",
+        sizeof(SLDCH_t)-sizeof(uint8_t*),
+        sldch->payload_length,
+        sldch_header_len+sizeof(SLDCH_t)-sizeof(uint8_t*)+sldch->payload_length);
+
+  multicast_link_write_sock(0,
+                            &pdu,
+                            sldch_header_len+sizeof(SLDCH_t)-sizeof(uint8_t*)+sldch->payload_length);
 
 }
+
 
 #endif

@@ -937,7 +937,10 @@ typedef struct {
 } SLSCH_t;
 
 typedef struct {
-
+  /// payload length 
+  int payload_length;
+  /// pointer to payload
+  uint8_t *payload;
 } SLDCH_t;
 
 #define TTI_SYNC 0
