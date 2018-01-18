@@ -990,12 +990,12 @@ void init_seed(uint8_t set_seed)
   if(set_seed) {
 
     randominit (oai_emulation.info.seed);
-    setup_nor();//Setup for the normal probability distribution function
+    table_nor(oai_emulation.info.seed);//Setup for the normal probability distribution function
     set_taus_seed (oai_emulation.info.seed);
 
   } else {
     randominit (0);
-    setup_nor();//Setup for the normal probability distribution function
+    table_nor(1234567891);//Setup for the normal probability distribution function. Always use a non-zero unsigned long argument. 
     set_taus_seed (0);
   }
 }

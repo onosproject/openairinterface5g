@@ -436,13 +436,13 @@ the value \f$\mathrm{sgn}(u)i\f$.  The search requires at most \f$Nbits-1\f$ com
 */
 int gauss(unsigned int *gauss_LUT,unsigned char Nbits);
 
-double zigguratdouble(unsigned int r, double sigma);
 double gaussdouble(double,double);
 void randominit(unsigned int seed_init);
-void setup_nor();
+void table_nor(unsigned long seed);
+double nfix(void);
 double uniformrandom(void);
 void uniformrandomSSE(__m128d *d1,__m128d *d2);
-double ziggurat();
+double ziggurat(double mean, double variance);
 int freq_channel(channel_desc_t *desc,uint16_t nb_rb, int16_t n_samples);
 int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
 int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples);

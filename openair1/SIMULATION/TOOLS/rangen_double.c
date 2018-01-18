@@ -29,9 +29,6 @@
 #include  "defs.h"
 
 static unsigned int seed, iy, ir[98];
-static uint32_t kn[128];static double wn[128],fn[128];
-static unsigned long iz,jz,jsr=123456789;
-static long hz;
 
 /*
 @defgroup _uniformdouble
@@ -106,69 +103,6 @@ void randominit(unsigned seed_init)
 #endif
 #endif
 
-//Procedure to create tables for normal distribution kn,wn and fn
-#define SHR3 (jz=jsr, jsr^=(jsr<<13),jsr^=(jsr>>17),jsr^=(jsr<<5),jz+jsr)
-#define UNI (0.5+(signed) SHR3 * 0.2328306e-9)
-#define NOR (hz=SHR3, iz=hz&127, (abs(hz)<kn[iz])? hz*wn[iz] : nfix())
-double nfix()
-{
-  const double r = 3.442620; static double x, y;
-  for (;;)
-  {
-      x=hz*wn[iz];
-      if (iz==0)
-      {   
-        do
-        {
-          x = - 0.2904764 * log (UNI);
-          y = - log (UNI);
-	} 
-        while (y+y < x*x);
-        return (hz>0)? r+x : -r-x;
-      }
-      if (fn[iz]+UNI*(fn[iz-1]-fn[iz])<exp(-0.5*x*x))
-        return x;
-      hz = SHR3;
-      iz = hz&127;
-      if (abs(hz) < kn[iz])
-        return (hz*wn[iz]);
-  }
-}
-
-void setup_nor()
-{
-  double dn = 3.442619855899;
-  int i;
-  const double m1 = 2147483648.0;
-  double q;
-  double tn = 3.442619855899;
-  const double vn = 9.91256303526217E-03;
-
-  q = vn/exp(-0.5*dn*dn);
-
-  kn[0] = (int)((dn/q)*m1);
-  kn[1] = 0;
-
-  wn[0] = (double) ( q / m1 );
-  wn[127] = (double) ( dn / m1 );
-
-  fn[0] = 1.0;
-  fn[127] = (double) ( exp ( - 0.5 * dn * dn ) );
-  for ( i = 126; 1 <= i; i-- )
-  {
-    dn = sqrt (-2.0 * log ( vn/dn + exp(-0.5*dn*dn)));
-    kn[i+1] = (int) ((dn / tn)*m1);
-    tn = dn;
-    fn[i] = (double) (exp (-0.5*dn*dn));
-    wn[i] = (double) (dn / m1);
-  }
-  for ( i = 0; i <= 127; i++ ){
-	printf("i %d: kn %d, fn %e, wn %e\n",i,kn[i],fn[i],wn[i]);
-  }
-
-  return;
-}
-
 /*!\brief Uniform linear congruential random number generator on \f$[0,1)\f$.  Returns a double-precision floating-point number.*/
 
 double uniformrandom(void)
@@ -211,20 +145,101 @@ double uniformrandom(void)
 
 }*/
 /*!\brief Ziggurat random number generator based on rejection sampling. It returns a pseudorandom normally distributed double number between -4.5 and 4.5*/
-double ziggurat()
+//Procedure to create tables for normal distribution kn,wn and fn
+
+#define SHR3 (jz=jsr, jsr^=(jsr<<13),jsr^=(jsr>>17),jsr^=(jsr<<5),jz+jsr)
+#define UNI (0.5+(signed) SHR3 * 0.2328306e-9)
+#define NOR (hz=SHR3,iz=(hz&127),(abs(hz)<kn[iz])? hz*wn[iz] : nfix())
+static double wn[128],fn[128];
+static unsigned long iz,jz,jsr=123456789,kn[128];
+static int32_t hz;
+//#define NOR (hz=SHR3, printf("hz %d\n",hz),sign=(hz&128)>>7,printf("sign %s\n",(sign)?"-":"+"),iz=hz&127,printf("iz %d\n",iz), (abs(hz)<kn[iz])? (sign)?(-1)*hz*wn[iz]:hz*wn[iz] : (sign)?(-1)*nfix():nfix())
+double nfix(void)
 {
-  return NOR;
+  const double r = 3.442620; 
+  static double x, y;
+  long l;
+  double d;
+  for (;;)
+  {
+      x=hz *  wn[iz];
+      //printf("iz %d,x %e,l %d, hz %d,d %e wn %e\n",iz, x, l, hz, d, wn[iz]);
+      if (iz==0)
+      {   
+        do
+        {
+          x = - 0.2904764 * log (UNI);
+          y = - log (UNI);
+	} 
+        while (y+y < x*x);
+	/*printf("x*x %e,y+y %e\n",x*x,y+y);
+	printf("return 1: %e\n",(hz>0)? r+x : -r-x);*/
+        return (hz>0)? r+x : -r-x;
+      }
+      if (fn[iz]+UNI*(fn[iz-1]-fn[iz])<exp(-0.5*x*x)){
+        //printf("return 2: %e\n",x);
+        return x;
+      }
+      hz = SHR3;
+      iz = hz&127;
+      if (abs(hz) < kn[iz]){
+	/*printf("return 3: %e\n",(double)hz*wn[iz]);
+        printf("return 3: iz %d, hz %d, wn[%d] %e, hz*wz[%d] %e\n",iz,hz,iz,wn[iz],iz,wn[iz]*(double)hz);*/
+        return ((hz)*wn[iz]);
+      }
+  }
 }
 
+void table_nor(unsigned long seed)
+{
+  jsr=seed;
+  printf("seed is %d\n",seed);
+  double dn = 3.442619855899;
+  int i;
+  const double m1 = 2147483648.0;
+  double q;
+  double tn = 3.442619855899;
+  const double vn = 9.91256303526217E-03;
+
+  q = vn/exp(-0.5*dn*dn);
+
+  kn[0] = ((dn/q)*m1);
+  kn[1] = 0;
+
+  wn[0] =  ( q / m1 );
+  wn[127] = ( dn / m1 );
+
+  fn[0] = 1.0;
+  fn[127] = ( exp ( - 0.5 * dn * dn ) );
+  for ( i = 126; 1 <= i; i-- )
+  {
+    dn = sqrt (-2.0 * log ( vn/dn + exp(-0.5*dn*dn)));
+    kn[i+1] = ((dn / tn)*m1);
+    tn = dn;
+    fn[i] = (exp (-0.5*dn*dn));
+    wn[i] = (dn / m1);
+  }
+  for ( i = 0; i <= 127; i++ ){
+	printf("i %d: kn %d, fn %e, wn %e\n",i,kn[i],fn[i],wn[i]);
+  }
+
+  return;
+}
+double ziggurat(double mean, double variance)
+{
+  //double nor=NOR;
+  //printf("NOR %e\n",nor);
+  return NOR;
+}
 /*
 @defgroup _gaussdouble Gaussian random number generator based on modified Box-Muller transformation.
 @ingroup numerical
 */
 
 /*!\brief Gaussian random number generator based on modified Box-Muller transformation.Returns a double-precision floating-point number. */
-#define random_SSE
+//#define random_SSE
 #ifdef random_SSE
-double gaussdouble(double mean, double variance)//It is necessary to improve the function. However if we enable SSE the gain in time it is not too much.
+double gaussdouble(double mean, double variance)//It is necessary to improve the function.
 {
   static int iset=0;
   static double gset;
@@ -293,11 +308,11 @@ double gaussdouble(double mean, double variance)
     do {
       /*count++;
       clock_t start=clock();*/
-      v1 = 2.0*uniformrandom()-1.0;
+      v1 = 2.0*UNI-1.0;
       /*clock_t stop=clock();
       printf("UE_freq_channel time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
       sum=(sum+stop-start);*/
-      v2 = 2.0*uniformrandom()-1.0;
+      v2 = 2.0*UNI-1.0;
       r = v1*v1+v2*v2;
       //printf("Inside do: r %e\n",r);
     }  while (r >= 1.0);
