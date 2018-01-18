@@ -809,23 +809,11 @@ pdcp_data_ind(
       // set ((pdcp_data_ind_header_t *) new_sdu_p->data)->inst for IP layer here
       if (ctxt_pP->enb_flag == ENB_FLAG_NO) {
         ((pdcp_data_ind_header_t *) new_sdu_p->data)->rb_id = rb_id;
-#if defined(OAI_EMU)
-        ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id + oai_emulation.info.nb_enb_local - oai_emulation.info.first_ue_local;
-#else
-#  if defined(ENABLE_USE_MME)
-        /* for the UE compiled in S1 mode, we need 1 here
-         * for the UE compiled in noS1 mode, we need 0
-         * TODO: be sure of this
-         */
-        ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = 1;
-#  endif
-#endif
       } else {
         ((pdcp_data_ind_header_t*) new_sdu_p->data)->rb_id = rb_id + (ctxt_pP->module_id * maxDRB);
-#if defined(OAI_EMU)
-        ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id - oai_emulation.info.first_enb_local;
-#endif
       }
+      ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id;
+
 #ifdef DEBUG_PDCP_FIFO_FLUSH_SDU
       static uint32_t pdcp_inst = 0;
       ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst = pdcp_inst++;

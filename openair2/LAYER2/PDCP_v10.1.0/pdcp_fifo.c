@@ -170,10 +170,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
             ((pdcp_data_ind_header_t*) sdu_p->data)->inst,
             ((pdcp_data_ind_header_t *) sdu_p->data)->data_size);
 #else
-#if ! defined(OAI_EMU)
-      /* TODO: do we have to reset to 0 or not? not for a scenario with 1 UE at least */
-      //    ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
-#endif
+      ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
 #endif
 
 #if defined(LINK_ENB_PDCP_TO_GTPV1U)
