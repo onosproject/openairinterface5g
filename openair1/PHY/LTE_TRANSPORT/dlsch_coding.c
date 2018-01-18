@@ -714,7 +714,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 
       //ldpc_encoder((char*)dlsch->harq_processes[harq_pid]->c[r],(char*)&dlsch->harq_processes[harq_pid]->d[r][96],dlsch->harq_processes[harq_pid]->B,rate);
 
-            ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],dlsch->harq_processes[harq_pid]->B,rate);
+            ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,rate);
 
 #endif
             printf("end ldpc encoder -- output\n");
