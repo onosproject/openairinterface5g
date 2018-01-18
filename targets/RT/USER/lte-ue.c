@@ -939,6 +939,10 @@ void init_UE_threads(PHY_VARS_UE *UE) {
         pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_dlsch_td,NULL);
         pthread_cond_init(&UE->proc.proc_rxtx[i].cond_dlsch_td,NULL);
         pthread_create(&UE->proc.proc_rxtx[i].pthread_dlsch_td,NULL,dlsch_decoding_2thread0, rtd);
+        //thread 2
+        pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_dlsch_td1,NULL);
+        pthread_cond_init(&UE->proc.proc_rxtx[i].cond_dlsch_td1,NULL);
+        pthread_create(&UE->proc.proc_rxtx[i].pthread_dlsch_td1,NULL,dlsch_decoding_2thread1, rtd);
 #endif
 
 #ifdef UE_SLOT_PARALLELISATION

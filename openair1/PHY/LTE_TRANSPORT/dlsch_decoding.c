@@ -1004,6 +1004,11 @@ uint32_t  dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,
 
 
   G = harq_process->G;
+
+  proc->decoder_main_available = 1;
+  proc->decoder_thread_available = 0;
+  proc->decoder_thread_available1 = 0;
+  printf("early set main available %d \n", proc->decoder_main_available);
   //get_G(frame_parms,nb_rb,dlsch->rb_alloc,mod_order,num_pdcch_symbols,phy_vars_ue->frame,subframe);
 
   //  printf("DLSCH Decoding, harq_pid %d Ndi %d\n",harq_pid,harq_process->Ndi);
@@ -1090,13 +1095,13 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
                proc->eNB_id    = eNB_id;
                proc->harq_pid  = harq_pid;
                proc->llr8_flag = llr8_flag;
-              // proc->Er = Er;
+               //proc->r[0] = 1;
 
      printf("after mthread instance_cnt_dlsch_td %d\n",  proc->instance_cnt_dlsch_td);
 
      if (proc->instance_cnt_dlsch_td == 0)
      {
-     LOG_D(PHY,"unblock slot1 dl processing thread blocked on instance_cnt_dlsch_td : %d \n", proc->instance_cnt_dlsch_td );
+     LOG_D(PHY,"unblock dlsch td processing thread blocked on instance_cnt_dlsch_td : %d \n", proc->instance_cnt_dlsch_td );
          if (pthread_cond_signal(&proc->cond_dlsch_td) != 0) {
              LOG_E( PHY, "[SCHED][UE %d][Slot0] ERROR pthread_cond_signal for UE dlsch td\n", phy_vars_ue->Mod_id);
              exit_fun("nothing to add");
@@ -1115,9 +1120,42 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
      //AssertFatal(pthread_cond_signal(&proc->cond_slot1_dl_processing) ==0 ,"");
      AssertFatal(pthread_mutex_unlock(&proc->mutex_dlsch_td) ==0,"");
 
+     if (harq_process->C>2) {
+    	 if (pthread_mutex_lock(&proc->mutex_dlsch_td1) != 0) {
+    	          LOG_E( PHY, "[SCHED][UE %d][Slot0] error locking mutex for UE dlsch td\n",phy_vars_ue->Mod_id );
+    	          exit_fun("nothing to add");
+    	      }
 
+    	 proc->instance_cnt_dlsch_td1++;
+                    proc->eNB_id    = eNB_id;
+                    proc->harq_pid  = harq_pid;
+                    proc->llr8_flag = llr8_flag;
+                   // proc->Er = Er;
 
+          printf("after mthread instance_cnt_dlsch_td 1 %d\n",  proc->instance_cnt_dlsch_td1);
 
+          if (proc->instance_cnt_dlsch_td1 == 0)
+          {
+          LOG_D(PHY,"unblock slot1 dl processing thread blocked on instance_cnt_dlsch_td : %d \n", proc->instance_cnt_dlsch_td1 );
+              if (pthread_cond_signal(&proc->cond_dlsch_td1) != 0) {
+                  LOG_E( PHY, "[SCHED][UE %d][Slot0] ERROR pthread_cond_signal for UE dlsch td\n", phy_vars_ue->Mod_id);
+                  exit_fun("nothing to add");
+              }
+              if (pthread_mutex_unlock(&proc->mutex_dlsch_td1) != 0) {
+                  LOG_E( PHY, "[SCHED][UE %d][Slot0] error unlocking mutex for UE dlsch td \n",phy_vars_ue->Mod_id );
+                  exit_fun("nothing to add");
+              }
+
+          } else
+          {
+              LOG_E( PHY, "[SCHED][UE %d] UE dlsch td thread 1 busy (IC %d)!!\n", phy_vars_ue->Mod_id, proc->instance_cnt_dlsch_td1);
+              if (proc->instance_cnt_dlsch_td1 > 2)
+                  exit_fun("instance_cnt_dlsch_td1 > 2");
+          }
+
+          AssertFatal(pthread_mutex_unlock(&proc->mutex_dlsch_td1) ==0,"");
+
+     }
 	/*
 	if (pthread_mutex_timedlock(&proc->mutex_td,&wait) != 0) {
        printf("[eNB] ERROR pthread_mutex_lock for TD thread (IC %d)\n", proc->instance_cnt_td);
@@ -1152,8 +1190,8 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
      pthread_mutex_unlock( &proc->mutex_td );*/
 
 
-     Cby2 = harq_process->C/2;
-     proc->decoder_main_available = 1;
+     Cby2 = 1; //harq_process->C/2;
+     //proc->decoder_main_available = 1;
    }
    else {
      Cby2 = 1;
@@ -1543,11 +1581,28 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
   printf("C %d\n",harq_process->C);
   */
   uint32_t wait = 0;
-  while((proc->decoder_thread_available == 0) &&(harq_process->C>1))
+  if (harq_process->C==2){
+	  printf("waiting for thread0 %d\n", proc->decoder_thread_available);
+  while((proc->decoder_thread_available == 0) )
   {
           usleep(1);
           wait++;
   }
+  printf("end waiting for thread0 %d\n", proc->decoder_thread_available);
+  }
+  else if ((harq_process->C==3) ){
+	  printf("waiting for thread0&1 avail0 %d avail1 %d\n", proc->decoder_thread_available, proc->decoder_thread_available1);
+	  while((proc->decoder_thread_available == 0) || (proc->decoder_thread_available1 == 0))
+			  {
+			            usleep(1);
+			            wait++;
+			    }
+	  printf("end waiting for thread0&1 avail0 %d avail1 %d\n", proc->decoder_thread_available, proc->decoder_thread_available1);
+
+  }
+
+  proc->decoder_main_available = 0;
+  printf("main thread set available %d\n", proc->decoder_main_available);
 
   for (r=0; r<harq_process->C; r++) {
     if (r<harq_process->Cminus)
@@ -1578,7 +1633,9 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
   }
 
   dlsch->last_iteration_cnt = ret;
-  //proc->decoder_thread_available == 0;
+  //proc->decoder_thread_available = 0;
+  //proc->decoder_main_available = 0;
+  printf("end of main thread flag available %d\n", proc->decoder_main_available);
 
 
   //wait for worker to finish
@@ -1605,7 +1662,8 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
     proc->nr_tti_rx=proc->sub_frame_start;
 
     printf("start thread 0\n");
-    proc->decoder_thread_available == 0;
+    proc->decoder_thread_available = 0;
+    printf("thread0 begain available %d\n", proc->decoder_thread_available);
 
     char threadname[256];
     sprintf(threadname,"UE_thread_dlsch_td_%d", proc->sub_frame_start);
@@ -1674,11 +1732,16 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 
 	init_thread(900000,1000000 , FIFO_PRIORITY-1, &cpuset, threadname);
 	while (!oai_exit) {
+
+		//proc->decoder_thread_available = 1;
+
+		printf("loop oai exit thread0 available %d\n", proc->decoder_thread_available);
+
 	        if (pthread_mutex_lock(&proc->mutex_dlsch_td) != 0) {
 	            LOG_E( PHY, "[SCHED][UE] error locking mutex for UE dlsch td\n" );
 	            exit_fun("nothing to add");
 	        }
-	        while (proc->instance_cnt_slot1_dl_processing < 0) {
+	        while (proc->instance_cnt_dlsch_td < 0) {
 	            // most of the time, the thread is waiting here
 	            pthread_cond_wait( &proc->cond_dlsch_td, &proc->mutex_dlsch_td );
 	        }
@@ -1694,6 +1757,8 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 	        	                  wait++;
 	        	          }
 
+	        	          //proc->decoder_thread_available = 0;
+	        	              printf("thread0 begain available %d\n", proc->decoder_thread_available);
 	        //PHY_VARS_UE *phy_vars_ue   		= tdp->UE;
 	        	int eNB_id         				= proc->eNB_id;
 	        	int harq_pid      				= proc->harq_pid;
@@ -1809,8 +1874,8 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   	        	r_offset = Nl*Qm * ((GpmodC==0?0:1) + (Gp/C));
   	       printf("sub thread r_offset %d\n", r_offset);
 
-  for (r=(harq_process->C/2); r<harq_process->C; r++) {
-
+  //for (r=(harq_process->C/2); r<harq_process->C; r++) {
+  	     r=1; //(harq_process->C/2);
 	  printf("thread0 r=%d\n",r);
 
 
@@ -2130,7 +2195,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 //      LOG_D(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,subframe,r,harq_process->C-1);
       err_flag = 1;
     }
-  }
+  //}
 
   /*int32_t frame_rx_prev = frame;
   int32_t subframe_rx_prev = subframe - 1;
@@ -2230,7 +2295,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 #endif
 
   proc->decoder_thread_available = 1;
-  proc->decoder_main_available = 0;
+  //proc->decoder_main_available = 0;
 
   printf("2thread0 proc->instance_cnt_dlsch_td %d\n", proc->instance_cnt_dlsch_td);
 
@@ -2249,6 +2314,679 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
       // thread finished
           free(arg);
           return &UE_dlsch_td_retval;
+}
+#endif
+
+#ifdef UE_DLSCH_PARALLELISATION
+#define FIFO_PRIORITY   38
+uint32_t  dlsch_decoding_2thread1(void *arg)
+{
+	static __thread int UE_dlsch_td_retval1;
+    struct rx_tx_thread_data *rtd = arg;
+    UE_rxtx_proc_t *proc = rtd->proc;
+    PHY_VARS_UE    *phy_vars_ue   = rtd->UE;
+
+    int llr8_flag1;
+
+    proc->instance_cnt_dlsch_td1=-1;
+    proc->nr_tti_rx=proc->sub_frame_start;
+
+    printf("start thread 1\n");
+    proc->decoder_thread_available1 = 0;
+
+    char threadname[256];
+    sprintf(threadname,"UE_thread_dlsch_td1_%d", proc->sub_frame_start);
+
+	cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    if ( (proc->sub_frame_start+1)%RX_NB_TH == 0 && threads.dlsch_td_one != -1 )
+    	CPU_SET(threads.dlsch_td_one, &cpuset);
+    if ( (proc->sub_frame_start+1)%RX_NB_TH == 1 && threads.dlsch_td_two != -1 )
+    	CPU_SET(threads.dlsch_td_two, &cpuset);
+    if ( (proc->sub_frame_start+1)%RX_NB_TH == 2 && threads.dlsch_td_three != -1 )
+    	CPU_SET(threads.dlsch_td_three, &cpuset);
+
+
+
+#if UE_TIMING_TRACE
+  time_stats_t *dlsch_rate_unmatching_stats=&phy_vars_ue->dlsch_rate_unmatching_stats;
+  time_stats_t *dlsch_turbo_decoding_stats=&phy_vars_ue->dlsch_turbo_decoding_stats;
+  time_stats_t *dlsch_deinterleaving_stats=&phy_vars_ue->dlsch_deinterleaving_stats;
+#endif
+  uint32_t A,E;
+  uint32_t G;
+  uint32_t ret,offset;
+  uint16_t iind;
+  //  uint8_t dummy_channel_output[(3*8*block_length)+12];
+  short dummy_w[MAX_NUM_DLSCH_SEGMENTS][3*(6144+64)];
+  uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0;
+  uint8_t crc_type;
+  uint8_t C;
+   uint8_t Qm;
+   uint8_t Nl;
+   uint32_t Er, Gp,GpmodC;
+#ifdef DEBUG_DLSCH_DECODING
+  uint16_t i;
+#endif
+  //#ifdef __AVX2__
+
+  uint8_t (*tc)(int16_t *y,
+                uint8_t *,
+                uint16_t,
+                uint16_t,
+                uint16_t,
+                uint8_t,
+                uint8_t,
+                uint8_t,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *);
+  if (llr8_flag1 == 0) {
+    //#ifdef __AVX2__
+#if 0
+    tc_2cw = phy_threegpplte_turbo_decoder16avx2;
+#endif
+    tc = phy_threegpplte_turbo_decoder16;
+  }
+  else
+  {
+	  //AssertFatal (harq_process->TBS >= 256 , "Mismatch flag nbRB=%d TBS=%d mcs=%d Qm=%d RIV=%d round=%d \n",
+	  //		  harq_process->nb_rb, harq_process->TBS,harq_process->mcs,harq_process->Qm,harq_process->rvidx,harq_process->round);
+	    tc = phy_threegpplte_turbo_decoder8;
+  }
+
+	init_thread(900000,1000000 , FIFO_PRIORITY-1, &cpuset, threadname);
+	printf("2thread1 oai_exit %d\n", oai_exit);
+	while (!oai_exit) {
+	        if (pthread_mutex_lock(&proc->mutex_dlsch_td1) != 0) {
+	            LOG_E( PHY, "[SCHED][UE] error locking mutex for UE dlsch td\n" );
+	            exit_fun("nothing to add");
+	        }
+	        while (proc->instance_cnt_dlsch_td1 < 0) {
+	            // most of the time, the thread is waiting here
+	            pthread_cond_wait( &proc->cond_dlsch_td1, &proc->mutex_dlsch_td1 );
+	        }
+	        if (pthread_mutex_unlock(&proc->mutex_dlsch_td1) != 0) {
+	            LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE dlsch_td \n" );
+	            exit_fun("nothing to add");
+	        }
+
+	        printf("2thread1 main available %d\n", proc->decoder_main_available);
+
+	        uint32_t wait = 0;
+	        	          while(proc->decoder_main_available == 0)
+	        	          {
+	        	                  usleep(1);
+	        	                  wait++;
+	        	          }
+
+	        	          printf("2thread1 end of wait\n");
+
+	        	          //proc->decoder_thread_available1 = 0;
+	        	              printf("thread0 begain available1 %d\n", proc->decoder_thread_available1);
+
+	        //PHY_VARS_UE *phy_vars_ue   		= tdp->UE;
+	        	int eNB_id         				= proc->eNB_id;
+	        	int harq_pid      				= proc->harq_pid;
+	        	llr8_flag1     					= proc->llr8_flag;
+	        	//r_offset						= proc->Er;
+	        	//UE_rxtx_proc_t *proc    		= tdp->proc;
+	        	int frame                       = proc->frame_rx;
+	        	int subframe      				= proc->nr_tti_rx;
+	        	LTE_UE_DLSCH_t *dlsch 			= phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0];
+	        	LTE_DL_UE_HARQ_t *harq_process  = dlsch->harq_processes[harq_pid];
+	        	short *dlsch_llr 				= phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->llr[0];
+	        	//printf("2thread0 llr flag %d tdp flag %d\n",llr8_flag1, tdp->llr8_flag);
+	        	printf("2thread1 nr_tti_tx %d subframe %d SF thread id %d r_offset %d\n", proc->nr_tti_rx, subframe, phy_vars_ue->current_thread_id[subframe], r_offset);
+
+  //  nb_rb = dlsch->nb_rb;
+
+  /*
+  if (nb_rb > frame_parms->N_RB_DL) {
+    printf("dlsch_decoding.c: Illegal nb_rb %d\n",nb_rb);
+    return(max_turbo_iterations);
+    }*/
+
+  /*harq_pid = dlsch->current_harq_pid[phy_vars_ue->current_thread_id[subframe]];
+  if (harq_pid >= 8) {
+    printf("dlsch_decoding.c: Illegal harq_pid %d\n",harq_pid);
+    return(max_turbo_iterations);
+  }
+  */
+
+
+
+  harq_process->trials[harq_process->round]++;
+
+  A = harq_process->TBS; //2072 for QPSK 1/3
+
+  ret = dlsch->max_turbo_iterations;
+
+
+  G = harq_process->G;
+  //get_G(frame_parms,nb_rb,dlsch->rb_alloc,mod_order,num_pdcch_symbols,phy_vars_ue->frame,subframe);
+
+    printf("DLSCH Decoding,  A %d harq_pid %d G %d\n",A, harq_pid,harq_process->G);
+
+  if (harq_process->round == 0) {
+    // This is a new packet, so compute quantities regarding segmentation
+    harq_process->B = A+24;
+    lte_segmentation(NULL,
+                     NULL,
+                     harq_process->B,
+                     &harq_process->C,
+                     &harq_process->Cplus,
+                     &harq_process->Cminus,
+                     &harq_process->Kplus,
+                     &harq_process->Kminus,
+                     &harq_process->F);
+    //  CLEAR LLR's HERE for first packet in process
+  }
+
+  /*
+  else {
+    printf("dlsch_decoding.c: Ndi>0 not checked yet!!\n");
+    return(max_turbo_iterations);
+  }
+  */
+  err_flag = 0;
+  //r_offset = 0;
+
+  /*
+  unsigned char bw_scaling =1;
+
+  switch (frame_parms->N_RB_DL) {
+  case 6:
+    bw_scaling =16;
+    break;
+
+  case 25:
+    bw_scaling =4;
+    break;
+
+  case 50:
+    bw_scaling =2;
+    break;
+
+  default:
+    bw_scaling =1;
+    break;
+  }
+
+  if (harq_process->C > MAX_NUM_DLSCH_SEGMENTS/bw_scaling) {
+    LOG_E(PHY,"Illegal harq_process->C %d > %d\n",harq_process->C,MAX_NUM_DLSCH_SEGMENTS/bw_scaling);
+    return((1+dlsch->max_turbo_iterations));
+  }*/
+#ifdef DEBUG_DLSCH_DECODING
+  printf("Segmentation: C %d, Cminus %d, Kminus %d, Kplus %d\n",harq_process->C,harq_process->Cminus,harq_process->Kminus,harq_process->Kplus);
+#endif
+
+  opp_enabled=1;
+  printf("harq process thread 0 half C %d harq_process->C %d \n",harq_process->C/2, harq_process->C);
+
+  Qm= harq_process->Qm;
+  	       Nl=harq_process->Nl;
+  	       //r_thread = harq_process->C/2-1;
+  	       C= harq_process->C;
+
+  	       Gp = G/Nl/Qm;
+  	        GpmodC = Gp%C;
+
+
+
+  	        if ((C/2-1) < (C-(GpmodC)))
+  	        	r_offset = Nl*Qm * (Gp/C);
+  	        else
+  	        	r_offset = Nl*Qm * ((GpmodC==0?0:1) + (Gp/C));
+
+  	       printf("sub thread r_offset %d\n", r_offset);
+
+  //for (r=(harq_process->C/2); r<harq_process->C; r++) {
+  	     r=2; //(harq_process->C/2);
+  	   r_offset = r*r_offset;
+	  printf("thread1 r=%d r_offset %d \n",r, r_offset);
+
+
+    // Get Turbo interleaver parameters
+    if (r<harq_process->Cminus)
+      Kr = harq_process->Kminus;
+    else
+      Kr = harq_process->Kplus;
+
+    Kr_bytes = Kr>>3;
+
+    if (Kr_bytes<=64)
+      iind = (Kr_bytes-5);
+    else if (Kr_bytes <=128)
+      iind = 59 + ((Kr_bytes-64)>>1);
+    else if (Kr_bytes <= 256)
+      iind = 91 + ((Kr_bytes-128)>>2);
+    else if (Kr_bytes <= 768)
+      iind = 123 + ((Kr_bytes-256)>>3);
+    else {
+      printf("dlsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
+      //return(dlsch->max_turbo_iterations);
+    }
+
+#ifdef DEBUG_DLSCH_DECODING
+    printf("f1 %d, f2 %d, F %d\n",f1f2mat_old[2*iind],f1f2mat_old[1+(2*iind)],(r==0) ? harq_process->F : 0);
+#endif
+
+#if UE_TIMING_TRACE
+    start_meas(dlsch_rate_unmatching_stats);
+#endif
+    memset(&dummy_w[r][0],0,3*(6144+64)*sizeof(short));
+    harq_process->RTC[r] = generate_dummy_w(4+(Kr_bytes*8),
+                                            (uint8_t*) &dummy_w[r][0],
+                                            (r==0) ? harq_process->F : 0);
+
+#ifdef DEBUG_DLSCH_DECODING
+    LOG_D(PHY,"HARQ_PID %d Rate Matching Segment %d (coded bits %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
+          harq_pid,r, G,
+          Kr*3,
+          harq_process->TBS,
+          harq_process->Qm,
+          harq_process->nb_rb,
+          harq_process->Nl,
+          harq_process->rvidx,
+          harq_process->round);
+#endif
+
+#ifdef DEBUG_DLSCH_DECODING
+    printf(" in decoding dlsch->harq_processes[harq_pid]->rvidx = %d\n", dlsch->harq_processes[harq_pid]->rvidx);
+#endif
+    if (lte_rate_matching_turbo_rx(harq_process->RTC[r],
+                                   G,
+                                   harq_process->w[r],
+                                   (uint8_t*)&dummy_w[r][0],
+                                   dlsch_llr+r_offset,
+                                   harq_process->C,
+                                   dlsch->Nsoft,
+                                   dlsch->Mdlharq,
+                                   dlsch->Kmimo,
+                                   harq_process->rvidx,
+                                   (harq_process->round==0)?1:0,
+                                   harq_process->Qm,
+                                   harq_process->Nl,
+                                   r,
+                                   &E)==-1) {
+#if UE_TIMING_TRACE
+      stop_meas(dlsch_rate_unmatching_stats);
+#endif
+      LOG_E(PHY,"dlsch_decoding.c: Problem in rate_matching\n");
+      //return(dlsch->max_turbo_iterations);
+    } else
+    {
+#if UE_TIMING_TRACE
+      stop_meas(dlsch_rate_unmatching_stats);
+#endif
+    }
+    r_offset += E;
+
+    /*
+    printf("Subblock deinterleaving, d %p w %p\n",
+     harq_process->d[r],
+     harq_process->w);
+    */
+#if UE_TIMING_TRACE
+    start_meas(dlsch_deinterleaving_stats);
+#endif
+    sub_block_deinterleaving_turbo(4+Kr,
+                                   &harq_process->d[r][96],
+
+                                   harq_process->w[r]);
+#if UE_TIMING_TRACE
+    stop_meas(dlsch_deinterleaving_stats);
+#endif
+#ifdef DEBUG_DLSCH_DECODING
+    /*
+    if (r==0) {
+              write_output("decoder_llr.m","decllr",dlsch_llr,G,1,0);
+              write_output("decoder_in.m","dec",&harq_process->d[0][96],(3*8*Kr_bytes)+12,1,0);
+    }
+
+    printf("decoder input(segment %d) :",r);
+    int i; for (i=0;i<(3*8*Kr_bytes)+12;i++)
+      printf("%d : %d\n",i,harq_process->d[r][96+i]);
+      printf("\n");*/
+#endif
+
+
+    //    printf("Clearing c, %p\n",harq_process->c[r]);
+    memset(harq_process->c[r],0,Kr_bytes);
+
+    //    printf("done\n");
+    if (harq_process->C == 1)
+      crc_type = CRC24_A;
+    else
+      crc_type = CRC24_B;
+
+    /*
+    printf("decoder input(segment %d)\n",r);
+    for (i=0;i<(3*8*Kr_bytes)+12;i++)
+      if ((harq_process->d[r][96+i]>7) ||
+    (harq_process->d[r][96+i] < -8))
+    printf("%d : %d\n",i,harq_process->d[r][96+i]);
+    printf("\n");
+    */
+
+    //#ifndef __AVX2__
+#if 1
+    if (err_flag == 0) {
+/*
+        LOG_I(PHY, "turbo algo Kr=%d cb_cnt=%d C=%d nbRB=%d crc_type %d TBSInput=%d TBSHarq=%d TBSplus24=%d mcs=%d Qm=%d RIV=%d round=%d maxIter %d\n",
+                            Kr,r,harq_process->C,harq_process->nb_rb,crc_type,A,harq_process->TBS,
+                            harq_process->B,harq_process->mcs,harq_process->Qm,harq_process->rvidx,harq_process->round,dlsch->max_turbo_iterations);
+*/
+    	if (llr8_flag1) {
+    		AssertFatal (Kr >= 256, "turbo algo issue Kr=%d cb_cnt=%d C=%d nbRB=%d TBSInput=%d TBSHarq=%d TBSplus24=%d mcs=%d Qm=%d RIV=%d round=%d\n",
+    				Kr,r,harq_process->C,harq_process->nb_rb,A,harq_process->TBS,harq_process->B,harq_process->mcs,harq_process->Qm,harq_process->rvidx,harq_process->round);
+    	}
+#if UE_TIMING_TRACE
+        start_meas(dlsch_turbo_decoding_stats);
+#endif
+//      LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,subframe,r,harq_process->C-1);
+      ret = tc
+            (&harq_process->d[r][96],
+             harq_process->c[r],
+             Kr,
+             f1f2mat_old[iind*2],
+             f1f2mat_old[(iind*2)+1],
+             dlsch->max_turbo_iterations,
+             crc_type,
+             (r==0) ? harq_process->F : 0,
+             &phy_vars_ue->dlsch_tc_init_stats,
+             &phy_vars_ue->dlsch_tc_alpha_stats,
+             &phy_vars_ue->dlsch_tc_beta_stats,
+             &phy_vars_ue->dlsch_tc_gamma_stats,
+             &phy_vars_ue->dlsch_tc_ext_stats,
+             &phy_vars_ue->dlsch_tc_intl1_stats,
+             &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
+
+      printf("sub thread output channel decoder r=%d cr %d %d %d %d %d \n", r,harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+
+
+#if UE_TIMING_TRACE
+      stop_meas(dlsch_turbo_decoding_stats);
+#endif
+    }
+#else
+    if ((harq_process->C == 1) ||
+	((r==harq_process->C-1) && (skipped_last==0))) { // last segment with odd number of segments
+
+#if UE_TIMING_TRACE
+        start_meas(dlsch_turbo_decoding_stats);
+#endif
+      ret = tc
+            (&harq_process->d[r][96],
+             harq_process->c[r],
+             Kr,
+             f1f2mat_old[iind*2],
+             f1f2mat_old[(iind*2)+1],
+             dlsch->max_turbo_iterations,
+             crc_type,
+             (r==0) ? harq_process->F : 0,
+             &phy_vars_ue->dlsch_tc_init_stats,
+             &phy_vars_ue->dlsch_tc_alpha_stats,
+             &phy_vars_ue->dlsch_tc_beta_stats,
+             &phy_vars_ue->dlsch_tc_gamma_stats,
+             &phy_vars_ue->dlsch_tc_ext_stats,
+             &phy_vars_ue->dlsch_tc_intl1_stats,
+             &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
+ #if UE_TIMING_TRACE
+      stop_meas(dlsch_turbo_decoding_stats);
+#endif
+      //      printf("single decode, exit\n");
+      //      exit(-1);
+    }
+    else {
+    // we can merge code segments
+      if ((skipped_last == 0) && (r<harq_process->C-1)) {
+	skipped_last = 1;
+	Kr_last = Kr;
+      }
+      else {
+	skipped_last=0;
+
+	if (Kr_last == Kr) { // decode 2 code segments with AVX2 version
+#ifdef DEBUG_DLSCH_DECODING
+	  printf("single decoding segment %d (%p)\n",r-1,&harq_process->d[r-1][96]);
+#endif
+#if UE_TIMING_TRACE
+	  start_meas(dlsch_turbo_decoding_stats);
+#endif
+#ifdef DEBUG_DLSCH_DECODING
+	  printf("double decoding segments %d,%d (%p,%p)\n",r-1,r,&harq_process->d[r-1][96],&harq_process->d[r][96]);
+#endif
+	  ret = tc_2cw
+            (&harq_process->d[r-1][96],
+	     &harq_process->d[r][96],
+             harq_process->c[r-1],
+             harq_process->c[r],
+             Kr,
+             f1f2mat_old[iind*2],
+             f1f2mat_old[(iind*2)+1],
+             dlsch->max_turbo_iterations,
+             crc_type,
+             (r==0) ? harq_process->F : 0,
+             &phy_vars_ue->dlsch_tc_init_stats,
+             &phy_vars_ue->dlsch_tc_alpha_stats,
+             &phy_vars_ue->dlsch_tc_beta_stats,
+             &phy_vars_ue->dlsch_tc_gamma_stats,
+             &phy_vars_ue->dlsch_tc_ext_stats,
+             &phy_vars_ue->dlsch_tc_intl1_stats,
+             &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
+	  /*
+	  ret = tc
+            (&harq_process->d[r-1][96],
+             harq_process->c[r-1],
+             Kr_last,
+             f1f2mat_old[iind*2],
+             f1f2mat_old[(iind*2)+1],
+             dlsch->max_turbo_iterations,
+             crc_type,
+             (r==0) ? harq_process->F : 0,
+             &phy_vars_ue->dlsch_tc_init_stats,
+             &phy_vars_ue->dlsch_tc_alpha_stats,
+             &phy_vars_ue->dlsch_tc_beta_stats,
+             &phy_vars_ue->dlsch_tc_gamma_stats,
+             &phy_vars_ue->dlsch_tc_ext_stats,
+             &phy_vars_ue->dlsch_tc_intl1_stats,
+             &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
+
+	     exit(-1);*/
+#if UE_TIMING_TRACE
+      stop_meas(dlsch_turbo_decoding_stats);
+#endif
+	}
+	else { // Kr_last != Kr
+#if UE_TIMING_TRACE
+	  start_meas(dlsch_turbo_decoding_stats);
+#endif
+	  ret = tc
+            (&harq_process->d[r-1][96],
+             harq_process->c[r-1],
+             Kr_last,
+             f1f2mat_old[iind*2],
+             f1f2mat_old[(iind*2)+1],
+             dlsch->max_turbo_iterations,
+             crc_type,
+             (r==0) ? harq_process->F : 0,
+             &phy_vars_ue->dlsch_tc_init_stats,
+             &phy_vars_ue->dlsch_tc_alpha_stats,
+             &phy_vars_ue->dlsch_tc_beta_stats,
+             &phy_vars_ue->dlsch_tc_gamma_stats,
+             &phy_vars_ue->dlsch_tc_ext_stats,
+             &phy_vars_ue->dlsch_tc_intl1_stats,
+             &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
+#if UE_TIMING_TRACE
+      stop_meas(dlsch_turbo_decoding_stats);
+
+	  start_meas(dlsch_turbo_decoding_stats);
+#endif
+
+	  ret = tc
+            (&harq_process->d[r][96],
+             harq_process->c[r],
+             Kr,
+             f1f2mat_old[iind*2],
+             f1f2mat_old[(iind*2)+1],
+             dlsch->max_turbo_iterations,
+             crc_type,
+             (r==0) ? harq_process->F : 0,
+             &phy_vars_ue->dlsch_tc_init_stats,
+             &phy_vars_ue->dlsch_tc_alpha_stats,
+             &phy_vars_ue->dlsch_tc_beta_stats,
+             &phy_vars_ue->dlsch_tc_gamma_stats,
+             &phy_vars_ue->dlsch_tc_ext_stats,
+             &phy_vars_ue->dlsch_tc_intl1_stats,
+             &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
+
+#if UE_TIMING_TRACE
+
+	  stop_meas(dlsch_turbo_decoding_stats);
+
+	  /*printf("Segmentation: C %d r %d, dlsch_rate_unmatching_stats %5.3f dlsch_deinterleaving_stats %5.3f  dlsch_turbo_decoding_stats %5.3f \n",
+              harq_process->C,
+              r,
+              dlsch_rate_unmatching_stats->p_time/(cpuf*1000.0),
+              dlsch_deinterleaving_stats->p_time/(cpuf*1000.0),
+              dlsch_turbo_decoding_stats->p_time/(cpuf*1000.0));*/
+#endif
+	}
+      }
+    }
+#endif
+
+
+    if ((err_flag == 0) && (ret>=(1+dlsch->max_turbo_iterations))) {// a Code segment is in error so break;
+//      LOG_D(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,subframe,r,harq_process->C-1);
+      err_flag = 1;
+    }
+  //}
+
+  /*int32_t frame_rx_prev = frame;
+  int32_t subframe_rx_prev = subframe - 1;
+  if (subframe_rx_prev < 0) {
+    frame_rx_prev--;
+    subframe_rx_prev += 10;
+  }
+  frame_rx_prev = frame_rx_prev%1024;*/
+#if 0
+  if (err_flag == 1) {
+//#if UE_DEBUG_TRACE
+    LOG_I(PHY,"[UE %d] THREAD 0 DLSCH: Setting NAK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d) Kr %d r %d harq_process->round %d\n",
+        phy_vars_ue->Mod_id, frame, subframe, harq_pid,harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs,Kr,r,harq_process->round);
+//#endif
+    dlsch->harq_ack[subframe].ack = 0;
+    dlsch->harq_ack[subframe].harq_id = harq_pid;
+    dlsch->harq_ack[subframe].send_harq_status = 1;
+    harq_process->errors[harq_process->round]++;
+    harq_process->round++;
+
+
+    //    printf("Rate: [UE %d] DLSCH: Setting NACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
+    if (harq_process->round >= dlsch->Mdlharq) {
+      harq_process->status = SCH_IDLE;
+      harq_process->round  = 0;
+    }
+/*    if(is_crnti)
+    {
+    LOG_D(PHY,"[UE %d] DLSCH: Setting NACK for subframe %d (pid %d, pid status %d, round %d/Max %d, TBS %d)\n",
+               phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->status,harq_process->round,dlsch->Mdlharq,harq_process->TBS);
+    }*/
+
+
+    //return((1+dlsch->max_turbo_iterations));
+  } else {
+#if UE_DEBUG_TRACE
+      LOG_I(PHY,"[UE %d] THREAD 0 DLSCH: Setting ACK for subframe %d TBS %d mcs %d nb_rb %d\n",
+           phy_vars_ue->Mod_id,subframe,harq_process->TBS,harq_process->mcs,harq_process->nb_rb);
+#endif
+
+    harq_process->status = SCH_IDLE;
+    harq_process->round  = 0;
+    dlsch->harq_ack[subframe].ack = 1;
+    dlsch->harq_ack[subframe].harq_id = harq_pid;
+    dlsch->harq_ack[subframe].send_harq_status = 1;
+    //LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d)\n",
+      //  phy_vars_ue->Mod_id, frame, subframe, harq_pid, harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs);
+
+/*    if(is_crnti)
+    {
+    LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d (pid %d, round %d, TBS %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round,harq_process->TBS);
+    }
+    LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
+
+  }*/
+
+  // Reassembly of Transport block here
+  offset = 0;
+
+  /*
+  printf("harq_pid %d\n",harq_pid);
+  printf("F %d, Fbytes %d\n",harq_process->F,harq_process->F>>3);
+  printf("C %d\n",harq_process->C);
+  */
+  for (r=0; r<harq_process->C; r++) {
+    if (r<harq_process->Cminus)
+      Kr = harq_process->Kminus;
+    else
+      Kr = harq_process->Kplus;
+
+    Kr_bytes = Kr>>3;
+
+    //    printf("Segment %d : Kr= %d bytes\n",r,Kr_bytes);
+    if (r==0) {
+      memcpy(harq_process->b,
+             &harq_process->c[0][(harq_process->F>>3)],
+             Kr_bytes - (harq_process->F>>3)- ((harq_process->C>1)?3:0));
+      offset = Kr_bytes - (harq_process->F>>3) - ((harq_process->C>1)?3:0);
+      //            printf("copied %d bytes to b sequence (harq_pid %d)\n",
+      //          Kr_bytes - (harq_process->F>>3),harq_pid);
+      //          printf("b[0] = %x,c[%d] = %x\n",
+      //      harq_process->b[0],
+      //      harq_process->F>>3,
+      //      harq_process->c[0][(harq_process->F>>3)]);
+    } else {
+      memcpy(harq_process->b+offset,
+             harq_process->c[r],
+             Kr_bytes- ((harq_process->C>1)?3:0));
+      offset += (Kr_bytes - ((harq_process->C>1)?3:0));
+    }
+  }
+
+  dlsch->last_iteration_cnt = ret;
+
+  //return(ret);
+  }
+#endif
+
+  proc->decoder_thread_available1 = 1;
+  //proc->decoder_main_available = 0;
+
+  printf("2thread1 proc->instance_cnt_dlsch_td1 %d\n", proc->instance_cnt_dlsch_td1);
+
+  if (pthread_mutex_lock(&proc->mutex_dlsch_td1) != 0) {
+              LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
+              exit_fun("noting to add");
+          }
+          proc->instance_cnt_dlsch_td1--;
+          if (pthread_mutex_unlock(&proc->mutex_dlsch_td1) != 0) {
+              LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE td1\n" );
+              exit_fun("noting to add");
+          }
+          printf("end 2thread1 proc->instance_cnt_dlsch_td1 %d\n", proc->instance_cnt_dlsch_td1);
+      }
+
+	 printf("after 2thread1 after oai exit proc->instance_cnt_dlsch_td %d\n", proc->instance_cnt_dlsch_td1);
+      // thread finished
+          free(arg);
+          return &UE_dlsch_td_retval1;
 }
 #endif
 

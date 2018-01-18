@@ -168,6 +168,8 @@ int32_t dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
 
 uint32_t  dlsch_decoding_2thread0(void *arg);
 
+uint32_t  dlsch_decoding_2thread1(void *arg);
+
 void dlsch_encoding_emul(PHY_VARS_eNB *phy_vars_eNB,
                          uint8_t *DLSCH_pdu,
                          LTE_eNB_DLSCH_t *dlsch);

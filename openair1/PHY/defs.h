@@ -458,6 +458,20 @@ typedef struct {
   int sub_frame_start;
   int sub_frame_step;
   unsigned long long gotIQs;
+  uint8_t decoder_thread_available1;
+  int instance_cnt_dlsch_td1;
+  /// pthread descriptor fep_slot1 thread
+  //pthread_t pthread_slot0_dl_processing;
+  pthread_t pthread_dlsch_td1;
+  /// pthread attributes for fep_slot1 processing thread
+ // pthread_attr_t attr_slot0_dl_processing;
+  pthread_attr_t attr_dlsch_td1;
+  /// condition variable for UE fep_slot1 thread;
+  //pthread_cond_t cond_slot0_dl_processing;
+  pthread_cond_t cond_dlsch_td1;
+  /// mutex for UE synch thread
+  //pthread_mutex_t mutex_slot0_dl_processing;
+  pthread_mutex_t mutex_dlsch_td1;
 } UE_rxtx_proc_t;
 
 /// Context data structure for eNB subframe processing
