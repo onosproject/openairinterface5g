@@ -1087,7 +1087,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref.c
   ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation.c
   ${OPENAIR1_DIR}/PHY/CODING/nr_segmentation.c
-  ${OPENAIR1_DIR}/PHY/CODING/nrLDPC_decoder.c
+  ${OPENAIR1_DIR}/PHY/CODING/ldpc_decoder.c
   ${OPENAIR1_DIR}/PHY/CODING/ldpc_encoder.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_lte.c
@@ -1122,7 +1122,7 @@ if (${SMBV})
 endif  (${SMBV})
 
 if (${COMPILATION_AVX2} STREQUAL "True")
-  set(PHY_SRC ${PHY_SRC} ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_llr_computation_avx2.c)
+  set(PHY_SRC ${PHY_SRC} ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_llr_computation_avx2.c ${OPENAIR1_DIR}/PHY/CODING/nrLDPC_decoder.c)
 endif ()
 
 add_library(PHY ${PHY_SRC})

@@ -589,10 +589,12 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 
 		printf("starting ldpc decoder Z %d, BG %d, R %d\n",p_decParams->Z, p_decParams->BG, p_decParams->R);
 
+		/*
 		nrLDPC_decoder(p_decParams,
 			       (int8_t*) &pl[0],
 			       (int8_t*) harq_process->c[r],
 			       p_procTime);
+		*/
 #endif
 
 #ifdef DEBUG_DLSCH_DECODING
