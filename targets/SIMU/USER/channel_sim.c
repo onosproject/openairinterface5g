@@ -1238,7 +1238,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 	    // write_output("s_re_f_prach.m","s_re_f_prach_txF", s_re_f_prach,frame_parms->ofdm_symbol_size*12,1,1);
 	    start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->multipath_channel_freq_PRACH);
 	    multipath_channel_prach(UE2eNB[UE_id][eNB_id][CC_id],s_re_f_prach,s_im_f_prach,r_re0_f_prach,r_im0_f_prach,&PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
-			  frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*12,hold_channel,eNB_id,prach_fmt,n_ra_prb);
+			  (prach_fmt<4)?13+839+12:3+139+2,hold_channel,eNB_id,prach_fmt,n_ra_prb);
 	    stop_meas(&UE2eNB[UE_id][eNB_id][CC_id]->multipath_channel_freq_PRACH);
 
 	    //for (int idx=0;idx<10;idx++) printf("dumping raw PRACH UL tx subframe (output) %d: r_f[%d] = (%f,%f)\n", subframe, idx, r_re0_f_prach[0][idx],r_im0_f_prach[0][idx]);

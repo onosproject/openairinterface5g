@@ -36,7 +36,7 @@ double **cos_lut=NULL,**sin_lut=NULL;
 
 //#if 1
 
-#define abstraction_SSE
+//#define abstraction_SSE
 #ifdef  abstraction_SSE
 int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 {
@@ -309,11 +309,6 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
   prach_samples = (prach_fmt<4)?13+839+12:3+139+2; 
 
   // do some error checking
-  // n_samples has to be a odd number because we assume the spectrum is symmetric around the DC and includes the DC
-  if ((n_samples&1)==0) {
-    fprintf(stderr, "freq_channel: n_samples has to be odd\n");
-    return(-1); 
-  }
   if (nb_rb-n_ra_prb<6) {
     fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check r_ra_prb value (r_ra_prb=%d)\n",n_ra_prb);
     return(-1); 

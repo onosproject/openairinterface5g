@@ -21,7 +21,6 @@
 
 #include "defs.h"
 
-#include "PHY/sse_intrin.h"
 
 // Compute Energy of a complex signal vector, removing the DC component!
 // input  : points to vector
@@ -293,6 +292,31 @@ int32_t signal_energy_nodc(int32_t *input,uint32_t length)
 }
 
 #endif
+#define signal_energy_SSE
+#ifdef  signal_energy_SSE
+double signal_energy_fp(double *s_re[2],double *s_im[2],uint32_t nb_antennas,uint32_t length,uint32_t offset)
+{
+
+  int32_t aa,i;
+  double V=0.0,lower_d,upper_d;
+  __m128d V128, s_re128,s_im128;
+
+  V128=_mm_setzero_pd();
+  for (i=0; i<(length>>1); i++) {
+    for (aa=0; aa<nb_antennas; aa++) {
+      //V= V + (s_re[aa][i+offset]*s_re[aa][i+offset]) + (s_im[aa][i+offset]*s_im[aa][i+offset]);
+      s_re128=_mm_loadu_pd(&s_re[aa][2*i+offset]);
+      s_im128=_mm_loadu_pd(&s_im[aa][2*i+offset]);
+      s_re128=_mm_mul_pd(s_re128,s_re128);
+      s_im128=_mm_mul_pd(s_im128,s_im128);
+      V128=_mm_add_pd(V128,_mm_add_pd(s_re128,s_im128));
+    }
+  }
+  _mm_storel_pd(&lower_d,V128);
+  _mm_storeh_pd(&upper_d,V128);
+  return((lower_d+upper_d)/length/nb_antennas);
+}
+#else
 double signal_energy_fp(double *s_re[2],double *s_im[2],uint32_t nb_antennas,uint32_t length,uint32_t offset)
 {
 
@@ -304,9 +328,9 @@ double signal_energy_fp(double *s_re[2],double *s_im[2],uint32_t nb_antennas,uin
       V= V + (s_re[aa][i+offset]*s_re[aa][i+offset]) + (s_im[aa][i+offset]*s_im[aa][i+offset]);
     }
   }
-
   return(V/length/nb_antennas);
 }
+#endif
 
 double signal_energy_fp2(struct complex *s,uint32_t length)
 {

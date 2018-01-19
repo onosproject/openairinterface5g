@@ -219,9 +219,9 @@ void table_nor(unsigned long seed)
     fn[i] = (exp (-0.5*dn*dn));
     wn[i] = (dn / m1);
   }
-  for ( i = 0; i <= 127; i++ ){
+  /*for ( i = 0; i <= 127; i++ ){
 	printf("i %d: kn %d, fn %e, wn %e\n",i,kn[i],fn[i],wn[i]);
-  }
+  }*/
 
   return;
 }

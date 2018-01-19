@@ -1167,6 +1167,16 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 
 int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
+  static int first_run=0;
+  static double sum;
+  static int count;
+  if (!first_run)
+  {
+     first_run=1;
+     sum=0;
+     count=0;
+  } 
+  count++;
 
   int ret = nsamps;
   int UE_id = device->Mod_id;
@@ -1243,7 +1253,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
                 &PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
                 UE_id,
                 CC_id);
-  	/*clock_t stop=clock();
+  	/*lock_t stop=clock();
   	printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
   	sum=(sum+stop-start);*/
 	//stop_meas(&dl_chan_stats_f);

@@ -465,6 +465,7 @@ void multipath_channel_freq(channel_desc_t *desc,
 			}
 			else
 			{
+				//printf("else 0: f %d, data in %e, data out %e\n",k*1024+f,tx_sig_re[ii][f+k*ofdm_symbol_size],rx_sig_re[ii][f+k*ofdm_symbol_size]);
 				rx_sig_re[ii][f+k*ofdm_symbol_size] =  0;
 				rx_sig_im[ii][f+k*ofdm_symbol_size] =  0;
 			}
@@ -496,7 +497,6 @@ void multipath_channel_prach(channel_desc_t *desc,
   int ii,j,f;
   __m128d rx_tmp128_re_f,rx_tmp128_im_f,rx_tmp128_re,rx_tmp128_im, rx_tmp128_1,rx_tmp128_2,rx_tmp128_3,rx_tmp128_4,tx128_re,tx128_im,chF128_x,chF128_y,pathloss128;
   struct complex rx_tmp;
-  int prach_samples = (prach_fmt<4)?13+839+12:3+139+2;
   double path_loss = pow(10,desc->path_loss_dB/20);
   pathloss128 = _mm_set1_pd(path_loss);
   int nb_rb, n_samples;
@@ -512,7 +512,7 @@ void multipath_channel_prach(channel_desc_t *desc,
 		} else {
 		freq_channel_prach(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
 		}	
-			for (f=0;f<(prach_samples>>1); f++) {
+			for (f=0;f<(length>>1); f++) {
 				//rx_tmp.x = 0;
 				//rx_tmp.y = 0;
 				rx_tmp128_re_f = _mm_setzero_pd();
@@ -561,20 +561,15 @@ void multipath_channel_prach(channel_desc_t *desc,
 		       uint8_t n_ra_prb)
 {
 
-
-  int prach_samples;
   int ii,j,f;
   struct complex rx_tmp;
   //double delta_f;
-  prach_samples = (prach_fmt<4)?13+839+12:3+139+2;
   double path_loss = pow(10,desc->path_loss_dB/20);
   int nb_rb, n_samples;
   
   nb_rb=fp->N_RB_DL;
   n_samples=fp->N_RB_DL*12+1;
 
-  //delta_f = (prach_fmt<4)?nb_rb*180000/((n_samples-1)*12):nb_rb*180000/((n_samples-1)*2);
-  //printf("prach_samples %d, n_ra_prb %d, delta_f %e, prach_fmt %d\n",prach_samples,get_prach_prb_offset(fp, PHY_vars_UE_g[UE_id][CC_id]->prach_resources[0]->ra_TDD_map_index, PHY_vars_eNB_g[0][0]->proc.frame_prach), delta_f,prach_fmt);
   #ifdef DEBUG_CH
   printf("[CHANNEL_PRACH] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, len %d \n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,desc->channel_length);
 #endif		
@@ -585,7 +580,7 @@ void multipath_channel_prach(channel_desc_t *desc,
 		//random_channel(desc,0);//Find a(l)
 		freq_channel_prach(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
 		}	
-			for (f=0;f<prach_samples; f++) {
+			for (f=0;f<lenght; f++) {
 				rx_tmp.x = 0;
 				rx_tmp.y = 0;
 				for (ii=0; ii<desc->nb_rx; ii++) {

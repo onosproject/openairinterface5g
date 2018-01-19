@@ -155,8 +155,8 @@ void rf_rx(double **r_re,
       }
 
       // Amplify by receiver gain and apply 3rd order non-linearity
-      r_re[a][i] = rx_gain_lin*(r_re[a][i] + IP3_lin*(pow(r_re[a][i],3.0) + 3.0*r_re[a][i]*r_im[a][i]*r_im[a][i])) + rx_gain_lin*(sqrt(.5*N0W)*gaussdouble(0.0,1.0));
-      r_im[a][i] = rx_gain_lin*(r_im[a][i] + IP3_lin*(pow(r_im[a][i],3.0) + 3.0*r_im[a][i]*r_re[a][i]*r_re[a][i])) + rx_gain_lin*(sqrt(.5*N0W)*gaussdouble(0.0,1.0));
+      r_re[a][i] = rx_gain_lin*(r_re[a][i] + IP3_lin*(pow(r_re[a][i],3.0) + 3.0*r_re[a][i]*r_im[a][i]*r_im[a][i])) + rx_gain_lin*(sqrt(.5*N0W)*ziggurat(0.0,1.0));
+      r_im[a][i] = rx_gain_lin*(r_im[a][i] + IP3_lin*(pow(r_im[a][i],3.0) + 3.0*r_im[a][i]*r_re[a][i]*r_re[a][i])) + rx_gain_lin*(sqrt(.5*N0W)*ziggurat(0.0,1.0));
 
 
 
@@ -191,7 +191,7 @@ void rf_rx(double **r_re,
     //compute next realization of phase-noise process
     x_n2 = x_n1;
     x_n1 = x_n;
-    x_n = gaussdouble(0.0,1.0);
+    x_n = ziggurat(0.0,1.0);
     y_n1 = p_noise;
     y_n2 = y_n1;
     p_noise = pn_a0*x_n + 2*pn_a0*x_n1 + pn_a0*x_n2 - pn_b1*y_n1 - pn_b2*y_n2;
@@ -199,75 +199,6 @@ void rf_rx(double **r_re,
     //    pn[i] = p_noise;
   }
 }
-#define RF_RX_SSE
-//#define __AVX2__
-#ifdef  RF_RX_SSE
-void rf_rx_simple(double *r_re[2],
-                  double *r_im[2],
-                  unsigned int nb_rx_antennas,
-                  unsigned int length,
-                  double s_time,
-                  double rx_gain_dB)
-{
- /* static int first_run=0;
-  static double sum;
-  static int count;
-  if (!first_run)
-  {
-     first_run=1;
-     sum=0;
-     count=0;
-  } 
-  count++;*/
-  __m128d rx128_re,rx128_im,rx128_gain_lin,gauss_0_128_sqrt_NOW,gauss_1_128_sqrt_NOW;//double
-  int i,a;
-  double rx_gain_lin = pow(10.0,.05*rx_gain_dB);
-  //double rx_gain_lin = 1.0;
-  double N0W         = pow(10.0,.1*(-174.0 - 10*log10(s_time*1e-9)));
-  double sqrt_NOW = sqrt(.5*N0W);
-  double gauss0_sqrt_NOW,gauss1_sqrt_NOW;
-  //double N0W = 0.0;
-
-  //  printf("s_time=%f, N0W=%g\n",s_time,10*log10(N0W));
-
-  //Loop over input
-#ifdef DEBUG_RF
-  printf("N0W = %f dBm\n",10*log10(N0W));
-  printf("rx_gain = %f dB(%f)\n",rx_gain_dB,rx_gain_lin);
-#endif
-  //rx128_gain_lin=mm_loadu_pd(rx_gain_lin);
-/*count++;
-clock_t start=clock();*/
-  for (i=0; i<(length>>1); i++) {
-    for (a=0; a<nb_rx_antennas; a++) {
-	
-	      //rx128_gain_lin=mm_mul_set1_ps(rx_gain_lin);
-	      gauss0_sqrt_NOW=sqrt_NOW*gaussdouble(0.0,1.0);
-	      gauss1_sqrt_NOW=sqrt_NOW*gaussdouble(0.0,1.0);
-	      rx128_re =  _mm_loadu_pd(&r_re[a][2*i]);//r_re[a][i],r_re[a][i+1]
-	      rx128_im =  _mm_loadu_pd(&r_im[a][2*i]);//r_im[a][i],r_im[a][i+1]
-	      rx128_gain_lin = _mm_set1_pd(rx_gain_lin);
-	      gauss_0_128_sqrt_NOW = _mm_set1_pd(gauss0_sqrt_NOW);
-	      gauss_1_128_sqrt_NOW = _mm_set1_pd(gauss1_sqrt_NOW);
-	      // Amplify by receiver gain and apply 3rd order non-linearity
-	      //r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0)); 
-	      //r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
-	      rx128_re = _mm_add_pd(rx128_re,gauss_0_128_sqrt_NOW);
-	      rx128_im = _mm_add_pd(rx128_im,gauss_1_128_sqrt_NOW);
-	      rx128_re = _mm_mul_pd(rx128_re,rx128_gain_lin);
-	      rx128_im = _mm_mul_pd(rx128_im,rx128_gain_lin);
-	      _mm_storeu_pd(&r_re[a][2*i],rx128_re);
-	      _mm_storeu_pd(&r_im[a][2*i],rx128_im);
-	
-
-      //printf("gaussdouble %e, rx_gain_lin %e\n",gaussdouble(0.0,1.0), rx_gain_lin);
-    }
-  }
-/*clock_t stop=clock();
-printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
-sum=(sum+stop-start);*/
-}
-#else
 void rf_rx_simple(double *r_re[2],
                   double *r_im[2],
                   unsigned int nb_rx_antennas,
@@ -303,8 +234,8 @@ void rf_rx_simple(double *r_re[2],
       // Amplify by receiver gain and apply 3rd order non-linearity
 /*count++;
 clock_t start=clock();*/
-      r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
-      r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
+      r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*ziggurat(0.0,1.0));
+      r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*ziggurat(0.0,1.0));
 /*clock_t stop=clock();
 printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
 sum=(sum+stop-start);*/
@@ -312,84 +243,7 @@ sum=(sum+stop-start);*/
   }
 
 }
-#endif
-#ifdef __AVX2__
-void rf_rx_simple_freq(double *r_re[2],
-                  double *r_im[2],
-                  unsigned int nb_rx_antennas,
-                  unsigned int length,
-                  double s_time,
-                  double rx_gain_dB,
-		  unsigned int symbols_per_tti,
-		  unsigned int ofdm_symbol_size,
-		  unsigned int n_samples)
-{
- /* static int first_run=0;
-  static double sum;
-  static int count;
-  if (!first_run)
-  {
-     first_run=1;
-     sum=0;
-     count=0;
-  } 
-  count++;*/
-  __m256d rx256_re,rx256_im,rx256_gain_lin,gauss_0_256_sqrt_NOW,gauss_1_256_sqrt_NOW;//4 doubles
-  int i,j,a;
-  double rx_gain_lin = pow(10.0,.05*rx_gain_dB);
-  //double rx_gain_lin = 1.0;
-  double N0W         = pow(10.0,.1*(-174.0 - 10*log10(s_time*1e-9)));
-  double sqrt_NOW = sqrt(.5*N0W);
-  double gauss0_sqrt_NOW,gauss1_sqrt_NOW;
-  //double N0W = 0.0;
-
-  //  printf("s_time=%f, N0W=%g\n",s_time,10*log10(N0W));
-
-  //Loop over input
-#ifdef DEBUG_RF
-  printf("N0W = %f dBm\n",10*log10(N0W));
-  printf("rx_gain = %f dB(%f)\n",rx_gain_dB,rx_gain_lin);
-#endif
-  //rx128_gain_lin=mm_loadu_pd(rx_gain_lin);
-/*count++;
-clock_t start=clock();*/
-	  for (i=0; i<(length>>2); i++) {
-	    for (a=0; a<nb_rx_antennas; a++) {
-	      if (i%(ofdm_symbol_size>>2)>(n_samples>>2) && i%(ofdm_symbol_size>>2)<(ofdm_symbol_size>>2)-(n_samples>>2))
-    	      {
-		//printf("i = %d\n",i);
-		//_mm_storeu_pd(&r_re[a][2*i],_mm_setzero_pd());
-		//_mm_storeu_pd(&r_im[a][2*i],_mm_setzero_pd());
-	 	break;
-	      }
-	      else
-	      {
-		      //rx256_gain_lin=mm_mul_set1_ps(rx_gain_lin);
-		      gauss0_sqrt_NOW=sqrt_NOW*gaussdouble(0.0,1.0);
-		      gauss1_sqrt_NOW=sqrt_NOW*gaussdouble(0.0,1.0);
-		      rx256_re =  _mm256_load_pd(&r_re[a][2*i]);//r_re[a][i],r_re[a][i+1]
-		      rx256_im =  _mm256_load_pd(&r_im[a][2*i]);//r_im[a][i],r_im[a][i+1]
-		      rx256_gain_lin = _mm_set1_pd(rx_gain_lin);
-		      gauss_0_256_sqrt_NOW = _mm_set1_pd(gauss0_sqrt_NOW);
-		      gauss_1_256_sqrt_NOW = _mm_set1_pd(gauss1_sqrt_NOW);
-		      // Amplify by receiver gain and apply 3rd order non-linearity
-		      //r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0)); 
-		      //r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
-		      rx256_re = _mm256_add_pd(rx256_re,gauss_0_256_sqrt_NOW);
-		      rx256_im = _mm256_add_pd(rx256_im,gauss_1_256_sqrt_NOW);
-		      rx256_re = _mm256_mul_pd(rx256_re,rx256_gain_lin);
-		      rx256_im = _mm256_mul_pd(rx256_im,rx256_gain_lin);
-		      _mm_storeu_pd(&r_re[a][2*i],rx256_re);
-		      _mm_storeu_pd(&r_im[a][2*i],rx256_im);
-	      }
-	      //printf("gaussdouble %e, rx_gain_lin %e\n",gaussdouble(0.0,1.0), rx_gain_lin);
-	    }
-	  }
-/*clock_t stop=clock();
-printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
-sum=(sum+stop-start);*/
-}
-#endif
+#define RF_RX_SSE
 #ifdef  RF_RX_SSE
 void rf_rx_simple_freq(double *r_re[2],
                   double *r_im[2],
@@ -417,7 +271,6 @@ void rf_rx_simple_freq(double *r_re[2],
   //double rx_gain_lin = 1.0;
   double N0W         = pow(10.0,.1*(-174.0 - 10*log10(s_time*1e-9)));
   double sqrt_NOW = sqrt(.5*N0W);
-  double gauss0_sqrt_NOW,gauss1_sqrt_NOW;
   //double N0W = 0.0;
 
   //  printf("s_time=%f, N0W=%g\n",s_time,10*log10(N0W));
@@ -442,13 +295,11 @@ clock_t start=clock();*/
 	      else
 	      {
 		      //rx128_gain_lin=mm_mul_set1_ps(rx_gain_lin);
-		      gauss0_sqrt_NOW=sqrt_NOW*ziggurat(0.0,1.0);
-		      gauss1_sqrt_NOW=sqrt_NOW*ziggurat(0.0,1.0);
 		      rx128_re =  _mm_loadu_pd(&r_re[a][2*i]);//r_re[a][i],r_re[a][i+1]
 		      rx128_im =  _mm_loadu_pd(&r_im[a][2*i]);//r_im[a][i],r_im[a][i+1]
 		      rx128_gain_lin = _mm_set1_pd(rx_gain_lin);
-		      gauss_0_128_sqrt_NOW = _mm_set1_pd(gauss0_sqrt_NOW);
-		      gauss_1_128_sqrt_NOW = _mm_set1_pd(gauss1_sqrt_NOW);
+		      gauss_0_128_sqrt_NOW = _mm_set1_pd(sqrt_NOW*ziggurat(0.0,1.0));
+		      gauss_1_128_sqrt_NOW = _mm_set1_pd(sqrt_NOW*ziggurat(0.0,1.0));
 		      // Amplify by receiver gain and apply 3rd order non-linearity
 		      //r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0)); 
 		      //r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
@@ -503,8 +354,8 @@ void rf_rx_simple_freq(double *r_re[2],
       // Amplify by receiver gain and apply 3rd order non-linearity
 /*count++;
 clock_t start=clock();*/
-      r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
-      r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
+      r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*ziggurat(0.0,1.0));
+      r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*ziggurat(0.0,1.0));
 /*clock_t stop=clock();
 printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
 sum=(sum+stop-start);*/

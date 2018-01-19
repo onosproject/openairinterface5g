@@ -73,7 +73,57 @@ void dac(double *s_re[2],
     }
   }
 }
+#define dac_SSE
+#ifdef  dac_SSE
+//This implementation of dac_fixed_gain using SSE does not work
+double dac_fixed_gain(double *s_re[2],
+                      double *s_im[2],
+                      uint32_t **input,
+                      uint32_t input_offset,
+                      uint32_t nb_tx_antennas,
+                      uint32_t length,
+                      uint32_t input_offset_meas,
+                      uint32_t length_meas,
+                      uint8_t B,
+                      double txpwr_dBm,
+                      int NB_RE)
+{
 
+  int i;
+  int aa;
+  double amp,amp1,div;
+  __m128d s_re128,s_im128,input_re128, input_im128;
+
+  amp = //sqrt(NB_RE)*pow(10.0,.05*txpwr_dBm)/sqrt(nb_tx_antennas); //this is amp per tx antenna
+    pow(10.0,.05*txpwr_dBm)/sqrt(nb_tx_antennas); //this is amp per tx antenna
+  amp1 = 0;
+
+  for (aa=0; aa<nb_tx_antennas; aa++) {
+    amp1 += sqrt((double)signal_energy((int32_t*)&input[aa][input_offset_meas],length_meas)/NB_RE);
+  }
+
+  amp1/=nb_tx_antennas;
+
+  div=amp/amp1;
+  for (i=0; i<(length>>1); i++) {
+    for (aa=0; aa<nb_tx_antennas; aa++) {
+      input_re128=_mm_set1_pd(((double)(((short *)input[aa]))[((2*i+input_offset)<<1)]));
+      input_im128=_mm_set1_pd(((double)(((short *)input[aa]))[((2*i+input_offset)<<1)+1]));
+      input_re128=_mm_mul_pd(input_re128,_mm_set1_pd(div));
+      input_im128=_mm_mul_pd(input_im128,_mm_set1_pd(div));
+      _mm_storeu_pd(&s_re[aa][2*i],input_re128);
+      _mm_storeu_pd(&s_im[aa][2*i],input_im128);
+      //s_re[aa][i] = amp*((double)(((short *)input[aa]))[((i+input_offset)<<1)])/amp1; ///(1<<(B-1));
+      //s_im[aa][i] = amp*((double)(((short *)input[aa]))[((i+input_offset)<<1)+1])/amp1; ///(1<<(B-1));
+    }
+  }
+      for (i=0;i<1048;i++)
+      	printf(" s_re_out[%d] %e\n",i,s_re[0][i]);
+  //  printf("ener %e\n",signal_energy_fp(s_re,s_im,nb_tx_antennas,length,0));
+
+  return(signal_energy_fp(s_re,s_im,nb_tx_antennas,length_meas,0)/NB_RE);
+}
+#else
 double dac_fixed_gain(double *s_re[2],
                       double *s_im[2],
                       uint32_t **input,
@@ -119,13 +169,15 @@ double dac_fixed_gain(double *s_re[2],
     for (aa=0; aa<nb_tx_antennas; aa++) {
       s_re[aa][i] = amp*((double)(((short *)input[aa]))[((i+input_offset)<<1)])/amp1; ///(1<<(B-1));
       s_im[aa][i] = amp*((double)(((short *)input[aa]))[((i+input_offset)<<1)+1])/amp1; ///(1<<(B-1));
+      //if (i<1024)
+	//printf("s_re [%d]%e\n",i,s_re[aa][i]);
     }
-  }
-
+  }      	
   //  printf("ener %e\n",signal_energy_fp(s_re,s_im,nb_tx_antennas,length,0));
 
   return(signal_energy_fp(s_re,s_im,nb_tx_antennas,length_meas,0)/NB_RE);
 }
+#endif
 double dac_fixed_gain_prach(double *s_re[2],
                       double *s_im[2],
                       uint32_t *input,
