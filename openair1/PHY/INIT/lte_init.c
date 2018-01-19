@@ -36,8 +36,9 @@ extern uint16_t prach_root_sequence_map0_3[838];
 extern uint16_t prach_root_sequence_map4[138];
 uint8_t dmrs1_tab[8] = {0,2,3,4,6,8,9,10};
 
-
 int N_RB_DL_array[6] = {6,15,25,50,75,100};
+
+extern char threequarter_fs;
 
 int l1_north_init_eNB() {
 
@@ -100,7 +101,7 @@ void phy_config_request(PHY_Config_t *phy_config) {
   fp->Ncp_UL                             = Ncp;
   fp->nb_antenna_ports_eNB               = p_eNB;
 
-  fp->threequarter_fs                    = 0;
+  fp->threequarter_fs                    = threequarter_fs;
 
   AssertFatal(cfg->phich_config.phich_resource.value<4, "Illegal phich_Resource\n");
 

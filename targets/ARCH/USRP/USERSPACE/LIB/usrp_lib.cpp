@@ -744,13 +744,18 @@ extern "C" {
             openair0_cfg[0].rx_gain_calib_table = calib_table_x310;
 
             switch ((int)openair0_cfg[0].sample_rate) {
-			case 122880000:
+	    case 122880000:
                 // from usrp_time_offset
                 //openair0_cfg[0].samples_per_packet    = 2048;
-				openair0_cfg[0].tx_sample_advance     = 15; //to be checked
+ 	        openair0_cfg[0].tx_sample_advance     = 15; //to be checked
                 openair0_cfg[0].tx_bw                 = 80e6;
                 openair0_cfg[0].rx_bw                 = 80e6;
                 break;
+	    case 92160000:
+ 	        openair0_cfg[0].tx_sample_advance     = 15; //to be checked
+                openair0_cfg[0].tx_bw                 = 80e6;
+                openair0_cfg[0].rx_bw                 = 80e6;
+		break;
             case 61440000:
                 // from usrp_time_offset
                 //openair0_cfg[0].samples_per_packet    = 2048;
@@ -758,9 +763,19 @@ extern "C" {
                 openair0_cfg[0].tx_bw                 = 40e6;
                 openair0_cfg[0].rx_bw                 = 40e6;
                 break;
+	    case 46080000:
+                openair0_cfg[0].tx_sample_advance     = 15;
+                openair0_cfg[0].tx_bw                 = 40e6;
+                openair0_cfg[0].rx_bw                 = 40e6;
+                break;
             case 30720000:
                 // from usrp_time_offset
                 //openair0_cfg[0].samples_per_packet    = 2048;
+                openair0_cfg[0].tx_sample_advance     = 15;
+                openair0_cfg[0].tx_bw                 = 20e6;
+                openair0_cfg[0].rx_bw                 = 20e6;
+                break;
+	    case 23040000:
                 openair0_cfg[0].tx_sample_advance     = 15;
                 openair0_cfg[0].tx_bw                 = 20e6;
                 openair0_cfg[0].rx_bw                 = 20e6;

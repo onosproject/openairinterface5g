@@ -114,6 +114,7 @@ unsigned short config_frames[4] = {2,9,11,13};
 extern volatile int                    oai_exit;
 extern int numerology;
 extern int fh_two_thread;
+extern char threequarter_fs;
 
 
 extern void  phy_init_RU(RU_t*);
@@ -1242,32 +1243,40 @@ void fill_rf_config(RU_t *ru, char *rf_config_file) {
       if (fp->threequarter_fs) {
         cfg->sample_rate=23.04e6;
         cfg->samples_per_frame = 230400; 
-        cfg->tx_bw = 10e6;
-        cfg->rx_bw = 10e6;
       }
       else {
         cfg->sample_rate=30.72e6;
         cfg->samples_per_frame = 307200; 
-        cfg->tx_bw = 10e6;
-        cfg->rx_bw = 10e6;
       }
-	}else if(numerology == 1){
-	  cfg->sample_rate=61.44e6;
-      cfg->samples_per_frame = 307200; 
+      cfg->tx_bw = 10e6;
+      cfg->rx_bw = 10e6;
+    } else if(numerology == 1) {
+      if (fp->threequarter_fs) {
+      	cfg->sample_rate=46.08e6;
+	cfg->samples_per_frame = 230400; 
+      } else {
+      	cfg->sample_rate=61.44e6;
+	cfg->samples_per_frame = 307200; 
+      }
       cfg->tx_bw = 20e6;
       cfg->rx_bw = 20e6;
-	}else if(numerology == 2){
-	  cfg->sample_rate=122.88e6;
-      cfg->samples_per_frame = 307200; 
+    }else if(numerology == 2){
+      if (fp->threequarter_fs) {
+	cfg->sample_rate=92.16e6;
+	cfg->samples_per_frame = 230400; 
+      } else {
+	cfg->sample_rate=122.88e6;
+	cfg->samples_per_frame = 307200; 
+      }
       cfg->tx_bw = 40e6;
       cfg->rx_bw = 40e6;
-	}else{
-	  printf("Wrong input for numerology %d\n setting to 20MHz normal CP configuration",numerology);
-	  cfg->sample_rate=30.72e6;
+    }else{
+      printf("Wrong input for numerology %d\n setting to 20MHz normal CP configuration",numerology);
+      cfg->sample_rate=30.72e6;
       cfg->samples_per_frame = 307200; 
       cfg->tx_bw = 10e6;
       cfg->rx_bw = 10e6;
-	}
+    }
   } else if(fp->N_RB_DL == 50) {
     cfg->sample_rate=15.36e6;
     cfg->samples_per_frame = 153600;

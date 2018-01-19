@@ -133,7 +133,7 @@ static char              UE_flag=0;
 unsigned int                    mmapped_dma=0;
 int                             single_thread_flag=1;
 
-static char                     threequarter_fs=0;
+char                     threequarter_fs=0;
 
 uint32_t                 downlink_frequency[MAX_NUM_CCs][4];
 int32_t                  uplink_frequency_offset[MAX_NUM_CCs][4];
@@ -754,35 +754,39 @@ void init_openair0() {
     openair0_cfg[card].configFilename = NULL;
 
     if(frame_parms[0]->N_RB_DL == 100) {
-	  if(numerology == 0)
-	  {
-      if (frame_parms[0]->threequarter_fs) {
-	openair0_cfg[card].sample_rate=23.04e6;
-	openair0_cfg[card].samples_per_frame = 230400;
+      if(numerology == 0) {
+	if (frame_parms[0]->threequarter_fs) {
+	  openair0_cfg[card].sample_rate=23.04e6;
+	  openair0_cfg[card].samples_per_frame = 230400;
+	} else {
+	  openair0_cfg[card].sample_rate=30.72e6;
+	  openair0_cfg[card].samples_per_frame = 307200;
+	}
 	openair0_cfg[card].tx_bw = 10e6;
 	openair0_cfg[card].rx_bw = 10e6;
+      } else if(numerology == 1) {
+	if (frame_parms[0]->threequarter_fs) {
+	  openair0_cfg[card].sample_rate=46.08e6;
+	  openair0_cfg[card].samples_per_frame = 230400;
+	} else {
+	  openair0_cfg[card].sample_rate=61.44e6;
+	  openair0_cfg[card].samples_per_frame = 307200;
+	}
+	openair0_cfg[card].tx_bw = 20e6;
+	openair0_cfg[card].rx_bw = 20e6;
+      } else if(numerology == 2) {
+	if (frame_parms[0]->threequarter_fs) {
+	  openair0_cfg[card].sample_rate=92.16e6;
+	  openair0_cfg[card].samples_per_frame = 230400;
+	} else {
+	  openair0_cfg[card].sample_rate=122.88e6;
+	  openair0_cfg[card].samples_per_frame = 307200;
+	}
+	openair0_cfg[card].tx_bw = 40e6;
+	openair0_cfg[card].rx_bw = 40e6;
       } else {
-	openair0_cfg[card].sample_rate=30.72e6;
-	openair0_cfg[card].samples_per_frame = 307200;
-	openair0_cfg[card].tx_bw = 10e6;
-	openair0_cfg[card].rx_bw = 10e6;
+	printf("Un supported numerology\n");
       }
-	  }else if(numerology == 1)
-	  {
-		openair0_cfg[card].sample_rate=61.44e6;
-		openair0_cfg[card].samples_per_frame = 307200;
-		openair0_cfg[card].tx_bw = 20e6;
-		openair0_cfg[card].rx_bw = 20e6;
-	  }else if(numerology == 2)
-	  {
-		openair0_cfg[card].sample_rate=122.88e6;
-		openair0_cfg[card].samples_per_frame = 307200;
-		openair0_cfg[card].tx_bw = 20e6;
-		openair0_cfg[card].rx_bw = 20e6;
-	  }else
-	  {
-	    printf("Un supported numerology\n");
-	  }
     } else if(frame_parms[0]->N_RB_DL == 50) {
       openair0_cfg[card].sample_rate=15.36e6;
       openair0_cfg[card].samples_per_frame = 153600;
@@ -1292,7 +1296,7 @@ int main( int argc, char **argv )
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       
       
-#ifdef OAI_USRP  || defined(OAI_ADRV9371_ZC706)
+#if defined(OAI_USRP)  || defined(OAI_ADRV9371_ZC706)
       UE[CC_id]->hw_timing_advance = timing_advance;
 #else
       UE[CC_id]->hw_timing_advance = 160;
