@@ -197,8 +197,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   t_nrLDPC_dec_params* p_decParams = &decParams;
   t_nrLDPC_time_stats procTime;
   t_nrLDPC_time_stats* p_procTime =&procTime ;
-  int16_t z [68*128];
-  int8_t l [68*128];
+  int16_t z [68*384];
+  int8_t l [68*384];
   //__m128i l;
   int16_t inv_d [68*384];
   int16_t *p_invd =&inv_d;
@@ -434,8 +434,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                                             (uint8_t*) &dummy_w[r][0],
                                             (r==0) ? harq_process->F : 0);
 
-#ifdef DEBUG_DLSCH_DECODING
-    LOG_D(PHY,"HARQ_PID %d Rate Matching Segment %d (coded bits %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
+//#ifdef DEBUG_DLSCH_DECODING
+    LOG_I(PHY,"HARQ_PID %d Rate Matching Segment %d (coded bits %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
           harq_pid,r, G,
           Kr*3,
           harq_process->TBS,
@@ -444,7 +444,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
           harq_process->Nl,
           harq_process->rvidx,
           harq_process->round);
-#endif
+//#endif
 
 #ifdef DEBUG_DLSCH_DECODING
     printf(" in decoding dlsch->harq_processes[harq_pid]->rvidx = %d\n", dlsch->harq_processes[harq_pid]->rvidx);
@@ -545,11 +545,11 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       printf("harq process dr iteration %d\n", p_decParams->numMaxIter);
       //66*p_decParams->Z
 
-      if (A < 1000){
+      //if (A < 1000){
       for (int cnt =0; cnt < 66*p_decParams->Z; cnt++){
             inv_d[cnt] = (-1)*harq_process->d[r][96+cnt];
             }
-      }
+      //}
 
       for (int cnt =0; cnt < 8; cnt++){
       printf("dr %d inv_d %d \n", harq_process->d[r][96+cnt], inv_d[cnt]);
@@ -587,19 +587,19 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 		memset(pv,0,2*p_decParams->Z*sizeof(int16_t));
         //memset(pl,0,2*p_decParams->Z*sizeof(int8_t));
 
-		if (A < 1000){
+		//if (A < 1000){
 
       	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
       	{
       		pv[i]= _mm_loadu_si128((__m128i*)(&inv_d[8*j]));
       	}
-		}
+      	/*}
 		else{
       	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
       	      	{
       	      		pv[i]= _mm_loadu_si128((__m128i*)&harq_process->d[r][96+8*j]);
       	      	}
-		}
+		}*/
 		for (i=0, j=0; j < (68*p_decParams->Z/16);  i+=2, j++)
       	      	{
       				//printf("mm packs i %d j %d\n", i, j);
