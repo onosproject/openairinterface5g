@@ -435,6 +435,12 @@ typedef struct RU_proc_t_s {
   int subframe_phy_tx;
   /// timestamp to send to "slave rru"
   openair0_timestamp timestamp_phy_tx;
+  /// pthread structure for RF TX thread
+  pthread_t pthread_rf_tx;
+  pthread_mutex_t mutex_rf_tx;
+  pthread_cond_t cond_rf_tx;
+  /// \internal This variable is protected by \ref mutex_rf_tx.
+  int instance_cnt_rf_tx;
 #endif
 #if defined(UE_EXPANSION) || defined(UE_EXPANSION_SIM2)
   pthread_t pthread_pre_scd;

@@ -1784,16 +1784,18 @@ static void* eNB_thread_phy_tx( void* param ) {
        ru->proc.subframe_tx = proc->subframe_phy_tx;
        ru->proc.timestamp_tx = proc->timestamp_phy_tx;
        phy_tx_txdataF_end = 1;
+       if(pthread_mutex_lock(&ru->proc.mutex_rf_tx) != 0){
+          LOG_E( PHY, "[RU] ERROR pthread_mutex_lock for rf tx thread (IC %d)\n", ru->proc.instance_cnt_rf_tx);
+          exit_fun( "error locking mutex_rf_tx" );
+        }
+        if (ru->proc.instance_cnt_rf_tx==-1) {
+          ++ru->proc.instance_cnt_rf_tx;
 
-       // do TX front-end processing if needed (precoding and/or IDFTs)
-       if (ru->feptx_prec) ru->feptx_prec(ru);
-
-       // do OFDM if needed
-       if ((ru->fh_north_asynch_in == NULL) && (ru->feptx_ofdm)) ru->feptx_ofdm(ru);
-       // do outgoing fronthaul (south) if needed
-       if ((ru->fh_north_asynch_in == NULL) && (ru->fh_south_out)) ru->fh_south_out(ru);
-
-       if (ru->fh_north_out) ru->fh_north_out(ru);
+          // the thread can now be woken up
+          AssertFatal(pthread_cond_signal(&ru->proc.cond_rf_tx) == 0, "ERROR pthread_cond_signal for rf_tx thread\n");
+        }
+        else LOG_W(PHY,"rf tx thread busy, skipping\n");
+        pthread_mutex_unlock( &ru->proc.mutex_rf_tx );
     }
     if (release_thread(&proc->mutex_phy_tx,&proc->instance_cnt_phy_tx,"eNB_thread_phy_tx") < 0) break;
     phy_tx_end = 1;
@@ -1803,6 +1805,45 @@ static void* eNB_thread_phy_tx( void* param ) {
 
   eNB_thread_phy_tx_status = 0;
   return &eNB_thread_phy_tx_status;
+}
+
+
+static void* rf_tx( void* param ) {
+  static int rf_tx_status;
+
+  RU_t *ru      = (RU_t*)param;
+  RU_proc_t *proc = &ru->proc;
+
+  // set default return value
+  rf_tx_status = 0;
+
+  thread_top_init("rf_tx",1,500000L,1000000L,20000000L);
+  
+  while (!oai_exit) {
+
+    if (oai_exit) break;
+
+
+    if (wait_on_condition(&proc->mutex_rf_tx,&proc->cond_rf_tx,&proc->instance_cnt_rf_tx,"rf_tx_thread") < 0) break;
+
+    LOG_D(PHY,"Running eNB rf tx procedures\n");
+    if(ru->num_eNB == 1){
+       // do TX front-end processing if needed (precoding and/or IDFTs)
+       if (ru->feptx_prec) ru->feptx_prec(ru);
+       // do OFDM if needed
+       if ((ru->fh_north_asynch_in == NULL) && (ru->feptx_ofdm)) ru->feptx_ofdm(ru);
+       // do outgoing fronthaul (south) if needed
+       if ((ru->fh_north_asynch_in == NULL) && (ru->fh_south_out)) ru->fh_south_out(ru);
+
+       if (ru->fh_north_out) ru->fh_north_out(ru);
+    }
+    if (release_thread(&proc->mutex_rf_tx,&proc->instance_cnt_rf_tx,"rf_tx") < 0) break;
+  }
+
+  LOG_I(PHY, "Exiting rf TX\n");
+
+  rf_tx_status = 0;
+  return &rf_tx_status;
 }
 #endif
 
@@ -1881,6 +1922,9 @@ void init_RU_proc(RU_t *ru) {
   proc->instance_cnt_phy_tx       = -1;
   pthread_mutex_init( &proc->mutex_phy_tx, NULL);
   pthread_cond_init( &proc->cond_phy_tx, NULL);
+  proc->instance_cnt_rf_tx       = -1;
+  pthread_mutex_init( &proc->mutex_rf_tx, NULL);
+  pthread_cond_init( &proc->cond_rf_tx, NULL);
 #endif
   
 #ifndef DEADLINE_SCHEDULER
@@ -1905,6 +1949,7 @@ void init_RU_proc(RU_t *ru) {
 #ifdef UE_EXPANSION
     pthread_create( &proc->pthread_phy_tx, NULL, eNB_thread_phy_tx, (void*)ru );
     pthread_setname_np( proc->pthread_phy_tx, "phy_tx_thread" );
+    pthread_create( &proc->pthread_rf_tx, NULL, rf_tx, (void*)ru );
 #endif
 
   if (ru->function == NGFI_RRU_IF4p5) {
@@ -2342,6 +2387,11 @@ void stop_ru(RU_t *ru) {
       pthread_join( ru->proc.pthread_phy_tx, (void**)&status );
       pthread_mutex_destroy( &ru->proc.mutex_phy_tx );
       pthread_cond_destroy( &ru->proc.cond_phy_tx );
+      ru->proc.instance_cnt_rf_tx = 0;
+      pthread_cond_signal(&ru->proc.cond_rf_tx);
+      pthread_join( ru->proc.pthread_rf_tx, (void**)&status );
+      pthread_mutex_destroy( &ru->proc.mutex_rf_tx );
+      pthread_cond_destroy( &ru->proc.cond_rf_tx );
   }
 #endif
 }

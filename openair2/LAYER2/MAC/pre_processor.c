@@ -552,7 +552,7 @@ inline uint16_t search_rbs_required(uint16_t mcs, uint16_t TBS,uint16_t NB_RB, u
   uint16_t nb_rb,i_TBS,tmp_TBS;
   i_TBS=get_I_TBS(mcs);
   for(nb_rb=step_size;nb_rb<NB_RB;nb_rb+=step_size){
-    tmp_TBS = TBStable[i_TBS][nb_rb-1];
+    tmp_TBS = TBStable[i_TBS][nb_rb-1]>>3;
     if(TBS<tmp_TBS)return(nb_rb);
   }
   return NB_RB;
