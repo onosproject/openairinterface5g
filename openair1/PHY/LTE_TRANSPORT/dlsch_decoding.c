@@ -200,6 +200,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   int16_t z [68*128];
   int8_t l [68*128];
   //__m128i l;
+  int16_t inv_d [68*384];
+  int16_t *p_invd =&inv_d;
 
   uint32_t i,j;
   uint32_t k;
@@ -353,7 +355,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   //	  p_decParams->Z = 128;
       p_decParams->BG = 1;
       p_decParams->R = 13;
-      p_decParams->numMaxIter = 2;
+      p_decParams->numMaxIter = 5;
       Kr = p_decParams->Z*22;
       p_decParams->outMode= 0;
 
@@ -543,8 +545,14 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       printf("harq process dr iteration %d\n", p_decParams->numMaxIter);
       //66*p_decParams->Z
 
+      if (A < 1000){
+      for (int cnt =0; cnt < 66*p_decParams->Z; cnt++){
+            inv_d[cnt] = (-1)*harq_process->d[r][96+cnt];
+            }
+      }
+
       for (int cnt =0; cnt < 8; cnt++){
-      printf("%d \n", harq_process->d[r][96+cnt]);
+      printf("dr %d inv_d %d \n", harq_process->d[r][96+cnt], inv_d[cnt]);
       }
 
       printf(" \n");
@@ -579,11 +587,19 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 		memset(pv,0,2*p_decParams->Z*sizeof(int16_t));
         //memset(pl,0,2*p_decParams->Z*sizeof(int8_t));
 
+		if (A < 1000){
+
       	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
       	{
-      		pv[i]= _mm_loadu_si128((__m128i*)&harq_process->d[r][96+8*j]);
+      		pv[i]= _mm_loadu_si128((__m128i*)(&inv_d[8*j]));
       	}
-
+		}
+		else{
+      	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
+      	      	{
+      	      		pv[i]= _mm_loadu_si128((__m128i*)&harq_process->d[r][96+8*j]);
+      	      	}
+		}
 		for (i=0, j=0; j < (68*p_decParams->Z/16);  i+=2, j++)
       	      	{
       				//printf("mm packs i %d j %d\n", i, j);
