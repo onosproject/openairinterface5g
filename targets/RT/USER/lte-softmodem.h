@@ -138,6 +138,7 @@ extern int16_t dlsch_demod_shift;
 /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 #define CMDLINE_PARAMS_DESC {  \
 {"rf-config-file",        	 CONFIG_HLP_RFCFGF,	0,		  strptr:(char **)&rf_config_file,	defstrval:NULL, 		   TYPE_STRING,   sizeof(rf_config_file)}, \
+{"turbo-thread-pool",        	 NULL,			0,		  strptr:(char **)&threadpool,		defstrval:NULL, 		   TYPE_STRING,   sizeof(threadpool)}, \
 {"ulsch-max-errors",      	 CONFIG_HLP_ULMAXE,	0,		  uptr:&ULSCH_max_consecutive_errors,	defuintval:0,			   TYPE_UINT,	  0},			   \
 {"phy-test",              	 CONFIG_HLP_PHYTST,	PARAMFLAG_BOOL,   iptr:&phy_test,			defintval:0,			   TYPE_INT,	  0},			   \
 {"usim-test",             	 CONFIG_HLP_USIM,	PARAMFLAG_BOOL,   u8ptr:&usim_test,			defintval:0,			   TYPE_UINT8,    0},			   \

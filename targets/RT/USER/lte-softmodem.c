@@ -101,6 +101,7 @@ unsigned short config_frames[4] = {2,9,11,13};
 #endif
 #include "lte-softmodem.h"
 
+#include <thread-pool.h>
 #ifdef XFORMS
 // current status is that every UE has a DL scope for a SINGLE eNB (eNB_id=0)
 // at eNB 0, an UL scope for every UE
@@ -133,6 +134,7 @@ volatile int             start_UE = 0;
 volatile int             oai_exit = 0;
 
 static clock_source_t clock_source = internal;
+static char threadpool[1024]="";
 static int wait_for_sync = 0;
 
 static char              UE_flag=0;
@@ -1311,8 +1313,14 @@ int main( int argc, char **argv )
     number_of_cards = 1;    
     printf("RC.nb_L1_inst:%d\n", RC.nb_L1_inst);
     if (RC.nb_L1_inst > 0) {
-      printf("Initializing eNB threads single_thread_flag:%d wait_for_sync:%d\n", single_thread_flag,wait_for_sync);
+        LOG_W(PHY, "Initializing eNB threads, single thread flag= %d, clock_source=%d\n", single_thread_flag, clock_source);
       init_eNB(single_thread_flag,wait_for_sync);
+      if ( strlen(threadpool) > 0 ) {
+        LOG_W(PHY, "Creating turbo codec thread pool on cores: %s\n",threadpool);
+        init_tpool(threadpool, &RC.eNB[0][0]->proc.threadPool);
+      }
+      else
+      init_tpool("n", &RC.eNB[0][0]->proc.threadPool);
       //      for (inst=0;inst<RC.nb_L1_inst;inst++)
       //	for (CC_id=0;CC_id<RC.nb_L1_CC[inst];CC_id++) phy_init_lte_eNB(RC.eNB[inst][CC_id],0,0);
     }

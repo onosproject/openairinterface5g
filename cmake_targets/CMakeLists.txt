@@ -1825,6 +1825,7 @@ add_definitions(-DASN1_MINIMUM_VERSION=924)
 # lte-softmodem is both eNB and UE implementation
 ###################################################
 
+include_directories (${OPENAIR_TARGETS}/tcri)
 add_executable(lte-softmodem
   ${rrc_h}
   ${s1ap_h}
@@ -1849,6 +1850,7 @@ add_executable(lte-softmodem
   ${T_SOURCE}
   ${CONFIG_SOURCES}
   ${SHLIB_LOADER_SOURCES}
+  ${OPENAIR_TARGETS}/tcri/thread-pool.c
   )
 
 target_link_libraries (lte-softmodem
@@ -2323,3 +2325,10 @@ ADD_CUSTOM_TARGET(oarf
    DEPENDS ${OCT_FILES}
 )
 
+add_executable(test_tcri
+  ${OPENAIR_TARGETS}/tcri/thread-pool.c
+  ${CONFIG_SOURCES}
+  ${SHLIB_LOADER_SOURCES}
+)
+target_compile_definitions(test_tcri PRIVATE TESTMAIN)
+target_link_libraries(test_tcri pthread PHY UTIL ${ITTI_LIB} LFDS config rt dl)

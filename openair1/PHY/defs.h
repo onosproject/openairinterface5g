@@ -56,6 +56,7 @@
 #include <math.h>
 #include "common_lib.h"
 #include "msc.h"
+#include <thread-pool.h>
 
 #include "openair2/PHY_INTERFACE/IF_Module.h"
 
@@ -196,8 +197,9 @@ enum transmission_access_mode {
   POSTPONED_ACCESS,
   CANCELED_ACCESS,
   UNKNOWN_ACCESS,
-  SCHEDULED_ACCESS,
-  CBA_ACCESS};
+    SCHEDULED_ACCESS,
+    CBA_ACCESS
+};
 
 typedef enum  {
   eNodeB_3GPP=0,   // classical eNodeB function
@@ -430,6 +432,7 @@ typedef struct eNB_proc_t_s {
   uint8_t              CC_id;
   /// thread index
   int thread_index;
+    tpool_t threadPool;
   /// timestamp received from HW
   openair0_timestamp timestamp_rx;
   /// timestamp to send to "slave rru"
@@ -927,6 +930,20 @@ typedef struct {
   int            prach_I0;
 } PHY_MEASUREMENTS_eNB;
 
+typedef request_t  *(ulsch_decoding_t)(struct PHY_VARS_eNB_s *phy_vars_eNB,
+                                       eNB_rxtx_proc_t *proc,
+                                       uint8_t UE_id,
+                                       uint8_t control_only_flag,
+                                       uint8_t Nbundled,
+                                       uint8_t llr8_flag,
+                                       int frame,
+                                       int subframe);
+typedef request_t *(ulsch_decoding_data_t)(struct PHY_VARS_eNB_s *eNB,
+        int UE_id,
+        int harq_pid,
+        int llr8_flag,
+        int frame,
+        int subframe);
 
 /// Top-level PHY Data Structure for eNB
 typedef struct PHY_VARS_eNB_s {
@@ -944,7 +961,8 @@ typedef struct PHY_VARS_eNB_s {
   /// Ethernet parameters for fronthaul interface
   eth_params_t         eth_params;
   int                  rx_total_gain_dB;
-  int                  (*td)(struct PHY_VARS_eNB_s *eNB,int UE_id,int harq_pid,int llr8_flag);
+    //int                  (*td)(struct PHY_VARS_eNB_s *eNB,int UE_id,int harq_pid,int llr8_flag);
+    ulsch_decoding_data_t *td;
   int                  (*te)(struct PHY_VARS_eNB_s *,uint8_t *,uint8_t,LTE_eNB_DLSCH_t *,int,uint8_t,time_stats_t *,time_stats_t *,time_stats_t *);
   int                  (*start_if)(struct RU_t_s *ru,struct PHY_VARS_eNB_s *eNB);
   uint8_t              local_flag;
@@ -1614,6 +1632,55 @@ static inline int release_thread(pthread_mutex_t *mutex,int *instance_cnt,char *
   }
   return(0);
 }
+
+// OpenAir .h files are very very badly intricated, so we redeclare a type
+// A major issue to fix in whole OAI: total crap (reprototype in .c, loops of includes, ...)
+typedef  uint8_t (turboDecoder)(int16_t *y,
+                                uint8_t *,
+                                uint16_t,
+                                uint16_t,
+                                uint16_t,
+                                uint8_t,
+                                uint8_t,
+                                uint8_t,
+                                time_stats_t *,
+                                time_stats_t *,
+                                time_stats_t *,
+                                time_stats_t *,
+                                time_stats_t *,
+                                time_stats_t *,
+                                time_stats_t *);
+typedef struct TurboDecode_s {
+    turboDecoder *function;
+    int16_t soft_bits[3*8*6144+12+96] __attribute__((aligned(32)));
+    uint8_t decoded_bytes[3+768] __attribute__((aligned(32)));
+    int UEid;
+    int harq_pid;
+    int frame;
+    int subframe;
+    int iind;
+    int Fbits;
+    int Kr;
+    LTE_UL_eNB_HARQ_t *ulsch_harq;
+    PHY_VARS_eNB *eNB;
+    int nbSegments;
+    int segment_r;
+    int offset;
+    int maxIterations;
+    int decodeIterations;
+} turboDecode_t;
+
+#define TURBO_SIMD_SOFTBITS   96+12+3+3*6144
+typedef struct turboEncode_s {
+    uint8_t * input;
+    uint8_t output[TURBO_SIMD_SOFTBITS];
+    int Kr_bytes;
+    int filler;
+    int iind;
+    int r;
+    int harq_pid;
+    LTE_eNB_DLSCH_t *dlsch;
+} turboEncode_t;
 
 
 #include "PHY/INIT/defs.h"

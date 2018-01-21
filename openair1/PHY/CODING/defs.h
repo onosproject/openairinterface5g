@@ -463,7 +463,21 @@ int32_t rate_matching_lte(uint32_t N_coded,
                           uint8_t *inPtr,
                           uint32_t off);
 
-
+typedef  uint8_t (turboDecoder)(int16_t *y,
+                uint8_t *,
+                uint16_t,
+                uint16_t,
+                uint16_t,
+                uint8_t,
+                uint8_t,
+                uint8_t,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *);
 /*!
 \brief This routine performs max-logmap detection for the 3GPP turbo code (with termination).  It is optimized for SIMD processing and 16-bit
 LLR arithmetic, and requires SSE2,SSSE3 and SSE4.1 (gcc >=4.3 and appropriate CPU)
@@ -477,21 +491,7 @@ LLR arithmetic, and requires SSE2,SSSE3 and SSE4.1 (gcc >=4.3 and appropriate CP
 @param F Number of filler bits at start of packet
 @returns number of iterations used (this is 1+max if incorrect crc or if crc_len=0)
 */
-uint8_t phy_threegpplte_turbo_decoder16(int16_t *y,
-                                        uint8_t *decoded_bytes,
-                                        uint16_t n,
-                                        uint16_t interleaver_f1,
-                                        uint16_t interleaver_f2,
-                                        uint8_t max_iterations,
-                                        uint8_t crc_type,
-                                        uint8_t F,
-                                        time_stats_t *init_stats,
-                                        time_stats_t *alpha_stats,
-                                        time_stats_t *beta_stats,
-                                        time_stats_t *gamma_stats,
-                                        time_stats_t *ext_stats,
-                                        time_stats_t *intl1_stats,
-                                        time_stats_t *intl2_stats);
+turboDecoder phy_threegpplte_turbo_decoder16;
 
 uint8_t phy_threegpplte_turbo_decoder16avx2(int16_t *y,
 					    int16_t *y2,
@@ -524,21 +524,7 @@ LLR arithmetic, and requires SSE2,SSSE3 and SSE4.1 (gcc >=4.3 and appropriate CP
 @param F Number of filler bits at start of packet
 @returns number of iterations used (this is 1+max if incorrect crc or if crc_len=0)
 */
-uint8_t phy_threegpplte_turbo_decoder8(int16_t *y,
-                                       uint8_t *decoded_bytes,
-                                       uint16_t n,
-                                       uint16_t interleaver_f1,
-                                       uint16_t interleaver_f2,
-                                       uint8_t max_iterations,
-                                       uint8_t crc_type,
-                                       uint8_t F,
-                                       time_stats_t *init_stats,
-                                       time_stats_t *alpha_stats,
-                                       time_stats_t *beta_stats,
-                                       time_stats_t *gamma_stats,
-                                       time_stats_t *ext_stats,
-                                       time_stats_t *intl1_stats,
-                                       time_stats_t *intl2_stats);
+turboDecoder phy_threegpplte_turbo_decoder8;
 
 uint8_t phy_threegpplte_turbo_decoder_scalar(int16_t *y,
     uint8_t *decoded_bytes,

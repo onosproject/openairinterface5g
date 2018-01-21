@@ -34,7 +34,7 @@
 #include "PHY/defs.h"
 #include <math.h>
 #include "nfapi_interface.h"
-
+#include <thread-pool.h>
 // Functions below implement 36-211 and 36-212
 
 /** @addtogroup _PHY_TRANSPORT_
@@ -113,6 +113,16 @@ LTE_UE_ULSCH_t *new_ue_ulsch(unsigned char N_RB_UL, uint8_t abstraction_flag);
     @returns status
 */
 int32_t dlsch_encoding(PHY_VARS_eNB *eNB,
+                       uint8_t *a,
+                       uint8_t num_pdcch_symbols,
+                       LTE_eNB_DLSCH_t *dlsch,
+                       int frame,
+                       uint8_t subframe,
+                       time_stats_t *rm_stats,
+                       time_stats_t *te_stats,
+                       time_stats_t *i_stats);
+
+int32_t dlsch_encoding2(PHY_VARS_eNB *eNB,
                        uint8_t *a,
                        uint8_t num_pdcch_symbols,
                        LTE_eNB_DLSCH_t *dlsch,
@@ -1884,12 +1894,8 @@ int32_t ulsch_encoding_emul(uint8_t *ulsch_buffer,
   @param llr8_flag If 1, indicate that the 8-bit turbo decoder should be used
   @returns 0 on success
 */
-unsigned int  ulsch_decoding(PHY_VARS_eNB *phy_vars_eNB,
-                             eNB_rxtx_proc_t *proc,
-                             uint8_t UE_id,
-                             uint8_t control_only_flag,
-                             uint8_t Nbundled,
-                             uint8_t llr8_flag);
+
+ulsch_decoding_t ulsch_decoding;
 
 /*!
   \brief Decoding of ULSCH data component from 36-212. This one spawns 1 worker thread in parallel,half of the segments in each thread.
@@ -1912,10 +1918,7 @@ int ulsch_decoding_data_2thread(PHY_VARS_eNB *eNB,
   @param llr8_flag If 1, indicate that the 8-bit turbo decoder should be used
   @returns 0 on success
 */
-int ulsch_decoding_data(PHY_VARS_eNB *eNB,
-                        int UE_id,
-                        int harq_pid,
-                        int llr8_flag);
+ulsch_decoding_data_t ulsch_decoding_data;
 
 uint32_t ulsch_decoding_emul(PHY_VARS_eNB *phy_vars_eNB,
                              eNB_rxtx_proc_t *proc,
