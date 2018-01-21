@@ -221,10 +221,11 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   int                     subframe  =  proc->subframe_tx;
   int                     frame     =  proc->frame_tx;
   uint16_t                Ntti      =  10;                      //ntti = 10
-  int                     RB_IoT_ID=9 ;                          // XXX should be initialized (RB reserved for NB-IoT, PRB index)
-  int                     With_NSSS;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
+  int                     RB_IoT_ID=2 ;                          // XXX should be initialized (RB reserved for NB-IoT, PRB index)
+  int                     With_NSSS=0;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
   
-  /*NSSS only happened in the even frame*/
+
+ //NSSS only happened in the even frame
   if(frame%2==0)
     {
       With_NSSS = 1;
@@ -234,40 +235,42 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       With_NSSS = 0;
     }
     
-  /*NPSS when subframe 5*/
+    
+
+  
   if(subframe == 5)
     {
+
       generate_npss_NB_IoT(txdataF,
                            AMP,
                            fp,
                            3,
-                           0,
+                           10,
                            RB_IoT_ID);
-    }
-    
-  /*NSSS when subframe 9 on even frame*/
-  else if((subframe == 9)&&(With_NSSS == 1))
+   }
+   else if((subframe == 9)&&(With_NSSS == 1))
     {
-      generate_sss_NB_IoT(txdataF,
+      //printf("NSSS");
+  generate_sss_NB_IoT(txdataF,
                           AMP,
                           fp,
                           3,
-                          0,
+                          18,
                           frame,
                           RB_IoT_ID);
     }
 
-  else
+  /*else
   {
-    /*NRS*/
-   /* generate_pilots_NB_IoT(eNB,
+    
+    generate_pilots_NB_IoT(eNB,
                            txdataF,
                            AMP,
                            Ntti,
                            RB_IoT_ID,
-                           With_NSSS); */
+                           With_NSSS); 
   }
-  
+  */
 }
 
 void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc,UL_IND_t *UL_INFO)
@@ -323,7 +326,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
         {
           if (eNB->UE_stats[i].mode == RA_RESPONSE_NB_IoT) 
             {
-	             /*Process Msg3 TODO*/
+               /*Process Msg3 TODO*/
               //process_Msg3(eNB,proc,i,harq_pid);
             }
         }
@@ -342,7 +345,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
           /*NB-IoT The nb_rb always set to 1 */
           for (int rb=0;rb<=eNB->nulsch[i]->harq_process->nb_rb;rb++) 
             {
-	             int rb2 = rb+eNB->nulsch[i]->harq_process->first_rb;
+               int rb2 = rb+eNB->nulsch[i]->harq_process->first_rb;
                eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
             }
 
@@ -384,7 +387,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
                                       i,
                                       0, // control_only_flag
                                       eNB->nulsch[i]->harq_process->V_UL_DAI,
-			                                eNB->nulsch[i]->harq_process->nb_rb>20 ? 1 : 0);
+                                      eNB->nulsch[i]->harq_process->nb_rb>20 ? 1 : 0);
 
           //compute the expected ULSCH RX power (for the stats)
           eNB->nulsch[(uint32_t)i]->harq_process->delta_TF = get_hundred_times_delta_IF_eNB_NB_IoT(eNB,i,harq_pid, 0); // 0 means bw_factor is not considered
@@ -420,8 +423,8 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 
           if (eNB->nulsch[i]->Msg3_flag == 1) 
           {
-	             /*dump_ulsch(eNB,proc,i);
-	             exit(-1);*/
+               /*dump_ulsch(eNB,proc,i);
+               exit(-1);*/
 
                /*In NB-IoT MSG3 */
                 // activate retransmission for Msg3 (signalled to UE PHY by DCI
@@ -443,11 +446,11 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
                   eNB->UE_stats[i].ulsch_errors[harq_pid]++;
                   eNB->UE_stats[i].ulsch_consecutive_errors++; 
                   /*if (eNB->ulsch[i]->harq_processes[harq_pid]->nb_rb > 20) {
-		                dump_ulsch(eNB,proc,i);
-	 	              exit(-1);
+                    dump_ulsch(eNB,proc,i);
+                  exit(-1);
                   }*/
-	                // indicate error to MAC
-	                if (eNB->mac_enabled == 1)
+                  // indicate error to MAC
+                  if (eNB->mac_enabled == 1)
                     {
                       //instead rx_sdu to report The Uplink data not received successfully to MAC
                       (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag = 1;
@@ -475,18 +478,18 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
             hundred_times_log10_NPRB_NB_IoT[eNB->nulsch[i]->harq_process->nb_rb-1]/100 -
             get_hundred_times_delta_IF_eNB_NB_IoT(eNB,i,harq_pid, 0)/100;
           //for NB-IoT PHICH not work
-	        /*eNB->ulsch[i]->harq_processes[harq_pid]->phich_active = 1;
+          /*eNB->ulsch[i]->harq_processes[harq_pid]->phich_active = 1;
           eNB->ulsch[i]->harq_processes[harq_pid]->phich_ACK = 1;*/
           eNB->nulsch[i]->harq_process->round = 0;
           eNB->UE_stats[i].ulsch_consecutive_errors = 0;
 
           if (eNB->nulsch[i]->Msg3_flag == 1) 
             {
-	            if (eNB->mac_enabled==1) 
+              if (eNB->mac_enabled==1) 
                 {
-	                LOG_I(PHY,"[eNB %d][RAPROC] Frame %d Terminating ra_proc for harq %d, UE %d\n",
-		                    eNB->Mod_id,frame,harq_pid,i);
-	                if (eNB->mac_enabled)
+                  LOG_I(PHY,"[eNB %d][RAPROC] Frame %d Terminating ra_proc for harq %d, UE %d\n",
+                        eNB->Mod_id,frame,harq_pid,i);
+                  if (eNB->mac_enabled)
                     {
                       // store successful MSG3 in UL_Info instead rx_sdu
                       (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag  = 0;
@@ -498,24 +501,24 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
                       UL_INFO->RX_NPUSCH.number_of_pdus++;
                     }
 
-	                /* Need check if this needed in NB-IoT
-	                // one-shot msg3 detection by MAC: empty PDU (e.g. CRNTI)
-	                if (eNB->ulsch[i]->Msg3_flag == 0 ) {
-	               eNB->UE_stats[i].mode = PRACH;
-	               mac_xface->cancel_ra_proc(eNB->Mod_id,
-					       eNB->CC_id,
-					       frame,
-					       eNB->UE_stats[i].crnti);
-	               mac_phy_remove_ue(eNB->Mod_id,eNB->UE_stats[i].crnti);
-	               eNB->ulsch[(uint32_t)i]->Msg3_active = 0;
-	               } // Msg3_flag == 0*/
-	    
-	            } // mac_enabled==1
+                  /* Need check if this needed in NB-IoT
+                  // one-shot msg3 detection by MAC: empty PDU (e.g. CRNTI)
+                  if (eNB->ulsch[i]->Msg3_flag == 0 ) {
+                 eNB->UE_stats[i].mode = PRACH;
+                 mac_xface->cancel_ra_proc(eNB->Mod_id,
+                 eNB->CC_id,
+                 frame,
+                 eNB->UE_stats[i].crnti);
+                 mac_phy_remove_ue(eNB->Mod_id,eNB->UE_stats[i].crnti);
+                 eNB->ulsch[(uint32_t)i]->Msg3_active = 0;
+                 } // Msg3_flag == 0*/
+      
+              } // mac_enabled==1
 
             eNB->UE_stats[i].mode     = PUSCH;
             eNB->nulsch[i]->Msg3_flag = 0;
 
-	          LOG_D(PHY,"[eNB %d][RAPROC] Frame %d : RX Subframe %d Setting UE %d mode to PUSCH\n",eNB->Mod_id,frame,subframe,i);
+            LOG_D(PHY,"[eNB %d][RAPROC] Frame %d : RX Subframe %d Setting UE %d mode to PUSCH\n",eNB->Mod_id,frame,subframe,i);
 
             /*Init HARQ parameters, need to check*/
             for (k=0; k<8; k++) 
@@ -544,9 +547,9 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
             eNB->UE_stats[i].dlsch_NAK_round0   = 0;
             eNB->UE_stats[i].dlsch_mcs_offset   = 0;
           } // Msg3_flag==1
-	       else 
+         else 
           {  // Msg3_flag == 0
-	          if (eNB->mac_enabled == 1) 
+            if (eNB->mac_enabled == 1) 
               {
                   // store successful Uplink data in UL_Info instead rx_sdu
                   (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag  = 0;
@@ -556,8 +559,8 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
                   (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length    = eNB->nulsch[i]->harq_process->TBS>>3;
                   (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid   = harq_pid;
                   UL_INFO->RX_NPUSCH.number_of_pdus++;
-	    
-	            } // mac_enabled==1
+      
+              } // mac_enabled==1
           } // Msg3_flag == 0
 
             // estimate timing advance for MAC
@@ -616,7 +619,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
       if(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti_type == 1)
         {
 
-    	  //mapping the fapi parameters to the oai parameters
+        //mapping the fapi parameters to the oai parameters
 
           DCI_format = DCIFormatN1_RAR;
 
@@ -626,7 +629,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
           DCI_Content->DCIN1_RAR.Scheddly       = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.scheduling_delay;
           DCI_Content->DCIN1_RAR.ResAssign      = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.resource_assignment;
           DCI_Content->DCIN1_RAR.mcs            = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.mcs;
-          DCI_Content->DCIN1_RAR.RepNum			    = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.repetition_number;
+          DCI_Content->DCIN1_RAR.RepNum         = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.repetition_number;
           DCI_Content->DCIN1_RAR.ndi            = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.new_data_indicator;
           DCI_Content->DCIN1_RAR.HARQackRes     = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
           DCI_Content->DCIN1_RAR.DCIRep         = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
@@ -649,21 +652,21 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
                                                     ndlsch,
                                                     fp,
                                                     dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level,
-												                            dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol);
+                                                    dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol);
 
           //eNB->dlsch_ra_NB->nCCE[subframe] = eNB->DCI_pdu->dci_alloc.firstCCE;
         }
       else
         { //managing data
 
-    	  //TODO target/SIMU/USER?init_lte/init_lte_eNB we should allocate the ndlsch structures
-    	  UE_id = find_ue_NB_IoT(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti, eNB);
-    	  AssertFatal(UE_id != -1, "no ndlsch context available or no ndlsch context corresponding to that rnti\n");
+        //TODO target/SIMU/USER?init_lte/init_lte_eNB we should allocate the ndlsch structures
+        UE_id = find_ue_NB_IoT(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti, eNB);
+        AssertFatal(UE_id != -1, "no ndlsch context available or no ndlsch context corresponding to that rnti\n");
 
 
-    	  	  //mapping the fapi parameters to the oai parameters
+            //mapping the fapi parameters to the oai parameters
 
-    	  	  DCI_format = DCIFormatN1;
+            DCI_format = DCIFormatN1;
 
               //DCI format N1 to DLSCH
               DCI_Content->DCIN1.type           = 1;
@@ -671,7 +674,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
               DCI_Content->DCIN1.Scheddly       = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.scheduling_delay;
               DCI_Content->DCIN1.ResAssign      = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.resource_assignment;
               DCI_Content->DCIN1.mcs            = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.mcs;
-              DCI_Content->DCIN1.RepNum			    = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.repetition_number;
+              DCI_Content->DCIN1.RepNum         = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.repetition_number;
               DCI_Content->DCIN1.ndi            = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.new_data_indicator;
               DCI_Content->DCIN1.HARQackRes     = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
               DCI_Content->DCIN1.DCIRep         = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
@@ -686,18 +689,18 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
               npdcch->repetition_number = 1;
               else
               {
-            	  //see TS 36.213 Table 16.1-1
+                //see TS 36.213 Table 16.1-1
               }
 
 
               //fill the ndlsch structure for UE and packed the DCI PD
 
-        	  ndlsch = eNB->ndlsch[(uint8_t)UE_id]; //in the old implementation they also consider UE_id = 1;
-        	  ndlsch->ndlsch_type = UE_Data;
+            ndlsch = eNB->ndlsch[(uint8_t)UE_id]; //in the old implementation they also consider UE_id = 1;
+            ndlsch->ndlsch_type = UE_Data;
 
               //parameters we don't consider pdsch config dedicated since not calling the phy config dedicated step2
 
-        	  LOG_D(PHY,"Generating dlsch params for DCIN1 data and packing DCI\n");
+            LOG_D(PHY,"Generating dlsch params for DCIN1 data and packing DCI\n");
             generate_eNB_dlsch_params_from_dci_NB_IoT(eNB,
                                                       frame,
                                                       subframe,
@@ -707,7 +710,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
                                                       ndlsch,
                                                       fp,
                                                       dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level,
-													                            dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol); 
+                                                      dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol); 
 
               //eNB->ndlsch[(uint8_t)UE_id]->nCCE[subframe] = eNB->DCI_pdu->dci_alloc[i].firstCCE;
 
@@ -761,7 +764,7 @@ void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
                                             DCIFormatN0,
                                             UE_id,
                                             hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.aggregation_level,
-										                        hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.start_symbol);  
+                                            hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.start_symbol);  
 
   
   //LOG for ULSCH DCI Resource allocation
@@ -783,11 +786,11 @@ void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
  * ** redundancy version exist only in UL for NB-IoT and not in DL
  */
 void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
-						           eNB_rxtx_proc_t   *proc,     //Context data structure for RX/TX portion of subframe processing
-						           NB_IoT_eNB_NDLSCH_t      *ndlsch,
-						           //int num_pdcch_symbols,            //(BCOM says are not needed
-						           uint8_t                  *pdu
-									     )
+                       eNB_rxtx_proc_t   *proc,     //Context data structure for RX/TX portion of subframe processing
+                       NB_IoT_eNB_NDLSCH_t      *ndlsch,
+                       //int num_pdcch_symbols,            //(BCOM says are not needed
+                       uint8_t                  *pdu
+                       )
 {
   int                     frame                   =   proc->frame_tx;
   int                     subframe                =   proc->subframe_tx;
@@ -801,32 +804,32 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
   int                     i;
 
   LOG_D(PHY,
-	      "[eNB %"PRIu8"][PDSCH rnti%"PRIx16"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", mcs %"PRIu8"(round %"PRIu8")\n",
-	      eNB->Mod_id,
-	      ndlsch->rnti,
-	      frame, subframe, input_buffer_length,
-	      ndlsch_harq->mcs,
-	      ndlsch_harq->round
+        "[eNB %"PRIu8"][PDSCH rnti%"PRIx16"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", mcs %"PRIu8"(round %"PRIu8")\n",
+        eNB->Mod_id,
+        ndlsch->rnti,
+        frame, subframe, input_buffer_length,
+        ndlsch_harq->mcs,
+        ndlsch_harq->round
         );
 
   if(ndlsch_harq->round == 0) { //first transmission so we encode... because we generate the sequence
 
     if (eNB->mac_enabled == 1) { // set in lte-softmodem/main line 1646
 
-    	  DLSCH_pdu = pdu;
+        DLSCH_pdu = pdu;
 
-  	  /*
-  	   * we don't need to manage the RAR here since should be managed in the MAC layer for two reasons:
-  	   * 1)we should receive directly the pdu containing the RAR from the MAC in the schedule_response
-  	   * 2)all the parameters for getting the MSG3 should be given by the UL_CONFIG.request (all inside the next schedule_response function)
-  	   *
-  	   */
+      /*
+       * we don't need to manage the RAR here since should be managed in the MAC layer for two reasons:
+       * 1)we should receive directly the pdu containing the RAR from the MAC in the schedule_response
+       * 2)all the parameters for getting the MSG3 should be given by the UL_CONFIG.request (all inside the next schedule_response function)
+       *
+       */
 
-    	  //fill_rar shouduld be in the MAC
-    	  //cancel ra procedure should be in the mac
-    	  //scheduling request not implemented in NB-IoT
-    	  //nulsch_param configuration for MSG3 should be considered in handling UL_Config.request
-    	  //(in particular the nulsch structure for RAR is distinguished based on the harq_process->rar_alloc and the particular subframe in which we should have Msg3)
+        //fill_rar shouduld be in the MAC
+        //cancel ra procedure should be in the mac
+        //scheduling request not implemented in NB-IoT
+        //nulsch_param configuration for MSG3 should be considered in handling UL_Config.request
+        //(in particular the nulsch structure for RAR is distinguished based on the harq_process->rar_alloc and the particular subframe in which we should have Msg3)
     }
 
     else {  //XXX we should change taus function???
@@ -835,11 +838,11 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
 
       for (i=0; i<input_buffer_length; i++)
 
-	       DLSCH_pdu[i] = (unsigned char)(taus()&0xff);
+         DLSCH_pdu[i] = (unsigned char)(taus()&0xff);
     }
   }
   else {
-	  //We are doing a retransmission (harq round > 0
+    //We are doing a retransmission (harq round > 0
     #ifdef DEBUG_PHY_PROC
     #ifdef DEBUG_DLSCH
     LOG_D(PHY,"[eNB] This DLSCH is a retransmission\n");
@@ -850,34 +853,34 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
   if (eNB->abstraction_flag==0) { // used for simulation of the PHY??
 
 
-	  //we can distinguish among the different kind of NDLSCH structure (example)
-	  switch(ndlsch->ndlsch_type)
-	  {
-	  case SIB1:
-		  break;
-	  case SI_Message:
-		  break;
-	  case RAR: //maybe not needed
-		  break;
-	  case UE_Data: //maybe not needed
-		  break;
-	  }
+    //we can distinguish among the different kind of NDLSCH structure (example)
+    switch(ndlsch->ndlsch_type)
+    {
+    case SIB1:
+      break;
+    case SI_Message:
+      break;
+    case RAR: //maybe not needed
+      break;
+    case UE_Data: //maybe not needed
+      break;
+    }
 
 
-	 /*
-	  * in any case inside the encoding procedure is re-checked if this is round 0 or no
-	  * in the case of harq_process round = 0 --> generate the sequence and put it into the parameter *c[r]
-	  * otherwise do nothing(only rate maching)
-	  */
+   /*
+    * in any case inside the encoding procedure is re-checked if this is round 0 or no
+    * in the case of harq_process round = 0 --> generate the sequence and put it into the parameter *c[r]
+    * otherwise do nothing(only rate maching)
+    */
 
 
-	/*
-	 * REASONING:
-	 * Encoding procedure will generate a Table with encoded data ( in ndlsch structure)
-	 * The table will go in input to the scrambling
-	 * --we should take care if there are repetitions of data or not because scrambling should be called at the first frame and subframe in which each repetition
-	 * begin (see params Nf, Ns)
-	 */
+  /*
+   * REASONING:
+   * Encoding procedure will generate a Table with encoded data ( in ndlsch structure)
+   * The table will go in input to the scrambling
+   * --we should take care if there are repetitions of data or not because scrambling should be called at the first frame and subframe in which each repetition
+   * begin (see params Nf, Ns)
+   */
 
 
     // 36-212
@@ -886,10 +889,10 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
     /*
      *
      * REASONING:
-	 * Encoding procedure will generate a Table with encoded data ( in ndlsch structure)
-	 * The table will go in input to the scrambling
-	 * --we should take care if there are repetitions of data or not because scrambling should be called at the first frame and subframe in which each repetition
-	 * 	begin (see params Nf, Ns)
+   * Encoding procedure will generate a Table with encoded data ( in ndlsch structure)
+   * The table will go in input to the scrambling
+   * --we should take care if there are repetitions of data or not because scrambling should be called at the first frame and subframe in which each repetition
+   *  begin (see params Nf, Ns)
      *
      * we should have as an iput parameter also G for the encoding based on the switch/case over eutracontrolRegionSize (if exist) and operationModeInfo if defined
      * NB: switch case of G is the same for npdsch and npdcch
@@ -897,10 +900,10 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
      * npdsch_start symbol index
      * -refers to TS 36.213 ch 16.4.1.4:
      * -if subframe k is a subframe for receiving the SIB1-NB
-     *	-- if operationModeInfo set to 00 or 01 (in band) --> npdsch_start_sysmbol = 3
-     *	-- otherwise --> npdsch_start_symbol = 0
+     *  -- if operationModeInfo set to 00 or 01 (in band) --> npdsch_start_sysmbol = 3
+     *  -- otherwise --> npdsch_start_symbol = 0
      * -if the k subframe is not for SIB1-NB
-     *	--npdsch_start_symbol = eutracontrolregionsize (defined for in-band operating mode (mode 0,1 for FAPI specs) and take values 1,2,3 [units in number of OFDM symbol])
+     *  --npdsch_start_symbol = eutracontrolregionsize (defined for in-band operating mode (mode 0,1 for FAPI specs) and take values 1,2,3 [units in number of OFDM symbol])
      * - otherwise --> npdsch_start_symbol = 0
      * (is the starting OFDM for the NPDSCH transmission in the first slot in a subframe k)
      * FAPI style:
@@ -910,34 +913,34 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
 
     switch(ndlsch->npdsch_start_symbol)
     {
-  	  case 0:
-  		  G = 304;
-	 	  break;
-  	  case 1:
-  		  G = 240;
-  		break;
-  	  case 2:
-  		  G = 224;
-  		break;
-  	  case 3:
-  		  G =200;
-  		break;
-  	  default:
-  		  LOG_E (PHY,"npdsch_start_index has unwanted value\n");
-  		break;
+      case 0:
+        G = 304;
+      break;
+      case 1:
+        G = 240;
+      break;
+      case 2:
+        G = 224;
+      break;
+      case 3:
+        G =200;
+      break;
+      default:
+        LOG_E (PHY,"npdsch_start_index has unwanted value\n");
+      break;
 
     }
     //start_meas_NB_IoT(&eNB->dlsch_encoding_stats);
     LOG_I(PHY, "NB-IoT Encoding step\n");
 
     //    eNB->te(eNB,
-    //	    DLSCH_pdu,
-    //	    num_pdcch_symbols,
-    //	    dlsch,
-    //	    frame,subframe,
-    //	    &eNB->dlsch_rate_matching_stats,
-    //	    &eNB->dlsch_turbo_encoding_stats,
-    //	    &eNB->dlsch_interleaving_stats);
+    //      DLSCH_pdu,
+    //      num_pdcch_symbols,
+    //      dlsch,
+    //      frame,subframe,
+    //      &eNB->dlsch_rate_matching_stats,
+    //      &eNB->dlsch_turbo_encoding_stats,
+    //      &eNB->dlsch_interleaving_stats);
 
 
    // stop_meas_NB_IoT(&eNB->dlsch_encoding_stats);
@@ -955,18 +958,18 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
      */
 
       //    dlsch_scrambling(fp,
-      //		     0,
-      //		     dlsch,
-      //		     get_G(fp,
-      //			   dlsch_harq->nb_rb,
-      //			   dlsch_harq->rb_alloc,
-      //			   get_Qm(dlsch_harq->mcs),
-      //			   dlsch_harq->Nl,
-      //			   num_pdcch_symbols,
-      //			   frame,subframe,
-      //			   0),
-      //		     0,
-      //		     subframe<<1);
+      //         0,
+      //         dlsch,
+      //         get_G(fp,
+      //         dlsch_harq->nb_rb,
+      //         dlsch_harq->rb_alloc,
+      //         get_Qm(dlsch_harq->mcs),
+      //         dlsch_harq->Nl,
+      //         num_pdcch_symbols,
+      //         frame,subframe,
+      //         0),
+      //         0,
+      //         subframe<<1);
 
     //stop_meas_NB_IoT(&eNB->dlsch_scrambling_stats);
 
@@ -976,12 +979,12 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
     LOG_I(PHY, "NB-IoT Modulation step\n");
 
     //    dlsch_modulation(eNB,
-    //		     eNB->common_vars.txdataF[0],
-    //		     AMP,
-    //		     subframe,
-    //		     num_pdcch_symbols,
-    //		     dlsch,
-    //		     dlsch1);
+    //         eNB->common_vars.txdataF[0],
+    //         AMP,
+    //         subframe,
+    //         num_pdcch_symbols,
+    //         dlsch,
+    //         dlsch1);
 
     //stop_meas_NB_IoT(&eNB->dlsch_modulation_stats);
   }
@@ -991,8 +994,8 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
   else {
     //start_meas_NB_IoT(&eNB->dlsch_encoding_stats);
     //dlsch_encoding_emul(eNB,
-			//DLSCH_pdu,
-			//dlsch);
+      //DLSCH_pdu,
+      //dlsch);
    // stop_meas_NB_IoT(&eNB->dlsch_encoding_stats);
   }
 
@@ -1045,8 +1048,8 @@ extern int oai_exit;
  */
 
 void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
-         	 	 	 	 	                eNB_rxtx_proc_t  *proc,
-							                    int                     do_meas)
+                                  eNB_rxtx_proc_t  *proc,
+                                  int                     do_meas)
 {
   int                    frame           = proc->frame_tx;
   int                    subframe        = proc->subframe_tx;
@@ -1079,22 +1082,22 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
      {
           if(eNB->npbch->pdu != NULL)
           {
-        	  //BCOM function
-        	  /*
-        	   * -the function get the MIB pdu and schedule the transmission over the 64 radio frame
-        	   * -need to check the subframe #0 (since encoding functions only check the frame)
-        	   * this functions should be called every frame (the function will transmit the remaining part of MIB)
-        	   * ( XXX Should check when the schedule_responce is transmitted by MAC scheduler)
-        	   * RB-ID only for the case of in-band operation but should be always considered
-        	   * (in stand alone i can put whatever the number)in other case consider the PRB index in the Table R&Shwartz pag 9
-        	   *
-        	   */
+            //BCOM function
+            /*
+             * -the function get the MIB pdu and schedule the transmission over the 64 radio frame
+             * -need to check the subframe #0 (since encoding functions only check the frame)
+             * this functions should be called every frame (the function will transmit the remaining part of MIB)
+             * ( XXX Should check when the schedule_responce is transmitted by MAC scheduler)
+             * RB-ID only for the case of in-band operation but should be always considered
+             * (in stand alone i can put whatever the number)in other case consider the PRB index in the Table R&Shwartz pag 9
+             *
+             */
 
-    		    generate_npbch(eNB->npbch,
+            generate_npbch(eNB->npbch,
                            txdataF,
                            AMP,
                            fp,
-						               eNB->npbch->pdu,
+                           eNB->npbch->pdu,
                            frame%64,
                            fp->NB_IoT_RB_ID);
                         
@@ -1104,7 +1107,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
           //this should be in line with FAPI specs pag 94 (BCH procedure in Downlink 3.2.4.2 for NB-IoT)
           if(frame%64 == 63)
           {
-        	  eNB->npbch->pdu = NULL;
+            eNB->npbch->pdu = NULL;
           }
       }
 
@@ -1127,25 +1130,25 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
     {
       //check if current frame is for SIB1-NB transmission (if yes get the starting frame of SIB1-NB) and set the flag for the encoding
       sib1_startFrame = is_SIB1_NB_IoT(frame,
-    		  	  	  	  	  	           (long)eNB->ndlsch_SIB1->harq_process->repetition_number,
-								                       fp->Nid_cell,
-								                       eNB->ndlsch_SIB1); //set the flags
-								                   
-  	  if(sib1_startFrame != -1 && eNB->ndlsch_SIB1->harq_process->pdu != NULL)
-  	  {
-    	   npdsch_procedures(eNB,
-          				         proc,
-					                 eNB->ndlsch_SIB1, //since we have no DCI for system information, this is filled directly when we receive the NDLSCH pdu from DL_CONFIG.request message
-					                 eNB->ndlsch_SIB1->harq_process->pdu);
-  	  }
+                                       (long)eNB->ndlsch_SIB1->harq_process->repetition_number,
+                                       fp->Nid_cell,
+                                       eNB->ndlsch_SIB1); //set the flags
+                                   
+      if(sib1_startFrame != -1 && eNB->ndlsch_SIB1->harq_process->pdu != NULL)
+      {
+         npdsch_procedures(eNB,
+                           proc,
+                           eNB->ndlsch_SIB1, //since we have no DCI for system information, this is filled directly when we receive the NDLSCH pdu from DL_CONFIG.request message
+                           eNB->ndlsch_SIB1->harq_process->pdu);
+      }
 
-  	  //at the end of the period we put the PDU to NULL since we have to wait for the new one from the MAC for starting the next SIB1-NB transmission
-  	  if((frame-sib1_startFrame)%256 == 255)
-  	  {
-  		    //whenever we will not receive a new sdu from MAC at the start of the next SIB1-NB period we prevent future SIB1-NB transmission (may just only of the two condition is necessary)
-  		    eNB->ndlsch_SIB1->harq_process->status = DISABLED;
-  		    eNB->ndlsch_SIB1->harq_process->pdu = NULL;
-  	  }
+      //at the end of the period we put the PDU to NULL since we have to wait for the new one from the MAC for starting the next SIB1-NB transmission
+      if((frame-sib1_startFrame)%256 == 255)
+      {
+          //whenever we will not receive a new sdu from MAC at the start of the next SIB1-NB period we prevent future SIB1-NB transmission (may just only of the two condition is necessary)
+          eNB->ndlsch_SIB1->harq_process->status = DISABLED;
+          eNB->ndlsch_SIB1->harq_process->pdu = NULL;
+      }
 
     }
 
@@ -1177,68 +1180,68 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
      *
      */
 
-	if(eNB->ndlsch_SI->harq_process->status == ACTIVE_NB_IoT && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE_NB_IoT || subframe != 4)) //condition on SIB1-NB
-	{
-	    if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
-	    {
-	      if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5 && subframe != 9)
-	       {
-    		  //check if the PDU != NULL will be done inside just for understanding if a new SI message need to be transmitted or not
-    		  npdsch_procedures(eNB,
-            					      proc,
-								            eNB->ndlsch_SI, //since we have no DCI for system information, this is filled directly when we receive the DL_CONFIG.request message
-								            eNB->ndlsch_SI->harq_process->pdu);
+  if(eNB->ndlsch_SI->harq_process->status == ACTIVE_NB_IoT && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE_NB_IoT || subframe != 4)) //condition on SIB1-NB
+  {
+      if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
+      {
+        if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5 && subframe != 9)
+         {
+          //check if the PDU != NULL will be done inside just for understanding if a new SI message need to be transmitted or not
+          npdsch_procedures(eNB,
+                            proc,
+                            eNB->ndlsch_SI, //since we have no DCI for system information, this is filled directly when we receive the DL_CONFIG.request message
+                            eNB->ndlsch_SI->harq_process->pdu);
 
-    		  eNB->ndlsch_SI->harq_process->status = DISABLED_NB_IoT;
-	    	}
+          eNB->ndlsch_SI->harq_process->status = DISABLED_NB_IoT;
+        }
 
-	     } else {//this frame not foresee the transmission of NSSS (subframe 9 is available)
-	    
-	    	      if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5)
-	    	      {
-	    		         npdsch_procedures(eNB,
-	            					             proc,
-									                   eNB->ndlsch_SI, //since we have no DCI for system information, this is filled directly when we receive the DL_CONFIG.request message
-									                   eNB->ndlsch_SI->harq_process->pdu);
+       } else {//this frame not foresee the transmission of NSSS (subframe 9 is available)
+      
+              if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5)
+              {
+                   npdsch_procedures(eNB,
+                                     proc,
+                                     eNB->ndlsch_SI, //since we have no DCI for system information, this is filled directly when we receive the DL_CONFIG.request message
+                                     eNB->ndlsch_SI->harq_process->pdu);
 
-	    		         eNB->ndlsch_SI->harq_process->status = DISABLED_NB_IoT;
+                   eNB->ndlsch_SI->harq_process->status = DISABLED_NB_IoT;
 
-	    	      }
-	         }
+              }
+           }
 
-	}
+  }
 
       ///check for RAR transmission
       if(eNB->ndlsch_ra != NULL && eNB->ndlsch_ra->active == 1 && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE_NB_IoT || subframe != 4)) //condition on SIB1-NB
       {
-  	    if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
-  	     {
-  	      if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5 && subframe != 9)
-  	       {
+        if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
+         {
+          if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5 && subframe != 9)
+           {
 
-  	    	  npdsch_procedures(eNB,
-            					        proc,
-								              eNB->ndlsch_ra, //should be filled ?? (in the old implementation was filled when from DCI we generate_dlsch_params
-								              eNB->ndlsch_ra->harq_process->pdu);
+            npdsch_procedures(eNB,
+                              proc,
+                              eNB->ndlsch_ra, //should be filled ?? (in the old implementation was filled when from DCI we generate_dlsch_params
+                              eNB->ndlsch_ra->harq_process->pdu);
 
-  	    	  //it should be activated only when we receive the proper DCIN1_RAR
-  	    	  eNB->ndlsch_ra->active= 0;
-  	       }
-  	     }
-	    else //this frame not foresee the transmission of NSSS (subframe 9 is available)
-	    {
-	    	if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5)
-	    	   {
-	  	    	  npdsch_procedures(eNB,
-	            					        proc,
-									              eNB->ndlsch_ra, //should be filled ?? (in the old implementation was filled when from DCI we generate_dlsch_params
-									              eNB->ndlsch_ra->harq_process->pdu);
+            //it should be activated only when we receive the proper DCIN1_RAR
+            eNB->ndlsch_ra->active= 0;
+           }
+         }
+      else //this frame not foresee the transmission of NSSS (subframe 9 is available)
+      {
+        if(eNB->ndlsch_SI != NULL &&  subframe!= 0 && subframe != 5)
+           {
+              npdsch_procedures(eNB,
+                                proc,
+                                eNB->ndlsch_ra, //should be filled ?? (in the old implementation was filled when from DCI we generate_dlsch_params
+                                eNB->ndlsch_ra->harq_process->pdu);
 
-	  	    	  //it should be activated only when we receive the proper DCIN1_RAR
-	  	    	  eNB->ndlsch_ra->active= 0; // maybe this is already done inside the ndlsch_procedure
+              //it should be activated only when we receive the proper DCIN1_RAR
+              eNB->ndlsch_ra->active= 0; // maybe this is already done inside the ndlsch_procedure
 
-	    	   }
-	    }
+           }
+      }
       }
 
 
@@ -1265,32 +1268,32 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
       //this should give only 1 result (since only 1 ndlsch procedure is activated at once) so we brak after the transmission
       for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX_NB_IoT; UE_id++)
       {
-    	  if(eNB->ndlsch[(uint8_t)UE_id] != NULL && eNB->ndlsch[(uint8_t)UE_id]->active == 1 && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE_NB_IoT || subframe != 4)) //condition on sib1-NB
-    	  {
-    	  	if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
-    	  	  {
-    	  	    if( subframe!= 0 && subframe != 5 && subframe != 9)
-    	  	     {
-    	  	    	npdsch_procedures(eNB,
-                						      proc,
-										              eNB->ndlsch[(uint8_t)UE_id],
-										              eNB->ndlsch[(uint8_t)UE_id]->harq_process->pdu);
-    	  	    	break;
-    	  	       }
-    	  	     }
-    	    else //this frame not foresee the transmission of NSSS (subframe 9 is available)
-    	    {
-    	    	if( subframe!= 0 && subframe != 5)
-    	    	   {
-    	  	    	npdsch_procedures(eNB,
-                						      proc,
-										              eNB->ndlsch[(uint8_t)UE_id],
-										              eNB->ndlsch[(uint8_t)UE_id]->harq_process->pdu);
-    	  	    	break;
+        if(eNB->ndlsch[(uint8_t)UE_id] != NULL && eNB->ndlsch[(uint8_t)UE_id]->active == 1 && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE_NB_IoT || subframe != 4)) //condition on sib1-NB
+        {
+          if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
+            {
+              if( subframe!= 0 && subframe != 5 && subframe != 9)
+               {
+                npdsch_procedures(eNB,
+                                  proc,
+                                  eNB->ndlsch[(uint8_t)UE_id],
+                                  eNB->ndlsch[(uint8_t)UE_id]->harq_process->pdu);
+                break;
+                 }
+               }
+          else //this frame not foresee the transmission of NSSS (subframe 9 is available)
+          {
+            if( subframe!= 0 && subframe != 5)
+               {
+                npdsch_procedures(eNB,
+                                  proc,
+                                  eNB->ndlsch[(uint8_t)UE_id],
+                                  eNB->ndlsch[(uint8_t)UE_id]->harq_process->pdu);
+                break;
 
-    	    	   }
-    	    }
-    	  }
+               }
+          }
+        }
 
 
       }
@@ -1334,46 +1337,46 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
       for(UE_id = 0 ; UE_id < NUMBER_OF_UE_MAX_NB_IoT; UE_id++)
       {
-    	  if(eNB->npdcch[(uint8_t)UE_id] != NULL && eNB->npdcch[(uint8_t)UE_id]->rnti == dci_pdu->dci_alloc->rnti && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE_NB_IoT || subframe != 4))
-    	  {
-      	  	if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
-      	  	  {
-      	  	    if( subframe!= 0 && subframe != 5 && subframe != 9)
-      	  	     {
+        if(eNB->npdcch[(uint8_t)UE_id] != NULL && eNB->npdcch[(uint8_t)UE_id]->rnti == dci_pdu->dci_alloc->rnti && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE_NB_IoT || subframe != 4))
+        {
+            if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
+              {
+                if( subframe!= 0 && subframe != 5 && subframe != 9)
+                 {
 
-      	  	    	generate_dci_top_NB_IoT(eNB->npdcch[(uint8_t)UE_id],
-    		      		  	  	                dci_pdu->Num_dci,
-    		  					                      dci_pdu->dci_alloc,
-    		  					                      AMP,
-    		  					                      fp,
-    		  					                      eNB->common_vars.txdataF[0],
-    		  					                      subframe,
-    		  					                      dci_pdu->npdcch_start_symbol); //this parameter depends by eutraControlRegionSize (see TS36.213 16.6.1)
-      	  	    	                        eNB->npdcch[(uint8_t)UE_id]->repetition_idx++; //can do also inside also the management
+                  generate_dci_top_NB_IoT(eNB->npdcch[(uint8_t)UE_id],
+                                          dci_pdu->Num_dci,
+                                          dci_pdu->dci_alloc,
+                                          AMP,
+                                          fp,
+                                          eNB->common_vars.txdataF[0],
+                                          subframe,
+                                          dci_pdu->npdcch_start_symbol); //this parameter depends by eutraControlRegionSize (see TS36.213 16.6.1)
+                                          eNB->npdcch[(uint8_t)UE_id]->repetition_idx++; //can do also inside also the management
 
-    		  	  	  break;
-      	  	     }
-      	  	  }
-      	  else //this frame not foresee the transmission of NSSS (subframe 9 is available)
-      	     {
-      	     if( subframe!= 0 && subframe != 5)
-      	      {
-   	  	    	  generate_dci_top_NB_IoT(eNB->npdcch[(uint8_t)UE_id],
- 		      		  	  	                  dci_pdu->Num_dci,
- 		  					                        dci_pdu->dci_alloc,
- 		  					                        AMP,
- 		  					                        fp,
- 		  					                        eNB->common_vars.txdataF[0],
- 		  					                        subframe,
- 		  					                        dci_pdu->npdcch_start_symbol); //this parameter depends by eutraControlRegionSize (see TS36.213 16.6.1)
-   	  	    	  
+                  break;
+                 }
+              }
+          else //this frame not foresee the transmission of NSSS (subframe 9 is available)
+             {
+             if( subframe!= 0 && subframe != 5)
+              {
+                generate_dci_top_NB_IoT(eNB->npdcch[(uint8_t)UE_id],
+                                        dci_pdu->Num_dci,
+                                        dci_pdu->dci_alloc,
+                                        AMP,
+                                        fp,
+                                        eNB->common_vars.txdataF[0],
+                                        subframe,
+                                        dci_pdu->npdcch_start_symbol); //this parameter depends by eutraControlRegionSize (see TS36.213 16.6.1)
+                
                 eNB->npdcch[(uint8_t)UE_id]->repetition_idx++; //can do also inside also the management
 
- 		  	  	  break;
-      	      }
+              break;
+              }
 
-      	     }
-      	   }
-    	  }
+             }
+           }
+        }
 
 }
