@@ -92,7 +92,7 @@ double dac_fixed_gain(double *s_re[2],
   int i;
   int aa;
   double amp,amp1,div;
-  __m128d s_re128,s_im128,input_re128, input_im128;
+  __m128d input_re128, input_im128;
 
   amp = //sqrt(NB_RE)*pow(10.0,.05*txpwr_dBm)/sqrt(nb_tx_antennas); //this is amp per tx antenna
     pow(10.0,.05*txpwr_dBm)/sqrt(nb_tx_antennas); //this is amp per tx antenna
@@ -107,8 +107,8 @@ double dac_fixed_gain(double *s_re[2],
   div=amp/amp1;
   for (i=0; i<(length>>1); i++) {
     for (aa=0; aa<nb_tx_antennas; aa++) {
-      input_re128=_mm_set1_pd(((double)(((short *)input[aa]))[((2*i+input_offset)<<1)]));
-      input_im128=_mm_set1_pd(((double)(((short *)input[aa]))[((2*i+input_offset)<<1)+1]));
+      input_re128=_mm_set_pd(((double)(((short *)input[aa]))[(((2*i+1)+input_offset)<<1)]),((double)(((short *)input[aa]))[((2*i+input_offset)<<1)]));
+      input_im128=_mm_set_pd(((double)(((short *)input[aa]))[(((2*i+1)+input_offset)<<1)+1]),((double)(((short *)input[aa]))[((2*i+input_offset)<<1)+1]));
       input_re128=_mm_mul_pd(input_re128,_mm_set1_pd(div));
       input_im128=_mm_mul_pd(input_im128,_mm_set1_pd(div));
       _mm_storeu_pd(&s_re[aa][2*i],input_re128);
@@ -117,8 +117,8 @@ double dac_fixed_gain(double *s_re[2],
       //s_im[aa][i] = amp*((double)(((short *)input[aa]))[((i+input_offset)<<1)+1])/amp1; ///(1<<(B-1));
     }
   }
-      for (i=0;i<1048;i++)
-      	printf(" s_re_out[%d] %e\n",i,s_re[0][i]);
+      /*for (i=0;i<length;i++)
+      	printf(" s_re_out[%d] %e, s_im_out[%d] %e, input_re[%d] %e, input_im[%d] %e\n",i,s_re[0][i],i,s_im[0][i],i,((double)(((short *)input[0]))[((i+input_offset)<<1)]),i,((double)(((short *)input[0]))[((i+input_offset)<<1)+1]));*/
   //  printf("ener %e\n",signal_energy_fp(s_re,s_im,nb_tx_antennas,length,0));
 
   return(signal_energy_fp(s_re,s_im,nb_tx_antennas,length_meas,0)/NB_RE);
@@ -139,7 +139,7 @@ double dac_fixed_gain(double *s_re[2],
 
   int i;
   int aa;
-  double amp,amp1;
+  double amp,amp1,div;
 
   amp = //sqrt(NB_RE)*pow(10.0,.05*txpwr_dBm)/sqrt(nb_tx_antennas); //this is amp per tx antenna
     pow(10.0,.05*txpwr_dBm)/sqrt(nb_tx_antennas); //this is amp per tx antenna
@@ -164,15 +164,17 @@ double dac_fixed_gain(double *s_re[2],
     //printf("DL: amp1 %f dB (%d,%d), tx_power %f\n",20*log10(amp1),input_offset,input_offset_meas,txpwr_dBm);
   */
 
-
+  div=amp/amp1;
   for (i=0; i<length; i++) {
     for (aa=0; aa<nb_tx_antennas; aa++) {
-      s_re[aa][i] = amp*((double)(((short *)input[aa]))[((i+input_offset)<<1)])/amp1; ///(1<<(B-1));
-      s_im[aa][i] = amp*((double)(((short *)input[aa]))[((i+input_offset)<<1)+1])/amp1; ///(1<<(B-1));
+      s_re[aa][i] = div*((double)(((short *)input[aa]))[((i+input_offset)<<1)]); ///(1<<(B-1));
+      s_im[aa][i] = div*((double)(((short *)input[aa]))[((i+input_offset)<<1)+1]); ///(1<<(B-1));
       //if (i<1024)
 	//printf("s_re [%d]%e\n",i,s_re[aa][i]);
     }
   }      	
+      /*for (i=0;i<length;i++)
+      	printf(" s_re_out[%d] %e, s_im_out[%d] %e, input_re[%d] %e, input_im[%d] %e\n",i,s_re[0][i],i,s_im[0][i],i,((double)(((short *)input[0]))[((i+input_offset)<<1)]),i,((double)(((short *)input[0]))[((i+input_offset)<<1)+1]));*/
   //  printf("ener %e\n",signal_energy_fp(s_re,s_im,nb_tx_antennas,length,0));
 
   return(signal_energy_fp(s_re,s_im,nb_tx_antennas,length_meas,0)/NB_RE);
