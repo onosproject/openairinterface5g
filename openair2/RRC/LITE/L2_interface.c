@@ -515,6 +515,7 @@ mac_rrc_data_ind(
 
     //TTN (for D2D)
     if(srb_idP == SL_DISCOVERY) {
+       LOG_I(RRC,"[UE %d] Received SDU (%d bytes) for SL_DISCOVERY on SRB %d from eNB %d\n",module_idP, sdu_lenP, srb_idP,eNB_indexP);
        decode_SL_Discovery_Message(&ctxt, eNB_indexP, sduP, sdu_lenP);
     }
 

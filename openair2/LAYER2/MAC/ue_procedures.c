@@ -797,9 +797,11 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		   NULL);
   } else { //SL_DISCOVERY
 
-     LOG_I( MAC, "SL DISCOVERY \n");
-    //call mac_rrc_data_ind
-     uint16_t len;
+     //call mac_rrc_data_ind
+     uint16_t len = sdu_len;
+     printf("SL DISCOVERY: ");
+     for (int i=0;i<len;i++) printf("%x ",((uint8_t*)sdu)[i]);
+     printf("\n");
      mac_rrc_data_ind(module_idP,
                       CC_id,
                       frameP,subframeP,

@@ -5837,7 +5837,9 @@ int decode_SL_Discovery_Message(
    int prose_addr_len;
    char send_buf[BUFSIZE];
    int n;
+   struct sidelink_ctrl_element *sl_ctrl_msg_recv = NULL;
 
+   LOG_I(RRC,"[decode_SL_Discovery_Message] received %d bytes (sizeof(struct sidelink_ctrl_element) %d)\n",Sdu_len, sizeof(struct sidelink_ctrl_element));
    //from the main program, listen for the incoming messages from control socket (ProSe App)
    prose_addr_len = sizeof(prose_app_addr);
 
@@ -5845,18 +5847,21 @@ int decode_SL_Discovery_Message(
    memcpy((void*)&UE_rrc_inst[ctxt_pP->module_id].SL_Discovery[0].Rx_buffer.Payload[0], (void*)Sdu, Sdu_len);
    UE_rrc_inst[ctxt_pP->module_id].SL_Discovery[0].Rx_buffer.payload_size = Sdu_len;
 
+   sl_ctrl_msg_recv = calloc(1, sizeof(struct sidelink_ctrl_element));
+   memcpy((void *)sl_ctrl_msg_recv, (void *)Sdu, sizeof(struct sidelink_ctrl_element));
+   LOG_I(RRC,"[decode_SL_Discovery_Message] Message type %d\n",  sl_ctrl_msg_recv->type);
+
    memset(send_buf, 0, BUFSIZE);
    //send to ProSeApp
    memcpy((void *)send_buf, (void*)Sdu, Sdu_len);
    prose_addr_len = sizeof(prose_app_addr);
    n = sendto(ctrl_sock_fd, (char *)send_buf, Sdu_len, 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
-//         free(sl_ctrl_msg_send);
+
    if (n < 0){
       LOG_E(RRC, "ERROR: Failed to send to ProSe App\n");
-      exit(EXIT_FAILURE);
+      //exit(EXIT_FAILURE);
    }
-
-
+   free(sl_ctrl_msg_recv);
 
   return(0);
 }
