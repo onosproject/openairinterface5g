@@ -5802,19 +5802,19 @@ void *rrc_control_socket_thread_fct(void *arg)
          break;
 
 
-      case PC5_DISCOVERY_ANNOUNCEMENT:
+      case PC5_DISCOVERY_MESSAGE:
 
  #ifdef DEBUG_CTRL_SOCKET
-           LOG_I(RRC,"[PC5DiscoveryAnnouncement] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
-        //   LOG_I(RRC,"[PC5DiscoveryAnnouncement] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.msg_type);
-        //   LOG_D(RRC,"[PC5DiscoveryAnnouncement] discoveryGroupId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.discoveryGroupId);
-        //   LOG_D(RRC,"[PC5DiscoveryAnnouncement] proSeUEId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_announcement.proSeUEId);
+           LOG_I(RRC,"[PC5DiscoveryMessage] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
+        //   LOG_I(RRC,"[PC5DiscoveryMessage] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_message.msg_type);
+        //   LOG_D(RRC,"[PC5DiscoveryMessage] discoveryGroupId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_message.discoveryGroupId);
+        //   LOG_D(RRC,"[PC5DiscoveryMessage] proSeUEId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_message.proSeUEId);
  #endif
         //prepare SL_Discovery buffer
          if (UE_rrc_inst) {
            memcpy((void*)&UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.Payload[0], (void*)receive_buf, n);
            UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.payload_size = n;
-           LOG_I(RRC,"[PC5DiscoveryAnnouncement] Copied %d bytes\n",n);
+           LOG_I(RRC,"[PC5DiscoveryMessage] Copied %d bytes\n",n);
          }
          break;
       default:

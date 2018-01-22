@@ -87,7 +87,7 @@
 #define GROUP_COMMUNICATION_RELEASE_RSP     8
 #define PC5S_ESTABLISH_REQ                  9
 #define PC5S_ESTABLISH_RSP                  10
-#define PC5_DISCOVERY_ANNOUNCEMENT          11
+#define PC5_DISCOVERY_MESSAGE          11
 
 
 typedef enum {
@@ -132,10 +132,10 @@ struct PC5SEstablishRsp{
    uint8_t status;
 };
 
-//example of PC5_DSICOVERY ANNOUNCEMENT (for testing only)
+//example of PC5_DSICOVERY MESSAGE (for testing only)
 typedef struct  {
    unsigned char bytes[29];
-}  __attribute__((__packed__)) PC5DiscoveryAnnouncement ;
+}  __attribute__((__packed__)) PC5DiscoveryMessage ;
 
 
 struct sidelink_ctrl_element {
@@ -149,7 +149,7 @@ struct sidelink_ctrl_element {
       int slrb_id;
       struct PC5SEstablishReq pc5s_establish_req;
       struct PC5SEstablishRsp pc5s_establish_rsp;
-      PC5DiscoveryAnnouncement pc5_discovery_announcement;
+      PC5DiscoveryMessage pc5_discovery_message;
    } sidelinkPrimitive;
 };
 
