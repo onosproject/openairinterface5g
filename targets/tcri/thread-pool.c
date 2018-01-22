@@ -38,11 +38,13 @@ request_t * createRequest(enum request_t type,int size) {
 }
 
 void freeRequest(request_t* request) {
+    //printf("freeing: %ld, %p\n", request->id, request);
     free(request);
 }
 
+volatile int ii=0;
 int add_request(request_t* request, tpool_t * tp) {
-    AssertFatal(pthread_mutex_lock(&tp->lockRequests)==0,"");
+    mutexlock(tp->lockRequests);
     if (tp->oldestRequests == NULL)
         tp->oldestRequests = request;
     else {
@@ -50,22 +52,22 @@ int add_request(request_t* request, tpool_t * tp) {
         tp->newestRequests->next = request;
     }
     tp->newestRequests = request;
-    AssertFatal(pthread_mutex_lock(&tp->lockReportDone)==0,"");
+    mutexlock(tp->lockReportDone);
     tp->notFinishedJobs++;
-    //printf("added:%d\n", tp->notFinishedJobs);
-    AssertFatal(pthread_mutex_unlock(&tp->lockReportDone)==0,"");
-    AssertFatal(pthread_cond_broadcast(&tp->notifRequest)==0,"");
-    AssertFatal(pthread_mutex_unlock(&tp->lockRequests)==0,"");
+    mutexunlock(tp->lockReportDone);
+    condbroadcast(tp->notifRequest);
+    mutexunlock(tp->lockRequests);
     return 0;
 }
 
 int add_requests(uint64_t request_num, tpool_t * tp) {
     request_t* request;
     int nbToAdd=((uint32_t)lrand48())%20+1;
+    mutexlock(tp->lockRequests);
     for (int i=0; i<nbToAdd; i++) {
         // simulate request
         request=createRequest(DECODE,sizeof(turboDecode_t));
-        union turboReqUnion id= {.s={request_num*100+i,1000,i*10,111,222}};
+        union turboReqUnion id= {.s={request_num,1000,i*10,111,222}};
         request->id= id.p;
         turboDecode_t * rdata=(turboDecode_t *) request->data;
         rdata->function=phy_threegpplte_turbo_decoder8;
@@ -80,16 +82,21 @@ int add_requests(uint64_t request_num, tpool_t * tp) {
         tp->newestRequests = request;
     }
 
+    mutexlock(tp->lockReportDone);
+    tp->notFinishedJobs+=nbToAdd;
+    mutexunlock(tp->lockReportDone);
+    condbroadcast(tp->notifRequest);
+    mutexunlock(tp->lockRequests);
     return nbToAdd;
 }
 
 request_t * get_request(tpool_t * tp, uint16_t threadID ) {
-  int nb=0;
-  request_t* r=tp->oldestRequests;
-  while (r!=NULL) {
-    nb++;
-    r=r->next;
-  }
+    int nb=0;
+    request_t* r=tp->oldestRequests;
+    while (r!=NULL) {
+        nb++;
+        r=r->next;
+    }
     request_t* request=tp->oldestRequests;
     if (request == NULL)
         return NULL;
@@ -114,11 +121,13 @@ request_t * get_request(tpool_t * tp, uint16_t threadID ) {
     int nnb=0;
     r=tp->oldestRequests;
     while (r!=NULL) {
-      nnb++;
-      r=r->next;
+        nnb++;
+        r=r->next;
     }
-    //if ( ! ( nb == nnb && request == NULL))
-    //printf("getr:was=%d,is=%d,gotit=%p\n",nb,nnb,request);
+    /*
+    if ( ! ( nb == nnb && request == NULL))
+      printf("getr:was=%d,is=%d,gotit=%p\n",nb,nnb,request);
+    */
     return request;
 }
 
@@ -141,7 +150,7 @@ request_t * searchRNTI(tpool_t * tp, rnti_t rnti) {
 
 
 void process_request(request_t* request) {
-  //printf("S:%s...",request->type==DECODE?"D":"E");
+    //printf("S:%s...",request->type==DECODE?"D":"E");
     switch(request->type) {
     case DECODE : {
         time_stats_t oaitimes[7];
@@ -182,24 +191,21 @@ void process_request(request_t* request) {
 }
 
 void handle_request(tpool_t * tp, request_t* request) {
-  request->startProcessingTime=rdtsc();
-  process_request(request);
-  request->endProcessingTime=rdtsc();
-  AssertFatal(pthread_mutex_lock(&tp->lockReportDone)==0,"");
-  tp->notFinishedJobs--;
-  //printf("Removed:%d\n",tp->notFinishedJobs);
-  request->next=tp->doneRequests;
-  tp->doneRequests=request;
-  //printf("signaling ...");
-  AssertFatal(pthread_cond_signal(&tp->notifDone)==0,"");
-  //printf("...done\n");
-  AssertFatal(pthread_mutex_unlock(&tp->lockReportDone)==0,"");
-  /*
-    printf("Thread '%ld' handled request '%d' delay in µs:%ld\n",
-    syscall( SYS_gettid ),
-    request->id,
-    (rdtsc() - request->creationTime)/tp->cpuCyclesMicroSec);
-  */
+    request->startProcessingTime=rdtsc();
+    process_request(request);
+    request->endProcessingTime=rdtsc();
+    mutexlock(tp->lockReportDone);
+    tp->notFinishedJobs--;
+    request->next=tp->doneRequests;
+    tp->doneRequests=request;
+    condsignal(tp->notifDone);
+    mutexunlock(tp->lockReportDone);
+    /*
+      printf("Thread '%ld' handled request '%d' delay in µs:%ld\n",
+      syscall( SYS_gettid ),
+      request->id,
+      (rdtsc() - request->creationTime)/tp->cpuCyclesMicroSec);
+    */
 }
 
 void* one_thread(void* data) {
@@ -224,13 +230,16 @@ void* one_thread(void* data) {
 
     // Infinite loop to process requests
     do {
-        AssertFatal(pthread_mutex_lock(&tp->lockRequests)==0,"");
+        mutexlock(tp->lockRequests);
+
         request_t* request = get_request(tp, myThread->id);
         if (request == NULL) {
-            AssertFatal(pthread_cond_wait(&tp->notifRequest,&tp->lockRequests)==0,"");
-	    request = get_request(tp, myThread->id);
-	}
-        AssertFatal(pthread_mutex_unlock(&tp->lockRequests)==0,"");
+            condwait(tp->notifRequest,tp->lockRequests);
+            request = get_request(tp, myThread->id);
+        }
+
+        mutexunlock(tp->lockRequests);
+
         if (request!=NULL) {
             strncpy(request->processedBy,myThread->name, 15);
             request->coreId=myThread->coreID;
@@ -258,10 +267,11 @@ void init_tpool(char * params,tpool_t * pool) {
     sparam.sched_priority = sched_get_priority_max(SCHED_RR)-1;
     pthread_setschedparam(pthread_self(), SCHED_RR, &sparam);
     pool->activated=true;
-    pthread_mutex_init(&pool->lockRequests,NULL);
-    pthread_cond_init (&pool->notifRequest,NULL);
-    pthread_mutex_init(&pool->lockReportDone,NULL);
-    pthread_cond_init (&pool->notifDone,NULL);
+    mutexinit(pool->lockRequests);
+    condinit (pool->notifRequest);
+    pool->notifCount=0;
+    mutexinit(pool->lockReportDone);
+    condinit (pool->notifDone);
     pool->oldestRequests=NULL;
     pool->newestRequests=NULL;
     pool->doneRequests=NULL;
@@ -346,12 +356,11 @@ int main(int argc, char* argv[]) {
     uint64_t i=1;
     // Test the lists
     srand48(time(NULL));
-    AssertFatal(pthread_mutex_lock(&pool.lockRequests)==0,"");
     int nbRequest=add_requests(i, &pool);
     printf("These should be: %d elements in the list\n",nbRequest);
     displayList(pool.oldestRequests, pool.newestRequests);
     // remove in middle
-    request_t *req106=searchRNTI(&pool.oldestRequests, &pool.newestRequests, 106);
+    request_t *req106=searchRNTI(&pool, 106);
     if (req106) {
         union turboReqUnion id= {.p=req106->id};
         printf("Removed: rnti:%u frame:%u-%u codeblock:%u, check it\n",
@@ -363,8 +372,7 @@ int main(int argc, char* argv[]) {
     }  else
         printf("no rnti 106\n");
     displayList(pool.oldestRequests, pool.newestRequests);
-    request_t *reqlast=searchRNTI(&pool.oldestRequests, &pool.newestRequests,
-                                  100+nbRequest-1);
+    request_t *reqlast=searchRNTI(&pool, 100+nbRequest-1);
     if (reqlast) {
         printf("Removed last item, check it\n");
         freeRequest(reqlast);
@@ -373,49 +381,59 @@ int main(int argc, char* argv[]) {
     displayList(pool.oldestRequests, pool.newestRequests);
     printf("Remove all jobs\n");
     while(pool.oldestRequests!=NULL)
-        get_request(&pool);
+        get_request(&pool,0);
     printf("List should be empty now\n");
     displayList(pool.oldestRequests, pool.newestRequests);
-    AssertFatal(pthread_mutex_unlock(&pool.lockRequests)==0,"");
+
+    sleep(1);
+    mutexlock(pool.lockReportDone);
+    pool.notFinishedJobs=0;
+    pool.doneRequests=NULL;
+    mutexunlock(pool.lockReportDone);
 
     while (1) {
         uint64_t now=rdtsc();
         /* run a loop that generates a lot of requests */
-        AssertFatal(pthread_mutex_lock(&pool.lockRequests)==0,"");
-        int nbRequest=add_requests(i, &pool);
-        AssertFatal(pthread_mutex_lock(&pool.lockReportDone)==0,"");
-        pool.notFinishedJobs+=nbRequest;
-        AssertFatal(pthread_mutex_unlock(&pool.lockReportDone)==0,"");
-        AssertFatal(pthread_cond_broadcast(&pool.notifRequest)==0,"");
-        AssertFatal(pthread_mutex_unlock(&pool.lockRequests)==0,"");
+        AssertFatal(pool.notFinishedJobs==0,"");
+        int n=add_requests(i, &pool);
+        printf("Added %d requests\n",n);
+
         /*
             // The main thread also process the queue
-            AssertFatal(pthread_mutex_lock(&pool.lockRequests)==0,"");
+            mutexlock(pool.lockRequests);
             request_t* request= NULL;
-            while ( (request=get_request(&pool)) != NULL ) {
-                AssertFatal(pthread_mutex_unlock(&pool.lockRequests)==0,"");
+            while ( (request=get_request(&pool,0)) != NULL ) {
+                mutexunlock(pool.lockRequests);
                 strcpy(request->processedBy,"MainThread");
                 handle_request(&pool, request);
-                AssertFatal(pthread_mutex_lock(&pool.lockRequests)==0,"");
+                mutexlock(pool.lockRequests);
             }
-            AssertFatal(pthread_mutex_unlock(&pool.lockRequests)==0,"");
+            mutexunlock(pool.lockRequests);
         */
 
         // Wait all other threads finish to process
-        AssertFatal(pthread_mutex_lock(&pool.lockReportDone)==0,"");
+        mutexlock(pool.lockReportDone);
         while ( pool.notFinishedJobs > 0 ) {
-            AssertFatal(pthread_cond_wait(&pool.notifDone,&pool.lockReportDone)==0,"");
+            condwait(pool.notifDone,pool.lockReportDone);
         }
-        AssertFatal(pthread_mutex_unlock(&pool.lockReportDone)==0,"");
+        mutexunlock(pool.lockReportDone);
+
+        int i=0;
+        for (request_t* ptr=pool.doneRequests; ptr!=NULL; ptr=ptr->next)  {
+            i++;
+            //printf("in return: %ld, %p\n", ptr->id, ptr);
+        }
+        AssertFatal(i==n,"%d/%d\n",i,n);
 
         while (pool.doneRequests!=NULL) {
             pool.doneRequests->returnTime=rdtsc();
-            if(write(pool.traceFd,pool.doneRequests,sizeof(request_t))) {};
+            if(write(pool.traceFd,pool.doneRequests,sizeof(request_t)- 2*sizeof(void*))) {};
             request_t* tmp=pool.doneRequests;
             pool.doneRequests=pool.doneRequests->next;
-            free(tmp);
+            freeRequest(tmp);
         }
-        printf("Requests %lu Done %d requests in %ld µsec\n",i, nbRequest, (rdtsc()-now)/pool.cpuCyclesMicroSec);
+
+        printf("Requests %d Done in %ld µsec\n",i, (rdtsc()-now)/pool.cpuCyclesMicroSec);
         i++;
     };
     return 0;

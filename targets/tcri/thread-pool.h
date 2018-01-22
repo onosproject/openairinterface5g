@@ -1,6 +1,7 @@
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
 #include <stdbool.h>
+#include <sys/syscall.h>
 #include <openair2/COMMON/platform_types.h>
 
 enum request_t {
@@ -48,6 +49,7 @@ typedef struct thread_pool {
     int activated;
     pthread_mutex_t lockRequests;
     pthread_cond_t  notifRequest;
+    int notifCount;
     pthread_mutex_t lockReportDone;
     pthread_cond_t  notifDone;
     request_t* oldestRequests;
@@ -61,6 +63,18 @@ typedef struct thread_pool {
     bool restrictRNTI;
     struct one_thread * allthreads;
 } tpool_t;
+
+#define mutexinit(mutex)   AssertFatal(pthread_mutex_init(&mutex,NULL)==0,"");
+#define condinit(signal)   AssertFatal(pthread_cond_init(&signal,NULL)==0,"");
+
+//#define mutexlock(mutex)   printf("L:" #mutex  __FILE__ ":%d, thread %d\n", __LINE__, syscall( SYS_gettid )); AssertFatal(pthread_mutex_lock(&mutex)==0,"");
+//#define mutexunlock(mutex) printf("U:" #mutex  __FILE__ ":%d, thread:%d\n", __LINE__, syscall( SYS_gettid )); AssertFatal(pthread_mutex_unlock(&mutex)==0,"");
+
+#define mutexlock(mutex)   AssertFatal(pthread_mutex_lock(&mutex)==0,"");
+#define mutexunlock(mutex) AssertFatal(pthread_mutex_unlock(&mutex)==0,"");
+#define condwait(condition, mutex) AssertFatal(pthread_cond_wait(&condition, &mutex)==0,"");
+#define condbroadcast(signal) AssertFatal(pthread_cond_broadcast(&signal)==0,"");
+#define condsignal(signal)    AssertFatal(pthread_cond_broadcast(&signal)==0,"");
 
 void init_tpool(char*,tpool_t* );
 request_t * createRequest(enum request_t type,int size);
