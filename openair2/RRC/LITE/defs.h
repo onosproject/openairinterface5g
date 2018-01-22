@@ -87,7 +87,10 @@
 #define GROUP_COMMUNICATION_RELEASE_RSP     8
 #define PC5S_ESTABLISH_REQ                  9
 #define PC5S_ESTABLISH_RSP                  10
-#define PC5_DISCOVERY_MESSAGE          11
+#define PC5_DISCOVERY_MESSAGE          	    11
+
+
+#define PC5_DISCOVERY_PAYLOAD_SIZE	    29
 
 
 typedef enum {
@@ -132,9 +135,10 @@ struct PC5SEstablishRsp{
    uint8_t status;
 };
 
-//example of PC5_DSICOVERY MESSAGE (for testing only)
+//PC5_DISCOVERY MESSAGE
 typedef struct  {
-   unsigned char bytes[29];
+   unsigned char payload[PC5_DISCOVERY_PAYLOAD_SIZE];
+   uint32_t measuredPower;
 }  __attribute__((__packed__)) PC5DiscoveryMessage ;
 
 

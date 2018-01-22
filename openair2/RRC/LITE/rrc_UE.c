@@ -5806,15 +5806,13 @@ void *rrc_control_socket_thread_fct(void *arg)
 
  #ifdef DEBUG_CTRL_SOCKET
            LOG_I(RRC,"[PC5DiscoveryMessage] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
-        //   LOG_I(RRC,"[PC5DiscoveryMessage] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_message.msg_type);
-        //   LOG_D(RRC,"[PC5DiscoveryMessage] discoveryGroupId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_message.discoveryGroupId);
-        //   LOG_D(RRC,"[PC5DiscoveryMessage] proSeUEId: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_message.proSeUEId);
  #endif
         //prepare SL_Discovery buffer
          if (UE_rrc_inst) {
-           memcpy((void*)&UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.Payload[0], (void*)receive_buf, n);
-           UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.payload_size = n;
-           LOG_I(RRC,"[PC5DiscoveryMessage] Copied %d bytes\n",n);
+           memcpy((void*)&UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.Payload[0], (void*)&sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_message.payload[0], PC5_DISCOVERY_PAYLOAD_SIZE);
+           //memcpy((void*)&UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.Payload[0], (void*)receive_buf, n);
+           UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.payload_size = PC5_DISCOVERY_PAYLOAD_SIZE;
+           LOG_I(RRC,"[PC5DiscoveryMessage] Copied %d bytes\n",PC5_DISCOVERY_PAYLOAD_SIZE);
          }
          break;
       default:
@@ -5837,9 +5835,8 @@ int decode_SL_Discovery_Message(
    int prose_addr_len;
    char send_buf[BUFSIZE];
    int n;
-   struct sidelink_ctrl_element *sl_ctrl_msg_recv = NULL;
+   struct sidelink_ctrl_element *sl_ctrl_msg_send = NULL;
 
-   LOG_I(RRC,"[decode_SL_Discovery_Message] received %d bytes (sizeof(struct sidelink_ctrl_element) %d)\n",Sdu_len, sizeof(struct sidelink_ctrl_element));
    //from the main program, listen for the incoming messages from control socket (ProSe App)
    prose_addr_len = sizeof(prose_app_addr);
 
@@ -5847,21 +5844,30 @@ int decode_SL_Discovery_Message(
    memcpy((void*)&UE_rrc_inst[ctxt_pP->module_id].SL_Discovery[0].Rx_buffer.Payload[0], (void*)Sdu, Sdu_len);
    UE_rrc_inst[ctxt_pP->module_id].SL_Discovery[0].Rx_buffer.payload_size = Sdu_len;
 
-   sl_ctrl_msg_recv = calloc(1, sizeof(struct sidelink_ctrl_element));
-   memcpy((void *)sl_ctrl_msg_recv, (void *)Sdu, sizeof(struct sidelink_ctrl_element));
-   LOG_I(RRC,"[decode_SL_Discovery_Message] Message type %d\n",  sl_ctrl_msg_recv->type);
-
    memset(send_buf, 0, BUFSIZE);
    //send to ProSeApp
    memcpy((void *)send_buf, (void*)Sdu, Sdu_len);
    prose_addr_len = sizeof(prose_app_addr);
-   n = sendto(ctrl_sock_fd, (char *)send_buf, Sdu_len, 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
 
+   sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
+   sl_ctrl_msg_send->type = PC5_DISCOVERY_MESSAGE;
+   int num_bytes = 29;
+   // TODO:  Add a check for the SDU size.
+   memcpy((void*)&sl_ctrl_msg_send->sidelinkPrimitive.pc5_discovery_message.payload[0], (void*) Sdu,  num_bytes);
+
+   memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
+   free(sl_ctrl_msg_send);
+
+   prose_addr_len = sizeof(prose_app_addr);
+
+   n = sendto(ctrl_sock_fd, (char *)send_buf, sizeof(struct sidelink_ctrl_element), 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
    if (n < 0){
-      LOG_E(RRC, "ERROR: Failed to send to ProSe App\n");
+      // TODO:  We should not just exit if the Prose App has not yet attached.  It creates a race condition.
+      LOG_I(RRC, "ERROR: Failed to send to ProSe App\n");
       //exit(EXIT_FAILURE);
    }
-   free(sl_ctrl_msg_recv);
+
+
 
   return(0);
 }
