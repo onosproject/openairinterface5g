@@ -189,6 +189,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   uint32_t G;
   uint32_t ret,offset;
   uint16_t iind;
+  int32_t no_iteration_ldpc;
   //  uint8_t dummy_channel_output[(3*8*block_length)+12];
   short dummy_w[MAX_NUM_DLSCH_SEGMENTS][3*(6144+64)];
   uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0;
@@ -542,7 +543,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 #endif
       LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
 
-      printf("harq process dr iteration %d\n", p_decParams->numMaxIter);
+      //printf("harq process dr iteration %d\n", p_decParams->numMaxIter);
       //66*p_decParams->Z
 
       //if (A < 1000){
@@ -551,11 +552,11 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
             }
       //}
 
-      for (int cnt =0; cnt < 8; cnt++){
+      /*for (int cnt =0; cnt < 8; cnt++){
       printf("dr %d inv_d %d \n", harq_process->d[r][96+cnt], inv_d[cnt]);
       }
 
-      printf(" \n");
+      printf(" \n");*/
 
       /*printf("end dr \n");
       for (int cnt =(50*p_decParams->Z-16) ; cnt < 50*p_decParams->Z; cnt++){
@@ -609,17 +610,22 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       	      		//print128_num2bytes(pl[j]);
       	      	}
 
-		nrLDPC_decoder(p_decParams,
+		no_iteration_ldpc = nrLDPC_decoder(p_decParams,
       			&pl[0],
 				llrProcBuf,
           		p_procTime);
+
+		if (no_iteration_ldpc > 2)
+			printf("Error number of iteration LPDC %d\n", no_iteration_ldpc);
+		else
+			printf("OK number of iteration LPDC %d\n", no_iteration_ldpc);
 
 		for (int m=0; m < Kr>>3; m ++)
 		      	      	{
 		      				harq_process->c[r][m]= (uint8_t) llrProcBuf[m];
 		      	      	}
 
-		      	for (int u=0; u < Kr>>3; u ++)
+		      	/*for (int u=0; u < Kr>>3; u ++)
 		      	      	      	{
 		      						ullrProcBuf[u]= (uint8_t) llrProcBuf[u];
 		      	      	      	}
@@ -633,10 +639,10 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 		      	      						printf(" %d \n", ullrProcBuf[j]);
 
 		      	      	      	      	}
-		     	printf(" \n");
+		     	printf(" \n");*/
 #endif
 
-		 printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+		 //printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
 
 
 #if UE_TIMING_TRACE

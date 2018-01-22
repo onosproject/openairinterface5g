@@ -95,6 +95,8 @@ get_distribution_release() {
 check_supported_distribution() {
     local distribution=$(get_distribution_release)
     case "$distribution" in
+        "ubuntu17.10") return 0 ;;
+        "ubuntu17.04") return 0 ;;
         "ubuntu16.04") return 0 ;;
         "ubuntu14.04") return 0 ;;
         "fedora24")    return 0 ;;
@@ -202,14 +204,10 @@ install_protobuf_from_source(){
     (
     cd /tmp
     echo "Downloading protobuf"
-    #rm -rf /tmp/protobuf-2.6.1.tar.gz* /tmp/protobuf-2.6.1
-    #wget https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz
-    #tar -xzvf protobuf-2.6.1.tar.gz --owner $USER --group $USER --no-same-owner
-    #cd protobuf-2.6.1/
-    rm -rf /tmp/protobuf-cpp-3.3.0.tar.gz* /tmp/protobuf-3.3.0
-    wget https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cpp-3.3.0.tar.gz
-    tar -xzvf protobuf-cpp-3.3.0.tar.gz --owner $USER --group $USER --no-same-owner
-    cd protobuf-3.3.0/
+    rm -rf /tmp/protobuf-2.6.1.tar.gz* /tmp/protobuf-2.6.1
+    wget https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz
+    tar -xzvf protobuf-2.6.1.tar.gz --owner $USER --group $USER --no-same-owner 
+    cd protobuf-2.6.1/
     ./configure
     echo "Compiling protobuf"
     make -j`nproc`
@@ -230,6 +228,7 @@ install_protobuf_c_from_source(){
     rm -rf /tmp/protobuf-c
     git clone https://github.com/protobuf-c/protobuf-c.git
     cd protobuf-c
+    git checkout 2a46af42784abf86804d536f6e0122d47cfeea45
     ./autogen.sh
     ./configure
     echo "Compiling protobuf-c"
@@ -509,16 +508,26 @@ check_install_oai_software() {
     fi
     $SUDO $INSTALLER update -y
   if [[ "$OS_DISTRO" == "ubuntu" ]]; then
+    local LAPACK_LIBNAME="liblapack.so"
+    local LAPACK_TARGET="/usr/lib/atlas-base/atlas/liblapack.so"
     $SUDO apt install -y software-properties-common
     case "$(get_distribution_release)" in
         "ubuntu14.04")
-            specific_packages="libtasn1-3-dev"
+            specific_packages="libtasn1-3-dev gccxml libgnutls-dev libatlas-dev"
             # For iperf3
             $SUDO add-apt-repository "deb http://archive.ubuntu.com/ubuntu trusty-backports universe"
             $SUDO apt-get update
             ;;
         "ubuntu16.04")
-            specific_packages="libtasn1-6-dev"
+            specific_packages="libtasn1-6-dev gccxml libgnutls-dev libatlas-dev"
+            ;;
+        "ubuntu17.04")
+            specific_packages="libtasn1-6-dev castxml libgnutls28-dev libatlas-dev"
+            ;;
+        "ubuntu17.10")
+            specific_packages="libtasn1-6-dev castxml libgnutls28-dev"
+            LAPACK_LIBNAME="liblapack.so-x86_64-linux-gnu"
+            LAPACK_TARGET="/usr/lib/x86_64-linux-gnu/atlas/liblapack.so"
             ;;
     esac
     $SUDO apt-get install -y \
@@ -534,7 +543,6 @@ check_install_oai_software() {
 	texlive-latex-base \
 	ethtool \
 	flex  \
-	gccxml \
 	gdb  \
 	git \
 	graphviz \
@@ -545,7 +553,6 @@ check_install_oai_software() {
 	iptables \
 	iptables-dev \
 	libatlas-base-dev \
-	libatlas-dev \
 	libblas-dev \
 	libconfig8-dev \
 	libffi-dev \
@@ -583,15 +590,15 @@ check_install_oai_software() {
 	wget \
 	libxpm-dev
 
-    $SUDO update-alternatives --set liblapack.so /usr/lib/atlas-base/atlas/liblapack.so
-    
     #Remove old gnutls/nettle installation that was done from sources
-    remove_nettle_from_source
+#    remove_nettle_from_source
     
-    $SUDO apt-get install -y nettle-dev nettle-bin
-    remove_gnutls_from_source
+    $SUDO update-alternatives --set "$LAPACK_LIBNAME" "$LAPACK_TARGET"
 
-    $SUDO apt-get install -y libgnutls-dev
+#    remove_gnutls_from_source
+
+    $SUDO apt-get install -y nettle-dev nettle-bin
+
   elif [[ "$OS_BASEDISTRO" == "fedora" ]]; then
     if [[ "$OS_DISTRO" == "rhel" ]] || [[ "$OS_DISTRO" == "centos" ]]; then
       if rpm -q epel-release > /dev/null; then
@@ -675,6 +682,8 @@ check_install_oai_software() {
     install_asn1c_from_source
     $SUDO rm -fr /opt/ssh
     $SUDO git clone https://gist.github.com/2190472.git /opt/ssh
+    install_protobuf_from_source
+    install_protobuf_c_from_source
 }
 
 ### Remove Nettle installation which was done from sources (only done for Ubuntu Distro)
