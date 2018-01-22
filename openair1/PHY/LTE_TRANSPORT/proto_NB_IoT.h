@@ -33,6 +33,7 @@
 #define __LTE_TRANSPORT_PROTO_NB_IOT__H__
 #include "PHY/defs_NB_IoT.h"
 #include "PHY/impl_defs_lte.h"
+#include "PHY/defs.h"
 //#include <math.h>
 
 //NPSS
@@ -65,7 +66,7 @@ int nsss_extract_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 
 //NRS
 
-void generate_pilots_NB_IoT(PHY_VARS_eNB_NB_IoT  *phy_vars_eNB,
+void generate_pilots_NB_IoT(PHY_VARS_eNB  *phy_vars_eNB,
                             int32_t              **txdataF,
                             int16_t              amp,
                             uint16_t             Ntti,                // Ntti = 10

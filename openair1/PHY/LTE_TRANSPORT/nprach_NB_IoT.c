@@ -359,7 +359,7 @@ void RX_NPRACH_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, int16_t *Rx_buffer){
 	uint32_t estimated_TA_coarse=0;  
 	int16_t *Rx_sub_sampled_buffer_128,*Rx_sub_sampled_buffer_16; 
 	uint16_t sub_sampling_rate; //NB-IoT: to be defined somewhere
-	uint32_t FRAME_LENGTH_COMPLEX_SAMPLES=0; // NB-IoT: length of input buffer, to be defined somewhere 
+	uint32_t FRAME_LENGTH_COMPLEX_SAMPLESx=0; // NB-IoT: length of input buffer, to be defined somewhere 
 	uint32_t FRAME_LENGTH_COMPLEX_SUB_SAMPLES; // Length of buffer after sub-sampling
 	uint32_t *length_ouput; // Length of buffer after sub-sampling 
 	char coarse=1; // flag that indicate the level of TA estimation
@@ -370,7 +370,7 @@ void RX_NPRACH_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, int16_t *Rx_buffer){
 
 	sub_sampling_rate = 128; 
 	length_ouput = &FRAME_LENGTH_COMPLEX_SUB_SAMPLES; 
-	Rx_sub_sampled_buffer_128 = sub_sampling_NB_IoT(Rx_buffer,FRAME_LENGTH_COMPLEX_SAMPLES,length_ouput, sub_sampling_rate); 
+	Rx_sub_sampled_buffer_128 = sub_sampling_NB_IoT(Rx_buffer,FRAME_LENGTH_COMPLEX_SAMPLESx,length_ouput, sub_sampling_rate); 
 
 	// Detection and TA estimation stage  /============================================================/ 
 
@@ -387,7 +387,7 @@ void RX_NPRACH_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, int16_t *Rx_buffer){
 	
 		// Sub-sampling stage /============================================================/
 		sub_sampling_rate = 16; 
-		Rx_sub_sampled_buffer_16 = sub_sampling_NB_IoT(Rx_buffer,FRAME_LENGTH_COMPLEX_SAMPLES,length_ouput, sub_sampling_rate); 
+		Rx_sub_sampled_buffer_16 = sub_sampling_NB_IoT(Rx_buffer,FRAME_LENGTH_COMPLEX_SAMPLESx,length_ouput, sub_sampling_rate); 
 
 
 		// Fine TA estimation stage  /============================================================/ 

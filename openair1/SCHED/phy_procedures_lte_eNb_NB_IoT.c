@@ -220,7 +220,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   int                     **txdataF =  eNB->common_vars.txdataF[0];
   int                     subframe  =  proc->subframe_tx;
   int                     frame     =  proc->frame_tx;
-  uint16_t                Ntti      =  10;                      //ntti = 10
+  //uint16_t                Ntti      =  10;                      //ntti = 10
   int                     RB_IoT_ID=2 ;                          // XXX should be initialized (RB reserved for NB-IoT, PRB index)
   int                     With_NSSS=0;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
   
@@ -260,17 +260,14 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                           RB_IoT_ID);
     }
 
-  /*else
-  {
     
     generate_pilots_NB_IoT(eNB,
                            txdataF,
                            AMP,
-                           Ntti,
+                           subframe,
                            RB_IoT_ID,
-                           With_NSSS); 
-  }
-  */
+                           With_NSSS);
+  
 }
 
 void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc,UL_IND_t *UL_INFO)
