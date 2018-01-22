@@ -1025,7 +1025,7 @@ static void* ru_thread_prach_br( void* param ) {
   ru_thread_prach_status = 0;
 
   thread_top_init("ru_thread_prach_br",1,500000,1000000,20000000);
-  wait_sync(ru_thread_prach_br);
+  wait_sync("ru_thread_prach_br");
 
   while (!oai_exit) {
     
@@ -1483,8 +1483,8 @@ static void* ru_thread( void* param ) {
   // set default return value
   thread_top_init("ru_thread",1,400000,500000,500000);
 
-  CPU_SET(1, &cpuset);
-  pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  //CPU_SET(1, &cpuset);
+  //pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
   pthread_setname_np( pthread_self(),"ru thread");
   LOG_I(PHY,"thread ru created id=%ld\n", syscall(__NR_gettid));
 
