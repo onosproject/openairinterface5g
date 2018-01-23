@@ -573,5 +573,6 @@ void phy_viterbi_dot11(int8_t *,uint8_t *,uint16_t);
 
 short *ldpc_decoder(short *msgChannel,short block_length,short No_iteration,double rate);
 int ldpc_encoder(unsigned char *test_input,unsigned char* channel_input,short block_length,double rate);
+int ldpc_encoder_orig(unsigned char *test_input,unsigned char* channel_input,short block_length,double rate,unsigned char gen_code);
 
 #endif

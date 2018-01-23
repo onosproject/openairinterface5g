@@ -26,6 +26,8 @@
 
 #include "SIMULATION/TOOLS/defs.h"
 
+
+
 // 4-bit quantizer
 char quantize4bit(double D,double x)
 {
@@ -81,7 +83,7 @@ int test_ldpc(short No_iteration,
   double *modulated_input;
   short *channel_output_fixed;
   unsigned int i,trial=0;
-  short BG,Zc,Kb,nrows,ncols,channel_temp;
+  short BG,Zc,Kb,nrows,ncols;
   int no_punctured_columns,removed_bit;
   int i1;
   //Table of possible lifting sizes
@@ -89,14 +91,13 @@ int test_ldpc(short No_iteration,
   *errors=0;
   *crc_misses=0;
   // generate input block
-  test_input=(unsigned char *)malloc(sizeof(unsigned char) * block_length/8);
+  test_input=(unsigned char *)malloc(sizeof(unsigned char) * block_length/8); 
   channel_input = (unsigned char *)malloc(sizeof(unsigned char) * 68*384);
   modulated_input = (double *)malloc(sizeof(double) * 68*384);
   channel_output  = (double *)malloc(sizeof(double) * 68*384);
+
   reset_meas(&time);
 
-  while (trial++ < ntrials)
-  {
     for (i=0; i<block_length/8; i++)
     {
       //test_input[i]=(unsigned char) rand();
@@ -104,32 +105,31 @@ int test_ldpc(short No_iteration,
     }
 
     //determine number of bits in codeword
-    //if (block_length>3840)
-    //{
-    BG=1;
-    Kb = 22;
-    nrows=46; //parity check bits
-    ncols=22; //info bits
+    if (block_length>3840)
+    {
+      BG=1;
+      Kb = 22;
+      nrows=46; //parity check bits
+      ncols=22; //info bits
+    }
+    else if (block_length<=3840)
+    {
+      BG=2;
+      nrows=42; //parity check bits
+      ncols=10; // info bits
 
-    // }
-    /*
-        else if (block_length<=3840)
-        {
-          BG=2;
-          nrows=42; //parity check bits
-          ncols=10; // info bits
+      if (block_length>640)
+        Kb = 10;
+      else if (block_length>560)
+        Kb = 9;
+      else if (block_length>192)
+        Kb = 8;
+      else
+        Kb = 6;
+    }
 
-          if (block_length>640)
-            Kb = 10;
-          else if (block_length>560)
-            Kb = 9;
-          else if (block_length>192)
-            Kb = 8;
-          else
-            Kb = 6;
-        }
-    */
     //find minimum value in all sets of lifting size
+    Zc=0;
     for (i1=0; i1 < 51; i1++)
     {
       if (lift_size[i1] >= (double) block_length/Kb)
@@ -140,21 +140,30 @@ int test_ldpc(short No_iteration,
       }
     }
 
+    printf("BG %d, Zc %d, Kb %d\n",BG, Zc, Kb);
+
     no_punctured_columns=(int)((nrows-2)*Zc+block_length-block_length/rate)/Zc;
     //printf("%d\n",no_punctured_columns);
-    start_meas(&time);
+
+  for (trial=0; trial < ntrials; trial++)
+  {
     //// encoder
-    ldpc_encoder(test_input, channel_input,block_length,rate);
-    stop_meas(&time);
-    print_meas_now(&time, "", stdout);
+    if (ntrials==1)
+      ldpc_encoder_orig(test_input, channel_input,block_length,rate,1);
+    else {
+      start_meas(&time);
+      if (BG==1)
+	ldpc_encoder(test_input, channel_input,block_length,rate);
+      else 
+	ldpc_encoder_orig(test_input, channel_input,block_length,rate,0);
+      stop_meas(&time);
+    }
+    //print_meas_now(&time, "", stdout);
 
-    for (i=0; i<10; i++)
-      printf("channel_input[%d]=%d\n",i,channel_input[i]);
 
-    ldpc_encoder_orig(test_input, channel_input,block_length,rate);
-
-    for (i=0; i<10; i++)
-      printf("channel_input[%d]=%d\n",i,channel_input[i]);
+    //  for (i=0;i<8448;i++)
+    //printf("channel_input[%d]=%d\n",i,channel_input[i]);  
+    //printf("%d ",channel_input[i]);  
 
     if ((BG==2) && (Zc==128||Zc==256))
     {
@@ -210,24 +219,27 @@ int test_ldpc(short No_iteration,
       free(channel_output_fixed);
     }
     else
-      printf("decoder is not supported\n");
+      if (trial==0)
+	printf("decoder is not supported\n");
   }
 
-  print_meas(&time, "ldpc encoder", NULL, NULL);
+  print_meas(&time,"ldpc_encoder",NULL,NULL);
+
   return *errors;
 }
 
 int main(int argc, char *argv[])
 {
+
   unsigned int errors,crc_misses;
-  short block_length=22*128; // decoder supports length: 1201 -> 1280, 2401 -> 2560
+  short block_length=22*384; // decoder supports length: 1201 -> 1280, 2401 -> 2560
   short No_iteration=25;
   double rate=0.333;
   double SNR,SNR_lin;
   unsigned char qbits=4;
   unsigned int decoded_errors[100]; // initiate the size of matrix equivalent to size of SNR
   int c,i=0;
-  int ntrials = 100;
+  int n_trials = 100;
   randominit(0);
 
   while ((c = getopt (argc, argv, "q:r:l:n:")) != -1)
@@ -245,9 +257,9 @@ int main(int argc, char *argv[])
         block_length = atoi(optarg);
         break;
 
-      case 'n':
-        ntrials = atoi(optarg);
-        break;
+    case 'n':
+      n_trials = atoi(optarg);
+      break;
 
       default:
         abort ();
@@ -266,14 +278,15 @@ int main(int argc, char *argv[])
                                 SNR_lin,   // noise standard deviation
                                 qbits,
                                 block_length,   // block length bytes
-                                ntrials,
+                                n_trials,
                                 &errors,
                                 &crc_misses);
-    printf("SNR %f, BLER %f (%d/%d)\n",SNR,(float)decoded_errors[i]/(float)ntrials,decoded_errors[i],ntrials);
+    printf("SNR %f, BLER %f (%d/%d)\n",SNR,(float)decoded_errors[i]/(float)n_trials,decoded_errors[i],n_trials);
     i=i+1;
   }
 
   return(0);
 }
+
 
 
