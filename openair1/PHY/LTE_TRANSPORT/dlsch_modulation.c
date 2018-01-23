@@ -2178,8 +2178,6 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
   int16_t qpsk_table_a1[2],qam16_table_a1[4],qam64_table_a1[8],qpsk_table_b1[2],qam16_table_b1[4],qam64_table_b1[8];
 
   int16_t *qam_table_s0=NULL,*qam_table_s1=NULL;
-#ifdef NEW_ALLOC_RE
-  /* TODO: variable to be removed? */
   int (*allocate_REs)(PHY_VARS_eNB*,
                       int **,
                       uint32_t*,
@@ -2201,7 +2199,6 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
                       uint8_t,
                       int *,
                       int *);
-#endif
 
   int P1_SHIFT[13],P2_SHIFT[13];
   int offset,nushiftmod3;
@@ -2435,10 +2432,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
     re_offset = frame_parms->first_carrier_offset;
     symbol_offset = (uint32_t)frame_parms->ofdm_symbol_size*(l+(subframe_offset*nsymb));
 
-#ifdef NEW_ALLOC_RE
-    /* TODO: remove this code? */
     allocate_REs = allocate_REs_in_RB;
-#endif
 
     switch (mod_order0) {
     case 2:
