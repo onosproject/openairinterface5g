@@ -720,7 +720,7 @@ extern "C" {
             uhd::device_addrs_t device_adds = uhd::device::find(args);
 
             if(device_adds.size() == 0) {
-		args += ",addr=192.168.30.2";
+		args += ",addr=192.168.30.2,second_addr=192.168.40.2";
 
             	uhd::device_addrs_t device_adds = uhd::device::find(args);
 
