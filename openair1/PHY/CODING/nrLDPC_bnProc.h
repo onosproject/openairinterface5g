@@ -2737,11 +2737,9 @@ static inline void nrLDPC_llr2bitPacked(int8_t* out, int8_t* llrOut, uint16_t nu
     uint32_t M  = numLLR>>5;
     uint32_t Mr = numLLR&31;
 
-    const __m256i* p_zeros = (__m256i*) zeros256_epi8;
-
     for (i=0; i<M; i++)
     {
-        *p_bits++ = _mm256_movemask_epi8(_mm256_cmpgt_epi8(*p_zeros, *p_llrOut));
+        *p_bits++ = _mm256_movemask_epi8(*p_llrOut);
         p_llrOut++;
     }
 
@@ -2764,114 +2762,5 @@ static inline void nrLDPC_llr2bitPacked(int8_t* out, int8_t* llrOut, uint16_t nu
     }
     *p_bits = bitsTmp;
 }
-
-/*
-static inline void nrLDPC_bnProcPc_test(t_nrLDPC_lut* p_lut, int8_t* llrIn, int8_t* llrOut, uint16_t numLLR, uint16_t Z, uint8_t BG)
-{
-    // Sum all edges and store in llrRes
-
-    const uint32_t* lut_llr2CnProcBuf = p_lut->llr2CnProcBuf;
-    const uint8_t* lut_numEdgesPerBn = p_lut->numEdgesPerBn;
-    uint32_t idxLut = 0;
-    uint32_t idxCnProcBuf = 0;
-    uint8_t numEdges;
-    uint32_t i;
-    uint32_t j;
-    uint32_t k;
-    uint8_t startColParity = NR_LDPC_START_COL_PARITY_BG1;
-    uint32_t colG1;
-    uint16_t bnSum[16] __attribute__ ((aligned(32))) = {0};
-    uint16_t llrTmp[16] __attribute__ ((aligned(32))) = {0};
-    __m256i* p_bnSum256 = (__m256i*) &bnSum[0];
-    __m256i* p_llrOut256 = (__m256i*) &llrTmp[0];
-
-    if (BG == 2)
-    {
-        startColParity = NR_LDPC_START_COL_PARITY_BG2;
-    }
-    colG1 = startColParity*Z;
-
-    // BNs connected to more than 1 CN
-    for (k=0; k<startColParity; k++)
-    {
-        numEdges = lut_numEdgesPerBn[k];
-
-        for (i=0; i<Z; i++)
-        {
-            bnSum[0] = 0;
-
-            // Sum all edges
-            for (j=0; j<numEdges; j++)
-            {
-                idxCnProcBuf = lut_llr2CnProcBuf[idxLut++];
-
-                bnSum[0] += cnProcBufRes[idxCnProcBuf];
-            }
-
-            // Add LLR from receiver input
-            bnSum[0] += llrIn[k*Z + i];
-            // Signed saturation
-            *p_llrOut256 = _mm256_packs_epi16(*p_bnSum256, *p_llrOut256);
-            llrOut[k*Z + i] = llrTmp[0];
-        }
-    }
-
-    // BNs connected to 1 CN
-    for (i=colG1; i<numLLR; i++)
-    {
-        idxCnProcBuf = lut_llr2CnProcBuf[idxLut++];
-        bnSum[0] = cnProcBufRes[idxCnProcBuf];
-
-        cnProcBuf[idxCnProcBuf] = llrIn[i];
-
-        // Add LLR from receiver input
-        bnSum[0] += llrIn[i];
-        // Signed saturation
-        *p_llrOut256 = _mm256_packs_epi16(*p_bnSum256, *p_llrOut256);
-        llrOut[i] = llrTmp[0];
-    }
-}
-*/
-/*
-static inline void nrLDPC_bnProc_test(t_nrLDPC_lut* p_lut, int8_t* llrOut, uint16_t numLLR, uint16_t Z, uint8_t BG)
-{
-    // Sum all edges and store in llrRes
-
-    const uint32_t* lut_llr2CnProcBuf = p_lut->llr2CnProcBuf;
-    const uint8_t* lut_numEdgesPerBn = p_lut->numEdgesPerBn;
-    uint32_t idxLut = 0;
-    uint32_t idxCnProcBuf = 0;
-    uint8_t numEdges;
-    uint32_t i;
-    uint32_t j;
-    uint32_t k;
-    uint8_t startColParity = NR_LDPC_START_COL_PARITY_BG1;
-    uint32_t colG1;
-
-    if (BG == 2)
-    {
-        startColParity = NR_LDPC_START_COL_PARITY_BG2;
-    }
-    colG1 = startColParity*Z;
-
-    // BNs connected to more than 1 CN
-    for (k=0; k<startColParity; k++)
-    {
-        numEdges = lut_numEdgesPerBn[k];
-
-        for (i=0; i<Z; i++)
-        {
-
-            for (j=0; j<numEdges; j++)
-            {
-                idxCnProcBuf = lut_llr2CnProcBuf[idxLut++];
-
-                cnProcBuf[idxCnProcBuf] = llrOut[k*Z + i] - cnProcBufRes[idxCnProcBuf];
-            }
-        }
-    }
-
-}
-*/
 
 #endif

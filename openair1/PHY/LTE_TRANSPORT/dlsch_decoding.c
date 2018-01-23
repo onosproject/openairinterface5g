@@ -189,6 +189,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   uint32_t G;
   uint32_t ret,offset;
   uint16_t iind;
+  int32_t no_iteration_ldpc;
   //  uint8_t dummy_channel_output[(3*8*block_length)+12];
   short dummy_w[MAX_NUM_DLSCH_SEGMENTS][3*(6144+64)];
   uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0;
@@ -197,9 +198,11 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   t_nrLDPC_dec_params* p_decParams = &decParams;
   t_nrLDPC_time_stats procTime;
   t_nrLDPC_time_stats* p_procTime =&procTime ;
-  int16_t z [68*128];
-  int8_t l [68*128];
+  int16_t z [68*384];
+  int8_t l [68*384];
   //__m128i l;
+  int16_t inv_d [68*384];
+  int16_t *p_invd =&inv_d;
 
   uint32_t i,j;
   uint32_t k;
@@ -323,6 +326,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   if (harq_process->round == 0) {
     // This is a new packet, so compute quantities regarding segmentation
     harq_process->B = A+24;
+#ifdef TD_DECODING
     lte_segmentation(NULL,
                      NULL,
                      harq_process->B,
@@ -333,8 +337,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                      &harq_process->Kminus,
                      &harq_process->F);
     //  CLEAR LLR's HERE for first packet in process
-
-    /*nr_segmentation(NULL,
+#else
+    nr_segmentation(NULL,
     	                    NULL,
     	                    harq_process->B,
     	                    &harq_process->C,
@@ -342,14 +346,17 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
     	                    &harq_process->Kminus,
     						&harq_process->Z,
     	                    &harq_process->F);
-    	p_decParams->Z = harq_process->Z;*/
+    	p_decParams->Z = harq_process->Z;
+    	printf("dlsch decoding nr segmentation Z %d\n", p_decParams->Z);
+    	printf("Kplus %d C %d nl %d \n", harq_process->Kplus, harq_process->C, harq_process->Nl);
+#endif
 
   }
 
-  	  p_decParams->Z = 128;
+  //	  p_decParams->Z = 128;
       p_decParams->BG = 1;
       p_decParams->R = 13;
-      p_decParams->numMaxIter = 2;
+      p_decParams->numMaxIter = 5;
       Kr = p_decParams->Z*22;
       p_decParams->outMode= 0;
 
@@ -432,8 +439,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                                             (uint8_t*) &dummy_w[r][0],
                                             (r==0) ? harq_process->F : 0);
 
-#ifdef DEBUG_DLSCH_DECODING
-    LOG_D(PHY,"HARQ_PID %d Rate Matching Segment %d (coded bits %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
+//#ifdef DEBUG_DLSCH_DECODING
+    LOG_I(PHY,"HARQ_PID %d Rate Matching Segment %d (coded bits %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
           harq_pid,r, G,
           Kr*3,
           harq_process->TBS,
@@ -442,7 +449,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
           harq_process->Nl,
           harq_process->rvidx,
           harq_process->round);
-#endif
+//#endif
 
 #ifdef DEBUG_DLSCH_DECODING
     printf(" in decoding dlsch->harq_processes[harq_pid]->rvidx = %d\n", dlsch->harq_processes[harq_pid]->rvidx);
@@ -540,13 +547,21 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 #endif
       LOG_I(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
 
-      printf("harq process dr \n");
-//66*p_decParams->Z
-      for (int cnt =0; cnt < 8; cnt++){
-      printf("%d \n", harq_process->d[r][96+cnt]);
+
+      //printf("harq process dr iteration %d\n", p_decParams->numMaxIter);
+      //66*p_decParams->Z
+
+      //if (A < 1000){
+      for (int cnt =0; cnt < 66*p_decParams->Z; cnt++){
+            inv_d[cnt] = (-1)*harq_process->d[r][96+cnt];
+            }
+      //}
+
+      /*for (int cnt =0; cnt < 8; cnt++){
+      printf("dr %d inv_d %d \n", harq_process->d[r][96+cnt], inv_d[cnt]);
       }
 
-      printf(" \n");
+      printf(" \n");*/
 
       /*printf("end dr \n");
       for (int cnt =(50*p_decParams->Z-16) ; cnt < 50*p_decParams->Z; cnt++){
@@ -578,11 +593,19 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 		memset(pv,0,2*p_decParams->Z*sizeof(int16_t));
         //memset(pl,0,2*p_decParams->Z*sizeof(int8_t));
 
+		//if (A < 1000){
+
       	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
       	{
-      		pv[i]= _mm_loadu_si128((__m128i*)&harq_process->d[r][96+8*j]);
+      		pv[i]= _mm_loadu_si128((__m128i*)(&inv_d[8*j]));
       	}
-
+      	/*}
+		else{
+      	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
+      	      	{
+      	      		pv[i]= _mm_loadu_si128((__m128i*)&harq_process->d[r][96+8*j]);
+      	      	}
+		}*/
 		for (i=0, j=0; j < (68*p_decParams->Z/16);  i+=2, j++)
       	      	{
       				//printf("mm packs i %d j %d\n", i, j);
@@ -592,12 +615,40 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       	      		//print128_num2bytes(pl[j]);
       	      	}
 
-		nrLDPC_decoder(p_decParams,
+		no_iteration_ldpc = nrLDPC_decoder(p_decParams,
       			&pl[0],
 				llrProcBuf,
           		p_procTime);
+
+		if (no_iteration_ldpc > 2)
+			printf("Error number of iteration LPDC %d\n", no_iteration_ldpc);
+		else
+			printf("OK number of iteration LPDC %d\n", no_iteration_ldpc);
+
+		for (int m=0; m < Kr>>3; m ++)
+		      	      	{
+		      				harq_process->c[r][m]= (uint8_t) llrProcBuf[m];
+		      	      	}
+
+		      	/*for (int u=0; u < Kr>>3; u ++)
+		      	      	      	{
+		      						ullrProcBuf[u]= (uint8_t) llrProcBuf[u];
+		      	      	      	}
+
+
+		      	printf("output unsigned ullrProcBuf \n");
+
+		      	for (int j=0; j < Kr>>3; j ++)
+		      	      	       	      	{
+
+		      	      						printf(" %d \n", ullrProcBuf[j]);
+
+		      	      	      	      	}
+		     	printf(" \n");*/
 #endif
 		printf("output channel decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+
+		 //printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
 
 
 #if UE_TIMING_TRACE

@@ -696,7 +696,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       printf("turbo tbc number %d input %d\n",tbc_counter, dlsch->harq_processes[harq_pid]->c[r][tbc_counter]);
       }*/
 
-      printf("start encoder kr %d kr>>3 %d segment %d total segments %d\n", Kr, Kr>>3, r, dlsch->harq_processes[harq_pid]->C);
+      printf("start encoder kr %d kr>>3 %d segment %d total segments %d rate %.2f\n", Kr, Kr>>3, r, dlsch->harq_processes[harq_pid]->C,rate);
             for (int tbs_counter = 0; tbs_counter< 8; tbs_counter++){
             printf("%d ", dlsch->harq_processes[harq_pid]->c[r][tbs_counter]);
             }
@@ -716,15 +716,15 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       printf("start ldpc encoder\n");
       printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
 
-      ldpc_encoder((char*)dlsch->harq_processes[harq_pid]->c[r],(char*)&dlsch->harq_processes[harq_pid]->d[r][96],dlsch->harq_processes[harq_pid]->B,rate);
+      //ldpc_encoder((char*)dlsch->harq_processes[harq_pid]->c[r],(char*)&dlsch->harq_processes[harq_pid]->d[r][96],dlsch->harq_processes[harq_pid]->B,rate);
 
-            ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],dlsch->harq_processes[harq_pid]->B,rate);
+            ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,rate);
 
 #endif
             /*printf("end ldpc encoder -- output\n");
 
-            //printf("output %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->d[r][96], dlsch->harq_processes[harq_pid]->d[r][96+1], dlsch->harq_processes[harq_pid]->d[r][96+2],dlsch->harq_processes[harq_pid]->d[r][96+3], dlsch->harq_processes[harq_pid]->d[r][96+4]);
-            for (int cnt =0 ; cnt < 66*128; cnt ++){
+            /*printf("output %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->d[r][96], dlsch->harq_processes[harq_pid]->d[r][96+1], dlsch->harq_processes[harq_pid]->d[r][96+2],dlsch->harq_processes[harq_pid]->d[r][96+3], dlsch->harq_processes[harq_pid]->d[r][96+4]);
+            for (int cnt =0 ; cnt < 66*(*pz); cnt ++){
             printf("%d \n",  dlsch->harq_processes[harq_pid]->d[r][96+cnt]);
 
             }

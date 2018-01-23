@@ -13,6 +13,6 @@
 
 #include "nrLDPC_types.h"
 
-void nrLDPC_decoder(t_nrLDPC_dec_params* p_decParams, int8_t* p_llr, int8_t* p_llrOut, t_nrLDPC_time_stats* p_profiler);
+int32_t nrLDPC_decoder(t_nrLDPC_dec_params* p_decParams, int8_t* p_llr, int8_t* p_llrOut, t_nrLDPC_time_stats* p_profiler);
 
 #endif

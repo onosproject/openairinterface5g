@@ -80,6 +80,7 @@ static inline void nrLDPC_llr2CnProcBuf(t_nrLDPC_lut* p_lut, int8_t* llr, uint16
     {
         cnProcBuf[*p_lutEntry++] = llr[i];
     }
+
 }
 
 static inline void nrLDPC_cn2bnProcBuf(t_nrLDPC_lut* p_lut, uint16_t Z)
