@@ -62,8 +62,6 @@ Test with Iperf
 Filter the incomming packets according to GroupL2Id: receiver (one-to-many) can discard the packets if it doesn't belong to this group. 
 For the moment, both sender and receiver use the same set of Ids (hardcoded)  
 
-
- 
 UE1 (sender)
  - sudo ./lte-softmodem-stub -U --emul_iface eth0
  - ./vencore_app  #send the sourceL2Id, groupL2Id to OAI
@@ -83,5 +81,13 @@ step 2:
 step 3: 
 - UE1: ./vencore_app -s #send a message via PC5-S (e.g., DirectCommunicationRequest)
  
-
+ 
+  --------------------------------------
+TEST PC5-D
+step 1:
+- UE1: sudo ./lte-softmodem-stub -U --emul_iface eth0
+- UE1: ./vencore_app -d #send a PC5-Discovery-Announcement via PC5D
+step 2:
+- UE2: sudo ./lte-softmodem-stub -U --emul_iface eno1
+- UE2: ./vencore_app -d #send a PC5-Discovery-Announcement via PC5D
 
