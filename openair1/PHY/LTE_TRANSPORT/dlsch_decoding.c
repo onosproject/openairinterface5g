@@ -40,7 +40,7 @@
 #include "PHY/CODING/nrLDPC_decoder.h"
 #include "PHY/CODING/nrLDPC_types.h"
 //#define DEBUG_DLSCH_DECODING
-#define TD_DECODING
+//#define TD_DECODING
 
 #define OAI_LDPC_MAX_NUM_LLR 26112 // NR_LDPC_NCOL_BG1*NR_LDPC_ZMAX
 
@@ -941,12 +941,30 @@ uint32_t  dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,
   uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0;
   uint8_t crc_type;
   //UE_rxtx_proc_t *proc = &phy_vars_ue->proc;
+  int32_t no_iteration_ldpc;
   int Cby2;
   /*uint8_t C;
   uint8_t Qm;
   uint8_t Nl;
   uint8_t r_thread;
   uint32_t Er, Gp,GpmodC;*/
+  t_nrLDPC_dec_params decParams;
+    t_nrLDPC_dec_params* p_decParams = &decParams;
+    t_nrLDPC_time_stats procTime;
+    t_nrLDPC_time_stats* p_procTime =&procTime ;
+    int16_t z [68*384];
+    int8_t l [68*384];
+    //__m128i l;
+    int16_t inv_d [68*384];
+    int16_t *p_invd =&inv_d;
+
+    uint32_t i,j;
+    uint32_t k;
+
+    __m128i *pv = (__m128i*)&z;
+    __m128i *pl = (__m128i*)&l;
+
+
 #ifdef DEBUG_DLSCH_DECODING
   uint16_t i;
 #endif
@@ -1065,19 +1083,41 @@ uint32_t  dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,
   //  printf("DLSCH Decoding, harq_pid %d Ndi %d\n",harq_pid,harq_process->Ndi);
 
   if (harq_process->round == 0) {
-    // This is a new packet, so compute quantities regarding segmentation
-    harq_process->B = A+24;
-    lte_segmentation(NULL,
-                     NULL,
-                     harq_process->B,
-                     &harq_process->C,
-                     &harq_process->Cplus,
-                     &harq_process->Cminus,
-                     &harq_process->Kplus,
-                     &harq_process->Kminus,
-                     &harq_process->F);
-    //  CLEAR LLR's HERE for first packet in process
-  }
+      // This is a new packet, so compute quantities regarding segmentation
+      harq_process->B = A+24;
+ #ifdef TD_DECODING
+      lte_segmentation(NULL,
+                       NULL,
+                       harq_process->B,
+                       &harq_process->C,
+                       &harq_process->Cplus,
+                       &harq_process->Cminus,
+                       &harq_process->Kplus,
+                       &harq_process->Kminus,
+                       &harq_process->F);
+      //  CLEAR LLR's HERE for first packet in process
+  #else
+      nr_segmentation(NULL,
+      	                    NULL,
+      	                    harq_process->B,
+      	                    &harq_process->C,
+      	                    &harq_process->Kplus,
+      	                    &harq_process->Kminus,
+      						&harq_process->Z,
+      	                    &harq_process->F);
+      	p_decParams->Z = harq_process->Z;
+      	printf("dlsch decoding nr segmentation Z %d\n", p_decParams->Z);
+      	printf("Kplus %d C %d nl %d \n", harq_process->Kplus, harq_process->C, harq_process->Nl);
+  #endif
+
+    }
+
+    //	  p_decParams->Z = 128;
+        p_decParams->BG = 1;
+        p_decParams->R = 13;
+        p_decParams->numMaxIter = 5;
+        Kr = p_decParams->Z*22;
+        p_decParams->outMode= 0;
 
   /*
   else {
@@ -1251,10 +1291,14 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
   for (r=0; r<Cby2; r++) {
 
     // Get Turbo interleaver parameters
-    if (r<harq_process->Cminus)
+#ifdef TD_DECODING
+	  if (r<harq_process->Cminus)
       Kr = harq_process->Kminus;
     else
       Kr = harq_process->Kplus;
+#else
+	  Kr = harq_process->Kplus;
+#endif
 
     Kr_bytes = Kr>>3;
 
@@ -1390,6 +1434,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
         start_meas(dlsch_turbo_decoding_stats);
 #endif
       LOG_I(PHY,"mthread AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
+#ifdef TD_DECODING
       ret = tc
             (&harq_process->d[r][96],
              harq_process->c[r],
@@ -1408,6 +1453,68 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
              &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
 
       printf("main thread output channel decoder r=%d cr %d %d %d %d %d \n", r,harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+
+#else
+
+		memset(pv,0,2*p_decParams->Z*sizeof(int16_t));
+        //memset(pl,0,2*p_decParams->Z*sizeof(int8_t));
+
+		//if (A < 1000){
+
+      	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
+      	{
+      		pv[i]= _mm_loadu_si128((__m128i*)(&inv_d[8*j]));
+      	}
+      	/*}
+		else{
+      	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
+      	      	{
+      	      		pv[i]= _mm_loadu_si128((__m128i*)&harq_process->d[r][96+8*j]);
+      	      	}
+		}*/
+		for (i=0, j=0; j < (68*p_decParams->Z/16);  i+=2, j++)
+      	      	{
+      				//printf("mm packs i %d j %d\n", i, j);
+      				//print128_num(pv[i]);
+      				//print128_num(pv[i+1]);
+      	      		pl[j] = _mm_packs_epi16(pv[i],pv[i+1]);
+      	      		//print128_num2bytes(pl[j]);
+      	      	}
+
+		no_iteration_ldpc = nrLDPC_decoder(p_decParams,
+      			&pl[0],
+				llrProcBuf,
+          		p_procTime);
+
+		if (no_iteration_ldpc > 2)
+			printf("Error number of iteration LPDC %d\n", no_iteration_ldpc);
+		else
+			printf("OK number of iteration LPDC %d\n", no_iteration_ldpc);
+
+		for (int m=0; m < Kr>>3; m ++)
+		      	      	{
+		      				harq_process->c[r][m]= (uint8_t) llrProcBuf[m];
+		      	      	}
+
+		      	/*for (int u=0; u < Kr>>3; u ++)
+		      	      	      	{
+		      						ullrProcBuf[u]= (uint8_t) llrProcBuf[u];
+		      	      	      	}
+
+
+		      	printf("output unsigned ullrProcBuf \n");
+
+		      	for (int j=0; j < Kr>>3; j ++)
+		      	      	       	      	{
+
+		      	      						printf(" %d \n", ullrProcBuf[j]);
+
+		      	      	      	      	}
+		     	printf(" \n");*/
+#endif
+		printf("output channel decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+
+		 //printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
 
 
 #if UE_TIMING_TRACE
@@ -1708,6 +1815,22 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
     PHY_VARS_UE    *phy_vars_ue   = rtd->UE;
 
     int llr8_flag1;
+    int32_t no_iteration_ldpc;
+    t_nrLDPC_dec_params decParams;
+    t_nrLDPC_dec_params* p_decParams = &decParams;
+    t_nrLDPC_time_stats procTime;
+    t_nrLDPC_time_stats* p_procTime =&procTime ;
+    int16_t z [68*384];
+    int8_t l [68*384];
+    //__m128i l;
+    int16_t inv_d [68*384];
+    int16_t *p_invd =&inv_d;
+
+    uint32_t i,j;
+    uint32_t k;
+
+    __m128i *pv = (__m128i*)&z;
+    __m128i *pl = (__m128i*)&l;
 
     proc->instance_cnt_dlsch_td=-1;
     proc->nr_tti_rx=proc->sub_frame_start;
@@ -1856,17 +1979,39 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   if (harq_process->round == 0) {
     // This is a new packet, so compute quantities regarding segmentation
     harq_process->B = A+24;
-    lte_segmentation(NULL,
-                     NULL,
-                     harq_process->B,
-                     &harq_process->C,
-                     &harq_process->Cplus,
-                     &harq_process->Cminus,
-                     &harq_process->Kplus,
-                     &harq_process->Kminus,
-                     &harq_process->F);
-    //  CLEAR LLR's HERE for first packet in process
-  }
+ #ifdef TD_DECODING
+      lte_segmentation(NULL,
+                       NULL,
+                       harq_process->B,
+                       &harq_process->C,
+                       &harq_process->Cplus,
+                       &harq_process->Cminus,
+                       &harq_process->Kplus,
+                       &harq_process->Kminus,
+                       &harq_process->F);
+      //  CLEAR LLR's HERE for first packet in process
+  #else
+      nr_segmentation(NULL,
+      	                    NULL,
+      	                    harq_process->B,
+      	                    &harq_process->C,
+      	                    &harq_process->Kplus,
+      	                    &harq_process->Kminus,
+      						&harq_process->Z,
+      	                    &harq_process->F);
+      	p_decParams->Z = harq_process->Z;
+      	printf("dlsch decoding nr segmentation Z %d\n", p_decParams->Z);
+      	printf("Kplus %d C %d nl %d \n", harq_process->Kplus, harq_process->C, harq_process->Nl);
+  #endif
+
+    }
+
+    //	  p_decParams->Z = 128;
+        p_decParams->BG = 1;
+        p_decParams->R = 13;
+        p_decParams->numMaxIter = 5;
+        Kr = p_decParams->Z*22;
+        p_decParams->outMode= 0;
 
   /*
   else {
@@ -1931,10 +2076,14 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 
 
     // Get Turbo interleaver parameters
-    if (r<harq_process->Cminus)
+#ifdef TD_DECODING
+	  if (r<harq_process->Cminus)
       Kr = harq_process->Kminus;
     else
       Kr = harq_process->Kplus;
+#else
+	  Kr = harq_process->Kplus;
+#endif
 
     Kr_bytes = Kr>>3;
 
@@ -2069,7 +2218,8 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
         start_meas(dlsch_turbo_decoding_stats);
 #endif
 //      LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,subframe,r,harq_process->C-1);
-      ret = tc
+#ifdef TD_DECODING
+        ret = tc
             (&harq_process->d[r][96],
              harq_process->c[r],
              Kr,
@@ -2088,6 +2238,67 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 
       printf("sub thread output channel decoder r=%d cr %d %d %d %d %d \n", r,harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
 
+#else
+
+		memset(pv,0,2*p_decParams->Z*sizeof(int16_t));
+        //memset(pl,0,2*p_decParams->Z*sizeof(int8_t));
+
+		//if (A < 1000){
+
+      	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
+      	{
+      		pv[i]= _mm_loadu_si128((__m128i*)(&inv_d[8*j]));
+      	}
+      	/*}
+		else{
+      	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
+      	      	{
+      	      		pv[i]= _mm_loadu_si128((__m128i*)&harq_process->d[r][96+8*j]);
+      	      	}
+		}*/
+		for (i=0, j=0; j < (68*p_decParams->Z/16);  i+=2, j++)
+      	      	{
+      				//printf("mm packs i %d j %d\n", i, j);
+      				//print128_num(pv[i]);
+      				//print128_num(pv[i+1]);
+      	      		pl[j] = _mm_packs_epi16(pv[i],pv[i+1]);
+      	      		//print128_num2bytes(pl[j]);
+      	      	}
+
+		no_iteration_ldpc = nrLDPC_decoder(p_decParams,
+      			&pl[0],
+				llrProcBuf,
+          		p_procTime);
+
+		if (no_iteration_ldpc > 2)
+			printf("Error number of iteration LPDC %d\n", no_iteration_ldpc);
+		else
+			printf("OK number of iteration LPDC %d\n", no_iteration_ldpc);
+
+		for (int m=0; m < Kr>>3; m ++)
+		      	      	{
+		      				harq_process->c[r][m]= (uint8_t) llrProcBuf[m];
+		      	      	}
+
+		      	/*for (int u=0; u < Kr>>3; u ++)
+		      	      	      	{
+		      						ullrProcBuf[u]= (uint8_t) llrProcBuf[u];
+		      	      	      	}
+
+
+		      	printf("output unsigned ullrProcBuf \n");
+
+		      	for (int j=0; j < Kr>>3; j ++)
+		      	      	       	      	{
+
+		      	      						printf(" %d \n", ullrProcBuf[j]);
+
+		      	      	      	      	}
+		     	printf(" \n");*/
+#endif
+		printf("output channel decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+
+		 //printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
 
 #if UE_TIMING_TRACE
       stop_meas(dlsch_turbo_decoding_stats);
@@ -2378,6 +2589,22 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
     PHY_VARS_UE    *phy_vars_ue   = rtd->UE;
 
     int llr8_flag1;
+    int32_t no_iteration_ldpc;
+    t_nrLDPC_dec_params decParams;
+    t_nrLDPC_dec_params* p_decParams = &decParams;
+    t_nrLDPC_time_stats procTime;
+    t_nrLDPC_time_stats* p_procTime =&procTime ;
+    int16_t z [68*384];
+    int8_t l [68*384];
+    //__m128i l;
+    int16_t inv_d [68*384];
+    int16_t *p_invd =&inv_d;
+
+    uint32_t i,j;
+    uint32_t k;
+
+    __m128i *pv = (__m128i*)&z;
+    __m128i *pl = (__m128i*)&l;
 
     proc->instance_cnt_dlsch_td1=-1;
     proc->nr_tti_rx=proc->sub_frame_start;
@@ -2526,18 +2753,39 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
   if (harq_process->round == 0) {
     // This is a new packet, so compute quantities regarding segmentation
     harq_process->B = A+24;
-    lte_segmentation(NULL,
-                     NULL,
-                     harq_process->B,
-                     &harq_process->C,
-                     &harq_process->Cplus,
-                     &harq_process->Cminus,
-                     &harq_process->Kplus,
-                     &harq_process->Kminus,
-                     &harq_process->F);
-    //  CLEAR LLR's HERE for first packet in process
-  }
+#ifdef TD_DECODING
+      lte_segmentation(NULL,
+                       NULL,
+                       harq_process->B,
+                       &harq_process->C,
+                       &harq_process->Cplus,
+                       &harq_process->Cminus,
+                       &harq_process->Kplus,
+                       &harq_process->Kminus,
+                       &harq_process->F);
+      //  CLEAR LLR's HERE for first packet in process
+  #else
+      nr_segmentation(NULL,
+      	                    NULL,
+      	                    harq_process->B,
+      	                    &harq_process->C,
+      	                    &harq_process->Kplus,
+      	                    &harq_process->Kminus,
+      						&harq_process->Z,
+      	                    &harq_process->F);
+      	p_decParams->Z = harq_process->Z;
+      	printf("dlsch decoding nr segmentation Z %d\n", p_decParams->Z);
+      	printf("Kplus %d C %d nl %d \n", harq_process->Kplus, harq_process->C, harq_process->Nl);
+  #endif
 
+    }
+
+    //	  p_decParams->Z = 128;
+        p_decParams->BG = 1;
+        p_decParams->R = 13;
+        p_decParams->numMaxIter = 5;
+        Kr = p_decParams->Z*22;
+        p_decParams->outMode= 0;
   /*
   else {
     printf("dlsch_decoding.c: Ndi>0 not checked yet!!\n");
@@ -2603,10 +2851,14 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
 
 
     // Get Turbo interleaver parameters
-    if (r<harq_process->Cminus)
+#ifdef TD_DECODING
+	  if (r<harq_process->Cminus)
       Kr = harq_process->Kminus;
     else
       Kr = harq_process->Kplus;
+#else
+	  Kr = harq_process->Kplus;
+#endif
 
     Kr_bytes = Kr>>3;
 
@@ -2741,7 +2993,8 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
         start_meas(dlsch_turbo_decoding_stats);
 #endif
 //      LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,subframe,r,harq_process->C-1);
-      ret = tc
+#ifdef TD_DECODING
+        ret = tc
             (&harq_process->d[r][96],
              harq_process->c[r],
              Kr,
@@ -2759,7 +3012,67 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
              &phy_vars_ue->dlsch_tc_intl2_stats); //(is_crnti==0)?harq_pid:harq_pid+1);
 
       printf("sub thread output channel decoder r=%d cr %d %d %d %d %d \n", r,harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+#else
 
+		memset(pv,0,2*p_decParams->Z*sizeof(int16_t));
+        //memset(pl,0,2*p_decParams->Z*sizeof(int8_t));
+
+		//if (A < 1000){
+
+      	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
+      	{
+      		pv[i]= _mm_loadu_si128((__m128i*)(&inv_d[8*j]));
+      	}
+      	/*}
+		else{
+      	for (i=2*p_decParams->Z/8, j = 0; i < (68*p_decParams->Z/8+1); i++, j++)
+      	      	{
+      	      		pv[i]= _mm_loadu_si128((__m128i*)&harq_process->d[r][96+8*j]);
+      	      	}
+		}*/
+		for (i=0, j=0; j < (68*p_decParams->Z/16);  i+=2, j++)
+      	      	{
+      				//printf("mm packs i %d j %d\n", i, j);
+      				//print128_num(pv[i]);
+      				//print128_num(pv[i+1]);
+      	      		pl[j] = _mm_packs_epi16(pv[i],pv[i+1]);
+      	      		//print128_num2bytes(pl[j]);
+      	      	}
+
+		no_iteration_ldpc = nrLDPC_decoder(p_decParams,
+      			&pl[0],
+				llrProcBuf,
+          		p_procTime);
+
+		if (no_iteration_ldpc > 2)
+			printf("Error number of iteration LPDC %d\n", no_iteration_ldpc);
+		else
+			printf("OK number of iteration LPDC %d\n", no_iteration_ldpc);
+
+		for (int m=0; m < Kr>>3; m ++)
+		      	      	{
+		      				harq_process->c[r][m]= (uint8_t) llrProcBuf[m];
+		      	      	}
+
+		      	/*for (int u=0; u < Kr>>3; u ++)
+		      	      	      	{
+		      						ullrProcBuf[u]= (uint8_t) llrProcBuf[u];
+		      	      	      	}
+
+
+		      	printf("output unsigned ullrProcBuf \n");
+
+		      	for (int j=0; j < Kr>>3; j ++)
+		      	      	       	      	{
+
+		      	      						printf(" %d \n", ullrProcBuf[j]);
+
+		      	      	      	      	}
+		     	printf(" \n");*/
+#endif
+		printf("output channel decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+
+		 //printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
 
 #if UE_TIMING_TRACE
       stop_meas(dlsch_turbo_decoding_stats);

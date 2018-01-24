@@ -45,7 +45,7 @@
 
 //#define DEBUG_DLSCH_CODING
 //#define DEBUG_DLSCH_FREE 1
-#define TD_DECODING
+//#define TD_DECODING
 
 /*
 #define is_not_pilot(pilots,first_pilot,re) (pilots==0) || \
