@@ -936,10 +936,22 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 	//LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 3 \n");
 	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req);
       }
-      if(UE_mac_inst[Mod_id].hi_dci0_req!= NULL){
-	LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 4 \n");
-	hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req);
+      //if(UE_mac_inst[Mod_id].hi_dci0_req!= NULL){
+      if (UE_mac_inst[Mod_id].hi_dci0_req!=NULL && UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
+    	  LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 4 \n");
+    	  hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req);
+    	  //if(UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
+    		  free(UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list);
+    		  UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list = NULL;
+    	  //}
+    	  free(UE_mac_inst[Mod_id].hi_dci0_req);
+    	  UE_mac_inst[Mod_id].hi_dci0_req = NULL;
       }
+
+      else if(UE_mac_inst[Mod_id].hi_dci0_req!=NULL){
+      		free(UE_mac_inst[Mod_id].hi_dci0_req);
+      		UE_mac_inst[Mod_id].hi_dci0_req = NULL;
+      	}
       //stop_meas(&UE->timer_stats);
       //t_diff = get_time_meas_us(&UE->timer_stats);
       //LOG_E(MAC," Panos-D Absolute time: %f\n", t_diff);
@@ -1030,23 +1042,6 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 		UE_mac_inst[Mod_id].ul_config_req = NULL;
 	}
       }
-            	/*else{
-            		AssertFatal(UE_mac_inst[Mod_id].ul_config_req!= NULL, "Panos-D: Copy of ul_config_req is NULL");
-            	}*/
-//>>>>>>> Stashed changes
-
-
-    /*if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_UL) ||
-	(UE->frame_parms.frame_type == FDD) )
-      if (UE->mode != loop_through_memory){
-	// Panos: Substitute call to phy_procedures Tx with call to phy_stub functions in order to trigger
-	// UE Tx procedures directly at the MAC layer, based on the received ul_config requests from the vnf (eNB).
-	// Generate UL_indications which corresponf to UL traffic.
-	if(UE_mac_inst[Mod_id].ul_config_req!= NULL){
-	  ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req);
-	  UL_indication(UL_INFO);
-	}
-      }*/
 
     phy_procedures_UE_SL_RX(UE,proc);
 

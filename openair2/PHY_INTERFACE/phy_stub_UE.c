@@ -1027,14 +1027,23 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req)
 	  free(tx_request_pdu_list);
   	  tx_request_pdu_list = NULL;
   }
+  if(req->dl_config_request_body.dl_config_pdu_list!=NULL){
+	  free(req->dl_config_request_body.dl_config_pdu_list);
+	  req->dl_config_request_body.dl_config_pdu_list = NULL;
+  }
   free(req);
   req = NULL;
   return 0;
 	}
 	else if(req!=NULL){
 		//LOG_I(MAC, "Panos-D: dl_config_req_UE_MAC probably dummy DL_Config \n");
-		//free(req);
-		//req = NULL;
+		if(req->dl_config_request_body.dl_config_pdu_list!=NULL){
+			//LOG_I(MAC, "Panos-D: dl_config_req_UE_MAC probably dummy DL_Config 2\n");
+			free(req->dl_config_request_body.dl_config_pdu_list);
+			req->dl_config_request_body.dl_config_pdu_list = NULL;
+		}
+		free(req);
+		req = NULL;
 		return -1;
 	}
 
@@ -1053,6 +1062,7 @@ int deallocate_mem_nfapi_dl(nfapi_dl_config_request_t* req, nfapi_tx_request_pdu
 
 int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req)
 {
+	if (req!=NULL && req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
   LOG_D(PHY,"[UE-PHY_STUB] hi dci0 request sfn_sf:%d number_of_dci:%d number_of_hi:%d\n", NFAPI_SFNSF2DEC(req->sfn_sf), req->hi_dci0_request_body.number_of_dci, req->hi_dci0_request_body.number_of_hi);
 
   //phy_info* phy = (phy_info*)(pnf_p7->user_data);
@@ -1073,12 +1083,13 @@ int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req)
     }
     else if (req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type == NFAPI_HI_DCI0_HI_PDU_TYPE)
     {
-      LOG_D(PHY,"[UE-PHY_STUB] HI_DCI0_REQ sfn_sf:%d PDU[%d] - NFAPI_HI_DCI0_HI_PDU_TYPE\n", NFAPI_SFNSF2DEC(req->sfn_sf), i);
+      LOG_I(MAC,"[UE-PHY_STUB] HI_DCI0_REQ sfn_sf:%d PDU[%d] - NFAPI_HI_DCI0_HI_PDU_TYPE\n", NFAPI_SFNSF2DEC(req->sfn_sf), i);
 
       nfapi_hi_dci0_request_pdu_t *hi_dci0_req_pdu = &req->hi_dci0_request_body.hi_dci0_pdu_list[i];
 
       // This is meaningful only after ACKnowledging the first ULSCH Txon (i.e. Msg3)
       if(hi_dci0_req_pdu->hi_pdu.hi_pdu_rel8.hi_value == 1 && UE_mac_inst[Mod_id].first_ULSCH_Tx == 1){
+    	  LOG_I(MAC,"[UE-PHY_STUB] HI_DCI0_REQ 2 sfn_sf:%d PDU[%d] - NFAPI_HI_DCI0_HI_PDU_TYPE\n", NFAPI_SFNSF2DEC(req->sfn_sf), i);
     	  UE_mac_inst[Mod_id].UE_mode[0] = PUSCH;
     	  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
       }
@@ -1089,6 +1100,19 @@ int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req)
       LOG_E(PHY,"[UE-PHY_STUB] HI_DCI0_REQ sfn_sf:%d PDU[%d] - unknown pdu type:%d\n", NFAPI_SFNSF2DEC(req->sfn_sf), i, req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type);
     }
   }
+
+  /*if(req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
+	  free(req->hi_dci0_request_body.hi_dci0_pdu_list);
+	  req->hi_dci0_request_body.hi_dci0_pdu_list = NULL;
+  }
+  free(req);
+  req = NULL;*/
+
+	}
+	/*else if(req!=NULL){
+		free(req);
+		req = NULL;
+	}*/
 
   return 0;
 }
@@ -1101,6 +1125,7 @@ int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req)
 // pnf_p7_subframe_ind.
 int memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
 {
+	//LOG_I(MAC, "Panos-D: memcpy_dl_config_req 1");
 
 	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 	UE_mac_inst[Mod_id].dl_config_req = (nfapi_dl_config_request_t*)malloc(sizeof(nfapi_dl_config_request_t));
@@ -1163,6 +1188,7 @@ int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
 		}
 
 
+
 	//UE_mac_inst[Mod_id].ul_config_req = req;
 	return 0;
 }
@@ -1212,6 +1238,8 @@ int memcpy_tx_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
 
 int memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req)
 {
+
+	//if(req!=0){
 	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 	UE_mac_inst[Mod_id].hi_dci0_req = (nfapi_hi_dci0_request_t*)malloc(sizeof(nfapi_hi_dci0_request_t));
 
@@ -1222,10 +1250,20 @@ int memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
 	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_hi = req->hi_dci0_request_body.number_of_hi;
 	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.sfnsf = req->hi_dci0_request_body.sfnsf;
 	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.tl = req->hi_dci0_request_body.tl;
-	int total_pdus = UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_dci + UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_dci;
+	int total_pdus = UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_dci + UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_hi;
+
+	LOG_I(MAC, "Original hi_dci0 req. #:%d, Copy #: %d \n",req->hi_dci0_request_body.number_of_dci + req->hi_dci0_request_body.number_of_hi, total_pdus);
 
 	//(nfapi_ul_config_request_pdu_t*) malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_ul_config_request_pdu_t));
 	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list = (nfapi_hi_dci0_request_pdu_t*) malloc(total_pdus*sizeof(nfapi_hi_dci0_request_pdu_t));
+
+	for(int i=0; i<total_pdus; i++){
+		UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list[i] = req->hi_dci0_request_body.hi_dci0_pdu_list[i];
+		LOG_I(MAC, "Original hi_dci0 req. type:%d, Copy type: %d \n",req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type, UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type);
+	}
+	//}
+	//else
+	//	LOG_I(MAC, "Panos-D: Dummy HI_DCI0");
 
 	LOG_I(MAC, "Panos-D: memcpy_hi_dci0_req 2 \n");
 	//module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
