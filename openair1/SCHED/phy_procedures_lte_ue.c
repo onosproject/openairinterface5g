@@ -4009,7 +4009,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 			   harq_pid,
 			   pdsch==PDSCH?1:0,//proc->decoder_switch,
 			   dlsch0->harq_processes[harq_pid]->TBS>256?1:0);
-      printf("start cW0 dlsch decoding\n");
+      //printf("start cW0 dlsch decoding\n");
 #endif
 
 #if UE_TIMING_TRACE
