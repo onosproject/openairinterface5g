@@ -228,6 +228,7 @@ help (void)
   printf ("-b Set the number of local eNB\n");
   printf ("-B Set the mobility model for eNB, options are: STATIC, RWP, RWALK, \n");
   printf ("-c [1,2,3,4] Activate the config generator (OCG) to process the scenario descriptor, or give the scenario manually: -c template_1.xml \n");
+  printf ("-d Enable Frequency Domain Analysis (Time Domain Analysis is default)\n");
   printf ("-C [0-6] Sets TDD configuration\n");
   printf ("-e Activates extended prefix mode\n");
   printf ("-E Random number generator seed\n");

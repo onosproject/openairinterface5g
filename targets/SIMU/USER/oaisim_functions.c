@@ -1176,7 +1176,6 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
      sum=0;
      count=0;
   } 
-  count++;
 
   int ret = nsamps;
   int UE_id = device->Mod_id;
@@ -1244,7 +1243,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
       if (do_ofdm_mod)
       {
 	//start_meas(&dl_chan_stats_f);
-        //clock_t start=clock();
+        clock_t start=clock();
       	do_DL_sig_freq(eNB2UE,
                 enb_data,
                 ue_data,
@@ -1253,14 +1252,16 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
                 &PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
                 UE_id,
                 CC_id);
-  	/*lock_t stop=clock();
+  	clock_t stop=clock();
   	printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
-  	sum=(sum+stop-start);*/
+  	sum=(sum+stop-start);
+        count++;
 	//stop_meas(&dl_chan_stats_f);
 	//print_meas(&dl_chan_stats_f,"DL_Channel Stats Frequency Domain",&dl_chan_stats_f,&dl_chan_stats_f);
       }
       else
       {
+      //clock_t start=clock();
       do_DL_sig(eNB2UE,
                 enb_data,
                 ue_data,
@@ -1269,6 +1270,10 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
                 &PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
                 UE_id,
                 CC_id);
+      /*clock_t stop=clock();
+      printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
+      sum=(sum+stop-start);
+      count++;*/
       }
 
       last_UE_rx_timestamp[UE_id][CC_id] = last;

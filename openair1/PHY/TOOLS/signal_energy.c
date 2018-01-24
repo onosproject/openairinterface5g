@@ -331,6 +331,19 @@ double signal_energy_fp(double *s_re[2],double *s_im[2],uint32_t nb_antennas,uin
   return(V/length/nb_antennas);
 }
 #endif
+float signal_energy_fp_SSE_float(float *s_re[2],float *s_im[2],uint32_t nb_antennas,uint32_t length,uint32_t offset)
+{
+
+  int32_t aa,i;
+  float V=0.0;
+
+  for (i=0; i<length; i++) {
+    for (aa=0; aa<nb_antennas; aa++) {
+      V= V + (s_re[aa][i+offset]*s_re[aa][i+offset]) + (s_im[aa][i+offset]*s_im[aa][i+offset]);
+    }
+  }
+  return(V/length/nb_antennas);
+}
 
 double signal_energy_fp2(struct complex *s,uint32_t length)
 {

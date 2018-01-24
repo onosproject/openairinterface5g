@@ -36,24 +36,18 @@ void adc(double *r_re[2],
 {
   int i;
   int aa;
-  __m128i r_re128, r_im128, output_re128, output_im128;
-  __m128d gain128
+  __m128d r_re128,r_im128,gain128;
   double gain = (double)(1<<(B-1));
   gain128=_mm_set1_pd(gain);
-  for (i=0; i<(length>>1); i++) {//SSE can process 8 shorts in parallel (length>>3)
+  for (i=0; i<(length>>1); i++) {
     for (aa=0; aa<nb_rx_antennas; aa++) {
-      r_re128=_mm_loadu_pd(&r_re[aa][2*i+input_offset]]);
-      r_im128=_mm_loadu_pd(&r_im[aa][2*i+input_offset]]);
+      r_re128=_mm_loadu_pd(&r_re[aa][2*i+input_offset]);
+      r_im128=_mm_loadu_pd(&r_im[aa][2*i+input_offset]);
       r_re128=_mm_mul_pd(r_re128,gain128);
       r_im128=_mm_mul_pd(r_im128,gain128);
-      ((short *)output[aa])[((i+output_offset)<<1)]   = (short)(r_re[aa][i+input_offset]*gain);
-      ((short *)output[aa])[1+((i+output_offset)<<1)] = (short)(r_im[aa][i+input_offset]*gain);
-
-      if ((r_re[aa][i+input_offset]*gain) > 30000) {
-        //("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
-      }
+      ((short *)output[aa])[((2*i+output_offset)<<1)]=_mm_cvttsd_si32(r_re128);
+      ((short *)output[aa])[1+((2*i+output_offset)<<1)]=_mm_cvtsd_si32(r_re128);
     }
-    //printf("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
   } 
 }
 #else
@@ -91,6 +85,39 @@ void adc(double *r_re[2],
   } 
 }
 #endif
+void adc_SSE_float(float *r_re[2],
+         float *r_im[2],
+         unsigned int input_offset,
+         unsigned int output_offset,
+         unsigned int **output,
+         unsigned int nb_rx_antennas,
+         unsigned int length,
+         unsigned char B)
+{
+  int i;
+  int aa;
+  //FILE *file1=NULL;
+  //FILE *file2=NULL;
+  //file1 = fopen("adc1","w+");
+  //file1 = fopen("adc2","w+");
+  float gain = (float)(1<<(B-1));
+  //double gain = 1.0;
+  //for (i=0;i<length;i++){
+//	fprintf(file1,"%d\t%d\t%d\t%d\t%d\n",i,(short)(r_re[0][i+input_offset]*gain),(short)(r_im[0][i+input_offset]*gain),output_offset/14336,i+output_offset);
+ // } 
+  for (i=0; i<length; i++) {
+    for (aa=0; aa<nb_rx_antennas; aa++) {
+      ((short *)output[aa])[((i+output_offset)<<1)]   = (short)(r_re[aa][i+input_offset]*gain);
+      ((short *)output[aa])[1+((i+output_offset)<<1)] = (short)(r_im[aa][i+input_offset]*gain);
+      //if (i>10 && i<20)
+      //printf("Adc outputs %d (%d,%d)-(%d,%d)\n",i+output_offset,((short *)output[aa])[((i+output_offset)<<1)],((short *)output[aa])[1+((i+output_offset)<<1)],(short)(r_re[aa][i+input_offset]*gain),(short)(r_im[aa][i+input_offset]*gain));
+      if ((r_re[aa][i+input_offset]*gain) > 30000) {
+        //("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
+      }
+    }
+    //printf("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
+  } 
+}
 void adc_freq(double *r_re[2],
          double *r_im[2],
          unsigned int input_offset,
@@ -180,6 +207,38 @@ void adc_freq(double *r_re[2],
 }*/
 void adc_prach(double *r_re[2],
          double *r_im[2],
+         unsigned int input_offset,
+         unsigned int output_offset,
+         unsigned int **output,
+         unsigned int nb_rx_antennas,
+         unsigned int length,
+         unsigned char B)
+{
+
+  int i;
+  int aa;
+  double gain = (double)(1<<(B-1));
+  //double gain = 1.0;
+
+  for (i=0; i<length; i++) {
+    for (aa=0; aa<nb_rx_antennas; aa++) {
+      ((short *)output[aa])[((i+output_offset/2)<<1)]   = (short)(r_re[aa][i+input_offset]*gain);
+      ((short *)output[aa])[1+((i+output_offset/2)<<1)] = (short)(r_im[aa][i+input_offset]*gain);
+#ifdef DEBUG_ADC
+      if (i<10)
+      	printf("[adc_prach]i %d.  input (%d,%d), output (%d,%d)\n",i,(short)(r_re[aa][i+input_offset]),(short)(r_im[aa][i+input_offset]),((short *)output[aa])[((i+output_offset/2)<<1)],((short *)output[aa])[1+((i+output_offset/2)<<1)]);
+      if (i>length-10&&i<length)
+#endif
+      if ((r_re[aa][i+input_offset]*gain) > 30000) {
+        //("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
+      }
+    }
+
+    //printf("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
+  }
+}
+void adc_prach_SSE_float(float *r_re[2],
+         float *r_im[2],
          unsigned int input_offset,
          unsigned int output_offset,
          unsigned int **output,

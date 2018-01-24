@@ -158,8 +158,6 @@ double nfix(void)
 {
   const double r = 3.442620; 
   static double x, y;
-  long l;
-  double d;
   for (;;)
   {
       x=hz *  wn[iz];
@@ -193,7 +191,7 @@ double nfix(void)
 void table_nor(unsigned long seed)
 {
   jsr=seed;
-  printf("seed is %d\n",seed);
+  //printf("Seed for Ziggurat random number generator is %d\n",seed);
   double dn = 3.442619855899;
   int i;
   const double m1 = 2147483648.0;
