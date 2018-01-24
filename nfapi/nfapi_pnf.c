@@ -51,6 +51,9 @@ extern void handle_nfapi_bch_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, nfapi_
 
 extern uint8_t  nfapi_mode;
 
+extern int timer_subframe;
+extern int timer_frame;
+
 nfapi_tx_request_pdu_t* tx_request_pdu[1023][10][10]; // [frame][subframe][max_num_pdus]
 
 
@@ -1921,6 +1924,7 @@ int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind)
   ind->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
   ind->header.message_id = NFAPI_RX_ULSCH_INDICATION;
 
+  LOG_I(MAC, "Panos-D: oai_nfapi_rx_ind 1 TIMER SFN/SF:%d.%d \n", timer_frame, timer_subframe);
   int retval = nfapi_pnf_p7_rx_ind(p7_config_g, ind);
 
   //LOG_D(PHY,"%s() SFN/SF:%d pdus:%d retval:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rx_indication_body.number_of_pdus, retval);

@@ -321,7 +321,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
 	      "Transmission on secondary CCs is not supported yet\n");
 
   if (UE_mode == PRACH) {
-	  LOG_I(MAC, "Panos-D: ue_get_rach 3");
+	  LOG_I(MAC, "Panos-D: ue_get_rach 3, RA_active value: %d", UE_mac_inst[module_idP].RA_active);
     if (UE_mac_inst[module_idP].radioResourceConfigCommon) {
       rach_ConfigCommon = &UE_mac_inst[module_idP].radioResourceConfigCommon->rach_ConfigCommon;
     } else {

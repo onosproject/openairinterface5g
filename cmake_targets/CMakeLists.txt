@@ -1933,6 +1933,55 @@ target_link_libraries (lte-softmodem-nos1  ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-softmodem-nos1 ${T_LIB})
 
 
+
+
+# lte-softmodem-stub-nos1 is both eNB and UE implementation
+###################################################
+
+add_executable(lte-softmodem-stub-nos1
+  ${rrc_h}
+  ${s1ap_h}
+  ${OPENAIR_BIN_DIR}/messages_xml.h
+  ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
+  ${OPENAIR_TARGETS}/RT/USER/lte-ue.c
+  ${OPENAIR_TARGETS}/RT/USER/lte-enb.c
+  ${OPENAIR_TARGETS}/RT/USER/lte-softmodem-stub.c
+  ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
+  ${OPENAIR_TARGETS}/SIMU/USER/init_lte.c
+  ${OPENAIR_TARGETS}/COMMON/create_tasks.c
+  ${OPENAIR_TARGETS}/ARCH/COMMON/common_lib.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/multicast_link.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/socket.c
+  #${OPENAIR3_DIR}/NAS/UE/nas_ue_task.c
+  ${OPENAIR_DIR}/common/utils/utils.c
+  ${OPENAIR_DIR}/common/utils/system.c
+  #${GTPU_need_ITTI}
+  ${RTAI_SOURCE}
+  ${XFORMS_SOURCE}
+  ${XFORMS_SOURCE_SOFTMODEM}
+  ${T_SOURCE}
+  ${CONFIG_SOURCES}
+  ${SHLIB_LOADER_SOURCES}
+  )
+
+target_link_libraries (lte-softmodem-stub-nos1
+  -Wl,--start-group
+  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
+  NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB
+  NFAPI_USER_LIB
+  -Wl,--end-group z dl)
+
+target_link_libraries (lte-softmodem-stub-nos1 ${LIBXML2_LIBRARIES})
+target_link_libraries (lte-softmodem-stub-nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
+target_link_libraries (lte-softmodem-stub-nos1 ${LIB_LMS_LIBRARIES})
+target_link_libraries (lte-softmodem-stub-nos1 ${T_LIB})
+
+
+
+
+
+
 # lte-softmodem-stub is both eNB and UE implementation
 ###################################################
 

@@ -128,7 +128,7 @@ int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
 uint8_t nfapi_mode = 3;
 
-uint16_t sf_ahead=4;
+uint16_t sf_ahead=2;
 
 char *emul_iface;
 
@@ -1228,7 +1228,9 @@ int main( int argc, char **argv )
       printf("cannot create ITTI tasks\n");
       exit(-1); // need a softer mode
     }
-    //    UE_config_stub_pnf();
+    if(nfapi_mode==3){ //Panos: Here we should add another nfapi_mode for the case of Supervised LTE-D2D
+        UE_config_stub_pnf();
+    }
     printf("ITTI tasks created\n");
   }
   else {
@@ -1349,7 +1351,7 @@ int main( int argc, char **argv )
   if (nfapi_mode<3) // VNF
     wait_nfapi_init("main?");
 
-  printf("START MAIN THREADS\n");
+  printf("START MAIN THREADS, nfapi_mode:%d \n", nfapi_mode);
 
   // start the main threads
   if (UE_flag == 1) {
@@ -1366,8 +1368,10 @@ int main( int argc, char **argv )
     //phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
 
 
-    init_timer_thread();
+    // Panos: CHANGE we call init_timer_thread() from inside init_UE_stub() now
+    //init_timer_thread();
     init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
+
 
     /*for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       PHY_vars_UE_g[0][CC_id]->rf_map.card=0;

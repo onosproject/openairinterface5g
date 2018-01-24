@@ -47,7 +47,7 @@ void send_nfapi_UL_indications(UL_IND_t UL_INFO);
 
 //void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe);
 
-void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t *ulsch_buffer, uint16_t buflen, uint16_t rnti);
+void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t *ulsch_buffer, uint16_t buflen, uint16_t rnti, int index);
 
 
 // This function should be indicating directly to the eNB when there is a planned scheduling request at the MAC layer
@@ -56,7 +56,7 @@ void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_I
 
 // In our case the this function will be always indicating ACK to the MAC of the eNB (i.e. always assuming)
 // successful decoding.
-void fill_crc_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t crc_flag);
+void fill_crc_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t crc_flag, int index, uint16_t rnti);
 
 
 void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t ra_PreambleIndex, uint16_t ra_RNTI);
@@ -71,11 +71,11 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id, int frame, int subframe, UL_IND
 			      /*uint8_t tdd_mapping_mode,
 			      uint16_t tdd_multiplexing_mask*/);
 
-int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req);
+int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int frame, int subframe);
 
 void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
                          nfapi_ul_config_request_pdu_t *ul_config_pdu,
-                         uint16_t frame,uint8_t subframe,uint8_t srs_present);
+                         uint16_t frame,uint8_t subframe,uint8_t srs_present, int index);
 
 int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req);
 
