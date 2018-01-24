@@ -53,9 +53,9 @@ int32_t nr_segmentation(unsigned char *input_buffer,
       *C=*C+1;
 
     Bprime = B+((*C)*L);
-//#ifdef DEBUG_SEGMENTATION
+#ifdef DEBUG_SEGMENTATION
     printf("Bprime %d\n",Bprime);
-//#endif
+#endif
   }
 
   if ((*C)>MAX_NUM_DLSCH_SEGMENTS) {
@@ -83,7 +83,7 @@ if ((Bprime_by_C%Kb) > 0)
 else
 	Z = (Bprime_by_C/Kb);
 
-  printf("nr segmetation B %d Bprime %d Bprime_by_C %d z %d \n", B, Bprime, Bprime_by_C, Z);
+  //printf("nr segmetation B %d Bprime %d Bprime_by_C %d z %d \n", B, Bprime, Bprime_by_C, Z);
 	  
   if (Z <= 2) {
     *Kplus = 2;
@@ -112,9 +112,9 @@ else
     if (*Kplus < Z)
       *Kplus = *Kplus + 8;
 
-//#ifdef DEBUG_SEGMENTATION
+#ifdef DEBUG_SEGMENTATION
     printf("Z_by_C %d , Kplus2 %d\n",Z,*Kplus);
-//#endif
+#endif
     *Kminus = (*Kplus - 8);
   } else if (Z <= 256) { // increase by 4 bytes til here
       *Kplus = (Z>>4)<<4;
@@ -141,7 +141,7 @@ else
   
 
   *F = ((*C)*(*Kplus) - (Bprime));
-  printf("final nr seg output Z %d Kplus %d F %d \n", *Zout, *Kplus, *F);
+  //printf("final nr seg output Z %d Kplus %d F %d \n", *Zout, *Kplus, *F);
 #ifdef DEBUG_SEGMENTATION
   printf("C %d, Kplus %d, Kminus %d, Bprime_bytes %d, Bprime %d, F %d\n",*C,*Kplus,*Kminus,Bprime>>3,Bprime,*F);
 #endif

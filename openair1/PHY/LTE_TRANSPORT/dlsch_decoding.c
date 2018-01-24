@@ -49,6 +49,8 @@ static int8_t llrProcBuf[OAI_LDPC_MAX_NUM_LLR] __attribute__ ((aligned(32)));
 
 static uint8_t ullrProcBuf[OAI_LDPC_MAX_NUM_LLR] __attribute__ ((aligned(32)));
 
+static uint64_t nb_total_decod =0;
+static uint64_t nb_error_decod =0;
 
 extern double cpuf;
 
@@ -347,8 +349,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
     						&harq_process->Z,
     	                    &harq_process->F);
     	p_decParams->Z = harq_process->Z;
-    	printf("dlsch decoding nr segmentation Z %d\n", p_decParams->Z);
-    	printf("Kplus %d C %d nl %d \n", harq_process->Kplus, harq_process->C, harq_process->Nl);
+    	//printf("dlsch decoding nr segmentation Z %d\n", p_decParams->Z);
+    	//printf("Kplus %d C %d nl %d \n", harq_process->Kplus, harq_process->C, harq_process->Nl);
 #endif
 
   }
@@ -436,7 +438,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                                             (r==0) ? harq_process->F : 0);
 
 //#ifdef DEBUG_DLSCH_DECODING
-    LOG_I(PHY,"HARQ_PID %d Rate Matching Segment %d (coded bits %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
+    LOG_D(PHY,"HARQ_PID %d Rate Matching Segment %d (coded bits %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
           harq_pid,r, G,
           Kr*3,
           harq_process->TBS,
@@ -541,7 +543,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 #if UE_TIMING_TRACE
         start_meas(dlsch_turbo_decoding_stats);
 #endif
-      LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
+      //LOG_E(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d A %d ",frame%1024,nr_tti_rx,r,harq_process->C-1, A);
 
       //printf("harq process dr iteration %d\n", p_decParams->numMaxIter);
       //66*p_decParams->Z
@@ -614,11 +616,19 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       			&pl[0],
 				llrProcBuf,
           		p_procTime);
+		ret = no_iteration_ldpc;
 
-		if (no_iteration_ldpc > 2)
-			printf("Error number of iteration LPDC %d\n", no_iteration_ldpc);
-		else
-			printf("OK number of iteration LPDC %d\n", no_iteration_ldpc);
+
+		nb_total_decod++;
+		if (no_iteration_ldpc > 2){
+			nb_error_decod++;
+			
+		}
+		if (!nb_total_decod%10000){
+				printf("Error number of iteration LPDC %d %ld/%ld \n", no_iteration_ldpc, nb_error_decod,nb_total_decod);fflush(stdout);}
+
+		//else
+			//printf("OK number of iteration LPDC %d\n", no_iteration_ldpc);
 
 		for (int m=0; m < Kr>>3; m ++)
 		      	      	{
@@ -806,8 +816,9 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 
 
     if ((err_flag == 0) && (ret>=(1+dlsch->max_turbo_iterations))) {// a Code segment is in error so break;
-      LOG_D(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
-      err_flag = 1;
+	if (!(!(frame%2) && (nr_tti_rx==5))){
+      LOG_W(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
+      err_flag = 1;}
     }
   }
 
