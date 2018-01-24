@@ -54,7 +54,7 @@
 #include "PHY/extern.h"
 
 /////////   for NB-IoT /////////////////////////
-//#include "SystemInformationBlockType2-NB-r13.h"
+#include "SystemInformationBlockType2-NB-r13.h"
 //////////////////END/////////////////////
 
 /* those macros are here to help diagnose problems in configuration files
@@ -251,7 +251,7 @@
 //
 /////////////////////////////////////////////////NB-IoT parameters ///////////////////////////////////////////////
 //
-/*
+
 ///////////////////////////////////////////////// RRC parameters in the config file of merge branch
 #define ENB_CONFIG_STRING_RACH_POWERRAMPINGSTEP_NB_IOT                     "rach_powerRampingStep_NB"
 #define ENB_CONFIG_STRING_RACH_PREAMBLEINITIALRECEIVEDTARGETPOWER_NB_IOT   "rach_preambleInitialReceivedTargetPower_NB"
@@ -297,7 +297,7 @@
 #define ENB_CONFIG_STRING_NPDCCH_NUMREPETITIONS_RA_NB_IOT                  "npdcch_NumRepetitions_RA"
 #define ENB_CONFIG_STRING_NPDCCH_STARTSF_CSS_RA_NB_IOT                     "npdcch_StartSF_CSS_RA"
 #define ENB_CONFIG_STRING_NPDCCH_OFFSET_RA_NB_IOT                          "npdcch_Offset_RA"
-*/
+
 /////////////////////////////////////////////////END///////////////////////////////////////////////
 
 #define KHz (1000UL)
@@ -371,29 +371,29 @@ void enb_config_display(void)
     
     for (j=0; j< enb_properties.properties[i]->nb_rrh_gw; j++) {
       if (enb_properties.properties[i]->rrh_gw_config[j].active == 1 ){
-	printf( "\n\tRRH GW %d config for eNB %u:\n\n", j, i);
+  printf( "\n\tRRH GW %d config for eNB %u:\n\n", j, i);
         printf( "\tinterface name :       \t%s:\n",enb_properties.properties[i]->rrh_gw_config[j].rrh_gw_if_name);
-	printf( "\tlocal address  :       \t%s:\n",enb_properties.properties[i]->rrh_gw_config[j].local_address);
-	printf( "\tlocal port     :       \t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].local_port);
-	printf( "\tremote address :       \t%s:\n",enb_properties.properties[i]->rrh_gw_config[j].remote_address);
-	printf( "\tremote port    :       \t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].remote_port);
-	printf( "\ttx_scheduling_advance :\t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].tx_scheduling_advance);
-	printf( "\ttx_sample_advance :    \t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].tx_sample_advance);
-	printf( "\tiq_txshift :           \t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].iq_txshift);
-	printf( "\ttransport  :           \t%s Ethernet:\n",(enb_properties.properties[i]->rrh_gw_config[j].raw == 1)? "RAW" : (enb_properties.properties[i]->rrh_gw_config[j].rawif4p5 == 1)? "RAW_IF4p5" : (enb_properties.properties[i]->rrh_gw_config[j].udpif4p5 == 1)? "UDP_IF4p5" : (enb_properties.properties[i]->rrh_gw_config[j].rawif5_mobipass == 1)? "RAW_IF5_MOBIPASS" : "UDP");
-	if (enb_properties.properties[i]->rrh_gw_config[j].exmimo == 1) {
-	  printf( "\tRF target  :           \tEXMIMO:\n");
-	} else if (enb_properties.properties[i]->rrh_gw_config[j].usrp_b200 == 1) {
-	  printf( "\tRF target  :           \tUSRP_B200:\n");
-	} else if (enb_properties.properties[i]->rrh_gw_config[j].usrp_x300 == 1) {
-	  printf( "\tRF target  :           \tUSRP_X300:\n");
-	} else if (enb_properties.properties[i]->rrh_gw_config[j].bladerf == 1) {
-	  printf( "\tRF target  :           \tBLADERF:\n");
-	} else if (enb_properties.properties[i]->rrh_gw_config[j].lmssdr == 1) {
-	  printf( "\tRF target  :           \tLMSSDR:\n");
-	} else {
-	  printf( "\tRF target  :           \tNONE:\n");
-	}
+  printf( "\tlocal address  :       \t%s:\n",enb_properties.properties[i]->rrh_gw_config[j].local_address);
+  printf( "\tlocal port     :       \t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].local_port);
+  printf( "\tremote address :       \t%s:\n",enb_properties.properties[i]->rrh_gw_config[j].remote_address);
+  printf( "\tremote port    :       \t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].remote_port);
+  printf( "\ttx_scheduling_advance :\t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].tx_scheduling_advance);
+  printf( "\ttx_sample_advance :    \t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].tx_sample_advance);
+  printf( "\tiq_txshift :           \t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].iq_txshift);
+  printf( "\ttransport  :           \t%s Ethernet:\n",(enb_properties.properties[i]->rrh_gw_config[j].raw == 1)? "RAW" : (enb_properties.properties[i]->rrh_gw_config[j].rawif4p5 == 1)? "RAW_IF4p5" : (enb_properties.properties[i]->rrh_gw_config[j].udpif4p5 == 1)? "UDP_IF4p5" : (enb_properties.properties[i]->rrh_gw_config[j].rawif5_mobipass == 1)? "RAW_IF5_MOBIPASS" : "UDP");
+  if (enb_properties.properties[i]->rrh_gw_config[j].exmimo == 1) {
+    printf( "\tRF target  :           \tEXMIMO:\n");
+  } else if (enb_properties.properties[i]->rrh_gw_config[j].usrp_b200 == 1) {
+    printf( "\tRF target  :           \tUSRP_B200:\n");
+  } else if (enb_properties.properties[i]->rrh_gw_config[j].usrp_x300 == 1) {
+    printf( "\tRF target  :           \tUSRP_X300:\n");
+  } else if (enb_properties.properties[i]->rrh_gw_config[j].bladerf == 1) {
+    printf( "\tRF target  :           \tBLADERF:\n");
+  } else if (enb_properties.properties[i]->rrh_gw_config[j].lmssdr == 1) {
+    printf( "\tRF target  :           \tLMSSDR:\n");
+  } else {
+    printf( "\tRF target  :           \tNONE:\n");
+  }
     printf( "\tif_compression :         \t%s Compression:\n",(enb_properties.properties[i]->rrh_gw_config[j].if_compress == 1)? "ALAW" : "None");
       }
     }
@@ -551,7 +551,7 @@ static int enb_check_band_frequencies(char* lib_config_file_name_pP,
       if (band == eutra_bands[band_index].band) {
         uint32_t uplink_frequency = downlink_frequency + uplink_frequency_offset;
 
-   /*     AssertError (eutra_bands[band_index].dl_min < downlink_frequency, errors ++,
+        AssertError (eutra_bands[band_index].dl_min < downlink_frequency, errors ++,
                      "Failed to parse eNB configuration file %s, enb %d downlink frequency %u too low (%u) for band %d!",
                      lib_config_file_name_pP, enb_properties_index, downlink_frequency, eutra_bands[band_index].dl_min, band);
         AssertError (downlink_frequency < eutra_bands[band_index].dl_max, errors ++,
@@ -564,7 +564,7 @@ static int enb_check_band_frequencies(char* lib_config_file_name_pP,
         AssertError (uplink_frequency < eutra_bands[band_index].ul_max, errors ++,
                      "Failed to parse eNB configuration file %s, enb %d uplink frequency %u too high (%u) for band %d!",
                      lib_config_file_name_pP, enb_properties_index, uplink_frequency, eutra_bands[band_index].ul_max, band);
-*/
+
         AssertError (eutra_bands[band_index].frame_type == frame_type, errors ++,
                      "Failed to parse eNB configuration file %s, enb %d invalid frame type (%d/%d) for band %d!",
                      lib_config_file_name_pP, enb_properties_index, eutra_bands[band_index].frame_type, frame_type, band);
@@ -763,7 +763,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   //
   /////////////////////////////////////////////////NB-IoT parameters ///////////////////////////////////////////////
   //
-  /*
+  
   libconfig_int     rach_raResponseWindowSize_NB                 = 0;
   libconfig_int     rach_macContentionResolutionTimer_NB         = 0;
   libconfig_int     rach_powerRampingStep_NB                     = 0;
@@ -804,7 +804,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   libconfig_int     npdcch_NumRepetitions_RA           = 0;
   libconfig_int     npdcch_StartSF_CSS_RA              = 0;
   const char*       npdcch_Offset_RA                   = NULL;
-  */
+  
   ////////////////////////////////////////////////END///////////////////////////////////////////////
 
 
@@ -949,7 +949,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
             for (j = 0; j < num_component_carriers /*&& j < MAX_NUM_CCs*/; j++) {
               component_carrier = config_setting_get_elem(setting_component_carriers, j);
 
-              //printf("Component carrier %d\n",component_carrier);
+           
               if (!(config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_CC_NODE_FUNCTION, &cc_node_function)
                    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_CC_NODE_TIMING, &cc_node_timing)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_CC_NODE_SYNCH_REF, &cc_node_synch_ref)
@@ -1020,10 +1020,6 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N310,  &ue_TimersAndConstants_n310)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N311,  &ue_TimersAndConstants_n311)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UE_TRANSMISSION_MODE,  &ue_TransmissionMode)
-                   /*
-                   //
-                   /////////////////////////////////////////////// NB-IoT ///////////////////////////////////////////////
-                   //
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_RARESPONSEWINDOWSIZE_NB_IOT,  &rach_raResponseWindowSize_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_MACCONTENTIONRESOLUTIONTIMER_NB_IOT,  &rach_macContentionResolutionTimer_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_RACH_POWERRAMPINGSTEP_NB_IOT,  &rach_powerRampingStep_NB)
@@ -1046,14 +1042,12 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPUSCH_P0NOMINALPUSH_NB_IOT,  &npusch_p0_NominalNPUSCH)
                    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_NPUSCH_ALPHA_NB_IOT,  &npusch_alpha)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_DELTAPREAMBLEMSG3_NB_IOT,  &deltaPreambleMsg3)
-                   
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T300_NB_IOT,  &ue_TimersAndConstants_t300_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T301_NB_IOT,  &ue_TimersAndConstants_t301_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T310_NB_IOT,  &ue_TimersAndConstants_t310_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_T311_NB_IOT,  &ue_TimersAndConstants_t311_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N310_NB_IOT,  &ue_TimersAndConstants_n310_NB)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_UETIMERS_N311_NB_IOT,  &ue_TimersAndConstants_n311_NB)
-                   
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_PERIODICITY_NB_IOT,  &nprach_Periodicity)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_STARTTIME_NB_IOT,  &nprach_StartTime)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPRACH_SUBCARRIEROFFSET_NB_IOT,  &nprach_SubcarrierOffset)
@@ -1064,8 +1058,6 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPDCCH_NUMREPETITIONS_RA_NB_IOT,  &npdcch_NumRepetitions_RA)
                    && config_setting_lookup_int(component_carrier, ENB_CONFIG_STRING_NPDCCH_STARTSF_CSS_RA_NB_IOT,  &npdcch_StartSF_CSS_RA)
                    && config_setting_lookup_string(component_carrier, ENB_CONFIG_STRING_NPDCCH_OFFSET_RA_NB_IOT,  &npdcch_Offset_RA)
-                   */
-////////////////////////////////////////////////////END///////////////////////////////////////////////
 
 #if defined(Rel10) || defined(Rel14)
 
@@ -2091,35 +2083,35 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
 
               }
 
-	      switch (ue_TransmissionMode) {
-	      case 1:
-		enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm1;
-		break;
-	      case 2:
-		enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm2;
-		break;
-	      case 3:
-		enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm3;
-		break;
-	      case 4:
-		enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm4;
-		break;
-	      case 5:
-		enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm5;
-		break;
-	      case 6:
-		enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm6;
-		break;
-	      case 7:
-		enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm7;
-		break;
-	      default:
+        switch (ue_TransmissionMode) {
+        case 1:
+    enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm1;
+    break;
+        case 2:
+    enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm2;
+    break;
+        case 3:
+    enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm3;
+    break;
+        case 4:
+    enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm4;
+    break;
+        case 5:
+    enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm5;
+    break;
+        case 6:
+    enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm6;
+    break;
+        case 7:
+    enb_properties.properties[enb_properties_index]->ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm7;
+    break;
+        default:
                 AssertFatal (0,
                              "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for ue_TransmissionMode choice: 1,2,3,4,5,6,7",
                              lib_config_file_name_pP, i, ue_TransmissionMode);
-		break;
-	      }
-/*
+    break;
+        }
+
         //////////////////////////////////////////////////////////////////////////////////////////////
         /////////////////////////////////////////////// NB-IoT part ///////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2433,13 +2425,13 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                              lib_config_file_name_pP, i, nprach_rsrp_range);
 
       enb_properties.properties[enb_properties_index]->npdsch_nrs_Power[j] =  npdsch_nrs_Power;
- 
+
               if ((npdsch_nrs_Power<-60)||(npdsch_nrs_Power>50))
                 AssertFatal (0,
                              "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npdsch_nrs_Power choice: -60..50 !\n",
                              lib_config_file_name_pP, i, npdsch_nrs_Power);
 
-      
+    
       switch (npusch_ack_nack_numRepetitions_NB) {
               case 1:
                 enb_properties.properties[enb_properties_index]->npusch_ack_nack_numRepetitions_NB[j] = ACK_NACK_NumRepetitions_NB_r13_r1;
@@ -2562,7 +2554,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                              lib_config_file_name_pP, i, npusch_threeTone_CyclicShift_r13);
 
       enb_properties.properties[enb_properties_index]->npusch_sixTone_CyclicShift_r13[j] =  npusch_sixTone_CyclicShift_r13;
- 
+
               if ((npusch_sixTone_CyclicShift_r13<0)||(npusch_sixTone_CyclicShift_r13>3))
                 AssertFatal (0,
                              "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npusch_sixTone_CyclicShift_r13 choice: 0..3 !\n",
@@ -2653,7 +2645,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                              lib_config_file_name_pP, i, dl_GapDurationCoeff_NB);
 
       enb_properties.properties[enb_properties_index]->npusch_p0_NominalNPUSCH[j] =  npusch_p0_NominalNPUSCH;
- 
+
               if ((npusch_p0_NominalNPUSCH < -126)||(npusch_p0_NominalNPUSCH> 24))
                 AssertFatal (0,
                              "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npusch_p0_NominalNPUSCH choice: -126..24 !\n",
@@ -2729,6 +2721,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                 break;
 
               }
+
         switch (ue_TimersAndConstants_t301_NB) {
               case 2500:
                 enb_properties.properties[enb_properties_index]->ue_TimersAndConstants_t301_NB[j] = UE_TimersAndConstants_NB_r13__t301_r13_ms2500;
@@ -3010,23 +3003,23 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
               }
 
         switch (nprach_SubcarrierOffset) {
-              case 40:
+              case 0:
                 enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n0;
                 break;
 
-              case 80:
+              case 12:
                 enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n12;
                 break;
 
-              case 160:
+              case 24:
                 enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n24;
                 break;
 
-              case 240:
+              case 36:
                 enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n36;
                 break;
 
-                case 32:
+                case 2:
                 enb_properties.properties[enb_properties_index]->nprach_SubcarrierOffset[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n2;
                 break;
 
@@ -3074,7 +3067,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
 
                 break;
               }
-                
+           
         if (strcmp(nprach_SubcarrierMSG3_RangeStart, "zero") == 0) {
                 enb_properties.properties[enb_properties_index]->nprach_SubcarrierMSG3_RangeStart[j] = NPRACH_Parameters_NB_r13__nprach_SubcarrierMSG3_RangeStart_r13_zero;
               } else if (strcmp(nprach_SubcarrierMSG3_RangeStart, "oneThird") == 0) {
@@ -3277,7 +3270,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                              "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for npdcch_Offset_RA choice: zero,oneEighth,oneFourth,threeEighth !\n",
                              lib_config_file_name_pP, i, npdcch_Offset_RA);
 
-*/
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////END//////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3643,115 +3636,115 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
               enb_properties.properties[enb_properties_index]->mme_ip_address[j].ipv6 = 1;
             }
           }
-	  // RRH Config 
-	  setting_rrh_gws = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_RRH_GW_CONFIG);
-	  if ( setting_rrh_gws != NULL) {
-	    num_rrh_gw     = config_setting_length(setting_rrh_gws);
-	    enb_properties.properties[enb_properties_index]->nb_rrh_gw = 0;
+    // RRH Config 
+    setting_rrh_gws = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_RRH_GW_CONFIG);
+    if ( setting_rrh_gws != NULL) {
+      num_rrh_gw     = config_setting_length(setting_rrh_gws);
+      enb_properties.properties[enb_properties_index]->nb_rrh_gw = 0;
 
-	    for (j = 0; j < num_rrh_gw; j++) {
-	      setting_rrh_gw = config_setting_get_elem(setting_rrh_gws, j);
-	      
-	      if (  !(
-		      config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_LOCAL_IF_NAME, (const char **)&if_name)
-		      && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_LOCAL_ADDRESS, (const char **)&ipv4)
-		      && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_REMOTE_ADDRESS , (const char **)&ipv4_remote)
-		      && config_setting_lookup_int(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_LOCAL_PORT, &local_port)
-		      && config_setting_lookup_int(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_REMOTE_PORT, &remote_port)
-		      && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_ACTIVE, (const char **)&active)
-		      && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_TRANSPORT_PREFERENCE, (const char **)&tr_preference)
-		      && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_RF_TARGET_PREFERENCE, (const char **)&rf_preference)
-		      && config_setting_lookup_int(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_IQ_TXSHIFT, &iq_txshift) 
-		      && config_setting_lookup_int(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_TX_SAMPLE_ADVANCE, &tx_sample_advance)
-		      && config_setting_lookup_int(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_TX_SCHEDULING_ADVANCE, &tx_scheduling_advance)
-		      && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_IF_COMPRESSION, (const char **)&if_compression)
-		      )
-		    ) {
-		AssertFatal (0,
-			     "Failed to parse eNB configuration file %s, %u th enb %u the RRH GW address !\n",
-			     lib_config_file_name_pP, i, j);
-		continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
-	      }
-	      
-	      enb_properties.properties[enb_properties_index]->nb_rrh_gw += 1;
-	      
-	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].rrh_gw_if_name = strdup(if_name);
-	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].local_address  = strdup(ipv4);
-	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].remote_address = strdup(ipv4_remote);
-	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].local_port = local_port;
-	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].remote_port = remote_port;
-	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].iq_txshift = iq_txshift;
-	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].tx_sample_advance = tx_sample_advance;
-	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].tx_scheduling_advance= tx_scheduling_advance;
-	      
-	      if (strcmp(active, "yes") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].active = 1;
-	      } 
-	      
-	      if (strcmp(tr_preference, "udp") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].udp = 1;
-	      } else if (strcmp(tr_preference, "raw") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].raw = 1;
-	      } else if (strcmp(tr_preference, "udp_if4p5") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].udpif4p5 = 1; 
-	      } else if (strcmp(tr_preference, "raw_if4p5") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].rawif4p5 = 1;
-	      } else if (strcmp(tr_preference, "raw_if5_mobipass") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].rawif5_mobipass = 1;
-	      } else {//if (strcmp(preference, "no") == 0) 
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].udp = 1;
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].raw = 1;
-	      }
-	      
-	      if (strcmp(rf_preference, "exmimo") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].exmimo = 1;
-	      } else if (strcmp(rf_preference, "usrp_b200") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_b200 = 1;
-	      } else if (strcmp(rf_preference, "usrp_x300") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_x300 = 1;
-	      } else if (strcmp(rf_preference, "bladerf") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].bladerf = 1;
-	      } else if (strcmp(rf_preference, "lmsdr") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].lmssdr = 1;	      
-	      } else {//if (strcmp(preference, "no") == 0) 
-	      
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].exmimo = 1;
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_b200 = 1;
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_x300 = 1;
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].bladerf = 1;    
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].lmssdr = 1;    
-		
-	      }
-	      
-	      if (strcmp(if_compression, "alaw") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].if_compress = 1;
-	      } else if (strcmp(if_compression, "none") == 0) {
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].if_compress = 0;
-	      } else { 
-		enb_properties.properties[enb_properties_index]->rrh_gw_config[j].if_compress = 0;
-	      }
-	    } 
-	  } else {
-	    enb_properties.properties[enb_properties_index]->nb_rrh_gw = 0;	    
+      for (j = 0; j < num_rrh_gw; j++) {
+        setting_rrh_gw = config_setting_get_elem(setting_rrh_gws, j);
+        
+        if (  !(
+          config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_LOCAL_IF_NAME, (const char **)&if_name)
+          && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_LOCAL_ADDRESS, (const char **)&ipv4)
+          && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_REMOTE_ADDRESS , (const char **)&ipv4_remote)
+          && config_setting_lookup_int(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_LOCAL_PORT, &local_port)
+          && config_setting_lookup_int(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_REMOTE_PORT, &remote_port)
+          && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_ACTIVE, (const char **)&active)
+          && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_TRANSPORT_PREFERENCE, (const char **)&tr_preference)
+          && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_RF_TARGET_PREFERENCE, (const char **)&rf_preference)
+          && config_setting_lookup_int(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_IQ_TXSHIFT, &iq_txshift) 
+          && config_setting_lookup_int(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_TX_SAMPLE_ADVANCE, &tx_sample_advance)
+          && config_setting_lookup_int(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_TX_SCHEDULING_ADVANCE, &tx_scheduling_advance)
+          && config_setting_lookup_string(setting_rrh_gw, ENB_CONFIG_STRING_RRH_GW_IF_COMPRESSION, (const char **)&if_compression)
+          )
+        ) {
+    AssertFatal (0,
+           "Failed to parse eNB configuration file %s, %u th enb %u the RRH GW address !\n",
+           lib_config_file_name_pP, i, j);
+    continue; // FIXME will prevent segfaults below, not sure what happens at function exit...
+        }
+        
+        enb_properties.properties[enb_properties_index]->nb_rrh_gw += 1;
+        
+        enb_properties.properties[enb_properties_index]->rrh_gw_config[j].rrh_gw_if_name = strdup(if_name);
+        enb_properties.properties[enb_properties_index]->rrh_gw_config[j].local_address  = strdup(ipv4);
+        enb_properties.properties[enb_properties_index]->rrh_gw_config[j].remote_address = strdup(ipv4_remote);
+        enb_properties.properties[enb_properties_index]->rrh_gw_config[j].local_port = local_port;
+        enb_properties.properties[enb_properties_index]->rrh_gw_config[j].remote_port = remote_port;
+        enb_properties.properties[enb_properties_index]->rrh_gw_config[j].iq_txshift = iq_txshift;
+        enb_properties.properties[enb_properties_index]->rrh_gw_config[j].tx_sample_advance = tx_sample_advance;
+        enb_properties.properties[enb_properties_index]->rrh_gw_config[j].tx_scheduling_advance= tx_scheduling_advance;
+        
+        if (strcmp(active, "yes") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].active = 1;
+        } 
+        
+        if (strcmp(tr_preference, "udp") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].udp = 1;
+        } else if (strcmp(tr_preference, "raw") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].raw = 1;
+        } else if (strcmp(tr_preference, "udp_if4p5") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].udpif4p5 = 1; 
+        } else if (strcmp(tr_preference, "raw_if4p5") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].rawif4p5 = 1;
+        } else if (strcmp(tr_preference, "raw_if5_mobipass") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].rawif5_mobipass = 1;
+        } else {//if (strcmp(preference, "no") == 0) 
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].udp = 1;
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].raw = 1;
+        }
+        
+        if (strcmp(rf_preference, "exmimo") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].exmimo = 1;
+        } else if (strcmp(rf_preference, "usrp_b200") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_b200 = 1;
+        } else if (strcmp(rf_preference, "usrp_x300") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_x300 = 1;
+        } else if (strcmp(rf_preference, "bladerf") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].bladerf = 1;
+        } else if (strcmp(rf_preference, "lmsdr") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].lmssdr = 1;       
+        } else {//if (strcmp(preference, "no") == 0) 
+        
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].exmimo = 1;
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_b200 = 1;
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_x300 = 1;
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].bladerf = 1;    
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].lmssdr = 1;    
+    
+        }
+        
+        if (strcmp(if_compression, "alaw") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].if_compress = 1;
+        } else if (strcmp(if_compression, "none") == 0) {
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].if_compress = 0;
+        } else { 
+    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].if_compress = 0;
+        }
+      } 
+    } else {
+      enb_properties.properties[enb_properties_index]->nb_rrh_gw = 0;     
             enb_properties.properties[enb_properties_index]->rrh_gw_config[j].rrh_gw_if_name = "none";
             enb_properties.properties[enb_properties_index]->rrh_gw_config[j].local_address  = "0.0.0.0";
             enb_properties.properties[enb_properties_index]->rrh_gw_config[j].remote_address = "0.0.0.0";
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].local_port= 0;
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].remote_port= 0;	    
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].active = 0;	    
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].udp = 0;
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].raw = 0;
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].tx_scheduling_advance = 0;
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].tx_sample_advance = 0;
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].iq_txshift = 0;
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].exmimo = 0;
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_b200 = 0;
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_x300 = 0;
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].bladerf = 0;
-	    enb_properties.properties[enb_properties_index]->rrh_gw_config[j].lmssdr = 0;
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].local_port= 0;
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].remote_port= 0;     
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].active = 0;     
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].udp = 0;
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].raw = 0;
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].tx_scheduling_advance = 0;
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].tx_sample_advance = 0;
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].iq_txshift = 0;
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].exmimo = 0;
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_b200 = 0;
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].usrp_x300 = 0;
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].bladerf = 0;
+      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].lmssdr = 0;
             enb_properties.properties[enb_properties_index]->rrh_gw_config[j].if_compress = 0;
-	  }
-	  
+    }
+    
           // SCTP SETTING
           enb_properties.properties[enb_properties_index]->sctp_out_streams = SCTP_OUT_STREAMS;
           enb_properties.properties[enb_properties_index]->sctp_in_streams  = SCTP_IN_STREAMS;
@@ -3760,11 +3753,11 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
 
           if (subsetting != NULL) {
             if ( (config_setting_lookup_int( subsetting, ENB_CONFIG_STRING_SCTP_INSTREAMS, &my_int) )) {
-            	enb_properties.properties[enb_properties_index]->sctp_in_streams = (uint16_t)my_int;
+              enb_properties.properties[enb_properties_index]->sctp_in_streams = (uint16_t)my_int;
             }
 
             if ( (config_setting_lookup_int( subsetting, ENB_CONFIG_STRING_SCTP_OUTSTREAMS, &my_int) )) {
-            	enb_properties.properties[enb_properties_index]->sctp_out_streams = (uint16_t)my_int;
+              enb_properties.properties[enb_properties_index]->sctp_out_streams = (uint16_t)my_int;
             }
           }
 #endif
@@ -3805,9 +3798,9 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
               }
             }
           }
-	  
-	  // Network Controller 
-	  subsetting = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_NETWORK_CONTROLLER_CONFIG);
+    
+    // Network Controller 
+    subsetting = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_NETWORK_CONTROLLER_CONFIG);
 
           if (subsetting != NULL) {
             if (  (
@@ -3817,23 +3810,23 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                                                     (const char **)&flexran_agent_ipv4_address)
                    && config_setting_lookup_int(subsetting, ENB_CONFIG_STRING_FLEXRAN_AGENT_PORT,
                                                 &flexran_agent_port)
-		   && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_FLEXRAN_AGENT_CACHE,
-						    (const char **)&flexran_agent_cache)
+       && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_FLEXRAN_AGENT_CACHE,
+                (const char **)&flexran_agent_cache)
                  )
               ) {
               enb_properties.properties[enb_properties_index]->flexran_agent_interface_name = strdup(flexran_agent_interface_name);
               cidr = flexran_agent_ipv4_address;
               address = strtok(cidr, "/");
-	      //enb_properties.properties[enb_properties_index]->flexran_agent_ipv4_address = strdup(address);
-	      if (address) {
+        //enb_properties.properties[enb_properties_index]->flexran_agent_ipv4_address = strdup(address);
+        if (address) {
                 IPV4_STR_ADDR_TO_INT_NWBO (address, enb_properties.properties[enb_properties_index]->flexran_agent_ipv4_address, "BAD IP ADDRESS FORMAT FOR eNB Agent !\n" );
-	      }
+        }
 
               enb_properties.properties[enb_properties_index]->flexran_agent_port = flexran_agent_port;
-	      enb_properties.properties[enb_properties_index]->flexran_agent_cache = strdup(flexran_agent_cache);
+        enb_properties.properties[enb_properties_index]->flexran_agent_cache = strdup(flexran_agent_cache);
             }
           }
-	  
+    
 
           // OTG _CONFIG //MP: refers to USB On the GO Features ?? (use USB devices as a fleshdrives)
           setting_otg = config_setting_get_member (setting_enb, ENB_CONF_STRING_OTG_CONFIG);
@@ -4119,7 +4112,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
                "Failed to parse eNB configuration file %s, mismatch between %u active eNBs and %u corresponding defined eNBs !\n",
                lib_config_file_name_pP, num_enb_properties, enb_properties_index);
 
-  enb_config_display();
+  //enb_config_display();
   return &enb_properties;
 
 }

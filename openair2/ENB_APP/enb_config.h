@@ -209,7 +209,7 @@ typedef struct Enb_properties_s {
 #endif
   long                    ue_TransmissionMode[1+MAX_NUM_CCs];
   //
-  //*************************************** NB-IoT **********************************************
+  /////////////////////////////////////////// NB-IoT ///////////////////////////////////////////////////
   //
   long              rach_raResponseWindowSize_NB[1+MAX_NUM_CCs];
   long              rach_macContentionResolutionTimer_NB[1+MAX_NUM_CCs];
@@ -220,7 +220,7 @@ typedef struct Enb_properties_s {
   long              pcch_defaultPagingCycle_NB[1+MAX_NUM_CCs];
   long              nprach_CP_Length[1+MAX_NUM_CCs];
   long              nprach_rsrp_range[1+MAX_NUM_CCs];
-  char*             nprach_SubcarrierMSG3_RangeStart;
+  long             nprach_SubcarrierMSG3_RangeStart[1+MAX_NUM_CCs];
   long              maxNumPreambleAttemptCE_NB[1+MAX_NUM_CCs];
   long              npdsch_nrs_Power[1+MAX_NUM_CCs];
   long              npusch_ack_nack_numRepetitions_NB[1+MAX_NUM_CCs];
@@ -231,7 +231,7 @@ typedef struct Enb_properties_s {
   long              npusch_groupAssignmentNPUSCH_r13[1+MAX_NUM_CCs];
   long              dl_GapThreshold_NB[1+MAX_NUM_CCs];
   long              dl_GapPeriodicity_NB[1+MAX_NUM_CCs];
-  char*       dl_GapDurationCoeff_NB;
+  long       dl_GapDurationCoeff_NB[1+MAX_NUM_CCs];
   long              npusch_p0_NominalNPUSCH[1+MAX_NUM_CCs];
   long              npusch_alpha[1+MAX_NUM_CCs];
   long              deltaPreambleMsg3[1+MAX_NUM_CCs];
@@ -250,9 +250,9 @@ typedef struct Enb_properties_s {
   long              numRepetitionsPerPreambleAttempt[1+MAX_NUM_CCs];
   long              npdcch_NumRepetitions_RA[1+MAX_NUM_CCs];
   long              npdcch_StartSF_CSS_RA[1+MAX_NUM_CCs];
-  char*             npdcch_Offset_RA;
+  long             npdcch_Offset_RA[1+MAX_NUM_CCs];
 
-  //********************************************END******************************************************
+  /////////////////////////////////////////////END/////////////////////////////////////////////
   long                    srb1_timer_poll_retransmit;
   long                    srb1_timer_reordering;
   long                    srb1_timer_status_prohibit;
