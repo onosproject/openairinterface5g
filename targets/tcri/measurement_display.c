@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     usleep(100000);
     cpuCyclesMicroSec=(rdtsc()-deb)/100000;
     printf("Cycles per µs: %lu\n",cpuCyclesMicroSec);
-    #define SEP " "
+    #define SEP "\t"
     printf("Frame" SEP "SubFrame" SEP "CodeBlock" SEP "RNTI"  SEP "Iterations" SEP
 	   "StartTime" SEP "RunTime" SEP "ReturnTime" SEP
 	   "CPUcore" SEP "ThreadID" "\n");
