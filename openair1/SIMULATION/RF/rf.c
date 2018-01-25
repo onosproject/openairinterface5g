@@ -419,8 +419,8 @@ clock_t start=clock();*/
 		      rx128_re =  _mm_loadu_ps(&r_re[a][4*i]);//r_re[a][i],r_re[a][i+1]
 		      rx128_im =  _mm_loadu_ps(&r_im[a][4*i]);//r_im[a][i],r_im[a][i+1]
 		      rx128_gain_lin = _mm_set1_ps(rx_gain_lin);
-		      gauss_0_128_sqrt_NOW = _mm_set_ps(ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
-		      gauss_1_128_sqrt_NOW = _mm_set_ps(ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+		      gauss_0_128_sqrt_NOW = _mm_set1_ps(ziggurat(0.0,1.0));
+		      gauss_1_128_sqrt_NOW = _mm_set1_ps(ziggurat(0.0,1.0));
 		      gauss_0_128_sqrt_NOW = _mm_mul_ps(gauss_0_128_sqrt_NOW,_mm_set1_ps(sqrt_NOW));
 		      gauss_1_128_sqrt_NOW = _mm_mul_ps(gauss_1_128_sqrt_NOW,_mm_set1_ps(sqrt_NOW));
 		      // Amplify by receiver gain and apply 3rd order non-linearity

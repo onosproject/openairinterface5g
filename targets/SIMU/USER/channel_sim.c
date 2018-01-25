@@ -544,14 +544,13 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
                         frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,hold_channel,eNB_id,UE_id,CC_id,subframe&0x1);
 #endif
 		stop_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_multipath_channel_freq);
-                //print_meas (&eNB2UE[eNB_id][UE_id][CC_id]->DL_multipath_channel_freq,"[DL][multipath_channel_freq]", &eNB2UE[eNB_id][UE_id][CC_id]->DL_multipath_channel_freq, &eNB2UE[eNB_id][UE_id][CC_id]->DL_multipath_channel_freq);
 
        		/*clock_t stop=clock();
   		printf("multipath_channel DL time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
   		sum=(sum+stop-start);*/
-			//for (int x=0;x<frame_parms->N_RB_DL*12;x++){
-			//	fprintf(file1,"%d\t%e\t%e\n",x,eNB2UE[eNB_id][UE_id][CC_id]->chF[0][x].x,eNB2UE[eNB_id][UE_id][CC_id]->chF[0][x].y);
-			//}
+			/*for (int x=0;x<frame_parms->N_RB_DL*12;x++){
+				fprintf(file1,"%d\t%e\t%e\n",x,eNB2UE[eNB_id][UE_id][CC_id]->chF[0][x].x,eNB2UE[eNB_id][UE_id][CC_id]->chF[0][x].y);
+			}*/
 
 #ifdef DEBUG_SIM
       rx_pwr = signal_energy_fp2(eNB2UE[eNB_id][UE_id][CC_id]->chF[0],

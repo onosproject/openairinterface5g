@@ -225,8 +225,6 @@ void table_nor(unsigned long seed)
 }
 double ziggurat(double mean, double variance)
 {
-  //double nor=NOR;
-  //printf("NOR %e\n",nor);
   return NOR;
 }
 /*
@@ -237,7 +235,7 @@ double ziggurat(double mean, double variance)
 /*!\brief Gaussian random number generator based on modified Box-Muller transformation.Returns a double-precision floating-point number. */
 //#define random_SSE
 #ifdef random_SSE
-double gaussdouble(double mean, double variance)//It is necessary to improve the function.
+double gaussdouble(double mean, double variance)
 {
   static int iset=0;
   static double gset;
