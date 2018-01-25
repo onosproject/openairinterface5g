@@ -32,8 +32,8 @@ int main(int argc, char* argv[]) {
     printf("Cycles per µs: %lu\n",cpuCyclesMicroSec);
     #define SEP "\t"
     printf("Frame" SEP "SubFrame" SEP "CodeBlock" SEP "RNTI"  SEP "Iterations" SEP
-	   "StartTime" SEP "RunTime" SEP "ReturnTime" SEP
-	   "CPUcore" SEP "ThreadID" "\n");
+	   "StartTime" SEP "RunTime" SEP "ReturnTime" SEP "CumulSubFrame"
+	   SEP "CPUcore" SEP "ThreadID" "\n");
 
     mkfifo("/tmp/test-tcri",0666);
     int fd=open("/tmp/test-tcri", O_RDONLY);
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
 	doneRequest.processedBy[15]='\0';
 	printf("%u" SEP "%u" SEP "%u" SEP "%u" SEP "%lu" SEP
 	       "%lu" SEP "%lu" SEP "%lu" SEP
-	       "%u" SEP "%s" "\n",
+	       "%lu" SEP "%u" SEP "%s" "\n",
                id.s.frame,
                id.s.subframe,
 	       id.s.codeblock,
@@ -58,6 +58,7 @@ int main(int argc, char* argv[]) {
 	       (doneRequest.startProcessingTime-doneRequest.creationTime)/cpuCyclesMicroSec,
 	       (doneRequest.endProcessingTime-doneRequest.startProcessingTime)/cpuCyclesMicroSec,
 	       (doneRequest.returnTime-doneRequest.endProcessingTime)/cpuCyclesMicroSec,
+	       doneRequest.cumulSubframe/cpuCyclesMicroSec,
 	       doneRequest.coreId,
 	       doneRequest.processedBy
 	       );

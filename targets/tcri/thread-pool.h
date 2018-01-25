@@ -28,7 +28,8 @@ typedef struct request {
     uint64_t creationTime;
     uint64_t startProcessingTime;
     uint64_t endProcessingTime;
-    uint64_t returnTime;
+  uint64_t returnTime;
+  uint64_t cumulSubframe;
     uint64_t decodeIterations;
     int coreId;
     char processedBy[16];

@@ -551,6 +551,8 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
             eNB->proc.threadPool.doneRequests != NULL
        )
         LOG_E(PHY,"no finished = %d\n",eNB->proc.threadPool.notFinishedJobs);
+
+    uint64_t startTime=rdtsc();
     for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++)
     {
         dlsch0 = eNB->dlsch[(uint8_t)UE_id][0];
@@ -614,6 +616,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     request_t* tmp;
     while ((tmp=eNB->proc.threadPool.doneRequests)!=NULL) {
       tmp->returnTime=rdtsc();
+      tmp->cumulSubframe=tmp->returnTime-startTime;
       // Ignore write error (if no trace listner)
       if (write(eNB->proc.threadPool.traceFd, tmp, sizeof(request_t)- 2*sizeof(void*))) {};
       eNB->proc.threadPool.doneRequests=tmp->next;
@@ -1504,6 +1507,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
             eNB->proc.threadPool.doneRequests != NULL
        )
       LOG_E(PHY,"no finished = %d\n",eNB->proc.threadPool.notFinishedJobs);
+    uint64_t startTime=rdtsc();
     for (int i=0; i<NUMBER_OF_UE_MAX; i++) {
         LTE_eNB_ULSCH_t *ulsch = eNB->ulsch[i];
         LTE_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_processes[harq_pid];
@@ -1590,6 +1594,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       tmp->decodeIterations=rdata->decodeIterations;
       post_decode(tmp);
       tmp->returnTime=rdtsc();
+      tmp->cumulSubframe=tmp->returnTime-startTime;
       // Ignore write error (if no trace listner)
       if (write(eNB->proc.threadPool.traceFd, tmp, sizeof(request_t)- 2*sizeof(void*))) {};
       eNB->proc.threadPool.doneRequests=tmp->next;
