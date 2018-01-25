@@ -636,14 +636,9 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
             req->coreId=0;
             req->processedBy[0]=0;
 	    req->decodeIterations=0;
-	    // Ignore write error (if no trace listner)
-	    if (write(eNB->proc.threadPool.traceFd, req, sizeof(request_t)- 2*sizeof(void*))) {};            start_meas(i_stats);
-            rdata->dlsch->harq_processes[rdata->harq_pid]->RTC[rdata->r] =
-                sub_block_interleaving_turbo(4+(rdata->Kr_bytes*8),
-                                             rdata->output+96, //&dlsch->harq_processes[harq_pid]->d[r][96],
-                                             rdata->dlsch->harq_processes[rdata->harq_pid]->w[rdata->r]);
+	    req->next=eNB->proc.threadPool.doneRequests;
+	    eNB->proc.threadPool.doneRequests=req;
             stop_meas(i_stats);
-            free(req);
         }
     }
     return 0;

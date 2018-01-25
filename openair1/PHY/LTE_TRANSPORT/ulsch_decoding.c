@@ -704,25 +704,16 @@ request_t * ulsch_decoding_data(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr
             req->decodeIterations=rdata->decodeIterations;
             req->coreId=0;
             req->processedBy[0]=0;
-            // Ignore write error (if no trace listner)
-            if (write(eNB->proc.threadPool.traceFd, req, sizeof(request_t)- 2*sizeof(void*))) {};       // Reassembly of Transport block here
-            if (rdata->decodeIterations <= eNB->ulsch[UE_id]->max_turbo_iterations ) {
-                // last block in a TDU is processed in caller
-                if ( rdata->segment_r < (rdata->nbSegments - 1) ) {
-                    ulsch_harq->processedSegments++;
-                    memcpy(ulsch_harq->b+rdata->offset,
-                           rdata->decoded_bytes+Fbytes,
-                           blockSize);
-                    freeRequest(req);
-                }
-            }
-            else
+	    req->next=eNB->proc.threadPool.doneRequests;
+	    eNB->proc.threadPool.doneRequests=req;
+	    
+            if (rdata->decodeIterations > eNB->ulsch[UE_id]->max_turbo_iterations ) 
                 // Entire TPU need retransmission
                 break;
         }
         offset += blockSize;
     }
-    return(req);
+    return NULL;
 }
 
 static inline unsigned int lte_gold_unscram(unsigned int *x1, unsigned int *x2, unsigned char reset) __attribute__((always_inline));
