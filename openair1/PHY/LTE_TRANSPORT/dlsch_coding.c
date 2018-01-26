@@ -71,7 +71,7 @@ void free_eNB_dlsch(LTE_eNB_DLSCH_t *dlsch)
 
     for (i=0; i<dlsch->Mdlharq; i++) {
 #ifdef DEBUG_DLSCH_FREE
-      printf("Freeing dlsch process %d\n",i);
+     printf("Freeing dlsch process %d\n",i);
 #endif
 
       if (dlsch->harq_processes[i]) {
@@ -195,16 +195,16 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(unsigned char Kmimo,unsigned char Mdlharq,uint32_
         if (abstraction_flag==0) {
           for (r=0; r<MAX_NUM_DLSCH_SEGMENTS/bw_scaling; r++) {
             // account for filler in first segment and CRCs for multiple segment case
-            dlsch->harq_processes[i]->c[r] = (uint8_t*)malloc16(((r==0)?8:0) + 3+ 768);
-            dlsch->harq_processes[i]->d[r] = (uint8_t*)malloc16((96+12+3+(3*6144)));
+            dlsch->harq_processes[i]->c[r] = (uint8_t*)malloc16(((r==0)?8:0) + 3+ 1056);
+            dlsch->harq_processes[i]->d[r] = (uint8_t*)malloc16((96+12+3+(3*8448)));
             if (dlsch->harq_processes[i]->c[r]) {
-              bzero(dlsch->harq_processes[i]->c[r],((r==0)?8:0) + 3+ 768);
+              bzero(dlsch->harq_processes[i]->c[r],((r==0)?8:0) + 3+ 1056);
             } else {
               printf("Can't get c\n");
               exit_flag=2;
             }
             if (dlsch->harq_processes[i]->d[r]) {
-              bzero(dlsch->harq_processes[i]->d[r],(96+12+3+(3*6144)));
+              bzero(dlsch->harq_processes[i]->d[r],(96+12+3+(3*8448)));
             } else {
               printf("Can't get d\n");
               exit_flag=2;
@@ -881,6 +881,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
 #endif
 
+      memset(dlsch->harq_processes[harq_pid]->d[r],0,(96+12+3+3*8448)*sizeof(uint8_t));
       ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,rate);
 
 #endif
