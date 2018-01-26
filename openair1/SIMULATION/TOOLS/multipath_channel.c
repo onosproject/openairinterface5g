@@ -715,7 +715,7 @@ void multipath_channel_prach(channel_desc_t *desc,
 		random_channel(desc,0);//Find a(l)
 		freq_channel_prach(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
 		}	
-			for (f=0;f<lenght; f++) {
+			for (f=0;f<length; f++) {
 				rx_tmp.x = 0;
 				rx_tmp.y = 0;
 				for (ii=0; ii<desc->nb_rx; ii++) {
