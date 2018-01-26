@@ -5566,8 +5566,8 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
   }
 
   // calculate number of punctured bits
-  no_punctured_columns=(int)((nrows-2)*Zc+block_length-block_length/rate)/Zc;
-  removed_bit=(nrows-no_punctured_columns-2) * Zc+block_length-(int)(block_length/rate);
+  no_punctured_columns=(int)((nrows-2)*Zc+block_length-block_length*3)/Zc;
+  removed_bit=(nrows-no_punctured_columns-2) * Zc+block_length-(int)(block_length*3);
   //printf("%d\n",no_punctured_columns);
   //printf("%d\n",removed_bit);
   // unpack input
