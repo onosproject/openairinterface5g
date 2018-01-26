@@ -4,12 +4,12 @@
 #include <string.h>
 #include <types.h>
 
-int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Zc,short Kb)
+int encode_parity_check_part(uint16_t *c,uint16_t *d, short BG,short Zc,short Kb)
 {
   //short *Gen_shift_values;
   int i2, i5;
   uint16_t temp;
-  unsigned char *c2;                //offset matrix
+  uint16_t *c2;                //offset matrix
 
   if (BG==1)
   {
@@ -22,7 +22,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -130,7 +130,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -238,7 +238,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -346,7 +346,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -454,7 +454,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -562,7 +562,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -670,7 +670,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -778,7 +778,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -886,7 +886,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -994,7 +994,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -1102,7 +1102,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -1210,7 +1210,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -1318,7 +1318,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -1426,7 +1426,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -1534,7 +1534,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -1642,7 +1642,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -1750,7 +1750,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -1858,7 +1858,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -1966,7 +1966,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -2074,7 +2074,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -2182,7 +2182,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -2290,7 +2290,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -2398,7 +2398,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -2506,7 +2506,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -2614,7 +2614,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -2722,7 +2722,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -2830,7 +2830,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -2938,7 +2938,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -3046,7 +3046,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -3154,7 +3154,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -3262,7 +3262,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -3370,7 +3370,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -3478,7 +3478,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -3586,7 +3586,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -3694,7 +3694,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -3802,7 +3802,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -3910,7 +3910,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -4018,7 +4018,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -4228,7 +4228,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -4336,7 +4336,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -4444,7 +4444,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -4552,7 +4552,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -4660,7 +4660,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -4768,7 +4768,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -4876,7 +4876,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -4984,7 +4984,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -5092,7 +5092,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -5200,7 +5200,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -5308,7 +5308,7 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
           for (i5=0; i5 < Kb; i5++)
           {
             temp = c[i5*Zc];
-            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+            memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(uint16_t));
             c[i5*Zc+Zc-1] = temp;
           }
 
@@ -5522,9 +5522,9 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
 
 int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short block_length,double rate)
 {
-  unsigned char c[22*384]; //padded input, unpacked, max size
-  unsigned char d[46*384]; //coded parity part output, unpacked, max size
-  unsigned char c_extension[16896];      //double size matrix of c
+  uint16_t c[22*384]; //padded input, unpacked, max size
+  uint16_t d[46*384]; //coded parity part output, unpacked, max size
+  uint16_t c_extension[16896];      //double size matrix of c
   short BG,Zc,Kb,nrows,ncols;
   int i,i1;
   int no_punctured_columns,removed_bit;
@@ -5571,7 +5571,7 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
   //printf("%d\n",no_punctured_columns);
   //printf("%d\n",removed_bit);
   // unpack input
-  memset(c,0,sizeof(unsigned char) * ncols * Zc);
+  memset(c,0,sizeof(uint16_t) * ncols * Zc);
 
   for (i=0; i<block_length; i++)
   {
@@ -5580,17 +5580,127 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
     c[i]=(test_input[i/8]&(1<<(i&7)))>>(i&7);
   }
 
+  if ((Zc==128) || (Zc==384)) {
   // extend matrix
   for (i1=0; i1 < ncols; i1++)
   {
-    memcpy(&c_extension[2*i1*Zc], &c[i1*Zc], Zc*sizeof(unsigned char));   /// change type here
-    memcpy(&c_extension[(2*i1+1)*Zc], &c[i1*Zc], Zc*sizeof(unsigned char));
+    memcpy(&c_extension[2*i1*Zc], &c[i1*Zc], Zc*sizeof(uint16_t));   /// change type here
+    memcpy(&c_extension[(2*i1+1)*Zc], &c[i1*Zc], Zc*sizeof(uint16_t));
   }
 
   //parity check part
   encode_parity_check_part(c_extension, d, BG, Zc, Kb);
+  }
+  else {
+  //parity check part
+  encode_parity_check_part(c, d, BG, Zc, Kb);
+  }
+
   // information part and puncture columns
-  memcpy(&channel_input[0], &c[2*Zc], (block_length-2*Zc)*sizeof(unsigned char));
-  memcpy(&channel_input[block_length-2*Zc], &d[0], ((nrows-no_punctured_columns) * Zc-removed_bit)*sizeof(unsigned char));
+  //memcpy(&channel_input[0], &c[2*Zc], (block_length-2*Zc)*sizeof(uint16_t));
+  //memcpy(&channel_input[block_length-2*Zc], &d[0], ((nrows-no_punctured_columns) * Zc-removed_bit)*sizeof(uint16_t));
+
+  for (i=0;i<(block_length-2*Zc);i++) 
+    channel_input[i] = c[2*Zc+i];
+  for (i=0;i<((nrows-no_punctured_columns) * Zc-removed_bit);i++)
+    channel_input[block_length-2*Zc+i] = d[i];
+
+  return 0;
+}
+
+int ldpc_encoder_multi_segment(unsigned char **test_input,unsigned char **channel_input,short block_length,double rate,uint8_t n_segments)
+{
+  uint16_t c[22*384]; //padded input, unpacked, max size
+  uint16_t d[68*384]; //coded output, unpacked, max size
+  uint16_t c_extension[16896];      //double size matrix of c
+  short BG,Zc,Kb,nrows,ncols;
+  int i,i1;
+  int no_punctured_columns,removed_bit;
+  //Table of possible lifting sizes
+  short lift_size[51]= {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
+  int j;
+
+  //determine number of bits in codeword
+  //if (block_length>3840)
+  //{
+  BG=1;
+  Kb = 22;
+  nrows=46; //parity check bits
+  ncols=22; //info bits
+  //}
+  /* else if (block_length<=3840)
+  {
+    BG=2;
+    nrows=42; //parity check bits
+    ncols=10; // info bits
+
+    if (block_length>640)
+      Kb = 10;
+    else if (block_length>560)
+      Kb = 9;
+    else if (block_length>192)
+      Kb = 8;
+    else
+      Kb = 6;
+  } */
+
+  //find minimum value in all sets of lifting size
+  for (i1=0; i1 < 51; i1++)
+  {
+    if (lift_size[i1] >= (double) block_length/Kb)
+    {
+      Zc = lift_size[i1];
+      //printf("%d\n",Zc);
+      break;
+    }
+  }
+
+  // calculate number of punctured bits
+  no_punctured_columns=(int)((nrows-2)*Zc+block_length-block_length*3)/Zc;
+  removed_bit=(nrows-no_punctured_columns-2) * Zc+block_length-(int)(block_length*3);
+
+  // unpack input
+  memset(c,0,sizeof(uint16_t) * block_length);
+
+  for (i=0; i<block_length; i++)
+    for (j=0; j<n_segments; j++) {
+	//c[i] = test_input[i/8]<<(i%8);
+	//c[i]=c[i]>>7&1;
+	c[i] |= (test_input[j][i/8]&(1<<(i&7)))>>((i&7)-j);
+    }
+
+  // parity check part
+  if ((Zc==128) || (Zc==384)) {
+  // extend matrix
+  for (i1=0; i1 < ncols; i1++)
+  {
+    memcpy(&c_extension[2*i1*Zc], &c[i1*Zc], Zc*sizeof(uint16_t));   /// change type here
+    memcpy(&c_extension[(2*i1+1)*Zc], &c[i1*Zc], Zc*sizeof(uint16_t));
+  }
+
+  //parity check part
+  encode_parity_check_part(c_extension, d, BG, Zc, Kb);
+  }
+  else {
+  //parity check part
+  encode_parity_check_part(c, d, BG, Zc, Kb);
+  }
+  
+
+
+  /*
+  // information part and puncture columns
+  memcpy(&channel_input[0], &c[2*Zc], (block_length-2*Zc)*sizeof(uint16_t));
+  memcpy(&channel_input[block_length-2*Zc], d, ((nrows-no_punctured_columns) * Zc-removed_bit)*sizeof(uint16_t));
+  2 * Zc+block_length-(int)(block_length/rate);
+  */
+
+  for (i=0;i<(block_length-2*Zc);i++) 
+    for (j=0; j<n_segments; j++) 
+      channel_input[j][i] = (c[2*Zc+i]>>j)&1;
+  for (i=0;i<((nrows-no_punctured_columns) * Zc-removed_bit);i++)
+    for (j=0; j<n_segments; j++) 
+      channel_input[j][block_length-2*Zc+i] = (d[i]>>j)&1;
+
   return 0;
 }

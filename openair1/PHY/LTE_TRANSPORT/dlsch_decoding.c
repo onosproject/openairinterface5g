@@ -212,11 +212,6 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   __m128i *pv = (__m128i*)&z;
   __m128i *pl = (__m128i*)&l;
 
-
-
-#ifdef DEBUG_DLSCH_DECODING
-  uint16_t i;
-#endif
   //#ifdef __AVX2__
 #if 0
   int Kr_last,skipped_last=0;
@@ -616,7 +611,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       			&pl[0],
 				llrProcBuf,
           		p_procTime);
-		ret = no_iteration_ldpc;
+		//ret = no_iteration_ldpc;
 
 
 		nb_total_decod++;
@@ -652,14 +647,16 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 		     	printf(" \n");*/
 #endif
 
-		 //printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
-
+#ifdef DEBUG_DLSCH_DECODING
+      printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
+      printf("no_iterations_ldpc %d\n",no_iteration_ldpc);
+#endif
 
 #if UE_TIMING_TRACE
       stop_meas(dlsch_turbo_decoding_stats);
 #endif
     }
-#else
+#else //1
     if ((harq_process->C == 1) ||
 	((r==harq_process->C-1) && (skipped_last==0))) { // last segment with odd number of segments
 
@@ -805,7 +802,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 	}
       }
     }
-#endif
+#endif //1
 
     /*printf("Segmentation: C %d r %d, dlsch_rate_unmatching_stats %5.3f dlsch_deinterleaving_stats %5.3f  dlsch_turbo_decoding_stats %5.3f \n",
                   harq_process->C,

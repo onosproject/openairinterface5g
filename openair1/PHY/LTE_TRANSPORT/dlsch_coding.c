@@ -582,6 +582,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
   unsigned int Kr=0,Kr_bytes,r,r_offset=0;
   unsigned short m=dlsch->harq_processes[harq_pid]->mcs;
   uint8_t beamforming_mode=0;
+  uint8_t *d_tmp[MAX_NUM_DLSCH_SEGMENTS];
   double rate = 0.33;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_IN);
@@ -647,11 +648,13 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 #endif
 
     printf("Encoder: B %d F %d \n",dlsch->harq_processes[harq_pid]->B, dlsch->harq_processes[harq_pid]->F);
+
+#ifdef TD_DECODING
     for (r=0; r<dlsch->harq_processes[harq_pid]->C; r++) {
 
-      //if (r<dlsch->harq_processes[harq_pid]->Cminus)
-      //  Kr = dlsch->harq_processes[harq_pid]->Kminus;
-      //else
+      if (r<dlsch->harq_processes[harq_pid]->Cminus)
+        Kr = dlsch->harq_processes[harq_pid]->Kminus;
+      else
         Kr = dlsch->harq_processes[harq_pid]->Kplus;
 
       Kr_bytes = Kr>>3;
@@ -687,19 +690,6 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       printf("Encoding ... iind %d f1 %d, f2 %d\n",iind,f1f2mat_old[iind*2],f1f2mat_old[(iind*2)+1]);
 #endif
       start_meas(te_stats);
-      /*printf("start turbo encoder kr %d kr>>3 %d\n", Kr, Kr>>3);
-      for (int tbc_counter = 0; tbc_counter< Kr; tbc_counter++){
-      printf("turbo tbc number %d input %d\n",tbc_counter, dlsch->harq_processes[harq_pid]->c[r][tbc_counter]);
-      }*/
-
-      printf("start encoder kr %d kr>>3 %d rate %.2f\n", Kr, Kr>>3, rate);
-            for (int tbs_counter = 0; tbs_counter< 8; tbs_counter++){
-            printf("%d\n", dlsch->harq_processes[harq_pid]->c[r][tbs_counter]);
-            }
-
-            printf("end encoder \n");
-
-#ifdef TD_DECODING
       threegpplte_turbo_encoder(dlsch->harq_processes[harq_pid]->c[r],
                                 Kr>>3,
                                 &dlsch->harq_processes[harq_pid]->d[r][96],
@@ -707,38 +697,46 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
                                 f1f2mat_old[iind*2],   // f1 (see 36121-820, page 14)
                                 f1f2mat_old[(iind*2)+1]  // f2 (see 36121-820, page 14)
                                );
+      stop_meas(te_stats);
+    }
 #else
 
-      printf("start ldpc encoder\n");
-      printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
+    Kr = dlsch->harq_processes[harq_pid]->Kplus;
+    
+    Kr_bytes = Kr>>3;
 
-      //ldpc_encoder((char*)dlsch->harq_processes[harq_pid]->c[r],(char*)&dlsch->harq_processes[harq_pid]->d[r][96],dlsch->harq_processes[harq_pid]->B,rate);
-
-            ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,rate);
-
-#endif
-            printf("end ldpc encoder -- output\n");
-
-            /*printf("output %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->d[r][96], dlsch->harq_processes[harq_pid]->d[r][96+1], dlsch->harq_processes[harq_pid]->d[r][96+2],dlsch->harq_processes[harq_pid]->d[r][96+3], dlsch->harq_processes[harq_pid]->d[r][96+4]);
-            for (int cnt =0 ; cnt < 66*(*pz); cnt ++){
-            printf("%d \n",  dlsch->harq_processes[harq_pid]->d[r][96+cnt]);
-
-            }
-            printf("\n");*/
-            stop_meas(te_stats);
+    for (r=0; r<dlsch->harq_processes[harq_pid]->C; r++) {
+      d_tmp[r] = &dlsch->harq_processes[harq_pid]->d[r][96];
 #ifdef DEBUG_DLSCH_CODING
-
-      if (r==0)
-        write_output("enc_output0.m","enc0",&dlsch->harq_processes[harq_pid]->d[r][96],(3*8*Kr_bytes)+12,1,4);
-
+      printf("start ldpc encoder segment %d/%d\n",r,dlsch->harq_processes[harq_pid]->C);
+      printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
 #endif
-      start_meas(i_stats);
-      dlsch->harq_processes[harq_pid]->RTC[r] =
-        sub_block_interleaving_turbo(4+(Kr_bytes*8),
-                                     &dlsch->harq_processes[harq_pid]->d[r][96],
-                                     dlsch->harq_processes[harq_pid]->w[r]);
-      stop_meas(i_stats);
+      //ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,rate);
     }
+    start_meas(te_stats);
+    ldpc_encoder_multi_segment(dlsch->harq_processes[harq_pid]->c,d_tmp,Kr,rate,dlsch->harq_processes[harq_pid]->C);
+    stop_meas(te_stats);
+#endif
+      /*printf("end ldpc encoder -- output\n");
+
+	printf("output %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->d[r][96], dlsch->harq_processes[harq_pid]->d[r][96+1], dlsch->harq_processes[harq_pid]->d[r][96+2],dlsch->harq_processes[harq_pid]->d[r][96+3], dlsch->harq_processes[harq_pid]->d[r][96+4]);
+	for (int cnt =0 ; cnt < 66*(*pz); cnt ++){
+	printf("%d \n",  dlsch->harq_processes[harq_pid]->d[r][96+cnt]);
+	}
+	printf("\n");*/
+
+#ifdef DEBUG_DLSCH_CODING
+      write_output("enc_output0.m","enc0",&dlsch->harq_processes[harq_pid]->d[0][96],(3*8*Kr_bytes)+12,1,4);
+#endif
+
+      start_meas(i_stats);
+      for (r=0; r<dlsch->harq_processes[harq_pid]->C; r++) {
+	dlsch->harq_processes[harq_pid]->RTC[r] =
+	  sub_block_interleaving_turbo(4+(Kr_bytes*8),
+				       &dlsch->harq_processes[harq_pid]->d[r][96],
+				       dlsch->harq_processes[harq_pid]->w[r]);
+      }
+      stop_meas(i_stats);
 
   }
 
