@@ -17,12 +17,12 @@ enum openair_HARQ_TYPE_NB_IoT {
 };
 
 
-void process_schedule_rsp_NB_IoT(Sched_Rsp_t *sched_rsp,
+void process_schedule_rsp_NB_IoT(Sched_Rsp_NB_IoT_t *sched_rsp,
                           		 PHY_VARS_eNB_NB_IoT *eNB,
                           		 eNB_rxtx_proc_t *proc);
 
 /*Processing the ue-specific resources for uplink in NB-IoT*/
-void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, UL_IND_t *UL_INFO);
+void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, UL_IND_NB_IoT_t *UL_INFO);
 
 /* For NB-IoT, we put NPBCH in later part, since it would be scheduled by MAC scheduler,this generates NRS/NPSS/NSSS*/
 void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc); 

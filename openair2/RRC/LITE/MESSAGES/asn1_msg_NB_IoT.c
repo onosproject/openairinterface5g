@@ -97,7 +97,8 @@ int errno;
 uint8_t do_MIB_NB_IoT(
 		rrc_eNB_carrier_data_NB_IoT_t *carrier,
 		uint16_t N_RB_DL,//may not needed--> for NB_IoT only 1 PRB is used
-		uint32_t frame)
+		uint32_t frame,
+    uint32_t hyper_frame)
 {
   asn_enc_rval_t enc_rval;
   BCCH_BCH_Message_NB_t *mib_NB_IoT = &(carrier->mib_NB_IoT);
@@ -117,7 +118,7 @@ uint8_t do_MIB_NB_IoT(
 
   //XXX check if correct the bit assignment
   uint8_t sfn_MSB = (uint8_t)((frame>>6) & 0x0f); // all the 4 bits are set to 1
-  uint8_t hsfn_LSB = (uint8_t)(frame & 0x3); //2 bits set to 1 (0x3 = 0011)
+  uint8_t hsfn_LSB = (uint8_t)(hyper_frame & 0x3); //2 bits set to 1 (0x3 = 0011)
   uint16_t spare=0; //11 bits --> use uint16
 
   mib_NB_IoT->message.systemFrameNumber_MSB_r13.buf = &sfn_MSB;
@@ -129,7 +130,7 @@ uint8_t do_MIB_NB_IoT(
   mib_NB_IoT->message.hyperSFN_LSB_r13.bits_unused = 6;
 
   //XXX to be set??
-  mib_NB_IoT->message.spare.buf = (uint16_t *)&spare;
+  mib_NB_IoT->message.spare.buf = (uint8_t *)&spare;
   mib_NB_IoT->message.spare.size = 2;
   mib_NB_IoT->message.spare.bits_unused = 5;
 
@@ -142,7 +143,7 @@ uint8_t do_MIB_NB_IoT(
   mib_NB_IoT->message.operationModeInfo_r13.present = MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13;
   mib_NB_IoT->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13 = 0;
 
-  printf("[MIB] something to write HERE ,sfn_MSB %x, hsfn_LSB %x\n",
+  printf("[MIB] Intialization of frame information ,sfn_MSB %x, hsfn_LSB %x\n",
          (uint32_t)sfn_MSB,
 		 (uint32_t)hsfn_LSB);
 
@@ -169,14 +170,15 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
                )
 {
   BCCH_DL_SCH_Message_NB_t *bcch_message= &(carrier->siblock1_NB_IoT);
-  SystemInformationBlockType1_NB_t *sib1_NB_IoT;
+  SystemInformationBlockType1_NB_t **sib1_NB_IoT= &(carrier->sib1_NB_IoT);
+  
 
   asn_enc_rval_t enc_rval;
 
   PLMN_IdentityInfo_NB_r13_t PLMN_identity_info_NB_IoT;
   MCC_MNC_Digit_t dummy_mcc[3],dummy_mnc[3];
-  SchedulingInfo_NB_r13_t schedulingInfo_NB_IoT;
-  SIB_Type_NB_r13_t sib_type_NB_IoT;
+  SchedulingInfo_NB_r13_t *schedulingInfo_NB_IoT;
+  SIB_Type_NB_r13_t *sib_type_NB_IoT;
 
 
   long* attachWithoutPDN_Connectivity = NULL;
@@ -192,8 +194,7 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   bcch_message->message.choice.c1.present = BCCH_DL_SCH_MessageType_NB__c1_PR_systemInformationBlockType1_r13;
 
   //allocation
-  carrier->sib1_NB_IoT = &bcch_message->message.choice.c1.choice.systemInformationBlockType1_r13;
-  sib1_NB_IoT = carrier->sib1_NB_IoT;
+  *sib1_NB_IoT = &bcch_message->message.choice.c1.choice.systemInformationBlockType1_r13;
 
 
   /*TS 36.331 v14.2.0 pag 589
@@ -204,14 +205,11 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   uint8_t hyperSFN_MSB = (uint8_t) ((frame>>2)& 0xff);
 
   //XXX to be checked
-  sib1_NB_IoT->hyperSFN_MSB_r13.buf = &hyperSFN_MSB;
-  sib1_NB_IoT->hyperSFN_MSB_r13.size = 1;
-  sib1_NB_IoT->hyperSFN_MSB_r13.bits_unused = 0;
+  (*sib1_NB_IoT)->hyperSFN_MSB_r13.buf = &hyperSFN_MSB;
+  (*sib1_NB_IoT)->hyperSFN_MSB_r13.size = 1;
+  (*sib1_NB_IoT)->hyperSFN_MSB_r13.bits_unused = 0;
 
   memset(&PLMN_identity_info_NB_IoT,0,sizeof(PLMN_IdentityInfo_NB_r13_t));
-  memset(&schedulingInfo_NB_IoT,0,sizeof(SchedulingInfo_NB_r13_t));
-  memset(&sib_type_NB_IoT,0,sizeof(SIB_Type_NB_r13_t));
-
 
   PLMN_identity_info_NB_IoT.plmn_Identity_r13.mcc = CALLOC(1,sizeof(*PLMN_identity_info_NB_IoT.plmn_Identity_r13.mcc));
   memset(PLMN_identity_info_NB_IoT.plmn_Identity_r13.mcc,0,sizeof(*PLMN_identity_info_NB_IoT.plmn_Identity_r13.mcc));
@@ -272,55 +270,55 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   *attachWithoutPDN_Connectivity = 0;
   PLMN_identity_info_NB_IoT.attachWithoutPDN_Connectivity_r13 = attachWithoutPDN_Connectivity;
 
-  ASN_SEQUENCE_ADD(&sib1_NB_IoT->cellAccessRelatedInfo_r13.plmn_IdentityList_r13.list,&PLMN_identity_info_NB_IoT);
+  ASN_SEQUENCE_ADD(&(*sib1_NB_IoT)->cellAccessRelatedInfo_r13.plmn_IdentityList_r13.list,&PLMN_identity_info_NB_IoT);
 
   // 16 bits = 2 byte
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.trackingAreaCode_r13.buf = MALLOC(2); //MALLOC works in byte
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.trackingAreaCode_r13.buf = MALLOC(2); //MALLOC works in byte
 
   //lefts as it is?
 #if defined(ENABLE_ITTI)
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.trackingAreaCode_r13.buf[0] = (configuration->tac >> 8) & 0xff;
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.trackingAreaCode_r13.buf[1] = (configuration->tac >> 0) & 0xff;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.trackingAreaCode_r13.buf[0] = (configuration->tac >> 8) & 0xff;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.trackingAreaCode_r13.buf[1] = (configuration->tac >> 0) & 0xff;
 #else
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.trackingAreaCode_r13.buf[0] = 0x00;
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.trackingAreaCode_r13.buf[1] = 0x01;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.trackingAreaCode_r13.buf[0] = 0x00;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.trackingAreaCode_r13.buf[1] = 0x01;
 #endif
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.trackingAreaCode_r13.size=2;
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.trackingAreaCode_r13.bits_unused=0;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.trackingAreaCode_r13.size=2;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.trackingAreaCode_r13.bits_unused=0;
 
   // 28 bits --> i have to use 32 bits = 4 byte
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellIdentity_r13.buf = MALLOC(8); // why allocate 8 byte?
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellIdentity_r13.buf = MALLOC(8); // why allocate 8 byte?
 #if defined(ENABLE_ITTI)
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[0] = (configuration->cell_identity >> 20) & 0xff;
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[1] = (configuration->cell_identity >> 12) & 0xff;
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[2] = (configuration->cell_identity >>  4) & 0xff;
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[3] = (configuration->cell_identity <<  4) & 0xf0;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[0] = (configuration->cell_identity >> 20) & 0xff;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[1] = (configuration->cell_identity >> 12) & 0xff;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[2] = (configuration->cell_identity >>  4) & 0xff;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[3] = (configuration->cell_identity <<  4) & 0xf0;
 #else
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[0] = 0x00;
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[1] = 0x00;
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[2] = 0x00;
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[3] = 0x10;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[0] = 0x00;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[1] = 0x00;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[2] = 0x00;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellIdentity_r13.buf[3] = 0x10;
 #endif
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellIdentity_r13.size=4;
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellIdentity_r13.bits_unused=4;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellIdentity_r13.size=4;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellIdentity_r13.bits_unused=4;
 
   //Still set to "notBarred" as in the previous case
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.cellBarred_r13=SystemInformationBlockType1_NB__cellAccessRelatedInfo_r13__cellBarred_r13_notBarred;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.cellBarred_r13=SystemInformationBlockType1_NB__cellAccessRelatedInfo_r13__cellBarred_r13_notBarred;
 
   //Still Set to "notAllowed" like in the previous case
-  sib1_NB_IoT->cellAccessRelatedInfo_r13.intraFreqReselection_r13=SystemInformationBlockType1_NB__cellAccessRelatedInfo_r13__intraFreqReselection_r13_notAllowed;
+  (*sib1_NB_IoT)->cellAccessRelatedInfo_r13.intraFreqReselection_r13=SystemInformationBlockType1_NB__cellAccessRelatedInfo_r13__intraFreqReselection_r13_notAllowed;
 
 
-  sib1_NB_IoT->cellSelectionInfo_r13.q_RxLevMin_r13=-65; //which value?? TS 36.331 V14.2.1 pag. 589
-  sib1_NB_IoT->cellSelectionInfo_r13.q_QualMin_r13 = 0; //FIXME new parameter for SIB1-NB, not present in SIB1 (for cell reselection but if not used the UE should apply the default value)
+  (*sib1_NB_IoT)->cellSelectionInfo_r13.q_RxLevMin_r13=-65; //which value?? TS 36.331 V14.2.1 pag. 589
+  (*sib1_NB_IoT)->cellSelectionInfo_r13.q_QualMin_r13 = 0; //FIXME new parameter for SIB1-NB, not present in SIB1 (for cell reselection but if not used the UE should apply the default value)
 
-  sib1_NB_IoT->p_Max_r13 = CALLOC(1, sizeof(P_Max_t));
-  *(sib1_NB_IoT->p_Max_r13) = 23;
+  (*sib1_NB_IoT)->p_Max_r13 = CALLOC(1, sizeof(P_Max_t));
+  *((*sib1_NB_IoT)->p_Max_r13) = 23;
 
   //FIXME
-  sib1_NB_IoT->freqBandIndicator_r13 =
+  (*sib1_NB_IoT)->freqBandIndicator_r13 =
 #if defined(ENABLE_ITTI)
-    configuration->eutra_band[CC_id];
+    configuration->eutra_band;
 #else
     5; //if not configured we use band 5 (UL: 824 MHz - 849MHz / DL: 869 MHz - 894 MHz  FDD mode)
 #endif
@@ -334,56 +332,68 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
        */
 
 
-   sib1_NB_IoT->downlinkBitmap_r13 = CALLOC(1, sizeof(struct DL_Bitmap_NB_r13));
-   (sib1_NB_IoT->downlinkBitmap_r13)->present= DL_Bitmap_NB_r13_PR_NOTHING;
+   (*sib1_NB_IoT)->downlinkBitmap_r13 = CALLOC(1, sizeof(struct DL_Bitmap_NB_r13));
+   ((*sib1_NB_IoT)->downlinkBitmap_r13)->present= DL_Bitmap_NB_r13_PR_NOTHING;
 
-   *eutraControlRegionSize = 0;
-   sib1_NB_IoT->eutraControlRegionSize_r13 = eutraControlRegionSize;
+   *eutraControlRegionSize = 1;
+   (*sib1_NB_IoT)->eutraControlRegionSize_r13 = eutraControlRegionSize;
 
 
    *nrs_CRS_PowerOffset= 0;
-   sib1_NB_IoT->nrs_CRS_PowerOffset_r13 = nrs_CRS_PowerOffset;
+   (*sib1_NB_IoT)->nrs_CRS_PowerOffset_r13 = nrs_CRS_PowerOffset;
+
+   schedulingInfo_NB_IoT = (SchedulingInfo_NB_r13_t*) malloc (3*sizeof(SchedulingInfo_NB_r13_t));
+   sib_type_NB_IoT = (SIB_Type_NB_r13_t *) malloc (3*sizeof(SIB_Type_NB_r13_t));
+
+  memset(&schedulingInfo_NB_IoT[0],0,sizeof(SchedulingInfo_NB_r13_t));
+  memset(&schedulingInfo_NB_IoT[1],0,sizeof(SchedulingInfo_NB_r13_t));
+  memset(&schedulingInfo_NB_IoT[2],0,sizeof(SchedulingInfo_NB_r13_t));    
+  memset(&sib_type_NB_IoT[0],0,sizeof(SIB_Type_NB_r13_t));
+  memset(&sib_type_NB_IoT[1],0,sizeof(SIB_Type_NB_r13_t));
+  memset(&sib_type_NB_IoT[2],0,sizeof(SIB_Type_NB_r13_t));
 
 
-  //FIXME which value to set?
-  schedulingInfo_NB_IoT.si_Periodicity_r13=SchedulingInfo_NB_r13__si_Periodicity_r13_rf64;
-  schedulingInfo_NB_IoT.si_RepetitionPattern_r13=SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every2ndRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
-  schedulingInfo_NB_IoT.si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b208;//208 bits
-  //from ASN1 tools we have seen that sib2 + sib3 we are always below 200 bits so we use this si_TB size.
-  //from the specs the SI-message will be transmitted in 8 subframe = 8ms (pag 590 TS 36.331)
+  // Now, follow the scheduler SIB configuration
+  // There is only one sib2+sib3 common setting
+  schedulingInfo_NB_IoT[0].si_Periodicity_r13=SchedulingInfo_NB_r13__si_Periodicity_r13_rf4096;
+  schedulingInfo_NB_IoT[0].si_RepetitionPattern_r13=SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every2ndRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
+  schedulingInfo_NB_IoT[0].si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b680;//208 bits
+  
 
   // This is for SIB2/3
   /*SIB3 --> There is no mapping information of SIB2 since it is always present
     *  in the first SystemInformation message
     * listed in the schedulingInfoList list.
     * */
-  sib_type_NB_IoT=SIB_Type_NB_r13_sibType3_NB_r13;
+  sib_type_NB_IoT[0]=SIB_Type_NB_r13_sibType3_NB_r13;
 
-  ASN_SEQUENCE_ADD(&schedulingInfo_NB_IoT.sib_MappingInfo_r13.list,&sib_type_NB_IoT);
-  ASN_SEQUENCE_ADD(&sib1_NB_IoT->schedulingInfoList_r13.list,&schedulingInfo_NB_IoT);
+  ASN_SEQUENCE_ADD(&schedulingInfo_NB_IoT[0].sib_MappingInfo_r13.list,&sib_type_NB_IoT[0]);
+  ASN_SEQUENCE_ADD(&(*sib1_NB_IoT)->schedulingInfoList_r13.list,&schedulingInfo_NB_IoT[0]);
+
+  //printf("[ASN Debug] SI P: %ld\n",(*sib1_NB_IoT)->schedulingInfoList_r13.list.array[0]->si_Periodicity_r13);
 
 #if defined(ENABLE_ITTI)
 
   if (configuration->frame_type[CC_id] == TDD)
 #endif
   {
-	//FIXME in NB-IoT mandatory to be FDD --> so must give an error
-	  LOG_E(RRC,"[eNB %d] Frame Type is TDD --> not supported by NB-IoT, exiting\n", Mod_id); //correct?
-	  exit(-1);
+  //FIXME in NB-IoT mandatory to be FDD --> so must give an error
+    LOG_E(RRC,"[NB-IoT %d] Frame Type is TDD --> not supported by NB-IoT, exiting\n", Mod_id); //correct?
+    exit(-1);
   }
 
   //FIXME which value chose for the following parameter
-  sib1_NB_IoT->si_WindowLength_r13=SystemInformationBlockType1_NB__si_WindowLength_r13_ms160;
-  sib1_NB_IoT->si_RadioFrameOffset_r13= 0;
+  (*sib1_NB_IoT)->si_WindowLength_r13=SystemInformationBlockType1_NB__si_WindowLength_r13_ms160;
+  (*sib1_NB_IoT)->si_RadioFrameOffset_r13= 0;
 
   /*In Nb-IoT change/update of specific SI message can additionally be indicated by a SI message specific value tag
    * systemInfoValueTagSI (there is no SystemInfoValueTag in SIB1-NB but only in MIB-NB)
    *contained in systemInfoValueTagList_r13
    **/
   //FIXME correct?
-  sib1_NB_IoT->systemInfoValueTagList_r13 = CALLOC(1, sizeof(struct SystemInfoValueTagList_NB_r13));
-  asn_set_empty(&sib1_NB_IoT->systemInfoValueTagList_r13->list);
-  ASN_SEQUENCE_ADD(&sib1_NB_IoT->systemInfoValueTagList_r13->list,&systemInfoValueTagSI);
+  (*sib1_NB_IoT)->systemInfoValueTagList_r13 = CALLOC(1, sizeof(struct SystemInfoValueTagList_NB_r13));
+  asn_set_empty(&(*sib1_NB_IoT)->systemInfoValueTagList_r13->list);
+  ASN_SEQUENCE_ADD(&(*sib1_NB_IoT)->systemInfoValueTagList_r13->list,&systemInfoValueTagSI);
 
 
 #ifdef XER_PRINT //generate xml files
@@ -396,12 +406,14 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
                                    carrier->SIB1_NB_IoT,
                                    100);
 
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
+  if (enc_rval.encoded > 0){ 
+       LOG_F(RRC,"ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
+  }
 
 
 #ifdef USER_MODE
-  LOG_D(RRC,"[eNB] SystemInformationBlockType1-NB Encoded %d bits (%d bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
+  LOG_D(RRC,"[NB-IoT] SystemInformationBlockType1-NB Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
 #endif
 
   if (enc_rval.encoded==-1) {
@@ -427,17 +439,18 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
 
   asn_enc_rval_t enc_rval;
   RACH_Info_NB_r13_t rach_Info_NB_IoT;
-  NPRACH_Parameters_NB_r13_t nprach_parameters;
+  NPRACH_Parameters_NB_r13_t *nprach_parameters;
 
   //optional
   long *connEstFailOffset = NULL;
   connEstFailOffset = CALLOC(1, sizeof(long));
 
-  RSRP_ThresholdsNPRACH_InfoList_NB_r13_t *rsrp_ThresholdsPrachInfoList;
-  RSRP_Range_t rsrp_range;
+//  RSRP_ThresholdsNPRACH_InfoList_NB_r13_t *rsrp_ThresholdsPrachInfoList;
+//  RSRP_Range_t rsrp_range;
+
   ACK_NACK_NumRepetitions_NB_r13_t ack_nack_repetition;
   struct NPUSCH_ConfigCommon_NB_r13__dmrs_Config_r13 *dmrs_config;
-  struct DL_GapConfig_NB_r13	*dl_Gap;
+  struct DL_GapConfig_NB_r13  *dl_Gap;
 
   long *srs_SubframeConfig;
   srs_SubframeConfig= CALLOC(1, sizeof(long));
@@ -446,23 +459,23 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
   if (bcch_message) {
     memset(bcch_message,0,sizeof(BCCH_DL_SCH_Message_NB_t));
   } else {
-    LOG_E(RRC,"[eNB %d] BCCH_MESSAGE_NB is null, exiting\n", Mod_id);
+    LOG_E(RRC,"[NB-IoT %d] BCCH_MESSAGE_NB is null, exiting\n", Mod_id);
     exit(-1);
   }
 
   //before schould be allocated memory somewhere?
-  if (!carrier->sib2_NB_IoT) {
-    LOG_E(RRC,"[eNB %d] sib2_NB_IoT is null, exiting\n", Mod_id);
-    exit(-1);
-  }
+//  if (!carrier->sib2_NB_IoT) {
+//    LOG_E(RRC,"[NB-IoT %d] sib2_NB_IoT is null, exiting\n", Mod_id);
+//    exit(-1);
+//  }
+//
+//  if (!carrier->sib3_NB_IoT) {
+//    LOG_E(RRC,"[NB-IoT %d] sib3_NB_IoT is null, exiting\n", Mod_id);
+//    exit(-1);
+//  }
 
-  if (!carrier->sib3_NB_IoT) {
-    LOG_E(RRC,"[eNB %d] sib3_NB_IoT is null, exiting\n", Mod_id);
-    exit(-1);
-  }
 
-
-  LOG_I(RRC,"[eNB %d] Configuration SIB2/3\n", Mod_id);
+  LOG_I(RRC,"[NB-IoT %d] Configuration SIB2/3\n", Mod_id);
 
   sib2_NB_part = CALLOC(1,sizeof(struct SystemInformation_NB_r13_IEs__sib_TypeAndInfo_r13__Member));
   sib3_NB_part = CALLOC(1,sizeof(struct SystemInformation_NB_r13_IEs__sib_TypeAndInfo_r13__Member));
@@ -478,6 +491,11 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
   sib2_NB_IoT = carrier->sib2_NB_IoT;
   sib3_NB_IoT = carrier->sib3_NB_IoT;
 
+  nprach_parameters = (NPRACH_Parameters_NB_r13_t *) malloc (3*sizeof(NPRACH_Parameters_NB_r13_t));
+
+  memset(&nprach_parameters[0],0,sizeof(NPRACH_Parameters_NB_r13_t));
+  memset(&nprach_parameters[1],0,sizeof(NPRACH_Parameters_NB_r13_t));
+  memset(&nprach_parameters[2],0,sizeof(NPRACH_Parameters_NB_r13_t));
 
 /// SIB2-NB-----------------------------------------
 
@@ -485,9 +503,9 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
 
   //RACH Config. Common--------------------------------------------------------------
   sib2_NB_IoT->radioResourceConfigCommon_r13.rach_ConfigCommon_r13.preambleTransMax_CE_r13 =
-   		  configuration->rach_preambleTransMax_CE_NB[CC_id];
+        configuration->rach_preambleTransMax_CE_NB[CC_id];
   sib2_NB_IoT->radioResourceConfigCommon_r13.rach_ConfigCommon_r13.powerRampingParameters_r13.powerRampingStep =
-	configuration->rach_powerRampingStep_NB[CC_id];
+  configuration->rach_powerRampingStep_NB[CC_id];
   sib2_NB_IoT->radioResourceConfigCommon_r13.rach_ConfigCommon_r13.powerRampingParameters_r13.preambleInitialReceivedTargetPower =
     configuration->rach_preambleInitialReceivedTargetPower_NB[CC_id];
 
@@ -498,41 +516,71 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
 
   //TS 36.331 pag 614 --> if not present the value to infinity sould be used
   *connEstFailOffset = 0;
-   sib2_NB_IoT->radioResourceConfigCommon_r13.rach_ConfigCommon_r13.connEstFailOffset_r13 = connEstFailOffset; /*OPTIONAL*/
+  
+  sib2_NB_IoT->radioResourceConfigCommon_r13.rach_ConfigCommon_r13.connEstFailOffset_r13 = connEstFailOffset; /*OPTIONAL*/
 
 
   // BCCH-Config-NB-IoT----------------------------------------------------------------
   sib2_NB_IoT->radioResourceConfigCommon_r13.bcch_Config_r13.modificationPeriodCoeff_r13
-    = configuration->bcch_modificationPeriodCoeff_NB[CC_id];
+    = configuration->bcch_modificationPeriodCoeff_NB;
 
   // PCCH-Config-NB-IoT-----------------------------------------------------------------
   sib2_NB_IoT->radioResourceConfigCommon_r13.pcch_Config_r13.defaultPagingCycle_r13
-    = configuration->pcch_defaultPagingCycle_NB[CC_id];
+    = configuration->pcch_defaultPagingCycle_NB;
   sib2_NB_IoT->radioResourceConfigCommon_r13.pcch_Config_r13.nB_r13 = configuration->pcch_nB_NB[CC_id];
   sib2_NB_IoT->radioResourceConfigCommon_r13.pcch_Config_r13.npdcch_NumRepetitionPaging_r13 = configuration-> pcch_npdcch_NumRepetitionPaging_NB[CC_id];
 
   //NPRACH-Config-NB-IoT-----------------------------------------------------------------
+
+  sib2_NB_IoT->radioResourceConfigCommon_r13.nprach_Config_r13.rsrp_ThresholdsPrachInfoList_r13 = NULL; 
   sib2_NB_IoT->radioResourceConfigCommon_r13.nprach_Config_r13.nprach_CP_Length_r13 = configuration->nprach_CP_Length[CC_id];
-  sib2_NB_IoT->radioResourceConfigCommon_r13.nprach_Config_r13.rsrp_ThresholdsPrachInfoList_r13 = NULL; /*OPTIONAL*/
+  /*OPTIONAL*/
 //   =CALLOC(1, sizeof(struct RSRP_ThresholdsNPRACH_InfoList_NB_r13)); //fatto uguale dopo
 //   rsrp_ThresholdsPrachInfoList = sib2_NB_IoT->radioResourceConfigCommon_r13.nprach_Config_r13.rsrp_ThresholdsPrachInfoList_r13;
 //   rsrp_range = configuration->nprach_rsrp_range_NB;
 //   ASN_SEQUENCE_ADD(&rsrp_ThresholdsPrachInfoList->list,rsrp_range);
 
-  nprach_parameters.nprach_Periodicity_r13 = configuration->nprach_Periodicity[CC_id];
-  nprach_parameters.nprach_StartTime_r13 = configuration->nprach_StartTime[CC_id];
-  nprach_parameters.nprach_SubcarrierOffset_r13 = configuration->nprach_SubcarrierOffset[CC_id];
-  nprach_parameters.nprach_NumSubcarriers_r13= configuration->nprach_NumSubcarriers[CC_id];
-  nprach_parameters.nprach_SubcarrierMSG3_RangeStart_r13= configuration->nprach_SubcarrierMSG3_RangeStart[CC_id];
-  nprach_parameters.maxNumPreambleAttemptCE_r13= configuration->maxNumPreambleAttemptCE_NB[CC_id];
-  nprach_parameters.numRepetitionsPerPreambleAttempt_r13 = configuration->numRepetitionsPerPreambleAttempt_NB[CC_id];
-  nprach_parameters.npdcch_NumRepetitions_RA_r13 = configuration->npdcch_NumRepetitions_RA[CC_id];
-  nprach_parameters.npdcch_StartSF_CSS_RA_r13= configuration->npdcch_StartSF_CSS_RA[CC_id];
-  nprach_parameters.npdcch_Offset_RA_r13= configuration->npdcch_Offset_RA[CC_id];
+  // According configuration to set the 3 CE level configuration setting, for the initial testing, only consider the CE 0, since there is only one set of parameters.
+
+  nprach_parameters[0].nprach_Periodicity_r13               = configuration->nprach_Periodicity[CC_id];
+  nprach_parameters[0].nprach_StartTime_r13                 = configuration->nprach_StartTime[CC_id];
+  nprach_parameters[0].nprach_SubcarrierOffset_r13          = configuration->nprach_SubcarrierOffset[CC_id];
+  nprach_parameters[0].nprach_NumSubcarriers_r13            = configuration->nprach_NumSubcarriers[CC_id];
+  nprach_parameters[0].numRepetitionsPerPreambleAttempt_r13 = configuration->numRepetitionsPerPreambleAttempt_NB[CC_id];
+  nprach_parameters[0].nprach_SubcarrierMSG3_RangeStart_r13 = configuration->nprach_SubcarrierMSG3_RangeStart[CC_id];
+  nprach_parameters[0].maxNumPreambleAttemptCE_r13          = configuration->maxNumPreambleAttemptCE_NB[CC_id];
+  nprach_parameters[0].npdcch_NumRepetitions_RA_r13         = configuration->npdcch_NumRepetitions_RA[CC_id];
+  nprach_parameters[0].npdcch_StartSF_CSS_RA_r13            = configuration->npdcch_StartSF_CSS_RA[CC_id];
+  nprach_parameters[0].npdcch_Offset_RA_r13                 = configuration->npdcch_Offset_RA[CC_id];
+
+  nprach_parameters[1].nprach_Periodicity_r13               = configuration->nprach_Periodicity[CC_id];
+  nprach_parameters[1].nprach_StartTime_r13                 = configuration->nprach_StartTime[CC_id];
+  nprach_parameters[1].nprach_SubcarrierOffset_r13          = configuration->nprach_SubcarrierOffset[CC_id];
+  nprach_parameters[1].nprach_NumSubcarriers_r13            = configuration->nprach_NumSubcarriers[1];
+  nprach_parameters[1].numRepetitionsPerPreambleAttempt_r13 = configuration->numRepetitionsPerPreambleAttempt_NB[CC_id];
+  nprach_parameters[1].nprach_SubcarrierMSG3_RangeStart_r13 = configuration->nprach_SubcarrierMSG3_RangeStart[CC_id];
+  nprach_parameters[1].maxNumPreambleAttemptCE_r13          = configuration->maxNumPreambleAttemptCE_NB[CC_id];
+  nprach_parameters[1].npdcch_NumRepetitions_RA_r13         = configuration->npdcch_NumRepetitions_RA[CC_id];
+  nprach_parameters[1].npdcch_StartSF_CSS_RA_r13            = configuration->npdcch_StartSF_CSS_RA[CC_id];
+  nprach_parameters[1].npdcch_Offset_RA_r13                 = configuration->npdcch_Offset_RA[CC_id];
+
+  nprach_parameters[2].nprach_Periodicity_r13               = configuration->nprach_Periodicity[CC_id];
+  nprach_parameters[2].nprach_StartTime_r13                 = configuration->nprach_StartTime[CC_id];
+  nprach_parameters[2].nprach_SubcarrierOffset_r13          = configuration->nprach_SubcarrierOffset[CC_id];
+  nprach_parameters[2].nprach_NumSubcarriers_r13            = configuration->nprach_NumSubcarriers[CC_id];
+  nprach_parameters[2].numRepetitionsPerPreambleAttempt_r13 = configuration->numRepetitionsPerPreambleAttempt_NB[CC_id];
+  nprach_parameters[2].nprach_SubcarrierMSG3_RangeStart_r13 = configuration->nprach_SubcarrierMSG3_RangeStart[CC_id];
+  nprach_parameters[2].maxNumPreambleAttemptCE_r13          = configuration->maxNumPreambleAttemptCE_NB[CC_id];
+  nprach_parameters[2].npdcch_NumRepetitions_RA_r13         = configuration->npdcch_NumRepetitions_RA[CC_id];
+  nprach_parameters[2].npdcch_StartSF_CSS_RA_r13            = configuration->npdcch_StartSF_CSS_RA[CC_id];
+  nprach_parameters[2].npdcch_Offset_RA_r13                 = configuration->npdcch_Offset_RA[CC_id];
+
 
   //nprach_parameterList have a max size of 3 possible nprach configuration (see maxNPRACH_Resources_NB_r13)
-  ASN_SEQUENCE_ADD(&sib2_NB_IoT->radioResourceConfigCommon_r13.nprach_Config_r13.nprach_ParametersList_r13.list,&nprach_parameters);
-
+  ASN_SEQUENCE_ADD(&sib2_NB_IoT->radioResourceConfigCommon_r13.nprach_Config_r13.nprach_ParametersList_r13.list,&nprach_parameters[0]);
+  ASN_SEQUENCE_ADD(&sib2_NB_IoT->radioResourceConfigCommon_r13.nprach_Config_r13.nprach_ParametersList_r13.list,&nprach_parameters[1]);
+  ASN_SEQUENCE_ADD(&sib2_NB_IoT->radioResourceConfigCommon_r13.nprach_Config_r13.nprach_ParametersList_r13.list,&nprach_parameters[2]);
+  
   // NPDSCH-Config NB-IOT
   sib2_NB_IoT->radioResourceConfigCommon_r13.npdsch_ConfigCommon_r13.nrs_Power_r13= configuration->npdsch_nrs_Power[CC_id];
 
@@ -540,7 +588,7 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
   //NPUSCH-Config NB-IoT----------------------------------------------------------------
   //list of size 3 (see maxNPRACH_Resources_NB_r13)
   ack_nack_repetition = configuration-> npusch_ack_nack_numRepetitions_NB[CC_id]; //is an enumerative
-  ASN_SEQUENCE_ADD(&sib2_NB_IoT->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.ack_NACK_NumRepetitions_Msg4_r13.list,ack_nack_repetition);
+  ASN_SEQUENCE_ADD(&(sib2_NB_IoT->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.ack_NACK_NumRepetitions_Msg4_r13.list) ,&ack_nack_repetition);
 
   *srs_SubframeConfig = configuration->npusch_srs_SubframeConfig_NB[CC_id];
   sib2_NB_IoT->radioResourceConfigCommon_r13.npusch_ConfigCommon_r13.srs_SubframeConfig_r13= srs_SubframeConfig; /*OPTIONAL*/
@@ -548,8 +596,8 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
 
   /*OPTIONAL*/
   dmrs_config = CALLOC(1,sizeof(struct NPUSCH_ConfigCommon_NB_r13__dmrs_Config_r13));
-  dmrs_config->threeTone_CyclicShift_r13 = configuration->npusch_threeTone_CyclicShift_r13[CC_id];
-  dmrs_config->sixTone_CyclicShift_r13 = configuration->npusch_sixTone_CyclicShift_r13[CC_id];
+  dmrs_config->threeTone_CyclicShift_r13 = configuration->npusch_threeTone_CyclicShift_r13;
+  dmrs_config->sixTone_CyclicShift_r13 = configuration->npusch_sixTone_CyclicShift_r13;
 
   /*OPTIONAL
    * -define the base sequence for a DMRS sequence in a cell with multi tone transmission (3,6,12) see TS 36.331 NPUSCH-Config-NB
@@ -579,9 +627,9 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
 
 
   // uplinkPowerControlCommon - NB-IoT------------------------------------------------------
-  sib2_NB_IoT->radioResourceConfigCommon_r13.uplinkPowerControlCommon_r13.p0_NominalNPUSCH_r13 = configuration->npusch_p0_NominalNPUSCH;
-  sib2_NB_IoT->radioResourceConfigCommon_r13.uplinkPowerControlCommon_r13.deltaPreambleMsg3_r13 = configuration->deltaPreambleMsg3;
-  sib2_NB_IoT->radioResourceConfigCommon_r13.uplinkPowerControlCommon_r13.alpha_r13 = configuration->npusch_alpha;
+  sib2_NB_IoT->radioResourceConfigCommon_r13.uplinkPowerControlCommon_r13.p0_NominalNPUSCH_r13 = configuration->npusch_p0_NominalNPUSCH[CC_id];
+  sib2_NB_IoT->radioResourceConfigCommon_r13.uplinkPowerControlCommon_r13.deltaPreambleMsg3_r13 = configuration->deltaPreambleMsg3[CC_id];
+  sib2_NB_IoT->radioResourceConfigCommon_r13.uplinkPowerControlCommon_r13.alpha_r13 = configuration->npusch_alpha[CC_id];
   //no deltaFlist_PUCCH and no UL cyclic prefix
 
   // UE Timers and Constants -NB-IoT--------------------------------------------------------
@@ -604,7 +652,7 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
 /// SIB3-NB-------------------------------------------------------
 
   sib3_NB_IoT->cellReselectionInfoCommon_r13.q_Hyst_r13=SystemInformationBlockType3_NB_r13__cellReselectionInfoCommon_r13__q_Hyst_r13_dB4;
-  sib3_NB_IoT->cellReselectionServingFreqInfo_r13.s_NonIntraSearch_r13=NULL; //or define in configuration?
+  sib3_NB_IoT->cellReselectionServingFreqInfo_r13.s_NonIntraSearch_r13=0; //or define in configuration?
 
   sib3_NB_IoT->intraFreqCellReselectionInfo_r13.q_RxLevMin_r13 = -70;
   //new
@@ -639,20 +687,23 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
                                    (void*)bcch_message,
                                    carrier->SIB23_NB_IoT,
                                    900);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+//  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
+//               enc_rval.failed_type->name, enc_rval.encoded);
 
 //#if defined(ENABLE_ITTI).....
 
 
 #ifdef USER_MODE
-  LOG_D(RRC,"[eNB] SystemInformation-NB Encoded %d bits (%d bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
+  LOG_D(RRC,"[NB-IoT] SystemInformation-NB Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
 #endif
 
   if (enc_rval.encoded==-1) {
     msg("[RRC] ASN1 : SI-NB encoding failed for SIB23_NB_IoT\n");
     return(-1);
   }
+
+  carrier->sib2_NB_IoT = sib2_NB_IoT;
+  carrier->sib3_NB_IoT = sib3_NB_IoT;
 
   return((enc_rval.encoded+7)/8);
 }

@@ -1599,7 +1599,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
 
 
 /*-----------------CONFIGURATION-------------------*/
-
+/*
 //-----------------------------------------------------------------------------
 static void init_SI_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
@@ -1608,9 +1608,7 @@ static void init_SI_NB_IoT(
 )
 //-----------------------------------------------------------------------------
 { 
-	/*WE should allocate memory for PHY_Config structure
-	 * is declared in vars_nb_iot.c and put also in the extern_nb_iot
-	 * */
+
 	config_INFO = malloc(sizeof(PHY_Config_t));
 
 
@@ -1639,8 +1637,9 @@ static void init_SI_NB_IoT(
 	  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].sizeof_MIB_NB_IoT =
 	  			  do_MIB_NB_IoT(&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id],
 	  					  	configuration->N_RB_DL[CC_id],
-					        0 //FIXME is correct to pass frame = 0??
-					        );
+					        0, //FIXME is correct to pass frame = 0??
+					        0
+                  );
   }
   else {
       LOG_E(RRC, PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for MIB_NB_IoT allocated\n",
@@ -1693,7 +1692,7 @@ static void init_SI_NB_IoT(
     LOG_T(RRC, PROTOCOL_RRC_CTXT_FMT" SIB2/3 Contents (partial)\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
 
-    /*FIXME: decide which parameter to show....*/
+
 
     LOG_T(RRC, PROTOCOL_RRC_CTXT_FMT" TODO: some parameter of SIB23-NB to show\n",
           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
@@ -1729,7 +1728,7 @@ static void init_SI_NB_IoT(
     //exit here
   }
 }
-
+*/
 //-----------------------------------------------------------------------------
 //aka openair_rrc_eNB_init
 char openair_rrc_eNB_configuration_NB_IoT(
@@ -1780,7 +1779,7 @@ while ( eNB_rrc_inst_NB_IoT == NULL ) {
 
   //init SI
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
-    init_SI_NB_IoT(&ctxt, CC_id,configuration);
+    //init_SI_NB_IoT(&ctxt, CC_id,configuration);
   }
 
   /*New implementation Raymond*/

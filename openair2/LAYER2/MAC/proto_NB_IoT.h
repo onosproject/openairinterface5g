@@ -38,6 +38,7 @@
  *  @{
  */
 
+void mac_top_init_eNB_NB_IoT(void);
 int l2_init_eNB_NB_IoT(void);
 
 // main schedule functions
@@ -104,7 +105,6 @@ uint32_t from_earfcn_NB_IoT(int eutra_bandP,uint32_t dl_earfcn, float m_dl);
 int32_t get_uldl_offset_NB_IoT(int eutra_band);
 
 void config_mib_fapi_NB_IoT(
-		int                     rntiP,
         int                     physCellId,
         uint8_t                 eutra_band,
         int                     Ncp,
@@ -131,7 +131,6 @@ void rrc_mac_config_req_NB_IoT(
     RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon,
     PhysicalConfigDedicated_NB_r13_t        *physicalConfigDedicated,
     LogicalChannelConfig_NB_r13_t           *logicalChannelConfig,            //FIXME: decide how to use it
-    rrc_config_NB_IoT_t                     *mac_config,
     uint8_t                                 ded_flag,
     uint8_t                                 ue_list_ded_num);
 

@@ -34,7 +34,7 @@
 unsigned int mac_debug;
 
 //MAC_xface *mac_xface;
-IF_Module_t* if_inst;
+//IF_Module_t* if_inst;
 
 //MACPHY_PARAMS MACPHY_params;
 

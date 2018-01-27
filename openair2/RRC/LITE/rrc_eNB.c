@@ -31,7 +31,15 @@
 #define RRC_ENB_C
 
 #include "defs.h"
+
+// NB-IoT Section
+#include "defs_NB_IoT.h"
+#include "vars_NB_IoT.h"
 #include "extern.h"
+#include "extern_NB_IoT.h"
+#include "LAYER2/MAC/proto_NB_IoT.h"
+#include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
+// NB-IoT end
 #include "assertions.h"
 #include "asn1_conversions.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
@@ -111,6 +119,112 @@ extern uint16_t                     two_tier_hexagonal_cellIds[7];
 
 mui_t                               rrc_eNB_mui = 0;
 
+uint8_t *get_NB_IoT_MIB(void)
+{
+  // CC_ID=0
+  return eNB_rrc_inst_NB_IoT->carrier[0].MIB_NB_IoT;
+}
+
+void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_t *carrier, RrcConfigurationReq *configuration, uint32_t frame, uint32_t hyper_frame)
+{
+
+ //copy basic parameters
+  carrier[CC_id].physCellId      = configuration->Nid_cell[CC_id];
+  carrier[CC_id].p_rx_eNB   = 1;
+  carrier[CC_id].Ncp             = configuration->prefix_type[CC_id]; //DL Cyclic prefix
+  carrier[CC_id].Ncp_UL           = configuration->prefix_type_UL[CC_id];//UL cyclic prefix
+  carrier[CC_id].dl_CarrierFreq  = configuration->downlink_frequency[CC_id];
+  carrier[CC_id].ul_CarrierFreq  = configuration->downlink_frequency[CC_id]+ configuration->uplink_frequency_offset[CC_id];
+
+
+  //TODO: verify who allocate memory for sib1_NB_IoT, sib2_NB_IoT, sib3_NB and mib_nb in the carrier before being passed as parameter
+
+  carrier[CC_id].sizeof_SIB1_NB_IoT  = 0;
+  carrier[CC_id].sizeof_SIB23_NB_IoT = 0;
+  carrier[CC_id].sizeof_MIB_NB_IoT   = 0;
+
+  //MIB
+  carrier[CC_id].MIB_NB_IoT = (uint8_t*) malloc16(32); //MIB is 34 bits=5bytes needed
+
+
+  if (carrier[CC_id].MIB_NB_IoT)
+  {
+    carrier[CC_id].sizeof_MIB_NB_IoT =
+            do_MIB_NB_IoT(carrier,
+                  configuration->N_RB_DL[CC_id],
+                  0, //frame
+                  0// hyper sfn
+                  );
+  }
+  else {
+      LOG_E(RRC, " init_SI: FATAL, no memory for MIB_NB_IoT allocated\n");
+      //exit here
+    }
+
+
+  if (carrier[CC_id].sizeof_MIB_NB_IoT == 255) {
+     // exit here
+    }
+
+ //SIB1_NB_IoT
+  carrier[CC_id].SIB1_NB_IoT = (uint8_t*) malloc16(32);//allocation of buffer memory for SIB1_NB_IOT
+
+  if (carrier[CC_id].SIB1_NB_IoT)
+    carrier[CC_id].sizeof_SIB1_NB_IoT = do_SIB1_NB_IoT( //follow the new implementation
+            Mod_id,
+          CC_id,
+          carrier,
+          configuration,
+          0 //FIXME is correct to pass frame = 0??
+            );
+
+  else {
+      LOG_E(RRC, " init_SI: FATAL, no memory for SIB1_NB_IoT allocated\n");
+    //exit here
+  }
+
+  if (carrier[CC_id].sizeof_SIB1_NB_IoT == 255) {
+    //exit here
+  }
+
+  //SIB23_NB_IoT
+  carrier[CC_id].SIB23_NB_IoT = (uint8_t*) malloc16(64);
+
+  if (carrier[CC_id].SIB23_NB_IoT) {
+    carrier[CC_id].sizeof_SIB23_NB_IoT = do_SIB23_NB_IoT(
+          Mod_id,
+          CC_id,
+          carrier,
+          configuration
+        );
+
+    if (carrier[CC_id].sizeof_SIB23_NB_IoT == 255) {
+      //exit here
+    }
+
+
+    //Configure MAC
+
+
+
+
+         rrc_mac_config_req_NB_IoT(Mod_id,
+                                  CC_id,
+                                  0,
+                                  carrier,
+                                  (SystemInformationBlockType1_NB_t*) carrier[CC_id].sib1_NB_IoT,
+                                  (RadioResourceConfigCommonSIB_NB_r13_t *) &carrier[CC_id].sib2_NB_IoT->radioResourceConfigCommon_r13,
+                                  (struct PhysicalConfigDedicated_NB_r13 *)NULL,
+                                  (struct LogicalChannelConfig_NB_r13 *)NULL,
+                                  0,
+                                  0
+                                  );
+  } else {
+      LOG_E(RRC, " init_SI: FATAL, no memory for SIB23_NB_IoT allocated\n");
+    //exit here
+  }
+}
+
 //-----------------------------------------------------------------------------
 static void
 init_SI(
@@ -129,6 +243,14 @@ init_SI(
   int                                 i;
 #endif
   /*Nick Start*/
+
+  // for NB-IoT Initialization configuration testing
+
+  if(eNB_rrc_inst_NB_IoT==NULL)
+    eNB_rrc_inst_NB_IoT = (eNB_RRC_INST_NB_IoT*) malloc (sizeof(eNB_RRC_INST_NB_IoT));
+
+  init_testing_NB_IoT(ctxt_pP->module_id,CC_id,&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id],configuration,0,0);
+
   /*Here will copy basic parameters and implement do_MIB, rrc_eNB_carrier_data_t will add some parameters in MIB*/
 
   eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1 = 0;

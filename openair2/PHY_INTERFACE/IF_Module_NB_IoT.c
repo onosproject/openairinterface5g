@@ -5,23 +5,25 @@
 //#include "LAYER2/MAC/proto_NB_IoT.h"
 
 
-//called at initialization of L2
-void IF_Module_init_L2(void) // northbound IF-Module Interface
-{
-	//mapping the IF-Module function to L2 definition
-	if_inst->UL_indication = UL_indication;
+#define MAX_IF_MODULES_NB_IoT 1 
 
-	//return if_inst;
+IF_Module_NB_IoT_t *if_inst_NB_IoT[MAX_IF_MODULES_NB_IoT];
+//#include "LAYER2/MAC/proto_NB_IoT.h"
+
+
+IF_Module_NB_IoT_t *IF_Module_init_NB_IoT(int Mod_id){
+
+  AssertFatal(Mod_id<MAX_MODULES,"Asking for Module %d > %d\n",Mod_id,MAX_IF_MODULES_NB_IoT);
+
+  if (if_inst_NB_IoT[Mod_id]==NULL) {
+    if_inst_NB_IoT[Mod_id] = (IF_Module_NB_IoT_t*)malloc(sizeof(IF_Module_NB_IoT_t));
+    memset((void*)if_inst_NB_IoT[Mod_id],0,sizeof(IF_Module_NB_IoT_t));
+    
+    //if_inst[Mod_id]->CC_mask=0;
+    if_inst_NB_IoT[Mod_id]->UL_indication = UL_indication_NB_IoT;
+
+    /*AssertFatal(pthread_mutex_init(&if_inst[Mod_id]->if_mutex,NULL)==0,
+		"allocation of if_inst[%d]->if_mutex fails\n",Mod_id);*/
+  }
+  return if_inst_NB_IoT[Mod_id];
 }
-
-
-//called at initialization of L1 (phy_init_lte_eNB)
-void IF_Module_init_L1(void) //southbound IF-Module Interface
-{
-	//mapping the IF-module function to L1 definition
-	if_inst->schedule_response = schedule_response;
-	if_inst->PHY_config_req  = PHY_config_req;
-
-	//return if_inst;
-}
-

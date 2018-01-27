@@ -65,7 +65,8 @@
 uint8_t do_MIB_NB_IoT(
 		rrc_eNB_carrier_data_NB_IoT_t *carrier,
 		uint32_t N_RB_DL,
-		uint32_t frame);
+		uint32_t frame,
+    uint32_t hyper_frame);
 
 
 /**

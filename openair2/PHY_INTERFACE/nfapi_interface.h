@@ -1125,7 +1125,7 @@ typedef struct {
 	nfapi_emtc_config_t emtc_config;
 	nfapi_tdd_frame_structure_t tdd_frame_structure_config;
 	nfapi_l23_config_t l23_config;
-	nfapi_config_NB_IoT_t config_NB_IoT;
+	nfapi_config_NB_IoT_t nb_iot_config;
 	
 	// addition nfapi tlvs as per table 2-16 in idle or configure
 	nfapi_nfapi_t nfapi_config;

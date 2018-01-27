@@ -3,7 +3,7 @@
 
 
 // Sched_INFO as a input for the scheduler
-void UL_indication(UL_IND_t *UL_INFO)
+void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 {
     int i=0;
     //UE_TEMPLATE_NB_IoT *UE_info;

@@ -23,10 +23,10 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 	uint8_t MIB_size = 0;
 	uint8_t SIB1_size = 0, i = 0;
 
-	Sched_Rsp_t *SCHED_info = (Sched_Rsp_t*) malloc(sizeof(Sched_Rsp_t));
+	Sched_Rsp_NB_IoT_t *SCHED_info = (Sched_Rsp_NB_IoT_t*) malloc(sizeof(Sched_Rsp_NB_IoT_t));
 	nfapi_dl_config_request_pdu_t *dl_config_pdu;
 	nfapi_hi_dci0_request_pdu_t* hi_dci0_pdu;
-	nfapi_ul_config_request_pdu_t* ul_config_pdu;
+	nfapi_ul_config_request_pdu_t* ul_config_pdu = NULL;
 	schedule_result_t *tmp;
 	int DL_empty = 0, UL_empty = 0; 
 	//uint32_t current_time = 0;
@@ -63,6 +63,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
       		// fill MIB PDU
       		//SCHED_info->TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->NB_IoTch_pdu.NB_IoTch_pdu_rel13.pdu_index].segments[0].segment_data = MIB;
       		
+      		LOG_I(MAC,"NB-IoT fill MIB\n");
       		//dl_scheduled(mac_inst->current_subframe, _NPBCH, 0, "MIB");
 		}
 		else if(SIB1_flag == 1)
@@ -78,7 +79,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 			dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.modulation                     = 2;
 
 			//SCHED_info->TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index].segments[0].segment_data = SIB1;
-
+			LOG_I(MAC,"NB-IoT fill SIB1\n");
 			//start symbol, Resource assignment, Repetition number, Number of subframe Resource assignment lost for now
 			//dl_scheduled(mac_inst->current_subframe, _NPDSCH, SI_RNTI, "SIB1");
 		}
@@ -114,6 +115,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 
 					if(schedule_result_list_DL->direction == DL)
 					{
+						LOG_I(MAC,"NB-IoT fill DL_DCI\n");
 						//printf("Sched Info DL DCI here\n");
 						SCHED_info->DL_req->dl_config_request_body.number_dci = 1;
 						DCI_pdu = schedule_result_list_DL->DCI_pdu;
@@ -137,6 +139,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number        = ((DCIFormatN1_t *)DCI_pdu)->DCIRep;
 					}else if(schedule_result_list_DL->direction == UL)
 					{
+						LOG_I(MAC,"NB-IoT fill DL_DCI\n");
 						SCHED_info->HI_DCI0_req = (nfapi_hi_dci0_request_t*)malloc(sizeof(nfapi_hi_dci0_request_t));
 						SCHED_info->HI_DCI0_req->hi_dci0_request_body.hi_dci0_pdu_list = (nfapi_hi_dci0_request_pdu_t*)malloc(sizeof(nfapi_hi_dci0_request_pdu_t));
 						hi_dci0_pdu = SCHED_info->HI_DCI0_req->hi_dci0_request_body.hi_dci0_pdu_list;
@@ -158,7 +161,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 					}
 					break;
 				case NPDSCH:
-
+					LOG_I(MAC,"NB-IoT fill DL Data\n");
 				    DCI_pdu = schedule_result_list_DL-> DCI_pdu;
 					SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
 					dl_config_pdu->pdu_type                                           = NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE;
@@ -221,7 +224,8 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 		{
 			if(schedule_result_list_UL->channel == NPUSCH)
 			{
-				printf("first UL \n");
+				//printf("first UL \n");
+				LOG_I(MAC,"NB-IoT fill ul_config_pdu\n");
 				SCHED_info->UL_req->ul_config_request_body.number_of_pdus ++;
 				//SCHED_info->UL_req.sfn_sf = ;
 				(ul_config_pdu + i) ->pdu_type                                            = NFAPI_UL_CONFIG_NULSCH_PDU_TYPE;

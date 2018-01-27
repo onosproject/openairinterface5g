@@ -63,13 +63,7 @@
 
 
 
-#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
-
-
 extern uint16_t hundred_times_log10_NPRB_NB_IoT[100];
-
-extern Sched_Rsp_t* Sched_Rsp;
-
 
 
 #endif /*__SCHED_EXTERN_H__ */

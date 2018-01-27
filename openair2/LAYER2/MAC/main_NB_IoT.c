@@ -48,6 +48,8 @@ int mac_init_global_param_NB_IoT(void)
 void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
 {
   int32_t i, j, k;  
+
+  LOG_I(MAC,"[NB-IoT] MAC start initialization\n");
   
   for(i=0;i<64;++i)
   {
@@ -68,7 +70,6 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
   mac_inst->RA_msg4_list.tail = (RA_TEMPLATE_NB_IoT *)0;
 
   sib1_NB_IoT_sched_t *config = &mac_inst->rrc_config.sib1_NB_IoT_sched_config;
-  
   
   // DLSF Table
   init_dlsf_info(mac_inst, &DLSF_information);
@@ -97,8 +98,8 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
     }
   }
 
-  //mac_inst->si_window_length = ms160;
-  //mac_inst->sibs_NB_IoT_sched[0].si_periodicity = rf64;
+  mac_inst->rrc_config.si_window_length = ms160;
+  mac_inst->rrc_config.sibs_NB_IoT_sched[0].si_periodicity = rf64;
 
   for(i=0;i<256;++i){
     mac_inst->sibs_table[i] = -1;
@@ -136,12 +137,13 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
   //3 CE level USS list
   mac_inst->UE_list_spec = (UE_list_NB_IoT_t*)malloc(NUM_USS_PP*sizeof(UE_list_NB_IoT_t));
   //initial UE list
-  printf("[init_mac_NB_IoT] Initial UE list\n");
+  LOG_I(MAC,"[NB-IoT] Initial UE list\n");
 
   mac_inst->num_uss_list = NUM_USS_PP;
   for(i=0;i<NUM_USS_PP;++i)
   {
-    //rrc_mac_config_req_NB_IoT(&mac_inst->rrc_config, 0, 0, 1, i);
+    rrc_mac_config_req_NB_IoT(0,0,0,NULL,NULL,NULL,NULL,NULL,1,i);
+    
     (mac_inst->UE_list_spec+i)->head = -1;
     (mac_inst->UE_list_spec+i)->tail = -1;
     (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max = mac_inst->rrc_config.npdcch_ConfigDedicated[i].R_max;
@@ -159,7 +161,8 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
       (mac_inst->UE_list_spec+i)->UE_template_NB_IoT[j].direction = -1;
     }
     //SCHEDULE_LOG("[%04d][init_mac_NB_IoT] List_number %d R_max %d G %.1f a_offset %.1f T %d SS_start %d\n", mac_inst->current_subframe, i, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.a_offset, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.T, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.ss_start_uss);
-    printf("[init_mac_NB_IoT] List_number %d R_max %d G %.1f a_offset %.1f T %d SS_start %d\n", i, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.a_offset, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.T, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.ss_start_uss);
+    
+    LOG_I(MAC,"[NB-IoT] List_number %d R_max %d G %.1f a_offset %.1f T %d SS_start %d\n", i, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.a_offset, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.T, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.ss_start_uss);
   }
 
 /*
@@ -199,14 +202,46 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
   //Initialize uplink resource from nprach configuration
   Initialize_Resource();
   //add_UL_Resource(mac_inst);    
-  extend_available_resource_DL(mac_inst, mac_inst->current_subframe + 1 + 160);
+  extend_available_resource_DL(mac_inst, mac_inst->current_subframe + 1 + 160);  
+
 }
 
+void mac_top_init_eNB_NB_IoT(void)
+{
+  // can be an input of this function, but now fix to 0
+  module_id_t    i = 0;
+
+  //UE_list_t *UE_list;
+  //eNB_MAC_INST_NB_IoT *mac;
+
+  int nb_inst_NB_IOT_MAC= 1;
+  
+  LOG_I(MAC,"[NB-IoT MAIN] Init function start:nb_nbiot_macrlc_inst=%d\n",nb_inst_NB_IOT_MAC);
+
+  if (nb_inst_NB_IOT_MAC>0) {
+    // only one inst exit in legacy OAI
+
+      mac_inst->Mod_id = i;
+
+            // IF Module Initialization linking
+      mac_inst->if_inst_NB_IoT = IF_Module_init_NB_IoT(i);
+      mac_inst->if_inst_NB_IoT->PHY_config_req = PHY_config_req_NB_IoT;
+      mac_inst->if_inst_NB_IoT->schedule_response = schedule_response_NB_IoT;
+
+      //reserve for fapi structure initializati
+
+
+  } else {
+    mac_inst = NULL;
+  }
+  
+  // for NB-IoT UE list initialization will be in init_mac_NB_IoT
+
+}
 
 int l2_init_eNB_NB_IoT(void)
 {
-  LOG_I(MAC,"[MAIN] Mapping L2 IF-Module functions\n");
-  IF_Module_init_L2();
+
 
   LOG_I(MAC,"[MAIN] MAC_INIT_GLOBAL_PARAM NB-IoT IN...\n");
 

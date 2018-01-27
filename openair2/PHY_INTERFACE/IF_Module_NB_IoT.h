@@ -13,6 +13,7 @@
 #include "PhysicalConfigDedicated-NB-r13.h"
 //#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "openair2/COMMON/platform_types.h"
+//#include "openair1/SCHED/IF_Module_L1_primitives_NB_IoT.h"
 
 //#define SCH_PAYLOAD_SIZE_MAX 4096
 #define BCCH_PAYLOAD_SIZE_MAX_NB_IoT 128
@@ -106,7 +107,7 @@ typedef struct{
 	/*MP: MISSED COMMON CONFIG. of SIB2-NB in FAPI SPECS (may non needed)*/
 	extra_phyConfig_t extra_phy_parms;
 
-}PHY_Config_t;
+}PHY_Config_NB_IoT_t;
 
 
 
@@ -147,7 +148,7 @@ typedef struct{
  	/*crc_indication*/
  	nfapi_crc_indication_body_t crc_ind;
 
- }UL_IND_t;
+ }UL_IND_NB_IoT_t;
 
  // Downlink subframe P7
 
@@ -178,25 +179,34 @@ typedef struct{
   	/// Pointers to DL SDUs
   	//uint8_t **sdu;
 
-}Sched_Rsp_t;
+}Sched_Rsp_NB_IoT_t;
+
+
 
 
 /*IF_Module_t a group for gathering the Interface
 It should be allocated at the main () in lte-softmodem.c*/
 typedef struct IF_Module_s{
 	//define the function pointer
-	void (*UL_indication)(UL_IND_t *UL_INFO);
-	void (*schedule_response)(Sched_Rsp_t *Sched_INFO);
-	void (*PHY_config_req)(PHY_Config_t* config_INFO);
+	void (*UL_indication)(UL_IND_NB_IoT_t *UL_INFO);
+	void (*schedule_response)(Sched_Rsp_NB_IoT_t *Sched_INFO);
+	void (*PHY_config_req)(PHY_Config_NB_IoT_t* config_INFO);
 
-}IF_Module_t;
+}IF_Module_NB_IoT_t;
+
+/*Interface for Downlink, transmitting the DLSCH SDU, DCI SDU*/
+void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO);
+
+/*Interface for PHY Configuration
+ * Trigger the phy_config_xxx functions using parameters from the shared PHY_Config structure
+ * */
+void PHY_config_req_NB_IoT(PHY_Config_NB_IoT_t* config_INFO);
+/*Interface for uplink, transmitting the Preamble(list), ULSCH SDU, NAK, Tick (trigger scheduler)
+*/
+void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO);
 
 /*Initial */
-
-//int IF_Module_init(IF_Module_t *if_inst);
-
-void IF_Module_init_L1(void);
-void IF_Module_init_L2(void);
+IF_Module_NB_IoT_t *IF_Module_init_NB_IoT(int Mod_id);
 
 
 #endif

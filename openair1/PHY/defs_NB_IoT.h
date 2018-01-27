@@ -136,6 +136,8 @@ static inline void* malloc16_clear( size_t size )
 
 //#include "PHY/LTE_TRANSPORT/defs.h"
 #include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
+
 #include <pthread.h>
 
 #include "targets/ARCH/COMMON/common_lib.h"
@@ -758,7 +760,7 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   // DCI for at most 2 DCI pdus
   DCI_PDU_NB_IoT            *DCI_pdu;
 
-
+  UL_IND_NB_IoT_t UL_INFO;
 
 } PHY_VARS_eNB_NB_IoT;
 
@@ -1107,7 +1109,6 @@ static inline int release_thread(pthread_mutex_t *mutex,int *instance_cnt,char *
 //#include "PHY/LTE_TRANSPORT/proto.h"
 #include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
 //#include "PHY/LTE_ESTIMATION/defs.h"
-
 //#include "SIMULATION/ETH_TRANSPORT/defs.h"
 //#endif
 #endif //  __PHY_DEFS__H__

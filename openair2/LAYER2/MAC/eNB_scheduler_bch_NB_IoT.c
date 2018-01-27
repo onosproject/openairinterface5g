@@ -13,6 +13,7 @@
 #include "extern_NB_IoT.h"
 
 unsigned char str[6][7] = { "SIBs_1", "SIBs_2", "SIBs_3", "SIBs_4", "SIBs_5", "SIBs_6" };
+unsigned char si_repetition_pattern_table[4] = { 20, 40, 80, 160};
 
 void schedule_sibs_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start_subframe1){
 	
@@ -22,18 +23,20 @@ void schedule_sibs_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, in
 	schedule_result_t *new_node;	
 	DCIFormatN1_t *sibs_dci;
 	uint32_t j, i, k, num_subframe, last_subframe, residual_subframe;
-	num_subframe = mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_tb;
+
 	
-	for(k=0, i=start_subframe1;i<(start_subframe1+mac_inst->rrc_config.si_window_length);i+=mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_repetition_pattern, ++k){
+	num_subframe = mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_tb;
+
+	for(k=0, i=start_subframe1;i<(start_subframe1+mac_inst->rrc_config.si_window_length);i+=si_repetition_pattern_table[mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_repetition_pattern], ++k){
 		//printf("[debug][sibs%d] subframe: %d, check %d", sibs_order, i, num_subframe);
-		
+	
 		pt[k] = (available_resource_DL_t *)check_sibs_resource(mac_inst, i, i+9, num_subframe, &residual_subframe, &last_subframe, &first_subframe[k]);
-		
+
 		num_subframe = residual_subframe;
 		//printf("-- rest: %d, last: %d start: %d\n", num_subframe, last_subframe, start_subframe1);
 		
 		if(0==residual_subframe){
-
+			
 			sibs_dci = (DCIFormatN1_t *)malloc(sizeof(DCIFormatN1_t));
 			sibs_dci->type = 1;
 			sibs_dci->orderIndicator = 0;
@@ -45,7 +48,8 @@ void schedule_sibs_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, in
 			sibs_dci->HARQackRes = 0;
 			sibs_dci->DCIRep = 0;
 			
-			for(k=0, j=start_subframe1;j<=i;++k, j+=mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_repetition_pattern){	
+			for(k=0, j=start_subframe1;j<=i;++k, j+=si_repetition_pattern_table[mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_repetition_pattern]){	
+				
 				if((available_resource_DL_t *)0 != pt[k]){
 					new_node = (schedule_result_t *)malloc(sizeof(schedule_result_t));
 					//	fill new node
@@ -65,6 +69,7 @@ void schedule_sibs_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, in
 					fill_resource_DL(mac_inst, pt[k], first_subframe[k], (j==i)?last_subframe:j+9, new_node);
 				}
 			}
+			
 			return ;
 		}
 	}

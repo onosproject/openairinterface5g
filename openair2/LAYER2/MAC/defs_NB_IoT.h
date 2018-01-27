@@ -479,6 +479,8 @@ typedef struct RA_template_list_s{
 /*! \brief top level eNB MAC structure */
 typedef struct {
 
+    uint8_t Mod_id;
+
   //  System
   uint32_t hyper_system_frame;
   uint32_t system_frame;
@@ -516,6 +518,11 @@ typedef struct {
 
   rrc_config_NB_IoT_t rrc_config;
 
+  nfapi_config_request_t config;
+
+
+  IF_Module_NB_IoT_t            *if_inst_NB_IoT;
+
 } eNB_MAC_INST_NB_IoT;
 
 // actually not here, but for now put it here
@@ -530,6 +537,8 @@ typedef  struct {
 // global variables
 
 nprach_parameters_NB_IoT_t nprach_list[3];
+
+nfapi_config_request_t config;
 
 //DLSF Table
 DLSF_INFO_t DLSF_information;
