@@ -65,7 +65,7 @@ int32_t nr_segmentation(unsigned char *input_buffer,
 
   // Find K+
   Bprime_by_C = Bprime/(*C);
-  /*if (Bprime <=192) {
+  if (Bprime <=192) {
 	  Kb = 6;
   } else if (Bprime <=560) {
 	  Kb = 8;
@@ -73,9 +73,9 @@ int32_t nr_segmentation(unsigned char *input_buffer,
 	  Kb = 9;
   } else if (Bprime <=3840) {
 	  Kb = 10;;
-  } else {*/
+  } else {
 	  Kb = 22;
-  //}
+  }
 
 
 if ((Bprime_by_C%Kb) > 0)
