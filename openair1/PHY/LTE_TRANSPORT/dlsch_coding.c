@@ -190,7 +190,7 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(unsigned char Kmimo,unsigned char Mdlharq,uint32_
           for (r=0; r<MAX_NUM_DLSCH_SEGMENTS/bw_scaling; r++) {
             // account for filler in first segment and CRCs for multiple segment case
             dlsch->harq_processes[i]->c[r] = (uint8_t*)malloc16(((r==0)?8:0) + 3+ 1056);
-            dlsch->harq_processes[i]->d[r] = (uint8_t*)malloc16((96+12+3+(3*8144)));
+            dlsch->harq_processes[i]->d[r] = (uint8_t*)malloc16((96+12+3+(3*8448)));
             if (dlsch->harq_processes[i]->c[r]) {
               bzero(dlsch->harq_processes[i]->c[r],((r==0)?8:0) + 3+ 1056);
             } else {
@@ -198,7 +198,7 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(unsigned char Kmimo,unsigned char Mdlharq,uint32_
               exit_flag=2;
             }
             if (dlsch->harq_processes[i]->d[r]) {
-              bzero(dlsch->harq_processes[i]->d[r],(96+12+3+(3*8144)));
+              bzero(dlsch->harq_processes[i]->d[r],(96+12+3+(3*8448)));
             } else {
               printf("Can't get d\n");
               exit_flag=2;
