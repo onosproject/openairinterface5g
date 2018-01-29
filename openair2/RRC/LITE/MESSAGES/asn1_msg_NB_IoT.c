@@ -318,11 +318,11 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   //FIXME
   (*sib1_NB_IoT)->freqBandIndicator_r13 =
 #if defined(ENABLE_ITTI)
-    configuration->eutra_band;
+    configuration->eutra_band[CC_id];
 #else
     5; //if not configured we use band 5 (UL: 824 MHz - 849MHz / DL: 869 MHz - 894 MHz  FDD mode)
 #endif
-
+    
     //OPTIONAL new parameters, to be used?
       /*
        * freqBandInfo_r13
@@ -556,7 +556,7 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
   nprach_parameters[1].nprach_Periodicity_r13               = configuration->nprach_Periodicity[CC_id];
   nprach_parameters[1].nprach_StartTime_r13                 = configuration->nprach_StartTime[CC_id];
   nprach_parameters[1].nprach_SubcarrierOffset_r13          = configuration->nprach_SubcarrierOffset[CC_id];
-  nprach_parameters[1].nprach_NumSubcarriers_r13            = configuration->nprach_NumSubcarriers[1];
+  nprach_parameters[1].nprach_NumSubcarriers_r13            = configuration->nprach_NumSubcarriers[CC_id];
   nprach_parameters[1].numRepetitionsPerPreambleAttempt_r13 = configuration->numRepetitionsPerPreambleAttempt_NB[CC_id];
   nprach_parameters[1].nprach_SubcarrierMSG3_RangeStart_r13 = configuration->nprach_SubcarrierMSG3_RangeStart[CC_id];
   nprach_parameters[1].maxNumPreambleAttemptCE_r13          = configuration->maxNumPreambleAttemptCE_NB[CC_id];

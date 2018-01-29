@@ -400,7 +400,7 @@ typedef struct NPRACH_Parameters_NB_IoT{
 } nprach_parameters_NB_IoT_t;
 
 typedef struct{
-  A_SEQUENCE_OF(nprach_parameters_NB_IoT_t) list;
+ nprach_parameters_NB_IoT_t list[3];
 }NPRACH_List_NB_IoT_t;
 
 typedef long RSRP_Range_t;

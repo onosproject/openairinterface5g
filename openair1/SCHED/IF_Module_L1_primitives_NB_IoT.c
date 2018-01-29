@@ -354,10 +354,10 @@ void PHY_config_req_NB_IoT(PHY_Config_NB_IoT_t* config_INFO){
 	{
 	//Dedicated Configuration
 
-			phy_config_dedicated_eNB_NB_IoT(config_INFO->mod_id,
+			/*phy_config_dedicated_eNB_NB_IoT(config_INFO->mod_id,
 											config_INFO->CC_id,
 											config_INFO->rnti,
-											&config_INFO->extra_phy_parms);
+											&config_INFO->extra_phy_parms);*/
 
 	}
 

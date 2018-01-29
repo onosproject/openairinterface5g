@@ -68,7 +68,10 @@ void phy_config_mib_eNB_NB_IoT(int  			Mod_id,
 
   NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms_NB_IoT;
 
+  	fp = (NB_IoT_DL_FRAME_PARMS*) malloc (sizeof(NB_IoT_DL_FRAME_PARMS));
+
    LOG_I(PHY,"Configuring MIB-NB for instance %d, CCid %d : (band %d,Nid_cell %d,p %d,EARFCN %u)\n",Mod_id, CC_id, eutra_band, Nid_cell, p_eNB,EARFCN);
+  
 
 //  fp->N_RB_DL
 //  fp->N_RB_UL						also this two values need to be known when we are dealing with in-band and guard-band operating mode
@@ -80,13 +83,17 @@ void phy_config_mib_eNB_NB_IoT(int  			Mod_id,
   fp->nb_antenna_ports_eNB               = p_eNB; //tx antenna port
   fp->dl_CarrierFreq                     = from_earfcn_NB_IoT(eutra_band,EARFCN,0);
   fp->ul_CarrierFreq                     = fp->dl_CarrierFreq - get_uldl_offset_NB_IoT(eutra_band);
+
   fp->operating_mode					 = operating_mode; //see how are defined by FAPI structure
   fp->NB_IoT_RB_ID						 = prb_index; //XXX to be better understand how should be managed
   //fp->nb_rx_antenna_ports_eNB
   fp->control_region_size			 	 = control_region_size; //(assume that this value is negative if not used)
   fp->eutra_NumCRS_ports				 = eutra_NumCRS_ports; //(valid only for in-band operating mode with different PCI)
   
+  LOG_I(PHY,"Configure-MIB complete\n");
 
+
+  
   //TODO  (new Raymond implementation) in the classic implementation seems to be used only by oaisim
   //init_frame_parms(fp,1);
   //init_lte_top(fp);
@@ -196,86 +203,94 @@ void phy_config_sib2_eNB_NB_IoT(uint8_t 								  Mod_id,
 						 		nfapi_uplink_reference_signal_config_t	  *ul_nrs_config,
 						 		extra_phyConfig_t						  *extra_phy_parms)
 {
-	NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms;
-	LOG_D(PHY,"[eNB%d] CCid %d: Applying config_NB_IoT from sib2_NB\n",Mod_id,CC_id);
+
+  NB_IoT_DL_FRAME_PARMS *fp = &PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]->frame_parms_NB_IoT;
+
+	LOG_I(PHY,"[eNB%d] CCid %d: Applying config_NB_IoT from sib2_NB\n",Mod_id,CC_id);
+
+	  	fp = (NB_IoT_DL_FRAME_PARMS*) malloc (sizeof(NB_IoT_DL_FRAME_PARMS));
+
 	  
 	/*NPRACH_ConfigSIB_NB_r13----------------------------------------------------------*/
 
 	//MP: FAPI style approach: instead of a list they consider the 3 possible configuration separately
 
 	  if(config->nprach_config_0_enabled.value == 1){
-		  LOG_D(PHY, "NPRACH Config #0 enabled\n");
+		  LOG_I(PHY, "NPRACH Config #0 enabled\n");
 
 		  fp->nprach_config_common.nprach_CP_Length = config->nprach_config_0_cp_length.value; //NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7
 		  LOG_D(PHY," config#0: nprach_CP_Length = %d\n",fp->nprach_config_common.nprach_CP_Length);
 		  //FIXME: MP: memory for the list should be allocated? initialization??
-		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_Periodicity = config->nprach_config_0_sf_periodicity.value;
-		  LOG_D(PHY,"config#0: nprach_Periodicity = %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_Periodicity);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_StartTime = config->nprach_config_0_start_time.value;
-		  LOG_D(PHY,"config#0: nprach_StartTime = %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_StartTime);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_SubcarrierOffset = config->nprach_config_0_subcarrier_offset.value;
-		  LOG_D(PHY,"config#0: nprach_SubcarrierOffset= %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_SubcarrierOffset);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_NumSubcarriers = config->nprach_config_0_number_of_subcarriers.value;
-		  LOG_D(PHY,"config#0: nprach_NumSubcarriers= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_NumSubcarriers);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->numRepetitionsPerPreambleAttempt = config->nprach_config_0_number_of_repetitions_per_attempt.value;
-		  LOG_D(PHY,"config#0: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[0]->numRepetitionsPerPreambleAttempt);
+		  fp->nprach_config_common.nprach_ParametersList.list[0].nprach_Periodicity = config->nprach_config_0_sf_periodicity.value;
+		  LOG_D(PHY,"config#0: nprach_Periodicity = %d\n", fp->nprach_config_common.nprach_ParametersList.list[0].nprach_Periodicity);
+		  fp->nprach_config_common.nprach_ParametersList.list[0].nprach_StartTime = config->nprach_config_0_start_time.value;
+		  LOG_D(PHY,"config#0: nprach_StartTime = %d\n",fp->nprach_config_common.nprach_ParametersList.list[0].nprach_StartTime);
+		  fp->nprach_config_common.nprach_ParametersList.list[0].nprach_SubcarrierOffset = config->nprach_config_0_subcarrier_offset.value;
+		  LOG_D(PHY,"config#0: nprach_SubcarrierOffset= %d\n", fp->nprach_config_common.nprach_ParametersList.list[0].nprach_SubcarrierOffset);
+		  fp->nprach_config_common.nprach_ParametersList.list[0].nprach_NumSubcarriers = config->nprach_config_0_number_of_subcarriers.value;
+		  LOG_D(PHY,"config#0: nprach_NumSubcarriers= %d\n",fp->nprach_config_common.nprach_ParametersList.list[0].nprach_NumSubcarriers);
+		  fp->nprach_config_common.nprach_ParametersList.list[0].numRepetitionsPerPreambleAttempt = config->nprach_config_0_number_of_repetitions_per_attempt.value;
+		  LOG_D(PHY,"config#0: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list[0].numRepetitionsPerPreambleAttempt);
 
 		  //missed configuration in FAPI config_request (TS 36.331 pag 610) (may not needed)
-		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_SubcarrierMSG3_RangeStart = extra_phy_parms->nprach_config_0_subcarrier_MSG3_range_start;
+		  /*fp->nprach_config_common.nprach_ParametersList.list.array[0]->nprach_SubcarrierMSG3_RangeStart = extra_phy_parms->nprach_config_0_subcarrier_MSG3_range_start;
 		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_StartSF_CSS_RA = extra_phy_parms->nprach_config_0_npdcch_startSF_CSS_RA;
 		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_NumRepetitions_RA = extra_phy_parms->nprach_config_0_npdcch_num_repetitions_RA;
 		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->npdcch_Offset_RA = extra_phy_parms->nprach_config_0_npdcch_offset_RA;
 		  fp->nprach_config_common.nprach_ParametersList.list.array[0]->maxNumPreambleAttemptCE = extra_phy_parms->nprach_config_0_max_num_preamble_attempt_CE;
+		  */
 		  //fp->nprach_config_common.rsrp_ThresholdsPrachInfoList.list /*OPTIONAL*/
 
 	  }
 
 	  if(config->nprach_config_1_enabled.value == 1){
-		  LOG_D(PHY, "NPRACH Config #1 enabled\n");
+		  LOG_I(PHY, "NPRACH Config #1 enabled\n");
 
 		  fp->nprach_config_common.nprach_CP_Length = config->nprach_config_1_cp_length.value; //NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7
 		  LOG_D(PHY," config#1: nprach_CP_Length = %d\n",fp->nprach_config_common.nprach_CP_Length);
+
 		  //FIXME: MP: memory for the list should be allocated? initialization??
-		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_Periodicity = config->nprach_config_1_sf_periodicity.value;
-		  LOG_D(PHY,"config#1: nprach_Periodicity = %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_Periodicity);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_StartTime = config->nprach_config_1_start_time.value;
-		  LOG_D(PHY,"config#1: nprach_StartTime = %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_StartTime);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_SubcarrierOffset = config->nprach_config_1_subcarrier_offset.value;
-		  LOG_D(PHY,"config#1: nprach_SubcarrierOffset= %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_SubcarrierOffset);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_NumSubcarriers = config->nprach_config_1_number_of_subcarriers.value;
-		  LOG_D(PHY,"config#1: nprach_NumSubcarriers= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_NumSubcarriers);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->numRepetitionsPerPreambleAttempt = config->nprach_config_1_number_of_repetitions_per_attempt.value;
-		  LOG_D(PHY,"config#1: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[1]->numRepetitionsPerPreambleAttempt);
+		  fp->nprach_config_common.nprach_ParametersList.list[1].nprach_Periodicity = config->nprach_config_1_sf_periodicity.value;
+		  LOG_D(PHY,"config#1: nprach_Periodicity = %d\n", fp->nprach_config_common.nprach_ParametersList.list[1].nprach_Periodicity);
+		  fp->nprach_config_common.nprach_ParametersList.list[1].nprach_StartTime = config->nprach_config_1_start_time.value;
+		  LOG_D(PHY,"config#1: nprach_StartTime = %d\n",fp->nprach_config_common.nprach_ParametersList.list[1].nprach_StartTime);
+		  fp->nprach_config_common.nprach_ParametersList.list[1].nprach_SubcarrierOffset = config->nprach_config_1_subcarrier_offset.value;
+		  LOG_D(PHY,"config#1: nprach_SubcarrierOffset= %d\n", fp->nprach_config_common.nprach_ParametersList.list[1].nprach_SubcarrierOffset);
+		  fp->nprach_config_common.nprach_ParametersList.list[1].nprach_NumSubcarriers = config->nprach_config_1_number_of_subcarriers.value;
+		  LOG_D(PHY,"config#1: nprach_NumSubcarriers= %d\n",fp->nprach_config_common.nprach_ParametersList.list[1].nprach_NumSubcarriers);
+		  fp->nprach_config_common.nprach_ParametersList.list[1].numRepetitionsPerPreambleAttempt = config->nprach_config_1_number_of_repetitions_per_attempt.value;
+		  LOG_D(PHY,"config#1: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list[1].numRepetitionsPerPreambleAttempt);
 
 		  //missed configuration in FAPI config_request (TS 36.331 pag 610) (may not needed)
-		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_SubcarrierMSG3_RangeStart = extra_phy_parms->nprach_config_1_subcarrier_MSG3_range_start;
+		  /*fp->nprach_config_common.nprach_ParametersList.list.array[1]->nprach_SubcarrierMSG3_RangeStart = extra_phy_parms->nprach_config_1_subcarrier_MSG3_range_start;
 		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->npdcch_StartSF_CSS_RA = extra_phy_parms->nprach_config_1_npdcch_startSF_CSS_RA;
 		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->npdcch_NumRepetitions_RA = extra_phy_parms->nprach_config_1_npdcch_num_repetitions_RA;
 		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->npdcch_Offset_RA = extra_phy_parms->nprach_config_1_npdcch_offset_RA;
 		  fp->nprach_config_common.nprach_ParametersList.list.array[1]->maxNumPreambleAttemptCE = extra_phy_parms->nprach_config_1_max_num_preamble_attempt_CE;
+		  */
 		  //fp->nprach_config_common.rsrp_ThresholdsPrachInfoList.list /*OPTIONAL*/
 
 	  }
 
 	  if(config->nprach_config_2_enabled.value == 1){
-		  LOG_D(PHY, "NPRACH Config #2 enabled\n");
+		  LOG_I(PHY, "NPRACH Config #2 enabled\n");
 
 		  fp->nprach_config_common.nprach_CP_Length = config->nprach_config_2_cp_length.value; //NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7
 		  LOG_D(PHY," config#2: nprach_CP_Length = %d\n",fp->nprach_config_common.nprach_CP_Length);
 		  //FIXME: MP: memory for the list should be allocated? initialization?? where??
-		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_Periodicity = config->nprach_config_2_sf_periodicity.value;
-		  LOG_D(PHY,"config#2: nprach_Periodicity = %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_Periodicity);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_StartTime = config->nprach_config_2_start_time.value;
-		  LOG_D(PHY,"config#2: nprach_StartTime = %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_StartTime);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_SubcarrierOffset = config->nprach_config_2_subcarrier_offset.value;
-		  LOG_D(PHY,"config#2: nprach_SubcarrierOffset= %d\n", fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_SubcarrierOffset);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_NumSubcarriers = config->nprach_config_2_number_of_subcarriers.value;
-		  LOG_D(PHY,"config#2: nprach_NumSubcarriers= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_NumSubcarriers);
-		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->numRepetitionsPerPreambleAttempt = config->nprach_config_2_number_of_repetitions_per_attempt.value;
-		  LOG_D(PHY,"config#2: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->numRepetitionsPerPreambleAttempt);
+		  fp->nprach_config_common.nprach_ParametersList.list[2].nprach_Periodicity = config->nprach_config_2_sf_periodicity.value;
+		  LOG_D(PHY,"config#2: nprach_Periodicity = %d\n", fp->nprach_config_common.nprach_ParametersList.list[2].nprach_Periodicity);
+		  fp->nprach_config_common.nprach_ParametersList.list[2].nprach_StartTime = config->nprach_config_2_start_time.value;
+		  LOG_D(PHY,"config#2: nprach_StartTime = %d\n",fp->nprach_config_common.nprach_ParametersList.list[2].nprach_StartTime);
+		  fp->nprach_config_common.nprach_ParametersList.list[2].nprach_SubcarrierOffset = config->nprach_config_2_subcarrier_offset.value;
+		  LOG_D(PHY,"config#2: nprach_SubcarrierOffset= %d\n", fp->nprach_config_common.nprach_ParametersList.list[2].nprach_SubcarrierOffset);
+		  fp->nprach_config_common.nprach_ParametersList.list[2].nprach_NumSubcarriers = config->nprach_config_2_number_of_subcarriers.value;
+		  LOG_D(PHY,"config#2: nprach_NumSubcarriers= %d\n",fp->nprach_config_common.nprach_ParametersList.list[2].nprach_NumSubcarriers);
+		  fp->nprach_config_common.nprach_ParametersList.list[2].numRepetitionsPerPreambleAttempt = config->nprach_config_2_number_of_repetitions_per_attempt.value;
+		  LOG_D(PHY,"config#2: numRepetitionsPerPreambleAttempt= %d\n",fp->nprach_config_common.nprach_ParametersList.list[2].numRepetitionsPerPreambleAttempt);
 
 		  //missed configuration in FAPI config_request (TS 36.331 pag 610) (may not needed)
-		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_SubcarrierMSG3_RangeStart = extra_phy_parms->nprach_config_2_subcarrier_MSG3_range_start;
+		  /*fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_SubcarrierMSG3_RangeStart = extra_phy_parms->nprach_config_2_subcarrier_MSG3_range_start;
 		  LOG_D(PHY,"config#2: nprach_SubcarrierMSG3_RangeStart= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->nprach_SubcarrierMSG3_RangeStart);
 		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_StartSF_CSS_RA = extra_phy_parms->nprach_config_2_npdcch_startSF_CSS_RA;
 		  LOG_D(PHY,"config#2: npdcch_StartSF_CSS_RA= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_StartSF_CSS_RA);
@@ -285,6 +300,7 @@ void phy_config_sib2_eNB_NB_IoT(uint8_t 								  Mod_id,
 		  LOG_D(PHY,"config#2: npdcch_Offset_RA= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->npdcch_Offset_RA);
 		  fp->nprach_config_common.nprach_ParametersList.list.array[2]->maxNumPreambleAttemptCE = extra_phy_parms->nprach_config_2_max_num_preamble_attempt_CE;
 		  LOG_D(PHY,"config#2: maxNumPreambleAttemptCE= %d\n",fp->nprach_config_common.nprach_ParametersList.list.array[2]->maxNumPreambleAttemptCE);
+		  */
 		  //fp->nprach_config_common.rsrp_ThresholdsPrachInfoList.list /*OPTIONAL*/
 
 	  }
@@ -332,9 +348,9 @@ void phy_config_sib2_eNB_NB_IoT(uint8_t 								  Mod_id,
 
 	  /*UL Power Control Config Common---------------------------------------------------------*/
 	  //F nothing has been defined in FAPI specs for this (may because are only UE stuffs)
-	  fp->ul_power_control_config_common.p0_NominalNPUSCH = extra_phy_parms->p0_nominal_npusch;
+	  /*fp->ul_power_control_config_common.p0_NominalNPUSCH = extra_phy_parms->p0_nominal_npusch;
 	  fp->ul_power_control_config_common.alpha = extra_phy_parms->alpha;
-	  fp->ul_power_control_config_common.deltaPreambleMsg3 = extra_phy_parms->delta_preamle_MSG3;
+	  fp->ul_power_control_config_common.deltaPreambleMsg3 = extra_phy_parms->delta_preamle_MSG*/
 
 	  /*DL gap Config - OPTIONAL----------------------------------------------------------------*/
 	  //DL_GapConfig_NB_r13_t a;
@@ -344,7 +360,7 @@ void phy_config_sib2_eNB_NB_IoT(uint8_t 								  Mod_id,
 		  fp->DL_gap_config.dl_GapThreshold = config->dl_gap_threshold.value;
 	  }
 
-
+	  LOG_I(PHY,"SIB-2 configure complete\n");
 }
 
 
