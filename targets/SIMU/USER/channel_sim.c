@@ -1372,7 +1372,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 	      //printf("multipath_channel_prach, UE too weak %e\n", ((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
 	   //UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB));	
       } else {
-	     start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->dac_fixed_gain_PRACH);
+	     start_meas(&UE2eNB[0][eNB_id][CC_id]->dac_fixed_gain_PRACH);
 #ifdef    SSE_float
 	     tx_pwr = dac_fixed_gain_prach_SSE_float((float**)s_re_f_prach,
 					(float**)s_im_f_prach,
@@ -1400,7 +1400,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 					PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe],
 					PHY_vars_UE_g[UE_id][CC_id]->frame_parms.ofdm_symbol_size);  // This make the previous argument the total power
 #endif
-	    stop_meas(&UE2eNB[UE_id][eNB_id][CC_id]->dac_fixed_gain_PRACH);
+	    stop_meas(&UE2eNB[0][eNB_id][CC_id]->dac_fixed_gain_PRACH);
 	    //for (int idx=0;idx<10;idx++) printf("dumping raw PRACH UL tx subframe (input) %d: s_f[%d] = (%f,%f)\n", subframe, idx, s_re_f_prach[0][idx],s_im_f_prach[0][idx]);
 	    //for (int idx=829;idx<839;idx++) printf("dumping raw PRACH UL tx subframe (input) %d: s_f[%d] = (%f,%f)\n", subframe, idx, s_re_f_prach[0][idx],s_im_f_prach[0][idx]);
 	    LOG_D(OCM,"[SIM][UL] UE %d tx_pwr %f dBm (target %d dBm, num_RE %d) for subframe %d (sf_offset %d)\n",
@@ -1505,8 +1505,9 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 #endif
      rx_prachF = PHY_vars_eNB_g[eNB_id][CC_id]->prach_vars.rxsigF;
      sf_offset = pointer_firstvalue_PRACH;
-     //start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->adc_PRACH);
+     start_meas(&UE2eNB[0][eNB_id][CC_id]->adc_PRACH);
 #ifdef    SSE_float 
+     
      adc_prach_SSE_float(r_re_p_f_prach,
 		r_im_p_f_prach,
 		0,

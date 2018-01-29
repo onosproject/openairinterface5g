@@ -292,7 +292,7 @@ void multipath_channel_freq(channel_desc_t *desc,
       	/*clock_t stop=clock();
       	printf("UE_freq_channel time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
       	sum=(sum+stop-start);*/
-        random_channel(desc,0);
+        random_channel_freq(desc,0);
   	freq_channel(desc,nb_rb,n_samples);//Find desc->chF
   	//freq_channel_prach(desc,nb_rb,n_samples,1,44);//Find desc->chF
   }
@@ -425,7 +425,7 @@ void multipath_channel_freq(channel_desc_t *desc,
   if (keep_channel) {
   	// do nothing - keep channel
   } else {
-        random_channel(desc,0);
+        random_channel_freq(desc,0);
   	freq_channel(desc,nb_rb,n_samples);//Find desc->chF
   }
   //clock_t start=clock();
@@ -525,7 +525,7 @@ void multipath_channel_freq_SSE_float(channel_desc_t *desc,
   if (keep_channel) {
   	// do nothing - keep channel
   } else {
-        random_channel(desc,0);
+        random_channel_freq(desc,0);
   	freq_channel(desc,nb_rb,n_samples);//Find desc->chF
   }
 	for (j=0;j<(symbols_per_tti>>2);j++){
@@ -644,7 +644,7 @@ void multipath_channel_prach(channel_desc_t *desc,
    		if (keep_channel) {
 		// do nothing - keep channel
 		} else {
-		random_channel(desc,0);
+		random_channel_freq(desc,0);
 		freq_channel_prach(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
 		}	
 			for (f=0;f<(length>>1); f++) {
@@ -712,7 +712,7 @@ void multipath_channel_prach(channel_desc_t *desc,
    		if (keep_channel) {
 		// do nothing - keep channel
 		} else {
-		random_channel(desc,0);//Find a(l)
+		random_channel_freq(desc,0);//Find a(l)
 		freq_channel_prach(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
 		}	
 			for (f=0;f<length; f++) {
@@ -762,7 +762,7 @@ void multipath_channel_prach_SSE_float(channel_desc_t *desc,
    		if (keep_channel) {
 		// do nothing - keep channel
 		} else {
-		random_channel(desc,0);
+		random_channel_freq(desc,0);
 		freq_channel_prach(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
 		}	
 			for (f=0;f<(length>>2); f++) {

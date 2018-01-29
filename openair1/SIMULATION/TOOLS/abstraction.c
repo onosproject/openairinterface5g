@@ -37,7 +37,7 @@ static double **cos_lut=NULL,**sin_lut=NULL;
 //#if 1
 
 //#define abstraction_SSE
-#ifdef  abstraction_SSE//abstraction_SSE is not working.
+/*#ifdef  abstraction_SSE//abstraction_SSE is not working.
 int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 {
 
@@ -116,7 +116,7 @@ int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
   }
   return(0);
 }
-#else
+#else*/
 int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 {
 
@@ -162,7 +162,6 @@ int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
   //printf("count %d\n",count);
   return(0);
 }
-#endif
 #ifdef abstraction_SSE
 int freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 {
@@ -290,7 +289,7 @@ int freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
 {
 
-
+  static int first_run=1;
   double delta_f,freq;  // 90 kHz spacing
   double delay;
   int16_t f,f1;
@@ -306,9 +305,19 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
     return(-1); 
   }
   prach_samples = (prach_fmt<4)?13+839+12:3+139+2;
-  
-  cos_lut = (double **)malloc(prach_samples*sizeof(double*));
-  sin_lut = (double **)malloc(prach_samples*sizeof(double*));
+  if (first_run)
+  {
+	cos_lut = (double **)malloc16(prach_samples*sizeof(double*));
+	sin_lut = (double **)malloc16(prach_samples*sizeof(double*));
+        for (f=max_nb_rb_samples/2-prach_pbr_offset_samples,f1=0; f<max_nb_rb_samples/2-prach_pbr_offset_samples+prach_samples; f++,f1++) {
+	    cos_lut[f1] = (double *)malloc16_clear((int)desc->nb_taps*sizeof(double));
+	    sin_lut[f1] = (double *)malloc16_clear((int)desc->nb_taps*sizeof(double));
+	}
+	first_run=0;
+  }
+
+  //cos_lut = (double **)malloc(prach_samples*sizeof(double*));
+  //sin_lut = (double **)malloc(prach_samples*sizeof(double*));
 
   delta_f = (prach_fmt<4)?nb_rb*180000/((n_samples-1)*12):nb_rb*180000/((n_samples-1)*2);//1.25 khz for preamble format 1,2,3. 7.5 khz for preample format 4
   max_nb_rb_samples = nb_rb*180000/delta_f;//7200 if prach_fmt<4
@@ -317,8 +326,8 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
   for (f=max_nb_rb_samples/2-prach_pbr_offset_samples,f1=0; f<max_nb_rb_samples/2-prach_pbr_offset_samples+prach_samples; f++,f1++) {//3600-864,3600-864+864|3600-7200,3600-7200+839
     freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
     //printf("[init_freq_channel_prach] freq %e\n",freq);
-    cos_lut[f1] = (double *)malloc((int)desc->nb_taps*sizeof(double));
-    sin_lut[f1] = (double *)malloc((int)desc->nb_taps*sizeof(double));
+    //cos_lut[f1] = (double *)malloc((int)desc->nb_taps*sizeof(double));
+    //sin_lut[f1] = (double *)malloc((int)desc->nb_taps*sizeof(double));
 
 
     for (l=0; l<(int)desc->nb_taps; l++) {
@@ -336,6 +345,65 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
 
   return(0);
 }
+#ifdef abstraction_SSE
+int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
+{
+
+  int16_t f;
+  uint8_t aarx,aatx,l;
+  double *clut,*slut;
+  int prach_samples;
+  static int freq_channel_init=0;
+  static int n_samples_max=0;
+  __m128d clut128,slut128,chFx_128,chFy_128;
+
+  prach_samples = (prach_fmt<4)?13+839+12:3+139+2; 
+
+  // do some error checking
+  if (nb_rb-n_ra_prb<6) {
+    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check r_ra_prb value (r_ra_prb=%d)\n",n_ra_prb);
+    return(-1); 
+  }
+  if (freq_channel_init == 0) {
+    // we are initializing the lut for the largets possible n_samples=12*nb_rb+1
+    // if called with n_samples<12*nb_rb+1, we decimate the lut
+    n_samples_max=12*nb_rb+1;
+    if (init_freq_channel_prach(desc,nb_rb,n_samples_max,prach_fmt,n_ra_prb)==0)
+      freq_channel_init=1;
+    else
+      return(-1);
+  }
+
+  start_meas(&desc->interp_freq_PRACH);
+  for (f=0; f<(prach_samples>>1); f++) {
+    //clut = cos_lut[f];
+    //slut = sin_lut[f];
+    for (aarx=0; aarx<desc->nb_rx; aarx++) {
+      for (aatx=0; aatx<desc->nb_tx; aatx++) {
+        //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].x=0.0;
+        //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].y=0.0;
+	chFx_128=_mm_setzero_pd();
+	chFy_128=_mm_setzero_pd();
+        for (l=0; l<(int)desc->nb_taps; l++) {
+
+          //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].x+=(desc->a[l][aarx+(aatx*desc->nb_rx)].x*clut[l]+
+          //    desc->a[l][aarx+(aatx*desc->nb_rx)].y*slut[l]);
+          //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].y+=(-desc->a[l][aarx+(aatx*desc->nb_rx)].x*slut[l]+
+          //    desc->a[l][aarx+(aatx*desc->nb_rx)].y*clut[l]);
+	  chFx_128=_mm_add_pd(chFx_128,_mm_add_pd(_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].x),_mm_loadu_pd(&cos_lut[2*f][l])),_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].y),_mm_loadu_pd(&sin_lut[2*f][l]))));  
+	  chFy_128=_mm_add_pd(chFy_128,_mm_sub_pd(_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].y),_mm_loadu_pd(&cos_lut[2*f][l])),_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].x),_mm_loadu_pd(&sin_lut[2*f][l]))));  
+        }
+	_mm_storeu_pd(&desc->chF_prach[aarx+(aatx*desc->nb_rx)][2*f].x,chFx_128);
+	_mm_storeu_pd(&desc->chF_prach[aarx+(aatx*desc->nb_rx)][2*f].y,chFy_128);
+      }
+    }
+	//if (f<10 || (f>829&&f<839))
+	//	printf("chF_prach[0][%d], (x,y) = (%e,%e)\n",f,desc->chF_prach[0][f].x,desc->chF_prach[0][f].y);
+  }
+  stop_meas(&desc->interp_freq_PRACH);
+  return(0);
+}
+#else
 int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
 {
 
@@ -363,7 +431,7 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
       return(-1);
   }
 
-  start_meas(&desc->interp_freq);
+  start_meas(&desc->interp_freq_PRACH);
   for (f=0; f<prach_samples; f++) {
     clut = cos_lut[f];
     slut = sin_lut[f];
@@ -383,10 +451,10 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
 	//if (f<10 || (f>829&&f<839))
 	//	printf("chF_prach[0][%d], (x,y) = (%e,%e)\n",f,desc->chF_prach[0][f].x,desc->chF_prach[0][f].y);
   }
-  stop_meas(&desc->interp_freq);
+  stop_meas(&desc->interp_freq_PRACH);
   return(0);
 }
-
+#endif
 double compute_pbch_sinr(channel_desc_t *desc,
                          channel_desc_t *desc_i1,
                          channel_desc_t *desc_i2,

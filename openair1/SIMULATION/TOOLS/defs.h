@@ -93,6 +93,7 @@ typedef struct {
   time_stats_t random_channel;
   time_stats_t interp_time;
   time_stats_t interp_freq;
+  time_stats_t interp_freq_PRACH;
   time_stats_t convolution;
   /// frequency measurements
   time_stats_t DL_multipath_channel_freq;
@@ -109,6 +110,10 @@ typedef struct {
   time_stats_t dac_fixed_gain_PRACH;
   time_stats_t rf_rx_simple_freq_PRACH;
   time_stats_t adc_PRACH;
+
+  time_stats_t UL_PRACH_channel;
+  time_stats_t UL_channel;
+  time_stats_t DL_channel;
 
 } channel_desc_t;
 
@@ -237,6 +242,7 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
 \param desc Pointer to the channel descriptor
 */
 int random_channel(channel_desc_t *desc, uint8_t abstraction_flag);
+int random_channel_freq(channel_desc_t *desc, uint8_t abstraction_flag);
 /**\fn void multipath_channel(channel_desc_t *desc,
            double tx_sig_re[2],
            double tx_sig_im[2],

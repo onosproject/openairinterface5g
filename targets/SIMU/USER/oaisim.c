@@ -1481,6 +1481,7 @@ reset_opp_meas_oaisim (void)
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->random_channel);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->interp_time);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->interp_freq);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->interp_freq_PRACH);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->convolution);
       //Time consuming in Frequency analysis
       //Downlink
@@ -1498,6 +1499,10 @@ reset_opp_meas_oaisim (void)
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->dac_fixed_gain_PRACH);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->rf_rx_simple_freq_PRACH);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->adc_PRACH);
+      //DL-UL Frequency Channel
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_channel);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_channel);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_PRACH_channel);
     }
 
     reset_meas (&PHY_vars_eNB_g[eNB_id][0]->phy_proc);
@@ -1593,6 +1598,8 @@ print_opp_meas_oaisim (void)
                   "[UL][interp_time]", &oaisim_stats, &oaisim_stats_f);
       print_meas (&UE2eNB[UE_id][eNB_id][0]->interp_freq,
                   "[UL][interp_freq]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->interp_freq_PRACH,
+                  "[UL][interp_freq_PRACH]", &oaisim_stats, &oaisim_stats_f);
       print_meas (&UE2eNB[UE_id][eNB_id][0]->convolution,
                   "[UL][convolution]", &oaisim_stats, &oaisim_stats_f);
 
@@ -1624,6 +1631,14 @@ print_opp_meas_oaisim (void)
                   "[UL_PRACH][rf_rx_simple_freq]", &oaisim_stats, &oaisim_stats_f);
       print_meas (&UE2eNB[UE_id][eNB_id][0]->adc_PRACH,
                   "[UL_PRACH][adc]", &oaisim_stats, &oaisim_stats_f);
+
+      //Dl/UL Frequency Channel
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_channel,
+                  "[UL_channel]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_PRACH_channel,
+                  "[UL_PRACH_channel]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_channel,
+                  "[DL_channel]", &oaisim_stats, &oaisim_stats_f);
     }
   }
 

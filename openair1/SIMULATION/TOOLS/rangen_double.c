@@ -144,7 +144,7 @@ double uniformrandom(void)
   return;
 
 }*/
-/*!\brief Ziggurat random number generator based on rejection sampling. It returns a pseudorandom normally distributed double number between -4.5 and 4.5*/
+/*!\brief Ziggurat random number generator based on rejection sampling. It returns a pseudorandom normally distributed double number with x=0 and variance=1*/
 //Procedure to create tables for normal distribution kn,wn and fn
 
 #define SHR3 (jz=jsr, jsr^=(jsr<<13),jsr^=(jsr>>17),jsr^=(jsr<<5),jz+jsr)
