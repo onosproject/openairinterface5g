@@ -65,7 +65,7 @@ int32_t nr_segmentation(unsigned char *input_buffer,
 
   // Find K+
   Bprime_by_C = Bprime/(*C);
-  /*if (Bprime <=192) {
+  if (Bprime <=192) {
 	  Kb = 6;
   } else if (Bprime <=560) {
 	  Kb = 8;
@@ -73,9 +73,9 @@ int32_t nr_segmentation(unsigned char *input_buffer,
 	  Kb = 9;
   } else if (Bprime <=3840) {
 	  Kb = 10;;
-  } else {*/
+  } else {
 	  Kb = 22;
-  //}
+  }
 
 
 if ((Bprime_by_C%Kb) > 0)
@@ -83,7 +83,7 @@ if ((Bprime_by_C%Kb) > 0)
 else
 	Z = (Bprime_by_C/Kb);
 
-  //printf("nr segmetation B %d Bprime %d Bprime_by_C %d z %d \n", B, Bprime, Bprime_by_C, Z);
+  printf("nr segmetation B %d Bprime %d Bprime_by_C %d z %d \n", B, Bprime, Bprime_by_C, Z);
 	  
   if (Z <= 2) {
     *Kplus = 2;
@@ -141,7 +141,7 @@ else
   
 
   *F = ((*C)*(*Kplus) - (Bprime));
-  //printf("final nr seg output Z %d Kplus %d F %d \n", *Zout, *Kplus, *F);
+  printf("final nr seg output Z %d Kplus %d F %d \n", *Zout, *Kplus, *F);
 #ifdef DEBUG_SEGMENTATION
   printf("C %d, Kplus %d, Kminus %d, Bprime_bytes %d, Bprime %d, F %d\n",*C,*Kplus,*Kminus,Bprime>>3,Bprime,*F);
 #endif

@@ -145,7 +145,7 @@ typedef struct {
   /// Turbo-code outputs (36-212 V8.6 2009-03, p.12
   uint8_t *d[MAX_NUM_DLSCH_SEGMENTS];//[(96+3+(3*6144))];
   /// Sub-block interleaver outputs (36-212 V8.6 2009-03, p.16-17)
-  uint8_t w[MAX_NUM_DLSCH_SEGMENTS][3*6144];
+  uint8_t w[MAX_NUM_DLSCH_SEGMENTS][3*8448];
   /// Number of code segments (for definition see 36-212 V8.6 2009-03, p.9)
   uint32_t C;
   /// Number of "small" code segments (for definition see 36-212 V8.6 2009-03, p.10)
@@ -553,9 +553,9 @@ typedef struct {
   /// MIMO mode for this DLSCH
   MIMO_mode_t mimo_mode;
   /// soft bits for each received segment ("w"-sequence)(for definition see 36-212 V8.6 2009-03, p.15)
-  int16_t w[MAX_NUM_DLSCH_SEGMENTS][3*(6144+64)];
+  int16_t w[MAX_NUM_DLSCH_SEGMENTS][3*(8448+64)];
   /// for abstraction soft bits for each received segment ("w"-sequence)(for definition see 36-212 V8.6 2009-03, p.15)
-  double w_abs[MAX_NUM_DLSCH_SEGMENTS][3*(6144+64)];
+  double w_abs[MAX_NUM_DLSCH_SEGMENTS][3*(8448+64)];
   /// soft bits for each received segment ("d"-sequence)(for definition see 36-212 V8.6 2009-03, p.15)
   int16_t *d[MAX_NUM_DLSCH_SEGMENTS];
   /// Number of code segments (for definition see 36-212 V8.6 2009-03, p.9)
