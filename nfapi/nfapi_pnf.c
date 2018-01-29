@@ -1891,8 +1891,10 @@ int oai_nfapi_harq_indication(nfapi_harq_indication_t *harq_ind)
   harq_ind->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
   harq_ind->header.message_id = NFAPI_HARQ_INDICATION;
 
+
   LOG_E(PHY, "%s() sfn_sf:%d number_of_harqs:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(harq_ind->sfn_sf), harq_ind->harq_indication_body.number_of_harqs);
 
+  LOG_E(PHY, "%s() Panos-D: Number of ACK/NACKs: %d", __FUNCTION__, harq_ind->harq_indication_body.harq_pdu_list[0].harq_indication_fdd_rel13.number_of_ack_nack);
   int retval = nfapi_pnf_p7_harq_ind(p7_config_g, harq_ind);
 
   if (retval != 0) LOG_E(PHY, "%s() sfn_sf:%d number_of_harqs:%d nfapi_pnf_p7_harq_ind()=%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(harq_ind->sfn_sf), harq_ind->harq_indication_body.number_of_harqs, retval);

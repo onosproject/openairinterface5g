@@ -37,6 +37,7 @@ extern int32_t get_uldl_offset(int eutra_bandP);
 
 extern uint16_t prach_root_sequence_map0_3[838];
 extern uint16_t prach_root_sequence_map4[138];
+extern uint8_t nfapi_mode;
 uint8_t dmrs1_tab[8] = {0,2,3,4,6,8,9,10};
 
 
@@ -1170,12 +1171,16 @@ void phy_config_dedicated_ue(uint8_t Mod_id,int CC_id,uint8_t eNB_id,
       LOG_D(PHY,"[UE %d] Received NULL physicalConfigDedicated->antennaInfo from eNB %d\n",Mod_id, eNB_id);
     }
 
+    //LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 1 \n");
     if (physicalConfigDedicated->schedulingRequestConfig) {
+    	//LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 2 \n");
       if (physicalConfigDedicated->schedulingRequestConfig->present == SchedulingRequestConfig_PR_setup) {
+    	  //LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 3 \n");
         phy_vars_ue->scheduling_request_config[eNB_id].sr_PUCCH_ResourceIndex = physicalConfigDedicated->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex;
         phy_vars_ue->scheduling_request_config[eNB_id].sr_ConfigIndex=physicalConfigDedicated->schedulingRequestConfig->choice.setup.sr_ConfigIndex;
         phy_vars_ue->scheduling_request_config[eNB_id].dsr_TransMax=physicalConfigDedicated->schedulingRequestConfig->choice.setup.dsr_TransMax;
 
+        //LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 4 \n");
         LOG_D(PHY,"scheduling_request_config.sr_PUCCH_ResourceIndex %d\n",phy_vars_ue->scheduling_request_config[eNB_id].sr_PUCCH_ResourceIndex);
         LOG_D(PHY,"scheduling_request_config.sr_ConfigIndex %d\n",phy_vars_ue->scheduling_request_config[eNB_id].sr_ConfigIndex);
         LOG_D(PHY,"scheduling_request_config.dsr_TransMax %d\n",phy_vars_ue->scheduling_request_config[eNB_id].dsr_TransMax);
@@ -1187,6 +1192,7 @@ void phy_config_dedicated_ue(uint8_t Mod_id,int CC_id,uint8_t eNB_id,
 
     if (physicalConfigDedicated->soundingRS_UL_ConfigDedicated) {
 
+    	//LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 5 \n");
       phy_vars_ue->soundingrs_ul_config_dedicated[eNB_id].srsConfigDedicatedSetup = 0;
       if (physicalConfigDedicated->soundingRS_UL_ConfigDedicated->present == SoundingRS_UL_ConfigDedicated_PR_setup) {
         phy_vars_ue->soundingrs_ul_config_dedicated[eNB_id].srsConfigDedicatedSetup = 1;
@@ -1208,7 +1214,9 @@ void phy_config_dedicated_ue(uint8_t Mod_id,int CC_id,uint8_t eNB_id,
 
 
     if (physicalConfigDedicated->cqi_ReportConfig) {
+    	//LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 6.0 \n");
       if (physicalConfigDedicated->cqi_ReportConfig->cqi_ReportModeAperiodic) {
+    	  //LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 6 \n");
         // configure PUSCH CQI reporting
         phy_vars_ue->cqi_report_config[eNB_id].cqi_ReportModeAperiodic = *physicalConfigDedicated->cqi_ReportConfig->cqi_ReportModeAperiodic;
         if ((phy_vars_ue->cqi_report_config[eNB_id].cqi_ReportModeAperiodic != rm12) &&
@@ -1217,6 +1225,7 @@ void phy_config_dedicated_ue(uint8_t Mod_id,int CC_id,uint8_t eNB_id,
           LOG_E(PHY,"Unsupported Aperiodic CQI Feedback Mode : %d\n",phy_vars_ue->cqi_report_config[eNB_id].cqi_ReportModeAperiodic);
       }
       if (physicalConfigDedicated->cqi_ReportConfig->cqi_ReportPeriodic) {
+    	  //LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 7 \n");
         if (physicalConfigDedicated->cqi_ReportConfig->cqi_ReportPeriodic->present == CQI_ReportPeriodic_PR_setup) {
         // configure PUCCH CQI reporting
           phy_vars_ue->cqi_report_config[eNB_id].CQI_ReportPeriodic.cqi_PUCCH_ResourceIndex = physicalConfigDedicated->cqi_ReportConfig->cqi_ReportPeriodic->choice.setup.cqi_PUCCH_ResourceIndex;
@@ -1249,24 +1258,36 @@ void phy_config_dedicated_ue(uint8_t Mod_id,int CC_id,uint8_t eNB_id,
   }
 
   // fill cqi parameters for periodic CQI reporting
+  //LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 8 \n");
   get_cqipmiri_params(phy_vars_ue,eNB_id);
+  //LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 9 \n");
 
   // disable MIB SIB decoding once we are on connected mode
   first_dedicated_configuration ++;
   if(first_dedicated_configuration > 1)
   {
+	  //LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 10 \n");
   	LOG_I(PHY,"Disable SIB MIB decoding \n");
   	phy_vars_ue->decode_SIB = 0;
   	phy_vars_ue->decode_MIB = 0;
   }
   //phy_vars_ue->pdcch_vars[1][eNB_id]->crnti = phy_vars_ue->pdcch_vars[0][eNB_id]->crnti;
-  if(phy_vars_ue->pdcch_vars[0][eNB_id]->crnti == 0x1234)
+  LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 11.0 \n");
+
+  if(nfapi_mode!=3){
+  if(phy_vars_ue->pdcch_vars[0][eNB_id]->crnti == 0x1234) {
+	  //LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 11 \n");
       phy_vars_ue->pdcch_vars[0][eNB_id]->crnti = phy_vars_ue->pdcch_vars[1][eNB_id]->crnti;
-  else
+  }
+  else{
+	  //LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 12 \n");
       phy_vars_ue->pdcch_vars[1][eNB_id]->crnti = phy_vars_ue->pdcch_vars[0][eNB_id]->crnti;
+  }
+  //LOG_I(PHY,"Panos-D: phy_config_dedicated_ue 13 \n");
 
   LOG_I(PHY,"C-RNTI %x %x \n", phy_vars_ue->pdcch_vars[0][eNB_id]->crnti,
                                phy_vars_ue->pdcch_vars[1][eNB_id]->crnti);
+  }
 
 }
 

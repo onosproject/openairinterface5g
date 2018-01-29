@@ -1005,15 +1005,15 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
       if (UE->mode != loop_through_memory){
 
 	if ((UE_mac_inst[Mod_id].UE_mode[0] == PRACH) ) {
-	  LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH \n");
+	  //LOG_D(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH \n");
 
 	  // check if we have PRACH opportunity
 
 	  if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx)) {
-	    LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH 2 \n");
+	    //LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH 2 \n");
 	    PRACH_RESOURCES_t *prach_resources = ue_get_rach(Mod_id, 0, proc->frame_tx, 0, proc->subframe_tx);
 	    if(prach_resources!=NULL) {
-	      LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH 3 \n");
+	      //LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH 3 \n");
 	      fill_rach_indication_UE_MAC(Mod_id, proc->frame_tx ,proc->subframe_tx, UL_INFO, prach_resources->ra_PreambleIndex, prach_resources->ra_RNTI);
 	      Msg1_transmitted(Mod_id, 0, proc->frame_tx, 0);
 	      UE_mac_inst[Mod_id].UE_mode[0] = RA_RESPONSE;
@@ -1026,7 +1026,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 	// UE Tx procedures directly at the MAC layer, based on the received ul_config requests from the vnf (eNB).
 	// Generate UL_indications which correspond to UL traffic.
 	if(UE_mac_inst[Mod_id].ul_config_req!= NULL && UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
-		LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 ul_config_req is not NULL \n");
+		//LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 ul_config_req is not NULL \n");
 		ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req, timer_frame, timer_subframe);
 		//ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req, proc->frame_tx, proc->subframe_tx);
 		if(UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
