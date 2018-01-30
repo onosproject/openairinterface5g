@@ -1914,7 +1914,11 @@ int main( int argc, char **argv ) {
     int eMBMS_active=0;
     if (node_function[0] <= NGFI_RAU_IF4p5) { // don't initialize L2 for RRU
 
-
+      // MP, Nick: Initialization of IF module for NB-IoT should be here
+ 
+   //  if_inst = malloc(sizeof(IF_Module_t));
+  //   LOG_I(PHY,"Allocate IF-Module for NB-IoT\n");
+ 
 
         //---------------------------
 

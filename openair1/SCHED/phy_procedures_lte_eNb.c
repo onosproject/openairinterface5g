@@ -501,6 +501,10 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 
   common_signal_procedures_NB_IoT(eNB,proc);
 
+/////////////////// NB-IoT broadcast channel //////////////////////////
+
+
+/////////////////////////// END ///////////////////////////////////////  
 
 /*
   // generate Cell-Specific Reference Signals for both slots

@@ -244,13 +244,14 @@ init_SI(
 #endif
   /*Nick Start*/
 
-  // for NB-IoT Initialization configuration testing
+  /////////////////// for NB-IoT Initialization configuration testing  //////////////////////////////////////////////
 
   if(eNB_rrc_inst_NB_IoT==NULL)
     eNB_rrc_inst_NB_IoT = (eNB_RRC_INST_NB_IoT*) malloc (sizeof(eNB_RRC_INST_NB_IoT));
 
   init_testing_NB_IoT(ctxt_pP->module_id,CC_id,&eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id],configuration,0,0);
 
+//////////////////////////////////////// END //////////////////////////////////////////////////////////////////////////////////
   /*Here will copy basic parameters and implement do_MIB, rrc_eNB_carrier_data_t will add some parameters in MIB*/
 
   eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].sizeof_SIB1 = 0;
