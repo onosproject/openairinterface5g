@@ -5810,7 +5810,6 @@ void *rrc_control_socket_thread_fct(void *arg)
         //prepare SL_Discovery buffer
          if (UE_rrc_inst) {
            memcpy((void*)&UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.Payload[0], (void*)&sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_message.payload[0], PC5_DISCOVERY_PAYLOAD_SIZE);
-           //memcpy((void*)&UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.Payload[0], (void*)receive_buf, n);
            UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.payload_size = PC5_DISCOVERY_PAYLOAD_SIZE;
            LOG_I(RRC,"[PC5DiscoveryMessage] Copied %d bytes\n",PC5_DISCOVERY_PAYLOAD_SIZE);
          }
@@ -5851,9 +5850,8 @@ int decode_SL_Discovery_Message(
 
    sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
    sl_ctrl_msg_send->type = PC5_DISCOVERY_MESSAGE;
-   int num_bytes = 29;
    // TODO:  Add a check for the SDU size.
-   memcpy((void*)&sl_ctrl_msg_send->sidelinkPrimitive.pc5_discovery_message.payload[0], (void*) Sdu,  num_bytes);
+   memcpy((void*)&sl_ctrl_msg_send->sidelinkPrimitive.pc5_discovery_message.payload[0], (void*) Sdu,  PC5_DISCOVERY_PAYLOAD_SIZE);
 
    memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
    free(sl_ctrl_msg_send);
