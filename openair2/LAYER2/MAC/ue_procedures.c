@@ -796,25 +796,15 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		   1,
 		   NULL);
   } else { //SL_DISCOVERY
-
-<<<<<<< 7fb0902dbc37c2a91252b7b956d2c0158d3b2ff5
-     //call mac_rrc_data_ind
      uint16_t len = sdu_len;
-     printf("SL DISCOVERY: ");
-     for (int i=0;i<len;i++) printf("%x ",((uint8_t*)sdu)[i]);
-     printf("\n");
-=======
      LOG_I( MAC, "SL DISCOVERY \n");
-    //call mac_rrc_data_ind
-     //uint16_t len;
->>>>>>> Resolved issues with PC5-D implementation.
      mac_rrc_data_ind(module_idP,
                       CC_id,
                       frameP,subframeP,
                       UE_mac_inst[module_idP].crnti,
                       SL_DISCOVERY,
                       sdu, //(uint8_t*)&UE_mac_inst[Mod_id].SL_Discovery[0].Rx_buffer.Payload[0],
-                      sdu_len,
+                      len,
                       ENB_FLAG_NO,
                       eNB_index,
                       0);
