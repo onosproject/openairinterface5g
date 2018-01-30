@@ -59,6 +59,8 @@
 		     uint64_t deadline,
 		     uint64_t period);*/
 
+extern int codingw;
+
 void free_eNB_dlsch(LTE_eNB_DLSCH_t *dlsch)
 {
   int i;
@@ -607,16 +609,28 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
   }
   stop_meas(te_main_stats);
 
-  // wait for worker to finish
   start_meas(te_wait_stats);
-  wait_on_busy_condition(&proc->tep[0].mutex_te,&proc->tep[0].cond_te,&proc->tep[0].instance_cnt_te,"te thread 0");
-  wait_on_busy_condition(&proc->tep[1].mutex_te,&proc->tep[1].cond_te,&proc->tep[1].instance_cnt_te,"te thread 1");
-  wait_on_busy_condition(&proc->tep[2].mutex_te,&proc->tep[2].cond_te,&proc->tep[2].instance_cnt_te,"te thread 2");
-  stop_meas(te_wait_stats);
-  if(opp_enabled == 1 && te_wait_stats->diff_now>100*3000){
-    print_meas_now(te_wait_stats,"coding_wait",stderr);
-	printf("delay in wait on codition in frame_rx: %d \n",proc->frame_rx);
+  if(worker_num == 1)
+  {
+    wait_on_busy_condition(&proc->tep[0].mutex_te,&proc->tep[0].cond_te,&proc->tep[0].instance_cnt_te,"te thread 0");
   }
+  else if(worker_num == 2)
+  {
+    wait_on_busy_condition(&proc->tep[0].mutex_te,&proc->tep[0].cond_te,&proc->tep[0].instance_cnt_te,"te thread 0");
+    wait_on_busy_condition(&proc->tep[1].mutex_te,&proc->tep[1].cond_te,&proc->tep[1].instance_cnt_te,"te thread 1");
+  }
+  else
+  {
+    wait_on_busy_condition(&proc->tep[0].mutex_te,&proc->tep[0].cond_te,&proc->tep[0].instance_cnt_te,"te thread 0");
+    wait_on_busy_condition(&proc->tep[1].mutex_te,&proc->tep[1].cond_te,&proc->tep[1].instance_cnt_te,"te thread 1");
+    wait_on_busy_condition(&proc->tep[2].mutex_te,&proc->tep[2].cond_te,&proc->tep[2].instance_cnt_te,"te thread 2");
+  }
+  stop_meas(te_wait_stats);
+  
+  /*if(opp_enabled == 1 && te_wait_stats->diff_now>100*3000){
+    print_meas_now(te_wait_stats,"coding_wait",stderr);
+	printf("coding delay in wait on codition in frame_rx: %d \n",proc->frame_rx);
+  }*/
 
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_OUT);
@@ -655,7 +669,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
 		}
 	}
 
-	if(0/*C >= 8&&get_nprocs()>=6*/)//one main three worker
+	if(0/*C >= 8 && get_nprocs()>8 && codingw*/)//one main three worker
 	{
 		encoding_return =
 		dlsch_encoding_2threads(eNB,
@@ -673,7 +687,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
                    i_stats,
                    3);
 	}
-    else if(C >= 6&&get_nprocs()>=4)//one main two worker
+    else if(C >= 6 && get_nprocs()>=6 && codingw)//one main two worker
     {
         encoding_return =
 		dlsch_encoding_2threads(eNB,
@@ -691,7 +705,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
                    i_stats,
                    2);
     }
-    else if(C >= 4&&get_nprocs()>=2)//one main one worker
+    else if(C >= 4 && get_nprocs()>=4 && codingw)//one main one worker
     {
         encoding_return =
 		dlsch_encoding_2threads(eNB,

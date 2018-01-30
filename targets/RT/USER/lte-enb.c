@@ -150,6 +150,7 @@ void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
 #ifdef Rel14
 void wakeup_prach_eNB_br(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
 #endif
+extern int codingw;
 
 static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
 
@@ -182,14 +183,25 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER , 0 );
   
-  wakeup_tx(eNB,eNB->proc.ru_proc);
-  //if(oai_exit) return(-1);
-  //phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
-  //
-  //pthread_mutex_lock(&eNB->proc.ru_proc->mutex_eNBs);
-  //++eNB->proc.ru_proc->instance_cnt_eNBs;
-  //pthread_cond_signal(&eNB->proc.ru_proc->cond_eNBs);
-  //pthread_mutex_unlock(&eNB->proc.ru_proc->mutex_eNBs);
+  if(get_nprocs() > 8)
+  {
+    wakeup_tx(eNB,eNB->proc.ru_proc);
+  }
+  else if(get_nprocs() > 4)
+  {
+    if(oai_exit) return(-1);
+    phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
+    
+    pthread_mutex_lock(&eNB->proc.ru_proc->mutex_eNBs);
+    ++eNB->proc.ru_proc->instance_cnt_eNBs;
+    pthread_cond_signal(&eNB->proc.ru_proc->cond_eNBs);
+    pthread_mutex_unlock(&eNB->proc.ru_proc->mutex_eNBs);
+  }
+  else
+  {
+    if(oai_exit) return(-1);
+    phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
+  }
 
   stop_meas( &softmodem_stats_rxtx_sf );
   
@@ -229,6 +241,9 @@ static void* tx_thread(void* param) {
 	
     pthread_mutex_lock(&eNB_proc->ru_proc->mutex_eNBs);
     ++eNB_proc->ru_proc->instance_cnt_eNBs;
+    eNB_proc->ru_proc->timestamp_tx = proc->timestamp_tx;
+    eNB_proc->ru_proc->subframe_tx  = proc->subframe_tx;
+    eNB_proc->ru_proc->frame_tx     = proc->frame_tx;
     pthread_cond_signal(&eNB_proc->ru_proc->cond_eNBs);
     pthread_mutex_unlock(&eNB_proc->ru_proc->mutex_eNBs);
   }
@@ -350,10 +365,6 @@ void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string,RU_t
     if (rxtx(eNB,proc_rxtx,string) < 0) LOG_E(PHY,"eNB %d CC_id %d failed during execution\n",eNB->Mod_id,eNB->CC_id);
     LOG_D(PHY,"eNB_top out %p (proc %p, CC_id %d), frame %d, subframe %d, instance_cnt_prach %d\n",
 	  (void*)pthread_self(), proc, eNB->CC_id, proc->frame_rx,proc->subframe_rx,proc->instance_cnt_prach);
-	pthread_mutex_lock(&ru_proc->mutex_eNBs);
-	++ru_proc->instance_cnt_eNBs;
-	pthread_mutex_unlock(&ru_proc->mutex_eNBs);
-	pthread_cond_signal(&ru_proc->cond_eNBs);
   }
 }
 
@@ -361,7 +372,8 @@ int wakeup_tx(PHY_VARS_eNB *eNB,RU_proc_t *ru_proc) {
 
   eNB_proc_t *proc=&eNB->proc;
 
-  eNB_rxtx_proc_t *proc_rxtx=&proc->proc_rxtx[1];//*proc_rxtx=&proc->proc_rxtx[proc->frame_rx&1];
+  eNB_rxtx_proc_t *proc_rxtx1=&proc->proc_rxtx[1];//*proc_rxtx=&proc->proc_rxtx[proc->frame_rx&1];
+  eNB_rxtx_proc_t *proc_rxtx0=&proc->proc_rxtx[0];
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   
@@ -369,34 +381,34 @@ int wakeup_tx(PHY_VARS_eNB *eNB,RU_proc_t *ru_proc) {
   wait.tv_sec=0;
   wait.tv_nsec=5000000L;
   
-  if (proc_rxtx->instance_cnt_rxtx == 0) {
-    LOG_E(PHY,"Frame %d, subframe %d: TX1 thread busy, dropping\n",proc_rxtx->frame_rx,proc_rxtx->subframe_rx);
+  if (proc_rxtx1->instance_cnt_rxtx == 0) {
+    LOG_E(PHY,"Frame %d, subframe %d: TX1 thread busy, dropping\n",proc_rxtx1->frame_rx,proc_rxtx1->subframe_rx);
     return(-1);
   }
   
-  if (pthread_mutex_timedlock(&proc_rxtx->mutex_rxtx,&wait) != 0) {
-    LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB TX1 thread %d (IC %d)\n", proc_rxtx->subframe_rx&1,proc_rxtx->instance_cnt_rxtx );
+  if (pthread_mutex_timedlock(&proc_rxtx1->mutex_rxtx,&wait) != 0) {
+    LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB TX1 thread %d (IC %d)\n", proc_rxtx1->subframe_rx&1,proc_rxtx1->instance_cnt_rxtx );
     exit_fun( "error locking mutex_tx" );
     return(-1);
   }
 
-  ++proc_rxtx->instance_cnt_rxtx;
+  ++proc_rxtx1->instance_cnt_rxtx;
 
   
-  proc_rxtx->subframe_rx = ru_proc->subframe_rx;
-  proc_rxtx->frame_rx    = ru_proc->frame_rx;
-  proc_rxtx->subframe_tx = (ru_proc->subframe_rx+4)%10;
-  proc_rxtx->frame_tx    = (ru_proc->subframe_rx>5) ? (1+ru_proc->frame_rx)&1023 : ru_proc->frame_rx;
-  proc_rxtx->timestamp_tx = ru_proc->timestamp_tx;
+  proc_rxtx1->subframe_rx   = proc_rxtx0->subframe_rx;
+  proc_rxtx1->frame_rx      = proc_rxtx0->frame_rx;
+  proc_rxtx1->subframe_tx   = proc_rxtx0->subframe_tx;
+  proc_rxtx1->frame_tx      = proc_rxtx0->frame_tx;
+  proc_rxtx1->timestamp_tx  = proc_rxtx0->timestamp_tx;
   
   // the thread can now be woken up
-  if (pthread_cond_signal(&proc_rxtx->cond_rxtx) != 0) {
+  if (pthread_cond_signal(&proc_rxtx1->cond_rxtx) != 0) {
     LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB TXnp4 thread\n");
     exit_fun( "ERROR pthread_cond_signal" );
     return(-1);
   }
   
-  pthread_mutex_unlock( &proc_rxtx->mutex_rxtx );
+  pthread_mutex_unlock( &proc_rxtx1->mutex_rxtx );
 
   return(0);
 }
@@ -478,7 +490,7 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   proc_rxtx->frame_tx    = (ru_proc->subframe_rx>5) ? (1+ru_proc->frame_rx)&1023 : ru_proc->frame_rx;
   proc->frame_tx         = proc_rxtx->frame_tx;
   proc->frame_rx         = proc_rxtx->frame_rx;
-  proc_rxtx->timestamp_tx = ru_proc->timestamp_tx;
+  proc_rxtx->timestamp_tx = ru_proc->timestamp_rx+(4*fp->samples_per_tti);
   
   // the thread can now be woken up
   if (pthread_cond_signal(&proc_rxtx->cond_rxtx) != 0) {
@@ -824,9 +836,13 @@ void init_eNB_proc(int inst) {
 	
 	
 	//////////////////////////////////////need to modified////////////////*****
-	init_te_thread(eNB);
-	init_td_thread(eNB,attr_td);
-	if (opp_enabled == 1) pthread_create(&proc->process_stats_thread,NULL,process_stats_thread,(void*)eNB);
+    //printf("//////////////////////////////////////////////////////////////////**************************************************************** codingw = %d\n",codingw);
+    if(get_nprocs() > 2 && codingw)
+    {
+      init_te_thread(eNB);
+      init_td_thread(eNB,attr_td);
+    }
+    if (opp_enabled == 1) pthread_create(&proc->process_stats_thread,NULL,process_stats_thread,(void*)eNB);
 
     
   }
