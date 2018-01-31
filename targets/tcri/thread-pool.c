@@ -29,6 +29,7 @@
 request_t * createRequest(enum request_t type,int size) {
     request_t* request;
     AssertFatal( (request = (request_t*)aligned_alloc(32,sizeof(request_t)+size)) != NULL,"");
+    memset(request,0,sizeof(request_t));
     request->id = 0;
     request->type=type;
     request->next = NULL;
@@ -200,12 +201,7 @@ void handle_request(tpool_t * tp, request_t* request) {
     tp->doneRequests=request;
     condsignal(tp->notifDone);
     mutexunlock(tp->lockReportDone);
-    /*
-      printf("Thread '%ld' handled request '%d' delay in µs:%ld\n",
-      syscall( SYS_gettid ),
-      request->id,
-      (rdtsc() - request->creationTime)/tp->cpuCyclesMicroSec);
-    */
+
 }
 
 void* one_thread(void* data) {

@@ -555,6 +555,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     uint64_t startTime=rdtsc();
     for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++)
     {
+        eNB->proc.threadPool.startProcessingUE=rdtsc();
         dlsch0 = eNB->dlsch[(uint8_t)UE_id][0];
         dlsch1 = eNB->dlsch[(uint8_t)UE_id][1];
 
@@ -567,11 +568,9 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
             AssertFatal(harq_pid>=0,"harq_pid is negative\n");
 
             if (harq_pid>=8)
-            {
-                LOG_E(PHY,"harq_pid:%d corrupt must be 0-7 UE_id:%d frame:%d subframe:%d rnti:%x\n", harq_pid,UE_id,frame,subframe,dlsch0->rnti);
-            }
+                LOG_E(PHY,"harq_pid:%d corrupt must be 0-7 UE_id:%d frame:%d subframe:%d rnti:%x\n",
+                      harq_pid,UE_id,frame,subframe,dlsch0->rnti);
             else
-            {
                 // generate pdsch
                 pdsch_procedures(eNB,
                                  proc,
@@ -580,7 +579,6 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
                                  dlsch1,
                                  &eNB->UE_stats[(uint32_t)UE_id],
                                  0);
-            }
         }
     }
 
@@ -615,19 +613,19 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     }
     request_t* tmp;
     while ((tmp=eNB->proc.threadPool.doneRequests)!=NULL) {
-      tmp->returnTime=rdtsc();
-      tmp->cumulSubframe=tmp->returnTime-startTime;
-      // Ignore write error (if no trace listner)
-      if (write(eNB->proc.threadPool.traceFd, tmp, sizeof(request_t)- 2*sizeof(void*))) {};
-      eNB->proc.threadPool.doneRequests=tmp->next;
-      start_meas(&eNB->dlsch_interleaving_stats);
-      turboEncode_t * rdata=(turboEncode_t *) tmp->data;
-      rdata->dlsch->harq_processes[rdata->harq_pid]->RTC[rdata->r] =
-	sub_block_interleaving_turbo(4+(rdata->Kr_bytes*8),
-				     rdata->output+96, //&dlsch->harq_processes[harq_pid]->d[r][96],
-				     rdata->dlsch->harq_processes[rdata->harq_pid]->w[rdata->r]);
-      freeRequest(tmp);
-      stop_meas(&eNB->dlsch_interleaving_stats);
+        tmp->returnTime=rdtsc();
+        tmp->cumulSubframe=tmp->returnTime-startTime;
+        // Ignore write error (if no trace listner)
+        if (write(eNB->proc.threadPool.traceFd, tmp, sizeof(request_t)- 2*sizeof(void*))) {};
+        eNB->proc.threadPool.doneRequests=tmp->next;
+        start_meas(&eNB->dlsch_interleaving_stats);
+        turboEncode_t * rdata=(turboEncode_t *) tmp->data;
+        rdata->dlsch->harq_processes[rdata->harq_pid]->RTC[rdata->r] =
+            sub_block_interleaving_turbo(4+(rdata->Kr_bytes*8),
+                                         rdata->output+96, //&dlsch->harq_processes[harq_pid]->d[r][96],
+                                         rdata->dlsch->harq_processes[rdata->harq_pid]->w[rdata->r]);
+        freeRequest(tmp);
+        stop_meas(&eNB->dlsch_interleaving_stats);
     }
 
     for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++)    {
@@ -1506,9 +1504,10 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
             eNB->proc.threadPool.newestRequests != NULL ||
             eNB->proc.threadPool.doneRequests != NULL
        )
-      LOG_E(PHY,"no finished = %d\n",eNB->proc.threadPool.notFinishedJobs);
+        LOG_E(PHY,"no finished = %d\n",eNB->proc.threadPool.notFinishedJobs);
     uint64_t startTime=rdtsc();
     for (int i=0; i<NUMBER_OF_UE_MAX; i++) {
+        eNB->proc.threadPool.startProcessingUE=rdtsc();
         LTE_eNB_ULSCH_t *ulsch = eNB->ulsch[i];
         LTE_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_processes[harq_pid];
 
@@ -1590,15 +1589,15 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
     request_t* tmp;
     while ((tmp=eNB->proc.threadPool.doneRequests)!=NULL) {
-      turboDecode_t * rdata=(turboDecode_t *) tmp->data;
-      tmp->decodeIterations=rdata->decodeIterations;
-      post_decode(tmp);
-      tmp->returnTime=rdtsc();
-      tmp->cumulSubframe=tmp->returnTime-startTime;
-      // Ignore write error (if no trace listner)
-      if (write(eNB->proc.threadPool.traceFd, tmp, sizeof(request_t)- 2*sizeof(void*))) {};
-      eNB->proc.threadPool.doneRequests=tmp->next;
-      freeRequest(tmp);
+        turboDecode_t * rdata=(turboDecode_t *) tmp->data;
+        tmp->decodeIterations=rdata->decodeIterations;
+        post_decode(tmp);
+        tmp->returnTime=rdtsc();
+        tmp->cumulSubframe=tmp->returnTime-startTime;
+        // Ignore write error (if no trace listner)
+        if (write(eNB->proc.threadPool.traceFd, tmp, sizeof(request_t)- 2*sizeof(void*))) {};
+        eNB->proc.threadPool.doneRequests=tmp->next;
+        freeRequest(tmp);
     }
 }
 

@@ -25,11 +25,12 @@ union turboReqUnion {
 typedef struct request {
     uint64_t id;
     enum request_t type;
+    uint64_t startUELoop;
     uint64_t creationTime;
     uint64_t startProcessingTime;
     uint64_t endProcessingTime;
-  uint64_t returnTime;
-  uint64_t cumulSubframe;
+    uint64_t returnTime;
+    uint64_t cumulSubframe;
     uint64_t decodeIterations;
     int coreId;
     char processedBy[16];
@@ -60,6 +61,7 @@ typedef struct thread_pool {
     int traceFd;
     int dummyTraceFd;
     uint64_t cpuCyclesMicroSec;
+    uint64_t startProcessingUE;
     int nbThreads;
     bool restrictRNTI;
     struct one_thread * allthreads;
