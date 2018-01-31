@@ -24,6 +24,7 @@
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 #include "PHY/impl_defs_lte_NB_IoT.h"
 #include "PHY/impl_defs_top_NB_IoT.h"
+#include "PHY/impl_defs_lte.h"
 
 //#ifdef PHY_ABSTRACTION
 //#include "SIMULATION/TOOLS/defs.h"
@@ -35,17 +36,17 @@
 
 #define NPBCH_A 34                             // 34 for NB-IoT and 24 for LTE
 
-int allocate_npbch_REs_in_RB(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
+int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS 	*frame_parms,
                              int32_t 				**txdataF,
                              uint32_t 				*jj,
                              uint32_t 				symbol_offset,
                              uint8_t 				*x0,
                              uint8_t 				pilots,
                              int16_t 				amp,
-			     unsigned short 		id_offset,
+			     			 unsigned short 		id_offset,
                              uint32_t 				*re_allocated)  //  not used variable ??!!
 {
-  MIMO_mode_NB_IoT_t mimo_mode = (frame_parms->mode1_flag==1)?SISO_NB_IoT:ALAMOUTI_NB_IoT;
+  MIMO_mode_t mimo_mode = (frame_parms->mode1_flag==1)?SISO:ALAMOUTI;
 
   uint32_t  tti_offset,aa;
   uint8_t   re;
@@ -64,7 +65,7 @@ int allocate_npbch_REs_in_RB(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
 	if (pilots != 1 || re%3 != id_offset)  			// if re is not a pilot
 	{
 													//	diff_re = re%3 - id_offset;  
-      if (mimo_mode == SISO_NB_IoT) {  								//SISO mapping
+      if (mimo_mode == SISO) {  								//SISO mapping
         *re_allocated = *re_allocated + 1;						// variable incremented but never used
 			for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
 					((int16_t*)&txdataF[aa][tti_offset])[0] += (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //I //b_i
@@ -74,7 +75,7 @@ int allocate_npbch_REs_in_RB(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
 				((int16_t*)&txdataF[aa][tti_offset])[1] += (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //Q //b_{i+1}
 			}
 			*jj = *jj + 1;	
-      } else if (mimo_mode == ALAMOUTI_NB_IoT) {
+      } else if (mimo_mode == ALAMOUTI) {
 			*re_allocated = *re_allocated + 1;
 
 			((int16_t*)&tmp_sample1)[0] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
@@ -123,7 +124,7 @@ int allocate_npbch_REs_in_RB(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
 int generate_npbch(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
                    int32_t 					**txdataF,
                    int 						amp,
-                   NB_IoT_DL_FRAME_PARMS 	*frame_parms,
+                   LTE_DL_FRAME_PARMS 	    *frame_parms,
                    uint8_t 					*npbch_pdu,
                    uint8_t 					frame_mod64,
 				   unsigned short 			NB_IoT_RB_ID)
@@ -199,7 +200,7 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
 		{
 			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		} else {
-			NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
+			NB_IoT_start = 1 + (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		}
 		
 		symbol_offset = frame_parms->ofdm_symbol_size*l + NB_IoT_start;  						// symbol_offset = 512 * L + NB_IOT_RB start
@@ -220,7 +221,7 @@ return(0);
 }
 /**********************************************************
 **********************************************************/
-void npbch_scrambling(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
+void npbch_scrambling(LTE_DL_FRAME_PARMS 	*frame_parms,
                       uint8_t 					*npbch_e,
                       uint32_t 					length)  // 1600
 {

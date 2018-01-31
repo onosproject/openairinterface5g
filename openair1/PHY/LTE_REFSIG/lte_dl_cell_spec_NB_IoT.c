@@ -68,7 +68,7 @@ int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB          *phy_vars_eNB,
 		NB_IoT_start = phy_vars_eNB->frame_parms.ofdm_symbol_size - 12*(phy_vars_eNB->frame_parms.N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID%((int)(ceil(phy_vars_eNB->frame_parms.N_RB_DL/(float)2))));
   } else {
 	  	  	  	  	  	  	  	  	  	  	  	  	 //XXX invalid mod operation (put a cast for the moment)
-		NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID%((int)(ceil(phy_vars_eNB->frame_parms.N_RB_DL/(float)2))));
+		NB_IoT_start = 1 + (bandwidth_even_odd*6) + 12*(RB_IoT_ID%((int)(ceil(phy_vars_eNB->frame_parms.N_RB_DL/(float)2))));
   }
    
   k+=NB_IoT_start;

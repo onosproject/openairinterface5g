@@ -76,7 +76,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB  *phy_vars_eNB,
 
 //NPBCH
 
-int allocate_npbch_REs_in_RB(NB_IoT_DL_FRAME_PARMS  *frame_parms,
+int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS  *frame_parms,
                              int32_t                **txdataF,
                              uint32_t               *jj,
                              uint32_t               symbol_offset,
@@ -90,13 +90,13 @@ int allocate_npbch_REs_in_RB(NB_IoT_DL_FRAME_PARMS  *frame_parms,
 int generate_npbch(NB_IoT_eNB_NPBCH_t     *eNB_npbch,
                    int32_t                **txdataF,
                    int                    amp,
-                   NB_IoT_DL_FRAME_PARMS  *frame_parms,
+                   LTE_DL_FRAME_PARMS  *frame_parms,
                    uint8_t                *npbch_pdu,
                    uint8_t                frame_mod64,
                    unsigned short         NB_IoT_RB_ID);
 
 
-void npbch_scrambling(NB_IoT_DL_FRAME_PARMS  *frame_parms,
+void npbch_scrambling(LTE_DL_FRAME_PARMS  *frame_parms,
                       uint8_t                *npbch_e,
                       uint32_t               length);
 

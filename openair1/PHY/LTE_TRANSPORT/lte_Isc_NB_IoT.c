@@ -52,6 +52,9 @@ uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc)
 	}
 	if (I_sc>18){
 		return -1; 
+	} else {
+
+		return -1;   // this was added to remove warning since it is not a void function
 	}
 
 }

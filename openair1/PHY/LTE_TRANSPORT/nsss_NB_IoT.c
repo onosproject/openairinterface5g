@@ -115,7 +115,7 @@ int generate_sss_NB_IoT(int32_t 				**txdataF,
 		{
 			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		} else {
-			NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
+			NB_IoT_start = 1 + (bandwidth_even_odd*6) + 12*(RB_IoT_ID%(int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		}
 		// For the In-band or Stand-alone case the REs of NPSS signal have the same positions
 		for (s=0; s<11; s++ ) 								// loop on OFDM symbols

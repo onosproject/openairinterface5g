@@ -120,6 +120,8 @@ static inline void* malloc16_clear( size_t size )
 #include "impl_defs_top.h"
 #include "impl_defs_lte.h"
 
+#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+
 #include "PHY/TOOLS/time_meas.h"
 #include "PHY/CODING/defs.h"
 #include "PHY/TOOLS/defs.h"
@@ -499,6 +501,14 @@ typedef struct PHY_VARS_eNB_s {
   openair0_device ifdevice;
   /// Pointer for ifdevice buffer struct
   if_buffer_t ifbuffer;
+
+
+/////////////// NB-IoT testing ////////////////////////////
+
+NB_IoT_eNB_NPBCH_t        npbch;
+
+//////////////////// END /////////////////////////////////
+
 
 } PHY_VARS_eNB;
 

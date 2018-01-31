@@ -33,6 +33,7 @@
 #include "PHY/defs.h"
 #include "PHY/defs_NB_IoT.h"
 #include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
+#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 //#include "PHY/extern_NB_IoT.h" //where we get the global Sched_Rsp_t structure filled
 //#include "SCHED/defs.h"
 #include "SCHED/extern_NB_IoT.h"
@@ -46,7 +47,7 @@
 
 // for NB-IoT
 #include "SCHED/defs_NB_IoT.h"
-
+#include "openair2/RRC/LITE/proto_NB_IoT.h"
 //#define DEBUG_PHY_PROC (Already defined in cmake)
 //#define DEBUG_ULSCH
 
@@ -217,13 +218,14 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 {
   //LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms_NB_IoT;
   LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms;
+  NB_IoT_eNB_NPBCH_t   *broadcast_str = &eNB->npbch;
   int                     **txdataF =  eNB->common_vars.txdataF[0];
   int                     subframe  =  proc->subframe_tx;
   int                     frame     =  proc->frame_tx;
   //uint16_t                Ntti      =  10;                      //ntti = 10
   int                     RB_IoT_ID=2 ;                          // XXX should be initialized (RB reserved for NB-IoT, PRB index)
   int                     With_NSSS=0;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
-  
+  uint8_t      *npbch_pdu =  get_NB_IoT_MIB();
 
  //NSSS only happened in the even frame
   if(frame%2==0)
@@ -236,8 +238,6 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     }
     
     
-
-  
   if(subframe == 5)
     {
 
@@ -250,8 +250,8 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
    }
    else if((subframe == 9)&&(With_NSSS == 1))
     {
-      //printf("NSSS");
-  generate_sss_NB_IoT(txdataF,
+    
+      generate_sss_NB_IoT(txdataF,
                           AMP,
                           fp,
                           3,
@@ -267,6 +267,17 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                            subframe,
                            RB_IoT_ID,
                            With_NSSS);
+
+    if(subframe == 0)
+    {
+      generate_npbch(broadcast_str,
+                     txdataF,
+                     AMP,
+                     fp,
+                     npbch_pdu,
+                     frame%64,
+                     RB_IoT_ID);
+    }
   
 }
 
