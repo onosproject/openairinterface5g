@@ -183,7 +183,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER , 0 );
   
-  if(get_nprocs() > 8)
+  if(get_nprocs() >= 8)
   {
     wakeup_tx(eNB,eNB->proc.ru_proc);
   }
@@ -220,6 +220,8 @@ static void* tx_thread(void* param) {
   thread_top_init(thread_name,1,470000,500000,500000);
   
   wait_sync("tx_thread");
+
+  printf("tx_tread ready, ru_proc=%p\n",eNB_proc->ru_proc);
   
   while (!oai_exit) {
 
@@ -372,8 +374,8 @@ int wakeup_tx(PHY_VARS_eNB *eNB,RU_proc_t *ru_proc) {
 
   eNB_proc_t *proc=&eNB->proc;
 
-  eNB_rxtx_proc_t *proc_rxtx1=&proc->proc_rxtx[1];//*proc_rxtx=&proc->proc_rxtx[proc->frame_rx&1];
-  eNB_rxtx_proc_t *proc_rxtx0=&proc->proc_rxtx[0];
+  eNB_rxtx_proc_t *proc_rxtx1=&proc->proc_rxtx[1];//TX
+  eNB_rxtx_proc_t *proc_rxtx0=&proc->proc_rxtx[0];//RX
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   

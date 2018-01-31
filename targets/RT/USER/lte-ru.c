@@ -1426,7 +1426,7 @@ static void* ru_thread_tx( void* param ) {
 
   wait_on_condition(&proc->mutex_FH1,&proc->cond_FH1,&proc->instance_cnt_FH1,"ru_thread_tx");
 
-  printf( "ru_thread_tx ready\n");
+  printf( "ru_thread_tx ready, ru_proc=%p\n",proc);
   while (!oai_exit) { 
 
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_CPUID_RU_THREAD_TX,sched_getcpu());   
