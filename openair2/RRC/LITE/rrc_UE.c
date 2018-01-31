@@ -2113,7 +2113,8 @@ rrc_ue_process_rrcConnectionReconfiguration(
 
       //TTN for D2D
       //if RRCConnectionReconfiguration message includes the sl-CommConfig
-      if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12->commTxResources_r12->present != SL_CommConfig_r12__commTxResources_r12_PR_NOTHING){
+      //***Panos: Comment lines 2117-2137 temporarily
+      /*if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12->commTxResources_r12->present != SL_CommConfig_r12__commTxResources_r12_PR_NOTHING){
          LOG_I(RRC,"sl-CommConfig is present\n");
          //process sl-CommConfig
          rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
@@ -2133,7 +2134,7 @@ rrc_ue_process_rrcConnectionReconfiguration(
                (SL_CommConfig_r12_t* )NULL,
                rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12
                );
-      }
+      }*/
 
 
 #if defined(ENABLE_ITTI)

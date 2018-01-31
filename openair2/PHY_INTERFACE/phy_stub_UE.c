@@ -127,7 +127,17 @@ void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND
 void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint16_t rnti) {
 
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
-  nfapi_sr_indication_pdu_t *pdu =   &UL_INFO->sr_ind.sr_indication_body.sr_pdu_list[UL_INFO->rx_ind.rx_indication_body.number_of_pdus];
+
+  nfapi_sr_indication_t       *sr_ind = &UL_INFO->sr_ind;
+  nfapi_sr_indication_body_t  *sr_ind_body =    &sr_ind->sr_indication_body;
+  nfapi_sr_indication_pdu_t *pdu =   &sr_ind_body->sr_pdu_list[sr_ind_body->number_of_srs];
+
+  //nfapi_sr_indication_pdu_t *pdu =   &UL_INFO->sr_ind.sr_indication_body.sr_pdu_list[UL_INFO->rx_ind.rx_indication_body.number_of_pdus];
+
+  sr_ind->sfn_sf = frame<<4|subframe;
+  sr_ind->header.message_id = NFAPI_RX_SR_INDICATION;
+
+  sr_ind_body->tl.tag = NFAPI_SR_INDICATION_BODY_TAG;
 
   pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
@@ -139,13 +149,16 @@ void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_I
   //int SNRtimes10 = dB_fixed_times10(stat) - 200;//(10*eNB->measurements.n0_power_dB[0]);
   int SNRtimes10 = 640;
 
+  pdu->ul_cqi_information.tl.tag = NFAPI_UL_CQI_INFORMATION_TAG;
+
 
   if      (SNRtimes10 < -640) pdu->ul_cqi_information.ul_cqi=0;
   else if (SNRtimes10 >  635) pdu->ul_cqi_information.ul_cqi=255;
   else                        pdu->ul_cqi_information.ul_cqi=(640+SNRtimes10)/5;
   pdu->ul_cqi_information.channel = 0;
 
-  UL_INFO->rx_ind.rx_indication_body.number_of_pdus++;
+  //UL_INFO->rx_ind.rx_indication_body.number_of_pdus++;
+  sr_ind_body->number_of_srs++;
   pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 }
 
@@ -763,6 +776,7 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
   UL_INFO->rx_ind.rx_indication_body.rx_pdu_list = (nfapi_rx_indication_pdu_t*)malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_rx_indication_pdu_t));
   UL_INFO->crc_ind.crc_indication_body.crc_pdu_list = (nfapi_crc_indication_pdu_t*)malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_crc_indication_pdu_t));
   UL_INFO->harq_ind.harq_indication_body.harq_pdu_list = (nfapi_harq_indication_pdu_t*)malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_harq_indication_pdu_t));
+  UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = (nfapi_harq_indication_pdu_t*)malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_harq_indication_pdu_t));
 
   //Panos: Additional checks needed here to check if the UE is in PRACH mode.
 
@@ -860,6 +874,12 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
 	  UL_INFO->harq_ind.harq_indication_body.number_of_harqs =0;
 
   }
+  if(UL_INFO->sr_ind.sr_indication_body.number_of_srs>0)
+  {
+	  LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.5, SFN/SF in REQ:%d.%d, SFN/SF of PNF counter:%d.%d \n", sfn, sf, timer_frame, timer_subframe);
+	  oai_nfapi_sr_indication(&UL_INFO->sr_ind);
+	  UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
+  }
 
   // Free ul_config_request
   /*if(req->ul_config_request_body.ul_config_pdu_list != NULL){
@@ -882,6 +902,10 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
   if(UL_INFO->harq_ind.harq_indication_body.harq_pdu_list !=NULL){
 	  free(UL_INFO->harq_ind.harq_indication_body.harq_pdu_list);
 	  UL_INFO->harq_ind.harq_indication_body.harq_pdu_list = NULL;
+  }
+  if(UL_INFO->sr_ind.sr_indication_body.sr_pdu_list!=NULL){
+	  free(UL_INFO->sr_ind.sr_indication_body.sr_pdu_list);
+	  UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = NULL;
   }
   free(UL_INFO);
   UL_INFO = NULL;
