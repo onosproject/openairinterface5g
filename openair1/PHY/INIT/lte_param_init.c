@@ -57,9 +57,9 @@ void lte_param_init(unsigned char N_tx_port_eNB,
   memset((void*)UE,0,sizeof(PHY_VARS_UE));
 
 
-  srand(0);
-  randominit(0);
-  set_taus_seed(0);
+  srand(128);
+  randominit(128);
+  set_taus_seed(128);
 
   frame_parms = &(eNB->frame_parms);
 

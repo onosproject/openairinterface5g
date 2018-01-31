@@ -171,7 +171,8 @@ static int                      tx_max_power[MAX_NUM_CCs]; /* =  {0,0}*/;
 //char   rf_config_file[1024];
 //char   rf_config_file[1024]="./targets/ARCH/gNB.ini";
 //FIXME!
-char   rf_config_file[1024]="./targets/ARCH/ADRV9371_ZC706/USERSPACE/PROFILES/gnb.band7.tm1.PRB100.adrv9371-zc706_HWgain15dB.ini";
+char   rf_config_file[1024]="./targets/ARCH/ADRV9371_ZC706/USERSPACE/PROFILES/gnb.band7.tm1.PRB100.NR80.adrv9371-zc706_HWgain15dB.ini";
+//char   rf_config_file[1024]="./targets/ARCH/ADRV9371_ZC706/USERSPACE/PROFILES/gnb.band7.tm1.PRB100.adrv9371-zc706_HWgain15dB.ini";
 
 int chain_offset=0;
 int phy_test = 0;

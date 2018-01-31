@@ -53,9 +53,9 @@ int32_t nr_segmentation(unsigned char *input_buffer,
       *C=*C+1;
 
     Bprime = B+((*C)*L);
-//#ifdef DEBUG_SEGMENTATION
+#ifdef DEBUG_SEGMENTATION
     printf("Bprime %d\n",Bprime);
-//#endif
+#endif
   }
 
   if ((*C)>MAX_NUM_DLSCH_SEGMENTS) {
