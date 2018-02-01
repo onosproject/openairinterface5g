@@ -87,7 +87,7 @@
 #define GROUP_COMMUNICATION_RELEASE_RSP     8
 #define PC5S_ESTABLISH_REQ                  9
 #define PC5S_ESTABLISH_RSP                  10
-#define PC5_DISCOVERY_MESSAGE          	    11
+#define PC5_DISCOVERY_MESSAGE          	  11
 
 
 #define PC5_DISCOVERY_PAYLOAD_SIZE	    29

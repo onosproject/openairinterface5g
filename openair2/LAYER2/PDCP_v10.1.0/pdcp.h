@@ -387,6 +387,10 @@ typedef struct pdcp_data_req_header_s {
   sdu_size_t          data_size;
   signed int          inst;
   ip_traffic_type_t   traffic_type;
+#ifdef Rel14
+  uint32_t sourceL2Id;
+  uint32_t destinationL2Id;
+#endif
 } pdcp_data_req_header_t;
 
 typedef struct pdcp_data_ind_header_s {
@@ -394,6 +398,10 @@ typedef struct pdcp_data_ind_header_s {
   sdu_size_t          data_size;
   signed int          inst;
   ip_traffic_type_t   dummy_traffic_type;
+#ifdef Rel14
+  uint32_t sourceL2Id;
+  uint32_t destinationL2Id;
+#endif
 } pdcp_data_ind_header_t;
 
 struct pdcp_netlink_element_s {
@@ -406,48 +414,36 @@ struct pdcp_netlink_element_s {
 //TTN for D2D (PC5S)
 #ifdef Rel14
 #define PDCP_SOCKET_PORT_NO 9999 //temporary value
+#define PC5_SIGNALLING_PAYLOAD_SIZE   5  //should be updated with a correct value
 int pdcp_pc5_sockfd;
 struct sockaddr_in prose_ctrl_addr;
 struct sockaddr_in prose_pdcp_addr;
 struct sockaddr_in pdcp_sin;
 int pdcp_pc5_socket_init();
 
-typedef enum SL_PC5S_TYPES_e {
-  SL_PC5S_INIT=1,
-  SL_DIRECT_COMMUNICATION_REQUEST,
-  SL_DIRECT_COMMUNICATION_ACCEPT,
-  SL_DIRECT_COMMUNICATION_REJECT,
-  SL_DIRECT_SECURITY_MODE_COMMAND,
-  SL_DIRECT_SECURITY_MODE_COMPLETE
-} SL_PC5S_TYPES_t;
-
 typedef struct  {
-   SL_PC5S_TYPES_t   msg_type;
-   uint16_t  rb_id;
-   int32_t   data_size;
-   uint8_t   inst;
+   rb_id_t             rb_id;
+   sdu_size_t          data_size;
+   signed int          inst;
+   ip_traffic_type_t   traffic_type;
+   uint32_t sourceL2Id;
+   uint32_t destinationL2Id;
 } __attribute__((__packed__)) pdcp_data_header_t;
 
-//should be completed with other IEs (3GPP TS 24.334)
-typedef struct {
-   uint16_t sequenceNumber;
-   uint8_t ipAddressConfig;
-} __attribute__((__packed__)) PC5SDirectCommunicationRequest;
-
-typedef struct {
-   uint16_t sequenceNumber;
-   uint8_t ipAddressConfig;
-} __attribute__((__packed__)) PC5SDirectCommunicationAccept;
+//new PC5S-message
+typedef struct  {
+   unsigned char bytes[PC5_SIGNALLING_PAYLOAD_SIZE]; 
+}  __attribute__((__packed__)) PC5SignallingMessage ;
 
 //example of PC5-S messages
-typedef struct  {
+typedef struct {
    pdcp_data_header_t pdcp_data_header;
    union {
-      PC5SDirectCommunicationRequest pc5s_direct_communication_req;
-      PC5SDirectCommunicationAccept pc5s_direct_communication_accept;
       uint8_t status;
+      PC5SignallingMessage pc5_signalling_message;
    } pc5sPrimitive;
 } __attribute__((__packed__)) sidelink_pc5s_element;
+
 
 #endif
 

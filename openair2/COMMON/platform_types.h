@@ -158,7 +158,9 @@ typedef enum  ip_traffic_type_e {
   TRAFFIC_IPV4_TYPE_UNICAST    =  5,
   TRAFFIC_IPV4_TYPE_MULTICAST  =  6,
   TRAFFIC_IPV4_TYPE_BROADCAST  =  7,
-  TRAFFIC_IPV4_TYPE_UNKNOWN    =  8
+  TRAFFIC_IPV4_TYPE_UNKNOWN    =  8,
+  TRAFFIC_PC5S_SIGNALLING      =  9,
+  TRAFFIC_PC5S_SESSION_INIT    =  10
 } ip_traffic_type_t;
 
 //-----------------------------------------------------------------------------
