@@ -1045,6 +1045,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/CODING/nr_segmentation.c
   ${OPENAIR1_DIR}/PHY/CODING/nrLDPC_decoder.c
   ${OPENAIR1_DIR}/PHY/CODING/ldpc_encoder.c
+  ${OPENAIR1_DIR}/PHY/CODING/ldpc_generate_coefficient.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_lte.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_sse.c

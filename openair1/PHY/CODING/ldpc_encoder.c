@@ -5520,6 +5520,72 @@ int encode_parity_check_part(uint16_t *c,uint16_t *d, short BG,short Zc,short Kb
   return 0;
 }
 
+short *choose_generator_matrix(short BG,short Zc);
+extern short no_shift_values_BG1[1012],pointer_shift_values_BG1[1012],no_shift_values_BG2[2109],pointer_shift_values_BG2[2019];
+
+int encode_parity_check_part_orig(unsigned short *c,unsigned short *d, short BG,short Zc,short Kb)
+{
+  short *Gen_shift_values=choose_generator_matrix(BG,Zc);
+  short *no_shift_values, *pointer_shift_values;
+  int no_punctured_columns;
+  short nrows,ncols;
+  int i1,i2,i3,i4,i5,t,temp_prime;
+  unsigned short channel_temp,temp;
+  short block_length=Zc*Kb;
+
+  if (BG==1)
+  {
+    no_shift_values=(short *) no_shift_values_BG1;
+    pointer_shift_values=(short *) pointer_shift_values_BG1;
+      nrows=46; //parity check bits
+      ncols=22; //info bits
+  }
+  else if (BG==2)
+  {
+    no_shift_values=(short *) no_shift_values_BG2;
+    pointer_shift_values=(short *) pointer_shift_values_BG2;
+      nrows=46; //parity check bits
+      ncols=22; //info bits
+  }
+  else {
+    printf("problem with BG\n");
+    return(-1);
+  }
+
+  no_punctured_columns=(int)((nrows-2)*Zc+block_length-block_length*3)/Zc;
+
+  for (i2=0; i2 < 1; i2++)
+  {
+    t=Kb*Zc+i2;
+
+    //rotate matrix here
+    for (i5=0; i5 < Kb; i5++)
+    {
+      temp = c[i5*Zc];
+      memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+      c[i5*Zc+Zc-1] = temp;
+    }
+
+    // calculate each row in base graph
+    for (i1=0; i1 < nrows-no_punctured_columns; i1++)
+    {
+      channel_temp=0;
+      for (i3=0; i3 < Kb; i3++)
+      {
+        temp_prime=i1 * ncols + i3;
+
+        for (i4=0; i4 < no_shift_values[temp_prime]; i4++)
+        {
+          channel_temp = channel_temp ^ c[ i3*Zc + Gen_shift_values[ pointer_shift_values[temp_prime]+i4 ] ];
+        }
+      }
+      d[t+i1*Zc]=channel_temp;
+      //channel_input[t+i1*Zc]=channel_temp;
+    }
+  }
+  return(0);
+}
+
 int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short block_length,double rate)
 {
   uint16_t c[22*384]; //padded input, unpacked, max size
@@ -5531,43 +5597,48 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
   //Table of possible lifting sizes
   short lift_size[51]= {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
   //determine number of bits in codeword
-  //if (block_length>3840)
-  //{
-  BG=1;
-  Kb = 22;
-  nrows=46; //parity check bits
-  ncols=22; //info bits
-  //}
-  /* else if (block_length<=3840)
-  {
-    BG=2;
-    nrows=42; //parity check bits
-    ncols=10; // info bits
-
-    if (block_length>640)
-      Kb = 10;
-    else if (block_length>560)
-      Kb = 9;
-    else if (block_length>192)
-      Kb = 8;
-    else
-      Kb = 6;
-  } */
-
+  if (block_length>3840)
+    {
+      BG=1;
+      Kb = 22;
+      nrows=46; //parity check bits
+      ncols=22; //info bits
+    }
+  else if (block_length<=3840)
+    {
+      BG=2;
+      nrows=42; //parity check bits
+      ncols=10; // info bits
+      
+      if (block_length>640)
+	Kb = 10;
+      else if (block_length>560)
+	Kb = 9;
+      else if (block_length>192)
+	Kb = 8;
+      else
+	Kb = 6;
+    } 
+    
   //find minimum value in all sets of lifting size
+  Zc=0;
   for (i1=0; i1 < 51; i1++)
   {
-    if (lift_size[i1] >= (double) block_length/Kb)
+    if (lift_size[i1] >= block_length/Kb)
     {
       Zc = lift_size[i1];
       //printf("%d\n",Zc);
       break;
     }
   }
+  if ((Kb*Zc)!=block_length) {
+    printf("Cannot determine lift size Zc\n");
+    return(-1);
+  }
 
   // calculate number of punctured bits
-  no_punctured_columns=(int)((nrows-2)*Zc+block_length-block_length/rate)/Zc;
-  removed_bit=(nrows-no_punctured_columns-2) * Zc+block_length-(int)(block_length/rate);
+  no_punctured_columns=((nrows-2)*Zc+block_length-block_length*3)/Zc;
+  removed_bit=(nrows-no_punctured_columns-2) * Zc+block_length-block_length*3;
   //printf("%d\n",no_punctured_columns);
   //printf("%d\n",removed_bit);
   // unpack input
@@ -5580,20 +5651,29 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
     c[i]=(test_input[i/8]&(1<<(i&7)))>>(i&7);
   }
 
-  if ((Zc==128) || (Zc==384)) {
-  // extend matrix
-  for (i1=0; i1 < ncols; i1++)
-  {
-    memcpy(&c_extension[2*i1*Zc], &c[i1*Zc], Zc*sizeof(uint16_t));   /// change type here
-    memcpy(&c_extension[(2*i1+1)*Zc], &c[i1*Zc], Zc*sizeof(uint16_t));
+  if (BG==1) {
+    // extend matrix
+    for (i1=0; i1 < ncols; i1++)
+      {
+	memcpy(&c_extension[2*i1*Zc], &c[i1*Zc], Zc*sizeof(unsigned char));   /// change type here
+	memcpy(&c_extension[(2*i1+1)*Zc], &c[i1*Zc], Zc*sizeof(unsigned char));
+      }
+    
+    //parity check part
+    if (encode_parity_check_part(c_extension, d, BG, Zc, Kb)!=0) {
+      printf("Problem with encoder\n");
+      return(-1);
+    }
   }
-
-  //parity check part
-  encode_parity_check_part(c_extension, d, BG, Zc, Kb);
+  else if (BG==2) {
+    if (encode_parity_check_part_orig(c, d, BG, Zc, Kb)!=0) {
+      printf("Problem with encoder\n");
+      return(-1);
+    }
   }
   else {
-  //parity check part
-  encode_parity_check_part(c, d, BG, Zc, Kb);
+      printf("Problem with encoder\n");
+      return(-1);
   }
 
   // information part and puncture columns
@@ -5621,14 +5701,14 @@ int ldpc_encoder_multi_segment(unsigned char **test_input,unsigned char **channe
   int j;
 
   //determine number of bits in codeword
-  //if (block_length>3840)
-  //{
-  BG=1;
-  Kb = 22;
-  nrows=46; //parity check bits
-  ncols=22; //info bits
-  //}
-  /* else if (block_length<=3840)
+  if (block_length>3840)
+    {
+      BG=1;
+      Kb = 22;
+      nrows=46; //parity check bits
+      ncols=22; //info bits
+    }
+  else if (block_length<=3840)
   {
     BG=2;
     nrows=42; //parity check bits
@@ -5642,18 +5722,24 @@ int ldpc_encoder_multi_segment(unsigned char **test_input,unsigned char **channe
       Kb = 8;
     else
       Kb = 6;
-  } */
+  } 
 
   //find minimum value in all sets of lifting size
+  Zc=0;
   for (i1=0; i1 < 51; i1++)
   {
-    if (lift_size[i1] >= (double) block_length/Kb)
+    if (lift_size[i1] >= block_length/Kb)
     {
       Zc = lift_size[i1];
       //printf("%d\n",Zc);
       break;
     }
   }
+  if ((Kb*Zc)!=block_length) {
+    printf("Cannot determine lift size Zc\n");
+    return(-1);
+  }
+
 
   // calculate number of punctured bits
   no_punctured_columns=(int)((nrows-2)*Zc+block_length-block_length*3)/Zc;
@@ -5670,22 +5756,31 @@ int ldpc_encoder_multi_segment(unsigned char **test_input,unsigned char **channe
     }
 
   // parity check part
-  if ((Zc==128) || (Zc==384)) {
-  // extend matrix
-  for (i1=0; i1 < ncols; i1++)
-  {
-    memcpy(&c_extension[2*i1*Zc], &c[i1*Zc], Zc*sizeof(uint16_t));   /// change type here
-    memcpy(&c_extension[(2*i1+1)*Zc], &c[i1*Zc], Zc*sizeof(uint16_t));
-  }
+  if (BG==1) {
+    // extend matrix
+    for (i1=0; i1 < ncols; i1++)
+      {
+	memcpy(&c_extension[2*i1*Zc], &c[i1*Zc], Zc*sizeof(uint16_t));   /// change type here
+	memcpy(&c_extension[(2*i1+1)*Zc], &c[i1*Zc], Zc*sizeof(uint16_t));
+      }
 
-  //parity check part
-  encode_parity_check_part(c_extension, d, BG, Zc, Kb);
+    //parity check part
+    if (encode_parity_check_part(c_extension, d, BG, Zc, Kb)!=0) {
+      printf("problem with encoder\n");
+      return(-1);
+    }
+  }
+  else if (BG==2) {
+    //parity check part
+    if (encode_parity_check_part_orig(c, d, BG, Zc, Kb)!=0) {
+      printf("problem with encoder\n");
+      return(-1);
+    }
   }
   else {
-  //parity check part
-  encode_parity_check_part(c, d, BG, Zc, Kb);
-  }
-  
+      printf("Problem with encoder\n");
+      return(-1);
+  }  
 
 
   /*
