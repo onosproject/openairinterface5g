@@ -194,7 +194,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   int32_t no_iteration_ldpc;
   //  uint8_t dummy_channel_output[(3*8*block_length)+12];
   short dummy_w[MAX_NUM_DLSCH_SEGMENTS][3*(8448+64)];
-  uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0;
+  uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0, Kr_int;
   uint8_t crc_type;
   t_nrLDPC_dec_params decParams;
   t_nrLDPC_dec_params* p_decParams = &decParams;
@@ -356,7 +356,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   	  if ( kb==22){
   		  p_decParams->BG = 1;
   		  p_decParams->R = 13;
-  	  	  kc = 68;}
+  		  kc = 68;
+  	  }
   	  else{
   		  p_decParams->BG = 2;
   		  p_decParams->R = 15;
@@ -406,6 +407,16 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 
   opp_enabled=1;
 
+  Kr = harq_process->Kplus;
+
+     Kr_bytes = Kr>>3;
+
+  //workaround for nr ldpc using lte interleaving
+  if (dlsch->harq_processes[harq_pid]->C >= 2)
+      	Kr_int = G/(3*dlsch->harq_processes[harq_pid]->C);
+  else
+  	Kr_int = Kr;
+
   for (r=0; r<harq_process->C; r++) {
 
 
@@ -418,8 +429,6 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 #else
 	  Kr = harq_process->Kplus;
 #endif
-
-    Kr_bytes = Kr>>3;
 
     if (Kr_bytes<=64)
       iind = (Kr_bytes-5);
@@ -442,7 +451,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
     start_meas(dlsch_rate_unmatching_stats);
 #endif
     memset(&dummy_w[r][0],0,3*(8448+64)*sizeof(short));
-    harq_process->RTC[r] = generate_dummy_w(4+(Kr_bytes*8),
+    harq_process->RTC[r] = generate_dummy_w((Kr_int),
                                             (uint8_t*) &dummy_w[r][0],
                                             (r==0) ? harq_process->F : 0);
 
@@ -497,7 +506,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 #if UE_TIMING_TRACE
     start_meas(dlsch_deinterleaving_stats);
 #endif
-    sub_block_deinterleaving_turbo(4+Kr,
+    sub_block_deinterleaving_turbo(Kr_int,
                                    &harq_process->d[r][96],
 
                                    harq_process->w[r]);
@@ -618,11 +627,10 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 				llrProcBuf,
           		p_procTime);
 
-		//ret = no_iteration_ldpc;
-
+		ret = no_iteration_ldpc;
 
 		nb_total_decod++;
-		if (no_iteration_ldpc > 2){
+		if (no_iteration_ldpc > 5){
 			nb_error_decod++;
 			
 		}
@@ -642,10 +650,10 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 #endif
 
 
-#ifdef DEBUG_DLSCH_DECODING
+//#ifdef DEBUG_DLSCH_DECODING
       printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
       printf("no_iterations_ldpc %d\n",no_iteration_ldpc);
-#endif
+//#endif
 
 
 #if UE_TIMING_TRACE
@@ -808,7 +816,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                   dlsch_turbo_decoding_stats->p_time/(cpuf*1000.0));*/
 
 
-    if ((err_flag == 0) && (ret>=(1+dlsch->max_turbo_iterations))) {// a Code segment is in error so break;
+    if ((err_flag == 0) && (ret>(1+dlsch->max_turbo_iterations))) {// a Code segment is in error so break;
 	if (!(!(frame%2) && (nr_tti_rx==5))){
       LOG_W(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
       err_flag = 1;}
