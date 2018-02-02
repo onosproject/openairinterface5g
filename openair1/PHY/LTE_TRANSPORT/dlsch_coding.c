@@ -579,7 +579,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
   unsigned int A, Z;
   unsigned *pz = &Z;
   unsigned char mod_order;
-  unsigned int Kr=0,Kr_bytes,r,r_offset=0;
+  unsigned int Kr=0,Kr_bytes,r,r_offset=0,Kr_int=0;
   unsigned short m=dlsch->harq_processes[harq_pid]->mcs;
   uint8_t beamforming_mode=0;
   uint8_t *d_tmp[MAX_NUM_DLSCH_SEGMENTS];
@@ -708,7 +708,12 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 
     Kr = dlsch->harq_processes[harq_pid]->Kplus;
     
+    //workaround for nr ldpc using lte interleaving
     Kr_bytes = Kr>>3;
+    if (dlsch->harq_processes[harq_pid]->C >= 2)
+    	Kr_int = G/(3*dlsch->harq_processes[harq_pid]->C);
+    else
+    	Kr_int = Kr;
 
     for (r=0; r<dlsch->harq_processes[harq_pid]->C; r++) {
       d_tmp[r] = &dlsch->harq_processes[harq_pid]->d[r][96];
@@ -738,7 +743,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       start_meas(i_stats);
       for (r=0; r<dlsch->harq_processes[harq_pid]->C; r++) {
 	dlsch->harq_processes[harq_pid]->RTC[r] =
-	  sub_block_interleaving_turbo(4+(Kr_bytes*8),
+	  sub_block_interleaving_turbo((Kr_int),
 				       &dlsch->harq_processes[harq_pid]->d[r][96],
 				       dlsch->harq_processes[harq_pid]->w[r]);
       }
