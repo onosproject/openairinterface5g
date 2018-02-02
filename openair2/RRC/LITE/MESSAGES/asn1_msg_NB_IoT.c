@@ -395,16 +395,23 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   asn_set_empty(&(*sib1_NB_IoT)->systemInfoValueTagList_r13->list);
   ASN_SEQUENCE_ADD(&(*sib1_NB_IoT)->systemInfoValueTagList_r13->list,&systemInfoValueTagSI);
 
+  
+  // To check if the bcch message properly setting
+  printf("Check value :%d, should be band number\n",bcch_message->message.choice.c1.choice.systemInformationBlockType1_r13.freqBandIndicator_r13);
 
 #ifdef XER_PRINT //generate xml files
   xer_fprint(stdout, &asn_DEF_BCCH_DL_SCH_Message_NB, (void*)bcch_message);
 #endif
 
-
+  //bcch_message->message.choice.c1.choice.systemInformationBlockType1_r13 = **sib1_NB_IoT;
   enc_rval = uper_encode_to_buffer(&asn_DEF_BCCH_DL_SCH_Message_NB,
                                    (void*)bcch_message,
                                    carrier->SIB1_NB_IoT,
                                    100);
+ printf("In Asn.1 SIB1\n"); 
+ for(int i=0;i<32;i++)
+   printf("%x ",carrier->SIB1_NB_IoT[i]);
+  printf("\n");
 
   if (enc_rval.encoded > 0){ 
        LOG_F(RRC,"ASN1 message encoding failed (%s, %lu)!\n",
@@ -687,6 +694,12 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
                                    (void*)bcch_message,
                                    carrier->SIB23_NB_IoT,
                                    900);
+
+   printf("In Asn.1 SIB23\n"); 
+ for(int i=0;i<32;i++)
+   printf("%x ", carrier->SIB23_NB_IoT[i]);
+  printf("\n");
+  printf("(enc_rval.encoded+7)/8 = %d\n",(enc_rval.encoded+7)/8);
 //  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
 //               enc_rval.failed_type->name, enc_rval.encoded);
 

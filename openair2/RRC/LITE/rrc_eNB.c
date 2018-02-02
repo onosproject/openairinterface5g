@@ -125,6 +125,11 @@ uint8_t *get_NB_IoT_MIB(void)
   return eNB_rrc_inst_NB_IoT->carrier[0].MIB_NB_IoT;
 }
 
+uint8_t *get_NB_IoT_SIB1(void)
+{
+  return eNB_rrc_inst_NB_IoT->carrier[0].SIB1_NB_IoT;
+}
+
 void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_t *carrier, RrcConfigurationReq *configuration, uint32_t frame, uint32_t hyper_frame)
 {
 
@@ -186,6 +191,14 @@ void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_
   if (carrier[CC_id].sizeof_SIB1_NB_IoT == 255) {
     //exit here
   }
+
+  //dump SIB1_NB_IoT
+  
+  LOG_I(RRC,"Dump SIB1 NB-IoT content\n");
+  
+  for(int i = 0; i<32;i++)
+	printf("%02X ",carrier[CC_id].SIB1_NB_IoT[i]);
+  printf("\n");
 
   //SIB23_NB_IoT
   carrier[CC_id].SIB23_NB_IoT = (uint8_t*) malloc16(64);
