@@ -5287,7 +5287,7 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
       break;
     }
   }
-  if ((Kb*Zc)!=block_length) {
+  if (Zc==0) {
     printf("Cannot determine lift size Zc\n");
     return(-1);
   }
@@ -5321,7 +5321,7 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
       return(-1);
     }
   }
-  else if (BG==1) {
+  else if (BG==2) {
     if (encode_parity_check_part_orig(c, d, BG, Zc, Kb)!=0) {
       printf("Problem with encoder\n");
       return(-1);
