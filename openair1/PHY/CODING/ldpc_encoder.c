@@ -5390,7 +5390,7 @@ int ldpc_encoder_multi_segment(unsigned char **test_input,unsigned char **channe
       break;
     }
   }
-  if ((Kb*Zc)!=block_length) {
+  if (Zc==0) {
     printf("Cannot determine lift size Zc\n");
     return(-1);
   }
