@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "Gen_shift_value.h"
+#include "assertions.h"
 
 short *choose_generator_matrix(short BG,short Zc)
 {
@@ -335,7 +336,7 @@ int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,sho
   unsigned char channel_temp,temp;
   short *Gen_shift_values, *no_shift_values, *pointer_shift_values;
   short BG,Zc,Kb,nrows,ncols;
-  int i,i1,i2,i3,i4,i5,t,t1,temp_prime;
+  int i,i1,i2,i3,i4,i5,t,var,temp_prime;
   int no_punctured_columns,removed_bit;
   //Table of possible lifting sizes
   short lift_size[51]= {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
@@ -373,6 +374,9 @@ int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,sho
     }
   }
 
+  int nind=0;
+  int indlist[1000];
+
   // load base graph of generator matrix
   if (BG==1)
   {
@@ -402,9 +406,110 @@ int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,sho
 
   // parity check part
 
-  for (i2=0; i2 < 1; i2++)
+  if (gen_code==1)
   {
-    t=Kb*Zc+i2;
+    char fname[100];
+    sprintf(fname,"ldpc%d_byte.c",Zc);
+    FILE *fd=fopen(fname,"w");
+    int shift;
+    char data_type[100];
+    char xor_command[100];
+    int mask;
+
+    AssertFatal(fd!=NULL,"cannot open %s\n",fname);
+
+    fprintf(fd,"#include \"PHY/sse_intrin.h\"\n");
+
+    if ((Zc&31)==0) {
+      shift=5; // AVX2 - 256-bit SIMD
+      mask=31;
+      strcpy(data_type,"__m256i");
+      strcpy(xor_command,"_mm256_xor_si256");
+    }
+    else if ((Zc&15)==0) {
+      shift=4; // SSE4 - 128-bit SIMD
+      mask=15;
+      strcpy(data_type,"__m128i");
+      strcpy(xor_command,"_mm_xor_si128");
+
+    }
+    else if ((Zc&7)==0) {
+      shift=3; // MMX  - 64-bit SIMD
+      mask=7;
+      strcpy(data_type,"__m64i");
+      strcpy(xor_command,"_mm_xor_si64"); 
+    }
+    else {
+      shift=0;                 // no SIMD
+      mask=0;
+      strcpy(data_type,"uint8_t");
+      strcpy(xor_command,"scalar_xor");
+      fprintf(fd,"#define scalar_xor(a,b) ((a)^(b))\n");
+    }
+    fprintf(fd,"// generated code for Zc=%d, byte encoding\n",Zc);
+    fprintf(fd,"static inline void ldpc%d_byte(uint8_t *c,uint8_t *d) {\n",Zc);
+    fprintf(fd,"  %s *csimd=(%s *)c,*dsimd=(%s *)d;\n\n",data_type,data_type,data_type);
+    fprintf(fd,"  %s *c2,*d2;\n\n",data_type);
+    fprintf(fd,"  int i2;\n");
+    fprintf(fd,"  for (i2=0; i2<%d; i2++) {\n",Zc>>shift);
+    for (i2=0; i2 < 1; i2++)
+    {
+      t=Kb*Zc+i2;
+
+      //rotate matrix here
+      for (i5=0; i5 < Kb; i5++)
+      {
+        temp = c[i5*Zc];
+        memmove(&c[i5*Zc], &c[i5*Zc+1], (Zc-1)*sizeof(unsigned char));
+        c[i5*Zc+Zc-1] = temp;
+      }
+
+      // calculate each row in base graph
+      fprintf(fd,"     c2=&csimd[i2];\n");
+      fprintf(fd,"     d2=&dsimd[i2];\n");
+
+
+      for (i1=0; i1 < nrows-no_punctured_columns; i1++)
+      {
+        channel_temp=0;
+        fprintf(fd,"\n//row: %d\n",i1);
+	fprintf(fd,"     d2[%d]=",(Zc*i1)>>shift);
+
+        nind=0;
+
+        for (i3=0; i3 < Kb; i3++)
+        {
+          temp_prime=i1 * ncols + i3;
+
+	  for (i4=0; i4 < no_shift_values[temp_prime]; i4++)
+	    {
+	          
+	      var=(int)((i3*Zc + (Gen_shift_values[ pointer_shift_values[temp_prime]+i4 ]+1)%Zc)/Zc);
+	      int index =var*2*Zc + (i3*Zc + (Gen_shift_values[ pointer_shift_values[temp_prime]+i4 ]+1)%Zc) % Zc;
+	      
+	      indlist[nind++] = ((index&mask)*((2*Zc)>>shift)*Kb)+(index>>shift);
+	      
+	    }
+	  
+
+        }
+	for (i4=0;i4<nind-1;i4++) {
+	  fprintf(fd,"%s(c2[%d],",xor_command,indlist[i4]);
+	}
+	fprintf(fd,"c2[%d]",indlist[i4]);
+	for (i4=0;i4<nind-1;i4++) fprintf(fd,")");
+	fprintf(fd,";\n");
+        d[t+i1*Zc]=channel_temp;
+        //channel_input[t+i1*Zc]=channel_temp;
+      }
+      fprintf(fd,"  }\n}\n");
+    }
+    fclose(fd);
+  }
+  else if(gen_code==0)
+  {
+   for (i2=0; i2 < Zc; i2++) {
+    //t=Kb*Zc+i2;
 
     //rotate matrix here
     for (i5=0; i5 < Kb; i5++)
@@ -435,9 +540,10 @@ int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,sho
       }
       if (gen_code)
 	printf("\n");
-      d[t+i1*Zc]=channel_temp;
+      d[i2+i1*Zc]=channel_temp;
       //channel_input[t+i1*Zc]=channel_temp;
     }
+   }
   }
 
   // information part and puncture columns

@@ -766,7 +766,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 	  unsigned int Kr=0,Kr_bytes,r,r_offset=0,Kr_int=0;
   //  unsigned short m=dlsch->harq_processes[harq_pid]->mcs;
   uint8_t beamforming_mode=0;
-  double rate = 0.33;
+  //double rate = 0.33;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_IN);
 
@@ -899,13 +899,13 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
     	Kr_int = Kr;
 
 #ifdef DEBUG_DLSCH_CODING
-      printf("start ldpc encoder B %d, rate %f\n",dlsch->harq_processes[harq_pid]->B,rate);
+      printf("start ldpc encoder B %d\n",dlsch->harq_processes[harq_pid]->B);
       printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
 #endif
 
       start_meas(te_stats);
       memset(dlsch->harq_processes[harq_pid]->d[r],0,(96+12+3+3*8448)*sizeof(uint8_t));
-      ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,rate);
+      ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3);
       stop_meas(te_stats);
 
 #endif

@@ -11,5 +11,6 @@ set(PBS_SIM False)
 set(PERFECT_CE True)
 set(NAS_UE False)
 set(MESSAGE_CHART_GENERATOR False)
+set(RRC_ASN1_VERSION "Rel14")
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)

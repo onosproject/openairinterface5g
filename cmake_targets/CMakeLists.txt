@@ -282,7 +282,7 @@ set(protobuf_generated_dir ${OPENAIR_BIN_DIR})
 
 # RRC
 ######
-add_list2_option(RRC_ASN1_VERSION "Rel10" "ASN.1 version of RRC interface" "Rel8" "Rel10" "CBA")
+add_list2_option(RRC_ASN1_VERSION "Rel14" "ASN.1 version of RRC interface" "Rel8" "Rel10" "CBA")
 
 if (${RRC_ASN1_VERSION} STREQUAL "Rel8")
   set (RRC_GRAMMAR ${OPENAIR2_DIR}/RRC/LITE/MESSAGES/asn1c/ASN1_files/EUTRA-RRC-Definitions-86.asn)
@@ -1089,13 +1089,12 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/CODING/nr_segmentation.c
   ${OPENAIR1_DIR}/PHY/CODING/ldpc_decoder.c
   ${OPENAIR1_DIR}/PHY/CODING/ldpc_encoder.c
+  ${OPENAIR1_DIR}/PHY/CODING/ldpc_encoder2.c
   ${OPENAIR1_DIR}/PHY/CODING/ldpc_generate_coefficient.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_lte.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_sse.c
   ${OPENAIR1_DIR}/PHY/CODING/crc_byte.c
-  ${OPENAIR1_DIR}/PHY/CODING/ldpc_decoder.c
-  ${OPENAIR1_DIR}/PHY/CODING/ldpc_encoder.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_8bit.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_16bit.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_avx2_16bit.c
