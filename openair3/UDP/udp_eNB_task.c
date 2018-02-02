@@ -25,6 +25,7 @@
 * \company Eurecom
 * \email: lionel.gauthier@eurecom.fr
 */
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -295,7 +296,37 @@ void *udp_eNB_task(void *args_p)
   MessageDef         *received_message_p    = NULL;
   //const char         *msg_name = NULL;
   //instance_t          instance  = 0;
-  udp_enb_init();
+   char temp[1024];
+   char cpu_affinity[1024];
+   cpu_set_t cpuset;
+   int s;
+
+   CPU_ZERO(&cpuset);
+
+   CPU_SET(12, &cpuset);
+   s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+   if (s != 0)
+   {
+     perror( "udp pthread_setaffinity_np");
+     exit_fun("udp Error setting processor affinity");
+   }
+
+   /* Check the actual affinity mask assigned to the thread */
+   s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+   if (s != 0)
+   {
+       perror( "udp pthread_getaffinity_np");
+       exit_fun("udp Error getting processor affinity ");
+   }
+   memset(cpu_affinity,0,sizeof(cpu_affinity));
+   if (CPU_ISSET(12, &cpuset))
+   {
+      sprintf (temp, " CPU_12");
+      strcat(cpu_affinity, temp);
+   }
+
+   printf("Setting the affinity of udp_task to CPU %s!\n", cpu_affinity); 
+ udp_enb_init();
 
   itti_mark_task_ready(TASK_UDP);
   MSC_START_USE();

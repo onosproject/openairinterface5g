@@ -91,7 +91,7 @@ int32_t **txdata;
 
 #ifdef UE_EXPANSION_SIM2
 UE_RX_RECEIVE_INFO ue_rx_receive_info[10];
-
+//uint8_t pdcp_end_flag[RX_NB_TH][256];
 int ue_sd_c;
 int ue_sd_s;
 extern int udp_socket_ip_enb;
@@ -642,7 +642,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
     sprintf(threadname,"UE_%d_proc_%d", UE->Mod_id, proc->sub_frame_start);
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-
+#if 0
     if ( (proc->sub_frame_start+1)%RX_NB_TH == 0 && threads.one != -1 )
         CPU_SET(threads.one, &cpuset);
     if ( (proc->sub_frame_start+1)%RX_NB_TH == 1 && threads.two != -1 )
@@ -650,6 +650,8 @@ static void *UE_thread_rxn_txnp4(void *arg) {
     if ( (proc->sub_frame_start+1)%RX_NB_TH == 2 && threads.three != -1 )
         CPU_SET(threads.three, &cpuset);
             //CPU_SET(threads.three, &cpuset);
+#endif
+    CPU_SET(18+(UE->Mod_id%8), &cpuset);
     init_thread(900000,1000000 , FIFO_PRIORITY-1, &cpuset,
                 threadname);
 
@@ -828,7 +830,11 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 			       proc->subframe_tx,
 			       subframe_select(&UE->frame_parms,proc->subframe_tx),
 			       0,
-			       0/*FIXME CC_id*/);
+			       0/*FIXME CC_id*/
+#ifdef UE_EXPANSION_SIM2
+                   ,proc->sub_frame_start
+#endif
+                   );
             if ( ret != CONNECTION_OK) {
                 char *txt;
                 switch (ret) {
@@ -871,6 +877,8 @@ static void *UE_thread_rxn_txnp4(void *arg) {
             if (UE->mode != loop_through_memory)
                 phy_procedures_UE_S_TX(UE,0,0,no_relay);
 #else
+        }else{
+            //pdcp_end_flag[proc->sub_frame_start][UE->Mod_id] = 1;
         }
         ue_tx_info[proc->sub_frame_start][UE->Mod_id].flag = 1;
 #endif
@@ -929,7 +937,8 @@ void* UE_time_sync(void *arg){
     int inst;
     uint8_t CC_id;
     int ue_inst = 0;
-
+    protocol_ctxt_t ctxt;
+    
     volatile uint8_t thread_idx = 0;
     sprintf(threadname,"UE_time_sync");
     cpu_set_t cpuset;
@@ -1013,6 +1022,11 @@ void* UE_time_sync(void *arg){
           PHY_vars_UE_g[0][CC_id]->proc.proc_rxtx[thread_idx].frame_tx = (frame + (subframe > 5 ? 1: 0))&1023;
           PHY_vars_UE_g[0][CC_id]->proc.proc_rxtx[thread_idx].subframe_tx = (subframe +4)%10;
         }
+        //memset(&pdcp_end_flag[thread_idx][0],0,256);
+        PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0, 
+                PHY_vars_UE_g[0][0]->proc.proc_rxtx[thread_idx].frame_tx,
+                PHY_vars_UE_g[0][0]->proc.proc_rxtx[thread_idx].subframe_tx, 0);
+        pdcp_run(&ctxt);
 
         if(pthread_mutex_lock(&mutex_rxtx[thread_idx]) != 0){
             LOG_E( MAC, "[UE] ERROR locking mutex for cond rxtx[%d] \n", thread_idx );
@@ -1342,8 +1356,8 @@ static void* UE_phy_rev( void* arg ) {
 
   cpu_set_t cpuset;
   CPU_ZERO(&cpuset);
-  if ( threads.iq != -1 )
-      CPU_SET(threads.iq, &cpuset);
+//  if ( threads.iq != -1 )
+      CPU_SET(15, &cpuset);
   init_thread(100000, 500000, FIFO_PRIORITY-1, &cpuset,
               "UE_phy_rev");
 
@@ -1424,8 +1438,8 @@ static void* UE_phy_send( void* param ) {
 
   cpu_set_t cpuset;
   CPU_ZERO(&cpuset);
-  if ( threads.iq != -1 )
-      CPU_SET(threads.iq, &cpuset);
+//  if ( threads.iq != -1 )
+  CPU_SET(13+thread_idx, &cpuset);
   init_thread(100000, 500000, FIFO_PRIORITY-1, &cpuset,
               "UE_phy_send");
 

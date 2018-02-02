@@ -278,7 +278,6 @@ ue_ip_common_ip2wireless(
 
   pdcph.inst       = instP;
 
-
   bytes_wrote = ue_ip_netlink_send((char *)&pdcph,UE_IP_PDCPH_SIZE);
 #ifdef OAI_DRV_DEBUG_SEND
   printk("[UE_IP_DRV][%s] Wrote %d bytes (header for %d byte skb) to PDCP via netlink\n",__FUNCTION__,

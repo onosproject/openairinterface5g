@@ -1092,7 +1092,7 @@ void logRecord_mt(const char *file, const char *func, int line, int comp,
       if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     }
 
-    if ( (g_log->flag & FLAG_THREAD) || (c->flag & FLAG_THREAD) ) {
+//    if ( (g_log->flag & FLAG_THREAD) || (c->flag & FLAG_THREAD) ) {
 #     define THREAD_NAME_LEN 128
       char threadname[THREAD_NAME_LEN];
       if (pthread_getname_np(pthread_self(), threadname, THREAD_NAME_LEN) != 0)
@@ -1103,20 +1103,20 @@ void logRecord_mt(const char *file, const char *func, int line, int comp,
         if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
       }
 #     undef THREAD_NAME_LEN
-    }
+//    }
 
     if ( (g_log->flag & FLAG_FUNCT) || (c->flag & FLAG_FUNCT) ) {
       len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%s] ",
                       func);
       if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     }
-
+#if 0 
     if ( (g_log->flag & FLAG_FILE_LINE) || (c->flag & FLAG_FILE_LINE) ) {
       len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%s:%d]",
                       file, line);
       if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     }
-
+#endif
     len += vsnprintf(&log_buffer[len], MAX_LOG_TOTAL - len, format, args);
     if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     log_end = log_buffer + len;

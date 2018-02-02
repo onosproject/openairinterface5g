@@ -27,6 +27,7 @@
   EMAIL   : Lionel.Gauthier@eurecom.fr and Navid Nikaein
 */
 
+#define _GNU_SOURCE
 #include <string.h>
 #include <stdio.h>
 
@@ -301,6 +302,36 @@ void *eNB_app_task(void *args_p)
   int                             result;
   /* for no gcc warnings */
   (void)instance;
+  char temp[1024];
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+  int s;
+
+  CPU_ZERO(&cpuset);
+
+  CPU_SET(5, &cpuset);
+  s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    perror( "rrc pthread_setaffinity_np");
+    exit_fun("rrc Error setting processor affinity");
+  }
+
+  /* Check the actual affinity mask assigned to the thread */
+  s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    perror( "rrc pthread_getaffinity_np");
+    exit_fun("rrc Error getting processor affinity ");
+  }
+  memset(cpu_affinity,0,sizeof(cpu_affinity));
+  if (CPU_ISSET(5, &cpuset))
+  {
+    sprintf (temp, " CPU_5");
+    strcat(cpu_affinity, temp);
+  }
+
+  printf("Setting the affinity of eNB_app_task to CPU %s!\n", cpu_affinity);
 
   itti_mark_task_ready (TASK_ENB_APP);
 

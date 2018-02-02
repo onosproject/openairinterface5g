@@ -29,6 +29,7 @@
  */
 #define RRC_ENB
 #define RRC_ENB_C
+#define _GNU_SOURCE
 
 #include "defs.h"
 #include "extern.h"
@@ -4940,6 +4941,36 @@ rrc_enb_task(
   int                                 CC_id;
 
   protocol_ctxt_t                     ctxt;
+  char temp[1024];
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+  int s;
+
+  CPU_ZERO(&cpuset);
+
+  CPU_SET(9, &cpuset);
+  s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    perror( "rrc pthread_setaffinity_np");
+    exit_fun("rrc Error setting processor affinity");
+  }
+
+  /* Check the actual affinity mask assigned to the thread */
+  s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+      perror( "rrc pthread_getaffinity_np");
+      exit_fun("rrc Error getting processor affinity ");
+  }
+  memset(cpu_affinity,0,sizeof(cpu_affinity));
+  if (CPU_ISSET(9, &cpuset))
+  {
+     sprintf (temp, " CPU_9");
+     strcat(cpu_affinity, temp);
+  }
+
+  printf("Setting the affinity of rrc_enb_task to CPU %s!\n", cpu_affinity);
   itti_mark_task_ready(TASK_RRC_ENB);
   LOG_I(RRC,"Entering main loop of RRC message task\n");
   while (1) {

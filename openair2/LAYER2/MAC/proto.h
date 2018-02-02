@@ -661,8 +661,11 @@ UE_L2_STATE_t ue_scheduler(const module_id_t module_idP,
 			   const frame_t txFrameP,
 			   const sub_frame_t txSubframe,
 			   const lte_subframe_t direction,
-			   const uint8_t eNB_index, const int CC_id);
-
+			   const uint8_t eNB_index, const int CC_id
+#ifdef UE_EXPANSION_SIM2
+			   ,const uint8_t thread_id
+#endif
+                           );
 /*! \fn  int cba_access(module_id_t module_idP,frame_t frameP,sub_frame_t subframe, uint8_t eNB_index,uint16_t buflen);
 \brief determine whether to use cba resource to transmit or not
 \param[in] Mod_id instance of the UE

@@ -298,14 +298,19 @@ void thread_top_init(char *thread_name,
   /* Enable CPU Affinity only if number of CPUs >2 */
   CPU_ZERO(&cpuset);
 
-#ifdef CPU_AFFINITY
+//#ifdef CPU_AFFINITY
+#if 1
   if (get_nprocs() > 2)
   {
+#if 0
     if (affinity == 0)
       CPU_SET(0,&cpuset);
     else
       for (j = 1; j < get_nprocs(); j++)
         CPU_SET(j, &cpuset);
+#else
+    CPU_SET(affinity, &cpuset);
+#endif
     s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
     if (s != 0)
     {
@@ -345,7 +350,7 @@ void thread_top_init(char *thread_name,
     exit_fun("Error getting thread priority");
   }
 
-  LOG_I(HW, "[SCHED][eNB] %s started on CPU %d, sched_policy = %s , priority = %d, CPU Affinity=%s \n",thread_name,sched_getcpu(),
+  printf("[SCHED][eNB] %s started on CPU %d, sched_policy = %s , priority = %d, CPU Affinity=%s \n",thread_name,sched_getcpu(),
                    (policy == SCHED_FIFO)  ? "SCHED_FIFO" :
                    (policy == SCHED_RR)    ? "SCHED_RR" :
                    (policy == SCHED_OTHER) ? "SCHED_OTHER" :

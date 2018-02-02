@@ -507,7 +507,37 @@ static void *scope_thread(void *arg) {
 void *l2l1_task(void *arg) {
   MessageDef *message_p = NULL;
   int         result;
+  char temp[1024];
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+  int s;
+  CPU_ZERO(&cpuset);
+  CPU_SET(5, &cpuset);
 
+  s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    perror( "rrc pthread_setaffinity_np");
+    exit_fun("rrc Error setting processor affinity");
+  }
+
+  /* Check the actual affinity mask assigned to the thread */
+
+  s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    perror( "rrc pthread_getaffinity_np");
+    exit_fun("rrc Error getting processor affinity ");
+  }
+  memset(cpu_affinity,0,sizeof(cpu_affinity));
+
+  if (CPU_ISSET(5, &cpuset))
+  {
+    sprintf (temp, " CPU_5");
+    strcat(cpu_affinity, temp);
+  }
+
+  printf("Setting the affinity of l2l1_task to CPU %s!\n", cpu_affinity);
   itti_set_task_real_time(TASK_L2L1);
   itti_mark_task_ready(TASK_L2L1);
 
@@ -1031,14 +1061,14 @@ int main( int argc, char **argv )
     if (init_opt(in_path, in_ip, NULL, radio_type) == -1)
       LOG_E(OPT,"failed to run OPT \n");
   }
-
+if (UE_flag==1) {
 #ifdef PDCP_USE_NETLINK
   netlink_init();
 #if defined(PDCP_USE_NETLINK_QUEUES)
   pdcp_netlink_init();
 #endif
 #endif
-
+}
 #if !defined(ENABLE_ITTI)
   // to make a graceful exit when ctrl-c is pressed
   signal(SIGSEGV, signal_handler);
@@ -1152,15 +1182,27 @@ int main( int argc, char **argv )
   int s;
   char cpu_affinity[1024];
   CPU_ZERO(&cpuset);
-#ifdef CPU_AFFINITY
+//#ifdef CPU_AFFINITY
+#if 1
   if (get_nprocs() > 2) {
-    CPU_SET(0, &cpuset);
+//    CPU_SET(0, &cpuset);
+    //CPU_SET(0, &cpuset);
+    CPU_SET(4, &cpuset);
     s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
     if (s != 0) {
       perror( "pthread_setaffinity_np");
       exit_fun("Error setting processor affinity");
     }
-    LOG_I(HW, "Setting the affinity of main function to CPU 0, for device library to use CPU 0 only!\n");
+//    LOG_I(HW, "Setting the affinity of main function to CPU 0, for device library to use CPU 0 only!\n");
+    char cpu_affinity[1024];
+    memset(cpu_affinity,0,sizeof(cpu_affinity));
+    for (int j = 0; j < get_nprocs(); j++)
+      if (CPU_ISSET(j, &cpuset)) {
+        char temp[1024];
+        sprintf (temp, " CPU_%d", j);
+        strcat(cpu_affinity, temp);
+      }
+    printf( "Setting the affinity of main function to CPU %s, for device library to use CPU  only!\n",cpu_affinity);
   }
 #endif
   
@@ -1189,7 +1231,7 @@ int main( int argc, char **argv )
       (RC.nb_inst > 0))  {
     
     // don't create if node doesn't connect to RRC/S1/GTP
-    if (create_tasks(UE_flag ? 0 : 1, UE_flag ? 1 : 0) < 0) {
+   if (create_tasks(UE_flag ? 0 : 1, UE_flag ? NB_UE_INST : 0) < 0) {
       printf("cannot create ITTI tasks\n");
       exit(-1); // need a softer mode
     }

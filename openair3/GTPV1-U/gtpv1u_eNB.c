@@ -26,6 +26,7 @@
  * \company Eurecom
  * \email: lionel.gauthier@eurecom.fr
  */
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <errno.h>
 
@@ -1005,7 +1006,36 @@ void *gtpv1u_eNB_task(void *args)
   int                       rc = 0;
   instance_t                instance;
   //const char               *msg_name_p;
+   char temp[1024];
+   char cpu_affinity[1024];
+   cpu_set_t cpuset;
+   int s;
 
+   CPU_ZERO(&cpuset);
+
+   CPU_SET(12, &cpuset);
+   s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+   if (s != 0)
+   {
+     perror( "gtpv1u pthread_setaffinity_np");
+     exit_fun("gtpv1u Error setting processor affinity");
+   }
+
+   /* Check the actual affinity mask assigned to the thread */
+   s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+   if (s != 0)
+   {
+       perror( "gtpv1u pthread_getaffinity_np");
+       exit_fun("gtpv1u Error getting processor affinity ");
+   }
+   memset(cpu_affinity,0,sizeof(cpu_affinity));
+   if (CPU_ISSET(12, &cpuset))
+   {
+      sprintf (temp, " CPU_12");
+      strcat(cpu_affinity, temp);
+   }
+
+   printf("Setting the affinity of gtpv1u_task to CPU %s!\n", cpu_affinity);
   rc = gtpv1u_eNB_init();
   AssertFatal(rc == 0, "gtpv1u_eNB_init Failed");
   itti_mark_task_ready(TASK_GTPV1_U);

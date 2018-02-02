@@ -842,9 +842,7 @@ static void* ru_thread_asynch_rxtx( void* param ) {
 
 
   int subframe=0, frame=0; 
-
   thread_top_init("ru_thread_asynch_rxtx",1,870000L,1000000L,1000000L);
-
   // wait for top-level synchronization and do one acquisition to get timestamp for setting frame/subframe
 
   wait_sync("ru_thread_asynch_rxtx");
@@ -1352,7 +1350,7 @@ static void* ru_thread( void* param ) {
 
 
   // set default return value
-  thread_top_init("ru_thread",0,870000,1000000,1000000);
+  thread_top_init("ru_thread",8,870000,1000000,1000000);
 
   LOG_I(PHY,"Starting RU %d (%s,%s),\n",ru->idx,eNB_functions[ru->function],eNB_timing[ru->if_timing]);
 

@@ -30,7 +30,7 @@
 
 #define RRC_UE
 #define RRC_UE_C
-
+#define _GNU_SOURCE
 #include "assertions.h"
 #include "hashtable.h"
 #include "asn1_conversions.h"
@@ -4262,6 +4262,37 @@ void *rrc_ue_task( void *args_p )
   SRB_INFO     *srb_info_p;
 
   protocol_ctxt_t  ctxt;
+   char temp[1024];
+   char cpu_affinity[1024];
+   cpu_set_t cpuset;
+   int s;
+
+   CPU_ZERO(&cpuset);
+
+   CPU_SET(17, &cpuset);
+   s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+   if (s != 0)
+   {
+     perror( "rrc_ue pthread_setaffinity_np");
+     exit_fun("rrc_ue Error setting processor affinity");
+   }
+
+   /* Check the actual affinity mask assigned to the thread */
+   s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+   if (s != 0)
+   {
+       perror( "rrc_ue pthread_getaffinity_np");
+       exit_fun("rrc_ue Error getting processor affinity ");
+   }
+   memset(cpu_affinity,0,sizeof(cpu_affinity));
+   if (CPU_ISSET(17, &cpuset))
+   {
+      sprintf (temp, " CPU_17");
+      strcat(cpu_affinity, temp);
+   }
+
+   printf("Setting the affinity of rrc_ue_task to CPU %s!\n", cpu_affinity);
+
   itti_mark_task_ready (TASK_RRC_UE);
 
   while(1) {

@@ -274,13 +274,29 @@ int esm_ebr_context_create(
 
              res = sprintf(command_line,
                            "ifconfig oip%d %s netmask %s broadcast %s up && "
-                           "ip rule add from %s/32 table %d && "
-                           "ip rule add to %s/32 table %d && "
-                           "ip route add default dev oip%d table %d",
+//                           "ip rule add from %s/32 table %d && "
+//                           "ip rule add to %s/32 table %d && "
+//                           "ip route add default dev oip%d table %d",
+                            "ip rule add from %s/24 table %d prio %d && "
+                            "ip rule add to %s/24 table %d prio %d && "
+                            #ifdef UE_EXPANSION_SIM2
+                              "ip route add default dev oip%d table %d &&"
+                              "sysctl net.ipv4.conf.oip%d.rp_filter=0",
+                            #else
+                              //"ip route add default dev oip%d table %d",
+                              "ip route add table %d 192.168.200.0/24 dev oip%d proto kernel scope link && "
+                              "ip route add default dev oip%d table %d && ",
+                              "sysctl net.ipv4.conf.oip%d.rp_filter=0",
+                            #endif
                            ueid + 1, ipv4_addr, netmask, broadcast,
-                           ipv4_addr, ueid + 201,
-                           ipv4_addr, ueid + 201,
-                           ueid + 1, ueid + 201);
+                           ipv4_addr, 201, 201,
+                           ipv4_addr, 201, 201,
+#ifdef UE_EXPANSION_SIM2
+                           ueid + 1, 201, ueid + 1);
+#else
+                           ueid + 201, ueid + 1,
+                           ueid + 1, ueid + 201, ueid + 1);
+#endif
              if ( res<0 ) {
                 LOG_TRACE(WARNING, "ESM-PROC  - Failed to system command string");
              }

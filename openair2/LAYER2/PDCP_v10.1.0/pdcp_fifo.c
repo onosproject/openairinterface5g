@@ -590,7 +590,8 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
             //ctxt.rnti          = pdcp_eNB_UE_instance_to_rnti[pdcp_eNB_UE_instance_to_rnti_index];
             ctxt.rnti   = pdcp_eNB_UE_instance_to_rnti[pdcp_read_header_g.rb_id / maxDRB];
           } else {
-            ctxt.module_id = 0;
+//            ctxt.module_id = 0;
+            ctxt.module_id = pdcp_read_header_g.inst - 1;
             rab_id      = pdcp_read_header_g.rb_id % maxDRB;
             ctxt.rnti          = pdcp_UE_UE_module_id_to_rnti[ctxt.module_id];
           }
@@ -702,8 +703,8 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                       len,
                       nas_nlh_rx->nlmsg_len-sizeof(struct nlmsghdr),
                       pdcp_read_header_g.rb_id);
-
-                LOG_D(PDCP, "[FRAME %5u][UE][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes --->][PDCP][MOD %u][UE %u][RB %u]\n",
+#endif 
+                LOG_E(PDCP, "[FRAME %5u][UE][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes --->][PDCP][MOD %u][UE %u][RB %u]\n",
                       ctxt.frame,
                       pdcp_read_header_g.inst,
                       pdcp_read_header_g.rb_id,
@@ -711,7 +712,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                       ctxt.module_id,
                       ctxt.rnti,
                       rab_id);
-#endif
+//#endif
           	    MSC_LOG_RX_MESSAGE(
           	      (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_PDCP_ENB:MSC_PDCP_UE,
                   (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_IP_ENB:MSC_IP_UE,

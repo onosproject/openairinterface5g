@@ -604,7 +604,7 @@ void* eNB_time_sync( void* param ){
     // set default return value
     eNB_time_sync_status = 0;
 
-    thread_top_init("eNB_time_sync",1,500000L,1000000L,20000000L);
+    thread_top_init("eNB_time_sync",6,500000L,1000000L,20000000L);
 
     wait_sync("eNB_time_sync");
     wait_system_ready("eNB_time_sync",&socket_ready_flag);
@@ -798,7 +798,7 @@ static void* eNB_phy_stub( void* param ) {
   // set default return value
   eNB_phy_stub_status = 0;
 
-  thread_top_init("eNB_phy_stub",1,500000L,1000000L,20000000L);
+  thread_top_init("eNB_phy_stub",7,500000L,1000000L,20000000L);
 
   addr = RC.rrc[eNB->Mod_id]->udp_socket_ip_enb;
   port = RC.rrc[eNB->Mod_id]->udp_socket_port_enb;

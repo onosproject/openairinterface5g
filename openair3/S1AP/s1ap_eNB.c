@@ -27,7 +27,7 @@
  * \version 1.0
  * @ingroup _s1ap
  */
-
+#define _GNU_SOURCE
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -300,6 +300,36 @@ void *s1ap_eNB_task(void *arg)
 
   S1AP_DEBUG("Starting S1AP layer\n");
 
+   char temp[1024];
+   char cpu_affinity[1024];
+   cpu_set_t cpuset;
+   int s;
+
+   CPU_ZERO(&cpuset);
+
+   CPU_SET(11, &cpuset);
+   s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+   if (s != 0)
+   {
+     perror( "s1ap pthread_setaffinity_np");
+     exit_fun("s1ap Error setting processor affinity");
+   }
+
+   /* Check the actual affinity mask assigned to the thread */
+   s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+   if (s != 0)
+   {
+       perror( "s1ap pthread_getaffinity_np");
+       exit_fun("s1ap Error getting processor affinity ");
+   }
+   memset(cpu_affinity,0,sizeof(cpu_affinity));
+   if (CPU_ISSET(11, &cpuset))
+   {
+      sprintf (temp, " CPU_11");
+      strcat(cpu_affinity, temp);
+   }
+
+   printf("Setting the affinity of s1ap_task to CPU %s!\n", cpu_affinity);
   s1ap_eNB_prepare_internal_data();
 
   itti_mark_task_ready(TASK_S1AP);

@@ -568,7 +568,7 @@ ue_send_sdu(module_id_t module_idP,
 	    payload_ptr += rx_lengths[i];
 	}
     }				// end if (payload_ptr != NULL)
-
+    
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
 	(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SEND_SDU, VCD_FUNCTION_OUT);
 #if UE_TIMING_TRACE
@@ -2159,7 +2159,11 @@ ue_scheduler(const module_id_t module_idP,
 	     const frame_t txFrameP,
 	     const sub_frame_t txSubframeP,
 	     const lte_subframe_t directionP,
-	     const uint8_t eNB_indexP, const int CC_id)
+	     const uint8_t eNB_indexP, const int CC_id
+#ifdef UE_EXPANSION_SIM2
+        ,const uint8_t thread_id
+#endif
+             )
 //------------------------------------------------------------------------------
 {
     int lcid;			// lcid index
@@ -2227,7 +2231,7 @@ ue_scheduler(const module_id_t module_idP,
     //Rrc_xface->Frame_index=Mac_rlc_xface->frameP;
     //if (subframe%5 == 0)
     //LG#ifdef EXMIMO
-    pdcp_run(&ctxt);
+//    pdcp_run(&ctxt);
     //#endif
     UE_mac_inst[module_idP].txFrame = txFrameP;
     UE_mac_inst[module_idP].txSubframe = txSubframeP;

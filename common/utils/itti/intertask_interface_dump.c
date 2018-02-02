@@ -481,6 +481,35 @@ static void *itti_dump_socket(void *arg_p)
 #ifdef RTAI
   struct timeval  timeout;
 #endif
+  char temp[1024];
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+  int s;
+
+  CPU_ZERO(&cpuset);
+
+  CPU_SET(10, &cpuset);
+  s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    perror( "rrc pthread_setaffinity_np");
+    exit_fun("rrc Error setting processor affinity");
+  }
+
+  /* Check the actual affinity mask assigned to the thread */
+  s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    perror( "rrc pthread_getaffinity_np");
+    exit_fun("rrc Error getting processor affinity ");
+  }
+  memset(cpu_affinity,0,sizeof(cpu_affinity));
+  if (CPU_ISSET(10, &cpuset))
+  {
+    sprintf (temp, " CPU_10");
+    strcat(cpu_affinity, temp);
+  }
+  printf("Setting the affinity of itti_dump_socket to CPU %s!\n", cpu_affinity);
 
   ITTI_DUMP_DEBUG(0x2, " Creating TCP dump socket on port %u\n", ITTI_PORT);
 

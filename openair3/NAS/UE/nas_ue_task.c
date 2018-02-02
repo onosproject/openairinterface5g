@@ -18,7 +18,7 @@
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
  */
-
+#define _GNU_SOURCE
 #include "utils.h"
 #if defined(ENABLE_ITTI)
 # include "assertions.h"
@@ -94,7 +94,36 @@ void *nas_ue_task(void *args_p)
   unsigned int          Mod_id;
   int                   result;
   nas_user_container_t *users=args_p;
+  char temp[1024];
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+  int s;
 
+  CPU_ZERO(&cpuset);
+
+  CPU_SET(16, &cpuset);
+  s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    perror( "nas pthread_setaffinity_np");
+    exit_fun("nas Error setting processor affinity");
+  }
+
+  /* Check the actual affinity mask assigned to the thread */
+  s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+      perror( "nas pthread_getaffinity_np");
+      exit_fun("nas Error getting processor affinity ");
+  }
+  memset(cpu_affinity,0,sizeof(cpu_affinity));
+  if (CPU_ISSET(16, &cpuset))
+  {
+     sprintf (temp, " CPU_16");
+     strcat(cpu_affinity, temp);
+  }
+
+  printf("Setting the affinity of nas_enb_task to CPU %s!\n", cpu_affinity);
   itti_mark_task_ready (TASK_NAS_UE);
   MSC_START_USE();
   /* Initialize UE NAS (EURECOM-NAS) */

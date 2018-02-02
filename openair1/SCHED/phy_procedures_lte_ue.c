@@ -5412,8 +5412,11 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
 			   subframe_tx,
 			   subframe_select(&ue->frame_parms,subframe_tx),
 			   eNB_id,
-			   0/*FIXME CC_id*/);
-	
+			   0/*FIXME CC_id*/
+#ifdef UE_EXPANSION_SIM2
+               ,0
+#endif
+                );	
 	if (ret == CONNECTION_LOST) {
 	  LOG_E(PHY,"[UE %d] Frame %d, subframe %d RRC Connection lost, returning to PRACH\n",ue->Mod_id,
 		frame_rx,subframe_tx);

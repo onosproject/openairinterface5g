@@ -18,7 +18,7 @@
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
  */
-
+#define _GNU_SOURCE
 #include <pthread.h>
 #include <stdint.h>
 #include <errno.h>
@@ -809,6 +809,36 @@ void *sctp_eNB_task(void *arg)
 
   SCTP_DEBUG("Starting SCTP layer\n");
 
+   char temp[1024];
+   char cpu_affinity[1024];
+   cpu_set_t cpuset;
+   int s;
+
+   CPU_ZERO(&cpuset);
+
+   CPU_SET(11, &cpuset);
+   s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+   if (s != 0)
+   {
+     perror( "sctp pthread_setaffinity_np");
+     exit_fun("sctp Error setting processor affinity");
+   }
+
+   /* Check the actual affinity mask assigned to the thread */
+   s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+   if (s != 0)
+   {
+       perror( "sctp pthread_getaffinity_np");
+       exit_fun("sctp Error getting processor affinity ");
+   }
+   memset(cpu_affinity,0,sizeof(cpu_affinity));
+   if (CPU_ISSET(11, &cpuset))
+   {
+      sprintf (temp, " CPU_11");
+      strcat(cpu_affinity, temp);
+   }
+
+   printf("Setting the affinity of sctp_task to CPU %s!\n", cpu_affinity);
   STAILQ_INIT(&sctp_cnx_list);
 
   itti_mark_task_ready(TASK_SCTP);
