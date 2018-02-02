@@ -656,9 +656,6 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
         Kr = dlsch->harq_processes[harq_pid]->Kminus;
       else
         Kr = dlsch->harq_processes[harq_pid]->Kplus;
-#else
-      Kr = dlsch->harq_processes[harq_pid]->Kplus;
-#endif
 
       Kr_bytes = Kr>>3;
 
@@ -687,14 +684,11 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       printf("mod_order %d\n",mod_order);
 #endif
 
-      //double rate = 0.33;
-
 #ifdef DEBUG_DLSCH_CODING
       printf("Encoding ... iind %d f1 %d, f2 %d\n",iind,f1f2mat_old[iind*2],f1f2mat_old[(iind*2)+1]);
 #endif
       start_meas(te_stats);
 
-#ifdef TD_DECODING
       threegpplte_turbo_encoder(dlsch->harq_processes[harq_pid]->c[r],
                                 Kr>>3,
                                 &dlsch->harq_processes[harq_pid]->d[r][96],
@@ -737,6 +731,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 	printf("\n");*/
 
 #ifdef DEBUG_DLSCH_CODING
+      write_output("enc_input0.m","enc_in0",&dlsch->harq_processes[harq_pid]->c[0][0],Kr_bytes,1,4);
       write_output("enc_output0.m","enc0",&dlsch->harq_processes[harq_pid]->d[0][96],(3*8*Kr_bytes)+12,1,4);
 #endif
 

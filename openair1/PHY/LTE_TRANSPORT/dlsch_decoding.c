@@ -360,7 +360,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   	  }
   	  else{
   		  p_decParams->BG = 2;
-  		  p_decParams->R = 15;
+  		  p_decParams->R = 13;
   		  kc = 52;
   	  	  }
 
@@ -653,6 +653,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 //#ifdef DEBUG_DLSCH_DECODING
       printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
       printf("no_iterations_ldpc %d\n",no_iteration_ldpc);
+      write_output("dec_output.m","dec0",harq_process->c[0],Kr_bytes,1,4);
 //#endif
 
 
