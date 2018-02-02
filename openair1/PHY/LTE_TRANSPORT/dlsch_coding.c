@@ -913,8 +913,10 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 #endif
  
 #ifdef DEBUG_DLSCH_CODING
-      if (r==0)
-        write_output("enc_output0.m","enc0",&dlsch->harq_processes[harq_pid]->d[r][96],(3*8*Kr_bytes)+12,1,4);
+      if (r==0) {
+	write_output("enc_input0.m","enc_in0",&dlsch->harq_processes[harq_pid]->c[0][0],Kr_bytes,1,4);
+	write_output("enc_output0.m","enc0",&dlsch->harq_processes[harq_pid]->d[0][96],(3*8*Kr_bytes)+12,1,4);
+      }
 #endif
 
       start_meas(i_stats);

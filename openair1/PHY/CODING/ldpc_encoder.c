@@ -5179,15 +5179,14 @@ int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Z
 short *choose_generator_matrix(short BG,short Zc);
 extern short no_shift_values_BG1[1012],pointer_shift_values_BG1[1012],no_shift_values_BG2[2109],pointer_shift_values_BG2[2019];
 
-int encode_parity_check_part_orig(unsigned char *c,unsigned char *d, short BG,short Zc,short Kb)
+int encode_parity_check_part_orig(unsigned char *c,unsigned char *d, short BG,short Zc,short Kb,short block_length)
 {
   short *Gen_shift_values=choose_generator_matrix(BG,Zc);
   short *no_shift_values, *pointer_shift_values;
   int no_punctured_columns;
   short nrows,ncols;
-  int i1,i2,i3,i4,i5,t,temp_prime;
+  int i1,i2,i3,i4,i5,temp_prime;
   unsigned char channel_temp,temp;
-  short block_length=Zc*Kb;
 
   if (BG==1)
   {
@@ -5200,8 +5199,8 @@ int encode_parity_check_part_orig(unsigned char *c,unsigned char *d, short BG,sh
   {
     no_shift_values=(short *) no_shift_values_BG2;
     pointer_shift_values=(short *) pointer_shift_values_BG2;
-      nrows=46; //parity check bits
-      ncols=22; //info bits
+      nrows=42; //parity check bits
+      ncols=10; //info bits
   }
   else {
     printf("problem with BG\n");
@@ -5210,9 +5209,11 @@ int encode_parity_check_part_orig(unsigned char *c,unsigned char *d, short BG,sh
 
   no_punctured_columns=(int)((nrows-2)*Zc+block_length-block_length*3)/Zc;
 
-  for (i2=0; i2 < 1; i2++)
+  //printf("no_punctured_columns = %d\n",no_punctured_columns);
+
+  for (i2=0; i2 < Zc; i2++)
   {
-    t=Kb*Zc+i2;
+    //t=Kb*Zc+i2;
 
     //rotate matrix here
     for (i5=0; i5 < Kb; i5++)
@@ -5235,7 +5236,7 @@ int encode_parity_check_part_orig(unsigned char *c,unsigned char *d, short BG,sh
           channel_temp = channel_temp ^ c[ i3*Zc + Gen_shift_values[ pointer_shift_values[temp_prime]+i4 ] ];
         }
       }
-      d[t+i1*Zc]=channel_temp;
+      d[i2+i1*Zc]=channel_temp;
       //channel_input[t+i1*Zc]=channel_temp;
     }
   }
@@ -5299,6 +5300,7 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
   //printf("%d\n",removed_bit);
   // unpack input
   memset(c,0,sizeof(unsigned char) * ncols * Zc);
+  memset(d,0,sizeof(unsigned char) * ncols * Zc * 3);
 
   for (i=0; i<block_length; i++)
   {
@@ -5322,7 +5324,7 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
     }
   }
   else if (BG==2) {
-    if (encode_parity_check_part_orig(c, d, BG, Zc, Kb)!=0) {
+    if (encode_parity_check_part_orig(c, d, BG, Zc, Kb, block_length)!=0) {
       printf("Problem with encoder\n");
       return(-1);
     }
