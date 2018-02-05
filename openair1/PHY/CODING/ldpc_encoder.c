@@ -5302,7 +5302,7 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
   //printf("%d\n",removed_bit);
   // unpack input
   memset(c,0,sizeof(unsigned char) * ncols * Zc);
-  memset(d,0,sizeof(unsigned char) * ncols * Zc * 3);
+  memset(d,0,sizeof(unsigned char) * nrows * Zc);
 
   for (i=0; i<block_length; i++)
   {
