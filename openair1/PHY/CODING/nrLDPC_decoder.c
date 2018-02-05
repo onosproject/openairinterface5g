@@ -18,6 +18,8 @@
 #include "nrLDPC_cnProc.h"
 #include "nrLDPC_bnProc.h"
 
+#define NR_LDPC_ENABLE_PARITY_CHECK
+
 #ifdef NR_LDPC_DEBUG_MODE
 #include "nrLDPC_tools/nrLDPC_debug.h"
 #endif
