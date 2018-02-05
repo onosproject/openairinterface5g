@@ -709,6 +709,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
     else
     	Kr_int = Kr;
 
+    start_meas(te_stats);
     for (r=0; r<dlsch->harq_processes[harq_pid]->C; r++) {
       d_tmp[r] = &dlsch->harq_processes[harq_pid]->d[r][96];
 #ifdef DEBUG_DLSCH_CODING
@@ -716,9 +717,9 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
 #endif
       //ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,rate);
+      ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,NULL,NULL,NULL,NULL);
     }
-    start_meas(te_stats);
-    ldpc_encoder_multi_segment(dlsch->harq_processes[harq_pid]->c,d_tmp,Kr,rate,dlsch->harq_processes[harq_pid]->C);
+    //ldpc_encoder_multi_segment(dlsch->harq_processes[harq_pid]->c,d_tmp,Kr,rate,dlsch->harq_processes[harq_pid]->C);
     stop_meas(te_stats);
 #endif
       /*printf("end ldpc encoder -- output\n");

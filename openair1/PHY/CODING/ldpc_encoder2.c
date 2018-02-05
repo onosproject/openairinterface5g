@@ -94,30 +94,28 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
   int simd_size;
 
   //determine number of bits in codeword
-  //if (block_length>3840)
-  //{
-  AssertFatal(block_length>3840,"Block length < 3840 not supported yet\n");
-  BG=1;
-  Kb = 22;
-  nrows=46; //parity check bits
-  ncols=22; //info bits
-  
-  //}
-  /* else if (block_length<=3840)
-  {
-    BG=2;
-    nrows=42; //parity check bits
-    ncols=10; // info bits
-
-    if (block_length>640)
-      Kb = 10;
-    else if (block_length>560)
-      Kb = 9;
-    else if (block_length>192)
+  if (block_length>3840)
+    {
+      BG=1;
+      Kb = 22;
+      nrows=46; //parity check bits
+      ncols=22; //info bits
+    }
+  else if (block_length<=3840)
+    {
+      BG=2;
+      nrows=42; //parity check bits
+      ncols=10; // info bits
+      
+      if (block_length>640)
+	Kb = 10;
+      else if (block_length>560)
+	Kb = 9;
+      else if (block_length>192)
       Kb = 8;
     else
       Kb = 6;
-  } */
+    }
 
   //find minimum value in all sets of lifting size
   Zc=0;
@@ -155,28 +153,42 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
     //c[i]=c[i]>>7&1;
     c[i]=(test_input[i/8]&(1<<(i&7)))>>(i&7);
   }
-  stop_meas(tinput); 
-  // extend matrix
-  start_meas(tprep);
-  for (i1=0; i1 < ncols; i1++)
-  {
-    memcpy(&c_extension[2*i1*Zc], &c[i1*Zc], Zc*sizeof(unsigned char));
-    memcpy(&c_extension[(2*i1+1)*Zc], &c[i1*Zc], Zc*sizeof(unsigned char));
+  stop_meas(tinput);
+
+  if (BG==1) { 
+    // extend matrix
+    start_meas(tprep);
+    for (i1=0; i1 < ncols; i1++)
+      {
+	memcpy(&c_extension[2*i1*Zc], &c[i1*Zc], Zc*sizeof(unsigned char));
+	memcpy(&c_extension[(2*i1+1)*Zc], &c[i1*Zc], Zc*sizeof(unsigned char));
+      }
+    for (i1=1;i1<simd_size;i1++) {
+      memcpy(&c_extension[(2*ncols*Zc*i1)], &c_extension[i1], (2*ncols*Zc*sizeof(unsigned char))-i1);
+      //    memset(&c_extension[(2*ncols*Zc*i1)],0,i1);
+      /*
+	printf("shift %d: ",i1);
+	for (int j=0;j<64;j++) printf("%d ",c_extension[(2*ncols*Zc*i1)+j]);
+	printf("\n");
+      */
+    }
+    stop_meas(tprep);
+    //parity check part
+    start_meas(tparity);
+    encode_parity_check_part_optim(c_extension, d, BG, Zc, Kb);
+    stop_meas(tparity);
   }
-  for (i1=1;i1<simd_size;i1++) {
-    memcpy(&c_extension[(2*ncols*Zc*i1)], &c_extension[i1], (2*ncols*Zc*sizeof(unsigned char))-i1);
-    //    memset(&c_extension[(2*ncols*Zc*i1)],0,i1);
-    /*
-    printf("shift %d: ",i1);
-    for (int j=0;j<64;j++) printf("%d ",c_extension[(2*ncols*Zc*i1)+j]);
-    printf("\n");
-    */
+  else if (BG==2) {
+    if (encode_parity_check_part_orig(c, d, BG, Zc, Kb, block_length)!=0) {
+      printf("Problem with encoder\n");
+      return(-1);
+    }
   }
-  stop_meas(tprep);
-  //parity check part
-  start_meas(tparity);
-  encode_parity_check_part_optim(c_extension, d, BG, Zc, Kb);
-  stop_meas(tparity);
+  else {
+      printf("Problem with encoder\n");
+      return(-1);
+  }
+
   start_meas(toutput);
   // information part and puncture columns
   memcpy(&channel_input[0], &c[2*Zc], (block_length-2*Zc)*sizeof(unsigned char));

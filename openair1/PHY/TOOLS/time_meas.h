@@ -98,7 +98,7 @@ static inline uint32_t rdtsc_oai(void)
 static inline void start_meas(time_stats_t *ts)
 {
 
-  if (opp_enabled) {
+  if (opp_enabled && ts) {
     if (ts->meas_flag==0) {
       ts->trials++;
       ts->in = rdtsc_oai();
@@ -113,7 +113,7 @@ static inline void start_meas(time_stats_t *ts)
 static inline void stop_meas(time_stats_t *ts)
 {
 
-  if (opp_enabled) {
+  if (opp_enabled && ts) {
     long long out = rdtsc_oai();
     
     ts->diff_now = (out-ts->in);
@@ -133,6 +133,8 @@ static inline void stop_meas(time_stats_t *ts)
 
 static inline void reset_meas(time_stats_t *ts) {
 
+  if (ts) {
+
   ts->trials=0;
   ts->diff=0;
   ts->diff_now=0;
@@ -141,6 +143,7 @@ static inline void reset_meas(time_stats_t *ts) {
   ts->max=0;
   ts->meas_flag=0;
   
+  }
 }
 
 static inline void copy_meas(time_stats_t *dst_ts,time_stats_t *src_ts)
