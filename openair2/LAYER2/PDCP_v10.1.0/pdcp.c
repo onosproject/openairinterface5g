@@ -86,6 +86,10 @@ boolean_t pdcp_data_req(
   const sdu_size_t     sdu_buffer_sizeP,
   unsigned char *const sdu_buffer_pP,
   const pdcp_transmission_mode_t modeP
+#ifdef Rel14
+    ,const uint32_t * const sourceL2Id
+    ,const uint32_t * const destinationL2Id
+#endif
 )
 //-----------------------------------------------------------------------------
 {
@@ -166,7 +170,11 @@ boolean_t pdcp_data_req(
                                 (unsigned char*)&pdcp_pdu_p->data[0],
                                 sdu_buffer_sizeP);
 #endif
-      rlc_status = rlc_data_req(ctxt_pP, srb_flagP, MBMS_FLAG_YES, rb_idP, muiP, confirmP, sdu_buffer_sizeP, pdcp_pdu_p);
+      rlc_status = rlc_data_req(ctxt_pP, srb_flagP, MBMS_FLAG_YES, rb_idP, muiP, confirmP, sdu_buffer_sizeP, pdcp_pdu_p
+#ifdef Rel14
+                                ,NULL, NULL
+#endif
+                                );
     } else {
       rlc_status = RLC_OP_STATUS_OUT_OF_RESSOURCES;
       LOG_W(PDCP,PROTOCOL_CTXT_FMT" PDCP_DATA_REQ SDU DROPPED, OUT OF MEMORY \n",
@@ -351,7 +359,12 @@ boolean_t pdcp_data_req(
 
     LOG_F(PDCP,"\n");
 #endif
-    rlc_status = rlc_data_req(ctxt_pP, srb_flagP, MBMS_FLAG_NO, rb_idP, muiP, confirmP, pdcp_pdu_size, pdcp_pdu_p);
+    rlc_status = rlc_data_req(ctxt_pP, srb_flagP, MBMS_FLAG_NO, rb_idP, muiP, confirmP, pdcp_pdu_size, pdcp_pdu_p
+#ifdef Rel14
+                             ,sourceL2Id
+                             ,destinationL2Id
+#endif
+                             );
 
   }
 
@@ -927,7 +940,11 @@ pdcp_run (
                                 RRC_DCCH_DATA_REQ (msg_p).confirmp,
                                 RRC_DCCH_DATA_REQ (msg_p).sdu_size,
                                 RRC_DCCH_DATA_REQ (msg_p).sdu_p,
-                                RRC_DCCH_DATA_REQ (msg_p).mode);
+                                RRC_DCCH_DATA_REQ (msg_p).mode
+#ifdef Rel14
+                                , NULL, NULL
+#endif
+                                );
         if (result != TRUE)
           LOG_E(PDCP, "PDCP data request failed!\n");
 

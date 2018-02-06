@@ -389,7 +389,11 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
 	dcch_header_len = 2 + 2;  /// SHORT Subheader + C-RNTI control element
 	rlc_status = mac_rlc_status_ind(module_idP,UE_mac_inst[module_idP].crnti, eNB_indexP,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
 					DCCH,
-					6);
+					6
+#ifdef Rel14
+               ,0, 0
+#endif
+               );
 	
 	if (UE_mac_inst[module_idP].crnti_before_ho)
 	  LOG_D(MAC,
@@ -403,7 +407,12 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
 					  eNB_indexP, frameP,ENB_FLAG_NO, MBMS_FLAG_NO,
 					  DCCH,
 					  6,	//not used
-					  (char *)&ulsch_buff[0]);
+					  (char *)&ulsch_buff[0]
+#ifdef Rel14
+                 ,0,
+                  0
+#endif
+                  );
 	
 	LOG_D(MAC,"[UE %d] TX Got %d bytes for DCCH\n",module_idP,sdu_lengths[0]);
 	update_bsr(module_idP, frameP, subframeP,eNB_indexP);

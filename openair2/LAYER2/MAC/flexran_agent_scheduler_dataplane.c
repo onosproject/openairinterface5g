@@ -178,7 +178,11 @@ void flexran_apply_ue_spec_scheduling_decisions(mid_t mod_id,
 	   				  ENB_FLAG_YES,
 	   				  MBMS_FLAG_NO,
 	   				  lcid,
-	   				  0);
+	   				  0
+#ifdef Rel14
+                   ,0, 0
+#endif
+                   );
 
 	  if (rlc_status.bytes_in_buffer > 0) {
 
@@ -198,7 +202,11 @@ void flexran_apply_ue_spec_scheduling_decisions(mid_t mod_id,
 					    ENB_FLAG_YES,
 					    MBMS_FLAG_NO,
 					    lcid,
-					    rlc_size); // transport block set size
+					    rlc_size // transport block set size
+#ifdef Rel14
+                   ,0, 0
+#endif
+                   );
 	  
 	    LOG_D(MAC, "[TEST] RLC can give %d bytes for LCID %d during second call\n", rlc_status.bytes_in_buffer, lcid);
 	  
@@ -212,7 +220,12 @@ void flexran_apply_ue_spec_scheduling_decisions(mid_t mod_id,
 						MBMS_FLAG_NO,
 						lcid,
 						rlc_size, //not used
-						(char *)&dlsch_buffer[sdu_length_total]);
+						(char *)&dlsch_buffer[sdu_length_total]
+#ifdef Rel14
+                  ,0,
+                   0
+#endif
+                  );
 	      
 	      LOG_D(MAC,"[eNB %d][LCID %d] CC_id %d Got %d bytes from RLC\n",mod_id, lcid, CC_id, sdu_lengths[j]);
 	      sdu_length_total += sdu_lengths[j];

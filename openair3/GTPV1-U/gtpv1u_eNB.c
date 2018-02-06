@@ -61,7 +61,12 @@ extern boolean_t pdcp_data_req(
   const confirm_t      confirmP,
   const sdu_size_t     sdu_buffer_sizeP,
   unsigned char *const sdu_buffer_pP,
-  const pdcp_transmission_mode_t modeP);
+  const pdcp_transmission_mode_t modeP
+#ifdef Rel14
+    ,const uint32_t * const sourceL2Id
+    ,const uint32_t * const destinationL2Id
+#endif
+    );
 
 extern unsigned char NB_eNB_INST;
 extern RAN_CONTEXT_t RC;
@@ -347,7 +352,11 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 			     SDU_CONFIRM_NO, // confirm
 			     buffer_len,
 			     buffer,
-			     PDCP_TRANSMISSION_MODE_DATA);
+			     PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+              ,NULL, NULL
+#endif
+              );
       
       
       if ( result == FALSE ) {

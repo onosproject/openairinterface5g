@@ -207,13 +207,10 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #ifdef Rel14
       sidelink_pc5s_element *sl_pc5s_msg_recv = NULL;
       char send_buf[BUFSIZE];
+      int rb_id = ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id;
 
-      LOG_D(PDCP, "[THINH] PDCP->IP Frame %d INST %d, rab %d, source L2ID 0x%08x, Dest L2ID  0x%08x\n",
-            ctxt_pP->frame, ((pdcp_data_ind_header_t *)(sdu_p->data))->inst,
-            ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id, ((pdcp_data_ind_header_t *)(sdu_p->data))->sourceL2Id, ((pdcp_data_ind_header_t *)(sdu_p->data))->destinationL2Id);
-
-     // if ((((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id) == 10) { //hardcoded for PC5-Signaling
-      if ((((pdcp_data_ind_header_t *)(sdu_p->data))->dummy_traffic_type) == TRAFFIC_PC5S_SIGNALLING) {
+      if (rb_id == 10) { //hardcoded for PC5-Signaling
+      //if ((rb_id == 28) | (rb_id == 29) | (rb_id == 30))
 
 #ifdef PDCP_DEBUG
          sl_pc5s_msg_recv = calloc(1, sizeof(sidelink_pc5s_element));
@@ -507,7 +504,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                RLC_SDU_CONFIRM_NO,
                data_p->pdcp_read_header.data_size,
                data_p->data,
-               pdcp_mode);
+               pdcp_mode
+#ifdef Rel14
+               ,NULL, NULL
+#endif
+               );
       } else if (ctxt_cpy.enb_flag) {
          /* rb_id = 0, thus interpreated as broadcast and transported as
           * multiple unicast is a broadcast packet, we have to send this
@@ -531,7 +532,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                      RLC_SDU_CONFIRM_NO,
                      data_p->pdcp_read_header.data_size,
                      data_p->data,
-                     PDCP_TRANSMISSION_MODE_DATA);
+                     PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                     ,NULL, NULL
+#endif
+                     );
             }
          }
       } else {
@@ -544,7 +549,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                RLC_SDU_CONFIRM_NO,
                data_p->pdcp_read_header.data_size,
                data_p->data,
-               PDCP_TRANSMISSION_MODE_DATA);
+               PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+               ,NULL, NULL
+#endif
+               );
       }
 
       free(data_p->data);
@@ -702,7 +711,12 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                         RLC_SDU_CONFIRM_NO,
                         pdcp_data_header->data_size,
                         (unsigned char *)receive_buf,
-                        PDCP_TRANSMISSION_MODE_DATA);
+                        PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                        ,&pdcp_data_header->sourceL2Id
+                        ,&pdcp_data_header->destinationL2Id
+#endif
+                        );
                } else {
                   MSC_LOG_RX_DISCARDED_MESSAGE(
                         (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_PDCP_ENB:MSC_PDCP_UE,
@@ -755,7 +769,12 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                      RLC_SDU_CONFIRM_NO,
                      pdcp_data_header->data_size,
                      (unsigned char *)receive_buf,
-                     PDCP_TRANSMISSION_MODE_DATA);
+                     PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                     ,&pdcp_data_header->sourceL2Id
+                     ,&pdcp_data_header->destinationL2Id
+#endif
+                     );
             }
          }
           free (sl_pc5s_msg_recv);
@@ -794,8 +813,8 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                if (nas_nlh_rx->nlmsg_len == sizeof (pdcp_data_req_header_t) + sizeof(struct nlmsghdr)) {
                   pdcp_read_state_g = 1;  //get
                   memcpy((void *)&pdcp_read_header_g, (void *)NLMSG_DATA(nas_nlh_rx), sizeof(pdcp_data_req_header_t));
-                  LOG_D(PDCP, "[PDCP][NETLINK] RX pdcp_data_req_header_t inst %u, rb_id %u data_size %d\n",
-                        pdcp_read_header_g.inst, pdcp_read_header_g.rb_id, pdcp_read_header_g.data_size);
+                  LOG_D(PDCP, "[PDCP][NETLINK] RX pdcp_data_req_header_t inst %u, rb_id %u data_size %d, source L2Id 0x%08x, destination L2Id 0x%08x\n",
+                        pdcp_read_header_g.inst, pdcp_read_header_g.rb_id, pdcp_read_header_g.data_size,pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id );
                } else {
                   LOG_E(PDCP, "[PDCP][NETLINK] WRONG size %d should be sizeof (pdcp_data_req_header_t) + sizeof(struct nlmsghdr)\n",
                         nas_nlh_rx->nlmsg_len);
@@ -839,7 +858,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                ctxt.enb_flag      = ctxt_cpy.enb_flag;
 
 #ifdef PDCP_DEBUG
-               LOG_I(PDCP, "[PDCP][NETLINK] pdcp_read_header_g.rb_id = %d\n", pdcp_read_header_g.rb_id);
+               LOG_I(PDCP, "[PDCP][NETLINK] pdcp_read_header_g.rb_id = %d, source L2Id = 0x%08x, destination L2Id = 0x%08x \n", pdcp_read_header_g.rb_id, pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id);
 #endif
 
                if (ctxt_cpy.enb_flag) {
@@ -898,7 +917,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                               RLC_SDU_CONFIRM_NO,
                               pdcp_read_header_g.data_size,
                               (unsigned char *)NLMSG_DATA(nas_nlh_rx),
-                              PDCP_TRANSMISSION_MODE_DATA);
+                              PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                              ,NULL, NULL
+#endif
+                              );
                      } else {
                         LOG_D(PDCP, "[FRAME %5u][eNB][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes ---X][PDCP][MOD %u][UE %u][RB %u] NON INSTANCIATED INSTANCE, DROPPED\n",
                               ctxt.frame,
@@ -931,7 +954,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                  RLC_SDU_CONFIRM_NO,
                                  pdcp_read_header_g.data_size,
                                  (unsigned char *)NLMSG_DATA(nas_nlh_rx),
-                                 PDCP_TRANSMISSION_MODE_DATA);
+                                 PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                                ,NULL, NULL
+#endif
+                                );
                         }
                      }
                   }
@@ -993,7 +1020,12 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                               RLC_SDU_CONFIRM_NO,
                               pdcp_read_header_g.data_size,
                               (unsigned char *)NLMSG_DATA(nas_nlh_rx),
-                              PDCP_TRANSMISSION_MODE_DATA);
+                              PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                              ,&pdcp_read_header_g.sourceL2Id
+                              ,&pdcp_read_header_g.destinationL2Id
+#endif
+                              );
                      } else {
                         MSC_LOG_RX_DISCARDED_MESSAGE(
                               (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_PDCP_ENB:MSC_PDCP_UE,
@@ -1046,7 +1078,12 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                            RLC_SDU_CONFIRM_NO,
                            pdcp_read_header_g.data_size,
                            (unsigned char *)NLMSG_DATA(nas_nlh_rx),
-                           PDCP_TRANSMISSION_MODE_DATA);
+                           PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                           ,&pdcp_read_header_g.sourceL2Id
+                           ,&pdcp_read_header_g.destinationL2Id
+#endif
+                           );
                   }
                }
 
@@ -1135,7 +1172,11 @@ void pdcp_fifo_read_input_sdus_from_otg (const protocol_ctxt_t* const  ctxt_pP) 
                      RLC_SDU_CONFIRM_NO,
                      pkt_size,
                      otg_pkt,
-                     pdcp_mode);
+                     pdcp_mode
+#ifdef Rel14
+                     , NULL, NULL
+#endif
+                     );
                if (result != TRUE) {
                   LOG_W(OTG,"PDCP data request failed!\n");
                }
@@ -1169,7 +1210,11 @@ void pdcp_fifo_read_input_sdus_from_otg (const protocol_ctxt_t* const  ctxt_pP) 
                      RLC_SDU_CONFIRM_NO,
                      pkt_size,
                      otg_pkt,
-                     PDCP_TRANSMISSION_MODE_DATA);
+                     PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                     , NULL, NULL
+#endif
+                     );
                if (result != TRUE) {
                   LOG_W(OTG,"PDCP data request failed!\n");
                }
@@ -1224,7 +1269,11 @@ void pdcp_fifo_read_input_sdus_from_otg (const protocol_ctxt_t* const  ctxt_pP) 
                         RLC_SDU_CONFIRM_NO,
                         pkt_size,
                         otg_pkt,
-                        PDCP_TRANSMISSION_MODE_DATA);
+                        PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                        , NULL, NULL
+#endif
+                        );
                   LOG_I(OTG,
                         "send packet from module %d on rab id %d (src %d, dst %d) pkt size %d\n",
                         ctxt_pP->module_id, rb_id, ctxt_pP->module_id, dst_id, pkt_size);

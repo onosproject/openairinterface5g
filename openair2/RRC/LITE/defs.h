@@ -48,18 +48,17 @@
 #include "LAYER2/MAC/defs.h"
 
 //for D2D
-#define CONTROL_SOCKET_PORT_NO 8888
 #define DEBUG_CTRL_SOCKET
-#define BUFSIZE 1024
+#define BUFSIZE                1024
 #define CONTROL_SOCKET_PORT_NO 8888
-
+#define MAX_NUM_DEST           10
 //netlink
 //#define DEBUG_PDCP
-#define UE_IP_PDCP_NETLINK_ID 31
-#define PDCP_PID 1
-#define NETLINK_HEADER_SIZE 16
-#define SL_DEFAULT_RAB_ID     3
-#define SLRB_ID              3
+#define UE_IP_PDCP_NETLINK_ID  31
+#define PDCP_PID               1
+#define NETLINK_HEADER_SIZE    16
+#define SL_DEFAULT_RAB_ID      3
+#define SLRB_ID                3
 
 #define MAX_PAYLOAD 1024 /* maximum payload size*/
 
@@ -740,8 +739,10 @@ typedef struct UE_RRC_INST_s {
   uint32_t sourceL2Id;
   //group L2 Id
   uint32_t groupL2Id;
-  //destination L2 Id
+  //current destination
   uint32_t destinationL2Id;
+  //List of destinations
+   uint32_t destinationList[MAX_NUM_DEST];
   //sl_discovery..
   SRB_INFO SL_Discovery[NB_CNX_UE];
 #endif

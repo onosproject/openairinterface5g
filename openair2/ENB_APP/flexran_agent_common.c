@@ -563,7 +563,11 @@ int flexran_get_tx_queue_size(mid_t mod_id, mid_t ue_id, logical_chan_id_t chann
   rnti_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
   uint16_t frame = (uint16_t) flexran_get_current_frame(mod_id);
   uint16_t subframe = (uint16_t) flexran_get_current_subframe(mod_id);
-  mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(mod_id,rnti, mod_id,frame,subframe,ENB_FLAG_YES,MBMS_FLAG_NO, channel_id, 0);
+  mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(mod_id,rnti, mod_id,frame,subframe,ENB_FLAG_YES,MBMS_FLAG_NO, channel_id, 0
+#ifdef Rel14
+                                                        ,0, 0
+#endif
+                                                        );
   return rlc_status.bytes_in_buffer;
 }
 
@@ -571,7 +575,11 @@ int flexran_get_hol_delay(mid_t mod_id, mid_t ue_id, logical_chan_id_t channel_i
   rnti_t rnti = flexran_get_ue_crnti(mod_id,ue_id);
   uint16_t frame = (uint16_t) flexran_get_current_frame(mod_id);
   uint16_t subframe = (uint16_t) flexran_get_current_subframe(mod_id);
-  mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(mod_id, rnti, mod_id, frame, subframe, ENB_FLAG_YES, MBMS_FLAG_NO, channel_id, 0);
+  mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(mod_id, rnti, mod_id, frame, subframe, ENB_FLAG_YES, MBMS_FLAG_NO, channel_id, 0
+#ifdef Rel14
+                                                        ,0, 0
+#endif
+                                                        );
   return rlc_status.head_sdu_creation_time;
 }
 

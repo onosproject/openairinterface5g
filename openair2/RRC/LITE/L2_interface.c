@@ -638,7 +638,11 @@ rrc_data_req(
            confirmP,
            sdu_sizeP,
            buffer_pP,
-           modeP);
+           modeP
+#ifdef Rel14
+           ,NULL, NULL
+#endif
+           );
 #endif
 }
 

@@ -849,7 +849,11 @@ schedule_ue_spec(
                          ENB_FLAG_YES,
                          MBMS_FLAG_NO,
                          DCCH,
-                         (TBS-ta_len-header_len_dcch)); // transport block set size
+                         (TBS-ta_len-header_len_dcch) // transport block set size
+#ifdef Rel14
+                          ,0, 0
+#endif
+                          );
 
           sdu_lengths[0]=0;
 
@@ -865,7 +869,12 @@ schedule_ue_spec(
 					      MBMS_FLAG_NO,
 					      DCCH,
 					      TBS, //not used
-					      (char *)&dlsch_buffer[0]);
+					      (char *)&dlsch_buffer[0]
+#ifdef Rel14
+                     ,0,
+                      0
+#endif
+                     );
 
             T(T_ENB_MAC_UE_DL_SDU, T_INT(module_idP), T_INT(CC_id), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
               T_INT(harq_pid), T_INT(DCCH), T_INT(sdu_lengths[0]));
@@ -902,7 +911,11 @@ schedule_ue_spec(
                          ENB_FLAG_YES,
                          MBMS_FLAG_NO,
                          DCCH+1,
-                         (TBS-ta_len-header_len_dcch-sdu_length_total)); // transport block set size less allocations for timing advance and
+                         (TBS-ta_len-header_len_dcch-sdu_length_total) // transport block set size less allocations for timing advance and
+#ifdef Rel14
+                          ,0, 0
+#endif
+                          );
           // DCCH SDU
 	  sdu_lengths[num_sdus] = 0;
 
@@ -918,7 +931,12 @@ schedule_ue_spec(
                                        MBMS_FLAG_NO,
                                        DCCH+1,
 									   TBS, //not used
-                                       (char *)&dlsch_buffer[sdu_length_total]);
+                                       (char *)&dlsch_buffer[sdu_length_total]
+#ifdef Rel14
+                                       ,0,
+                                        0
+#endif
+                      );
 
             T(T_ENB_MAC_UE_DL_SDU, T_INT(module_idP), T_INT(CC_id), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
               T_INT(harq_pid), T_INT(DCCH+1), T_INT(sdu_lengths[num_sdus]));
@@ -964,7 +982,11 @@ schedule_ue_spec(
 					    ENB_FLAG_YES,
 					    MBMS_FLAG_NO,
 					    lcid,
-					    TBS-ta_len-header_len_dcch-sdu_length_total-header_len_dtch);
+					    TBS-ta_len-header_len_dcch-sdu_length_total-header_len_dtch
+#ifdef Rel14
+                   ,0, 0
+#endif
+                   );
 	   
 
 	    if (rlc_status.bytes_in_buffer > 0) {
@@ -979,7 +1001,12 @@ schedule_ue_spec(
 						       MBMS_FLAG_NO,
 						       lcid,
 							   TBS,	//not used
-						       (char*)&dlsch_buffer[sdu_length_total]);
+						       (char*)&dlsch_buffer[sdu_length_total]
+#ifdef Rel14
+                         ,0,
+                         0
+#endif
+                         );
 	      T(T_ENB_MAC_UE_DL_SDU, T_INT(module_idP), T_INT(CC_id), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
               T_INT(harq_pid), T_INT(lcid), T_INT(sdu_lengths[num_sdus]));
 

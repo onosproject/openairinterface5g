@@ -319,7 +319,12 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
                                   const mui_t        muiP,
                                   confirm_t    confirmP,
                                   sdu_size_t   sdu_sizeP,
-                                  mem_block_t *sdu_pP)
+                                  mem_block_t *sdu_pP
+#ifdef Rel14
+                                  ,const uint32_t * const sourceL2Id
+                                  ,const uint32_t * const destinationL2Id
+#endif
+                                  )
 {
   //-----------------------------------------------------------------------------
   mem_block_t           *new_sdu_p    = NULL;
@@ -384,6 +389,10 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
     }
 
     key = RLC_COLL_KEY_MBMS_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, mbms_id_p->service_id, mbms_id_p->session_id);
+  }
+  if (sourceL2Id && destinationL2Id){
+     key = RLC_COLL_KEY_SOURCE_DEST_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, *sourceL2Id, *destinationL2Id, srb_flagP);
+     //key_lcid = RLC_COLL_KEY_LCID_SOURCE_DEST_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, chan_idP, *sourceL2Id, *destinationL2Id, srb_flagP);
   } else
 #endif
   {

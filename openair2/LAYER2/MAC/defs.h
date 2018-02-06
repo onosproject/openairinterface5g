@@ -445,6 +445,7 @@ typedef struct {
 #define CC_ACT_DEACT 27
 //TTN (for D2D)
 #define SL_DISCOVERY 8 //LCID (fake)
+#define MAX_NUM_DEST 10
 #endif
 
 // ULSCH LCHAN IDs
@@ -1341,6 +1342,9 @@ typedef struct {
   uint32_t groupL2Id;
   //SL destinationL2Id
   uint32_t destinationL2Id;
+  //List of destinations
+  uint32_t destinationList[MAX_NUM_DEST];
+  uint8_t numCommFlows;
 
 #endif
   /// pointer to TDD Configuration (NULL for FDD)

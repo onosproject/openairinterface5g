@@ -931,10 +931,9 @@ int rrc_mac_config_req_ue(module_id_t     module_idP,
 			  uint16_t cba_rnti
 #endif
 #if defined(Rel14)
-           ,
-           uint32_t *sourceL2Id,
-           uint32_t *groupL2Id,
-           uint32_t *destinationL2Id
+           ,config_action_t config_action
+           ,const uint32_t * const sourceL2Id
+           ,const uint32_t * const destinationL2Id
 #endif
 			  );
 

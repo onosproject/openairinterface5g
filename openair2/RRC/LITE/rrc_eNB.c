@@ -535,7 +535,12 @@ static void init_MBMS(
                             NULL, // SRB_ToAddModList
                             NULL,   // DRB_ToAddModList
                             NULL,   // DRB_ToReleaseList
-                            &(RC.rrc[enb_mod_idP]->carrier[CC_id].mcch_message->pmch_InfoList_r9));
+                            &(RC.rrc[enb_mod_idP]->carrier[CC_id].mcch_message->pmch_InfoList_r9)
+
+#ifdef Rel14
+                            ,0, 0
+#endif
+                            );
 
     //rrc_mac_config_req();
   }
@@ -2529,7 +2534,11 @@ check_handovers(
                                SDU_CONFIRM_NO,
                                ue_context_p->ue_context.handover_info->size,
                                ue_context_p->ue_context.handover_info->buf,
-                               PDCP_TRANSMISSION_MODE_CONTROL);
+                               PDCP_TRANSMISSION_MODE_CONTROL
+#ifdef Rel14
+                               ,NULL, NULL
+#endif
+                               );
         AssertFatal(result == TRUE, "PDCP data request failed!\n");
         ue_context_p->ue_context.handover_info->ho_complete = 0xF2;
       }
@@ -3352,6 +3361,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
                           (DRB_ToAddModList_t *) NULL, (DRB_ToReleaseList_t *) NULL
 #if defined(Rel10) || defined(Rel14)
                           , (PMCH_InfoList_r9_t *) NULL
+                          , 0, 0
 #endif
                          );
 
@@ -3573,6 +3583,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
     (DRB_ToReleaseList_t *) NULL
 #if defined(Rel10) || defined(Rel14)
     , (PMCH_InfoList_r9_t *) NULL
+    , 0, 0
 #endif
   );
   
@@ -4410,6 +4421,7 @@ rrc_eNB_decode_ccch(
                               (DRB_ToReleaseList_t*) NULL
 #   if defined(Rel10) || defined(Rel14)
                               , (PMCH_InfoList_r9_t *) NULL
+                              , 0, 0
 #   endif
                              );
 #endif //NO_RRM

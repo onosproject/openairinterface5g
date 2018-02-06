@@ -160,7 +160,11 @@ void _store_dlsch_buffer (module_id_t Mod_id,
 
     for(i=0; i< MAX_NUM_LCID; i++) { // loop over all the logical channels
 
-      rlc_status = mac_rlc_status_ind(Mod_id,rnti, Mod_id,frameP,subframeP,ENB_FLAG_YES,MBMS_FLAG_NO,i,0 );
+      rlc_status = mac_rlc_status_ind(Mod_id,rnti, Mod_id,frameP,subframeP,ENB_FLAG_YES,MBMS_FLAG_NO,i,0
+#ifdef Rel14
+                                     ,0, 0
+#endif
+                                     );
       UE_template->dl_buffer_info[i] = rlc_status.bytes_in_buffer; //storing the dlsch buffer for each logical channel
       UE_template->dl_pdus_in_buffer[i] = rlc_status.pdus_in_buffer;
       UE_template->dl_buffer_head_sdu_creation_time[i] = rlc_status.head_sdu_creation_time ;
@@ -1245,7 +1249,11 @@ flexran_schedule_ue_spec_common(mid_t   mod_id,
 					     ENB_FLAG_YES,
 					     MBMS_FLAG_NO,
 					     j,
-					     (dci_tbs - ta_len - header_len - sdu_length_total)); // transport block set size
+					     (dci_tbs - ta_len - header_len - sdu_length_total) // transport block set size
+#ifdef Rel14
+                   ,0, 0
+#endif
+                   );
 
 	     //If data are available in channel j
 	     if (rlc_status.bytes_in_buffer > 0) {

@@ -220,7 +220,12 @@ public_pdcp(boolean_t pdcp_data_req(
               const confirm_t confirmP, \
               const sdu_size_t sdu_buffer_size,
               unsigned char* const sdu_buffer,
-              const pdcp_transmission_mode_t mode));
+              const pdcp_transmission_mode_t mode
+#ifdef Rel14
+              ,const uint32_t * const sourceL2Id
+              ,const uint32_t * const destinationL2Id
+#endif
+              ));
 
 /*! \fn boolean_t pdcp_data_ind(const protocol_ctxt_t* const, srb_flag_t, MBMS_flag_t, rb_id_t, sdu_size_t, mem_block_t*, boolean_t)
 * \brief This functions handles data transfer indications coming from RLC
