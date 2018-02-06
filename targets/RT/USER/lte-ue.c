@@ -47,6 +47,7 @@
 #include "SCHED/extern.h"
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/proto.h"
+#include <inttypes.h>
 //#include "openair2/PHY_INTERFACE/phy_stub_UE.h"
 
 
@@ -828,7 +829,9 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
 
 static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 
-  module_id_t Mod_id = 0;
+	thread_top_init("UE_phy_stub_thread_rxn_txnp4",1,870000L,1000000L,1000000L);
+
+	module_id_t Mod_id = 0;
   static __thread int UE_thread_rxtx_retval;
   struct rx_tx_thread_data *rtd = arg;
   UE_rxtx_proc_t *proc = rtd->proc;
@@ -847,6 +850,9 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 
   phy_stub_ticking->ticking_var = -1;
   proc->subframe_rx=proc->sub_frame_start;
+
+  //PANOS: CAREFUL HERE!
+  wait_sync("UE_phy_stub_thread_rxn_txnp4");
 
   while (!oai_exit) {
 
@@ -1053,7 +1059,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
       updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");*/
 
     //if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
-    if (pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) != 0) {
+    /*if (pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) != 0) {
       LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
       exit_fun("noting to add");
     }
@@ -1064,7 +1070,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
     if (pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) != 0) {
       LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
       exit_fun("noting to add");
-    }
+    }*/
   }
   // thread finished
   free(arg);
@@ -1522,8 +1528,170 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
 
 
 
+/*static void* timer_thread( void* param ) {
+  thread_top_init("timer_thread",1,870000L,1000000L,1000000L);
+  timer_subframe =9;
+  timer_frame    =1023;
+  //phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
+  phy_stub_ticking->ticking_var = -1;
+  PHY_VARS_UE *UE;
+  UE = PHY_vars_UE_g[0][0];
+  double t_diff;
+  int external_timer = 0;
 
 
+  //struct timespec pselect_start;
+
+
+  //struct timespec sf_duration;
+  //sf_duration.tv_sec = 0;
+  //sf_duration.tv_nsec = 1e6;
+
+
+  wait_sync("timer_thread");
+
+  //pthread_mutex_init(&phy_stub_ticking->mutex_ticking,NULL);
+  //pthread_cond_init(&phy_stub_ticking->cond_ticking,NULL);
+
+  //  struct timespec start = {0};
+  //  struct timespec end = {0};
+  //sleepValue.tv_nsec = 1000000;
+  opp_enabled = 1;
+
+  // first check if we are receiving timing indications
+  if(nfapi_mode==4) {
+  usleep(10000);
+  if (UE->instance_cnt_timer > 0) {
+    external_timer = 1;
+    int absSFm1 = ((emulator_absSF+10239)%10240);
+    timer_frame = absSFm1/10;
+    timer_subframe = absSFm1%10;
+    pthread_mutex_lock(&UE->timer_mutex);
+    UE->instance_cnt_timer = -1;
+    pthread_mutex_unlock(&UE->timer_mutex);
+    LOG_I(PHY,"Running with external timer\n");
+  }
+  else LOG_I(PHY,"Running with internal timer\n");
+  }
+
+  struct timespec t_start;
+  struct timespec t_now;
+  struct timespec t_sleep;
+  uint64_t T_0;
+  uint64_t T_now;
+  uint64_t T_next_SF;
+  uint64_t T_sleep;
+  uint64_t sf_cnt = 0; //Total Subframe counter
+
+  clock_gettime(CLOCK_MONOTONIC, &t_start);
+  T_0 = (uint64_t) t_start.tv_sec*1000000000 + t_start.tv_nsec;
+  LOG_I(MAC, "Panos-D: timer_thread(), T_0 value: %" PRId64 "\n", T_0);
+  //printf("%" PRId64 "\n", t);
+
+  while (!oai_exit) {
+
+    // these are local subframe/frame counters to check that we are in synch with the fronthaul timing.
+    // They are set on the first rx/tx in the underly FH routines.
+    if (timer_subframe==9) {
+      timer_subframe=0;
+      timer_frame++;
+      timer_frame&=1023;
+    } else {
+      timer_subframe++;
+    }
+    //printf("[timer_thread] Frame: %d, Subframe: %d \n", timer_frame, timer_subframe);
+    //LOG_I(MAC," Panos-D [timer_thread] Frame: %d, Subframe: %d \n", timer_frame, timer_subframe);
+    //AssertFatal( 0 == pthread_cond_signal(&phy_stub_ticking->cond_ticking), "");
+    AssertFatal(pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) ==0,"");
+    phy_stub_ticking->ticking_var++;
+    // This should probably be a call to pthread_cond_broadcast when we introduce support for multiple UEs (threads)
+    if(phy_stub_ticking->ticking_var == 0){
+      //AssertFatal(phy_stub_ticking->ticking_var == 0,"phy_stub_ticking->ticking_var = %d",
+      		//phy_stub_ticking->ticking_var);
+      if (pthread_cond_signal(&phy_stub_ticking->cond_ticking) != 0) {
+	//LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
+	LOG_E( PHY, "timer_thread ERROR pthread_cond_signal for UE_thread\n");
+	exit_fun("nothing to add");
+      }
+    }
+    else
+    	LOG_I(MAC, "Panos-D: timer_thread() Timing problem! \n");
+
+    AssertFatal(pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) ==0,"");
+    start_meas(&UE->timer_stats);
+
+
+    //clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start); // get initial time-stamp
+    if (external_timer == 0) {
+    	sf_cnt++;
+    	T_next_SF = T_0 + sf_cnt*1000000;
+    	do{
+    	clock_gettime(CLOCK_MONOTONIC, &t_now);
+    	T_now =(uint64_t) t_now.tv_sec*1000000000 + t_now.tv_nsec;
+    	}while(T_now < T_next_SF);
+      //usleep(1000);
+      UE_tport_t pdu;
+      pdu.header.packet_type = TTI_SYNC;
+      pdu.header.absSF = (timer_frame*10)+timer_subframe;
+      multicast_link_write_sock(0,
+	  			&pdu,
+				sizeof(UE_tport_header_t));
+
+    }
+    else {
+      wait_on_condition(&UE->timer_mutex,&UE->timer_cond,&UE->instance_cnt_timer,"timer_thread");
+      release_thread(&UE->timer_mutex,&UE->instance_cnt_timer,"timer_thread");
+    }
+    //clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);   // get final time-stamp
+
+    //double t_ns = (double)(end.tv_sec - start.tv_sec) * 1.0e9 +
+    //              (double)(end.tv_nsec - start.tv_nsec);
+    //printf("Panos-D: [timer_thread] REAL TIME difference: %f", t_ns);
+
+
+    stop_meas(&UE->timer_stats);
+    t_diff = get_time_meas_us(&UE->timer_stats);
+
+    //printf("Panos-D: Absolute time: %lld, diff: %lld, diff_now: %lld \n",UE->timer_stats.p_time, UE->timer_stats.diff, UE->timer_stats.diff_now);
+    //LOG_I(MAC,"[UE%d] Applying default macMainConfig\n",module_idP);
+    //if (t_diff > 1100)
+
+
+    //    LOG_E(MAC," Panos-D Absolute time: %f\n", t_diff);
+	    //LOG_E(MAC," Panos-D Absolute time: %f\n", t_diff);
+
+    //printf("Panos-D: Absolute time: %f", t_diff);
+
+
+    stop_meas(&UE->timer_stats);
+    t_diff = get_time_meas_us(&UE->timer_stats);
+    //printf("Panos-D: Absolute time: %lld, diff: %lld, diff_now: %lld \n",UE->timer_stats.p_time, UE->timer_stats.diff, UE->timer_stats.diff_now);
+    //LOG_I(MAC,"[UE%d] Applying default macMainConfig\n",module_idP);
+    //if (t_diff > 1100) LOG_E(MAC," Panos-D Absolute time: %f\n", t_diff);
+    //printf("Panos-D: Absolute time: %f", t_diff);
+
+    //UE->proc.ticking_var++;
+    // pthread_cond_signal() //Send signal to ue_thread()?
+    // We also need to somehow pass the information of SFN/SF
+  }
+  free(phy_stub_ticking);
+  pthread_cond_destroy(&phy_stub_ticking->cond_ticking);
+  pthread_mutex_destroy(&phy_stub_ticking->mutex_ticking);
+  return 0;
+
+}*/
+
+
+
+
+
+
+
+
+
+
+
+//02/02/2018
 static void* timer_thread( void* param ) {
   thread_top_init("timer_thread",1,870000L,1000000L,1000000L);
   timer_subframe =9;
@@ -1581,6 +1749,8 @@ static void* timer_thread( void* param ) {
 
   clock_gettime(CLOCK_MONOTONIC, &t_start);
   T_0 = (uint64_t) t_start.tv_sec*1000000000 + t_start.tv_nsec;
+  LOG_I(MAC, "Panos-D: timer_thread(), T_0 value: %" PRId64 "\n", T_0);
+  //printf("%" PRId64 "\n", t);
 
   while (!oai_exit) {
 
@@ -1601,13 +1771,15 @@ static void* timer_thread( void* param ) {
     // This should probably be a call to pthread_cond_broadcast when we introduce support for multiple UEs (threads)
     if(phy_stub_ticking->ticking_var == 0){
       //AssertFatal(phy_stub_ticking->ticking_var == 0,"phy_stub_ticking->ticking_var = %d",
-      //		phy_stub_ticking->ticking_var);
+      		//phy_stub_ticking->ticking_var);
       if (pthread_cond_signal(&phy_stub_ticking->cond_ticking) != 0) {
 	//LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
 	LOG_E( PHY, "timer_thread ERROR pthread_cond_signal for UE_thread\n");
 	exit_fun("nothing to add");
       }
     }
+    else
+    	LOG_I(MAC, "Panos-D: timer_thread() Timing problem! ticking_var value:%d \n \n \n", phy_stub_ticking->ticking_var);
 
     AssertFatal(pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) ==0,"");
     start_meas(&UE->timer_stats);
@@ -1626,17 +1798,20 @@ static void* timer_thread( void* param ) {
     	}
     	else{
     		T_sleep = T_next_SF - T_now;
+    		//LOG_I(MAC, "Panos-D: timer_thread(), T_sleep value: %" PRId64 "\n", T_sleep);
     		t_sleep.tv_sec =0;
     		t_sleep.tv_nsec = (__syscall_slong_t) T_sleep;
     	}
       nanosleep(&t_sleep, (struct timespec *)NULL);
-      //usleep(1000);
+      //usleep(T_sleep/1000000);
       UE_tport_t pdu;
       pdu.header.packet_type = TTI_SYNC;
       pdu.header.absSF = (timer_frame*10)+timer_subframe;
+      if (nfapi_mode!=3){
       multicast_link_write_sock(0,
 				&pdu,
 				sizeof(UE_tport_header_t));
+      }
 
     }
     else {

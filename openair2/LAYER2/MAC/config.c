@@ -1201,7 +1201,8 @@ rrc_mac_config_req_ue(
 
 
   if (physicalConfigDedicated != NULL) {
-    phy_config_dedicated_ue(Mod_idP,0,eNB_index,physicalConfigDedicated);
+	  if(nfapi_mode!=3)
+		  phy_config_dedicated_ue(Mod_idP,0,eNB_index,physicalConfigDedicated);
     UE_mac_inst[Mod_idP].physicalConfigDedicated=physicalConfigDedicated; // for SR proc
   }
 
