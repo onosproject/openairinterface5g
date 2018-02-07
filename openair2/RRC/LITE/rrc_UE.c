@@ -5832,6 +5832,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          // configure lower layers PDCP/MAC/PHY for this communication
          //Establish a new RBID/LCID for this communication
          // Establish a SLRB (using DRB 10 for now)
+         UE  = &UE_rrc_inst[module_id];
          PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
 
          UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
@@ -5917,7 +5918,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                   (DRB_ToReleaseList_t*)NULL
 #ifdef Rel14
                   ,(PMCH_InfoList_r9_t *)NULL
-                  , sourceL2Id, groupL2Id
+                  , sourceL2Id, destinationL2Id
 #endif
             );
 
@@ -5956,11 +5957,11 @@ void *rrc_control_socket_thread_fct(void *arg)
 #if defined(Rel10) || defined(Rel14)
                   ,CONFIG_ACTION_ADD,
                   &sourceL2Id,
-                  &groupL2Id
+                  &destinationL2Id
 #endif
             );
          } else {//RX
-            rrc_rlc_config_asn1_req(&ctxt,
+/*            rrc_rlc_config_asn1_req(&ctxt,
                   (SRB_ToAddModList_t*)NULL,
                   UE->DRB_configList,
                   (DRB_ToReleaseList_t*)NULL
@@ -5969,7 +5970,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                   , sourceL2Id, 0
 #endif
             );
-
+*/
 
             //configure MAC with sourceL2Id/groupL2ID
             rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0

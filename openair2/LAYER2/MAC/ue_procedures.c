@@ -769,12 +769,6 @@ void ue_send_sl_sdu(module_id_t module_idP,
   //filter incoming packet based on destination address
   destinationL2Id = (longh->DST07<<16) | (longh->DST815 <<8) | (longh->DST1623);
   LOG_I( MAC, "[DestinationL2Id:  0x%08x]  \n", destinationL2Id );
-  //match the destinationL2Id with UE L2Id or groupL2ID
-/*  if (!((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) | (destinationL2Id == UE_mac_inst[module_idP].groupL2Id))){
-     LOG_I( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
-     return;
-  }
-*/
   //in case of 1-n communication, verify that UE belongs to that group
   int i=0;
   for (i=0; i< MAX_NUM_DEST; i++)
