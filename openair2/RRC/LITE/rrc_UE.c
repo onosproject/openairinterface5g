@@ -5459,6 +5459,15 @@ void *rrc_control_socket_thread_fct(void *arg)
    uint32_t sourceL2Id, groupL2Id, destinationL2Id;
    module_id_t         module_id = 0; //hardcoded for testing only
    uint8_t type;
+   UE_RRC_INST *UE  = NULL;
+   protocol_ctxt_t ctxt;
+   struct RLC_Config                  *DRB_rlc_config                   = NULL;
+   struct PDCP_Config                 *DRB_pdcp_config                  = NULL;
+   struct PDCP_Config__rlc_UM         *PDCP_rlc_UM                      = NULL;
+   struct LogicalChannelConfig        *DRB_lchan_config                 = NULL;
+   struct LogicalChannelConfig__ul_SpecificParameters  *DRB_ul_SpecificParameters = NULL;
+   long                               *logicalchannelgroup_drb          = NULL;
+
 
    //from the main program, listen for the incoming messages from control socket (ProSe App)
    prose_addr_len = sizeof(prose_app_addr);
@@ -5546,9 +5555,8 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          // configure lower layers PDCP/MAC/PHY for this communication
          //Establish a new RBID/LCID for this communication
-         UE_RRC_INST *UE  = &UE_rrc_inst[module_id];
          // Establish a SLRB (using DRB 3 for now)
-         protocol_ctxt_t ctxt;
+         UE  = &UE_rrc_inst[module_id];
          PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
 
          UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
@@ -5559,17 +5567,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          *(UE->DRB_config[0][0]->eps_BearerIdentity) = 3;
          UE->DRB_config[0][0]->logicalChannelIdentity = CALLOC(1, sizeof(long));
          *(UE->DRB_config[0][0]->logicalChannelIdentity) = UE->DRB_config[0][0]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
-
-         // TTN - Establish a new SLRB for PC5-S (using DRB 10 for now)
-         UE->DRB_config[0][1] = CALLOC(1,sizeof(struct DRB_ToAddMod));
-         UE->DRB_config[0][1]->eps_BearerIdentity = CALLOC(1, sizeof(long));
-         UE->DRB_config[0][1]->drb_Identity =  10;
-         UE->DRB_config[0][1]->eps_BearerIdentity = CALLOC(1, sizeof(long));
-         // allowed value 5..15, value : x+4
-         *(UE->DRB_config[0][1]->eps_BearerIdentity) = 10;
-         UE->DRB_config[0][1]->logicalChannelIdentity = CALLOC(1, sizeof(long));
-         *(UE->DRB_config[0][1]->logicalChannelIdentity) = UE->DRB_config[0][1]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
-
+/*
          struct RLC_Config                  *DRB_rlc_config                   = CALLOC(1,sizeof(struct RLC_Config));
          struct PDCP_Config                 *DRB_pdcp_config                  = CALLOC(1,sizeof(struct PDCP_Config));
          struct PDCP_Config__rlc_UM         *PDCP_rlc_UM                      = CALLOC(1,sizeof(struct PDCP_Config__rlc_UM));
@@ -5577,17 +5575,22 @@ void *rrc_control_socket_thread_fct(void *arg)
          struct LogicalChannelConfig__ul_SpecificParameters
          *DRB_ul_SpecificParameters                                         = CALLOC(1, sizeof(struct LogicalChannelConfig__ul_SpecificParameters));
          long                               *logicalchannelgroup_drb          = CALLOC(1, sizeof(long));
+*/
+         DRB_rlc_config                   = CALLOC(1,sizeof(struct RLC_Config));
+         DRB_pdcp_config                  = CALLOC(1,sizeof(struct PDCP_Config));
+         PDCP_rlc_UM                      = CALLOC(1,sizeof(struct PDCP_Config__rlc_UM));
+         DRB_lchan_config                 = CALLOC(1,sizeof(struct LogicalChannelConfig));
+         DRB_ul_SpecificParameters                                         = CALLOC(1, sizeof(struct LogicalChannelConfig__ul_SpecificParameters));
+         logicalchannelgroup_drb          = CALLOC(1, sizeof(long));
 
          DRB_rlc_config->present = RLC_Config_PR_um_Bi_Directional;
          DRB_rlc_config->choice.um_Bi_Directional.ul_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
          DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
          DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.t_Reordering = T_Reordering_ms35;
          UE->DRB_config[0][0]->rlc_Config = DRB_rlc_config;
-         UE->DRB_config[0][1]->rlc_Config = DRB_rlc_config;
 
          DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
          UE->DRB_config[0][0]->pdcp_Config = DRB_pdcp_config;
-         UE->DRB_config[0][1]->pdcp_Config = DRB_pdcp_config;
          DRB_pdcp_config->discardTimer = CALLOC(1, sizeof(long));
          *DRB_pdcp_config->discardTimer = PDCP_Config__discardTimer_infinity;
          DRB_pdcp_config->rlc_AM = NULL;
@@ -5601,7 +5604,6 @@ void *rrc_control_socket_thread_fct(void *arg)
          DRB_pdcp_config->headerCompression.present = PDCP_Config__headerCompression_PR_notUsed;
 
          UE->DRB_config[0][0]->logicalChannelConfig = DRB_lchan_config;
-         UE->DRB_config[0][1]->logicalChannelConfig = DRB_lchan_config;
          DRB_ul_SpecificParameters = CALLOC(1, sizeof(*DRB_ul_SpecificParameters));
          DRB_lchan_config->ul_SpecificParameters = DRB_ul_SpecificParameters;
 
@@ -5618,7 +5620,6 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          UE->DRB_configList = CALLOC(1,sizeof(DRB_ToAddModList_t));
          ASN_SEQUENCE_ADD(&UE->DRB_configList->list,UE->DRB_config[0][0]);
-         ASN_SEQUENCE_ADD(&UE->DRB_configList->list,UE->DRB_config[0][1]);
 
          rrc_pdcp_config_asn1_req(&ctxt,
                (SRB_ToAddModList_t *) NULL,
@@ -5662,7 +5663,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
                (MeasObjectToAddMod_t **)NULL,
                (MAC_MainConfig_t *)NULL,
-               0,
+               3, //LCID
                (struct LogicalChannelConfig *)NULL,
                (MeasGapConfig_t *)NULL,
                (TDD_Config_t *)NULL,
@@ -5802,10 +5803,10 @@ void *rrc_control_socket_thread_fct(void *arg)
       case PC5S_ESTABLISH_REQ:
          type =  sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.type;
          sourceL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.sourceL2Id;
- #ifdef DEBUG_CTRL_SOCKET
-                  LOG_I(RRC,"[PC5EstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
-                  LOG_I(RRC,"[PC5EstablishReq] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.type); //RX/TX
-                  LOG_I(RRC,"[PC5EstablishReq] source Id: 0x%08x \n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.sourceL2Id);
+#ifdef DEBUG_CTRL_SOCKET
+         LOG_I(RRC,"[PC5EstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
+         LOG_I(RRC,"[PC5EstablishReq] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.type); //RX/TX
+         LOG_I(RRC,"[PC5EstablishReq] source Id: 0x%08x \n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.sourceL2Id);
 #endif
          if (type > 0) {
             destinationL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.destinationL2Id;
@@ -5814,6 +5815,205 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
          }
 
+         //store sourceL2Id/destinationL2Id
+         if (type > 0) { //TX
+            UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
+            int j = 0;
+            int i = 0;
+            for (i=0; i< MAX_NUM_DEST; i++) {
+               if ((UE_rrc_inst[module_id].destinationList[i] == 0) && (j == 0)) j = i+1;
+               if (UE_rrc_inst[module_id].destinationList[i] == destinationL2Id) break; //group already exists!
+            }
+            if ((i == MAX_NUM_DEST) && (j > 0))  UE_mac_inst[module_id].destinationList[j-1] = destinationL2Id;
+         } else {//RX
+            UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
+         }
+
+         // configure lower layers PDCP/MAC/PHY for this communication
+         //Establish a new RBID/LCID for this communication
+         // Establish a SLRB (using DRB 10 for now)
+         PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
+
+         UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
+         UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
+         UE->DRB_config[0][0]->drb_Identity =  10;
+         UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
+         // allowed value 5..15, value : x+4
+         *(UE->DRB_config[0][0]->eps_BearerIdentity) = 10;
+         UE->DRB_config[0][0]->logicalChannelIdentity = CALLOC(1, sizeof(long));
+         *(UE->DRB_config[0][0]->logicalChannelIdentity) = UE->DRB_config[0][0]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
+
+         DRB_rlc_config                   = CALLOC(1,sizeof(struct RLC_Config));
+         DRB_pdcp_config                  = CALLOC(1,sizeof(struct PDCP_Config));
+         PDCP_rlc_UM                      = CALLOC(1,sizeof(struct PDCP_Config__rlc_UM));
+         DRB_lchan_config                 = CALLOC(1,sizeof(struct LogicalChannelConfig));
+         DRB_ul_SpecificParameters                                         = CALLOC(1, sizeof(struct LogicalChannelConfig__ul_SpecificParameters));
+         logicalchannelgroup_drb          = CALLOC(1, sizeof(long));
+
+         DRB_rlc_config->present = RLC_Config_PR_um_Bi_Directional;
+         DRB_rlc_config->choice.um_Bi_Directional.ul_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
+         DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
+         DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.t_Reordering = T_Reordering_ms35;
+         UE->DRB_config[0][0]->rlc_Config = DRB_rlc_config;
+
+         DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
+         UE->DRB_config[0][0]->pdcp_Config = DRB_pdcp_config;
+         DRB_pdcp_config->discardTimer = CALLOC(1, sizeof(long));
+         *DRB_pdcp_config->discardTimer = PDCP_Config__discardTimer_infinity;
+         DRB_pdcp_config->rlc_AM = NULL;
+         DRB_pdcp_config->rlc_UM = NULL;
+
+         /* avoid gcc warnings */
+         (void)PDCP_rlc_UM;
+
+         DRB_pdcp_config->rlc_UM = PDCP_rlc_UM;
+         PDCP_rlc_UM->pdcp_SN_Size = PDCP_Config__rlc_UM__pdcp_SN_Size_len12bits;
+         DRB_pdcp_config->headerCompression.present = PDCP_Config__headerCompression_PR_notUsed;
+
+         UE->DRB_config[0][0]->logicalChannelConfig = DRB_lchan_config;
+         DRB_ul_SpecificParameters = CALLOC(1, sizeof(*DRB_ul_SpecificParameters));
+         DRB_lchan_config->ul_SpecificParameters = DRB_ul_SpecificParameters;
+
+         DRB_ul_SpecificParameters->priority = 12;    // lower priority than srb1, srb2 and other dedicated bearer
+         DRB_ul_SpecificParameters->prioritisedBitRate =LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_kBps8 ;
+         //LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_infinity;
+         DRB_ul_SpecificParameters->bucketSizeDuration =
+               LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
+
+         // LCG for DTCH can take the value from 1 to 3 as defined in 36331: normally controlled by upper layers (like RRM)
+
+         *logicalchannelgroup_drb = 1;
+         DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
+
+         UE->DRB_configList = CALLOC(1,sizeof(DRB_ToAddModList_t));
+         ASN_SEQUENCE_ADD(&UE->DRB_configList->list,UE->DRB_config[0][0]);
+
+         rrc_pdcp_config_asn1_req(&ctxt,
+               (SRB_ToAddModList_t *) NULL,
+               UE->DRB_configList,
+               (DRB_ToReleaseList_t*) NULL,
+               0xff, NULL, NULL, NULL
+#if defined(Rel10) || defined(Rel14)
+               , (PMCH_InfoList_r9_t *) NULL
+#endif
+               ,NULL);
+
+
+         rrc_rlc_config_asn1_req(&ctxt,
+               (SRB_ToAddModList_t*)NULL,
+               UE->DRB_configList,
+               (DRB_ToReleaseList_t*)NULL
+#if defined(Rel10) || defined(Rel14)
+               ,(PMCH_InfoList_r9_t *)NULL
+               , 0, 0
+#endif
+         );
+
+         //TX
+         if (type > 0) {
+            rrc_rlc_config_asn1_req(&ctxt,
+                  (SRB_ToAddModList_t*)NULL,
+                  UE->DRB_configList,
+                  (DRB_ToReleaseList_t*)NULL
+#ifdef Rel14
+                  ,(PMCH_InfoList_r9_t *)NULL
+                  , sourceL2Id, groupL2Id
+#endif
+            );
+
+            //configure MAC with sourceL2Id/groupL2ID
+            rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
+                  (RadioResourceConfigCommonSIB_t *)NULL,
+                  (struct PhysicalConfigDedicated *)NULL,
+#if defined(Rel10) || defined(Rel14)
+                  (SCellToAddMod_r10_t *)NULL,
+                  //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
+#endif
+                  (MeasObjectToAddMod_t **)NULL,
+                  (MAC_MainConfig_t *)NULL,
+                  10, //LCID
+                  (struct LogicalChannelConfig *)NULL,
+                  (MeasGapConfig_t *)NULL,
+                  (TDD_Config_t *)NULL,
+                  (MobilityControlInfo_t *)NULL,
+                  NULL,
+                  NULL,
+                  NULL,
+                  NULL,
+                  NULL,
+                  NULL
+#if defined(Rel10) || defined(Rel14)
+                  ,0,
+                  (MBSFN_AreaInfoList_r9_t *)NULL,
+                  (PMCH_InfoList_r9_t *)NULL
+
+#endif
+#ifdef CBA
+                  ,
+                  0,
+                  0
+#endif
+#if defined(Rel10) || defined(Rel14)
+                  ,CONFIG_ACTION_ADD,
+                  &sourceL2Id,
+                  &groupL2Id
+#endif
+            );
+         } else {//RX
+            rrc_rlc_config_asn1_req(&ctxt,
+                  (SRB_ToAddModList_t*)NULL,
+                  UE->DRB_configList,
+                  (DRB_ToReleaseList_t*)NULL
+#ifdef Rel14
+                  ,(PMCH_InfoList_r9_t *)NULL
+                  , sourceL2Id, 0
+#endif
+            );
+
+
+            //configure MAC with sourceL2Id/groupL2ID
+            rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
+                  (RadioResourceConfigCommonSIB_t *)NULL,
+                  (struct PhysicalConfigDedicated *)NULL,
+#if defined(Rel10) || defined(Rel14)
+                  (SCellToAddMod_r10_t *)NULL,
+                  //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
+#endif
+                  (MeasObjectToAddMod_t **)NULL,
+                  (MAC_MainConfig_t *)NULL,
+                  0,
+                  (struct LogicalChannelConfig *)NULL,
+                  (MeasGapConfig_t *)NULL,
+                  (TDD_Config_t *)NULL,
+                  (MobilityControlInfo_t *)NULL,
+                  NULL,
+                  NULL,
+                  NULL,
+                  NULL,
+                  NULL,
+                  NULL
+#if defined(Rel10) || defined(Rel14)
+                  ,0,
+                  (MBSFN_AreaInfoList_r9_t *)NULL,
+                  (PMCH_InfoList_r9_t *)NULL
+
+#endif
+#ifdef CBA
+                  ,
+                  0,
+                  0
+#endif
+#if defined(Rel10) || defined(Rel14)
+                  ,CONFIG_ACTION_ADD,
+                  &sourceL2Id,
+                  NULL
+#endif
+            );
+
+         }
+
+
+         /*
          //store sourceL2Id, destinationL2Id
          if (type > 0) { //TX
             UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
@@ -5899,7 +6099,7 @@ void *rrc_control_socket_thread_fct(void *arg)
           #endif
                      );
          }
-
+*/
 
          LOG_I(RRC,"Send PC5EstablishRsp to ProSe App\n");
          memset(send_buf, 0, BUFSIZE);

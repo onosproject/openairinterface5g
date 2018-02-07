@@ -1391,6 +1391,16 @@ rrc_mac_config_req_ue(
         if ((i == MAX_NUM_DEST) && (j > 0))  UE_mac_inst[Mod_idP].destinationList[j-1] = *destinationL2Id;
         UE_mac_inst[Mod_idP].numCommFlows++;
      }
+     //store list of LCIDs for SL
+     if (logicalChannelIdentity >0 ){
+        int j = 0;
+        int i = 0;
+        for (i=0; i< MAX_NUM_LCID; i++) {
+           if ((UE_mac_inst[Mod_idP].SL_LCID[i] == 0) && (j == 0)) j = i+1;
+           if (UE_mac_inst[Mod_idP].SL_LCID[i] == logicalChannelIdentity) break; //LCID already exists!
+        }
+        if ((i == MAX_NUM_LCID) && (j > 0))  UE_mac_inst[Mod_idP].SL_LCID[j-1] = logicalChannelIdentity;
+     }
      break;
   case CONFIG_ACTION_REMOVE:
      //TODO

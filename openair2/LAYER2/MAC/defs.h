@@ -1345,6 +1345,7 @@ typedef struct {
   //List of destinations
   uint32_t destinationList[MAX_NUM_DEST];
   uint8_t numCommFlows;
+  uint32_t  SL_LCID[MAX_NUM_LCID];
 
 #endif
   /// pointer to TDD Configuration (NULL for FDD)
