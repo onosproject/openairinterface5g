@@ -142,12 +142,12 @@ int test_ldpc(short No_iteration,
     if (lift_size[i1] >= (double) block_length/Kb)
     {
       Zc = lift_size[i1];
-      // printf("%d\n",Zc);
+      //printf("%d\n",Zc);
       break;
     }
   }
 
-  printf("BG %d, Zc %d, Kb %d\n",BG, Zc, Kb);
+  printf("ldpc_test: BG %d, Zc %d, Kb %d\n",BG, Zc, Kb);
   no_punctured_columns=(int)((nrows-2)*Zc+block_length-block_length*(1/((float)nom_rate/(float)denom_rate)))/Zc;
   //  printf("puncture:%d\n",no_punctured_columns);
   removed_bit=(nrows-no_punctured_columns-2) * Zc+block_length-(int)(block_length/((float)nom_rate/(float)denom_rate));
@@ -160,28 +160,25 @@ int test_ldpc(short No_iteration,
     //// encoder
     start_meas(&time);
 
-    if (BG==1)
-      ldpc_encoder(test_input, channel_input,block_length,nom_rate,denom_rate);
-    else
-      ldpc_encoder_orig(test_input, channel_input,block_length,nom_rate,denom_rate,0);
+    //if (BG==1) 
+    //ldpc_encoder(test_input, channel_input,block_length,nom_rate,denom_rate);
+    //else
+    ldpc_encoder_orig(test_input, channel_input,block_length,nom_rate,denom_rate,0);
     
     stop_meas(&time);
     start_meas(&time_optim);
-    if (BG==1) {
-      ldpc_encoder_optim(test_input, channel_input_optim,block_length,nom_rate,denom_rate,&tinput,&tprep,&tparity,&toutput);
-    }
+    ldpc_encoder_optim(test_input,channel_input_optim,block_length,nom_rate,denom_rate,&tinput,&tprep,&tparity,&toutput);
     stop_meas(&time_optim);
     
-    
-    for (i = 0; i < block_length+(nrows-no_punctured_columns) * Zc - removed_bit; i++)
-      if (channel_input[i]!=channel_input_optim[i]) printf("differ in pos %d (%d,%d)\n",i,
-							   channel_input[i],
-							   channel_input_optim[i]);
+    if (ntrials==1)    
+      for (i = 0; i < block_length+(nrows-no_punctured_columns) * Zc - removed_bit; i++)
+	if (channel_input[i]!=channel_input_optim[i]) printf("differ in pos %d (%d,%d)\n",i,
+							     channel_input[i],
+							     channel_input_optim[i]);
     //print_meas_now(&time, "", stdout);
 
-    //for (i=0;i<25344;i++)
+   // for (i=0;i<6400;i++)
     //printf("channel_input[%d]=%d\n",i,channel_input[i]);
-
     //printf("%d ",channel_input[i]);
 
     if ((BG==2) && (Zc==128||Zc==256))
@@ -253,7 +250,7 @@ int test_ldpc(short No_iteration,
 int main(int argc, char *argv[])
 {
   unsigned int errors,crc_misses;
-  short block_length=22*384; // decoder supports length: 1201 -> 1280, 2401 -> 2560
+  short block_length=576; // decoder supports length: 1201 -> 1280, 2401 -> 2560
   short No_iteration=25;
   //double rate=0.333;
   int nom_rate=1;
@@ -262,7 +259,9 @@ int main(int argc, char *argv[])
   unsigned char qbits=4;
   unsigned int decoded_errors[100]; // initiate the size of matrix equivalent to size of SNR
   int c,i=0;
+
   int n_trials = 1;
+
   randominit(0);
 
   while ((c = getopt (argc, argv, "q:r:s:l:n:")) != -1)
