@@ -5536,7 +5536,6 @@ void *rrc_control_socket_thread_fct(void *arg)
 
 #ifdef DEBUG_CTRL_SOCKET
          LOG_I(RRC,"[GroupCommunicationEstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
-         LOG_I(RRC,"[GroupCommunicationEstablishReq] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.type);
          LOG_I(RRC,"[GroupCommunicationEstablishReq] source Id: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.sourceL2Id);
          LOG_I(RRC,"[GroupCommunicationEstablishReq] group Id: 0x%08x\n",sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupL2Id);
          LOG_I(RRC,"[GroupCommunicationEstablishReq] group IP Address: " IPV4_ADDR "\n",IPV4_ADDR_FORMAT(sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupIpAddress));
@@ -5567,15 +5566,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          *(UE->DRB_config[0][0]->eps_BearerIdentity) = 3;
          UE->DRB_config[0][0]->logicalChannelIdentity = CALLOC(1, sizeof(long));
          *(UE->DRB_config[0][0]->logicalChannelIdentity) = UE->DRB_config[0][0]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
-/*
-         struct RLC_Config                  *DRB_rlc_config                   = CALLOC(1,sizeof(struct RLC_Config));
-         struct PDCP_Config                 *DRB_pdcp_config                  = CALLOC(1,sizeof(struct PDCP_Config));
-         struct PDCP_Config__rlc_UM         *PDCP_rlc_UM                      = CALLOC(1,sizeof(struct PDCP_Config__rlc_UM));
-         struct LogicalChannelConfig        *DRB_lchan_config                 = CALLOC(1,sizeof(struct LogicalChannelConfig));
-         struct LogicalChannelConfig__ul_SpecificParameters
-         *DRB_ul_SpecificParameters                                         = CALLOC(1, sizeof(struct LogicalChannelConfig__ul_SpecificParameters));
-         long                               *logicalchannelgroup_drb          = CALLOC(1, sizeof(long));
-*/
+
          DRB_rlc_config                   = CALLOC(1,sizeof(struct RLC_Config));
          DRB_pdcp_config                  = CALLOC(1,sizeof(struct PDCP_Config));
          PDCP_rlc_UM                      = CALLOC(1,sizeof(struct PDCP_Config__rlc_UM));
@@ -5696,16 +5687,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          memset(send_buf, 0, BUFSIZE);
          sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
          sl_ctrl_msg_send->type = GROUP_COMMUNICATION_ESTABLISH_RSP;
-         //in case of TX, assign a new SLRB and prepare for the filter
-         if (sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.type == 1) {
-
-            sl_ctrl_msg_send->sidelinkPrimitive.slrb_id = SLRB_ID; //slrb_id
-            //pthread_mutex_lock(&slrb_mutex);
-            slrb_id = SLRB_ID;
-            //pthread_mutex_unlock(&slrb_mutex);
-         } else{ //RX
-            sl_ctrl_msg_send->sidelinkPrimitive.slrb_id = SL_DEFAULT_RAB_ID;
-         }
+         sl_ctrl_msg_send->sidelinkPrimitive.slrb_id = 3; //slrb_id
 
          memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
          free(sl_ctrl_msg_send);
@@ -5961,17 +5943,6 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
             );
          } else {//RX
-/*            rrc_rlc_config_asn1_req(&ctxt,
-                  (SRB_ToAddModList_t*)NULL,
-                  UE->DRB_configList,
-                  (DRB_ToReleaseList_t*)NULL
-#ifdef Rel14
-                  ,(PMCH_InfoList_r9_t *)NULL
-                  , sourceL2Id, 0
-#endif
-            );
-*/
-
             //configure MAC with sourceL2Id/groupL2ID
             rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                   (RadioResourceConfigCommonSIB_t *)NULL,
@@ -6013,102 +5984,13 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          }
 
-
-         /*
-         //store sourceL2Id, destinationL2Id
-         if (type > 0) { //TX
-            UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
-            UE_rrc_inst[module_id].destinationL2Id = destinationL2Id;
-
-            // configure lower layers PDCP/MAC/PHY
-            rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
-                   (RadioResourceConfigCommonSIB_t *)NULL,
-                   (struct PhysicalConfigDedicated *)NULL,
-        #if defined(Rel10) || defined(Rel14)
-                   (SCellToAddMod_r10_t *)NULL,
-                   //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
-        #endif
-                   (MeasObjectToAddMod_t **)NULL,
-                   (MAC_MainConfig_t *)NULL,
-                   0,
-                   (struct LogicalChannelConfig *)NULL,
-                   (MeasGapConfig_t *)NULL,
-                   (TDD_Config_t *)NULL,
-                   (MobilityControlInfo_t *)NULL,
-                   NULL,
-                   NULL,
-                   NULL,
-                   NULL,
-                   NULL,
-                   NULL
-        #if defined(Rel10) || defined(Rel14)
-                   ,0,
-                   (MBSFN_AreaInfoList_r9_t *)NULL,
-                   (PMCH_InfoList_r9_t *)NULL
-
-        #endif
-        #ifdef CBA
-                   ,
-                   0,
-                   0
-        #endif
-        #if defined(Rel10) || defined(Rel14)
-                   ,CONFIG_ACTION_ADD,
-                   &sourceL2Id,
-                   &destinationL2Id
-        #endif
-                   );
-
-         } else {//RX
-            UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
-            // configure lower layers PDCP/MAC/PHY
-              rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
-                     (RadioResourceConfigCommonSIB_t *)NULL,
-                     (struct PhysicalConfigDedicated *)NULL,
-          #if defined(Rel10) || defined(Rel14)
-                     (SCellToAddMod_r10_t *)NULL,
-                     //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
-          #endif
-                     (MeasObjectToAddMod_t **)NULL,
-                     (MAC_MainConfig_t *)NULL,
-                     0,
-                     (struct LogicalChannelConfig *)NULL,
-                     (MeasGapConfig_t *)NULL,
-                     (TDD_Config_t *)NULL,
-                     (MobilityControlInfo_t *)NULL,
-                     NULL,
-                     NULL,
-                     NULL,
-                     NULL,
-                     NULL,
-                     NULL
-          #if defined(Rel10) || defined(Rel14)
-                     ,0,
-                     (MBSFN_AreaInfoList_r9_t *)NULL,
-                     (PMCH_InfoList_r9_t *)NULL
-
-          #endif
-          #ifdef CBA
-                     ,
-                     0,
-                     0
-          #endif
-          #if defined(Rel10) || defined(Rel14)
-                     ,CONFIG_ACTION_ADD,
-                     &sourceL2Id,
-                     NULL
-          #endif
-                     );
-         }
-*/
-
          LOG_I(RRC,"Send PC5EstablishRsp to ProSe App\n");
          memset(send_buf, 0, BUFSIZE);
          sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
          sl_ctrl_msg_send->type = PC5S_ESTABLISH_RSP;
-         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.sourceL2Id = sourceL2Id;
-         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.destinationL2Id = destinationL2Id;
-         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.status = 1;
+         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.slrbid_lcid28 = 10;
+         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.slrbid_lcid29 = 10;
+         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.slrbid_lcid30 = 10;
          memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
 
          prose_addr_len = sizeof(prose_app_addr);

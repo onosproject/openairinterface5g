@@ -433,7 +433,7 @@ typedef struct  {
    ip_traffic_type_t   traffic_type;
    uint32_t sourceL2Id;
    uint32_t destinationL2Id;
-} __attribute__((__packed__)) pdcp_data_header_t;
+} __attribute__((__packed__)) pc5s_header_t;
 
 //new PC5S-message
 typedef struct  {
@@ -442,7 +442,7 @@ typedef struct  {
 
 //example of PC5-S messages
 typedef struct {
-   pdcp_data_header_t pdcp_data_header;
+   pc5s_header_t pc5s_header;
    union {
       uint8_t status;
       PC5SignallingMessage pc5_signalling_message;

@@ -48,8 +48,8 @@ UE1 and UE2: Get and build vencore_app from d2d-l3-stub (branch: l3_stub)
 --------------------------------
 TEST ONE-TO-MANY
 Run UE1 then UE2, for example:
-UE1: sudo ./lte-softmodem-stub -U --emul_iface eth0
-UE2: sudo ./lte-softmodem-stub -U --emul_iface eno1
+UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
+UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
 
 Test with Ping
 - Sender - UE1: ping -I oip0 224.0.0.1
@@ -63,20 +63,20 @@ Filter the incomming packets according to GroupL2Id: receiver (one-to-many) can 
 For the moment, both sender and receiver use the same set of Ids (hardcoded)  
 
 UE1 (sender)
- - sudo ./lte-softmodem-stub -U --emul_iface eth0
+ - sudo ./lte-softmodem-stub -U --emul-iface eth0
  - ./vencore_app  #send the sourceL2Id, groupL2Id to OAI
  - ping -I oip0 224.0.0.1
  UE2(receiver)
-  - sudo ./lte-softmodem-stub -U --emul_iface eno1 
+  - sudo ./lte-softmodem-stub -U --emul-iface eno1 
   #we can see the incomming packets from OAI log, however, cannot see from Wireshark -> they are discarded at MAC layer
   - ./vencore_app  #we can see the packets appearing in Wireshark
  
  --------------------------------------
 TEST PC5-S (UE1 -sender, UE2 - receiver)
 step 1:
-- UE1: sudo ./lte-softmodem-stub -U --emul_iface eth0
+- UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
 step 2:
-- UE2: sudo ./lte-softmodem-stub -U --emul_iface eno1
+- UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
 - UE2: ./vencore_app -r #listen to incomming message from PC5-S 
 step 3: 
 - UE1: ./vencore_app -s #send a message via PC5-S (e.g., DirectCommunicationRequest)
@@ -85,9 +85,9 @@ step 3:
   --------------------------------------
 TEST PC5-D
 step 1:
-- UE1: sudo ./lte-softmodem-stub -U --emul_iface eth0
+- UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
 - UE1: ./vencore_app -d #send a PC5-Discovery-Announcement via PC5D
 step 2:
-- UE2: sudo ./lte-softmodem-stub -U --emul_iface eno1
+- UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
 - UE2: ./vencore_app -d #send a PC5-Discovery-Announcement via PC5D
 

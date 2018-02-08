@@ -215,12 +215,12 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #ifdef PDCP_DEBUG
          sl_pc5s_msg_recv = calloc(1, sizeof(sidelink_pc5s_element));
          memcpy((void*)sl_pc5s_msg_recv, (void*)(sdu_p->data+sizeof(pdcp_data_ind_header_t)), sizeof(sidelink_pc5s_element));
-         LOG_D(PDCP,"Received PC5S message, header traffic_type: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.traffic_type);
-         LOG_D(PDCP,"Received PC5S message, header rb_id: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.rb_id);
-         LOG_D(PDCP,"Received PC5S message, header data_size: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.data_size);
-         LOG_D(PDCP,"Received PC5S message, header inst: %d)\n", sl_pc5s_msg_recv->pdcp_data_header.inst);
-         LOG_D(PDCP,"Received PC5-S message, sourceL2Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pdcp_data_header.sourceL2Id);
-         LOG_D(PDCP,"Received PC5-S message, destinationL1Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pdcp_data_header.destinationL2Id);
+         LOG_D(PDCP,"Received PC5S message, header traffic_type: %d)\n", sl_pc5s_msg_recv->pc5s_header.traffic_type);
+         LOG_D(PDCP,"Received PC5S message, header rb_id: %d)\n", sl_pc5s_msg_recv->pc5s_header.rb_id);
+         LOG_D(PDCP,"Received PC5S message, header data_size: %d)\n", sl_pc5s_msg_recv->pc5s_header.data_size);
+         LOG_D(PDCP,"Received PC5S message, header inst: %d)\n", sl_pc5s_msg_recv->pc5s_header.inst);
+         LOG_D(PDCP,"Received PC5-S message, sourceL2Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pc5s_header.sourceL2Id);
+         LOG_D(PDCP,"Received PC5-S message, destinationL1Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pc5s_header.destinationL2Id);
          free(sl_pc5s_msg_recv);
 #endif
          memset(send_buf, 0, BUFSIZE);
@@ -436,7 +436,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
    uint32_t sourceL2Id;
    uint32_t groupL2Id;
    module_id_t         module_id = 0;
-   pdcp_data_header_t *pdcp_data_header;
+   pc5s_header_t *pc5s_header;
 #endif
 
 # if defined(PDCP_USE_NETLINK_QUEUES)
@@ -581,15 +581,15 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
    //    exit(EXIT_FAILURE);
    // }
    if (bytes_received > 0) {
-      pdcp_data_header = calloc(1, sizeof(pdcp_data_header_t));
-      memcpy((void *)pdcp_data_header, (void *)receive_buf, sizeof(pdcp_data_header_t));
+      pc5s_header = calloc(1, sizeof(pc5s_header_t));
+      memcpy((void *)pc5s_header, (void *)receive_buf, sizeof(pc5s_header_t));
 
-      if (pdcp_data_header->traffic_type == TRAFFIC_PC5S_SESSION_INIT){
+      if (pc5s_header->traffic_type == TRAFFIC_PC5S_SESSION_INIT){
          //send reply to ProSe app
          LOG_D(PDCP,"Received a request to open PDCP socket and establish a new PDCP session ... send response to ProSe App \n");
          memset(send_buf, 0, BUFSIZE);
          sl_pc5s_msg_send = calloc(1, sizeof(sidelink_pc5s_element));
-         sl_pc5s_msg_send->pdcp_data_header.traffic_type = TRAFFIC_PC5S_SESSION_INIT;
+         sl_pc5s_msg_send->pc5s_header.traffic_type = TRAFFIC_PC5S_SESSION_INIT;
          sl_pc5s_msg_send->pc5sPrimitive.status = 1;
 
          memcpy((void *)send_buf, (void *)sl_pc5s_msg_send, sizeof(sidelink_pc5s_element));
@@ -599,56 +599,56 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
             LOG_E(PDCP, "ERROR: Failed to send to ProSe App\n");
             exit(EXIT_FAILURE);
          }
-      } else if (pdcp_data_header->traffic_type == TRAFFIC_PC5S_SIGNALLING) { //if containing PC5-S message -> send to other UE
+      } else if (pc5s_header->traffic_type == TRAFFIC_PC5S_SIGNALLING) { //if containing PC5-S message -> send to other UE
          LOG_D(PDCP,"Received PC5-S message ... send to the other UE\n");
 #ifdef PDCP_DEBUG
-         LOG_D(PDCP,"Received PC5-S message, traffic_type: %d)\n", pdcp_data_header->traffic_type);
-         LOG_D(PDCP,"Received PC5-S message, rbid: %d)\n", pdcp_data_header->rb_id);
-         LOG_D(PDCP,"Received PC5-S message, data_size: %d)\n", pdcp_data_header->data_size);
-         LOG_D(PDCP,"Received PC5-S message, inst: %d)\n", pdcp_data_header->inst);
-         LOG_D(PDCP,"Received PC5-S message,sourceL2Id: 0x%08x\n)\n", pdcp_data_header->sourceL2Id);
-         LOG_D(PDCP,"Received PC5-S message,destinationL1Id: 0x%08x\n)\n", pdcp_data_header->destinationL2Id);
+         LOG_D(PDCP,"Received PC5-S message, traffic_type: %d)\n", pc5s_header->traffic_type);
+         LOG_D(PDCP,"Received PC5-S message, rbid: %d)\n", pc5s_header->rb_id);
+         LOG_D(PDCP,"Received PC5-S message, data_size: %d)\n", pc5s_header->data_size);
+         LOG_D(PDCP,"Received PC5-S message, inst: %d)\n", pc5s_header->inst);
+         LOG_D(PDCP,"Received PC5-S message,sourceL2Id: 0x%08x\n)\n", pc5s_header->sourceL2Id);
+         LOG_D(PDCP,"Received PC5-S message,destinationL1Id: 0x%08x\n)\n", pc5s_header->destinationL2Id);
 
 #endif
 
 #ifdef OAI_EMU
 
          // overwrite function input parameters, because only one netlink socket for all instances
-         if (pdcp_data_header->inst < oai_emulation.info.nb_enb_local) {
+         if (pc5s_header->inst < oai_emulation.info.nb_enb_local) {
             ctxt.frame         = ctxt_cpy.frame;
             ctxt.enb_flag      = ENB_FLAG_YES;
-            ctxt.module_id     = pdcp_data_header.inst  +  oai_emulation.info.first_enb_local;
-            ctxt.rnti          = oai_emulation.info.eNB_ue_module_id_to_rnti[ctxt.module_id ][pdcp_data_header->rb_id / maxDRB + oai_emulation.info.first_ue_local];
-            rab_id    = pdcp_data_header->rb_id % maxDRB;
+            ctxt.module_id     = pc5s_header.inst  +  oai_emulation.info.first_enb_local;
+            ctxt.rnti          = oai_emulation.info.eNB_ue_module_id_to_rnti[ctxt.module_id ][pc5s_header->rb_id / maxDRB + oai_emulation.info.first_ue_local];
+            rab_id    = pc5s_header->rb_id % maxDRB;
          } else {
             ctxt.frame         = ctxt_cpy.frame;
             ctxt.enb_flag      = ENB_FLAG_NO;
-            ctxt.module_id     = pdcp_data_header->inst - oai_emulation.info.nb_enb_local + oai_emulation.info.first_ue_local;
+            ctxt.module_id     = pc5s_header->inst - oai_emulation.info.nb_enb_local + oai_emulation.info.first_ue_local;
             ctxt.rnti          = pdcp_UE_UE_module_id_to_rnti[ctxt.module_id];
-            rab_id    = pdcp_data_header->rb_id % maxDRB;
+            rab_id    = pc5s_header->rb_id % maxDRB;
          }
 
          CHECK_CTXT_ARGS(&ctxt);
          AssertFatal (rab_id    < maxDRB,                       "RB id is too high (%u/%d)!\n", rab_id, maxDRB);
-         /*LGpdcp_read_header.inst = (pdcp_data_header.inst >= oai_emulation.info.nb_enb_local) ? \
-                  pdcp_data_header.inst - oai_emulation.info.nb_enb_local+ NB_eNB_INST + oai_emulation.info.first_ue_local :
-                  pdcp_data_header.inst +  oai_emulation.info.first_enb_local;*/
+         /*LGpdcp_read_header.inst = (pc5s_header.inst >= oai_emulation.info.nb_enb_local) ? \
+                  pc5s_header.inst - oai_emulation.info.nb_enb_local+ NB_eNB_INST + oai_emulation.info.first_ue_local :
+                  pc5s_header.inst +  oai_emulation.info.first_enb_local;*/
 #else // OAI_EMU
          /* TODO: do we have to reset to 0 or not? not for a scenario with 1 UE at least */
-         //          pdcp_data_header.inst = 0;
+         //          pc5s_header.inst = 0;
          //#warning "TO DO CORRCT VALUES FOR ue mod id, enb mod id"
          ctxt.frame         = ctxt_cpy.frame;
          ctxt.enb_flag      = ctxt_cpy.enb_flag;
 
-         LOG_I(PDCP, "[PDCP] pdcp_data_header->rb_id = %d\n", pdcp_data_header->rb_id);
+         LOG_I(PDCP, "[PDCP] pc5s_header->rb_id = %d\n", pc5s_header->rb_id);
 
          if (ctxt_cpy.enb_flag) {
             ctxt.module_id = 0;
-            rab_id      = pdcp_data_header->rb_id % maxDRB;
+            rab_id      = pc5s_header->rb_id % maxDRB;
             ctxt.rnti          = pdcp_eNB_UE_instance_to_rnti[pdcp_eNB_UE_instance_to_rnti_index];
          } else {
             ctxt.module_id = 0;
-            rab_id      = pdcp_data_header->rb_id % maxDRB;
+            rab_id      = pc5s_header->rb_id % maxDRB;
             ctxt.rnti          = pdcp_UE_UE_module_id_to_rnti[ctxt.module_id];
          }
 #endif
@@ -678,15 +678,15 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 #ifdef PDCP_DEBUG
                   LOG_I(PDCP, "[FRAME %5u][UE][NETLINK][IP->PDCP] INST %d: Received socket with length %d  on Rab %d \n",
                         ctxt.frame,
-                        pdcp_data_header->inst,
+                        pc5s_header->inst,
                         bytes_received,
-                        pdcp_data_header->rb_id);
+                        pc5s_header->rb_id);
 
                   LOG_I(PDCP, "[FRAME %5u][UE][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes --->][PDCP][MOD %u][UE %u][RB %u]\n",
                         ctxt.frame,
-                        pdcp_data_header->inst,
-                        pdcp_data_header->rb_id,
-                        pdcp_data_header->data_size,
+                        pc5s_header->inst,
+                        pc5s_header->rb_id,
+                        pc5s_header->data_size,
                         ctxt.module_id,
                         ctxt.rnti,
                         rab_id);
@@ -698,10 +698,10 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                     0,
                                     MSC_AS_TIME_FMT" DATA-REQ inst %u rb %u rab %u size %u",
                                     MSC_AS_TIME_ARGS(ctxt_pP),
-                                    pdcp_data_header.inst,
-                                    pdcp_data_header.rb_id,
+                                    pc5s_header.inst,
+                                    pc5s_header.rb_id,
                                     rab_id,
-                                    pdcp_data_header.data_size);
+                                    pc5s_header.data_size);
 
                   pdcp_data_req(
                         &ctxt,
@@ -709,12 +709,12 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                         rab_id,
                         RLC_MUI_UNDEFINED,
                         RLC_SDU_CONFIRM_NO,
-                        pdcp_data_header->data_size,
+                        pc5s_header->data_size,
                         (unsigned char *)receive_buf,
                         PDCP_TRANSMISSION_MODE_DATA
 #ifdef Rel14
-                        ,&pdcp_data_header->sourceL2Id
-                        ,&pdcp_data_header->destinationL2Id
+                        ,&pc5s_header->sourceL2Id
+                        ,&pc5s_header->destinationL2Id
 #endif
                         );
                } else {
@@ -725,16 +725,16 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                     0,
                                     MSC_AS_TIME_FMT" DATA-REQ inst %u rb %u rab %u size %u",
                                     MSC_AS_TIME_ARGS(ctxt_pP),
-                                    pdcp_data_header.inst,
-                                    pdcp_data_header.rb_id,
+                                    pc5s_header.inst,
+                                    pc5s_header.rb_id,
                                     rab_id,
-                                    pdcp_data_header.data_size);
+                                    pc5s_header.data_size);
                   LOG_D(PDCP,
                         "[FRAME %5u][UE][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes ---X][PDCP][MOD %u][UE %u][RB %u] NON INSTANCIATED INSTANCE key 0x%"PRIx64", DROPPED\n",
                         ctxt.frame,
-                        pdcp_data_header->inst,
-                        pdcp_data_header->rb_id,
-                        pdcp_data_header->data_size,
+                        pc5s_header->inst,
+                        pc5s_header->rb_id,
+                        pc5s_header->data_size,
                         ctxt.module_id,
                         ctxt.rnti,
                         rab_id,
@@ -744,9 +744,9 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                LOG_D(PDCP, "Forcing send on DEFAULT_RAB_ID\n");
                LOG_D(PDCP, "[FRAME %5u][eNB][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes --->][PDCP][MOD %u][UE %u][RB DEFAULT_RAB_ID %u]\n",
                      ctxt.frame,
-                     pdcp_data_header->inst,
-                     pdcp_data_header->rb_id,
-                     pdcp_data_header->data_size,
+                     pc5s_header->inst,
+                     pc5s_header->rb_id,
+                     pc5s_header->data_size,
                      ctxt.module_id,
                      ctxt.rnti,
                      DEFAULT_RAB_ID);
@@ -756,10 +756,10 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                  NULL,0,
                                  MSC_AS_TIME_FMT" DATA-REQ inst %u rb %u default rab %u size %u",
                                  MSC_AS_TIME_ARGS(ctxt_pP),
-                                 pdcp_data_header->inst,
-                                 pdcp_data_header->rb_id,
+                                 pc5s_header->inst,
+                                 pc5s_header->rb_id,
                                  DEFAULT_RAB_ID,
-                                 pdcp_data_header->data_size);
+                                 pc5s_header->data_size);
 
                pdcp_data_req (
                      &ctxt,
@@ -767,12 +767,12 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                      DEFAULT_RAB_ID,
                      RLC_MUI_UNDEFINED,
                      RLC_SDU_CONFIRM_NO,
-                     pdcp_data_header->data_size,
+                     pc5s_header->data_size,
                      (unsigned char *)receive_buf,
                      PDCP_TRANSMISSION_MODE_DATA
 #ifdef Rel14
-                     ,&pdcp_data_header->sourceL2Id
-                     ,&pdcp_data_header->destinationL2Id
+                     ,&pc5s_header->sourceL2Id
+                     ,&pc5s_header->destinationL2Id
 #endif
                      );
             }

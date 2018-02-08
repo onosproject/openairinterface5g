@@ -103,7 +103,6 @@ typedef enum {
 } Group_Communication_Status_t;
 
 struct GroupCommunicationEstablishReq {
-   uint8_t type; //0 - rx, 1 - tx
    uint32_t sourceL2Id;
    uint32_t groupL2Id;
    uint32_t groupIpAddress;
@@ -129,10 +128,11 @@ struct PC5SEstablishReq{
 };
 
 struct PC5SEstablishRsp{
-   uint32_t sourceL2Id;
-   uint32_t destinationL2Id;
-   uint8_t status;
+   uint32_t slrbid_lcid28;
+   uint32_t slrbid_lcid29;
+   uint32_t slrbid_lcid30;
 };
+
 
 //PC5_DISCOVERY MESSAGE
 typedef struct  {
