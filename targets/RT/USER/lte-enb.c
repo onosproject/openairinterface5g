@@ -381,13 +381,16 @@ int wakeup_tx(PHY_VARS_eNB *eNB,RU_proc_t *ru_proc) {
   eNB_rxtx_proc_t *proc_rxtx0=&proc->proc_rxtx[0];//RX
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
-  
+ 
+  static int num_busy=0;
+ 
   struct timespec wait;
   wait.tv_sec=0;
   wait.tv_nsec=5000000L;
   
   if (proc_rxtx1->instance_cnt_rxtx == 0) {
     LOG_E(PHY,"Frame %d, subframe %d: TX1 thread busy, dropping\n",proc_rxtx1->frame_rx,proc_rxtx1->subframe_rx);
+    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DAQ_MBOX,++num_busy);
     return(-1);
   }
   
