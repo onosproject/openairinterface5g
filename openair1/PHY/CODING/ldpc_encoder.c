@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <types.h>
+#include "defs.h"
 
 int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Zc,short Kb)
 {

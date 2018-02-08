@@ -905,7 +905,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 
       start_meas(te_stats);
       memset(dlsch->harq_processes[harq_pid]->d[r],0,(96+12+3+3*8448)*sizeof(uint8_t));
-      //ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3);
+      //ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1.0/3.0);
       ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,NULL,NULL,NULL,NULL);
       stop_meas(te_stats);
 
