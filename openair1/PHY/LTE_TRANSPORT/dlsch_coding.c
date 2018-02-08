@@ -652,6 +652,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
                    time_stats_t *i_stats)
 {
 	int encoding_return = 0;
+	/*
 	unsigned int L,C,B;
 	B = dlsch->harq_processes[dlsch->harq_ids[subframe]]->B;
 	if(B<=6144)
@@ -669,7 +670,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
 		}
 	}
 
-	if(0/*C >= 8 && get_nprocs()>8 && codingw*/)//one main three worker
+	if(C >= 8 && get_nprocs()>8 && codingw)//one main three worker
 	{
 		encoding_return =
 		dlsch_encoding_2threads(eNB,
@@ -725,6 +726,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
     }
 	else
 	{
+	*/
 		encoding_return =
 		dlsch_encoding(eNB,
 				   a,
@@ -735,7 +737,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
                    rm_stats,
                    te_stats,
                    i_stats);
-	}
+		//}
 	return encoding_return;
 }
 
