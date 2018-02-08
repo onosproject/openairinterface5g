@@ -164,16 +164,19 @@ void encode_parity_check_part_optim(uint8_t *c,uint8_t *d, short BG,short Zc,sho
 
 }
 
-int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,short block_length,int nom_rate,int denom_rate,time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput)
+int ldpc_encoder_optim(unsigned char **test_input,unsigned char **channel_input,short block_length,int nom_rate,int denom_rate,int n_segments,time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput)
 {
 
   short BG,Zc,Kb,nrows,ncols;
-  int i,i1;
+  int i,i1,j;
   int no_punctured_columns,removed_bit;
   //Table of possible lifting sizes
   short lift_size[51]= {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
 
   int simd_size;
+  char temp;
+
+  AssertFatal(n_segments>0&&n_segments<=8,"0 < n_segments %d <= 8\n",n_segments);
 
   //determine number of bits in codeword
   if (block_length>3840)
@@ -230,11 +233,13 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
   memset(d,0,sizeof(unsigned char) * nrows * Zc);
 
   start_meas(tinput);
-  for (i=0; i<block_length; i++)
-  {
-    //c[i] = test_input[i/8]<<(i%8);
-    //c[i]=c[i]>>7&1;
-    c[i]=(test_input[i/8]&(1<<(i&7)))>>(i&7);
+  for (i=0; i<block_length; i++) {
+    for (j=0; j<n_segments; j++) {
+      temp = (test_input[j][i/8]&(1<<(i&7)))>>(i&7);
+      //printf("c(%d,%d)=%d\n",j,i,temp);
+      c[i] |= (temp << j);
+    }
+    //printf("c[%d]=%d\n",i,c[i]);
   }
   stop_meas(tinput);
 
@@ -269,8 +274,17 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
   }
   start_meas(toutput);
   // information part and puncture columns
+  /*
   memcpy(&channel_input[0], &c[2*Zc], (block_length-2*Zc)*sizeof(unsigned char));
   memcpy(&channel_input[block_length-2*Zc], &d[0], ((nrows-no_punctured_columns) * Zc-removed_bit)*sizeof(unsigned char));
+  */
+  for (i=0;i<(block_length-2*Zc);i++) 
+    for (j=0; j<n_segments; j++) 
+      channel_input[j][i] = (c[2*Zc+i]>>j)&1;
+  for (i=0;i<((nrows-no_punctured_columns) * Zc-removed_bit);i++)
+    for (j=0; j<n_segments; j++) 
+      channel_input[j][block_length-2*Zc+i] = (d[i]>>j)&1;
+
   stop_meas(toutput);
   return 0;
 }
