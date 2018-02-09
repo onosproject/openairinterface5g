@@ -76,15 +76,15 @@ int test_ldpc(short No_iteration,
   opp_enabled=1;
   cpu_freq_GHz = get_cpu_freq_GHz();
   //short test_input[block_length];
-  unsigned char *test_input;
+  unsigned char *test_input[8]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
   //short *c; //padded codeword
   short *esimated_output;
   unsigned char *channel_input;
-  unsigned char *channel_input_optim;
+  unsigned char *channel_input_optim[8];
   double *channel_output;
   double *modulated_input;
   short *channel_output_fixed;
-  unsigned int i,trial=0;
+  unsigned int i,j,trial=0;
   short BG,Zc,Kb,nrows,ncols;
   int no_punctured_columns,removed_bit;
   int i1;
@@ -93,9 +93,9 @@ int test_ldpc(short No_iteration,
   *errors=0;
   *crc_misses=0;
   // generate input block
-  test_input=(unsigned char *)malloc(sizeof(unsigned char) * block_length/8);
-  channel_input = (unsigned char *)malloc(sizeof(unsigned char) * 68*384);
-  channel_input_optim = (unsigned char *)malloc(sizeof(unsigned char) * 68*384);
+  for (j=0;j<8;j++) test_input[j]=(unsigned char *)malloc16(sizeof(unsigned char) * block_length/8);
+  channel_input = (unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
+  for (j=0;j<8;j++) channel_input_optim[j] = (unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
   modulated_input = (double *)malloc(sizeof(double) * 68*384);
   channel_output  = (double *)malloc(sizeof(double) * 68*384);
   reset_meas(&time);
@@ -107,7 +107,7 @@ int test_ldpc(short No_iteration,
   for (i=0; i<block_length/8; i++)
   {
     //test_input[i]=(unsigned char) rand();
-    test_input[i]=217;
+    for (j=0;j<8;j++) test_input[j][i]=217;
   }
 
   //determine number of bits in codeword
@@ -152,7 +152,7 @@ int test_ldpc(short No_iteration,
   //  printf("puncture:%d\n",no_punctured_columns);
   removed_bit=(nrows-no_punctured_columns-2) * Zc+block_length-(int)(block_length/((float)nom_rate/(float)denom_rate));
   if (ntrials==0)
-    ldpc_encoder_orig(test_input,channel_input, block_length, nom_rate, denom_rate, 1);
+    ldpc_encoder_orig(test_input[0],channel_input, block_length, nom_rate, denom_rate, 1);
   
   for (trial=0; trial < ntrials; trial++)
   {
@@ -163,18 +163,19 @@ int test_ldpc(short No_iteration,
     //if (BG==1) 
     //ldpc_encoder(test_input, channel_input,block_length,nom_rate,denom_rate);
     //else
-    ldpc_encoder_orig(test_input, channel_input,block_length,nom_rate,denom_rate,0);
+    ldpc_encoder_orig(test_input[0], channel_input,block_length,nom_rate,denom_rate,0);
     
     stop_meas(&time);
     start_meas(&time_optim);
-    ldpc_encoder_optim(test_input,channel_input_optim,block_length,nom_rate,denom_rate,&tinput,&tprep,&tparity,&toutput);
+    //    ldpc_encoder_optim_8seg(test_input[0],channel_input_optim[0],block_length,nom_rate,denom_rate,&tinput,&tprep,&tparity,&toutput);
+    ldpc_encoder_optim_8seg(test_input,channel_input_optim,block_length,nom_rate,denom_rate,8,&tinput,&tprep,&tparity,&toutput);
     stop_meas(&time_optim);
     
     if (ntrials==1)    
       for (i = 0; i < block_length+(nrows-no_punctured_columns) * Zc - removed_bit; i++)
-	if (channel_input[i]!=channel_input_optim[i]) printf("differ in pos %d (%d,%d)\n",i,
+	if (channel_input[i]!=channel_input_optim[0][i]) printf("differ in pos %d (%d,%d)\n",i,
 							     channel_input[i],
-							     channel_input_optim[i]);
+							     channel_input_optim[0][i]);
     //print_meas_now(&time, "", stdout);
 
    // for (i=0;i<6400;i++)

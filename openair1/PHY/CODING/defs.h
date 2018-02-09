@@ -578,5 +578,5 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
 int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,short block_length,int nom_rate,int denom_rate,unsigned char gen_code);
 int ldpc_encoder_multi_segment(unsigned char **test_input,unsigned char **channel_input,short block_length,double rate,uint8_t n_segments);
 int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,short block_length,int nom_rate,int denom_rate,time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput);
-
+int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_input,short block_length,int nom_rate,int denom_rate,int n_segments,time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput);
 #endif
