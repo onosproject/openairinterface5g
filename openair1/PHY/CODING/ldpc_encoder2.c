@@ -226,7 +226,8 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
   // printf("%d\n",no_punctured_columns);
   // printf("%d\n",removed_bit);
   // unpack input
-  //  memset(c,0,sizeof(unsigned char) * ncols * Zc);
+  memset(c,0,sizeof(unsigned char) * ncols * Zc);
+  memset(d,0,sizeof(unsigned char) * nrows * Zc);
 
   start_meas(tinput);
   for (i=0; i<block_length; i++)
