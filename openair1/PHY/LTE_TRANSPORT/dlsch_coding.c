@@ -652,6 +652,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
                    time_stats_t *i_stats)
 {
 	int encoding_return = 0;
+	/*
 	unsigned int L,C,B;
 	B = dlsch->harq_processes[dlsch->harq_ids[subframe]]->B;
 	if(B<=6144)
@@ -669,7 +670,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
 		}
 	}
 
-	if(0/*C >= 8 && get_nprocs()>8 && codingw*/)//one main three worker
+	if(C >= 8 && get_nprocs()>8 && codingw)//one main three worker
 	{
 		encoding_return =
 		dlsch_encoding_2threads(eNB,
@@ -725,6 +726,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
     }
 	else
 	{
+	*/
 		encoding_return =
 		dlsch_encoding(eNB,
 				   a,
@@ -735,7 +737,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
                    rm_stats,
                    te_stats,
                    i_stats);
-	}
+		//}
 	return encoding_return;
 }
 
@@ -918,7 +920,8 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 
       start_meas(te_stats);
       //ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1.0/3.0);
-      ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c,d_tmp,Kr,1,3,dlsch->harq_processes[harq_pid]->C,NULL,NULL,NULL,NULL);
+      //ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,NULL,NULL,NULL,NULL);
+      ldpc_encoder_optim_8seg(dlsch->harq_processes[harq_pid]->c,d_tmp,Kr,1,3,dlsch->harq_processes[harq_pid]->C,NULL,NULL,NULL,NULL);
       stop_meas(te_stats);
 
 

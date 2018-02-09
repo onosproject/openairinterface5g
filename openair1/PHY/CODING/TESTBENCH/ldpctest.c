@@ -76,7 +76,7 @@ int test_ldpc(short No_iteration,
   opp_enabled=1;
   cpu_freq_GHz = get_cpu_freq_GHz();
   //short test_input[block_length];
-  unsigned char *test_input[MAX_NUM_DLSCH_SEGMENTS];
+  unsigned char *test_input[MAX_NUM_DLSCH_SEGMENTS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};;
   //short *c; //padded codeword
   short *esimated_output;
   unsigned char *channel_input[MAX_NUM_DLSCH_SEGMENTS];
@@ -96,9 +96,9 @@ int test_ldpc(short No_iteration,
 
   // generate input block
   for(j=0;j<MAX_NUM_DLSCH_SEGMENTS;j++) {
-    test_input[j]=(unsigned char *)malloc(sizeof(unsigned char) * block_length/8);
-    channel_input[j] = (unsigned char *)malloc(sizeof(unsigned char) * 68*384);
-    channel_input_optim[j] = (unsigned char *)malloc(sizeof(unsigned char) * 68*384);
+    test_input[j]=(unsigned char *)malloc16(sizeof(unsigned char) * block_length/8);
+    channel_input[j] = (unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
+    channel_input_optim[j] = (unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
   }
   modulated_input = (double *)malloc(sizeof(double) * 68*384);
   channel_output  = (double *)malloc(sizeof(double) * 68*384);
@@ -175,7 +175,7 @@ int test_ldpc(short No_iteration,
 
     stop_meas(&time);
     start_meas(&time_optim);
-    ldpc_encoder_optim(test_input,channel_input_optim,block_length,nom_rate,denom_rate,n_segments,&tinput,&tprep,&tparity,&toutput);
+    ldpc_encoder_optim_8seg(test_input,channel_input_optim,block_length,nom_rate,denom_rate,n_segments,&tinput,&tprep,&tparity,&toutput);
     stop_meas(&time_optim);
     
     if (ntrials==1)    
