@@ -423,13 +423,34 @@ int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_i
   memcpy(&channel_input[0], &c[2*Zc], (block_length-2*Zc)*sizeof(unsigned char));
   memcpy(&channel_input[block_length-2*Zc], &d[0], ((nrows-no_punctured_columns) * Zc-removed_bit)*sizeof(unsigned char));
   */
+#if 0
   for (i=0;i<(block_length-2*Zc);i++) 
     for (j=0; j<n_segments; j++) 
       channel_input[j][i] = (c[2*Zc+i]>>j)&1;
   for (i=0;i<((nrows-no_punctured_columns) * Zc-removed_bit);i++)
     for (j=0; j<n_segments; j++) 
       channel_input[j][block_length-2*Zc+i] = (d[i]>>j)&1;
+#else
+#ifdef __AVX2__
+  uint32_t l1 = (block_length-(2*Zc))>>5;
+  uint32_t l2 = ((nrows-no_punctured_columns) * Zc-removed_bit)>>5;
+  AssertFatal(((2*Zc)&31) == 0,"2*Zc needs to be a multiple of 32 for now\n");
+  AssertFatal(((block_length-(2*Zc))&31) == 0,"block_length-(2*Zc) needs to be a multiple of 32 for now\n");
+  __m256i *c256p = (__m256i *)&c[2*Zc];
+  __m256i *d256p = (__m256i *)&d[0];
+  //  if (((block_length-(2*Zc))&31)>0) l1++;
 
+  for (i=0;i<l1;i++)
+    for (j=0;j<n_segments;j++) ((__m256i *)channel_input[j])[i] = _mm256_and_si256(_mm256_srai_epi16(c256p[i],j),masks[0]); 
+
+  //  if ((((nrows-no_punctured_columns) * Zc-removed_bit)&31)>0) l2++;
+
+  for (i1=0;i1<l2;i1++,i++)
+    for (j=0;j<n_segments;j++) ((__m256i *)channel_input[j])[i] = _mm256_and_si256(_mm256_srai_epi16(d256p[i1],j),masks[0]); 
+#else
+  AssertFatal(1==0,"Need AVX2 for now\n");
+#endif
+#endif
   stop_meas(toutput);
   return 0;
 }
