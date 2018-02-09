@@ -714,11 +714,15 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 #ifdef DEBUG_DLSCH_CODING
       printf("start ldpc encoder segment %d/%d\n",r,dlsch->harq_processes[harq_pid]->C);
       printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
+      /*for (int cnt =0 ; cnt < 22*(*pz); cnt ++){
+      printf("%d ", dlsch->harq_processes[harq_pid]->c[r][cnt]);
+      }*/
+
 #endif
-      //ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,rate);
+      ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,rate);
     }
     start_meas(te_stats);
-    ldpc_encoder_multi_segment(dlsch->harq_processes[harq_pid]->c,d_tmp,Kr,rate,dlsch->harq_processes[harq_pid]->C);
+    //ldpc_encoder_multi_segment(dlsch->harq_processes[harq_pid]->c,d_tmp,Kr,rate,dlsch->harq_processes[harq_pid]->C);
     stop_meas(te_stats);
 #endif
       /*printf("end ldpc encoder -- output\n");
@@ -818,7 +822,7 @@ int dlsch_encoding_SIC(PHY_VARS_UE *ue,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_IN);
 
   A = dlsch->harq_processes[harq_pid]->TBS; //6228
-  printf("Encoder: A: %d\n",A);
+  //printf("Encoder: A: %d\n",A);
   mod_order = get_Qm(dlsch->harq_processes[harq_pid]->mcs);
 
   if(dlsch->harq_processes[harq_pid]->mimo_mode == TM7)

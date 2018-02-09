@@ -5253,14 +5253,14 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
   //Table of possible lifting sizes
   short lift_size[51]= {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
   //determine number of bits in codeword
-  if (block_length>3840)
+  //if (block_length>3840)
     {
       BG=1;
       Kb = 22;
       nrows=46; //parity check bits
       ncols=22; //info bits
     }
-  else if (block_length<=3840)
+  /*else if (block_length<=3840)
     {
       BG=2;
       nrows=42; //parity check bits
@@ -5274,7 +5274,7 @@ int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short bl
 	Kb = 8;
       else
 	Kb = 6;
-    } 
+    } */
     
   //find minimum value in all sets of lifting size
   Zc=0;
