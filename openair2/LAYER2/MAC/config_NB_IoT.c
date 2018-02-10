@@ -431,28 +431,15 @@ void rrc_mac_config_req_NB_IoT(
         mac_config->sib1_NB_IoT_sched_config.starting_rf = (intptr_t)(sib1_NB_IoT->si_RadioFrameOffset_r13);
         mac_config->si_window_length = sib1_NB_IoT->si_WindowLength_r13;
 
-        SchedulingInfo_NB_r13_t *scheduling_info_list;
-
 
         ///OAI only supports SIB2/3-NB for the sibs
-        if ( sib1_NB_IoT->schedulingInfoList_r13.list.array[0] != NULL){ 
-            scheduling_info_list = sib1_NB_IoT->schedulingInfoList_r13.list.array[0];
-
-            mac_config->sibs_NB_IoT_sched[0].si_periodicity =   scheduling_info_list->si_Periodicity_r13 ;
-            //printf("Pass first SIBs Asn, SI P:%d\n",mac_config->sibs_NB_IoT_sched[0].si_periodicity);
-            mac_config->sibs_NB_IoT_sched[0].si_repetition_pattern =  scheduling_info_list->si_RepetitionPattern_r13 ;
-            mac_config->sibs_NB_IoT_sched[0].sib_mapping_info =   scheduling_info_list->sib_MappingInfo_r13.list.array[0][0];
-            mac_config->sibs_NB_IoT_sched[0].si_tb =      scheduling_info_list->si_TB_r13  ;
-          
-        } else { //set this value for now to be test further
 
             mac_config->sibs_NB_IoT_sched[0].si_periodicity =   si_Periodicity_rf4096 ;
             mac_config->sibs_NB_IoT_sched[0].si_repetition_pattern =  si_RepetitionPattern_every2ndRF;
      
             mac_config->sibs_NB_IoT_sched[0].sib_mapping_info =   sib3_v;
             mac_config->sibs_NB_IoT_sched[0].si_tb =      si_TB_680;
-        }
-
+        /*
         /// Thiese value is setting for different SIB set
        if ( sib1_NB_IoT->schedulingInfoList_r13.list.array[1] != NULL) {
             scheduling_info_list = sib1_NB_IoT->schedulingInfoList_r13.list.array[1];
@@ -482,11 +469,11 @@ void rrc_mac_config_req_NB_IoT(
         mac_config->sibs_NB_IoT_sched[3].sib_mapping_info = 0x0;
         mac_config->sibs_NB_IoT_sched[4].sib_mapping_info = 0x0;
         mac_config->sibs_NB_IoT_sched[5].sib_mapping_info = 0x0;
+        */
 
     }else{
          LOG_E(MAC,"sib1_NB_IoT is NULL\n"); 
     }
-
 
 
     if (radioResourceConfigCommon!=NULL) {
