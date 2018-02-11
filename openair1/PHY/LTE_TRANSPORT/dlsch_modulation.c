@@ -637,7 +637,10 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
   int16_t tmp_amp=amp;
   int s=1;
   int mprime2 = mprime,ind,ind_dword,ind_qpsk_symb,p,w;
-  int Wbar_NCP[8][4] = {{1,1,1,1},{1,-1,1,-1},{1,1,1,1},{1,-1,1,-1},{1,1,-1,-1},{-1,-1,1,1},{1,-1,-1,1},{-1,1,1,-1}} ;
+  /* The sequence w_bar for normal cyclic prefix */
+  int Wbar_NCP_0[8][4] = {{1,1,1,1},{1,-1,1,-1},{1,1,1,1},{1,-1,1,-1},{1,1,-1,-1},{-1,-1,1,1},{1,-1,-1,1},{-1,1,1,-1}} ;
+  /* The sequence w_bar for extended cyclic prefix */
+  int Wbar_NCP_1[2][2] = {{1,1},{-1,1}};  
   gain_lin_QPSK = (int16_t)((amp*ONE_OVER_SQRT2_Q15)>>15);
 
   int32_t qpsk[4],nqpsk[4],*qpsk_p;
@@ -1728,10 +1731,10 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
           }
 
         }
-        else {/* The following process is called 4 times (lprime=0,1,2,3), N_RB_DL times per lprime, 3 times per rb (re=1,6,11), 2 times per re (p=7,8) */
+	        else {/* The following process is called 4 times (lprime=0,1,2,3), N_RB_DL times per lprime, 3 times per rb (re=1,6,11), 2 times per re (p=7,8) */
           for (p=7; p<9; p++) {
-	    if (p==first_layer0 || p==first_layer1) {
-	      if (frame_parms->Ncp==0) { //normal CP
+	   	if (p==first_layer0 || p==first_layer1) {
+	      
 		
 		/* Here rb has to be 0 to N_RB_DL otherwise w does not get the right values in the case of p8 */
 		if (p==8) {
@@ -1756,13 +1759,22 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
 			}
 		}
 
-		if (((mprime2+rb)%2)==0) {
-			w = Wbar_NCP[p-7][lprime];
-		} else {
-			w = Wbar_NCP[p-7][3-lprime];
-		}
+		if (frame_parms->Ncp==0) { //normal CP
+			if (((mprime2+rb)%2)==0) {
+				w = Wbar_NCP_0[p-7][lprime];
+			} else {
+				w = Wbar_NCP_0[p-7][3-lprime];
+			}
+		} else { //extended CP
+			if ((mprime2%2)==0) {
+		  		w = Wbar_NCP_1[p-7][lprime%2] ;
+			} else {
+		  		w = Wbar_NCP_1[p-7][1-(lprime%2)] ;
+			}
+		}		
+
 		/* Here we have to assign specific values to rb in order to produce the same ind values as the Matlab  */
-		if ((re<2 && p==7) ||(p==8 && lprime>0)) {
+		if ((re<=2 && p==7) ||(p==8 && lprime>0)) {
 			if (lprime==1) {
 				if (frame_parms->N_RB_DL==25) {
 					rb = rb+85;
@@ -1784,29 +1796,18 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
 			}
 		}
 
-		ind = 3*lprime*frame_parms->N_RB_DL+3*rb+mprime2;
-		ind_dword = ind>>4 ;
-		ind_qpsk_symb = ind&0xf ;
-			
-	      
-	      } else { //extended CP
-		// this is very likely wrong as the Wbar table is different for extended CP
-		ind = 4*lprime*dlsch0_harq->nb_rb+4*rb+mprime2 ;
-		ind_dword = ind>>4 ;
-		ind_qpsk_symb = ind&0xf ;
-		int l = lprime%2;	
-		
-		if ((mprime2%2)==0) {
-		  w = Wbar_NCP[p-7][l] ;
-		} else {
-		  w = Wbar_NCP[p-7][1-l] ;
+		if (frame_parms->Ncp==0) { //normal CP
+			ind = 3*lprime*frame_parms->N_RB_DL+3*rb+mprime2;
+		} else { //extended CP 
+			ind = 4*lprime*frame_parms->N_RB_DL+4*rb+mprime2;
 		}
-	      }
+		ind_dword = ind>>4 ;
+		ind_qpsk_symb = ind&0xf ;
 	qpsk_p = (w==1) ? qpsk : nqpsk;
 	txdataF[p][tti_offset] = qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3];
 	
 	if (lprime==1) {
-		printf("p=%d, w=%d, txdataF = {%d %d}\n\n", p,w,((int16_t *)&txdataF[p][tti_offset])[0],((int16_t *)&txdataF[p][tti_offset])[1]);
+		printf("re=%d, mprime2=%d, p=%d, w=%d, rb=%d, txdataF = {%d %d}\n\n", re,mprime2,p,w,rb,((int16_t *)&txdataF[p][tti_offset])[0],((int16_t *)&txdataF[p][tti_offset])[1]);
 	}
 	      	}//end if p=first_layer
 		}// end for p=7
