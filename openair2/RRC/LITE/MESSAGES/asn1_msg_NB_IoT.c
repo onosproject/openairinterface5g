@@ -349,15 +349,10 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
 
   // Now, follow the scheduler SIB configuration
   // There is only one sib2+sib3 common setting
-<<<<<<< HEAD
-  schedulingInfo_NB_IoT[0].si_Periodicity_r13=SchedulingInfo_NB_r13__si_Periodicity_r13_rf4096;  // (to be set to 64)
-  schedulingInfo_NB_IoT[0].si_RepetitionPattern_r13=SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every2ndRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
-  schedulingInfo_NB_IoT[0].si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b680;//208 bits
-=======
-  schedulingInfo_NB_IoT.si_Periodicity_r13=SchedulingInfo_NB_r13__si_Periodicity_r13_rf4096;
+
+  schedulingInfo_NB_IoT.si_Periodicity_r13=SchedulingInfo_NB_r13__si_Periodicity_r13_rf4096; // (to be set to 64)
   schedulingInfo_NB_IoT.si_RepetitionPattern_r13=SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every2ndRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
   schedulingInfo_NB_IoT.si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b680;//208 bits
->>>>>>> fb84abece3df291f424f5502474468dc4b0cd695
   
 
   // This is for SIB2/3
