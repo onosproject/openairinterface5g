@@ -1,7 +1,7 @@
 Scenario 1 : Off-network UE2UE link
 SynchREF UE (UE1)
 
-UE1(eth0 - 10.10.10.1)--------UE2(eth0 - 10.10.10.2)
+UE1(eth0 - 10.10.10.1)--------UE2(eno1 - 10.10.10.2)
 
 Here's an example of /etc/network/interfaces configuration for UE1
 auto eth0
@@ -39,12 +39,13 @@ UE1:
  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.1 -j MARK --set-mark 3
  - (if necessary) sudo route add default gw 10.10.10.1 eth0
 UE2:
- - sudo ifconfig oip1 10.0.0.2
- - sudo iptables -A POSTROUTING  -t mangle -o oip1 -d 224.0.0.1 -j MARK --set-mark 3
- - (if necessary) sudo route add default gw 10.10.10.1 eth0
+ - sudo ifconfig oip0 10.0.0.2
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.1 -j MARK --set-mark 3
+ - (if necessary) sudo route add default gw 10.10.10.1 eno1
 
 UE1 and UE2: Get and build vencore_app from d2d-l3-stub (branch: l3_stub)
  - gcc -I . vencore_app.c -o vencore_app -lpthread
+ 
 --------------------------------
 TEST ONE-TO-MANY
 Run UE1 then UE2, for example:
@@ -72,7 +73,17 @@ UE1 (sender)
   - ./vencore_app  #we can see the packets appearing in Wireshark
  
  --------------------------------------
-TEST PC5-S (UE1 -sender, UE2 - receiver)
+TEST PC5-S (UE1 -sender, UE2 - receiver) and PC5-U for ONE-TO-ONE scenario
+Configure UE1/UE2
+UE1: 
+ - sudo ifconfig oip0 10.0.0.1
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.2 -j MARK --set-mark 3
+ - sudo route add default gw 10.10.10.1 eth0
+UE2:
+ - sudo ifconfig oip0 10.0.0.2
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.1 -j MARK --set-mark 3
+ - sudo route add default gw 10.10.10.1 eno1
+ 
 step 1:
 - UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
 step 2:
@@ -80,6 +91,9 @@ step 2:
 - UE2: ./vencore_app -r #listen to incomming message from PC5-S 
 step 3: 
 - UE1: ./vencore_app -s #send a message via PC5-S (e.g., DirectCommunicationRequest)
+
+Generate unicast traffic
+UE1: ping -I oip0 10.0.0.2
  
  
   --------------------------------------
