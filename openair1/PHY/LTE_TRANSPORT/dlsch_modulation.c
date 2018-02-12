@@ -1735,7 +1735,31 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
           for (p=7; p<9; p++) {
 	   	if (p==first_layer0 || p==first_layer1) {
 	      
-		
+		/*if (p==7 && re<2 && lprime==0 && mprime2==0 && rb==0) {
+			int cnt=0;
+			for (rb=0; rb<100; rb++) {
+				for (mprime2=0; mprime2<3; mprime2++) {
+					ind = 3*3*frame_parms->N_RB_DL+3*rb+mprime2;
+					ind_dword = ind>>4;
+					ind_qpsk_symb = ind&0xf;
+					printf("cnt=%d, rb=%d, mprime2=%d, dword=%d, qpsk_symb=%d\n", cnt,rb,mprime2,ind_dword,ind_qpsk_symb);
+					//printf("cnt=%d, rb=%d, mprime2=%d, ind_dword=%d, ind_qpsk=%d, %d  %d\n", cnt,rb,mprime2,ind_dword,ind_qpsk_symb,((int16_t *)&qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3])[0],((int16_t *)&qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3])[1]);
+					cnt++;
+				}
+			}
+		}*/
+
+		/*if (p==7 && re<2 && lprime==0 && mprime2==0 && rb==0) {
+		int cnt=0;
+		qpsk_p = qpsk;
+		for (ind_dword=0; ind_dword<100; ind_dword++){
+			for (ind_qpsk_symb=0; ind_qpsk_symb<16; ind_qpsk_symb++) {
+				printf("cnt=%d, ind_dword=%d, ind_qpsk=%d, %d  %d\n", cnt,ind_dword,ind_qpsk_symb,((int16_t *)&qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3])[0],((int16_t *)&qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3])[1]);
+				cnt++;
+			}
+		}
+		}*/		
+
 		/* Here rb has to be 0 to N_RB_DL otherwise w does not get the right values in the case of p8 */
 		if (p==8) {
 			if (lprime==1) {
@@ -1743,18 +1767,24 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
 					rb = rb-85;
 				} else if (frame_parms->N_RB_DL==50) {
 					rb = rb-60;
+				} else {
+					rb = rb-10;
 				}
 			} else if (lprime==2) {
 				if (frame_parms->N_RB_DL==25) {
 					rb = rb-170;
 				} else if (frame_parms->N_RB_DL==50) {
 					rb = rb-120;
+				} else {
+					rb = rb-20;
 				}
 			} else if (lprime==3) {
 				if (frame_parms->N_RB_DL==25) {
 					rb = rb-255;
 				} else if (frame_parms->N_RB_DL==50) {
 					rb = rb-180;
+				} else {
+					rb = rb-30;
 				}
 			}
 		}
@@ -1780,18 +1810,24 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
 					rb = rb+85;
 				} else if (frame_parms->N_RB_DL==50) {
 					rb = rb+60;
+				} else {
+					rb = rb+10;
 				}
 			} else if (lprime==2) {
 				if (frame_parms->N_RB_DL==25) {
 					rb = rb+170;
 				} else if (frame_parms->N_RB_DL==50) {
 					rb = rb+120;
+				} else {
+					rb = rb+20;
 				}
 			} else if (lprime==3) {
 				if (frame_parms->N_RB_DL==25) {
 					rb = rb+255;
 				} else if (frame_parms->N_RB_DL==50) {
 					rb = rb+180;
+				} else {
+					rb = rb+30;
 				}
 			}
 		}
@@ -1806,7 +1842,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
 	qpsk_p = (w==1) ? qpsk : nqpsk;
 	txdataF[p][tti_offset] = qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3];
 	
-	if (lprime==1) {
+	if (lprime==2 && p==7) {
 		printf("re=%d, mprime2=%d, p=%d, w=%d, rb=%d, txdataF = {%d %d}\n\n", re,mprime2,p,w,rb,((int16_t *)&txdataF[p][tti_offset])[0],((int16_t *)&txdataF[p][tti_offset])[1]);
 	}
 	      	}//end if p=first_layer
