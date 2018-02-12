@@ -335,7 +335,7 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
    (*sib1_NB_IoT)->downlinkBitmap_r13 = CALLOC(1, sizeof(struct DL_Bitmap_NB_r13));
    ((*sib1_NB_IoT)->downlinkBitmap_r13)->present= DL_Bitmap_NB_r13_PR_NOTHING;
 
-   *eutraControlRegionSize = 1;
+   *eutraControlRegionSize = 2;
    (*sib1_NB_IoT)->eutraControlRegionSize_r13 = eutraControlRegionSize;
 
 
@@ -355,7 +355,7 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
 
   // Now, follow the scheduler SIB configuration
   // There is only one sib2+sib3 common setting
-  schedulingInfo_NB_IoT[0].si_Periodicity_r13=SchedulingInfo_NB_r13__si_Periodicity_r13_rf4096;
+  schedulingInfo_NB_IoT[0].si_Periodicity_r13=SchedulingInfo_NB_r13__si_Periodicity_r13_rf4096;  // (to be set to 64)
   schedulingInfo_NB_IoT[0].si_RepetitionPattern_r13=SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every2ndRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
   schedulingInfo_NB_IoT[0].si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b680;//208 bits
   
