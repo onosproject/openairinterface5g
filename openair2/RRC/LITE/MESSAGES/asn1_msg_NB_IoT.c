@@ -325,25 +325,6 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
     5; //if not configured we use band 5 (UL: 824 MHz - 849MHz / DL: 869 MHz - 894 MHz  FDD mode)
 #endif
 
-   /* 
-    //OPTIONAL new parameters, to be used?
-      
-       // freqBandInfo_r13
-       // multiBandInfoList_r13
-       // nrs_CRS_PowerOffset_r13
-       // sib1_NB_IoT->downlinkBitmap_r13.choice.subframePattern10_r13 =(is a BIT_STRING)
-      
-
-   (*sib1_NB_IoT)->downlinkBitmap_r13 = CALLOC(1, sizeof(struct DL_Bitmap_NB_r13));
-   ((*sib1_NB_IoT)->downlinkBitmap_r13)->present= DL_Bitmap_NB_r13_PR_NOTHING;
-
-   *eutraControlRegionSize = 2;
-   (*sib1_NB_IoT)->eutraControlRegionSize_r13 = eutraControlRegionSize;
-
-
-   *nrs_CRS_PowerOffset= 0;
-   (*sib1_NB_IoT)->nrs_CRS_PowerOffset_r13 = nrs_CRS_PowerOffset;
-  */
 
   // Now, follow the scheduler SIB configuration
   // There is only one sib2+sib3 common setting
@@ -513,11 +494,11 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
 
   // BCCH-Config-NB-IoT----------------------------------------------------------------
   sib2_NB_IoT->radioResourceConfigCommon_r13.bcch_Config_r13.modificationPeriodCoeff_r13
-    = configuration->bcch_modificationPeriodCoeff_NB;
+    = configuration->bcch_modificationPeriodCoeff_NB[CC_id];
 
   // PCCH-Config-NB-IoT-----------------------------------------------------------------
   sib2_NB_IoT->radioResourceConfigCommon_r13.pcch_Config_r13.defaultPagingCycle_r13
-    = configuration->pcch_defaultPagingCycle_NB;
+    = configuration->pcch_defaultPagingCycle_NB[CC_id];
   sib2_NB_IoT->radioResourceConfigCommon_r13.pcch_Config_r13.nB_r13 = configuration->pcch_nB_NB[CC_id];
   sib2_NB_IoT->radioResourceConfigCommon_r13.pcch_Config_r13.npdcch_NumRepetitionPaging_r13 = configuration-> pcch_npdcch_NumRepetitionPaging_NB[CC_id];
 
@@ -587,8 +568,8 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
 
   /*OPTIONAL*/
   dmrs_config = CALLOC(1,sizeof(struct NPUSCH_ConfigCommon_NB_r13__dmrs_Config_r13));
-  dmrs_config->threeTone_CyclicShift_r13 = configuration->npusch_threeTone_CyclicShift_r13;
-  dmrs_config->sixTone_CyclicShift_r13 = configuration->npusch_sixTone_CyclicShift_r13;
+  dmrs_config->threeTone_CyclicShift_r13 = configuration->npusch_threeTone_CyclicShift_r13[CC_id];
+  dmrs_config->sixTone_CyclicShift_r13 = configuration->npusch_sixTone_CyclicShift_r13[CC_id];
 
   /*OPTIONAL
    * -define the base sequence for a DMRS sequence in a cell with multi tone transmission (3,6,12) see TS 36.331 NPUSCH-Config-NB
@@ -648,7 +629,7 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
   sib3_NB_IoT->intraFreqCellReselectionInfo_r13.q_RxLevMin_r13 = -70;
   //new
   sib3_NB_IoT->intraFreqCellReselectionInfo_r13.q_QualMin_r13 = CALLOC(1,sizeof(*sib3_NB_IoT->intraFreqCellReselectionInfo_r13.q_QualMin_r13));
-  *(sib3_NB_IoT->intraFreqCellReselectionInfo_r13.q_QualMin_r13)= 10; //a caso
+  *(sib3_NB_IoT->intraFreqCellReselectionInfo_r13.q_QualMin_r13)= -22; //a caso
 
   sib3_NB_IoT->intraFreqCellReselectionInfo_r13.p_Max_r13 = NULL;
   sib3_NB_IoT->intraFreqCellReselectionInfo_r13.s_IntraSearchP_r13 = 31; // s_intraSearch --> s_intraSearchP!!! (they call in a different way)
