@@ -7,6 +7,8 @@
 #include "PHY/TOOLS/time_meas.h"
 #include "defs.h"
 
+#define DEBUG_LDPC
+
 #include "ldpc384_byte.c"
 #include "ldpc352_byte.c"
 #include "ldpc320_byte.c"
@@ -179,14 +181,14 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
   char temp;
 
   //determine number of bits in codeword
-  if (block_length>3840)
+  //if (block_length>3840)
     {
       BG=1;
       Kb = 22;
       nrows=46; //parity check bits
       ncols=22; //info bits
     }
-  else if (block_length<=3840)
+    /*else if (block_length<=3840)
     {
       BG=2;
       nrows=42; //parity check bits
@@ -200,7 +202,7 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
       Kb = 8;
     else
       Kb = 6;
-    }
+      }*/
 
   //find minimum value in all sets of lifting size
   Zc=0;
@@ -214,6 +216,11 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
     }
   }
   AssertFatal(Zc>0,"no valid Zc found for block length %d\n",block_length);
+
+#ifdef DEBUG_LDPC
+  LOG_D(PHY,"ldpc_encoder_optim_8seg: BG %d, Zc %d, Kb %d, block_length %d\n",BG,Zc,Kb,block_length);
+  LOG_D(PHY,"ldpc_encoder_optim_8seg: PDU %x %x %x %x\n",test_input[0],test_input[1],test_input[2],test_input[3]);
+#endif
 
   if ((Zc&31) > 0) simd_size = 16;
   else          simd_size = 32;
@@ -240,7 +247,7 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
 
   stop_meas(tinput);
 
-  if ((BG==1) || (BG==2 && Zc>64)) { 
+  if ((BG==1 && Zc>176) || (BG==2 && Zc>64)) { 
     // extend matrix
     start_meas(tprep);
     for (i1=0; i1 < ncols; i1++)
@@ -293,14 +300,14 @@ int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_i
   AssertFatal(n_segments>0&&n_segments<=8,"0 < n_segments %d <= 8\n",n_segments);
 
   //determine number of bits in codeword
-  if (block_length>3840)
+  //if (block_length>3840)
     {
       BG=1;
       Kb = 22;
       nrows=46; //parity check bits
       ncols=22; //info bits
     }
-  else if (block_length<=3840)
+    /*else if (block_length<=3840)
     {
       BG=2;
       nrows=42; //parity check bits
@@ -314,7 +321,7 @@ int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_i
       Kb = 8;
     else
       Kb = 6;
-    }
+      }*/
 
   //find minimum value in all sets of lifting size
   Zc=0;
@@ -327,6 +334,12 @@ int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_i
       break;
     }
   }
+
+#ifdef DEBUG_LDPC
+  LOG_D(PHY,"ldpc_encoder_optim_8seg: BG %d, Zc %d, Kb %d, block_length %d, segments %d\n",BG,Zc,Kb,block_length,n_segments);
+  LOG_D(PHY,"ldpc_encoder_optim_8seg: PDU (seg 0) %x %x %x %x\n",test_input[0][0],test_input[0][1],test_input[0][2],test_input[0][3]);
+#endif
+
   AssertFatal(Zc>0,"no valid Zc found for block length %d\n",block_length);
 
   if ((Zc&31) > 0) simd_size = 16;
@@ -387,7 +400,7 @@ int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_i
 
   stop_meas(tinput);
 
-  if ((BG==1) || (BG==2 && Zc>64)) { 
+  if ((BG==1 && Zc>176) || (BG==2 && Zc>64)) { 
     // extend matrix
     start_meas(tprep);
     for (i1=0; i1 < ncols; i1++)
@@ -422,34 +435,41 @@ int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_i
   memcpy(&channel_input[0], &c[2*Zc], (block_length-2*Zc)*sizeof(unsigned char));
   memcpy(&channel_input[block_length-2*Zc], &d[0], ((nrows-no_punctured_columns) * Zc-removed_bit)*sizeof(unsigned char));
   */
-#if 0
-  for (i=0;i<(block_length-2*Zc);i++) 
-    for (j=0; j<n_segments; j++) 
-      channel_input[j][i] = (c[2*Zc+i]>>j)&1;
-  for (i=0;i<((nrows-no_punctured_columns) * Zc-removed_bit);i++)
-    for (j=0; j<n_segments; j++) 
-      channel_input[j][block_length-2*Zc+i] = (d[i]>>j)&1;
-#else
 #ifdef __AVX2__
-  uint32_t l1 = (block_length-(2*Zc))>>5;
-  uint32_t l2 = ((nrows-no_punctured_columns) * Zc-removed_bit)>>5;
-  AssertFatal(((2*Zc)&31) == 0,"2*Zc needs to be a multiple of 32 for now\n");
-  AssertFatal(((block_length-(2*Zc))&31) == 0,"block_length-(2*Zc) needs to be a multiple of 32 for now\n");
-  __m256i *c256p = (__m256i *)&c[2*Zc];
-  __m256i *d256p = (__m256i *)&d[0];
-  //  if (((block_length-(2*Zc))&31)>0) l1++;
+  if ((((2*Zc)&31) == 0) && (((block_length-(2*Zc))&31) == 0)) {
+    //AssertFatal(((2*Zc)&31) == 0,"2*Zc needs to be a multiple of 32 for now\n");
+    //AssertFatal(((block_length-(2*Zc))&31) == 0,"block_length-(2*Zc) needs to be a multiple of 32 for now\n");
+    uint32_t l1 = (block_length-(2*Zc))>>5;
+    uint32_t l2 = ((nrows-no_punctured_columns) * Zc-removed_bit)>>5;
+    __m256i *c256p = (__m256i *)&c[2*Zc];
+    __m256i *d256p = (__m256i *)&d[0];
+    //  if (((block_length-(2*Zc))&31)>0) l1++;
+    
+    for (i=0;i<l1;i++)
+      for (j=0;j<n_segments;j++) ((__m256i *)channel_input[j])[i] = _mm256_and_si256(_mm256_srai_epi16(c256p[i],j),masks[0]); 
+    
+    //  if ((((nrows-no_punctured_columns) * Zc-removed_bit)&31)>0) l2++;
+    
+    for (i1=0;i1<l2;i1++,i++)
+      for (j=0;j<n_segments;j++) ((__m256i *)channel_input[j])[i] = _mm256_and_si256(_mm256_srai_epi16(d256p[i1],j),masks[0]); 
+  }
+  else {
+#ifdef DEBUG_LDPC
+  LOG_W(PHY,"using non-optimized version\n");
+#endif
+    // do non-SIMD version
+    for (i=0;i<(block_length-2*Zc);i++) 
+      for (j=0; j<n_segments; j++) 
+	channel_input[j][i] = (c[2*Zc+i]>>j)&1;
+    for (i=0;i<((nrows-no_punctured_columns) * Zc-removed_bit);i++)
+      for (j=0; j<n_segments; j++) 
+	channel_input[j][block_length-2*Zc+i] = (d[i]>>j)&1;
+    }
 
-  for (i=0;i<l1;i++)
-    for (j=0;j<n_segments;j++) ((__m256i *)channel_input[j])[i] = _mm256_and_si256(_mm256_srai_epi16(c256p[i],j),masks[0]); 
-
-  //  if ((((nrows-no_punctured_columns) * Zc-removed_bit)&31)>0) l2++;
-
-  for (i1=0;i1<l2;i1++,i++)
-    for (j=0;j<n_segments;j++) ((__m256i *)channel_input[j])[i] = _mm256_and_si256(_mm256_srai_epi16(d256p[i1],j),masks[0]); 
 #else
-  AssertFatal(1==0,"Need AVX2 for now\n");
+    AssertFatal(1==0,"Need AVX2 for now\n");
 #endif
-#endif
+
   stop_meas(toutput);
   return 0;
 }

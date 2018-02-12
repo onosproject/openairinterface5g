@@ -916,24 +916,26 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       printf("start ldpc encoder B %d\n",dlsch->harq_processes[harq_pid]->B);
       printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
 #endif
-    }
 
       start_meas(te_stats);
       //ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1.0/3.0);
-      //ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,NULL,NULL,NULL,NULL);
+      ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,NULL,NULL,NULL,NULL);
+      stop_meas(te_stats);
+    }
+
+    /*
+      start_meas(te_stats);
       ldpc_encoder_optim_8seg(dlsch->harq_processes[harq_pid]->c,d_tmp,Kr,1,3,dlsch->harq_processes[harq_pid]->C,NULL,NULL,NULL,NULL);
       stop_meas(te_stats);
-
-
+    */
 #if 0
-      printf("end ldpc encoder -- output\n");
-
-      //printf("output %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->d[r][96], dlsch->harq_processes[harq_pid]->d[r][96+1], dlsch->harq_processes[harq_pid]->d[r][96+2],dlsch->harq_processes[harq_pid]->d[r][96+3], dlsch->harq_processes[harq_pid]->d[r][96+4]);
-	    
+      printf("end ldpc encoder -- output %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->d[0][96], dlsch->harq_processes[harq_pid]->d[0][96+1], dlsch->harq_processes[harq_pid]->d[0][96+2],dlsch->harq_processes[harq_pid]->d[0][96+3], dlsch->harq_processes[harq_pid]->d[0][96+4]);
+      /*	    
       for (int cnt =0 ; cnt < 66*128; cnt ++){
 	printf("%d \n",  dlsch->harq_processes[harq_pid]->d[r][96+cnt]);
       }
       printf("\n");
+      */
 #endif
  
 #ifdef DEBUG_DLSCH_CODING

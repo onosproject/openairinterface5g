@@ -347,14 +347,14 @@ int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,sho
   int indlist2[1000];
 
   //determine number of bits in codeword
-  if (block_length>3840)
+  //if (block_length>3840)
   {
     BG=1;
     Kb = 22;
     nrows=46; //parity check bits
     ncols=22; //info bits
   }
-  else if (block_length<=3840)
+  /*else if (block_length<=3840)
   {
     BG=2;
     nrows=42;  //parity check bits
@@ -368,7 +368,7 @@ int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,sho
       Kb = 8;
     else
       Kb = 6;
-  }
+      }*/
 
   //find minimum value in all sets of lifting size
   Zc=0;
