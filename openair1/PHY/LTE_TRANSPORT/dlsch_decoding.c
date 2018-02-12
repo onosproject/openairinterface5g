@@ -572,11 +572,11 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
             }
       //}
 
-      for (int cnt =0; cnt < 8; cnt++){
+      /*for (int cnt =0; cnt < 8; cnt++){
       printf("dr %d inv_d %d \n", harq_process->d[r][96+cnt], inv_d[cnt]);
       }
 
-      printf(" \n");
+      printf(" \n");*/
 
       /*printf("end dr \n");
       for (int cnt =(50*p_decParams->Z-16) ; cnt < 50*p_decParams->Z; cnt++){
@@ -648,12 +648,11 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 		      	
 #endif
 
-
-		//#ifdef DEBUG_DLSCH_DECODING
+#ifdef DEBUG_DLSCH_DECODING
       printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
       printf("no_iterations_ldpc %d\n",no_iteration_ldpc);
       //write_output("dec_output.m","dec0",harq_process->c[0],Kr_bytes,1,4);
-      //#endif
+#endif
 
 
 #if UE_TIMING_TRACE
