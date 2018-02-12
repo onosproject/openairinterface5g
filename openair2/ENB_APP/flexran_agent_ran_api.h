@@ -119,9 +119,6 @@ uint32_t flexran_get_mac_sdu_size(mid_t mod_id, mid_t ue_id, int cc_id, int lcid
 /*Return number of MAC SDUs obtained in MAC layer*/
 uint32_t flexran_get_num_mac_sdu_tx(mid_t mod_id, mid_t ue_id, int cc_id);
 
-/*Get LCID MAC SDU*/
-unsigned char flexran_get_mac_sdu_lcid(mid_t mod_id, mid_t ue_id, int cc_id, int lcid);
-
 /*Get mac sdu lcid index*/
 unsigned char flexran_get_mac_sdu_lcid_index(mid_t mod_id, mid_t ue_id, int cc_id, int index);
 

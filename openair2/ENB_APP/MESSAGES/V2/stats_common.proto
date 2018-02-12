@@ -276,24 +276,31 @@ message flex_pdcp_stats {
 
 message flex_mon_app {
 
-    optional uint32 size_sdus_dl = 1;
-    optional uint32 size_sdus_ul = 2;
-    optional uint32 total_size_sdus_dl = 3;
-    optional uint32 total_size_sdus_ul = 4;
-    optional uint32 harq_round = 5;
-    optional uint32 dl_tbs = 6;
-    optional uint32 ul_tbs = 7;
-    optional uint32 prb_retx = 8;
-    optional uint32 prb_tx = 9;
-    optional uint32 prb_rx = 10;
-    optional uint32 total_prb_tx = 11;
-    optional uint32 total_prb_rx = 12;
-    optional uint32 total_pdu_tx = 13;
-    optional uint32 total_pdu_rx = 14;
-    repeated flex_rec_mac_sdu rec_mac_sdu = 15;
+    optional uint32 total_bytes_sdus_dl = 1;
+    optional uint32 total_bytes_sdus_ul = 2;
+    optional uint32 harq_round = 3;
+    optional uint32 tbs_dl = 4;
+    optional uint32 tbs_ul = 5;
+    optional uint32 prb_retx_dl = 6;
+    optional uint32 prb_retx_ul = 7;
+    optional uint32 prb_dl = 8;
+    optional uint32 prb_ul = 9;
+    optional uint32 mcs1_dl = 10;
+    optional uint32 mcs2_dl = 11;
+    optional uint32 mcs1_ul = 12;
+    optional uint32 mcs2_ul = 13;
+    optional uint32 total_prb_retx_dl = 14;
+    optional uint32 total_prb_retx_ul = 15;
+    optional uint32 total_prb_dl = 16;
+    optional uint32 total_prb_ul = 17;
+    optional uint32 total_pdu_dl = 18;
+    optional uint32 total_pdu_ul = 19;
+    optional uint32 total_tbs_dl = 20;
+    optional uint32 total_tbs_ul = 21;
+    repeated flex_mac_sdus_dl mac_sdus_dl = 22;
 }
 
-message flex_rec_mac_sdu {
+message flex_mac_sdus_dl {
 
     optional uint32 sdu_length = 1;
     optional uint32 lcid = 2;
