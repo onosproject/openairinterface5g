@@ -132,7 +132,7 @@ int8_t flexran_get_ue_phr(mid_t mod_id, mid_t ue_id)
 uint8_t flexran_get_ue_wcqi(mid_t mod_id, mid_t ue_id)
 {
   if (!phy_is_present(mod_id, 0)) return 0;
-  return RC.eNB[mod_id][0]->UE_stats[ue_id].DL_cqi[0];
+  return RC.mac[mod_id]->UE_list.UE_sched_ctrl[ue_id].dl_cqi[0];
 }
 
 rlc_buffer_occupancy_t flexran_get_tx_queue_size(mid_t mod_id, mid_t ue_id, logical_chan_id_t channel_id)
@@ -239,6 +239,124 @@ int flexran_get_MAC_CE_bitmap_TA(mid_t mod_id, mid_t ue_id, uint8_t cc_id)
   }
 }
 
+uint32_t flexran_get_num_mac_sdu_tx(mid_t mod_id, mid_t ue_id, int cc_id){
+
+ if (!mac_is_present(mod_id)) return 0;
+ return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].num_mac_sdu_tx;
+
+}
+
+uint32_t flexran_get_mac_sdu_size(mid_t mod_id, mid_t ue_id, int cc_id, int lcid){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].sdu_length_tx[lcid];
+
+}
+
+unsigned char flexran_get_mac_sdu_lcid(mid_t mod_id, mid_t ue_id, int cc_id, int lcid){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].lcid_sdu[lcid];
+}
+
+unsigned char flexran_get_mac_sdu_lcid_index(mid_t mod_id, mid_t ue_id, int cc_id, int index){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].lcid_sdu[index];
+}
+
+
+
+uint32_t flexran_get_total_size_dl_mac_sdus(mid_t mod_id, mid_t ue_id, int cc_id){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].total_sdu_bytes;
+
+}
+
+uint32_t flexran_get_total_size_ul_mac_sdus(mid_t mod_id, mid_t ue_id, int cc_id){
+
+   if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->eNB_stats[cc_id].total_ulsch_bytes_rx;
+
+}
+
+uint32_t flexran_get_total_num_pdu_dl(mid_t mod_id, mid_t ue_id, int cc_id){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].total_num_pdus;
+}
+
+uint32_t flexran_get_total_num_pdu_ul(mid_t mod_id, mid_t ue_id, int cc_id){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].total_num_pdus_rx;
+}
+
+
+/*Total RB used This should be modified later*/
+uint32_t flexran_get_total_prb_dl_tx_per_ue(mid_t mod_id, mid_t ue_id, int cc_id){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].total_rbs_used;
+
+}
+
+uint32_t flexran_get_total_prb_ul_rx_per_ue(mid_t mod_id, mid_t ue_id, int cc_id){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].total_rbs_used_rx;
+}
+
+
+uint32_t flexran_get_TBS_ul(mid_t mod_id, mid_t ue_id, int cc_id){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].ulsch_TBS;
+
+}
+
+
+uint32_t flexran_get_TBS_dl(mid_t mod_id, mid_t ue_id, int cc_id){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].TBS;
+}
+
+
+uint16_t flexran_get_num_prb_retx_per_ue(mid_t mod_id, mid_t ue_id, uint32_t cc_id) {
+
+if (!mac_is_present(mod_id)) return 0;
+return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].rbs_used_retx;
+
+}
+
+uint16_t flexran_get_num_prb_dl_tx_per_ue(mid_t mod_id, mid_t ue_id, uint32_t cc_id){
+
+if (!mac_is_present(mod_id)) return 0;
+return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].rbs_used;
+
+}
+
+uint16_t flexran_get_num_prb_ul_rx_per_ue(mid_t mod_id, mid_t ue_id, uint32_t cc_id){
+
+if (!mac_is_present(mod_id)) return 0;
+return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].rbs_used_rx;
+
+}
+
+uint32_t flexran_get_size_dl_mac_sdus(mid_t mod_id, uint32_t cc_id){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->eNB_stats[cc_id].dlsch_bytes_tx;
+}
+
+uint32_t flexran_get_size_ul_mac_sdus(mid_t mod_id, uint32_t cc_id){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->eNB_stats[cc_id].ulsch_bytes_rx;
+}
+
 int flexran_get_active_CC(mid_t mod_id, mid_t ue_id)
 {
   if (!mac_is_present(mod_id)) return 0;
@@ -307,6 +425,9 @@ int flexran_get_harq(mid_t       mod_id,
    }
 
 
+
+
+
   *pid = harq_pid;
   *round = harq_round;*/
   /* if (round > 0) { */
@@ -318,6 +439,15 @@ int flexran_get_harq(mid_t       mod_id,
 #warning "Implement flexran_get_harq() in RAN API"
   return 0;
 }
+
+
+int flexran_get_harq_round(mid_t mod_id, uint8_t cc_id, mid_t ue_id){
+
+  if (!mac_is_present(mod_id)) return 0;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].harq_round;
+
+}
+
 
 int32_t flexran_get_p0_pucch_dbm(mid_t mod_id, mid_t ue_id, uint8_t cc_id)
 {

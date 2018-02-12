@@ -49,6 +49,7 @@ message flex_ue_stats_report {
 	optional flex_ul_cqi_report ul_cqi_report = 9;
 	optional flex_rrc_measurements rrc_measurements = 10;
     optional flex_pdcp_stats pdcp_stats = 11;
+    optional flex_mon_app mon_app = 12;
 }
 
 //
@@ -85,6 +86,7 @@ enum flex_ue_stats_type {
      FLUST_DL_CQI = 16;
      FLUST_PBS = 32;
      FLUST_UL_CQI = 64;
+     FLUST_MON_APP = 128;
 
      FLUST_PDCP_STATS = 1024;     
      FLUST_RRC_MEASUREMENTS = 65536;

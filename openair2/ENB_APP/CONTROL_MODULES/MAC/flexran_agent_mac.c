@@ -27,8 +27,6 @@
  */
 
 #include "flexran_agent_mac.h"
-#include "flexran_agent_extern.h"
-#include "flexran_agent_common.h"
 #include "flexran_agent_mac_internal.h"
 #include "flexran_agent_net_comm.h"
 #include "flexran_agent_timer.h"
@@ -61,8 +59,8 @@ int flexran_agent_mac_stats_reply(mid_t mod_id,
 
 
   // Protocol__FlexHeader *header;
-  int i, j, k;
-  // int cc_id = 0;
+  int i, j, k, lcid;
+  int cc_id = 0;
   int enb_id = mod_id;
 
   /* Allocate memory for list of UE reports */
@@ -490,6 +488,85 @@ int flexran_agent_mac_stats_reply(mid_t mod_id,
                       
 
                      }    
+                     if (report_config->ue_report_type[i].ue_report_flags & PROTOCOL__FLEX_UE_STATS_TYPE__FLUST_MON_APP) {
+
+                            Protocol__FlexMonApp *monapp;
+                            monapp = malloc(sizeof(Protocol__FlexMonApp));
+                            if (monapp == NULL)
+                              goto error;
+                            protocol__flex_mon_app__init(monapp);
+
+                            monapp->size_sdus_dl = flexran_get_size_dl_mac_sdus(mod_id, cc_id);
+                            monapp->has_size_sdus_dl = 1;
+
+                            monapp->size_sdus_ul = flexran_get_size_ul_mac_sdus(mod_id, cc_id);
+                            monapp->has_size_sdus_ul = 1;
+
+                            monapp->total_size_sdus_dl = flexran_get_total_size_dl_mac_sdus(mod_id, i, cc_id);
+                            monapp->has_total_size_sdus_dl = 1;
+
+                            monapp->total_size_sdus_ul = flexran_get_total_size_ul_mac_sdus(mod_id, i, cc_id);
+                            monapp->has_total_size_sdus_ul = 1;
+
+                            monapp->harq_round = flexran_get_harq_round(mod_id, cc_id, i);
+                            monapp->has_harq_round = 1;
+
+                            monapp->dl_tbs = flexran_get_TBS_dl(mod_id, i, cc_id);
+                            monapp->has_dl_tbs = 1;
+
+                            monapp->ul_tbs = flexran_get_TBS_ul(mod_id, i, cc_id);
+                            monapp->has_ul_tbs = 1;
+
+                            monapp->prb_retx = flexran_get_num_prb_retx_per_ue(mod_id, i, cc_id);
+                            monapp->has_prb_retx = 1;
+
+                            monapp->prb_tx = flexran_get_num_prb_dl_tx_per_ue(mod_id, i, cc_id);
+                            monapp->has_prb_tx = 1;
+
+                            monapp->prb_rx = flexran_get_num_prb_ul_rx_per_ue(mod_id, i, cc_id);
+                            monapp->has_prb_rx = 1;
+
+                            monapp->total_prb_tx = flexran_get_total_prb_dl_tx_per_ue(mod_id, i, cc_id);
+                            monapp->has_total_prb_tx = 1;
+
+                            monapp->total_prb_rx = flexran_get_total_prb_ul_rx_per_ue(mod_id, i, cc_id);
+                            monapp->has_total_prb_rx = 1;
+
+                            monapp->total_pdu_tx = flexran_get_total_num_pdu_dl(mod_id, i, cc_id);
+                            monapp->has_total_pdu_tx = 1;
+
+                            monapp->total_pdu_rx = flexran_get_total_num_pdu_ul(mod_id, i, cc_id);
+                            monapp->has_total_pdu_rx = 1;
+
+                            Protocol__FlexRecMacSdu ** mac_sdus;
+                            mac_sdus = malloc(sizeof(Protocol__FlexRecMacSdu) * flexran_get_num_mac_sdu_tx(mod_id, i, cc_id));
+                            if (mac_sdus == NULL)
+                                goto error;
+
+                            monapp->n_rec_mac_sdu = flexran_get_num_mac_sdu_tx(mod_id, i, cc_id);
+
+                            for (j = 0; j < monapp->n_rec_mac_sdu; j++){
+
+
+                                mac_sdus[j] = malloc(sizeof(Protocol__FlexRecMacSdu));
+                                protocol__flex_rec_mac_sdu__init(mac_sdus[j]);
+
+                                mac_sdus[j]->lcid = flexran_get_mac_sdu_lcid_index(mod_id, i, cc_id, j);
+                                mac_sdus[j]->has_lcid = 1;
+
+                                mac_sdus[j]->sdu_length = flexran_get_mac_sdu_size(mod_id, i, cc_id, mac_sdus[j]->lcid);
+                                mac_sdus[j]->has_sdu_length = 1;
+
+
+                            }
+
+
+                            monapp->rec_mac_sdu = mac_sdus;
+
+
+                        ue_report[i]->mon_app = monapp;
+
+               }
                              
                  
 
@@ -783,15 +860,16 @@ int flexran_agent_mac_sf_trigger(mid_t mod_id, const void *params, Protocol__Fle
 
   sf_trigger_msg->n_dl_info = 0;
 
-  for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
-    for (j = 0; j < 8; j++) {
-      if (RC.mac && RC.mac[mod_id] && RC.mac[mod_id]->UE_list.eNB_UE_stats[UE_PCCID(mod_id,i)][i].harq_pid == 1) {
-	available_harq[i] = j;
-	sf_trigger_msg->n_dl_info++;
-	break;
+ for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+      for (j = 0; j < 8; j++) {
+        if (harq_pid_updated[i][j] == 1) {
+          available_harq[i] = j;
+          sf_trigger_msg->n_dl_info++;
+          break;
+        }
       }
     }
-  }
+
   
 
   //  LOG_I(FLEXRAN_AGENT, "Sending subframe trigger for frame %d and subframe %d\n", flexran_get_current_frame(mod_id), (flexran_get_current_subframe(mod_id) + 1) % 10);
@@ -828,14 +906,13 @@ int flexran_agent_mac_sf_trigger(mid_t mod_id, const void *params, Protocol__Fle
       
       
       dl_info[i]->harq_process_id = available_harq[UE_id];
-      if (RC.mac && RC.mac[mod_id])
-        RC.mac[mod_id]->UE_list.eNB_UE_stats[UE_PCCID(mod_id,i)][UE_id].harq_pid = 0;
+      harq_pid_updated[UE_id][available_harq[UE_id]] = 0;
       dl_info[i]->has_harq_process_id = 1;
       /* Fill in the status of the HARQ process (2 TBs)*/
       dl_info[i]->n_harq_status = 2;
       dl_info[i]->harq_status = malloc(sizeof(uint32_t) * dl_info[i]->n_harq_status);
       for (j = 0; j < dl_info[i]->n_harq_status; j++) {
-        dl_info[i]->harq_status[j] = RC.mac[mod_id]->UE_list.UE_sched_ctrl[i].round[UE_PCCID(mod_id,i)][j];
+        dl_info[i]->harq_status[j] = harq_pid_round[UE_id][available_harq[UE_id]];
         // TODO: This should be different per TB
       }
       //      LOG_I(FLEXRAN_AGENT, "Sending subframe trigger for frame %d and subframe %d and harq %d (round %d)\n", flexran_get_current_frame(mod_id), (flexran_get_current_subframe(mod_id) + 1) % 10, dl_info[i]->harq_process_id, dl_info[i]->harq_status[0]);
@@ -1169,10 +1246,10 @@ void flexran_agent_init_mac_agent(mid_t mod_id) {
   lfds700_ringbuffer_init_valid_on_current_logical_core( &ringbuffer_state[mod_id], dl_mac_config_array[mod_id], num_elements, &ps[mod_id], NULL );
   for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
     for (j = 0; j < 8; j++) {
-      if (RC.mac && RC.mac[mod_id])
-        RC.mac[mod_id]->UE_list.eNB_UE_stats[UE_PCCID(mod_id,i)][i].harq_pid = 0;
+       harq_pid_updated[i][j] = 0;
     }
   }
+
 }
 
 /***********************************************

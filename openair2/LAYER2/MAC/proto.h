@@ -29,6 +29,7 @@
 #ifndef __LAYER2_MAC_PROTO_H__
 #define __LAYER2_MAC_PROTO_H__
 
+#include "flexran_agent_defs.h"
 #include "LAYER2/MAC/defs.h"
 
 /** \addtogroup _mac

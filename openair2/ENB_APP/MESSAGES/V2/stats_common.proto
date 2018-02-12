@@ -269,3 +269,32 @@ message flex_pdcp_stats {
 
 	optional uint64 sfn=17;
 }
+
+//
+// Monitoring App
+//
+
+message flex_mon_app {
+
+    optional uint32 size_sdus_dl = 1;
+    optional uint32 size_sdus_ul = 2;
+    optional uint32 total_size_sdus_dl = 3;
+    optional uint32 total_size_sdus_ul = 4;
+    optional uint32 harq_round = 5;
+    optional uint32 dl_tbs = 6;
+    optional uint32 ul_tbs = 7;
+    optional uint32 prb_retx = 8;
+    optional uint32 prb_tx = 9;
+    optional uint32 prb_rx = 10;
+    optional uint32 total_prb_tx = 11;
+    optional uint32 total_prb_rx = 12;
+    optional uint32 total_pdu_tx = 13;
+    optional uint32 total_pdu_rx = 14;
+    repeated flex_rec_mac_sdu rec_mac_sdu = 15;
+}
+
+message flex_rec_mac_sdu {
+
+    optional uint32 sdu_length = 1;
+    optional uint32 lcid = 2;
+}

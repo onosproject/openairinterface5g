@@ -53,6 +53,8 @@
 extern uint8_t nfapi_mode;
 int oai_nfapi_rach_ind(nfapi_rach_indication_t *rach_ind);
 
+int harq_pid_updated[NUM_MAX_UE][8];
+int harq_pid_round[NUM_MAX_UE][8];
 
 
 void pmch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,PHY_VARS_RN *rn,relaying_type_t r_type) {
