@@ -212,6 +212,8 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
   }
   AssertFatal(Zc>0,"no valid Zc found for block length %d\n",block_length);
 
+  printf("ldpc_encoder_optim: BG %d, Zc %d, Kb %d, block_length %d\n",BG,Zc,Kb,block_length);
+
   if ((Zc&31) > 0) simd_size = 16;
   else          simd_size = 32;
 
@@ -238,7 +240,7 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
   }
   stop_meas(tinput);
 
-  if ((BG==1) || (BG==2 && Zc>64)) { 
+  if ((BG==1 && Zc>176) || (BG==2 && Zc>64)) { 
     // extend matrix
     start_meas(tprep);
     for (i1=0; i1 < ncols; i1++)

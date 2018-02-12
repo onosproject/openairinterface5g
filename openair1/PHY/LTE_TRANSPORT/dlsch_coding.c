@@ -43,7 +43,7 @@
 #include "UTIL/LOG/log.h"
 #include <syscall.h>
 
-//#define DEBUG_DLSCH_CODING
+#define DEBUG_DLSCH_CODING
 //#define DEBUG_DLSCH_FREE 1
 //#define TD_DECODING
 
