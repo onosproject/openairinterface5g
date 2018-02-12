@@ -325,15 +325,14 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
     5; //if not configured we use band 5 (UL: 824 MHz - 849MHz / DL: 869 MHz - 894 MHz  FDD mode)
 #endif
 
-    
+   /* 
     //OPTIONAL new parameters, to be used?
-      /*
-       * freqBandInfo_r13
-       * multiBandInfoList_r13
-       * nrs_CRS_PowerOffset_r13
-       * sib1_NB_IoT->downlinkBitmap_r13.choice.subframePattern10_r13 =(is a BIT_STRING)
-       */
-
+      
+       // freqBandInfo_r13
+       // multiBandInfoList_r13
+       // nrs_CRS_PowerOffset_r13
+       // sib1_NB_IoT->downlinkBitmap_r13.choice.subframePattern10_r13 =(is a BIT_STRING)
+      
 
    (*sib1_NB_IoT)->downlinkBitmap_r13 = CALLOC(1, sizeof(struct DL_Bitmap_NB_r13));
    ((*sib1_NB_IoT)->downlinkBitmap_r13)->present= DL_Bitmap_NB_r13_PR_NOTHING;
@@ -344,7 +343,7 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
 
    *nrs_CRS_PowerOffset= 0;
    (*sib1_NB_IoT)->nrs_CRS_PowerOffset_r13 = nrs_CRS_PowerOffset;
-
+  */
 
   // Now, follow the scheduler SIB configuration
   // There is only one sib2+sib3 common setting
