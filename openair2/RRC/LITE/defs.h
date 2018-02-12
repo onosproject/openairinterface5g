@@ -145,7 +145,7 @@ struct sidelink_ctrl_element {
    unsigned short type;
    union {
       struct GroupCommunicationEstablishReq group_comm_establish_req;
-      struct DirectCommunicationEstablishReq direct_comm_estblish_req;
+      struct DirectCommunicationEstablishReq direct_comm_establish_req;
       Group_Communication_Status_t group_comm_release_rsp;
       //struct DirectCommunicationReleaseReq  direct_comm_release_req;
       SL_UE_STATE_t ue_state;
