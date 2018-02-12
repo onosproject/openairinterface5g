@@ -232,6 +232,8 @@ void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_
                                   0,
                                   0
                                   );
+
+      LOG_I(MAC,"testing_NB_IoT config done\n");
   } else {
       LOG_E(RRC, " init_SI: FATAL, no memory for SIB23_NB_IoT allocated\n");
     //exit here

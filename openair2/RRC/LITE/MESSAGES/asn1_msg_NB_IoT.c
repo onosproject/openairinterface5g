@@ -177,8 +177,8 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
 
   PLMN_IdentityInfo_NB_r13_t PLMN_identity_info_NB_IoT;
   MCC_MNC_Digit_t dummy_mcc[3],dummy_mnc[3];
-  SchedulingInfo_NB_r13_t *schedulingInfo_NB_IoT;
-  SIB_Type_NB_r13_t *sib_type_NB_IoT;
+  SchedulingInfo_NB_r13_t schedulingInfo_NB_IoT;
+  SIB_Type_NB_r13_t sib_type_NB_IoT;
 
 
   long* attachWithoutPDN_Connectivity = NULL;
@@ -192,7 +192,9 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   memset(bcch_message,0,sizeof(BCCH_DL_SCH_Message_NB_t));
   bcch_message->message.present = BCCH_DL_SCH_MessageType_NB_PR_c1;
   bcch_message->message.choice.c1.present = BCCH_DL_SCH_MessageType_NB__c1_PR_systemInformationBlockType1_r13;
-
+  
+  memset(&schedulingInfo_NB_IoT,0,sizeof(SchedulingInfo_NB_r13_t));
+  memset(&sib_type_NB_IoT,0,sizeof(SIB_Type_NB_r13_t));
   //allocation
   *sib1_NB_IoT = &bcch_message->message.choice.c1.choice.systemInformationBlockType1_r13;
 
@@ -342,22 +344,20 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
    *nrs_CRS_PowerOffset= 0;
    (*sib1_NB_IoT)->nrs_CRS_PowerOffset_r13 = nrs_CRS_PowerOffset;
 
-   schedulingInfo_NB_IoT = (SchedulingInfo_NB_r13_t*) malloc (3*sizeof(SchedulingInfo_NB_r13_t));
-   sib_type_NB_IoT = (SIB_Type_NB_r13_t *) malloc (3*sizeof(SIB_Type_NB_r13_t));
 
-  memset(&schedulingInfo_NB_IoT[0],0,sizeof(SchedulingInfo_NB_r13_t));
-  memset(&schedulingInfo_NB_IoT[1],0,sizeof(SchedulingInfo_NB_r13_t));
-  memset(&schedulingInfo_NB_IoT[2],0,sizeof(SchedulingInfo_NB_r13_t));    
-  memset(&sib_type_NB_IoT[0],0,sizeof(SIB_Type_NB_r13_t));
-  memset(&sib_type_NB_IoT[1],0,sizeof(SIB_Type_NB_r13_t));
-  memset(&sib_type_NB_IoT[2],0,sizeof(SIB_Type_NB_r13_t));
 
 
   // Now, follow the scheduler SIB configuration
   // There is only one sib2+sib3 common setting
+<<<<<<< HEAD
   schedulingInfo_NB_IoT[0].si_Periodicity_r13=SchedulingInfo_NB_r13__si_Periodicity_r13_rf4096;  // (to be set to 64)
   schedulingInfo_NB_IoT[0].si_RepetitionPattern_r13=SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every2ndRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
   schedulingInfo_NB_IoT[0].si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b680;//208 bits
+=======
+  schedulingInfo_NB_IoT.si_Periodicity_r13=SchedulingInfo_NB_r13__si_Periodicity_r13_rf4096;
+  schedulingInfo_NB_IoT.si_RepetitionPattern_r13=SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every2ndRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
+  schedulingInfo_NB_IoT.si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b680;//208 bits
+>>>>>>> fb84abece3df291f424f5502474468dc4b0cd695
   
 
   // This is for SIB2/3
@@ -365,10 +365,10 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
     *  in the first SystemInformation message
     * listed in the schedulingInfoList list.
     * */
-  sib_type_NB_IoT[0]=SIB_Type_NB_r13_sibType3_NB_r13;
+  sib_type_NB_IoT=SIB_Type_NB_r13_sibType3_NB_r13;
 
-  ASN_SEQUENCE_ADD(&schedulingInfo_NB_IoT[0].sib_MappingInfo_r13.list,&sib_type_NB_IoT[0]);
-  ASN_SEQUENCE_ADD(&(*sib1_NB_IoT)->schedulingInfoList_r13.list,&schedulingInfo_NB_IoT[0]);
+  ASN_SEQUENCE_ADD(&schedulingInfo_NB_IoT.sib_MappingInfo_r13.list,&sib_type_NB_IoT);
+  ASN_SEQUENCE_ADD(&(*sib1_NB_IoT)->schedulingInfoList_r13.list,&schedulingInfo_NB_IoT);
 
   //printf("[ASN Debug] SI P: %ld\n",(*sib1_NB_IoT)->schedulingInfoList_r13.list.array[0]->si_Periodicity_r13);
 
