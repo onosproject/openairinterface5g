@@ -312,7 +312,7 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
 
 
   (*sib1_NB_IoT)->cellSelectionInfo_r13.q_RxLevMin_r13=-65; //which value?? TS 36.331 V14.2.1 pag. 589
-  (*sib1_NB_IoT)->cellSelectionInfo_r13.q_QualMin_r13 = 0; //FIXME new parameter for SIB1-NB, not present in SIB1 (for cell reselection but if not used the UE should apply the default value)
+  (*sib1_NB_IoT)->cellSelectionInfo_r13.q_QualMin_r13 =-22; //FIXME new parameter for SIB1-NB, not present in SIB1 (for cell reselection but if not used the UE should apply the default value)
 
   (*sib1_NB_IoT)->p_Max_r13 = CALLOC(1, sizeof(P_Max_t));
   *((*sib1_NB_IoT)->p_Max_r13) = 23;
@@ -324,6 +324,7 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
 #else
     5; //if not configured we use band 5 (UL: 824 MHz - 849MHz / DL: 869 MHz - 894 MHz  FDD mode)
 #endif
+
     
     //OPTIONAL new parameters, to be used?
       /*
@@ -343,8 +344,6 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
 
    *nrs_CRS_PowerOffset= 0;
    (*sib1_NB_IoT)->nrs_CRS_PowerOffset_r13 = nrs_CRS_PowerOffset;
-
-
 
 
   // Now, follow the scheduler SIB configuration
@@ -381,19 +380,21 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   (*sib1_NB_IoT)->si_WindowLength_r13=SystemInformationBlockType1_NB__si_WindowLength_r13_ms160;
   (*sib1_NB_IoT)->si_RadioFrameOffset_r13= 0;
 
-  /*In Nb-IoT change/update of specific SI message can additionally be indicated by a SI message specific value tag
-   * systemInfoValueTagSI (there is no SystemInfoValueTag in SIB1-NB but only in MIB-NB)
-   *contained in systemInfoValueTagList_r13
-   **/
-  //FIXME correct?
+  /////optional parameters, decide to use at future
+  /*
+  //system value tag
   (*sib1_NB_IoT)->systemInfoValueTagList_r13 = CALLOC(1, sizeof(struct SystemInfoValueTagList_NB_r13));
   asn_set_empty(&(*sib1_NB_IoT)->systemInfoValueTagList_r13->list);
   ASN_SEQUENCE_ADD(&(*sib1_NB_IoT)->systemInfoValueTagList_r13->list,&systemInfoValueTagSI);
-
-  
-  // To check if the bcch message properly setting
-  printf("Check value :%d, should be band number\n",bcch_message->message.choice.c1.choice.systemInformationBlockType1_r13.freqBandIndicator_r13);
-
+  // downlink bitmap
+  (*sib1_NB_IoT)->downlinkBitmap_r13 = CALLOC(1, sizeof(struct DL_Bitmap_NB_r13));
+  ((*sib1_NB_IoT)->downlinkBitmap_r13)->present= DL_Bitmap_NB_r13_PR_NOTHING;
+  // CRS power offset
+  *nrs_CRS_PowerOffset= 0;
+  (*sib1_NB_IoT)->nrs_CRS_PowerOffset_r13 = nrs_CRS_PowerOffset;
+  */
+    *eutraControlRegionSize = 1;
+   (*sib1_NB_IoT)->eutraControlRegionSize_r13 = eutraControlRegionSize;
 #ifdef XER_PRINT //generate xml files
   xer_fprint(stdout, &asn_DEF_BCCH_DL_SCH_Message_NB, (void*)bcch_message);
 #endif
@@ -403,20 +404,9 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
                                    (void*)bcch_message,
                                    carrier->SIB1_NB_IoT,
                                    100);
- printf("In Asn.1 SIB1\n"); 
- for(int i=0;i<32;i++)
-   printf("%x ",carrier->SIB1_NB_IoT[i]);
-  printf("\n");
 
-  if (enc_rval.encoded > 0){ 
-       LOG_F(RRC,"ASN1 message encoding failed (%s, %lu)!\n",
+  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
-  }
-
-
-#ifdef USER_MODE
-  LOG_D(RRC,"[NB-IoT] SystemInformationBlockType1-NB Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
-#endif
 
   if (enc_rval.encoded==-1) {
     return(-1);
