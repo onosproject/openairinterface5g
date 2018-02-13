@@ -78,12 +78,12 @@ int test_ldpc(short No_iteration,
   //short test_input[block_length];
   unsigned char *test_input[MAX_NUM_DLSCH_SEGMENTS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};;
   //short *c; //padded codeword
-  short *esimated_output;
+  unsigned char *estimated_output;
   unsigned char *channel_input[MAX_NUM_DLSCH_SEGMENTS];
   unsigned char *channel_input_optim[MAX_NUM_DLSCH_SEGMENTS];
   double *channel_output;
   double *modulated_input;
-  short *channel_output_fixed;
+  char *channel_output_fixed;
   unsigned int i,j,trial=0;
   short BG,Zc,Kb,nrows,ncols;
   int no_punctured_columns,removed_bit;
@@ -91,6 +91,10 @@ int test_ldpc(short No_iteration,
   //Table of possible lifting sizes
   short lift_size[51]= {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
   int n_segments=8;
+
+  t_nrLDPC_dec_params decParams;
+  int n_iter;
+
   *errors=0;
   *crc_misses=0;
 
@@ -102,6 +106,9 @@ int test_ldpc(short No_iteration,
   }
   modulated_input = (double *)malloc(sizeof(double) * 68*384);
   channel_output  = (double *)malloc(sizeof(double) * 68*384);
+  channel_output_fixed  = (char *)malloc16(sizeof(char) * 68*384);
+  estimated_output = (unsigned char*) malloc16(sizeof(unsigned char) * block_length/8);
+
   reset_meas(&time);
   reset_meas(&time_optim);
   reset_meas(&tinput);
@@ -153,7 +160,7 @@ int test_ldpc(short No_iteration,
     }
   }
 
-  printf("ldpc_test: BG %d, Zc %d, Kb %d\n",BG, Zc, Kb);
+  printf("ldpc_test: block_length %d, BG %d, Zc %d, Kb %d\n",block_length,BG, Zc, Kb);
   no_punctured_columns=(int)((nrows-2)*Zc+block_length-block_length*(1/((float)nom_rate/(float)denom_rate)))/Zc;
   //  printf("puncture:%d\n",no_punctured_columns);
   removed_bit=(nrows-no_punctured_columns-2) * Zc+block_length-(int)(block_length/((float)nom_rate/(float)denom_rate));
@@ -166,46 +173,39 @@ int test_ldpc(short No_iteration,
     //// encoder
     start_meas(&time);
     for(j=0;j<n_segments;j++) {
-      //if (BG==1) 
-      //ldpc_encoder(test_input, channel_input,block_length,nom_rate,denom_rate);
-      //else
       ldpc_encoder_orig(test_input[j], channel_input[j],block_length,nom_rate,denom_rate,0);
     }
     stop_meas(&time);
 
     start_meas(&time_optim);
-    //ldpc_encoder_optim_8seg(test_input,channel_input_optim,block_length,nom_rate,denom_rate,n_segments,&tinput,&tprep,&tparity,&toutput);
-    for(j=0;j<n_segments;j++) {
+    ldpc_encoder_optim_8seg(test_input,channel_input_optim,block_length,nom_rate,denom_rate,n_segments,&tinput,&tprep,&tparity,&toutput);
+    /*for(j=0;j<n_segments;j++) {
       ldpc_encoder_optim(test_input[j],channel_input_optim[j],block_length,nom_rate,denom_rate,&tinput,&tprep,&tparity,&toutput);
-    }
+      }*/
     stop_meas(&time_optim);
     
     if (ntrials==1)    
       for (j=0;j<n_segments;j++)
 	for (i = 0; i < block_length+(nrows-no_punctured_columns) * Zc - removed_bit; i++)
-	  if (channel_input[j][i]!=channel_input_optim[j][i]) 
+	  if (channel_input[j][i]!=channel_input_optim[j][i]) {
 	    printf("differ in seg %d pos %d (%d,%d)\n",j,i,channel_input[j][i],channel_input_optim[j][i]);
+	    return (-1);
+	  }
 
     //print_meas_now(&time, "", stdout);
 
-   // for (i=0;i<6400;i++)
+    // for (i=0;i<6400;i++)
     //printf("channel_input[%d]=%d\n",i,channel_input[i]);
     //printf("%d ",channel_input[i]);
 
-    if ((BG==2) && (Zc==128||Zc==256))
+    //if ((BG==2) && (Zc==128||Zc==256))
+    if (0)
     {
-      channel_output_fixed  = (short *)malloc( (Kb+nrows) * Zc*sizeof(short));
-      memset(channel_output_fixed,0,(Kb+nrows) * Zc*sizeof(short));
-      removed_bit=(nrows-no_punctured_columns-2) * Zc+block_length-(int)(block_length/((float)nom_rate/(float)denom_rate));
-      //printf("removed_bit:%d\n",removed_bit);
-
       for (i = 2*Zc; i < (Kb+nrows-no_punctured_columns) * Zc-removed_bit; i++)
       {
 #ifdef DEBUG_CODER
-
         if ((i&0xf)==0)
           printf("\ne %d..%d:    ",i,i+15);
-
 #endif
 
         if (channel_input[0][i-2*Zc]==0)
@@ -214,7 +214,8 @@ int test_ldpc(short No_iteration,
           modulated_input[i]=-1/sqrt(2);
 
         channel_output[i] = modulated_input[i] + gaussdouble(0.0,1.0) * 1/sqrt(2*SNR);
-        channel_output_fixed[i] = (short) ((channel_output[i]*128)<0?(channel_output[i]*128-0.5):(channel_output[i]*128+0.5)); //fixed point 9-7
+        channel_output_fixed[i] = (char) ((channel_output[i]*128)<0?(channel_output[i]*128-0.5):(channel_output[i]*128+0.5)); //fixed point 9-7
+	//printf("llr[%d]=%d\n",i,channel_output_fixed[i]);
       }
 
       //for (i=(Kb+nrows) * Zc-5;i<(Kb+nrows) * Zc;i++)
@@ -226,28 +227,47 @@ int test_ldpc(short No_iteration,
       printf("\n");
       exit(-1);
 #endif
+
+      decParams.BG=BG;
+      decParams.Z=Zc;
+      decParams.R=13;
+      decParams.numMaxIter=6;
+      decParams.outMode = nrLDPC_outMode_BIT;
+
       // decode the sequence
       // decoder supports BG2, Z=128 & 256
-      esimated_output=ldpc_decoder(channel_output_fixed, block_length, No_iteration, (double)((float)nom_rate/(float)denom_rate));
+      //esimated_output=ldpc_decoder(channel_output_fixed, block_length, No_iteration, (double)((float)nom_rate/(float)denom_rate));
+
+      nrLDPC_decoder(&decParams, channel_output_fixed, estimated_output, NULL);
 
       //for (i=(Kb+nrows) * Zc-5;i<(Kb+nrows) * Zc;i++)
       //  printf("esimated_output[%d]=%d\n",i,esimated_output[i]);
 
       //count errors
-      for (i=2*Zc; i<(Kb+nrows-no_punctured_columns) * Zc-removed_bit; i++)
+      for (i=0; i<block_length>>3; i++)
       {
-        if (esimated_output[i] != channel_input[0][i-2*Zc])
+        if (estimated_output[i] != test_input[0][i])
         {
+	  //printf("error pos %d (%d, %d)\n",i,estimated_output[i],test_input[i]);
           *errors = (*errors) + 1;
           break;
         }
       }
 
-      free(channel_output_fixed);
     }
-    else if (trial==0)
-      printf("decoder is not supported\n");
+    /*else if (trial==0)
+      printf("decoder is not supported\n");*/
   }
+
+  for(j=0;j<MAX_NUM_DLSCH_SEGMENTS;j++) {
+    free(test_input[j]);
+    free(channel_input[j]);
+    free(channel_input_optim[j]);
+  }
+  free(modulated_input);
+  free(channel_output);
+  free(channel_output_fixed);
+  free(estimated_output);
 
   print_meas(&time,"ldpc_encoder",NULL,NULL);
   print_meas(&time_optim,"ldpc_encoder_optim",NULL,NULL);
@@ -266,7 +286,7 @@ int main(int argc, char *argv[])
   //double rate=0.333;
   int nom_rate=1;
   int denom_rate=3;
-  double SNR,SNR_lin;
+  double SNR0=-2.0,SNR,SNR_lin;
   unsigned char qbits=4;
   unsigned int decoded_errors[100]; // initiate the size of matrix equivalent to size of SNR
   int c,i=0;
@@ -275,7 +295,7 @@ int main(int argc, char *argv[])
 
   randominit(0);
 
-  while ((c = getopt (argc, argv, "q:r:s:l:n:")) != -1)
+  while ((c = getopt (argc, argv, "q:r:s:l:n:d:")) != -1)
     switch (c)
     {
       case 'q':
@@ -286,7 +306,7 @@ int main(int argc, char *argv[])
         nom_rate = atoi(optarg);
         break;
 
-      case 's':
+      case 'd':
         denom_rate = atoi(optarg);
         break;
 
@@ -298,6 +318,10 @@ int main(int argc, char *argv[])
         n_trials = atoi(optarg);
         break;
 
+      case 's':
+        SNR0 = atoi(optarg);
+        break;
+
       default:
         abort ();
     }
@@ -307,7 +331,7 @@ int main(int argc, char *argv[])
   printf("block length %d: \n", block_length);
   printf("rate: %d/%d\n",nom_rate,denom_rate);
 
-  for (SNR=-2.1; SNR<-2; SNR+=.1)
+  for (block_length=8;block_length<=MAX_BLOCK_LENGTH;block_length+=8)
   {
     SNR_lin = pow(10,SNR/10);
     decoded_errors[i]=test_ldpc(No_iteration,
