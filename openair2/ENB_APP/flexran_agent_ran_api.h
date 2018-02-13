@@ -93,6 +93,15 @@ uint32_t flexran_get_TBS_dl(mid_t mod_id, mid_t ue_id, int cc_id);
 /*Get uplink TBS */
 uint32_t flexran_get_TBS_ul(mid_t mod_id, mid_t ue_id, int cc_id);
 
+/*Get total TBS DL*/
+uint64_t flexran_get_total_TBS_dl(mid_t mod_id, mid_t ue_id, int cc_id);
+
+/*Get total TBS DL*/
+uint64_t flexran_get_total_TBS_ul(mid_t mod_id, mid_t ue_id, int cc_id);
+
+/*Get retx PRB dl*/
+uint16_t flexran_get_num_prb_retx_dl_per_ue(mid_t mod_id, mid_t ue_id, uint32_t cc_id);
+
 /* Get the transmission queue size for a UE with a channel_id logical channel id */
 rlc_buffer_occupancy_t flexran_get_tx_queue_size(mid_t mod_id, mid_t ue_id, logical_chan_id_t channel_id);
 
@@ -152,8 +161,23 @@ uint16_t flexran_get_num_prb_dl_tx_per_ue(mid_t mod_id, mid_t ue_id, uint32_t cc
 /*Get number of prb for rx per UE UL*/
 uint16_t flexran_get_num_prb_ul_rx_per_ue(mid_t mod_id, mid_t ue_id, uint32_t cc_id);
 
+/*Get number of prb for retx per UE UL*/
+uint32_t flexran_get_num_prb_retx_ul_per_ue(mid_t mod_id, mid_t ue_id, uint32_t cc_id);
+
 /*Get number of prb for retx per UE*/
-uint16_t flexran_get_num_prb_retx_per_ue(mid_t mod_id, mid_t ue_id, uint32_t cc_id);
+uint16_t flexran_get_num_prb_retx_dl_per_ue(mid_t mod_id, mid_t ue_id, uint32_t cc_id);
+
+/*MCS before rate adaptation DL*/
+uint8_t flexran_get_mcs1_dl(mid_t mod_id, mid_t ue_id, int cc_id);
+
+/*MCS after rate adaptation DL*/
+uint8_t flexran_get_mcs2_dl(mid_t mod_id, mid_t ue_id, int cc_id);
+
+/*MCS before rate adaptation UL*/
+uint8_t flexran_get_mcs1_ul(mid_t mod_id, mid_t ue_id, int cc_id);
+
+/*MCS after rate adaptation UL*/
+uint8_t flexran_get_mcs2_ul(mid_t mod_id, mid_t ue_id, int cc_id);
 
 /* Get the number of active component carriers for a specific UE */
 int flexran_get_active_CC(mid_t mod_id, mid_t ue_id);
