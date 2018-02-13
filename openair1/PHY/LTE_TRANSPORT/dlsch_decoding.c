@@ -626,7 +626,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 				llrProcBuf,
           		p_procTime);
 
-		//	ret = no_iteration_ldpc;
+		//ret = no_iteration_ldpc;
 
 		nb_total_decod++;
 		if (no_iteration_ldpc > 5){
@@ -1117,7 +1117,7 @@ uint32_t  dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,
  	kb = harq_process->Kplus/harq_process->Z;
   	  if ( kb==22){
   		  p_decParams->BG = 1;
-  		  p_decParams->R = 13;
+  		  p_decParams->R = 89;
   		  kc = 68;
   	  }
   	  else{
@@ -1126,7 +1126,7 @@ uint32_t  dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,
   		  kc = 52;
   	  	  }
 
-      p_decParams->numMaxIter = 10;
+      p_decParams->numMaxIter = 2;
       Kr = p_decParams->Z*kb;
       p_decParams->outMode= 0;
 
@@ -2060,7 +2060,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   	        else
   	        	r_offset = Nl*Qm * ((GpmodC==0?0:1) + (Gp/C));
 
-		printf("thread0 r_offset %d\n",r_offset);
+		//	printf("thread0 r_offset %d\n",r_offset);
   	       
   //for (r=(harq_process->C/2); r<harq_process->C; r++) {
   	     r=1; //(harq_process->C/2);
