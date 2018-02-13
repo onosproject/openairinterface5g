@@ -615,6 +615,8 @@ typedef struct {
     ///  uplink transport block size
     uint32_t ulsch_TBS;
 
+    uint32_t total_ulsch_TBS;
+
     ///  total rb used for a new uplink transmission
     uint32_t num_retransmission_rx;
     ///  total rb used for a new uplink transmission

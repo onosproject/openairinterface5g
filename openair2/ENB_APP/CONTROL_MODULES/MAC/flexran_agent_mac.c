@@ -549,9 +549,9 @@ int flexran_agent_mac_stats_reply(mid_t mod_id,
                             monapp->has_total_tbs_dl = 1;
 
                             monapp->total_tbs_ul = flexran_get_total_TBS_ul(mod_id, i, cc_id);
-                            monapp->has_total_tbs_dl = 1;
-
-                            Protocol__FlexMacSdusDl ** mac_sdus;
+                            monapp->has_total_tbs_ul = 1;
+                           
+                            Protocol__FlexMacSdusDl ** mac_sdus;           
                             mac_sdus = malloc(sizeof(Protocol__FlexMacSdusDl) * flexran_get_num_mac_sdu_tx(mod_id, i, cc_id));
                             if (mac_sdus == NULL)
                                 goto error;

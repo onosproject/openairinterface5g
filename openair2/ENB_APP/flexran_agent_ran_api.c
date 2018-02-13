@@ -325,7 +325,7 @@ uint64_t flexran_get_total_TBS_dl(mid_t mod_id, mid_t ue_id, int cc_id){
 uint64_t flexran_get_total_TBS_ul(mid_t mod_id, mid_t ue_id, int cc_id){
 
   if (!mac_is_present(mod_id)) return 0;
-  return /*TODO for uplink*/0;//UE_list->eNB_UE_stats[CC_id][UE_id].total_pdu_bytes;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].total_ulsch_TBS;
 }
 
 uint8_t flexran_get_mcs1_dl(mid_t mod_id, mid_t ue_id, int cc_id){
