@@ -329,7 +329,22 @@ double gaussdouble(double mean, double variance)
   }
 }
 #endif
-
+/*
+static void gaussfloat_sse2(float* data, size_t count) {
+	//assert(count % 8 == 0);
+	LCG<__m128> r;
+	for (int i = 0; i < count; i += 8) {
+        __m128 u1 = _mm_sub_ps(_mm_set1_ps(1.0f), r()); // [0, 1) -> (0, 1]
+        __m128 u2 = r();
+		__m128 radius = _mm_sqrt_ps(_mm_mul_ps(_mm_set1_ps(-2.0f), log_ps(u1)));
+		__m128 theta = _mm_mul_ps(_mm_set1_ps(2.0f * 3.14159265358979323846f), u2);
+        __m128 sintheta, costheta;
+        sincos_ps(theta, &sintheta, &costheta);
+		_mm_store_ps(&data[i    ], _mm_mul_ps(radius, costheta));
+		_mm_store_ps(&data[i + 4], _mm_mul_ps(radius, sintheta));
+	}
+}
+*/
 #ifdef MAIN
 main(int argc,char **argv)
 {
@@ -343,4 +358,3 @@ main(int argc,char **argv)
   }
 }
 #endif
-

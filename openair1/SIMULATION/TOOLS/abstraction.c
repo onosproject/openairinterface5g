@@ -37,7 +37,7 @@ static double **cos_lut=NULL,**sin_lut=NULL;
 //#if 1
 
 //#define abstraction_SSE
-/*#ifdef  abstraction_SSE//abstraction_SSE is not working.
+#ifdef  abstraction_SSE//abstraction_SSE is not working.
 int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 {
 
@@ -70,25 +70,28 @@ int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
     //count++;
     //freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
     for (l=0; l<(int)desc->nb_taps; l++) {
+
       if (desc->nb_taps==1)
         delay = desc->delays[l];
       else
         delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
-      cos_lut128=_mm_set_pd(cos(twopi*2*f*delay),cos(twopi*(2*f+1)*delay));
-      sin_lut128=_mm_set_pd(sin(twopi*2*f*delay),sin(twopi*(2*f+1)*delay));
-      _mm_storeu_pd(&cos_lut[2*f+(n_samples>>1)][l],cos_lut128);
-      _mm_storeu_pd(&sin_lut[2*f+(n_samples>>1)][l],sin_lut128);
+
+       sincos_ps(_mm_set_pd(cos(twopi*(2*f)*delay),cos(twopi*(2*f)*delay)), &sin_lut128, &cos_lut128);
+      _mm_storeu_pd(&cos_lut[2*f+(n_samples>>1)][l],_mm_set_pd(cos(twopi*(2*f)*delay),cos(twopi*(2*f)*delay)));
+      _mm_storeu_pd(&sin_lut[2*f+(n_samples>>1)][l],_mm_set_pd(sin(twopi*(2*f)*delay),sin(twopi*(2*f)*delay)));
       //cos_lut[f+(n_samples>>1)][l] = cos(2*M_PI*freq*delay);
       //sin_lut[f+(n_samples>>1)][l] = sin(2*M_PI*freq*delay);
-      //printf("values cos:%d, sin:%d\n", cos_lut[f][l], sin_lut[f][l]);
-
+      printf("arg %e, f %d, values cos:%e, sin:%e, cos# %e\n",twopi*(2*f)*delay,2*f+(n_samples>>1), cos_lut[2*f+(n_samples>>1)][l], sin_lut[2*f+(n_samples>>1)][l],cos(twopi*(2*f)*delay));
+      printf("arg %e, f %d, values cos:%e, sin:%e, cos# %e\n",twopi*(2*f+1)*delay,2*f+1+(n_samples>>1), cos_lut[2*f+1+(n_samples>>1)][l], sin_lut[2*f+1+(n_samples>>1)][l],cos(twopi*(2*f+1)*delay));
+      //printf("f %d, cos0 %e, cos1 %e\n",2*f,(double) &cos_lut128[0],(double) &cos_lut128[1]);
+      //printf("f %d, sin0 %e, sin1 %e\n",2*f+1,(double) &sin_lut128[0],(double) &sin_lut128[1]);
     }
   }
   for (l=0; l<(int)desc->nb_taps; l++) 
   {
       cos_lut[(n_samples>>1)][l] = 1;
       sin_lut[(n_samples>>1)][l] = 0;
-      printf("[%d][%d] (cos,sin) (%e,%e):\n",2*f,l,cos_lut[(n_samples>>1)][l],sin_lut[(n_samples>>1)][l]);
+      printf("f %d,l %d (cos,sin) (%e,%e):\n",2*f,l,cos_lut[(n_samples>>1)][l],sin_lut[(n_samples>>1)][l]);
   }
 
   for (f=1; f<=(n_samples>>2); f++) {
@@ -99,8 +102,8 @@ int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
         delay = desc->delays[l];
       else
         delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
-      cos_lut128=_mm_set_pd(cos(twopi*2*f*delay),cos(twopi*(2*f+1)*delay));
-      sin_lut128=_mm_set_pd(sin(twopi*2*f*delay),sin(twopi*(2*f+1)*delay));
+      cos_lut128=_mm_set_pd(cos(twopi*2*(f+1)*delay),cos(twopi*(2*f)*delay));
+      sin_lut128=_mm_set_pd(sin(twopi*2*(f+1)*delay),sin(twopi*(2*f)*delay));
       _mm_storeu_pd(&cos_lut[2*f+(n_samples>>1)][l],cos_lut128);
       _mm_storeu_pd(&sin_lut[2*f+(n_samples>>1)][l],sin_lut128);
       //cos_lut[f+(n_samples>>1)][l] = cos(2*M_PI*freq*delay);
@@ -111,12 +114,12 @@ int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
   }
   for (f=-(n_samples>>1); f<=(n_samples>>1); f++) {
     for (l=0; l<(int)desc->nb_taps; l++) {  
-      printf("[%d][%d] (cos,sin) (%e,%e):\n",f,l,cos_lut[f+(n_samples>>1)][l],sin_lut[f+(n_samples>>1)][l]);
+      printf("f %d, l %d (cos,sin) (%e,%e):\n",f,l,cos_lut[f+(n_samples>>1)][l],sin_lut[f+(n_samples>>1)][l]);
     }
   }
   return(0);
 }
-#else*/
+#else
 int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 {
 
@@ -162,7 +165,8 @@ int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
   //printf("count %d\n",count);
   return(0);
 }
-#ifdef abstraction_SSE
+#endif
+/*#ifdef abstraction_SSE
 int freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 {
   int16_t f,f2,d;
@@ -224,7 +228,7 @@ int freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 
   return(0);
 }
-#else
+#else*/
 int freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 {
 
@@ -284,7 +288,7 @@ int freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 
   return(0);
 }
-#endif
+//#endif
 
 int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
 {
@@ -345,7 +349,7 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
 
   return(0);
 }
-#ifdef abstraction_SSE
+/*#ifdef abstraction_SSE
 int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
 {
 
@@ -403,7 +407,7 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
   stop_meas(&desc->interp_freq_PRACH);
   return(0);
 }
-#else
+#else*/
 int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
 {
 
@@ -454,7 +458,7 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
   stop_meas(&desc->interp_freq_PRACH);
   return(0);
 }
-#endif
+//#endif
 double compute_pbch_sinr(channel_desc_t *desc,
                          channel_desc_t *desc_i1,
                          channel_desc_t *desc_i2,
@@ -632,5 +636,104 @@ double pbch_bler(double sinr)
   //printf ("sinr %f bler %f\n",sinr,bler);
   return(bler);
 
+}
+
+
+/* since sin_ps and cos_ps are almost identical, sincos_ps could replace both of them..
+   it is almost as fast, and gives you a free cosine with your sine */
+inline void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
+  __m128 xmm1, xmm2, xmm3 = _mm_setzero_ps(), sign_bit_sin, y;
+  __m128i emm0, emm2, emm4;
+
+  sign_bit_sin = x;
+  /* take the absolute value */
+  x = _mm_and_ps(x, _mm_castsi128_ps(_mm_set1_epi32(~0x80000000)));//_ps_inv_sign_mask
+  /* extract the sign bit (upper one) */
+  sign_bit_sin = _mm_and_ps(sign_bit_sin, _mm_castsi128_ps(_mm_set1_epi32(~0x80000000)));//_ps_sign_mask
+  
+  /* scale by 4/Pi */
+  y = _mm_mul_ps(x, _mm_castsi128_ps(_mm_set1_epi32(1.27323954473516f)));
+    
+
+  /* store the integer part of y in emm2 */
+  emm2 = _mm_cvttps_epi32(y);
+
+  /* j=(j+1) & (~1) (see the cephes sources) */
+  emm2 = _mm_add_epi32(emm2, _mm_set1_epi32(1));//_pi32_1
+  emm2 = _mm_and_si128(emm2, _mm_set1_epi32(~1));//_pi32_inv1
+  y = _mm_cvtepi32_ps(emm2);
+
+  emm4 = emm2;
+
+  /* get the swap sign flag for the sine */
+  emm0 = _mm_and_si128(emm2, _mm_set1_epi32(4));//_pi32_4
+  emm0 = _mm_slli_epi32(emm0, 29);
+  __m128 swap_sign_bit_sin = _mm_castsi128_ps(emm0);
+
+  /* get the polynom selection mask for the sine*/
+  emm2 = _mm_and_si128(emm2, _mm_set1_epi32(2));//_pi32_2
+  emm2 = _mm_cmpeq_epi32(emm2, _mm_setzero_si128());
+  __m128 poly_mask = _mm_castsi128_ps(emm2);
+
+  /* The magic pass: "Extended precision modular arithmetic" 
+     x = ((x - y * DP1) - y * DP2) - y * DP3; */
+
+  xmm1 = _mm_set1_ps(-0.78515625f);//_ps_minus_cephes_DP1
+  xmm2 = _mm_set1_ps(-2.4187564849853515625e-4f);//_ps_minus_cephes_DP2
+  xmm3 = _mm_set1_ps(-3.77489497744594108e-8f);//_ps_minus_cephes_DP3
+  xmm1 = _mm_mul_ps(y, xmm1);
+  xmm2 = _mm_mul_ps(y, xmm2);
+  xmm3 = _mm_mul_ps(y, xmm3);
+  x = _mm_add_ps(x, xmm1);
+  x = _mm_add_ps(x, xmm2);
+  x = _mm_add_ps(x, xmm3);
+
+
+  emm4 = _mm_sub_epi32(emm4, _mm_set1_epi32(2));//_pi32_2
+  emm4 = _mm_andnot_si128(emm4, _mm_set1_epi32(4));//_pi32_4
+  emm4 = _mm_slli_epi32(emm4, 29);
+  __m128 sign_bit_cos = _mm_castsi128_ps(emm4);
+
+  sign_bit_sin = _mm_xor_ps(sign_bit_sin, swap_sign_bit_sin);
+
+  
+  /* Evaluate the first polynom  (0 <= x <= Pi/4) */
+  __m128 z = _mm_mul_ps(x,x);
+  y = _mm_set1_ps( 2.443315711809948E-005f);//_ps_coscof_p0
+
+  y = _mm_mul_ps(y, z);
+  y = _mm_add_ps(y, _mm_set1_ps(-1.388731625493765E-003f));//_ps_coscof_p1
+  y = _mm_mul_ps(y, z);
+  y = _mm_add_ps(y, _mm_set1_ps( 4.166664568298827E-002f));//_ps_coscof_p2
+  y = _mm_mul_ps(y, z);
+  y = _mm_mul_ps(y, z);
+  __m128 tmp = _mm_mul_ps(z, _mm_set1_ps(0.5f));//_ps_0p5
+  y = _mm_sub_ps(y, tmp);
+  y = _mm_add_ps(y, _mm_set1_ps(1.f));//_ps_1
+  
+  /* Evaluate the second polynom  (Pi/4 <= x <= 0) */
+
+  __m128 y2 = _mm_set1_ps(-1.9515295891E-4f);//*(__m128*)_ps_sincof_p0;
+  y2 = _mm_mul_ps(y2, z);
+  y2 = _mm_add_ps(y2, _mm_set1_ps( 8.3321608736E-3f));//*(__m128*)_ps_sincof_p1);
+  y2 = _mm_mul_ps(y2, z);
+  y2 = _mm_add_ps(y2, _mm_set1_ps(-1.6666654611E-1f));//_ps_sincof_p2
+  y2 = _mm_mul_ps(y2, z);
+  y2 = _mm_mul_ps(y2, x);
+  y2 = _mm_add_ps(y2, x);
+
+  /* select the correct result from the two polynoms */  
+  xmm3 = poly_mask;
+  __m128 ysin2 = _mm_and_ps(xmm3, y2);
+  __m128 ysin1 = _mm_andnot_ps(xmm3, y);
+  y2 = _mm_sub_ps(y2,ysin2);
+  y = _mm_sub_ps(y, ysin1);
+
+  xmm1 = _mm_add_ps(ysin1,ysin2);
+  xmm2 = _mm_add_ps(y,y2);
+ 
+  /* update the sign */
+  *s = _mm_xor_ps(xmm1, sign_bit_sin);
+  *c = _mm_xor_ps(xmm2, sign_bit_cos);
 }
 
