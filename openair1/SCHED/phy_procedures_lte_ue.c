@@ -1901,6 +1901,14 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       LOG_I(PHY,"[UE  %d][PUSCH %d] AbsSubFrame %d.%d, generating PUSCH, Po_PUSCH: %d dBm (max %d dBm), amp %d\n",
 	    Mod_id,harq_pid,frame_tx%1024,nr_tti_tx,ue->tx_power_dBm[nr_tti_tx],ue->tx_power_max_dBm, tx_amp);
 #endif
+
+      if (tx_amp>100)
+	tx_amp =100;
+
+      //LOG_I(PHY,"[UE  %d][PUSCH %d] after AbsSubFrame %d.%d, generating PUSCH, Po_PUSCH: %d dBm (max %d dBm), amp %d\n",
+	//    Mod_id,harq_pid,frame_tx%1024,nr_tti_tx,ue->tx_power_dBm[nr_tti_tx],ue->tx_power_max_dBm, tx_amp);
+
+      
 #if UE_TIMING_TRACE
 
       start_meas(&ue->ulsch_modulation_stats);
