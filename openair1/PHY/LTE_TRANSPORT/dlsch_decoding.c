@@ -352,7 +352,6 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   }
 
       kb = harq_process->Kplus/harq_process->Z;
-  //	  p_decParams->Z = 128;
   	  if ( kb==22){
   		  p_decParams->BG = 1;
   		  p_decParams->R = 13;
@@ -364,7 +363,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   		  kc = 52;
   	  	  }
 
-      p_decParams->numMaxIter = 5;
+      p_decParams->numMaxIter = 10;
       Kr = p_decParams->Z*kb;
       p_decParams->outMode= 0;
 
@@ -634,9 +633,9 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 			nb_error_decod++;
 			
 		}
-		//if (!nb_total_decod%10000){
+		if (!nb_total_decod%10000){
 				printf("Error number of iteration LPDC %d %ld/%ld \n", no_iteration_ldpc, nb_error_decod,nb_total_decod);fflush(stdout);
-		//}
+		}
 
 		//else
 			//printf("OK number of iteration LPDC %d\n", no_iteration_ldpc);
@@ -649,15 +648,10 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 		      	
 #endif
 
-
 #ifdef DEBUG_DLSCH_DECODING
       printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
       printf("no_iterations_ldpc %d\n",no_iteration_ldpc);
-      write_output("dec_output.m","dec0",harq_process->c[0],Kr_bytes,1,4);
-/*      for (int cnt =0 ; cnt < 22*p_decParams->Z; cnt ++){
-    	  printf("%d ", harq_process->c[r][cnt]);
-      }
-      printf("\n");*/
+      //write_output("dec_output.m","dec0",harq_process->c[0],Kr_bytes,1,4);
 #endif
 
 
@@ -949,7 +943,7 @@ uint32_t  dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,
   uint16_t iind;
   //  uint8_t dummy_channel_output[(3*8*block_length)+12];
   short dummy_w[MAX_NUM_DLSCH_SEGMENTS][3*(8448+64)];
-  uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0;
+  uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0,Kr_int,kb,kc;
   uint8_t crc_type;
   //UE_rxtx_proc_t *proc = &phy_vars_ue->proc;
   int32_t no_iteration_ldpc;
@@ -1120,12 +1114,21 @@ uint32_t  dlsch_decoding_mthread(PHY_VARS_UE *phy_vars_ue,
 
     }
 
-    //	  p_decParams->Z = 128;
-        p_decParams->BG = 1;
-        p_decParams->R = 89;
-        p_decParams->numMaxIter = 5;
-        Kr = p_decParams->Z*22;
-        p_decParams->outMode= 0;
+ 	kb = harq_process->Kplus/harq_process->Z;
+  	  if ( kb==22){
+  		  p_decParams->BG = 1;
+  		  p_decParams->R = 13;
+  		  kc = 68;
+  	  }
+  	  else{
+  		  p_decParams->BG = 2;
+  		  p_decParams->R = 13;
+  		  kc = 52;
+  	  	  }
+
+      p_decParams->numMaxIter = 10;
+      Kr = p_decParams->Z*kb;
+      p_decParams->outMode= 0;
 
   /*
   else {
@@ -1305,6 +1308,12 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
 
     Kr_bytes = Kr>>3;
 
+     //workaround for nr ldpc using lte interleaving
+  if (dlsch->harq_processes[harq_pid]->C >= 2)
+      	Kr_int = G/(3*dlsch->harq_processes[harq_pid]->C);
+  else
+  	Kr_int = Kr;
+  
     if (Kr_bytes<=64)
       iind = (Kr_bytes-5);
     else if (Kr_bytes <=128)
@@ -1314,8 +1323,8 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
     else if (Kr_bytes <= 768)
       iind = 123 + ((Kr_bytes-256)>>3);
     else {
-      printf("dlsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
-      return(dlsch->max_turbo_iterations);
+      //printf("dlsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
+      //return(dlsch->max_turbo_iterations);
     }
 
 #ifdef DEBUG_DLSCH_DECODING
@@ -1326,7 +1335,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
     start_meas(dlsch_rate_unmatching_stats);
 #endif
     memset(&dummy_w[r][0],0,3*(8448+64)*sizeof(short));
-    harq_process->RTC[r] = generate_dummy_w(4+(Kr_bytes*8),
+    harq_process->RTC[r] = generate_dummy_w(Kr_int,
                                             (uint8_t*) &dummy_w[r][0],
                                             (r==0) ? harq_process->F : 0);
 
@@ -1372,6 +1381,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
 #endif
     }
     r_offset += E;
+    //printf("main thread r_offset %d\n",r_offset);
 
     /*
     printf("Subblock deinterleaving, d %p w %p\n",
@@ -1486,7 +1496,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
 				llrProcBuf,
           		p_procTime);
 
-		if (no_iteration_ldpc > 2)
+		if (no_iteration_ldpc > 10)
 			printf("Error number of iteration LPDC %d\n", no_iteration_ldpc);
 		//else
 			//printf("OK number of iteration LPDC %d\n", no_iteration_ldpc);
@@ -1854,7 +1864,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   uint16_t iind;
   //  uint8_t dummy_channel_output[(3*8*block_length)+12];
   short dummy_w[MAX_NUM_DLSCH_SEGMENTS][3*(8448+64)];
-  uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0;
+  uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0,Kr_int;
   uint8_t crc_type;
   uint8_t C;
    uint8_t Qm;
@@ -1990,8 +2000,8 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 
     //	  p_decParams->Z = 128;
         p_decParams->BG = 1;
-        p_decParams->R = 89;
-        p_decParams->numMaxIter = 5;
+        p_decParams->R = 13;
+        p_decParams->numMaxIter = 2;
         Kr = p_decParams->Z*22;
         p_decParams->outMode= 0;
 
@@ -2049,6 +2059,8 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
   	        	r_offset = Nl*Qm * (Gp/C);
   	        else
   	        	r_offset = Nl*Qm * ((GpmodC==0?0:1) + (Gp/C));
+
+		printf("thread0 r_offset %d\n",r_offset);
   	       
   //for (r=(harq_process->C/2); r<harq_process->C; r++) {
   	     r=1; //(harq_process->C/2);
@@ -2065,6 +2077,12 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 
     Kr_bytes = Kr>>3;
 
+     //workaround for nr ldpc using lte interleaving
+  if (dlsch->harq_processes[harq_pid]->C >= 2)
+      	Kr_int = G/(3*dlsch->harq_processes[harq_pid]->C);
+  else
+  	Kr_int = Kr;
+
     if (Kr_bytes<=64)
       iind = (Kr_bytes-5);
     else if (Kr_bytes <=128)
@@ -2074,7 +2092,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
     else if (Kr_bytes <= 768)
       iind = 123 + ((Kr_bytes-256)>>3);
     else {
-      printf("dlsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
+      //printf("dlsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
       //return(dlsch->max_turbo_iterations);
     }
 
@@ -2086,7 +2104,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
     start_meas(dlsch_rate_unmatching_stats);
 #endif
     memset(&dummy_w[r][0],0,3*(8448+64)*sizeof(short));
-    harq_process->RTC[r] = generate_dummy_w(4+(Kr_bytes*8),
+    harq_process->RTC[r] = generate_dummy_w(Kr_int,
                                             (uint8_t*) &dummy_w[r][0],
                                             (r==0) ? harq_process->F : 0);
 
@@ -2607,8 +2625,8 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
   uint32_t ret,offset;
   uint16_t iind;
   //  uint8_t dummy_channel_output[(3*8*block_length)+12];
-  short dummy_w[MAX_NUM_DLSCH_SEGMENTS][3*(6144+64)];
-  uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0;
+  short dummy_w[MAX_NUM_DLSCH_SEGMENTS][3*(8448+64)];
+  uint32_t r,r_offset=0,Kr,Kr_bytes,err_flag=0,Kr_int;
   uint8_t crc_type;
   uint8_t C;
    uint8_t Qm;
@@ -2750,7 +2768,7 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
     //	  p_decParams->Z = 128;
         p_decParams->BG = 1;
         p_decParams->R = 89;
-        p_decParams->numMaxIter = 5;
+        p_decParams->numMaxIter = 2;
         Kr = p_decParams->Z*22;
         p_decParams->outMode= 0;
   /*
@@ -2828,6 +2846,12 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
 
     Kr_bytes = Kr>>3;
 
+     //workaround for nr ldpc using lte interleaving
+  if (dlsch->harq_processes[harq_pid]->C >= 2)
+      	Kr_int = G/(3*dlsch->harq_processes[harq_pid]->C);
+  else
+  	Kr_int = Kr;
+
     if (Kr_bytes<=64)
       iind = (Kr_bytes-5);
     else if (Kr_bytes <=128)
@@ -2837,7 +2861,7 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
     else if (Kr_bytes <= 768)
       iind = 123 + ((Kr_bytes-256)>>3);
     else {
-      printf("dlsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
+      //printf("dlsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
       //return(dlsch->max_turbo_iterations);
     }
 
@@ -2848,8 +2872,8 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
 #if UE_TIMING_TRACE
     start_meas(dlsch_rate_unmatching_stats);
 #endif
-    memset(&dummy_w[r][0],0,3*(6144+64)*sizeof(short));
-    harq_process->RTC[r] = generate_dummy_w(4+(Kr_bytes*8),
+    memset(&dummy_w[r][0],0,3*(8448+64)*sizeof(short));
+    harq_process->RTC[r] = generate_dummy_w(Kr_int,
                                             (uint8_t*) &dummy_w[r][0],
                                             (r==0) ? harq_process->F : 0);
 

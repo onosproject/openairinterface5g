@@ -3044,7 +3044,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     else{
       if (ue->pbch_vars[eNB_id]->pdu_errors_conseq>=100) {
   LOG_E(PHY,"More that 100 consecutive PBCH errors! Exiting!\n");
-  mac_xface->macphy_exit("More that 100 consecutive PBCH errors!");
+  //mac_xface->macphy_exit("More that 100 consecutive PBCH errors!");
       }
     }
   }

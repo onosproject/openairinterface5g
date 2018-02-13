@@ -83,7 +83,7 @@ if ((Bprime_by_C%Kb) > 0)
 else
 	Z = (Bprime_by_C/Kb);
 
-  //printf("nr segmetation B %d Bprime %d Bprime_by_C %d z %d \n", B, Bprime, Bprime_by_C, Z);
+//printf("nr segmetation B %d Bprime %d Bprime_by_C %d z %d \n", B, Bprime, Bprime_by_C, Z);
 	  
   if (Z <= 2) {
     *Kplus = 2;
@@ -141,7 +141,7 @@ else
   
 
   *F = ((*C)*(*Kplus) - (Bprime));
-
+  // printf("final nr seg output Z %d Kplus %d F %d \n", *Zout, *Kplus, *F);
 #ifdef DEBUG_SEGMENTATION
   printf("final nr seg output Z %d Kplus %d F %d \n", *Zout, *Kplus, *F);
   printf("C %d, Kplus %d, Kminus %d, Bprime_bytes %d, Bprime %d, F %d\n",*C,*Kplus,*Kminus,Bprime>>3,Bprime,*F);
