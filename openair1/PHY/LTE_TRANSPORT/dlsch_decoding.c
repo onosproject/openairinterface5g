@@ -421,12 +421,12 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 
     // Get Turbo interleaver parameters
 #ifdef TD_DECODING
-	  if (r<harq_process->Cminus)
+    if (r<harq_process->Cminus)
       Kr = harq_process->Kminus;
     else
       Kr = harq_process->Kplus;
 #else
-	  Kr = harq_process->Kplus;
+    Kr = harq_process->Kplus;
 #endif
 
     if (Kr_bytes<=64)
@@ -622,16 +622,27 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
       	      	}
 
 		no_iteration_ldpc = nrLDPC_decoder(p_decParams,
-      			&pl[0],
-				llrProcBuf,
-          		p_procTime);
-
-		//ret = no_iteration_ldpc;
+						   (int8_t*)&pl[0],
+						   llrProcBuf,
+						   p_procTime);
+		/*
+		if (check_crc(llrProcBuf,Kr,crc_type)) {
+		  printf("CRC OK\n");
+		  ret = 2;
+		}
+		else {
+		  printf("CRC NOK\n");
+		  ret = 1+dlsch->max_turbo_iterations;
+		}
+		*/
 
 		nb_total_decod++;
 		if (no_iteration_ldpc > 5){
-			nb_error_decod++;
-			
+		  nb_error_decod++;
+		  ret = 1+dlsch->max_turbo_iterations;
+		}
+		else {
+		  ret=2;
 		}
 		if (!nb_total_decod%10000){
 				printf("Error number of iteration LPDC %d %ld/%ld \n", no_iteration_ldpc, nb_error_decod,nb_total_decod);fflush(stdout);
@@ -650,8 +661,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 
 #ifdef DEBUG_DLSCH_DECODING
       printf("output decoder %d %d %d %d %d \n", harq_process->c[r][0], harq_process->c[r][1], harq_process->c[r][2],harq_process->c[r][3], harq_process->c[r][4]);
-      printf("no_iterations_ldpc %d\n",no_iteration_ldpc);
-      //write_output("dec_output.m","dec0",harq_process->c[0],Kr_bytes,1,4);
+      printf("no_iterations_ldpc %d (ret %d)\n",no_iteration_ldpc,ret);
+      write_output("dec_output.m","dec0",harq_process->c[0],Kr_bytes,1,4);
 #endif
 
 
@@ -815,10 +826,9 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
                   dlsch_turbo_decoding_stats->p_time/(cpuf*1000.0));*/
 
 
-    if ((err_flag == 0) && (ret>(1+dlsch->max_turbo_iterations))) {// a Code segment is in error so break;
-	if (!(!(frame%2) && (nr_tti_rx==5))){
+    if ((err_flag == 0) && (ret>=(1+dlsch->max_turbo_iterations))) {// a Code segment is in error so break;
       LOG_W(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
-      err_flag = 1;}
+      err_flag = 1;
     }
   }
 
