@@ -43,7 +43,7 @@
 #include "UTIL/LOG/log.h"
 #include <syscall.h>
 
-#define DEBUG_DLSCH_CODING
+//#define DEBUG_DLSCH_CODING
 //#define DEBUG_DLSCH_FREE 1
 //#define TD_DECODING
 
@@ -618,7 +618,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
     a[A>>3] = ((uint8_t*)&crc)[2];
     a[1+(A>>3)] = ((uint8_t*)&crc)[1];
     a[2+(A>>3)] = ((uint8_t*)&crc)[0];
-    //    printf("CRC %x (A %d)\n",crc,A);
+    //printf("CRC %x (A %d)\n",crc,A);
 
     dlsch->harq_processes[harq_pid]->B = A+24;
     //    dlsch->harq_processes[harq_pid]->b = a;
@@ -638,13 +638,13 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 #else
 
     nr_segmentation(dlsch->harq_processes[harq_pid]->b,
-            dlsch->harq_processes[harq_pid]->c,
-            dlsch->harq_processes[harq_pid]->B,
-            &dlsch->harq_processes[harq_pid]->C,
-			&dlsch->harq_processes[harq_pid]->Kplus,
-			&dlsch->harq_processes[harq_pid]->Kminus,
-        						pz,
-								&dlsch->harq_processes[harq_pid]->F);
+		    dlsch->harq_processes[harq_pid]->c,
+		    dlsch->harq_processes[harq_pid]->B,
+		    &dlsch->harq_processes[harq_pid]->C,
+		    &dlsch->harq_processes[harq_pid]->Kplus,
+		    &dlsch->harq_processes[harq_pid]->Kminus,
+		    pz,
+		    &dlsch->harq_processes[harq_pid]->F);
 #endif
 
 
@@ -720,8 +720,9 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       }*/
 
 #endif
-      //ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,rate);
-      ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,NULL,NULL,NULL,NULL);
+      ldpc_encoder_orig((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,0);
+      //ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3);
+      //ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,NULL,NULL,NULL,NULL);
     }
     //ldpc_encoder_multi_segment(dlsch->harq_processes[harq_pid]->c,d_tmp,Kr,rate,dlsch->harq_processes[harq_pid]->C);
     stop_meas(te_stats);
