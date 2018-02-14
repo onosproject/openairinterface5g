@@ -720,9 +720,9 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
       }*/
 
 #endif
-      ldpc_encoder_orig((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,0);
+      //ldpc_encoder_orig((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,0);
       //ldpc_encoder((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3);
-      //ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,NULL,NULL,NULL,NULL);
+      ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][96],Kr,1,3,NULL,NULL,NULL,NULL);
     }
     //ldpc_encoder_multi_segment(dlsch->harq_processes[harq_pid]->c,d_tmp,Kr,rate,dlsch->harq_processes[harq_pid]->C);
     stop_meas(te_stats);
