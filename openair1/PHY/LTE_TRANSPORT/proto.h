@@ -1427,7 +1427,8 @@ int rx_sss(PHY_VARS_UE *phy_vars_ue,int32_t *tot_metric,uint8_t *flip_max,uint8_
 /*! \brief receiver for the PBCH
   \returns number of tx antennas or -1 if error
 */
-uint16_t rx_pbch(LTE_UE_COMMON *lte_ue_common_vars,
+uint16_t rx_pbch(PHY_VARS_UE *ue,
+				 UE_rxtx_proc_t *proc,
                  LTE_UE_PBCH *lte_ue_pbch_vars,
                  LTE_DL_FRAME_PARMS *frame_parms,
                  uint8_t eNB_id,

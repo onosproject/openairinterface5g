@@ -861,7 +861,7 @@ static unsigned char dummy_w_rx[3*3*(16+PBCH_A)];
 static int8_t pbch_w_rx[3*3*(16+PBCH_A)],pbch_d_rx[96+(3*(16+PBCH_A))];
 
 
-uint16_t rx_pbch(LTE_UE_COMMON *lte_ue_common_vars,
+uint16_t rx_pbch( PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,
                  LTE_UE_PBCH *lte_ue_pbch_vars,
                  LTE_DL_FRAME_PARMS *frame_parms,
                  uint8_t eNB_id,
@@ -869,6 +869,8 @@ uint16_t rx_pbch(LTE_UE_COMMON *lte_ue_common_vars,
                  uint32_t high_speed_flag,
                  uint8_t frame_mod4)
 {
+
+	LTE_UE_COMMON *lte_ue_common_vars = &ue->common_vars;
 
   uint8_t log2_maxh;//,aatx,aarx;
   int max_h=0;
@@ -883,6 +885,7 @@ uint16_t rx_pbch(LTE_UE_COMMON *lte_ue_common_vars,
   uint8_t *decoded_output = lte_ue_pbch_vars->decoded_output;
   uint16_t crc;
 
+  int subframe_rx = proc->subframe_rx;
 
   //  pbch_D    = 16+PBCH_A;
 
@@ -900,8 +903,8 @@ uint16_t rx_pbch(LTE_UE_COMMON *lte_ue_common_vars,
 #ifdef DEBUG_PBCH
     msg("[PBCH] starting extract\n");
 #endif
-    pbch_extract(lte_ue_common_vars->common_vars_rx_data_per_thread[0].rxdataF,
-                 lte_ue_common_vars->common_vars_rx_data_per_thread[0].dl_ch_estimates[eNB_id],
+    pbch_extract(lte_ue_common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe_rx]].rxdataF,
+                 lte_ue_common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe_rx]].dl_ch_estimates[eNB_id],
                  lte_ue_pbch_vars->rxdataF_ext,
                  lte_ue_pbch_vars->dl_ch_estimates_ext,
                  symbol,

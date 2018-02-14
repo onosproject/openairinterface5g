@@ -124,7 +124,8 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
   pbch_decoded = 0;
 
   for (frame_mod4=0; frame_mod4<4; frame_mod4++) {
-    pbch_tx_ant = rx_pbch(&ue->common_vars,
+    pbch_tx_ant = rx_pbch(ue,
+						  &ue->proc.proc_rxtx[0],
                           ue->pbch_vars[0],
                           frame_parms,
                           0,
@@ -137,7 +138,8 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
       break;
     }
 
-    pbch_tx_ant = rx_pbch(&ue->common_vars,
+    pbch_tx_ant = rx_pbch(ue,
+						  &ue->proc.proc_rxtx[0],
                           ue->pbch_vars[0],
                           frame_parms,
                           0,
