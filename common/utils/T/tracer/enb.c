@@ -289,11 +289,11 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database,
 
   line = new_container(g, HORIZONTAL);
   widget_add_child(g, top_container, line, -1);
-  logo = new_image(g, openair_logo_png, openair_logo_png_len);
+//  logo = new_image(g, openair_logo_png, openair_logo_png_len);
 
   /* logo + prev/next UE buttons */
   col = new_container(g, VERTICAL);
-  widget_add_child(g, col, logo, -1);
+//  widget_add_child(g, col, logo, -1);
   w = new_container(g, HORIZONTAL);
   widget_add_child(g, col, w, -1);
   /* TODO: use button widget, not label widget */
@@ -314,7 +314,7 @@ static void enb_main_gui(enb_gui *e, gui *g, event_handler *h, void *database,
 
   input_signal_plot = new_xy_plot(g, 256, 55, "input signal", 20);
   widget_add_child(g, line, input_signal_plot, -1);
-  xy_plot_set_range(g, input_signal_plot, 0, 7680*10, 20, 70);
+  xy_plot_set_range(g, input_signal_plot, 0, 7680*10, -50, 100);
   input_signal_log = new_framelog(h, database,
       "ENB_PHY_INPUT_SIGNAL", "subframe", "rxdata");
   /* a skip value of 10 means to process 1 frame over 10, that is
