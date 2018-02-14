@@ -1652,8 +1652,8 @@ void phy_init_lte_top_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms)
 
   //ccodedot11_init();
   //ccodedot11_init_inv();
-
-  //ccodelte_init();
+  ccodelte_init_NB_IoT();
+  ccodelte_init2_NB_IoT();
   //ccodelte_init_inv();
 
   //treillis_table_init();

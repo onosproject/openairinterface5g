@@ -44,6 +44,7 @@
 #include "PHY/TOOLS/time_meas_NB_IoT.h" 
 
 unsigned char  ccodelte_table2_NB_IoT[128];
+unsigned short glte2_NB_IoT[] = { 0133, 0171, 0165 }; 
 
 void ccode_encode_npdsch_NB_IoT (int32_t   numbits,
 								 uint8_t   *inPtr,
@@ -86,10 +87,7 @@ void ccode_encode_npdsch_NB_IoT (int32_t   numbits,
 int dlsch_encoding_NB_IoT(unsigned char      			*a,
 						  NB_IoT_eNB_DLSCH_t 			*dlsch,
 						  uint8_t 			 			Nsf,		// number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
-						  unsigned int 		 			G, 		    // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
-						  time_stats_t_NB_IoT 		 	*rm_stats,
-						  time_stats_t_NB_IoT 		 	*te_stats,
-						  time_stats_t_NB_IoT 		 	*i_stats)
+						  unsigned int 		 			G) 		    // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
 {
 	unsigned int  crc = 1;
 	//unsigned char harq_pid = dlsch->current_harq_pid;  			// to check during implementation if harq_pid is required in the NB_IoT_eNB_DLSCH_t structure  in defs_NB_IoT.h
@@ -97,7 +95,7 @@ int dlsch_encoding_NB_IoT(unsigned char      			*a,
 	uint8_t 	  RCC;
 
 	A 							 = dlsch->harq_process.TBS;  				// 680
-	dlsch->harq_process.length_e = G*Nsf;									// G*Nsf (number_of_subframes) = total number of bits to transmit
+	dlsch->harq_process.length_e = G*Nsf;									// G*Nsf (number_of_subframes) = total number of bits to transmit G=236
 
 	int32_t numbits = A+24;
 	
@@ -114,17 +112,43 @@ int dlsch_encoding_NB_IoT(unsigned char      			*a,
 		memcpy(dlsch->harq_process.b,a,numbits/8); 
 		memset(dlsch->harq_process.d,LTE_NULL_NB_IoT,96);
 		
-		start_meas_NB_IoT(te_stats);
-		ccode_encode_npdsch_NB_IoT(numbits, dlsch->harq_process.b, dlsch->harq_process.d+96, crc);  					//   step 1 Tail-biting convolutional coding
-		stop_meas_NB_IoT(te_stats);
+		ccode_encode_npdsch_NB_IoT(numbits, dlsch->harq_process.b, dlsch->harq_process.d+96, crc);  	//   step 1 Tail-biting convolutional coding
 		
-		start_meas_NB_IoT(i_stats);
-		RCC = sub_block_interleaving_cc_NB_IoT(numbits,dlsch->harq_process.d+96,dlsch->harq_process.w);					//   step 2 interleaving
-		stop_meas_NB_IoT(i_stats);
+		RCC = sub_block_interleaving_cc_NB_IoT(numbits,dlsch->harq_process.d+96,dlsch->harq_process.w);		//   step 2 interleaving
 		
-		start_meas_NB_IoT(rm_stats);
-		lte_rate_matching_cc_NB_IoT(RCC,dlsch->harq_process.length_e,dlsch->harq_process.w,dlsch->harq_process.e);    // step 3 Rate Matching
-		stop_meas_NB_IoT(rm_stats);		
+		lte_rate_matching_cc_NB_IoT(RCC,dlsch->harq_process.length_e,dlsch->harq_process.w,dlsch->harq_process.e);  // step 3 Rate Matching
+				
     }
   return(0);
 }
+
+/*************************************************************************
+
+  Functions to initialize the code tables
+
+*************************************************************************/
+/* Basic code table initialization for constraint length 7 */
+
+/* Input in MSB, followed by state in 6 LSBs */
+void ccodelte_init2_NB_IoT(void)
+{
+  unsigned int  i, j, k, sum;
+
+  for (i = 0; i < 128; i++) {
+
+    ccodelte_table2_NB_IoT[i] = 0;
+
+    /* Compute 3 output bits */
+    for (j = 0; j < 3; j++) {
+      sum = 0;
+
+      for (k = 0; k < 7; k++)
+        if ((i & glte2_NB_IoT[j]) & (1 << k))
+          sum++;
+
+      /* Write the sum modulo 2 in bit j */
+      ccodelte_table2_NB_IoT[i] |= (sum & 1) << j;
+    }
+  }
+}
+

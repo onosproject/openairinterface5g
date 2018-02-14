@@ -373,7 +373,7 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   *nrs_CRS_PowerOffset= 0;
   (*sib1_NB_IoT)->nrs_CRS_PowerOffset_r13 = nrs_CRS_PowerOffset;
   */
-    *eutraControlRegionSize = 1;
+    *eutraControlRegionSize = 2;
    (*sib1_NB_IoT)->eutraControlRegionSize_r13 = eutraControlRegionSize;
 #ifdef XER_PRINT //generate xml files
   xer_fprint(stdout, &asn_DEF_BCCH_DL_SCH_Message_NB, (void*)bcch_message);

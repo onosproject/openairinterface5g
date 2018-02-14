@@ -86,6 +86,18 @@ int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS  *frame_parms,
                              unsigned short         id_offset,
                              uint32_t               *re_allocated);
 
+// NPDSCH
+int allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS    *frame_parms,
+                              int32_t               **txdataF,
+                              uint32_t              *jj,
+                              uint32_t              symbol_offset,
+                              uint8_t               *x0,
+                              uint8_t               pilots,
+                              int16_t               amp,
+                              unsigned short        id_offset,
+                              uint8_t               pilot_shift,
+                              uint32_t              *re_allocated); 
+
 
 int generate_npbch(NB_IoT_eNB_NPBCH_t     *eNB_npbch,
                    int32_t                **txdataF,
@@ -213,13 +225,20 @@ unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS, uint8_t N_sc_RU);
     @returns status
 */
 
+int dlsch_modulation_NB_IoT(int32_t               **txdataF,
+                            int16_t               amp,
+                            LTE_DL_FRAME_PARMS      *frame_parms,
+                            uint8_t               control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+                            NB_IoT_eNB_DLSCH_t    *dlsch0,
+                            int                   G,              // number of bits per subframe
+                            unsigned              npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf        
+                            unsigned short        NB_IoT_RB_ID);
+
 int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
                               NB_IoT_eNB_DLSCH_t         *dlsch,
                               uint8_t                    Nsf,        // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
-                              unsigned int               G,          // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
-                              time_stats_t_NB_IoT        *rm_stats,
-                              time_stats_t_NB_IoT        *te_stats,
-                              time_stats_t_NB_IoT        *i_stats); 
+                              unsigned int               G);         // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
+ 
 
 void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT      *phy_vars_eNB,
                      eNB_rxtx_proc_NB_IoT_t   *proc,

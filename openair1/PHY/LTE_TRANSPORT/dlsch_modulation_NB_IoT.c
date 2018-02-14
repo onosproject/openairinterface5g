@@ -15,16 +15,18 @@
 //#include "PHY/defs.h"
 //#include "PHY/defs_NB_IoT.h"
 //#include "PHY/extern_NB_IoT.h"
+#include "PHY/impl_defs_lte.h"
 //#include "PHY/CODING/defs_nb_iot.h"
 //#include "PHY/CODING/extern.h"
 //#include "PHY/CODING/lte_interleaver_inline.h"
 #include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
 #include "PHY/impl_defs_lte_NB_IoT.h"
 #include "PHY/impl_defs_top_NB_IoT.h"
 //#include "defs.h"
 //#include "UTIL/LOG/vcd_signal_dumper.h"
 
-int allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
+int allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS 	    *frame_parms,
                               int32_t 					**txdataF,
                               uint32_t 					*jj,
                               uint32_t 					symbol_offset,
@@ -32,9 +34,10 @@ int allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
                               uint8_t 					pilots,
                               int16_t 					amp,
 						  	  unsigned short 			id_offset,
+						  	  uint8_t                   pilot_shift,
                               uint32_t 					*re_allocated)  //  not used variable ??!!
 {
-  MIMO_mode_NB_IoT_t 	mimo_mode = (frame_parms->mode1_flag==1)? SISO_NB_IoT:ALAMOUTI_NB_IoT;
+  MIMO_mode_t 	mimo_mode = (frame_parms->mode1_flag==1)? SISO:ALAMOUTI;
 
   uint32_t  tti_offset,aa;
   uint8_t   re;
@@ -50,10 +53,10 @@ int allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
 
     tti_offset = symbol_offset + re;				// symbol_offset = 512 * L ,  re_offset = 512 - 3*12  , re
 	
-	if (pilots != 1 || re%3 != id_offset)  			// if re is not a pilot
+	if (pilots != 1 || (re%6 != ((id_offset + 3*pilot_shift) % 6) ) )  			// if re is not a pilot
 	{
 													 
-      if (mimo_mode == SISO_NB_IoT) {  								//SISO mapping
+      if (mimo_mode == SISO) {  								//SISO mapping
 			*re_allocated = *re_allocated + 1;						// variable incremented but never used
 			
 			for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
@@ -65,7 +68,7 @@ int allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
 			}
 			*jj = *jj + 1;	
 			
-      } else if (mimo_mode == ALAMOUTI_NB_IoT) {
+      } else if (mimo_mode == ALAMOUTI) {
 	  
 			*re_allocated = *re_allocated + 1;
 
@@ -114,7 +117,7 @@ int allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS 	*frame_parms,
 
 int dlsch_modulation_NB_IoT(int32_t 				**txdataF,
 							int16_t 				amp,
-							NB_IoT_DL_FRAME_PARMS 	*frame_parms,
+							LTE_DL_FRAME_PARMS 	    *frame_parms,
 							uint8_t 				control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
 							NB_IoT_eNB_DLSCH_t 		*dlsch0,
 							int 					G,						  // number of bits per subframe
@@ -126,29 +129,34 @@ int dlsch_modulation_NB_IoT(int32_t 				**txdataF,
     uint32_t 		jj = 0;
 	uint32_t 		re_allocated,symbol_offset;
     uint16_t 		l;
-    uint8_t 		id_offset,pilots = 0; 
+    uint8_t 		id_offset,pilot_shift,pilots = 0; 
 	unsigned short 	bandwidth_even_odd;
     unsigned short 	NB_IoT_start, RB_IoT_ID;
 
     re_allocated = 0;
 	id_offset    = 0;
+	pilot_shift  = 0;
 	// testing if the total number of RBs is even or odd 
 	bandwidth_even_odd  =  frame_parms->N_RB_DL % 2; 	 	// 0 even, 1 odd
 	RB_IoT_ID 			=  NB_IoT_RB_ID;
 	// step  5, 6, 7   									 	// modulation and mapping (slot 1, symbols 0..3)
 	for (l=control_region_size; l<14; l++) { 								 	// loop on OFDM symbols	
-		if((l>=4 && l<=8) || (l>=11 && l<=13))
+		if((l>=4 && l<=7) || (l>=11 && l<=13))
 		{
 			pilots = 1;
+			if(l==4 || l==6 || l==11 || l==13)
+			{
+				pilot_shift  = 1;
+			}
 		} else {
 			pilots = 0;
 		}
-		id_offset = frame_parms->Nid_cell % 3;    			// Cell_ID_NB_IoT % 3
+		id_offset = frame_parms->Nid_cell % 6;    			// Cell_ID_NB_IoT % 6
 		if(RB_IoT_ID < (frame_parms->N_RB_DL/2))
 		{
 			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID % (int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		} else {
-			NB_IoT_start = (bandwidth_even_odd*6) + 12*(RB_IoT_ID % (int)(ceil(frame_parms->N_RB_DL/(float)2)));
+			NB_IoT_start = 1 + (bandwidth_even_odd*6) + 12*(RB_IoT_ID % (int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		}
 		symbol_offset = frame_parms->ofdm_symbol_size*l + NB_IoT_start;  						// symbol_offset = 512 * L + NB_IOT_RB start
 
@@ -160,6 +168,7 @@ int dlsch_modulation_NB_IoT(int32_t 				**txdataF,
 								  pilots,
 								  amp,
 								  id_offset,
+								  pilot_shift,
 								  &re_allocated);
 	}
 	
