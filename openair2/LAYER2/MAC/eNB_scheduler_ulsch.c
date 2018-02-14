@@ -1291,7 +1291,7 @@ schedule_ulsch_rnti(module_id_t module_idP,
 	    UE_template->oldNDI_UL[harq_pid] = ndi;
 	    UE_list->eNB_UE_stats[CC_id][UE_id].normalized_rx_power = normalized_rx_power;
 	    UE_list->eNB_UE_stats[CC_id][UE_id].target_rx_power = target_rx_power;
-		UE_template->mcs_UL[harq_pid] = cmin(UE_template->pre_assigned_mcs_ul, slice_maxmcs_uplink[slice_id]);
+	    UE_template->mcs_UL[harq_pid] = cmin(UE_template->pre_assigned_mcs_ul, slice_maxmcs_uplink[slice_id]);
 		UE_list->eNB_UE_stats[CC_id][UE_id].ulsch_mcs1= UE_template->mcs_UL[harq_pid];
 		//cmin (UE_template->pre_assigned_mcs_ul, openair_daq_vars.target_ue_ul_mcs); // adjust, based on user-defined MCS
 	    if (UE_template->pre_allocated_rb_table_index_ul >= 0) {

@@ -490,81 +490,81 @@ int flexran_agent_mac_stats_reply(mid_t mod_id,
                      }
                      if (report_config->ue_report_type[i].ue_report_flags & PROTOCOL__FLEX_UE_STATS_TYPE__FLUST_MAC_STATS) {
 
-                            Protocol__FlexMacStats *monapp;
-                            monapp = malloc(sizeof(Protocol__FlexMacStats));
-                            if (monapp == NULL)
+		       Protocol__FlexMacStats *mac_stats;
+                            mac_stats = malloc(sizeof(Protocol__FlexMacStats));
+                            if ( mac_stats == NULL)
                               goto error;
-                            protocol__flex_mac_stats__init(monapp);
+                            protocol__flex_mac_stats__init(mac_stats);
 
 
-                            monapp->total_bytes_sdus_dl = flexran_get_total_size_dl_mac_sdus(mod_id, i, cc_id);
-                            monapp->has_total_bytes_sdus_dl = 1;
+                            mac_stats->total_bytes_sdus_dl = flexran_get_total_size_dl_mac_sdus(mod_id, i, cc_id);
+                            mac_stats->has_total_bytes_sdus_dl = 1;
 
-                            monapp->total_bytes_sdus_ul = flexran_get_total_size_ul_mac_sdus(mod_id, i, cc_id);
-                            monapp->has_total_bytes_sdus_ul = 1;
+                           mac_stats->total_bytes_sdus_ul = flexran_get_total_size_ul_mac_sdus(mod_id, i, cc_id);
+                            mac_stats->has_total_bytes_sdus_ul = 1;
 
-                            monapp->tbs_dl = flexran_get_TBS_dl(mod_id, i, cc_id);
-                            monapp->has_tbs_dl = 1;
+                            mac_stats->tbs_dl = flexran_get_TBS_dl(mod_id, i, cc_id);
+                            mac_stats->has_tbs_dl = 1;
 
-                            monapp->tbs_ul = flexran_get_TBS_ul(mod_id, i, cc_id);
-                            monapp->has_tbs_ul = 1;
+                            mac_stats->tbs_ul = flexran_get_TBS_ul(mod_id, i, cc_id);
+                            mac_stats->has_tbs_ul = 1;
 
-                            monapp->prb_retx_dl = flexran_get_num_prb_retx_dl_per_ue(mod_id, i, cc_id);
-                            monapp->has_prb_retx_dl = 1;
+                            mac_stats->prb_retx_dl = flexran_get_num_prb_retx_dl_per_ue(mod_id, i, cc_id);
+                            mac_stats->has_prb_retx_dl = 1;
 
-                            monapp->prb_retx_ul = flexran_get_num_prb_retx_ul_per_ue(mod_id, i, cc_id);
-                            monapp->has_prb_retx_ul = 1;
+                            mac_stats->prb_retx_ul = flexran_get_num_prb_retx_ul_per_ue(mod_id, i, cc_id);
+                            mac_stats->has_prb_retx_ul = 1;
 
-                            monapp->prb_dl = flexran_get_num_prb_dl_tx_per_ue(mod_id, i, cc_id);
-                            monapp->has_prb_dl = 1;
+                            mac_stats->prb_dl = flexran_get_num_prb_dl_tx_per_ue(mod_id, i, cc_id);
+                            mac_stats->has_prb_dl = 1;
 
-                            monapp->prb_ul = flexran_get_num_prb_ul_rx_per_ue(mod_id, i, cc_id);
-                            monapp->has_prb_ul = 1;
+                            mac_stats->prb_ul = flexran_get_num_prb_ul_rx_per_ue(mod_id, i, cc_id);
+                            mac_stats->has_prb_ul = 1;
 
-                            monapp->mcs1_dl = flexran_get_mcs1_dl(mod_id, i, cc_id);
-                            monapp->has_mcs1_dl = 1;
+                            mac_stats->mcs1_dl = flexran_get_mcs1_dl(mod_id, i, cc_id);
+                            mac_stats->has_mcs1_dl = 1;
 
-                            monapp->mcs2_dl = flexran_get_mcs2_dl(mod_id, i, cc_id);
-                            monapp->has_mcs2_dl = 1;
+                            mac_stats->mcs2_dl = flexran_get_mcs2_dl(mod_id, i, cc_id);
+                            mac_stats->has_mcs2_dl = 1;
 
-                            monapp->mcs1_ul = flexran_get_mcs1_ul(mod_id, i, cc_id);
-                            monapp->has_mcs1_ul = 1;
+                            mac_stats->mcs1_ul = flexran_get_mcs1_ul(mod_id, i, cc_id);
+                            mac_stats->has_mcs1_ul = 1;
 
-                            monapp->mcs2_ul = flexran_get_mcs2_ul(mod_id, i, cc_id);
-                            monapp->has_mcs2_ul = 1;
+                            mac_stats->mcs2_ul = flexran_get_mcs2_ul(mod_id, i, cc_id);
+                            mac_stats->has_mcs2_ul = 1;
 
-                            monapp->total_prb_dl = flexran_get_total_prb_dl_tx_per_ue(mod_id, i, cc_id);
-                            monapp->has_total_prb_dl = 1;
+                            mac_stats->total_prb_dl = flexran_get_total_prb_dl_tx_per_ue(mod_id, i, cc_id);
+                            mac_stats->has_total_prb_dl = 1;
 
-                            monapp->total_prb_ul = flexran_get_total_prb_ul_rx_per_ue(mod_id, i, cc_id);
-                            monapp->has_total_prb_ul = 1;
+                            mac_stats->total_prb_ul = flexran_get_total_prb_ul_rx_per_ue(mod_id, i, cc_id);
+                            mac_stats->has_total_prb_ul = 1;
 
-                            monapp->total_pdu_dl = flexran_get_total_num_pdu_dl(mod_id, i, cc_id);
-                            monapp->has_total_pdu_dl = 1;
+                            mac_stats->total_pdu_dl = flexran_get_total_num_pdu_dl(mod_id, i, cc_id);
+                            mac_stats->has_total_pdu_dl = 1;
 
-                            monapp->total_pdu_ul = flexran_get_total_num_pdu_ul(mod_id, i, cc_id);
-                            monapp->has_total_pdu_ul = 1;
+                            mac_stats->total_pdu_ul = flexran_get_total_num_pdu_ul(mod_id, i, cc_id);
+                            mac_stats->has_total_pdu_ul = 1;
 
-                            monapp->total_tbs_dl = flexran_get_total_TBS_dl(mod_id, i, cc_id);
-                            monapp->has_total_tbs_dl = 1;
+                            mac_stats->total_tbs_dl = flexran_get_total_TBS_dl(mod_id, i, cc_id);
+                            mac_stats->has_total_tbs_dl = 1;
 
-                            monapp->total_tbs_ul = flexran_get_total_TBS_ul(mod_id, i, cc_id);
-                            monapp->has_total_tbs_ul = 1;
+                            mac_stats->total_tbs_ul = flexran_get_total_TBS_ul(mod_id, i, cc_id);
+			    mac_stats->has_total_tbs_ul = 1;
                            
                             Protocol__FlexMacSdusDl ** mac_sdus;           
                             mac_sdus = malloc(sizeof(Protocol__FlexMacSdusDl) * flexran_get_num_mac_sdu_tx(mod_id, i, cc_id));
                             if (mac_sdus == NULL)
                                 goto error;
 
-                            monapp->n_mac_sdus_dl = flexran_get_num_mac_sdu_tx(mod_id, i, cc_id);
+                            mac_stats->n_mac_sdus_dl = flexran_get_num_mac_sdu_tx(mod_id, i, cc_id);
 
-                            for (j = 0; j < monapp->n_mac_sdus_dl; j++){
+                            for (j = 0; j < mac_stats->n_mac_sdus_dl; j++){
 
 
                                 mac_sdus[j] = malloc(sizeof(Protocol__FlexMacSdusDl));
                                 protocol__flex_mac_sdus_dl__init(mac_sdus[j]);
 
-                                mac_sdus[j]->lcid = flexran_get_mac_sdu_lcid_index(mod_id, i, cc_id, j);
+                                mac_sdus[j]->lcid = flexran_get_mac_dl_lcid_sdu(mod_id, i, cc_id, j);
                                 mac_sdus[j]->has_lcid = 1;
 
                                 mac_sdus[j]->sdu_length = flexran_get_mac_sdu_size(mod_id, i, cc_id, mac_sdus[j]->lcid);
@@ -574,10 +574,10 @@ int flexran_agent_mac_stats_reply(mid_t mod_id,
                             }
 
 
-                            monapp->mac_sdus_dl = mac_sdus;
+                            mac_stats->mac_sdus_dl = mac_sdus;
 
 
-                        ue_report[i]->mac_stats = monapp;
+                        ue_report[i]->mac_stats = mac_stats;
 
                }
 

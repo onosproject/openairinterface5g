@@ -253,9 +253,10 @@ uint32_t flexran_get_mac_sdu_size(mid_t mod_id, mid_t ue_id, int cc_id, int lcid
 
 }
 
-unsigned char flexran_get_mac_sdu_lcid_index(mid_t mod_id, mid_t ue_id, int cc_id, int index){
+unsigned char flexran_get_mac_dl_lcid_sdu(mid_t mod_id, mid_t ue_id, int cc_id, int index){
 
   if (!mac_is_present(mod_id)) return 0;
+  if (index < 0 || index > NB_RB_MAX)  return 0;
   return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].lcid_sdu[index];
 }
 
