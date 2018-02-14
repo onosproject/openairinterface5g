@@ -572,11 +572,8 @@ int16_t reverseBits(int32_t ,int32_t);
 void phy_viterbi_dot11(int8_t *,uint8_t *,uint16_t);
 
 short *ldpc_decoder(short *msgChannel,short block_length,short No_iteration,double rate);
-int encode_parity_check_part(uint16_t *c,uint16_t *d, short BG,short Zc,short Kb);
 int encode_parity_check_part_orig(unsigned char *c,unsigned char *d, short BG,short Zc,short Kb,short block_length);
-int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short block_length,int nom_rate,int denom_rate);
 int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,short block_length,int nom_rate,int denom_rate,unsigned char gen_code);
-int ldpc_encoder_multi_segment(unsigned char **test_input,unsigned char **channel_input,short block_length,double rate,uint8_t n_segments);
 int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,short block_length,int nom_rate,int denom_rate,time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput);
 
 #endif
