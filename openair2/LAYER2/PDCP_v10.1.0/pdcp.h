@@ -419,7 +419,7 @@ struct pdcp_netlink_element_s {
 //TTN for D2D (PC5S)
 #ifdef Rel14
 #define PDCP_SOCKET_PORT_NO 9999 //temporary value
-#define PC5_SIGNALLING_PAYLOAD_SIZE   5  //should be updated with a correct value
+#define PC5_SIGNALLING_PAYLOAD_SIZE   100  //should be updated with a correct value
 int pdcp_pc5_sockfd;
 struct sockaddr_in prose_ctrl_addr;
 struct sockaddr_in prose_pdcp_addr;

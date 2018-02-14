@@ -6129,7 +6129,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
                   (MeasObjectToAddMod_t **)NULL,
                   (MAC_MainConfig_t *)NULL,
-                  0,
+                  10, //LCID
                   (struct LogicalChannelConfig *)NULL,
                   (MeasGapConfig_t *)NULL,
                   (TDD_Config_t *)NULL,
