@@ -7,7 +7,7 @@
 #include "PHY/TOOLS/time_meas.h"
 #include "defs.h"
 
-#define DEBUG_LDPC
+//#define DEBUG_LDPC
 
 #include "ldpc384_byte.c"
 #include "ldpc352_byte.c"
@@ -171,14 +171,13 @@ int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,sh
 {
 
   short BG,Zc,Kb,nrows,ncols;
-  int i,i1,j;
+  int i,i1;
   int no_punctured_columns,removed_bit;
 
   //Table of possible lifting sizes
   short lift_size[51]= {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
 
   int simd_size;
-  char temp;
 
   //determine number of bits in codeword
   //if (block_length>3840)
@@ -293,9 +292,24 @@ int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_i
   int no_punctured_columns,removed_bit;
   //Table of possible lifting sizes
   short lift_size[51]= {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
-
+  char temp;
   int simd_size;
 
+#ifdef __AVX2__
+  __m256i shufmask = _mm256_set_epi64x(0x0303030303030303, 0x0202020202020202,0x0101010101010101, 0x0000000000000000);
+  __m256i andmask  = _mm256_set1_epi64x(0x8040201008040201);  // every 8 bits -> 8 bytes, pattern repeats.
+  __m256i zero256   = _mm256_setzero_si256();
+  __m256i masks[8];
+  register __m256i c256;
+  masks[0] = _mm256_set1_epi8(0x1);
+  masks[1] = _mm256_set1_epi8(0x2);
+  masks[2] = _mm256_set1_epi8(0x4);
+  masks[3] = _mm256_set1_epi8(0x8);
+  masks[4] = _mm256_set1_epi8(0x10);
+  masks[5] = _mm256_set1_epi8(0x20);
+  masks[6] = _mm256_set1_epi8(0x40);
+  masks[7] = _mm256_set1_epi8(0x80);
+#endif
 
   AssertFatal(n_segments>0&&n_segments<=8,"0 < n_segments %d <= 8\n",n_segments);
 
@@ -361,7 +375,6 @@ int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_i
 
   start_meas(tinput);
 #if 0
-  char temp;
   for (i=0; i<block_length; i++) {
     for (j=0; j<n_segments; j++) {
 
@@ -372,26 +385,21 @@ int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_i
   }
 #else
 #ifdef __AVX2__
-  __m256i shufmask = _mm256_set_epi64x(0x0303030303030303, 0x0202020202020202,0x0101010101010101, 0x0000000000000000);
-  __m256i andmask  = _mm256_set1_epi64x(0x8040201008040201);  // every 8 bits -> 8 bytes, pattern repeats.
-  __m256i zero256   = _mm256_setzero_si256();
-  __m256i masks[8];
-  register __m256i c256;
-  masks[0] = _mm256_set1_epi8(0x1);
-  masks[1] = _mm256_set1_epi8(0x2);
-  masks[2] = _mm256_set1_epi8(0x4);
-  masks[3] = _mm256_set1_epi8(0x8);
-  masks[4] = _mm256_set1_epi8(0x10);
-  masks[5] = _mm256_set1_epi8(0x20);
-  masks[6] = _mm256_set1_epi8(0x40);
-  masks[7] = _mm256_set1_epi8(0x80);
-
   for (i=0; i<block_length>>5; i++) {
     c256 = _mm256_and_si256(_mm256_cmpeq_epi8(_mm256_andnot_si256(_mm256_shuffle_epi8(_mm256_set1_epi32(((uint32_t*)test_input[0])[i]), shufmask),andmask),zero256),masks[0]);
     for (j=1; j<n_segments; j++) {
       c256 = _mm256_or_si256(_mm256_and_si256(_mm256_cmpeq_epi8(_mm256_andnot_si256(_mm256_shuffle_epi8(_mm256_set1_epi32(((uint32_t*)test_input[j])[i]), shufmask),andmask),zero256),masks[j]),c256);
     }
     ((__m256i *)c)[i] = c256;
+  }
+
+  for (i=(block_length>>5)<<5;i<block_length;i++) {
+    for (j=0; j<n_segments; j++) {
+
+      temp = (test_input[j][i/8]&(1<<(i&7)))>>(i&7);
+      //printf("c(%d,%d)=%d\n",j,i,temp);
+      c[i] |= (temp << j);
+    }
   }
 #else
   AssertFatal(1==0,"Need AVX2 for this\n");
