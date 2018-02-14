@@ -924,7 +924,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
   uint8_t DLSCH_pdu_rar[256];
   int i;
 
-  LOG_D(PHY,
+  LOG_I(PHY,
 	"[eNB %"PRIu8"][PDSCH %"PRIx16"/%"PRIu8"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8", pmi_alloc %"PRIx64", rv %"PRIu8" (round %"PRIu8")\n",
 	eNB->Mod_id, dlsch->rnti,harq_pid,
 	frame, subframe, input_buffer_length,

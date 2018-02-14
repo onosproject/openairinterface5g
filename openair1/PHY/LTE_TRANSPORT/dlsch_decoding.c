@@ -637,7 +637,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
 		*/
 
 		nb_total_decod++;
-		if (no_iteration_ldpc > 5){
+		if (no_iteration_ldpc > 10){
 		  nb_error_decod++;
 		  ret = 1+dlsch->max_turbo_iterations;
 		}
