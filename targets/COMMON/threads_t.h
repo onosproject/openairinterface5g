@@ -12,6 +12,9 @@ typedef struct threads_s {
     int dlsch_td_one;
 	int dlsch_td_two;
 	int dlsch_td_three;
+	int dlsch_td1_one;
+	int dlsch_td1_two;
+	int dlsch_td1_three;
 } threads_t;
 
 #endif /* _THREADS_T_H_ */
