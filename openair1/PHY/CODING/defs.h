@@ -576,4 +576,5 @@ int encode_parity_check_part_orig(unsigned char *c,unsigned char *d, short BG,sh
 int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,short block_length,int nom_rate,int denom_rate,unsigned char gen_code);
 int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,short block_length,int nom_rate,int denom_rate,time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput);
 
+uint8_t check_crc(uint8_t *decoded_bytes, uint16_t len, uint8_t crc_type);
 #endif

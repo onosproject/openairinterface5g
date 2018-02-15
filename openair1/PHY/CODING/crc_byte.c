@@ -199,6 +199,72 @@ crc8 (unsigned char * inptr, int bitlen)
   return crc;
 }
 
+uint8_t check_crc(uint8_t *decoded_bytes, uint16_t len, uint8_t crc_type)
+{
+  uint8_t crc_len,temp;
+  uint16_t oldcrc,crc;
+
+  switch (crc_type) {
+  case CRC24_A:
+  case CRC24_B:
+    crc_len=3;
+    break;
+
+  case CRC16:
+    crc_len=2;
+    break;
+
+  case CRC8:
+    crc_len=1;
+    break;
+
+  default:
+    crc_len=3;
+  }
+
+  // check the CRC
+  oldcrc= *((unsigned int *)(&decoded_bytes[(len>>3)-crc_len]));
+
+      switch (crc_type) {
+
+      case CRC24_A:
+        oldcrc&=0x00ffffff;
+        crc = crc24a(decoded_bytes,len-24)>>8;
+        temp=((uint8_t *)&crc)[2];
+        ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+        ((uint8_t *)&crc)[0] = temp;
+        break;
+
+      case CRC24_B:
+        oldcrc&=0x00ffffff;
+        crc = crc24b(decoded_bytes,len-24)>>8;
+        temp=((uint8_t *)&crc)[2];
+        ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+        ((uint8_t *)&crc)[0] = temp;
+        break;
+
+      case CRC16:
+        oldcrc&=0x0000ffff;
+        crc = crc16(decoded_bytes,
+                    len-16)>>16;
+        break;
+
+      case CRC8:
+        oldcrc&=0x000000ff;
+        crc = crc8(decoded_bytes,
+                   len-8)>>24;
+        break;
+
+      default:
+        printf("FATAL:  Unknown CRC\n");
+        return(255);
+        break;
+      }
+
+      printf("old CRC %x, CRC %x \n",oldcrc,crc);
+      return (crc == oldcrc); 
+}
+
 #ifdef DEBUG_CRC
 /*******************************************************************/
 /**
