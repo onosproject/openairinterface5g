@@ -112,6 +112,7 @@ int main(int argc, char **argv)
 
   unsigned char frame_type = 0;
   unsigned char pbch_phase = 0;
+  UE_rxtx_proc_t *proc;
 
 #ifdef XFORMS
   FD_lte_phy_scope_ue *form_ue;
@@ -978,7 +979,7 @@ int main(int argc, char **argv)
           if (l==((eNB->frame_parms.Ncp==0)?10:9)) {
 
             for (frame_mod4=0; frame_mod4<4; frame_mod4++) {
-              pbch_tx_ant = rx_pbch(&UE->common_vars,
+              pbch_tx_ant = rx_pbch(UE,proc,
                                     UE->pbch_vars[0],
                                     &UE->frame_parms,
                                     0,
@@ -994,7 +995,7 @@ int main(int argc, char **argv)
                   printf("pbch_phase different!!!\n");
               }
 
-              pbch_tx_ant = rx_pbch(&UE->common_vars,
+              pbch_tx_ant = rx_pbch(UE,proc,
                                     UE->pbch_vars[0],
                                     &eNB->frame_parms,
                                     0,
