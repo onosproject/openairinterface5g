@@ -331,7 +331,8 @@ int main(int argc, char *argv[])
   printf("block length %d: \n", block_length);
   printf("rate: %d/%d\n",nom_rate,denom_rate);
 
-  for (block_length=8;block_length<=MAX_BLOCK_LENGTH;block_length+=8)
+  //for (block_length=8;block_length<=MAX_BLOCK_LENGTH;block_length+=8)
+  for (SNR=SNR0;SNR<SNR0+1.0;SNR+=1.0)
   {
     SNR_lin = pow(10,SNR/10);
     decoded_errors[i]=test_ldpc(No_iteration,
