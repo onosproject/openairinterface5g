@@ -4846,7 +4846,7 @@ int check_dci_format1_1a_coherency(DCI_format_t dci_format,
             break;
         }
     }
-    else
+    /*else
     {
         switch (N_RB_DL) {
         case 6:
@@ -4878,7 +4878,7 @@ int check_dci_format1_1a_coherency(DCI_format_t dci_format,
               RIV_max  =  0x1FFFFFF;
             break;
         }
-    }
+	}*/
 
 
     if(dci_format == format1)
@@ -4886,13 +4886,14 @@ int check_dci_format1_1a_coherency(DCI_format_t dci_format,
         NPRB = conv_nprb(rah, rballoc, N_RB_DL);
     }
 
-
+    /*
     if(rballoc > RIV_max)
     {
         LOG_I(PHY,"bad dci rballoc rballoc %d  RIV_max %lld \n",rballoc, RIV_max);
         // DCI false detection
         return(0);
     }
+    */
 
     if(NPRB == 0)
     {
