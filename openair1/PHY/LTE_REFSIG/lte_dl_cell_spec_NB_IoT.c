@@ -77,7 +77,7 @@ int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB          *phy_vars_eNB,
   DevAssert( l < 2 );
 
   for (m=0; m<2; m++) {
-    output[k] = qpsk[(phy_vars_eNB->lte_gold_table[Ns][l][0]) & 3]; //TODO should be defined one for NB-IoT
+    output[k] = qpsk[(phy_vars_eNB->lte_gold_table_NB_IoT[Ns][l][0]) & 3]; //TODO should be defined one for NB-IoT
     k+=6;
   }
 

@@ -147,6 +147,60 @@ typedef enum {
 
 typedef struct {
   /// NB-IoT
+  /// Allocated RNTI (0 means DLSCH_t is not currently used)
+  uint16_t              si_rnti;   ///(=0xfff4)
+
+  SCH_status_NB_IoT_t   status;
+  /// The scheduling the NPDCCH and the NPDSCH transmission TS 36.213 Table 16.4.1-1
+  uint8_t               scheduling_delay;
+  /// The number of the subframe to transmit the NPDSCH Table TS 36.213 Table 16.4.1.3-1  (Nsf) (NB. in this case is not the index Isf)
+  uint8_t               resource_assignment;
+  /// is the index that determined the repeat number of NPDSCH through table TS 36.213 Table 16.4.1.3-2 / for SIB1-NB Table 16.4.1.3-3
+  uint8_t               repetition_number;
+  /// Determined the ACK/NACK delay and the subcarrier allocation TS 36.213 Table 16.4.2
+  uint8_t               HARQ_ACK_resource;
+  /// Determined the repetition number value 0-3 (2 biut carried by the FAPI NPDCCH)
+  uint8_t               dci_subframe_repetitions;
+  /// modulation always QPSK Qm = 2 
+  uint8_t               modulation;
+  /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
+  uint8_t               e[MAX_NUM_CHANNEL_BITS_NB_IoT];
+  /// data after scrambling
+  uint8_t               s_e[MAX_NUM_CHANNEL_BITS_NB_IoT];
+  //length of the table e
+  uint16_t              length_e;                // new parameter
+  /// Tail-biting convolutional coding outputs
+  uint8_t               d[96+(3*(24+MAX_DL_SIZE_BITS_NB_IoT))];  // new parameter
+  /// Sub-block interleaver outputs
+  uint8_t               w[3*3*(MAX_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
+
+  /// Status Flag indicating for this DLSCH (idle,active,disabled)
+  //SCH_status_t status;
+  /// Transport block size
+  uint32_t              TBS;
+  /// The payload + CRC size in bits, "B" from 36-212
+  uint32_t              B;
+  /// Pointer to the payload
+  uint8_t               *b;
+  ///pdu of the ndlsch message
+  uint8_t               *pdu;
+  /// Frame where current HARQ round was sent
+  uint32_t              frame;
+  /// Subframe where current HARQ round was sent
+  uint32_t              subframe;
+  /// Index of current HARQ round for this DLSCH
+  uint8_t               round;
+  /// MCS format for this NDLSCH , TS 36.213 Table 16.4.1.5
+  uint8_t               mcs;
+  // we don't have code block segmentation / crc attachment / concatenation in NB-IoT R13 36.212 6.4.2
+  // we don't have beamforming in NB-IoT
+  //this index will be used mainly for SI message buffer
+   uint8_t               pdu_buffer_index;
+
+} NB_IoT_DL_eNB_SIB1_t;
+
+typedef struct {
+  /// NB-IoT
   SCH_status_NB_IoT_t   status;
   /// The scheduling the NPDCCH and the NPDSCH transmission TS 36.213 Table 16.4.1-1
   uint8_t               scheduling_delay;
@@ -196,7 +250,7 @@ typedef struct {
 
 } NB_IoT_DL_eNB_HARQ_t;
 
-
+/*
 typedef struct {                                        // LTE_eNB_DLSCH_t
  /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
  uint32_t               *txdataF[8];
@@ -217,7 +271,9 @@ typedef struct {                                        // LTE_eNB_DLSCH_t
  /// First-round error threshold for fine-grain rate adaptation
  uint8_t                error_threshold;
  /// Pointers to 8 HARQ processes for the DLSCH
- NB_IoT_DL_eNB_HARQ_t   harq_process;
+ NB_IoT_DL_eNB_HARQ_t   harq_process2;
+
+ NB_IoT_DL_eNB_SIB1_t   harq_process;
  /// circular list of free harq PIDs (the oldest come first)
  /// (10 is arbitrary value, must be > to max number of DL HARQ processes in LTE)
  int                    harq_pid_freelist[10];
@@ -242,7 +298,8 @@ typedef struct {                                        // LTE_eNB_DLSCH_t
  /// amplitude of PDSCH (compared to RS) in symbols containing pilots
  int16_t                sqrt_rho_b;
 
-} NB_IoT_eNB_DLSCH_t;
+} NB_IoT_eNB_DLSCH_t; 
+*/
 
 
 typedef struct {
@@ -547,9 +604,11 @@ typedef struct {
   uint8_t                 subframe_tx[10];
   /// First CCE of last PDSCH scheduling per subframe.  Again used during PUCCH detection for ACK/NAK.
   uint8_t                 nCCE[10];
-  /*in NB-IoT there is only 1 HARQ process for each UE therefore no pid is required*/
+  ///in NB-IoT there is only 1 HARQ process for each UE therefore no pid is required///
   /// The only HARQ process for the DLSCH
   NB_IoT_DL_eNB_HARQ_t    *harq_process;
+
+  NB_IoT_DL_eNB_SIB1_t    harq_process_sib1;
   /// Number of soft channel bits
   uint32_t                G;
   /// Maximum number of HARQ rounds
@@ -571,7 +630,7 @@ typedef struct {
   ///indicates the starting OFDM symbol in the first slot of a subframe k for the NPDSCH transmission
   /// see FAPI/NFAPI specs Table 4-47
   uint8_t                 npdsch_start_symbol;
-  /*SIB1-NB related parameters*/
+  ///SIB1-NB related parameters//
   ///flag for indicate if the current frame is the start of a new SIB1-NB repetition within the SIB1-NB period (0 = FALSE, 1 = TRUE)
   uint8_t                 sib1_rep_start;
   ///the number of the frame within the 16 continuous frame in which sib1-NB is transmitted (1-8 = 1st, 2nd ecc..) (0 = not foresees a transmission)

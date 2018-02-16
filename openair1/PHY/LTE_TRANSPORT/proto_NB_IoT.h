@@ -229,13 +229,13 @@ int dlsch_modulation_NB_IoT(int32_t               **txdataF,
                             int16_t               amp,
                             LTE_DL_FRAME_PARMS      *frame_parms,
                             uint8_t               control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-                            NB_IoT_eNB_DLSCH_t    *dlsch0,
+                            NB_IoT_eNB_NDLSCH_t    *dlsch0,
                             int                   G,              // number of bits per subframe
                             unsigned              npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf        
                             unsigned short        NB_IoT_RB_ID);
 
 int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
-                              NB_IoT_eNB_DLSCH_t         *dlsch,
+                              NB_IoT_eNB_NDLSCH_t         *dlsch,
                               uint8_t                    Nsf,        // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
                               unsigned int               G);         // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
  

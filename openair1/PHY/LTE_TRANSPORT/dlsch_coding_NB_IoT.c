@@ -85,7 +85,7 @@ void ccode_encode_npdsch_NB_IoT (int32_t   numbits,
 
 
 int dlsch_encoding_NB_IoT(unsigned char      			*a,
-						  NB_IoT_eNB_DLSCH_t 			*dlsch,
+						  NB_IoT_eNB_NDLSCH_t 			*dlsch,
 						  uint8_t 			 			Nsf,		// number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
 						  unsigned int 		 			G) 		    // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
 {
@@ -94,12 +94,12 @@ int dlsch_encoding_NB_IoT(unsigned char      			*a,
 	unsigned int  A;
 	uint8_t 	  RCC;
 
-	A 							 = dlsch->harq_process.TBS;  				// 680
-	dlsch->harq_process.length_e = G*Nsf;									// G*Nsf (number_of_subframes) = total number of bits to transmit G=236
+	A 							 = dlsch->harq_process_sib1.TBS;  				// 680
+	dlsch->harq_process_sib1.length_e = G*Nsf;									// G*Nsf (number_of_subframes) = total number of bits to transmit G=236
 
 	int32_t numbits = A+24;
 	
-	if (dlsch->harq_process.round == 0) { 	    // This is a new packet
+	if (dlsch->harq_process_sib1.round == 0) { 	    // This is a new packet
 
 		crc = crc24a_NB_IoT(a,A)>>8;						// CRC calculation (24 bits CRC)
 												    // CRC attachment to payload
@@ -107,16 +107,16 @@ int dlsch_encoding_NB_IoT(unsigned char      			*a,
 		a[1+(A>>3)] = ((uint8_t*)&crc)[1];
 		a[2+(A>>3)] = ((uint8_t*)&crc)[0];
 		
-		dlsch->harq_process.B = numbits;			// The length of table b in bits
+		dlsch->harq_process_sib1.B = numbits;			// The length of table b in bits
 		
-		memcpy(dlsch->harq_process.b,a,numbits/8); 
-		memset(dlsch->harq_process.d,LTE_NULL_NB_IoT,96);
+		memcpy(dlsch->harq_process_sib1.b,a,numbits/8); 
+		memset(dlsch->harq_process_sib1.d,LTE_NULL_NB_IoT,96);
 		
-		ccode_encode_npdsch_NB_IoT(numbits, dlsch->harq_process.b, dlsch->harq_process.d+96, crc);  	//   step 1 Tail-biting convolutional coding
+		ccode_encode_npdsch_NB_IoT(numbits, dlsch->harq_process_sib1.b, dlsch->harq_process_sib1.d+96, crc);  	//   step 1 Tail-biting convolutional coding
 		
-		RCC = sub_block_interleaving_cc_NB_IoT(numbits,dlsch->harq_process.d+96,dlsch->harq_process.w);		//   step 2 interleaving
+		RCC = sub_block_interleaving_cc_NB_IoT(numbits,dlsch->harq_process_sib1.d+96,dlsch->harq_process_sib1.w);		//   step 2 interleaving
 		
-		lte_rate_matching_cc_NB_IoT(RCC,dlsch->harq_process.length_e,dlsch->harq_process.w,dlsch->harq_process.e);  // step 3 Rate Matching
+		lte_rate_matching_cc_NB_IoT(RCC,dlsch->harq_process_sib1.length_e,dlsch->harq_process_sib1.w,dlsch->harq_process_sib1.e);  // step 3 Rate Matching
 				
     }
   return(0);

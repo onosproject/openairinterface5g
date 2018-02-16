@@ -219,6 +219,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   //LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms_NB_IoT;
   LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms;
   NB_IoT_eNB_NPBCH_t   *broadcast_str = &eNB->npbch;
+  NB_IoT_eNB_NDLSCH_t  *sib1          = &eNB->ndlsch_SIB1;
   int                     **txdataF =  eNB->common_vars.txdataF[0];
   int                     subframe  =  proc->subframe_tx;
   int                     frame     =  proc->frame_tx;
@@ -226,7 +227,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   int                     RB_IoT_ID=2 ;                          // XXX should be initialized (RB reserved for NB-IoT, PRB index)
   int                     With_NSSS=0;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
   uint8_t      *npbch_pdu =  get_NB_IoT_MIB();
-
+  uint8_t      *sib1_pdu = get_NB_IoT_SIB1();
  //NSSS only happened in the even frame
   if(frame%2==0)
     {
@@ -278,6 +279,42 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                      frame%64,
                      RB_IoT_ID);
     }
+
+
+    // SIB1
+    /*
+
+        if(subframe == 4)
+        {
+
+    */
+    /*
+      dlsch_encoding_NB_IoT(sib1_pdu,
+                            sib1,
+                            number_of_subframes_required, ***************
+                            G);   ***********
+
+      dlsch_sib1_scrambling_NB_IoT(fp,
+                                   sib1,
+                                   total_bits, **************************
+                                   frame,
+                                   subframe*2);
+
+      dlsch_modulation_NB_IoT(txdataF,
+                              AMP,
+                              fp,
+                              control_region_size,  *********    // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+                              sib1,
+                              G,               *********           // number of bits per subframe
+                              npdsch_data_subframe,  *******   // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf        
+                              RB_IoT_ID)
+
+
+        }
+      if(Number_of_sib1_subframe > 1)
+
+    */
+
   
 }
 

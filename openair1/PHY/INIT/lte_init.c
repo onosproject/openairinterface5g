@@ -1382,6 +1382,10 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
 
   if (eNB->node_function != NGFI_RRU_IF4p5) {
     lte_gold(fp,eNB->lte_gold_table,fp->Nid_cell);
+
+    // NB-IoT testing
+    lte_gold_NB_IoT(fp,eNB->lte_gold_table_NB_IoT,fp->Nid_cell);
+    //////////////////////////////////////////////////////////
     generate_pcfich_reg_mapping(fp);
     generate_phich_reg_mapping(fp);
 
@@ -1708,7 +1712,7 @@ int phy_init_lte_eNB_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
 
   if (eNB->node_function != NGFI_RRU_IF4p5_NB_IoT) {
-    lte_gold_NB_IoT(fp,eNB->lte_gold_table_NB_IoT,fp->Nid_cell);
+  //  lte_gold_NB_IoT(fp,eNB->lte_gold_table_NB_IoT,fp->Nid_cell);   ****** uncomment when this function is used - 16/02/2018
   //  generate_pcfich_reg_mapping(fp);
   //  generate_phich_reg_mapping(fp);
 

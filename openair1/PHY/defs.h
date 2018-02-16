@@ -326,6 +326,10 @@ typedef struct PHY_VARS_eNB_s {
   /// cell-specific reference symbols
   uint32_t         lte_gold_table[20][2][14];
 
+
+  /// cell-specific reference symbols
+  uint32_t         lte_gold_table_NB_IoT[20][2][14];
+
   /// UE-specific reference symbols (p=5), TM 7
   uint32_t         lte_gold_uespec_port5_table[NUMBER_OF_UE_MAX][20][38];
 
@@ -507,6 +511,7 @@ typedef struct PHY_VARS_eNB_s {
 
 NB_IoT_eNB_NPBCH_t        npbch;
 NB_IoT_eNB_NDLSCH_t       *ndlsch[NUMBER_OF_UE_MAX];
+NB_IoT_eNB_NDLSCH_t       ndlsch_SIB1;
 
 //////////////////// END /////////////////////////////////
 
