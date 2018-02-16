@@ -30,6 +30,7 @@ int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB          *phy_vars_eNB,
 					                  unsigned short        RB_IoT_ID) 			// the ID of the RB dedicated for NB_IoT
 {
   unsigned char   nu,m;
+  unsigned char   mprime,mprime_dword,mprime_qpsk_symb;
   unsigned short  k,a;
   unsigned short  NB_IoT_start,bandwidth_even_odd;
   int32_t         qpsk[4];
@@ -57,6 +58,8 @@ int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB          *phy_vars_eNB,
     return(-1);
   }
 
+  //mprime = 110 - eNB->frame_parms.N_RB_DL;
+  mprime = 109;
   // testing if the total number of RBs is even or odd 
   bandwidth_even_odd = phy_vars_eNB->frame_parms.N_RB_DL % 2;    // 0 even, 1 odd
   
@@ -77,7 +80,12 @@ int lte_dl_cell_spec_NB_IoT(PHY_VARS_eNB          *phy_vars_eNB,
   DevAssert( l < 2 );
 
   for (m=0; m<2; m++) {
-    output[k] = qpsk[(phy_vars_eNB->lte_gold_table_NB_IoT[Ns][l][0]) & 3]; //TODO should be defined one for NB-IoT
+    mprime_dword     = mprime>>4;
+    mprime_qpsk_symb = mprime&0xf;
+
+    output[k] = qpsk[(phy_vars_eNB->lte_gold_table_NB_IoT[Ns][l][mprime_dword]>>(2*mprime_qpsk_symb)) & 3]; //TODO should be defined one for NB-IoT
+    
+    mprime++;
     k+=6;
   }
 

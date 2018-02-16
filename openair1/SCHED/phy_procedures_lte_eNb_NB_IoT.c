@@ -284,7 +284,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     // SIB1
     /*
 
-        if(subframe == 4)
+        if(subframe > 3)
         {
 
     */
