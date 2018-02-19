@@ -101,7 +101,6 @@ typedef enum {
 } Group_Communication_Status_t;
 
 struct GroupCommunicationEstablishReq {
-   uint8_t type; //0 - rx, 1 - tx
    uint32_t sourceL2Id;
    uint32_t groupL2Id;
    uint32_t groupIpAddress;
@@ -127,10 +126,11 @@ struct PC5SEstablishReq{
 };
 
 struct PC5SEstablishRsp{
-   uint32_t sourceL2Id;
-   uint32_t destinationL2Id;
-   uint8_t status;
+   uint32_t slrbid_lcid28;
+   uint32_t slrbid_lcid29;
+   uint32_t slrbid_lcid30;
 };
+
 
 //PC5_DISCOVERY MESSAGE
 typedef struct  {
@@ -143,7 +143,7 @@ struct sidelink_ctrl_element {
    unsigned short type;
    union {
       struct GroupCommunicationEstablishReq group_comm_establish_req;
-      struct DirectCommunicationEstablishReq direct_comm_estblish_req;
+      struct DirectCommunicationEstablishReq direct_comm_establish_req;
       Group_Communication_Status_t group_comm_release_rsp;
       //struct DirectCommunicationReleaseReq  direct_comm_release_req;
       SL_UE_STATE_t ue_state;

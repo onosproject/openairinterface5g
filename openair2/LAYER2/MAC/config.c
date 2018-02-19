@@ -1249,6 +1249,8 @@ rrc_mac_config_req_ue(
 
 //for D2D
 #if defined(Rel10) || defined(Rel14)
+  int j = 0;
+  int k = 0;
   switch (config_action) {
   case CONFIG_ACTION_ADD:
      if (sourceL2Id){
@@ -1257,14 +1259,32 @@ rrc_mac_config_req_ue(
      }
      if (destinationL2Id) {
         LOG_I(MAC,"[UE %d] Configure destination L2Id 0x%08x\n", Mod_idP, *destinationL2Id );
-        int j = 0;
-        int i = 0;
-        for (i=0; i< MAX_NUM_DEST; i++) {
-           if ((UE_mac_inst[Mod_idP].destinationList[i] == 0) && (j == 0)) j = i+1;
-           if (UE_mac_inst[Mod_idP].destinationList[i] == *destinationL2Id) break; //destination already exists!
+        for (k=0; k< MAX_NUM_DEST; k++) {
+           if ((UE_mac_inst[Mod_idP].destinationList[k] == 0) && (j == 0)) j = k+1;
+           if (UE_mac_inst[Mod_idP].destinationList[k] == *destinationL2Id) break; //destination already exists!
         }
-        if ((i == MAX_NUM_DEST) && (j > 0))  UE_mac_inst[Mod_idP].destinationList[j-1] = *destinationL2Id;
-        UE_mac_inst[Mod_idP].numCommFlows++;
+        if ((k == MAX_NUM_DEST) && (j > 0)) {
+           UE_mac_inst[Mod_idP].destinationList[j-1] = *destinationL2Id;
+          // UE_mac_inst[Mod_idP].numCommFlows++;
+        }
+        for (k=0; k< MAX_NUM_DEST; k++) {
+           LOG_I(MAC,"[UE %d] destination %d L2Id 0x%08x\n", Mod_idP,k,UE_mac_inst[Mod_idP].destinationList[k] );
+        }
+     }
+     //store list of LCIDs for SL
+     if (logicalChannelIdentity >0 ){
+        j = 0;
+        for (k=0; k< MAX_NUM_LCID; k++) {
+           if ((UE_mac_inst[Mod_idP].SL_LCID[k] == 0) && (j == 0)) j = k+1;
+           if (UE_mac_inst[Mod_idP].SL_LCID[k] == logicalChannelIdentity) break; //LCID already exists!
+        }
+        if ((k == MAX_NUM_LCID) && (j > 0)) {
+           UE_mac_inst[Mod_idP].SL_LCID[j-1] = logicalChannelIdentity;
+           UE_mac_inst[Mod_idP].numCommFlows++;
+        }
+        for (k=0; k< MAX_NUM_LCID; k++) {
+           LOG_I(MAC,"[UE %d] logical channel %d channel id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].SL_LCID[k] );
+        }
      }
      break;
   case CONFIG_ACTION_REMOVE:
