@@ -244,7 +244,6 @@ static void* tx_thread(void* param) {
     phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
 	if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) break;
 	
-	
     pthread_mutex_lock(&eNB_proc->ru_proc->mutex_eNBs);
     ++eNB_proc->ru_proc->instance_cnt_eNBs;
     eNB_proc->ru_proc->timestamp_tx = proc->timestamp_tx;
@@ -428,7 +427,8 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   RU_proc_t *ru_proc=&ru->proc;
 
   eNB_rxtx_proc_t *proc_rxtx=&proc->proc_rxtx[0];//*proc_rxtx=&proc->proc_rxtx[proc->frame_rx&1];
-  proc->ru_proc = &ru->proc;
+  //proc->ru_proc = &ru->proc;
+  
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
 
@@ -732,7 +732,7 @@ static void* process_stats_thread(void* param) {
        if (eNB->td) print_meas(&eNB->ulsch_decoding_stats,"ulsch_decoding",NULL,NULL);
        if (eNB->te)
        {
-         print_meas(&eNB->dlsch_turbo_encoding_preperation_stats,"dlsch_coding_prepare",NULL,NULL);
+         print_meas(&eNB->dlsch_turbo_encoding_preperation_stats,"dlsch_coding_crc",NULL,NULL);
          print_meas(&eNB->dlsch_turbo_encoding_segmentation_stats,"dlsch_segmentation",NULL,NULL);
          print_meas(&eNB->dlsch_turbo_encoding_stats,"turbo_encoding",NULL,NULL);
          print_meas(&eNB->dlsch_rate_matching_stats,"rate_matching",NULL,NULL);
@@ -849,7 +849,6 @@ void init_eNB_proc(int inst) {
 	
 	
 	//////////////////////////////////////need to modified////////////////*****
-    //printf("//////////////////////////////////////////////////////////////////**************************************************************** codingw = %d\n",codingw);
     if(get_nprocs() > 2 && codingw)
     {
       init_te_thread(eNB);
