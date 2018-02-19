@@ -65,7 +65,7 @@
 #define CONFIG_HLP_NOSNGLT       "Disables single-thread mode in lte-softmodem\n" 
 #define CONFIG_HLP_TADV          "Set timing_advance\n"
 #define CONFIG_HLP_DLF           "Set the downlink frequency for all component carriers\n"
-#define CONFIG_HLP_CHOFF         "Channel id offset"
+#define CONFIG_HLP_CHOFF         "Channel id offset\n"
 #define CONFIG_HLP_SOFTS         "Enable soft scope and L1 and L2 stats (Xforms)\n"
 #define CONFIG_HLP_EXMCAL        "Calibrate the EXMIMO borad, available files: exmimo2_2arxg.lime exmimo2_2brxg.lime \n"
 #define CONFIG_HLP_ITTIL         "Generate ITTI analyzser logs (similar to wireshark logs but with more details)\n"
@@ -251,7 +251,7 @@ extern void init_RU(const char*);
 extern int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg);
 extern void fill_ue_band_info(void);
 
-extern void init_UE(int,int,int);
+extern void init_UE(int,int,int,int);
 extern void init_thread(int sched_runtime, int sched_deadline, int sched_fifo, cpu_set_t *cpuset, char * name);
 
 extern void reset_opp_meas(void);

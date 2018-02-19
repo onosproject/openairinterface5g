@@ -162,13 +162,6 @@ tbs_size_t mac_rlc_data_req(
     AssertFatal (channel_idP < NB_RB_MAX,        "channel id is too high (%u/%d)!\n",     channel_idP, NB_RB_MAX);
   }
 
-#ifdef OAI_EMU
-  CHECK_CTXT_ARGS(&ctxt);
-  //printf("MBMS_flagP %d, MBMS_FLAG_NO %d \n",MBMS_flagP, MBMS_FLAG_NO);
-  //  AssertFatal (MBMS_flagP == MBMS_FLAG_NO ," MBMS FLAG SHOULD NOT BE SET IN mac_rlc_data_req in UE\n");
-
-#endif
-
   if (MBMS_flagP) {
     if (enb_flagP) {
       mbms_id_p = &rlc_mbms_lcid2service_session_id_eNB[module_idP][channel_idP];
@@ -265,18 +258,6 @@ void mac_rlc_data_ind     (
   }
 
 #endif // DEBUG_MAC_INTERFACE
-#ifdef OAI_EMU
-
-  if (MBMS_flagP)
-    AssertFatal (channel_idP < RLC_MAX_MBMS_LC,  "channel id is too high (%u/%d)!\n",
-                 channel_idP, RLC_MAX_MBMS_LC);
-  else
-    AssertFatal (channel_idP < NB_RB_MAX,        "channel id is too high (%u/%d)!\n",
-                 channel_idP, NB_RB_MAX);
-
-  CHECK_CTXT_ARGS(&ctxt);
-
-#endif
 
 #if T_TRACER
   if (enb_flagP)
@@ -361,31 +342,6 @@ mac_rlc_status_resp_t mac_rlc_status_ind(
   memset (&mac_rlc_status_resp, 0, sizeof(mac_rlc_status_resp_t));
   memset (&tx_status          , 0, sizeof(struct mac_status_ind));
 
-#ifdef OAI_EMU
-
-  if (MBMS_flagP)
-    AssertFatal (channel_idP < RLC_MAX_MBMS_LC,
-                 "%s channel id is too high (%u/%d) enb module id %u ue %u!\n",
-                 (enb_flagP) ? "eNB" : "UE",
-                 channel_idP,
-                 RLC_MAX_MBMS_LC,
-                 module_idP,
-                 rntiP);
-  else
-    AssertFatal (channel_idP < NB_RB_MAX,
-                 "%s channel id is too high (%u/%d) enb module id %u ue %u!\n",
-                 (enb_flagP) ? "eNB" : "UE",
-                 channel_idP,
-                 NB_RB_MAX,
-                 module_idP,
-                 rntiP);
-
-  CHECK_CTXT_ARGS(&ctxt);
-
-#endif
-
-
-
   if (MBMS_flagP) {
     if (enb_flagP) {
       mbms_id_p = &rlc_mbms_lcid2service_session_id_eNB[module_idP][channel_idP];
@@ -401,17 +357,19 @@ mac_rlc_status_resp_t mac_rlc_status_ind(
     } else
 #endif
     {
+    	//LOG_I(RLC, "Panos-D mac_rlc_status_ind 1 enb_flagP: %d, channel_idP: %d, srb_flag: %d \n", enb_flagP, channel_idP, srb_flag);
     key = RLC_COLL_KEY_LCID_VALUE(module_idP, rntiP, enb_flagP, channel_idP, srb_flag);
     }
 }
 
+  //LOG_I(RLC, "Panos-D mac_rlc_status_ind 2 enb_flagP: %d, channel_idP: %d, srb_flag: %d \n", enb_flagP, channel_idP, srb_flag);
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
 
   if (h_rc == HASH_TABLE_OK) {
     rlc_mode = rlc_union_p->mode;
   } else {
     rlc_mode = RLC_MODE_NONE;
-    LOG_W(RLC , "[%s] RLC not configured lcid %u module %u!\n", __FUNCTION__, channel_idP, module_idP);
+    //LOG_W(RLC , "[%s] RLC not configured lcid %u module %u!\n", __FUNCTION__, channel_idP, module_idP);
     //LOG_D(RLC , "[%s] RLC not configured rb id %u lcid %u module %u!\n", __FUNCTION__, rb_id, channel_idP, ue_module_idP);
   }
 

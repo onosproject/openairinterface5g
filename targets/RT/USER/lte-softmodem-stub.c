@@ -90,6 +90,7 @@ unsigned short config_frames[4] = {2,9,11,13};
 #include "UTIL/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "enb_config.h"
+#include "targets/COMMON/create_tasks.h"
 //#include "PHY/TOOLS/time_meas.h"
 
 #ifndef OPENAIR2
@@ -1224,7 +1225,8 @@ int main( int argc, char **argv )
 
   if (UE_flag == 1) {
     // don't create if node doesn't connect to RRC/S1/GTP
-    if (create_tasks(UE_flag ? 0 : 1, UE_flag ? 1 : 0) < 0) {
+    //if (create_tasks(UE_flag ? 0 : 1, UE_flag ? 1 : 0) < 0) {
+	  if (create_tasks_ue(1) < 0) {
       printf("cannot create ITTI tasks\n");
       exit(-1); // need a softer mode
     }

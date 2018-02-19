@@ -59,6 +59,15 @@ char defbool[2]="1";
 	   printf("cfgoptions->strptr %p (&emul_iface %p, emul_iface %p)\n",cfgoptions->strptr,&emul_iface,emul_iface);
            sprintf(*(cfgoptions->strptr), "%s",tmpval);
            printf("[CONFIG] %s set to  %s from command line\n", cfgoptions->optname, tmpval);
+/*=======
+           if (cfgoptions->numelt == 0 ) {
+              config_check_valptr(cfgoptions, cfgoptions->strptr, strlen(tmpval)+1);
+              sprintf(*(cfgoptions->strptr), "%s",tmpval);
+            } else {
+              sprintf( (char *)(cfgoptions->strptr), "%s",tmpval);              
+           }
+           printf_cmdl("[CONFIG] %s set to  %s from command line\n", cfgoptions->optname, tmpval);
+>>>>>>> main/develop*/
 	   optisset=1;
         break;
 	

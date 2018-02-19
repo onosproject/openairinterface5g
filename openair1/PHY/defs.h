@@ -775,6 +775,10 @@ typedef struct RU_t_s{
   time_stats_t rx_fhaul;
   /// Timing statistics (TX Fronthaul + Compression)
   time_stats_t tx_fhaul; 
+  /// Timong statistics (Compression)
+  time_stats_t compression;
+  /// Timing statistics (Fronthaul transport)
+  time_stats_t transport;
   /// RX and TX buffers for precoder output
   RU_COMMON            common;
   /// beamforming weight vectors per eNB
@@ -1004,6 +1008,7 @@ typedef struct PHY_VARS_eNB_s {
   LTE_eNB_ULSCH_t     *ulsch[NUMBER_OF_UE_MAX+1];      // Nusers + number of RA
   LTE_eNB_DLSCH_t     *dlsch_SI,*dlsch_ra,*dlsch_p;
   LTE_eNB_DLSCH_t     *dlsch_MCH;
+  LTE_eNB_DLSCH_t     *dlsch_PCH;
   LTE_eNB_UE_stats     UE_stats[NUMBER_OF_UE_MAX];
   LTE_eNB_UE_stats    *UE_stats_ptr[NUMBER_OF_UE_MAX];
 

@@ -31,11 +31,9 @@
 #ifndef __OPENAIR_RRC_DEFS_H__
 #define __OPENAIR_RRC_DEFS_H__
 
-#ifdef USER_MODE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#endif
 
 #include "collection/tree.h"
 #include "rrc_types.h"
@@ -169,7 +167,7 @@ void *send_UE_status_notification(void *);
 
 //#include "COMMON/openair_defs.h"
 #ifndef USER_MODE
-#include <rtai.h>
+//#include <rtai.h>
 #endif
 
 #include "SystemInformationBlockType1.h"
@@ -379,7 +377,11 @@ typedef enum SL_TRIGGER_e {
 // #define NUM_MAX_CBA_GROUP 4 // in the platform_constants
 
 /* TS 36.331: RRC-TransactionIdentifier ::= INTEGER (0..3) */
+#if defined(USRP_REC_PLAY)
+#define RRC_TRANSACTION_IDENTIFIER_NUMBER  1
+#else
 #define RRC_TRANSACTION_IDENTIFIER_NUMBER  3
+#endif
 
 typedef struct {
   unsigned short transport_block_size;                  /*!< \brief Minimum PDU size in bytes provided by RLC to MAC layer interface */
@@ -429,12 +431,15 @@ typedef enum e_rab_satus_e {
   E_RAB_STATUS_DONE, // from the eNB perspective
   E_RAB_STATUS_ESTABLISHED, // get the reconfigurationcomplete form UE
   E_RAB_STATUS_FAILED,
+  E_RAB_STATUS_TORELEASE  // to release DRB between eNB and UE
 } e_rab_status_t;
 
 typedef struct e_rab_param_s {
   e_rab_t param;
   uint8_t status;
   uint8_t xid; // transaction_id
+  s1ap_Cause_t cause;
+  uint8_t cause_value;
 } __attribute__ ((__packed__)) e_rab_param_t;
 #endif
 
@@ -512,6 +517,7 @@ typedef struct eNB_RRC_UE_s {
   SRB_ToAddModList_t*                SRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER];
   DRB_ToAddModList_t*                DRB_configList;
   DRB_ToAddModList_t*                DRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER];
+  DRB_ToReleaseList_t*               DRB_Release_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER];
   uint8_t                            DRB_active[8];
   struct PhysicalConfigDedicated*    physicalConfigDedicated;
   struct SPS_Config*                 sps_Config;
@@ -531,6 +537,9 @@ typedef struct eNB_RRC_UE_s {
 #if defined(ENABLE_SECURITY)
   /* KeNB as derived from KASME received from EPC */
   uint8_t kenb[32];
+  int8_t  kenb_ncc;
+  uint8_t nh[32];
+  int8_t  nh_ncc;
 #endif
   /* Used integrity/ciphering algorithms */
   CipheringAlgorithm_r12_t                          ciphering_algorithm;
@@ -560,9 +569,15 @@ typedef struct eNB_RRC_UE_s {
   uint8_t                           setup_e_rabs;
   /* Number of e_rab to be setup in the list */
   uint8_t                            nb_of_e_rabs;
+  /* Number of e_rab to be modified in the list */
+  uint8_t                            nb_of_modify_e_rabs;
+  uint8_t                            nb_of_failed_e_rabs;
+  e_rab_param_t                      modify_e_rab[NB_RB_MAX];//[S1AP_MAX_E_RAB];
   /* list of e_rab to be setup by RRC layers */
   e_rab_param_t                      e_rab[NB_RB_MAX];//[S1AP_MAX_E_RAB];
-
+  //release e_rabs
+  uint8_t                            nb_release_of_e_rabs;
+  e_rab_failed_t                     e_rabs_release_failed[S1AP_MAX_E_RAB];
   // LG: For GTPV1 TUNNELS
   uint32_t                           enb_gtp_teid[S1AP_MAX_E_RAB];
   transport_layer_addr_t             enb_gtp_addrs[S1AP_MAX_E_RAB];
@@ -571,6 +586,13 @@ typedef struct eNB_RRC_UE_s {
   uint32_t                           ul_failure_timer;
   uint32_t                           ue_release_timer;
   uint32_t                           ue_release_timer_thres;
+  uint32_t                           ue_release_timer_s1;
+  uint32_t                           ue_release_timer_thres_s1;
+  uint32_t                           ue_release_timer_rrc;
+  uint32_t                           ue_release_timer_thres_rrc;
+  uint32_t                           ue_reestablishment_timer;
+  uint32_t                           ue_reestablishment_timer_thres;
+  uint8_t                            e_rab_release_command_flag;
 } eNB_RRC_UE_t;
 
 typedef uid_t ue_uid_t;
@@ -639,6 +661,8 @@ typedef struct {
   // End - TTN
   SRB_INFO                          SI;
   SRB_INFO                          Srb0;
+  uint8_t                           *paging[NUMBER_OF_UE_MAX];
+  uint32_t                           sizeof_paging[NUMBER_OF_UE_MAX];
 } rrc_eNB_carrier_data_t;
 
 typedef struct eNB_RRC_INST_s {
@@ -786,6 +810,8 @@ typedef struct UE_RRC_INST_s {
 #if defined(ENABLE_SECURITY)
   /* KeNB as computed from parameters within USIM card */
   uint8_t kenb[32];
+  uint8_t nh[32];
+  int8_t  nh_ncc;
 #endif
 
   /* Used integrity/ciphering algorithms */
@@ -797,6 +823,14 @@ typedef struct UE_RRC_INST_s {
   DRB_ToAddModList_t *DRB_configList;
 #endif
 } UE_RRC_INST;
+
+typedef struct UE_PF_PO_s {
+  boolean_t enable_flag;  /* flag indicate whether current object is used */
+  uint16_t ue_index_value;  /* UE index value */
+  uint8_t PF_min;  /* minimal value of Paging Frame (PF) */
+  uint8_t PO;  /* Paging Occasion (PO) */
+  uint32_t T;  /* DRX cycle */
+} UE_PF_PO_t;
 
 #include "proto.h"
 

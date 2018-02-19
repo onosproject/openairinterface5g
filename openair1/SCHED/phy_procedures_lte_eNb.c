@@ -334,42 +334,50 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,
   }
 
 
-  LOG_D(PHY,"Generating DLSCH/PDSCH %d\n",ra_flag);
+  LOG_D(PHY,"Generating DLSCH/PDSCH pdu:%p pdsch_start:%d frame:%d subframe:%d nb_rb:%d rb_alloc:%d Qm:%d Nl:%d round:%d\n",
+      dlsch_harq->pdu,dlsch_harq->pdsch_start,frame,subframe,dlsch_harq->nb_rb,dlsch_harq->rb_alloc[0],dlsch_harq->Qm,dlsch_harq->Nl,dlsch_harq->round);
   // 36-212 
-  start_meas(&eNB->dlsch_encoding_stats);
-  AssertFatal(dlsch_harq->pdu!=NULL,"dlsch_harq->pdu == NULL (rnti %x)\n",dlsch->rnti);
-  eNB->te(eNB,
-	  dlsch_harq->pdu,
-	  dlsch_harq->pdsch_start,
-	  dlsch,
-	  frame,subframe,
-	  &eNB->dlsch_rate_matching_stats,
-	  &eNB->dlsch_turbo_encoding_stats,
-	  &eNB->dlsch_interleaving_stats);
-  stop_meas(&eNB->dlsch_encoding_stats);
+  if (nfapi_mode == 0 || nfapi_mode == 1) { // monolthic OR PNF - do not need turbo encoding on VNF
+
+    if (dlsch_harq->pdu==NULL){
+        LOG_E(PHY,"dlsch_harq->pdu == NULL SFN/SF:%04d%d dlsch[rnti:%x] dlsch_harq[pdu:%p pdsch_start:%d Qm:%d Nl:%d round:%d nb_rb:%d rb_alloc[0]:%d]\n", frame,subframe,dlsch->rnti, dlsch_harq->pdu,dlsch_harq->pdsch_start,dlsch_harq->Qm,dlsch_harq->Nl,dlsch_harq->round,dlsch_harq->nb_rb,dlsch_harq->rb_alloc[0]);
+      return;
+    }
+
+    start_meas(&eNB->dlsch_encoding_stats);
+
+    eNB->te(eNB,
+        dlsch_harq->pdu,
+        dlsch_harq->pdsch_start,
+        dlsch,
+        frame,subframe,
+        &eNB->dlsch_rate_matching_stats,
+        &eNB->dlsch_turbo_encoding_stats,
+        &eNB->dlsch_interleaving_stats);
+    stop_meas(&eNB->dlsch_encoding_stats);
   // 36-211
-  start_meas(&eNB->dlsch_scrambling_stats);
-  dlsch_scrambling(fp,
-		   0,
-		   dlsch,
-		   harq_pid,
-		   get_G(fp,
-			 dlsch_harq->nb_rb,
-			 dlsch_harq->rb_alloc,
-			 dlsch_harq->Qm,
-			 dlsch_harq->Nl,
-			 dlsch_harq->pdsch_start,
-			 frame,subframe,
-			 0),
-		   0,
-		   frame,
-		   subframe<<1);
-  stop_meas(&eNB->dlsch_scrambling_stats);
+    start_meas(&eNB->dlsch_scrambling_stats);
+    dlsch_scrambling(fp,
+        0,
+        dlsch,
+        harq_pid,
+        get_G(fp,
+          dlsch_harq->nb_rb,
+          dlsch_harq->rb_alloc,
+          dlsch_harq->Qm,
+          dlsch_harq->Nl,
+          dlsch_harq->pdsch_start,
+          frame,subframe,
+          0),
+        0,
+        frame,
+        subframe<<1);
+    stop_meas(&eNB->dlsch_scrambling_stats);
+
+    start_meas(&eNB->dlsch_modulation_stats);
+
   
-  start_meas(&eNB->dlsch_modulation_stats);
-  
-  
-  dlsch_modulation(eNB,
+    dlsch_modulation(eNB,
 		   eNB->common_vars.txdataF,
 		   AMP,
 		   subframe,
@@ -377,10 +385,13 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,
 		   dlsch,
 		   dlsch1);
   
-  stop_meas(&eNB->dlsch_modulation_stats);
+    stop_meas(&eNB->dlsch_modulation_stats);
+  }
 
   dlsch->active = 0;
   dlsch_harq->round++;
+
+  LOG_D(PHY,"Generating DLSCH/PDSCH dlsch_harq[round:%d]\n",dlsch_harq->round);
 }
 
 
@@ -406,6 +417,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
   int offset = eNB->CC_id;//proc == &eNB->proc.proc_rxtx[0] ? 0 : 1;
 
+  
   if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)==SF_UL)) return;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_TX+offset,1);
@@ -418,12 +430,15 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   }
   
 
-  if (is_pmch_subframe(frame,subframe,fp)) {
-    pmch_procedures(eNB,proc,rn,r_type);
-  }
-  else {
-    // this is not a pmch subframe, so generate PSS/SSS/PBCH
-    common_signal_procedures(eNB,proc->frame_tx, proc->subframe_tx);
+
+  if (nfapi_mode == 0 || nfapi_mode == 1) {
+    if (is_pmch_subframe(frame,subframe,fp)) {
+      pmch_procedures(eNB,proc,rn,r_type);
+    }
+    else {
+      // this is not a pmch subframe, so generate PSS/SSS/PBCH
+      common_signal_procedures(eNB,proc->frame_tx, proc->subframe_tx);
+    }
   }
 
   // clear existing ulsch dci allocations before applying info from MAC  (this is table
@@ -439,7 +454,8 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   }
 
   /* save old HARQ information needed for PHICH generation */
-  if (ul_subframe < 10) { // This means that there is a potential UL subframe that will be scheduled here
+  if ((ul_subframe < 10)&&
+      (subframe_select(fp,ul_subframe)==SF_UL)) { // This means that there is a potential UL subframe that will be scheduled here
     for (i=0; i<NUMBER_OF_UE_MAX; i++) {
       harq_pid = subframe2harq_pid(fp,ul_frame,ul_subframe);
       if (eNB->ulsch[i]) {
@@ -477,17 +493,17 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   num_dci           = eNB->pdcch_vars[subframe&1].num_dci;
   //  LOG_D(PHY,"num_pdcch_symbols %"PRIu8",(dci common %"PRIu8", dci uespec %"PRIu8"\n",num_pdcch_symbols,
   //        DCI_pdu->Num_common_dci,DCI_pdu->Num_ue_spec_dci);
-  //LOG_D(PHY,"num_pdcch_symbols %"PRIu8",number dci %"PRIu8"\n",num_pdcch_symbols, num_dci);
+
+  LOG_D(PHY,"num_pdcch_symbols %"PRIu8",number dci %"PRIu8"\n",num_pdcch_symbols, num_dci);
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,num_pdcch_symbols);
 
 
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,(frame*10)+subframe);
 
   if (num_dci > 0)
-  {
-    //LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (num_dci %"PRIu8") num_pdcch_symbols:%d\n",eNB->Mod_id,frame, subframe, num_dci, num_pdcch_symbols);
-  }
-    
+
+    LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (num_dci %"PRIu8") num_pdcch_symbols:%d\n",eNB->Mod_id,frame, subframe, num_dci, num_pdcch_symbols);
+
   //LOG_D(PHY,"Before generate_dci_top num_pdcch_symbols:%d num_dci:%d dci_alloc:dci_length:%d\n", num_pdcch_symbols, num_dci, eNB->pdcch_vars[subframe&1].dci_alloc[0].dci_length);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,1);
@@ -524,7 +540,9 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
         if (harq_pid>=8)
         {
-          LOG_E(PHY,"harq_pid:%d corrupt must be 0-7\n", harq_pid);
+
+          LOG_E(PHY,"harq_pid:%d corrupt must be 0-7 UE_id:%d frame:%d subframe:%d rnti:%x \n", harq_pid,UE_id,frame,subframe,dlsch0->rnti);
+
         }
         else
         {
@@ -565,182 +583,6 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   
 }
 
-
-void prach_procedures(PHY_VARS_eNB *eNB,
-#ifdef Rel14
-		      int br_flag
-#endif
-		      ) {
-  uint16_t max_preamble[4],max_preamble_energy[4],max_preamble_delay[4];
-  uint16_t i;
-  int frame,subframe;
-
-#ifdef Rel14
-  if (br_flag==1) {
-    subframe = eNB->proc.subframe_prach_br;
-    frame = eNB->proc.frame_prach_br;
-    pthread_mutex_lock(&eNB->UL_INFO_mutex);
-    eNB->UL_INFO.rach_ind_br.rach_indication_body.number_of_preambles=0;
-    pthread_mutex_unlock(&eNB->UL_INFO_mutex);
-  }
-  else
-#endif
-    {
-      pthread_mutex_lock(&eNB->UL_INFO_mutex);
-      eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles=0;
-      pthread_mutex_unlock(&eNB->UL_INFO_mutex);
-      subframe = eNB->proc.subframe_prach;
-      frame = eNB->proc.frame_prach;
-    }
-  RU_t *ru;
-  int aa=0;
-  int ru_aa;
-
- 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,1);
-
-
-
-  for (i=0;i<eNB->num_RU;i++) {
-    ru=eNB->RU_list[i];
-    for (ru_aa=0,aa=0;ru_aa<ru->nb_rx;ru_aa++,aa++) {
-      eNB->prach_vars.rxsigF[0][aa] = eNB->RU_list[i]->prach_rxsigF[ru_aa];
-#ifdef Rel14
-      int ce_level;
-
-      if (br_flag==1)
-	for (ce_level=0;ce_level<4;ce_level++) eNB->prach_vars_br.rxsigF[ce_level][aa] = eNB->RU_list[i]->prach_rxsigF_br[ce_level][ru_aa];
-#endif
-    }
-  }
-
-  rx_prach(eNB,
-	   eNB->RU_list[0],
-	   &max_preamble[0],
-	   &max_preamble_energy[0],
-	   &max_preamble_delay[0],
-	   frame,
-	   0
-#ifdef Rel14
-	   ,br_flag
-#endif
-	   );
-
-  //#ifdef DEBUG_PHY_PROC
-  if (max_preamble_energy[0]/10 > 32)
-    LOG_E(PHY,"[RAPROC] Frame %d, subframe %d : Most likely preamble %d, energy %d dB delay %d\n",
-        frame,subframe,
-        max_preamble[0],
-        max_preamble_energy[0]/10,
-        max_preamble_delay[0]);
-  //q#endif
-
-#ifdef Rel14
-  if (br_flag==1) {
-
-    int prach_mask;
-      
-    prach_mask = is_prach_subframe(&eNB->frame_parms,eNB->proc.frame_prach_br,eNB->proc.subframe_prach_br);
-    
-    eNB->UL_INFO.rach_ind_br.rach_indication_body.preamble_list                              = eNB->preamble_list_br;
-    int ind=0;
-    int ce_level=0;
-    /* Save for later, it doesn't work    
-    for (int ind=0,ce_level=0;ce_level<4;ce_level++) {
-      
-      if ((eNB->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[ce_level]==1)&&
-	  (prach_mask&(1<<(1+ce_level)) > 0) && // prach is active and CE level has finished its repetitions
-	  (eNB->prach_vars_br.repetition_number[ce_level]==
-	   eNB->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[ce_level])) {
-    */ 
-    if (eNB->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[0]==1){ 
-      if ((eNB->prach_energy_counter == 100) && 
-          (max_preamble_energy[0] > eNB->measurements.prach_I0 + 100)) {
-	eNB->UL_INFO.rach_ind_br.rach_indication_body.number_of_preambles++;
-	
-	eNB->preamble_list_br[ind].preamble_rel8.timing_advance        = max_preamble_delay[ind];//
-	eNB->preamble_list_br[ind].preamble_rel8.preamble              = max_preamble[ind];
-	// note: fid is implicitly 0 here, this is the rule for eMTC RA-RNTI from 36.321, Section 5.1.4
-	eNB->preamble_list_br[ind].preamble_rel8.rnti                  = 1+subframe+(eNB->prach_vars_br.first_frame[ce_level]%40);  
-	eNB->preamble_list_br[ind].instance_length                     = 0; //don't know exactly what this is
-	eNB->preamble_list_br[ind].preamble_rel13.rach_resource_type   = 1+ce_level;  // CE Level
-	LOG_D(PHY,"Filling NFAPI indication for RACH %d CELevel %d (mask %x) : TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
-	      ind,
-	      ce_level,
-	      prach_mask,
-	      eNB->preamble_list_br[ind].preamble_rel8.timing_advance,
-	      eNB->preamble_list_br[ind].preamble_rel8.preamble,
-	      eNB->preamble_list_br[ind].preamble_rel8.rnti,
-	      eNB->preamble_list_br[ind].preamble_rel13.rach_resource_type);
-      }
-      /*
-	ind++;
-      }
-      } */// ce_level
-    }
-  }
-  else
-#endif
-
-    {
-      if ((eNB->prach_energy_counter == 100) && 
-          (max_preamble_energy[0] > eNB->measurements.prach_I0+100)) {
-
-	LOG_E(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure with preamble %d, energy %d.%d dB, delay %d\n",
-	      eNB->Mod_id,
-	      eNB->CC_id,
-	      frame,
-	      subframe,
-	      max_preamble[0],
-	      max_preamble_energy[0]/10,
-	      max_preamble_energy[0]%10,
-	      max_preamble_delay[0]);
-	
-	    T(T_ENB_PHY_INITIATE_RA_PROCEDURE, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe),
-	      T_INT(max_preamble[0]), T_INT(max_preamble_energy[0]), T_INT(max_preamble_delay[0]));
-	    
-	    pthread_mutex_lock(&eNB->UL_INFO_mutex);
-	    
-	    eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles  = 1;
-	    eNB->UL_INFO.rach_ind.rach_indication_body.preamble_list        = &eNB->preamble_list[0];
-	    eNB->UL_INFO.rach_ind.rach_indication_body.tl.tag               = NFAPI_RACH_INDICATION_BODY_TAG;
-            eNB->UL_INFO.rach_ind.header.message_id                         = NFAPI_RACH_INDICATION;
-            eNB->UL_INFO.rach_ind.sfn_sf                                    = frame<<4 | subframe;
-	    
-	    eNB->preamble_list[0].preamble_rel8.tl.tag                = NFAPI_PREAMBLE_REL8_TAG;
-	    eNB->preamble_list[0].preamble_rel8.timing_advance        = max_preamble_delay[0];
-	    eNB->preamble_list[0].preamble_rel8.preamble              = max_preamble[0];
-	    eNB->preamble_list[0].preamble_rel8.rnti                  = 1+subframe;  // note: fid is implicitly 0 here
-	    eNB->preamble_list[0].preamble_rel13.rach_resource_type   = 0;
-	    eNB->preamble_list[0].instance_length                     = 0; //don't know exactly what this is
-	    
-            if (nfapi_mode == 1)    // If NFAPI PNF then we need to send the message to the VNF
-            {
-              LOG_E(PHY,"\n\n\n\nDJP - this needs to be sent to VNF **********************************************\n\n\n\n");
-              LOG_E(PHY,"Filling NFAPI indication for RACH : SFN_SF:%d TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
-                  NFAPI_SFNSF2DEC(eNB->UL_INFO.rach_ind.sfn_sf),
-                  eNB->preamble_list[0].preamble_rel8.timing_advance,
-                  eNB->preamble_list[0].preamble_rel8.preamble,
-                  eNB->preamble_list[0].preamble_rel8.rnti,
-                  eNB->preamble_list[0].preamble_rel13.rach_resource_type);	    
-
-              oai_nfapi_rach_ind(&eNB->UL_INFO.rach_ind);
-
-              eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles = 0;
-            }
-
-	    pthread_mutex_unlock(&eNB->UL_INFO_mutex);
-      
-      } // max_preamble_energy > prach_I0 + 100 
-      else {
-         eNB->measurements.prach_I0 = ((eNB->measurements.prach_I0*900)>>10) + ((max_preamble_energy[0]*124)>>10); 
-         if (frame==0) LOG_I(PHY,"prach_I0 = %d.%d dB\n",eNB->measurements.prach_I0/10,eNB->measurements.prach_I0%10);
-         if (eNB->prach_energy_counter < 100) eNB->prach_energy_counter++;
-      }
-    } // else br_flag
-
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,0);
-}
 
 void srs_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 
@@ -879,10 +721,10 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	if (uci->type == SR) {
 	  if (SR_payload == 1) {
 	    fill_sr_indication(eNB,uci->rnti,frame,subframe,metric_SR);
-	    return;
+        continue;
 	  }
 	  else {
-	    return;
+        continue;
 	  }
 	}
       case HARQ:
@@ -1323,8 +1165,9 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     ulsch = eNB->ulsch[i];
     ulsch_harq = ulsch->harq_processes[harq_pid];
-    if (ulsch->rnti>0) LOG_D(PHY,"eNB->ulsch[%d]->harq_processes[harq_pid:%d] Frame %d, subframe %d: PUSCH procedures, harq_pid %d, UE %d/%x ulsch_harq[status:%d frame:%d subframe:%d handled:%d]\n",
-			     i, harq_pid, frame,subframe,harq_pid,i,ulsch->rnti,
+
+    if (ulsch->rnti>0) LOG_D(PHY,"eNB->ulsch[%d]->harq_processes[harq_pid:%d] SFN/SF:%04d%d: PUSCH procedures, UE %d/%x ulsch_harq[status:%d SFN/SF:%04d%d handled:%d]\n",
+			     i, harq_pid, frame,subframe,i,ulsch->rnti,
                              ulsch_harq->status, ulsch_harq->frame, ulsch_harq->subframe, ulsch_harq->handled);
     
     if ((ulsch) &&
@@ -1342,7 +1185,8 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
       }
 
-      //LOG_D(PHY,"[eNB %d] frame %d, subframe %d: Scheduling ULSCH Reception for UE %d \n", eNB->Mod_id, frame, subframe, i);
+
+      LOG_D(PHY,"[eNB %d] frame %d, subframe %d: Scheduling ULSCH Reception for UE %d \n", eNB->Mod_id, frame, subframe, i);
 
       nPRS = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1];
 
@@ -1372,8 +1216,6 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       rx_ulsch(eNB,proc, i);
 
         stop_meas(&eNB->ulsch_demodulation_stats);
-
-        clock_gettime(CLOCK_MONOTONIC,&t_decode);
 
         start_meas(&eNB->ulsch_decoding_stats);
 
@@ -1454,12 +1296,9 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
         ulsch_harq->handled = 1;
       }  // ulsch in error
       else {
-        clock_gettime(CLOCK_MONOTONIC,&t_crc);
 
 	fill_crc_indication(eNB,i,frame,subframe,0); // indicate ACK to MAC
-        clock_gettime(CLOCK_MONOTONIC,&t_rx_ind);
 	fill_rx_indication(eNB,i,frame,subframe);  // indicate SDU to MAC
-        clock_gettime(CLOCK_MONOTONIC,&t_rx_ind_b);
 
         ulsch_harq->status = SCH_IDLE;
         ulsch->harq_mask   &= ~(1 << harq_pid);
@@ -1520,16 +1359,8 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       LOG_W(PHY,"Removing stale ULSCH config for UE %x harq_pid %d (harq_mask is now 0x%2.2x)\n",
             ulsch->rnti, harq_pid, ulsch->harq_mask);
     }
-  }   //   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-  clock_gettime(CLOCK_MONOTONIC,&t_end);
-  if (0)LOG_E(PHY,"%s() TIMING:decode:%ld.%09ld crc:%ld.%09ld rx_ind:%ld.%09ld-%ld.%09ld harq:%ld.%09ld-%ld.%09ld end:%ld.%09ld\n", __FUNCTION__, 
-      t_decode.tv_sec, t_decode.tv_nsec, 
-      t_crc.tv_sec, t_crc.tv_nsec, 
-      t_rx_ind.tv_sec, t_rx_ind.tv_nsec, 
-      t_rx_ind_b.tv_sec, t_rx_ind_b.tv_nsec, 
-      t_harq_a.tv_sec, t_harq_a.tv_nsec,
-      t_harq_b.tv_sec, t_harq_b.tv_nsec,
-      t_end.tv_sec, t_end.tv_nsec);
+
+  }   //   for (i=0; i<NUMBER_OF_UE_MAX; i++)
 }
 
 extern int oai_exit;
@@ -1619,11 +1450,13 @@ void fill_rx_indication(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe)
   else if (SNRtimes10 >  635) pdu->rx_indication_rel8.ul_cqi=255;
   else                        pdu->rx_indication_rel8.ul_cqi=(640+SNRtimes10)/5;
 
-  LOG_D(PHY,"[PUSCH %d] Filling RX_indication with SNR %d (%d), timing_advance %d (update %d)\n",
-	harq_pid,SNRtimes10,pdu->rx_indication_rel8.ul_cqi,pdu->rx_indication_rel8.timing_advance,
+
+  LOG_D(PHY,"[PUSCH %d] Frame %d Subframe %d Filling RX_indication with SNR %d (%d), timing_advance %d (update %d)\n",
+	harq_pid,frame,subframe,SNRtimes10,pdu->rx_indication_rel8.ul_cqi,pdu->rx_indication_rel8.timing_advance,
 	timing_advance_update);
 
   eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus++;
+  eNB->UL_INFO.rx_ind.sfn_sf = frame<<4 | subframe;
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 }
 
@@ -1739,7 +1572,9 @@ void fill_ulsch_cqi_indication(PHY_VARS_eNB *eNB,uint16_t frame,uint8_t subframe
   pdu->ul_cqi_information.channel = 1; // PUSCH
   memcpy((void*)raw_pdu->pdu,ulsch_harq->o,pdu->cqi_indication_rel9.length);
   eNB->UL_INFO.cqi_ind.number_of_cqis++;
-  LOG_E(PHY,"eNB->UL_INFO.cqi_ind.number_of_cqis:%d\n", eNB->UL_INFO.cqi_ind.number_of_cqis);
+
+  LOG_D(PHY,"eNB->UL_INFO.cqi_ind.number_of_cqis:%d\n", eNB->UL_INFO.cqi_ind.number_of_cqis);
+
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
@@ -1748,7 +1583,15 @@ void fill_ulsch_cqi_indication(PHY_VARS_eNB *eNB,uint16_t frame,uint8_t subframe
 void fill_ulsch_harq_indication(PHY_VARS_eNB *eNB,LTE_UL_eNB_HARQ_t *ulsch_harq,uint16_t rnti, int frame,int subframe,int bundling)
 {
   int UE_id = find_dlsch(rnti,eNB,SEARCH_EXIST);
-  AssertFatal(UE_id>=0,"UE_id doesn't exist\n");
+  //AssertFatal(UE_id>=0,"UE_id doesn't exist\n");
+
+  if (UE_id < 0)
+  {
+    LOG_E(PHY,"%s(eNB, ulsch_harq, rnti:%04x, frame:%d, subframe:%d, bundling:%d) harq_pdus:%d - Could not find rnti - abort fill of ulsch harq ind\n", __FUNCTION__, rnti, frame, subframe, bundling,eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs);
+    return;
+  }
+
+  LOG_D(PHY,"%s(eNB, ulsch_harq, rnti:%04x, frame:%d, subframe:%d, bundling:%d) harq_pdus:%d O_ACK:%d\n", __FUNCTION__, rnti, frame, subframe, bundling,eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs,ulsch_harq->O_ACK);
 
   LOG_I(PHY,"%s(eNB, ulsch_harq, rnti:%04x, frame:%d, subframe:%d, bundling:%d) harq_pdus:%d\n", __FUNCTION__, rnti, frame, subframe, bundling,eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs);
 
@@ -1759,6 +1602,9 @@ void fill_ulsch_harq_indication(PHY_VARS_eNB *eNB,LTE_UL_eNB_HARQ_t *ulsch_harq,
 
   eNB->UL_INFO.harq_ind.header.message_id = NFAPI_HARQ_INDICATION;
   eNB->UL_INFO.harq_ind.sfn_sf = frame<<4|subframe;
+
+
+  eNB->UL_INFO.harq_ind.harq_indication_body.tl.tag = NFAPI_HARQ_INDICATION_BODY_TAG;
 
   pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
@@ -1827,7 +1673,12 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
 			      uint16_t tdd_multiplexing_mask) {
 
   int UE_id=find_dlsch(uci->rnti,eNB,SEARCH_EXIST);
-  AssertFatal(UE_id>=0,"UE_id doesn't exist rnti:%x\n", uci->rnti);
+
+  //AssertFatal(UE_id>=0,"UE_id doesn't exist rnti:%x\n", uci->rnti);
+  if (UE_id < 0) {
+    LOG_E(PHY,"SFN/SF:%04d%d Unable to find rnti:%x do not send HARQ\n", frame, subframe, uci->rnti);
+    return;
+  }
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
@@ -1994,7 +1845,8 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
 
 
   eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs++;
-  LOG_E(PHY,"Incremented eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs:%d\n", eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs);
+  LOG_D(PHY,"Incremented eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs:%d\n", eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs);
+
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);  
 
 }
@@ -2013,7 +1865,8 @@ void fill_crc_indication(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint
   //  pdu->rx_ue_information.handle                       = handle;
   pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
   pdu->rx_ue_information.rnti                         = eNB->ulsch[UE_id]->rnti;
-  pdu->crc_indication_rel8.tl.tag                     = NFAPI_CRC_INDICATION_REL8_TAG; 
+
+  pdu->crc_indication_rel8.tl.tag                     = NFAPI_CRC_INDICATION_REL8_TAG;
   pdu->crc_indication_rel8.crc_flag                   = crc_flag;
 
   eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs++;
@@ -2049,6 +1902,11 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
   eNB->rb_mask_ul[2]=0;
   eNB->rb_mask_ul[3]=0;
 
+
+  // Fix me here, these should be locked
+  eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus  = 0;
+  eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs = 0;
+
   // Call SRS first since all others depend on presence of SRS or lack thereof
   srs_procedures(eNB,proc);
 
@@ -2064,8 +1922,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 
   uci_procedures(eNB,proc);
 
-  if (nfapi_mode == 0 || nfapi_mode == 1) // If PNF or monolithic
-  {
+  if (nfapi_mode == 0 || nfapi_mode == 1) { // If PNF or monolithic
     pusch_procedures(eNB,proc);
   }
 
@@ -2077,7 +1934,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 #endif
 
   int min_I0=1000,max_I0=0;
-  if ((frame==0) && (subframe==6)) { 
+  if ((frame==0) && (subframe==4)) { 
     for (int i=0;i<eNB->frame_parms.N_RB_UL;i++) {
       if (i==(eNB->frame_parms.N_RB_UL>>1) - 1) i+=2;
  

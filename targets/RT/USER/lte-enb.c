@@ -124,6 +124,7 @@ extern int oaisim_flag;
 //uint16_t sf_ahead=4;
 extern uint16_t sf_ahead;
 
+
 //pthread_t                       main_eNB_thread;
 
 time_stats_t softmodem_stats_mt; // main thread
@@ -175,8 +176,8 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
   // *******************************************************************
 
-  if (nfapi_mode == 1)
-  {
+  if (nfapi_mode == 1) {
+
     // I am a PNF and I need to let nFAPI know that we have a (sub)frame tick
     uint16_t frame = proc->frame_rx;
     uint16_t subframe = proc->subframe_rx;
@@ -185,22 +186,29 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
     //oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
     //LOG_D(PHY, "oai_subframe_ind(frame:%u, subframe:%d) - NOT CALLED ********\n", frame, subframe);
-  start_meas(&nfapi_meas);
-    oai_subframe_ind(frame, subframe);
-  stop_meas(&nfapi_meas);
 
-    LOG_D(PHY, "UL_info[rx_ind:%d:%d harqs:%d:%d crcs:%d:%d preambles:%d:%d cqis:%d] RX:%d%d TX:%d%d num_pdcch_symbols:%d\n", 
-      NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf),   eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, 
-      NFAPI_SFNSF2DEC(eNB->UL_INFO.harq_ind.sfn_sf), eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs, 
-      NFAPI_SFNSF2DEC(eNB->UL_INFO.crc_ind.sfn_sf),  eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, 
-      NFAPI_SFNSF2DEC(eNB->UL_INFO.rach_ind.sfn_sf), eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles,
-      eNB->UL_INFO.cqi_ind.number_of_cqis, 
-      proc->frame_rx, proc->subframe_rx, 
+    start_meas(&nfapi_meas);
+    oai_subframe_ind(frame, subframe);
+    stop_meas(&nfapi_meas);
+
+    if (eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus||
+        eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs ||
+        eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs ||
+        eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles ||
+        eNB->UL_INFO.cqi_ind.number_of_cqis
+       ) {
+      LOG_D(PHY, "UL_info[rx_ind:%05d:%d harqs:%05d:%d crcs:%05d:%d preambles:%05d:%d cqis:%d] RX:%04d%d TX:%04d%d num_pdcch_symbols:%d\n", 
+          NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf),   eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus, 
+          NFAPI_SFNSF2DEC(eNB->UL_INFO.harq_ind.sfn_sf), eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs, 
+          NFAPI_SFNSF2DEC(eNB->UL_INFO.crc_ind.sfn_sf),  eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, 
+          NFAPI_SFNSF2DEC(eNB->UL_INFO.rach_ind.sfn_sf), eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles,
+          eNB->UL_INFO.cqi_ind.number_of_cqis, 
+          proc->frame_rx, proc->subframe_rx, 
       proc->frame_tx, proc->subframe_tx, eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols);
+    }
   }
 
-  if (nfapi_mode == 1 && eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols == 0)
-  {
+  if (nfapi_mode == 1 && eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols == 0) {
     LOG_E(PHY, "eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols == 0");
     return 0;
   }
@@ -212,7 +220,6 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
   // if this is IF5 or 3GPP_eNB
   if (eNB && eNB->RU_list && eNB->RU_list[0] && eNB->RU_list[0]->function < NGFI_RAU_IF4p5) {
-    //LOG_D(PHY,"%s:%s() %u/%u Before wakeup_prach_eNB() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
     wakeup_prach_eNB(eNB,NULL,proc->frame_rx,proc->subframe_rx);
     //LOG_D(PHY,"%s:%s() %u/%u Before wakeup_prach_eNB_br() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
 #ifdef Rel14
@@ -222,9 +229,6 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   }
 
   // UE-specific RX processing for subframe n
-
-
-  // Panos: Substitute with call to get_nfapi_indications() from the socket.
   if (nfapi_mode == 0 || nfapi_mode == 1) {
     phy_procedures_eNB_uespec_RX(eNB, proc, no_relay );
   }
@@ -249,22 +253,21 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   
   if (oai_exit) return(-1);
   
-  // Panos: Substitute with call to send_nfapi_sched_response() to the UE through the socket.
   phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
 
   stop_meas( &softmodem_stats_rxtx_sf );
 
-  LOG_D(PHY,"%s() Exit proc[rx:%d%d tx:%d%d] rxtx:%lld nfapi:%lld",
-      __FUNCTION__, proc->frame_rx, proc->subframe_rx, proc->frame_tx, proc->subframe_tx,
-      softmodem_stats_rxtx_sf.diff_now, nfapi_meas.diff_now);
+  LOG_D(PHY,"%s() Exit proc[rx:%d%d tx:%d%d]\n", __FUNCTION__, proc->frame_rx, proc->subframe_rx, proc->frame_tx, proc->subframe_tx);
 
-  LOG_D(PHY, "phy:%lld tx:%lld rx:%lld prach:%lld ofdm:%lld ",
+#if 0
+  LOG_D(PHY, "rxtx:%lld nfapi:%lld phy:%lld tx:%lld rx:%lld prach:%lld ofdm:%lld ",
+      softmodem_stats_rxtx_sf.diff_now, nfapi_meas.diff_now,
       TICK_TO_US(eNB->phy_proc),
       TICK_TO_US(eNB->phy_proc_tx),
       TICK_TO_US(eNB->phy_proc_rx),
       TICK_TO_US(eNB->rx_prach),
-      TICK_TO_US(eNB->ofdm_mod_stats));
-
+      TICK_TO_US(eNB->ofdm_mod_stats),
+      softmodem_stats_rxtx_sf.diff_now, nfapi_meas.diff_now);
   LOG_D(PHY,
     "dlsch[enc:%lld mod:%lld scr:%lld rm:%lld t:%lld i:%lld] rx_dft:%lld ",
       TICK_TO_US(eNB->dlsch_encoding_stats),
@@ -296,6 +299,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
       TICK_TO_US(eNB->ulsch_tc_intl1_stats),
       TICK_TO_US(eNB->ulsch_tc_intl2_stats)
       );
+#endif
   
       //softmodem_stats_rxtx_sf.in, softmodem_stats_rxtx_sf.diff_now, softmodem_stats_rxtx_sf.max,
 
@@ -348,8 +352,6 @@ static void* eNB_thread_rxtx( void* param ) {
 
     }
 
-    //LOG_D(PHY,"%s:%s() TX:%u/%u DONE rxtx()\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx);
-
     if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) break;
 
   } // while !oai_exit
@@ -395,9 +397,6 @@ void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string)
   proc->subframe_rx = subframe_rx;
 
   if (!oai_exit) {
-    //LOG_D(PHY,"eNB_top in %p (proc %p, CC_id %d), frame %d, subframe %d, instance_cnt_prach %d\n",
-	  //(void*)pthread_self(), proc, eNB->CC_id, proc->frame_rx,proc->subframe_rx,proc->instance_cnt_prach);
-
     T(T_ENB_MASTER_TICK, T_INT(0), T_INT(proc->frame_rx), T_INT(proc->subframe_rx));
 
     proc_rxtx->subframe_rx = proc->subframe_rx;
@@ -408,7 +407,7 @@ void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string)
     proc_rxtx->timestamp_tx = proc->timestamp_tx;
 
     if (rxtx(eNB,proc_rxtx,string) < 0) LOG_E(PHY,"eNB %d CC_id %d failed during execution\n",eNB->Mod_id,eNB->CC_id);
-    //LOG_D(PHY,"eNB_top out %p (proc %p, CC_id %d), frame %d, subframe %d, instance_cnt_prach %d\n", (void*)pthread_self(), proc, eNB->CC_id, proc->frame_rx,proc->subframe_rx,proc->instance_cnt_prach);
+
   }
 }
 
@@ -466,7 +465,7 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   }
 #endif
 
-  // wake up TX for subframe n+2
+  // wake up TX for subframe n+sf_ahead
   // lock the TX mutex and make sure the thread is ready
   if (pthread_mutex_timedlock(&proc_rxtx->mutex_rxtx,&wait) != 0) {
     LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", proc_rxtx->subframe_rx&1,proc_rxtx->instance_cnt_rxtx );
@@ -488,8 +487,7 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   proc_rxtx->subframe_rx  = proc->subframe_rx;
   proc_rxtx->frame_tx     = (proc_rxtx->subframe_rx > (9-sf_ahead)) ? (proc_rxtx->frame_rx+1)&1023 : proc_rxtx->frame_rx;
   proc_rxtx->subframe_tx  = (proc_rxtx->subframe_rx + sf_ahead)%10;
-  
-  LOG_D(PHY,"Signal &proc_rxtx->cond_rxtx\n");
+
 
   // the thread can now be woken up
   if (pthread_cond_signal(&proc_rxtx->cond_rxtx) != 0) {
@@ -918,7 +916,7 @@ void init_transport(PHY_VARS_eNB *eNB) {
   int j;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
 
-  LOG_E(PHY, "Initialise transport\n");
+  LOG_I(PHY, "Initialise transport\n");
 
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     LOG_I(PHY,"Allocating Transport Channel Buffers for DLSCH, UE %d\n",i);
@@ -997,12 +995,12 @@ void init_eNB_afterRU(void) {
       LOG_I(PHY,"Mapping RX ports from %d RUs to eNB %d\n",eNB->num_RU,eNB->Mod_id);
       eNB->frame_parms.nb_antennas_rx       = 0;
 
-      LOG_E(PHY,"Overwriting eNB->prach_vars.rxsigF[0]:%p\n", eNB->prach_vars.rxsigF[0]);
+      LOG_I(PHY,"Overwriting eNB->prach_vars.rxsigF[0]:%p\n", eNB->prach_vars.rxsigF[0]);
 
       eNB->prach_vars.rxsigF[0] = (int16_t**)malloc16(64*sizeof(int16_t*));
 #ifdef Rel14
       for (int ce_level=0;ce_level<4;ce_level++) {
-        LOG_E(PHY,"Overwriting eNB->prach_vars_br.rxsigF.rxsigF[0]:%p\n", eNB->prach_vars_br.rxsigF[ce_level]);
+        LOG_I(PHY,"Overwriting eNB->prach_vars_br.rxsigF.rxsigF[0]:%p\n", eNB->prach_vars_br.rxsigF[ce_level]);
         eNB->prach_vars_br.rxsigF[ce_level] = (int16_t**)malloc16(64*sizeof(int16_t*));
       }
 #endif
@@ -1034,6 +1032,10 @@ void init_eNB_afterRU(void) {
 
 
 
+      /* TODO: review this code, there is something wrong.
+       * In monolithic mode, we come here with nb_antennas_rx == 0
+       * (not tested in other modes).
+       */
       if (eNB->frame_parms.nb_antennas_rx < 1)
       {
         LOG_I(PHY, "%s() ************* DJP ***** eNB->frame_parms.nb_antennas_rx:%d - GOING TO HARD CODE TO 1", __FUNCTION__, eNB->frame_parms.nb_antennas_rx);
@@ -1041,7 +1043,7 @@ void init_eNB_afterRU(void) {
       }
       else
       {
-        LOG_I(PHY," Delete code\n");
+        //LOG_I(PHY," Delete code\n");
       }
 
       if (eNB->frame_parms.nb_antennas_tx < 1)
@@ -1051,7 +1053,7 @@ void init_eNB_afterRU(void) {
       }
       else
       {
-        LOG_I(PHY," Delete code\n");
+        //LOG_I(PHY," Delete code\n");
       }
 
 

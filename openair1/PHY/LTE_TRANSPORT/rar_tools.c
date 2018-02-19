@@ -173,7 +173,9 @@ int generate_eNB_ulsch_params_from_rar(PHY_VARS_eNB *eNB,
 		 &ulsch_harq->frame,
 		 &ulsch_harq->subframe);
 
-  LOG_I(PHY,"Programming msg3 reception in (%d,%d)\n",ulsch_harq->frame,ulsch_harq->subframe);
+  LOG_I(PHY,"Programming msg3 reception in (%d,%d) mcs:%d TBS:%d Qm:%d Mcs_intial:%d Nsymb_intial:%d round:%d\n",
+      ulsch_harq->frame,ulsch_harq->subframe,
+      mcs, ulsch_harq->TBS, ulsch_harq->Qm, ulsch_harq->Msc_initial, ulsch_harq->Nsymb_initial, ulsch_harq->round);
   use_srs = is_srs_occasion_common(frame_parms,ulsch_harq->frame,ulsch_harq->subframe);
   ulsch_harq->Nsymb_pusch = 12-(frame_parms->Ncp<<1)-(use_srs==0?0:1);
   ulsch_harq->srs_active                            = use_srs;

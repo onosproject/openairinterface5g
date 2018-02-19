@@ -7,7 +7,7 @@
 #include "openair2/LAYER2/MAC/proto.h"
 //#include "openair2/LAYER2/MAC/vars.h"
 #include "openair1/SCHED/defs.h"
-#include "nfapi/nfapi_interface.h"
+#include "nfapi/open-nFAPI/nfapi/public_inc/nfapi_interface.h"
 //#include "common/ran_context.h"
 #include "openair2/PHY_INTERFACE/phy_stub_UE.h"
 
