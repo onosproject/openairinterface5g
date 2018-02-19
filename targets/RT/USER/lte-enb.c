@@ -734,7 +734,11 @@ static void* process_stats_thread(void* param) {
        {
          print_meas(&eNB->dlsch_turbo_encoding_preperation_stats,"dlsch_coding_prepare",NULL,NULL);
          print_meas(&eNB->dlsch_turbo_encoding_segmentation_stats,"dlsch_segmentation",NULL,NULL);
+         print_meas(&eNB->dlsch_turbo_encoding_stats,"turbo_encoding",NULL,NULL);
+         print_meas(&eNB->dlsch_rate_matching_stats,"rate_matching",NULL,NULL);
+         print_meas(&eNB->dlsch_interleaving_stats,"interleaving",NULL,NULL);
          print_meas(&eNB->dlsch_encoding_stats,"dlsch_encoding",NULL,NULL);
+         print_meas(&eNB->dlsch_scrambling_stats,"dlsch_scrambling",NULL,NULL);
          print_meas(&eNB->dlsch_turbo_encoding_signal_stats,"coding_signal",NULL,NULL);
          print_meas(&eNB->dlsch_turbo_encoding_main_stats,"coding_main",NULL,NULL);
          print_meas(&eNB->dlsch_turbo_encoding_waiting_stats,"coding_wait",NULL,NULL);
