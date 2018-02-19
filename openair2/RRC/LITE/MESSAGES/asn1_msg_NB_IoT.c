@@ -141,7 +141,7 @@ uint8_t do_MIB_NB_IoT(
 
   //to be decided
   mib_NB_IoT->message.operationModeInfo_r13.present = MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13;
-  mib_NB_IoT->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13 = 5;
+  mib_NB_IoT->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13 = 5;      /// TODO: take into account RB_index of NB-IoT
 
   printf("[MIB] Intialization of frame information ,sfn_MSB %x, hsfn_LSB %x\n",
          (uint32_t)sfn_MSB,

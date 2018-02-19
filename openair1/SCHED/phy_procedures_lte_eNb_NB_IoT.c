@@ -228,6 +228,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   int                     With_NSSS=0;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
   uint8_t      *npbch_pdu =  get_NB_IoT_MIB();
   uint8_t      *sib1_pdu = get_NB_IoT_SIB1();
+  int           G=0;                                            
  //NSSS only happened in the even frame
   if(frame%2==0)
     {
@@ -283,6 +284,20 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
     // SIB1
     /*
+
+        switch ( a ) {
+          case 0:
+              G=142;
+          break;
+          case 1:
+              G=130;
+          case 2:
+              G=118;
+          break;
+          default:
+          // Code
+          break;
+        }
 
         if(subframe > 3)
         {

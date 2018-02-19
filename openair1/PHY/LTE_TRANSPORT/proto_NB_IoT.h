@@ -112,6 +112,19 @@ void npbch_scrambling(LTE_DL_FRAME_PARMS  *frame_parms,
                       uint8_t                *npbch_e,
                       uint32_t               length);
 
+/*
+int scrambling_npbch_REs_rel_14(LTE_DL_FRAME_PARMS      *frame_parms,
+                                int32_t                 **txdataF,
+                                uint32_t                *jj,
+                                int                     l,
+                                uint32_t                symbol_offset,
+                                uint8_t                 pilots,
+                                unsigned short          id_offset,
+                                uint8_t                 *reset,
+                                uint32_t                *x1,
+                                uint32_t                *x2,
+                                uint32_t                *s);
+*/
 // Functions below implement 36-211 and 36-212
 
 /*Function to pack the DCI*/ 
