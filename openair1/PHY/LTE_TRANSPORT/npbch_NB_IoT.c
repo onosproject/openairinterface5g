@@ -53,6 +53,79 @@
 
 #define NPBCH_A 34                             // 34 for NB-IoT and 24 for LTE
 
+/*
+int scrambling_npbch_REs_rel_14(LTE_DL_FRAME_PARMS 	    *frame_parms,
+                                int32_t 				**txdataF,
+                                uint32_t 				*jj,
+                                int                    l,
+                                uint32_t 				symbol_offset,
+                                uint8_t 				pilots,
+			     			    unsigned short 		id_offset,
+			     			    uint8_t                *reset,
+			     			    uint32_t               *x1,
+			     			    uint32_t               *x2,
+			     			    uint32_t               *s)
+{
+	uint32_t  tti_offset,aa;
+  	uint8_t   re;
+  	uint8_t   first_re,last_re;
+  	uint8_t   c_even,c_odd; 
+  	int16_t   theta_re,theta_im; 
+  	int16_t   data_re[frame_parms->nb_antennas_tx],data_im[frame_parms->nb_antennas_tx];
+
+  	first_re      = 0;
+  	last_re       = 12;
+  	for (re=first_re; re<last_re; re++) {      		// re varies between 0 and 12 sub-carriers
+
+  		if (((l-3)*12+re)%16 == 0){ 
+  			*s 	= lte_gold_generic_NB_IoT(x1, x2, *reset);
+  			*reset = 0; 
+  			*jj = 0;
+  		}
+  		c_even = (*s>>*jj)&1; 
+		c_odd = (*s>>(*jj+1))&1;
+  		if (c_even == c_odd){
+  			if(c_even){
+  				theta_re = 0;
+  				theta_im = -32768;
+  			}else{
+  				theta_re = 32767;
+  				theta_im = 0;
+  			}
+  		}else{
+  			if(c_even){
+  				theta_re = 0;
+  				theta_im = 32767;
+  			}else{
+  				theta_re = -32768;
+  				theta_im = 0;
+  			}
+  		}
+
+	    tti_offset = symbol_offset + re;				// symbol_offset = 512 * L ,  re_offset = 512 - 3*12  , re
+		
+		if (pilots != 1 || re%3 != id_offset)  			// if re is not a pilot 
+		{					
+			for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {								 
+				data_re[aa] = ((int16_t*)&txdataF[aa][tti_offset])[0]; 
+				data_im[aa] = ((int16_t*)&txdataF[aa][tti_offset])[1]; 
+			}
+			for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
+				((int16_t*)&txdataF[aa][tti_offset])[0] = (int16_t) (((int32_t) data_re[aa] * (int32_t) theta_re -
+                            (int32_t) data_im[aa] * (int32_t) theta_im)>>15);  //I //b_i
+
+				((int16_t*)&txdataF[aa][tti_offset])[1] = (int16_t) (((int32_t) data_im[aa] * (int32_t) theta_re +
+                            (int32_t) data_re[aa] * (int32_t) theta_im)>>15);  //Q //b_{i+1}
+			}
+			*jj = *jj + 2;	
+    	}
+  	}
+
+  	return(0);
+}
+
+*/
+
 int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS 	*frame_parms,
                              int32_t 				**txdataF,
                              uint32_t 				*jj,
@@ -159,6 +232,17 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
   uint32_t 		  symbol_offset;
   uint16_t 		  amask=0;
 
+  /*
+   uint32_t 		  ii=0;
+   uint8_t            reset=1; 
+   uint32_t 	      x1_r14, x2_r14, s_r14=0; 
+
+   x2_r14 = ((frame_parms->Nid_cell+1) * (frame_mod64%8 + 1) 
+  		* (frame_mod64%8 + 1) * (frame_mod64%8 + 1) <<9) 
+  		+ frame_parms->Nid_cell; // specific to Rel 14
+
+  */
+
   npbch_D  = 16 + NPBCH_A;
   npbch_E  = 1600; 									
 									
@@ -239,8 +323,19 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
 								 amp,
 								 id_offset,
 								 &re_allocated);
-			
-	
+		/*	
+		scrambling_npbch_REs_rel_14(frame_parms,
+                                    txdataF,
+                                    &ii,
+                                    l,
+                                    symbol_offset,
+                                    pilots,
+			     			        id_offset,
+			     			        &reset,
+			     			        &x1_r14,
+			     			        &x2_r14,
+			     			        &s_r14);	
+	    */
 	}
 return(0);
 }
