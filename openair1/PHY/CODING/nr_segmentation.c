@@ -171,12 +171,14 @@ else
         s++;
       }
 
+      /*
       if (*C > 1) { // add CRC
         crc = crc24b(output_buffers[r],Kprime-24)>>8;
         output_buffers[r][(Kprime-24)>>3] = ((uint8_t*)&crc)[2];
         output_buffers[r][1+((Kprime-24)>>3)] = ((uint8_t*)&crc)[1];
         output_buffers[r][2+((Kprime-24)>>3)] = ((uint8_t*)&crc)[0];
       }
+      */
       k=0;
     }
   }
