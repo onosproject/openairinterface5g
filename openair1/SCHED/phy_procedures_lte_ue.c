@@ -2954,10 +2954,10 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     frame_tx += ((int)(ue->pbch_vars[eNB_id]->decoded_output[1]&0xfc));
     frame_tx += pbch_phase;
 
-    if (ue->mac_enabled==1) {
+    //if (ue->mac_enabled==1) {
       mac_xface->dl_phy_sync_success(ue->Mod_id,frame_rx,eNB_id,
              ue->UE_mode[eNB_id]==NOT_SYNCHED ? 1 : 0);
-    }
+      //}
 
 #ifdef EMOS
     //emos_dump_UE.frame_tx = frame_tx;
@@ -4172,9 +4172,9 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 #endif
 
 
-      if (ue->mac_enabled == 1) {
   switch (pdsch) {
   case PDSCH:
+      if (ue->mac_enabled == 1) 
     mac_xface->ue_send_sdu(ue->Mod_id,
          CC_id,
          frame_rx,
@@ -4192,6 +4192,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
           ue->dlsch_SI[eNB_id]->harq_processes[0]->TBS>>3);
     break;
   case P_PDSCH:
+      if (ue->mac_enabled == 1) 
     mac_xface->ue_decode_p(ue->Mod_id,
          CC_id,
          frame_rx,
@@ -4200,6 +4201,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
          ue->dlsch_SI[eNB_id]->harq_processes[0]->TBS>>3);
     break;
   case RA_PDSCH:
+      if (ue->mac_enabled == 1) 
     process_rar(ue,proc,eNB_id,mode,abstraction_flag);
     break;
   case PDSCH1:
@@ -4210,7 +4212,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
     LOG_E(PHY,"Shouldn't have PMCH here\n");
     AssertFatal(1==0,"exiting");
     break;
-  }
+  
       }
       ue->total_TBS[eNB_id] =  ue->total_TBS[eNB_id] +
   dlsch0->harq_processes[dlsch0->current_harq_pid]->TBS;

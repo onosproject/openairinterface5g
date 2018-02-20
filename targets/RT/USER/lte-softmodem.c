@@ -1303,11 +1303,16 @@ void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
         frame_parms[CC_id]->phich_config_common.phich_resource = oneSixth;
         frame_parms[CC_id]->phich_config_common.phich_duration = normal;
         // UL RS Config
-        frame_parms[CC_id]->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = 0;//n_DMRS1 set to 0
-        frame_parms[CC_id]->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = 0;
+        frame_parms[CC_id]->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = 1;//n_DMRS1 set to 0
+        frame_parms[CC_id]->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = 1;
         frame_parms[CC_id]->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = 0;
         frame_parms[CC_id]->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = 0;
 
+	frame_parms[CC_id]->pusch_config_common.n_SB = 1;
+	frame_parms[CC_id]->pusch_config_common.hoppingMode = 0;
+	frame_parms[CC_id]->pusch_config_common.pusch_HoppingOffset = 0;
+	frame_parms[CC_id]->pusch_config_common.enable64QAM = 0;
+		
         frame_parms[CC_id]->prach_config_common.rootSequenceIndex=22;
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig=1;
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.prach_ConfigIndex=0;
