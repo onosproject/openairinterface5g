@@ -2724,6 +2724,11 @@ int decode_BCCH_DLSCH_Message(
                             (const void *)Sdu,
                             Sdu_len );
 
+#ifdef XER_PRINT
+  xer_fprint(stdout, &asn_DEF_BCCH_DL_SCH_Message, (void*)bcch_message);
+#endif
+
+
   if ((dec_rval.code != RC_OK) && (dec_rval.consumed == 0)) {
     LOG_E( RRC, "[UE %"PRIu8"] Failed to decode BCCH_DLSCH_MESSAGE (%zu bits)\n",
            ctxt_pP->module_id,
@@ -2783,6 +2788,7 @@ int decode_BCCH_DLSCH_Message(
       break;
 
     case BCCH_DL_SCH_MessageType__c1_PR_systemInformation:
+      LOG_D(RRC, "SIStatus=%d\n",UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus);
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 1) {
         // SIB1 with schedulingInfoList is available
 
