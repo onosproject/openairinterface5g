@@ -540,8 +540,8 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame
     schedule_ue_spec(module_idP,frameP,subframeP,mbsfn_status);
   }
   else {
-    if (subframeP==0) schedule_ulsch_phy_test(module_idP,frameP,subframeP);
-    //if (subframeP!=5) schedule_ue_spec_phy_test(module_idP,frameP,subframeP,mbsfn_status);
+    /*if (subframeP==0)*/ schedule_ulsch_phy_test(module_idP,frameP,subframeP);
+    if (subframeP!=5) schedule_ue_spec_phy_test(module_idP,frameP,subframeP,mbsfn_status);
   }
 
   // Allocate CCEs for good after scheduling is done

@@ -127,7 +127,7 @@ uint32_t get_TBS_UL(uint8_t mcs, uint16_t nb_rb)
   uint32_t TBS = 0;
 
   if ((nb_rb > 0) && (mcs < 29)) {
-    TBS = TBStable[get_I_TBS_UL(mcs)][nb_rb-1];
+    TBS = TBStableUL[get_I_TBS_UL(mcs)][nb_rb-1];
     TBS = TBS>>3;
     return(TBS);
   } else {

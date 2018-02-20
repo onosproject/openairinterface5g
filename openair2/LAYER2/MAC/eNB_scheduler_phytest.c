@@ -178,6 +178,9 @@ schedule_ue_spec_phy_test(
 			      0 // number of beamforming vectors, not used here
 			      );  
 
+      //program_dlsch_acknak(module_idP,CC_id,UE_id,frameP,subframeP,dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.cce_idx);
+
+
       eNB->TX_req[CC_id].sfn_sf = fill_nfapi_tx_req(&eNB->TX_req[CC_id].tx_request_body,
 						    (frameP*10)+subframeP,
 						    TBS,
@@ -203,7 +206,6 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
   int32_t           target_rx_power= 178;
   int               n;
   int               CC_id = 0;
-  int               N_RB_UL; //total number of RB
   int               nb_rb=4; //allocated number of RB
   eNB_MAC_INST      *eNB = RC.mac[module_idP];
   COMMON_channels_t *cc  = eNB->common_channels;
@@ -222,17 +224,16 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
   nfapi_ul_config_request_body_t *ul_req       = &eNB->UL_req[CC_id].ul_config_request_body;
 
   ul_config_pdu                                    = &ul_req->ul_config_pdu_list[0]; 
+  //ul_config_pdu->ulsch_harq_pdu.harq_information.harq_information_rel10.harq_size=1;
 
   eNB->UL_req[CC_id].sfn_sf   = (sched_frame<<4) + sched_subframe;
   eNB->HI_DCI0_req[CC_id].sfn_sf = (frameP<<4)+subframeP;
   
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     //rnti = UE_RNTI(module_idP,UE_id);
-    N_RB_UL      = to_prb(cc[CC_id].ul_Bandwidth);
-    //printf("////////////////////////////////////*************************N_RB_UL = %d\n",N_RB_UL);
     //leave out first RB for PUCCH
     first_rb[CC_id] = 1;
-  // loop over all active UEs
+    //loop over all active UEs
 
       //      if (eNB_UE_stats->mode == PUSCH) { // ue has a ulsch channel
 
@@ -267,16 +268,16 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
 
 	    
 	    
-      UE_template->TBS_UL[harq_pid] = get_TBS_UL(UE_template->mcs_UL[harq_pid],N_RB_UL-1);
-	  UE_list->eNB_UE_stats[CC_id][UE_id].total_rbs_used_rx+=N_RB_UL-1;
-	  UE_list->eNB_UE_stats[CC_id][UE_id].ulsch_TBS = get_TBS_UL(mcs,N_RB_UL-1);
+      UE_template->TBS_UL[harq_pid] = get_TBS_UL(UE_template->mcs_UL[harq_pid],nb_rb);
+	  UE_list->eNB_UE_stats[CC_id][UE_id].total_rbs_used_rx+=nb_rb;
+	  UE_list->eNB_UE_stats[CC_id][UE_id].ulsch_TBS = get_TBS_UL(mcs,nb_rb);
 	  //            buffer_occupancy -= TBS;
 
 
 	    
 	  // bad indices : 20 (40 PRB), 21 (45 PRB), 22 (48 PRB)
       //store for possible retransmission
-      UE_template->nb_rb_ul[harq_pid]    = N_RB_UL-1;
+      UE_template->nb_rb_ul[harq_pid]    = nb_rb;
       UE_template->first_rb_ul[harq_pid] = first_rb[CC_id];
 	    
 	  UE_sched_ctrl->ul_scheduled |= (1<<harq_pid);
@@ -314,7 +315,7 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
 	  fill_nfapi_ulsch_config_request_rel8(&ul_req->ul_config_pdu_list[ul_req->number_of_pdus],
 						 cqi_req,
 						 cc,
-						 0,//UE_template->physicalConfigDedicated,
+						 UE_template->physicalConfigDedicated,
 						 get_tmode(module_idP,CC_id,UE_id),
 						 eNB->ul_handle,
 						 rnti,
@@ -330,7 +331,7 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
 						 0, // ul_tx_mode
 						 0, // current_tx_nb
 						 0, // n_srs
-						 get_TBS_UL(mcs,N_RB_UL-1)
+						 get_TBS_UL(mcs,nb_rb)
 						 );
 #ifdef Rel14
 	  if (UE_template->rach_resource_type>0) { // This is a BL/CE UE allocation
@@ -353,7 +354,7 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
 			      S_UL_SCHEDULED);
 	    
             // increment first rb for next UE allocation
-       first_rb[CC_id]+= N_RB_UL -1;
+       first_rb[CC_id]+= nb_rb;
 	    
 	  	  
   } // loop of CC_id

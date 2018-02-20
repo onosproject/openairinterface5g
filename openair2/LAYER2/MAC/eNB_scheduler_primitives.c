@@ -924,7 +924,8 @@ void program_dlsch_acknak(module_id_t module_idP, int CC_idP,int UE_idP, frame_t
 
 #if defined(Rel10) || defined(Rel14)
 
-  if ((UE_list->UE_template[CC_idP][UE_idP].physicalConfigDedicated->ext2) &&
+  if ((UE_list->UE_template[CC_idP][UE_idP].physicalConfigDedicated) &&
+      (UE_list->UE_template[CC_idP][UE_idP].physicalConfigDedicated->ext2) &&
       (UE_list->UE_template[CC_idP][UE_idP].physicalConfigDedicated->ext2->pucch_ConfigDedicated_v1020) &&
       (UE_list->UE_template[CC_idP][UE_idP].physicalConfigDedicated->ext2->pucch_ConfigDedicated_v1020->simultaneousPUCCH_PUSCH_r10) &&
       (*UE_list->UE_template[CC_idP][UE_idP].physicalConfigDedicated->ext2->pucch_ConfigDedicated_v1020->simultaneousPUCCH_PUSCH_r10 ==
@@ -1373,6 +1374,7 @@ void fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t  *ul_con
     else if (cc->p_eNB==4)
       ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.aperiodic_cqi_pmi_ri_report.cc[0].ri_size = 2;
 
+    AssertFatal(physicalConfigDedicated!=NULL,"physicalConfigDedicated is null!\n");
     AssertFatal(physicalConfigDedicated->cqi_ReportConfig!=NULL,"physicalConfigDedicated->cqi_ReportConfig is null!\n");
     AssertFatal(physicalConfigDedicated->cqi_ReportConfig->cqi_ReportModeAperiodic!=NULL,"physicalConfigDedicated->cqi_ReportModeAperiodic is null!\n");
     AssertFatal(physicalConfigDedicated->pusch_ConfigDedicated!=NULL,"physicalConfigDedicated->puschConfigDedicated is null!\n");
