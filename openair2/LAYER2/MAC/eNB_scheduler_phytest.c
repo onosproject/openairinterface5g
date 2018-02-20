@@ -204,7 +204,6 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
   uint32_t          cqi_req = 0,cshift,ndi,tpc = 1;
   int32_t           normalized_rx_power;
   int32_t           target_rx_power= 178;
-  int               n;
   int               CC_id = 0;
   int               nb_rb=4; //allocated number of RB
   eNB_MAC_INST      *eNB = RC.mac[module_idP];
@@ -268,8 +267,8 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
 
 	    
 	    
-      UE_template->TBS_UL[harq_pid] = get_TBS_UL(UE_template->mcs_UL[harq_pid],nb_rb);
-	  UE_list->eNB_UE_stats[CC_id][UE_id].total_rbs_used_rx+=nb_rb;
+      UE_template->TBS_UL[harq_pid] = get_TBS_UL(mcs,nb_rb);
+	  UE_list->eNB_UE_stats[CC_id][UE_id].total_rbs_used_rx += nb_rb;
 	  UE_list->eNB_UE_stats[CC_id][UE_id].ulsch_TBS = get_TBS_UL(mcs,nb_rb);
 	  //            buffer_occupancy -= TBS;
 
