@@ -8224,7 +8224,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
       }
       //LOG_E(PHY,"Fatal: mcs(%d) > 28!!! and round == 0\n", mcs);
     }
-    ulsch->harq_processes[harq_pid]->TBS = TBStable[get_I_TBS_UL(ulsch->harq_processes[harq_pid]->mcs)][ulsch->harq_processes[harq_pid]->nb_rb-1];
+    ulsch->harq_processes[harq_pid]->TBS = TBStableUL[get_I_TBS_UL(ulsch->harq_processes[harq_pid]->mcs)][ulsch->harq_processes[harq_pid]->nb_rb-1];
 
     /*
        else if (ulsch->harq_processes[harq_pid]->mcs == 29) {
@@ -8875,7 +8875,7 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
       // printf("Auto-Calibration (eNB): mcs %d, nb_rb %d\n",ulsch->harq_processes[harq_pid]->mcs,ulsch->harq_processes[harq_pid]->nb_rb);
       }
       */
-      ulsch->harq_processes[harq_pid]->TBS         = TBStable[get_I_TBS_UL(ulsch->harq_processes[harq_pid]->mcs)][ulsch->harq_processes[harq_pid]->nb_rb-1];
+      ulsch->harq_processes[harq_pid]->TBS         = TBStableUL[get_I_TBS_UL(ulsch->harq_processes[harq_pid]->mcs)][ulsch->harq_processes[harq_pid]->nb_rb-1];
 
       ulsch->harq_processes[harq_pid]->Msc_initial   = 12*ulsch->harq_processes[harq_pid]->nb_rb;
       ulsch->harq_processes[harq_pid]->Nsymb_initial = ulsch->harq_processes[harq_pid]->Nsymb_pusch;
