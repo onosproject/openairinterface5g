@@ -1294,9 +1294,12 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
   if (fp->frame_type == FDD) harq_pid = ((10*frame) + subframe)&7;
   else                       harq_pid = subframe%10;
-   LOG_I(PHY,"Frame %d, subframe %d: PUSCH procedures, harq_pid %d\n",
+
+  /*
+  LOG_I(PHY,"Frame %d, subframe %d: PUSCH procedures, harq_pid %d\n",
                              frame,subframe,harq_pid);
   LOG_I(PHY,"rnti = %x\n",eNB->ulsch[0]->rnti);
+  */
 
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     ulsch = eNB->ulsch[i];
@@ -1365,7 +1368,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
       stop_meas(&eNB->ulsch_decoding_stats);
 
-      LOG_D(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) N0 (%d,%d) dB ACK (%d,%d), decoding iter %d\n",
+      LOG_I(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) N0 (%d,%d) dB ACK (%d,%d), decoding iter %d\n",
             eNB->Mod_id,harq_pid,
             frame,subframe,
             ulsch->rnti,

@@ -71,7 +71,7 @@ schedule_ue_spec_phy_test(
   uint16_t                       rnti      = 0x1235;
   uint32_t                       rb_alloc  = 0x1FFFFFFF;
   int32_t                        tpc       = 1;
-  int32_t                        mcs       = 10;
+  int32_t                        mcs       = 6;
   int32_t                        cqi       = 15;
   int32_t                        ndi       = subframeP/5;
   int32_t                        dai       = 0;
@@ -192,18 +192,19 @@ schedule_ue_spec_phy_test(
 
 void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP)
 {
-  uint16_t first_rb[MAX_NUM_CCs];
+  uint16_t          first_rb[MAX_NUM_CCs];
   int               UE_id = 0;
   uint8_t           aggregation    = 2;
   rnti_t            rnti           = 0x1235;
-  uint8_t           mcs            = 28;
+  uint8_t           mcs            = 0;
   uint8_t           harq_pid       = 0;
   uint32_t          cqi_req = 0,cshift,ndi,tpc = 1;
   int32_t           normalized_rx_power;
   int32_t           target_rx_power= 178;
   int               n;
   int               CC_id = 0;
-  int               N_RB_UL;
+  int               N_RB_UL; //total number of RB
+  int               nb_rb=4; //allocated number of RB
   eNB_MAC_INST      *eNB = RC.mac[module_idP];
   COMMON_channels_t *cc  = eNB->common_channels;
   UE_list_t         *UE_list=&eNB->UE_list;
@@ -228,7 +229,7 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     //rnti = UE_RNTI(module_idP,UE_id);
     N_RB_UL      = to_prb(cc[CC_id].ul_Bandwidth);
-    printf("////////////////////////////////////*************************N_RB_UL = %d\n",N_RB_UL);
+    //printf("////////////////////////////////////*************************N_RB_UL = %d\n",N_RB_UL);
     //leave out first RB for PUCCH
     first_rb[CC_id] = 1;
   // loop over all active UEs
@@ -242,7 +243,7 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
       LOG_I(MAC,"Scheduling for frame %d, subframe %d => harq_pid %d\n",sched_frame,sched_subframe,harq_pid);
 
       RC.eNB[module_idP][CC_id]->pusch_stats_BO[UE_id][(frameP*10)+subframeP] = UE_template->ul_total_buffer;
-      printf("////////////////////////////////////*************************ul_total_buffer = %d\n",UE_template->ul_total_buffer);
+      //printf("////////////////////////////////////*************************ul_total_buffer = %d\n",UE_template->ul_total_buffer);
 
 	  
 
@@ -251,7 +252,7 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
 	  
       // this is the normalized RX power and this should be constant (regardless of mcs
       normalized_rx_power = UE_sched_ctrl->pusch_snr[CC_id];
-      printf("////////////////////////////////////*************************normalized_rx_power = %d\n",normalized_rx_power);
+      //printf("////////////////////////////////////*************************normalized_rx_power = %d\n",normalized_rx_power);
 	  
       // new transmission
 	  
@@ -296,7 +297,7 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
 	  hi_dci0_pdu->dci_pdu.dci_pdu_rel8.rnti                              = rnti;
 	  hi_dci0_pdu->dci_pdu.dci_pdu_rel8.transmission_power                = 6000;
 	  hi_dci0_pdu->dci_pdu.dci_pdu_rel8.resource_block_start              = first_rb[CC_id];
-	  hi_dci0_pdu->dci_pdu.dci_pdu_rel8.number_of_resource_block          = 20;//N_RB_UL-1;
+	  hi_dci0_pdu->dci_pdu.dci_pdu_rel8.number_of_resource_block          = nb_rb;
 	  hi_dci0_pdu->dci_pdu.dci_pdu_rel8.mcs_1                             = mcs;
 	  hi_dci0_pdu->dci_pdu.dci_pdu_rel8.cyclic_shift_2_for_drms           = cshift;
 	  hi_dci0_pdu->dci_pdu.dci_pdu_rel8.frequency_hopping_enabled_flag    = 0;
@@ -318,7 +319,7 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
 						 eNB->ul_handle,
 						 rnti,
 						 first_rb[CC_id], // resource_block_start
-						 20,//N_RB_UL-1, // number_of_resource_blocks
+						 nb_rb, // number_of_resource_blocks
 						 mcs,
 						 cshift, // cyclic_shift_2_for_drms
 						 0, // frequency_hopping_enabled_flag
