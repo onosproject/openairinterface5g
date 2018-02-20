@@ -81,10 +81,16 @@ schedule_ue_spec_phy_test(
   nfapi_dl_config_request_body_t *dl_req;
   nfapi_dl_config_request_pdu_t  *dl_config_pdu;
 
+  UE_list_t *UE_list    = &RC.mac[module_idP]->UE_list;
+  UE_sched_ctrl *sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
+  int wideband_cqi;
+
   N_RB_DL         = to_prb(cc->mib->message.dl_Bandwidth);
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-    LOG_D(MAC, "doing schedule_ue_spec for CC_id %d\n",CC_id);
+    wideband_cqi  = sched_ctl->aperiodic_wideband_cqi0[CC_id];
+    //mcs = cqi_to_mcs[wideband_cqi];
+    LOG_I(MAC, "doing schedule_ue_spec for CC_id %d, cqi %d, mcs %d\n",CC_id,wideband_cqi,mcs);
 
     dl_req        = &eNB->DL_req[CC_id].dl_config_request_body;
 
@@ -199,9 +205,9 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
   int               UE_id = 0;
   uint8_t           aggregation    = 2;
   rnti_t            rnti           = 0x1235;
-  uint8_t           mcs            = 0;
+  uint8_t           mcs            = 2;
   uint8_t           harq_pid       = 0;
-  uint32_t          cqi_req = 0,cshift,ndi,tpc = 1;
+  uint32_t          cqi_req = 1,cshift,ndi,tpc = 1;
   int32_t           normalized_rx_power;
   int32_t           target_rx_power= 178;
   int               CC_id = 0;
@@ -245,7 +251,17 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
       RC.eNB[module_idP][CC_id]->pusch_stats_BO[UE_id][(frameP*10)+subframeP] = UE_template->ul_total_buffer;
       //printf("////////////////////////////////////*************************ul_total_buffer = %d\n",UE_template->ul_total_buffer);
 
-	  
+      if (UE_template->physicalConfigDedicated == NULL) {
+	UE_template->physicalConfigDedicated = CALLOC(1,sizeof(*UE_template->physicalConfigDedicated));
+	UE_template->physicalConfigDedicated->pusch_ConfigDedicated         = CALLOC(1,sizeof(*UE_template->physicalConfigDedicated->pusch_ConfigDedicated));
+	UE_template->physicalConfigDedicated->cqi_ReportConfig              = CALLOC(1,sizeof(*UE_template->physicalConfigDedicated->cqi_ReportConfig));
+	UE_template->physicalConfigDedicated->cqi_ReportConfig->cqi_ReportModeAperiodic = CALLOC(1,sizeof(*UE_template->physicalConfigDedicated->cqi_ReportConfig->cqi_ReportModeAperiodic));
+	UE_template->physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_CQI_Index = 2;
+	UE_template->physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_RI_Index = 0;
+	UE_template->physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_ACK_Index = 0;
+	*UE_template->physicalConfigDedicated->cqi_ReportConfig->cqi_ReportModeAperiodic = CQI_ReportModeAperiodic_rm30;
+      }
+
 
       //power control
       //compute the expected ULSCH RX power (for the stats)

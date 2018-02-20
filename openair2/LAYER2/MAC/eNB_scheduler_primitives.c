@@ -61,6 +61,8 @@
 #define ENABLE_MAC_PAYLOAD_DEBUG
 #define DEBUG_eNB_SCHEDULER 1
 
+extern int phy_test;
+
 int choose(int n,int k)
 {
   int res  = 1;
@@ -1390,6 +1392,7 @@ void fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t  *ul_con
 
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.delta_offset_cqi        = physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_CQI_Index;
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.delta_offset_ri         = physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_RI_Index;
+    ul_config_pdu->ulsch_cqi_harq_ri_pdu.harq_information.harq_information_rel10.delta_offset_harq         = physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_ACK_Index;
   }
 }
 
@@ -3478,6 +3481,7 @@ void extract_pusch_csi(module_id_t mod_idP,int CC_idP,int UE_id, frame_t frameP,
     //subband CQI no PMI (TM1/2/3/7)
     AssertFatal(tmode==1 || tmode==2 || tmode==3 || tmode==7,"Illegal transmission mode %d for CQI_ReportModeAperiodic_rm30\n",tmode);
     sched_ctl->aperiodic_wideband_cqi0[CC_idP] = pdu[0]>>4;
+    LOG_I(MAC,"aperiodic_wideband_cqi0 %d\n",sched_ctl->aperiodic_wideband_cqi0[CC_idP]);
     curbyte = 0;
     curbit = 3;
     for (i=0;i<N;i++) {
@@ -3558,8 +3562,14 @@ void cqi_indication(module_id_t mod_idP, int CC_idP, frame_t frameP, sub_frame_t
                     nfapi_cqi_indication_rel9_t *rel9,uint8_t *pdu,
                     nfapi_ul_cqi_information_t *ul_cqi_information)
 {
-  int UE_id = find_UE_id(mod_idP, rntiP);
+  int UE_id;
   UE_list_t *UE_list = &RC.mac[mod_idP]->UE_list;
+
+  if (phy_test==1)
+    UE_id=0;
+  else
+    find_UE_id(mod_idP, rntiP);
+
   if (UE_id == -1) {
     LOG_W(MAC, "cqi_indication: UE %x not found\n", rntiP);
     return;

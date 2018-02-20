@@ -263,7 +263,7 @@ void handle_ulsch_harq_pdu(
   ulsch->beta_offset_harqack_times8      = to_beta_offset_harqack[harq_information->harq_information_rel10.delta_offset_harq];
 }
 
-uint16_t to_beta_offset_ri[16]={9,13,16,20,25,32,40,50,64,80,101,127,160,0,0,0};
+uint16_t to_beta_offset_ri[16]={10,13,16,20,25,32,40,50,64,80,101,127,160,0,0,0};
 uint16_t to_beta_offset_cqi[16]={0,0,9,10,11,13,14,16,18,20,23,25,28,32,40,50};
 
 void handle_ulsch_cqi_ri_pdu(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_request_pdu_t *ul_config_pdu,uint16_t frame,uint8_t subframe)
@@ -281,8 +281,8 @@ void handle_ulsch_cqi_ri_pdu(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_request
   if (ulsch_harq->O_RI>1) ulsch_harq->Or2 = rel9->aperiodic_cqi_pmi_ri_report.cc[0].dl_cqi_pmi_size[1];
   ulsch->beta_offset_ri_times8            = to_beta_offset_ri[rel9->delta_offset_ri];
   ulsch->beta_offset_cqi_times8           = to_beta_offset_cqi[rel9->delta_offset_cqi];
-  LOG_D(PHY,"Filling ulsch_cqi_ri information for frame %d, subframe %d : O_RI %d, Or1 %d, beta_offset_cqi_times8 %d (%d)\n",
-        frame,subframe,ulsch_harq->O_RI,ulsch_harq->Or1,ulsch->beta_offset_cqi_times8,
+  LOG_D(PHY,"Filling ulsch_cqi_ri information for frame %d, subframe %d : O_RI %d, Or1 %d, beta_offset_cqi_times8 %d, beta_offset_harqack_times8 %d, beta_offset_ri_times8 %d (%d)\n",
+        frame,subframe,ulsch_harq->O_RI,ulsch_harq->Or1,ulsch->beta_offset_cqi_times8,ulsch->beta_offset_harqack_times8,ulsch->beta_offset_ri_times8,
         rel9->delta_offset_cqi);
 }
 

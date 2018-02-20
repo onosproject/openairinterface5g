@@ -1362,7 +1362,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
       stop_meas(&eNB->ulsch_decoding_stats);
 
-      LOG_I(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) N0 (%d,%d) dB ACK (%d,%d), decoding iter %d\n",
+      LOG_I(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) N0 (%d,%d) dB ACK (%d,%d), uci_format %d, decoding iter %d\n",
             eNB->Mod_id,harq_pid,
             frame,subframe,
             ulsch->rnti,
@@ -1372,17 +1372,13 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
             20,//eNB->measurements.n0_power_dB[1],
             ulsch_harq->o_ACK[0],
             ulsch_harq->o_ACK[1],
+	    ulsch_harq->uci_format,
             ret);
 
       //compute the expected ULSCH RX power (for the stats)
       ulsch_harq->delta_TF = get_hundred_times_delta_IF_eNB(eNB,i,harq_pid, 0); // 0 means bw_factor is not considered
 
       if (ulsch_harq->cqi_crc_status == 1) {
-#ifdef DEBUG_PHY_PROC
-        //if (((frame%10) == 0) || (frame < 50))
-        print_CQI(ulsch_harq->o,ulsch_harq->uci_format,0,fp->N_RB_DL);
-#endif
-
         fill_ulsch_cqi_indication(eNB,frame,subframe,
                                   ulsch_harq,
                                   ulsch->rnti);
