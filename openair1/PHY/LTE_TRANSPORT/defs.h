@@ -157,7 +157,7 @@ typedef struct {
   /// Turbo-code outputs (36-212 V8.6 2009-03, p.12
   uint8_t *d[MAX_NUM_DLSCH_SEGMENTS];//[(96+3+(3*6144))];
   /// Sub-block interleaver outputs (36-212 V8.6 2009-03, p.16-17)
-  uint8_t w[MAX_NUM_DLSCH_SEGMENTS][3*6144];
+  uint8_t w[MAX_NUM_DLSCH_SEGMENTS][3*8448] __attribute__((aligned(32)));
   /// Number of code segments (for definition see 36-212 V8.6 2009-03, p.9)
   uint32_t C;
   /// Number of "small" code segments (for definition see 36-212 V8.6 2009-03, p.10)

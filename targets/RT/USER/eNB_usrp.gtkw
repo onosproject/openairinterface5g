@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Fri Nov  3 16:03:52 2017
+[*] Wed Feb 21 13:06:28 2018
 [*]
 [dumpfile] "/tmp/openair_dump_eNB.vcd"
-[dumpfile_mtime] "Fri Nov  3 16:00:30 2017"
-[dumpfile_size] 56765827
-[savefile] "/homes/wangts/openairinterface5g/targets/RT/USER/eNB_usrp.gtkw"
-[timestart] 15220241000
-[size] 1920 1018
+[dumpfile_mtime] "Wed Feb 21 13:03:32 2018"
+[dumpfile_size] 745020518
+[savefile] "/home/tct-labo4/dev/oai_gNB_mwc18_integration/openairinterface5g/targets/RT/USER/eNB_usrp.gtkw"
+[timestart] 79635579000
+[size] 1855 1018
 [pos] 0 22
-*-19.666586 15221741584 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-19.666586 79639241598 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [sst_width] 386
 [signals_width] 302
 [sst_expanded] 1
@@ -35,10 +35,12 @@ functions.phy_eNB_ofdm_mod_l
 @24
 variables.frame_number_RX0_eNB[63:0]
 variables.frame_number_TX0_eNB[63:0]
-@25
-variables.frame_number_RX1_eNB[63:0]
+@420
+variables.subframe_number_TX0_eNB[63:0]
 @24
+variables.frame_number_RX1_eNB[63:0]
 variables.frame_number_TX1_eNB[63:0]
+variables.subframe_number_TX1_eNB[63:0]
 @28
 functions.phy_eNB_dlsch_modulation
 functions.phy_eNB_dlsch_encoding
@@ -57,6 +59,9 @@ functions.phy_procedures_ru_feptx_ofdm0
 functions.phy_procedures_ru_feptx_ofdm1
 functions.phy_procedures_ru_feptx_prec0
 functions.phy_procedures_ru_feptx_prec1
+@29
+functions.eNB_thread_rxtx0
+@28
 functions.eNB_thread_rxtx1
 functions.phy_enb_sfgen
 functions.phy_enb_prach_rx

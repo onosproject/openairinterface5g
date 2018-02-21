@@ -520,6 +520,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	harq_pid = dlsch0->harq_ids[subframe];
 	if ((harq_pid>=0) && (harq_pid<8)) {
 	// generate pdsch
+	  LOG_I(PHY,"subframe %d: harq_pid %d:  generating PDSCH\n",subframe,harq_pid);
 	pdsch_procedures(eNB,
 			 proc,
 			 harq_pid,
@@ -528,7 +529,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 			 &eNB->UE_stats[(uint32_t)UE_id],
 			 0);
 	} else {
-	LOG_E(PHY,"harq_pid %d is not valid, not generating PDSCH\n",harq_pid);
+	  LOG_E(PHY,"subframe %d: harq_pid %d is not valid, not generating PDSCH\n",subframe,harq_pid);
 	}
 
       }

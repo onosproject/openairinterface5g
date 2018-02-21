@@ -582,7 +582,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 
   eNB         = RC.eNB[Mod_id][CC_id];
   fp          = &eNB->frame_parms;
-  proc        = &eNB->proc.proc_rxtx[0];
+  proc        = &eNB->proc.proc_rxtx[1];
   ul_subframe = pdcch_alloc2ul_subframe(fp,subframe);
   ul_frame    = pdcch_alloc2ul_frame(fp,frame,subframe);
 

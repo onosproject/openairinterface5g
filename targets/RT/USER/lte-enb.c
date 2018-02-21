@@ -173,6 +173,14 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   // UE-specific RX processing for subframe n
   phy_procedures_eNB_uespec_RX(eNB, proc, no_relay );
   
+  
+  if(get_nprocs() >= 8)
+  {
+    wakeup_tx(eNB,eNB->proc.ru_proc);
+  }
+  else if(get_nprocs() > 4)
+  {
+    if(oai_exit) return(-1);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER , 1 );
     
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
@@ -184,14 +192,6 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
   
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER , 0 );
-  
-  if(get_nprocs() >= 8)
-  {
-    wakeup_tx(eNB,eNB->proc.ru_proc);
-  }
-  else if(get_nprocs() > 4)
-  {
-    if(oai_exit) return(-1);
     phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
     
     wakeup_txfh(proc,eNB->proc.ru_proc);
@@ -234,6 +234,18 @@ static void* tx_thread(void* param) {
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_TX1_ENB,proc->frame_tx);
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_RX1_ENB,proc->frame_rx);
     
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER , 1 );
+    
+    pthread_mutex_lock(&eNB->UL_INFO_mutex);
+    eNB->UL_INFO.frame     = proc->frame_rx;
+    eNB->UL_INFO.subframe  = proc->subframe_rx;
+    eNB->UL_INFO.module_id = eNB->Mod_id;
+    eNB->UL_INFO.CC_id     = eNB->CC_id;
+    eNB->if_inst->UL_indication(&eNB->UL_INFO);
+    pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+  
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER , 0 );
+
     phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
 	if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) break;
 	
@@ -366,6 +378,15 @@ int wakeup_txfh(eNB_rxtx_proc_t *proc,RU_proc_t *ru_proc) {
   wait.tv_nsec=5000000L;
   
   
+  if (ru_proc->instance_cnt_eNBs == 0) {
+    usleep(50);
+  }
+
+  if (ru_proc->instance_cnt_eNBs == 0) {
+    LOG_E(PHY,"Frame %d, subframe %d: TX FH thread busy, dropping\n",proc->frame_tx,proc->subframe_tx);
+    return(-1);
+  }
+
   if (pthread_mutex_timedlock(&ru_proc->mutex_eNBs,&wait) != 0) {
     LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB TX1 thread %d (IC %d)\n", ru_proc->subframe_rx&1,ru_proc->instance_cnt_eNBs );
     exit_fun( "error locking mutex_eNB" );
@@ -404,6 +425,10 @@ int wakeup_tx(PHY_VARS_eNB *eNB,RU_proc_t *ru_proc) {
   wait.tv_sec=0;
   wait.tv_nsec=5000000L;
   
+  if (proc_rxtx1->instance_cnt_rxtx == 0) {
+    usleep(50);
+  }
+
   if (proc_rxtx1->instance_cnt_rxtx == 0) {
     LOG_E(PHY,"Frame %d, subframe %d: TX1 thread busy, dropping\n",proc_rxtx1->frame_rx,proc_rxtx1->subframe_rx);
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DAQ_MBOX,++num_busy);
@@ -479,6 +504,7 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   if (proc_rxtx->instance_cnt_rxtx == 0) {
     usleep(50);
   }
+
   if (proc_rxtx->instance_cnt_rxtx == 0) {
     LOG_E(PHY,"Frame %d, subframe %d: RXTX0 thread busy, dropping\n",proc_rxtx->frame_rx,proc_rxtx->subframe_rx);
     return(-1);

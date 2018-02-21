@@ -138,7 +138,8 @@ void handle_ulsch(UL_IND_t *UL_info) {
       } //if (UL_info->crc_ind.crc_pdu_list[j].rx_ue_information.rnti ==
 	//    UL_info->rx_ind.rx_pdu_list[i].rx_ue_information.rnti) {
     } //    for (j=0;j<UL_info->crc_ind.number_of_crcs;j++) {
-    AssertFatal(j<UL_info->crc_ind.number_of_crcs,"Couldn't find matchin CRC indication\n");
+    //AssertFatal(j<UL_info->crc_ind.number_of_crcs,"Couldn't find matchin CRC indication\n");
+    LOG_W(MAC,"Couldn't find matchin CRC indication\n");
   } //   for (i=0;i<UL_info->rx_ind.number_of_pdus;i++) {
     
   UL_info->rx_ind.number_of_pdus=0;

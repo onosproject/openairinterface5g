@@ -62,7 +62,7 @@
 
 extern int codingw;
 
-uint8_t segments_per_worker[9][3] = {{1,0,0},{2,0,0},{3,0,0},{2,4,0},{2,5,0},{3,6,0},{2,4,7},{2,5,8},{3,6,9}};
+uint16_t segments_per_worker[9][3] = {{1,0,0},{2,0,0},{2,3,0},{2,4,0},{2,4,5},{2,4,6},{2,4,7},{2,5,8},{3,6,9}};
 
 void free_eNB_dlsch(LTE_eNB_DLSCH_t *dlsch)
 {
@@ -524,9 +524,11 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
 
     stop_meas(&eNB->dlsch_turbo_encoding_segmentation_stats);
     
-    if (dlsch->harq_processes[harq_pid]->C >= 7) worker_num=2;
-    else if (dlsch->harq_processes[harq_pid]->C >=4) worker_num=1;
+    if (dlsch->harq_processes[harq_pid]->C >= 6) worker_num=2;
+    else if (dlsch->harq_processes[harq_pid]->C >=3) worker_num=1;
     else worker_num=0;
+
+    //LOG_I(PHY,"dlsch_encoding (round 0): C=%d, worker_num=%d\n",dlsch->harq_processes[harq_pid]->C,worker_num);
 
     start_meas(&eNB->dlsch_turbo_encoding_signal_stats);
     for(int i=0;i<worker_num;i++)
@@ -614,7 +616,7 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
     else
     	Kr_int = Kr;
 
-    for (r0=0,r=segments_per_worker[dlsch->harq_processes[harq_pid]->C-1][worker_num-1]; r<dlsch->harq_processes[harq_pid]->C; r++,r0++) {
+    for (r0=0,r=(worker_num==0 ? 0 : segments_per_worker[dlsch->harq_processes[harq_pid]->C-1][worker_num-1]); r<dlsch->harq_processes[harq_pid]->C; r++,r0++) {
       memset(dlsch->harq_processes[harq_pid]->d[r],0,(96+12+3+3*8448)*sizeof(uint8_t));
       c_tmp[r0] = &dlsch->harq_processes[harq_pid]->c[r][0];
       d_tmp[r0] = &dlsch->harq_processes[harq_pid]->d[r][96];
@@ -625,7 +627,7 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
     stop_meas(te_stats);
 
     start_meas(i_stats);
-    for (r=segments_per_worker[dlsch->harq_processes[harq_pid]->C-1][worker_num-1]; r<dlsch->harq_processes[harq_pid]->C; r++) {
+    for (r=(worker_num==0 ? 0 : segments_per_worker[dlsch->harq_processes[harq_pid]->C-1][worker_num-1]); r<dlsch->harq_processes[harq_pid]->C; r++) {
       dlsch->harq_processes[harq_pid]->RTC[r] =
 	sub_block_interleaving_turbo((Kr_int),
 				     &dlsch->harq_processes[harq_pid]->d[r][96],
@@ -636,6 +638,12 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
 
   }
   else {
+
+    if (dlsch->harq_processes[harq_pid]->C >= 6) worker_num=2;
+    else if (dlsch->harq_processes[harq_pid]->C >=3) worker_num=1;
+    else worker_num=0;
+
+    //LOG_I(PHY,"dlsch_encoding (round >0): C=%d, worker_num=%d\n",dlsch->harq_processes[harq_pid]->C,worker_num);
 
     for(int i=0;i<worker_num;i++)
     {
@@ -658,7 +666,7 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
   for (r=0,r_offset=0; r<dlsch->harq_processes[harq_pid]->C; r++) {
 
     // get information for E for the segments that are handled by the worker thread
-    if (r<segments_per_worker[dlsch->harq_processes[harq_pid]->C-1][worker_num-1]) {
+    if (r<(worker_num==0 ? 0 : segments_per_worker[dlsch->harq_processes[harq_pid]->C-1][worker_num-1])) {
       int Nl=dlsch->harq_processes[harq_pid]->Nl;
       int Qm=dlsch->harq_processes[harq_pid]->Qm;
       int C = dlsch->harq_processes[harq_pid]->C;
@@ -733,26 +741,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
 		       time_stats_t *i_stats)
 {
   int encoding_return = 0;
-  /*
-  unsigned int L,C,B;
-  B = dlsch->harq_processes[dlsch->harq_ids[subframe]]->B;
-  if(B<=8448)
-    {
-      L=0;
-      C=1;
-    }
-  else
-    {
-      L=24;
-      C = B/(8448-L);
-      if((8448-L)*C < B)
-	{
-	  C = C+1;
-	}
-    }
-  */
-  //if(C >= 8 && get_nprocs()>=8 && codingw)//one main three worker
-    {
+  
       encoding_return =
 	dlsch_encoding_2threads(eNB,
 				a,
@@ -768,47 +757,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
 				te_wakeup_stats1,
 				i_stats,
 				3);
-    }
-    /*
-  if(C >= 7 && get_nprocs()>=6 && codingw)//one main two worker
-    {
-      encoding_return =
-	dlsch_encoding_2threads(eNB,
-				a,
-				num_pdcch_symbols,
-				dlsch,
-				frame,
-				subframe,
-				rm_stats,
-				te_stats,
-				te_wait_stats,
-				te_main_stats,
-				te_wakeup_stats0,
-				te_wakeup_stats1,
-				i_stats,
-				2);
-    }
-  else if(C >= 4 && get_nprocs()>=4 && codingw)//one main one worker
-    {
-      encoding_return =
-	dlsch_encoding_2threads(eNB,
-				a,
-				num_pdcch_symbols,
-				dlsch,
-				frame,
-				subframe,
-				rm_stats,
-				te_stats,
-				te_wait_stats,
-				te_main_stats,
-				te_wakeup_stats0,
-				te_wakeup_stats1,
-				i_stats,
-				1);
-    }
-  else
-    {
-      printf("what? C=%d, nproc=%d, codingw=%d\n",C,get_nprocs(),codingw);
+      /*
       encoding_return =
 	dlsch_encoding(eNB,
 		       a,
@@ -819,8 +768,7 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
 		       rm_stats,
 		       te_stats,
 		       i_stats);
-    }
-    */
+      */
   return encoding_return;
 }
 
