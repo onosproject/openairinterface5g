@@ -78,6 +78,11 @@ int32_t **txdata;
 
 #define KHz (1000UL)
 #define MHz (1000*KHz)
+#define SAIF_ENABLED
+
+#ifdef SAIF_ENABLED
+uint64_t	g_ue_rx_thread_busy	= 0;
+#endif
 
 typedef struct eutra_band_s {
     int16_t band;
@@ -320,7 +325,7 @@ static void *UE_thread_synch(void *arg) {
             if (initial_sync( UE, UE->mode ) == 0) {
 
                 hw_slot_offset = (UE->rx_offset<<1) / UE->frame_parms.samples_per_tti;
-                LOG_I( HW, "Got synch: hw_slot_offset %d, carrier off %d Hz, rxgain %d (DL %u, UL %u), UE_scan_carrier %d\n",
+                printf("Got synch: hw_slot_offset %d, carrier off %d Hz, rxgain %d (DL %u, UL %u), UE_scan_carrier %d\n",
                        hw_slot_offset,
                        freq_offset,
                        UE->rx_total_gain_dB,
@@ -375,7 +380,7 @@ static void *UE_thread_synch(void *arg) {
                     UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
                     //UE->rfdevice.trx_set_gains_func(&openair0,&openair0_cfg[0]);
                     //UE->rfdevice.trx_stop_func(&UE->rfdevice);
-                    sleep(1);
+                    // sleep(1);
                     init_frame_parms(&UE->frame_parms,1);
                     /*if (UE->rfdevice.trx_start_func(&UE->rfdevice) != 0 ) {
                         LOG_E(HW,"Could not start the device\n");
@@ -496,10 +501,13 @@ static void *UE_thread_rxn_txnp4(void *arg) {
     proc->instance_cnt_rxtx=-1;
     proc->subframe_rx=proc->sub_frame_start;
 
+	proc->dci_err_cnt=0;
     char threadname[256];
     sprintf(threadname,"UE_%d_proc_%d", UE->Mod_id, proc->sub_frame_start);
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
+    char timing_proc_name[256];
+    sprintf(timing_proc_name,"Delay to process sub-frame proc %d",proc->sub_frame_start);
 
     if ( (proc->sub_frame_start+1)%RX_NB_TH == 0 && threads.one != -1 )
         CPU_SET(threads.one, &cpuset);
@@ -525,10 +533,10 @@ static void *UE_thread_rxn_txnp4(void *arg) {
           exit_fun("nothing to add");
         }
 
-        initRefTimes(t2);
+//        initRefTimes(t2);
         initRefTimes(t3);
         pickTime(current);
-        updateTimes(proc->gotIQs, &t2, 10000, "Delay to wake up UE_Thread_Rx (case 2)");
+//        updateTimes(proc->gotIQs, &t2, 10000, "Delay to wake up UE_Thread_Rx (case 2)");
 
         // Process Rx data for one sub-frame
         lte_subframe_t sf_type = subframe_select( &UE->frame_parms, proc->subframe_rx);
@@ -620,7 +628,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                 (UE->frame_parms.frame_type == TDD))
             if (UE->mode != loop_through_memory)
                 phy_procedures_UE_S_TX(UE,0,0,no_relay);
-        updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");
+        updateTimes(current, &t3, 10000, timing_proc_name);
 
         if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
           LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
@@ -853,6 +861,15 @@ void *UE_thread(void *arg) {
                         for (th_id=0; th_id < RX_NB_TH; th_id++) {
                             UE->proc.proc_rxtx[th_id].frame_rx++;
                         }
+#ifdef SAIF_ENABLED
+						if (!(proc->frame_rx%4000))
+						{
+							printf("frame_rx=%d rx_thread_busy=%ld - rate %8.3f\n", 
+								proc->frame_rx, g_ue_rx_thread_busy,
+								(float)g_ue_rx_thread_busy/(proc->frame_rx*10+1)*100.0);
+							fflush(stdout);
+						}
+#endif
                     }
                     //UE->proc.proc_rxtx[0].gotIQs=readTime(gotIQs);
                     //UE->proc.proc_rxtx[1].gotIQs=readTime(gotIQs);
@@ -876,17 +893,29 @@ void *UE_thread(void *arg) {
                         exit_fun("nothing to add");
                       }
                     } else {
-                      LOG_E( PHY, "[SCHED][UE %d] UE RX thread busy (IC %d)!!\n", UE->Mod_id, proc->instance_cnt_rxtx);
+#ifdef SAIF_ENABLED
+						g_ue_rx_thread_busy++;
+#endif
+                      LOG_E( PHY, "[SCHED][UE %d] !! UE RX thread busy (IC %d)!!\n", UE->Mod_id, proc->instance_cnt_rxtx);
                       if (proc->instance_cnt_rxtx > 2)
-                        exit_fun("instance_cnt_rxtx > 2");
+                      {
+                        char exit_fun_string[256];
+                        sprintf(exit_fun_string,"[SCHED][UE %d] !!! UE instance_cnt_rxtx > 2 (IC %d) (Proc %d)!!",
+                        			UE->Mod_id, proc->instance_cnt_rxtx,
+                        			UE->current_thread_id[tti_nr]);
+          				printf("%s\n",exit_fun_string);
+          				fflush(stdout);
+          				sleep(1);
+                        exit_fun(exit_fun_string);
+                      }
                     }
 
                     AssertFatal (pthread_cond_signal(&proc->cond_rxtx) ==0 ,"");
                     AssertFatal(pthread_mutex_unlock(&proc->mutex_rxtx) ==0,"");
-                    initRefTimes(t1);
-                    initStaticTime(lastTime);
-                    updateTimes(lastTime, &t1, 20000, "Delay between two IQ acquisitions (case 1)");
-                    pickStaticTime(lastTime);
+//                    initRefTimes(t1);
+//                    initStaticTime(lastTime);
+//                    updateTimes(lastTime, &t1, 20000, "Delay between two IQ acquisitions (case 1)");
+//                    pickStaticTime(lastTime);
 
                 } else {
                     printf("Processing subframe %d",proc->subframe_rx);

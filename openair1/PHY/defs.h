@@ -472,6 +472,7 @@ typedef struct {
   /// mutex for UE synch thread
   //pthread_mutex_t mutex_slot0_dl_processing;
   pthread_mutex_t mutex_dlsch_td1;
+  int dci_err_cnt;
 } UE_rxtx_proc_t;
 
 /// Context data structure for eNB subframe processing
