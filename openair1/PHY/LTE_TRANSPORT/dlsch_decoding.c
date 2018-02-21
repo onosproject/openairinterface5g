@@ -346,7 +346,8 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
     	                    &harq_process->F);
     	p_decParams->Z = harq_process->Z;
     	//printf("dlsch decoding nr segmentation Z %d\n", p_decParams->Z);
-    	//printf("Kplus %d C %d nl %d \n", harq_process->Kplus, harq_process->C, harq_process->Nl);
+	if (!frame%100)
+    	printf("Kplus %d C %d Z %d nl %d \n", harq_process->Kplus, harq_process->C, p_decParams->Z, harq_process->Nl);
 #endif
 
   }
@@ -363,7 +364,7 @@ uint32_t  dlsch_decoding(PHY_VARS_UE *phy_vars_ue,
   		  kc = 52;
   	  	  }
 
-      p_decParams->numMaxIter = 10;
+      p_decParams->numMaxIter = 2;
       Kr = p_decParams->Z*kb;
       p_decParams->outMode= 0;
 
@@ -1506,7 +1507,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
 				llrProcBuf,
           		p_procTime);
 
-		if (no_iteration_ldpc > 10)
+		if (no_iteration_ldpc > 2)
 			printf("Error number of iteration LPDC %d\n", no_iteration_ldpc);
 		//else
 			//printf("OK number of iteration LPDC %d\n", no_iteration_ldpc);
@@ -2010,7 +2011,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 
     //	  p_decParams->Z = 128;
         p_decParams->BG = 1;
-        p_decParams->R = 13;
+        p_decParams->R = 89;
         p_decParams->numMaxIter = 2;
         Kr = p_decParams->Z*22;
         p_decParams->outMode= 0;
@@ -2692,7 +2693,7 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
 	            exit_fun("nothing to add");
 	        }
 
-	        printf("2thread1 main available %d\n", proc->decoder_main_available);
+	        //printf("2thread1 main available %d\n", proc->decoder_main_available);
 
 	        uint32_t wait = 0;
 	        	          while(proc->decoder_main_available == 0)
@@ -3325,7 +3326,7 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
   proc->decoder_thread_available1 = 1;
   //proc->decoder_main_available = 0;
 
-  printf("2thread1 proc->instance_cnt_dlsch_td1 %d\n", proc->instance_cnt_dlsch_td1);
+  //printf("2thread1 proc->instance_cnt_dlsch_td1 %d\n", proc->instance_cnt_dlsch_td1);
 
   if (pthread_mutex_lock(&proc->mutex_dlsch_td1) != 0) {
               LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
@@ -3336,10 +3337,10 @@ uint32_t  dlsch_decoding_2thread1(void *arg)
               LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE td1\n" );
               exit_fun("noting to add");
           }
-          printf("end 2thread1 proc->instance_cnt_dlsch_td1 %d\n", proc->instance_cnt_dlsch_td1);
+          //printf("end 2thread1 proc->instance_cnt_dlsch_td1 %d\n", proc->instance_cnt_dlsch_td1);
       }
 
-	 printf("after 2thread1 after oai exit proc->instance_cnt_dlsch_td %d\n", proc->instance_cnt_dlsch_td1);
+	//printf("after 2thread1 after oai exit proc->instance_cnt_dlsch_td %d\n", proc->instance_cnt_dlsch_td1);
       // thread finished
           free(arg);
           return &UE_dlsch_td_retval1;
