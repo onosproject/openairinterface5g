@@ -235,7 +235,7 @@ void dlsch_scheduler_pre_processor_accounting(module_id_t Mod_id,
                                               int min_rb_unit[MAX_NUM_CCs],
                                               uint8_t total_ue_count[MAX_NUM_CCs],
                                               uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
-                                              uint16_t nb_rbs_required_remaining_1[MAX_NUM_CCs][NUMBER_OF_UE_MAX]);
+                                              uint16_t nb_rbs_accounted[MAX_NUM_CCs][NUMBER_OF_UE_MAX]);
 
 void dlsch_scheduler_pre_processor_positioning(module_id_t Mod_id,
                                                slice_id_t slice_id,
@@ -243,7 +243,7 @@ void dlsch_scheduler_pre_processor_positioning(module_id_t Mod_id,
                                                int min_rb_unit[MAX_NUM_CCs],
                                                uint8_t total_ue_count[MAX_NUM_CCs],
                                                uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
-                                               uint16_t nb_rbs_required_remaining_1[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
+                                               uint16_t nb_rbs_accounted[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
                                                uint8_t rballoc_sub[MAX_NUM_CCs][N_RBG_MAX],
                                                uint8_t MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX]);
 
@@ -1190,8 +1190,7 @@ int l2_init_ue(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
 	       uint8_t HO_active);
 
 /*Slice related functions */
-uint16_t flexran_nb_rbs_allowed_slice(float rb_percentage, int total_rbs);
-
+uint16_t nb_rbs_allowed_slice(float rb_percentage, int total_rbs);
 int ue_slice_membership(int UE_id, int slice_id);
 
 #endif
