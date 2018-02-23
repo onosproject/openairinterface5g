@@ -1478,11 +1478,14 @@ reset_opp_meas_oaisim (void)
       reset_meas (&eNB2UE[eNB_id][UE_id][0]->interp_time);
       reset_meas (&eNB2UE[eNB_id][UE_id][0]->interp_freq);
       reset_meas (&eNB2UE[eNB_id][UE_id][0]->convolution);
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->ziggurat);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->random_channel);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->interp_time);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->interp_freq);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->interp_freq_PRACH);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->convolution);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->ziggurat);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->ziggurat_PRACH);
       //Time consuming in Frequency analysis
       //Downlink
       reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_multipath_channel_freq);
@@ -1591,6 +1594,8 @@ print_opp_meas_oaisim (void)
                   "[DL][interp_freq]", &oaisim_stats, &oaisim_stats_f);
       print_meas (&eNB2UE[eNB_id][UE_id][0]->convolution,
                   "[DL][convolution]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&eNB2UE[eNB_id][UE_id][0]->ziggurat,
+                  "[DL][ziggurat]", &oaisim_stats, &oaisim_stats_f);
 
       print_meas (&UE2eNB[UE_id][eNB_id][0]->random_channel,
                   "[UL][random_channel]", &oaisim_stats, &oaisim_stats_f);
@@ -1602,6 +1607,10 @@ print_opp_meas_oaisim (void)
                   "[UL][interp_freq_PRACH]", &oaisim_stats, &oaisim_stats_f);
       print_meas (&UE2eNB[UE_id][eNB_id][0]->convolution,
                   "[UL][convolution]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->ziggurat,
+                  "[UL][ziggurat]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->ziggurat_PRACH,
+                  "[UL][ziggurat]", &oaisim_stats, &oaisim_stats_f);
 
       //Time consuming in Frequency analysis
       //Downlink

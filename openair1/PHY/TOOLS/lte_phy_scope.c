@@ -562,7 +562,10 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
   llr_pdcch = (float*) calloc(12*frame_parms->N_RB_DL*num_pdcch_symbols*2,sizeof(float)); // init to zero
   bit_pdcch = (float*) calloc(12*frame_parms->N_RB_DL*num_pdcch_symbols*2,sizeof(float));
 
-  rxsig_t = (int16_t**) phy_vars_ue->common_vars.rxdata;
+  if (phy_vars_ue->do_ofdm_mod)
+  	rxsig_t = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF;
+  else	
+  	rxsig_t = (int16_t**) phy_vars_ue->common_vars.rxdata;
   chest_t = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[phy_vars_ue->current_thread_id[subframe]].dl_ch_estimates_time[eNB_id];
   chest_f = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[phy_vars_ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id];
   pbch_llr = (int8_t*) phy_vars_ue->pbch_vars[eNB_id]->llr;

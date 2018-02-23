@@ -294,6 +294,7 @@ void multipath_channel_freq(channel_desc_t *desc,
       	sum=(sum+stop-start);*/
         random_channel_freq(desc,0);
   	freq_channel(desc,nb_rb,n_samples);//Find desc->chF
+        printf("MULTICHANNEL\n");
   	//freq_channel_prach(desc,nb_rb,n_samples,1,44);//Find desc->chF
   }
   //clock_t start=clock();
@@ -319,8 +320,8 @@ void multipath_channel_freq(channel_desc_t *desc,
 					//RX_IM(k) += TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
 					tx128_re = _mm_loadu_pd(&tx_sig_re[j][(2*f+1)]);
             				tx128_im = _mm_loadu_pd(&tx_sig_im[j][(2*f+1)]);
-          				chF128_x = _mm_set1_pd(desc->ch[ii+(j*desc->nb_rx)][(2*(f%(ofdm_symbol_size>>1)))+(n_samples>>1)].x);
-          				chF128_y = _mm_set1_pd(desc->ch[ii+(j*desc->nb_rx)][(2*(f%(ofdm_symbol_size>>1)))+(n_samples>>1)].y);
+          				chF128_x = _mm_set1_pd(desc->chFf[ii+(j*desc->nb_rx)].x[(2*(f%(ofdm_symbol_size>>1)))+(n_samples>>1)]);
+          				chF128_y = _mm_set1_pd(desc->chFf[ii+(j*desc->nb_rx)].y[(2*(f%(ofdm_symbol_size>>1)))+(n_samples>>1)]);
 					//rx_tmp.x += (tx_sig_re[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f+(n_samples>>1)-1].x)//tx128_re*ch128_x
 					//	     -(tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f+(n_samples>>1)-1].y);//-tx128_im*ch128_y
 					//rx_tmp.y += (tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f+(n_samples>>1)-1].x)//tx128_im*ch128_x
@@ -357,8 +358,8 @@ void multipath_channel_freq(channel_desc_t *desc,
 					//RX_IM(k) += TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
 					tx128_re = _mm_loadu_pd(&tx_sig_re[j][2*f]);
             				tx128_im = _mm_loadu_pd(&tx_sig_im[j][2*f]);
-          				chF128_x = _mm_set1_pd(desc->ch[ii+(j*desc->nb_rx)][2*(f%(ofdm_symbol_size>>1)-((ofdm_symbol_size>>1)-(n_samples>>1)))].x);
-          				chF128_y = _mm_set1_pd(desc->ch[ii+(j*desc->nb_rx)][2*(f%(ofdm_symbol_size>>1)-((ofdm_symbol_size>>1)-(n_samples>>1)))].y);
+          				chF128_x = _mm_set1_pd(desc->chFf[ii+(j*desc->nb_rx)].x[2*(f%(ofdm_symbol_size>>1)-((ofdm_symbol_size>>1)-(n_samples>>1)))]);
+          				chF128_y = _mm_set1_pd(desc->chFf[ii+(j*desc->nb_rx)].y[2*(f%(ofdm_symbol_size>>1)-((ofdm_symbol_size>>1)-(n_samples>>1)))]);
 					//rx_tmp.x += (tx_sig_re[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].x)
 					//	     -(tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].y);
 					//rx_tmp.y += (tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].x)
@@ -427,6 +428,7 @@ void multipath_channel_freq(channel_desc_t *desc,
   } else {
         random_channel_freq(desc,0);
   	freq_channel(desc,nb_rb,n_samples);//Find desc->chF
+        printf("MULTICHANNEL\n");
   }
   //clock_t start=clock();
   //printf("symbols_per_tti is %d\n",symbols_per_tti);
@@ -526,7 +528,7 @@ void multipath_channel_freq_SSE_float(channel_desc_t *desc,
   	// do nothing - keep channel
   } else {
         random_channel_freq(desc,0);
-  	freq_channel(desc,nb_rb,n_samples);//Find desc->chF
+  	freq_channel_SSE_float(desc,nb_rb,n_samples);//Find desc->chF
   }
 	for (j=0;j<(symbols_per_tti>>2);j++){
 		for (ii=0; ii<desc->nb_rx; ii++) {
@@ -549,8 +551,8 @@ void multipath_channel_freq_SSE_float(channel_desc_t *desc,
 					//RX_IM(k) += TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
 					tx128_re = _mm_loadu_ps(&tx_sig_re[j][(4*f+1)]);
             				tx128_im = _mm_loadu_ps(&tx_sig_im[j][(4*f+1)]);
-          				chF128_x = _mm_set1_ps(desc->ch[ii+(j*desc->nb_rx)][(4*(f%(ofdm_symbol_size>>2)))+(n_samples>>2)].x);
-          				chF128_y = _mm_set1_ps(desc->ch[ii+(j*desc->nb_rx)][(4*(f%(ofdm_symbol_size>>2)))+(n_samples>>2)].y);
+          				chF128_x = _mm_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].x[(4*(f%(ofdm_symbol_size>>2)))+(n_samples>>2)]);
+          				chF128_y = _mm_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].y[(4*(f%(ofdm_symbol_size>>2)))+(n_samples>>2)]);
 					//rx_tmp.x += (tx_sig_re[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f+(n_samples>>1)-1].x)//tx128_re*ch128_x
 					//	     -(tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f+(n_samples>>1)-1].y);//-tx128_im*ch128_y
 					//rx_tmp.y += (tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f+(n_samples>>1)-1].x)//tx128_im*ch128_x
@@ -587,8 +589,8 @@ void multipath_channel_freq_SSE_float(channel_desc_t *desc,
 					//RX_IM(k) += TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
 					tx128_re = _mm_loadu_ps(&tx_sig_re[j][4*f]);
             				tx128_im = _mm_loadu_ps(&tx_sig_im[j][4*f]);
-          				chF128_x = _mm_set1_ps(desc->ch[ii+(j*desc->nb_rx)][4*(f%(ofdm_symbol_size>>2)-((ofdm_symbol_size>>2)-(n_samples>>2)))].x);
-          				chF128_y = _mm_set1_ps(desc->ch[ii+(j*desc->nb_rx)][4*(f%(ofdm_symbol_size>>2)-((ofdm_symbol_size>>2)-(n_samples>>2)))].y);
+          				chF128_x = _mm_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].x[4*(f%(ofdm_symbol_size>>2)-((ofdm_symbol_size>>2)-(n_samples>>2)))]);
+          				chF128_y = _mm_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].y[4*(f%(ofdm_symbol_size>>2)-((ofdm_symbol_size>>2)-(n_samples>>2)))]);
 					//rx_tmp.x += (tx_sig_re[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].x)
 					//	     -(tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].y);
 					//rx_tmp.y += (tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].x)
@@ -630,7 +632,6 @@ void multipath_channel_prach(channel_desc_t *desc,
 
   int ii,j,f;
   __m128d rx_tmp128_re_f,rx_tmp128_im_f,rx_tmp128_re,rx_tmp128_im, rx_tmp128_1,rx_tmp128_2,rx_tmp128_3,rx_tmp128_4,tx128_re,tx128_im,chF128_x,chF128_y,pathloss128;
-  struct complex rx_tmp;
   double path_loss = pow(10,desc->path_loss_dB/20);
   pathloss128 = _mm_set1_pd(path_loss);
   int nb_rb, n_samples;
@@ -658,8 +659,8 @@ void multipath_channel_prach(channel_desc_t *desc,
 						//RX_IM(k) = TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
 						tx128_re = _mm_loadu_pd(&tx_sig_re[j][(2*f)]);
             					tx128_im = _mm_loadu_pd(&tx_sig_im[j][(2*f)]);
-          					chF128_x = _mm_set1_pd(desc->ch[ii+(j*desc->nb_rx)][2*f+(prach_fmt<4)?13:3].x);
-          					chF128_y = _mm_set1_pd(desc->ch[ii+(j*desc->nb_rx)][2*f+(prach_fmt<4)?13:3].y);	
+          					chF128_x = _mm_set1_pd(desc->chFf[ii+(j*desc->nb_rx)].x[2*f+(prach_fmt<4)?13:3]);
+          					chF128_y = _mm_set1_pd(desc->chFf[ii+(j*desc->nb_rx)].y[2*f+(prach_fmt<4)?13:3]);	
 						//rx_tmp.x += (tx_sig_re[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].x)-(tx_sig_im[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].y);
 						//rx_tmp.y += (tx_sig_im[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].x)+(tx_sig_re[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].y);
 						rx_tmp128_1    = _mm_mul_pd(tx128_re,chF128_x);
@@ -748,7 +749,6 @@ void multipath_channel_prach_SSE_float(channel_desc_t *desc,
 
   int ii,j,f;
   __m128 rx_tmp128_re_f,rx_tmp128_im_f,rx_tmp128_re,rx_tmp128_im, rx_tmp128_1,rx_tmp128_2,rx_tmp128_3,rx_tmp128_4,tx128_re,tx128_im,chF128_x,chF128_y,pathloss128;
-  struct complex rx_tmp;
   float path_loss = pow(10,desc->path_loss_dB/20);
   pathloss128 = _mm_set1_ps(path_loss);
   int nb_rb, n_samples;
@@ -776,8 +776,8 @@ void multipath_channel_prach_SSE_float(channel_desc_t *desc,
 						//RX_IM(k) = TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
 						tx128_re = _mm_loadu_ps(&tx_sig_re[j][(4*f)]);
             					tx128_im = _mm_loadu_ps(&tx_sig_im[j][(4*f)]);
-          					chF128_x = _mm_set1_ps(desc->ch[ii+(j*desc->nb_rx)][4*f+(prach_fmt<4)?13:3].x);
-          					chF128_y = _mm_set1_ps(desc->ch[ii+(j*desc->nb_rx)][4*f+(prach_fmt<4)?13:3].y);	
+          					chF128_x = _mm_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].x[4*f+(prach_fmt<4)?13:3]);
+          					chF128_y = _mm_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].y[4*f+(prach_fmt<4)?13:3]);	
 						//rx_tmp.x += (tx_sig_re[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].x)-(tx_sig_im[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].y);
 						//rx_tmp.y += (tx_sig_im[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].x)+(tx_sig_re[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].y);
 						rx_tmp128_1    = _mm_mul_ps(tx128_re,chF128_x);

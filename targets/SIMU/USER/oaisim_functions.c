@@ -1701,8 +1701,8 @@ void init_ocm(void)
 			       0);
 	if (do_ofdm_mod)
 	{
-		random_channel(eNB2UE[eNB_id][UE_id][CC_id],abstraction_flag);//Find a(l)
-		freq_channel(eNB2UE[eNB_id][UE_id][CC_id],nb_rb,n_samples);//Find desc->chF
+		random_channel_freq(eNB2UE[eNB_id][UE_id][CC_id],abstraction_flag);//Find a(l)
+		freq_channel_SSE_float(eNB2UE[eNB_id][UE_id][CC_id],nb_rb,n_samples);//Find desc->chF
 	}
 
 	else
@@ -1722,8 +1722,8 @@ void init_ocm(void)
 			       0);
 	if (do_ofdm_mod)
 	{
-		random_channel(UE2eNB[UE_id][eNB_id][CC_id],abstraction_flag);//Find a(l)
-		freq_channel(UE2eNB[UE_id][eNB_id][CC_id],nb_rb,n_samples);//Find desc->chF
+		random_channel_freq(UE2eNB[UE_id][eNB_id][CC_id],abstraction_flag);//Find a(l)
+		freq_channel_SSE_float(UE2eNB[UE_id][eNB_id][CC_id],nb_rb,n_samples);//Find desc->chF
 	}
 	else
         	random_channel(UE2eNB[UE_id][eNB_id][CC_id],abstraction_flag);

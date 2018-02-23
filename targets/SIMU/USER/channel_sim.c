@@ -406,9 +406,9 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 
   uint8_t eNB_id=0;
 #ifdef    SSE_float
-  double tx_pwr;
-#else
   float tx_pwr;
+#else
+  double tx_pwr;
 #endif
   //double rx_pwr;
   //int32_t rx_pwr0,rx_pwr1,rx_pwr2, rx_pwr3;
