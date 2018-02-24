@@ -61,7 +61,7 @@ typedef struct {
   struct complex **chF;
   struct complexf *chFf;
   ///Sampled prach frequency response (frequency analysis)
-  struct complex **chF_prach;
+  struct complexf *chF_prach;
   ///Maximum path delay in mus.
   double Td;
   ///Channel bandwidth in MHz.
@@ -478,9 +478,13 @@ double ziggurat(double mean, double variance);
 int freq_channel(channel_desc_t *desc,uint16_t nb_rb, int16_t n_samples);
 int freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb, int16_t n_samples);
 int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
+int freq_channel_prach_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
 int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples);
 int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples);
 int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
+int init_freq_channel_prach_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
+
+void sincos_ps(__m128 x, __m128 *s, __m128 *c);
 
 uint8_t multipath_channel_nosigconv(channel_desc_t *desc);
 void multipath_tv_channel(channel_desc_t *desc,

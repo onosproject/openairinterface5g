@@ -206,7 +206,7 @@ void rf_rx_simple(double *r_re[2],
                   double s_time,
                   double rx_gain_dB)
 {
-  static int first_run=0;
+ /* static int first_run=0;
   static double sum;
   static int count;
   if (!first_run)
@@ -214,7 +214,7 @@ void rf_rx_simple(double *r_re[2],
      first_run=1;
      sum=0;
      count=0;
-  } 
+  } */
   int i,a;
   double rx_gain_lin = pow(10.0,.05*rx_gain_dB);
   //double rx_gain_lin = 1.0;

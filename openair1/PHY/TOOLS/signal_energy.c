@@ -335,14 +335,19 @@ float signal_energy_fp_SSE_float(float *s_re[2],float *s_im[2],uint32_t nb_anten
 {
 
   int32_t aa,i;
-  float V=0.0;
-
-  for (i=0; i<length; i++) {
+  __m128 V128, s_re128,s_im128;
+  V128 = _mm_setzero_ps();
+  for (i=0; i<(length>>2); i++) {
     for (aa=0; aa<nb_antennas; aa++) {
-      V= V + (s_re[aa][i+offset]*s_re[aa][i+offset]) + (s_im[aa][i+offset]*s_im[aa][i+offset]);
+     // V= V + (s_re[aa][i+offset]*s_re[aa][i+offset]) + (s_im[aa][i+offset]*s_im[aa][i+offset]);
+      s_re128=_mm_loadu_ps(&s_re[aa][4*i+offset]);
+      s_im128=_mm_loadu_ps(&s_im[aa][4*i+offset]);
+      s_re128=_mm_mul_ps(s_re128,s_re128);
+      s_im128=_mm_mul_ps(s_im128,s_im128);
+      V128=_mm_add_ps(V128,_mm_add_ps(s_re128,s_im128));
     }
   }
-  return(V/length/nb_antennas);
+  return((V128[0]+V128[1]+V128[2]+V128[3])/length/nb_antennas);
 }
 
 double signal_energy_fp2(struct complex *s,uint32_t length)

@@ -763,7 +763,7 @@ void multipath_channel_prach_SSE_float(channel_desc_t *desc,
 		// do nothing - keep channel
 		} else {
 		random_channel_freq(desc,0);
-		freq_channel_prach(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
+		freq_channel_prach_SSE_float(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
 		}	
 			for (f=0;f<(length>>2); f++) {
 				//rx_tmp.x = 0;
@@ -776,8 +776,8 @@ void multipath_channel_prach_SSE_float(channel_desc_t *desc,
 						//RX_IM(k) = TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
 						tx128_re = _mm_loadu_ps(&tx_sig_re[j][(4*f)]);
             					tx128_im = _mm_loadu_ps(&tx_sig_im[j][(4*f)]);
-          					chF128_x = _mm_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].x[4*f+(prach_fmt<4)?13:3]);
-          					chF128_y = _mm_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].y[4*f+(prach_fmt<4)?13:3]);	
+          					chF128_x = _mm_set1_ps(desc->chF_prach[ii+(j*desc->nb_rx)].x[4*f+(prach_fmt<4)?13:3]);
+          					chF128_y = _mm_set1_ps(desc->chF_prach[ii+(j*desc->nb_rx)].y[4*f+(prach_fmt<4)?13:3]);	
 						//rx_tmp.x += (tx_sig_re[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].x)-(tx_sig_im[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].y);
 						//rx_tmp.y += (tx_sig_im[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].x)+(tx_sig_re[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].y);
 						rx_tmp128_1    = _mm_mul_ps(tx128_re,chF128_x);
