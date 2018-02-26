@@ -231,6 +231,10 @@ void dlsch_scheduler_pre_processor_reset(module_id_t module_idP,
                                          unsigned char MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX],
                                          int *mbsfn_flag);
 
+void dlsch_scheduler_pre_processor_partitioning(module_id_t Mod_id,
+                                                slice_id_t slice_id,
+                                                const uint8_t rbs_retx[MAX_NUM_CCs]);
+
 void dlsch_scheduler_pre_processor_accounting(module_id_t Mod_id,
                                               slice_id_t slice_id,
                                               frame_t frameP,
@@ -265,7 +269,7 @@ void dlsch_scheduler_pre_processor_allocate(module_id_t Mod_id,
                                             int N_RBG,
                                             int min_rb_unit,
                                             uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
-                                            uint16_t nb_rbs_required_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
+                                            uint16_t nb_rbs_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
                                             unsigned char rballoc_sub[MAX_NUM_CCs][N_RBG_MAX],
                                             uint8_t slice_allocation_mask[MAX_NUM_CCs][N_RBG_MAX],
                                             unsigned char MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX]);
