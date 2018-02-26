@@ -236,7 +236,6 @@ void dlsch_scheduler_pre_processor_accounting(module_id_t Mod_id,
                                               frame_t frameP,
                                               sub_frame_t subframeP,
                                               int min_rb_unit[MAX_NUM_CCs],
-                                              uint8_t total_ue_count[MAX_NUM_CCs],
                                               uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
                                               uint16_t nb_rbs_accounted[MAX_NUM_CCs][NUMBER_OF_UE_MAX]);
 
@@ -244,11 +243,21 @@ void dlsch_scheduler_pre_processor_positioning(module_id_t Mod_id,
                                                slice_id_t slice_id,
                                                int N_RBG[MAX_NUM_CCs],
                                                int min_rb_unit[MAX_NUM_CCs],
-                                               uint8_t total_ue_count[MAX_NUM_CCs],
                                                uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
                                                uint16_t nb_rbs_accounted[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
+                                               uint16_t nb_rbs_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
                                                uint8_t rballoc_sub[MAX_NUM_CCs][N_RBG_MAX],
                                                uint8_t MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX]);
+
+void dlsch_scheduler_pre_processor_intraslice_sharing(module_id_t Mod_id,
+                                                      slice_id_t slice_id,
+                                                      int N_RBG[MAX_NUM_CCs],
+                                                      int min_rb_unit[MAX_NUM_CCs],
+                                                      uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
+                                                      uint16_t nb_rbs_accounted[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
+                                                      uint16_t nb_rbs_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
+                                                      uint8_t rballoc_sub[MAX_NUM_CCs][N_RBG_MAX],
+                                                      uint8_t MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX]);
 
 void dlsch_scheduler_pre_processor_allocate(module_id_t Mod_id,
                                             int UE_id,
