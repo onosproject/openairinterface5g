@@ -131,6 +131,8 @@ void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND
 
 void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint16_t rnti) {
 
+	LOG_I(MAC, "Panos-D: fill_sr_indication_UE_MAC 1 \n");
+
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 
   nfapi_sr_indication_t       *sr_ind = &UL_INFO->sr_ind;
@@ -203,7 +205,7 @@ void fill_crc_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_
 
 void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t ra_PreambleIndex, uint16_t ra_RNTI) {
 
-	//LOG_I(MAC, "Panos-D: fill_rach_indication_UE_MAC 1 \n");
+	LOG_I(MAC, "Panos-D: fill_rach_indication_UE_MAC 1 \n");
 	pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 	UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
 
@@ -1152,8 +1154,8 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req)
     	// Last parameter is 1 if first time synchronization and zero otherwise. Not sure which value to put
     	// for our case.
     	LOG_E(MAC,"dl_config_req_UE_MAC 4 Received MIB: sfn/sf: %d.%d \n", sfn, sf);
-    	dl_phy_sync_success(Mod_id,sfn,0, 0);
     	if(UE_mac_inst[Mod_id].UE_mode[0] == NOT_SYNCHED){
+    		dl_phy_sync_success(Mod_id,sfn,0, 0);
     		LOG_E(MAC,"dl_config_req_UE_MAC 5 Received MIB: UE_mode: %d\n", UE_mac_inst[Mod_id].UE_mode[0]);
     		UE_mac_inst[Mod_id].UE_mode[0]=PRACH;
     	}
@@ -1241,7 +1243,7 @@ int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req)
 
       // This is meaningful only after ACKnowledging the first ULSCH Txon (i.e. Msg3)
       if(hi_dci0_req_pdu->hi_pdu.hi_pdu_rel8.hi_value == 1 && UE_mac_inst[Mod_id].first_ULSCH_Tx == 1){
-    	  //LOG_I(MAC,"[UE-PHY_STUB] HI_DCI0_REQ 2 sfn_sf:%d PDU[%d] - NFAPI_HI_DCI0_HI_PDU_TYPE\n", NFAPI_SFNSF2DEC(req->sfn_sf), i);
+    	  LOG_I(MAC,"[UE-PHY_STUB] HI_DCI0_REQ 2 sfn_sf:%d PDU[%d] - NFAPI_HI_DCI0_HI_PDU_TYPE\n", NFAPI_SFNSF2DEC(req->sfn_sf), i);
     	  UE_mac_inst[Mod_id].UE_mode[0] = PUSCH;
     	  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
       }
@@ -1298,7 +1300,10 @@ int memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
 	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdcch_ofdm_symbols = req->dl_config_request_body.number_pdcch_ofdm_symbols;
 	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdsch_rnti = req->dl_config_request_body.number_pdsch_rnti;
 	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdu = req->dl_config_request_body.number_pdu;
-	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.tl = req->dl_config_request_body.tl;
+
+	//UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.tl = req->dl_config_request_body.tl;
+	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.tl.tag = req->dl_config_request_body.tl.tag;
+	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.tl.length = req->dl_config_request_body.tl.length;
 
 	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.dl_config_pdu_list = (nfapi_dl_config_request_pdu_t*) malloc(req->dl_config_request_body.number_pdu*sizeof(nfapi_dl_config_request_pdu_t));
 	for(int i=0; i<UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdu; i++) {
@@ -1329,7 +1334,10 @@ int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
 	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.number_of_pdus = req->ul_config_request_body.number_of_pdus;
 	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.rach_prach_frequency_resources = req->ul_config_request_body.rach_prach_frequency_resources;
 	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.srs_present = req->ul_config_request_body.srs_present;
-	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.tl = req->ul_config_request_body.tl;
+
+	//UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.tl = req->ul_config_request_body.tl;
+	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.tl.tag = req->ul_config_request_body.tl.tag;
+	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.tl.length = req->ul_config_request_body.tl.length;
 
 	//LOG_D(MAC, "Panos-D: memcpy_ul_config_req 1 #ofULPDUs: %d \n", UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.number_of_pdus); //req->ul_config_request_body.number_of_pdus);
 	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list = (nfapi_ul_config_request_pdu_t*) malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_ul_config_request_pdu_t));
@@ -1401,7 +1409,11 @@ int memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
 	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_dci = req->hi_dci0_request_body.number_of_dci;
 	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_hi = req->hi_dci0_request_body.number_of_hi;
 	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.sfnsf = req->hi_dci0_request_body.sfnsf;
-	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.tl = req->hi_dci0_request_body.tl;
+
+	//UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.tl = req->hi_dci0_request_body.tl;
+	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.tl.tag = req->hi_dci0_request_body.tl.tag;
+	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.tl.length = req->hi_dci0_request_body.tl.length;
+
 	int total_pdus = UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_dci + UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_hi;
 
 	//LOG_I(MAC, "Original hi_dci0 req. #:%d, Copy #: %d \n",req->hi_dci0_request_body.number_of_dci + req->hi_dci0_request_body.number_of_hi, total_pdus);

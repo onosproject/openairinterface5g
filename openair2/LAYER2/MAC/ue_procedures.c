@@ -480,6 +480,7 @@ ue_send_sdu(module_id_t module_idP,
 			    if(nfapi_mode == 3) { // Panos: phy_stub mode
 			    	// Panos: Modification for phy_stub mode operation here. We only need to make sure that the ue_mode is back to
 			    	// PRACH state.
+			    	LOG_I(MAC, "nfapi_mode3: Setting UE_mode BACK to PRACH 1\n");
 			    	UE_mac_inst[module_idP].UE_mode[eNB_index] = PRACH;
 			    	//ra_failed(module_idP,CC_id,eNB_index);UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
 			    	}
@@ -1624,6 +1625,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 	   uint8_t * ulsch_buffer, uint16_t buflen, uint8_t * access_mode)
 {
 
+	LOG_I(MAC, "Panos-D: In ue_get_sdu() 1 \n");
     uint8_t total_rlc_pdu_header_len = 0, rlc_pdu_header_len_last = 0;
     uint16_t buflen_remain = 0;
     uint8_t bsr_len = 0, bsr_ce_len = 0, bsr_header_len = 0;
@@ -1653,7 +1655,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
     rlc_buffer_occupancy_t lcid_buffer_occupancy_old =
 	0, lcid_buffer_occupancy_new = 0;
 
-    LOG_D(MAC,
+    LOG_I(MAC,
 	  "[UE %d] MAC PROCESS UL TRANSPORT BLOCK at frame%d subframe %d TBS=%d\n",
 	  module_idP, frameP, subframe, buflen);
 
@@ -1996,7 +1998,15 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
     }
     // build PHR and update the timers
     if (phr_ce_len == sizeof(POWER_HEADROOM_CMD)) {
-	phr_p->PH = get_phr_mapping(module_idP, CC_id, eNB_index);
+    	if(nfapi_mode ==3){
+    		//Panos: Substitute with a static value for the MAC layer abstraction (phy_stub mode)
+    		phr_p->PH = 40;
+    	}
+    	else{
+    		phr_p->PH = get_phr_mapping(module_idP, CC_id, eNB_index);
+    	}
+
+
 	phr_p->R = 0;
 	LOG_D(MAC,
 	      "[UE %d] Frame %d report PHR with mapping (%d->%d) for LCID %d\n",
@@ -2196,7 +2206,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 					   bsr_s,	// short bsr
 					   bsr_l, post_padding);	// long_bsr
 
-    LOG_D(MAC,
+    LOG_I(MAC,
 	  "[UE %d] Generate header :bufflen %d  sdu_length_total %d, num_sdus %d, sdu_lengths[0] %d, sdu_lcids[0] %d => payload offset %d,  total_rlc_pdu_header_len %d, padding %d,post_padding %d, bsr len %d, phr len %d, reminder %d \n",
 	  module_idP, buflen, sdu_length_total, num_sdus, sdu_lengths[0],
 	  sdu_lcids[0], payload_offset, total_rlc_pdu_header_len,
@@ -2204,6 +2214,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 	  buflen - sdu_length_total - payload_offset);
     // cycle through SDUs and place in ulsch_buffer
     if (sdu_length_total) {
+    	LOG_I(MAC, "Panos-D: ue_get_sdu() 2 before copying to ulsch_buffer");
 	memcpy(&ulsch_buffer[payload_offset], ulsch_buff,
 	       sdu_length_total);
     }
@@ -2460,6 +2471,7 @@ ue_scheduler(const module_id_t module_idP,
 	    if(nfapi_mode == 3) { // Panos: phy_stub mode
 	    	// Panos: Modification for phy_stub mode operation here. We only need to make sure that the ue_mode is back to
 	    	// PRACH state.
+	    	LOG_I(MAC, "nfapi_mode3: Setting UE_mode to PRACH 2 \n");
 	    	UE_mac_inst[module_idP].UE_mode[eNB_indexP] = PRACH;
 	    	//ra_failed(module_idP,CC_id,eNB_index);UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
 	    	}

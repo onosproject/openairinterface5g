@@ -106,6 +106,8 @@ unsigned short config_frames[4] = {2,9,11,13};
 
 #include "system.h"
 
+static char *in_ip_xx = in_ip;
+
 #ifdef XFORMS
 #include "PHY/TOOLS/lte_phy_scope.h"
 #include "stats.h"

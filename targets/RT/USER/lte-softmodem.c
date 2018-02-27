@@ -101,6 +101,8 @@ unsigned short config_frames[4] = {2,9,11,13};
 #endif
 #include "lte-softmodem.h"
 
+static char *in_ip_xx = in_ip;
+
 #ifdef XFORMS
 // current status is that every UE has a DL scope for a SINGLE eNB (eNB_id=0)
 // at eNB 0, an UL scope for every UE

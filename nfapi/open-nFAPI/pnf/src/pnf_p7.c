@@ -416,12 +416,14 @@ int pnf_p7_send_message(pnf_p7_t* pnf_p7, uint8_t* msg, uint32_t len)
 	int sendto_result;
 	if ((sendto_result = sendto((int)pnf_p7->p7_sock, (const char*)msg, len, 0, (const struct sockaddr*)&remote_addr, remote_addr_len)) < 0)
 	{
+		printf("Panos-D: %s %s:%d sendto(%d, %p, %d) %d failed errno: %d\n", __FUNCTION__, pnf_p7->_public.remote_p7_addr, pnf_p7->_public.remote_p7_port, (int)pnf_p7->p7_sock, (const char*)msg, len, remote_addr_len,  errno);
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s %s:%d sendto(%d, %p, %d) %d failed errno: %d\n", __FUNCTION__, pnf_p7->_public.remote_p7_addr, pnf_p7->_public.remote_p7_port, (int)pnf_p7->p7_sock, (const char*)msg, len, remote_addr_len,  errno);
 		return -1;
 	}
 
 	if(sendto_result != len)
 	{
+		printf("Panos-D: %s sendto failed to send the entire message %d %d\n", __FUNCTION__, sendto_result, len);
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s sendto failed to send the entire message %d %d\n", __FUNCTION__, sendto_result, len);
 	}
 	return 0;
@@ -434,6 +436,7 @@ int pnf_p7_pack_and_send_p7_message(pnf_p7_t* pnf_p7, nfapi_p7_message_header_t*
 	// Need to guard against different threads calling the encode function at the same time
 	if(pthread_mutex_lock(&(pnf_p7->pack_mutex)) != 0)
 	{
+		printf("Panos-D: failed to lock mutex 1\n");
 		NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to lock mutex\n");
 		return -1;
 	}
@@ -444,10 +447,12 @@ int pnf_p7_pack_and_send_p7_message(pnf_p7_t* pnf_p7, nfapi_p7_message_header_t*
 	{
 		if(pthread_mutex_unlock(&(pnf_p7->pack_mutex)) != 0)
 		{
+			printf("Panos-D: failed to unlock mutex 2\n");
 			NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to unlock mutex\n");
 			return -1;
 		}
 		
+		printf("Panos-D: nfapi_p7_message_pack failed with return %d\n", len);
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "nfapi_p7_message_pack failed with return %d\n", len );
 		return -1;
 	}
@@ -461,6 +466,7 @@ int pnf_p7_pack_and_send_p7_message(pnf_p7_t* pnf_p7, nfapi_p7_message_header_t*
 		int segment = 0;
 		int offset = NFAPI_P7_HEADER_LENGTH;
 		uint8_t buffer[pnf_p7->_public.segment_size];
+		printf("Panos-D: pnf_p7_pack_and_send_p7_message sending through multiple segments \n");
 		for(segment = 0; segment < segment_count; ++segment)
 		{
 			uint8_t last = 0;

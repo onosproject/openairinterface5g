@@ -670,6 +670,7 @@ rx_sdu(const module_id_t enb_mod_idP,
 		      enb_mod_idP, CC_idP, frameP, rx_lengths[i], UE_id,
 		      rx_lcids[i]);
 
+		LOG_I(MAC, "Panos-D: rx_sdu before mac_rlc_data_ind 1, frame:%d, subframe: %d \n", frameP, subframeP);
 		mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL);	//(unsigned int*)crc_status);
 		UE_list->eNB_UE_stats[CC_idP][UE_id].
 		    num_pdu_rx[rx_lcids[i]] += 1;
@@ -728,7 +729,8 @@ rx_sdu(const module_id_t enb_mod_idP,
 			     [rx_lcids[i]]] = 0;
 		    if ((rx_lengths[i] < SCH_PAYLOAD_SIZE_MAX)
 			&& (rx_lengths[i] > 0)) {	// MAX SIZE OF transport block
-			mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL);	//(unsigned int*)crc_status);
+		    	LOG_I(MAC, "Panos-D: rx_sdu before mac_rlc_data_ind 2 \n");
+		    	mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL);	//(unsigned int*)crc_status);
 
 			UE_list->eNB_UE_stats[CC_idP][UE_id].
 			    num_pdu_rx[rx_lcids[i]] += 1;
