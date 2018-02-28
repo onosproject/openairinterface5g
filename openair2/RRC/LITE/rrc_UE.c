@@ -287,6 +287,9 @@ static void init_SI_UE( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
 #if defined(Rel10) || defined(Rel14)
   UE_rrc_inst[ctxt_pP->module_id].sib12[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType12_r9_t) );
   UE_rrc_inst[ctxt_pP->module_id].sib13[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType13_r9_t) );
+  UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType18_r12_t) );
+  UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType19_r12_t) );
+
 #endif
   UE_rrc_inst[ctxt_pP->module_id].SI[eNB_index] = (uint8_t*)malloc16_clear( 64 );
 
@@ -3866,14 +3869,9 @@ uint64_t arfcn_to_freq(long arfcn) {
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_UE_DECODE_SI, VCD_FUNCTION_IN );
 
   // Dump contents
-  //TTN - should be modified since we use SystemInformation__criticalExtensions_PR_criticalExtensionsFuture
-  // instead of SystemInformation__criticalExtensions_PR_systemInformation_r8
-  // Panos: I brought this if condition back to previous form in order to prevent crashing. Pending to
-  // modify for SystemInformation__criticalExtensions_PR_criticalExtensionsFuture
   if ((*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_systemInformation_r8 ||
 		  (*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_criticalExtensionsFuture) {
-  //if ((*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_criticalExtensionsFuture) {
-    LOG_D( RRC, "[UE] (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count %d\n",
+    LOG_I( RRC, "[UE] (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count %d\n",
            (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count );
   } else {
 	  LOG_I( RRC, "Panos-D: decode_SI 2.3 \n");
@@ -3883,7 +3881,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 
   LOG_I( RRC, "Panos-D: decode_SI 3 \n");
   for (int i=0; i<(*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count; i++) {
-    LOG_D( RRC, "SI count %d\n", i );
+    LOG_I( RRC, "SI count %d\n", i );
     struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *typeandinfo;
     typeandinfo = (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.array[i];
 
@@ -4124,7 +4122,9 @@ uint64_t arfcn_to_freq(long arfcn) {
 	break;
       }
 #endif
-    //TTN - SIB18
+
+#if defined(Rel10) || defined(Rel14)
+      //SIB18
     case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib18_v1250:
        if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&8192) == 0) {
           UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=8192;
@@ -4135,7 +4135,7 @@ uint64_t arfcn_to_freq(long arfcn) {
           dump_sib18( UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index] );
           // adding here function to store necessary parameters to transfer to PHY layer
           LOG_I( RRC, "[FRAME %05"PRIu32"][RRC_UE][MOD %02"PRIu8"][][--- MAC_CONFIG_REQ (SIB18 params eNB %"PRIu8") --->][MAC_UE][MOD %02"PRIu8"][]\n",
-                    ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
+                ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
 
           //process SIB18 to transfer SL-related parameters to PHY
           rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
@@ -4143,34 +4143,34 @@ uint64_t arfcn_to_freq(long arfcn) {
                 (SystemInformationBlockType19_r12_t *)NULL,
                 (SL_CommConfig_r12_t *)NULL,
                 (SL_DiscConfig_r12_t *)NULL
-                );
+          );
 
        }
        break;
 
-       //TTN - SIB19
-       case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib19_v1250:
-          if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&16384) == 0) {
-             UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=16384;
-             new_sib=1;
+       //SIB19
+    case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib19_v1250:
+       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&16384) == 0) {
+          UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=16384;
+          new_sib=1;
 
-             memcpy( UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index], &typeandinfo->choice.sib19_v1250, sizeof(SystemInformationBlockType19_r12_t) );
-             LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB19 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
-             dump_sib19( UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index] );
-             // adding here function to store necessary parameters to transfer to PHY layer
-             LOG_I( RRC, "[FRAME %05"PRIu32"][RRC_UE][MOD %02"PRIu8"][][--- MAC_CONFIG_REQ (SIB19 params eNB %"PRIu8") --->][MAC_UE][MOD %02"PRIu8"][]\n",
-                       ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
-             //process SIB19 to transfer SL-related parameters to PHY
-             rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
-                   (SystemInformationBlockType18_r12_t *)NULL,
-                   UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index],
-                   (SL_CommConfig_r12_t *)NULL,
-                   (SL_DiscConfig_r12_t *)NULL
-                   );
+          memcpy( UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index], &typeandinfo->choice.sib19_v1250, sizeof(SystemInformationBlockType19_r12_t) );
+          LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB19 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
+          dump_sib19( UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index] );
+          // adding here function to store necessary parameters to transfer to PHY layer
+          LOG_I( RRC, "[FRAME %05"PRIu32"][RRC_UE][MOD %02"PRIu8"][][--- MAC_CONFIG_REQ (SIB19 params eNB %"PRIu8") --->][MAC_UE][MOD %02"PRIu8"][]\n",
+                ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
+          //process SIB19 to transfer SL-related parameters to PHY
+          rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
+                (SystemInformationBlockType18_r12_t *)NULL,
+                UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index],
+                (SL_CommConfig_r12_t *)NULL,
+                (SL_DiscConfig_r12_t *)NULL
+          );
 
-          }
-          break;
-
+       }
+       break;
+#endif
     default:
       break;
     }

@@ -560,8 +560,10 @@ uint8_t do_SIB23(uint8_t Mod_id,
 #endif
                 )
 {
+
   struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *sib2_part,*sib3_part;
 
+#if defined(Rel14)
   //TTN - for D2D
   struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *sib18_part, *sib19_part, *sib21_part;
   SL_CommRxPoolList_r12_t *SL_CommRxPoolList; //for SIB18
@@ -570,7 +572,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
   struct SL_DiscResourcePool_r12 *SL_DiscResourcePool; //for SIB19 (discRxPool)
   SL_DiscRxPoolList_r12_t *SL_DiscRxPoolPSList; //for SIB19 (discRxPoolPS)
   struct SL_DiscResourcePool_r12 *SL_DiscResourcePoolPS; //for SIB19 (discRxPoolPS)
-
+#endif
 
 #if defined(Rel10) || defined(Rel14)
   struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *sib13_part;
@@ -589,11 +591,12 @@ uint8_t do_SIB23(uint8_t Mod_id,
   uint8_t                           MBMS_flag     = RC.rrc[Mod_id]->carrier[CC_id].MBMS_flag;
 #endif
 
-
+#if defined(Rel10) || defined(Rel14)
   //TTN - for D2D
   SystemInformationBlockType18_r12_t     **sib18        = &RC.rrc[Mod_id]->carrier[CC_id].sib18;
   SystemInformationBlockType19_r12_t     **sib19        = &RC.rrc[Mod_id]->carrier[CC_id].sib19;
   //SystemInformationBlockType21_r14_t     **sib21        = &RC.rrc[Mod_id]->carrier[CC_id].sib21;
+#endif
 
   if (bcch_message) {
     memset(bcch_message,0,sizeof(BCCH_DL_SCH_Message_t));
@@ -639,6 +642,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
 
 #endif
 
+#if defined(Rel10) || defined(Rel14)
   //TTN - for D2D
   sib18_part = CALLOC(1,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
   sib19_part = CALLOC(1,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
@@ -655,6 +659,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
   *sib19 = &sib19_part->choice.sib19_v1250;
   //*sib21 = &sib19_part->choice.sib21_v14x0;
 
+#endif
 
 
   // sib2
@@ -1050,11 +1055,12 @@ uint8_t do_SIB23(uint8_t Mod_id,
 
 #endif
 
+
+#if defined(Rel10) || defined(Rel14)
   //TTN - for D2D
   // SIB18
   // fill in all elements of SIB18 if present
   //later we can read the parameters from the configuration file as for eNB's parameters
-
 
   //commRxPool_r12 - should be filled with the parameters from the configuration file
   (*sib18)->commConfig_r12 = CALLOC (1, sizeof(*(*sib18)->commConfig_r12));
@@ -1062,6 +1068,8 @@ uint8_t do_SIB23(uint8_t Mod_id,
   memset(SL_CommRxPoolList,0,sizeof(*SL_CommRxPoolList));
 
   SL_CommResourcePool = CALLOC(1, sizeof(*SL_CommResourcePool));
+  memset(SL_CommResourcePool,0,sizeof(*SL_CommResourcePool));
+
   SL_CommResourcePool->sc_CP_Len_r12 = configuration->rxPool_sc_CP_Len[CC_id];
   SL_CommResourcePool->sc_Period_r12 = configuration->rxPool_sc_Period[CC_id];
   SL_CommResourcePool->data_CP_Len_r12  = configuration->rxPool_data_CP_Len[CC_id];
@@ -1070,6 +1078,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
   SL_CommResourcePool->sc_TF_ResourceConfig_r12.prb_Start_r12 = configuration->rxPool_ResourceConfig_prb_Start[CC_id];
   SL_CommResourcePool->sc_TF_ResourceConfig_r12.prb_End_r12 = configuration->rxPool_ResourceConfig_prb_End[CC_id];
   SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present = configuration->rxPool_ResourceConfig_offsetIndicator_present[CC_id];
+
   if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present == SL_OffsetIndicator_r12_PR_small_r12 ) {
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = configuration->rxPool_ResourceConfig_offsetIndicator_choice[CC_id] ;
   } else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present == SL_OffsetIndicator_r12_PR_large_r12 ){
@@ -1118,23 +1127,29 @@ uint8_t do_SIB23(uint8_t Mod_id,
   SL_CommResourcePool->dataHoppingConfig_r12.hoppingParameter_r12 = 0;
   SL_CommResourcePool->dataHoppingConfig_r12.numSubbands_r12  =  SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
   SL_CommResourcePool->dataHoppingConfig_r12.rb_Offset_r12 = 0;
+
   //SL_CommResourcePool->dataHoppingConfig_r12._asn_ctx = asn_ctx_default;
 
   //ue_SelectedResourceConfig_r12
   SL_CommResourcePool->ue_SelectedResourceConfig_r12 = CALLOC (1, sizeof (*SL_CommResourcePool->ue_SelectedResourceConfig_r12));
-  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_Num_r12 = 0;
-  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_Start_r12 = 0;
-  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_End_r12 = 0;
-  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.present = SL_OffsetIndicator_r12_PR_NOTHING;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_Num_r12 = 20;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_Start_r12 = 5;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_End_r12 = 44;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.present = SL_OffsetIndicator_r12_PR_small_r12;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = 0 ;
 
-  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.present = SubframeBitmapSL_r12_PR_NOTHING;
-  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size = 0;
-  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf  = NULL;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.present = SubframeBitmapSL_r12_PR_bs40_r12;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size = 5;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf  = CALLOC(1,5);
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.bits_unused = 0;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[0] = 0xF0;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[1] = 0xFF;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[2] = 0xFF;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[3] = 0xFF;
+  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[4] = 0xFF;
   //SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12._asn_ctx = asn_ctx_default;
 
-  SL_CommResourcePool->ue_SelectedResourceConfig_r12->trpt_Subset_r12 = CALLOC (1, sizeof(*SL_CommResourcePool->ue_SelectedResourceConfig_r12->trpt_Subset_r12));
+  //SL_CommResourcePool->ue_SelectedResourceConfig_r12->trpt_Subset_r12 = CALLOC (1, sizeof(*SL_CommResourcePool->ue_SelectedResourceConfig_r12->trpt_Subset_r12));
   //SL_CommResourcePool->ue_SelectedResourceConfig_r12->_asn_ctx = asn_ctx_default;
   //rxParametersNCell_r12
   SL_CommResourcePool->rxParametersNCell_r12 = CALLOC (1, sizeof (*SL_CommResourcePool->rxParametersNCell_r12));
@@ -1315,7 +1330,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
 
   (*sib19)->lateNonCriticalExtension = NULL;
   //end SIB19
-
+#endif
  
 
   bcch_message->message.present = BCCH_DL_SCH_MessageType_PR_c1;
@@ -1345,15 +1360,13 @@ uint8_t do_SIB23(uint8_t Mod_id,
     ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list,sib13_part);
   }
 
-#endif
-
   //Panos: Careful here! You have commented TTN's next two lines
   //TTN - for D2D
-  //ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib18_part);
+   ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib18_part);
   //ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib19_part);
   //ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib21_part);
 
-
+#endif
 
 #ifdef XER_PRINT
   xer_fprint(stdout, &asn_DEF_BCCH_DL_SCH_Message, (void*)bcch_message);

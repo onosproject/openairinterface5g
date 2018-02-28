@@ -299,7 +299,9 @@ void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_ifa
   printf("UE threads created \n");
 
   LOG_I(PHY,"Starting multicast link on %s\n",emul_iface);
+  if(nfapi_mode !=3)
   multicast_link_start(ue_stub_rx_handler,0,emul_iface);
+
 
 
 }
@@ -964,6 +966,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
       //stop_meas(&UE->timer_stats);
       //t_diff = get_time_meas_us(&UE->timer_stats);
       //LOG_E(MAC," Panos-D Absolute time: %f\n", t_diff);
+      if (nfapi_mode != 3)
       phy_procedures_UE_SL_TX(UE,proc);
       //#endif
     }
