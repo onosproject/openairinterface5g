@@ -163,7 +163,7 @@ extern int16_t dlsch_demod_shift;
 {"U" ,  		  	 CONFIG_HLP_UE, 	PARAMFLAG_BOOL,   i8ptr:&UE_flag,			defintval:0,			   TYPE_INT8,	  0},			   \
 {"m" ,  		  	 CONFIG_HLP_DLMCS,	0,		  uptr:&target_dl_mcs,  		defintval:0,			   TYPE_UINT,	  0},			   \
 {"t" ,  		  	 CONFIG_HLP_ULMCS,	0,		  uptr:&target_ul_mcs,  		defintval:0,			   TYPE_UINT,	  0},			   \
-{"W" ,  		  	 CONFIG_HLP_L2MONW,	0,		  strptr:(char **)&in_ip,		defstrval:"127.0.0.1",  	   TYPE_STRING,   sizeof(in_ip)},	   \
+{"W" ,  		  	 CONFIG_HLP_L2MONW,	0,		  strptr:&in_ip_xx,			defstrval:"127.0.0.1",  	   TYPE_STRING,   sizeof(in_ip)},	   \
 {"P" ,  		  	 CONFIG_HLP_L2MONP,	0,		  strptr:(char **)&in_path,		defstrval:"/tmp/oai_opt.pcap",     TYPE_STRING,   sizeof(in_path)},	   \
 {"V" ,  		  	 CONFIG_HLP_VCD,	PARAMFLAG_BOOL,   iptr:&ouput_vcd,			defintval:0,			   TYPE_INT,	  0},			   \
 {"q" ,  		  	 CONFIG_HLP_STMON,	PARAMFLAG_BOOL,   iptr:&opp_enabled,			defintval:0,			   TYPE_INT,	  0},			   \

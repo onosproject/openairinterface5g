@@ -486,6 +486,7 @@ check_ul_failure(module_id_t module_idP, int CC_id, int UE_id,
 	}
 
 	UE_list->UE_sched_ctrl[UE_id].ul_failure_timer++;
+	//LOG_I(MAC, "Panos-D: check_ul_failure(), ul_failure_timer: %d \n", UE_list->UE_sched_ctrl[UE_id].ul_failure_timer);
 	// check threshold
 	if (UE_list->UE_sched_ctrl[UE_id].ul_failure_timer > 20000) {
 	    // inform RRC of failure and clear timer

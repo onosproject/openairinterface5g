@@ -401,6 +401,7 @@ u16 attach_ue3(char *dcch_sdu_ue, char dcch_sdu_ue_len, char *dcch_sdu_eNB)
 
   // simulation reception of RRCConnectionSetupComplete
 
+  //LOG_D(RLC, "Panos-D: attach_ue3 before mac_rlc_data_ind 1 \n");
   mac_rlc_data_ind(0,134,1,
                    DCCH,
                    dcch_sdu_ue,
@@ -418,6 +419,7 @@ u16 attach_ue3(char *dcch_sdu_ue, char dcch_sdu_ue_len, char *dcch_sdu_eNB)
                              DCCH,
                              dcch_sdu_eNB);
 
+  //LOG_D(RLC, "Panos-D: attach_ue3 before mac_rlc_data_ind 2 \n");
   mac_rlc_data_ind(1,135,1,
                    DCCH,
                    dcch_sdu_eNB,

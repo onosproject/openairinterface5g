@@ -722,6 +722,7 @@ void rrc_eNB_emulation_notify_ue_module_id(
   const uint8_t     cell_identity_byte2P,
   const uint8_t     cell_identity_byte3P)
 {
+	LOG_I(RRC, "Panos-D: rrc_eNB_emulation_notify_ue_module_id 1 \n");
   module_id_t                         enb_module_id;
   struct rrc_eNB_ue_context_s*        ue_context_p = NULL;
   int                                 CC_id;
@@ -732,21 +733,21 @@ void rrc_eNB_emulation_notify_ue_module_id(
       return;
     }
     for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
-//<<<<<<< HEAD
+/*<<<<<<< HEAD
       if (RC.rrc[enb_module_id]->carrier[CC_id].sib1 != NULL) {
         if (
           (RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[0] == cell_identity_byte0P) &&
           (RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[1] == cell_identity_byte1P) &&
           (RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[2] == cell_identity_byte2P) &&
           (RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[3] == cell_identity_byte3P)
-/*=======
+/*=======*/
       if (&RC.rrc[enb_module_id]->carrier[CC_id].sib1 != NULL) {
         if (
           (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[0] == cell_identity_byte0P) &&
           (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[1] == cell_identity_byte1P) &&
           (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[2] == cell_identity_byte2P) &&
           (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[3] == cell_identity_byte3P)
->>>>>>> main/develop*/
+//>>>>>>> main/develop
         ) {
           ue_context_p = rrc_eNB_get_ue_context(
                            RC.rrc[enb_module_id],
@@ -4855,8 +4856,8 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
     for (i = 0; i < DRB_configList->list.count; i++) {  // num max DRB (11-3-8)
       if (DRB_configList->list.array[i]) {
 	drb_id = (int)DRB_configList->list.array[i]->drb_Identity;
-        LOG_I(RRC,
-              "[eNB %d] Frame  %d : Logical Channel UL-DCCH, Received RRCConnectionReconfigurationComplete from UE rnti %x, reconfiguring DRB %d/LCID %d\n",
+        LOG_E(RRC,
+              "[eNB %d] Frame  %d : Logical Channel UL-DCCH, Received RRCConnectionReconfigurationComplete from UE rnti %x, reconfiguring DRB %d/LCID %d\n \n \n",
               ctxt_pP->module_id,
               ctxt_pP->frame,
               ctxt_pP->rnti,
@@ -5667,7 +5668,7 @@ rrc_eNB_decode_ccch(
             }
 #endif
             if ((ue_context_p = rrc_eNB_ue_context_random_exist(ctxt_pP, random_value))) {
-              LOG_W(RRC, "new UE rnti %x (coming with random value) is already there as UE %x, removing %x from MAC/PHY\n",
+              LOG_I(RRC, "new UE rnti %x (coming with random value) is already there as UE %x, removing %x from MAC/PHY\n",
                     ctxt_pP->rnti, ue_context_p->ue_context.rnti, ue_context_p->ue_context.rnti);
               ue_context_p->ue_context.ul_failure_timer = 20000;
             }
@@ -7037,6 +7038,7 @@ rrc_rx_tx(
       }
       if (ue_context_p->ue_context.ul_failure_timer>0) {
 	ue_context_p->ue_context.ul_failure_timer++;
+	LOG_I(RRC, "Panos-D: rrc_rx_tx(), ul_failure_timer: %d \n", ue_context_p->ue_context.ul_failure_timer);
 	if (ue_context_p->ue_context.ul_failure_timer >= 20000) {
 	  // remove UE after 20 seconds after MAC has indicated UL failure
 	  LOG_I(RRC,"Removing UE %x instance\n",ue_context_p->ue_context.rnti);
@@ -7046,9 +7048,10 @@ rrc_rx_tx(
       }
       if (ue_context_p->ue_context.ue_release_timer>0) {
 	ue_context_p->ue_context.ue_release_timer++;
+	LOG_I(RRC, "Panos-D: rrc_rx_tx(), release timer: %d \n", ue_context_p->ue_context.ue_release_timer);
 	if (ue_context_p->ue_context.ue_release_timer >= 
 	    ue_context_p->ue_context.ue_release_timer_thres) {
-	  LOG_I(RRC,"Removing UE %x instance\n",ue_context_p->ue_context.rnti);
+	  LOG_I(RRC,"Removing UE %x instance, Release timer: %d, Release timer thres.: %d \n",ue_context_p->ue_context.rnti, ue_context_p->ue_context.ue_release_timer, ue_context_p->ue_context.ue_release_timer_thres);
 	  ue_to_be_removed = ue_context_p;
 	  break;
 	}

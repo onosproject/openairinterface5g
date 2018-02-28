@@ -300,7 +300,7 @@ void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_ifa
 
   LOG_I(PHY,"Starting multicast link on %s\n",emul_iface);
   if(nfapi_mode !=3)
-  multicast_link_start(ue_stub_rx_handler,0,emul_iface);
+     multicast_link_start(ue_stub_rx_handler,0,emul_iface);
 
 
 
@@ -868,7 +868,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
     while (phy_stub_ticking->ticking_var < 0) {
       // most of the time, the thread is waiting here
       //pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx )
-      LOG_D(MAC,"Waiting for ticking_var\n",phy_stub_ticking->ticking_var);
+      LOG_D(MAC,"Waiting for ticking_var\n");
       pthread_cond_wait( &phy_stub_ticking->cond_ticking, &phy_stub_ticking->mutex_ticking);
     }
     phy_stub_ticking->ticking_var--;
@@ -966,12 +966,12 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
       //stop_meas(&UE->timer_stats);
       //t_diff = get_time_meas_us(&UE->timer_stats);
       //LOG_E(MAC," Panos-D Absolute time: %f\n", t_diff);
+
       if (nfapi_mode != 3)
-      phy_procedures_UE_SL_TX(UE,proc);
+        phy_procedures_UE_SL_TX(UE,proc);
+
       //#endif
     }
-
-//>>>>>>> Stashed changes
 
 #if UE_TIMING_TRACE
     start_meas(&UE->generic_stat);
@@ -2021,7 +2021,7 @@ int init_timer_thread(void) {
 	PHY_VARS_UE *UE=PHY_vars_UE_g[0][0];
   phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));
   pthread_mutex_init(&UE->timer_mutex,NULL);
-  pthread_mutex_init(&UE->timer_cond,NULL);
+  pthread_cond_init(&UE->timer_cond,NULL);
   UE->instance_cnt_timer = -1;
   pthread_mutex_init(&phy_stub_ticking->mutex_ticking,NULL);
   pthread_cond_init(&phy_stub_ticking->cond_ticking,NULL);
