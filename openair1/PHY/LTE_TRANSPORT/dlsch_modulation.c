@@ -632,13 +632,16 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
 
   int16_t gain_lin_QPSK;//,gain_lin_16QAM1,gain_lin_16QAM2;
   int16_t re_off=re_offset;
-
+  
   uint8_t first_re,last_re;
   int32_t tmp_sample1,tmp_sample2;
   int16_t tmp_amp=amp;
   int s=1;
   int mprime2 = mprime,ind,ind_dword,ind_qpsk_symb,p,w;
-  int Wbar_NCP[8][4] = {{1,1,1,1},{1,-1,1,-1},{1,1,1,1},{1,-1,1,-1},{1,1,-1,-1},{-1,-1,1,1},{1,-1,-1,1},{-1,1,1,-1}} ;
+  /* The sequence w_bar for normal cyclic prefix */
+  int Wbar_NCP_0[8][4] = {{1,1,1,1},{1,-1,1,-1},{1,1,1,1},{1,-1,1,-1},{1,1,-1,-1},{-1,-1,1,1},{1,-1,-1,1},{-1,1,1,-1}} ;
+  /* The sequence w_bar for extended cyclic prefix */
+  int Wbar_NCP_1[2][2] = {{1,1},{-1,1}};  
   gain_lin_QPSK = (int16_t)((amp*ONE_OVER_SQRT2_Q15)>>15);
 
   int32_t qpsk[4],nqpsk[4],*qpsk_p;
@@ -716,7 +719,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
 
       //check that RE is not from Cell-specific RS
 
-    if (is_not_pilot(pilots,re,frame_parms->nushift,use2ndpilots)==1) {
+    	if (is_not_pilot(pilots,re,frame_parms->nushift,use2ndpilots)==1) {
       //printf("re %d (jj %d)\n",re,*jj);
 
 
@@ -1729,48 +1732,133 @@ int allocate_REs_in_RB(PHY_VARS_eNB *phy_vars_eNB,
           }
 
         }
-        else {
+	        else {/* The following process is called 4 times (lprime=0,1,2,3), N_RB_DL times per lprime, 3 times per rb (re=1,6,11), 2 times per re (p=7,8) */
           for (p=7; p<9; p++) {
-	    if (p==first_layer0 || p==first_layer1) {
-	      if (frame_parms->Ncp==0) { //normal CP
-		ind = 3*lprime*frame_parms->N_RB_DL+3*rb+mprime2;
-		ind_dword = ind>>4 ;
-		ind_qpsk_symb = ind&0xf ;
-		
-		if (((mprime2+rb)%2)==0) {
-		  w = Wbar_NCP[p-7][lprime] ;
-		} else {
-		  w = Wbar_NCP[p-7][3-lprime] ;
-		}
-	      } else { //extended CP
-		// this is very likely wrong as the Wbar table is different for extended CP
-		ind = 4*lprime*dlsch0_harq->nb_rb+4*rb+mprime2 ;
-		ind_dword = ind>>4 ;
-		ind_qpsk_symb = ind&0xf ;
-		int l = lprime%2 ;
-		
-		if ((mprime2%2)==0) {
-		  w = Wbar_NCP[p-7][l] ;
-		} else {
-		  w = Wbar_NCP[p-7][1-l] ;
-		}
-	      }
-	      qpsk_p = (w==1) ? qpsk : nqpsk;
+	   	if (p==first_layer0 || p==first_layer1) {
 	      
-	      /* pointer to the frequency domain Tx signal */
-	      txdataF[p][tti_offset] = qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3] ;
-	    }
-          }
-	  mprime2++ ;
-        }
+		/*if (p==7 && re<2 && lprime==0 && mprime2==0 && rb==0) {
+			int cnt=0;
+			for (rb=0; rb<100; rb++) {
+				for (mprime2=0; mprime2<3; mprime2++) {
+					ind = 3*3*frame_parms->N_RB_DL+3*rb+mprime2;
+					ind_dword = ind>>4;
+					ind_qpsk_symb = ind&0xf;
+					printf("cnt=%d, rb=%d, mprime2=%d, dword=%d, qpsk_symb=%d\n", cnt,rb,mprime2,ind_dword,ind_qpsk_symb);
+					//printf("cnt=%d, rb=%d, mprime2=%d, ind_dword=%d, ind_qpsk=%d, %d  %d\n", cnt,rb,mprime2,ind_dword,ind_qpsk_symb,((int16_t *)&qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3])[0],((int16_t *)&qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3])[1]);
+					cnt++;
+				}
+			}
+		}*/
+
+		/*if (p==7 && re<2 && lprime==0 && mprime2==0 && rb==0) {
+		int cnt=0;
+		qpsk_p = qpsk;
+		for (ind_dword=0; ind_dword<100; ind_dword++){
+			for (ind_qpsk_symb=0; ind_qpsk_symb<16; ind_qpsk_symb++) {
+				printf("cnt=%d, ind_dword=%d, ind_qpsk=%d, %d  %d\n", cnt,ind_dword,ind_qpsk_symb,((int16_t *)&qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3])[0],((int16_t *)&qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3])[1]);
+				cnt++;
+			}
+		}
+		}*/		
+
+		/* Here rb has to be 0 to N_RB_DL otherwise w does not get the right values in the case of p8 */
+		if (p==8) {
+			if (lprime==1) {
+				if (frame_parms->N_RB_DL==25) {
+					rb = rb-85;
+				} else if (frame_parms->N_RB_DL==50) {
+					rb = rb-60;
+				} else {
+					rb = rb-10;
+				}
+			} else if (lprime==2) {
+				if (frame_parms->N_RB_DL==25) {
+					rb = rb-170;
+				} else if (frame_parms->N_RB_DL==50) {
+					rb = rb-120;
+				} else {
+					rb = rb-20;
+				}
+			} else if (lprime==3) {
+				if (frame_parms->N_RB_DL==25) {
+					rb = rb-255;
+				} else if (frame_parms->N_RB_DL==50) {
+					rb = rb-180;
+				} else {
+					rb = rb-30;
+				}
+			}
+		}
+
+		if (frame_parms->Ncp==0) { //normal CP
+			if (((mprime2+rb)%2)==0) {
+				w = Wbar_NCP_0[p-7][lprime];
+			} else {
+				w = Wbar_NCP_0[p-7][3-lprime];
+			}
+		} else { //extended CP
+			if ((mprime2%2)==0) {
+		  		w = Wbar_NCP_1[p-7][lprime%2] ;
+			} else {
+		  		w = Wbar_NCP_1[p-7][1-(lprime%2)] ;
+			}
+		}		
+
+		/* Here we have to assign specific values to rb in order to produce the same ind values as the Matlab  */
+		if ((re<=2 && p==7) ||(p==8 && lprime>0)) {
+			if (lprime==1) {
+				if (frame_parms->N_RB_DL==25) {
+					rb = rb+85;
+				} else if (frame_parms->N_RB_DL==50) {
+					rb = rb+60;
+				} else {
+					rb = rb+10;
+				}
+			} else if (lprime==2) {
+				if (frame_parms->N_RB_DL==25) {
+					rb = rb+170;
+				} else if (frame_parms->N_RB_DL==50) {
+					rb = rb+120;
+				} else {
+					rb = rb+20;
+				}
+			} else if (lprime==3) {
+				if (frame_parms->N_RB_DL==25) {
+					rb = rb+255;
+				} else if (frame_parms->N_RB_DL==50) {
+					rb = rb+180;
+				} else {
+					rb = rb+30;
+				}
+			}
+		}
+
+		if (frame_parms->Ncp==0) { //normal CP
+			ind = 3*lprime*frame_parms->N_RB_DL+3*rb+mprime2;
+		} else { //extended CP 
+			ind = 4*lprime*frame_parms->N_RB_DL+4*rb+mprime2;
+		}
+		ind_dword = ind>>4 ;
+		ind_qpsk_symb = ind&0xf ;
+	qpsk_p = (w==1) ? qpsk : nqpsk;
+	txdataF[p][tti_offset] = qpsk_p[(phy_vars_eNB->lte_gold_uespec_table[nscid][Ns][0][ind_dword]>>(2*ind_qpsk_symb))&3];
+	
+	if (lprime==2 && p==7) {
+		printf("re=%d, mprime2=%d, p=%d, w=%d, rb=%d, txdataF = {%d %d}\n\n", re,mprime2,p,w,rb,((int16_t *)&txdataF[p][tti_offset])[0],((int16_t *)&txdataF[p][tti_offset])[1]);
+	}
+	      	}//end if p=first_layer
+		}// end for p=7
+	  mprime2++ ; // mprime2 is the counter of UE-spec REs within an OFDM symbol
+		
+      	}//end for else 
       } else if (mimo_mode>=TM9_10) {
         printf("allocate_REs_in_RB() [dlsch.c] : ERROR, unknown mimo_mode %d\n",mimo_mode);
         return(-1);
       }
-    }
-  }
+    }// end for is_not_pilot()
+ }// end for re=first_re
   return(0);
-}
+}// end for allocate_REs_in_RB
 
 
 int allocate_REs_in_RB_MCH(int32_t **txdataF,
@@ -2367,9 +2455,9 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
         else
           lprime=-1;
       } else {
-        if (l==13)
+        if (l==11)
           lprime=3;
-        else if (l==12)
+        else if (l==10)
           lprime=2;
         else if (l==5)
           lprime=1;
