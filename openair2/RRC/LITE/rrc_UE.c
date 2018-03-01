@@ -5307,8 +5307,7 @@ rrc_ue_process_sidelink_radioResourceConfig(
          //do not consider commTXPoolExceptional for the moment
          //configure PHY/MAC to receive SL communication by using the RPs indicated by commRxPool
          //sib18->commConfig_r12->commRxPool_r12
-         //we can configure a default SLRB to receive one-to-many communication [should be verified]
-
+         //TODO
 
          if (sib18->commConfig_r12->commTxPoolNormalCommon_r12 !=NULL) { //commTxPoolNormalCommon - to transmit SL communication in RRC_IDLE
             //maybe we don't consider this case for the moment since UE will immediately establish a RRC connection after receiving SIB messages

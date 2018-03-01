@@ -1059,10 +1059,8 @@ uint8_t do_SIB23(uint8_t Mod_id,
 #if defined(Rel10) || defined(Rel14)
   //TTN - for D2D
   // SIB18
-  // fill in all elements of SIB18 if present
-  //later we can read the parameters from the configuration file as for eNB's parameters
 
-  //commRxPool_r12 - should be filled with the parameters from the configuration file
+  //commRxPool_r12
   (*sib18)->commConfig_r12 = CALLOC (1, sizeof(*(*sib18)->commConfig_r12));
   SL_CommRxPoolList= &(*sib18)->commConfig_r12->commRxPool_r12;
   memset(SL_CommRxPoolList,0,sizeof(*SL_CommRxPoolList));
@@ -1128,8 +1126,6 @@ uint8_t do_SIB23(uint8_t Mod_id,
   SL_CommResourcePool->dataHoppingConfig_r12.numSubbands_r12  =  SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
   SL_CommResourcePool->dataHoppingConfig_r12.rb_Offset_r12 = 0;
 
-  //SL_CommResourcePool->dataHoppingConfig_r12._asn_ctx = asn_ctx_default;
-
   //ue_SelectedResourceConfig_r12
   SL_CommResourcePool->ue_SelectedResourceConfig_r12 = CALLOC (1, sizeof (*SL_CommResourcePool->ue_SelectedResourceConfig_r12));
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_Num_r12 = 20;
@@ -1137,7 +1133,6 @@ uint8_t do_SIB23(uint8_t Mod_id,
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_End_r12 = 44;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.present = SL_OffsetIndicator_r12_PR_small_r12;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = 0 ;
-
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.present = SubframeBitmapSL_r12_PR_bs40_r12;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size = 5;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf  = CALLOC(1,5);
@@ -1147,56 +1142,39 @@ uint8_t do_SIB23(uint8_t Mod_id,
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[2] = 0xFF;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[3] = 0xFF;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[4] = 0xFF;
-  //SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12._asn_ctx = asn_ctx_default;
-
   //SL_CommResourcePool->ue_SelectedResourceConfig_r12->trpt_Subset_r12 = CALLOC (1, sizeof(*SL_CommResourcePool->ue_SelectedResourceConfig_r12->trpt_Subset_r12));
-  //SL_CommResourcePool->ue_SelectedResourceConfig_r12->_asn_ctx = asn_ctx_default;
   //rxParametersNCell_r12
   SL_CommResourcePool->rxParametersNCell_r12 = CALLOC (1, sizeof (*SL_CommResourcePool->rxParametersNCell_r12));
   SL_CommResourcePool->rxParametersNCell_r12->tdd_Config_r12 = CALLOC (1, sizeof (*SL_CommResourcePool->rxParametersNCell_r12->tdd_Config_r12));
   SL_CommResourcePool->rxParametersNCell_r12->tdd_Config_r12->subframeAssignment = 0 ;
   SL_CommResourcePool->rxParametersNCell_r12->tdd_Config_r12->specialSubframePatterns = 0;
-  //SL_CommResourcePool->rxParametersNCell_r12->tdd_Config_r12->_asn_ctx = asn_ctx_default;
-
   SL_CommResourcePool->rxParametersNCell_r12->syncConfigIndex_r12 = 0;
-  //SL_CommResourcePool->rxParametersNCell_r12->_asn_ctx = asn_ctx_default;
   //txParameters_r12
   SL_CommResourcePool->txParameters_r12 = CALLOC (1, sizeof (*SL_CommResourcePool->txParameters_r12));
   SL_CommResourcePool->txParameters_r12->sc_TxParameters_r12.alpha_r12 = Alpha_r12_al0;
   SL_CommResourcePool->txParameters_r12->sc_TxParameters_r12.p0_r12 = 0;
-  //SL_CommResourcePool->txParameters_r12->sc_TxParameters_r12._asn_ctx = asn_ctx_default;
 
   SL_CommResourcePool->ext1 = NULL ;
-
-  //Context for parsing across buffer boundaries
-  //SL_CommResourcePool->_asn_ctx = asn_ctx_default;
   //end SL_CommResourcePool
 
   //add SL_CommResourcePool to SL_CommRxPoolList
   ASN_SEQUENCE_ADD(&SL_CommRxPoolList->list,SL_CommResourcePool);
-
-  //SL_CommRxPoolList->_asn_ctx = asn_ctx_default;
   //end commRxPool_r12
 
   //TODO:  commTxPoolNormalCommon_r12, similar to commRxPool_r12
   //TODO: commTxPoolExceptional_r12
   //TODO: commSyncConfig_r12
-
-  //(*sib18)->commConfig_r12->_asn_ctx = asn_ctx_default;
-
   // may add commTxResourceUC-ReqAllowed with Ext1
   (*sib18)->ext1 = NULL;
   (*sib18)->lateNonCriticalExtension = NULL;
-  //(*sib18)->_asn_ctx = asn_ctx_default;
   // end SIB18
 
 
   // SIB19
   // fill in all elements of SIB19 if present
 
-  //discConfig_r12 - should be filled with the parameters from the configuration file
+  //discConfig_r12
   (*sib19)->discConfig_r12 = CALLOC (1, sizeof(*(*sib19)->discConfig_r12));
-
   SL_DiscRxPoolList = &(*sib19)->discConfig_r12->discRxPool_r12;
   memset(SL_DiscRxPoolList,0,sizeof(*SL_DiscRxPoolList));
   //fill SL_DiscResourcePool
@@ -1206,25 +1184,21 @@ uint8_t do_SIB23(uint8_t Mod_id,
   SL_DiscResourcePool->discPeriod_r12 = configuration->discRxPool_discPeriod[CC_id];
   //sc_TF_ResourceConfig_r12
   SL_DiscResourcePool->numRetx_r12 = configuration->discRxPool_numRetx[CC_id];
-  SL_DiscResourcePool->numRepetition_r12 =  configuration->discRxPool_numRepetition[CC_id];
-
+  SL_DiscResourcePool->numRepetition_r12 = configuration->discRxPool_numRepetition[CC_id];
   SL_DiscResourcePool->tf_ResourceConfig_r12.prb_Num_r12 = configuration->discRxPool_ResourceConfig_prb_Num[CC_id];
   SL_DiscResourcePool->tf_ResourceConfig_r12.prb_Start_r12 = configuration->discRxPool_ResourceConfig_prb_Start[CC_id];
   SL_DiscResourcePool->tf_ResourceConfig_r12.prb_End_r12 = configuration->discRxPool_ResourceConfig_prb_End[CC_id];
-
   SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.present = configuration->discRxPool_ResourceConfig_offsetIndicator_present[CC_id];
   if (SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.present == SL_OffsetIndicator_r12_PR_small_r12 ) {
      SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = configuration->discRxPool_ResourceConfig_offsetIndicator_choice[CC_id] ;
   } else if (SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.present == SL_OffsetIndicator_r12_PR_large_r12 ){
      SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.choice.large_r12 = configuration->discRxPool_ResourceConfig_offsetIndicator_choice[CC_id] ;
   }
-
-
   SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present = configuration->discRxPool_ResourceConfig_subframeBitmap_present[CC_id];
   if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs4_r12){
      //for BS4
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
-     SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf  = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
+     SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf  =  configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.bits_unused = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
   } else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs8_r12){
      //for BS8
@@ -1261,6 +1235,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
   //add SL_DiscResourcePool to SL_DiscRxPoolList
   ASN_SEQUENCE_ADD(&SL_DiscRxPoolList->list,SL_DiscResourcePool);
 
+/*
   //for DiscRxPoolPS
   (*sib19)->ext1 = CALLOC (1, sizeof(*(*sib19)->ext1));
   (*sib19)->ext1->discConfigPS_13 = CALLOC (1, sizeof(*((*sib19)->ext1->discConfigPS_13)));
@@ -1327,6 +1302,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
 
   //add SL_DiscResourcePool to SL_DiscRxPoolList
   ASN_SEQUENCE_ADD(&SL_DiscRxPoolPSList->list,SL_DiscResourcePoolPS);
+*/
 
   (*sib19)->lateNonCriticalExtension = NULL;
   //end SIB19
@@ -1362,8 +1338,8 @@ uint8_t do_SIB23(uint8_t Mod_id,
 
   //Panos: Careful here! You have commented TTN's next two lines
   //TTN - for D2D
-   ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib18_part);
-  //ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib19_part);
+  ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib18_part);
+  ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib19_part);
   //ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib21_part);
 
 #endif
