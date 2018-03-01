@@ -158,13 +158,14 @@ int dlsch_modulation_NB_IoT(int32_t 				**txdataF,
 		} else {
 			NB_IoT_start = 1 + (bandwidth_even_odd*6) + 12*(RB_IoT_ID % (int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		}
-		symbol_offset = frame_parms->ofdm_symbol_size*l + NB_IoT_start;  						// symbol_offset = 512 * L + NB_IOT_RB start
+		symbol_offset = (14*4*frame_parms->ofdm_symbol_size) + frame_parms->ofdm_symbol_size*l + NB_IoT_start;  						// symbol_offset = 512 * L + NB_IOT_RB start
+
 
 		allocate_REs_in_RB_NB_IoT(frame_parms,
 								  txdataF,
 								  &jj,
 								  symbol_offset,
-								  &dlsch0->harq_process_sib1.s_e[G*npdsch_data_subframe],
+								  &dlsch0->s_e[G*npdsch_data_subframe],
 								  pilots,
 								  amp,
 								  id_offset,

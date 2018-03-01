@@ -112,6 +112,11 @@ void npbch_scrambling(LTE_DL_FRAME_PARMS  *frame_parms,
                       uint8_t                *npbch_e,
                       uint32_t               length);
 
+void dlsch_sib1_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
+                                  NB_IoT_eNB_NDLSCH_t    *dlsch,
+                                  int                    tot_bits,                
+                                  uint8_t                Nf,        
+                                  uint8_t                Ns); 
 /*
 int scrambling_npbch_REs_rel_14(LTE_DL_FRAME_PARMS      *frame_parms,
                                 int32_t                 **txdataF,

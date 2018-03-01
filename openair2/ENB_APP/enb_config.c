@@ -551,7 +551,7 @@ static int enb_check_band_frequencies(char* lib_config_file_name_pP,
       if (band == eutra_bands[band_index].band) {
         uint32_t uplink_frequency = downlink_frequency + uplink_frequency_offset;
 
-        AssertError (eutra_bands[band_index].dl_min < downlink_frequency, errors ++,
+   /*     AssertError (eutra_bands[band_index].dl_min < downlink_frequency, errors ++,
                      "Failed to parse eNB configuration file %s, enb %d downlink frequency %u too low (%u) for band %d!",
                      lib_config_file_name_pP, enb_properties_index, downlink_frequency, eutra_bands[band_index].dl_min, band);
         AssertError (downlink_frequency < eutra_bands[band_index].dl_max, errors ++,
@@ -563,7 +563,8 @@ static int enb_check_band_frequencies(char* lib_config_file_name_pP,
                      lib_config_file_name_pP, enb_properties_index, uplink_frequency, eutra_bands[band_index].ul_min, band);
         AssertError (uplink_frequency < eutra_bands[band_index].ul_max, errors ++,
                      "Failed to parse eNB configuration file %s, enb %d uplink frequency %u too high (%u) for band %d!",
-                     lib_config_file_name_pP, enb_properties_index, uplink_frequency, eutra_bands[band_index].ul_max, band);
+                     lib_config_file_name_pP, enb_properties_index, uplink_frequency, eutra_bands[band_index].ul_max, band); 
+  */
 
         AssertError (eutra_bands[band_index].frame_type == frame_type, errors ++,
                      "Failed to parse eNB configuration file %s, enb %d invalid frame type (%d/%d) for band %d!",

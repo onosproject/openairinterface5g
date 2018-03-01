@@ -36,9 +36,9 @@ void dlsch_sib1_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
 {
   int         i,j,k=0;
   uint32_t    x1,x2, s=0;
-  uint8_t     *e = dlsch->harq_process_sib1.e; 															//uint8_t *e=dlsch->harq_processes[dlsch->current_harq_pid]->e;
+  uint8_t     *e = dlsch->e; 															//uint8_t *e=dlsch->harq_processes[dlsch->current_harq_pid]->e;
 
-  x2 = (dlsch->harq_process_sib1.si_rnti<<15) + (frame_parms->Nid_cell + 1) * ( (Nf % 61) + 1 ) ;
+  x2 = (dlsch->si_rnti<<15) + (frame_parms->Nid_cell + 1) * ( (Nf % 61) + 1 ) ;
 
   // for NPDSCH not carriying SIBs
   //x2 = (dlsch->harq_process_sib1.rnti<<14) + ((Nf%2)<<13) + ((Ns>>1)<<9) + frame_parms->Nid_cell;   //this is c_init in 36.211 Sec 10.2.3.1
@@ -49,7 +49,7 @@ void dlsch_sib1_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
 
     for (j=0; j<32; j++,k++) {
 
-      dlsch->harq_process_sib1.s_e[k] = (e[k]&1) ^ ((s>>j)&1);
+      dlsch->s_e[k] = (e[k]&1) ^ ((s>>j)&1);
 
     }
     s = lte_gold_generic_NB_IoT(&x1, &x2, 0);

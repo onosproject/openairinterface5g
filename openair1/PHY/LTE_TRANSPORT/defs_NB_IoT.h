@@ -144,7 +144,7 @@ typedef enum {
 
 } SCH_status_NB_IoT_t;
 
-
+/*
 typedef struct {
   /// NB-IoT
   /// Allocated RNTI (0 means DLSCH_t is not currently used)
@@ -164,15 +164,15 @@ typedef struct {
   /// modulation always QPSK Qm = 2 
   uint8_t               modulation;
   /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
-  uint8_t               e[MAX_NUM_CHANNEL_BITS_NB_IoT];
+  uint8_t               e[1888];
   /// data after scrambling
-  uint8_t               s_e[MAX_NUM_CHANNEL_BITS_NB_IoT];
+  uint8_t               s_e[1888];
   //length of the table e
   uint16_t              length_e;                // new parameter
   /// Tail-biting convolutional coding outputs
-  uint8_t               d[96+(3*(24+MAX_DL_SIZE_BITS_NB_IoT))];  // new parameter
+  uint8_t               d[96+(3*(24+152))];  // new parameter
   /// Sub-block interleaver outputs
-  uint8_t               w[3*3*(MAX_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
+  uint8_t               w[3*3*(152+24)];      // new parameter
 
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   //SCH_status_t status;
@@ -197,7 +197,8 @@ typedef struct {
   //this index will be used mainly for SI message buffer
    uint8_t               pdu_buffer_index;
 
-} NB_IoT_DL_eNB_SIB1_t;
+} NB_IoT_DL_eNB_SIB1_t; 
+*/
 
 typedef struct {
   /// NB-IoT
@@ -608,7 +609,36 @@ typedef struct {
   /// The only HARQ process for the DLSCH
   NB_IoT_DL_eNB_HARQ_t    *harq_process;
 
-  NB_IoT_DL_eNB_SIB1_t    harq_process_sib1;
+ // NB_IoT_DL_eNB_SIB1_t    harq_process_sib1;
+
+//////////////////////////////////////////////////////////////////////
+ /// Allocated RNTI (0 means DLSCH_t is not currently used)
+  uint16_t              si_rnti;   ///(=0xfff4)
+  SCH_status_NB_IoT_t   status;
+  /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
+  uint8_t               e[1888];
+  /// data after scrambling
+  uint8_t               s_e[1888];
+  //length of the table e
+  uint16_t              length_e;                // new parameter
+  /// Tail-biting convolutional coding outputs
+  uint8_t               d[96+(3*(24+152))];  // new parameter
+  /// Sub-block interleaver outputs
+  uint8_t               w[3*3*(152+24)];      // new parameter
+  /// Status Flag indicating for this DLSCH (idle,active,disabled)
+  //SCH_status_t status;
+  /// Transport block size
+  uint32_t              TBS;
+  /// The payload + CRC size in bits, "B" from 36-212
+  uint32_t              B;
+  /// Pointer to the payload
+  uint8_t               *b;
+  ///pdu of the ndlsch message
+  uint8_t               *pdu;
+  //this index will be used mainly for SI message buffer
+   uint8_t               pdu_buffer_index;
+////////////////////////////////////////////////////////////////////////////
+
   /// Number of soft channel bits
   uint32_t                G;
   /// Maximum number of HARQ rounds

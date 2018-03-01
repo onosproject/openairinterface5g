@@ -130,6 +130,11 @@ uint8_t *get_NB_IoT_SIB1(void)
   return eNB_rrc_inst_NB_IoT->carrier[0].SIB1_NB_IoT;
 }
 
+long *get_NB_IoT_SIB1_eutracontrolregionsize(void)
+{
+  return eNB_rrc_inst_NB_IoT->carrier[0].sib1_NB_IoT->eutraControlRegionSize_r13;
+}
+
 void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_t *carrier, RrcConfigurationReq *configuration, uint32_t frame, uint32_t hyper_frame)
 {
 

@@ -41,6 +41,8 @@ uint8_t *get_NB_IoT_SIB1(void);
 
 uint8_t *get_NB_IoT_MIB(void);
 
+long *get_NB_IoT_SIB1_eutracontrolregionsize(void);
+
 void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_t *carrier, RrcConfigurationReq *configuration, uint32_t frame, uint32_t hyper_frame);
 
 /*------------------------common_nb_iot.c----------------------------------------*/

@@ -135,7 +135,7 @@ uint8_t do_MIB_NB_IoT(
   mib_NB_IoT->message.spare.bits_unused = 5;
 
   //decide how to set it
-  mib_NB_IoT->message.schedulingInfoSIB1_r13 =11; //see TS 36.213-->tables 16.4.1.3-3 ecc...
+  mib_NB_IoT->message.schedulingInfoSIB1_r13 =10; //see TS 36.213-->tables 16.4.1.3-3 ecc...  // to make 8 repetitions
   mib_NB_IoT->message.systemInfoValueTag_r13= 0;
   mib_NB_IoT->message.ab_Enabled_r13 = 0;
 

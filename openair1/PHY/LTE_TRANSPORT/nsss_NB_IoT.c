@@ -47,9 +47,9 @@ int generate_sss_NB_IoT(int32_t 				**txdataF,
 						unsigned short 			frame_number, 	// new attribute (Get value from higher layer), it does not exist for LTE
 						unsigned short 			RB_IoT_ID)		// new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
 {
-	uint8_t  	    aa,Nid_NB_IoT,Nid2,f,q,s,c,u;
+	uint8_t  	    aa,Nid2,f,q,s,c,u;
 	int16_t 		*d;
-	uint16_t 		n_f;
+	uint16_t 		n_f,Nid_NB_IoT;
 	unsigned short  a;
 	uint16_t 		slot_id;  						// slot_id = 17 in NB_IoT
 	unsigned short  bandwidth_even_odd;
