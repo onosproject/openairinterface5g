@@ -93,21 +93,42 @@ int dlsch_encoding_NB_IoT(unsigned char      			*a,
 	//unsigned char harq_pid = dlsch->current_harq_pid;  			// to check during implementation if harq_pid is required in the NB_IoT_eNB_DLSCH_t structure  in defs_NB_IoT.h
 	unsigned int  A;
 	uint8_t 	  RCC;
-	uint8_t       npbch_a[21];
+	//uint8_t       npbch_a[21];
 
-	bzero(npbch_a,21); 
+	//bzero(npbch_a,21); 
+
+	uint8_t       npbch_a[85];
+    uint8_t       npbch_a_crc[88];
+	bzero(npbch_a,85); 
+	bzero(npbch_a_crc,88);
 
 	//A 							 = dlsch->harq_process_sib1.TBS;  				// 680
-	A 							 = 19*8;  										// 680
+	//A 							 = 19*8;  										// 680
+	A 							 = 680;
 	dlsch->length_e = G*Nsf;									// G*Nsf (number_of_subframes) = total number of bits to transmit G=236
 
 	int32_t numbits = A+24;
 
-		crc = crc24a_NB_IoT(a,A)>>8;						// CRC calculation (24 bits CRC)
+	  for (int i=0; i<19; i++) 												
+			{	
+				npbch_a[i] = a[i];    
+			}
+
+		//crc = crc24a_NB_IoT(a,A)>>8;						// CRC calculation (24 bits CRC)
+		crc = crc24a_NB_IoT(npbch_a,A)>>8;
+
+		for (int j=0; j<85; j++) 												
+			{	
+					npbch_a_crc[j] = npbch_a[j];    
+			}
 												    // CRC attachment to payload
-		a[A>>3]     = ((uint8_t*)&crc)[2];
+		/*a[A>>3]     = ((uint8_t*)&crc)[2];
 		a[1+(A>>3)] = ((uint8_t*)&crc)[1];
-		a[2+(A>>3)] = ((uint8_t*)&crc)[0];
+		a[2+(A>>3)] = ((uint8_t*)&crc)[0];*/
+
+			npbch_a_crc[85] = ((uint8_t*)&crc)[2];
+			npbch_a_crc[86] = ((uint8_t*)&crc)[1];
+			npbch_a_crc[87] = ((uint8_t*)&crc)[0];
 		
 		dlsch->B = numbits;			// The length of table b in bits
 
@@ -127,7 +148,8 @@ int dlsch_encoding_NB_IoT(unsigned char      			*a,
 
 		//ccode_encode_npdsch_NB_IoT(numbits, dlsch->b, dlsch->d+96, crc);  	//   step 1 Tail-biting convolutional coding
 		// to uncomment if option 2
-		ccode_encode_npdsch_NB_IoT(numbits,npbch_a, dlsch->d+96, crc);
+		//ccode_encode_npdsch_NB_IoT(numbits,npbch_a, dlsch->d+96, crc);
+		ccode_encode_npdsch_NB_IoT(numbits,npbch_a_crc,dlsch->d+96,crc);
 		// sib1_w = 19*8*3*3=1368
 		RCC = sub_block_interleaving_cc_NB_IoT(numbits,dlsch->d+96,dlsch->w);		//   step 2 interleaving
 		// length e = 1888

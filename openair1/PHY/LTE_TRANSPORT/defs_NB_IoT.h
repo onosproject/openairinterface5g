@@ -622,9 +622,9 @@ typedef struct {
   //length of the table e
   uint16_t              length_e;                // new parameter
   /// Tail-biting convolutional coding outputs
-  uint8_t               d[96+(3*(24+152))];  // new parameter
+  uint8_t               d[96+(3*(24+680))];  // new parameter
   /// Sub-block interleaver outputs
-  uint8_t               w[3*3*(152+24)];      // new parameter
+  uint8_t               w[3*3*(680+24)];      // new parameter
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   //SCH_status_t status;
   /// Transport block size
