@@ -5961,6 +5961,7 @@ rrc_eNB_decode_dcch(
                    RC.rrc[ctxt_pP->module_id],
                    ctxt_pP->rnti);
 
+  LOG_I(RRC, "THINH ul_dcch_msg->message.present %d \n", ul_dcch_msg->message.present);
   if (ul_dcch_msg->message.present == UL_DCCH_MessageType_PR_c1) {
 
     switch (ul_dcch_msg->message.choice.c1.present) {
@@ -6498,11 +6499,14 @@ if (ue_context_p->ue_context.nb_of_modify_e_rabs > 0) {
     return 0;
     //TTN for D2D
   } else if (ul_dcch_msg->message.present == UL_DCCH_MessageType_PR_messageClassExtension){
+     LOG_I(RRC, "THINH [UL_DCCH_MessageType_PR_messageClassExtension]\n");
 
      switch (ul_dcch_msg->message.choice.messageClassExtension.present) {
-     case UL_DCCH_MessageType__messageClassExtension__c2_PR_NOTHING: /* No components present */
+     case UL_DCCH_MessageType__messageClassExtension_PR_NOTHING: /* No components present */
         break;
-     case UL_DCCH_MessageType__messageClassExtension__c2_PR_sidelinkUEInformation_r12: //SidelinkUEInformation
+     case UL_DCCH_MessageType__messageClassExtension_PR_c2: //SidelinkUEInformation
+     //case UL_DCCH_MessageType__messageClassExtension__c2_PR_sidelinkUEInformation_r12: //SidelinkUEInformation
+        LOG_I(RRC,"THINH [UL_DCCH_MessageType__messageClassExtension_PR_c2]\n");
 
 #ifdef RRC_MSG_PRINT
         LOG_F(RRC,"[MSG] SidelinkUEInformation\n");
@@ -6818,83 +6822,94 @@ rrc_eNB_process_SidelinkUEInformation(
          PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
    //For SL Communication
-   // express its interest to receive SL communication
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12 !=  NULL){
+   if (sidelinkUEInformation->criticalExtensions.present ==  SidelinkUEInformation_r12__criticalExtensions_PR_c1){
+      if (sidelinkUEInformation->criticalExtensions.choice.c1.present == SidelinkUEInformation_r12__criticalExtensions__c1_PR_sidelinkUEInformation_r12){
+         // express its interest to receive SL communication
+         if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12 !=  NULL){
 
-   }
+         }
 
-   // express its interest to transmit  non-relay one-to-many SL communication
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12 != NULL){
-      n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.count;
-      destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
-      for (int i=0; i< n_destinations; i++ ){
-         //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.array[i]);
-         ASN_SEQUENCE_ADD(&destinationInfoList->list, sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.array[i]);
+         // express its interest to transmit  non-relay one-to-many SL communication
+         if ((sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12 != NULL) && (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12 != NULL)){
+            n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.count;
+            destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
+            for (int i=0; i< n_destinations; i++ ){
+               //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.array[i]);
+               ASN_SEQUENCE_ADD(&destinationInfoList->list, sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.array[i]);
+            }
+            //generate RRC Reconfiguration
+            rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, destinationInfoList, 0);
+            return 0;
+
+         }
+
+         // express its interest to transmit  non-relay one-to-one SL communication
+         if ((sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension != NULL) && (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13 != NULL)) {
+            if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12 != NULL){
+               n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.count;
+               destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
+               for (int i=0; i< n_destinations; i++ ){
+                  //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.array[i]);
+                  ASN_SEQUENCE_ADD(&destinationInfoList->list,sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.array[i]);
+               }
+               //generate RRC Reconfiguration
+               rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, destinationInfoList, 0);
+               return 0;
+            }
+         }
+
+         // express its interest to transmit relay related one-to-one SL communication
+         if ((sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension != NULL) &&(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13 != NULL)) {
+            if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count > 0) {
+               n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count;
+               ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
+               destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
+               for (int i=0; i< n_destinations; i++ ){
+                  //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.array[i]);
+                  ASN_SEQUENCE_ADD(&destinationInfoList->list, sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.array[i]);
+               }
+               //generate RRC Reconfiguration
+               rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, destinationInfoList, 0);
+               return 0;
+            }
+         }
+
+         //express its interest to transmit relay related one-to-many SL communication
+         if ((sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension != NULL) && (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13 != NULL)) {
+            if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count > 0){
+               n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count;
+               ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
+               destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
+               for (int i=0; i< n_destinations; i++ ){
+                  //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.array[i]);
+                  ASN_SEQUENCE_ADD(&destinationInfoList->list,sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.array[i]);
+               }
+               //generate RRC Reconfiguration
+               rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, destinationInfoList, 0);
+               return 0;
+            }
+         }
+
+         //For SL Discovery
+         //express its interest to receive SL discovery announcements
+         //express its interest to transmit non-PS related discovery announcements
+         if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12 != NULL){
+            n_discoveryMessages = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12);
+            //generate RRC Reconfiguration
+            rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, NULL, n_discoveryMessages);
+            return 0;
+         }
+         //express its interest to transmit PS related discovery announcements
+         if ((sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension != NULL) && (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13 !=NULL)) {
+            if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13->discTxResourceReq_r13 > 0){
+               n_discoveryMessages = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13->discTxResourceReq_r13;
+               //generate RRC Reconfiguration
+               rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, NULL, n_discoveryMessages);
+               return 0;
+            }
+         }
       }
-
-      //generate RRC Reconfiguration
-      rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, destinationInfoList, 0);
-      return 0;
    }
-
-   // express its interest to transmit  non-relay one-to-one SL communication
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12 != NULL){
-      n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.count;
-      destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
-      for (int i=0; i< n_destinations; i++ ){
-         //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.array[i]);
-         ASN_SEQUENCE_ADD(&destinationInfoList->list,sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.array[i]);
-      }
-      //generate RRC Reconfiguration
-      rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, destinationInfoList, 0);
-      return 0;
-   }
-
-   // express its interest to transmit relay related one-to-one SL communication
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count > 0){
-      n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count;
-      ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
-      destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
-      for (int i=0; i< n_destinations; i++ ){
-         //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.array[i]);
-         ASN_SEQUENCE_ADD(&destinationInfoList->list, sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.array[i]);
-      }
-      //generate RRC Reconfiguration
-      rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, destinationInfoList, 0);
-      return 0;
-   }
-
-   //express its interest to transmit relay related one-to-many SL communication
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count > 0){
-      n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count;
-      ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
-      destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
-      for (int i=0; i< n_destinations; i++ ){
-         //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.array[i]);
-         ASN_SEQUENCE_ADD(&destinationInfoList->list,sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.array[i]);
-      }
-      //generate RRC Reconfiguration
-      rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, destinationInfoList, 0);
-      return 0;
-   }
-   //For SL Discovery
-   //express its interest to receive SL discovery announcements
-
-   //express its interest to transmit non-PS related discovery announcements
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12 != NULL){
-      n_discoveryMessages = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12);
-      //generate RRC Reconfiguration
-      rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, NULL, n_discoveryMessages);
-      return 0;
-   }
-   //express its interest to transmit PS related discovery announcements
-   if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13->discTxResourceReq_r13 > 0){
-      n_discoveryMessages = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13->discTxResourceReq_r13;
-      //generate RRC Reconfiguration
-      rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(ctxt_pP, ue_context_pP, NULL, n_discoveryMessages);
-      return 0;
-   }
-
    return 0;
 }
 
@@ -6916,6 +6931,9 @@ rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
   // allocate dedicated pools for UE -sl-CommConfig/sl-DiscConfig (sl-V2X-ConfigDedicated)
   //populate dedicated resources for SL communication (sl-CommConfig)
   if ((destinationInfoList != NULL) && (destinationInfoList->list.count > 0)) {
+
+     LOG_I(RRC,"[eNB %d] Frame %d, Generate RRCConnectionReconfiguration_Sidelink (bytes %d, UE id %x), number of destinations %d\n",
+            ctxt_pP->module_id,ctxt_pP->frame, size, ue_context_pP->ue_context.rnti,destinationInfoList->list.count );
      //get dedicated resources from available pool and assign to the UE
      SL_CommConfig_r12_t  sl_CommConfig[destinationInfoList->list.count];
      //get a RP from the available RPs
@@ -6973,19 +6991,72 @@ rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
 
 SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool( const protocol_ctxt_t* const ctxt_pP, rrc_eNB_ue_context_t* const ue_context_pP,  SL_DestinationInfoList_r12_t  *destinationInfoList ){
    // for the moment, use scheduled resource allocation
-   SL_CommConfig_r12_t  sl_CommConfig;
-   sl_CommConfig.commTxResources_r12 = CALLOC(1, sizeof(*sl_CommConfig.commTxResources_r12));
-   sl_CommConfig.commTxResources_r12->present = SL_CommConfig_r12__commTxResources_r12_PR_setup;
-   sl_CommConfig.commTxResources_r12->choice.setup.present = SL_CommConfig_r12__commTxResources_r12__setup_PR_scheduled_r12;
-   //sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12 =  ue_context_pP->ue_context.rnti;//rnti
-   //sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.mcs_r12; //Msc
-   sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.retx_BSR_TimerSL = RetxBSR_Timer_r12_sf320; //MacConfig, for testing only
-   sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.periodic_BSR_TimerSL = CALLOC(1,
-         sizeof(*sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.periodic_BSR_TimerSL));
-   *(sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.periodic_BSR_TimerSL) =  PeriodicBSR_Timer_r12_sf40; //MacConfig, for testing only
-   //sl_CommConfig.commTxResources_r12->choice.setup.choice.scheduled_r12.sc_CommTxConfig_r12; //RP
+   SL_CommConfig_r12_t  *sl_CommConfig;
+   SL_CommResourcePool_r12_t    *sc_CommTxConfig;
 
-   return sl_CommConfig;
+   sl_CommConfig = CALLOC(1, sizeof(struct SL_CommConfig_r12));
+   sl_CommConfig->commTxResources_r12 = CALLOC(1, sizeof(*sl_CommConfig->commTxResources_r12));
+   sl_CommConfig->commTxResources_r12->present = SL_CommConfig_r12__commTxResources_r12_PR_setup;
+   sl_CommConfig->commTxResources_r12->choice.setup.present = SL_CommConfig_r12__commTxResources_r12__setup_PR_scheduled_r12;
+   sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.size = 2;
+   sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.buf = CALLOC(1,2);
+   sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.buf[0] = 0x00;
+   sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.buf[1] = 0x01;//ctxt_pP->rnti;//rnti
+   sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.bits_unused = 0;
+   sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mcs_r12 = CALLOC(1,sizeof(*sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mcs_r12));
+   //*sl_CommConfig_test->commTxResources_r12->choice.setup.choice.scheduled_r12.mcs_r12 = 12; //Msc
+   sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.retx_BSR_TimerSL = RetxBSR_Timer_r12_sf320; //MacConfig, for testing only
+   //sl_CommConfig_test->commTxResources_r12->choice.setup.choice.scheduled_r12.sc_CommTxConfig_r12;
+
+   sc_CommTxConfig = & sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sc_CommTxConfig_r12;
+
+   sc_CommTxConfig->sc_CP_Len_r12 = SL_CP_Len_r12_normal;
+   sc_CommTxConfig->sc_Period_r12 = SL_PeriodComm_r12_sf40;
+   sc_CommTxConfig->data_CP_Len_r12  = SL_CP_Len_r12_normal;
+   //sc_TF_ResourceConfig_r12
+   sc_CommTxConfig->sc_TF_ResourceConfig_r12.prb_Num_r12 = 20;
+   sc_CommTxConfig->sc_TF_ResourceConfig_r12.prb_Start_r12 = 5;
+   sc_CommTxConfig->sc_TF_ResourceConfig_r12.prb_End_r12 = 44;
+   sc_CommTxConfig->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present = SL_OffsetIndicator_r12_PR_small_r12;
+   sc_CommTxConfig->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = 0;
+
+   sc_CommTxConfig->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present = SubframeBitmapSL_r12_PR_bs40_r12;
+   sc_CommTxConfig->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size = 5;
+   sc_CommTxConfig->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf  = CALLOC(1,5);
+   sc_CommTxConfig->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = 0;
+   //dataHoppingConfig_r12
+   sc_CommTxConfig->dataHoppingConfig_r12.hoppingParameter_r12 = 0;
+   sc_CommTxConfig->dataHoppingConfig_r12.numSubbands_r12  =  SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
+   sc_CommTxConfig->dataHoppingConfig_r12.rb_Offset_r12 = 0;
+   //ue_SelectedResourceConfig_r12
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12 = CALLOC (1, sizeof (*sc_CommTxConfig->ue_SelectedResourceConfig_r12));
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_Num_r12 = 20;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_Start_r12 = 5;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_End_r12 = 44;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.present = SL_OffsetIndicator_r12_PR_small_r12;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = 0 ;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.present = SubframeBitmapSL_r12_PR_bs40_r12;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size = 5;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf  = CALLOC(1,5);
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.bits_unused = 0;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[0] = 0xF0;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[1] = 0xFF;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[2] = 0xFF;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[3] = 0xFF;
+   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[4] = 0xFF;
+   //rxParametersNCell_r12
+   sc_CommTxConfig->rxParametersNCell_r12 = CALLOC (1, sizeof (*sc_CommTxConfig->rxParametersNCell_r12));
+   sc_CommTxConfig->rxParametersNCell_r12->tdd_Config_r12 = CALLOC (1, sizeof (*sc_CommTxConfig->rxParametersNCell_r12->tdd_Config_r12 ));
+   sc_CommTxConfig->rxParametersNCell_r12->tdd_Config_r12->subframeAssignment = 0 ;
+   sc_CommTxConfig->rxParametersNCell_r12->tdd_Config_r12->specialSubframePatterns = 0;
+   sc_CommTxConfig->rxParametersNCell_r12->syncConfigIndex_r12 = 0;
+   //txParameters_r12
+   sc_CommTxConfig->txParameters_r12 = CALLOC (1, sizeof (*sc_CommTxConfig->txParameters_r12));
+   sc_CommTxConfig->txParameters_r12->sc_TxParameters_r12.alpha_r12 = Alpha_r12_al0;
+   sc_CommTxConfig->txParameters_r12->sc_TxParameters_r12.p0_r12 = 0;
+   sc_CommTxConfig->ext1 = NULL ;
+
+   return *sl_CommConfig;
 }
 
 

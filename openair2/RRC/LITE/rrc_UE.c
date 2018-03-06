@@ -151,6 +151,7 @@ static uint8_t check_trigger_meas_event(
 
 #if defined(Rel10) || defined(Rel14)
 static void decode_MBSFNAreaConfiguration(module_id_t module_idP, uint8_t eNB_index, frame_t frameP,uint8_t mbsfn_sync_area);
+uint8_t rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, SL_TRIGGER_t mode);
 #endif
 
 
@@ -289,6 +290,7 @@ static void init_SI_UE( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
   UE_rrc_inst[ctxt_pP->module_id].sib13[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType13_r9_t) );
   UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType18_r12_t) );
   UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType19_r12_t) );
+  UE_rrc_inst[ctxt_pP->module_id].sib21[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType21_r14_t) );
 
 #endif
   UE_rrc_inst[ctxt_pP->module_id].SI[eNB_index] = (uint8_t*)malloc16_clear( 64 );
@@ -2682,6 +2684,20 @@ rrc_ue_decode_dcch(
 
         }
 
+        //TTN test D2D (should not be here - in reality, this message will be triggered from ProSeApp)
+        LOG_I(RRC, "TEST SidelinkUEInformation [UE %d] Received  (eNB %d)\n",
+              ctxt_pP->module_id, eNB_indexP);
+        SL_DestinationInfoList_r12_t *destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
+        SL_DestinationIdentity_r12_t *sl_destination_identity = CALLOC(1, sizeof(SL_DestinationIdentity_r12_t));
+        sl_destination_identity->size = 3;
+        sl_destination_identity->buf = CALLOC(1,3);
+        sl_destination_identity->buf[0] = 0x00;
+        sl_destination_identity->buf[1] = 0x00;
+        sl_destination_identity->buf[2] = 0x01;
+        sl_destination_identity->bits_unused = 0;
+        ASN_SEQUENCE_ADD(&destinationInfoList->list,sl_destination_identity);
+        rrc_ue_generate_SidelinkUEInformation(ctxt_pP, eNB_indexP, destinationInfoList, NULL, SL_TRANSMIT_NON_RELAY_ONE_TO_ONE);
+
         break;
 
       case DL_DCCH_MessageType__c1_PR_rrcConnectionRelease:
@@ -3821,7 +3837,7 @@ uint64_t arfcn_to_freq(long arfcn) {
   LOG_I( RRC, "[UE] NotificationOffset-r9 : %d\n", (int)sib13->notificationConfig_r9.notificationOffset_r9 );
   LOG_I( RRC, "[UE] NotificationSF-Index-r9 : %d\n", (int)sib13->notificationConfig_r9.notificationSF_Index_r9 );
 }
-#endif
+
 
 //TTN - SIB18
 //-----------------------------------------------------------------------------
@@ -3844,7 +3860,7 @@ uint64_t arfcn_to_freq(long arfcn) {
  void dump_sib19(SystemInformationBlockType19_r12_t *sib19){
    LOG_I( RRC, "[UE] Dumping SIB19\n" );
    for (int i = 0; i < sib19->discConfig_r12->discRxPool_r12.list.count; i++) {
-       LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, sib19->discConfig_r12->discRxPool_r12.list.count);
+       LOG_I(RRC, " Contents of SIB19 %d/%d \n", i+1, sib19->discConfig_r12->discRxPool_r12.list.count);
        LOG_I(RRC, " SIB19 cp_Len_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->cp_Len_r12);
        LOG_I(RRC, " SIB19 discPeriod_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->discPeriod_r12);
        LOG_I(RRC, " SIB19 numRetx_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRetx_r12);
@@ -3856,11 +3872,26 @@ uint64_t arfcn_to_freq(long arfcn) {
      }
 }
 
+ void dump_sib21(SystemInformationBlockType21_r14_t *sib21){
+    if ((sib21->sl_V2X_ConfigCommon_r14 != NULL) && (sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14 !=NULL) ){
+       for (int i = 0; i < sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.count; i++) {
+          LOG_I(RRC, " Contents of SIB21 %d/%d \n", i+1, sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.count);
+          LOG_I(RRC, " SIB21 sl_Subframe_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->sl_Subframe_r14.present);
+          LOG_I(RRC, " SIB21 adjacencyPSCCH_PSSCH_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->adjacencyPSCCH_PSSCH_r14);
+          LOG_I(RRC, " SIB21 sizeSubchannel_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->sizeSubchannel_r14);
+          LOG_I(RRC, " SIB21 numSubchannel_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->numSubchannel_r14);
+          LOG_I(RRC, " SIB21 startRB_Subchannel_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->startRB_Subchannel_r14);
+          //to add more log
+       }
+    }
+ }
+
+
+#endif
 //-----------------------------------------------------------------------------
  int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
 	LOG_I( RRC, "Panos-D: decode_SI 1 \n");
-	//printf("Panos-D: decode_SI 1 \n");
   SystemInformation_t** si = &UE_rrc_inst[ctxt_pP->module_id].si[eNB_index];
   int new_sib = 0;
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
@@ -4170,6 +4201,25 @@ uint64_t arfcn_to_freq(long arfcn) {
 
        }
        break;
+
+       //SIB21
+    case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib21_v1430:
+       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&32768) == 0) {
+          UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=32768;
+          new_sib=1;
+
+          memcpy( UE_rrc_inst[ctxt_pP->module_id].sib21[eNB_index], &typeandinfo->choice.sib21_v1430, sizeof(SystemInformationBlockType21_r14_t) );
+          LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB21 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
+          dump_sib21( UE_rrc_inst[ctxt_pP->module_id].sib21[eNB_index] );
+          // adding here function to store necessary parameters to transfer to PHY layer
+          LOG_I( RRC, "[FRAME %05"PRIu32"][RRC_UE][MOD %02"PRIu8"][][--- MAC_CONFIG_REQ (SIB21 params eNB %"PRIu8") --->][MAC_UE][MOD %02"PRIu8"][]\n",
+                ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
+          //process SIB21
+          //TODO
+       }
+       break;
+
+
 #endif
     default:
       break;
@@ -5230,14 +5280,24 @@ uint8_t rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt
       size = do_SidelinkUEInformation(ctxt_pP->module_id, buffer, destinationInfoList, NULL, mode);
       LOG_I(RRC,"[UE %d][RRC_UE] Frame %d : Logical Channel UL-DCCH, Generating SidelinkUEInformation (bytes%d, eNB %d)\n",
             ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
-      return size;
+      //return size;
    }
    if (((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&16384) > 0) && (discTxResourceReq != NULL)) {//if SIB19 is available
       size = do_SidelinkUEInformation(ctxt_pP->module_id, buffer, NULL, discTxResourceReq, mode);
       LOG_I(RRC,"[UE %d][RRC_UE] Frame %d : Logical Channel UL-DCCH, Generating SidelinkUEInformation (bytes%d, eNB %d)\n",
             ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
-      return size;
+     //return size;
    }
+
+   rrc_data_req_ue (
+       ctxt_pP,
+       DCCH,
+       rrc_mui++,
+       SDU_CONFIRM_NO,
+       size,
+       buffer,
+       PDCP_TRANSMISSION_MODE_CONTROL);
+   return size;
 }
 
 

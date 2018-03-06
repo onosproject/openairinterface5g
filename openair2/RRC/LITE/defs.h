@@ -755,6 +755,7 @@ typedef struct UE_RRC_INST_s {
   //SIB18
   SystemInformationBlockType18_r12_t *sib18[NB_CNX_UE];
   SystemInformationBlockType19_r12_t *sib19[NB_CNX_UE];
+  SystemInformationBlockType21_r14_t *sib21[NB_CNX_UE];
 
   SBCCH_SL_BCH_MessageType_t   mib_sl[NB_CNX_UE];
   /// Preconfiguration for Sidelink
