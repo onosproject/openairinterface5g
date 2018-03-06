@@ -90,7 +90,7 @@ int ctrl_sock_fd;
 #define BUFSIZE 1024
 struct sockaddr_in prose_app_addr;
 int slrb_id;
-pthread_mutex_t slrb_mutex;
+int send_ue_information = 0;
 #endif
 
 #ifdef PHY_EMUL
@@ -2163,17 +2163,30 @@ rrc_ue_process_rrcConnectionReconfiguration(
 
       //TTN for D2D
       //if RRCConnectionReconfiguration message includes the sl-CommConfig
-      //***Panos: Comment lines 2117-2137 temporarily
-      /*if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12->commTxResources_r12->present != SL_CommConfig_r12__commTxResources_r12_PR_NOTHING){
-         LOG_I(RRC,"sl-CommConfig is present\n");
-         //process sl-CommConfig
-         rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
-               (SystemInformationBlockType18_r12_t *)NULL,
-               (SystemInformationBlockType19_r12_t *)NULL,
-               rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12,
-               (SL_DiscConfig_r12_t *)NULL
-               );
+      if ((rrcConnectionReconfiguration_r8->nonCriticalExtension != NULL)
+            && (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension
+                  != NULL)
+                  && (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension
+                        != NULL)
+                        && (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension
+                              != NULL)
+                              && (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension
+                                    != NULL)
+                                    && (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12
+                                          != NULL)) {
+         if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12->commTxResources_r12->present != SL_CommConfig_r12__commTxResources_r12_PR_NOTHING){
+            LOG_I(RRC,"sl-CommConfig is present\n");
+            //process sl-CommConfig
+            rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
+                  (SystemInformationBlockType18_r12_t *)NULL,
+                  (SystemInformationBlockType19_r12_t *)NULL,
+                  rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12,
+                  (SL_DiscConfig_r12_t *)NULL
+            );
+         }
       }
+
+/*
       //if RRCConnectionReconfiguration message includes the sl-DiscConfig
       if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12->discTxResources_r12->present != SL_DiscConfig_r12__discTxResources_r12_PR_NOTHING ){
          LOG_I(RRC,"sl-DiscConfig is present\n");
@@ -2184,8 +2197,8 @@ rrc_ue_process_rrcConnectionReconfiguration(
                (SL_CommConfig_r12_t* )NULL,
                rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12
                );
-      }*/
-
+      }
+*/
 
 #if defined(ENABLE_ITTI)
 
@@ -2685,19 +2698,21 @@ rrc_ue_decode_dcch(
         }
 
         //TTN test D2D (should not be here - in reality, this message will be triggered from ProSeApp)
-        LOG_I(RRC, "TEST SidelinkUEInformation [UE %d] Received  (eNB %d)\n",
-              ctxt_pP->module_id, eNB_indexP);
-        SL_DestinationInfoList_r12_t *destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
-        SL_DestinationIdentity_r12_t *sl_destination_identity = CALLOC(1, sizeof(SL_DestinationIdentity_r12_t));
-        sl_destination_identity->size = 3;
-        sl_destination_identity->buf = CALLOC(1,3);
-        sl_destination_identity->buf[0] = 0x00;
-        sl_destination_identity->buf[1] = 0x00;
-        sl_destination_identity->buf[2] = 0x01;
-        sl_destination_identity->bits_unused = 0;
-        ASN_SEQUENCE_ADD(&destinationInfoList->list,sl_destination_identity);
-        rrc_ue_generate_SidelinkUEInformation(ctxt_pP, eNB_indexP, destinationInfoList, NULL, SL_TRANSMIT_NON_RELAY_ONE_TO_ONE);
-
+        if (send_ue_information == 0) {
+           LOG_I(RRC, "TEST SidelinkUEInformation [UE %d] Received  (eNB %d)\n",
+                 ctxt_pP->module_id, eNB_indexP);
+           SL_DestinationInfoList_r12_t *destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
+           SL_DestinationIdentity_r12_t *sl_destination_identity = CALLOC(1, sizeof(SL_DestinationIdentity_r12_t));
+           sl_destination_identity->size = 3;
+           sl_destination_identity->buf = CALLOC(1,3);
+           sl_destination_identity->buf[0] = 0x00;
+           sl_destination_identity->buf[1] = 0x00;
+           sl_destination_identity->buf[2] = 0x01;
+           sl_destination_identity->bits_unused = 0;
+           ASN_SEQUENCE_ADD(&destinationInfoList->list,sl_destination_identity);
+           rrc_ue_generate_SidelinkUEInformation(ctxt_pP, eNB_indexP, destinationInfoList, NULL, SL_TRANSMIT_NON_RELAY_ONE_TO_ONE);
+           send_ue_information ++;
+        }
         break;
 
       case DL_DCCH_MessageType__c1_PR_rrcConnectionRelease:
@@ -5399,11 +5414,17 @@ rrc_ue_process_sidelink_radioResourceConfig(
          switch (sl_CommConfig->commTxResources_r12->present){
          case SL_CommConfig_r12__commTxResources_r12_PR_setup:
             if (sl_CommConfig->commTxResources_r12->choice.setup.present == SL_CommConfig_r12__commTxResources_r12__setup_PR_scheduled_r12 ){
+
+               LOG_I(RRC,"[UE %d][RRC_UE] scheduled resource for SL, sl_RNTI size %d  \n",
+                     Mod_idP, sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.size );
+               LOG_I(RRC,"[UE %d][RRC_UE] scheduled resource for SL, sl_RNTI buf 0x%08x \n",
+                     Mod_idP, sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.buf );
+               LOG_I(RRC,"[UE %d][RRC_UE] scheduled resource for SL, Mac_MainConfig_r12.retx_BSR_TimerSL %d \n",
+                     Mod_idP, sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.retx_BSR_TimerSL );
+               LOG_I(RRC,"[UE %d][RRC_UE] scheduled resource for SL, sc_CommTxConfig %d \n",
+                     Mod_idP, sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.retx_BSR_TimerSL );
                //configure scheduled resource for SL
-               //sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12;
-               //sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mcs_r12;
-               //sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12;
-               //sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sc_CommTxConfig_r12;
+               //TODO
             } else if (sl_CommConfig->commTxResources_r12->choice.setup.present == SL_CommConfig_r12__commTxResources_r12__setup_PR_ue_Selected_r12){
                //configure dedicated resources (commTxPoolNormalDedicated) for SL from which UE can autonomously select
                //sl_CommConfig->commTxResources_r12->choice.setup.choice.ue_Selected_r12.commTxPoolNormalDedicated_r12;
@@ -5493,8 +5514,6 @@ rrc_control_socket_init(){
    int optval; // flag value for setsockopt
    int n; // message byte size
 
-   //init the mutex
-   //pthread_mutex_init(&slrb_mutex, NULL);
 
    // create the control socket
    ctrl_sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -5863,9 +5882,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          //if the requested id exists -> release this ID
          if (sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id == slrb_id) {
             sl_ctrl_msg_send->sidelinkPrimitive.group_comm_release_rsp = GROUP_COMMUNICATION_RELEASE_OK;
-            // pthread_mutex_lock(&slrb_mutex);
             slrb_id = 0; //Reset slrb_id
-            //pthread_mutex_unlock(&slrb_mutex);
          } else {
             sl_ctrl_msg_send->sidelinkPrimitive.group_comm_release_rsp = GROUP_COMMUNICATION_RELEASE_FAILURE;
          }

@@ -6983,6 +6983,14 @@ rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
   LOG_I(RRC,"[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration_Sidelink (bytes %d, UE id %x)\n",
         ctxt_pP->module_id,ctxt_pP->frame, size, ue_context_pP->ue_context.rnti);
 
+  rrc_data_req(
+    ctxt_pP,
+    DCCH,
+    rrc_eNB_mui++,
+    SDU_CONFIRM_NO,
+    size,
+    buffer,
+    PDCP_TRANSMISSION_MODE_CONTROL);
 
   // rrc_data_req();
 
@@ -6997,6 +7005,7 @@ SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool( const protocol_ctxt_t* cons
    sl_CommConfig = CALLOC(1, sizeof(struct SL_CommConfig_r12));
    sl_CommConfig->commTxResources_r12 = CALLOC(1, sizeof(*sl_CommConfig->commTxResources_r12));
    sl_CommConfig->commTxResources_r12->present = SL_CommConfig_r12__commTxResources_r12_PR_setup;
+
    sl_CommConfig->commTxResources_r12->choice.setup.present = SL_CommConfig_r12__commTxResources_r12__setup_PR_scheduled_r12;
    sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.size = 2;
    sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.buf = CALLOC(1,2);
