@@ -391,7 +391,7 @@ void rf_rx_simple_freq_SSE_float(float *r_re[2],
   float rx_gain_lin = pow(10.0,.05*rx_gain_dB);
   //double rx_gain_lin = 1.0;
   float N0W         = pow(10.0,.1*(-174.0 - 10*log10(s_time*1e-9)));
-  float sqrt_NOW = sqrt(.5*N0W);
+  float sqrt_NOW = rx_gain_lin*sqrt(.5*N0W);
   //double N0W = 0.0;
 
   //  printf("s_time=%f, N0W=%g\n",s_time,10*log10(N0W));
@@ -404,9 +404,11 @@ void rf_rx_simple_freq_SSE_float(float *r_re[2],
   //rx128_gain_lin=mm_loadu_pd(rx_gain_lin);
 /*count++;
 clock_t start=clock();*/
+  rx128_gain_lin = _mm_set1_ps(rx_gain_lin);
+
 	  for (i=0; i<(length>>2); i++) {
 	    for (a=0; a<nb_rx_antennas; a++) {
-	      if (i%(ofdm_symbol_size>>2)>(n_samples>>2) && i%(ofdm_symbol_size>>2)<(ofdm_symbol_size>>2)-(n_samples>>2))
+	      /*if (i%(ofdm_symbol_size>>2)>(n_samples>>2) && i%(ofdm_symbol_size>>2)<(ofdm_symbol_size>>2)-(n_samples>>2))
     	      {
 		//printf("i = %d\n",i);
 		//_mm_storeu_pd(&r_re[a][2*i],_mm_setzero_pd());
@@ -414,11 +416,10 @@ clock_t start=clock();*/
 	 	break;
 	      }
 	      else
-	      {
+	      {*/
 		      //rx128_gain_lin=mm_mul_set1_ps(rx_gain_lin);
 		      rx128_re =  _mm_loadu_ps(&r_re[a][4*i]);//r_re[a][i],r_re[a][i+1]
 		      rx128_im =  _mm_loadu_ps(&r_im[a][4*i]);//r_im[a][i],r_im[a][i+1]
-		      rx128_gain_lin = _mm_set1_ps(rx_gain_lin);
 		      //start_meas(&desc->ziggurat);
 		      gauss_0_128_sqrt_NOW = _mm_set_ps(ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
 		      gauss_1_128_sqrt_NOW = _mm_set_ps(ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
@@ -428,13 +429,11 @@ clock_t start=clock();*/
 		      // Amplify by receiver gain and apply 3rd order non-linearity
 		      //r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0)); 
 		      //r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
-		      rx128_re = _mm_add_ps(rx128_re,gauss_0_128_sqrt_NOW);
-		      rx128_im = _mm_add_ps(rx128_im,gauss_1_128_sqrt_NOW);
-		      rx128_re = _mm_mul_ps(rx128_re,rx128_gain_lin);
-		      rx128_im = _mm_mul_ps(rx128_im,rx128_gain_lin);
+		      rx128_re = _mm_add_ps(_mm_mul_ps(rx128_re,rx128_gain_lin),gauss_0_128_sqrt_NOW);
+		      rx128_im = _mm_add_ps(_mm_mul_ps(rx128_im,rx128_gain_lin),gauss_1_128_sqrt_NOW);
 		      _mm_storeu_ps(&r_re[a][4*i],rx128_re);
 		      _mm_storeu_ps(&r_im[a][4*i],rx128_im);
-	      }
+	      //}
 	    }
 	  }
 /*clock_t stop=clock();

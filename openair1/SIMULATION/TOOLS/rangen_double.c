@@ -27,6 +27,7 @@
 #endif
 
 #include  "defs.h"
+#include "PHY/sse_intrin.h"
 
 static unsigned int seed, iy, ir[98];
 
@@ -147,12 +148,34 @@ double uniformrandom(void)
 /*!\brief Ziggurat random number generator based on rejection sampling. It returns a pseudorandom normally distributed double number with x=0 and variance=1*/
 //Procedure to create tables for normal distribution kn,wn and fn
 
+
+//#define SHR3 (jz=jsr,printf("jsr %lu ",jsr), jsr^=(jsr<<13),printf("jsr<<13 %lu ",jsr),jsr^=(jsr>>17),printf("jsr>>17 %lu ",jsr),jsr^=(jsr<<5),printf("jsr<<5 %lu\n",jsr),printf("SHR3	jsr %lu, jz %lu, jsr+jz %lu\n",jsr,jz,jz+jsr),jz+jsr)
 #define SHR3 (jz=jsr, jsr^=(jsr<<13),jsr^=(jsr>>17),jsr^=(jsr<<5),jz+jsr)
+
 #define UNI (0.5+(signed) SHR3 * 0.2328306e-9)
+
 #define NOR (hz=SHR3,iz=(hz&127),(abs(hz)<kn[iz])? hz*wn[iz] : nfix())
 static double wn[128],fn[128];
-static unsigned long iz,jz,jsr=123456789,kn[128];
+static uint32_t iz,jz,jsr=123456789,kn[128];
 static int32_t hz;
+
+static uint32_t jsr4[4] __attribute__((aligned(16))) = {123456789,2714967881,2238813396,1250077441};//This initialization depends on the seed for nor_table function in oaisim_functions.c file.
+static uint32_t out[4] __attribute__((aligned(16)));
+#if defined(__x86_64__) || defined(__i386__)
+static __m128i jsr_128 __attribute__((aligned(16)));
+static __m128i jz_128 __attribute__((aligned(16)));
+static __m128i hz_128 __attribute__((aligned(16)));
+static __m128i iz_128 __attribute__((aligned(16)));
+//#define jsr4 (jz=jsr, jsr^=(jsr<<13),jsr^=(jsr>>17),jsr^=(jsr<<5),jz+jsr,printf("seed %d, next seed %d\n",jz,jsr))
+//#define SHR3_SSE (jsr_128=_mm_loadu_si128(jsr4),jz_128=jsr_128, printf("jsr4 is %lu,%lu,%lu,%lu\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]), jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,13),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128),printf("jsr128<<13 is %lu,%lu,%lu,%lu\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]),      jsr_128=_mm_xor_si128(_mm_srli_epi32(jsr_128,17),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128),printf("jsr128>>17 is %lu,%lu,%lu,%lu\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]),      jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,5),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128), printf("jsr128<<5  is %lu,%lu,%lu,%lu\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]),      _mm_storeu_si128(out,_mm_add_epi32(jz_128,jsr_128)),printf("out is %lu,%lu,%lu,%lu\n",out[0],out[1],out[2],out[3]),_mm_add_epi32(jz_128,jsr_128))
+#define SHR3_SSE (jsr_128=_mm_loadu_si128(jsr4),jz_128=jsr_128, jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,13),jsr_128),jsr_128=_mm_xor_si128(_mm_srli_epi32(jsr_128,17),jsr_128),jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,5),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128),_mm_add_epi32(jz_128,jsr_128))
+
+#define UNI_SSE (_mm_add_ps(_mm_mul_ps(_mm_set1_ps(0.2328306e-9),_mm_cvtepi32_ps(SHR3_SSE)),_mm_set1_ps(0.5)))
+
+#define NOR_SSE (hz_128=SHR3_SSE,iz_128=_mm_and_epi32(hz_128,_mm_set1_epi32(127)),_mm_cmplt_epi32(_mm_max_epi32(_mm_sub_epi32(_mm_setzero_si128(),hz_128),hz_128),_mm_setr_epi32(kn[iz_128[0]],kn[iz_128[1]],kn[iz_128[2]],kn[iz_128[3]])),_mm_mul_ps(hz_128,_mm_set_ps(wn[iz_128[0],wn[iz_128[1],wn[iz_128[2],wn[iz_128[3]))): nfix())
+#endif
+
+
 //#define NOR (hz=SHR3, printf("hz %d\n",hz),sign=(hz&128)>>7,printf("sign %s\n",(sign)?"-":"+"),iz=hz&127,printf("iz %d\n",iz), (abs(hz)<kn[iz])? (sign)?(-1)*hz*wn[iz]:hz*wn[iz] : (sign)?(-1)*nfix():nfix())
 double nfix(void)
 {
@@ -225,7 +248,78 @@ void table_nor(unsigned long seed)
 }
 double ziggurat(double mean, double variance)
 {
+  //printf("UNI is %e\n",UNI);
+  //printf("SHR3 is %d\n",SHR3);
+  /*__m128i m __attribute__((aligned(16)));
+  __m128 n __attribute__((aligned(16)));
+  static uint32_t mm[4] __attribute__((aligned(16)));
+  static uint32_t aa[4] __attribute__((aligned(16)));
+  static uint32_t bb[4] __attribute__((aligned(16)));
+  static float    cc[4] __attribute__((aligned(16)));
+  //printf("SHR3_SSE  jsr4 is %d,%d,%d,%d\n\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]);
+
+  m=SHR3_SSE;
+  printf("UNI is %e,%e,%e,%e\n",UNI,UNI,UNI,UNI);
+  printf("UNI is %e,%e,%e,%e\n",UNI,UNI,UNI,UNI);
+  printf("UNI is %e,%e,%e,%e\n",UNI,UNI,UNI,UNI);
+  printf("UNI is %e,%e,%e,%e\n",UNI,UNI,UNI,UNI);
+  n=UNI_SSE;
+  printf("UNI_SSE is %e,%e,%e,%e\n\n",n[0],n[1],n[2],n[3]);
+  _mm_storeu_si128((__m128i *)mm,jsr_128);
+  _mm_storeu_si128((__m128i *)aa,jz_128);
+  _mm_storeu_si128((__m128i *)bb,m);
+  _mm_storeu_ps((__m128 *)cc,n);
+
+  printf("SHR3_SSE  jsr128 is %d,%d,%d,%d\n",mm[0],mm[1],mm[2],mm[3]);
+  printf("SHR3_SSE  jz128 is %d,%d,%d,%d\n",aa[0],aa[1],aa[2],aa[3]);
+  printf("SHR3_SSE  jsr_128+jz_128 is %d,%d,%d,%d\n",bb[0],bb[1],bb[2],bb[3]);
+  printf("SHR3_SSE  norm is %d,%d,%d,%d\n",cc[0],cc[1],cc[2],cc[3]);
+  //printf("SHR3_SSE  jsr4 is %d,%d,%d,%d\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]);
+  //printf("SHR3_SSE jz_128 is %d,%d,%d,%d\n\n",jz_128[0],jz_128[1],jz_128[2],jz_128[3]);
+  __m128 x ;
+  x=log_ps(_mm_set_ps(-10,-100,-1000,100000));
+  printf("ln aprox is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
+  printf("ln function is %e,%e,%e,%e\n",log(-10),log(-100),log(-1000),log(100000));
+  uint32_t out[4] __attribute__((aligned(16)));
+  __m128i m __attribute__((aligned(16)));
+  m=_mm_max_epi32(_mm_setr_epi32(1,-1,3,-45),_mm_setr_epi32(-1,1,-3,45));
+  _mm_storeu_si128(out,m);
+  printf("abs is %d,%d,%d,%d\n",out[0],out[1],out[2],out[3]);*/
   return NOR;
+}
+
+void boxmuller_SSE_float(float* data, size_t count) {
+	assert(count % 8 == 0);
+	__m128 twopi = _mm_set1_ps(2.0f * 3.14159265358979323846f);
+	__m128 one = _mm_set1_ps(1.0f);
+	__m128 minustwo = _mm_set1_ps(-2.0f);
+	__m128 u1_ps,u2_ps;
+	__m128 r_ps,radius,theta,sintheta,costheta;
+	__m128i a_ps, b_ps;
+	__m128i x_ps;
+	__m128i u_ps;
+
+	//LCG<__m128> r;
+	x_ps=_mm_setr_epi32(10, 100, 1000, 10000);
+	a_ps=x_ps;
+	b_ps=_mm_set1_epi32(1664525);
+	const __m128i tmp1 = _mm_mul_epu32(a_ps, b_ps);
+	const __m128i tmp2 = _mm_mul_epu32(_mm_srli_si128(a_ps, 4), _mm_srli_si128(b_ps, 4));
+
+	x_ps=_mm_add_epi32(_mm_unpacklo_epi32(_mm_shuffle_epi32(tmp1, _MM_SHUFFLE (0,0,2,0)), _mm_shuffle_epi32(tmp2, _MM_SHUFFLE (0,0,2,0))),_mm_set1_epi32(1013904223));
+
+	u_ps = _mm_or_si128(_mm_srli_epi32(x_ps, 9), _mm_set1_epi32(0x3F800000));
+ 	r_ps = _mm_sub_ps(_mm_castsi128_ps(u_ps), _mm_set1_ps(1));
+
+	for (size_t i = 0; i < count; i += 8) {
+        	u1_ps = _mm_sub_ps(one, r_ps); // [0, 1) -> (0, 1]
+        	u2_ps = r_ps;
+		radius = _mm_sqrt_ps(_mm_mul_ps(minustwo, _mm_set_ps(log(u1_ps[0]),log(u1_ps[1]),log(u1_ps[2]),log(u1_ps[3]))));
+		theta = _mm_mul_ps(twopi, u2_ps);
+        sincos_ps(theta, &sintheta, &costheta);
+		_mm_store_ps(&data[i    ], _mm_mul_ps(radius, costheta));
+		_mm_store_ps(&data[i + 4], _mm_mul_ps(radius, sintheta));
+	}
 }
 /*
 @defgroup _gaussdouble Gaussian random number generator based on modified Box-Muller transformation.
@@ -233,30 +327,28 @@ double ziggurat(double mean, double variance)
 */
 
 /*!\brief Gaussian random number generator based on modified Box-Muller transformation.Returns a double-precision floating-point number. */
-//#define random_SSE
+#define random_SSE
 #ifdef random_SSE
 double gaussdouble(double mean, double variance)
 {
   static int iset=0;
-  static double gset;
-  double fac,rn,r[2],v1[2],v2[2],ones[]={1.0,1.0};
+  static float gset;
+  float fac,rn,r[2],v1[2],v2[2],ones[]={1.0,1.0,1.0,1.0};
   static double max=-1000000;
   static double min=1000000;
-  __m128d v1_128, v2_128, r128, ones128, compge128;
-  ones128 = _mm_load_pd(ones);
+  __m128 v1_128, v2_128, r128, ones128,compge128_mask;
+  ones128 = _mm_load_ps(ones);
   if (iset == 0) {
     do {
       //v2 = 2.0*uniformrandom()-1.0;
-      v1_128 = _mm_set_pd(2*UNI-1,2*UNI-1);
-      v2_128 = _mm_set_pd(2*UNI-1,2*UNI-1);
+      v1_128 = _mm_set1_ps(2*UNI-1);
+      v2_128 = _mm_set1_ps(2*UNI-1);
       //r = v1*v1+v2*v2;
-      v1_128= _mm_mul_pd(v1_128,v1_128);
-      v2_128= _mm_mul_pd(v2_128,v2_128);
-      r128= _mm_add_pd(v1_128,v2_128);
-      //compge128=_mm_cmpge_pd(r128,ones128);
-      _mm_storeu_pd(&r[0],r128);
+      r128= _mm_add_ps(_mm_mul_ps(v1_128,v1_128),_mm_mul_ps(v2_128,v2_128));
+      compge128_mask=_mm_cmpge_ps(r128,ones128);
+      //_mm_storeu_ps(&r[0],r128);
       //printf("Inside do: r[0] %e, r[1] %e\n",r[0],r[1]);
-    }  while (r[0] >= 1.0 && r[1]>=1.0);
+    }  while (compge128_mask[0] != 4294967295 && compge128_mask[1]!=4294967295 && compge128_mask[2]!=4294967295 && compge128_mask[3]!=4294967295);
     //printf("outside do: r[0] %e, r[1] %e\n",r[0],r[1]);
     if (r[0]<r[1]){
         fac = sqrt(-2.0*log(r[0])/r[0]);
@@ -329,10 +421,10 @@ double gaussdouble(double mean, double variance)
   }
 }
 #endif
-/*
-static void gaussfloat_sse2(float* data, size_t count) {
+
+/*static void gaussfloat_sse2(float* data, size_t count) {
 	//assert(count % 8 == 0);
-	LCG<__m128> r;
+	//LCG<__m128> r;
 	for (int i = 0; i < count; i += 8) {
         __m128 u1 = _mm_sub_ps(_mm_set1_ps(1.0f), r()); // [0, 1) -> (0, 1]
         __m128 u2 = r();
@@ -343,8 +435,8 @@ static void gaussfloat_sse2(float* data, size_t count) {
 		_mm_store_ps(&data[i    ], _mm_mul_ps(radius, costheta));
 		_mm_store_ps(&data[i + 4], _mm_mul_ps(radius, sintheta));
 	}
-}
-*/
+}*/
+
 #ifdef MAIN
 main(int argc,char **argv)
 {

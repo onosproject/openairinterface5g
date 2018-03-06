@@ -92,7 +92,9 @@ void adc_SSE_float(float *r_re[2],
          unsigned int **output,
          unsigned int nb_rx_antennas,
          unsigned int length,
-         unsigned char B)
+         unsigned char B,
+	 unsigned int samples,
+	 unsigned int ofdm_symbol_size)
 {
   int i;
   int aa;
@@ -100,19 +102,21 @@ void adc_SSE_float(float *r_re[2],
   __m128i r_re128i, r_im128i,output128;
   float gain = (float)(1<<(B-1));
   gain128=_mm_set1_ps(gain);
-  for (i=0; i<(length>>2); i++) {
-    for (aa=0; aa<nb_rx_antennas; aa++) {
-      r_re128=_mm_loadu_ps(&r_re[aa][4*i+input_offset]);
-      r_im128=_mm_loadu_ps(&r_im[aa][4*i+input_offset]);
-      r_re128=_mm_mul_ps(r_re128,gain128);
-      r_im128=_mm_mul_ps(r_im128,gain128);
-      r_re128i=_mm_cvtps_epi32(r_re128);
-      r_im128i=_mm_cvtps_epi32(r_im128); 
-      r_re128i=_mm_packs_epi32(r_re128i,r_re128i);
-      r_im128i=_mm_packs_epi32(r_im128i,r_im128i); 
-      output128=_mm_unpacklo_epi16(r_re128i,r_im128i);
-      _mm_storeu_si128((__m128i *)&output[aa][4*i+output_offset],output128);
-    }
+  for (i=0; i<(length>>2); i++) 
+  {
+	    for (aa=0; aa<nb_rx_antennas; aa++) 
+	    {
+	      r_re128=_mm_loadu_ps(&r_re[aa][4*i+input_offset]);
+	      r_im128=_mm_loadu_ps(&r_im[aa][4*i+input_offset]);
+	      r_re128=_mm_mul_ps(r_re128,gain128);
+	      r_im128=_mm_mul_ps(r_im128,gain128);
+	      r_re128i=_mm_cvtps_epi32(r_re128);
+	      r_im128i=_mm_cvtps_epi32(r_im128); 
+	      r_re128i=_mm_packs_epi32(r_re128i,r_re128i);
+	      r_im128i=_mm_packs_epi32(r_im128i,r_im128i); 
+	      output128=_mm_unpacklo_epi16(r_re128i,r_im128i);
+	      _mm_storeu_si128((__m128i *)&output[aa][4*i+output_offset],output128);
+	    }
   }
 }
 

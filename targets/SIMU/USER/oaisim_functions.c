@@ -995,7 +995,7 @@ void init_seed(uint8_t set_seed)
 
   } else {
     randominit (0);
-    table_nor(1234567891);//Setup for the normal probability distribution function. Always use a non-zero unsigned long argument. 
+    table_nor(123456789);//Setup for the normal probability distribution function. Always use a non-zero unsigned long argument. 
     set_taus_seed (0);
   }
 }

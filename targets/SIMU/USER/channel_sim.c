@@ -682,7 +682,9 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 		    rxdataF,
 		    nb_antennas_rx,
 		    frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,
-		    12);
+		    12,
+		    PHY_vars_UE_g[UE_id][CC_id]->frame_parms.N_RB_DL*12,
+		    frame_parms->ofdm_symbol_size);
 #else
 	        adc(r_re_p_f,
 		    r_im_p_f,
@@ -1206,7 +1208,9 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 		rxdataF,
 		nb_antennas_rx,
 		frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,
-		12);
+		12,
+		PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.N_RB_DL*12,
+		frame_parms->ofdm_symbol_size);
 #else
 	        adc(r_re_p_f,
 		r_im_p_f,

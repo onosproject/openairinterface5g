@@ -28,6 +28,7 @@
 
 #include "PHY/TOOLS/defs.h"
 #include "defs.h"
+#include "PHY/sse_intrin.h"
 
 // NEW code with lookup table for sin/cos based on delay profile (TO BE TESTED)
 
@@ -181,7 +182,6 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
       else
         delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
 
-       //sincos_ps(_mm_set_ps(cos(twopi*(4*f)*delay),cos(twopi*(4*f)*delay)), &sin_lut128, &cos_lut128);
       //sincos_ps(_mm_set_ps(twopi*(4*f+3)*delay,twopi*(4*f+2)*delay,twopi*(4*f+1)*delay,twopi*(4*f)*delay), &sin_lut128, &cos_lut128);
       cos_lut128=_mm_set_ps(cos(twopi*(4*f+3)*delay),cos(twopi*(4*f+2)*delay),cos(twopi*(4*f+1)*delay),cos(twopi*(4*f)*delay));
       sin_lut128=_mm_set_ps(sin(twopi*(4*f+3)*delay),sin(twopi*(4*f+2)*delay),sin(twopi*(4*f+1)*delay),sin(twopi*(4*f)*delay));
@@ -224,11 +224,11 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
 
     }
   }
-  for (f=-(n_samples>>1); f<=(n_samples>>1); f++) {
+  /*for (f=-(n_samples>>1); f<=(n_samples>>1); f++) {
     for (l=0; l<(int)desc->nb_taps; l++) {  
       printf("f %d, l %d (cos,sin) (%e,%e):\n",f,l,cos_lut_f[l][f+(n_samples>>1)],sin_lut_f[l][f+(n_samples>>1)]);
     }
-  }
+  }*/
   return(0);
 }
 int freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
@@ -861,5 +861,100 @@ void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
   /* update the sign */
   *s = _mm_xor_ps(xmm1, sign_bit_sin);
   *c = _mm_xor_ps(xmm2, sign_bit_cos);
+}
+
+
+__m128 log_ps(__m128 x) {
+#if defined(__x86_64__) || defined(__i386__)
+  __m128i emm0 __attribute__((aligned(16)));
+  __m128i* invalid_mask1 __attribute__((aligned(16)))=NULL;
+  __m128 invalid_mask __attribute__((aligned(16)));
+  __m128 one __attribute__((aligned(16)));
+  __m128i *y1 __attribute__((aligned(16)))=NULL;
+
+  __m128i l __attribute__((aligned(16)))=_mm_setr_epi32(1,2,3,49);
+  y1 = &l;
+  //l = _mm_storeu_si128(y1);
+  static uint32_t s[4] __attribute__((aligned(16)));
+  _mm_storeu_si128(s,_mm_setr_epi32(1,2,3,45));
+  printf("s is %d,%d,%d,%d\n",s[0],s[1],s[2],s[3]);
+#endif
+
+  one = _mm_set1_ps(1.f);
+  printf("one_m128 is %e,%e,%e,%e\n",one[0],one[1],one[2],one[3]);
+  invalid_mask= _mm_cmple_ps(x, _mm_setzero_ps());
+  printf("ln inside bef x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
+  printf("ln inside invalid_mask is %e,%e,%e,%e\n",invalid_mask[0],invalid_mask[1],invalid_mask[2],invalid_mask[3]);
+  invalid_mask1 = (__m128i*) &y1;
+  //invalid_mask = 
+  printf("ln inside invalid_mask1 is %d,%d,%d,%d\n",invalid_mask1[0],invalid_mask1[1],invalid_mask1[2],invalid_mask1[3]);
+
+  x = _mm_max_ps(x, _mm_set1_ps(0x00800000));  // cut off denormalized stuff
+  printf("ln inside af x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
+
+
+  // part 1: x = frexpf(x, &e); 
+  emm0 = _mm_srli_epi32(_mm_castps_si128(x), 23);
+
+  // keep only the fractional part 
+  x = _mm_and_ps(x, _mm_set1_ps(~0x7f800000));
+  printf("ln inside x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
+  x = _mm_or_ps(x, _mm_set1_ps(0.5f));
+  printf("ln inside x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
+
+
+  // now e=mm0:mm1 contain the really base-2 exponent 
+  emm0 = _mm_sub_epi32(emm0, _mm_set1_epi32(0x7f));
+  __m128 e = _mm_cvtepi32_ps(emm0); 
+
+
+  e = _mm_add_ps(e, one);
+
+
+  __m128 mask = _mm_cmplt_ps(x, _mm_set1_ps(0.707106781186547524f));
+
+  __m128 tmp = _mm_and_ps(x, mask);
+  x = _mm_sub_ps(x, one);
+  e = _mm_sub_ps(e, _mm_and_ps(one, mask));
+
+  x = _mm_add_ps(x, tmp);
+
+
+  __m128 z = _mm_mul_ps(x,x);
+
+  __m128 y = _mm_set1_ps(7.0376836292E-2f);
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(- 1.1514610310E-1f));
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(1.1676998740E-1f));
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(- 1.2420140846E-1f));
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(1.4249322787E-1f));
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(- 1.6668057665E-1f));
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(2.0000714765E-1f));
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(- 2.4999993993E-1f));
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(3.3333331174E-1f));
+  y = _mm_mul_ps(y, x);
+
+  y = _mm_mul_ps(y, z);
+  
+
+  tmp = _mm_mul_ps(e, _mm_set1_ps(-2.12194440e-4f));
+  y = _mm_add_ps(y, tmp);
+
+
+  tmp = _mm_mul_ps(z, _mm_set1_ps(0.5f));
+  y = _mm_sub_ps(y, tmp);
+
+  tmp = _mm_mul_ps(e, _mm_set1_ps(0.693359375f));
+  x = _mm_add_ps(x, y);
+  x = _mm_add_ps(x, tmp);
+  x = _mm_or_ps(x, invalid_mask); // negative arg will be NAN
+  return x;
 }
 

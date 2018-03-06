@@ -98,7 +98,9 @@ void adc_SSE_float(float *r_re[2],
          int **output,
          unsigned int nb_rx_antennas,
          unsigned int length,
-         unsigned char B);
+         unsigned char B,
+	 unsigned int samples,
+	 unsigned int ofdm_symbol_size);
 void adc_freq(double *r_re[2],
          double *r_im[2],
          unsigned int input_offset,
