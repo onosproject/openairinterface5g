@@ -1,13 +1,14 @@
 #include "IF_Module_L2_primitives_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
+#include "LAYER2/MAC/extern_NB_IoT.h"
 
 
 // Sched_INFO as a input for the scheduler
 void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 {
     int i=0;
+    uint32_t abs_subframe;
     //UE_TEMPLATE_NB_IoT *UE_info;
-    //mac_NB_IoT_t *mac_inst;
 
       //If there is a preamble, do the initiate RA procedure
       if(UL_INFO->NRACH.number_of_initial_scs_detected>0)
@@ -17,14 +18,14 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
               // initiate_ra here, some useful inforamtion : 
               //(UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc
               //(UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance
-              /*init_RA_NB_IoT(UL_INFO->module_id,
-                                      UL_INFO->CC_id,
-                                      UL_INFO->frame,
-                                      (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
-                                      //timing_offset = Timing_advance * 16
-                                      (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance * 16,
-                                      UL_INFO->subframe
-                                     );*/
+              init_RA_NB_IoT(mac_inst,
+                             (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
+                             (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.nrach_ce_level,
+                             UL_INFO->frame,
+                             //timing_offset = Timing_advance * 16
+                             (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
+                             );
+
 
             }
         }
@@ -64,7 +65,9 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 
           }
 
+    abs_subframe = UL_INFO->frame*10+UL_INFO->subframe;
     //scheduler here
     //Schedule subframe should be next four subframe, means that UL_INFO->frame*10+UL_INFO->subframe + 4
-    //eNB_dlsch_ulsch_scheduler_NB_IoT(mac_inst,abs_subframe);
+    eNB_dlsch_ulsch_scheduler_NB_IoT(mac_inst,abs_subframe);
+
 }

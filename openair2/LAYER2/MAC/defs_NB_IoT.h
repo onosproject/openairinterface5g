@@ -521,7 +521,9 @@ typedef struct {
   nfapi_config_request_t config;
 
 
-  IF_Module_NB_IoT_t            *if_inst_NB_IoT;
+  IF_Module_NB_IoT_t *if_inst_NB_IoT;
+
+  Sched_Rsp_NB_IoT_t Sched_INFO;
 
 } eNB_MAC_INST_NB_IoT;
 
