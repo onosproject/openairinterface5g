@@ -235,10 +235,6 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   int           G=0;
   rrc_eNB_carrier_data_NB_IoT_t *carrier = &eNB_rrc_inst_NB_IoT->carrier[0];
 
-  // test for getting RRC instance
-
-  LOG_I(PHY,"NB-IoT Testing for getting RRC in PHY show the size of MIB : %d\n",carrier->sizeof_MIB_NB_IoT);
-
  //NSSS only happened in the even frame
   if(frame%2==0)
     {
