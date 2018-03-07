@@ -1523,12 +1523,12 @@ void qpsk_qpsk_TM3456(short *stream0_in,
 
 /** \brief Attempt decoding of a particular DCI with given length and format.
     @param DCI_LENGTH length of DCI in bits
-    @param DCI_FMT Format of DCI
+    @param coded_bits number of physical channel bits
     @param e e-sequence (soft bits)
     @param decoded_output Output of Viterbi decoder
 */
 void dci_decoding(uint8_t DCI_LENGTH,
-                  uint8_t DCI_FMT,
+                  uint16_t coded_bits,
                   int8_t *e,
                   uint8_t *decoded_output);
 
@@ -1719,6 +1719,24 @@ void ulsch_extract_rbs_single(int32_t **rxdataF,
                               uint8_t Ns,
                               LTE_DL_FRAME_PARMS *frame_parms);
 
+void ulsch_channel_compensation(int32_t **rxdataF_ext,
+                                int32_t **ul_ch_estimates_ext,
+                                int32_t **ul_ch_mag,
+                                int32_t **ul_ch_magb,
+                                int32_t **rxdataF_comp,
+                                LTE_DL_FRAME_PARMS *frame_parms,
+                                uint8_t symbol,
+                                uint8_t Qm,
+                                uint16_t nb_rb,
+                                uint8_t output_shift);
+
+void ulsch_detection_mrc(LTE_DL_FRAME_PARMS *frame_parms,
+                         int32_t **rxdataF_comp,
+                         int32_t **ul_ch_mag,
+                         int32_t **ul_ch_magb,
+                         uint8_t symbol,
+                         uint16_t nb_rb);
+
 uint8_t subframe2harq_pid(LTE_DL_FRAME_PARMS *frame_parms,frame_t frame,uint8_t subframe);
 uint8_t subframe2harq_pid_eNBrx(LTE_DL_FRAME_PARMS *frame_parms,uint8_t subframe);
 
@@ -1737,6 +1755,21 @@ int generate_ue_dlsch_params_from_dci(int frame,
                                       uint16_t p_rnti,
                                       uint8_t beamforming_mode,
                                       uint16_t tc_rnti);
+
+int32_t ulsch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
+                       int32_t **rxdataF_comp,
+                       int16_t *ulsch_llr,
+                       uint8_t symbol,
+                       uint16_t nb_rb,
+                       int16_t **llrp);
+
+void ulsch_16qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
+                     int32_t **rxdataF_comp,
+                     int16_t *ulsch_llr,
+                     int32_t **ul_ch_mag,
+                     uint8_t symbol,
+                     uint16_t nb_rb,
+                     int16_t **llrp);
 
 void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,
 			eNB_rxtx_proc_t *proc,

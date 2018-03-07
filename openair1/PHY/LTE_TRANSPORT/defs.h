@@ -886,6 +886,8 @@ typedef struct {
   uint32_t prb_End;
   /// SL-OffsetIndicator (0-10239)
   uint32_t SL_OffsetIndicator;
+  /// SC-SC_Period
+  uint32_t SL_SC_Period;
   /// PSCCH subframe bitmap, first 64-bits (up to 40 bits for Rel 12)
   uint64_t bitmap1;
   /// PSCCH subframe bitmap, 2nd 64-bits (up to 100 bits for Rel 14)
@@ -908,7 +910,6 @@ typedef struct {
   uint32_t timing_advance_indication;
   /// SCI0 Group Destination ID for SLSCH
   uint32_t group_destination_id;
-
   // SLSCH Parameters
   /// Number of Subbands (36.213 14.1.1.2)
   uint32_t Nsb;

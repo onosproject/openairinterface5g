@@ -1140,7 +1140,6 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
   Qm = ulsch[UE_id]->harq_processes[harq_pid]->Qm;
 #ifdef DEBUG_ULSCH
   printf("rx_ulsch: harq_pid %d, nb_rb %d first_rb %d\n",harq_pid,ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,ulsch[UE_id]->harq_processes[harq_pid]->first_rb);
-
 #endif //DEBUG_ULSCH
 
   if (ulsch[UE_id]->harq_processes[harq_pid]->nb_rb == 0) {
@@ -1152,10 +1151,10 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
 
 #ifdef DEBUG_ULSCH
     printf("rx_ulsch : symbol %d (first_rb %d,nb_rb %d), rxdataF %p, rxdataF_ext %p\n",l,
-        ulsch[UE_id]->harq_processes[harq_pid]->first_rb,
-        ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,
-        common_vars->rxdataF,
-        pusch_vars->rxdataF_ext);
+	   ulsch[UE_id]->harq_processes[harq_pid]->first_rb,
+	   ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,
+	   common_vars->rxdataF,
+	   pusch_vars->rxdataF_ext);
 #endif //DEBUG_ULSCH
 
     ulsch_extract_rbs_single(common_vars->rxdataF,
@@ -1165,11 +1164,25 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
                              l%(frame_parms->symbols_per_tti/2),
                              l/(frame_parms->symbols_per_tti/2),
                              frame_parms);
-    
-    lte_ul_channel_estimation(eNB,proc,
-                              UE_id,
-                              l%(frame_parms->symbols_per_tti/2),
-                              l/(frame_parms->symbols_per_tti/2));
+
+    int Ns = l/(frame_parms->symbols_per_tti/2);
+    int lmod = l%(frame_parms->symbols_per_tti/2);
+    int cyclic_shift = (frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
+			eNB->ulsch[UE_id]->harq_processes[harq_pid]->n_DMRS2 +
+			frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[(subframe<<1)+Ns]) % 12;
+    lte_ul_channel_estimation(&eNB->frame_parms,
+			      pusch_vars->drs_ch_estimates,
+			      pusch_vars->drs_ch_estimates_time,
+			      pusch_vars->rxdataF_ext,
+			      ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,
+			      proc->frame_rx,
+			      subframe,
+			      frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[Ns+(subframe<<1)],
+			      frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[Ns+(subframe<<1)],
+			      cyclic_shift,
+			      lmod,
+			      Ns,
+			      ulsch[UE_id]->rnti);
   }
 
   int correction_factor = 1;
@@ -1212,7 +1225,7 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
   avgs = 0;
   
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
-    avgs = cmax(avgs,avgU[(aarx<<1)]);
+    avgs = cmax(avgs,avgU[aarx]);
   
   //      log2_maxh = 4+(log2_approx(avgs)/2);
   

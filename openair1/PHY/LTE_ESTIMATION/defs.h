@@ -218,11 +218,20 @@ void phy_adjust_gain (PHY_VARS_UE *phy_vars_ue,
               uint32_t rx_power_fil_dB,
                       unsigned char eNB_id);
 
-int lte_ul_channel_estimation(PHY_VARS_eNB *phy_vars_eNB,
-			      eNB_rxtx_proc_t *proc,
-                              module_id_t UE_id,
-                              uint8_t l,
-                              uint8_t Ns);
+int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
+				  int32_t **ul_ch_estimates,
+				  int32_t **ul_ch_estimates_time,
+				  int32_t **rxdataF_ext,
+				  int N_rb_alloc,
+				  int frame_rx,
+				  int subframe_rx,
+				  uint32_t u,
+				  uint32_t v,
+				  uint32_t cyclic_shift,
+                                  unsigned char l,
+                                  unsigned char Ns,
+				  uint16_t rnti);
+
 
 
 int16_t lte_ul_freq_offset_estimation(LTE_DL_FRAME_PARMS *frame_parms,

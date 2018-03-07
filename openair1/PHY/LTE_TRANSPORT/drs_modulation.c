@@ -58,25 +58,82 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   int32_t *txdataF = ue->common_vars.txdataF[ant];
   uint32_t u,v,alpha_ind;
-  uint32_t u0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[subframe<<1];
-  uint32_t u1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(subframe<<1)];
-  uint32_t v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
-  uint32_t v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
+  uint32_t u0,u1,v0,v1;
   int32_t ref_re,ref_im;
-  uint8_t harq_pid = subframe2harq_pid(frame_parms,proc->frame_tx,subframe);
+  uint8_t harq_pid;
+  int lstart,linc;
+ 
+  AssertFatal(ue->sl_chan>=0 && ue->sl_chan<MAX_SLTYPES, "ue->sl_chan %d impossible\n",ue->sl_chan);
 
-  cyclic_shift0 = (frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
-                   ue->ulsch[eNB_id]->harq_processes[harq_pid]->n_DMRS2 +
-                   frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1]+
-                   ((ue->ulsch[0]->cooperation_flag==2)?10:0)+
-                   ant*6) % 12;
-  //  printf("PUSCH.cyclicShift %d, n_DMRS2 %d, nPRS %d\n",frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift,ue->ulsch[eNB_id]->n_DMRS2,ue->lte_frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1]);
-  cyclic_shift1 = (frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
-                   ue->ulsch[eNB_id]->harq_processes[harq_pid]->n_DMRS2 +
-                   frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[(subframe<<1)+1]+
-                   ((ue->ulsch[0]->cooperation_flag==2)?10:0)+
-                   ant*6) % 12;
-
+  switch (ue->sl_chan) {
+  case PSCCH_12_EVEN:  
+    cyclic_shift0=0;
+    cyclic_shift1=0;
+    u0=0;
+    u1=0;
+    v0=0;
+    v1=0;
+    lstart = (3 - frame_parms->Ncp);
+    linc   = frame_parms->symbols_per_tti;
+    break;
+  case PSCCH_12_ODD:
+    cyclic_shift0=0;
+    cyclic_shift1=0;
+    u0=0;
+    u1=0;
+    v0=0;
+    v1=0;
+    lstart = (10 - (frame_parms->Ncp<<1));
+    linc   = frame_parms->symbols_per_tti;
+    break;
+  break;
+  case PSCCH_34_EVEN:
+    AssertFatal(1==0,"SL Transmission type 3/4 not supported for now\n");
+  break;
+  case PSCCH_34_ODD:
+    AssertFatal(1==0,"SL Transmission type 3/4 not supported for now\n");
+  break;
+  case PSSCH_12:
+    /* Need to figure this out ...
+    u0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[subframe<<1];
+    u1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(subframe<<1)];
+    v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
+    v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];*/
+    cyclic_shift0 = (ue->slsch->n_ss_PSSCH>>1)&7;
+    cyclic_shift1 = cyclic_shift0;
+    lstart        = (3 - frame_parms->Ncp);
+    linc          = frame_parms->symbols_per_tti;
+    break;
+  case PSSCH_34:
+    AssertFatal(1==0,"SL Transmission type 3/4 not supported for now\n");
+    break;
+  case PSDCH_ODD:
+  case PSDCH_EVEN:
+    AssertFatal(1==0,"PSDCH Transmission not supported for now\n");
+    break;
+  case PSBCH:
+    AssertFatal(1==0,"PSBCH Transmission not supported for now\n");
+    break;
+  case NO_SL:
+    u0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[subframe<<1];
+    u1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(subframe<<1)];
+    v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
+    v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
+    harq_pid = subframe2harq_pid(frame_parms,proc->frame_tx,subframe);
+    lstart = (3 - frame_parms->Ncp);
+    linc   = (7 - frame_parms->Ncp);
+    cyclic_shift0 = (frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
+		     ue->ulsch[eNB_id]->harq_processes[harq_pid]->n_DMRS2 +
+		     frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1]+
+		     ((ue->ulsch[0]->cooperation_flag==2)?10:0)+
+		     ant*6) % 12;
+    //  printf("PUSCH.cyclicShift %d, n_DMRS2 %d, nPRS %d\n",frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift,ue->ulsch[eNB_id]->n_DMRS2,ue->lte_frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1]);
+    cyclic_shift1 = (frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
+		     ue->ulsch[eNB_id]->harq_processes[harq_pid]->n_DMRS2 +
+		     frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[(subframe<<1)+1]+
+		     ((ue->ulsch[0]->cooperation_flag==2)?10:0)+
+		     ant*6) % 12;
+  }
   //       cyclic_shift0 = 0;
   //        cyclic_shift1 = 0;
   Msc_RS = 12*nb_rb;
@@ -105,9 +162,9 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
 #endif
 
 
-  for (l = (3 - frame_parms->Ncp),u=u0,v=v0,cyclic_shift=cyclic_shift0;
+  for (l = lstart,u=u0,v=v0,cyclic_shift=cyclic_shift0;
        l<frame_parms->symbols_per_tti;
-       l += (7 - frame_parms->Ncp),u=u1,v=v1,cyclic_shift=cyclic_shift1) {
+       l += linc,u=u1,v=v1,cyclic_shift=cyclic_shift1) {
 
     drs_offset = 0;  //  printf("drs_modulation: Msc_RS = %d, Msc_RS_idx = %d\n",Msc_RS, Msc_RS_idx);
 

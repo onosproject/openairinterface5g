@@ -1240,6 +1240,8 @@ typedef struct {
   LTE_UE_PBCH      *pbch_vars[NUMBER_OF_CONNECTED_eNB_MAX];
   LTE_UE_PDCCH     *pdcch_vars[RX_NB_TH_MAX][NUMBER_OF_CONNECTED_eNB_MAX];
   LTE_UE_PRACH     *prach_vars[NUMBER_OF_CONNECTED_eNB_MAX];
+  LTE_UE_PSCCH_TX  *pscch_vars_tx;
+  LTE_UE_PSCCH_RX  *pscch_vars_rx;
   LTE_UE_DLSCH_t   *dlsch[RX_NB_TH_MAX][NUMBER_OF_CONNECTED_eNB_MAX][2]; // two RxTx Threads
   LTE_UE_ULSCH_t   *ulsch[NUMBER_OF_CONNECTED_eNB_MAX];
   LTE_UE_DLSCH_t   *dlsch_SI[NUMBER_OF_CONNECTED_eNB_MAX];
@@ -1248,7 +1250,11 @@ typedef struct {
   LTE_UE_DLSCH_t   *dlsch_MCH[NUMBER_OF_CONNECTED_eNB_MAX];
   // This is for SIC in the UE, to store the reencoded data
   LTE_eNB_DLSCH_t  *dlsch_eNB[NUMBER_OF_CONNECTED_eNB_MAX];
-
+  SL_chan_t        sl_chan;
+  SLSCH_t          *slsch;
+  SLSCH_t          slsch_rx;
+  int              slcch_received;
+  uint8_t          sidelink_l2_emulation;
   //Paging parameters
   uint32_t              IMSImod1024;
   uint32_t              PF;
@@ -1323,6 +1329,9 @@ typedef struct {
   int dlsch_mtch_trials[MAX_MBSFN_AREA][NUMBER_OF_CONNECTED_eNB_MAX];
   int current_dlsch_cqi[NUMBER_OF_CONNECTED_eNB_MAX];
   unsigned char first_run_timing_advance[NUMBER_OF_CONNECTED_eNB_MAX];
+  uint8_t               sidelink_active;
+  uint8_t               pscch_coded;
+  uint8_t               pscch_generated;
   uint8_t               generate_prach;
   uint8_t               prach_cnt;
   uint8_t               prach_PreambleIndex;

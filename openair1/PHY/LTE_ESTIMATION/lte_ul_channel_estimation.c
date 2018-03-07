@@ -34,24 +34,33 @@ static int16_t ru_90c[2*128] = {32767, 0,32766, -402,32758, -804,32746, -1206,32
 
 #define SCALE 0x3FFF
 
-int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
-				  eNB_rxtx_proc_t *proc,
-                                  uint8_t UE_id,
+int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
+				  int32_t **ul_ch_estimates,
+				  int32_t **ul_ch_estimates_time,
+				  int32_t **rxdataF_ext,
+				  int N_rb_alloc,
+				  int frame_rx,
+				  int subframe_rx,
+				  uint32_t u,
+				  uint32_t v,
+				  uint32_t cyclic_shift,
                                   unsigned char l,
-                                  unsigned char Ns) {
+                                  unsigned char Ns,
+				  uint16_t rnti) {
 
-  LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
-  LTE_eNB_PUSCH *pusch_vars = eNB->pusch_vars[UE_id];
-  int32_t **ul_ch_estimates=pusch_vars->drs_ch_estimates;
+
+
+  /*  int32_t **ul_ch_estimates=pusch_vars->drs_ch_estimates;
   int32_t **ul_ch_estimates_time=  pusch_vars->drs_ch_estimates_time;
   int32_t **rxdataF_ext=  pusch_vars->rxdataF_ext;
   int subframe = proc->subframe_rx;
-  uint8_t harq_pid = subframe2harq_pid(frame_parms,proc->frame_rx,subframe);
+  */
+
   int16_t delta_phase = 0;
   int16_t *ru1 = ru_90;
   int16_t *ru2 = ru_90;
   int16_t current_phase1,current_phase2;
-  uint16_t N_rb_alloc = eNB->ulsch[UE_id]->harq_processes[harq_pid]->nb_rb;
+  //  uint16_t N_rb_alloc = eNB->ulsch[UE_id]->harq_processes[harq_pid]->nb_rb;
   uint16_t aa,Msc_RS,Msc_RS_idx;
   uint16_t * Msc_idx_ptr;
   int k,pilot_pos1 = 3 - frame_parms->Ncp, pilot_pos2 = 10 - 2*frame_parms->Ncp;
@@ -60,11 +69,10 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
 
   //uint8_t nb_antennas_rx = frame_parms->nb_antenna_ports_eNB;
   uint8_t nb_antennas_rx = frame_parms->nb_antennas_rx;
-  uint8_t cyclic_shift;
 
   uint32_t alpha_ind;
-  uint32_t u=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[Ns+(subframe<<1)];
-  uint32_t v=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[Ns+(subframe<<1)];
+  //  uint32_t u=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[Ns+(subframe<<1)];
+  //  uint32_t v=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[Ns+(subframe<<1)];
   int32_t tmp_estimates[N_rb_alloc*12] __attribute__((aligned(16)));
 
   int symbol_offset,i;
@@ -86,10 +94,9 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
 int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
 
   Msc_RS = N_rb_alloc*12;
+  /*
 
-  cyclic_shift = (frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
-                  eNB->ulsch[UE_id]->harq_processes[harq_pid]->n_DMRS2 +
-                  frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[(subframe<<1)+Ns]) % 12;
+  */
 
 #if defined(USER_MODE)
   Msc_idx_ptr = (uint16_t*) bsearch(&Msc_RS, dftsizes, 33, sizeof(uint16_t), compareints);
@@ -267,50 +274,51 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
 #endif
       }
 
-      // Convert to time domain for visualization
-      memset(temp_in_ifft_0,0,frame_parms->ofdm_symbol_size*sizeof(int32_t));
-      for(i=0; i<Msc_RS; i++)
-        ((int32_t*)temp_in_ifft_0)[i] = ul_ch_estimates[aa][symbol_offset+i];
-
-      switch(frame_parms->N_RB_DL) {
-      case 6:
-	idft128((int16_t*) temp_in_ifft_0,
-	       (int16_t*) ul_ch_estimates_time[aa],
-	       1);
-	break;
-      case 25:
-	idft512((int16_t*) temp_in_ifft_0,
-	       (int16_t*) ul_ch_estimates_time[aa],
-	       1);
-	break;
-      case 50:
-	idft1024((int16_t*) temp_in_ifft_0,
-	       (int16_t*) ul_ch_estimates_time[aa],
-	       1);
-	break;
-      case 100:
-	idft2048((int16_t*) temp_in_ifft_0,
-	       (int16_t*) ul_ch_estimates_time[aa],
-	       1);
-	break;
-      }
-
+      if (ul_ch_estimates_time[aa]) {
+	// Convert to time domain for visualization
+	memset(temp_in_ifft_0,0,frame_parms->ofdm_symbol_size*sizeof(int32_t));
+	for(i=0; i<Msc_RS; i++)
+	  ((int32_t*)temp_in_ifft_0)[i] = ul_ch_estimates[aa][symbol_offset+i];
+	
+	switch(frame_parms->N_RB_DL) {
+	case 6:
+	  idft128((int16_t*) temp_in_ifft_0,
+		  (int16_t*) ul_ch_estimates_time[aa],
+		  1);
+	  break;
+	case 25:
+	  idft512((int16_t*) temp_in_ifft_0,
+		  (int16_t*) ul_ch_estimates_time[aa],
+		  1);
+	  break;
+	case 50:
+	  idft1024((int16_t*) temp_in_ifft_0,
+		   (int16_t*) ul_ch_estimates_time[aa],
+		   1);
+	  break;
+	case 100:
+	  idft2048((int16_t*) temp_in_ifft_0,
+		   (int16_t*) ul_ch_estimates_time[aa],
+		   1);
+	  break;
+	}
+      
 #if T_TRACER
-      if (aa == 0)
-        T(T_ENB_PHY_UL_CHANNEL_ESTIMATE, T_INT(0), T_INT(eNB->ulsch[UE_id]->rnti),
-          T_INT(proc->frame_rx), T_INT(subframe),
-          T_INT(0), T_BUFFER(ul_ch_estimates_time[0], 512  * 4));
+	if (aa == 0)
+	  T(T_ENB_PHY_UL_CHANNEL_ESTIMATE, T_INT(0), T_INT(rnti),
+	    T_INT(frame_rx), T_INT(subframe),
+	    T_INT(0), T_BUFFER(ul_ch_estimates_time[0], 512  * 4));
 #endif
-
+      }
 #ifdef DEBUG_CH
 
       if (aa==0) {
         if (Ns == 0) {
           write_output("rxdataF_ext.m","rxF_ext",&rxdataF_ext[aa][symbol_offset],512*2,2,1);
           write_output("tmpin_ifft.m","drs_in",temp_in_ifft_0,512,1,1);
-          write_output("drs_est0.m","drs0",ul_ch_estimates_time[aa],512,1,1);
+          if (ul_ch_estimates_time[aa]) write_output("drs_est0.m","drs0",ul_ch_estimates_time[aa],512,1,1);
         } else
-          write_output("drs_est1.m","drs1",ul_ch_estimates_time[aa],512,1,1);
+          if (ul_ch_estimates_time[aa]) write_output("drs_est1.m","drs1",ul_ch_estimates_time[aa],512,1,1);
       }
 
 #endif

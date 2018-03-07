@@ -2544,7 +2544,7 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
 
 
 void dci_decoding(uint8_t DCI_LENGTH,
-                  uint8_t aggregation_level,
+                  uint16_t coded_bits,
                   int8_t *e,
                   uint8_t *decoded_output)
 {
@@ -2555,15 +2555,14 @@ void dci_decoding(uint8_t DCI_LENGTH,
   uint16_t RCC;
 
   uint16_t D=(DCI_LENGTH+16+64);
-  uint16_t coded_bits;
+
 #ifdef DEBUG_DCI_DECODING
   int32_t i;
 #endif
 
-  AssertFatal(aggregation_level<4,
-	      "dci_decoding FATAL, illegal aggregation_level %d\n",aggregation_level);
+  AssertFatal(coded_bits<8*72,
+	      "dci_decoding FATAL, illegal codeblock size %d\n",coded_bits);
 
-  coded_bits = 72 * (1<<aggregation_level);
 
 #ifdef DEBUG_DCI_DECODING
   LOG_I(PHY," Doing DCI decoding for %d bits, DCI_LENGTH %d,coded_bits %d, e %p\n",3*(DCI_LENGTH+16),DCI_LENGTH,coded_bits,e);
@@ -2905,9 +2904,9 @@ void dci_decoding_procedure0(LTE_UE_PDCCH **pdcch_vars,
                 pdcch_vars[eNB_id]->num_pdcch_symbols,m,L2,sizeof_bits,CCEind,nCCE,*CCEmap,CCEmap_mask,format_c);
 
        dci_decoding(sizeof_bits,
-                   L,
-                   &pdcch_vars[eNB_id]->e_rx[CCEind*72],
-                   &dci_decoded_output[current_thread_id][0]);
+		    (1<<L)*72,
+		    &pdcch_vars[eNB_id]->e_rx[CCEind*72],
+		    &dci_decoded_output[current_thread_id][0]);
       /*
         for (i=0;i<3+(sizeof_bits>>3);i++)
         printf("dci_decoded_output[%d] => %x\n",i,dci_decoded_output[i]);

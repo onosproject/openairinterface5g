@@ -44,13 +44,13 @@ void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx)
 
 
   AssertFatal(sldch->payload_length <=1500-sldch_header_len - sizeof(SLDCH_t) + sizeof(uint8_t*),
-                "SLDCH payload length > %d\n",
+                "SLDCH payload length > %lu\n",
                 1500-sldch_header_len - sizeof(SLDCH_t) + sizeof(uint8_t*));
   memcpy((void*)&pdu.sldch,
          (void*)sldch,
          sizeof(SLDCH_t));
 
-  LOG_I(PHY,"SLDCH configuration %d bytes, TBS payload %d bytes => %d bytes\n",
+  LOG_I(PHY,"SLDCH configuration %lu bytes, TBS payload %d bytes => %lu bytes\n",
         sizeof(SLDCH_t)-sizeof(uint8_t*),
         sldch->payload_length,
         sldch_header_len+sizeof(SLDCH_t)-sizeof(uint8_t*)+sldch->payload_length);

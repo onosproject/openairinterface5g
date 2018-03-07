@@ -344,6 +344,21 @@ typedef enum {
   deltaF_PUCCH_Format2b_deltaF2  = 2
 } deltaF_PUCCH_Format2b_t;
 
+/// Enumeration of SL_channel_config
+typedef enum {
+  NO_SL=0,
+  PSCCH_12_EVEN=1,
+  PSCCH_12_ODD=2,
+  PSCCH_34_EVEN=3,
+  PSCCH_34_ODD=4,
+  PSSCH_12=5,
+  PSSCH_34=6,
+  PSDCH_EVEN=7,
+  PSDCH_ODD=8,
+  PSBCH=9,
+  MAX_SLTYPES=10
+} SL_chan_t;
+
 /// DeltaFList-PUCCH from 36.331 RRC spec
 typedef struct {
   deltaF_PUCCH_Format1_t   deltaF_PUCCH_Format1;
@@ -352,6 +367,7 @@ typedef struct {
   deltaF_PUCCH_Format2a_t  deltaF_PUCCH_Format2a;
   deltaF_PUCCH_Format2b_t  deltaF_PUCCH_Format2b;
 } deltaFList_PUCCH_t;
+
 
 /// SoundingRS-UL-ConfigDedicated Information Element from 36.331 RRC spec
 typedef struct {
@@ -1067,6 +1083,43 @@ typedef struct {
   // llr length per ofdm symbol
   uint32_t llr_length[14];
 } LTE_UE_PDSCH;
+
+typedef struct {
+  /// \brief Received frequency-domain signal after extraction.
+  /// - first index: ? [0..7] (hard coded) FIXME! accessed via \c nb_antennas_rx
+  /// - second index: ? [0..168*N_RB_DL[
+  int32_t **rxdataF_ext;
+  /// \brief Hold the channel estimates in time domain based on DRS.
+  /// - first index: rx antenna id [0..nb_antennas_rx[
+  /// - second index: ? [0..4*ofdm_symbol_size[
+  int32_t **drs_ch_estimates_time;
+  /// \brief Hold the channel estimates in frequency domain based on DRS.
+  /// - first index: rx antenna id [0..nb_antennas_rx[
+  /// - second index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **drs_ch_estimates;
+  /// \brief Holds the compensated signal.
+  /// - first index: rx antenna id [0..nb_antennas_rx[
+  /// - second index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  int32_t **rxdataF_comp;
+  /// received signal energy of PSCCH
+  int slcch_power;
+  /// \brief llr values.
+  /// - first index: ? [0..1179743] (hard coded)
+  int16_t *llr;
+} LTE_UE_PSCCH_RX;
+
+/// maximum size for N_SL_RB=100, SCI_A=1+13+7+5+11+8 = 45, 
+#define SCI_A 45
+/// SCI_E=12 REs * 6 symbols * 2 bits/RE
+#define SCI_E (12*6*2)
+typedef struct {
+  /// Coded PSCCH bits (12 REs, 12 OFDM symbols, 2 bits/RE)
+  uint8_t f[SCI_E];
+  // interleaved PSSCH bits
+  uint8_t h[SCI_E];
+  // interleaved+scrambled PSSCH bits
+  uint8_t b_tilde[SCI_E];
+} LTE_UE_PSCCH_TX;
 
 typedef struct {
   /// \brief Received frequency-domain signal after extraction.
