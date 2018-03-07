@@ -32,6 +32,7 @@
 #ifndef __LTE_TRANSPORT_SLSS__C__
 #define __LTE_TRANSPORT_SLSS__C__
 #include "PHY/defs.h"
+#include "pssch.h"
 
 int64_t sci_mapping(PHY_VARS_UE *ue) {
   SLSCH_t *slsch                = ue->slsch;
@@ -419,6 +420,60 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
 
 }
 
+void slsch_codingmodulation() {
+
+
+}
+void check_and_generate_pssch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
+
+  AssertFatal(frame_tx<1024 && frame_tx>0,"frame %d is illegal\n",frame_tx);
+  AssertFatal(subframe_tx<10 && subframe_tx>0,"subframe %d is illegal\n",subframe_tx);
+  SLSCH_t *slsch = ue->slsch;
+  AssertFatal(slsch!=NULL,"SLSCH is null\n");
+  uint32_t O = ue->slsch->SL_OffsetIndicator;
+  uint32_t P = ue->slsch->SL_SC_Period;
+  uint32_t absSF = (frame_tx*10)+subframe_tx;
+  uint32_t absSF_offset,absSF_modP;
+  absSF_offset = absSF-O;
+
+  if (ue->slsch_active == 0) return;
+
+  if (absSF_offset < O) return;
+
+  absSF_modP = absSF_offset%P;
+
+  // This is the condition for short SCCH bitmap (40 bits), check that the current subframe is for SLSCH
+  if (absSF_modP < 40) return;
+  
+  absSF_modP-=40;
+
+  AssertFatal(slsch->time_resource_pattern < TRP8_MAX,
+	      "received Itrp %d: TRP8 is used with Itrp in 0...%d\n",
+	      slsch->time_resource_pattern,TRP8_MAX);
+
+  // Note : this assumes Ntrp=8 for now
+  if (trp8[slsch->time_resource_pattern][absSF_modP&8]==0) return;
+  // we have an opportunity in this subframe
+  if (slsch->rvidx == 0) { // first new transmission in period, get a new packet
+    // call to MAC to update data pointer and length
+    // mac_update_slsch();
+    if (slsch->payload_length==0) {
+      ue->slsch_sdu_active = 0;
+      return;
+    }
+    ue->slsch_sdu_active = 1;
+    slsch_codingmodulation(ue,frame_tx,subframe_tx);
+    slsch->rvidx=2;
+  }
+  else if(ue->slsch_sdu_active==1){
+    slsch_codingmodulation(ue,frame_tx,subframe_tx);
+    if      (slsch->rvidx == 2) slsch->rvidx = 3;
+    else if (slsch->rvidx == 3) slsch->rvidx = 1;
+    else if (slsch->rvidx == 1) slsch->rvidx = 0;
+    else                        AssertFatal(1==0,"rvidx %d isn't possible\n",slsch->rvidx);
+  }
+}
+
 void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   
   AssertFatal(frame_tx<1024 && frame_tx>0,"frame %d is illegal\n",frame_tx);
@@ -511,7 +566,7 @@ void generate_slsch(PHY_VARS_UE *ue,SLSCH_t *slsch,int frame_tx,int subframe_tx)
   }
   // check and flll SCI portion
   check_and_generate_pscch(ue,frame_tx,subframe_tx);
-  // check_and_generate_pssch(ue,frame_tx,subframe_tx);
+  check_and_generate_pssch(ue,frame_tx,subframe_tx);
 }
 
 

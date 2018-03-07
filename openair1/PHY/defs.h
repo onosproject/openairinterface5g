@@ -1253,6 +1253,8 @@ typedef struct {
   SL_chan_t        sl_chan;
   SLSCH_t          *slsch;
   SLSCH_t          slsch_rx;
+  int              slsch_active;
+  int              slsch_sdu_active;
   int              slcch_received;
   uint8_t          sidelink_l2_emulation;
   //Paging parameters

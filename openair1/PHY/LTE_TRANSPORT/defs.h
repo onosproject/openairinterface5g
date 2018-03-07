@@ -940,7 +940,7 @@ typedef struct {
 typedef struct {
   /// payload length
   int payload_length;
-	uint8_t payload[100];
+  uint8_t payload[100];
 } SLDCH_t;
 
 #define TTI_SYNC 0
