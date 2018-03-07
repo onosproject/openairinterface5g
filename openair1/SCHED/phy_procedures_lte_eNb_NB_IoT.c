@@ -49,6 +49,8 @@
 // for NB-IoT
 #include "SCHED/defs_NB_IoT.h"
 #include "openair2/RRC/LITE/proto_NB_IoT.h"
+#include "openair2/RRC/LITE/extern_NB_IoT.h"
+#include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
 //#define DEBUG_PHY_PROC (Already defined in cmake)
 //#define DEBUG_ULSCH
 
@@ -230,7 +232,13 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   uint8_t      *npbch_pdu =  get_NB_IoT_MIB();
   uint8_t      *sib1_pdu = get_NB_IoT_SIB1();
   //uint8_t      *control_region_size = get_NB_IoT_SIB1_eutracontrolregionsize();
-  int           G=0;                                            
+  int           G=0;
+  rrc_eNB_carrier_data_NB_IoT_t *carrier = &eNB_rrc_inst_NB_IoT->carrier[0];
+
+  // test for getting RRC instance
+
+  LOG_I(PHY,"NB-IoT Testing for getting RRC in PHY show the size of MIB : %d\n",carrier->sizeof_MIB_NB_IoT);
+
  //NSSS only happened in the even frame
   if(frame%2==0)
     {
