@@ -50,6 +50,7 @@
 #include "RRC/LITE/extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 #include "rlc.h"
+#include "defs.h"
 
 
 #define DEBUG_eNB_SCHEDULER 1
@@ -63,7 +64,7 @@ extern uint32_t slice_sorting_policy[MAX_NUM_SLICES];
 extern int      slice_accounting_policy[MAX_NUM_SLICES];
 extern int      slice_maxmcs[MAX_NUM_SLICES];
 extern int      slice_maxmcs_uplink[MAX_NUM_SLICES];
-
+extern pre_processor_results_t pre_processor_results[MAX_NUM_SLICES];
 
 //#define ICIC 0
 
@@ -1007,7 +1008,7 @@ void dlsch_scheduler_pre_processor_intraslice_sharing(module_id_t Mod_id,
   int UE_id, CC_id;
   int i;
   uint8_t transmission_mode;
-  uint8_t slice_allocation_mask[MAX_NUM_CCs][N_RBG_MAX];
+  uint8_t (*slice_allocation_mask)[N_RBG_MAX] = pre_processor_results[slice_id].slice_allocation_mask;
   UE_list_t *UE_list = &RC.mac[Mod_id]->UE_list;
 
   decode_slice_positioning(Mod_id, slice_id, slice_allocation_mask);
@@ -1231,11 +1232,12 @@ dlsch_scheduler_pre_processor(module_id_t Mod_id,
 
   int N_RBG[MAX_NUM_CCs];
   int min_rb_unit[MAX_NUM_CCs];
-  uint8_t rballoc_sub[MAX_NUM_CCs][N_RBG_MAX];
-  uint8_t MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX]; // If TM5 is revisited, we can move this inside accounting
-  uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
-  uint16_t nb_rbs_accounted[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
-  uint16_t nb_rbs_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+
+  uint16_t (*nb_rbs_required)[NUMBER_OF_UE_MAX]  = pre_processor_results[slice_id].nb_rbs_required;
+  uint16_t (*nb_rbs_accounted)[NUMBER_OF_UE_MAX] = pre_processor_results[slice_id].nb_rbs_accounted;
+  uint16_t (*nb_rbs_remaining)[NUMBER_OF_UE_MAX] = pre_processor_results[slice_id].nb_rbs_remaining;
+  uint8_t  (*rballoc_sub)[N_RBG_MAX]             = pre_processor_results[slice_id].slice_allocated_rbgs;
+  uint8_t  (*MIMO_mode_indicator)[N_RBG_MAX]     = pre_processor_results[slice_id].MIMO_mode_indicator;
 
   UE_list_t *UE_list = &RC.mac[Mod_id]->UE_list;
   UE_sched_ctrl *ue_sched_ctl;
@@ -1377,8 +1379,8 @@ dlsch_scheduler_pre_processor_reset(module_id_t module_idP,
                                     int N_RBG[MAX_NUM_CCs],
                                     int min_rb_unit[MAX_NUM_CCs],
                                     uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
-                                    unsigned char rballoc_sub[MAX_NUM_CCs][N_RBG_MAX],
-                                    unsigned char MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX],
+                                    uint8_t rballoc_sub[MAX_NUM_CCs][N_RBG_MAX],
+                                    uint8_t MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX],
                                     int *mbsfn_flag)
 {
 
@@ -1596,9 +1598,9 @@ dlsch_scheduler_pre_processor_allocate(module_id_t Mod_id,
                                        int min_rb_unit,
                                        uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
                                        uint16_t nb_rbs_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
-                                       unsigned char rballoc_sub[MAX_NUM_CCs][N_RBG_MAX],
+                                       uint8_t rballoc_sub[MAX_NUM_CCs][N_RBG_MAX],
                                        uint8_t slice_allocation_mask[MAX_NUM_CCs][N_RBG_MAX],
-                                       unsigned char MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX]) {
+                                       uint8_t MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX]) {
 
   int i;
   int tm = get_tmode(Mod_id, CC_id, UE_id);
