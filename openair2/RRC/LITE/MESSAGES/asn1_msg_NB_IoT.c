@@ -95,9 +95,9 @@ int errno;
 
 /*do_MIB_NB_NB_IoT*/
 uint8_t do_MIB_NB_IoT(
-		rrc_eNB_carrier_data_NB_IoT_t *carrier,
-		uint16_t N_RB_DL,//may not needed--> for NB_IoT only 1 PRB is used
-		uint32_t frame,
+    rrc_eNB_carrier_data_NB_IoT_t *carrier,
+    uint16_t N_RB_DL,//may not needed--> for NB_IoT only 1 PRB is used
+    uint32_t frame,
     uint32_t hyper_frame)
 {
   asn_enc_rval_t enc_rval;
@@ -115,11 +115,14 @@ uint8_t do_MIB_NB_IoT(
    *
    * NOTE: in OAI never modify the SIB messages!!??
    */
-
+//printf("Frame   %d",frame);
+//printf("HFN  %d",hyper_frame);
   //XXX check if correct the bit assignment
-  uint8_t sfn_MSB = (uint8_t)((frame>>6) & 0x0f); // all the 4 bits are set to 1
-  uint8_t hsfn_LSB = (uint8_t)(hyper_frame & 0x3); //2 bits set to 1 (0x3 = 0011)
+  uint8_t sfn_MSB = (uint8_t)((frame>>2) & 0xf0);//(uint8_t)((frame>>6) & 0x0f); // all the 4 bits are set to 1
+  uint8_t hsfn_LSB = (uint8_t)((hyper_frame<<6) & 0xc0);///(uint8_t)(hyper_frame & 0x03); //2 bits set to 1 (0x3 = 0011)
   uint16_t spare=0; //11 bits --> use uint16
+//printf("Frame   %d",sfn_MSB);
+//printf("HFN  %d",hsfn_LSB);
 
   mib_NB_IoT->message.systemFrameNumber_MSB_r13.buf = &sfn_MSB;
   mib_NB_IoT->message.systemFrameNumber_MSB_r13.size = 1; //if expressed in byte
@@ -141,11 +144,11 @@ uint8_t do_MIB_NB_IoT(
 
   //to be decided
   mib_NB_IoT->message.operationModeInfo_r13.present = MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13;
-  mib_NB_IoT->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13 = 5;      /// TODO: take into account RB_index of NB-IoT
+  mib_NB_IoT->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13 = 8;      /// TODO: take into account RB_index of NB-IoT
 
-  printf("[MIB] Intialization of frame information ,sfn_MSB %x, hsfn_LSB %x\n",
-         (uint32_t)sfn_MSB,
-		 (uint32_t)hsfn_LSB);
+ // printf("[MIB] Intialization of frame information ,sfn_MSB %x, hsfn_LSB %x\n",
+ //        (uint32_t)sfn_MSB,
+//     (uint32_t)hsfn_LSB);
 
   enc_rval = uper_encode_to_buffer(&asn_DEF_BCCH_BCH_Message_NB,
                                    (void*)mib_NB_IoT,

@@ -83,79 +83,52 @@ void ccode_encode_npdsch_NB_IoT (int32_t   numbits,
 		}
 }
 
-
 int dlsch_encoding_NB_IoT(unsigned char      			*a,
-						  NB_IoT_eNB_NDLSCH_t 			*dlsch,
-						  uint8_t 			 			Nsf,		// number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
-						  unsigned int 		 			G) 		    // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
+			  NB_IoT_eNB_NDLSCH_t 			*dlsch,
+			  uint8_t 			 	Nsf,       // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
+			  unsigned int 		 		G) 		    // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
 {
-	unsigned int  crc = 1;
+	uint32_t  crc = 1;
 	//unsigned char harq_pid = dlsch->current_harq_pid;  			// to check during implementation if harq_pid is required in the NB_IoT_eNB_DLSCH_t structure  in defs_NB_IoT.h
+	uint8_t 	  option1,option2,option3,option4;
 	unsigned int  A;
 	uint8_t 	  RCC;
-	//uint8_t       npbch_a[21];
 
-	//bzero(npbch_a,21); 
-
-	uint8_t       npbch_a[85];
+    uint8_t       npbch_a[85];
     uint8_t       npbch_a_crc[88];
 	bzero(npbch_a,85); 
 	bzero(npbch_a_crc,88);
+  
+	 A 							 = 680;
 
-	//A 							 = dlsch->harq_process_sib1.TBS;  				// 680
-	//A 							 = 19*8;  										// 680
-	A 							 = 680;
 	dlsch->length_e = G*Nsf;									// G*Nsf (number_of_subframes) = total number of bits to transmit G=236
 
 	int32_t numbits = A+24;
 
-	  for (int i=0; i<19; i++) 												
-			{	
-				npbch_a[i] = a[i];    
-			}
+    for (int i=0; i<19; i++) 												
+	{	
+		npbch_a[i] = a[i];    
+	}
+     
+	crc = crc24a_NB_IoT(npbch_a,A)>>8;
+	
 
-		//crc = crc24a_NB_IoT(a,A)>>8;						// CRC calculation (24 bits CRC)
-		crc = crc24a_NB_IoT(npbch_a,A)>>8;
+    for (int j=0; j<85; j++) 												
+	{	
+		npbch_a_crc[j] = npbch_a[j];    
+	}
 
-		for (int j=0; j<85; j++) 												
-			{	
-					npbch_a_crc[j] = npbch_a[j];    
-			}
-												    // CRC attachment to payload
-		/*a[A>>3]     = ((uint8_t*)&crc)[2];
-		a[1+(A>>3)] = ((uint8_t*)&crc)[1];
-		a[2+(A>>3)] = ((uint8_t*)&crc)[0];*/
-
-			npbch_a_crc[85] = ((uint8_t*)&crc)[2];
-			npbch_a_crc[86] = ((uint8_t*)&crc)[1];
-			npbch_a_crc[87] = ((uint8_t*)&crc)[0];
-		
+    npbch_a_crc[85] = ((uint8_t*)&crc)[2];
+    npbch_a_crc[86] = ((uint8_t*)&crc)[1];
+	npbch_a_crc[87] = ((uint8_t*)&crc)[0];
+	
 		dlsch->B = numbits;			// The length of table b in bits
-
-		/*for (int i=0; i<21; i++) 										// to uncomment if option 2								
-		{	
-				npbch_a[i] = a[i];    
-		}
-		*/
 		//memcpy(dlsch->b,a,numbits/8);        // comment if option 2 
 		memset(dlsch->d,LTE_NULL_NB_IoT,96);
-
-		for (int i=0; i<21; i++) 										// to uncomment if option 2								
-		{	
-				npbch_a[21-i-1] = a[i];    
-		}
-		
-
-		//ccode_encode_npdsch_NB_IoT(numbits, dlsch->b, dlsch->d+96, crc);  	//   step 1 Tail-biting convolutional coding
-		// to uncomment if option 2
-		//ccode_encode_npdsch_NB_IoT(numbits,npbch_a, dlsch->d+96, crc);
 		ccode_encode_npdsch_NB_IoT(numbits,npbch_a_crc,dlsch->d+96,crc);
-		// sib1_w = 19*8*3*3=1368
 		RCC = sub_block_interleaving_cc_NB_IoT(numbits,dlsch->d+96,dlsch->w);		//   step 2 interleaving
-		// length e = 1888
 		lte_rate_matching_cc_NB_IoT(RCC,dlsch->length_e,dlsch->w,dlsch->e);  // step 3 Rate Matching
 				
-   
   return(0);
 }
 
