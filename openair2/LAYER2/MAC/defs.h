@@ -1357,6 +1357,16 @@ typedef struct {
     uint8_t n_adj_cells;
 } neigh_cell_id_t;
 
+/// Structure for saving the output of each pre_processor instance
+typedef struct {
+    uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+    uint16_t nb_rbs_accounted[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+    uint16_t nb_rbs_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+    uint8_t  slice_allocation_mask[MAX_NUM_CCs][N_RBG_MAX];
+    uint8_t  slice_allocated_rbgs[MAX_NUM_CCs][N_RBG_MAX];
+    uint8_t  MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX];
+} pre_processor_results_t;
+
 #include "proto.h"
 /*@}*/
 #endif /*__LAYER2_MAC_DEFS_H__ */
