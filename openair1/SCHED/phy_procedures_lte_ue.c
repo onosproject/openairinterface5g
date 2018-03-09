@@ -3477,7 +3477,7 @@ int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint
 
     else {
 #ifdef DEBUG_PHY_PROC
-      LOG_I(PHY,"[UE  %d] frame %d, nr_tti_rx %d: received DCI %d with RNTI=%x (C-RNTI:%x, CBA_RNTI %x) and format %d!\n",ue->Mod_id,frame_rx,nr_tti_rx,i,dci_alloc_rx[i].rnti,
+      LOG_D(PHY,"[UE  %d] frame %d, nr_tti_rx %d: received DCI %d with RNTI=%x (C-RNTI:%x, CBA_RNTI %x) and format %d!\n",ue->Mod_id,frame_rx,nr_tti_rx,i,dci_alloc_rx[i].rnti,
 	    ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id]->crnti,
 	    ue->ulsch[eNB_id]->cba_rnti[0],
 	    dci_alloc_rx[i].format);

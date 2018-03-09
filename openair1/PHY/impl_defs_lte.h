@@ -37,8 +37,8 @@
 #include "types.h"
 //#include "defs.h"
 
-#define RX_NB_TH_MAX 3
-#define RX_NB_TH 3
+#define RX_NB_TH_MAX 4
+#define RX_NB_TH 4
 
 #define LTE_SLOTS_PER_SUBFRAME 2
 

@@ -897,7 +897,7 @@ void *UE_thread(void *arg) {
 						g_ue_rx_thread_busy++;
 #endif
                       LOG_E( PHY, "[SCHED][UE %d] !! UE RX thread busy (IC %d)!!\n", UE->Mod_id, proc->instance_cnt_rxtx);
-                      if (proc->instance_cnt_rxtx > 2)
+                      if (proc->instance_cnt_rxtx > 4)
                       {
                         char exit_fun_string[256];
                         sprintf(exit_fun_string,"[SCHED][UE %d] !!! UE instance_cnt_rxtx > 2 (IC %d) (Proc %d)!!",

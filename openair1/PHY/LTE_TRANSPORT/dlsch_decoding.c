@@ -1224,8 +1224,8 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
      } else
      {
          LOG_E( PHY, "[SCHED][UE %d] UE dlsch td thread busy (IC %d)!!\n", phy_vars_ue->Mod_id, proc->instance_cnt_dlsch_td);
-         if (proc->instance_cnt_dlsch_td > 2)
-             exit_fun("instance_cnt_dlsch_td > 2");
+         if (proc->instance_cnt_dlsch_td > 4)
+             exit_fun("instance_cnt_dlsch_td > 4");
      }
      //AssertFatal(pthread_cond_signal(&proc->cond_slot1_dl_processing) ==0 ,"");
      AssertFatal(pthread_mutex_unlock(&proc->mutex_dlsch_td) ==0,"");
@@ -1257,8 +1257,8 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
           } else
           {
               LOG_E( PHY, "[SCHED][UE %d] UE dlsch td thread 1 busy (IC %d)!!\n", phy_vars_ue->Mod_id, proc->instance_cnt_dlsch_td1);
-              if (proc->instance_cnt_dlsch_td1 > 2)
-                  exit_fun("instance_cnt_dlsch_td1 > 2");
+              if (proc->instance_cnt_dlsch_td1 > 4)
+                  exit_fun("instance_cnt_dlsch_td1 > 4");
           }
 
           AssertFatal(pthread_mutex_unlock(&proc->mutex_dlsch_td1) ==0,"");
@@ -2580,7 +2580,7 @@ uint32_t  dlsch_decoding_2thread0(void *arg)
 #endif
 
 #ifdef UE_DLSCH_PARALLELISATION
-#define FIFO_PRIORITY   38
+#define FIFO_PRIORITY   39
 uint32_t  dlsch_decoding_2thread1(void *arg)
 {
 	static __thread int UE_dlsch_td_retval1;

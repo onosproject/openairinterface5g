@@ -73,8 +73,8 @@
 #define openair_free(y,x) free((y))
 #define PAGE_SIZE 4096
 
-#define RX_NB_TH_MAX 3
-#define RX_NB_TH 3
+#define RX_NB_TH_MAX 4
+#define RX_NB_TH 4
 
 
 //#ifdef SHRLIBDEV
