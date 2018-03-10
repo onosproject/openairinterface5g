@@ -389,6 +389,8 @@ void rf_rx_simple_freq_SSE_float(float *r_re[2],
   __m128 rx128_re,rx128_im,rx128_gain_lin,gauss_0_128_sqrt_NOW,gauss_1_128_sqrt_NOW;//double
   int i,a;
   float rx_gain_lin = pow(10.0,.05*rx_gain_dB);
+  //static float out[4] __attribute__((aligned(16)));
+  //static float out1[4] __attribute__((aligned(16)));
   //double rx_gain_lin = 1.0;
   float N0W         = pow(10.0,.1*(-174.0 - 10*log10(s_time*1e-9)));
   float sqrt_NOW = rx_gain_lin*sqrt(.5*N0W);
@@ -421,9 +423,16 @@ clock_t start=clock();*/
 		      rx128_re =  _mm_loadu_ps(&r_re[a][4*i]);//r_re[a][i],r_re[a][i+1]
 		      rx128_im =  _mm_loadu_ps(&r_im[a][4*i]);//r_im[a][i],r_im[a][i+1]
 		      //start_meas(&desc->ziggurat);
-		      gauss_0_128_sqrt_NOW = _mm_set_ps(ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
-		      gauss_1_128_sqrt_NOW = _mm_set_ps(ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+		      //gauss_0_128_sqrt_NOW = _mm_set_ps(ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+		      //gauss_1_128_sqrt_NOW = _mm_set_ps(ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+		      boxmuller_SSE_float(&gauss_0_128_sqrt_NOW, &gauss_1_128_sqrt_NOW);
 		      //stop_meas(&desc->ziggurat);
+		      //_mm_storeu_ps(out,gauss_0_128_sqrt_NOW);
+		      //_mm_storeu_ps(out1,gauss_1_128_sqrt_NOW);
+        	      //printf("Ziggurat is %e,%e,%e,%e\n",ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+        	      //printf("boxmuller is %e,%e,%e,%e\n",gaussdouble(0.0,1.0),gaussdouble(0.0,1.0),gaussdouble(0.0,1.0),gaussdouble(0.0,1.0));
+		      //printf("NOR SSE is %e,%e,%e,%e\n",out[0],out[1],out[2],out[3]);
+		      //printf("NOR SSE1 is %e,%e,%e,%e\n",out1[0],out1[1],out1[2],out1[3]);
 		      gauss_0_128_sqrt_NOW = _mm_mul_ps(gauss_0_128_sqrt_NOW,_mm_set1_ps(sqrt_NOW));
 		      gauss_1_128_sqrt_NOW = _mm_mul_ps(gauss_1_128_sqrt_NOW,_mm_set1_ps(sqrt_NOW));
 		      // Amplify by receiver gain and apply 3rd order non-linearity

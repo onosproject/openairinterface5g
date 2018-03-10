@@ -159,24 +159,68 @@ static double wn[128],fn[128];
 static uint32_t iz,jz,jsr=123456789,kn[128];
 static int32_t hz;
 
-static uint32_t jsr4[4] __attribute__((aligned(16))) = {123456789,2714967881,2238813396,1250077441};//This initialization depends on the seed for nor_table function in oaisim_functions.c file.
-static uint32_t out[4] __attribute__((aligned(16)));
+static uint32_t jsr4[4] __attribute__((aligned(16))) = {123456789,112548569,985584512,452236879};//This initialization depends on the seed for nor_table function in oaisim_functions.c file.
+static uint32_t iz4[4] __attribute__((aligned(16)));
+static float out[4] __attribute__((aligned(16)));
+static uint32_t ssh3_sse4[4] __attribute__((aligned(16)));
+static uint32_t ifabs4[4] __attribute__((aligned(16)));
+static uint32_t hz4[4] __attribute__((aligned(16)));
 #if defined(__x86_64__) || defined(__i386__)
 static __m128i jsr_128 __attribute__((aligned(16)));
 static __m128i jz_128 __attribute__((aligned(16)));
 static __m128i hz_128 __attribute__((aligned(16)));
 static __m128i iz_128 __attribute__((aligned(16)));
+static __m128 x128 __attribute__((aligned(16)));
+static __m128i ifabs __attribute__((aligned(16)));
+
 //#define jsr4 (jz=jsr, jsr^=(jsr<<13),jsr^=(jsr>>17),jsr^=(jsr<<5),jz+jsr,printf("seed %d, next seed %d\n",jz,jsr))
 //#define SHR3_SSE (jsr_128=_mm_loadu_si128(jsr4),jz_128=jsr_128, printf("jsr4 is %lu,%lu,%lu,%lu\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]), jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,13),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128),printf("jsr128<<13 is %lu,%lu,%lu,%lu\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]),      jsr_128=_mm_xor_si128(_mm_srli_epi32(jsr_128,17),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128),printf("jsr128>>17 is %lu,%lu,%lu,%lu\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]),      jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,5),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128), printf("jsr128<<5  is %lu,%lu,%lu,%lu\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]),      _mm_storeu_si128(out,_mm_add_epi32(jz_128,jsr_128)),printf("out is %lu,%lu,%lu,%lu\n",out[0],out[1],out[2],out[3]),_mm_add_epi32(jz_128,jsr_128))
-#define SHR3_SSE (jsr_128=_mm_loadu_si128(jsr4),jz_128=jsr_128, jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,13),jsr_128),jsr_128=_mm_xor_si128(_mm_srli_epi32(jsr_128,17),jsr_128),jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,5),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128),_mm_add_epi32(jz_128,jsr_128))
+#define SHR3_SSE (jsr_128=_mm_loadu_si128((__m128i *)jsr4),jz_128=jsr_128, jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,13),jsr_128),jsr_128=_mm_xor_si128(_mm_srli_epi32(jsr_128,17),jsr_128),jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,5),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128),_mm_add_epi32(jz_128,jsr_128))
 
+//#define UNI_SSE (_mm_storeu_ps(out,_mm_add_ps(_mm_mul_ps(_mm_set1_ps(0.2328306e-9),_mm_cvtepi32_ps(SHR3_SSE)),_mm_set1_ps(0.5))),printf("out is %e,%e,%e,%e\n",out[0],out[1],out[2],out[3]),_mm_add_ps(_mm_mul_ps(_mm_set1_ps(0.2328306e-9),_mm_cvtepi32_ps(SHR3_SSE)),_mm_set1_ps(0.5)))
 #define UNI_SSE (_mm_add_ps(_mm_mul_ps(_mm_set1_ps(0.2328306e-9),_mm_cvtepi32_ps(SHR3_SSE)),_mm_set1_ps(0.5)))
-
-#define NOR_SSE (hz_128=SHR3_SSE,iz_128=_mm_and_epi32(hz_128,_mm_set1_epi32(127)),_mm_cmplt_epi32(_mm_max_epi32(_mm_sub_epi32(_mm_setzero_si128(),hz_128),hz_128),_mm_setr_epi32(kn[iz_128[0]],kn[iz_128[1]],kn[iz_128[2]],kn[iz_128[3]])),_mm_mul_ps(hz_128,_mm_set_ps(wn[iz_128[0],wn[iz_128[1],wn[iz_128[2],wn[iz_128[3]))): nfix())
+//,_mm_storeu_si128(ssh3_sse4,hz_128),printf("ssh3_sse4 %lu,%lu,%lu,%lu\n",ssh3_sse4[0],ssh3_sse4[1],ssh3_sse4[2],ssh3_sse4[3])
+#define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128(hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128(iz4,iz_128),ifabs=_mm_cmplt_epi32(_mm_max_epi32(_mm_sub_epi32(_mm_setzero_si128(),hz_128),hz_128),_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),_mm_storeu_si128(ifabs4,ifabs),printf("ifabs %x,%x,%x,%x\n",ifabs4[0],ifabs4[1],ifabs4[2],ifabs4[3]),x128=_mm_and_ps(_mm_cvtepi32_ps(_mm_cmplt_epi32(_mm_max_epi32(_mm_sub_epi32(_mm_setzero_si128(),hz_128),hz_128),_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]]))),_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]]))),printf("x128 %e,%e,%e,%e\n",x128[0],x128[1],x128[2],x128[3]),printf("iz %d,%d,%d,%d\n",iz4[0],iz4[1],iz4[2],iz4[3]),printf("wn*hz %e,%e,%e,%e\n",hz4[0]*wn[iz4[0]],hz4[1]*wn[iz4[1]],hz4[2]*wn[iz4[2]],hz4[3]*wn[iz4[3]]),_mm_set1_ps(-1,2,3,4))
 #endif
-
+//
+//
+//
+//
+//
 
 //#define NOR (hz=SHR3, printf("hz %d\n",hz),sign=(hz&128)>>7,printf("sign %s\n",(sign)?"-":"+"),iz=hz&127,printf("iz %d\n",iz), (abs(hz)<kn[iz])? (sign)?(-1)*hz*wn[iz]:hz*wn[iz] : (sign)?(-1)*nfix():nfix())
+
+/*__m128 nfix_SSE(void)
+{
+  __m128 r = _mm_set1_ps(3.442620); 
+  static __m128 x, y;
+  for (;;)
+  {
+      x= x128;
+      //printf("iz %d,x %e,l %d, hz %d,d %e wn %e\n",iz, x, l, hz, d, wn[iz]);
+      if (iz==0)
+      {   
+        do
+        {
+          x = - 0.2904764 * log (UNI);
+          y = - log (UNI);
+	} 
+        while (y+y < x*x);
+
+        return (hz>0)? _mm_set1_ps(r+x) : _mm_set1_ps(-r-x);
+      }
+      if (fn[iz]+UNI*(fn[iz-1]-fn[iz])<exp(-0.5*x*x)){
+
+        return _mm_set1_ps(x);
+      }
+      hz = SHR3;
+      iz = hz&127;
+      if (abs(hz) < kn[iz]){
+
+        return (_mm_set1_ps((hz)*wn[iz]));
+      }
+  }
+}*/
 double nfix(void)
 {
   const double r = 3.442620; 
@@ -210,7 +254,6 @@ double nfix(void)
       }
   }
 }
-
 void table_nor(unsigned long seed)
 {
   jsr=seed;
@@ -248,78 +291,37 @@ void table_nor(unsigned long seed)
 }
 double ziggurat(double mean, double variance)
 {
-  //printf("UNI is %e\n",UNI);
-  //printf("SHR3 is %d\n",SHR3);
-  /*__m128i m __attribute__((aligned(16)));
-  __m128 n __attribute__((aligned(16)));
-  static uint32_t mm[4] __attribute__((aligned(16)));
-  static uint32_t aa[4] __attribute__((aligned(16)));
-  static uint32_t bb[4] __attribute__((aligned(16)));
-  static float    cc[4] __attribute__((aligned(16)));
-  //printf("SHR3_SSE  jsr4 is %d,%d,%d,%d\n\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]);
 
-  m=SHR3_SSE;
-  printf("UNI is %e,%e,%e,%e\n",UNI,UNI,UNI,UNI);
-  printf("UNI is %e,%e,%e,%e\n",UNI,UNI,UNI,UNI);
-  printf("UNI is %e,%e,%e,%e\n",UNI,UNI,UNI,UNI);
-  printf("UNI is %e,%e,%e,%e\n",UNI,UNI,UNI,UNI);
-  n=UNI_SSE;
-  printf("UNI_SSE is %e,%e,%e,%e\n\n",n[0],n[1],n[2],n[3]);
-  _mm_storeu_si128((__m128i *)mm,jsr_128);
-  _mm_storeu_si128((__m128i *)aa,jz_128);
-  _mm_storeu_si128((__m128i *)bb,m);
-  _mm_storeu_ps((__m128 *)cc,n);
 
-  printf("SHR3_SSE  jsr128 is %d,%d,%d,%d\n",mm[0],mm[1],mm[2],mm[3]);
-  printf("SHR3_SSE  jz128 is %d,%d,%d,%d\n",aa[0],aa[1],aa[2],aa[3]);
-  printf("SHR3_SSE  jsr_128+jz_128 is %d,%d,%d,%d\n",bb[0],bb[1],bb[2],bb[3]);
-  printf("SHR3_SSE  norm is %d,%d,%d,%d\n",cc[0],cc[1],cc[2],cc[3]);
-  //printf("SHR3_SSE  jsr4 is %d,%d,%d,%d\n",jsr4[0],jsr4[1],jsr4[2],jsr4[3]);
-  //printf("SHR3_SSE jz_128 is %d,%d,%d,%d\n\n",jz_128[0],jz_128[1],jz_128[2],jz_128[3]);
-  __m128 x ;
-  x=log_ps(_mm_set_ps(-10,-100,-1000,100000));
-  printf("ln aprox is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
-  printf("ln function is %e,%e,%e,%e\n",log(-10),log(-100),log(-1000),log(100000));
-  uint32_t out[4] __attribute__((aligned(16)));
-  __m128i m __attribute__((aligned(16)));
-  m=_mm_max_epi32(_mm_setr_epi32(1,-1,3,-45),_mm_setr_epi32(-1,1,-3,45));
-  _mm_storeu_si128(out,m);
-  printf("abs is %d,%d,%d,%d\n",out[0],out[1],out[2],out[3]);*/
+  /*__m128  n __attribute__((aligned(16)));
+  __m128  m __attribute__((aligned(16)));
+  //n=NOR_SSE;
+  m=log_ps(_mm_setr_ps(1230,100,340,-1000));
+  printf("log using functions (1230,100,340,-1000) %e,%e,%e,%e\n",log(1230),log(100),log(340),log(-1000));
+  printf("log sse (1230,100,340,-1000) %e,%e,%e,%e\n",m[0],m[1],m[2],m[3]);*/
   return NOR;
 }
 
-void boxmuller_SSE_float(float* data, size_t count) {
-	assert(count % 8 == 0);
+void boxmuller_SSE_float(__m128 *data1, __m128 *data2) {
+	//assert(count % 8 == 0);
 	__m128 twopi = _mm_set1_ps(2.0f * 3.14159265358979323846f);
-	__m128 one = _mm_set1_ps(1.0f);
+	//__m128 one = _mm_set1_ps(1.0f);
 	__m128 minustwo = _mm_set1_ps(-2.0f);
 	__m128 u1_ps,u2_ps;
-	__m128 r_ps,radius,theta,sintheta,costheta;
-	__m128i a_ps, b_ps;
-	__m128i x_ps;
-	__m128i u_ps;
+	__m128 radius,theta,sintheta,costheta;
 
-	//LCG<__m128> r;
-	x_ps=_mm_setr_epi32(10, 100, 1000, 10000);
-	a_ps=x_ps;
-	b_ps=_mm_set1_epi32(1664525);
-	const __m128i tmp1 = _mm_mul_epu32(a_ps, b_ps);
-	const __m128i tmp2 = _mm_mul_epu32(_mm_srli_si128(a_ps, 4), _mm_srli_si128(b_ps, 4));
-
-	x_ps=_mm_add_epi32(_mm_unpacklo_epi32(_mm_shuffle_epi32(tmp1, _MM_SHUFFLE (0,0,2,0)), _mm_shuffle_epi32(tmp2, _MM_SHUFFLE (0,0,2,0))),_mm_set1_epi32(1013904223));
-
-	u_ps = _mm_or_si128(_mm_srli_epi32(x_ps, 9), _mm_set1_epi32(0x3F800000));
- 	r_ps = _mm_sub_ps(_mm_castsi128_ps(u_ps), _mm_set1_ps(1));
-
-	for (size_t i = 0; i < count; i += 8) {
-        	u1_ps = _mm_sub_ps(one, r_ps); // [0, 1) -> (0, 1]
-        	u2_ps = r_ps;
-		radius = _mm_sqrt_ps(_mm_mul_ps(minustwo, _mm_set_ps(log(u1_ps[0]),log(u1_ps[1]),log(u1_ps[2]),log(u1_ps[3]))));
-		theta = _mm_mul_ps(twopi, u2_ps);
+	u1_ps = UNI_SSE;//_mm_sub_ps(_mm_mul_ps(_mm_set1_ps(2),UNI_SSE),_mm_set1_ps(-1));
+	u2_ps = UNI_SSE;//_mm_sub_ps(_mm_mul_ps(_mm_set1_ps(2),UNI_SSE),_mm_set1_ps(-1));
+	//_mm_storeu_ps(out,u1_ps);
+	//_mm_storeu_ps(out1,u2_ps);
+	//printf("NOR SSE is %e,%e,%e,%e\n",out[0],out[1],out[2],out[3]);
+	//printf("NOR SSE1 is %e,%e,%e,%e\n",out1[0],out1[1],out1[2],out1[3]);
+	radius = _mm_sqrt_ps(_mm_mul_ps(minustwo, log_ps(u1_ps)));
+	theta = _mm_mul_ps(twopi, u2_ps);
         sincos_ps(theta, &sintheta, &costheta);
-		_mm_store_ps(&data[i    ], _mm_mul_ps(radius, costheta));
-		_mm_store_ps(&data[i + 4], _mm_mul_ps(radius, sintheta));
-	}
+	*data1=_mm_mul_ps(radius, costheta);
+	*data2=_mm_mul_ps(radius, sintheta);
+	//}
 }
 /*
 @defgroup _gaussdouble Gaussian random number generator based on modified Box-Muller transformation.
@@ -327,7 +329,7 @@ void boxmuller_SSE_float(float* data, size_t count) {
 */
 
 /*!\brief Gaussian random number generator based on modified Box-Muller transformation.Returns a double-precision floating-point number. */
-#define random_SSE
+//#define random_SSE
 #ifdef random_SSE
 double gaussdouble(double mean, double variance)
 {

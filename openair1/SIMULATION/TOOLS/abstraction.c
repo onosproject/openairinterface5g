@@ -153,6 +153,8 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
   int16_t f;
   uint8_t l;
   __m128 cos_lut128,sin_lut128;
+  static float out[4] __attribute__((aligned(16)));
+  static float out1[4] __attribute__((aligned(16)));
   //static int count=0;
 
   if ((n_samples&1)==0) {
@@ -183,8 +185,14 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
         delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
 
       //sincos_ps(_mm_set_ps(twopi*(4*f+3)*delay,twopi*(4*f+2)*delay,twopi*(4*f+1)*delay,twopi*(4*f)*delay), &sin_lut128, &cos_lut128);
-      cos_lut128=_mm_set_ps(cos(twopi*(4*f+3)*delay),cos(twopi*(4*f+2)*delay),cos(twopi*(4*f+1)*delay),cos(twopi*(4*f)*delay));
+	//_mm_storeu_ps(out,sin_lut128);
+	//printf("sin sincos SSE is %e,%e,%e,%e\n",out[0],out[1],out[2],out[3]);
+
+        cos_lut128=_mm_set_ps(cos(twopi*(4*f+3)*delay),cos(twopi*(4*f+2)*delay),cos(twopi*(4*f+1)*delay),cos(twopi*(4*f)*delay));
+
       sin_lut128=_mm_set_ps(sin(twopi*(4*f+3)*delay),sin(twopi*(4*f+2)*delay),sin(twopi*(4*f+1)*delay),sin(twopi*(4*f)*delay));
+	//_mm_storeu_ps(out1,sin_lut128);
+	//printf("sin SSE1 is %e,%e,%e,%e\n",out1[0],out1[1],out1[2],out1[3]);
       _mm_storeu_ps(&cos_lut_f[l][4*f+(n_samples>>1)],cos_lut128);
       _mm_storeu_ps(&sin_lut_f[l][4*f+(n_samples>>1)],sin_lut128);
       //cos_lut[f+(n_samples>>1)][l] = cos(2*M_PI*freq*delay);
@@ -509,7 +517,7 @@ int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int
   start_meas(&desc->interp_freq_PRACH);
   for (f=0; f<prach_samples; f++) {
     //clut = cos_lut[f];
-    //slut = sin_lut[f];
+    //slut = sin_lut[f];1.26614
     for (aarx=0; aarx<desc->nb_rx; aarx++) {
       for (aatx=0; aatx<desc->nb_tx; aatx++) {
         desc->chF_prach[aarx+(aatx*desc->nb_rx)].x[f]=0.0;
@@ -775,10 +783,10 @@ void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
   /* take the absolute value */
   x = _mm_and_ps(x, _mm_castsi128_ps(_mm_set1_epi32(~0x80000000)));//_ps_inv_sign_mask
   /* extract the sign bit (upper one) */
-  sign_bit_sin = _mm_and_ps(sign_bit_sin, _mm_castsi128_ps(_mm_set1_epi32(~0x80000000)));//_ps_sign_mask
+  sign_bit_sin = _mm_and_ps(sign_bit_sin, _mm_castsi128_ps(_mm_set1_epi32(0x80000000)));//_ps_sign_mask
   
   /* scale by 4/Pi */
-  y = _mm_mul_ps(x, _mm_castsi128_ps(_mm_set1_epi32(1.27323954473516f)));
+  y = _mm_mul_ps(x, _mm_set1_ps(1.27323954473516f));
     
 
   /* store the integer part of y in emm2 */
@@ -865,42 +873,19 @@ void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
 
 
 __m128 log_ps(__m128 x) {
-#if defined(__x86_64__) || defined(__i386__)
+
   __m128i emm0 __attribute__((aligned(16)));
-  __m128i* invalid_mask1 __attribute__((aligned(16)))=NULL;
-  __m128 invalid_mask __attribute__((aligned(16)));
-  __m128 one __attribute__((aligned(16)));
-  __m128i *y1 __attribute__((aligned(16)))=NULL;
+  __m128 one __attribute__((aligned(16)))=_mm_set1_ps(1.f);
+  __m128 invalid_mask __attribute__((aligned(16))) = _mm_cmple_ps(x, _mm_setzero_ps());
 
-  __m128i l __attribute__((aligned(16)))=_mm_setr_epi32(1,2,3,49);
-  y1 = &l;
-  //l = _mm_storeu_si128(y1);
-  static uint32_t s[4] __attribute__((aligned(16)));
-  _mm_storeu_si128(s,_mm_setr_epi32(1,2,3,45));
-  printf("s is %d,%d,%d,%d\n",s[0],s[1],s[2],s[3]);
-#endif
-
-  one = _mm_set1_ps(1.f);
-  printf("one_m128 is %e,%e,%e,%e\n",one[0],one[1],one[2],one[3]);
-  invalid_mask= _mm_cmple_ps(x, _mm_setzero_ps());
-  printf("ln inside bef x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
-  printf("ln inside invalid_mask is %e,%e,%e,%e\n",invalid_mask[0],invalid_mask[1],invalid_mask[2],invalid_mask[3]);
-  invalid_mask1 = (__m128i*) &y1;
-  //invalid_mask = 
-  printf("ln inside invalid_mask1 is %d,%d,%d,%d\n",invalid_mask1[0],invalid_mask1[1],invalid_mask1[2],invalid_mask1[3]);
-
-  x = _mm_max_ps(x, _mm_set1_ps(0x00800000));  // cut off denormalized stuff
-  printf("ln inside af x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
-
-
-  // part 1: x = frexpf(x, &e); 
+  x = _mm_max_ps(x, _mm_castsi128_ps(_mm_set1_epi32(0x00800000)));  // cut off denormalized stuff
   emm0 = _mm_srli_epi32(_mm_castps_si128(x), 23);
 
   // keep only the fractional part 
-  x = _mm_and_ps(x, _mm_set1_ps(~0x7f800000));
-  printf("ln inside x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
+  x = _mm_and_ps(x,_mm_castsi128_ps(_mm_set1_epi32(~0x7f800000)));
+  //printf("ln inside x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
   x = _mm_or_ps(x, _mm_set1_ps(0.5f));
-  printf("ln inside x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
+  //printf("ln inside x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
 
 
   // now e=mm0:mm1 contain the really base-2 exponent 
@@ -955,6 +940,7 @@ __m128 log_ps(__m128 x) {
   x = _mm_add_ps(x, y);
   x = _mm_add_ps(x, tmp);
   x = _mm_or_ps(x, invalid_mask); // negative arg will be NAN
+  //printf("ln is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
   return x;
 }
 
