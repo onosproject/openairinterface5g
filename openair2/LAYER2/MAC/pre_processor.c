@@ -60,8 +60,8 @@
 extern float    slice_percentage[MAX_NUM_SLICES];
 extern float    slice_percentage_uplink[MAX_NUM_SLICES];
 extern int      slice_position[MAX_NUM_SLICES*2];
-extern uint32_t slice_sorting_policy[MAX_NUM_SLICES];
-extern int      slice_accounting_policy[MAX_NUM_SLICES];
+extern uint32_t slice_sorting[MAX_NUM_SLICES];
+extern int      slice_accounting[MAX_NUM_SLICES];
 extern int      slice_maxmcs[MAX_NUM_SLICES];
 extern int      slice_maxmcs_uplink[MAX_NUM_SLICES];
 extern pre_processor_results_t pre_processor_results[MAX_NUM_SLICES];
@@ -317,6 +317,20 @@ int maxcqi(module_id_t Mod_id, int32_t UE_id) {
   return CQI;
 }
 
+long min_lcgidpriority(module_id_t Mod_id, int32_t UE_id) {
+  UE_list_t *UE_list = &RC.mac[Mod_id]->UE_list;
+  int i;
+  int pCC_id = UE_PCCID(Mod_id, UE_id);
+  long ret = UE_list->UE_template[pCC_id][UE_id].lcgidpriority[0];
+
+  for (i = 1; i < 11; ++i) {
+    if (UE_list->UE_template[pCC_id][UE_id].lcgidpriority[i] < ret)
+      ret = UE_list->UE_template[pCC_id][UE_id].lcgidpriority[i];
+  }
+
+  return ret;
+}
+
 struct sort_ue_dl_params {
     int Mod_idP;
     int frameP;
@@ -344,6 +358,9 @@ static int ue_dl_compare(const void *_a, const void *_b, void *_params)
 
   int cqi1 = maxcqi(params->Mod_idP, UE_id1);
   int cqi2 = maxcqi(params->Mod_idP, UE_id2);
+
+  long lcgid1 = min_lcgidpriority(params->Mod_idP, UE_id1);
+  long lcgid2 = min_lcgidpriority(params->Mod_idP, UE_id2);
 
   for (i = 0; i < CR_NUM; ++i) {
     switch (UE_list->sorting_criteria[slice_id][i]) {
@@ -392,6 +409,12 @@ static int ue_dl_compare(const void *_a, const void *_b, void *_params)
         if (cqi1 < cqi2)
           return 1;
 
+      case CR_LCP :
+        if (lcgid1 < lcgid2)
+          return -1;
+        if (lcgid1 > lcgid2)
+          return 1;
+
       default :
         break;
     }
@@ -434,7 +457,7 @@ void decode_sorting_policy(module_id_t Mod_idP, slice_id_t slice_id) {
   int i;
 
   UE_list_t *UE_list = &RC.mac[Mod_idP]->UE_list;
-  uint32_t policy = slice_sorting_policy[slice_id];
+  uint32_t policy = slice_sorting[slice_id];
   uint32_t mask = 0x0000000F;
   uint16_t criterion;
 
@@ -442,7 +465,7 @@ void decode_sorting_policy(module_id_t Mod_idP, slice_id_t slice_id) {
     criterion = (uint16_t) (policy >> 4 * (CR_NUM - 1 - i) & mask);
     if (criterion >= CR_NUM) {
       LOG_W(MAC, "Invalid criterion in slice %d policy, revert to default policy \n", slice_id);
-      slice_sorting_policy[slice_id] = 0x1234;
+      slice_sorting[slice_id] = 0x1234;
       break;
     }
     UE_list->sorting_criteria[slice_id][i] = criterion;
@@ -682,7 +705,7 @@ void dlsch_scheduler_pre_processor_accounting(module_id_t Mod_id,
   // Reduces the available RBs according to slicing configuration
   dlsch_scheduler_pre_processor_partitioning(Mod_id, slice_id, rbs_retx);
 
-  switch (slice_accounting_policy[slice_id]) {
+  switch (slice_accounting[slice_id]) {
 
     // If greedy scheduling, try to account all the required RBs
     case 1:
