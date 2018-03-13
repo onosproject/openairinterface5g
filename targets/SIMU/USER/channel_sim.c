@@ -17,6 +17,13 @@
  *-------------------------------------------------------------------------------
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
+ *-------------------------------------------------------------------------------
+ * Optimization using SIMD instructions
+ * Frecuency Domain Analysis
+ * Luis Felipe Ariza Vesga, email:lfarizav@unal.edu.co
+ * Functions: do_DL_sig_freq(), do_UL_sig_freq(), init_channel_vars_freq(),
+ * do_UL_sig_freq_prach.
+ *-------------------------------------------------------------------------------
  */
 
 #include <string.h>

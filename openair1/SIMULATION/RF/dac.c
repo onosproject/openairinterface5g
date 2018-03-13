@@ -17,6 +17,12 @@
  *-------------------------------------------------------------------------------
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
+ *-------------------------------------------------------------------------------
+ * Optimization using SIMD instructions
+ * Frecuency Domain Analysis
+ * Luis Felipe Ariza Vesga, email:lfarizav@unal.edu.co
+ * Functions: dac_fixed_gain_SSE_float(), dac_fixed_gain_prach(), dac_fixed_gain_prach_SSE_float().
+ *-------------------------------------------------------------------------------
  */
 
 //#define DEBUG_DAC
@@ -297,8 +303,8 @@ float dac_fixed_gain_prach_SSE_float(float *s_re[2],
 
   int i;
   int aa;
-  float amp,amp1;
-  int k;
+  float amp,amp1,div;
+  __m128 input_re128, input_im128;
 
   amp = //sqrt(NB_RE)*pow(10.0,.05*txpwr_dBm)/sqrt(nb_tx_antennas); //this is amp per tx antenna
     pow(10.0,.05*txpwr_dBm)/sqrt(nb_tx_antennas); //this is amp per tx antenna
@@ -322,27 +328,26 @@ float dac_fixed_gain_prach_SSE_float(float *s_re[2],
     amp1 = amp1*sqrt(512.0/300.0); //account for loss due to null carriers
     //printf("DL: amp1 %f dB (%d,%d), tx_power %f\n",20*log10(amp1),input_offset,input_offset_meas,txpwr_dBm);
   */
-#ifdef DEBUG_DAC
-  printf("DAC: input_offset %d, amp %e, amp1 %e\n",input_offset,amp,amp1);
-#endif
-  k=input_offset;
-  for (i=0; i<length*2; i+=2) {
+
+  div=amp/amp1;
+  for (i=0; i<(length>>2); i++) {
     for (aa=0; aa<nb_tx_antennas; aa++) {
-      s_re[aa][i/2] = amp*((float)(((short *)input))[((k))])/amp1; ///(1<<(B-1));
-      s_im[aa][i/2] = amp*((float)(((short *)input))[((k))+1])/amp1; ///(1<<(B-1));
-#ifdef DEBUG_DAC
-      if(i<20)
-      	printf("DAC[%d]: input (%d,%d). output (%e,%e)\n",i/2,(((short *)input))[((k))],(((short *)input))[((k))+1],s_re[aa][i/2],s_im[aa][i/2]);
-      if (i>length*2-20&&i<length*2)
-	printf("DAC[%d]: input (%d,%d). output (%e,%e)\n",i/2,(((short *)input))[((k))],(((short *)input))[((k))+1],s_re[aa][i/2],s_im[aa][i/2]);
-#endif
-      k+=2;
-      if (k==12*2*ofdm_symbol_size)
- 	k=0;
+      //s_re[aa][i] = div*((float)(((short *)input))[((input_offset+2*i))]); ///(1<<(B-1));
+      //s_im[aa][i] = div*((float)(((short *)input))[((input_offset+2*i))+1]); ///(1<<(B-1));
+
+      input_re128=_mm_set_ps((float)(((short *)input))[2*(4*i+3)+input_offset],(float)(((short *)input))[2*(4*i+2)+input_offset],(float)(((short *)input))[2*(4*i+1)+input_offset],(float)(((short *)input))[2*(4*i)+input_offset]);
+      input_im128=_mm_set_ps((float)(((short *)input))[2*(4*i+3)+1+input_offset],(float)(((short *)input))[2*(4*i+2)+1+input_offset],(float)(((short *)input))[2*(4*i+1)+1+input_offset],(float)(((short *)input))[2*(4*i)+1+input_offset]);
+      input_re128=_mm_mul_ps(input_re128,_mm_set1_ps(div));
+      input_im128=_mm_mul_ps(input_im128,_mm_set1_ps(div));
+      _mm_storeu_ps(&s_re[aa][4*i],input_re128);
+      _mm_storeu_ps(&s_im[aa][4*i],input_im128);
+
+      if (2*i+input_offset==12*2*ofdm_symbol_size)
+ 	i=0;
     }
   }
 
   //  printf("ener %e\n",signal_energy_fp(s_re,s_im,nb_tx_antennas,length,0));
 
-  return(signal_energy_fp(s_re,s_im,nb_tx_antennas,length_meas,0)/NB_RE);
+  return(signal_energy_fp_SSE_float(s_re,s_im,nb_tx_antennas,length_meas,0)/NB_RE);
 }

@@ -17,6 +17,17 @@
  *-------------------------------------------------------------------------------
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
+ *-------------------------------------------------------------------------------
+ * Optimization using SIMD instructions
+ * Frecuency Domain Analysis
+ * Luis Felipe Ariza Vesga, email:lfarizav@unal.edu.co
+ * Functions: init_freq_channel_SSE_float(), freq_channel_SSE_float(),
+ * init_freq_channel_prach(), init_freq_channel_prach_SSE_float(),
+ * freq_channel_prach (), freq_channel_prach_SSE_float().
+ *
+ * sincos_ps(), log_ps() --> Functions mofified from Miloyip and Cephes sources.
+ * More info https://github.com/miloyip/normaldist-benchmark.
+ *-------------------------------------------------------------------------------
  */
 
 #include <math.h>
@@ -63,7 +74,6 @@ int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 	}
 	first_run=0;
   }
-
   for (f=-(n_samples>>1); f<=(n_samples>>1); f++) {
     //count++;
     freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
@@ -75,11 +85,8 @@ int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
 
       cos_lut[f+(n_samples>>1)][l] = cos(2*M_PI*freq*delay);
       sin_lut[f+(n_samples>>1)][l] = sin(2*M_PI*freq*delay);
-      //printf("[%d][%d] (cos,sin) (%e,%e):\n",f,l,cos_lut[f+(n_samples>>1)][l],sin_lut[f+(n_samples>>1)][l]);
-
     }
   }
-  //printf("count %d\n",count);
   return(0);
 }
 
@@ -100,8 +107,6 @@ int freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
     return(-1); 
   }
 
-  // printf("no of taps:%d,",(int)desc->nb_taps);
-
   if (freq_channel_init == 0) {
     // we are initializing the lut for the largets possible n_samples=12*nb_rb+1
     // if called with n_samples<12*nb_rb+1, we decimate the lut
@@ -113,9 +118,6 @@ int freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
   }
 
   d=(n_samples_max-1)/(n_samples-1);
-
-  //printf("no_samples=%d, n_samples_max=%d, d=%d\n",n_samples,n_samples_max,d);
-
   start_meas(&desc->interp_freq);
 
   for (f=-(n_samples_max>>1),f2=-(n_samples>>1); f<(n_samples_max>>1); f+=d,f2++) {
@@ -134,7 +136,6 @@ int freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
           desc->chF[aarx+(aatx*desc->nb_rx)][(n_samples>>1)+f2].y+=(-desc->a[l][aarx+(aatx*desc->nb_rx)].x*slut[l]+
               desc->a[l][aarx+(aatx*desc->nb_rx)].y*clut[l]);
         }
-	printf("f %d, (chF.x,chF.y) (%e,%e):\n",f,desc->chF[0][(n_samples>>1)+f].x,desc->chF[0][(n_samples>>1)+f].y);
       }
     }
   }
@@ -153,9 +154,6 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
   int16_t f;
   uint8_t l;
   __m128 cos_lut128,sin_lut128;
-  static float out[4] __attribute__((aligned(16)));
-  static float out1[4] __attribute__((aligned(16)));
-  //static int count=0;
 
   if ((n_samples&1)==0) {
     fprintf(stderr, "freq_channel_init: n_samples has to be odd\n");
@@ -184,27 +182,12 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
       else
         delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
 
-      //sincos_ps(_mm_set_ps(twopi*(4*f+3)*delay,twopi*(4*f+2)*delay,twopi*(4*f+1)*delay,twopi*(4*f)*delay), &sin_lut128, &cos_lut128);
-	//_mm_storeu_ps(out,sin_lut128);
-	//printf("sin sincos SSE is %e,%e,%e,%e\n",out[0],out[1],out[2],out[3]);
-
+        //sincos_ps(_mm_set_ps(twopi*(4*f+3)*delay,twopi*(4*f+2)*delay,twopi*(4*f+1)*delay,twopi*(4*f)*delay), &sin_lut128, &cos_lut128);
         cos_lut128=_mm_set_ps(cos(twopi*(4*f+3)*delay),cos(twopi*(4*f+2)*delay),cos(twopi*(4*f+1)*delay),cos(twopi*(4*f)*delay));
+        sin_lut128=_mm_set_ps(sin(twopi*(4*f+3)*delay),sin(twopi*(4*f+2)*delay),sin(twopi*(4*f+1)*delay),sin(twopi*(4*f)*delay));
+        _mm_storeu_ps(&cos_lut_f[l][4*f+(n_samples>>1)],cos_lut128);
+        _mm_storeu_ps(&sin_lut_f[l][4*f+(n_samples>>1)],sin_lut128);
 
-      sin_lut128=_mm_set_ps(sin(twopi*(4*f+3)*delay),sin(twopi*(4*f+2)*delay),sin(twopi*(4*f+1)*delay),sin(twopi*(4*f)*delay));
-	//_mm_storeu_ps(out1,sin_lut128);
-	//printf("sin SSE1 is %e,%e,%e,%e\n",out1[0],out1[1],out1[2],out1[3]);
-      _mm_storeu_ps(&cos_lut_f[l][4*f+(n_samples>>1)],cos_lut128);
-      _mm_storeu_ps(&sin_lut_f[l][4*f+(n_samples>>1)],sin_lut128);
-      //cos_lut[f+(n_samples>>1)][l] = cos(2*M_PI*freq*delay);
-      //sin_lut[f+(n_samples>>1)][l] = sin(2*M_PI*freq*delay);
-      //printf("cos %e,%e,%e,%e\n",cos_lut128[0],cos_lut128[1],cos_lut128[2],cos_lut128[3]);
-      //printf("sin %e,%e,%e,%e\n",sin_lut128[0],sin_lut128[1],sin_lut128[2],sin_lut128[3]);
-      //printf("arg %e, f %d, values cos:%e, sin:%e, cos# %e, sin# %e\n",twopi*(4*f)*delay,4*f+(n_samples>>1), cos_lut_f[l][4*f+(n_samples>>1)], sin_lut_f[l][4*f+(n_samples>>1)],cos(twopi*(4*f)*delay),sin(twopi*(4*f)*delay));
-      //printf("arg %e, f %d, values cos:%e, sin:%e, cos# %e, sin# %e\n",twopi*(4*f+1)*delay,4*f+1+(n_samples>>1), cos_lut_f[l][4*f+1+(n_samples>>1)], sin_lut_f[l][4*f+1+(n_samples>>1)],cos(twopi*(4*f+1)*delay),sin(twopi*(4*f+1)*delay));
-      //printf("arg %e, f %d, values cos:%e, sin:%e, cos# %e, sin# %e\n",twopi*(4*f+2)*delay,4*f+2+(n_samples>>1), cos_lut_f[l][4*f+2+(n_samples>>1)], sin_lut_f[l][4*f+2+(n_samples>>1)],cos(twopi*(4*f+2)*delay),sin(twopi*(4*f+2)*delay));
-      //printf("arg %e, f %d, values cos:%e, sin:%e, cos# %e, sin# %e\n",twopi*(4*f+3)*delay,4*f+3+(n_samples>>1), cos_lut_f[l][4*f+3+(n_samples>>1)], sin_lut_f[l][4*f+3+(n_samples>>1)],cos(twopi*(4*f+3)*delay),sin(twopi*(4*f+3)*delay));
-      //printf("f %d, cos0 %e, cos1 %e\n",2*f,(double) &cos_lut128[0],(double) &cos_lut128[1]);
-      //printf("f %d, sin0 %e, sin1 %e\n",2*f+1,(double) &sin_lut128[0],(double) &sin_lut128[1]);
     }
   }
   for (l=0; l<(int)desc->nb_taps; l++) 
@@ -226,10 +209,6 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
       sin_lut128=_mm_set_ps(sin(twopi*(4*f)*delay),sin(twopi*(4*f-1)*delay),sin(twopi*(4*f-2)*delay),sin(twopi*(4*f-3)*delay));
       _mm_storeu_ps(&cos_lut_f[l][4*f-3+(n_samples>>1)],cos_lut128);
       _mm_storeu_ps(&sin_lut_f[l][4*f-3+(n_samples>>1)],sin_lut128);
-      //cos_lut[f+(n_samples>>1)][l] = cos(2*M_PI*freq*delay);
-      //sin_lut[f+(n_samples>>1)][l] = sin(2*M_PI*freq*delay);
-      //printf("values cos:%d, sin:%d\n", cos_lut[f][l], sin_lut[f][l]);
-
     }
   }
   /*for (f=-(n_samples>>1); f<=(n_samples>>1); f++) {
@@ -428,65 +407,7 @@ int init_freq_channel_prach_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_
 
   return(0);
 }
-/*#ifdef abstraction_SSE
-int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
-{
 
-  int16_t f;
-  uint8_t aarx,aatx,l;
-  double *clut,*slut;
-  int prach_samples;
-  static int freq_channel_init=0;
-  static int n_samples_max=0;
-  __m128d clut128,slut128,chFx_128,chFy_128;
-
-  prach_samples = (prach_fmt<4)?13+839+12:3+139+2; 
-
-  // do some error checking
-  if (nb_rb-n_ra_prb<6) {
-    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check r_ra_prb value (r_ra_prb=%d)\n",n_ra_prb);
-    return(-1); 
-  }
-  if (freq_channel_init == 0) {
-    // we are initializing the lut for the largets possible n_samples=12*nb_rb+1
-    // if called with n_samples<12*nb_rb+1, we decimate the lut
-    n_samples_max=12*nb_rb+1;
-    if (init_freq_channel_prach(desc,nb_rb,n_samples_max,prach_fmt,n_ra_prb)==0)
-      freq_channel_init=1;
-    else
-      return(-1);
-  }
-
-  start_meas(&desc->interp_freq_PRACH);
-  for (f=0; f<(prach_samples>>1); f++) {
-    //clut = cos_lut[f];
-    //slut = sin_lut[f];
-    for (aarx=0; aarx<desc->nb_rx; aarx++) {
-      for (aatx=0; aatx<desc->nb_tx; aatx++) {
-        //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].x=0.0;
-        //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].y=0.0;
-	chFx_128=_mm_setzero_pd();
-	chFy_128=_mm_setzero_pd();
-        for (l=0; l<(int)desc->nb_taps; l++) {
-
-          //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].x+=(desc->a[l][aarx+(aatx*desc->nb_rx)].x*clut[l]+
-          //    desc->a[l][aarx+(aatx*desc->nb_rx)].y*slut[l]);
-          //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].y+=(-desc->a[l][aarx+(aatx*desc->nb_rx)].x*slut[l]+
-          //    desc->a[l][aarx+(aatx*desc->nb_rx)].y*clut[l]);
-	  chFx_128=_mm_add_pd(chFx_128,_mm_add_pd(_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].x),_mm_loadu_pd(&cos_lut[2*f][l])),_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].y),_mm_loadu_pd(&sin_lut[2*f][l]))));  
-	  chFy_128=_mm_add_pd(chFy_128,_mm_sub_pd(_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].y),_mm_loadu_pd(&cos_lut[2*f][l])),_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].x),_mm_loadu_pd(&sin_lut[2*f][l]))));  
-        }
-	_mm_storeu_pd(&desc->chF_prach[aarx+(aatx*desc->nb_rx)][2*f].x,chFx_128);
-	_mm_storeu_pd(&desc->chF_prach[aarx+(aatx*desc->nb_rx)][2*f].y,chFy_128);
-      }
-    }
-	//if (f<10 || (f>829&&f<839))
-	//	printf("chF_prach[0][%d], (x,y) = (%e,%e)\n",f,desc->chF_prach[0][f].x,desc->chF_prach[0][f].y);
-  }
-  stop_meas(&desc->interp_freq_PRACH);
-  return(0);
-}
-#else*/
 int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
 {
 
@@ -940,7 +861,79 @@ __m128 log_ps(__m128 x) {
   x = _mm_add_ps(x, y);
   x = _mm_add_ps(x, tmp);
   x = _mm_or_ps(x, invalid_mask); // negative arg will be NAN
-  //printf("ln is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
+
   return x;
 }
+
+/*#ifdef abstraction_SSE
+int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
+{
+
+  int16_t f;
+  uint8_t aarx,aatx,l;
+  double *clut,*slut;
+  int prach_samples;
+  static int freq_channel_init=0;
+  static int n_samples_max=0;
+  __m128d clut128,slut128,chFx_128,chFy_128;
+
+  prach_samples = (prach_fmt<4)?13+839+12:3+139+2; 
+
+  // do some error checking
+  if (nb_rb-n_ra_prb<6) {
+    fprintf(stderr, "freq_channel_init: Impossible to allocate PRACH, check r_ra_prb value (r_ra_prb=%d)\n",n_ra_prb);
+    return(-1); 
+  }
+  if (freq_channel_init == 0) {
+    // we are initializing the lut for the largets possible n_samples=12*nb_rb+1
+    // if called with n_samples<12*nb_rb+1, we decimate the lut
+    n_samples_max=12*nb_rb+1;
+    if (init_freq_channel_prach(desc,nb_rb,n_samples_max,prach_fmt,n_ra_prb)==0)
+      freq_channel_init=1;
+    else
+      return(-1);
+  }
+
+  start_meas(&desc->interp_freq_PRACH);
+  for (f=0; f<(prach_samples>>1); f++) {
+    //clut = cos_lut[f];
+    //slut = sin_lut[f];
+    for (aarx=0; aarx<desc->nb_rx; aarx++) {
+      for (aatx=0; aatx<desc->nb_tx; aatx++) {
+        //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].x=0.0;
+        //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].y=0.0;
+	chFx_128=_mm_setzero_pd();
+	chFy_128=_mm_setzero_pd();
+        for (l=0; l<(int)desc->nb_taps; l++) {
+
+          //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].x+=(desc->a[l][aarx+(aatx*desc->nb_rx)].x*clut[l]+
+          //    desc->a[l][aarx+(aatx*desc->nb_rx)].y*slut[l]);
+          //desc->chF_prach[aarx+(aatx*desc->nb_rx)][f].y+=(-desc->a[l][aarx+(aatx*desc->nb_rx)].x*slut[l]+
+          //    desc->a[l][aarx+(aatx*desc->nb_rx)].y*clut[l]);
+	  chFx_128=_mm_add_pd(chFx_128,_mm_add_pd(_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].x),_mm_loadu_pd(&cos_lut[2*f][l])),_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].y),_mm_loadu_pd(&sin_lut[2*f][l]))));  
+	  chFy_128=_mm_add_pd(chFy_128,_mm_sub_pd(_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].y),_mm_loadu_pd(&cos_lut[2*f][l])),_mm_mul_pd(_mm_set1_pd(desc->a[l][aarx+(aatx*desc->nb_rx)].x),_mm_loadu_pd(&sin_lut[2*f][l]))));  
+        }
+	_mm_storeu_pd(&desc->chF_prach[aarx+(aatx*desc->nb_rx)][2*f].x,chFx_128);
+	_mm_storeu_pd(&desc->chF_prach[aarx+(aatx*desc->nb_rx)][2*f].y,chFy_128);
+      }
+    }
+	//if (f<10 || (f>829&&f<839))
+	//	printf("chF_prach[0][%d], (x,y) = (%e,%e)\n",f,desc->chF_prach[0][f].x,desc->chF_prach[0][f].y);
+  }
+  stop_meas(&desc->interp_freq_PRACH);
+  return(0);
+}
+#else*/
+
+      //cos_lut[f+(n_samples>>1)][l] = cos(2*M_PI*freq*delay);
+      //sin_lut[f+(n_samples>>1)][l] = sin(2*M_PI*freq*delay);
+      //printf("cos %e,%e,%e,%e\n",cos_lut128[0],cos_lut128[1],cos_lut128[2],cos_lut128[3]);
+      //printf("sin %e,%e,%e,%e\n",sin_lut128[0],sin_lut128[1],sin_lut128[2],sin_lut128[3]);
+      //printf("arg %e, f %d, values cos:%e, sin:%e, cos# %e, sin# %e\n",twopi*(4*f)*delay,4*f+(n_samples>>1), cos_lut_f[l][4*f+(n_samples>>1)], sin_lut_f[l][4*f+(n_samples>>1)],cos(twopi*(4*f)*delay),sin(twopi*(4*f)*delay));
+      //printf("arg %e, f %d, values cos:%e, sin:%e, cos# %e, sin# %e\n",twopi*(4*f+1)*delay,4*f+1+(n_samples>>1), cos_lut_f[l][4*f+1+(n_samples>>1)], sin_lut_f[l][4*f+1+(n_samples>>1)],cos(twopi*(4*f+1)*delay),sin(twopi*(4*f+1)*delay));
+      //printf("arg %e, f %d, values cos:%e, sin:%e, cos# %e, sin# %e\n",twopi*(4*f+2)*delay,4*f+2+(n_samples>>1), cos_lut_f[l][4*f+2+(n_samples>>1)], sin_lut_f[l][4*f+2+(n_samples>>1)],cos(twopi*(4*f+2)*delay),sin(twopi*(4*f+2)*delay));
+      //printf("arg %e, f %d, values cos:%e, sin:%e, cos# %e, sin# %e\n",twopi*(4*f+3)*delay,4*f+3+(n_samples>>1), cos_lut_f[l][4*f+3+(n_samples>>1)], sin_lut_f[l][4*f+3+(n_samples>>1)],cos(twopi*(4*f+3)*delay),sin(twopi*(4*f+3)*delay));
+      //printf("f %d, cos0 %e, cos1 %e\n",2*f,(double) &cos_lut128[0],(double) &cos_lut128[1]);
+      //printf("f %d, sin0 %e, sin1 %e\n",2*f+1,(double) &sin_lut128[0],(double) &sin_lut128[1]);
+
 

@@ -17,6 +17,12 @@
  *-------------------------------------------------------------------------------
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
+ *-------------------------------------------------------------------------------
+ * Optimization using SIMD instructions
+ * Frecuency Domain Analysis
+ * Luis Felipe Ariza Vesga, email:lfarizav@unal.edu.co
+ * Functions: rf_rx_simple_freq(), rf_rx_simple_freq_SSE_float().
+ *-------------------------------------------------------------------------------
  */
 
 //#include "defs.h"
@@ -294,17 +300,15 @@ clock_t start=clock();*/
 	      }
 	      else
 	      {
-		      //rx128_gain_lin=mm_mul_set1_ps(rx_gain_lin);
 		      rx128_re =  _mm_loadu_pd(&r_re[a][2*i]);//r_re[a][i],r_re[a][i+1]
 		      rx128_im =  _mm_loadu_pd(&r_im[a][2*i]);//r_im[a][i],r_im[a][i+1]
 		      rx128_gain_lin = _mm_set1_pd(rx_gain_lin);
-		      gauss_0_128_sqrt_NOW = _mm_set_pd(ziggurat(0.0,1.0),ziggurat(0.0,1.0));
-		      gauss_1_128_sqrt_NOW = _mm_set_pd(ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+		      //gauss_0_128_sqrt_NOW = _mm_set_pd(ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+		      //gauss_1_128_sqrt_NOW = _mm_set_pd(ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+		      boxmuller_SSE_float(&gauss_0_128_sqrt_NOW, &gauss_1_128_sqrt_NOW);
 		      gauss_0_128_sqrt_NOW = _mm_mul_pd(gauss_0_128_sqrt_NOW,_mm_set1_pd(sqrt_NOW));
 		      gauss_1_128_sqrt_NOW = _mm_mul_pd(gauss_1_128_sqrt_NOW,_mm_set1_pd(sqrt_NOW));
 		      // Amplify by receiver gain and apply 3rd order non-linearity
-		      //r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0)); 
-		      //r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
 		      rx128_re = _mm_add_pd(rx128_re,gauss_0_128_sqrt_NOW);
 		      rx128_im = _mm_add_pd(rx128_im,gauss_1_128_sqrt_NOW);
 		      rx128_re = _mm_mul_pd(rx128_re,rx128_gain_lin);
@@ -419,7 +423,6 @@ clock_t start=clock();*/
 	      }
 	      else
 	      {*/
-		      //rx128_gain_lin=mm_mul_set1_ps(rx_gain_lin);
 		      rx128_re =  _mm_loadu_ps(&r_re[a][4*i]);//r_re[a][i],r_re[a][i+1]
 		      rx128_im =  _mm_loadu_ps(&r_im[a][4*i]);//r_im[a][i],r_im[a][i+1]
 		      //start_meas(&desc->ziggurat);
@@ -427,17 +430,9 @@ clock_t start=clock();*/
 		      //gauss_1_128_sqrt_NOW = _mm_set_ps(ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
 		      boxmuller_SSE_float(&gauss_0_128_sqrt_NOW, &gauss_1_128_sqrt_NOW);
 		      //stop_meas(&desc->ziggurat);
-		      //_mm_storeu_ps(out,gauss_0_128_sqrt_NOW);
-		      //_mm_storeu_ps(out1,gauss_1_128_sqrt_NOW);
-        	      //printf("Ziggurat is %e,%e,%e,%e\n",ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
-        	      //printf("boxmuller is %e,%e,%e,%e\n",gaussdouble(0.0,1.0),gaussdouble(0.0,1.0),gaussdouble(0.0,1.0),gaussdouble(0.0,1.0));
-		      //printf("NOR SSE is %e,%e,%e,%e\n",out[0],out[1],out[2],out[3]);
-		      //printf("NOR SSE1 is %e,%e,%e,%e\n",out1[0],out1[1],out1[2],out1[3]);
 		      gauss_0_128_sqrt_NOW = _mm_mul_ps(gauss_0_128_sqrt_NOW,_mm_set1_ps(sqrt_NOW));
 		      gauss_1_128_sqrt_NOW = _mm_mul_ps(gauss_1_128_sqrt_NOW,_mm_set1_ps(sqrt_NOW));
 		      // Amplify by receiver gain and apply 3rd order non-linearity
-		      //r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0)); 
-		      //r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
 		      rx128_re = _mm_add_ps(_mm_mul_ps(rx128_re,rx128_gain_lin),gauss_0_128_sqrt_NOW);
 		      rx128_im = _mm_add_ps(_mm_mul_ps(rx128_im,rx128_gain_lin),gauss_1_128_sqrt_NOW);
 		      _mm_storeu_ps(&r_re[a][4*i],rx128_re);
@@ -445,6 +440,29 @@ clock_t start=clock();*/
 	      //}
 	    }
 	  }
+		      /*rx128_re =  _mm_loadu_ps(&r_re[a][4*i+ofdm_symbol_size*j]);//r_re[a][i],r_re[a][i+1]
+		      rx128_im =  _mm_loadu_ps(&r_im[a][4*i+ofdm_symbol_size*j]);//r_im[a][i],r_im[a][i+1]
+		      rx128_re_1 =  _mm_loadu_ps(&r_re[a][(ofdm_symbol_size-n_samples)+4*i+ofdm_symbol_size*j]);//r_re[a][i],r_re[a][i+1]
+		      rx128_im_1 =  _mm_loadu_ps(&r_im[a][(ofdm_symbol_size-n_samples)+4*i+ofdm_symbol_size*j]);//r_im[a][i],r_im[a][i+1]
+		      //start_meas(&desc->ziggurat);
+		      //gauss_0_128_sqrt_NOW = _mm_set_ps(ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+		      //gauss_1_128_sqrt_NOW = _mm_set_ps(ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+		      boxmuller_SSE_float(&gauss_0_128_sqrt_NOW, &gauss_1_128_sqrt_NOW);
+		      boxmuller_SSE_float(&gauss_0_128_sqrt_NOW_1, &gauss_1_128_sqrt_NOW_1);
+		      //stop_meas(&desc->ziggurat);
+		      gauss_0_128_sqrt_NOW = _mm_mul_ps(gauss_0_128_sqrt_NOW,_mm_set1_ps(sqrt_NOW));
+		      gauss_1_128_sqrt_NOW = _mm_mul_ps(gauss_1_128_sqrt_NOW,_mm_set1_ps(sqrt_NOW));
+		      gauss_0_128_sqrt_NOW_1 = _mm_mul_ps(gauss_0_128_sqrt_NOW_1,_mm_set1_ps(sqrt_NOW));
+		      gauss_1_128_sqrt_NOW_1 = _mm_mul_ps(gauss_1_128_sqrt_NOW_1,_mm_set1_ps(sqrt_NOW));
+		      // Amplify by receiver gain and apply 3rd order non-linearity
+		      rx128_re = _mm_add_ps(_mm_mul_ps(rx128_re,rx128_gain_lin),gauss_0_128_sqrt_NOW);
+		      rx128_im = _mm_add_ps(_mm_mul_ps(rx128_im,rx128_gain_lin),gauss_1_128_sqrt_NOW);
+		      rx128_re_1 = _mm_add_ps(_mm_mul_ps(rx128_re_1,rx128_gain_lin),gauss_0_128_sqrt_NOW_1);
+		      rx128_im_1 = _mm_add_ps(_mm_mul_ps(rx128_im_1,rx128_gain_lin),gauss_1_128_sqrt_NOW_1);
+		      _mm_storeu_ps(&r_re[a][4*i+ofdm_symbol_size*j],rx128_re);
+		      _mm_storeu_ps(&r_im[a][4*i+ofdm_symbol_size*j],rx128_im);
+		      _mm_storeu_ps(&r_re[a][(ofdm_symbol_size-n_samples)+4*i+ofdm_symbol_size*j],rx128_re_1);
+		      _mm_storeu_ps(&r_im[a][(ofdm_symbol_size-n_samples)+4*i+ofdm_symbol_size*j],rx128_im_1);*/
 /*clock_t stop=clock();
 printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
 sum=(sum+stop-start);*/

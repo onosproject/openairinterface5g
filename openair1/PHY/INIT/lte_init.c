@@ -1155,31 +1155,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
     for (i=0; i<fp->nb_antennas_rx; i++) {
       common_vars->rxdata[i] = (int32_t*) malloc16_clear( (fp->samples_per_tti*10+2048)*sizeof(int32_t) );
     }
-  /*if (do_ofdm_mod)
-  {
-    common_vars->common_vars_rx_data_per_thread[0].rxdataF  = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*));
-    printf("[lte_init_f] address of rxdataF in memory: %p, thread %d\n",&common_vars->common_vars_rx_data_per_thread[0].rxdataF,0);
-    for (i=0; i<fp->nb_antennas_rx; i++) {
-          common_vars->common_vars_rx_data_per_thread[0].rxdataF[i] = (int32_t*)malloc16_clear((10*fp->ofdm_symbol_size*fp->symbols_per_tti)*sizeof(int32_t));
-	  printf("[lte_init_f] address of rxdataF[i] in memory: %p, thread %d, antenna %d\n",&common_vars->common_vars_rx_data_per_thread[0].rxdataF[i],0,i);
-    }
 
-    //rxdata_temp. Please remove this dummy allocation when all arrays are size fixed. If not, the multichannel does not work.
-    rxdataF_temp = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
-    for (i=0; i<fp->nb_antennas_rx; i++) {
-	rxdataF_temp[i] = (int32_t*)malloc16_clear((14313)*sizeof(int32_t));
-    }
-
-    common_vars->common_vars_rx_data_per_thread[1].rxdataF  = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
-    printf("[lte_init_f] address of rxdataF in memory: %p, thread %d\n",&common_vars->common_vars_rx_data_per_thread[1].rxdataF,1);
-    for (i=0; i<fp->nb_antennas_rx; i++) {
-      common_vars->common_vars_rx_data_per_thread[1].rxdataF[i] = (int32_t*)malloc16_clear((10*fp->ofdm_symbol_size*fp->symbols_per_tti)*sizeof(int32_t));
-      printf("[lte_init_f address of rxdataF[i] in memory: %p, thread %d, antenna %d\n",&common_vars->common_vars_rx_data_per_thread[1].rxdataF[i],1,i);
-    }
-
-  }
-  else
-  //{*/
     for (th_id=0; th_id<RX_NB_TH_MAX; th_id++){
     	common_vars->common_vars_rx_data_per_thread[th_id].rxdataF  = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
         printf("[lte_init_t] address of rxdataF in memory: %p, thread %d\n",&common_vars->common_vars_rx_data_per_thread[th_id].rxdataF,th_id);
@@ -1208,19 +1184,6 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
         }
       }
   }
-
-	/*for (i=0; i<fp->ofdm_symbol_size*fp->symbols_per_tti; i++) {
-	    for (int aa=0; aa<fp->nb_antennas_rx; aa++) {
-	      ((short *)common_vars->common_vars_rx_data_per_thread[1].rxdataF[aa])[((i+fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)]   = (short)(i);
-	      ((short *)common_vars->common_vars_rx_data_per_thread[1].rxdataF[aa])[1+((i+fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)] = (short)(1);
-	      if (i < 300) {
-		printf("[lte-init] rxdataF (thread[%d]) %d: (%d,%d), memory addr %p\n",1,i,((short *)common_vars->common_vars_rx_data_per_thread[1].rxdataF[aa])[((i+fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)],((short *)common_vars->common_vars_rx_data_per_thread[1].rxdataF[aa])[1+((i+fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)],&common_vars->common_vars_rx_data_per_thread[1].rxdataF[aa][1+((i+fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)]);
-		printf("[lte-init] rxdataF (thread[%d]) %d: (%d,%d), memory addr %p\n",0,i,((short *)common_vars->common_vars_rx_data_per_thread[0].rxdataF[aa])[((i+4+2*fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)],((short *)common_vars->common_vars_rx_data_per_thread[0].rxdataF[aa])[1+((i+4+2*fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)],&common_vars->common_vars_rx_data_per_thread[0].rxdataF[aa][1+((i+4+2*fp->ofdm_symbol_size*fp->symbols_per_tti)<<1)]);
-	      }
-	    }
-	}*/
-
-
   }
 
   // DLSCH

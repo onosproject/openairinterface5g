@@ -89,8 +89,8 @@ void fill_channel_desc(channel_desc_t *chan_desc,
   chan_desc->max_Doppler                = max_Doppler;
   chan_desc->ch                         = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
   chan_desc->chF                        = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
-  chan_desc->chFf                       = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
-  chan_desc->chF_prach                  = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
+  chan_desc->chFf                       = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
+  chan_desc->chF_prach                  = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
   chan_desc->a                          = (struct complex**) malloc(nb_taps*sizeof(struct complex*));
 
   LOG_D(OCM,"[CHANNEL] Filling ch \n");
@@ -303,8 +303,8 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
     chan_desc->random_aoa     = 0;
     chan_desc->ch             = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
     chan_desc->chF            = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
-    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
-    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
+    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
+    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
     chan_desc->a              = (struct complex**) malloc(chan_desc->nb_taps*sizeof(struct complex*));
     for (i = 0; i<nb_tx*nb_rx; i++)
       chan_desc->ch[i] = (struct complex*) malloc(chan_desc->channel_length * sizeof(struct complex));
@@ -358,8 +358,8 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
     chan_desc->random_aoa     = 0;
     chan_desc->ch             = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
     chan_desc->chF            = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
-    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
-    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
+    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
+    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
     chan_desc->a              = (struct complex**) malloc(chan_desc->nb_taps*sizeof(struct complex*));
     for (i = 0; i<nb_tx*nb_rx; i++)
       chan_desc->ch[i] = (struct complex*) malloc(chan_desc->channel_length * sizeof(struct complex));
@@ -412,8 +412,8 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
     chan_desc->random_aoa     = 0;
     chan_desc->ch             = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
     chan_desc->chF            = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
-    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
-    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
+    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
+    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
     chan_desc->a              = (struct complex**) malloc(chan_desc->nb_taps*sizeof(struct complex*));
     for (i = 0; i<nb_tx*nb_rx; i++)
       chan_desc->ch[i] = (struct complex*) malloc(chan_desc->channel_length * sizeof(struct complex));
@@ -458,8 +458,8 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
     chan_desc->random_aoa     = 0;
     chan_desc->ch             = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
     chan_desc->chF            = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
-    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
-    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
+    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
+    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
     chan_desc->a              = (struct complex**) malloc(chan_desc->nb_taps*sizeof(struct complex*));
     for (i = 0; i<nb_tx*nb_rx; i++)
       chan_desc->ch[i] = (struct complex*) malloc(chan_desc->channel_length * sizeof(struct complex));
@@ -507,8 +507,8 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
     chan_desc->random_aoa     = 0;
     chan_desc->ch             = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
     chan_desc->chF            = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
-    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
-    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
+    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
+    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
     chan_desc->a              = (struct complex**) malloc(chan_desc->nb_taps*sizeof(struct complex*));
     for (i = 0; i<nb_tx*nb_rx; i++)
       chan_desc->ch[i] = (struct complex*) malloc(chan_desc->channel_length * sizeof(struct complex));
@@ -556,8 +556,8 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
     chan_desc->random_aoa     = 0;
     chan_desc->ch             = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
     chan_desc->chF            = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
-    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
-    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
+    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
+    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
     chan_desc->a              = (struct complex**) malloc(chan_desc->nb_taps*sizeof(struct complex*));
     for (i = 0; i<nb_tx*nb_rx; i++)
       chan_desc->ch[i] = (struct complex*) malloc(chan_desc->channel_length * sizeof(struct complex));
@@ -604,8 +604,8 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
     chan_desc->random_aoa     = 0;
     chan_desc->ch             = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
     chan_desc->chF            = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
-    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
-    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
+    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
+    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
     chan_desc->a              = (struct complex**) malloc(chan_desc->nb_taps*sizeof(struct complex*));
     for (i = 0; i<nb_tx*nb_rx; i++)
       chan_desc->ch[i] = (struct complex*) malloc(chan_desc->channel_length * sizeof(struct complex));
@@ -650,8 +650,8 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
     chan_desc->random_aoa     = 0;
     chan_desc->ch             = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
     chan_desc->chF            = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
-    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
-    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
+    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
+    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
     chan_desc->a              = (struct complex**) malloc(chan_desc->nb_taps*sizeof(struct complex*));
     for (i = 0; i<nb_tx*nb_rx; i++)
       chan_desc->ch[i] = (struct complex*) malloc(chan_desc->channel_length * sizeof(struct complex));
@@ -696,8 +696,8 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
     chan_desc->random_aoa     = 0;
     chan_desc->ch             = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
     chan_desc->chF            = (struct complex**) malloc(nb_tx*nb_rx*sizeof(struct complex*));
-    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
-    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));
+    chan_desc->chFf           = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
+    chan_desc->chF_prach      = (struct complexf*) malloc(nb_tx*nb_rx*sizeof(struct complexf));//To allow SIMD intrinsic functions
     chan_desc->a              = (struct complex**) malloc(chan_desc->nb_taps*sizeof(struct complex*));
     for (i = 0; i<nb_tx*nb_rx; i++)
       chan_desc->ch[i] = (struct complex*) malloc(chan_desc->channel_length * sizeof(struct complex));
@@ -1275,8 +1275,8 @@ int random_channel(channel_desc_t *desc, uint8_t abstraction_flag) {
     for (aarx=0;aarx<desc->nb_rx;aarx++) {
       for (aatx=0;aatx<desc->nb_tx;aatx++) {
 
-        anew[aarx+(aatx*desc->nb_rx)].x = sqrt(desc->ricean_factor*desc->amps[i]/2) * ziggurat(0.0,1.0);
-        anew[aarx+(aatx*desc->nb_rx)].y = sqrt(desc->ricean_factor*desc->amps[i]/2) * ziggurat(0.0,1.0);
+        anew[aarx+(aatx*desc->nb_rx)].x = sqrt(desc->ricean_factor*desc->amps[i]/2) * ziggurat(0.0,1.0);// Ziggurat function to improve pseudo-random normal number generation.
+        anew[aarx+(aatx*desc->nb_rx)].y = sqrt(desc->ricean_factor*desc->amps[i]/2) * ziggurat(0.0,1.0);// Ziggurat function to improve pseudo-random normal number generation.
 
         if ((i==0) && (desc->ricean_factor != 1.0)) {
           if (desc->random_aoa==1) {
@@ -1422,8 +1422,8 @@ int random_channel_freq(channel_desc_t *desc, uint8_t abstraction_flag) {
     for (aarx=0;aarx<desc->nb_rx;aarx++) {
       for (aatx=0;aatx<desc->nb_tx;aatx++) {
 
-        anew[aarx+(aatx*desc->nb_rx)].x = sqrt(desc->ricean_factor*desc->amps[i]/2) * ziggurat(0.0,1.0);
-        anew[aarx+(aatx*desc->nb_rx)].y = sqrt(desc->ricean_factor*desc->amps[i]/2) * ziggurat(0.0,1.0);
+        anew[aarx+(aatx*desc->nb_rx)].x = sqrt(desc->ricean_factor*desc->amps[i]/2) * ziggurat(0.0,1.0);// Ziggurat function to improve pseudo-random normal number generation.
+        anew[aarx+(aatx*desc->nb_rx)].y = sqrt(desc->ricean_factor*desc->amps[i]/2) * ziggurat(0.0,1.0);// Ziggurat function to improve pseudo-random normal number generation.
 
         if ((i==0) && (desc->ricean_factor != 1.0)) {
           if (desc->random_aoa==1) {
