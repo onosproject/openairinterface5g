@@ -864,6 +864,60 @@ __m128 log_ps(__m128 x) {
 
   return x;
 }
+__m128 exp_ps(__m128 x) {
+  __m128 tmp = _mm_setzero_ps(), fx;
+
+  __m128i emm0;
+
+  __m128 one = _mm_set1_ps(1.f);
+
+  x = _mm_min_ps(x, _mm_set1_ps(88.3762626647949f));
+  x = _mm_max_ps(x, _mm_set1_ps(-88.3762626647949f));
+
+  /* express exp(x) as exp(g + n*log(2)) */
+  fx = _mm_mul_ps(x, _mm_set1_ps(1.44269504088896341f));
+  fx = _mm_add_ps(fx, _mm_set1_ps(0.5f));
+
+  /* how to perform a floorf with SSE: just below */
+
+  emm0 = _mm_cvttps_epi32(fx);
+  tmp  = _mm_cvtepi32_ps(emm0);
+
+  /* if greater, substract 1 */
+  __m128 mask = _mm_cmpgt_ps(tmp, fx);    
+  mask = _mm_and_ps(mask, one);
+  fx = _mm_sub_ps(tmp, mask);
+
+  tmp = _mm_mul_ps(fx, _mm_set1_ps(0.693359375f));
+  __m128 z = _mm_mul_ps(fx, _mm_set1_ps(-2.12194440e-4f));
+  x = _mm_sub_ps(x, tmp);
+  x = _mm_sub_ps(x, z);
+
+  z = _mm_mul_ps(x,x);
+  
+  __m128 y = _mm_set1_ps(1.9875691500E-4f);
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(1.3981999507E-3f));
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(8.3334519073E-3f));
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(4.1665795894E-2f));
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(1.6666665459E-1f));
+  y = _mm_mul_ps(y, x);
+  y = _mm_add_ps(y, _mm_set1_ps(5.0000001201E-1f));
+  y = _mm_mul_ps(y, z);
+  y = _mm_add_ps(y, x);
+  y = _mm_add_ps(y, one);
+
+  /* build 2^n */
+  emm0 = _mm_cvttps_epi32(fx);
+  emm0 = _mm_add_epi32(emm0, _mm_set1_epi32(0x7f));
+  emm0 = _mm_slli_epi32(emm0, 23);
+  __m128 pow2n = _mm_castsi128_ps(emm0);
+  y = _mm_mul_ps(y, pow2n);
+  return y;
+}
 
 /*#ifdef abstraction_SSE
 int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
