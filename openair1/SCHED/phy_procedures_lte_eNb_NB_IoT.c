@@ -344,7 +344,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
      ///////////////////////////////////////////////////////// END ////////////////////////////////////////////////////////
         
   //////////////////////////////////////////////////// SIB23 ////////////////////////////////////////////////////////////////////////
-  if( (subframe >0) && (subframe <5) && (subframe >5) && (With_NSSS == 0) && (frame%2==1) && (frame%64<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
+  if( (subframe >0) && (subframe !=5) && (With_NSSS == 0) && (frame%2==1) && (frame%64<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
   {
         if( subframe == 1 )
         {
