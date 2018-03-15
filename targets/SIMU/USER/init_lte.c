@@ -54,7 +54,8 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
   PHY_vars_eNB->frame_parms.Nid_cell =  Nid_cell;                                             ///////((Nid_cell/3)*3)+((eNB_id+Nid_cell)%3);
   PHY_vars_eNB->frame_parms.nushift = PHY_vars_eNB->frame_parms.Nid_cell%6;
 // for NB-IoT testing
-  PHY_vars_eNB->ndlsch_SIB1.si_rnti = 0xffff;
+  PHY_vars_eNB->ndlsch_SIB.content_sib1.si_rnti = 0xffff;
+  PHY_vars_eNB->ndlsch_SIB.content_sib23.si_rnti = 0xffff;
 ////////////////////////////
   phy_init_lte_eNB(PHY_vars_eNB,0,abstraction_flag);
 

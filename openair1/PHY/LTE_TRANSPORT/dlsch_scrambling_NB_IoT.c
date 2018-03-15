@@ -28,8 +28,8 @@
 #include "PHY/impl_defs_lte.h"
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 
-void dlsch_sib1_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
-							                    NB_IoT_eNB_NDLSCH_t    *dlsch,
+void dlsch_sib_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
+							                    NB_IoT_DL_eNB_SIB_t   *dlsch, //NB_IoT_eNB_NDLSCH_t 
 							                    int                    tot_bits,        				// total number of bits to transmit
 							                    uint8_t                Nf,   						// Nf is the frame number (0..9)
 							                    uint8_t                Ns)							  // slot number (0..19)

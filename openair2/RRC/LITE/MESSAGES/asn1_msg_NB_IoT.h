@@ -84,6 +84,15 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id,
 				               uint32_t frame
                       );
 
+uint8_t do_SIB1_NB_IoT_x(uint8_t Mod_id, int CC_id,
+        rrc_eNB_carrier_data_NB_IoT_t *carrier,
+        uint16_t mcc, //208
+        uint16_t mnc, //92
+        uint16_t tac, //1
+        uint32_t cell_identity, //3584
+        uint16_t band,  // 7
+        uint16_t mnc_digit_length,
+        uint32_t frame);
 /**
 \brief Generate a default configuration for SIB2/SIB3-NB in one System Information PDU (eNB).
 @param Mod_id Index of eNB (used to derive some parameters)

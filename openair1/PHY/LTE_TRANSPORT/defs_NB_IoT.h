@@ -144,25 +144,9 @@ typedef enum {
 
 } SCH_status_NB_IoT_t;
 
-/*
-typedef struct {
-  /// NB-IoT
-  /// Allocated RNTI (0 means DLSCH_t is not currently used)
-  uint16_t              si_rnti;   ///(=0xfff4)
 
-  SCH_status_NB_IoT_t   status;
-  /// The scheduling the NPDCCH and the NPDSCH transmission TS 36.213 Table 16.4.1-1
-  uint8_t               scheduling_delay;
-  /// The number of the subframe to transmit the NPDSCH Table TS 36.213 Table 16.4.1.3-1  (Nsf) (NB. in this case is not the index Isf)
-  uint8_t               resource_assignment;
-  /// is the index that determined the repeat number of NPDSCH through table TS 36.213 Table 16.4.1.3-2 / for SIB1-NB Table 16.4.1.3-3
-  uint8_t               repetition_number;
-  /// Determined the ACK/NACK delay and the subcarrier allocation TS 36.213 Table 16.4.2
-  uint8_t               HARQ_ACK_resource;
-  /// Determined the repetition number value 0-3 (2 biut carried by the FAPI NPDCCH)
-  uint8_t               dci_subframe_repetitions;
-  /// modulation always QPSK Qm = 2 
-  uint8_t               modulation;
+typedef struct {
+ uint16_t              si_rnti;
   /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
   uint8_t               e[1888];
   /// data after scrambling
@@ -170,9 +154,9 @@ typedef struct {
   //length of the table e
   uint16_t              length_e;                // new parameter
   /// Tail-biting convolutional coding outputs
-  uint8_t               d[96+(3*(24+152))];  // new parameter
+  uint8_t               d[96+(3*(24+680))];  // new parameter
   /// Sub-block interleaver outputs
-  uint8_t               w[3*3*(152+24)];      // new parameter
+  uint8_t               w[3*3*(680+24)];      // new parameter
 
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   //SCH_status_t status;
@@ -188,17 +172,9 @@ typedef struct {
   uint32_t              frame;
   /// Subframe where current HARQ round was sent
   uint32_t              subframe;
-  /// Index of current HARQ round for this DLSCH
-  uint8_t               round;
-  /// MCS format for this NDLSCH , TS 36.213 Table 16.4.1.5
-  uint8_t               mcs;
-  // we don't have code block segmentation / crc attachment / concatenation in NB-IoT R13 36.212 6.4.2
-  // we don't have beamforming in NB-IoT
-  //this index will be used mainly for SI message buffer
    uint8_t               pdu_buffer_index;
 
-} NB_IoT_DL_eNB_SIB1_t; 
-*/
+} NB_IoT_DL_eNB_SIB_t;
 
 typedef struct {
   /// NB-IoT
@@ -590,8 +566,6 @@ typedef struct {
 } DCI_PDU_NB_IoT;
 
 
-
-
 typedef struct {
   /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
   int32_t                 *txdataF[8];
@@ -611,33 +585,12 @@ typedef struct {
 
  // NB_IoT_DL_eNB_SIB1_t    harq_process_sib1;
 
-//////////////////////////////////////////////////////////////////////
- /// Allocated RNTI (0 means DLSCH_t is not currently used)
-  uint16_t              si_rnti;   ///(=0xfff4)
   SCH_status_NB_IoT_t   status;
-  /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
-  uint8_t               e[1888];
-  /// data after scrambling
-  uint8_t               s_e[1888];
-  //length of the table e
-  uint16_t              length_e;                // new parameter
-  /// Tail-biting convolutional coding outputs
-  uint8_t               d[96+(3*(24+680))];  // new parameter
-  /// Sub-block interleaver outputs
-  uint8_t               w[3*3*(680+24)];      // new parameter
-  /// Status Flag indicating for this DLSCH (idle,active,disabled)
-  //SCH_status_t status;
-  /// Transport block size
-  uint32_t              TBS;
-  /// The payload + CRC size in bits, "B" from 36-212
-  uint32_t              B;
-  /// Pointer to the payload
-  uint8_t               *b;
-  ///pdu of the ndlsch message
-  uint8_t               *pdu;
-  //this index will be used mainly for SI message buffer
-   uint8_t               pdu_buffer_index;
-////////////////////////////////////////////////////////////////////////////
+
+  //////////////////////////////////////////////////////////////////////
+  NB_IoT_DL_eNB_SIB_t    content_sib1;
+  NB_IoT_DL_eNB_SIB_t    content_sib23;
+
 
   /// Number of soft channel bits
   uint32_t                G;

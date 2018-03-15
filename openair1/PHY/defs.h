@@ -511,7 +511,7 @@ typedef struct PHY_VARS_eNB_s {
 
 NB_IoT_eNB_NPBCH_t        npbch;
 NB_IoT_eNB_NDLSCH_t       *ndlsch[NUMBER_OF_UE_MAX];
-NB_IoT_eNB_NDLSCH_t       ndlsch_SIB1;
+NB_IoT_eNB_NDLSCH_t       ndlsch_SIB;
 
 //////////////////// END /////////////////////////////////
 

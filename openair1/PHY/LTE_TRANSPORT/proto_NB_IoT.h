@@ -112,11 +112,12 @@ void npbch_scrambling(LTE_DL_FRAME_PARMS  *frame_parms,
                       uint8_t                *npbch_e,
                       uint32_t               length);
 
-void dlsch_sib1_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
-                                  NB_IoT_eNB_NDLSCH_t    *dlsch,
+void dlsch_sib_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
+                                  NB_IoT_DL_eNB_SIB_t    *dlsch,  //NB_IoT_eNB_NDLSCH_t
                                   int                    tot_bits,                
-                                  uint8_t                Nf,        
+                                  uint8_t                Nf,
                                   uint8_t                Ns); 
+
 /*
 int scrambling_npbch_REs_rel_14(LTE_DL_FRAME_PARMS      *frame_parms,
                                 int32_t                 **txdataF,
@@ -247,13 +248,14 @@ int dlsch_modulation_NB_IoT(int32_t               **txdataF,
                             int16_t               amp,
                             LTE_DL_FRAME_PARMS      *frame_parms,
                             uint8_t               control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-                            NB_IoT_eNB_NDLSCH_t    *dlsch0,
+                            NB_IoT_DL_eNB_SIB_t    *dlsch0,  //NB_IoT_eNB_NDLSCH_t
                             int                   G,              // number of bits per subframe
                             unsigned              npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf        
+                            unsigned              subframe,
                             unsigned short        NB_IoT_RB_ID);
 
 int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
-                              NB_IoT_eNB_NDLSCH_t         *dlsch,
+                              NB_IoT_DL_eNB_SIB_t        *dlsch, // NB_IoT_eNB_NDLSCH_t
                               uint8_t                    Nsf,        // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
                               unsigned int               G);         // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
  

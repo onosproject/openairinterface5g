@@ -37,9 +37,11 @@
 #include "LAYER2/MAC/defs_NB_IoT.h"
 /*NOTE: no static function should be declared in this header file (e.g. init_SI_NB)*/
 
+uint8_t *get_NB_IoT_MIB(void);
+
 uint8_t *get_NB_IoT_SIB1(void);
 
-uint8_t *get_NB_IoT_MIB(void);
+uint8_t *get_NB_IoT_SIB23(void);
 
 long *get_NB_IoT_SIB1_eutracontrolregionsize(void);
 
