@@ -133,9 +133,8 @@ static uint32_t ssh3_sse4[4] __attribute__((aligned(16)));
 static int32_t ifabs4[4] __attribute__((aligned(16)));
 static int32_t hz4[4] __attribute__((aligned(16)));
 static int32_t abshz4[4] __attribute__((aligned(16)));
+static float x4_option0[4] __attribute__((aligned(16)));
 static float x4[4] __attribute__((aligned(16)));
-static float y4[4] __attribute__((aligned(16)));
-
 static __m128i jsr_128 __attribute__((aligned(16)));
 static __m128i jz_128 __attribute__((aligned(16)));
 static __m128i hz_128 __attribute__((aligned(16)));
@@ -164,7 +163,11 @@ static __m128i ifabs __attribute__((aligned(16)));
   static int32_t cmplt_option0[4] __attribute__((aligned(16)));
   static int32_t cmplt_option1[4] __attribute__((aligned(16)));
   static int32_t cmplt_option2[4] __attribute__((aligned(16)));
+  static float output0[4] __attribute__((aligned(16)));
+  static float output1[4] __attribute__((aligned(16)));
+  static float output2[4] __attribute__((aligned(16)));
   static float output[12] __attribute__((aligned(16)));
+  
   static int option=-1;
 __m128 option012(void)
 {
@@ -183,114 +186,95 @@ __m128 nfix_SSE(void)
   static int count0=0;
   static int count1=0;
   static int count2=0;
-  static int first_run=0;
+  static int count=0;
+  static int rand0=0;
+  static int rand1=0;
+  static int rand2=0;
+  static int rand3=0;
   int i;
   static float r = 3.442620; 
   for (;;)
   {
-    if (count0+count1+count2>4)
+    if (count0+count1+count2>3)
     {
-	for (i=0;i<4;i++)
-	{
-		return _mm_setr_ps(output[count0+count1+count2+2],output[count0+count1+count2+1],output[count0+count1+count2],output[count0+count1+count2-1]);
-	}
+	return _mm_setr_ps(output[rand0],output[rand1],output[rand2],output[rand3]);
     }
 
     NOR_SSE;
     //(abs(hz)<kn[iz])? hz*wn[iz]
     cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]]));
     _mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128);
+    //x=hz *  wn[iz];
     x=_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]]));
+    _mm_storeu_ps(x4_option0,x);
 
     for (i=0;i<4;i++)
     {
-	    //printf("i %d, count0 is %d, cmplt_option0 %x \n",i,count0,cmplt_option0[i]);
 	    if (cmplt_option0[i]==0xFFFFFFFF)
 	    {
+		//printf("count0 %d\n",count0);
 		output[count0]=hz4[i]*wn[iz4[i]];
 		count0++;
 	    }  
     }
 
-    //x = - 0.2904764 * log (UNI);
-    //y = - log (UNI);
 
-    x = _mm_mul_ps(_mm_set1_ps(-0.2904764f), log_ps(UNI_SSE));
-    _mm_storeu_ps((__m128 *)x4,x);
-    y = _mm_mul_ps(_mm_set1_ps(-1.0f), log_ps(UNI_SSE));
-    //_mm_storeu_ps((__m128 *)y4,y);
-    cmplt_option1_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(y,y),_mm_add_ps(x,x)));
-    _mm_storeu_si128((__m128i *)cmplt_option1,cmplt_option1_128);
-   
-    //while (cmplt_option0[0]==0xFFFFFFFF && cmplt_option0[1]==0xFFFFFFFF && cmplt_option0[2]==0xFFFFFFFF && cmplt_option0[3]==0xFFFFFFFF);
-    for (i=0;i<4;i++)
-    {
-	    //printf("i %d, count1 is %d, cmplt_option1 %x  \n",i,count1,cmplt_option1[i]);
-	    if (cmplt_option1[i]==0x80000000)
-	    {
-		output[count0+count1+1]=(hz4[i]>0)? x4[i]+r:-x4[i]-r;
-		count1++;
-	    }  
-    }
-    cmplt_option2_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(_mm_setr_ps(fn[iz4[0]],fn[iz4[1]],fn[iz4[2]],fn[iz4[3]]),_mm_mul_ps(UNI_SSE,_mm_sub_ps(_mm_setr_ps(fn[iz4[0]],fn[iz4[1]],fn[iz4[2]],fn[iz4[3]]),_mm_setr_ps(fn[iz4[0]-1],fn[iz4[1]-1],fn[iz4[2]-1],fn[iz4[3]-1])))),exp_ps(_mm_mul_ps(_mm_mul_ps(x,x),_mm_set1_ps(-0.5f)))));
+    // if (fn[iz]+UNI*(fn[iz-1]-fn[iz])<exp(-0.5*x*x))
+    cmplt_option2_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(_mm_setr_ps(fn[iz4[0]],fn[iz4[1]],fn[iz4[2]],fn[iz4[3]]),_mm_mul_ps(UNI_SSE,_mm_sub_ps(_mm_setr_ps(fn[iz4[0]-1],fn[iz4[1]-1],fn[iz4[2]-1],fn[iz4[3]-1]),_mm_setr_ps(fn[iz4[0]],fn[iz4[1]],fn[iz4[2]],fn[iz4[3]])))),exp_ps(_mm_mul_ps(_mm_mul_ps(x,x),_mm_set1_ps(-0.5f)))));
     _mm_storeu_si128((__m128i *)cmplt_option2,cmplt_option2_128);
     for (i=0;i<4;i++)
     {
-	    //printf("i %d, count2 is %d, cmplt_option2 %x  \n",i,count2,cmplt_option2[i]);
 	    if (cmplt_option2[i]==0x80000000)
 	    {
-		output[count0+count1+count2+2]=x4[i];
-		count2++;
+		//printf("count1 %d\n",count1);
+		output[count0+count1]=x4_option0[i];
+		count1++;
 	    }  
     }
-
-    if (count0+count1+count2>4)
-    {
-	for (i=0;i<4;i++)
-	{
-		return _mm_setr_ps(output[count0+count1+count2+2],output[count0+count1+count2+1],output[count0+count1+count2],output[count0+count1+count2-1]);
-	}
-    }
-
-  }
-
-  /*if (first_run==0)
-  {
-	option_012();
-  }
-  if (ifabs4[0]==0xFFFFFFFF && ifabs4[1]==0xFFFFFFFF && ifabs4[2]==0xFFFFFFFF && ifabs4[3]==0xFFFFFFFF)
-  {
-	_mm_storeu_ps((__m128 *)option0,_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])));
-	option=0;
-  }
-
-  for (;;)
-  {
-      x= x128;
-      if (iz4[0]==0||iz4[1]==0||iz4[2]==0||iz4[3]==0)
+      /*if (iz==0)
       {   
         do
         {
-          x = _mm_mul_ps(_mm_set1_ps(-0.2904764), log_ps(UNI_SSE));
-	  _mm_storeu_ps((__m128 *)x4,x);
-          y = _mm_mul_ps(_mm_set1_ps(-1), log_ps(UNI_SSE));
-	  _mm_storeu_ps((__m128 *)y4,y);
+          x = - 0.2904764 * log (UNI);
+          y = - log (UNI);
 	} 
-        while (_mm_add_ps(y,y) < _mm_mul_ps(x,x));
-	(iz0==10)?iz0=0:iz0++;
-        return (hz>0)? _mm_set1_ps(r+x) : _mm_set1_ps(-r-x);
-      }
-      if (fn[iz]+UNI*(fn[iz-1]-fn[iz])<exp(-0.5*x*x)){
-	(iz0==10)?iz0=0:iz0++;
-        return _mm_set1_ps(x);
-      }
-      hz = SHR3;
-      iz = hz&127;
-      if (abs(hz) < kn[iz]){
-	(iz0==10)?iz0=0:iz0++;
-        return (_mm_set1_ps((hz)*wn[iz]));
-      }
-  }*/
+        while (y+y < x*x);
+        return (hz>0)? r+x : -r-x;
+      }*/
+    //if (iz==0)
+    if (iz4[0]==0 ||iz4[1]==0 ||iz4[2]==0 ||iz4[3]==0)
+    {
+	do
+	{
+	    //x = - 0.2904764 * log (UNI);
+	    x = _mm_mul_ps(_mm_set1_ps(-0.2904764f), log_ps(UNI_SSE));
+	    _mm_storeu_ps(x4,x);
+            //y = - log (UNI);
+	    y = _mm_mul_ps(_mm_set1_ps(-1.0f), log_ps(UNI_SSE));
+	   //(y+y < x*x)?
+	    cmplt_option1_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(y,y),_mm_mul_ps(x,x)));
+	    _mm_storeu_si128((__m128i *)cmplt_option1,cmplt_option1_128);
+
+	    for (i=0;i<4;i++)
+	    {
+		    if (cmplt_option1[i]==0x80000000)
+		    {
+		        printf("count2 %d\n",count2);
+			output[count0+count1+count2]=(hz4[i]>0)? x4[i]+r:-x4[i]-r;
+			count2++;
+		    }  
+	    }
+	}
+	while (cmplt_option1[0]!=0x80000000 && cmplt_option1[1]!=0x80000000 && cmplt_option1[2]!=0x80000000 && cmplt_option1[3]!=0x80000000);
+    }
+    count=count0+count1+count2;
+    rand0=iz4[0]%count;
+    rand1=iz4[1]%count;
+    rand2=iz4[2]%count;
+    rand3=iz4[3]%count;
+
+  }
+
 }
 
 
