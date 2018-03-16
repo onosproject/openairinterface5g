@@ -288,6 +288,8 @@ void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_ifa
   }
   init_timer_thread();
 
+  init_sl_channel();
+
   for (inst=0;inst<nb_inst;inst++) {
 
     LOG_I(PHY,"Intializing UE Threads for instance %d (%p,%p)...\n",inst,PHY_vars_UE_g[inst],PHY_vars_UE_g[inst][0]);
@@ -298,6 +300,7 @@ void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_ifa
 
   LOG_I(PHY,"Starting multicast link on %s\n",emul_iface);
   multicast_link_start(ue_stub_rx_handler,0,emul_iface);
+
 
 
 }
@@ -757,8 +760,28 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 }
 
 
-
+#include "openair1/SIMULATION/TOOLS/defs.h"
 unsigned int emulator_absSF;
+channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MAX][MAX_NUM_CCs];
+
+void init_sl_channel(void) {
+
+  for (int UE_id = 0; UE_id < NB_UE_INST; UE_id++) {
+    for (int UE_id2 = 1; UE_id2 < NB_UE_INST; UE_id2++) {
+      UE2UE[UE_id][UE_id2][0] = 
+	new_channel_desc_scm(PHY_vars_UE_g[UE_id][0]->frame_parms.nb_antennas_tx,
+			     PHY_vars_UE_g[UE_id][0]->frame_parms.nb_antennas_rx,
+			     AWGN, 
+			     N_RB2sampling_rate(PHY_vars_UE_g[UE_id][0]->frame_parms.N_RB_UL),
+			     N_RB2channel_bandwidth(PHY_vars_UE_g[UE_id][0]->frame_parms.N_RB_DL),
+			     0.0,
+			     0,
+			     0);
+      
+      random_channel(UE2UE[UE_id][UE_id2][0],0);
+    }
+  }
+}
 
 void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
 
@@ -785,10 +808,19 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
     for (int i=0;i<sizeof(SLSCH_t);i++) printf("%x ",((uint8_t*)slsch)[i]);
     printf("\n");
 
+    int frame    = pdu->header.absSF/10;
+    int subframe = pdu->header.absSF%10;
+    if (UE->sidelink_l2_emulation == 2) {
+      // do simulation here
+      UE->slsch = slsch;
+      check_and_generate_pscch(UE,frame,subframe);
+      check_and_generate_pssch(UE,frame,subframe);
+      do_SL_sig(UE2UE,subframe,&UE->frame_parms,frame,0);
+      rx_slcch(UE,frame,subframe);
+    }
     ue_send_sl_sdu(0,
 		   0,
-		   pdu->header.absSF/10,
-		   pdu->header.absSF%10,
+		   frame,subframe,
 		   pdu->payload,
 		   slsch->payload_length,
 		   0,

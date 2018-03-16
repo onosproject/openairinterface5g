@@ -51,14 +51,14 @@
 */
 void set_taus_seed(unsigned int seed_type);
 
-/*! \fn inline unsigned int taus(unsigned int comp);
+/*! \fn inline unsigned int tausc(unsigned int comp);
 * \brief compute random number
 * \param[in] integer
 * \param[out]
 * \note
 * @ingroup  _oml
 */
-unsigned int taus(unsigned int comp);
+unsigned int tausc(unsigned int comp);
 
 
 /*! \fn void init_seeds(int seed);

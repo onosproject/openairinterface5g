@@ -420,10 +420,14 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
 
 }
 
-void slsch_codingmodulation() {
+void slsch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
+  SLSCH_t *slsch=ue->slsch;
+  AssertFatal(slsch!=NULL,"ue->slsch is null\n");
 
+  //  G=
 }
+
 void check_and_generate_pssch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
   AssertFatal(frame_tx<1024 && frame_tx>0,"frame %d is illegal\n",frame_tx);

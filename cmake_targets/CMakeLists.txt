@@ -1967,7 +1967,7 @@ add_executable(lte-softmodem-stub-nos1
 
 target_link_libraries (lte-softmodem-stub-nos1
   -Wl,--start-group
-  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
+  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 SIMU ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
   NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB
   NFAPI_USER_LIB
   -Wl,--end-group z dl)
@@ -1994,6 +1994,8 @@ add_executable(lte-softmodem-stub
   ${OPENAIR_TARGETS}/RT/USER/lte-enb.c
   ${OPENAIR_TARGETS}/RT/USER/lte-softmodem-stub.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
+  ${OPENAIR_TARGETS}/SIMU/USER/channel_sim.c
+  ${OPENAIR1_DIR}/SIMULATION/TOOLS/random_channel.c
   ${OPENAIR_TARGETS}/SIMU/USER/init_lte.c
   ${OPENAIR_TARGETS}/COMMON/create_tasks.c
   ${OPENAIR_TARGETS}/ARCH/COMMON/common_lib.c
@@ -2014,7 +2016,7 @@ add_executable(lte-softmodem-stub
 
 target_link_libraries (lte-softmodem-stub
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
+  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY SIMU LFDS L2 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
   NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB
   NFAPI_USER_LIB
   -Wl,--end-group z dl)
@@ -2023,7 +2025,7 @@ target_link_libraries (lte-softmodem-stub ${LIBXML2_LIBRARIES})
 target_link_libraries (lte-softmodem-stub pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
 target_link_libraries (lte-softmodem-stub ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-softmodem-stub ${T_LIB})
-
+target_link_libraries (lte-softmodem-stub ${LAPACK_LIBRARIES} ${ATLAS_LIBRARIES})
 
 
 # rrh

@@ -50,7 +50,7 @@ unsigned int s0[MAX_NUM_COMPS], s1[MAX_NUM_COMPS], s2[MAX_NUM_COMPS], b[MAX_NUM_
 
 
 
-inline unsigned int taus(unsigned int comp)
+inline unsigned int tausc(unsigned int comp)
 {
 
   b[comp] = (((s0[comp] << 13) ^ s0[comp]) >> 19);
