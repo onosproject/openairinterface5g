@@ -96,7 +96,7 @@ int main(int argc, char **argv)
   int delay = 0;
   double delay_avg=0;
   double ue_speed = 0;
-  int NCS_config = 1,rootSequenceIndex=0;
+  int NCS_config = 1,rootSequenceIndex=0,prach_ConfigIndex=0;
   int threequarter_fs = 0;
 
   cpuf = get_cpu_freq_GHz();
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 
 
 
-  while ((c = getopt (argc, argv, "hHaA:Cr:p:g:n:s:S:t:x:y:v:V:z:N:F:d:Z:L:R:E")) != -1) {
+  while ((c = getopt (argc, argv, "hHaA:Cr:p:g:n:s:S:t:x:y:v:V:z:N:F:d:Z:L:P:R:E")) != -1) {
     switch (c) {
     case 'a':
       printf("Running AWGN simulation\n");
@@ -232,6 +232,14 @@ int main(int argc, char **argv)
 
       break;
 
+    case 'P':
+    	prach_ConfigIndex = atoi(optarg);
+
+      if ((prach_ConfigIndex < 0) || (prach_ConfigIndex > 28))
+        printf("Illegal prach_ConfigIndex %d, (should be 0-28)\n",prach_ConfigIndex);
+
+      break;
+
     case 'x':
       transmission_mode=atoi(optarg);
 
@@ -297,6 +305,7 @@ int main(int argc, char **argv)
       printf("-v Starting UE velocity in km/h, runs from 'v' to 'v+50km/h'. If n_frames is 1 just 'v' is simulated \n");
       printf("-V Ending UE velocity in km/h, runs from 'v' to 'V'");
       printf("-L rootSequenceIndex (0-837)\n");
+      printf("-P prach_ConfigIndex (0-28)\n");
       printf("-Z NCS_config (ZeroCorrelationZone) (0-15)\n");
       printf("-H Run with High-Speed Flag enabled \n");
       printf("-R Number of PRB (6,15,25,50,75,100)\n");
@@ -385,14 +394,14 @@ int main(int argc, char **argv)
   }
 
   UE->frame_parms.prach_config_common.rootSequenceIndex=rootSequenceIndex;
-  UE->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex=0;
+  UE->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex=prach_ConfigIndex;
   UE->frame_parms.prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig=NCS_config;
   UE->frame_parms.prach_config_common.prach_ConfigInfo.highSpeedFlag=hs_flag;
   UE->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset=0;
 
 
   eNB->frame_parms.prach_config_common.rootSequenceIndex=rootSequenceIndex;
-  eNB->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex=0;
+  eNB->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex=prach_ConfigIndex;
   eNB->frame_parms.prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig=NCS_config;
   eNB->frame_parms.prach_config_common.prach_ConfigInfo.highSpeedFlag=hs_flag;
   eNB->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset=0;
@@ -407,8 +416,9 @@ int main(int argc, char **argv)
   /* N_ZC not used later, no need to set */
   //N_ZC = (prach_fmt <4)?839:139;
 
+printf("################################################\n### entering to function compute_prach_seq eNB\n");
   compute_prach_seq(&eNB->frame_parms.prach_config_common,eNB->frame_parms.frame_type,eNB->X_u);
-
+printf("### entering to function compute_prach_seq UE\n");
   compute_prach_seq(&UE->frame_parms.prach_config_common,UE->frame_parms.frame_type,UE->X_u);
 
   UE->prach_vars[0]->amp = AMP;
@@ -419,15 +429,17 @@ int main(int argc, char **argv)
     preamble_tx = (uint16_t)(taus()&0x3f);
 
   if (n_frames == 1)
-    printf("raPreamble %d\n",preamble_tx);
+    printf("### rootSequenceIndex=%d, prach_ConfigIndex=%d, NCS_config=%d, hs_flag=%d, preamble_tx=%d\n",rootSequenceIndex,prach_ConfigIndex,NCS_config,hs_flag,preamble_tx);
+    //printf("raPreamble %d\n",preamble_tx);
 
   UE->prach_resources[0]->ra_PreambleIndex = preamble_tx;
   UE->prach_resources[0]->ra_TDD_map_index = 0;
-
+printf("### entering to function generate_prach UE\n");
   tx_lev = generate_prach(UE,
                           0, //eNB_id,
                           subframe,
                           0); //Nf
+printf("### finished function generate_prach UE\n################################################\n");
 
   /* tx_lev_dB not used later, no need to set */
   //tx_lev_dB = (unsigned int) dB_fixed(tx_lev);

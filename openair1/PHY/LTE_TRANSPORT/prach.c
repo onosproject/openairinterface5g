@@ -39,10 +39,29 @@
 #include "UTIL/LOG/vcd_signal_dumper.h"
 
 //#define PRACH_DEBUG 1
+#define NR_PRACH_DEBUG 1
 
+// The following tables defined for 4G
 uint16_t NCS_unrestricted[16] = {0,13,15,18,22,26,32,38,46,59,76,93,119,167,279,419};
 uint16_t NCS_restricted[15]   = {15,18,22,26,32,38,46,55,68,82,100,128,158,202,237}; // high-speed case
+// Note: in 4G implementation, restricted set type B is not supported
 uint16_t NCS_4[7]             = {2,4,6,8,10,12,15};
+
+/*************************************
+* The following tables defined for NR
+**************************************/
+// Table 6.3.3.1-5 (38.211) NCS for preamble formats with delta_f_RA = 1.25 KHz
+uint16_t NCS_unrestricted_delta_f_RA_125[16] = {0,13,15,18,22,26,32,38,46,59,76,93,119,167,279,419};
+uint16_t NCS_restricted_TypeA_delta_f_RA_125[15]   = {15,18,22,26,32,38,46,55,68,82,100,128,158,202,237}; // high-speed case set Type A
+uint16_t NCS_restricted_TypeB_delta_f_RA_125[13]   = {15,18,22,26,32,38,46,55,68,82,100,118,137}; // high-speed case set Type B
+
+// Table 6.3.3.1-6 (38.211) NCS for preamble formats with delta_f_RA = 5 KHz
+uint16_t NCS_unrestricted_delta_f_RA_5[16] = {0,13,26,33,38,41,49,55,64,76,93,119,139,209,279,419};
+uint16_t NCS_restricted_TypeA_delta_f_RA_5[16]   = {36,57,72,81,89,94,103,112,121,132,137,152,173,195,216,237}; // high-speed case set Type A
+uint16_t NCS_restricted_TypeB_delta_f_RA_5[14]   = {36,57,60,63,65,68,71,77,81,85,97,109,122,137}; // high-speed case set Type B
+
+// Table 6.3.3.1-7 (38.211) NCS for preamble formats with delta_f_RA = 15 * 2mu KHz where mu = {0,1,2,3}
+uint16_t NCS_unrestricted_delta_f_RA_15[16] = {0,2,4,6,8,10,12,13,15,17,19,23,27,34,46,69};
 
 int16_t ru[2*839]; // quantized roots of unity
 uint32_t ZC_inv[839]; // multiplicative inverse for roots u
@@ -407,6 +426,17 @@ uint8_t get_fid_prach_tdd(LTE_DL_FRAME_PARMS *frame_parms,uint8_t tdd_map_index)
 
 uint8_t get_prach_fmt(uint8_t prach_ConfigIndex,lte_frame_type_t frame_type)
 {
+/*********************************************************************
+ * Only prach format 0 and 1 are fully implemented on NR
+ * NR format 0 == 4G format 0
+ * NR format 1 == 4G format 3
+**********************************************************************/
+
+// Table 6.3.3.2-2: Random access configurations for FR1 and paired spectrum
+	return(prach_ConfigIndex>>4);
+/*
+ * Table 5.7.1-2 and Table 5.7.1-3 for Frame structure type 1 and Frame structure type 2 respectively
+ * not defined in NR
 
   if (frame_type == FDD) // FDD
     return(prach_ConfigIndex>>4);
@@ -426,6 +456,7 @@ uint8_t get_prach_fmt(uint8_t prach_ConfigIndex,lte_frame_type_t frame_type)
     else
       return (4);
   }
+*/
 }
 
 uint8_t get_prach_prb_offset(LTE_DL_FRAME_PARMS *frame_parms, uint8_t tdd_mapindex, uint16_t Nf) 
@@ -482,8 +513,76 @@ int is_prach_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame, uint8_t su
   uint8_t t0_ra;
   uint8_t t1_ra;
   uint8_t t2_ra;
+// Implementing table 6.3.3.2-2 from 38.211 only until Prach Config Index <= 28
+  if ((((frame&1) == 1) && (subframe < 9)) ||
+      (((frame&1) == 0) && (subframe == 9)))  // This is an odd frame, ignore even-only PRACH frames
+    if (((prach_ConfigIndex&0xf)<3) || // 0,1,2,16,17,18,32,33,34,48,49,50
+        ((prach_ConfigIndex&0x1f)==18) || // 18,50
+        ((prach_ConfigIndex&0xf)==15) ||   // 15,47
+    	(prach_ConfigIndex>28) ) // for prach_ConfigIndex > 28 the prach is not implemented (formats 0 and 1 only implemented)
+      return(0);
 
+  switch (prach_ConfigIndex&0x1f) {
+  case 0:
+  case 3:
+    return(subframe==1);
+    break;
 
+  case 1:
+  case 4:
+    return(subframe==4);
+    break;
+
+  case 2:
+  case 5:
+    return(subframe==7);
+    break;
+
+  case 6:
+    return((subframe==1) || (subframe==6));
+    break;
+
+  case 7:
+    return((subframe==2) || (subframe==7));
+    break;
+
+  case 8:
+    return((subframe==3) || (subframe==8));
+    break;
+
+  case 9:
+    return((subframe==1) || (subframe==4) || (subframe==7));
+    break;
+
+  case 10:
+    return((subframe==2) || (subframe==5) || (subframe==8));
+    break;
+
+  case 11:
+    return((subframe==3) || (subframe==6) || (subframe==9));
+    break;
+
+  case 12:
+    if (prach_ConfigIndex == 12) {
+    	return((subframe&1)==0);
+    } else {
+    	return((subframe)==9);
+    }
+    break;
+
+  case 13:
+    return((subframe&1)==1);
+    break;
+
+  case 14:
+    return(1==1);
+    break;
+
+  case 15:
+    return(subframe==9);
+    break;
+  }
+/*
   if (frame_parms->frame_type == FDD) { //FDD
     //implement Table 5.7.1-2 from 36.211 (Rel-10, p.41)
     if ((((frame&1) == 1) && (subframe < 9)) ||
@@ -583,7 +682,7 @@ int is_prach_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame, uint8_t su
     } else
       return(1==2);
   }
-
+*/
   // shouldn't get here!
   return(2==1);
 }
@@ -614,6 +713,9 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
   uint16_t d_start,numshift;
 
   uint8_t prach_fmt = get_prach_fmt(prach_ConfigIndex,frame_type);
+#ifdef NR_PRACH_DEBUG
+	printf("### prach_ConfigIndex=%d, prach_fmt=%d\n",prach_ConfigIndex,prach_fmt);
+#endif
   //uint8_t Nsp=2;
   //uint8_t f_ra,t1_ra;
   uint16_t N_ZC = (prach_fmt<4)?839:139;
@@ -655,6 +757,13 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
 
 
   // First compute physical root sequence
+
+/************************************************************************
+* 4G and NR NCS tables are slightly different and depend on prach format
+* Table 6.3.3.1-5:  for preamble formats with delta_f_RA = 1.25 Khz (formats 0,1,2)
+* Table 6.3.3.1-6:  for preamble formats with delta_f_RA = 5 Khz (formats 3)
+* NOTE: Restricted set type B is not implemented
+*************************************************************************/
   if (restricted_set == 0) {
     if (Ncs_config > 15) {
       LOG_E( PHY, "[PHY] FATAL, Illegal Ncs_config for unrestricted format %"PRIu8"\n", Ncs_config );
@@ -662,16 +771,37 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
       return 0; // not reached
     }
 
-    NCS = NCS_unrestricted[Ncs_config];
-  } else {
-    if (Ncs_config > 14) {
-      LOG_E( PHY, "[PHY] FATAL, Illegal Ncs_config for restricted format %"PRIu8"\n", Ncs_config );
-      mac_xface->macphy_exit("PRACH: Illegal Ncs_config for restricted format");
-      return 0; // not reached
+    //NCS = NCS_unrestricted[Ncs_config];
+    if (prach_fmt<3) {
+#ifdef NR_PRACH_DEBUG
+	printf("### using table NCS_unrestricted_delta_f_RA_125\n");
+#endif
+    	NCS = NCS_unrestricted_delta_f_RA_125[Ncs_config];
+    } else {
+    	NCS = NCS_unrestricted_delta_f_RA_5[Ncs_config];
     }
-
-    NCS = NCS_restricted[Ncs_config];
+  } else {
+    //NCS = NCS_restricted[Ncs_config];
+    if (prach_fmt<3) {
+        if (Ncs_config > 14) {
+          LOG_E( PHY, "[PHY] FATAL, Illegal Ncs_config for restricted format %"PRIu8"\n", Ncs_config );
+          mac_xface->macphy_exit("PRACH: Illegal Ncs_config for restricted format");
+          return 0; // not reached
+        }
+#ifdef NR_PRACH_DEBUG
+	printf("### using table NCS_restricted_TypeA_delta_f_RA_125\n");
+#endif
+    	NCS = NCS_restricted_TypeA_delta_f_RA_125[Ncs_config];
+    } else {
+        if (Ncs_config > 15) {
+          LOG_E( PHY, "[PHY] FATAL, Illegal Ncs_config for restricted format %"PRIu8"\n", Ncs_config );
+          mac_xface->macphy_exit("PRACH: Illegal Ncs_config for restricted format");
+          return 0; // not reached
+        }
+    	NCS = NCS_restricted_TypeA_delta_f_RA_5[Ncs_config];
+    }
   }
+
 
   n_ra_prb = get_prach_prb_offset(&(ue->frame_parms), tdd_mapindex, Nf);
   prach_root_sequence_map = (prach_fmt<4) ? prach_root_sequence_map0_3 : prach_root_sequence_map4;
@@ -833,7 +963,19 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
       memset((void*)prachF,0,4*18432);
     break;
   }
-
+/********************************************************
+ *
+ * In function init_parch_tables: 
+ * to compute quantized roots of unity ru(n) = 32767 * exp j*[ (2 * PI * n) / N_ZC ]
+ *
+ * In compute_prach_seq: 
+ * to calculate Xu = DFT xu = xu (inv_u*k) * Xu[0] (This is a Zadoff-Chou sequence property: DFT ZC sequence is another ZC sequence)
+ *
+ * In generate_prach: 
+ * to do the cyclic-shifted DFT by multiplying Xu[k] * ru[k*preamble_shift] as:
+ * If X[k] = DFT x(n) -> X_shifted[k] = DFT x(n+preamble_shift) = X[k] * exp -j*[ (2*PI*k*preamble_shift) / N_ZC ]
+ *
+ *********************************************************/
   for (offset=0,offset2=0; offset<N_ZC; offset++,offset2+=preamble_shift) {
 
     if (offset2 >= N_ZC)
@@ -847,7 +989,31 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
     if (k==(12*2*ue->frame_parms.ofdm_symbol_size))
       k=0;
   }
+/****************************************************************************************************************
+* Note that only formats 0 and 1 are fully implemented (format 0 keeps unchanged / format 1 5G NR == format 3 4G)
+****************************************************************************************************************/
+  switch (prach_fmt) {
+  case 0:
+    Ncp = 3168;
+    break;
 
+  case 1:
+    Ncp = 21024;
+    break;
+
+  case 2:
+    Ncp = 4688;
+    break;
+
+  case 3:
+    Ncp = 3168;
+    break;
+
+  default:
+    Ncp = 3168;
+    break;
+  }
+/* We remove this switch concerning the 4G prach formats
   switch (prach_fmt) {
   case 0:
     Ncp = 3168;
@@ -870,7 +1036,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
     Ncp = 3168;
     break;
   }
-
+*/
   switch (ue->frame_parms.N_RB_UL) {
   case 6:
     Ncp>>=4;
@@ -911,7 +1077,8 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
       memmove( prach, prach+3072, Ncp<<2 );
       prach_len = 1536+Ncp;
 
-      if (prach_fmt>1) {
+  	//if (prach_fmt>1) {
+  	if (prach_fmt==1) {
         memmove( prach2+3072, prach2, 6144 );
         prach_len = 2*1536+Ncp;
       }
@@ -930,7 +1097,8 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
       memmove( prach, prach+6144, Ncp<<2 );
       prach_len = 3072+Ncp;
 
-      if (prach_fmt>1) {
+  	//if (prach_fmt>1) {
+  	if (prach_fmt==1) {
         memmove( prach2+6144, prach2, 12288 );
         prach_len = 2*3072+Ncp;
       }
@@ -951,7 +1119,8 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
       memmove( prach, prach+12288, Ncp<<2 );
       prach_len = 6144+Ncp;
 
-      if (prach_fmt>1) {
+  	//if (prach_fmt>1) {
+  	if (prach_fmt==1) {
         memmove( prach2+12288, prach2, 24576 );
         prach_len = 2*6144+Ncp;
       }
@@ -969,7 +1138,8 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
       memmove( prach, prach+24576, Ncp<<2 );
       prach_len = 12288+Ncp;
 
-      if (prach_fmt>1) {
+  	//if (prach_fmt>1) {
+  	if (prach_fmt==1) {
         memmove( prach2+24576, prach2, 49152 );
         prach_len = 2*12288+Ncp;
       }
@@ -988,7 +1158,8 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
       memmove( prach, prach+36864, Ncp<<2 );
       prach_len = 18432+Ncp;
 
-      if (prach_fmt>1) {
+  	//if (prach_fmt>1) {
+  	if (prach_fmt==1) {
         memmove( prach2+36834, prach2, 73728 );
         prach_len = 2*18432+Ncp;
       }
@@ -999,21 +1170,21 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
   case 100:
     if (ue->frame_parms.threequarter_fs == 0) { 
       if (prach_fmt == 4) {
-	idft4096(prachF,prach2,1);
-	memmove( prach, prach+8192, Ncp<<2 );
-	prach_len = 4096+Ncp;
+	   idft4096(prachF,prach2,1);
+	   memmove( prach, prach+8192, Ncp<<2 );
+	   prach_len = 4096+Ncp;
       } else {
-	idft24576(prachF,prach2);
-	memmove( prach, prach+49152, Ncp<<2 );
-	prach_len = 24576+Ncp;
+	   idft24576(prachF,prach2);
+	   memmove( prach, prach+49152, Ncp<<2 );
+	   prach_len = 24576+Ncp;
 	
-	if (prach_fmt>1) {
-	  memmove( prach2+49152, prach2, 98304 );
-	  prach_len = 2* 24576+Ncp;
-	}
+	//if (prach_fmt>1) {
+	   if (prach_fmt==1) {
+	     memmove( prach2+49152, prach2, 98304 );
+	     prach_len = 2* 24576+Ncp;
+       }
       }
-    }
-    else {
+    } else {
       if (prach_fmt == 4) {
 	idft3072(prachF,prach2);
 	//TODO: account for repeated format in dft output
@@ -1024,11 +1195,12 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
 	memmove( prach, prach+36864, Ncp<<2 );
 	prach_len = 18432+Ncp;
 	printf("Generated prach for 100 PRB, 3/4 sampling\n");
-	if (prach_fmt>1) {
+	//if (prach_fmt>1) {
+	if (prach_fmt==1) {
 	  memmove( prach2+36834, prach2, 73728 );
 	  prach_len = 2*18432+Ncp;
-	}
       } 
+      }
     }
 
     break;
@@ -1802,6 +1974,42 @@ void compute_prach_seq(PRACH_CONFIG_COMMON *prach_config_common,
       X_u[i][k] = ((uint32_t*)ru)[(((k*(1+(inv_u*k)))%N_ZC)*420)%N_ZC];
       //        printf("X_u[%d][%d] (%d)(%d)(%d) : %d,%d\n",i,k,u*inv_u*k*(1+(inv_u*k)),u*inv_u*k*(1+(inv_u*k))/2,(u*inv_u*k*(1+(inv_u*k))/2)%N_ZC,((int16_t*)&X_u[i][k])[0],((int16_t*)&X_u[i][k])[1]);
     }
+
+/****************************************************************************************
+* The following commented code shows that X_u[i][k] is the DFT xu[n]
+* according to ZC property DFT xu[n] = xu[inv_n*k]*X_u[0]
+*
+
+
+   printf("### Calculate ZC teorique:\n");
+    int16_t Rexu[839];
+    int16_t Imxu[839];
+    int16_t Re_Xu[839];
+    int16_t Im_Xu[839];
+    double X_0_im = 0;
+    double X_0_re = 0;
+
+    for (i=0; i<839; i++) {
+      Rexu[i] = (int16_t)(floor(32767.0*cos(M_PI*u*i*(i+1)/839)));
+      Imxu[i] = (int16_t)(floor((-32767.0)*sin(M_PI*u*i*(i+1)/839)));
+    }
+    for (i=0; i<839; i++){
+    	X_0_re = X_0_re + Rexu[i]/839;
+    	X_0_im = X_0_im + Imxu[i]/839;
+    	X_0_re = 1;
+    	X_0_im = 0;
+    }
+    for (i=0; i<839; i++) {
+    	Re_Xu[i] = (Rexu[(i*inv_u)%839]*X_0_re)-(-Imxu[(i*inv_u)%839]*X_0_im);
+    	Im_Xu[i] = (Rexu[(i*inv_u)%839]*X_0_im)+(-Imxu[(i*inv_u)%839]*X_0_re);
+    	//printf("###### for i=%d -> shift=%d, Rexu=%d Imxu=%d\n",i,(i+shifft)%839,Rexu[i],Imxu[i]);
+    }
+    printf("### i \t### ru(re) \t### ru(im) \t### X_u(re) \t### X_u(im) \t### Rexu \t### Imxu \t### Re_Xu \t### Im_Xu \t### X0=%f,%f\n",X_0_re,X_0_im);
+    for (i=1; i<31; i++){
+    	printf("### %d \t### %d \t### %d \t### %d \t### %d \t### %d \t### %d \t### %d \t### %d\n",i,ru[i<<1],ru[1+(i<<1)],
+    			((int16_t*)&X_u[0][i])[0],((int16_t*)&X_u[0][i])[1],Rexu[i],Imxu[i],Re_Xu[i],Im_Xu[i]);
+    }
+*****************************************************************************************/
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_UE_COMPUTE_PRACH, VCD_FUNCTION_OUT);
