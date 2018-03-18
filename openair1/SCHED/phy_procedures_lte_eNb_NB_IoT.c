@@ -246,15 +246,10 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
         printf("\n");*/
       }
 
-     if(frame%64==1 && subframe ==0)
-      {//printf("dooooo MIB");
-
-     
+  /*   if(frame%64==1 && subframe ==0)
+      {     
        do_SIB1_NB_IoT_x(0,0,carrier,208,92,1,3584,7,2,hyper_frame);
-       /* for(int i = 0; i<5;i++)
-         printf("%02X ",eNB_rrc_inst_NB_IoT->carrier[0].MIB_NB_IoT[i]);
-        printf("\n");*/
-      }
+      }*/
       
 /////////////////////////////////////////////////////////////////////////////////
   //uint8_t      *control_region_size = get_NB_IoT_SIB1_eutracontrolregionsize();
