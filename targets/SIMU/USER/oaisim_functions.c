@@ -1073,7 +1073,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 
   *ptimestamp = last_eNB_rx_timestamp[eNB_id][CC_id];
  
-  int do_ofdm_mod = PHY_vars_UE_g[0][CC_id]->do_ofdm_mod;
+  int do_ofdm_mod = PHY_vars_UE_g[UE_id][CC_id]->do_ofdm_mod;
 
   uint32_t frame;
   //int n_ra_prb;
@@ -1126,7 +1126,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
       //printf("is Prach generated? %d, is prach_subframe? %d, frame %d, subframe %d, mode %d\n",PHY_vars_UE_g[0][CC_id]->generate_prach,is_prach_subframe(frame_parms,frame,subframe),frame,subframe,PHY_vars_UE_g[0][CC_id]->UE_mode[eNB_id]);
       if (do_ofdm_mod)
       {
-	for (UE_id=0; UE_id<NB_UE_INST; UE_id++){
+	for (UE_id=NB_UE_INST-1; UE_id>=0; UE_id--){
 		if (is_prach_subframe(&PHY_vars_UE_g[UE_id][CC_id]->frame_parms,frame,subframe) && PHY_vars_UE_g[UE_id][CC_id]->generate_prach)
 		{
 			start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_PRACH_channel);
@@ -1400,7 +1400,7 @@ void init_devices(void){
       PHY_vars_eNB_g[eNB_id][CC_id]->rfdevice.trx_stop_func      = eNB_trx_stop;
       PHY_vars_eNB_g[eNB_id][CC_id]->rfdevice.trx_set_freq_func  = eNB_trx_set_freq;
       PHY_vars_eNB_g[eNB_id][CC_id]->rfdevice.trx_set_gains_func = eNB_trx_set_gains;
-      if (PHY_vars_UE_g[0][0]->do_ofdm_mod)
+      if (PHY_vars_UE_g[0][CC_id]->do_ofdm_mod)
       	current_eNB_rx_timestamp[eNB_id][CC_id] = PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.symbols_per_tti;
       else
       	current_eNB_rx_timestamp[eNB_id][CC_id] = PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti;
@@ -1416,7 +1416,7 @@ void init_devices(void){
       PHY_vars_UE_g[UE_id][CC_id]->rfdevice.trx_stop_func        = UE_trx_stop;
       PHY_vars_UE_g[UE_id][CC_id]->rfdevice.trx_set_freq_func    = UE_trx_set_freq;
       PHY_vars_UE_g[UE_id][CC_id]->rfdevice.trx_set_gains_func   = UE_trx_set_gains;
-      if (PHY_vars_UE_g[0][0]->do_ofdm_mod)
+      if (PHY_vars_UE_g[UE_id][CC_id]->do_ofdm_mod)
       	current_UE_rx_timestamp[UE_id][CC_id] = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.ofdm_symbol_size*PHY_vars_UE_g[UE_id][CC_id]->frame_parms.symbols_per_tti;
       else
 	current_UE_rx_timestamp[UE_id][CC_id] = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.samples_per_tti;
@@ -1611,16 +1611,16 @@ void init_openair2(void)
 
 void init_ocm(void)
 {
-  module_id_t UE_id, eNB_id;
-  int CC_id;
+  module_id_t UE_id=0, eNB_id=0;
+  int CC_id=0;
 
   /* Added for PHY abstraction */
 
   char* frame_type = "unknown";
 
-  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
+  int do_ofdm_mod = PHY_vars_UE_g[UE_id][CC_id]->do_ofdm_mod;
   int nb_rb, n_samples;
-  nb_rb=PHY_vars_UE_g[0][0]->frame_parms.N_RB_DL;
+  nb_rb=PHY_vars_UE_g[UE_id][CC_id]->frame_parms.N_RB_DL;
   n_samples=nb_rb*12+1;
 
   switch (oai_emulation.info.frame_type[0]) {
@@ -1699,14 +1699,14 @@ void init_ocm(void)
 			       forgetting_factor,
 			       0,
 			       0);
-	if (do_ofdm_mod)
-	{
+	/*if (do_ofdm_mod)
+	{*/
 		random_channel_freq(eNB2UE[eNB_id][UE_id][CC_id],abstraction_flag);//Find a(l)
 		freq_channel_SSE_float(eNB2UE[eNB_id][UE_id][CC_id],nb_rb,n_samples);//Find desc->chF
-	}
+	/*}
 
 	else
-        	random_channel(eNB2UE[eNB_id][UE_id][CC_id],abstraction_flag);
+        	random_channel(eNB2UE[eNB_id][UE_id][CC_id],abstraction_flag);*/
 
         LOG_D(OCM,"[SIM] Initializing channel (%s, %d) from UE %d to eNB %d\n", oai_emulation.environment_system_config.fading.small_scale.selected_option,
               map_str_to_int(small_scale_names, oai_emulation.environment_system_config.fading.small_scale.selected_option),UE_id, eNB_id);
@@ -1720,13 +1720,13 @@ void init_ocm(void)
 			       forgetting_factor,
 			       0,
 			       0);
-	if (do_ofdm_mod)
-	{
+	/*if (do_ofdm_mod)
+	{*/
 		random_channel_freq(UE2eNB[UE_id][eNB_id][CC_id],abstraction_flag);//Find a(l)
 		freq_channel_SSE_float(UE2eNB[UE_id][eNB_id][CC_id],nb_rb,n_samples);//Find desc->chF
-	}
+	/*}
 	else
-        	random_channel(UE2eNB[UE_id][eNB_id][CC_id],abstraction_flag);
+        	random_channel(UE2eNB[UE_id][eNB_id][CC_id],abstraction_flag);*/
 
         // to make channel reciprocal uncomment following line instead of previous. However this only works for SISO at the moment. For MIMO the channel would need to be transposed.
         //UE2eNB[UE_id][eNB_id] = eNB2UE[eNB_id][UE_id];

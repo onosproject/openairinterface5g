@@ -868,7 +868,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   //  uint16_t Nid_cell_fdd_ncp=0,Nid_cell_fdd_ecp=0,Nid_cell_tdd_ncp=0,Nid_cell_tdd_ecp=0;
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   int ret=-1;
-  //int aarx,rx_power=0;
+  int aarx,rx_power=0;
   /*#ifdef OAI_USRP
   __m128i *rxdata128;
   #endif*/
@@ -879,6 +879,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   //frame_parms->frame_type=FDD;
   frame_parms->frame_type=PHY_vars_eNB_g[0][0]->frame_parms.frame_type;
   frame_parms->Ncp=PHY_vars_eNB_g[0][0]->frame_parms.Ncp;
+  init_frame_parms(frame_parms,1);
   //frame_parms->N_RB_DL=PHY_vars_eNB_g[0][0]->frame_parms.N_RB_DL;
 
 // cellid
@@ -889,11 +890,20 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   // lte-gold
   lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
   ret=pbch_detection_freq(ue,mode);
-  init_frame_parms(frame_parms,1);
+  //init_frame_parms(frame_parms,1);
   //printf("dumping enb frame params\n");
   //dump_frame_parms(&PHY_vars_eNB_g[0][0]->frame_parms);
   //printf("dumping ue frame params\n");
   //dump_frame_parms(frame_parms);
+  if (ret==-1) { 
+      frame_parms->frame_type=PHY_vars_eNB_g[0][0]->frame_parms.frame_type;
+      frame_parms->Ncp=PHY_vars_eNB_g[0][0]->frame_parms.Ncp;
+      init_frame_parms(frame_parms,1);
+      frame_parms->nushift  = frame_parms->Nid_cell%6;
+      lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
+      ret = pbch_detection(ue,mode);
+
+  }
   if (ret==0) {  // fake first PBCH found so indicate sync to higher layers and configure frame parameters
 
     //printf("[UE%d] frame_type is %c\n",ue->Mod_id, ue->rx_offset);
@@ -971,7 +981,34 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
 	  openair0_cfg[0].rx_freq[0]-ue->common_vars.freq_offset,
 	  ue->common_vars.freq_offset);
 #endif
-	}
+#ifndef OAI_USRP
+#ifndef OAI_BLADERF
+#ifndef OAI_LMSSDR
+  	  phy_adjust_gain(ue,dB_fixed(ue->measurements.rssi),0);
+#endif
+#endif
+#endif
+  } else {
+#ifdef DEBUG_INITIAL_SYNC
+    LOG_I(PHY,"[UE%d] Initial sync : PBCH not ok\n",ue->Mod_id);
+    LOG_I(PHY,"[UE%d] Initial sync : Estimated PSS position %d, Nid2 %d\n",ue->Mod_id,sync_pos,ue->common_vars.eNb_id);
+    /*      LOG_I(PHY,"[UE%d] Initial sync: (metric fdd_ncp %d (%d), metric fdd_ecp %d (%d), metric_tdd_ncp %d (%d), metric_tdd_ecp %d (%d))\n",
+          ue->Mod_id,
+          metric_fdd_ncp,Nid_cell_fdd_ncp,
+          metric_fdd_ecp,Nid_cell_fdd_ecp,
+          metric_tdd_ncp,Nid_cell_tdd_ncp,
+          metric_tdd_ecp,Nid_cell_tdd_ecp);*/
+    LOG_I(PHY,"[UE%d] Initial sync : Estimated Nid_cell %d, Frame_type %d\n",ue->Mod_id,
+          frame_parms->Nid_cell,frame_parms->frame_type);
+#endif
+
+    ue->UE_mode[0] = NOT_SYNCHED;
+    ue->pbch_vars[0]->pdu_errors_last=ue->pbch_vars[0]->pdu_errors;
+    ue->pbch_vars[0]->pdu_errors++;
+    ue->pbch_vars[0]->pdu_errors_conseq++;
+
+  }
+  
   return ret;
 }
 

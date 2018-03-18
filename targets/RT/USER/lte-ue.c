@@ -161,7 +161,6 @@ void init_thread(int sched_runtime, int sched_deadline, int sched_fifo, cpu_set_
     }
     CPU_FREE(cset);
 #endif
-
     // Lock memory from swapping. This is a process wide call (not constraint to this thread).
     mlockall(MCL_CURRENT | MCL_FUTURE);
     pthread_setname_np( pthread_self(), name );
@@ -588,7 +587,11 @@ static void *UE_thread_synch_freq(void *arg) {
 
         case pbch:
 
-            LOG_I(PHY,"[UE thread Synch] Running Initial frequency Synch (mode %d), initial_synch is %d\n",UE->mode,initial_sync_freq( UE, UE->mode ));
+#if DISABLE_LOG_X
+            printf("[UE thread Synch] Running Initial Synch (mode %d)\n",UE->mode);
+#else
+            LOG_I(PHY, "[UE thread Synch] Running Initial Synch (mode %d)\n",UE->mode);
+#endif
 	    //Pushed N_RB_DL, PHICH_CONFIG, FRAME_NUMBER
             if (initial_sync_freq( UE, UE->mode ) == 0) {
 
@@ -669,13 +672,13 @@ static void *UE_thread_synch_freq(void *arg) {
                     UE->is_synchronized = 1;
                     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
 
-                    /*if( UE->mode == rx_dump_frame ) {
+                    if( UE->mode == rx_dump_frame ) {
                         FILE *fd;
                         if ((UE->proc.proc_rxtx[0].frame_rx&1) == 0) {  // this guarantees SIB1 is present
                             if ((fd = fopen("rxsig_frame0.dat","w")) != NULL) {
-                                fwrite((void*)&UE->common_vars.rxdata[0][0],
+                                fwrite((void*)&UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0][0],
                                        sizeof(int32_t),
-                                       10*UE->frame_parms.samples_per_tti,
+                                       10*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti),
                                        fd);
                                 LOG_I(PHY,"Dummping Frame ... bye bye \n");
                                 fclose(fd);
@@ -690,9 +693,9 @@ static void *UE_thread_synch_freq(void *arg) {
                             AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
 
                         }
-                    }*/
+                    }
 		}
-	    /*} else {
+	    } else {
                 // initial sync failed
                 // calculate new offset and try again
                 if (UE->UE_scan_carrier == 1) {
@@ -704,9 +707,9 @@ static void *UE_thread_synch_freq(void *arg) {
                         LOG_I( PHY, "[initial_sync] No cell synchronization found, abandoning\n" );
                         FILE *fd;
                         if ((fd = fopen("rxsig_frame0.dat","w"))!=NULL) {
-                            fwrite((void*)&UE->common_vars.rxdata[0][0],
+                            fwrite((void*)&UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0][0],
                                    sizeof(int32_t),
-                                   10*UE->frame_parms.samples_per_tti,
+                                   10*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti),
                                    fd);
                             LOG_I(PHY,"Dummping Frame ... bye bye \n");
                             fclose(fd);
@@ -716,11 +719,19 @@ static void *UE_thread_synch_freq(void *arg) {
                         return &UE_thread_synch_retval; // not reached
                     }
                 }
-                LOG_I( PHY, "[initial_sync] trying carrier off %d Hz, rxgain %d (DL %u, UL %u)\n",
+#if DISABLE_LOG_X
+                printf("[initial_sync] trying carrier off %d Hz, rxgain %d (DL %u, UL %u)\n",
                        freq_offset,
                        UE->rx_total_gain_dB,
                        downlink_frequency[0][0]+freq_offset,
                        downlink_frequency[0][0]+uplink_frequency_offset[0][0]+freq_offset );
+#else
+                LOG_I(PHY, "[initial_sync] trying carrier off %d Hz, rxgain %d (DL %u, UL %u)\n",
+                       freq_offset,
+                       UE->rx_total_gain_dB,
+                       downlink_frequency[0][0]+freq_offset,
+                       downlink_frequency[0][0]+uplink_frequency_offset[0][0]+freq_offset );
+#endif
 
                 for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
                     openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][i]+freq_offset;
@@ -729,7 +740,7 @@ static void *UE_thread_synch_freq(void *arg) {
                     if (UE->UE_scan_carrier==1)
                         openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
                 }
-                UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);*/
+                UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
             }// initial_sync=0
             break;
         case si:
@@ -1183,8 +1194,6 @@ void *UE_thread_freq(void *arg) {
 
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-
-
     if ( threads.iq != -1 )
         CPU_SET(threads.iq, &cpuset);
     init_thread(100000, 500000, FIFO_PRIORITY, &cpuset,
@@ -1209,16 +1218,13 @@ void *UE_thread_freq(void *arg) {
         AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
         int instance_cnt_synch = UE->proc.instance_cnt_synch;
         int is_synchronized    = UE->is_synchronized;
-	//printf("[ue_thread] UE is synchronized: %d, instance_cnt_synch: %d\n",is_synchronized,instance_cnt_synch);
         AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
 
         if (is_synchronized == 0) {
             if (instance_cnt_synch < 0) {  // we can invoke the synch
                 // grab 10 ms of signal and wakeup synch thread
-        		for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
-			{
-		            rxp_freq[i] = (void*)&UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[i][0];	
-			}		
+        	for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
+			rxp_freq[i] = (void*)&UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[i][0];			
                 if (UE->mode != loop_through_memory)
 		{
 				AssertFatal( UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti*10 ==
@@ -1266,7 +1272,7 @@ void *UE_thread_freq(void *arg) {
 		        start_rx_stream=1;
 			//printf("[ue_thread] UE is synch and start_rx_stream change from 0 to %d, UE->rx_offset %d \n",start_rx_stream,UE->rx_offset);
 		        	if (UE->mode != loop_through_memory) {
-				   /*if (UE->no_timing_correction==0) {//no_timing_correction is loaded to 1 in oaisim_functions.c
+				   if (UE->no_timing_correction==0) {//no_timing_correction is loaded to 1 in oaisim_functions.c
 				        LOG_I(PHY,"Resynchronizing RX by %d samples (mode = %d)\n",UE->rx_offset,UE->mode);
 				        AssertFatal(UE->rx_offset ==
 				                    UE->rfdevice.trx_read_func(&UE->rfdevice,
@@ -1274,13 +1280,7 @@ void *UE_thread_freq(void *arg) {
 				                                               (void**)UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF,
 				                                               UE->rx_offset,
 				                                               UE->frame_parms.nb_antennas_rx),"");
-					AssertFatal(UE->rx_offset ==
-				                    UE->rfdevice.trx_read_func(&UE->rfdevice,
-				                                               &timestamp,
-				                                               (void**)UE->common_vars.common_vars_rx_data_per_thread[1].rxdataF,
-				                                               UE->rx_offset,
-				                                               UE->frame_parms.nb_antennas_rx),"");
-				    }*/
+				    }
 				    UE->rx_offset=0;
 				    UE->time_sync_cell=0;
 				    //UE->proc.proc_rxtx[0].frame_rx++;

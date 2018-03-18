@@ -2737,7 +2737,6 @@ int decode_BCCH_DLSCH_Message(
 
         decode_SI( ctxt_pP, eNB_index );
       }
-
       break;
 
     case BCCH_DL_SCH_MessageType__c1_PR_NOTHING:
