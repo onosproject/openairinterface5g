@@ -1,6 +1,24 @@
-/***********************************************************************
+/*
+ * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The OpenAirInterface Software Alliance licenses this file to You under
+ * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.openairinterface.org/?page_id=698
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *-------------------------------------------------------------------------------
+ * For more information about the OpenAirInterface (OAI) Software Alliance:
+ *      contact@openairinterface.org
+ */
 
-**********************************************************************/
 /*! \file PHY/LTE_TRANSPORT/dlsch_modulation_NB_IoT.c
 * \brief Top-level routines for generating the NPDSCH physical channel for NB_IoT,
 * \author M. KANJ
@@ -119,9 +137,10 @@ int dlsch_modulation_NB_IoT(int32_t 				**txdataF,
 							int16_t 				amp,
 							LTE_DL_FRAME_PARMS 	    *frame_parms,
 							uint8_t 				control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-							NB_IoT_eNB_NDLSCH_t     *dlsch0,
+							NB_IoT_DL_eNB_SIB_t     *dlsch0,
 							int 					G,						  // number of bits per subframe
-							unsigned 				npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf  			
+							unsigned int				npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are
+                            unsigned int				subframe,  			
 							unsigned short 			NB_IoT_RB_ID)
 {
     //uint8_t harq_pid = dlsch0->current_harq_pid;
@@ -158,7 +177,7 @@ int dlsch_modulation_NB_IoT(int32_t 				**txdataF,
 		} else {
 			NB_IoT_start = 1 + (bandwidth_even_odd*6) + 12*(RB_IoT_ID % (int)(ceil(frame_parms->N_RB_DL/(float)2)));
 		}
-		symbol_offset = (14*4*frame_parms->ofdm_symbol_size) + frame_parms->ofdm_symbol_size*l + NB_IoT_start;  						// symbol_offset = 512 * L + NB_IOT_RB start
+		symbol_offset = (14*subframe*frame_parms->ofdm_symbol_size) + frame_parms->ofdm_symbol_size*l + NB_IoT_start;		// symbol_offset = 512 * L + NB_IOT_RB start
 
 
 		allocate_REs_in_RB_NB_IoT(frame_parms,

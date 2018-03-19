@@ -222,7 +222,9 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   //LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms_NB_IoT;
   LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms;
   NB_IoT_eNB_NPBCH_t   *broadcast_str = &eNB->npbch;
-  NB_IoT_eNB_NDLSCH_t  *sib1          = &eNB->ndlsch_SIB1;
+  //NB_IoT_eNB_NDLSCH_t  *sib1          = &eNB->ndlsch_SIB;
+  NB_IoT_DL_eNB_SIB_t  *sib1          = &eNB->ndlsch_SIB.content_sib1;
+  NB_IoT_DL_eNB_SIB_t  *sib23          = &eNB->ndlsch_SIB.content_sib23;
   int                     **txdataF =  eNB->common_vars.txdataF[0];
   int                     subframe  =  proc->subframe_tx;
   uint32_t                frame     =  proc->frame_tx;
@@ -243,9 +245,17 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
          printf("%02X ",eNB_rrc_inst_NB_IoT->carrier[0].MIB_NB_IoT[i]);
         printf("\n");*/
       }
+
+      /*  if(frame%64==1 && subframe ==0)
+      {
+
+     
+       do_SIB1_NB_IoT_x(0,0,carrier,208,92,1,3584,7,2,hyper_frame);
+       
+      }*/
 /////////////////////////////////////////////////////////////////////////////////
   //uint8_t      *control_region_size = get_NB_IoT_SIB1_eutracontrolregionsize();
-  int           G=0;
+  // int           G=0;
   
 
  //NSSS only happened in the even frame
@@ -283,7 +293,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
   uint8_t      *npbch_pdu =  get_NB_IoT_MIB();
   uint8_t      *sib1_pdu = get_NB_IoT_SIB1();
-    
+  uint8_t      *sib23_pdu = get_NB_IoT_SIB23();
    
 
     if(subframe == 0)
@@ -299,7 +309,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     }
 
 
-    
+    ///////////////////////////////////////////////////////// SIB1 ////////////////////////////////////
     if((subframe == 4)  && (frame%2==0) && (frame%32<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
     {
         if( frame%32 == 0 )
@@ -310,9 +320,9 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                   236);                   //////////// G*2
         
         
-            dlsch_sib1_scrambling_NB_IoT(fp,                    // is called only in subframe 4
+             dlsch_sib_scrambling_NB_IoT(fp,
                                          sib1,
-                                         1888,            //////   total_bits
+                                         1888,
                                          frame,
                                          subframe*2);
         }
@@ -323,10 +333,60 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                 3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
                                 sib1,
                                 236,                       // number of bits per subframe
-                               ((frame%32)/2),///npdsch_data_subframe, data per subframe//subframe index of the data table of npdsch channel (G*Nsf) ((frame%32)/2),values are between 0..Nsf        
+                               ((frame%32)/2),
+                               4,       
                                 RB_IoT_ID);
         
         }
+        ///////////////////////////////////////////////////////// END ////////////////////////////////////////////////////////
+        
+  //////////////////////////////////////////////////// SIB23 ////////////////////////////////////////////////////////////////////////
+  if( (subframe >0) && (subframe !=5) && (frame%2==1) && (frame%64<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
+  {
+        if( subframe == 1 )
+        {
+            dlsch_encoding_NB_IoT(sib23_pdu,
+                                  sib23,
+                                  8,                      ///// number_of_subframes_required
+                                  236);                   //////////// G*2
+        
+        
+            dlsch_sib_scrambling_NB_IoT(fp,                    // is called only in subframe 4
+                                         sib23,
+                                         1888,            //////   total_bits
+                                         frame,
+                                         subframe*2);
+        }
+
+        if( subframe < 5 )
+        {
+
+        dlsch_modulation_NB_IoT(txdataF,
+                                AMP,
+                                fp,
+                                3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+                                sib23,
+                                236,                       // number of bits per subframe
+                               (subframe-1),///npdsch_data_subframe, data per subframe//subframe index of the data table of npdsch channel (G*Nsf) ((frame%32)/2),values are between 0..Nsf        
+                                subframe,
+                                RB_IoT_ID);
+       } else {
+
+         dlsch_modulation_NB_IoT(txdataF,
+                                AMP,
+                                fp,
+                                3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+                                sib1,
+                                236,                       // number of bits per subframe
+                               (subframe-2),///npdsch_data_subframe, data per subframe//subframe index of the data table of npdsch channel (G*Nsf) ((frame%32)/2),values are between 0..Nsf        
+                                subframe,
+                                RB_IoT_ID);
+
+       }
+        
+  }
+  //////////////////////////////////////////////////// END ////////////////////////////////////////////////////////////////////////
+
      
  generate_pilots_NB_IoT(eNB,
                            txdataF,

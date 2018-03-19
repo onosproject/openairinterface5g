@@ -130,6 +130,11 @@ uint8_t *get_NB_IoT_SIB1(void)
   return eNB_rrc_inst_NB_IoT->carrier[0].SIB1_NB_IoT;
 }
 
+uint8_t *get_NB_IoT_SIB23(void)
+{
+  return eNB_rrc_inst_NB_IoT->carrier[0].SIB23_NB_IoT;
+}
+
 long *get_NB_IoT_SIB1_eutracontrolregionsize(void)
 {
   return eNB_rrc_inst_NB_IoT->carrier[0].sib1_NB_IoT->eutraControlRegionSize_r13;

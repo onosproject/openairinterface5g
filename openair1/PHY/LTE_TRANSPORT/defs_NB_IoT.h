@@ -1,6 +1,24 @@
-/*******************************************************************************
- 
- *******************************************************************************/
+/*
+ * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The OpenAirInterface Software Alliance licenses this file to You under
+ * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.openairinterface.org/?page_id=698
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *-------------------------------------------------------------------------------
+ * For more information about the OpenAirInterface (OAI) Software Alliance:
+ *      contact@openairinterface.org
+ */
+
 /*! \file PHY/LTE_TRANSPORT/defs_NB_IoT.h
 * \brief data structures for NPDSCH/NDLSCH/NPUSCH/NULSCH physical and transport channel descriptors (TX/RX) of NB-IoT
 * \author M. KANJ
@@ -144,25 +162,8 @@ typedef enum {
 
 } SCH_status_NB_IoT_t;
 
-/*
 typedef struct {
-  /// NB-IoT
-  /// Allocated RNTI (0 means DLSCH_t is not currently used)
-  uint16_t              si_rnti;   ///(=0xfff4)
-
-  SCH_status_NB_IoT_t   status;
-  /// The scheduling the NPDCCH and the NPDSCH transmission TS 36.213 Table 16.4.1-1
-  uint8_t               scheduling_delay;
-  /// The number of the subframe to transmit the NPDSCH Table TS 36.213 Table 16.4.1.3-1  (Nsf) (NB. in this case is not the index Isf)
-  uint8_t               resource_assignment;
-  /// is the index that determined the repeat number of NPDSCH through table TS 36.213 Table 16.4.1.3-2 / for SIB1-NB Table 16.4.1.3-3
-  uint8_t               repetition_number;
-  /// Determined the ACK/NACK delay and the subcarrier allocation TS 36.213 Table 16.4.2
-  uint8_t               HARQ_ACK_resource;
-  /// Determined the repetition number value 0-3 (2 biut carried by the FAPI NPDCCH)
-  uint8_t               dci_subframe_repetitions;
-  /// modulation always QPSK Qm = 2 
-  uint8_t               modulation;
+ uint16_t              si_rnti;
   /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
   uint8_t               e[1888];
   /// data after scrambling
@@ -170,9 +171,9 @@ typedef struct {
   //length of the table e
   uint16_t              length_e;                // new parameter
   /// Tail-biting convolutional coding outputs
-  uint8_t               d[96+(3*(24+152))];  // new parameter
+  uint8_t               d[96+(3*(24+680))];  // new parameter
   /// Sub-block interleaver outputs
-  uint8_t               w[3*3*(152+24)];      // new parameter
+  uint8_t               w[3*3*(680+24)];      // new parameter
 
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   //SCH_status_t status;
@@ -188,17 +189,9 @@ typedef struct {
   uint32_t              frame;
   /// Subframe where current HARQ round was sent
   uint32_t              subframe;
-  /// Index of current HARQ round for this DLSCH
-  uint8_t               round;
-  /// MCS format for this NDLSCH , TS 36.213 Table 16.4.1.5
-  uint8_t               mcs;
-  // we don't have code block segmentation / crc attachment / concatenation in NB-IoT R13 36.212 6.4.2
-  // we don't have beamforming in NB-IoT
-  //this index will be used mainly for SI message buffer
    uint8_t               pdu_buffer_index;
 
-} NB_IoT_DL_eNB_SIB1_t; 
-*/
+} NB_IoT_DL_eNB_SIB_t;
 
 typedef struct {
   /// NB-IoT
@@ -637,6 +630,9 @@ typedef struct {
   uint8_t               *pdu;
   //this index will be used mainly for SI message buffer
    uint8_t               pdu_buffer_index;
+
+  NB_IoT_DL_eNB_SIB_t    content_sib1;
+  NB_IoT_DL_eNB_SIB_t    content_sib23;
 ////////////////////////////////////////////////////////////////////////////
 
   /// Number of soft channel bits
