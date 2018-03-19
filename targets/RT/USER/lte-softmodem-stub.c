@@ -130,6 +130,7 @@ uint8_t nfapi_mode = 3;
 
 uint16_t sf_ahead=2;
 
+int simL1;
 char *emul_iface;
 
 pthread_cond_t sync_cond;
@@ -230,7 +231,7 @@ extern PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
 			  uint8_t abstraction_flag);
 
 extern void init_eNB_afterRU(void);
-extern void init_UE_stub(int nb_inst,int,int,char*);
+extern void init_UE_stub(int nb_inst,int,int,char*,int);
 extern int init_timer_thread(void);
 
 int transmission_mode=1;
@@ -1370,7 +1371,7 @@ int main( int argc, char **argv )
 
     // Panos: CHANGE we call init_timer_thread() from inside init_UE_stub() now
     //init_timer_thread();
-    init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
+    init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface,simL1);
 
 
     /*for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {

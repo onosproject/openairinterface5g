@@ -73,6 +73,7 @@
 #define CONFIG_HLP_STMON         "Enable processing timing measurement of lte softmodem on per subframe basis \n"
 #define CONFIG_HLP_PRB           "Set the PRB, valid values: 6, 25, 50, 100  \n"    
 #define CONFIG_HLP_EMULIFACE     "Set the interface name for the multicast transport for emulation mode (e.g. eth0, lo, etc.)  \n"    
+#define CONFIG_HLP_SIML1         "Turn on simulation interface for L1"
 #define CONFIG_HLP_MSLOTS        "Skip the missed slots/subframes \n"    
 #define CONFIG_HLP_ULMCS         "Set the maximum uplink MCS\n"
 #define CONFIG_HLP_TDD           "Set hardware to TDD mode (default: FDD). Used only with -U (otherwise set in config file).\n"
@@ -129,8 +130,9 @@
 {"ue-scan-carrier",  	       CONFIG_HLP_UESCAN,     PARAMFLAG_BOOL,	iptr:&UE_scan_carrier,  	    defintval:0,    TYPE_INT,	   0},     \
 {"ue-max-power",     	       NULL,		      0,		iptr:&(tx_max_power[0]),	    defintval:90,   TYPE_INT,	   0},     \
 {"r"  ,                        CONFIG_HLP_PRB,        0,                u8ptr:&n_rb_dl,                     defintval:0,    TYPE_UINT8,    0},     \
-{"emul-iface",                 CONFIG_HLP_EMULIFACE,  0,                strptr:&emul_iface,                  defstrval:"lo", TYPE_STRING,   100} \
- }
+{"emul-iface",                 CONFIG_HLP_EMULIFACE,  0,                strptr:&emul_iface,                  defstrval:"lo", TYPE_STRING,   100},\
+{"sim-L1",                    CONFIG_HLP_SIML1,      0,                iptr:&simL1,                        defintval:0,    TYPE_INT,   0} \
+}
 
 
 extern int16_t dlsch_demod_shift;

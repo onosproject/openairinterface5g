@@ -78,7 +78,7 @@ void init_UE_threads(int);
 void init_UE_threads_stub(int);
 void *UE_thread(void *arg);
 void init_UE(int nb_inst,int,int);
-void init_UE_stub(int nb_inst,int,int,char*);
+void init_UE_stub(int nb_inst,int,int,char*,int);
 extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
 //extern int tx_req_UE_MAC1();
 
@@ -271,7 +271,7 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in) {
 }
 
 
-void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_iface) {
+void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_iface, int simL1) {
 
   int         inst;
 
@@ -285,10 +285,15 @@ void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_ifa
 
     LOG_I(PHY,"Initializing memory for UE instance %d (%p)\n",inst,PHY_vars_UE_g[inst]);
     PHY_vars_UE_g[inst][0] = init_ue_vars(NULL,inst,0);
+    if (simL1 == 1) PHY_vars_UE_g[inst][0]->sidelink_l2_emulation = 2;
+    else            PHY_vars_UE_g[inst][0]->sidelink_l2_emulation = 1;
+
+
   }
   init_timer_thread();
 
   init_sl_channel();
+
 
   for (inst=0;inst<nb_inst;inst++) {
 
