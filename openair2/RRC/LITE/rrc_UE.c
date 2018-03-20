@@ -3908,12 +3908,12 @@ uint64_t arfcn_to_freq(long arfcn) {
 //-----------------------------------------------------------------------------
  int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
-	LOG_I( RRC, "Panos-D: decode_SI 1 \n");
+  //LOG_D( RRC, "Panos-D: decode_SI 1 \n");
   SystemInformation_t** si = &UE_rrc_inst[ctxt_pP->module_id].si[eNB_index];
   int new_sib = 0;
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
 
-  LOG_I( RRC, "Panos-D: decode_SI 2 \n");
+  //LOG_D( RRC, "Panos-D: decode_SI 2 \n");
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_UE_DECODE_SI, VCD_FUNCTION_IN );
 
   // Dump contents
@@ -3922,12 +3922,12 @@ uint64_t arfcn_to_freq(long arfcn) {
     LOG_I( RRC, "[UE] (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count %d\n",
            (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count );
   } else {
-	  LOG_I( RRC, "Panos-D: decode_SI 2.3 \n");
+	  //LOG_D( RRC, "Panos-D: decode_SI 2.3 \n");
     LOG_D( RRC, "[UE] Unknown criticalExtension version (not Rel8)\n" );
     return -1;
   }
 
-  LOG_I( RRC, "Panos-D: decode_SI 3 \n");
+  LOG_D( RRC, "Panos-D: decode_SI 3 \n");
   for (int i=0; i<(*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count; i++) {
     LOG_I( RRC, "SI count %d\n", i );
     struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *typeandinfo;
@@ -3935,7 +3935,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 
     switch(typeandinfo->present) {
     case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib2:
-    	LOG_I( RRC, "Panos-D: decode_SI 4 \n");
+    	//LOG_D( RRC, "Panos-D: decode_SI 4 \n");
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&2) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=2;
 	new_sib=1;
@@ -4025,7 +4025,7 @@ uint64_t arfcn_to_freq(long arfcn) {
       break; // case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib2
 
     case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib3:
-    	LOG_I( RRC, "Panos-D: decode_SI 5 \n");
+    	//LOG_D( RRC, "Panos-D: decode_SI 5 \n");
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&4) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=4;
 	new_sib=1;

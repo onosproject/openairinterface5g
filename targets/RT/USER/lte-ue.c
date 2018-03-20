@@ -968,6 +968,31 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
     //if(timer_frame%5 == 0 && timer_subframe%10 == 0)
     	init_ra_UE++;
+
+    	//Panos: Not sure whether we should put the memory allocation here.
+    	//*** Note we should find the right place to call free(UL_INFO).
+    	UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
+
+    	UL_INFO->rx_ind.rx_indication_body.rx_pdu_list = (nfapi_rx_indication_pdu_t*)malloc(10*sizeof(nfapi_rx_indication_pdu_t));
+    	UL_INFO->rx_ind.rx_indication_body.number_of_pdus = 0;
+    	UL_INFO->rx_ind.header.message_id = 3225;
+
+
+    	UL_INFO->crc_ind.crc_indication_body.crc_pdu_list = (nfapi_crc_indication_pdu_t*)malloc(10*sizeof(nfapi_crc_indication_pdu_t));
+    	UL_INFO->crc_ind.crc_indication_body.number_of_crcs = 0;
+    	UL_INFO->crc_ind.header.message_id = 3225;
+
+    	UL_INFO->harq_ind.harq_indication_body.harq_pdu_list = (nfapi_harq_indication_pdu_t*)malloc(10*sizeof(nfapi_harq_indication_pdu_t));
+    	UL_INFO->harq_ind.harq_indication_body.number_of_harqs = 0;
+    	UL_INFO->harq_ind.header.message_id = 3225;
+
+    	UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = (nfapi_sr_indication_pdu_t*)malloc(10*sizeof(nfapi_sr_indication_pdu_t));
+    	UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
+    	UL_INFO->sr_ind.header.message_id = 3225;
+
+
+
+
     for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++) {
     	//LOG_I(MAC, "Panos-D: UE_phy_stub_single_thread_rxn_txnp4, NB_UE_INST:%d, Mod_id:%d \n", NB_UE_INST, Mod_id);
     	UE = PHY_vars_UE_g[Mod_id][0];
@@ -1034,7 +1059,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
       }
       //if(UE_mac_inst[Mod_id].hi_dci0_req!= NULL){
       if (UE_mac_inst[Mod_id].hi_dci0_req!=NULL && UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
-    	  LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 4 \n");
+    	  //LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 4 \n");
     	  hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req, Mod_id);
     	  //if(UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
     		  free(UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list);
@@ -1172,6 +1197,68 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     	  free(tx_request_pdu_list);
       	  tx_request_pdu_list = NULL;
       }
+
+
+    if (UL_INFO->crc_ind.crc_indication_body.number_of_crcs>0)
+      {
+    	  //LOG_D(PHY,"UL_info->crc_ind.crc_indication_body.number_of_crcs:%d CRC_IND:SFN/SF:%d\n", UL_info->crc_ind.crc_indication_body.number_of_crcs, NFAPI_SFNSF2DEC(UL_info->crc_ind.sfn_sf));
+    	  LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.2, SFN/SF of PNF counter:%d.%d, number_of_crcs: %d \n", timer_frame, timer_subframe, UL_INFO->crc_ind.crc_indication_body.number_of_crcs);
+    	  oai_nfapi_crc_indication(&UL_INFO->crc_ind);
+    	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.21 \n");
+    	  UL_INFO->crc_ind.crc_indication_body.number_of_crcs = 0;
+      }
+      if (UL_INFO->rx_ind.rx_indication_body.number_of_pdus>0)
+      {
+    	  //LOG_D(PHY,"UL_info->rx_ind.number_of_pdus:%d RX_IND:SFN/SF:%d\n", UL_info->rx_ind.rx_indication_body.number_of_pdus, NFAPI_SFNSF2DEC(UL_info->rx_ind.sfn_sf));
+    	  LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.3, SFN/SF of PNF counter:%d.%d, number_of_pdus: %d \n", timer_frame, timer_subframe, UL_INFO->rx_ind.rx_indication_body.number_of_pdus);
+    	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.3 \n");
+    	  oai_nfapi_rx_ind(&UL_INFO->rx_ind);
+    	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.31 \n");
+    	  UL_INFO->rx_ind.rx_indication_body.number_of_pdus = 0;
+      }
+      if(UL_INFO->harq_ind.harq_indication_body.number_of_harqs>0)
+      {
+    	  LOG_D(MAC, "Panos-D: ul_config_req_UE_MAC 2.4, SFN/SF of PNF counter:%d.%d, number_of_harqs: %d \n", timer_frame, timer_subframe, UL_INFO->harq_ind.harq_indication_body.number_of_harqs);
+    	  oai_nfapi_harq_indication(&UL_INFO->harq_ind);
+    	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.41 \n");
+    	  UL_INFO->harq_ind.harq_indication_body.number_of_harqs =0;
+
+      }
+      if(UL_INFO->sr_ind.sr_indication_body.number_of_srs>0)
+      {
+    	  LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.5, SFN/SF of PNF counter:%d.%d, number_of_srs: %d \n", timer_frame, timer_subframe, UL_INFO->sr_ind.sr_indication_body.number_of_srs);
+    	  oai_nfapi_sr_indication(&UL_INFO->sr_ind);
+    	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.51 \n");
+    	  UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
+      }
+
+      // Free UL_INFO messages
+      //if(UL_INFO->crc_ind.crc_indication_body.crc_pdu_list != NULL){
+    	  free(UL_INFO->crc_ind.crc_indication_body.crc_pdu_list);
+    	  UL_INFO->crc_ind.crc_indication_body.crc_pdu_list = NULL;
+      //}
+      //if(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list != NULL){
+    	  free(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list);
+    	  UL_INFO->rx_ind.rx_indication_body.rx_pdu_list = NULL;
+      //}
+      //if(UL_INFO->harq_ind.harq_indication_body.harq_pdu_list !=NULL){
+    	  free(UL_INFO->harq_ind.harq_indication_body.harq_pdu_list);
+    	  UL_INFO->harq_ind.harq_indication_body.harq_pdu_list = NULL;
+      //}
+      //if(UL_INFO->sr_ind.sr_indication_body.sr_pdu_list!=NULL){
+    	  free(UL_INFO->sr_ind.sr_indication_body.sr_pdu_list);
+    	  UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = NULL;
+      //}
+
+      free(UL_INFO);
+      UL_INFO = NULL;
+
+
+
+
+
+
+
   }
   // thread finished
   free(arg);

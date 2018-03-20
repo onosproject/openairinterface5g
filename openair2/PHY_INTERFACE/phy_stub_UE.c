@@ -559,7 +559,7 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
     //LOG_I(MAC, "Panos-D: fill_uci_harq_indication_UE_MAC 7 \n");
   UL_INFO->harq_ind.harq_indication_body.number_of_harqs++;
   //LOG_I(MAC, "Panos-D: fill_uci_harq_indication_UE_MAC 8 \n");
-  LOG_E(PHY,"Incremented eNB->UL_INFO.harq_ind.number_of_harqs:%d\n", UL_INFO->harq_ind.harq_indication_body.number_of_harqs);
+  LOG_D(PHY,"Incremented eNB->UL_INFO.harq_ind.number_of_harqs:%d\n", UL_INFO->harq_ind.harq_indication_body.number_of_harqs);
   pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 
 }
@@ -577,7 +577,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
   // check if we have received a dci for this ue and ulsch descriptor is configured
 
   if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE) {
-	  LOG_I(MAC, "Panos-D: handle_nfapi_ul_pdu_UE_MAC 2 \n");
+	  LOG_D(MAC, "Panos-D: handle_nfapi_ul_pdu_UE_MAC 2 \n");
     //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
     //            "No existing UE ULSCH for rnti %x\n",rel8->rnti);
     LOG_D(PHY,"Applying UL config for UE, rnti %x for frame %d, subframe %d\n",
@@ -809,9 +809,7 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
   nfapi_ul_config_request_pdu_t* ul_config_pdu_list = req->ul_config_request_body.ul_config_pdu_list;
   //LOG_D(MAC, "Panos-D: ul_config_req_UE_MAC 1 \n");
 
-  //Panos: Not sure whether we should put the memory allocation here.
-  //*** Note we should find the right place to call free(UL_INFO).
-  UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
+
   //UL_INFO->rach_ind.rach_indication_body.preamble_list = (nfapi_preamble_pdu_t*)malloc(UL_INFO->rach_ind.rach_indication_body.number_of_preambles*sizeof(nfapi_preamble_pdu_t));
 
   /*UL_INFO->rx_ind.rx_indication_body.rx_pdu_list = (nfapi_rx_indication_pdu_t*)malloc(sizeof(nfapi_rx_indication_pdu_t));
@@ -826,6 +824,13 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
   UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = (nfapi_sr_indication_pdu_t*)malloc(sizeof(nfapi_sr_indication_pdu_t));
   UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;*/
 
+
+  /*
+
+
+  //Panos: Not sure whether we should put the memory allocation here.
+   //*** Note we should find the right place to call free(UL_INFO).
+   UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
 
   	UL_INFO->rx_ind.rx_indication_body.rx_pdu_list = (nfapi_rx_indication_pdu_t*)malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_rx_indication_pdu_t));
   	UL_INFO->rx_ind.rx_indication_body.number_of_pdus = 0;
@@ -843,6 +848,9 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
   	UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = (nfapi_sr_indication_pdu_t*)malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_sr_indication_pdu_t));
   	UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
   	UL_INFO->sr_ind.header.message_id = 3225;
+
+  	*/
+
 
   //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC total number of pdus: %d \n", req->ul_config_request_body.number_of_pdus);
   //Panos: Additional checks needed here to check if the UE is in PRACH mode.
@@ -863,7 +871,7 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
   //subtract_subframe(&sfn, &sf, 4);
 
 
-  LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC() TOTAL NUMBER OF UL_CONFIG PDUs: %d, SFN/SF: %d/%d \n", req->ul_config_request_body.number_of_pdus, timer_frame, timer_subframe);
+  LOG_D(MAC, "Panos-D: ul_config_req_UE_MAC() TOTAL NUMBER OF UL_CONFIG PDUs: %d, SFN/SF: %d/%d \n", req->ul_config_request_body.number_of_pdus, timer_frame, timer_subframe);
 
 
 
@@ -960,6 +968,10 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
     }
   }
 
+
+
+  /****
+
   if (UL_INFO->crc_ind.crc_indication_body.number_of_crcs>0)
   {
 	  //LOG_D(PHY,"UL_info->crc_ind.crc_indication_body.number_of_crcs:%d CRC_IND:SFN/SF:%d\n", UL_info->crc_ind.crc_indication_body.number_of_crcs, NFAPI_SFNSF2DEC(UL_info->crc_ind.sfn_sf));
@@ -979,7 +991,7 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
   }
   if(UL_INFO->harq_ind.harq_indication_body.number_of_harqs>0)
   {
-	  LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.4, SFN/SF in REQ:%d.%d, SFN/SF of PNF counter:%d.%d, number_of_harqs: %d \n", sfn, sf, timer_frame, timer_subframe, UL_INFO->harq_ind.harq_indication_body.number_of_harqs);
+	  LOG_D(MAC, "Panos-D: ul_config_req_UE_MAC 2.4, SFN/SF in REQ:%d.%d, SFN/SF of PNF counter:%d.%d, number_of_harqs: %d \n", sfn, sf, timer_frame, timer_subframe, UL_INFO->harq_ind.harq_indication_body.number_of_harqs);
 	  oai_nfapi_harq_indication(&UL_INFO->harq_ind);
 	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.41 \n");
 	  UL_INFO->harq_ind.harq_indication_body.number_of_harqs =0;
@@ -992,15 +1004,6 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
 	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.51 \n");
 	  UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
   }
-
-  // Free ul_config_request
-  /*if(req->ul_config_request_body.ul_config_pdu_list != NULL){
-	  free(req->ul_config_request_body.ul_config_pdu_list);
-	  req->ul_config_request_body.ul_config_pdu_list = NULL;
-  }
-  free(req);
-  req = NULL;*/
-
 
   // Free UL_INFO messages
   //if(UL_INFO->crc_ind.crc_indication_body.crc_pdu_list != NULL){
@@ -1019,8 +1022,9 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
 	  free(UL_INFO->sr_ind.sr_indication_body.sr_pdu_list);
 	  UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = NULL;
   //}
+
   free(UL_INFO);
-  UL_INFO = NULL;
+  UL_INFO = NULL;****/
 	}
 
   return 0;
@@ -1092,7 +1096,7 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
   for (int i=0;i<req->dl_config_request_body.number_pdu;i++)
   {
     //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn/sf:%d PDU[%d] size:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size);
-	  LOG_E(MAC, "dl_config_req_UE_MAC 2 Received real ones: sfn/sf:%d.%d PDU[%d] size:%d\n", sfn, sf, i, dl_config_pdu_list[i].pdu_size);
+	  //LOG_E(MAC, "dl_config_req_UE_MAC 2 Received real ones: sfn/sf:%d.%d PDU[%d] size:%d\n", sfn, sf, i, dl_config_pdu_list[i].pdu_size);
 
     if (dl_config_pdu_list[i].pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE)
     {
@@ -1112,7 +1116,9 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 
 				if(dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index <= tx_req_num_elems -1){
 				//if(tx_request_pdu_list + dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index!= NULL){
-					LOG_E(MAC, "dl_config_req_UE_MAC 2 Received data: sfn/sf:%d PDU[%d] size:%d, TX_PDU index: %d, tx_req_num_elems: %d \n", NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index, tx_req_num_elems);
+
+					//LOG_E(MAC, "dl_config_req_UE_MAC 2 Received data: sfn/sf:%d PDU[%d] size:%d, TX_PDU index: %d, tx_req_num_elems: %d \n", NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index, tx_req_num_elems);
+
 					ue_send_sdu(Mod_id, 0, sfn, sf,
 							tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
 							tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_length,
@@ -1131,8 +1137,10 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 			dl_config_pdu_tmp = &dl_config_pdu_list[i+1];
 			if(dl_config_pdu_tmp->pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE && dl_config_pdu_list[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti == 0xFFFF){
 				//pdu = Tx_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data;
-				LOG_E(MAC,"dl_config_req_UE_MAC 3 Received SI: [PDU:%d] NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d sdu:%p\n",
-				            i, sfn, sf, sfn, sf, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.transport_blocks, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index, tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);
+
+				/*LOG_E(MAC,"dl_config_req_UE_MAC 3 Received SI: [PDU:%d] NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d sdu:%p\n",
+				            i, sfn, sf, sfn, sf, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.transport_blocks, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index, tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data);*/
+
 				if(dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index <= tx_req_num_elems -1){
 				//if(tx_request_pdu_list + dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index!= NULL){
 					ue_decode_si(Mod_id, 0, sfn, 0,
@@ -1192,7 +1200,7 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
     	// BCH case
     	// Last parameter is 1 if first time synchronization and zero otherwise. Not sure which value to put
     	// for our case.
-    	LOG_E(MAC,"dl_config_req_UE_MAC 4 Received MIB: sfn/sf: %d.%d \n", sfn, sf);
+    	//LOG_E(MAC,"dl_config_req_UE_MAC 4 Received MIB: sfn/sf: %d.%d \n", sfn, sf);
     	if(UE_mac_inst[Mod_id].UE_mode[0] == NOT_SYNCHED){
     		dl_phy_sync_success(Mod_id,sfn,0, 1);
     		LOG_E(MAC,"dl_config_req_UE_MAC 5 Received MIB: UE_mode: %d\n", UE_mac_inst[Mod_id].UE_mode[0]);
