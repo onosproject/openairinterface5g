@@ -2763,7 +2763,7 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
 
 	if(result == 0)
 	{
-		//printf( "Panos-D: P7 Pack failed to pack message\n");
+		printf( "Panos-D: P7 Pack failed to pack message\n");
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "P7 Pack failed to pack message\n");
 		return -1;
 	}

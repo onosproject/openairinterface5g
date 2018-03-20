@@ -327,7 +327,7 @@ Msg3_transmitted(module_id_t module_idP, uint8_t CC_id,
 		"Transmission on secondary CCs is not supported yet\n");
 
     // start contention resolution timer
-    LOG_D(MAC,
+    LOG_I(MAC,
 	  "[UE %d][RAPROC] Frame %d : Msg3_tx: Setting contention resolution timer\n",
 	  module_idP, frameP);
     UE_mac_inst[module_idP].RA_contention_resolution_cnt = 0;

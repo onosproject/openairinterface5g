@@ -675,6 +675,8 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
                 //printf("subframe_buffer->sfn_sf:%d sfn_sf:%d\n", subframe_buffer->sfn_sf, sfn_sf);
 		if(tx_subframe_buffer->sfn_sf == sfn_sf_tx)
 		{
+			//printf("Panos-D: pnf_p7_subframe_ind tx_subframe_buffer->sfn_sf == sfn_sf_tx satisfied, pnf_p7: %d MINE: %d.%d, REAL: %d.%d \n",
+				//	tx_subframe_buffer->sfn_sf, sfn_sf_tx>>4, sfn_sf_tx&0xf, tx_subframe_buffer->sfn_sf>>4, tx_subframe_buffer->sfn_sf&0xf);
 			if(tx_subframe_buffer->tx_req != 0)
 			{
 				if(pnf_p7->_public.tx_req)
@@ -1366,6 +1368,7 @@ void pnf_handle_dl_node_sync(void *pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7, u
 	// unpack the message
 	if (nfapi_p7_message_unpack(pRecvMsg, recvMsgLen, &dl_node_sync, sizeof(dl_node_sync), &pnf_p7->_public.codec_config) < 0)
 	{
+		printf("Panos-D: %s: Unpack message failed, ignoring\n", __FUNCTION__);
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s: Unpack message failed, ignoring\n", __FUNCTION__);
 		return;
 	}

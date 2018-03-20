@@ -76,9 +76,11 @@ typedef enum {
 
 void init_UE_threads(int);
 void init_UE_threads_stub(int);
+void init_UE_single_thread_stub(int);
 void *UE_thread(void *arg);
 void init_UE(int nb_inst,int,int,int);
 void init_UE_stub(int nb_inst,int,int,char*);
+void init_UE_stub_single_thread(int nb_inst,int,int,char*);
 extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
 //extern int tx_req_UE_MAC1();
 
@@ -271,6 +273,44 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
 #endif
 #endif
 }
+
+// Panos: Initiating all UEs within a single set of threads for PHY_STUB. Future extensions -> multiple
+// set of threads for multiple UEs.
+void init_UE_stub_single_thread(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_iface) {
+
+  int         inst;
+
+  LOG_I(PHY,"UE : Calling Layer 2 for initialization, nb_inst: %d \n", nb_inst);
+
+  l2_init_ue(eMBMS_active,(uecap_xer_in==1)?uecap_xer:NULL,
+	     0,// cba_group_active
+	     0); // HO flag
+
+  for (inst=0;inst<nb_inst;inst++) {
+
+    LOG_I(PHY,"Initializing memory for UE instance %d (%p)\n",inst,PHY_vars_UE_g[inst]);
+    PHY_vars_UE_g[inst][0] = init_ue_vars(NULL,inst,0);
+  }
+  init_timer_thread();
+  init_UE_single_thread_stub(nb_inst);
+
+  /*for (inst=0;inst<nb_inst;inst++) {
+
+    LOG_I(PHY,"Intializing UE Threads for instance %d (%p,%p)...\n",inst,PHY_vars_UE_g[inst],PHY_vars_UE_g[inst][0]);
+    init_UE_threads_stub(inst);
+  }*/
+
+  printf("UE threads created \n");
+
+  LOG_I(PHY,"Starting multicast link on %s\n",emul_iface);
+  if(nfapi_mode!=3)
+  multicast_link_start(ue_stub_rx_handler,0,emul_iface);
+
+
+}
+
+
+
 
 
 void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_iface) {
@@ -824,6 +864,323 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
   }
 }
 
+
+/*!
+ * \brief This is the UE thread for RX subframe n and TX subframe n+4.
+ * This thread performs the phy_procedures_UE_RX() on every received slot.
+ * then, if TX is enabled it performs TX for n+4.
+ * \param arg is a pointer to a \ref PHY_VARS_UE structure.
+ * \returns a pointer to an int. The storage is not on the heap and must not be freed.
+ */
+
+static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
+
+	thread_top_init("UE_phy_stub_thread_rxn_txnp4",1,870000L,1000000L,1000000L);
+
+	module_id_t Mod_id = 0;
+	int init_ra_UE = -1; // This counter is used to initiate the RA of each UE in different SFrames
+	int global_cnt = 0;
+  static __thread int UE_thread_rxtx_retval;
+  struct rx_tx_thread_data *rtd = arg;
+  UE_rxtx_proc_t *proc = rtd->proc;
+
+  PHY_VARS_UE    *UE;   //= rtd->UE;
+  int ret;
+  //  double t_diff;
+
+  char threadname[256];
+  //sprintf(threadname,"UE_%d_proc", UE->Mod_id);
+
+  // Panos: Call (Sched_Rsp_t) get_nfapi_sched_response(UE->Mod_ID) to get all
+  //sched_response config messages which concern the specific UE. Inside this
+  //function we should somehow make the translation of rnti to Mod_ID.
+
+  //proc->instance_cnt_rxtx=-1;
+
+  phy_stub_ticking->ticking_var = -1;
+  proc->subframe_rx=proc->sub_frame_start;
+
+  // Initialize all nfapi structures to NULL
+  for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++) {
+      	UE_mac_inst[Mod_id].dl_config_req = NULL;
+      	UE_mac_inst[Mod_id].ul_config_req = NULL;
+      	UE_mac_inst[Mod_id].hi_dci0_req = NULL;
+      	tx_request_pdu_list = NULL;
+      	tx_req_num_elems = 0;
+      	UE_mac_inst[Mod_id].tx_req = NULL;
+      }
+
+  //PANOS: CAREFUL HERE!
+  wait_sync("UE_phy_stub_single_thread_rxn_txnp4");
+
+  while (!oai_exit) {
+
+    if (pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) != 0) {
+      LOG_E( MAC, "[SCHED][UE] error locking mutex for UE RXTX\n" );
+      exit_fun("nothing to add");
+    }
+    while (phy_stub_ticking->ticking_var < 0) {
+      // most of the time, the thread is waiting here
+      //pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx )
+      LOG_D(MAC,"Waiting for ticking_var\n");
+      pthread_cond_wait( &phy_stub_ticking->cond_ticking, &phy_stub_ticking->mutex_ticking);
+    }
+    phy_stub_ticking->ticking_var--;
+    if (pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) != 0) {
+      LOG_E( MAC, "[SCHED][UE] error unlocking mutex for UE RXn_TXnp4\n" );
+      exit_fun("nothing to add");
+    }
+    LOG_D(MAC," Panos-D [UE_phy_stub_thread_rxn_txnp4 1] Frame: %d, Subframe: %d \n" "\n" "\n", timer_frame, timer_subframe);
+
+
+    proc->subframe_rx=timer_subframe;
+    proc->frame_rx = timer_frame;
+    proc->subframe_tx=(timer_subframe+4)%10;
+    proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
+    //oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
+
+
+    oai_subframe_ind(timer_frame, timer_subframe);
+
+    // Panos: Guessing that the next 4 lines are not needed for the phy_stub mode.
+    /*initRefTimes(t2);
+      initRefTimes(t3);
+      pickTime(current);
+      updateTimes(proc->gotIQs, &t2, 10000, "Delay to wake up UE_Thread_Rx (case 2)");*/
+
+
+
+    // Process Rx data for one sub-frame
+
+    /*if(global_cnt == 0){
+    	init_ra_UE++;
+    	global_cnt++;
+    }*/
+
+    /*if(global_cnt>= 0 && global_cnt<15000)
+    	global_cnt++;
+    if(global_cnt == 10000 || global_cnt == 15000){
+    	LOG_I(MAC, "Panos-D: global_cnt: %d", global_cnt);
+    	global_cnt++;
+    	init_ra_UE++;
+    }*/
+
+
+    //if(timer_frame%5 == 0 && timer_subframe%10 == 0)
+    	init_ra_UE++;
+    for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++) {
+    	//LOG_I(MAC, "Panos-D: UE_phy_stub_single_thread_rxn_txnp4, NB_UE_INST:%d, Mod_id:%d \n", NB_UE_INST, Mod_id);
+    	UE = PHY_vars_UE_g[Mod_id][0];
+    lte_subframe_t sf_type = subframe_select( &UE->frame_parms, proc->subframe_rx);
+    if ((sf_type == SF_DL) ||
+	(UE->frame_parms.frame_type == FDD) ||
+	(sf_type == SF_S)) {
+
+      if (UE->frame_parms.frame_type == TDD) {
+	LOG_D(PHY, "%s,TDD%d,%s: calling UE_RX\n",
+	      threadname,
+	      UE->frame_parms.tdd_config,
+	      (sf_type==SF_DL? "SF_DL" :
+	       (sf_type==SF_UL? "SF_UL" :
+		(sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
+      } else {
+	LOG_D(PHY, "%s,%s,%s: calling UE_RX\n",
+	      threadname,
+	      (UE->frame_parms.frame_type==FDD? "FDD":
+	       (UE->frame_parms.frame_type==TDD? "TDD":"UNKNOWN_DUPLEX_MODE")),
+	      (sf_type==SF_DL? "SF_DL" :
+	       (sf_type==SF_UL? "SF_UL" :
+		(sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
+      }
+
+
+      phy_procedures_UE_SL_RX(UE,proc);
+
+
+
+      /*
+	#ifdef UE_SLOT_PARALLELISATION
+	phy_procedures_slot_parallelization_UE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
+	#else
+      */
+      // Panos: Substitute call to phy_procedures Rx with call to phy_stub functions in order to trigger
+      // UE Rx procedures directly at the MAC layer, based on the received nfapi requests from the vnf (eNB).
+      // Hardcode Mod_id for now. Will be changed later.
+
+      // Panos: is this the right place to call oai_subframe_indication to invoke p7 nfapi callbacks here?
+
+      //oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
+      //oai_subframe_ind(timer_frame, timer_subframe);
+
+      //start_meas(&UE->timer_stats);
+      //oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
+
+
+
+      //oai_subframe_ind(timer_frame, timer_subframe);
+
+
+
+
+      //LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind \n");
+      //printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind \n");
+      /*if(UE_mac_inst[Mod_id].tx_req!= NULL){
+	printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 2\n");
+	tx_req_UE_MAC(UE_mac_inst[Mod_id].tx_req);
+	}*/
+      if(UE_mac_inst[Mod_id].dl_config_req!= NULL) {
+	//LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 3, NB_UE_INST:%d \n", NB_UE_INST);
+	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req, Mod_id);
+      }
+      //if(UE_mac_inst[Mod_id].hi_dci0_req!= NULL){
+      if (UE_mac_inst[Mod_id].hi_dci0_req!=NULL && UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
+    	  LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 4 \n");
+    	  hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req, Mod_id);
+    	  //if(UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
+    		  free(UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list);
+    		  UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list = NULL;
+    	  //}
+    	  free(UE_mac_inst[Mod_id].hi_dci0_req);
+    	  UE_mac_inst[Mod_id].hi_dci0_req = NULL;
+      }
+
+      else if(UE_mac_inst[Mod_id].hi_dci0_req!=NULL){
+      		free(UE_mac_inst[Mod_id].hi_dci0_req);
+      		UE_mac_inst[Mod_id].hi_dci0_req = NULL;
+      	}
+      //stop_meas(&UE->timer_stats);
+      //t_diff = get_time_meas_us(&UE->timer_stats);
+      //LOG_E(MAC," Panos-D Absolute time: %f\n", t_diff);
+
+      if(nfapi_mode!=3)
+      phy_procedures_UE_SL_TX(UE,proc);
+
+      //#endif
+    }
+  //} //for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++)
+
+//>>>>>>> Stashed changes
+
+#if UE_TIMING_TRACE
+    start_meas(&UE->generic_stat);
+#endif
+
+    if (UE->mac_enabled==1) {
+
+      ret = ue_scheduler(UE->Mod_id,
+			 proc->frame_rx,
+			 proc->subframe_rx,
+			 proc->frame_tx,
+			 proc->subframe_tx,
+			 subframe_select(&UE->frame_parms,proc->subframe_tx),
+			 0,
+			 0/*FIXME CC_id*/);
+      if ( ret != CONNECTION_OK) {
+	char *txt;
+	switch (ret) {
+	case CONNECTION_LOST:
+	  txt="RRC Connection lost, returning to PRACH";
+	  break;
+	case PHY_RESYNCH:
+	  txt="RRC Connection lost, trying to resynch";
+	  break;
+	case RESYNCH:
+	  txt="return to PRACH and perform a contention-free access";
+	  break;
+	default:
+	  txt="UNKNOWN RETURN CODE";
+	};
+	LOG_E( PHY, "[UE %"PRIu8"] Frame %"PRIu32", subframe %u %s\n",
+	       UE->Mod_id, proc->frame_rx, proc->subframe_tx,txt );
+      }
+    }
+#if UE_TIMING_TRACE
+    stop_meas(&UE->generic_stat);
+#endif
+
+
+    // Prepare the future Tx data
+
+    if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_UL) ||
+	(UE->frame_parms.frame_type == FDD) )
+      if (UE->mode != loop_through_memory){
+
+	if ((UE_mac_inst[Mod_id].UE_mode[0] == PRACH) ) {
+	  //LOG_D(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH \n");
+
+	  // check if we have PRACH opportunity
+
+	  if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx && Mod_id == (module_id_t) init_ra_UE) ) { //&& Mod_id == init_ra_UE
+	    //LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH 2 \n");
+	    PRACH_RESOURCES_t *prach_resources = ue_get_rach(Mod_id, 0, proc->frame_tx, 0, proc->subframe_tx);
+	    if(prach_resources!=NULL ) {
+	      //LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH 3 \n");
+	      fill_rach_indication_UE_MAC(Mod_id, proc->frame_tx ,proc->subframe_tx, UL_INFO, prach_resources->ra_PreambleIndex, prach_resources->ra_RNTI);
+	      Msg1_transmitted(Mod_id, 0, proc->frame_tx, 0);
+	      UE_mac_inst[Mod_id].UE_mode[0] = RA_RESPONSE;
+	    }
+
+	    //ue_prach_procedures(ue,proc,eNB_id,abstraction_flag,mode);
+	  }
+	} // mode is PRACH
+	// Panos: Substitute call to phy_procedures Tx with call to phy_stub functions in order to trigger
+	// UE Tx procedures directly at the MAC layer, based on the received ul_config requests from the vnf (eNB).
+	// Generate UL_indications which correspond to UL traffic.
+	if(UE_mac_inst[Mod_id].ul_config_req!= NULL){ //&& UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
+		//LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 ul_config_req is not NULL \n");
+		ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req, timer_frame, timer_subframe, Mod_id);
+		//ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req, proc->frame_tx, proc->subframe_tx);
+		if(UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
+			free(UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list);
+			UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list = NULL;
+		}
+		free(UE_mac_inst[Mod_id].ul_config_req);
+		UE_mac_inst[Mod_id].ul_config_req = NULL;
+		//UL_indication(UL_INFO);
+	}
+	else if(UE_mac_inst[Mod_id].ul_config_req!=NULL){
+		free(UE_mac_inst[Mod_id].ul_config_req);
+		UE_mac_inst[Mod_id].ul_config_req = NULL;
+	}
+      }
+
+    phy_procedures_UE_SL_RX(UE,proc);
+
+
+    /*if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_S) &&
+      (UE->frame_parms.frame_type == TDD))
+      if (UE->mode != loop_through_memory)
+      phy_procedures_UE_S_TX(UE,0,0,no_relay);
+      updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");*/
+
+    //if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
+    /*if (pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) != 0) {
+      LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
+      exit_fun("noting to add");
+    }
+
+    //proc->instance_cnt_rxtx--;
+
+    //if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
+    if (pthread_mutex_unlock(&phy_stub_ticking->mutex_ticking) != 0) {
+      LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
+      exit_fun("noting to add");
+    }*/
+    } //for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++)
+
+    if(tx_request_pdu_list!=NULL){
+    	  free(tx_request_pdu_list);
+      	  tx_request_pdu_list = NULL;
+      }
+  }
+  // thread finished
+  free(arg);
+  return &UE_thread_rxtx_retval;
+}
+
+
+
+
 /*!
  * \brief This is the UE thread for RX subframe n and TX subframe n+4.
  * This thread performs the phy_procedures_UE_RX() on every received slot.
@@ -945,12 +1302,13 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 	}*/
       if(UE_mac_inst[Mod_id].dl_config_req!= NULL) {
 	//LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 3 \n");
-	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req);
+	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req, Mod_id);
+      //dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req, UE_mac_inst[Mod_id].tx_request_pdu_list);
       }
       //if(UE_mac_inst[Mod_id].hi_dci0_req!= NULL){
       if (UE_mac_inst[Mod_id].hi_dci0_req!=NULL && UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
     	  LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 4 \n");
-    	  hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req);
+    	  hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req, Mod_id);
     	  //if(UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
     		  free(UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list);
     		  UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list = NULL;
@@ -1039,7 +1397,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 	// Generate UL_indications which correspond to UL traffic.
 	if(UE_mac_inst[Mod_id].ul_config_req!= NULL && UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
 		//LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 ul_config_req is not NULL \n");
-		ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req, timer_frame, timer_subframe);
+		ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req, timer_frame, timer_subframe, Mod_id);
 		//ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req, proc->frame_tx, proc->subframe_tx);
 		if(UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
 			free(UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list);
@@ -1411,6 +1769,70 @@ void init_UE_threads(int inst) {
  * - UE_thread_dlsch_proc_slot1
  * and the locking between them.
  */
+void init_UE_single_thread_stub(int nb_inst) {
+  struct rx_tx_thread_data *rtd;
+  PHY_VARS_UE *UE;
+
+  for (int i=0; i<nb_inst; i++){
+	  AssertFatal(PHY_vars_UE_g!=NULL,"PHY_vars_UE_g is NULL\n");
+	  AssertFatal(PHY_vars_UE_g[i]!=NULL,"PHY_vars_UE_g[inst] is NULL\n");
+	  AssertFatal(PHY_vars_UE_g[i][0]!=NULL,"PHY_vars_UE_g[inst][0] is NULL\n");
+  }
+  UE = PHY_vars_UE_g[0][0];
+
+  pthread_attr_init (&UE->proc.attr_ue);
+  pthread_attr_setstacksize(&UE->proc.attr_ue,8192);//5*PTHREAD_STACK_MIN);
+
+  // Panos: Don't need synch for phy_stub mode
+  //pthread_mutex_init(&UE->proc.mutex_synch,NULL);
+  //pthread_cond_init(&UE->proc.cond_synch,NULL);
+
+  // the threads are not yet active, therefore access is allowed without locking
+  // Panos: In phy_stub_UE mode due to less heavy processing operations we don't need two threads
+  //int nb_threads=RX_NB_TH;
+  int nb_threads=1;
+  for (int i=0; i<nb_threads; i++) {
+    rtd = calloc(1, sizeof(struct rx_tx_thread_data));
+    if (rtd == NULL) abort();
+    rtd->UE = UE;
+    rtd->proc = &UE->proc.proc_rxtx[i];
+
+    pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_rxtx,NULL);
+    pthread_cond_init(&UE->proc.proc_rxtx[i].cond_rxtx,NULL);
+    UE->proc.proc_rxtx[i].sub_frame_start=i;
+    UE->proc.proc_rxtx[i].sub_frame_step=nb_threads;
+    printf("Init_UE_threads rtd %d proc %d nb_threads %d i %d\n",rtd->proc->sub_frame_start, UE->proc.proc_rxtx[i].sub_frame_start,nb_threads, i);
+    pthread_create(&UE->proc.proc_rxtx[i].pthread_rxtx, NULL, UE_phy_stub_single_thread_rxn_txnp4, rtd);
+    /*
+      #ifdef UE_SLOT_PARALLELISATION
+      //pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_slot0_dl_processing,NULL);
+      //pthread_cond_init(&UE->proc.proc_rxtx[i].cond_slot0_dl_processing,NULL);
+      //pthread_create(&UE->proc.proc_rxtx[i].pthread_slot0_dl_processing,NULL,UE_thread_slot0_dl_processing, rtd);
+
+      pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_slot1_dl_processing,NULL);
+      pthread_cond_init(&UE->proc.proc_rxtx[i].cond_slot1_dl_processing,NULL);
+      pthread_create(&UE->proc.proc_rxtx[i].pthread_slot1_dl_processing,NULL,UE_thread_slot1_dl_processing, rtd);
+      #endif*/
+
+  }
+  // Panos: Remove thread for UE_sync in phy_stub_UE mode.
+  //pthread_create(&UE->proc.pthread_synch,NULL,UE_thread_synch,(void*)UE);
+}
+
+
+
+
+/*!
+ * \brief Initialize the UE theads.
+ * Creates the UE threads:
+ * - UE_thread_rxtx0
+ * - UE_thread_synch
+ * - UE_thread_fep_slot0
+ * - UE_thread_fep_slot1
+ * - UE_thread_dlsch_proc_slot0
+ * - UE_thread_dlsch_proc_slot1
+ * and the locking between them.
+ */
 void init_UE_threads_stub(int inst) {
   struct rx_tx_thread_data *rtd;
   PHY_VARS_UE *UE;
@@ -1537,8 +1959,6 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
 // which will be ticking and provide the SFN/SF values that will be used from the UE threads
 // playing the role of nfapi-pnf.
 
-
-
 /*static void* timer_thread( void* param ) {
   thread_top_init("timer_thread",1,870000L,1000000L,1000000L);
   timer_subframe =9;
@@ -1644,9 +2064,11 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
       UE_tport_t pdu;
       pdu.header.packet_type = TTI_SYNC;
       pdu.header.absSF = (timer_frame*10)+timer_subframe;
+      if (nfapi_mode!=3){
       multicast_link_write_sock(0,
 	  			&pdu,
 				sizeof(UE_tport_header_t));
+				}
 
     }
     else {

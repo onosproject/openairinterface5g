@@ -1199,6 +1199,7 @@ int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req) {
 
 int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req) {
 
+	//LOG_I(MAC, "Panos-D: oai_nfapi_ul_config_req 1 \n");
   nfapi_vnf_p7_config_t *p7_config = vnf.p7_vnfs[0].config;
 
   ul_config_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!

@@ -1828,8 +1828,8 @@ rrc_ue_process_securityModeCommand(
   uint8_t buffer[200];
   int i, securityMode;
 
-  LOG_I(RRC,"[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), Processing securityModeCommand (eNB %d)\n",
-        ctxt_pP->module_id,ctxt_pP->frame,eNB_index);
+  LOG_I(RRC,"[UE %d] SFN/SF %d/%d: Receiving from SRB1 (DL-DCCH), Processing securityModeCommand (eNB %d)\n",
+        ctxt_pP->module_id,ctxt_pP->frame, ctxt_pP->subframe, eNB_index);
 
   switch (securityModeCommand->criticalExtensions.choice.c1.choice.securityModeCommand_r8.securityConfigSMC.securityAlgorithmConfig.cipheringAlgorithm) {
   case CipheringAlgorithm_r12_eea0:
@@ -1886,8 +1886,10 @@ rrc_ue_process_securityModeCommand(
   ul_dcch_msg.message.present           = UL_DCCH_MessageType_PR_c1;
 
   if (securityMode >= NO_SECURITY_MODE) {
+	  LOG_I(RRC, "rrc_ue_process_securityModeCommand, security mode complete case \n");
     ul_dcch_msg.message.choice.c1.present = UL_DCCH_MessageType__c1_PR_securityModeComplete;
   } else {
+	  LOG_I(RRC, "rrc_ue_process_securityModeCommand, security mode failure case \n");
     ul_dcch_msg.message.choice.c1.present = UL_DCCH_MessageType__c1_PR_securityModeFailure;
   }
 
@@ -1938,11 +1940,11 @@ rrc_ue_process_securityModeCommand(
               | (UE_rrc_inst[ctxt_pP->module_id].integrity_algorithm << 4),
           kRRCenc, kRRCint, kUPenc);
     } else {
-      LOG_W(RRC, "skipped pdcp_config_set_security() as securityMode == 0x%02x",
+      LOG_I(RRC, "skipped pdcp_config_set_security() as securityMode == 0x%02x",
           securityMode);
     }
   } else {
-    LOG_W(RRC, "Could not get PDCP instance where key=0x%ld\n", key);
+    LOG_I(RRC, "Could not get PDCP instance where key=0x%ld\n", key);
   }
 
 #endif //#if defined(ENABLE_SECURITY)
@@ -1957,8 +1959,8 @@ rrc_ue_process_securityModeCommand(
     ul_dcch_msg.message.choice.c1.choice.securityModeComplete.criticalExtensions.present = SecurityModeCommand__criticalExtensions_PR_c1;
     ul_dcch_msg.message.choice.c1.choice.securityModeComplete.criticalExtensions.choice.securityModeComplete_r8.nonCriticalExtension =NULL;
     
-    LOG_I(RRC,"[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), encoding securityModeComplete (eNB %d)\n",
-	  ctxt_pP->module_id,ctxt_pP->frame,eNB_index);
+    LOG_I(RRC,"[UE %d] SFN/SF %d/%d: Receiving from SRB1 (DL-DCCH), encoding securityModeComplete (eNB %d), rrc_TransactionIdentifier: %ld\n",
+	  ctxt_pP->module_id,ctxt_pP->frame, ctxt_pP->subframe, eNB_index, securityModeCommand->rrc_TransactionIdentifier);
     
     enc_rval = uper_encode_to_buffer(&asn_DEF_UL_DCCH_Message,
 				     (void*)&ul_dcch_msg,

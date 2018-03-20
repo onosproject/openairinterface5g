@@ -816,7 +816,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   if (nfapi_mode) {
     if (number_ul_pdu>0)
     {
-      //LOG_D(PHY, "UL_CONFIG to send to PNF\n");
+      //LOG_I(PHY, "UL_CONFIG to send to PNF\n");
       oai_nfapi_ul_config_req(UL_req);
       UL_req->ul_config_request_body.number_of_pdus=0;
       number_ul_pdu=0;

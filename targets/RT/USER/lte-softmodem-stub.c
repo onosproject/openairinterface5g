@@ -1106,66 +1106,27 @@ int main( int argc, char **argv )
 
   printf("Before CC \n");
 
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
+  NB_UE_INST=2;
+  NB_INST=1;
 
-    if (UE_flag==1) {
-      NB_UE_INST=1;
-      NB_INST=1;
-      PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**));
-      PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
+  if (UE_flag==1) {
+	  PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**)*NB_UE_INST);
+	  for (int i=0; i<NB_UE_INST; i++) {
+		  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
+			  PHY_vars_UE_g[i] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
+			  PHY_vars_UE_g[i][CC_id] = init_ue_vars(frame_parms[CC_id], i,abstraction_flag);
 
+			  UE[CC_id] = PHY_vars_UE_g[i][CC_id];
+			  printf("PHY_vars_UE_g[inst][%d] = %p\n",CC_id,UE[CC_id]);
 
-      PHY_vars_UE_g[0][CC_id] = init_ue_vars(frame_parms[CC_id], 0,abstraction_flag);
-      UE[CC_id] = PHY_vars_UE_g[0][CC_id];
-      printf("PHY_vars_UE_g[0][%d] = %p\n",CC_id,UE[CC_id]);
-
-      if (phy_test==1)
-	UE[CC_id]->mac_enabled = 0;
-      else
-	UE[CC_id]->mac_enabled = 1;
-
-      /*if (UE[CC_id]->mac_enabled == 0) {  //set default UL parameters for testing mode
-	for (i=0; i<NUMBER_OF_CONNECTED_eNB_MAX; i++) {
-	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
-	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
-	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
-
-	  UE[CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = 0;
-	  UE[CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(0%3);
-	  UE[CC_id]->scheduling_request_config[i].dsr_TransMax = sr_n4;
-	}
-      }
-
-      UE[CC_id]->UE_scan = UE_scan;
-      UE[CC_id]->UE_scan_carrier = UE_scan_carrier;
-      UE[CC_id]->mode    = mode;
-      printf("UE[%d]->mode = %d\n",CC_id,mode);
-
-      if (UE[CC_id]->mac_enabled == 1) {
-	UE[CC_id]->pdcch_vars[0][0]->crnti = 0x1234;
-	UE[CC_id]->pdcch_vars[1][0]->crnti = 0x1234;
-      }else {
-	UE[CC_id]->pdcch_vars[0][0]->crnti = 0x1235;
-	UE[CC_id]->pdcch_vars[1][0]->crnti = 0x1235;
-      }
-      UE[CC_id]->rx_total_gain_dB =  (int)rx_gain[CC_id][0] + rx_gain_off;
-      UE[CC_id]->tx_power_max_dBm = tx_max_power[CC_id];
-
-      if (frame_parms[CC_id]->frame_type==FDD) {
-	UE[CC_id]->N_TA_offset = 0;
-      }
-      else {
-	if (frame_parms[CC_id]->N_RB_DL == 100)
-	  UE[CC_id]->N_TA_offset = 624;
-	else if (frame_parms[CC_id]->N_RB_DL == 50)
-	  UE[CC_id]->N_TA_offset = 624/2;
-	else if (frame_parms[CC_id]->N_RB_DL == 25)
-	  UE[CC_id]->N_TA_offset = 624/4;
-      }*/
-
-    }
+			  if (phy_test==1)
+				  UE[CC_id]->mac_enabled = 0;
+			  else
+				  UE[CC_id]->mac_enabled = 1;
+		  }
+	  }
   }
 
   // Panos: Probably don't need these lines for phy_stub
@@ -1374,7 +1335,10 @@ int main( int argc, char **argv )
 
     // Panos: CHANGE we call init_timer_thread() from inside init_UE_stub() now
     //init_timer_thread();
-    init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
+
+    // Panos: Temporarily we will be using single set of threads for multiple UEs.
+    //init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
+    init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,emul_iface);
 
 
     /*for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
@@ -1444,7 +1408,7 @@ int main( int argc, char **argv )
   // connect the TX/RX buffers
   if (UE_flag==1) {
 
-    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+    /*for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
 
 #ifdef OAI_USRP
@@ -1452,7 +1416,11 @@ int main( int argc, char **argv )
 #else
       UE[CC_id]->hw_timing_advance = 160;
 #endif
-    }
+    }*/
+
+
+
+
     // Panos: No need to call setup_ue_buffers() for nfapi_mode=3
     /*if (setup_ue_buffers(UE,&openair0_cfg[0])!=0) {
       printf("Error setting up eNB buffer\n");

@@ -87,6 +87,7 @@ rx_sdu(const module_id_t enb_mod_idP,
        const uint16_t sdu_lenP,
        const uint16_t timing_advance, const uint8_t ul_cqi)
 {
+	//LOG_I(MAC, "Panos-D: rx_sdu 1 \n");
     int current_rnti = rntiP;
     unsigned char rx_ces[MAX_NUM_CE], num_ce, num_sdu, i, *payload_ptr;
     unsigned char rx_lcids[NB_RB_MAX];
@@ -155,7 +156,7 @@ rx_sdu(const module_id_t enb_mod_idP,
 							  UE_id));
 	    }
 	} else {		// we've got an error
-	    LOG_D(MAC,
+	    LOG_I(MAC,
 		  "[eNB %d][PUSCH %d] CC_id %d ULSCH in error in round %d, ul_cqi %d\n",
 		  enb_mod_idP, harq_pid, CC_idP,
 		  UE_list->UE_sched_ctrl[UE_id].round_UL[CC_idP][harq_pid],
@@ -185,7 +186,7 @@ rx_sdu(const module_id_t enb_mod_idP,
 		    radioResourceConfigCommon->rach_ConfigCommon.
 		    maxHARQ_Msg3Tx);
 
-	LOG_D(MAC,
+	LOG_I(MAC,
 	      "[eNB %d][PUSCH %d] CC_id %d [RAPROC Msg3] Received ULSCH sdu round %d from PHY (rnti %x, RA_id %d) ul_cqi %d\n",
 	      enb_mod_idP, harq_pid, CC_idP, ra[RA_id].msg3_round,
 	      current_rnti, RA_id, ul_cqi);
@@ -217,10 +218,11 @@ rx_sdu(const module_id_t enb_mod_idP,
 		add_msg3(enb_mod_idP, CC_idP, &ra[RA_id], frameP,
 			 subframeP);
 	    }
+	    LOG_I(MAC, "Panos-D: rx_sdu() 2 before error returning \n");
 	    return;
 	}
     } else {
-	LOG_W(MAC,
+	LOG_I(MAC,
 	      "Cannot find UE or RA corresponding to ULSCH rnti %x, dropping it\n",
 	      current_rnti);
 	return;
@@ -1043,6 +1045,7 @@ schedule_ulsch(module_id_t module_idP, frame_t frameP,
 	for (i = 0; i < NB_RA_PROC_MAX; i++) {
 	    if ((cc->ra[i].state == WAITMSG3) &&
 		(cc->ra[i].Msg3_subframe == sched_subframe)) {
+	    	//LOG_I(MAC, "Panos-D: schedule_ulsch WAITMSG3 \n");
 		first_rb[CC_id]++;
 		//    cc->ray[i].Msg3_subframe = -1;
 		break;
@@ -1062,6 +1065,7 @@ schedule_ulsch_rnti(module_id_t module_idP,
 		    unsigned char sched_subframeP, uint16_t * first_rb)
 {
 
+	//LOG_I(MAC, "Panos-D: schedule_ulsch_rnti \n");
     int UE_id;
     uint8_t aggregation = 2;
     rnti_t rnti = -1;
@@ -1109,7 +1113,7 @@ schedule_ulsch_rnti(module_id_t module_idP,
 	// don't schedule if Msg4 is not received yet
 	if (UE_list->UE_template[UE_PCCID(module_idP, UE_id)][UE_id].
 	    configured == FALSE) {
-	    LOG_D(MAC,
+	    LOG_I(MAC,
 		  "[eNB %d] frame %d subfarme %d, UE %d: not configured, skipping UE scheduling \n",
 		  module_idP, frameP, subframeP, UE_id);
 	    continue;
@@ -1118,7 +1122,7 @@ schedule_ulsch_rnti(module_id_t module_idP,
 	rnti = UE_RNTI(module_idP, UE_id);
 
 	if (rnti == NOT_A_RNTI) {
-	    LOG_W(MAC, "[eNB %d] frame %d subfarme %d, UE %d: no RNTI \n",
+	    LOG_I(MAC, "[eNB %d] frame %d subfarme %d, UE %d: no RNTI \n",
 		  module_idP, frameP, subframeP, UE_id);
 	    continue;
 	}
@@ -1148,7 +1152,7 @@ schedule_ulsch_rnti(module_id_t module_idP,
 	     */
 	    if (UE_list->UE_sched_ctrl[UE_id].ul_failure_timer == 0 &&
 		UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync == 0) {
-		LOG_W(MAC,
+		LOG_I(MAC,
 		      "[eNB %d] frame %d subframe %d, UE %d/%x CC %d: UE in weird state, let's put it 'out of sync'\n",
 		      module_idP, frameP, subframeP, UE_id, rnti, CC_id);
 		// inform RRC of failure and clear timer
@@ -1173,7 +1177,7 @@ schedule_ulsch_rnti(module_id_t module_idP,
 
 	    if (CCE_allocation_infeasible
 		(module_idP, CC_id, 1, subframeP, aggregation, rnti)) {
-		LOG_W(MAC,
+		LOG_I(MAC,
 		      "[eNB %d] frame %d subframe %d, UE %d/%x CC %d: not enough nCCE\n",
 		      module_idP, frameP, subframeP, UE_id, rnti, CC_id);
 		continue;	// break;
@@ -1181,7 +1185,7 @@ schedule_ulsch_rnti(module_id_t module_idP,
 
 	    /* be sure that there are some free RBs */
 	    if (first_rb[CC_id] >= N_RB_UL - 1) {
-		LOG_W(MAC,
+		LOG_I(MAC,
 		      "[eNB %d] frame %d subframe %d, UE %d/%x CC %d: dropping, not enough RBs\n",
 		      module_idP, frameP, subframeP, UE_id, rnti, CC_id);
 		continue;
@@ -1463,6 +1467,7 @@ schedule_ulsch_rnti(module_id_t module_idP,
 		      T_INT(rb_table[rb_table_index]), T_INT(round));
 
 		    // fill in NAK information
+		    LOG_I(MAC, "schedule_ulsch_rnti() Retransmission case! \n");
 
 		    hi_dci0_pdu = &hi_dci0_req_body->hi_dci0_pdu_list[hi_dci0_req_body->number_of_dci + hi_dci0_req_body->number_of_hi];
 		    memset((void *) hi_dci0_pdu, 0,

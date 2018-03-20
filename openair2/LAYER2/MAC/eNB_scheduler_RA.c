@@ -186,10 +186,10 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t * ra, frame_t frameP,
 	      module_idP, frameP, subframeP, CC_id, ra->Msg3_frame,
 	      ra->Msg3_subframe);
 
-	LOG_D(MAC,
-	      "Frame %d, Subframe %d Adding Msg3 UL Config Request for (%d,%d) : (%d,%d,%d)\n",
+	LOG_I(MAC,
+	      "Frame %d, Subframe %d Adding Msg3 UL Config Request for (%d,%d) : (%d,%d,%d) for rnti: %d\n",
 	      frameP, subframeP, ra->Msg3_frame, ra->Msg3_subframe,
-	      ra->msg3_nb_rb, ra->msg3_first_rb, ra->msg3_round);
+	      ra->msg3_nb_rb, ra->msg3_first_rb, ra->msg3_round, ra->rnti);
 
 	ul_config_pdu =
 	    &ul_req_body->ul_config_pdu_list[ul_req_body->number_of_pdus];
@@ -693,7 +693,7 @@ generate_Msg2(module_id_t module_idP, int CC_idP, frame_t frameP,
 			 cc[CC_idP].RAR_pdu.payload, N_RB_DL, 7);
 		add_msg3(module_idP, CC_idP, ra, frameP, subframeP);
 		ra->state = WAITMSG3;
-                LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d: state:WAITMSG3\n", module_idP, frameP, subframeP);
+                LOG_I(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d: state:WAITMSG3\n", module_idP, frameP, subframeP);
 
 		// DL request
 		mac->TX_req[CC_idP].sfn_sf = (frameP << 4) + subframeP;

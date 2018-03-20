@@ -372,22 +372,22 @@ boolean_t pdcp_data_req(
     break;
 
   case RLC_OP_STATUS_BAD_PARAMETER:
-    LOG_W(PDCP, "Data sending request over RLC failed with 'Bad Parameter' reason!\n");
+    LOG_D(PDCP, "Data sending request over RLC failed with 'Bad Parameter' reason!\n");
     ret= FALSE;
     break;
 
   case RLC_OP_STATUS_INTERNAL_ERROR:
-    LOG_W(PDCP, "Data sending request over RLC failed with 'Internal Error' reason!\n");
+    LOG_D(PDCP, "Data sending request over RLC failed with 'Internal Error' reason!\n");
     ret= FALSE;
     break;
 
   case RLC_OP_STATUS_OUT_OF_RESSOURCES:
-    LOG_W(PDCP, "Data sending request over RLC failed with 'Out of Resources' reason!\n");
+    LOG_D(PDCP, "Data sending request over RLC failed with 'Out of Resources' reason!\n");
     ret= FALSE;
     break;
 
   default:
-    LOG_W(PDCP, "RLC returned an unknown status code after PDCP placed the order to send some data (Status Code:%d)\n", rlc_status);
+    LOG_D(PDCP, "RLC returned an unknown status code after PDCP placed the order to send some data (Status Code:%d)\n", rlc_status);
     ret= FALSE;
     break;
   }

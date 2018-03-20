@@ -1625,7 +1625,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 	   uint8_t * ulsch_buffer, uint16_t buflen, uint8_t * access_mode)
 {
 
-	LOG_I(MAC, "Panos-D: In ue_get_sdu() 1 \n");
+	LOG_I(MAC, "Panos-D: UE[%d] In ue_get_sdu() 1  \n", module_idP);
     uint8_t total_rlc_pdu_header_len = 0, rlc_pdu_header_len_last = 0;
     uint16_t buflen_remain = 0;
     uint8_t bsr_len = 0, bsr_ce_len = 0, bsr_header_len = 0;
@@ -2214,7 +2214,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 	  buflen - sdu_length_total - payload_offset);
     // cycle through SDUs and place in ulsch_buffer
     if (sdu_length_total) {
-    	LOG_I(MAC, "Panos-D: ue_get_sdu() 2 before copying to ulsch_buffer");
+    	LOG_I(MAC, "Panos-D: [UE %d] ue_get_sdu() 2 before copying to ulsch_buffer, SFN/SF: %d/%d \n \n \n", module_idP, frameP, subframe);
 	memcpy(&ulsch_buffer[payload_offset], ulsch_buff,
 	       sdu_length_total);
     }
