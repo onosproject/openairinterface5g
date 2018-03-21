@@ -36,11 +36,11 @@ OAI build/execute
 
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 3
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - (if necessary) sudo route add default gw 10.10.10.1 eth0
 UE2:
  - sudo ifconfig oip0 10.0.0.2
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 3
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - (if necessary) sudo route add default gw 10.10.10.1 eno1
 
 UE1 and UE2: Get and build vencore_app from d2d-l3-stub (branch: l3_stub)
@@ -73,15 +73,17 @@ UE1 (sender)
   - ./vencore_app  #we can see the packets appearing in Wireshark
  
  --------------------------------------
-TEST PC5-S (UE1 -sender, UE2 - receiver) and PC5-U for ONE-TO-ONE scenario
+TEST PC5-S (UE1 - sender, UE2 - receiver) and PC5-U for ONE-TO-ONE scenario (and PC5-U for ONE-TO-MANY scenario)
 Configure UE1/UE2
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.2 -j MARK --set-mark 3
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - sudo route add default gw 10.10.10.1 eth0
 UE2:
  - sudo ifconfig oip0 10.0.0.2
  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.1 -j MARK --set-mark 3
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - sudo route add default gw 10.10.10.1 eno1
  
 step 1:
@@ -93,9 +95,11 @@ step 3:
 - UE1: ./vencore_app -s #send a message via PC5-S (e.g., DirectCommunicationRequest)
 
 Generate unicast traffic
-UE1: ping -I oip0 10.0.0.2
- 
- 
+ - UE1: ping -I oip0 10.0.0.2
+
+Generate multicast traffic
+ - UE1: ping -I oip0 224.0.0.3
+
   --------------------------------------
 TEST PC5-D
 step 1:
