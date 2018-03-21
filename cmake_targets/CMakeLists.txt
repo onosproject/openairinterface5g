@@ -2206,7 +2206,7 @@ target_link_libraries (dlsim_tm4
   pthread m rt ${CONFIG_LIBRARIES} ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${T_LIB}
   )
 
-foreach(myExe dlsim dlsim_tm7 ulsim pbchsim scansim mbmssim pdcchsim pucchsim prachsim syncsim)
+foreach(myExe dlsim dlsim_tm7 ulsim slschsim pbchsim scansim mbmssim pdcchsim pucchsim prachsim syncsim)
 
   add_executable(${myExe}
     ${OPENAIR_BIN_DIR}/messages_xml.h

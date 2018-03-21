@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 set(PACKAGE_NAME "unitary_tests_simulators")
 set(PHYSIM True)
+set(RRC_ASN1_VERSION "Rel14")
 set(RF_BOARD None)
 set(XFORMS True)
 set(ENABLE_ITTI False)
