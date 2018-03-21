@@ -361,7 +361,7 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
 
   //FIXME which value chose for the following parameter
   (*sib1_NB_IoT)->si_WindowLength_r13=SystemInformationBlockType1_NB__si_WindowLength_r13_ms160;
-  (*sib1_NB_IoT)->si_RadioFrameOffset_r13= 1;
+  (*sib1_NB_IoT)->si_RadioFrameOffset_r13= 0;
 
   /////optional parameters, decide to use at future
   /*
