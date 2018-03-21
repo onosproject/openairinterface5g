@@ -2059,7 +2059,7 @@ rrc_ue_process_ueCapabilityEnquiry(
 	      UECapabilityEnquiry->criticalExtensions.present,UECapabilityEnquiry__criticalExtensions_PR_c1);
 
   if (UECapabilityEnquiry->criticalExtensions.choice.c1.present != UECapabilityEnquiry__criticalExtensions__c1_PR_ueCapabilityEnquiry_r8)
-    LOG_W(RRC,"UECapabilityEnquiry->criticalExtensions.choice.c1.present (%d) != UECapabilityEnquiry__criticalExtensions__c1_PR_ueCapabilityEnquiry_r8)\n",
+    LOG_I(RRC,"UECapabilityEnquiry->criticalExtensions.choice.c1.present (%d) != UECapabilityEnquiry__criticalExtensions__c1_PR_ueCapabilityEnquiry_r8)\n",
 	  UECapabilityEnquiry->criticalExtensions.choice.c1.present);
   
   ul_dcch_msg.message.choice.c1.choice.ueCapabilityInformation.criticalExtensions.present           = UECapabilityInformation__criticalExtensions_PR_c1;
@@ -2104,7 +2104,7 @@ rrc_ue_process_ueCapabilityEnquiry(
 #endif
 	
 
-          LOG_D(RRC,"UECapabilityInformation Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
+          LOG_I(RRC,"UECapabilityInformation Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
 
           for (i = 0; i < (enc_rval.encoded + 7) / 8; i++) {
             LOG_T(RRC, "%02x.", buffer[i]);

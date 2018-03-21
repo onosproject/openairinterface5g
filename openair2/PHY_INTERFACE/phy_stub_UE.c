@@ -1297,8 +1297,8 @@ int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req, module_id_t Mod_id)
       // This is meaningful only after ACKnowledging the first ULSCH Txon (i.e. Msg3)
       if(hi_dci0_req_pdu->hi_pdu.hi_pdu_rel8.hi_value == 1 && UE_mac_inst[Mod_id].first_ULSCH_Tx == 1){
     	  LOG_I(MAC,"[UE-PHY_STUB] HI_DCI0_REQ 2 sfn_sf:%d PDU[%d] - NFAPI_HI_DCI0_HI_PDU_TYPE\n", NFAPI_SFNSF2DEC(req->sfn_sf), i);
-    	  UE_mac_inst[Mod_id].UE_mode[0] = PUSCH;
-    	  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+    	  //UE_mac_inst[Mod_id].UE_mode[0] = PUSCH;
+    	  //UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
       }
 
     }

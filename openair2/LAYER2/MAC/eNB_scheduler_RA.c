@@ -1229,7 +1229,7 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
     	    	  module_idP, CC_idP, frameP, subframeP, UE_id, rrc_sdu_length);
 
     	    AssertFatal(rrc_sdu_length > 0,
-    			"[MAC][eNB Scheduler] CCCH not allocated\n");
+    			"[MAC][eNB Scheduler] CCCH not allocated, rrc_sdu_length: %d\n", rrc_sdu_length);
 
 
 
