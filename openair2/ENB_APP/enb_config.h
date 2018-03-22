@@ -96,6 +96,7 @@ typedef struct ru_config_s {
 eth_params_t         stub_eth_params;
 
 extern void RCconfig_RU(void);
+extern void RCconfig_flexran(void);
 extern void RCconfig_L1(void);
 extern void RCconfig_macrlc(void);
 extern void UE_config_stub_pnf(void);

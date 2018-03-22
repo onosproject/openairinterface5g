@@ -342,7 +342,6 @@ uint16_t prach_root_sequence_map4[138] = {  1,138,2,137,3,136,4,135,5,134,6,133,
                                             61,78,62,77,63,76,64,75,65,74,66,73,67,72,68,71,69,70
                                          };
 
-#ifdef USER_MODE
 void dump_prach_config(LTE_DL_FRAME_PARMS *frame_parms,uint8_t subframe)
 {
 
@@ -363,7 +362,6 @@ void dump_prach_config(LTE_DL_FRAME_PARMS *frame_parms,uint8_t subframe)
   fclose(fd);
 
 }
-#endif
 
 // This function computes the du
 void fill_du(uint8_t prach_fmt)
@@ -1095,6 +1093,10 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
 }
 //__m128i mmtmpX0,mmtmpX1,mmtmpX2,mmtmpX3;
 
+#ifndef Rel14
+#define rx_prach0 rx_prach
+#endif
+
 void rx_prach0(PHY_VARS_eNB *eNB,
 	       RU_t *ru,
 	       uint16_t *max_preamble,
@@ -1770,9 +1772,8 @@ void rx_prach0(PHY_VARS_eNB *eNB,
 
 
 
-#ifndef Rel14
-#define rx_prach rx_prach0
-#else
+#ifdef Rel14
+
 void rx_prach(PHY_VARS_eNB *eNB,
 	      RU_t *ru,
 	      uint16_t *max_preamble,
@@ -1812,7 +1813,8 @@ void rx_prach(PHY_VARS_eNB *eNB,
     }
   }
 }
-#endif
+
+#endif /* Rel14 */
 
 void init_prach_tables(int N_ZC)
 {

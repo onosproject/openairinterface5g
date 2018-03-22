@@ -31,13 +31,6 @@
 */
 
 
-#ifndef USER_MODE
-#define __NO_VERSION__
-
-#endif
-
-//#include "PHY/types.h"
-
 #include "defs.h"
 
 
@@ -116,7 +109,7 @@ crc24a (unsigned char * inptr, int bitlen)
   resbit = (bitlen % 8);
 
   while (octetlen-- > 0) {
-    //    printf("in %x => crc %x\n",crc,*inptr);
+    //   printf("crc24a: in %x => crc %x\n",crc,*inptr);
     crc = (crc << 8) ^ crc24aTable[(*inptr++) ^ (crc >> 24)];
   }
 
@@ -135,6 +128,7 @@ unsigned int crc24b (unsigned char * inptr, int bitlen)
   resbit = (bitlen % 8);
 
   while (octetlen-- > 0) {
+    //    printf("crc24b: in %x => crc %x (%x)\n",crc,*inptr,crc24bTable[(*inptr) ^ (crc >> 24)]);
     crc = (crc << 8) ^ crc24bTable[(*inptr++) ^ (crc >> 24)];
   }
 

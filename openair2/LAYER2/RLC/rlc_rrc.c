@@ -33,9 +33,6 @@
 #include "rlc_um.h"
 #include "rlc_tm.h"
 #include "UTIL/LOG/log.h"
-#ifdef OAI_EMU
-#include "UTIL/OCG/OCG_vars.h"
-#endif
 #include "RLC-Config.h"
 #include "DRB-ToAddMod.h"
 #include "DRB-ToAddModList.h"
@@ -89,12 +86,6 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
   LOG_D(RLC, PROTOCOL_CTXT_FMT" CONFIG REQ ASN1 \n",
         PROTOCOL_CTXT_ARGS(ctxt_pP));
-
-#ifdef OAI_EMU
-
-  CHECK_CTXT_ARGS(ctxt_pP)
-
-#endif
 
   if (srb2add_listP != NULL) {
     for (cnt=0; cnt<srb2add_listP->list.count; cnt++) {
@@ -565,10 +556,6 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
 #if defined(Rel10) || defined(Rel14)
   rlc_mbms_id_t         *mbms_id_p  = NULL;
 #endif
-#ifdef OAI_EMU
-  CHECK_CTXT_ARGS(ctxt_pP)
-
-#endif
 
   /* for no gcc warnings */
   (void)lcid;
@@ -678,13 +665,6 @@ rlc_union_t* rrc_rlc_add_rlc   (
   logical_chan_id_t      lcid            = 0;
 #endif
 
-#ifdef OAI_EMU
-
-  CHECK_CTXT_ARGS(ctxt_pP)
-
-#endif
-
-
   if (MBMS_flagP == FALSE) {
     AssertFatal (rb_idP < NB_RB_MAX, "RB id is too high (%u/%d)!\n", rb_idP, NB_RB_MAX);
     AssertFatal (chan_idP < RLC_MAX_LC, "LC id is too high (%u/%d)!\n", chan_idP, RLC_MAX_LC);
@@ -791,11 +771,6 @@ rlc_op_status_t rrc_rlc_config_req   (
         PROTOCOL_CTXT_ARGS(ctxt_pP),
         rb_idP);
 
-#ifdef OAI_EMU
-
-  CHECK_CTXT_ARGS(ctxt_pP)
-
-#endif
   AssertFatal (rb_idP < NB_RB_MAX, "RB id is too high (%u/%d)!\n", rb_idP, NB_RB_MAX);
 
   switch (actionP) {

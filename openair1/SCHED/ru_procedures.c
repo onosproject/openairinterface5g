@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -37,10 +37,6 @@
 
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
 #include "PHY/LTE_TRANSPORT/if5_tools.h"
-
-#ifdef EMOS
-#include "SCHED/phy_procedures_emos.h"
-#endif
 
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/defs.h"
@@ -369,16 +365,6 @@ void feptx_prec(RU_t *ru) {
     
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC , 1);
 
-    //LOG_D(PHY, "%s() subframe:%d\n", __FUNCTION__, subframe);
-
-    if (0) LOG_E(PHY,"%s() run->nb_tx:%u subframe:%u fp->symbols_per_tti:%u fp->ofdm_symbol_size:%u symbols:(%d, %d), (%d,%d)\n", 
-    __FUNCTION__, ru->nb_tx, subframe, fp->symbols_per_tti, fp->ofdm_symbol_size,
-    ((short*)&eNB->common_vars.txdataF[0][1])[0],
-    ((short*)&eNB->common_vars.txdataF[0][1])[1],
-    ((short*)&eNB->common_vars.txdataF[0][2])[0],
-    ((short*)&eNB->common_vars.txdataF[0][2])[1]
-    );
-
     for (aa=0;aa<ru->nb_tx;aa++)
       memcpy((void*)ru->common.txdataF_BF[aa],
 	     (void*)&eNB->common_vars.txdataF[aa][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],
@@ -553,6 +539,7 @@ void fep_full(RU_t *ru) {
 
   remove_7_5_kHz(ru,proc->subframe_rx<<1);
   remove_7_5_kHz(ru,1+(proc->subframe_rx<<1));
+
   for (l=0; l<fp->symbols_per_tti/2; l++) {
     slot_fep_ul(ru,
 		l,

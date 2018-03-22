@@ -32,7 +32,6 @@
 #    define __LOG_H__
 
 /*--- INCLUDES ---------------------------------------------------------------*/
-#ifdef USER_MODE
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,9 +52,6 @@
 #define _GNU_SOURCE
 #endif
 #include <pthread.h>
-#else
-#include "rtai_fifos.h"
-#endif
 
 /*----------------------------------------------------------------------------*/
 
@@ -258,7 +254,17 @@ typedef enum log_instance_type_e {
 void log_set_instance_type (log_instance_type_t instance);
 #endif
 
-
+#ifdef LOG_MAIN
+log_t *g_log;
+#else
+#ifdef __cplusplus
+   extern "C" {
+#endif
+extern log_t *g_log;
+#ifdef __cplusplus
+}
+#endif
+#endif
 /*--- INCLUDES ---------------------------------------------------------------*/
 #    include "log_if.h"
 /*----------------------------------------------------------------------------*/
@@ -283,9 +289,8 @@ void *log_thread_function(void * list);
  *  @ingroup _macro
  *  @brief Macro used to call tr_log_full_ex with file, function and line information
  * @{*/
-#ifdef USER_MODE
-//#define logIt(component, level, format, args...) do {logRecord(__FILE__, __FUNCTION__, __LINE__, component, level, format, ##args);} while(0);
 #ifdef LOG_NO_THREAD
+<<<<<<< HEAD
 #define logIt(component, level, format, args...) logRecord_mt(__FILE__, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
 #else //default
 #define logIt(component, level, format, args...) logRecord(__FILE__, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
@@ -296,6 +301,11 @@ void *log_thread_function(void * list);
 #else // default
 #define logIt(component, level, format, args...) logRecord(NULL, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
 #endif
+=======
+#define logIt(component, level, format, args...) (g_log->log_component[component].interval?logRecord_mt(__FILE__, __FUNCTION__, __LINE__, component, level, format, ##args):(void)0)
+#else //default
+#define logIt(component, level, format, args...) (g_log->log_component[component].interval?logRecord(__FILE__, __FUNCTION__, __LINE__, component, level, format, ##args):(void)0)
+>>>>>>> 3fe90157e61c4c78e6196d10937584293f36c6fc
 #endif
 /* @}*/
 
@@ -315,8 +325,8 @@ void *log_thread_function(void * list);
 /*   optname                              helpstr   paramflags    XXXptr	             defXXXval				      type	     numelt	*/
 /*--------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 #define LOG_GLOBALPARAMS_DESC { \
-{LOG_CONFIG_STRING_GLOBAL_LOG_LEVEL,    NULL,	    0,  	 strptr:(char **)&gloglevel, defstrval:log_level_names[2].name,       TYPE_STRING,  sizeof(gloglevel)}, \
-{LOG_CONFIG_STRING_GLOBAL_LOG_VERBOSITY,NULL,	    0,  	 strptr:(char **)&glogverbo, defstrval:log_verbosity_names[2].name,   TYPE_STRING,  sizeof(glogverbo)}, \
+{LOG_CONFIG_STRING_GLOBAL_LOG_LEVEL,    NULL,	    0,  	 strptr:(char **)&gloglevel, defstrval:log_level_names[2].name,       TYPE_STRING,  0}, \
+{LOG_CONFIG_STRING_GLOBAL_LOG_VERBOSITY,NULL,	    0,  	 strptr:(char **)&glogverbo, defstrval:log_verbosity_names[2].name,   TYPE_STRING,  0}, \
 {LOG_CONFIG_STRING_GLOBAL_LOG_ONLINE,   NULL,	    0,  	 iptr:&(g_log->onlinelog),   defintval:1,                             TYPE_INT,      0,              }, \
 {LOG_CONFIG_STRING_GLOBAL_LOG_INFILE,   NULL,	    0,  	 iptr:&(g_log->filelog),     defintval:0,                             TYPE_INT,      0,              }, \
 }
@@ -327,7 +337,6 @@ void *log_thread_function(void * list);
  * @{*/
 
 // debugging macros
-#ifdef USER_MODE
 #  if T_TRACER
 #    include "T.h"
 #    define LOG_I(c, x...) T(T_LEGACY_ ## c ## _INFO, T_PRINTF(x))
@@ -379,17 +388,6 @@ void *log_thread_function(void * list);
 #        endif /* 0 */
 #    endif /*DISABLE_LOG_X*/
 #  endif /* T_TRACER */
-#else /* USER_MODE */
-#  define LOG_G(c, x...) printk(x)
-#  define LOG_A(c, x...) printk(x)
-#  define LOG_C(c, x...) printk(x)
-#  define LOG_E(c, x...) printk(x)
-#  define LOG_W(c, x...) printk(x)
-#  define LOG_N(c, x...) printk(x)
-#  define LOG_I(c, x...) printk(x)
-#  define LOG_D(c, x...) printk(x)
-#  define LOG_T(c, x...) printk(x)
-#endif
 /* @}*/
 
 

@@ -135,11 +135,6 @@ rlc_op_status_t rlc_stat_req     (
   hash_key_t             key             = HASHTABLE_NOT_A_KEY_VALUE;
   hashtable_rc_t         h_rc;
 
-#ifdef OAI_EMU
-
-  CHECK_CTXT_ARGS(ctxt_pP)
-
-#endif
   AssertFatal (rb_idP < NB_RB_MAX, "RB id is too high (%u/%d)!\n", rb_idP, NB_RB_MAX);
   key = RLC_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, srb_flagP);
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
@@ -351,11 +346,6 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
 #else
   AssertFatal(MBMS_flagP == 0, "MBMS_flagP %u", MBMS_flagP);
 #endif
-#ifdef OAI_EMU
-
-  CHECK_CTXT_ARGS(ctxt_pP)
-
-#endif
 
 #if T_TRACER
   if (ctxt_pP->enb_flag)
@@ -456,6 +446,15 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
       break;
 
     case RLC_MODE_UM:
+      /* TODO: this is a hack, needs better solution. Let's not use too
+       * much memory and store at maximum 5 millions bytes.
+       */
+      /* look for HACK_RLC_UM_LIMIT for others places related to the hack. Please do not remove this comment. */
+      if (rlc_um_get_buffer_occupancy(&rlc_union_p->rlc.um) > 5000000) {
+        free_mem_block(sdu_pP, __func__);
+        return RLC_OP_STATUS_OUT_OF_RESSOURCES;
+      }
+
       new_sdu_p = get_free_mem_block (sdu_sizeP + sizeof (struct rlc_um_data_req_alloc), __func__);
 
       if (new_sdu_p != NULL) {
