@@ -436,6 +436,34 @@ schedule_dlsch(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP, in
     slice_percentage_total += slice_percentage[i];
   }
 
+  // Check for *intra*slice share activation
+  if (intraslice_share_active_current != intraslice_share_active) {
+    if (intraslice_share_active != 1 && intraslice_share_active != 0) {
+      LOG_W(MAC,
+            "[eNB %d][DL] frame %d subframe %d: invalid intraslice sharing status (%d), revert to its previous value (%d)\n",
+            module_idP, i, frameP, subframeP, intraslice_share_active, intraslice_share_active_current);
+      intraslice_share_active = intraslice_share_active_current;
+    } else {
+      LOG_N(MAC, "[eNB %d][DL] frame %d subframe %d: intraslice sharing status has changed (%x-->%x)\n",
+            module_idP, i, frameP, subframeP, intraslice_share_active_current, intraslice_share_active);
+      intraslice_share_active_current = intraslice_share_active;
+    }
+  }
+
+  // Check for *inter*slice share activation
+  if (interslice_share_active_current != interslice_share_active) {
+    if (interslice_share_active != 1 && interslice_share_active != 0) {
+      LOG_W(MAC,
+            "[eNB %d][DL] frame %d subframe %d: invalid interslice sharing status (%d), revert to its previous value (%d)\n",
+            module_idP, i, frameP, subframeP, interslice_share_active, interslice_share_active_current);
+      interslice_share_active = interslice_share_active_current;
+    } else {
+      LOG_N(MAC, "[eNB %d][DL] frame %d subframe %d: interslice sharing status has changed (%x-->%x)\n",
+            module_idP, i, frameP, subframeP, interslice_share_active_current, interslice_share_active);
+      interslice_share_active_current = interslice_share_active;
+    }
+  }
+
   for (i = 0; i < n_active_slices; i++) {
 
     // Load any updated functions
@@ -722,7 +750,9 @@ schedule_ue_spec(module_id_t module_idP, slice_id_t slice_idP,
     return;
   }
 
-  dlsch_scheduler_interslice_multiplexing(module_idP, frameP, subframeP);
+  if (interslice_share_active) {
+    dlsch_scheduler_interslice_multiplexing(module_idP, frameP, subframeP);
+  }
 
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
     LOG_D(MAC, "doing schedule_ue_spec for CC_id %d\n", CC_id);
