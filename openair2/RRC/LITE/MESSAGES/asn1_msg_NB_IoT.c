@@ -139,7 +139,7 @@ uint8_t do_MIB_NB_IoT(
 
   //decide how to set it
   mib_NB_IoT->message.schedulingInfoSIB1_r13 =10; //see TS 36.213-->tables 16.4.1.3-3 ecc...  // to make 8 repetitions
-  mib_NB_IoT->message.systemInfoValueTag_r13= frame%16;
+  mib_NB_IoT->message.systemInfoValueTag_r13= 0;
   mib_NB_IoT->message.ab_Enabled_r13 = 0;
 
   //to be decided
@@ -191,6 +191,9 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   long *eutraControlRegionSize=NULL; //this parameter should be set only if we are considering in-band operating mode (samePCI or differentPCI)
    eutraControlRegionSize = CALLOC(1,sizeof(long));
   long systemInfoValueTagSI = 0;
+
+  long *offset=NULL; //this parameter should be set only if we are considering in-band operating mode (samePCI or differentPCI)
+  offset = CALLOC(1,sizeof(long));
 
   memset(bcch_message,0,sizeof(BCCH_DL_SCH_Message_NB_t));
   bcch_message->message.present = BCCH_DL_SCH_MessageType_NB_PR_c1;
@@ -360,8 +363,10 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   }
 
   //FIXME which value chose for the following parameter
+  *offset =1;
+  //FIXME which value chose for the following parameter
   (*sib1_NB_IoT)->si_WindowLength_r13=SystemInformationBlockType1_NB__si_WindowLength_r13_ms160;
-  (*sib1_NB_IoT)->si_RadioFrameOffset_r13= 0;
+  (*sib1_NB_IoT)->si_RadioFrameOffset_r13=offset;
 
   /////optional parameters, decide to use at future
   /*
@@ -401,14 +406,13 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
 /*do_SIB1_NB*/
 uint8_t do_SIB1_NB_IoT_x(uint8_t Mod_id, int CC_id,
         rrc_eNB_carrier_data_NB_IoT_t *carrier,
-        uint16_t mcc, //208
-        uint16_t mnc, //92
-        uint16_t tac, //1
-        uint32_t cell_identity, //3584
-        uint16_t band,  // 7
-        uint16_t mnc_digit_length, //2
-        uint32_t frame
-               )
+        uint16_t mcc,
+        uint16_t mnc,
+        uint16_t tac,
+        uint32_t cell_identity,
+        uint16_t band,
+        uint16_t mnc_digit_length,
+        uint32_t frame)
 {
   BCCH_DL_SCH_Message_NB_t *bcch_message= &(carrier->siblock1_NB_IoT);
   SystemInformationBlockType1_NB_t **sib1_NB_IoT= &(carrier->sib1_NB_IoT);
@@ -429,6 +433,9 @@ uint8_t do_SIB1_NB_IoT_x(uint8_t Mod_id, int CC_id,
   long *eutraControlRegionSize=NULL; //this parameter should be set only if we are considering in-band operating mode (samePCI or differentPCI)
    eutraControlRegionSize = CALLOC(1,sizeof(long));
   long systemInfoValueTagSI = 0;
+
+  long *offset=NULL; //this parameter should be set only if we are considering in-band operating mode (samePCI or differentPCI)
+  offset = CALLOC(1,sizeof(long));
 
   memset(bcch_message,0,sizeof(BCCH_DL_SCH_Message_NB_t));
   bcch_message->message.present = BCCH_DL_SCH_MessageType_NB_PR_c1;
@@ -598,8 +605,10 @@ uint8_t do_SIB1_NB_IoT_x(uint8_t Mod_id, int CC_id,
   }
 */
   //FIXME which value chose for the following parameter
+  *offset =1;
+  //FIXME which value chose for the following parameter
   (*sib1_NB_IoT)->si_WindowLength_r13=SystemInformationBlockType1_NB__si_WindowLength_r13_ms160;
-  (*sib1_NB_IoT)->si_RadioFrameOffset_r13= 0;
+  (*sib1_NB_IoT)->si_RadioFrameOffset_r13=offset;
 
   /////optional parameters, decide to use at future
   /*

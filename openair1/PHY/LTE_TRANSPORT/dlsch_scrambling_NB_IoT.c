@@ -1,6 +1,24 @@
-/*******************************************************************************
+/*
+ * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The OpenAirInterface Software Alliance licenses this file to You under
+ * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.openairinterface.org/?page_id=698
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *-------------------------------------------------------------------------------
+ * For more information about the OpenAirInterface (OAI) Software Alliance:
+ *      contact@openairinterface.org
+ */
 
- *******************************************************************************/
 /*! \file PHY/LTE_TRANSPORT/dlsch_scrambling_NB_IoT.c
 * \brief Routines for the scrambling procedure of the NPDSCH physical channel for NB_IoT,	 TS 36-211, V13.4.0 2017-02
 * \author M. KANJ
@@ -29,17 +47,17 @@
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 
 void dlsch_sib_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
-							                    NB_IoT_DL_eNB_SIB_t   *dlsch, //NB_IoT_eNB_NDLSCH_t 
-							                    int                    tot_bits,        				// total number of bits to transmit
-							                    uint8_t                Nf,   						// Nf is the frame number (0..9)
-							                    uint8_t                Ns)							  // slot number (0..19)
+							                    NB_IoT_DL_eNB_SIB_t    *dlsch,
+                                  int                    tot_bits,                // total number of bits to transmit
+                                  uint16_t                Nf,              // Nf is the frame number (0..9)
+                                  uint8_t                Ns)  
 {
   int         i,j,k=0;
   uint32_t    x1,x2, s=0;
   uint8_t     *e = dlsch->e; 															//uint8_t *e=dlsch->harq_processes[dlsch->current_harq_pid]->e;
 
-  x2 = (dlsch->si_rnti<<15) + (frame_parms->Nid_cell + 1) * ( (Nf % 61) + 1 ) ;
-
+   //x2 = (dlsch->si_rnti<<15) + (frame_parms->Nid_cell + 1) * ( (Nf % 61) + 1 ) ;
+  x2 = (dlsch->si_rnti<<14) + ((Nf%2)<<13) + ((Ns>>1)<<9) + frame_parms->Nid_cell;
   // for NPDSCH not carriying SIBs
   //x2 = (dlsch->harq_process_sib1.rnti<<14) + ((Nf%2)<<13) + ((Ns>>1)<<9) + frame_parms->Nid_cell;   //this is c_init in 36.211 Sec 10.2.3.1
   

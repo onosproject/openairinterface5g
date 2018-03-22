@@ -115,7 +115,7 @@ void npbch_scrambling(LTE_DL_FRAME_PARMS  *frame_parms,
 void dlsch_sib_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
                                   NB_IoT_DL_eNB_SIB_t    *dlsch,  //NB_IoT_eNB_NDLSCH_t
                                   int                    tot_bits,                
-                                  uint8_t                Nf,
+                                  uint16_t                Nf,
                                   uint8_t                Ns); 
 
 /*
@@ -250,15 +250,15 @@ int dlsch_modulation_NB_IoT(int32_t               **txdataF,
                             uint8_t               control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
                             NB_IoT_DL_eNB_SIB_t    *dlsch0,  //NB_IoT_eNB_NDLSCH_t
                             int                   G,              // number of bits per subframe
-                            unsigned short            npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf        
-                            unsigned short            subframe,
+                            unsigned int            npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf        
+                            unsigned int            subframe,
                             unsigned short        NB_IoT_RB_ID);
 
 int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
                               NB_IoT_DL_eNB_SIB_t        *dlsch, // NB_IoT_eNB_NDLSCH_t
                               uint8_t                    Nsf,        // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
                               unsigned int               G,
-                              uint8_t option);         // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
+                              uint8_t                    option);         // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
  
 
 void rx_ulsch_NB_IoT(PHY_VARS_eNB_NB_IoT      *phy_vars_eNB,
