@@ -1368,6 +1368,11 @@ typedef struct {
     uint8_t  slice_allocation_mask[MAX_NUM_CCs][N_RBG_MAX];
     uint8_t  slice_allocated_rbgs[MAX_NUM_CCs][N_RBG_MAX];
     uint8_t  MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX];
+
+    uint32_t bytes_lcid[NUMBER_OF_UE_MAX][MAX_NUM_LCID];
+    uint32_t wb_pmi[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+    uint8_t  mcs[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+
 } pre_processor_results_t;
 
 #include "proto.h"
