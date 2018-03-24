@@ -2717,6 +2717,7 @@ int decode_BCCH_DLSCH_Message(
                   sizeof(SystemInformationBlockType1_t) );
           LOG_D( RRC, "[UE %"PRIu8"] Decoding First SIB1\n", ctxt_pP->module_id );
           decode_SIB1( ctxt_pP, eNB_index, rsrq, rsrp );
+          //printf("decode_BCCH_DLSCH_Message \n");
         }
       }
 
@@ -2731,7 +2732,7 @@ int decode_BCCH_DLSCH_Message(
                 &bcch_message->message.choice.c1.choice.systemInformation,
                 sizeof(SystemInformation_t) );
 
-        LOG_D( RRC, "[UE %"PRIu8"] Decoding SI for frameP %"PRIu32"\n",
+        LOG_I( RRC, "[UE %"PRIu8"] Decoding SI for frameP %"PRIu32"\n",
                ctxt_pP->module_id,
                ctxt_pP->frame );
 

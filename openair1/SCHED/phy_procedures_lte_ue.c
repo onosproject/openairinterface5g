@@ -2896,7 +2896,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
   int pbch_tx_ant=0;
   uint8_t pbch_phase;
   uint16_t frame_tx;
-  static uint8_t first_run = 1;
+  static uint8_t first_run = 0;
   uint8_t pbch_trials = 0;
 
   DevAssert(ue);
@@ -2985,8 +2985,8 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     //emos_dump_UE.mimo_mode = ue->pbch_vars[eNB_id]->decoded_output[1];
 #endif
 
-    if (first_run) {
-      first_run = 0;
+    if (first_run<=ue->Mod_id) {
+      first_run++;
 
       proc->frame_rx = (proc->frame_rx & 0xFFFFFC00) | (frame_tx & 0x000003FF);
       proc->frame_tx = proc->frame_rx;
@@ -5300,7 +5300,6 @@ else
   if ((ue->dlsch_SI[eNB_id]) && (ue->dlsch_SI[eNB_id]->active == 1)) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDSCH_PROC_SI, VCD_FUNCTION_IN);
     ue_pdsch_procedures(ue,
-
 			proc,
 			eNB_id,
 			SI_PDSCH,
@@ -5410,6 +5409,7 @@ else
 
   if ( (subframe_rx == 0) && (ue->decode_MIB == 1))
   {
+    //printf("[ue_pbch_procedures] subframe_rx %d ,ue->decode_MIB %d, UE %d\n",subframe_rx,ue->decode_MIB,ue->Mod_id);
     ue_pbch_procedures(eNB_id,ue,proc,abstraction_flag);
   }
 

@@ -303,9 +303,9 @@ clock_t start=clock();*/
 		      rx128_re =  _mm_loadu_pd(&r_re[a][2*i]);//r_re[a][i],r_re[a][i+1]
 		      rx128_im =  _mm_loadu_pd(&r_im[a][2*i]);//r_im[a][i],r_im[a][i+1]
 		      rx128_gain_lin = _mm_set1_pd(rx_gain_lin);
-		      //gauss_0_128_sqrt_NOW = _mm_set_pd(ziggurat(0.0,1.0),ziggurat(0.0,1.0));
-		      //gauss_1_128_sqrt_NOW = _mm_set_pd(ziggurat(0.0,1.0),ziggurat(0.0,1.0));
-		      boxmuller_SSE_float(&gauss_0_128_sqrt_NOW, &gauss_1_128_sqrt_NOW);
+		      gauss_0_128_sqrt_NOW = _mm_set_pd(ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+		      gauss_1_128_sqrt_NOW = _mm_set_pd(ziggurat(0.0,1.0),ziggurat(0.0,1.0));
+		      //boxmuller_SSE_float(&gauss_0_128_sqrt_NOW, &gauss_1_128_sqrt_NOW);
 		      gauss_0_128_sqrt_NOW = _mm_mul_pd(gauss_0_128_sqrt_NOW,_mm_set1_pd(sqrt_NOW));
 		      gauss_1_128_sqrt_NOW = _mm_mul_pd(gauss_1_128_sqrt_NOW,_mm_set1_pd(sqrt_NOW));
 		      // Amplify by receiver gain and apply 3rd order non-linearity
@@ -435,7 +435,6 @@ clock_t start=clock();*/
 		      //boxmuller_SSE_float(&gauss_0_128_sqrt_NOW, &gauss_1_128_sqrt_NOW);
 		      gauss_0_128_sqrt_NOW = ziggurat_SSE_float();
 		      gauss_1_128_sqrt_NOW = ziggurat_SSE_float();
-
 		      //stop_meas(&desc->ziggurat);
 		      gauss_0_128_sqrt_NOW = _mm_mul_ps(gauss_0_128_sqrt_NOW,_mm_set1_ps(sqrt_NOW));
 		      gauss_1_128_sqrt_NOW = _mm_mul_ps(gauss_1_128_sqrt_NOW,_mm_set1_ps(sqrt_NOW));

@@ -128,155 +128,118 @@ double nfix(void)
 
 static uint32_t jsr4[4] __attribute__((aligned(16))) = {123456789,112548569,985584512,452236879};//This initialization depends on the seed for nor_table function in oaisim_functions.c file.
 static uint32_t iz4[4] __attribute__((aligned(16)));
-static float out[4] __attribute__((aligned(16)));
-static uint32_t ssh3_sse4[4] __attribute__((aligned(16)));
-static int32_t ifabs4[4] __attribute__((aligned(16)));
+static uint32_t iz1[4] __attribute__((aligned(16)));
+static uint32_t iz2[4] __attribute__((aligned(16)));
+//static float out[4] __attribute__((aligned(16)));
+//static int32_t ifabs4[4] __attribute__((aligned(16)));
 static int32_t hz4[4] __attribute__((aligned(16)));
-static int32_t abshz4[4] __attribute__((aligned(16)));
-static float x4_option0[4] __attribute__((aligned(16)));
-static float x4[4] __attribute__((aligned(16)));
+static int32_t hz1[4] __attribute__((aligned(16)));
+static int32_t hz2[4] __attribute__((aligned(16)));
+static int32_t abshz[4] __attribute__((aligned(16)));
+static int32_t abshz1[4] __attribute__((aligned(16)));
+static int32_t abshz2[4] __attribute__((aligned(16)));
 static __m128i jsr_128 __attribute__((aligned(16)));
 static __m128i jz_128 __attribute__((aligned(16)));
 static __m128i hz_128 __attribute__((aligned(16)));
+static __m128i hz1_128 __attribute__((aligned(16)));
+static __m128i hz2_128 __attribute__((aligned(16)));
 static __m128i abs_hz_128 __attribute__((aligned(16)));
+static __m128i abs_hz1_128 __attribute__((aligned(16)));
+static __m128i abs_hz2_128 __attribute__((aligned(16)));
 static __m128i iz_128 __attribute__((aligned(16)));
-static __m128 x128 __attribute__((aligned(16)));
-static __m128i ifabs __attribute__((aligned(16)));
-
+static __m128i iz1_128 __attribute__((aligned(16)));
+static __m128i iz2_128 __attribute__((aligned(16)));
+static __m128i cmplt_option0_128 __attribute__((aligned(16)));
+static int count99=0;
+static int count0=0;
+static int nfix_first_run=0;
+static __m128 x __attribute__((aligned(16)));
 
 #define SHR3_SSE (jsr_128=_mm_loadu_si128((__m128i *)jsr4),jz_128=jsr_128, jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,13),jsr_128),jsr_128=_mm_xor_si128(_mm_srli_epi32(jsr_128,17),jsr_128),jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,5),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128),_mm_add_epi32(jz_128,jsr_128))
 #define UNI_SSE (_mm_add_ps(_mm_mul_ps(_mm_set1_ps(0.2328306e-9),_mm_cvtepi32_ps(SHR3_SSE)),_mm_set1_ps(0.5)))
 
-#define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz4,iz_128),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz4,abs_hz_128))
+#define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz4,iz_128),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),count99=(count99>99)?0:count99+4,nfix_first_run=(count99>99)?0:1,(_mm_testc_si128(cmplt_option0_128,_mm_setr_epi32(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF)))?x=_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])):nfix_SSE())
+
+//#define NOR1_SSE (hz1_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz1,hz1_128),iz1_128=_mm_and_si128(hz1_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz1,iz1_128),abs_hz1_128=_mm_and_si128(hz1_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz1,abs_hz1_128))
+
+//#define NOR2_SSE (hz2_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz2,hz2_128),iz2_128=_mm_and_si128(hz2_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz2,iz2_128),abs_hz2_128=_mm_and_si128(hz2_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz2,abs_hz2_128))
+
+//#define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz4,iz_128),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz4,abs_hz_128),cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),_mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128),count0=0,(cmplt_option0[0]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[1]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[2]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[3]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[0]==0xFFFFFFFF && cmplt_option0[1]==0xFFFFFFFF && cmplt_option0[2]==0xFFFFFFFF && cmplt_option0[3]==0xFFFFFFFF && count99<95 && count0==4)?_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])):nfix_SSE())
 
 //,ifabs=_mm_cmplt_epi32(_mm_max_epi32(_mm_sub_epi32(_mm_setzero_si128(),hz_128),hz_128),_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),_mm_storeu_si128((__m128i *)ifabs4,ifabs),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz4,abs_hz_128),printf("abs_hz_128 %d,%d,%d,%d\n",abshz4[0],abshz4[1],abshz4[2],abshz4[3]),printf("kn %d,%d,%d,%d\n",kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]]),printf("ifabs %x,%x,%x,%x\n",ifabs4[0],ifabs4[1],ifabs4[2],ifabs4[3]),x128=_mm_and_ps(_mm_cvtepi32_ps(_mm_cmplt_epi32(_mm_max_epi32(_mm_sub_epi32(_mm_setzero_si128(),hz_128),hz_128),_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]]))),_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]]))),printf("x128 %e,%e,%e,%e\n",x128[0],x128[1],x128[2],x128[3]),printf("iz %d,%d,%d,%d\n",iz4[0],iz4[1],iz4[2],iz4[3]),printf("wn*hz %e,%e,%e,%e\n",hz4[0]*wn[iz4[0]],hz4[1]*wn[iz4[1]],hz4[2]*wn[iz4[2]],hz4[3]*wn[iz4[3]]))
 
 //,_mm_storeu_si128(ssh3_sse4,hz_128),printf("ssh3_sse4 %lu,%lu,%lu,%lu\n",ssh3_sse4[0],ssh3_sse4[1],ssh3_sse4[2],ssh3_sse4[3])
 //#define NOR (hz=SHR3, printf("hz %d\n",hz),sign=(hz&128)>>7,printf("sign %s\n",(sign)?"-":"+"),iz=hz&127,printf("iz %d\n",iz), (abs(hz)<kn[iz])? (sign)?(-1)*hz*wn[iz]:hz*wn[iz] : (sign)?(-1)*nfix():nfix())
 
-
-  static __m128 x __attribute__((aligned(16)));
-  static __m128 y __attribute__((aligned(16)));
-  static __m128i cmplt_option0_128 __attribute__((aligned(16)));
-  static __m128i cmplt_option1_128 __attribute__((aligned(16)));
-  static __m128i cmplt_option2_128 __attribute__((aligned(16)));
-  static int32_t cmplt_option0[4] __attribute__((aligned(16)));
-  static int32_t cmplt_option1[4] __attribute__((aligned(16)));
-  static int32_t cmplt_option2[4] __attribute__((aligned(16)));
-  static float output0[4] __attribute__((aligned(16)));
-  static float output1[4] __attribute__((aligned(16)));
-  static float output2[4] __attribute__((aligned(16)));
-  static float output[12] __attribute__((aligned(16)));
-  
-  static int option=-1;
-__m128 option012(void)
-{
-  int i;	
-  for (i=0;i<4;i++)
-  {
-    if (abshz4[i]<kn[iz4[i]])
-    {
-
-    }
-  }
-}
-
 __m128 nfix_SSE(void)
 {
-  static int count0=0;
-  static int count1=0;
-  static int count2=0;
-  static int count=0;
-  static int rand0=0;
-  static int rand1=0;
-  static int rand2=0;
-  static int rand3=0;
+  __m128 y __attribute__((aligned(16)));
+  __m128i cmplt_option1_128 __attribute__((aligned(16)));
+  __m128i cmplt_option2_128 __attribute__((aligned(16)));
+  int32_t cmplt_option0[4] __attribute__((aligned(16)));
+  int32_t cmplt_option1[4] __attribute__((aligned(16)));
+  int32_t cmplt_option2[4] __attribute__((aligned(16)));
+  float output[12] __attribute__((aligned(16)));
+  float x4_option0[4] __attribute__((aligned(16)));
+  float x4[4] __attribute__((aligned(16)));
   int i;
   static float r = 3.442620; 
-  for (;;)
-  {
-    if (count0+count1+count2>3)
-    {
-	return _mm_setr_ps(output[rand0],output[rand1],output[rand2],output[rand3]);
-    }
+  uint32_t iz4_i[4] __attribute__((aligned(16))) ;
+  _mm_storeu_si128((__m128i *)iz4_i,iz_128);
 
-    NOR_SSE;
-    //(abs(hz)<kn[iz])? hz*wn[iz]
-    cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]]));
-    _mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128);
     //x=hz *  wn[iz];
-    x=_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]]));
+    _mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128);
     _mm_storeu_ps(x4_option0,x);
-
+    count0=0;
     for (i=0;i<4;i++)
     {
 	    if (cmplt_option0[i]==0xFFFFFFFF)
 	    {
-		//printf("count0 %d\n",count0);
-		output[count0]=hz4[i]*wn[iz4[i]];
+		output[count0]=hz4[i]*wn[iz4_i[i]];
 		count0++;
 	    }  
     }
-
-
-    // if (fn[iz]+UNI*(fn[iz-1]-fn[iz])<exp(-0.5*x*x))
-    cmplt_option2_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(_mm_setr_ps(fn[iz4[0]],fn[iz4[1]],fn[iz4[2]],fn[iz4[3]]),_mm_mul_ps(UNI_SSE,_mm_sub_ps(_mm_setr_ps(fn[iz4[0]-1],fn[iz4[1]-1],fn[iz4[2]-1],fn[iz4[3]-1]),_mm_setr_ps(fn[iz4[0]],fn[iz4[1]],fn[iz4[2]],fn[iz4[3]])))),exp_ps(_mm_mul_ps(_mm_mul_ps(x,x),_mm_set1_ps(-0.5f)))));
-    _mm_storeu_si128((__m128i *)cmplt_option2,cmplt_option2_128);
-    for (i=0;i<4;i++)
+    if ((iz4_i[0]==0||iz4_i[1]==0||iz4_i[2]==0||iz4_i[3]==0)&&nfix_first_run==0&&count0>0)
     {
-	    if (cmplt_option2[i]==0x80000000)
-	    {
-		//printf("count1 %d\n",count1);
-		output[count0+count1]=x4_option0[i];
-		count1++;
-	    }  
-    }
-      /*if (iz==0)
-      {   
-        do
-        {
-          x = - 0.2904764 * log (UNI);
-          y = - log (UNI);
-	} 
-        while (y+y < x*x);
-        return (hz>0)? r+x : -r-x;
-      }*/
-    //if (iz==0)
-    if (iz4[0]==0 ||iz4[1]==0 ||iz4[2]==0 ||iz4[3]==0)
-    {
-	do
-	{
-	    //x = - 0.2904764 * log (UNI);
-	    x = _mm_mul_ps(_mm_set1_ps(-0.2904764f), log_ps(UNI_SSE));
-	    _mm_storeu_ps(x4,x);
-            //y = - log (UNI);
-	    y = _mm_mul_ps(_mm_set1_ps(-1.0f), log_ps(UNI_SSE));
-	   //(y+y < x*x)?
-	    cmplt_option1_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(y,y),_mm_mul_ps(x,x)));
-	    _mm_storeu_si128((__m128i *)cmplt_option1,cmplt_option1_128);
-
-	    for (i=0;i<4;i++)
-	    {
-		    if (cmplt_option1[i]==0x80000000)
+		nfix_first_run=1;
+		do
+		{
+		    //x = - 0.2904764 * log (UNI);
+		    x = _mm_mul_ps(_mm_set1_ps(-0.2904764f), log_ps(UNI_SSE));
+		    _mm_storeu_ps(x4,x);
+		    //y = - log (UNI);
+		    y = _mm_mul_ps(_mm_set1_ps(-1.0f), log_ps(UNI_SSE));
+		   //(y+y < x*x)?
+		    cmplt_option1_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(y,y),_mm_mul_ps(x,x)));
+		    _mm_storeu_si128((__m128i *)cmplt_option1,cmplt_option1_128);
+		    for (i=0;i<4;i++)
 		    {
-		        printf("count2 %d\n",count2);
-			output[count0+count1+count2]=(hz4[i]>0)? x4[i]+r:-x4[i]-r;
-			count2++;
-		    }  
-	    }
-	}
-	while (cmplt_option1[0]!=0x80000000 && cmplt_option1[1]!=0x80000000 && cmplt_option1[2]!=0x80000000 && cmplt_option1[3]!=0x80000000);
+			    if (cmplt_option1[i]==0x80000000)
+			    {
+				output[3]=(hz4[i]>0)? x4[i]+r:-x4[i]-r;
+			        break;
+			    }  
+		    }
+		}
+		while (cmplt_option1[0]!=0x80000000 && cmplt_option1[1]!=0x80000000 && cmplt_option1[2]!=0x80000000 && cmplt_option1[3]!=0x80000000);
+		return _mm_setr_ps(output[0],output[1],output[2],output[3]);	   
     }
-    count=count0+count1+count2;
-    rand0=iz4[0]%count;
-    rand1=iz4[1]%count;
-    rand2=iz4[2]%count;
-    rand3=iz4[3]%count;
-
-  }
-
+    else if (iz4[0]>0&&iz4[1]>0&&iz4[2]>0&&iz4[3]>0&&nfix_first_run==0&&count0>0)
+    {
+        nfix_first_run=1;
+	cmplt_option2_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(_mm_setr_ps(fn[iz4_i[0]],fn[iz4_i[1]],fn[iz4_i[2]],fn[iz4_i[3]]),_mm_mul_ps(UNI_SSE,_mm_sub_ps(_mm_setr_ps(fn[iz4_i[0]-1],fn[iz4_i[1]-1],fn[iz4_i[2]-1],fn[iz4_i[3]-1]),_mm_setr_ps(fn[iz4_i[0]],fn[iz4_i[1]],fn[iz4_i[2]],fn[iz4_i[3]])))),exp_ps(_mm_mul_ps(_mm_mul_ps(x,x),_mm_set1_ps(-0.5f)))));
+	_mm_storeu_si128((__m128i *)cmplt_option2,cmplt_option2_128);
+	for (i=0;i<4;i++)
+	{
+		if (cmplt_option2[i]==0x80000000)
+		{
+			output[3]=x4_option0[i];
+			break; 
+		} 
+	}
+	return _mm_setr_ps(output[0],output[1],output[2],output[3]);
+    }  
 }
-
 
 /*!\Procedure to create tables for normal distribution kn,wn and fn. */
 void table_nor(unsigned long seed)
@@ -316,7 +279,7 @@ double ziggurat(double mean, double variance)
 }
 __m128 ziggurat_SSE_float(void)
 {
-  return   nfix_SSE();
+  return   NOR_SSE;
 }
 
 void boxmuller_SSE_float(__m128 *data1, __m128 *data2) {
@@ -513,6 +476,311 @@ void randominit(unsigned seed_init)
 	min=sqrt(variance)*gset + mean;
 
     return(sqrt(variance)*gset + mean);
+  }
+}*/
+
+/*__m128 nfix1_SSE(void)
+{
+  __m128 x1 __attribute__((aligned(16)));
+  __m128 y1 __attribute__((aligned(16)));
+  __m128i cmplt_option0_128 __attribute__((aligned(16)));
+  __m128i cmplt_option1_128 __attribute__((aligned(16)));
+  __m128i cmplt_option2_128 __attribute__((aligned(16)));
+  int32_t cmplt_option0[4] __attribute__((aligned(16)));
+  int32_t cmplt_option1[4] __attribute__((aligned(16)));
+  int32_t cmplt_option2[4] __attribute__((aligned(16)));
+  float output1[12] __attribute__((aligned(16)));
+  float x1_option0[4] __attribute__((aligned(16)));
+  float x4[4] __attribute__((aligned(16)));
+
+  int count0=0;
+  int count1=0;
+  int count2=0;
+
+  int i;
+  static float r = 3.442620; 
+  static int nfix_first_run=0;
+  for (;;)
+  {
+    NOR1_SSE;
+    //(abs(hz)<kn[iz])? hz*wn[iz]
+    cmplt_option0_128 = _mm_cmplt_epi32(abs_hz1_128,_mm_setr_epi32(kn[iz1[0]],kn[iz1[1]],kn[iz1[2]],kn[iz1[3]]));
+    _mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128);
+    //x=hz *  wn[iz];
+    for (i=0;i<4;i++)
+    {
+	    if (cmplt_option0[i]==0xFFFFFFFF)
+	    {
+		//printf("count0 %d\n",count0);
+		output1[count0]=hz1[i]*wn[iz1[i]];
+		count0++;
+	    }  
+    }
+
+    if (count0>3)
+    {
+    	count99+=4;
+	if (count99>99)
+	{
+		count99=0;
+		nfix_first_run=0;
+	}
+	return _mm_setr_ps(output1[0],output1[1],output1[2],output1[3]);
+    }
+    //x=hz *  wn[iz];
+    x1=_mm_mul_ps(_mm_cvtepi32_ps(hz1_128),_mm_setr_ps(wn[iz1[0]],wn[iz1[1]],wn[iz1[2]],wn[iz1[3]]));
+    _mm_storeu_ps(x1_option0,x1);
+    //printf("count0 is %d, count1 is %d, count2 is %d,count99 is %d\n",count0,count1,count2,count99);
+    if ((iz1[0]==0||iz1[1]==0||iz1[2]==0||iz1[3]==0)&&nfix_first_run==0&&count0>0)
+    {
+		//printf("\niz == 0 [%d,%d,%d,%d]\n\n",iz4[0],iz4[1],iz4[2],iz4[3]);
+		nfix_first_run=1;
+		do
+		{
+		    //x = - 0.2904764 * log (UNI);
+		    x1 = _mm_mul_ps(_mm_set1_ps(-0.2904764f), log_ps(UNI_SSE));
+		    _mm_storeu_ps(x4,x1);
+		    //y = - log (UNI);
+		    y1 = _mm_mul_ps(_mm_set1_ps(-1.0f), log_ps(UNI_SSE));
+		   //(y+y < x*x)?
+		    cmplt_option1_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(y1,y1),_mm_mul_ps(x1,x1)));
+		    _mm_storeu_si128((__m128i *)cmplt_option1,cmplt_option1_128);
+		    for (i=0;i<4;i++)
+		    {
+			    if (cmplt_option1[i]==0x80000000)
+			    {
+				//printf("count22 %d\n",count2);
+				output1[3]=(hz1[i]>0)? x4[i]+r:-x4[i]-r;
+				count2++;
+				break;
+			    }  
+		    }
+		}
+		while (cmplt_option1[0]!=0x80000000 || cmplt_option1[1]!=0x80000000 || cmplt_option1[2]!=0x80000000 || cmplt_option1[3]!=0x80000000);
+		if (count0+count2>3)
+		{
+        		count99+=4;
+			if (count99>99)
+			{
+				count99=0;
+				nfix_first_run=0;
+			}
+			return _mm_setr_ps(output1[0],output1[1],output1[2],output1[3]);
+	        }
+    }
+    if (iz1[0]>0&&iz1[1]>0&&iz1[2]>0&&iz1[3]>0&&nfix_first_run==0&&count0>0)
+    {
+	//printf("\niz > 0 [%d,%d,%d,%d]\n\n",iz4[0],iz4[1],iz4[2],iz4[3]);
+	nfix_first_run=1;
+	printf("\niz1 > 0 [%d,%d,%d,%d].\nfn [%e,%e,%e,%e].\n\n",iz1[0],iz1[1],iz1[2],iz1[3],fn[iz1[0]],fn[iz1[1]],fn[iz1[2]],fn[iz1[3]]);
+	printf("fn1 - 1 [%e,%e,%e,%e]\n",fn[iz1[0]-1],fn[iz1[1]-1],fn[iz1[2]-1],fn[iz1[3]-1]);
+	//if (iz==0)
+	printf("\niz [%d,%d,%d,%d]\n",iz4[0],iz4[1],iz4[2],iz4[3]);
+	printf("iz==0 [%d,%d,%d,%d]\n",iz4[0]==0,iz4[1]==0,iz4[2]==0,iz4[3]==0);
+	printf("iz>0 [%d,%d,%d,%d]\n\n",iz4[0]>0,iz4[1]>0,iz4[2]>0,iz4[3]>0);//
+        // if (fn[iz]+UNI*(fn[iz-1]-fn[iz])<exp(-0.5*x*x))
+	//printf("iz [%d,%d,%d,%d] is ok? %d\n",iz4[0],iz4[1],iz4[2],iz4[3],iz4[0]==0&&iz4[1]==0&&iz4[2]==0&&iz4[3]==0);
+	//printf("iz>0 inside [%d,%d,%d,%d]\n",iz4[0]>0,iz4[1]>0,iz4[2]>0,iz4[3]>0);
+	//printf("iz-1 [%d,%d,%d,%d]\n",iz4[0]-1,iz4[1]-1,iz4[2]-1,iz4[3]-1);
+	//printf("x [%e,%e,%e,%e]\n",x[0],x[1],x[2],x[3]);
+	//printf("exp [%e,%e,%e,%e]\n",exp(-0.5*x[0]*x[0]),exp(-0.5*x[1]*x[1]),exp(-0.5*x[2]*x[2]),exp(-0.5*x[3]*x[3]));//
+	cmplt_option2_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(_mm_setr_ps(fn[iz1[0]],fn[iz1[1]],fn[iz1[2]],fn[iz1[3]]),_mm_mul_ps(UNI_SSE,_mm_sub_ps(_mm_setr_ps(fn[iz1[0]-1],fn[iz1[1]-1],fn[iz1[2]-1],fn[iz1[3]-1]),_mm_setr_ps(fn[iz1[0]],fn[iz1[1]],fn[iz1[2]],fn[iz1[3]])))),exp_ps(_mm_mul_ps(_mm_mul_ps(x1,x1),_mm_set1_ps(-0.5f)))));
+	//cmplt_option2_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_setr_ps(fn[iz4[0]],fn[iz4[1]],fn[iz4[2]],fn[iz4[3]]),exp_ps(_mm_mul_ps(_mm_mul_ps(x,x),_mm_set1_ps(-0.5f)))));
+	_mm_storeu_si128((__m128i *)cmplt_option2,cmplt_option2_128);
+	for (i=0;i<4;i++)
+	{
+		if (cmplt_option2[i]==0x80000000)
+		{
+			//printf("count1 %d\n",count1);
+			output1[3]=x1_option0[i];
+			count1++;
+			break; 
+		} 
+	}
+	if (count0+count1>3)
+	{
+        	count99+=4;
+		if (count99>109)
+		{
+			count99=0;
+			nfix_first_run=0;
+		}
+		return _mm_setr_ps(output1[0],output1[1],output1[2],output1[3]);
+	}
+    }
+
+    NOR1_SSE;
+    //(abs(hz)<kn[iz])? hz*wn[iz]
+    cmplt_option0_128 = _mm_cmplt_epi32(abs_hz1_128,_mm_setr_epi32(kn[iz1[0]],kn[iz1[1]],kn[iz1[2]],kn[iz1[3]]));
+    _mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128);
+    for (i=count0;i<3;i++)
+    {
+	    if (cmplt_option0[i-count0]==0xFFFFFFFF)
+	    {
+		//printf("count0 %d\n",count0);
+		output1[count0]=hz1[i-count0]*wn[iz1[i-count0]];
+		count0++;
+	    }  
+    }
+    count99+=4;
+    if (count99>109)
+    {
+		count99=0;
+		nfix_first_run=0;
+    }
+    return _mm_setr_ps(output1[0],output1[1],output1[2],output1[3]);
+  }
+}
+__m128 nfix2_SSE(void)
+{
+  __m128 x2 __attribute__((aligned(16)));
+  __m128 y2 __attribute__((aligned(16)));
+  __m128i cmplt_option0_128 __attribute__((aligned(16)));
+  __m128i cmplt_option1_128 __attribute__((aligned(16)));
+  __m128i cmplt_option2_128 __attribute__((aligned(16)));
+  int32_t cmplt_option0[4] __attribute__((aligned(16)));
+  int32_t cmplt_option1[4] __attribute__((aligned(16)));
+  int32_t cmplt_option2[4] __attribute__((aligned(16)));
+  float output2[12] __attribute__((aligned(16)));
+  float x2_option0[4] __attribute__((aligned(16)));
+  float x4[4] __attribute__((aligned(16)));
+
+  static int count0=0;
+  static int count1=0;
+  static int count2=0;
+  static int count99=0;
+  int i;
+  static float r = 3.442620; 
+  static int nfix_first_run=0;
+  for (;;)
+  {
+    NOR2_SSE;
+    //(abs(hz)<kn[iz])? hz*wn[iz]
+    cmplt_option0_128 = _mm_cmplt_epi32(abs_hz2_128,_mm_setr_epi32(kn[iz2[0]],kn[iz2[1]],kn[iz2[2]],kn[iz2[3]]));
+    _mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128);
+    //x=hz *  wn[iz];
+    for (i=0;i<4;i++)
+    {
+	    if (cmplt_option0[i]==0xFFFFFFFF)
+	    {
+		//printf("count0 %d\n",count0);
+		output2[count0]=hz2[i]*wn[iz2[i]];
+		count0++;
+	    }  
+    }
+
+    if (count0>3)
+    {
+    	count99+=4;
+	if (count99>99)
+	{
+		count99=0;
+		nfix_first_run=0;
+	}
+	return _mm_setr_ps(output2[0],output2[1],output2[2],output2[3]);
+    }
+    //x=hz *  wn[iz];
+    x2=_mm_mul_ps(_mm_cvtepi32_ps(hz2_128),_mm_setr_ps(wn[iz2[0]],wn[iz2[1]],wn[iz2[2]],wn[iz2[3]]));
+    _mm_storeu_ps(x2_option0,x2);
+    //printf("count0 is %d, count1 is %d, count2 is %d,count99 is %d\n",count0,count1,count2,count99);
+    if ((iz2[0]==0||iz2[1]==0||iz2[2]==0||iz2[3]==0)&&nfix_first_run==0&&count0>0)
+    {
+		//printf("\niz == 0 [%d,%d,%d,%d]\n\n",iz4[0],iz4[1],iz4[2],iz4[3]);
+		nfix_first_run=1;
+		do
+		{
+		    //x = - 0.2904764 * log (UNI);
+		    x2 = _mm_mul_ps(_mm_set1_ps(-0.2904764f), log_ps(UNI_SSE));
+		    _mm_storeu_ps(x4,x2);
+		    //y = - log (UNI);
+		    y2 = _mm_mul_ps(_mm_set1_ps(-1.0f), log_ps(UNI_SSE));
+		   //(y+y < x*x)?
+		    cmplt_option1_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(y2,y2),_mm_mul_ps(x2,x2)));
+		    _mm_storeu_si128((__m128i *)cmplt_option1,cmplt_option1_128);
+		    for (i=0;i<4;i++)
+		    {
+			    if (cmplt_option1[i]==0x80000000)
+			    {
+				//printf("count22 %d\n",count2);
+				output2[3]=(hz2[i]>0)? x4[i]+r:-x4[i]-r;
+				count2++;
+				break;
+			    }  
+		    }
+		}
+		while (cmplt_option1[0]!=0x80000000 || cmplt_option1[1]!=0x80000000 || cmplt_option1[2]!=0x80000000 || cmplt_option1[3]!=0x80000000);
+		if (count0+count2>3)
+		{
+        		count99+=4;
+			if (count99>109)
+			{
+				count99=0;
+				nfix_first_run=0;
+			}
+			return _mm_setr_ps(output2[0],output2[1],output2[2],output2[3]);
+	        }
+    }
+    if (iz2[0]>0&&iz2[1]>0&&iz2[2]>0&&iz2[3]>0&&nfix_first_run==0&&count0>0)
+    {
+	//printf("\niz > 0 [%d,%d,%d,%d]\n\n",iz4[0],iz4[1],iz4[2],iz4[3]);
+	nfix_first_run=1;
+	printf("\niz2 > 0 [%d,%d,%d,%d].\nfn [%e,%e,%e,%e].\n\n",iz2[0],iz2[1],iz2[2],iz2[3],fn[iz2[0]],fn[iz2[1]],fn[iz2[2]],fn[iz2[3]]);
+	printf("fn2 - 1 [%e,%e,%e,%e]\n",fn[iz2[0]-1],fn[iz2[1]-1],fn[iz2[2]-1],fn[iz2[3]-1]);
+	//if (iz==0)
+	printf("\niz [%d,%d,%d,%d]\n",iz4[0],iz4[1],iz4[2],iz4[3]);
+	printf("iz==0 [%d,%d,%d,%d]\n",iz4[0]==0,iz4[1]==0,iz4[2]==0,iz4[3]==0);
+	printf("iz>0 [%d,%d,%d,%d]\n\n",iz4[0]>0,iz4[1]>0,iz4[2]>0,iz4[3]>0);//
+        // if (fn[iz]+UNI*(fn[iz-1]-fn[iz])<exp(-0.5*x*x))
+	//printf("iz [%d,%d,%d,%d] is ok? %d\n",iz4[0],iz4[1],iz4[2],iz4[3],iz4[0]==0&&iz4[1]==0&&iz4[2]==0&&iz4[3]==0);
+	printf("iz>0 inside [%d,%d,%d,%d]\n",iz4[0]>0,iz4[1]>0,iz4[2]>0,iz4[3]>0);
+	printf("iz-1 [%d,%d,%d,%d]\n",iz4[0]-1,iz4[1]-1,iz4[2]-1,iz4[3]-1);
+	printf("x [%e,%e,%e,%e]\n",x[0],x[1],x[2],x[3]);
+	printf("exp [%e,%e,%e,%e]\n",exp(-0.5*x[0]*x[0]),exp(-0.5*x[1]*x[1]),exp(-0.5*x[2]*x[2]),exp(-0.5*x[3]*x[3]));//
+	cmplt_option2_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(_mm_setr_ps(fn[iz2[0]],fn[iz2[1]],fn[iz2[2]],fn[iz2[3]]),_mm_mul_ps(UNI_SSE,_mm_sub_ps(_mm_setr_ps(fn[iz2[0]-1],fn[iz2[1]-1],fn[iz2[2]-1],fn[iz2[3]-1]),_mm_setr_ps(fn[iz2[0]],fn[iz2[1]],fn[iz2[2]],fn[iz2[3]])))),exp_ps(_mm_mul_ps(_mm_mul_ps(x2,x2),_mm_set1_ps(-0.5f)))));
+	//cmplt_option2_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_setr_ps(fn[iz4[0]],fn[iz4[1]],fn[iz4[2]],fn[iz4[3]]),exp_ps(_mm_mul_ps(_mm_mul_ps(x,x),_mm_set1_ps(-0.5f)))));
+	_mm_storeu_si128((__m128i *)cmplt_option2,cmplt_option2_128);
+	for (i=0;i<4;i++)
+	{
+		if (cmplt_option2[i]==0x80000000)
+		{
+			//printf("count1 %d\n",count1);
+			output2[3]=x2_option0[i];
+			count1++;
+			break; 
+		} 
+	}
+	if (count0+count1>3)
+	{
+        	count99+=4;
+		if (count99>109)
+		{
+			count99=0;
+			nfix_first_run=0;
+		}
+		return _mm_setr_ps(output2[0],output2[1],output2[2],output2[3]);
+	}
+    }
+
+    NOR2_SSE;
+    //(abs(hz)<kn[iz])? hz*wn[iz]
+    cmplt_option0_128 = _mm_cmplt_epi32(abs_hz2_128,_mm_setr_epi32(kn[iz2[0]],kn[iz2[1]],kn[iz2[2]],kn[iz2[3]]));
+    _mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128);
+    for (i=count0;i<3;i++)
+    {
+	    if (cmplt_option0[i-count0]==0xFFFFFFFF)
+	    {
+		//printf("count0 %d\n",count0);
+		output2[count0]=hz2[i-count0]*wn[iz2[i-count0]];
+		count0++;
+	    }  
+    }
+    count99+=4;
+    if (count99>109)
+    {
+		count99=0;
+		nfix_first_run=0;
+    }
+    return _mm_setr_ps(output2[0],output2[1],output2[2],output2[3]);
   }
 }*/
 
