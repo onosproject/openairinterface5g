@@ -1,3 +1,4 @@
+#include "LAYER2/MAC/defs.h"
 
 PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 			       frame_t frameP, uint8_t new_Msg3,
@@ -7,6 +8,12 @@ void ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 		sub_frame_t subframe, uint8_t eNB_index,
 		uint8_t * ulsch_buffer, uint16_t buflen,
 		uint8_t * access_mode){}
+
+SLSS_t *ue_get_slss(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe) {return(NULL);};
+
+SLDCH_t *ue_get_sldch(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe) {return(NULL);};
+
+SLSCH_t *ue_get_slsch(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe) {return(NULL);};
 
 void Msg1_transmitted(module_id_t module_idP, uint8_t CC_id,
 		      frame_t frameP, uint8_t eNB_id){}

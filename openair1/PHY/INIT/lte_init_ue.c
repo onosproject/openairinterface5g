@@ -743,6 +743,10 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
     prach_vars[eNB_id]     = (LTE_UE_PRACH *)malloc16_clear(sizeof(LTE_UE_PRACH));
     pbch_vars[eNB_id]      = (LTE_UE_PBCH *)malloc16_clear(sizeof(LTE_UE_PBCH));
 
+#ifdef Rel14
+    ue->pscch_vars_tx          = (LTE_UE_PSCCH_TX *)malloc16_clear(sizeof(LTE_UE_PSCCH_TX));
+    ue->pscch_vars_rx          = (LTE_UE_PSCCH_RX *)malloc16_clear(sizeof(LTE_UE_PSCCH_RX));
+#endif
     for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
       phy_init_lte_ue__PDSCH( (*pdsch_vars_th)[th_id][eNB_id], fp );
     }

@@ -72,6 +72,8 @@
 
 extern uint8_t usim_test;
 
+extern int nfapi_mode;
+
 mapping BSR_names[] = {
     {"NONE", 0},
     {"SHORT BSR", 1},
@@ -853,17 +855,16 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		   NULL);
   } else { //SL_DISCOVERY
      uint16_t len = sdu_len;
-     LOG_I( MAC, "SL DISCOVERY \n");
-     mac_rrc_data_ind(module_idP,
-                      CC_id,
-                      frameP,subframeP,
-                      UE_mac_inst[module_idP].crnti,
-                      SL_DISCOVERY,
-                      sdu, //(uint8_t*)&UE_mac_inst[Mod_id].SL_Discovery[0].Rx_buffer.Payload[0],
-                      len,
-                      ENB_FLAG_NO,
-                      eNB_index,
-                      0);
+     LOG_I( MAC, "SL DISCOVERY \n");	
+     mac_rrc_data_ind_ue(module_idP,
+			 CC_id,
+			 frameP,subframeP,
+			 UE_mac_inst[module_idP].crnti,
+			 SL_DISCOVERY,
+			 sdu, //(uint8_t*)&UE_mac_inst[Mod_id].SL_Discovery[0].Rx_buffer.Payload[0],
+			 len,
+			 eNB_index,
+			 0);
 
   }
 }
@@ -1805,17 +1806,20 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 
 
 		sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP,
-							 UE_mac_inst
-							 [module_idP].
-							 crnti, eNB_index,
+							 UE_mac_inst[module_idP].crnti, 
+							 eNB_index,
 							 frameP,
 							 ENB_FLAG_NO,
 							 MBMS_FLAG_NO,
 							 lcid,
 							 buflen_remain,
 							 (char *)
-							 &ulsch_buff
-							 [sdu_length_total]);
+							 &ulsch_buff[sdu_length_total]
+#ifdef Rel14
+							 ,0,
+							 0
+#endif
+							 );
 
 
 		AssertFatal(buflen_remain >= sdu_lengths[num_sdus],
@@ -2777,7 +2781,11 @@ update_bsr(module_id_t module_idP, frame_t frameP,
 		    scheduling_info.LCID_buffer_remain[lcid];
 	    }
 
-	    rlc_status = mac_rlc_status_ind(module_idP, UE_mac_inst[module_idP].crnti, eNB_index, frameP, subframeP, ENB_FLAG_NO, MBMS_FLAG_NO, lcid, 0xFFFF);	//TBS is not used in RLC at this step, set a special value for debug
+	    rlc_status = mac_rlc_status_ind(module_idP, UE_mac_inst[module_idP].crnti, eNB_index, frameP, subframeP, ENB_FLAG_NO, MBMS_FLAG_NO, lcid, 0xFFFF
+#ifdef Rel14
+					    ,0, 0
+#endif
+					    );	//TBS is not used in RLC at this step, set a special value for debug
 
 	    lcid_bytes_in_buffer[lcid] = rlc_status.bytes_in_buffer;
 
@@ -3140,13 +3148,12 @@ SLDCH_t *ue_get_sldch(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t 
     UE_MAC_INST *ue = &UE_mac_inst[Mod_id];
     SLDCH_t *sldch = &UE_mac_inst[Mod_id].sldch;
 
-    sldch->payload_length = mac_rrc_data_req(Mod_id,
+    sldch->payload_length = mac_rrc_data_req_ue(Mod_id,
             CC_id,
             frame_tx,
             SL_DISCOVERY,
             1,
             (char*)(sldch->payload), //&UE_mac_inst[Mod_id].SL_Discovery[0].Tx_buffer.Payload[0],
-            0,
             0, //eNB_indexP
             0);
 

@@ -469,7 +469,7 @@ int pdcp_pc5_sockfd;
 struct sockaddr_in prose_ctrl_addr;
 struct sockaddr_in prose_pdcp_addr;
 struct sockaddr_in pdcp_sin;
-int pdcp_pc5_socket_init();
+int pdcp_pc5_socket_init(void);
 
 typedef struct  {
    rb_id_t             rb_id;

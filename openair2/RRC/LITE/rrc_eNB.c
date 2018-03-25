@@ -1826,6 +1826,10 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
                                          (RSRP_Range_t*)rsrp, // rsrp,
                                          (C_RNTI_t*)cba_RNTI,  // cba_RNTI
                                          (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList //dedicatedInfoNASList
+#ifdef Rel14
+					 ,(SL_CommConfig_r12_t*)NULL,
+					 (SL_DiscConfig_r12_t*)NULL
+#endif
 #if defined(Rel10) || defined(Rel14)
                                          , (SCellToAddMod_r10_t*)NULL
 #endif
@@ -2261,6 +2265,10 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration(const protocol_ctxt_t* co
 					  NULL, NULL, NULL, NULL,NULL,
 					  NULL, NULL,  NULL, NULL, NULL, NULL, 
 					  (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
+#ifdef Rel14
+					  ,(SL_CommConfig_r12_t*)NULL,
+					  (SL_DiscConfig_r12_t*)NULL
+#endif
 #if defined(Rel10) || defined(Rel14)
                                          , (SCellToAddMod_r10_t*)NULL
 #endif
@@ -2529,6 +2537,10 @@ rrc_eNB_modify_dedicatedRRCConnectionReconfiguration(const protocol_ctxt_t* cons
                                           NULL, NULL, NULL, NULL,NULL,
                                           NULL, NULL,  NULL, NULL, NULL, NULL,
                                           (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
+#ifdef Rel14
+					  ,(SL_CommConfig_r12_t*)NULL,
+					  (SL_DiscConfig_r12_t*)NULL
+#endif
 #if defined(Rel10) || defined(Rel14)
                                           , (SCellToAddMod_r10_t*)NULL
 #endif
@@ -2652,6 +2664,10 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_release(  const protocol_
                                     NULL,
                                     NULL,
                                     (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
+#ifdef Rel14
+					   ,(SL_CommConfig_r12_t*)NULL,
+					   (SL_DiscConfig_r12_t*)NULL
+#endif
 #if defined(Rel10) || defined(Rel14)
                                     , (SCellToAddMod_r10_t*)NULL
 #endif
@@ -3380,9 +3396,10 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
                                          (RSRP_Range_t*)rsrp,
                                          (C_RNTI_t*)cba_RNTI,
                                          (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
-                                         (SL_CommConfig_r12_t*)NULL,
+#ifdef Rel14
+                                         ,(SL_CommConfig_r12_t*)NULL,
                                          (SL_DiscConfig_r12_t*)NULL
-
+#endif
 #if defined(Rel10) || defined(Rel14)
                                          , (SCellToAddMod_r10_t*)NULL
 #endif
@@ -3972,9 +3989,11 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
                                          (struct MeasConfig__speedStatePars*)Sparams,
                                          (RSRP_Range_t*)rsrp,
                                          (C_RNTI_t*)cba_RNTI,
-                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList,
-                                         (SL_CommConfig_r12_t*)NULL,
+                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
+#ifdef Rel14
+                                         ,(SL_CommConfig_r12_t*)NULL,
                                          (SL_DiscConfig_r12_t*)NULL
+#endif
 #if defined(Rel10) || defined(Rel14)
                                          , (SCellToAddMod_r10_t*)NULL
 #endif
@@ -4077,10 +4096,11 @@ rrc_eNB_generate_RRCConnectionReconfiguration_SCell(
                                          (struct MeasConfig__speedStatePars*)NULL,
                                          (RSRP_Range_t*)NULL,
                                          (C_RNTI_t*)NULL,
-                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL,
-                                         (SL_CommConfig_r12_t*)NULL,
+                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL
+#ifdef Rel14
+					 ,(SL_CommConfig_r12_t*)NULL,
                                          (SL_DiscConfig_r12_t*)NULL
-
+#endif
 #if defined(Rel10) || defined(Rel14)
                                          , ue_context_pP->ue_context.sCell_config
 #endif
@@ -5228,9 +5248,11 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
            Sparams,
            NULL,
            NULL,
-           dedicatedInfoNASList,
-           (SL_CommConfig_r12_t*)NULL,
+           dedicatedInfoNASList
+#ifdef Rel14 
+	   ,(SL_CommConfig_r12_t*)NULL,
            (SL_DiscConfig_r12_t*)NULL
+#endif
 #if defined(Rel10) || defined(Rel14)
            , NULL   // SCellToAddMod_r10_t
 #endif
@@ -6215,7 +6237,8 @@ rrc_eNB_decode_ccch(
                               (DRB_ToAddModList_t*) NULL,
                               (DRB_ToReleaseList_t*) NULL
 #   if defined(Rel10) || defined(Rel14)
-                              , (PMCH_InfoList_r9_t *) NULL
+                              , (PMCH_InfoList_r9_t *) NULL,
+			      0,0
 #   endif
                              );
 #endif //NO_RRM

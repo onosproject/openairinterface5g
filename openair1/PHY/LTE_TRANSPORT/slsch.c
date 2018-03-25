@@ -304,7 +304,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   // coding part
   if (ue->pscch_coded == 0) {
     sci = sci_mapping(ue);
-    dci_encoding((uint8_t *)sci,
+    dci_encoding((uint8_t *)&sci,
 		 log2_approx(slsch->N_SL_RB*((slsch->N_SL_RB+1)>>1))+31,
 		 E,
 		 pscch->f,
@@ -430,8 +430,8 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
 void check_and_generate_pssch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
-  AssertFatal(frame_tx<1024 && frame_tx>0,"frame %d is illegal\n",frame_tx);
-  AssertFatal(subframe_tx<10 && subframe_tx>0,"subframe %d is illegal\n",subframe_tx);
+  AssertFatal(frame_tx<1024 && frame_tx>=0,"frame %d is illegal\n",frame_tx);
+  AssertFatal(subframe_tx<10 && subframe_tx>=0,"subframe %d is illegal\n",subframe_tx);
   SLSCH_t *slsch = ue->slsch;
   AssertFatal(slsch!=NULL,"SLSCH is null\n");
   uint32_t O = ue->slsch->SL_OffsetIndicator;
@@ -480,8 +480,8 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
 void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   
-  AssertFatal(frame_tx<1024 && frame_tx>0,"frame %d is illegal\n",frame_tx);
-  AssertFatal(subframe_tx<10 && subframe_tx>0,"subframe %d is illegal\n",subframe_tx);
+  AssertFatal(frame_tx<1024 && frame_tx>=0,"frame %d is illegal\n",frame_tx);
+  AssertFatal(subframe_tx<10 && subframe_tx>=0,"subframe %d is illegal\n",subframe_tx);
   SLSCH_t *slsch = ue->slsch;
   AssertFatal(slsch!=NULL,"SLSCH is null\n");
   uint32_t O = ue->slsch->SL_OffsetIndicator;
@@ -510,15 +510,15 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t sf_index=40,LPSCCH=0;
   for (int i=0;i<40;i++) {
     if (i==absSF_modP) sf_index=LPSCCH;
-    if (((((uint64_t)1)<<i) & slsch->bitmap1)>0) sf_index++;
+    if (((((uint64_t)1)<<i) & slsch->bitmap1)>0) LPSCCH++;
   }
-  AssertFatal(sf_index<40,"sf_index not set, should not happen\n");
-  LPSCCH++;
+  AssertFatal(sf_index<40,"sf_index not set, should not happen (absSF_modP %d)\n",absSF_modP);
+
   // sf_index now contains the SF index in 0...LPSCCH-1
   // LPSCCH has the number of PSCCH subframes
 
-  // 2 SLSCH/SLCCH resource block regions subframe times number of resources blocks per slot times 2 slots
-  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB*LPSCCH<<2;
+  // number of resources blocks per slot times 2 slots
+  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB*LPSCCH<<1;
   AssertFatal(slsch->n_pscch < (M_RB_PSCCH_RP>>1)*LPSCCH,"n_pscch not in 0..%d\n",
 	      ((M_RB_PSCCH_RP>>1)*LPSCCH)-1);
   // hard-coded to transmission mode one for now (Section 14.2.1.1 from 36.213 Rel14.3)
@@ -526,6 +526,9 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t a2=a1+slsch->n_pscch/LPSCCH+(M_RB_PSCCH_RP>>1);
   uint32_t b1=slsch->n_pscch%LPSCCH;
   uint32_t b2=(slsch->n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
+
+  LOG_D(PHY,"Checking pscch for absSF %d (LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d)\n",
+	absSF, LPSCCH, M_RB_PSCCH_RP,a1,a2,b1,b2);
 
   if (absSF_modP == b1)      pscch_codingmodulation(ue,frame_tx,subframe_tx,a1,0);	
   else if (absSF_modP == b2) pscch_codingmodulation(ue,frame_tx,subframe_tx,a2,1);
@@ -581,22 +584,38 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
   SLSCH_t *slsch = &ue->slsch_rx;
 
   uint32_t amod = a%(slsch->N_SL_RB);
-  int32_t rxdataF_ext[2][12];
-  int32_t drs_ch_estimates[2][12] __attribute__ ((aligned (32)));
-  int32_t rxdataF_comp[2][12] __attribute__ ((aligned (32)));
-  int32_t ul_ch_mag[2][12] __attribute__ ((aligned (32)));
+  int16_t **rxdataF_ext;//[2][12];
+  int16_t **drs_ch_estimates;//[2][12] __attribute__ ((aligned (32)));
+  int16_t **rxdataF_comp;//[2][12] __attribute__ ((aligned (32)));
+  int16_t **ul_ch_mag;//[2][12] __attribute__ ((aligned (32)));
+  int16_t **rxdata_7_5kHz;//[2][ue->frame_parms.samples_per_tti] __attribute__ ((aligned (32)));
+  int16_t **rxdataF;//[2][ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti] __attribute__ ((aligned (32)));
   int32_t avgs;
   uint8_t log2_maxh=0;
   int32_t avgU[2];
   int nprb;
 
+  rxdataF_ext      = (int16_t **)malloc(2*sizeof(int16_t));
+  drs_ch_estimates = (int16_t **)malloc(2*sizeof(int16_t));
+  rxdataF_comp     = (int16_t **)malloc(2*sizeof(int16_t));
+  ul_ch_mag        = (int16_t **)malloc(2*sizeof(int16_t));
+  rxdata_7_5kHz    = (int16_t **)malloc(2*sizeof(int16_t));
+  rxdataF          = (int16_t **)malloc(2*sizeof(int16_t));
+
+  for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) {
+    rxdataF_ext[aa]      = (int16_t*)malloc16(12*2*sizeof(int16_t));
+    drs_ch_estimates[aa] = (int16_t*)malloc16(12*2*sizeof(int16_t));
+    rxdataF_comp[aa]     = (int16_t*)malloc16(12*2*sizeof(int16_t));
+    ul_ch_mag[aa]        = (int16_t*)malloc16(12*2*sizeof(int16_t));
+    rxdataF[aa]          = (int16_t*)malloc16(2*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int16_t));
+    rxdata_7_5kHz[aa]    = (int16_t*)malloc16(2*ue->frame_parms.samples_per_tti);
+  }				   
   if (amod<(slsch->N_SL_RB>>1)) nprb = slsch->prb_Start + amod;
   else                          nprb = slsch->prb_End-slsch->N_SL_RB+amod;
 
   // slot FEP
   RU_t ru_tmp;
-  int rxdata_7_5kHz[2][ue->frame_parms.samples_per_tti] __attribute__ ((aligned (32)));
-  int rxdataF[2][ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti] __attribute__ ((aligned (32)));
+
 
   memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS)); 
   ru_tmp.common.rxdata = ue->common_vars.rxdata;
@@ -743,12 +762,27 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
     ue->slsch_rx.group_destination_id      = (sci_rx>>(1+7+5+11+RAbits))&255;
     ue->slcch_received                     = 1;
   }
+
+  for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) {
+    free(rxdataF_ext[aa]);
+    free(drs_ch_estimates[aa]);
+    free(rxdataF_comp[aa]);
+    free(ul_ch_mag[aa]);
+    free(rxdataF[aa]);
+    free(rxdata_7_5kHz[aa]);
+  }		
+  free(rxdataF_ext);
+  free(drs_ch_estimates);
+  free(rxdataF_comp);
+  free(ul_ch_mag);
+  free(rxdataF);
+  free(rxdata_7_5kHz);
 }	
 
 void rx_slcch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
 
-  AssertFatal(frame_rx<1024 && frame_rx>0,"frame %d is illegal\n",frame_rx);
-  AssertFatal(subframe_rx<10 && subframe_rx>0,"subframe %d is illegal\n",subframe_rx);
+  AssertFatal(frame_rx<1024 && frame_rx>=0,"frame %d is illegal\n",frame_rx);
+  AssertFatal(subframe_rx<10 && subframe_rx>=0,"subframe %d is illegal\n",subframe_rx);
   SLSCH_t *slsch = &ue->slsch_rx;
   AssertFatal(slsch!=NULL,"SLSCH is null\n");
   uint32_t O = slsch->SL_OffsetIndicator;
@@ -775,15 +809,15 @@ void rx_slcch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   uint32_t sf_index=40,LPSCCH=0;
   for (int i=0;i<40;i++) {
     if (i==absSF_modP) sf_index=LPSCCH;
-    if (((((uint64_t)1)<<i) & slsch->bitmap1)>0) sf_index++;
+    if (((((uint64_t)1)<<i) & slsch->bitmap1)>0) LPSCCH++;
   }
   AssertFatal(sf_index<40,"sf_index not set, should not happen\n");
-  LPSCCH++;
+
   // sf_index now contains the SF index in 0...LPSCCH-1
   // LPSCCH has the number of PSCCH subframes
 
   // 2 SLSCH/SLCCH resource block regions subframe times number of resources blocks per slot times 2 slots
-  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB*LPSCCH<<2;
+  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB*LPSCCH<<1;
   AssertFatal(slsch->n_pscch < (M_RB_PSCCH_RP>>1)*LPSCCH,"n_pscch not in 0..%d\n",
 	      ((M_RB_PSCCH_RP>>1)*LPSCCH)-1);
   // hard-coded to transmission mode one for now (Section 14.2.1.1 from 36.213 Rel14.3)

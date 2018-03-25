@@ -143,7 +143,6 @@ static inline void* malloc16_clear( size_t size )
 #include "targets/ARCH/COMMON/common_lib.h"
 #include "targets/COMMON/openairinterface5g_limits.h"
 
-#include "openair2/LAYER2/MAC/defs.h"
 
 #if defined(EXMIMO) || defined(OAI_USRP)
 //#define NUMBER_OF_eNB_MAX 1

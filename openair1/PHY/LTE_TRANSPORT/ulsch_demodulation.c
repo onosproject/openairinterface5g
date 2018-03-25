@@ -751,6 +751,7 @@ void ulsch_extract_rbs_single(int32_t **rxdataF,
         rxF_ext += nb_rb2*6;
       }
     } else { //there is only data in the second half
+
       rxF = &rxdataF[aarx][(6*(2*first_rb - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size)];
       memcpy(rxF_ext, rxF, nb_rb2*6*sizeof(int));
       rxF_ext += nb_rb2*6;

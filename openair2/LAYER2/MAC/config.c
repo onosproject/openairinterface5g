@@ -736,7 +736,7 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
     LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
     mac_top_init_eNB();
     LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
-  }
+
 
     RC.mac[Mod_idP]->common_channels[CC_idP].physCellId = physCellId;
     RC.mac[Mod_idP]->common_channels[CC_idP].p_eNB = p_eNB;
@@ -771,7 +771,7 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 	       );
 
     mac_init_cell_params(Mod_idP,CC_idP);
-
+    
     if (schedulingInfoList!=NULL)  {
       RC.mac[Mod_idP]->common_channels[CC_idP].tdd_Config         = tdd_Config;    
       RC.mac[Mod_idP]->common_channels[CC_idP].schedulingInfoList = schedulingInfoList;    
@@ -815,13 +815,13 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
       LOG_I(MAC, "[CONFIG]pusch_config_common.cyclicShift  = %ld\n",
 	    radioResourceConfigCommon->
 	    pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.cyclicShift);
-
+      
       AssertFatal(radioResourceConfigCommon->
 		  rach_ConfigCommon.maxHARQ_Msg3Tx > 0,
 		  "radioResourceconfigCommon %d == 0\n",
 		  (int) radioResourceConfigCommon->
 		  rach_ConfigCommon.maxHARQ_Msg3Tx);
-
+      
       RC.mac[Mod_idP]->common_channels[CC_idP].
 	radioResourceConfigCommon = radioResourceConfigCommon;
       if (ul_CarrierFreq > 0)
@@ -845,7 +845,7 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 
     }
   } // mib != NULL
-
+  
   // SRB2_lchan_config->choice.explicitValue.ul_SpecificParameters->logicalChannelGroup
   if (logicalChannelConfig != NULL) {	// check for eMTC specific things
     UE_id = find_UE_id(Mod_idP, rntiP);

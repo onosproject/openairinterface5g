@@ -827,50 +827,8 @@ void nfapi_log(char *file, char *func, int line, int comp, int level, const char
 #endif
 }
 
-void nfapi_log(char *file, char *func, int line, int comp, int level, const char* format, va_list args)
-{
-  LOG_params log_params;
-  int        len;
-
-  len = vsnprintf(log_params.l_buff_info, MAX_LOG_INFO-1, format, args);
-
-  //2 first parameters must be passed as 'const' to the thread function
-  log_params.file = strdup(file);
-  log_params.func = strdup(func);
-  log_params.line = line;
-  log_params.comp = comp;
-  log_params.level = level;
-  log_params.format = format;
-  log_params.len = len;
-
-  if (pthread_mutex_lock(&log_lock) != 0) {
-    return;
-  }
-
-  log_list_tail++;
-  log_list[log_list_tail - 1] = log_params;
-
-  if (log_list_tail >= 1000) {
-    log_list_tail = 0;
-  }
-
-  if (log_list_nb_elements < 1000) {
-    log_list_nb_elements++;
-  }
-
-  if(pthread_cond_signal(&log_notify) != 0) {
-    pthread_mutex_unlock(&log_lock);
-    return;
-  }
-
-  if(pthread_mutex_unlock(&log_lock) != 0) {
-    return;
-  }
-
-}
-
 //log record: add to a list
-void logRecord(const char *file, const char *func, int line, pthread_t thread_id, int comp,
+void logRecord(const char *file, const char *func, int line, int comp,
                int level, const char *format, ...)
 {
   va_list    args;
@@ -885,7 +843,6 @@ void logRecord(const char *file, const char *func, int line, pthread_t thread_id
   log_params.file = strdup(file);
   log_params.func = strdup(func);
   log_params.line = line;
-  log_params.thread_id = thread_id;
   log_params.comp = comp;
   log_params.level = level;
   log_params.format = format;
@@ -1329,7 +1286,7 @@ void logRecord_mt(const char *file, const char *func, int line, int comp,
 
 //log record, format, and print:  executed in the main thread (mt)
 void logRecord_mt(const char *file, const char *func, int line, 
-    pthread_t thread_id, int comp, int level, const char *format, ...)
+		  int comp, int level, const char *format, ...)
 {
   int len = 0;
   va_list args;

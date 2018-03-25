@@ -56,33 +56,43 @@ void lte_param_init(PHY_VARS_eNB **eNBp,
 
   LTE_DL_FRAME_PARMS *frame_parms;
   int i;
-  PHY_VARS_eNB *eNB;
-  PHY_VARS_UE  *UE;
-  RU_t         *ru;
+  PHY_VARS_eNB *eNB=NULL;
+  PHY_VARS_UE  *UE=NULL;
+  RU_t         *ru=NULL;
   printf("Start lte_param_init\n");
-  *eNBp = malloc(sizeof(PHY_VARS_eNB));
-  *UEp = malloc(sizeof(PHY_VARS_UE));
-  *rup = malloc(sizeof(RU_t));
-  eNB = *eNBp;
-  UE  = *UEp;
-  ru  = *rup;
+  if (eNBp) { 
+    *eNBp = malloc(sizeof(PHY_VARS_eNB));   
+    eNB = *eNBp;
+    memset((void*)eNB,0,sizeof(PHY_VARS_eNB));
+  }
+  if (UEp) {
+    *UEp = malloc(sizeof(PHY_VARS_UE));
+    UE  = *UEp;
+    memset((void*)UE,0,sizeof(PHY_VARS_UE));    
+  }
+  if (rup) {
+    *rup = malloc(sizeof(RU_t));
+    ru  = *rup;
+    memset((void*)ru,0,sizeof(RU_t));
+    ru->eNB_list[0] = eNB;
+    eNB->RU_list[0] = ru;
+    ru->num_eNB=1;
+  }
+
+
   printf("eNB %p, UE %p, ru %p\n",eNB,UE,ru);
 
 
 
-  memset((void*)eNB,0,sizeof(PHY_VARS_eNB));
-  memset((void*)UE,0,sizeof(PHY_VARS_UE));
-  memset((void*)ru,0,sizeof(RU_t));
 
-  ru->eNB_list[0] = eNB;
-  eNB->RU_list[0] = ru;
-  ru->num_eNB=1;
 
   srand(0);
   randominit(0);
   set_taus_seed(0);
 
-  frame_parms = &(eNB->frame_parms);
+  if (eNB) frame_parms = &(eNB->frame_parms);
+  else if (UE) frame_parms = &(UE->frame_parms);
+  else AssertFatal(1==0,"Either eNB or UE must be non-null\n");
 
   frame_parms->N_RB_DL            = N_RB_DL;   //50 for 10MHz and 25 for 5 MHz
   frame_parms->N_RB_UL            = N_RB_DL;
@@ -109,61 +119,72 @@ void lte_param_init(PHY_VARS_eNB **eNBp,
 
   //  phy_init_top(frame_parms); //allocation
 
-  UE->is_secondary_ue = 0;
-  UE->frame_parms = *frame_parms;
-  UE->frame_parms.nb_antennas_rx=N_rx_ue;
-  //  eNB->frame_parms = *frame_parms;
-  ru->frame_parms = *frame_parms;
-  ru->nb_tx = N_tx_phy;
-  ru->nb_rx = N_rx_ru;
-  ru->if_south = LOCAL_RF;
+  if (eNB) {
+    eNB->configured=1;
 
-  eNB->configured=1;
+    eNB->transmission_mode[0] = transmission_mode;
+    printf("Calling phy_init_lte_eNB\n");
+    phy_init_lte_eNB(eNB,0,0);
+    AssertFatal(ru!=NULL,"ru is null\n");
+    if (eNB->frame_parms.frame_type == TDD) {
+      if      (eNB->frame_parms.N_RB_DL == 100) ru->N_TA_offset = 624;
+      else if (eNB->frame_parms.N_RB_DL == 50)  ru->N_TA_offset = 624/2;
+      else if (eNB->frame_parms.N_RB_DL == 25)  ru->N_TA_offset = 624/4;
+    }
+    else ru->N_TA_offset=0;
+  }
+  if (UE) {
+    UE->is_secondary_ue = 0;
+    UE->frame_parms = *frame_parms;
+    UE->frame_parms.nb_antennas_rx=N_rx_ue;
+    UE->transmission_mode[0] = transmission_mode;
+    UE->measurements.n_adj_cells=0;
+    UE->measurements.adj_cell_id[0] = Nid_cell+1;
+    UE->measurements.adj_cell_id[1] = Nid_cell+2;
+    for (i=0; i<3; i++)
+      lte_gold(frame_parms,UE->lte_gold_table[i],Nid_cell+i);
+    printf("Calling init_lte_ue_signal\n");
+    init_lte_ue_signal(UE,1,0);
+    generate_pcfich_reg_mapping(&UE->frame_parms);
+    generate_phich_reg_mapping(&UE->frame_parms);
+    // DL power control init
+    //if (transmission_mode == 1) {
+    UE->pdsch_config_dedicated->p_a  = pa;
+    /* the UE code is multi-thread "aware", we need to setup this array */
+    for (i = 0; i < 10; i++) UE->current_thread_id[i] = i % 2;
+    UE->perfect_ce = perfect_ce;
+  }
+  if (ru) {
+    ru->frame_parms = *frame_parms;
+    ru->nb_tx = N_tx_phy;
+    ru->nb_rx = N_rx_ru;
+    ru->if_south = LOCAL_RF;
+    printf("Calling phy_init_RU (%p)\n",ru);
+    phy_init_RU(ru);
 
-  eNB->transmission_mode[0] = transmission_mode;
-  UE->transmission_mode[0] = transmission_mode;
+  }
+
 
   dump_frame_parms(frame_parms);
 
-  UE->measurements.n_adj_cells=0;
-  UE->measurements.adj_cell_id[0] = Nid_cell+1;
-  UE->measurements.adj_cell_id[1] = Nid_cell+2;
 
-  for (i=0; i<3; i++)
-    lte_gold(frame_parms,UE->lte_gold_table[i],Nid_cell+i);
 
-  printf("Calling init_lte_ue_signal\n");
-  init_lte_ue_signal(UE,1,0);
-  printf("Calling phy_init_lte_eNB\n");
-  phy_init_lte_eNB(eNB,0,0);
-  printf("Calling phy_init_RU (%p)\n",ru);
-  phy_init_RU(ru);
-  generate_pcfich_reg_mapping(&UE->frame_parms);
-  generate_phich_reg_mapping(&UE->frame_parms);
 
-  // DL power control init
-  //if (transmission_mode == 1) {
-  UE->pdsch_config_dedicated->p_a  = pa;
+
+
 
   if (transmission_mode == 1 || transmission_mode ==7) {
-    ((eNB->frame_parms).pdsch_config_common).p_b = 0;
-    ((UE->frame_parms).pdsch_config_common).p_b = 0;
+    if (eNB) ((eNB->frame_parms).pdsch_config_common).p_b = 0;
+    if (UE) ((UE->frame_parms).pdsch_config_common).p_b = 0;
   } else { // rho_a = rhob
-    ((eNB->frame_parms).pdsch_config_common).p_b = 1;
-    ((UE->frame_parms).pdsch_config_common).p_b = 1;
+    if (eNB) ((eNB->frame_parms).pdsch_config_common).p_b = 1;
+    if (UE) ((UE->frame_parms).pdsch_config_common).p_b = 1;
   }
 
-  UE->perfect_ce = perfect_ce;
 
-  /* the UE code is multi-thread "aware", we need to setup this array */
-  for (i = 0; i < 10; i++) UE->current_thread_id[i] = i % 2;
 
-  if (eNB->frame_parms.frame_type == TDD) {
-    if      (eNB->frame_parms.N_RB_DL == 100) ru->N_TA_offset = 624;
-    else if (eNB->frame_parms.N_RB_DL == 50)  ru->N_TA_offset = 624/2;
-    else if (eNB->frame_parms.N_RB_DL == 25)  ru->N_TA_offset = 624/4;
-  }
-  else ru->N_TA_offset=0;
+
+
 
   printf("Done lte_param_init\n");
 

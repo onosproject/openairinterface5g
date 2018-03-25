@@ -42,6 +42,8 @@
 #include "RRC/LITE/defs.h"
 #include "flexran_agent_defs.h"
 
+#include "openair2/COMMON/messages_types.h"
+
 #include "gtpv1u.h"
 #include "NwGtpv1u.h"
 #include "NwGtpv1uMsg.h"

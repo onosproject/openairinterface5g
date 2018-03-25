@@ -47,7 +47,6 @@
 #include "unitary_defs.h"
 
 #include "PHY/TOOLS/lte_phy_scope.h"
-#include "dummy_functions.c"
 
 double cpuf;
 

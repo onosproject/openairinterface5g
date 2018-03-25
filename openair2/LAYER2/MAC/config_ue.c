@@ -135,6 +135,11 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 #ifdef CBA
 		      , uint8_t num_active_cba_groups, uint16_t cba_rnti
 #endif
+#if defined(Rel14)
+		      ,config_action_t config_action
+		      ,const uint32_t * const sourceL2Id
+		      ,const uint32_t * const destinationL2Id
+#endif
 		      )
 {
 
@@ -577,6 +582,56 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 			num_active_cba_groups);
   }
 #endif
+
+//for D2D
+#if defined(Rel14)
+  int j = 0;
+  int k = 0;
+  switch (config_action) {
+  case CONFIG_ACTION_ADD:
+     if (sourceL2Id){
+        UE_mac_inst[Mod_idP].sourceL2Id = *sourceL2Id;
+        LOG_I(MAC,"[UE %d] Configure source L2Id 0x%08x \n", Mod_idP, *sourceL2Id );
+     }
+     if (destinationL2Id) {
+        LOG_I(MAC,"[UE %d] Configure destination L2Id 0x%08x\n", Mod_idP, *destinationL2Id );
+        for (k=0; k< MAX_NUM_DEST; k++) {
+           if ((UE_mac_inst[Mod_idP].destinationList[k] == 0) && (j == 0)) j = k+1;
+           if (UE_mac_inst[Mod_idP].destinationList[k] == *destinationL2Id) break; //destination already exists!
+        }
+        if ((k == MAX_NUM_DEST) && (j > 0)) {
+           UE_mac_inst[Mod_idP].destinationList[j-1] = *destinationL2Id;
+          // UE_mac_inst[Mod_idP].numCommFlows++;
+        }
+        for (k=0; k< MAX_NUM_DEST; k++) {
+           LOG_I(MAC,"[UE %d] destination %d L2Id 0x%08x\n", Mod_idP,k,UE_mac_inst[Mod_idP].destinationList[k] );
+        }
+     }
+     //store list of LCIDs for SL
+     if (logicalChannelIdentity >0 ){
+        j = 0;
+        for (k=0; k< MAX_NUM_LCID; k++) {
+           if ((UE_mac_inst[Mod_idP].SL_LCID[k] == 0) && (j == 0)) j = k+1;
+           if (UE_mac_inst[Mod_idP].SL_LCID[k] == logicalChannelIdentity) break; //LCID already exists!
+        }
+        if ((k == MAX_NUM_LCID) && (j > 0)) {
+           UE_mac_inst[Mod_idP].SL_LCID[j-1] = logicalChannelIdentity;
+           UE_mac_inst[Mod_idP].numCommFlows++;
+        }
+        for (k=0; k< MAX_NUM_LCID; k++) {
+           LOG_I(MAC,"[UE %d] logical channel %d channel id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].SL_LCID[k] );
+        }
+     }
+     break;
+  case CONFIG_ACTION_REMOVE:
+     //TODO
+     break;
+  default:
+     break;
+  }
+
+#endif
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
     (VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
 

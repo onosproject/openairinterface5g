@@ -492,7 +492,7 @@ generate_Msg2(module_id_t module_idP, int CC_idP, frame_t frameP,
     } else
 #endif
     {
-      LOG_E(MAC,"%s() Compare SFN/SF:%04d%d Msg2:%04d%d\n", __FUNCTION__,frameP,subframeP,RA_template->Msg2_frame,RA_template->Msg2_subframe);
+      LOG_E(MAC,"%s() Compare SFN/SF:%04d%d Msg2:%04d%d\n", __FUNCTION__,frameP,subframeP,ra->Msg2_frame,ra->Msg2_subframe);
 
 	if ((ra->Msg2_frame == frameP) && (ra->Msg2_subframe == subframeP)) {
 	    LOG_D(MAC,

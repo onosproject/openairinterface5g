@@ -913,21 +913,23 @@ typedef struct {
   // SLSCH Parameters
   /// Number of Subbands (36.213 14.1.1.2)
   uint32_t Nsb;
-  /// N_RB_HO (36.213 14.1.1.2)
+  /// N_RB_HO (36.213 14.1.1.2) = numSubbands-r12
   uint32_t N_RB_HO;
-  /// n_ss_PSSCH (36.211 9.2.4)
+  /// n_ss_PSSCH (36.211 9.2.4) = rb-Offset-r12
   uint32_t n_ss_PSSCH;
-  /// n_ssf_PSSCH
+  /// n_ssf_PSSCH : (SL TM 1)
   uint32_t n_ssf_PSSCH;
   /// cinit (36.331 hoppingParameter-r12)
   uint32_t cinit;
   /// redundancy version
   uint32_t rvidx;
-  /// n_prime_VRB (36.213 14.1.1.2.1)
-  uint32_t n_prime_VRB;
-  /// M_RB_PSSCH_RP (36.213 14.1.3
+  /// n_prime_VRB parameters (36.213 14.1.1.2.1), RB_start
+  uint32_t RB_start;
+  /// n_prime_VRB parameters (36.213 14.1.1.2.1), L_CRBs
+  uint32_t L_CRBs;
+  /// M_RB_PSSCH_RP (36.213 14.1.3)
   uint32_t M_RB_PSSCH_RP;
-  /// n_prime_PRB (36.213 14.1.1.4
+  /// n_prime_PRB (36.213 14.1.1.4)
   uint32_t n_prime_PRB;
   /// m_nprime_PRB_PSSCH (36.213 14.1.3)
   uint32_t m_nprime_PRB_PSCCH;

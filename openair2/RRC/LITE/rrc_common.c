@@ -53,45 +53,6 @@ extern UE_MAC_INST *UE_mac_inst;
 
 extern mui_t rrc_eNB_mui;
 
-<<<<<<< HEAD
-//configure  BCCH & CCCH Logical Channels and associated rrc_buffers, configure associated SRBs
-//-----------------------------------------------------------------------------
-void
-openair_rrc_on(
-  const protocol_ctxt_t* const ctxt_pP
-)
-//-----------------------------------------------------------------------------
-{
-  unsigned short i;
-  int            CC_id;
-
-  if (ctxt_pP->enb_flag == ENB_FLAG_YES) {
-    LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" ENB:OPENAIR RRC IN....\n",
-          PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
-    for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
-      rrc_config_buffer (&RC.rrc[ctxt_pP->module_id]->carrier[CC_id].SI, BCCH, 1);
-      RC.rrc[ctxt_pP->module_id]->carrier[CC_id].SI.Active = 1;
-      rrc_config_buffer (&RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0, CCCH, 1);
-      RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Active = 1;
-    }
-  } else {
-    LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" UE?:OPENAIR RRC IN....\n",
-          PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
-
-    for (i = 0; i < NB_eNB_INST; i++) {
-      LOG_D(RRC, PROTOCOL_RRC_CTXT_FMT" Activating CCCH (eNB %d)\n",
-            PROTOCOL_RRC_CTXT_ARGS(ctxt_pP), i);
-      UE_rrc_inst[ctxt_pP->module_id].Srb0[i].Srb_id = CCCH;
-      memcpy (&UE_rrc_inst[ctxt_pP->module_id].Srb0[i].Lchan_desc[0], &CCCH_LCHAN_DESC, LCHAN_DESC_SIZE);
-      memcpy (&UE_rrc_inst[ctxt_pP->module_id].Srb0[i].Lchan_desc[1], &CCCH_LCHAN_DESC, LCHAN_DESC_SIZE);
-      rrc_config_buffer (&UE_rrc_inst[ctxt_pP->module_id].Srb0[i], CCCH, 1);
-      UE_rrc_inst[ctxt_pP->module_id].Srb0[i].Active = 1;
-    }
-  }
-}
-
-=======
->>>>>>> 3fe90157e61c4c78e6196d10937584293f36c6fc
 //-----------------------------------------------------------------------------
 int
 rrc_init_global_param(

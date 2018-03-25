@@ -296,12 +296,12 @@ void freq_equalization(LTE_DL_FRAME_PARMS *frame_parms,
   __m128i *ul_ch_mag128,*ul_ch_magb128,*rxdataF_comp128;
   rxdataF_comp128   = (__m128i *)&rxdataF_comp[0][symbol*frame_parms->N_RB_DL*12];
   ul_ch_mag128      = (__m128i *)&ul_ch_mag[0][symbol*frame_parms->N_RB_DL*12];
-  ul_ch_magb128      = (__m128i *)&ul_ch_magb[0][symbol*frame_parms->N_RB_DL*12];
+  ul_ch_magb128     = (Qm == 6) ? (__m128i *)&ul_ch_magb[0][symbol*frame_parms->N_RB_DL*12] : NULL;
 #elif defined(__arm__)
   int16x8_t *ul_ch_mag128,*ul_ch_magb128,*rxdataF_comp128;
   rxdataF_comp128   = (int16x8_t*)&rxdataF_comp[0][symbol*frame_parms->N_RB_DL*12];
   ul_ch_mag128      = (int16x8_t*)&ul_ch_mag[0][symbol*frame_parms->N_RB_DL*12];
-  ul_ch_magb128     = (int16x8_t*)&ul_ch_magb[0][symbol*frame_parms->N_RB_DL*12];
+  ul_ch_magb128     = (Qm == 6) ? (int16x8_t*)&ul_ch_magb[0][symbol*frame_parms->N_RB_DL*12] : NULL;
 #endif
 
   AssertFatal(symbol<frame_parms->symbols_per_tti,"symbol %d >= %d\n",
@@ -322,7 +322,7 @@ void freq_equalization(LTE_DL_FRAME_PARMS *frame_parms,
 
     if (Qm==4)
       ul_ch_mag128[re]  = _mm_set1_epi16(324);  // this is 512*2/sqrt(10)
-    else {
+    else if (Qm==6) {
       ul_ch_mag128[re]  = _mm_set1_epi16(316);  // this is 512*4/sqrt(42)
       ul_ch_magb128[re] = _mm_set1_epi16(158);  // this is 512*2/sqrt(42)
     }
@@ -331,7 +331,7 @@ void freq_equalization(LTE_DL_FRAME_PARMS *frame_parms,
 
     if (Qm==4)
       ul_ch_mag128[re]  = vdupq_n_s16(324);  // this is 512*2/sqrt(10)
-    else {
+    else if (Qm==6){
       ul_ch_mag128[re]  = vdupq_n_s16(316);  // this is 512*4/sqrt(42)
       ul_ch_magb128[re] = vdupq_n_s16(158);  // this is 512*2/sqrt(42)
     }

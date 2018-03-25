@@ -107,7 +107,7 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
     return(-1);
   }
 
-  LOG_D(PHY,"subframe %d, Ns %d, l %d, Msc_RS = %d, Msc_RS_idx = %d, u %d, v %d, cyclic_shift %d\n",subframe,Ns,l,Msc_RS, Msc_RS_idx,u,v,cyclic_shift);
+  LOG_D(PHY,"subframe %d, Ns %d, l %d, Msc_RS = %d, Msc_RS_idx = %d, u %d, v %d, cyclic_shift %d\n",subframe_rx,Ns,l,Msc_RS, Msc_RS_idx,u,v,cyclic_shift);
 #ifdef DEBUG_CH
 
   if (Ns==0)
@@ -261,7 +261,7 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
 #endif
       }
 
-      if (ul_ch_estimates_time[aa]) {
+      if (ul_ch_estimates_time && ul_ch_estimates_time[aa]) {
 	// Convert to time domain for visualization
 	memset(temp_in_ifft_0,0,frame_parms->ofdm_symbol_size*sizeof(int32_t));
 	for(i=0; i<Msc_RS; i++)

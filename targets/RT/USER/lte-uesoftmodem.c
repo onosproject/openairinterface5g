@@ -114,6 +114,10 @@ unsigned char                   scope_enb_num_ue = 2;
 static pthread_t                forms_thread; //xforms
 #endif //XFORMS
 
+pthread_cond_t nfapi_sync_cond;
+pthread_mutex_t nfapi_sync_mutex;
+int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
+
 pthread_cond_t sync_cond;
 pthread_mutex_t sync_mutex;
 int sync_var=-1; //!< protected by mutex \ref sync_mutex.
@@ -151,6 +155,8 @@ runmode_t mode = normal_txrx;
 
 FILE *input_fd=NULL;
 
+int simL1=0;
+char emul_iface[100];
 
 #if MAX_NUM_CCs == 1
 rx_gain_t                rx_gain_mode[MAX_NUM_CCs][4] = {{max_gain,max_gain,max_gain,max_gain}};
@@ -202,6 +208,7 @@ uint32_t timing_advance = 0;
 uint8_t exit_missed_slots=1;
 uint64_t num_missed_slots=0; // counter for the number of missed slots
 
+uint8_t nfapi_mode = 0;
 
 extern void reset_opp_meas(void);
 extern void print_opp_meas(void);

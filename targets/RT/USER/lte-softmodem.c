@@ -116,7 +116,7 @@ pthread_cond_t nfapi_sync_cond;
 pthread_mutex_t nfapi_sync_mutex;
 int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
-
+int simL1=0;
 char emul_iface[100];
 uint8_t nfapi_mode = 0; // Default to monolithic mode
 
@@ -239,6 +239,7 @@ threads_t threads= {-1,-1,-1,-1,-1,-1,-1};
  * this is very hackish - find a proper solution
  */
 uint8_t abstraction_flag=0;
+
 
 /* forward declarations */
 void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]);

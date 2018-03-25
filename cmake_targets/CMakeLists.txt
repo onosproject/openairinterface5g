@@ -979,6 +979,8 @@ set(SCHED_SRC
 add_library(SCHED_LIB ${SCHED_SRC})
 
 set(SCHED_SRC_UE
+  ${OPENAIR1_DIR}/SCHED/fapi_l1.c
+  ${OPENAIR1_DIR}/SCHED/dummy_functions_ue.c
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_ue.c
   ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common.c
   ${OPENAIR1_DIR}/SCHED/ru_procedures.c
@@ -1038,7 +1040,16 @@ set(NFAPI_USER_SRC
   ${NFAPI_USER_DIR}/nfapi_pnf.c
   ${NFAPI_USER_DIR}/nfapi_vnf.c
 )
+
 add_library(NFAPI_USER_LIB ${NFAPI_USER_SRC})
+
+set(NFAPI_USER_UE_SRC
+  ${NFAPI_USER_DIR}/nfapi.c
+  ${NFAPI_USER_DIR}/nfapi_pnf.c
+)
+
+add_library(NFAPI_USER_UE_LIB ${NFAPI_USER_UE_SRC})
+
 include_directories(${NFAPI_USER_DIR})
 
 # Layer 1
@@ -1178,6 +1189,9 @@ set(PHY_SRC_UE
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/prach.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pmch.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pch.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/slss.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/sldch.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/slsch.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/group_hopping.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/srs_modulation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/drs_modulation.c
@@ -1226,6 +1240,7 @@ set(PHY_SRC_UE
   ${OPENAIR1_DIR}/PHY/CODING/viterbi_lte.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_init_ru.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_init_ue.c
+#  ${OPENAIR1_DIR}/PHY/INIT/lte_init.c
   ${OPENAIR1_DIR}/PHY/INIT/init_top.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_parms.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_param_init.c
@@ -1353,7 +1368,6 @@ set(L2_SRC_UE
   )
 
 set (MAC_SRC
-  ${PHY_INTERFACE_DIR}/phy_stub_UE.c
   ${PHY_INTERFACE_DIR}/IF_Module.c
   ${MAC_DIR}/main.c
   ${MAC_DIR}/main_ue.c
@@ -1375,6 +1389,9 @@ set (MAC_SRC
  )
 
 set (MAC_SRC_UE
+  ${PHY_INTERFACE_DIR}/phy_stub_UE.c
+  ${PHY_INTERFACE_DIR}/IF_Module.c
+  ${PHY_INTERFACE_DIR}/dummy_functions.c
   ${MAC_DIR}/main_ue.c
   ${MAC_DIR}/ue_procedures.c
   ${MAC_DIR}/ra_procedures.c
@@ -1790,14 +1807,13 @@ add_library(SIMU_ETH
 ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c
 ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/multicast_link.c
 ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/socket.c
-${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/bypass_session_layer.c
+#${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/bypass_session_layer.c
 #${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/emu_transport.c
 )
 
 add_library(OPENAIR0_LIB
   ${OPENAIR_TARGETS}/ARCH/EXMIMO/USERSPACE/LIB/openair0_lib.c
 )
-
 include_directories("${NFAPI_DIR}/nfapi/public_inc")
 include_directories("${NFAPI_DIR}/common/public_inc")
 include_directories("${NFAPI_DIR}/pnf/public_inc")
@@ -2008,7 +2024,7 @@ add_executable(lte-softmodem
 
 target_link_libraries (lte-softmodem
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 
+  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY SIMU_ETH LFDS L2 
   ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
   NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB NFAPI_USER_LIB
   -Wl,--end-group z dl)
@@ -2066,6 +2082,7 @@ add_executable(lte-uesoftmodem
   ${OPENAIR_BIN_DIR}/messages_xml.h
   ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
   ${OPENAIR_TARGETS}/RT/USER/lte-ue.c
+#  ${OPENAIR_TARGETS}/RT/USER/lte-enb.c
   ${OPENAIR_TARGETS}/RT/USER/lte-uesoftmodem.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
   ${OPENAIR_TARGETS}/SIMU/USER/init_lte.c
@@ -2075,6 +2092,8 @@ add_executable(lte-uesoftmodem
   ${OPENAIR3_DIR}/NAS/UE/nas_ue_task.c
   ${OPENAIR_DIR}/common/utils/utils.c
   ${OPENAIR_DIR}/common/utils/system.c
+  ${OPENAIR_TARGETS}/SIMU/USER/channel_sim.c
+  ${OPENAIR_TARGETS}/SIMU/USER/init_lte.c
   ${XFORMS_SOURCE}
   ${XFORMS_SOURCE_SOFTMODEM}
   ${T_SOURCE}
@@ -2084,12 +2103,13 @@ add_executable(lte-uesoftmodem
 
 target_link_libraries (lte-uesoftmodem
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_UE_LIB PHY_UE LFDS L2_UE 
+  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_UE_LIB PHY_UE LFDS L2_UE SIMU SIMU_ETH
   ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} LFDS7
+  NFAPI_COMMON_LIB NFAPI_LIB NFAPI_PNF_LIB NFAPI_USER_UE_LIB
   -Wl,--end-group z dl)
 
 target_link_libraries (lte-uesoftmodem ${LIBXML2_LIBRARIES})
-target_link_libraries (lte-uesoftmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
+target_link_libraries (lte-uesoftmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES} ${LAPACK_LIBRARIES} ${ATLAS_LIBRARIES})
 target_link_libraries (lte-uesoftmodem ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-uesoftmodem ${T_LIB})
 
@@ -2282,18 +2302,21 @@ target_link_libraries (dlsim_tm4
   pthread m rt ${CONFIG_LIBRARIES} ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${T_LIB}
   )
 
-foreach(myExe dlsim dlsim_tm7 ulsim slschsim pbchsim scansim mbmssim pdcchsim pucchsim prachsim syncsim)
-
+#foreach(myExe dlsim dlsim_tm7 ulsim slschsim pbchsim scansim mbmssim pdcchsim pucchsim prachsim syncsim)
+foreach(myExe dlsim ulsim slschsim pucchsim prachsim)
   add_executable(${myExe}
     ${OPENAIR_BIN_DIR}/messages_xml.h
     ${OPENAIR1_DIR}/SIMULATION/LTE_PHY/${myExe}.c
+    ${OPENAIR1_DIR}/SIMULATION/LTE_PHY/dummy_functions.c
+    ${OPENAIR_TARGETS}/SIMU/USER/channel_sim.c
     ${XFORMS_SOURCE}
     ${T_SOURCE}
     ${CONFIG_SOURCES}
+    ${SHLIB_LOADER_SOURCES}
     )
-  target_link_libraries (${myExe}
 
-    -Wl,--start-group SIMU UTIL SCHED_LIB PHY LFDS ${ITTI_LIB} LFDS7 -Wl,--end-group
+  target_link_libraries (${myExe}
+    -Wl,--start-group SIMU UTIL SCHED_LIB PHY LFDS SIMU SIMU_ETH ${ITTI_LIB} LFDS7 -Wl,--end-group
     pthread m rt ${CONFIG_LIBRARIES} ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${T_LIB} dl
     )
 endforeach(myExe)

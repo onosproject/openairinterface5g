@@ -135,12 +135,8 @@ void mac_top_init_eNB(void)
 
 }
 
-<<<<<<< HEAD
 
-void mac_top_init_eNB(void)
-=======
 void mac_init_cell_params(int Mod_idP, int CC_idP)
->>>>>>> 3fe90157e61c4c78e6196d10937584293f36c6fc
 {
 
     int j;

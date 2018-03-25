@@ -1401,7 +1401,6 @@ fill_nfapi_dlsch_config(eNB_MAC_INST * eNB,
 
   dl_config_pdu->pdu_type                                                        = NFAPI_DL_CONFIG_DLSCH_PDU_TYPE;
   dl_config_pdu->pdu_size                                                        = (uint8_t) (2 + sizeof(nfapi_dl_config_dlsch_pdu));
->>>>>>> 3fe90157e61c4c78e6196d10937584293f36c6fc
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.length                                 = length;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = pdu_index;

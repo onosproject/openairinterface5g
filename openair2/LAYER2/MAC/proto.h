@@ -1025,16 +1025,12 @@ int rrc_mac_config_req_ue(module_id_t module_idP,
 			  ,
 			  uint8_t num_active_cba_groups, uint16_t cba_rnti
 #endif
-<<<<<<< HEAD
 #if defined(Rel14)
            ,config_action_t config_action
            ,const uint32_t * const sourceL2Id
            ,const uint32_t * const destinationL2Id
 #endif
 			  );
-=======
-    );
->>>>>>> 3fe90157e61c4c78e6196d10937584293f36c6fc
 
 uint16_t getRIV(uint16_t N_RB_DL, uint16_t RBstart, uint16_t Lcrbs);
 

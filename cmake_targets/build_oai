@@ -626,7 +626,8 @@ function main() {
   if [ "$SIMUS_PHY" = "1" ] ; then
     # lte unitary simulators compilation
     echo_info "Compiling unitary tests simulators"
-    simlist="dlsim_tm4 dlsim ulsim slschsim pucchsim prachsim pdcchsim pbchsim mbmssim"
+#    simlist="dlsim_tm4 dlsim ulsim slschsim pucchsim prachsim pdcchsim pbchsim mbmssim"
+    simlist="dlsim ulsim slschsim pucchsim prachsim"
     for f in $simlist ; do
       compilations \
       lte-simulators $f \

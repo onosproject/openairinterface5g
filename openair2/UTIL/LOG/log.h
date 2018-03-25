@@ -269,8 +269,8 @@ extern log_t *g_log;
 #    include "log_if.h"
 /*----------------------------------------------------------------------------*/
 int  logInit (void);
-void logRecord_mt(const char *file, const char *func, int line,pthread_t thread_id, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 7, 8)));
-void logRecord(const char *file, const char *func, int line, pthread_t thread_id, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 7, 8)));
+void logRecord_mt(const char *file, const char *func, int line, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 6, 7)));
+void logRecord(const char *file, const char *func, int line,int comp, int level, const char *format, ...) __attribute__ ((format (printf, 6, 7)));
 int  set_comp_log(int component, int level, int verbosity, int interval);
 int  set_log(int component, int level, int interval);
 void set_glog(int level, int verbosity);
@@ -290,22 +290,9 @@ void *log_thread_function(void * list);
  *  @brief Macro used to call tr_log_full_ex with file, function and line information
  * @{*/
 #ifdef LOG_NO_THREAD
-<<<<<<< HEAD
-#define logIt(component, level, format, args...) logRecord_mt(__FILE__, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
-#else //default
-#define logIt(component, level, format, args...) logRecord(__FILE__, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
-#endif
-#else
-#ifdef LOG_NO_THREAD
-#define logIt(component, level, format, args...) logRecord_mt(NULL, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
-#else // default
-#define logIt(component, level, format, args...) logRecord(NULL, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
-#endif
-=======
 #define logIt(component, level, format, args...) (g_log->log_component[component].interval?logRecord_mt(__FILE__, __FUNCTION__, __LINE__, component, level, format, ##args):(void)0)
 #else //default
 #define logIt(component, level, format, args...) (g_log->log_component[component].interval?logRecord(__FILE__, __FUNCTION__, __LINE__, component, level, format, ##args):(void)0)
->>>>>>> 3fe90157e61c4c78e6196d10937584293f36c6fc
 #endif
 /* @}*/
 

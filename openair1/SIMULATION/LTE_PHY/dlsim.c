@@ -54,9 +54,8 @@
 
 #include "PHY/TOOLS/lte_phy_scope.h"
 
-#include "dummy_functions.c"
 
-
+ 
 
 double cpuf;
 
@@ -498,7 +497,7 @@ int n_users = 1;
 sub_frame_t subframe=7;
 int num_common_dci=0,num_ue_spec_dci=0,num_dci=0,num_pdcch_symbols=1;
 uint16_t n_rnti=0x1234;
-  int nfapi_mode=0;
+int nfapi_mode=0;
 
 int main(int argc, char **argv)
 {
