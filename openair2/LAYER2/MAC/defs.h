@@ -1342,8 +1342,10 @@ typedef struct {
   uint32_t groupL2Id;
   //SL destinationL2Id
   uint32_t destinationL2Id;
-  //List of destinations
+  //List of destinations (unicast)
   uint32_t destinationList[MAX_NUM_DEST];
+  //List of group (multicast)
+  uint32_t groupList[MAX_NUM_DEST];
   uint8_t numCommFlows;
   uint32_t  SL_LCID[MAX_NUM_LCID];
 

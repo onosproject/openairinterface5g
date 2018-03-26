@@ -1051,6 +1051,7 @@ rrc_mac_config_req_ue(
   ,config_action_t  config_action
   ,const uint32_t * const sourceL2Id
   ,const uint32_t * const destinationL2Id
+  ,const uint32_t * const groupL2Id
 #endif
 
                       )
@@ -1384,6 +1385,8 @@ rrc_mac_config_req_ue(
         LOG_I(MAC,"[UE %d] Configure source L2Id 0x%08x \n", Mod_idP, *sourceL2Id );
      }
      if (destinationL2Id) {
+        j = 0;
+        k = 0;
         LOG_I(MAC,"[UE %d] Configure destination L2Id 0x%08x\n", Mod_idP, *destinationL2Id );
         for (k=0; k< MAX_NUM_DEST; k++) {
            if ((UE_mac_inst[Mod_idP].destinationList[k] == 0) && (j == 0)) j = k+1;
@@ -1397,9 +1400,26 @@ rrc_mac_config_req_ue(
            LOG_I(MAC,"[UE %d] destination %d L2Id 0x%08x\n", Mod_idP,k,UE_mac_inst[Mod_idP].destinationList[k] );
         }
      }
+     if (groupL2Id) {
+        j = 0;
+        k = 0;
+        LOG_I(MAC,"[UE %d] Configure group L2Id 0x%08x\n", Mod_idP, *groupL2Id );
+        for (k=0; k< MAX_NUM_DEST; k++) {
+           if ((UE_mac_inst[Mod_idP].groupList[k] == 0) && (j == 0)) j = k+1;
+           if (UE_mac_inst[Mod_idP].groupList[k] == *groupL2Id) break; //group already exists!
+        }
+        if ((k == MAX_NUM_DEST) && (j > 0)) {
+           UE_mac_inst[Mod_idP].groupList[j-1] = *groupL2Id;
+          // UE_mac_inst[Mod_idP].numCommFlows++;
+        }
+        for (k=0; k< MAX_NUM_DEST; k++) {
+           LOG_I(MAC,"[UE %d] group %d L2Id 0x%08x\n", Mod_idP,k,UE_mac_inst[Mod_idP].groupList[k] );
+        }
+     }
      //store list of LCIDs for SL
      if (logicalChannelIdentity >0 ){
         j = 0;
+        k = 0;
         for (k=0; k< MAX_NUM_LCID; k++) {
            if ((UE_mac_inst[Mod_idP].SL_LCID[k] == 0) && (j == 0)) j = k+1;
            if (UE_mac_inst[Mod_idP].SL_LCID[k] == logicalChannelIdentity) break; //LCID already exists!

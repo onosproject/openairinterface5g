@@ -636,7 +636,7 @@ typedef struct {
   SystemInformationBlockType18_r12_t *sib18;
   SystemInformationBlockType19_r12_t *sib19;
   SystemInformationBlockType21_r14_t *sib21;
-  // End - TTN
+
   SRB_INFO                          SI;
   SRB_INFO                          Srb0;
 } rrc_eNB_carrier_data_t;
@@ -741,8 +741,10 @@ typedef struct UE_RRC_INST_s {
   uint32_t groupL2Id;
   //current destination
   uint32_t destinationL2Id;
-  //List of destinations
-   uint32_t destinationList[MAX_NUM_DEST];
+  //List of destinations (unicast)
+  uint32_t destinationList[MAX_NUM_DEST];
+  //List of groups (multicast)
+  uint32_t groupList[MAX_NUM_DEST];
   //sl_discovery..
   SRB_INFO SL_Discovery[NB_CNX_UE];
 #endif

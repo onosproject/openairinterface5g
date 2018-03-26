@@ -1048,6 +1048,7 @@ rrc_ue_process_measConfig(
            ,
            0,
            NULL,
+           NULL,
            NULL
 #endif
 			  );
@@ -1567,6 +1568,7 @@ rrc_ue_process_radioResourceConfigDedicated(
            ,
            0,
            NULL,
+           NULL,
            NULL
 #endif
 				);
@@ -1631,6 +1633,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #if defined(Rel14)
            ,
            0,
+           NULL,
            NULL,
            NULL
 #endif
@@ -1745,6 +1748,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #if defined(Rel14)
            ,
            0,
+           NULL,
            NULL,
            NULL
 #endif
@@ -2335,6 +2339,7 @@ rrc_ue_process_mobilityControlInfo(
 #if defined(Rel14)
            ,
            0,
+           NULL,
            NULL,
            NULL
 #endif
@@ -3204,6 +3209,7 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
            ,
            0,
            NULL,
+           NULL,
            NULL
 #endif
 			);
@@ -3889,6 +3895,7 @@ uint64_t arfcn_to_freq(long arfcn) {
            ,
            0,
            NULL,
+           NULL,
            NULL
 #endif
 			      );
@@ -4074,6 +4081,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 #if defined(Rel14)
            ,
            0,
+           NULL,
            NULL,
            NULL
 #endif
@@ -4580,6 +4588,7 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
 #if defined(Rel14)
            ,
            0,
+           NULL,
            NULL,
            NULL
 #endif
@@ -5549,10 +5558,10 @@ void *rrc_control_socket_thread_fct(void *arg)
          j = 0;
          i = 0;
          for (i=0; i< MAX_NUM_DEST; i++) {
-            if ((UE_rrc_inst[module_id].destinationList[i] == 0) && (j == 0)) j = i+1;
-            if (UE_rrc_inst[module_id].destinationList[i] == groupL2Id) break; //group already exists!
+            if ((UE_rrc_inst[module_id].groupList[i] == 0) && (j == 0)) j = i+1;
+            if (UE_rrc_inst[module_id].groupList[i] == groupL2Id) break; //group already exists!
          }
-         if ((i == MAX_NUM_DEST) && (j > 0))  UE_rrc_inst[module_id].destinationList[j-1] = groupL2Id;
+         if ((i == MAX_NUM_DEST) && (j > 0))  UE_rrc_inst[module_id].groupList[j-1] = groupL2Id;
 
          // configure lower layers PDCP/MAC/PHY for this communication
          //Establish a new RBID/LCID for this communication
@@ -5681,6 +5690,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #if defined(Rel10) || defined(Rel14)
                ,CONFIG_ACTION_ADD,
                &sourceL2Id,
+               NULL,
                &groupL2Id
 #endif
          );
@@ -5753,7 +5763,8 @@ void *rrc_control_socket_thread_fct(void *arg)
          #if defined(Rel10) || defined(Rel14)
                     ,CONFIG_ACTION_REMOVE,
                     &sourceL2Id,
-                    &destinationL2Id
+                    &destinationL2Id,
+                    NULL
          #endif
                     );
 
@@ -5932,7 +5943,8 @@ void *rrc_control_socket_thread_fct(void *arg)
 #if defined(Rel10) || defined(Rel14)
                ,CONFIG_ACTION_ADD,
                &sourceL2Id,
-               &destinationL2Id
+               &destinationL2Id,
+               NULL
 #endif
          );
 
@@ -5983,7 +5995,7 @@ void *rrc_control_socket_thread_fct(void *arg)
             i = 0;
             for (i=0; i< MAX_NUM_DEST; i++) {
                if ((UE_rrc_inst[module_id].destinationList[i] == 0) && (j == 0)) j = i+1;
-               if (UE_rrc_inst[module_id].destinationList[i] == destinationL2Id) break; //group already exists!
+               if (UE_rrc_inst[module_id].destinationList[i] == destinationL2Id) break; //destination already exists!
             }
             if ((i == MAX_NUM_DEST) && (j > 0))  UE_rrc_inst[module_id].destinationList[j-1] = destinationL2Id;
          } else {//RX
@@ -6118,7 +6130,8 @@ void *rrc_control_socket_thread_fct(void *arg)
 #if defined(Rel10) || defined(Rel14)
                   ,CONFIG_ACTION_ADD,
                   &sourceL2Id,
-                  &destinationL2Id
+                  &destinationL2Id,
+                  NULL
 #endif
             );
          } else {//RX
@@ -6157,6 +6170,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #if defined(Rel10) || defined(Rel14)
                   ,CONFIG_ACTION_ADD,
                   &sourceL2Id,
+                  NULL,
                   NULL
 #endif
             );
