@@ -691,9 +691,28 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP, slice_id_t slice_id, 
 				   uint16_t * first_rb);
 void store_ulsch_buffer(module_id_t module_idP, int frameP,
 			sub_frame_t subframeP);
-void sort_ue_ul(module_id_t module_idP, int frameP, sub_frame_t subframeP);
+void sort_ue_ul(module_id_t module_idP, slice_id_t slice_id, int frameP, sub_frame_t subframeP);
 void assign_max_mcs_min_rb(module_id_t module_idP, int slice_id, int frameP,
 			   sub_frame_t subframeP, uint16_t * first_rb);
+
+void ulsch_scheduler_pre_processor_accounting(module_id_t module_idP,
+                                              slice_id_t slice_id,
+                                              int frameP,
+                                              sub_frame_t subframeP,
+                                              uint16_t * first_rb,
+                                              uint16_t total_ue_count[MAX_NUM_CCs],
+                                              uint16_t nb_allocated_rbs[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
+                                              uint16_t total_allocated_rbs[MAX_NUM_CCs]);
+
+void ulsch_scheduler_pre_processor_allocation(module_id_t module_idP,
+                                              slice_id_t slice_id,
+                                              int frameP,
+                                              sub_frame_t subframeP,
+                                              uint16_t * first_rb,
+                                              uint16_t total_ue_count[MAX_NUM_CCs],
+                                              uint16_t nb_allocated_rbs[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
+                                              uint16_t total_allocated_rbs[MAX_NUM_CCs]);
+
 void adjust_bsr_info(int buffer_occupancy, uint16_t TBS,
 		     UE_TEMPLATE * UE_template);
 int phy_stats_exist(module_id_t Mod_id, int rnti);

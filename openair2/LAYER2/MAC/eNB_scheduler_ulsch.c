@@ -1009,6 +1009,13 @@ schedule_ulsch(module_id_t module_idP, frame_t frameP,
         }
       }
 
+      // Check for new sorting policy
+      if (slice_sorting_uplink_current[i] != slice_sorting_uplink[i]) {
+        LOG_N(MAC, "[eNB %d][SLICE %d][UL] frame %d subframe %d: UE sorting policy has changed (%x-->%x)\n",
+              module_idP, i, frameP, subframeP, slice_sorting_uplink_current[i], slice_sorting_uplink[i]);
+        slice_sorting_uplink_current[i] = slice_sorting_uplink[i];
+      }
+
       // check if a new scheduler, and log the console
       if (update_ul_scheduler_current[i] != update_ul_scheduler[i]){
         LOG_N(MAC,"[eNB %d][SLICE %d][UL] frame %d subframe %d: UL scheduler for this slice is updated: %s \n",

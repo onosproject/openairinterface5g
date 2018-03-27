@@ -111,6 +111,14 @@ typedef enum {
 } sorting_criterion_t;
 
 typedef enum {
+    CRU_ROUND = 0,
+    CRU_BUF   = 1,
+    CRU_BTS   = 2,
+    CRU_MCS   = 3,
+    CRU_NUM   = 4
+} sorting_criterion_ul_t;
+
+typedef enum {
     POL_FAIR   = 0,
     POL_GREEDY = 1,
     POL_NUM    = 2
