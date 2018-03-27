@@ -10,6 +10,8 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     uint32_t abs_subframe;
     //UE_TEMPLATE_NB_IoT *UE_info;
 
+    /* Disable uplink RX function for now
+
       //If there is a preamble, do the initiate RA procedure
       if(UL_INFO->NRACH.number_of_initial_scs_detected>0)
         {
@@ -45,13 +47,13 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
           }
         }
 
-        /*If there is a Uplink SDU which needs to send to MAC*/
+        //If there is a Uplink SDU which needs to send to MAC
 
         if(UL_INFO->RX_NPUSCH.number_of_pdus>0)
           {
             for(i=0;i<UL_INFO->RX_NPUSCH.number_of_pdus;i++)
               {
-                /*For MSG3, Normal Uplink Data, NAK*/
+                //For MSG3, Normal Uplink Data, NAK
                 rx_sdu_NB_IoT(UL_INFO->module_id,
                               UL_INFO->CC_id,
                               UL_INFO->frame,
@@ -65,9 +67,13 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 
           }
 
+          */
+
     abs_subframe = UL_INFO->frame*10+UL_INFO->subframe;
+
+    LOG_I(MAC,"Enter scheduler in subframe %d\n",abs_subframe);
     //scheduler here
     //Schedule subframe should be next four subframe, means that UL_INFO->frame*10+UL_INFO->subframe + 4
     eNB_dlsch_ulsch_scheduler_NB_IoT(mac_inst,abs_subframe);
-
+    LOG_I(MAC,"After scheduler\n");
 }

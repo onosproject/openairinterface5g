@@ -652,6 +652,17 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   /// if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc, no_relay );
    ////////////////////////////////////END///////////////////////
 
+  //////////////////////////////////// for IF Module/scheduler testing
+
+  //LOG_I(PHY,"Before UL_indication\n");
+  eNB->UL_INFO.frame     = proc->frame_rx;
+  eNB->UL_INFO.subframe  = proc->subframe_rx;
+  eNB->UL_INFO.module_id = eNB->Mod_id;
+  eNB->UL_INFO.CC_id     = eNB->CC_id;
+
+  //eNB->if_inst->UL_indication(&eNB->UL_INFO);
+  
+  //LOG_I(PHY,"After UL_indication\n");
   // *****************************************
   // TX processing for subframe n+4
   // run PHY TX procedures the one after the other for all CCs to avoid race conditions
@@ -2113,6 +2124,14 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
       eNB->ts_offset          = 0;
       eNB->in_synch           = 0;
       eNB->is_slave           = (wait_for_sync>0) ? 1 : 0;
+
+      /////// IF-Module initialization ///////////////
+
+      LOG_I(PHY,"Registering with MAC interface module start\n");
+      AssertFatal((eNB->if_inst         = IF_Module_init_NB_IoT(inst))!=NULL,"Cannot register interface");
+      eNB->if_inst->schedule_response   = schedule_response_NB_IoT;
+      eNB->if_inst->PHY_config_req      = PHY_config_req_NB_IoT;
+      LOG_I(PHY,"Registering with MAC interface module sucessfully\n");
 
 
 #ifndef OCP_FRAMEWORK

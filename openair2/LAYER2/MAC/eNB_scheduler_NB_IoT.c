@@ -84,6 +84,8 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 	SIB1_flag = 0;
 	uint32_t h,f,sf;
 	//int a;
+
+	printf("A\n");
 	//DEBUG("--------------[%04d][eNB scheduler NB-IoT] Start Scheduling------------\n", mac_inst->current_subframe);
 	eNB_scheduler_computing_flag_NB_IoT(mac_inst, abs_subframe, &scheduler_flags, &common_flags);
 	/*Update the available resource list to current state*/
@@ -96,11 +98,14 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 			}
 		}
 	}
+	printf("B\n");
 
 	if(scheduler_flags > 0){
 	        extend_available_resource_DL(mac_inst, mac_inst->current_subframe + 1 + max_subframe);
 	}
 	
+	printf("C\n");
+
 	maintain_available_resource(mac_inst);
 
     //static int test=2;
@@ -109,17 +114,24 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 		   add_UL_Resource();
 	}
 
+	printf("D\n");
+
 	//Check if type2 searching space scheduling
 	if((scheduler_flags&flag_css_type2)>0){
 		schedule_RA_NB_IoT(mac_inst);
 		scheduler_flags &= ~(flag_css_type2);
 	}
 
+	printf("E\n");
+
+
 	//Check if type1 searching space scheduling
 	if((scheduler_flags&flag_css_type1)>0){
 		scheduler_flags &= ~(flag_css_type1);
  	}
 	
+		printf("F\n");
+
 	// loop all USS period
 	for(i=0;i<mac_inst->num_uss_list;++i)
 	{
@@ -146,7 +158,11 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 		MIB_flag = 1;
 	if(common_flags == flag_sib1)
 		SIB1_flag = 1;
+
+		printf("G\n");
+
 	convert_system_number(abs_subframe, &h, &f, &sf);
+
 	a = output_handler(mac_inst, 0,0,h,f,sf,MIB_flag,SIB1_flag, abs_subframe);
 
 	printf("Output_handler_return value : %d", a);

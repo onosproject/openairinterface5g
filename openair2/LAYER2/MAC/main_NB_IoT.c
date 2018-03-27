@@ -247,6 +247,8 @@ int l2_init_eNB_NB_IoT(void)
 
   mac_inst = (eNB_MAC_INST_NB_IoT *) malloc (sizeof(eNB_MAC_INST_NB_IoT));
 
+  memset(mac_inst,0,sizeof(eNB_MAC_INST_NB_IoT));
+
   Is_rrc_registered_NB_IoT=0;
   mac_init_global_param_NB_IoT();
   Is_rrc_registered_NB_IoT=1;

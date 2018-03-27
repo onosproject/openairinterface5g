@@ -121,6 +121,7 @@ static inline void* malloc16_clear( size_t size )
 #include "impl_defs_lte.h"
 
 #include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 
 #include "PHY/TOOLS/time_meas.h"
 #include "PHY/CODING/defs.h"
@@ -512,6 +513,11 @@ typedef struct PHY_VARS_eNB_s {
 NB_IoT_eNB_NPBCH_t        npbch;
 NB_IoT_eNB_NDLSCH_t       *ndlsch[NUMBER_OF_UE_MAX];
 NB_IoT_eNB_NDLSCH_t       ndlsch_SIB;
+
+////////////// For IF Module /////////////////////////////
+
+IF_Module_NB_IoT_t          *if_inst; 
+UL_IND_NB_IoT_t             UL_INFO;
 
 //////////////////// END /////////////////////////////////
 
