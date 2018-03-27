@@ -71,9 +71,9 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 
     abs_subframe = UL_INFO->frame*10+UL_INFO->subframe;
 
-    LOG_I(MAC,"Enter scheduler in subframe %d\n",abs_subframe);
+    //LOG_I(MAC,"Enter scheduler in subframe %d\n",abs_subframe);
     //scheduler here
     //Schedule subframe should be next four subframe, means that UL_INFO->frame*10+UL_INFO->subframe + 4
     eNB_dlsch_ulsch_scheduler_NB_IoT(mac_inst,abs_subframe);
-    LOG_I(MAC,"After scheduler\n");
+
 }

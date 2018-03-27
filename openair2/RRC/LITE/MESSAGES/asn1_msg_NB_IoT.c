@@ -106,7 +106,7 @@ uint8_t do_MIB_NB_IoT(
   /*
    * systemFrameNumber-MSB: (TS 36.331 pag 576)
    * define the 4 MSB of the SFN (10 bits). The last significant 6 bits will be acquired implicitly by decoding the NPBCH
-   * NOTE: 6 LSB will be used for counting the 64 radio frames in the TTI period (640 ms) that is exactly the MIB period
+   * NOTE: 6 LSB will be used for counting the 64  frames in the TTI period (640 ms) that is exactly the MIB period
    *
    * hyperSFN-LSB:
    * indicates the 2 least significant bits of the HSFN. The remaining 8 bits are present in SIB1-NB

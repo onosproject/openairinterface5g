@@ -56,8 +56,7 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
     mac_inst->sib1_flag[i] = 0;
     mac_inst->sib1_count[i] = 0;
   }
-  
-  //rrc_mac_config_req_NB_IoT(&mac_inst->rrc_config, 1, 1, 0, 0);
+    //rrc_mac_config_req_NB_IoT(&mac_inst->rrc_config, 1, 1, 0, 0);
   init_tool_sib1(mac_inst);
 
   //  output handler 
@@ -70,7 +69,7 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
   mac_inst->RA_msg4_list.tail = (RA_TEMPLATE_NB_IoT *)0;
 
   sib1_NB_IoT_sched_t *config = &mac_inst->rrc_config.sib1_NB_IoT_sched_config;
-  
+   
   // DLSF Table
   init_dlsf_info(mac_inst, &DLSF_information);
 
@@ -86,13 +85,13 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
     }
     mac_inst->sib1_count[i]=j;
   }
-//printf("%d", mac_inst->sib1_period);
+//LOG_D(MAC,"%d", mac_inst->sib1_period);
   for(i=0, j=0;i<640;++i){
-    //printf("*%d", i);
+    //LOG_D(MAC,"*%d", i);
     if(is_dlsf(mac_inst, i)){
       ++j;
     }
-    //printf("-");
+    //LOG_D(MAC,"-");
     if(i%10==9){
       mac_inst->dlsf_table[i/10] = j;
     }

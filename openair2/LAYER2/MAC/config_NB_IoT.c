@@ -428,7 +428,7 @@ void rrc_mac_config_req_NB_IoT(
 
 
 
-        mac_config->sib1_NB_IoT_sched_config.starting_rf = (intptr_t)(sib1_NB_IoT->si_RadioFrameOffset_r13);
+        mac_config->sib1_NB_IoT_sched_config.starting_rf = *(sib1_NB_IoT->si_RadioFrameOffset_r13);
         mac_config->si_window_length = sib1_NB_IoT->si_WindowLength_r13;
 
 
@@ -580,7 +580,7 @@ void rrc_mac_config_req_NB_IoT(
 
     //return 0;
 
-      //init_mac_NB_IoT(mac_inst);
+      init_mac_NB_IoT(mac_inst);
 
       LOG_I(MAC,"[NB-IoT] Init_MAC done\n");
 

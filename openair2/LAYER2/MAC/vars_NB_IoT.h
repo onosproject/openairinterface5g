@@ -21,6 +21,8 @@
 //#include "COMMON/mac_rrc_primitives.h"
 
 
+//IF_Module_NB_IoT_t *if_inst_NB_IoT;
+
 //NB-IoT--------------------------------------
 eNB_MAC_INST_NB_IoT *mac_inst;
 
@@ -70,6 +72,13 @@ const int rachrepeat[8]={1,2,4,8,16,32,64,128};
 const int rachscofst[7]={0,12,24,36,2,18,34};
 const int rachnumsc[4]={12,24,36,48};
 
+const int rawindow[8] = {2, 3, 4, 5, 6, 7, 8, 10};
+const int rmax[12] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048};
+const double gvalue[8] = {1.5f, 2, 4, 8, 16, 32, 48, 64};
+const int candidate[4] = {1, 2, 4, 8};
+const double pdcchoffset[4] = {0, 0.125f, 0.25f, 0.375f};
+const int dlrepeat[16] = {1, 2, 4, 8, 16, 32, 64, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048};
+
 const uint32_t RU_table[8]={1,2,3,4,5,6,8,10};
 
 const uint32_t scheduling_delay[4]={8,16,32,64};
@@ -112,6 +121,13 @@ const int dl_rep[3] = {1, 2, 4};
 const uint32_t dci_rep[3] = {1, 2, 4};
 const uint32_t harq_rep[3] = {1, 2, 4};
 
+int extend_space[2] = {256, 256};
+int extend_alpha_offset[2] = {10, 10};
+
+int uss_space = 320;
+int uss_alpha_offset = 10;
+
+const int si_repetition_pattern[4] = {20, 40, 80, 160};
 
 #endif
 
