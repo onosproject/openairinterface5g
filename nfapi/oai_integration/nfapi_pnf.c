@@ -1110,6 +1110,7 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
   }
 
   if(phy_info->timing_info_mode & 0x2) {
+	  //printf("Panos-D: start_request () Enabling timing_info_mode_aperiodic \n");
     p7_config->timing_info_mode_aperiodic = 1;
   }
 
@@ -1177,7 +1178,7 @@ int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi
     NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] DJP - HACK - Set p7_config global ready for subframe ind%s\n", __FUNCTION__);
     p7_config_g = p7_config;
 
-    NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Panos-D: start_request, BUFFER SIZE: %d", p7_config_g->subframe_buffer_size);
+    //NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Panos-D: start_request, BUFFER SIZE: %d", p7_config_g->subframe_buffer_size);
     //printf("Panos-D: start_request, bUFFER SIZE: %d", p7_config_g->subframe_buffer_size);
 
     // Need to wait for main thread to create RU structures

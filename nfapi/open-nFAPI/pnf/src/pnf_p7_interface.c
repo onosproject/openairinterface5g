@@ -34,6 +34,7 @@ nfapi_pnf_p7_config_t* nfapi_pnf_p7_config_create()
 	_this->_public.subframe_buffer_size = 8;
 	_this->_public.timing_info_mode_periodic = 1;
 	_this->_public.timing_info_period = 32;
+	//printf("Panos-D: nfapi_pnf_p7_config_create() Enabling timing_info_mode_aperiodic \n");
 	_this->_public.timing_info_mode_aperiodic = 1;
 	
 	_this->_public.checksum_enabled = 1;

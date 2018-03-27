@@ -3044,7 +3044,7 @@ int decode_BCCH_DLSCH_Message(
                   sizeof(SystemInformationBlockType1_t) );
           LOG_D( RRC, "[UE %"PRIu8"] Decoding First SIB1\n", ctxt_pP->module_id );
 
-          LOG_I( RRC, "Panos-D: decode_BCCH_DLSCH_Message1 BEFORE decode_SIB1");
+          //LOG_I( RRC, "Panos-D: decode_BCCH_DLSCH_Message1 BEFORE decode_SIB1");
           //printf("Panos-D: decode_BCCH_DLSCH_Message1 BEFORE decode_SIB1");
           decode_SIB1( ctxt_pP, eNB_index, rsrq, rsrp );
         }
@@ -3064,7 +3064,7 @@ int decode_BCCH_DLSCH_Message(
         LOG_D( RRC, "[UE %"PRIu8"] Decoding SI for frameP %"PRIu32"\n",
                ctxt_pP->module_id,
                ctxt_pP->frame );
-        LOG_I( RRC, "Panos-D: decode_BCCH_DLSCH_Message1 BEFORE OTHER decode_SI");
+        //LOG_I( RRC, "Panos-D: decode_BCCH_DLSCH_Message1 BEFORE OTHER decode_SI");
         //printf("Panos-D: decode_BCCH_DLSCH_Message1 BEFORE OTHER decode_SI");
         decode_SI( ctxt_pP, eNB_index );
       }
@@ -3919,7 +3919,7 @@ uint64_t arfcn_to_freq(long arfcn) {
   // Dump contents
   if ((*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_systemInformation_r8 ||
 		  (*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_criticalExtensionsFuture) {
-    LOG_I( RRC, "[UE] (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count %d\n",
+    LOG_D( RRC, "[UE] (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count %d\n",
            (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count );
   } else {
 	  //LOG_D( RRC, "Panos-D: decode_SI 2.3 \n");
@@ -3929,7 +3929,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 
   LOG_D( RRC, "Panos-D: decode_SI 3 \n");
   for (int i=0; i<(*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count; i++) {
-    LOG_I( RRC, "SI count %d\n", i );
+    //LOG_I( RRC, "Panos-D: SI count %d\n", i );
     struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *typeandinfo;
     typeandinfo = (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.array[i];
 

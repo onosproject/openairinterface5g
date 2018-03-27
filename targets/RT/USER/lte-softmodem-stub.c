@@ -1446,6 +1446,10 @@ int main( int argc, char **argv )
 
   printf("Sending sync to all threads\n");
 
+  /*if(nfapi_mode==3){
+	  usleep(1000);
+  }*/
+
   pthread_mutex_lock(&sync_mutex);
   sync_var=0;
   pthread_cond_broadcast(&sync_cond);

@@ -1214,7 +1214,7 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
 #endif
     {
     // This is normal LTE case
-	LOG_I(MAC, "Panos-D: generate_Msg4 1 ra->Msg4_frame SFN/SF: %d.%d, SFN/SF: %d.%d \n", ra->Msg4_frame, ra->Msg4_subframe, frameP, subframeP);
+	LOG_I(MAC, "Panos-D: generate_Msg4 1 ra->Msg4_frame SFN/SF: %d.%d,  frameP SFN/SF: %d.%d FOR UE_Mod: %d \n", ra->Msg4_frame, ra->Msg4_subframe, frameP, subframeP, module_idP);
     	if ((ra->Msg4_frame == frameP) && (ra->Msg4_subframe == subframeP)) {
 
     	    // Get RRCConnectionSetup for Piggyback
@@ -1224,7 +1224,7 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
     		rrc_sdu_length = mac_rrc_data_req(module_idP, CC_idP, frameP, CCCH, 1,	// 1 transport block
     						      &cc[CC_idP].CCCH_pdu.payload[0], 0);	// not used in this case
 
-    	    LOG_D(MAC,
+    	    LOG_I(MAC,
     	    	  "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: UE_id %d, rrc_sdu_length %d\n",
     	    	  module_idP, CC_idP, frameP, subframeP, UE_id, rrc_sdu_length);
 
@@ -1503,8 +1503,8 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
     N_RB_DL = to_prb(cc[CC_idP].mib->message.dl_Bandwidth);
 
     LOG_I(MAC,
-	  "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 for harq_pid %d was acknowledged (round %d)\n",
-	  module_idP, CC_idP, frameP, subframeP, ra->harq_pid, round);
+	  "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 for harq_pid %d was acknowledged (round %d), UE_id: %d \n",
+	  module_idP, CC_idP, frameP, subframeP, ra->harq_pid, round, UE_id);
 
     if (round != 8) {
 

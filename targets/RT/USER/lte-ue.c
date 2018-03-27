@@ -878,8 +878,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 	thread_top_init("UE_phy_stub_thread_rxn_txnp4",1,870000L,1000000L,1000000L);
 
 	module_id_t Mod_id = 0;
-	int init_ra_UE = -1; // This counter is used to initiate the RA of each UE in different SFrames
-	int global_cnt = 0;
+	//int init_ra_UE = -1; // This counter is used to initiate the RA of each UE in different SFrames
   static __thread int UE_thread_rxtx_retval;
   struct rx_tx_thread_data *rtd = arg;
   UE_rxtx_proc_t *proc = rtd->proc;
@@ -905,6 +904,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
       	UE_mac_inst[Mod_id].dl_config_req = NULL;
       	UE_mac_inst[Mod_id].ul_config_req = NULL;
       	UE_mac_inst[Mod_id].hi_dci0_req = NULL;
+      	UE_mac_inst[Mod_id].ra_frame = 0;
       	tx_request_pdu_list = NULL;
       	tx_req_num_elems = 0;
       	UE_mac_inst[Mod_id].tx_req = NULL;
@@ -949,25 +949,8 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
       updateTimes(proc->gotIQs, &t2, 10000, "Delay to wake up UE_Thread_Rx (case 2)");*/
 
 
-
-    // Process Rx data for one sub-frame
-
-    /*if(global_cnt == 0){
-    	init_ra_UE++;
-    	global_cnt++;
-    }*/
-
-    /*if(global_cnt>= 0 && global_cnt<15000)
-    	global_cnt++;
-    if(global_cnt == 10000 || global_cnt == 15000){
-    	LOG_I(MAC, "Panos-D: global_cnt: %d", global_cnt);
-    	global_cnt++;
-    	init_ra_UE++;
-    }*/
-
-
     //if(timer_frame%5 == 0 && timer_subframe%10 == 0)
-    	init_ra_UE++;
+    	//init_ra_UE++;
 
     	//Panos: Not sure whether we should put the memory allocation here.
     	//*** Note we should find the right place to call free(UL_INFO).
@@ -1045,14 +1028,6 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
       //oai_subframe_ind(timer_frame, timer_subframe);
 
 
-
-
-      //LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind \n");
-      //printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind \n");
-      /*if(UE_mac_inst[Mod_id].tx_req!= NULL){
-	printf("Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 2\n");
-	tx_req_UE_MAC(UE_mac_inst[Mod_id].tx_req);
-	}*/
       if(UE_mac_inst[Mod_id].dl_config_req!= NULL) {
 	//LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 3, NB_UE_INST:%d \n", NB_UE_INST);
 	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req, Mod_id);
@@ -1082,9 +1057,6 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
       //#endif
     }
-  //} //for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++)
-
-//>>>>>>> Stashed changes
 
 #if UE_TIMING_TRACE
     start_meas(&UE->generic_stat);
@@ -1130,16 +1102,21 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 	(UE->frame_parms.frame_type == FDD) )
       if (UE->mode != loop_through_memory){
 
-	if ((UE_mac_inst[Mod_id].UE_mode[0] == PRACH) ) {
+	if ((UE_mac_inst[Mod_id].UE_mode[0] == PRACH  && Mod_id == 0) || (UE_mac_inst[Mod_id].UE_mode[0] == PRACH && Mod_id>0 && proc->frame_rx >= UE_mac_inst[Mod_id-1].ra_frame + 20) ) {
 	  //LOG_D(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH \n");
 
 	  // check if we have PRACH opportunity
 
-	  if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx && Mod_id == (module_id_t) init_ra_UE) ) { //&& Mod_id == init_ra_UE
+	  if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx) ) {
+
+	  // The one working strangely...
+      //if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx && Mod_id == (module_id_t) init_ra_UE) ) {
+
 	    //LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH 2 \n");
 	    PRACH_RESOURCES_t *prach_resources = ue_get_rach(Mod_id, 0, proc->frame_tx, 0, proc->subframe_tx);
 	    if(prach_resources!=NULL ) {
-	      //LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH 3 \n");
+	    	UE_mac_inst[Mod_id].ra_frame = proc->frame_rx;
+	      LOG_I(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH 3, Mod_id: %d \n", Mod_id );
 	      fill_rach_indication_UE_MAC(Mod_id, proc->frame_tx ,proc->subframe_tx, UL_INFO, prach_resources->ra_PreambleIndex, prach_resources->ra_RNTI);
 	      Msg1_transmitted(Mod_id, 0, proc->frame_tx, 0);
 	      UE_mac_inst[Mod_id].UE_mode[0] = RA_RESPONSE;
@@ -1202,7 +1179,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     if (UL_INFO->crc_ind.crc_indication_body.number_of_crcs>0)
       {
     	  //LOG_D(PHY,"UL_info->crc_ind.crc_indication_body.number_of_crcs:%d CRC_IND:SFN/SF:%d\n", UL_info->crc_ind.crc_indication_body.number_of_crcs, NFAPI_SFNSF2DEC(UL_info->crc_ind.sfn_sf));
-    	  LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.2, SFN/SF of PNF counter:%d.%d, number_of_crcs: %d \n", timer_frame, timer_subframe, UL_INFO->crc_ind.crc_indication_body.number_of_crcs);
+    	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.2, SFN/SF of PNF counter:%d.%d, number_of_crcs: %d \n", timer_frame, timer_subframe, UL_INFO->crc_ind.crc_indication_body.number_of_crcs);
     	  oai_nfapi_crc_indication(&UL_INFO->crc_ind);
     	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.21 \n");
     	  UL_INFO->crc_ind.crc_indication_body.number_of_crcs = 0;
@@ -1210,7 +1187,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
       if (UL_INFO->rx_ind.rx_indication_body.number_of_pdus>0)
       {
     	  //LOG_D(PHY,"UL_info->rx_ind.number_of_pdus:%d RX_IND:SFN/SF:%d\n", UL_info->rx_ind.rx_indication_body.number_of_pdus, NFAPI_SFNSF2DEC(UL_info->rx_ind.sfn_sf));
-    	  LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.3, SFN/SF of PNF counter:%d.%d, number_of_pdus: %d \n", timer_frame, timer_subframe, UL_INFO->rx_ind.rx_indication_body.number_of_pdus);
+    	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.3, SFN/SF of PNF counter:%d.%d, number_of_pdus: %d \n", timer_frame, timer_subframe, UL_INFO->rx_ind.rx_indication_body.number_of_pdus);
     	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.3 \n");
     	  oai_nfapi_rx_ind(&UL_INFO->rx_ind);
     	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.31 \n");
@@ -1218,7 +1195,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
       }
       if(UL_INFO->harq_ind.harq_indication_body.number_of_harqs>0)
       {
-    	  LOG_D(MAC, "Panos-D: ul_config_req_UE_MAC 2.4, SFN/SF of PNF counter:%d.%d, number_of_harqs: %d \n", timer_frame, timer_subframe, UL_INFO->harq_ind.harq_indication_body.number_of_harqs);
+    	  //LOG_D(MAC, "Panos-D: ul_config_req_UE_MAC 2.4, SFN/SF of PNF counter:%d.%d, number_of_harqs: %d \n", timer_frame, timer_subframe, UL_INFO->harq_ind.harq_indication_body.number_of_harqs);
     	  oai_nfapi_harq_indication(&UL_INFO->harq_ind);
     	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.41 \n");
     	  UL_INFO->harq_ind.harq_indication_body.number_of_harqs =0;
@@ -1226,7 +1203,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
       }
       if(UL_INFO->sr_ind.sr_indication_body.number_of_srs>0)
       {
-    	  LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.5, SFN/SF of PNF counter:%d.%d, number_of_srs: %d \n", timer_frame, timer_subframe, UL_INFO->sr_ind.sr_indication_body.number_of_srs);
+    	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.5, SFN/SF of PNF counter:%d.%d, number_of_srs: %d \n", timer_frame, timer_subframe, UL_INFO->sr_ind.sr_indication_body.number_of_srs);
     	  oai_nfapi_sr_indication(&UL_INFO->sr_ind);
     	  //LOG_I(MAC, "Panos-D: ul_config_req_UE_MAC 2.51 \n");
     	  UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;

@@ -1164,6 +1164,7 @@ rrc_eNB_generate_RRCConnectionReject(
   RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size =
     do_RRCConnectionReject(ctxt_pP->module_id,
                           (uint8_t*) RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.Payload);
+  //LOG_D(RRC,"%s rrc_eNB_generate_RRCConnectionReject() Payload size return value: %d \n", __FUNCTION__, RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size);
 
 #ifdef RRC_MSG_PRINT
   LOG_F(RRC,"[MSG] RRCConnectionReject\n");
@@ -1218,6 +1219,10 @@ rrc_eNB_generate_RRCConnectionReestablishment(
                                     rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),
                                     SRB_configList,
                                     &ue_context_pP->ue_context.physicalConfigDedicated);
+
+  //LOG_D(RRC,"%s rrc_eNB_generate_RRCConnectionReestablishment() Payload size return value: %d \n", __FUNCTION__, RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size);
+
+
 
 #ifdef RRC_MSG_PRINT
   LOG_F(RRC,"[MSG] RRCConnectionReestablishment\n");
@@ -1952,6 +1957,10 @@ rrc_eNB_generate_RRCConnectionReestablishmentReject(
   RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size =
     do_RRCConnectionReestablishmentReject(ctxt_pP->module_id,
                           (uint8_t*) RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.Payload);
+
+  //LOG_D(RRC,"%s rrc_eNB_generate_RRCConnectionReestablishmentReject() Payload size return value: %d \n", __FUNCTION__, RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size);
+
+
 
 #ifdef RRC_MSG_PRINT
   LOG_F(RRC,"[MSG] RRCConnectionReestablishmentReject\n");
@@ -5061,6 +5070,10 @@ rrc_eNB_generate_RRCConnectionSetup(
                           rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),
                           SRB_configList,
                           &ue_context_pP->ue_context.physicalConfigDedicated);
+
+  LOG_D(RRC,"%s rrc_eNB_generate_RRCConnectionSetup() Payload size return value: %d, SFN/SF:%d/%d \n", __FUNCTION__, RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size, ctxt_pP->frame, ctxt_pP->subframe);
+
+
 
 #ifdef RRC_MSG_PRINT
   LOG_F(RRC,"[MSG] RRC Connection Setup\n");

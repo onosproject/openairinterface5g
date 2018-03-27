@@ -826,6 +826,7 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
 		}
 		else if(pnf_p7->_public.timing_info_mode_aperiodic && pnf_p7->timing_info_aperiodic_send)
 		{
+			printf("Panos-D: Sending aperiodic timing info message \n");
 			pnf_pack_and_send_timing_info(pnf_p7);
 
 			pnf_p7->timing_info_aperiodic_send = 0;

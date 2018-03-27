@@ -1625,7 +1625,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 	   uint8_t * ulsch_buffer, uint16_t buflen, uint8_t * access_mode)
 {
 
-	LOG_I(MAC, "Panos-D: UE[%d] In ue_get_sdu() 1  \n", module_idP);
+	//LOG_I(MAC, "Panos-D: UE[%d] In ue_get_sdu() 1  \n", module_idP);
     uint8_t total_rlc_pdu_header_len = 0, rlc_pdu_header_len_last = 0;
     uint16_t buflen_remain = 0;
     uint8_t bsr_len = 0, bsr_ce_len = 0, bsr_header_len = 0;
@@ -1655,7 +1655,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
     rlc_buffer_occupancy_t lcid_buffer_occupancy_old =
 	0, lcid_buffer_occupancy_new = 0;
 
-    LOG_I(MAC,
+    LOG_D(MAC,
 	  "[UE %d] MAC PROCESS UL TRANSPORT BLOCK at frame%d subframe %d TBS=%d\n",
 	  module_idP, frameP, subframe, buflen);
 
@@ -2206,7 +2206,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 					   bsr_s,	// short bsr
 					   bsr_l, post_padding);	// long_bsr
 
-    LOG_I(MAC,
+    LOG_D(MAC,
 	  "[UE %d] Generate header :bufflen %d  sdu_length_total %d, num_sdus %d, sdu_lengths[0] %d, sdu_lcids[0] %d => payload offset %d,  total_rlc_pdu_header_len %d, padding %d,post_padding %d, bsr len %d, phr len %d, reminder %d \n",
 	  module_idP, buflen, sdu_length_total, num_sdus, sdu_lengths[0],
 	  sdu_lcids[0], payload_offset, total_rlc_pdu_header_len,
@@ -2214,7 +2214,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 	  buflen - sdu_length_total - payload_offset);
     // cycle through SDUs and place in ulsch_buffer
     if (sdu_length_total) {
-    	LOG_I(MAC, "Panos-D: [UE %d] ue_get_sdu() 2 before copying to ulsch_buffer, SFN/SF: %d/%d \n \n \n", module_idP, frameP, subframe);
+    	//LOG_I(MAC, "Panos-D: [UE %d] ue_get_sdu() 2 before copying to ulsch_buffer, SFN/SF: %d/%d \n \n \n", module_idP, frameP, subframe);
 	memcpy(&ulsch_buffer[payload_offset], ulsch_buff,
 	       sdu_length_total);
     }
