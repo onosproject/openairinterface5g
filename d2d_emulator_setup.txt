@@ -34,6 +34,11 @@ OAI build/execute
  - cp ../../../targets/bin/.usim* .
  - sudo insmod ../../../targets/bin/ue_ip.ko
 
+Get and build vencore_app from d2d-l3-stub (branch: l3_stub)
+- git clone https://gitlab.eurecom.fr/tien-thinh.nguyen/d2d-l3-stub 
+- git checkout l3-stub
+- gcc -I . vencore_app.c -o vencore_app -lpthread
+
 
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
@@ -43,16 +48,17 @@ UE2:
  - sudo ifconfig oip0 10.0.0.2
  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - (if necessary) sudo route add default gw 10.10.10.1 eno1
-
-UE1 and UE2: Get and build vencore_app from d2d-l3-stub (branch: l3_stub)
- - gcc -I . vencore_app.c -o vencore_app -lpthread
  
+ For the moment, we suppose that L2Ids of UE1, UE2 are Ox01, 0x02 respectively. GroupL2Id is set to 0x03. 
 --------------------------------
 TEST ONE-TO-MANY
 Run UE1 then UE2, for example:
-UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
-UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
+ - UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
+ - UE1 ./vencore_app -g 0x01 0x03  #0x01 - UE1-L2Id, 0x03-groupL2Id
 
+ - UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
+ - UE2 ./vencore_app -g 0x02 0x03  #0x02 - UE2-L2Id, 0x03-groupL2Id
+ 
 Test with Ping
 - Sender - UE1: ping -I oip0 224.0.0.3
 - Receiver - UE2: using wireshark
@@ -62,16 +68,15 @@ Test with Iperf
 - Receiver - UE2: sudo ./mcreceive 224.0.0.3 5001 
 
 Filter the incomming packets according to GroupL2Id: receiver (one-to-many) can discard the packets if it doesn't belong to this group. 
-For the moment, both sender and receiver use the same set of Ids (hardcoded)  
 
 UE1 (sender)
  - sudo ./lte-softmodem-stub -U --emul-iface eth0
- - ./vencore_app  #send the sourceL2Id, groupL2Id to OAI
+  - ./vencore_app -g 0x01 0x03  #0x01 - UE1's L2Id, 0x03-groupL2Id
  - ping -I oip0 224.0.0.3
  UE2(receiver)
   - sudo ./lte-softmodem-stub -U --emul-iface eno1 
   #we can see the incomming packets from OAI log, however, cannot see from Wireshark -> they are discarded at MAC layer
-  - ./vencore_app  #we can see the packets appearing in Wireshark
+  -./vencore_app -g 0x02 0x03  #0x02 - UE2-L2Id, 0x03-groupL2Id   #we can see the packets appearing in Wireshark
  
  --------------------------------------
 TEST PC5-S (UE1 - sender, UE2 - receiver) and PC5-U for ONE-TO-ONE scenario (and PC5-U for ONE-TO-MANY scenario)
@@ -91,9 +96,9 @@ step 1:
 - UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
 step 2:
 - UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
-- UE2: ./vencore_app -r #listen to incomming message from PC5-S 
+- UE2: ./vencore_app -r 0x02 0x01  #listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x02 - UE2-L2Id, 0x01 - UE1-L2Id 
 step 3: 
-- UE1: ./vencore_app -s #send a message via PC5-S (e.g., DirectCommunicationRequest)
+- UE1: ./vencore_app -s 0x01 0x02 #send a message via PC5-S (e.g., DirectCommunicationRequest) and establish 1-1 communication, 0x01 - UE1-L2Id, 0x02 - UE2-L2Id 
 
 Generate unicast traffic
  - UE1: ping -I oip0 10.0.0.2
@@ -109,4 +114,68 @@ step 1:
 step 2:
 - UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
 - UE2: ./vencore_app -d #send a PC5-Discovery-Announcement via PC5D
+
+
+
+
+Scenario 2 : Off-network UE2UE link (3 UEs, 2 communication flows: 1 unicast + 1 multicast)
+SynchREF UE (UE1)
+
+UE1(eth0 - 10.10.10.1)-----Hub------UE2(eno1 - 10.10.10.2)
+                            |
+                            |
+                           UE3 (eno1 - 10.0.0.4)
+                            
+UE1-L2ID: 0x01
+UE2-L2ID: 0x02
+UE3-L2ID: 0x04
+ --------------------------------------
+TEST PC5-U for ONE-TO-ONE scenario (UE1 - sender, UE2 - receiver) and PC5-U for ONE-TO-MANY scenario (UE1 - sender, UE2/3 - receiver)
+
+- configure UE1, UE2 as mentioned in the previous section
+UE1: 
+ - sudo ifconfig oip0 10.0.0.1
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.2 -j MARK --set-mark 3
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
+ - sudo route add default gw 10.10.10.1 eth0
+
+UE2:
+ - sudo ifconfig oip0 10.0.0.2
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.1 -j MARK --set-mark 3
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
+ - sudo route add default gw 10.10.10.1 eno1
+
+- configure UE3
+UE3: 
+ - sudo ifconfig oip0 10.0.0.4
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
+ - sudo route add default gw 10.10.10.1 eno1
+
+ step 1:
+- UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
+step 2:
+- UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
+- UE2: ./vencore_app -r 0x02 0x01  # listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x02 - UE2-L2Id, 0x01 - UE1-L2Id
+                                   # groupL2Id is hardcoded for the moment (0x03) 
+
+- UE3: sudo ./lte-softmodem-stub -U --emul-iface eno1
+- UE3: ./vencore_app -g 0x04 0x03  # listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x02 - UE2-L2Id, 0x01 - UE1-L2Id
+                                   # groupL2Id is hardcoded for the moment 
+
+step 3: 
+- UE1: ./vencore_app -s 0x01 0x02 # 0x01 - UE1-L2Id, 0x02 - UE2-L2Id 
+                                  # groupL2Id is hardcoded for the moment (0x03) 
+
+Generate unicast traffic
+ - UE1: ping -I oip0 10.0.0.2
+
+Generate multicast traffic
+ - UE1: ping -I oip0 224.0.0.3
+
+Expected results:
+- UE2 can receive both unicast and multicast traffic
+- UE3 can only receive multicast traffic
+Note: 
+ - Use wireshark to observe unicast/multicast traffic from UE2 and multicast traffic from UE3.   
+
 
