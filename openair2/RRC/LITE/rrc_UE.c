@@ -278,10 +278,21 @@ static void init_SI_UE( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
   UE_rrc_inst[ctxt_pP->module_id].sib12[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType12_r9_t) );
   UE_rrc_inst[ctxt_pP->module_id].sib13[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType13_r9_t) );
 #endif
-  UE_rrc_inst[ctxt_pP->module_id].SI[eNB_index] = (uint8_t*)malloc16_clear( 64 );
+#ifdef Rel14
+  // FeMBMS structures
+  UE_rrc_inst[ctxt_pP->module_id].mib_mbms  = malloc16_clear( sizeof(MasterInformationBlock_MBMS_r14_t) );
+  UE_rrc_inst[ctxt_pP->module_id].sib1_mbms = malloc16_clear( sizeof(SystemInformationBlockType1_MBMS_r14_t) );
+  UE_rrc_inst[ctxt_pP->module_id].sib15     = malloc16_clear( sizeof(SystemInformationBlockType15_r11_t) );
+  UE_rrc_inst[ctxt_pP->module_id].sib16     = malloc16_clear( sizeof(SystemInformationBlockType16_r11_t) );
+#endif
 
+  UE_rrc_inst[ctxt_pP->module_id].SI[eNB_index] = (uint8_t*)malloc16_clear( 64 );
   UE_rrc_inst[ctxt_pP->module_id].si[eNB_index] = (SystemInformation_t*)malloc16_clear( sizeof(SystemInformation_t) );
 
+#ifdef Rel14
+  UE_rrc_inst[ctxt_pP->module_id].SI_mbms = (uint8_t*)malloc16_clear( 64 );
+  UE_rrc_inst[ctxt_pP->module_id].si_mbms = (SystemInformation_t*)malloc16_clear( sizeof(SystemInformation_MBMS_r14_t) );
+#endif
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus = 0;
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIcnt    = 0;
 }

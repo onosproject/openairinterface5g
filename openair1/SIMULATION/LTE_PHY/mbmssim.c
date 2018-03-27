@@ -237,15 +237,18 @@ int main(int argc, char **argv)
   if (transmission_mode==2)
     n_tx=2;
 
-  lte_param_init(n_tx,
+  lte_param_init(&eNB,&UE,&ru,
+		 n_tx,
                  n_tx,
+		 1,
 		 n_rx,
 		 transmission_mode,
-		 extended_prefix_flag,
-		 frame_type,
+		 1,
+		 FDD,
 		 Nid_cell,
 		 tdd_config,
 		 N_RB_DL,
+		 0,
 		 0,
 		 osf,
 		 perfect_ce);

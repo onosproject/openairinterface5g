@@ -89,6 +89,7 @@ void dump_mch(PHY_VARS_UE *ue,uint8_t eNB_id,uint16_t coded_bits_per_codeword,in
 }
 
 int is_pmch_subframe(uint32_t frame, int subframe, LTE_DL_FRAME_PARMS *frame_parms)
+		     // ,FeMBMS_active)
 {
 
   uint32_t period;
@@ -96,6 +97,8 @@ int is_pmch_subframe(uint32_t frame, int subframe, LTE_DL_FRAME_PARMS *frame_par
 
   //  LOG_D(PHY,"is_pmch_subframe: frame %d, subframe %d, num_MBSFN_config %d\n",
   //  frame,subframe,frame_parms->num_MBSFN_config);
+  //
+  //  if ((FeMBMS_active == 1) && ((frame&3 != 0) || (subframe > 0))) return(1);
 
   for (i=0; i<frame_parms->num_MBSFN_config; i++) {  // we have at least one MBSFN configuration
     period = 1<<frame_parms->MBSFN_config[i].radioframeAllocationPeriod;
@@ -392,11 +395,67 @@ void mch_extract_rbs(int **rxdataF,
 
 }
 
+void mch_extract_rbs125(int **rxdataF,
+			int **dl_ch_estimates,
+			int **rxdataF_ext,
+			int **dl_ch_estimates_ext,
+			unsigned char subframe,
+			LTE_DL_FRAME_PARMS *frame_parms)
+{
+
+  int i,j,offset,aarx;
+  int first_carrier_offset;
+
+  offset = 3*(subframe&1);
+
+  switch (frame_parms->N_RB_DL) {
+  case 6:
+    first_carrier_offset=1536-450;
+    break;
+  case 15:
+    first_carrier_offset=3072-900;
+    break;
+  case 25:
+    first_carrier_offset=6144-1800;
+    break;
+  case 50:
+    first_carrier_offset=12288-3600;
+    break;
+  case 75:
+    first_carrier_offset=18432-5400;
+    break;
+  case 100:
+    first_carrier_offset=24576-7200;
+    break;
+  default:
+    AssertFatal(1==0,"Illegal N_RB_DL %d\n",frame_parms->N_RB_DL);
+    break;
+  }
+  for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
+
+
+    for (i=offset,j=0; i<frame_parms->N_RB_DL*72; i+=6,j++) {
+      /*  printf("MCH with pilots: i %d, j %d => %d,%d\n",i,j,
+       *(int16_t*)&rxdataF[aarx][i+frame_parms->first_carrier_offset + (symbol*frame_parms->ofdm_symbol_size)],
+       *(int16_t*)(1+&rxdataF[aarx][i+frame_parms->first_carrier_offset + (symbol*frame_parms->ofdm_symbol_size)]));
+       */
+      // negative half of RX frequency vector
+      rxdataF_ext[aarx][j]                                     = rxdataF[aarx][i+first_carrier_offset];
+      // positive half of RX frequency vector
+      rxdataF_ext[aarx][(frame_parms->N_RB_DL*2*12)+j]         = rxdataF[aarx][i+1];
+      // negative half of channel response frequency vector
+      dl_ch_estimates_ext[aarx][j]                             = dl_ch_estimates[aarx][i];
+      // positive half of channel response frequency vector
+      dl_ch_estimates_ext[aarx][(frame_parms->N_RB_DL*2*12)+j] = dl_ch_estimates[aarx][i+(frame_parms->N_RB_DL*72)];
+    }
+  }
+}
+
 void mch_channel_level(int **dl_ch_estimates_ext,
                        LTE_DL_FRAME_PARMS *frame_parms,
                        int *avg,
                        uint8_t symbol,
-                       unsigned short nb_rb)
+                       int FeMBMS_flag)
 {
 
   int i,aarx,nre;
@@ -416,11 +475,15 @@ void mch_channel_level(int **dl_ch_estimates_ext,
 
 
 #endif
-    if ((symbol == 2) || (symbol == 6) || (symbol == 10))
-      nre = (frame_parms->N_RB_DL*6);
-    else
-      nre = (frame_parms->N_RB_DL*12);
-
+    if (FeMBMS_flag == 0) {
+      if ((symbol == 2) || (symbol == 6) || (symbol == 10))
+	nre = (frame_parms->N_RB_DL*6);
+      else
+	nre = (frame_parms->N_RB_DL*12);
+    } 
+    else if (FeMBMS_flag == 2) nre = frame_parms->N_RB_DL*120;
+    else AssertFatal(1==0,"Illegal FeMBMS_flag %d\n",FeMBMS_flag);
+ 
     for (i=0; i<(nre>>2); i++) {
 #if defined(__x86_64__) || defined(__i386__)
       avg128 = _mm_add_epi32(avg128,_mm_madd_epi16(dl_ch128[0],dl_ch128[0]));
@@ -451,7 +514,8 @@ void mch_channel_compensation(int **rxdataF_ext,
                               LTE_DL_FRAME_PARMS *frame_parms,
                               unsigned char symbol,
                               unsigned char mod_order,
-                              unsigned char output_shift)
+                              unsigned char output_shift,
+			      int FeMBMS_flag)
 {
 
   int aarx,nre,i;
@@ -461,10 +525,18 @@ void mch_channel_compensation(int **rxdataF_ext,
 #elif defined(__arm__)
 
 #endif
-  if ((symbol == 2) || (symbol == 6) || (symbol == 10))
-    nre = frame_parms->N_RB_DL*6;
-  else
-    nre = frame_parms->N_RB_DL*12;
+  if (FeMBMS_flag == 0) {
+    if ((symbol == 2) || (symbol == 6) || (symbol == 10))
+      nre = frame_parms->N_RB_DL*6;
+    else
+      nre = frame_parms->N_RB_DL*12;
+  }
+  else if (FeMBMS_flag == 1) { // 7.5 kHz SCS
+    AssertFatal(1==0,"7.5 kHz SCS not supported yet\n");
+  }
+  else { // 1.25kHz SCS
+    nre = frame_parms->N_RB_DL*120;
+  }
 
 #if defined(__x86_64__) || defined(__i386__)
   if (mod_order == 4) {
@@ -596,7 +668,8 @@ void mch_detection_mrc(LTE_DL_FRAME_PARMS *frame_parms,
                        int **rxdataF_comp,
                        int **dl_ch_mag,
                        int **dl_ch_magb,
-                       unsigned char symbol)
+                       unsigned char symbol,
+		       int FeMBMS_flag)
 {
 
 
@@ -606,6 +679,12 @@ void mch_detection_mrc(LTE_DL_FRAME_PARMS *frame_parms,
 #elif defined(__arm__)
   int16x8_t *rxdataF_comp128_0,*rxdataF_comp128_1,*dl_ch_mag128_0,*dl_ch_mag128_1,*dl_ch_mag128_0b,*dl_ch_mag128_1b;
 #endif
+  int length;
+
+  if (FeMBMS_flag == 0) length = 3*frame_parms->N_RB_DL;
+  else if (FeMBMS_flag == 2) length = 36*frame_parms->N_RB_DL;
+  else AssertFatal(1==0,"unsupported FeMBMS_flag %d\n",FeMBMS_flag);
+
   if (frame_parms->nb_antennas_rx>1) {
 
 #if defined(__x86_64__) || defined(__i386__)
@@ -627,7 +706,7 @@ void mch_detection_mrc(LTE_DL_FRAME_PARMS *frame_parms,
 
 #endif
     // MRC on each re of rb, both on MF output and magnitude (for 16QAM/64QAM llr computation)
-    for (i=0; i<frame_parms->N_RB_DL*3; i++) {
+    for (i=0; i<length; i++) {
 #if defined(__x86_64__) || defined(__i386__)
       rxdataF_comp128_0[i] = _mm_adds_epi16(_mm_srai_epi16(rxdataF_comp128_0[i],1),_mm_srai_epi16(rxdataF_comp128_1[i],1));
       dl_ch_mag128_0[i]    = _mm_adds_epi16(_mm_srai_epi16(dl_ch_mag128_0[i],1),_mm_srai_epi16(dl_ch_mag128_1[i],1));
@@ -649,27 +728,36 @@ int mch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
                  int **rxdataF_comp,
                  short *dlsch_llr,
                  unsigned char symbol,
-                 short **llr32p)
+                 short **llr32p,
+		 int FeMBMS_flag)
 {
 
   uint32_t *rxF = (uint32_t*)&rxdataF_comp[0][(symbol*frame_parms->N_RB_DL*12)];
   uint32_t *llr32;
   int i,len;
 
-  if (symbol==2) {
-    llr32 = (uint32_t*)dlsch_llr;
-  } else {
-    llr32 = (uint32_t*)(*llr32p);
+  if (FeMBMS_flag == 0) {
+    if (symbol==2) {
+      llr32 = (uint32_t*)dlsch_llr;
+    } else {
+      llr32 = (uint32_t*)(*llr32p);
+    }
   }
+  else if (FeMBMS_flag == 2) llr32 = (uint32_t*)dlsch_llr;
+  else AssertFatal(1==0,"Illegal FeMBMS_flag %d\n",FeMBMS_flag);
 
   AssertFatal(llr32!=NULL,"dlsch_qpsk_llr: llr is null, symbol %d, llr32=%p\n",symbol, llr32);
 
-
-  if ((symbol==2) || (symbol==6) || (symbol==10)) {
-    len = frame_parms->N_RB_DL*6;
-  } else {
-    len = frame_parms->N_RB_DL*12;
+  if (FeMBMS_flag == 0) {
+    if ((symbol==2) || (symbol==6) || (symbol==10)) {
+      len = frame_parms->N_RB_DL*6;
+    } else {
+      len = frame_parms->N_RB_DL*12;
+    }
   }
+  else if (FeMBMS_flag == 2) len = frame_parms->N_RB_DL*120;
+  else AssertFatal(1==0,"Illegal FeMBMS_flag %d\n",FeMBMS_flag);  
+  
 
   //  printf("dlsch_qpsk_llr: symbol %d,len %d,pbch_pss_sss_adjust %d\n",symbol,len,pbch_pss_sss_adjust);
   for (i=0; i<len; i++) {
@@ -692,12 +780,14 @@ int mch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
 // 16-QAM
 //----------------------------------------------------------------------------------------------
 
+// update this for FeMBMS length
 void mch_16qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
                    int **rxdataF_comp,
                    short *dlsch_llr,
                    int **dl_ch_mag,
                    unsigned char symbol,
-                   int16_t **llr32p)
+                   int16_t **llr32p,
+		   int FeMBMS_flag)
 {
 
 #if defined(__x86_64__) || defined(__i386__)
@@ -805,14 +895,15 @@ void mch_16qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
 //----------------------------------------------------------------------------------------------
 // 64-QAM
 //----------------------------------------------------------------------------------------------
-
+// update this for FeMBMS length
 void mch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
                    int **rxdataF_comp,
                    short *dlsch_llr,
                    int **dl_ch_mag,
                    int **dl_ch_magb,
                    unsigned char symbol,
-                   short **llr_save)
+                   short **llr_save,
+		   int FeMBMS_flag)
 {
 
 #if defined(__x86_64__) || defined(__i386__)
@@ -967,21 +1058,34 @@ int rx_pmch(PHY_VARS_UE *ue,
 
   //printf("*********************mch: symbol %d\n",symbol);
 
-  mch_extract_rbs(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
-                  common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
-                  pdsch_vars[eNB_id]->rxdataF_ext,
-                  pdsch_vars[eNB_id]->dl_ch_estimates_ext,
-                  symbol,
-                  subframe,
-                  frame_parms);
+  AssertFatal(((ue->FeMBMS_active == 1) && (symbol == 0)) || (ue->FeMBMS_active == 0),
+	      "Illegal symbol %d (FeMBMS_active = %d)\n",symbol,ue->FeMBMS_active);
 
-  if (symbol == 2) {
+  if (ue->FeMBMS_active == 0) 
+    mch_extract_rbs(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+		    common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+		    pdsch_vars[eNB_id]->rxdataF_ext,
+		    pdsch_vars[eNB_id]->dl_ch_estimates_ext,
+		    symbol,
+		    subframe,
+		    frame_parms);
+  else if (ue->FeMBMS_active == 2) 
+    mch_extract_rbs125(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+		       common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+		       pdsch_vars[eNB_id]->rxdataF_ext,
+		       pdsch_vars[eNB_id]->dl_ch_estimates_ext,
+		       subframe,
+		       frame_parms);
+
+  else AssertFatal(1==0,"Illegal FeMBMS_active %d\n",ue->FeMBMS_active);
+
+  if (((ue->FeMBMS_active == 0) && (symbol == 2)) || (ue->FeMBMS_active == 1))  
     mch_channel_level(pdsch_vars[eNB_id]->dl_ch_estimates_ext,
                       frame_parms,
                       avg_pmch,
                       symbol,
-                      frame_parms->N_RB_DL);
-  }
+                      ue->FeMBMS_active == 0 ? 0 : 2);
+  
 
   avgs = 0;
 
@@ -1001,7 +1105,8 @@ int rx_pmch(PHY_VARS_UE *ue,
                            frame_parms,
                            symbol,
                            get_Qm(dlsch[0]->harq_processes[0]->mcs),
-                           pdsch_vars[eNB_id]->log2_maxh);
+                           pdsch_vars[eNB_id]->log2_maxh,
+			   ue->FeMBMS_active == 0 ? 0 : 2);
 
 
   if (frame_parms->nb_antennas_rx > 1)
@@ -1009,7 +1114,8 @@ int rx_pmch(PHY_VARS_UE *ue,
                       pdsch_vars[eNB_id]->rxdataF_comp0,
                       pdsch_vars[eNB_id]->dl_ch_mag0,
                       pdsch_vars[eNB_id]->dl_ch_magb0,
-                      symbol);
+                      symbol,
+		      ue->FeMBMS_active == 0 ? 0 : 2);
 
   switch (get_Qm(dlsch[0]->harq_processes[0]->mcs)) {
   case 2 :
@@ -1017,7 +1123,8 @@ int rx_pmch(PHY_VARS_UE *ue,
                  pdsch_vars[eNB_id]->rxdataF_comp0,
                  pdsch_vars[eNB_id]->llr[0],
                  symbol,
-                 pdsch_vars[eNB_id]->llr128);
+                 pdsch_vars[eNB_id]->llr128,
+		 ue->FeMBMS_active == 0 ? 0 : 2);
     break;
 
   case 4:
@@ -1026,7 +1133,8 @@ int rx_pmch(PHY_VARS_UE *ue,
                   pdsch_vars[eNB_id]->llr[0],
                   pdsch_vars[eNB_id]->dl_ch_mag0,
                   symbol,
-                  pdsch_vars[eNB_id]->llr128);
+                  pdsch_vars[eNB_id]->llr128,
+		  ue->FeMBMS_active == 0 ? 0 : 2);
     break;
 
   case 6:
@@ -1036,7 +1144,8 @@ int rx_pmch(PHY_VARS_UE *ue,
                   pdsch_vars[eNB_id]->dl_ch_mag0,
                   pdsch_vars[eNB_id]->dl_ch_magb0,
                   symbol,
-                  pdsch_vars[eNB_id]->llr128);
+                  pdsch_vars[eNB_id]->llr128,
+		  ue->FeMBMS_active == 0 ? 0 : 2);
     break;
   }
 

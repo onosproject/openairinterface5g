@@ -94,6 +94,49 @@ void lte_gold_mbsfn(LTE_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_mbsfn_tabl
   }
 }
 
+// note 150 = 24*N_RB_DL_MAX/16 = 24*110/16
+void lte_gold_mbsfn125(LTE_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_mbsfn125_table[10][150],uint16_t Nid_mbsfn)
+{
+
+  unsigned char sfn,l;
+  unsigned int n,x1,x2;//,x1tmp,x2tmp;
+
+  for (sfn=0; sfn<10; sfn++) {
+
+    x2 = (Nid_mbsfn) + (((1+(Nid_mbsfn<<1))*(1 + 2 + (7*(1+(sfn>>1)))))<<9); //cinit
+
+
+
+    x1 = 1+ (1<<31);
+    x2=x2 ^ ((x2 ^ (x2>>1) ^ (x2>>2) ^ (x2>>3))<<31);
+    // skip first 50 double words (1600 bits)
+    //      printf("n=0 : x1 %x, x2 %x\n",x1,x2);
+    
+    for (n=1; n<50; n++) {
+      
+      x1 = (x1>>1) ^ (x1>>4);
+      x1 = x1 ^ (x1<<31) ^ (x1<<28);
+      x2 = (x2>>1) ^ (x2>>2) ^ (x2>>3) ^ (x2>>4);
+      x2 = x2 ^ (x2<<31) ^ (x2<<30) ^ (x2<<29) ^ (x2<<28);
+      //  printf("x1 : %x, x2 : %x\n",x1,x2);
+      
+    }
+
+    for (n=0; n<150; n++) {
+      
+      x1 = (x1>>1) ^ (x1>>4);
+      x1 = x1 ^ (x1<<31) ^ (x1<<28);
+      x2 = (x2>>1) ^ (x2>>2) ^ (x2>>3) ^ (x2>>4);
+      x2 = x2 ^ (x2<<31) ^ (x2<<30) ^ (x2<<29) ^ (x2<<28);
+      lte_gold_mbsfn125_table[sfn][n] = x1^x2;
+      //  printf("n=%d : c %x\n",n,x1^x2);
+    }
+    
+  
+
+  }
+}
+
 
 #ifdef LTE_GOLD_MAIN
 main()

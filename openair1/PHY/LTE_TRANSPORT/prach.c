@@ -930,7 +930,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
       memmove( prach, prach+1024, Ncp<<2 );
       prach_len = 512+Ncp;
     } else {
-      idft3072(prachF,prach2);
+      idft3072(prachF,prach2,1);
       memmove( prach, prach+6144, Ncp<<2 );
       prach_len = 3072+Ncp;
 
@@ -949,7 +949,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
       memmove( prach, prach+2048, Ncp<<2 );
       prach_len = 1024+Ncp;
     } else {
-      idft6144(prachF,prach2);
+      idft6144(prachF,prach2,1);
       /*for (i=0;i<6144*2;i++)
       prach2[i]<<=1;*/
       memmove( prach, prach+12288, Ncp<<2 );
@@ -969,7 +969,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
       memmove( prach, prach+4096, Ncp<<2 );
       prach_len = 2048+Ncp;
     } else {
-      idft12288(prachF,prach2);
+      idft12288(prachF,prach2,1);
       memmove( prach, prach+24576, Ncp<<2 );
       prach_len = 12288+Ncp;
 
@@ -983,12 +983,12 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
 
   case 75:
     if (prach_fmt == 4) {
-      idft3072(prachF,prach2);
+      idft3072(prachF,prach2,1);
       //TODO: account for repeated format in dft output
       memmove( prach, prach+6144, Ncp<<2 );
       prach_len = 3072+Ncp;
     } else {
-      idft18432(prachF,prach2);
+      idft18432(prachF,prach2,1);
       memmove( prach, prach+36864, Ncp<<2 );
       prach_len = 18432+Ncp;
 
@@ -1007,7 +1007,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
 	memmove( prach, prach+8192, Ncp<<2 );
 	prach_len = 4096+Ncp;
       } else {
-	idft24576(prachF,prach2);
+	idft24576(prachF,prach2,1);
 	memmove( prach, prach+49152, Ncp<<2 );
 	prach_len = 24576+Ncp;
 	
@@ -1019,12 +1019,12 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
     }
     else {
       if (prach_fmt == 4) {
-	idft3072(prachF,prach2);
+	idft3072(prachF,prach2,1);
 	//TODO: account for repeated format in dft output
 	memmove( prach, prach+6144, Ncp<<2 );
 	prach_len = 3072+Ncp;
       } else {
-	idft18432(prachF,prach2);
+	idft18432(prachF,prach2,1);
 	memmove( prach, prach+36864, Ncp<<2 );
 	prach_len = 18432+Ncp;
 	printf("Generated prach for 100 PRB, 3/4 sampling\n");
@@ -1403,10 +1403,10 @@ void rx_prach0(PHY_VARS_eNB *eNB,
 	if (prach_fmt == 4) {
 	  dft256(prach2,rxsigF[aa],1);
 	} else {
-	  dft3072(prach2,rxsigF[aa]);
+	  dft3072(prach2,rxsigF[aa],1);
 	  
 	  if (prach_fmt>1)
-	    dft3072(prach2+6144,rxsigF[aa]+6144);
+	    dft3072(prach2+6144,rxsigF[aa]+6144,1);
 	}
 	
 	break;
@@ -1417,10 +1417,10 @@ void rx_prach0(PHY_VARS_eNB *eNB,
 	  dft1024(prach2,rxsigF[aa],1);
 	  fft_size = 1024;
 	} else {
-	  dft6144(prach2,rxsigF[aa]);
+	  dft6144(prach2,rxsigF[aa],1);
 	  
 	  if (prach_fmt>1)
-	    dft6144(prach2+12288,rxsigF[aa]+12288);
+	    dft6144(prach2+12288,rxsigF[aa]+12288,1);
 	  
 	  fft_size = 6144;
 	}
@@ -1431,22 +1431,22 @@ void rx_prach0(PHY_VARS_eNB *eNB,
 	if (prach_fmt == 4) {
 	  dft2048(prach2,rxsigF[aa],1);
 	} else {
-	  dft12288(prach2,rxsigF[aa]);
+	  dft12288(prach2,rxsigF[aa],1);
 	  
 	  if (prach_fmt>1)
-	    dft12288(prach2+24576,rxsigF[aa]+24576);
+	    dft12288(prach2+24576,rxsigF[aa]+24576,1);
 	}
 	
 	break;
 	
       case 75:
 	if (prach_fmt == 4) {
-	  dft3072(prach2,rxsigF[aa]);
+	  dft3072(prach2,rxsigF[aa],1);
 	} else {
-	  dft18432(prach2,rxsigF[aa]);
+	  dft18432(prach2,rxsigF[aa],1);
 	  
 	  if (prach_fmt>1)
-	    dft18432(prach2+36864,rxsigF[aa]+36864);
+	    dft18432(prach2+36864,rxsigF[aa]+36864,1);
 	}
 	
 	break;
@@ -1456,19 +1456,19 @@ void rx_prach0(PHY_VARS_eNB *eNB,
 	  if (prach_fmt == 4) {
 	    dft4096(prach2,rxsigF[aa],1);
 	  } else {
-	    dft24576(prach2,rxsigF[aa]);
+	    dft24576(prach2,rxsigF[aa],1);
 	    
 	    if (prach_fmt>1)
-	      dft24576(prach2+49152,rxsigF[aa]+49152);
+	      dft24576(prach2+49152,rxsigF[aa]+49152,1);
 	  }
 	} else {
 	  if (prach_fmt == 4) {
-	    dft3072(prach2,rxsigF[aa]);
+	    dft3072(prach2,rxsigF[aa],1);
 	  } else {
-	    dft18432(prach2,rxsigF[aa]);
+	    dft18432(prach2,rxsigF[aa],1);
 	    
 	    if (prach_fmt>1)
-	      dft18432(prach2+36864,rxsigF[aa]+36864);
+	      dft18432(prach2+36864,rxsigF[aa]+36864,1);
 	  }
 	}
 	

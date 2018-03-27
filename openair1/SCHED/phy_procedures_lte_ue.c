@@ -2580,6 +2580,13 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_PBCH_PROCEDURES, VCD_FUNCTION_IN);
 
+  // In general we will need to detect that the UE is running with FeMBMS
+  // something like if (ue->FeMBMS_active == 1)
+  // This is for regular LTE
+  // for FeMBMS this has to be something like:
+  //  AssertFatal(frame_rx&3 == 0, "ue_pbch_procedures called in frame that is not a multiple of 4\n");
+  //  pbch_phase_FeMBMS = (frame_rx/4)&3;
+ 
   pbch_phase=(frame_rx%4);
 
   if (pbch_phase>=4)
@@ -3906,6 +3913,9 @@ void *UE_thread_slot1_dl_processing(void *arg) {
         next_subframe_rx    = (1+subframe_rx)%10;
         next_subframe_slot0 = next_subframe_rx<<1;
 
+	// additional check for FeMBMS
+	// if  ((ue->FeMBMS_active ==0) || ((ue->FeMBMS_active == 1) && ((frame_rx % 4) == 0)) {
+
         slot1  = (subframe_rx<<1) + 1;
         pilot0 = 0;
 
@@ -3998,6 +4008,7 @@ void *UE_thread_slot1_dl_processing(void *arg) {
                 pilot0,
                 next_subframe_slot0,
                 0);
+
 
         if ( (subframe_rx == 0) && (ue->decode_MIB == 1))
         {
@@ -4129,6 +4140,7 @@ void *UE_thread_slot1_dl_processing(void *arg) {
             LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE FEP Slo1\n" );
             exit_fun("noting to add");
         }
+	// } end condition for FeMBMS
     }
     // thread finished
         free(arg);

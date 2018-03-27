@@ -145,8 +145,11 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,int frame, int subframe) {
   int **txdataF = eNB->common_vars.txdataF;
   uint8_t *pbch_pdu=&eNB->pbch_pdu[0];
 
+  // AssertFatal((eNB->FeMBMS_active == 1) && ((frame&3 != 0) || (subframe > 0)),"Called common_signal_procedures for FeMBMS subframe which is not regular LTE\n");
+
   //LOG_D(PHY,"common_signal_procedures: frame %d, subframe %d fdd:%s dir:%s\n",frame,subframe,fp->frame_type == FDD?"FDD":"TDD", subframe_select(fp,subframe) == SF_DL?"DL":"UL?"); 
 
+  // if ((eNB->FeMBMS_active ==0) || ((eNB->FeMBMS_active == 1) && ((frame % 4) == 0)) {
   // generate Cell-Specific Reference Signals for both slots
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_RS_TX,1);
   generate_pilots_slot(eNB,
@@ -183,7 +186,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,int frame, int subframe) {
 
       
     /// First half of SSS (TDD, slot 1)
-    
+    // if ((eNB->FeMBMS_active==0) && (fp->frame_type == TDD))
     if (fp->frame_type == TDD) {
       generate_sss(txdataF,
 		   AMP,
@@ -195,16 +198,20 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,int frame, int subframe) {
     // generate PBCH (Physical Broadcast CHannel) info
 
     /// generate PBCH
+
+    // if (((eNB->FeMBMS_active == 1) && ((frame&15) ==  0)) || (eNB->FeMBMS_active == 0) && ((frame&3)==0)) {
     if ((frame&3)==0) {
       //AssertFatal(eNB->pbch_configured==1,"PBCH was not configured by MAC\n");
       if (eNB->pbch_configured!=1) return;
       eNB->pbch_configured=0;
     }
+    // if (eNB->FeMBMS_active == 1) && (frame&3==0)) || (eNB->FeMBMS_active == 0)
     generate_pbch(&eNB->pbch,
 		  txdataF,
 		  AMP,
 		  fp,
 		  pbch_pdu,
+		  // eNB->FeMBMS_active == 1 ? (frame>>2)&3 : frame&3
 		  frame&3);
   
   }

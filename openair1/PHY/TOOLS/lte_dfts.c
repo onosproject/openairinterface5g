@@ -5524,19 +5524,19 @@ void dft1536(int16_t *input, int16_t *output, int scale)
 }
 
 // 1024 x 3
-void dft3072(int16_t *input, int16_t *output)
+void dft3072(int16_t *input, int16_t *output,int scale)
 {
 
 }
 
-void idft3072(int16_t *input, int16_t *output)
+void idft3072(int16_t *input, int16_t *output,int scale)
 {
 
 }
 
 #include "twiddle6144.h"
 
-void idft6144(int16_t *input, int16_t *output)
+void idft6144(int16_t *input, int16_t *output,int scale)
 {
   int i,i2,j;
   uint32_t tmp[3][2048] __attribute__((aligned(32)));
@@ -5577,7 +5577,7 @@ void idft6144(int16_t *input, int16_t *output)
 }
 
 
-void dft6144(int16_t *input, int16_t *output)
+void dft6144(int16_t *input, int16_t *output,int scale)
 {
   int i,i2,j;
   uint32_t tmp[3][2048] __attribute__((aligned(32)));
@@ -5617,7 +5617,7 @@ void dft6144(int16_t *input, int16_t *output)
 #include "twiddle12288.h"
 
 // 4096 x 3
-void dft12288(int16_t *input, int16_t *output)
+void dft12288(int16_t *input, int16_t *output,int scale)
 {
   int i,i2,j;
   uint32_t tmp[3][4096] __attribute__((aligned(32)));
@@ -5629,9 +5629,9 @@ void dft12288(int16_t *input, int16_t *output)
     tmp[2][i] = ((uint32_t *)input)[j++];
   }
 
-  dft4096((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]),1);
-  dft4096((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]),1);
-  dft4096((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]),1);
+  dft4096((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]),scale);
+  dft4096((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]),scale);
+  dft4096((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]),scale);
   /*
   for (i=1; i<4096; i++) {
     tmpo[0][i] = tmpo[0][i<<1];
@@ -5653,7 +5653,7 @@ void dft12288(int16_t *input, int16_t *output)
 
 }
 
-void idft12288(int16_t *input, int16_t *output)
+void idft12288(int16_t *input, int16_t *output,int scale)
 {
   int i,i2,j;
   uint32_t tmp[3][4096] __attribute__((aligned(32)));
@@ -5666,9 +5666,9 @@ void idft12288(int16_t *input, int16_t *output)
   }
 
 
-  idft4096((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]),1);
-  idft4096((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]),1);
-  idft4096((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]),1);
+  idft4096((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]),scale);
+  idft4096((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]),scale);
+  idft4096((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]),scale);
   /*
     write_output("in.m","in",input,12288,1,1);
     write_output("out0.m","o0",tmpo[0],4096,1,1);
@@ -5689,7 +5689,7 @@ void idft12288(int16_t *input, int16_t *output)
 
 #include "twiddle18432.h"
 // 6144 x 3
-void dft18432(int16_t *input, int16_t *output) {
+void dft18432(int16_t *input, int16_t *output,int scale) {
 
   int i,i2,j;
   uint32_t tmp[3][6144] __attribute__((aligned(32)));
@@ -5701,9 +5701,9 @@ void dft18432(int16_t *input, int16_t *output) {
     tmp[2][i] = ((uint32_t *)input)[j++];
   }
 
-  dft6144((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]));
-  dft6144((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]));
-  dft6144((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]));
+  dft6144((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]),scale);
+  dft6144((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]),scale);
+  dft6144((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]),scale);
 
   for (i=0,i2=0; i<12288; i+=8,i2+=4)  {
     bfly3((simd_q15_t*)(&tmpo[0][i2]),(simd_q15_t*)(&tmpo[1][i2]),(simd_q15_t*)(&tmpo[2][i2]),
@@ -5715,7 +5715,7 @@ void dft18432(int16_t *input, int16_t *output) {
   _m_empty();
 }
 
-void idft18432(int16_t *input, int16_t *output) {
+void idft18432(int16_t *input, int16_t *output,int scale) {
 
   int i,i2,j;
   uint32_t tmp[3][6144] __attribute__((aligned(32)));
@@ -5727,9 +5727,9 @@ void idft18432(int16_t *input, int16_t *output) {
     tmp[2][i] = ((uint32_t *)input)[j++];
   }
 
-  idft6144((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]));
-  idft6144((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]));
-  idft6144((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]));
+  idft6144((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]),scale);
+  idft6144((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]),scale);
+  idft6144((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]),scale);
 
   for (i=0,i2=0; i<12288; i+=8,i2+=4)  {
     ibfly3((simd_q15_t*)(&tmpo[0][i2]),(simd_q15_t*)(&tmpo[1][i2]),(simd_q15_t*)(&tmpo[2][i2]),
@@ -5743,7 +5743,7 @@ void idft18432(int16_t *input, int16_t *output) {
 
 #include "twiddle24576.h"
 // 8192 x 3
-void dft24576(int16_t *input, int16_t *output)
+void dft24576(int16_t *input, int16_t *output,int scale)
 {
   int i,i2,j;
   uint32_t tmp[3][8192] __attribute__((aligned(32)));
@@ -5755,9 +5755,9 @@ void dft24576(int16_t *input, int16_t *output)
     tmp[2][i] = ((uint32_t *)input)[j++];
   }
 
-  dft8192((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]),1);
-  dft8192((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]),1);
-  dft8192((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]),1);
+  dft8192((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]),scale);
+  dft8192((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]),scale);
+  dft8192((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]),scale);
   /*
   for (i=1; i<8192; i++) {
     tmpo[0][i] = tmpo[0][i<<1];
@@ -5780,7 +5780,7 @@ void dft24576(int16_t *input, int16_t *output)
   //  write_output("out.m","out",output,24576,1,1);
 }
 
-void idft24576(int16_t *input, int16_t *output)
+void idft24576(int16_t *input, int16_t *output,int scale)
 {
   int i,i2,j;
   uint32_t tmp[3][8192] __attribute__((aligned(32)));
@@ -5792,9 +5792,9 @@ void idft24576(int16_t *input, int16_t *output)
     tmp[2][i] = ((uint32_t *)input)[j++];
   }
 
-  idft8192((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]),1);
-  idft8192((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]),1);
-  idft8192((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]),1);
+  idft8192((int16_t*)(tmp[0]),(int16_t*)(tmpo[0]),scale);
+  idft8192((int16_t*)(tmp[1]),(int16_t*)(tmpo[1]),scale);
+  idft8192((int16_t*)(tmp[2]),(int16_t*)(tmpo[2]),scale);
   
   /*
     write_output("in.m","in",input,24576,1,1);

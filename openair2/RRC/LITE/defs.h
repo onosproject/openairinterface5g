@@ -44,9 +44,14 @@
 #include "COMMON/platform_types.h"
 
 #include "LAYER2/MAC/defs.h"
-
+#include "MasterInformationBlock-MBMS-r14.h"
 #include "SystemInformationBlockType1.h"
 #include "SystemInformation.h"
+#ifdef Rel14
+#include "MasterInformationBlock-MBMS-r14.h"
+#include "SystemInformation-MBMS-r14.h"
+#include "SystemInformationBlockType1-MBMS-r14.h"
+#endif
 #include "RRCConnectionReconfiguration.h"
 #include "RRCConnectionReconfigurationComplete.h"
 #include "RRCConnectionSetup.h"
@@ -619,6 +624,15 @@ typedef struct UE_RRC_INST_s {
   MBSFNAreaConfiguration_r9_t       *mcch_message[NB_CNX_UE];
   SystemInformationBlockType12_r9_t *sib12[NB_CNX_UE];
   SystemInformationBlockType13_r9_t *sib13[NB_CNX_UE];
+#endif
+#ifdef Rel14
+  uint8_t *SI_mbms;
+  // Maybe not needed, check parameters additionalNonMBSFNSubframes_r14
+  MasterInformationBlock_MBMS_r14_t *mib_mbms;
+  SystemInformationBlockType1_MBMS_r14_t *sib1_mbms;
+  SystemInformation_MBMS_r14_t *si_mbms; //!< Temporary storage for an SI message. Decoding happens in decode_SI().
+  SystemInformationBlockType15_r11_t *sib15;
+  SystemInformationBlockType16_r11_t *sib16;  
 #endif
 #ifdef CBA
   uint8_t                         num_active_cba_groups;
