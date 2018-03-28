@@ -414,6 +414,13 @@ function main() {
         flash_firmware_bladerf
       fi
     fi
+    if [ "$HW" == "OAI_IRIS" ] ; then
+      echo_info "installing packages for IRIS support"
+      check_install_soapy
+      #if [ ! "$DISABLE_HARDWARE_DEPENDENCY" == "True" ]; then
+      #  flash_firmware_iris
+      #fi
+    fi
   fi
 
   if [ "$INSTALL_OPTIONAL" = "1" ] ; then
