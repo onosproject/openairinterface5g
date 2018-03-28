@@ -34,7 +34,7 @@
 #else
 #include "PHY/TOOLS/time_meas.h"
 #endif
-#include "nrLDPC_decoder.h"
+#include "nrLDPC_decoder/nrLDPC_decoder.h"
 
 #define CRC24_A 0
 #define CRC24_B 1

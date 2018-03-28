@@ -36,9 +36,7 @@
 #include "PHY/CODING/extern.h"
 #include "SCHED/extern.h"
 #include "SIMULATION/TOOLS/defs.h"
-//#include "targets/RT/USER/lte-softmodem.h"
-#include "PHY/CODING/nrLDPC_decoder.h"
-#include "PHY/CODING/nrLDPC_types.h"
+#include "PHY/CODING/nrLDPC_decoder/nrLDPC_decoder.h"
 //#define DEBUG_DLSCH_DECODING
 //#define TD_DECODING
 

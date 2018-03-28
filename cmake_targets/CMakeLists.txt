@@ -1087,7 +1087,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref.c
   ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation.c
   ${OPENAIR1_DIR}/PHY/CODING/nr_segmentation.c
-  ${OPENAIR1_DIR}/PHY/CODING/ldpc_decoder.c
+  ${OPENAIR1_DIR}/PHY/CODING/nrLDPC_decoder/nrLDPC_decoder.c
   ${OPENAIR1_DIR}/PHY/CODING/ldpc_encoder.c
   ${OPENAIR1_DIR}/PHY/CODING/ldpc_encoder2.c
   ${OPENAIR1_DIR}/PHY/CODING/ldpc_generate_coefficient.c
