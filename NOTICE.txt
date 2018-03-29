@@ -1,4 +1,4 @@
-The source code of openairinterface5g is distributed under OAI Public License V1.0. 
+The source code of openairinterface5g is distributed under OAI Public License V1.1. 
 For more details of the license, refer to LICENSE file in the same directory.
 
 However, the source code also contains third party software that is acknowledged here for reference.
