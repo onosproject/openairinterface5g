@@ -715,7 +715,8 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 
 	  nfapi_ul_config_harq_information *ulsch_harq_information = &ul_config_pdu->uci_harq_pdu.harq_information;
 	  //LOG_I(MAC, "Panos-D: handle_nfapi_ul_pdu_UE_MAC 7 \n");
-	  fill_uci_harq_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO,ulsch_harq_information, rnti);
+	  if(ulsch_harq_information != NULL)
+		  fill_uci_harq_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO,ulsch_harq_information, rnti);
   }
   else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_CQI_PDU_TYPE) {
     AssertFatal(1==0,"NFAPI_UL_CONFIG_UCI_CQI_PDU_TYPE not handled yet\n");
@@ -750,7 +751,8 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 		  fill_sr_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO,rnti);
 
 	  nfapi_ul_config_harq_information *ulsch_harq_information = &ul_config_pdu->uci_sr_harq_pdu.harq_information;
-	  fill_uci_harq_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO,ulsch_harq_information, rnti);
+	  if (ulsch_harq_information != NULL)
+		  fill_uci_harq_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO,ulsch_harq_information, rnti);
 
   }
   /*else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_SRS_PDU_TYPE) {
@@ -1093,7 +1095,7 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 				if(dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index <= tx_req_num_elems -1){
 				//if(tx_request_pdu_list + dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index!= NULL){
 
-					//LOG_E(MAC, "dl_config_req_UE_MAC 2 Received data: sfn/sf:%d PDU[%d] size:%d, TX_PDU index: %d, tx_req_num_elems: %d \n", NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index, tx_req_num_elems);
+					LOG_E(MAC, "dl_config_req_UE_MAC 2 Received data: sfn/sf:%d PDU[%d] size:%d, TX_PDU index: %d, tx_req_num_elems: %d \n", NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index, tx_req_num_elems);
 
 					ue_send_sdu(Mod_id, 0, sfn, sf,
 							tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
@@ -1103,15 +1105,17 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 				}
 				else{
 					LOG_E(MAC,"dl_config_req_UE_MAC 2: Problem with receiving data: sfn/sf:%d PDU[%d] size:%d, TX_PDU index: %d\n", NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index);
+					i++;
 				}
 			}
 			else {
-				LOG_E(MAC,"[UE %d] Frame %d, subframe %d : Cannot extract DLSCH PDU from NFAPI\n",Mod_id, sfn,sf);
+				LOG_E(MAC,"[UE %d] Frame %d, subframe %d : DLSCH PDU from NFAPI not for this UE \n",Mod_id, sfn,sf);
+				i++;
 			}
 		}
 		else if (dl_config_pdu_list[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti_type == 2) {
 			dl_config_pdu_tmp = &dl_config_pdu_list[i+1];
-			if(dl_config_pdu_tmp->pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE && dl_config_pdu_list[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti == 0xFFFF){
+			if(dl_config_pdu_tmp->pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE && dl_config_pdu_list[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti == 0xFFFF && UE_mac_inst[Mod_id].UE_mode[0] != NOT_SYNCHED){ //&& UE_mac_inst[Mod_id].UE_mode[0] != NOT_SYNCHED
 				//pdu = Tx_req->tx_request_body.tx_pdu_list[dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data;
 
 				/*LOG_E(MAC,"dl_config_req_UE_MAC 3 Received SI: [PDU:%d] NFAPI_DL_CONFIG_DLSCH_PDU_TYPE TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d sdu:%p\n",
@@ -1126,6 +1130,7 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 				}
 				else{
 					LOG_E(MAC,"dl_config_req_UE_MAC 3: Problem with receiving SI: sfn/sf:%d PDU[%d] size:%d, TX_PDU index: %d\n", NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index);
+					i++;
 				}
 			}
 			else if(dl_config_pdu_tmp->pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE && dl_config_pdu_list[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti == 0xFFFE){
@@ -1141,6 +1146,7 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 				}
 				else{
 					LOG_E(MAC,"dl_config_req_UE_MAC: Problem with receiving Paging: sfn/sf:%d PDU[%d] size:%d, TX_PDU index: %d\n", NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index);
+					i++;
 				}
 			}
 			else if(dl_config_pdu_tmp->pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE) {
@@ -1164,9 +1170,11 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 					UE_mac_inst[Mod_id].UE_mode[0] = RA_RESPONSE;
 					UE_mac_inst[Mod_id].first_ULSCH_Tx = 1; //Expecting an UL_CONFIG_ULSCH_PDU to enable Msg3 Txon (first ULSCH Txon for the UE)
 				}
+				i++;
 			}
 			else {
-				LOG_E(MAC,"[UE %d] %d Frame %d, subframe %d : Cannot extract DLSCH PDU from NFAPI\n",Mod_id, sfn, sf);
+				LOG_E(MAC,"[UE %d] %d Frame %d, subframe %d : Cannot extract DLSCH PDU from NFAPI 2\n",Mod_id, sfn, sf);
+				i++;
 			}
 
 		}
@@ -1179,7 +1187,7 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
     	//LOG_E(MAC,"dl_config_req_UE_MAC 4 Received MIB: sfn/sf: %d.%d \n", sfn, sf);
     	if(UE_mac_inst[Mod_id].UE_mode[0] == NOT_SYNCHED){
     		dl_phy_sync_success(Mod_id,sfn,0, 1);
-    		LOG_E(MAC,"dl_config_req_UE_MAC 5 Received MIB: UE_mode: %d\n", UE_mac_inst[Mod_id].UE_mode[0]);
+    		LOG_E(MAC,"dl_config_req_UE_MAC 5 Received MIB: UE_mode: %d, sfn/sf: %d.%d\n", UE_mac_inst[Mod_id].UE_mode[0], sfn, sf);
     		UE_mac_inst[Mod_id].UE_mode[0]=PRACH;
     	}
     	else

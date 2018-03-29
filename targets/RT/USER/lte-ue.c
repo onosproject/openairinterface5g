@@ -900,15 +900,17 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
   proc->subframe_rx=proc->sub_frame_start;
 
   // Initialize all nfapi structures to NULL
-  for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++) {
+  /*for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++) {
       	UE_mac_inst[Mod_id].dl_config_req = NULL;
       	UE_mac_inst[Mod_id].ul_config_req = NULL;
       	UE_mac_inst[Mod_id].hi_dci0_req = NULL;
-      	UE_mac_inst[Mod_id].ra_frame = 0;
+      	//UE_mac_inst[Mod_id].ra_frame = 0;
+      	next_ra_frame = 0;
+      	next_Mod_id = 0;
       	tx_request_pdu_list = NULL;
       	tx_req_num_elems = 0;
       	UE_mac_inst[Mod_id].tx_req = NULL;
-      }
+      }*/
 
   //PANOS: CAREFUL HERE!
   wait_sync("UE_phy_stub_single_thread_rxn_txnp4");
@@ -1102,12 +1104,14 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 	(UE->frame_parms.frame_type == FDD) )
       if (UE->mode != loop_through_memory){
 
-	if ((UE_mac_inst[Mod_id].UE_mode[0] == PRACH  && Mod_id == 0) || (UE_mac_inst[Mod_id].UE_mode[0] == PRACH && Mod_id>0 && proc->frame_rx >= UE_mac_inst[Mod_id-1].ra_frame + 20) ) {
+    // We make the start of RA between consecutive UEs differ by 20 frames
+	//if ((UE_mac_inst[Mod_id].UE_mode[0] == PRACH  && Mod_id == 0) || (UE_mac_inst[Mod_id].UE_mode[0] == PRACH && Mod_id>0 && proc->frame_rx >= UE_mac_inst[Mod_id-1].ra_frame + 20) ) {
+	if (UE_mac_inst[Mod_id].UE_mode[0] == PRACH  && Mod_id == next_Mod_id && proc->frame_rx >= next_ra_frame) {
 	  //LOG_D(MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 before RACH \n");
 
 	  // check if we have PRACH opportunity
 
-	  if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx) ) {
+	  if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx) &&  UE_mac_inst[Mod_id].SI_Decoded == 1) {
 
 	  // The one working strangely...
       //if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx && Mod_id == (module_id_t) init_ra_UE) ) {
@@ -1120,6 +1124,8 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 	      fill_rach_indication_UE_MAC(Mod_id, proc->frame_tx ,proc->subframe_tx, UL_INFO, prach_resources->ra_PreambleIndex, prach_resources->ra_RNTI);
 	      Msg1_transmitted(Mod_id, 0, proc->frame_tx, 0);
 	      UE_mac_inst[Mod_id].UE_mode[0] = RA_RESPONSE;
+	      next_Mod_id = Mod_id + 1;
+	      next_ra_frame = (proc->frame_rx + 20)%1000;
 	    }
 
 	    //ue_prach_procedures(ue,proc,eNB_id,abstraction_flag,mode);

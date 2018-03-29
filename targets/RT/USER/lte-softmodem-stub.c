@@ -942,6 +942,10 @@ int main( int argc, char **argv )
   uint8_t  abstraction_flag=0;
   uint8_t beta_ACK=0,beta_RI=0,beta_CQI=2;
 
+  // Default value for the number of UEs. It will hold,
+  // if not changed from the command line option --num-ues
+  NB_UE_INST=1;
+
 #if defined (XFORMS)
   int ret;
 #endif
@@ -1107,7 +1111,7 @@ int main( int argc, char **argv )
   printf("Before CC \n");
 
 
-  NB_UE_INST=2;
+  //NB_UE_INST=2;
   NB_INST=1;
 
   if (UE_flag==1) {

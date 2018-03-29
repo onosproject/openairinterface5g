@@ -22,6 +22,10 @@ UL_IND_t *UL_INFO;
 nfapi_tx_request_pdu_t* tx_request_pdu_list;
 int	tx_req_num_elems;
 
+int next_ra_frame;
+module_id_t next_Mod_id;
+
+
 
 
 // Panos: This function should return all the sched_response config messages which concern a specific UE. Inside this

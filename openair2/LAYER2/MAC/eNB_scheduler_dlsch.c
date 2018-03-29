@@ -833,7 +833,7 @@ schedule_ue_spec(module_id_t module_idP,
 
                             eNB->DL_req[CC_id].sfn_sf = frameP<<4 | subframeP;
                             eNB->DL_req[CC_id].header.message_id = NFAPI_DL_CONFIG_REQUEST;
-
+                //LOG_I(MAC, "Panos:D: schedule_ue_spec() before fill_nfapi_dlsch_config() with pdu_index = -1 \n");
 			    fill_nfapi_dlsch_config(eNB, dl_req, TBS, -1
 						    /* retransmission, no pdu_index */
 						    , rnti, 0,	// type 0 allocation from 7.1.6 in 36.213

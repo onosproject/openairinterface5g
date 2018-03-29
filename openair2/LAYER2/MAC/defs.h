@@ -1479,6 +1479,7 @@ typedef struct {
   /// Panos: Phy_stub mode: Boolean variable to distinguish whether a Msg3 or a regular ULSCH data pdu should be generated
   /// after the reception of NFAPI_UL_CONFIG_ULSCH_PDU_TYPE.
   uint8_t first_ULSCH_Tx;
+  uint8_t SI_Decoded;
   int ra_frame; 	// This variable keeps the frame in which the RA started for the specific UE. It is used in order
                     // to make sure that different UEs RA starts within a number of frames difference.
 

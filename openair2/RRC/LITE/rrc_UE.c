@@ -789,6 +789,7 @@ int rrc_ue_decode_ccch( const protocol_ctxt_t* const ctxt_pP, const SRB_INFO* co
     char        message_string[10000];
     size_t      message_string_size;
 
+    //LOG_I(RRC, "Panos-D: rrc_ue_decode_ccch, Before xer_sprint() \n");
     if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_CCCH_Message, (void *)dl_ccch_msg)) > 0) {
       MessageDef *msg_p;
 
@@ -1979,6 +1980,7 @@ rrc_ue_process_securityModeCommand(
       char        message_string[20000];
       size_t      message_string_size;
       
+      //LOG_I(RRC, "Panos-D: rrc_ue_process_securityModeCommand, Before xer_sprint() \n");
       if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_UL_DCCH_Message, (void *) &ul_dcch_msg)) > 0) {
 	MessageDef *msg_p;
 	
@@ -2090,6 +2092,7 @@ rrc_ue_process_ueCapabilityEnquiry(
 	char        message_string[20000];
 	size_t      message_string_size;
 	
+	//LOG_I(RRC, "Panos-D: rrc_ue_process_ueCapabilityEnquiry, Before xer_sprint() \n");
 	if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_UL_DCCH_Message, (void *) &ul_dcch_msg)) > 0) {
 	  MessageDef *msg_p;
 	  
@@ -2484,6 +2487,7 @@ rrc_ue_decode_dcch(
     char        message_string[30000];
     size_t      message_string_size;
 
+    //LOG_I(RRC, "Panos-D: rrc_ue_decode_dcch, Before xer_sprint() \n");
     if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message, (void *)dl_dcch_msg)) > 0) {
       msg_p = itti_alloc_new_message_sized (TASK_RRC_UE, RRC_DL_DCCH, message_string_size + sizeof (IttiMsgText));
       msg_p->ittiMsg.rrc_dl_dcch.size = message_string_size;
@@ -3019,6 +3023,7 @@ int decode_BCCH_DLSCH_Message(
     char        message_string[15000];
     size_t      message_string_size;
 
+    //LOG_I(RRC, "Panos-D: decode_BCCH_DLSCH_Message, Before xer_sprint() \n");
     if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_BCCH_DL_SCH_Message, (void *)bcch_message)) > 0) {
       MessageDef *msg_p;
 
@@ -3067,6 +3072,8 @@ int decode_BCCH_DLSCH_Message(
         //LOG_I( RRC, "Panos-D: decode_BCCH_DLSCH_Message1 BEFORE OTHER decode_SI");
         //printf("Panos-D: decode_BCCH_DLSCH_Message1 BEFORE OTHER decode_SI");
         decode_SI( ctxt_pP, eNB_index );
+        //if (nfapi_mode == 3)
+        	UE_mac_inst[ctxt_pP->module_id].SI_Decoded = 1;
       }
 
       break;
