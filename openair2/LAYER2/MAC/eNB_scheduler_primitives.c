@@ -61,8 +61,6 @@
 #define ENABLE_MAC_PAYLOAD_DEBUG
 #define DEBUG_eNB_SCHEDULER 1
 
-extern int n_active_slices;
-
 int choose(int n, int k)
 {
   int res = 1;
@@ -4140,7 +4138,7 @@ uint16_t nb_rbs_allowed_slice(float rb_percentage, int total_rbs)
     return (uint16_t) floor(rb_percentage * total_rbs);
 }
 
-int ue_slice_membership(int UE_id, int slice_id)
+int ue_slice_membership(int UE_id, int slice_id, int n_active_slices)
 {
   if ((slice_id < 0) || (slice_id > n_active_slices))
     LOG_W(MAC, "out of range slice id %d\n", slice_id);

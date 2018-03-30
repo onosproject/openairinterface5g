@@ -986,6 +986,143 @@ typedef struct {
 
 } UE_list_t;
 
+/// Structure for saving the output of each pre_processor instance
+typedef struct {
+    uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+    uint16_t nb_rbs_accounted[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+    uint16_t nb_rbs_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+    uint8_t  slice_allocation_mask[MAX_NUM_CCs][N_RBG_MAX];
+    uint8_t  slice_allocated_rbgs[MAX_NUM_CCs][N_RBG_MAX];
+    uint8_t  MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX];
+
+    uint32_t bytes_lcid[NUMBER_OF_UE_MAX][MAX_NUM_LCID];
+    uint32_t wb_pmi[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+    uint8_t  mcs[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+
+} pre_processor_results_t;
+
+/**
+ * slice specific scheduler for the DL
+ */
+typedef void (*slice_scheduler_dl)(module_id_t mod_id,
+                                   slice_id_t  slice_id,
+                                   frame_t     frame,
+                                   sub_frame_t subframe,
+                                   int        *mbsfn_flag);
+
+typedef struct {
+    /// RB share for each slice for past and current time
+    float     pct;
+    float     pct_current;
+
+    /// whether this slice is isolated from the others for past and current time
+    int       isol;
+    int       isol_current;
+
+    int       prio;
+    int       prio_current;
+
+    /// Frequency ranges for slice positioning
+    int       pos_low;
+    int       pos_high;
+    int       pos_low_current;
+    int       pos_high_current;
+
+    // max mcs for each slice for past and current time
+    int       maxmcs;
+    int       maxmcs_current;
+
+    /// criteria for sorting policies of the slices
+    uint32_t  sorting;
+    uint32_t  sorting_current;
+
+    /// Accounting policy (just greedy(1) or fair(0) setting for now)
+    int       accounting;
+    int       accounting_current;
+
+    /// Whether the scheduler callback should be updated
+    int       update_sched;
+    int       update_sched_current;
+
+    /// name of available scheduler
+    char     *sched_name;
+
+    /// pointer to the slice specific scheduler in DL
+    slice_scheduler_dl sched_cb;
+
+} slice_sched_conf_dl_t;
+
+typedef void (*slice_scheduler_ul)(module_id_t   mod_id,
+                                   slice_id_t    slice_id,
+                                   frame_t       frame,
+                                   sub_frame_t   subframe,
+                                   unsigned char sched_subframe,
+                                   uint16_t     *first_rb);
+
+typedef struct {
+    /// RB share for each slice for past and current time
+    float     pct;
+    float     pct_current;
+
+    // MAX MCS for each slice for past and current time
+    int       maxmcs;
+    int       maxmcs_current;
+
+    /// criteria for sorting policies of the slices
+    uint32_t  sorting;
+    uint32_t  sorting_current;
+
+    /// starting RB (RB offset) of UL scheduling
+    int       first_rb;
+    int       first_rb_current;
+
+    /// Slice scheduler callback update needed
+    int       update_sched;
+    int       update_sched_current;
+
+    /// name of available scheduler
+    char     *sched_name;
+
+    /// pointer to the slice specific scheduler in UL
+    slice_scheduler_ul sched_cb;
+
+} slice_sched_conf_ul_t;
+
+
+typedef struct {
+    /// counter used to indicate when all slices have pre-allocated UEs
+    int      slice_counter;
+
+    /// indicates whether remaining RBs after first intra-slice allocation will
+    /// be allocated to UEs of the same slice
+    int       intraslice_share_active;
+    int       intraslice_share_active_current;
+    /// indicates whether remaining RBs after slice allocation will be
+    /// allocated to UEs of another slice. Isolated slices will be ignored
+    int       interslice_share_active;
+    int       interslice_share_active_current;
+
+    /// number of active slices for past and current time in DL
+    int      n_dl;
+    int      n_dl_current;
+    /// RB share stats for DL
+    float    tot_pct_dl;
+    float    tot_pct_dl_current;
+    float    avg_pct_dl;
+    slice_sched_conf_dl_t dl[MAX_NUM_SLICES];
+
+    /// number of active slices for past and current time in UL
+    int      n_ul;
+    int      n_ul_current;
+    /// RB share stats for UL
+    float    tot_pct_ul;
+    float    tot_pct_ul_current;
+    float    avg_pct_ul;
+    slice_sched_conf_ul_t ul[MAX_NUM_SLICES];
+
+    pre_processor_results_t pre_processor_results[MAX_NUM_SLICES];
+} slice_info_t;
+
 /*! \brief eNB common channels */
 typedef struct {
     int physCellId;
@@ -1108,6 +1245,9 @@ typedef struct eNB_MAC_INST_s {
     /// UL handle
     uint32_t ul_handle;
     UE_list_t UE_list;
+
+    /// slice-related configuration
+    slice_info_t slice_info;
 
     ///subband bitmap configuration
     SBMAP_CONF sbmap_conf;
@@ -1360,21 +1500,6 @@ typedef struct {
     uint16_t cell_ids[6];
     uint8_t n_adj_cells;
 } neigh_cell_id_t;
-
-/// Structure for saving the output of each pre_processor instance
-typedef struct {
-    uint16_t nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
-    uint16_t nb_rbs_accounted[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
-    uint16_t nb_rbs_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
-    uint8_t  slice_allocation_mask[MAX_NUM_CCs][N_RBG_MAX];
-    uint8_t  slice_allocated_rbgs[MAX_NUM_CCs][N_RBG_MAX];
-    uint8_t  MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX];
-
-    uint32_t bytes_lcid[NUMBER_OF_UE_MAX][MAX_NUM_LCID];
-    uint32_t wb_pmi[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
-    uint8_t  mcs[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
-
-} pre_processor_results_t;
 
 #include "proto.h"
 /*@}*/
