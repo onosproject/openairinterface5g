@@ -53,8 +53,8 @@ int slice_maxmcs_uplink[MAX_NUM_SLICES] = {20, 20, 20, 20};
 int slice_maxmcs_current_uplink[MAX_NUM_SLICES] = {20,20,20,20};
 
 // The lists of criteria that enforce the sorting policies of the slices
-uint32_t  slice_sorting_uplink[MAX_NUM_SLICES]         = {0x0123, 0x0123, 0x0123, 0x0123};
-uint32_t  slice_sorting_uplink_current[MAX_NUM_SLICES] = {0x0123, 0x0123, 0x0123, 0x0123};
+uint32_t  slice_sorting_uplink[MAX_NUM_SLICES]         = {0x012345, 0x012345, 0x012345, 0x012345};
+uint32_t  slice_sorting_uplink_current[MAX_NUM_SLICES] = {0x012345, 0x012345, 0x012345, 0x012345};
 
 /*resource blocks allowed*/
 uint16_t         nb_rbs_allowed_slice_uplink[MAX_NUM_CCs][MAX_NUM_SLICES];

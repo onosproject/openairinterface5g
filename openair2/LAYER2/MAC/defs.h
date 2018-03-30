@@ -984,6 +984,8 @@ typedef struct {
     uint16_t sorting_criteria[MAX_NUM_SLICES][CR_NUM];
     uint16_t sorting_criteria_ul[MAX_NUM_SLICES][CR_NUM];
 
+    uint16_t first_rb_offset[MAX_NUM_CCs][MAX_NUM_SLICES];
+
 } UE_list_t;
 
 /*! \brief eNB common channels */

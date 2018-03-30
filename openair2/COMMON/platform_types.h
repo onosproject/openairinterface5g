@@ -115,7 +115,9 @@ typedef enum {
     CRU_BUF   = 1,
     CRU_BTS   = 2,
     CRU_MCS   = 3,
-    CRU_NUM   = 4
+    CRU_LCP   = 4,
+    CRU_HOL   = 5,
+    CRU_NUM   = 6
 } sorting_criterion_ul_t;
 
 typedef enum {
@@ -123,6 +125,12 @@ typedef enum {
     POL_GREEDY = 1,
     POL_NUM    = 2
 } accounting_policy_t;
+
+typedef enum {
+    CQI2MCS_TABLE = 0,
+    CQI2MCS_DUMMY = 1,
+    CQI2MCS_NUM   = 2
+} cqi2mcs_policy_t;
 //-----------------------------------------------------------------------------
 // PHY TYPES
 //-----------------------------------------------------------------------------

@@ -66,6 +66,8 @@ int       slice_position_current[MAX_NUM_SLICES*2] = {0, N_RBG_MAX, 0, N_RBG_MAX
 // MAX MCS for each slice for past and current time
 int       slice_maxmcs[MAX_NUM_SLICES]         = { 28, 28, 28, 28 };
 int       slice_maxmcs_current[MAX_NUM_SLICES] = { 28, 28, 28, 28 };
+int       slice_cqi2mcs[MAX_NUM_SLICES]         = {0, 0, 0, 0};
+int       slice_cqi2mcs_current[MAX_NUM_SLICES] = {0, 0, 0, 0};
 
 // The lists of criteria that enforce the sorting policies of the slices
 uint32_t  slice_sorting[MAX_NUM_SLICES]         = {0x012345, 0x012345, 0x012345, 0x012345};

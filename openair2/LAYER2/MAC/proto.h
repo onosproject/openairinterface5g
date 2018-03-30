@@ -704,14 +704,14 @@ void ulsch_scheduler_pre_processor_accounting(module_id_t module_idP,
                                               uint16_t nb_allocated_rbs[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
                                               uint16_t total_allocated_rbs[MAX_NUM_CCs]);
 
-void ulsch_scheduler_pre_processor_allocation(module_id_t module_idP,
-                                              slice_id_t slice_id,
-                                              int frameP,
-                                              sub_frame_t subframeP,
-                                              uint16_t * first_rb,
-                                              uint16_t total_ue_count[MAX_NUM_CCs],
-                                              uint16_t nb_allocated_rbs[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
-                                              uint16_t total_allocated_rbs[MAX_NUM_CCs]);
+void ulsch_scheduler_pre_processor_intraslice_sharing(module_id_t module_idP,
+                                                      slice_id_t slice_id,
+                                                      int frameP,
+                                                      sub_frame_t subframeP,
+                                                      uint16_t *first_rb,
+                                                      uint16_t total_ue_count[MAX_NUM_CCs],
+                                                      uint16_t nb_allocated_rbs[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
+                                                      uint16_t total_allocated_rbs[MAX_NUM_CCs]);
 
 void adjust_bsr_info(int buffer_occupancy, uint16_t TBS,
 		     UE_TEMPLATE * UE_template);

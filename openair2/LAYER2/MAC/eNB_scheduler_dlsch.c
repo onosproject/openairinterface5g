@@ -593,7 +593,7 @@ schedule_dlsch(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP, in
 
     // Check for new accounting policy
     if (slice_accounting_current[i] != slice_accounting[i]) {
-      if (slice_accounting[i] > 1 || slice_accounting[i] < 0) {
+      if (slice_accounting[i] > (POL_NUM - 1) || slice_accounting[i] < 0) {
         LOG_W(MAC,
               "[eNB %d][SLICE %d][DL] frame %d subframe %d: invalid accounting policy (%d), revert to its previous value (%d)\n",
               module_idP, i, frameP, subframeP, slice_accounting[i], slice_accounting_current[i]);
@@ -602,6 +602,20 @@ schedule_dlsch(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP, in
         LOG_N(MAC, "[eNB %d][SLICE %d][DL] frame %d subframe %d: UE sorting policy has changed (%x-->%x)\n",
               module_idP, i, frameP, subframeP, slice_accounting_current[i], slice_accounting[i]);
         slice_accounting_current[i] = slice_accounting[i];
+      }
+    }
+
+    // Check for new cqi2mcs conversion policy
+    if (slice_cqi2mcs_current[i] != slice_cqi2mcs[i]) {
+      if (slice_cqi2mcs[i] > (POL_NUM - 1) || slice_cqi2mcs[i] < 0) {
+        LOG_W(MAC,
+              "[eNB %d][SLICE %d][DL] frame %d subframe %d: invalid CQI/MCS conversion policy (%d), revert to its previous value (%d)\n",
+              module_idP, i, frameP, subframeP, slice_cqi2mcs[i], slice_cqi2mcs_current[i]);
+        slice_cqi2mcs[i] = slice_cqi2mcs_current[i];
+      } else {
+        LOG_N(MAC, "[eNB %d][SLICE %d][DL] frame %d subframe %d: CQI/MCS conversion policy has changed (%x-->%x)\n",
+              module_idP, i, frameP, subframeP, slice_cqi2mcs_current[i], slice_cqi2mcs[i]);
+        slice_cqi2mcs_current[i] = slice_cqi2mcs[i];
       }
     }
 
