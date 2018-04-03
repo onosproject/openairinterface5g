@@ -472,7 +472,7 @@ double gaussdouble(double,double);
 void randominit(unsigned int seed_init);
 void table_nor(unsigned long seed);
 double nfix(void);
-__m128 nfix_SSE(void);
+__m128 nfix_SSE(__m128i iz);
 __m128 log_ps(__m128 x);
 __m128 exp_ps(__m128 x);
 double uniformrandom(void);
