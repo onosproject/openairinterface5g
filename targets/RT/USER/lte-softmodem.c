@@ -462,7 +462,7 @@ void *l2l1_task(void *arg) {
 	break;
 
       case TERMINATE_MESSAGE:
-	printf("received terminate message\n");
+        LOG_W(EMU, " *** Exiting L2L1 thread\n");
 	oai_exit=1;
         start_eNB = 0;
 	itti_exit_task ();
