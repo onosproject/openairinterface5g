@@ -1200,7 +1200,8 @@ int l2_init_ue(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
 
 /*Slice related functions */
 uint16_t nb_rbs_allowed_slice(float rb_percentage, int total_rbs);
-int ue_slice_membership(int UE_id, int slice_id, int n_active_slices);
+int ue_dl_slice_membership(module_id_t mod_id, int UE_id, slice_id_t slice_id);
+int ue_ul_slice_membership(module_id_t mod_id, int UE_id, slice_id_t slice_id);
 
 #endif
 /** @}*/

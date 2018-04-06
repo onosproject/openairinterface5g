@@ -984,6 +984,9 @@ typedef struct {
     uint16_t sorting_criteria[MAX_NUM_SLICES][CR_NUM];
     uint16_t first_rb_offset[MAX_NUM_CCs][MAX_NUM_SLICES];
 
+    slice_id_t assoc_dl_slice[NUMBER_OF_UE_MAX];
+    slice_id_t assoc_ul_slice[NUMBER_OF_UE_MAX];
+
 } UE_list_t;
 
 /// Structure for saving the output of each pre_processor instance

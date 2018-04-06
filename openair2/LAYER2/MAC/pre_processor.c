@@ -105,7 +105,7 @@ store_dlsch_buffer(module_id_t Mod_id,
     if (UE_list->active[UE_id] != TRUE)
       continue;
 
-    if (!ue_slice_membership(UE_id, slice_id, RC.mac[Mod_id]->slice_info.n_dl))
+    if (!ue_dl_slice_membership(Mod_id, UE_id, slice_id))
       continue;
 
     UE_template = &UE_list->UE_template[UE_PCCID(Mod_id, UE_id)][UE_id];
@@ -190,7 +190,7 @@ assign_rbs_required(module_id_t Mod_id,
   // clear rb allocations across all CC_id
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; ++UE_id) {
     if (UE_list->active[UE_id] != TRUE) continue;
-    if (!ue_slice_membership(UE_id, slice_id, sli->n_dl)) continue;
+    if (!ue_dl_slice_membership(Mod_id, UE_id, slice_id)) continue;
     pCCid = UE_PCCID(Mod_id, UE_id);
 
     //update CQI information across component carriers
@@ -509,7 +509,7 @@ void sort_UEs(module_id_t Mod_idP, slice_id_t slice_id, int frameP, sub_frame_t 
     if (UE_list->active[i] == FALSE) continue;
     if (UE_RNTI(Mod_idP, i) == NOT_A_RNTI) continue;
     if (UE_list->UE_sched_ctrl[i].ul_out_of_sync == 1) continue;
-    if (!ue_slice_membership(i, slice_id, RC.mac[Mod_idP]->slice_info.n_dl)) continue;
+    if (!ue_dl_slice_membership(Mod_idP, i, slice_id)) continue;
 
     list[list_size] = i;
     list_size++;
@@ -613,7 +613,7 @@ void dlsch_scheduler_pre_processor_partitioning(module_id_t Mod_id,
 
     if (UE_RNTI(Mod_id, UE_id) == NOT_A_RNTI) continue;
     if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync == 1) continue;
-    if (!ue_slice_membership(UE_id, slice_id, RC.mac[Mod_id]->slice_info.n_dl)) continue;
+    if (!ue_dl_slice_membership(Mod_id, UE_id, slice_id)) continue;
 
     ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 
@@ -653,7 +653,6 @@ void dlsch_scheduler_pre_processor_accounting(module_id_t Mod_id,
   uint8_t ue_retx_flag[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
 
   UE_list_t *UE_list = &RC.mac[Mod_id]->UE_list;
-  slice_info_t *sli = &RC.mac[Mod_id]->slice_info;
   UE_sched_ctrl *ue_sched_ctl;
   COMMON_channels_t *cc;
 
@@ -674,7 +673,7 @@ void dlsch_scheduler_pre_processor_accounting(module_id_t Mod_id,
     rnti = UE_RNTI(Mod_id, UE_id);
     if (rnti == NOT_A_RNTI) continue;
     if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync == 1) continue;
-    if (!ue_slice_membership(UE_id, slice_id, sli->n_dl)) continue;
+    if (!ue_dl_slice_membership(Mod_id, UE_id, slice_id)) continue;
 
     for (i = 0; i < UE_num_active_CC(UE_list, UE_id); ++i) {
       CC_id = UE_list->ordered_CCids[i][UE_id];
@@ -714,7 +713,7 @@ void dlsch_scheduler_pre_processor_accounting(module_id_t Mod_id,
         rnti = UE_RNTI(Mod_id, UE_id);
         if (rnti == NOT_A_RNTI) continue;
         if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync == 1) continue;
-        if (!ue_slice_membership(UE_id, slice_id, sli->n_dl)) continue;
+        if (!ue_dl_slice_membership(Mod_id, UE_id, slice_id)) continue;
 
         for (i = 0; i < UE_num_active_CC(UE_list, UE_id); i++) {
           CC_id = UE_list->ordered_CCids[i][UE_id];
@@ -734,7 +733,7 @@ void dlsch_scheduler_pre_processor_accounting(module_id_t Mod_id,
 
         if (rnti == NOT_A_RNTI) continue;
         if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync == 1) continue;
-        if (!ue_slice_membership(UE_id, slice_id, sli->n_dl)) continue;
+        if (!ue_dl_slice_membership(Mod_id, UE_id, slice_id)) continue;
 
         for (i = 0; i < UE_num_active_CC(UE_list, UE_id); ++i) {
 
@@ -759,7 +758,7 @@ void dlsch_scheduler_pre_processor_accounting(module_id_t Mod_id,
         rnti = UE_RNTI(Mod_id, UE_id);
         if (rnti == NOT_A_RNTI) continue;
         if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync == 1) continue;
-        if (!ue_slice_membership(UE_id, slice_id, sli->n_dl)) continue;
+        if (!ue_dl_slice_membership(Mod_id, UE_id, slice_id)) continue;
 
         for (i = 0; i < UE_num_active_CC(UE_list, UE_id); i++) {
           CC_id = UE_list->ordered_CCids[i][UE_id];
@@ -778,7 +777,7 @@ void dlsch_scheduler_pre_processor_accounting(module_id_t Mod_id,
     rnti = UE_RNTI(Mod_id, UE_id);
     if (rnti == NOT_A_RNTI) continue;
     if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync == 1) continue;
-    if (!ue_slice_membership(UE_id, slice_id, sli->n_dl)) continue;
+    if (!ue_dl_slice_membership(Mod_id, UE_id, slice_id)) continue;
 
     for (i = 0; i < UE_num_active_CC(UE_list, UE_id); i++) {
       CC_id = UE_list->ordered_CCids[i][UE_id];
@@ -815,7 +814,6 @@ void dlsch_scheduler_pre_processor_positioning(module_id_t Mod_id,
   uint8_t transmission_mode;
   uint8_t slice_allocation_mask[MAX_NUM_CCs][N_RBG_MAX];
   UE_list_t *UE_list = &RC.mac[Mod_id]->UE_list;
-  slice_info_t *sli = &RC.mac[Mod_id]->slice_info;
 
   decode_slice_positioning(Mod_id, slice_id, slice_allocation_mask);
 
@@ -824,7 +822,7 @@ void dlsch_scheduler_pre_processor_positioning(module_id_t Mod_id,
 
     if (UE_RNTI(Mod_id, UE_id) == NOT_A_RNTI) continue;
     if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync == 1) continue;
-    if (!ue_slice_membership(UE_id, slice_id, sli->n_dl)) continue;
+    if (!ue_dl_slice_membership(Mod_id, UE_id, slice_id)) continue;
 
     for (i = 0; i < UE_num_active_CC(UE_list, UE_id); i++) {
       CC_id = UE_list->ordered_CCids[i][UE_id];
@@ -1045,7 +1043,7 @@ void dlsch_scheduler_pre_processor_intraslice_sharing(module_id_t Mod_id,
 
     if (UE_RNTI(Mod_id, UE_id) == NOT_A_RNTI) continue;
     if (UE_list->UE_sched_ctrl[UE_id].ul_out_of_sync == 1) continue;
-    if (!ue_slice_membership(UE_id, slice_id, sli->n_dl)) continue;
+    if (!ue_dl_slice_membership(Mod_id, UE_id, slice_id)) continue;
 
     for (i = 0; i < UE_num_active_CC(UE_list, UE_id); i++) {
       CC_id = UE_list->ordered_CCids[i][UE_id];
@@ -1427,7 +1425,6 @@ dlsch_scheduler_pre_processor_reset(module_id_t module_idP,
 
   rnti_t rnti;
   UE_list_t *UE_list;
-  slice_info_t *sli = &RC.mac[module_idP]->slice_info;
   UE_sched_ctrl *ue_sched_ctl;
   uint8_t *vrb_map;
   COMMON_channels_t *cc;
@@ -1455,7 +1452,7 @@ dlsch_scheduler_pre_processor_reset(module_id_t module_idP,
       if (UE_list->active[UE_id] != TRUE)
         continue;
 
-      if (!ue_slice_membership(UE_id, slice_id, sli->n_dl))
+      if (!ue_dl_slice_membership(module_idP, UE_id, slice_id))
         continue;
 
       vrb_map = RC.mac[module_idP]->common_channels[CC_id].vrb_map;
@@ -1727,7 +1724,7 @@ ulsch_scheduler_pre_processor(module_id_t module_idP,
         // This is the actual CC_id in the list
         CC_id = UE_list->ordered_ULCCids[n][i];
         UE_template = &UE_list->UE_template[CC_id][i];
-        if (!ue_slice_membership(i, slice_id, sli->n_ul))
+        if (!ue_ul_slice_membership(module_idP, i, slice_id))
           continue;
         if (UE_template->pre_allocated_nb_rb_ul[slice_id] > 0) {
           total_ue_count[CC_id] += 1;
@@ -1748,7 +1745,7 @@ ulsch_scheduler_pre_processor(module_id_t module_idP,
       if (UE_list->UE_sched_ctrl[i].ul_out_of_sync == 1)
         continue;
 
-      if (!ue_slice_membership(UE_id, slice_id, sli->n_ul))
+      if (!ue_ul_slice_membership(module_idP, UE_id, slice_id))
           continue;
 
       LOG_D(MAC, "In ulsch_preprocessor: handling UE %d/%x\n", UE_id,
@@ -1805,7 +1802,7 @@ ulsch_scheduler_pre_processor(module_id_t module_idP,
         continue;
       if (UE_list->UE_sched_ctrl[i].ul_out_of_sync == 1)
         continue;
-      if (!ue_slice_membership(i, slice_id, sli->n_ul))
+      if (!ue_ul_slice_membership(module_idP, i, slice_id))
         continue;
 
 
@@ -1846,7 +1843,7 @@ ulsch_scheduler_pre_processor(module_id_t module_idP,
         continue;
       if (UE_list->UE_sched_ctrl[i].ul_out_of_sync == 1)
         continue;
-      if (!ue_slice_membership(i, slice_id, sli->n_ul))
+      if (!ue_ul_slice_membership(module_idP, i, slice_id))
         continue;
 
       UE_id = i;
@@ -1924,7 +1921,7 @@ assign_max_mcs_min_rb(module_id_t module_idP, int slice_id, int frameP,
       continue;
     if (UE_list->UE_sched_ctrl[i].ul_out_of_sync == 1)
       continue;
-    if (!ue_slice_membership(i, slice_id, sli->n_ul))
+    if (!ue_ul_slice_membership(module_idP, i, slice_id))
       continue;
 
     if (UE_list->UE_sched_ctrl[i].phr_received == 1) {
