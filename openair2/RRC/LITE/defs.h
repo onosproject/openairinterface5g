@@ -84,13 +84,13 @@
 #define DIRECT_COMMUNICATION_ESTABLISH_RSP  6
 #define GROUP_COMMUNICATION_RELEASE_REQ     7
 #define GROUP_COMMUNICATION_RELEASE_RSP     8
-#define PC5S_ESTABLISH_REQ                  9
-#define PC5S_ESTABLISH_RSP                  10
-#define PC5_DISCOVERY_MESSAGE          	  11
+#define DIRECT_COMMUNICATION_RELEASE_REQ    9
+#define DIRECT_COMMUNICATION_RELEASE_RSP    10
+#define PC5S_ESTABLISH_REQ                  11
+#define PC5S_ESTABLISH_RSP                  12
+#define PC5_DISCOVERY_MESSAGE               13
 
-
-#define PC5_DISCOVERY_PAYLOAD_SIZE	    29
-
+#define PC5_DISCOVERY_PAYLOAD_SIZE	        29
 
 typedef enum {
    UE_STATE_OFF_NETWORK,
@@ -140,6 +140,10 @@ typedef struct  {
    uint32_t measuredPower;
 }  __attribute__((__packed__)) PC5DiscoveryMessage ;
 
+typedef enum {
+   DIRECT_COMMUNICATION_RELEASE_OK = 0,
+   DIRECT_COMMUNICATION_RELEASE_FAILURE
+} Direct_Communication_Status_t;
 
 struct sidelink_ctrl_element {
    unsigned short type;
@@ -147,7 +151,7 @@ struct sidelink_ctrl_element {
       struct GroupCommunicationEstablishReq group_comm_establish_req;
       struct DirectCommunicationEstablishReq direct_comm_establish_req;
       Group_Communication_Status_t group_comm_release_rsp;
-      //struct DirectCommunicationReleaseReq  direct_comm_release_req;
+      Direct_Communication_Status_t direct_comm_release_rsp;
       SL_UE_STATE_t ue_state;
       int slrb_id;
       struct PC5SEstablishReq pc5s_establish_req;
@@ -741,10 +745,7 @@ typedef struct UE_RRC_INST_s {
   uint32_t groupL2Id;
   //current destination
   uint32_t destinationL2Id;
-  //List of destinations (unicast)
-  uint32_t destinationList[MAX_NUM_DEST];
-  //List of groups (multicast)
-  uint32_t groupList[MAX_NUM_DEST];
+  SL_INFO sl_info[MAX_NUM_LCID];
   //sl_discovery..
   SRB_INFO SL_Discovery[NB_CNX_UE];
 #endif

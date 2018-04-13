@@ -5478,6 +5478,7 @@ void *rrc_control_socket_thread_fct(void *arg)
    long                               *logicalchannelgroup_drb          = NULL;
    int j = 0;
    int i = 0;
+   int slrb_id =0;
 
    //from the main program, listen for the incoming messages from control socket (ProSe App)
    prose_addr_len = sizeof(prose_app_addr);
@@ -5543,7 +5544,7 @@ void *rrc_control_socket_thread_fct(void *arg)
       case GROUP_COMMUNICATION_ESTABLISH_REQ:
          sourceL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.sourceL2Id;
          groupL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupL2Id;
-         int group_comm_rbid = 4;
+         int group_comm_rbid = 0;
 
 #ifdef DEBUG_CTRL_SOCKET
          LOG_I(RRC,"[GroupCommunicationEstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
@@ -5557,11 +5558,24 @@ void *rrc_control_socket_thread_fct(void *arg)
          UE_rrc_inst[module_id].groupL2Id = groupL2Id;
          j = 0;
          i = 0;
-         for (i=0; i< MAX_NUM_DEST; i++) {
-            if ((UE_rrc_inst[module_id].groupList[i] == 0) && (j == 0)) j = i+1;
-            if (UE_rrc_inst[module_id].groupList[i] == groupL2Id) break; //group already exists!
+
+         //get available rbid for this communication and store (LCID, G)
+         if (groupL2Id > 0){
+            for (i=0; i< MAX_NUM_LCID_DATA; i++) {
+               if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (j == 0)) j = i+1;
+               if (UE_rrc_inst[module_id].sl_info[i].groupL2Id == groupL2Id) {
+                  group_comm_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
+                  LOG_I(RRC,"[GroupCommunicationEstablishReq] rbid %d for group Id: 0x%08x\n already exists",group_comm_rbid, UE_rrc_inst[module_id].sl_info[i].groupL2Id );
+                  break; //(LCID, G) already exists!
+               }
+            }
+            if ((i == MAX_NUM_LCID_DATA) && (j > 0)) {
+               UE_rrc_inst[module_id].sl_info[j-1].LCID = (j-1)+3;
+               group_comm_rbid =  UE_rrc_inst[module_id].sl_info[j-1].LCID;
+               UE_rrc_inst[module_id].sl_info[j-1].groupL2Id = groupL2Id;
+               LOG_I(RRC,"[GroupCommunicationEstablishReq] establish rbid %d for group Id: 0x%08x\n",group_comm_rbid, UE_rrc_inst[module_id].sl_info[j-1].groupL2Id );
+            }
          }
-         if ((i == MAX_NUM_DEST) && (j > 0))  UE_rrc_inst[module_id].groupList[j-1] = groupL2Id;
 
          // configure lower layers PDCP/MAC/PHY for this communication
          //Establish a new RBID/LCID for this communication
@@ -5725,9 +5739,23 @@ void *rrc_control_socket_thread_fct(void *arg)
          LOG_I(RRC,"[GroupCommunicationReleaseRequest] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
          LOG_I(RRC,"[GroupCommunicationReleaseRequest] Slrb Id: %i\n",sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id);
 #endif
+         slrb_id = sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id;
          //reset groupL2ID from MAC LAYER
          UE_rrc_inst[module_id].groupL2Id = 0x00000000;
          sourceL2Id = UE_rrc_inst[module_id].sourceL2Id;
+
+
+         //find the corresponding record and reset the values
+         if (slrb_id > 0){
+            for (i=0; i< MAX_NUM_LCID_DATA; i++) {
+               if (UE_rrc_inst[module_id].sl_info[i].LCID == slrb_id) {
+                  UE_rrc_inst[module_id].sl_info[i].LCID = 0;
+                  LOG_I(RRC,"[GroupCommunicationReleaseRequest] rbid %d for group Id: 0x%08x\n has been removed",slrb_id, UE_rrc_inst[module_id].sl_info[i].groupL2Id );
+                  UE_rrc_inst[module_id].sl_info[i].groupL2Id = 0x00;
+                  break;
+               }
+            }
+         }
 
          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                     (RadioResourceConfigCommonSIB_t *)NULL,
@@ -5738,7 +5766,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          #endif
                     (MeasObjectToAddMod_t **)NULL,
                     (MAC_MainConfig_t *)NULL,
-                    0,
+                    slrb_id,
                     (struct LogicalChannelConfig *)NULL,
                     (MeasGapConfig_t *)NULL,
                     (TDD_Config_t *)NULL,
@@ -5763,7 +5791,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          #if defined(Rel10) || defined(Rel14)
                     ,CONFIG_ACTION_REMOVE,
                     &sourceL2Id,
-                    &destinationL2Id,
+                    NULL,
                     NULL
          #endif
                     );
@@ -5774,15 +5802,8 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
          sl_ctrl_msg_send->type = GROUP_COMMUNICATION_RELEASE_RSP;
-         //if the requested id exists -> release this ID
-         if (sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id == slrb_id) {
-            sl_ctrl_msg_send->sidelinkPrimitive.group_comm_release_rsp = GROUP_COMMUNICATION_RELEASE_OK;
-            // pthread_mutex_lock(&slrb_mutex);
-            slrb_id = 0; //Reset slrb_id
-            //pthread_mutex_unlock(&slrb_mutex);
-         } else {
-            sl_ctrl_msg_send->sidelinkPrimitive.group_comm_release_rsp = GROUP_COMMUNICATION_RELEASE_FAILURE;
-         }
+         sl_ctrl_msg_send->sidelinkPrimitive.group_comm_release_rsp = GROUP_COMMUNICATION_RELEASE_OK;
+
          memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
          free(sl_ctrl_msg_send);
 
@@ -5798,7 +5819,7 @@ void *rrc_control_socket_thread_fct(void *arg)
       case DIRECT_COMMUNICATION_ESTABLISH_REQ:
          sourceL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.direct_comm_establish_req.sourceL2Id;
          destinationL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.direct_comm_establish_req.destinationL2Id;
-         int direct_comm_rbid = 3;
+         int direct_comm_rbid = 0;
 
 #ifdef DEBUG_CTRL_SOCKET
          LOG_I(RRC,"[DirectCommunicationEstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
@@ -5810,11 +5831,25 @@ void *rrc_control_socket_thread_fct(void *arg)
          UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
          i = 0;
          j = 0;
-         for (i=0; i< MAX_NUM_DEST; i++) {
-            if ((UE_rrc_inst[module_id].destinationList[i] == 0) && (j == 0)) j = i+1;
-            if (UE_rrc_inst[module_id].destinationList[i] == destinationL2Id) break; //destination already exists!
+
+         //get available rbid for this communication and store (LCID, D)
+         if (destinationL2Id >0){
+            for (i=0; i< MAX_NUM_LCID_DATA; i++) {
+               if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (j == 0)) j = i+1;
+               if (UE_rrc_inst[module_id].sl_info[i].destinationL2Id == destinationL2Id) {
+                  direct_comm_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
+                  LOG_I(RRC,"[DirectCommunicationEstablishReq] rbid %d for destination Id: 0x%08x already exists!\n",direct_comm_rbid, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
+                  break; //(LCID, D) already exists!
+               }
+            }
+            if ((i == MAX_NUM_LCID_DATA) && (j > 0)) {
+               UE_rrc_inst[module_id].sl_info[j-1].LCID = (j-1)+3;
+               direct_comm_rbid =  UE_rrc_inst[module_id].sl_info[j-1].LCID;
+               UE_rrc_inst[module_id].sl_info[j-1].destinationL2Id = destinationL2Id;
+               LOG_I(RRC,"[DirectCommunicationEstablishReq] establish rbid %d for destination Id: 0x%08x\n",direct_comm_rbid, UE_rrc_inst[module_id].sl_info[j-1].destinationL2Id );
+            }
          }
-         if ((i == MAX_NUM_DEST) && (j > 0))  UE_rrc_inst[module_id].destinationList[j-1] = destinationL2Id;
+
 
          // configure lower layers PDCP/MAC/PHY for this communication
          //Establish a new RBID/LCID for this communication
@@ -5972,10 +6007,92 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
          break;
 
+      case DIRECT_COMMUNICATION_RELEASE_REQ:
+          printf("-----------------------------------\n");
+ #ifdef DEBUG_CTRL_SOCKET
+          LOG_I(RRC,"[DirectCommunicationReleaseRequest] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
+          LOG_I(RRC,"[DirectCommunicationReleaseRequest] Slrb Id: %i\n",sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id);
+ #endif
+          slrb_id = sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id;
+          //reset groupL2ID from MAC LAYER
+          UE_rrc_inst[module_id].destinationL2Id = 0x00000000;
+          sourceL2Id = UE_rrc_inst[module_id].sourceL2Id;
+
+          //find the corresponding record and reset the values
+          if (slrb_id > 0){
+             for (i=0; i< MAX_NUM_LCID_DATA; i++) {
+                if (UE_rrc_inst[module_id].sl_info[i].LCID == slrb_id) {
+                   UE_rrc_inst[module_id].sl_info[i].LCID = 0;
+                   LOG_I(RRC,"[GroupCommunicationReleaseRequest] rbid %d for destination Id: 0x%08x\n has been removed",slrb_id, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
+                   UE_rrc_inst[module_id].sl_info[i].destinationL2Id = 0x00;
+                   break;
+                }
+             }
+          }
+
+          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
+                     (RadioResourceConfigCommonSIB_t *)NULL,
+                     (struct PhysicalConfigDedicated *)NULL,
+          #if defined(Rel10) || defined(Rel14)
+                     (SCellToAddMod_r10_t *)NULL,
+                     //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
+          #endif
+                     (MeasObjectToAddMod_t **)NULL,
+                     (MAC_MainConfig_t *)NULL,
+                     slrb_id,
+                     (struct LogicalChannelConfig *)NULL,
+                     (MeasGapConfig_t *)NULL,
+                     (TDD_Config_t *)NULL,
+                     (MobilityControlInfo_t *)NULL,
+                     NULL,
+                     NULL,
+                     NULL,
+                     NULL,
+                     NULL,
+                     NULL
+          #if defined(Rel10) || defined(Rel14)
+                     ,0,
+                     (MBSFN_AreaInfoList_r9_t *)NULL,
+                     (PMCH_InfoList_r9_t *)NULL
+
+          #endif
+          #ifdef CBA
+                     ,
+                     0,
+                     0
+          #endif
+          #if defined(Rel10) || defined(Rel14)
+                     ,CONFIG_ACTION_REMOVE,
+                     &sourceL2Id,
+                     NULL,
+                     NULL
+          #endif
+                     );
+
+
+          LOG_I(RRC,"Send DirectCommunicationReleaseResponse to ProSe App \n");
+          memset(send_buf, 0, BUFSIZE);
+
+          sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
+          sl_ctrl_msg_send->type = DIRECT_COMMUNICATION_RELEASE_RSP;
+          sl_ctrl_msg_send->sidelinkPrimitive.direct_comm_release_rsp = DIRECT_COMMUNICATION_RELEASE_OK;
+
+          memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
+          free(sl_ctrl_msg_send);
+
+          prose_addr_len = sizeof(prose_app_addr);
+          n = sendto(ctrl_sock_fd, (char *)send_buf, sizeof(struct sidelink_ctrl_element), 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
+          if (n < 0){
+             LOG_E(RRC, "ERROR: Failed to send to ProSe App\n");
+             exit(EXIT_FAILURE);
+          }
+          break;
+
+
       case PC5S_ESTABLISH_REQ:
          type =  sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.type;
          sourceL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.sourceL2Id;
-         int pc5s_rbid = 10;
+         int pc5s_rbid = 0;
 #ifdef DEBUG_CTRL_SOCKET
          LOG_I(RRC,"[PC5EstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
          LOG_I(RRC,"[PC5EstablishReq] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.type); //RX/TX
@@ -5993,18 +6110,32 @@ void *rrc_control_socket_thread_fct(void *arg)
             UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
             j = 0;
             i = 0;
-            for (i=0; i< MAX_NUM_DEST; i++) {
-               if ((UE_rrc_inst[module_id].destinationList[i] == 0) && (j == 0)) j = i+1;
-               if (UE_rrc_inst[module_id].destinationList[i] == destinationL2Id) break; //destination already exists!
+            if (destinationL2Id > 0){
+               for (i = MAX_NUM_LCID_DATA; i < MAX_NUM_LCID; i++) {
+                  if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (j == 0)) j = i+1;
+                  if (UE_rrc_inst[module_id].sl_info[i].destinationL2Id == destinationL2Id) {
+                     pc5s_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
+                     LOG_I(RRC,"[PC5EstablishReq] rbid %d for destination Id: 0x%08x\n ",pc5s_rbid, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
+                     break; //(LCID, D) already exists!
+                  }
+               }
+               if ((i == MAX_NUM_LCID) && (j > 0)) {
+                  UE_rrc_inst[module_id].sl_info[j-1].LCID = (j-1);
+                  pc5s_rbid = UE_rrc_inst[module_id].sl_info[j-1].LCID;
+                  UE_rrc_inst[module_id].sl_info[j-1].destinationL2Id = destinationL2Id;
+                  LOG_I(RRC,"[PC5EstablishReq] establish rbid %d for destinationL2Id Id: 0x%08x\n",pc5s_rbid, UE_rrc_inst[module_id].sl_info[j-1].destinationL2Id );
+               }
             }
-            if ((i == MAX_NUM_DEST) && (j > 0))  UE_rrc_inst[module_id].destinationList[j-1] = destinationL2Id;
+
+
+
          } else {//RX
             UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
          }
 
          // configure lower layers PDCP/MAC/PHY for this communication
          //Establish a new RBID/LCID for this communication
-         // Establish a SLRB (using DRB 10 for now)
+         // Establish a SLRB (starting from 8 for now)
          UE  = &UE_rrc_inst[module_id];
          PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
 

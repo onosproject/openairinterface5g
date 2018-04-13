@@ -773,17 +773,17 @@ void ue_send_sl_sdu(module_id_t module_idP,
   LOG_D( MAC, "[DestinationL2Id:  0x%08x]  \n", destinationL2Id );
   //in case of 1-n communication, verify that UE belongs to that group
   int i = 0;
-  for (i=0; i< MAX_NUM_DEST; i++)
-     if (UE_mac_inst[module_idP].groupList[i] == destinationL2Id) break;
+  for (i=0; i< MAX_NUM_LCID; i++)
+     if (UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) break;
   int j = 0;
-  for (j=0; j< MAX_NUM_DEST; j++)
-       if (UE_mac_inst[module_idP].destinationList[j] == sourceL2Id) break;
+  for (j=0; j< MAX_NUM_LCID; j++)
+            if (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) break;
 
   //match the destinationL2Id with UE L2Id or groupL2ID
-  if (!(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (j < MAX_NUM_DEST)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (longh->LCID == 10)) | (i < MAX_NUM_DEST))){
-     LOG_D( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
-     return;
-  }
+    if (!(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (j < MAX_NUM_LCID)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) | (i < MAX_NUM_LCID))){
+       LOG_D( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
+       return;
+    }
 
 
   if (longh->F==1) {
@@ -2807,7 +2807,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
    LOG_D(MAC,"Checking SLSCH for absSF %d\n",absSF);
    if ((absSF%40) == 0) { // fill PSCCH data later in first subframe of SL period
       ue->sltx_active = 0;
-
+/*
       for (i = 0; i < MAX_NUM_LCID; i++){
          if (ue->SL_LCID[i] > 0) {
             for (int j = 0; j < ue->numCommFlows; j++){
@@ -2843,6 +2843,42 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
          }
          if ( ue->sltx_active == 1) break;
       }
+      */
+      for (i = 0; i < MAX_NUM_LCID; i++){
+               if (ue->sl_info[i].LCID > 0) {
+                  for (int j = 0; j < ue->numCommFlows; j++){
+                     if ((ue->sourceL2Id > 0) && (ue->sl_info[j].destinationL2Id >0) ){
+                        rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                              ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[j].destinationL2Id );
+                        if (rlc_status.bytes_in_buffer > 2){
+                           LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
+                           // Fill in group id for off-network communications
+                           ue->sltx_active = 1;
+                           //store LCID, destinationL2Id
+                           ue->slsch_lcid =  ue->sl_info[i].LCID;
+                           ue->destinationL2Id = ue->sl_info[j].destinationL2Id;
+                           break;
+                        }
+                     }
+
+                     if ((ue->sourceL2Id > 0) && (ue->sl_info[j].groupL2Id >0) ){
+                        rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                              ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[j].groupL2Id);
+                        if (rlc_status.bytes_in_buffer > 2){
+                           LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
+                           // Fill in group id for off-network communications
+                           ue->sltx_active = 1;
+                           //store LCID, destinationL2Id
+                           ue->slsch_lcid =  ue->sl_info[i].LCID;
+                           ue->destinationL2Id = ue->sl_info[j].groupL2Id;
+                           break;
+                        }
+                     }
+
+                  }
+               }
+               if ( ue->sltx_active == 1) break;
+            }
    } // we're not in the SCCH period
    else if (((absSF & 3) == 0 ) &&
          (ue->sltx_active == 1)) { // every 4th subframe, check for new data from RLC
