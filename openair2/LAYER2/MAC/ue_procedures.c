@@ -776,7 +776,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
   int i = 0;
   int j = 0;
   for (i=0; i< MAX_NUM_LCID; i++)
-     if ((UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) &&  (UE_mac_inst[module_idP].sl_info[i].sourceL2Id != sourceL2Id)) {
+     if ((UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[i].sourceL2Id != sourceL2Id)) {
         lcid = UE_mac_inst[module_idP].sl_info[i].LCID;
         break;
      }
@@ -794,13 +794,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
            break;
         }
      }
-     //  if (UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) break;
   }
-/*
-  int j = 0;
-  for (j=0; j< MAX_NUM_LCID; j++)
-            if (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) break;
-*/
 
   //match the destinationL2Id with UE L2Id or groupL2ID
     if (!(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (j < MAX_NUM_LCID)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) | (i < MAX_NUM_LCID))){
@@ -808,8 +802,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
        return;
     }
 
-    LOG_I( MAC, "[longh->LCID %d]  \n", longh->LCID);
-    LOG_I( MAC, "[DestinationL2Id:  0x%08x, sl_rbid %d]  \n", destinationL2Id, lcid );
+    LOG_D( MAC, "DestinationL2Id:  0x%08x, sl_rbid %d, longh->LCID %d  \n", destinationL2Id, lcid, longh->LCID );
 
 
   if (longh->F==1) {
@@ -834,7 +827,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		   NULL);
   } else { //SL_DISCOVERY
      uint16_t len = sdu_len;
-     LOG_I( MAC, "SL DISCOVERY \n");
+     LOG_D( MAC, "SL DISCOVERY \n");
      mac_rrc_data_ind(module_idP,
                       CC_id,
                       frameP,subframeP,
