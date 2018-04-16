@@ -6091,7 +6091,7 @@ void *rrc_control_socket_thread_fct(void *arg)
       case PC5S_ESTABLISH_REQ:
          type =  sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.type;
          sourceL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.sourceL2Id;
-         int pc5s_rbid = 0;
+         int pc5s_rbid = MAX_NUM_LCID_DATA;
 #ifdef DEBUG_CTRL_SOCKET
          LOG_I(RRC,"[PC5EstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
          LOG_I(RRC,"[PC5EstablishReq] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.type); //RX/TX

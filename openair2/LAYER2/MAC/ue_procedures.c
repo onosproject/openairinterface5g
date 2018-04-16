@@ -771,19 +771,19 @@ void ue_send_sl_sdu(module_id_t module_idP,
   //filter incoming packet based on destination address
   destinationL2Id = (longh->DST07<<16) | (longh->DST815 <<8) | (longh->DST1623);
   sourceL2Id = (longh->SRC07<<16) | (longh->SRC815 <<8) | (longh->SRC1623);
-  LOG_D( MAC, "[DestinationL2Id:  0x%08x]  \n", destinationL2Id );
+
   //in case of 1-n communication, verify that UE belongs to that group
   int i = 0;
   int j = 0;
   for (i=0; i< MAX_NUM_LCID; i++)
-     if (UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) {
+     if ((UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) &&  (UE_mac_inst[module_idP].sl_info[i].sourceL2Id != sourceL2Id)) {
         lcid = UE_mac_inst[module_idP].sl_info[i].LCID;
         break;
      }
 
   for (j = 0; j< MAX_NUM_LCID; j++){
      if ((longh->LCID < MAX_NUM_LCID_DATA) && (j < MAX_NUM_LCID_DATA)){
-        if (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) {
+        if ((UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) && (UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id)) {
            lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
            break;
         }
@@ -808,6 +808,9 @@ void ue_send_sl_sdu(module_id_t module_idP,
        return;
     }
 
+    LOG_I( MAC, "[longh->LCID %d]  \n", longh->LCID);
+    LOG_I( MAC, "[DestinationL2Id:  0x%08x, sl_rbid %d]  \n", destinationL2Id, lcid );
+
 
   if (longh->F==1) {
     rlc_sdu_len = ((longh->L_MSB<<8)&0x7F00)|(longh->L_LSB&0xFF);
@@ -824,7 +827,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		   frameP,
 		   ENB_FLAG_NO,
 		   MBMS_FLAG_NO,
-		   longh->LCID, //3/10
+		   lcid, //3/10
 		   rlc_sdu,
 		   rlc_sdu_len,
 		   1,

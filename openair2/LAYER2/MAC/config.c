@@ -1427,10 +1427,10 @@ rrc_mac_config_req_ue(
         }
      } else if ((logicalChannelIdentity >= MAX_NUM_LCID_DATA) && (logicalChannelIdentity < MAX_NUM_LCID)) {
     //    if (destinationL2Id){
-           LOG_I(MAC,"[UE %d] Configure destination L2Id 0x%08x for PC5S\n", Mod_idP, *destinationL2Id );
+           LOG_I(MAC,"[UE %d] Configure LCID %d  for PC5S\n", Mod_idP, logicalChannelIdentity );
            j = 0;
            k = 0;
-           for (k=MAX_NUM_LCID_DATA; k< MAX_NUM_LCID; k++) {
+           for (k = MAX_NUM_LCID_DATA; k < MAX_NUM_LCID; k++) {
               if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) && (j == 0)) j = k+1;
               if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity)) break;
                     //&& (UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == *destinationL2Id)) break; //(LCID, D) already exists!
