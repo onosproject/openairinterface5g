@@ -755,6 +755,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
 
   int rlc_sdu_len;
   char *rlc_sdu;
+  int lcid;
   uint32_t destinationL2Id =0x00000000;
   uint32_t sourceL2Id = 0x00000000;
 
@@ -766,18 +767,40 @@ void ue_send_sl_sdu(module_id_t module_idP,
   // extract header
   SLSCH_SUBHEADER_24_Bit_DST_LONG *longh = (SLSCH_SUBHEADER_24_Bit_DST_LONG *)sdu;
   AssertFatal(longh->E==0,"E is non-zero\n");
-  AssertFatal(((longh->LCID==3)|(longh->LCID==10)|(longh->LCID==4)),"LCID is %d (not 3, 4 or 10)\n",longh->LCID);
+  //AssertFatal(((longh->LCID==3)|(longh->LCID==10)|(longh->LCID==4)),"LCID is %d (not 3, 4 or 10)\n",longh->LCID);
   //filter incoming packet based on destination address
   destinationL2Id = (longh->DST07<<16) | (longh->DST815 <<8) | (longh->DST1623);
   sourceL2Id = (longh->SRC07<<16) | (longh->SRC815 <<8) | (longh->SRC1623);
   LOG_D( MAC, "[DestinationL2Id:  0x%08x]  \n", destinationL2Id );
   //in case of 1-n communication, verify that UE belongs to that group
   int i = 0;
+  int j = 0;
   for (i=0; i< MAX_NUM_LCID; i++)
-     if (UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) break;
+     if (UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) {
+        lcid = UE_mac_inst[module_idP].sl_info[i].LCID;
+        break;
+     }
+
+  for (j = 0; j< MAX_NUM_LCID; j++){
+     if ((longh->LCID < MAX_NUM_LCID_DATA) && (j < MAX_NUM_LCID_DATA)){
+        if (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) {
+           lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
+           break;
+        }
+     }
+     if ((longh->LCID >= MAX_NUM_LCID_DATA) && (j >= MAX_NUM_LCID_DATA)){
+        if (UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id) {
+           lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
+           break;
+        }
+     }
+     //  if (UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) break;
+  }
+/*
   int j = 0;
   for (j=0; j< MAX_NUM_LCID; j++)
             if (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) break;
+*/
 
   //match the destinationL2Id with UE L2Id or groupL2ID
     if (!(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (j < MAX_NUM_LCID)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) | (i < MAX_NUM_LCID))){

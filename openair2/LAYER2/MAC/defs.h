@@ -1297,6 +1297,8 @@ typedef struct {
 } UE_SCHEDULING_INFO;
 
 typedef struct {
+   //SL source L2Id
+   uint32_t sourceL2Id;
    //SL groupL2Id
    uint32_t groupL2Id;
    //SL destinationL2Id

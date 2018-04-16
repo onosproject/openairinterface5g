@@ -1391,17 +1391,18 @@ rrc_mac_config_req_ue(
            LOG_I(MAC,"[UE %d] Configure group L2Id 0x%08x\n", Mod_idP, *groupL2Id );
            j = 0;
            k = 0;
-           for (k=0; k< MAX_NUM_LCID_DATA; k++) {
+           for (k = 0; k< MAX_NUM_LCID_DATA; k++) {
               if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) && (j == 0)) j = k+1;
               if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity) && (UE_mac_inst[Mod_idP].sl_info[k].groupL2Id == *groupL2Id)) break; //(LCID, G) already exists!
            }
            if ((k == MAX_NUM_LCID_DATA) && (j > 0)) {
               UE_mac_inst[Mod_idP].sl_info[j-1].LCID = logicalChannelIdentity;
               UE_mac_inst[Mod_idP].sl_info[j-1].groupL2Id = *groupL2Id;
+              UE_mac_inst[Mod_idP].sl_info[j-1].sourceL2Id = *sourceL2Id;
               UE_mac_inst[Mod_idP].numCommFlows++;
 
            }
-           for (k=0; k< MAX_NUM_LCID_DATA; k++) {
+           for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
               LOG_I(MAC,"[UE %d] logical channel %d channel id %d, groupL2Id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].groupL2Id );
            }
         }
@@ -1409,39 +1410,42 @@ rrc_mac_config_req_ue(
            LOG_I(MAC,"[UE %d] Configure destination L2Id 0x%08x\n", Mod_idP, *destinationL2Id );
            j = 0;
            k = 0;
-           for (k=0; k< MAX_NUM_LCID_DATA; k++) {
+           for (k = 0; k< MAX_NUM_LCID_DATA; k++) {
               if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) && (j == 0)) j = k+1;
               if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity) && (UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == *destinationL2Id)) break; //(LCID, D) already exists!
            }
            if ((k == MAX_NUM_LCID_DATA) && (j > 0)) {
               UE_mac_inst[Mod_idP].sl_info[j-1].LCID = logicalChannelIdentity;
               UE_mac_inst[Mod_idP].sl_info[j-1].destinationL2Id = *destinationL2Id;
+              UE_mac_inst[Mod_idP].sl_info[j-1].sourceL2Id = *sourceL2Id;
               UE_mac_inst[Mod_idP].numCommFlows++;
 
            }
-           for (k=0; k< MAX_NUM_LCID_DATA; k++) {
+           for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
               LOG_I(MAC,"[UE %d] logical channel %d channel id %d, destinationL2Id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id);
            }
         }
      } else if ((logicalChannelIdentity >= MAX_NUM_LCID_DATA) && (logicalChannelIdentity < MAX_NUM_LCID)) {
-        if (destinationL2Id){
-                   LOG_I(MAC,"[UE %d] Configure destination L2Id 0x%08x for PC5S\n", Mod_idP, *destinationL2Id );
-                   j = 0;
-                   k = 0;
-                   for (k=MAX_NUM_LCID_DATA; k< MAX_NUM_LCID; k++) {
-                      if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) && (j == 0)) j = k+1;
-                      if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity) && (UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == *destinationL2Id)) break; //(LCID, D) already exists!
-                   }
-                   if ((k == MAX_NUM_LCID) && (j > 0)) {
-                      UE_mac_inst[Mod_idP].sl_info[j-1].LCID = logicalChannelIdentity;
-                      UE_mac_inst[Mod_idP].sl_info[j-1].destinationL2Id = *destinationL2Id;
-                      UE_mac_inst[Mod_idP].numCommFlows++;
+    //    if (destinationL2Id){
+           LOG_I(MAC,"[UE %d] Configure destination L2Id 0x%08x for PC5S\n", Mod_idP, *destinationL2Id );
+           j = 0;
+           k = 0;
+           for (k=MAX_NUM_LCID_DATA; k< MAX_NUM_LCID; k++) {
+              if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) && (j == 0)) j = k+1;
+              if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity)) break;
+                    //&& (UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == *destinationL2Id)) break; //(LCID, D) already exists!
+           }
+           if ((k == MAX_NUM_LCID) && (j > 0)) {
+              UE_mac_inst[Mod_idP].sl_info[j-1].LCID = logicalChannelIdentity;
+              if (destinationL2Id) UE_mac_inst[Mod_idP].sl_info[j-1].destinationL2Id = *destinationL2Id;
+              UE_mac_inst[Mod_idP].sl_info[j-1].sourceL2Id = *sourceL2Id;
+              UE_mac_inst[Mod_idP].numCommFlows++;
 
-                   }
-                   for (k=MAX_NUM_LCID_DATA; k< MAX_NUM_LCID; k++) {
-                      LOG_I(MAC,"[UE %d] logical channel %d channel id %d, destinationL2Id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id);
-                   }
-                }
+           }
+           for (k = MAX_NUM_LCID_DATA; k < MAX_NUM_LCID; k++) {
+              LOG_I(MAC,"[UE %d] logical channel %d channel id %d, destinationL2Id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id);
+           }
+    //    }
      }
 
 
@@ -1450,23 +1454,38 @@ rrc_mac_config_req_ue(
      // OK for the moment since LCID is unique per flow
      if ((logicalChannelIdentity > 0) && (logicalChannelIdentity < MAX_NUM_LCID_DATA)) {
         LOG_I(MAC,"[UE %d] Remove (logicalChannelIdentity %d)\n", Mod_idP, logicalChannelIdentity );
-             k = 0;
-             for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
-                if (UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity) {
-                   UE_mac_inst[Mod_idP].sl_info[k].LCID = 0;
-                   UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id = 0;
-                   UE_mac_inst[Mod_idP].sl_info[k].groupL2Id = 0;
-                   UE_mac_inst[Mod_idP].numCommFlows--;
-                   break;
-                }
-             }
+        k = 0;
+        for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
+           if (UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity) {
+              UE_mac_inst[Mod_idP].sl_info[k].LCID = 0;
+              UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id = 0;
+              UE_mac_inst[Mod_idP].sl_info[k].groupL2Id = 0;
+              UE_mac_inst[Mod_idP].numCommFlows--;
+              break;
+           }
+        }
 
-             for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
-                LOG_I(MAC,"[UE %d] channel id %d, destinationL2Id %d, groupL2Id %d\n", Mod_idP, UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id, UE_mac_inst[Mod_idP].sl_info[k].groupL2Id);
-             }
-          } else if ((logicalChannelIdentity >= MAX_NUM_LCID_DATA) && (logicalChannelIdentity < MAX_NUM_LCID)) {
-             //Todo - remove RBID for PCS5
-          }
+        for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
+           LOG_I(MAC,"[UE %d] channel id %d, destinationL2Id %d, groupL2Id %d\n", Mod_idP, UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id, UE_mac_inst[Mod_idP].sl_info[k].groupL2Id);
+        }
+     } else if ((logicalChannelIdentity >= MAX_NUM_LCID_DATA) && (logicalChannelIdentity < MAX_NUM_LCID)) {
+        //Todo - remove RBID for PCS5
+        LOG_I(MAC,"[UE %d] Remove (logicalChannelIdentity %d)\n", Mod_idP, logicalChannelIdentity );
+        k = 0;
+        for (k = MAX_NUM_LCID_DATA; k < MAX_NUM_LCID; k++) {
+           if (UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity) {
+              UE_mac_inst[Mod_idP].sl_info[k].LCID = 0;
+              UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id = 0;
+              UE_mac_inst[Mod_idP].sl_info[k].groupL2Id = 0;
+              UE_mac_inst[Mod_idP].numCommFlows--;
+              break;
+           }
+        }
+
+        for (k = MAX_NUM_LCID_DATA; k < MAX_NUM_LCID; k++) {
+           LOG_I(MAC,"[UE %d] channel id %d, destinationL2Id %d, groupL2Id %d\n", Mod_idP, UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id, UE_mac_inst[Mod_idP].sl_info[k].groupL2Id);
+        }
+     }
 
      break;
 
