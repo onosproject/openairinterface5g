@@ -984,8 +984,8 @@ typedef struct {
     uint16_t sorting_criteria[MAX_NUM_SLICES][CR_NUM];
     uint16_t first_rb_offset[MAX_NUM_CCs][MAX_NUM_SLICES];
 
-    slice_id_t assoc_dl_slice[NUMBER_OF_UE_MAX];
-    slice_id_t assoc_ul_slice[NUMBER_OF_UE_MAX];
+    int assoc_dl_slice_idx[NUMBER_OF_UE_MAX];
+    int assoc_ul_slice_idx[NUMBER_OF_UE_MAX];
 
 } UE_list_t;
 
@@ -1008,12 +1008,14 @@ typedef struct {
  * slice specific scheduler for the DL
  */
 typedef void (*slice_scheduler_dl)(module_id_t mod_id,
-                                   slice_id_t  slice_id,
+                                   int         slice_idx,
                                    frame_t     frame,
                                    sub_frame_t subframe,
                                    int        *mbsfn_flag);
 
 typedef struct {
+    slice_id_t id;
+
     /// RB share for each slice for past and current time
     float     pct;
     float     pct_current;
@@ -1056,13 +1058,15 @@ typedef struct {
 } slice_sched_conf_dl_t;
 
 typedef void (*slice_scheduler_ul)(module_id_t   mod_id,
-                                   slice_id_t    slice_id,
+                                   int           slice_idx,
                                    frame_t       frame,
                                    sub_frame_t   subframe,
                                    unsigned char sched_subframe,
                                    uint16_t     *first_rb);
 
 typedef struct {
+    slice_id_t id;
+
     /// RB share for each slice for past and current time
     float     pct;
     float     pct_current;
