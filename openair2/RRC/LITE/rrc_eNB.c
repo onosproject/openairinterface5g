@@ -7141,7 +7141,7 @@ rrc_rx_tx(
       }
       if (ue_context_p->ue_context.ue_release_timer>0) {
 	ue_context_p->ue_context.ue_release_timer++;
-	LOG_I(RRC, "Panos-D: rrc_rx_tx(), release timer: %d \n", ue_context_p->ue_context.ue_release_timer);
+	//LOG_D(RRC, "Panos-D: rrc_rx_tx(), release timer: %d \n", ue_context_p->ue_context.ue_release_timer);
 	if (ue_context_p->ue_context.ue_release_timer >= 
 	    ue_context_p->ue_context.ue_release_timer_thres) {
 	  LOG_I(RRC,"Removing UE %x instance, Release timer: %d, Release timer thres.: %d \n",ue_context_p->ue_context.rnti, ue_context_p->ue_context.ue_release_timer, ue_context_p->ue_context.ue_release_timer_thres);
