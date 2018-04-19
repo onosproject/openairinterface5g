@@ -1290,6 +1290,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
        frame_parms->nb_prefix_samples,
        CYCLIC_PREFIX);
     else {
+
       normal_prefix_mod(&ue->common_vars.txdataF[aa][subframe_tx*nsymb*frame_parms->ofdm_symbol_size],
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
 			dummy_tx_buffer,
@@ -1848,7 +1849,9 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
 		     frame_tx,
 		     subframe_tx,
 		     &ue->frame_parms,
-		     ue->ulsch[eNB_id]);
+		     ue->ulsch[eNB_id],
+		     0,
+		     0);
     for (aa=0; aa<1/*frame_parms->nb_antennas_tx*/; aa++)
       generate_drs_pusch(ue,
 			 proc,
@@ -1857,7 +1860,9 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
 			 subframe_tx,
 			 first_rb,
 			 nb_rb,
-			 aa);
+			 aa,
+			 NULL,
+			 0);
 #if UE_TIMING_TRACE
     stop_meas(&ue->ulsch_modulation_stats);
 #endif
@@ -2352,7 +2357,7 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
   if ((sldch = ue_get_sldch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_sldch(ue,sldch,frame_tx,subframe_tx);
 
   // check for SLSCH
-  if ((slsch = ue_get_slsch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_slsch(ue,slsch,frame_tx,subframe_tx);
+  if ((slsch = ue_get_slsch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_slsch(ue,proc,slsch,frame_tx,subframe_tx);
 
 }
 

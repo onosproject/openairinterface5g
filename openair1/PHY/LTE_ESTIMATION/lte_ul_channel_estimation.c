@@ -45,7 +45,7 @@ int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
 				  uint32_t v,
 				  uint32_t cyclic_shift,
                                   unsigned char l,
-                                  unsigned char Ns,
+				  int interpolate,
 				  uint16_t rnti) {
 
 
@@ -91,7 +91,10 @@ int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
   int32x4_t mmtmp0,mmtmp1,mmtmp_re,mmtmp_im;
 #endif
 
-int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
+  int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
+
+  AssertFatal(l==pilot_pos1 || l==pilot_pos2,"%d is not a valid symbol for DMRS, should be %d or %d\n",
+	      l,pilot_pos1,pilot_pos2);
 
   Msc_RS = N_rb_alloc*12;
   /*
@@ -107,10 +110,10 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
     return(-1);
   }
 
-  LOG_D(PHY,"subframe %d, Ns %d, l %d, Msc_RS = %d, Msc_RS_idx = %d, u %d, v %d, cyclic_shift %d\n",subframe_rx,Ns,l,Msc_RS, Msc_RS_idx,u,v,cyclic_shift);
+  LOG_I(PHY,"subframe %d, l %d, Msc_RS = %d, Msc_RS_idx = %d, u %d, v %d, cyclic_shift %d\n",subframe_rx,l,Msc_RS, Msc_RS_idx,u,v,cyclic_shift);
 #ifdef DEBUG_CH
 
-  if (Ns==0)
+  if (l==pilot_pos1)
     write_output("drs_seq0.m","drsseq0",ul_ref_sigs_rx[u][v][Msc_RS_idx],2*Msc_RS,2,1);
   else
     write_output("drs_seq1.m","drsseq1",ul_ref_sigs_rx[u][v][Msc_RS_idx],2*Msc_RS,2,1);
@@ -118,68 +121,66 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
 #endif
 
 
-  if (l == (3 - frame_parms->Ncp)) {
 
-    symbol_offset = frame_parms->N_RB_UL*12*(l+((7-frame_parms->Ncp)*(Ns&1)));
-
-    for (aa=0; aa<nb_antennas_rx; aa++) {
-      //           msg("Componentwise prod aa %d, symbol_offset %d,ul_ch_estimates %p,ul_ch_estimates[aa] %p,ul_ref_sigs_rx[0][0][Msc_RS_idx] %p\n",aa,symbol_offset,ul_ch_estimates,ul_ch_estimates[aa],ul_ref_sigs_rx[0][0][Msc_RS_idx]);
-
+  symbol_offset = frame_parms->N_RB_UL*12*l;
+  
+  for (aa=0; aa<nb_antennas_rx; aa++) {
+    
 #if defined(__x86_64__) || defined(__i386__)
-      rxdataF128 = (__m128i *)&rxdataF_ext[aa][symbol_offset];
-      ul_ch128   = (__m128i *)&ul_ch_estimates[aa][symbol_offset];
-      ul_ref128  = (__m128i *)ul_ref_sigs_rx[u][v][Msc_RS_idx];
+    rxdataF128 = (__m128i *)&rxdataF_ext[aa][symbol_offset];
+    ul_ch128   = (__m128i *)&ul_ch_estimates[aa][symbol_offset];
+    ul_ref128  = (__m128i *)ul_ref_sigs_rx[u][v][Msc_RS_idx];
 #elif defined(__arm__)
-      rxdataF128 = (int16x8_t *)&rxdataF_ext[aa][symbol_offset];
-      ul_ch128   = (int16x8_t *)&ul_ch_estimates[aa][symbol_offset];
-      ul_ref128  = (int16x8_t *)ul_ref_sigs_rx[u][v][Msc_RS_idx];
+    rxdataF128 = (int16x8_t *)&rxdataF_ext[aa][symbol_offset];
+    ul_ch128   = (int16x8_t *)&ul_ch_estimates[aa][symbol_offset];
+    ul_ref128  = (int16x8_t *)ul_ref_sigs_rx[u][v][Msc_RS_idx];
 #endif
-
-      for (i=0; i<Msc_RS/12; i++) {
+    
+    for (i=0; i<Msc_RS/12; i++) {
 #if defined(__x86_64__) || defined(__i386__)
-        // multiply by conjugated channel
-        mmtmpU0 = _mm_madd_epi16(ul_ref128[0],rxdataF128[0]);
-        // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-        mmtmpU1 = _mm_shufflelo_epi16(ul_ref128[0],_MM_SHUFFLE(2,3,0,1));
-        mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-        mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)&conjugate[0]);
-        mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[0]);
-        // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-        mmtmpU0 = _mm_srai_epi32(mmtmpU0,15);
-        mmtmpU1 = _mm_srai_epi32(mmtmpU1,15);
-        mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-        mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-
-        ul_ch128[0] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-        //  printf("rb %d ch: %d %d\n",i,((int16_t*)ul_ch128)[0],((int16_t*)ul_ch128)[1]);
-        // multiply by conjugated channel
-        mmtmpU0 = _mm_madd_epi16(ul_ref128[1],rxdataF128[1]);
-        // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-        mmtmpU1 = _mm_shufflelo_epi16(ul_ref128[1],_MM_SHUFFLE(2,3,0,1));
-        mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-        mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
-        mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[1]);
-        // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-        mmtmpU0 = _mm_srai_epi32(mmtmpU0,15);
-        mmtmpU1 = _mm_srai_epi32(mmtmpU1,15);
-        mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-        mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-
-        ul_ch128[1] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-
-        mmtmpU0 = _mm_madd_epi16(ul_ref128[2],rxdataF128[2]);
-        // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-        mmtmpU1 = _mm_shufflelo_epi16(ul_ref128[2],_MM_SHUFFLE(2,3,0,1));
-        mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-        mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
-        mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[2]);
-        // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-        mmtmpU0 = _mm_srai_epi32(mmtmpU0,15);
-        mmtmpU1 = _mm_srai_epi32(mmtmpU1,15);
-        mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-        mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-
-        ul_ch128[2] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
+      // multiply by conjugated channel
+      mmtmpU0 = _mm_madd_epi16(ul_ref128[0],rxdataF128[0]);
+      // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
+      mmtmpU1 = _mm_shufflelo_epi16(ul_ref128[0],_MM_SHUFFLE(2,3,0,1));
+      mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
+      mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)&conjugate[0]);
+      mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[0]);
+      // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
+      mmtmpU0 = _mm_srai_epi32(mmtmpU0,15);
+      mmtmpU1 = _mm_srai_epi32(mmtmpU1,15);
+      mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
+      mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
+      
+      ul_ch128[0] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
+      //  printf("rb %d ch: %d %d\n",i,((int16_t*)ul_ch128)[0],((int16_t*)ul_ch128)[1]);
+      // multiply by conjugated channel
+      mmtmpU0 = _mm_madd_epi16(ul_ref128[1],rxdataF128[1]);
+      // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
+      mmtmpU1 = _mm_shufflelo_epi16(ul_ref128[1],_MM_SHUFFLE(2,3,0,1));
+      mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
+      mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
+      mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[1]);
+      // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
+      mmtmpU0 = _mm_srai_epi32(mmtmpU0,15);
+      mmtmpU1 = _mm_srai_epi32(mmtmpU1,15);
+      mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
+      mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
+      
+      ul_ch128[1] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
+      
+      mmtmpU0 = _mm_madd_epi16(ul_ref128[2],rxdataF128[2]);
+      // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
+      mmtmpU1 = _mm_shufflelo_epi16(ul_ref128[2],_MM_SHUFFLE(2,3,0,1));
+      mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
+      mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
+      mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[2]);
+      // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
+      mmtmpU0 = _mm_srai_epi32(mmtmpU0,15);
+      mmtmpU1 = _mm_srai_epi32(mmtmpU1,15);
+      mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
+      mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
+      
+      ul_ch128[2] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
 #elif defined(__arm__)
       mmtmp0 = vmull_s16(((int16x4_t*)ul_ref128)[0],((int16x4_t*)rxdataF128)[0]);
       mmtmp1 = vmull_s16(((int16x4_t*)ul_ref128)[1],((int16x4_t*)rxdataF128)[1]);
@@ -189,7 +190,7 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
       mmtmp1 = vmull_s16(vrev32_s16(vmul_s16(((int16x4_t*)ul_ref128)[1],*(int16x4_t*)conjugate)), ((int16x4_t*)rxdataF128)[1]);
       mmtmp_im = vcombine_s32(vpadd_s32(vget_low_s32(mmtmp0),vget_high_s32(mmtmp0)),
                               vpadd_s32(vget_low_s32(mmtmp1),vget_high_s32(mmtmp1)));
-
+      
       ul_ch128[0] = vcombine_s16(vmovn_s32(mmtmp_re),vmovn_s32(mmtmp_im));
       ul_ch128++;
       ul_ref128++;
@@ -202,12 +203,12 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
       mmtmp1 = vmull_s16(vrev32_s16(vmul_s16(((int16x4_t*)ul_ref128)[1],*(int16x4_t*)conjugate)), ((int16x4_t*)rxdataF128)[1]);
       mmtmp_im = vcombine_s32(vpadd_s32(vget_low_s32(mmtmp0),vget_high_s32(mmtmp0)),
                               vpadd_s32(vget_low_s32(mmtmp1),vget_high_s32(mmtmp1)));
-
+      
       ul_ch128[0] = vcombine_s16(vmovn_s32(mmtmp_re),vmovn_s32(mmtmp_im));
       ul_ch128++;
       ul_ref128++;
       rxdataF128++;
-
+      
       mmtmp0 = vmull_s16(((int16x4_t*)ul_ref128)[0],((int16x4_t*)rxdataF128)[0]);
       mmtmp1 = vmull_s16(((int16x4_t*)ul_ref128)[1],((int16x4_t*)rxdataF128)[1]);
       mmtmp_re = vcombine_s32(vpadd_s32(vget_low_s32(mmtmp0),vget_high_s32(mmtmp0)),
@@ -216,208 +217,216 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
       mmtmp1 = vmull_s16(vrev32_s16(vmul_s16(((int16x4_t*)ul_ref128)[1],*(int16x4_t*)conjugate)), ((int16x4_t*)rxdataF128)[1]);
       mmtmp_im = vcombine_s32(vpadd_s32(vget_low_s32(mmtmp0),vget_high_s32(mmtmp0)),
                               vpadd_s32(vget_low_s32(mmtmp1),vget_high_s32(mmtmp1)));
-
+      
       ul_ch128[0] = vcombine_s16(vmovn_s32(mmtmp_re),vmovn_s32(mmtmp_im));
       ul_ch128++;
       ul_ref128++;
       rxdataF128++;
-
-
+      
+      
 #endif
-        ul_ch128+=3;
-        ul_ref128+=3;
-        rxdataF128+=3;
-      }
-
-      alpha_ind = 0;
-
-      if((cyclic_shift != 0)) {
-        // Compensating for the phase shift introduced at the transmitte
+      ul_ch128+=3;
+      ul_ref128+=3;
+      rxdataF128+=3;
+    }
+    
+    alpha_ind = 0;
+    
+    if((cyclic_shift != 0)) {
+      // Compensating for the phase shift introduced at the transmitte
 #ifdef DEBUG_CH
-        write_output("drs_est_pre.m","drsest_pre",ul_ch_estimates[0],300*12,1,1);
+      write_output("drs_est_pre.m","drsest_pre",ul_ch_estimates[0],300*12,1,1);
 #endif
-
-        for(i=symbol_offset; i<symbol_offset+Msc_RS; i++) {
-          ul_ch_estimates_re = ((int16_t*) ul_ch_estimates[aa])[i<<1];
-          ul_ch_estimates_im = ((int16_t*) ul_ch_estimates[aa])[(i<<1)+1];
-          //    ((int16_t*) ul_ch_estimates[aa])[i<<1] =  (i%2 == 1? 1:-1) * ul_ch_estimates_re;
-          ((int16_t*) ul_ch_estimates[aa])[i<<1] =
-            (int16_t) (((int32_t) (alpha_re[alpha_ind]) * (int32_t) (ul_ch_estimates_re) +
-                        (int32_t) (alpha_im[alpha_ind]) * (int32_t) (ul_ch_estimates_im))>>15);
-
-          //((int16_t*) ul_ch_estimates[aa])[(i<<1)+1] =  (i%2 == 1? 1:-1) * ul_ch_estimates_im;
-          ((int16_t*) ul_ch_estimates[aa])[(i<<1)+1] =
-            (int16_t) (((int32_t) (alpha_re[alpha_ind]) * (int32_t) (ul_ch_estimates_im) -
-                        (int32_t) (alpha_im[alpha_ind]) * (int32_t) (ul_ch_estimates_re))>>15);
-
-          alpha_ind+=cyclic_shift;
-
-          if (alpha_ind>11)
-            alpha_ind-=12;
-        }
-
-#ifdef DEBUG_CH
-        write_output("drs_est_post.m","drsest_post",ul_ch_estimates[0],300*12,1,1);
-#endif
-      }
-
-      if (ul_ch_estimates_time && ul_ch_estimates_time[aa]) {
-	// Convert to time domain for visualization
-	memset(temp_in_ifft_0,0,frame_parms->ofdm_symbol_size*sizeof(int32_t));
-	for(i=0; i<Msc_RS; i++)
-	  ((int32_t*)temp_in_ifft_0)[i] = ul_ch_estimates[aa][symbol_offset+i];
+      
+      for(i=symbol_offset; i<symbol_offset+Msc_RS; i++) {
+	ul_ch_estimates_re = ((int16_t*) ul_ch_estimates[aa])[i<<1];
+	ul_ch_estimates_im = ((int16_t*) ul_ch_estimates[aa])[(i<<1)+1];
+	//    ((int16_t*) ul_ch_estimates[aa])[i<<1] =  (i%2 == 1? 1:-1) * ul_ch_estimates_re;
+	((int16_t*) ul_ch_estimates[aa])[i<<1] =
+	  (int16_t) (((int32_t) (alpha_re[alpha_ind]) * (int32_t) (ul_ch_estimates_re) +
+		      (int32_t) (alpha_im[alpha_ind]) * (int32_t) (ul_ch_estimates_im))>>15);
 	
-	switch(frame_parms->N_RB_DL) {
-	case 6:
-	  idft128((int16_t*) temp_in_ifft_0,
-		  (int16_t*) ul_ch_estimates_time[aa],
-		  1);
-	  break;
-	case 25:
-	  idft512((int16_t*) temp_in_ifft_0,
-		  (int16_t*) ul_ch_estimates_time[aa],
-		  1);
-	  break;
-	case 50:
-	  idft1024((int16_t*) temp_in_ifft_0,
-		   (int16_t*) ul_ch_estimates_time[aa],
-		   1);
-	  break;
-	case 100:
-	  idft2048((int16_t*) temp_in_ifft_0,
-		   (int16_t*) ul_ch_estimates_time[aa],
-		   1);
-	  break;
-	}
+	//((int16_t*) ul_ch_estimates[aa])[(i<<1)+1] =  (i%2 == 1? 1:-1) * ul_ch_estimates_im;
+	((int16_t*) ul_ch_estimates[aa])[(i<<1)+1] =
+	  (int16_t) (((int32_t) (alpha_re[alpha_ind]) * (int32_t) (ul_ch_estimates_im) -
+		      (int32_t) (alpha_im[alpha_ind]) * (int32_t) (ul_ch_estimates_re))>>15);
+	
+	alpha_ind+=cyclic_shift;
+	
+	if (alpha_ind>11)
+	  alpha_ind-=12;
+      }
+      
+#ifdef DEBUG_CH
+      write_output("drs_est_post.m","drsest_post",ul_ch_estimates[0],300*12,1,1);
+#endif
+    }
+    
+    if (ul_ch_estimates_time && ul_ch_estimates_time[aa]) {
+      // Convert to time domain for visualization
+      memset(temp_in_ifft_0,0,frame_parms->ofdm_symbol_size*sizeof(int32_t));
+      for(i=0; i<Msc_RS; i++)
+	((int32_t*)temp_in_ifft_0)[i] = ul_ch_estimates[aa][symbol_offset+i];
+      
+      switch(frame_parms->N_RB_DL) {
+      case 6:
+	idft128((int16_t*) temp_in_ifft_0,
+		(int16_t*) ul_ch_estimates_time[aa],
+		1);
+	break;
+      case 25:
+	idft512((int16_t*) temp_in_ifft_0,
+		(int16_t*) ul_ch_estimates_time[aa],
+		1);
+	break;
+      case 50:
+	idft1024((int16_t*) temp_in_ifft_0,
+		 (int16_t*) ul_ch_estimates_time[aa],
+		 1);
+	break;
+      case 100:
+	idft2048((int16_t*) temp_in_ifft_0,
+		 (int16_t*) ul_ch_estimates_time[aa],
+		 1);
+	break;
+      }
       
 #if T_TRACER
-	if (aa == 0)
-	  T(T_ENB_PHY_UL_CHANNEL_ESTIMATE, T_INT(0), T_INT(rnti),
-	    T_INT(frame_rx), T_INT(subframe),
-	    T_INT(0), T_BUFFER(ul_ch_estimates_time[0], 512  * 4));
+      if (aa == 0)
+	T(T_ENB_PHY_UL_CHANNEL_ESTIMATE, T_INT(0), T_INT(rnti),
+	  T_INT(frame_rx), T_INT(subframe),
+	  T_INT(0), T_BUFFER(ul_ch_estimates_time[0], 512  * 4));
 #endif
-      }
+    }
 #ifdef DEBUG_CH
-
-      if (aa==1) {
-        if (Ns == 0) {
-          write_output("rxdataF_ext.m","rxF_ext",&rxdataF_ext[aa][symbol_offset],512*2,2,1);
-          write_output("tmpin_ifft.m","drs_in",temp_in_ifft_0,512,1,1);
-          if (ul_ch_estimates_time[aa]) write_output("drs_est0.m","drs0",ul_ch_estimates_time[aa],512,1,1);
-        } else
-          if (ul_ch_estimates_time[aa]) write_output("drs_est1.m","drs1",ul_ch_estimates_time[aa],512,1,1);
-      }
-
+    
+    if (aa==1) {
+      if (l == pilot_pos1) {
+	write_output("rxdataF_ext.m","rxF_ext",&rxdataF_ext[aa][symbol_offset],512*2,2,1);
+	write_output("tmpin_ifft.m","drs_in",temp_in_ifft_0,512,1,1);
+	if (ul_ch_estimates_time[aa]) write_output("drs_est0.m","drs0",ul_ch_estimates_time[aa],512,1,1);
+      } else
+	if (ul_ch_estimates_time[aa]) write_output("drs_est1.m","drs1",ul_ch_estimates_time[aa],512,1,1);
+    }
+    
 #endif
-
-
     
     
-	if (Ns&1) {//we are in the second slot of the sub-frame, so do the interpolation
-
-	  ul_ch1 = &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos1];
-	  ul_ch2 = &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos2];
-	  
-	  
-	  // Estimation of phase difference between the 2 channel estimates
-	  delta_phase = lte_ul_freq_offset_estimation(frame_parms,
-						      ul_ch_estimates[aa],
-						      N_rb_alloc);
-	  // negative phase index indicates negative Im of ru
-	  //    msg("delta_phase: %d\n",delta_phase);
-	  
+    
+    
+    if (l==pilot_pos2 && interpolate==1) {//we are in the second slot of the sub-frame, so do the interpolation
+      
+      ul_ch1 = &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos1];
+      ul_ch2 = &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos2];
+      
+      
+      // Estimation of phase difference between the 2 channel estimates
+      delta_phase = lte_ul_freq_offset_estimation(frame_parms,
+						  ul_ch_estimates[aa],
+						  N_rb_alloc);
+      // negative phase index indicates negative Im of ru
+      //    msg("delta_phase: %d\n",delta_phase);
+      
 #ifdef DEBUG_CH
-	  LOG_D(PHY,"lte_ul_channel_estimation: ul_ch1 = %p, ul_ch2 = %p, pilot_pos1=%d, pilot_pos2=%d\n",ul_ch1, ul_ch2, pilot_pos1,pilot_pos2);
+      LOG_D(PHY,"lte_ul_channel_estimation: ul_ch1 = %p, ul_ch2 = %p, pilot_pos1=%d, pilot_pos2=%d\n",ul_ch1, ul_ch2, pilot_pos1,pilot_pos2);
 #endif
-	  
-	  for (k=0; k<frame_parms->symbols_per_tti; k++) {
-	    
-	    // we scale alpha and beta by SCALE (instead of 0x7FFF) to avoid overflows
-	    //	    alpha = (int16_t) (((int32_t) SCALE * (int32_t) (pilot_pos2-k))/(pilot_pos2-pilot_pos1));
-	    //	    beta  = (int16_t) (((int32_t) SCALE * (int32_t) (k-pilot_pos1))/(pilot_pos2-pilot_pos1));
-
-	    
+      
+      for (k=0; k<frame_parms->symbols_per_tti; k++) {
+	
+	// we scale alpha and beta by SCALE (instead of 0x7FFF) to avoid overflows
+	//	    alpha = (int16_t) (((int32_t) SCALE * (int32_t) (pilot_pos2-k))/(pilot_pos2-pilot_pos1));
+	//	    beta  = (int16_t) (((int32_t) SCALE * (int32_t) (k-pilot_pos1))/(pilot_pos2-pilot_pos1));
+	
+	
 #ifdef DEBUG_CH
-	    LOG_D(PHY,"lte_ul_channel_estimation: k=%d, alpha = %d, beta = %d\n",k,alpha,beta);
+	LOG_D(PHY,"lte_ul_channel_estimation: k=%d, alpha = %d, beta = %d\n",k,alpha,beta);
 #endif
-          //symbol_offset_subframe = frame_parms->N_RB_UL*12*k;
+	//symbol_offset_subframe = frame_parms->N_RB_UL*12*k;
+	
+	// interpolate between estimates
+	if ((k != pilot_pos1) && (k != pilot_pos2))  {
+	  //          multadd_complex_vector_real_scalar((int16_t*) ul_ch1,alpha,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
+	  //          multadd_complex_vector_real_scalar((int16_t*) ul_ch2,beta ,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
+	  
+	  //          multadd_complex_vector_real_scalar((int16_t*) ul_ch1,SCALE,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
+	  //          multadd_complex_vector_real_scalar((int16_t*) ul_ch2,SCALE,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
+	  //          msg("phase = %d\n",ru[2*cmax(((delta_phase/7)*(k-3)),0)]);
+	  
+	  // the phase is linearly interpolated
+	  current_phase1 = (delta_phase/7)*(k-pilot_pos1);
+	  current_phase2 = (delta_phase/7)*(k-pilot_pos2);
+	  //          msg("sym: %d, current_phase1: %d, current_phase2: %d\n",k,current_phase1,current_phase2);
+	  // set the right quadrant
+	  (current_phase1 > 0) ? (ru1 = ru_90) : (ru1 = ru_90c);
+	  (current_phase2 > 0) ? (ru2 = ru_90) : (ru2 = ru_90c);
+	  // take absolute value and clip
+	  current_phase1 = cmin(abs(current_phase1),127);
+	  current_phase2 = cmin(abs(current_phase2),127);
+	  
+	  //          msg("sym: %d, current_phase1: %d, ru: %d + j%d, current_phase2: %d, ru: %d + j%d\n",k,current_phase1,ru1[2*current_phase1],ru1[2*current_phase1+1],current_phase2,ru2[2*current_phase2],ru2[2*current_phase2+1]);
+	  
+	  // rotate channel estimates by estimated phase
+	  rotate_cpx_vector((int16_t*) ul_ch1,
+			    &ru1[2*current_phase1],
+			    (int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],
+			    Msc_RS,
+			    15);
+	  
+	  rotate_cpx_vector((int16_t*) ul_ch2,
+			    &ru2[2*current_phase2],
+			    (int16_t*) &tmp_estimates[0],
+			    Msc_RS,
+			    15);
+	  
+	  // Combine the two rotated estimates
+	  multadd_complex_vector_real_scalar((int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],SCALE,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
+	  multadd_complex_vector_real_scalar((int16_t*) &tmp_estimates[0],SCALE,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
+	  
+	  /*
+	    if ((k<pilot_pos1) || ((k>pilot_pos2))) {
 	    
-          // interpolate between estimates
-	    if ((k != pilot_pos1) && (k != pilot_pos2))  {
-	      //          multadd_complex_vector_real_scalar((int16_t*) ul_ch1,alpha,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
-	      //          multadd_complex_vector_real_scalar((int16_t*) ul_ch2,beta ,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
-	      
-	      //          multadd_complex_vector_real_scalar((int16_t*) ul_ch1,SCALE,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
-	      //          multadd_complex_vector_real_scalar((int16_t*) ul_ch2,SCALE,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
-	      //          msg("phase = %d\n",ru[2*cmax(((delta_phase/7)*(k-3)),0)]);
-	      
-	      // the phase is linearly interpolated
-	      current_phase1 = (delta_phase/7)*(k-pilot_pos1);
-	      current_phase2 = (delta_phase/7)*(k-pilot_pos2);
-	      //          msg("sym: %d, current_phase1: %d, current_phase2: %d\n",k,current_phase1,current_phase2);
-	      // set the right quadrant
-	      (current_phase1 > 0) ? (ru1 = ru_90) : (ru1 = ru_90c);
-	      (current_phase2 > 0) ? (ru2 = ru_90) : (ru2 = ru_90c);
-	      // take absolute value and clip
-	      current_phase1 = cmin(abs(current_phase1),127);
-	      current_phase2 = cmin(abs(current_phase2),127);
-	      
-	      //          msg("sym: %d, current_phase1: %d, ru: %d + j%d, current_phase2: %d, ru: %d + j%d\n",k,current_phase1,ru1[2*current_phase1],ru1[2*current_phase1+1],current_phase2,ru2[2*current_phase2],ru2[2*current_phase2+1]);
-	      
-	      // rotate channel estimates by estimated phase
-	      rotate_cpx_vector((int16_t*) ul_ch1,
-				&ru1[2*current_phase1],
-				(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],
-				Msc_RS,
-				15);
-	      
-	      rotate_cpx_vector((int16_t*) ul_ch2,
-				&ru2[2*current_phase2],
-				(int16_t*) &tmp_estimates[0],
-				Msc_RS,
-				15);
-	      
-	      // Combine the two rotated estimates
-	      multadd_complex_vector_real_scalar((int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],SCALE,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
-	      multadd_complex_vector_real_scalar((int16_t*) &tmp_estimates[0],SCALE,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
-	      
-	      /*
-		if ((k<pilot_pos1) || ((k>pilot_pos2))) {
-		
-                multadd_complex_vector_real_scalar((int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],SCALE>>1,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
-		
-                multadd_complex_vector_real_scalar((int16_t*) &tmp_estimates[0],SCALE>>1,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
-		
-		} else {
-		
-                multadd_complex_vector_real_scalar((int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],SCALE>>1,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
-		
-                multadd_complex_vector_real_scalar((int16_t*) &tmp_estimates[0],SCALE>>1,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
-		
-                //              multadd_complex_vector_real_scalar((int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],alpha,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
-		
-                //              multadd_complex_vector_real_scalar((int16_t*) &tmp_estimates[0],beta ,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
-		
-		}
-	      */
-	      
-	      //      memcpy(&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],ul_ch1,Msc_RS*sizeof(int32_t));
+	    multadd_complex_vector_real_scalar((int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],SCALE>>1,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
+	    
+	    multadd_complex_vector_real_scalar((int16_t*) &tmp_estimates[0],SCALE>>1,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
+	    
+	    } else {
+	    
+	    multadd_complex_vector_real_scalar((int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],SCALE>>1,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
+	    
+	    multadd_complex_vector_real_scalar((int16_t*) &tmp_estimates[0],SCALE>>1,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
+	    
+	    //              multadd_complex_vector_real_scalar((int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],alpha,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],1,Msc_RS);
+	    
+	    //              multadd_complex_vector_real_scalar((int16_t*) &tmp_estimates[0],beta ,(int16_t*) &ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],0,Msc_RS);
+	    
 	    }
-	  } //for(k=...
-
-	  // because of the scaling of alpha and beta we also need to scale the final channel estimate at the pilot positions
+	  */
 	  
-	  //    multadd_complex_vector_real_scalar((int16_t*) ul_ch1,SCALE,(int16_t*) ul_ch1,1,Msc_RS);
-	  //    multadd_complex_vector_real_scalar((int16_t*) ul_ch2,SCALE,(int16_t*) ul_ch2,1,Msc_RS);
-
-	} //if (Ns&1)
-
-    } //for(aa=...
-
-  } //if(l==...
-
-
-
+	  //      memcpy(&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],ul_ch1,Msc_RS*sizeof(int32_t));
+	}
+      } //for(k=...
+      
+      // because of the scaling of alpha and beta we also need to scale the final channel estimate at the pilot positions
+      
+      //    multadd_complex_vector_real_scalar((int16_t*) ul_ch1,SCALE,(int16_t*) ul_ch1,1,Msc_RS);
+      //    multadd_complex_vector_real_scalar((int16_t*) ul_ch2,SCALE,(int16_t*) ul_ch2,1,Msc_RS);
+      
+    } //if (Ns&1 && interpolate==1)
+    else if (interpolate == 0 && l == pilot_pos1)
+      for (k=0;k<frame_parms->symbols_per_tti>>1;k++) { 
+	memcpy((void*)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],
+	       (void*)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos1],
+	       frame_parms->N_RB_UL*12*sizeof(int));
+	if (k==pilot_pos1) k++;
+      }
+    else if (interpolate == 0 && l == pilot_pos2)
+      for (k=0;k<frame_parms->symbols_per_tti>>1;k++) {
+	if (k==pilot_pos1) k++;
+	memcpy((void*)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*(k+(frame_parms->symbols_per_tti>>1))],
+	       (void*)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos2],
+	       frame_parms->N_RB_UL*12*sizeof(int));
+      }	
+  } //for(aa=...
   return(0);
 }
 

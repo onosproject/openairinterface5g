@@ -110,7 +110,7 @@ double dac_fixed_gain(double *s_re[2],
 
 
 
-  //  printf("DAC: amp %f, amp1 %f dB (%d,%d), tx_power %f (%f),length %d,pos %d\n",20*log10(amp),20*log10(*amp1p),input_offset,input_offset_meas,txpwr_dBm,length, 10*log10((double)signal_energy((int32_t*)&input[0][input_offset_meas],length_meas)/NB_RE),input_offset_meas);
+  //printf("DAC: amp %f, amp1 %f dB (%d,%d), tx_power %f (%f),length %d,pos %d\n",20*log10(amp),20*log10(*amp1p),input_offset,input_offset_meas,txpwr_dBm,length, 10*log10((double)signal_energy((int32_t*)&input[0][input_offset_meas],length_meas)/NB_RE),input_offset_meas);
 
   /*
     if (nb_tx_antennas==2)
@@ -133,5 +133,12 @@ double dac_fixed_gain(double *s_re[2],
 
   //  printf("ener %e\n",signal_energy_fp(s_re,s_im,nb_tx_antennas,length,0));
 
-  return(signal_energy_fp(s_re,s_im,nb_tx_antennas,length<length_meas?length:length_meas,0)/NB_RE);
+ 
+  double *s_re2[2],*s_im2[2];
+  for (i=0;i<nb_tx_antennas;i++) {
+    s_re2[i]=&s_re[i][-input_offset+input_offset_meas];
+    s_im2[i]=&s_re[i][-input_offset+input_offset_meas];
+  }
+  //  printf("DAC: input_offset_meas %d (%p,%p)\n",-input_offset+input_offset_meas,s_re[0],s_re2[0]);
+  return(signal_energy_fp(s_re2,s_im2,nb_tx_antennas,length<length_meas?length:length_meas,0)/NB_RE);
 }

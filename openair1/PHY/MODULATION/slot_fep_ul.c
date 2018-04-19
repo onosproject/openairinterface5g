@@ -22,9 +22,10 @@
 #include "PHY/defs.h"
 #include "PHY/extern.h"
 #include "defs.h"
+
 //#define DEBUG_FEP
-
-
+//#undef LOG_D
+//#define LOG_D(A,B,C...) printf(B,C)
 
 int slot_fep_ul(RU_t *ru,
                 unsigned char l,
@@ -88,15 +89,9 @@ int slot_fep_ul(RU_t *ru,
     slot_offset = (fp->samples_per_tti>>1) * (Ns&1);
   }
 
-  if (l<0 || l>=7-fp->Ncp) {
-    LOG_E(PHY,"slot_fep: l must be between 0 and %d\n",7-fp->Ncp);
-    return(-1);
-  }
+  AssertFatal(l>=0 && l<7-fp->Ncp,"slot_fep: l must be between 0 and %d\n",7-fp->Ncp);
+  AssertFatal(Ns>=0 && Ns<20,"slot_fep: Ns must be between 0 and 19\n");
 
-  if (Ns<0 || Ns>=20) {
-    LOG_E(PHY,"slot_fep: Ns must be between 0 and 19\n");
-    return(-1);
-  }
 
 #ifdef DEBUG_FEP
   LOG_D(PHY,"slot_fep: Ns %d offset %d, symbol %d, nb_prefix_samples %d\n",Ns,slot_offset,symbol, nb_prefix_samples);
@@ -113,6 +108,10 @@ int slot_fep_ul(RU_t *ru,
            (int16_t *)&common->rxdataF[aa][fp->ofdm_symbol_size*symbol],
            1
          );
+#ifdef DEBUG_FEP
+      LOG_D(PHY,"slot_fep: symbol %d %d dB (output)\n",l,
+	    dB_fixed(signal_energy(&common->rxdataF[aa][fp->ofdm_symbol_size*symbol],fp->ofdm_symbol_size)));
+#endif
     } else {
       
       rx_offset += (fp->ofdm_symbol_size+nb_prefix_samples)*l;
@@ -121,16 +120,32 @@ int slot_fep_ul(RU_t *ru,
         memcpy((void *)&tmp_dft_in,
 	       (void *)&common->rxdata_7_5kHz[aa][(rx_offset % frame_length_samples)],
 	       fp->ofdm_symbol_size*sizeof(int));
+#ifdef DEBUG_FEP
+      LOG_D(PHY,"slot_fep: symbol %d %d dB\n",l,
+	    dB_fixed(signal_energy(&tmp_dft_in,fp->ofdm_symbol_size)));
+#endif
         dft( (short *) tmp_dft_in,
              (short*)  &common->rxdataF[aa][fp->ofdm_symbol_size*symbol],
              1
            );
+#ifdef DEBUG_FEP
+      LOG_D(PHY,"slot_fep: symbol %d %d dB (output)\n",l,
+	    dB_fixed(signal_energy(&common->rxdataF[aa][fp->ofdm_symbol_size*symbol],fp->ofdm_symbol_size)));
+#endif
       }
       else{
+#ifdef DEBUG_FEP
+      LOG_D(PHY,"slot_fep: symbol %d %d dB\n",l,
+	    dB_fixed(signal_energy(&common->rxdata_7_5kHz[aa][rx_offset],fp->ofdm_symbol_size)));
+#endif
       dft( (short *)&common->rxdata_7_5kHz[aa][rx_offset],
            (short*)&common->rxdataF[aa][fp->ofdm_symbol_size*symbol],
            1
          );
+#ifdef DEBUG_FEP
+      LOG_D(PHY,"slot_fep: symbol %d %d dB (output)\n",l,
+	    dB_fixed(signal_energy(&common->rxdataF[aa][fp->ofdm_symbol_size*symbol],fp->ofdm_symbol_size)));
+#endif
       }
     }
   }

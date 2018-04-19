@@ -73,10 +73,11 @@ void free_ue_dlsch(LTE_UE_DLSCH_t *dlsch);
     @param Kmimo Kmimo factor from 36-212/36-213
     @param Mdlharq Maximum number of HARQ rounds (36-212/36-213)
     @param Nsoft Soft-LLR buffer size from UE-Category
+    @param nharq Number of harq processes
     @params N_RB_DL total number of resource blocks (determine the operating BW)
     @param abstraction_flag Flag to indicate abstracted interface
 */
-LTE_UE_DLSCH_t *new_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_t max_turbo_iterations,uint8_t N_RB_DL, uint8_t abstraction_flag);
+LTE_UE_DLSCH_t *new_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,int nharq,uint8_t max_turbo_iterations,uint8_t N_RB_DL, uint8_t abstraction_flag);
 
 
 void clean_eNb_ulsch(LTE_eNB_ULSCH_t *ulsch);
@@ -1507,7 +1508,7 @@ void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx)
   \param frame_tx Frame number
   \param subframe_tx subframe number
 */
-void generate_slsch(PHY_VARS_UE *ue,SLSCH_t *slss,int frame_tx,int subframe_tx);
+void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slss,int frame_tx,int subframe_tx);
 
 void generate_64qam_table(void);
 void generate_16qam_table(void);
@@ -1691,7 +1692,9 @@ int32_t generate_drs_pusch(PHY_VARS_UE *phy_vars_ue,
                            uint32_t subframe,
                            uint32_t first_rb,
                            uint32_t nb_rb,
-                           uint8_t ant);
+                           uint8_t ant,
+			   uint32_t *gh,
+			   int ljmod10);
 
 /*!
   \brief This function initializes the Group Hopping, Sequence Hopping and nPRS sequences for PUCCH/PUSCH according to 36.211 v8.6.0. It should be called after configuration of UE (reception of SIB2/3) and initial configuration of eNB (or after reconfiguration of cell-specific parameters).
@@ -1714,8 +1717,9 @@ void ulsch_modulation(int32_t **txdataF,
                       frame_t frame,
                       uint32_t subframe,
                       LTE_DL_FRAME_PARMS *frame_parms,
-                      LTE_UE_ULSCH_t *ulsch);
-
+                      LTE_UE_ULSCH_t *ulsch,
+		      int slsch_flag,
+		      uint32_t cinit);
 
 void ulsch_extract_rbs_single(int32_t **rxdataF,
                               int32_t **rxdataF_ext,

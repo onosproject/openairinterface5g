@@ -60,8 +60,14 @@
 #include "oaisim.h"
 
 #define RF
-//#define DEBUG_SIM
 
+//#define DEBUG_SIM
+/*
+#undef LOG_I
+#define LOG_I(A,B,C...) printf(B,C);
+#undef LOG_D
+#define LOG_D(A,B,C...) printf(B,C);
+*/
 int number_rb_ul;
 int first_rbUL ;
 
@@ -543,7 +549,7 @@ void do_UL_sig(channel_desc_t *UE2RU[NUMBER_OF_UE_MAX][NUMBER_OF_RU_MAX][MAX_NUM
 }
 
 void do_SL_sig(int UE_id,channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MAX][MAX_NUM_CCs],
-	       uint16_t subframe,LTE_DL_FRAME_PARMS *frame_parms, 
+	       uint16_t subframe,uint16_t slot, LTE_DL_FRAME_PARMS *frame_parms, 
 	       uint32_t frame,uint8_t CC_id)
 {
 
@@ -599,11 +605,11 @@ void do_SL_sig(int UE_id,channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MA
   if (((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
        UE2UE[UE_id][0][CC_id]->path_loss_dB) <= -125.0) {
     // don't simulate a UE that is too weak
-    LOG_D(OCM,"[SIM][UL] UE %d tx_pwr %d dBm (num_RE %d) for subframe %d (sf_offset %d)\n",
+    LOG_D(OCM,"[SIM][SL] UE %d tx_pwr %d dBm (num_RE %d) for subframe %d (sf_offset %d,slot_ind %d)\n",
 	  UE_id,
 	  PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe],
 	  PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe],
-	  subframe,sf_offset);	
+	  subframe,slot,sf_offset);	
   } else {
     tx_pwr = dac_fixed_gain((double**)s_re,
 			    (double**)s_im,
@@ -611,19 +617,20 @@ void do_SL_sig(int UE_id,channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MA
 			    sf_offset,
 			    nb_antennas_tx,
 			    frame_parms->samples_per_tti,
-			    sf_offset,
+			    (slot == 2)? sf_offset+(frame_parms->samples_per_tti>>1) : sf_offset,
 			    frame_parms->ofdm_symbol_size,
 			    14,
 			    (double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe]-10*log10((double)PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe]),
 			    1,
 			    NULL,
 			    PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe]);  // This make the previous argument the total power
-    LOG_D(OCM,"[SIM][UL] UE %d tx_pwr %f dBm (target %d dBm, num_RE %d) for subframe %d (sf_offset %d)\n",
+    LOG_I(OCM,"[SIM][SL] UE %d tx_pwr %f dBm (target %d dBm, num_RE %d) for subframe %d (sf_offset %d/%d)\n",
 	  UE_id,
 	  10*log10(tx_pwr*PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe]),
 	  PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe],
 	  PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe],
-	  subframe,sf_offset);
+	  subframe,sf_offset,
+	  (slot == 2)? sf_offset+(frame_parms->samples_per_tti>>1) : sf_offset);
     
     
     multipath_channel(UE2UE[UE_id][0][CC_id],s_re,s_im,r_re0,r_im0,
@@ -633,12 +640,12 @@ void do_SL_sig(int UE_id,channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MA
     rx_pwr = signal_energy_fp2(UE2UE[UE_id][0][CC_id]->ch[0],
 			       UE2UE[UE_id][0][CC_id]->channel_length)*UE2UE[UE_id][0][CC_id]->channel_length;
     
-    LOG_D(OCM,"[SIM][UL] subframe %d Channel UE %d => UE %d : %f dB (hold %d,length %d, PL %f)\n",subframe,UE_id,0,10*log10(rx_pwr),
+    LOG_I(OCM,"[SIM][SL] subframe %d Channel UE %d => UE %d : %f dB (hold %d,length %d, PL %f)\n",subframe,UE_id,0,10*log10(rx_pwr),
 	  hold_channel,UE2UE[UE_id][0][CC_id]->channel_length,
 	  UE2UE[UE_id][0][CC_id]->path_loss_dB);
     
     rx_pwr = signal_energy_fp(r_re0,r_im0,nb_antennas_rx,frame_parms->samples_per_tti,0);
-    LOG_D(OCM,"[SIM][UL] UE %d (%d/%d rx antennas) : rx_pwr %f dBm (tx_pwr - PL %f) for subframe %d, sptti %d\n",
+    LOG_I(OCM,"[SIM][SL] UE %d (%d/%d rx antennas) : rx_pwr %f dBm (tx_pwr - PL %f) for subframe %d, sptti %d\n",
 	  UE_id,nb_antennas_rx,UE2UE[UE_id][0][CC_id]->nb_rx,10*log10(rx_pwr),10*log10(tx_pwr*PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe])+UE2UE[UE_id][0][CC_id]->path_loss_dB,subframe,frame_parms->samples_per_tti);
     /*	
 	if (abs(10*log10(rx_pwr)-10*log10(tx_pwr*PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe])-UE2RU[UE_id][ru_id][CC_id]->path_loss_dB)>3) {
@@ -666,7 +673,7 @@ void do_SL_sig(int UE_id,channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MA
   double *r_im_p[2] = {r_im_SL[0][0],r_im_SL[0][1]};
   
   rx_pwr = signal_energy_fp(r_re_p,r_im_p,nb_antennas_rx,frame_parms->samples_per_tti,0);
-  LOG_D(OCM,"[SIM][UL] UE %d (%d/%d rx antennas) : rx_pwr %f dBm (before RF) for subframe %d, gain %f\n",
+  LOG_D(OCM,"[SIM][SL] UE %d (%d/%d rx antennas) : rx_pwr %f dBm (before RF) for subframe %d, gain %f\n",
 	UE_id,nb_antennas_rx,nb_antennas_rx,10*log10(rx_pwr),subframe,
 	PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB - 66.227);
   rf_rx_simple(r_re_p,
@@ -678,8 +685,8 @@ void do_SL_sig(int UE_id,channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MA
   
 #ifdef DEBUG_SIM
   rx_pwr = signal_energy_fp(r_re_p,r_im_p,nb_antennas_rx,frame_parms->samples_per_tti,0);//*(double)frame_parms->ofdm_symbol_size/(12.0*frame_parms->N_RB_DL;
-  LOG_D(OCM,"[SIM][UL] rx_pwr (ADC in) %f dB for subframe %d (rx_gain %f)\n",10*log10(rx_pwr),subframe,
-	PHY_vars_UE_g[0][CC_id]->rx_total_gain_dB);
+  LOG_D(OCM,"[SIM][SL] rx_pwr (ADC in) %f dB for subframe %d (rx_gain %d)\n",10*log10(rx_pwr),subframe,
+	PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB);
 #endif
   
   rxdata = PHY_vars_UE_g[0][CC_id]->common_vars.rxdata;
@@ -697,7 +704,7 @@ void do_SL_sig(int UE_id,channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MA
   
 #ifdef DEBUG_SIM
   rx_pwr2 = signal_energy(rxdata[0]+sf_offset,frame_parms->samples_per_tti)*(double)frame_parms->ofdm_symbol_size/(12.0*frame_parms->N_RB_DL);
-  LOG_D(OCM,"[SIM][UL] UE %d rx_pwr (ADC out) %f dB (%d) for subframe %d (offset %d) = %p\n",UE_id,10*log10((double)rx_pwr2),rx_pwr2,subframe,sf_offset,rxdata[0]+sf_offset);
+  LOG_D(OCM,"[SIM][SL] UE %d rx_pwr (ADC out) %f dB (%d) for subframe %d (offset %d) = %p\n",UE_id,10*log10((double)rx_pwr2),rx_pwr2,subframe,sf_offset,rxdata[0]+sf_offset);
 #else
   UNUSED_VARIABLE(tx_pwr);
   UNUSED_VARIABLE(rx_pwr);

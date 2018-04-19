@@ -41,7 +41,9 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
                        unsigned int subframe,
                        unsigned int first_rb,
                        unsigned int nb_rb,
-                       uint8_t ant)
+                       uint8_t ant, 
+		       uint32_t *gh,
+		       int ljmod10)
 {
 
   uint16_t k,l,Msc_RS,Msc_RS_idx,rb,drs_offset;
@@ -94,15 +96,15 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
     AssertFatal(1==0,"SL Transmission type 3/4 not supported for now\n");
   break;
   case PSSCH_12:
-    /* Need to figure this out ...
-    u0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[subframe<<1];
-    u1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(subframe<<1)];
-    v0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
-    v1=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];*/
-    cyclic_shift0 = (ue->slsch->n_ss_PSSCH>>1)&7;
+
+    u0=ue->gh[ue->slsch->group_destination_id][ljmod10<<1];
+    u1=ue->gh[ue->slsch->group_destination_id][1+(ljmod10<<1)];
+    v0=0;//frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
+    v1=0;//frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
+    cyclic_shift0 = (ue->slsch->group_destination_id>>1)&7;
     cyclic_shift1 = cyclic_shift0;
     lstart        = (3 - frame_parms->Ncp);
-    linc          = frame_parms->symbols_per_tti;
+    linc          = (7 - frame_parms->Ncp);
     break;
   case PSSCH_34:
     AssertFatal(1==0,"SL Transmission type 3/4 not supported for now\n");
@@ -147,13 +149,13 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
     return(-1);
   }
 
-  for (l = (3 - frame_parms->Ncp),u=u0,v=v0,cyclic_shift=cyclic_shift0;
+  for (l = lstart,u=u0,v=v0,cyclic_shift=cyclic_shift0;
        l<frame_parms->symbols_per_tti;
        l += linc,u=u1,v=v1,cyclic_shift=cyclic_shift1) {
 
     drs_offset = 0;
 #ifdef DEBUG_DRS
-    printf("drs_modulation: Msc_RS = %d, Msc_RS_idx = %d, u=%d,v=%d\n",Msc_RS, Msc_RS_idx,u,v);
+    printf("drs_modulation: l %d Msc_RS = %d, Msc_RS_idx = %d, u=%d,v=%d\n",l,Msc_RS, Msc_RS_idx,u,v);
 #endif
 
 

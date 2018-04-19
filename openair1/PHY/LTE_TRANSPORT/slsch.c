@@ -29,43 +29,81 @@
  * \note
  * \warning
  */
-#ifndef __LTE_TRANSPORT_SLSS__C__
-#define __LTE_TRANSPORT_SLSS__C__
 #include "PHY/defs.h"
 #include "pssch.h"
 
-int64_t sci_mapping(PHY_VARS_UE *ue) {
+//#define PSSCH_DEBUG 1
+#define DEBUG_SCI_DECODING 1
+
+void generate_sl_grouphop(PHY_VARS_UE *ue)
+{
+
+  uint8_t ns;
+  uint8_t reset=1;
+  uint32_t x1, x2, s=0;
+  uint32_t fss_pusch;
+
+  for (int destid=0;destid<256;destid++) {
+    // This is from Section 5.5.1.3
+    fss_pusch = destid%30;
+    
+    x2 = destid/30;
+#ifdef DEBUG_SLGROUPHOP
+    printf("[PHY] SL GroupHop %d:",destid);
+#endif
+    
+    for (ns=0; ns<20; ns++) {
+      if ((ns&3) == 0) {
+	s = lte_gold_generic(&x1,&x2,reset);
+	reset = 0;
+      }
+	
+      ue->gh[destid][ns] = (((uint8_t*)&s)[ns&3]+fss_pusch)%30;
+    
+      
+#ifdef DEBUG_SLGROUPHOP
+      printf("%d.",ue->gh[destid][ns]);
+#endif
+    }
+    
+#ifdef DEBUG_SLGROUPHOP
+    printf("\n");
+#endif
+  }
+} 
+ 
+uint64_t sci_mapping(PHY_VARS_UE *ue) {
   SLSCH_t *slsch                = ue->slsch;
   
   AssertFatal(slsch->freq_hopping_flag<2,"freq_hop %d >= 2\n",slsch->freq_hopping_flag);
-  int64_t freq_hopping_flag     = (uint64_t)slsch->freq_hopping_flag;
+  uint64_t freq_hopping_flag     = (uint64_t)slsch->freq_hopping_flag;
   
-  int64_t RAbits                = log2_approx(slsch->N_SL_RB*((slsch->N_SL_RB+1)>>1));
+  uint64_t RAbits                = log2_approx(slsch->N_SL_RB*((slsch->N_SL_RB+1)>>1));
   AssertFatal(slsch->resource_block_coding<(1<<RAbits),"slsch->resource_block_coding %x >= %x\n",slsch->resource_block_coding,(1<<RAbits));
-  int64_t resource_block_coding     = (uint64_t)slsch->resource_block_coding; 
+  uint64_t resource_block_coding     = (uint64_t)slsch->resource_block_coding; 
   
   AssertFatal(slsch->time_resource_pattern<128,"slsch->time_resource_pattern %d>=128\n",slsch->time_resource_pattern);
-  int64_t time_resource_pattern     = (uint64_t)slsch->time_resource_pattern;
-
+  uint64_t time_resource_pattern     = (uint64_t)slsch->time_resource_pattern;
+  
   AssertFatal(slsch->mcs<32,"slsch->mcs %d >= 32\n",slsch->mcs);
-  int64_t mcs                       = (uint64_t)slsch->mcs;
-
+  uint64_t mcs                       = (uint64_t)slsch->mcs;
+  
   AssertFatal(slsch->timing_advance_indication<2048,"slsch->timing_advance_indication %d >= 2048\n",slsch->timing_advance_indication);
-  int64_t timing_advance_indication = (uint64_t)slsch->timing_advance_indication;
-
+  uint64_t timing_advance_indication = (uint64_t)slsch->timing_advance_indication;
+  
   AssertFatal(slsch->group_destination_id<256,"slsch->group_destination_id %d >= 256\n",slsch->group_destination_id);
-  int64_t group_destination_id = (uint64_t)slsch->group_destination_id;
-
+  uint64_t group_destination_id = (uint64_t)slsch->group_destination_id;
+  
   // map bitfields
   // frequency-hopping 1-bit
-  return( freq_hopping_flag | 
-	  (resource_block_coding << 1) | 
-	  (time_resource_pattern<<(1+RAbits)) | 
-	  (mcs<<(1+RAbits+7)) | 
-	  (timing_advance_indication<<(1+RAbits+7+5)) | 
-	  (group_destination_id<<(1+RAbits+7+5+11))
+  return( (freq_hopping_flag <<63) | 
+	  (resource_block_coding << (63-1-RAbits+1)) | 
+	  (time_resource_pattern<<(63-1-7-RAbits+1)) | 
+	  (mcs<<(63-1-RAbits-7-5+1)) | 
+	  (timing_advance_indication<<(63-1-RAbits-7-5-11+1)) | 
+	  (group_destination_id<<(63-1-RAbits-7-5-11-8+1))
 	  );
-
+  
 }
 
 void dft_slcch(int32_t *z,int32_t *d, uint8_t Nsymb) {
@@ -87,7 +125,7 @@ void dft_slcch(int32_t *z,int32_t *d, uint8_t Nsymb) {
 #elif defined(__arm__)
   int16x8_t norm128;
 #endif
-
+  
   
   d0 = (uint32_t *)d;
   d1 = d0+12;
@@ -152,7 +190,7 @@ void dft_slcch(int32_t *z,int32_t *d, uint8_t Nsymb) {
 
 extern short conjugate2[8];
 
-void idft_slcch(LTE_DL_FRAME_PARMS *frame_parms,int32_t *z)
+void idft_slcch(LTE_DL_FRAME_PARMS *frame_parms,int32_t *z,int slot)
 {
 #if defined(__x86_64__) || defined(__i386__)
   __m128i idft_in128[3][12],idft_out128[3][12];
@@ -170,7 +208,7 @@ void idft_slcch(LTE_DL_FRAME_PARMS *frame_parms,int32_t *z)
   //  printf("Doing lte_idft for Msc_PUSCH %d\n",Msc_PUSCH);
 
   if (frame_parms->Ncp == 0) { // Normal prefix
-    z0 = z;
+    z0 = z+slot*(frame_parms->N_RB_DL*12*7);
     z1 = z0+(frame_parms->N_RB_DL*12);
     z2 = z1+(frame_parms->N_RB_DL*12);
     //pilot
@@ -178,13 +216,12 @@ void idft_slcch(LTE_DL_FRAME_PARMS *frame_parms,int32_t *z)
     z4 = z3+(frame_parms->N_RB_DL*12);
     z5 = z4+(frame_parms->N_RB_DL*12);
   } else { // extended prefix
-    z0 = z;
+    z0 = z+slot*(frame_parms->N_RB_DL*12*6);
     z1 = z0+(frame_parms->N_RB_DL*12);
     //pilot
     z2 = z1+(2*frame_parms->N_RB_DL*12);
     z3 = z2+(frame_parms->N_RB_DL*12);
     z4 = z3+(frame_parms->N_RB_DL*12);
-
   }
 
   // conjugate input
@@ -299,13 +336,31 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   uint64_t sci;
   // Note this should depend on configuration of slsch/slcch
   uint32_t Nsymb = 7;
+  int Nsymb2  = slot==0 ? Nsymb : Nsymb-1;
   uint32_t E = 12*(Nsymb-1)*2;
+
 
   // coding part
   if (ue->pscch_coded == 0) {
+
+    LOG_D(PHY,"pscch_coding\n");
     sci = sci_mapping(ue);
-    dci_encoding((uint8_t *)&sci,
-		 log2_approx(slsch->N_SL_RB*((slsch->N_SL_RB+1)>>1))+31,
+    LOG_I(PHY,"sci %lx\n",sci);
+
+    int length = log2_approx(slsch->N_SL_RB*((ue->slsch_rx.N_SL_RB+1)>>1))+32;
+
+    //   for (int i=0;i<(length+7)/8;i++) printf("sci[%d] %x\n",i,((uint8_t *)&sci)[i]);
+    uint8_t sci_flip[8];
+    sci_flip[0] = ((uint8_t *)&sci)[7];
+    sci_flip[1] = ((uint8_t *)&sci)[6];
+    sci_flip[2] = ((uint8_t *)&sci)[5];
+    sci_flip[3] = ((uint8_t *)&sci)[4];
+    sci_flip[4] = ((uint8_t *)&sci)[3];
+    sci_flip[5] = ((uint8_t *)&sci)[2];
+    sci_flip[6] = ((uint8_t *)&sci)[1];
+    sci_flip[7] = ((uint8_t *)&sci)[0];
+    dci_encoding(sci_flip,
+		 length,
 		 E,
 		 pscch->f,
 		 0);
@@ -316,7 +371,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
     uint8_t *fptr;
     for (int i=0,j=0; i<Cmux; i++)
       // 24 = 12*(Nsymb-1)*2/(Nsymb-1)
-      for (int r=0; r<24; r++) {
+      for (int r=0; r<12; r++) {
         fptr=&pscch->f[((r*Cmux)+i)<<1];
         pscch->h[j++] = *fptr++;
         pscch->h[j++] = *fptr++;
@@ -333,6 +388,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
 	c = (uint8_t)((s>>j)&1);
 	pscch->b_tilde[k] = (pscch->h[k]+c)&1;
       }
+      s = lte_gold_generic(&x1,&x2,0); 
     }		 
     ue->pscch_coded=1;
   }
@@ -349,6 +405,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   //  pssch_power_cntl(ue,proc,eNB_id,1, abstraction_flag);
   //  ue->tx_power_dBm[subframe_tx] = ue->slcch[eNB_id]->Po_PUSCH;
   ue->tx_power_dBm[subframe_tx] = 0;
+  ue->tx_total_RE[subframe_tx] = 12;
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
   tx_amp = get_tx_amp(ue->tx_power_dBm[subframe_tx],
 		      ue->tx_power_max_dBm,
@@ -363,6 +420,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   int32_t d[Msymb];
   int16_t gain_lin_QPSK = (int16_t)((tx_amp*ONE_OVER_SQRT2_Q15)>>15);
 
+  LOG_D(PHY,"pscch modulation, Msymb %d\n",Msymb);
   for (int i=0,j=0; i<Msymb; i++,j+=2) {
     
     ((int16_t*)&d[i])[0] = (pscch->b_tilde[j] == 1)  ? (-gain_lin_QPSK) : gain_lin_QPSK;
@@ -385,9 +443,16 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
 
   AssertFatal(slot==0||slot==1,"Slot %d is illegal\n",slot);
   int loffset = slot==0 ? 0 : Nsymb;
+
   int32_t *txptr;
 
-  for (int j=0,l=0; l<(Nsymb-1); l++) {
+  for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
+    memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
+           0,
+           ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
+  }
+
+  for (int j=0,l=0; l<Nsymb2; l++) {
     re_offset = re_offset0;
     symbol_offset = (uint32_t)frame_parms->ofdm_symbol_size*(loffset+l+(subframe_tx*2*Nsymb));
     txptr = &ue->common_vars.txdataF[0][symbol_offset];
@@ -408,27 +473,145 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   // DMRS insertion
   for (int aa=0; aa<1/*frame_parms->nb_antennas_tx*/; aa++)
     generate_drs_pusch(ue,
-		       NULL, // no proc means this is SLSCH/SLCCH
-		       0,
-		       tx_amp,
-		       subframe_tx,
-		       nprb,
-		       1,
-		       aa);
+                       NULL, // no proc means this is SLSCH/SLCCH
+                       0,
+                       tx_amp,
+                       subframe_tx,
+                       nprb,
+                       1,
+                       aa,
+                       NULL,
+                       0);
 
-
+  ue->pscch_generated = 1+slot;
 
 }
 
-void slsch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
+void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,int subframe_tx,int ljmod10) {
 
-  SLSCH_t *slsch=ue->slsch;
+  SLSCH_t *slsch               = ue->slsch;
+  LTE_eNB_DLSCH_t *dlsch = ue->dlsch_slsch;
+  LTE_UE_ULSCH_t *ulsch  = ue->ulsch_slsch;
+  uint32_t Nsymb = 7;
+  int tx_amp;
+  
   AssertFatal(slsch!=NULL,"ue->slsch is null\n");
+  
+  AssertFatal(ue->slsch_sdu_active > 0,"ue->slsch_sdu_active is   G=\n");
 
-  //  G=
+  LOG_I(PHY,"Generating SLSCH for rvidx %d, group_id %d, mcs %d, resource first rb %d, L_crbs %d\n",
+	slsch->rvidx,slsch->group_destination_id,slsch->mcs,slsch->RB_start,slsch->L_CRBs);
+
+  
+
+
+  dlsch->harq_processes[0]->nb_rb       = slsch->L_CRBs;
+  dlsch->harq_processes[0]->TBS         = get_TBS_UL(slsch->mcs,slsch->L_CRBs)<<3;
+  dlsch->harq_processes[0]->Qm          = get_Qm_ul(slsch->mcs);
+  dlsch->harq_processes[0]->mimo_mode   = SISO;
+  dlsch->harq_processes[0]->rb_alloc[0] = 0; // unused for SL
+  dlsch->harq_processes[0]->rb_alloc[1] = 0; // unused for SL
+  dlsch->harq_processes[0]->rb_alloc[2] = 0; // unused for SL
+  dlsch->harq_processes[0]->rb_alloc[3] = 0; // unused for SL
+  dlsch->harq_processes[0]->Nl          = 1;
+  dlsch->harq_processes[0]->round       = (slsch->rvidx == 0) ? 0 : (dlsch->harq_processes[0]->round+1); 
+  dlsch->harq_processes[0]->rvidx       = slsch->rvidx;
+
+  //  int E = dlsch->harq_processes[0]->Qm * 12 * slsch->L_CRBs * ((Nsymb-1)<<1);
+  if (slsch->rvidx == 0) ue->slsch_txcnt++;
+
+  dlsch_encoding0(&ue->frame_parms,
+		 slsch->payload,
+		 0, // means SL
+		 dlsch,
+		 frame_tx,
+		 subframe_tx,
+		 &ue->ulsch_rate_matching_stats,
+		 &ue->ulsch_turbo_encoding_stats,
+		 &ue->ulsch_interleaving_stats);
+
+  //  for (int i=0;i<2*12*slsch->L_CRBs*((Nsymb-1)<<1)/16;i++) printf("encoding: E[%d] %d\n",i,dlsch->harq_processes[0]->e[i]);
+  // interleaving
+  // Cmux assumes configuration 0
+  int Cmux = (Nsymb-1)<<1;
+  uint8_t *eptr;
+  for (int i=0,j=0; i<Cmux; i++)
+    // 24 = 12*(Nsymb-1)*2/(Nsymb-1)
+    for (int r=0; r<12*slsch->L_CRBs; r++) {
+       if (dlsch->harq_processes[0]->Qm == 2) {
+           eptr=&dlsch->harq_processes[0]->e[((r*Cmux)+i)<<1];
+           ulsch->h[j++] = *eptr++;
+           ulsch->h[j++] = *eptr++;
+       }
+       else if (dlsch->harq_processes[0]->Qm == 4) {
+           eptr=&dlsch->harq_processes[0]->e[((r*Cmux)+i)<<2];
+           ulsch->h[j++] = *eptr++;
+           ulsch->h[j++] = *eptr++;
+           ulsch->h[j++] = *eptr++;
+           ulsch->h[j++] = *eptr++;
+       }
+       else {
+            AssertFatal(1==0,"64QAM not supported for SL\n");
+       }
+    }
+
+  
+  // scrambling
+  uint32_t cinit=510+(((uint32_t)slsch->group_destination_id)<<14)+(ljmod10<<9);
+  
+  ulsch->harq_processes[0]->nb_rb       = slsch->L_CRBs;
+  ulsch->harq_processes[0]->first_rb    = slsch->RB_start;
+  ulsch->harq_processes[0]->mcs         = slsch->mcs;
+  ulsch->Nsymb_pusch                    = ((Nsymb-1)<<1);
+
+  ue->sl_chan = PSSCH_12;
+
+  // Fill in power control later
+  //  pssch_power_cntl(ue,proc,eNB_id,1, abstraction_flag);
+  //  ue->tx_power_dBm[subframe_tx] = ue->slcch[eNB_id]->Po_PUSCH;
+  ue->tx_power_dBm[subframe_tx] = dB_fixed(slsch->L_CRBs);
+  ue->tx_total_RE[subframe_tx] = slsch->L_CRBs*12;
+#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+  tx_amp = get_tx_amp(ue->tx_power_dBm[subframe_tx],
+		      ue->tx_power_max_dBm,
+		      ue->frame_parms.N_RB_UL,
+		      1);
+#else
+  tx_amp = AMP;
+#endif  
+
+  for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
+    memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
+           0,
+           ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
+  }
+
+  ulsch_modulation(ue->common_vars.txdataF,
+		   tx_amp,
+		   frame_tx,
+                   subframe_tx,
+		   &ue->frame_parms,
+                   ulsch,
+                   1,
+                   cinit);
+  generate_drs_pusch(ue,
+		     NULL,
+		     0,
+		     tx_amp,
+		     subframe_tx,
+		     slsch->RB_start,
+		     slsch->L_CRBs,
+                     0,
+                     ue->gh[slsch->group_destination_id],
+                     ljmod10);
+
+  ue->pssch_generated = 1;
 }
 
-void check_and_generate_pssch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
+void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,int subframe_tx) {
+
+  LOG_I(PHY,"Checking pssch for SFN/SF %d.%d (slsch_active %d)\n",
+	frame_tx,subframe_tx, ue->slsch_active);
 
   AssertFatal(frame_tx<1024 && frame_tx>=0,"frame %d is illegal\n",frame_tx);
   AssertFatal(subframe_tx<10 && subframe_tx>=0,"subframe %d is illegal\n",subframe_tx);
@@ -438,8 +621,13 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t P = ue->slsch->SL_SC_Period;
   uint32_t absSF = (frame_tx*10)+subframe_tx;
   uint32_t absSF_offset,absSF_modP;
+
+
   absSF_offset = absSF-O;
 
+  LOG_I(PHY,"Checking pssch for absSF %d (slsch_active %d)\n",
+	absSF, ue->slsch_active);
+  
   if (ue->slsch_active == 0) return;
 
   if (absSF_offset < O) return;
@@ -451,31 +639,27 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   
   absSF_modP-=40;
 
-  AssertFatal(slsch->time_resource_pattern < TRP8_MAX,
+
+  AssertFatal(slsch->time_resource_pattern <= TRP8_MAX,
 	      "received Itrp %d: TRP8 is used with Itrp in 0...%d\n",
 	      slsch->time_resource_pattern,TRP8_MAX);
 
+  LOG_I(PHY,"Checking pssch for absSF %d (trp mask %d, rv %d)\n",
+	absSF, trp8[slsch->time_resource_pattern][absSF_modP&7],
+	slsch->rvidx);
   // Note : this assumes Ntrp=8 for now
-  if (trp8[slsch->time_resource_pattern][absSF_modP&8]==0) return;
+  if (trp8[slsch->time_resource_pattern][absSF_modP&7]==0) return;
   // we have an opportunity in this subframe
-  if (slsch->rvidx == 0) { // first new transmission in period, get a new packet
-    // call to MAC to update data pointer and length
-    // mac_update_slsch();
-    if (slsch->payload_length==0) {
-      ue->slsch_sdu_active = 0;
-      return;
-    }
-    ue->slsch_sdu_active = 1;
-    slsch_codingmodulation(ue,frame_tx,subframe_tx);
-    slsch->rvidx=2;
-  }
-  else if(ue->slsch_sdu_active==1){
-    slsch_codingmodulation(ue,frame_tx,subframe_tx);
-    if      (slsch->rvidx == 2) slsch->rvidx = 3;
-    else if (slsch->rvidx == 3) slsch->rvidx = 1;
-    else if (slsch->rvidx == 1) slsch->rvidx = 0;
-    else                        AssertFatal(1==0,"rvidx %d isn't possible\n",slsch->rvidx);
-  }
+  if (absSF_modP == 0) slsch->ljmod10 = 0;
+  else slsch->ljmod10++;
+  if (slsch->ljmod10 == 0) slsch->ljmod10 = 0;
+	 
+
+  slsch_codingmodulation(ue,proc,frame_tx,subframe_tx,slsch->ljmod10);
+  if (slsch->rvidx == 0) slsch->rvidx=2;
+  else if (slsch->rvidx == 2) slsch->rvidx=3;
+  else if (slsch->rvidx == 3) slsch->rvidx=1;
+  else slsch->rvidx = 0;
 }
 
 void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
@@ -500,8 +684,11 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   absSF_modP = absSF_offset%P;
 
   // This is the condition for short SCCH bitmap (40 bits), check that the current subframe is for SCCH
-  if (absSF_modP > 39) return;
-
+  if (absSF_modP > 39) { 
+    ue->pscch_coded =0; 
+    ue->pscch_generated=0;
+    return;
+  }
 
   uint64_t SFpos = ((uint64_t)1) << absSF_modP;
   if ((SFpos & slsch->bitmap1) == 0) return;
@@ -527,8 +714,10 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t b1=slsch->n_pscch%LPSCCH;
   uint32_t b2=(slsch->n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
 
-  LOG_D(PHY,"Checking pscch for absSF %d (LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d)\n",
-	absSF, LPSCCH, M_RB_PSCCH_RP,a1,a2,b1,b2);
+  LOG_I(PHY,"Checking pscch for absSF %d (LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d) pscch_coded %d\n",
+	absSF, LPSCCH, M_RB_PSCCH_RP,a1,a2,b1,b2,ue->pscch_coded);
+
+  ue->slsch_sdu_active = 1;
 
   if (absSF_modP == b1)      pscch_codingmodulation(ue,frame_tx,subframe_tx,a1,0);	
   else if (absSF_modP == b2) pscch_codingmodulation(ue,frame_tx,subframe_tx,a2,1);
@@ -536,7 +725,7 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
 }
 
-void generate_slsch(PHY_VARS_UE *ue,SLSCH_t *slsch,int frame_tx,int subframe_tx) {
+void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slsch,int frame_tx,int subframe_tx) {
     
   UE_tport_t pdu;
   size_t slsch_header_len = sizeof(UE_tport_header_t);
@@ -572,69 +761,75 @@ void generate_slsch(PHY_VARS_UE *ue,SLSCH_t *slsch,int frame_tx,int subframe_tx)
     ue->slsch           = slsch;
   }
   // check and flll SCI portion
+  LOG_I(PHY,"pscch: SFN.SF %d.%d\n",frame_tx,subframe_tx); 
   check_and_generate_pscch(ue,frame_tx,subframe_tx);
-  check_and_generate_pssch(ue,frame_tx,subframe_tx);
+  // check and flll SLSCH portion
+  LOG_I(PHY,"pssch: SFN.SF %d.%d\n",frame_tx,subframe_tx); 
+  check_and_generate_pssch(ue,proc,frame_tx,subframe_tx);
 }
 
 
 void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot) {
 
-  AssertFatal(slot==0 || slot==1, "slot %d is illegal\n",slot);
   int Nsymb = 7 - slot;
   SLSCH_t *slsch = &ue->slsch_rx;
 
   uint32_t amod = a%(slsch->N_SL_RB);
-  int16_t **rxdataF_ext;//[2][12];
-  int16_t **drs_ch_estimates;//[2][12] __attribute__ ((aligned (32)));
-  int16_t **rxdataF_comp;//[2][12] __attribute__ ((aligned (32)));
-  int16_t **ul_ch_mag;//[2][12] __attribute__ ((aligned (32)));
-  int16_t **rxdata_7_5kHz;//[2][ue->frame_parms.samples_per_tti] __attribute__ ((aligned (32)));
-  int16_t **rxdataF;//[2][ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti] __attribute__ ((aligned (32)));
+  int16_t **rxdataF_ext      = ue->pusch_slcch->rxdataF_ext;
+  int16_t **drs_ch_estimates = ue->pusch_slcch->drs_ch_estimates;
+  int16_t **rxdataF_comp     = ue->pusch_slcch->rxdataF_comp;
+  int16_t **ul_ch_mag        = ue->pusch_slcch->ul_ch_mag;
+  int16_t **rxdata_7_5kHz    = ue->slcch_rxdata_7_5kHz;
+  int16_t **rxdataF          = ue->slcch_rxdataF;
   int32_t avgs;
   uint8_t log2_maxh=0;
   int32_t avgU[2];
   int nprb;
 
-  rxdataF_ext      = (int16_t **)malloc(2*sizeof(int16_t));
-  drs_ch_estimates = (int16_t **)malloc(2*sizeof(int16_t));
-  rxdataF_comp     = (int16_t **)malloc(2*sizeof(int16_t));
-  ul_ch_mag        = (int16_t **)malloc(2*sizeof(int16_t));
-  rxdata_7_5kHz    = (int16_t **)malloc(2*sizeof(int16_t));
-  rxdataF          = (int16_t **)malloc(2*sizeof(int16_t));
+  AssertFatal(slot==0 || slot==1, "slot %d is illegal\n",slot);
 
-  for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) {
-    rxdataF_ext[aa]      = (int16_t*)malloc16(12*2*sizeof(int16_t));
-    drs_ch_estimates[aa] = (int16_t*)malloc16(12*2*sizeof(int16_t));
-    rxdataF_comp[aa]     = (int16_t*)malloc16(12*2*sizeof(int16_t));
-    ul_ch_mag[aa]        = (int16_t*)malloc16(12*2*sizeof(int16_t));
-    rxdataF[aa]          = (int16_t*)malloc16(2*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int16_t));
-    rxdata_7_5kHz[aa]    = (int16_t*)malloc16(2*ue->frame_parms.samples_per_tti);
-  }				   
+
+			   
   if (amod<(slsch->N_SL_RB>>1)) nprb = slsch->prb_Start + amod;
   else                          nprb = slsch->prb_End-slsch->N_SL_RB+amod;
 
   // slot FEP
   RU_t ru_tmp;
-
-
-  memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS)); 
+  memset((void*)&ru_tmp,0,sizeof(RU_t));
+  
+  memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
+  ru_tmp.N_TA_offset=0;
   ru_tmp.common.rxdata = ue->common_vars.rxdata;
   ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
   ru_tmp.common.rxdataF = (int32_t**)rxdataF;
+  ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
+
 
   remove_7_5_kHz(&ru_tmp,(subframe_rx<<1)+slot);
 
+#ifdef PSCCH_DEBUG
+  write_output("rxsig0_input.m","rxs0_in",&ue->common_vars.rxdata[0][((subframe_rx<<1)+slot)*ue->frame_parms.samples_per_tti>>1],ue->frame_parms.samples_per_tti>>1,1,1);
+  write_output("rxsig0_7_5kHz.m","rxs0_7_5kHz",rxdata_7_5kHz[0],ue->frame_parms.samples_per_tti,1,1);
+#endif
   // extract symbols from slot  
   for (int l=0; l<Nsymb; l++) {
     slot_fep_ul(&ru_tmp,l,(subframe_rx<<1)+slot,0);
-    ulsch_extract_rbs_single((int32_t**)rxdataF,
-			     (int32_t**)rxdataF_ext,
+    ulsch_extract_rbs_single((int32_t **)rxdataF,
+			     (int32_t **)rxdataF_ext,
 			     nprb,
 			     1,
 			     l,
 			     (subframe_rx<<1)+slot,
 			     &ue->frame_parms);
   }
+#ifdef PSCCH_DEBUG
+  write_output("slcch_rxF.m",
+	       "slcchrxF",
+	       &rxdataF[0][0],
+	       14*ue->frame_parms.ofdm_symbol_size,1,1);
+  write_output("slcch_rxF_ext.m","slcchrxF_ext",rxdataF_ext[0],14*12*ue->frame_parms.N_RB_DL,1,1);
+#endif
+
   // channel estimation
   lte_ul_channel_estimation(&ue->frame_parms,
 			    (int32_t**)drs_ch_estimates,
@@ -646,10 +841,17 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
 			    0,
 			    0,
 			    0,
-			    3,
-			    slot,
+			    (slot==0) ? 3 : 10,
+			    0, // interpolation
 			    0);
-  
+#ifdef PSCCH_DEBUG
+  write_output("drs_ext0.m","drsest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+#endif
+
+  ulsch_channel_level(drs_ch_estimates,
+		      &ue->frame_parms,
+		      avgU,
+		      1);
   avgs = 0;
   
   for (int aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++)
@@ -659,12 +861,15 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
   
   log2_maxh = (log2_approx(avgs)/2)+ log2_approx(ue->frame_parms.nb_antennas_rx-1)+4;
 
-  for (int l=0; l<(ue->frame_parms.symbols_per_tti>>1)-1; l++) {
-
-    if (((ue->frame_parms.Ncp == 0) && ((l==3) || (l==10)))||   // skip pilots
-        ((ue->frame_parms.Ncp == 1) && ((l==2) || (l==8)))) {
-      l++;
+  for (int l=0; l<(ue->frame_parms.symbols_per_tti>>1)-slot; l++) {
+  
+    int l2 = l + slot*(ue->frame_parms.symbols_per_tti>>1);
+    if (((ue->frame_parms.Ncp == 0) && ((l2==3) || (l2==10)))||   // skip pilots
+	((ue->frame_parms.Ncp == 1) && ((l2==2) || (l2==8)))) {
+      l2++;l++;
     }
+
+    //    printf("Doing SLCCH reception for symbol %d\n",l2);
 
     ulsch_channel_compensation((int32_t**)rxdataF_ext,
 			       (int32_t**)drs_ch_estimates,
@@ -672,111 +877,178 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
 			       NULL,
 			       (int32_t**)rxdataF_comp,
 			       &ue->frame_parms,
-			       l,
+			       l2,
 			       2,
 			       1,
 			       log2_maxh); // log2_maxh+I0_shift
-
-  
-
-
+    
+    
+    
+    
     if (ue->frame_parms.nb_antennas_rx > 1)
       ulsch_detection_mrc(&ue->frame_parms,
 			  (int32_t**)rxdataF_comp,
 			  (int32_t**)ul_ch_mag,
 			  NULL,
-			  l,
+			  l2,
 			  1);
     
     
     
-
+    
     //    if (23<ulsch_power[0]) {
-      freq_equalization(&ue->frame_parms,
-			(int32_t**)rxdataF_comp,
-			(int32_t**)ul_ch_mag,
-			NULL,
-			l,
-			12,
-			2);
+    freq_equalization(&ue->frame_parms,
+		      (int32_t**)rxdataF_comp,
+		      (int32_t**)ul_ch_mag,
+		      NULL,
+		      l2,
+		      12,
+		      2);
     
   }
-
+	    
   idft_slcch(&ue->frame_parms,
-	     rxdataF_comp[0]);
+	     (int32_t*)rxdataF_comp[0],
+	     slot);
+	    
+#ifdef PSCCH_DEBUG
+  write_output("slcch_rxF_comp.m","slcchrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+#endif
+
 
   int E=144;
-  int16_t llr[144];
+  int16_t llr[E] __attribute__((aligned(32)));
   int16_t *llrp = (int16_t*)&llr[0];
-
+  memset((void*)llr,0,E*sizeof(int16_t));
   for (int l=0; l<(ue->frame_parms.symbols_per_tti>>1)-slot; l++) {
 
-    if (((ue->frame_parms.Ncp == 0) && ((l==3) || (l==10)))||   // skip pilots
-        ((ue->frame_parms.Ncp == 1) && ((l==2) || (l==8)))) {
-      l++;
+    int l2 = l + slot*(ue->frame_parms.symbols_per_tti>>1);
+    if (((ue->frame_parms.Ncp == 0) && ((l2==3) || (l2==10)))||   // skip pilots
+	((ue->frame_parms.Ncp == 1) && ((l2==2) || (l2==8)))) {
+      l2++;l++;
     }
-    
+    //    printf("Running ulsch_qpsk_llr for symbol %d\n",l2);
     ulsch_qpsk_llr(&ue->frame_parms,
 		   (int32_t**)rxdataF_comp,
-		   llr,
-		   l,
+                   (int32_t *)llr,
+		   l2,
 		   1,
-		   &llrp);
+		   (int32_t *)&llrp);
   }
-
+  /*
+  write_output("slcch_llr.m","slcchllr",llr,
+               12*2*(ue->frame_parms.symbols_per_tti>>1),
+               1,0);
+  */
   // unscrambling
-  uint32_t x1,x2=510,k;
+  uint32_t x1,x2=510;
   
   uint32_t s = lte_gold_generic(&x1,&x2,1); 
   
-  for (int i=0,k=0;i<(1+(E>>5));i++) 
-    for (int j=0;(j<32)&&(k<E);j++,k++) 
+  for (int i=0,k=0;i<(1+(E>>5));i++) {
+    //  printf("s[%d] %x\n",i,s);
+    for (int j=0;(j<32)&&(k<E);j++,k++) {
+      //      printf("llr[%d]=%d c %d => %d\n",k,llr[k],(int16_t)((((s>>j)&1)<<1)-1),(int16_t)((((s>>j)&1)<<1)-1) * llr[k]);
       llr[k] = (int16_t)((((s>>j)&1)<<1)-1) * llr[k];
-
+    }
+    s = lte_gold_generic(&x1,&x2,0); 
+  }
   // deinterleaving
   int8_t f[144];
-  int Cmux = (ue->frame_parms.symbols_per_tti>>1)-1-slot;
-  for (int i=0,j=0;i<Cmux;i++)
-    // 24 = 12*(Nsymb-1)*2/(Nsymb-1)
-    for (int r=0;r<24;r++) {
-      f[((r*Cmux)+1)<<1]     = (int8_t)llr[j++];
-      f[(((r*Cmux)+1)<<1)+1] = (int8_t)llr[j++];
+  int Cmux = (ue->frame_parms.symbols_per_tti>>1)-1;
+  for (int i=0,j=0;i<Cmux;i++) {
+    // 12 = 12*(Nsymb-1)/(Nsymb-1)
+//    printf("******* i %d\n",i);
+    for (int r=0;r<12;r++) {
+      f[((r*Cmux)+i)<<1]     = (int8_t)(llr[j++]>>4);
+      f[(((r*Cmux)+i)<<1)+1]     = (int8_t)(llr[j++]>>4);
+//      printf("f[%d] %d(%d) f[%d] %d(%d)\n",
+//	     ((r*Cmux)+i)<<1,f[((r*Cmux)+i)<<1],j-2,(((r*Cmux)+i)<<1)+1,f[(((r*Cmux)+i)<<1)+1],j-1);
     }
+  }
   uint16_t res;
-  uint64_t sci_rx;
+  uint64_t sci_rx=0,sci_rx_flip=0;
   //decoding
-  int length = log2_approx(slsch->N_SL_RB*((ue->slsch_rx.N_SL_RB+1)>>1))+31;
-  dci_decoding(length,144,f,(uint8_t*)&sci_rx);
+  int length = log2_approx(slsch->N_SL_RB*((ue->slsch_rx.N_SL_RB+1)>>1))+32;
+  dci_decoding(length,E,f,(uint8_t*)&sci_rx);
+  ((uint8_t *)&sci_rx_flip)[0] = ((uint8_t *)&sci_rx)[7];
+  ((uint8_t *)&sci_rx_flip)[1] = ((uint8_t *)&sci_rx)[6];
+  ((uint8_t *)&sci_rx_flip)[2] = ((uint8_t *)&sci_rx)[5];
+  ((uint8_t *)&sci_rx_flip)[3] = ((uint8_t *)&sci_rx)[4];
+  ((uint8_t *)&sci_rx_flip)[4] = ((uint8_t *)&sci_rx)[3];
+  ((uint8_t *)&sci_rx_flip)[5] = ((uint8_t *)&sci_rx)[2];
+  ((uint8_t *)&sci_rx_flip)[6] = ((uint8_t *)&sci_rx)[1];
+  ((uint8_t *)&sci_rx_flip)[7] = ((uint8_t *)&sci_rx)[0];
+  //  for (int i=0;i<((length+7)/8);i++) printf("sci_rx[%d] %x\n",i,((uint8_t *)&sci_rx_flip)[i]);
   res = (crc16((uint8_t*)&sci_rx,length)>>16) ^ extract_crc((uint8_t*)&sci_rx,length);
+
+  // extract SCI bit fields
+  int RAbits = length-32;
 #ifdef DEBUG_SCI_DECODING
-  printf("crc res =>%x\n",res);
+  printf("sci %lx (%d bits) CRC res %d\n",sci_rx_flip,length,res);
 #endif
-  // unpopulate SCI bit fields
-  int RAbits = length-31;
+
   if (res==0) {
-    ue->slsch_rx.freq_hopping_flag         = sci_rx&1;
-    ue->slsch_rx.resource_block_coding     = (sci_rx>>1)&((1<<RAbits)-1);
-    ue->slsch_rx.time_resource_pattern     = (sci_rx>>(1+RAbits))&127;
-    ue->slsch_rx.mcs                       = (sci_rx>>(1+7+RAbits))&31;
-    ue->slsch_rx.timing_advance_indication = (sci_rx>>(1+7+5+RAbits))&2047;
-    ue->slsch_rx.group_destination_id      = (sci_rx>>(1+7+5+11+RAbits))&255;
+    ue->slsch_rx.freq_hopping_flag         = (sci_rx_flip>>63)&1;
+    ue->slsch_rx.resource_block_coding     = (sci_rx_flip>>(63-1-RAbits+1))&((1<<RAbits)-1);
+    ue->slsch_rx.time_resource_pattern     = (sci_rx_flip>>(63-1-7-RAbits+1))&127;
+    ue->slsch_rx.mcs                       = (sci_rx_flip>>(63-1-7-5-RAbits+1))&31;
+    ue->slsch_rx.timing_advance_indication = (sci_rx_flip>>(63-1-7-5-11-RAbits+1))&2047;
+    ue->slsch_rx.group_destination_id      = (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1))&255;
     ue->slcch_received                     = 1;
+    ue->slsch_decoded                      = 0;
+#ifdef DEBUG_SCI_DECODING
+    printf("sci %lx (%d bits) : freq_hop %d, resource_block_coding %d, time_resource_pattern %d, mcs %d, timing_advance_indication %d, group_destination_id %d (gid shift %d result %lx => %lx\n",
+	   sci_rx_flip,length,
+	   ue->slsch_rx.freq_hopping_flag,
+	   ue->slsch_rx.resource_block_coding,
+	   ue->slsch_rx.time_resource_pattern,
+	   ue->slsch_rx.mcs,
+	   ue->slsch_rx.timing_advance_indication,
+    ue->slsch_rx.group_destination_id,
+    63-1-7-5-11-8-RAbits+1,
+    (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1)),
+    (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1))&255
+    );
+#endif
+    // check group_id here
+    if (ue->slsch_rx.group_destination_id==0) ue->slsch_rx_sdu_active=1;
+    /*
+    write_output("rxsig0_input.m","rxs0_in",&ue->common_vars.rxdata[0][((subframe_rx<<1)+slot)*ue->frame_parms.samples_per_tti>>1],ue->frame_parms.samples_per_tti>>1,1,1);
+    write_output("rxsig0_7_5kHz.m","rxs0_7_5kHz",rxdata_7_5kHz[0],ue->frame_parms.samples_per_tti,1,1);
+    write_output("slcch_rxF.m",
+		 "slcchrxF",
+		 &rxdataF[0][0],
+		 14*ue->frame_parms.ofdm_symbol_size,1,1);
+    write_output("slcch_rxF_ext.m","slcchrxF_ext",rxdataF_ext[0],14*12*ue->frame_parms.N_RB_DL,1,1);
+    write_output("drs_ext0.m","drsest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+    write_output("slcch_rxF_comp.m","slcchrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+    write_output("slcch_llr.m","slcchllr",llr,
+		 12*2*(ue->frame_parms.symbols_per_tti>>1),
+		 1,0);    
+
+		 exit(-1);*/
+  }
+  else {
+    /*
+    write_output("rxsig0_input.m","rxs0_in",&ue->common_vars.rxdata[0][((subframe_rx<<1)+slot)*ue->frame_parms.samples_per_tti>>1],ue->frame_parms.samples_per_tti>>1,1,1);
+    write_output("rxsig0_7_5kHz.m","rxs0_7_5kHz",rxdata_7_5kHz[0],ue->frame_parms.samples_per_tti,1,1);
+    write_output("slcch_rxF.m",
+		 "slcchrxF",
+		 &rxdataF[0][0],
+		 14*ue->frame_parms.ofdm_symbol_size,1,1);
+    write_output("slcch_rxF_ext.m","slcchrxF_ext",rxdataF_ext[0],14*12*ue->frame_parms.N_RB_DL,1,1);
+    write_output("drs_ext0.m","drsest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+    write_output("slcch_rxF_comp.m","slcchrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+    write_output("slcch_llr.m","slcchllr",llr,
+		 12*2*(ue->frame_parms.symbols_per_tti>>1),
+		 1,0);    
+
+		 exit(-1);*/
   }
 
-  for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) {
-    free(rxdataF_ext[aa]);
-    free(drs_ch_estimates[aa]);
-    free(rxdataF_comp[aa]);
-    free(ul_ch_mag[aa]);
-    free(rxdataF[aa]);
-    free(rxdata_7_5kHz[aa]);
-  }		
-  free(rxdataF_ext);
-  free(drs_ch_estimates);
-  free(rxdataF_comp);
-  free(ul_ch_mag);
-  free(rxdataF);
-  free(rxdata_7_5kHz);
+
+
 }	
 
 void rx_slcch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
@@ -790,7 +1062,7 @@ void rx_slcch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   uint32_t absSF = (frame_rx*10)+subframe_rx;
   uint32_t absSF_offset,absSF_modP;
 
-  if (ue->slcch_received == 1) return;
+
 
   absSF_offset = absSF-O;
 
@@ -798,10 +1070,13 @@ void rx_slcch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
 
   absSF_modP = absSF_offset%P;
 
+  if (absSF_modP == 0) ue->slcch_received=0;
+
   // This is the condition for short SCCH bitmap (40 bits), check that the current subframe is for SCCH
+
+  if (ue->slcch_received == 1) return;
+
   if (absSF_modP > 39) return;
-
-
   uint64_t SFpos = ((uint64_t)1) << absSF_modP;
   if ((SFpos & slsch->bitmap1) == 0) return;
 
@@ -833,4 +1108,359 @@ void rx_slcch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
 
 }
 
+void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx,int ljmod10) {
+
+  int Nsymb = 7;
+  SLSCH_t *slsch = &ue->slsch_rx;
+  int16_t **rxdataF_ext      = ue->pusch_slsch->rxdataF_ext;
+  int16_t **drs_ch_estimates = ue->pusch_slsch->drs_ch_estimates;
+  int16_t **rxdataF_comp     = ue->pusch_slsch->rxdataF_comp;
+  int16_t **ul_ch_mag        = ue->pusch_slsch->ul_ch_mag;
+  int16_t **rxdata_7_5kHz    = ue->slsch_rxdata_7_5kHz;
+  int16_t **rxdataF          = ue->slsch_rxdataF;
+  int32_t avgs;
+  uint8_t log2_maxh=0;
+  int32_t avgU[2];
+
+
+  LOG_I(PHY,"slsch_decoding %d.%d => lmod10 %d\n",frame_rx,subframe_rx,ljmod10);
+
+  // slot FEP
+  RU_t ru_tmp;
+  memset((void*)&ru_tmp,0,sizeof(RU_t));
+  
+  memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
+  ru_tmp.N_TA_offset=0;
+  ru_tmp.common.rxdata = ue->common_vars.rxdata;
+  ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
+  ru_tmp.common.rxdataF = (int32_t**)rxdataF;
+  ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
+
+
+  remove_7_5_kHz(&ru_tmp,(subframe_rx<<1));
+  remove_7_5_kHz(&ru_tmp,(subframe_rx<<1)+1);
+
+  // extract symbols from slot  
+  for (int l=0; l<Nsymb; l++) {
+    slot_fep_ul(&ru_tmp,l,(subframe_rx<<1),0);
+    ulsch_extract_rbs_single((int32_t**)rxdataF,
+			     (int32_t**)rxdataF_ext,
+			     slsch->RB_start,
+			     slsch->L_CRBs,
+			     l,
+			     (subframe_rx<<1),
+			     &ue->frame_parms);
+
+    if (l<Nsymb-1) { // skip last symbol in second slot
+      slot_fep_ul(&ru_tmp,l,(subframe_rx<<1)+1,0);
+      
+      ulsch_extract_rbs_single((int32_t**)rxdataF,
+			       (int32_t**)rxdataF_ext,
+			       slsch->RB_start,
+			       slsch->L_CRBs,
+			       l,
+			       (subframe_rx<<1)+1,
+			       &ue->frame_parms);
+    }
+  }
+
+#ifdef PSSCH_DEBUG
+  write_output("slsch_rxF.m",
+	       "slschrxF",
+	       &rxdataF[0][0],
+	       14*ue->frame_parms.ofdm_symbol_size,1,1);
+  write_output("slsch_rxF_ext.m","slschrxF_ext",rxdataF_ext[0],14*12*ue->frame_parms.N_RB_DL,1,1);
 #endif
+
+  uint32_t u = ue->gh[ue->slsch->group_destination_id][ljmod10<<1];
+  uint32_t v = 0;
+  uint32_t cyclic_shift=(ue->slsch->group_destination_id>>1)&7;
+
+  lte_ul_channel_estimation(&ue->frame_parms,
+			    (int32_t**)drs_ch_estimates,
+			    (int32_t**)NULL,
+			    (int32_t**)rxdataF_ext,
+			    slsch->L_CRBs,
+			    frame_rx,
+			    subframe_rx,
+			    u,
+			    v,
+			    cyclic_shift,
+			    3,
+			    1, // interpolation
+			    0);
+  u = ue->gh[ue->slsch->group_destination_id][1+(ljmod10<<1)];
+  lte_ul_channel_estimation(&ue->frame_parms,
+			    (int32_t**)drs_ch_estimates,
+			    (int32_t**)NULL,
+			    (int32_t**)rxdataF_ext,
+			    slsch->L_CRBs,
+			    frame_rx,
+			    subframe_rx,
+			    u,
+			    v,
+			    cyclic_shift,
+			    10,
+			    1, // interpolation
+			    0);
+
+  ulsch_channel_level(drs_ch_estimates,
+		      &ue->frame_parms,
+		      avgU,
+		      slsch->L_CRBs);
+ 
+#ifdef PSSCH_DEBUG
+  write_output("drs_ext0.m","drsest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+#endif
+
+  avgs = 0;
+  
+  for (int aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++)
+    avgs = cmax(avgs,avgU[aarx]);
+  
+  //      log2_maxh = 4+(log2_approx(avgs)/2);
+  
+  log2_maxh = (log2_approx(avgs)/2)+ log2_approx(ue->frame_parms.nb_antennas_rx-1)+4;
+  int Qm = get_Qm_ul(slsch->mcs);
+
+  for (int l=0; l<(Nsymb<<1)-1; l++) {
+
+    if (((ue->frame_parms.Ncp == 0) && ((l==3) || (l==10)))||   // skip pilots
+        ((ue->frame_parms.Ncp == 1) && ((l==2) || (l==8)))) {
+      l++;
+    }
+
+    ulsch_channel_compensation(
+			       rxdataF_ext,
+			       drs_ch_estimates,
+			       ul_ch_mag,
+			       NULL,
+			       rxdataF_comp,
+			       &ue->frame_parms,
+			       l,
+			       Qm,
+			       slsch->L_CRBs,
+			       log2_maxh); // log2_maxh+I0_shift
+
+    if (ue->frame_parms.nb_antennas_rx > 1)
+      ulsch_detection_mrc(&ue->frame_parms,
+			  rxdataF_comp,
+			  ul_ch_mag,
+			  NULL,
+			  l,
+			  slsch->L_CRBs);
+    
+    freq_equalization(&ue->frame_parms,
+		      rxdataF_comp,
+		      ul_ch_mag,
+		      NULL,
+		      l,
+		      slsch->L_CRBs*12,
+		      Qm);
+  
+  }
+  lte_idft(&ue->frame_parms,
+           rxdataF_comp[0],
+           slsch->L_CRBs*12);
+
+//#ifdef PSSCH_DEBUG
+  write_output("slsch_rxF_comp.m","slschrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+//#endif
+
+  int E = 12*Qm*slsch->L_CRBs*((Nsymb-1)<<1);
+
+  int16_t *llrp = ue->slsch_ulsch_llr;
+
+  for (int l=0; l<(Nsymb<<1)-1; l++) {
+
+    if (((ue->frame_parms.Ncp == 0) && ((l==3) || (l==10)))||   // skip pilots
+        ((ue->frame_parms.Ncp == 1) && ((l==2) || (l==8)))) {
+      l++;
+    }
+
+    switch (Qm) {
+    case 2 :
+      ulsch_qpsk_llr(&ue->frame_parms,
+                     rxdataF_comp,
+                     (int32_t *)ue->slsch_ulsch_llr,
+                     l,
+                     slsch->L_CRBs,
+                     (int32_t *)&llrp);
+      break;
+
+    case 4 :
+      ulsch_16qam_llr(&ue->frame_parms,
+                      rxdataF_comp,
+                      (int32_t *)ue->slsch_ulsch_llr,
+                      (int32_t *)ul_ch_mag,
+                      l,slsch->L_CRBs,
+                      &llrp);
+      break;
+
+    case 6 :
+      AssertFatal(1==0,"64QAM not supported for SL\n");
+      /*
+      ulsch_64qam_llr(frame_parms,
+                      pusch_vars->rxdataF_comp,
+                      pusch_vars->llr,
+                      pusch_vars->ul_ch_mag,
+                      pusch_vars->ul_ch_magb,
+                      l,ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,
+                      &llrp);
+      */
+      break;
+
+    default:
+      AssertFatal(1==0,"Unknown Qm !!!!\n");
+      break;
+    }
+  }
+  
+  write_output("slsch_llr.m","slschllr",ue->slsch_ulsch_llr,
+               12*Qm*(ue->frame_parms.symbols_per_tti),
+               1,0);
+  
+
+  // unscrambling
+
+  uint32_t x1,x2=510+(((uint32_t)slsch->group_destination_id)<<14)+(ljmod10<<9);
+  LOG_I(PHY,"Setting seed (unscrambling) for SL to %x (%x,%d)\n",x2,slsch->group_destination_id,ljmod10);
+
+  uint32_t s = lte_gold_generic(&x1, &x2, 1);
+  int k=0;
+  int16_t c;
+
+  
+
+
+  for (int i=0; i<(1+(E>>5)); i++) {
+    for (int j=0; j<32; j++,k++) {
+        c = (int16_t)((((s>>j)&1)<<1)-1);
+	//	printf("i %d : %d (llr %d c %d)\n",(i<<5)+j,c*ue->slsch_ulsch_llr[k],ue->slsch_ulsch_llr[k],c);
+        ue->slsch_ulsch_llr[k] = c*ue->slsch_ulsch_llr[k];
+    }    
+    s = lte_gold_generic(&x1, &x2, 0);
+  }
+
+  // Deinterleaving
+
+  int Cmux = (Nsymb-1)*2;
+  for (int i=0,j=0;i<Cmux;i++) {
+    // 12 = 12*(Nsymb-1)/(Nsymb-1)
+//    printf("******* i %d\n",i);
+    if (Qm == 2) {
+      for (int r=0;r<12*slsch->L_CRBs;r++) {
+	ue->slsch_dlsch_llr[((r*Cmux)+i)<<1]     = ue->slsch_ulsch_llr[j++];
+	ue->slsch_dlsch_llr[(((r*Cmux)+i)<<1)+1] = ue->slsch_ulsch_llr[j++];
+	//	printf("dlsch_llr[%d] %d(%d) dlsch_llr[%d] %d(%d)\n",
+	//	       ((r*Cmux)+i)<<1,ue->slsch_dlsch_llr[((r*Cmux)+i)<<1],j-2,(((r*Cmux)+i)<<1)+1,ue->slsch_dlsch_llr[(((r*Cmux)+i)<<1)+1],j-1);
+      }
+    }
+    else if (Qm == 4) {
+      for (int r=0;r<12*slsch->L_CRBs;r++) {
+	ue->slsch_dlsch_llr[((r*Cmux)+i)<<2]     = ue->slsch_ulsch_llr[j++];
+	ue->slsch_dlsch_llr[(((r*Cmux)+i)<<2)+1] = ue->slsch_ulsch_llr[j++];
+	ue->slsch_dlsch_llr[(((r*Cmux)+i)<<2)+2] = ue->slsch_ulsch_llr[j++];
+	ue->slsch_dlsch_llr[(((r*Cmux)+i)<<2)+3] = ue->slsch_ulsch_llr[j++];
+	//	printf("dlsch_llr[%d] %d(%d) dlsch_llr[%d] %d(%d)\n",
+	//	       ((r*Cmux)+i)<<2,ue->slsch_dlsch_llr[((r*Cmux)+i)<<2],j-4,(((r*Cmux)+i)<<2)+1,ue->slsch_dlsch_llr[(((r*Cmux)+i)<<2)+1],j-3);
+	//	printf("dlsch_llr[%d] %d(%d) dlsch_llr[%d] %d(%d)\n",
+	//	       (((r*Cmux)+i)<<2)+2,ue->slsch_dlsch_llr[(((r*Cmux)+i)<<2)+2],j-2,(((r*Cmux)+i)<<2)+3,ue->slsch_dlsch_llr[(((r*Cmux)+i)<<2)+3],j-1);
+      }
+    }
+  }
+
+
+  // Decoding
+
+  ue->dlsch_rx_slsch->harq_processes[0]->rvidx = slsch->rvidx;
+  ue->dlsch_rx_slsch->harq_processes[0]->nb_rb = slsch->L_CRBs;
+  ue->dlsch_rx_slsch->harq_processes[0]->TBS   = get_TBS_UL(slsch->mcs,slsch->L_CRBs)<<3;
+  ue->dlsch_rx_slsch->harq_processes[0]->Qm    = Qm;
+  ue->dlsch_rx_slsch->harq_processes[0]->G     = E;
+  ue->dlsch_rx_slsch->harq_processes[0]->Nl    = 1;
+
+  //  for (int i=0;i<E/16;i++) printf("decoding: E[%d] %d\n",i,ue->slsch_dlsch_llr[i]);
+
+  int ret = dlsch_decoding(ue,
+		 ue->slsch_dlsch_llr,
+		 &ue->frame_parms,
+		 ue->dlsch_rx_slsch,
+		 ue->dlsch_rx_slsch->harq_processes[0],
+		 frame_rx,
+		 subframe_rx,
+		 0,
+		 0,
+		 1);
+
+//  printf("slsch decoding round %d ret %d\n",ue->dlsch_rx_slsch->harq_processes[0]->round,ret);
+  if (ret<ue->dlsch_rx_slsch->max_turbo_iterations) {
+    ue->slsch_decoded=1;
+    LOG_D(PHY,"SLSCH received for group_id %d (L_CRBs %d, mcs %d,rvidx %d, iter %d)\n",
+	  slsch->group_destination_id,slsch->L_CRBs,slsch->mcs,
+	  slsch->rvidx,ret);
+
+    if      (slsch->rvidx == 0 ) ue->slsch_rxcnt[0]++;
+    else if (slsch->rvidx == 2 ) ue->slsch_rxcnt[1]++;
+    else if (slsch->rvidx == 3 ) ue->slsch_rxcnt[2]++;
+    else if (slsch->rvidx == 1 ) ue->slsch_rxcnt[3]++;
+  }
+  else if (ue->dlsch_rx_slsch->harq_processes[0]->rvidx == 1 &&
+	   ret==ue->dlsch_rx_slsch->max_turbo_iterations) {
+    LOG_I(PHY,"sLSCH received in error for group_id %d (L_CRBs %d, mcs %d)\n",
+	  slsch->group_destination_id,slsch->L_CRBs,slsch->mcs);
+    ue->slsch_errors++;
+  }
+  else LOG_I(PHY,"sLSCH received in error for rvidx %d round %d (L_CRBs %d, mcs %d)\n",
+    slsch->rvidx,(ue->dlsch_rx_slsch->harq_processes[0]->round+3)&3,slsch->L_CRBs,slsch->mcs);
+
+}
+
+void rx_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx) {
+
+  AssertFatal(frame_rx<1024 && frame_rx>=0,"frame %d is illegal\n",frame_rx);
+  AssertFatal(subframe_rx<10 && subframe_rx>=0,"subframe %d is illegal\n",subframe_rx);
+  SLSCH_t *slsch = &ue->slsch_rx;
+  AssertFatal(slsch!=NULL,"SLSCH is null\n");
+  uint32_t O = slsch->SL_OffsetIndicator;
+  uint32_t P = slsch->SL_SC_Period;
+  uint32_t absSF = (frame_rx*10)+subframe_rx;
+  uint32_t absSF_offset,absSF_modP;
+
+  if (ue->slcch_received == 0) return;
+
+  absSF_offset = absSF-O;
+
+  if (absSF_offset < O) return;
+
+  absSF_modP = absSF_offset%P;
+
+  // This is the condition for short SCCH bitmap (40 bits), check that the current subframe is for SCCH
+  if (absSF_modP < 40) return;
+
+  LOG_I(PHY,"Checking pssch for absSF %d (trp mask %d, rv %d)\n",
+	absSF, trp8[slsch->time_resource_pattern][absSF_modP&7],
+	slsch->rvidx);
+  // Note : this assumes Ntrp=8 for now
+  if (trp8[slsch->time_resource_pattern][absSF_modP&7]==0) return;
+  // we have an opportunity in this subframe
+  if (absSF_modP == 40) slsch->ljmod10 = 0;
+  else slsch->ljmod10++;
+  if (slsch->ljmod10 == 0) slsch->ljmod10 = 0;
+
+  if (slsch->rvidx == 0) { // first new transmission in period, get a new packet
+    ue->slsch_decoded = 0;
+    slsch_decoding(ue,proc,frame_rx,subframe_rx,slsch->ljmod10);
+    slsch->rvidx=2;
+  }
+  else {
+    if (ue->slsch_decoded == 0) slsch_decoding(ue,proc,frame_rx,subframe_rx,slsch->ljmod10);
+    if      (slsch->rvidx == 2) slsch->rvidx = 3;
+    else if (slsch->rvidx == 3) slsch->rvidx = 1;
+    else if (slsch->rvidx == 1) slsch->rvidx = 0;
+    else                        AssertFatal(1==0,"rvidx %d isn't possible\n",slsch->rvidx);
+  }
+
+
+}
+

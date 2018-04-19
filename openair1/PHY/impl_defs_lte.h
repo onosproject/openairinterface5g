@@ -1112,7 +1112,7 @@ typedef struct {
 
 /// maximum size for N_SL_RB=100, SCI_A=1+13+7+5+11+8 = 45, 
 #define SCI_A 45
-/// SCI_E=12 REs * 6 symbols * 2 bits/RE
+/// SCI_E=12 REs * (7-1) symbols * 2 bits/RE
 #define SCI_E (12*6*2)
 typedef struct {
   /// Coded PSCCH bits (12 REs, 12 OFDM symbols, 2 bits/RE)

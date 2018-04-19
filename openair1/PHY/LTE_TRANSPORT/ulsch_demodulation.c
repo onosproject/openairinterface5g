@@ -477,10 +477,10 @@ int32_t ulsch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
 
   int i;
 
-  //  printf("qpsk llr for symbol %d (pos %d), llr offset %d\n",symbol,(symbol*frame_parms->N_RB_DL*12),llr128U-(__m128i*)ulsch_llr);
+  //  printf("qpsk llr for symbol %d (pos %d), nb_rb %d\n",symbol,(symbol*frame_parms->N_RB_DL*12),nb_rb);
 
   for (i=0; i<(nb_rb*3); i++) {
-    //printf("%d,%d,%d,%d,%d,%d,%d,%d\n",((int16_t *)rxF)[0],((int16_t *)rxF)[1],((int16_t *)rxF)[2],((int16_t *)rxF)[3],((int16_t *)rxF)[4],((int16_t *)rxF)[5],((int16_t *)rxF)[6],((int16_t *)rxF)[7]);
+    //    printf("%d,%d,%d,%d,%d,%d,%d,%d\n",((int16_t *)rxF)[0],((int16_t *)rxF)[1],((int16_t *)rxF)[2],((int16_t *)rxF)[3],((int16_t *)rxF)[4],((int16_t *)rxF)[5],((int16_t *)rxF)[6],((int16_t *)rxF)[7]);
     *(*llrp128) = *rxF;
     rxF++;
     (*llrp128)++;
@@ -735,7 +735,7 @@ void ulsch_extract_rbs_single(int32_t **rxdataF,
     nb_rb2 = 2*nb_rb - nb_rb1;                                   // 2 times no. RBs after the DC
  
 #ifdef DEBUG_ULSCH
-    printf("ulsch_extract_rbs_single: 2*nb_rb1 = %d, 2*nb_rb2 = %d\n",nb_rb1,nb_rb2);
+    printf("ulsch_extract_rbs_single: symbol %d 2*nb_rb1 = %d, 2*nb_rb2 = %d, first_rb %d\n",symbol,nb_rb1,nb_rb2,first_rb);
 #endif
 
     rxF_ext   = &rxdataF_ext[aarx][(symbol*frame_parms->N_RB_UL*12)];
@@ -753,6 +753,9 @@ void ulsch_extract_rbs_single(int32_t **rxdataF,
     } else { //there is only data in the second half
 
       rxF = &rxdataF[aarx][(6*(2*first_rb - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size)];
+#ifdef DEBUG_ULSCH
+      printf("copying %d REs from %p to %p\n",nb_rb2*6,rxF,rxF_ext);
+#endif
       memcpy(rxF_ext, rxF, nb_rb2*6*sizeof(int));
       rxF_ext += nb_rb2*6;
     }
@@ -1166,25 +1169,42 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
                              l/(frame_parms->symbols_per_tti/2),
                              frame_parms);
 
-    int Ns = l/(frame_parms->symbols_per_tti/2);
-    int lmod = l%(frame_parms->symbols_per_tti/2);
-    int cyclic_shift = (frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
-			eNB->ulsch[UE_id]->harq_processes[harq_pid]->n_DMRS2 +
-			frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[(subframe<<1)+Ns]) % 12;
-    lte_ul_channel_estimation(&eNB->frame_parms,
-			      pusch_vars->drs_ch_estimates,
-			      pusch_vars->drs_ch_estimates_time,
-			      pusch_vars->rxdataF_ext,
-			      ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,
-			      proc->frame_rx,
-			      subframe,
-			      frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[Ns+(subframe<<1)],
-			      frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[Ns+(subframe<<1)],
-			      cyclic_shift,
-			      lmod,
-			      Ns,
-			      ulsch[UE_id]->rnti);
+
   }
+
+  int cyclic_shift = (frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
+		      eNB->ulsch[UE_id]->harq_processes[harq_pid]->n_DMRS2 +
+		      frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[(subframe<<1)]) % 12;
+  
+  lte_ul_channel_estimation(&eNB->frame_parms,
+			    pusch_vars->drs_ch_estimates,
+			    pusch_vars->drs_ch_estimates_time,
+			    pusch_vars->rxdataF_ext,
+			    ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,
+			    proc->frame_rx,
+			    subframe,
+			    frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[(subframe<<1)],
+			    frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[(subframe<<1)],
+			    cyclic_shift,
+			    3 - frame_parms->Ncp,
+			    1, // interpolation
+			    ulsch[UE_id]->rnti);
+  cyclic_shift = (frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
+		  eNB->ulsch[UE_id]->harq_processes[harq_pid]->n_DMRS2 +
+		  frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[1+(subframe<<1)]) % 12;
+  lte_ul_channel_estimation(&eNB->frame_parms,
+			    pusch_vars->drs_ch_estimates,
+			    pusch_vars->drs_ch_estimates_time,
+			    pusch_vars->rxdataF_ext,
+			    ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,
+			    proc->frame_rx,
+			    subframe,
+			    frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(subframe<<1)],
+			    frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)],
+			    cyclic_shift,
+			    10 - 2*frame_parms->Ncp,
+			    1, // interpolation
+			    ulsch[UE_id]->rnti);
 
   int correction_factor = 1;
   int deltaMCS=1; 
@@ -1280,10 +1300,6 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
 			Qm);
     }
   }
-
-  
-
-
 
   //#ifdef DEBUG_ULSCH
   // Inverse-Transform equalized outputs

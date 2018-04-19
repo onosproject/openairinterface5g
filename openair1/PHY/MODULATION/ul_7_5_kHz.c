@@ -205,13 +205,14 @@ void remove_7_5_kHz(RU_t *ru,uint8_t slot)
     kHz7_5ptr128    = (int16x8_t *)kHz7_5ptr;
 #endif
     // apply 7.5 kHz
-
     //      if (((slot>>1)&1) == 0) { // apply the sinusoid from the table directly
     for (i=0; i<(len>>2); i++) {
 
 #if defined(__x86_64__) || defined(__i386__)
       kHz7_5_2 = _mm_sign_epi16(*kHz7_5ptr128,*(__m128i*)&conjugate75_2[0]);
+
       mmtmp_re = _mm_madd_epi16(*rxptr128,kHz7_5_2);
+
       // Real part of complex multiplication (note: 7_5kHz signal is conjugated for this to work)
       mmtmp_im = _mm_shufflelo_epi16(kHz7_5_2,_MM_SHUFFLE(2,3,0,1));
       mmtmp_im = _mm_shufflehi_epi16(mmtmp_im,_MM_SHUFFLE(2,3,0,1));
@@ -222,10 +223,13 @@ void remove_7_5_kHz(RU_t *ru,uint8_t slot)
       mmtmp_re2 = _mm_unpacklo_epi32(mmtmp_re,mmtmp_im);
       mmtmp_im2 = _mm_unpackhi_epi32(mmtmp_re,mmtmp_im);
 
+
+
       rxptr128_7_5kHz[0] = _mm_packs_epi32(mmtmp_re2,mmtmp_im2);
       rxptr128++;
       rxptr128_7_5kHz++;
       kHz7_5ptr128++;
+
 
 #elif defined(__arm__)
 

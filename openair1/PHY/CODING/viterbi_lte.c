@@ -388,6 +388,7 @@ void phy_viterbi_lte_sse2(int8_t *y,uint8_t *decoded_bytes,uint16_t n)
 
     decoded_bytes[(position)>>3] += (prev_state0 & 0x1)<<(7-(position & 0x7));
 
+    //    if ((position & 7) == 0) printf("decoded_bytes[%d]=%x\n",position>>3,decoded_bytes[position>>3]);
 
     if (TB_ptr2[prev_state0] == 0)
       prev_state0 = (prev_state0 >> 1);

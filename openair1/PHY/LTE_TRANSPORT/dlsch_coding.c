@@ -143,7 +143,7 @@ LTE_eNB_DLSCH_t *new_eNB_dlsch(unsigned char Kmimo,unsigned char Mdlharq,uint32_
        }*/
 
     for (i=0; i<10; i++)
-      dlsch->harq_ids[i] = Mdlharq;
+      dlsch->harq_ids[i] = 8;
 
     for (i=0; i<Mdlharq; i++) {
       dlsch->harq_processes[i] = (LTE_DL_eNB_HARQ_t *)malloc16(sizeof(LTE_DL_eNB_HARQ_t));
@@ -537,22 +537,22 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
   return(0);
 }
 
-int dlsch_encoding(PHY_VARS_eNB *eNB,
-		   unsigned char *a,
-                   uint8_t num_pdcch_symbols,
-                   LTE_eNB_DLSCH_t *dlsch,
-                   int frame,
-                   uint8_t subframe,
-                   time_stats_t *rm_stats,
-                   time_stats_t *te_stats,
-                   time_stats_t *i_stats)
+
+int dlsch_encoding0(LTE_DL_FRAME_PARMS *frame_parms,
+		    unsigned char *a,
+		    uint8_t num_pdcch_symbols,
+		    LTE_eNB_DLSCH_t *dlsch,
+		    int frame,
+		    uint8_t subframe,
+		    time_stats_t *rm_stats,
+		    time_stats_t *te_stats,
+		    time_stats_t *i_stats)
 {
 
   unsigned int G;
   unsigned int crc=1;
   unsigned short iind;
 
-  LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
   unsigned char harq_pid = dlsch->harq_ids[subframe];
   unsigned short nb_rb = dlsch->harq_processes[harq_pid]->nb_rb;
   unsigned int A;
@@ -573,7 +573,9 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
     beamforming_mode = 8;
   else if(dlsch->harq_processes[harq_pid]->mimo_mode == TM9_10)
     beamforming_mode = 9;
-  G = get_G(frame_parms,nb_rb,dlsch->harq_processes[harq_pid]->rb_alloc,mod_order,dlsch->harq_processes[harq_pid]->Nl,num_pdcch_symbols,frame,subframe,beamforming_mode);
+
+  if (num_pdcch_symbols > 0) G = get_G(frame_parms,nb_rb,dlsch->harq_processes[harq_pid]->rb_alloc,mod_order,dlsch->harq_processes[harq_pid]->Nl,num_pdcch_symbols,frame,subframe,beamforming_mode); // regular DLSCH coding
+  else G = nb_rb * ((frame_parms->Ncp == 0)?12:10) * 12 * mod_order; // SLSCH Coding
 
 
   //  if (dlsch->harq_processes[harq_pid]->Ndi == 1) {  // this is a new packet
@@ -719,6 +721,28 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
   return(0);
 }
 
+int dlsch_encoding(PHY_VARS_eNB *eNB,
+		   unsigned char *a,
+		   uint8_t num_pdcch_symbols,
+		   LTE_eNB_DLSCH_t *dlsch,
+		   int frame,
+		   uint8_t subframe,
+		   time_stats_t *rm_stats,
+		   time_stats_t *te_stats,
+		   time_stats_t *i_stats)
+{
+
+  return(dlsch_encoding0(&eNB->frame_parms,
+			 a,
+			 num_pdcch_symbols,
+			 dlsch,
+			 frame,
+			 subframe,
+			 rm_stats,
+			 te_stats,
+			 i_stats));
+
+}
 
 int dlsch_encoding_SIC(PHY_VARS_UE *ue,
 		       unsigned char *a,

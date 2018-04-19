@@ -74,7 +74,7 @@ void free_ue_dlsch(LTE_UE_DLSCH_t *dlsch)
   }
 }
 
-LTE_UE_DLSCH_t *new_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_t max_turbo_iterations,uint8_t N_RB_DL, uint8_t abstraction_flag)
+LTE_UE_DLSCH_t *new_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,int nharq,uint8_t max_turbo_iterations,uint8_t N_RB_DL, uint8_t abstraction_flag)
 {
 
   LTE_UE_DLSCH_t *dlsch;
@@ -108,8 +108,8 @@ LTE_UE_DLSCH_t *new_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint8_
     dlsch->Mdlharq = Mdlharq;
     dlsch->Nsoft = Nsoft;
     dlsch->max_turbo_iterations = max_turbo_iterations;
-
-    for (i=0; i<Mdlharq; i++) {
+    
+    for (i=0; i<nharq; i++) {
       //      printf("new_ue_dlsch: Harq process %d\n",i);
       dlsch->harq_processes[i] = (LTE_DL_UE_HARQ_t *)malloc16(sizeof(LTE_DL_UE_HARQ_t));
 
@@ -368,7 +368,7 @@ decoder_if_t tc;
                                             (r==0) ? harq_process->F : 0);
 
 #ifdef DEBUG_DLSCH_DECODING
-    LOG_D(PHY,"HARQ_PID %d Rate Matching Segment %d (coded bits %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
+    printf("HARQ_PID %d Rate Matching Segment %d (coded bits %d,unpunctured/repeated bits %d, TBS %d, mod_order %d, nb_rb %d, Nl %d, rv %d, round %d)...\n",
           harq_pid,r, G,
           Kr*3,
           harq_process->TBS,

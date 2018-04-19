@@ -211,7 +211,7 @@ int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
 				  uint32_t v,
 				  uint32_t cyclic_shift,
                                   unsigned char l,
-                                  unsigned char Ns,
+				  int interpolate,
 				  uint16_t rnti);
 
 

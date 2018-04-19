@@ -1264,13 +1264,30 @@ typedef struct {
   LTE_UE_DLSCH_t   *dlsch_MCH[NUMBER_OF_CONNECTED_eNB_MAX];
   // This is for SIC in the UE, to store the reencoded data
   LTE_eNB_DLSCH_t  *dlsch_eNB[NUMBER_OF_CONNECTED_eNB_MAX];
+  // Sidelink-specific variables
   SL_chan_t        sl_chan;
+  LTE_eNB_DLSCH_t  *dlsch_slsch;
+  LTE_UE_ULSCH_t   *ulsch_slsch;
+  LTE_eNB_PUSCH    *pusch_slsch;
+  LTE_eNB_PUSCH    *pusch_slcch;
+  LTE_UE_DLSCH_t   *dlsch_rx_slsch;
+  int16_t          **slsch_rxdataF;
+  int16_t          **slcch_rxdataF;
+  int16_t          **slsch_rxdata_7_5kHz;
+  int16_t          **slcch_rxdata_7_5kHz;
+  int16_t          *slsch_dlsch_llr;
+  int16_t          *slsch_ulsch_llr;
   SLSCH_t          *slsch;
   SLSCH_t          slsch_rx;
   int              slsch_active;
   int              slsch_sdu_active;
+  int              slsch_rx_sdu_active;
   int              slcch_received;
+  int              slsch_decoded;
   uint8_t          sidelink_l2_emulation;
+  uint32_t         slsch_txcnt;
+  uint32_t         slsch_errors;
+  uint32_t         slsch_rxcnt[4];
   //Paging parameters
   uint32_t              IMSImod1024;
   uint32_t              PF;
@@ -1346,8 +1363,11 @@ typedef struct {
   int current_dlsch_cqi[NUMBER_OF_CONNECTED_eNB_MAX];
   unsigned char first_run_timing_advance[NUMBER_OF_CONNECTED_eNB_MAX];
   uint8_t               sidelink_active;
+  uint8_t               destination_id;
+  uint32_t              gh[256][20];
   uint8_t               pscch_coded;
   uint8_t               pscch_generated;
+  uint8_t               pssch_generated;
   uint8_t               generate_prach;
   uint8_t               prach_cnt;
   uint8_t               prach_PreambleIndex;

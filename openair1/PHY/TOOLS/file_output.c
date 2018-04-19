@@ -66,8 +66,8 @@ int write_output(const char *fname,const char *vname,void *data,int length,int d
   case 15:
 
     for (i=0; i<length<<1; i+=(2*dec)) {
-      //fprintf(fp,"%d + j*(%d)\n",((short *)data)[i],((short *)data)[i+1]);
-      fprintf(fp,"%d,%d,",((short *)data)[i],((short *)data)[i+1]);
+      fprintf(fp,"%d + j*(%d)\n",((short *)data)[i],((short *)data)[i+1]);
+      //fprintf(fp,"%d,%d,",((short *)data)[i],((short *)data)[i+1]);
 
     }
     fprintf(fp,"\n");

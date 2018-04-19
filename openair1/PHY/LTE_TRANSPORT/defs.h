@@ -937,6 +937,8 @@ typedef struct {
   int payload_length;
   /// pointer to payload
   uint8_t *payload;
+  /// index of current subframe modulo 10 in subframe pool
+  uint8_t ljmod10;
 } SLSCH_t;
 
 typedef struct {

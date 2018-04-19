@@ -370,7 +370,9 @@ void ulsch_modulation(int32_t **txdataF,
                       uint32_t frame,
                       uint32_t subframe,
                       LTE_DL_FRAME_PARMS *frame_parms,
-                      LTE_UE_ULSCH_t *ulsch)
+                      LTE_UE_ULSCH_t *ulsch,
+		      int slsch_flag,
+		      uint32_t cinit)
 {
 
   uint8_t qam64_table_offset_re = 0;
@@ -383,7 +385,7 @@ void ulsch_modulation(int32_t **txdataF,
 
   int re_offset,re_offset0,i,Msymb,j,k,nsymb,Msc_PUSCH,l;
   //  uint8_t harq_pid = (rag_flag == 1) ? 0 : subframe2harq_pid_tdd(frame_parms->tdd_config,subframe);
-  uint8_t harq_pid = subframe2harq_pid(frame_parms,frame,subframe);
+  uint8_t harq_pid;
   uint8_t Q_m;
   int32_t *txptr;
   uint32_t symbol_offset;
@@ -394,26 +396,31 @@ void ulsch_modulation(int32_t **txdataF,
   uint32_t x1, x2, s=0;
   uint8_t c;
 
+  if (slsch_flag ==0) {
+    harq_pid = subframe2harq_pid(frame_parms,frame,subframe);
+    // x1 is set in lte_gold_generic
+    x2 = (ulsch->rnti<<14) + (subframe<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.3.1
+  }
+  else {
+    harq_pid = 0;
+    x2 = cinit;
+    LOG_I(PHY,"Setting seed for SL to %x\n",x2);
+  }
+
   if (!ulsch) {
     printf("ulsch_modulation.c: Null ulsch\n");
     return;
   }
 
-  // x1 is set in lte_gold_generic
-  x2 = (ulsch->rnti<<14) + (subframe<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.3.1
 
-  if (harq_pid>=8) {
-    printf("ulsch_modulation.c: Illegal harq_pid %d\n",harq_pid);
-    return;
-  }
 
+  AssertFatal(harq_pid<8,
+	      "ulsch_modulation.c: Illegal harq_pid %d\n",harq_pid);
   first_rb = ulsch->harq_processes[harq_pid]->first_rb;
   nb_rb = ulsch->harq_processes[harq_pid]->nb_rb;
 
-  if (nb_rb == 0) {
-    printf("ulsch_modulation.c: Frame %d, Subframe %d Illegal nb_rb %d\n",frame,subframe,nb_rb);
-    return;
-  }
+  AssertFatal(nb_rb > 0 && nb_rb < frame_parms->N_RB_UL, 
+	      "ulsch_modulation.c: Frame %d, Subframe %d Illegal nb_rb %d, harq_pid %d\n",frame,subframe,nb_rb,harq_pid);
 
   if (first_rb > frame_parms->N_RB_UL) {
     printf("ulsch_modulation.c: Frame %d, Subframe %d Illegal first_rb %d\n",frame,subframe,first_rb);
@@ -432,16 +439,16 @@ void ulsch_modulation(int32_t **txdataF,
   Msc_PUSCH = ulsch->harq_processes[harq_pid]->nb_rb*12;
 
 #ifdef DEBUG_ULSCH_MODULATION
-  LOG_D(PHY,"ulsch_modulation.c: Doing modulation (rnti %x,x2 %x) for G=%d bits, harq_pid %d , nb_rb %d, Q_m %d, Nsymb_pusch %d (nsymb %d), subframe %d\n",
+  LOG_I(PHY,"ulsch_modulation.c: Doing modulation (rnti %x,x2 %x) for G=%d bits, harq_pid %d , nb_rb %d, Q_m %d, Nsymb_pusch %d (nsymb %d), subframe %d\n",
         ulsch->rnti,x2,G,harq_pid,ulsch->harq_processes[harq_pid]->nb_rb,Q_m, ulsch->Nsymb_pusch,nsymb,subframe);
 #endif
 
   // scrambling (Note the placeholding bits are handled in ulsch_coding.c directly!)
-  //printf("ulsch bits: ");
+  //  printf("ulsch bits: ");
   s = lte_gold_generic(&x1, &x2, 1);
   k=0;
 
-  //printf("G %d\n",G);
+  //  printf("G %d\n",G);
   for (i=0; i<(1+(G>>5)); i++) {
     for (j=0; j<32; j++,k++) {
       c = (uint8_t)((s>>j)&1);
@@ -454,7 +461,7 @@ void ulsch_modulation(int32_t **txdataF,
         ulsch->b_tilde[k] = ulsch->b_tilde[k-1];
       } else {
         ulsch->b_tilde[k] = (ulsch->h[k]+c)&1;
-        //  printf("i %d : %d (h %d c %d)\n", (i<<5)+j,ulsch->b_tilde[k],ulsch->h[k],c);
+	//	printf("i %d : %d (h %d c %d)\n", (i<<5)+j,ulsch->b_tilde[k],ulsch->h[k],c);
       }
 
     }
@@ -619,7 +626,7 @@ void ulsch_modulation(int32_t **txdataF,
         ((int16_t*)&ulsch->d[i])[0] = (ulsch->b_tilde[j] == 1)  ? (-gain_lin_QPSK) : gain_lin_QPSK;
         ((int16_t*)&ulsch->d[i])[1] = (ulsch->b_tilde[j+1] == 1)? (-gain_lin_QPSK) : gain_lin_QPSK;
         //        if (i<Msc_PUSCH)
-        //    printf("input %d/%d Msc_PUSCH %d (%p): %d,%d\n", i,Msymb,Msc_PUSCH,&ulsch->d[i],((int16_t*)&ulsch->d[i])[0],((int16_t*)&ulsch->d[i])[1]);
+	//   printf("input %d/%d Msc_PUSCH %d (%p): %d,%d\n", i,Msymb,Msc_PUSCH,&ulsch->d[i],((int16_t*)&ulsch->d[i])[0],((int16_t*)&ulsch->d[i])[1]);
 
         break;
 

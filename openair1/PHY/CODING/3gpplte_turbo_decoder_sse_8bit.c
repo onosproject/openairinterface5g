@@ -1016,8 +1016,8 @@ unsigned char phy_threegpplte_turbo_decoder8(short *y,
     avg=_mm_add_epi32(_mm_cvtepi16_epi32(_mm_abs_epi16(((__m128i*)y)[i])),avg);
     avg=_mm_add_epi32(_mm_cvtepi16_epi32(tmp),avg);
   }
-
-  int32_t round_avg=(_mm_extract_epi32(avg,0)+_mm_extract_epi32(avg,1)+_mm_extract_epi32(avg,2)+_mm_extract_epi32(avg,3))/(n*3);
+  // to make Valgrind freak less
+  int32_t round_avg = (_mm_extract_epi32(avg,0)+_mm_extract_epi32(avg,1)+_mm_extract_epi32(avg,2)+_mm_extract_epi32(avg,3))/(n*3);
 
   //printf("avg input turbo: %d sum %d taille bloc %d\n",round_avg,round_sum,n);
 

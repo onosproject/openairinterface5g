@@ -77,6 +77,9 @@ int lte_segmentation(unsigned char *input_buffer,
   } else if (Bprime_by_C<=512) { // increase by 1 byte til here
     *Kplus = (Bprime_by_C>>3)<<3;
     *Kminus = Bprime_by_C-8;
+#ifdef DEBUG_SEGMENTATION
+    printf("Bprime_by_C_by_C %d , Kplus2 %d\n",Bprime_by_C,*Kplus,*Kminus);
+#endif
   } else if (Bprime_by_C <=1024) { // increase by 2 bytes til here
     *Kplus = (Bprime_by_C>>4)<<4;
 
@@ -84,6 +87,9 @@ int lte_segmentation(unsigned char *input_buffer,
       *Kplus = *Kplus + 16;
 
     *Kminus = (*Kplus - 16);
+#ifdef DEBUG_SEGMENTATION
+    printf("Bprime_by_C_by_C %d , Kplus2 %d\n",Bprime_by_C,*Kplus,*Kminus);
+#endif
   } else if (Bprime_by_C <= 2048) { // increase by 4 bytes til here
     *Kplus = (Bprime_by_C>>5)<<5;
 
