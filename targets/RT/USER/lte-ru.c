@@ -1905,6 +1905,8 @@ void kill_RU_proc(int inst)
   proc->instance_cnt_FH = 0;
   pthread_cond_signal(&proc->cond_FH);
   pthread_mutex_unlock(&proc->mutex_FH);
+  LOG_D(PHY, "Joining pthread_FH\n");
+  pthread_join(proc->pthread_FH, NULL);
 
   pthread_mutex_lock(&proc->mutex_FH1);
   proc->instance_cnt_FH1 = 0;
@@ -1939,10 +1941,10 @@ void kill_RU_proc(int inst)
   pthread_cond_signal(&proc->cond_asynch_rxtx);
   pthread_mutex_unlock(&proc->mutex_asynch_rxtx);
 
-  LOG_D(PHY, "Joining pthread_FH\n");
-  pthread_join(proc->pthread_FH, NULL);
-  LOG_D(PHY, "Joining pthread_FHTX\n");
-  pthread_join(proc->pthread_FH1, NULL);
+  if (get_nprocs() > 4) {
+    LOG_D(PHY, "Joining pthread_FHTX\n");
+    pthread_join(proc->pthread_FH1, NULL);
+  }
   if (ru->function == NGFI_RRU_IF4p5) {
     LOG_D(PHY, "Joining pthread_prach\n");
     pthread_join(proc->pthread_prach, NULL);
@@ -1961,6 +1963,10 @@ void kill_RU_proc(int inst)
       LOG_D(PHY, "Joining pthread_asynch_rxtx\n");
       pthread_join(proc->pthread_asynch_rxtx, NULL);
     }
+  }
+  else if (ru->function == eNodeB_3GPP && ru->if_south == LOCAL_RF) {
+    LOG_D(PHY, "Joining pthread_prach\n");
+    pthread_join(proc->pthread_prach, NULL);
   }
   if (get_nprocs() > 2 && fepw) {
     if (ru->feprx) {
