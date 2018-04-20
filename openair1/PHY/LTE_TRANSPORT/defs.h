@@ -942,6 +942,27 @@ typedef struct {
 } SLSCH_t;
 
 typedef struct {
+  // SL Configuration
+  /// Number of SL resource blocks (1-100)
+  uint32_t N_SL_RB;
+  /// prb-start (0-99)
+  uint32_t prb_Start;
+  /// prb-End (0-99)
+  uint32_t prb_End;
+  /// SL-OffsetIndicator (0-10239)
+  uint32_t offsetIndicator;
+  /// SL-Discovery Period
+  uint32_t discPeriod;
+  /// Number of Repetitions (N_R)
+  uint32_t numRepetitions;
+  /// PSDCH subframe bitmap (up to 100 bits, first 64)6
+  uint64_t bitmap1;
+  /// PSDCH subframe bitmap (up to 100 bits, second 36)
+  uint64_t bitmap2;
+  /// Bitmap length (N_B) (valid values (4,8,12,16,30,40,42) Rel12, (16,20,100) Rel14
+  uint32_t bitmap_length;
+  // Discovery resource
+  uint32_t n_psdch;
   /// payload length
   int payload_length;
   uint8_t payload[100];
