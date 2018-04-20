@@ -68,6 +68,7 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   
   AssertFatal(frame_tx<1024 && frame_tx>=0,"frame %d is illegal\n",frame_tx);
   AssertFatal(subframe_tx<10 && subframe_tx>=0,"subframe %d is illegal\n",subframe_tx);
+  /*
   SLDCH_t *sldch = ue->sldch;
   AssertFatal(slsch!=NULL,"SLSCH is null\n");
   uint32_t O = ue->sldch->offsetIndicator;
@@ -117,5 +118,5 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   if (absSF_modP == b1)      pscch_codingmodulation(ue,frame_tx,subframe_tx,a1,0);	
   else if (absSF_modP == b2) pscch_codingmodulation(ue,frame_tx,subframe_tx,a2,1);
   else return;
-
+  */
 }
