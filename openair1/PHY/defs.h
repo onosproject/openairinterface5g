@@ -1667,8 +1667,10 @@ static inline void wait_sync(char *thread_name) {
 }
 
 static inline int wait_on_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
-  if (pthread_mutex_lock(mutex) != 0) {
-    LOG_E( PHY, "[SCHED][eNB] error locking mutex for %s\n",name);
+  int rc;
+  if ((rc = pthread_mutex_lock(mutex)) != 0) {
+    LOG_E( PHY, "[SCHED][eNB] error locking mutex for %s due to error %s\n",
+        name, strerror(rc));
     exit_fun("nothing to add");
     return(-1);
   }
