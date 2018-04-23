@@ -6123,7 +6123,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                   pc5s_rbid = UE_rrc_inst[module_id].sl_info[j-1].LCID;
                   UE_rrc_inst[module_id].sl_info[j-1].destinationL2Id = destinationL2Id;
                   UE_rrc_inst[module_id].sl_info[j-1].sourceL2Id = sourceL2Id;
-                  LOG_I(RRC,"[PC5EstablishReq] establish rbid %d for destinationL2Id Id: 0x%08x\n",pc5s_rbid, UE_rrc_inst[module_id].sl_info[j-1].destinationL2Id );
+                  LOG_I(RRC,"[PC5EstablishReq] establish rbid %d for PC5S TX (destinationL2Id Id: 0x%08x)\n",pc5s_rbid, UE_rrc_inst[module_id].sl_info[j-1].destinationL2Id );
                }
             }
 
@@ -6131,6 +6131,17 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          } else {//RX
             UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
+            j = 0;
+            i = 0;
+            for (i = MAX_NUM_LCID_DATA; i < MAX_NUM_LCID; i++) {
+               if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (j == 0)) j = i+1;
+            }
+            if ((i == MAX_NUM_LCID) && (j > 0)) {
+               UE_rrc_inst[module_id].sl_info[j-1].LCID = (j-1);
+               pc5s_rbid = UE_rrc_inst[module_id].sl_info[j-1].LCID;
+               UE_rrc_inst[module_id].sl_info[j-1].sourceL2Id = sourceL2Id;
+               LOG_I(RRC,"[PC5EstablishReq] establish rbid %d for PC5S (RX)\n",pc5s_rbid);
+            }
          }
 
          // configure lower layers PDCP/MAC/PHY for this communication
