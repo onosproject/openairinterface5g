@@ -46,6 +46,7 @@
 int16_t dlsch_demod_shift = 0;
 int16_t interf_unaw_shift = 13;
 
+
 //#define DEBUG_HARQ
 
 //#define DEBUG_PHY 1
@@ -1506,7 +1507,7 @@ void dlsch_channel_compensation(int **rxdataF_ext,
   _mm_empty();
   _m_empty();
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 
 
   unsigned short rb;
@@ -1753,9 +1754,11 @@ void prec2A_TM56_128(unsigned char pmi,__m128i *ch0,__m128i *ch1)
   _mm_empty();
   _m_empty();
 }
-#elif defined(__arm__)
-void prec2A_TM56_128(unsigned char pmi,__m128i *ch0,__m128i *ch1) {
+#elif defined(__arm__) || defined(__aarch64__)
+void prec2A_TM56_128(unsigned char pmi,int16x8_t *ch0,int16x8_t *ch1) {
 
+  AssertFatal(1==0,"To be done for ARM\n");
+  /*
   // sqrt(2) is already taken into account in computation sqrt_rho_a, sqrt_rho_b,
   //so removed it
 
@@ -1795,6 +1798,7 @@ void prec2A_TM56_128(unsigned char pmi,__m128i *ch0,__m128i *ch1) {
 
   _mm_empty();
   _m_empty();
+*/
 }
 #endif
 // precoding is stream 0 .5(1,1)  .5(1,-1) .5(1,1)  .5(1,-1)
@@ -1803,6 +1807,7 @@ void prec2A_TM56_128(unsigned char pmi,__m128i *ch0,__m128i *ch1) {
 
 short TM3_prec[8]__attribute__((aligned(16))) = {1,1,-1,-1,1,1,-1,-1} ;
 
+#if defined(__x86_64__) || defined(__i386__)
 void prec2A_TM3_128(__m128i *ch0,__m128i *ch1) {
 
   __m128i amp = _mm_set1_epi16(ONE_OVER_SQRT2_Q15);
@@ -1843,10 +1848,17 @@ void prec2A_TM3_128(__m128i *ch0,__m128i *ch1) {
   _mm_empty();
   _m_empty();
 }
+#else
+void prec2A_TM3_128(int16x8_t *ch0,int16x8_t *ch1) {
+
+  AssertFatal(1==0,"To be done for ARM\n");
+}
+#endif
 
 // pmi = 0 => stream 0 (1,1), stream 1 (1,-1)
 // pmi = 1 => stream 0 (1,j), stream 2 (1,-j)
 
+#if defined(__x86_64__) || defined(__i386__)
 void prec2A_TM4_128(int pmi,__m128i *ch0,__m128i *ch1) {
 
 // sqrt(2) is already taken into account in computation sqrt_rho_a, sqrt_rho_b,
@@ -1893,7 +1905,11 @@ void prec2A_TM4_128(int pmi,__m128i *ch0,__m128i *ch1) {
  // print_shorts("prec2A_TM4 ch0 (end):",ch0);
   //print_shorts("prec2A_TM4 ch1 (end):",ch1);
 }
-
+#elsif defined(__arm__) || defined(__aarch64__)
+void prec2A_TM4_128(int pmi,int16x8_t *ch0,int16x8_t *ch1) {
+  AssertFatal(1==0,"To be done for ARM\n");
+}
+#endif
 void dlsch_channel_compensation_TM56(int **rxdataF_ext,
                                      int **dl_ch_estimates_ext,
                                      int **dl_ch_mag,
@@ -2102,7 +2118,7 @@ void dlsch_channel_compensation_TM56(int **rxdataF_ext,
   //printf("eNB_id %d, symbol %d: precoded CQI %d dB\n",eNB_id,symbol,
   //   measurements->precoded_cqi_dB[eNB_id][0]);
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 
   uint32_t rb,Nre;
   uint32_t aarx,symbol_mod,pilots=0;
@@ -2682,8 +2698,9 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
   _mm_empty();
   _m_empty();
 
-  #elif defined(__arm__)
+  #elif defined(__arm__) || defined(__aarch64__)
 
+  AssertFatal(1==0,"To be checked for ARM (output_shift => output_shift0/1)\n");
   unsigned short rb,Nre;
   unsigned char aarx,symbol_mod,pilots=0;
   int precoded_signal_strength0=0,precoded_signal_strength1=0, rx_power_correction;
@@ -2694,7 +2711,7 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
   int32x4_t mmtmpD0,mmtmpD1,mmtmpD0b,mmtmpD1b;
   int16x8_t *dl_ch_mag0_128,*dl_ch_mag0_128b,*dl_ch_mag1_128,*dl_ch_mag1_128b,mmtmpD2,mmtmpD3,mmtmpD4,*rxdataF_comp0_128,*rxdataF_comp1_128;
   int16x8_t QAM_amp0_128,QAM_amp0_128b,QAM_amp1_128,QAM_amp1_128b;
-  int32x4_t output_shift128 = vmovq_n_s32(-(int32_t)output_shift);
+  int32x4_t output_shift128 = vmovq_n_s32(-(int32_t)output_shift0);
 
   int **rxdataF_ext           = pdsch_vars->rxdataF_ext;
   int **dl_ch_estimates_ext   = pdsch_vars->dl_ch_estimates_ext;
@@ -3091,8 +3108,8 @@ void dlsch_dual_stream_correlation(LTE_DL_FRAME_PARMS *frame_parms,
   _mm_empty();
   _m_empty();
 
-#elif defined(__arm__)
-
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 #endif
 }
 
@@ -3212,7 +3229,7 @@ void dlsch_dual_stream_correlation(LTE_DL_FRAME_PARMS *frame_parms,
   _mm_empty();
   _m_empty();
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 
 #endif
 }
@@ -3297,7 +3314,7 @@ void dlsch_detection_mrc(LTE_DL_FRAME_PARMS *frame_parms,
   _mm_empty();
   _m_empty();
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 
   unsigned char aatx;
   int i;
@@ -3368,6 +3385,7 @@ void dlsch_detection_mrc_TM34(LTE_DL_FRAME_PARMS *frame_parms,
                               unsigned char dual_stream_UE) {
 
   int i;
+#if defined(__x86_64__) || defined(__i386__)
   __m128i *rxdataF_comp128_0,*rxdataF_comp128_1,*rxdataF_comp128_i0,*rxdataF_comp128_i1,*dl_ch_mag128_0,*dl_ch_mag128_1,*dl_ch_mag128_0b,*dl_ch_mag128_1b,*rho128_0,*rho128_1,*rho128_i0,*rho128_i1,*dl_ch_mag128_i0,*dl_ch_mag128_i1,*dl_ch_mag128_i0b,*dl_ch_mag128_i1b;
 
   int **rxdataF_comp0           = pdsch_vars->rxdataF_comp0;
@@ -3435,6 +3453,9 @@ void dlsch_detection_mrc_TM34(LTE_DL_FRAME_PARMS *frame_parms,
 
   _mm_empty();
   _m_empty();
+#elsif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
+#endif
 }
 
 
@@ -3495,8 +3516,8 @@ void dlsch_scale_channel(int **dl_ch_estimates_ext,
     }
   }
 
-#elif defined(__arm__)
-
+#elif defined(__arm__) || defined(__arch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 #endif
 }
 
@@ -3573,7 +3594,7 @@ void dlsch_channel_level(int **dl_ch_estimates_ext,
   _mm_empty();
   _m_empty();
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__arch64__)
 
   short rb;
   unsigned char aatx,aarx,nre=12,symbol_mod;
@@ -3769,7 +3790,9 @@ void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
   _mm_empty();
   _m_empty();
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__arch64__)
+
+  AssertFatal(1==0,"To be done for ARM\n");
 
 #endif
 }
@@ -3872,7 +3895,7 @@ void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
   _mm_empty();
   _m_empty();
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__arch64__)
 
 #endif
 }*/
@@ -3956,8 +3979,8 @@ void dlsch_channel_level_TM56(int **dl_ch_estimates_ext,
   _mm_empty();
   _m_empty();
 
-#elif defined(__arm__)
-
+#elif defined(__arm__) || defined(__arch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 
 #endif
 }
@@ -4028,8 +4051,8 @@ void dlsch_channel_level_TM7(int **dl_bf_ch_estimates_ext,
   _mm_empty();
   _m_empty();
 
-#elif defined(__arm__)
-
+#elif defined(__arm__) || defined(__arch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 #endif
 }
 //#define ONE_OVER_2_Q15 16384
@@ -4134,7 +4157,8 @@ void dlsch_alamouti(LTE_DL_FRAME_PARMS *frame_parms,
   _mm_empty();
   _m_empty();
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__arch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 
 #endif
 }

@@ -517,7 +517,7 @@ int pbch_channel_level(int **dl_ch_estimates_ext,
 #if defined(__x86_64__) || defined(__i386__)
   __m128i avg128;
   __m128i *dl_ch128;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int32x4_t avg128;
   int16x8_t *dl_ch128;
 #endif

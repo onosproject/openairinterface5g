@@ -617,7 +617,7 @@ __m128i tmp_result4 __attribute__ ((aligned(16)));
 // calculates a_sq = int_ch_mag*(a_r^2 + a_i^2)*scale_factor for 64-QAM
 #define square_a_64qam_epi16(a_r,a_i,int_ch_mag,scale_factor,a_sq)  tmp_result = _mm_mulhi_epi16(a_r,a_r); tmp_result = _mm_slli_epi16(tmp_result,1); tmp_result = _mm_mulhi_epi16(tmp_result,scale_factor); tmp_result = _mm_slli_epi16(tmp_result,3); tmp_result = _mm_mulhi_epi16(tmp_result,int_ch_mag); tmp_result = _mm_slli_epi16(tmp_result,1); tmp_result2 = _mm_mulhi_epi16(a_i,a_i); tmp_result2 = _mm_slli_epi16(tmp_result2,1); tmp_result2 = _mm_mulhi_epi16(tmp_result2,scale_factor); tmp_result2 = _mm_slli_epi16(tmp_result2,3); tmp_result2 = _mm_mulhi_epi16(tmp_result2,int_ch_mag); tmp_result2 = _mm_slli_epi16(tmp_result2,1); a_sq = _mm_adds_epi16(tmp_result,tmp_result2);
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 
 #endif
 
@@ -822,7 +822,7 @@ void dlsch_16qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
   __m128i *ch_mag;
   __m128i llr128[2];
   uint32_t *llr32;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int16x8_t *rxF = (int16x8_t*)&rxdataF_comp[0][(symbol*frame_parms->N_RB_DL*12)];
   int16x8_t *ch_mag;
   int16x8_t xmm0;
@@ -840,7 +840,7 @@ void dlsch_16qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
   } else {
     llr32 = (uint32_t*)*llr32p;
   }
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   if (first_symbol_flag==1) {
     llr16 = (int16_t*)dlsch_llr;
   } else {
@@ -899,7 +899,7 @@ void dlsch_16qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
     llr32[6] = _mm_extract_epi32(llr128[1],2); //((uint32_t *)&llr128[1])[2];
     llr32[7] = _mm_extract_epi32(llr128[1],3); //((uint32_t *)&llr128[1])[3];
     llr32+=8;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     xmm0 = vabsq_s16(rxF[i]);
     xmm0 = vqsubq_s16(ch_mag[i],xmm0);
     // lambda_1=y_R, lambda_2=|y_R|-|h|^2, lamda_3=y_I, lambda_4=|y_I|-|h|^2
@@ -953,14 +953,11 @@ void dlsch_16qam_llr_SIC (LTE_DL_FRAME_PARMS *frame_parms,
   uint16_t *sic_data;
   uint16_t pbch_pss_sss_adjust;
   unsigned char len_mod4=0;
-  __m128i llr128[2];
-  __m128i *ch_mag;
   nsymb = (frame_parms->Ncp==0) ? 14:12;
 
     for (symbol=num_pdcch_symbols; symbol<nsymb; symbol++) {
     uint16_t *rxF = (uint16_t*)(&rxdataF_comp[0][((int16_t)symbol*frame_parms->N_RB_DL*12)]);
     int16_t *rho_1=(int16_t*)(&rho_i[0][((int16_t)symbol*frame_parms->N_RB_DL*12)]);
-    ch_mag = (__m128i*)(&dl_ch_mag[0][((int16_t)symbol*frame_parms->N_RB_DL*12)]);
     sic_data = (uint16_t*)(&sic_buffer[0][((int16_t)len_acc)]);
 
     symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
@@ -1005,10 +1002,17 @@ void dlsch_16qam_llr_SIC (LTE_DL_FRAME_PARMS *frame_parms,
     len>>=2;  // length in quad words (4 REs)
     len+=(len_mod4==0 ? 0 : 1);
 
-    for (i=0; i<len; i++) {
 
+#if defined(__x86_64__) || defined(__i386__)
+    __m128i llr128[2];
+    __m128i *ch_mag;
+
+   ch_mag = (__m128i*)(&dl_ch_mag[0][((int16_t)symbol*frame_parms->N_RB_DL*12)]);  
+
+   for (i=0; i<len; i++) {
 
     __m128i *x1 = (__m128i*)rxF;//clean_x1;
+    ch_mag = (__m128i*)(&dl_ch_mag[0][((int16_t)symbol*frame_parms->N_RB_DL*12)]);
 //printf("%p %p %p\n", clean_x1, &clean_x1, &clean_x1[0]);
 //int *a = malloc(10*sizeof(int));
 //printf("%p %p\n", a, &a);
@@ -1032,7 +1036,10 @@ void dlsch_16qam_llr_SIC (LTE_DL_FRAME_PARMS *frame_parms,
   }
   _mm_empty();
   _m_empty();
-}
+#elsif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
+#endif
+ }
 }
 
 //----------------------------------------------------------------------------------------------
@@ -1055,7 +1062,7 @@ void dlsch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
 #if defined(__x86_64__) || defined(__i386__)
   __m128i *rxF = (__m128i*)&rxdataF_comp[0][(symbol*frame_parms->N_RB_DL*12)];
   __m128i *ch_mag,*ch_magb;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int16x8_t *rxF = (int16x8_t*)&rxdataF_comp[0][(symbol*frame_parms->N_RB_DL*12)];
   int16x8_t *ch_mag,*ch_magb,xmm1,xmm2;
 #endif
@@ -1081,7 +1088,7 @@ void dlsch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
 #if defined(__x86_64__) || defined(__i386__)
   ch_mag = (__m128i*)&dl_ch_mag[0][(symbol*frame_parms->N_RB_DL*12)];
   ch_magb = (__m128i*)&dl_ch_magb[0][(symbol*frame_parms->N_RB_DL*12)];
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   ch_mag = (int16x8_t*)&dl_ch_mag[0][(symbol*frame_parms->N_RB_DL*12)];
   ch_magb = (int16x8_t*)&dl_ch_magb[0][(symbol*frame_parms->N_RB_DL*12)];
 #endif
@@ -1121,7 +1128,7 @@ void dlsch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
     xmm1 = _mm_subs_epi16(ch_mag[i],xmm1);
     xmm2 = _mm_abs_epi16(xmm1);
     xmm2 = _mm_subs_epi16(ch_magb[i],xmm2);
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     xmm1 = vabsq_s16(rxF[i]);
     xmm1 = vsubq_s16(ch_mag[i],xmm1);
     xmm2 = vabsq_s16(xmm1);
@@ -1147,7 +1154,7 @@ void dlsch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
     llr2[3] = _mm_extract_epi16(xmm1,1);//((short *)&xmm1)[j+1];
     llr2[4] = _mm_extract_epi16(xmm2,0);//((short *)&xmm2)[j];
     llr2[5] = _mm_extract_epi16(xmm2,1);//((short *)&xmm2)[j+1];
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     llr2[2] = vgetq_lane_s16(xmm1,0);
     llr2[3] = vgetq_lane_s16(xmm1,1);//((short *)&xmm1)[j+1];
     llr2[4] = vgetq_lane_s16(xmm2,0);//((short *)&xmm2)[j];
@@ -1162,7 +1169,7 @@ void dlsch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
     llr2[3] = _mm_extract_epi16(xmm1,3);//((short *)&xmm1)[j+1];
     llr2[4] = _mm_extract_epi16(xmm2,2);//((short *)&xmm2)[j];
     llr2[5] = _mm_extract_epi16(xmm2,3);//((short *)&xmm2)[j+1];
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     llr2[2] = vgetq_lane_s16(xmm1,2);
     llr2[3] = vgetq_lane_s16(xmm1,3);//((short *)&xmm1)[j+1];
     llr2[4] = vgetq_lane_s16(xmm2,2);//((short *)&xmm2)[j];
@@ -1177,7 +1184,7 @@ void dlsch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
     llr2[3] = _mm_extract_epi16(xmm1,5);//((short *)&xmm1)[j+1];
     llr2[4] = _mm_extract_epi16(xmm2,4);//((short *)&xmm2)[j];
     llr2[5] = _mm_extract_epi16(xmm2,5);//((short *)&xmm2)[j+1];
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     llr2[2] = vgetq_lane_s16(xmm1,4);
     llr2[3] = vgetq_lane_s16(xmm1,5);//((short *)&xmm1)[j+1];
     llr2[4] = vgetq_lane_s16(xmm2,4);//((short *)&xmm2)[j];
@@ -1191,7 +1198,7 @@ void dlsch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
     llr2[3] = _mm_extract_epi16(xmm1,7);//((short *)&xmm1)[j+1];
     llr2[4] = _mm_extract_epi16(xmm2,6);//((short *)&xmm2)[j];
     llr2[5] = _mm_extract_epi16(xmm2,7);//((short *)&xmm2)[j+1];
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     llr2[2] = vgetq_lane_s16(xmm1,6);
     llr2[3] = vgetq_lane_s16(xmm1,7);//((short *)&xmm1)[j+1];
     llr2[4] = vgetq_lane_s16(xmm2,6);//((short *)&xmm2)[j];
@@ -1232,15 +1239,12 @@ void dlsch_64qam_llr_SIC(LTE_DL_FRAME_PARMS *frame_parms,
   uint16_t pbch_pss_sss_adjust;
   unsigned char len_mod4=0;
   uint16_t *llr2;
-  __m128i *ch_mag,*ch_magb;
-
+  
   nsymb = (frame_parms->Ncp==0) ? 14:12;
 
   for (symbol=num_pdcch_symbols; symbol<nsymb; symbol++) {
     uint16_t *rxF = (uint16_t*)(&rxdataF_comp[0][((int16_t)symbol*frame_parms->N_RB_DL*12)]);
     int16_t *rho_1=(int16_t*)(&rho_i[0][((int16_t)symbol*frame_parms->N_RB_DL*12)]);
-    ch_mag = (__m128i*)(&dl_ch_mag[0][((int16_t)symbol*frame_parms->N_RB_DL*12)]);
-    ch_magb = (__m128i*)(&dl_ch_magb[0][((int16_t)symbol*frame_parms->N_RB_DL*12)]);
     sic_data = (uint16_t*)(&sic_buffer[0][((int16_t)len_acc)]);
 
     symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
@@ -1289,7 +1293,11 @@ void dlsch_64qam_llr_SIC(LTE_DL_FRAME_PARMS *frame_parms,
     len2+=(len_mod4?0:1);
 
 
-
+#if defined(__x86_64__) || defined(__i386__)
+    __m128i *ch_mag,*ch_magb;
+    ch_mag = (__m128i*)(&dl_ch_mag[0][((int16_t)symbol*frame_parms->N_RB_DL*12)]);
+    ch_magb = (__m128i*)(&dl_ch_magb[0][((int16_t)symbol*frame_parms->N_RB_DL*12)]);
+ 
     for (i=0; i<len2; i++) {
 
       __m128i *x1 = (__m128i*)rxF;
@@ -1354,7 +1362,9 @@ void dlsch_64qam_llr_SIC(LTE_DL_FRAME_PARMS *frame_parms,
 
   _mm_empty();
   _m_empty();
-
+#elsif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
+#endif
   }
 }
 //#endif
@@ -1464,7 +1474,7 @@ void qpsk_qpsk(short *stream0_in,
   __m128i *stream1_128i_in = (__m128i *)stream1_in;
   __m128i *stream0_128i_out = (__m128i *)stream0_out;
   __m128i ONE_OVER_SQRT_8 = _mm_set1_epi16(23170); //round(2^16/sqrt(8))
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int16x8_t *rho01_128i = (int16x8_t *)rho01;
   int16x8_t *stream0_128i_in = (int16x8_t *)stream0_in;
   int16x8_t *stream1_128i_in = (int16x8_t *)stream1_in;
@@ -1500,8 +1510,8 @@ void qpsk_qpsk(short *stream0_in,
     // divide by sqrt(8), no shift needed ONE_OVER_SQRT_8 = Q1.16
     rho_rpi = _mm_mulhi_epi16(rho_rpi,ONE_OVER_SQRT_8);
     rho_rmi = _mm_mulhi_epi16(rho_rmi,ONE_OVER_SQRT_8);
-#elif defined(__arm__)
-
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 
 #endif
     // Compute LLR for first bit of stream 0
@@ -1524,7 +1534,7 @@ void qpsk_qpsk(short *stream0_in,
 
     y0r_over2  = _mm_srai_epi16(y0r,1);   // divide by 2
     y0i_over2  = _mm_srai_epi16(y0i,1);   // divide by 2
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 
 
 #endif
@@ -1726,7 +1736,7 @@ void qpsk_qam16(int16_t *stream0_in,
   __m128i THREE_OVER_SQRT_10 = _mm_set1_epi16(31086); // round(3/sqrt(10)*2^15)
   __m128i SQRT_10_OVER_FOUR = _mm_set1_epi16(25905); // round(sqrt(10)/4*2^15)
   __m128i ch_mag_int __attribute__((aligned(16)));
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int16x8_t *rho01_128i = (int16x8_t *)rho01;
   int16x8_t *stream0_128i_in = (int16x8_t *)stream0_in;
   int16x8_t *stream1_128i_in = (int16x8_t *)stream1_in;
@@ -1901,8 +1911,8 @@ void qpsk_qam16(int16_t *stream0_in,
     if (i<((length>>1) - 1)) // false if only 2 REs remain
       stream0_128i_out[i+1] = _mm_unpackhi_epi16(y0r,y0i);
 
-#elif defined(__arm__)
-
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0, "To be done for ARM\n");
 #endif
   }
 
@@ -2014,8 +2024,8 @@ void qpsk_qam64(short *stream0_in,
   __m128i ch_mag_int_with_sigma2;
   __m128i two_ch_mag_int_with_sigma2;
   __m128i three_ch_mag_int_with_sigma2;
-#elif defined(__arm__)
-
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 #endif
 
 #ifdef DEBUG_LLR
@@ -2199,8 +2209,8 @@ void qpsk_qam64(short *stream0_in,
     if (i<((length>>1) - 1)) // false if only 2 REs remain
       stream0_128i_out[i+1] = _mm_unpackhi_epi16(y0r,y0i);
 
-#elif defined(__arm__)
-
+#elif defined(__arm__) || defined(__aarch64__)
+   AssertFatal(1==0,"To be done for ARM\n");
 #endif
   }
 
@@ -2275,7 +2285,8 @@ void qam16_qpsk(short *stream0_in,
   __m128i ch_mag_over_10;
   __m128i ch_mag_over_2;
   __m128i ch_mag_9_over_10;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 
 #endif
 
@@ -2666,7 +2677,8 @@ void qam16_qpsk(short *stream0_in,
     stream0_128i_out[2*i+2] = _mm_unpacklo_epi32(xmm1,xmm3);
     stream0_128i_out[2*i+3] = _mm_unpackhi_epi32(xmm1,xmm3);
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 
 #endif
   }
@@ -2784,7 +2796,8 @@ void qam16_qam16(short *stream0_in,
   __m128i ch_mag_over_10;
   __m128i ch_mag_over_2;
   __m128i ch_mag_9_over_10;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 
 #endif
 
@@ -3218,7 +3231,8 @@ void qam16_qam16(short *stream0_in,
     stream0_128i_out[2*i+1] = _mm_unpackhi_epi32(xmm0,xmm2);
     stream0_128i_out[2*i+2] = _mm_unpacklo_epi32(xmm1,xmm3);
     stream0_128i_out[2*i+3] = _mm_unpackhi_epi32(xmm1,xmm3);
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 
 #endif
 
@@ -3349,7 +3363,8 @@ void qam16_qam64(int16_t *stream0_in,
   __m128i two_ch_mag_int_with_sigma2;
   __m128i three_ch_mag_int_with_sigma2;
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 
 #endif
   int i;
@@ -3851,8 +3866,8 @@ void qam16_qam64(int16_t *stream0_in,
     stream0_128i_out[2*i+1] = _mm_unpackhi_epi32(xmm0,xmm2);
     stream0_128i_out[2*i+2] = _mm_unpacklo_epi32(xmm1,xmm3);
     stream0_128i_out[2*i+3] = _mm_unpackhi_epi32(xmm1,xmm3);
-#elif defined(__arm__)
-
+#elif defined(__arm__) || defined(__aarch64__)
+   AssertFatal(1==0,"To be done for ARM\n");
 #endif
 
   }
@@ -4032,7 +4047,8 @@ void qam64_qpsk(int16_t *stream0_in,
   __m128i  y0i_three_over_sqrt_21;
   __m128i  y0i_five_over_sqrt_21;
   __m128i  y0i_seven_over_sqrt_21;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0, "To be done for ARM\n");
 
 #endif
 
@@ -5417,8 +5433,8 @@ void qam64_qpsk(int16_t *stream0_in,
     stream0_out[j + 45] = ((short *)&y0i)[7];
     stream0_out[j + 46] = ((short *)&y1i)[7];
     stream0_out[j + 47] = ((short *)&y2i)[7];
-#elif defined(__arm__)
-
+#elif defined(__arm__) || defined(__aarch64__)
+   AssertFatal(1==0,"To be done for ARM\n");
 #endif
   }
 
@@ -5557,7 +5573,8 @@ void qam64_qam16(short *stream0_in,
   __m128i  y0i_five_over_sqrt_21;
   __m128i  y0i_seven_over_sqrt_21;
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 
 #endif
   int i,j;
@@ -6957,7 +6974,8 @@ void qam64_qam16(short *stream0_in,
     stream0_out[j + 46] = ((short *)&y1i)[7];
     stream0_out[j + 47] = ((short *)&y2i)[7];
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"to be done for ARM\n");
 
 #endif
   }
@@ -7103,7 +7121,8 @@ void qam64_qam64(short *stream0_in,
   __m128i ch_mag_int_with_sigma2;
   __m128i two_ch_mag_int_with_sigma2;
   __m128i three_ch_mag_int_with_sigma2;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
 
 #endif
 
@@ -8767,7 +8786,8 @@ void qam64_qam64(short *stream0_in,
     stream0_out[j + 46] = ((short *)&y1i)[7];
     stream0_out[j + 47] = ((short *)&y2i)[7];
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"to be done for ARM\n");
 
 #endif
 

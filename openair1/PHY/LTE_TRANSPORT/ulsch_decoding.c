@@ -1074,7 +1074,7 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
     ((__m256i*)cseq)[i2++] = ((__m256i*)unscrambling_lut)[s&65535];
     ((__m256i*)cseq)[i2++] = ((__m256i*)unscrambling_lut)[(s>>16)&65535];
 #endif
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut)[(s&65535)<<1];
     ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut)[1+((s&65535)<<1)];
     s>>=16;
@@ -1170,7 +1170,7 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
       i2=j<<2;
 
       for (r=0; r<Rmux_prime; r++) {
-	/*
+#if defined(__arm__) || defined(__aarch64__)	
         c = cseq[i];
         y[i2++] = c*ulsch_llr[i++];
         c = cseq[i];
@@ -1180,9 +1180,10 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
         c = cseq[i];
         y[i2] = c*ulsch_llr[i++];
         i2=(i2+(Cmux<<2)-3);
-	*/
+#elif defined(__x86_64__) || defined(__i386__)	
 	// slightly more optimized version (equivalent to above) for 16QAM to improve computational performance
 	*(__m64 *)&y[i2] = _mm_sign_pi16(*(__m64*)&ulsch_llr[i],*(__m64*)&cseq[i]);i+=4;i2+=(Cmux<<2);
+#endif
 
 
       }
@@ -1437,7 +1438,7 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
     for (iprime=0; iprime<G;iprime+=16,j2+=16)
       *((__m256i *)&ulsch_harq->e[iprime]) = *((__m256i *)&y[j2]);
 #endif
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     for (iprime=0; iprime<G;iprime+=8,j2+=8)
       *((int16x8_t *)&ulsch_harq->e[iprime]) = *((int16x8_t *)&y[j2]);
 #endif

@@ -147,6 +147,25 @@ typedef unsigned long int                lfds611_atom_t;
 #define LFDS611_BARRIER_PROCESSOR_FULL   __sync_synchronize()
 #endif
 
+#if (defined __unix__ && defined __aarch64__ && __GNUC__)
+// TRD : any UNIX with GCC on ARM
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+typedef unsigned long long int           lfds611_atom_t;
+#define LFDS611_INLINE                   inline
+#define LFDS611_ALIGN(alignment)         __attribute__( (aligned(alignment)) )
+#define LFDS611_ALIGN_SINGLE_POINTER     8
+#define LFDS611_ALIGN_DOUBLE_POINTER     16
+#define LFDS611_BARRIER_COMPILER_LOAD    __asm__ __volatile__ ( "" : : : "memory" )
+#define LFDS611_BARRIER_COMPILER_STORE   __asm__ __volatile__ ( "" : : : "memory" )
+#define LFDS611_BARRIER_COMPILER_FULL    __asm__ __volatile__ ( "" : : : "memory" )
+#define LFDS611_BARRIER_PROCESSOR_LOAD   __sync_synchronize()
+#define LFDS611_BARRIER_PROCESSOR_STORE  __sync_synchronize()
+#define LFDS611_BARRIER_PROCESSOR_FULL   __sync_synchronize()
+#endif
+
+
 #define LFDS611_BARRIER_LOAD   LFDS611_BARRIER_COMPILER_LOAD; LFDS611_BARRIER_PROCESSOR_LOAD; LFDS611_BARRIER_COMPILER_LOAD
 #define LFDS611_BARRIER_STORE  LFDS611_BARRIER_COMPILER_STORE; LFDS611_BARRIER_PROCESSOR_STORE; LFDS611_BARRIER_COMPILER_STORE
 #define LFDS611_BARRIER_FULL   LFDS611_BARRIER_COMPILER_FULL; LFDS611_BARRIER_PROCESSOR_FULL; LFDS611_BARRIER_COMPILER_FULL

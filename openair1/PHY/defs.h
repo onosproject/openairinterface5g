@@ -123,6 +123,7 @@ static inline void* malloc16_clear( size_t size )
 
 #define cmax3(a,b,c) ((cmax(a,b)>c) ? (cmax(a,b)) : (c))
 
+
 /// suppress compiler warning for unused arguments
 #define UNUSED(x) (void)x;
 

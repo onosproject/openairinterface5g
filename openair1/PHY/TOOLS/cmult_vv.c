@@ -30,7 +30,7 @@ int16_t conjug2[8]__attribute__((aligned(16))) = {1,-1,1,-1,1,-1,1,-1} ;
 #define simdshort_q15_t __m64
 #define set1_int16(a) _mm_set1_epi16(a)
 #define setr_int16(a0, a1, a2, a3, a4, a5, a6, a7) _mm_setr_epi16(a0, a1, a2, a3, a4, a5, a6, a7 )
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 int16_t conjug[4]__attribute__((aligned(16))) = {-1,1,-1,1} ;
 #define simd_q15_t int16x8_t
 #define simdshort_q15_t int16x4_t
@@ -69,7 +69,7 @@ int mult_cpx_conj_vector(int16_t *x1,
   simd_q15_t tmp_re,tmp_im;
   simd_q15_t tmpy0,tmpy1;
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int32x4_t tmp_re,tmp_im;
   int32x4_t tmp_re1,tmp_im1;
   int16x4x2_t tmpy;
@@ -98,7 +98,7 @@ int mult_cpx_conj_vector(int16_t *x1,
     else
       *y_128 += _mm_packs_epi32(tmpy0,tmpy1);
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 
     tmp_re  = vmull_s16(((simdshort_q15_t *)x1_128)[0], ((simdshort_q15_t*)x2_128)[0]);
     //tmp_re = [Re(x1[0])Re(x2[0]) Im(x1[0])Im(x2[0]) Re(x1[1])Re(x2[1]) Im(x1[1])Im(x2[1])]
@@ -166,6 +166,7 @@ int mult_cpx_vector(int16_t *x1, //Q15
   //print_shorts("x1_128:",&x1_128[0]);
  // print_shorts("x2_128:",&x2_128[0]);
 
+#if defined(__x86_64__) || defined(__i386__)
   //right shift by 13 while p_a * x0 and 15 while
   // we compute 4 cpx multiply for each loop
   for(i=0; i<(N>>2); i++) {
@@ -195,6 +196,9 @@ int mult_cpx_vector(int16_t *x1, //Q15
   }
   _mm_empty();
   _m_empty();
+#elif defined(__arm__) || defined(__aarch64__)
+  AssertFatal(1==0,"To be done for ARM\n");
+#endif
   return(0);
 }
 
@@ -226,7 +230,7 @@ int multadd_cpx_vector(int16_t *x1,
 #if defined(__x86_64__) || defined(__i386__)
   simd_q15_t tmp_re,tmp_im;
   simd_q15_t tmpy0,tmpy1;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int32x4_t tmp_re,tmp_im;
   int32x4_t tmp_re1,tmp_im1;
   int16x4x2_t tmpy;
@@ -254,8 +258,8 @@ int multadd_cpx_vector(int16_t *x1,
     else
       *y_128 = _mm_adds_epi16(*y_128,_mm_packs_epi32(tmpy0,tmpy1));
     //print_shorts("*y_128:",&y_128[i]);
-#elif defined(__arm__)
-    msg("mult_cpx_vector not implemented for __arm__");
+#elif defined(__arm__) || defined(__aarch64__)
+    AssertFatal(1==0,"mult_cpx_vector not implemented for __arm__");
 #endif
     x1_128++;
     x2_128++;

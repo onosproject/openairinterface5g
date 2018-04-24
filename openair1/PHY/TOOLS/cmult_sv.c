@@ -31,7 +31,7 @@
 #define mulhi_s1_int16(a,b) _mm_slli_epi16(_mm_mulhi_epi16(a,b),2)
 #define adds_int16(a,b) _mm_adds_epi16(a,b)
 #define mullo_int16(a,b) _mm_mullo_epi16(a,b)
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 #define simd_q15_t int16x8_t
 #define simdshort_q15_t int16x4_t
 #define shiftright_int16(a,shift) vshrq_n_s16(a,shift)
@@ -103,7 +103,7 @@ void multadd_real_vector_complex_scalar(int16_t *x,
     j++;
     y_128[j]   = _mm_adds_epi16(y_128[j],_mm_unpackhi_epi16(yr,yi));
     j++;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     int16x8x2_t yint;
     yint = vzipq_s16(yr,yi);
     y_128[j]   = adds_int16(y_128[j],yint.val[0]);
@@ -354,7 +354,7 @@ int rotate_cpx_vector(int16_t *x,
   ((int16_t *)&alpha_128)[5] = -alpha[1];
   ((int16_t *)&alpha_128)[6] = alpha[1];
   ((int16_t *)&alpha_128)[7] = alpha[0];
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int32x4_t shift;
   int32x4_t ab_re0,ab_re1,ab_im0,ab_im1,re32,im32;
   int16_t reflip[8]  __attribute__((aligned(16))) = {1,-1,1,-1,1,-1,1,-1};
@@ -386,7 +386,7 @@ int rotate_cpx_vector(int16_t *x,
 
     y_128[0] = _mm_packs_epi32(m2,m3);        // pack in 16bit integers with saturation [re im re im re im re im]
     //print_ints("y_128[0]=", &y_128[0]);
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 
   ab_re0 = vmull_s16(((int16x4_t*)xd)[0],((int16x4_t*)&bconj)[0]);
   ab_re1 = vmull_s16(((int16x4_t*)xd)[1],((int16x4_t*)&bconj)[1]);

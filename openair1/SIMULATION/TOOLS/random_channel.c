@@ -32,8 +32,11 @@
 #include "UTIL/LOG/log.h"
 //#define DEBUG_CH
 
+#if defined(__i386__) || defined(__x86_64__) 
 extern void print_shorts(char *s,__m128i *x);
-
+#elsif defined (__arm__) || defined(__aarch64__)
+extern void print_shorts(char *s,int16x8_t *x);
+#endif
 void fill_channel_desc(channel_desc_t *chan_desc,
                        uint8_t nb_tx,
                        uint8_t nb_rx,

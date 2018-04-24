@@ -186,33 +186,52 @@ void send_IF5(RU_t *ru, openair0_timestamp proc_timestamp, int subframe, uint8_t
     if (ru->if_timing == synch_to_mobipass_standalone) {
       uint16_t db_fulllength = PAYLOAD_MOBIPASS_NUM_SAMPLES;
 
+#if defined(__x86_64__) || defined(__i386__)
       __m128i *data_block=NULL, *data_block_head=NULL;
       __m128i *txp128;
       __m128i t0, t1;
-
+#elif defined(__arm__) || defined(__aarch64__)
+      int16x8_t *data_block=NULL, *data_block_head=NULL;
+      int16x8_t *txp128;
+      int16x8_t t0, t1;
+#endif
       unsigned char _tx_buffer[MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t + db_fulllength*sizeof(int16_t)];
       tx_buffer=(int32_t *)_tx_buffer;
 
       IF5_mobipass_header_t *header = (IF5_mobipass_header_t *)((uint8_t *)tx_buffer + MAC_HEADER_SIZE_BYTES);
+#if defined(__x86_64__) || defined(__i386__)
       data_block_head = (__m128i *)((uint8_t *)tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t);
+#elif defined(__arm__) || defined(__aarch64__)
+      data_block_head = (int16x8_t *)((uint8_t *)tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t);
+#endif
 
       header->flags = 0;
       header->fifo_status = 0;
       header->seqno = *seqno;
       header->ack = 0;
       header->word0 = 0;
-
       txp[0] = (void*)&ru->common.txdata[0][subframe*ru->frame_parms.samples_per_tti];
-      txp128 = (__m128i *) txp[0];
-
+      txp128 = 
+#if defined(__x86_64__) || defined(__i386__)
+              (__m128i *) txp[0];
+#elif defined(__arm__) || defined(__aarch64__)
+              (int16x8_t *) txp[0];
+#endif
       for (packet_id=0; packet_id<fp->samples_per_tti/db_fulllength; packet_id++) {
         header->time_stamp = htonl((uint32_t)(proc_timestamp + packet_id*db_fulllength));
         data_block = data_block_head;
 
         for (i=0; i<db_fulllength>>2; i+=2) {
+#if defined(__x86_64__) || defined(__i386__)
           t0 = _mm_srai_epi16(*txp128++, 4);
           t1 = _mm_srai_epi16(*txp128++, 4);
          _mm_storeu_si128(data_block++, _mm_packs_epi16(t0, t1));
+#elif defined(__arm__) || defined(__aarch64__)
+          t0 = vshrq_n_s16(*txp128++, 4);
+          t1 = vshrq_n_s16(*txp128++, 4);
+         //_mm_storeu_si128(data_block++, _mm_packs_epi16(t0, t1));
+          AssertFatal(1==0,"To be done for ARM\n");
+#endif
         }
 
         // Write the packet to the fronthaul
@@ -231,15 +250,25 @@ void send_IF5(RU_t *ru, openair0_timestamp proc_timestamp, int subframe, uint8_t
     } else {
       uint16_t db_fulllength = PAYLOAD_MOBIPASS_NUM_SAMPLES;
       
+#if defined(__x86_64__) || defined(__i386__)
       __m128i *data_block=NULL, *data_block_head=NULL;
-
       __m128i *txp128;
       __m128i t0, t1;
+#elif defined(__arm__) || defined(__aarch64__)
+      int16x8_t *data_block=NULL, *data_block_head=NULL;
+      int16x8_t *txp128;
+      int16x8_t t0, t1;
+#endif
+
 
       // tx_buffer = memalign(16, MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t + db_fulllength*sizeof(int16_t));
       tx_buffer = malloc(MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t + db_fulllength*sizeof(int16_t));
       IF5_mobipass_header_t *header = (IF5_mobipass_header_t *)((uint8_t *)tx_buffer + MAC_HEADER_SIZE_BYTES);
+#if defined(__x86_64__) || defined(__i386__)
       data_block_head = (__m128i *)((uint8_t *)tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t);
+#elif defined(__arm__) || defined(__aarch64__)
+      data_block_head = (int16x8_t *)((uint8_t *)tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t);
+#endif
     
       header->flags = 0;
       header->fifo_status = 0;  
@@ -248,17 +277,26 @@ void send_IF5(RU_t *ru, openair0_timestamp proc_timestamp, int subframe, uint8_t
       header->word0 = 0;  
       
       txp[0] = (void*)&ru->common.txdata[0][subframe*ru->frame_parms.samples_per_tti];
+#if defined(__x86_64__) || defined(__i386__)
       txp128 = (__m128i *) txp[0];
+#elif defined(__arm__) || defined(__aarch64__)
+      txp128 = (int16x8_t *) txp[0];
+#endif
                 
       for (packet_id=0; packet_id<fp->samples_per_tti/db_fulllength; packet_id++) {
         header->time_stamp = htonl((uint32_t)(proc_timestamp + packet_id*db_fulllength));
         data_block = data_block_head; 
-      
         for (i=0; i<db_fulllength>>2; i+=2) {
+#if defined(__x86_64__) || defined(__i386__)
           t0 = _mm_srai_epi16(*txp128++, 4);
-          t1 = _mm_srai_epi16(*txp128++, 4);   
-//        *data_block++ = _mm_packs_epi16(t0, t1);     
-         _mm_storeu_si128(data_block++, _mm_packs_epi16(t0, t1));     
+          t1 = _mm_srai_epi16(*txp128++, 4);
+         _mm_storeu_si128(data_block++, _mm_packs_epi16(t0, t1));
+#elif defined(__arm__) || defined(__aarch64__)
+          t0 = vshrq_n_s16(*txp128++, 4);
+          t1 = vshrq_n_s16(*txp128++, 4);
+         //_mm_storeu_si128(data_block++, _mm_packs_epi16(t0, t1));
+          AssertFatal(1==0,"To be done for ARM\n");
+#endif
         }
         
         // Write the packet to the fronthaul
@@ -447,16 +485,31 @@ void recv_IF5(RU_t *ru, openair0_timestamp *proc_timestamp, int subframe, uint16
       uint16_t db_fulllength = PAYLOAD_MOBIPASS_NUM_SAMPLES;
       openair0_timestamp timestamp_mobipass[fp->samples_per_tti/db_fulllength];
       int32_t *rx_buffer=NULL;
+#if defined(__x86_64__) || defined(__i386__)
       __m128i *data_block=NULL, *data_block_head=NULL;
       __m128i *rxp128;
       __m128i r0;
+#else
+      int16x8_t *data_block=NULL, *data_block_head=NULL;
+      int16x8_t *rxp128;
+      int16x8_t r0;
+      AssertFatal(1==0,"To be done for ARM\n");
+#endif
 
       unsigned char _rx_buffer[MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t + db_fulllength*sizeof(int16_t)];
       rx_buffer = (int32_t *)_rx_buffer;
+#if defined(__x86_64__) || defined(__i386__)
       data_block_head = (__m128i *)((uint8_t *)rx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t);
+#else
+      AssertFatal(1==0,"To be done for ARM\n");
+#endif
 
       rxp[0] = (void*)&ru->common.rxdata[0][subframe*ru->frame_parms.samples_per_tti];
+#if defined(__x86_64__) || defined(__i386__) 
       rxp128 = (__m128i *) (rxp[0]);
+#else
+      AssertFatal(1==0,"To be done for ARM\n");
+#endif
 
       packet_id=0;
       while(packet_id<fp->samples_per_tti/db_fulllength) {
@@ -471,12 +524,16 @@ void recv_IF5(RU_t *ru, openair0_timestamp *proc_timestamp, int subframe, uint16
 
           //store rxdata and increase packet_id
           rxp[0] = (void*)&ru->common.rxdata[0][(subframe*ru->frame_parms.samples_per_tti)+packet_id*db_fulllength];
+#if defined(__x86_64__) || defined(__i386__)
           rxp128 = (__m128i *) (rxp[0]);
           for (i=0; i<db_fulllength>>2; i+=2) {
             r0 = _mm_loadu_si128(data_block++);
             *rxp128++ =_mm_slli_epi16(_mm_srai_epi16(_mm_unpacklo_epi8(r0,r0),8),4);
             *rxp128++ =_mm_slli_epi16(_mm_srai_epi16(_mm_unpackhi_epi8(r0,r0),8),4);
           }
+#else
+   AssertFatal(1==0,"To be done for ARM\n");
+#endif
           packet_id++;
       }//end while
 
@@ -492,18 +549,34 @@ void recv_IF5(RU_t *ru, openair0_timestamp *proc_timestamp, int subframe, uint16
       int subframe_skip = 0;
       int reset_flag = 0;
       int32_t *rx_buffer=NULL;
+#if defined(__x86_64__) || defined(__i386__)
       __m128i *data_block=NULL, *data_block_head=NULL;
       __m128i *rxp128;
       __m128i r0;
+#else
+      int16x8_t *data_block=NULL, *data_block_head=NULL;
+      int16x8_t *rxp128;
+      int16x8_t r0;
+
+   AssertFatal(1==0,"To be done for ARM\n");
+#endif
 
       //rx_buffer = memalign(16, MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t + db_fulllength*sizeof(int16_t));
       rx_buffer = malloc(MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t + db_fulllength*sizeof(int16_t));
       IF5_mobipass_header_t *header = (IF5_mobipass_header_t *)((uint8_t *)rx_buffer + MAC_HEADER_SIZE_BYTES);
+#if defined(__x86_64__) || defined(__i386__)
       data_block_head = (__m128i *)((uint8_t *)rx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t);
    
       rxp[0] = (void*)&ru->common.rxdata[0][subframe*ru->frame_parms.samples_per_tti];
       rxp128 = (__m128i *) (rxp[0]);
-   
+#else 
+      data_block_head = (int16x8_t *)((uint8_t *)rx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF5_mobipass_header_t);
+  
+      rxp[0] = (void*)&ru->common.rxdata[0][subframe*ru->frame_parms.samples_per_tti];
+      rxp128 = (int16x8_t *) (rxp[0]);
+
+   AssertFatal(1==0,"To be done for ARM\n"); 
+#endif
       RU_proc_t *proc = &ru->proc;
 /*
    //   while(packet_id<fp->samples_per_tti/db_fulllength) {
@@ -532,6 +605,8 @@ void recv_IF5(RU_t *ru, openair0_timestamp *proc_timestamp, int subframe, uint16
           //   ts_stored = 1;
           *proc_timestamp = ntohl(ts - (packet_id*db_fulllength));
           // }
+#if defined(__x86_64__) || defined(__i386__)
+
           rxp[0] = (void*)&eNB->common_vars.rxdata[0][0][(subframe*eNB->frame_parms.samples_per_tti)+packet_id*db_fulllength];
           rxp128 = (__m128i *) (rxp[0]);
 
@@ -540,6 +615,9 @@ void recv_IF5(RU_t *ru, openair0_timestamp *proc_timestamp, int subframe, uint16
             *rxp128++ =_mm_slli_epi16(_mm_srai_epi16(_mm_unpacklo_epi8(r0,r0),8),4);
             *rxp128++ =_mm_slli_epi16(_mm_srai_epi16(_mm_unpackhi_epi8(r0,r0),8),4);
           }
+#else
+          AssertFatal(1==0,"To be done for ARM\n");
+#endif
         }
     //  }//end while
 */
@@ -581,6 +659,8 @@ void recv_IF5(RU_t *ru, openair0_timestamp *proc_timestamp, int subframe, uint16
           start_flag = 0;
 
           //store rxdata and increase packet_id
+#if defined(__x86_64__) || defined(__i386__)
+
           rxp[0] = (void*)&ru->common.rxdata[0][(subframe*ru->frame_parms.samples_per_tti)+packet_id*db_fulllength];
           rxp128 = (__m128i *) (rxp[0]);
           for (i=0; i<db_fulllength>>2; i+=2) {
@@ -588,6 +668,9 @@ void recv_IF5(RU_t *ru, openair0_timestamp *proc_timestamp, int subframe, uint16
             *rxp128++ =_mm_slli_epi16(_mm_srai_epi16(_mm_unpacklo_epi8(r0,r0),8),4);
             *rxp128++ =_mm_slli_epi16(_mm_srai_epi16(_mm_unpackhi_epi8(r0,r0),8),4);
           }   
+#else
+          AssertFatal(1==0,"To be done for ARM\n");
+#endif
           packet_id++; 
           offset_cnt = (header->seqno+1)&255;
         }

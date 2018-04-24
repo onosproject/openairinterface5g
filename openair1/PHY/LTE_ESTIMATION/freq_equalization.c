@@ -297,7 +297,7 @@ void freq_equalization(LTE_DL_FRAME_PARMS *frame_parms,
   rxdataF_comp128   = (__m128i *)&rxdataF_comp[0][symbol*frame_parms->N_RB_DL*12];
   ul_ch_mag128      = (__m128i *)&ul_ch_mag[0][symbol*frame_parms->N_RB_DL*12];
   ul_ch_magb128      = (__m128i *)&ul_ch_magb[0][symbol*frame_parms->N_RB_DL*12];
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int16x8_t *ul_ch_mag128,*ul_ch_magb128,*rxdataF_comp128;
   rxdataF_comp128   = (int16x8_t*)&rxdataF_comp[0][symbol*frame_parms->N_RB_DL*12];
   ul_ch_mag128      = (int16x8_t*)&ul_ch_mag[0][symbol*frame_parms->N_RB_DL*12];
@@ -326,7 +326,7 @@ void freq_equalization(LTE_DL_FRAME_PARMS *frame_parms,
       ul_ch_mag128[re]  = _mm_set1_epi16(316);  // this is 512*4/sqrt(42)
       ul_ch_magb128[re] = _mm_set1_epi16(158);  // this is 512*2/sqrt(42)
     }
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     rxdataF_comp128[re] = vmulq_s16(rxdataF_comp128[re],*((int16x8_t *)&inv_ch[8*amp]));
 
     if (Qm==4)

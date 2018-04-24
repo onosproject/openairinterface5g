@@ -20,6 +20,36 @@
  */
 
 #include "defs.h"
+#if defined(__x86_64__) || defined(__i386__)
+#define simd_q15_t __m128i
+#define simd_q31_t __m128i
+#define simd_q63_t __m128i
+#define simd_q15_short_t __m64i
+#define simd_q15_add(a,b) _mm_adds_epi16(a,b)
+#define simd_q63_add(a,b) _mm_add_epi64(a,b)
+#define simd_q15_sub(a,b) _mm_subs_epi16(a,b)
+#define simd_q63_sub(a,b) _mm_subs_epi64(a,b)
+#define simd_q15_add_short(a,b) _mm_adds_pi16(a,b)
+#define simd_q31_add(a,b) _mm_adds_epi32(a,b)
+#ifdef __AVX2__
+#define simd256_q15_t __m256i
+#endif
+
+#elif defined(__arm__) || defined(__aarch64__)
+#define simd_q15_t int16x8_t
+#define simd_q31_t int32x4_t
+#define simd_q63_t int64x2_t
+#define simd_q15_short_t int16x4_t
+#define simd_q15_add(a,b) vqaddq_s16(a,b)
+#define simd_q63_add(a,b) vqaddq_s64(a,b)
+#define simd_q15_sub(a,b) vqsubq_s16(a,b)
+#define simd_q63_sub(a,b) vqsubq_s64(a,b)
+#define simd_q15_add_short(a,b) vqadd_s16(a,b)
+#define simd_q31_add(a,b) vqaddq_s32(a,b)
+#define _mm_empty() 
+#define _m_empty()
+
+#endif
 
 
 int add_vector16(short *x,
@@ -29,13 +59,13 @@ int add_vector16(short *x,
 {
   unsigned int i;                 // loop counter
 
-  __m128i *x_128;
-  __m128i *y_128;
-  __m128i *z_128;
+  simd_q15_t *x_128;
+  simd_q15_t *y_128;
+  simd_q15_t *z_128;
 
-  x_128 = (__m128i *)&x[0];
-  y_128 = (__m128i *)&y[0];
-  z_128 = (__m128i *)&z[0];
+  x_128 = (simd_q15_t *)&x[0];
+  y_128 = (simd_q15_t *)&y[0];
+  z_128 = (simd_q15_t *)&z[0];
 
 
   for(i=0; i<(N>>5); i++) {
@@ -45,7 +75,7 @@ int add_vector16(short *x,
     print_shorts(y_128[0],"y[0]=");
     */
 
-    z_128[0] = _mm_adds_epi16(x_128[0],y_128[0]);
+    z_128[0] = simd_q15_add(x_128[0],y_128[0]);
     /*
     print_shorts(z_128[0],"z[0]=");
 
@@ -53,7 +83,7 @@ int add_vector16(short *x,
     print_shorts(y_128[1],"y[1]=");
     */
 
-    z_128[1] = _mm_adds_epi16(x_128[1],y_128[1]);
+    z_128[1] = simd_q15_add(x_128[1],y_128[1]);
     /*
     print_shorts(z_128[1],"z[1]=");
 
@@ -61,7 +91,7 @@ int add_vector16(short *x,
     print_shorts(y_128[2],"y[2]=");
     */
 
-    z_128[2] = _mm_adds_epi16(x_128[2],y_128[2]);
+    z_128[2] = simd_q15_add(x_128[2],y_128[2]);
     /*
     print_shorts(z_128[2],"z[2]=");
 
@@ -69,7 +99,7 @@ int add_vector16(short *x,
     print_shorts(y_128[3],"y[3]=");
     */
 
-    z_128[3] = _mm_adds_epi16(x_128[3],y_128[3]);
+    z_128[3] = simd_q15_add(x_128[3],y_128[3]);
     /*
     print_shorts(z_128[3],"z[3]=");
     */
@@ -106,13 +136,13 @@ int add_vector16_64(short *x,
 {
   unsigned int i;                 // loop counter
 
-  __m64 *x_64;
-  __m64 *y_64;
-  __m64 *z_64;
+  simd_q15_short_t *x_64;
+  simd_q15_short_t *y_64;
+  simd_q15_short_t *z_64;
 
-  x_64 = (__m64 *)&x[0];
-  y_64 = (__m64 *)&y[0];
-  z_64 = (__m64 *)&z[0];
+  x_64 = (simd_q15_short_t *)&x[0];
+  y_64 = (simd_q15_short_t *)&y[0];
+  z_64 = (simd_q15_short_t *)&z[0];
 
 
   for(i=0; i<(N>>2); i++) {
@@ -122,7 +152,7 @@ int add_vector16_64(short *x,
     print_shorts64(y_64[i],"y[i]=");
     */
 
-    z_64[i] = _mm_adds_pi16(x_64[i],y_64[i]);
+    z_64[i] = simd_q15_add_short(x_64[i],y_64[i]);
     /*
     print_shorts64(z_64[i],"z[i]=");
     */
@@ -142,20 +172,20 @@ int add_cpx_vector32(short *x,
 {
   unsigned int i;                 // loop counter
 
-  __m128i *x_128;
-  __m128i *y_128;
-  __m128i *z_128;
+  simd_q31_t *x_128;
+  simd_q31_t *y_128;
+  simd_q31_t *z_128;
 
-  x_128 = (__m128i *)&x[0];
-  y_128 = (__m128i *)&y[0];
-  z_128 = (__m128i *)&z[0];
+  x_128 = (simd_q31_t *)&x[0];
+  y_128 = (simd_q31_t *)&y[0];
+  z_128 = (simd_q31_t *)&z[0];
 
 
   for(i=0; i<(N>>3); i++) {
-    z_128[0] = _mm_add_epi32(x_128[0],y_128[0]);
-    z_128[1] = _mm_add_epi32(x_128[1],y_128[1]);
-    z_128[2] = _mm_add_epi32(x_128[2],y_128[2]);
-    z_128[3] = _mm_add_epi32(x_128[3],y_128[3]);
+    z_128[0] = simd_q31_add(x_128[0],y_128[0]);
+    z_128[1] = simd_q31_add(x_128[1],y_128[1]);
+    z_128[2] = simd_q31_add(x_128[2],y_128[2]);
+    z_128[3] = simd_q31_add(x_128[3],y_128[3]);
 
 
     x_128+=4;
@@ -176,16 +206,16 @@ int32_t sub_cpx_vector16(int16_t *x,
 {
   unsigned int i;                 // loop counter
 
-  __m128i *x_128;
-  __m128i *y_128;
-  __m128i *z_128;
+  simd_q15_t *x_128;
+  simd_q15_t *y_128;
+  simd_q15_t *z_128;
 
-  x_128 = (__m128i *)&x[0];
-  y_128 = (__m128i *)&y[0];
-  z_128 = (__m128i *)&z[0];
+  x_128 = (simd_q15_t *)&x[0];
+  y_128 = (simd_q15_t *)&y[0];
+  z_128 = (simd_q15_t *)&z[0];
 
  for(i=0; i<(N>>3); i++) {
-    z_128[0] = _mm_subs_epi16(x_128[0],y_128[0]);
+    z_128[0] = simd_q15_sub(x_128[0],y_128[0]);
 
     x_128++;
     y_128++;
@@ -207,19 +237,19 @@ int add_real_vector64(short *x,
 {
   unsigned int i;                 // loop counter
 
-  __m128i *x_128;
-  __m128i *y_128;
-  __m128i *z_128;
+  simd_q63_t *x_128;
+  simd_q63_t *y_128;
+  simd_q63_t *z_128;
 
-  x_128 = (__m128i *)&x[0];
-  y_128 = (__m128i *)&y[0];
-  z_128 = (__m128i *)&z[0];
+  x_128 = (simd_q63_t *)&x[0];
+  y_128 = (simd_q63_t *)&y[0];
+  z_128 = (simd_q63_t *)&z[0];
 
   for(i=0; i<(N>>3); i++) {
-    z_128[0] = _mm_add_epi64(x_128[0], y_128[0]);
-    z_128[1] = _mm_add_epi64(x_128[1], y_128[1]);
-    z_128[2] = _mm_add_epi64(x_128[2], y_128[2]);
-    z_128[3] = _mm_add_epi64(x_128[3], y_128[3]);
+    z_128[0] = simd_q63_add(x_128[0], y_128[0]);
+    z_128[1] = simd_q63_add(x_128[1], y_128[1]);
+    z_128[2] = simd_q63_add(x_128[2], y_128[2]);
+    z_128[3] = simd_q63_add(x_128[3], y_128[3]);
 
 
     x_128+=4;
@@ -240,20 +270,19 @@ int sub_real_vector64(short *x,
 {
   unsigned int i;                 // loop counter
 
-  __m128i *x_128;
-  __m128i *y_128;
-  __m128i *z_128;
+  simd_q63_t *x_128;
+  simd_q63_t *y_128;
+  simd_q63_t *z_128;
 
-  x_128 = (__m128i *)&x[0];
-  y_128 = (__m128i *)&y[0];
-  z_128 = (__m128i *)&z[0];
+  x_128 = (simd_q63_t *)&x[0];
+  y_128 = (simd_q63_t *)&y[0];
+  z_128 = (simd_q63_t *)&z[0];
 
   for(i=0; i<(N>>3); i++) {
-    z_128[0] = _mm_sub_epi64(x_128[0], y_128[0]);
-    z_128[1] = _mm_sub_epi64(x_128[1], y_128[1]);
-    z_128[2] = _mm_sub_epi64(x_128[2], y_128[2]);
-    z_128[3] = _mm_sub_epi64(x_128[3], y_128[3]);
-
+    z_128[0] = simd_q63_sub(x_128[0], y_128[0]);
+    z_128[1] = simd_q63_sub(x_128[1], y_128[1]);
+    z_128[2] = simd_q63_sub(x_128[2], y_128[2]);
+    z_128[3] = simd_q63_sub(x_128[3], y_128[3]);
 
     x_128+=4;
     y_128+=4;

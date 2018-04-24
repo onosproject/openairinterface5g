@@ -127,7 +127,7 @@ void compute_gamma16(llr_t* m11,llr_t* m10,llr_t* systematic,channel_t* y_parity
   __m128i *y_parity128   = (__m128i *)y_parity;
   __m128i *m10_128        = (__m128i *)m10;
   __m128i *m11_128        = (__m128i *)m11;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int16x8_t *systematic128  = (int16x8_t *)systematic;
   int16x8_t *y_parity128    = (int16x8_t *)y_parity;
   int16x8_t *m10_128        = (int16x8_t *)m10;
@@ -157,7 +157,7 @@ void compute_gamma16(llr_t* m11,llr_t* m10,llr_t* systematic,channel_t* y_parity
     //    ((__m256i*)m10_128)[k] = _mm256_srai_epi16(_mm256_subs_epi16(((__m256i*)y_parity128)[k],((__m256i*)systematic128)[k]),1);
     ((__m256i*)m10_128)[k] = _mm256_srai_epi16(_mm256_subs_epi16(((__m256i*)systematic128)[k],((__m256i*)y_parity128)[k]),1);
 #endif
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     m11_128[k] = vhaddq_s16(systematic128[k],y_parity128[k]);
     m10_128[k] = vhsubq_s16(systematic128[k],y_parity128[k]);
 #endif
@@ -181,7 +181,7 @@ void compute_gamma16(llr_t* m11,llr_t* m10,llr_t* systematic,channel_t* y_parity
 #else
   m10_128[k] = _mm_srai_epi16(_mm_subs_epi16(y_parity128[k],systematic128[k+term_flag]),1);
 #endif
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   m11_128[k] = vhaddq_s16(systematic128[k+term_flag],y_parity128[k]);
   m10_128[k] = vhsubq_s16(systematic128[k+term_flag],y_parity128[k]);
 #endif
@@ -216,7 +216,7 @@ void compute_alpha16(llr_t* alpha,llr_t* beta,llr_t* m_11,llr_t* m_10,unsigned s
   __m256i alpha_max;
 #endif
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int16x8_t *alpha128=(int16x8_t *)alpha,*alpha_ptr;
   int16x8_t a0,a1,a2,a3,a4,a5,a6,a7,*m11p,*m10p;
   int16x8_t m_b0,m_b1,m_b2,m_b3,m_b4,m_b5,m_b6,m_b7;
@@ -235,7 +235,7 @@ void compute_alpha16(llr_t* alpha,llr_t* beta,llr_t* m_11,llr_t* m_10,unsigned s
 #if 0
     alpha256 = (__m256i *)alpha;
 #endif
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     alpha128 = (int16x8_t *)alpha;
 #endif
 
@@ -249,7 +249,7 @@ void compute_alpha16(llr_t* alpha,llr_t* beta,llr_t* m_11,llr_t* m_10,unsigned s
       alpha128[5] = _mm_set_epi16(-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2);
       alpha128[6] = _mm_set_epi16(-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2);
       alpha128[7] = _mm_set_epi16(-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2,-MAX/2);
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
       alpha128[0] = vdupq_n_s16(-MAX/2);
       alpha128[0] = vsetq_lane_s16(0,alpha128[0],0);
       alpha128[1] = vdupq_n_s16(-MAX/2);
@@ -282,7 +282,7 @@ void compute_alpha16(llr_t* alpha,llr_t* beta,llr_t* m_11,llr_t* m_10,unsigned s
       alpha128[5] = _mm_slli_si128(alpha128[5+frame_length],2);
       alpha128[6] = _mm_slli_si128(alpha128[6+frame_length],2);
       alpha128[7] = _mm_slli_si128(alpha128[7+frame_length],2);
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
       alpha128[0] = (int16x8_t)vshlq_n_s64((int64x2_t)alpha128[frame_length],16);   alpha128[0] = vsetq_lane_s16(alpha[8],alpha128[0],3);
       alpha128[1] = (int16x8_t)vshlq_n_s64((int64x2_t)alpha128[1+frame_length],16); alpha128[1] = vsetq_lane_s16(alpha[24],alpha128[0],3);
       alpha128[2] = (int16x8_t)vshlq_n_s64((int64x2_t)alpha128[2+frame_length],16); alpha128[2] = vsetq_lane_s16(alpha[40],alpha128[0],3);
@@ -323,7 +323,7 @@ void compute_alpha16(llr_t* alpha,llr_t* beta,llr_t* m_11,llr_t* m_10,unsigned s
 #if defined(__x86_64__) || defined(__i386__)
     m11p = (__m128i*)m_11;
     m10p = (__m128i*)m_10;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     m11p = (int16x8_t*)m_11;
     m10p = (int16x8_t*)m_10;
 #endif
@@ -409,7 +409,7 @@ void compute_alpha16(llr_t* alpha,llr_t* beta,llr_t* m_11,llr_t* m_10,unsigned s
       
       
 #endif
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
       m_b0 = vqaddq_s16(alpha_ptr[1],*m11p);  // m11
       m_b4 = vqsubq_s16(alpha_ptr[1],*m11p);  // m00=-m11
       m_b1 = vqsubq_s16(alpha_ptr[3],*m10p);  // m01=-m10
@@ -477,7 +477,7 @@ void compute_alpha16(llr_t* alpha,llr_t* beta,llr_t* m_11,llr_t* m_10,unsigned s
       alpha_ptr256[2] = _mm256_permute2x128_si256(a45,a67,0x02);  //a64
       alpha_ptr256[3] = _mm256_permute2x128_si256(a45,a67,0x31);  //a75
 #endif
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
       alpha_ptr[0] = vqsubq_s16(a0,alpha_max);
       alpha_ptr[1] = vqsubq_s16(a1,alpha_max);
       alpha_ptr[2] = vqsubq_s16(a2,alpha_max);
@@ -549,7 +549,7 @@ void compute_beta16(llr_t* alpha,llr_t* beta,llr_t *m_11,llr_t* m_10,unsigned sh
 
   __m128i *beta128,*alpha128,*beta_ptr;
   __m128i beta_max;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int16x8_t m11_128,m10_128;
   int16x8_t m_b0,m_b1,m_b2,m_b3,m_b4,m_b5,m_b6,m_b7;
   int16x8_t new0,new1,new2,new3,new4,new5,new6,new7;
@@ -631,7 +631,7 @@ void compute_beta16(llr_t* alpha,llr_t* beta,llr_t *m_11,llr_t* m_10,unsigned sh
 #if defined(__x86_64__) || defined(__i386__)
     beta_ptr   = (__m128i*)&beta[frame_length<<3];
     alpha128   = (__m128i*)&alpha[0];
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     beta_ptr   = (int16x8_t*)&beta[frame_length<<3];
     alpha128   = (int16x8_t*)&alpha[0];
 #endif
@@ -666,7 +666,7 @@ void compute_beta16(llr_t* alpha,llr_t* beta,llr_t *m_11,llr_t* m_10,unsigned sh
       beta_ptr[5] = _mm_srli_si128(beta128[5],2);
       beta_ptr[6] = _mm_srli_si128(beta128[6],2);
       beta_ptr[7] = _mm_srli_si128(beta128[7],2);
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
       beta128 = (int16x8_t*)&beta[0];
       beta_ptr   = (int16x8_t*)&beta[frame_length<<3];
       beta_ptr[0] = (int16x8_t)vshrq_n_s64((int64x2_t)beta128[0],16);   beta_ptr[0] = vsetq_lane_s16(beta[3],beta_ptr[0],4);
@@ -701,7 +701,7 @@ void compute_beta16(llr_t* alpha,llr_t* beta,llr_t *m_11,llr_t* m_10,unsigned sh
     beta_ptr[5] = _mm_insert_epi16(beta_ptr[5],beta5_16,7);
     beta_ptr[6] = _mm_insert_epi16(beta_ptr[6],beta6_16,7);
     beta_ptr[7] = _mm_insert_epi16(beta_ptr[7],beta7_16,7);
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     beta_ptr[0] = vsetq_lane_s16(beta0_16,beta_ptr[0],7);
     beta_ptr[1] = vsetq_lane_s16(beta1_16,beta_ptr[1],7);
     beta_ptr[2] = vsetq_lane_s16(beta2_16,beta_ptr[2],7);
@@ -822,7 +822,7 @@ void compute_beta16(llr_t* alpha,llr_t* beta,llr_t *m_11,llr_t* m_10,unsigned sh
       ((_m256i*)beta_ptr)[3]) = _mm256_permute2x128_si256(b64,b75,0x20);  //b67
 #endif
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
       m11_128=((int16x8_t*)m_11)[k];
       m10_128=((int16x8_t*)m_10)[k];
       m_b0 = vqaddq_s16(beta_ptr[4],m11_128);  //m11
@@ -903,7 +903,7 @@ void compute_ext16(llr_t* alpha,llr_t* beta,llr_t* m_11,llr_t* m_10,llr_t* ext, 
   __m128i m01_1,m01_2,m01_3,m01_4;
   __m128i m10_1,m10_2,m10_3,m10_4;
   __m128i m11_1,m11_2,m11_3,m11_4;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int16x8_t *alpha128=(int16x8_t *)alpha;
   int16x8_t *beta128=(int16x8_t *)beta;
   int16x8_t *m11_128,*m10_128,*ext_128;
@@ -1054,7 +1054,7 @@ void compute_ext16(llr_t* alpha,llr_t* beta,llr_t* m_11,llr_t* m_10,llr_t* ext, 
     print_shorts("m01_1:",(int16_t*)&m01_1);
 #endif
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     m11_128        = (int16x8_t*)&m_11[k<<3];
     m10_128        = (int16x8_t*)&m_10[k<<3];
     ext_128        = (int16x8_t*)&ext[k<<3];
@@ -1221,7 +1221,7 @@ unsigned char phy_threegpplte_turbo_decoder16(short *y,
   __m128i *yp128;
   __m128i tmp, zeros=_mm_setzero_si128();
   __m128i tmpe;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   int16x8_t *yp128;
 //  int16x8_t tmp128[(n+8)>>3];
   int16x8_t tmp, zeros=vdupq_n_s16(0);
@@ -1276,7 +1276,7 @@ unsigned char phy_threegpplte_turbo_decoder16(short *y,
 
 #if defined(__x86_64__) || defined(__i386__)
   yp128 = (__m128i*)y;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
   yp128 = (int16x8_t*)y;
 #endif
 
@@ -1367,7 +1367,7 @@ unsigned char phy_threegpplte_turbo_decoder16(short *y,
     fprintf(fdsse4,"init7: j %d, s[j] %d yp1[j] %d yp2[j] %d\n",j,s[j],yp1[j],yp2[j]);
 #endif
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
     s[j]   = vgetq_lane_s16(yp128[0],0);
     yp1[j] = vgetq_lane_s16(yp128[0],1);
     yp2[j] = vgetq_lane_s16(yp128[0],2);
@@ -1471,7 +1471,7 @@ unsigned char phy_threegpplte_turbo_decoder16(short *y,
       ((__m128i *)systematic2)[i]=_mm_insert_epi16(((__m128i *)systematic2)[i],ext[*pi4_p++],6);
       ((__m128i *)systematic2)[i]=_mm_insert_epi16(((__m128i *)systematic2)[i],ext[*pi4_p++],7);
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
       ((int16x8_t*)systematic2)[i]=vsetq_lane_s16(ext[*pi4_p++],((int16x8_t*)systematic2)[i],0);
       ((int16x8_t*)systematic2)[i]=vsetq_lane_s16(ext[*pi4_p++],((int16x8_t*)systematic2)[i],1);
       ((int16x8_t*)systematic2)[i]=vsetq_lane_s16(ext[*pi4_p++],((int16x8_t*)systematic2)[i],2);
@@ -1507,7 +1507,7 @@ unsigned char phy_threegpplte_turbo_decoder16(short *y,
       tmp=_mm_insert_epi16(tmp,ext2[*pi5_p++],6);
       tmp=_mm_insert_epi16(tmp,ext2[*pi5_p++],7);
       ((__m128i *)systematic1)[i] = _mm_adds_epi16(_mm_subs_epi16(tmp,((__m128i*)ext)[i]),((__m128i *)systematic0)[i]);
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
         tmp=vsetq_lane_s16(ext2[*pi5_p++],tmp,0);
         tmp=vsetq_lane_s16(ext2[*pi5_p++],tmp,1);
         tmp=vsetq_lane_s16(ext2[*pi5_p++],tmp,2);
@@ -1542,7 +1542,7 @@ unsigned char phy_threegpplte_turbo_decoder16(short *y,
 #endif
         tmp=_mm_cmpgt_epi8(_mm_packs_epi16(tmp,zeros),zeros);
         decoded_bytes[i]=(unsigned char)_mm_movemask_epi8(tmp);
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
         tmp=vsetq_lane_s16(ext2[*pi6_p++],tmp,7);
         tmp=vsetq_lane_s16(ext2[*pi6_p++],tmp,6);
         tmp=vsetq_lane_s16(ext2[*pi6_p++],tmp,5);
@@ -1558,7 +1558,7 @@ unsigned char phy_threegpplte_turbo_decoder16(short *y,
 // Mask64 = 2^b0 + 2^b1 + 2^b2 + 2^b3 + 2^b4 + 2^b5 + 2^b6 + 2^b7
 	uint64x2_t Mask   = vpaddlq_u32(vpaddlq_u16(vandq_u16(vcgtq_s16(tmp,zeros), Powers)));
         uint64x1_t Mask64 = vget_high_u64(Mask)+vget_low_u64(Mask);
-        decoded_bytes[i] = (uint8_t)Mask64;
+        decoded_bytes[i] = vget_lane_u8((uint8x8_t)Mask64,0);
 #endif
 #ifdef DEBUG_LOGMAP
 	print_shorts("tmp",(int16_t*)&tmp);
@@ -1626,7 +1626,7 @@ unsigned char phy_threegpplte_turbo_decoder16(short *y,
       __m128i* ext_128=(__m128i*) ext;
       __m128i* s1_128=(__m128i*) systematic1;
       __m128i* s0_128=(__m128i*) systematic0;
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
       int16x8_t* ext_128=(int16x8_t*) ext;
       int16x8_t* s1_128=(int16x8_t*) systematic1;
       int16x8_t* s0_128=(int16x8_t*) systematic0;
@@ -1636,7 +1636,7 @@ unsigned char phy_threegpplte_turbo_decoder16(short *y,
       for (i=0; i<myloop; i++) {
 #if defined(__x86_64__) || defined(__i386__)
         *ext_128=_mm_adds_epi16(_mm_subs_epi16(*ext_128,*s1_128++),*s0_128++);
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
         *ext_128=vqaddq_s16(vqsubq_s16(*ext_128,*s1_128++),*s0_128++);
 #endif
         ext_128++;
