@@ -1042,12 +1042,12 @@ void kill_eNB_proc(int inst) {
     LOG_I(PHY, "Killing TX CC_id %d inst %d\n", CC_id, inst );
     for (i=0; i<2; i++) {
       pthread_mutex_lock(&proc_rxtx[i].mutex_rxtx);
-      proc_rxtx[i].instance_cnt_rxtx = 0;
+      proc_rxtx[i].instance_cnt_rxtx = 1;
       proc_rxtx[i].pipe_ready = 0;
       pthread_cond_signal(&proc_rxtx[i].cond_rxtx);
       pthread_mutex_unlock(&proc_rxtx[i].mutex_rxtx);
     }
-    proc->instance_cnt_prach = 0;
+    proc->instance_cnt_prach = 1;
     pthread_cond_signal( &proc->cond_prach );
 
     pthread_cond_signal( &proc->cond_asynch_rxtx );
@@ -1060,7 +1060,7 @@ void kill_eNB_proc(int inst) {
     pthread_mutex_destroy( &proc->mutex_prach );
     pthread_cond_destroy( &proc->cond_prach );
 #ifdef Rel14
-    proc->instance_cnt_prach_br = 0;
+    proc->instance_cnt_prach_br = 1;
     pthread_cond_signal( &proc->cond_prach_br );
     pthread_join( proc->pthread_prach_br, (void**)&status );    
     pthread_mutex_destroy( &proc->mutex_prach_br );

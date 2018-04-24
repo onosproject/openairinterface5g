@@ -1902,42 +1902,42 @@ void kill_RU_proc(int inst)
   RU_proc_t *proc = &ru->proc;
 
   pthread_mutex_lock(&proc->mutex_FH);
-  proc->instance_cnt_FH = 0;
+  proc->instance_cnt_FH = 1;
   pthread_cond_signal(&proc->cond_FH);
   pthread_mutex_unlock(&proc->mutex_FH);
   LOG_D(PHY, "Joining pthread_FH\n");
   pthread_join(proc->pthread_FH, NULL);
 
   pthread_mutex_lock(&proc->mutex_FH1);
-  proc->instance_cnt_FH1 = 0;
+  proc->instance_cnt_FH1 = 1;
   pthread_cond_signal(&proc->cond_FH1);
   pthread_mutex_unlock(&proc->mutex_FH1);
 
   pthread_mutex_lock(&proc->mutex_prach);
-  proc->instance_cnt_prach = 0;
+  proc->instance_cnt_prach = 1;
   pthread_cond_signal(&proc->cond_prach);
   pthread_mutex_unlock(&proc->mutex_prach);
 
 #ifdef Rel14
   pthread_mutex_lock(&proc->mutex_prach_br);
-  proc->instance_cnt_prach_br = 0;
+  proc->instance_cnt_prach_br = 1;
   pthread_cond_signal(&proc->cond_prach_br);
   pthread_mutex_unlock(&proc->mutex_prach_br);
 #endif
 
   pthread_mutex_lock(&proc->mutex_synch);
-  proc->instance_cnt_synch = 0;
+  proc->instance_cnt_synch = 1;
   pthread_cond_signal(&proc->cond_synch);
   pthread_mutex_unlock(&proc->mutex_synch);
 
   pthread_mutex_lock(&proc->mutex_eNBs);
   proc->ru_tx_ready = 0;
-  proc->instance_cnt_eNBs = 0;
+  proc->instance_cnt_eNBs = 1;
   pthread_cond_signal(&proc->cond_eNBs);
   pthread_mutex_unlock(&proc->mutex_eNBs);
 
   pthread_mutex_lock(&proc->mutex_asynch_rxtx);
-  proc->instance_cnt_asynch_rxtx = 0;
+  proc->instance_cnt_asynch_rxtx = 1;
   pthread_cond_signal(&proc->cond_asynch_rxtx);
   pthread_mutex_unlock(&proc->mutex_asynch_rxtx);
 
@@ -1971,7 +1971,7 @@ void kill_RU_proc(int inst)
   if (get_nprocs() > 2 && fepw) {
     if (ru->feprx) {
       pthread_mutex_lock(&proc->mutex_fep);
-      proc->instance_cnt_fep = 0;
+      proc->instance_cnt_fep = 1;
       pthread_mutex_unlock(&proc->mutex_fep);
       pthread_cond_signal(&proc->cond_fep);
       LOG_D(PHY, "Joining pthread_fep\n");
@@ -1981,7 +1981,7 @@ void kill_RU_proc(int inst)
     }
     if (ru->feptx_ofdm) {
       pthread_mutex_lock(&proc->mutex_feptx);
-      proc->instance_cnt_feptx = 0;
+      proc->instance_cnt_feptx = 1;
       pthread_mutex_unlock(&proc->mutex_feptx);
       pthread_cond_signal(&proc->cond_feptx);
       LOG_D(PHY, "Joining pthread_feptx\n");
