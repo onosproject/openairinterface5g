@@ -2883,12 +2883,14 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                         rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
                               ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].destinationL2Id );
                         if (rlc_status.bytes_in_buffer > 2){
-                           LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
+                           LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer \n",frameP,subframeP,rlc_status.bytes_in_buffer);
+
                            // Fill in group id for off-network communications
                            ue->sltx_active = 1;
                            //store LCID, destinationL2Id
                            ue->slsch_lcid =  ue->sl_info[i].LCID;
                            ue->destinationL2Id = ue->sl_info[i].destinationL2Id;
+                           LOG_I(MAC,"LCID %d, source L2ID  0x%08x, destinationL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->destinationL2Id);
                            break;
                         }
                      }
@@ -2903,6 +2905,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                            //store LCID, destinationL2Id
                            ue->slsch_lcid =  ue->sl_info[i].LCID;
                            ue->destinationL2Id = ue->sl_info[i].groupL2Id;
+                           LOG_I(MAC,"LCID %d, source L2ID  0x%08x, groupL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->groupL2Id);
                            break;
                         }
                      }
