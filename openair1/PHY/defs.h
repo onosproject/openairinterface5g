@@ -1192,6 +1192,7 @@ typedef struct PHY_VARS_eNB_s {
 
 #define debug_msg if (((mac_xface->frame%100) == 0) || (mac_xface->frame < 50)) msg
 
+#define MAX_SLDCH 16
 /// Top-level PHY Data Structure for UE
 typedef struct {
   /// \brief Module ID indicator for this instance
@@ -1265,18 +1266,23 @@ typedef struct {
   // This is for SIC in the UE, to store the reencoded data
   LTE_eNB_DLSCH_t  *dlsch_eNB[NUMBER_OF_CONNECTED_eNB_MAX];
   // Sidelink-specific variables
+  int              sl_fep_done;
   SL_chan_t        sl_chan;
   LTE_eNB_DLSCH_t  *dlsch_slsch;
   LTE_UE_ULSCH_t   *ulsch_slsch;
   LTE_eNB_PUSCH    *pusch_slsch;
+  LTE_eNB_DLSCH_t  *dlsch_sldch;
+  LTE_UE_ULSCH_t   *ulsch_sldch;
+  LTE_eNB_PUSCH    *pusch_sldch;
   LTE_eNB_PUSCH    *pusch_slcch;
   LTE_UE_DLSCH_t   *dlsch_rx_slsch;
-  int16_t          **slsch_rxdataF;
-  int16_t          **slcch_rxdataF;
-  int16_t          **slsch_rxdata_7_5kHz;
-  int16_t          **slcch_rxdata_7_5kHz;
+  LTE_UE_DLSCH_t   *dlsch_rx_sldch[MAX_SLDCH];
+  int16_t          **sl_rxdataF;
+  int16_t          **sl_rxdata_7_5kHz;
   int16_t          *slsch_dlsch_llr;
   int16_t          *slsch_ulsch_llr;
+  int16_t          *sldch_dlsch_llr;
+  int16_t          *sldch_ulsch_llr;
   SLSCH_t          *slsch;
   SLSCH_t          slsch_rx;
   int              slsch_active;
@@ -1288,6 +1294,8 @@ typedef struct {
   uint32_t         slsch_txcnt;
   uint32_t         slsch_errors;
   uint32_t         slsch_rxcnt[4];
+  SLDCH_t          *sldch;
+  int              sldch_sdu_active;
   //Paging parameters
   uint32_t              IMSImod1024;
   uint32_t              PF;
@@ -1368,6 +1376,7 @@ typedef struct {
   uint8_t               pscch_coded;
   uint8_t               pscch_generated;
   uint8_t               pssch_generated;
+  uint8_t               psdch_generated;
   uint8_t               generate_prach;
   uint8_t               prach_cnt;
   uint8_t               prach_PreambleIndex;

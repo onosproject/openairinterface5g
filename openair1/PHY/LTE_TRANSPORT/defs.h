@@ -941,8 +941,15 @@ typedef struct {
   uint8_t ljmod10;
 } SLSCH_t;
 
+typedef enum {
+  disc_type1=0,
+  disc_type2B=1
+} SLD_t;
+
 typedef struct {
-  // SL Configuration
+  // SL Discovery Configuration
+  /// Discovery Type
+  SLD_t type;
   /// Number of SL resource blocks (1-100)
   uint32_t N_SL_RB;
   /// prb-start (0-99)
@@ -955,12 +962,26 @@ typedef struct {
   uint32_t discPeriod;
   /// Number of Repetitions (N_R)
   uint32_t numRepetitions;
+  /// Number of retransmissions (numRetx-r12)
+  uint32_t numRetx;
   /// PSDCH subframe bitmap (up to 100 bits, first 64)6
   uint64_t bitmap1;
   /// PSDCH subframe bitmap (up to 100 bits, second 36)
   uint64_t bitmap2;
   /// Bitmap length (N_B) (valid values (4,8,12,16,30,40,42) Rel12, (16,20,100) Rel14
   uint32_t bitmap_length;
+  /// N1_PSDCH (a-r12)
+  uint32_t N1;
+  /// N1_PSDCH (b-r12)
+  uint32_t N2;
+  /// N1_PSDCH (c-r12)
+  uint32_t N3;
+  /// a10 (discPRB-Index)
+  uint32_t a10;
+  /// b10 (discSF-Index)
+  uint32_t b10;
+  /// transmission index (j)
+  uint32_t j;
   // Discovery resource
   uint32_t n_psdch;
   /// payload length

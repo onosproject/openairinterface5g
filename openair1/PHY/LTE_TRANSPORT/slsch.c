@@ -398,7 +398,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   uint32_t amod = a%(slsch->N_SL_RB);
 
   if (amod<(slsch->N_SL_RB>>1)) nprb = slsch->prb_Start + amod;
-  else                          nprb = slsch->prb_End-slsch->N_SL_RB+amod;
+  else                          nprb = slsch->prb_End-(slsch->N_SL_RB>>1)+amod;
 
 
   // Fill in power control later
@@ -497,7 +497,7 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
   
   AssertFatal(slsch!=NULL,"ue->slsch is null\n");
   
-  AssertFatal(ue->slsch_sdu_active > 0,"ue->slsch_sdu_active is   G=\n");
+  AssertFatal(ue->slsch_sdu_active > 0,"ue->slsch_sdu_active isn't active\n");
 
   LOG_I(PHY,"Generating SLSCH for rvidx %d, group_id %d, mcs %d, resource first rb %d, L_crbs %d\n",
 	slsch->rvidx,slsch->group_destination_id,slsch->mcs,slsch->RB_start,slsch->L_CRBs);
@@ -779,8 +779,8 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
   int16_t **drs_ch_estimates = ue->pusch_slcch->drs_ch_estimates;
   int16_t **rxdataF_comp     = ue->pusch_slcch->rxdataF_comp;
   int16_t **ul_ch_mag        = ue->pusch_slcch->ul_ch_mag;
-  int16_t **rxdata_7_5kHz    = ue->slcch_rxdata_7_5kHz;
-  int16_t **rxdataF          = ue->slcch_rxdataF;
+  int16_t **rxdata_7_5kHz    = ue->sl_rxdata_7_5kHz;
+  int16_t **rxdataF          = ue->sl_rxdataF;
   int32_t avgs;
   uint8_t log2_maxh=0;
   int32_t avgU[2];
@@ -791,29 +791,31 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
 
 			   
   if (amod<(slsch->N_SL_RB>>1)) nprb = slsch->prb_Start + amod;
-  else                          nprb = slsch->prb_End-slsch->N_SL_RB+amod;
+  else                          nprb = slsch->prb_End-(slsch->N_SL_RB>>1)+amod;
 
   // slot FEP
-  RU_t ru_tmp;
-  memset((void*)&ru_tmp,0,sizeof(RU_t));
-  
-  memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
-  ru_tmp.N_TA_offset=0;
-  ru_tmp.common.rxdata = ue->common_vars.rxdata;
-  ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
-  ru_tmp.common.rxdataF = (int32_t**)rxdataF;
-  ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
+  if (ue->sl_fep_done == 0) {
+    RU_t ru_tmp;
+    memset((void*)&ru_tmp,0,sizeof(RU_t));
+    
+    memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
+    ru_tmp.N_TA_offset=0;
+    ru_tmp.common.rxdata = ue->common_vars.rxdata;
+    ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
+    ru_tmp.common.rxdataF = (int32_t**)rxdataF;
+    ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
+    
 
-
-  remove_7_5_kHz(&ru_tmp,(subframe_rx<<1)+slot);
+    remove_7_5_kHz(&ru_tmp,(subframe_rx<<1)+slot);
 
 #ifdef PSCCH_DEBUG
-  write_output("rxsig0_input.m","rxs0_in",&ue->common_vars.rxdata[0][((subframe_rx<<1)+slot)*ue->frame_parms.samples_per_tti>>1],ue->frame_parms.samples_per_tti>>1,1,1);
-  write_output("rxsig0_7_5kHz.m","rxs0_7_5kHz",rxdata_7_5kHz[0],ue->frame_parms.samples_per_tti,1,1);
+    write_output("rxsig0_input.m","rxs0_in",&ue->common_vars.rxdata[0][((subframe_rx<<1)+slot)*ue->frame_parms.samples_per_tti>>1],ue->frame_parms.samples_per_tti>>1,1,1);
+    write_output("rxsig0_7_5kHz.m","rxs0_7_5kHz",rxdata_7_5kHz[0],ue->frame_parms.samples_per_tti,1,1);
 #endif
+    for (int l=0; l<Nsymb; l++) slot_fep_ul(&ru_tmp,l,(subframe_rx<<1)+slot,0);
+  }
   // extract symbols from slot  
   for (int l=0; l<Nsymb; l++) {
-    slot_fep_ul(&ru_tmp,l,(subframe_rx<<1)+slot,0);
     ulsch_extract_rbs_single((int32_t **)rxdataF,
 			     (int32_t **)rxdataF_ext,
 			     nprb,
@@ -1116,8 +1118,8 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   int16_t **drs_ch_estimates = ue->pusch_slsch->drs_ch_estimates;
   int16_t **rxdataF_comp     = ue->pusch_slsch->rxdataF_comp;
   int16_t **ul_ch_mag        = ue->pusch_slsch->ul_ch_mag;
-  int16_t **rxdata_7_5kHz    = ue->slsch_rxdata_7_5kHz;
-  int16_t **rxdataF          = ue->slsch_rxdataF;
+  int16_t **rxdata_7_5kHz    = ue->sl_rxdata_7_5kHz;
+  int16_t **rxdataF          = ue->sl_rxdataF;
   int32_t avgs;
   uint8_t log2_maxh=0;
   int32_t avgU[2];
@@ -1126,23 +1128,30 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   LOG_I(PHY,"slsch_decoding %d.%d => lmod10 %d\n",frame_rx,subframe_rx,ljmod10);
 
   // slot FEP
-  RU_t ru_tmp;
-  memset((void*)&ru_tmp,0,sizeof(RU_t));
-  
-  memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
-  ru_tmp.N_TA_offset=0;
-  ru_tmp.common.rxdata = ue->common_vars.rxdata;
-  ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
-  ru_tmp.common.rxdataF = (int32_t**)rxdataF;
-  ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
-
-
-  remove_7_5_kHz(&ru_tmp,(subframe_rx<<1));
-  remove_7_5_kHz(&ru_tmp,(subframe_rx<<1)+1);
-
-  // extract symbols from slot  
-  for (int l=0; l<Nsymb; l++) {
-    slot_fep_ul(&ru_tmp,l,(subframe_rx<<1),0);
+  if (ue->sl_fep_done == 0) {
+    ue->sl_fep_done = 1;
+    RU_t ru_tmp;
+    memset((void*)&ru_tmp,0,sizeof(RU_t));
+    
+    memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
+    ru_tmp.N_TA_offset=0;
+    ru_tmp.common.rxdata = ue->common_vars.rxdata;
+    ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
+    ru_tmp.common.rxdataF = (int32_t**)rxdataF;
+    ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
+    
+    
+    remove_7_5_kHz(&ru_tmp,(subframe_rx<<1));
+    remove_7_5_kHz(&ru_tmp,(subframe_rx<<1)+1);
+    for (int l=0; l<Nsymb; l++) {
+      slot_fep_ul(&ru_tmp,l,(subframe_rx<<1),0);
+      if (l<Nsymb-1)  // skip last symbol in second slot
+	slot_fep_ul(&ru_tmp,l,(subframe_rx<<1)+1,0);
+    }
+    LOG_I(PHY,"SLSCH Slot FEP %d.%d\n",frame_rx,subframe_rx);
+  }
+  // extract symbols from slot 
+   for (int l=0; l<Nsymb; l++) {
     ulsch_extract_rbs_single((int32_t**)rxdataF,
 			     (int32_t**)rxdataF_ext,
 			     slsch->RB_start,
@@ -1152,8 +1161,6 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 			     &ue->frame_parms);
 
     if (l<Nsymb-1) { // skip last symbol in second slot
-      slot_fep_ul(&ru_tmp,l,(subframe_rx<<1)+1,0);
-      
       ulsch_extract_rbs_single((int32_t**)rxdataF,
 			       (int32_t**)rxdataF_ext,
 			       slsch->RB_start,
@@ -1263,9 +1270,9 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
            rxdataF_comp[0],
            slsch->L_CRBs*12);
 
-//#ifdef PSSCH_DEBUG
+#ifdef PSSCH_DEBUG
   write_output("slsch_rxF_comp.m","slschrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
-//#endif
+#endif
 
   int E = 12*Qm*slsch->L_CRBs*((Nsymb-1)<<1);
 
@@ -1316,10 +1323,11 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     }
   }
   
+#ifdef PSSCH_DEBUG
   write_output("slsch_llr.m","slschllr",ue->slsch_ulsch_llr,
-               12*Qm*(ue->frame_parms.symbols_per_tti),
-               1,0);
-  
+               12*slsch->L_CRBs*Qm*(ue->frame_parms.symbols_per_tti-2),
+               1,0);  
+#endif
 
   // unscrambling
 
@@ -1413,6 +1421,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   }
   else LOG_I(PHY,"sLSCH received in error for rvidx %d round %d (L_CRBs %d, mcs %d)\n",
     slsch->rvidx,(ue->dlsch_rx_slsch->harq_processes[0]->round+3)&3,slsch->L_CRBs,slsch->mcs);
+
 
 }
 

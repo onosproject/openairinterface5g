@@ -109,9 +109,15 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
   case PSSCH_34:
     AssertFatal(1==0,"SL Transmission type 3/4 not supported for now\n");
     break;
-  case PSDCH_ODD:
-  case PSDCH_EVEN:
-    AssertFatal(1==0,"PSDCH Transmission not supported for now\n");
+  case PSDCH:
+    u0=0;
+    u1=0;
+    v0=0;
+    v1=0;
+    cyclic_shift0 = 0;
+    cyclic_shift1 = 0;
+    lstart        = (3 - frame_parms->Ncp);
+    linc          = (7 - frame_parms->Ncp);
     break;
   case PSBCH:
     AssertFatal(1==0,"PSBCH Transmission not supported for now\n");

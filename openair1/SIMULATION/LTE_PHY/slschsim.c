@@ -62,12 +62,14 @@ int main(int argc, char **argv) {
   PHY_VARS_UE *UE;
   int log_level = LOG_INFO;
   SLSCH_t slsch;
+  SLDCH_t sldch;
   SCM_t channel_model=AWGN;
   UE_rxtx_proc_t proc;
   double snr0 = 35;
   double snr_step=1;
   double snr_int=1;
   uint8_t slsch_payload[768*9];
+  uint8_t sldch_payload[32];
   int mcs=10;
   int nb_rb=20;
   char channel_model_input[20];
@@ -235,7 +237,8 @@ int main(int argc, char **argv) {
   UE->N_TA_offset = 0;
   UE->hw_timing_advance = 0;
   UE->slsch = &slsch;
-  // SL Configuration
+  UE->sldch = &sldch;
+  // SLSCH/CCH Configuration
   slsch.N_SL_RB                   = 20;
   slsch.prb_Start                 = 5;
   slsch.prb_End                   = 44;
@@ -264,10 +267,28 @@ int main(int argc, char **argv) {
   slsch.L_CRBs                    = nb_rb;
   slsch.payload_length            = get_TBS_UL(slsch.mcs,slsch.L_CRBs);
   slsch.payload                   = slsch_payload;
+
+  // SLDCH Configuration
+  sldch.type                      = disc_type1;
+  sldch.N_SL_RB                   = 8;
+  sldch.prb_Start                 = 15;
+  sldch.prb_End                   = 34;
+  sldch.offsetIndicator        = 0;
+  /// 128 frame
+  sldch.discPeriod                = 128;
+  // 1 transmission per period
+  sldch.numRepetitions            = 1;
+  // 4 transmissions per SLDCH sdu
+  sldch.numRetx                   = 3;
+  // 16 TXops
+  sldch.bitmap1                   = 0xffff;
+  sldch.bitmap_length                   = 16;
+  sldch.payload_length            = 256;
   // copy sidelink parameters, PSCCH and PSSCH payloads will get overwritten
   memcpy((void*)&UE->slsch_rx,(void*)UE->slsch,sizeof(SLSCH_t));
   
   for (int i=0;i<768*9;i++) slsch_payload[i] = taus()&255;
+  for (int i=0;i<32;i++) sldch_payload[i] = taus()&255;
 
   // 0dBm transmit power for PSCCH = 0dBm - 10*log10(12) dBm/RE
 
@@ -279,19 +300,22 @@ int main(int argc, char **argv) {
     UE->slsch_txcnt = 0;
     UE->slsch_rxcnt[0] = 0;    UE->slsch_rxcnt[1] = 0;    UE->slsch_rxcnt[2] = 0;    UE->slsch_rxcnt[3] = 0;
     pscch_errors=0;
+    UE->sl_fep_done = 0;
 
     for (trials = 0;trials<n_trials;trials++) {
       UE->pscch_coded=0;
       UE->pscch_generated=0;
+      UE->psdch_generated=0;
       for (int absSF=0;absSF<10240;absSF++) {
 	frame = absSF/10;
 	subframe= absSF%10;
+	check_and_generate_psdch(UE,frame,subframe);
 	UE->slsch_active = 1;
 	check_and_generate_pscch(UE,frame,subframe);
 	proc.subframe_tx = subframe;
 	proc.frame_tx    = frame;
 	check_and_generate_pssch(UE,&proc,frame,subframe);
-	if (UE->pscch_generated > 0 || UE->pssch_generated > 0) {
+	if (UE->psdch_generated>0 || UE->pscch_generated > 0 || UE->pssch_generated > 0) {
 	  AssertFatal(UE->pscch_generated<3,"Illegal pscch_generated %d\n",UE->pscch_generated);
 	  // FEP
 	  ulsch_common_procedures(UE,&proc,0);
@@ -301,12 +325,13 @@ int main(int argc, char **argv) {
 	  //	write_output("rxsig0.m","rxs0",&UE->common_vars.rxdata[0][UE->frame_parms.samples_per_tti*subframe],UE->frame_parms.samples_per_tti,1,1);
 	  UE->pscch_generated = 0;
 	  UE->pssch_generated = 0;
-	  
+	  UE->psdch_generated = 0;
 	  
 	}
 	rx_slcch(UE,frame,subframe);
 	rx_slsch(UE,&proc,frame,subframe);
-	
+
+	UE->sl_fep_done = 0;
 	if ((absSF%320) == 319)  {
 	  if (UE->slcch_received == 0) pscch_errors++;
 	  break;

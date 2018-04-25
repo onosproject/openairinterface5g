@@ -355,10 +355,9 @@ typedef enum {
   PSCCH_34_ODD=4,
   PSSCH_12=5,
   PSSCH_34=6,
-  PSDCH_EVEN=7,
-  PSDCH_ODD=8,
-  PSBCH=9,
-  MAX_SLTYPES=10
+  PSDCH=7,
+  PSBCH=8,
+  MAX_SLTYPES=9
 } SL_chan_t;
 
 /// DeltaFList-PUCCH from 36.331 RRC spec
