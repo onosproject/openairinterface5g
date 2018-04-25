@@ -995,7 +995,6 @@ typedef struct {
     uint16_t nb_rbs_accounted[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
     uint16_t nb_rbs_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
     uint8_t  slice_allocation_mask[MAX_NUM_CCs][N_RBG_MAX];
-    uint8_t  slice_allocated_rbgs[MAX_NUM_CCs][N_RBG_MAX];
     uint8_t  MIMO_mode_indicator[MAX_NUM_CCs][N_RBG_MAX];
 
     uint32_t bytes_lcid[NUMBER_OF_UE_MAX][MAX_NUM_LCID];
@@ -1255,6 +1254,8 @@ typedef struct eNB_MAC_INST_s {
 
     /// slice-related configuration
     slice_info_t slice_info;
+    /// common rb allocation list between slices
+    uint8_t rballoc_sub[MAX_NUM_CCs][N_RBG_MAX];
 
     ///subband bitmap configuration
     SBMAP_CONF sbmap_conf;

@@ -412,6 +412,7 @@ schedule_dlsch(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP, in
 
   int i = 0;
   slice_info_t *sli = &RC.mac[module_idP]->slice_info;
+  memset(RC.mac[module_idP]->rballoc_sub, 0, sizeof(RC.mac[module_idP]->rballoc_sub));
 
   sli->tot_pct_dl = 0;
   sli->avg_pct_dl = 1.0 / sli->n_dl;
@@ -736,7 +737,8 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
                                 slice_idxP,
                                 frameP,
                                 subframeP,
-                                mbsfn_flag);
+                                mbsfn_flag,
+                                RC.mac[module_idP]->rballoc_sub);
   stop_meas(&eNB->schedule_dlsch_preprocessor);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_DLSCH_PREPROCESSOR, VCD_FUNCTION_OUT);
@@ -750,7 +752,7 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
   //}
 
   if (RC.mac[module_idP]->slice_info.interslice_share_active) {
-    dlsch_scheduler_interslice_multiplexing(module_idP, frameP, subframeP);
+    dlsch_scheduler_interslice_multiplexing(module_idP, frameP, subframeP, RC.mac[module_idP]->rballoc_sub);
   }
 
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
@@ -1559,7 +1561,10 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
 }
 
 //------------------------------------------------------------------------------
-void dlsch_scheduler_interslice_multiplexing(module_id_t Mod_id, int frameP, sub_frame_t subframeP)
+void dlsch_scheduler_interslice_multiplexing(module_id_t Mod_id,
+                                             int frameP,
+                                             sub_frame_t subframeP,
+                                             uint8_t rballoc_sub[MAX_NUM_CCs][N_RBG_MAX])
 //------------------------------------------------------------------------------
 {
   // FIXME: I'm prototyping the algorithm, so there may be arrays and variables that carry redundant information here and in pre_processor_results struct.
@@ -1582,7 +1587,6 @@ void dlsch_scheduler_interslice_multiplexing(module_id_t Mod_id, int frameP, sub
 
   uint16_t (*nb_rbs_remaining)[NUMBER_OF_UE_MAX];
   uint16_t (*nb_rbs_required)[NUMBER_OF_UE_MAX];
-  uint8_t  (*rballoc_sub)[N_RBG_MAX];
   uint8_t  (*MIMO_mode_indicator)[N_RBG_MAX];
 
   // Initialize the free RBGs map
@@ -1597,7 +1601,7 @@ void dlsch_scheduler_interslice_multiplexing(module_id_t Mod_id, int frameP, sub
       for (i = 0; i < sli->n_dl; ++i) {
         owned = sli->pre_processor_results[i].slice_allocation_mask[CC_id][rbg];
         if (owned) {
-          used = sli->pre_processor_results[i].slice_allocated_rbgs[CC_id][rbg];
+          used = rballoc_sub[CC_id][rbg];
           free_rbgs_map[CC_id][rbg] = used ? -1 : i;
           break;
         }
@@ -1656,7 +1660,6 @@ void dlsch_scheduler_interslice_multiplexing(module_id_t Mod_id, int frameP, sub
 
       nb_rbs_remaining = sli->pre_processor_results[slice_idx].nb_rbs_remaining;
       nb_rbs_required = sli->pre_processor_results[slice_idx].nb_rbs_required;
-      rballoc_sub = sli->pre_processor_results[slice_idx].slice_allocated_rbgs;
       MIMO_mode_indicator = sli->pre_processor_results[slice_idx].MIMO_mode_indicator;
 
       // Allocation
