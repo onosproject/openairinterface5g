@@ -1403,7 +1403,7 @@ rrc_mac_config_req_ue(
 
            }
            for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
-              LOG_D(MAC,"[UE %d] logical channel %d channel id %d, groupL2Id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].groupL2Id );
+              LOG_I(MAC,"[UE %d] logical channel %d channel id %d, groupL2Id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].groupL2Id );
            }
         }
         if (destinationL2Id){
@@ -1422,7 +1422,7 @@ rrc_mac_config_req_ue(
 
            }
            for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
-              LOG_D(MAC,"[UE %d] logical channel %d channel id %d, destinationL2Id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id);
+              LOG_I(MAC,"[UE %d] logical channel %d channel id %d, destinationL2Id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id);
            }
         }
      } else if ((logicalChannelIdentity >= MAX_NUM_LCID_DATA) && (logicalChannelIdentity < MAX_NUM_LCID)) {
@@ -1442,7 +1442,7 @@ rrc_mac_config_req_ue(
 
         }
         for (k = MAX_NUM_LCID_DATA; k < MAX_NUM_LCID; k++) {
-           LOG_D(MAC,"[UE %d] logical channel %d channel id %d, destinationL2Id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id);
+           LOG_I(MAC,"[UE %d] logical channel %d channel id %d, destinationL2Id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id);
         }
      }
 
@@ -1464,7 +1464,7 @@ rrc_mac_config_req_ue(
         }
 
         for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
-           LOG_D(MAC,"[UE %d] channel id %d, destinationL2Id %d, groupL2Id %d\n", Mod_idP, UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id, UE_mac_inst[Mod_idP].sl_info[k].groupL2Id);
+           LOG_I(MAC,"[UE %d] channel id %d, destinationL2Id %d, groupL2Id %d\n", Mod_idP, UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id, UE_mac_inst[Mod_idP].sl_info[k].groupL2Id);
         }
      } else if ((logicalChannelIdentity >= MAX_NUM_LCID_DATA) && (logicalChannelIdentity < MAX_NUM_LCID)) {
         //remove RBID for PCS5
@@ -1481,7 +1481,7 @@ rrc_mac_config_req_ue(
         }
 
         for (k = MAX_NUM_LCID_DATA; k < MAX_NUM_LCID; k++) {
-           LOG_D(MAC,"[UE %d] channel id %d, destinationL2Id %d, groupL2Id %d\n", Mod_idP, UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id, UE_mac_inst[Mod_idP].sl_info[k].groupL2Id);
+           LOG_I(MAC,"[UE %d] channel id %d, destinationL2Id %d, groupL2Id %d\n", Mod_idP, UE_mac_inst[Mod_idP].sl_info[k].LCID, UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id, UE_mac_inst[Mod_idP].sl_info[k].groupL2Id);
         }
      }
 
