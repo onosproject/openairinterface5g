@@ -445,7 +445,7 @@ typedef struct {
 /*!\brief LCID of Carrier component activation/deactivation */
 #define CC_ACT_DEACT 27
 //TTN (for D2D)
-#define SL_DISCOVERY 8 //LCID (fake)
+#define SL_DISCOVERY 11 //LCID (fake)
 #define MAX_NUM_DEST 10
 #endif
 

@@ -2905,7 +2905,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                            //store LCID, destinationL2Id
                            ue->slsch_lcid =  ue->sl_info[i].LCID;
                            ue->destinationL2Id = ue->sl_info[i].groupL2Id;
-                           LOG_I(MAC,"LCID %d, source L2ID  0x%08x, groupL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->groupL2Id);
+                           LOG_I(MAC,"LCID %d, source L2ID  0x%08x, groupL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->destinationL2Id);
                            break;
                         }
                      }
