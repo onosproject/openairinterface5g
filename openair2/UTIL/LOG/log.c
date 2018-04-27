@@ -34,6 +34,7 @@
 #define COMPONENT_LOG
 #define COMPONENT_LOG_IF
 #include <ctype.h>
+#define LOG_MAIN
 #include "log.h"
 #include "vcd_signal_dumper.h"
 #include "assertions.h"
@@ -46,7 +47,7 @@
 # include <string.h>
 #include "common/config/config_userapi.h"
 // main log variables
-log_t *g_log;
+
 
 mapping log_level_names[] = {
   {"emerg", LOG_EMERG},
@@ -1327,8 +1328,8 @@ void logRecord_mt(const char *file, const char *func, int line, int comp,
 #endif /* #if 0 */
 
 //log record, format, and print:  executed in the main thread (mt)
-void logRecord_mt(const char *file, const char *func, int line, 
-    pthread_t thread_id, int comp, int level, const char *format, ...)
+void logRecord_mt(const char *file, const char *func, int line, int comp,
+                  int level, const char *format, ...)
 {
   int len = 0;
   va_list args;
@@ -1423,16 +1424,13 @@ void logRecord_mt(const char *file, const char *func, int line,
       if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     }
 
-    //len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%08lx]", thread_id);
-    //if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
-
     len += vsnprintf(&log_buffer[len], MAX_LOG_TOTAL - len, format, args);
     if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     log_end = log_buffer + len;
 
     if ( (g_log->flag & FLAG_COLOR) || (c->flag & FLAG_COLOR) ) {
       len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "%s",
-          log_level_highlight_end[level]);
+                      log_level_highlight_end[level]);
       if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     }
   }
@@ -1604,6 +1602,7 @@ void logRecord_mt(const char *file, const char *func, int line,
                                           VCD_FUNCTION_OUT);
 }
 
+
 int set_log(int component, int level, int interval)
 {
   /* Checking parameters */
@@ -1611,7 +1610,7 @@ int set_log(int component, int level, int interval)
            component, MIN_LOG_COMPONENTS, MAX_LOG_COMPONENTS);
   DevCheck((level <= LOG_TRACE) && (level >= LOG_EMERG), level, LOG_TRACE,
            LOG_EMERG);
-  DevCheck((interval > 0) && (interval <= 0xFF), interval, 0, 0xFF);
+  DevCheck((interval >= 0) && (interval <= 0xFF), interval, 0, 0xFF);
 
   g_log->log_component[component].level = level;
 
@@ -1645,7 +1644,7 @@ int set_comp_log(int component, int level, int verbosity, int interval)
            component, MIN_LOG_COMPONENTS, MAX_LOG_COMPONENTS);
   DevCheck((level <= LOG_TRACE) && (level >= LOG_EMERG), level, LOG_TRACE,
            LOG_EMERG);
-  DevCheck((interval > 0) && (interval <= 0xFF), interval, 0, 0xFF);
+  DevCheck((interval >= 0) && (interval <= 0xFF), interval, 0, 0xFF);
 
 #if 0
   if ((verbosity == LOG_NONE) || (verbosity == LOG_LOW) ||

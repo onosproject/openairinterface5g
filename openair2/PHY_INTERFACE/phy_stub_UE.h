@@ -24,6 +24,7 @@ int	tx_req_num_elems;
 
 int next_ra_frame;
 module_id_t next_Mod_id;
+eth_params_t         stub_eth_params;
 
 
 
@@ -103,6 +104,8 @@ int memcpy_tx_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req);
 
 
 int memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req);
+
+void UE_config_stub_pnf(void);
 
 
 

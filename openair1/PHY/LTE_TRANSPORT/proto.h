@@ -83,6 +83,12 @@ void clean_eNb_ulsch(LTE_eNB_ULSCH_t *ulsch);
 
 void free_ue_ulsch(LTE_UE_ULSCH_t *ulsch);
 
+/** \fn free_eNB_ulsch(LTE_eNB_DLSCH_t *dlsch)
+    \brief This function frees memory allocated for a particular ULSCH at eNB
+    @param ulsch Pointer to ULSCH to be removed
+*/
+void free_eNB_ulsch(LTE_eNB_ULSCH_t *ulsch);
+
 LTE_eNB_ULSCH_t *new_eNB_ulsch(uint8_t max_turbo_iterations,uint8_t N_RB_UL, uint8_t abstraction_flag);
 
 LTE_UE_ULSCH_t *new_ue_ulsch(unsigned char N_RB_UL, uint8_t abstraction_flag);
@@ -120,6 +126,20 @@ int32_t dlsch_encoding(PHY_VARS_eNB *eNB,
                        uint8_t subframe,
                        time_stats_t *rm_stats,
                        time_stats_t *te_stats,
+                       time_stats_t *i_stats);
+					   
+int32_t dlsch_encoding_all(PHY_VARS_eNB *eNB,
+                       uint8_t *a,
+                       uint8_t num_pdcch_symbols,
+                       LTE_eNB_DLSCH_t *dlsch,
+                       int frame,
+                       uint8_t subframe,
+                       time_stats_t *rm_stats,
+                       time_stats_t *te_stats,
+					   time_stats_t *te_wait_stats,
+                       time_stats_t *te_main_stats,
+                       time_stats_t *te_wakeup_stats0,
+                       time_stats_t *te_wakeup_stats1,
                        time_stats_t *i_stats);
 
 int32_t dlsch_encoding_SIC(PHY_VARS_UE *ue,
@@ -165,7 +185,12 @@ int32_t dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
                                 uint8_t subframe,
                                 time_stats_t *rm_stats,
                                 time_stats_t *te_stats,
-                                time_stats_t *i_stats);
+								time_stats_t *te_wait_stats,
+                                time_stats_t *te_main_stats,
+                                time_stats_t *te_wakeup_stats0,
+                                time_stats_t *te_wakeup_stats1,
+                                time_stats_t *i_stats,
+                                int worker_num);
 
 void dlsch_encoding_emul(PHY_VARS_eNB *phy_vars_eNB,
                          uint8_t *DLSCH_pdu,
@@ -1505,6 +1530,7 @@ void generate_slsch(PHY_VARS_UE *ue,SLSCH_t *slss,int frame_tx,int subframe_tx);
 
 void generate_64qam_table(void);
 void generate_16qam_table(void);
+void generate_qpsk_table(void);
 
 uint16_t extract_crc(uint8_t *dci,uint8_t DCI_LENGTH);
 
@@ -1806,7 +1832,7 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *PHY_vars_eNB,
                                        uint8_t use_srs);
 
 
-void dump_ulsch(PHY_VARS_eNB *phy_vars_eNB,int frame, int subframe, uint8_t UE_id);
+void dump_ulsch(PHY_VARS_eNB *phy_vars_eNB,int frame, int subframe, uint8_t UE_id,int round);
 
 int dump_dci(LTE_DL_FRAME_PARMS *frame_parms, DCI_ALLOC_t *dci);
 
@@ -1914,6 +1940,11 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *phy_vars_eNB,
                              uint8_t Nbundled,
                              uint8_t llr8_flag);
 
+int ulsch_decoding_data_all(PHY_VARS_eNB *eNB,
+                        int UE_id,
+                        int harq_pid,
+                        int llr8_flag);
+							 
 /*!
   \brief Decoding of ULSCH data component from 36-212. This one spawns 1 worker thread in parallel,half of the segments in each thread.
   @param phy_vars_eNB Pointer to eNB top-level descriptor
@@ -2174,11 +2205,10 @@ void rx_prach(PHY_VARS_eNB *phy_vars_eNB,RU_t *ru,
 	      uint16_t *max_preamble, 
 	      uint16_t *max_preamble_energy, 
 	      uint16_t *max_preamble_delay, 
-#ifdef Rel14
-	      uint16_t Nf, uint8_t tdd_mapindex,
-	      uint8_t br_flag
-#else
 	      uint16_t Nf, uint8_t tdd_mapindex
+#ifdef Rel14
+	      ,
+              uint8_t br_flag
 #endif
 	      );
 /*!
@@ -2245,15 +2275,15 @@ uint32_t dlsch_decoding_abstraction(double *dlsch_MIPB,
                                     uint8_t num_pdcch_symbols);
 
 // DL power control functions
-double get_pa_dB(PDSCH_CONFIG_DEDICATED *pdsch_config_dedicated);
+double get_pa_dB(uint8_t pa);
 
-double computeRhoA_eNB(PDSCH_CONFIG_DEDICATED *pdsch_config_dedicated,
-                       LTE_eNB_DLSCH_t *dlsch_eNB,
+double computeRhoA_eNB(uint8_t pa,
+		       LTE_eNB_DLSCH_t *dlsch_eNB,
                        int dl_power_off,
                        uint8_t n_antenna_port);
 
-double computeRhoB_eNB(PDSCH_CONFIG_DEDICATED  *pdsch_config_dedicated,
-                       PDSCH_CONFIG_COMMON *pdsch_config_common,
+double computeRhoB_eNB(uint8_t pa,
+		       uint8_t pb,
                        uint8_t n_antenna_port,
                        LTE_eNB_DLSCH_t *dlsch_eNB,
                        int dl_power_off);

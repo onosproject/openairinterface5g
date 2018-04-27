@@ -42,7 +42,6 @@ conf_nvram_path=$OPENAIR_DIR/openair3/NAS/TOOLS/ue_eurecom_test_sfr.conf
 
 MSC_GEN="False"
 XFORMS="True"
-FLEXRAN_AGENT_SB_IF="True"
 PRINT_STATS="False"
 VCD_TIMING="False"
 DEADLINE_SCHEDULER_FLAG_USER="False"
@@ -68,6 +67,7 @@ UE_TIMING_TRACE="False"
 DISABLE_LOG_X="False"
 USRP_REC_PLAY="False"
 BUILD_ECLIPSE=0
+UE_NAS_USE_TUN="False"
 trap handle_ctrl_c INT
 
 function print_help() {
@@ -100,8 +100,6 @@ Options
    Specify conf_nvram_path (default \"$conf_nvram_path\")
 --UE-gen-nvram [output path]
    Specify gen_nvram_path (default \"$gen_nvram_path\")
--a | --agent
-   Enables agent for software-defined control of the eNB
 -r | --3gpp-release
    default is Rel14,
    Rel8 limits the implementation to 3GPP Release 8 version
@@ -159,6 +157,8 @@ Options
    Build eclipse project files. Paths are auto corrected by fixprj.sh
 --usrp-recplay
    Build for I/Q record-playback modes
+--ue-nas-use-tun
+   Use TUN devices for the UEs instead of ue_ip.ko
 Usage (first build):
  oaisim (eNB + UE): ./build_oai -I  --oaisim -x --install-system-files
  Eurecom EXMIMO + COTS UE : ./build_oai -I  --eNB -x --install-system-files
@@ -204,8 +204,7 @@ function main() {
             echo_info "Will compile eNB"
             shift;;
        -a | --agent)
-	    FLEXRAN_AGENT=1
-	    echo_info "Will compile eNB with agent support"
+	    echo_info "FlexRAN support is always compiled into the eNB"
 	    shift;;
        --UE)
             UE=1
@@ -351,6 +350,10 @@ function main() {
             USRP_REC_PLAY="True"
             echo_info "Enabling USRP record playback mode"
             shift 1;;
+        --ue-nas-use-tun)
+            UE_NAS_USE_TUN="True"
+            echo_info "Enabling UE NAS TUN device usage instead of ue_ip.ko"
+            shift 1;;
         -h | --help)
             print_help
             exit 1;;
@@ -363,7 +366,11 @@ function main() {
   
   CMAKE_CMD="$CMAKE_CMD .."
   echo_info "CMAKE_CMD=$CMAKE_CMD"
-  
+  if [ "$eNB" = "1" ] && [ "$UE" = "1" ]; then
+    echo_error "Cannot build UE and eNB on one build_oai execution"
+    echo_error "use 2 build_oai invocations"
+    exit
+  fi  
   #########################################################
   # check validity of HW and TP parameters for eNB
   #########################################################
@@ -465,11 +472,9 @@ function main() {
         flash_firmware_bladerf
       fi
     fi
-    if [ "$FLEXRAN_AGENT" == "1" ] ; then
-      echo_info "installing protobuf/protobuf-c for flexran agent support"
-      install_protobuf_from_source
-      install_protobuf_c_from_source
-    fi
+    echo_info "installing protobuf/protobuf-c for flexran agent support"
+    install_protobuf_from_source
+    install_protobuf_c_from_source
   fi
 
   if [ "$INSTALL_OPTIONAL" = "1" ] ; then
@@ -494,12 +499,29 @@ function main() {
   DIR=$OPENAIR_DIR/cmake_targets
   if [ "$NOS1" =  "1" ] ; then
       lte_build_dir=lte_noS1_build_oai
-      #lte_exec=lte-softmodem-nos1
-      lte_exec=lte-softmodem-stub-nos1
+#<<<<<<< HEAD
+#      #lte_exec=lte-softmodem-nos1
+#      lte_exec=lte-softmodem-stub-nos1
+#  else
+#      lte_build_dir=lte_build_oai
+#      #lte_exec=lte-softmodem
+#      lte_exec=lte-softmodem-stub
+#=======
+      if [ "$eNB" = "1" ] ; then
+         lte_exec=lte-softmodem-nos1
+      fi
+      if [ "$UE" = "1" ] ; then
+         lte_exec=lte-uesoftmodem-nos1
+      fi
   else
       lte_build_dir=lte_build_oai
-      #lte_exec=lte-softmodem
-      lte_exec=lte-softmodem-stub
+      if [ "$eNB" = "1" ] ; then
+         lte_exec=lte-softmodem
+      fi
+      if [ "$UE" = "1" ] ; then
+         lte_exec=lte-uesoftmodem
+      fi
+#>>>>>>> main/develop
   fi
 
 # configuration module libraries, one currently available, using libconfig 
@@ -519,9 +541,6 @@ function main() {
     echo "set ( CMAKE_BUILD_TYPE $CMAKE_BUILD_TYPE )" >> $cmake_file
     echo "set ( CFLAGS_PROCESSOR_USER \"$CFLAGS_PROCESSOR_USER\" )" >>  $cmake_file
     echo "set ( XFORMS $XFORMS )"                  >>  $cmake_file
-    if [ "$FLEXRAN_AGENT" = "1" ] ; then
-	echo "set ( FLEXRAN_AGENT_SB_IF $FLEXRAN_AGENT_SB_IF )"      >>  $cmake_file
-    fi
     echo "set ( RRC_ASN1_VERSION \"${REL}\")"      >>  $cmake_file
     echo "set ( ENABLE_VCD_FIFO $VCD_TIMING )"     >>  $cmake_file
     echo "set ( RF_BOARD \"${HW}\")"               >>  $cmake_file
@@ -555,6 +574,9 @@ function main() {
     compilations \
 	  $lte_build_dir $config_libconfig_shlib \
 	  lib$config_libconfig_shlib.so $dbin/lib$config_libconfig_shlib.so
+    compilations \
+          $lte_build_dir coding \
+          libcoding.so $dbin/libcoding.so
 	  
     if [ "$NOS1" = "1" ] ; then
 	compilations \
@@ -620,12 +642,17 @@ function main() {
   if [ "$SIMUS_PHY" = "1" ] ; then
     # lte unitary simulators compilation
     echo_info "Compiling unitary tests simulators"
-    simlist="dlsim_tm4 dlsim ulsim pucchsim prachsim pdcchsim pbchsim mbmssim"
+    # TODO: fix: dlsim_tm4 pucchsim prachsim pdcchsim pbchsim mbmssim
+    #simlist="dlsim_tm4 dlsim ulsim pucchsim prachsim pdcchsim pbchsim mbmssim"
+    simlist="dlsim ulsim"
     for f in $simlist ; do
       compilations \
       lte-simulators $f \
 	  $f $dbin/$f.$REL
     done
+    compilations \
+          lte-simulators coding \
+          libcoding.so $dbin/libcoding.so
   fi
 
   # Core simulators
@@ -681,13 +708,11 @@ function main() {
     echo "set ( CMAKE_BUILD_TYPE $CMAKE_BUILD_TYPE )" >> $cmake_file
     echo "set ( CFLAGS_PROCESSOR_USER \"$CFLAGS_PROCESSOR_USER\" )" >>  $cmake_file
     echo "set ( XFORMS $XFORMS )" >>  $cmake_file
-    if [ "$FLEXRAN_AGENT" = "1" ] ; then
-	echo "set ( FLEXRAN_AGENT_SB_IF $FLEXRAN_AGENT_SB_IF )"      >>  $cmake_file
-    fi
     echo "set ( PRINT_STATS $PRINT_STATS )" >>  $cmake_file
     echo "set ( RRC_ASN1_VERSION \"${REL}\")" >>  $cmake_file
     echo "set ( ENABLE_VCD_FIFO $VCD_TIMING )" >>  $cmake_file
     echo "set ( T_TRACER $T_TRACER )"          >>  $cmake_file
+    echo "set ( UE_NAS_USE_TUN $UE_NAS_USE_TUN )" >>  $cmake_file
     echo 'include(${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)' >> $cmake_file
     [ "$CLEAN" = "1" ] && rm -rf $DIR/$oaisim_build_dir/build
     mkdir -p $DIR/$oaisim_build_dir/build
@@ -696,6 +721,12 @@ function main() {
     compilations \
 	  $oaisim_build_dir $oaisim_exec \
 	  $oaisim_exec $dbin/$oaisim_exec.$REL
+    compilations \
+	  $oaisim_build_dir $config_libconfig_shlib \
+	  lib$config_libconfig_shlib.so $dbin/lib$config_libconfig_shlib.so
+    compilations \
+          $oaisim_build_dir coding \
+          libcoding.so $dbin/libcoding.so
 
     if [ "$NOS1" != "1" ] ; then
 
@@ -764,9 +795,6 @@ function main() {
     cp $DIR/oaisim_mme_build_oai/CMakeLists.template $cmake_file
     echo "set ( CMAKE_BUILD_TYPE $CMAKE_BUILD_TYPE )" >> $cmake_file
     echo "set ( XFORMS $XFORMS )" >>  $cmake_file
-    if [ "$FLEXRAN_AGENT" = "1" ] ; then
-	echo "set ( FLEXRAN_AGENT_SB_IF $FLEXRAN_AGENT_SB_IF )"      >>  $cmake_file
-    fi
     echo "set ( RRC_ASN1_VERSION \"${REL}\")" >>  $cmake_file
     echo "set ( ENABLE_VCD_FIFO $VCD_TIMING )" >>  $cmake_file
     echo "set ( T_TRACER $T_TRACER )"        >>  $cmake_file
@@ -783,17 +811,10 @@ function main() {
   # Telnet server compilation
   #####################
   if [ "$BUILD_TELNETSRV" = "1" ] ; then
-
-     telnetsrv_build_dir=telnetsrv
-     mkdir -p $DIR/$telnetsrv_build_dir/build
-     cd $DIR/$telnetsrv_build_dir/build   
-     echo_info "Compiling telnet server library ..."
-    
-     [ "$CLEAN" = "1" ] && rm -rf $DIR/$telnetsrv_build_dir 
-     cmake_file=$OPENAIR_DIR/common/utils/$telnetsrv_build_dir/CMakeLists.txt   
-     cd $DIR/$telnetsrv_build_dir/build
-     eval  "$CMAKE_CMD $OPENAIR_DIR/common/utils/$telnetsrv_build_dir/"
-     make
+              build_dir=$lte_build_dir
+              compilations \
+                  $build_dir telnetsrv \
+                  libtelnetsrv.so $dbin/libtelnetsrv.so
 
   fi  
   # build RF device and transport protocol libraries

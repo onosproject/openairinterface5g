@@ -2206,6 +2206,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t
 
 #endif
     
+//printf("DCI %d.%d rnti %d harq %d TBS %d\n", frame, subframe, rel8->rnti, rel8->harq_process, dlsch0_harq->TBS);
 #if T_TRACER
   if (dlsch0->active)
     T(T_ENB_PHY_DLSCH_UE_DCI, T_INT(0), T_INT(frame), T_INT(subframe),
@@ -2683,11 +2684,12 @@ void fill_ulsch(PHY_VARS_eNB *eNB,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame
   else if(ulsch->harq_processes[harq_pid]->n_DMRS == 7)
     ulsch->harq_processes[harq_pid]->n_DMRS2 = 9;
   
-  LOG_D(PHY,"[eNB %d][PUSCH %d] Frame %d, Subframe %d Programming PUSCH with n_DMRS2 %d (cshift %d) ulsch:ndi:%d ulsch_pdu:ndi:%d new_ulsch:%d status:%d\n",
+  LOG_D(PHY,"[eNB %d][PUSCH %d] Frame %d, Subframe %d Programming PUSCH with n_DMRS2 %d (cshift %d) ulsch:ndi:%d ulsch_pdu:ndi:%d new_ulsch:%d status:%d ulsch_pdu:rvidx:%d\n",
 	eNB->Mod_id,harq_pid,frame,subframe,
         ulsch->harq_processes[harq_pid]->n_DMRS2,
         ulsch->harq_processes[harq_pid]->n_DMRS,
-	ulsch->harq_processes[harq_pid]->ndi, ulsch_pdu->ulsch_pdu_rel8.new_data_indication, new_ulsch, ulsch->harq_processes[harq_pid]->status);
+	ulsch->harq_processes[harq_pid]->ndi, ulsch_pdu->ulsch_pdu_rel8.new_data_indication, new_ulsch, ulsch->harq_processes[harq_pid]->status,
+	ulsch_pdu->ulsch_pdu_rel8.redundancy_version);
   
   ulsch->harq_processes[harq_pid]->rvidx = ulsch_pdu->ulsch_pdu_rel8.redundancy_version;
   ulsch->harq_processes[harq_pid]->Qm    = ulsch_pdu->ulsch_pdu_rel8.modulation_type;
@@ -4703,13 +4705,13 @@ int check_dci_format1_1a_coherency(DCI_format_t dci_format,
 
     if(harq_pid>=8)
     {
-        LOG_I(PHY,"bad harq id \n");
+      //        LOG_I(PHY,"bad harq id \n");
         return(0);
     }
 
     if(dci_format == format1 && ((rnti==si_rnti) || (rnti==p_rnti) || (rnti==ra_rnti)) )
     {
-        LOG_I(PHY,"bad dci format \n");
+      //        LOG_I(PHY,"bad dci format \n");
         return(0);
     }
 
@@ -4718,13 +4720,13 @@ int check_dci_format1_1a_coherency(DCI_format_t dci_format,
     {
         if(pdlsch0_harq->round == 0)
         {
-            LOG_I(PHY,"bad dci mcs + round \n");
+	  //            LOG_I(PHY,"bad dci mcs + round \n");
             return(0);
         }
 
         if((rnti==si_rnti) || (rnti==p_rnti) || (rnti==ra_rnti))
         {
-            LOG_I(PHY,"bad dci mcs + rnti  \n");
+	  //            LOG_I(PHY,"bad dci mcs + rnti  \n");
             return(0);
         }
     }
@@ -4790,7 +4792,7 @@ int check_dci_format1_1a_coherency(DCI_format_t dci_format,
 
     if(rballoc > RIV_max)
     {
-        LOG_I(PHY,"bad dci rballoc rballoc %d  RIV_max %lld \n",rballoc, RIV_max);
+      //        LOG_I(PHY,"bad dci rballoc rballoc %d  RIV_max %lld \n",rballoc, RIV_max);
         // DCI false detection
         return(0);
     }
@@ -4798,7 +4800,7 @@ int check_dci_format1_1a_coherency(DCI_format_t dci_format,
     if(NPRB == 0)
     {
         // DCI false detection
-        LOG_I(PHY,"bad NPRB = 0 \n");
+      //        LOG_I(PHY,"bad NPRB = 0 \n");
         return(0);
     }
 
@@ -4917,13 +4919,13 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
     // I- check dci content minimum coherency
     if(harq_pid>=8)
     {
-        LOG_I(PHY,"bad harq pid\n");
+      //        LOG_I(PHY,"bad harq pid\n");
       return(0);
     }
 
     if( (rnti==si_rnti) || (rnti==p_rnti) || (rnti==ra_rnti) )
     {
-        LOG_I(PHY,"bad rnti\n");
+      //        LOG_I(PHY,"bad rnti\n");
         return(0);
     }
 
@@ -4932,7 +4934,7 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
     {
       if(pdlsch0_harq->round == 0)
       {
-          LOG_I(PHY,"bad mcs1\n");
+	//          LOG_I(PHY,"bad mcs1\n");
         return(0);
       }
     }
@@ -4941,7 +4943,7 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
     {
       if(pdlsch1_harq->round == 0)
       {
-          LOG_I(PHY,"bad mcs2\n");
+	//          LOG_I(PHY,"bad mcs2\n");
           return(0);
       }
     }
@@ -4950,14 +4952,14 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
     if((pdlsch0_harq->round == 0) && (rv1 > 0) && (mcs1 != 0))
     {
       // DCI false detection
-        LOG_I(PHY,"bad rv1\n");
+      //        LOG_I(PHY,"bad rv1\n");
       return(0);
     }
 
     if((pdlsch1_harq->round == 0) && (rv2 > 0) && (mcs2 != 0))
     {
       // DCI false detection
-        LOG_I(PHY,"bad rv2\n");
+      //        LOG_I(PHY,"bad rv2\n");
       return(0);
     }
 
@@ -5018,14 +5020,14 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
    if( (rballoc > RIV_max) && (rah == 1) )
    {
       // DCI false detection
-       LOG_I(PHY,"bad rballoc %d RIV_max %lld\n", rballoc, RIV_max);
+     //       LOG_I(PHY,"bad rballoc %d RIV_max %lld\n", rballoc, RIV_max);
       return(0);
    }
 
    if(NPRB == 0)
    {
       // DCI false detection
-       LOG_I(PHY,"bad NPRB\n");
+     //       LOG_I(PHY,"bad NPRB\n");
       return(0);
    }
 
@@ -5049,7 +5051,7 @@ void compute_llr_offset(LTE_DL_FRAME_PARMS *frame_parms,
 
     pdsch_vars->llr_offset[pdcch_vars->num_pdcch_symbols] = 0;
 
-    //LOG_I(PHY,"compute_llr_offset:  nb RB %d - Qm %d \n", nb_rb_alloc, dlsch0_harq->Qm);
+    //    LOG_I(PHY,"compute_llr_offset:  nb RB %d - Qm %d \n", nb_rb_alloc, dlsch0_harq->Qm);
 
     //dlsch0_harq->rb_alloc_even;
     //dlsch0_harq->rb_alloc_odd;
@@ -5078,16 +5080,17 @@ void compute_llr_offset(LTE_DL_FRAME_PARMS *frame_parms,
         pdsch_vars->llr_length[symbol]   = data_re;
         if(symbol < (frame_parms->symbols_per_tti-1))
           pdsch_vars->llr_offset[symbol+1] = pdsch_vars->llr_offset[symbol] + llr_offset;
+	/*
+	LOG_I(PHY,"Granted Re subframe %d / symbol %d => %d (%d RBs)\n", subframe, symbol_mod, granted_re,dlsch0_harq->nb_rb);
+	LOG_I(PHY,"Pbch/PSS/SSS Re subframe %d / symbol %d => %d \n", subframe, symbol_mod, pbch_pss_sss_re);
+	LOG_I(PHY,"CRS Re Per PRB subframe %d / symbol %d => %d \n", subframe, symbol_mod, crs_re);
+	LOG_I(PHY,"Data Re subframe %d / symbol %d => %d \n", subframe, symbol_mod, data_re);
+	
 
-	//        LOG_I(PHY,"Granted Re subframe %d / symbol %d => %d (%d RBs)\n", subframe, symbol_mod, granted_re,dlsch0_harq->nb_rb);
-	//        LOG_I(PHY,"Pbch/PSS/SSS Re subframe %d / symbol %d => %d \n", subframe, symbol_mod, pbch_pss_sss_re);
-	//        LOG_I(PHY,"CRS Re Per PRB subframe %d / symbol %d => %d \n", subframe, symbol_mod, crs_re);
-	//        LOG_I(PHY,"Data Re subframe %d / symbol %d => %d \n", subframe, symbol_mod, data_re);
 
-
-
-        //LOG_I(PHY,"Data Re subframe %d-symbol %d => llr length %d, llr offset %d \n", subframe, symbol,
-        //      pdsch_vars->llr_length[symbol], pdsch_vars->llr_offset[symbol]);
+        LOG_I(PHY,"Data Re subframe %d-symbol %d => llr length %d, llr offset %d \n", subframe, symbol,
+              pdsch_vars->llr_length[symbol], pdsch_vars->llr_offset[symbol]);
+	*/
     }
 }
 void prepare_dl_decoding_format1_1A(DCI_format_t dci_format,
@@ -5202,7 +5205,7 @@ void prepare_dl_decoding_format1_1A(DCI_format_t dci_format,
                 //packet was actually decoded in previous transmission (ACK was missed by eNB)
                 //However, the round is not a good check as it might have been decoded in a retransmission prior to this one.
             {
-                LOG_D(PHY,"skip pdsch decoding and report ack\n");
+	      //                LOG_D(PHY,"skip pdsch decoding and report ack\n");
                 // skip pdsch decoding and report ack
                 //pdlsch0_harq->status   = SCH_IDLE;
                 pdlsch0->active       = 0;
@@ -5827,7 +5830,7 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
           //LOG_I(PHY,"[UE] DLSCH: New Data Indicator CW0 subframe %d (pid %d, round %d)\n",
           //           subframe,harq_pid,dlsch0_harq->round);
           if ( dlsch0_harq->first_tx==1) {
-            LOG_D(PHY,"Format 2 DCI First TX0: Clearing flag\n");
+	    //            LOG_D(PHY,"Format 2 DCI First TX0: Clearing flag\n");
             dlsch0_harq->first_tx = 0;
           }
         }
@@ -5875,7 +5878,7 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
           //LOG_I(PHY,"[UE] DLSCH: New Data Indicator CW1 subframe %d (pid %d, round %d)\n",
           //           subframe,harq_pid,dlsch0_harq->round);
           if (dlsch1_harq->first_tx==1) {
-            LOG_D(PHY,"Format 2 DCI First TX1: Clearing flag\n");
+	    //            LOG_D(PHY,"Format 2 DCI First TX1: Clearing flag\n");
             dlsch1_harq->first_tx = 0;
           }
         }
@@ -6580,7 +6583,7 @@ uint8_t pdcch_alloc2ul_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t n)
   else
     ul_subframe = ((n+4)%10);
 
-  //  AssertFatal(frame_parms->frame_type == FDD || subframe_select(frame_parms,ul_subframe) == SF_UL,"illegal ul_subframe %d (n %d)\n",ul_subframe,n);
+  AssertFatal(frame_parms->frame_type == FDD || subframe_select(frame_parms,ul_subframe) == SF_UL,"illegal ul_subframe %d (n %d)\n",ul_subframe,n);
 
   LOG_D(PHY, "subframe %d: PUSCH subframe = %d\n", n, ul_subframe);
   return ul_subframe;

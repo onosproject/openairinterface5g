@@ -958,20 +958,20 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     	//*** Note we should find the right place to call free(UL_INFO).
     	UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
 
-    	UL_INFO->rx_ind.rx_indication_body.rx_pdu_list = (nfapi_rx_indication_pdu_t*)malloc(10*sizeof(nfapi_rx_indication_pdu_t));
+    	UL_INFO->rx_ind.rx_indication_body.rx_pdu_list = (nfapi_rx_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_rx_indication_pdu_t));
     	UL_INFO->rx_ind.rx_indication_body.number_of_pdus = 0;
     	UL_INFO->rx_ind.header.message_id = 3225;
 
 
-    	UL_INFO->crc_ind.crc_indication_body.crc_pdu_list = (nfapi_crc_indication_pdu_t*)malloc(10*sizeof(nfapi_crc_indication_pdu_t));
+    	UL_INFO->crc_ind.crc_indication_body.crc_pdu_list = (nfapi_crc_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_crc_indication_pdu_t));
     	UL_INFO->crc_ind.crc_indication_body.number_of_crcs = 0;
     	UL_INFO->crc_ind.header.message_id = 3225;
 
-    	UL_INFO->harq_ind.harq_indication_body.harq_pdu_list = (nfapi_harq_indication_pdu_t*)malloc(10*sizeof(nfapi_harq_indication_pdu_t));
+    	UL_INFO->harq_ind.harq_indication_body.harq_pdu_list = (nfapi_harq_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_harq_indication_pdu_t));
     	UL_INFO->harq_ind.harq_indication_body.number_of_harqs = 0;
     	UL_INFO->harq_ind.header.message_id = 3225;
 
-    	UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = (nfapi_sr_indication_pdu_t*)malloc(10*sizeof(nfapi_sr_indication_pdu_t));
+    	UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = (nfapi_sr_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_sr_indication_pdu_t));
     	UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
     	UL_INFO->sr_ind.header.message_id = 3225;
 

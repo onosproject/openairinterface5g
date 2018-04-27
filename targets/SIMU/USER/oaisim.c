@@ -76,9 +76,7 @@ uint8_t config_smbv = 0;
 char smbv_ip[16];
 #endif
 
-#if defined(FLEXRAN_AGENT_SB_IF)
-#   include "flexran_agent.h"
-#endif
+#include "flexran_agent.h"
 
 
 #include "oaisim_functions.h"
@@ -197,6 +195,11 @@ time_stats_t oaisim_stats_f;
 time_stats_t dl_chan_stats;
 time_stats_t ul_chan_stats;
 
+int emulate_rf = 0;
+int numerology = 0;
+int codingw = 0;
+int fepw = 0;
+
 // this should reflect the channel models in openair1/SIMULATION/TOOLS/defs.h
 mapping small_scale_names[] = { 
   { "custom", custom }, { "SCM_A", SCM_A },
@@ -218,7 +221,8 @@ oai_shutdown (void);
 
 void reset_opp_meas_oaisim (void);
 
-void wait_eNBs() {
+void wait_eNBs(void)
+{
   return;
 }
 
@@ -366,7 +370,7 @@ static void set_cli_start(module_id_t module_idP, uint8_t start)
 #ifdef OPENAIR2
 int omv_write(int pfd, node_list* enb_node_list, node_list* ue_node_list, Data_Flow_Unit omv_data)
 {
-  module_id_t i, j;
+  module_id_t i;
   omv_data.end = 0;
 
   //omv_data.total_num_nodes = NB_UE_INST + NB_eNB_INST;
@@ -497,7 +501,7 @@ l2l1_task (void *args_p)
 #undef PRINT_STATS /* this undef is to avoid gcc warnings */
 #define PRINT_STATS
 #ifdef PRINT_STATS
-  int len;
+  //int len;
   FILE *UE_stats[NUMBER_OF_UE_MAX];
   FILE *UE_stats_th[NUMBER_OF_UE_MAX];
   FILE *eNB_stats[NUMBER_OF_eNB_MAX];
@@ -623,7 +627,6 @@ l2l1_task (void *args_p)
   }
 
 #endif
-  module_id_t enb_id;
   module_id_t UE_id;
 
   if (abstraction_flag == 1) {
@@ -739,19 +742,16 @@ l2l1_task (void *args_p)
 
 	CC_id=0;
         int all_done=0;
-
         while (all_done==0) {
 
           pthread_mutex_lock(&subframe_mutex);
-          int subframe_ru_mask_local = subframe_ru_mask;
-          int subframe_UE_mask_local  = subframe_UE_mask;
+          int subframe_ru_mask_local  = (subframe_select(&RC.ru[0]->frame_parms,(sf+4)%10)!=SF_UL) ? subframe_ru_mask : ((1<<NB_RU)-1);
+          int subframe_UE_mask_local  = (RC.ru[0]->frame_parms.frame_type == FDD || subframe_select(&RC.ru[0]->frame_parms,(sf+4)%10)!=SF_DL) ? subframe_UE_mask : ((1<<NB_UE_INST)-1);
           pthread_mutex_unlock(&subframe_mutex);
           LOG_D(EMU,"Frame %d, Subframe %d, NB_RU %d, NB_UE %d: Checking masks %x,%x\n",frame,sf,NB_RU,NB_UE_INST,subframe_ru_mask_local,subframe_UE_mask_local);
           if ((subframe_ru_mask_local == ((1<<NB_RU)-1)) &&
-              (subframe_UE_mask_local == ((1<<NB_UE_INST)-1)))
-             all_done=1;
-          else
-	    usleep(1500);
+              (subframe_UE_mask_local == ((1<<NB_UE_INST)-1))) all_done=1;
+          else usleep(1500);
         }
 
 
@@ -771,11 +771,11 @@ l2l1_task (void *args_p)
 	*/
 	for (ru_id=0;ru_id<NB_RU;ru_id++) {
 	  current_ru_rx_timestamp[ru_id][CC_id] += RC.ru[ru_id]->frame_parms.samples_per_tti;
-	  LOG_D(EMU,"RU %d/%d: TS %llu\n",ru_id,CC_id,current_ru_rx_timestamp[ru_id][CC_id]);
+	  LOG_D(EMU,"RU %d/%d: TS %"PRIi64"\n",ru_id,CC_id,current_ru_rx_timestamp[ru_id][CC_id]);
         }
         for (UE_inst = 0; UE_inst<NB_UE_INST;UE_inst++) {
 	  current_UE_rx_timestamp[UE_inst][CC_id] += PHY_vars_UE_g[UE_inst][CC_id]->frame_parms.samples_per_tti;
-	  LOG_D(EMU,"UE %d/%d: TS %llu\n",UE_id,CC_id,current_UE_rx_timestamp[UE_inst][CC_id]);
+	  LOG_D(EMU,"UE %d/%d: TS %"PRIi64"\n",UE_inst,CC_id,current_UE_rx_timestamp[UE_inst][CC_id]);
         }
 
         for (eNB_inst = oai_emulation.info.first_enb_local;
@@ -818,9 +818,7 @@ l2l1_task (void *args_p)
               fwrite (stats_buffer, 1, len, eNB_stats[eNB_inst]);
               fflush(eNB_stats[eNB_inst]);
             }
-	    */
 #ifdef OPENAIR2
-
             if (eNB_l2_stats) {
               len = dump_eNB_l2_stats (stats_buffer, 0);
               rewind (eNB_l2_stats);
@@ -829,6 +827,7 @@ l2l1_task (void *args_p)
             }
 
 #endif
+*/
 #endif
           }
         }// eNB_inst loop
@@ -990,6 +989,23 @@ l2l1_task (void *args_p)
   return NULL;
 }
 
+/*
+ * The following two functions are meant to restart *the lte-softmodem* and are
+ * here to make oaisim compile. A restart command from the controller will be
+ * ignored in oaisim.
+ */
+int stop_L1L2(int enb_id)
+{
+  LOG_W(FLEXRAN_AGENT, "stop_L1L2() not supported in oaisim\n");
+  return 0;
+}
+
+int restart_L1L2(int enb_id)
+{
+  LOG_W(FLEXRAN_AGENT, "restart_L1L2() not supported in oaisim\n");
+  return 0;
+}
+
 #if T_TRACER
 int T_wait = 1;       /* by default we wait for the tracer */
 int T_port = 2021;    /* default port to listen to to wait for the tracer */
@@ -997,8 +1013,8 @@ int T_dont_fork = 0;  /* default is to fork, see 'T_init' to understand */
 #endif
 
 
-void wait_RUs() {
-
+void wait_RUs(void)
+{
   int i;
 
   // wait for all RUs to be configured over fronthaul
@@ -1054,6 +1070,7 @@ void set_UE_defaults(int nb_ue) {
 	PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[i][0]->agregationLevel      = 0xFF;
       }
       PHY_vars_UE_g[UE_id][CC_id]->current_dlsch_cqi[0] = 10;
+      PHY_vars_UE_g[UE_id][CC_id]->tx_power_max_dBm = 23;
     }
   }
 }
@@ -1068,9 +1085,9 @@ static void print_current_directory(void)
     printf("working directory: %s\n", dir);
 }
 
-/*------------------------------------------------------------------------------*/
-int
-main (int argc, char **argv)
+void init_devices(void);
+
+int main (int argc, char **argv)
 {
 
   clock_t t;
@@ -1088,7 +1105,6 @@ main (int argc, char **argv)
   int node_id;
   int port,Process_Flag=0,wgt,Channel_Flag=0,temp;
 #endif
-  int i;
 
   //default parameters
   oai_emulation.info.n_frames = MAX_FRAME_NUMBER; //1024;          //10;
@@ -1456,8 +1472,10 @@ print_opp_meas_oaisim (void)
                 &oaisim_stats, &oaisim_stats_f);
 
 
-    print_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc_rx,
-                "[UE][total_phy_proc_rx]", &oaisim_stats, &oaisim_stats_f);
+    print_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc_rx[0],
+                "[UE][total_phy_proc_rx[0]]", &oaisim_stats, &oaisim_stats_f);
+    print_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc_rx[1],
+                "[UE][total_phy_proc_rx[1]]", &oaisim_stats, &oaisim_stats_f);
     //    print_meas (&PHY_vars_UE_g[UE_id][0]->ofdm_demod_stats,
     //                "[UE][ofdm_demod]", &oaisim_stats, &oaisim_stats_f);
     print_meas (&PHY_vars_UE_g[UE_id][0]->rx_dft_stats, "[UE][rx_dft]",
@@ -1828,8 +1846,8 @@ get_OAI_emulation ()
 
 // dummy function declarations
 
-void *rrc_enb_task(void *args_p) {
-
-
+void *rrc_enb_task(void *args_p)
+{
+  return NULL;
 }
 

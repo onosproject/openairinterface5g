@@ -254,12 +254,24 @@ typedef enum log_instance_type_e {
 void log_set_instance_type (log_instance_type_t instance);
 #endif
 
-
+#ifdef LOG_MAIN
+log_t *g_log;
+#else
+#ifdef __cplusplus
+   extern "C" {
+#endif
+extern log_t *g_log;
+#ifdef __cplusplus
+}
+#endif
+#endif
 /*--- INCLUDES ---------------------------------------------------------------*/
 #    include "log_if.h"
 /*----------------------------------------------------------------------------*/
 int  logInit (void);
-void logRecord_mt(const char *file, const char *func, int line,pthread_t thread_id, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 7, 8)));
+//void logRecord_mt(const char *file, const char *func, int line,pthread_t thread_id, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 7, 8)));
+
+void logRecord_mt(const char *file, const char *func, int line,int comp, int level, const char *format, ...) __attribute__ ((format (printf, 6, 7)));
 void logRecord(const char *file, const char *func, int line, pthread_t thread_id, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 7, 8)));
 int  set_comp_log(int component, int level, int verbosity, int interval);
 int  set_log(int component, int level, int interval);
@@ -280,9 +292,9 @@ void *log_thread_function(void * list);
  *  @brief Macro used to call tr_log_full_ex with file, function and line information
  * @{*/
 #ifdef LOG_NO_THREAD
-#define logIt(component, level, format, args...) logRecord_mt(__FILE__, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
+#define logIt(component, level, format, args...) (g_log->log_component[component].interval?logRecord_mt(__FILE__, __FUNCTION__, __LINE__, component, level, format, ##args):(void)0)
 #else //default
-#define logIt(component, level, format, args...) logRecord(__FILE__, __FUNCTION__, __LINE__, pthread_self(), component, level, format, ##args)
+#define logIt(component, level, format, args...) (g_log->log_component[component].interval?logRecord(__FILE__, __FUNCTION__, __LINE__, component, level, format, ##args):(void)0)
 #endif
 
 /* @}*/

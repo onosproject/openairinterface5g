@@ -242,6 +242,7 @@ add_boolean_option(UE_DEBUG_TRACE      False "Activate UE debug trace")
 add_boolean_option(UE_TIMING_TRACE     False "Activate UE timing trace")
 add_boolean_option(DISABLE_LOG_X       False "Deactivate all LOG_* macros")
 add_boolean_option(USRP_REC_PLAY       False "Enable USRP record playback mode")
+add_boolean_option(UE_NAS_USE_TUN      False "Enable UE NAS TUN device instead of ue_ip.ko")
 
 add_boolean_option(DEBUG_CONSOLE False "makes debugging easier, disables stdout/stderr buffering")
 
@@ -280,7 +281,7 @@ set(protobuf_generated_dir ${OPENAIR_BIN_DIR})
 
 # RRC
 ######
-add_list2_option(RRC_ASN1_VERSION "Rel10" "ASN.1 version of RRC interface" "Rel8" "Rel10" "CBA")
+add_list2_option(RRC_ASN1_VERSION "Rel14" "ASN.1 version of RRC interface" "Rel8" "Rel10" "Rel14" "CBA")
 
 if (${RRC_ASN1_VERSION} STREQUAL "Rel8")
   set (RRC_GRAMMAR ${OPENAIR2_DIR}/RRC/LITE/MESSAGES/asn1c/ASN1_files/EUTRA-RRC-Definitions-86.asn)
@@ -314,7 +315,8 @@ file(GLOB rrc_h ${RRC_FULL_DIR}/*.h)
 set(rrc_h ${rrc_h} ${RRC_FULL_DIR}/asn1_constants.h)
 set_source_files_properties(${rrc_source} PROPERTIES COMPILE_FLAGS -w) # suppress warnings from generated code
 add_library(RRC_LIB ${rrc_h} ${rrc_source}
-    ${OPENAIR2_DIR}/RRC/LITE/MESSAGES/asn1_msg.c)
+    ${OPENAIR2_DIR}/RRC/LITE/MESSAGES/asn1_msg.c
+    ${OPENAIR2_DIR}/RRC/LITE/MESSAGES/asn1_msg_NB_IoT.c)
 include_directories ("${RRC_FULL_DIR}")
 
 # add the command to generate the source code
@@ -599,8 +601,6 @@ add_boolean_option(MESSAGE_CHART_GENERATOR False         "For generating sequenc
 add_boolean_option(MESSAGE_CHART_GENERATOR_RLC_MAC False "trace RLC-MAC exchanges in sequence diagrams")
 add_boolean_option(MESSAGE_CHART_GENERATOR_PHY     False "trace some PHY exchanges in sequence diagrams")
 
-add_boolean_option(FLEXRAN_AGENT_SB_IF             False         "enable FlexRAN agent to inteface with a SDN controller")
-
 ########################
 # Include order
 ##########################
@@ -766,6 +766,8 @@ include_directories("${OPENAIR_DIR}/targets/ARCH/EXMIMO/USERSPACE/LIB/")
 include_directories("${OPENAIR_DIR}/targets/ARCH/EXMIMO/DEFS")
 include_directories("${OPENAIR2_DIR}/ENB_APP")
 include_directories("${OPENAIR2_DIR}/ENB_APP/CONTROL_MODULES/MAC")
+include_directories("${OPENAIR2_DIR}/ENB_APP/CONTROL_MODULES/RRC")
+include_directories("${OPENAIR2_DIR}/ENB_APP/CONTROL_MODULES/PDCP")
 include_directories("${OPENAIR2_DIR}/UTIL/OSA")
 include_directories("${OPENAIR2_DIR}/UTIL/LFDS/liblfds6.1.1/liblfds611/inc")
 include_directories("${OPENAIR2_DIR}/UTIL/LFDS/liblfds7.0.0/liblfds700/inc")
@@ -787,92 +789,94 @@ include_directories("${OPENAIR_DIR}")
 
 # Utilities Library
 ################
-if (FLEXRAN_AGENT_SB_IF)
-  # set the version of protobuf messages, V3 not supported yet
-  add_list1_option(FLPT_VERSION V2 "FLPT MSG  protobuf  grammar version" V2 V3)
+# set the version of protobuf messages, V3 not supported yet
+add_list1_option(FLPT_VERSION V2 "FLPT MSG  protobuf  grammar version" V2 V3)
 
-  if (${FLPT_VERSION} STREQUAL "V2")
-    set (FLPTDIR V2)
-  elseif (${FLPT_VERSION} STREQUAL "V3")
-    set (FLPTDIR V3)
-  endif(${FLPT_VERSION} STREQUAL "V2")
+if (${FLPT_VERSION} STREQUAL "V2")
+  set (FLPTDIR V2)
+elseif (${FLPT_VERSION} STREQUAL "V3")
+  set (FLPTDIR V3)
+endif(${FLPT_VERSION} STREQUAL "V2")
 
-  set(FLPT_MSG_DIR ${OPENAIR2_DIR}/ENB_APP/MESSAGES/${FLPTDIR} )
-  set(FLPT_MSG_FILES
-    ${FLPT_MSG_DIR}/header.proto
-    ${FLPT_MSG_DIR}/flexran.proto
-    ${FLPT_MSG_DIR}/stats_common.proto
-    ${FLPT_MSG_DIR}/stats_messages.proto
-    ${FLPT_MSG_DIR}/time_common.proto
-    ${FLPT_MSG_DIR}/controller_commands.proto
-    ${FLPT_MSG_DIR}/mac_primitives.proto
-    ${FLPT_MSG_DIR}/config_messages.proto
-    ${FLPT_MSG_DIR}/config_common.proto
-    ${FLPT_MSG_DIR}/control_delegation.proto
-    )
+set(FLPT_MSG_DIR ${OPENAIR2_DIR}/ENB_APP/MESSAGES/${FLPTDIR} )
+set(FLPT_MSG_FILES
+  ${FLPT_MSG_DIR}/header.proto
+  ${FLPT_MSG_DIR}/flexran.proto
+  ${FLPT_MSG_DIR}/stats_common.proto
+  ${FLPT_MSG_DIR}/stats_messages.proto
+  ${FLPT_MSG_DIR}/time_common.proto
+  ${FLPT_MSG_DIR}/controller_commands.proto
+  ${FLPT_MSG_DIR}/mac_primitives.proto
+  ${FLPT_MSG_DIR}/config_messages.proto
+  ${FLPT_MSG_DIR}/config_common.proto
+  ${FLPT_MSG_DIR}/control_delegation.proto
+  )
 
-  set(FLPT_C_DIR ${protobuf_generated_dir}/${FLPTDIR})
-  #message("calling protoc_call=${protoc_call} FLPT_C_DIR=${FLPT_C_DIR} FLPT_MSG_FILES=${FLPT_MSG_FILES}")
-  execute_process(COMMAND ${protoc_call} ${FLPT_C_DIR} ${FLPT_MSG_DIR} ${FLPT_MSG_FILES})
-  file(GLOB FLPT_source ${FLPT_C_DIR}/*.c)
-  set(FLPT_OAI_generated
-    ${FLPT_C_DIR}/header.pb-c.c
-    ${FLPT_C_DIR}/flexran.pb-c.c
-    ${FLPT_C_DIR}/stats_common.pb-c.c
-    ${FLPT_C_DIR}/stats_messages.pb-c.c
-    ${FLPT_C_DIR}/time_common.pb-c.c
-    ${FLPT_C_DIR}/controller_commands.pb-c.c
-    ${FLPT_C_DIR}/mac_primitives.pb-c.c
-    ${FLPT_C_DIR}/config_messages.pb-c.c
-    ${FLPT_C_DIR}/config_common.pb-c.c
-    ${FLPT_C_DIR}/control_delegation.pb-c.c
-    )
+set(FLPT_C_DIR ${protobuf_generated_dir}/${FLPTDIR})
+#message("calling protoc_call=${protoc_call} FLPT_C_DIR=${FLPT_C_DIR} FLPT_MSG_FILES=${FLPT_MSG_FILES}")
+execute_process(COMMAND ${protoc_call} ${FLPT_C_DIR} ${FLPT_MSG_DIR} ${FLPT_MSG_FILES})
+file(GLOB FLPT_source ${FLPT_C_DIR}/*.c)
+set(FLPT_OAI_generated
+  ${FLPT_C_DIR}/header.pb-c.c
+  ${FLPT_C_DIR}/flexran.pb-c.c
+  ${FLPT_C_DIR}/stats_common.pb-c.c
+  ${FLPT_C_DIR}/stats_messages.pb-c.c
+  ${FLPT_C_DIR}/time_common.pb-c.c
+  ${FLPT_C_DIR}/controller_commands.pb-c.c
+  ${FLPT_C_DIR}/mac_primitives.pb-c.c
+  ${FLPT_C_DIR}/config_messages.pb-c.c
+  ${FLPT_C_DIR}/config_common.pb-c.c
+  ${FLPT_C_DIR}/control_delegation.pb-c.c
+  )
 
-  file(GLOB flpt_h ${FLPT_C_DIR}/*.h)
-  set(flpt_h ${flpt_h} )
+file(GLOB flpt_h ${FLPT_C_DIR}/*.h)
+set(flpt_h ${flpt_h} )
 
-  add_library(FLPT_MSG
-    ${FLPT_OAI_generated}
-    ${FLPT_source}
-    )
-  set(FLPT_MSG_LIB FLPT_MSG)
-  #message("prpt c dir is : ${FLPT_C_DIR}")
-  include_directories (${FLPT_C_DIR})
+add_library(FLPT_MSG
+  ${FLPT_OAI_generated}
+  ${FLPT_source}
+  )
+set(FLPT_MSG_LIB FLPT_MSG)
+#message("prpt c dir is : ${FLPT_C_DIR}")
+include_directories (${FLPT_C_DIR})
 
-  add_library(ASYNC_IF
-    ${OPENAIR2_DIR}/UTIL/ASYNC_IF/socket_link.c
-    ${OPENAIR2_DIR}/UTIL/ASYNC_IF/link_manager.c
-    ${OPENAIR2_DIR}/UTIL/ASYNC_IF/message_queue.c
-    ${OPENAIR2_DIR}/UTIL/ASYNC_IF/ringbuffer_queue.c
-    )
-  set(ASYNC_IF_LIB ASYNC_IF)
-  include_directories(${OPENAIR2_DIR}/UTIL/ASYNC_IF)
+add_library(ASYNC_IF
+  ${OPENAIR2_DIR}/UTIL/ASYNC_IF/socket_link.c
+  ${OPENAIR2_DIR}/UTIL/ASYNC_IF/link_manager.c
+  ${OPENAIR2_DIR}/UTIL/ASYNC_IF/message_queue.c
+  ${OPENAIR2_DIR}/UTIL/ASYNC_IF/ringbuffer_queue.c
+  )
+set(ASYNC_IF_LIB ASYNC_IF)
+include_directories(${OPENAIR2_DIR}/UTIL/ASYNC_IF)
 
- add_library(FLEXRAN_AGENT
-    ${OPENAIR2_DIR}/ENB_APP/flexran_agent_handler.c
-    ${OPENAIR2_DIR}/ENB_APP/flexran_agent_common.c
-    ${OPENAIR2_DIR}/ENB_APP/flexran_agent_common_internal.c
-    ${OPENAIR2_DIR}/ENB_APP/CONTROL_MODULES/MAC/flexran_agent_mac.c
-    ${OPENAIR2_DIR}/ENB_APP/flexran_agent.c
-    ${OPENAIR2_DIR}/ENB_APP/flexran_agent_task_manager.c
-    ${OPENAIR2_DIR}/ENB_APP/flexran_agent_net_comm.c
-    ${OPENAIR2_DIR}/ENB_APP/flexran_agent_async.c
-    ${OPENAIR2_DIR}/ENB_APP/CONTROL_MODULES/MAC/flexran_agent_mac_internal.c
-    )
-  set(FLEXRAN_AGENT_LIB FLEXRAN_AGENT)
-  #include_directories(${OPENAIR2_DIR}/ENB_APP)
+add_library(FLEXRAN_AGENT
+  ${OPENAIR2_DIR}/ENB_APP/flexran_agent_handler.c
+  ${OPENAIR2_DIR}/ENB_APP/flexran_agent_common.c
+  ${OPENAIR2_DIR}/ENB_APP/flexran_agent_ran_api.c
+  ${OPENAIR2_DIR}/ENB_APP/flexran_agent_timer.c
+  ${OPENAIR2_DIR}/ENB_APP/flexran_agent_common_internal.c
+  ${OPENAIR2_DIR}/ENB_APP/CONTROL_MODULES/MAC/flexran_agent_mac.c
+  ${OPENAIR2_DIR}/ENB_APP/CONTROL_MODULES/RRC/flexran_agent_rrc.c
+  ${OPENAIR2_DIR}/ENB_APP/CONTROL_MODULES/PDCP/flexran_agent_pdcp.c
+  ${OPENAIR2_DIR}/ENB_APP/flexran_agent.c
+  ${OPENAIR2_DIR}/ENB_APP/flexran_agent_task_manager.c
+  ${OPENAIR2_DIR}/ENB_APP/flexran_agent_net_comm.c
+  ${OPENAIR2_DIR}/ENB_APP/flexran_agent_async.c
+  ${OPENAIR2_DIR}/ENB_APP/CONTROL_MODULES/MAC/flexran_agent_mac_internal.c
+  )
+set(FLEXRAN_AGENT_LIB FLEXRAN_AGENT)
+#include_directories(${OPENAIR2_DIR}/ENB_APP)
 
-  set(PROTOBUF_LIB "protobuf-c")
+set(PROTOBUF_LIB "protobuf-c")
 
-  FIND_PATH(LIBYAML_INCLUDE_DIR NAMES yaml.h)
-  FIND_LIBRARY(LIBYAML_LIBRARIES NAMES yaml libyaml)
+FIND_PATH(LIBYAML_INCLUDE_DIR NAMES yaml.h)
+FIND_LIBRARY(LIBYAML_LIBRARIES NAMES yaml libyaml)
 
-  INCLUDE(FindPackageHandleStandardArgs)
-  FIND_PACKAGE_HANDLE_STANDARD_ARGS(Yaml DEFAULT_MSG LIBYAML_LIBRARIES LIBYAML_INCLUDE_DIR)
-  MARK_AS_ADVANCED(LIBYAML_INCLUDE_DIR LIBYAML_LIBRARIES)
+INCLUDE(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Yaml DEFAULT_MSG LIBYAML_LIBRARIES LIBYAML_INCLUDE_DIR)
+MARK_AS_ADVANCED(LIBYAML_INCLUDE_DIR LIBYAML_LIBRARIES)
 
-  #set(PROTOBUF_LIB "protobuf") #for Cpp
-endif()
+#set(PROTOBUF_LIB "protobuf") #for Cpp
 
 
 add_library(HASHTABLE
@@ -1040,7 +1044,115 @@ include_directories(${NFAPI_USER_DIR})
 
 # Layer 1
 #############################
+set(PHY_TURBOSRC
+  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_sse.c
+  ${OPENAIR1_DIR}/PHY/CODING/3gpplte.c
+  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_8bit.c
+  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_16bit.c
+  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_avx2_16bit.c
+  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder.c
+)
+set(PHY_TURBOIF
+  ${OPENAIR1_DIR}/PHY/CODING/coding_load.c
+)
+
+add_library(coding MODULE ${PHY_TURBOSRC} )
 set(PHY_SRC
+  # depend on code generation from asn1c
+  ${RRC_FULL_DIR}/asn1_constants.h
+  # actual source
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pss.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/sss.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pilots.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pilots_mbsfn.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_coding.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_modulation.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_demodulation.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_llr_computation.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/power_control.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_decoding.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_scrambling.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/uci_tools.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_mcs.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pbch.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/edci.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/phich.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pcfich.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pucch.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/prach.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pmch.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pch.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/slss.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/sldch.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/slsch.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/group_hopping.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/srs_modulation.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/drs_modulation.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_modulation.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_demodulation.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_coding.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_decoding.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/rar_tools.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/print_stats.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/initial_sync.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/if4_tools.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/if5_tools.c
+  ${OPENAIR1_DIR}/PHY/MODULATION/ofdm_mod.c
+  ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep.c
+  ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep_mbsfn.c
+  ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep_ul.c
+  ${OPENAIR1_DIR}/PHY/MODULATION/ul_7_5_kHz.c
+  ${OPENAIR1_DIR}/PHY/MODULATION/beamforming.c
+  ${OPENAIR1_DIR}/PHY/MODULATION/compute_bf_weights.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/freq_equalization.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_time.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_timefreq.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_adjust_sync.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_channel_estimation.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_bf_channel_estimation.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_mbsfn_channel_estimation.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_est_freq_offset.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ue_measurements.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_eNB_measurements.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/adjust_gain.c
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_cell_spec.c
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_uespec.c
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold.c
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold_mbsfn.c
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_mbsfn.c
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref.c
+  ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation.c
+  ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte.c
+  ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_lte.c
+  ${OPENAIR1_DIR}/PHY/CODING/crc_byte.c
+  ${PHY_TURBOIF}
+  ${OPENAIR1_DIR}/PHY/CODING/lte_rate_matching.c
+  ${OPENAIR1_DIR}/PHY/CODING/viterbi.c
+  ${OPENAIR1_DIR}/PHY/CODING/viterbi_lte.c
+  ${OPENAIR1_DIR}/PHY/INIT/lte_init.c
+  ${OPENAIR1_DIR}/PHY/INIT/lte_init_ru.c
+  ${OPENAIR1_DIR}/PHY/INIT/lte_init_ue.c
+  ${OPENAIR1_DIR}/PHY/INIT/init_top.c
+  ${OPENAIR1_DIR}/PHY/INIT/lte_parms.c
+  ${OPENAIR1_DIR}/PHY/INIT/lte_param_init.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/file_output.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/cadd_vv.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/lte_dfts.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/log2_approx.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/cmult_sv.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/cmult_vv.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/cdot_prod.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/signal_energy.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/dB_routines.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/sqrt.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/time_meas.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/lut.c
+  )
+
+set(PHY_SRC_UE
   # depend on code generation from asn1c
   ${RRC_FULL_DIR}/asn1_constants.h
   # actual source
@@ -1112,104 +1224,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_lte.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_sse.c
   ${OPENAIR1_DIR}/PHY/CODING/crc_byte.c
-  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_8bit.c
-  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_16bit.c
-  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_avx2_16bit.c
-  ${OPENAIR1_DIR}/PHY/CODING/lte_rate_matching.c
-  ${OPENAIR1_DIR}/PHY/CODING/viterbi.c
-  ${OPENAIR1_DIR}/PHY/CODING/viterbi_lte.c
-  ${OPENAIR1_DIR}/PHY/INIT/lte_init.c
-  ${OPENAIR1_DIR}/PHY/INIT/lte_init_ru.c
-  ${OPENAIR1_DIR}/PHY/INIT/lte_init_ue.c
-  ${OPENAIR1_DIR}/PHY/INIT/init_top.c
-  ${OPENAIR1_DIR}/PHY/INIT/lte_parms.c
-  ${OPENAIR1_DIR}/PHY/INIT/lte_param_init.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/file_output.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/cadd_vv.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/lte_dfts.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/log2_approx.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/cmult_sv.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/cmult_vv.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/cdot_prod.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/signal_energy.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/dB_routines.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/sqrt.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/time_meas.c
-  ${OPENAIR1_DIR}/PHY/TOOLS/lut.c
-  )
-
-set(PHY_SRC_UE
-  # depend on code generation from asn1c
-  ${RRC_FULL_DIR}/asn1_constants.h
-  # actual source
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pss.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/sss.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pilots.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pilots_mbsfn.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_coding.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_modulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_demodulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_llr_computation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/power_control.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_decoding.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_scrambling.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/uci_tools.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_mcs.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pbch.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/edci.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/phich.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pcfich.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pucch.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/prach.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pmch.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pch.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/group_hopping.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/srs_modulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/drs_modulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_modulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_demodulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_coding.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_decoding.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/rar_tools.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/print_stats.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/initial_sync.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/if4_tools.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/if5_tools.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/ofdm_mod.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep_mbsfn.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep_ul.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/ul_7_5_kHz.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/beamforming.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/compute_bf_weights.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/freq_equalization.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_time.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_timefreq.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_adjust_sync.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_channel_estimation.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_bf_channel_estimation.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_mbsfn_channel_estimation.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_est_freq_offset.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ue_measurements.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_eNB_measurements.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/adjust_gain.c
-  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_cell_spec.c
-  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_uespec.c
-  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold.c
-  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold_mbsfn.c
-  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_mbsfn.c
-  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref.c
-  ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation.c
-  ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte.c
-  ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_lte.c
-  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_sse.c
-  ${OPENAIR1_DIR}/PHY/CODING/crc_byte.c
-  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_8bit.c
-  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_16bit.c
-  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_avx2_16bit.c
+  ${PHY_TURBOIF}
   ${OPENAIR1_DIR}/PHY/CODING/lte_rate_matching.c
   ${OPENAIR1_DIR}/PHY/CODING/viterbi.c
   ${OPENAIR1_DIR}/PHY/CODING/viterbi_lte.c
@@ -1301,7 +1316,6 @@ set(L2_SRC
   )
 
 set(L2_SRC_UE
-  ${OPENAIR2_DIR}/LAYER2/openair2_proc.c
   ${PDCP_DIR}/pdcp.c
   ${PDCP_DIR}/pdcp_fifo.c
   ${PDCP_DIR}/pdcp_sequence_manager.c
@@ -1343,7 +1357,7 @@ set(L2_SRC_UE
   )
 
 set (MAC_SRC
-  ${PHY_INTERFACE_DIR}/phy_stub_UE.c
+  #${PHY_INTERFACE_DIR}/phy_stub_UE.c
   ${PHY_INTERFACE_DIR}/IF_Module.c
   ${MAC_DIR}/main.c
   ${MAC_DIR}/main_ue.c
@@ -1359,12 +1373,14 @@ set (MAC_SRC
   ${MAC_DIR}/eNB_scheduler_bch.c
   ${MAC_DIR}/eNB_scheduler_primitives.c
   ${MAC_DIR}/eNB_scheduler_RA.c
+  ${MAC_DIR}/eNB_scheduler_phytest.c
   ${MAC_DIR}/pre_processor.c
   ${MAC_DIR}/config.c
   ${MAC_DIR}/config_ue.c
  )
 
 set (MAC_SRC_UE
+  ${PHY_INTERFACE_DIR}/phy_stub_UE.c
   ${MAC_DIR}/main_ue.c
   ${MAC_DIR}/ue_procedures.c
   ${MAC_DIR}/ra_procedures.c
@@ -1373,22 +1389,12 @@ set (MAC_SRC_UE
   ${MAC_DIR}/config_ue.c
  )
 
-
-if (FLEXRAN_AGENT_SB_IF)
-
-set (MAC_SRC ${MAC_SRC}
-  ${MAC_DIR}/flexran_agent_scheduler_dlsch_ue.c
-  ${MAC_DIR}/flexran_agent_scheduler_dataplane.c
-  ${MAC_DIR}/flexran_agent_scheduler_dlsch_ue_remote.c
-)
-
-endif()
-
 set (ENB_APP_SRC
   ${OPENAIR2_DIR}/ENB_APP/enb_app.c
   ${OPENAIR2_DIR}/ENB_APP/enb_config.c
+  ${OPENAIR2_DIR}/ENB_APP/RRC_config_tools.c
   )
-
+  
 add_library(L2
   ${L2_SRC}
   ${MAC_SRC}
@@ -1401,14 +1407,6 @@ add_library(L2_UE
 )
 
 include_directories(${NFAPI_USER_DIR})
-
-if (FLEXRAN_AGENT_SB_IF)
-
-#Test for adding a shared library
-add_library(default_sched SHARED ${MAC_DIR}/flexran_agent_scheduler_dlsch_ue.c)
-add_library(remote_sched SHARED ${MAC_DIR}/flexran_agent_scheduler_dlsch_ue_remote.c)
-
-endif()
 
 # L3 Libs
 ##########################
@@ -1729,6 +1727,17 @@ if(NAS_UE)
 endif()
 
 
+# nbiot
+add_definitions("-DNUMBER_OF_UE_MAX_NB_IoT=16")
+set (NBIOT_SOURCES
+    ${OPENAIR2_DIR}/ENB_APP/NB_IoT_config.c
+)
+add_library(NB_IoT MODULE ${NBIOT_SOURCES} )
+
+# shared library loader
+set (SHLIB_LOADER_SOURCES
+    ${OPENAIR_DIR}/common/utils/load_module_shlib.c
+)
 
 # Make lfds as a own source code (even if it is a outside library)
 # For better intergration with compilation flags & structure of cmake
@@ -1800,6 +1809,7 @@ include_directories("${NFAPI_DIR}/pnf/public_inc")
 include_directories("${NFAPI_DIR}/nfapi/inc")
 include_directories("${NFAPI_DIR}/sim_common/inc")
 include_directories("${NFAPI_DIR}/pnf_sim/inc")
+
 
 # System packages that are required
 # We use either the cmake buildin, in ubuntu are in: /usr/share/cmake*/Modules/
@@ -1903,6 +1913,16 @@ if(EXISTS "/usr/include/atlas/cblas.h" OR EXISTS "/usr/include/cblas.h")
   endif()
 
   list(APPEND ATLAS_LIBRARIES lapack)
+
+# for ubuntu 17.10, directories are different
+elseif(EXISTS "/usr/include/x86_64-linux-gnu/cblas.h")
+
+  include_directories("/usr/include/x86_64-linux-gnu")
+  LINK_DIRECTORIES("/usr/lib/x86_64-linux-gnu")
+  list(APPEND ATLAS_LIBRARIES cblas)
+  list(APPEND ATLAS_LIBRARIES atlas)
+  list(APPEND ATLAS_LIBRARIES lapack)
+
 else()
   message("No Blas/Atlas libs found, some targets will fail")
 endif()
@@ -1972,14 +1992,13 @@ add_executable(lte-softmodem
   ${s1ap_h}
   ${OPENAIR_BIN_DIR}/messages_xml.h
   ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
-  ${OPENAIR_TARGETS}/RT/USER/lte-ue.c
   ${OPENAIR_TARGETS}/RT/USER/lte-enb.c
   ${OPENAIR_TARGETS}/RT/USER/lte-ru.c
   ${OPENAIR_TARGETS}/RT/USER/lte-softmodem.c
+  ${OPENAIR2_DIR}/ENB_APP/NB_IoT_interface.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
   ${OPENAIR_TARGETS}/SIMU/USER/init_lte.c
   ${OPENAIR_TARGETS}/COMMON/create_tasks.c
-  ${OPENAIR_TARGETS}/COMMON/create_tasks_ue.c
   ${OPENAIR_TARGETS}/ARCH/COMMON/common_lib.c
   ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c
   ${OPENAIR3_DIR}/NAS/UE/nas_ue_task.c
@@ -1995,9 +2014,9 @@ add_executable(lte-softmodem
 
 target_link_libraries (lte-softmodem
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7 
-  NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB
-  NFAPI_USER_LIB
+  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 
+  ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
+  NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB NFAPI_USER_LIB
   -Wl,--end-group z dl)
 
 target_link_libraries (lte-softmodem ${LIBXML2_LIBRARIES})
@@ -2014,19 +2033,18 @@ add_executable(lte-softmodem-nos1
   ${s1ap_h}
   ${OPENAIR_BIN_DIR}/messages_xml.h
   ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
-  ${OPENAIR_TARGETS}/RT/USER/lte-ue.c
   ${OPENAIR_TARGETS}/RT/USER/lte-enb.c
   ${OPENAIR_TARGETS}/RT/USER/lte-ru.c
   ${OPENAIR_TARGETS}/RT/USER/lte-softmodem.c
+  ${OPENAIR2_DIR}/ENB_APP/NB_IoT_interface.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
   ${OPENAIR_TARGETS}/SIMU/USER/init_lte.c
   ${OPENAIR_TARGETS}/COMMON/create_tasks.c
-  ${OPENAIR_TARGETS}/COMMON/create_tasks_ue.c
   ${OPENAIR_TARGETS}/ARCH/COMMON/common_lib.c
   ${OPENAIR2_DIR}/RRC/NAS/nas_config.c
   ${OPENAIR2_DIR}/RRC/NAS/rb_config.c
   ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c
-   ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/multicast_link.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/multicast_link.c
   ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/socket.c
   ${OPENAIR_DIR}/common/utils/system.c
   ${XFORMS_SOURCE}
@@ -2037,10 +2055,10 @@ add_executable(lte-softmodem-nos1
   )
 target_link_libraries (lte-softmodem-nos1
   -Wl,--start-group
-  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
-  NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB
-  NFAPI_USER_LIB
-  -Wl,--end-group z dl)
+  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCHED_LIB PHY LFDS L2 ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} 
+  ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
+  NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB NFAPI_USER_LIB
+  -Wl,--end-group z dl )
 
 target_link_libraries (lte-softmodem-nos1 ${LIBXML2_LIBRARIES})
 target_link_libraries (lte-softmodem-nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp ${XFORMS_LIBRARIES} ${PROTOBUF_LIB} ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
@@ -2048,7 +2066,82 @@ target_link_libraries (lte-softmodem-nos1  ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-softmodem-nos1 ${T_LIB})
 
 
+# lte-uesoftmodem is  UE implementation
+#######################################
 
+add_executable(lte-uesoftmodem
+  ${rrc_h}
+  ${s1ap_h}
+  ${OPENAIR_BIN_DIR}/messages_xml.h
+  ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
+  ${OPENAIR_TARGETS}/RT/USER/lte-ue.c
+  ${OPENAIR_TARGETS}/RT/USER/lte-uesoftmodem.c
+  ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
+  ${OPENAIR_TARGETS}/SIMU/USER/init_lte.c
+  ${OPENAIR_TARGETS}/COMMON/create_tasks_ue.c
+  ${OPENAIR_TARGETS}/ARCH/COMMON/common_lib.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c
+  ${OPENAIR3_DIR}/NAS/UE/nas_ue_task.c
+  ${OPENAIR_DIR}/common/utils/utils.c
+  ${OPENAIR_DIR}/common/utils/system.c
+  ${XFORMS_SOURCE}
+  ${XFORMS_SOURCE_SOFTMODEM}
+  ${T_SOURCE}
+  ${CONFIG_SOURCES}
+  ${SHLIB_LOADER_SOURCES}
+  )
+
+target_link_libraries (lte-uesoftmodem
+  -Wl,--start-group
+  RRC_LIB S1AP_LIB S1AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_UE_LIB PHY_UE LFDS L2_UE 
+  ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} LFDS7
+  -Wl,--end-group z dl)
+
+target_link_libraries (lte-uesoftmodem ${LIBXML2_LIBRARIES})
+target_link_libraries (lte-uesoftmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
+target_link_libraries (lte-uesoftmodem ${LIB_LMS_LIBRARIES})
+target_link_libraries (lte-uesoftmodem ${T_LIB})
+
+
+
+# lte-uesoftmodem-nos1 is UE implementation
+###################################################
+add_executable(lte-uesoftmodem-nos1
+  ${rrc_h}
+  ${s1ap_h}
+  ${OPENAIR_BIN_DIR}/messages_xml.h
+  ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
+  ${OPENAIR_TARGETS}/RT/USER/lte-ue.c
+  ${OPENAIR_TARGETS}/RT/USER/lte-uesoftmodem.c
+  ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
+  ${OPENAIR_TARGETS}/SIMU/USER/init_lte.c
+  ${OPENAIR_TARGETS}/COMMON/create_tasks_ue.c
+  ${OPENAIR_TARGETS}/ARCH/COMMON/common_lib.c
+  ${OPENAIR2_DIR}/RRC/NAS/nas_config.c
+  ${OPENAIR2_DIR}/RRC/NAS/rb_config.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/multicast_link.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/socket.c
+  ${OPENAIR_DIR}/common/utils/utils.c
+  ${OPENAIR_DIR}/common/utils/system.c
+  ${XFORMS_SOURCE}
+  ${XFORMS_SOURCE_SOFTMODEM}
+  ${T_SOURCE}
+  ${CONFIG_SOURCES}
+  ${SHLIB_LOADER_SOURCES}
+  )
+
+target_link_libraries (lte-uesoftmodem-nos1
+  -Wl,--start-group
+  RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCHED_UE_LIB PHY_UE LFDS L2_UE ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} 
+  ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} LFDS7
+  NFAPI_COMMON_LIB NFAPI_LIB NFAPI_PNF_LIB NFAPI_USER_LIB 
+  -Wl,--end-group z dl )
+
+target_link_libraries (lte-uesoftmodem-nos1 ${LIBXML2_LIBRARIES})
+target_link_libraries (lte-uesoftmodem-nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB} ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
+target_link_libraries (lte-uesoftmodem-nos1  ${LIB_LMS_LIBRARIES})
+target_link_libraries (lte-uesoftmodem-nos1 ${T_LIB})
 
 # lte-softmodem-stub-nos1 is both eNB and UE implementation
 ###################################################
@@ -2142,7 +2235,6 @@ target_link_libraries (lte-softmodem-stub ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-softmodem-stub ${T_LIB})
 
 
-
 # USIM process
 #################
 #add_executable(usim
@@ -2194,7 +2286,6 @@ add_executable(oaisim
   ${OPENAIR3_DIR}/NAS/UE/nas_ue_task.c
   ${OPENAIR_DIR}/common/utils/utils.c
   ${OPENAIR_DIR}/common/utils/system.c
-  ${GTPU_need_ITTI}
   ${OPENAIR_TARGETS}/COMMON/create_tasks_ue.c
   ${XFORMS_SOURCE}
   ${T_SOURCE}
@@ -2227,14 +2318,13 @@ add_executable(oaisim
 target_include_directories(oaisim PUBLIC  ${OPENAIR_TARGETS}/SIMU/USER)
 target_link_libraries (oaisim
   -Wl,-ldl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB GTPV1U SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_UE_LIB PHY_UE LFDS L2 ${MSC_LIB} LIB_NAS_UE SIMU SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
-  NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB
-  NFAPI_USER_LIB
+  RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_UE_LIB PHY_UE LFDS L2_UE ${MSC_LIB} LIB_NAS_UE SIMU SECU_OSA ${ITTI_LIB}  ${MIH_LIB}
+  ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7
   -Wl,--end-group z dl)
 
 target_link_libraries (oaisim ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})
 target_link_libraries (oaisim pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES}  ${NETTLE_LIBRARIES} sctp z
-  ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${OPENPGM_LIBRARIES} )
+  ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${OPENPGM_LIBRARIES} ${PROTOBUF_LIB} ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
 #Force link with forms, regardless XFORMS option
 target_link_libraries (oaisim forms)
 target_link_libraries (oaisim ${T_LIB})
@@ -2307,11 +2397,13 @@ foreach(myExe dlsim dlsim_tm7 ulsim pbchsim scansim mbmssim pdcchsim pucchsim pr
     ${OPENAIR1_DIR}/SIMULATION/LTE_PHY/${myExe}.c
     ${XFORMS_SOURCE}
     ${T_SOURCE}
+    ${CONFIG_SOURCES}
+    ${SHLIB_LOADER_SOURCES}
     )
   target_link_libraries (${myExe}
 
     -Wl,--start-group SIMU UTIL SCHED_LIB PHY LFDS ${ITTI_LIB} LFDS7 -Wl,--end-group
-    pthread m rt ${CONFIG_LIBRARIES} ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${T_LIB}
+    pthread m rt ${CONFIG_LIBRARIES} ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${T_LIB} dl
     )
 endforeach(myExe)
 
@@ -2448,7 +2540,7 @@ add_custom_command (
 # retrieve the compiler options to send it to gccxml
 get_directory_property(DirDefs COMPILE_DEFINITIONS )
 foreach( d ${DirDefs} )
-  set(module_cc_opt_tmp "${module_cc_opt_tmp} -D${d}")
+  set(module_cc_opt "${module_cc_opt} -D${d}")
 endforeach()
 get_directory_property( DirDefs INCLUDE_DIRECTORIES )
 foreach( d ${DirDefs} )
@@ -2557,4 +2649,9 @@ endforeach(file)
 ADD_CUSTOM_TARGET(oarf
    DEPENDS ${OCT_FILES}
 )
+
+include (${OPENAIR_DIR}/common/utils/telnetsrv/telnetsrv_CMakeLists.txt)
+
+
+
 
