@@ -878,6 +878,12 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
   struct rx_tx_thread_data *rtd = arg;
   UE_rxtx_proc_t *proc = rtd->proc;
 
+  // Initializations for nfapi-L2-emulator mode
+  dl_config_req = NULL;
+  ul_config_req = NULL;
+  hi_dci0_req	= NULL;
+  tx_request_pdu_list = NULL;
+
   PHY_VARS_UE    *UE;   //= rtd->UE;
   int ret;
   //  double t_diff;
@@ -934,26 +940,26 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
       updateTimes(proc->gotIQs, &t2, 10000, "Delay to wake up UE_Thread_Rx (case 2)");*/
 
 
-    	//Panos: Not sure whether we should put the memory allocation here.
-    	//*** Note we should find the right place to call free(UL_INFO).
+    	//Panos: Not sure whether we should put the memory allocation here and not sure how much memory
+        //we should allocate for each subframe cycle.
     	UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
 
     	UL_INFO->rx_ind.rx_indication_body.rx_pdu_list = (nfapi_rx_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_rx_indication_pdu_t));
     	UL_INFO->rx_ind.rx_indication_body.number_of_pdus = 0;
-    	UL_INFO->rx_ind.header.message_id = 3225;
+    	//UL_INFO->rx_ind.header.message_id = 3225;
 
 
     	UL_INFO->crc_ind.crc_indication_body.crc_pdu_list = (nfapi_crc_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_crc_indication_pdu_t));
     	UL_INFO->crc_ind.crc_indication_body.number_of_crcs = 0;
-    	UL_INFO->crc_ind.header.message_id = 3225;
+    	//UL_INFO->crc_ind.header.message_id = 3225;
 
     	UL_INFO->harq_ind.harq_indication_body.harq_pdu_list = (nfapi_harq_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_harq_indication_pdu_t));
     	UL_INFO->harq_ind.harq_indication_body.number_of_harqs = 0;
-    	UL_INFO->harq_ind.header.message_id = 3225;
+    	//UL_INFO->harq_ind.header.message_id = 3225;
 
     	UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = (nfapi_sr_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_sr_indication_pdu_t));
     	UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
-    	UL_INFO->sr_ind.header.message_id = 3225;
+    	//UL_INFO->sr_ind.header.message_id = 3225;
 
 
 
@@ -986,26 +992,15 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
       phy_procedures_UE_SL_RX(UE,proc);
 
+      if (dl_config_req!=NULL && tx_request_pdu_list!=NULL){
+    	  //if(dl_config_req!= NULL) {
+    	  dl_config_req_UE_MAC(dl_config_req, Mod_id);
 
-
-      if(UE_mac_inst[Mod_id].dl_config_req!= NULL) {
-
-	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req, Mod_id);
-      }
-      if (UE_mac_inst[Mod_id].hi_dci0_req!=NULL && UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
-    	  hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req, Mod_id);
-
-    		  free(UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list);
-    		  UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list = NULL;
-
-    	  free(UE_mac_inst[Mod_id].hi_dci0_req);
-    	  UE_mac_inst[Mod_id].hi_dci0_req = NULL;
       }
 
-      else if(UE_mac_inst[Mod_id].hi_dci0_req!=NULL){
-      		free(UE_mac_inst[Mod_id].hi_dci0_req);
-      		UE_mac_inst[Mod_id].hi_dci0_req = NULL;
-      	}
+      if (hi_dci0_req!=NULL && hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
+    	  hi_dci0_req_UE_MAC(hi_dci0_req, Mod_id);
+      }
 
       if(nfapi_mode!=3)
       phy_procedures_UE_SL_TX(UE,proc);
@@ -1084,19 +1079,8 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 	// Panos: Substitute call to phy_procedures Tx with call to phy_stub functions in order to trigger
 	// UE Tx procedures directly at the MAC layer, based on the received ul_config requests from the vnf (eNB).
 	// Generate UL_indications which correspond to UL traffic.
-	if(UE_mac_inst[Mod_id].ul_config_req!= NULL){ //&& UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
-		ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req, timer_frame, timer_subframe, Mod_id);
-		if(UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
-			free(UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list);
-			UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list = NULL;
-		}
-		free(UE_mac_inst[Mod_id].ul_config_req);
-		UE_mac_inst[Mod_id].ul_config_req = NULL;
-
-	}
-	else if(UE_mac_inst[Mod_id].ul_config_req!=NULL){
-		free(UE_mac_inst[Mod_id].ul_config_req);
-		UE_mac_inst[Mod_id].ul_config_req = NULL;
+	if(ul_config_req!=NULL){ //&& UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
+		ul_config_req_UE_MAC(ul_config_req, timer_frame, timer_subframe, Mod_id);
 	}
       }
 
@@ -1104,11 +1088,6 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
 
     } //for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++)
-
-    if(tx_request_pdu_list!=NULL){
-    	  free(tx_request_pdu_list);
-      	  tx_request_pdu_list = NULL;
-      }
 
 
     if (UL_INFO->crc_ind.crc_indication_body.number_of_crcs>0)
@@ -1163,6 +1142,40 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
       free(UL_INFO);
       UL_INFO = NULL;
+
+      // De-allocate memory of nfapi requests copies before next subframe round
+      if(dl_config_req!=NULL){
+    	  if(dl_config_req->vendor_extension)
+    		  free(dl_config_req->vendor_extension);
+    	  if(dl_config_req->dl_config_request_body.dl_config_pdu_list!=NULL){
+    		  free(dl_config_req->dl_config_request_body.dl_config_pdu_list);
+    		  dl_config_req->dl_config_request_body.dl_config_pdu_list = NULL;
+    	  }
+    	  free(dl_config_req);
+    	  dl_config_req = NULL;
+      }
+      if(tx_request_pdu_list!=NULL){
+    	  free(tx_request_pdu_list);
+    	  tx_request_pdu_list = NULL;
+      }
+      if(ul_config_req!=NULL){
+    	  if(ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
+    		  free(ul_config_req->ul_config_request_body.ul_config_pdu_list);
+    		  ul_config_req->ul_config_request_body.ul_config_pdu_list = NULL;
+    	  }
+    	  free(ul_config_req);
+    	  ul_config_req = NULL;
+      }
+
+      if(hi_dci0_req!=NULL){
+    	  if(hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
+    		  free(hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list);
+    		  hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list = NULL;
+    	  }
+    	  free(hi_dci0_req);
+    	  hi_dci0_req = NULL;
+      }
+
 
 
   }
@@ -1263,26 +1276,26 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 
        oai_subframe_ind(timer_frame, timer_subframe);
 
-      if(UE_mac_inst[Mod_id].dl_config_req!= NULL) {
+      if(dl_config_req!= NULL) {
 
-	dl_config_req_UE_MAC(UE_mac_inst[Mod_id].dl_config_req, Mod_id);
+	dl_config_req_UE_MAC(dl_config_req, Mod_id);
 
       }
       //if(UE_mac_inst[Mod_id].hi_dci0_req!= NULL){
-      if (UE_mac_inst[Mod_id].hi_dci0_req!=NULL && UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
+      if (hi_dci0_req!=NULL && hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
     	  LOG_I( MAC, "Panos-D: UE_phy_stub_thread_rxn_txnp4 after oai_subframe_ind 4 \n");
-    	  hi_dci0_req_UE_MAC(UE_mac_inst[Mod_id].hi_dci0_req, Mod_id);
+    	  hi_dci0_req_UE_MAC(hi_dci0_req, Mod_id);
     	  //if(UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
-    		  free(UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list);
-    		  UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list = NULL;
+    		  free(hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list);
+    		  hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list = NULL;
     	  //}
-    	  free(UE_mac_inst[Mod_id].hi_dci0_req);
-    	  UE_mac_inst[Mod_id].hi_dci0_req = NULL;
+    	  free(hi_dci0_req);
+    	  hi_dci0_req = NULL;
       }
 
-      else if(UE_mac_inst[Mod_id].hi_dci0_req!=NULL){
-      		free(UE_mac_inst[Mod_id].hi_dci0_req);
-      		UE_mac_inst[Mod_id].hi_dci0_req = NULL;
+      else if(hi_dci0_req!=NULL){
+      		free(hi_dci0_req);
+      		hi_dci0_req = NULL;
       	}
 
       if (nfapi_mode != 3)
@@ -1302,7 +1315,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 			 proc->subframe_tx,
 			 subframe_select(&UE->frame_parms,proc->subframe_tx),
 			 0,
-			 0/*FIXME CC_id*/);
+			 0);
       if ( ret != CONNECTION_OK) {
 	char *txt;
 	switch (ret) {
@@ -1352,19 +1365,19 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 	// Panos: Substitute call to phy_procedures Tx with call to phy_stub functions in order to trigger
 	// UE Tx procedures directly at the MAC layer, based on the received ul_config requests from the vnf (eNB).
 	// Generate UL_indications which correspond to UL traffic.
-	if(UE_mac_inst[Mod_id].ul_config_req!= NULL && UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
+	if(ul_config_req!= NULL && ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
 		//LOG_I(MAC, "UE_phy_stub_thread_rxn_txnp4 ul_config_req is not NULL \n");
-		ul_config_req_UE_MAC(UE_mac_inst[Mod_id].ul_config_req, timer_frame, timer_subframe, Mod_id);
-		if(UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
-			free(UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list);
-			UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list = NULL;
+		ul_config_req_UE_MAC(ul_config_req, timer_frame, timer_subframe, Mod_id);
+		if(ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
+			free(ul_config_req->ul_config_request_body.ul_config_pdu_list);
+			ul_config_req->ul_config_request_body.ul_config_pdu_list = NULL;
 		}
-		free(UE_mac_inst[Mod_id].ul_config_req);
-		UE_mac_inst[Mod_id].ul_config_req = NULL;
+		free(ul_config_req);
+		ul_config_req = NULL;
 	}
-	else if(UE_mac_inst[Mod_id].ul_config_req!=NULL){
-		free(UE_mac_inst[Mod_id].ul_config_req);
-		UE_mac_inst[Mod_id].ul_config_req = NULL;
+	else if(ul_config_req!=NULL){
+		free(ul_config_req);
+		ul_config_req = NULL;
 	}
       }
 

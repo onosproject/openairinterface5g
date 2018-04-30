@@ -163,11 +163,6 @@ void ue_init_mac(module_id_t module_idP)
 	  UE_mac_inst[module_idP].UE_mode[0] = NOT_SYNCHED; //PRACH;
 	  UE_mac_inst[module_idP].first_ULSCH_Tx =0;
 	  UE_mac_inst[module_idP].SI_Decoded = 0;
-	  UE_mac_inst[module_idP].dl_config_req = NULL;
-	  UE_mac_inst[module_idP].ul_config_req = NULL;
-	  UE_mac_inst[module_idP].hi_dci0_req = NULL;
-	  UE_mac_inst[module_idP].tx_req = NULL;
-	  //UE_mac_inst[Mod_id].ra_frame = 0;
 	  next_ra_frame = 0;
 	  next_Mod_id = 0;
 	  tx_request_pdu_list = NULL;

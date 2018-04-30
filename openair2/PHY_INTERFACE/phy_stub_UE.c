@@ -50,7 +50,7 @@ void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND
 
 	  UL_INFO->rx_ind.sfn_sf                    = frame<<4| subframe;
 	  UL_INFO->rx_ind.rx_indication_body.tl.tag = NFAPI_RX_INDICATION_BODY_TAG;
-	  UL_INFO->rx_ind.vendor_extension		     = UE_mac_inst[Mod_id].ul_config_req->vendor_extension;
+	  UL_INFO->rx_ind.vendor_extension		     = ul_config_req->vendor_extension;
 
 
 	  pdu                                    = &UL_INFO->rx_ind.rx_indication_body.rx_pdu_list[UL_INFO->rx_ind.rx_indication_body.number_of_pdus];
@@ -91,7 +91,7 @@ void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_I
   nfapi_sr_indication_t       *sr_ind = &UL_INFO->sr_ind;
   nfapi_sr_indication_body_t  *sr_ind_body =    &sr_ind->sr_indication_body;
   nfapi_sr_indication_pdu_t *pdu =   &sr_ind_body->sr_pdu_list[sr_ind_body->number_of_srs];
-  UL_INFO->sr_ind.vendor_extension		     = UE_mac_inst[Mod_id].ul_config_req->vendor_extension;
+  UL_INFO->sr_ind.vendor_extension		     = ul_config_req->vendor_extension;
 
   //nfapi_sr_indication_pdu_t *pdu =   &UL_INFO->sr_ind.sr_indication_body.sr_pdu_list[UL_INFO->rx_ind.rx_indication_body.number_of_pdus];
 
@@ -132,7 +132,7 @@ void fill_crc_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_
   nfapi_crc_indication_pdu_t *pdu =   &UL_INFO->crc_ind.crc_indication_body.crc_pdu_list[UL_INFO->crc_ind.crc_indication_body.number_of_crcs];
 
   UL_INFO->crc_ind.sfn_sf                    = frame<<4| subframe;
-  UL_INFO->crc_ind.vendor_extension		     = UE_mac_inst[Mod_id].ul_config_req->vendor_extension;
+  UL_INFO->crc_ind.vendor_extension		     = ul_config_req->vendor_extension;
   UL_INFO->crc_ind.header.message_id              = NFAPI_CRC_INDICATION;
   UL_INFO->crc_ind.crc_indication_body.tl.tag = NFAPI_CRC_INDICATION_BODY_TAG;
 
@@ -248,7 +248,7 @@ void fill_ulsch_harq_indication_UE_MAC(int Mod_id, int frame,int subframe, UL_IN
 
   UL_INFO->harq_ind.header.message_id = NFAPI_HARQ_INDICATION;
   UL_INFO->harq_ind.sfn_sf = frame<<4|subframe;
-  UL_INFO->harq_ind.vendor_extension		     = UE_mac_inst[Mod_id].ul_config_req->vendor_extension;
+  UL_INFO->harq_ind.vendor_extension		     = ul_config_req->vendor_extension;
 
   UL_INFO->harq_ind.harq_indication_body.tl.tag = NFAPI_HARQ_INDICATION_BODY_TAG;
 
@@ -292,7 +292,7 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
   nfapi_harq_indication_body_t *body = &ind->harq_indication_body;
   nfapi_harq_indication_pdu_t *pdu =   &body->harq_pdu_list[UL_INFO->harq_ind.harq_indication_body.number_of_harqs];
 
-  UL_INFO->harq_ind.vendor_extension		     = UE_mac_inst[Mod_id].ul_config_req->vendor_extension;
+  UL_INFO->harq_ind.vendor_extension		     = ul_config_req->vendor_extension;
 
   ind->sfn_sf = frame<<4|subframe;
   ind->header.message_id = NFAPI_HARQ_INDICATION;
@@ -354,9 +354,6 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
   nfapi_ul_config_ulsch_pdu_rel8_t *rel8 = &ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8;
 
   if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE) {
-	  //LOG_D(MAC, "Panos-D: handle_nfapi_ul_pdu_UE_MAC 2 \n");
-    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
-    //            "No existing UE ULSCH for rnti %x\n",rel8->rnti);
     LOG_D(PHY,"Applying UL config for UE, rnti %x for frame %d, subframe %d\n",
          rel8->rnti,frame,subframe);
     uint8_t ulsch_buffer[5477] __attribute__ ((aligned(32)));
@@ -525,7 +522,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 
 int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int timer_subframe, module_id_t Mod_id)
 {
-	if (req!=NULL){ // && req->ul_config_request_body.ul_config_pdu_list !=NULL){
+	//if (req!=NULL){ // && req->ul_config_request_body.ul_config_pdu_list !=NULL){
   LOG_D(PHY,"[PNF] UL_CONFIG_REQ %s() sfn_sf:%d pdu:%d rach_prach_frequency_resources:%d srs_present:%u\n",
       __FUNCTION__,
       NFAPI_SFNSF2DEC(req->sfn_sf),
@@ -568,7 +565,7 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
     }
   }
 
-	}
+//	}
 
   return 0;
 }
@@ -603,7 +600,7 @@ int tx_req_UE_MAC(nfapi_tx_request_t* req)
 
 int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //, nfapi_tx_request_pdu_t* tx_request_pdu_list)
 {
-	if (req!=NULL && tx_request_pdu_list!=NULL){
+	//if (req!=NULL && tx_request_pdu_list!=NULL){
   int sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
   int sf = NFAPI_SFNSF2SF(req->sfn_sf);
   //Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
@@ -752,14 +749,8 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
   }
   //deallocate_mem_nfapi_dl
 
-  if(req->vendor_extension)
+  /*if(req->vendor_extension)
     free(req->vendor_extension);
-
-
-  /*if(tx_request_pdu_list!=NULL){
-	  free(tx_request_pdu_list);
-  	  tx_request_pdu_list = NULL;
-  }*/
 
 
   if(req->dl_config_request_body.dl_config_pdu_list!=NULL){
@@ -767,9 +758,9 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 	  req->dl_config_request_body.dl_config_pdu_list = NULL;
   }
   free(req);
-  req = NULL;
+  req = NULL;*/
   return 0;
-	}
+	/*}
 	else if(req!=NULL){
 		//LOG_I(MAC, "Panos-D: dl_config_req_UE_MAC probably dummy DL_Config \n");
 		if(req->dl_config_request_body.dl_config_pdu_list!=NULL){
@@ -780,7 +771,7 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 		free(req);
 		req = NULL;
 		return -1;
-	}
+	}*/
 
 
 
@@ -845,26 +836,26 @@ int memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
 
 	for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
 
-	UE_mac_inst[Mod_id].dl_config_req = (nfapi_dl_config_request_t*)malloc(sizeof(nfapi_dl_config_request_t));
+	dl_config_req = (nfapi_dl_config_request_t*)malloc(sizeof(nfapi_dl_config_request_t));
 	//LOG_I(MAC, "Panos-D: memcpy_dl_config_req 1, Mod_id:%d \n", Mod_id);
 
 
 	//UE_mac_inst[Mod_id].dl_config_req->header = req->header;
-	UE_mac_inst[Mod_id].dl_config_req->sfn_sf = req->sfn_sf;
+	dl_config_req->sfn_sf = req->sfn_sf;
 
-	UE_mac_inst[Mod_id].dl_config_req->vendor_extension = req->vendor_extension;
+	dl_config_req->vendor_extension = req->vendor_extension;
 
-	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_dci = req->dl_config_request_body.number_dci;
-	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdcch_ofdm_symbols = req->dl_config_request_body.number_pdcch_ofdm_symbols;
-	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdsch_rnti = req->dl_config_request_body.number_pdsch_rnti;
-	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdu = req->dl_config_request_body.number_pdu;
+	dl_config_req->dl_config_request_body.number_dci = req->dl_config_request_body.number_dci;
+	dl_config_req->dl_config_request_body.number_pdcch_ofdm_symbols = req->dl_config_request_body.number_pdcch_ofdm_symbols;
+	dl_config_req->dl_config_request_body.number_pdsch_rnti = req->dl_config_request_body.number_pdsch_rnti;
+	dl_config_req->dl_config_request_body.number_pdu = req->dl_config_request_body.number_pdu;
 
-	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.tl.tag = req->dl_config_request_body.tl.tag;
-	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.tl.length = req->dl_config_request_body.tl.length;
+	dl_config_req->dl_config_request_body.tl.tag = req->dl_config_request_body.tl.tag;
+	dl_config_req->dl_config_request_body.tl.length = req->dl_config_request_body.tl.length;
 
-	UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.dl_config_pdu_list = (nfapi_dl_config_request_pdu_t*) malloc(req->dl_config_request_body.number_pdu*sizeof(nfapi_dl_config_request_pdu_t));
-	for(int i=0; i<UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.number_pdu; i++) {
-		UE_mac_inst[Mod_id].dl_config_req->dl_config_request_body.dl_config_pdu_list[i] = req->dl_config_request_body.dl_config_pdu_list[i];
+	dl_config_req->dl_config_request_body.dl_config_pdu_list = (nfapi_dl_config_request_pdu_t*) calloc(req->dl_config_request_body.number_pdu, sizeof(nfapi_dl_config_request_pdu_t));
+	for(int i=0; i<dl_config_req->dl_config_request_body.number_pdu; i++) {
+		dl_config_req->dl_config_request_body.dl_config_pdu_list[i] = req->dl_config_request_body.dl_config_pdu_list[i];
 	}
 
 	}
@@ -882,23 +873,23 @@ int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
 
 	for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
 
-		UE_mac_inst[Mod_id].ul_config_req = (nfapi_ul_config_request_t*)malloc(sizeof(nfapi_ul_config_request_t));
+		ul_config_req = (nfapi_ul_config_request_t*)malloc(sizeof(nfapi_ul_config_request_t));
 
-	UE_mac_inst[Mod_id].ul_config_req->sfn_sf = req->sfn_sf;
-	UE_mac_inst[Mod_id].ul_config_req->vendor_extension = req->vendor_extension;
+	ul_config_req->sfn_sf = req->sfn_sf;
+	ul_config_req->vendor_extension = req->vendor_extension;
 
 
-	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.number_of_pdus = req->ul_config_request_body.number_of_pdus;
-	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.rach_prach_frequency_resources = req->ul_config_request_body.rach_prach_frequency_resources;
-	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.srs_present = req->ul_config_request_body.srs_present;
+	ul_config_req->ul_config_request_body.number_of_pdus = req->ul_config_request_body.number_of_pdus;
+	ul_config_req->ul_config_request_body.rach_prach_frequency_resources = req->ul_config_request_body.rach_prach_frequency_resources;
+	ul_config_req->ul_config_request_body.srs_present = req->ul_config_request_body.srs_present;
 
-	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.tl.tag = req->ul_config_request_body.tl.tag;
-	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.tl.length = req->ul_config_request_body.tl.length;
+	ul_config_req->ul_config_request_body.tl.tag = req->ul_config_request_body.tl.tag;
+	ul_config_req->ul_config_request_body.tl.length = req->ul_config_request_body.tl.length;
 
 	//LOG_D(MAC, "memcpy_ul_config_req 1 #ofULPDUs: %d \n", UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.number_of_pdus); //req->ul_config_request_body.number_of_pdus);
-	UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list = (nfapi_ul_config_request_pdu_t*) malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_ul_config_request_pdu_t));
-	for(int i=0; i<UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.number_of_pdus; i++) {
-			UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list[i] = req->ul_config_request_body.ul_config_pdu_list[i];
+	ul_config_req->ul_config_request_body.ul_config_pdu_list = (nfapi_ul_config_request_pdu_t*) malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_ul_config_request_pdu_t));
+	for(int i=0; i<ul_config_req->ul_config_request_body.number_of_pdus; i++) {
+			ul_config_req->ul_config_request_body.ul_config_pdu_list[i] = req->ul_config_request_body.ul_config_pdu_list[i];
 		}
 	}
 
@@ -940,25 +931,25 @@ int memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
 	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 
 	for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
-	UE_mac_inst[Mod_id].hi_dci0_req = (nfapi_hi_dci0_request_t*)malloc(sizeof(nfapi_hi_dci0_request_t));
+	hi_dci0_req = (nfapi_hi_dci0_request_t*)malloc(sizeof(nfapi_hi_dci0_request_t));
 
-	UE_mac_inst[Mod_id].hi_dci0_req->sfn_sf = req->sfn_sf;
-	UE_mac_inst[Mod_id].hi_dci0_req->vendor_extension = req->vendor_extension;
+	hi_dci0_req->sfn_sf = req->sfn_sf;
+	hi_dci0_req->vendor_extension = req->vendor_extension;
 
-	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_dci = req->hi_dci0_request_body.number_of_dci;
-	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_hi = req->hi_dci0_request_body.number_of_hi;
-	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.sfnsf = req->hi_dci0_request_body.sfnsf;
+	hi_dci0_req->hi_dci0_request_body.number_of_dci = req->hi_dci0_request_body.number_of_dci;
+	hi_dci0_req->hi_dci0_request_body.number_of_hi = req->hi_dci0_request_body.number_of_hi;
+	hi_dci0_req->hi_dci0_request_body.sfnsf = req->hi_dci0_request_body.sfnsf;
 
 	//UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.tl = req->hi_dci0_request_body.tl;
-	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.tl.tag = req->hi_dci0_request_body.tl.tag;
-	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.tl.length = req->hi_dci0_request_body.tl.length;
+	hi_dci0_req->hi_dci0_request_body.tl.tag = req->hi_dci0_request_body.tl.tag;
+	hi_dci0_req->hi_dci0_request_body.tl.length = req->hi_dci0_request_body.tl.length;
 
-	int total_pdus = UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_dci + UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.number_of_hi;
+	int total_pdus = hi_dci0_req->hi_dci0_request_body.number_of_dci + hi_dci0_req->hi_dci0_request_body.number_of_hi;
 
-	UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list = (nfapi_hi_dci0_request_pdu_t*) malloc(total_pdus*sizeof(nfapi_hi_dci0_request_pdu_t));
+	hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list = (nfapi_hi_dci0_request_pdu_t*) malloc(total_pdus*sizeof(nfapi_hi_dci0_request_pdu_t));
 
 	for(int i=0; i<total_pdus; i++){
-		UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list[i] = req->hi_dci0_request_body.hi_dci0_pdu_list[i];
+		hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list[i] = req->hi_dci0_request_body.hi_dci0_pdu_list[i];
 		//LOG_I(MAC, "Original hi_dci0 req. type:%d, Copy type: %d \n",req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type, UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type);
 	}
 

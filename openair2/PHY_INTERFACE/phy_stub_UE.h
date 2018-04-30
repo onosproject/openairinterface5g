@@ -20,6 +20,12 @@
 UL_IND_t *UL_INFO;
 
 nfapi_tx_request_pdu_t* tx_request_pdu_list;
+// New
+/// Panos: Pointers to config_request types. Used from nfapi callback functions.
+nfapi_dl_config_request_t* dl_config_req;
+nfapi_ul_config_request_t* ul_config_req;
+nfapi_hi_dci0_request_t* hi_dci0_req;
+
 int	tx_req_num_elems;
 
 int next_ra_frame;

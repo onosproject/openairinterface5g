@@ -1502,13 +1502,6 @@ typedef struct {
   int ra_frame; 	// This variable keeps the frame in which the RA started for the specific UE. It is used in order
                     // to make sure that different UEs RA starts within a number of frames difference.
 
-  /// Panos: Pointers to config_request types. Used from nfapi callback functions.
-  nfapi_dl_config_request_t* dl_config_req;
-  nfapi_ul_config_request_t* ul_config_req;
-  nfapi_hi_dci0_request_t* hi_dci0_req;
-  nfapi_tx_request_pdu_t* tx_request_pdu_list;
-  nfapi_tx_request_t* tx_req;
-
   eth_params_t         eth_params_n;
 
 } UE_MAC_INST;
