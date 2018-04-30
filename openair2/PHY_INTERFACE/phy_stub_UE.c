@@ -85,7 +85,6 @@ void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND
 
 void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint16_t rnti) {
 
-	LOG_I(MAC, "Panos-D: fill_sr_indication_UE_MAC 1 \n");
 
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 
@@ -155,7 +154,7 @@ void fill_crc_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_
 
 void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint8_t ra_PreambleIndex, uint16_t ra_RNTI) {
 
-	LOG_I(MAC, "Panos-D: fill_rach_indication_UE_MAC 1 \n");
+	LOG_D(MAC, "fill_rach_indication_UE_MAC 1 \n");
 	pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 	UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
 
@@ -367,7 +366,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
     uint8_t access_mode=SCHEDULED_ACCESS;
     if(buflen>0){
     	if(UE_mac_inst[Mod_id].first_ULSCH_Tx == 1){ // Msg3 case
-    		LOG_I(MAC, "Panos-D: handle_nfapi_ul_pdu_UE_MAC 2.2, Mod_id:%d, SFN/SF: %d/%d \n", Mod_id, frame, subframe);
+    		LOG_D(MAC, "handle_nfapi_ul_pdu_UE_MAC 2.2, Mod_id:%d, SFN/SF: %d/%d \n", Mod_id, frame, subframe);
     		fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0, index, rnti);
     		fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti, index);
     		Msg3_transmitted(Mod_id, 0, frame, 0);

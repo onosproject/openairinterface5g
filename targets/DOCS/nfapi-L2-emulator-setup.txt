@@ -3,10 +3,10 @@
 source oaienv
 cd cmake_targets
 
-#Create lte-softmodem-stub-nos1 (UE) and lte-softmodem-nos1 (eNB) executables
-./build_oai --eNB --UE --noS1 -x -t ETHERNET -C
-cd lte_noS1_build_oai/build/
-make lte-softmodem-nos1
+#Create lte-uesoftmodem-nos1 (UE) and lte-softmodem-nos1 (eNB) executables
+./build_oai --UE --noS1 -x -t ETHERNET 
+
+./build_oai --eNB --noS1 -x -t ETHERNET
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -27,5 +27,5 @@ sudo ./lte-softmodem-nos1 -O PATH_OF:rcc.band7.tm1.50PRB.nfapi.conf
 
 # Run the UE process on the other terminal (PNF) (--L2-emul specifying the operation in nfapi-L2-emulation mode
 # and it has to be equal to 3, --num_ues specifying the number of UEs)
-sudo ./lte-softmodem-stub-nos1 -U -O PATH_OF:oaiL1.nfapi.usrpb210.conf --L2-emul 3 --num-ues 5 > debug_log.txt
+sudo ./lte-uesoftmodem-nos1 -U -O PATH_OF:oaiL1.nfapi.usrpb210.conf --L2-emul 3 --num-ues 5 > debug_log.txt
 
