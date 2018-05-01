@@ -510,7 +510,11 @@ void rx_sdu(const module_id_t enb_mod_idP,
                            (char *)payload_ptr,
                            rx_lengths[i],
                            1,
-                           NULL);//(unsigned int*)crc_status);
+                           NULL //(unsigned int*)crc_status);
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+  );
           UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]]+=1;
           UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]]+=rx_lengths[i];
 
@@ -559,7 +563,11 @@ void rx_sdu(const module_id_t enb_mod_idP,
                              (char *)payload_ptr,
                              rx_lengths[i],
                              1,
-                             NULL);//(unsigned int*)crc_status);
+                             NULL //(unsigned int*)crc_status);
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+  );
 
             UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]]+=1;
             UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]]+=rx_lengths[i];

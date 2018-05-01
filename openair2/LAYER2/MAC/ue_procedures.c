@@ -505,7 +505,11 @@ ue_send_sdu(
                        (char *)payload_ptr,
                        rx_lengths[i],
                        1,
-                       NULL);
+                       NULL
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+  );
 
     } else if ((rx_lcids[i]  < NB_RB_MAX) && (rx_lcids[i] > DCCH1 )) {
 
@@ -527,7 +531,11 @@ ue_send_sdu(
 		       (char *)payload_ptr,
 		       rx_lengths[i],
 		       1,
-		       NULL);
+		       NULL
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+  );
     } else {
       LOG_E(MAC,"[UE %d] Frame %d : unknown LCID %d (eNB %d)\n", module_idP, frameP,rx_lcids[i], eNB_index);
     }
@@ -720,7 +728,11 @@ void ue_send_mch_sdu(module_id_t module_idP, uint8_t CC_id, frame_t frameP, uint
           (char *)payload_ptr,
           rx_lengths[i],
           1,
-          NULL);
+          NULL
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+  );
 
       }
     } else {
@@ -826,6 +838,21 @@ void ue_send_sl_sdu(module_id_t module_idP,
     rlc_sdu_len = ((SLSCH_SUBHEADER_24_Bit_DST_SHORT *)sdu)->L;
     rlc_sdu = sdu+sizeof(SLSCH_SUBHEADER_24_Bit_DST_SHORT);
   }
+
+  //Test
+  i=0;
+  sl_reset_rlc_flag_t reset_flag = SL_RESET_RLC_FLAG_YES;
+  for (i = MAX_NUM_LCID_DATA; i < MAX_NUM_LCID; i++){
+     //PC5-S (default RX)
+     if (UE_mac_inst[module_idP].sl_info[i].destinationL2Id == sourceL2Id) {
+        reset_flag = SL_RESET_RLC_FLAG_NO;
+        break;
+     }
+  }
+  if (reset_flag == SL_RESET_RLC_FLAG_YES){
+     LOG_I(MAC, "SL_RESET_RLC_FLAG_YES");
+  }
+
   mac_rlc_data_ind(
 		   module_idP,
 		   0x1234,
@@ -837,7 +864,11 @@ void ue_send_sl_sdu(module_id_t module_idP,
 		   rlc_sdu,
 		   rlc_sdu_len,
 		   1,
-		   NULL);
+		   NULL
+#ifdef Rel14
+  ,reset_flag
+#endif
+  );
   } else { //SL_DISCOVERY
      uint16_t len = sdu_len;
      LOG_D( MAC, "SL DISCOVERY \n");

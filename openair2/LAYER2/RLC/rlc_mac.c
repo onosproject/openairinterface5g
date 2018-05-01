@@ -239,7 +239,11 @@ void mac_rlc_data_ind     (
   char                     *buffer_pP,
   const tb_size_t           tb_sizeP,
   num_tb_t                  num_tbP,
-  crc_t                    *crcs_pP)
+  crc_t                    *crcs_pP
+#ifdef Rel14
+  , sl_reset_rlc_flag_t    sl_reset_rlc_flag
+#endif
+   )
 {
   //-----------------------------------------------------------------------------
   rlc_mode_t             rlc_mode   = RLC_MODE_NONE;
@@ -315,7 +319,11 @@ void mac_rlc_data_ind     (
     break;
 
   case RLC_MODE_UM:
-    rlc_um_mac_data_indication(&ctxt, &rlc_union_p->rlc.um, data_ind);
+    rlc_um_mac_data_indication(&ctxt, &rlc_union_p->rlc.um, data_ind
+#ifdef Rel14
+  ,sl_reset_rlc_flag
+#endif
+  );
     break;
 
   case RLC_MODE_TM:

@@ -479,8 +479,16 @@ void rlc_um_v9_3_0_test_exchange_pdus(rlc_um_entity_t *um_txP,
 
   rlc_um_v9_3_0_test_mac_rlc_loop(&data_ind_rx, &data_request_tx, &g_drop_tx, &g_tx_packets, &g_dropped_tx_packets);
   rlc_um_v9_3_0_test_mac_rlc_loop(&data_ind_tx, &data_request_rx, &g_drop_rx, &g_rx_packets, &g_dropped_rx_packets);
-  rlc_um_mac_data_indication(um_rxP, g_frame, um_rxP->is_enb, data_ind_rx);
-  rlc_um_mac_data_indication(um_txP, g_frame, um_txP->is_enb, data_ind_tx);
+  rlc_um_mac_data_indication(um_rxP, g_frame, um_rxP->is_enb, data_ind_rx
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+  );
+  rlc_um_mac_data_indication(um_txP, g_frame, um_txP->is_enb, data_ind_tx
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+  );
   g_frame += 1;
   //check_mem_area();
   //display_mem_load();
@@ -530,10 +538,18 @@ void rlc_um_v9_3_0_test_exchange_delayed_pdus(rlc_um_entity_t *um_txP,
   rlc_um_v9_3_0_buffer_delayed_tx_mac_data_ind(&data_ind_tx, time_rx_delayedP);
 
 
-  rlc_um_mac_data_indication(um_rxP, g_frame, um_rxP->is_enb, g_rx_delayed_indications[frame_modulo]);
+  rlc_um_mac_data_indication(um_rxP, g_frame, um_rxP->is_enb, g_rx_delayed_indications[frame_modulo]
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+  );
   memset(&g_rx_delayed_indications[frame_modulo], 0, sizeof(struct mac_data_ind));
 
-  rlc_um_mac_data_indication(um_txP, g_frame, um_txP->is_enb, g_tx_delayed_indications[frame_modulo]);
+  rlc_um_mac_data_indication(um_txP, g_frame, um_txP->is_enb, g_tx_delayed_indications[frame_modulo]
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+  );
   memset(&g_tx_delayed_indications[frame_modulo], 0, sizeof(struct mac_data_ind));
 
   if (is_frame_incrementedP) {

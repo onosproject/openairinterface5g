@@ -173,7 +173,11 @@ rlc_um_get_pdus (const protocol_ctxt_t* const ctxt_pP, void *argP)
 
 //-----------------------------------------------------------------------------
 void
-rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind data_indP)
+rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind data_indP
+#ifdef Rel14
+  , sl_reset_rlc_flag_t    sl_reset_rlc_flag
+#endif
+  )
 {
   rlc_um_entity_t    *l_rlc_p = (rlc_um_entity_t *) argP;
 #if TRACE_RLC_UM_PDU || MESSAGE_CHART_GENERATOR
@@ -374,6 +378,12 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
     }
 
 #endif
+    if (sl_reset_rlc_flag == SL_DISCOVERY_FLAG_YES) {
+        l_rlc_p->vr_ur = 0;
+        l_rlc_p->vr_ux = 0;
+        l_rlc_p->vr_uh = 0;
+
+    }
     rlc_um_receive (ctxt_pP, l_rlc_p, data_indP);
     break;
 
@@ -676,9 +686,17 @@ rlc_um_mac_data_request (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP,cons
 
 //-----------------------------------------------------------------------------
 void
-rlc_um_mac_data_indication (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, struct mac_data_ind data_indP)
+rlc_um_mac_data_indication (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, struct mac_data_ind data_indP
+#ifdef Rel14
+  , sl_reset_rlc_flag_t    sl_reset_rlc_flag
+#endif
+  )
 {
-  rlc_um_rx (ctxt_pP, rlc_pP, data_indP);
+  rlc_um_rx (ctxt_pP, rlc_pP, data_indP
+#ifdef Rel14
+  ,sl_reset_rlc_flag
+#endif
+  );
   rlc_um_check_timer_dar_time_out(ctxt_pP, rlc_pP);
 }
 
