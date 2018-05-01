@@ -378,7 +378,7 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
     }
 
 #endif
-    if (sl_reset_rlc_flag == SL_DISCOVERY_FLAG_YES) {
+    if (sl_reset_rlc_flag == SL_RESET_RLC_FLAG_YES) {
         l_rlc_p->vr_ur = 0;
         l_rlc_p->vr_ux = 0;
         l_rlc_p->vr_uh = 0;
