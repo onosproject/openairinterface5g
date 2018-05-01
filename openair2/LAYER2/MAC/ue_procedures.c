@@ -802,27 +802,29 @@ void ue_send_sl_sdu(module_id_t module_idP,
      }
      if ((longh->LCID >= MAX_NUM_LCID_DATA) && (j >= MAX_NUM_LCID_DATA)){
         //PC5-S (receive message after transmitting, e.g, security-command...)
-        if ((UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id)) {
-           lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
+        if ((UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == 0)) {
+           if (UE_mac_inst[module_idP].sl_info[j].LCID > 0) lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
            break;
         }
      }
   }
+/*
   int k = 0;
   if (j == MAX_NUM_LCID) {
      for (k = MAX_NUM_LCID_DATA; k < MAX_NUM_LCID; k++){
         //PC5-S (default RX)
-        if ((UE_mac_inst[module_idP].sl_info[k].sourceL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[k].destinationL2Id == 0)) {
+        if ((UE_mac_inst[module_idP].sl_info[k].sourceL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[k].destinationL2Id == 0)) 
+        {
            lcid = UE_mac_inst[module_idP].sl_info[k].LCID;
            break;
         }
      }
   }
 
-
+*/
 
   //match the destinationL2Id with UE L2Id or groupL2ID
-    if (!(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (j < MAX_NUM_LCID)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (k < MAX_NUM_LCID)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) | (i < MAX_NUM_LCID))){
+    if (!(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (j < MAX_NUM_LCID)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) | (i < MAX_NUM_LCID))){
        LOG_D( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
        return;
     }
