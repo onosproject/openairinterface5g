@@ -846,7 +846,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
   sl_reset_rlc_flag_t reset_flag = SL_RESET_RLC_FLAG_YES;
   for (i = MAX_NUM_LCID_DATA; i < MAX_NUM_LCID; i++){
      //PC5-S (default RX)
-     if (UE_mac_inst[module_idP].sl_info[i].destinationL2Id == sourceL2Id) {
+     if ((UE_mac_inst[module_idP].sl_info[i].destinationL2Id == sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) {
         reset_flag = SL_RESET_RLC_FLAG_NO;
         break;
      }
