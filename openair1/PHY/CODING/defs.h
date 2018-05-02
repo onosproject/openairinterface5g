@@ -571,12 +571,17 @@ uint32_t crcbit (uint8_t * ,
 int16_t reverseBits(int32_t ,int32_t);
 void phy_viterbi_dot11(int8_t *,uint8_t *,uint16_t);
 
-short *ldpc_decoder(short *msgChannel,short block_length,short No_iteration,double rate);
-int encode_parity_check_part(unsigned char *c,unsigned char *d, short BG,short Zc,short Kb);
+//short *ldpc_decoder(short *msgChannel,short block_length,short No_iteration,double rate);
+
+/*ldpc_encoder.c*/
 int encode_parity_check_part_orig(unsigned char *c,unsigned char *d, short BG,short Zc,short Kb,short block_length);
-int ldpc_encoder(unsigned char *test_input,unsigned char *channel_input,short block_length, double rate);
-int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,short block_length,int nom_rate,int denom_rate,unsigned char gen_code);
-int ldpc_encoder_multi_segment(unsigned char **test_input,unsigned char **channel_input,short block_length,double rate,uint8_t n_segments);
-int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,short block_length,int nom_rate,int denom_rate,time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput);
-int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_input,short block_length,int nom_rate,int denom_rate,int n_segments,time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput);
+
+/*ldpc_encoder2.c*/
+void encode_parity_check_part_optim(uint8_t *c,uint8_t *d, short BG,short Zc,short Kb);
+int ldpc_encoder_optim(unsigned char *test_input,unsigned char *channel_input,short block_length,short BG,time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput);
+int ldpc_encoder_optim_8seg(unsigned char **test_input,unsigned char **channel_input,short block_length,short BG,int n_segments,time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput);
+
+/*ldpc_generate_coefficient.c*/
+int ldpc_encoder_orig(unsigned char *test_input,unsigned char *channel_input,short block_length,short BG,unsigned char gen_code);
+
 #endif
