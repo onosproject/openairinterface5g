@@ -378,12 +378,19 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
     }
 
 #endif
+#ifdef Rel14
     if (sl_reset_rlc_flag == SL_RESET_RLC_FLAG_YES) {
         l_rlc_p->vr_ur = 0;
         l_rlc_p->vr_ux = 0;
         l_rlc_p->vr_uh = 0;
-
     }
+    if (l_rlc_p->channel_id == MAX_NUM_LCID_DATA) {
+       l_rlc_p->vr_ur = l_rlc_p->vr_ur %2;
+       l_rlc_p->vr_ux = l_rlc_p->vr_ux %2;
+       l_rlc_p->vr_uh = l_rlc_p->vr_uh %2;
+    }
+#endif
+
     rlc_um_receive (ctxt_pP, l_rlc_p, data_indP);
     break;
 
