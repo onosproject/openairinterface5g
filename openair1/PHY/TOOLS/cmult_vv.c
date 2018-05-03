@@ -21,6 +21,7 @@
 
 #include "defs.h"
 #include <stdio.h>
+#include "assertions.h"
 
 #if defined(__x86_64__) || defined(__i386__)
 int16_t conjug[8]__attribute__((aligned(16))) = {-1,1,-1,1,-1,1,-1,1} ;

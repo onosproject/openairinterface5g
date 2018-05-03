@@ -303,7 +303,7 @@ extern void eNB_fep_full_2thread(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc);
 int main(int argc, char **argv)
 {
 
-  char c;
+  int c;
   int i,j,aa,u;
   PHY_VARS_eNB *eNB;
   PHY_VARS_UE *UE;

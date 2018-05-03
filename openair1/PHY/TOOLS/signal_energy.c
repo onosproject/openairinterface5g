@@ -173,7 +173,7 @@ int32_t signal_energy_nodc(int32_t *input,uint32_t length)
   return((temp>0)?temp:1);
 }
 
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 
 int32_t signal_energy(int32_t *input,uint32_t length)
 {

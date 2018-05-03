@@ -2118,6 +2118,9 @@ void dlsch_channel_compensation_TM56(int **rxdataF_ext,
   //printf("eNB_id %d, symbol %d: precoded CQI %d dB\n",eNB_id,symbol,
   //   measurements->precoded_cqi_dB[eNB_id][0]);
 
+  _mm_empty();
+  _m_empty();
+
 #elif defined(__arm__) || defined(__aarch64__)
 
   uint32_t rb,Nre;
@@ -2296,8 +2299,6 @@ void dlsch_channel_compensation_TM56(int **rxdataF_ext,
   //     measurements->precoded_cqi_dB[eNB_id][0]);
 
 #endif
-  _mm_empty();
-  _m_empty();
 }
 
 void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
@@ -6038,8 +6039,6 @@ unsigned short dlsch_extract_rbs_TM7(int **rxdataF,
     }
   }
 
-  _mm_empty();
-  _m_empty();
 
   return(nb_rb/frame_parms->nb_antennas_rx);
 }
