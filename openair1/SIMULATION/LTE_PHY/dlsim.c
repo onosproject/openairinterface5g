@@ -659,13 +659,15 @@ int main(int argc, char **argv)
   Sched_Rsp_t sched_resp;
   int pa=dB0;
 
-#if defined(__arm__)
+#if defined(__arm__) || defined(__aarch64__)
   FILE    *proc_fd = NULL;
   char buf[64];
 
-  proc_fd = fopen("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_cur_freq", "r");
-  if(!proc_fd)
-     printf("cannot open /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_cur_freq");
+  proc_fd = fopen("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq", "r");
+  if(!proc_fd) {
+     printf("cannot open /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq");
+     exit(-1);
+  }
   else {
      while(fgets(buf, 63, proc_fd))
         printf("%s", buf);
