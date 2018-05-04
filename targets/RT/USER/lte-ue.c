@@ -81,7 +81,17 @@ void *UE_thread(void *arg);
 void init_UE(int nb_inst,int,int,int);
 void init_UE_stub(int nb_inst,int,int,char*);
 void init_UE_stub_single_thread(int nb_inst,int,int,char*);
+int init_timer_thread(void);
 extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
+extern void multicast_link_start(void (*rx_handlerP) (unsigned int, char *),
+                          unsigned char _multicast_group, char *multicast_ifname);
+extern int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind);
+extern int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind);
+extern int oai_nfapi_harq_indication(nfapi_harq_indication_t *harq_ind);
+extern int oai_nfapi_sr_indication(nfapi_sr_indication_t *ind);
+extern int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind);
+extern int multicast_link_write_sock(int groupP, char *dataP, uint32_t sizeP);
+
 //extern int tx_req_UE_MAC1();
 
 void ue_stub_rx_handler(unsigned int, char *);
@@ -891,10 +901,6 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
   char threadname[256];
   //sprintf(threadname,"UE_%d_proc", UE->Mod_id);
 
-  // Panos: Call (Sched_Rsp_t) get_nfapi_sched_response(UE->Mod_ID) to get all
-  //sched_response config messages which concern the specific UE. Inside this
-  //function we should somehow make the translation of rnti to Mod_ID.
-
   //proc->instance_cnt_rxtx=-1;
 
   phy_stub_ticking->ticking_var = -1;
@@ -946,26 +952,22 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
     	UL_INFO->rx_ind.rx_indication_body.rx_pdu_list = (nfapi_rx_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_rx_indication_pdu_t));
     	UL_INFO->rx_ind.rx_indication_body.number_of_pdus = 0;
-    	//UL_INFO->rx_ind.header.message_id = 3225;
 
 
     	UL_INFO->crc_ind.crc_indication_body.crc_pdu_list = (nfapi_crc_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_crc_indication_pdu_t));
     	UL_INFO->crc_ind.crc_indication_body.number_of_crcs = 0;
-    	//UL_INFO->crc_ind.header.message_id = 3225;
 
     	UL_INFO->harq_ind.harq_indication_body.harq_pdu_list = (nfapi_harq_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_harq_indication_pdu_t));
     	UL_INFO->harq_ind.harq_indication_body.number_of_harqs = 0;
-    	//UL_INFO->harq_ind.header.message_id = 3225;
 
     	UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = (nfapi_sr_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_sr_indication_pdu_t));
     	UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
-    	//UL_INFO->sr_ind.header.message_id = 3225;
 
 
 
 
     for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++) {
-    	//LOG_I(MAC, "Panos-D: UE_phy_stub_single_thread_rxn_txnp4, NB_UE_INST:%d, Mod_id:%d \n", NB_UE_INST, Mod_id);
+    	//LOG_D(MAC, "UE_phy_stub_single_thread_rxn_txnp4, NB_UE_INST:%d, Mod_id:%d \n", NB_UE_INST, Mod_id);
     	UE = PHY_vars_UE_g[Mod_id][0];
     lte_subframe_t sf_type = subframe_select( &UE->frame_parms, proc->subframe_rx);
     if ((sf_type == SF_DL) ||
@@ -1210,9 +1212,6 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
   char threadname[256];
   sprintf(threadname,"UE_%d_proc", UE->Mod_id);
 
-  // Panos: Call (Sched_Rsp_t) get_nfapi_sched_response(UE->Mod_ID) to get all
-  //sched_response config messages which concern the specific UE. Inside this
-  //function we should somehow make the translation of rnti to Mod_ID.
 
   //proc->instance_cnt_rxtx=-1;
 
@@ -2049,7 +2048,7 @@ int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg)
 
 
 
-// Panos: This timer thread is used only in the phy_sub mode as an independent timer
+// Panos: This timer thread is used only in the phy_stub mode as an independent timer
 // which will be ticking and provide the SFN/SF values that will be used from the UE threads
 // playing the role of nfapi-pnf.
 
@@ -2062,7 +2061,7 @@ static void* timer_thread( void* param ) {
   phy_stub_ticking->ticking_var = -1;
   PHY_VARS_UE *UE;
   UE = PHY_vars_UE_g[0][0];
-  double t_diff;
+  //double t_diff;
   int external_timer = 0;
 
 
@@ -2097,7 +2096,7 @@ static void* timer_thread( void* param ) {
 
   clock_gettime(CLOCK_MONOTONIC, &t_start);
   T_0 = (uint64_t) t_start.tv_sec*1000000000 + t_start.tv_nsec;
-  LOG_D(MAC, "Panos-D: timer_thread(), T_0 value: %" PRId64 "\n", T_0);
+  LOG_D(MAC, "timer_thread(), T_0 value: %" PRId64 "\n", T_0);
 
   while (!oai_exit) {
 
@@ -2163,11 +2162,11 @@ static void* timer_thread( void* param ) {
     }
 
 
-    stop_meas(&UE->timer_stats);
+    /*stop_meas(&UE->timer_stats);
     t_diff = get_time_meas_us(&UE->timer_stats);
 
     stop_meas(&UE->timer_stats);
-    t_diff = get_time_meas_us(&UE->timer_stats);
+    t_diff = get_time_meas_us(&UE->timer_stats);*/
   }
   free(phy_stub_ticking);
   pthread_cond_destroy(&phy_stub_ticking->cond_ticking);
@@ -2324,7 +2323,6 @@ static void* timer_thread( void* param ) {
 
 
 int init_timer_thread(void) {
-	// Panos: CAREFUL Originally this was set to PHY_VARS_UE *UE=PHY_vars_UE_g[0]
   //PHY_VARS_UE *UE=PHY_vars_UE_g[0];
 	PHY_VARS_UE *UE=PHY_vars_UE_g[0][0];
   phy_stub_ticking = (SF_ticking*)malloc(sizeof(SF_ticking));

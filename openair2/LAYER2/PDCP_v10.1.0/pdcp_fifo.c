@@ -487,13 +487,14 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 #ifdef Rel14
    int prose_addr_len;
    char send_buf[BUFSIZE], receive_buf[BUFSIZE];
-   int optval;
+   // Panos: Remove the following definitions due to warnings of unused variables.
+   //int optval;
    int bytes_received;
    sidelink_pc5s_element *sl_pc5s_msg_recv = NULL;
    sidelink_pc5s_element *sl_pc5s_msg_send = NULL;
-   uint32_t sourceL2Id;
-   uint32_t groupL2Id;
-   module_id_t         module_id = 0;
+   //uint32_t sourceL2Id;
+   //uint32_t groupL2Id;
+   //module_id_t         module_id = 0;
    pc5s_header_t *pc5s_header;
 #endif
 
@@ -633,7 +634,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
    // receive a message from ProSe App
    memset(receive_buf, 0, BUFSIZE);
    bytes_received = recvfrom(pdcp_pc5_sockfd, receive_buf, BUFSIZE, 0,
-         (struct sockaddr *) &prose_pdcp_addr, &prose_addr_len);
+         (struct sockaddr *) &prose_pdcp_addr, (socklen_t *)&prose_addr_len);
    //  if (bytes_received < 0){
    //    LOG_E(RRC, "ERROR: Failed to receive from ProSe App\n");
    //    exit(EXIT_FAILURE);
@@ -720,7 +721,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                   key = PDCP_COLL_KEY_DEFAULT_DRB_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
                   h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
                   LOG_I(PDCP,"request key %x : (%d,%x,%d,%d)\n",
-                        key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
+                        (uint8_t)key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
                } else {
                   rab_id = rab_id % maxDRB;
                   LOG_I(PDCP, "PDCP_COLL_KEY_VALUE(module_id=%d, rnti=%x, enb_flag=%d, rab_id=%d, SRB_FLAG=%d)\n",
@@ -728,7 +729,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                   key = PDCP_COLL_KEY_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
                   h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
                   LOG_I(PDCP,"request key %x : (%d,%x,%d,%d)\n",
-                        key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
+                		  (uint8_t)key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
                }
 
                if (h_rc == HASH_TABLE_OK) {
@@ -1027,7 +1028,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                         key = PDCP_COLL_KEY_DEFAULT_DRB_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
                         h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
                         LOG_I(PDCP,"request key %x : (%d,%x,%d,%d)\n",
-                              key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
+                        		(uint8_t)key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
                      } else {
                         rab_id = rab_id % maxDRB;
                         LOG_I(PDCP, "PDCP_COLL_KEY_VALUE(module_id=%d, rnti=%x, enb_flag=%d, rab_id=%d, SRB_FLAG=%d)\n",
@@ -1035,7 +1036,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                         key = PDCP_COLL_KEY_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
                         h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
                         LOG_I(PDCP,"request key %x : (%d,%x,%d,%d)\n",
-                              key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
+                        		(uint8_t)key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
                      }
 
                      if (h_rc == HASH_TABLE_OK) {
@@ -1186,12 +1187,12 @@ void pdcp_fifo_read_input_sdus_from_otg (const protocol_ctxt_t* const  ctxt_pP) 
 //TTN for D2D (PC5S)
 #ifdef Rel14
 
-int
+void
 pdcp_pc5_socket_init() {
-   pthread_attr_t     attr;
-   struct sched_param sched_param;
+	//pthread_attr_t     attr;
+   //struct sched_param sched_param;
    int optval; // flag value for setsockopt
-   int n; // message byte size
+   //int n; // message byte size
 
    //create PDCP socket
    pdcp_pc5_sockfd = socket(AF_INET, SOCK_DGRAM, 0);

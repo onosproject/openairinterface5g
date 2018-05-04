@@ -33,6 +33,7 @@
 #define __LTE_TRANSPORT_SLSS__C__
 #include "PHY/defs.h"
 
+extern int multicast_link_write_sock(int groupP, char *dataP, uint32_t sizeP);
 
 void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx) {
 

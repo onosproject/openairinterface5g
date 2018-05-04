@@ -499,14 +499,6 @@ function main() {
   DIR=$OPENAIR_DIR/cmake_targets
   if [ "$NOS1" =  "1" ] ; then
       lte_build_dir=lte_noS1_build_oai
-#<<<<<<< HEAD
-#      #lte_exec=lte-softmodem-nos1
-#      lte_exec=lte-softmodem-stub-nos1
-#  else
-#      lte_build_dir=lte_build_oai
-#      #lte_exec=lte-softmodem
-#      lte_exec=lte-softmodem-stub
-#=======
       if [ "$eNB" = "1" ] ; then
          lte_exec=lte-softmodem-nos1
       fi
@@ -521,7 +513,6 @@ function main() {
       if [ "$UE" = "1" ] ; then
          lte_exec=lte-uesoftmodem
       fi
-#>>>>>>> main/develop
   fi
 
 # configuration module libraries, one currently available, using libconfig 

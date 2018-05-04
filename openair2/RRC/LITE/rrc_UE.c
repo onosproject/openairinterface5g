@@ -30,6 +30,7 @@
 
 #define RRC_UE
 #define RRC_UE_C
+#define _GNU_SOURCE
 
 #include "assertions.h"
 #include "hashtable.h"
@@ -3869,12 +3870,12 @@ uint64_t arfcn_to_freq(long arfcn) {
    LOG_I( RRC, "[UE] Dumping SIB18\n" );
    for (int i = 0; i < sib18->commConfig_r12->commRxPool_r12.list.count; i++) {
        LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, sib18->commConfig_r12->commRxPool_r12.list.count);
-       LOG_I(RRC, " SIB18 rxPool_sc_CP_Len: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_CP_Len_r12);
-       LOG_I(RRC, " SIB18 sc_Period_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_Period_r12);
-       LOG_I(RRC, " SIB18 data_CP_Len_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->data_CP_Len_r12);
-       LOG_I(RRC, " SIB18 prb_Num_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Num_r12);
-       LOG_I(RRC, " SIB18 prb_Start_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Start_r12);
-       LOG_I(RRC, " SIB18 prb_End_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_End_r12);
+       LOG_I(RRC, " SIB18 rxPool_sc_CP_Len: %ld \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_CP_Len_r12);
+       LOG_I(RRC, " SIB18 sc_Period_r12: %ld \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_Period_r12);
+       LOG_I(RRC, " SIB18 data_CP_Len_r12: %ld \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->data_CP_Len_r12);
+       LOG_I(RRC, " SIB18 prb_Num_r12: %ld \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Num_r12);
+       LOG_I(RRC, " SIB18 prb_Start_r12: %ld \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Start_r12);
+       LOG_I(RRC, " SIB18 prb_End_r12: %ld \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_End_r12);
        //to add more log
      }
 }
@@ -3885,13 +3886,13 @@ uint64_t arfcn_to_freq(long arfcn) {
    LOG_I( RRC, "[UE] Dumping SIB19\n" );
    for (int i = 0; i < sib19->discConfig_r12->discRxPool_r12.list.count; i++) {
        LOG_I(RRC, " Contents of SIB19 %d/%d \n", i+1, sib19->discConfig_r12->discRxPool_r12.list.count);
-       LOG_I(RRC, " SIB19 cp_Len_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->cp_Len_r12);
-       LOG_I(RRC, " SIB19 discPeriod_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->discPeriod_r12);
-       LOG_I(RRC, " SIB19 numRetx_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRetx_r12);
-       LOG_I(RRC, " SIB19 numRepetition_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRepetition_r12);
-       LOG_I(RRC, " SIB19 prb_Num_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Num_r12);
-       LOG_I(RRC, " SIB19 prb_Start_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Start_r12);
-       LOG_I(RRC, " SIB19 prb_End_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_End_r12);
+       LOG_I(RRC, " SIB19 cp_Len_r12: %ld \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->cp_Len_r12);
+       LOG_I(RRC, " SIB19 discPeriod_r12: %ld \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->discPeriod_r12);
+       LOG_I(RRC, " SIB19 numRetx_r12: %ld \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRetx_r12);
+       LOG_I(RRC, " SIB19 numRepetition_r12: %ld \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRepetition_r12);
+       LOG_I(RRC, " SIB19 prb_Num_r12: %ld \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Num_r12);
+       LOG_I(RRC, " SIB19 prb_Start_r12: %ld \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Start_r12);
+       LOG_I(RRC, " SIB19 prb_End_r12: %ld \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_End_r12);
        //to add more log
      }
 }
@@ -3902,9 +3903,9 @@ uint64_t arfcn_to_freq(long arfcn) {
           LOG_I(RRC, " Contents of SIB21 %d/%d \n", i+1, sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.count);
           LOG_I(RRC, " SIB21 sl_Subframe_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->sl_Subframe_r14.present);
           LOG_I(RRC, " SIB21 adjacencyPSCCH_PSSCH_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->adjacencyPSCCH_PSSCH_r14);
-          LOG_I(RRC, " SIB21 sizeSubchannel_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->sizeSubchannel_r14);
-          LOG_I(RRC, " SIB21 numSubchannel_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->numSubchannel_r14);
-          LOG_I(RRC, " SIB21 startRB_Subchannel_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->startRB_Subchannel_r14);
+          LOG_I(RRC, " SIB21 sizeSubchannel_r14: %ld \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->sizeSubchannel_r14);
+          LOG_I(RRC, " SIB21 numSubchannel_r14: %ld \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->numSubchannel_r14);
+          LOG_I(RRC, " SIB21 startRB_Subchannel_r14: %ld \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->startRB_Subchannel_r14);
           //to add more log
        }
     }
@@ -5297,7 +5298,7 @@ rrc_top_cleanup_ue(
 //-----------------------------------------------------------------------------
 uint8_t rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, SL_TRIGGER_t mode)
 {
-   uint8_t    size;
+   uint8_t    size=0;
    uint8_t buffer[100];
 
    //Generate SidelinkUEInformation
@@ -5346,7 +5347,7 @@ uint8_t fill_SLSS(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
          //if RRC_CONNECTED (Todo: and if networkControlledSyncTx (RRCConnectionReconfiguration) is configured and set to On)
          if (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State == RRC_CONNECTED){
             //select subframe(s) indicated by syncOffsetIndicator
-            subframe = syncOffsetIndicator;
+            *subframe = syncOffsetIndicator;
          } else {
             //select subframe(s) indicated by syncOffsetIndicator within SC period
          }
@@ -5429,9 +5430,9 @@ rrc_ue_process_sidelink_radioResourceConfig(
                      Mod_idP, sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.size );
                LOG_I(RRC,"[UE %d][RRC_UE] scheduled resource for SL, sl_RNTI buf 0x%08x \n",
                      Mod_idP, sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.buf );
-               LOG_I(RRC,"[UE %d][RRC_UE] scheduled resource for SL, Mac_MainConfig_r12.retx_BSR_TimerSL %d \n",
+               LOG_I(RRC,"[UE %d][RRC_UE] scheduled resource for SL, Mac_MainConfig_r12.retx_BSR_TimerSL %ld \n",
                      Mod_idP, sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.retx_BSR_TimerSL );
-               LOG_I(RRC,"[UE %d][RRC_UE] scheduled resource for SL, sc_CommTxConfig %d \n",
+               LOG_I(RRC,"[UE %d][RRC_UE] scheduled resource for SL, sc_CommTxConfig %ld \n",
                      Mod_idP, sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.retx_BSR_TimerSL );
                //configure scheduled resource for SL
                //TODO
@@ -5522,7 +5523,7 @@ rrc_control_socket_init(){
    pthread_attr_t     attr;
    struct sched_param sched_param;
    int optval; // flag value for setsockopt
-   int n; // message byte size
+   //int n; // message byte size
 
 
    // create the control socket
@@ -5579,7 +5580,7 @@ void *rrc_control_socket_thread_fct(void *arg)
    int prose_addr_len;
    char send_buf[BUFSIZE];
    char receive_buf[BUFSIZE];
-   int optval;
+   //int optval;
    int n;
    struct sidelink_ctrl_element *sl_ctrl_msg_recv = NULL;
    struct sidelink_ctrl_element *sl_ctrl_msg_send = NULL;
@@ -5599,13 +5600,13 @@ void *rrc_control_socket_thread_fct(void *arg)
 
    //from the main program, listen for the incoming messages from control socket (ProSe App)
    prose_addr_len = sizeof(prose_app_addr);
-   int enable_notification = 1;
+   //int enable_notification = 1;
    while (1) {
       LOG_I(RRC,"Listening to incoming connection from ProSe App \n");
       // receive a message from ProSe App
       memset(receive_buf, 0, BUFSIZE);
       n = recvfrom(ctrl_sock_fd, receive_buf, BUFSIZE, 0,
-            (struct sockaddr *) &prose_app_addr, &prose_addr_len);
+            (struct sockaddr *) &prose_app_addr, (socklen_t *)&prose_addr_len);
       if (n < 0){
          LOG_E(RRC, "ERROR: Failed to receive from ProSe App\n");
          exit(EXIT_FAILURE);

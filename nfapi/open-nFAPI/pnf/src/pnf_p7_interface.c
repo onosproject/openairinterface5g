@@ -117,7 +117,6 @@ int nfapi_pnf_p7_crc_ind(nfapi_pnf_p7_config_t* config, nfapi_crc_indication_t* 
 {
 	if(config == NULL || ind == NULL)
 	{
-		printf("Panos-D: %s: invalid input params\n", __FUNCTION__);
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s: invalid input params\n", __FUNCTION__);
 		return -1;
 	}
@@ -129,7 +128,6 @@ int nfapi_pnf_p7_rx_ind(nfapi_pnf_p7_config_t* config, nfapi_rx_indication_t* in
 {
 	if(config == NULL || ind == NULL)
 	{
-		printf("Panos-D: %s: invalid input params\n", __FUNCTION__);
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s: invalid input params\n", __FUNCTION__);
 		return -1;
 	}

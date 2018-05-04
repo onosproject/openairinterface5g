@@ -1832,7 +1832,6 @@ static uint8_t pack_crc_indication_body_value(void* tlv, uint8_t **ppWritePacked
 	nfapi_crc_indication_body_t* value = (nfapi_crc_indication_body_t*)tlv;
 	
 	if(push16(value->number_of_crcs, ppWritePackedMsg, end) == 0){
-		printf("Panos-D: pack_crc_indication_body_value 0 \n");
 		return 0;
 	}
 
@@ -1844,13 +1843,11 @@ static uint8_t pack_crc_indication_body_value(void* tlv, uint8_t **ppWritePacked
 		
 		uint8_t* instance_length_p = *ppWritePackedMsg;
 		if(!push16(pdu->instance_length, ppWritePackedMsg, end)){
-			printf("Panos-D: pack_crc_indication_body_value 1 \n");
 			return 0;
 		}
 		
 		if(!(pack_tlv(NFAPI_RX_UE_INFORMATION_TAG, &pdu->rx_ue_information, ppWritePackedMsg, end, pack_rx_ue_information_value) &&
 			 pack_tlv(NFAPI_CRC_INDICATION_REL8_TAG, &pdu->crc_indication_rel8, ppWritePackedMsg, end, pack_crc_indication_rel8_body))){
-			printf("Panos-D: pack_crc_indication_body_value 2 \n");
 			return 0;
 		}
 
@@ -1965,7 +1962,6 @@ static uint8_t pack_rx_ulsch_indication_body_value(void *tlv, uint8_t **ppWriteP
 		}
 
 		if( pusharray8(value->rx_pdu_list[i].data, length, length, ppWritePackedMsg, end) == 0){
-			printf("Panos-D: pack_rx_ulsch_indication_body_value() 2 about to return error \n");
 			return 0;
 		}
 	}
@@ -2788,7 +2784,7 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
 	pMessageHeader->message_length = packedMsgLen16;
 	
 	if(!push16(packedMsgLen16, &pPackedLengthField, end)){
-		printf("Panos-D: Pack function failed. Returning... \n");
+		//printf("Panos-D: Pack function failed. Returning... \n");
 		return -1;
 	}
 		
@@ -2797,7 +2793,7 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
 		//quick test
 		if(pMessageHeader->message_length != packedMsgLen)
 		{
-			printf("Panos-D: nfapi packedMsgLen(%d) != message_length(%d) id %d\n", packedMsgLen, pMessageHeader->message_length, pMessageHeader->message_id);
+			//printf("Panos-D: nfapi packedMsgLen(%d) != message_length(%d) id %d\n", packedMsgLen, pMessageHeader->message_length, pMessageHeader->message_id);
 			NFAPI_TRACE(NFAPI_TRACE_ERROR, "nfapi packedMsgLen(%d) != message_length(%d) id %d\n", packedMsgLen, pMessageHeader->message_length, pMessageHeader->message_id);
 		}
 	}

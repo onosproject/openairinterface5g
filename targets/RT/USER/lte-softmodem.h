@@ -139,7 +139,7 @@
 {"ue-max-power",     	       NULL,		      0,		iptr:&(tx_max_power[0]),	    defintval:90,   TYPE_INT,	   0},     \
 {"emul-iface",                 CONFIG_HLP_EMULIFACE,  0,                strptr:&emul_iface,                  defstrval:"lo", TYPE_STRING,   100}, \
 {"L2-emul",                 	NULL,  				  0,                u8ptr:&nfapi_mode,                  defuintval:3, TYPE_UINT8,   0}, \
-{"num-ues",     	       		   NULL,		      	  0,				iptr:&(NB_UE_INST),	    defintval:1,   	TYPE_INT,	   0},     \
+{"num-ues",     	       		   NULL,		      	  0,				u8ptr:&(NB_UE_INST),	    defuintval:1,   	TYPE_UINT8,	   0},     \
 {"r"  ,                        CONFIG_HLP_PRB,        0,                u8ptr:&(frame_parms[0]->N_RB_DL),   defintval:25,   TYPE_UINT8,    0}     \
 }
 

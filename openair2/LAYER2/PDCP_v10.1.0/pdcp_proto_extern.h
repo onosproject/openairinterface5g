@@ -69,6 +69,6 @@ extern void     init_pdcp (struct pdcp_entity *pdcpP, struct rb_dispatcher *rbP,
 extern void    *pdcp_tx (void *argP);
 #endif
 
-void pdcp_pc5_socket_init();
+extern void pdcp_pc5_socket_init(void);
 
 #endif

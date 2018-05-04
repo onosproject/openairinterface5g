@@ -216,6 +216,7 @@ uint64_t num_missed_slots=0; // counter for the number of missed slots
 
 extern void reset_opp_meas(void);
 extern void print_opp_meas(void);
+extern void init_UE_stub_single_thread(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_iface);
 
 extern PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
 			  uint8_t UE_id,
@@ -1167,6 +1168,7 @@ int main( int argc, char **argv )
         nfapi_mode_str = "<UNKNOWN NFAPI MODE>";
         break;
     }
+    printf("NFAPI MODE:%s\n", nfapi_mode_str);
 
 
   // start the main threads

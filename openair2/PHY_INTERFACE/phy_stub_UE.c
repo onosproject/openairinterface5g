@@ -21,6 +21,8 @@
 
 extern int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind);
 extern int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind);
+extern int oai_nfapi_rach_ind(nfapi_rach_indication_t *rach_ind);
+void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, int pnf_p7_port, int vnf_p7_port);
 
 
 
@@ -158,9 +160,6 @@ void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL
 	pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 	UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
 
-
-
-	//LOG_I(MAC, "Panos-D: fill_rach_indication_UE_MAC 2 \n");
 	    UL_INFO->rach_ind.rach_indication_body.number_of_preambles                 = 1;
 
 	    //eNB->UL_INFO.rach_ind.preamble_list                       = &eNB->preamble_list[0];
@@ -204,7 +203,6 @@ void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL
 }
 
 void fill_ulsch_cqi_indication_UE_MAC(int Mod_id, uint16_t frame,uint8_t subframe, UL_IND_t *UL_INFO, uint16_t rnti) {
-	//LOG_I(MAC, "Panos-D: fill_ulsch_cqi_indication_UE_MAC 1 \n");
 
 	pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 	nfapi_cqi_indication_pdu_t *pdu         = &UL_INFO->cqi_ind.cqi_pdu_list[UL_INFO->cqi_ind.number_of_cqis];
@@ -300,11 +298,9 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
   body->tl.tag = NFAPI_HARQ_INDICATION_BODY_TAG;
   pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
 
-  //LOG_I(MAC, "Panos-D: fill_uci_harq_indication_UE_MAC 2, # of harqs: %d \n", UL_INFO->harq_ind.harq_indication_body.number_of_harqs);
   pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
   pdu->rx_ue_information.rnti                         = rnti;
-  //LOG_I(MAC, "Panos-D: fill_uci_harq_indication_UE_MAC 3 \n");
 
   pdu->ul_cqi_information.tl.tag = NFAPI_UL_CQI_INFORMATION_TAG;
 
@@ -329,7 +325,6 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
     }
     else if ((harq_information->harq_information_rel9_fdd.ack_nack_mode == 0) &&
                  (harq_information->harq_information_rel9_fdd.harq_size == 2)) {
-    	//LOG_I(MAC, "Panos-D: fill_uci_harq_indication_UE_MAC 6 \n");
       pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_FDD_REL13_TAG;
       pdu->harq_indication_fdd_rel13.mode = 0;
       pdu->harq_indication_fdd_rel13.number_of_ack_nack = 2;
@@ -384,7 +379,6 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
   }
 
   else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE) {
-	  //LOG_I(MAC, "Panos-D: handle_nfapi_ul_pdu_UE_MAC 3 \n");
 
 	  //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
     //            "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
@@ -411,7 +405,6 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 		  }
 
 	  }
-	  //LOG_I(MAC, "Panos-D: handle_nfapi_ul_pdu_UE_MAC 3.2 \n");
 	  if(ulsch_harq_information!=NULL)
 		  fill_ulsch_harq_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_harq_information, rnti);
 
@@ -497,7 +490,6 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 
   }
   else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_SR_HARQ_PDU_TYPE) {
-	  //LOG_I(MAC, "Panos-D: handle_nfapi_ul_pdu_UE_MAC 9 \n");
     //AssertFatal((UE_id = find_uci(rel8->rnti,proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
     //            "No available UE UCI for rnti %x\n",ul_config_pdu->uci_sr_harq_pdu.ue_information.ue_information_rel8.rnti);
 
@@ -541,9 +533,6 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
 
   for (int i=0;i<req->ul_config_request_body.number_of_pdus;i++)
   {
-    //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn/sf:%d PDU[%d] size:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), i, ul_config_pdu_list[i].pdu_size);
-
-	//LOG_D(MAC, "Panos-D: ul_config_req_UE_MAC 2.0 #PDUs: %d \n", i<req->ul_config_request_body.number_of_pdus);
 
     if (
     		(req->ul_config_request_body.ul_config_pdu_list[i].pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE && req->ul_config_request_body.ul_config_pdu_list[i].ulsch_pdu.ulsch_pdu_rel8.rnti == UE_mac_inst[Mod_id].crnti) ||
@@ -603,17 +592,12 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 	//if (req!=NULL && tx_request_pdu_list!=NULL){
   int sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
   int sf = NFAPI_SFNSF2SF(req->sfn_sf);
-  //Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
+  //Mod_id = 0; // Currently static (only for one UE) but this should change.
 
   /*struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
   eNB_rxtx_proc_t *proc = &eNB->proc.proc_rxtx[0];*/
   nfapi_dl_config_request_pdu_t* dl_config_pdu_list = req->dl_config_request_body.dl_config_pdu_list;
   nfapi_dl_config_request_pdu_t *dl_config_pdu_tmp;
-
-  /*LTE_eNB_PDCCH *pdcch_vars = &eNB->pdcch_vars[sf&1];
-
-  pdcch_vars->num_pdcch_symbols = req->dl_config_request_body.number_pdcch_ofdm_symbols;
-  pdcch_vars->num_dci = 0;*/
 
   //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() TX:%d/%d RX:%d/%d sfn_sf:%d DCI:%d PDU:%d\n", __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx, NFAPI_SFNSF2DEC(req->sfn_sf), req->dl_config_request_body.number_dci, req->dl_config_request_body.number_pdu);
 
@@ -720,7 +704,7 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 				i++;
 			}
 			else {
-				LOG_E(MAC,"[UE %d] %d Frame %d, subframe %d : Cannot extract DLSCH PDU from NFAPI 2\n",Mod_id, sfn, sf);
+				LOG_E(MAC,"[UE %d] Frame %d, subframe %d : Cannot extract DLSCH PDU from NFAPI 2\n",Mod_id, sfn, sf);
 				i++;
 			}
 
@@ -747,34 +731,8 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
       //NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() UNKNOWN:%d\n", __FUNCTION__, dl_config_pdu_list[i].pdu_type);
     }
   }
-  //deallocate_mem_nfapi_dl
 
-  /*if(req->vendor_extension)
-    free(req->vendor_extension);
-
-
-  if(req->dl_config_request_body.dl_config_pdu_list!=NULL){
-	  free(req->dl_config_request_body.dl_config_pdu_list);
-	  req->dl_config_request_body.dl_config_pdu_list = NULL;
-  }
-  free(req);
-  req = NULL;*/
   return 0;
-	/*}
-	else if(req!=NULL){
-		//LOG_I(MAC, "Panos-D: dl_config_req_UE_MAC probably dummy DL_Config \n");
-		if(req->dl_config_request_body.dl_config_pdu_list!=NULL){
-			//LOG_I(MAC, "Panos-D: dl_config_req_UE_MAC probably dummy DL_Config 2\n");
-			free(req->dl_config_request_body.dl_config_pdu_list);
-			req->dl_config_request_body.dl_config_pdu_list = NULL;
-		}
-		free(req);
-		req = NULL;
-		return -1;
-	}*/
-
-
-
 
 }
 
@@ -829,12 +787,10 @@ int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req, module_id_t Mod_id)
 // pnf_p7_subframe_ind.
 int memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
 {
-	//LOG_I(MAC, "Panos-D: memcpy_dl_config_req 1");
 
+	//module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 
-	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
-
-	for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
+	//for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
 
 	dl_config_req = (nfapi_dl_config_request_t*)malloc(sizeof(nfapi_dl_config_request_t));
 	//LOG_I(MAC, "Panos-D: memcpy_dl_config_req 1, Mod_id:%d \n", Mod_id);
@@ -858,7 +814,7 @@ int memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
 		dl_config_req->dl_config_request_body.dl_config_pdu_list[i] = req->dl_config_request_body.dl_config_pdu_list[i];
 	}
 
-	}
+	//}
 
 	return 0;
 
@@ -868,10 +824,10 @@ int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
 {
 	//LOG_D(MAC, "Panos-D: memcpy_ul_config_req 1 \n");
 
-	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
+	//module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 
 
-	for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
+	//for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
 
 		ul_config_req = (nfapi_ul_config_request_t*)malloc(sizeof(nfapi_ul_config_request_t));
 
@@ -891,7 +847,7 @@ int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
 	for(int i=0; i<ul_config_req->ul_config_request_body.number_of_pdus; i++) {
 			ul_config_req->ul_config_request_body.ul_config_pdu_list[i] = req->ul_config_request_body.ul_config_pdu_list[i];
 		}
-	}
+	//}
 
 	return 0;
 }
@@ -901,7 +857,7 @@ int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
 
 int memcpy_tx_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
 {
-	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
+	//module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 
 
 	tx_req_num_elems = req->tx_request_body.number_of_pdus;
@@ -928,9 +884,9 @@ int memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
 {
 
 	//if(req!=0){
-	module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
+	//module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 
-	for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
+	//for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
 	hi_dci0_req = (nfapi_hi_dci0_request_t*)malloc(sizeof(nfapi_hi_dci0_request_t));
 
 	hi_dci0_req->sfn_sf = req->sfn_sf;
@@ -953,7 +909,7 @@ int memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
 		//LOG_I(MAC, "Original hi_dci0 req. type:%d, Copy type: %d \n",req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type, UE_mac_inst[Mod_id].hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list[i].pdu_type);
 	}
 
-	}
+	//}
 		return 0;
 }
 
@@ -1057,7 +1013,7 @@ uint32_t from_earfcn(int eutra_bandP, uint32_t dl_earfcn) { return(0);}
 int32_t get_uldl_offset(int eutra_bandP) { return(0);}
 
 int l1_north_init_eNB() {
-
+return 0;
 }
 
 void init_eNB_afterRU(void) {

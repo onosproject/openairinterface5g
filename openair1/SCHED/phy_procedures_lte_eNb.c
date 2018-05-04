@@ -1169,8 +1169,8 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   LTE_eNB_ULSCH_t *ulsch;
   LTE_UL_eNB_HARQ_t *ulsch_harq;
-  struct timespec t_decode, t_crc,t_rx_ind,t_rx_ind_b,t_harq_a,t_harq_b,t_end;
-
+  struct timespec t_harq_a,t_harq_b;
+  //struct timespec t_decode, t_crc,t_rx_ind,t_rx_ind_b, t_end;
   const int subframe = proc->subframe_rx;
   const int frame    = proc->frame_rx;
   
