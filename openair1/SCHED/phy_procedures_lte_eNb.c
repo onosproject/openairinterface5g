@@ -2022,12 +2022,12 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
   int frame = eNB->proc.frame_prach;
   uint8_t CC_id = eNB->CC_id;
 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,1);
+  /*VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,1);
   memset(&preamble_energy_list[0],0,64*sizeof(uint16_t));
-  memset(&preamble_delay_list[0],0,64*sizeof(uint16_t));
+  memset(&preamble_delay_list[0],0,64*sizeof(uint16_t));*/
 
   if (eNB->abstraction_flag == 0) {
-    LOG_D(PHY,"[eNB %d][RAPROC] Frame %d, Subframe %d : PRACH RX Signal Power : %d dBm\n",eNB->Mod_id, 
+    /*LOG_D(PHY,"[eNB %d][RAPROC] Frame %d, Subframe %d : PRACH RX Signal Power : %d dBm\n",eNB->Mod_id, 
           frame,subframe,dB_fixed(signal_energy(&eNB->common_vars.rxdata[0][0][subframe*fp->samples_per_tti],512)) - eNB->rx_total_gain_dB);
 
 
@@ -2035,11 +2035,13 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
              preamble_energy_list,
              preamble_delay_list,
              frame,
-             0);
+             0);*/
+  //usleep(100);
+    nprach_procedures_NB_IoT(eNB);
   } else {
     for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
 
-      LOG_D(PHY,"[RAPROC] UE_id %d (%p), generate_prach %d, UE RSI %d, eNB RSI %d preamble index %d\n",
+      /*LOG_D(PHY,"[RAPROC] UE_id %d (%p), generate_prach %d, UE RSI %d, eNB RSI %d preamble index %d\n",
             UE_id,PHY_vars_UE_g[UE_id][CC_id],PHY_vars_UE_g[UE_id][CC_id]->generate_prach,
             PHY_vars_UE_g[UE_id][CC_id]->frame_parms.prach_config_common.rootSequenceIndex,
             fp->prach_config_common.rootSequenceIndex,
@@ -2051,11 +2053,11 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
         preamble_energy_list[PHY_vars_UE_g[UE_id][CC_id]->prach_PreambleIndex] = 800;
         preamble_delay_list[PHY_vars_UE_g[UE_id][CC_id]->prach_PreambleIndex] = 5;
 
-      }
+      }*/
     }
   }
 
-  preamble_energy_max = preamble_energy_list[0];
+  /*preamble_energy_max = preamble_energy_list[0];
   preamble_max = 0;
 
   for (i=1; i<64; i++) {
@@ -2132,7 +2134,7 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
             eNB->Mod_id,frame, subframe);
     }
   }
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,0);
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,0);*/
 }
 
 void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq_pid,uint8_t do_srs)
@@ -2846,8 +2848,10 @@ void do_prach(PHY_VARS_eNB *eNB,int frame,int subframe) {
   eNB_proc_t *proc = &eNB->proc;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
 
+if(frame%2==0 && subframe==9)
+{
   // check if we have to detect PRACH first
-  if (is_prach_subframe(fp,frame,subframe)>0) { 
+  //if (is_prach_subframe(fp,frame,subframe)>0) { 
     /* accept some delay in processing - up to 5ms */
     int i;
     for (i = 0; i < 10 && proc->instance_cnt_prach == 0; i++) {
@@ -2879,7 +2883,8 @@ void do_prach(PHY_VARS_eNB *eNB,int frame,int subframe) {
     }
     
     pthread_mutex_unlock( &proc->mutex_prach );
-  }
+  //}
+ }
 
 }
 

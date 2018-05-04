@@ -1515,3 +1515,22 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
         }
 
 }
+
+void nprach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
+
+  uint32_t estimated_TA; 
+  int subframe,frame,frame_mod; 
+
+  
+  subframe = eNB->proc.subframe_prach; 
+  frame = eNB->proc.frame_prach;
+
+  //printf("frame = %i \n sf = %i\n",frame,subframe); 
+  frame_mod = 0;//(frame)%32; 
+  //if (subframe==1 && frame_mod==0 && frame!=0){
+ if (frame_mod==0 && frame!=0){
+    //printf("\n frame_in = %i\n",frame); 
+    estimated_TA = RX_NPRACH_NB_IoT(eNB,frame);
+    //printf("estim = %i\n",estimated_TA);
+  }
+}
