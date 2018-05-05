@@ -296,7 +296,8 @@ int generate_pbch(LTE_eNB_PBCH *eNB_pbch,
 
     pbch_scrambling(frame_parms,
                     eNB_pbch->pbch_e,
-                    pbch_E);
+                    pbch_E,
+		    0);
 #ifdef DEBUG_PBCH
     if (frame_mod4==0) {
       write_output("pbch_e_s.m","pbch_e_s",
@@ -731,7 +732,8 @@ void pbch_detection_mrc(LTE_DL_FRAME_PARMS *frame_parms,
 
 void pbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
                      uint8_t *pbch_e,
-                     uint32_t length)
+                     uint32_t length,
+		     int SLflag)
 {
   int i;
   uint8_t reset;
@@ -739,7 +741,7 @@ void pbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
 
   reset = 1;
   // x1 is set in lte_gold_generic
-  x2 = frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.6.1
+  x2 = SLflag==0 ? frame_parms->Nid_cell : frame_parms->Nid_SL; //this is c_init in 36.211 Sec 6.6.1
   //  msg("pbch_scrambling: Nid_cell = %d\n",x2);
 
   for (i=0; i<length; i++) {

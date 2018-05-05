@@ -1432,10 +1432,12 @@ uint16_t rx_pbch_emul(PHY_VARS_UE *phy_vars_ue,
 /*! \brief PBCH scrambling. Applies 36.211 PBCH scrambling procedure.
   \param frame_parms Pointer to frame descriptor
   \param coded_data Output of the coding and rate matching
-  \param length Length of the sequence*/
+  \param length Length of the sequence
+  \param Flag to indicate that this is for PSBCH instead of PBCH*/
 void pbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
                      uint8_t* coded_data,
-                     uint32_t length);
+                     uint32_t length,
+		     int SL_flag);
 
 /*! \brief PBCH unscrambling
   This is similar to pbch_scrabling with the difference that inputs are signed s16s (llr values) and instead of flipping bits we change signs.
@@ -1486,29 +1488,6 @@ uint8_t generate_dci_top_emul(PHY_VARS_eNB *phy_vars_eNB,
                               DCI_ALLOC_t *dci_alloc,
                               uint8_t subframe);
 
-/*! \brief Top-level generation route for Sidelink BCH,PSS and SSS
-  \param ue pointer to UE descriptor
-  \param slss pointer to SLSS configuration and payload
-  \param frame_tx Frame number
-  \param subframe_tx subframe number
-*/
-void generate_slss(PHY_VARS_UE *ue,SLSS_t *slss,int frame_tx,int subframe_tx);
-
-/*! \brief Top-level generation route for Sidelink Discovery Channel
-  \param ue pointer to UE descriptor
-  \param sldch pointer to SLDCH configuration and payload
-  \param frame_tx Frame number
-  \param subframe_tx subframe number
-*/
-void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx);
-
-/*! \brief Top-level generation route for Sidelink Shared Channel
-  \param ue pointer to UE descriptor
-  \param slsch pointer to SLSCH configuration and payload
-  \param frame_tx Frame number
-  \param subframe_tx subframe number
-*/
-void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slss,int frame_tx,int subframe_tx);
 
 void generate_64qam_table(void);
 void generate_16qam_table(void);
@@ -2330,6 +2309,41 @@ int8_t find_dlsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type);
 int8_t find_ulsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type);
 
 int8_t find_uci(uint16_t rnti, int frame, int subframe, PHY_VARS_eNB *eNB,find_type_t type);
+
+int generate_slpss(int32_t **txdataF,
+		   short amp,
+		   LTE_DL_FRAME_PARMS *frame_parms,
+		   unsigned short symbol,
+		   int subframe);
+
+int generate_slsss(int32_t **txdataF,
+		   int subframe,
+		   int16_t amp,
+		   LTE_DL_FRAME_PARMS *frame_parms,
+		   uint16_t symbol);
+
+/*! \brief Top-level generation route for Sidelink BCH,PSS and SSS
+  \param ue pointer to UE descriptor
+  \param frame_tx Frame number
+  \param subframe_tx subframe number
+*/
+void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx);
+
+/*! \brief Top-level generation route for Sidelink Discovery Channel
+  \param ue pointer to UE descriptor
+  \param sldch pointer to SLDCH configuration and payload
+  \param frame_tx Frame number
+  \param subframe_tx subframe number
+*/
+void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx);
+
+/*! \brief Top-level generation route for Sidelink Shared Channel
+  \param ue pointer to UE descriptor
+  \param slsch pointer to SLSCH configuration and payload
+  \param frame_tx Frame number
+  \param subframe_tx subframe number
+*/
+void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slss,int frame_tx,int subframe_tx);
 
 /**@}*/
 #endif

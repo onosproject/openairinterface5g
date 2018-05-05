@@ -200,6 +200,7 @@
 
 #define ONE_OVER_SQRT2_Q15 23170
 #define ONE_OVER_2_Q15 16384
+#define SQRT_18_OVER_32_Q15 17656
 
 // QAM amplitude definitions
 

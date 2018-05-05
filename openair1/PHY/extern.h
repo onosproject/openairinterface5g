@@ -55,6 +55,8 @@ extern PHY_VARS_eNB * PHY_vars_eNB_g[MAX_eNB][MAX_NUM_CCs];
 extern short primary_synch0[144];
 extern short primary_synch1[144];
 extern short primary_synch2[144];
+extern short primary_synch0SL[144];
+extern short primary_synch1SL[144];
 extern unsigned char primary_synch0_tab[72];
 extern unsigned char primary_synch1_tab[72];
 extern unsigned char primary_synch2_tab[72];

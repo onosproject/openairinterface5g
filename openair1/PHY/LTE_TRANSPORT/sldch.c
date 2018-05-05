@@ -465,7 +465,7 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
   tx_amp = get_tx_amp(ue->tx_power_dBm[subframe_tx],
 		      ue->tx_power_max_dBm,
 		      ue->frame_parms.N_RB_UL,
-		      1);
+		      2);
 #else
   tx_amp = AMP;
 #endif  

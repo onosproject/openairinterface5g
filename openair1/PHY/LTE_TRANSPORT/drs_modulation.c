@@ -120,7 +120,14 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
     linc          = (7 - frame_parms->Ncp);
     break;
   case PSBCH:
-    AssertFatal(1==0,"PSBCH Transmission not supported for now\n");
+    u0=ue->gh[ue->slsch->group_destination_id][ljmod10<<1];
+    u1=ue->gh[ue->slsch->group_destination_id][1+(ljmod10<<1)];
+    v0=0;//frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
+    v1=0;//frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
+    cyclic_shift0 = (ue->frame_parms.Nid_SL>>1)&7;
+    cyclic_shift1 = (ue->frame_parms.Nid_SL>>1)&7;
+    lstart        = (3 - frame_parms->Ncp);
+    linc          = (7 - frame_parms->Ncp);
     break;
   case NO_SL:
     u0=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[subframe<<1];

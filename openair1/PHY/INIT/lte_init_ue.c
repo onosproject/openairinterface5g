@@ -976,10 +976,10 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
     ue->pusch_sldch->rxdataF_comp[aa]     = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
     ue->pusch_sldch->ul_ch_mag[aa]        = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
   }	
-  ue->slsch_dlsch_llr                 = (int16_t **)malloc(2*6*12*1200*sizeof(int16_t*));
-  ue->slsch_ulsch_llr                 = (int16_t **)malloc(2*6*12*1200*sizeof(int16_t*));
-  ue->sldch_dlsch_llr                 = (int16_t **)malloc(2*2*12*1200*sizeof(int16_t*));
-  ue->sldch_ulsch_llr                 = (int16_t **)malloc(2*2*12*1200*sizeof(int16_t*));
+  ue->slsch_dlsch_llr                 = (int16_t *)malloc(2*6*12*1200*sizeof(int16_t*));
+  ue->slsch_ulsch_llr                 = (int16_t *)malloc(2*6*12*1200*sizeof(int16_t*));
+  ue->sldch_dlsch_llr                 = (int16_t *)malloc(2*2*12*1200*sizeof(int16_t*));
+  ue->sldch_ulsch_llr                 = (int16_t *)malloc(2*2*12*1200*sizeof(int16_t*));
 
 
 

@@ -3139,8 +3139,12 @@ int get_db_dl_PathlossChange(uint8_t dl_PathlossChange)
 
 
 SLSS_t *ue_get_slss(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t subframe_tx) {
+  UE_MAC_INST *ue = &UE_mac_inst[Mod_id];
+  SLSS_t *slss = &UE_mac_inst[Mod_id].slss;
+  
+  // call RRC get check for SL-MIB
 
-  return((SLSS_t*)NULL);
+  return((SLSS_t*)slss);
 }
 
 SLDCH_t *ue_get_sldch(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t subframe_tx) {

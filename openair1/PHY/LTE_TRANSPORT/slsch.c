@@ -42,23 +42,32 @@ void generate_sl_grouphop(PHY_VARS_UE *ue)
   uint8_t reset=1;
   uint32_t x1, x2, s=0;
   uint32_t fss_pusch;
+  uint32_t destid;
 
-  for (int destid=0;destid<256;destid++) {
+  for (int index=0;index<257;index++) {
     // This is from Section 5.5.1.3
-    fss_pusch = destid%30;
-    
-    x2 = destid/30;
+    if (index > 0) { // PSSCH
+      destid=index-1;
+      fss_pusch = destid%30;
+      
+      x2 = destid/30;
 #ifdef DEBUG_SLGROUPHOP
-    printf("[PHY] SL GroupHop %d:",destid);
+      printf("[PHY] SL GroupHop %d:",destid);
 #endif
-    
+    }
+    else { // PSBCH
+      fss_pusch =(ue->frame_parms.Nid_SL/16)%30;
+      
+      x2 = ue->frame_parms.Nid_SL/30;
+
+    }
     for (ns=0; ns<20; ns++) {
       if ((ns&3) == 0) {
 	s = lte_gold_generic(&x1,&x2,reset);
 	reset = 0;
       }
 	
-      ue->gh[destid][ns] = (((uint8_t*)&s)[ns&3]+fss_pusch)%30;
+      ue->gh[index][ns] = (((uint8_t*)&s)[ns&3]+fss_pusch)%30;
     
       
 #ifdef DEBUG_SLGROUPHOP
@@ -602,7 +611,7 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
 		     slsch->RB_start,
 		     slsch->L_CRBs,
                      0,
-                     ue->gh[slsch->group_destination_id],
+                     ue->gh[1+slsch->group_destination_id],
                      ljmod10);
 
   ue->pssch_generated = 1;
@@ -1179,7 +1188,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   write_output("slsch_rxF_ext.m","slschrxF_ext",rxdataF_ext[0],14*12*ue->frame_parms.N_RB_DL,1,1);
 #endif
 
-  uint32_t u = ue->gh[ue->slsch->group_destination_id][ljmod10<<1];
+  uint32_t u = ue->gh[1+ue->slsch->group_destination_id][ljmod10<<1];
   uint32_t v = 0;
   uint32_t cyclic_shift=(ue->slsch->group_destination_id>>1)&7;
 
@@ -1196,7 +1205,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 			    3,
 			    1, // interpolation
 			    0);
-  u = ue->gh[ue->slsch->group_destination_id][1+(ljmod10<<1)];
+  u = ue->gh[1+ue->slsch->group_destination_id][1+(ljmod10<<1)];
   lte_ul_channel_estimation(&ue->frame_parms,
 			    (int32_t**)drs_ch_estimates,
 			    (int32_t**)NULL,

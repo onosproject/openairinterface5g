@@ -1283,6 +1283,8 @@ typedef struct {
   int16_t          *slsch_ulsch_llr;
   int16_t          *sldch_dlsch_llr;
   int16_t          *sldch_ulsch_llr;
+  SLSCH_t          *slss;
+  SLSCH_t          slss_rx;
   SLSCH_t          *slsch;
   SLSCH_t          slsch_rx;
   int              slsch_active;
@@ -1372,7 +1374,8 @@ typedef struct {
   unsigned char first_run_timing_advance[NUMBER_OF_CONNECTED_eNB_MAX];
   uint8_t               sidelink_active;
   uint8_t               destination_id;
-  uint32_t              gh[256][20];
+  // DMRS group-hopping sequences for PSBCH (index 0) and 256 possible PSSCH (indices 1...256)
+  uint32_t              gh[257][20];
   uint8_t               pscch_coded;
   uint8_t               pscch_generated;
   uint8_t               pssch_generated;

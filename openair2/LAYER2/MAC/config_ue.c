@@ -138,7 +138,9 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 #if defined(Rel14)
 		      ,config_action_t config_action
 		      ,const uint32_t * const sourceL2Id
-		      ,const uint32_t * const destinationL2Id
+		      ,const uint32_t * const destinationL2Id,
+		      SL_Preconfiguration_r12_t *SL_Preconfiguration_r12_t
+
 #endif
 		      )
 {

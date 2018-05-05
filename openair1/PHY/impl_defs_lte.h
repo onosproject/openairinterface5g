@@ -576,6 +576,8 @@ typedef struct {
   uint16_t Nid_cell;
   /// MBSFN Area ID
   uint16_t Nid_cell_mbsfn;
+  /// Sidelink Cell ID
+  uint16_t Nid_SL;
   /// Cyclic Prefix for DL (0=Normal CP, 1=Extended CP)
   lte_prefix_type_t Ncp;
   /// Cyclic Prefix for UL (0=Normal CP, 1=Extended CP)

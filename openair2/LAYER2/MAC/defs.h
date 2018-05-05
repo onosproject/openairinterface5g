@@ -64,6 +64,7 @@
 #ifdef Rel14
 #include "SystemInformationBlockType1-v1310-IEs.h"
 #include "SystemInformationBlockType18-r12.h"
+#include "SL-Preconfiguration-r12.h"
 #endif
 #include "RadioResourceConfigCommonSIB.h"
 #include "nfapi_interface.h"
@@ -1402,6 +1403,7 @@ typedef struct {
   int sltx_active;
   SLSCH_t slsch;
   SLDCH_t sldch;
+  SLSS_t slss;
   ULSCH_PDU slsch_pdu;
   int slsch_lcid;
 #endif

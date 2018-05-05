@@ -872,8 +872,20 @@ typedef enum {
 
 
 typedef struct {
+  // SL Configuration
+  /// Number of SL resource blocks (1-100)
+  uint32_t N_SL_RB;
+  /// prb-start (0-99)
+  uint32_t prb_Start;
+  /// prb-End (0-99)
+  uint32_t prb_End;
+  /// SL-OffsetIndicator (0-10239)
+  uint32_t SL_OffsetIndicator;
+
   uint16_t slss_id;
+  uint8_t slmib_length;
   uint8_t *slmib;
+
 } SLSS_t;
 
 typedef struct {

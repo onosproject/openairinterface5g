@@ -43,7 +43,8 @@ int generate_pss(int32_t **txdataF,
                  short amp,
                  LTE_DL_FRAME_PARMS *frame_parms,
                  unsigned short symbol,
-                 unsigned short slot_offset)
+                 unsigned short slot_offset
+		 )
 {
 
   unsigned int Nsymb;
