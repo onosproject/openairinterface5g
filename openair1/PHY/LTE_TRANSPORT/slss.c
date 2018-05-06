@@ -43,9 +43,11 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
   int tx_amp;
 
-  if (slss->slmib == NULL) return;
+
 
   if ((((10*frame_tx) + subframe_tx)%40) != slss->SL_OffsetIndicator) return; 
+
+  if (slss->slmib_length == 0) return;
 
   // here we have a transmission opportunity for SLSS
   ue->frame_parms.Nid_SL = slss->slss_id;

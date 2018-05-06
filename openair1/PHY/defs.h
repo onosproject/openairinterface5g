@@ -639,6 +639,7 @@ typedef struct {
   struct sched_param sched_param_ue;
   /// pthread descriptor main UE thread
   pthread_t pthread_ue;
+
   /// \brief Instance count for synch thread.
   /// \internal This variable is protected by \ref mutex_synch.
   int instance_cnt_synch;
@@ -652,6 +653,34 @@ typedef struct {
   pthread_cond_t cond_synch;
   /// mutex for UE synch thread
   pthread_mutex_t mutex_synch;
+
+  /// pthread attributes for main UE thread
+  pthread_attr_t attr_ueSL;
+  /// scheduling parameters for main UE thread
+  struct sched_param sched_param_ueSL;
+  /// pthread descriptor main UE thread
+  pthread_t pthread_ueSL;
+
+  /// \brief Instance count for SL synch thread.
+  /// \internal This variable is protected by \ref mutex_synch.
+  int instance_cnt_synchSL;
+  /// pthread attributes for SL synch processing thread
+  pthread_attr_t attr_synchSL;
+  /// scheduling parameters for sL synch thread
+  struct sched_param sched_param_synchSL;
+  /// pthread descriptor SL synch thread
+  pthread_t pthread_synchSL;
+  /// condition variable for UE SL synch thread;
+  pthread_cond_t cond_synchSL;
+  /// mutex for UE sL synch thread
+  pthread_mutex_t mutex_synchSL;
+
+  /// instance count for synchronizing UE_thread (DL/UL) with UE_threadSL
+  int instance_cnt_SL;
+  /// condition variable for synchronizing UE_thread (DL/UL) with UE_threadSL
+  pthread_cond_t cond_SL;
+  /// mutex for synchronizing UE_thread (DL/UL) with UE_threadSL
+  pthread_mutex_t mutex_SL;
   /// instance count for eNBs
   int instance_cnt_eNBs;
   /// set of scheduling variables RXn-TXnp4 threads
@@ -1210,6 +1239,10 @@ typedef struct {
   int UE_scan_carrier;
   /// \brief Indicator that UE is synchronized to an eNB
   int is_synchronized;
+  /// \brief Indicator that UE is synchronized to a SyncRef UE on SL
+  int is_synchronizedSL;
+  /// \brief Indicator that UE is an SynchRef UE
+  int is_SynchRef;
   /// Data structure for UE process scheduling
   UE_proc_t proc;
   /// Flag to indicate the UE shouldn't do timing correction at all
@@ -1370,9 +1403,10 @@ typedef struct {
   int dlsch_mtch_errors[MAX_MBSFN_AREA][NUMBER_OF_CONNECTED_eNB_MAX];
   int dlsch_mcch_trials[MAX_MBSFN_AREA][NUMBER_OF_CONNECTED_eNB_MAX];
   int dlsch_mtch_trials[MAX_MBSFN_AREA][NUMBER_OF_CONNECTED_eNB_MAX];
-  int current_dlsch_cqi[NUMBER_OF_CONNECTED_eNB_MAX];
+  int current_dlsch_cqi[NUMBER_OF_CONNECTED_eNB_MAX];         
   unsigned char first_run_timing_advance[NUMBER_OF_CONNECTED_eNB_MAX];
   uint8_t               sidelink_active;
+  uint8_t               SLonly;
   uint8_t               destination_id;
   // DMRS group-hopping sequences for PSBCH (index 0) and 256 possible PSSCH (indices 1...256)
   uint32_t              gh[257][20];
@@ -1387,6 +1421,8 @@ typedef struct {
   uint8_t               decode_SIB;
   uint8_t               decode_MIB;
   int              rx_offset; /// Timing offset
+  /// timing offset for SL
+  int rx_offsetSL;        
   int              rx_offset_diff; /// Timing adjustment for ofdm symbol0 on HW USRP
   int              time_sync_cell;
   int              timing_advance; ///timing advance signalled from eNB
@@ -1516,7 +1552,6 @@ typedef struct {
   int instance_cnt_timer;
 
   /// RF and Interface devices per CC
-
   openair0_device rfdevice; 
 } PHY_VARS_UE;
 

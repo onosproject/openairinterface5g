@@ -884,7 +884,7 @@ typedef struct {
 
   uint16_t slss_id;
   uint8_t slmib_length;
-  uint8_t *slmib;
+  uint8_t slmib[5];
 
 } SLSS_t;
 

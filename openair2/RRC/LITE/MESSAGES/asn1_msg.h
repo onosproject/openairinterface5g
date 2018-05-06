@@ -297,3 +297,6 @@ uint8_t do_SecurityModeCommand(
   const uint8_t Transaction_id,
   const uint8_t cipheringAlgorithm,
   const uint8_t integrityProtAlgorithm);
+
+
+uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, int absSF, uint8_t in_coverage);

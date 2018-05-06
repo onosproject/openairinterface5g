@@ -40,7 +40,7 @@
 #include "rrc_eNB_UE_context.h"
 #include "pdcp.h"
 #include "msc.h"
-
+#include "asn1_msg.h"
 
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
@@ -55,31 +55,39 @@
 int8_t
 mac_rrc_data_req_ue(
   const module_id_t Mod_idP,
-  const int         CC_id,
+  const int         CC_idP,
   const frame_t     frameP,
-  const rb_id_t     Srb_id,
-  const uint8_t     Nb_tb,
+  const rb_id_t     Srb_idP,
+  const uint8_t     Nb_tbP,
   uint8_t*    const buffer_pP,
-  const uint8_t     eNB_index,
-  const uint8_t     mbsfn_sync_area
+  const uint8_t     eNB_indexP,
+  const uint8_t     mbsfn_sync_areaP
 )
 //--------------------------------------------------------------------------
 {
 
+  protocol_ctxt_t ctxt;
+
+  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, Mod_idP, 0, 0, frameP/10, frameP%10,eNB_indexP);
+
 #ifdef DEBUG_RRC
   int i;
-  LOG_I(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_id);
+  LOG_I(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_idP);
 #endif
 
-  LOG_D(RRC,"[UE %d] Frame %d Filling CCCH SRB_ID %d\n",Mod_idP,frameP,Srb_id);
-  LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size);
+  LOG_D(RRC,"[UE %d] Frame %d Filling CCCH SRB_ID %d\n",Mod_idP,frameP,Srb_idP);
+  LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].Srb0[eNB_indexP].Tx_buffer.payload_size);
 
-  if( (UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size > 0) ) {
+  AssertFatal(Srb_idP==MIBCH || Srb_idP==CCCH,"SRB_id %d is not possible should be (MIBCH %d or CCCH %d)\n",
+	      Srb_idP,MIBCH,CCCH);
 
+  if( Srb_idP == CCCH && UE_rrc_inst[Mod_idP].Srb0[eNB_indexP].Tx_buffer.payload_size > 0 ) {
+
+    // Note the bottom code is not used
 #if defined(ENABLE_ITTI)
       {
         MessageDef *message_p;
-        int ccch_size = UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size;
+        int ccch_size = UE_rrc_inst[Mod_idP].Srb0[eNB_indexP].Tx_buffer.payload_size;
         int sdu_size = sizeof(RRC_MAC_CCCH_DATA_REQ (message_p).sdu);
 
         if (ccch_size > sdu_size) {
@@ -91,24 +99,29 @@ mac_rrc_data_req_ue(
         RRC_MAC_CCCH_DATA_REQ (message_p).frame = frameP;
         RRC_MAC_CCCH_DATA_REQ (message_p).sdu_size = ccch_size;
         memset (RRC_MAC_CCCH_DATA_REQ (message_p).sdu, 0, CCCH_SDU_SIZE);
-        memcpy (RRC_MAC_CCCH_DATA_REQ (message_p).sdu, UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.Payload, ccch_size);
-        RRC_MAC_CCCH_DATA_REQ (message_p).enb_index = eNB_index;
+        memcpy (RRC_MAC_CCCH_DATA_REQ (message_p).sdu, UE_rrc_inst[Mod_idP].Srb0[eNB_indexP].Tx_buffer.Payload, ccch_size);
+        RRC_MAC_CCCH_DATA_REQ (message_p).enb_index = eNB_indexP;
 
         itti_send_msg_to_task (TASK_MAC_UE, UE_MODULE_ID_TO_INSTANCE(Mod_idP), message_p);
       }
 #endif
 
-      memcpy(&buffer_pP[0],&UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.Payload[0],UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size);
-      uint8_t Ret_size=UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size;
+      memcpy(&buffer_pP[0],&UE_rrc_inst[Mod_idP].Srb0[eNB_indexP].Tx_buffer.Payload[0],UE_rrc_inst[Mod_idP].Srb0[eNB_indexP].Tx_buffer.payload_size);
+      uint8_t Ret_size=UE_rrc_inst[Mod_idP].Srb0[eNB_indexP].Tx_buffer.payload_size;
       //   UE_rrc_inst[Mod_id].Srb0[eNB_index].Tx_buffer.payload_size=0;
-      UE_rrc_inst[Mod_idP].Info[eNB_index].T300_active = 1;
-      UE_rrc_inst[Mod_idP].Info[eNB_index].T300_cnt = 0;
+      UE_rrc_inst[Mod_idP].Info[eNB_indexP].T300_active = 1;
+      UE_rrc_inst[Mod_idP].Info[eNB_indexP].T300_cnt = 0;
       //      msg("[RRC][UE %d] Sending rach\n",Mod_id);
       return(Ret_size);
-    } else {
-      return 0;
-    }
+  }
 
+  else if (Srb_idP == MIBCH)  {
+    int Ret_size = do_MIB_SL(&ctxt,eNB_indexP,frameP,0);
+    memcpy((void*)buffer_pP,(void*)UE_rrc_inst[Mod_idP].SL_MIB,Ret_size);
+    return(Ret_size);
+  }
+  
+  AssertFatal(1==0,"Should never be here!\n");
   return(0);
 }
 

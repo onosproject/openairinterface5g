@@ -174,7 +174,7 @@ void *send_UE_status_notification(void *);
 #include "RRCConnectionRequest.h"
 #include "RRCConnectionReestablishmentRequest.h"
 #include "BCCH-DL-SCH-Message.h"
-#include "SBCCH-SL-BCH-MessageType.h"
+#include "SBCCH-SL-BCH-Message.h"
 #include "BCCH-BCH-Message.h"
 #if defined(Rel10) || defined(Rel14)
 #include "MCCH-Message.h"
@@ -758,7 +758,8 @@ typedef struct UE_RRC_INST_s {
   SystemInformationBlockType18_r12_t *sib18[NB_CNX_UE];
   SystemInformationBlockType19_r12_t *sib19[NB_CNX_UE];
 
-  SBCCH_SL_BCH_MessageType_t   mib_sl[NB_CNX_UE];
+  SBCCH_SL_BCH_Message_t   SL_mib[NB_CNX_UE];
+  uint8_t                           *SL_MIB;
   /// Preconfiguration for Sidelink
   struct SL_Preconfiguration_r12 *SL_Preconfiguration[NB_CNX_UE];
   //source L2 Id

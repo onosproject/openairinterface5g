@@ -3143,8 +3143,15 @@ SLSS_t *ue_get_slss(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t su
   SLSS_t *slss = &UE_mac_inst[Mod_id].slss;
   
   // call RRC get check for SL-MIB
+  slss->slmib_length = mac_rrc_data_req_ue(Mod_id,
+					   CC_id,
+					   (frame_tx*10)+subframe_tx,
+					   MIBCH, 1,
+					   slss->slmib, 
+					   0,
+					   0);
 
-  return((SLSS_t*)slss);
+  return(slss);
 }
 
 SLDCH_t *ue_get_sldch(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t subframe_tx) {
