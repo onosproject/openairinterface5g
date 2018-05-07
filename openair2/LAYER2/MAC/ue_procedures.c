@@ -756,59 +756,59 @@ void ue_send_mch_sdu(module_id_t module_idP, uint8_t CC_id, frame_t frameP, uint
 
 
 void ue_send_sl_sdu(module_id_t module_idP,
-		    uint8_t CC_id,
-		    frame_t frameP,
-		    sub_frame_t subframeP,
-		    uint8_t* sdu,
-		    uint16_t sdu_len,
-		    uint8_t eNB_index,
-		    sl_discovery_flag_t sl_discovery_flag
-		    ) {
+      uint8_t CC_id,
+      frame_t frameP,
+      sub_frame_t subframeP,
+      uint8_t* sdu,
+      uint16_t sdu_len,
+      uint8_t eNB_index,
+      sl_discovery_flag_t sl_discovery_flag
+) {
 
-  int rlc_sdu_len;
-  char *rlc_sdu;
-  int lcid;
-  uint32_t destinationL2Id =0x00000000;
-  uint32_t sourceL2Id = 0x00000000;
+   int rlc_sdu_len;
+   char *rlc_sdu;
+   int lcid;
+   uint32_t destinationL2Id =0x00000000;
+   uint32_t sourceL2Id = 0x00000000;
 
-  if (sl_discovery_flag == SL_DISCOVERY_FLAG_NO) {
+   if (sl_discovery_flag == SL_DISCOVERY_FLAG_NO) {
 
-  // Notes: 1. no control elements are supported yet
-  //        2. we exit with error if LCID != 3
-  //        3. we exit with error if E=1 (more than one SDU/CE)
-  // extract header
-  SLSCH_SUBHEADER_24_Bit_DST_LONG *longh = (SLSCH_SUBHEADER_24_Bit_DST_LONG *)sdu;
-  AssertFatal(longh->E==0,"E is non-zero\n");
-  //AssertFatal(((longh->LCID==3)|(longh->LCID==10)|(longh->LCID==4)),"LCID is %d (not 3, 4 or 10)\n",longh->LCID);
-  //filter incoming packet based on destination address
-  destinationL2Id = (longh->DST07<<16) | (longh->DST815 <<8) | (longh->DST1623);
-  sourceL2Id = (longh->SRC07<<16) | (longh->SRC815 <<8) | (longh->SRC1623);
+      // Notes: 1. no control elements are supported yet
+      //        2. we exit with error if LCID != 3
+      //        3. we exit with error if E=1 (more than one SDU/CE)
+      // extract header
+      SLSCH_SUBHEADER_24_Bit_DST_LONG *longh = (SLSCH_SUBHEADER_24_Bit_DST_LONG *)sdu;
+      AssertFatal(longh->E==0,"E is non-zero\n");
+      //AssertFatal(((longh->LCID==3)|(longh->LCID==10)|(longh->LCID==4)),"LCID is %d (not 3, 4 or 10)\n",longh->LCID);
+      //filter incoming packet based on destination address
+      destinationL2Id = (longh->DST07<<16) | (longh->DST815 <<8) | (longh->DST1623);
+      sourceL2Id = (longh->SRC07<<16) | (longh->SRC815 <<8) | (longh->SRC1623);
 
-  //in case of 1-n communication, verify that UE belongs to that group
-  int i = 0;
-  int j = 0;
-  for (i=0; i< MAX_NUM_LCID; i++)
-     if ((UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[i].sourceL2Id != sourceL2Id)) {
-        lcid = UE_mac_inst[module_idP].sl_info[i].LCID;
-        break;
-     }
+      //in case of 1-n communication, verify that UE belongs to that group
+      int i = 0;
+      int j = 0;
+      for (i=0; i< MAX_NUM_LCID; i++)
+         if ((UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[i].sourceL2Id != sourceL2Id)) {
+            lcid = UE_mac_inst[module_idP].sl_info[i].LCID;
+            break;
+         }
 
-  for (j = 0; j< MAX_NUM_LCID; j++){
-     if ((longh->LCID < MAX_NUM_LCID_DATA) && (j < MAX_NUM_LCID_DATA)){
-        if ((UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) && (UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id)) {
-           lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
-           break;
-        }
-     }
-     if ((longh->LCID >= MAX_NUM_LCID_DATA) && (j >= MAX_NUM_LCID_DATA)){
-        //PC5-S (receive message after transmitting, e.g, security-command...)
-        if ((UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == 0)) {
-           if (UE_mac_inst[module_idP].sl_info[j].LCID > 0) lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
-           break;
-        }
-     }
-  }
-/*
+      for (j = 0; j< MAX_NUM_LCID; j++){
+         if ((longh->LCID < MAX_NUM_LCID_DATA) && (j < MAX_NUM_LCID_DATA)){
+            if ((UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) && (UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id)) {
+               lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
+               break;
+            }
+         }
+         if ((longh->LCID >= MAX_NUM_LCID_DATA) && (j >= MAX_NUM_LCID_DATA)){
+            //PC5-S (receive message after transmitting, e.g, security-command...)
+            if ((UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == 0)) {
+               if (UE_mac_inst[module_idP].sl_info[j].LCID > 0) lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
+               break;
+            }
+         }
+      }
+      /*
   int k = 0;
   if (j == MAX_NUM_LCID) {
      for (k = MAX_NUM_LCID_DATA; k < MAX_NUM_LCID; k++){
@@ -821,75 +821,79 @@ void ue_send_sl_sdu(module_id_t module_idP,
      }
   }
 
-*/
+       */
 
-  //match the destinationL2Id with UE L2Id or groupL2ID
-    if (!(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (j < MAX_NUM_LCID)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) | (i < MAX_NUM_LCID))){
-       LOG_D( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
-       return;
-    }
+      //match the destinationL2Id with UE L2Id or groupL2ID
+      if (!(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (j < MAX_NUM_LCID)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) | (i < MAX_NUM_LCID))){
+         LOG_D( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
+         return;
+      }
+      if (lcid == 0) {
+         LOG_D( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
+         return;
+      }
 
-    LOG_I( MAC, "DestinationL2Id:  0x%08x, sl_rbid %d, longh->LCID %d  \n", destinationL2Id, lcid, longh->LCID );
+      LOG_I( MAC, "DestinationL2Id:  0x%08x, sl_rbid %d, longh->LCID %d  \n", destinationL2Id, lcid, longh->LCID );
 
 
-  if (longh->F==1) {
-    rlc_sdu_len = ((longh->L_MSB<<8)&0x7F00)|(longh->L_LSB&0xFF);
-    rlc_sdu = sdu+sizeof(SLSCH_SUBHEADER_24_Bit_DST_LONG);
-  }
-  else {
-    rlc_sdu_len = ((SLSCH_SUBHEADER_24_Bit_DST_SHORT *)sdu)->L;
-    rlc_sdu = sdu+sizeof(SLSCH_SUBHEADER_24_Bit_DST_SHORT);
-  }
+      if (longh->F==1) {
+         rlc_sdu_len = ((longh->L_MSB<<8)&0x7F00)|(longh->L_LSB&0xFF);
+         rlc_sdu = sdu+sizeof(SLSCH_SUBHEADER_24_Bit_DST_LONG);
+      }
+      else {
+         rlc_sdu_len = ((SLSCH_SUBHEADER_24_Bit_DST_SHORT *)sdu)->L;
+         rlc_sdu = sdu+sizeof(SLSCH_SUBHEADER_24_Bit_DST_SHORT);
+      }
 
-  //Test
-  i=0;
-  sl_reset_rlc_flag_t reset_flag = SL_RESET_RLC_FLAG_YES;
-  if (longh->LCID < MAX_NUM_LCID_DATA) reset_flag = SL_RESET_RLC_FLAG_NO;
+      //Test
+      i=0;
+      sl_reset_rlc_flag_t reset_flag = SL_RESET_RLC_FLAG_YES;
+      if (longh->LCID < MAX_NUM_LCID_DATA) reset_flag = SL_RESET_RLC_FLAG_NO;
 
-  for (i = MAX_NUM_LCID_DATA; i < MAX_NUM_LCID; i++){
-     //PC5-S (default RX)
-     if ((UE_mac_inst[module_idP].sl_info[i].destinationL2Id == sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) {
-        reset_flag = SL_RESET_RLC_FLAG_NO;
-        break;
-     }
-  }
-  if (reset_flag == SL_RESET_RLC_FLAG_YES){
-     LOG_I(MAC, "SL_RESET_RLC_FLAG_YES\n");
-  } else {
-     LOG_I(MAC, "SL_RESET_RLC_FLAG_NO\n");
-  }
+      for (i = MAX_NUM_LCID_DATA; i < MAX_NUM_LCID; i++){
+         //PC5-S (default RX)
+         if ((UE_mac_inst[module_idP].sl_info[i].destinationL2Id == sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) {
+            reset_flag = SL_RESET_RLC_FLAG_NO;
+            break;
+         }
+      }
+      if (reset_flag == SL_RESET_RLC_FLAG_YES){
+         LOG_I(MAC, "SL_RESET_RLC_FLAG_YES\n");
+      } else {
+         LOG_I(MAC, "SL_RESET_RLC_FLAG_NO\n");
+      }
 
-  mac_rlc_data_ind(
-		   module_idP,
-		   0x1234,
-		   eNB_index,
-		   frameP,
-		   ENB_FLAG_NO,
-		   MBMS_FLAG_NO,
-		   lcid, //3/10
-		   rlc_sdu,
-		   rlc_sdu_len,
-		   1,
-		   NULL
+      mac_rlc_data_ind(
+            module_idP,
+            0x1234,
+            eNB_index,
+            frameP,
+            ENB_FLAG_NO,
+            MBMS_FLAG_NO,
+            lcid, //3/10
+            rlc_sdu,
+            rlc_sdu_len,
+            1,
+            NULL
 #ifdef Rel14
-  ,reset_flag
+            ,reset_flag
 #endif
-  );
-  } else { //SL_DISCOVERY
-     uint16_t len = sdu_len;
-     LOG_D( MAC, "SL DISCOVERY \n");
-     mac_rrc_data_ind(module_idP,
-                      CC_id,
-                      frameP,subframeP,
-                      UE_mac_inst[module_idP].crnti,
-                      SL_DISCOVERY,
-                      sdu, //(uint8_t*)&UE_mac_inst[Mod_id].SL_Discovery[0].Rx_buffer.Payload[0],
-                      len,
-                      ENB_FLAG_NO,
-                      eNB_index,
-                      0);
+      );
+   } else { //SL_DISCOVERY
+      uint16_t len = sdu_len;
+      LOG_D( MAC, "SL DISCOVERY \n");
+      mac_rrc_data_ind(module_idP,
+            CC_id,
+            frameP,subframeP,
+            UE_mac_inst[module_idP].crnti,
+            SL_DISCOVERY,
+            sdu, //(uint8_t*)&UE_mac_inst[Mod_id].SL_Discovery[0].Rx_buffer.Payload[0],
+            len,
+            ENB_FLAG_NO,
+            eNB_index,
+            0);
 
-  }
+   }
 }
 
 

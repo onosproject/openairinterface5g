@@ -1456,8 +1456,8 @@ rrc_mac_config_req_ue(
         for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
            if (UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity) {
               UE_mac_inst[Mod_idP].sl_info[k].LCID = 0;
-              UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id = 0;
-              UE_mac_inst[Mod_idP].sl_info[k].groupL2Id = 0;
+              //UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id = 0;
+              //UE_mac_inst[Mod_idP].sl_info[k].groupL2Id = 0;
               UE_mac_inst[Mod_idP].numCommFlows--;
               break;
            }

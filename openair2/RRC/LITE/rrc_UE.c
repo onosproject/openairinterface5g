@@ -5562,9 +5562,13 @@ void *rrc_control_socket_thread_fct(void *arg)
          //get available rbid for this communication and store (LCID, G)
          if (groupL2Id > 0){
             for (i=0; i< MAX_NUM_LCID_DATA; i++) {
-               if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (j == 0)) j = i+1;
+               if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (UE_rrc_inst[module_id].sl_info[i].groupL2Id == 0) && (j == 0)) j = i+1;
                if (UE_rrc_inst[module_id].sl_info[i].groupL2Id == groupL2Id) {
-                  group_comm_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
+                  if (UE_rrc_inst[module_id].sl_info[i].LCID >0 ){
+                     group_comm_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
+                  } else if (UE_rrc_inst[module_id].sl_info[i].LCID == 0 ){
+                     UE_rrc_inst[module_id].sl_info[i].LCID = i + 3;
+                  }
                   LOG_I(RRC,"[GroupCommunicationEstablishReq] rbid %d for group Id: 0x%08x\n already exists",group_comm_rbid, UE_rrc_inst[module_id].sl_info[i].groupL2Id );
                   break; //(LCID, G) already exists!
                }
@@ -5576,6 +5580,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                LOG_I(RRC,"[GroupCommunicationEstablishReq] establish rbid %d for group Id: 0x%08x\n",group_comm_rbid, UE_rrc_inst[module_id].sl_info[j-1].groupL2Id );
             }
          }
+
 
          // configure lower layers PDCP/MAC/PHY for this communication
          //Establish a new RBID/LCID for this communication
@@ -5751,7 +5756,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                if (UE_rrc_inst[module_id].sl_info[i].LCID == slrb_id) {
                   UE_rrc_inst[module_id].sl_info[i].LCID = 0;
                   LOG_I(RRC,"[GroupCommunicationReleaseRequest] rbid %d for group Id: 0x%08x\n has been removed",slrb_id, UE_rrc_inst[module_id].sl_info[i].groupL2Id );
-                  UE_rrc_inst[module_id].sl_info[i].groupL2Id = 0x00;
+                  //UE_rrc_inst[module_id].sl_info[i].groupL2Id = 0x00;
                   break;
                }
             }
@@ -5834,9 +5839,13 @@ void *rrc_control_socket_thread_fct(void *arg)
          //get available rbid for this communication and store (LCID, D)
          if (destinationL2Id > 0){
             for (i = 0; i < MAX_NUM_LCID_DATA; i++) {
-               if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (j == 0)) j = i+1;
+               if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (UE_rrc_inst[module_id].sl_info[i].destinationL2Id == 0) && (j == 0)) j = i+1;
                if (UE_rrc_inst[module_id].sl_info[i].destinationL2Id == destinationL2Id) {
-                  direct_comm_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
+                  if (UE_rrc_inst[module_id].sl_info[i].LCID > 0) {
+                     direct_comm_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
+                  } else if (UE_rrc_inst[module_id].sl_info[i].LCID == 0){
+                     UE_rrc_inst[module_id].sl_info[i].LCID = i + 3;
+                  }
                   LOG_I(RRC,"[DirectCommunicationEstablishReq] rbid %d for destination Id: 0x%08x already exists!\n",direct_comm_rbid, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
                   break; //(LCID, D) already exists!
                }
@@ -6023,7 +6032,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                 if (UE_rrc_inst[module_id].sl_info[i].LCID == slrb_id) {
                    UE_rrc_inst[module_id].sl_info[i].LCID = 0;
                    LOG_I(RRC,"[GroupCommunicationReleaseRequest] rbid %d for destination Id: 0x%08x\n has been removed",slrb_id, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
-                   UE_rrc_inst[module_id].sl_info[i].destinationL2Id = 0x00;
+                   //UE_rrc_inst[module_id].sl_info[i].destinationL2Id = 0x00;
                    break;
                 }
              }
