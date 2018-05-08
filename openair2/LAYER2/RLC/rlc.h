@@ -386,7 +386,12 @@ public_rlc_rrc(rlc_op_status_t rrc_rlc_remove_ue (const protocol_ctxt_t* const);
 * \param[in]  rb_idP             Radio bearer identifier.
 * \return     A status about the processing, OK or error code.
 */
-public_rlc_rrc(rlc_op_status_t rrc_rlc_remove_rlc   (const protocol_ctxt_t* const, const srb_flag_t, const MBMS_flag_t, const  rb_id_t );)
+public_rlc_rrc(rlc_op_status_t rrc_rlc_remove_rlc   (const protocol_ctxt_t* const, const srb_flag_t, const MBMS_flag_t, const  rb_id_t
+#ifdef Rel14
+    ,const uint32_t sourceL2Id
+    ,const uint32_t destinationL2Id
+#endif
+    );)
 
 /*! \fn rlc_union_t*  rrc_rlc_add_rlc   (const protocol_ctxt_t* const ctxtP, const srb_flag_t srb_flagP, const  MBMS_flag_t MBMS_flagP, const  rb_id_t rb_idP, logical_chan_id_t chan_idP, rlc_mode_t rlc_modeP)
 * \brief  Add a RLC protocol instance to a radio bearer.

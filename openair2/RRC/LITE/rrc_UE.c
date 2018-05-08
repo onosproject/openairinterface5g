@@ -6023,8 +6023,10 @@ void *rrc_control_socket_thread_fct(void *arg)
  #endif
           slrb_id = sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id;
           //reset groupL2ID from MAC LAYER
+
           UE_rrc_inst[module_id].destinationL2Id = 0x00000000;
           sourceL2Id = UE_rrc_inst[module_id].sourceL2Id;
+
 
           //find the corresponding record and reset the values
           if (slrb_id > 0){
@@ -6033,10 +6035,31 @@ void *rrc_control_socket_thread_fct(void *arg)
                    UE_rrc_inst[module_id].sl_info[i].LCID = 0;
                    LOG_I(RRC,"[GroupCommunicationReleaseRequest] rbid %d for destination Id: 0x%08x\n has been removed",slrb_id, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
                    //UE_rrc_inst[module_id].sl_info[i].destinationL2Id = 0x00;
+                   destinationL2Id = UE_rrc_inst[module_id].sl_info[i].destinationL2Id;
                    break;
                 }
              }
           }
+
+          //TEST REMOVE RLC
+/*
+           DRB_ToReleaseList_t*  drb2release_list;
+           drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
+           ASN_SEQUENCE_ADD(&drb2release_list->list, (DRB_Identity_t) slrb_id);
+
+
+           rrc_rlc_config_asn1_req(&ctxt,
+                 (SRB_ToAddModList_t*)NULL,
+                 (DRB_ToAddModList_t*)NULL,
+                 (DRB_ToReleaseList_t*)drb2release_list
+  #ifdef Rel14
+                 ,(PMCH_InfoList_r9_t *)NULL
+                 , sourceL2Id, destinationL2Id
+  #endif
+           );
+
+*/
+
 
           rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                      (RadioResourceConfigCommonSIB_t *)NULL,

@@ -411,7 +411,12 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
         ctxt_pP,
         SRB_FLAG_NO,
         MBMS_FLAG_NO,
-        *pdrb_id);
+        *pdrb_id
+#ifdef Rel14
+              ,sourceL2Id,
+              destinationL2Id
+#endif
+              );
     }
   }
 
@@ -535,14 +540,22 @@ rlc_op_status_t rrc_rlc_remove_ue (
     rrc_rlc_remove_rlc(ctxt_pP,
                        SRB_FLAG_YES,
                        MBMS_FLAG_NO,
-                       rb_id);
+                       rb_id
+#ifdef Rel14
+               ,0, 0
+#endif
+               );
   }
 
   for (rb_id = 1; rb_id <= maxDRB; rb_id++) {
     rrc_rlc_remove_rlc(ctxt_pP,
                        SRB_FLAG_NO,
                        MBMS_FLAG_NO,
-                       rb_id);
+                       rb_id
+#ifdef Rel14
+               ,0, 0
+#endif
+               );
   }
 
   return RLC_OP_STATUS_OK;
@@ -553,7 +566,12 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
   const protocol_ctxt_t* const ctxt_pP,
   const srb_flag_t  srb_flagP,
   const MBMS_flag_t MBMS_flagP,
-  const rb_id_t     rb_idP)
+  const rb_id_t     rb_idP
+#ifdef Rel14
+    ,const uint32_t sourceL2Id
+    ,const uint32_t destinationL2Id
+#endif
+    )
 {
   //-----------------------------------------------------------------------------
   logical_chan_id_t      lcid            = 0;
@@ -854,7 +872,11 @@ rlc_op_status_t rrc_rlc_config_req   (
     break;
 
   case CONFIG_ACTION_REMOVE:
-    return rrc_rlc_remove_rlc(ctxt_pP, srb_flagP, mbms_flagP, rb_idP);
+    return rrc_rlc_remove_rlc(ctxt_pP, srb_flagP, mbms_flagP, rb_idP
+#ifdef Rel14
+               ,0, 0
+#endif
+               );
     break;
 
   default:
