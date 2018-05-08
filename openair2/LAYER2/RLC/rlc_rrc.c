@@ -660,13 +660,13 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
   if ((h_rc == HASH_TABLE_OK) && (h_lcid_rc == HASH_TABLE_OK)) {
     h_lcid_rc = hashtable_remove(rlc_coll_p, key_lcid);
     h_rc = hashtable_remove(rlc_coll_p, key);
-    LOG_D(RLC, PROTOCOL_CTXT_FMT"[%s %u LCID %d] RELEASED %s\n",
+    LOG_I(RLC, PROTOCOL_CTXT_FMT"[%s %u LCID %d] RELEASED %s\n",
           PROTOCOL_CTXT_ARGS(ctxt_pP),
           (srb_flagP) ? "SRB" : "DRB",
           rb_idP, lcid,
           (srb_flagP) ? "SRB" : "DRB");
   } else if ((h_rc == HASH_TABLE_KEY_NOT_EXISTS) || (h_lcid_rc == HASH_TABLE_KEY_NOT_EXISTS)) {
-    LOG_D(RLC, PROTOCOL_CTXT_FMT"[%s %u LCID %d] RELEASE : RLC NOT FOUND %s, by RB-ID=%d, by LC-ID=%d\n",
+    LOG_I(RLC, PROTOCOL_CTXT_FMT"[%s %u LCID %d] RELEASE : RLC NOT FOUND %s, by RB-ID=%d, by LC-ID=%d\n",
           PROTOCOL_CTXT_ARGS(ctxt_pP),
           (srb_flagP) ? "SRB" : "DRB",
           rb_idP, lcid,

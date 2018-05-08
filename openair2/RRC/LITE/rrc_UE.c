@@ -6043,6 +6043,24 @@ void *rrc_control_socket_thread_fct(void *arg)
              }
           }
 
+          //TEST Remove RLC
+          DRB_Identity_t       drb_id         = slrb_id;
+          DRB_ToReleaseList_t*  drb2release_list = NULL;
+          drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
+          ASN_SEQUENCE_ADD(&drb2release_list->list, drb_id);
+
+
+          rrc_rlc_config_asn1_req(&ctxt,
+                (SRB_ToAddModList_t*)NULL,
+                (DRB_ToAddModList_t*)NULL,
+                (DRB_ToReleaseList_t*)drb2release_list
+ #ifdef Rel14
+                ,(PMCH_InfoList_r9_t *)NULL
+                , sourceL2Id, destinationL2Id
+ #endif
+          );
+
+
 
 
           rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
@@ -6103,8 +6121,8 @@ void *rrc_control_socket_thread_fct(void *arg)
            }
 
 
-           DRB_Identity_t       drb_id         = slrb_id;
-           DRB_ToReleaseList_t*  drb2release_list = NULL;
+           drb_id         = slrb_id;
+           drb2release_list = NULL;
            drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
            ASN_SEQUENCE_ADD(&drb2release_list->list, drb_id);
 
