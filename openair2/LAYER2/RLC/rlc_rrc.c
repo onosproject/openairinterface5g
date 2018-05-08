@@ -614,12 +614,11 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
     key = RLC_COLL_KEY_MBMS_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, mbms_id_p->service_id, mbms_id_p->session_id);
   }
   if ((sourceL2Id > 0) && (destinationL2Id > 0) ){
-        key = RLC_COLL_KEY_SOURCE_DEST_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, sourceL2Id, destinationL2Id, srb_flagP);
-        key_lcid = RLC_COLL_KEY_LCID_SOURCE_DEST_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, chan_idP, sourceL2Id, destinationL2Id, srb_flagP);
+     key = RLC_COLL_KEY_SOURCE_DEST_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, sourceL2Id, destinationL2Id, srb_flagP);
   } else
 #endif
   {
-    key = RLC_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, srb_flagP);
+     key = RLC_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, srb_flagP);
   }
 
 
@@ -628,24 +627,31 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
 
   if (h_rc == HASH_TABLE_OK) {
-    // also remove the hash-key created by LC-id
-    switch (rlc_union_p->mode) {
-    case RLC_MODE_AM:
-      lcid = rlc_union_p->rlc.am.channel_id;
-      break;
-    case RLC_MODE_UM:
-      lcid = rlc_union_p->rlc.um.channel_id;
-      break;
-    case RLC_MODE_TM:
-      lcid = rlc_union_p->rlc.tm.channel_id;
-      break;
-    default:
-      LOG_E(RLC, PROTOCOL_CTXT_FMT"[%s %u] RLC mode is unknown!\n",
-            PROTOCOL_CTXT_ARGS(ctxt_pP),
-            (srb_flagP) ? "SRB" : "DRB",
-            rb_idP);
+     // also remove the hash-key created by LC-id
+     switch (rlc_union_p->mode) {
+     case RLC_MODE_AM:
+        lcid = rlc_union_p->rlc.am.channel_id;
+        break;
+     case RLC_MODE_UM:
+        lcid = rlc_union_p->rlc.um.channel_id;
+        break;
+     case RLC_MODE_TM:
+        lcid = rlc_union_p->rlc.tm.channel_id;
+        break;
+     default:
+        LOG_E(RLC, PROTOCOL_CTXT_FMT"[%s %u] RLC mode is unknown!\n",
+              PROTOCOL_CTXT_ARGS(ctxt_pP),
+              (srb_flagP) ? "SRB" : "DRB",
+                    rb_idP);
+     }
+#ifdef Rel14
+     if ((sourceL2Id > 0) && (destinationL2Id > 0) ){
+        key_lcid = RLC_COLL_KEY_LCID_SOURCE_DEST_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, lcid, sourceL2Id, destinationL2Id, srb_flagP);
+     } else
+#endif
+    {
+       key_lcid = RLC_COLL_KEY_LCID_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, lcid, srb_flagP);
     }
-    key_lcid = RLC_COLL_KEY_LCID_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, lcid, srb_flagP);
     h_lcid_rc = hashtable_get(rlc_coll_p, key_lcid, (void**)&rlc_union_p);
   } else {
     h_lcid_rc = HASH_TABLE_KEY_NOT_EXISTS;
