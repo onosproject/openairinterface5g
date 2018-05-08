@@ -6041,8 +6041,66 @@ void *rrc_control_socket_thread_fct(void *arg)
              }
           }
 
+
+
+          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
+                      (RadioResourceConfigCommonSIB_t *)NULL,
+                      (struct PhysicalConfigDedicated *)NULL,
+           #if defined(Rel10) || defined(Rel14)
+                      (SCellToAddMod_r10_t *)NULL,
+                      //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
+           #endif
+                      (MeasObjectToAddMod_t **)NULL,
+                      (MAC_MainConfig_t *)NULL,
+                      slrb_id,
+                      (struct LogicalChannelConfig *)NULL,
+                      (MeasGapConfig_t *)NULL,
+                      (TDD_Config_t *)NULL,
+                      (MobilityControlInfo_t *)NULL,
+                      NULL,
+                      NULL,
+                      NULL,
+                      NULL,
+                      NULL,
+                      NULL
+           #if defined(Rel10) || defined(Rel14)
+                      ,0,
+                      (MBSFN_AreaInfoList_r9_t *)NULL,
+                      (PMCH_InfoList_r9_t *)NULL
+
+           #endif
+           #ifdef CBA
+                      ,
+                      0,
+                      0
+           #endif
+           #if defined(Rel10) || defined(Rel14)
+                      ,CONFIG_ACTION_REMOVE,
+                      &sourceL2Id,
+                      NULL,
+                      NULL
+           #endif
+                      );
+
+
+
           //TEST REMOVE RLC
            slrb_id = 9;
+
+           //find the corresponding record and reset the values
+           if (slrb_id > 0){
+              for (i=0; i< MAX_NUM_LCID_DATA; i++) {
+                 if (UE_rrc_inst[module_id].sl_info[i].LCID == slrb_id) {
+                    UE_rrc_inst[module_id].sl_info[i].LCID = 0;
+                    LOG_I(RRC,"[DirectCommunicationReleaseRequest] rbid %d for destination Id: 0x%08x\n has been removed",slrb_id, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
+                    //UE_rrc_inst[module_id].sl_info[i].destinationL2Id = 0x00;
+                    destinationL2Id = UE_rrc_inst[module_id].sl_info[i].destinationL2Id;
+                    break;
+                 }
+              }
+           }
+
+
            DRB_Identity_t       drb_id         = slrb_id;
            DRB_ToReleaseList_t*  drb2release_list = NULL;
            drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
@@ -6058,7 +6116,6 @@ void *rrc_control_socket_thread_fct(void *arg)
                  , sourceL2Id, destinationL2Id
   #endif
            );
-
 
 
 
@@ -6100,6 +6157,9 @@ void *rrc_control_socket_thread_fct(void *arg)
                      NULL
           #endif
                      );
+
+
+
 
 
           LOG_I(RRC,"Send DirectCommunicationReleaseResponse to ProSe App \n");
