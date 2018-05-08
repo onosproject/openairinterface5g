@@ -612,6 +612,10 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
     }
 
     key = RLC_COLL_KEY_MBMS_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, mbms_id_p->service_id, mbms_id_p->session_id);
+  }
+  if ((sourceL2Id > 0) && (destinationL2Id > 0) ){
+        key = RLC_COLL_KEY_SOURCE_DEST_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, sourceL2Id, destinationL2Id, srb_flagP);
+        key_lcid = RLC_COLL_KEY_LCID_SOURCE_DEST_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, chan_idP, sourceL2Id, destinationL2Id, srb_flagP);
   } else
 #endif
   {
