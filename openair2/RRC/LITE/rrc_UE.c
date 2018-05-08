@@ -6042,7 +6042,7 @@ void *rrc_control_socket_thread_fct(void *arg)
           }
 
           //TEST REMOVE RLC
-/*
+
            DRB_ToReleaseList_t*  drb2release_list;
            drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
            ASN_SEQUENCE_ADD(&drb2release_list->list, (DRB_Identity_t) slrb_id);
@@ -6058,7 +6058,7 @@ void *rrc_control_socket_thread_fct(void *arg)
   #endif
            );
 
-*/
+
 
 
           rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
