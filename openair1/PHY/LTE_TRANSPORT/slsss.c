@@ -55,13 +55,13 @@ int generate_slsss(int32_t **txdataF,
   Nid1 = frame_parms->Nid_SL%168;
 
 
-  AssertFatal((frame_parms->Ncp == NORMAL && (symbol==4 || symbol==5)) ||
-	      (frame_parms->Ncp == EXTENDED && (symbol==3 || symbol==4)),
+  AssertFatal((frame_parms->Ncp == NORMAL && (symbol==11 || symbol==12)) ||
+	      (frame_parms->Ncp == EXTENDED && (symbol==10 || symbol==11)),
 	      "Symbol %d not possible for SLSSS\n",
 	      symbol);
   
-  if (((symbol == 4) && frame_parms->Ncp == NORMAL) ||
-      ((symbol == 3) && frame_parms->Ncp == EXTENDED))
+  if (((symbol == 11) && frame_parms->Ncp == NORMAL) ||
+      ((symbol == 10) && frame_parms->Ncp == EXTENDED))
     d = &d0_sss[62*(Nid2 + (Nid1*3))];
   else 
     d = &d5_sss[62*(Nid2 + (Nid1*3))];
@@ -277,8 +277,8 @@ int slpss_sss_extract(PHY_VARS_UE *phy_vars_ue,
 
 
 
-int16_t phase_re[7] = {16383, 25101, 30791, 32767, 30791, 25101, 16383};
-int16_t phase_im[7] = {-28378, -21063, -11208, 0, 11207, 21062, 28377};
+int16_t phaseSL_re[7] = {16383, 25101, 30791, 32767, 30791, 25101, 16383};
+int16_t phaseSL_im[7] = {-28378, -21063, -11208, 0, 11207, 21062, 28377};
 
 
 int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int subframe_rx)
@@ -374,8 +374,8 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int
       // This is the inner product using one particular value of each unknown parameter
       for (i=0; i<62; i++) {
 	metric += 
-	  (int16_t)(((d0[i]*((((phase_re[phase]*(int32_t)sss0[i<<1])>>19)-((phase_im[phase]*(int32_t)sss0[1+(i<<1)])>>19)))))) + 
-	  (int16_t)(((d5[i]*((((phase_re[phase]*(int32_t)sss1[i<<1])>>19)-((phase_im[phase]*(int32_t)sss1[1+(i<<1)])>>19))))));
+	  (int16_t)(((d0[i]*((((phaseSL_re[phase]*(int32_t)sss0[i<<1])>>19)-((phaseSL_im[phase]*(int32_t)sss0[1+(i<<1)])>>19)))))) + 
+	  (int16_t)(((d5[i]*((((phaseSL_re[phase]*(int32_t)sss1[i<<1])>>19)-((phaseSL_im[phase]*(int32_t)sss1[1+(i<<1)])>>19))))));
       }
       
       // if the current metric is better than the last save it

@@ -493,6 +493,8 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
                        0);
 
   ue->pscch_generated = 1+slot;
+  ue->generate_ul_signal[subframe_tx][0] = 0;
+
 
 }
 
@@ -615,6 +617,8 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
                      ljmod10);
 
   ue->pssch_generated = 1;
+  ue->generate_ul_signal[subframe_tx][0] = 0;
+
 }
 
 void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,int subframe_tx) {

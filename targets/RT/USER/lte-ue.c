@@ -249,6 +249,7 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
     init_UE_threads(inst);
     UE = PHY_vars_UE_g[inst][0];
 
+    
     if (oaisim_flag == 0) {
      
       ret = openair0_device_load(&(UE->rfdevice), &openair0_cfg[0]);
@@ -1540,7 +1541,12 @@ void init_UE_threads(int inst) {
 
   }
   if (UE->SLonly==0) pthread_create(&UE->proc.pthread_synch,NULL,UE_thread_synch,(void*)UE);
-  if (UE->sidelink_active==1) pthread_create(&UE->proc.pthread_synchSL,NULL,UE_thread_synchSL,(void*)UE);
+  if (UE->sidelink_active==1) {
+    pthread_mutex_init(&UE->slss_mutex,NULL);
+    pthread_mutex_init(&UE->sldch_mutex,NULL);
+    pthread_mutex_init(&UE->slsch_mutex,NULL);
+    pthread_create(&UE->proc.pthread_synchSL,NULL,UE_thread_synchSL,(void*)UE);
+  }
 }
 
 

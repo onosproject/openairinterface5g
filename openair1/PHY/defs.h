@@ -1316,7 +1316,7 @@ typedef struct {
   int16_t          *slsch_ulsch_llr;
   int16_t          *sldch_dlsch_llr;
   int16_t          *sldch_ulsch_llr;
-  SLSCH_t          *slss;
+  SLSS_t           *slss;
   SLSCH_t          slss_rx;
   SLSCH_t          *slsch;
   SLSCH_t          slsch_rx;
@@ -1331,6 +1331,10 @@ typedef struct {
   uint32_t         slsch_rxcnt[4];
   SLDCH_t          *sldch;
   int              sldch_sdu_active;
+  pthread_mutex_t  slss_mutex;
+  pthread_mutex_t  sldch_mutex;
+  pthread_mutex_t  slsch_mutex;
+  
   //Paging parameters
   uint32_t              IMSImod1024;
   uint32_t              PF;
@@ -1359,7 +1363,7 @@ typedef struct {
   uint32_t high_speed_flag;
   uint32_t perfect_ce;
   int16_t ch_est_alpha;
-  int generate_ul_signal[NUMBER_OF_CONNECTED_eNB_MAX];
+  int generate_ul_signal[10][NUMBER_OF_CONNECTED_eNB_MAX];
 
   UE_SCAN_INFO_t scan_info[NB_BANDS_MAX];
 

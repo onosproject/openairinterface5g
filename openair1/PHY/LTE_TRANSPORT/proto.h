@@ -2345,5 +2345,12 @@ void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx)
 */
 void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slss,int frame_tx,int subframe_tx);
 
+
+int generate_slbch(int32_t **txdataF,
+		   short amp,
+		   LTE_DL_FRAME_PARMS *frame_parms,
+		   int subframe,
+		   uint8_t *slmib);
+
 /**@}*/
 #endif

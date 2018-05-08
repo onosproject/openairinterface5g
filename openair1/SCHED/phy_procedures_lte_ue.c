@@ -1193,14 +1193,12 @@ uint16_t get_n1_pucch(PHY_VARS_UE *ue,
 }
 
 
-void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empty_subframe) {
+void ulsch_common_procedures(PHY_VARS_UE *ue, int frame_tx, int subframe_tx, uint8_t empty_subframe) {
 
   int aa;
   LTE_DL_FRAME_PARMS *frame_parms=&ue->frame_parms;
 
   int nsymb;
-  int subframe_tx = proc->subframe_tx;
-  int frame_tx = proc->frame_tx;
   int ulsch_start;
   int overflow=0;
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
@@ -1231,6 +1229,8 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 #else //this is the normal case
   ulsch_start = (frame_parms->samples_per_tti*subframe_tx)-ue->N_TA_offset; //-ue->timing_advance;
 #endif //else EXMIMO
+
+
 
 //#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
   if (empty_subframe)
@@ -1268,14 +1268,15 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 //#endif
 
 //  if ((frame_tx%100) == 0)
-    LOG_D(PHY,"[UE %d] Frame %d, subframe %d: ulsch_start = %d (rxoff %d, HW TA %d, timing advance %d, TA_offset %d\n",
-    ue->Mod_id,frame_tx,subframe_tx,
-    ulsch_start,
-    ue->rx_offset,
-    ue->hw_timing_advance,
-    ue->timing_advance,
-    ue->N_TA_offset);
 
+   LOG_I(PHY,"[UE %d] Frame %d, subframe %d: ulsch_start = %d (rxoff %d, HW TA %d, timing advance %d, TA_offset %d, empty subframe %d\n",
+	 ue->Mod_id,frame_tx,subframe_tx,
+	 ulsch_start,
+	 ue->rx_offset,
+	 ue->hw_timing_advance,
+	 ue->timing_advance,
+	 ue->N_TA_offset,
+	 empty_subframe);
 
   for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
     if (frame_parms->Ncp == 1)
@@ -1324,13 +1325,13 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 
 
     for (k=ulsch_start,l=0; k<cmin(frame_parms->samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME,ulsch_start+frame_parms->samples_per_tti); k++,l++) {
-      ((short*)ue->common_vars.txdata[aa])[2*k] = ((short*)dummy_tx_buffer)[2*l]<<4;
-      ((short*)ue->common_vars.txdata[aa])[2*k+1] = ((short*)dummy_tx_buffer)[2*l+1]<<4;
+      ((short*)ue->common_vars.txdata[aa])[2*k] = ((short*)dummy_tx_buffer)[2*l];
+      ((short*)ue->common_vars.txdata[aa])[2*k+1] = ((short*)dummy_tx_buffer)[2*l+1];
     }
 
     for (k=0; k<overflow; k++,l++) {
-      ((short*)ue->common_vars.txdata[aa])[2*k] = ((short*)dummy_tx_buffer)[2*l]<<4;
-      ((short*)ue->common_vars.txdata[aa])[2*k+1] = ((short*)dummy_tx_buffer)[2*l+1]<<4;
+      ((short*)ue->common_vars.txdata[aa])[2*k] = ((short*)dummy_tx_buffer)[2*l];
+      ((short*)ue->common_vars.txdata[aa])[2*k+1] = ((short*)dummy_tx_buffer)[2*l+1];
     }
 #if defined(EXMIMO)
     // handle switch before 1st TX subframe, guarantee that the slot prior to transmission is switch on
@@ -1344,6 +1345,9 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
     }
 #endif
 #endif
+    LOG_D(PHY,"ULSCH : signal energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdata[0][ulsch_start],frame_parms->samples_per_tti)),&ue->common_vars.txdataF[0][subframe_tx*nsymb*frame_parms->ofdm_symbol_size]);
+    //    write_output("txBuff.m","txSignal",&ue->common_vars.txdata[aa][ulsch_start],frame_parms->samples_per_tti,1,1);
+    //    exit(-1);
     /*
     only for debug
     LOG_I(PHY,"ul-signal [subframe: %d, ulsch_start %d, TA: %d, rxOffset: %d, timing_advance: %d, hw_timing_advance: %d]\n",subframe_tx, ulsch_start, ue->N_TA_offset, ue->rx_offset, ue->timing_advance, ue->hw_timing_advance);
@@ -1593,7 +1597,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
   }
   if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag == 1) {
 
-    ue->generate_ul_signal[eNB_id] = 1;
+    ue->generate_ul_signal[subframe_tx][eNB_id] = 1;
 
     // deactivate service request
     // ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 0;
@@ -1894,7 +1898,7 @@ void ue_srs_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8
 
   if(isSrsTxOccasion)
   {
-    ue->generate_ul_signal[eNB_id] = 1;
+    ue->generate_ul_signal[subframe_tx][eNB_id] = 1;
     if (ue->mac_enabled==1)
     {
       srs_power_cntl(ue,proc,eNB_id, (uint8_t*)(&nb_rb_srs), abstraction_flag);
@@ -2172,7 +2176,7 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 
   // Part - IV
   // Generate PUCCH signal
-  ue->generate_ul_signal[eNB_id] = 1;
+  ue->generate_ul_signal[subframe_tx][eNB_id] = 1;
 
   switch (format) {
   case pucch_format1:
@@ -2339,28 +2343,62 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 
 }
 
+// synchronization variables for slss/sldch/slsch 
+
+
 void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
 
   int subframe_tx = proc->subframe_tx;
   int frame_tx = proc->frame_tx;
-  SLSS_t *slss;
-  SLDCH_t *sldch;
-  SLSCH_t *slsch;
 
+
+    
   AssertFatal(frame_tx>=0 && frame_tx < 1024, "frame_tx %d is not in 0...1023\n");
   AssertFatal(subframe_tx>=0 && subframe_tx < 10, "frame_tx %d is not in 0...1023\n");
   
-  LOG_I(PHY,"****** start Sidelink TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, subframe_tx);
+  LOG_D(PHY,"****** start Sidelink TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, subframe_tx);
 
+  if (ue->SLonly == 1) {
+    
+    ue->tx_power_dBm[subframe_tx]=-127;
+    ue->generate_ul_signal[subframe_tx][0] = 0;
+    for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
+      memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
+	     0,
+             ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
+      
+     }
+  }
   // check for SLBCH/SLSS
+  AssertFatal(0==pthread_mutex_lock(&ue->slss_mutex),"");
   if ((ue->slss = ue_get_slss(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) check_and_generate_slss(ue,frame_tx,subframe_tx);
-  
+  AssertFatal(0==pthread_mutex_unlock(&ue->slss_mutex),"");
+
   // check for SLDCH
-  if ((sldch = ue_get_sldch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_sldch(ue,sldch,frame_tx,subframe_tx);
+  AssertFatal(0==pthread_mutex_lock(&ue->sldch_mutex),"");
+  if ((ue->sldch = ue_get_sldch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_sldch(ue,ue->sldch,frame_tx,subframe_tx);
+  AssertFatal(0==pthread_mutex_unlock(&ue->sldch_mutex),"");
 
+  LOG_D(PHY,"ULSCH (after sldch) : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
+    
   // check for SLSCH
-  if ((slsch = ue_get_slsch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_slsch(ue,proc,slsch,frame_tx,subframe_tx);
+  AssertFatal(0==pthread_mutex_lock(&ue->slsch_mutex),"");
+  if ((ue->slsch = ue_get_slsch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_slsch(ue,proc,ue->slsch,frame_tx,subframe_tx);
+  AssertFatal(0==pthread_mutex_unlock(&ue->slsch_mutex),"");
+  LOG_D(PHY,"ULSCH (after slsch) : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
+  LOG_D(PHY,"****** end Sidelink TX-Chain for AbsSubframe %d.%d (ul %d) ******\n", frame_tx, subframe_tx,
+	ue->generate_ul_signal[subframe_tx][0]);
 
+  if (ue->SLonly == 1) {
+
+
+
+    LOG_D(PHY,"ULSCH : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
+    
+    ulsch_common_procedures(ue,frame_tx,subframe_tx, (ue->generate_ul_signal[subframe_tx][0] == 0));
+
+
+  }
 }
 
 void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag,runmode_t mode,relaying_type_t r_type) {
@@ -2383,7 +2421,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
   T(T_UE_PHY_UL_TICK, T_INT(ue->Mod_id), T_INT(frame_tx%1024), T_INT(subframe_tx));
 #endif
 
-  ue->generate_ul_signal[eNB_id] = 0;
+  ue->generate_ul_signal[subframe_tx][eNB_id] = 0;
 #if UE_TIMING_TRACE
   start_meas(&ue->phy_proc_tx);
 #endif
@@ -2420,8 +2458,9 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
 	
   	
 
-  	
-  ulsch_common_procedures(ue,proc, (ue->generate_ul_signal[eNB_id] == 0));
+
+  
+  ulsch_common_procedures(ue,frame_tx,subframe_tx, (ue->generate_ul_signal[subframe_tx][eNB_id] == 0));
         
   if ((ue->UE_mode[eNB_id] == PRACH) && 
       (ue->frame_parms.prach_config_common.prach_Config_enabled==1)) {

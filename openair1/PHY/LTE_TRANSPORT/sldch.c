@@ -495,6 +495,9 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
                      NULL,
                      0);
 
+  ue->generate_ul_signal[subframe_tx][0] = 0;
+
+
 }
   
 void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {

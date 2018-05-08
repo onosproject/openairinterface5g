@@ -74,6 +74,10 @@ int generate_slpss(int32_t **txdataF,
   a = (amp*SQRT_18_OVER_32_Q15)>>(15-2);
   //printf("[PSS] amp=%d, a=%d\n",amp,a);
 
+  LOG_I(PHY,"Generating PSS in subframe %d, symbol %d, amp %d (%d) => %p\n",
+	subframe,symbol,a,amp,
+	&((short*)txdataF[0])[subframe*frame_parms->samples_per_tti]);
+  
   // The PSS occupies the inner 6 RBs, which start at
   k = frame_parms->ofdm_symbol_size-3*12+5;
   
@@ -93,6 +97,7 @@ int generate_slpss(int32_t **txdataF,
     
     
   }
+
 
   return(0);
 }

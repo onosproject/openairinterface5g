@@ -45,7 +45,6 @@
 int generate_slbch(int32_t **txdataF,
 		   short amp,
 		   LTE_DL_FRAME_PARMS *frame_parms,
-		   unsigned short symbol,
 		   int subframe,
 		   uint8_t *slmib) {
   
@@ -83,8 +82,8 @@ int generate_slbch(int32_t **txdataF,
   a = (amp*SQRT_18_OVER_32_Q15)>>(15-2);
   int Nsymb=14;
 
-  for (symb=0;symb<10;symb++) {
-    k = frame_parms->ofdm_symbol_size-36;
+  for (symb=0;symb<10;symb++) { 
+    k = (frame_parms->ofdm_symbol_size<<1)-72;
     txptr = (int16_t*)&txdataF[0][subframe*Nsymb*frame_parms->ofdm_symbol_size+(symb*frame_parms->ofdm_symbol_size)];
     // first half (negative frequencies)
     for (int i=0;i<72;i++) {
