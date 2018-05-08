@@ -406,12 +406,14 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
   if (drb2release_listP != NULL) {
     for (cnt=0; cnt<drb2release_listP->list.count; cnt++) {
-      pdrb_id = drb2release_listP->list.array[cnt];
+       drb_id = drb2release_listP->list.array[cnt];
+       LOG_I(RLC, "Releasing rb_id %d\n",drb_id);
+
       rrc_rlc_remove_rlc(
         ctxt_pP,
         SRB_FLAG_NO,
         MBMS_FLAG_NO,
-        *pdrb_id
+        drb_id
 #ifdef Rel14
               ,sourceL2Id,
               destinationL2Id

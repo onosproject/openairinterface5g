@@ -6033,7 +6033,7 @@ void *rrc_control_socket_thread_fct(void *arg)
              for (i=0; i< MAX_NUM_LCID_DATA; i++) {
                 if (UE_rrc_inst[module_id].sl_info[i].LCID == slrb_id) {
                    UE_rrc_inst[module_id].sl_info[i].LCID = 0;
-                   LOG_I(RRC,"[GroupCommunicationReleaseRequest] rbid %d for destination Id: 0x%08x\n has been removed",slrb_id, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
+                   LOG_I(RRC,"[DirectCommunicationReleaseRequest] rbid %d for destination Id: 0x%08x\n has been removed",slrb_id, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
                    //UE_rrc_inst[module_id].sl_info[i].destinationL2Id = 0x00;
                    destinationL2Id = UE_rrc_inst[module_id].sl_info[i].destinationL2Id;
                    break;
@@ -6042,10 +6042,11 @@ void *rrc_control_socket_thread_fct(void *arg)
           }
 
           //TEST REMOVE RLC
-
-           DRB_ToReleaseList_t*  drb2release_list;
+           slrb_id = 9;
+           DRB_Identity_t       drb_id         = slrb_id;
+           DRB_ToReleaseList_t*  drb2release_list = NULL;
            drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
-           ASN_SEQUENCE_ADD(&drb2release_list->list, (DRB_Identity_t) slrb_id);
+           ASN_SEQUENCE_ADD(&drb2release_list->list, drb_id);
 
 
            rrc_rlc_config_asn1_req(&ctxt,
