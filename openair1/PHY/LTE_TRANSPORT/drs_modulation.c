@@ -97,8 +97,8 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
   break;
   case PSSCH_12:
 
-    u0=ue->gh[ue->slsch->group_destination_id][ljmod10<<1];
-    u1=ue->gh[ue->slsch->group_destination_id][1+(ljmod10<<1)];
+    u0=ue->gh[1+ue->slsch->group_destination_id][ljmod10<<1];
+    u1=ue->gh[1+ue->slsch->group_destination_id][1+(ljmod10<<1)];
     v0=0;//frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
     v1=0;//frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
     cyclic_shift0 = (ue->slsch->group_destination_id>>1)&7;
@@ -120,8 +120,8 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
     linc          = (7 - frame_parms->Ncp);
     break;
   case PSBCH:
-    u0=ue->gh[ue->slsch->group_destination_id][ljmod10<<1];
-    u1=ue->gh[ue->slsch->group_destination_id][1+(ljmod10<<1)];
+    u0=ue->gh[0][ljmod10<<1];
+    u1=ue->gh[0][1+(ljmod10<<1)];
     v0=0;//frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
     v1=0;//frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
     cyclic_shift0 = (ue->frame_parms.Nid_SL>>1)&7;

@@ -2347,7 +2347,10 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
   SLDCH_t *sldch;
   SLSCH_t *slsch;
 
-  LOG_D(PHY,"****** start Sidelink TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, subframe_tx);
+  AssertFatal(frame_tx>=0 && frame_tx < 1024, "frame_tx %d is not in 0...1023\n");
+  AssertFatal(subframe_tx>=0 && subframe_tx < 10, "frame_tx %d is not in 0...1023\n");
+  
+  LOG_I(PHY,"****** start Sidelink TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, subframe_tx);
 
   // check for SLBCH/SLSS
   if ((ue->slss = ue_get_slss(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) check_and_generate_slss(ue,frame_tx,subframe_tx);

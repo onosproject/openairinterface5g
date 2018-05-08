@@ -3141,16 +3141,18 @@ int get_db_dl_PathlossChange(uint8_t dl_PathlossChange)
 SLSS_t *ue_get_slss(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t subframe_tx) {
   UE_MAC_INST *ue = &UE_mac_inst[Mod_id];
   SLSS_t *slss = &UE_mac_inst[Mod_id].slss;
-  
-  // call RRC get check for SL-MIB
-  slss->slmib_length = mac_rrc_data_req_ue(Mod_id,
-					   CC_id,
-					   (frame_tx*10)+subframe_tx,
-					   MIBCH, 1,
-					   slss->slmib, 
-					   0,
-					   0);
 
+  LOG_D(MAC,"frame_tx %d, subframe %d,slss->SL_OffsetIndicator %d\n",
+	frame_tx,subframe_tx,slss->SL_OffsetIndicator);
+  if ((((10*frame_tx) + subframe_tx)%40) != slss->SL_OffsetIndicator) slss->slmib_length=0;
+  else slss->slmib_length = mac_rrc_data_req_ue(Mod_id,
+						CC_id,
+						(frame_tx*10)+subframe_tx,
+						MIBCH, 1,
+						slss->slmib, 
+						0,
+						0); // call RRC get check for SL-MIB
+  
   return(slss);
 }
 
@@ -3159,6 +3161,7 @@ SLDCH_t *ue_get_sldch(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t 
     UE_MAC_INST *ue = &UE_mac_inst[Mod_id];
     SLDCH_t *sldch = &UE_mac_inst[Mod_id].sldch;
 
+    
     sldch->payload_length = mac_rrc_data_req_ue(Mod_id,
             CC_id,
             frame_tx,

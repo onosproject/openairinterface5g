@@ -528,10 +528,10 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp
   if (u_sf_mode != 2) { // not replay mode
 #endif    
 #if defined(__x86_64) || defined(__i386__)
-#ifdef __AVX2__
+    #ifdef __AVX2__
     nsamps2 = (nsamps+7)>>3;
     __m256i buff_tmp[2][nsamps2];
-#else
+    #else
     nsamps2 = (nsamps+3)>>2;
     __m128i buff_tmp[2][nsamps2];
 #endif
@@ -563,12 +563,12 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp
             for (int j=0; j<nsamps2; j++) {
 #if defined(__x86_64__) || defined(__i386__)
 #ifdef __AVX2__
-                ((__m256i *)buff[i])[j] = _mm256_srai_epi16(buff_tmp[i][j],4);
+	      ((__m256i *)buff[i])[j] = _mm256_srai_epi16(buff_tmp[i][j],4);
 #else
-                ((__m128i *)buff[i])[j] = _mm_srai_epi16(buff_tmp[i][j],4);
+	      ((__m128i *)buff[i])[j] = _mm_srai_epi16(buff_tmp[i][j],4);
 #endif
 #elif defined(__arm__)
-                ((int16x8_t*)buff[i])[j] = vshrq_n_s16(buff_tmp[i][j],4);
+	      ((int16x8_t*)buff[i])[j] = vshrq_n_s16(buff_tmp[i][j],4);
 #endif
             }
         }

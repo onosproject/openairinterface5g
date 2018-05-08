@@ -78,8 +78,8 @@ mac_rrc_data_req_ue(
   LOG_D(RRC,"[UE %d] Frame %d Filling CCCH SRB_ID %d\n",Mod_idP,frameP,Srb_idP);
   LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].Srb0[eNB_indexP].Tx_buffer.payload_size);
 
-  AssertFatal(Srb_idP==MIBCH || Srb_idP==CCCH,"SRB_id %d is not possible should be (MIBCH %d or CCCH %d)\n",
-	      Srb_idP,MIBCH,CCCH);
+  AssertFatal(Srb_idP==MIBCH || Srb_idP==CCCH || Srb_idP==SL_DISCOVERY,"SRB_id %d is not possible should be (MIBCH %d or CCCH %d or SL_DISCOVERY %d)\n",
+	      Srb_idP,MIBCH,CCCH,SL_DISCOVERY);
 
   if( Srb_idP == CCCH && UE_rrc_inst[Mod_idP].Srb0[eNB_indexP].Tx_buffer.payload_size > 0 ) {
 
@@ -120,8 +120,22 @@ mac_rrc_data_req_ue(
     memcpy((void*)buffer_pP,(void*)UE_rrc_inst[Mod_idP].SL_MIB,Ret_size);
     return(Ret_size);
   }
+
+#ifdef Rel14
   
-  AssertFatal(1==0,"Should never be here!\n");
+  //TTN (for D2D)
+  else if (Srb_idP  == SL_DISCOVERY && UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size > 0){
+    LOG_D(RRC,"[UE %d] Frame %d Filling SL DISCOVERY SRB_ID %d\n",Mod_idP,frameP,Srb_idP);
+    LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size);
+    
+    memcpy(&buffer_pP[0],&UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.Payload[0],UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size);
+    uint8_t Ret_size=UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size;
+    LOG_D(RRC,"[UE %d] Sending SL_Discovery, size %d bytes\n",Mod_idP,Ret_size);
+    UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size = 0;
+    return(Ret_size);
+  }
+#endif
+
   return(0);
 }
 

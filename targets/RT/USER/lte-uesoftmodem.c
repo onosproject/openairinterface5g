@@ -1038,7 +1038,7 @@ int main( int argc, char **argv )
 
   // start the main threads
     int eMBMS_active = 0;
-    init_UE(1,eMBMS_active,uecap_xer_in,0,sidelink_active,SLonly);
+    init_UE(1,eMBMS_active,uecap_xer_in,0,sidelink_active,SLonly,synchRef);
 
     if (phy_test==0) {
       printf("Filling UE band info\n");

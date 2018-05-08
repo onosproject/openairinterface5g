@@ -80,7 +80,7 @@ void *UE_thread(void *arg);
 void *UE_threadSL(void *arg);
 void init_UE_stub(int nb_inst,int,int,char*,int);
 void ue_stub_rx_handler(unsigned int, char *);
-void init_UE(int nb_inst,int,int,int,int,int);
+void init_UE(int nb_inst,int,int,int,int,int,int);
 
 int32_t **rxdata;
 int32_t **txdata;
@@ -221,7 +221,7 @@ void init_thread(int sched_runtime, int sched_deadline, int sched_fifo, cpu_set_
 
 }
 
-void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correction,int sidelink_active,int SLonly) {
+void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correction,int sidelink_active,int SLonly,int isSynchRef) {
 
   PHY_VARS_UE *UE;
   int         inst;
@@ -241,6 +241,8 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
     PHY_vars_UE_g[inst][0]->no_timing_correction = timing_correction;
     
     PHY_vars_UE_g[inst][0]->SLonly = SLonly;
+    PHY_vars_UE_g[inst][0]->is_SynchRef = isSynchRef;
+    
     if (SLonly==1) PHY_vars_UE_g[inst][0]->sidelink_active = 1;
     else           PHY_vars_UE_g[inst][0]->sidelink_active = sidelink_active;
     LOG_I(PHY,"Intializing UE Threads for instance %d (%p,%p)...\n",inst,PHY_vars_UE_g[inst],PHY_vars_UE_g[inst][0]);
@@ -689,9 +691,8 @@ static void *UE_thread_synchSL(void *arg)
     pthread_cond_wait(&sync_cond, &sync_mutex);
   pthread_mutex_unlock(&sync_mutex);
 
-  printf("Started device, unlocked sync_mutex (UE_sync_thread)\n");
 
-  AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0,"Could not start the device");
+
 
   while (oai_exit==0) {
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
@@ -743,6 +744,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
       LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
       exit_fun("nothing to add");
     }
+    LOG_I(PHY,"before pthread_cond_wait : instance_cnt_rxtx %d\n",proc->instance_cnt_rxtx);
     while (proc->instance_cnt_rxtx < 0) {
       // most of the time, the thread is waiting here
       pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx );
@@ -840,15 +842,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 	  phy_procedures_UE_S_TX(UE,0,0,no_relay);
       updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");
       
-      if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
-	LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
-	exit_fun("noting to add");
-      }
-      proc->instance_cnt_rxtx--;
-      if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
-	LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
-	exit_fun("noting to add");
-      }
+
     }
 
     // This is for Sidelink
@@ -859,6 +853,16 @@ static void *UE_thread_rxn_txnp4(void *arg) {
       phy_procedures_UE_SL_TX(UE,proc);
 
     }
+
+          if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
+	LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
+	exit_fun("noting to add");
+      }
+      proc->instance_cnt_rxtx--;
+      if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
+	LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
+	exit_fun("noting to add");
+      }
   }
   // thread finished
   free(arg);
@@ -1015,7 +1019,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
     proc->subframe_rx=timer_subframe;
     proc->frame_rx = timer_frame;
     proc->subframe_tx=(timer_subframe+4)%10;
-    proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
+    proc->frame_tx = (proc->frame_rx + (proc->subframe_rx>5?1:0))&1023;
     //oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
 
 
@@ -1439,7 +1443,7 @@ void *UE_thread(void *arg) {
 	  }
 	  proc->subframe_rx=sub_frame;
 	  proc->subframe_tx=(sub_frame+4)%10;
-	  proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
+	  proc->frame_tx = (proc->frame_rx + (proc->subframe_rx>5?1:0))&1023;
 	  proc->timestamp_tx = timestamp+
 	    (4*UE->frame_parms.samples_per_tti)-
 	    UE->frame_parms.ofdm_symbol_size-UE->frame_parms.nb_prefix_samples0;
@@ -1641,12 +1645,23 @@ void *UE_threadSL(void *arg) {
   int sub_frame=-1;
   //int cumulated_shift=0;
 
+  UE->proc.instance_cnt_synchSL=-1;
+
+  while (sync_var<0)
+    pthread_cond_wait(&sync_cond, &sync_mutex);
+  pthread_mutex_unlock(&sync_mutex);
+
+  AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0,"Could not start the device");
+
   while (!oai_exit) {
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
     int instance_cnt_synch = UE->proc.instance_cnt_synchSL;
     int is_synchronized    = UE->is_synchronizedSL;
     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
 
+    LOG_I(PHY,"UHD Thread SL (is_synchronized %d, is_SynchRef %d\n",
+	  is_synchronized,UE->is_SynchRef);
+    
     if (is_synchronized == 0 && UE->is_SynchRef == 0) {
       if (instance_cnt_synch < 0) {  // we can invoke the synch
 	// grab 10 ms of signal and wakeup synch thread
@@ -1710,7 +1725,7 @@ void *UE_threadSL(void *arg) {
 	// update thread index for received subframe
 	UE->current_thread_id[sub_frame] = thread_idx;
 	
-	LOG_D(PHY,"Process Subframe %d thread Idx %d \n", sub_frame, UE->current_thread_id[sub_frame]);
+	LOG_I(PHY,"Process SL Subframe %d thread Idx %d \n", sub_frame, UE->current_thread_id[sub_frame]);
 	
 	thread_idx++;
 	if(thread_idx>=RX_NB_TH)
@@ -1756,13 +1771,17 @@ void *UE_threadSL(void *arg) {
 	  readBlockSize=UE->frame_parms.samples_per_tti - UE->rx_offset_diff;
 	  writeBlockSize=UE->frame_parms.samples_per_tti -UE->rx_offset_diff;
 	}
-	
+
+	LOG_D(PHY,"reading rxp[0] %p (%p)\n",
+	      rxp[0],UE->common_vars.rxdata[0]);
 	AssertFatal(readBlockSize ==
 		    UE->rfdevice.trx_read_func(&UE->rfdevice,
 					       &timestamp,
 					       rxp,
 					       readBlockSize,
 					       UE->frame_parms.nb_antennas_rx),"");
+	LOG_D(PHY,"writing txp[0] %p (%p)\n",txp[0],UE->common_vars.txdata[0]);
+
 	AssertFatal( writeBlockSize ==
 		     UE->rfdevice.trx_write_func(&UE->rfdevice,
 						 timestamp+
@@ -1792,11 +1811,11 @@ void *UE_threadSL(void *arg) {
 	  }
 	  proc->subframe_rx=sub_frame;
 	  proc->subframe_tx=(sub_frame+4)%10;
-	  proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
+	  proc->frame_tx = (proc->frame_rx + (proc->subframe_rx>5?1:0))&1023;
 	  proc->timestamp_tx = timestamp+(4*UE->frame_parms.samples_per_tti);
-	  
+	  	  
 	  proc->instance_cnt_rxtx++;
-	  LOG_D( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
+	  LOG_I( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
 	  if (proc->instance_cnt_rxtx == 0) {
 	    if (pthread_cond_signal(&proc->cond_rxtx) != 0) {
 	      LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
@@ -1814,6 +1833,7 @@ void *UE_threadSL(void *arg) {
 	  initStaticTime(lastTime);
 	  updateTimes(lastTime, &t1, 20000, "Delay between two IQ acquisitions (case 1)");
 	  pickStaticTime(lastTime);
+	  
 	} // UE->is_synchronized==0
       } // start_rx_stream==1
     }   //  UE->is_synchronized==0 && UE->is_SynchRef==0

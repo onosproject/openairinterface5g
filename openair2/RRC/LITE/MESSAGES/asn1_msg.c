@@ -324,8 +324,8 @@ uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
 
    //set FrameNumber, subFrameNumber
    sl_mib->message.directFrameNumber_r12.buf =  &frame;
-   sl_mib->message.directFrameNumber_r12.size = 1;
-   sl_mib->message.directFrameNumber_r12.bits_unused=0;
+   sl_mib->message.directFrameNumber_r12.size = 2;
+   sl_mib->message.directFrameNumber_r12.bits_unused=6;
    sl_mib->message.directSubframeNumber_r12 = subframe;
    
 
@@ -335,7 +335,7 @@ uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
   enc_rval = uper_encode_to_buffer(&asn_DEF_SBCCH_SL_BCH_Message,
                                    (void*)sl_mib,
                                    UE->SL_MIB,
-                                   24);
+                                   40);
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
 
