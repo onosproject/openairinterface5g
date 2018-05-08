@@ -200,7 +200,7 @@ typedef uint32_t           m_tmsi_t;
 #define SI_RNTI    (rnti_t)0xFFFF
 #endif
 typedef enum config_action_e {
-  CONFIG_ACTION_NULL              = 0,
+  CONFIG_ACTION_NULL             = 0,
   CONFIG_ACTION_ADD               = 1,
   CONFIG_ACTION_REMOVE            = 2,
   CONFIG_ACTION_MODIFY            = 3,

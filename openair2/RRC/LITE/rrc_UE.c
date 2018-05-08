@@ -324,47 +324,29 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
   // SL Control portion
   struct SL_PreconfigCommPool_r12 *preconfigpool = malloc16_clear(sizeof(struct SL_PreconfigCommPool_r12));
   preconfigpool->sc_CP_Len_r12                                                    = SL_CP_Len_r12_normal;
-  preconfigpool->sc_Period_r12                                                    = SL_PeriodComm_r12_sf40;
-  // 20 PRBs for SL communications
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12                             = 20;
+  preconfigpool->sc_Period_r12                                                    = SL_PeriodComm_r12_sf320;
+  // 4 PRBs for SL-SC communications
+  preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12                             = 4;
   preconfigpool->sc_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
   preconfigpool->sc_TF_ResourceConfig_r12.prb_End_r12                             = 44;
   // Offset set to 0 subframes
   preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present             = SL_OffsetIndicator_r12_PR_small_r12;
   preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0;
   // 40 ms SL Period
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present              = SubframeBitmapSL_r12_PR_bs40_r12;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf         = CALLOC(1,5);
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size        = 5;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = 0;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present              = SubframeBitmapSL_r12_PR_bs4_r12;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf         = CALLOC(1,1);
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size        = 1;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = 4;
   // 1st 4 subframes for PSCCH
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[0]      = 0xF;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[1]      = 0;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[2]      = 0;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[3]      = 0;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[4]      = 0;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[0]      = 0x0F;
   preconfigpool->sc_TxParameters_r12                                              = 0;
 
   //SL Data portion
-  preconfigpool->data_CP_Len_r12                                                  = SL_CP_Len_r12_normal;
   // 20 PRBs for SL communications
-  preconfigpool->data_TF_ResourceConfig_r12.prb_Num_r12                             = 20;
-  preconfigpool->data_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
-  preconfigpool->data_TF_ResourceConfig_r12.prb_End_r12                             = 44;
-  // Offset set to 0 subframes
-  preconfigpool->data_TF_ResourceConfig_r12.offsetIndicator_r12.present             = SL_OffsetIndicator_r12_PR_small_r12;
-  preconfigpool->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0;
-  // 40 ms SL Period
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.present              = SubframeBitmapSL_r12_PR_bs40_r12;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf         = CALLOC(1,5);
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size        = 5;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = 0;
-  // last 36 subframes for PSCCH
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[0]      = 0xF0;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[1]      = 0xFF;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[2]      = 0xFF;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[3]      = 0xFF;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[5]      = 0xFF;
+  preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12                             = 20;
+  preconfigpool->sc_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
+  preconfigpool->sc_TF_ResourceConfig_r12.prb_End_r12                             = 44;
+  preconfigpool->data_CP_Len_r12                                                  = SL_CP_Len_r12_normal;
 
   preconfigpool->dataHoppingConfig_r12.hoppingParameter_r12                         = 0;
   preconfigpool->dataHoppingConfig_r12.numSubbands_r12                              = SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
@@ -5115,10 +5097,10 @@ openair_rrc_top_init_ue(
 
   module_id_t         module_id;
   OAI_UECapability_t *UECap     = NULL;
-  int                 CC_id;
+  int                 CC_id=0;
 
   /* for no gcc warnings */
-  (void)CC_id;
+
 
   LOG_D(RRC, "[OPENAIR][INIT] Init function start: NB_UE_INST=%d, NB_eNB_INST=%d\n", NB_UE_INST, NB_eNB_INST);
 
@@ -5134,25 +5116,62 @@ openair_rrc_top_init_ue(
       UE_rrc_inst[module_id].UECap = UECap;
       UE_rrc_inst[module_id].UECapability = UECap->sdu;
       UE_rrc_inst[module_id].UECapability_size = UECap->sdu_size;
-    }
-
+    
+      
 #if defined(Rel10) || defined(Rel14)
-    LOG_I(RRC,"[UE] eMBMS active state is %d \n", eMBMS_active);
-
-    for (module_id=0; module_id<NB_UE_INST; module_id++) {
+      LOG_I(RRC,"[UE] eMBMS active state is %d \n", eMBMS_active);
+      
       UE_rrc_inst[module_id].MBMS_flag = (uint8_t)eMBMS_active;
-    }
-
+      
+      
 #endif
-
+      
 #ifdef Rel14
-  init_SL_preconfig(&UE_rrc_inst[module_id],0);
+      init_SL_preconfig(&UE_rrc_inst[module_id],0);
+      
+      rrc_mac_config_req_ue(module_id,
+			    CC_id,
+			    0,
+			    (RadioResourceConfigCommonSIB_t *)NULL,
+			    (struct PhysicalConfigDedicated *)NULL,
+#if defined(Rel10) || defined(Rel14)
+			    (SCellToAddMod_r10_t *)NULL,
 #endif
-
+			    (MeasObjectToAddMod_t **) NULL,
+			    (MAC_MainConfig_t *)NULL,
+			    0,
+			    (LogicalChannelConfig_t *)NULL,
+			    (MeasGapConfig_t *)NULL,
+			    (TDD_Config_t *)NULL,
+			    (MobilityControlInfo_t *)NULL,
+			    (uint8_t *)NULL,
+			    (uint16_t *)NULL,
+			    (ARFCN_ValueEUTRA_t *)NULL,
+			    (long *)NULL,
+			    (AdditionalSpectrumEmission_t *)NULL,
+			    (struct MBSFN_SubframeConfigList*)NULL
+#if defined(Rel10) || defined(Rel14)
+			    , 0,
+			    (MBSFN_AreaInfoList_r9_t *)NULL,
+			    (PMCH_InfoList_r9_t *)NULL
+#endif
+#ifdef CBA
+			    , 0,0
+#endif
+#if defined(Rel14)
+			    ,CONFIG_ACTION_NULL,
+			    (const uint32_t *)NULL,
+			    (const uint32_t *)NULL,
+			    UE_rrc_inst[module_id].SL_Preconfiguration[0]
+			    
+#endif
+#endif
+			    );
+    }
   } else {
     UE_rrc_inst = NULL;
   }
-
+  
 }
 
 //-----------------------------------------------------------------------------

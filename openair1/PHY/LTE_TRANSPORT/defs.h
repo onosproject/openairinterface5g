@@ -872,16 +872,8 @@ typedef enum {
 
 
 typedef struct {
-  // SL Configuration
-  /// Number of SL resource blocks (1-100)
-  uint32_t N_SL_RB;
-  /// prb-start (0-99)
-  uint32_t prb_Start;
-  /// prb-End (0-99)
-  uint32_t prb_End;
   /// SL-OffsetIndicator (0-10239)
   uint32_t SL_OffsetIndicator;
-
   uint16_t slss_id;
   uint8_t slmib_length;
   uint8_t slmib[5];
@@ -890,16 +882,26 @@ typedef struct {
 
 typedef struct {
   // SL Configuration
-  /// Number of SL resource blocks (1-100)
-  uint32_t N_SL_RB;
-  /// prb-start (0-99)
-  uint32_t prb_Start;
-  /// prb-End (0-99)
-  uint32_t prb_End;
+  /// Number of SL resource blocks (1-100) for SCI
+  uint32_t N_SL_RB_SC;
+  /// prb-start (0-99) for SCI
+  uint32_t prb_Start_SC;
+  /// prb-End (0-99) for SCI
+  uint32_t prb_End_SC;
+  /// Number of SL resource blocks (1-100) for SCI
+  uint32_t N_SL_RB_data;
+  /// prb-start (0-99) for SCI
+  uint32_t prb_Start_data;
+  /// prb-End (0-99) for SCI
+  uint32_t prb_End_data;
   /// SL-OffsetIndicator (0-10239)
   uint32_t SL_OffsetIndicator;
+  /// SL-OffsetIndicator data (0-10239)
+  uint32_t SL_OffsetIndicator_data;
   /// SC-SC_Period
   uint32_t SL_SC_Period;
+  /// SC bitmap length (subframes)
+  uint32_t SubframeBitmapSL_length;
   /// PSCCH subframe bitmap, first 64-bits (up to 40 bits for Rel 12)
   uint64_t bitmap1;
   /// PSCCH subframe bitmap, 2nd 64-bits (up to 100 bits for Rel 14)

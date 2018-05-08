@@ -239,10 +239,16 @@ int main(int argc, char **argv) {
   UE->slsch = &slsch;
   UE->sldch = &sldch;
   // SLSCH/CCH Configuration
-  slsch.N_SL_RB                   = 20;
-  slsch.prb_Start                 = 5;
-  slsch.prb_End                   = 44;
+  slsch.N_SL_RB_data                   = 20;
+  slsch.prb_Start_data                 = 5;
+  slsch.prb_End_data                   = 44;
+  slsch.N_SL_RB_SC                     = 4;
+  slsch.prb_Start_SC                   = 5;
+  slsch.prb_End_SC                     = 44;
+  slsch.SL_SC_Period                   = 320;
+  slsch.SubframeBitmapSL_length        = 4;
   slsch.SL_OffsetIndicator        = 0;
+  slsch.SL_OffsetIndicator_data   = 0;
   // This can be 40,60,70,80,120,140,160,240,280,320
   slsch.SL_SC_Period              = 320;
   slsch.bitmap1                   = 0xffffffffff;

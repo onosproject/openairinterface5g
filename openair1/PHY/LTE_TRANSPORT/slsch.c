@@ -87,7 +87,7 @@ uint64_t sci_mapping(PHY_VARS_UE *ue) {
   AssertFatal(slsch->freq_hopping_flag<2,"freq_hop %d >= 2\n",slsch->freq_hopping_flag);
   uint64_t freq_hopping_flag     = (uint64_t)slsch->freq_hopping_flag;
   
-  uint64_t RAbits                = log2_approx(slsch->N_SL_RB*((slsch->N_SL_RB+1)>>1));
+  uint64_t RAbits                = log2_approx(slsch->N_SL_RB_data*((slsch->N_SL_RB_data+1)>>1));
   AssertFatal(slsch->resource_block_coding<(1<<RAbits),"slsch->resource_block_coding %x >= %x\n",slsch->resource_block_coding,(1<<RAbits));
   uint64_t resource_block_coding     = (uint64_t)slsch->resource_block_coding; 
   
@@ -356,7 +356,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
     sci = sci_mapping(ue);
     LOG_I(PHY,"sci %lx\n",sci);
 
-    int length = log2_approx(slsch->N_SL_RB*((ue->slsch_rx.N_SL_RB+1)>>1))+32;
+    int length = log2_approx(slsch->N_SL_RB_SC*((ue->slsch_rx.N_SL_RB_SC+1)>>1))+32;
 
     //   for (int i=0;i<(length+7)/8;i++) printf("sci[%d] %x\n",i,((uint8_t *)&sci)[i]);
     uint8_t sci_flip[8];
@@ -404,10 +404,10 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   // convert a to prb number and compute slot
 
   // get index within slot (first half of the prbs in slot 0, second half in 1)
-  uint32_t amod = a%(slsch->N_SL_RB);
+  uint32_t amod = a%(slsch->N_SL_RB_SC);
 
-  if (amod<(slsch->N_SL_RB>>1)) nprb = slsch->prb_Start + amod;
-  else                          nprb = slsch->prb_End-(slsch->N_SL_RB>>1)+amod;
+  if (amod<(slsch->N_SL_RB_SC>>1)) nprb = slsch->prb_Start_SC + amod;
+  else                             nprb = slsch->prb_End_SC-(slsch->N_SL_RB_SC>>1)+amod;
 
 
   // Fill in power control later
@@ -626,7 +626,7 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,
   AssertFatal(subframe_tx<10 && subframe_tx>=0,"subframe %d is illegal\n",subframe_tx);
   SLSCH_t *slsch = ue->slsch;
   AssertFatal(slsch!=NULL,"SLSCH is null\n");
-  uint32_t O = ue->slsch->SL_OffsetIndicator;
+  uint32_t O = ue->slsch->SL_OffsetIndicator_data;
   uint32_t P = ue->slsch->SL_SC_Period;
   uint32_t absSF = (frame_tx*10)+subframe_tx;
   uint32_t absSF_offset,absSF_modP;
@@ -643,10 +643,10 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,
 
   absSF_modP = absSF_offset%P;
 
-  // This is the condition for short SCCH bitmap (40 bits), check that the current subframe is for SLSCH
-  if (absSF_modP < 40) return;
+  // This is the condition for short SCCH bitmap (slsch->SubframeBitmapSL_length bits), check that the current subframe is for SLSCH
+  if (absSF_modP < slsch->SubframeBitmapSL_length) return;
   
-  absSF_modP-=40;
+  absSF_modP-=slsch->SubframeBitmapSL_length;
 
 
   AssertFatal(slsch->time_resource_pattern <= TRP8_MAX,
@@ -692,8 +692,8 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
   absSF_modP = absSF_offset%P;
 
-  // This is the condition for short SCCH bitmap (40 bits), check that the current subframe is for SCCH
-  if (absSF_modP > 39) { 
+  // This is the condition for short SCCH bitmap (slsch->SubframeBitmapSL_length bits), check that the current subframe is for SCCH
+  if (absSF_modP >= slsch->SubframeBitmapSL_length) { 
     ue->pscch_coded =0; 
     ue->pscch_generated=0;
     return;
@@ -703,18 +703,18 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   if ((SFpos & slsch->bitmap1) == 0) return;
 
   // if we get here, then there is a PSCCH subframe for a potential transmission
-  uint32_t sf_index=40,LPSCCH=0;
-  for (int i=0;i<40;i++) {
+  uint32_t sf_index=slsch->SubframeBitmapSL_length,LPSCCH=0;
+  for (int i=0;i<slsch->SubframeBitmapSL_length;i++) {
     if (i==absSF_modP) sf_index=LPSCCH;
     if (((((uint64_t)1)<<i) & slsch->bitmap1)>0) LPSCCH++;
   }
-  AssertFatal(sf_index<40,"sf_index not set, should not happen (absSF_modP %d)\n",absSF_modP);
+  AssertFatal(sf_index<slsch->SubframeBitmapSL_length,"sf_index not set, should not happen (absSF_modP %d)\n",absSF_modP);
 
   // sf_index now contains the SF index in 0...LPSCCH-1
   // LPSCCH has the number of PSCCH subframes
 
   // number of resources blocks per slot times 2 slots
-  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB*LPSCCH<<1;
+  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB_SC*LPSCCH<<1;
   AssertFatal(slsch->n_pscch < (M_RB_PSCCH_RP>>1)*LPSCCH,"n_pscch not in 0..%d\n",
 	      ((M_RB_PSCCH_RP>>1)*LPSCCH)-1);
   // hard-coded to transmission mode one for now (Section 14.2.1.1 from 36.213 Rel14.3)
@@ -783,7 +783,7 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
   int Nsymb = 7 - slot;
   SLSCH_t *slsch = &ue->slsch_rx;
 
-  uint32_t amod = a%(slsch->N_SL_RB);
+  uint32_t amod = a%(slsch->N_SL_RB_SC);
   int16_t **rxdataF_ext      = ue->pusch_slcch->rxdataF_ext;
   int16_t **drs_ch_estimates = ue->pusch_slcch->drs_ch_estimates;
   int16_t **rxdataF_comp     = ue->pusch_slcch->rxdataF_comp;
@@ -799,8 +799,8 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
 
 
 			   
-  if (amod<(slsch->N_SL_RB>>1)) nprb = slsch->prb_Start + amod;
-  else                          nprb = slsch->prb_End-(slsch->N_SL_RB>>1)+amod;
+  if (amod<(slsch->N_SL_RB_SC>>1)) nprb = slsch->prb_Start_SC + amod;
+  else                             nprb = slsch->prb_End_SC-(slsch->N_SL_RB_SC>>1)+amod;
 
   // slot FEP
   if (ue->sl_fep_done == 0) {
@@ -980,7 +980,7 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
   uint16_t res;
   uint64_t sci_rx=0,sci_rx_flip=0;
   //decoding
-  int length = log2_approx(slsch->N_SL_RB*((ue->slsch_rx.N_SL_RB+1)>>1))+32;
+  int length = log2_approx(slsch->N_SL_RB_SC*((ue->slsch_rx.N_SL_RB_SC+1)>>1))+32;
   dci_decoding(length,E,f,(uint8_t*)&sci_rx);
   ((uint8_t *)&sci_rx_flip)[0] = ((uint8_t *)&sci_rx)[7];
   ((uint8_t *)&sci_rx_flip)[1] = ((uint8_t *)&sci_rx)[6];
@@ -1083,27 +1083,27 @@ void rx_slcch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
 
   if (absSF_modP == 0) ue->slcch_received=0;
 
-  // This is the condition for short SCCH bitmap (40 bits), check that the current subframe is for SCCH
+  // This is the condition for short SCCH bitmap (slsch->SubframeBitmapSL_length bits), check that the current subframe is for SCCH
 
   if (ue->slcch_received == 1) return;
 
-  if (absSF_modP > 39) return;
+  if (absSF_modP >= slsch->SubframeBitmapSL_length) return;
   uint64_t SFpos = ((uint64_t)1) << absSF_modP;
   if ((SFpos & slsch->bitmap1) == 0) return;
 
   // if we get here, then there is a PSCCH subframe for a potential transmission
-  uint32_t sf_index=40,LPSCCH=0;
-  for (int i=0;i<40;i++) {
+  uint32_t sf_index=slsch->SubframeBitmapSL_length,LPSCCH=0;
+  for (int i=0;i<slsch->SubframeBitmapSL_length;i++) {
     if (i==absSF_modP) sf_index=LPSCCH;
     if (((((uint64_t)1)<<i) & slsch->bitmap1)>0) LPSCCH++;
   }
-  AssertFatal(sf_index<40,"sf_index not set, should not happen\n");
+  AssertFatal(sf_index<slsch->SubframeBitmapSL_length,"sf_index not set, should not happen\n");
 
   // sf_index now contains the SF index in 0...LPSCCH-1
   // LPSCCH has the number of PSCCH subframes
 
   // 2 SLSCH/SLCCH resource block regions subframe times number of resources blocks per slot times 2 slots
-  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB*LPSCCH<<1;
+  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB_SC*LPSCCH<<1;
   AssertFatal(slsch->n_pscch < (M_RB_PSCCH_RP>>1)*LPSCCH,"n_pscch not in 0..%d\n",
 	      ((M_RB_PSCCH_RP>>1)*LPSCCH)-1);
   // hard-coded to transmission mode one for now (Section 14.2.1.1 from 36.213 Rel14.3)
@@ -1453,8 +1453,8 @@ void rx_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
 
   absSF_modP = absSF_offset%P;
 
-  // This is the condition for short SCCH bitmap (40 bits), check that the current subframe is for SCCH
-  if (absSF_modP < 40) return;
+  // This is the condition for short SCCH bitmap (slsch->SubframeBitmapSL_length bits), check that the current subframe is for SCCH
+  if (absSF_modP < slsch->SubframeBitmapSL_length) return;
 
   LOG_I(PHY,"Checking pssch for absSF %d (trp mask %d, rv %d)\n",
 	absSF, trp8[slsch->time_resource_pattern][absSF_modP&7],
@@ -1462,7 +1462,7 @@ void rx_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
   // Note : this assumes Ntrp=8 for now
   if (trp8[slsch->time_resource_pattern][absSF_modP&7]==0) return;
   // we have an opportunity in this subframe
-  if (absSF_modP == 40) slsch->ljmod10 = 0;
+  if (absSF_modP == slsch->SubframeBitmapSL_length) slsch->ljmod10 = 0;
   else slsch->ljmod10++;
   if (slsch->ljmod10 == 0) slsch->ljmod10 = 0;
 

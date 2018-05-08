@@ -59,7 +59,7 @@
 
 extern void mac_init_cell_params(int Mod_idP,int CC_idP);
 extern void phy_reset_ue(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
-
+extern uint32_t taus(void);
 
 /* sec 5.9, 36.321: MAC Reset Procedure */
 void ue_mac_reset(module_id_t module_idP, uint8_t eNB_index)
@@ -96,9 +96,10 @@ void ue_mac_reset(module_id_t module_idP, uint8_t eNB_index)
 
 }
 
-int32_t **rxdata;
-int32_t **txdata;
-
+#ifdef Rel14
+const uint32_t SC_Period[10] = {40,60,70,80,120,140,160,240,280,320};
+const uint32_t SubframeBitmapSL[7] = {4,8,12,16,30,40,42};
+#endif
 
 int
 rrc_mac_config_req_ue(module_id_t Mod_idP,
@@ -139,7 +140,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 		      ,config_action_t config_action
 		      ,const uint32_t * const sourceL2Id
 		      ,const uint32_t * const destinationL2Id,
-		      SL_Preconfiguration_r12_t *SL_Preconfiguration_r12_t
+		      SL_Preconfiguration_r12_t *SL_Preconfiguration_r12
 
 #endif
 		      )
@@ -632,6 +633,40 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
      break;
   }
 
+// SL Preconfiguration
+
+  if (SL_Preconfiguration_r12){
+
+
+    LOG_I(MAC,"Getting SL parameters\n");
+
+    // SLSS
+
+    UE_mac_inst[Mod_idP].slss.SL_OffsetIndicator   = SL_Preconfiguration_r12->preconfigSync_r12.syncOffsetIndicator1_r12;
+    // Note: Other synch parameters are ignored for now
+    UE_mac_inst[Mod_idP].slss.slss_id              = 168+(taus()%168);
+    // PSCCH
+    struct SL_PreconfigCommPool_r12 *preconfigpool = SL_Preconfiguration_r12->preconfigComm_r12.list.array[0];
+    UE_mac_inst[Mod_idP].slsch.N_SL_RB_SC                = preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12;
+    UE_mac_inst[Mod_idP].slsch.prb_Start_SC              = preconfigpool->sc_TF_ResourceConfig_r12.prb_Start_r12;
+    UE_mac_inst[Mod_idP].slsch.prb_End_SC                = preconfigpool->sc_TF_ResourceConfig_r12.prb_End_r12;
+    UE_mac_inst[Mod_idP].slsch.N_SL_RB_data              = preconfigpool->data_TF_ResourceConfig_r12.prb_Num_r12;
+    UE_mac_inst[Mod_idP].slsch.prb_Start_data            = preconfigpool->data_TF_ResourceConfig_r12.prb_Start_r12;
+    UE_mac_inst[Mod_idP].slsch.prb_End_data              = preconfigpool->data_TF_ResourceConfig_r12.prb_End_r12;
+    AssertFatal(preconfigpool->sc_Period_r12<10,"Maximum supported sc_Period is 320ms (sc_Period_r12=%d)\n",
+		SL_PeriodComm_r12_sf320);
+    UE_mac_inst[Mod_idP].slsch.SL_SC_Period = SC_Period[preconfigpool->sc_Period_r12];
+    AssertFatal(preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present == SL_OffsetIndicator_r12_PR_small_r12,
+		"offsetIndicator is limited to smaller format\n");
+
+    UE_mac_inst[Mod_idP].slsch.SL_OffsetIndicator      = preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12;
+    UE_mac_inst[Mod_idP].slsch.SL_OffsetIndicator_data = preconfigpool->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12;
+    AssertFatal(preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present <= SubframeBitmapSL_r12_PR_bs40_r12 ||
+		preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present > SubframeBitmapSL_r12_PR_NOTHING,
+		"PSCCH bitmap limited to 42 bits\n");
+    UE_mac_inst[Mod_idP].slsch.SubframeBitmapSL_length = SubframeBitmapSL[preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present];
+    UE_mac_inst[Mod_idP].slsch.bitmap1 = *((uint64_t*)preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf);
+ }
 #endif
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME

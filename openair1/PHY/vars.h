@@ -33,10 +33,14 @@ char* namepointer_log2;
 
 #include "PHY/LTE_REFSIG/primary_synch.h"
 #include "PHY/LTE_REFSIG/primary_synch_SL.h"
-int16_t *primary_synch0_time;
-int16_t *primary_synch1_time;
-int16_t *primary_synch2_time;
+const int16_t *primary_synch0_time;
+const int16_t *primary_synch1_time;
+const int16_t *primary_synch2_time;
 
+#ifdef Rel14
+const int16_t *primary_synch0SL_time;
+const int16_t *primary_synch1SL_time;
+#endif
 
 #include "PHY/CODING/vars.h"
 
