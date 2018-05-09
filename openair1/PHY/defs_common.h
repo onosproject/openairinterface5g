@@ -72,6 +72,16 @@ typedef struct {
   /// scheduling parameters for RXn-TXnp4 thread
   struct sched_param sched_param_rxtx;
 
+  uint32_t ra_rnti_computed;
+
+  uint8_t dci_to_transmit;
+
+  uint32_t sheduling_info_rar;
+
+  uint8_t remaining_dci;
+
+  uint8_t remaining_rar;
+
 } eNB_rxtx_proc_t;
 
 /// Context data structure for eNB subframe processing

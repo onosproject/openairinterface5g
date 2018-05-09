@@ -502,7 +502,20 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
   common_signal_procedures_NB_IoT(eNB,proc);
 
 /////////////////// NB-IoT broadcast channel //////////////////////////
+//RA_template[i].RA_active=TRUE;
 
+ RA_TEMPLATE *RA_template = (RA_TEMPLATE *)&eNB_mac_inst[eNB->Mod_id].common_channels[eNB->CC_id].RA_template[0];
+ 
+ if( RA_template[0].generate_rar == 1)
+ {
+    proc->ra_rnti_computed = RA_template[0].RA_rnti;
+
+    printf("detection ok in TX !!!!!!!!!!!!!!!!!");
+    RA_template[0].generate_rar = 0;
+    RA_template[i].RA_active = FALSE;
+
+ }
+ 
 
 /////////////////////////// END ///////////////////////////////////////  
 
