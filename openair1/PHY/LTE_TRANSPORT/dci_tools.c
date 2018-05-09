@@ -4726,44 +4726,27 @@ int check_dci_format1_1a_coherency(DCI_format_t dci_format,
             break;
         }
     }
-    else
-    {
-        switch (N_RB_DL) {
-        case 6:
-            NPRB     = RIV2nb_rb_LUT6[rballoc];//NPRB;
-            if(rah)
-              RIV_max  = RIV_max6;
-            else
-              RIV_max  = 0x3F;
-            break;
-        case 25:
-            NPRB     = RIV2nb_rb_LUT25[rballoc];//NPRB;
-            if(rah)
-              RIV_max  = RIV_max25;
-            else
-              RIV_max  = 0x1FFF;
-            break;
-        case 50:
-            NPRB     = RIV2nb_rb_LUT50[rballoc];//NPRB;
-            if(rah)
-              RIV_max  = RIV_max50;
-            else
-              RIV_max  = 0x1FFFF;
-            break;
-        case 100:
-            NPRB     = RIV2nb_rb_LUT100[rballoc];//NPRB;
-            if(rah)
-              RIV_max  = RIV_max100;
-            else
-              RIV_max  =  0x1FFFFFF;
-            break;
-        }
-    }
 
 
     if(dci_format == format1)
     {
-        NPRB = conv_nprb(rah, rballoc, N_RB_DL);
+        NPRB=conv_nprb(rah,rballoc,N_RB_DL);
+
+        switch (N_RB_DL) {
+        case 6:
+            RIV_max  = 0x3f;
+            break;
+        case 25:
+            RIV_max  = 0x1fff;
+            break;
+        case 50:
+            RIV_max  = 0x1ffff;
+            break;
+        case 100:
+            RIV_max  = 0x1ffffff;
+            break;
+        }
+
     }
 
 

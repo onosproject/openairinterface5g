@@ -802,6 +802,7 @@ int main(int argc, char **argv)
 
     case 'r':
       DLSCH_RB_ALLOC = atoi(optarg);
+      AssertFatal(DLSCH_RB_ALLOC <= 0x1ffffff,"rballoc %x is not in an allowable range (0...0x1ffffff)\n",DLSCH_RB_ALLOC);
       rballocset = 1;
       break;
 
