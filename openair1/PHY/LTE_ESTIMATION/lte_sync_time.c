@@ -651,7 +651,7 @@ int lte_sync_timeSL(PHY_VARS_UE *ue,
   for (int slot=0;slot<80;slot++) {
     remove_7_5_kHz(&ru_tmp,slot);
     for (int ar=0;ar<frame_parms->nb_antennas_rx;ar++) {
-      memcpy((void*)&rxdata[ar][slot*2*(frame_parms->samples_per_tti/2)],
+      memcpy((void*)&rxdata[ar][slot*(frame_parms->samples_per_tti/2)],
 	     (void*)&rxdata_7_5kHz[ar][(slot&1)*2*(frame_parms->samples_per_tti/2)],
 	     sizeof(int16_t)*(2*frame_parms->samples_per_tti/2));
     }
@@ -796,7 +796,7 @@ int lte_sync_time_eNB(int32_t **rxdata, ///rx data in time domain
     }
   }
 
-  mean_val/=length;
+  mean_val/=(length/4); 
 
   *peak_val_out = peak_val;
 
