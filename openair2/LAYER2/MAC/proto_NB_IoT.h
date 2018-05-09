@@ -38,6 +38,9 @@
  *  @{
  */
 
+void initiate_ra_proc_NB_IoT(module_id_t module_idP,int CC_id,frame_t frameP, uint16_t preamble_index,int16_t timing_offset,uint8_t sect_id,sub_frame_t subframe,uint8_t f_id);
+
+
 void mac_top_init_eNB_NB_IoT(void);
 int l2_init_eNB_NB_IoT(void);
 

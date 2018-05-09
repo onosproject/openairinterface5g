@@ -62,6 +62,12 @@
 #endif //PHY_EMUL
 
 #include "SCHED/defs.h"
+
+
+///// NB-IoT testing
+#include "proto_NB_IoT.h"
+
+
 /* TODO: this abstraction_flag here is very hackish - find a proper solution */
 extern uint8_t abstraction_flag;
 void dl_phy_sync_success(module_id_t   module_idP,
@@ -458,7 +464,8 @@ int l2_init(LTE_DL_FRAME_PARMS *frame_parms,int eMBMS_active, char *uecap_xer,ui
   mac_xface->eNB_dlsch_ulsch_scheduler = eNB_dlsch_ulsch_scheduler;
   mac_xface->get_dci_sdu               = get_dci_sdu;
   mac_xface->fill_rar                  = fill_rar;
-  mac_xface->initiate_ra_proc          = initiate_ra_proc;
+  //mac_xface->initiate_ra_proc          = initiate_ra_proc;
+  mac_xface->initiate_ra_proc          = initiate_ra_proc_NB_IoT;
   mac_xface->cancel_ra_proc            = cancel_ra_proc;
   mac_xface->set_msg3_subframe         = set_msg3_subframe;
   mac_xface->SR_indication             = SR_indication;

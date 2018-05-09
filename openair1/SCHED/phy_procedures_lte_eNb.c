@@ -1250,15 +1250,15 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
   }
 
-/*
+
   // Get scheduling info for next subframe
   // This is called only for the CC_id = 0 and triggers scheduling for all CC_id's
-  if (eNB->mac_enabled==1) {
+ /* if (eNB->mac_enabled==1) {
     if (eNB->CC_id == 0) {
       mac_xface->eNB_dlsch_ulsch_scheduler(eNB->Mod_id,0,frame,subframe);//,1);
     }
-  }
-*/
+  }*/
+
   // clear the transmit data array for the current subframe
   if (eNB->abstraction_flag==0) {
     for (aa=0; aa<fp->nb_antenna_ports_eNB; aa++) {      
@@ -1266,6 +1266,21 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
              0,fp->ofdm_symbol_size*(fp->symbols_per_tti)*sizeof(int32_t));
     }
   }
+
+
+///////////////////////////////////////////////////////////////////////////////////
+// test if  there is detection, 
+  //if yes proceed to setting flag to indicate that there is something to transmit 
+  // another flag to indicate that DCI is transmitted 
+  // flag to encode DCI
+  // store the PDU of DCI
+  // add two variable for frame and subframe , in order to know next transmission
+  // varible to indicate the remaining repetition to transmit
+  
+
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////
 
  // if (is_pmch_subframe(frame,subframe,fp)) {
    // pmch_procedures(eNB,proc,rn,r_type);
@@ -2014,14 +2029,18 @@ void get_n1_pucch_eNB(PHY_VARS_eNB *eNB,
 void prach_procedures(PHY_VARS_eNB *eNB) {
 
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
-  uint16_t preamble_energy_list[64],preamble_delay_list[64];
-  uint16_t preamble_max,preamble_energy_max;
+ // uint16_t preamble_energy_list[64],preamble_delay_list[64];
+ // uint16_t preamble_max,preamble_energy_max;
+  uint16_t preamble_max=0;
   uint16_t i;
   int8_t UE_id;
   int subframe = eNB->proc.subframe_prach;
   int frame = eNB->proc.frame_prach;
   uint8_t CC_id = eNB->CC_id;
 
+
+  uint32_t detection=0;
+  uint16_t estimated_TA=2;
   /*VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,1);
   memset(&preamble_energy_list[0],0,64*sizeof(uint16_t));
   memset(&preamble_delay_list[0],0,64*sizeof(uint16_t));*/
@@ -2037,11 +2056,11 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
              frame,
              0);*/
   //usleep(100);
-    nprach_procedures_NB_IoT(eNB);
-  } else {
+   detection = nprach_procedures_NB_IoT(eNB);
+ /* } else {
     for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
 
-      /*LOG_D(PHY,"[RAPROC] UE_id %d (%p), generate_prach %d, UE RSI %d, eNB RSI %d preamble index %d\n",
+      LOG_D(PHY,"[RAPROC] UE_id %d (%p), generate_prach %d, UE RSI %d, eNB RSI %d preamble index %d\n",
             UE_id,PHY_vars_UE_g[UE_id][CC_id],PHY_vars_UE_g[UE_id][CC_id]->generate_prach,
             PHY_vars_UE_g[UE_id][CC_id]->frame_parms.prach_config_common.rootSequenceIndex,
             fp->prach_config_common.rootSequenceIndex,
@@ -2053,8 +2072,8 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
         preamble_energy_list[PHY_vars_UE_g[UE_id][CC_id]->prach_PreambleIndex] = 800;
         preamble_delay_list[PHY_vars_UE_g[UE_id][CC_id]->prach_PreambleIndex] = 5;
 
-      }*/
-    }
+      }
+    } */
   }
 
   /*preamble_energy_max = preamble_energy_list[0];
@@ -2120,6 +2139,20 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
           break;
         }
 
+        */
+  /////////////////////////////////////////// NB-IoT testing //////////////////////////
+  if(detection == 1)
+  {
+    mac_xface->initiate_ra_proc(eNB->Mod_id,
+            eNB->CC_id,
+            frame,
+            preamble_max,
+            estimated_TA,
+            0,subframe,0);      
+
+  }
+  /////////////////////////////////////////////////////////////////////////////////////
+/*
   mac_xface->initiate_ra_proc(eNB->Mod_id,
             eNB->CC_id,
             frame,

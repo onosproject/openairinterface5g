@@ -1516,7 +1516,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
 }
 
-void nprach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
+uint32_t nprach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
 
   uint32_t estimated_TA; 
   int subframe,frame,frame_mod; 
@@ -1533,4 +1533,5 @@ void nprach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
     estimated_TA = RX_NPRACH_NB_IoT(eNB,frame);
     //printf("estim = %i\n",estimated_TA);
   }
+  return estimated_TA;
 }

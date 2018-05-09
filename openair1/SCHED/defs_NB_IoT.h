@@ -48,7 +48,7 @@ uint32_t is_SIB1_NB_IoT(const frame_t          frameP,
                         NB_IoT_eNB_NDLSCH_t   *ndlsch_SIB1
                         );
 
-void nprach_procedures_NB_IoT(PHY_VARS_eNB *eNB);
+uint32_t nprach_procedures_NB_IoT(PHY_VARS_eNB *eNB);
 
 #endif
 
