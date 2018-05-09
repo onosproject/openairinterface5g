@@ -313,7 +313,7 @@ int main(int argc, char **argv) {
   
   if (do_SLSS == 1) {
     slss.SL_OffsetIndicator         = 0;
-    slss.slss_id                    = 169;
+    slss.slss_id                    = 170;
     slss.slmib_length               = 5;
     slss.slmib[0]                   = 0;
     slss.slmib[1]                   = 1;

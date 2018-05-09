@@ -216,11 +216,11 @@ uint8_t nfapi_mode = 0;
 extern void reset_opp_meas(void);
 extern void print_opp_meas(void);
 
-extern PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
+PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
 			  uint8_t UE_id,
-			  uint8_t abstraction_flag);
-
-
+			  uint8_t abstraction_flag,
+			  int sidelink_active);
+  
 int transmission_mode=1;
 
 
@@ -883,8 +883,9 @@ int main( int argc, char **argv )
       NB_UE_INST=1;     
       NB_INST=1;     
       PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**));     
-      PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);    
-      PHY_vars_UE_g[0][CC_id] = init_ue_vars(frame_parms[CC_id], 0,abstraction_flag);
+      PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
+      if (SLonly == 1 || synchRef==1) sidelink_active=1;
+      PHY_vars_UE_g[0][CC_id] = init_ue_vars(frame_parms[CC_id], 0,abstraction_flag,sidelink_active);
       UE[CC_id] = PHY_vars_UE_g[0][CC_id];
       printf("PHY_vars_UE_g[0][%d] = %p\n",CC_id,UE[CC_id]);
       
@@ -1038,6 +1039,7 @@ int main( int argc, char **argv )
 
   // start the main threads
     int eMBMS_active = 0;
+
     init_UE(1,eMBMS_active,uecap_xer_in,0,sidelink_active,SLonly,synchRef);
 
     if (phy_test==0) {

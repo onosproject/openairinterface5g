@@ -80,7 +80,7 @@ void *UE_thread(void *arg);
 void *UE_threadSL(void *arg);
 void init_UE_stub(int nb_inst,int,int,char*,int);
 void ue_stub_rx_handler(unsigned int, char *);
-void init_UE(int nb_inst,int,int,int,int,int,int);
+void init_UE(int,int,int,int,int,int,int);
 
 int32_t **rxdata;
 int32_t **txdata;
@@ -151,7 +151,8 @@ void phy_init_lte_ue_transport(PHY_VARS_UE *ue,int absraction_flag);
 
 PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
 			  uint8_t UE_id,
-			  uint8_t abstraction_flag)
+			  uint8_t abstraction_flag,
+			  int sidelink_active)
 
 {
 
@@ -167,7 +168,8 @@ PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
 
   ue->Mod_id      = UE_id;
   ue->mac_enabled = 1;
-
+  ue->sidelink_active = sidelink_active;
+  
   // Panos: In phy_stub_UE (MAC-to-MAC) mode these init functions don't need to get called. Is this correct?
   if (nfapi_mode!=3)
     {
@@ -226,7 +228,7 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
   PHY_VARS_UE *UE;
   int         inst;
   int         ret;
-
+  
   LOG_I(PHY,"UE : Calling Layer 2 for initialization\n");
 
   l2_init_ue(eMBMS_active,(uecap_xer_in==1)?uecap_xer:NULL,
@@ -236,15 +238,14 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
   for (inst=0;inst<nb_inst;inst++) {
 
     LOG_I(PHY,"Initializing memory for UE instance %d (%p)\n",inst,PHY_vars_UE_g[inst]);
-    PHY_vars_UE_g[inst][0] = init_ue_vars(NULL,inst,0);
+
+    PHY_vars_UE_g[inst][0] = init_ue_vars(NULL,inst,0,sidelink_active);
     // turn off timing control loop in UE
     PHY_vars_UE_g[inst][0]->no_timing_correction = timing_correction;
     
     PHY_vars_UE_g[inst][0]->SLonly = SLonly;
     PHY_vars_UE_g[inst][0]->is_SynchRef = isSynchRef;
     
-    if (SLonly==1) PHY_vars_UE_g[inst][0]->sidelink_active = 1;
-    else           PHY_vars_UE_g[inst][0]->sidelink_active = sidelink_active;
     LOG_I(PHY,"Intializing UE Threads for instance %d (%p,%p)...\n",inst,PHY_vars_UE_g[inst],PHY_vars_UE_g[inst][0]);
     init_UE_threads(inst);
     UE = PHY_vars_UE_g[inst][0];
@@ -299,7 +300,7 @@ void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_ifa
   for (inst=0;inst<nb_inst;inst++) {
 
     LOG_I(PHY,"Initializing memory for UE instance %d (%p)\n",inst,PHY_vars_UE_g[inst]);
-    PHY_vars_UE_g[inst][0] = init_ue_vars(NULL,inst,0);
+    PHY_vars_UE_g[inst][0] = init_ue_vars(NULL,inst,0,0);
     if (simL1 == 1) PHY_vars_UE_g[inst][0]->sidelink_l2_emulation = 2;
     else            PHY_vars_UE_g[inst][0]->sidelink_l2_emulation = 1;
 
@@ -1688,11 +1689,11 @@ void *UE_threadSL(void *arg) {
 	for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
 	  rxp[i] = (void*)&UE->common_vars.rxdata_syncSL[i][0];
 
-	AssertFatal( UE->frame_parms.samples_per_tti*10 ==
+	AssertFatal( UE->frame_parms.samples_per_tti*40 ==
 		     UE->rfdevice.trx_read_func(&UE->rfdevice,
 						&timestamp,
 						rxp,
-						UE->frame_parms.samples_per_tti*10,
+						UE->frame_parms.samples_per_tti*40,
 						UE->frame_parms.nb_antennas_rx), "");
 	AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
 	instance_cnt_synch = ++UE->proc.instance_cnt_synchSL;
@@ -1708,7 +1709,7 @@ void *UE_threadSL(void *arg) {
 
 	for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
 	  rxp[i] = (void*)&dummy_rx[i][0];
-	for (int sf=0; sf<10; sf++)
+	for (int sf=0; sf<40; sf++)
 	  //	    printf("Reading dummy sf %d\n",sf);
 	  UE->rfdevice.trx_read_func(&UE->rfdevice,
 				     &timestamp,
