@@ -2243,7 +2243,7 @@ rrc_ue_process_mobilityControlInfo(
 
   /*
   drb2release_list = CALLOC (1, sizeof (*drb2release_list));
-  lcid= CALLOC (1, sizeof (DRB_Identity_t)); // long
+  lcid = CALLOC (1, sizeof (DRB_Identity_t)); // long
   for (*lcid=0;*lcid<NB_RB_MAX;*lcid++)
   {
     ASN_SEQUENCE_ADD (&(drb2release_list)->list,lcid);
@@ -2251,12 +2251,42 @@ rrc_ue_process_mobilityControlInfo(
    */
   //Removing SRB1 and SRB2 and DRB0
   LOG_N(RRC,"[UE %d] : Update needed for rrc_pdcp_config_req (deprecated) and rrc_rlc_config_req commands(deprecated)\n", ctxt_pP->module_id);
-  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH,UNDEF_SECURITY_MODE);
-  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, CONFIG_ACTION_REMOVE,ctxt_pP->module_id+DCCH,Rlc_info_am_config);
-  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH1,UNDEF_SECURITY_MODE);
-  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DCCH1,Rlc_info_am_config);
-  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_NO, CONFIG_ACTION_REMOVE, DTCH,UNDEF_SECURITY_MODE);
-  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_NO,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DTCH,Rlc_info_um);
+  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH,UNDEF_SECURITY_MODE
+#ifdef Rel14
+                       ,0
+                       ,0
+#endif
+                       );
+  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, CONFIG_ACTION_REMOVE,ctxt_pP->module_id+DCCH,Rlc_info_am_config
+#ifdef Rel14
+    ,0
+    ,0
+#endif
+    );
+  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH1,UNDEF_SECURITY_MODE
+#ifdef Rel14
+                       ,0
+                       ,0
+#endif
+                       );
+  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DCCH1,Rlc_info_am_config
+#ifdef Rel14
+    ,0
+    ,0
+#endif
+    );
+  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_NO, CONFIG_ACTION_REMOVE, DTCH,UNDEF_SECURITY_MODE
+#ifdef Rel14
+                       ,0
+                       ,0
+#endif
+                       );
+  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_NO,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DTCH,Rlc_info_um
+#ifdef Rel14
+    ,0
+    ,0
+#endif
+    );
   /*
   rrc_pdcp_config_asn1_req(NB_eNB_INST+ue_mod_idP,frameP, 0,eNB_index,
          NULL, // SRB_ToAddModList
@@ -5479,6 +5509,8 @@ void *rrc_control_socket_thread_fct(void *arg)
    int j = 0;
    int i = 0;
    int slrb_id =0;
+   DRB_Identity_t drb_id = 0;
+   DRB_ToReleaseList_t*  drb2release_list = NULL;
 
    //from the main program, listen for the incoming messages from control socket (ProSe App)
    prose_addr_len = sizeof(prose_app_addr);
@@ -6029,7 +6061,6 @@ void *rrc_control_socket_thread_fct(void *arg)
           UE_rrc_inst[module_id].destinationL2Id = 0x00000000;
           sourceL2Id = UE_rrc_inst[module_id].sourceL2Id;
 
-
           //find the corresponding record and reset the values
           if (slrb_id > 0){
              for (i=0; i< MAX_NUM_LCID_DATA; i++) {
@@ -6044,11 +6075,10 @@ void *rrc_control_socket_thread_fct(void *arg)
           }
 
           //TEST Remove RLC
-          DRB_Identity_t       drb_id         = slrb_id;
-          DRB_ToReleaseList_t*  drb2release_list = NULL;
+          drb_id = slrb_id;
           drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
           ASN_SEQUENCE_ADD(&drb2release_list->list, drb_id);
-
+/*
 
           rrc_rlc_config_asn1_req(&ctxt,
                 (SRB_ToAddModList_t*)NULL,
@@ -6059,7 +6089,15 @@ void *rrc_control_socket_thread_fct(void *arg)
                 , sourceL2Id, destinationL2Id
  #endif
           );
+  */
+          rrc_rlc_config_req(&ctxt, SRB_FLAG_NO,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,slrb_id,Rlc_info_um
+        #ifdef Rel14
+            ,0
+            ,0
+        #endif
+            );
 
+          //need to remove PDCP instance
 
 
 
@@ -6101,85 +6139,6 @@ void *rrc_control_socket_thread_fct(void *arg)
                       NULL
            #endif
                       );
-
-
-
-          //TEST REMOVE RLC
-           slrb_id = 9;
-
-           //find the corresponding record and reset the values
-           if (slrb_id > 0){
-              for (i=0; i< MAX_NUM_LCID_DATA; i++) {
-                 if (UE_rrc_inst[module_id].sl_info[i].LCID == slrb_id) {
-                    UE_rrc_inst[module_id].sl_info[i].LCID = 0;
-                    LOG_I(RRC,"[DirectCommunicationReleaseRequest] rbid %d for destination Id: 0x%08x\n has been removed",slrb_id, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
-                    //UE_rrc_inst[module_id].sl_info[i].destinationL2Id = 0x00;
-                    destinationL2Id = UE_rrc_inst[module_id].sl_info[i].destinationL2Id;
-                    break;
-                 }
-              }
-           }
-
-
-           drb_id         = slrb_id;
-           drb2release_list = NULL;
-           drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
-           ASN_SEQUENCE_ADD(&drb2release_list->list, drb_id);
-
-
-           rrc_rlc_config_asn1_req(&ctxt,
-                 (SRB_ToAddModList_t*)NULL,
-                 (DRB_ToAddModList_t*)NULL,
-                 (DRB_ToReleaseList_t*)drb2release_list
-  #ifdef Rel14
-                 ,(PMCH_InfoList_r9_t *)NULL
-                 , sourceL2Id, destinationL2Id
-  #endif
-           );
-
-
-
-          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
-                     (RadioResourceConfigCommonSIB_t *)NULL,
-                     (struct PhysicalConfigDedicated *)NULL,
-          #if defined(Rel10) || defined(Rel14)
-                     (SCellToAddMod_r10_t *)NULL,
-                     //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
-          #endif
-                     (MeasObjectToAddMod_t **)NULL,
-                     (MAC_MainConfig_t *)NULL,
-                     slrb_id,
-                     (struct LogicalChannelConfig *)NULL,
-                     (MeasGapConfig_t *)NULL,
-                     (TDD_Config_t *)NULL,
-                     (MobilityControlInfo_t *)NULL,
-                     NULL,
-                     NULL,
-                     NULL,
-                     NULL,
-                     NULL,
-                     NULL
-          #if defined(Rel10) || defined(Rel14)
-                     ,0,
-                     (MBSFN_AreaInfoList_r9_t *)NULL,
-                     (PMCH_InfoList_r9_t *)NULL
-
-          #endif
-          #ifdef CBA
-                     ,
-                     0,
-                     0
-          #endif
-          #if defined(Rel10) || defined(Rel14)
-                     ,CONFIG_ACTION_REMOVE,
-                     &sourceL2Id,
-                     NULL,
-                     NULL
-          #endif
-                     );
-
-
-
 
 
           LOG_I(RRC,"Send DirectCommunicationReleaseResponse to ProSe App \n");
@@ -6449,6 +6408,108 @@ void *rrc_control_socket_thread_fct(void *arg)
             exit(EXIT_FAILURE);
          }
          break;
+
+      case PC5S_RELEASE_REQ:
+           printf("-----------------------------------\n");
+  #ifdef DEBUG_CTRL_SOCKET
+           LOG_I(RRC,"[PC5SReleaseRequest] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
+           LOG_I(RRC,"[PC5SReleaseRequest] Slrb Id: %i\n",sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id);
+  #endif
+           slrb_id = sl_ctrl_msg_recv->sidelinkPrimitive.slrb_id;
+           //reset groupL2ID from MAC LAYER
+
+           UE_rrc_inst[module_id].destinationL2Id = 0x00000000;
+           sourceL2Id = UE_rrc_inst[module_id].sourceL2Id;
+
+
+           //find the corresponding record and reset the values
+           if (slrb_id > 0){
+              for (i = MAX_NUM_LCID_DATA; i< MAX_NUM_LCID; i++) {
+                 if (UE_rrc_inst[module_id].sl_info[i].LCID == slrb_id) {
+                    UE_rrc_inst[module_id].sl_info[i].LCID = 0;
+                    LOG_I(RRC,"[DirectCommunicationReleaseRequest] rbid %d for destination Id: 0x%08x\n has been removed",slrb_id, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
+                    //UE_rrc_inst[module_id].sl_info[i].destinationL2Id = 0x00;
+                    destinationL2Id = UE_rrc_inst[module_id].sl_info[i].destinationL2Id;
+                    break;
+                 }
+              }
+           }
+
+           //TEST Remove RLC
+           drb_id = slrb_id;
+           drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
+           ASN_SEQUENCE_ADD(&drb2release_list->list, drb_id);
+
+
+           rrc_rlc_config_asn1_req(&ctxt,
+                 (SRB_ToAddModList_t*)NULL,
+                 (DRB_ToAddModList_t*)NULL,
+                 (DRB_ToReleaseList_t*)drb2release_list
+  #ifdef Rel14
+                 ,(PMCH_InfoList_r9_t *)NULL
+                 , sourceL2Id, destinationL2Id
+  #endif
+           );
+
+
+           rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
+                       (RadioResourceConfigCommonSIB_t *)NULL,
+                       (struct PhysicalConfigDedicated *)NULL,
+            #if defined(Rel10) || defined(Rel14)
+                       (SCellToAddMod_r10_t *)NULL,
+                       //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
+            #endif
+                       (MeasObjectToAddMod_t **)NULL,
+                       (MAC_MainConfig_t *)NULL,
+                       slrb_id,
+                       (struct LogicalChannelConfig *)NULL,
+                       (MeasGapConfig_t *)NULL,
+                       (TDD_Config_t *)NULL,
+                       (MobilityControlInfo_t *)NULL,
+                       NULL,
+                       NULL,
+                       NULL,
+                       NULL,
+                       NULL,
+                       NULL
+            #if defined(Rel10) || defined(Rel14)
+                       ,0,
+                       (MBSFN_AreaInfoList_r9_t *)NULL,
+                       (PMCH_InfoList_r9_t *)NULL
+
+            #endif
+            #ifdef CBA
+                       ,
+                       0,
+                       0
+            #endif
+            #if defined(Rel10) || defined(Rel14)
+                       ,CONFIG_ACTION_REMOVE,
+                       &sourceL2Id,
+                       NULL,
+                       NULL
+            #endif
+                       );
+
+
+
+           LOG_I(RRC,"Send PC5SReleaseResponse to ProSe App \n");
+           memset(send_buf, 0, BUFSIZE);
+
+           sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
+           sl_ctrl_msg_send->type = PC5S_RELEASE_RSP;
+           sl_ctrl_msg_send->sidelinkPrimitive.direct_comm_release_rsp = PC5S_RELEASE_OK;
+
+           memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
+           free(sl_ctrl_msg_send);
+
+           prose_addr_len = sizeof(prose_app_addr);
+           n = sendto(ctrl_sock_fd, (char *)send_buf, sizeof(struct sidelink_ctrl_element), 0, (struct sockaddr *)&prose_app_addr, prose_addr_len);
+           if (n < 0){
+              LOG_E(RRC, "ERROR: Failed to send to ProSe App\n");
+              exit(EXIT_FAILURE);
+           }
+           break;
 
 
       case PC5_DISCOVERY_MESSAGE:

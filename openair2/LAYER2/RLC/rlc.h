@@ -424,6 +424,8 @@ private_rlc_rrc(rlc_union_t*  rrc_rlc_add_rlc      (const protocol_ctxt_t* const
 * \param[in]  actionP          Action for this radio bearer (add, modify, remove).
 * \param[in]  rb_idP           Radio bearer identifier.
 * \param[in]  rlc_infoP        RLC configuration parameters issued from Radio Resource Manager.
+* \param[in]  sourceL2ID       [D2D] source L2 Identity.
+* \param[in]  destinationL2ID  [D2D] destination L2 Identity.
 * \return     A status about the processing, OK or error code.
 */
 public_rlc_rrc( rlc_op_status_t rrc_rlc_config_req   (
@@ -432,7 +434,12 @@ public_rlc_rrc( rlc_op_status_t rrc_rlc_config_req   (
                   const MBMS_flag_t,
                   config_action_t,
                   const  rb_id_t,
-                  rlc_info_t );)
+                  rlc_info_t
+#ifdef Rel14
+                  ,const uint32_t
+                  ,const uint32_t
+#endif
+                  );)
 
 /*! \fn rlc_op_status_t rrc_rlc_data_req     (const protocol_ctxt_t* const ctxtP, const  MBMS_flag_t MBMS_flagP, const  rb_id_t rb_idP, mui_t muiP, confirm_t confirmP, sdu_size_t sdu_sizeP, char* sduP)
 * \brief  Function for RRC to send a SDU through a Signalling Radio Bearer.

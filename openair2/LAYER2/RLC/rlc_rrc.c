@@ -812,7 +812,12 @@ rlc_op_status_t rrc_rlc_config_req   (
   const MBMS_flag_t     mbms_flagP,
   const config_action_t actionP,
   const rb_id_t         rb_idP,
-  const rlc_info_t      rlc_infoP)
+  const rlc_info_t      rlc_infoP
+#ifdef Rel14
+    ,const uint32_t sourceL2Id
+    ,const uint32_t destinationL2Id
+#endif
+    )
 {
   //-----------------------------------------------------------------------------
   //rlc_op_status_t status;
@@ -886,9 +891,10 @@ rlc_op_status_t rrc_rlc_config_req   (
   case CONFIG_ACTION_REMOVE:
     return rrc_rlc_remove_rlc(ctxt_pP, srb_flagP, mbms_flagP, rb_idP
 #ifdef Rel14
-               ,0, 0
+                              ,sourceL2Id
+                              ,destinationL2Id
 #endif
-               );
+                              );
     break;
 
   default:

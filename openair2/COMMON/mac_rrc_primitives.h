@@ -353,7 +353,12 @@ typedef struct {
   //RLC_INTERFACE_FUNCTIONS
   void (*pdcp_run)(void);
   void (*pdcp_data_req)(module_id_t, rb_id_t, sdu_size_t, char*);
-  signed int (*rrc_rlc_config_req)(unsigned int, unsigned int, unsigned int, unsigned int, rlc_info_t );
+  signed int (*rrc_rlc_config_req)(unsigned int, unsigned int, unsigned int, unsigned int, rlc_info_t
+#ifdef Rel14
+    ,unsigned int
+    ,unsigned int
+#endif
+    );
   int (*rrc_mac_config_req)(uint8_t Mod_id,uint8_t eNB_flag,uint8_t UE_id,uint8_t eNB_index,
                             RadioResourceConfigCommonSIB_t *radioResourceConfigCommon,
                             struct PhysicalConfigDedicated *physicalConfigDedicated,

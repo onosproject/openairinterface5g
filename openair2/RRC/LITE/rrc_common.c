@@ -195,13 +195,23 @@ rrc_t310_expiration(
                            SRB_FLAG_YES,
                            CONFIG_ACTION_REMOVE,
                            UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
-                           0);
+                           0
+#ifdef Rel14
+                           ,0
+                           ,0
+#endif
+    );
       rrc_rlc_config_req (ctxt_pP,
                           SRB_FLAG_YES,
                           MBMS_FLAG_NO,
                           CONFIG_ACTION_REMOVE,
                           UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
-                          Rlc_info_um);
+                          Rlc_info_um
+#ifdef Rel14
+    ,0
+    ,0
+#endif
+    );
       UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Active = 0;
       UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Status = IDLE;
       UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Next_check_frame = 0;

@@ -263,7 +263,12 @@ public_pdcp(void rrc_pdcp_config_req (
               const srb_flag_t  srb_flagP,
               const uint32_t    actionP,
               const rb_id_t     rb_idP,
-              const uint8_t     security_modeP);)
+              const uint8_t     security_modeP
+#ifdef Rel14
+              ,const uint32_t sourceL2Id
+              ,const uint32_t destinationL2Id
+#endif
+              );)
 
 /*! \fn bool rrc_pdcp_config_asn1_req (const protocol_ctxt_t* const , SRB_ToAddModList_t* srb2add_list, DRB_ToAddModList_t* drb2add_list, DRB_ToReleaseList_t*  drb2release_list)
 * \brief  Function for RRC to configure a Radio Bearer.

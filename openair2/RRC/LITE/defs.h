@@ -89,6 +89,8 @@
 #define PC5S_ESTABLISH_REQ                  11
 #define PC5S_ESTABLISH_RSP                  12
 #define PC5_DISCOVERY_MESSAGE               13
+#define PC5S_RELEASE_REQ                    14
+#define PC5S_RELEASE_RSP                    15
 
 #define PC5_DISCOVERY_PAYLOAD_SIZE	        29
 
@@ -133,6 +135,11 @@ struct PC5SEstablishRsp{
    uint32_t slrbid_lcid30;
 };
 
+typedef enum {
+   PC5S_RELEASE_OK = 0,
+   PC5S_RELEASE_FAILURE
+} PC5S_Release_Status_t;
+
 
 //PC5_DISCOVERY MESSAGE
 typedef struct  {
@@ -152,6 +159,7 @@ struct sidelink_ctrl_element {
       struct DirectCommunicationEstablishReq direct_comm_establish_req;
       Group_Communication_Status_t group_comm_release_rsp;
       Direct_Communication_Status_t direct_comm_release_rsp;
+      PC5S_Release_Status_t pc5s_release_rsp;
       SL_UE_STATE_t ue_state;
       int slrb_id;
       struct PC5SEstablishReq pc5s_establish_req;
