@@ -6183,9 +6183,14 @@ void *rrc_control_socket_thread_fct(void *arg)
             i = 0;
             if (destinationL2Id > 0){
                for (i = MAX_NUM_LCID_DATA; i < MAX_NUM_LCID; i++) {
-                  if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (j == 0)) j = i+1;
+                  if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (UE_rrc_inst[module_id].sl_info[i].destinationL2Id == 0) && (j == 0)) j = i+1;
                   if (UE_rrc_inst[module_id].sl_info[i].destinationL2Id == destinationL2Id) {
-                     pc5s_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
+                     if (UE_rrc_inst[module_id].sl_info[i].LCID > 0) {
+                        pc5s_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
+                     } else if (UE_rrc_inst[module_id].sl_info[i].LCID == 0){
+                        UE_rrc_inst[module_id].sl_info[i].LCID = i;
+                        pc5s_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
+                     }
                      LOG_I(RRC,"[PC5EstablishReq] rbid %d for destination Id: 0x%08x\n ",pc5s_rbid, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
                      break; //(LCID, D) already exists!
                   }
@@ -6206,7 +6211,7 @@ void *rrc_control_socket_thread_fct(void *arg)
             j = 0;
             i = 0;
             for (i = MAX_NUM_LCID_DATA; i < MAX_NUM_LCID; i++) {
-               if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (j == 0)) j = i+1;
+               if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (UE_rrc_inst[module_id].sl_info[i].destinationL2Id == 0) && (j == 0)) j = i+1;
             }
             if ((i == MAX_NUM_LCID) && (j > 0)) {
                UE_rrc_inst[module_id].sl_info[j-1].LCID = (j-1);
