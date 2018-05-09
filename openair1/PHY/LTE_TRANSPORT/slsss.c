@@ -62,9 +62,9 @@ int generate_slsss(int32_t **txdataF,
   
   if (((symbol == 11) && frame_parms->Ncp == NORMAL) ||
       ((symbol == 10) && frame_parms->Ncp == EXTENDED))
-    d = &d0_sss[62*(Nid2 + (Nid1*3))];
+    d = &d0_sss[62*(Nid2 + (Nid1*2))];
   else 
-    d = &d5_sss[62*(Nid2 + (Nid1*3))];
+    d = &d5_sss[62*(Nid2 + (Nid1*2))];
 
   Nsymb = (frame_parms->Ncp==NORMAL)?14:12;
   k = frame_parms->ofdm_symbol_size-3*12+5;
@@ -190,7 +190,7 @@ int _do_slpss_sss_extract(PHY_VARS_UE *ue,
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
 
 
-  int rx_offset = (subframe*frame_parms->samples_per_tti) + frame_parms->ofdm_symbol_size-3*12;
+  int rx_offset = frame_parms->ofdm_symbol_size-3*12;
   uint8_t pss0_symb,pss1_symb,sss0_symb,sss1_symb;
 
   int32_t **rxdataF;
@@ -202,9 +202,9 @@ int _do_slpss_sss_extract(PHY_VARS_UE *ue,
     if (frame_parms->frame_type == FDD) {
       pss0_symb = 1;
       pss1_symb = 2;
-      sss0_symb = 10;
-      sss1_symb = 11;
-      rxdataF  =  ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF;
+      sss0_symb = 11;
+      sss1_symb = 12;
+      rxdataF   =  ue->sl_rxdataF;
       pss0_rxF  =  &rxdataF[aarx][(rx_offset + (pss0_symb*(frame_parms->ofdm_symbol_size)))];
       sss0_rxF  =  &rxdataF[aarx][(rx_offset + (sss0_symb*(frame_parms->ofdm_symbol_size)))];
       pss1_rxF  =  &rxdataF[aarx][(rx_offset + (pss1_symb*(frame_parms->ofdm_symbol_size)))];
@@ -228,16 +228,16 @@ int _do_slpss_sss_extract(PHY_VARS_UE *ue,
       // skip DC carrier
       if (rb==3) {
         if(frame_parms->frame_type == FDD)
-        {
-          sss0_rxF       = &rxdataF[aarx][(1 + (sss0_symb*(frame_parms->ofdm_symbol_size)))];
-          pss0_rxF       = &rxdataF[aarx][(1 + (pss0_symb*(frame_parms->ofdm_symbol_size)))];
-          sss1_rxF       = &rxdataF[aarx][(1 + (sss1_symb*(frame_parms->ofdm_symbol_size)))];
-          pss1_rxF       = &rxdataF[aarx][(1 + (pss1_symb*(frame_parms->ofdm_symbol_size)))];
-        }
+	  {
+	    sss0_rxF       = &rxdataF[aarx][((sss0_symb*(frame_parms->ofdm_symbol_size)))];
+	    pss0_rxF       = &rxdataF[aarx][((pss0_symb*(frame_parms->ofdm_symbol_size)))];
+	    sss1_rxF       = &rxdataF[aarx][((sss1_symb*(frame_parms->ofdm_symbol_size)))];
+	    pss1_rxF       = &rxdataF[aarx][((pss1_symb*(frame_parms->ofdm_symbol_size)))];
+	  }
         else
 	  AssertFatal(0,"");
-        }
       }
+    
 
       for (i=0; i<12; i++) {
         if (doPss) {
@@ -247,6 +247,8 @@ int _do_slpss_sss_extract(PHY_VARS_UE *ue,
         if (doSss) {
 	  sss0_rxF_ext[i]=sss0_rxF[i];
 	  sss1_rxF_ext[i]=sss1_rxF[i];
+	  //	  printf("rb %d: sss0 %d (%d,%d)\n",rb,i,((int16_t*)&sss0_rxF[i])[0],((int16_t*)&sss0_rxF[i])[1]);
+	  //	  printf("rb %d: sss1 %d (%d,%d)\n",rb,i,((int16_t*)&sss1_rxF[i])[0],((int16_t*)&sss1_rxF[i])[1]);
 	}
       }
 
@@ -259,7 +261,7 @@ int _do_slpss_sss_extract(PHY_VARS_UE *ue,
       pss1_rxF_ext+=12;
       sss1_rxF_ext+=12;
 
-
+    }
   }
   
   return(0);
@@ -293,7 +295,6 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int
   LTE_DL_FRAME_PARMS *frame_parms=&ue->frame_parms;
   int32_t metric;
   int16_t *d0,*d5;
-  int16_t **rxdata_7_5kHz    = ue->sl_rxdata_7_5kHz;
   int16_t **rxdataF          = ue->sl_rxdataF;
 
   if (frame_parms->frame_type == FDD) {
@@ -316,7 +317,7 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int
     ru_tmp.N_TA_offset=0;
     ru_tmp.common.rxdata_7_5kHz     = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*)); 
     for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) 
-      ru_tmp.common.rxdata_7_5kHz[aa] = (int32_t*)&rxdata_7_5kHz[aa][ue->rx_offsetSL*2];
+      ru_tmp.common.rxdata_7_5kHz[aa] = (int32_t*)&ue->common_vars.rxdata_syncSL[aa][ue->rx_offsetSL*2];
     ru_tmp.common.rxdataF = (int32_t**)rxdataF;
     ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
     
@@ -341,12 +342,12 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int
 		    pss1_ext,
 		    sss1_ext,
 		    0);
-  
-  write_output("rxdataF0.m","rxF0",&rxdataF[0][0],2*14*ue->frame_parms.ofdm_symbol_size,1,1);
-  write_output("pss_ext0.m","pssext0",pss0_ext,72,1,1);
-  write_output("sss0_ext0.m","sss0ext0",sss0_ext,72,1,1);
 
-  exit(-1);
+  //  write_output("rxdataF0.m","rxF0",&rxdataF[0][0],2*14*ue->frame_parms.ofdm_symbol_size,1,1);
+  //  write_output("pss0_ext.m","pss0ext",pss0_ext,72,1,1);
+  //  write_output("sss0_ext.m","sss0ext",sss0_ext,72,1,1);
+
+  //  exit(-1);
 
   // get conjugated channel estimate from PSS (symbol 6), H* = R* \cdot PSS
   // and do channel estimation and compensation based on PSS
@@ -359,7 +360,7 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int
 	       Nid2);
 
   //  write_output("sss0_comp0.m","sss0comp0",sss0_ext,72,1,1);
-
+  //  exit(-1);
   // now do the SSS detection based on the precomputed sequences in PHY/LTE_TRANSPORT/sss.h
 
   *tot_metric = -99999999;
@@ -373,8 +374,8 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int
     for (Nid1 = 0 ; Nid1 <= 167; Nid1++) {  // 168 possible Nid1 values
       metric = 0;
       
-      d0 = &d0_sss[62*(Nid2 + (Nid1*3))];
-      d5 = &d5_sss[62*(Nid2 + (Nid1*3))];
+      d0 = &d0_sss[62*(Nid2 + (Nid1*2))];
+      d5 = &d5_sss[62*(Nid2 + (Nid1*2))];
       // This is the inner product using one particular value of each unknown parameter
       for (i=0; i<62; i++) {
 	metric += 
@@ -385,16 +386,16 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int
       // if the current metric is better than the last save it
       if (metric > *tot_metric) {
 	*tot_metric = metric;
-	ue->frame_parms.Nid_SL = Nid2+(2*Nid1);
+	ue->frame_parms.Nid_SL = (Nid2*168)+Nid1;
 	*phase_max = phase;
-#ifdef DEBUG_SSS
-	printf("(phase,Nid1) (%d,%d), metric_phase %d tot_metric %d, phase_max %d\n",phase,Nid1,metric,*tot_metric,*phase_max);
-#endif
+	//#ifdef DEBUG_SSS
+	  LOG_I(PHY,"(phase,Nid_SL) (%d,%d), metric_phase %d tot_metric %d, phase_max %d\n",phase,ue->frame_parms.Nid_SL,metric,*tot_metric,*phase_max);
+	//#endif
 	
       }
     }
   }
-
+  exit(-1);
 
   return(0);
 }
