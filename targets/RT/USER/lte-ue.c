@@ -712,9 +712,12 @@ static void *UE_thread_synchSL(void *arg)
 				   &MLind,
 				   &maxlev,
 				   &avglev);
-    if (rxoffset>=0) LOG_I(PHY,"Most likely Nid_SL/168 = %d with rxoffset %d, lev %d dB, avg %d dB\n",
-			   MLind,rxoffset,dB_fixed(maxlev),dB_fixed(avglev));
+    if (rxoffset>=0) LOG_I(PHY,"Most likely Nid_SL/168 = %d with rxoffset %d, lev %d dB, avg %d dB\n", MLind,rxoffset,dB_fixed(maxlev),dB_fixed(avglev));
 
+    int32_t sss_metric;
+    int32_t phase_max; 
+    rx_slsss(UE,&sss_metric,&phase_max,MLind,0);
+	  
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
     UE->proc.instance_cnt_synchSL--;
     UE->is_synchronizedSL = 0;
