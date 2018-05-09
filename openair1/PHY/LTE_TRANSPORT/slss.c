@@ -45,7 +45,7 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
   AssertFatal(slss!=NULL,"slss is null\n");
   
-  LOG_I(PHY,"check_and_generate_slss: frame_tx %d, subframe_tx %d : slss->SL_offsetIndicator %d, slss->slmib_length %d\n",
+  LOG_D(PHY,"check_and_generate_slss: frame_tx %d, subframe_tx %d : slss->SL_offsetIndicator %d, slss->slmib_length %d\n",
 	frame_tx,subframe_tx,slss->SL_OffsetIndicator, slss->slmib_length);
   
   if ((((10*frame_tx) + subframe_tx)%40) != slss->SL_OffsetIndicator) return; 

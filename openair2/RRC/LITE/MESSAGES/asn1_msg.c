@@ -329,7 +329,7 @@ uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
    sl_mib->message.directSubframeNumber_r12 = subframe;
    
 
-  LOG_I(RRC,"[MIB-SL] sfn %x, subframe %x\n", (uint32_t)frame, (uint8_t)subframe);
+   if ((frame&255) == 0) LOG_D(RRC,"[MIB-SL] sfn %x, subframe %x\n", (uint32_t)frame, (uint8_t)subframe);
 
 
   enc_rval = uper_encode_to_buffer(&asn_DEF_SBCCH_SL_BCH_Message,

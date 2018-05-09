@@ -1269,7 +1269,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, int frame_tx, int subframe_tx, uin
 
 //  if ((frame_tx%100) == 0)
 
-   LOG_I(PHY,"[UE %d] Frame %d, subframe %d: ulsch_start = %d (rxoff %d, HW TA %d, timing advance %d, TA_offset %d, empty subframe %d\n",
+   LOG_D(PHY,"[UE %d] Frame %d, subframe %d: ulsch_start = %d (rxoff %d, HW TA %d, timing advance %d, TA_offset %d, empty subframe %d\n",
 	 ue->Mod_id,frame_tx,subframe_tx,
 	 ulsch_start,
 	 ue->rx_offset,

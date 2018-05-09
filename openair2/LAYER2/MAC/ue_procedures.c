@@ -3152,7 +3152,7 @@ SLSS_t *ue_get_slss(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t su
 						0,
 						0); // call RRC get check for SL-MIB
 
-  LOG_I(MAC,"frame_tx %d, subframe %d,slss->SL_OffsetIndicator %d, mib length %d, slmib %p\n",
+  LOG_D(MAC,"frame_tx %d, subframe %d,slss->SL_OffsetIndicator %d, mib length %d, slmib %p\n",
 	frame_tx,subframe_tx,slss->SL_OffsetIndicator,slss->slmib_length, slss->slmib);
   return(slss);
 }

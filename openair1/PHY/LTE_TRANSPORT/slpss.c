@@ -74,7 +74,7 @@ int generate_slpss(int32_t **txdataF,
   a = (amp*SQRT_18_OVER_32_Q15)>>(15-2);
   //printf("[PSS] amp=%d, a=%d\n",amp,a);
 
-  LOG_I(PHY,"Generating PSS in subframe %d, symbol %d, amp %d (%d) => %p\n",
+  LOG_D(PHY,"Generating PSS in subframe %d, symbol %d, amp %d (%d) => %p\n",
 	subframe,symbol,a,amp,
 	&((short*)txdataF[0])[subframe*frame_parms->samples_per_tti]);
   

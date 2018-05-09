@@ -758,7 +758,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
       LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
       exit_fun("nothing to add");
     }
-    LOG_I(PHY,"before pthread_cond_wait : instance_cnt_rxtx %d\n",proc->instance_cnt_rxtx);
+    LOG_D(PHY,"before pthread_cond_wait : instance_cnt_rxtx %d\n",proc->instance_cnt_rxtx);
     while (proc->instance_cnt_rxtx < 0) {
       // most of the time, the thread is waiting here
       pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx );
@@ -1679,7 +1679,7 @@ void *UE_threadSL(void *arg) {
     int is_synchronized    = UE->is_synchronizedSL;
     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
 
-    LOG_I(PHY,"UHD Thread SL (is_synchronized %d, is_SynchRef %d\n",
+    LOG_D(PHY,"UHD Thread SL (is_synchronized %d, is_SynchRef %d\n",
 	  is_synchronized,UE->is_SynchRef);
     
     if (is_synchronized == 0 && UE->is_SynchRef == 0) {
@@ -1745,7 +1745,7 @@ void *UE_threadSL(void *arg) {
 	// update thread index for received subframe
 	UE->current_thread_id[sub_frame] = thread_idx;
 	
-	LOG_I(PHY,"Process SL Subframe %d thread Idx %d \n", sub_frame, UE->current_thread_id[sub_frame]);
+	LOG_D(PHY,"Process SL Subframe %d thread Idx %d \n", sub_frame, UE->current_thread_id[sub_frame]);
 	
 	thread_idx++;
 	if(thread_idx>=RX_NB_TH)
@@ -1835,7 +1835,7 @@ void *UE_threadSL(void *arg) {
 	  proc->timestamp_tx = timestamp+(4*UE->frame_parms.samples_per_tti);
 	  	  
 	  proc->instance_cnt_rxtx++;
-	  LOG_I( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
+	  LOG_D( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
 	  if (proc->instance_cnt_rxtx == 0) {
 	    if (pthread_cond_signal(&proc->cond_rxtx) != 0) {
 	      LOG_E( PHY, "[SCHED][UE %d] ERROR pthread_cond_signal for UE RX thread\n", UE->Mod_id);
