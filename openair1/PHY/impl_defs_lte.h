@@ -977,7 +977,11 @@ typedef struct {
   /// - first index: rx antenna [0..nb_antennas_rx[
   /// - second index: sample [0..FRAME_LENGTH_COMPLEX_SAMPLES+2048[
   int32_t **rxdata;
-
+  /// \brief holds the received data vector used for SL primary synchronization (40ms)
+  /// - first index: rx antenna [0..nb_antennas_rx[
+  /// - second index: sample [0..4*FRAME_LENGTH_COMPLEX_SAMPLES+2048[    
+  int16_t **rxdata_syncSL;
+  
   LTE_UE_COMMON_PER_THREAD common_vars_rx_data_per_thread[RX_NB_TH_MAX];
 
   /// holds output of the sync correlator

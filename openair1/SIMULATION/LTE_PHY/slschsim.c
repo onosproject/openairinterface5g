@@ -63,6 +63,8 @@ int main(int argc, char **argv) {
   int log_level = LOG_INFO;
   SLSCH_t slsch;
   SLDCH_t sldch;
+  SLSS_t slss;
+  
   SCM_t channel_model=AWGN;
   UE_rxtx_proc_t proc;
   double snr0 = 35;
@@ -74,8 +76,12 @@ int main(int argc, char **argv) {
   int nb_rb=20;
   char channel_model_input[20];
   int pscch_errors=0;
+  int do_SLSS=0;
 
-
+  int index;
+  int64_t psslevel;
+  int64_t avglevel;
+  
   AssertFatal(load_configmodule(argc,argv) != NULL,
 	      "cannot load configuration module, exiting\n");
   logInit();
@@ -86,7 +92,7 @@ int main(int argc, char **argv) {
 
   char c;
 
-  while ((c = getopt (argc, argv, "hf:m:n:g:r:z:w:s:")) != -1) {
+  while ((c = getopt (argc, argv, "hf:m:n:g:r:z:w:s:S")) != -1) {
     switch (c) {
     case 'f':
       snr_step= atof(optarg);
@@ -179,6 +185,10 @@ int main(int argc, char **argv) {
       }
 
       break;
+    case 'S':
+      do_SLSS=1;
+      break;
+      
     case 'h':
     default:
       printf("%s -h(elp) -a(wgn on) -m mcs -n n_frames -s snr0 -z RXant \n",argv[0]);
@@ -191,6 +201,7 @@ int main(int argc, char **argv) {
       printf("-r number of resource blocks\n");
       printf("-g [A:M] Use 3GPP 25.814 SCM-A/B/C/D('A','B','C','D') or 36-101 EPA('E'), EVA ('F'),ETU('G') models (ignores delay spread and Ricean factor), Rayghleigh8 ('H'), Rayleigh1('I'), Rayleigh1_corr('J'), Rayleigh1_anticorr ('K'), Rice8('L'), Rice1('M')\n");
       printf("-z Number of RX antennas used in UE\n");
+      printf("-S Run SL synchronization procedures\n");
       exit(1);
       break;
     }
@@ -212,7 +223,9 @@ int main(int argc, char **argv) {
 		 0, //pa
 		 0, //threequart_fs
 		 1, //osf
-		 0); //perfect_ce
+		 0, //perfect_ce
+		 1,  //sidelink_active
+		 1); //SLonly 
 
   UE2UE[0][0][0] = new_channel_desc_scm(UE->frame_parms.nb_antennas_tx,
 					UE->frame_parms.nb_antennas_rx,
@@ -229,8 +242,11 @@ int main(int argc, char **argv) {
   PHY_vars_UE_g[0] = (PHY_VARS_UE**) malloc(sizeof(PHY_VARS_UE*));
   PHY_vars_UE_g[0][0] = UE;
 
+  
   init_lte_ue_transport(UE,0);
 
+  if (do_SLSS==1) lte_sync_time_init(&UE->frame_parms);
+  
   UE->rx_total_gain_dB = 120.0;
   UE->rx_offset = 0;
   UE->timing_advance = 0;
@@ -238,6 +254,8 @@ int main(int argc, char **argv) {
   UE->hw_timing_advance = 0;
   UE->slsch = &slsch;
   UE->sldch = &sldch;
+  UE->slss  = &slss;
+
   // SLSCH/CCH Configuration
   slsch.N_SL_RB_data                   = 20;
   slsch.prb_Start_data                 = 5;
@@ -253,7 +271,7 @@ int main(int argc, char **argv) {
   slsch.SL_SC_Period              = 320;
   slsch.bitmap1                   = 0xffffffffff;
   // SCI Paramters and Payload
-  slsch.n_pscch                   = 1111;
+  slsch.n_pscch                   = 13;
   slsch.format                    = 0;
   slsch.freq_hopping_flag         = 0;
   slsch.resource_block_coding     = 127;
@@ -290,6 +308,19 @@ int main(int argc, char **argv) {
   sldch.bitmap1                   = 0xffff;
   sldch.bitmap_length                   = 16;
   sldch.payload_length            = 256;
+
+  memset((void*)&slss,0,sizeof(slss));
+  
+  if (do_SLSS == 1) {
+    slss.SL_OffsetIndicator         = 0;
+    slss.slss_id                    = 169;
+    slss.slmib_length               = 5;
+    slss.slmib[0]                   = 0;
+    slss.slmib[1]                   = 1;
+    slss.slmib[2]                   = 2;
+    slss.slmib[3]                   = 3;
+    slss.slmib[4]                   = 4;
+  }
   // copy sidelink parameters, PSCCH and PSSCH payloads will get overwritten
   memcpy((void*)&UE->slsch_rx,(void*)UE->slsch,sizeof(SLSCH_t));
   
@@ -312,7 +343,9 @@ int main(int argc, char **argv) {
       UE->pscch_coded=0;
       UE->pscch_generated=0;
       UE->psdch_generated=0;
+
       for (int absSF=0;absSF<10240;absSF++) {
+	UE->slss_generated=0;
 	frame = absSF/10;
 	subframe= absSF%10;
 	check_and_generate_psdch(UE,frame,subframe);
@@ -321,14 +354,22 @@ int main(int argc, char **argv) {
 	proc.subframe_tx = subframe;
 	proc.frame_tx    = frame;
 	check_and_generate_pssch(UE,&proc,frame,subframe);
-	if (UE->psdch_generated>0 || UE->pscch_generated > 0 || UE->pssch_generated > 0) {
+	check_and_generate_slss(UE,frame,subframe);
+	
+	if (UE->psdch_generated>0 || UE->pscch_generated > 0 || UE->pssch_generated > 0 || UE->slss_generated > 0) {
 	  AssertFatal(UE->pscch_generated<3,"Illegal pscch_generated %d\n",UE->pscch_generated);
 	  // FEP
 	  ulsch_common_procedures(UE,&proc,0);
-	  //	write_output("txsig0SL.m","txs0",&UE->common_vars.txdata[0][UE->frame_parms.samples_per_tti*subframe],UE->frame_parms.samples_per_tti,1,1);
-	  printf("Running do_SL_sig for subframe %d, slot_ind %d\n",subframe,UE->pscch_generated);
+	  //	  write_output("txsig0SL.m","txs0",&UE->common_vars.txdata[0][UE->frame_parms.samples_per_tti*subframe],UE->frame_parms.samples_per_tti,1,1);
+	  //	  printf("Running do_SL_sig for frame %d subframe %d (%d,%d,%d,%d)\n",frame,subframe,UE->slss_generated,UE->pscch_generated,UE->psdch_generated,UE->pssch_generated);
 	  do_SL_sig(0,UE2UE,subframe,UE->pscch_generated,&UE->frame_parms,frame,0);
-	  //	write_output("rxsig0.m","rxs0",&UE->common_vars.rxdata[0][UE->frame_parms.samples_per_tti*subframe],UE->frame_parms.samples_per_tti,1,1);
+	  //	  write_output("rxsig0.m","rxs0",&UE->common_vars.rxdata[0][UE->frame_parms.samples_per_tti*subframe],UE->frame_parms.samples_per_tti,1,1);
+	  if (do_SLSS==1) 
+	    memcpy((void*)&UE->common_vars.rxdata_syncSL[0][(((frame&3)*10)+subframe)*2*UE->frame_parms.samples_per_tti],
+		   (void*)&UE->common_vars.rxdata[0][subframe*UE->frame_parms.samples_per_tti],
+		   2*UE->frame_parms.samples_per_tti*sizeof(int16_t));
+	  //	  write_output("rxsyncb0.m","rxsyncb0",(void*)UE->common_vars.rxdata_syncSL[0],(UE->frame_parms.samples_per_tti),1,1);
+	  //	  exit(-1);
 	  UE->pscch_generated = 0;
 	  UE->pssch_generated = 0;
 	  UE->psdch_generated = 0;
@@ -336,7 +377,26 @@ int main(int argc, char **argv) {
 	}
 	rx_slcch(UE,frame,subframe);
 	rx_slsch(UE,&proc,frame,subframe);
+        if ((absSF % 40) == 3 && do_SLSS==1) {
+	  printf("Running Initial synchronization for SL\n");
+	  // initial synch for SL
 
+	  //	  write_output("rxsyncb.m","rxsyncb",(void*)UE->common_vars.rxdata_syncSL[0],(UE->frame_parms.samples_per_tti),1,1);
+	  UE->rx_offsetSL = lte_sync_timeSL(UE,
+					    &index,
+					    &psslevel,
+					    &avglevel);
+	  printf("absSF %d: Frame %d, index %d, psslevel %lld dB avglevel %lld dB => %d sample offset\n",
+		 absSF,frame,index,dB_fixed(psslevel),dB_fixed(avglevel),UE->rx_offsetSL);
+	  int32_t sss_metric;
+	  int32_t phase_max;
+	  rx_slsss(UE,&sss_metric,&phase_max,index,subframe);
+	  
+	  //	  write_output("rxsynca.m","rxsynca",(void*)UE->common_vars.rxdata_syncSL[0],(UE->frame_parms.samples_per_tti),1,1);
+
+	  //	  exit(-1);
+	}
+	  
 	UE->sl_fep_done = 0;
 	if ((absSF%320) == 319)  {
 	  if (UE->slcch_received == 0) pscch_errors++;

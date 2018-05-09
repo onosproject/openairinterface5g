@@ -346,7 +346,9 @@ void lte_param_init(PHY_VARS_eNB **eNBp,
 		    uint8_t pa,
 		    uint8_t threequarter_fs,
                     uint8_t osf,
-		    uint32_t perfect_ce);
+		    uint32_t perfect_ce,
+		    uint8_t sidelink_active,
+		    uint8_t SLonly);
 
 
 #if defined(Rel10) || defined(Rel14)

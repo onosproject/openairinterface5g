@@ -455,11 +455,12 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
 
   int32_t *txptr;
 
-  for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
-    memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
-           0,
-           ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
-  }
+  if (ue->generate_ul_signal[subframe_tx][0] == 0) 
+    for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
+      memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
+	     0,
+	     ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
+    }
 
   for (int j=0,l=0; l<Nsymb2; l++) {
     re_offset = re_offset0;
@@ -591,11 +592,12 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
   tx_amp = AMP;
 #endif  
 
-  for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
-    memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
-           0,
-           ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
-  }
+  if (ue->generate_ul_signal[subframe_tx][0] == 0) 
+    for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
+      memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
+	     0,
+	     ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
+    }
 
   ulsch_modulation(ue->common_vars.txdataF,
 		   tx_amp,

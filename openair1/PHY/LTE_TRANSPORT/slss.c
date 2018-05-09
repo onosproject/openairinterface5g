@@ -43,6 +43,8 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
   int tx_amp;
 
+  AssertFatal(slss!=NULL,"slss is null\n");
+  
   LOG_I(PHY,"check_and_generate_slss: frame_tx %d, subframe_tx %d : slss->SL_offsetIndicator %d, slss->slmib_length %d\n",
 	frame_tx,subframe_tx,slss->SL_OffsetIndicator, slss->slmib_length);
   
@@ -66,33 +68,37 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   tx_amp = AMP;
 #endif  
 
-  for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
-    memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
-           0,
-	   ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
-  }
+  if (ue->generate_ul_signal[subframe_tx][0] == 0) 
+    for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
+      memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
+	     0,
+	     ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
+    }
 
 
   // PSS
+  
   generate_slpss(ue->common_vars.txdataF,
                  tx_amp,
                  &ue->frame_parms,
                  1,
                  subframe_tx
-		 );
+		 );  
+  
   generate_slpss(ue->common_vars.txdataF,
                  tx_amp,
                  &ue->frame_parms,
                  2,
                  subframe_tx
 		 );
+  /*  
   generate_slbch(ue->common_vars.txdataF,
                  tx_amp,
                  &ue->frame_parms,
 		 subframe_tx,
 		 ue->slss->slmib);
-    
-
+  */
+  
   generate_slsss(ue->common_vars.txdataF,
 		 subframe_tx,
                  tx_amp,
@@ -104,8 +110,9 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
                  &ue->frame_parms,
 		 12);
   
-  ue->sl_chan = PSBCH;
   
+  ue->sl_chan = PSBCH;
+    
   generate_drs_pusch(ue,
 		     NULL,
 		     0,
@@ -117,8 +124,10 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
                      NULL,
                      0);
   
+  
   ue->generate_ul_signal[subframe_tx][0] = 1;
-
+  ue->slss_generated = 1;
+  
   LOG_D(PHY,"ULSCH (after slss) : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
     
   //  write_output("txdataF_pre.m","txF_pre",&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size,1,1);

@@ -84,7 +84,9 @@ int generate_slbch(int32_t **txdataF,
 
   for (symb=0;symb<10;symb++) { 
     k = (frame_parms->ofdm_symbol_size<<1)-72;
-    txptr = (int16_t*)&txdataF[0][subframe*Nsymb*frame_parms->ofdm_symbol_size+(symb*frame_parms->ofdm_symbol_size)];
+    printf("Generating PSBCH in symbol %d offset %d\n",symb,
+	   (subframe*Nsymb*frame_parms->ofdm_symbol_size)+(symb*frame_parms->ofdm_symbol_size));
+    txptr = (int16_t*)&txdataF[0][(subframe*Nsymb*frame_parms->ofdm_symbol_size)+(symb*frame_parms->ofdm_symbol_size)];
     // first half (negative frequencies)
     for (int i=0;i<72;i++) {
       if (*eptr++ == 1) txptr[k] =-a;

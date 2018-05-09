@@ -703,8 +703,21 @@ static void *UE_thread_synchSL(void *arg)
     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synchSL), "");
    
     // Do initial synch here
+    LOG_I(PHY,"Running PSS timing estimation first\n");
+    int MLind;
+    int64_t maxlev;
+    int64_t avglev;
+    int rxoffset = lte_sync_timeSL(UE,
+				   &MLind,
+				   &maxlev,
+				   &avglev);
+    if (rxoffset>=0) LOG_I(PHY,"Most likely Nid_SL/168 = %d with rxoffset %d, lev %d dB, avg %d dB\n",
+			   MLind,rxoffset,dB_fixed(maxlev),dB_fixed(avglev));
 
+    AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
+    UE->proc.instance_cnt_synchSL--;
     UE->is_synchronizedSL = 0;
+    AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synchSL), "");
   }
 }
 /*!
@@ -1659,6 +1672,7 @@ void *UE_threadSL(void *arg) {
 
   AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0,"Could not start the device");
 
+  
   while (!oai_exit) {
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
     int instance_cnt_synch = UE->proc.instance_cnt_synchSL;
@@ -1670,9 +1684,9 @@ void *UE_threadSL(void *arg) {
     
     if (is_synchronized == 0 && UE->is_SynchRef == 0) {
       if (instance_cnt_synch < 0) {  // we can invoke the synch
-	// grab 10 ms of signal and wakeup synch thread
+	// grab 40 ms of signal and wakeup synch thread
 	for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
-	  rxp[i] = (void*)&UE->common_vars.rxdata[i][0];
+	  rxp[i] = (void*)&UE->common_vars.rxdata_syncSL[i][0];
 
 	AssertFatal( UE->frame_parms.samples_per_tti*10 ==
 		     UE->rfdevice.trx_read_func(&UE->rfdevice,
@@ -1844,6 +1858,9 @@ void *UE_threadSL(void *arg) {
       } // start_rx_stream==1
     }   //  UE->is_synchronized==0 && UE->is_SynchRef==0
   } // while !oai_exit
+
+  for (int i=0; i<UE->frame_parms.nb_antennas_rx;i++) free(rxdata[i]);
+  
   return NULL;
 }
 

@@ -2369,6 +2369,9 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
       
      }
   }
+  ue->slss_generated=0;
+
+  
   // check for SLBCH/SLSS
   AssertFatal(0==pthread_mutex_lock(&ue->slss_mutex),"");
   if ((ue->slss = ue_get_slss(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) check_and_generate_slss(ue,frame_tx,subframe_tx);

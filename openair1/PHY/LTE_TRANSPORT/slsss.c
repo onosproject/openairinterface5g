@@ -307,26 +307,30 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int
 #endif
     // Do FFTs for SSS/PSS
     // SSS
+    LOG_I(PHY,"Doing SSS detection at offset %d\n",ue->rx_offsetSL);
+    
     RU_t ru_tmp;
     memset((void*)&ru_tmp,0,sizeof(RU_t));
     
     memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
     ru_tmp.N_TA_offset=0;
-    ru_tmp.common.rxdata = ue->common_vars.rxdata;
-    ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
+    ru_tmp.common.rxdata_7_5kHz     = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*)); 
+    for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) 
+      ru_tmp.common.rxdata_7_5kHz[aa] = (int32_t*)&rxdata_7_5kHz[aa][ue->rx_offsetSL*2];
     ru_tmp.common.rxdataF = (int32_t**)rxdataF;
     ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
     
-
-    remove_7_5_kHz(&ru_tmp,(subframe_rx<<1));
-    remove_7_5_kHz(&ru_tmp,(subframe_rx<<1)+1);
+    
+    //    remove_7_5_kHz(&ru_tmp,(subframe_rx<<1));
+    //    remove_7_5_kHz(&ru_tmp,(subframe_rx<<1)+1);
     // PSS
     slot_fep_ul(&ru_tmp,1,0,0);
     slot_fep_ul(&ru_tmp,2,0,0);
     // SSS
-    slot_fep_ul(&ru_tmp,11,1,0);
-    slot_fep_ul(&ru_tmp,12,1,0);
-
+    slot_fep_ul(&ru_tmp,4,1,0);
+    slot_fep_ul(&ru_tmp,5,1,0);
+    
+    free(ru_tmp.common.rxdata_7_5kHz); 
   } else { // TDD
     AssertFatal(1==0,"TDD not supported for Sidelink\n");
   }
@@ -337,12 +341,12 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int
 		    pss1_ext,
 		    sss1_ext,
 		    0);
-  /*
-  write_output("rxsig0.m","rxs0",&ue->common_vars.rxdata[0][0],ue->frame_parms.samples_per_tti,1,1);
-  write_output("rxdataF0.m","rxF0",&ue->common_vars.rxdataF[0][0],2*14*ue->frame_parms.ofdm_symbol_size,2,1);
-  write_output("pss_ext0.m","pssext0",pss_ext,72,1,1);
+  
+  write_output("rxdataF0.m","rxF0",&rxdataF[0][0],2*14*ue->frame_parms.ofdm_symbol_size,1,1);
+  write_output("pss_ext0.m","pssext0",pss0_ext,72,1,1);
   write_output("sss0_ext0.m","sss0ext0",sss0_ext,72,1,1);
-  */
+
+  exit(-1);
 
   // get conjugated channel estimate from PSS (symbol 6), H* = R* \cdot PSS
   // and do channel estimation and compensation based on PSS
