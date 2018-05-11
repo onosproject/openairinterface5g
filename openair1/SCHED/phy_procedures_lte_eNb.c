@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.1  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.0  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -26,6 +26,17 @@
  * \version 0.1
  * \company Eurecom
  * \email: knopp@eurecom.fr,florian.kaltenberger@eurecom.fr,navid.nikaein@eurecom.fr, x.foukas@sms.ed.ac.uk
+ * \note
+ * \warning
+ */
+ 
+/*! \file phy_procedures_lte_eNB.c
+ * \brief Design the function of "phy_procedures_eNB_TX" as PHY-DL master threads
+ * \author Terng-Yin Hsu, Shao-Ying Yeh (fdragon)
+ * \date 2018
+ * \version 0.1, based on 67df8e0e
+ * \company NCTU
+ * \email: tyhsu@cs.nctu.edu.tw, fdragon.cs96g@g2.nctu.edu.tw
  * \note
  * \warning
  */
@@ -74,6 +85,19 @@
 #define NS_PER_SLOT 500000
 
 #define PUCCH 1
+
+//DLSH thread
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h> 
+#include <string.h>
+#include <semaphore.h>
+#include <sys/sysinfo.h>
+#include <sys/signal.h>
+#include <assert.h>
+#include <sched.h>
+#include <pthread.h>
 
 void exit_fun(const char* s);
 
@@ -1169,25 +1193,25 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 
 void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 			   eNB_rxtx_proc_t *proc,
-                           relaying_type_t r_type,
+			   relaying_type_t r_type,
 			   PHY_VARS_RN *rn,
 			   int do_meas,
 			   int do_pdcch_flag)
 {
   UNUSED(rn);
-  int frame=proc->frame_tx;
+  //int frame=proc->frame_tx;
   int subframe=proc->subframe_tx;
   //  uint16_t input_buffer_length;
-  uint32_t i,j,aa;
-  uint8_t harq_pid;
-  DCI_PDU *DCI_pdu;
-  DCI_PDU DCI_pdu_tmp;
-  int8_t UE_id=0;
-  uint8_t num_pdcch_symbols=0;
-  uint8_t ul_subframe;
-  uint32_t ul_frame;
+  //uint32_t i,j,aa;
+  //uint8_t harq_pid;
+  //DCI_PDU *DCI_pdu;
+  //DCI_PDU DCI_pdu_tmp;
+  //int8_t UE_id=0;
+  //uint8_t num_pdcch_symbols=0;
+  //uint8_t ul_subframe;
+  //uint32_t ul_frame;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
-  DCI_ALLOC_t *dci_alloc=(DCI_ALLOC_t *)NULL;
+  //DCI_ALLOC_t *dci_alloc=(DCI_ALLOC_t *)NULL;
 
   int offset = eNB->CC_id;//proc == &eNB->proc.proc_rxtx[0] ? 0 : 1;
 
@@ -1205,328 +1229,27 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
   T(T_ENB_PHY_DL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
 
-  for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-    // If we've dropped the UE, go back to PRACH mode for this UE
-    if ((frame==0)&&(subframe==0)) {
-      if (eNB->UE_stats[i].crnti > 0) {
-	LOG_I(PHY,"UE %d : rnti %x\n",i,eNB->UE_stats[i].crnti);
-      }
-    }
-    if (eNB->UE_stats[i].ulsch_consecutive_errors == ULSCH_max_consecutive_errors) {
-      LOG_W(PHY,"[eNB %d, CC %d] frame %d, subframe %d, UE %d: ULSCH consecutive error count reached %u, triggering UL Failure\n",
-            eNB->Mod_id,eNB->CC_id,frame,subframe, i, eNB->UE_stats[i].ulsch_consecutive_errors);
-      eNB->UE_stats[i].ulsch_consecutive_errors=0;
-      mac_xface->UL_failure_indication(eNB->Mod_id,
-				       eNB->CC_id,
-				       frame,
-				       eNB->UE_stats[i].crnti,
-				       subframe);
-				       
-    }
-	
+  eNB->complete_m2p = 0;
+  eNB->complete_dci = 0;
+  eNB->complete_sch_SR = 0;
+  pthread_cond_signal(&eNB->thread_m2p.cond_tx);
+  while(eNB->complete_m2p!=1);
+  
+  eNB->thread_cch.r_type = r_type;
+  eNB->thread_cch.do_pdcch_flag = do_pdcch_flag;
+  eNB->thread_cch.rn = rn;
+  eNB->complete_cch = 0;
+  pthread_cond_signal(&eNB->thread_cch.cond_tx);
+  while(eNB->complete_dci!=1);
 
-  }
+  eNB->complete_pdsch[0]=0;
+  eNB->complete_pdsch[1]=0;
+  pthread_cond_signal(&eNB->thread_g[0].cond_tx);
+  pthread_cond_signal(&eNB->thread_g[1].cond_tx);
 
-
-  // Get scheduling info for next subframe
-  // This is called only for the CC_id = 0 and triggers scheduling for all CC_id's
-  if (eNB->mac_enabled==1) {
-    if (eNB->CC_id == 0) {
-      mac_xface->eNB_dlsch_ulsch_scheduler(eNB->Mod_id,0,frame,subframe);//,1);
-    }
-  }
-
-  // clear the transmit data array for the current subframe
-  if (eNB->abstraction_flag==0) {
-    for (aa=0; aa<fp->nb_antenna_ports_eNB; aa++) {      
-      memset(&eNB->common_vars.txdataF[0][aa][subframe*fp->ofdm_symbol_size*(fp->symbols_per_tti)],
-             0,fp->ofdm_symbol_size*(fp->symbols_per_tti)*sizeof(int32_t));
-    }
-  }
-
-  if (is_pmch_subframe(frame,subframe,fp)) {
-    pmch_procedures(eNB,proc,rn,r_type);
-  }
-  else {
-    // this is not a pmch subframe, so generate PSS/SSS/PBCH
-    common_signal_procedures(eNB,proc);
-  }
-
-#if defined(SMBV) 
-
-  // PBCH takes one allocation
-  if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4)) {
-    if (subframe==0)
-      smbv_alloc_cnt++;
-  }
-
-#endif
-
-  if (eNB->mac_enabled==1) {
-    // Parse DCI received from MAC
-    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,1);
-    DCI_pdu = mac_xface->get_dci_sdu(eNB->Mod_id,
-				     eNB->CC_id,
-				     frame,
-				     subframe);
-  }
-  else {
-    DCI_pdu = &DCI_pdu_tmp;
-#ifdef EMOS_CHANNEL
-    fill_dci_emos(DCI_pdu,eNB);
-#else
-    fill_dci(DCI_pdu,eNB,proc);
-    // clear previous allocation information for all UEs
-    for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-      if (eNB->dlsch[i][0]){
-        for (j=0; j<8; j++)
-          eNB->dlsch[i][0]->harq_processes[j]->round = 0;
-      }
-    }
-
-#endif
-  }
-
-  // clear existing ulsch dci allocations before applying info from MAC  (this is table
-  ul_subframe = pdcch_alloc2ul_subframe(fp,subframe);
-  ul_frame = pdcch_alloc2ul_frame(fp,frame,subframe);
-
-  if ((subframe_select(fp,ul_subframe)==SF_UL) ||
-      (fp->frame_type == FDD)) {
-    harq_pid = subframe2harq_pid(fp,ul_frame,ul_subframe);
-
-    // clear DCI allocation maps for new subframe
-    for (i=0; i<NUMBER_OF_UE_MAX; i++)
-      if (eNB->ulsch[i]) {
-        eNB->ulsch[i]->harq_processes[harq_pid]->dci_alloc=0;
-        eNB->ulsch[i]->harq_processes[harq_pid]->rar_alloc=0;
-      }
-  }
-
-  // clear previous allocation information for all UEs
-  for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-    if (eNB->dlsch[i][0])
-      eNB->dlsch[i][0]->subframe_tx[subframe] = 0;
-  }
-
-  /* save old HARQ information needed for PHICH generation */
-  for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-    if (eNB->ulsch[i]) {
-      /* Store first_rb and n_DMRS for correct PHICH generation below.
-       * For PHICH generation we need "old" values of last scheduling
-       * for this HARQ process. 'generate_eNB_dlsch_params' below will
-       * overwrite first_rb and n_DMRS and 'generate_phich_top', done
-       * after 'generate_eNB_dlsch_params', would use the "new" values
-       * instead of the "old" ones.
-       *
-       * This has been tested for FDD only, may be wrong for TDD.
-       *
-       * TODO: maybe we should restructure the code to be sure it
-       *       is done correctly. The main concern is if the code
-       *       changes and first_rb and n_DMRS are modified before
-       *       we reach here, then the PHICH processing will be wrong,
-       *       using wrong first_rb and n_DMRS values to compute
-       *       ngroup_PHICH and nseq_PHICH.
-       *
-       * TODO: check if that works with TDD.
-       */
-      if ((subframe_select(fp,ul_subframe)==SF_UL) ||
-          (fp->frame_type == FDD)) {
-        harq_pid = subframe2harq_pid(fp,ul_frame,ul_subframe);
-        eNB->ulsch[i]->harq_processes[harq_pid]->previous_first_rb =
-            eNB->ulsch[i]->harq_processes[harq_pid]->first_rb;
-        eNB->ulsch[i]->harq_processes[harq_pid]->previous_n_DMRS =
-            eNB->ulsch[i]->harq_processes[harq_pid]->n_DMRS;
-      }
-    }
-  }
-
-
-  // loop over all DCIs for this subframe to generate DLSCH allocations
-  for (i=0; i<DCI_pdu->Num_dci; i++) {
-    LOG_D(PHY,"[eNB] Subframe %d: DCI %d/%d : rnti %x, CCEind %d\n",subframe,i,DCI_pdu->Num_dci,DCI_pdu->dci_alloc[i].rnti,DCI_pdu->dci_alloc[i].firstCCE);
-    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].rnti);
-    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].format);
-    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].firstCCE);
-    dci_alloc = &DCI_pdu->dci_alloc[i];
-
-    if ((dci_alloc->rnti<= P_RNTI) && 
-	(dci_alloc->ra_flag!=1)) {
-      if (eNB->mac_enabled==1)
-	UE_id = find_ue((int16_t)dci_alloc->rnti,eNB);
-      else
-	UE_id = i;
-    }
-    else UE_id=0;
-    
-    generate_eNB_dlsch_params(eNB,proc,dci_alloc,UE_id);
-
-  }
-
-  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,(frame*10)+subframe);
-
-  // Apply physicalConfigDedicated if needed
-  // This is for UEs that have received this IE, which changes these DL and UL configuration, we apply after a delay for the eNodeB UL parameters
-  phy_config_dedicated_eNB_step2(eNB);
-
-  // Now loop again over the DCIs for UL configuration
-  for (i=0; i<DCI_pdu->Num_dci; i++) {
-    dci_alloc = &DCI_pdu->dci_alloc[i];
-
-    if (dci_alloc->format == format0) {  // this is a ULSCH allocation
-      if (eNB->mac_enabled==1)
-	UE_id = find_ue((int16_t)dci_alloc->rnti,eNB);
-      else
-	UE_id = i;
-      
-      if (UE_id<0) { // should not happen, log an error and exit, this is a fatal error
-	LOG_E(PHY,"[eNB %"PRIu8"] Frame %d: Unknown UE_id for rnti %"PRIx16"\n",eNB->Mod_id,frame,dci_alloc->rnti);
-	mac_xface->macphy_exit("FATAL\n"); 
-      }
-      generate_eNB_ulsch_params(eNB,proc,dci_alloc,UE_id);
-    }
-  }
-
-
-
-
-
-  // if we have DCI to generate do it now
-  if (DCI_pdu->Num_dci>0) {
-
-
-  } else { // for emulation!!
-    eNB->num_ue_spec_dci[(subframe)&1]=0;
-    eNB->num_common_dci[(subframe)&1]=0;
-  }
-
-
-  if (eNB->abstraction_flag == 0) {
-    if (do_pdcch_flag) {
-      if (DCI_pdu->Num_dci > 0) {
-	LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (Num_dci=%d)\n",eNB->Mod_id,frame, subframe,
-	      DCI_pdu->Num_dci);
-      }
-
-      num_pdcch_symbols = generate_dci_top(DCI_pdu->Num_dci,
-					   DCI_pdu->dci_alloc,
-					   0,
-					   AMP,
-					   fp,
-					   eNB->common_vars.txdataF[0],
-					   subframe);
-    }
-    else {
-      num_pdcch_symbols = DCI_pdu->num_pdcch_symbols;
-      LOG_D(PHY,"num_pdcch_symbols %"PRIu8" (Num_dci %d)\n",num_pdcch_symbols,
-	    DCI_pdu->Num_dci);
-    }
-  }
-
-#ifdef PHY_ABSTRACTION // FIXME this ifdef seems suspicious
-  else {
-    LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_to_emul\n",eNB->Mod_id,frame, subframe);
-    num_pdcch_symbols = generate_dci_top_emul(eNB,DCI_pdu->Num_dci,DCI_pdu->dci_alloc,subframe);
-  }
-
-#endif
-
-  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->num_pdcch_symbols);
-
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,0);
-
-#if defined(SMBV) 
-  // Sets up PDCCH and DCI table
-  if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4) && (DCI_pdu->Num_dci>0)) {
-    LOG_D(PHY,"[SMBV] Frame %3d, SF %d PDCCH, number of DCIs %d\n",frame,subframe,DCI_pdu->Num_dci);
-    dump_dci(fp,&DCI_pdu->dci_alloc[0]);
-    smbv_configure_pdcch(smbv_fname,(smbv_frame_cnt*10) + (subframe),num_pdcch_symbols,DCI_pdu->Num_dci);
-  }
-#endif
-
-  // Check for SI activity
-
-  if ((eNB->dlsch_SI) && (eNB->dlsch_SI->active == 1)) {
-
-    pdsch_procedures(eNB,proc,eNB->dlsch_SI,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,0,num_pdcch_symbols);
-
-#if defined(SMBV) 
-
-    // Configures the data source of allocation (allocation is configured by DCI)
-    if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4)) {
-      LOG_D(PHY,"[SMBV] Frame %3d, Configuring SI payload in SF %d alloc %"PRIu8"\n",frame,(smbv_frame_cnt*10) + (subframe),smbv_alloc_cnt);
-      smbv_configure_datalist_for_alloc(smbv_fname, smbv_alloc_cnt++, (smbv_frame_cnt*10) + (subframe), DLSCH_pdu, input_buffer_length);
-    }
-
-#endif
-  }
-
-  // Check for RA activity
-  if ((eNB->dlsch_ra) && (eNB->dlsch_ra->active == 1)) {
-
-#if defined(SMBV) 
-
-    // Configures the data source of allocation (allocation is configured by DCI)
-    if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4)) {
-      LOG_D(PHY,"[SMBV] Frame %3d, Configuring RA payload in SF %d alloc %"PRIu8"\n",frame,(smbv_frame_cnt*10) + (subframe),smbv_alloc_cnt);
-      smbv_configure_datalist_for_alloc(smbv_fname, smbv_alloc_cnt++, (smbv_frame_cnt*10) + (subframe), dlsch_input_buffer, input_buffer_length);
-    }
-    
-#endif
-    
-    
-    LOG_D(PHY,"[eNB %"PRIu8"][RAPROC] Frame %d, subframe %d: Calling generate_dlsch (RA),Msg3 frame %"PRIu32", Msg3 subframe %"PRIu8"\n",
-	  eNB->Mod_id,
-	  frame, subframe,
-	  eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
-	  eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
-    
-    pdsch_procedures(eNB,proc,eNB->dlsch_ra,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,1,num_pdcch_symbols);
-    
-    
-    eNB->dlsch_ra->active = 0;
-  }
-
-  // Now scan UE specific DLSCH
-  for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++)
-    {
-      if ((eNB->dlsch[(uint8_t)UE_id][0])&&
-	  (eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
-	  (eNB->dlsch[(uint8_t)UE_id][0]->active == 1)) {
-
-	pdsch_procedures(eNB,proc,eNB->dlsch[(uint8_t)UE_id][0],eNB->dlsch[(uint8_t)UE_id][1],&eNB->UE_stats[(uint32_t)UE_id],0,num_pdcch_symbols);
-
-
-      }
-
-      else if ((eNB->dlsch[(uint8_t)UE_id][0])&&
-	       (eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
-	       (eNB->dlsch[(uint8_t)UE_id][0]->active == 0)) {
-
-	// clear subframe TX flag since UE is not scheduled for PDSCH in this subframe (so that we don't look for PUCCH later)
-	eNB->dlsch[(uint8_t)UE_id][0]->subframe_tx[subframe]=0;
-      }
-    }
-
-
-
-  // if we have PHICH to generate
-
-  if (is_phich_subframe(fp,subframe))
-    {
-      generate_phich_top(eNB,
-			 proc,
-			 AMP,
-			 0);
-    }
-
-  /*
-  if (frame>=10 && subframe>=9) {
-    write_output("/tmp/txsigF0.m","txsF0", &eNB->common_vars.txdataF[0][0][0],120*eNB->frame_parms.ofdm_symbol_size,1,1);
-    write_output("/tmp/txsigF1.m","txsF1", &eNB->common_vars.txdataF[0][0][0],120*eNB->frame_parms.ofdm_symbol_size,1,1);
-    abort();
-  }
-  */
+  while(!eNB->complete_pdsch[0]||!eNB->complete_pdsch[1]);
+  while(eNB->complete_cch!=1);
+  while(eNB->complete_sch_SR!=1);
 
 #ifdef EMOS
   phy_procedures_emos_eNB_TX(subframe, eNB);

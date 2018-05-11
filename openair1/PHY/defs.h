@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.1  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.0  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -29,6 +29,18 @@
  \note
  \warning
 */
+
+/*! \file PHY/defs.h
+ \brief Based on OAI structure definitions and add structure def. for multi-threads of PHY DL
+ \author Terng-Yin Hsu, Shao-Ying Yeh (fdragon)
+ \date 2018
+ \version 0.1, based on 67df8e0e
+ \company NCTU
+ \email: tyhsu@cs.nctu.edu.tw, fdragon.cs96g@g2.nctu.edu.tw
+ \note
+ \warning
+*/
+
 #ifndef __PHY_DEFS__H__
 #define __PHY_DEFS__H__
 
@@ -457,6 +469,36 @@ typedef struct {
   UE_rxtx_proc_t proc_rxtx[RX_NB_TH];
 } UE_proc_t;
 
+// ----------------Part of TX procedure----------------
+typedef struct{
+	pthread_t pthread_m2p;
+	pthread_cond_t cond_tx;
+	pthread_mutex_t mutex_tx;
+	pthread_attr_t attr_m2p;
+	//=====//
+}mac2phy;
+
+typedef struct{
+	pthread_t pthread_cch;
+	pthread_cond_t cond_tx;
+	pthread_mutex_t mutex_tx;
+	pthread_attr_t attr_cch;
+	//=====//
+	relaying_type_t r_type;
+	int do_pdcch_flag;
+	PHY_VARS_RN *rn;
+}control_channel;
+
+typedef struct{
+	pthread_t pthread_tx;
+	pthread_cond_t cond_tx;
+	pthread_mutex_t mutex_tx;
+	pthread_attr_t attr_sch;
+	//=====//
+	int id;
+}multi_share_channel;
+// [end] ----------------Part of TX procedure----------------
+
 /// Top-level PHY Data Structure for eNB
 typedef struct PHY_VARS_eNB_s {
   /// Module ID indicator for this instance
@@ -682,6 +724,23 @@ typedef struct PHY_VARS_eNB_s {
   openair0_device ifdevice;
   /// Pointer for ifdevice buffer struct
   if_buffer_t ifbuffer;
+  
+  //---------------- [start] Part of TX procedure----------------
+  // Thread
+  mac2phy thread_m2p;
+  control_channel thread_cch;
+  multi_share_channel thread_g[2];
+  //Thread 0 for even,
+  //Thread 1 for odd
+
+  //DONE
+  volatile uint8_t complete_m2p;
+  volatile uint8_t complete_dci; 
+  volatile uint8_t complete_cch;
+  volatile uint8_t complete_sch_SR;
+  volatile uint8_t complete_pdsch[2];
+
+  //---------------- [end] Part of TX procedure----------------
 
 } PHY_VARS_eNB;
 

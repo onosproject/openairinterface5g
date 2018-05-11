@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.1  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.0  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -29,6 +29,18 @@
  * \note
  * \warning
  */
+ 
+/*! \file lte-enb.c
+ * \brief Based on top-level threads for eNodeB and include multi-threads of PHY DL
+ * \author Terng-Yin Hsu, Shao-Ying Yeh (fdragon)
+ * \date 2018
+ * \version 0.1, based on 67df8e0e
+ * \company NCTU
+ * \email: tyhsu@cs.nctu.edu.tw, fdragon.cs96g@g2.nctu.edu.tw
+ * \note
+ * \warning
+ */
+ 
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,6 +56,12 @@
 #include <getopt.h>
 #include <sys/sysinfo.h>
 #include "rt_wrapper.h"
+
+// DLSH thread
+#include <semaphore.h>
+#include <assert.h>
+#include <pthread.h>
+//=====
 
 #include "time_utils.h"
 
@@ -1748,6 +1766,539 @@ static void* eNB_thread_single( void* param ) {
 extern void init_fep_thread(PHY_VARS_eNB *, pthread_attr_t *);
 extern void init_td_thread(PHY_VARS_eNB *, pthread_attr_t *);
 extern void init_te_thread(PHY_VARS_eNB *, pthread_attr_t *);
+extern void pdsch_procedures(PHY_VARS_eNB *,eNB_rxtx_proc_t *,LTE_eNB_DLSCH_t *, LTE_eNB_DLSCH_t *,LTE_eNB_UE_stats *,int ,int );
+extern void pmch_procedures(PHY_VARS_eNB *,eNB_rxtx_proc_t *,PHY_VARS_RN *,relaying_type_t );
+extern void common_signal_procedures (PHY_VARS_eNB *,eNB_rxtx_proc_t *);
+extern void generate_eNB_dlsch_params(PHY_VARS_eNB *,eNB_rxtx_proc_t *,DCI_ALLOC_t *,const int );
+extern void generate_eNB_ulsch_params(PHY_VARS_eNB *,eNB_rxtx_proc_t *,DCI_ALLOC_t *,const int );
+
+//----------------Part of TX procedure----------------
+static void *mac2phy_proc(void *ptr){
+	PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][0];
+	eNB_rxtx_proc_t *proc;
+	
+	int frame;
+	int subframe;
+    uint32_t i,j,aa;
+    uint8_t harq_pid;
+    DCI_PDU *DCI_pdu;
+    DCI_PDU DCI_pdu_tmp;
+    int8_t UE_id=0;
+    uint8_t num_pdcch_symbols=0;
+    uint8_t ul_subframe;
+    uint32_t ul_frame;
+    LTE_DL_FRAME_PARMS *fp;
+    DCI_ALLOC_t *dci_alloc=(DCI_ALLOC_t *)NULL;
+	
+	static int mac2phy_proc_status = 0;
+	
+	/**********************************************************************/
+	cpu_set_t cpuset; 
+	//the CPU we whant to use
+	int cpu = 1;
+	int s;
+	CPU_ZERO(&cpuset);       //clears the cpuset
+	CPU_SET( cpu , &cpuset); //set CPU 0~7 on cpuset
+	s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+	if (s != 0)
+	{
+		perror( "pthread_setaffinity_np");
+		exit_fun("Error setting processor affinity");
+	}
+	s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+	if (s != 0) {
+		perror( "pthread_getaffinity_np");
+		exit_fun("Error getting processor affinity ");
+	}
+	printf("[SCHED][eNB] MAC to PHY thread started on CPU %d TID %ld\n",sched_getcpu(),gettid());
+	/**********************************************************************/
+	
+	while(!oai_exit){
+		// wait signal
+		while(pthread_cond_wait(&eNB->thread_m2p.cond_tx, &eNB->thread_m2p.mutex_tx)!=0);
+		
+		// start mac2phy
+		proc = &eNB->proc.proc_rxtx[0];
+		fp=&eNB->frame_parms;
+		frame = proc->frame_tx;
+		subframe = proc->subframe_tx;
+		
+		for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+			// If we've dropped the UE, go back to PRACH mode for this UE
+			if ((frame==0)&&(subframe==0)) {
+				if (eNB->UE_stats[i].crnti > 0) {
+					LOG_I(PHY,"UE %d : rnti %x\n",i,eNB->UE_stats[i].crnti);
+				}
+			}
+			if (eNB->UE_stats[i].ulsch_consecutive_errors == ULSCH_max_consecutive_errors) {
+				LOG_W(PHY,"[eNB %d, CC %d] frame %d, subframe %d, UE %d: ULSCH consecutive error count reached %u, triggering UL Failure\n",
+					eNB->Mod_id,eNB->CC_id,frame,subframe, i, eNB->UE_stats[i].ulsch_consecutive_errors);
+				eNB->UE_stats[i].ulsch_consecutive_errors=0;
+				mac_xface->UL_failure_indication(eNB->Mod_id,
+								eNB->CC_id,
+								frame,
+								eNB->UE_stats[i].crnti,
+								subframe);
+				       
+			}
+	
+
+		}
+		
+		// Get scheduling info for next subframe
+		// This is called only for the CC_id = 0 and triggers scheduling for all CC_id's
+		if (eNB->mac_enabled==1) {
+			if (eNB->CC_id == 0) {
+				mac_xface->eNB_dlsch_ulsch_scheduler(eNB->Mod_id,0,frame,subframe);//,1);
+			}
+		}
+		
+		// clear the transmit data array for the current subframe
+		if (eNB->abstraction_flag==0) {
+			for (aa=0; aa<fp->nb_antenna_ports_eNB; aa++) {      
+			memset(&eNB->common_vars.txdataF[0][aa][subframe*fp->ofdm_symbol_size*(fp->symbols_per_tti)],
+					0,fp->ofdm_symbol_size*(fp->symbols_per_tti)*sizeof(int32_t));
+			}
+		}
+		
+		eNB->complete_m2p = 1; ///////////////////////////////////////
+		
+		if (eNB->mac_enabled==1) {
+			// Parse DCI received from MAC
+			VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,1);
+			DCI_pdu = mac_xface->get_dci_sdu(eNB->Mod_id,
+							eNB->CC_id,
+							frame,
+							subframe);
+		}
+		else {
+			DCI_pdu = &DCI_pdu_tmp;
+#ifdef EMOS_CHANNEL
+			fill_dci_emos(DCI_pdu,eNB);
+#else
+			fill_dci(DCI_pdu,eNB,proc);
+			// clear previous allocation information for all UEs
+			for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+				if (eNB->dlsch[i][0]){
+					for (j=0; j<8; j++)
+						eNB->dlsch[i][0]->harq_processes[j]->round = 0;
+				}
+			}
+
+#endif
+		}
+		
+		// clear existing ulsch dci allocations before applying info from MAC  (this is table
+		ul_subframe = pdcch_alloc2ul_subframe(fp,subframe);
+		ul_frame = pdcch_alloc2ul_frame(fp,frame,subframe);
+		
+		if ((subframe_select(fp,ul_subframe)==SF_UL) ||
+			(fp->frame_type == FDD)) {
+			harq_pid = subframe2harq_pid(fp,ul_frame,ul_subframe);
+				
+			// clear DCI allocation maps for new subframe
+			for (i=0; i<NUMBER_OF_UE_MAX; i++)
+				if (eNB->ulsch[i]) {
+					eNB->ulsch[i]->harq_processes[harq_pid]->dci_alloc=0;
+					eNB->ulsch[i]->harq_processes[harq_pid]->rar_alloc=0;
+				}
+		}
+
+		// clear previous allocation information for all UEs
+		for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+			if (eNB->dlsch[i][0])
+				eNB->dlsch[i][0]->subframe_tx[subframe] = 0;
+		}
+
+		/* save old HARQ information needed for PHICH generation */
+		for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+			if (eNB->ulsch[i]) {
+				/* Store first_rb and n_DMRS for correct PHICH generation below.
+				 * For PHICH generation we need "old" values of last scheduling
+				 * for this HARQ process. 'generate_eNB_dlsch_params' below will
+				 * overwrite first_rb and n_DMRS and 'generate_phich_top', done
+				 * after 'generate_eNB_dlsch_params', would use the "new" values
+				 * instead of the "old" ones.
+				 *
+				 * This has been tested for FDD only, may be wrong for TDD.
+				 *
+				 * TODO: maybe we should restructure the code to be sure it
+				 *       is done correctly. The main concern is if the code
+				 *       changes and first_rb and n_DMRS are modified before
+				 *       we reach here, then the PHICH processing will be wrong,
+				 *       using wrong first_rb and n_DMRS values to compute
+				 *       ngroup_PHICH and nseq_PHICH.
+				 *
+				 * TODO: check if that works with TDD.
+				 */
+				if ((subframe_select(fp,ul_subframe)==SF_UL) ||
+					(fp->frame_type == FDD)) {
+					harq_pid = subframe2harq_pid(fp,ul_frame,ul_subframe);
+					eNB->ulsch[i]->harq_processes[harq_pid]->previous_first_rb =
+						eNB->ulsch[i]->harq_processes[harq_pid]->first_rb;
+					eNB->ulsch[i]->harq_processes[harq_pid]->previous_n_DMRS =
+						eNB->ulsch[i]->harq_processes[harq_pid]->n_DMRS;
+				}
+			}
+		}
+		
+		/*///////////////////////////////////////////////
+
+		num_pdcch_symbols = DCI_pdu->num_pdcch_symbols;
+		LOG_D(PHY,"num_pdcch_symbols %"PRIu8",(dci common %"PRIu8", dci uespec %"PRIu8"\n",num_pdcch_symbols,
+			  DCI_pdu->Num_common_dci,DCI_pdu->Num_ue_spec_dci);
+			  
+		#if defined(SMBV) 
+		  // Sets up PDCCH and DCI table
+		  if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4) && ((DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci)>0)) {
+			LOG_D(PHY,"[SMBV] Frame %3d, SF %d PDCCH, number of DCIs %d\n",frame,subframe,DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci);
+			dump_dci(fp,&DCI_pdu->dci_alloc[0]);
+			smbv_configure_pdcch(smbv_fname,(smbv_frame_cnt*10) + (subframe),num_pdcch_symbols,DCI_pdu->Num_common_dci+DCI_pdu->Num_ue_spec_dci);
+		  }
+		#endif
+
+		VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->num_pdcch_symbols);
+		///////////////////////////////////////////////*/
+
+		// loop over all DCIs for this subframe to generate DLSCH allocations
+		for (i=0; i<DCI_pdu->Num_dci; i++) {
+			LOG_D(PHY,"[eNB] Subframe %d: DCI %d/%d : rnti %x, CCEind %d\n",subframe,i,DCI_pdu->Num_dci,DCI_pdu->dci_alloc[i].rnti,DCI_pdu->dci_alloc[i].firstCCE);
+			VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].rnti);
+			VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].format);
+			VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->dci_alloc[i].firstCCE);
+			dci_alloc = &DCI_pdu->dci_alloc[i];
+
+			if ((dci_alloc->rnti<= P_RNTI) && 
+				(dci_alloc->ra_flag!=1)) {
+				if (eNB->mac_enabled==1)
+					UE_id = find_ue((int16_t)dci_alloc->rnti,eNB);
+				else
+					UE_id = i;
+			}
+			else UE_id=0;
+			
+			generate_eNB_dlsch_params(eNB,proc,dci_alloc,UE_id);
+
+		}
+
+		VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,(frame*10)+subframe);
+
+		// Apply physicalConfigDedicated if needed
+		// This is for UEs that have received this IE, which changes these DL and UL configuration, we apply after a delay for the eNodeB UL parameters
+		phy_config_dedicated_eNB_step2(eNB);
+
+		// Now loop again over the DCIs for UL configuration
+		for (i=0; i<DCI_pdu->Num_dci; i++) {
+			dci_alloc = &DCI_pdu->dci_alloc[i];
+
+			if (dci_alloc->format == format0) {  // this is a ULSCH allocation
+				if (eNB->mac_enabled==1)
+					UE_id = find_ue((int16_t)dci_alloc->rnti,eNB);
+				else
+					UE_id = i;
+			
+				if (UE_id<0) { // should not happen, log an error and exit, this is a fatal error
+					LOG_E(PHY,"[eNB %"PRIu8"] Frame %d: Unknown UE_id for rnti %"PRIx16"\n",eNB->Mod_id,frame,dci_alloc->rnti);
+					mac_xface->macphy_exit("FATAL\n"); 
+				}
+				generate_eNB_ulsch_params(eNB,proc,dci_alloc,UE_id);
+			}
+		}
+
+		// if we have DCI to generate do it now
+		if (DCI_pdu->Num_dci>0) {
+			
+		} else { // for emulation!!
+			eNB->num_ue_spec_dci[(subframe)&1]=0;
+			eNB->num_common_dci[(subframe)&1]=0;
+		}
+		
+		eNB->complete_dci = 1; ///////////////////////////////////////
+		
+		num_pdcch_symbols = get_num_pdcch_symbols(DCI_pdu->Num_dci,DCI_pdu->dci_alloc,fp,subframe);
+		
+		// Check for SI activity
+		if ((eNB->dlsch_SI) && (eNB->dlsch_SI->active == 1)) {
+			pdsch_procedures(eNB,proc,eNB->dlsch_SI,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,0,num_pdcch_symbols);
+
+#if defined(SMBV) 
+			// Configures the data source of allocation (allocation is configured by DCI)
+			if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4)) {
+				LOG_D(PHY,"[SMBV] Frame %3d, Configuring SI payload in SF %d alloc %"PRIu8"\n",frame,(smbv_frame_cnt*10) + (subframe),smbv_alloc_cnt);
+				smbv_configure_datalist_for_alloc(smbv_fname, smbv_alloc_cnt++, (smbv_frame_cnt*10) + (subframe), DLSCH_pdu, input_buffer_length);
+			}
+#endif
+		}
+
+		// Check for RA activity
+		if ((eNB->dlsch_ra) && (eNB->dlsch_ra->active == 1)) {
+
+#if defined(SMBV) 
+			// Configures the data source of allocation (allocation is configured by DCI)
+			if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4)) {
+				LOG_D(PHY,"[SMBV] Frame %3d, Configuring RA payload in SF %d alloc %"PRIu8"\n",frame,(smbv_frame_cnt*10) + (subframe),smbv_alloc_cnt);
+				smbv_configure_datalist_for_alloc(smbv_fname, smbv_alloc_cnt++, (smbv_frame_cnt*10) + (subframe), dlsch_input_buffer, input_buffer_length);
+			}
+#endif
+			LOG_D(PHY,"[eNB %"PRIu8"][RAPROC] Frame %d, subframe %d: Calling generate_dlsch (RA),Msg3 frame %"PRIu32", Msg3 subframe %"PRIu8"\n",
+				eNB->Mod_id,
+				frame, subframe,
+				eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
+				eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
+			
+			pdsch_procedures(eNB,proc,eNB->dlsch_ra,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,1,num_pdcch_symbols);
+			
+			eNB->dlsch_ra->active = 0;
+		} 
+		
+		eNB->complete_sch_SR = 1; ///////////////////////////////////////
+	}
+	
+	printf( "Exiting eNB thread mac2phy\n");
+	return &mac2phy_proc_status;
+}
+
+static void *cch_proc(void *ptr){
+	control_channel *cch = (control_channel*)ptr;
+	
+	PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][0];
+	eNB_rxtx_proc_t *proc;
+	relaying_type_t r_type;
+	PHY_VARS_RN *rn;
+	
+	int frame;
+	int subframe;
+	// uint32_t i,j;
+	DCI_PDU *DCI_pdu; 
+    DCI_PDU DCI_pdu_tmp;
+	uint8_t num_pdcch_symbols=0;
+	LTE_DL_FRAME_PARMS *fp;
+
+	static int control_channel_status = 0;
+	int do_pdcch_flag;
+	
+	/**********************************************************************/
+	cpu_set_t cpuset; 
+	//the CPU we whant to use
+	int cpu = 2;
+	int s;
+	CPU_ZERO(&cpuset);       //clears the cpuset
+	CPU_SET( cpu , &cpuset); //set CPU 0~7 on cpuset
+	s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+	if (s != 0)
+	{
+		perror( "pthread_setaffinity_np");
+		exit_fun("Error setting processor affinity"); 
+	}
+	s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+	if (s != 0) {
+		perror( "pthread_getaffinity_np");
+		exit_fun("Error getting processor affinity ");
+	}
+	printf("[SCHED][eNB] Control_channel thread started on CPU %d TID %ld\n",sched_getcpu(),gettid());
+	/**********************************************************************/
+
+	while(!oai_exit)
+	{
+		// wait signal
+	   	while(pthread_cond_wait(&eNB->thread_cch.cond_tx, &eNB->thread_cch.mutex_tx)!=0);
+		
+		// start cch
+		proc = &eNB->proc.proc_rxtx[0]; 
+		fp=&eNB->frame_parms;
+		frame = proc->frame_tx;
+		subframe = proc->subframe_tx;
+		r_type = cch->r_type;
+		do_pdcch_flag = cch->do_pdcch_flag;
+		rn = cch->rn;
+		UNUSED(rn);
+		
+		if (is_pmch_subframe(frame,subframe,fp)) {
+			pmch_procedures(eNB,proc,rn,r_type);
+		}
+		else {
+			// this is not a pmch subframe, so generate PSS/SSS/PBCH
+			common_signal_procedures(eNB,proc);
+		}
+
+#if defined(SMBV) 
+
+		// PBCH takes one allocation
+		if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4)) {
+			if (subframe==0)
+				smbv_alloc_cnt++;
+		}
+
+#endif
+
+		if (eNB->mac_enabled==1) {
+			// Parse DCI received from MAC
+			DCI_pdu = mac_xface->get_dci_sdu(eNB->Mod_id,
+				     eNB->CC_id,
+				     frame,
+				     subframe);
+		}
+		else {
+			DCI_pdu = &DCI_pdu_tmp;
+#ifdef EMOS_CHANNEL
+			fill_dci_emos(DCI_pdu,eNB);
+#else
+			fill_dci(DCI_pdu,eNB,proc);
+#endif
+		}
+		
+		if (eNB->abstraction_flag == 0) {
+			if (do_pdcch_flag) {
+				if (DCI_pdu->Num_dci > 0) {
+					LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (Num_dci=%d)\n",eNB->Mod_id,frame, subframe,
+						DCI_pdu->Num_dci);
+				}
+
+				num_pdcch_symbols = generate_dci_top(DCI_pdu->Num_dci,
+									DCI_pdu->dci_alloc,
+									0,
+									AMP,
+									fp,
+									eNB->common_vars.txdataF[0],
+									subframe);
+			}
+			else {
+				num_pdcch_symbols = DCI_pdu->num_pdcch_symbols;
+				LOG_D(PHY,"num_pdcch_symbols %"PRIu8" (Num_dci %d)\n",num_pdcch_symbols,
+					DCI_pdu->Num_dci);
+			}
+		}
+
+#ifdef PHY_ABSTRACTION // FIXME this ifdef seems suspicious
+		else {
+			LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_to_emul\n",eNB->Mod_id,frame, subframe);
+			num_pdcch_symbols = generate_dci_top_emul(eNB,DCI_pdu->Num_dci,DCI_pdu->dci_alloc,subframe);
+		}
+
+#endif
+
+#if defined(SMBV) 
+		// Sets up PDCCH and DCI table
+		if (smbv_is_config_frame(frame) && (smbv_frame_cnt < 4) && (DCI_pdu->Num_dci>0)) {
+			LOG_D(PHY,"[SMBV] Frame %3d, SF %d PDCCH, number of DCIs %d\n",frame,subframe,DCI_pdu->Num_dci);
+				dump_dci(fp,&DCI_pdu->dci_alloc[0]);
+			smbv_configure_pdcch(smbv_fname,(smbv_frame_cnt*10) + (subframe),num_pdcch_symbols,DCI_pdu->Num_dci);
+		}
+#endif
+
+
+		// if we have PHICH to generate
+
+		if (is_phich_subframe(fp,subframe))
+		{
+			generate_phich_top(eNB,
+							   proc,
+							   AMP,
+							   0);
+		}
+		
+		eNB->complete_cch = 1;
+		
+	}
+	
+	printf( "Exiting eNB thread control_channel\n");
+	return &control_channel_status;
+}
+
+static void *multi_sch_proc(void *ptr){
+	multi_share_channel *sch =(multi_share_channel*) ptr;
+	
+	PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][0];
+	eNB_rxtx_proc_t *proc;
+	
+	int frame;
+	int subframe;
+	DCI_PDU *DCI_pdu; 
+	DCI_PDU DCI_pdu_tmp;
+	int UE_id=0;
+	int num_pdcch_symbols=0;
+	LTE_DL_FRAME_PARMS *fp;
+
+	static int multi_sch_proc_status = 0;
+	
+    /**********************************************************************/
+	cpu_set_t cpuset; 
+	//the CPU we whant to use
+	int cpu = 3+UE_id;
+	int s;
+	CPU_ZERO(&cpuset);       //clears the cpuset
+	CPU_SET( cpu , &cpuset); //set CPU 0~7 on cpuset
+	s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+	if (s != 0)
+	{
+		perror( "pthread_setaffinity_np");
+		exit_fun("Error setting processor affinity");
+	}
+	s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+	if (s != 0) {
+		perror( "pthread_getaffinity_np");
+		exit_fun("Error getting processor affinity ");
+	}
+	printf("[SCHED][eNB] PDSCH thread %d started on CPU %d TID %ld\n",UE_id,sched_getcpu(),gettid());
+	/**********************************************************************/
+  
+	while(!oai_exit){
+		// wait signal
+		while(pthread_cond_wait(&eNB->thread_g[sch->id].cond_tx,&eNB->thread_g[sch->id].mutex_tx)!=0);
+		
+		// start sch
+		proc=&eNB->proc.proc_rxtx[0];
+		frame = proc->frame_tx;
+		subframe = proc->subframe_tx;
+		fp=&eNB->frame_parms;
+		
+		if (eNB->mac_enabled==1) {
+			// Parse DCI received from MAC
+			VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,1);
+			DCI_pdu = mac_xface->get_dci_sdu(eNB->Mod_id,
+											 eNB->CC_id,
+											 frame,
+											 subframe);
+		}
+		else {
+			DCI_pdu = &DCI_pdu_tmp;
+#ifdef EMOS_CHANNEL
+			fill_dci_emos(DCI_pdu,eNB);
+#else
+			fill_dci(DCI_pdu,eNB,proc);
+#endif
+		}
+		
+        num_pdcch_symbols = get_num_pdcch_symbols(DCI_pdu->Num_dci,DCI_pdu->dci_alloc,fp,subframe);
+		
+		// Now scan UE specific DLSCH
+		for (UE_id=sch->id; UE_id<NUMBER_OF_UE_MAX; UE_id+=2)
+		{
+			if ((eNB->dlsch[(uint8_t)UE_id][0])&&
+				(eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
+				(eNB->dlsch[(uint8_t)UE_id][0]->active == 1)) {
+					
+				pdsch_procedures(eNB,proc,eNB->dlsch[(uint8_t)UE_id][0],eNB->dlsch[(uint8_t)UE_id][1],&eNB->UE_stats[(uint32_t)UE_id],0,num_pdcch_symbols);
+				
+			}
+			
+			else if ((eNB->dlsch[(uint8_t)UE_id][0])&&
+					(eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
+					(eNB->dlsch[(uint8_t)UE_id][0]->active == 0)) {
+						
+				// clear subframe TX flag since UE is not scheduled for PDSCH in this subframe (so that we don't look for PUCCH later)
+				eNB->dlsch[(uint8_t)UE_id][0]->subframe_tx[subframe]=0;
+			}
+		}
+		
+		eNB->complete_pdsch[sch->id]=1;
+	}
+	
+	printf( "Exiting eNB thread multi_sch_proc %d\n",sch->id);
+	multi_sch_proc_status=0;
+	return &multi_sch_proc_status;
+}
+// ===================================================
 
 void init_eNB_proc(int inst) {
   
@@ -1793,6 +2344,18 @@ void init_eNB_proc(int inst) {
     pthread_cond_init( &proc->cond_FH, NULL);
     pthread_cond_init( &proc->cond_asynch_rxtx, NULL);
     pthread_cond_init( &proc->cond_synch,NULL);
+	
+	//----------------Part of TX procedure----------------
+	pthread_mutex_init( &eNB->thread_m2p.mutex_tx, NULL);
+	pthread_mutex_init( &(eNB->thread_cch.mutex_tx), NULL);
+	pthread_mutex_init( &eNB->thread_g[0].mutex_tx, NULL);
+	pthread_mutex_init( &eNB->thread_g[1].mutex_tx, NULL);
+	
+	pthread_cond_init( &eNB->thread_m2p.cond_tx, NULL);
+	pthread_cond_init( &(eNB->thread_cch.cond_tx), NULL);
+	pthread_cond_init( &eNB->thread_g[0].cond_tx, NULL);
+	pthread_cond_init( &eNB->thread_g[1].cond_tx, NULL);
+	//====================================================
 
     pthread_attr_init( &proc->attr_FH);
     pthread_attr_init( &proc->attr_prach);
@@ -1804,6 +2367,14 @@ void init_eNB_proc(int inst) {
     pthread_attr_init( &proc->attr_te);
     pthread_attr_init( &proc_rxtx[0].attr_rxtx);
     pthread_attr_init( &proc_rxtx[1].attr_rxtx);
+	
+	//----------------Part of TX procedure----------------
+	pthread_attr_init( &eNB->thread_m2p.attr_m2p);
+    pthread_attr_init( &eNB->thread_cch.attr_cch);
+	pthread_attr_init( &eNB->thread_g[0].attr_sch);
+	pthread_attr_init( &eNB->thread_g[1].attr_sch);
+	//====================================================
+	
 #ifndef DEADLINE_SCHEDULER
     attr0       = &proc_rxtx[0].attr_rxtx;
     attr1       = &proc_rxtx[1].attr_rxtx;
@@ -1836,8 +2407,16 @@ void init_eNB_proc(int inst) {
 
 
       pthread_create( &proc->pthread_asynch_rxtx, attr_asynch, eNB_thread_asynch_rxtx, &eNB->proc );
+	  
+	//----------------Part of TX procedure----------------
+	pthread_create(&(eNB->thread_m2p.pthread_m2p),&eNB->thread_m2p.attr_m2p,mac2phy_proc,NULL);
+	pthread_create(&(eNB->thread_cch.pthread_cch),&eNB->thread_cch.attr_cch,cch_proc,&eNB->thread_cch);
+	pthread_create(&(eNB->thread_g[0].pthread_tx),&eNB->thread_g[0].attr_sch,multi_sch_proc,&eNB->thread_g[0]);
+	pthread_create(&(eNB->thread_g[1].pthread_tx),&eNB->thread_g[1].attr_sch,multi_sch_proc,&eNB->thread_g[1]);
+	//====================================================
+	
 
-    char name[16];
+    char name[32];
     if (eNB->single_thread_flag == 0) {
       snprintf( name, sizeof(name), "RXTX0 %d", i );
       pthread_setname_np( proc_rxtx[0].pthread_rxtx, name );
@@ -1850,6 +2429,17 @@ void init_eNB_proc(int inst) {
       snprintf( name, sizeof(name), " %d", i );
       pthread_setname_np( proc->pthread_single, name );
     }
+	
+	//----------------Part of TX procedure----------------
+	snprintf( name, sizeof(name), "MAC to PHY thread");
+	pthread_setname_np(eNB->thread_m2p.pthread_m2p, name );
+	snprintf( name, sizeof(name), "Control_channel thread");
+	pthread_setname_np(eNB->thread_cch.pthread_cch, name );
+    snprintf( name, sizeof(name), "PDSCH thread 0");
+	pthread_setname_np(eNB->thread_g[0].pthread_tx, name );
+	snprintf( name, sizeof(name), "PDSCH thread 1");
+	pthread_setname_np(eNB->thread_g[1].pthread_tx, name );
+	//====================================================
   }
 
   //for multiple CCs: setup master and slaves
@@ -1905,6 +2495,13 @@ void kill_eNB_proc(int inst) {
     pthread_cond_signal( &proc->cond_prach );
     pthread_cond_signal( &proc->cond_FH );
     pthread_cond_broadcast(&sync_phy_proc.cond_phy_proc_tx);
+	
+	//----------------Part of TX procedure----------------
+	pthread_cond_signal(&eNB->thread_m2p.cond_tx);	
+	pthread_cond_signal(&eNB->thread_cch.cond_tx);
+	pthread_cond_signal(&eNB->thread_g[0].cond_tx);
+	pthread_cond_signal(&eNB->thread_g[1].cond_tx);
+	//====================================================
 
     pthread_join( proc->pthread_FH, (void**)&status ); 
     pthread_mutex_destroy( &proc->mutex_FH );
@@ -1920,6 +2517,24 @@ void kill_eNB_proc(int inst) {
       pthread_mutex_destroy( &proc_rxtx[i].mutex_rxtx );
       pthread_cond_destroy( &proc_rxtx[i].cond_rxtx );
     }
+	
+	//----------------Part of TX procedure----------------
+	pthread_join(eNB->thread_m2p.pthread_m2p,(void**)&status);
+	pthread_mutex_destroy(&eNB->thread_m2p.mutex_tx);
+	pthread_cond_destroy(&eNB->thread_m2p.cond_tx);
+	
+	pthread_join(eNB->thread_cch.pthread_cch,(void**)&status);
+	pthread_mutex_destroy(&eNB->thread_cch.mutex_tx);
+	pthread_cond_destroy(&eNB->thread_cch.cond_tx);
+	
+	pthread_join(eNB->thread_g[0].pthread_tx,(void**)&status);
+	pthread_mutex_destroy( &(eNB->thread_g[0].mutex_tx) );
+	pthread_cond_destroy( &(eNB->thread_g[0].cond_tx) );
+	
+	pthread_join(eNB->thread_g[1].pthread_tx,(void**)&status);
+	pthread_mutex_destroy( &(eNB->thread_g[1].mutex_tx) );
+	pthread_cond_destroy( &(eNB->thread_g[1].cond_tx) );
+	//====================================================
   }
 }
 
@@ -2075,6 +2690,11 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
       eNB->ts_offset          = 0;
       eNB->in_synch           = 0;
       eNB->is_slave           = (wait_for_sync>0) ? 1 : 0;
+	  
+	  //----------------Part of TX procedure----------------
+	  eNB->thread_g[0].id = 0;
+	  eNB->thread_g[1].id = 1;
+	  //====================================================
 
 
 #ifndef OCP_FRAMEWORK
