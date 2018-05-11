@@ -6092,8 +6092,8 @@ void *rrc_control_socket_thread_fct(void *arg)
   */
           rrc_rlc_config_req(&ctxt, SRB_FLAG_NO,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,slrb_id,Rlc_info_um
         #ifdef Rel14
-            ,0
-            ,0
+            ,sourceL2Id
+            ,destinationL2Id
         #endif
             );
 
@@ -6503,7 +6503,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 
            sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
            sl_ctrl_msg_send->type = PC5S_RELEASE_RSP;
-           sl_ctrl_msg_send->sidelinkPrimitive.direct_comm_release_rsp = PC5S_RELEASE_OK;
+           sl_ctrl_msg_send->sidelinkPrimitive.pc5s_release_rsp = PC5S_RELEASE_OK;
 
            memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
            free(sl_ctrl_msg_send);
