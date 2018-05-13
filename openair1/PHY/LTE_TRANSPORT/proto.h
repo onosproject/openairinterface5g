@@ -1444,11 +1444,13 @@ void pbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
   \param frame_parms Pointer to frame descriptor
   \param llr Output of the demodulator
   \param length Length of the sequence
-  \param frame_mod4 Frame number modulo 4*/
+  \param frame_mod4 Frame number modulo 4
+  \param SL_flag Flag to indicate SLBCH instead of BCH*/
 void pbch_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
                        int8_t* llr,
                        uint32_t length,
-                       uint8_t frame_mod4);
+                       uint8_t frame_mod4,
+		       int SL_flag);
 
 /*! \brief DCI Encoding. This routine codes an arbitrary DCI PDU after appending the 8-bit 3GPP CRC.  It then applied sub-block interleaving and rate matching.
   \param a Pointer to DCI PDU (coded in bytes)
@@ -2322,6 +2324,8 @@ int generate_slsss(int32_t **txdataF,
 		   LTE_DL_FRAME_PARMS *frame_parms,
 		   uint16_t symbol);
 
+int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2);
+
 /*! \brief Top-level generation route for Sidelink BCH,PSS and SSS
   \param ue pointer to UE descriptor
   \param frame_tx Frame number
@@ -2351,6 +2355,8 @@ int generate_slbch(int32_t **txdataF,
 		   LTE_DL_FRAME_PARMS *frame_parms,
 		   int subframe,
 		   uint8_t *slmib);
+
+int rx_psbch(PHY_VARS_UE *ue);
 
 /**@}*/
 #endif

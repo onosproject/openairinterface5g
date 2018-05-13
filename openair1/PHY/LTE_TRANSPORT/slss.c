@@ -56,7 +56,7 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   ue->frame_parms.Nid_SL = slss->slss_id;
 
   // 6 PRBs => ceil(10*log10(6)) = 8 
-  ue->tx_power_dBm[subframe_tx] = -6;
+  ue->tx_power_dBm[subframe_tx] = 8;
   ue->tx_total_RE[subframe_tx] = 72;
 
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
@@ -79,34 +79,34 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   // PSS
   
   generate_slpss(ue->common_vars.txdataF,
-                 tx_amp,
+                 tx_amp<<1,
                  &ue->frame_parms,
                  1,
                  subframe_tx
 		 );  
   
   generate_slpss(ue->common_vars.txdataF,
-                 tx_amp,
+                 tx_amp<<1,
                  &ue->frame_parms,
                  2,
                  subframe_tx
 		 );
-  /*  
+          
   generate_slbch(ue->common_vars.txdataF,
                  tx_amp,
                  &ue->frame_parms,
 		 subframe_tx,
 		 ue->slss->slmib);
-  */
+  
   
   generate_slsss(ue->common_vars.txdataF,
 		 subframe_tx,
-                 tx_amp,
+                 tx_amp<<2,
                  &ue->frame_parms,
 		 11);
   generate_slsss(ue->common_vars.txdataF,
 		 subframe_tx,
-                 tx_amp,
+                 tx_amp<<2,
                  &ue->frame_parms,
 		 12);
   
@@ -116,9 +116,9 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   generate_drs_pusch(ue,
 		     NULL,
 		     0,
-		     tx_amp,
+		     tx_amp<<2,
 		     subframe_tx,
-		     (1+(ue->frame_parms.N_RB_UL/2))-3,
+		     (ue->frame_parms.N_RB_UL/2)-3,
 		     6,
                      0,
                      NULL,
@@ -130,7 +130,5 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   
   LOG_D(PHY,"ULSCH (after slss) : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
     
-  //  write_output("txdataF_pre.m","txF_pre",&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size,1,1);
-  
 }
 #endif

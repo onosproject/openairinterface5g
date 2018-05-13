@@ -752,14 +752,15 @@ void pbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
     }
 
     pbch_e[i] = (pbch_e[i]&1) ^ ((s>>(i&0x1f))&1);
-
+    
   }
 }
 
 void pbch_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
                        int8_t* llr,
                        uint32_t length,
-                       uint8_t frame_mod4)
+                       uint8_t frame_mod4,
+		       int SLflag)
 {
   int i;
   uint8_t reset;
@@ -767,7 +768,7 @@ void pbch_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
 
   reset = 1;
   // x1 is set in first call to lte_gold_generic
-  x2 = frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.6.1
+  x2 = SLflag==0 ? frame_parms->Nid_cell : frame_parms->Nid_SL; //this is c_init in 36.211 Sec 6.6.1
   //  msg("pbch_unscrambling: Nid_cell = %d\n",x2);
 
   for (i=0; i<length; i++) {
@@ -778,7 +779,7 @@ void pbch_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
     }
 
     // take the quarter of the PBCH that corresponds to this frame
-    if ((i>=(frame_mod4*(length>>2))) && (i<((1+frame_mod4)*(length>>2)))) {
+    if (SLflag==1 || ((i>=(frame_mod4*(length>>2))) && (i<((1+frame_mod4)*(length>>2))))) {
 
       if (((s>>(i%32))&1)==0)
         llr[i] = -llr[i];
@@ -838,7 +839,6 @@ void pbch_quantize(int8_t *pbch_llr8,
       pbch_llr8[i]=-8;
     else
       pbch_llr8[i] = (char)(pbch_llr[i]);
-
   }
 }
 
@@ -956,7 +956,8 @@ uint16_t rx_pbch(LTE_UE_COMMON *lte_ue_common_vars,
   pbch_unscrambling(frame_parms,
                     pbch_e_rx,
                     pbch_E,
-                    frame_mod4);
+                    frame_mod4,
+		    0);
 
 
 

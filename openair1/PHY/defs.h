@@ -1307,6 +1307,7 @@ typedef struct {
   LTE_eNB_DLSCH_t  *dlsch_sldch;
   LTE_UE_ULSCH_t   *ulsch_sldch;
   LTE_eNB_PUSCH    *pusch_sldch;
+  LTE_eNB_PUSCH    *pusch_slbch;
   LTE_eNB_PUSCH    *pusch_slcch;
   LTE_UE_DLSCH_t   *dlsch_rx_slsch;
   LTE_UE_DLSCH_t   *dlsch_rx_sldch[MAX_SLDCH];
@@ -1317,7 +1318,7 @@ typedef struct {
   int16_t          *sldch_dlsch_llr;
   int16_t          *sldch_ulsch_llr;
   SLSS_t           *slss;
-  SLSCH_t          slss_rx;
+  SLSS_t          slss_rx;
   SLSCH_t          *slsch;
   SLSCH_t          slsch_rx;
   int              slsch_active;
@@ -1334,7 +1335,7 @@ typedef struct {
   pthread_mutex_t  slss_mutex;
   pthread_mutex_t  sldch_mutex;
   pthread_mutex_t  slsch_mutex;
-  
+  int              slbch_errors;
   //Paging parameters
   uint32_t              IMSImod1024;
   uint32_t              PF;

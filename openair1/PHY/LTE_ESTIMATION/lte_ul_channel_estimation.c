@@ -114,9 +114,9 @@ int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
 #ifdef DEBUG_CH
 
   if (l==pilot_pos1)
-    write_output("drs_seq0.m","drsseq0",ul_ref_sigs_rx[u][v][Msc_RS_idx],2*Msc_RS,2,1);
+    write_output("drs_seq0.m","drsseq0",ul_ref_sigs_rx[u][v][Msc_RS_idx],Msc_RS,1,1);
   else
-    write_output("drs_seq1.m","drsseq1",ul_ref_sigs_rx[u][v][Msc_RS_idx],2*Msc_RS,2,1);
+    write_output("drs_seq1.m","drsseq1",ul_ref_sigs_rx[u][v][Msc_RS_idx],Msc_RS,1,1);
 
 #endif
 
@@ -152,7 +152,7 @@ int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
       
       ul_ch128[0] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-      //  printf("rb %d ch: %d %d\n",i,((int16_t*)ul_ch128)[0],((int16_t*)ul_ch128)[1]);
+      //      printf("rb %d ch: %d %d\n",i,((int16_t*)ul_ch128)[0],((int16_t*)ul_ch128)[1]);
       // multiply by conjugated channel
       mmtmpU0 = _mm_madd_epi16(ul_ref128[1],rxdataF128[1]);
       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
@@ -339,7 +339,7 @@ int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
 	
 	
 #ifdef DEBUG_CH
-	LOG_D(PHY,"lte_ul_channel_estimation: k=%d, alpha = %d, beta = %d\n",k,alpha,beta);
+	//	LOG_D(PHY,"lte_ul_channel_estimation: k=%d, alpha = %d, beta = %d\n",k,alpha,beta);
 #endif
 	//symbol_offset_subframe = frame_parms->N_RB_UL*12*k;
 	

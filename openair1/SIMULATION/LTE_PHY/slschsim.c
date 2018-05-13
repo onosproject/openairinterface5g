@@ -46,10 +46,14 @@
 
 #include "unitary_defs.h"
 
-
+//#define PSBCH_DEBUG 1
 
 int nfapi_mode=0;
 double cpuf;
+extern int32_t* sync_corr_ue1;
+
+#define PSBCH_A 40
+#define PSBCH_E 1008 //12REs/PRB*6PRBs*7symbols*2 bits/RB
 
 int main(int argc, char **argv) {
 
@@ -78,15 +82,13 @@ int main(int argc, char **argv) {
   int pscch_errors=0;
   int do_SLSS=0;
 
-  int index;
-  int64_t psslevel;
-  int64_t avglevel;
   
   AssertFatal(load_configmodule(argc,argv) != NULL,
 	      "cannot load configuration module, exiting\n");
   logInit();
   // enable these lines if you need debug info
   set_comp_log(PHY,LOG_INFO,LOG_HIGH,1);
+  set_comp_log(OCM,LOG_INFO,LOG_HIGH,1);
   set_glog(log_level,LOG_HIGH);
   
 
@@ -314,6 +316,7 @@ int main(int argc, char **argv) {
   if (do_SLSS == 1) {
     slss.SL_OffsetIndicator         = 0;
     slss.slss_id                    = 170;
+    UE->frame_parms.Nid_SL          = slss.slss_id;
     slss.slmib_length               = 5;
     slss.slmib[0]                   = 0;
     slss.slmib[1]                   = 1;
@@ -329,6 +332,8 @@ int main(int argc, char **argv) {
 
   // 0dBm transmit power for PSCCH = 0dBm - 10*log10(12) dBm/RE
 
+  generate_sl_grouphop(UE);
+  
   for (double snr=snr0;snr<snr+snr_int;snr+=snr_step) {
     printf("*****************SNR %f\n",snr);
     UE2UE[0][0][0]->path_loss_dB = -132.24 + snr + 10*log10(12);
@@ -338,7 +343,8 @@ int main(int argc, char **argv) {
     UE->slsch_rxcnt[0] = 0;    UE->slsch_rxcnt[1] = 0;    UE->slsch_rxcnt[2] = 0;    UE->slsch_rxcnt[3] = 0;
     pscch_errors=0;
     UE->sl_fep_done = 0;
-
+    UE->slbch_errors=0;
+    
     for (trials = 0;trials<n_trials;trials++) {
       UE->pscch_coded=0;
       UE->pscch_generated=0;
@@ -362,7 +368,9 @@ int main(int argc, char **argv) {
 	  ulsch_common_procedures(UE,&proc,0);
 	  //	  write_output("txsig0SL.m","txs0",&UE->common_vars.txdata[0][UE->frame_parms.samples_per_tti*subframe],UE->frame_parms.samples_per_tti,1,1);
 	  //	  printf("Running do_SL_sig for frame %d subframe %d (%d,%d,%d,%d)\n",frame,subframe,UE->slss_generated,UE->pscch_generated,UE->psdch_generated,UE->pssch_generated);
-	  do_SL_sig(0,UE2UE,subframe,UE->pscch_generated,&UE->frame_parms,frame,0);
+	  do_SL_sig(0,UE2UE,subframe,UE->pscch_generated,
+		    3*(UE->frame_parms.ofdm_symbol_size)+2*(UE->frame_parms.nb_prefix_samples)+UE->frame_parms.nb_prefix_samples0,
+		    &UE->frame_parms,frame,0);
 	  //	  write_output("rxsig0.m","rxs0",&UE->common_vars.rxdata[0][UE->frame_parms.samples_per_tti*subframe],UE->frame_parms.samples_per_tti,1,1);
 	  if (do_SLSS==1) 
 	    memcpy((void*)&UE->common_vars.rxdata_syncSL[0][(((frame&3)*10)+subframe)*2*UE->frame_parms.samples_per_tti],
@@ -377,24 +385,12 @@ int main(int argc, char **argv) {
 	}
 	rx_slcch(UE,frame,subframe);
 	rx_slsch(UE,&proc,frame,subframe);
+
         if ((absSF % 40) == 3 && do_SLSS==1) {
 	  printf("Running Initial synchronization for SL\n");
 	  // initial synch for SL
+	  initial_syncSL(UE);
 
-	  //	  write_output("rxsyncb.m","rxsyncb",(void*)UE->common_vars.rxdata_syncSL[0],(UE->frame_parms.samples_per_tti),1,1);
-	  UE->rx_offsetSL = lte_sync_timeSL(UE,
-					    &index,
-					    &psslevel,
-					    &avglevel);
-	  printf("absSF %d: Frame %d, index %d, psslevel %lld dB avglevel %lld dB => %d sample offset\n",
-		 absSF,frame,index,dB_fixed(psslevel),dB_fixed(avglevel),UE->rx_offsetSL);
-	  int32_t sss_metric;
-	  int32_t phase_max;
-	  rx_slsss(UE,&sss_metric,&phase_max,index,subframe);
-	  
-	  //	  write_output("rxsynca.m","rxsynca",(void*)UE->common_vars.rxdata_syncSL[0],(UE->frame_parms.samples_per_tti),1,1);
-
-	  //	  exit(-1);
 	}
 	  
 	UE->sl_fep_done = 0;

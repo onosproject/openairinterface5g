@@ -194,6 +194,97 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 #ifdef PSDCH_DEBUG
   write_output("sldch_rxF_comp.m","sldchrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
 #endif
+  lte_ul_channel_estimation(&ue->frame_parms,
+			    (int32_t**)drs_ch_estimates,
+			    (int32_t**)NULL,
+			    (int32_t**)rxdataF_ext,
+			    2,
+			    frame_rx,
+			    subframe_rx,
+			    0, //u
+			    0, //v
+			    0, //cyclic_shift
+			    3,
+			    1, // interpolation
+			    0);
+
+  lte_ul_channel_estimation(&ue->frame_parms,
+			    (int32_t**)drs_ch_estimates,
+			    (int32_t**)NULL,
+			    (int32_t**)rxdataF_ext,
+			    2,
+			    frame_rx,
+			    subframe_rx,
+			    0,//u
+			    0,//v
+			    0,//cyclic_shift,
+			    10,
+			    1, // interpolation
+			    0);
+
+  ulsch_channel_level(drs_ch_estimates,
+		      &ue->frame_parms,
+		      avgU,
+		      2);
+ 
+#ifdef PSDCH_DEBUG
+  write_output("drs_ext0.m","drsest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+#endif
+
+  avgs = 0;
+  
+  for (int aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++)
+    avgs = cmax(avgs,avgU[aarx]);
+  
+  //      log2_maxh = 4+(log2_approx(avgs)/2);
+  
+  log2_maxh = (log2_approx(avgs)/2)+ log2_approx(ue->frame_parms.nb_antennas_rx-1)+4;
+
+
+  for (int l=0; l<(Nsymb<<1)-1; l++) {
+
+    if (((ue->frame_parms.Ncp == 0) && ((l==3) || (l==10)))||   // skip pilots
+        ((ue->frame_parms.Ncp == 1) && ((l==2) || (l==8)))) {
+      l++;
+    }
+
+    ulsch_channel_compensation(
+			       rxdataF_ext,
+			       drs_ch_estimates,
+			       ul_ch_mag,
+			       NULL,
+			       rxdataF_comp,
+			       &ue->frame_parms,
+			       l,
+			       2, //Qm
+			       2, //nb_rb
+			       log2_maxh); // log2_maxh+I0_shift
+
+    if (ue->frame_parms.nb_antennas_rx > 1)
+      ulsch_detection_mrc(&ue->frame_parms,
+			  rxdataF_comp,
+			  ul_ch_mag,
+			  NULL,
+			  l,
+			  2 //nb_rb
+			  );
+    
+    freq_equalization(&ue->frame_parms,
+		      rxdataF_comp,
+		      ul_ch_mag,
+		      NULL,
+		      l,
+		      24,
+		      2);
+  
+  }
+  lte_idft(&ue->frame_parms,
+           rxdataF_comp[0],
+           24);
+
+#ifdef PSDCH_DEBUG
+  write_output("sldch_rxF_comp.m","sldchrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+#endif
 
   int E = 12*2*2*((Nsymb-1)<<1);
 

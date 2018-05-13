@@ -960,6 +960,13 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
   ue->pusch_sldch->drs_ch_estimates = (int32_t **)malloc(2*sizeof(int32_t*));
   ue->pusch_sldch->rxdataF_comp     = (int32_t **)malloc(2*sizeof(int32_t*));
   ue->pusch_sldch->ul_ch_mag        = (int32_t **)malloc(2*sizeof(int32_t*));
+
+  ue->pusch_slbch                   = (LTE_eNB_PUSCH*)malloc(sizeof(LTE_eNB_PUSCH));
+  ue->pusch_slbch->rxdataF_ext      = (int32_t **)malloc(2*sizeof(int32_t*));
+  ue->pusch_slbch->drs_ch_estimates = (int32_t **)malloc(2*sizeof(int32_t*));
+  ue->pusch_slbch->rxdataF_comp     = (int32_t **)malloc(2*sizeof(int32_t*));
+  ue->pusch_slbch->ul_ch_mag        = (int32_t **)malloc(2*sizeof(int32_t*));
+
   ue->sl_rxdata_7_5kHz              = (int16_t **)malloc(2*sizeof(int32_t*));
   ue->sl_rxdataF                    = (int16_t **)malloc(2*sizeof(int32_t*));
 
@@ -979,11 +986,16 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
     ue->pusch_sldch->drs_ch_estimates[aa] = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
     ue->pusch_sldch->rxdataF_comp[aa]     = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
     ue->pusch_sldch->ul_ch_mag[aa]        = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
+    ue->pusch_slbch->rxdataF_ext[aa]      = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
+    ue->pusch_slbch->drs_ch_estimates[aa] = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
+    ue->pusch_slbch->rxdataF_comp[aa]     = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
+    ue->pusch_slbch->ul_ch_mag[aa]        = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
   }	
   ue->slsch_dlsch_llr                 = (int16_t *)malloc(2*6*12*1200*sizeof(int16_t*));
   ue->slsch_ulsch_llr                 = (int16_t *)malloc(2*6*12*1200*sizeof(int16_t*));
   ue->sldch_dlsch_llr                 = (int16_t *)malloc(2*2*12*1200*sizeof(int16_t*));
   ue->sldch_ulsch_llr                 = (int16_t *)malloc(2*2*12*1200*sizeof(int16_t*));
+  
 
 
 

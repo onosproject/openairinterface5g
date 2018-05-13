@@ -549,7 +549,7 @@ void do_UL_sig(channel_desc_t *UE2RU[NUMBER_OF_UE_MAX][NUMBER_OF_RU_MAX][MAX_NUM
 }
 
 void do_SL_sig(int UE_id,channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MAX][MAX_NUM_CCs],
-	       uint16_t subframe,uint16_t slot, LTE_DL_FRAME_PARMS *frame_parms, 
+	       uint16_t subframe,uint16_t slot, int symbol_offset, LTE_DL_FRAME_PARMS *frame_parms, 
 	       uint32_t frame,uint8_t CC_id)
 {
 
@@ -605,11 +605,11 @@ void do_SL_sig(int UE_id,channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MA
   if (((double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe] +
        UE2UE[UE_id][0][CC_id]->path_loss_dB) <= -125.0) {
     // don't simulate a UE that is too weak
-    LOG_D(OCM,"[SIM][SL] UE %d tx_pwr %d dBm (num_RE %d) for subframe %d (sf_offset %d,slot_ind %d)\n",
+    LOG_I(OCM,"[SIM][SL] UE %d tx_pwr %d dBm (num_RE %d) for subframe %d (sf_offset %d,slot_ind %d,symbol_offset %d)\n",
 	  UE_id,
 	  PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe],
 	  PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe],
-	  subframe,slot,sf_offset);	
+	  subframe,sf_offset,slot,symbol_offset);	
   } else {
     tx_pwr = dac_fixed_gain((double**)s_re,
 			    (double**)s_im,
@@ -617,20 +617,21 @@ void do_SL_sig(int UE_id,channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MA
 			    sf_offset,
 			    nb_antennas_tx,
 			    frame_parms->samples_per_tti,
-			    (slot == 2)? sf_offset+(frame_parms->samples_per_tti>>1) : sf_offset,
+			    ((slot == 2)? sf_offset+(frame_parms->samples_per_tti>>1) : sf_offset)+symbol_offset,
 			    frame_parms->ofdm_symbol_size,
 			    14,
 			    (double)PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe]-10*log10((double)PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe]),
 			    1,
 			    NULL,
 			    PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe]);  // This make the previous argument the total power
-    LOG_I(OCM,"[SIM][SL] UE %d tx_pwr %f dBm (target %d dBm, num_RE %d) for subframe %d (sf_offset %d/%d)\n",
+    LOG_I(OCM,"[SIM][SL] UE %d tx_pwr %f dBm (target %d dBm, num_RE %d) for subframe %d (sf_offset %d/%d/%d)\n",
 	  UE_id,
 	  10*log10(tx_pwr*PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe]),
 	  PHY_vars_UE_g[UE_id][CC_id]->tx_power_dBm[subframe],
 	  PHY_vars_UE_g[UE_id][CC_id]->tx_total_RE[subframe],
 	  subframe,sf_offset,
-	  (slot == 2)? sf_offset+(frame_parms->samples_per_tti>>1) : sf_offset);
+	  (slot == 2)? sf_offset+(frame_parms->samples_per_tti>>1) : sf_offset,
+	  symbol_offset);
     
     
     multipath_channel(UE2UE[UE_id][0][CC_id],s_re,s_im,r_re0,r_im0,

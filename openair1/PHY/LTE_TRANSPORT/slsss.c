@@ -283,7 +283,7 @@ int16_t phaseSL_re[7] = {16383, 25101, 30791, 32767, 30791, 25101, 16383};
 int16_t phaseSL_im[7] = {-28378, -21063, -11208, 0, 11207, 21062, 28377};
 
 
-int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int subframe_rx)
+int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2)
 {
 
   uint8_t i;
@@ -322,8 +322,6 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int
     ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
     
     
-    //    remove_7_5_kHz(&ru_tmp,(subframe_rx<<1));
-    //    remove_7_5_kHz(&ru_tmp,(subframe_rx<<1)+1);
     // PSS
     slot_fep_ul(&ru_tmp,1,0,0);
     slot_fep_ul(&ru_tmp,2,0,0);
@@ -395,7 +393,6 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2,int
       }
     }
   }
-  exit(-1);
 
   return(0);
 }

@@ -87,7 +87,7 @@ uint32_t sub_block_interleaving_turbo(uint32_t D, uint8_t *d,uint8_t *w)
 
 
 #ifdef RM_DEBUG
-      printf("row %d, index %d, index-Nd %d index-Nd+1 %d (k,Kpi+2k,Kpi+2k+1) (%d,%d,%d) w(%d,%d,%d)\n",row,index,index-ND,((index+1)%Kpi)-ND,k,Kpi+(k<<1),Kpi+(k<<1)+1,w[k],w[Kpi+(k<<1)],w[Kpi+1+(k<<1)]);
+      printf("row %d (k,Kpi+2k,Kpi+2k+1) (%d,%d,%d) w(%d,%d,%d)\n",row,k,Kpi+k2,Kpi+k2+1,w[k],w[Kpi+k2],w[Kpi+1+k2]);
 
       if (w[k]== LTE_NULL)
         nulled++;
@@ -156,7 +156,7 @@ uint32_t sub_block_interleaving_cc(uint32_t D, uint8_t *d,uint8_t *w)
       w[Kpi+k]     =   d[(int32_t)index3-(int32_t)ND3+1];
       w[(Kpi<<1)+k] =  d[(int32_t)index3-(int32_t)ND3+2];
 #ifdef RM_DEBUG_CC
-      printf("row %d, index %d k %d w(%d,%d,%d)\n",row,index,k,w[k],w[Kpi+k],w[(Kpi<<1)+k]);
+      printf("row %d, index %d (k,k+Kpi,k+2Kpi) (%d,%d,%d) w(%d,%d,%d)\n",row,index,k,k+Kpi,k+Kpi<<1,w[k],w[Kpi+k],w[(Kpi<<1)+k]);
 
       if (w[k]== LTE_NULL)
         nulled++;
@@ -375,7 +375,7 @@ uint32_t generate_dummy_w_cc(uint32_t D, uint8_t *w)
 {
 
   uint32_t RCC = (D>>5), ND;
-  uint32_t col,Kpi,index;
+  uint32_t row,col,Kpi,index;
   int32_t k;
 #ifdef RM_DEBUG_CC
   uint32_t nulled=0;
@@ -401,15 +401,16 @@ uint32_t generate_dummy_w_cc(uint32_t D, uint8_t *w)
     printf("Col %d\n",col);
 #endif
     index = bitrev_cc[col];
-
-    if (index<ND) {
-      w[k]          = LTE_NULL;
-      w[Kpi+k]      = LTE_NULL;
-      w[(Kpi<<1)+k] = LTE_NULL;
+    for (row=0;row<RCC;row++){
+      if (index<ND) {
+	w[k]          = LTE_NULL;
+	w[Kpi+k]      = LTE_NULL;
+	w[(Kpi<<1)+k] = LTE_NULL;
 #ifdef RM_DEBUG_CC
-      nulled+=3;
+	nulled+=3;
 #endif
-    }
+      }
+    
 
     /*
     //bits beyond 32 due to "filler" bits
@@ -439,9 +440,11 @@ uint32_t generate_dummy_w_cc(uint32_t D, uint8_t *w)
     }
     */
 #ifdef RM_DEBUG_CC
-    printf("k %d w (%d,%d,%d), index-ND %d index+32-ND %d\n",k,w[k],w[Kpi+k],w[(Kpi<<1)+k],index-ND,index+32-ND);
+      printf("k %d w (%d,%d,%d), index-ND %d index+32-ND %d\n",k,w[k],w[Kpi+k],w[(Kpi<<1)+k],index-ND,index+32-ND);
 #endif
-    k+=RCC;
+      index+=32;
+      k++;
+    }
   }
 
 #ifdef RM_DEBUG_CC
@@ -649,7 +652,10 @@ uint32_t lte_rate_matching_cc(uint32_t RCC,
 
   for (k=0; k<E; k++) {
 
-
+#ifdef RM_DEBUG_CC
+    AssertFatal(w[ind]==0 || w[ind]==1 || w[ind]==LTE_NULL,
+		"w[%d] = %d is illegal\n",ind,w[ind]);
+#endif
     while(w[ind] == LTE_NULL) {
 
 #ifdef RM_DEBUG_CC
