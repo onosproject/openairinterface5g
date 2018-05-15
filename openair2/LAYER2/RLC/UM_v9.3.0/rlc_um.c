@@ -379,6 +379,29 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
 
 #endif
 #ifdef Rel14
+    //trick to make UE receive multicast packet from different sources
+    mem_block_t         *tb_p             = NULL;
+    uint8_t            *first_byte_p     = NULL;
+
+    //rlc_um_entity_t *
+    tb_p  = list_get_head(&data_indP.data);
+    first_byte_p = ((struct mac_tb_ind *) (tb_p->data))->data_ptr;
+    rlc_um_pdu_sn_10_t*   pdu_mem_pP =  (rlc_um_pdu_sn_10_t*)first_byte_p;
+
+    rlc_sn_t sn = -1;
+
+    if (l_rlc_p->rx_sn_length == 10) {
+       sn = ((pdu_mem_pP->b1 & 0x00000003) << 8) + pdu_mem_pP->b2;
+    } else if (l_rlc_p->rx_sn_length == 5) {
+       sn = pdu_mem_pP->b1 & 0x1F;
+    }
+
+    LOG_I(RLC, "[rlc_um_rx]DEBUG SN %d, rlc_pP->vr_uh %d rlc_pP->vr_ur %d, l_rlc_p->vr_ux %d \n", sn, l_rlc_p->vr_uh, l_rlc_p->vr_ur, l_rlc_p->vr_ux);
+
+    l_rlc_p->vr_ur = sn;
+    l_rlc_p->vr_uh = sn;
+
+    /*
     if (sl_reset_rlc_flag == SL_RESET_RLC_FLAG_YES) {
         l_rlc_p->vr_ur = 0;
         l_rlc_p->vr_ux = 0;
@@ -390,7 +413,7 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
        l_rlc_p->vr_ux = l_rlc_p->vr_ux % 3;
        l_rlc_p->vr_uh = l_rlc_p->vr_uh % 3;
     }
-
+*/
 #endif
 
     rlc_um_receive (ctxt_pP, l_rlc_p, data_indP);
