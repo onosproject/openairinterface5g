@@ -3866,7 +3866,9 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 		       frame_rx,
 		       eNB_id,
 		       ue->dlsch_SI[eNB_id]->harq_processes[0]->b,
-		       ue->dlsch_SI[eNB_id]->harq_processes[0]->TBS>>3);
+		       ue->dlsch_SI[eNB_id]->harq_processes[0]->TBS>>3,
+		       NULL,NULL,NULL);
+
 	  break;
 	case P_PDSCH:
 		// Panos: Substitute call with call to fill_dlsch_indication()

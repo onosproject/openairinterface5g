@@ -6212,7 +6212,24 @@ void *rrc_control_socket_thread_fct(void *arg)
    return 0;
 }
 
+int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
+		    uint8_t*               const Sdu,
+		    const uint8_t                Sdu_len) {
 
+  memcpy((void*)&UE_rrc_inst[ctxt_pP->module_id].SL_MIB, (void*)Sdu, Sdu_len);
+
+  asn_dec_rval_t dec_rval = uper_decode_complete( NULL,
+                            &asn_DEF_SBCCH_SL_BCH_Message,
+                            (void **)&UE_rrc_inst[ctxt_pP->module_id].SL_mib[0],
+                            (const void *)Sdu,
+                            Sdu_len );
+
+  if ((dec_rval.code != RC_OK) && (dec_rval.consumed==0)) {
+    LOG_E(RRC,"[UE %d] Frame %d : Failed to decode SBCCH_SL_BCH_Message (%zu bytes)\n",ctxt_pP->module_id,ctxt_pP->frame,dec_rval.consumed);
+    return -1;
+  }
+  return(0);
+}
 //-----------------------------------------------------------------------------
 int decode_SL_Discovery_Message(
   const protocol_ctxt_t* const ctxt_pP,

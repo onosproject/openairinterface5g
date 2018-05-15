@@ -290,7 +290,6 @@ uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
 
    AssertFatal(eNB_index==0,"eNB_index needs to be 0\n");
 
-   if (UE->SL_MIB == NULL) UE->SL_MIB = (uint8_t*) CALLOC(1,5);
 
    if (in_coverage > 0 ){
       //in coverage

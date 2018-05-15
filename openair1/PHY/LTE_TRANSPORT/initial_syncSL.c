@@ -51,14 +51,31 @@ int initial_syncSL(PHY_VARS_UE *ue) {
 				    &avglevel);
   printf("index %d, psslevel %lld dB avglevel %lld dB => %d sample offset\n",
 	 index,dB_fixed(psslevel),dB_fixed(avglevel),ue->rx_offsetSL);
-  int32_t sss_metric;
-  int32_t phase_max;
-  rx_slsss(ue,&sss_metric,&phase_max,index);
-  generate_sl_grouphop(ue);
-  
-  if (rx_psbch(ue) == -1)
-    ue->slbch_errors++;
-  else {
+  if (ue->rx_offsetSL >= 0) {
+    int32_t sss_metric;
+    int32_t phase_max;
+    rx_slsss(ue,&sss_metric,&phase_max,index);
+    generate_sl_grouphop(ue);
+    
+    if (rx_psbch(ue) == -1) {
+      ue->slbch_errors++;
+      return(-1);
+    }
+    else {
     // send payload to RRC
+      LOG_I(PHY,"Synchronization with SyncREF UE found, sending MIB-SL to RRC\n");
+      ue_decode_si(ue->Mod_id,
+		   0, // CC_id
+		   0, // frame
+		   0, // eNB_index
+		   NULL, // pdu, NULL for MIB-SL
+		   0,    // len, 0 for MIB-SL
+		   &ue->slss_rx,
+		   &frame,
+		   &subframe);
+
+      LOG_I(PHY,"RRC returns MIB-SL for frame %d, subframe %d\n");		   
+      return(-1);
+    }
   }
 }

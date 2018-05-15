@@ -704,19 +704,7 @@ static void *UE_thread_synchSL(void *arg)
     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synchSL), "");
    
     // Do initial synch here
-    LOG_I(PHY,"Running PSS timing estimation first\n");
-    int MLind;
-    int64_t maxlev;
-    int64_t avglev;
-    int rxoffset = lte_sync_timeSL(UE,
-				   &MLind,
-				   &maxlev,
-				   &avglev);
-    if (rxoffset>=0) LOG_I(PHY,"Most likely Nid_SL/168 = %d with rxoffset %d, lev %d dB, avg %d dB\n", MLind,rxoffset,dB_fixed(maxlev),dB_fixed(avglev));
-
-    int32_t sss_metric;
-    int32_t phase_max; 
-    rx_slsss(UE,&sss_metric,&phase_max,MLind,0);
+    if (initial_synchSL(UE) >= 0)
 	  
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
     UE->proc.instance_cnt_synchSL--;

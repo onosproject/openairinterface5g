@@ -272,6 +272,17 @@ mac_rrc_data_ind_ue(
 #endif // Rel10 || Rel14
 
 #ifdef Rel14
+    if (srb_idP == MIBSLCH) {
+      LOG_I(RRC,"[UE %d] Received SDU for MIBSL\n");
+      if (decode_MIB_SL(&ctxt,sduP,5)>=0) {
+//	rrc_mac_config_request();
+
+      }
+      else {
+
+      }
+
+    }
     //TTN (for D2D)
     if(srb_idP == SL_DISCOVERY) {
        LOG_I(RRC,"[UE %d] Received SDU (%d bytes) for SL_DISCOVERY on SRB %d from eNB %d\n",module_idP, sdu_lenP, srb_idP,eNB_indexP);

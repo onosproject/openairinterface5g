@@ -507,7 +507,8 @@ void mac_out_of_sync_ind(module_id_t module_idP, frame_t frameP,
 			 uint16_t CH_index);
 
 void ue_decode_si(module_id_t module_idP, int CC_id, frame_t frame,
-		  uint8_t CH_index, void *pdu, uint16_t len);
+		  uint8_t CH_index, void *pdu, uint16_t len,
+		  SLSS_t *slss, int *rxframe, int *rxsubframe);
 
 void ue_decode_p(module_id_t module_idP, int CC_id, frame_t frame,
 		 uint8_t CH_index, void *pdu, uint16_t len);
