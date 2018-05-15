@@ -142,6 +142,69 @@ if(option ==1)
   return(0);
 }
 
+///////////////////////////////////////////////////////////////////////////
+////////////////////////////////temp  function////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+int dlsch_encoding_rar_NB_IoT(unsigned char      			*a,
+			              NB_IoT_DL_eNB_RAR_t 			*dlsch, //NB_IoT_eNB_NDLSCH_t
+			              uint8_t 			 	Nsf,       // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
+			              unsigned int 		 		G,
+			              uint8_t option) 		    // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
+{
+	uint32_t  crc = 1;
+	//unsigned char harq_pid = dlsch->current_harq_pid;  			// to check during implementation if harq_pid is required in the NB_IoT_eNB_DLSCH_t structure  in defs_NB_IoT.h
+	//uint8_t 	  option1,option2,option3,option4;
+	unsigned int  A;
+	uint8_t 	  RCC;
+
+    uint8_t       npbch_a[7];
+    uint8_t       npbch_a_crc[10];
+	bzero(npbch_a,7); 
+	bzero(npbch_a_crc,10);
+  
+	 A 							 = 56;
+
+	dlsch->length_e = G;									// G*Nsf (number_of_subframes) = total number of bits to transmit G=236
+
+	int32_t numbits = A+24;
+
+if(option ==1)
+{  
+	for (int i=0; i<7; i++) 												
+	{	
+		npbch_a[i] = a[i];    
+	}
+} else {
+	for (int i=0; i<33; i++) 												
+	{	
+		npbch_a[i] = a[i];    
+	}
+}
+    
+     
+	crc = crc24a_NB_IoT(npbch_a,A)>>8;
+	
+
+    for (int j=0; j<7; j++) 												
+	{	
+		npbch_a_crc[j] = npbch_a[j];    
+	}
+
+    npbch_a_crc[7] = ((uint8_t*)&crc)[2];
+    npbch_a_crc[8] = ((uint8_t*)&crc)[1];
+	npbch_a_crc[9] = ((uint8_t*)&crc)[0];
+	
+		dlsch->B = numbits;			// The length of table b in bits
+		//memcpy(dlsch->b,a,numbits/8);        // comment if option 2 
+		memset(dlsch->d,LTE_NULL_NB_IoT,96);
+		ccode_encode_npdsch_NB_IoT(numbits,npbch_a_crc,dlsch->d+96,crc);
+		RCC = sub_block_interleaving_cc_NB_IoT(numbits,dlsch->d+96,dlsch->w);		//   step 2 interleaving
+		lte_rate_matching_cc_NB_IoT(RCC,dlsch->length_e,dlsch->w,dlsch->e);  // step 3 Rate Matching
+				
+  return(0);
+}
+
 /*************************************************************************
 
   Functions to initialize the code tables

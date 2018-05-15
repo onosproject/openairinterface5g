@@ -513,7 +513,8 @@ typedef struct PHY_VARS_eNB_s {
 NB_IoT_eNB_NPBCH_t        npbch;
 NB_IoT_eNB_NDLSCH_t       *ndlsch[NUMBER_OF_UE_MAX];
 NB_IoT_eNB_NDLSCH_t       ndlsch_SIB;
-
+NB_IoT_eNB_NDLSCH_t       ndlsch_rar;
+NB_IoT_eNB_NPDCCH_temp_t  npdcch_tmp;
 ////////////// For IF Module /////////////////////////////
 
 IF_Module_NB_IoT_t          *if_inst; 

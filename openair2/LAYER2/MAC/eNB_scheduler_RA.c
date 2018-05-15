@@ -741,7 +741,7 @@ printf("MAC: msg4 acknowledged for rnti %x fsf %d/%d, let's configure it\n", RA_
 void initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t preamble_index,int16_t timing_offset,uint8_t sect_id,sub_frame_t subframeP,
                       uint8_t f_id)
 {
-
+    printf("xxxxxxxxxxxxxxxxxx  LTE xxxxxxxxxxxxxxxxxxx");
   uint8_t i;
   RA_TEMPLATE *RA_template = (RA_TEMPLATE *)&eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[0];
 

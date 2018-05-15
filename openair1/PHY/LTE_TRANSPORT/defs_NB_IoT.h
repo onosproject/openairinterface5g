@@ -177,6 +177,37 @@ typedef struct {
 } NB_IoT_DL_eNB_SIB_t;
 
 typedef struct {
+ uint16_t              si_rnti;
+  /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
+  uint8_t               e[236];
+  /// data after scrambling
+  uint8_t               s_e[236];
+  //length of the table e
+  uint16_t              length_e;                // new parameter
+  /// Tail-biting convolutional coding outputs
+  uint8_t               d[96+(3*(24+56))];  // new parameter
+  /// Sub-block interleaver outputs
+  uint8_t               w[3*3*(56+24)];      // new parameter
+
+  /// Status Flag indicating for this DLSCH (idle,active,disabled)
+  //SCH_status_t status;
+  /// Transport block size
+  uint32_t              TBS;
+  /// The payload + CRC size in bits, "B" from 36-212
+  uint32_t              B;
+  /// Pointer to the payload
+  uint8_t               *b;
+  ///pdu of the ndlsch message
+  uint8_t               *pdu;
+  /// Frame where current HARQ round was sent
+  uint32_t              frame;
+  /// Subframe where current HARQ round was sent
+  uint32_t              subframe;
+   uint8_t               pdu_buffer_index;
+
+} NB_IoT_DL_eNB_RAR_t;
+
+typedef struct {
   /// NB-IoT
   SCH_status_NB_IoT_t   status;
   /// The scheduling the NPDCCH and the NPDSCH transmission TS 36.213 Table 16.4.1-1
@@ -590,7 +621,7 @@ typedef struct {
   //////////////////////////////////////////////////////////////////////
   NB_IoT_DL_eNB_SIB_t    content_sib1;
   NB_IoT_DL_eNB_SIB_t    content_sib23;
-
+  NB_IoT_DL_eNB_RAR_t    content_rar;
 
   /// Number of soft channel bits
   uint32_t                G;
@@ -832,6 +863,20 @@ typedef struct {
   uint8_t   *pdu;
 
 } NB_IoT_eNB_NPBCH_t;
+
+#define NPDCCH_A 23
+
+typedef struct {
+  //the 2 LSB of the hsfn (the MSB are indicated by the SIB1-NB)
+  uint16_t  h_sfn_lsb;
+
+  uint8_t   npdcch_d[2][96+(3*(16+NPDCCH_A))];
+  uint8_t   npdcch_w[2][3*3*(16+NPDCCH_A)];
+  uint8_t   npdcch_e[2][236];
+  ///pdu of the npbch message
+  uint8_t   pdu[2][3];
+
+} NB_IoT_eNB_NPDCCH_temp_t;
 
 
 #endif

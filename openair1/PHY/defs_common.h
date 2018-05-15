@@ -76,6 +76,11 @@ typedef struct {
 
   uint8_t dci_to_transmit;
 
+  uint8_t rar_to_transmit;
+
+  int next_frame_tx;
+  int next_subframe_tx;
+
   uint32_t sheduling_info_rar;
 
   uint8_t remaining_dci;

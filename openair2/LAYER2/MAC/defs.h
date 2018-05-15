@@ -808,7 +808,7 @@ typedef struct {
   /// DCI format for Msg4/ContRes (should be 1A)
   uint8_t RA_dci_fmt2;
   /// Flag to indicate the eNB should generate RAR.  This is triggered by detection of PRACH
-  uint8_t generate_rar;
+  volatile uint8_t generate_rar;
   /// Subframe where preamble was received
   uint8_t preamble_subframe;
   /// Subframe where Msg3 is to be sent
@@ -820,7 +820,7 @@ typedef struct {
   /// UE RNTI allocated during RAR
   rnti_t rnti;
   /// RA RNTI allocated from received PRACH
-  uint16_t RA_rnti;
+  volatile uint16_t RA_rnti;
   /// Received preamble_index
   uint8_t preamble_index;
   /// Received UE Contention Resolution Identifier
