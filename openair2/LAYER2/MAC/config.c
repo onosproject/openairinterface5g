@@ -1392,7 +1392,13 @@ rrc_mac_config_req_ue(
            j = 0;
            k = 0;
            for (k = 0; k< MAX_NUM_LCID_DATA; k++) {
-              if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) && (j == 0)) j = k+1;
+              if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) && (UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == 0) && (UE_mac_inst[Mod_idP].sl_info[k].groupL2Id == 0) && (j == 0)) j = k+1;
+
+              if ((UE_mac_inst[Mod_idP].sl_info[k].groupL2Id == *groupL2Id) && (UE_mac_inst[Mod_idP].sl_info[k].LCID == 0 )) {
+                 UE_mac_inst[Mod_idP].sl_info[k].LCID = logicalChannelIdentity;
+                 break; //(LCID, G) already exists!
+              }
+
               if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity) && (UE_mac_inst[Mod_idP].sl_info[k].groupL2Id == *groupL2Id)) break; //(LCID, G) already exists!
            }
            if ((k == MAX_NUM_LCID_DATA) && (j > 0)) {
@@ -1411,7 +1417,11 @@ rrc_mac_config_req_ue(
            j = 0;
            k = 0;
            for (k = 0; k< MAX_NUM_LCID_DATA; k++) {
-              if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) && (j == 0)) j = k+1;
+              if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) &&  (UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == 0)  && (UE_mac_inst[Mod_idP].sl_info[k].groupL2Id == 0) && (j == 0)) j = k+1;
+              if ((UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == *destinationL2Id) && (UE_mac_inst[Mod_idP].sl_info[k].LCID == 0 )) {
+                 UE_mac_inst[Mod_idP].sl_info[k].LCID = logicalChannelIdentity;
+                 break; //(LCID, D) already exists!
+              }
               if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity) && (UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == *destinationL2Id)) break; //(LCID, D) already exists!
            }
            if ((k == MAX_NUM_LCID_DATA) && (j > 0)) {
@@ -1430,7 +1440,13 @@ rrc_mac_config_req_ue(
         j = 0;
         k = 0;
         for (k = MAX_NUM_LCID_DATA; k < MAX_NUM_LCID; k++) {
-           if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) && (j == 0)) j = k+1;
+           if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) && (UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == 0) && (UE_mac_inst[Mod_idP].sl_info[k].groupL2Id == 0) && (j == 0)) j = k+1;
+           if (destinationL2Id){
+              if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) && (UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == *destinationL2Id )) {
+                 UE_mac_inst[Mod_idP].sl_info[k].LCID = logicalChannelIdentity;
+                 break;
+              }
+           }
            if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity)) break;
            //&& (UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == *destinationL2Id)) break; //(LCID, D) already exists!
         }
