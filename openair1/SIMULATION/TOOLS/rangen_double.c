@@ -158,7 +158,7 @@ static __m128 x __attribute__((aligned(16)));
 #define SHR3_SSE (jsr_128=_mm_loadu_si128((__m128i *)jsr4),jz_128=jsr_128, jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,13),jsr_128),jsr_128=_mm_xor_si128(_mm_srli_epi32(jsr_128,17),jsr_128),jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,5),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128),_mm_add_epi32(jz_128,jsr_128))
 #define UNI_SSE (_mm_add_ps(_mm_mul_ps(_mm_set1_ps(0.2328306e-9),_mm_cvtepi32_ps(SHR3_SSE)),_mm_set1_ps(0.5)))
 
-#define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz4,iz_128),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),count99=(count99>99)?0:count99+4,nfix_first_run=(count99>99)?0:1,(_mm_testc_si128(cmplt_option0_128,_mm_setr_epi32(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF)))?x=_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])):nfix_SSE(iz_128))
+#define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz4,iz_128),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),count99=(count99>99)?0:count99+4,nfix_first_run=(count99>99)?0:1,(_mm_testc_si128(cmplt_option0_128,_mm_setr_epi32(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF)))?_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])):nfix_SSE(iz_128))
 
 //#define NOR1_SSE (hz1_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz1,hz1_128),iz1_128=_mm_and_si128(hz1_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz1,iz1_128),abs_hz1_128=_mm_and_si128(hz1_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz1,abs_hz1_128))
 
@@ -189,7 +189,7 @@ __m128 nfix_SSE(__m128i iz)
     //x=hz *  wn[iz];
     _mm_storeu_si128((__m128i *)iz4_i,iz_128);
     _mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128);
-    _mm_storeu_ps(x4_option0,x);
+    _mm_storeu_ps(x4_option0,_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])));
     count0=0;
     for (i=0;i<4;i++)
     {
