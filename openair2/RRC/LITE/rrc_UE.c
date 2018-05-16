@@ -1019,6 +1019,9 @@ rrc_ue_process_measConfig(
 			  0,
 			  NULL,
 			  NULL,
+			  NULL,
+			  1025, // indicates that there is no  update in the frame number
+			  11,   // /indicates that there isno update in the subframe number
 			  NULL
 #endif
 			  );
@@ -1539,6 +1542,9 @@ rrc_ue_process_radioResourceConfigDedicated(
 				0,
 				NULL,
 				NULL,
+				NULL,
+				1025, // indicates that there is no  update in the frame number
+				11,   // /indicates that there isno update in the subframe number
 				NULL
 #endif
 				);
@@ -1605,6 +1611,9 @@ rrc_ue_process_radioResourceConfigDedicated(
 				0,
 				NULL,
 				NULL,
+				NULL,
+				1025, // indicates that there is no  update in the frame number
+				11,   // /indicates that there isno update in the subframe number
 				NULL
 #endif
 				);
@@ -1720,6 +1729,9 @@ rrc_ue_process_radioResourceConfigDedicated(
 			      0,
 			      NULL,
 			      NULL,
+			      NULL,
+			      1025, // indicates that there is no  update in the frame number
+			      11,   // /indicates that there isno update in the subframe number
 			      NULL
 #endif
 			      );
@@ -2306,6 +2318,9 @@ rrc_ue_process_mobilityControlInfo(
 			0,
 			NULL,
 			NULL,
+			NULL,
+			1025, // indicates that there is no  update in the frame number
+			11,   // /indicates that there isno update in the subframe number
 			NULL
 #endif
 			);
@@ -3175,6 +3190,9 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
 			0,
 			NULL,
 			NULL,
+			NULL,
+			1025, // indicates that there is no  update in the frame number
+			11,   // /indicates that there isno update in the subframe number
 			NULL
 #endif
 			);
@@ -3861,6 +3879,9 @@ uint64_t arfcn_to_freq(long arfcn) {
 			      0,
 			      NULL,
 			      NULL,
+			      NULL,
+			      1025, // indicates that there is no  update in the frame number
+			      11,   // /indicates that there isno update in the subframe number
 			      NULL
 #endif
 			      );
@@ -4048,6 +4069,9 @@ uint64_t arfcn_to_freq(long arfcn) {
 			      0,
 			      NULL,
 			      NULL,
+			      NULL,
+			      1025, // indicates that there is no  update in the frame number
+			      11,   // /indicates that there isno update in the subframe number
 			      NULL
 #endif
 			      );
@@ -4555,6 +4579,9 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
 			0,
 			NULL,
 			NULL,
+			NULL,
+			1025, // indicates that there is no  update in the frame number
+			11,   // /indicates that there isno update in the subframe number
 			NULL
 #endif
 			);
@@ -5162,7 +5189,10 @@ openair_rrc_top_init_ue(
 			    ,CONFIG_ACTION_NULL,
 			    (const uint32_t *)NULL,
 			    (const uint32_t *)NULL,
-			    UE_rrc_inst[module_id].SL_Preconfiguration[0]
+			    UE_rrc_inst[module_id].SL_Preconfiguration[0],
+			    1025, // indicates that there is no  update in the frame number
+			    11,   // /indicates that there isno update in the subframe number
+			    NULL
 			    
 #endif
 #endif
@@ -5655,40 +5685,43 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          //configure MAC with sourceL2Id/groupL2ID
          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
-               (RadioResourceConfigCommonSIB_t *)NULL,
-               (struct PhysicalConfigDedicated *)NULL,
+			       (RadioResourceConfigCommonSIB_t *)NULL,
+			       (struct PhysicalConfigDedicated *)NULL,
 #if defined(Rel10) || defined(Rel14)
-               (SCellToAddMod_r10_t *)NULL,
-               //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
+			       (SCellToAddMod_r10_t *)NULL,
+			       //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
 #endif
-               (MeasObjectToAddMod_t **)NULL,
-               (MAC_MainConfig_t *)NULL,
-               3, //LCID
-               (struct LogicalChannelConfig *)NULL,
-               (MeasGapConfig_t *)NULL,
-               (TDD_Config_t *)NULL,
-               (MobilityControlInfo_t *)NULL,
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               NULL
+			       (MeasObjectToAddMod_t **)NULL,
+			       (MAC_MainConfig_t *)NULL,
+			       3, //LCID
+			       (struct LogicalChannelConfig *)NULL,
+			       (MeasGapConfig_t *)NULL,
+			       (TDD_Config_t *)NULL,
+			       (MobilityControlInfo_t *)NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL,
+			       NULL
 #if defined(Rel10) || defined(Rel14)
-               ,0,
-               (MBSFN_AreaInfoList_r9_t *)NULL,
-               (PMCH_InfoList_r9_t *)NULL
-
+			       ,0,
+			       (MBSFN_AreaInfoList_r9_t *)NULL,
+			       (PMCH_InfoList_r9_t *)NULL
+			       
 #endif
 #ifdef CBA
-               ,
-               0,
-               0
+			       ,
+			       0,
+			       0
 #endif
 #if defined(Rel10) || defined(Rel14)
 			       ,CONFIG_ACTION_ADD,
 			       &sourceL2Id,
 			       &groupL2Id,
+			       NULL,
+			       1025, // indicates that there is no  update in the frame number
+			       11,   // /indicates that there isno update in the subframe number
 			       NULL
 #endif
          );
@@ -5762,6 +5795,9 @@ void *rrc_control_socket_thread_fct(void *arg)
 			       ,CONFIG_ACTION_REMOVE,
 			       &sourceL2Id,
 			       &destinationL2Id,
+			       NULL,
+			       1025, // indicates that there is no  update in the frame number
+			       11,   // /indicates that there isno update in the subframe number
 			       NULL
 
          #endif
@@ -5941,6 +5977,9 @@ void *rrc_control_socket_thread_fct(void *arg)
 			       ,CONFIG_ACTION_ADD,
 			       &sourceL2Id,
 			       &destinationL2Id,
+			       NULL,
+			       1025, // indicates that there is no  update in the frame number
+			       11,   // /indicates that there isno update in the subframe number
 			       NULL
 #endif
          );
@@ -6127,6 +6166,9 @@ void *rrc_control_socket_thread_fct(void *arg)
 				  ,CONFIG_ACTION_ADD,
 				  &sourceL2Id,
 				  &destinationL2Id,
+				  NULL,
+				  1025, // indicates that there is no  update in the frame number
+				  11,   // /indicates that there isno update in the subframe number
 				  NULL
 #endif
             );
@@ -6167,6 +6209,9 @@ void *rrc_control_socket_thread_fct(void *arg)
 				  ,CONFIG_ACTION_ADD,
 				  &sourceL2Id,
 				  NULL,
+				  NULL,
+				  1025, // indicates that there is no  update in the frame number
+				  11,   // /indicates that there isno update in the subframe number
 				  NULL
 #endif
             );
@@ -6228,6 +6273,50 @@ int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
     LOG_E(RRC,"[UE %d] Frame %d : Failed to decode SBCCH_SL_BCH_Message (%zu bytes)\n",ctxt_pP->module_id,ctxt_pP->frame,dec_rval.consumed);
     return -1;
   }
+
+  rrc_mac_config_req_ue(ctxt_pP->module_id, 0, 0,
+			(RadioResourceConfigCommonSIB_t *)NULL,
+			(struct PhysicalConfigDedicated *)NULL,
+#if defined(Rel10) || defined(Rel14)
+			(SCellToAddMod_r10_t *)NULL,
+			//(struct PhysicalConfigDedicatedSCell_r10 *)NULL,
+#endif
+			(MeasObjectToAddMod_t **)NULL,
+			(MAC_MainConfig_t *)NULL,
+			0,
+			(struct LogicalChannelConfig *)NULL,
+			(MeasGapConfig_t *)NULL,
+			NULL,
+			(MobilityControlInfo_t *) NULL,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			NULL,
+			(MBSFN_SubframeConfigList_t *)NULL
+#if defined(Rel10) || defined(Rel14)
+			,0,
+			(MBSFN_AreaInfoList_r9_t *)NULL,
+			(PMCH_InfoList_r9_t *)NULL
+
+#endif
+#ifdef CBA
+			,
+			0,
+			0
+#endif
+#if defined(Rel14)
+			,
+			0,
+			NULL,
+			NULL,
+			NULL,
+			BIT_STRING_to_uint32(&UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.directFrameNumber_r12), // indicates that there is no  update in the frame number
+			UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.directSubframeNumber_r12,   // /indicates that there isno update in the subframe number
+			&UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.sl_Bandwidth_r12
+#endif
+			);
+
   return(0);
 }
 //-----------------------------------------------------------------------------

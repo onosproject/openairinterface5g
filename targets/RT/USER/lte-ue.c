@@ -704,7 +704,7 @@ static void *UE_thread_synchSL(void *arg)
     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synchSL), "");
    
     // Do initial synch here
-    if (initial_synchSL(UE) >= 0)
+    if (initial_syncSL(UE) >= 0)
 	  
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
     UE->proc.instance_cnt_synchSL--;

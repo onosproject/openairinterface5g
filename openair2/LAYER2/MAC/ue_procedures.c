@@ -612,6 +612,10 @@ ue_decode_si(module_id_t module_idP, int CC_id, frame_t frameP,
 			  SI_RNTI,
 			  MIBSLCH, (uint8_t *) pdu, len, eNB_index,
 			  0);
+      // copy frame/subframe
+      *frame    = UE_mac_inst[module_idP].directFrameNumber_r12;
+      *subframe = UE_mac_inst[module_idP].directSubframeNumber_r12;
+      LOG_I(MAC,"SL: Resetting SF.SFN to %d.%d\n",*frame,*subframe);
     }
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
 	(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_SI, VCD_FUNCTION_OUT);

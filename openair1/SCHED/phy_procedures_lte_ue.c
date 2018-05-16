@@ -2353,8 +2353,8 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
 
 
     
-  AssertFatal(frame_tx>=0 && frame_tx < 1024, "frame_tx %d is not in 0...1023\n");
-  AssertFatal(subframe_tx>=0 && subframe_tx < 10, "frame_tx %d is not in 0...1023\n");
+  AssertFatal(frame_tx>=0 && frame_tx < 1024, "frame_tx %d is not in 0...1023\n",frame_tx);
+  AssertFatal(subframe_tx>=0 && subframe_tx < 10, "frame_tx %d is not in 0...9\n",subframe_tx);
   
   LOG_D(PHY,"****** start Sidelink TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, subframe_tx);
 

@@ -44,6 +44,7 @@ int initial_syncSL(PHY_VARS_UE *ue) {
   int index;
   int64_t psslevel;
   int64_t avglevel;
+  int frame,subframe;
 
   ue->rx_offsetSL = lte_sync_timeSL(ue,
 				    &index,

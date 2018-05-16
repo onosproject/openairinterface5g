@@ -1318,7 +1318,6 @@ typedef struct {
     uint16_t extendedBSR_Sizes_r10;
     /// default value is false
     uint16_t extendedPHR_r10;
-
     //Bj bucket usage per  lcid
     int16_t Bj[MAX_NUM_LCID];
     // Bucket size per lcid
@@ -1326,31 +1325,31 @@ typedef struct {
 } UE_SCHEDULING_INFO;
 /*!\brief Top level UE MAC structure */
 typedef struct {
-    uint16_t Node_id;
-    /// RX frame counter
-    frame_t rxFrame;
-    /// RX subframe counter
-    sub_frame_t rxSubframe;
-    /// TX frame counter
-    frame_t txFrame;
-    /// TX subframe counter
-    sub_frame_t txSubframe;
-    /// C-RNTI of UE
-    uint16_t crnti;
-    /// C-RNTI of UE before HO
-    rnti_t crnti_before_ho;	///user id (rnti) of connected UEs
-    /// uplink active flag
-    uint8_t ul_active;
-    /// pointer to RRC PHY configuration
-    RadioResourceConfigCommonSIB_t *radioResourceConfigCommon;
-    /// pointer to RACH_ConfigDedicated (NULL when not active, i.e. upon HO completion or T304 expiry)
-    struct RACH_ConfigDedicated *rach_ConfigDedicated;
-    /// pointer to RRC PHY configuration
-    struct PhysicalConfigDedicated *physicalConfigDedicated;
+  uint16_t Node_id;
+  /// RX frame counter
+  frame_t rxFrame;
+  /// RX subframe counter
+  sub_frame_t rxSubframe;
+  /// TX frame counter
+  frame_t txFrame;
+  /// TX subframe counter
+  sub_frame_t txSubframe;
+  /// C-RNTI of UE
+  uint16_t crnti;
+  /// C-RNTI of UE before HO
+  rnti_t crnti_before_ho;	///user id (rnti) of connected UEs
+  /// uplink active flag
+  uint8_t ul_active;
+  /// pointer to RRC PHY configuration
+  RadioResourceConfigCommonSIB_t *radioResourceConfigCommon;
+  /// pointer to RACH_ConfigDedicated (NULL when not active, i.e. upon HO completion or T304 expiry)
+  struct RACH_ConfigDedicated *rach_ConfigDedicated;
+  /// pointer to RRC PHY configuration
+  struct PhysicalConfigDedicated *physicalConfigDedicated;
 #if defined(Rel10) || defined(Rel14)
-    /// pointer to RRC PHY configuration SCEll
-    struct PhysicalConfigDedicatedSCell_r10
-	*physicalConfigDedicatedSCell_r10;
+  /// pointer to RRC PHY configuration SCEll
+  struct PhysicalConfigDedicatedSCell_r10
+  *physicalConfigDedicatedSCell_r10;
 #endif
 #if defined(Rel14)
   /// Preconfiguration for Sidelink
@@ -1408,6 +1407,9 @@ typedef struct {
   SLSS_t slss;
   ULSCH_PDU slsch_pdu;
   int slsch_lcid;
+  uint32_t directFrameNumber_r12;
+  long directSubframeNumber_r12;
+  long sl_Bandwidth_r12;
 #endif
   
   /// number of attempt for rach

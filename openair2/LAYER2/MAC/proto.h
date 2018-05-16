@@ -1030,7 +1030,10 @@ int rrc_mac_config_req_ue(module_id_t module_idP,
 			  ,config_action_t config_action,
 			  const uint32_t * const sourceL2Id,
 			  const uint32_t * const destinationL2Id,
-			  SL_Preconfiguration_r12_t *SL_Preconfiguration_r12_t
+			  SL_Preconfiguration_r12_t *SL_Preconfiguration_r12_t,
+			  uint32_t directFrame_r12,
+			  long directSubframe_r12,
+			  long *sl_Bandwidth_r12
 #endif
 			  );
 

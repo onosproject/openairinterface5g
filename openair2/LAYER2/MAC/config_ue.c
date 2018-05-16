@@ -140,8 +140,10 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 		      ,config_action_t config_action
 		      ,const uint32_t * const sourceL2Id
 		      ,const uint32_t * const destinationL2Id,
-		      SL_Preconfiguration_r12_t *SL_Preconfiguration_r12
-
+		      SL_Preconfiguration_r12_t *SL_Preconfiguration_r12,
+		      uint32_t directFrameNumber_r12,
+		      long directSubframeNumber_r12,
+		      long *sl_Bandwidth_r12
 #endif
 		      )
 {
@@ -666,7 +668,10 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 		"PSCCH bitmap limited to 42 bits\n");
     UE_mac_inst[Mod_idP].slsch.SubframeBitmapSL_length = SubframeBitmapSL[preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present];
     UE_mac_inst[Mod_idP].slsch.bitmap1 = *((uint64_t*)preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf);
- }
+  }
+  if (directFrameNumber_r12<1025) UE_mac_inst[Mod_idP].directFrameNumber_r12     = directFrameNumber_r12;
+  if (directSubframeNumber_r12<11) UE_mac_inst[Mod_idP].directSubframeNumber_r12 = directSubframeNumber_r12;
+  if (sl_Bandwidth_r12) UE_mac_inst[Mod_idP].sl_Bandwidth_r12        = *sl_Bandwidth_r12;
 #endif
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME

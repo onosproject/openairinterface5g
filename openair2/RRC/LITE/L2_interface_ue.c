@@ -143,7 +143,7 @@ mac_rrc_data_req_ue(
 int8_t
 mac_rrc_data_ind_ue(
   const module_id_t     module_idP,
-  const int             CC_id,
+  const int             CC_idP,
   const frame_t         frameP,
   const sub_frame_t     sub_frameP,
   const rnti_t          rntiP,
@@ -272,17 +272,13 @@ mac_rrc_data_ind_ue(
 #endif // Rel10 || Rel14
 
 #ifdef Rel14
+
     if (srb_idP == MIBSLCH) {
       LOG_I(RRC,"[UE %d] Received SDU for MIBSL\n");
-      if (decode_MIB_SL(&ctxt,sduP,5)>=0) {
-//	rrc_mac_config_request();
-
-      }
-      else {
-
-      }
-
+      if (decode_MIB_SL(&ctxt,sduP,5)>=0) LOG_E(RRC,"Received  MIB_SL\n");
+      else                                LOG_E(RRC,"Received bogus MIB_SL\n");
     }
+
     //TTN (for D2D)
     if(srb_idP == SL_DISCOVERY) {
        LOG_I(RRC,"[UE %d] Received SDU (%d bytes) for SL_DISCOVERY on SRB %d from eNB %d\n",module_idP, sdu_lenP, srb_idP,eNB_indexP);
