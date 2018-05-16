@@ -56,7 +56,7 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   ue->frame_parms.Nid_SL = slss->slss_id;
 
   // 6 PRBs => ceil(10*log10(6)) = 8 
-  ue->tx_power_dBm[subframe_tx] = 8;
+  ue->tx_power_dBm[subframe_tx] = -6;
   ue->tx_total_RE[subframe_tx] = 72;
 
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
