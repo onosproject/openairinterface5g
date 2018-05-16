@@ -704,8 +704,12 @@ static void *UE_thread_synchSL(void *arg)
     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synchSL), "");
    
     // Do initial synch here
-    if (initial_syncSL(UE) >= 0)
-	  
+    if (initial_syncSL(UE) >= 0) LOG_I(PHY,"Found SynchRef UE\n");
+    else {
+      LOG_I(PHY,"No SynchRefUE found\n");
+      write_output("rxsig0.m","rxs0",&UE->common_vars.rxdata_syncSL[0][0],40*UE->frame_parms.samples_per_tti,1,1);
+      exit(-1);
+    }	  
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
     UE->proc.instance_cnt_synchSL--;
     UE->is_synchronizedSL = 0;

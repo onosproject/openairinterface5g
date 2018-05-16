@@ -79,4 +79,8 @@ int initial_syncSL(PHY_VARS_UE *ue) {
       return(-1);
     }
   }
+  else {
+     write_output("rxsig0.m","rxs0",&ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe],ue->frame_parms.samples_per_tti,1,1);
+     exit(-1);
+  }
 }
