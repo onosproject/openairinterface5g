@@ -1066,7 +1066,6 @@ extern "C" {
             }
             else{
                 s->usrp->set_clock_source("external");
-		s->usrp->set_time_source("external");
             }	
 
             device->type = USRP_B200_DEV;

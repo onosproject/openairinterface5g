@@ -42,6 +42,8 @@
 #define PSBCH_A 40
 #define PSBCH_E 1008 //12REs/PRB*6PRBs*7symbols*2 bits/RB
 
+#define PSBCH_DEBUG 1
+
 
 
 	  
@@ -150,6 +152,8 @@ int rx_psbch(PHY_VARS_UE *ue) {
     ru_tmp.common.rxdata_7_5kHz[aa] = (int32_t*)&ue->common_vars.rxdata_syncSL[aa][ue->rx_offsetSL*2];
   ru_tmp.common.rxdataF = (int32_t**)rxdataF;
   ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
+
+  LOG_I(PHY,"Running PBCH detection with Nid_SL %d\n",ue->frame_parms.Nid_SL);
   
   for (int l=0; l<11; l++) {
     slot_fep_ul(&ru_tmp,l%7,(l>6)?1:0,0);
