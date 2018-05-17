@@ -100,7 +100,7 @@ int slpss_ch_est(PHY_VARS_UE *ue,
 {
 
   int16_t *pss;
-  int16_t *pss0_ext2,*sss0_ext2,*sss0_ext3,*sss1_ext3,tmp_re,tmp_im,tmp0_re2,tmp0_im2,tmp1_re2,tmp1_im2;
+  int16_t *pss0_ext2,*sss0_ext2,*sss0_ext3,*sss1_ext3,tmp0_re,tmp0_im,tmp1_re,tmp1_im,tmp0_re2,tmp0_im2,tmp1_re2,tmp1_im2;
 
   int16_t *pss1_ext2,*sss1_ext2;
   uint8_t aarx,i;
@@ -134,19 +134,22 @@ int slpss_ch_est(PHY_VARS_UE *ue,
     for (i=0; i<62; i++) {
 
       // This is H*(PSS) = R* \cdot PSS
-      tmp_re = (int16_t)((((pss0_ext2[i<<1]+pss1_ext2[i<<1]) * (int32_t)pss[i<<1])>>15)     + (((pss0_ext2[1+(i<<1)]+pss1_ext2[1+(i<<1)]) * (int32_t)pss[1+(i<<1)])>>15));
-      tmp_im = (int16_t)((((pss0_ext2[i<<1]+pss1_ext2[i<<1]) * (int32_t)pss[1+(i<<1)])>>15) - (((pss0_ext2[1+(i<<1)]+pss1_ext2[1+(i<<1)]) * (int32_t)pss[(i<<1)])>>15));
+      tmp0_re = (int16_t)((((pss0_ext2[i<<1]) * (int32_t)pss[i<<1])>>15)     + (((pss0_ext2[1+(i<<1)]) * (int32_t)pss[1+(i<<1)])>>15));
+      tmp0_im = (int16_t)((((pss0_ext2[i<<1]) * (int32_t)pss[1+(i<<1)])>>15) - (((pss0_ext2[1+(i<<1)]) * (int32_t)pss[(i<<1)])>>15));
+      tmp1_re = (int16_t)((((pss1_ext2[i<<1]) * (int32_t)pss[i<<1])>>15)     + (((pss1_ext2[1+(i<<1)]) * (int32_t)pss[1+(i<<1)])>>15));
+      tmp1_im = (int16_t)((((pss1_ext2[i<<1]) * (int32_t)pss[1+(i<<1)])>>15) - (((pss1_ext2[1+(i<<1)]) * (int32_t)pss[(i<<1)])>>15));
+
       //      printf("H*(%d,%d) : (%d,%d)\n",aarx,i,tmp_re,tmp_im);
       // This is R(SSS0) \cdot H*(PSS)
-      tmp0_re2 = (int16_t)(((tmp_re * (int32_t)sss0_ext2[i<<1])>>15)  - 
-			   ((tmp_im * (int32_t)sss0_ext2[1+(i<<1)])>>15));
-      tmp0_im2 = (int16_t)(((tmp_re * (int32_t)sss0_ext2[1+(i<<1)])>>15) + 
-			   ((tmp_im * (int32_t)sss0_ext2[(i<<1)])>>15));
+      tmp0_re2 = (int16_t)(((tmp0_re * (int32_t)sss0_ext2[i<<1])>>12)  - 
+			   ((tmp0_im * (int32_t)sss0_ext2[1+(i<<1)])>>12));
+      tmp0_im2 = (int16_t)(((tmp0_re * (int32_t)sss0_ext2[1+(i<<1)])>>12) + 
+			   ((tmp0_im * (int32_t)sss0_ext2[(i<<1)])>>12));
       // This is R(SSS1) \cdot H*(PSS)
-      tmp1_re2 = (int16_t)(((tmp_re * (int32_t)sss1_ext2[i<<1])>>15)  - 
-			   ((tmp_im * (int32_t)sss1_ext2[1+(i<<1)])>>15));
-      tmp1_im2 = (int16_t)(((tmp_re * (int32_t)sss1_ext2[1+(i<<1)])>>15) + 
-			   ((tmp_im * (int32_t)sss1_ext2[(i<<1)])>>15));
+      tmp1_re2 = (int16_t)(((tmp1_re * (int32_t)sss1_ext2[i<<1])>>12)  - 
+			   ((tmp1_im * (int32_t)sss1_ext2[1+(i<<1)])>>12));
+      tmp1_im2 = (int16_t)(((tmp1_re * (int32_t)sss1_ext2[1+(i<<1)])>>12) + 
+			   ((tmp1_im * (int32_t)sss1_ext2[(i<<1)])>>12));
     
       //      printf("SSSi(%d,%d) : (%d,%d)\n",aarx,i,sss_ext2[i<<1],sss_ext2[1+(i<<1)]);
       //      printf("SSSo(%d,%d) : (%d,%d)\n",aarx,i,tmp_re2,tmp_im2);
@@ -342,8 +345,8 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2)
 		    0);
 
   //  write_output("rxdataF0.m","rxF0",&rxdataF[0][0],2*14*ue->frame_parms.ofdm_symbol_size,1,1);
-  //  write_output("pss0_ext.m","pss0ext",pss0_ext,72,1,1);
-  //  write_output("sss0_ext.m","sss0ext",sss0_ext,72,1,1);
+    write_output("pss0_ext.m","pss0ext",pss0_ext,72,1,1);
+    write_output("sss0_ext.m","sss0ext",sss0_ext,72,1,1);
 
   //  exit(-1);
 
@@ -357,7 +360,8 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2)
 	       sss1_ext,
 	       Nid2);
 
-  //  write_output("sss0_comp0.m","sss0comp0",sss0_ext,72,1,1);
+    write_output("sss0_comp0.m","sss0comp0",sss0_ext,72,1,1);
+    write_output("sss1_comp0.m","sss1comp0",sss1_ext,72,1,1);
   //  exit(-1);
   // now do the SSS detection based on the precomputed sequences in PHY/LTE_TRANSPORT/sss.h
 
@@ -377,8 +381,8 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2)
       // This is the inner product using one particular value of each unknown parameter
       for (i=0; i<62; i++) {
 	metric += 
-	  (int16_t)(((d0[i]*((((phaseSL_re[phase]*(int32_t)sss0[i<<1])>>19)-((phaseSL_im[phase]*(int32_t)sss0[1+(i<<1)])>>19)))))) + 
-	  (int16_t)(((d5[i]*((((phaseSL_re[phase]*(int32_t)sss1[i<<1])>>19)-((phaseSL_im[phase]*(int32_t)sss1[1+(i<<1)])>>19))))));
+	  (int16_t)(((d0[i]*((((phaseSL_re[phase]*(int32_t)sss0[i<<1])>>15)-((phaseSL_im[phase]*(int32_t)sss0[1+(i<<1)])>>15)))))) + 
+	  (int16_t)(((d5[i]*((((phaseSL_re[phase]*(int32_t)sss1[i<<1])>>15)-((phaseSL_im[phase]*(int32_t)sss1[1+(i<<1)])>>15))))));
       }
       
       // if the current metric is better than the last save it

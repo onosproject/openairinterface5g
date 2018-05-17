@@ -54,7 +54,7 @@ int lte_sync_time_init(LTE_DL_FRAME_PARMS *frame_parms )   // LTE_UE_COMMON *com
   int i,k;
 
   sync_corr_ue0 = (int32_t *)malloc16(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int32_t)*frame_parms->samples_per_tti);
-  sync_corr_ue1 = (int32_t *)malloc16(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int32_t)*frame_parms->samples_per_tti);
+  sync_corr_ue1 = (int32_t *)malloc16(4*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int32_t)*frame_parms->samples_per_tti);
   sync_corr_ue2 = (int32_t *)malloc16(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int32_t)*frame_parms->samples_per_tti);
 
   if (sync_corr_ue0) {
@@ -708,14 +708,15 @@ int lte_sync_timeSL(PHY_VARS_UE *ue,
     }
     sync_corr0[nprime]=magtmp0;
     sync_corr1[nprime]=magtmp1;
-    if (n<FRAME_LENGTH_COMPLEX_SAMPLES) sync_corr_ue1[n] = magtmp1; 
+    if (n<4*FRAME_LENGTH_COMPLEX_SAMPLES) sync_corr_ue1[n] = magtmp1; 
   }
   avg0/=(length/4);
   avg1/=(length/4);
 
   // PSS in symbol 1
   int pssoffset = frame_parms->ofdm_symbol_size + frame_parms->nb_prefix_samples0;
-  
+  printf("maxpos1 = %d, pssoffset = %d\n",maxpos1,pssoffset);
+ 
   if (maxlev0 > maxlev1) {
     if ((int64_t)maxlev0 > (5*avg0)) {*lev = maxlev0; *ind=0; *avg=avg0; return((length+maxpos0-pssoffset)%length);};
   }
