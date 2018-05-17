@@ -22,6 +22,7 @@
 extern int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind);
 extern int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind);
 extern int oai_nfapi_rach_ind(nfapi_rach_indication_t *rach_ind);
+//extern static int rrc_set_state (module_id_t ue_mod_idP, Rrc_State_t state);
 void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, int pnf_p7_port, int vnf_p7_port);
 
 
@@ -87,6 +88,7 @@ void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND
 
 void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint16_t rnti) {
 
+	LOG_I(MAC, "fill_sr_indication_UE_MAC() for Mod_Id: %d \n", Mod_id);
 
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 
@@ -650,10 +652,12 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 		}
 		else if (dl_config_pdu_list[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti_type == 2) {
 			dl_config_pdu_tmp = &dl_config_pdu_list[i+1];
+			//LOG_I(MAC, "Panos-D: Before decoding SIB1 1\n \n");
 			if(dl_config_pdu_tmp->pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE && dl_config_pdu_list[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti == 0xFFFF && UE_mac_inst[Mod_id].UE_mode[0] != NOT_SYNCHED){ //&& UE_mac_inst[Mod_id].UE_mode[0] != NOT_SYNCHED
 
 				if(dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index <= tx_req_num_elems -1){
 				//if(tx_request_pdu_list + dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index!= NULL){
+					//LOG_I(MAC, "Panos-D: Before decoding SIB1 2\n \n");
 					ue_decode_si(Mod_id, 0, sfn, 0,
 							tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
 							tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_length);
@@ -717,12 +721,13 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
     	// for our case.
     	//LOG_E(MAC,"dl_config_req_UE_MAC 4 Received MIB: sfn/sf: %d.%d \n", sfn, sf);
     	if(UE_mac_inst[Mod_id].UE_mode[0] == NOT_SYNCHED){
+    		//rrc_set_state(Mod_id, RRC_STATE_IDLE);
     		dl_phy_sync_success(Mod_id,sfn,0, 1);
     		LOG_E(MAC,"dl_config_req_UE_MAC 5 Received MIB: UE_mode: %d, sfn/sf: %d.%d\n", UE_mac_inst[Mod_id].UE_mode[0], sfn, sf);
     		UE_mac_inst[Mod_id].UE_mode[0]=PRACH;
     	}
-    	else
-    		dl_phy_sync_success(Mod_id,sfn,0, 0);
+    	//else
+    		//dl_phy_sync_success(Mod_id,sfn,0, 0);
 
     }
 

@@ -103,6 +103,8 @@ extern UE_MAC_INST *UE_mac_inst;
 extern void *bigphys_malloc(int);
 #endif
 
+extern uint8_t  nfapi_mode;
+
 //#define XER_PRINT
 
 //extern int8_t dB_fixed2(uint32_t x,uint32_t y);
@@ -2988,6 +2990,11 @@ int decode_BCCH_DLSCH_Message(
     return 0;
   }
 
+  // Temporary better solution should be found for nfapi_mode=3
+  if(UE_rrc_inst[ctxt_pP->module_id].RrcState == RRC_STATE_INACTIVE && nfapi_mode==3)
+	  UE_rrc_inst[ctxt_pP->module_id].RrcState = RRC_STATE_IDLE;
+
+  //LOG_I(RRC, "decode_BCCH_DLSCH_Message before calling rrc_set_sub_state() \n");
   rrc_set_sub_state( ctxt_pP->module_id, RRC_SUB_STATE_IDLE_RECEIVING_SIB );
 
   asn_dec_rval_t dec_rval = uper_decode_complete( NULL,
@@ -4778,10 +4785,12 @@ void *rrc_ue_task( void *args_p )
       if (UE_rrc_inst[ue_mod_id].Info[RRC_MAC_IN_SYNC_IND (msg_p).enb_index].T310_active == 1) {
         UE_rrc_inst[ue_mod_id].Info[RRC_MAC_IN_SYNC_IND (msg_p).enb_index].N311_cnt++;
       }
+      //LOG_I(RRC, "In rrc_ue_task() received RRC_MAC_IN_SYNC_IND message through ITTI, UE RRC state: %d \n", rrc_get_state(ue_mod_id));
 
       break;
 
     case RRC_MAC_OUT_OF_SYNC_IND:
+    	//LOG_I(RRC, "In rrc_ue_task() received RRC_MAC_OUT_OF_SYNC_IND message through ITTI, UE RRC state: %d \n", rrc_get_state(ue_mod_id));
       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
             RRC_MAC_OUT_OF_SYNC_IND (msg_p).frame, RRC_MAC_OUT_OF_SYNC_IND (msg_p).enb_index);
 
@@ -4789,6 +4798,7 @@ void *rrc_ue_task( void *args_p )
       break;
 
     case RRC_MAC_BCCH_DATA_IND:
+    	//LOG_I(RRC, "In rrc_ue_task() received RRC_MAC_BCCH_DATA_IND message through ITTI, UE RRC state: %d \n", rrc_get_state(ue_mod_id));
       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
             RRC_MAC_BCCH_DATA_IND (msg_p).frame, RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
 
@@ -4910,7 +4920,7 @@ void *rrc_ue_task( void *args_p )
       /* NAS messages */
     case NAS_CELL_SELECTION_REQ:
 
-      LOG_D(RRC, "[UE %d] Received %s: state %d, plmnID (%d%d%d.%d%d%d), rat %x\n", ue_mod_id, msg_name, rrc_get_state(ue_mod_id),
+      LOG_I(RRC, "[UE %d] Received %s: state %d, plmnID (%d%d%d.%d%d%d), rat %x\n", ue_mod_id, msg_name, rrc_get_state(ue_mod_id),
             NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit1,
             NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit2,
             NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit3,
@@ -4921,6 +4931,7 @@ void *rrc_ue_task( void *args_p )
 
       if (rrc_get_state(ue_mod_id) == RRC_STATE_INACTIVE) {
         // have a look at MAC/main.c void dl_phy_sync_success(...)
+    	  LOG_I(RRC, "rrc_ue_task() in RRC_STATE_INACTIVE before openair_rrc_ue_init() \n");
         openair_rrc_ue_init(ue_mod_id,0);
       }
 
@@ -4941,6 +4952,7 @@ void *rrc_ue_task( void *args_p )
 
       switch (rrc_get_state(ue_mod_id)) {
       case RRC_STATE_INACTIVE: {
+    	  LOG_I(RRC, "Panos-D: rrc_ue_task() RRC state: RRC_STATE_INACTIVE \n");
         /* Need to first activate lower layers */
         MessageDef *message_p;
 
@@ -4953,6 +4965,7 @@ void *rrc_ue_task( void *args_p )
       }
 
       case RRC_STATE_IDLE: {
+    	  LOG_I(RRC, "Panos-D: rrc_ue_task() RRC state: RRC_STATE_IDLE \n");
         /* Ask to layer 1 to find a cell matching the criterion */
         MessageDef *message_p;
 

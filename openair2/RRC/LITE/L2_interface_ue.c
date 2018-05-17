@@ -159,6 +159,7 @@ mac_rrc_data_ind_ue(
 
 #if defined(ENABLE_ITTI)
       {
+    	  //LOG_I(RRC, "Panos-D: In mac_rrc_data_ind_ue() ITTI \n \n");
         MessageDef *message_p;
         int msg_sdu_size = sizeof(RRC_MAC_BCCH_DATA_IND (message_p).sdu);
 
@@ -182,6 +183,7 @@ mac_rrc_data_ind_ue(
         itti_send_msg_to_task (TASK_RRC_UE, ctxt.instance, message_p);
       }
 #else
+      //LOG_I(RRC, "Panos-D: In mac_rrc_data_ind_ue() outside ITTI \n \n");
       decode_BCCH_DLSCH_Message(&ctxt,eNB_indexP,(uint8_t*)sduP,sdu_lenP, 0, 0);
 #endif
     }
@@ -396,6 +398,7 @@ void rrc_in_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index)
   //-------------------------------------------------------------------------------------------//
 #if defined(ENABLE_ITTI)
   {
+	  LOG_I(RRC, "Panos-D: rrc_in_sync_ind 0 \n");
     MessageDef *message_p;
     //LOG_I(RRC,"sending a message to task_mac_ue\n");
     message_p = itti_alloc_new_message (TASK_MAC_UE, RRC_MAC_IN_SYNC_IND);
@@ -406,9 +409,8 @@ void rrc_in_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index)
   }
 #else
   UE_rrc_inst[Mod_idP].Info[eNB_index].N310_cnt=0;
-
+  LOG_I(RRC, "Panos-D: rrc_in_sync_ind 1 \n");
   if (UE_rrc_inst[Mod_idP].Info[eNB_index].T310_active==1) {
-	  LOG_I(RRC, "Panos-D: rrc_in_sync_ind 1 \n");
     UE_rrc_inst[Mod_idP].Info[eNB_index].N311_cnt++;
   }
 
