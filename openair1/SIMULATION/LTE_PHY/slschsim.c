@@ -354,14 +354,15 @@ int main(int argc, char **argv) {
 	UE->slss_generated=0;
 	frame = absSF/10;
 	subframe= absSF%10;
-	check_and_generate_psdch(UE,frame,subframe);
-	UE->slsch_active = 1;
-	check_and_generate_pscch(UE,frame,subframe);
-	proc.subframe_tx = subframe;
-	proc.frame_tx    = frame;
-	check_and_generate_pssch(UE,&proc,frame,subframe);
-	check_and_generate_slss(UE,frame,subframe);
-	
+        if (do_SLSS==0) {
+	   check_and_generate_psdch(UE,frame,subframe);
+	   UE->slsch_active = 1;
+	   check_and_generate_pscch(UE,frame,subframe);
+	   proc.subframe_tx = subframe;
+	   proc.frame_tx    = frame;
+	   check_and_generate_pssch(UE,&proc,frame,subframe);
+        }
+	   check_and_generate_slss(UE,frame,subframe);
 	if (UE->psdch_generated>0 || UE->pscch_generated > 0 || UE->pssch_generated > 0 || UE->slss_generated > 0) {
 	  AssertFatal(UE->pscch_generated<3,"Illegal pscch_generated %d\n",UE->pscch_generated);
 	  // FEP
