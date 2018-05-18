@@ -42,7 +42,7 @@
 #define PSBCH_A 40
 #define PSBCH_E 1008 //12REs/PRB*6PRBs*7symbols*2 bits/RB
 
-#define PSBCH_DEBUG 1
+//#define PSBCH_DEBUG 1
 
 
 
@@ -149,7 +149,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
   ru_tmp.N_TA_offset=0;
   ru_tmp.common.rxdata_7_5kHz     = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*)); 
   for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) 
-    ru_tmp.common.rxdata_7_5kHz[aa] = (int32_t*)&ue->common_vars.rxdata_syncSL[aa][ue->rx_offsetSL*2];
+    ru_tmp.common.rxdata_7_5kHz[aa] = ue->sl_rxdata_7_5kHz[aa];//(int32_t*)&ue->common_vars.rxdata_syncSL[aa][ue->rx_offsetSL*2];
   ru_tmp.common.rxdataF = (int32_t**)rxdataF;
   ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
 

@@ -40,6 +40,8 @@ const int16_t *primary_synch2_time;
 
 const int16_t *primary_synch0SL_time;
 const int16_t *primary_synch1SL_time;
+int16_t *primary_synch0SL_time_rx;
+int16_t *primary_synch1SL_time_rx;
 
 
 #include "PHY/CODING/vars.h"
