@@ -635,7 +635,7 @@ static void *UE_thread_synch(void *arg)
   return &UE_thread_synch_retval;
 }
 
-extern int32_t* sync_corr_ue1;
+extern int64_t* sync_corr_ue1;
 
 static void *UE_thread_synchSL(void *arg)
 {
