@@ -40,9 +40,9 @@
 #endif
 //#define DEBUG_PHY
 
-int32_t* sync_corr_ue0 = NULL;
-int32_t* sync_corr_ue1 = NULL;
-int32_t* sync_corr_ue2 = NULL;
+int64_t* sync_corr_ue0 = NULL;
+int64_t* sync_corr_ue1 = NULL;
+int64_t* sync_corr_ue2 = NULL;
 
 
 extern int16_t s6n_kHz_7_5[1920];
@@ -64,8 +64,8 @@ int lte_sync_time_init(LTE_DL_FRAME_PARMS *frame_parms )   // LTE_UE_COMMON *com
   int32_t sync_tmp[2048*4] __attribute__((aligned(32)));
   int16_t syncF_tmp[2048*2] __attribute__((aligned(32)));
 
-  sync_corr_ue0 = (int32_t *)malloc16(4*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int32_t)*frame_parms->samples_per_tti);
-  sync_corr_ue1 = (int32_t *)malloc16(4*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int32_t)*frame_parms->samples_per_tti);
+  sync_corr_ue0 = (int64_t *)malloc16(4*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int64_t)*frame_parms->samples_per_tti);
+  sync_corr_ue1 = (int64_t *)malloc16(4*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int64_t)*frame_parms->samples_per_tti);
   sync_corr_ue2 = (int32_t *)malloc16(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int32_t)*frame_parms->samples_per_tti);
 
   if (sync_corr_ue0) {
@@ -773,8 +773,8 @@ int lte_sync_timeSL(PHY_VARS_UE *ue,
     avg0 += magtmp0;
     avg1 += magtmp1;
     if (n<4*FRAME_LENGTH_COMPLEX_SAMPLES) {
-      sync_corr_ue1[n] = (int32_t)(magtmp1>>31);       
-      sync_corr_ue0[n] = (int32_t)(magtmp0>>31);       
+      sync_corr_ue1[n] = magtmp1;     
+      sync_corr_ue0[n] = magtmp0;       
     }
   }
   avg0/=(length/4);

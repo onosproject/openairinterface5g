@@ -330,7 +330,7 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2)
     ru_tmp.common.rxdata            = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*)); 
     for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) { 
       ru_tmp.common.rxdata_7_5kHz[aa] = (int32_t*)ue->sl_rxdata_7_5kHz[aa];
-      ru_tmp.common.rxdata[aa]        = (int32_t*)ue->common_vars.rxdata_syncSL[aa];
+      ru_tmp.common.rxdata[aa]        = (int32_t*)&ue->common_vars.rxdata_syncSL[aa][2*ue->rx_offsetSL];
     }
     ru_tmp.common.rxdataF = (int32_t**)rxdataF;
     ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;

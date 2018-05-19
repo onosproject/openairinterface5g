@@ -68,9 +68,9 @@ extern int16_t *primary_synch1SL_time;
 extern int16_t *primary_synch0SL_time_rx;
 extern int16_t *primary_synch1SL_time_rx;
 
-extern int *sync_corr_ue0; //!< index [0..10*samples_per_tti[
-extern int *sync_corr_ue1; //!< index [0..10*samples_per_tti[
-extern int *sync_corr_ue2; //!< index [0..10*samples_per_tti[
+extern int64_t *sync_corr_ue0; //!< index [0..10*samples_per_tti[
+extern int64_t *sync_corr_ue1; //!< index [0..10*samples_per_tti[
+extern int64_t *sync_corr_ue2; //!< index [0..10*samples_per_tti[
 
 extern int flagMag;
 //extern short **txdataF_rep_tmp;
