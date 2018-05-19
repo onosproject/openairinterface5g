@@ -60,6 +60,7 @@ int initial_syncSL(PHY_VARS_UE *ue) {
   
     if (rx_psbch(ue) == -1) {
       ue->slbch_errors++;
+
       write_output("rxsig0.m","rxs0",&ue->common_vars.rxdata_syncSL[0][0],40*ue->frame_parms.samples_per_tti,1,1);
       write_output("corr0.m","rxsync0",sync_corr_ue0,40*ue->frame_parms.samples_per_tti,1,2);
       write_output("corr1.m","rxsync1",sync_corr_ue1,40*ue->frame_parms.samples_per_tti,1,2);
