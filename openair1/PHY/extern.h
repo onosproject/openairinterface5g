@@ -60,11 +60,11 @@ extern short primary_synch1SL[144];
 extern unsigned char primary_synch0_tab[72];
 extern unsigned char primary_synch1_tab[72];
 extern unsigned char primary_synch2_tab[72];
-extern const int16_t *primary_synch0_time; //!< index: [0..ofdm_symbol_size*2[
-extern const int16_t *primary_synch1_time; //!< index: [0..ofdm_symbol_size*2[
-extern const int16_t *primary_synch2_time; //!< index: [0..ofdm_symbol_size*2[
-extern const int16_t *primary_synch0SL_time;
-extern const int16_t *primary_synch1SL_time;
+extern int16_t *primary_synch0_time; //!< index: [0..ofdm_symbol_size*2[
+extern int16_t *primary_synch1_time; //!< index: [0..ofdm_symbol_size*2[
+extern int16_t *primary_synch2_time; //!< index: [0..ofdm_symbol_size*2[
+extern int16_t *primary_synch0SL_time;
+extern int16_t *primary_synch1SL_time;
 extern int16_t *primary_synch0SL_time_rx;
 extern int16_t *primary_synch1SL_time_rx;
 

@@ -359,10 +359,10 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2)
 		    0);
 
   //  write_output("rxdataF0.m","rxF0",&rxdataF[0][0],2*14*ue->frame_parms.ofdm_symbol_size,1,1);
-  /*  write_output("pss0_ext.m","pss0ext",pss0_ext,72,1,1);
+    write_output("pss0_ext.m","pss0ext",pss0_ext,72,1,1);
     write_output("sss0_ext.m","sss0ext",sss0_ext,72,1,1);
     write_output("pss1_ext.m","pss1ext",pss1_ext,72,1,1);
-    write_output("sss1_ext.m","sss1ext",sss1_ext,72,1,1); */
+    write_output("sss1_ext.m","sss1ext",sss1_ext,72,1,1); 
 
 
 
@@ -400,9 +400,10 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2)
       sss0_comp16[i] = (int16_t)(sss0comp[i]>>shift);
       sss1_comp16[i] = (int16_t)(sss1comp[i]>>shift);
   }
-    /*write_output("sss0_comp0.m","sss0comp0",sss0_comp16,72,1,1);
-    write_output("sss1_comp0.m","sss1comp0",sss1_comp16,72,1,1);*/
-  //  exit(-1);
+/*
+    write_output("sss0_comp0.m","sss0comp0",sss0_comp16,72,1,1);
+    write_output("sss1_comp0.m","sss1comp0",sss1_comp16,72,1,1);
+    exit(-1); */
   // now do the SSS detection based on the precomputed sequences in PHY/LTE_TRANSPORT/sss.h
 
   *tot_metric = -99999999;
