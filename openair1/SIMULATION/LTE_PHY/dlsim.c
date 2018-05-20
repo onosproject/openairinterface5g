@@ -1667,9 +1667,9 @@ int main(int argc, char **argv)
               write_output("txsig0.m","txs0", &ru->common.txdata[0][subframe* eNB->frame_parms.samples_per_tti], eNB->frame_parms.samples_per_tti,1,1);
 
               if (transmission_mode<7) {
-	        write_output("txsigF0.m","txsF0x", &ru->common.txdataF_BF[0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+	        write_output("txsigF0.m","txsF0x", &ru->common.txdataF_BF[0][0],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
               } else if (transmission_mode == 7) {
-                write_output("txsigF0.m","txsF0", &ru->common.txdataF_BF[5][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+                write_output("txsigF0.m","txsF0", &ru->common.txdataF_BF[5][0],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
                 write_output("txsigF0_BF.m","txsF0_BF", &ru->common.txdataF_BF[0][0],eNB->frame_parms.ofdm_symbol_size,1,1);
               }
             }
@@ -1729,6 +1729,7 @@ int main(int argc, char **argv)
 	  dci_received = UE->pdcch_vars[UE->current_thread_id[proc->subframe_rx]][eNB_id]->dci_received;
 
 	  phy_procedures_UE_RX(UE,proc,0,0,dci_flag,normal_txrx,no_relay,NULL);
+
 
 	  dci_received = dci_received - UE->pdcch_vars[UE->current_thread_id[proc->subframe_rx]][eNB_id]->dci_received;
 

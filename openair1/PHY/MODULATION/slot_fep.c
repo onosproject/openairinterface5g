@@ -21,7 +21,7 @@
 
 #include "PHY/defs.h"
 #include "defs.h"
-//#define DEBUG_FEP
+#define DEBUG_FEP
 
 #define SOFFSET 0
 
@@ -240,6 +240,7 @@ int slot_fep(PHY_VARS_UE *ue,
 #ifdef DEBUG_FEP
   printf("slot_fep: done\n");
 #endif
+
   return(0);
 }
 

@@ -1559,19 +1559,19 @@ void dlsch_channel_compensation(int **rxdataF_ext,
     // mmtmpD0 = [ch0*ch0 + ch1*ch1,ch0*ch0 + ch1*ch1,ch2*ch2 + ch3*ch3,ch2*ch2 + ch3*ch3]>>output_shift128 on 32-bits
     mmtmpD1 = vmull_s16(dl_ch128[1], dl_ch128[1]);
     mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-    mmtmpD2 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+    mmtmpD2 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
     // mmtmpD2 = [ch0*ch0 + ch1*ch1,ch0*ch0 + ch1*ch1,ch2*ch2 + ch3*ch3,ch2*ch2 + ch3*ch3,ch4*ch4 + ch5*ch5,ch4*ch4 + ch5*ch5,ch6*ch6 + ch7*ch7,ch6*ch6 + ch7*ch7]>>output_shift128 on 16-bits
     mmtmpD0 = vmull_s16(dl_ch128[2], dl_ch128[2]);
     mmtmpD0 = vqshlq_s32(vqaddq_s32(mmtmpD0,vrev64q_s32(mmtmpD0)),output_shift128);
     mmtmpD1 = vmull_s16(dl_ch128[3], dl_ch128[3]);
     mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-    mmtmpD3 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+    mmtmpD3 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
     if (pilots==0) {
       mmtmpD0 = vmull_s16(dl_ch128[4], dl_ch128[4]);
       mmtmpD0 = vqshlq_s32(vqaddq_s32(mmtmpD0,vrev64q_s32(mmtmpD0)),output_shift128);
       mmtmpD1 = vmull_s16(dl_ch128[5], dl_ch128[5]);
       mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-      mmtmpD4 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+      mmtmpD4 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
     }
 
     dl_ch_mag128b[0] = vqdmulhq_s16(mmtmpD2,QAM_amp128b);
@@ -1603,7 +1603,7 @@ void dlsch_channel_compensation(int **rxdataF_ext,
 
   mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
   mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-  rxdataF_comp128[0] = vzip_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+  rxdataF_comp128[0] = vzip_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
   mmtmpD0 = vmull_s16(dl_ch128[2], rxdataF128[2]);
   mmtmpD1 = vmull_s16(dl_ch128[3], rxdataF128[3]);
   mmtmpD0 = vcombine_s32(vpadd_s32(vget_low_s32(mmtmpD0),vget_high_s32(mmtmpD0)),
@@ -1614,7 +1614,7 @@ void dlsch_channel_compensation(int **rxdataF_ext,
              vpadd_s32(vget_low_s32(mmtmpD1b),vget_high_s32(mmtmpD1b)));
   mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
   mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-  rxdataF_comp128[1] = vzip_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+  rxdataF_comp128[1] = vzip_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
   if (pilots==0) {
     mmtmpD0 = vmull_s16(dl_ch128[4], rxdataF128[4]);
@@ -1630,7 +1630,7 @@ void dlsch_channel_compensation(int **rxdataF_ext,
 
     mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
     mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-    rxdataF_comp128[2] = vzip_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+    rxdataF_comp128[2] = vzip_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
 
     dl_ch128+=6;
@@ -1667,7 +1667,7 @@ void dlsch_channel_compensation(int **rxdataF_ext,
 
   mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
   mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-  rho128[0] = vzip_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+  rho128[0] = vzip_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
   mmtmpD0 = vmull_s16(dl_ch128[2], dl_ch128_2[2]);
   mmtmpD1 = vmull_s16(dl_ch128[3], dl_ch128_2[3]);
@@ -1680,7 +1680,7 @@ void dlsch_channel_compensation(int **rxdataF_ext,
 
   mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
   mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-  rho128[1] = vzip_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+  rho128[1] = vzip_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
   mmtmpD0 = vmull_s16(dl_ch128[0], dl_ch128_2[0]);
   mmtmpD1 = vmull_s16(dl_ch128[1], dl_ch128_2[1]);
@@ -1693,7 +1693,7 @@ void dlsch_channel_compensation(int **rxdataF_ext,
 
   mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
   mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-  rho128[2] = vzip_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+  rho128[2] = vzip_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
 
   dl_ch128+=6;
@@ -2189,19 +2189,19 @@ void dlsch_channel_compensation_TM56(int **rxdataF_ext,
         // mmtmpD0 = [ch0*ch0 + ch1*ch1,ch0*ch0 + ch1*ch1,ch2*ch2 + ch3*ch3,ch2*ch2 + ch3*ch3]>>output_shift128 on 32-bits
         mmtmpD1 = vmull_s16(dl_ch0_128[1], dl_ch0_128[1]);
         mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-        mmtmpD2 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+        mmtmpD2 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
         // mmtmpD2 = [ch0*ch0 + ch1*ch1,ch0*ch0 + ch1*ch1,ch2*ch2 + ch3*ch3,ch2*ch2 + ch3*ch3,ch4*ch4 + ch5*ch5,ch4*ch4 + ch5*ch5,ch6*ch6 + ch7*ch7,ch6*ch6 + ch7*ch7]>>output_shift128 on 16-bits
         mmtmpD0 = vmull_s16(dl_ch0_128[2], dl_ch0_128[2]);
         mmtmpD0 = vqshlq_s32(vqaddq_s32(mmtmpD0,vrev64q_s32(mmtmpD0)),output_shift128);
         mmtmpD1 = vmull_s16(dl_ch0_128[3], dl_ch0_128[3]);
         mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-        mmtmpD3 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+        mmtmpD3 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
         if (pilots==0) {
           mmtmpD0 = vmull_s16(dl_ch0_128[4], dl_ch0_128[4]);
           mmtmpD0 = vqshlq_s32(vqaddq_s32(mmtmpD0,vrev64q_s32(mmtmpD0)),output_shift128);
           mmtmpD1 = vmull_s16(dl_ch0_128[5], dl_ch0_128[5]);
           mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-          mmtmpD4 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+          mmtmpD4 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
 
         }
@@ -2235,7 +2235,7 @@ void dlsch_channel_compensation_TM56(int **rxdataF_ext,
 
       mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
       mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-      rxdataF_comp128[0] = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+      rxdataF_comp128[0] = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
       mmtmpD0 = vmull_s16(dl_ch0_128[2], rxdataF128[2]);
       mmtmpD1 = vmull_s16(dl_ch0_128[3], rxdataF128[3]);
@@ -2249,7 +2249,7 @@ void dlsch_channel_compensation_TM56(int **rxdataF_ext,
 
       mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
       mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-      rxdataF_comp128[1] = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+      rxdataF_comp128[1] = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
       if (pilots==0) {
         mmtmpD0 = vmull_s16(dl_ch0_128[4], rxdataF128[4]);
@@ -2265,7 +2265,7 @@ void dlsch_channel_compensation_TM56(int **rxdataF_ext,
 
         mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
         mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-        rxdataF_comp128[2] = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+        rxdataF_comp128[2] = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
 
         dl_ch0_128+=6;
@@ -2814,20 +2814,20 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
         // mmtmpD0 = [ch0*ch0 + ch1*ch1,ch0*ch0 + ch1*ch1,ch2*ch2 + ch3*ch3,ch2*ch2 + ch3*ch3]>>output_shift128 on 32-bits
         mmtmpD1 = vmull_s16(dl_ch0_128[1], dl_ch0_128[1]);
         mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-        mmtmpD2 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+        mmtmpD2 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
         // mmtmpD2 = [ch0*ch0 + ch1*ch1,ch0*ch0 + ch1*ch1,ch2*ch2 + ch3*ch3,ch2*ch2 + ch3*ch3,ch4*ch4 + ch5*ch5,ch4*ch4 + ch5*ch5,ch6*ch6 + ch7*ch7,ch6*ch6 + ch7*ch7]>>output_shift128 on 16-bits
         mmtmpD0 = vmull_s16(dl_ch0_128[2], dl_ch0_128[2]);
         mmtmpD0 = vqshlq_s32(vqaddq_s32(mmtmpD0,vrev64q_s32(mmtmpD0)),output_shift128);
         mmtmpD1 = vmull_s16(dl_ch0_128[3], dl_ch0_128[3]);
         mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-        mmtmpD3 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+        mmtmpD3 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
         if (pilots==0) {
           mmtmpD0 = vmull_s16(dl_ch0_128[4], dl_ch0_128[4]);
           mmtmpD0 = vqshlq_s32(vqaddq_s32(mmtmpD0,vrev64q_s32(mmtmpD0)),output_shift128);
           mmtmpD1 = vmull_s16(dl_ch0_128[5], dl_ch0_128[5]);
           mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-          mmtmpD4 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+          mmtmpD4 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
 
         }
@@ -2852,20 +2852,20 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
         // mmtmpD0 = [ch0*ch0 + ch1*ch1,ch0*ch0 + ch1*ch1,ch2*ch2 + ch3*ch3,ch2*ch2 + ch3*ch3]>>output_shift128 on 32-bits
         mmtmpD1 = vmull_s16(dl_ch1_128[1], dl_ch1_128[1]);
         mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-        mmtmpD2 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+        mmtmpD2 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
         // mmtmpD2 = [ch0*ch0 + ch1*ch1,ch0*ch0 + ch1*ch1,ch2*ch2 + ch3*ch3,ch2*ch2 + ch3*ch3,ch4*ch4 + ch5*ch5,ch4*ch4 + ch5*ch5,ch6*ch6 + ch7*ch7,ch6*ch6 + ch7*ch7]>>output_shift128 on 16-bits
         mmtmpD0 = vmull_s16(dl_ch1_128[2], dl_ch1_128[2]);
         mmtmpD0 = vqshlq_s32(vqaddq_s32(mmtmpD0,vrev64q_s32(mmtmpD0)),output_shift128);
         mmtmpD1 = vmull_s16(dl_ch1_128[3], dl_ch1_128[3]);
         mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-        mmtmpD3 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+        mmtmpD3 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
         if (pilots==0) {
           mmtmpD0 = vmull_s16(dl_ch1_128[4], dl_ch1_128[4]);
           mmtmpD0 = vqshlq_s32(vqaddq_s32(mmtmpD0,vrev64q_s32(mmtmpD0)),output_shift128);
           mmtmpD1 = vmull_s16(dl_ch1_128[5], dl_ch1_128[5]);
           mmtmpD1 = vqshlq_s32(vqaddq_s32(mmtmpD1,vrev64q_s32(mmtmpD1)),output_shift128);
-          mmtmpD4 = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+          mmtmpD4 = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
 
         }
@@ -2900,7 +2900,7 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
 
       mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
       mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-      rxdataF_comp0_128[0] = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+      rxdataF_comp0_128[0] = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
       mmtmpD0 = vmull_s16(dl_ch0_128[2], rxdataF128[2]);
       mmtmpD1 = vmull_s16(dl_ch0_128[3], rxdataF128[3]);
@@ -2914,7 +2914,7 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
 
       mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
       mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-      rxdataF_comp0_128[1] = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+      rxdataF_comp0_128[1] = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
       // second stream
       mmtmpD0 = vmull_s16(dl_ch1_128[0], rxdataF128[0]);
@@ -2931,7 +2931,7 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
 
       mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
       mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-      rxdataF_comp1_128[0] = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+      rxdataF_comp1_128[0] = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
       mmtmpD0 = vmull_s16(dl_ch1_128[2], rxdataF128[2]);
       mmtmpD1 = vmull_s16(dl_ch1_128[3], rxdataF128[3]);
@@ -2945,7 +2945,7 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
 
       mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
       mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-      rxdataF_comp1_128[1] = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+      rxdataF_comp1_128[1] = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
 
       if (pilots==0) {
         mmtmpD0 = vmull_s16(dl_ch0_128[4], rxdataF128[4]);
@@ -2961,7 +2961,7 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
 
         mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
         mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-        rxdataF_comp0_128[2] = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+        rxdataF_comp0_128[2] = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
         mmtmpD0 = vmull_s16(dl_ch1_128[4], rxdataF128[4]);
         mmtmpD1 = vmull_s16(dl_ch1_128[5], rxdataF128[5]);
         mmtmpD0 = vcombine_s32(vpadd_s32(vget_low_s32(mmtmpD0),vget_high_s32(mmtmpD0)),
@@ -2975,7 +2975,7 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
 
         mmtmpD0 = vqshlq_s32(mmtmpD0,output_shift128);
         mmtmpD1 = vqshlq_s32(mmtmpD1,output_shift128);
-        rxdataF_comp1_128[2] = vcombine_s16(vmovn_s32(mmtmpD0),vmovn_s32(mmtmpD1));
+        rxdataF_comp1_128[2] = vcombine_s16(vshrn_n_s32(mmtmpD0,15),vshrn_n_s32(mmtmpD1,15));
       }
     }
 

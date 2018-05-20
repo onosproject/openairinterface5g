@@ -1308,6 +1308,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 			&ue->frame_parms);
       }
 
+ 
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
     apply_7_5_kHz(ue,dummy_tx_buffer,0);
     apply_7_5_kHz(ue,dummy_tx_buffer,1);

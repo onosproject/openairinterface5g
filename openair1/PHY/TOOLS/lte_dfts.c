@@ -684,9 +684,12 @@ static inline void bfly2_16(int16x8_t *x0, int16x8_t *x1, int16x8_t *y0, int16x8
 
 static inline void bfly2_16(int16x8_t *x0, int16x8_t *x1, int16x8_t *y0, int16x8_t *y1, int16x8_t *tw, int16x8_t *twb)
 {
+  int16x8_t x1t;
 
-  *y0  = vqaddq_s16(*x0,*x1);
-  *y1  = vqsubq_s16(*x0,*x1);
+  x1t  = packed_cmult2(*(x1),*(tw),*(twb));
+
+  *y0  = vqaddq_s16(*x0,x1t);
+  *y1  = vqsubq_s16(*x0,x1t);
 
 }
 #endif
@@ -18918,7 +18921,7 @@ int main(int argc, char**argv)
       ((int16_t*)x)[i] = (int16_t)((taus()&0xffff))>>5;
     }
     memset((void*)&y[0],0,16*4);
-    idft16((int16_t *)x,(int16_t *)y);
+    dft16((int16_t *)x,(int16_t *)y);
     printf("\n\n16-point\n");
     printf("X: ");
     for (i=0;i<4;i++)
@@ -19105,7 +19108,7 @@ int main(int argc, char**argv)
   reset_meas(&ts);
   for (i=0; i<10000; i++) {
     start_meas(&ts);
-    idft512((int16_t *)x,(int16_t *)y,1);
+    dft512((int16_t *)x,(int16_t *)y,1);
     stop_meas(&ts);
   }
 
@@ -19140,7 +19143,7 @@ int main(int argc, char**argv)
 
   for (i=0; i<10000; i++) {
     start_meas(&ts);
-    idft1024((int16_t *)x,(int16_t *)y,1);
+    dft1024((int16_t *)x,(int16_t *)y,1);
     stop_meas(&ts);
   }
 
@@ -19165,7 +19168,7 @@ int main(int argc, char**argv)
 
   for (i=0; i<10000; i++) {
     start_meas(&ts);
-    idft2048((int16_t *)x,(int16_t *)y,1);
+    dft2048((int16_t *)x,(int16_t *)y,1);
     stop_meas(&ts);
   }
 

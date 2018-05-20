@@ -173,6 +173,11 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
         mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
 
         ul_ch128[2] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
+
+        ul_ch128+=3;
+        ul_ref128+=3;
+        rxdataF128+=3;
+
 #elif defined(__arm__) || defined(__aarch64__)
       mmtmp0 = vmull_s16(((int16x4_t*)ul_ref128)[0],((int16x4_t*)rxdataF128)[0]);
       mmtmp1 = vmull_s16(((int16x4_t*)ul_ref128)[1],((int16x4_t*)rxdataF128)[1]);
@@ -183,7 +188,7 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
       mmtmp_im = vcombine_s32(vpadd_s32(vget_low_s32(mmtmp0),vget_high_s32(mmtmp0)),
                               vpadd_s32(vget_low_s32(mmtmp1),vget_high_s32(mmtmp1)));
 
-      ul_ch128[0] = vcombine_s16(vmovn_s32(mmtmp_re),vmovn_s32(mmtmp_im));
+      ((int16x4x2_t*)ul_ch128)[0] = vzip_s16(vshrn_n_s32(mmtmp_re,15),vshrn_n_s32(mmtmp_im,15));
       ul_ch128++;
       ul_ref128++;
       rxdataF128++;
@@ -196,7 +201,7 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
       mmtmp_im = vcombine_s32(vpadd_s32(vget_low_s32(mmtmp0),vget_high_s32(mmtmp0)),
                               vpadd_s32(vget_low_s32(mmtmp1),vget_high_s32(mmtmp1)));
 
-      ul_ch128[0] = vcombine_s16(vmovn_s32(mmtmp_re),vmovn_s32(mmtmp_im));
+      ((int16x4x2_t*)ul_ch128)[0] = vzip_s16(vshrn_n_s32(mmtmp_re,15),vshrn_n_s32(mmtmp_im,15));
       ul_ch128++;
       ul_ref128++;
       rxdataF128++;
@@ -210,16 +215,13 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
       mmtmp_im = vcombine_s32(vpadd_s32(vget_low_s32(mmtmp0),vget_high_s32(mmtmp0)),
                               vpadd_s32(vget_low_s32(mmtmp1),vget_high_s32(mmtmp1)));
 
-      ul_ch128[0] = vcombine_s16(vmovn_s32(mmtmp_re),vmovn_s32(mmtmp_im));
+      ((int16x4x2_t*)ul_ch128)[0] = vzip_s16(vshrn_n_s32(mmtmp_re,15),vshrn_n_s32(mmtmp_im,15));
       ul_ch128++;
       ul_ref128++;
       rxdataF128++;
 
 
 #endif
-        ul_ch128+=3;
-        ul_ref128+=3;
-        rxdataF128+=3;
       }
 
       alpha_ind = 0;

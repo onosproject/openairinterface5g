@@ -30,6 +30,9 @@ short conjugate75[8]__attribute__((aligned(16))) = {-1,1,-1,1,-1,1,-1,1} ;
 short conjugate75_2[8]__attribute__((aligned(16))) = {1,-1,1,-1,1,-1,1,-1} ;
 short negate[8]__attribute__((aligned(16))) = {-1,-1,-1,-1,-1,-1,-1,-1};
 
+#define print_shorts(s,x) printf("%s : %d %d %d %d %d %d %d %d\n",s,((int16_t*)x)[0],((int16_t*)x)[1],((int16_t*)x)[2],((int16_t*)x)[3],((int16_t*)x)[4],((int16_t*)x)[5],((int16_t*)x)[6],((int16_t*)x)[7])
+#define print_dw(s,x) printf("%s : %d %d %d %d\n",s,((int32_t*)x)[0],((int32_t*)x)[1],((int32_t*)x)[2],((int32_t*)x)[3])
+
 void apply_7_5_kHz(PHY_VARS_UE *ue,int32_t*txdata,uint8_t slot)
 {
 
@@ -90,7 +93,6 @@ void apply_7_5_kHz(PHY_VARS_UE *ue,int32_t*txdata,uint8_t slot)
   kHz7_5ptr128 = (int16x8_t*)kHz7_5ptr;
 #endif
   // apply 7.5 kHz
-
   for (i=0; i<(len>>2); i++) {
 #if defined(__x86_64__) || defined(__i386__)
     mmtmp_re = _mm_madd_epi16(*txptr128,*kHz7_5ptr128);
@@ -117,15 +119,34 @@ void apply_7_5_kHz(PHY_VARS_UE *ue,int32_t*txdata,uint8_t slot)
                             vpadd_s32(vget_low_s32(mmtmp1),vget_high_s32(mmtmp1)));
         //mmtmp_re = [Re(ch[0])Re(rx[0])+Im(ch[0])Im(ch[0]) Re(ch[1])Re(rx[1])+Im(ch[1])Im(ch[1]) Re(ch[2])Re(rx[2])+Im(ch[2])Im(ch[2]) Re(ch[3])Re(rx[3])+Im(ch[3])Im(ch[3])] 
 
-    mmtmp0 = vmull_s16(vrev32_s16(vmul_s16(((int16x4_t*)txptr128)[0],*(int16x4_t*)conjugate75_2)),((int16x4_t*)kHz7_5ptr128)[0]);
+    /*if (i<4) {   
+       print_shorts("txp:",txptr128);
+       print_shorts("kHz75:",kHz7_5ptr128);
+       print_dw("mmtmp0",&mmtmp0);
+       print_dw("mmtmp1",&mmtmp1); 
+    }*/
+    mmtmp0 = vmull_s16(((int16x4_t*)txptr128)[0],
+                       vrev32_s16(vmul_s16(((int16x4_t*)kHz7_5ptr128)[0],
+                                           *(int16x4_t*)conjugate75_2)));
         //mmtmp0 = [-Im(ch[0])Re(rx[0]) Re(ch[0])Im(rx[0]) -Im(ch[1])Re(rx[1]) Re(ch[1])Im(rx[1])]
-    mmtmp1 = vmull_s16(vrev32_s16(vmul_s16(((int16x4_t*)txptr128)[1],*(int16x4_t*)conjugate75_2)), ((int16x4_t*)kHz7_5ptr128)[1]);
+    mmtmp1 = vmull_s16(((int16x4_t*)txptr128)[1],
+                       vrev32_s16(vmul_s16(((int16x4_t*)kHz7_5ptr128)[1],
+                                           *(int16x4_t*)conjugate75_2)));
         //mmtmp0 = [-Im(ch[2])Re(rx[2]) Re(ch[2])Im(rx[2]) -Im(ch[3])Re(rx[3]) Re(ch[3])Im(rx[3])]
+
+
+
+
     mmtmp_im = vcombine_s32(vpadd_s32(vget_low_s32(mmtmp0),vget_high_s32(mmtmp0)),
                             vpadd_s32(vget_low_s32(mmtmp1),vget_high_s32(mmtmp1)));
         //mmtmp_im = [-Im(ch[0])Re(rx[0])+Re(ch[0])Im(rx[0]) -Im(ch[1])Re(rx[1])+Re(ch[1])Im(rx[1]) -Im(ch[2])Re(rx[2])+Re(ch[2])Im(rx[2]) -Im(ch[3])Re(rx[3])+Re(ch[3])Im(rx[3])]
 
-    txptr128[0] = vcombine_s16(vmovn_s32(mmtmp_re),vmovn_s32(mmtmp_im));
+    ((int16x4x2_t*)txptr128)[0] = vzip_s16(vshrn_n_s32(mmtmp_re,15),vshrn_n_s32(mmtmp_im,15));
+    /*if (i<4) {
+       print_dw("mmtmp_re",&mmtmp_re);
+       print_dw("mmtmp_im",&mmtmp_im);
+       print_shorts("txp",txptr128);
+    }*/
     txptr128++;
     kHz7_5ptr128++;
 #endif
@@ -238,15 +259,21 @@ void remove_7_5_kHz(RU_t *ru,uint8_t slot)
                               vpadd_s32(vget_low_s32(mmtmp1),vget_high_s32(mmtmp1)));
         //mmtmp_re = [Re(ch[0])Re(rx[0])+Im(ch[0])Im(ch[0]) Re(ch[1])Re(rx[1])+Im(ch[1])Im(ch[1]) Re(ch[2])Re(rx[2])+Im(ch[2])Im(ch[2]) Re(ch[3])Re(rx[3])+Im(ch[3])Im(ch[3])]
 
-      mmtmp0 = vmull_s16(vrev32_s16(vmul_s16(((int16x4_t*)rxptr128)[0],*(int16x4_t*)conjugate75_2)), ((int16x4_t*)kHz7_5ptr128)[0]);
+      mmtmp0 = vmull_s16(((int16x4_t*)rxptr128)[0],
+                         vrev32_s16(vmul_s16(((int16x4_t*)kHz7_5ptr128)[0],
+                                           *(int16x4_t*)conjugate75_2)));
         //mmtmp0 = [-Im(ch[0])Re(rx[0]) Re(ch[0])Im(rx[0]) -Im(ch[1])Re(rx[1]) Re(ch[1])Im(rx[1])]
-      mmtmp1 = vmull_s16(vrev32_s16(vmul_s16(((int16x4_t*)rxptr128)[1],*(int16x4_t*)conjugate75_2)), ((int16x4_t*)kHz7_5ptr128)[1]);
+      mmtmp1 = vmull_s16(((int16x4_t*)rxptr128)[1],
+                       vrev32_s16(vmul_s16(((int16x4_t*)kHz7_5ptr128)[1],
+                                           *(int16x4_t*)conjugate75_2)));
+
         //mmtmp1 = [-Im(ch[2])Re(rx[2]) Re(ch[2])Im(rx[2]) -Im(ch[3])Re(rx[3]) Re(ch[3])Im(rx[3])]
       mmtmp_im = vcombine_s32(vpadd_s32(vget_low_s32(mmtmp0),vget_high_s32(mmtmp0)),
                               vpadd_s32(vget_low_s32(mmtmp1),vget_high_s32(mmtmp1)));
         //mmtmp_im = [-Im(ch[0])Re(rx[0])+Re(ch[0])Im(rx[0]) -Im(ch[1])Re(rx[1])+Re(ch[1])Im(rx[1]) -Im(ch[2])Re(rx[2])+Re(ch[2])Im(rx[2]) -Im(ch[3])Re(rx[3])+Re(ch[3])Im(rx[3])]
 
-      rxptr128_7_5kHz[0] = vcombine_s16(vmovn_s32(mmtmp_re),vmovn_s32(mmtmp_im));
+    ((int16x4x2_t*)rxptr128_7_5kHz)[0] = vzip_s16(vshrn_n_s32(mmtmp_re,15),vshrn_n_s32(mmtmp_im,15));
+
       rxptr128_7_5kHz++;
       rxptr128++;
       kHz7_5ptr128++;
