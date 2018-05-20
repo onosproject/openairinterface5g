@@ -18913,7 +18913,7 @@ int main(int argc, char**argv)
     for (i=0;i<300;i++)
       printf("%d: %d,%d\n",i,((int16_t*)(&y[i]))[0],((int16_t *)(&y[i]))[1]);
     printf("\n");
-
+*/
     for (i=0;i<32;i++) {
       ((int16_t*)x)[i] = (int16_t)((taus()&0xffff))>>5;
     }
@@ -18928,7 +18928,7 @@ int main(int argc, char**argv)
     for (i=0;i<4;i++)
       printf("%d,%d,%d,%d,%d,%d,%d,%d,",((int16_t*)&y[i])[0],((int16_t *)&y[i])[1],((int16_t*)&y[i])[2],((int16_t *)&y[i])[3],((int16_t*)&y[i])[4],((int16_t *)&y[i])[5],((int16_t*)&y[i])[6],((int16_t *)&y[i])[7]);
     printf("\n");
- */
+ 
   memset((void*)&x[0],0,2048*4);
       
   for (i=0; i<2048; i+=4) {
@@ -18970,16 +18970,17 @@ int main(int argc, char**argv)
   
 
   printf("64-point\n");
-  printf("X: ");
-  for (i=0;i<8;i++)
-    print_shorts256("",((int16_t *)x)+(i*16));
+/*  printf("X: ");
+  for (i=0;i<8;i++){
+    print_shorts256("",((int16_t *)x)+(i*16)); printf(",");
+  }
 
   printf("\nY:");
 
   for (i=0;i<8;i++)
     print_shorts256("",((int16_t *)y)+(i*16));
   printf("\n");
-
+*/
   
 
 

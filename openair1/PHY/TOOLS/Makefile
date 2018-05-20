@@ -12,3 +12,6 @@ lte_dfts_sse4.s: lte_dfts.c
 
 dft_cycles_avx2: lte_dfts_avx2
 	./lte_dfts_avx2 | egrep cycles
+
+lte_dfts_arm64: lte_dfts.c
+	gcc -O2  -g -ggdb -o lte_dfts_arm64 lte_dfts.c time_meas.c file_output.c ../../SIMULATION/TOOLS/taus.c -I$$OPENAIR1_DIR -I$$OPENAIR_TARGETS -I$$OPENAIR2_DIR/COMMON -DMR_MAIN -DNB_ANTENNAS_RX=1
