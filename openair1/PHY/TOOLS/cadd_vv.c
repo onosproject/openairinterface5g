@@ -24,13 +24,13 @@
 #define simd_q15_t __m128i
 #define simd_q31_t __m128i
 #define simd_q63_t __m128i
-#define simd_q15_short_t __m64i
+#define simd_q15_short_t __m64
 #define simd_q15_add(a,b) _mm_adds_epi16(a,b)
 #define simd_q63_add(a,b) _mm_add_epi64(a,b)
 #define simd_q15_sub(a,b) _mm_subs_epi16(a,b)
-#define simd_q63_sub(a,b) _mm_subs_epi64(a,b)
+#define simd_q63_sub(a,b) _mm_sub_epi64(a,b)
 #define simd_q15_add_short(a,b) _mm_adds_pi16(a,b)
-#define simd_q31_add(a,b) _mm_adds_epi32(a,b)
+#define simd_q31_add(a,b) _mm_add_epi32(a,b)
 #ifdef __AVX2__
 #define simd256_q15_t __m256i
 #endif

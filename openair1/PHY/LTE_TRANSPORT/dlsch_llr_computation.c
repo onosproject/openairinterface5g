@@ -1036,7 +1036,7 @@ void dlsch_16qam_llr_SIC (LTE_DL_FRAME_PARMS *frame_parms,
   }
   _mm_empty();
   _m_empty();
-#elsif defined(__arm__) || defined(__aarch64__)
+#elif defined(__arm__) || defined(__aarch64__)
   AssertFatal(1==0,"To be done for ARM\n");
 #endif
  }
@@ -1362,7 +1362,7 @@ void dlsch_64qam_llr_SIC(LTE_DL_FRAME_PARMS *frame_parms,
 
   _mm_empty();
   _m_empty();
-#elsif defined(__arm__) || defined(__aarch64__)
+#elif defined(__arm__) || defined(__aarch64__)
   AssertFatal(1==0,"To be done for ARM\n");
 #endif
   }

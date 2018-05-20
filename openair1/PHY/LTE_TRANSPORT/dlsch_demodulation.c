@@ -1905,7 +1905,7 @@ void prec2A_TM4_128(int pmi,__m128i *ch0,__m128i *ch1) {
  // print_shorts("prec2A_TM4 ch0 (end):",ch0);
   //print_shorts("prec2A_TM4 ch1 (end):",ch1);
 }
-#elsif defined(__arm__) || defined(__aarch64__)
+#elif defined(__arm__) || defined(__aarch64__)
 void prec2A_TM4_128(int pmi,int16x8_t *ch0,int16x8_t *ch1) {
   AssertFatal(1==0,"To be done for ARM\n");
 }
@@ -3454,7 +3454,7 @@ void dlsch_detection_mrc_TM34(LTE_DL_FRAME_PARMS *frame_parms,
 
   _mm_empty();
   _m_empty();
-#elsif defined(__arm__) || defined(__aarch64__)
+#elif defined(__arm__) || defined(__aarch64__)
   AssertFatal(1==0,"To be done for ARM\n");
 #endif
 }
