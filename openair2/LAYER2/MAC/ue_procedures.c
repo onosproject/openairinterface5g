@@ -839,6 +839,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
   int rlc_sdu_len;
   char *rlc_sdu;
   uint32_t destinationL2Id =0x00000000;
+  uint32_t sourceL2Id = 0x00000000;
 
   if (sl_discovery_flag == SL_DISCOVERY_FLAG_NO) {
 
@@ -848,17 +849,22 @@ void ue_send_sl_sdu(module_id_t module_idP,
   // extract header
   SLSCH_SUBHEADER_24_Bit_DST_LONG *longh = (SLSCH_SUBHEADER_24_Bit_DST_LONG *)sdu;
   AssertFatal(longh->E==0,"E is non-zero\n");
-  AssertFatal(((longh->LCID==3)|(longh->LCID==10)),"LCID is %d (not 3 or 10)\n",longh->LCID);
+  AssertFatal(((longh->LCID==3)|(longh->LCID==10)|(longh->LCID==4)),"LCID is %d (not 3, 4 or 10)\n",longh->LCID);
   //filter incoming packet based on destination address
   destinationL2Id = (longh->DST07<<16) | (longh->DST815 <<8) | (longh->DST1623);
-  LOG_I( MAC, "[DestinationL2Id:  0x%08x]  \n", destinationL2Id );
+  sourceL2Id = (longh->SRC07<<16) | (longh->SRC815 <<8) | (longh->SRC1623);
+  LOG_D( MAC, "[DestinationL2Id:  0x%08x]  \n", destinationL2Id );
   //in case of 1-n communication, verify that UE belongs to that group
-  int i=0;
+  int i = 0;
   for (i=0; i< MAX_NUM_DEST; i++)
-     if (UE_mac_inst[module_idP].destinationList[i] == destinationL2Id) break;
+     if (UE_mac_inst[module_idP].groupList[i] == destinationL2Id) break;
+  int j = 0;
+  for (j=0; j< MAX_NUM_DEST; j++)
+       if (UE_mac_inst[module_idP].destinationList[j] == sourceL2Id) break;
+
   //match the destinationL2Id with UE L2Id or groupL2ID
-  if (!((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) | (i < MAX_NUM_DEST))){
-     LOG_I( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
+  if (!(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (j < MAX_NUM_DEST)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (longh->LCID == 10)) | (i < MAX_NUM_DEST))){
+     LOG_D( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
      return;
   }
 
@@ -3271,6 +3277,21 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                      break;
                   }
                }
+
+               if ((ue->sourceL2Id > 0) && (ue->groupList[j] >0) ){
+                  rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                        ue->SL_LCID[i], 0xFFFF, ue->sourceL2Id, ue->groupList[j]);
+                  if (rlc_status.bytes_in_buffer > 2){
+                     LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
+                     // Fill in group id for off-network communications
+                     ue->sltx_active = 1;
+                     //store LCID, destinationL2Id
+                     ue->slsch_lcid =  ue->SL_LCID[i];
+                     ue->destinationL2Id = ue->groupList[j];
+                     break;
+                  }
+               }
+
             }
          }
          if ( ue->sltx_active == 1) break;

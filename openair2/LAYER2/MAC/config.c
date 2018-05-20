@@ -971,6 +971,90 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 	    mbms_SessionList[i]->list.count);
     }
   }
+
+#endif
+
+  LOG_E(MAC, "%s() %s:%d RC.mac[Mod_idP]->if_inst->PHY_config_req:%p\n", __FUNCTION__, __FILE__, __LINE__, RC.mac[Mod_idP]->if_inst->PHY_config_req);
+
+  // if in nFAPI mode 
+  if (
+      (nfapi_mode == 1 || nfapi_mode == 2) &&
+      (RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL)
+    )
+  {
+    while(RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL) {
+      // DJP AssertFatal(RC.mac[Mod_idP]->if_inst->PHY_config_req != NULL,"if_inst->phy_config_request is null\n");
+      usleep(100 * 1000);
+      printf("Waiting for PHY_config_req\n");
+    }
+  }
+
+  if (radioResourceConfigCommon != NULL) {
+	  PHY_Config_t phycfg;
+	  phycfg.Mod_id = Mod_idP;
+	  phycfg.CC_id  = CC_idP;
+	  phycfg.cfg    = &RC.mac[Mod_idP]->config[CC_idP];
+
+	  LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
+	  if (RC.mac[Mod_idP]->if_inst->PHY_config_req) RC.mac[Mod_idP]->if_inst->PHY_config_req(&phycfg);
+	  LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
+
+	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
+  }
+
+  return(0);			   
+
+}
+
+/*
+int
+rrc_mac_config_req_ue(
+  module_id_t                      Mod_idP,
+  int                              CC_idP,
+  uint8_t                          eNB_index,
+  RadioResourceConfigCommonSIB_t  *radioResourceConfigCommon,
+  struct PhysicalConfigDedicated  *physicalConfigDedicated,
+#if defined(Rel10) || defined(Rel14)
+  SCellToAddMod_r10_t *sCellToAddMod_r10,
+  //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
+#endif
+  MeasObjectToAddMod_t           **measObj,
+  MAC_MainConfig_t                *mac_MainConfig,
+  long                             logicalChannelIdentity,
+  LogicalChannelConfig_t          *logicalChannelConfig,
+  MeasGapConfig_t                 *measGapConfig,
+  TDD_Config_t                    *tdd_Config,
+  MobilityControlInfo_t           *mobilityControlInfo,
+  uint8_t                              *SIwindowsize,
+  uint16_t                             *SIperiod,
+  ARFCN_ValueEUTRA_t              *ul_CarrierFreq,
+  long                            *ul_Bandwidth,
+  AdditionalSpectrumEmission_t    *additionalSpectrumEmission,
+  struct MBSFN_SubframeConfigList *mbsfn_SubframeConfigList
+#if defined(Rel10) || defined(Rel14)
+  ,uint8_t                              MBMS_Flag,
+  MBSFN_AreaInfoList_r9_t         *mbsfn_AreaInfoList,
+  PMCH_InfoList_r9_t              *pmch_InfoList
+#endif
+#ifdef CBA
+  ,uint8_t                              num_active_cba_groups,
+  uint16_t                              cba_rnti
+#endif
+#if defined(Rel14)
+  ,config_action_t  config_action
+  ,const uint32_t * const sourceL2Id
+  ,const uint32_t * const destinationL2Id
+  ,const uint32_t * const groupL2Id
+#endif
+
+                      )
+{
+
+  int i;
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
+
+  LOG_I(MAC,"[CONFIG][UE %d] Configuring MAC/PHY from eNB %d\n",Mod_idP,eNB_index);
   
 #endif
 
@@ -998,7 +1082,223 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
       }
+<<<<<<< HEAD
   return(0);			   
+=======
+      
+      phy_config_meas_ue(Mod_idP,0,eNB_index,UE_mac_inst[Mod_idP].n_adj_cells,UE_mac_inst[Mod_idP].adj_cell_id);
+    }
+  }
 
-}
+
+  if(mobilityControlInfo != NULL) {
+    
+    LOG_D(MAC,"[UE%d] MAC Reset procedure triggered by RRC eNB %d \n",Mod_idP,eNB_index);
+    ue_mac_reset(Mod_idP,eNB_index);
+    
+    if(mobilityControlInfo->radioResourceConfigCommon.rach_ConfigCommon) {
+      memcpy((void *)&UE_mac_inst[Mod_idP].radioResourceConfigCommon->rach_ConfigCommon,
+	     (void *)mobilityControlInfo->radioResourceConfigCommon.rach_ConfigCommon,
+	     sizeof(RACH_ConfigCommon_t));
+    }
+    
+    memcpy((void *)&UE_mac_inst[Mod_idP].radioResourceConfigCommon->prach_Config.prach_ConfigInfo,
+	   (void *)mobilityControlInfo->radioResourceConfigCommon.prach_Config.prach_ConfigInfo,
+	   sizeof(PRACH_ConfigInfo_t));
+    UE_mac_inst[Mod_idP].radioResourceConfigCommon->prach_Config.rootSequenceIndex = mobilityControlInfo->radioResourceConfigCommon.prach_Config.rootSequenceIndex;
+    
+    if(mobilityControlInfo->radioResourceConfigCommon.pdsch_ConfigCommon) {
+      memcpy((void *)&UE_mac_inst[Mod_idP].radioResourceConfigCommon->pdsch_ConfigCommon,
+	     (void *)mobilityControlInfo->radioResourceConfigCommon.pdsch_ConfigCommon,
+	     sizeof(PDSCH_ConfigCommon_t));
+    }
+    
+    // not a pointer: mobilityControlInfo->radioResourceConfigCommon.pusch_ConfigCommon
+    memcpy((void *)&UE_mac_inst[Mod_idP].radioResourceConfigCommon->pusch_ConfigCommon,
+	   (void *)&mobilityControlInfo->radioResourceConfigCommon.pusch_ConfigCommon,
+	   sizeof(PUSCH_ConfigCommon_t));
+    
+    if(mobilityControlInfo->radioResourceConfigCommon.phich_Config) {
+      // memcpy((void *)&UE_mac_inst[Mod_idP].radioResourceConfigCommon->phich_Config,
+	 //(void *)mobilityControlInfo->radioResourceConfigCommon.phich_Config,
+	 //sizeof(PHICH_Config_t));
+    }
+    
+    if(mobilityControlInfo->radioResourceConfigCommon.pucch_ConfigCommon) {
+      memcpy((void *)&UE_mac_inst[Mod_idP].radioResourceConfigCommon->pucch_ConfigCommon,
+	     (void *)mobilityControlInfo->radioResourceConfigCommon.pucch_ConfigCommon,
+	     sizeof(PUCCH_ConfigCommon_t));
+    }
+    
+    if(mobilityControlInfo->radioResourceConfigCommon.soundingRS_UL_ConfigCommon) {
+      memcpy((void *)&UE_mac_inst[Mod_idP].radioResourceConfigCommon->soundingRS_UL_ConfigCommon,
+	     (void *)mobilityControlInfo->radioResourceConfigCommon.soundingRS_UL_ConfigCommon,
+	     sizeof(SoundingRS_UL_ConfigCommon_t));
+    }
+    
+    if(mobilityControlInfo->radioResourceConfigCommon.uplinkPowerControlCommon) {
+      memcpy((void *)&UE_mac_inst[Mod_idP].radioResourceConfigCommon->uplinkPowerControlCommon,
+	     (void *)mobilityControlInfo->radioResourceConfigCommon.uplinkPowerControlCommon,
+	     sizeof(UplinkPowerControlCommon_t));
+    }
+    
+    //configure antennaInfoCommon somewhere here..
+    if(mobilityControlInfo->radioResourceConfigCommon.p_Max) {
+      //to be configured
+    }
+    
+    if(mobilityControlInfo->radioResourceConfigCommon.tdd_Config) {
+      UE_mac_inst[Mod_idP].tdd_Config = mobilityControlInfo->radioResourceConfigCommon.tdd_Config;
+    }
+    
+    if(mobilityControlInfo->radioResourceConfigCommon.ul_CyclicPrefixLength) {
+      memcpy((void *)&UE_mac_inst[Mod_idP].radioResourceConfigCommon->ul_CyclicPrefixLength,
+	     (void *)mobilityControlInfo->radioResourceConfigCommon.ul_CyclicPrefixLength,
+	     sizeof(UL_CyclicPrefixLength_t));
+    }
+    
+    // store the previous rnti in case of failure, and set thenew rnti
+    UE_mac_inst[Mod_idP].crnti_before_ho = UE_mac_inst[Mod_idP].crnti;
+    UE_mac_inst[Mod_idP].crnti = ((mobilityControlInfo->newUE_Identity.buf[0])|(mobilityControlInfo->newUE_Identity.buf[1]<<8));
+    LOG_I(MAC,"[UE %d] Received new identity %x from %d\n", Mod_idP, UE_mac_inst[Mod_idP].crnti, eNB_index);
+    UE_mac_inst[Mod_idP].rach_ConfigDedicated = malloc(sizeof(*mobilityControlInfo->rach_ConfigDedicated));
+    
+    if (mobilityControlInfo->rach_ConfigDedicated) {
+      memcpy((void*)UE_mac_inst[Mod_idP].rach_ConfigDedicated,
+	     (void*)mobilityControlInfo->rach_ConfigDedicated,
+	     sizeof(*mobilityControlInfo->rach_ConfigDedicated));
+    }
+    
+    phy_config_afterHO_ue(Mod_idP,0,eNB_index,mobilityControlInfo,0);
+  }
+
+
+  if (mbsfn_SubframeConfigList != NULL) {
+    LOG_I(MAC,"[UE %d][CONFIG] Received %d subframe allocation pattern for MBSFN\n", Mod_idP, mbsfn_SubframeConfigList->list.count);
+    UE_mac_inst[Mod_idP].num_sf_allocation_pattern= mbsfn_SubframeConfigList->list.count;
+    
+    for (i=0; i<mbsfn_SubframeConfigList->list.count; i++) {
+      LOG_I(MAC, "[UE %d] Configuring MBSFN_SubframeConfig %d from received SIB2 \n", Mod_idP, i);
+      UE_mac_inst[Mod_idP].mbsfn_SubframeConfig[i] = mbsfn_SubframeConfigList->list.array[i];
+      //  LOG_I("[UE %d] MBSFN_SubframeConfig[%d] pattern is  %ld\n", Mod_idP,
+      //    UE_mac_inst[Mod_idP].mbsfn_SubframeConfig[i]->subframeAllocation.choice.oneFrame.buf[0]);
+    }
+  }
+  
+
+#if defined(Rel10) || defined(Rel14)
+
+  if (mbsfn_AreaInfoList != NULL) {
+    LOG_I(MAC,"[UE %d][CONFIG] Received %d MBSFN Area Info\n", Mod_idP, mbsfn_AreaInfoList->list.count);
+    UE_mac_inst[Mod_idP].num_active_mbsfn_area = mbsfn_AreaInfoList->list.count;
+    
+    for (i =0; i< mbsfn_AreaInfoList->list.count; i++) {
+      UE_mac_inst[Mod_idP].mbsfn_AreaInfo[i] = mbsfn_AreaInfoList->list.array[i];
+      LOG_I(MAC,"[UE %d] MBSFN_AreaInfo[%d]: MCCH Repetition Period = %ld\n",Mod_idP, i,
+	    UE_mac_inst[Mod_idP].mbsfn_AreaInfo[i]->mcch_Config_r9.mcch_RepetitionPeriod_r9);
+      phy_config_sib13_ue(Mod_idP,0,eNB_index,i,UE_mac_inst[Mod_idP].mbsfn_AreaInfo[i]->mbsfn_AreaId_r9);
+    }
+  }
+  
+  if (pmch_InfoList != NULL) {
+    
+    //    LOG_I(MAC,"DUY: lcid when entering rrc_mac config_req is %02d\n",(pmch_InfoList->list.array[0]->mbms_SessionInfoList_r9.list.array[0]->logicalChannelIdentity_r9));
+
+    LOG_I(MAC, "[UE %d] Configuring PMCH_config from MCCH MESSAGE \n",Mod_idP);
+    
+    for (i =0; i< pmch_InfoList->list.count; i++) {
+      UE_mac_inst[Mod_idP].pmch_Config[i] = &pmch_InfoList->list.array[i]->pmch_Config_r9;
+      LOG_I(MAC, "[UE %d] PMCH[%d]: MCH_Scheduling_Period = %ld\n", Mod_idP, i,
+	    UE_mac_inst[Mod_idP].pmch_Config[i]->mch_SchedulingPeriod_r9);
+    }
+    
+    UE_mac_inst[Mod_idP].mcch_status = 1;
+  }
+
+
+#endif
+#ifdef CBA
+
+  if (cba_rnti) {
+    UE_mac_inst[Mod_idP].cba_rnti[num_active_cba_groups-1] = cba_rnti;
+    LOG_D(MAC,"[UE %d] configure CBA group %d RNTI %x for eNB %d (total active cba group %d)\n",
+	  Mod_idP,Mod_idP%num_active_cba_groups, cba_rnti,eNB_index,num_active_cba_groups);
+    phy_config_cba_rnti(Mod_idP,CC_idP,eNB_flagP,eNB_index,cba_rnti,num_active_cba_groups-1, num_active_cba_groups);
+  }
+#endif
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
+
+  // Panos: Call to the phy_config_request_ue() function of the interface to copy the UE_PHY_Config_t interface
+  // configuration to the PHY common and dedicated configuration originating from RRC.
+
+//for D2D
+#if defined(Rel10) || defined(Rel14)
+  int j = 0;
+  int k = 0;
+  switch (config_action) {
+  case CONFIG_ACTION_ADD:
+     if (sourceL2Id){
+        UE_mac_inst[Mod_idP].sourceL2Id = *sourceL2Id;
+        LOG_I(MAC,"[UE %d] Configure source L2Id 0x%08x \n", Mod_idP, *sourceL2Id );
+     }
+     if (destinationL2Id) {
+        j = 0;
+        k = 0;
+        LOG_I(MAC,"[UE %d] Configure destination L2Id 0x%08x\n", Mod_idP, *destinationL2Id );
+        for (k=0; k< MAX_NUM_DEST; k++) {
+           if ((UE_mac_inst[Mod_idP].destinationList[k] == 0) && (j == 0)) j = k+1;
+           if (UE_mac_inst[Mod_idP].destinationList[k] == *destinationL2Id) break; //destination already exists!
+        }
+        if ((k == MAX_NUM_DEST) && (j > 0)) {
+           UE_mac_inst[Mod_idP].destinationList[j-1] = *destinationL2Id;
+          // UE_mac_inst[Mod_idP].numCommFlows++;
+        }
+        for (k=0; k< MAX_NUM_DEST; k++) {
+           LOG_I(MAC,"[UE %d] destination %d L2Id 0x%08x\n", Mod_idP,k,UE_mac_inst[Mod_idP].destinationList[k] );
+        }
+     }
+     if (groupL2Id) {
+        j = 0;
+        k = 0;
+        LOG_I(MAC,"[UE %d] Configure group L2Id 0x%08x\n", Mod_idP, *groupL2Id );
+        for (k=0; k< MAX_NUM_DEST; k++) {
+           if ((UE_mac_inst[Mod_idP].groupList[k] == 0) && (j == 0)) j = k+1;
+           if (UE_mac_inst[Mod_idP].groupList[k] == *groupL2Id) break; //group already exists!
+        }
+        if ((k == MAX_NUM_DEST) && (j > 0)) {
+           UE_mac_inst[Mod_idP].groupList[j-1] = *groupL2Id;
+          // UE_mac_inst[Mod_idP].numCommFlows++;
+        }
+        for (k=0; k< MAX_NUM_DEST; k++) {
+           LOG_I(MAC,"[UE %d] group %d L2Id 0x%08x\n", Mod_idP,k,UE_mac_inst[Mod_idP].groupList[k] );
+        }
+     }
+     //store list of LCIDs for SL
+     if (logicalChannelIdentity >0 ){
+        j = 0;
+        k = 0;
+        for (k=0; k< MAX_NUM_LCID; k++) {
+           if ((UE_mac_inst[Mod_idP].SL_LCID[k] == 0) && (j == 0)) j = k+1;
+           if (UE_mac_inst[Mod_idP].SL_LCID[k] == logicalChannelIdentity) break; //LCID already exists!
+        }
+        if ((k == MAX_NUM_LCID) && (j > 0)) {
+           UE_mac_inst[Mod_idP].SL_LCID[j-1] = logicalChannelIdentity;
+           UE_mac_inst[Mod_idP].numCommFlows++;
+        }
+        for (k=0; k< MAX_NUM_LCID; k++) {
+           LOG_I(MAC,"[UE %d] logical channel %d channel id %d\n", Mod_idP,k,UE_mac_inst[Mod_idP].SL_LCID[k] );
+        }
+     }
+     break;
+  case CONFIG_ACTION_REMOVE:
+     //TODO
+     break;
+  default:
+     break;
+  }
+
+#endif
+>>>>>>> origin/master
+
+}*/
 

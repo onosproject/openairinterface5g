@@ -1104,6 +1104,7 @@ rrc_ue_process_measConfig(
            ,
            0,
            NULL,
+           NULL,
            NULL
 #endif
 			  );
@@ -1623,6 +1624,7 @@ rrc_ue_process_radioResourceConfigDedicated(
            ,
            0,
            NULL,
+           NULL,
            NULL
 #endif
 				);
@@ -1687,6 +1689,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #if defined(Rel14)
            ,
            0,
+           NULL,
            NULL,
            NULL
 #endif
@@ -1801,6 +1804,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #if defined(Rel14)
            ,
            0,
+           NULL,
            NULL,
            NULL
 #endif
@@ -2404,6 +2408,7 @@ rrc_ue_process_mobilityControlInfo(
            ,
            0,
            NULL,
+           NULL,
            NULL
 #endif
 			);
@@ -2991,8 +2996,8 @@ int decode_BCCH_DLSCH_Message(
   }
 
   // Temporary better solution should be found for nfapi_mode=3
-  if(UE_rrc_inst[ctxt_pP->module_id].RrcState == RRC_STATE_INACTIVE && nfapi_mode==3)
-	  UE_rrc_inst[ctxt_pP->module_id].RrcState = RRC_STATE_IDLE;
+  /*if(UE_rrc_inst[ctxt_pP->module_id].RrcState == RRC_STATE_INACTIVE && nfapi_mode==3)
+	  UE_rrc_inst[ctxt_pP->module_id].RrcState = RRC_STATE_IDLE;*/
 
   //LOG_I(RRC, "decode_BCCH_DLSCH_Message before calling rrc_set_sub_state() \n");
   rrc_set_sub_state( ctxt_pP->module_id, RRC_SUB_STATE_IDLE_RECEIVING_SIB );
@@ -3296,6 +3301,7 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
 #if defined(Rel14)
            ,
            0,
+           NULL,
            NULL,
            NULL
 #endif
@@ -3993,6 +3999,7 @@ uint64_t arfcn_to_freq(long arfcn) {
            ,
            0,
            NULL,
+           NULL,
            NULL
 #endif
 			      );
@@ -4178,6 +4185,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 #if defined(Rel14)
            ,
            0,
+           NULL,
            NULL,
            NULL
 #endif
@@ -4705,6 +4713,7 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
 #if defined(Rel14)
            ,
            0,
+           NULL,
            NULL,
            NULL
 #endif
@@ -5675,6 +5684,7 @@ void *rrc_control_socket_thread_fct(void *arg)
       case GROUP_COMMUNICATION_ESTABLISH_REQ:
          sourceL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.sourceL2Id;
          groupL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.group_comm_establish_req.groupL2Id;
+         int group_comm_rbid = 4;
 
 #ifdef DEBUG_CTRL_SOCKET
          LOG_I(RRC,"[GroupCommunicationEstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
@@ -5689,23 +5699,23 @@ void *rrc_control_socket_thread_fct(void *arg)
          j = 0;
          i = 0;
          for (i=0; i< MAX_NUM_DEST; i++) {
-            if ((UE_rrc_inst[module_id].destinationList[i] == 0) && (j == 0)) j = i+1;
-            if (UE_rrc_inst[module_id].destinationList[i] == groupL2Id) break; //group already exists!
+            if ((UE_rrc_inst[module_id].groupList[i] == 0) && (j == 0)) j = i+1;
+            if (UE_rrc_inst[module_id].groupList[i] == groupL2Id) break; //group already exists!
          }
-         if ((i == MAX_NUM_DEST) && (j > 0))  UE_mac_inst[module_id].destinationList[j-1] = groupL2Id;
+         if ((i == MAX_NUM_DEST) && (j > 0))  UE_rrc_inst[module_id].groupList[j-1] = groupL2Id;
 
          // configure lower layers PDCP/MAC/PHY for this communication
          //Establish a new RBID/LCID for this communication
-         // Establish a SLRB (using DRB 3 for now)
+         // Establish a SLRB (using DRB 4 for now)
          UE  = &UE_rrc_inst[module_id];
          PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
 
          UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
          UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
-         UE->DRB_config[0][0]->drb_Identity =  3;
+         UE->DRB_config[0][0]->drb_Identity =  group_comm_rbid;
          UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
          // allowed value 5..15, value : x+4
-         *(UE->DRB_config[0][0]->eps_BearerIdentity) = 3;
+         *(UE->DRB_config[0][0]->eps_BearerIdentity) = group_comm_rbid;
          UE->DRB_config[0][0]->logicalChannelIdentity = CALLOC(1, sizeof(long));
          *(UE->DRB_config[0][0]->logicalChannelIdentity) = UE->DRB_config[0][0]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
 
@@ -5796,7 +5806,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
                (MeasObjectToAddMod_t **)NULL,
                (MAC_MainConfig_t *)NULL,
-               3, //LCID
+               group_comm_rbid, //LCID
                (struct LogicalChannelConfig *)NULL,
                (MeasGapConfig_t *)NULL,
                (TDD_Config_t *)NULL,
@@ -5821,6 +5831,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #if defined(Rel10) || defined(Rel14)
                ,CONFIG_ACTION_ADD,
                &sourceL2Id,
+               NULL,
                &groupL2Id
 #endif
          );
@@ -5829,7 +5840,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          memset(send_buf, 0, BUFSIZE);
          sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
          sl_ctrl_msg_send->type = GROUP_COMMUNICATION_ESTABLISH_RSP;
-         sl_ctrl_msg_send->sidelinkPrimitive.slrb_id = 3; //slrb_id
+         sl_ctrl_msg_send->sidelinkPrimitive.slrb_id = group_comm_rbid; //slrb_id
 
          memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
          free(sl_ctrl_msg_send);
@@ -5893,7 +5904,8 @@ void *rrc_control_socket_thread_fct(void *arg)
          #if defined(Rel10) || defined(Rel14)
                     ,CONFIG_ACTION_REMOVE,
                     &sourceL2Id,
-                    &destinationL2Id
+                    &destinationL2Id,
+                    NULL
          #endif
                     );
 
@@ -5925,6 +5937,7 @@ void *rrc_control_socket_thread_fct(void *arg)
       case DIRECT_COMMUNICATION_ESTABLISH_REQ:
          sourceL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.direct_comm_establish_req.sourceL2Id;
          destinationL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.direct_comm_establish_req.destinationL2Id;
+         int direct_comm_rbid = 3;
 
 #ifdef DEBUG_CTRL_SOCKET
          LOG_I(RRC,"[DirectCommunicationEstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
@@ -5940,7 +5953,7 @@ void *rrc_control_socket_thread_fct(void *arg)
             if ((UE_rrc_inst[module_id].destinationList[i] == 0) && (j == 0)) j = i+1;
             if (UE_rrc_inst[module_id].destinationList[i] == destinationL2Id) break; //destination already exists!
          }
-         if ((i == MAX_NUM_DEST) && (j > 0))  UE_mac_inst[module_id].destinationList[j-1] = destinationL2Id;
+         if ((i == MAX_NUM_DEST) && (j > 0))  UE_rrc_inst[module_id].destinationList[j-1] = destinationL2Id;
 
          // configure lower layers PDCP/MAC/PHY for this communication
          //Establish a new RBID/LCID for this communication
@@ -5950,10 +5963,10 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
          UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
-         UE->DRB_config[0][0]->drb_Identity =  3;
+         UE->DRB_config[0][0]->drb_Identity =  direct_comm_rbid;
          UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
          // allowed value 5..15, value : x+4
-         *(UE->DRB_config[0][0]->eps_BearerIdentity) = 3;
+         *(UE->DRB_config[0][0]->eps_BearerIdentity) = direct_comm_rbid;
          UE->DRB_config[0][0]->logicalChannelIdentity = CALLOC(1, sizeof(long));
          *(UE->DRB_config[0][0]->logicalChannelIdentity) = UE->DRB_config[0][0]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
 
@@ -6044,7 +6057,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
                (MeasObjectToAddMod_t **)NULL,
                (MAC_MainConfig_t *)NULL,
-               3, //LCID
+               direct_comm_rbid, //LCID
                (struct LogicalChannelConfig *)NULL,
                (MeasGapConfig_t *)NULL,
                (TDD_Config_t *)NULL,
@@ -6069,7 +6082,8 @@ void *rrc_control_socket_thread_fct(void *arg)
 #if defined(Rel10) || defined(Rel14)
                ,CONFIG_ACTION_ADD,
                &sourceL2Id,
-               &destinationL2Id
+               &destinationL2Id,
+               NULL
 #endif
          );
 
@@ -6077,7 +6091,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          memset(send_buf, 0, BUFSIZE);
          sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
          sl_ctrl_msg_send->type = DIRECT_COMMUNICATION_ESTABLISH_RSP;
-         sl_ctrl_msg_send->sidelinkPrimitive.slrb_id = 3; //slrb_id
+         sl_ctrl_msg_send->sidelinkPrimitive.slrb_id = direct_comm_rbid; //slrb_id
 
          memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
          free(sl_ctrl_msg_send);
@@ -6100,6 +6114,7 @@ void *rrc_control_socket_thread_fct(void *arg)
       case PC5S_ESTABLISH_REQ:
          type =  sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.type;
          sourceL2Id = sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.sourceL2Id;
+         int pc5s_rbid = 10;
 #ifdef DEBUG_CTRL_SOCKET
          LOG_I(RRC,"[PC5EstablishReq] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
          LOG_I(RRC,"[PC5EstablishReq] type: %d\n",sl_ctrl_msg_recv->sidelinkPrimitive.pc5s_establish_req.type); //RX/TX
@@ -6119,9 +6134,9 @@ void *rrc_control_socket_thread_fct(void *arg)
             i = 0;
             for (i=0; i< MAX_NUM_DEST; i++) {
                if ((UE_rrc_inst[module_id].destinationList[i] == 0) && (j == 0)) j = i+1;
-               if (UE_rrc_inst[module_id].destinationList[i] == destinationL2Id) break; //group already exists!
+               if (UE_rrc_inst[module_id].destinationList[i] == destinationL2Id) break; //destination already exists!
             }
-            if ((i == MAX_NUM_DEST) && (j > 0))  UE_mac_inst[module_id].destinationList[j-1] = destinationL2Id;
+            if ((i == MAX_NUM_DEST) && (j > 0))  UE_rrc_inst[module_id].destinationList[j-1] = destinationL2Id;
          } else {//RX
             UE_rrc_inst[module_id].sourceL2Id = sourceL2Id;
          }
@@ -6134,10 +6149,10 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
          UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
-         UE->DRB_config[0][0]->drb_Identity =  10;
+         UE->DRB_config[0][0]->drb_Identity =  pc5s_rbid;
          UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
          // allowed value 5..15, value : x+4
-         *(UE->DRB_config[0][0]->eps_BearerIdentity) = 10;
+         *(UE->DRB_config[0][0]->eps_BearerIdentity) = pc5s_rbid;
          UE->DRB_config[0][0]->logicalChannelIdentity = CALLOC(1, sizeof(long));
          *(UE->DRB_config[0][0]->logicalChannelIdentity) = UE->DRB_config[0][0]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
 
@@ -6229,7 +6244,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
                   (MeasObjectToAddMod_t **)NULL,
                   (MAC_MainConfig_t *)NULL,
-                  10, //LCID
+                  pc5s_rbid, //LCID
                   (struct LogicalChannelConfig *)NULL,
                   (MeasGapConfig_t *)NULL,
                   (TDD_Config_t *)NULL,
@@ -6254,7 +6269,8 @@ void *rrc_control_socket_thread_fct(void *arg)
 #if defined(Rel10) || defined(Rel14)
                   ,CONFIG_ACTION_ADD,
                   &sourceL2Id,
-                  &destinationL2Id
+                  &destinationL2Id,
+                  NULL
 #endif
             );
          } else {//RX
@@ -6268,7 +6284,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
                   (MeasObjectToAddMod_t **)NULL,
                   (MAC_MainConfig_t *)NULL,
-                  10, //LCID
+                  pc5s_rbid, //LCID
                   (struct LogicalChannelConfig *)NULL,
                   (MeasGapConfig_t *)NULL,
                   (TDD_Config_t *)NULL,
@@ -6293,6 +6309,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #if defined(Rel10) || defined(Rel14)
                   ,CONFIG_ACTION_ADD,
                   &sourceL2Id,
+                  NULL,
                   NULL
 #endif
             );
@@ -6303,9 +6320,9 @@ void *rrc_control_socket_thread_fct(void *arg)
          memset(send_buf, 0, BUFSIZE);
          sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
          sl_ctrl_msg_send->type = PC5S_ESTABLISH_RSP;
-         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.slrbid_lcid28 = 10;
-         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.slrbid_lcid29 = 10;
-         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.slrbid_lcid30 = 10;
+         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.slrbid_lcid28 = pc5s_rbid;
+         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.slrbid_lcid29 = pc5s_rbid;
+         sl_ctrl_msg_send->sidelinkPrimitive.pc5s_establish_rsp.slrbid_lcid30 = pc5s_rbid;
          memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
 
          prose_addr_len = sizeof(prose_app_addr);

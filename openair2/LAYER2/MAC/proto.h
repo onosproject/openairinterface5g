@@ -1032,6 +1032,7 @@ int rrc_mac_config_req_ue(module_id_t module_idP,
            ,config_action_t config_action
            ,const uint32_t * const sourceL2Id
            ,const uint32_t * const destinationL2Id
+           ,const uint32_t * const groupL2Id
 #endif
 			  );
 
