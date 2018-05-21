@@ -599,18 +599,22 @@ ue_decode_si(module_id_t module_idP, int CC_id, frame_t frameP,
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
 	(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_SI, VCD_FUNCTION_IN);
 
-    LOG_D(MAC, "[UE %d] Frame %d Sending SI to RRC (LCID Id %d,len %d)\n",
-	  module_idP, frameP, BCCH, len);
     if (slss == NULL) { // this is not MIB-SL
+      LOG_D(MAC, "[UE %d] Frame %d Sending SI to RRC (LCID Id %d,len %d)\n",
+             module_idP, frameP, BCCH, len);
+
       mac_rrc_data_ind_ue(module_idP, CC_id, frameP, 0,	// unknown subframe
 			  SI_RNTI,
 			  BCCH, (uint8_t *) pdu, len, eNB_index,
 			  0);
     }
     else {
+      LOG_I(MAC, "[UE %d] Frame %d Sending MIBSL to RRC (LCID Id %d,len %d)\n",
+          module_idP, frameP, MIBSLCH, 5);
+ 
       mac_rrc_data_ind_ue(module_idP, CC_id, frameP, 0,	// unknown subframe
 			  SI_RNTI,
-			  MIBSLCH, (uint8_t *) pdu, len, eNB_index,
+			  MIBSLCH, (uint8_t *) slss->slmib, 5, eNB_index,
 			  0);
       // copy frame/subframe
       *frame    = UE_mac_inst[module_idP].directFrameNumber_r12;

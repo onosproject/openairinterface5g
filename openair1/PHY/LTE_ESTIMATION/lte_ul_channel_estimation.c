@@ -414,18 +414,23 @@ int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
     } //if (Ns&1 && interpolate==1)
     else if (interpolate == 0 && l == pilot_pos1)
       for (k=0;k<frame_parms->symbols_per_tti>>1;k++) { 
+        if (k==pilot_pos1) k++;
 	memcpy((void*)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*k],
 	       (void*)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos1],
 	       frame_parms->N_RB_UL*12*sizeof(int));
-	if (k==pilot_pos1) k++;
       }
-    else if (interpolate == 0 && l == pilot_pos2)
+    else if (interpolate == 0 && l == pilot_pos2) {
       for (k=0;k<frame_parms->symbols_per_tti>>1;k++) {
-	if (k==pilot_pos1) k++;
+	if (k==pilot_pos2) k++;
 	memcpy((void*)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*(k+(frame_parms->symbols_per_tti>>1))],
 	       (void*)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos2],
 	       frame_parms->N_RB_UL*12*sizeof(int));
       }	
+      delta_phase = lte_ul_freq_offset_estimation(frame_parms,
+                                                  ul_ch_estimates[aa],
+                                                  N_rb_alloc);
+      LOG_I(PHY,"delta_phase = %d\n",delta_phase);
+    }
   } //for(aa=...
   return(0);
 }
@@ -605,18 +610,19 @@ int16_t lte_ul_freq_offset_estimation(LTE_DL_FRAME_PARMS *frame_parms,
     mmtmpD3 = _mm_unpackhi_epi32(mmtmpD0,mmtmpD1);
     R[2] = _mm_packs_epi32(mmtmpD2,mmtmpD3);
 
-    R[0] = _mm_add_epi16(_mm_srai_epi16(R[0],1),_mm_srai_epi16(R[1],1));
-    R[0] = _mm_add_epi16(_mm_srai_epi16(R[0],1),_mm_srai_epi16(R[2],1));
-
+//    R[0] = _mm_add_epi16(_mm_srai_epi16(R[0],1),_mm_srai_epi16(R[1],1));
+//    R[0] = _mm_add_epi16(_mm_srai_epi16(R[0],1),_mm_srai_epi16(R[2],1));
+    R[0] = _mm_add_epi16(R[0],_mm_add_epi16(R[1],R[2]));
     Ravg[0] += (((short*)&R)[0] +
                 ((short*)&R)[2] +
                 ((short*)&R)[4] +
-                ((short*)&R)[6])/(nb_rb*4);
-
+//                ((short*)&R)[6])/(nb_rb*4);
+                ((short*)&R)[6])/(nb_rb*12);
     Ravg[1] += (((short*)&R)[1] +
                 ((short*)&R)[3] +
                 ((short*)&R)[5] +
-                ((short*)&R)[7])/(nb_rb*4);
+//                ((short*)&R)[7])/(nb_rb*4);
+                ((short*)&R)[6])/(nb_rb*12);
 
     ul_ch1+=3;
     ul_ch2+=3;
@@ -650,7 +656,7 @@ int16_t lte_ul_freq_offset_estimation(LTE_DL_FRAME_PARMS *frame_parms,
     phase_idx = -phase_idx;
 
   return(phase_idx);
-#elif defined(__arm__)
+#elif defined(__arm__) 
   return(0);
 #endif
 }

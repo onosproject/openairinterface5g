@@ -60,12 +60,13 @@ int initial_syncSL(PHY_VARS_UE *ue) {
   
     if (rx_psbch(ue) == -1) {
       ue->slbch_errors++;
-
+      LOG_I(PHY,"PBCH not decoded\n");
+/*
       write_output("rxsig0.m","rxs0",&ue->common_vars.rxdata_syncSL[0][0],40*ue->frame_parms.samples_per_tti,1,1);
       write_output("corr0.m","rxsync0",sync_corr_ue0,40*ue->frame_parms.samples_per_tti,1,6);
       write_output("corr1.m","rxsync1",sync_corr_ue1,40*ue->frame_parms.samples_per_tti,1,6);
 
-      exit(-1);
+      exit(-1); */
       return(-1);
     }
     else {
@@ -77,7 +78,7 @@ int initial_syncSL(PHY_VARS_UE *ue) {
 		   0, // eNB_index
 		   NULL, // pdu, NULL for MIB-SL
 		   0,    // len, 0 for MIB-SL
-		   &ue->slss_rx,
+		   ue->slss_rx.slmib,
 		   &frame,
 		   &subframe);
 

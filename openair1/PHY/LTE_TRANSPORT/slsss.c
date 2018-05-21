@@ -359,10 +359,10 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2)
 		    0);
 
   //  write_output("rxdataF0.m","rxF0",&rxdataF[0][0],2*14*ue->frame_parms.ofdm_symbol_size,1,1);
-    write_output("pss0_ext.m","pss0ext",pss0_ext,72,1,1);
+   /* write_output("pss0_ext.m","pss0ext",pss0_ext,72,1,1);
     write_output("sss0_ext.m","sss0ext",sss0_ext,72,1,1);
     write_output("pss1_ext.m","pss1ext",pss1_ext,72,1,1);
-    write_output("sss1_ext.m","sss1ext",sss1_ext,72,1,1); 
+    write_output("sss1_ext.m","sss1ext",sss1_ext,72,1,1); */
 
 
 
