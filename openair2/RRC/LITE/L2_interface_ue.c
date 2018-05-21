@@ -276,7 +276,7 @@ mac_rrc_data_ind_ue(
 
     if (srb_idP == MIBSLCH) {
       LOG_I(RRC,"[UE %d] Received SDU for MIBSL\n");
-      if (decode_MIB_SL(&ctxt,sduP,5)>=0) LOG_E(RRC,"Received  MIB_SL\n");
+      if (decode_MIB_SL(&ctxt,sduP,5)>=0) LOG_I(RRC,"Received  MIB_SL: %x.%x.%x.%x.%x\n",sduP[0],sduP[1],sduP[2],sduP[3],sduP[4]);
       else                                LOG_E(RRC,"Received bogus MIB_SL\n");
     }
 
