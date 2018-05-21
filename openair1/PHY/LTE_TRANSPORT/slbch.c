@@ -319,7 +319,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
   for (int i=0; i<(PSBCH_A>>3); i++)
     decoded_output[(PSBCH_A>>3)-i-1] = slbch_a[i];
   
-  //  for (int i=0; i<(PSBCH_A>>3); i++) printf("SLBCH %d : %x\n",i,decoded_output[i]);
+  LOG_I(PHY,"SLBCH  : %x.%x.%x.%x.%x\n",decoded_output[0],decoded_output[1],decoded_output[2],decoded_output[3],decoded_output[4]);
   
 #ifdef DEBUG_PSBCH
   LOG_I(PHY,"PSBCH CRC %x : %x\n",

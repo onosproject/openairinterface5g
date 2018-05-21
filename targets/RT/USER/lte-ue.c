@@ -730,6 +730,7 @@ static void *UE_thread_synchSL(void *arg)
 	  UE->UE_scan_carrier = 0;
 	} else {
 	  AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+          LOG_I(PHY,"Setting UE->is_synchronized to 1\n",UE->is_synchronized);
 	  UE->is_synchronizedSL = 1;
 	  AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
         }
@@ -762,7 +763,8 @@ static void *UE_thread_synchSL(void *arg)
     }
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
     UE->proc.instance_cnt_synchSL--;
-    UE->is_synchronizedSL = 0;
+// Remove this to go to steady-state mode
+    UE->is_synchronizedSL=0;
     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synchSL), "");
   }
 }
@@ -1727,6 +1729,7 @@ void *UE_threadSL(void *arg) {
 
     LOG_D(PHY,"UHD Thread SL (is_synchronized %d, is_SynchRef %d\n",
 	  is_synchronized,UE->is_SynchRef);
+
     
     if (is_synchronized == 0 && UE->is_SynchRef == 0) {
       if (instance_cnt_synch < 0) {  // we can invoke the synch

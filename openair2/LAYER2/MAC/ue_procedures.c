@@ -609,8 +609,8 @@ ue_decode_si(module_id_t module_idP, int CC_id, frame_t frameP,
 			  0);
     }
     else {
-      LOG_I(MAC, "[UE %d] Frame %d Sending MIBSL to RRC (LCID Id %d,len %d)\n",
-          module_idP, frameP, MIBSLCH, 5);
+      LOG_I(MAC, "[UE %d] Frame %d Sending MIBSL to RRC (LCID Id %d,len %d) : %x.%x.%x.%x.%x\n",
+          module_idP, frameP, MIBSLCH, 5, slss->slmib[0],slss->slmib[1],slss->slmib[2],slss->slmib[3],slss->slmib[4]);
  
       mac_rrc_data_ind_ue(module_idP, CC_id, frameP, 0,	// unknown subframe
 			  SI_RNTI,

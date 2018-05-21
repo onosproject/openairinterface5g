@@ -457,7 +457,7 @@ int lte_sync_time_init(LTE_DL_FRAME_PARMS *frame_parms )   // LTE_UE_COMMON *com
   /*
   write_output("primary_sync0.m","psync0",primary_synch0_time,frame_parms->ofdm_symbol_size,1,1);
   write_output("primary_sync1.m","psync1",primary_synch1_time,frame_parms->ofdm_symbol_size,1,1);
-  write_output("primary_sync2.m","psync2",primary_synch2_time,frame_parms->ofdm_symbol_size,1,1);*/
+  write_output("primary_sync2.m","psync2",primary_synch2_time,frame_parms->ofdm_symbol_size,1,1);
   write_output("primary_syncSL0.m","psyncSL0",primary_synch0SL_time,frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples,1,1);
   write_output("primary_syncSL1.m","psyncSL1",primary_synch1SL_time,frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples,1,1);
 
@@ -465,7 +465,7 @@ int lte_sync_time_init(LTE_DL_FRAME_PARMS *frame_parms )   // LTE_UE_COMMON *com
   write_output("primary_syncSL1rx.m","psyncSL1rx",primary_synch1SL_time_rx,2*(frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples),1,1);
   write_output("primary_syncSL0rx.m","psyncSL0rx",primary_synch0SL_time_rx,2*(frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples),1,1);
   write_output("kHz75.m","kHz75",kHz7_5ptr,2*1096,1,1);
-  
+ */ 
   return (1);
 }
 

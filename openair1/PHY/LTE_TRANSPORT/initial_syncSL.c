@@ -78,12 +78,12 @@ int initial_syncSL(PHY_VARS_UE *ue) {
 		   0, // eNB_index
 		   NULL, // pdu, NULL for MIB-SL
 		   0,    // len, 0 for MIB-SL
-		   ue->slss_rx.slmib,
+		   &ue->slss_rx,
 		   &frame,
 		   &subframe);
 
-      LOG_I(PHY,"RRC returns MIB-SL for frame %d, subframe %d\n");		   
-      return(-1);
+      LOG_I(PHY,"RRC returns MIB-SL for frame %d, subframe %d\n",frame,subframe);		   
+      return(0);
     }
   }
   else {

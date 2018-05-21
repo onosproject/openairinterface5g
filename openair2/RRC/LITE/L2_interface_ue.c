@@ -118,6 +118,7 @@ mac_rrc_data_req_ue(
   else if (Srb_idP == MIBCH)  {
     int Ret_size = do_MIB_SL(&ctxt,eNB_indexP,frameP,0);
     memcpy((void*)buffer_pP,(void*)UE_rrc_inst[Mod_idP].SL_MIB,Ret_size);
+    LOG_I(RRC,"MIB-SL for %d.%d: %x.%x.%x.%x.%x\n",frameP,0,buffer_pP[0],buffer_pP[1],buffer_pP[2],buffer_pP[3],buffer_pP[4]);
     return(Ret_size);
   }
 
@@ -275,7 +276,7 @@ mac_rrc_data_ind_ue(
 
     if (srb_idP == MIBSLCH) {
       LOG_I(RRC,"[UE %d] Received SDU for MIBSL\n");
-      if (decode_MIB_SL(&ctxt,sduP,5)>=0) LOG_E(RRC,"Received  MIB_SL\n");
+      if (decode_MIB_SL(&ctxt,sduP,5)>=0) LOG_I(RRC,"Received  MIB_SL: %x.%x.%x.%x.%x\n",sduP[0],sduP[1],sduP[2],sduP[3],sduP[4]);
       else                                LOG_E(RRC,"Received bogus MIB_SL\n");
     }
 
