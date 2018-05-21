@@ -6274,6 +6274,12 @@ int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
     return -1;
   }
 
+  LOG_I(RRC,"Decoded MIBSL SFN.SF %d.%d, sl_Bandwidth_r12 %d, InCoverage %d\n",
+                        BIT_STRING_to_uint32(&UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.directFrameNumber_r12), // indicates that there is no  update in the frame number
+                        UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.directSubframeNumber_r12,   // /indicates that there isno update in the subframe number
+                        &UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.sl_Bandwidth_r12,
+                        UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.inCoverage_r12);
+
   rrc_mac_config_req_ue(ctxt_pP->module_id, 0, 0,
 			(RadioResourceConfigCommonSIB_t *)NULL,
 			(struct PhysicalConfigDedicated *)NULL,

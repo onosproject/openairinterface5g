@@ -167,11 +167,13 @@ int rx_psbch(PHY_VARS_UE *ue) {
     if (l==0) l+=2;
   }
 #ifdef PSBCH_DEBUG
+  if (ue->frame_parms.Nid_SL==170) {
   write_output("slbch_rxF.m",
 	       "slbchrxF",
 	       &rxdataF[0][0],
 	       14*ue->frame_parms.ofdm_symbol_size,1,1);
   write_output("slbch_rxF_ext.m","slbchrxF_ext",rxdataF_ext[0],14*12*ue->frame_parms.N_RB_DL,1,1);
+  }
 #endif
   
   lte_ul_channel_estimation(&ue->frame_parms,
@@ -185,7 +187,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
 			    0, //v
 			    (ue->frame_parms.Nid_SL>>1)&7, //cyclic_shift
 			    3,
-			    1, // interpolation
+			    0, // interpolation
 			    0);
   
   lte_ul_channel_estimation(&ue->frame_parms,
@@ -199,7 +201,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
 			    0,//v
 			    (ue->frame_parms.Nid_SL>>1)&7,//cyclic_shift,
 			    10,
-			    1, // interpolation
+			    0, // interpolation
 			    0);
   
   ulsch_channel_level(drs_ch_estimates,
@@ -208,7 +210,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
 		      2);
   
 #ifdef PSBCH_DEBUG
-  write_output("drsbch_ext0.m","drsbchest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+  if (ue->frame_parms.Nid_SL == 170) write_output("drsbch_est0.m","drsbchest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
 #endif
   
   avgs = 0;
@@ -260,7 +262,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
 	   72);
   
 #ifdef PSBCH_DEBUG
-  write_output("slbch_rxF_comp.m","slbchrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+  if (ue->frame_parms.Nid_SL == 170) write_output("slbch_rxF_comp.m","slbchrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
 #endif
   int8_t llr[PSBCH_E];
   int8_t *llrp = llr;
@@ -279,7 +281,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
 		    1);
   
 #ifdef PSBCH_DEBUG
-  write_output("slbch_llr.m","slbch_llr",llr,PSBCH_E,1,4);
+  if (ue->frame_parms.Nid_SL == 170)  write_output("slbch_llr.m","slbch_llr",llr,PSBCH_E,1,4);
 #endif
   
   uint8_t slbch_a[2+(PSBCH_A>>3)];
