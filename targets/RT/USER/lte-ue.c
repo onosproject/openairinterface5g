@@ -635,6 +635,8 @@ static void *UE_thread_synch(void *arg)
   return &UE_thread_synch_retval;
 }
 
+extern int64_t* sync_corr_ue1;
+
 static void *UE_thread_synchSL(void *arg)
 {
   static int UE_thread_synch_retval;
@@ -702,14 +704,62 @@ static void *UE_thread_synchSL(void *arg)
       // the thread waits here most of the time
       pthread_cond_wait( &UE->proc.cond_synchSL, &UE->proc.mutex_synchSL );
     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synchSL), "");
-   
+  
+    LOG_I(PHY,"Running initial synch with carrier offset %d, ue_scan_carrier %d\n",freq_offset,UE->UE_scan_carrier); 
     // Do initial synch here
-    if (initial_syncSL(UE) >= 0) LOG_I(PHY,"Found SynchRef UE\n");
+    if (initial_syncSL(UE) >= 0)  {
+
+       LOG_I(PHY,"Found SynchRef UE\n");
+	// rerun with new cell parameters and frequency-offset
+	for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
+	  openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
+	  if (UE->UE_scan_carrier == 1) {
+	    if (freq_offset >= 0)
+	      openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] += abs(UE->common_vars.freq_offset);
+	    else
+	      openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] -= abs(UE->common_vars.freq_offset);
+	    freq_offset=0;
+	  }
+	}
+	UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
+	//UE->rfdevice.trx_set_gains_func(&openair0,&openair0_cfg[0]);
+	//UE->rfdevice.trx_stop_func(&UE->rfdevice);
+	sleep(1);
+	if (UE->UE_scan_carrier == 1) {
+
+	  UE->UE_scan_carrier = 0;
+	} else {
+	  AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+	  UE->is_synchronizedSL = 1;
+	  AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
+        }
+
+    }
     else {
-      LOG_I(PHY,"No SynchRefUE found\n");
+     LOG_I(PHY,"No SynchRefUE found\n");
+/*
       write_output("rxsig0.m","rxs0",&UE->common_vars.rxdata_syncSL[0][0],40*UE->frame_parms.samples_per_tti,1,1);
+      write_output("corr.m","corr1",sync_corr_ue1,40*UE->frame_parms.samples_per_tti,1,2);
+
       exit(-1);
-    }	  
+*/
+      if (UE->UE_scan_carrier == 1) {
+         if (freq_offset>=0)
+           freq_offset+=100;
+         freq_offset*=-1;
+         if (abs(freq_offset) > 7500) 
+           AssertFatal(1==0, "[initial_sync] No cell synchronization found, abandoning\n" );
+      }
+      for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
+	  openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = (double)UE->frame_parms.ul_CarrierFreq+freq_offset;
+	  openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = (double)UE->frame_parms.ul_CarrierFreq+freq_offset;
+	  openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
+	  if (UE->UE_scan_carrier==1)
+	    openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
+       }
+       LOG_I(PHY,"Setting USRP freq to %f\n",openair0_cfg[UE->rf_map.card].rx_freq[0]);
+       UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
+    }
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
     UE->proc.instance_cnt_synchSL--;
     UE->is_synchronizedSL = 0;

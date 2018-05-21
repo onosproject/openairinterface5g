@@ -42,6 +42,8 @@
 #define PSBCH_A 40
 #define PSBCH_E 1008 //12REs/PRB*6PRBs*7symbols*2 bits/RB
 
+//#define PSBCH_DEBUG 1
+
 
 
 	  
@@ -147,9 +149,11 @@ int rx_psbch(PHY_VARS_UE *ue) {
   ru_tmp.N_TA_offset=0;
   ru_tmp.common.rxdata_7_5kHz     = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*)); 
   for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) 
-    ru_tmp.common.rxdata_7_5kHz[aa] = (int32_t*)&ue->common_vars.rxdata_syncSL[aa][ue->rx_offsetSL*2];
+    ru_tmp.common.rxdata_7_5kHz[aa] = ue->sl_rxdata_7_5kHz[aa];//(int32_t*)&ue->common_vars.rxdata_syncSL[aa][ue->rx_offsetSL*2];
   ru_tmp.common.rxdataF = (int32_t**)rxdataF;
   ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
+
+  LOG_I(PHY,"Running PBCH detection with Nid_SL %d\n",ue->frame_parms.Nid_SL);
   
   for (int l=0; l<11; l++) {
     slot_fep_ul(&ru_tmp,l%7,(l>6)?1:0,0);
@@ -163,11 +167,13 @@ int rx_psbch(PHY_VARS_UE *ue) {
     if (l==0) l+=2;
   }
 #ifdef PSBCH_DEBUG
+  if (ue->frame_parms.Nid_SL==170) {
   write_output("slbch_rxF.m",
 	       "slbchrxF",
 	       &rxdataF[0][0],
 	       14*ue->frame_parms.ofdm_symbol_size,1,1);
   write_output("slbch_rxF_ext.m","slbchrxF_ext",rxdataF_ext[0],14*12*ue->frame_parms.N_RB_DL,1,1);
+  }
 #endif
   
   lte_ul_channel_estimation(&ue->frame_parms,
@@ -181,7 +187,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
 			    0, //v
 			    (ue->frame_parms.Nid_SL>>1)&7, //cyclic_shift
 			    3,
-			    1, // interpolation
+			    0, // interpolation
 			    0);
   
   lte_ul_channel_estimation(&ue->frame_parms,
@@ -195,7 +201,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
 			    0,//v
 			    (ue->frame_parms.Nid_SL>>1)&7,//cyclic_shift,
 			    10,
-			    1, // interpolation
+			    0, // interpolation
 			    0);
   
   ulsch_channel_level(drs_ch_estimates,
@@ -204,7 +210,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
 		      2);
   
 #ifdef PSBCH_DEBUG
-  write_output("drsbch_ext0.m","drsbchest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+  if (ue->frame_parms.Nid_SL == 170) write_output("drsbch_est0.m","drsbchest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
 #endif
   
   avgs = 0;
@@ -256,7 +262,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
 	   72);
   
 #ifdef PSBCH_DEBUG
-  write_output("slbch_rxF_comp.m","slbchrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+  if (ue->frame_parms.Nid_SL == 170) write_output("slbch_rxF_comp.m","slbchrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
 #endif
   int8_t llr[PSBCH_E];
   int8_t *llrp = llr;
@@ -275,7 +281,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
 		    1);
   
 #ifdef PSBCH_DEBUG
-  write_output("slbch_llr.m","slbch_llr",llr,PSBCH_E,1,4);
+  if (ue->frame_parms.Nid_SL == 170)  write_output("slbch_llr.m","slbch_llr",llr,PSBCH_E,1,4);
 #endif
   
   uint8_t slbch_a[2+(PSBCH_A>>3)];

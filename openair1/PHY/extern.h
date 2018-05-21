@@ -60,14 +60,17 @@ extern short primary_synch1SL[144];
 extern unsigned char primary_synch0_tab[72];
 extern unsigned char primary_synch1_tab[72];
 extern unsigned char primary_synch2_tab[72];
-extern const int16_t *primary_synch0_time; //!< index: [0..ofdm_symbol_size*2[
-extern const int16_t *primary_synch1_time; //!< index: [0..ofdm_symbol_size*2[
-extern const int16_t *primary_synch2_time; //!< index: [0..ofdm_symbol_size*2[
-extern const int16_t *primary_synch0SL_time;
-extern const int16_t *primary_synch1SL_time;
-extern int *sync_corr_ue0; //!< index [0..10*samples_per_tti[
-extern int *sync_corr_ue1; //!< index [0..10*samples_per_tti[
-extern int *sync_corr_ue2; //!< index [0..10*samples_per_tti[
+extern int16_t *primary_synch0_time; //!< index: [0..ofdm_symbol_size*2[
+extern int16_t *primary_synch1_time; //!< index: [0..ofdm_symbol_size*2[
+extern int16_t *primary_synch2_time; //!< index: [0..ofdm_symbol_size*2[
+extern int16_t *primary_synch0SL_time;
+extern int16_t *primary_synch1SL_time;
+extern int16_t *primary_synch0SL_time_rx;
+extern int16_t *primary_synch1SL_time_rx;
+
+extern int64_t *sync_corr_ue0; //!< index [0..10*samples_per_tti[
+extern int64_t *sync_corr_ue1; //!< index [0..10*samples_per_tti[
+extern int64_t *sync_corr_ue2; //!< index [0..10*samples_per_tti[
 
 extern int flagMag;
 //extern short **txdataF_rep_tmp;

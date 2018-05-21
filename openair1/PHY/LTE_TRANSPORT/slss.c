@@ -55,6 +55,11 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   // here we have a transmission opportunity for SLSS
   ue->frame_parms.Nid_SL = slss->slss_id;
 
+  if (ue->SLghinitialized ==0) {
+    generate_sl_grouphop(ue);
+    ue->SLghinitialized=1;
+  }
+
   // 6 PRBs => ceil(10*log10(6)) = 8 
   ue->tx_power_dBm[subframe_tx] = -6;
   ue->tx_total_RE[subframe_tx] = 72;
@@ -84,20 +89,20 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
                  1,
                  subframe_tx
 		 );  
-  
+ 
   generate_slpss(ue->common_vars.txdataF,
                  tx_amp<<1,
                  &ue->frame_parms,
                  2,
                  subframe_tx
-		 );
+		 ); 
           
   generate_slbch(ue->common_vars.txdataF,
                  tx_amp,
                  &ue->frame_parms,
 		 subframe_tx,
 		 ue->slss->slmib);
-  
+ 
   
   generate_slsss(ue->common_vars.txdataF,
 		 subframe_tx,

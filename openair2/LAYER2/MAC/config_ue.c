@@ -646,7 +646,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 
     UE_mac_inst[Mod_idP].slss.SL_OffsetIndicator   = SL_Preconfiguration_r12->preconfigSync_r12.syncOffsetIndicator1_r12;
     // Note: Other synch parameters are ignored for now
-    UE_mac_inst[Mod_idP].slss.slss_id              = 168+(taus()%168);
+    UE_mac_inst[Mod_idP].slss.slss_id              = 170;//+(taus()%168);
     // PSCCH
     struct SL_PreconfigCommPool_r12 *preconfigpool = SL_Preconfiguration_r12->preconfigComm_r12.list.array[0];
     UE_mac_inst[Mod_idP].slsch.N_SL_RB_SC                = preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12;

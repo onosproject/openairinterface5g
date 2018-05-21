@@ -65,6 +65,7 @@ int main(int argc, char **argv) {
   channel_desc_t *UE2UE[2][2][2];
   PHY_VARS_UE *UE;
   int log_level = LOG_INFO;
+  int tx_offset=0;
   SLSCH_t slsch;
   SLDCH_t sldch;
   SLSS_t slss;
@@ -94,7 +95,7 @@ int main(int argc, char **argv) {
 
   char c;
 
-  while ((c = getopt (argc, argv, "hf:m:n:g:r:z:w:s:S")) != -1) {
+  while ((c = getopt (argc, argv, "hf:m:n:g:r:z:w:s:S:")) != -1) {
     switch (c) {
     case 'f':
       snr_step= atof(optarg);
@@ -189,6 +190,8 @@ int main(int argc, char **argv) {
       break;
     case 'S':
       do_SLSS=1;
+      tx_offset=atoi(optarg);
+      printf("Running TX/RX synchornization signals with timing offset %d\n",tx_offset);
       break;
       
     case 'h':
@@ -354,14 +357,15 @@ int main(int argc, char **argv) {
 	UE->slss_generated=0;
 	frame = absSF/10;
 	subframe= absSF%10;
-	check_and_generate_psdch(UE,frame,subframe);
-	UE->slsch_active = 1;
-	check_and_generate_pscch(UE,frame,subframe);
-	proc.subframe_tx = subframe;
-	proc.frame_tx    = frame;
-	check_and_generate_pssch(UE,&proc,frame,subframe);
-	check_and_generate_slss(UE,frame,subframe);
-	
+        if (do_SLSS==0) {
+	   check_and_generate_psdch(UE,frame,subframe);
+	   UE->slsch_active = 1;
+	   check_and_generate_pscch(UE,frame,subframe);
+	   proc.subframe_tx = subframe;
+	   proc.frame_tx    = frame;
+	   check_and_generate_pssch(UE,&proc,frame,subframe);
+        }
+	   check_and_generate_slss(UE,frame,subframe);
 	if (UE->psdch_generated>0 || UE->pscch_generated > 0 || UE->pssch_generated > 0 || UE->slss_generated > 0) {
 	  AssertFatal(UE->pscch_generated<3,"Illegal pscch_generated %d\n",UE->pscch_generated);
 	  // FEP
@@ -373,7 +377,7 @@ int main(int argc, char **argv) {
 		    &UE->frame_parms,frame,0);
 	  //	  write_output("rxsig0.m","rxs0",&UE->common_vars.rxdata[0][UE->frame_parms.samples_per_tti*subframe],UE->frame_parms.samples_per_tti,1,1);
 	  if (do_SLSS==1) 
-	    memcpy((void*)&UE->common_vars.rxdata_syncSL[0][(((frame&3)*10)+subframe)*2*UE->frame_parms.samples_per_tti],
+	    memcpy((void*)&UE->common_vars.rxdata_syncSL[0][2*tx_offset+(((frame&3)*10)+subframe)*2*UE->frame_parms.samples_per_tti],
 		   (void*)&UE->common_vars.rxdata[0][subframe*UE->frame_parms.samples_per_tti],
 		   2*UE->frame_parms.samples_per_tti*sizeof(int16_t));
 	  //	  write_output("rxsyncb0.m","rxsyncb0",(void*)UE->common_vars.rxdata_syncSL[0],(UE->frame_parms.samples_per_tti),1,1);

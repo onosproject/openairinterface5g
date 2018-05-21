@@ -1415,6 +1415,7 @@ typedef struct {
   uint8_t               destination_id;
   // DMRS group-hopping sequences for PSBCH (index 0) and 256 possible PSSCH (indices 1...256)
   uint32_t              gh[257][20];
+  uint8_t               SLghinitialized;
   uint8_t               slss_generated;
   uint8_t               pscch_coded;
   uint8_t               pscch_generated;

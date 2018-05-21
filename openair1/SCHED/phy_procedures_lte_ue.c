@@ -1227,7 +1227,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, int frame_tx, int subframe_tx, uin
 
   //LOG_E(PHY,"ul-signal [subframe: %d, ulsch_start %d]\n",subframe_tx, ulsch_start);
 #else //this is the normal case
-  ulsch_start = (frame_parms->samples_per_tti*subframe_tx)-ue->N_TA_offset; //-ue->timing_advance;
+  ulsch_start = ue->rx_offset+(frame_parms->samples_per_tti*subframe_tx)-ue->N_TA_offset; //-ue->timing_advance;
 #endif //else EXMIMO
 
 
