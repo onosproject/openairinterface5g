@@ -89,6 +89,8 @@ int main(int argc, char **argv) {
   logInit();
   // enable these lines if you need debug info
   set_comp_log(PHY,LOG_INFO,LOG_HIGH,1);
+  set_comp_log(MAC,LOG_INFO,LOG_HIGH,1);
+  set_comp_log(RRC,LOG_INFO,LOG_HIGH,1);
   set_comp_log(OCM,LOG_INFO,LOG_HIGH,1);
   set_glog(log_level,LOG_HIGH);
   
