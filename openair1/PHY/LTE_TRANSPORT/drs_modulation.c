@@ -168,7 +168,7 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
 
     drs_offset = 0;
 #ifdef DEBUG_DRS
-    printf("drs_modulation: l %d Msc_RS = %d, Msc_RS_idx = %d, u=%d,v=%d\n",l,Msc_RS, Msc_RS_idx,u,v);
+    LOG_I(PHY,"drs_modulation: l %d Msc_RS = %d, Msc_RS_idx = %d, u=%d,v=%d, cyclic shift %d\n",l,Msc_RS, Msc_RS_idx,u,v,cyclic_shift);
 #endif
 
 
@@ -177,9 +177,6 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
     symbol_offset = subframe_offset + frame_parms->ofdm_symbol_size*l;
 
 
-#ifdef DEBUG_DRS
-    printf("generate_drs_pusch: symbol_offset %d, subframe offset %d, cyclic shift %d\n",symbol_offset,subframe_offset,cyclic_shift);
-#endif
     alpha_ind = 0;
 
     for (rb=0; rb<frame_parms->N_RB_UL; rb++) {
