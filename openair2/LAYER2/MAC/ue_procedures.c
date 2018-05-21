@@ -3168,8 +3168,12 @@ SLSS_t *ue_get_slss(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t su
 						0,
 						0); // call RRC get check for SL-MIB
 
-  LOG_D(MAC,"frame_tx %d, subframe %d,slss->SL_OffsetIndicator %d, mib length %d, slmib %p\n",
-	frame_tx,subframe_tx,slss->SL_OffsetIndicator,slss->slmib_length, slss->slmib);
+  if (slss->slmib_length>0) {
+    LOG_I(MAC,"frame_tx %d, subframe %d,slss->SL_OffsetIndicator %d, mib length %d, slmib %p\n",
+        frame_tx,subframe_tx,slss->SL_OffsetIndicator,slss->slmib_length, slss->slmib);
+
+    LOG_I(MAC,"MIB-SL : %x.%x.%x.%x.%x\n",slss->slmib[0],slss->slmib[1],slss->slmib[2],slss->slmib[3],slss->slmib[4]);
+  }
   return(slss);
 }
 
