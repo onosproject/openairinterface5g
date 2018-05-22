@@ -3197,7 +3197,6 @@ SLDCH_t *ue_get_sldch(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t 
      LOG_I(MAC,"Got %d bytes from RRC for SLDCH @ %p\n",sldch->payload_length,sldch);
      return (sldch);
    }
-   else
 
    return((SLDCH_t*)NULL);
 }

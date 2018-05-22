@@ -80,7 +80,7 @@ void *UE_thread(void *arg);
 void *UE_threadSL(void *arg);
 void init_UE_stub(int nb_inst,int,int,char*,int);
 void ue_stub_rx_handler(unsigned int, char *);
-void init_UE(int,int,int,int,int,int,int);
+void init_UE(int,int,int,int,int,int,int,int);
 
 int32_t **rxdata;
 int32_t **txdata;
@@ -223,7 +223,7 @@ void init_thread(int sched_runtime, int sched_deadline, int sched_fifo, cpu_set_
 
 }
 
-void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correction,int sidelink_active,int SLonly,int isSynchRef) {
+void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correction,int sidelink_active,int SLonly,int isSynchRef,int slsynconly) {
 
   PHY_VARS_UE *UE;
   int         inst;
@@ -245,6 +245,7 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
     
     PHY_vars_UE_g[inst][0]->SLonly = SLonly;
     PHY_vars_UE_g[inst][0]->is_SynchRef = isSynchRef;
+    PHY_vars_UE_g[inst][0]->SLsynconly;
     
     LOG_I(PHY,"Intializing UE Threads for instance %d (%p,%p)...\n",inst,PHY_vars_UE_g[inst],PHY_vars_UE_g[inst][0]);
     init_UE_threads(inst);
@@ -764,7 +765,7 @@ static void *UE_thread_synchSL(void *arg)
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
     UE->proc.instance_cnt_synchSL--;
 // Remove this to go to steady-state mode
-    UE->is_synchronizedSL=0;
+    if (UE->SLsynconly==1) UE->is_synchronizedSL=0;
     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synchSL), "");
   }
 }

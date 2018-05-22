@@ -1412,6 +1412,7 @@ typedef struct {
   unsigned char first_run_timing_advance[NUMBER_OF_CONNECTED_eNB_MAX];
   uint8_t               sidelink_active;
   uint8_t               SLonly;
+  uint8_t               SLsynconly;
   uint8_t               destination_id;
   // DMRS group-hopping sequences for PSBCH (index 0) and 256 possible PSSCH (indices 1...256)
   uint32_t              gh[257][20];

@@ -604,6 +604,8 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t absSF = (frame_tx*10)+subframe_tx;
   uint32_t absSF_offset,absSF_modP;
 
+  LOG_I(PHY,"Checking SLDCH (O %d, P %d, abssF %d\n",O,P,absSF);
+
   absSF_offset = absSF-O;
 
   if (absSF_offset < O) return;
