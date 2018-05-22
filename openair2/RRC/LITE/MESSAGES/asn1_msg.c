@@ -478,14 +478,14 @@ uint8_t do_SIB1(rrc_eNB_carrier_data_t *carrier,
   ASN_SEQUENCE_ADD(&(*sib1)->schedulingInfoList.list,&schedulingInfo);
 
   //TTN - This is for SIB18
-  sib_type=SIB_Type_sibType18_v1250;
+  /*sib_type=SIB_Type_sibType18_v1250;
   ASN_SEQUENCE_ADD(&schedulingInfo.sib_MappingInfo.list,&sib_type);
   ASN_SEQUENCE_ADD(&(*sib1)->schedulingInfoList.list,&schedulingInfo);
 
   //TTN - This is for SIB19
   sib_type=SIB_Type_sibType19_v1250;
   ASN_SEQUENCE_ADD(&schedulingInfo.sib_MappingInfo.list,&sib_type);
-  ASN_SEQUENCE_ADD(&(*sib1)->schedulingInfoList.list,&schedulingInfo);
+  ASN_SEQUENCE_ADD(&(*sib1)->schedulingInfoList.list,&schedulingInfo);*/
 
   //  ASN_SEQUENCE_ADD(&schedulingInfo.sib_MappingInfo.list,NULL);
 
