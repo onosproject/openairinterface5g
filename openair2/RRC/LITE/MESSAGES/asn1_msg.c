@@ -322,7 +322,10 @@ uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
    }
 
    //set FrameNumber, subFrameNumber
-   sl_mib->message.directFrameNumber_r12.buf =  &frame;
+   uint8_t buf[2];
+   buf[1] = frame&3;
+   buf[0] = (frame>>2)&255; 
+   sl_mib->message.directFrameNumber_r12.buf =  &buf[0];
    sl_mib->message.directFrameNumber_r12.size = 2;
    sl_mib->message.directFrameNumber_r12.bits_unused=6;
    sl_mib->message.directSubframeNumber_r12 = subframe;

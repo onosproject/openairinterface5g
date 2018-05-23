@@ -118,7 +118,7 @@ mac_rrc_data_req_ue(
   else if (Srb_idP == MIBCH)  {
     int Ret_size = do_MIB_SL(&ctxt,eNB_indexP,frameP,0);
     memcpy((void*)buffer_pP,(void*)UE_rrc_inst[Mod_idP].SL_MIB,Ret_size);
-    LOG_I(RRC,"MIB-SL for %d.%d: %x.%x.%x.%x.%x\n",frameP,0,buffer_pP[0],buffer_pP[1],buffer_pP[2],buffer_pP[3],buffer_pP[4]);
+    LOG_I(RRC,"MIB-SL for %d.%d: %x.%x.%x.%x.%x\n",frameP/10,frameP%10,buffer_pP[0],buffer_pP[1],buffer_pP[2],buffer_pP[3],buffer_pP[4]);
     return(Ret_size);
   }
 
