@@ -74,7 +74,6 @@ extern int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req);
 extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 extern uint16_t sfnsf_add_subframe(uint16_t frameP, uint16_t subframeP, int offset);
 extern int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req);
-extern uint8_t nfapi_mode;
 
 extern uint8_t nfapi_mode;
 

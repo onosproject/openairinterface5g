@@ -2341,6 +2341,7 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
   SLDCH_t *sldch;
   SLSCH_t *slsch;
 
+
   LOG_D(PHY,"****** start Sidelink TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, subframe_tx);
 
   // check for SLBCH/SLSS

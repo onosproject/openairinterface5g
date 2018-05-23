@@ -63,6 +63,7 @@
 
 extern double cpuf;
 extern uint8_t  nfapi_mode;
+extern uint8_t D2D_en;
 
 #define FRAME_PERIOD    100000000ULL
 #define DAQ_PERIOD      66667ULL
@@ -308,7 +309,7 @@ void init_UE_stub_single_thread(int nb_inst,int eMBMS_active, int uecap_xer_in, 
   printf("UE threads created \n");
 
   LOG_I(PHY,"Starting multicast link on %s\n",emul_iface);
-  if(nfapi_mode!=3)
+  //if(nfapi_mode !=3) //This has to change now. It should be active for the case of D2D On-net
   multicast_link_start(ue_stub_rx_handler,0,emul_iface);
 
 
@@ -344,7 +345,7 @@ void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_ifa
   printf("UE threads created \n");
 
   LOG_I(PHY,"Starting multicast link on %s\n",emul_iface);
-  if(nfapi_mode !=3)
+  //if(nfapi_mode !=3) //This has to change now. It should be active for the case of D2D On-net
      multicast_link_start(ue_stub_rx_handler,0,emul_iface);
 
 
@@ -892,7 +893,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
   hi_dci0_req	= NULL;
   tx_request_pdu_list = NULL;
 
-  PHY_VARS_UE    *UE;   //= rtd->UE;
+  PHY_VARS_UE    *UE; //= rtd->UE;
   int ret;
   //  double t_diff;
 
@@ -1002,7 +1003,10 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     	  hi_dci0_req_UE_MAC(hi_dci0_req, Mod_id);
       }
 
-      if(nfapi_mode!=3)
+      //Panos: Have to remove this now that we run both D2D and nfapi-L2-emulator.
+      //Currently the call to this function creates problems for the RRC Connection establishment for
+      //if running with more than one UEs
+      //if(nfapi_mode!=3)
       phy_procedures_UE_SL_TX(UE,proc);
 
     }
@@ -1295,7 +1299,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
       		hi_dci0_req = NULL;
       	}
 
-      if (nfapi_mode != 3)
+      //if (nfapi_mode != 3)
         phy_procedures_UE_SL_TX(UE,proc);
 
     }
@@ -2068,7 +2072,8 @@ static void* timer_thread( void* param ) {
   opp_enabled = 1;
 
   // first check if we are receiving timing indications
-  if(nfapi_mode==4) {
+  if(D2D_en){
+  //if(nfapi_mode==4) {
   usleep(10000);
   if (UE->instance_cnt_timer > 0) {
     external_timer = 1;
@@ -2147,11 +2152,12 @@ static void* timer_thread( void* param ) {
       UE_tport_t pdu;
       pdu.header.packet_type = TTI_SYNC;
       pdu.header.absSF = (timer_frame*10)+timer_subframe;
-      if (nfapi_mode!=3){
+      //Panos: substitute this check with a check related to D2D (i.e., if D2D is enabled)
+      //if (nfapi_mode!=3){
       multicast_link_write_sock(0,
 				&pdu,
 				sizeof(UE_tport_header_t));
-      }
+      //}
 
     }
     else {

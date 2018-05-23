@@ -120,6 +120,9 @@ int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
 uint8_t nfapi_mode = 0;
 
+// Enabling D2D operations. Currently hardcoded but it should eventually be an execution option.
+uint8_t D2D_en = 0;
+
 uint16_t sf_ahead=2;
 
 char *emul_iface;
@@ -588,7 +591,7 @@ static void get_options(void) {
     // Read it in and store in asn1c data structures
     sprintf(uecap_xer,"%stargets/PROJECTS/GENERIC-LTE-EPC/CONF/UE_config.xml",getenv("OPENAIR_HOME"));
     printf("%s\n",uecap_xer);
-    if(nfapi_mode!=3)
+    if(nfapi_mode!=3 && D2D_en != 1)
     	uecap_xer_in=1;
   } /* UE with config file  */
 }
@@ -826,6 +829,8 @@ int main( int argc, char **argv )
   get_options ();
 
   printf("NFAPI_MODE value: %d \n", nfapi_mode);
+
+  printf("D2D_en value: %d \n \n", D2D_en);
 
   // Panos: Not sure if the following is needed here
   /*if (CONFIG_ISFLAGSET(CONFIG_ABORT)) {
@@ -1174,10 +1179,11 @@ int main( int argc, char **argv )
   // start the main threads
     int eMBMS_active = 0;
 
-    if (nfapi_mode==3) // UE-STUB-PNF
+    if (nfapi_mode==3 || D2D_en == 1) // UE-STUB-PNF or D2D (offnet) or both(D2D on-net)
     {
     	config_sync_var=0;
-    	wait_nfapi_init("main?");
+    	if(nfapi_mode==3)
+    		wait_nfapi_init("main?");
     	//Panos: Temporarily we will be using single set of threads for multiple UEs.
     	//init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
     	init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,emul_iface);
