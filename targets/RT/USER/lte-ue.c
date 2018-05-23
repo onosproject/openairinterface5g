@@ -722,10 +722,10 @@ static void *UE_thread_synchSL(void *arg)
 	    freq_offset=0;
 	  }
 	}
-	UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
+	//UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
 	//UE->rfdevice.trx_set_gains_func(&openair0,&openair0_cfg[0]);
 	//UE->rfdevice.trx_stop_func(&UE->rfdevice);
-	sleep(1);
+	//sleep(1);
 	if (UE->UE_scan_carrier == 1) {
 
 	  UE->UE_scan_carrier = 0;
@@ -760,7 +760,7 @@ static void *UE_thread_synchSL(void *arg)
 	    openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
        }
        LOG_I(PHY,"Setting USRP freq to %f\n",openair0_cfg[UE->rf_map.card].rx_freq[0]);
-       UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
+       //UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
     }
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
     UE->proc.instance_cnt_synchSL--;
@@ -1570,11 +1570,13 @@ void init_UE_threads(int inst) {
   pthread_mutex_init(&UE->proc.mutex_synch,NULL);
   pthread_cond_init(&UE->proc.cond_synch,NULL);
 
-  pthread_attr_init (&UE->proc.attr_ueSL);
-  pthread_attr_setstacksize(&UE->proc.attr_ueSL,8192);//5*PTHREAD_STACK_MIN);
+  if (UE->sidelink_active == 1) {
+    pthread_attr_init (&UE->proc.attr_ueSL);
+    pthread_attr_setstacksize(&UE->proc.attr_ueSL,8192);//5*PTHREAD_STACK_MIN);
 
-  pthread_mutex_init(&UE->proc.mutex_synchSL,NULL);
-  pthread_cond_init(&UE->proc.cond_synchSL,NULL);
+    pthread_mutex_init(&UE->proc.mutex_synchSL,NULL);
+    pthread_cond_init(&UE->proc.cond_synchSL,NULL);
+  }
 
   // the threads are not yet active, therefore access is allowed without locking
   int nb_threads=RX_NB_TH;
@@ -1721,7 +1723,7 @@ void *UE_threadSL(void *arg) {
 
   AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0,"Could not start the device");
 
-  
+  int subframe_delay=0; 
   while (!oai_exit) {
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
     int instance_cnt_synch = UE->proc.instance_cnt_synchSL;
@@ -1731,13 +1733,13 @@ void *UE_threadSL(void *arg) {
     LOG_D(PHY,"UHD Thread SL (is_synchronized %d, is_SynchRef %d\n",
 	  is_synchronized,UE->is_SynchRef);
 
-    
     if (is_synchronized == 0 && UE->is_SynchRef == 0) {
       if (instance_cnt_synch < 0) {  // we can invoke the synch
+        subframe_delay=0;
 	// grab 40 ms of signal and wakeup synch thread
 	for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
 	  rxp[i] = (void*)&UE->common_vars.rxdata_syncSL[i][0];
-
+        LOG_I(PHY,"Reading 40ms frame for initial synch\n");
 	AssertFatal( UE->frame_parms.samples_per_tti*40 ==
 		     UE->rfdevice.trx_read_func(&UE->rfdevice,
 						&timestamp,
@@ -1758,13 +1760,13 @@ void *UE_threadSL(void *arg) {
 
 	for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
 	  rxp[i] = (void*)&dummy_rx[i][0];
-	for (int sf=0; sf<40; sf++)
-	  //	    printf("Reading dummy sf %d\n",sf);
+	for (int sf=0; sf<40; sf++,subframe_delay++) {
 	  UE->rfdevice.trx_read_func(&UE->rfdevice,
 				     &timestamp,
 				     rxp,
 				     UE->frame_parms.samples_per_tti,
 				     UE->frame_parms.nb_antennas_rx);
+        }
       }
       
 	
@@ -1773,21 +1775,26 @@ void *UE_threadSL(void *arg) {
       if (start_rx_stream==0 && UE->is_SynchRef == 0) {
 	start_rx_stream=1;
 	if (UE->no_timing_correction==0) {
-	  LOG_I(PHY,"Resynchronizing RX by %d samples (mode = %d)\n",UE->rx_offsetSL,UE->mode);
-	  AssertFatal(UE->rx_offset ==
+	  LOG_I(PHY,"Resynchronizing RX by %d samples (mode = %d), subframe_delay %d\n",UE->rx_offsetSL,UE->mode,subframe_delay);
+	  AssertFatal(UE->rx_offsetSL ==
 		      UE->rfdevice.trx_read_func(&UE->rfdevice,
 						 &timestamp,
 						 (void**)UE->common_vars.rxdata,
-						 UE->rx_offset,
+						 UE->rx_offsetSL,
 						 UE->frame_parms.nb_antennas_rx),"");
+/*
+          AssertFatal(UE->frame_parms.samples_per_tti*40 ==
+                      UE->rfdevice.trx_read_func(&UE->rfdevice,
+                                                 &timestamp,
+                                                 (void**)UE->common_vars.rxdata_syncSL,
+                                                 UE->frame_parms.samples_per_tti*40,
+                                                 UE->frame_parms.nb_antennas_rx),"");
+          write_output("fourframes.m","frames4",UE->common_vars.rxdata_syncSL[0],UE->frame_parms.samples_per_tti*10,1,1);
+          exit(-1);*/ 
 	}
 	UE->rx_offsetSL=0;
 	UE->time_sync_cell=0;
-	//UE->proc.proc_rxtx[0].frame_rx++;
-	//UE->proc.proc_rxtx[1].frame_rx++;
-	for (th_id=0; th_id < RX_NB_TH; th_id++) {
-	  UE->proc.proc_rxtx[th_id].frame_rx++;
-	}
+	for (int i=0;i<RX_NB_TH;i++) UE->proc.proc_rxtx[i].frame_rx=(UE->proc.proc_rxtx[i].frame_rx-1+(subframe_delay/10))&1023; // -1 because we increment frame_rx below in subframe=0
       } else { // This is steady-state mode
 	sub_frame++;
 	sub_frame%=10;
@@ -1803,9 +1810,7 @@ void *UE_threadSL(void *arg) {
 	
 	
 	for (i=0; i<UE->frame_parms.nb_antennas_rx; i++)
-	  rxp[i] = (void*)&UE->common_vars.rxdata[i][UE->frame_parms.ofdm_symbol_size+
-						     UE->frame_parms.nb_prefix_samples0+
-						     sub_frame*UE->frame_parms.samples_per_tti];
+	  rxp[i] = (void*)&UE->common_vars.rxdata[i][sub_frame*UE->frame_parms.samples_per_tti];
 	for (i=0; i<UE->frame_parms.nb_antennas_tx; i++)
 	  txp[i] = (void*)&UE->common_vars.txdata[i][((sub_frame+2)%10)*UE->frame_parms.samples_per_tti];
 	
@@ -1842,8 +1847,9 @@ void *UE_threadSL(void *arg) {
 	  writeBlockSize=UE->frame_parms.samples_per_tti -UE->rx_offset_diff;
 	}
 
-	LOG_D(PHY,"reading rxp[0] %p (%p)\n",
-	      rxp[0],UE->common_vars.rxdata[0]);
+	LOG_D(PHY,"reading rxp[0] %p (%p) : %d samples\n",
+	      rxp[0],UE->common_vars.rxdata[0],
+	      readBlockSize);
 	AssertFatal(readBlockSize ==
 		    UE->rfdevice.trx_read_func(&UE->rfdevice,
 					       &timestamp,
@@ -1872,6 +1878,7 @@ void *UE_threadSL(void *arg) {
 	    //UE->proc.proc_rxtx[1].frame_rx++;
 	    for (th_id=0; th_id < RX_NB_TH; th_id++) {
 	      UE->proc.proc_rxtx[th_id].frame_rx++;
+              UE->proc.proc_rxtx[th_id].frame_rx&=1023;
 	    }
 	  }
 	  //UE->proc.proc_rxtx[0].gotIQs=readTime(gotIQs);

@@ -376,7 +376,7 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
   discrxpool->tf_ResourceConfig_r13.prb_Start_r12  = 15;
   discrxpool->tf_ResourceConfig_r13.prb_End_r12  = 34;
   discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.present  = SL_OffsetIndicator_r12_PR_small_r12;
-  discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.choice.small_r12  = 0;
+  discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.choice.small_r12  = 1;
   discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present  = SubframeBitmapSL_r12_PR_bs16_r12;
   discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs16_r12.buf  = CALLOC(1,2);
   discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs16_r12.buf[0]  = 0xFF;

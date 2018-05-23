@@ -19,13 +19,13 @@
  *      contact@openairinterface.org
  */
 
-/*! \file PHY/LTE_TRANSPORT/pss.c
-* \brief Top-level routines for generating primary synchronization signal (PSS) V8.6 2009-03
-* \author F. Kaltenberger, O. Tonelli, R. Knopp
+/*! \file PHY/LTE_TRANSPORT/slbch.c
+* \brief Top-level routines for transmitting and receiving the sidelink broadcast channel
+* \author R. Knopp
 * \date 2011
 * \version 0.1
 * \company Eurecom
-* \email: florian.kaltenberger@eurecom.fr, oscar.tonelli@yahoo.it,knopp@eurecom.fr
+* \email: knopp@eurecom.fr
 * \note
 * \warning
 */
@@ -129,7 +129,7 @@ int generate_slbch(int32_t **txdataF,
   return(0);
 }
 
-int rx_psbch(PHY_VARS_UE *ue) {
+int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   
   
   int16_t **rxdataF      = ue->sl_rxdataF;
@@ -153,7 +153,22 @@ int rx_psbch(PHY_VARS_UE *ue) {
   ru_tmp.common.rxdataF = (int32_t**)rxdataF;
   ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
 
-  LOG_I(PHY,"Running PBCH detection with Nid_SL %d\n",ue->frame_parms.Nid_SL);
+
+  if (ue->is_synchronizedSL == 1) { // Run front-end processing
+    ru_tmp.common.rxdata            = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*));
+    for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) {
+      ru_tmp.common.rxdata[aa]        = (int32_t*)&ue->common_vars.rxdata[aa][0];
+    }
+
+
+    remove_7_5_kHz(&ru_tmp,0);
+    remove_7_5_kHz(&ru_tmp,1);
+
+    free(ru_tmp.common.rxdata);
+
+
+  }
+  LOG_I(PHY,"Running PBCH detection with Nid_SL %d (is_synchronizedSL %d) rxdata %p\n",ue->frame_parms.Nid_SL,ue->is_synchronizedSL,ue->common_vars.rxdata[0]);
   
   for (int l=0; l<11; l++) {
     slot_fep_ul(&ru_tmp,l%7,(l>6)?1:0,0);
@@ -166,8 +181,10 @@ int rx_psbch(PHY_VARS_UE *ue) {
 			     &ue->frame_parms);
     if (l==0) l+=2;
   }
+  free(ru_tmp.common.rxdata_7_5kHz);
 #ifdef PSBCH_DEBUG
-  if (ue->frame_parms.Nid_SL==170) {
+  if (ue->is_synchronizedSL == 1 && ue->frame_parms.Nid_SL==170) {
+  write_output("slbch.m","slbchrx",ue->common_vars.rxdata[0],ue->frame_parms.samples_per_tti,1,1);
   write_output("slbch_rxF.m",
 	       "slbchrxF",
 	       &rxdataF[0][0],
@@ -210,7 +227,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
 		      2);
   
 #ifdef PSBCH_DEBUG
-  if (ue->frame_parms.Nid_SL == 170) write_output("drsbch_est0.m","drsbchest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+  if (ue->is_synchronizedSL == 1 && ue->frame_parms.Nid_SL == 170) write_output("drsbch_est0.m","drsbchest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
 #endif
   
   avgs = 0;
@@ -319,7 +336,7 @@ int rx_psbch(PHY_VARS_UE *ue) {
   for (int i=0; i<(PSBCH_A>>3); i++)
     decoded_output[(PSBCH_A>>3)-i-1] = slbch_a[i];
   
-  LOG_I(PHY,"SLBCH  : %x.%x.%x.%x.%x\n",decoded_output[0],decoded_output[1],decoded_output[2],decoded_output[3],decoded_output[4]);
+  LOG_I(PHY,"SFN.SF %d.%d SLBCH  : %x.%x.%x.%x.%x\n",frame_rx,subframe_rx,decoded_output[0],decoded_output[1],decoded_output[2],decoded_output[3],decoded_output[4]);
   
 #ifdef DEBUG_PSBCH
   LOG_I(PHY,"PSBCH CRC %x : %x\n",
@@ -330,7 +347,26 @@ int rx_psbch(PHY_VARS_UE *ue) {
   uint16_t crc = (crc16(slbch_a,PSBCH_A)>>16) ^
     (((uint16_t)slbch_a[PSBCH_A>>3]<<8)+slbch_a[(PSBCH_A>>3)+1]);
 
-  if (crc>0) return(-1);
-  else       return(0);
 
+  if (crc>0)  {
+     LOG_I(PHY,"SLBCH not received in %d.%d\n", frame_rx,subframe_rx);
+     return(-1);
+  }
+  else {
+     SLSS_t dummy_slss;
+     int testframe;
+     int testsubframe;
+     ue_decode_si(ue->Mod_id,
+                   0, // CC_id
+                   0, // frame
+                   0, // eNB_index
+                   NULL, // pdu, NULL for MIB-SL
+                   0,    // len, 0 for MIB-SL
+                   &ue->slss_rx,
+                   &testframe,
+                   &testsubframe);
+     AssertFatal(testframe!=frame_rx || testsubframe!=subframe_rx,
+	         "SFN.SF %d.%d != %d.%d\n",testframe,testsubframe,frame_rx,subframe_rx);
+     return(0);
+  }
 }

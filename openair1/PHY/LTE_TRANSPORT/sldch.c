@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file PHY/LTE_TRANSPORT/slss.c
+/*! \file PHY/LTE_TRANSPORT/sldch.c
  * \brief Functions to Generate and Receive PSDCH
  * \author R. Knopp
  * \date 2017
@@ -37,13 +37,13 @@
 void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx,int npsdch,int nprb,int rvidx) {
 
   int Nsymb = 7;
-  SLDCH_t *sldch = &ue->sldch;
-  int16_t **rxdataF_ext      = ue->pusch_sldch->rxdataF_ext;
-  int16_t **drs_ch_estimates = ue->pusch_sldch->drs_ch_estimates;
-  int16_t **rxdataF_comp     = ue->pusch_sldch->rxdataF_comp;
-  int16_t **ul_ch_mag        = ue->pusch_sldch->ul_ch_mag;
-  int16_t **rxdata_7_5kHz    = ue->sl_rxdata_7_5kHz;
-  int16_t **rxdataF          = ue->sl_rxdataF;
+  SLDCH_t *sldch = ue->sldch;
+  int16_t **rxdataF_ext      = (int16_t**)ue->pusch_sldch->rxdataF_ext;
+  int16_t **drs_ch_estimates = (int16_t**)ue->pusch_sldch->drs_ch_estimates;
+  int16_t **rxdataF_comp     = (int16_t**)ue->pusch_sldch->rxdataF_comp;
+  int16_t **ul_ch_mag        = (int16_t**)ue->pusch_sldch->ul_ch_mag;
+  int16_t **rxdata_7_5kHz    = (int16_t**)ue->sl_rxdata_7_5kHz;
+  int16_t **rxdataF          = (int16_t**)ue->sl_rxdataF;
   int32_t avgs;
   uint8_t log2_maxh=0;
   int32_t avgU[2];
@@ -484,16 +484,12 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
 
   AssertFatal(sldch!=NULL,"ue->sldch is null\n");
   
-  AssertFatal(ue->sldch_sdu_active > 0,"ue->sldch_sdu_active isn't active\n");
-
 
   int mcs   = 8;
 
 
-
   LOG_I(PHY,"Generating SLDCH for rvidx %d, npsdch %d, first rb %d\n",
 	rvidx,sldch->n_psdch,nprb);
-  ue->sldch_sdu_active = 1;
 
   dlsch->harq_processes[0]->nb_rb       = 2;
   dlsch->harq_processes[0]->TBS         = 256;
@@ -507,6 +503,7 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
   dlsch->harq_processes[0]->round       = sldch->j; 
   dlsch->harq_processes[0]->rvidx       = rvidx;
 
+  LOG_I(PHY,"SLDCH dlsch encoding\n");
   dlsch_encoding0(&ue->frame_parms,
 		 sldch->payload,
 		 0, // means SL
@@ -517,6 +514,7 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
 		 &ue->ulsch_turbo_encoding_stats,
 		 &ue->ulsch_interleaving_stats);
 
+  LOG_I(PHY,"SLDCH interleaving\n");
   int Cmux = (Nsymb-1)<<1;
   uint8_t *eptr;
   for (int i=0,j=0; i<Cmux; i++)
@@ -539,7 +537,7 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
        }
     }
 
-  
+  LOG_I(PHY,"SLDCH scrambling\n");
   // scrambling
   uint32_t cinit=510;
 
@@ -567,7 +565,8 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
 	     0,
 	     ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
     }
-  
+ 
+  LOG_I(PHY,"SLDCH Modulation\n"); 
   ulsch_modulation(ue->common_vars.txdataF,
 		   tx_amp,
 		   frame_tx,
@@ -576,6 +575,8 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
                    ulsch,
                    1,
                    cinit);
+
+  LOG_I(PHY,"SLDCH DMRS\n");
   generate_drs_pusch(ue,
 		     NULL,
 		     0,
@@ -587,9 +588,9 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
                      NULL,
                      0);
 
-  ue->generate_ul_signal[subframe_tx][0] = 0;
+  ue->generate_ul_signal[subframe_tx][0] = 1;
 
-
+  LOG_I(PHY,"SLDCH generated\n");
 }
   
 void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
@@ -604,7 +605,6 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t absSF = (frame_tx*10)+subframe_tx;
   uint32_t absSF_offset,absSF_modP;
 
-  LOG_I(PHY,"Checking SLDCH (O %d, P %d, abssF %d\n",O,P,absSF);
 
   absSF_offset = absSF-O;
 
@@ -615,6 +615,8 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   absSF_modP = absSF_offset%P;
 
   uint64_t SFpos = ((uint64_t)1) << absSF_modP;
+  LOG_D(PHY,"SLDCH: SFN.SF %d.%d : absSF_modP %d, bitmap1 %x\n",frame_tx,subframe_tx,absSF_modP,sldch->bitmap1);
+
   if ((SFpos & sldch->bitmap1) == 0) return;
 
   // if we get here, then this is a potential PSDCH subframe 
@@ -640,11 +642,13 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
   int N_TX_SLD = 1+sldch->numRepetitions;
   uint32_t M_RB_PSDCH_RP = sldch->N_SL_RB;
-  
+  unsigned int Ni,Nf; 
   if (sldch->type == disc_type1) {
-    int Ni = LPSDCH/N_TX_SLD;
-    int Nf = M_RB_PSDCH_RP>>1;
+    Ni = LPSDCH/N_TX_SLD;
+    Nf = M_RB_PSDCH_RP>>1;
+    sldch->n_psdch = taus()%(Ni*Nf);
     int a_ji = (((sldch->j-1)*(Nf/N_TX_SLD)) + (sldch->n_psdch/Ni))%Nf;
+    
     int b_1i = sldch->n_psdch%Ni;
 
     if (absSF_modP != ((b_1i*N_TX_SLD)+sldch->j-1)) return;
@@ -659,6 +663,7 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   if (nprb < sldch->N_SL_RB) nprb+=sldch->prb_Start;
   else                       nprb+=(sldch->prb_End-(sldch->N_SL_RB>>1));
 
+  LOG_I(PHY,"Generating SLDCH in SFN.SF %d.%d (O %d, P %d, n_psdch %d, Nf %d, Ni %d) \n",frame_tx,subframe_tx,O,P,sldch->n_psdch,Nf,Ni);
   sldch_codingmodulation(ue,frame_tx,subframe_tx,nprb,rvidx);
   ue->psdch_generated=1;
 }

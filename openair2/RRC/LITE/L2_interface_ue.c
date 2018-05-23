@@ -136,9 +136,9 @@ mac_rrc_data_req_ue(
     return(Ret_size);
   }
   else if (Srb_idP == SL_DISCOVERY) {
-    LOG_I(RRC,"[UE %d] Frame %d Filling DUMMY SL DISCOVERY SRB_ID %d\n",Mod_idP,frameP,Srb_idP);
+    LOG_D(RRC,"[UE %d] Frame %d Filling DUMMY SL DISCOVERY SRB_ID %d\n",Mod_idP,frameP,Srb_idP);
     for (int i=0;i<29;i++) buffer_pP[i] = i;
-    LOG_I(RRC,"[UE %d] Sending SL_Discovery, size %d bytes\n",Mod_idP,29);
+    LOG_D(RRC,"[UE %d] Sending SL_Discovery, size %d bytes\n",Mod_idP,29);
     return(29);
 
   }
