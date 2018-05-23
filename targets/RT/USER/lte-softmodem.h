@@ -79,6 +79,7 @@
 #define CONFIG_HLP_ENABLESL      "Enable SL functionality"
 #define CONFIG_HLP_SLONLY        "Use SL only (i.e. wire UE to off-network state)"
 #define CONFIG_HLP_SYNCHREF      "Hard-wire UE as SynchRef UE for SL"
+#define CONFIG_HLP_SLSYNCONLY    "Run UE with only searching procedure for SynchREF"
 #define CONFIG_HLP_MSLOTS        "Skip the missed slots/subframes \n"    
 #define CONFIG_HLP_ULMCS         "Set the maximum uplink MCS\n"
 #define CONFIG_HLP_TDD           "Set hardware to TDD mode (default: FDD). Used only with -U (otherwise set in config file).\n"
@@ -139,6 +140,7 @@
 {"ue-enable-sl",               CONFIG_HLP_ENABLESL,   PARAMFLAG_BOOL,   iptr:&sidelink_active,              defintval:0,    TYPE_INT,      0}, \
 {"ue-sl-only",                 CONFIG_HLP_SLONLY,     PARAMFLAG_BOOL,   iptr:&SLonly,                       defintval:0,    TYPE_INT,      0}, \
 {"ue-synchref",                CONFIG_HLP_SYNCHREF,   PARAMFLAG_BOOL,   iptr:&synchRef,                     defintval:0,    TYPE_INT,      0}, \
+{"ue-slsync-only",             CONFIG_HLP_SLSYNCONLY, PARAMFLAG_BOOL,   iptr:&slsynconly,                   defintval:0,    TYPE_INT,      0}, \
 {"r"  ,                        CONFIG_HLP_PRB,        0,                u8ptr:&(frame_parms[0]->N_RB_DL),   defintval:25,   TYPE_UINT8,    0},     \
 }
 
@@ -265,7 +267,7 @@ extern void set_function_spec_param(RU_t *ru);
 extern int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openair0_cfg);
 extern void fill_ue_band_info(void);
 
-extern void init_UE(int,int,int,int,int,int,int);
+extern void init_UE(int,int,int,int,int,int,int,int);
 extern void init_thread(int sched_runtime, int sched_deadline, int sched_fifo, cpu_set_t *cpuset, char * name);
 
 extern void reset_opp_meas(void);

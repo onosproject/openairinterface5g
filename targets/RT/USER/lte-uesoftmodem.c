@@ -160,6 +160,7 @@ char emul_iface[100];
 int sidelink_active=0;
 int SLonly=0;
 int synchRef=0;
+int slsynconly=0;
 
 #if MAX_NUM_CCs == 1
 rx_gain_t                rx_gain_mode[MAX_NUM_CCs][4] = {{max_gain,max_gain,max_gain,max_gain}};
@@ -1040,7 +1041,7 @@ int main( int argc, char **argv )
   // start the main threads
     int eMBMS_active = 0;
 
-    init_UE(1,eMBMS_active,uecap_xer_in,0,sidelink_active,SLonly,synchRef);
+    init_UE(1,eMBMS_active,uecap_xer_in,0,sidelink_active,SLonly,synchRef,slsynconly);
 
     if (phy_test==0) {
       printf("Filling UE band info\n");

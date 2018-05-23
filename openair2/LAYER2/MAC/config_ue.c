@@ -1,4 +1,3 @@
-
 /*
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -668,9 +667,82 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 		"PSCCH bitmap limited to 42 bits\n");
     UE_mac_inst[Mod_idP].slsch.SubframeBitmapSL_length = SubframeBitmapSL[preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present];
     UE_mac_inst[Mod_idP].slsch.bitmap1 = *((uint64_t*)preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf);
+
+    AssertFatal(SL_Preconfiguration_r12->ext1!=NULL,"there is no Rel13 extension in SL preconfiguration\n"); 
+    AssertFatal(SL_Preconfiguration_r12->ext1->preconfigDisc_r13!=NULL,"there is no SL discovery configuration\n");
+    AssertFatal(SL_Preconfiguration_r12->ext1->preconfigDisc_r13->discRxPoolList_r13.list.count==1,"Discover RX pool list count %d != 1\n",
+                SL_Preconfiguration_r12->ext1->preconfigDisc_r13->discRxPoolList_r13.list.count);
+    SL_PreconfigDiscPool_r13_t *discrxpool=SL_Preconfiguration_r12->ext1->preconfigDisc_r13->discRxPoolList_r13.list.array[0];
+
+  /// Discovery Type
+    UE_mac_inst[Mod_idP].sldch.type     = disc_type1;
+  /// Number of SL resource blocks (1-100)
+    UE_mac_inst[Mod_idP].sldch.N_SL_RB = discrxpool->tf_ResourceConfig_r13.prb_Num_r12;
+  /// prb-start (0-99)
+    UE_mac_inst[Mod_idP].sldch.prb_Start= discrxpool->tf_ResourceConfig_r13.prb_Start_r12;
+  /// prb-End (0-99)
+    UE_mac_inst[Mod_idP].sldch.prb_End = discrxpool->tf_ResourceConfig_r13.prb_End_r12;
+  /// SL-OffsetIndicator (0-10239)
+    AssertFatal(discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.present  == SL_OffsetIndicator_r12_PR_small_r12,
+                "offsetIndicator_r12 is not PR_small_r12\n");
+
+    UE_mac_inst[Mod_idP].sldch.offsetIndicator = discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.choice.small_r12 ;
+
+    AssertFatal(discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present >  SubframeBitmapSL_r12_PR_NOTHING && 
+                discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present <= SubframeBitmapSL_r12_PR_bs42_r12,
+                "illegal subframeBitmap %d\n",discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present);
+  	 
+  /// PSDCH subframe bitmap (up to 100 bits, first 64)
+    switch (discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present) {
+          case SubframeBitmapSL_r12_PR_NOTHING:
+           AssertFatal(1==0,"Should never get here\n");
+           break;
+  	  case SubframeBitmapSL_r12_PR_bs4_r12:
+           UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs4_r12.buf;
+           UE_mac_inst[Mod_idP].sldch.bitmap_length = 4;
+	   break;
+          case SubframeBitmapSL_r12_PR_bs8_r12:
+           UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs8_r12.buf;
+           UE_mac_inst[Mod_idP].sldch.bitmap_length = 9;
+	  break;
+          case SubframeBitmapSL_r12_PR_bs12_r12:
+           UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs12_r12.buf;
+           UE_mac_inst[Mod_idP].sldch.bitmap_length = 12;
+	  break;
+          case SubframeBitmapSL_r12_PR_bs16_r12:
+           UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs16_r12.buf;
+           UE_mac_inst[Mod_idP].sldch.bitmap_length = 16;
+	  break;
+          case SubframeBitmapSL_r12_PR_bs30_r12:
+           UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs30_r12.buf;
+           UE_mac_inst[Mod_idP].sldch.bitmap_length = 30;
+	  break;
+          case SubframeBitmapSL_r12_PR_bs40_r12:
+           UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs40_r12.buf;
+           UE_mac_inst[Mod_idP].sldch.bitmap_length = 40;
+	  break;
+          case SubframeBitmapSL_r12_PR_bs42_r12:
+           UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs42_r12.buf;
+           UE_mac_inst[Mod_idP].sldch.bitmap_length = 42;
+	  break;
+    } 
+
+  /// PSDCH subframe bitmap (up to 100 bits, second 36)
+    UE_mac_inst[Mod_idP].sldch.bitmap2 = 0;
+
+  /// SL-Discovery Period
+    AssertFatal(SL_PreconfigDiscPool_r13__discPeriod_r13_spare == 15, "specifications have changed, update table\n");
+    int sldisc_period[SL_PreconfigDiscPool_r13__discPeriod_r13_spare] = {4,6,7,8,12,14,16,24,28,32,64,128,256,512,1024};
+    UE_mac_inst[Mod_idP].sldch.discPeriod = sldisc_period[discrxpool->discPeriod_r13];
+
+  /// Number of Repetitions (N_R)
+    UE_mac_inst[Mod_idP].sldch.numRepetitions = discrxpool->numRepetition_r13;
+  /// Number of retransmissions (numRetx-r12)
+    UE_mac_inst[Mod_idP].sldch.numRetx = discrxpool->numRetx_r13;
+
+
   }
   if (directFrameNumber_r12<1025) UE_mac_inst[Mod_idP].directFrameNumber_r12     = directFrameNumber_r12;
-  if (directSubframeNumber_r12<11) UE_mac_inst[Mod_idP].directSubframeNumber_r12 = directSubframeNumber_r12;
   if (sl_Bandwidth_r12) UE_mac_inst[Mod_idP].sl_Bandwidth_r12        = *sl_Bandwidth_r12;
 #endif
 
@@ -679,3 +751,4 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 
   return (0);
 }
+

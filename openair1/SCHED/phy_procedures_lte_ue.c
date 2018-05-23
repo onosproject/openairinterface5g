@@ -2373,22 +2373,25 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
 
   
   // check for SLBCH/SLSS
-  AssertFatal(0==pthread_mutex_lock(&ue->slss_mutex),"");
-  if ((ue->slss = ue_get_slss(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) check_and_generate_slss(ue,frame_tx,subframe_tx);
-  AssertFatal(0==pthread_mutex_unlock(&ue->slss_mutex),"");
+  if (ue->is_SynchRef) {
+     AssertFatal(0==pthread_mutex_lock(&ue->slss_mutex),"");
+     if ((ue->slss = ue_get_slss(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) check_and_generate_slss(ue,frame_tx,subframe_tx);
+     AssertFatal(0==pthread_mutex_unlock(&ue->slss_mutex),"");
+  }
 
   // check for SLDCH
+/*
   AssertFatal(0==pthread_mutex_lock(&ue->sldch_mutex),"");
-  if ((ue->sldch = ue_get_sldch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_sldch(ue,ue->sldch,frame_tx,subframe_tx);
+  if ((ue->sldch = ue_get_sldch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) check_and_generate_psdch(ue,frame_tx,subframe_tx);
   AssertFatal(0==pthread_mutex_unlock(&ue->sldch_mutex),"");
-
-  LOG_D(PHY,"ULSCH (after sldch) : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
+*/
+  //LOG_D(PHY,"ULSCH (after sldch) : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
     
   // check for SLSCH
   AssertFatal(0==pthread_mutex_lock(&ue->slsch_mutex),"");
   if ((ue->slsch = ue_get_slsch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_slsch(ue,proc,ue->slsch,frame_tx,subframe_tx);
   AssertFatal(0==pthread_mutex_unlock(&ue->slsch_mutex),"");
-  LOG_D(PHY,"ULSCH (after slsch) : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
+  //LOG_D(PHY,"ULSCH (after slsch) : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
   LOG_D(PHY,"****** end Sidelink TX-Chain for AbsSubframe %d.%d (ul %d) ******\n", frame_tx, subframe_tx,
 	ue->generate_ul_signal[subframe_tx][0]);
 
@@ -2396,7 +2399,7 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
 
 
 
-    LOG_D(PHY,"ULSCH : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
+   // LOG_D(PHY,"ULSCH : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
     
     ulsch_common_procedures(ue,frame_tx,subframe_tx, (ue->generate_ul_signal[subframe_tx][0] == 0));
 
@@ -4784,6 +4787,13 @@ int phy_procedures_slot_parallelization_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *pr
 
 
 void phy_procedures_UE_SL_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
+
+  int frame_rx = proc->frame_rx;
+  int subframe_rx = proc->subframe_rx;
+
+  LOG_D(PHY,"SFN.SF %d.%d Running Steady-state SL UE procedures\n",frame_rx,subframe_rx);
+
+  if ((frame_rx&3) == 0 && subframe_rx == 0) rx_psbch(ue,frame_rx,subframe_rx);
 
 
 }

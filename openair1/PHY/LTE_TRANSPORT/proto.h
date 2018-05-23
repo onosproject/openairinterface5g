@@ -2356,7 +2356,7 @@ int generate_slbch(int32_t **txdataF,
 		   int subframe,
 		   uint8_t *slmib);
 
-int rx_psbch(PHY_VARS_UE *ue);
+int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx);
 
 /**@}*/
 #endif

@@ -58,7 +58,7 @@ int initial_syncSL(PHY_VARS_UE *ue) {
     rx_slsss(ue,&sss_metric,&phase_max,index);
     generate_sl_grouphop(ue);
   
-    if (rx_psbch(ue) == -1) {
+    if (rx_psbch(ue,0,0) == -1) {
       ue->slbch_errors++;
       LOG_I(PHY,"PBCH not decoded\n");
 /*
@@ -82,6 +82,10 @@ int initial_syncSL(PHY_VARS_UE *ue) {
 		   &frame,
 		   &subframe);
 
+      for (int i=0;i<RX_NB_TH;i++){
+	ue->proc.proc_rxtx[i].frame_rx = frame;
+        ue->proc.proc_rxtx[i].subframe_rx = subframe;
+      }
       LOG_I(PHY,"RRC returns MIB-SL for frame %d, subframe %d\n",frame,subframe);		   
       return(0);
     }
