@@ -207,7 +207,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
       char send_buf[BUFSIZE];
       int rb_id = ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id;
 
-      if (rb_id == 10) { //hardcoded for PC5-Signaling
+      if (rb_id >= MAX_NUM_LCID_DATA) { //hardcoded for PC5-Signaling
       //if ((rb_id == 28) | (rb_id == 29) | (rb_id == 30))
 
 #ifdef PDCP_DEBUG

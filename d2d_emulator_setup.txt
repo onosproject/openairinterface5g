@@ -42,22 +42,25 @@ Get and build vencore_app from d2d-l3-stub (branch: l3_stub)
 
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - (if necessary) sudo route add default gw 10.10.10.1 eth0
 UE2:
  - sudo ifconfig oip0 10.0.0.2
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - (if necessary) sudo route add default gw 10.10.10.1 eno1
  
- For the moment, we suppose that L2Ids of UE1, UE2 are Ox01, 0x02 respectively. GroupL2Id is set to 0x03. 
+ For the moment, we suppose that L2Ids of UE1, UE2 are Ox01, 0x02 respectively. GroupL2Id is set to 0x03.
+  
 --------------------------------
 TEST ONE-TO-MANY
 Run UE1 then UE2, for example:
  - UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
  - UE1 ./vencore_app -g 0x01 0x03  #0x01 - UE1-L2Id, 0x03-groupL2Id
+ # a SLRB will be established for this communication (check SLRB_ID from vencore_app's screen)
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark XXX #XXX is SLRB_ID
 
  - UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
  - UE2 ./vencore_app -g 0x02 0x03  #0x02 - UE2-L2Id, 0x03-groupL2Id
+  # a SLRB will be established for this communication (check SLRB_ID from vencore_app's screen)
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark XXX #XXX is SLRB_ID
  
 Test with Ping
 - Sender - UE1: ping -I oip0 224.0.0.3
@@ -71,34 +74,45 @@ Filter the incomming packets according to GroupL2Id: receiver (one-to-many) can 
 
 UE1 (sender)
  - sudo ./lte-softmodem-stub -U --emul-iface eth0
-  - ./vencore_app -g 0x01 0x03  #0x01 - UE1's L2Id, 0x03-groupL2Id
+ - ./vencore_app -g 0x01 0x03  #0x01 - UE1's L2Id, 0x03-groupL2Id
+   # a SLRB will be established for this communication (check SLRB_ID from vencore_app's screen)
+ - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark XXX #XXX is SLRB_ID
  - ping -I oip0 224.0.0.3
- UE2(receiver)
+
+UE2(receiver)
   - sudo ./lte-softmodem-stub -U --emul-iface eno1 
-  #we can see the incomming packets from OAI log, however, cannot see from Wireshark -> they are discarded at MAC layer
-  -./vencore_app -g 0x02 0x03  #0x02 - UE2-L2Id, 0x03-groupL2Id   #we can see the packets appearing in Wireshark
- 
+ #we can see the incomming packets from OAI log, however, cannot see from Wireshark -> they are discarded at MAC layer
+  -./vencore_app -g 0x02 0x03  #0x02 - UE2-L2Id, 0x03-groupL2Id  
+ # a SLRB will be established for this communication (check SLRB_ID from vencore_app's screen)
+  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark XXX #XXX is SLRB_ID
+ #we can see the packets appearing in Wireshark
+   
  --------------------------------------
 TEST PC5-S (UE1 - sender, UE2 - receiver) and PC5-U for ONE-TO-ONE scenario (and PC5-U for ONE-TO-MANY scenario)
 Configure UE1/UE2
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.2 -j MARK --set-mark 3
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - sudo route add default gw 10.10.10.1 eth0
 UE2:
  - sudo ifconfig oip0 10.0.0.2
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.1 -j MARK --set-mark 3
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - sudo route add default gw 10.10.10.1 eno1
  
 step 1:
-- UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
+ - UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
 step 2:
-- UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
-- UE2: ./vencore_app -r 0x02 0x01  #listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x02 - UE2-L2Id, 0x01 - UE1-L2Id 
+ - UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
+ - UE2: ./vencore_app -r 0x02 0x01  #listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x02 - UE2-L2Id, 0x01 - UE1-L2Id 
+ # mark the packets with the corresponding SLRB (since UE2 is receiver, we should mark only the unicast flow)
+ # 2 SLRBs will be established: 1 for unicast communication and 1 for multicast (check SLRB_ID from vencore_app's screen)
+  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.1 -j MARK --set-mark XXX  #XXX is SLRB_ID for unicast communication
+  
 step 3: 
-- UE1: ./vencore_app -s 0x01 0x02 #send a message via PC5-S (e.g., DirectCommunicationRequest) and establish 1-1 communication, 0x01 - UE1-L2Id, 0x02 - UE2-L2Id 
+- UE1: ./vencore_app -s 0x01 0x02 #send a message via PC5-S (e.g., DirectCommunicationRequest) and establish 1-1 communication, 0x01 - UE1-L2Id, 0x02 - UE2-L2Id
+ # mark the packets with the corresponding SLRB
+ # 2 SLRBs will be established: 1 for unicast communication and 1 for multicast (check SLRB_ID from vencore_app's screen)
+  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark XXX #XXX is SLRB_ID for multicast communication
+  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.2 -j MARK --set-mark XXX  #XXX is SLRB_ID for unicast communication
+   
 
 Generate unicast traffic
  - UE1: ping -I oip0 10.0.0.2
@@ -117,8 +131,8 @@ step 2:
 
 
 
-
-Scenario 2 : Off-network UE2UE link (3 UEs, 2 communication flows: 1 unicast + 1 multicast)
+-----------------------------------------
+Scenario 2 : Off-network UE2UE link (3 UEs, 4 communication flows: 2 unicast + 2 multicast)
 SynchREF UE (UE1)
 
 UE1(eth0 - 10.10.10.1)-----Hub------UE2(eno1 - 10.10.10.2)
@@ -129,53 +143,73 @@ UE1(eth0 - 10.10.10.1)-----Hub------UE2(eno1 - 10.10.10.2)
 UE1-L2ID: 0x01
 UE2-L2ID: 0x02
 UE3-L2ID: 0x04
- --------------------------------------
-TEST PC5-U for ONE-TO-ONE scenario (UE1 - sender, UE2 - receiver) and PC5-U for ONE-TO-MANY scenario (UE1 - sender, UE2/3 - receiver)
+Group1 L2ID: 0x03 (224.0.0.3)
+Group2 L2ID: 0x05 (225.0.0.5)
 
-- configure UE1, UE2 as mentioned in the previous section
+Unicast Flow 1: UE1 -> UE2
+Unicast Flow 2: UE1 -> UE3
+Multicast Flow 1: UE1 -> UE2 + UE3
+Multicast Flow 2: UE1 -> UE2 + UE3
+ 
+ --------------------------------------
+TEST PC5-U for ONE-TO-ONE scenario (UE1 - sender, UE2/3 - receiver) and PC5-U for ONE-TO-MANY scenario (UE1 - sender, UE2/3 - receiver)
+
+- configure UE1, UE2, UE3 as mentioned in the previous section
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.2 -j MARK --set-mark 3
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - sudo route add default gw 10.10.10.1 eth0
 
 UE2:
  - sudo ifconfig oip0 10.0.0.2
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.1 -j MARK --set-mark 3
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - sudo route add default gw 10.10.10.1 eno1
 
 - configure UE3
 UE3: 
  - sudo ifconfig oip0 10.0.0.4
- - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark 4
  - sudo route add default gw 10.10.10.1 eno1
 
- step 1:
-- UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
-step 2:
-- UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
-- UE2: ./vencore_app -r 0x02 0x01  # listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x02 - UE2-L2Id, 0x01 - UE1-L2Id
-                                   # groupL2Id is hardcoded for the moment (0x03) 
+Step 1:
+ - UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
+ 
+Step 2:
+ - UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
+ - UE2: ./vencore_app -r 0x02 0x01 # listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x02 - UE2-L2Id, 0x01 - UE1-L2Id
+                                   # groupL2Id is hardcoded for the moment (0x03, Ox05)
+ # mark the packets with the corresponding SLRB 
+ # 3 SLRBs will be established: 1 for unicast and 2 for multicast (check SLRB_ID from vencore_app's screen)
+ # since UE2 is receiver, we should mark only the unicast flow
+  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.1 -j MARK --set-mark XXX  #XXX is SLRB_ID for unicast communication                                
 
-- UE3: sudo ./lte-softmodem-stub -U --emul-iface eno1
-- UE3: ./vencore_app -g 0x04 0x03  # listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x02 - UE2-L2Id, 0x01 - UE1-L2Id
-                                   # groupL2Id is hardcoded for the moment 
-
-step 3: 
-- UE1: ./vencore_app -s 0x01 0x02 # 0x01 - UE1-L2Id, 0x02 - UE2-L2Id 
-                                  # groupL2Id is hardcoded for the moment (0x03) 
+ - UE3: sudo ./lte-softmodem-stub -U --emul-iface eno1
+ - UE3: ./vencore_app -r 0x04 0x01 #  listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x04 - UE3-L2Id, 0x01 - UE1-L2Id
+                                   # groupL2Id is hardcoded for the moment (0x03, Ox05)
+ # mark the packets with the corresponding SLRB 
+ # 3 SLRBs will be established: 1 for unicast and 2 for multicast (check SLRB_ID from vencore_app's screen)
+ # since UE3 is receiver, we should mark only the unicast flow
+  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.1 -j MARK --set-mark XXX  #XXX is SLRB_ID for unicast communication  
+  
+Step 3: 
+ - UE1: ./vencore_app -s 0x01 0x02 # 0x01 - UE1-L2Id, 0x02 - UE2-L2Id 
+                                  # groupL2Id is hardcoded for the moment (0x03, 0x05)
+ # mark the packets with the corresponding SLRB
+ # 4 SLRBs will be established: 2 for unicast communication and 2 for multicast (check SLRB_ID from vencore_app's screen)
+  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.2 -j MARK --set-mark XXX  #XXX is SLRB_ID for the first unicast communication
+  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.4 -j MARK --set-mark XXX  #XXX is SLRB_ID for the second unicast communication
+  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark XXX #XXX is SLRB_ID for the first multicast communication
+  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.5 -j MARK --set-mark XXX #XXX is SLRB_ID for the first multicast communication    
 
 Generate unicast traffic
- - UE1: ping -I oip0 10.0.0.2
+ - UE1: ping -I oip0 10.0.0.2 #flow 1
+ - UE1: ping -I oip0 10.0.0.4 #flow 2
 
 Generate multicast traffic
- - UE1: ping -I oip0 224.0.0.3
+ - UE1: ping -I oip0 224.0.0.3 #flow 3
+ - UE1: ping -I oip0 224.0.0.5 #flow 4
 
 Expected results:
-- UE2 can receive both unicast and multicast traffic
-- UE3 can only receive multicast traffic
+- UE2 can receive both unicast and multicast traffic (flow 1, flow 3 and flow 4)
+- UE3 can receive both unicast and multicast traffic (flow 2, flow 3 and flow 4)
 Note: 
- - Use wireshark to observe unicast/multicast traffic from UE2 and multicast traffic from UE3.   
+ - Use wireshark to observe unicast/multicast traffic from UE2/3.   
 
 

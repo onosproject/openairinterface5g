@@ -444,7 +444,7 @@ typedef struct {
 /*!\brief LCID of Carrier component activation/deactivation */
 #define CC_ACT_DEACT 27
 //TTN (for D2D)
-#define SL_DISCOVERY 8 //LCID (fake)
+#define SL_DISCOVERY 11 //LCID (fake)
 #define MAX_NUM_DEST 10
 #endif
 
@@ -1324,6 +1324,7 @@ typedef struct {
     // Bucket size per lcid
     int16_t bucket_size[MAX_NUM_LCID];
 } UE_SCHEDULING_INFO;
+
 /*!\brief Top level UE MAC structure */
 
 typedef struct {
@@ -1385,13 +1386,8 @@ typedef struct {
   uint32_t groupL2Id;
   //SL destinationL2Id
   uint32_t destinationL2Id;
-  //List of destinations (unicast)
-  uint32_t destinationList[MAX_NUM_DEST];
-  //List of group (multicast)
-  uint32_t groupList[MAX_NUM_DEST];
   uint8_t numCommFlows;
-  uint32_t  SL_LCID[MAX_NUM_LCID];
-
+  //list of (SLID, G, D)s
   SL_INFO sl_info[MAX_NUM_LCID];
 
 #endif

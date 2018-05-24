@@ -5600,7 +5600,12 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
               MBMS_FLAG_NO,
               CONFIG_ACTION_REMOVE,
               DRB2LCHAN[i],
-              Rlc_info_um);
+              Rlc_info_um
+#ifdef Rel14
+    ,0
+    ,0
+#endif
+    );
           }
 
           ue_context_pP->ue_context.DRB_active[drb_id] = 0;

@@ -173,7 +173,11 @@ private_rlc_um(   void     rlc_um_get_pdus (const protocol_ctxt_t* const ctxt_pP
 * \param[in]  rlc_pP                    RLC UM protocol instance pointer.
 * \param[in]  data_indication           PDUs from MAC.
 */
-protected_rlc_um( void     rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t * const rlc_pP, struct mac_data_ind data_indication);)
+protected_rlc_um( void     rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t * const rlc_pP, struct mac_data_ind data_indication
+#ifdef Rel14
+  , sl_reset_rlc_flag_t    sl_reset_rlc_flag
+#endif
+);)
 
 /*! \fn struct mac_status_resp rlc_um_mac_status_indication (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t * const rlc_pP, uint16_t tbs_sizeP, struct mac_status_ind tx_statusP)
 * \brief    Request the maximum number of bytes that can be served by RLC instance to MAC and fix the amount of bytes requested by MAC for next RLC transmission.
@@ -208,7 +212,11 @@ public_rlc_um(    struct mac_data_req rlc_um_mac_data_request (const protocol_ct
 * \param[in]  rlc_pP                    RLC UM protocol instance pointer.
 * \param[in]  data_indP                 PDUs from MAC.
 */
-public_rlc_um(   void     rlc_um_mac_data_indication (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t * const rlc_pP, struct mac_data_ind data_indP);)
+public_rlc_um(   void     rlc_um_mac_data_indication (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t * const rlc_pP, struct mac_data_ind data_indP
+#ifdef Rel14
+  , sl_reset_rlc_flag_t    sl_reset_rlc_flag
+#endif
+);)
 
 /*! \fn uint32_t rlc_um_get_buffer_occupancy (rlc_um_entity_t *rlc_pP)
 * \brief    Gets Tx Buffer Occupancy.

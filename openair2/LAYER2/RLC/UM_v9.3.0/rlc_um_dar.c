@@ -1006,6 +1006,8 @@ rlc_um_receive_process_dar (
     free_mem_block(pdu_mem_pP, __func__);
   }
 
+
+  LOG_I(RLC, "DEBUG SN %d, rlc_pP->vr_uh %d rlc_pP->vr_ur %d \n", sn, rlc_pP->vr_uh, rlc_pP->vr_ur);
   RLC_UM_MUTEX_LOCK(&rlc_pP->lock_dar_buffer, ctxt_pP, rlc_pP);
 
   in_window = rlc_um_in_window(ctxt_pP, rlc_pP, rlc_pP->vr_uh - rlc_pP->rx_um_window_size, sn, rlc_pP->vr_ur);

@@ -633,7 +633,11 @@ rx_sdu(const module_id_t enb_mod_idP,
 	      enb_mod_idP, CC_idP, frameP, rx_lengths[i], UE_id,
 	      rx_lcids[i]);
 
-	mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL);	//(unsigned int*)crc_status);
+	mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+  );	//(unsigned int*)crc_status);
 	UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]] += 1;
 	UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]] += rx_lengths[i];
 
@@ -642,6 +646,7 @@ rx_sdu(const module_id_t enb_mod_idP,
 
       /* UE_id != -1 */
       // }
+
       break;
 
       // all the DRBS
@@ -689,7 +694,11 @@ rx_sdu(const module_id_t enb_mod_idP,
           }
 
 	  if ((rx_lengths[i] < SCH_PAYLOAD_SIZE_MAX) && (rx_lengths[i] > 0)) {	// MAX SIZE OF transport block
-	    mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL);	//(unsigned int*)crc_status);
+	    mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+	    );	//(unsigned int*)crc_status);
 
 	    UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]] += 1;
 	    UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]] += rx_lengths[i];
