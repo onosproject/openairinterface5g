@@ -1007,7 +1007,8 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
       //Currently the call to this function creates problems for the RRC Connection establishment for
       //if running with more than one UEs
       //if(nfapi_mode!=3)
-      phy_procedures_UE_SL_TX(UE,proc);
+      if(D2D_en)
+    	  phy_procedures_UE_SL_TX(UE,proc);
 
     }
 
@@ -1300,6 +1301,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
       	}
 
       //if (nfapi_mode != 3)
+      if(D2D_en == 1)
         phy_procedures_UE_SL_TX(UE,proc);
 
     }
@@ -1754,6 +1756,13 @@ void init_UE_single_thread_stub(int nb_inst) {
     pthread_create(&UE->proc.proc_rxtx[i].pthread_rxtx, NULL, UE_phy_stub_single_thread_rxn_txnp4, rtd);
 
   }
+  // Panos: Based on the following only one UE can be supported in S1 mode for now.
+#ifdef NAS_UE
+  MessageDef *message_p;
+  message_p = itti_alloc_new_message(TASK_NAS_UE, INITIALIZE_MESSAGE);
+  itti_send_msg_to_task (TASK_NAS_UE, UE->Mod_id + NB_eNB_INST, message_p);
+#endif
+
   // Panos: Remove thread for UE_sync in phy_stub_UE mode.
   //pthread_create(&UE->proc.pthread_synch,NULL,UE_thread_synch,(void*)UE);
 }

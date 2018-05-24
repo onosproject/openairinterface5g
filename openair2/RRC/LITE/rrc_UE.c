@@ -579,7 +579,6 @@ char openair_rrc_ue_init( const module_id_t ue_mod_idP, const unsigned char eNB_
 //-----------------------------------------------------------------------------
 void rrc_ue_generate_RRCConnectionRequest( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
-
   uint8_t i=0,rv[6];
 
   if(UE_rrc_inst[ctxt_pP->module_id].Srb0[eNB_index].Tx_buffer.payload_size ==0) {
@@ -3097,11 +3096,13 @@ int decode_BCCH_DLSCH_Message(
     }
   }
 
+
   if ((rrc_get_sub_state(ctxt_pP->module_id) == RRC_SUB_STATE_IDLE_SIB_COMPLETE)
 #if defined(ENABLE_USE_MME)
       && (UE_rrc_inst[ctxt_pP->module_id].initialNasMsg.data != NULL)
 #endif
      ) {
+	//printf("Panos-D: decode_BCCH_DLSCH_Message() BEFORE calling rrc_ue_generate_RRCConnectionRequest \n \n");
     rrc_ue_generate_RRCConnectionRequest(ctxt_pP, 0);
     rrc_set_sub_state( ctxt_pP->module_id, RRC_SUB_STATE_IDLE_CONNECTING );
   }
@@ -4961,7 +4962,7 @@ void *rrc_ue_task( void *args_p )
 
       switch (rrc_get_state(ue_mod_id)) {
       case RRC_STATE_INACTIVE: {
-    	  LOG_I(RRC, "Panos-D: rrc_ue_task() RRC state: RRC_STATE_INACTIVE \n");
+    	  //LOG_I(RRC, "Panos-D: rrc_ue_task() RRC state: RRC_STATE_INACTIVE \n");
         /* Need to first activate lower layers */
         MessageDef *message_p;
 
@@ -4974,7 +4975,7 @@ void *rrc_ue_task( void *args_p )
       }
 
       case RRC_STATE_IDLE: {
-    	  LOG_I(RRC, "Panos-D: rrc_ue_task() RRC state: RRC_STATE_IDLE \n");
+    	  //LOG_I(RRC, "Panos-D: rrc_ue_task() RRC state: RRC_STATE_IDLE \n");
         /* Ask to layer 1 to find a cell matching the criterion */
         MessageDef *message_p;
 

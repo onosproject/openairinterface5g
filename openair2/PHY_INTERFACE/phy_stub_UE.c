@@ -242,6 +242,7 @@ void fill_ulsch_cqi_indication_UE_MAC(int Mod_id, uint16_t frame,uint8_t subfram
 void fill_ulsch_harq_indication_UE_MAC(int Mod_id, int frame,int subframe, UL_IND_t *UL_INFO, nfapi_ul_config_ulsch_harq_information *harq_information, uint16_t rnti)
 {
 
+	LOG_I(MAC, "Panos-D: fill_ulsch_harq_indication_UE_MAC(), NUM ACK_NAK REL. 10: %d, NUM ACK_NAK REL. 13: %d, SFN/SF: %d/%d", harq_information->harq_information_rel10.harq_size, harq_information->harq_information_rel13.harq_size_2, frame, subframe);
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
   nfapi_harq_indication_pdu_t *pdu =   &UL_INFO->harq_ind.harq_indication_body.harq_pdu_list[UL_INFO->harq_ind.harq_indication_body.number_of_harqs];
   int i;
@@ -261,16 +262,20 @@ void fill_ulsch_harq_indication_UE_MAC(int Mod_id, int frame,int subframe, UL_IN
   //if (eNB->frame_parms.frame_type == FDD) {
     pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_FDD_REL13_TAG;
     pdu->harq_indication_fdd_rel13.mode = 0;
-    pdu->harq_indication_fdd_rel13.number_of_ack_nack = harq_information->harq_information_rel10.harq_size;
+    pdu->harq_indication_fdd_rel13.number_of_ack_nack = 1; //harq_information->harq_information_rel10.harq_size;
+
+    //pdu->harq_indication_fdd_rel13.number_of_ack_nack = harq_information->harq_information_rel10.harq_size;
 
     //Panos: Could this be wrong? Is the number_of_ack_nack field equivalent to O_ACK?
     //pdu->harq_indication_fdd_rel13.number_of_ack_nack = ulsch_harq->O_ACK;
 
-    for (i=0;i<harq_information->harq_information_rel10.harq_size;i++) {
+
+    pdu->harq_indication_fdd_rel13.harq_tb_n[0] = 1;
+    /*for (i=0;i<harq_information->harq_information_rel10.harq_size;i++) {
 
       pdu->harq_indication_fdd_rel13.harq_tb_n[i] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
 
-    }
+    }*/
 
   UL_INFO->harq_ind.harq_indication_body.number_of_harqs++;
   pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
@@ -287,6 +292,7 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
 			      uint16_t tdd_multiplexing_mask*/) {
 
 
+	LOG_I (MAC, "Panos-D: fill_uci_harq_indication_UE_MAC 1 SFN/SF: %d/%d \n", frame, subframe);
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
   nfapi_harq_indication_t *ind       = &UL_INFO->harq_ind;
   nfapi_harq_indication_body_t *body = &ind->harq_indication_body;
@@ -322,6 +328,7 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
 
       //AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[0] == 4, "harq_ack[0] is %d, should be 1,2 or 4\n",harq_ack[0]);
       pdu->harq_indication_fdd_rel13.harq_tb_n[0] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
+      LOG_I (MAC, "Panos-D: fill_uci_harq_indication_UE_MAC 2 SFN/SF: %d/%d, harq_information->harq_information_rel9_fdd.harq_size: %d \n", frame, subframe, harq_information->harq_information_rel9_fdd.harq_size);
 
 
     }
@@ -332,6 +339,8 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
       pdu->harq_indication_fdd_rel13.number_of_ack_nack = 2;
       pdu->harq_indication_fdd_rel13.harq_tb_n[0] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
       pdu->harq_indication_fdd_rel13.harq_tb_n[1] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
+
+      LOG_I (MAC, "Panos-D: fill_uci_harq_indication_UE_MAC 3 SFN/SF: %d/%d, harq_information->harq_information_rel9_fdd.harq_size: %d \n", frame, subframe, harq_information->harq_information_rel9_fdd.harq_size);
 
     }
     else AssertFatal(1==0,"only format 1a/b for now, received \n");
