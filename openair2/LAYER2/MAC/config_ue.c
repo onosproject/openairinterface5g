@@ -152,7 +152,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
     (VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
 
-  LOG_I(MAC, "[CONFIG][UE %d] Configuring MAC/PHY from eNB %d\n",
+  LOG_D(MAC, "[CONFIG][UE %d] Configuring MAC/PHY from eNB %d\n",
 	Mod_idP, eNB_index);
 
   if (tdd_Config != NULL) {

@@ -168,7 +168,7 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
 
 
   }
-  LOG_I(PHY,"Running PBCH detection with Nid_SL %d (is_synchronizedSL %d) rxdata %p\n",ue->frame_parms.Nid_SL,ue->is_synchronizedSL,ue->common_vars.rxdata[0]);
+  LOG_D(PHY,"Running PBCH detection with Nid_SL %d (is_synchronizedSL %d) rxdata %p\n",ue->frame_parms.Nid_SL,ue->is_synchronizedSL,ue->common_vars.rxdata[0]);
   
   for (int l=0; l<11; l++) {
     slot_fep_ul(&ru_tmp,l%7,(l>6)?1:0,0);
@@ -336,7 +336,7 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   for (int i=0; i<(PSBCH_A>>3); i++)
     decoded_output[(PSBCH_A>>3)-i-1] = slbch_a[i];
   
-  LOG_I(PHY,"SFN.SF %d.%d SLBCH  : %x.%x.%x.%x.%x\n",frame_rx,subframe_rx,decoded_output[0],decoded_output[1],decoded_output[2],decoded_output[3],decoded_output[4]);
+  if (ue->is_synchronizedSL==0) LOG_I(PHY,"SFN.SF %d.%d SLBCH  : %x.%x.%x.%x.%x\n",frame_rx,subframe_rx,decoded_output[0],decoded_output[1],decoded_output[2],decoded_output[3],decoded_output[4]);
   
 #ifdef DEBUG_PSBCH
   LOG_I(PHY,"PSBCH CRC %x : %x\n",
@@ -347,9 +347,11 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   uint16_t crc = (crc16(slbch_a,PSBCH_A)>>16) ^
     (((uint16_t)slbch_a[PSBCH_A>>3]<<8)+slbch_a[(PSBCH_A>>3)+1]);
 
+  ue->slbch_rxops++;
 
   if (crc>0)  {
      LOG_I(PHY,"SLBCH not received in %d.%d\n", frame_rx,subframe_rx);
+     ue->slbch_errors++;
      return(-1);
   }
   else {
