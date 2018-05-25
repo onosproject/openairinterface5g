@@ -560,7 +560,7 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   if (sldch->type == disc_type1) {
     Ni = LPSDCH/N_TX_SLD;
     Nf = M_RB_PSDCH_RP>>1;
-    sldch->n_psdch = 0; //taus()%(Ni*Nf);
+    if (ue->is_SynchRef == 0) sldch->n_psdch = 2; //taus()%(Ni*Nf);
     int a_ji = ((sldch->j*(Nf/N_TX_SLD)) + (sldch->n_psdch/Ni))%Nf;
     
     int b_1i = sldch->n_psdch%Ni;
