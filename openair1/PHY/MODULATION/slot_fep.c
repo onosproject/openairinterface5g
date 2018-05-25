@@ -439,7 +439,7 @@ int slot_fep_freq(PHY_VARS_UE *ue,
           start_meas(&ue->dlsch_freq_offset_estimation_stats);
 #endif
 
-        lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[Ns>>1]].dl_ch_estimates[0],
+        lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[(Ns>>1)&0x1].dl_ch_estimates[0],
                             frame_parms,
                             l,
                             &common_vars->freq_offset,
@@ -454,7 +454,7 @@ int slot_fep_freq(PHY_VARS_UE *ue,
   }
 
 #ifdef DEBUG_FEP
-  printf("slot_fep: done\n");
+  printf("slot_fep_freq: done\n");
 #endif
   return(0);
 }

@@ -1043,7 +1043,7 @@ extern int subframe_eNB_mask,subframe_UE_mask;
 
 int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
-  static int first_run=0;
+  /*static int first_run=0;
   static double sum;
   static int count1;
   if (!first_run)
@@ -1060,7 +1060,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
      print_opp_meas_oaisim ();
      reset_opp_meas_oaisim ();
   }
-  count++;
+  count++;*/
 
   int ret = nsamps;
   int eNB_id = device->Mod_id;
@@ -1126,11 +1126,12 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
       //printf("is Prach generated? %d, is prach_subframe? %d, frame %d, subframe %d, mode %d\n",PHY_vars_UE_g[0][CC_id]->generate_prach,is_prach_subframe(frame_parms,frame,subframe),frame,subframe,PHY_vars_UE_g[0][CC_id]->UE_mode[eNB_id]);
       if (do_ofdm_mod)
       {
-	for (UE_id=NB_UE_INST-1; UE_id>=0; UE_id--){
+	for (UE_id=0; UE_id<NB_UE_INST; UE_id++){
 		if (is_prach_subframe(&PHY_vars_UE_g[UE_id][CC_id]->frame_parms,frame,subframe) && PHY_vars_UE_g[UE_id][CC_id]->generate_prach)
 		{
 			start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_PRACH_channel);
-			clock_t start=clock();
+			//clock_t start=clock();
+			printf("subframe UL PRACH: %d\n",subframe);
 			do_UL_sig_freq_prach(UE2eNB,
 				enb_data,
 				ue_data,
@@ -1140,10 +1141,10 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 				0,  // frame is only used for abstraction
 				eNB_id,
 				CC_id);
-  			clock_t stop=clock();
-  			printf("do_DL_sig time_prach is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count1*CLOCKS_PER_SEC),count1,sum+stop-start);
+  			//clock_t stop=clock();
+  			/*printf("do_DL_sig time_prach is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count1*CLOCKS_PER_SEC),count1,sum+stop-start);
   			sum=(sum+stop-start);
-        		count1++;
+        		count1++;*/
 		        stop_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_PRACH_channel);
 			//write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][CC_id]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 			break;
@@ -1546,7 +1547,7 @@ void init_openair1(void)
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
       PHY_vars_UE_g[UE_id][CC_id]->tx_power_max_dBm=10;
-
+      
       PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB=100;
 
       // update UE_mode for each eNB_id not just 0

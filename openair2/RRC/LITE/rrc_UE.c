@@ -2704,8 +2704,8 @@ int decode_BCCH_DLSCH_Message(
   }
 # endif
 #endif
-
   if (bcch_message->message.present == BCCH_DL_SCH_MessageType_PR_c1) {
+    printf("Before SIB1: bcch_message->message.choice.c1.present %d, BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1 %d, BCCH_DL_SCH_MessageType__c1_PR_systemInformation %d, id %d, frame %d, CASE %s\n",bcch_message->message.choice.c1.present,BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1,BCCH_DL_SCH_MessageType__c1_PR_systemInformation,ctxt_pP->module_id,ctxt_pP->frame, ((ctxt_pP->frame % 2) == 0&&((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 0) )?"SIB1":((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 1)?"SIB2":"Other case");
     switch (bcch_message->message.choice.c1.present) {
     case BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1:
       if ((ctxt_pP->frame % 2) == 0) {
@@ -2716,6 +2716,7 @@ int decode_BCCH_DLSCH_Message(
                   (void*)&bcch_message->message.choice.c1.choice.systemInformationBlockType1,
                   sizeof(SystemInformationBlockType1_t) );
           LOG_D( RRC, "[UE %"PRIu8"] Decoding First SIB1\n", ctxt_pP->module_id );
+	  printf("SIB1: BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1 %d, ctxt_pP->frame % 2 == 0? %d, UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1 == 0? %d, frame %d\n",BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1,((ctxt_pP->frame % 2) == 0),((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 0),ctxt_pP->frame);
           decode_SIB1( ctxt_pP, eNB_index, rsrq, rsrp );
           //printf("decode_BCCH_DLSCH_Message \n");
         }
@@ -2735,7 +2736,7 @@ int decode_BCCH_DLSCH_Message(
         LOG_I( RRC, "[UE %"PRIu8"] Decoding SI for frameP %"PRIu32"\n",
                ctxt_pP->module_id,
                ctxt_pP->frame );
-
+	printf("Decoding SI: BCCH_DL_SCH_MessageType__c1_PR_systemInformation %d, (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) %d\n",BCCH_DL_SCH_MessageType__c1_PR_systemInformation,(UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1));
         decode_SI( ctxt_pP, eNB_index );
       }
       break;
@@ -4275,15 +4276,17 @@ void *rrc_ue_task( void *args_p )
 
   protocol_ctxt_t  ctxt;
   itti_mark_task_ready (TASK_RRC_UE);
-
+  /*printf("Cases:  TERMINATE_MESSAGE%d, MESSAGE_TEST %d, RRC_MAC_IN_SYNC_IND %d, RRC_MAC_OUT_OF_SYNC_IND %d, RRC_MAC_BCCH_DATA_IND %d, RRC_MAC_CCCH_DATA_CNF %d,RRC_MAC_CCCH_DATA_IND %d, RRC_MAC_MCCH_DATA_IND %d,RRC_DCCH_DATA_IND %d,NAS_KENB_REFRESH_REQ %d,NAS_CELL_SELECTION_REQ %d,RRC_STATE_INACTIVE %d,RRC_STATE_IDLE %d,RRC_STATE_CONNECTED %d,NAS_CONN_ESTABLI_REQ %d,PHY_FIND_CELL_IND %d\n\n",TERMINATE_MESSAGE,MESSAGE_TEST,RRC_MAC_IN_SYNC_IND,RRC_MAC_OUT_OF_SYNC_IND,RRC_MAC_BCCH_DATA_IND,RRC_MAC_CCCH_DATA_CNF,RRC_MAC_CCCH_DATA_IND,RRC_MAC_MCCH_DATA_IND,RRC_DCCH_DATA_IND,
+NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RRC_STATE_CONNECTED,NAS_CONN_ESTABLI_REQ,PHY_FIND_CELL_IND);*/
   while(1) {
+
     // Wait for a message
     itti_receive_msg (TASK_RRC_UE, &msg_p);
 
     msg_name = ITTI_MSG_NAME (msg_p);
     instance = ITTI_MSG_INSTANCE (msg_p);
     ue_mod_id = UE_INSTANCE_TO_MODULE_ID(instance);
-
+    printf("rrc_ue_task... wait for a message. Case %d, id %d\n",ITTI_MSG_ID(msg_p),ue_mod_id);
     switch (ITTI_MSG_ID(msg_p)) {
     case TERMINATE_MESSAGE:
       itti_exit_task ();

@@ -461,6 +461,7 @@ ue_send_sdu(
                        ENB_FLAG_NO,
                        eNB_index,
                        0);
+	printf("1\n");
 
     } else if ((rx_lcids[i] == DCCH) || (rx_lcids[i] == DCCH1)) {
       LOG_D(MAC,"[UE %d] Frame %d : DLSCH -> DL-DCCH%d, RRC message (eNB %d, %d bytes)\n", module_idP, frameP, rx_lcids[i],eNB_index,rx_lengths[i]);
@@ -529,6 +530,7 @@ void ue_decode_si(module_id_t module_idP,int CC_id,frame_t frameP, uint8_t eNB_i
                    ENB_FLAG_NO,
                    eNB_index,
                    0);
+printf("2\n");
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_SI, VCD_FUNCTION_OUT);
 #if UE_TIMING_TRACE
   stop_meas(&UE_mac_inst[module_idP].rx_si);
@@ -568,6 +570,7 @@ void ue_decode_p(module_id_t module_idP,int CC_id,frame_t frameP, uint8_t eNB_in
                    ENB_FLAG_NO,
                    eNB_index,
                    0);
+printf("3\n");
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_PCCH, VCD_FUNCTION_OUT);
 #if UE_TIMING_TRACE
   stop_meas(&UE_mac_inst[module_idP].rx_p);
@@ -674,6 +677,7 @@ void ue_send_mch_sdu(module_id_t module_idP, uint8_t CC_id, frame_t frameP, uint
                        M_RNTI,
                        MCCH,
                        payload_ptr, rx_lengths[i], 0, eNB_index, sync_area);
+printf("4\n");
     } else if (rx_lcids[i] == MTCH) {
       if (UE_mac_inst[module_idP].msi_status==1) {
         LOG_I(MAC,"[UE %d] Frame %d : MCH->MTCH for sync area %d (eNB %d, %d bytes)\n",module_idP,frameP, sync_area, eNB_index, rx_lengths[i]);

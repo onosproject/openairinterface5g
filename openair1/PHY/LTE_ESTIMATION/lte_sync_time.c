@@ -498,7 +498,164 @@ int lte_sync_time(int **rxdata, ///rx data in time domain
   return(peak_pos);
 
 }
+int lte_sync_freq(int **rxdataF, ///rx data in frequency domain
+                  LTE_DL_FRAME_PARMS *frame_parms,
+                  int *eNB_id)
+{
 
+
+
+  // perform a frequency domain correlation using the oversampled sync sequence
+
+  unsigned int n, ar, s, peak_pos, peak_val, sync_source;
+  int result,result2;
+  int sync_out[3] = {0,0,0},sync_out2[3] = {0,0,0};
+  int tmp[3] = {0,0,0};
+  int length =   LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti>>1;
+
+  //msg("[SYNC TIME] Calling sync_time.\n");
+  if (sync_corr_ue0 == NULL) {
+    msg("[SYNC TIME] sync_corr_ue0 not yet allocated! Exiting.\n");
+    return(-1);
+  }
+
+  if (sync_corr_ue1 == NULL) {
+    msg("[SYNC TIME] sync_corr_ue1 not yet allocated! Exiting.\n");
+    return(-1);
+  }
+
+  if (sync_corr_ue2 == NULL) {
+    msg("[SYNC TIME] sync_corr_ue2 not yet allocated! Exiting.\n");
+    return(-1);
+  }
+
+  peak_val = 0;
+  peak_pos = 0;
+  sync_source = 0;
+
+
+  for (n=0; n<length; n+=4) {
+
+#ifdef RTAI_ENABLED
+
+    // This is necessary since the sync takes a long time and it seems to block all other threads thus screwing up RTAI. If we pause it for a little while during its execution we give RTAI a chance to catch up with its other tasks.
+    if ((n%(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti) == 0) && (n>0) && (openair_daq_vars.sync_state==0)) {
+#ifdef DEBUG_PHY
+      msg("[SYNC FREQ] pausing for 1000ns, n=%d\n",n);
+#endif
+      rt_sleep(nano2count(1000));
+    }
+
+#endif
+
+    sync_corr_ue0[n] = 0;
+    sync_corr_ue0[n+length] = 0;
+    sync_corr_ue1[n] = 0;
+    sync_corr_ue1[n+length] = 0;
+    sync_corr_ue2[n] = 0;
+    sync_corr_ue2[n+length] = 0;
+
+    for (s=0; s<3; s++) {
+      sync_out[s]=0;
+      sync_out2[s]=0;
+    }
+
+    //    if (n<(length-frame_parms->ofdm_symbol_size-frame_parms->nb_prefix_samples)) {
+    if (n<(length-frame_parms->ofdm_symbol_size)) {
+
+      //calculate dot product of primary_synch0_time and rxdataF[ar][n] (ar=0..nb_ant_rx) and store the sum in temp[n];
+      for (ar=0; ar<frame_parms->nb_antennas_rx; ar++) {
+
+        result  = dot_product((short*)primary_synch0_time, (short*) &(rxdataF[ar][n]), frame_parms->ofdm_symbol_size, SHIFT);
+        result2 = dot_product((short*)primary_synch0_time, (short*) &(rxdataF[ar][n+length]), frame_parms->ofdm_symbol_size, SHIFT);
+
+        ((short*)sync_corr_ue0)[2*n] += ((short*) &result)[0];
+        ((short*)sync_corr_ue0)[2*n+1] += ((short*) &result)[1];
+        ((short*)sync_corr_ue0)[2*(length+n)] += ((short*) &result2)[0];
+        ((short*)sync_corr_ue0)[(2*(length+n))+1] += ((short*) &result2)[1];
+        ((short*)sync_out)[0] += ((short*) &result)[0];
+        ((short*)sync_out)[1] += ((short*) &result)[1];
+        ((short*)sync_out2)[0] += ((short*) &result2)[0];
+        ((short*)sync_out2)[1] += ((short*) &result2)[1];
+      }
+
+      for (ar=0; ar<frame_parms->nb_antennas_rx; ar++) {
+        result = dot_product((short*)primary_synch1_time, (short*) &(rxdataF[ar][n]), frame_parms->ofdm_symbol_size, SHIFT);
+        result2 = dot_product((short*)primary_synch1_time, (short*) &(rxdataF[ar][n+length]), frame_parms->ofdm_symbol_size, SHIFT);
+        ((short*)sync_corr_ue1)[2*n] += ((short*) &result)[0];
+        ((short*)sync_corr_ue1)[2*n+1] += ((short*) &result)[1];
+        ((short*)sync_corr_ue1)[2*(length+n)] += ((short*) &result2)[0];
+        ((short*)sync_corr_ue1)[(2*(length+n))+1] += ((short*) &result2)[1];
+
+        ((short*)sync_out)[2] += ((short*) &result)[0];
+        ((short*)sync_out)[3] += ((short*) &result)[1];
+        ((short*)sync_out2)[2] += ((short*) &result2)[0];
+        ((short*)sync_out2)[3] += ((short*) &result2)[1];
+      }
+
+      for (ar=0; ar<frame_parms->nb_antennas_rx; ar++) {
+
+        result = dot_product((short*)primary_synch2_time, (short*) &(rxdataF[ar][n]), frame_parms->ofdm_symbol_size, SHIFT);
+        result2 = dot_product((short*)primary_synch2_time, (short*) &(rxdataF[ar][n+length]), frame_parms->ofdm_symbol_size, SHIFT);
+        ((short*)sync_corr_ue2)[2*n] += ((short*) &result)[0];
+        ((short*)sync_corr_ue2)[2*n+1] += ((short*) &result)[1];
+        ((short*)sync_corr_ue2)[2*(length+n)] += ((short*) &result2)[0];
+        ((short*)sync_corr_ue2)[(2*(length+n))+1] += ((short*) &result2)[1];
+        ((short*)sync_out)[4] += ((short*) &result)[0];
+        ((short*)sync_out)[5] += ((short*) &result)[1];
+        ((short*)sync_out2)[4] += ((short*) &result2)[0];
+        ((short*)sync_out2)[5] += ((short*) &result2)[1];
+      }
+
+    }
+
+    // calculate the absolute value of sync_corr[n]
+
+    sync_corr_ue0[n] = abs32(sync_corr_ue0[n]);
+    sync_corr_ue0[n+length] = abs32(sync_corr_ue0[n+length]);
+    sync_corr_ue1[n] = abs32(sync_corr_ue1[n]);
+    sync_corr_ue1[n+length] = abs32(sync_corr_ue1[n+length]);
+    sync_corr_ue2[n] = abs32(sync_corr_ue2[n]);
+    sync_corr_ue2[n+length] = abs32(sync_corr_ue2[n+length]);
+
+    for (s=0; s<3; s++) {
+      tmp[s] = (abs32(sync_out[s])>>1) + (abs32(sync_out2[s])>>1);
+
+      if (tmp[s]>peak_val) {
+        peak_val = tmp[s];
+        peak_pos = n;
+        sync_source = s;
+        /*
+        printf("s %d: n %d sync_out %d, sync_out2  %d (sync_corr %d,%d), (%d,%d) (%d,%d)\n",s,n,abs32(sync_out[s]),abs32(sync_out2[s]),sync_corr_ue0[n],
+               sync_corr_ue0[n+length],((int16_t*)&sync_out[s])[0],((int16_t*)&sync_out[s])[1],((int16_t*)&sync_out2[s])[0],((int16_t*)&sync_out2[s])[1]);
+        */
+      }
+    }
+  }
+
+  *eNB_id = sync_source;
+
+  LOG_D(PHY,"[UE] lte_sync_time: Sync source = %d, Peak found at pos %d, val = %d (%d dB)\n",sync_source,peak_pos,peak_val,dB_fixed(peak_val)/2);
+
+
+#ifdef DEBUG_PHY
+  if (debug_cnt == 0) {
+    write_output("sync_corr0_ue.m","synccorr0",sync_corr_ue0,2*length,1,2);
+    write_output("sync_corr1_ue.m","synccorr1",sync_corr_ue1,2*length,1,2);
+    write_output("sync_corr2_ue.m","synccorr2",sync_corr_ue2,2*length,1,2);
+    write_output("rxdata0.m","rxd0",rxdataF[0],length<<1,1,1);
+    //    exit(-1);
+  } else {
+    debug_cnt++;
+  }
+
+
+#endif
+
+
+  return(peak_pos);
+
+}
 //#define DEBUG_PHY
 
 int lte_sync_time_eNB(int32_t **rxdata, ///rx data in time domain

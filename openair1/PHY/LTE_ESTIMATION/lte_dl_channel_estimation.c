@@ -841,9 +841,9 @@ int lte_dl_channel_estimation_freq(PHY_VARS_UE *ue,
 
   uint8_t nushift,pilot0,pilot1,pilot2,pilot3;
   uint8_t previous_thread_id = ue->current_thread_id[Ns>>1]==0 ? (RX_NB_TH-1):(ue->current_thread_id[Ns>>1]-1);
-  int **dl_ch_estimates         =ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[Ns>>1]].dl_ch_estimates[eNB_offset];
-  int **dl_ch_estimates_previous=ue->common_vars.common_vars_rx_data_per_thread[previous_thread_id].dl_ch_estimates[eNB_offset];
-  int **rxdataF=ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[Ns>>1]].rxdataF;
+  int **dl_ch_estimates         =ue->common_vars.common_vars_rx_data_per_thread[(Ns>>1)&0x1].dl_ch_estimates[eNB_offset];
+  int **dl_ch_estimates_previous=ue->common_vars.common_vars_rx_data_per_thread[((Ns>>1)&0x1)==1?1:0].dl_ch_estimates[eNB_offset];
+  int **rxdataF=ue->common_vars.common_vars_rx_data_per_thread[(Ns>>1)&0x1].rxdataF;
 
   int subframe = Ns>>1;
   pilot0 = 0;
@@ -885,7 +885,7 @@ int lte_dl_channel_estimation_freq(PHY_VARS_UE *ue,
   k = (nu + nushift)%6;
 
 #ifdef DEBUG_CH
-  printf("Channel Estimation : ThreadId %d, eNB_offset %d cell_id %d ch_offset %d, OFDM size %d, Ncp=%d, l=%d, Ns=%d, k=%d\n",ue->current_thread_id[Ns>>1], eNB_offset,Nid_cell,ch_offset,ue->frame_parms.ofdm_symbol_size,
+  printf("Channel Estimation : ThreadId %d, eNB_offset %d cell_id %d ch_offset %d, OFDM size %d, Ncp=%d, l=%d, Ns=%d, k=%d\n",(Ns>>1)&0x1, eNB_offset,Nid_cell,ch_offset,ue->frame_parms.ofdm_symbol_size,
          ue->frame_parms.Ncp,l,Ns,k);
 #endif
 

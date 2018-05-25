@@ -519,6 +519,106 @@ uint16_t pbch_extract(int **rxdataF,
   return(0);
 }
 
+uint16_t pbch_extract_freq(int **rxdataF,
+                      int **dl_ch_estimates,
+                      int **rxdataF_ext,
+                      int **dl_ch_estimates_ext,
+                      uint32_t symbol,
+                      uint32_t high_speed_flag,
+                      LTE_DL_FRAME_PARMS *frame_parms,
+		      uint16_t subframe)
+{
+
+
+  uint16_t rb,nb_rb=6;
+  uint8_t i,j,aarx,aatx;
+  int *dl_ch0,*dl_ch0_ext,*rxF,*rxF_ext;
+
+  uint32_t nsymb = (frame_parms->Ncp==0) ? 7:6;
+  uint32_t symbol_mod = symbol % nsymb;
+
+  int rx_offset = frame_parms->ofdm_symbol_size-3*12;
+  int ch_offset = frame_parms->N_RB_DL*6-3*12;
+  int nushiftmod3 = frame_parms->nushift%3;
+
+  for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
+    /*
+    printf("extract_rbs (nushift %d): symbol_mod=%d, rx_offset=%d, ch_offset=%d\n",frame_parms->nushift,symbol_mod,
+     (rx_offset + (symbol*(frame_parms->ofdm_symbol_size)))*2,
+     LTE_CE_OFFSET+ch_offset+(symbol_mod*(frame_parms->ofdm_symbol_size)));
+    */
+
+    rxF        = &rxdataF[aarx][(rx_offset + (symbol*(frame_parms->ofdm_symbol_size)))+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
+    rxF_ext    = &rxdataF_ext[aarx][symbol_mod*(6*12)];
+
+    for (rb=0; rb<nb_rb; rb++) {
+      // skip DC carrier
+      if (rb==3) {
+        rxF       = &rxdataF[aarx][(1 + (symbol*(frame_parms->ofdm_symbol_size)))+subframe*(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)];
+      }
+
+      if ((symbol_mod==0) || (symbol_mod==1)) {
+        j=0;
+
+        for (i=0; i<12; i++) {
+          if ((i!=nushiftmod3) &&
+              (i!=(nushiftmod3+3)) &&
+              (i!=(nushiftmod3+6)) &&
+              (i!=(nushiftmod3+9))) {
+            rxF_ext[j++]=rxF[i];
+          }
+        }
+
+        rxF+=12;
+        rxF_ext+=8;
+      } else {
+        for (i=0; i<12; i++) {
+          rxF_ext[i]=rxF[i];
+        }
+
+        rxF+=12;
+        rxF_ext+=12;
+      }
+    }
+
+    for (aatx=0; aatx<4; aatx++) { //frame_parms->nb_antenna_ports_eNB;aatx++) {
+      if (high_speed_flag == 1)
+        dl_ch0     = &dl_ch_estimates[(aatx<<1)+aarx][LTE_CE_OFFSET+ch_offset+(symbol*(frame_parms->ofdm_symbol_size))];
+      else
+        dl_ch0     = &dl_ch_estimates[(aatx<<1)+aarx][LTE_CE_OFFSET+ch_offset];
+
+      dl_ch0_ext = &dl_ch_estimates_ext[(aatx<<1)+aarx][symbol_mod*(6*12)];
+
+      for (rb=0; rb<nb_rb; rb++) {
+        // skip DC carrier
+        // if (rb==3) dl_ch0++;
+        if (symbol_mod>1) {
+          memcpy(dl_ch0_ext,dl_ch0,12*sizeof(int));
+          dl_ch0+=12;
+          dl_ch0_ext+=12;
+        } else {
+          j=0;
+
+          for (i=0; i<12; i++) {
+            if ((i!=nushiftmod3) &&
+                (i!=(nushiftmod3+3)) &&
+                (i!=(nushiftmod3+6)) &&
+                (i!=(nushiftmod3+9))) {
+              //        printf("PBCH extract i %d j %d => (%d,%d)\n",i,j,*(short *)&dl_ch0[i],*(1+(short*)&dl_ch0[i]));
+              dl_ch0_ext[j++]=dl_ch0[i];
+            }
+          }
+
+          dl_ch0+=12;
+          dl_ch0_ext+=8;
+        }
+      }
+    }  //tx antenna loop
+
+  }
+
+  return(0);
+}
 //__m128i avg128;
 
 //compute average channel_level on each (TX,RX) antenna pair
@@ -907,6 +1007,187 @@ uint16_t rx_pbch(LTE_UE_COMMON *lte_ue_common_vars,
                  symbol,
                  high_speed_flag,
                  frame_parms);
+#ifdef DEBUG_PBCH
+    msg("[PHY] PBCH Symbol %d\n",symbol);
+    msg("[PHY] PBCH starting channel_level\n");
+#endif
+
+    max_h = pbch_channel_level(lte_ue_pbch_vars->dl_ch_estimates_ext,
+                               frame_parms,
+                               symbol);
+    log2_maxh = 3+(log2_approx(max_h)/2);
+
+#ifdef DEBUG_PBCH
+    msg("[PHY] PBCH log2_maxh = %d (%d)\n",log2_maxh,max_h);
+#endif
+
+    pbch_channel_compensation(lte_ue_pbch_vars->rxdataF_ext,
+                              lte_ue_pbch_vars->dl_ch_estimates_ext,
+                              lte_ue_pbch_vars->rxdataF_comp,
+                              frame_parms,
+                              symbol,
+                              log2_maxh); // log2_maxh+I0_shift
+
+    if (frame_parms->nb_antennas_rx > 1)
+      pbch_detection_mrc(frame_parms,
+                         lte_ue_pbch_vars->rxdataF_comp,
+                         symbol);
+
+
+    if (mimo_mode == ALAMOUTI) {
+      pbch_alamouti(frame_parms,lte_ue_pbch_vars->rxdataF_comp,symbol);
+      //  msg("[PBCH][RX] Alamouti receiver not yet implemented!\n");
+      //  return(-1);
+    } else if (mimo_mode != SISO) {
+      msg("[PBCH][RX] Unsupported MIMO mode\n");
+      return(-1);
+    }
+
+    if (symbol>(nsymb>>1)+1) {
+      pbch_quantize(pbch_e_rx,
+                    (short*)&(lte_ue_pbch_vars->rxdataF_comp[0][(symbol%(nsymb>>1))*72]),
+                    144);
+
+      pbch_e_rx+=144;
+    } else {
+      pbch_quantize(pbch_e_rx,
+                    (short*)&(lte_ue_pbch_vars->rxdataF_comp[0][(symbol%(nsymb>>1))*72]),
+                    96);
+
+      pbch_e_rx+=96;
+    }
+
+
+  }
+
+  pbch_e_rx = lte_ue_pbch_vars->llr;
+
+
+
+  //un-scrambling
+#ifdef DEBUG_PBCH
+  msg("[PBCH] doing unscrambling\n");
+#endif
+
+
+  pbch_unscrambling(frame_parms,
+                    pbch_e_rx,
+                    pbch_E,
+                    frame_mod4);
+
+
+
+  //un-rate matching
+#ifdef DEBUG_PBCH
+  msg("[PBCH] doing un-rate-matching\n");
+#endif
+
+
+  memset(dummy_w_rx,0,3*3*(16+PBCH_A));
+  RCC = generate_dummy_w_cc(16+PBCH_A,
+                            dummy_w_rx);
+
+
+  lte_rate_matching_cc_rx(RCC,pbch_E,pbch_w_rx,dummy_w_rx,pbch_e_rx);
+
+  sub_block_deinterleaving_cc((unsigned int)(PBCH_A+16),
+                              &pbch_d_rx[96],
+                              &pbch_w_rx[0]);
+
+  memset(pbch_a,0,((16+PBCH_A)>>3));
+
+
+
+
+  phy_viterbi_lte_sse2(pbch_d_rx+96,pbch_a,16+PBCH_A);
+
+  // Fix byte endian of PBCH (bit 23 goes in first)
+  for (i=0; i<(PBCH_A>>3); i++)
+    decoded_output[(PBCH_A>>3)-i-1] = pbch_a[i];
+
+#ifdef DEBUG_PBCH
+
+  for (i=0; i<(PBCH_A>>3); i++)
+    msg("[PBCH] pbch_a[%d] = %x\n",i,decoded_output[i]);
+
+#endif //DEBUG_PBCH
+
+#ifdef DEBUG_PBCH
+  msg("PBCH CRC %x : %x\n",
+      crc16(pbch_a,PBCH_A),
+      ((uint16_t)pbch_a[PBCH_A>>3]<<8)+pbch_a[(PBCH_A>>3)+1]);
+#endif
+
+  crc = (crc16(pbch_a,PBCH_A)>>16) ^
+        (((uint16_t)pbch_a[PBCH_A>>3]<<8)+pbch_a[(PBCH_A>>3)+1]);
+
+  if (crc == 0x0000)
+  {
+    return(1);
+  }
+  else if (crc == 0xffff)
+  {
+    return(2);
+  }
+  else if (crc == 0x5555)
+  {
+    return(4);
+  }
+  else
+  {
+    return(-1);
+  }
+
+}
+
+uint16_t rx_pbch_freq(LTE_UE_COMMON *lte_ue_common_vars,
+                 LTE_UE_PBCH *lte_ue_pbch_vars,
+                 LTE_DL_FRAME_PARMS *frame_parms,
+                 uint8_t eNB_id,
+                 MIMO_mode_t mimo_mode,
+                 uint32_t high_speed_flag,
+                 uint8_t frame_mod4,
+		 uint16_t subframe)
+{
+
+  uint8_t log2_maxh;//,aatx,aarx;
+  int max_h=0;
+
+  int symbol,i;
+  uint32_t nsymb = (frame_parms->Ncp==0) ? 14:12;
+  uint16_t  pbch_E;
+  uint8_t pbch_a[8];
+  uint8_t RCC;
+
+  int8_t *pbch_e_rx;
+  uint8_t *decoded_output = lte_ue_pbch_vars->decoded_output;
+  uint16_t crc;
+
+
+  //  pbch_D    = 16+PBCH_A;
+
+  pbch_E  = (frame_parms->Ncp==0) ? 1920 : 1728; //RE/RB * #RB * bits/RB (QPSK)
+  pbch_e_rx = &lte_ue_pbch_vars->llr[frame_mod4*(pbch_E>>2)];
+#ifdef DEBUG_PBCH
+  msg("[PBCH] starting symbol loop (Ncp %d, frame_mod4 %d,mimo_mode %d\n",frame_parms->Ncp,frame_mod4,mimo_mode);
+#endif
+
+  // clear LLR buffer
+  memset(lte_ue_pbch_vars->llr,0,pbch_E);
+
+  for (symbol=(nsymb>>1); symbol<(nsymb>>1)+4; symbol++) {
+
+#ifdef DEBUG_PBCH
+    msg("[PBCH] starting extract\n");
+#endif
+    pbch_extract_freq(lte_ue_common_vars->common_vars_rx_data_per_thread[0].rxdataF,
+                 lte_ue_common_vars->common_vars_rx_data_per_thread[0].dl_ch_estimates[eNB_id],
+                 lte_ue_pbch_vars->rxdataF_ext,
+                 lte_ue_pbch_vars->dl_ch_estimates_ext,
+                 symbol,
+                 high_speed_flag,
+                 frame_parms,
+		 subframe);
 #ifdef DEBUG_PBCH
     msg("[PHY] PBCH Symbol %d\n",symbol);
     msg("[PHY] PBCH starting channel_level\n");

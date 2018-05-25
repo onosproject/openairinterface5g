@@ -214,6 +214,13 @@ void lte_ue_measurements(PHY_VARS_UE *phy_vars_ue,
                          unsigned char rank_adaptation,
                          uint8_t subframe);
 
+void lte_ue_measurements_freq(PHY_VARS_UE *phy_vars_ue,
+                         unsigned int subframe_offset,
+                         unsigned char N0_symbol,
+                         unsigned char abstraction_flag,
+                         unsigned char rank_adaptation,
+                         uint8_t subframe);
+
 //! \brief This function performance RSRP/RSCP measurements
 void ue_rrc_measurements(PHY_VARS_UE *phy_vars_ue,
                          uint8_t slot,

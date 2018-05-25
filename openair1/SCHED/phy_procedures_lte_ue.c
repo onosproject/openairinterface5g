@@ -2711,6 +2711,7 @@ void ue_measurement_procedures(
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
     phy_adjust_gain (ue,dB_fixed(ue->measurements.rssi),0);
+    printf("phy_adjust_gain phy_proc_ue\n");
 #endif
 #endif
 #endif
@@ -2891,7 +2892,7 @@ void restart_phy(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uint8_t eNB_id,uint8_t ab
 
 void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uint8_t abstraction_flag)
 {
-
+  //printf("PBCH: id %d\n",ue->Mod_id);
   //  int i;
   int pbch_tx_ant=0;
   uint8_t pbch_phase;
@@ -2995,7 +2996,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
         ue->proc.proc_rxtx[th_id].frame_rx = proc->frame_rx;
         ue->proc.proc_rxtx[th_id].frame_tx = proc->frame_tx;
 
-        printf("[UE %d] frame %d, subframe %d: Adjusting frame counter (PBCH ant_tx=%d, frame_tx=%d, phase %d, rx_offset %d) => new frame %d\n",
+        printf("[UE %d] frame %d, subframe %d: Adjusting frame counter (PBCH ant_tx=%d, frame_tx=%d, phase %d, rx_offset %d) => new frame %d (th_id %d)\n",
  	    ue->Mod_id,
  	    ue->proc.proc_rxtx[th_id].frame_rx,
  	    subframe_rx,
@@ -3003,7 +3004,8 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
  	    frame_tx,
  	    pbch_phase,
  	    ue->rx_offset,
- 	    proc->frame_rx);
+ 	    proc->frame_rx,
+	    th_id);
       }
 
 
@@ -3910,6 +3912,8 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
   uint8_t is_cw0_active = 0;
   uint8_t is_cw1_active = 0;
 
+  printf("ue_dlsch_procedures id %d\n",ue->Mod_id);
+
   if (dlsch0==NULL)
       AssertFatal(0,"dlsch0 should be defined at this level \n");
 
@@ -4170,6 +4174,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
          eNB_id);
     break;
   case SI_PDSCH:
+    //printf("SI_PDSCH id %d\n",ue->Mod_id);
     mac_xface->ue_decode_si(ue->Mod_id,
           CC_id,
           frame_rx,
@@ -5106,7 +5111,7 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
   } 
   count++;
   clock_t start=clock();*/
-
+  //printf("phy_procedures_UE_RX id %d\n",ue->Mod_id);
 
   int l,l2;
   int pilot1;

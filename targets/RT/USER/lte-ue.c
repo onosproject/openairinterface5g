@@ -754,7 +754,6 @@ static void *UE_thread_synch_freq(void *arg) {
 
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_UE_THREAD_SYNCH, 0 );
     }  // while !oai_exit
-
     return &UE_thread_synch_retval;
 }
 

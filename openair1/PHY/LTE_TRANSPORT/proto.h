@@ -1451,6 +1451,15 @@ uint16_t rx_pbch(LTE_UE_COMMON *lte_ue_common_vars,
                  uint32_t high_speed_flag,
                  uint8_t frame_mod4);
 
+uint16_t rx_pbch_freq(LTE_UE_COMMON *lte_ue_common_vars,
+                 LTE_UE_PBCH *lte_ue_pbch_vars,
+                 LTE_DL_FRAME_PARMS *frame_parms,
+                 uint8_t eNB_id,
+                 MIMO_mode_t mimo_mode,
+                 uint32_t high_speed_flag,
+                 uint8_t frame_mod4,
+		 uint16_t subframe);
+
 uint16_t rx_pbch_emul(PHY_VARS_UE *phy_vars_ue,
                       uint8_t eNB_id,
                       uint8_t pbch_phase);
