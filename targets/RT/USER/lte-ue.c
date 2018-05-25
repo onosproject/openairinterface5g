@@ -1774,6 +1774,8 @@ void *UE_threadSL(void *arg) {
     else {
       if (start_rx_stream==0 && UE->is_SynchRef == 0) {
 	start_rx_stream=1;
+        UE->slbch_errors=0;
+        UE->slbch_rxops=0;
 	if (UE->no_timing_correction==0) {
 	  LOG_I(PHY,"Resynchronizing RX by %d samples (mode = %d), subframe_delay %d\n",UE->rx_offsetSL,UE->mode,subframe_delay);
 	  AssertFatal(UE->rx_offsetSL ==

@@ -4795,10 +4795,10 @@ void phy_procedures_UE_SL_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
 
   proc->sl_fep_done = 0;
 
-  if (ue->is_SynchRef == 0 && (frame_rx&3) == 0 && subframe_rx == 0) rx_psbch(ue,frame_rx,subframe_rx);
-
   rx_sldch(ue,proc,frame_rx,subframe_rx);
 
+  if (ue->is_SynchRef == 0 && frame_rx==0 && subframe_rx==0) LOG_I(PHY,"Connected with SyncRef UE (slbch errors %d/%d)\n",
+                                                ue->slbch_errors,ue->slbch_rxops);
 
 }
 
