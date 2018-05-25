@@ -784,7 +784,7 @@ void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slsch,int fram
 }
 
 
-void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot) {
+void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx,int a,int slot) {
 
   int Nsymb = 7 - slot;
   SLSCH_t *slsch = &ue->slsch_rx;
@@ -809,7 +809,7 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
   else                             nprb = slsch->prb_End_SC-(slsch->N_SL_RB_SC>>1)+amod;
 
   // slot FEP
-  if (ue->sl_fep_done == 0) {
+  if (proc->sl_fep_done == 0) {
     RU_t ru_tmp;
     memset((void*)&ru_tmp,0,sizeof(RU_t));
     
@@ -1068,7 +1068,7 @@ void pscch_decoding(PHY_VARS_UE *ue,int frame_rx,int subframe_rx,int a,int slot)
 
 }	
 
-void rx_slcch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
+void rx_slcch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx) {
 
   AssertFatal(frame_rx<1024 && frame_rx>=0,"frame %d is illegal\n",frame_rx);
   AssertFatal(subframe_rx<10 && subframe_rx>=0,"subframe %d is illegal\n",subframe_rx);
@@ -1118,8 +1118,8 @@ void rx_slcch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   uint32_t b1=slsch->n_pscch%LPSCCH;
   uint32_t b2=(slsch->n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
 
-  if (absSF_modP == b1)      pscch_decoding(ue,frame_rx,subframe_rx,a1,0);	
-  else if (absSF_modP == b2) pscch_decoding(ue,frame_rx,subframe_rx,a2,1);
+  if (absSF_modP == b1)      pscch_decoding(ue,proc,frame_rx,subframe_rx,a1,0);	
+  else if (absSF_modP == b2) pscch_decoding(ue,proc,frame_rx,subframe_rx,a2,1);
   else return;
 
 
@@ -1143,8 +1143,8 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   LOG_I(PHY,"slsch_decoding %d.%d => lmod10 %d\n",frame_rx,subframe_rx,ljmod10);
 
   // slot FEP
-  if (ue->sl_fep_done == 0) {
-    ue->sl_fep_done = 1;
+  if (proc->sl_fep_done == 0) {
+    proc->sl_fep_done = 1;
     RU_t ru_tmp;
     memset((void*)&ru_tmp,0,sizeof(RU_t));
     

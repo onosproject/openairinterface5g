@@ -4793,7 +4793,11 @@ void phy_procedures_UE_SL_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
 
   LOG_D(PHY,"SFN.SF %d.%d Running Steady-state SL UE procedures\n",frame_rx,subframe_rx);
 
-  if ((frame_rx&3) == 0 && subframe_rx == 0) rx_psbch(ue,frame_rx,subframe_rx);
+  proc->sl_fep_done = 0;
+
+  if (ue->is_SynchRef == 0 && (frame_rx&3) == 0 && subframe_rx == 0) rx_psbch(ue,frame_rx,subframe_rx);
+
+  rx_sldch(ue,proc,frame_rx,subframe_rx);
 
 
 }
