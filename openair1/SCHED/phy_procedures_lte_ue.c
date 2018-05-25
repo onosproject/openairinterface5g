@@ -1269,7 +1269,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, int frame_tx, int subframe_tx, uin
 
 //  if ((frame_tx%100) == 0)
 
-   LOG_D(PHY,"[UE %d] Frame %d, subframe %d: ulsch_start = %d (rxoff %d, HW TA %d, timing advance %d, TA_offset %d, empty subframe %d\n",
+   LOG_I(PHY,"[UE %d] Frame %d, subframe %d: ulsch_start = %d (rxoff %d, HW TA %d, timing advance %d, TA_offset %d, empty subframe %d\n",
 	 ue->Mod_id,frame_tx,subframe_tx,
 	 ulsch_start,
 	 ue->rx_offset,
@@ -1345,7 +1345,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, int frame_tx, int subframe_tx, uin
     }
 #endif
 #endif
-    LOG_D(PHY,"ULSCH : signal energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdata[0][ulsch_start],frame_parms->samples_per_tti)),&ue->common_vars.txdataF[0][subframe_tx*nsymb*frame_parms->ofdm_symbol_size]);
+    LOG_I(PHY,"ULSCH : signal energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdata[0][ulsch_start],frame_parms->samples_per_tti)),&ue->common_vars.txdataF[0][subframe_tx*nsymb*frame_parms->ofdm_symbol_size]);
     //    write_output("txBuff.m","txSignal",&ue->common_vars.txdata[aa][ulsch_start],frame_parms->samples_per_tti,1,1);
     //    exit(-1);
     /*

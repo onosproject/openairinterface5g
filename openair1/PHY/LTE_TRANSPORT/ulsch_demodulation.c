@@ -477,10 +477,10 @@ int32_t ulsch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
 
   int i;
 
-  //  printf("qpsk llr for symbol %d (pos %d), nb_rb %d\n",symbol,(symbol*frame_parms->N_RB_DL*12),nb_rb);
+//  printf("qpsk llr for symbol %d (pos %d), nb_rb %d\n",symbol,(symbol*frame_parms->N_RB_DL*12),nb_rb);
 
   for (i=0; i<(nb_rb*3); i++) {
-    //    printf("%d,%d,%d,%d,%d,%d,%d,%d\n",((int16_t *)rxF)[0],((int16_t *)rxF)[1],((int16_t *)rxF)[2],((int16_t *)rxF)[3],((int16_t *)rxF)[4],((int16_t *)rxF)[5],((int16_t *)rxF)[6],((int16_t *)rxF)[7]);
+//        printf("%d,%d,%d,%d,%d,%d,%d,%d\n",((int16_t *)rxF)[0],((int16_t *)rxF)[1],((int16_t *)rxF)[2],((int16_t *)rxF)[3],((int16_t *)rxF)[4],((int16_t *)rxF)[5],((int16_t *)rxF)[6],((int16_t *)rxF)[7]);
     *(*llrp128) = *rxF;
     rxF++;
     (*llrp128)++;
