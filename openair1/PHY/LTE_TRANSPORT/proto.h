@@ -2341,6 +2341,8 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx);
 */
 void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx);
 
+void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx);
+
 /*! \brief Top-level generation route for Sidelink Shared Channel
   \param ue pointer to UE descriptor
   \param slsch pointer to SLSCH configuration and payload

@@ -1024,8 +1024,12 @@ void init_lte_ue_transport(PHY_VARS_UE *ue,int abstraction_flag) {
     ue->transmission_mode[i] = ue->frame_parms.nb_antenna_ports_eNB==1 ? 1 : 2;
   }
 
-  ue->dlsch_rx_slsch = new_ue_dlsch(1,4,NSOFT,1,MAX_TURBO_ITERATIONS,ue->frame_parms.N_RB_DL, abstraction_flag);
   for (int i=0;i<MAX_SLDCH;i++) ue->dlsch_rx_sldch[i] = new_ue_dlsch(1,4,NSOFT,1,MAX_TURBO_ITERATIONS,ue->frame_parms.N_RB_DL, abstraction_flag);
+  ue->dlsch_sldch    = new_eNB_dlsch(1,1,NSOFT,ue->frame_parms.N_RB_DL, abstraction_flag,&ue->frame_parms);
+  ue->ulsch_sldch    = new_ue_ulsch(ue->frame_parms.N_RB_DL, abstraction_flag);
+  for (i=0;i<10;i++) ue->dlsch_sldch->harq_ids[i] = 0;
+
+  ue->dlsch_rx_slsch = new_ue_dlsch(1,4,NSOFT,1,MAX_TURBO_ITERATIONS,ue->frame_parms.N_RB_DL, abstraction_flag);
   ue->dlsch_slsch    = new_eNB_dlsch(1,1,NSOFT,ue->frame_parms.N_RB_DL, abstraction_flag,&ue->frame_parms);
   ue->ulsch_slsch    = new_ue_ulsch(ue->frame_parms.N_RB_DL, abstraction_flag);
   for (i=0;i<10;i++) ue->dlsch_slsch->harq_ids[i] = 0;

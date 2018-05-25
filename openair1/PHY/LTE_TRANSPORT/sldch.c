@@ -32,7 +32,7 @@
 #ifndef __LTE_TRANSPORT_SLSS__C__
 #define __LTE_TRANSPORT_SLSS__C__
 #include "PHY/defs.h"
-
+#include "PHY/LTE_TRANSPORT/proto.h"
 
 void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx,int npsdch,int nprb,int rvidx) {
 
@@ -409,7 +409,7 @@ void rx_sldch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
   AssertFatal(sldch->type == disc_type1 || sldch->type == disc_type2B,
 	      "unknown Discovery type %d\n",sldch->type);
 
-  int N_TX_SLD = 1+sldch->numRepetitions;
+  int N_TX_SLD = 1+sldch->numRetx;
   uint32_t M_RB_PSDCH_RP = sldch->N_SL_RB;
   int first_prb;
 
@@ -503,7 +503,6 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
   dlsch->harq_processes[0]->round       = sldch->j; 
   dlsch->harq_processes[0]->rvidx       = rvidx;
 
-  LOG_I(PHY,"SLDCH dlsch encoding\n");
   dlsch_encoding0(&ue->frame_parms,
 		 sldch->payload,
 		 0, // means SL
@@ -514,7 +513,6 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
 		 &ue->ulsch_turbo_encoding_stats,
 		 &ue->ulsch_interleaving_stats);
 
-  LOG_I(PHY,"SLDCH interleaving\n");
   int Cmux = (Nsymb-1)<<1;
   uint8_t *eptr;
   for (int i=0,j=0; i<Cmux; i++)
@@ -537,7 +535,6 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
        }
     }
 
-  LOG_I(PHY,"SLDCH scrambling\n");
   // scrambling
   uint32_t cinit=510;
 
@@ -566,7 +563,6 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
 	     ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
     }
  
-  LOG_I(PHY,"SLDCH Modulation\n"); 
   ulsch_modulation(ue->common_vars.txdataF,
 		   tx_amp,
 		   frame_tx,
@@ -576,7 +572,6 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
                    1,
                    cinit);
 
-  LOG_I(PHY,"SLDCH DMRS\n");
   generate_drs_pusch(ue,
 		     NULL,
 		     0,
@@ -590,7 +585,6 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
 
   ue->generate_ul_signal[subframe_tx][0] = 1;
 
-  LOG_I(PHY,"SLDCH generated\n");
 }
   
 void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
@@ -640,30 +634,33 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   AssertFatal(sldch->type == disc_type1 || sldch->type == disc_type2B,
 	      "unknown Discovery type %d\n",sldch->type);
 
-  int N_TX_SLD = 1+sldch->numRepetitions;
+  int N_TX_SLD = 1+sldch->numRetx;
   uint32_t M_RB_PSDCH_RP = sldch->N_SL_RB;
   unsigned int Ni,Nf; 
   if (sldch->type == disc_type1) {
     Ni = LPSDCH/N_TX_SLD;
     Nf = M_RB_PSDCH_RP>>1;
-    sldch->n_psdch = taus()%(Ni*Nf);
-    int a_ji = (((sldch->j-1)*(Nf/N_TX_SLD)) + (sldch->n_psdch/Ni))%Nf;
+    sldch->n_psdch = 0; //taus()%(Ni*Nf);
+    int a_ji = ((sldch->j*(Nf/N_TX_SLD)) + (sldch->n_psdch/Ni))%Nf;
     
     int b_1i = sldch->n_psdch%Ni;
 
-    if (absSF_modP != ((b_1i*N_TX_SLD)+sldch->j-1)) return;
+    if (absSF_modP != ((b_1i*N_TX_SLD)+sldch->j)) return;
     
     nprb = 2*a_ji;
+  LOG_I(PHY,"Generating SLDCH in SFN.SF %d.%d (O %d, P %d, n_psdch %d, Nf %d, Ni %d, j %d, a_ji %d) \n",frame_tx,subframe_tx,O,P,sldch->n_psdch,Nf,Ni,sldch->j,a_ji);
+
   }
   else {
     AssertFatal(1==0,"Discovery Type 2B not supported yet\n");
   }
 
 
-  if (nprb < sldch->N_SL_RB) nprb+=sldch->prb_Start;
-  else                       nprb+=(sldch->prb_End-(sldch->N_SL_RB>>1));
+  if (nprb <(sldch->N_SL_RB>>1)) nprb+=sldch->prb_Start;
+  else                           nprb+=(sldch->prb_End-(sldch->N_SL_RB>>1));
 
-  LOG_I(PHY,"Generating SLDCH in SFN.SF %d.%d (O %d, P %d, n_psdch %d, Nf %d, Ni %d) \n",frame_tx,subframe_tx,O,P,sldch->n_psdch,Nf,Ni);
   sldch_codingmodulation(ue,frame_tx,subframe_tx,nprb,rvidx);
   ue->psdch_generated=1;
+  sldch->j++;
+  sldch->j&=3;
 }
