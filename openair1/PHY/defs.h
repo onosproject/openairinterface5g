@@ -625,6 +625,8 @@ typedef struct {
   int sub_frame_start;
   int sub_frame_step;
   unsigned long long gotIQs;
+  /// indicator that slot_fep has been done for subframe (for sidelink)
+  int sl_fep_done;
 } UE_rxtx_proc_t;
 
 /// Context data structure for eNB subframe processing
@@ -1299,7 +1301,6 @@ typedef struct {
   // This is for SIC in the UE, to store the reencoded data
   LTE_eNB_DLSCH_t  *dlsch_eNB[NUMBER_OF_CONNECTED_eNB_MAX];
   // Sidelink-specific variables
-  int              sl_fep_done;
   SL_chan_t        sl_chan;
   LTE_eNB_DLSCH_t  *dlsch_slsch;
   LTE_UE_ULSCH_t   *ulsch_slsch;
@@ -1331,6 +1332,7 @@ typedef struct {
   uint32_t         slsch_errors;
   uint32_t         slsch_rxcnt[4];
   SLDCH_t          *sldch;
+  SLDCH_t          sldch_rx;
   int              sldch_sdu_active;
   pthread_mutex_t  slss_mutex;
   pthread_mutex_t  sldch_mutex;

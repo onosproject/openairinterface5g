@@ -740,6 +740,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
   /// Number of retransmissions (numRetx-r12)
     UE_mac_inst[Mod_idP].sldch.numRetx = discrxpool->numRetx_r13;
 
+    phy_config_SL(Mod_idP,&UE_mac_inst[Mod_idP].sldch,&UE_mac_inst[Mod_idP].slsch);
 
   }
   if (directFrameNumber_r12<1025) UE_mac_inst[Mod_idP].directFrameNumber_r12     = directFrameNumber_r12;

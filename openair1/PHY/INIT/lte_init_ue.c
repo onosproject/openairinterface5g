@@ -627,6 +627,16 @@ void phy_init_lte_ue__PDSCH( LTE_UE_PDSCH* const pdsch, const LTE_DL_FRAME_PARMS
   }
 }
 
+int phy_config_SL(int Mod_id,SLDCH_t *sldch_rx,SLSCH_t *slsch_rx) {
+
+   PHY_VARS_UE *ue=PHY_vars_UE_g[Mod_id][0];
+
+   memcpy((void*)&ue->sldch_rx,(void*)sldch_rx,sizeof(SLDCH_t));
+   memcpy((void*)&ue->slsch_rx,(void*)slsch_rx,sizeof(SLSCH_t));
+
+   return(0);
+}
+
 int init_lte_ue_signal(PHY_VARS_UE *ue,
 		       int nb_connected_eNB,
 		       uint8_t abstraction_flag)

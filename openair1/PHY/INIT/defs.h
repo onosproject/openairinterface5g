@@ -324,6 +324,15 @@ void phy_config_dedicated_eNB_step2(PHY_VARS_eNB *phy_vars_eNB);
  */
 int phy_init_secsys_eNB(PHY_VARS_eNB *phy_vars_eNb);
 
+/*!
+\fn void phy_config_SL(int Mod_id,SLDCH_t *sldch_rx,SLSCH_t *slsch_rx)
+\brief Configure PHY Sidelink parameters .
+@param Mod_id
+@param sldch_rx Sidelink discovery channel configuration
+@param slsch_rx Sidelink Control/Shared channel configuration
+ */
+int phy_config_SL(int Mod_id,SLDCH_t *sldch_rx,SLSCH_t *slsch_rx);
+
 void free_lte_top(void);
 
 void init_lte_top(LTE_DL_FRAME_PARMS *lte_frame_parms);
