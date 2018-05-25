@@ -92,6 +92,7 @@ int ctrl_sock_fd;
 struct sockaddr_in prose_app_addr;
 int slrb_id;
 int send_ue_information = 0;
+SL_UE_STATE_t On_Off_Net = UE_STATE_OFF_NETWORK;
 #endif
 
 #ifdef PHY_EMUL
@@ -2196,7 +2197,8 @@ rrc_ue_process_rrcConnectionReconfiguration(
                                     && (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12
                                           != NULL)) {
          if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12->commTxResources_r12->present != SL_CommConfig_r12__commTxResources_r12_PR_NOTHING){
-            LOG_I(RRC,"sl-CommConfig is present\n");
+             On_Off_Net = UE_STATE_ON_NETWORK;
+        	 LOG_I(RRC,"sl-CommConfig is present, UE state: %d \n", On_Off_Net);
             //process sl-CommConfig
             rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
                   (SystemInformationBlockType18_r12_t *)NULL,
@@ -5667,6 +5669,8 @@ void *rrc_control_socket_thread_fct(void *arg)
    //from the main program, listen for the incoming messages from control socket (ProSe App)
    prose_addr_len = sizeof(prose_app_addr);
    //int enable_notification = 1;
+
+   LOG_I(RRC,"UE SL state: %d \n", On_Off_Net);
    while (1) {
       LOG_I(RRC,"Listening to incoming connection from ProSe App \n");
       // receive a message from ProSe App
@@ -5696,7 +5700,8 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          sl_ctrl_msg_send = calloc(1, sizeof(struct sidelink_ctrl_element));
          sl_ctrl_msg_send->type = UE_STATUS_INFO;
-         sl_ctrl_msg_send->sidelinkPrimitive.ue_state = UE_STATE_OFF_NETWORK; //off-network
+         sl_ctrl_msg_send->sidelinkPrimitive.ue_state = On_Off_Net;
+         //sl_ctrl_msg_send->sidelinkPrimitive.ue_state = UE_STATE_OFF_NETWORK; //off-network
          memcpy((void *)send_buf, (void *)sl_ctrl_msg_send, sizeof(struct sidelink_ctrl_element));
          free(sl_ctrl_msg_send);
 

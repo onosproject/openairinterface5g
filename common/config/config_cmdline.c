@@ -54,20 +54,22 @@ char defbool[2]="1";
      switch(cfgoptions->type)
        {
        	case TYPE_STRING:
-           config_check_valptr(cfgoptions, (char **)(cfgoptions->strptr), sizeof(char *));
+           /*config_check_valptr(cfgoptions, (char **)(cfgoptions->strptr), sizeof(char *));
            config_check_valptr(cfgoptions, cfgoptions->strptr, strlen(tmpval+1));
 	   printf("cfgoptions->strptr %p (&emul_iface %p, emul_iface %p)\n \n \n",cfgoptions->strptr,&emul_iface,emul_iface);
-           sprintf(*(cfgoptions->strptr), "%s",tmpval);
-           printf("[CONFIG] %s set to  %s from command line\n", cfgoptions->optname, tmpval);
-/*=======
+           sprintf((char *)(cfgoptions->strptr), "%s",tmpval);
+           printf("[CONFIG] %s set to  %s from command line\n", cfgoptions->optname, tmpval);*/
+//=======
            if (cfgoptions->numelt == 0 ) {
               config_check_valptr(cfgoptions, cfgoptions->strptr, strlen(tmpval)+1);
               sprintf(*(cfgoptions->strptr), "%s",tmpval);
             } else {
-            	//sprintf(*(cfgoptions->strptr), "%s",tmpval);
             	sprintf( (char *)(cfgoptions->strptr), "%s",tmpval);
+            	//sprintf( &emul_iface, "%s",tmpval);
            }
-           printf_cmdl("[CONFIG] %s set to  %s from command line\n", cfgoptions->optname, tmpval);
+           printf_cmdl("[CONFIG] %s set to  %s from command line\n \n \n", cfgoptions->optname, tmpval);
+           printf("[CONFIG] %s set to  %s from command line \n \n \n", cfgoptions->optname, tmpval);
+           //printf("[CONFIG] %s set to  %s from command line \n \n \n", cfgoptions->optname, &emul_iface);
 //>>>>>>> main/develop*/
 	   optisset=1;
         break;

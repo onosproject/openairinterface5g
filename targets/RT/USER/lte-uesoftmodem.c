@@ -1186,7 +1186,8 @@ int main( int argc, char **argv )
     		wait_nfapi_init("main?");
     	//Panos: Temporarily we will be using single set of threads for multiple UEs.
     	//init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
-    	init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,emul_iface);
+    	//LOG_I(MAC, "Panos-D: Interface name: %s", &emul_iface);
+    	init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,&emul_iface);
     }
     else {
     	init_UE(1,eMBMS_active,uecap_xer_in,0);

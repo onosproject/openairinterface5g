@@ -308,9 +308,10 @@ void init_UE_stub_single_thread(int nb_inst,int eMBMS_active, int uecap_xer_in, 
 
   printf("UE threads created \n");
 
-  LOG_I(PHY,"Starting multicast link on %s\n",emul_iface);
+  LOG_I(PHY,"Starting multicast link on %s\n", emul_iface);
   //if(nfapi_mode !=3) //This has to change now. It should be active for the case of D2D On-net
-  multicast_link_start(ue_stub_rx_handler,0,emul_iface);
+  if(D2D_en)
+	  multicast_link_start(ue_stub_rx_handler,0, emul_iface);
 
 
 }
@@ -344,9 +345,10 @@ void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_ifa
 
   printf("UE threads created \n");
 
-  LOG_I(PHY,"Starting multicast link on %s\n",emul_iface);
+  LOG_I(PHY,"Starting multicast link on %s\n", &emul_iface);
   //if(nfapi_mode !=3) //This has to change now. It should be active for the case of D2D On-net
-     multicast_link_start(ue_stub_rx_handler,0,emul_iface);
+  if(D2D_en)
+     multicast_link_start(ue_stub_rx_handler,0, &emul_iface);
 
 
 
