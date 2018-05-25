@@ -252,6 +252,9 @@ int main(int argc, char **argv) {
   
   init_lte_ue_transport(UE,0);
 
+  for (int i=0;i<768*9;i++) slsch_payload[i] = taus()&255;
+  for (int i=0;i<32;i++) sldch_payload[i] = taus()&255;
+
   if (do_SLSS==1) lte_sync_time_init(&UE->frame_parms);
   
   UE->rx_total_gain_dB = 120.0;
@@ -298,13 +301,12 @@ int main(int argc, char **argv) {
   slsch.L_CRBs                    = nb_rb;
   slsch.payload_length            = get_TBS_UL(slsch.mcs,slsch.L_CRBs);
   slsch.payload                   = slsch_payload;
-
   // SLDCH Configuration
   sldch.type                      = disc_type1;
   sldch.N_SL_RB                   = 8;
   sldch.prb_Start                 = 15;
   sldch.prb_End                   = 34;
-  sldch.offsetIndicator        = 0;
+  sldch.offsetIndicator        = 1;
   /// 128 frame
   sldch.discPeriod                = 128;
   // 1 transmission per period
@@ -315,7 +317,8 @@ int main(int argc, char **argv) {
   sldch.bitmap1                   = 0xffff;
   sldch.bitmap_length                   = 16;
   sldch.payload_length            = 256;
-
+  memcpy((void*)sldch.payload,(void*)sldch_payload,32);
+  memcpy((void*)&UE->sldch_rx,(void*)&sldch,sizeof(SLDCH_t));
   memset((void*)&slss,0,sizeof(slss));
   
   if (do_SLSS == 1) {
@@ -347,7 +350,7 @@ int main(int argc, char **argv) {
     UE->slsch_txcnt = 0;
     UE->slsch_rxcnt[0] = 0;    UE->slsch_rxcnt[1] = 0;    UE->slsch_rxcnt[2] = 0;    UE->slsch_rxcnt[3] = 0;
     pscch_errors=0;
-    UE->sl_fep_done = 0;
+    proc.sl_fep_done = 0;
     UE->slbch_errors=0;
     
     for (trials = 0;trials<n_trials;trials++) {
@@ -361,19 +364,19 @@ int main(int argc, char **argv) {
 	subframe= absSF%10;
         if (do_SLSS==0) {
 	   check_and_generate_psdch(UE,frame,subframe);
-	   UE->slsch_active = 1;
-	   check_and_generate_pscch(UE,frame,subframe);
+/*	   UE->slsch_active = 1;
+	   check_and_generate_pscch(UE,frame,subframe);*/
 	   proc.subframe_tx = subframe;
 	   proc.frame_tx    = frame;
-	   check_and_generate_pssch(UE,&proc,frame,subframe);
+//	   check_and_generate_pssch(UE,&proc,frame,subframe);
         }
 	   check_and_generate_slss(UE,frame,subframe);
 	if (UE->psdch_generated>0 || UE->pscch_generated > 0 || UE->pssch_generated > 0 || UE->slss_generated > 0) {
 	  AssertFatal(UE->pscch_generated<3,"Illegal pscch_generated %d\n",UE->pscch_generated);
 	  // FEP
-	  ulsch_common_procedures(UE,&proc,0);
-	  //	  write_output("txsig0SL.m","txs0",&UE->common_vars.txdata[0][UE->frame_parms.samples_per_tti*subframe],UE->frame_parms.samples_per_tti,1,1);
-	  //	  printf("Running do_SL_sig for frame %d subframe %d (%d,%d,%d,%d)\n",frame,subframe,UE->slss_generated,UE->pscch_generated,UE->psdch_generated,UE->pssch_generated);
+	  ulsch_common_procedures(UE,proc.frame_tx,proc.subframe_tx,0);
+	  write_output("txsig0SL.m","txs0",&UE->common_vars.txdata[0][UE->frame_parms.samples_per_tti*subframe],UE->frame_parms.samples_per_tti,1,1);
+	  printf("Running do_SL_sig for frame %d subframe %d (%d,%d,%d,%d)\n",frame,subframe,UE->slss_generated,UE->pscch_generated,UE->psdch_generated,UE->pssch_generated);
 	  do_SL_sig(0,UE2UE,subframe,UE->pscch_generated,
 		    3*(UE->frame_parms.ofdm_symbol_size)+2*(UE->frame_parms.nb_prefix_samples)+UE->frame_parms.nb_prefix_samples0,
 		    &UE->frame_parms,frame,0);
@@ -384,14 +387,17 @@ int main(int argc, char **argv) {
 		   2*UE->frame_parms.samples_per_tti*sizeof(int16_t));
 	  //	  write_output("rxsyncb0.m","rxsyncb0",(void*)UE->common_vars.rxdata_syncSL[0],(UE->frame_parms.samples_per_tti),1,1);
 	  //	  exit(-1);
+          if (UE->psdch_generated==1) rx_sldch(UE,&proc,frame,subframe);
+
 	  UE->pscch_generated = 0;
 	  UE->pssch_generated = 0;
 	  UE->psdch_generated = 0;
-	  
 	}
-	rx_slcch(UE,frame,subframe);
+/*
+	rx_slcch(UE,&proc,frame,subframe);
 	rx_slsch(UE,&proc,frame,subframe);
-
+*/
+      //  rx_sldch(UE,&proc,frame,subframe);
         if ((absSF % 40) == 3 && do_SLSS==1) {
 	  printf("Running Initial synchronization for SL\n");
 	  // initial synch for SL
@@ -399,7 +405,7 @@ int main(int argc, char **argv) {
 
 	}
 	  
-	UE->sl_fep_done = 0;
+	proc.sl_fep_done = 0;
 	if ((absSF%320) == 319)  {
 	  if (UE->slcch_received == 0) pscch_errors++;
 	  break;
