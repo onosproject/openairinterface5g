@@ -286,7 +286,6 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 	  rvidx,ret);
   }
 
-  exit(-1);
 }
 
 void rx_sldch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx) {
