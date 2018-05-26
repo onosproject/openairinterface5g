@@ -423,6 +423,8 @@ void sldch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,int npr
   LOG_D(PHY,"Generating SLDCH in %d.%d for rvidx %d, npsdch %d, first rb %d\n",
 	frame_tx,subframe_tx,rvidx,sldch->n_psdch,nprb);
 
+  if (rvidx==0) ue->sldch_txcnt[sldch->n_psdch]++;
+
   dlsch->harq_processes[0]->nb_rb       = 2;
   dlsch->harq_processes[0]->TBS         = 256;
   dlsch->harq_processes[0]->Qm          = 2;
