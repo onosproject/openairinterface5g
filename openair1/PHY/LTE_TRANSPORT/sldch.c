@@ -284,10 +284,11 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 
 //  printf("slsch decoding round %d ret %d\n",ue->dlsch_rx_sldch->harq_processes[0]->round,ret);
   if (ret<ue->dlsch_rx_sldch[npsdch]->max_turbo_iterations) {
-    LOG_I(PHY,"SLDCH received for npsdch %d (rvidx %d, iter %d)\n",
+    LOG_D(PHY,"SLDCH received for npsdch %d (rvidx %d, iter %d)\n",
 	  npsdch,
 	  rvidx,ret);
     ue->sldch_received[npsdch] = 1;
+    ue->sldch_rxcnt[npsdch]++;
   }
 
   //exit(-1);

@@ -1313,6 +1313,7 @@ typedef struct {
   LTE_UE_DLSCH_t   *dlsch_rx_slsch;
   LTE_UE_DLSCH_t   *dlsch_rx_sldch[MAX_SLDCH];
   int              sldch_received[MAX_SLDCH];
+  int              sldch_rxcnt[MAX_SLDCH];
   int16_t          **sl_rxdataF[RX_NB_TH_MAX];
   int16_t          **sl_rxdata_7_5kHz[RX_NB_TH_MAX];
   int16_t          *slsch_dlsch_llr;
