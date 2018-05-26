@@ -1345,7 +1345,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, int frame_tx, int subframe_tx, uin
     }
 #endif
 #endif
-    LOG_I(PHY,"ULSCH : signal energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdata[0][ulsch_start],frame_parms->samples_per_tti)),&ue->common_vars.txdataF[0][subframe_tx*nsymb*frame_parms->ofdm_symbol_size]);
+    LOG_I(PHY,"ULSCH : signal energy %d dB (txdata %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdata[0][ulsch_start],frame_parms->samples_per_tti)),&ue->common_vars.txdata[0][ulsch_start]);
     //    write_output("txBuff.m","txSignal",&ue->common_vars.txdata[aa][ulsch_start],frame_parms->samples_per_tti,1,1);
     //    exit(-1);
     /*

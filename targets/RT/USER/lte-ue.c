@@ -1858,7 +1858,8 @@ void *UE_threadSL(void *arg) {
 					       rxp,
 					       readBlockSize,
 					       UE->frame_parms.nb_antennas_rx),"");
-	LOG_D(PHY,"writing txp[0] %p (%p)\n",txp[0],UE->common_vars.txdata[0]);
+	LOG_I(PHY,"writing txp[0] %p (%p) length %d subframe %d (%d dB)\n",txp[0],UE->common_vars.txdata[0],
+              writeBlockSize,(sub_frame+2)%10,dB_fixed(signal_energy(txp[0],writeBlockSize)));
 
 	AssertFatal( writeBlockSize ==
 		     UE->rfdevice.trx_write_func(&UE->rfdevice,
