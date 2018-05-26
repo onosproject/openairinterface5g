@@ -1847,8 +1847,6 @@ void *UE_threadSL(void *arg) {
 					       readBlockSize,
 					       UE->frame_parms.nb_antennas_rx),"");
 
-
-
 	AssertFatal( writeBlockSize ==
 		     UE->rfdevice.trx_write_func(&UE->rfdevice,
 						 timestamp+
