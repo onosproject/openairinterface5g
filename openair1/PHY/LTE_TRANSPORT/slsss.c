@@ -306,7 +306,7 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2)
   LTE_DL_FRAME_PARMS *frame_parms=&ue->frame_parms;
   int32_t metric;
   int16_t *d0,*d5;
-  int16_t **rxdataF          = ue->sl_rxdataF;
+  int16_t **rxdataF          = ue->sl_rxdataF[ue->current_thread_id[0]];
 
   if (frame_parms->frame_type == FDD) {
 #ifdef DEBUG_SSS
@@ -329,7 +329,7 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2)
     ru_tmp.common.rxdata_7_5kHz     = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*)); 
     ru_tmp.common.rxdata            = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*)); 
     for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) { 
-      ru_tmp.common.rxdata_7_5kHz[aa] = (int32_t*)ue->sl_rxdata_7_5kHz[aa];
+      ru_tmp.common.rxdata_7_5kHz[aa] = (int32_t*)ue->sl_rxdata_7_5kHz[ue->current_thread_id[0]][aa];
       ru_tmp.common.rxdata[aa]        = (int32_t*)&ue->common_vars.rxdata_syncSL[aa][2*ue->rx_offsetSL];
     }
     ru_tmp.common.rxdataF = (int32_t**)rxdataF;

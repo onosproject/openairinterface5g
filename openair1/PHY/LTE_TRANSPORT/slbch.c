@@ -132,11 +132,11 @@ int generate_slbch(int32_t **txdataF,
 int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   
   
-  int16_t **rxdataF      = ue->sl_rxdataF;
+  int16_t **rxdataF      = ue->sl_rxdataF[ue->current_thread_id[subframe_rx]];
   int16_t **rxdataF_ext  = ue->pusch_slbch->rxdataF_ext;
-  int16_t **drs_ch_estimates = ue->pusch_sldch->drs_ch_estimates;
-  int16_t **rxdataF_comp     = ue->pusch_sldch->rxdataF_comp;
-  int16_t **ul_ch_mag        = ue->pusch_sldch->ul_ch_mag;
+  int16_t **drs_ch_estimates = ue->pusch_slbch->drs_ch_estimates;
+  int16_t **rxdataF_comp     = ue->pusch_slbch->rxdataF_comp;
+  int16_t **ul_ch_mag        = ue->pusch_slbch->ul_ch_mag;
   int32_t avgs;
   uint8_t log2_maxh=0;
   int32_t avgU[2];

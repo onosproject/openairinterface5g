@@ -34,17 +34,17 @@
 #include "PHY/defs.h"
 #include "PHY/LTE_TRANSPORT/proto.h"
 
-//#define PSDCH_DEBUG 1
+#define PSDCH_DEBUG 1
 
 void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx,int npsdch,int nprb,int rvidx) {
 
   int Nsymb = 7;
-  int16_t **rxdataF_ext      = (int16_t**)ue->pusch_sldch->rxdataF_ext;
-  int16_t **drs_ch_estimates = (int16_t**)ue->pusch_sldch->drs_ch_estimates;
-  int16_t **rxdataF_comp     = (int16_t**)ue->pusch_sldch->rxdataF_comp;
-  int16_t **ul_ch_mag        = (int16_t**)ue->pusch_sldch->ul_ch_mag;
-  int16_t **rxdata_7_5kHz    = (int16_t**)ue->sl_rxdata_7_5kHz;
-  int16_t **rxdataF          = (int16_t**)ue->sl_rxdataF;
+  int16_t **rxdataF_ext      = (int16_t**)ue->pusch_sldch[ue->current_thread_id[subframe_rx]]->rxdataF_ext;
+  int16_t **drs_ch_estimates = (int16_t**)ue->pusch_sldch[ue->current_thread_id[subframe_rx]]->drs_ch_estimates;
+  int16_t **rxdataF_comp     = (int16_t**)ue->pusch_sldch[ue->current_thread_id[subframe_rx]]->rxdataF_comp;
+  int16_t **ul_ch_mag        = (int16_t**)ue->pusch_sldch[ue->current_thread_id[subframe_rx]]->ul_ch_mag;
+  int16_t **rxdata_7_5kHz    = (int16_t**)ue->sl_rxdata_7_5kHz[ue->current_thread_id[subframe_rx]];
+  int16_t **rxdataF          = (int16_t**)ue->sl_rxdataF[ue->current_thread_id[subframe_rx]];
   int32_t avgs;
   uint8_t log2_maxh=0;
   int32_t avgU[2];
@@ -75,7 +75,7 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 	slot_fep_ul(&ru_tmp,l,(subframe_rx<<1)+1,0);
     }
   }
-   LOG_I(PHY,"sldch_decoding: FEP for npsdch %d rvidx %d rx signal energy %d dB %d dB\n",npsdch,rvidx,
+   LOG_I(PHY,"sldch_decoding: FEP in %d.%d for npsdch %d rvidx %d rx signal energy %d dB %d dB\n",frame_rx,subframe_rx,npsdch,rvidx,
          dB_fixed(signal_energy(&ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe_rx],ue->frame_parms.samples_per_tti)),
          dB_fixed(signal_energy(ue->sl_rxdata_7_5kHz[0],ue->frame_parms.samples_per_tti)));
 
@@ -204,7 +204,7 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 
   int E = 12*2*2*((Nsymb-1)<<1);
 
-  int16_t *llrp = ue->sldch_ulsch_llr;
+  int16_t *llrp = ue->sldch_ulsch_llr[ue->current_thread_id[subframe_rx]];
 
   for (int l=0; l<(Nsymb<<1)-1; l++) {
 
@@ -215,13 +215,13 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 
     ulsch_qpsk_llr(&ue->frame_parms,
 		   (int32_t **)rxdataF_comp,
-		   (int16_t *)ue->sldch_ulsch_llr,
+		   (int16_t *)ue->sldch_ulsch_llr[ue->current_thread_id[subframe_rx]],
 		   l,
 		   2,
 		   &llrp);
   }
 #ifdef PSDCH_DEBUG  
-  write_output("sldch_llr.m","sldchllr",ue->sldch_ulsch_llr,
+  write_output("sldch_llr.m","sldchllr",ue->sldch_ulsch_llr[ue->current_thread_id[subframe_rx]],
                12*2*(ue->frame_parms.symbols_per_tti),
                1,0);
 #endif  
@@ -239,7 +239,7 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   for (int i=0; i<(1+(E>>5)); i++) {
     for (int j=0; j<32; j++,k++) {
         c = (int16_t)((((s>>j)&1)<<1)-1);
-        ue->sldch_ulsch_llr[k] = c*ue->sldch_ulsch_llr[k];
+        ue->sldch_ulsch_llr[ue->current_thread_id[subframe_rx]][k] = c*ue->sldch_ulsch_llr[ue->current_thread_id[subframe_rx]][k];
     }    
     s = lte_gold_generic(&x1, &x2, 0);
   }
@@ -249,8 +249,8 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   int Cmux = (Nsymb-1)*2;
   for (int i=0,j=0;i<Cmux;i++) {
     for (int r=0;r<24;r++) {
-      ue->sldch_dlsch_llr[((r*Cmux)+i)<<1]     = ue->sldch_ulsch_llr[j++];
-      ue->sldch_dlsch_llr[(((r*Cmux)+i)<<1)+1] = ue->sldch_ulsch_llr[j++];
+      ue->sldch_dlsch_llr[ue->current_thread_id[subframe_rx]][((r*Cmux)+i)<<1]     = ue->sldch_ulsch_llr[ue->current_thread_id[subframe_rx]][j++];
+      ue->sldch_dlsch_llr[ue->current_thread_id[subframe_rx]][(((r*Cmux)+i)<<1)+1] = ue->sldch_ulsch_llr[ue->current_thread_id[subframe_rx]][j++];
  //     	printf("dlsch_llr[%d] %d(%d) dlsch_llr[%d] %d(%d)\n",
  //     	       ((r*Cmux)+i)<<1,ue->sldch_dlsch_llr[((r*Cmux)+i)<<1],j-2,(((r*Cmux)+i)<<1)+1,ue->sldch_dlsch_llr[(((r*Cmux)+i)<<1)+1],j-1);
     }
@@ -269,7 +269,7 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   //  for (int i=0;i<E/16;i++) printf("decoding: E[%d] %d\n",i,ue->slsch_dlsch_llr[i]);
 
   int ret = dlsch_decoding(ue,
-			   ue->sldch_dlsch_llr,
+			   ue->sldch_dlsch_llr[ue->current_thread_id[subframe_rx]],
 			   &ue->frame_parms,
 			   ue->dlsch_rx_sldch[npsdch],
 			   ue->dlsch_rx_sldch[npsdch]->harq_processes[0],
@@ -286,6 +286,7 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 	  rvidx,ret);
   }
 
+  exit(-1);
 }
 
 void rx_sldch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx) {
@@ -357,8 +358,10 @@ void rx_sldch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
       if (nprb<(sldch->N_SL_RB>>1)) nprb+=sldch->prb_Start;
       else                          nprb+=(sldch->prb_End-(sldch->N_SL_RB>>1));
       // call decoding for candidate npsdch
-      LOG_I(PHY,"SLDCH (RX): absSF_modP %d Trying npsdch %d, j %d rvidx %d (nprb %d)\n",absSF_modP,npsdch,jrx,rvtab[jrx],nprb);
-      sldch_decoding(ue,proc,frame_rx,subframe_rx,npsdch,nprb,rvtab[jrx]);
+      if (npsdch==0) {
+        LOG_I(PHY,"SLDCH (RX): absSF_modP %d Trying npsdch %d, j %d rvidx %d (nprb %d)\n",absSF_modP,npsdch,jrx,rvtab[jrx],nprb);
+        sldch_decoding(ue,proc,frame_rx,subframe_rx,npsdch,nprb,rvtab[jrx]);
+      }
     }
 
   }

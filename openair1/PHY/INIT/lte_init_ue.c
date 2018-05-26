@@ -965,11 +965,26 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
   ue->pusch_slsch->rxdataF_comp     = (int32_t **)malloc(2*sizeof(int32_t*));
   ue->pusch_slsch->ul_ch_mag        = (int32_t **)malloc(2*sizeof(int32_t*));
 
-  ue->pusch_sldch                   = (LTE_eNB_PUSCH*)malloc(sizeof(LTE_eNB_PUSCH));
-  ue->pusch_sldch->rxdataF_ext      = (int32_t **)malloc(2*sizeof(int32_t*));
-  ue->pusch_sldch->drs_ch_estimates = (int32_t **)malloc(2*sizeof(int32_t*));
-  ue->pusch_sldch->rxdataF_comp     = (int32_t **)malloc(2*sizeof(int32_t*));
-  ue->pusch_sldch->ul_ch_mag        = (int32_t **)malloc(2*sizeof(int32_t*));
+  for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
+    ue->pusch_sldch[th_id]                   = (LTE_eNB_PUSCH*)malloc(sizeof(LTE_eNB_PUSCH));
+    ue->pusch_sldch[th_id]->rxdataF_ext      = (int32_t **)malloc(2*sizeof(int32_t*));
+    ue->pusch_sldch[th_id]->drs_ch_estimates = (int32_t **)malloc(2*sizeof(int32_t*));
+    ue->pusch_sldch[th_id]->rxdataF_comp     = (int32_t **)malloc(2*sizeof(int32_t*));
+    ue->pusch_sldch[th_id]->ul_ch_mag        = (int32_t **)malloc(2*sizeof(int32_t*));
+    ue->sl_rxdata_7_5kHz[th_id]              = (int16_t **)malloc(2*sizeof(int32_t*));
+    ue->sl_rxdataF[th_id]                    = (int16_t **)malloc(2*sizeof(int32_t*));
+    for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) {
+      ue->sl_rxdataF[th_id][aa]                    = (int16_t*)malloc16_clear(ue->frame_parms.ofdm_symbol_size*14*sizeof(int32_t));
+      ue->sl_rxdata_7_5kHz[th_id][aa]              = (int16_t*)malloc16_clear(ue->frame_parms.samples_per_tti*sizeof(int32_t));
+      ue->pusch_sldch[th_id]->rxdataF_ext[aa]      = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
+      ue->pusch_sldch[th_id]->drs_ch_estimates[aa] = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
+      ue->pusch_sldch[th_id]->rxdataF_comp[aa]     = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
+      ue->pusch_sldch[th_id]->ul_ch_mag[aa]        = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
+
+    }
+    ue->sldch_dlsch_llr[th_id]                 = (int16_t *)malloc(2*2*12*1200*sizeof(int16_t*));
+    ue->sldch_ulsch_llr[th_id]                 = (int16_t *)malloc(2*2*12*1200*sizeof(int16_t*));
+  }
 
   ue->pusch_slbch                   = (LTE_eNB_PUSCH*)malloc(sizeof(LTE_eNB_PUSCH));
   ue->pusch_slbch->rxdataF_ext      = (int32_t **)malloc(2*sizeof(int32_t*));
@@ -977,12 +992,8 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
   ue->pusch_slbch->rxdataF_comp     = (int32_t **)malloc(2*sizeof(int32_t*));
   ue->pusch_slbch->ul_ch_mag        = (int32_t **)malloc(2*sizeof(int32_t*));
 
-  ue->sl_rxdata_7_5kHz              = (int16_t **)malloc(2*sizeof(int32_t*));
-  ue->sl_rxdataF                    = (int16_t **)malloc(2*sizeof(int32_t*));
 
   for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) {
-    ue->sl_rxdataF[aa]                    = (int16_t*)malloc16_clear(ue->frame_parms.ofdm_symbol_size*14*sizeof(int32_t));
-    ue->sl_rxdata_7_5kHz[aa]              = (int16_t*)malloc16_clear(ue->frame_parms.samples_per_tti*sizeof(int32_t));
 
     ue->pusch_slcch->rxdataF_ext[aa]      = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
     ue->pusch_slcch->drs_ch_estimates[aa] = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
@@ -992,10 +1003,6 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
     ue->pusch_slsch->drs_ch_estimates[aa] = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
     ue->pusch_slsch->rxdataF_comp[aa]     = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
     ue->pusch_slsch->ul_ch_mag[aa]        = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
-    ue->pusch_sldch->rxdataF_ext[aa]      = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
-    ue->pusch_sldch->drs_ch_estimates[aa] = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
-    ue->pusch_sldch->rxdataF_comp[aa]     = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
-    ue->pusch_sldch->ul_ch_mag[aa]        = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
     ue->pusch_slbch->rxdataF_ext[aa]      = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
     ue->pusch_slbch->drs_ch_estimates[aa] = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
     ue->pusch_slbch->rxdataF_comp[aa]     = (int32_t*)malloc16_clear(ue->frame_parms.N_RB_DL*12*14*sizeof(int32_t));
@@ -1003,8 +1010,6 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
   }	
   ue->slsch_dlsch_llr                 = (int16_t *)malloc(2*6*12*1200*sizeof(int16_t*));
   ue->slsch_ulsch_llr                 = (int16_t *)malloc(2*6*12*1200*sizeof(int16_t*));
-  ue->sldch_dlsch_llr                 = (int16_t *)malloc(2*2*12*1200*sizeof(int16_t*));
-  ue->sldch_ulsch_llr                 = (int16_t *)malloc(2*2*12*1200*sizeof(int16_t*));
   
 
 
@@ -1297,10 +1302,14 @@ void free_ue_resources(PHY_VARS_UE *ue) {
       free(ue->pusch_slsch->drs_ch_estimates[aa]);
       free(ue->pusch_slsch->rxdataF_comp[aa]);
       free(ue->pusch_slsch->ul_ch_mag[aa]);
-      free(ue->pusch_sldch->rxdataF_ext[aa]);
-      free(ue->pusch_sldch->drs_ch_estimates[aa]);
-      free(ue->pusch_sldch->rxdataF_comp[aa]);
-      free(ue->pusch_sldch->ul_ch_mag[aa]);
+      for (int th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
+        free(ue->sl_rxdataF[th_id][aa]);
+        free(ue->sl_rxdata_7_5kHz[th_id][aa]);
+        free(ue->pusch_sldch[th_id]->rxdataF_ext[aa]);
+        free(ue->pusch_sldch[th_id]->drs_ch_estimates[aa]);
+        free(ue->pusch_sldch[th_id]->rxdataF_comp[aa]);
+        free(ue->pusch_sldch[th_id]->ul_ch_mag[aa]);
+      }
     }
   }
   if (ue->sidelink_active == 1) {  
@@ -1314,13 +1323,15 @@ void free_ue_resources(PHY_VARS_UE *ue) {
     free(ue->pusch_slsch->drs_ch_estimates);
     free(ue->pusch_slsch->rxdataF_comp);
     free(ue->pusch_slsch->ul_ch_mag);
-    free(ue->pusch_sldch->rxdataF_ext);
-    free(ue->pusch_sldch->drs_ch_estimates);
-    free(ue->pusch_sldch->rxdataF_comp);
-    free(ue->pusch_sldch->ul_ch_mag);
+    for (int th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
+      free(ue->pusch_sldch[th_id]->rxdataF_ext);
+      free(ue->pusch_sldch[th_id]->drs_ch_estimates);
+      free(ue->pusch_sldch[th_id]->rxdataF_comp);
+      free(ue->pusch_sldch[th_id]->ul_ch_mag);
+      free(ue->sldch_dlsch_llr[th_id]);
+      free(ue->sldch_ulsch_llr[th_id]);
+    }
     free(ue->slsch_dlsch_llr);
     free(ue->slsch_ulsch_llr);
-    free(ue->sldch_dlsch_llr);
-    free(ue->sldch_ulsch_llr);
   }
 }
