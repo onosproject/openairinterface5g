@@ -302,6 +302,7 @@ void rx_sldch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
   uint32_t absSF_offset,absSF_modP;
   int rvtab[4]={0,2,3,1};
 
+  return;
   absSF_offset = absSF-O;
 
   if (absSF_offset < O) return;
