@@ -1784,19 +1784,10 @@ void *UE_threadSL(void *arg) {
 						 (void**)UE->common_vars.rxdata,
 						 UE->rx_offsetSL,
 						 UE->frame_parms.nb_antennas_rx),"");
-/*
-          AssertFatal(UE->frame_parms.samples_per_tti*40 ==
-                      UE->rfdevice.trx_read_func(&UE->rfdevice,
-                                                 &timestamp,
-                                                 (void**)UE->common_vars.rxdata_syncSL,
-                                                 UE->frame_parms.samples_per_tti*40,
-                                                 UE->frame_parms.nb_antennas_rx),"");
-          write_output("fourframes.m","frames4",UE->common_vars.rxdata_syncSL[0],UE->frame_parms.samples_per_tti*10,1,1);
-          exit(-1);*/ 
 	}
 	UE->rx_offsetSL=0;
 	UE->time_sync_cell=0;
-	for (int i=0;i<RX_NB_TH;i++) UE->proc.proc_rxtx[i].frame_rx=(UE->proc.proc_rxtx[i].frame_rx-1+(subframe_delay/10))&1023; // -1 because we increment frame_rx below in subframe=0
+	for (int i=0;i<RX_NB_TH;i++) UE->proc.proc_rxtx[i].frame_rx=(UE->proc.proc_rxtx[i].frame_rx+3+(subframe_delay/10))&1023; // +3 because we increment frame_rx below in subframe=0 and first pbch is received in +4 frames
       } else { // This is steady-state mode
 	sub_frame++;
 	sub_frame%=10;
@@ -1849,17 +1840,12 @@ void *UE_threadSL(void *arg) {
 	  writeBlockSize=UE->frame_parms.samples_per_tti -UE->rx_offset_diff;
 	}
 
-	LOG_D(PHY,"reading rxp[0] %p (%p) : %d samples\n",
-	      rxp[0],UE->common_vars.rxdata[0],
-	      readBlockSize);
 	AssertFatal(readBlockSize ==
 		    UE->rfdevice.trx_read_func(&UE->rfdevice,
 					       &timestamp,
 					       rxp,
 					       readBlockSize,
 					       UE->frame_parms.nb_antennas_rx),"");
-	LOG_I(PHY,"writing txp[0] %p (%p) length %d subframe %d (%d dB)\n",txp[0],UE->common_vars.txdata[0],
-              writeBlockSize,(sub_frame+2)%10,dB_fixed(signal_energy(txp[0],writeBlockSize)));
 
 	AssertFatal( writeBlockSize ==
 		     UE->rfdevice.trx_write_func(&UE->rfdevice,

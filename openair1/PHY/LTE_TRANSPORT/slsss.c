@@ -211,7 +211,8 @@ int _do_slpss_sss_extract(PHY_VARS_UE *ue,
       pss1_symb = 2;
       sss0_symb = 11;
       sss1_symb = 12;
-      rxdataF   =  (int32_t**)ue->sl_rxdataF;
+      rxdataF   =  (int32_t**)ue->sl_rxdataF[ue->current_thread_id[0]];
+;
 
       pss0_rxF  =  &rxdataF[aarx][(rx_offset + (pss0_symb*(frame_parms->ofdm_symbol_size)))];
       sss0_rxF  =  &rxdataF[aarx][(rx_offset + (sss0_symb*(frame_parms->ofdm_symbol_size)))];
