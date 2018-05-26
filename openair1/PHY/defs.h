@@ -1307,7 +1307,7 @@ typedef struct {
   LTE_eNB_PUSCH    *pusch_slsch;
   LTE_eNB_DLSCH_t  *dlsch_sldch;
   LTE_UE_ULSCH_t   *ulsch_sldch;
-  LTE_eNB_PUSCH    *pusch_sldch;
+  LTE_eNB_PUSCH    *pusch_sldch[RX_NB_TH_MAX];
   LTE_eNB_PUSCH    *pusch_slbch;
   LTE_eNB_PUSCH    *pusch_slcch;
   LTE_UE_DLSCH_t   *dlsch_rx_slsch;
@@ -1316,8 +1316,8 @@ typedef struct {
   int16_t          **sl_rxdata_7_5kHz;
   int16_t          *slsch_dlsch_llr;
   int16_t          *slsch_ulsch_llr;
-  int16_t          *sldch_dlsch_llr;
-  int16_t          *sldch_ulsch_llr;
+  int16_t          *sldch_dlsch_llr[RX_NB_TH_MAX];
+  int16_t          *sldch_ulsch_llr[RX_NB_TH_MAX];
   SLSS_t           *slss;
   SLSS_t          slss_rx;
   SLSCH_t          *slsch;
