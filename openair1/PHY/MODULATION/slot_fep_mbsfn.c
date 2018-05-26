@@ -20,6 +20,7 @@
  */
 
 #include "PHY/defs.h"
+#include "PHY/extern.h"
 #include "defs.h"
 //#define DEBUG_FEP
 
@@ -109,7 +110,7 @@ int slot_fep_mbsfn(PHY_VARS_UE *ue,
 #endif
 
   for (aa=0; aa<frame_parms->nb_antennas_rx; aa++) {
-    memset(&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],0,frame_parms->ofdm_symbol_size*sizeof(int));
+    memset(&common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],0,frame_parms->ofdm_symbol_size*sizeof(int));
     if (l==0) {
 #if UE_TIMING_TRACE
         start_meas(&ue->rx_dft_stats);
@@ -118,7 +119,7 @@ int slot_fep_mbsfn(PHY_VARS_UE *ue,
           nb_prefix_samples0 +
           subframe_offset -
           SOFFSET) % frame_length_samples],
-          (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
+          (int16_t *)&common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
 #if UE_TIMING_TRACE
       stop_meas(&ue->rx_dft_stats);
 #endif
@@ -140,7 +141,7 @@ int slot_fep_mbsfn(PHY_VARS_UE *ue,
           (frame_parms->ofdm_symbol_size+nb_prefix_samples)*(l-1) +
           subframe_offset-
           SOFFSET) % frame_length_samples],
-          (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
+          (int16_t *)&common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
 #if UE_TIMING_TRACE
       stop_meas(&ue->rx_dft_stats);
 #endif
@@ -286,7 +287,7 @@ int slot_fep_mbsfn_freq(PHY_VARS_UE *ue,
 #endif
 
   /*for (aa=0; aa<frame_parms->nb_antennas_rx; aa++) {
-    memset(&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],0,frame_parms->ofdm_symbol_size*sizeof(int));
+    memset(&common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],0,frame_parms->ofdm_symbol_size*sizeof(int));
     if (l==0) {
 #if UE_TIMING_TRACE
         start_meas(&ue->rx_dft_stats);
@@ -295,7 +296,7 @@ int slot_fep_mbsfn_freq(PHY_VARS_UE *ue,
           nb_prefix_samples0 +
           subframe_offset -
           SOFFSET) % frame_length_samples],
-          (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
+          (int16_t *)&common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
 #if UE_TIMING_TRACE
       stop_meas(&ue->rx_dft_stats);
 #endif
@@ -317,7 +318,7 @@ int slot_fep_mbsfn_freq(PHY_VARS_UE *ue,
           (frame_parms->ofdm_symbol_size+nb_prefix_samples)*(l-1) +
           subframe_offset-
           SOFFSET) % frame_length_samples],
-          (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
+          (int16_t *)&common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF[aa][frame_parms->ofdm_symbol_size*l],1);
 #if UE_TIMING_TRACE
       stop_meas(&ue->rx_dft_stats);
 #endif

@@ -1030,8 +1030,8 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
     printf("(6144?) Point start PSS: %d\n",6*frame_parms->ofdm_symbol_size);
     // do a measurement on the best guess of the PSS
     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
-      rx_power=0;// += signal_energy((int*)&ue->common_vars.common_vars_rx_data_per_thread[0].rxdataF[aarx][6*frame_parms->ofdm_symbol_size],
-				//frame_parms->ofdm_symbol_size);
+      rx_power+= signal_energy((int*)&ue->common_vars.common_vars_rx_data_per_thread[0].rxdataF[aarx][6*frame_parms->ofdm_symbol_size],
+				frame_parms->ofdm_symbol_size);
    printf("rx_power %d\n",rx_power);
 
     /*common_vars.common_vars_rx_data_per_thread[0].rxdataF
@@ -1054,7 +1054,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
   phy_adjust_gain(ue,ue->measurements.rx_power_avg_dB[0],0);
-  printf("adjust gain freq 1\n");
+  //printf("adjust gain freq 1\n");
 #endif
 #endif
 #endif
@@ -1066,7 +1066,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
   phy_adjust_gain(ue,dB_fixed(ue->measurements.rssi),0);
-  printf("adjust gain freq 2\n");
+  //printf("adjust gain freq 2\n");
 #endif
 #endif
 #endif

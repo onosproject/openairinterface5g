@@ -384,7 +384,7 @@ uint8_t is_SR_TXOp(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id)
   int subframe=proc->subframe_tx;
 
   LOG_D(PHY,"[UE %d][SR %x] Frame %d subframe %d Checking for SR TXOp (sr_ConfigIndex %d)\n",
-        ue->Mod_id,ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->crnti,proc->frame_tx,subframe,
+        ue->Mod_id,ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->crnti,proc->frame_tx,subframe,
         ue->scheduling_request_config[eNB_id].sr_ConfigIndex);
 
   if (ue->scheduling_request_config[eNB_id].sr_ConfigIndex <= 4) {        // 5 ms SR period
@@ -521,7 +521,7 @@ void ue_compute_srs_occasion(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id
                               CC_id,
                               frame_tx,
                               eNB_id,
-                              ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->crnti,
+                              ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->crnti,
                               subframe_tx); // subframe used for meas gap
 
                       if (SR_payload > 0)
@@ -531,7 +531,7 @@ void ue_compute_srs_occasion(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id
 
               uint8_t pucch_ack_payload[2];
               if (get_ack(&ue->frame_parms,
-                      ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
+                      ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
                       subframe_tx,proc->subframe_rx,pucch_ack_payload,0) > 0)
               {
                   is_sr_an_subframe = 1;
@@ -723,10 +723,10 @@ uint16_t get_n1_pucch(PHY_VARS_UE *ue,
 
   if (frame_parms->frame_type == FDD ) { // FDD
     sf = (subframe<4)? subframe+6 : subframe-4;
-    LOG_D(PHY,"n1_pucch_UE: subframe %d, nCCE %d\n",sf,ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[sf]);
+    LOG_D(PHY,"n1_pucch_UE: subframe %d, nCCE %d\n",sf,ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[sf]);
 
     if (SR == 0)
-      return(frame_parms->pucch_config_common.n1PUCCH_AN + ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[sf]);
+      return(frame_parms->pucch_config_common.n1PUCCH_AN + ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[sf]);
     else
       return(ue->scheduling_request_config[eNB_id].sr_PUCCH_ResourceIndex);
   } else {
@@ -789,7 +789,7 @@ uint16_t get_n1_pucch(PHY_VARS_UE *ue,
           last_dl);
 
       // i=0
-      nCCE0 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[last_dl];
+      nCCE0 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[last_dl];
       n1_pucch0 = get_Np(frame_parms->N_RB_DL,nCCE0,0) + nCCE0+ frame_parms->pucch_config_common.n1PUCCH_AN;
 
       harq_ack0 = b[0];
@@ -831,18 +831,18 @@ uint16_t get_n1_pucch(PHY_VARS_UE *ue,
       // This is the offset for a particular subframe (2,3,4) => (0,2,4)
       last_dl = (subframe-2)<<1;
       // i=0
-      nCCE0 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[5+last_dl];
+      nCCE0 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[5+last_dl];
       n1_pucch0 = get_Np(frame_parms->N_RB_DL,nCCE0,0) + nCCE0+ frame_parms->pucch_config_common.n1PUCCH_AN;
       // i=1
-      nCCE1 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(6+last_dl)%10];
+      nCCE1 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(6+last_dl)%10];
       n1_pucch1 = get_Np(frame_parms->N_RB_DL,nCCE1,1) + nCCE1 + frame_parms->pucch_config_common.n1PUCCH_AN;
 
       // set ACK/NAK to values if not DTX
-      if (ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(6+last_dl)%10].send_harq_status>0)  // n-6 // subframe 6 is to be ACK/NAKed
-        harq_ack1 = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(6+last_dl)%10].ack;
+      if (ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(6+last_dl)%10].send_harq_status>0)  // n-6 // subframe 6 is to be ACK/NAKed
+        harq_ack1 = ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(6+last_dl)%10].ack;
 
-      if (ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[5+last_dl].send_harq_status>0)  // n-6 // subframe 5 is to be ACK/NAKed
-        harq_ack0 = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[5+last_dl].ack;
+      if (ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[5+last_dl].send_harq_status>0)  // n-6 // subframe 5 is to be ACK/NAKed
+        harq_ack0 = ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[5+last_dl].ack;
 
       LOG_D(PHY,"SFN/SF %d/%d calculating n1_pucch cce0=%d n1_pucch0=%d cce1=%d n1_pucch1=%d\n",
                                       proc->frame_tx%1024,
@@ -917,32 +917,32 @@ uint16_t get_n1_pucch(PHY_VARS_UE *ue,
           //last_dl = (subframe-2)<<1;
           if (subframe == 2) {
           // i=0
-          //nCCE0 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[2+subframe];
-          nCCE0 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(8+subframe)%10];
+          //nCCE0 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[2+subframe];
+          nCCE0 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(8+subframe)%10];
           n1_pucch0 = 2*get_Np(frame_parms->N_RB_DL,nCCE0,0) + nCCE0+ frame_parms->pucch_config_common.n1PUCCH_AN;
           // i=1
-          nCCE1 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[2+subframe];
+          nCCE1 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[2+subframe];
           n1_pucch1 = get_Np(frame_parms->N_RB_DL,nCCE1,0) + get_Np(frame_parms->N_RB_DL,nCCE1,1) + nCCE1 + frame_parms->pucch_config_common.n1PUCCH_AN;
           // i=2
-          nCCE2 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(8+subframe)%10];
+          nCCE2 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(8+subframe)%10];
 
           n1_pucch2 = 2*get_Np(frame_parms->N_RB_DL,nCCE2,1) + nCCE2+ frame_parms->pucch_config_common.n1PUCCH_AN;
           // i=3
-          //nCCE3 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(9+subframe)%10];
+          //nCCE3 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(9+subframe)%10];
           //n1_pucch3 = get_Np(frame_parms->N_RB_DL,nCCE3,1) + nCCE3 + frame_parms->pucch_config_common.n1PUCCH_AN;
 
           // set ACK/NAK to values if not DTX
-          if (ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(8+subframe)%10].send_harq_status>0)  // n-6 // subframe 6 is to be ACK/NAKed
-            harq_ack0 = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(8+subframe)%10].ack;
+          if (ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(8+subframe)%10].send_harq_status>0)  // n-6 // subframe 6 is to be ACK/NAKed
+            harq_ack0 = ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(8+subframe)%10].ack;
 
-          if (ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[2+subframe].send_harq_status>0)  // n-6 // subframe 5 is to be ACK/NAKed
-            harq_ack1 = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[2+subframe].ack;
+          if (ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[2+subframe].send_harq_status>0)  // n-6 // subframe 5 is to be ACK/NAKed
+            harq_ack1 = ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[2+subframe].ack;
 
-          if (ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[3+subframe].send_harq_status>0)  // n-6 // subframe 6 is to be ACK/NAKed
-            harq_ack2 = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[3+subframe].ack;
+          if (ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[3+subframe].send_harq_status>0)  // n-6 // subframe 6 is to be ACK/NAKed
+            harq_ack2 = ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[3+subframe].ack;
 
-          //if (ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(9+subframe)%10].send_harq_status>0)  // n-6 // subframe 5 is to be ACK/NAKed
-            //harq_ack3 = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(9+subframe)%10].ack;
+          //if (ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(9+subframe)%10].send_harq_status>0)  // n-6 // subframe 5 is to be ACK/NAKed
+            //harq_ack3 = ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(9+subframe)%10].ack;
           //LOG_I(PHY,"SFN/SF %d/%d calculating n1_pucch cce0=%d n1_pucch0=%d cce1=%d n1_pucch1=%d cce2=%d n1_pucch2=%d\n",
           //                      proc->frame_tx%1024,
           //                      proc->subframe_tx,
@@ -951,30 +951,30 @@ uint16_t get_n1_pucch(PHY_VARS_UE *ue,
           }else if (subframe == 3) {
           // i=0
 
-          nCCE0 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[4+subframe];
+          nCCE0 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[4+subframe];
           n1_pucch0 = 3*get_Np(frame_parms->N_RB_DL,nCCE0,0) + nCCE0+ frame_parms->pucch_config_common.n1PUCCH_AN;
           // i=1
-          nCCE1 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[5+subframe];
+          nCCE1 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[5+subframe];
           n1_pucch1 = 2*get_Np(frame_parms->N_RB_DL,nCCE1,0) + get_Np(frame_parms->N_RB_DL,nCCE1,1) + nCCE1 + frame_parms->pucch_config_common.n1PUCCH_AN;
           // i=2
-          nCCE2 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(6+subframe)];
+          nCCE2 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(6+subframe)];
           n1_pucch2 = get_Np(frame_parms->N_RB_DL,nCCE2,0) + 2*get_Np(frame_parms->N_RB_DL,nCCE2,1) + nCCE2+ frame_parms->pucch_config_common.n1PUCCH_AN;
           // i=3
-          nCCE3 = ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(3+subframe)];
+          nCCE3 = ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->nCCE[(3+subframe)];
           n1_pucch3 = 3*get_Np(frame_parms->N_RB_DL,nCCE3,1) + nCCE3 + frame_parms->pucch_config_common.n1PUCCH_AN;
 
           // set ACK/NAK to values if not DTX
-          if (ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[4+subframe].send_harq_status>0)  // n-6 // subframe 6 is to be ACK/NAKed
-          harq_ack0 = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[4+subframe].ack;
+          if (ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[4+subframe].send_harq_status>0)  // n-6 // subframe 6 is to be ACK/NAKed
+          harq_ack0 = ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[4+subframe].ack;
 
-          if (ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[5+subframe].send_harq_status>0)  // n-6 // subframe 5 is to be ACK/NAKed
-          harq_ack1 = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[5+subframe].ack;
+          if (ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[5+subframe].send_harq_status>0)  // n-6 // subframe 5 is to be ACK/NAKed
+          harq_ack1 = ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[5+subframe].ack;
 
-          if (ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(6+subframe)].send_harq_status>0)  // n-6 // subframe 6 is to be ACK/NAKed
-          harq_ack2 = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(6+subframe)].ack;
+          if (ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(6+subframe)].send_harq_status>0)  // n-6 // subframe 6 is to be ACK/NAKed
+          harq_ack2 = ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(6+subframe)].ack;
 
-          if (ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(3+subframe)].send_harq_status>0)  // n-6 // subframe 5 is to be ACK/NAKed
-          harq_ack3 = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(3+subframe)].ack;
+          if (ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(3+subframe)].send_harq_status>0)  // n-6 // subframe 5 is to be ACK/NAKed
+          harq_ack3 = ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack[(3+subframe)].ack;
           }
 
           //LOG_I(PHY,"SFN/SF %d/%d calculating n1_pucch cce0=%d n1_pucch0=%d harq_ack0=%d cce1=%d n1_pucch1=%d harq_ack1=%d cce2=%d n1_pucch2=%d harq_ack2=%d cce3=%d n1_pucch3=%d harq_ack3=%d bundling_flag=%d\n",
@@ -1278,19 +1278,23 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
   if (empty_subframe)
   {
 //#if 1
+    if (ue->do_ofdm_mod==0)
+    {
       overflow = ulsch_start - 9*frame_parms->samples_per_tti;
       for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
 
           if (overflow > 0)
-     {
-       memset(&ue->common_vars.txdata[aa][ulsch_start],0,4*(frame_parms->samples_per_tti-overflow));
-       memset(&ue->common_vars.txdata[aa][0],0,4*overflow);
-     }
-     else
-     {
-       memset(&ue->common_vars.txdata[aa][ulsch_start],0,4*frame_parms->samples_per_tti);
-     }
+	     {
+	       memset(&ue->common_vars.txdata[aa][ulsch_start],0,4*(frame_parms->samples_per_tti-overflow));
+	       memset(&ue->common_vars.txdata[aa][0],0,4*overflow);
+	     }
+     	  else
+	     {
+	       memset(&ue->common_vars.txdata[aa][ulsch_start],0,4*frame_parms->samples_per_tti);
+	     }
       }
+    }
+    
 /*#else
       overflow = ulsch_start - 9*frame_parms->samples_per_tti;
       for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
@@ -1654,21 +1658,21 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
     }
 
     ack_status_cw0 = reset_ack(&ue->frame_parms,
-            ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
+            ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
             subframe_tx,
             proc->subframe_rx,
             ue->ulsch[eNB_id]->o_ACK,
             &Nbundled,
             0);
     ack_status_cw1 = reset_ack(&ue->frame_parms,
-            ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][1]->harq_ack,
+            ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][1]->harq_ack,
             subframe_tx,
             proc->subframe_rx,
             ue->ulsch[eNB_id]->o_ACK,
             &NbundledCw1,
             1);
 
-    //Nbundled = ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack;
+    //Nbundled = ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack;
     //ue->ulsch[eNB_id]->bundling = Nbundled;
 
     first_rb = ue->ulsch[eNB_id]->harq_processes[harq_pid]->first_rb;
@@ -1699,14 +1703,14 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
     if(ue->ulsch[eNB_id]->o_ACK[0])
     {
     	LOG_I(PHY,"PUSCH ACK\n");
-        T(T_UE_PHY_DLSCH_UE_ACK, T_INT(eNB_id), T_INT(frame_tx%1024), T_INT(subframe_tx), T_INT(Mod_id), T_INT(ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti),
-                      T_INT(ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->current_harq_pid));
+        T(T_UE_PHY_DLSCH_UE_ACK, T_INT(eNB_id), T_INT(frame_tx%1024), T_INT(subframe_tx), T_INT(Mod_id), T_INT(ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti),
+                      T_INT(ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->current_harq_pid));
     }
     else
     {
     	LOG_I(PHY,"PUSCH NACK\n");
-        T(T_UE_PHY_DLSCH_UE_NACK, T_INT(eNB_id), T_INT(frame_tx%1024), T_INT(subframe_tx), T_INT(Mod_id), T_INT(ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti),
-                      T_INT(ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->current_harq_pid));
+        T(T_UE_PHY_DLSCH_UE_NACK, T_INT(eNB_id), T_INT(frame_tx%1024), T_INT(subframe_tx), T_INT(Mod_id), T_INT(ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti),
+                      T_INT(ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->current_harq_pid));
     }
 #endif
 #ifdef UE_DEBUG_TRACE
@@ -2047,7 +2051,7 @@ void get_pucch_param(PHY_VARS_UE    *ue,
     {
         pucch_resource[0] = get_n1_pucch(ue,
                                          proc,
-                                         ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
+                                         ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
                                          eNB_id,
                                          ack_payload,
                                          SR);
@@ -2158,7 +2162,7 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
                   CC_id,
                   frame_tx,
                   eNB_id,
-                  ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->crnti,
+                  ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->crnti,
                   subframe_tx); // subframe used for meas gap
       }
       else {
@@ -2167,14 +2171,14 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
   }
 
   ack_status_cw0 = get_ack(&ue->frame_parms,
-                       ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
+                       ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
                        subframe_tx,
                        proc->subframe_rx,
                        pucch_ack_payload,
                        0);
 
   ack_status_cw1 = get_ack(&ue->frame_parms,
-                       ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][1]->harq_ack,
+                       ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][1]->harq_ack,
                        subframe_tx,
                        proc->subframe_rx,
                        pucch_ack_payload,
@@ -2250,7 +2254,7 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 #endif
 #if T_TRACER
       T(T_UE_PHY_PUCCH_TX_POWER, T_INT(eNB_id),T_INT(Mod_id), T_INT(frame_tx%1024), T_INT(subframe_tx),T_INT(ue->tx_power_dBm[subframe_tx]),
-              T_INT(tx_amp),T_INT(ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->g_pucch),T_INT(get_PL(ue->Mod_id,ue->CC_id,eNB_id)));
+              T_INT(tx_amp),T_INT(ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->g_pucch),T_INT(get_PL(ue->Mod_id,ue->CC_id,eNB_id)));
 #endif
 
 #ifdef UE_DEBUG_TRACE
@@ -2258,7 +2262,7 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
       {
           LOG_I(PHY,"[UE  %d][SR %x] AbsSubframe %d.%d Generating PUCCH 1 (SR for PUSCH), an_srs_simultanous %d, shorten_pucch %d, n1_pucch %d, Po_PUCCH %d\n",
                   Mod_id,
-                  ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
+                  ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
                   frame_tx%1024, subframe_tx,
                   frame_parms->soundingrs_ul_config_common.ackNackSRS_SimultaneousTransmission,
                   isShortenPucch,
@@ -2270,7 +2274,7 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
           if (SR_payload>0) {
               LOG_I(PHY,"[UE  %d][SR %x] AbsSubFrame %d.%d Generating PUCCH %s payload %d,%d (with SR for PUSCH), an_srs_simultanous %d, shorten_pucch %d, n1_pucch %d, Po_PUCCH %d, amp %d\n",
                       Mod_id,
-                      ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
+                      ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
                       frame_tx % 1024, subframe_tx,
                       (format == pucch_format1a? "1a": (
                               format == pucch_format1b? "1b" : "??")),
@@ -2283,7 +2287,7 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
           } else {
               LOG_I(PHY,"[UE  %d][PDSCH %x] AbsSubFrame %d.%d rx_offset_diff: %d, Generating PUCCH %s, an_srs_simultanous %d, shorten_pucch %d, n1_pucch %d, b[0]=%d,b[1]=%d (SR_Payload %d), Po_PUCCH %d, amp %d\n",
                       Mod_id,
-                      ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
+                      ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
                       frame_tx%1024, subframe_tx,ue->rx_offset_diff,
                       (format == pucch_format1a? "1a": (
                               format == pucch_format1b? "1b" : "??")),
@@ -2299,13 +2303,13 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 #if T_TRACER
       if(pucch_payload[0])
       {
-          T(T_UE_PHY_DLSCH_UE_ACK, T_INT(eNB_id), T_INT(frame_tx%1024), T_INT(subframe_tx), T_INT(Mod_id), T_INT(ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti),
-                  T_INT(ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->current_harq_pid));
+          T(T_UE_PHY_DLSCH_UE_ACK, T_INT(eNB_id), T_INT(frame_tx%1024), T_INT(subframe_tx), T_INT(Mod_id), T_INT(ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti),
+                  T_INT(ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->current_harq_pid));
       }
       else
       {
-          T(T_UE_PHY_DLSCH_UE_NACK, T_INT(eNB_id), T_INT(frame_tx%1024), T_INT(subframe_tx), T_INT(Mod_id), T_INT(ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti),
-                  T_INT(ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->current_harq_pid));
+          T(T_UE_PHY_DLSCH_UE_NACK, T_INT(eNB_id), T_INT(frame_tx%1024), T_INT(subframe_tx), T_INT(Mod_id), T_INT(ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti),
+                  T_INT(ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->current_harq_pid));
       }
 #endif
 
@@ -2358,12 +2362,12 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 #endif
 #if T_TRACER
       T(T_UE_PHY_PUCCH_TX_POWER, T_INT(eNB_id),T_INT(Mod_id), T_INT(frame_tx%1024), T_INT(subframe_tx),T_INT(ue->tx_power_dBm[subframe_tx]),
-              T_INT(tx_amp),T_INT(ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->g_pucch),T_INT(get_PL(ue->Mod_id,ue->CC_id,eNB_id)));
+              T_INT(tx_amp),T_INT(ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->g_pucch),T_INT(get_PL(ue->Mod_id,ue->CC_id,eNB_id)));
 #endif
 #ifdef UE_DEBUG_TRACE
       LOG_I(PHY,"[UE  %d][RNTI %x] AbsSubFrame %d.%d Generating PUCCH 2 (RI or CQI), Po_PUCCH %d, isShortenPucch %d, amp %d\n",
               Mod_id,
-              ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
+              ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
               frame_tx%1024, subframe_tx,
               Po_PUCCH,
               isShortenPucch,
@@ -2380,20 +2384,20 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
               0,            // B2 not needed
               tx_amp,
               subframe_tx,
-              ue->pdcch_vars[ue->current_thread_id[proc->subframe_rx]][eNB_id]->crnti);
+              ue->pdcch_vars[current_thread_id[proc->subframe_rx]][eNB_id]->crnti);
   }
   break;
 
   case pucch_format2a:
       LOG_D(PHY,"[UE  %d][RNTI %x] AbsSubFrame %d.%d Generating PUCCH 2a (RI or CQI) Ack/Nack 1bit \n",
               Mod_id,
-              ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
+              ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
               frame_tx%1024, subframe_tx);
       break;
   case pucch_format2b:
       LOG_D(PHY,"[UE  %d][RNTI %x] AbsSubFrame %d.%d Generating PUCCH 2b (RI or CQI) Ack/Nack 2bits\n",
               Mod_id,
-              ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
+              ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->rnti,
               frame_tx%1024, subframe_tx);
       break;
   default:
@@ -2424,7 +2428,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
   unsigned int aa;
   uint8_t isSubframeSRS;
 
-  uint8_t next1_thread_id = ue->current_thread_id[proc->subframe_rx]== (RX_NB_TH-1) ? 0:(ue->current_thread_id[proc->subframe_rx]+1);
+  uint8_t next1_thread_id = current_thread_id[proc->subframe_rx]== (RX_NB_TH-1) ? 0:(current_thread_id[proc->subframe_rx]+1);
   uint8_t next2_thread_id = next1_thread_id== (RX_NB_TH-1) ? 0:(next1_thread_id+1);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_UE_TX,VCD_FUNCTION_IN);
@@ -2551,10 +2555,10 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
 
   // reset DL ACK/NACK status
   uint8_t N_bundled = 0;
-  if (ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0] != NULL)
+  if (ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0] != NULL)
   {
     reset_ack(&ue->frame_parms,
-               ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
+               ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
                subframe_tx,
                proc->subframe_rx,
                ue->ulsch[eNB_id]->o_ACK,
@@ -2711,7 +2715,7 @@ void ue_measurement_procedures(
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
     phy_adjust_gain (ue,dB_fixed(ue->measurements.rssi),0);
-    printf("phy_adjust_gain phy_proc_ue\n");
+    //printf("phy_adjust_gain phy_proc_ue\n");
 #endif
 #endif
 #endif
@@ -3912,7 +3916,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
   uint8_t is_cw0_active = 0;
   uint8_t is_cw1_active = 0;
 
-  printf("ue_dlsch_procedures id %d\n",ue->Mod_id);
+  //printf("ue_dlsch_procedures id %d\n",ue->Mod_id);
 
   if (dlsch0==NULL)
       AssertFatal(0,"dlsch0 should be defined at this level \n");

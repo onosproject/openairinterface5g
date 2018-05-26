@@ -38,6 +38,9 @@ extern unsigned int TX_DMA_BUFFER[4][NB_ANTENNAS_TX];
 extern unsigned int DAQ_MBOX;
 extern int number_of_cards;
 
+// point to the current rxTx thread index
+uint8_t current_thread_id[10];
+
 //extern PHY_CONFIG *PHY_config;
 //extern PHY_VARS *PHY_vars;
 #ifndef OCP_FRAMEWORK

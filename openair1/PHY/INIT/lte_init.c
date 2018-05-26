@@ -1096,12 +1096,18 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
   LTE_UE_PBCH** const pbch_vars           = ue->pbch_vars;
   LTE_UE_PRACH** const prach_vars         = ue->prach_vars;
 
-
-
   int i,j,k,l;
   int eNB_id;
   int th_id;
 
+  /* the UE code is multi-thread "aware", we need to setup this array */
+  //ue->current_thread_id = (uint8_t*)malloc16( 10*sizeof(uint8_t) );
+  for (i = 0; i < 10; i++) 
+  {
+	ue->current_thread_id[i] = i % 2;
+	current_thread_id[i] = i % 2;
+	printf("ue->Mod_id %d, thread %d = %d\n",ue->Mod_id,i,ue->current_thread_id[i]);
+  }
   printf("Initializing UE vars (abstraction %"PRIu8") for eNB TXant %"PRIu8", UE RXant %"PRIu8"\n",abstraction_flag,fp->nb_antennas_tx,fp->nb_antennas_rx);
   LOG_D(PHY,"[MSC_NEW][FRAME 00000][PHY_UE][MOD %02u][]\n", ue->Mod_id+NB_eNB_INST);
 
@@ -1140,22 +1146,23 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
   if (abstraction_flag == 0) {
 
     // init TX buffers
-
+  if (do_ofdm_mod==0)
     common_vars->txdata  = (int32_t**)malloc16( fp->nb_antennas_tx*sizeof(int32_t*) );
     common_vars->txdataF = (int32_t **)malloc16( fp->nb_antennas_tx*sizeof(int32_t*) );
 
     for (i=0; i<fp->nb_antennas_tx; i++) {
-
+     if (do_ofdm_mod==0)
       common_vars->txdata[i]  = (int32_t*)malloc16_clear( fp->samples_per_tti*10*sizeof(int32_t) );
       common_vars->txdataF[i] = (int32_t *)malloc16_clear( (fp->ofdm_symbol_size*fp->symbols_per_tti*10)*sizeof(int32_t) );
     }
 
     // init RX buffers
+  if (do_ofdm_mod==0){
     common_vars->rxdata   = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
     for (i=0; i<fp->nb_antennas_rx; i++) {
       common_vars->rxdata[i] = (int32_t*) malloc16_clear( (fp->samples_per_tti*10+2048)*sizeof(int32_t) );
     }
-
+  }
     for (th_id=0; th_id<RX_NB_TH_MAX; th_id++){
     	common_vars->common_vars_rx_data_per_thread[th_id].rxdataF  = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
         printf("[lte_init_t] address of rxdataF in memory: %p, thread %d\n",&common_vars->common_vars_rx_data_per_thread[th_id].rxdataF,th_id);
@@ -1172,6 +1179,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
   for (eNB_id=0; eNB_id<7; eNB_id++) {
     for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
         common_vars->common_vars_rx_data_per_thread[th_id].dl_ch_estimates[eNB_id]      = (int32_t**)malloc16_clear(8*sizeof(int32_t*));
+      if (do_ofdm_mod==0)
         common_vars->common_vars_rx_data_per_thread[th_id].dl_ch_estimates_time[eNB_id] = (int32_t**)malloc16_clear(8*sizeof(int32_t*));
     }
 
@@ -1180,6 +1188,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
         int idx = (j<<1) + i;
         for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
             common_vars->common_vars_rx_data_per_thread[th_id].dl_ch_estimates[eNB_id][idx] = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->symbols_per_tti*(fp->ofdm_symbol_size+LTE_CE_FILTER_LENGTH) );
+	  if (do_ofdm_mod==0)
             common_vars->common_vars_rx_data_per_thread[th_id].dl_ch_estimates_time[eNB_id][idx] = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->ofdm_symbol_size*2 );
         }
       }
@@ -1358,7 +1367,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
 
   init_prach_tables(839);
 
-  if (do_ofdm_mod){//solving memory allocation issues for frequency analysis
+  /*if (do_ofdm_mod){//solving memory allocation issues for frequency analysis
     for (i=0; i<fp->nb_antennas_rx; i++) {
       for (th_id=0; th_id<RX_NB_TH_MAX; th_id++){
       free(common_vars->common_vars_rx_data_per_thread[th_id].rxdataF[i]);
@@ -1366,7 +1375,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
       //printf("[lte_init_t] address of rxdataF[%d] in memory: %p, thread %d, antenna %d\n",th_id,&common_vars->common_vars_rx_data_per_thread[th_id].rxdataF[i],th_id,i);
       }
     }
-  }
+  }*/
 
   return 0;
 }

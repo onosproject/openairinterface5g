@@ -594,7 +594,6 @@ static void *UE_thread_synch_freq(void *arg) {
 #endif
 	    //Pushed N_RB_DL, PHICH_CONFIG, FRAME_NUMBER
             if (initial_sync_freq( UE, UE->mode ) == 0) {
-
                 hw_slot_offset = (UE->rx_offset<<1) / (UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti);
                 LOG_I( HW, "Got synch: hw_slot_offset %d, carrier off %d Hz, rxgain %d (DL %u, UL %u), UE_scan_carrier %d\n",
                        hw_slot_offset,
@@ -1038,9 +1037,9 @@ void *UE_thread(void *arg) {
 		
                 UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[thread_idx];
                 // update thread index for received subframe
-                UE->current_thread_id[sub_frame] = thread_idx;
+                current_thread_id[sub_frame] = thread_idx;
 
-                LOG_D(PHY,"Process Subframe %d thread Idx %d , frame %d \n", sub_frame, UE->current_thread_id[sub_frame],proc->frame_rx);
+                LOG_D(PHY,"Process Subframe %d thread Idx %d , frame %d \n", sub_frame, current_thread_id[sub_frame],proc->frame_rx);
 		    /*if (sub_frame==6 && ((proc->frame_rx&0x1)==0))
 		    {
 			write_output("lteue_rxsigF_frame0.m","lteue_rxsF0", UE->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,1,16);
@@ -1309,9 +1308,9 @@ void *UE_thread_freq(void *arg) {
 		
 				UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[thread_idx];
 				// update thread index for received subframe
-				UE->current_thread_id[sub_frame] = thread_idx;
+				//current_thread_id[sub_frame] = thread_idx; Please it is important to check with Raymond. I think it is not necessary.
 
-				LOG_D(PHY,"Process Subframe %d thread Idx %d , frame %d \n", sub_frame, UE->current_thread_id[sub_frame],proc->frame_rx);
+				LOG_D(PHY,"Process Subframe %d thread Idx %d , frame %d \n", sub_frame, current_thread_id[sub_frame],proc->frame_rx);
 
 				thread_idx++;
 				if(thread_idx>=RX_NB_TH)
@@ -1319,7 +1318,7 @@ void *UE_thread_freq(void *arg) {
 
 				if (UE->mode != loop_through_memory) {
 				    for (i=0; i<UE->frame_parms.nb_antennas_rx; i++){
-				        rxp_freq[i] = (void*)&UE->common_vars.common_vars_rx_data_per_thread[UE->current_thread_id[sub_frame]].rxdataF[i][UE->frame_parms.ofdm_symbol_size+sub_frame*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti];//14*1024->50RB
+				        rxp_freq[i] = (void*)&UE->common_vars.common_vars_rx_data_per_thread[current_thread_id[sub_frame]].rxdataF[i][UE->frame_parms.ofdm_symbol_size+sub_frame*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti];//14*1024->50RB
 				    }
 				    for (i=0; i<UE->frame_parms.nb_antennas_tx; i++)
 				        txp_freq[i] = (void*)&UE->common_vars.txdataF[i][
@@ -1366,7 +1365,7 @@ void *UE_thread_freq(void *arg) {
 				        AssertFatal(writeBlockSize-readBlockSize ==
 				                        UE->rfdevice.trx_read_func(&UE->rfdevice,
 				                                                   &timestamp1,
-				                                                   (void**)UE->common_vars.common_vars_rx_data_per_thread[UE->current_thread_id[sub_frame]].rxdataF,
+				                                                   (void**)UE->common_vars.common_vars_rx_data_per_thread[current_thread_id[sub_frame]].rxdataF,
 				                                                   writeBlockSize-readBlockSize,
 				                                                   UE->frame_parms.nb_antennas_rx),"");
 					if ( writeBlockSize-readBlockSize <0 )

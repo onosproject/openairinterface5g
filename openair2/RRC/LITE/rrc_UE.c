@@ -4286,7 +4286,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
     msg_name = ITTI_MSG_NAME (msg_p);
     instance = ITTI_MSG_INSTANCE (msg_p);
     ue_mod_id = UE_INSTANCE_TO_MODULE_ID(instance);
-    printf("rrc_ue_task... wait for a message. Case %d, id %d\n",ITTI_MSG_ID(msg_p),ue_mod_id);
+    //printf("rrc_ue_task... wait for a message. Case %d, id %d\n",ITTI_MSG_ID(msg_p),ue_mod_id);
     switch (ITTI_MSG_ID(msg_p)) {
     case TERMINATE_MESSAGE:
       itti_exit_task ();
@@ -4322,7 +4322,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
 
       //      PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_NO, NOT_A_RNTI, RRC_MAC_BCCH_DATA_IND (msg_p).frame, 0);
       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, NOT_A_RNTI, RRC_MAC_BCCH_DATA_IND (msg_p).frame, 0,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
-      printf("decode_BCCH_DLSCH_Message for ue %d \n",ue_mod_id);
+      //printf("decode_BCCH_DLSCH_Message for ue %d \n",ue_mod_id);
       decode_BCCH_DLSCH_Message (&ctxt,
                                  RRC_MAC_BCCH_DATA_IND (msg_p).enb_index,
                                  RRC_MAC_BCCH_DATA_IND (msg_p).sdu,

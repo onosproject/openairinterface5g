@@ -737,9 +737,6 @@ typedef struct {
   LTE_DL_FRAME_PARMS  frame_parms_before_ho;
   LTE_UE_COMMON    common_vars;
 
-  // point to the current rxTx thread index
-  uint8_t current_thread_id[10];
-
   LTE_UE_PDSCH     *pdsch_vars[RX_NB_TH_MAX][NUMBER_OF_CONNECTED_eNB_MAX+1]; // two RxTx Threads
   LTE_UE_PDSCH_FLP *pdsch_vars_flp[NUMBER_OF_CONNECTED_eNB_MAX+1];
   LTE_UE_PDSCH     *pdsch_vars_SI[NUMBER_OF_CONNECTED_eNB_MAX+1];
@@ -970,6 +967,8 @@ typedef struct {
   SLIST_HEAD(ral_thresholds_lte_poll_s, ral_threshold_phy_t) ral_thresholds_lte_polled[RAL_LINK_PARAM_LTE_MAX];
 #endif
   int do_ofdm_mod;
+  // point to the current rxTx thread index
+  uint8_t current_thread_id[10];
 
 } PHY_VARS_UE;
 
