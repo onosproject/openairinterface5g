@@ -149,7 +149,7 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   ru_tmp.N_TA_offset=0;
   ru_tmp.common.rxdata_7_5kHz     = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*)); 
   for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) 
-    ru_tmp.common.rxdata_7_5kHz[aa] = ue->sl_rxdata_7_5kHz[aa];//(int32_t*)&ue->common_vars.rxdata_syncSL[aa][ue->rx_offsetSL*2];
+    ru_tmp.common.rxdata_7_5kHz[aa] = ue->sl_rxdata_7_5kHz[ue->current_thread_id[0]][aa];//(int32_t*)&ue->common_vars.rxdata_syncSL[aa][ue->rx_offsetSL*2];
   ru_tmp.common.rxdataF = (int32_t**)rxdataF;
   ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
 
@@ -169,7 +169,10 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
 
   }
   LOG_D(PHY,"Running PBCH detection with Nid_SL %d (is_synchronizedSL %d) rxdata %p\n",ue->frame_parms.Nid_SL,ue->is_synchronizedSL,ue->common_vars.rxdata[0]);
-  
+  LOG_D(PHY,"slbch_decoding: FEP in %d.%d rx signal energy %d dB %d dB\n",frame_rx,subframe_rx,
+         dB_fixed(signal_energy(&ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe_rx],ue->frame_parms.samples_per_tti)),
+         dB_fixed(signal_energy(ue->sl_rxdata_7_5kHz[ue->current_thread_id[0]][0],ue->frame_parms.samples_per_tti)));
+ 
   for (int l=0; l<11; l++) {
     slot_fep_ul(&ru_tmp,l%7,(l>6)?1:0,0);
     ulsch_extract_rbs_single((int32_t**)rxdataF,
@@ -367,7 +370,8 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
                    &ue->slss_rx,
                    &testframe,
                    &testsubframe);
-     AssertFatal(testframe!=frame_rx || testsubframe!=subframe_rx,
+     if (ue->is_synchronizedSL!=0 || ue->is_synchronized!=0) 
+        AssertFatal(testframe==frame_rx && testsubframe==subframe_rx,
 	         "SFN.SF %d.%d != %d.%d\n",testframe,testsubframe,frame_rx,subframe_rx);
      return(0);
   }

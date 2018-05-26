@@ -1267,9 +1267,8 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, int frame_tx, int subframe_tx, uin
   }
 //#endif
 
-//  if ((frame_tx%100) == 0)
 
-   LOG_I(PHY,"[UE %d] Frame %d, subframe %d: ulsch_start = %d (rxoff %d, HW TA %d, timing advance %d, TA_offset %d, empty subframe %d\n",
+   LOG_D(PHY,"[UE %d] Frame %d, subframe %d: ulsch_start = %d (rxoff %d, HW TA %d, timing advance %d, TA_offset %d, empty subframe %d\n",
 	 ue->Mod_id,frame_tx,subframe_tx,
 	 ulsch_start,
 	 ue->rx_offset,
@@ -1345,19 +1344,6 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, int frame_tx, int subframe_tx, uin
     }
 #endif
 #endif
-    LOG_I(PHY,"ULSCH : signal energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdata[0][ulsch_start],frame_parms->samples_per_tti)),&ue->common_vars.txdataF[0][subframe_tx*nsymb*frame_parms->ofdm_symbol_size]);
-    //    write_output("txBuff.m","txSignal",&ue->common_vars.txdata[aa][ulsch_start],frame_parms->samples_per_tti,1,1);
-    //    exit(-1);
-    /*
-    only for debug
-    LOG_I(PHY,"ul-signal [subframe: %d, ulsch_start %d, TA: %d, rxOffset: %d, timing_advance: %d, hw_timing_advance: %d]\n",subframe_tx, ulsch_start, ue->N_TA_offset, ue->rx_offset, ue->timing_advance, ue->hw_timing_advance);
-    if( (crash == 1) && (subframe_tx == 0) )
-    {
-      LOG_E(PHY,"***** DUMP TX Signal [ulsch_start %d] *****\n",ulsch_start);
-      write_output("txBuff.m","txSignal",&ue->common_vars.txdata[aa][ulsch_start],frame_parms->samples_per_tti,1,1);
-    }
-    */
-
   } //nb_antennas_tx
 
 #if UE_TIMING_TRACE
@@ -4794,6 +4780,9 @@ void phy_procedures_UE_SL_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
   LOG_D(PHY,"SFN.SF %d.%d Running Steady-state SL UE procedures\n",frame_rx,subframe_rx);
 
   proc->sl_fep_done = 0;
+
+  if (ue->is_SynchRef == 0 && (frame_rx&3) == 0 && subframe_rx == 0) rx_psbch(ue,frame_rx,subframe_rx);
+
 
   rx_sldch(ue,proc,frame_rx,subframe_rx);
 

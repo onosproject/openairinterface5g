@@ -404,7 +404,7 @@ void ulsch_modulation(int32_t **txdataF,
   else {
     harq_pid = 0;
     x2 = cinit;
-    LOG_I(PHY,"Setting seed for SL to %x\n",x2);
+    LOG_D(PHY,"Setting seed for SL to %x\n",x2);
   }
 
   if (!ulsch) {
