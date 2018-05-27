@@ -30,7 +30,8 @@
 
 #define RRC_UE
 #define RRC_UE_C
-
+#define _GNU_SOURCE
+#include <pthread.h>
 #include "assertions.h"
 #include "hashtable.h"
 #include "asn1_conversions.h"
@@ -358,7 +359,6 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
 
   // Discovery (Use Rel13 fields)
   
-  struct SL_PreconfigCommPool_r12 *preconfigdiscpool = malloc16_clear(sizeof(struct SL_PreconfigCommPool_r12));
 
   // Rel13 extensions
   struct SL_Preconfiguration_r12__ext1 *ext1 = malloc16_clear(sizeof(struct SL_Preconfiguration_r12__ext1));
@@ -592,13 +592,23 @@ rrc_t310_expiration(
                            SRB_FLAG_YES,
                            CONFIG_ACTION_REMOVE,
                            UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
-                           0);
+                           0
+#ifdef Rel14
+                          ,0
+                          ,0
+#endif
+                          );
       rrc_rlc_config_req (ctxt_pP,
                           SRB_FLAG_YES,
                           MBMS_FLAG_NO,
                           CONFIG_ACTION_REMOVE,
                           UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
-                          Rlc_info_um);
+                          Rlc_info_um
+#ifdef Rel14
+                          ,0
+                          ,0
+#endif
+                          );
       UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Active = 0;
       UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Status = IDLE;
       UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Next_check_frame = 0;
@@ -1020,6 +1030,7 @@ rrc_ue_process_measConfig(
 			  NULL,
 			  NULL,
 			  NULL,
+                          NULL,
 			  1025, // indicates that there is no  update in the frame number
 			  11,   // /indicates that there isno update in the subframe number
 			  NULL
@@ -1543,6 +1554,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 				NULL,
 				NULL,
 				NULL,
+				NULL,
 				1025, // indicates that there is no  update in the frame number
 				11,   // /indicates that there isno update in the subframe number
 				NULL
@@ -1609,6 +1621,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #if defined(Rel14)
 				,
 				0,
+				NULL,
 				NULL,
 				NULL,
 				NULL,
@@ -1727,6 +1740,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #if defined(Rel14)
 			      ,
 			      0,
+			      NULL,
 			      NULL,
 			      NULL,
 			      NULL,
@@ -2346,6 +2360,7 @@ rrc_ue_process_mobilityControlInfo(
 #if defined(Rel14)
 			,
 			0,
+			NULL,
 			NULL,
 			NULL,
 			NULL,
@@ -3221,6 +3236,7 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
 			NULL,
 			NULL,
 			NULL,
+			NULL,
 			1025, // indicates that there is no  update in the frame number
 			11,   // /indicates that there isno update in the subframe number
 			NULL
@@ -3802,13 +3818,13 @@ uint64_t arfcn_to_freq(long arfcn) {
  void dump_sib18(SystemInformationBlockType18_r12_t *sib18){
    LOG_I( RRC, "[UE] Dumping SIB18\n" );
    for (int i = 0; i < sib18->commConfig_r12->commRxPool_r12.list.count; i++) {
-       LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, sib18->commConfig_r12->commRxPool_r12.list.count);
-       LOG_I(RRC, " SIB18 rxPool_sc_CP_Len: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_CP_Len_r12);
-       LOG_I(RRC, " SIB18 sc_Period_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_Period_r12);
-       LOG_I(RRC, " SIB18 data_CP_Len_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->data_CP_Len_r12);
-       LOG_I(RRC, " SIB18 prb_Num_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Num_r12);
-       LOG_I(RRC, " SIB18 prb_Start_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Start_r12);
-       LOG_I(RRC, " SIB18 prb_End_r12: %d \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_End_r12);
+       LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, (int)sib18->commConfig_r12->commRxPool_r12.list.count);
+       LOG_I(RRC, " SIB18 rxPool_sc_CP_Len: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_CP_Len_r12);
+       LOG_I(RRC, " SIB18 sc_Period_r12: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_Period_r12);
+       LOG_I(RRC, " SIB18 data_CP_Len_r12: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->data_CP_Len_r12);
+       LOG_I(RRC, " SIB18 prb_Num_r12: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Num_r12);
+       LOG_I(RRC, " SIB18 prb_Start_r12: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Start_r12);
+       LOG_I(RRC, " SIB18 prb_End_r12: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_End_r12);
        //to add more log
      }
 }
@@ -3818,14 +3834,14 @@ uint64_t arfcn_to_freq(long arfcn) {
  void dump_sib19(SystemInformationBlockType19_r12_t *sib19){
    LOG_I( RRC, "[UE] Dumping SIB19\n" );
    for (int i = 0; i < sib19->discConfig_r12->discRxPool_r12.list.count; i++) {
-       LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, sib19->discConfig_r12->discRxPool_r12.list.count);
-       LOG_I(RRC, " SIB19 cp_Len_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->cp_Len_r12);
-       LOG_I(RRC, " SIB19 discPeriod_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->discPeriod_r12);
-       LOG_I(RRC, " SIB19 numRetx_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRetx_r12);
-       LOG_I(RRC, " SIB19 numRepetition_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRepetition_r12);
-       LOG_I(RRC, " SIB19 prb_Num_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Num_r12);
-       LOG_I(RRC, " SIB19 prb_Start_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Start_r12);
-       LOG_I(RRC, " SIB19 prb_End_r12: %d \n", sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_End_r12);
+       LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, (int)sib19->discConfig_r12->discRxPool_r12.list.count);
+       LOG_I(RRC, " SIB19 cp_Len_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->cp_Len_r12);
+       LOG_I(RRC, " SIB19 discPeriod_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->discPeriod_r12);
+       LOG_I(RRC, " SIB19 numRetx_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRetx_r12);
+       LOG_I(RRC, " SIB19 numRepetition_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRepetition_r12);
+       LOG_I(RRC, " SIB19 prb_Num_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Num_r12);
+       LOG_I(RRC, " SIB19 prb_Start_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Start_r12);
+       LOG_I(RRC, " SIB19 prb_End_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_End_r12);
        //to add more log
      }
 }
@@ -3907,6 +3923,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 #if defined(Rel14)
 			      ,
 			      0,
+			      NULL,
 			      NULL,
 			      NULL,
 			      NULL,
@@ -4097,6 +4114,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 #if defined(Rel14)
 			      ,
 			      0,
+			      NULL,
 			      NULL,
 			      NULL,
 			      NULL,
@@ -4610,6 +4628,7 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
 			NULL,
 			NULL,
 			NULL,
+		        NULL,
 			1025, // indicates that there is no  update in the frame number
 			11,   // /indicates that there isno update in the subframe number
 			NULL
@@ -5219,6 +5238,7 @@ openair_rrc_top_init_ue(
 			    ,CONFIG_ACTION_NULL,
 			    (const uint32_t *)NULL,
 			    (const uint32_t *)NULL,
+			    (const uint32_t *)NULL,
 			    UE_rrc_inst[module_id].SL_Preconfiguration[0],
 			    1025, // indicates that there is no  update in the frame number
 			    11,   // /indicates that there isno update in the subframe number
@@ -5267,6 +5287,7 @@ uint8_t rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt
             ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
       return size;
    }
+   return(0);
 }
 
 
@@ -5290,7 +5311,7 @@ uint8_t fill_SLSS(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
          //if RRC_CONNECTED (Todo: and if networkControlledSyncTx (RRCConnectionReconfiguration) is configured and set to On)
          if (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].State == RRC_CONNECTED){
             //select subframe(s) indicated by syncOffsetIndicator
-            subframe = syncOffsetIndicator;
+            *subframe = syncOffsetIndicator;
          } else {
             //select subframe(s) indicated by syncOffsetIndicator within SC period
          }
@@ -5461,7 +5482,6 @@ rrc_control_socket_init(){
    pthread_attr_t     attr;
    struct sched_param sched_param;
    int optval; // flag value for setsockopt
-   int n; // message byte size
 
    //init the mutex
    //pthread_mutex_init(&slrb_mutex, NULL);
@@ -5517,10 +5537,9 @@ rrc_control_socket_init(){
 void *rrc_control_socket_thread_fct(void *arg)
 {
 
-   int prose_addr_len;
+   unsigned int prose_addr_len;
    char send_buf[BUFSIZE];
    char receive_buf[BUFSIZE];
-   int optval;
    int n;
    struct sidelink_ctrl_element *sl_ctrl_msg_recv = NULL;
    struct sidelink_ctrl_element *sl_ctrl_msg_send = NULL;
@@ -5543,7 +5562,6 @@ void *rrc_control_socket_thread_fct(void *arg)
 
    //from the main program, listen for the incoming messages from control socket (ProSe App)
    prose_addr_len = sizeof(prose_app_addr);
-   int enable_notification = 1;
    while (1) {
       LOG_I(RRC,"Listening to incoming connection from ProSe App \n");
       // receive a message from ProSe App
@@ -5773,6 +5791,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 			       &sourceL2Id,
 			       &groupL2Id,
 			       NULL,
+			       NULL,
 			       1025, // indicates that there is no  update in the frame number
 			       11,   // /indicates that there isno update in the subframe number
 			       NULL
@@ -5860,6 +5879,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 			       ,CONFIG_ACTION_REMOVE,
 			       &sourceL2Id,
 			       &destinationL2Id,
+			       NULL,
 			       NULL,
 			       1025, // indicates that there is no  update in the frame number
 			       11,   // /indicates that there isno update in the subframe number
@@ -6055,6 +6075,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 			       &sourceL2Id,
 			       &destinationL2Id,
 			       NULL,
+			       NULL,
 			       1025, // indicates that there is no  update in the frame number
 			       11,   // /indicates that there isno update in the subframe number
 			       NULL
@@ -6113,7 +6134,7 @@ void *rrc_control_socket_thread_fct(void *arg)
           //TEST Remove RLC
           drb_id = slrb_id;
           drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
-          ASN_SEQUENCE_ADD(&drb2release_list->list, drb_id);
+          ASN_SEQUENCE_ADD(&drb2release_list->list, &drb_id);
 /*
 
           rrc_rlc_config_asn1_req(&ctxt,
@@ -6172,6 +6193,10 @@ void *rrc_control_socket_thread_fct(void *arg)
                       ,CONFIG_ACTION_REMOVE,
                       &sourceL2Id,
                       NULL,
+                      NULL,
+		      NULL,
+                      1025, // indicates that there is no  update in the frame number
+                      11,   // /indicates that there isno update in the subframe number
                       NULL
            #endif
                       );
@@ -6386,6 +6411,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 				  ,CONFIG_ACTION_ADD,
 				  &sourceL2Id,
 				  &destinationL2Id,
+                                  NULL,
 				  NULL,
 				  1025, // indicates that there is no  update in the frame number
 				  11,   // /indicates that there isno update in the subframe number
@@ -6428,6 +6454,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #if defined(Rel10) || defined(Rel14)
 		  ,CONFIG_ACTION_ADD,
 		  &sourceL2Id,
+		  NULL,
 		  NULL,
 		  NULL,
 		  1025, // indicates that there is no  update in the frame number
@@ -6485,7 +6512,7 @@ void *rrc_control_socket_thread_fct(void *arg)
            //TEST Remove RLC
            drb_id = slrb_id;
            drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
-           ASN_SEQUENCE_ADD(&drb2release_list->list, drb_id);
+           ASN_SEQUENCE_ADD(&drb2release_list->list, &drb_id);
 
 
            rrc_rlc_config_asn1_req(&ctxt,
@@ -6534,6 +6561,10 @@ void *rrc_control_socket_thread_fct(void *arg)
                        ,CONFIG_ACTION_REMOVE,
                        &sourceL2Id,
                        NULL,
+                       NULL,
+                       NULL,
+                       1025, // indicates that there is no  update in the frame number
+                       11,   // /indicates that there isno update in the subframe number
                        NULL
             #endif
                        );
@@ -6598,9 +6629,9 @@ int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
 
   LOG_D(RRC,"Decoded MIBSL SFN.SF %d.%d, sl_Bandwidth_r12 %d, InCoverage %d\n",
                         BIT_STRING_to_uint32(&UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.directFrameNumber_r12), // indicates that there is no  update in the frame number
-                        UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.directSubframeNumber_r12,   // /indicates that there isno update in the subframe number
-                        UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.sl_Bandwidth_r12,
-                        UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.inCoverage_r12);
+                        (int)UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.directSubframeNumber_r12,   // /indicates that there isno update in the subframe number
+                        (int)UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.sl_Bandwidth_r12,
+                        (int)UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.inCoverage_r12);
 
   rrc_mac_config_req_ue(ctxt_pP->module_id, 0, 0,
 			(RadioResourceConfigCommonSIB_t *)NULL,
@@ -6636,6 +6667,7 @@ int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
 #if defined(Rel14)
 			,
 			0,
+                        NULL,
 			NULL,
 			NULL,
 			NULL,

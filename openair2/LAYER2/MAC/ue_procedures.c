@@ -539,7 +539,6 @@ ue_send_sdu(module_id_t module_idP,
                        CCCH,
                        (uint8_t*)payload_ptr,
                        rx_lengths[i],
-                       ENB_FLAG_NO,
                        eNB_index,
                        0);
 
@@ -802,7 +801,7 @@ ue_send_mch_sdu(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 
 		mac_rlc_data_ind(module_idP, UE_mac_inst[module_idP].crnti, eNB_index, frameP, ENB_FLAG_NO, MBMS_FLAG_YES, MTCH,	/*+ (maxDRB + 3), */
 				 (char *) payload_ptr, rx_lengths[i], 1,
-				 NULL,
+				 NULL
 #ifdef Rel14
                                    ,SL_RESET_RLC_FLAG_NO
 #endif
@@ -864,7 +863,6 @@ void ue_send_sl_sdu(module_id_t module_idP,
             lcid = UE_mac_inst[module_idP].sl_info[i].LCID;
             break;
          }
->>>>>>> origin
 
       for (j = 0; j< MAX_NUM_LCID; j++){
          if ((longh->LCID < MAX_NUM_LCID_DATA) && (j < MAX_NUM_LCID_DATA)){
@@ -962,7 +960,6 @@ void ue_send_sl_sdu(module_id_t module_idP,
             SL_DISCOVERY,
             sdu, //(uint8_t*)&UE_mac_inst[Mod_id].SL_Discovery[0].Rx_buffer.Payload[0],
             len,
-            ENB_FLAG_NO,
             eNB_index,
             0);
 
