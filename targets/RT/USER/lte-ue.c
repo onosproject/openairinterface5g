@@ -971,16 +971,15 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
     wakeup_thread(&UE->timer_mutex,&UE->timer_cond,&UE->instance_cnt_timer,"timer_thread");
     break;
   case SLSCH:
-
-
-    LOG_I(PHY,"Emulator SFN.SF %d.%d, Got SLSCH packet\n",emulator_absSF/10,emulator_absSF%10);
-    LOG_I(PHY,"Received %d bytes on UE-UE link for SFN.SF %d.%d, sending SLSCH payload (%d bytes) to MAC\n",num_bytes,
+    LOG_D(PHY,"Emulator SFN.SF %d.%d, Got SLSCH packet\n",emulator_absSF/10,emulator_absSF%10);
+    LOG_D(PHY,"Received %d bytes on UE-UE link for SFN.SF %d.%d, sending SLSCH payload (%d bytes) to MAC\n",num_bytes,
 	  pdu->header.absSF/10,pdu->header.absSF%10,
 	  slsch->payload_length);
+#ifdef DEBUG_UE_RX
     printf("SLSCH:");
     for (int i=0;i<sizeof(SLSCH_t);i++) printf("%x ",((uint8_t*)slsch)[i]);
     printf("\n");
-
+#endif
     int frame    = pdu->header.absSF/10;
     int subframe = pdu->header.absSF%10;
     if (UE->sidelink_l2_emulation == 2) {
@@ -1001,16 +1000,15 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
     break;
 
   case SLDCH:
-
-
-    LOG_I(PHY,"Emulator SFN.SF %d.%d, Got SLDCH packet\n",emulator_absSF/10,emulator_absSF%10);
-    LOG_I(PHY,"Received %d bytes on UE-UE link for SFN.SF %d.%d, sending SLDCH payload (%d bytes) to MAC\n",num_bytes,
+    LOG_D(PHY,"Emulator SFN.SF %d.%d, Got SLDCH packet\n",emulator_absSF/10,emulator_absSF%10);
+    LOG_D(PHY,"Received %d bytes on UE-UE link for SFN.SF %d.%d, sending SLDCH payload (%d bytes) to MAC\n",num_bytes,
           pdu->header.absSF/10,pdu->header.absSF%10,
           sldch->payload_length);
+#ifdef DEBUG_UE_RX
     printf("SLDCH:");
     for (int i=0;i<sizeof(SLDCH_t);i++) printf("%x ",((uint8_t*)sldch)[i]);
     printf("\n");
-
+#endif
     ue_send_sl_sdu(0,
                    0,
                    pdu->header.absSF/10,
@@ -1170,7 +1168,6 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
       //#endif
     }
 
-    //>>>>>>> Stashed changes
 
 #if UE_TIMING_TRACE
     start_meas(&UE->generic_stat);

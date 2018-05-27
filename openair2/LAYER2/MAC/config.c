@@ -963,7 +963,79 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 	    mbms_SessionList[i]->list.count);
     }
   }
-  
+
+#endif
+
+  LOG_E(MAC, "%s() %s:%d RC.mac[Mod_idP]->if_inst->PHY_config_req:%p\n", __FUNCTION__, __FILE__, __LINE__, RC.mac[Mod_idP]->if_inst->PHY_config_req);
+
+  // if in nFAPI mode 
+  if (
+      (nfapi_mode == 1 || nfapi_mode == 2) &&
+      (RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL)
+    )
+  {
+    while(RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL) {
+      // DJP AssertFatal(RC.mac[Mod_idP]->if_inst->PHY_config_req != NULL,"if_inst->phy_config_request is null\n");
+      usleep(100 * 1000);
+      printf("Waiting for PHY_config_req\n");
+    }
+  }
+
+  PHY_Config_t phycfg;
+  phycfg.Mod_id = Mod_idP;
+  phycfg.CC_id  = CC_idP;
+  phycfg.cfg    = &RC.mac[Mod_idP]->config[CC_idP];
+
+  LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
+  if (RC.mac[Mod_idP]->if_inst->PHY_config_req) RC.mac[Mod_idP]->if_inst->PHY_config_req(&phycfg); 
+  LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
+
+  return(0);			   
+
+}
+
+/*
+// P: New function supporting the MAC interface
+void config_sib1_ue()
+{
+
+}
+
+// P: New function supporting the MAC interface
+void config_sib2_ue()
+{
+
+}
+
+// P: New function supporting the MAC interface
+void config_meas_ue()
+{
+
+}
+
+// P: New function supporting the MAC interface
+// to substitute call to phy_config_afterHO_ue().
+void config_afterHO_ue()
+{
+
+}
+
+// P: New function supporting the MAC interface
+void config_sib13_ue()
+{
+
+}
+
+
+// P: New function supporting the MAC interface
+void config_dedicated_ue()
+{
+
+}
+*/
+
 #endif
     
     LOG_E(MAC, "%s() %s:%d RC.mac[Mod_idP]->if_inst->PHY_config_req:%p\n", __FUNCTION__, __FILE__, __LINE__, RC.mac[Mod_idP]->if_inst->PHY_config_req);

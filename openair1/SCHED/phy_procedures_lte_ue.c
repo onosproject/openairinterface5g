@@ -2391,6 +2391,8 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
 
 
   }
+  if (frame_tx==0 && subframe_tx ==0)
+    for (int i=0;i<MAX_SLDCH;i++) if (ue->sldch_txcnt[i]>0) LOG_I(PHY,"n_psdch %d TX count %d\n",i,ue->sldch_txcnt[i]);
 }
 
 void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag,runmode_t mode,relaying_type_t r_type) {
@@ -4788,7 +4790,8 @@ void phy_procedures_UE_SL_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
 
   if (ue->is_SynchRef == 0 && frame_rx==0 && subframe_rx==0) LOG_I(PHY,"Connected with SyncRef UE (slbch errors %d/%d)\n",
                                                 ue->slbch_errors,ue->slbch_rxops);
-
+  if (frame_rx==0 && subframe_rx==0)
+    for (int i=0;i<MAX_SLDCH;i++) if (ue->sldch_rxcnt[i]>0) LOG_I(PHY,"n_psdch %d RX count %d\n",i,ue->sldch_rxcnt[i]);
 }
 
 int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,

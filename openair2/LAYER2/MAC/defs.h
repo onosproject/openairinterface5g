@@ -120,6 +120,7 @@
 #define LCGID3 3
 /*!\brief Maximum number of logical chanels */
 #define MAX_NUM_LCID 11
+#define MAX_NUM_LCID_DATA 8
 /*!\brief Maximum number od control elemenets */
 #define MAX_NUM_CE 5
 /*!\brief Maximum number of random access process */
@@ -1323,6 +1324,18 @@ typedef struct {
     // Bucket size per lcid
     int16_t bucket_size[MAX_NUM_LCID];
 } UE_SCHEDULING_INFO;
+
+typedef struct {
+   //SL source L2Id
+   uint32_t sourceL2Id;
+   //SL groupL2Id
+   uint32_t groupL2Id;
+   //SL destinationL2Id
+   uint32_t destinationL2Id;
+   //LCID
+   uint32_t  LCID;
+} SL_INFO;
+
 /*!\brief Top level UE MAC structure */
 typedef struct {
   uint16_t Node_id;
@@ -1374,10 +1387,9 @@ typedef struct {
   uint32_t groupL2Id;
   //SL destinationL2Id
   uint32_t destinationL2Id;
-  //List of destinations
-  uint32_t destinationList[MAX_NUM_DEST];
   uint8_t numCommFlows;
-  uint32_t  SL_LCID[MAX_NUM_LCID];
+  //list of (SLID, G, D)s
+  SL_INFO sl_info[MAX_NUM_LCID];
 
 #endif
   /// pointer to TDD Configuration (NULL for FDD)

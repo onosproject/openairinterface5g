@@ -386,7 +386,12 @@ public_rlc_rrc(rlc_op_status_t rrc_rlc_remove_ue (const protocol_ctxt_t* const);
 * \param[in]  rb_idP             Radio bearer identifier.
 * \return     A status about the processing, OK or error code.
 */
-public_rlc_rrc(rlc_op_status_t rrc_rlc_remove_rlc   (const protocol_ctxt_t* const, const srb_flag_t, const MBMS_flag_t, const  rb_id_t );)
+public_rlc_rrc(rlc_op_status_t rrc_rlc_remove_rlc   (const protocol_ctxt_t* const, const srb_flag_t, const MBMS_flag_t, const  rb_id_t
+#ifdef Rel14
+    ,const uint32_t sourceL2Id
+    ,const uint32_t destinationL2Id
+#endif
+    );)
 
 /*! \fn rlc_union_t*  rrc_rlc_add_rlc   (const protocol_ctxt_t* const ctxtP, const srb_flag_t srb_flagP, const  MBMS_flag_t MBMS_flagP, const  rb_id_t rb_idP, logical_chan_id_t chan_idP, rlc_mode_t rlc_modeP)
 * \brief  Add a RLC protocol instance to a radio bearer.
@@ -419,6 +424,8 @@ private_rlc_rrc(rlc_union_t*  rrc_rlc_add_rlc      (const protocol_ctxt_t* const
 * \param[in]  actionP          Action for this radio bearer (add, modify, remove).
 * \param[in]  rb_idP           Radio bearer identifier.
 * \param[in]  rlc_infoP        RLC configuration parameters issued from Radio Resource Manager.
+* \param[in]  sourceL2ID       [D2D] source L2 Identity.
+* \param[in]  destinationL2ID  [D2D] destination L2 Identity.
 * \return     A status about the processing, OK or error code.
 */
 public_rlc_rrc( rlc_op_status_t rrc_rlc_config_req   (
@@ -427,7 +434,12 @@ public_rlc_rrc( rlc_op_status_t rrc_rlc_config_req   (
                   const MBMS_flag_t,
                   config_action_t,
                   const  rb_id_t,
-                  rlc_info_t );)
+                  rlc_info_t
+#ifdef Rel14
+                  ,const uint32_t
+                  ,const uint32_t
+#endif
+                  );)
 
 /*! \fn rlc_op_status_t rrc_rlc_data_req     (const protocol_ctxt_t* const ctxtP, const  MBMS_flag_t MBMS_flagP, const  rb_id_t rb_idP, mui_t muiP, confirm_t confirmP, sdu_size_t sdu_sizeP, char* sduP)
 * \brief  Function for RRC to send a SDU through a Signalling Radio Bearer.
@@ -485,7 +497,11 @@ public_rlc_mac(tbs_size_t            mac_rlc_data_req     (const module_id_t, co
 * \param[in]  crcs             Array of CRC decoding.
 */
 public_rlc_mac(void                  mac_rlc_data_ind     (const module_id_t, const rnti_t, const eNB_index_t,const frame_t, const  eNB_flag_t, const  MBMS_flag_t, logical_chan_id_t, char*, tb_size_t, num_tb_t,
-               crc_t* );)
+               crc_t*
+#ifdef Rel14
+  , sl_reset_rlc_flag_t
+#endif
+  );)
 
 /*! \fn mac_rlc_status_resp_t mac_rlc_status_ind     (const module_id_t mod_idP, const rnti_t rntiP, const frame_t frameP, const sub_frame_t subframeP, const  eNB_flag_t eNB_flagP, const  MBMS_flag_t MBMS_flagP, logical_chan_id_t rb_idP, tb_size_t tb_sizeP)
 * \brief    Interface with MAC layer, request and set the number of bytes scheduled for transmission by the RLC instance corresponding to the radio bearer identifier.
