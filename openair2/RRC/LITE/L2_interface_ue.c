@@ -135,13 +135,13 @@ mac_rrc_data_req_ue(
     UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size = 0;
     return(Ret_size);
   }
-  else if (Srb_idP == SL_DISCOVERY) {
+/*  else if (Srb_idP == SL_DISCOVERY) {
     LOG_D(RRC,"[UE %d] Frame %d Filling DUMMY SL DISCOVERY SRB_ID %d\n",Mod_idP,frameP,Srb_idP);
     for (int i=0;i<29;i++) buffer_pP[i] = i;
     LOG_D(RRC,"[UE %d] Sending SL_Discovery, size %d bytes\n",Mod_idP,29);
     return(29);
 
-  }
+  }*/
 #endif
 
   return(0);

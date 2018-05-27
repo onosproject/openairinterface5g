@@ -289,6 +289,15 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 	  rvidx,ret);
     ue->sldch_received[npsdch] = 1;
     ue->sldch_rxcnt[npsdch]++;
+    ue_send_sl_sdu(0,
+                   0,
+                   frame_rx,
+                   subframe_rx,
+                   ue->dlsch_rx_sldch[npsdch]->harq_processes[0]->b,
+                   ue->dlsch_rx_sldch[npsdch]->harq_processes[0]->TBS>>3,
+                   0,
+                   SL_DISCOVERY_FLAG_YES);
+
   }
 
   //exit(-1);
