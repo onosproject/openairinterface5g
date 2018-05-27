@@ -397,12 +397,19 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
   if (drb2release_listP != NULL) {
     for (cnt=0; cnt<drb2release_listP->list.count; cnt++) {
-      pdrb_id = drb2release_listP->list.array[cnt];
+       drb_id = drb2release_listP->list.array[cnt];
+       LOG_I(RLC, "Releasing rb_id %d\n",drb_id);
+
       rrc_rlc_remove_rlc(
         ctxt_pP,
         SRB_FLAG_NO,
         MBMS_FLAG_NO,
-        *pdrb_id);
+        drb_id
+#ifdef Rel14
+              ,sourceL2Id,
+              destinationL2Id
+#endif
+              );
     }
   }
 
@@ -526,14 +533,22 @@ rlc_op_status_t rrc_rlc_remove_ue (
     rrc_rlc_remove_rlc(ctxt_pP,
                        SRB_FLAG_YES,
                        MBMS_FLAG_NO,
-                       rb_id);
+                       rb_id
+#ifdef Rel14
+               ,0, 0
+#endif
+               );
   }
 
   for (rb_id = 1; rb_id <= maxDRB; rb_id++) {
     rrc_rlc_remove_rlc(ctxt_pP,
                        SRB_FLAG_NO,
                        MBMS_FLAG_NO,
-                       rb_id);
+                       rb_id
+#ifdef Rel14
+               ,0, 0
+#endif
+               );
   }
 
   return RLC_OP_STATUS_OK;
@@ -544,7 +559,12 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
   const protocol_ctxt_t* const ctxt_pP,
   const srb_flag_t  srb_flagP,
   const MBMS_flag_t MBMS_flagP,
-  const rb_id_t     rb_idP)
+  const rb_id_t     rb_idP
+#ifdef Rel14
+    ,const uint32_t sourceL2Id
+    ,const uint32_t destinationL2Id
+#endif
+    )
 {
   //-----------------------------------------------------------------------------
   logical_chan_id_t      lcid            = 0;
@@ -579,10 +599,13 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
     }
 
     key = RLC_COLL_KEY_MBMS_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, mbms_id_p->service_id, mbms_id_p->session_id);
+  }
+  if ((sourceL2Id > 0) && (destinationL2Id > 0) ){
+     key = RLC_COLL_KEY_SOURCE_DEST_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, sourceL2Id, destinationL2Id, srb_flagP);
   } else
 #endif
   {
-    key = RLC_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, srb_flagP);
+     key = RLC_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, srb_flagP);
   }
 
 
@@ -591,24 +614,31 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
 
   if (h_rc == HASH_TABLE_OK) {
-    // also remove the hash-key created by LC-id
-    switch (rlc_union_p->mode) {
-    case RLC_MODE_AM:
-      lcid = rlc_union_p->rlc.am.channel_id;
-      break;
-    case RLC_MODE_UM:
-      lcid = rlc_union_p->rlc.um.channel_id;
-      break;
-    case RLC_MODE_TM:
-      lcid = rlc_union_p->rlc.tm.channel_id;
-      break;
-    default:
-      LOG_E(RLC, PROTOCOL_CTXT_FMT"[%s %u] RLC mode is unknown!\n",
-            PROTOCOL_CTXT_ARGS(ctxt_pP),
-            (srb_flagP) ? "SRB" : "DRB",
-            rb_idP);
+     // also remove the hash-key created by LC-id
+     switch (rlc_union_p->mode) {
+     case RLC_MODE_AM:
+        lcid = rlc_union_p->rlc.am.channel_id;
+        break;
+     case RLC_MODE_UM:
+        lcid = rlc_union_p->rlc.um.channel_id;
+        break;
+     case RLC_MODE_TM:
+        lcid = rlc_union_p->rlc.tm.channel_id;
+        break;
+     default:
+        LOG_E(RLC, PROTOCOL_CTXT_FMT"[%s %u] RLC mode is unknown!\n",
+              PROTOCOL_CTXT_ARGS(ctxt_pP),
+              (srb_flagP) ? "SRB" : "DRB",
+                    rb_idP);
+     }
+#ifdef Rel14
+     if ((sourceL2Id > 0) && (destinationL2Id > 0) ){
+        key_lcid = RLC_COLL_KEY_LCID_SOURCE_DEST_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, lcid, sourceL2Id, destinationL2Id, srb_flagP);
+     } else
+#endif
+    {
+       key_lcid = RLC_COLL_KEY_LCID_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, lcid, srb_flagP);
     }
-    key_lcid = RLC_COLL_KEY_LCID_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, lcid, srb_flagP);
     h_lcid_rc = hashtable_get(rlc_coll_p, key_lcid, (void**)&rlc_union_p);
   } else {
     h_lcid_rc = HASH_TABLE_KEY_NOT_EXISTS;
@@ -617,13 +647,13 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
   if ((h_rc == HASH_TABLE_OK) && (h_lcid_rc == HASH_TABLE_OK)) {
     h_lcid_rc = hashtable_remove(rlc_coll_p, key_lcid);
     h_rc = hashtable_remove(rlc_coll_p, key);
-    LOG_D(RLC, PROTOCOL_CTXT_FMT"[%s %u LCID %d] RELEASED %s\n",
+    LOG_I(RLC, PROTOCOL_CTXT_FMT"[%s %u LCID %d] RELEASED %s\n",
           PROTOCOL_CTXT_ARGS(ctxt_pP),
           (srb_flagP) ? "SRB" : "DRB",
           rb_idP, lcid,
           (srb_flagP) ? "SRB" : "DRB");
   } else if ((h_rc == HASH_TABLE_KEY_NOT_EXISTS) || (h_lcid_rc == HASH_TABLE_KEY_NOT_EXISTS)) {
-    LOG_D(RLC, PROTOCOL_CTXT_FMT"[%s %u LCID %d] RELEASE : RLC NOT FOUND %s, by RB-ID=%d, by LC-ID=%d\n",
+    LOG_I(RLC, PROTOCOL_CTXT_FMT"[%s %u LCID %d] RELEASE : RLC NOT FOUND %s, by RB-ID=%d, by LC-ID=%d\n",
           PROTOCOL_CTXT_ARGS(ctxt_pP),
           (srb_flagP) ? "SRB" : "DRB",
           rb_idP, lcid,
@@ -762,7 +792,12 @@ rlc_op_status_t rrc_rlc_config_req   (
   const MBMS_flag_t     mbms_flagP,
   const config_action_t actionP,
   const rb_id_t         rb_idP,
-  const rlc_info_t      rlc_infoP)
+  const rlc_info_t      rlc_infoP
+#ifdef Rel14
+    ,const uint32_t sourceL2Id
+    ,const uint32_t destinationL2Id
+#endif
+    )
 {
   //-----------------------------------------------------------------------------
   //rlc_op_status_t status;
@@ -829,7 +864,12 @@ rlc_op_status_t rrc_rlc_config_req   (
     break;
 
   case CONFIG_ACTION_REMOVE:
-    return rrc_rlc_remove_rlc(ctxt_pP, srb_flagP, mbms_flagP, rb_idP);
+    return rrc_rlc_remove_rlc(ctxt_pP, srb_flagP, mbms_flagP, rb_idP
+#ifdef Rel14
+                              ,sourceL2Id
+                              ,destinationL2Id
+#endif
+                              );
     break;
 
   default:

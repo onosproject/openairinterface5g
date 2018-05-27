@@ -1790,7 +1790,12 @@ rrc_pdcp_config_req (
   const srb_flag_t srb_flagP,
   const uint32_t actionP,
   const rb_id_t rb_idP,
-  const uint8_t security_modeP)
+  const uint8_t security_modeP
+#ifdef Rel14
+    ,const uint32_t sourceL2Id
+    ,const uint32_t destinationL2Id
+#endif
+    )
 //-----------------------------------------------------------------------------
 {
   pdcp_t *pdcp_p = NULL;

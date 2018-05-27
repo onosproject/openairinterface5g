@@ -654,6 +654,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
   sib18_part = CALLOC(1,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
   sib19_part = CALLOC(1,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
   //sib21_part = CALLOC(1,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
+
   memset(sib18_part,0,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
   memset(sib19_part,0,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
   //memset(sib21_part,0,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
@@ -665,8 +666,6 @@ uint8_t do_SIB23(uint8_t Mod_id,
   *sib18 = &sib18_part->choice.sib18_v1250;
   *sib19 = &sib19_part->choice.sib19_v1250;
   //*sib21 = &sib19_part->choice.sib21_v14x0;
-
-
 
   // sib2
 
@@ -1328,7 +1327,6 @@ uint8_t do_SIB23(uint8_t Mod_id,
   //end SIB19
 
  
-
   bcch_message->message.present = BCCH_DL_SCH_MessageType_PR_c1;
   bcch_message->message.choice.c1.present = BCCH_DL_SCH_MessageType__c1_PR_systemInformation;
 
@@ -1358,7 +1356,6 @@ uint8_t do_SIB23(uint8_t Mod_id,
   ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib18_part);
   ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib19_part);
   //ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib21_part);
-
 
 
 #ifdef XER_PRINT
