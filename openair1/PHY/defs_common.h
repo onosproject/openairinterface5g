@@ -77,12 +77,16 @@ typedef struct {
   uint8_t dci_to_transmit;
 
   uint8_t rar_to_transmit;
-
+  uint8_t     subframe_SP;
   int next_frame_tx;
   int next_subframe_tx;
+  uint8_t SP;
+  uint8_t     there_is_sib23;
+  int next_frame_tx_DCI;
+  int next_subframe_tx_DCI;
 
   uint32_t sheduling_info_rar;
-
+uint8_t flag_scrambling;
   uint8_t remaining_dci;
 
   uint8_t remaining_rar;

@@ -822,7 +822,7 @@ typedef struct {
   /// RA RNTI allocated from received PRACH
   volatile uint16_t RA_rnti;
   /// Received preamble_index
-  uint8_t preamble_index;
+  volatile uint8_t preamble_index;
   /// Received UE Contention Resolution Identifier
   uint8_t cont_res_id[6];
   /// Timing offset indicated by PHY

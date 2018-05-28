@@ -33,6 +33,7 @@
 #include "PHY/defs_NB_IoT.h"
 #include "PHY/TOOLS/defs.h" // to take into account the dft functions
 #include "tables_nprach_NB_IoT.h"
+#include "first_sc_NB_IoT.h"
 //#include "PHY/extern.h"
 //#include "prach.h"
 //#include "PHY/LTE_TRANSPORT/if4_tools.h"
@@ -295,7 +296,48 @@ err
 
 	return TA_sample_estimated; 
 
-} */
+} */ 
+
+
+uint16_t subcarrier_estimation(int16_t *input_buffer){
+	
+	uint16_t estimated_sc; 
+	int16_t *s_n_re, *s_n_im; 
+	uint16_t k,m,n; 
+	int64_t max_correl_sc_m = 0; 
+	int64_t max_correl_sc_k = 0; 
+	int64_t max_correl_sc_glob = 0; 
+	int n_start_offset = 1920; // start at t=8 ms
+
+	for (k=0;k<12;k++){
+		s_n_re = &s_n_12_re[k*336]; 
+		s_n_im = &s_n_12_im[k*336]; 
+
+		for (m=0;m<20;m++){
+			for (n=0;n<336;n++){
+				max_correl_sc_m = max_correl_sc_m + 
+							(int16_t)(((int32_t)input_buffer[(m<<1)+((n+n_start_offset)<<1)]*(int32_t)s_n_re[n] )>>15) 
+							+ (int16_t)(((int32_t)input_buffer[(m<<1)+((n+n_start_offset)<<1)+1]*(int32_t)s_n_im[n])>>15);
+			}
+
+			if (max_correl_sc_m>max_correl_sc_k){
+				max_correl_sc_k = max_correl_sc_m;
+			}
+			max_correl_sc_m = 0;
+		}
+
+		//printf("correl = %li\n",max_correl_sc_k);
+
+		if (max_correl_sc_k>max_correl_sc_glob){
+			max_correl_sc_glob = max_correl_sc_k; 
+			estimated_sc = k; 
+		}
+		max_correl_sc_k = 0; 
+	} 
+
+	return estimated_sc;
+
+}
 
 int16_t* sub_sampling_NB_IoT(int16_t *input_buffer, uint32_t length_input, uint32_t *length_ouput, uint16_t sub_sampling_rate){  // void function ////// adding flag for switching between output_buffers 
 
@@ -338,9 +380,14 @@ void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t 
 								+ input_buffer[(n<<1)+1] * (int32_t)(sin_x[n]))>>15); 
 		signal_compensed_im[n] = (int16_t)((- input_buffer[n<<1] * (int32_t)(sin_x[n]) 
 								+ input_buffer[(n<<1)+1] * (int32_t)(cos_x[n]))>>15); 
+		
+		filtered_buffer[n<<1] = signal_compensed_re[n]; 
+		filtered_buffer[(n<<1)+1] = signal_compensed_im[n]; 
+
+
 	}
 
-	for (n=0;n<FRAME_LENGTH_COMPLEX_SAMPLESx-10;n++){
+	/*for (n=0;n<FRAME_LENGTH_COMPLEX_SAMPLESx-10;n++){
 		if (n<20){
 			for (k=-n;k<20;k++){
 				filtered_buffer[n<<1] = filtered_buffer[n<<1] + (int16_t)(((int32_t)filter_xx[20+k]*(int32_t)signal_compensed_re[n+k])>>15); 
@@ -352,7 +399,7 @@ void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t 
 				filtered_buffer[(n<<1)+1] = filtered_buffer[(n<<1)+1] + (int16_t)(((int32_t)filter_xx[20+k]*(int32_t)signal_compensed_im[n+k])>>15); 
 			}
 		}
-	}
+	}*/
 	
 
 }
@@ -377,7 +424,7 @@ uint32_t RX_NPRACH_NB_IoT(PHY_VARS_eNB *eNB, int frame){
 	FRAME_LENGTH_COMPLEX_SAMPLESx = 10*eNB->frame_parms.samples_per_tti; 
 	Rx_buffer = (int16_t*)&eNB->common_vars.rxdata[0][0][0]; // get the whole frame
 
-    memcpy(&buffer_nprach[0],&Rx_buffer[0],307200);
+        memcpy(&buffer_nprach[0],&Rx_buffer[0],307200);
 	
 	
 	//filtered_buffer = (int16_t *)calloc(2*FRAME_LENGTH_COMPLEX_SAMPLESx,sizeof(int16_t));  // calcule du taille exacte du tableau 76800
@@ -394,7 +441,7 @@ uint32_t RX_NPRACH_NB_IoT(PHY_VARS_eNB *eNB, int frame){
 
 	if (NPRACH_detection_NB_IoT(Rx_sub_sampled_buffer_128,*length_ouput)){
 		
-
+		
 		/*estimated_TA_coarse = TA_estimation_NB_IoT(eNB, 
 												   Rx_sub_sampled_buffer_128, 
 												   sub_sampling_rate, 
@@ -427,8 +474,9 @@ uint32_t RX_NPRACH_NB_IoT(PHY_VARS_eNB *eNB, int frame){
 			//fprintf(f,"%i \n",Rx_buffer[2*n+1]);
 		//}*/
 
-		printf("\ndetection !!!   est_TA = %i  ----   %i\n",estimated_TA_coarse,estimated_TA);
-
+		printf("\ndetection !!!   at frame %i \n",frame);
+		eNB->preamble_index_NB_IoT = subcarrier_estimation(Rx_sub_sampled_buffer_128);    // c'est un uint16_t 
+		printf("estimated subaccier = %i\n",eNB->preamble_index_NB_IoT);
 		return 1;//estimated_TA;
 	}else{
 
