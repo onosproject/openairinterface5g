@@ -195,7 +195,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
 #endif /* defined(ENABLE_USE_MME) */
 #ifdef PDCP_DEBUG
-      LOG_D(PDCP, "PDCP->IP TTI %d INST %d: Preparing %d Bytes of data from rab %d to Nas_mesh\n",
+      LOG_I(PDCP, "PDCP->IP TTI %d INST %d: Preparing %d Bytes of data from rab %d to Nas_mesh\n",
             ctxt_pP->frame, ((pdcp_data_ind_header_t *)(sdu_p->data))->inst,
             ((pdcp_data_ind_header_t *)(sdu_p->data))->data_size, ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id);
 #endif //PDCP_DEBUG
@@ -237,6 +237,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
          if (!pdcp_output_header_bytes_to_write) {
             pdcp_output_header_bytes_to_write = sizeof (pdcp_data_ind_header_t);
          }
+         //LOG_I(PDCP, "Panos-D: pdcp_fifo_flush_sdus() in PDCP_USE_NETLINK 0 \n");
 
 #ifdef PDCP_USE_RT_FIFO
          bytes_wrote = rtf_put (PDCP2PDCP_USE_RT_FIFO,
@@ -245,7 +246,9 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
 #else
 #ifdef PDCP_USE_NETLINK
+         //LOG_I(PDCP, "Panos-D: pdcp_fifo_flush_sdus() in PDCP_USE_NETLINK 0.1 \n");
 #ifdef LINUX
+         //LOG_I(PDCP, "Panos-D: pdcp_fifo_flush_sdus() in PDCP_USE_NETLINK 1 \n");
          memcpy(NLMSG_DATA(nas_nlh_tx), &(((uint8_t *) sdu_p->data)[sizeof (pdcp_data_ind_header_t) - pdcp_output_header_bytes_to_write]),
                pdcp_output_header_bytes_to_write);
          nas_nlh_tx->nlmsg_len = pdcp_output_header_bytes_to_write;
@@ -255,6 +258,9 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
          bytes_wrote = pdcp_output_header_bytes_to_write;
 #endif //PDCP_USE_RT_FIFO
 
+         LOG_I(PDCP, "Frame %d Sent %d Bytes of header to Nas_mesh\n",
+                        ctxt_pP->frame,
+                        bytes_wrote);
 #ifdef PDCP_DEBUG
          LOG_D(PDCP, "Frame %d Sent %d Bytes of header to Nas_mesh\n",
                ctxt_pP->frame,
@@ -274,6 +280,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
 #ifdef PDCP_USE_NETLINK
 #ifdef LINUX
+              // LOG_I(PDCP, "Panos-D: pdcp_fifo_flush_sdus() in PDCP_USE_NETLINK 2 \n");
           memcpy(NLMSG_DATA(nas_nlh_tx)+sizeof(pdcp_data_ind_header_t), &(sdu_p->data[sizeof (pdcp_data_ind_header_t)]), pdcp_output_sdu_bytes_to_write);
           nas_nlh_tx->nlmsg_len += pdcp_output_sdu_bytes_to_write;
           VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_UE_PDCP_FLUSH_SIZE, pdcp_output_sdu_bytes_to_write);
@@ -317,7 +324,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #endif // PDCP_USE_RT_FIFO
 
 #ifdef PDCP_DEBUG
-               LOG_D(PDCP, "PDCP->IP Frame %d INST %d: Sent %d Bytes of data from rab %d to higher layers\n",
+               LOG_I(PDCP, "PDCP->IP Frame %d INST %d: Sent %d Bytes of data from rab %d to higher layers\n",
                      ctxt_pP->frame,
                      ((pdcp_data_ind_header_t *)(sdu_p->data))->inst,
                      bytes_wrote,
@@ -329,7 +336,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
                   if (!pdcp_output_sdu_bytes_to_write) { // OK finish with this SDU
                      // LOG_D(PDCP, "rb sent a sdu qos_sap %d\n", sapiP);
-                     LOG_D(PDCP,
+                     LOG_I(PDCP,
                            "[FRAME %05d][xxx][PDCP][MOD xx/xx][RB %u][--- PDCP_DATA_IND / %d Bytes --->][IP][INSTANCE %u][RB %u]\n",
                            ctxt_pP->frame,
                            ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id,

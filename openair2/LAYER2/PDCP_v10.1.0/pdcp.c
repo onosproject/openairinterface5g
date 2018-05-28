@@ -440,6 +440,7 @@ pdcp_data_ind(
 )
 //-----------------------------------------------------------------------------
 {
+	//LOG_I(RLC, "Panos-D: pdcp_data_ind() 1 \n");
   pdcp_t      *pdcp_p          = NULL;
   list_t      *sdu_list_p      = NULL;
   mem_block_t *new_sdu_p       = NULL;
@@ -812,7 +813,7 @@ pdcp_data_ind(
   }
 
   /* Print octets of incoming data in hexadecimal form */
-  LOG_D(PDCP, "Following content has been received from RLC (%d,%d)(PDCP header has already been removed):\n",
+  LOG_I(PDCP, "Following content has been received from RLC (%d,%d)(PDCP header has already been removed):\n",
 	sdu_buffer_sizeP  - payload_offset + (int)sizeof(pdcp_data_ind_header_t),
 	sdu_buffer_sizeP  - payload_offset);
   //util_print_hex_octets(PDCP, &new_sdu_p->data[sizeof (pdcp_data_ind_header_t)], sdu_buffer_sizeP - payload_offset);

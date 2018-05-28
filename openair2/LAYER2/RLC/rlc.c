@@ -564,6 +564,7 @@ void rlc_data_ind     (
   const sdu_size_t  sdu_sizeP,
   mem_block_t      *sdu_pP)
 {
+	//LOG_I(RLC, "Panos-D: rlc_data_ind() 1 \n");
   //-----------------------------------------------------------------------------
 
 

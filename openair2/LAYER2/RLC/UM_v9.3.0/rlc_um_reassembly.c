@@ -107,6 +107,7 @@ rlc_um_reassembly (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t *rlc_pP
 void
 rlc_um_send_sdu (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t *rlc_pP)
 {
+	//LOG_I(RLC, "Panos-D: rlc_um_send_sdu 1 \n");
   if ((rlc_pP->output_sdu_in_construction)) {
     LOG_D(RLC, PROTOCOL_RLC_UM_CTXT_FMT" SEND_SDU to upper layers %d bytes sdu %p\n",
           PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP),
