@@ -1315,6 +1315,7 @@ typedef struct {
   int              sldch_received[MAX_SLDCH];
   int              sldch_rxcnt[MAX_SLDCH];
   int              sldch_txcnt[MAX_SLDCH];
+  int              sldch_active;
   int16_t          **sl_rxdataF[RX_NB_TH_MAX];
   int16_t          **sl_rxdata_7_5kHz[RX_NB_TH_MAX];
   int16_t          *slsch_dlsch_llr;

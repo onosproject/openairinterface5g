@@ -2368,7 +2368,8 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
   // check for SLDCH
 
   AssertFatal(0==pthread_mutex_lock(&ue->sldch_mutex),"");
-  if ((ue->sldch = ue_get_sldch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) check_and_generate_psdch(ue,frame_tx,subframe_tx);
+  if ((ue->sldch_active ==0) && (ue->sldch = ue_get_sldch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) ue->sldch_active = 1;
+  if (ue->sldch_active == 1) check_and_generate_psdch(ue,frame_tx,subframe_tx);
   AssertFatal(0==pthread_mutex_unlock(&ue->sldch_mutex),"");
 
   //LOG_D(PHY,"ULSCH (after sldch) : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);

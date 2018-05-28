@@ -828,6 +828,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     write_output("rxsig0_7_5kHz.m","rxs0_7_5kHz",rxdata_7_5kHz[0],ue->frame_parms.samples_per_tti,1,1);
 #endif
     for (int l=0; l<Nsymb; l++) slot_fep_ul(&ru_tmp,l,(subframe_rx<<1)+slot,0);
+    proc->sl_fep_done = 1;
   }
   // extract symbols from slot  
   for (int l=0; l<Nsymb; l++) {

@@ -791,6 +791,8 @@ int main( int argc, char **argv )
   get_options (); 
 
 
+  if (SLonly == 1 || synchRef==1) sidelink_active=1;
+
 #if T_TRACER
   T_init(T_port, 1-T_nowait, T_dont_fork);
 #endif
@@ -854,6 +856,15 @@ int main( int argc, char **argv )
 #endif
 #endif
 
+#ifdef Rel14
+  if (sidelink_active == 1) {
+    printf ("RRC control socket\n");
+    rrc_control_socket_init();
+    printf ("PDCP PC5S socket\n");
+    pdcp_pc5_socket_init();
+  }
+#endif
+
 #if !defined(ENABLE_ITTI)
   // to make a graceful exit when ctrl-c is pressed
   signal(SIGSEGV, signal_handler);
@@ -885,7 +896,6 @@ int main( int argc, char **argv )
       NB_INST=1;     
       PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**));     
       PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
-      if (SLonly == 1 || synchRef==1) sidelink_active=1;
       PHY_vars_UE_g[0][CC_id] = init_ue_vars(frame_parms[CC_id], 0,abstraction_flag,sidelink_active);
       UE[CC_id] = PHY_vars_UE_g[0][CC_id];
       printf("PHY_vars_UE_g[0][%d] = %p\n",CC_id,UE[CC_id]);

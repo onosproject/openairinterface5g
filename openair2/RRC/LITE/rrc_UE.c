@@ -5563,7 +5563,7 @@ void *rrc_control_socket_thread_fct(void *arg)
    //from the main program, listen for the incoming messages from control socket (ProSe App)
    prose_addr_len = sizeof(prose_app_addr);
    while (1) {
-      LOG_I(RRC,"Listening to incoming connection from ProSe App \n");
+      LOG_D(RRC,"Listening to incoming connection from ProSe App \n");
       // receive a message from ProSe App
       memset(receive_buf, 0, BUFSIZE);
       n = recvfrom(ctrl_sock_fd, receive_buf, BUFSIZE, 0,
@@ -6593,13 +6593,13 @@ void *rrc_control_socket_thread_fct(void *arg)
       case PC5_DISCOVERY_MESSAGE:
 
  #ifdef DEBUG_CTRL_SOCKET
-           LOG_I(RRC,"[PC5DiscoveryMessage] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
+           LOG_D(RRC,"[PC5DiscoveryMessage] Received on socket from ProSe App (msg type: %d)\n",sl_ctrl_msg_recv->type);
  #endif
         //prepare SL_Discovery buffer
          if (UE_rrc_inst) {
            memcpy((void*)&UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.Payload[0], (void*)&sl_ctrl_msg_recv->sidelinkPrimitive.pc5_discovery_message.payload[0], PC5_DISCOVERY_PAYLOAD_SIZE);
            UE_rrc_inst[module_id].SL_Discovery[0].Tx_buffer.payload_size = PC5_DISCOVERY_PAYLOAD_SIZE;
-           LOG_I(RRC,"[PC5DiscoveryMessage] Copied %d bytes\n",PC5_DISCOVERY_PAYLOAD_SIZE);
+           LOG_D(RRC,"[PC5DiscoveryMessage] Copied %d bytes\n",PC5_DISCOVERY_PAYLOAD_SIZE);
          }
          break;
       default:
