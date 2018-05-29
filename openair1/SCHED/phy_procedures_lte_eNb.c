@@ -808,17 +808,15 @@ proc->flag_scrambling =0;
 
 
                }
-           }
+            }
 
          }
 
-
-
     }
 
+}
 
-
-      NB_IoT_eNB_NPDCCH_temp_t   *npdcch_struct = &eNB->npdcch_tmp;
+     /* NB_IoT_eNB_NPDCCH_temp_t   *npdcch_struct = &eNB->npdcch_tmp;
        if(subframe==2)
        {
             printf("\n DCI 2 sentttttt frame %d, subframe %d", frame, subframe);
@@ -895,8 +893,8 @@ proc->flag_scrambling =0;
                 proc->next_subframe_tx=2;
 
            }
-       } 
-   } 
+       } */
+  // } 
 
 if(subframe !=5 && subframe !=0)
   {
@@ -911,7 +909,7 @@ if(subframe !=5 && subframe !=0)
       tab_rar[3]=67;
       tab_rar[4]=64;
       tab_rar[5]=0; // 16
-      tab_rar[6]=5;     // 5*/
+      tab_rar[6]=1;     // 5*/
 //T-CRNTI =4101
   /*    if(proc->remaining_rar == 4)
        {     
@@ -984,32 +982,33 @@ if(subframe !=5 && subframe !=0)
                           }
                   
                   } else {
-      if( ((frame)%2==0) && (subframe ==9))
-                        {
-                          proc->next_subframe_tx =1;
-        proc->next_frame_tx = proc->next_frame_tx+1;
-                        } else {
-        if(proc->flag_scrambling ==0)
-                             {
+                            if( ((frame)%2==0) && (subframe ==9))
+                            {
+                               proc->next_subframe_tx =1;
+                                proc->next_frame_tx = proc->next_frame_tx+1;
+                            } else {
 
-                dlsch_encoding_rar_NB_IoT(tab_rar,
-                                        rar,
-                                       8,                      ///// number_of_subframes_required
-                                        236,
-                                       1);                   //////////// G*2
+                                 if(proc->flag_scrambling ==0)
+                                  {
+
+                                      dlsch_encoding_rar_NB_IoT(tab_rar,
+                                                           rar,
+                                                             8,                      ///// number_of_subframes_required
+                                                          236,
+                                                          1);                   //////////// G*2
         
         
-                     dlsch_sib_scrambling_rar_NB_IoT(fp,
-                                         rar,
-                                         236,
-                                         frame,
-                                         subframe*2,
-                                         RA_template[0].RA_rnti);
-        }
-                            proc->flag_scrambling =1;
+                                        dlsch_sib_scrambling_rar_NB_IoT(fp,
+                                                              rar,
+                                                                236,
+                                                              frame,
+                                                               subframe*2,
+                                                            RA_template[0].RA_rnti);
+                               }
+                               proc->flag_scrambling =1;
 
-                          printf("\n RAR sentttttt frame %d, subframe %d", frame, subframe);
-                          dlsch_modulation_rar_NB_IoT(txdataF,
+                              printf("\n RAR sentttttt frame %d, subframe %d", frame, subframe);
+                              dlsch_modulation_rar_NB_IoT(txdataF,
                                       AMP,
                                       fp,
                                       3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
@@ -1019,9 +1018,9 @@ if(subframe !=5 && subframe !=0)
                                      subframe,       
                                      22);
 
-                         proc->remaining_rar--;
-                         proc->next_subframe_tx =subframe+1;
-      }
+                              proc->remaining_rar--;
+                              proc->next_subframe_tx =subframe+1;
+                        }
 
                   }
 
@@ -1029,8 +1028,9 @@ if(subframe !=5 && subframe !=0)
               }
 
         
+  }
  }
-}
+
 
 /////////////////////////// END ///////////////////////////////////////  
 
