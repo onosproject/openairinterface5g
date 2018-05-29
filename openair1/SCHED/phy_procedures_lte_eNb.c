@@ -498,7 +498,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 // NB-IoT synchro signals
 
 
- // common_signal_procedures_NB_IoT(eNB,proc);
+  common_signal_procedures_NB_IoT(eNB,proc);
 
 /////////////////// NB-IoT broadcast channel //////////////////////////
 //RA_template[i].RA_active=TRUE;
