@@ -147,8 +147,8 @@ int rx_pdsch(PHY_VARS_UE *ue,
     break;
 
   case PDSCH:
-    pdsch_vars = ue->pdsch_vars[current_thread_id[subframe]];
-    dlsch = ue->dlsch[current_thread_id[subframe]][eNB_id];
+    pdsch_vars = ue->pdsch_vars[ue->current_thread_id[subframe]];
+    dlsch = ue->dlsch[ue->current_thread_id[subframe]][eNB_id];
     //printf("status TB0 = %d, status TB1 = %d \n", dlsch[0]->harq_processes[harq_pid]->status, dlsch[1]->harq_processes[harq_pid]->status);
     LOG_D(PHY,"AbsSubframe %d.%d / Sym %d harq_pid %d,  harq status %d.%d \n",
                    frame,subframe,symbol,harq_pid,
@@ -269,11 +269,11 @@ int rx_pdsch(PHY_VARS_UE *ue,
 #endif
 
 #if UE_TIMING_TRACE
-    start_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    start_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #endif
 	if (ue->do_ofdm_mod)
-    		nb_rb = dlsch_extract_rbs_dual_freq(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                   common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+    		nb_rb = dlsch_extract_rbs_dual_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                   common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                                    pdsch_vars[eNB_id]->rxdataF_ext,
                                    pdsch_vars[eNB_id]->dl_ch_estimates_ext,
                                    dlsch0_harq->pmi_alloc,
@@ -285,8 +285,8 @@ int rx_pdsch(PHY_VARS_UE *ue,
                                    frame_parms,
                                    dlsch0_harq->mimo_mode);
 	else
-    		nb_rb = dlsch_extract_rbs_dual(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                   common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+    		nb_rb = dlsch_extract_rbs_dual(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                   common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                                    pdsch_vars[eNB_id]->rxdataF_ext,
                                    pdsch_vars[eNB_id]->dl_ch_estimates_ext,
                                    dlsch0_harq->pmi_alloc,
@@ -299,17 +299,17 @@ int rx_pdsch(PHY_VARS_UE *ue,
                                    dlsch0_harq->mimo_mode);
 #ifdef DEBUG_DLSCH_MOD
       printf("dlsch: using pmi %lx, rb_alloc %x, pmi_ext ",pmi2hex_2Ar1(dlsch0_harq->pmi_alloc),*rballoc);
-       for (rb=0;rb<nb_rb;rb++)
+       /*for (rb=0;rb<nb_rb;rb++)
           printf("%d",pdsch_vars[eNB_id]->pmi_ext[rb]);
-       printf("\n");
+       printf("\n");*/
 #endif
 
    if (rx_type >= rx_IC_single_stream) {
       if (eNB_id_i<ue->n_connected_eNB) // we are in TM5
       {
 	if (ue->do_ofdm_mod)
-      		nb_rb = dlsch_extract_rbs_dual_freq(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                       common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id_i],
+      		nb_rb = dlsch_extract_rbs_dual_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                       common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id_i],
                                        pdsch_vars[eNB_id_i]->rxdataF_ext,
                                        pdsch_vars[eNB_id_i]->dl_ch_estimates_ext,
                                        dlsch0_harq->pmi_alloc,
@@ -321,8 +321,8 @@ int rx_pdsch(PHY_VARS_UE *ue,
                                        frame_parms,
                                        dlsch0_harq->mimo_mode);
 	else
-      		nb_rb = dlsch_extract_rbs_dual(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                       common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id_i],
+      		nb_rb = dlsch_extract_rbs_dual(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                       common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id_i],
                                        pdsch_vars[eNB_id_i]->rxdataF_ext,
                                        pdsch_vars[eNB_id_i]->dl_ch_estimates_ext,
                                        dlsch0_harq->pmi_alloc,
@@ -337,8 +337,8 @@ int rx_pdsch(PHY_VARS_UE *ue,
       else
       {
 	if (ue->do_ofdm_mod)
-        	nb_rb = dlsch_extract_rbs_dual_freq(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                       common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+        	nb_rb = dlsch_extract_rbs_dual_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                       common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                                        pdsch_vars[eNB_id_i]->rxdataF_ext,
                                        pdsch_vars[eNB_id_i]->dl_ch_estimates_ext,
                                        dlsch0_harq->pmi_alloc,
@@ -350,8 +350,8 @@ int rx_pdsch(PHY_VARS_UE *ue,
                                        frame_parms,
                                        dlsch0_harq->mimo_mode);
 	else
-        	nb_rb = dlsch_extract_rbs_dual(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                       common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+        	nb_rb = dlsch_extract_rbs_dual(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                       common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                                        pdsch_vars[eNB_id_i]->rxdataF_ext,
                                        pdsch_vars[eNB_id_i]->dl_ch_estimates_ext,
                                        dlsch0_harq->pmi_alloc,
@@ -366,8 +366,8 @@ int rx_pdsch(PHY_VARS_UE *ue,
     }
   } else if (beamforming_mode==0) { //else if nb_antennas_ports_eNB==1 && beamforming_mode == 0
 	if (ue->do_ofdm_mod)
-    		nb_rb = dlsch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                     common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+    		nb_rb = dlsch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                     common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                                      pdsch_vars[eNB_id]->rxdataF_ext,
                                      pdsch_vars[eNB_id]->dl_ch_estimates_ext,
                                      dlsch0_harq->pmi_alloc,
@@ -378,8 +378,8 @@ int rx_pdsch(PHY_VARS_UE *ue,
                                      ue->high_speed_flag,
                                      frame_parms);
 	else	
-    		nb_rb = dlsch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                     common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+    		nb_rb = dlsch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                     common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                                      pdsch_vars[eNB_id]->rxdataF_ext,
                                      pdsch_vars[eNB_id]->dl_ch_estimates_ext,
                                      dlsch0_harq->pmi_alloc,
@@ -394,8 +394,8 @@ int rx_pdsch(PHY_VARS_UE *ue,
      if (eNB_id_i<ue->n_connected_eNB)
      {
 	if (ue->do_ofdm_mod)
-        	nb_rb = dlsch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                         common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id_i],
+        	nb_rb = dlsch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                         common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id_i],
                                          pdsch_vars[eNB_id_i]->rxdataF_ext,
                                          pdsch_vars[eNB_id_i]->dl_ch_estimates_ext,
                                          dlsch0_harq->pmi_alloc,
@@ -406,8 +406,8 @@ int rx_pdsch(PHY_VARS_UE *ue,
                                          ue->high_speed_flag,
                                          frame_parms);
 	else
-        	nb_rb = dlsch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                         common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id_i],
+        	nb_rb = dlsch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                         common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id_i],
                                          pdsch_vars[eNB_id_i]->rxdataF_ext,
                                          pdsch_vars[eNB_id_i]->dl_ch_estimates_ext,
                                          dlsch0_harq->pmi_alloc,
@@ -421,8 +421,8 @@ int rx_pdsch(PHY_VARS_UE *ue,
       else
       {
 	if (ue->do_ofdm_mod)
-        	nb_rb = dlsch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                         common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+        	nb_rb = dlsch_extract_rbs_single_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                         common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                                          pdsch_vars[eNB_id_i]->rxdataF_ext,
                                          pdsch_vars[eNB_id_i]->dl_ch_estimates_ext,
                                          dlsch0_harq->pmi_alloc,
@@ -433,8 +433,8 @@ int rx_pdsch(PHY_VARS_UE *ue,
                                          ue->high_speed_flag,
                                          frame_parms);
 	else
-        	nb_rb = dlsch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
-                                         common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id],
+        	nb_rb = dlsch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+                                         common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                                          pdsch_vars[eNB_id_i]->rxdataF_ext,
                                          pdsch_vars[eNB_id_i]->dl_ch_estimates_ext,
                                          dlsch0_harq->pmi_alloc,
@@ -448,7 +448,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
     }
   } else if (beamforming_mode==7) { //else if beamforming_mode == 7
     if (ue->do_ofdm_mod)
-    	nb_rb = dlsch_extract_rbs_TM7_freq(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
+    	nb_rb = dlsch_extract_rbs_TM7_freq(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
                                   pdsch_vars[eNB_id]->dl_bf_ch_estimates,
                                   pdsch_vars[eNB_id]->rxdataF_ext,
                                   pdsch_vars[eNB_id]->dl_bf_ch_estimates_ext,
@@ -458,7 +458,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
                                   ue->high_speed_flag,
                                   frame_parms);
     else	
-    	nb_rb = dlsch_extract_rbs_TM7(common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF,
+    	nb_rb = dlsch_extract_rbs_TM7(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
                                   pdsch_vars[eNB_id]->dl_bf_ch_estimates,
                                   pdsch_vars[eNB_id]->rxdataF_ext,
                                   pdsch_vars[eNB_id]->dl_bf_ch_estimates_ext,
@@ -479,18 +479,18 @@ int rx_pdsch(PHY_VARS_UE *ue,
   }
 
 #if UE_TIMING_TRACE
-    stop_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    stop_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #if DISABLE_LOG_X
     printf("[AbsSFN %d.%d] Slot%d Symbol %d Flag %d type %d: Pilot/Data extraction %5.2f \n",frame,subframe,slot,
-            symbol,ue->high_speed_flag,type,symbol,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+            symbol,ue->high_speed_flag,type,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #else
     LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d Flag %d type %d: Pilot/Data extraction  %5.2f \n",frame,subframe,slot,symbol,
-            ue->high_speed_flag,type,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+            ue->high_speed_flag,type,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #endif
 #endif
 
 #if UE_TIMING_TRACE
-    start_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    start_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #endif
   aatx = frame_parms->nb_antenna_ports_eNB;
   aarx = frame_parms->nb_antennas_rx;
@@ -515,16 +515,16 @@ int rx_pdsch(PHY_VARS_UE *ue,
   }
 
 #if UE_TIMING_TRACE
-    stop_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    stop_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #if DISABLE_LOG_X
-    printf("[AbsSFN %d.%d] Slot%d Symbol %d: Channel Scale %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    printf("[AbsSFN %d.%d] Slot%d Symbol %d: Channel Scale %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #else
-    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d: Channel Scale  %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d: Channel Scale  %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #endif
 #endif
 
 #if UE_TIMING_TRACE
-    start_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    start_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #endif
   if (first_symbol_flag==1) {
     if (beamforming_mode==0){
@@ -639,17 +639,17 @@ int rx_pdsch(PHY_VARS_UE *ue,
 #endif
 
 #if UE_TIMING_TRACE
-    stop_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    stop_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #if DISABLE_LOG_X
-    printf("[AbsSFN %d.%d] Slot%d Symbol %d first_symbol_flag %d: Channel Level %5.2f \n",frame,subframe,slot,symbol,first_symbol_flag,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    printf("[AbsSFN %d.%d] Slot%d Symbol %d first_symbol_flag %d: Channel Level %5.2f \n",frame,subframe,slot,symbol,first_symbol_flag,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #else
-    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d first_symbol_flag %d: Channel Level  %5.2f \n",frame,subframe,slot,symbol,first_symbol_flag,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d first_symbol_flag %d: Channel Level  %5.2f \n",frame,subframe,slot,symbol,first_symbol_flag,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #endif
 #endif
 
 
 #if UE_TIMING_TRACE
-    start_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    start_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #endif
 // Now channel compensation
   if (dlsch0_harq->mimo_mode<LARGE_CDD) {
@@ -846,16 +846,16 @@ int rx_pdsch(PHY_VARS_UE *ue,
   }
 
 #if UE_TIMING_TRACE
-    stop_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    stop_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #if DISABLE_LOG_X
-    printf("[AbsSFN %d.%d] Slot%d Symbol %d log2_maxh %d channel_level %d: Channel Comp %5.2f \n",frame,subframe,slot,symbol,pdsch_vars[eNB_id]->log2_maxh,proc->channel_level,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    printf("[AbsSFN %d.%d] Slot%d Symbol %d log2_maxh %d channel_level %d: Channel Comp %5.2f \n",frame,subframe,slot,symbol,pdsch_vars[eNB_id]->log2_maxh,proc->channel_level,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #else
-    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d log2_maxh %d channel_level %d: Channel Comp  %5.2f \n",frame,subframe,slot,symbol,pdsch_vars[eNB_id]->log2_maxh,proc->channel_level,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d log2_maxh %d channel_level %d: Channel Comp  %5.2f \n",frame,subframe,slot,symbol,pdsch_vars[eNB_id]->log2_maxh,proc->channel_level,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #endif
 #endif
 // MRC
 #if UE_TIMING_TRACE
-    start_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    start_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #endif
 
    if (frame_parms->nb_antennas_rx > 1) {
@@ -925,16 +925,16 @@ int rx_pdsch(PHY_VARS_UE *ue,
   }
 
 #if UE_TIMING_TRACE
-    stop_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    stop_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #if DISABLE_LOG_X
-    printf("[AbsSFN %d.%d] Slot%d Symbol %d: Channel Combine %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    printf("[AbsSFN %d.%d] Slot%d Symbol %d: Channel Combine %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #else
-    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d: Channel Combine  %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d: Channel Combine  %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #endif
 #endif
 
 #if UE_TIMING_TRACE
-    start_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    start_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #endif
   //printf("LLR dlsch0_harq->Qm %d rx_type %d cw0 %d cw1 %d symbol %d \n",dlsch0_harq->Qm,rx_type,codeword_TB0,codeword_TB1,symbol);
   // compute LLRs
@@ -1284,11 +1284,11 @@ int rx_pdsch(PHY_VARS_UE *ue,
   }
 
 #if UE_TIMING_TRACE
-    stop_meas(&ue->generic_stat_bis[current_thread_id[subframe]][slot]);
+    stop_meas(&ue->generic_stat_bis[ue->current_thread_id[subframe]][slot]);
 #if DISABLE_LOG_X
-    printf("[AbsSFN %d.%d] Slot%d Symbol %d: LLR Computation %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    printf("[AbsSFN %d.%d] Slot%d Symbol %d: LLR Computation %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #else
-    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d: LLR Computation  %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d: LLR Computation  %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #endif
 #endif
 // Please keep it: useful for debugging
@@ -1299,12 +1299,12 @@ int rx_pdsch(PHY_VARS_UE *ue,
       if(1)
       {
 #if 1
-      write_output("rxdataF0.m"    , "rxdataF0",             &common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF[0][0],14*frame_parms->ofdm_symbol_size,1,1);
-      //write_output("rxdataF1.m"    , "rxdataF1",             &common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].rxdataF[0][0],14*frame_parms->ofdm_symbol_size,1,1);
-      write_output("dl_ch_estimates00.m", "dl_ch_estimates00",   &common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id][0][0],14*frame_parms->ofdm_symbol_size,1,1);
-      //write_output("dl_ch_estimates01.m", "dl_ch_estimates01",   &common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id][1][0],14*frame_parms->ofdm_symbol_size,1,1);
-      //write_output("dl_ch_estimates10.m", "dl_ch_estimates10",   &common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id][2][0],14*frame_parms->ofdm_symbol_size,1,1);
-      //write_output("dl_ch_estimates11.m", "dl_ch_estimates11",   &common_vars->common_vars_rx_data_per_thread[current_thread_id[subframe]].dl_ch_estimates[eNB_id][3][0],14*frame_parms->ofdm_symbol_size,1,1);
+      write_output("rxdataF0.m"    , "rxdataF0",             &common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[0][0],14*frame_parms->ofdm_symbol_size,1,1);
+      //write_output("rxdataF1.m"    , "rxdataF1",             &common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[0][0],14*frame_parms->ofdm_symbol_size,1,1);
+      write_output("dl_ch_estimates00.m", "dl_ch_estimates00",   &common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][0][0],14*frame_parms->ofdm_symbol_size,1,1);
+      //write_output("dl_ch_estimates01.m", "dl_ch_estimates01",   &common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][1][0],14*frame_parms->ofdm_symbol_size,1,1);
+      //write_output("dl_ch_estimates10.m", "dl_ch_estimates10",   &common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][2][0],14*frame_parms->ofdm_symbol_size,1,1);
+      //write_output("dl_ch_estimates11.m", "dl_ch_estimates11",   &common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][3][0],14*frame_parms->ofdm_symbol_size,1,1);
 
 
       //write_output("rxdataF_ext00.m"    , "rxdataF_ext00",       &pdsch_vars[eNB_id]->rxdataF_ext[0][0],14*frame_parms->N_RB_DL*12,1,1);
@@ -8010,50 +8010,50 @@ void dump_dlsch2(PHY_VARS_UE *ue,uint8_t eNB_id,uint8_t subframe,unsigned int *c
 
   sprintf(fname,"dlsch%d_rxF_r%d_ext0.m",eNB_id,round);
   sprintf(vname,"dl%d_rxF_r%d_ext0",eNB_id,round);
-  write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->rxdataF_ext[0],12*N_RB_DL*nsymb,1,1);
+  write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->rxdataF_ext[0],12*N_RB_DL*nsymb,1,1);
 
   if (ue->frame_parms.nb_antennas_rx >1) {
     sprintf(fname,"dlsch%d_rxF_r%d_ext1.m",eNB_id,round);
     sprintf(vname,"dl%d_rxF_r%d_ext1",eNB_id,round);
-    write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->rxdataF_ext[1],12*N_RB_DL*nsymb,1,1);
+    write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->rxdataF_ext[1],12*N_RB_DL*nsymb,1,1);
   }
 
   sprintf(fname,"dlsch%d_ch_r%d_ext00.m",eNB_id,round);
   sprintf(vname,"dl%d_ch_r%d_ext00",eNB_id,round);
-  write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->dl_ch_estimates_ext[0],12*N_RB_DL*nsymb,1,1);
+  write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->dl_ch_estimates_ext[0],12*N_RB_DL*nsymb,1,1);
 
   if (ue->transmission_mode[eNB_id]==7){
     sprintf(fname,"dlsch%d_bf_ch_r%d.m",eNB_id,round);
     sprintf(vname,"dl%d_bf_ch_r%d",eNB_id,round);
-    write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->dl_bf_ch_estimates[0],512*nsymb,1,1);
+    write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->dl_bf_ch_estimates[0],512*nsymb,1,1);
     //write_output(fname,vname,phy_vars_ue->lte_ue_pdsch_vars[eNB_id]->dl_bf_ch_estimates[0],512,1,1);
 
     sprintf(fname,"dlsch%d_bf_ch_r%d_ext00.m",eNB_id,round);
     sprintf(vname,"dl%d_bf_ch_r%d_ext00",eNB_id,round);
-    write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->dl_bf_ch_estimates_ext[0],12*N_RB_DL*nsymb,1,1);
+    write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->dl_bf_ch_estimates_ext[0],12*N_RB_DL*nsymb,1,1);
   }
 
   if (ue->frame_parms.nb_antennas_rx == 2) {
     sprintf(fname,"dlsch%d_ch_r%d_ext01.m",eNB_id,round);
     sprintf(vname,"dl%d_ch_r%d_ext01",eNB_id,round);
-    write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->dl_ch_estimates_ext[1],12*N_RB_DL*nsymb,1,1);
+    write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->dl_ch_estimates_ext[1],12*N_RB_DL*nsymb,1,1);
   }
 
   if (ue->frame_parms.nb_antenna_ports_eNB == 2) {
     sprintf(fname,"dlsch%d_ch_r%d_ext10.m",eNB_id,round);
     sprintf(vname,"dl%d_ch_r%d_ext10",eNB_id,round);
-    write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->dl_ch_estimates_ext[2],12*N_RB_DL*nsymb,1,1);
+    write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->dl_ch_estimates_ext[2],12*N_RB_DL*nsymb,1,1);
 
     if (ue->frame_parms.nb_antennas_rx == 2) {
       sprintf(fname,"dlsch%d_ch_r%d_ext11.m",eNB_id,round);
       sprintf(vname,"dl%d_ch_r%d_ext11",eNB_id,round);
-      write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->dl_ch_estimates_ext[3],12*N_RB_DL*nsymb,1,1);
+      write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->dl_ch_estimates_ext[3],12*N_RB_DL*nsymb,1,1);
     }
   }
 
   sprintf(fname,"dlsch%d_rxF_r%d_uespec0.m",eNB_id,round);
   sprintf(vname,"dl%d_rxF_r%d_uespec0",eNB_id,round);
-  write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->rxdataF_uespec_pilots[0],12*N_RB_DL,1,1);
+  write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->rxdataF_uespec_pilots[0],12*N_RB_DL,1,1);
 
   /*
     write_output("dlsch%d_ch_ext01.m","dl01_ch0_ext",pdsch_vars[eNB_id]->dl_ch_estimates_ext[1],12*N_RB_DL*nsymb,1,1);
@@ -8063,31 +8063,31 @@ void dump_dlsch2(PHY_VARS_UE *ue,uint8_t eNB_id,uint8_t subframe,unsigned int *c
   sprintf(fname,"dlsch%d_r%d_rho.m",eNB_id,round);
   sprintf(vname,"dl_rho_r%d_%d",eNB_id,round);
 
-  write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->dl_ch_rho_ext[harq_pid][round][0],12*N_RB_DL*nsymb,1,1);
+  write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->dl_ch_rho_ext[harq_pid][round][0],12*N_RB_DL*nsymb,1,1);
 
   sprintf(fname,"dlsch%d_r%d_rho2.m",eNB_id,round);
   sprintf(vname,"dl_rho2_r%d_%d",eNB_id,round);
 
-  write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->dl_ch_rho2_ext[0],12*N_RB_DL*nsymb,1,1);
+  write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->dl_ch_rho2_ext[0],12*N_RB_DL*nsymb,1,1);
 
   sprintf(fname,"dlsch%d_rxF_r%d_comp0.m",eNB_id,round);
   sprintf(vname,"dl%d_rxF_r%d_comp0",eNB_id,round);
-  write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->rxdataF_comp0[0],12*N_RB_DL*nsymb,1,1);
+  write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->rxdataF_comp0[0],12*N_RB_DL*nsymb,1,1);
   if (ue->frame_parms.nb_antenna_ports_eNB == 2) {
     sprintf(fname,"dlsch%d_rxF_r%d_comp1.m",eNB_id,round);
     sprintf(vname,"dl%d_rxF_r%d_comp1",eNB_id,round);
-    write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->rxdataF_comp1[harq_pid][round][0],12*N_RB_DL*nsymb,1,1);
+    write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->rxdataF_comp1[harq_pid][round][0],12*N_RB_DL*nsymb,1,1);
   }
 
   sprintf(fname,"dlsch%d_rxF_r%d_llr.m",eNB_id,round);
   sprintf(vname,"dl%d_r%d_llr",eNB_id,round);
-  write_output(fname,vname, ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->llr[0],coded_bits_per_codeword[0],1,0);
+  write_output(fname,vname, ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->llr[0],coded_bits_per_codeword[0],1,0);
   sprintf(fname,"dlsch%d_r%d_mag1.m",eNB_id,round);
   sprintf(vname,"dl%d_r%d_mag1",eNB_id,round);
-  write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->dl_ch_mag0[0],12*N_RB_DL*nsymb,1,1);
+  write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->dl_ch_mag0[0],12*N_RB_DL*nsymb,1,1);
   sprintf(fname,"dlsch%d_r%d_mag2.m",eNB_id,round);
   sprintf(vname,"dl%d_r%d_mag2",eNB_id,round);
-  write_output(fname,vname,ue->pdsch_vars[current_thread_id[subframe]][eNB_id]->dl_ch_magb0[0],12*N_RB_DL*nsymb,1,1);
+  write_output(fname,vname,ue->pdsch_vars[ue->current_thread_id[subframe]][eNB_id]->dl_ch_magb0[0],12*N_RB_DL*nsymb,1,1);
 
   //  printf("log2_maxh = %d\n",ue->pdsch_vars[eNB_id]->log2_maxh);
 }

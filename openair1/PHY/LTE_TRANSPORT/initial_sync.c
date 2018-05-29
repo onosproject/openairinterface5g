@@ -86,7 +86,7 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
 		      0,
                       0);
 
-  printf("after lte_ue_measurements:TDD? %d UE %d, dig %3.1f\n",ue->frame_parms.frame_type,ue->Mod_id,10*log10(ue->measurements.rssi));
+  //printf("after lte_ue_measurements:TDD? %d UE %d, dig %3.1f\n",ue->frame_parms.frame_type,ue->Mod_id,10*log10(ue->measurements.rssi));
   if (ue->frame_parms.frame_type == TDD) {
     ue_rrc_measurements(ue,
 			2,
@@ -97,7 +97,7 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
 			0,
 			0);
   }
-  printf(" after ue_rrc_measurements_freq: UE %d, dig %3.1f\n",ue->Mod_id,10*log10(ue->measurements.rssi));
+  //printf(" after ue_rrc_measurements_freq: UE %d, dig %3.1f\n",ue->Mod_id,10*log10(ue->measurements.rssi));
 //#ifdef DEBUG_INITIAL_SYNCH
   LOG_I(PHY,"[UE %d] RX RSSI %d dBm, digital (%d, %d) dB, linear (%d, %d), avg rx power %d dB (%d lin), RX gain %d dB\n",
         ue->Mod_id,
@@ -303,7 +303,7 @@ int pbch_detection_freq(PHY_VARS_UE *ue, runmode_t mode)
                       0,
 		      0,
                       0);
-  printf(" after lte_ue_measurements_freq: UE %d, dig %3.1f\n",ue->Mod_id,10*log10(ue->measurements.rssi));
+  //printf(" after lte_ue_measurements_freq: UE %d, dig %3.1f\n",ue->Mod_id,10*log10(ue->measurements.rssi));
 
   if (ue->frame_parms.frame_type == TDD) {
     ue_rrc_measurements_freq(ue,
@@ -315,7 +315,7 @@ int pbch_detection_freq(PHY_VARS_UE *ue, runmode_t mode)
 			0,
 			0);
   }
-  printf(" after ue_rrc_measurements_freq: TDD? %d UE %d, dig %3.1f\n",ue->frame_parms.frame_type,ue->Mod_id,10*log10(ue->measurements.rssi));
+  //printf(" after ue_rrc_measurements_freq: TDD? %d UE %d, dig %3.1f\n",ue->frame_parms.frame_type,ue->Mod_id,10*log10(ue->measurements.rssi));
 //#ifdef DEBUG_INITIAL_SYNCH
   LOG_I(PHY,"[UE %d] RX RSSI %d dBm, digital (%d, %d) dB, linear (%d, %d), avg rx power %d dB (%d lin), RX gain %d dB\n",
         ue->Mod_id,

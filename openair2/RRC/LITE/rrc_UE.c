@@ -2668,9 +2668,9 @@ int decode_BCCH_DLSCH_Message(
     LOG_E( RRC, "[UE %"PRIu8"] Failed to decode BCCH_DLSCH_MESSAGE (%zu bits)\n",
            ctxt_pP->module_id,
            dec_rval.consumed );
-    for (i=0;i<Sdu_len;i++)
+    /*for (i=0;i<Sdu_len;i++)
       printf("%02x ",Sdu[i]);
-    printf("\n");
+    printf("\n");*/
     // free the memory
     SEQUENCE_free( &asn_DEF_BCCH_DL_SCH_Message, (void*)bcch_message, 1 );
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_BCCH, VCD_FUNCTION_OUT );
@@ -2716,7 +2716,7 @@ int decode_BCCH_DLSCH_Message(
                   (void*)&bcch_message->message.choice.c1.choice.systemInformationBlockType1,
                   sizeof(SystemInformationBlockType1_t) );
           LOG_D( RRC, "[UE %"PRIu8"] Decoding First SIB1\n", ctxt_pP->module_id );
-	  printf("SIB1: BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1 %d, ctxt_pP->frame % 2 == 0? %d, UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1 == 0? %d, frame %d\n",BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1,((ctxt_pP->frame % 2) == 0),((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 0),ctxt_pP->frame);
+	  //printf("SIB1: BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1 %d, ctxt_pP->frame % 2 == 0? %d, UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1 == 0? %d, frame %d\n",BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1,((ctxt_pP->frame % 2) == 0),((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 0),ctxt_pP->frame);
           decode_SIB1( ctxt_pP, eNB_index, rsrq, rsrp );
           //printf("decode_BCCH_DLSCH_Message \n");
         }
@@ -2736,7 +2736,7 @@ int decode_BCCH_DLSCH_Message(
         LOG_I( RRC, "[UE %"PRIu8"] Decoding SI for frameP %"PRIu32"\n",
                ctxt_pP->module_id,
                ctxt_pP->frame );
-	printf("Decoding SI: BCCH_DL_SCH_MessageType__c1_PR_systemInformation %d, (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) %d\n",BCCH_DL_SCH_MessageType__c1_PR_systemInformation,(UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1));
+	//printf("Decoding SI: BCCH_DL_SCH_MessageType__c1_PR_systemInformation %d, (UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) %d\n",BCCH_DL_SCH_MessageType__c1_PR_systemInformation,(UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1));
         decode_SI( ctxt_pP, eNB_index );
       }
       break;
@@ -2783,9 +2783,9 @@ int decode_PCCH_DLSCH_Message(
     LOG_E( RRC, "[UE %"PRIu8"] Failed to decode PCCH_MESSAGE (%zu bits)\n",
            ctxt_pP->module_id,
            dec_rval.consumed );
-    for (i=0;i<Sdu_len;i++)
+    /*for (i=0;i<Sdu_len;i++)
       printf("%02x ",Sdu[i]);
-    printf("\n");
+    printf("\n");*/
     // free the memory
     SEQUENCE_free( &asn_DEF_PCCH_Message, (void*)pcch_message, 1 );
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_PCCH, VCD_FUNCTION_OUT );
@@ -3470,10 +3470,10 @@ static void dump_sib5( SystemInformationBlockType5_t *sib5 )
 	    *ifcfInfo->cellReselectionPriority);
     }
     LOG_I(RRC,"   NeighCellConfig  : ");
-    for (j=0;j<ifcfInfo->neighCellConfig.size;j++) {
+    /*for (j=0;j<ifcfInfo->neighCellConfig.size;j++) {
       printf("%2x ",ifcfInfo->neighCellConfig.buf[j]);
     }
-    printf("\n");
+    printf("\n");*/
     if (ifcfInfo->q_OffsetFreq)
       LOG_I(RRC,"   Q_OffsetFreq : %d\n",Qoffsettab[*ifcfInfo->q_OffsetFreq]);
     if (ifcfInfo->interFreqNeighCellList) {

@@ -456,7 +456,7 @@ function main() {
     echo_info "Installing packages"
     check_install_oai_software
     if [ "$HW" == "OAI_USRP" ] ; then
-      echo_info "installing packages for USRP support"
+      echo_info "installing packages for USRP support ok"
       check_install_usrp_uhd_driver
       if [ ! "$DISABLE_HARDWARE_DEPENDENCY" == "True" ]; then
         install_usrp_uhd_driver $UHD_IMAGES_DIR

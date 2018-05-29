@@ -1104,8 +1104,8 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
   //ue->current_thread_id = (uint8_t*)malloc16( 10*sizeof(uint8_t) );
   for (i = 0; i < 10; i++) 
   {
-	ue->current_thread_id[i] = i % 2;
 	current_thread_id[i] = i % 2;
+        ue->current_thread_id[i] = i % 2;
 	printf("ue->Mod_id %d, thread %d = %d\n",ue->Mod_id,i,ue->current_thread_id[i]);
   }
   printf("Initializing UE vars (abstraction %"PRIu8") for eNB TXant %"PRIu8", UE RXant %"PRIu8"\n",abstraction_flag,fp->nb_antennas_tx,fp->nb_antennas_rx);

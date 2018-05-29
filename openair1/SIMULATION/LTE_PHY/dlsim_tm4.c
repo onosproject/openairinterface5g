@@ -2052,7 +2052,7 @@ int main(int argc, char **argv)
 
 
     if (n_frames==1)
-      printf("%d\n",numCCE);
+      //printf("%d\n",numCCE);
 
     // apply RNTI-based nCCE allocation
     memset(CCE_table,0,800*sizeof(int));

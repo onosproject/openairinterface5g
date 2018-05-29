@@ -130,8 +130,11 @@ void lte_param_init(unsigned char N_tx_port_eNB,
   UE->perfect_ce = perfect_ce;
 
   /* the UE code is multi-thread "aware", we need to setup this array */
-  //for (i = 0; i < 10; i++) UE->current_thread_id[i] = i % 2;
-
+  for (i = 0; i < 10; i++) 
+  {
+	UE->current_thread_id[i] = i % 2;
+	printf("[lte_param_id] ue->Mod_id %d, thread %d = %d\n",UE->Mod_id,i,UE->current_thread_id[i]);
+  }
   printf("Done lte_param_init\n");
 
 
