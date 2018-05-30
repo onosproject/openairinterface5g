@@ -173,6 +173,8 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
 #ifdef Rel14
       //TTN (29/05/18) OIP1 for UE-eNB, OIP0 for UE-UE (incoming packets)
+      LOG_I(PDCP, "[THINH2] source L2 Id: 0x%08x, destL2 0x%08x \n",((pdcp_data_ind_header_t *)(sdu_p->data))->sourceL2Id, ((pdcp_data_ind_header_t *)(sdu_p->data))->destinationL2Id);
+
       //traffic from other UE
       if (( ((pdcp_data_ind_header_t *)(sdu_p->data))->sourceL2Id > 0) && ( ((pdcp_data_ind_header_t *)(sdu_p->data))->destinationL2Id > 0)){
          ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
@@ -1093,6 +1095,8 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                           rab_id,
                                           pdcp_read_header_g.data_size);
 
+                        LOG_I(PDCP, "[THINH] source L2 Id: 0x%08x, destL2 0x%08x \n",pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id);
+
                         //TTN - for traffic from OIP1 (to eNB), sourceL2/DestL2 should be set to NULL
                         if (pdcp_read_header_g.inst == 0 ){ //INST == 0 (OIP0)
                            pdcp_data_req(
@@ -1170,6 +1174,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                        DEFAULT_RAB_ID,
                                        pdcp_read_header_g.data_size);
 
+                     LOG_I(PDCP, "[THINH] source L2 Id: 0x%08x, destL2 0x%08x \n",pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id);
                      //TTN - for traffic from OIP1 (to eNB), sourceL2/DestL2 should be set to NULL
                      if (pdcp_read_header_g.inst == 0){  //INST == 0 (OIP0)
                         pdcp_data_req (
