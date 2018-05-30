@@ -176,7 +176,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
       //for the  moment, based on rb_id, we distinguish between the traffic from eNB and from other UE
 
       //traffic from other UE
-      if ( ((pdcp_data_ind_header_t *)(sdu_p->data))->sourceL2Id > 4) {
+      if ( ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id > 4) {
          ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
       } else
 #endif
