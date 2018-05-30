@@ -794,7 +794,7 @@ pdcp_data_ind(
         //TTN (29/05/18) should check value of INST since 0 is for OIP0 (UE-UE), 1 is for OIP1 (UE-eNB) [even with S1 mode]
         //for the  moment, based on rb_id, we distinguish between the traffic from eNB and from other UE
         //if traffic from other UE
-        if ( ((pdcp_data_ind_header_t*) new_sdu_p->data)->rb_id > 4 ) {
+        if ( ((pdcp_data_ind_header_t*) new_sdu_p->data)->rb_id >= 4 ) {
            ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = 0;
         } else
 #endif
