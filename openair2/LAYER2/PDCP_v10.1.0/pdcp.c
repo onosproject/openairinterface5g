@@ -789,7 +789,18 @@ pdcp_data_ind(
          * for the UE compiled in noS1 mode, we need 0
          * TODO: be sure of this
          */
-        ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = 1;
+
+#ifdef Rel14
+        //TTN (29/05/18) should check value of INST since 0 is for OIP0 (UE-UE), 1 is for OIP1 (UE-eNB) [even with S1 mode]
+        //if traffic from other UE
+        if ((((pdcp_data_ind_header_t*) new_sdu_p->data)->sourceL2Id > 0 ) && (((pdcp_data_ind_header_t*) new_sdu_p->data)->destinationL2Id > 0 )){
+           ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = 0;
+        } else
+#endif
+        { //traffic from eNB
+           ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = 1;
+        }
+
 #endif
       } else {
         ((pdcp_data_ind_header_t*) new_sdu_p->data)->rb_id = rb_id + (ctxt_pP->module_id * maxDRB);
@@ -797,8 +808,8 @@ pdcp_data_ind(
       ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id;
 
 #ifdef DEBUG_PDCP_FIFO_FLUSH_SDU
-      static uint32_t pdcp_inst = 0;
-      ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst = pdcp_inst++;
+    //  static uint32_t pdcp_inst = 0;
+    //  ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst = pdcp_inst++; //TTN again should verify the value of INST (incoming packets)
       LOG_D(PDCP, "inst=%d size=%d\n", ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst, ((pdcp_data_ind_header_t *) new_sdu_p->data)->data_size);
 #endif
 

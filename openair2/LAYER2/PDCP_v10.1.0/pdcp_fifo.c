@@ -168,8 +168,19 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
             ((pdcp_data_ind_header_t*) sdu_p->data)->inst,
             ((pdcp_data_ind_header_t *) sdu_p->data)->data_size);
 #else
-      ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
+     // ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
 #endif
+
+#ifdef Rel14
+      //TTN (29/05/18) OIP1 for UE-eNB, OIP0 for UE-UE (incoming packets)
+      //traffic from other UE
+      if (( ((pdcp_data_ind_header_t *)(sdu_p->data))->sourceL2Id > 0) && ( ((pdcp_data_ind_header_t *)(sdu_p->data))->destinationL2Id > 0)){
+         ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
+      } else
+#endif
+      { //traffic from eNB
+         ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 1;
+      }
 
 #if defined(LINK_ENB_PDCP_TO_GTPV1U)
 
@@ -458,7 +469,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 
       pdcp_data_req(&ctxt, SRB_FLAG_NO, rab_id, RLC_MUI_UNDEFINED,
                     RLC_SDU_CONFIRM_NO, len, nl_rx_buf,
-                    PDCP_TRANSMISSION_MODE_DATA);
+                    PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                    ,NULL, NULL
+#endif
+        );
     } else {
       MSC_LOG_RX_DISCARDED_MESSAGE(
       (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_PDCP_ENB:MSC_PDCP_UE,
@@ -827,6 +842,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                  DEFAULT_RAB_ID,
                                  pc5s_header->data_size);
 
+
                pdcp_data_req (
                      &ctxt,
                      SRB_FLAG_NO,
@@ -848,7 +864,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
       }
    }
 
-#endif
+#endif /*end PC5S*/
 
    while ((len > 0) && (rlc_data_req_flag !=0))  {
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_FIFO_READ, 1 );
@@ -1077,20 +1093,39 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                           rab_id,
                                           pdcp_read_header_g.data_size);
 
-                        pdcp_data_req(
-                              &ctxt,
-                              SRB_FLAG_NO,
-                              rab_id,
-                              RLC_MUI_UNDEFINED,
-                              RLC_SDU_CONFIRM_NO,
-                              pdcp_read_header_g.data_size,
-                              (unsigned char *)NLMSG_DATA(nas_nlh_rx),
-                              PDCP_TRANSMISSION_MODE_DATA
+                        //TTN - for traffic from OIP1 (to eNB), sourceL2/DestL2 should be set to NULL
+                        if (pdcp_read_header_g.inst == 0 ){ //INST == 0 (OIP0)
+                           pdcp_data_req(
+                                 &ctxt,
+                                 SRB_FLAG_NO,
+                                 rab_id,
+                                 RLC_MUI_UNDEFINED,
+                                 RLC_SDU_CONFIRM_NO,
+                                 pdcp_read_header_g.data_size,
+                                 (unsigned char *)NLMSG_DATA(nas_nlh_rx),
+                                 PDCP_TRANSMISSION_MODE_DATA
 #ifdef Rel14
-                              ,&pdcp_read_header_g.sourceL2Id
-                              ,&pdcp_read_header_g.destinationL2Id
+                                 ,&pdcp_read_header_g.sourceL2Id
+                                 ,&pdcp_read_header_g.destinationL2Id
 #endif
-                              );
+                           );
+                        } else {  //INST == 1 (OIP1)
+                           pdcp_data_req(
+                                 &ctxt,
+                                 SRB_FLAG_NO,
+                                 rab_id,
+                                 RLC_MUI_UNDEFINED,
+                                 RLC_SDU_CONFIRM_NO,
+                                 pdcp_read_header_g.data_size,
+                                 (unsigned char *)NLMSG_DATA(nas_nlh_rx),
+                                 PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                                 ,NULL
+                                 ,NULL
+#endif
+                           );
+                        }
+
                      } else {
                         MSC_LOG_RX_DISCARDED_MESSAGE(
                               (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_PDCP_ENB:MSC_PDCP_UE,
@@ -1135,20 +1170,39 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                        DEFAULT_RAB_ID,
                                        pdcp_read_header_g.data_size);
 
-                     pdcp_data_req (
-                           &ctxt,
-                           SRB_FLAG_NO,
-                           DEFAULT_RAB_ID,
-                           RLC_MUI_UNDEFINED,
-                           RLC_SDU_CONFIRM_NO,
-                           pdcp_read_header_g.data_size,
-                           (unsigned char *)NLMSG_DATA(nas_nlh_rx),
-                           PDCP_TRANSMISSION_MODE_DATA
+                     //TTN - for traffic from OIP1 (to eNB), sourceL2/DestL2 should be set to NULL
+                     if (pdcp_read_header_g.inst == 0){  //INST == 0 (OIP0)
+                        pdcp_data_req (
+                              &ctxt,
+                              SRB_FLAG_NO,
+                              DEFAULT_RAB_ID,
+                              RLC_MUI_UNDEFINED,
+                              RLC_SDU_CONFIRM_NO,
+                              pdcp_read_header_g.data_size,
+                              (unsigned char *)NLMSG_DATA(nas_nlh_rx),
+                              PDCP_TRANSMISSION_MODE_DATA
 #ifdef Rel14
-                           ,&pdcp_read_header_g.sourceL2Id
-                           ,&pdcp_read_header_g.destinationL2Id
+                              ,&pdcp_read_header_g.sourceL2Id
+                              ,&pdcp_read_header_g.destinationL2Id
 #endif
-                           );
+                        );
+                     }  else { //INST == 1 (OIP1)
+                        pdcp_data_req (
+                              &ctxt,
+                              SRB_FLAG_NO,
+                              DEFAULT_RAB_ID,
+                              RLC_MUI_UNDEFINED,
+                              RLC_SDU_CONFIRM_NO,
+                              pdcp_read_header_g.data_size,
+                              (unsigned char *)NLMSG_DATA(nas_nlh_rx),
+                              PDCP_TRANSMISSION_MODE_DATA
+#ifdef Rel14
+                              ,NULL
+                              ,NULL
+#endif
+                        );
+                     }
+
                   }
                }
 
