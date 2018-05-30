@@ -634,7 +634,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
            LOG_I(MAC,"[UE %d] Configure destination L2Id 0x%08x\n", Mod_idP, *destinationL2Id );
            j = 0;
            k = 0;
-           for (k = 0; k< MAX_NUM_LCID_DATA; k++) {
+           for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
               if ((UE_mac_inst[Mod_idP].sl_info[k].LCID == 0) &&  (UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == 0)  && (UE_mac_inst[Mod_idP].sl_info[k].groupL2Id == 0) && (j == 0)) j = k+1;
               if ((UE_mac_inst[Mod_idP].sl_info[k].destinationL2Id == *destinationL2Id) && (UE_mac_inst[Mod_idP].sl_info[k].LCID == 0 )) {
                  UE_mac_inst[Mod_idP].sl_info[k].LCID = logicalChannelIdentity;

@@ -173,10 +173,10 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
 #ifdef Rel14
       //TTN (29/05/18) OIP1 for UE-eNB, OIP0 for UE-UE (incoming packets)
-      LOG_I(PDCP, "[THINH2] source L2 Id: 0x%08x, destL2 0x%08x \n",((pdcp_data_ind_header_t *)(sdu_p->data))->sourceL2Id, ((pdcp_data_ind_header_t *)(sdu_p->data))->destinationL2Id);
+      //for the  moment, based on rb_id, we distinguish between the traffic from eNB and from other UE
 
       //traffic from other UE
-      if (( ((pdcp_data_ind_header_t *)(sdu_p->data))->sourceL2Id > 0) && ( ((pdcp_data_ind_header_t *)(sdu_p->data))->destinationL2Id > 0)){
+      if ( ((pdcp_data_ind_header_t *)(sdu_p->data))->sourceL2Id > 4) {
          ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
       } else
 #endif

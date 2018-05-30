@@ -5597,8 +5597,7 @@ rrc_control_socket_init(){
       LOG_E(RRC,"[rrc_control_socket_init] :Error opening socket %d (%d:%s)\n",ctrl_sock_fd,errno, strerror(errno));
       exit(EXIT_FAILURE);
    }
-   //   if (ctrl_sock_fd < 0)
-   //      error("ERROR: Failed on opening socket");
+
    optval = 1;
    setsockopt(ctrl_sock_fd, SOL_SOCKET, SO_REUSEADDR,
          (const void *)&optval , sizeof(int));
@@ -5683,7 +5682,6 @@ void *rrc_control_socket_thread_fct(void *arg)
       }
       //TODO: should store the address of ProSeApp [UE_rrc_inst] to be able to send UE state notification to the App
 
-      //sl_ctrl_msg_recv = (struct sidelink_ctrl_element *) receive_buf;
       sl_ctrl_msg_recv = calloc(1, sizeof(struct sidelink_ctrl_element));
       memcpy((void *)sl_ctrl_msg_recv, (void *)receive_buf, sizeof(struct sidelink_ctrl_element));
 
@@ -5750,13 +5748,13 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          //get available rbid for this communication and store (LCID, G)
          if (groupL2Id > 0){
-            for (i=0; i< MAX_NUM_LCID_DATA; i++) {
+            for (i = 0; i< MAX_NUM_LCID_DATA; i++) {
                if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (UE_rrc_inst[module_id].sl_info[i].groupL2Id == 0) && (UE_rrc_inst[module_id].sl_info[i].destinationL2Id == 0)&& (j == 0)) j = i+1;
                if (UE_rrc_inst[module_id].sl_info[i].groupL2Id == groupL2Id) {
-                  if (UE_rrc_inst[module_id].sl_info[i].LCID >0 ){
+                  if (UE_rrc_inst[module_id].sl_info[i].LCID > 0 ){
                      group_comm_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
                   } else if (UE_rrc_inst[module_id].sl_info[i].LCID == 0 ){
-                     UE_rrc_inst[module_id].sl_info[i].LCID = i + 3;
+                     UE_rrc_inst[module_id].sl_info[i].LCID = i + 4; //3 first RBID is for SRB1, SRB2 and DBR1
                      group_comm_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
                   }
                   LOG_I(RRC,"[GroupCommunicationEstablishReq] rbid %d for group Id: 0x%08x\n already exists",group_comm_rbid, UE_rrc_inst[module_id].sl_info[i].groupL2Id );
@@ -5764,7 +5762,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                }
             }
             if ((i == MAX_NUM_LCID_DATA) && (j > 0)) {
-               UE_rrc_inst[module_id].sl_info[j-1].LCID = (j-1)+3;
+               UE_rrc_inst[module_id].sl_info[j-1].LCID = (j-1) + 4;
                group_comm_rbid =  UE_rrc_inst[module_id].sl_info[j-1].LCID;
                UE_rrc_inst[module_id].sl_info[j-1].groupL2Id = groupL2Id;
                LOG_I(RRC,"[GroupCommunicationEstablishReq] establish rbid %d for group Id: 0x%08x\n",group_comm_rbid, UE_rrc_inst[module_id].sl_info[j-1].groupL2Id );
@@ -5942,7 +5940,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          //find the corresponding record and reset the values
          if (slrb_id > 0){
-            for (i=0; i< MAX_NUM_LCID_DATA; i++) {
+            for (i = 0; i< MAX_NUM_LCID_DATA; i++) {
                if (UE_rrc_inst[module_id].sl_info[i].LCID == slrb_id) {
                   UE_rrc_inst[module_id].sl_info[i].LCID = 0;
                   LOG_I(RRC,"[GroupCommunicationReleaseRequest] rbid %d for group Id: 0x%08x\n has been removed",slrb_id, UE_rrc_inst[module_id].sl_info[i].groupL2Id );
@@ -6034,7 +6032,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                   if (UE_rrc_inst[module_id].sl_info[i].LCID > 0) {
                      direct_comm_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
                   } else if (UE_rrc_inst[module_id].sl_info[i].LCID == 0){
-                     UE_rrc_inst[module_id].sl_info[i].LCID = i + 3;
+                     UE_rrc_inst[module_id].sl_info[i].LCID = i + 4; //3 first RBID is for SRB1, SRB2 and DBR1
                      direct_comm_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
                   }
                   LOG_I(RRC,"[DirectCommunicationEstablishReq] rbid %d for destination Id: 0x%08x already exists!\n",direct_comm_rbid, UE_rrc_inst[module_id].sl_info[i].destinationL2Id );
@@ -6042,7 +6040,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                }
             }
             if ((i == MAX_NUM_LCID_DATA) && (j > 0)) {
-               UE_rrc_inst[module_id].sl_info[j-1].LCID = (j-1)+3;
+               UE_rrc_inst[module_id].sl_info[j-1].LCID = (j-1) + 4;
                direct_comm_rbid =  UE_rrc_inst[module_id].sl_info[j-1].LCID;
                UE_rrc_inst[module_id].sl_info[j-1].destinationL2Id = destinationL2Id;
                LOG_I(RRC,"[DirectCommunicationEstablishReq] establish rbid %d for destination Id: 0x%08x\n",direct_comm_rbid, UE_rrc_inst[module_id].sl_info[j-1].destinationL2Id );
@@ -6052,8 +6050,8 @@ void *rrc_control_socket_thread_fct(void *arg)
 
          // configure lower layers PDCP/MAC/PHY for this communication
          //Establish a new RBID/LCID for this communication
-         // Establish a SLRB (using DRB 3 for now)
-         UE  = &UE_rrc_inst[module_id];
+         // Establish a SLRB
+         UE = &UE_rrc_inst[module_id];
          PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
 
          UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
@@ -6231,7 +6229,7 @@ void *rrc_control_socket_thread_fct(void *arg)
              }
           }
 
-          //TEST Remove RLC
+          //Remove RLC instance
           drb_id = slrb_id;
           drb2release_list = CALLOC(1, sizeof(DRB_ToReleaseList_t));
           ASN_SEQUENCE_ADD(&drb2release_list->list, drb_id);
@@ -6254,8 +6252,7 @@ void *rrc_control_socket_thread_fct(void *arg)
         #endif
             );
 
-          //need to remove PDCP instance
-
+          //TODO: remove PDCP instance
 
 
           rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
