@@ -1003,7 +1003,8 @@ int main( int argc, char **argv )
     if (init_opt(in_path, in_ip, NULL, radio_type) == -1)
       LOG_E(OPT,"failed to run OPT \n");
   }
-
+//TTN temporary solution, disable netlink at eNB when eNB and UE are running on the same machine
+  /*
 #ifdef PDCP_USE_NETLINK
   printf("PDCP netlink\n");
   netlink_init();
@@ -1011,6 +1012,7 @@ int main( int argc, char **argv )
   pdcp_netlink_init();
 #endif
 #endif
+*/
 
 #if !defined(ENABLE_ITTI)
   // to make a graceful exit when ctrl-c is pressed
