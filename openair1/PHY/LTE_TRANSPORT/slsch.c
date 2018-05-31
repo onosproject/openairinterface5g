@@ -645,7 +645,7 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,
   
   if (ue->slsch_active == 0) return;
 
-  if (absSF_offset < O) return;
+  if (absSF < O) return;
 
   absSF_modP = absSF_offset%P;
 
@@ -694,7 +694,7 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   
   absSF_offset = absSF-O;
 
-  if (absSF_offset < O) return;
+  if (absSF < O) return;
 
   absSF_modP = absSF_offset%P;
 
@@ -719,6 +719,7 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   // sf_index now contains the SF index in 0...LPSCCH-1
   // LPSCCH has the number of PSCCH subframes
 
+ 
   // number of resources blocks per slot times 2 slots
   uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB_SC*LPSCCH<<1;
   AssertFatal(slsch->n_pscch < (M_RB_PSCCH_RP>>1)*LPSCCH,"n_pscch not in 0..%d\n",
@@ -1083,7 +1084,7 @@ void rx_slcch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx)
 
   absSF_offset = absSF-O;
 
-  if (absSF_offset < O) return;
+  if (absSF < O) return;
 
   absSF_modP = absSF_offset%P;
 
@@ -1455,7 +1456,7 @@ void rx_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
 
   absSF_offset = absSF-O;
 
-  if (absSF_offset < O) return;
+  if (absSF < O) return;
 
   absSF_modP = absSF_offset%P;
 

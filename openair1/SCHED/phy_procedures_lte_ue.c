@@ -2375,7 +2375,10 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
     
   // check for SLSCH
   AssertFatal(0==pthread_mutex_lock(&ue->slsch_mutex),"");
-  if ((ue->slsch = ue_get_slsch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_slsch(ue,proc,ue->slsch,frame_tx,subframe_tx);
+  if ((ue->slsch = ue_get_slsch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL)  {
+      check_and_generate_pscch(ue,frame_tx,subframe_tx);
+      check_and_generate_pssch(ue,proc,frame_tx,subframe_tx);
+  }
   AssertFatal(0==pthread_mutex_unlock(&ue->slsch_mutex),"");
   //LOG_D(PHY,"ULSCH (after slsch) : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
   LOG_D(PHY,"****** end Sidelink TX-Chain for AbsSubframe %d.%d (ul %d) ******\n", frame_tx, subframe_tx,

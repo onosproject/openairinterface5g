@@ -3282,7 +3282,7 @@ SLDCH_t *ue_get_sldch(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t 
    return((SLDCH_t*)NULL);
 }
 
-
+/*
 SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframeP) {
 
    mac_rlc_status_resp_t rlc_status, rlc_status_data;
@@ -3299,43 +3299,6 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
    LOG_D(MAC,"Checking SLSCH for absSF %d\n",absSF);
    if ((absSF%40) == 0) { // fill PSCCH data later in first subframe of SL period
       ue->sltx_active = 0;
-/*
-      for (i = 0; i < MAX_NUM_LCID; i++){
-         if (ue->SL_LCID[i] > 0) {
-            for (int j = 0; j < ue->numCommFlows; j++){
-               if ((ue->sourceL2Id > 0) && (ue->destinationList[j] >0) ){
-                  rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
-                        ue->SL_LCID[i], 0xFFFF, ue->sourceL2Id, ue->destinationList[j]);
-                  if (rlc_status.bytes_in_buffer > 2){
-                     LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
-                     // Fill in group id for off-network communications
-                     ue->sltx_active = 1;
-                     //store LCID, destinationL2Id
-                     ue->slsch_lcid =  ue->SL_LCID[i];
-                     ue->destinationL2Id = ue->destinationList[j];
-                     break;
-                  }
-               }
-
-               if ((ue->sourceL2Id > 0) && (ue->groupList[j] >0) ){
-                  rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
-                        ue->SL_LCID[i], 0xFFFF, ue->sourceL2Id, ue->groupList[j]);
-                  if (rlc_status.bytes_in_buffer > 2){
-                     LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
-                     // Fill in group id for off-network communications
-                     ue->sltx_active = 1;
-                     //store LCID, destinationL2Id
-                     ue->slsch_lcid =  ue->SL_LCID[i];
-                     ue->destinationL2Id = ue->groupList[j];
-                     break;
-                  }
-               }
-
-            }
-         }
-         if ( ue->sltx_active == 1) break;
-      }
-      */
       for (i = 0; i < MAX_NUM_LCID; i++){
                if (ue->sl_info[i].LCID > 0) {
                  // for (int j = 0; j < ue->numCommFlows; j++){
@@ -3455,3 +3418,155 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 
   return(NULL);
 }
+*/
+
+SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframeP) {
+
+   mac_rlc_status_resp_t rlc_status, rlc_status_data;
+   uint32_t absSF = (frameP*10)+subframeP;
+   UE_MAC_INST *ue = &UE_mac_inst[module_idP];
+   int sdu_length;
+   //uint8_t sl_lcids[2] = {3, 10}; //list of lcids for SL - hardcoded
+   int i = 0;
+   int mcs=19;
+   int L_CRBs=10;
+   // Note: this is hard-coded for now for the default SL configuration (4 SF PSCCH, 36 SF PSSCH)
+   SLSCH_t *slsch = &UE_mac_inst[module_idP].slsch;
+
+   AssertFatal(slsch!=NULL,"SLSCH is null\n");
+   uint32_t O = slsch->SL_OffsetIndicator;
+   uint32_t P = slsch->SL_SC_Period;
+   uint32_t absSF_offset=absSF-O,absSF_modP;
+
+   if (absSF<O) return((SLSCH_t *)NULL);
+
+   LOG_D(MAC,"Checking SLSCH for absSF %d\n",absSF);
+
+   if (absSF_offset == 0) { // this is the first subframe of PSCCH period, check for data and generate SCI
+      ue->sltx_active = 0;
+      for (i = 0; i < MAX_NUM_LCID; i++){
+               if (ue->sl_info[i].LCID > 0) {
+                 // for (int j = 0; j < ue->numCommFlows; j++){
+                     if ((ue->sourceL2Id > 0) && (ue->sl_info[i].destinationL2Id >0) ){
+                        rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                              ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].destinationL2Id );
+                        if (rlc_status.bytes_in_buffer > 2){
+                           LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer \n",frameP,subframeP,rlc_status.bytes_in_buffer);
+
+                           // Fill in group id for off-network communications
+                           ue->sltx_active = 1;
+                           //store LCID, destinationL2Id
+                           ue->slsch_lcid =  ue->sl_info[i].LCID;
+                           ue->destinationL2Id = ue->sl_info[i].destinationL2Id;
+                           LOG_I(MAC,"LCID %d, source L2ID  0x%08x, destinationL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->destinationL2Id);
+                           break;
+                        }
+                     }
+
+                     if ((ue->sourceL2Id > 0) && (ue->sl_info[i].groupL2Id >0) ){
+                        rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                              ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].groupL2Id);
+                        if (rlc_status.bytes_in_buffer > 2){
+                           LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
+                           // Fill in group id for off-network communications
+                           ue->sltx_active = 1;
+                           //store LCID, destinationL2Id
+                           ue->slsch_lcid =  ue->sl_info[i].LCID;
+                           ue->destinationL2Id = ue->sl_info[i].groupL2Id;
+                           LOG_I(MAC,"LCID %d, source L2ID  0x%08x, groupL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->destinationL2Id);
+                           break;
+                        }
+                     }
+
+                 // }
+               }
+               if ( ue->sltx_active == 1) break;
+            }
+     if (ue->sltx_active == 0) return((SLSCH_t*)NULL);
+
+     // fill in SCI fields
+     slsch->n_pscch                   = ue->sourceL2Id;  
+     slsch->format                    = 0;
+     slsch->freq_hopping_flag         = 0;
+     slsch->resource_block_coding     = computeRIV(slsch->N_SL_RB_data,0,L_CRBs);
+     slsch->time_resource_pattern     = 106; // all subframes for Nrp=8
+     slsch->mcs                       = mcs;
+     slsch->timing_advance_indication = 0;
+     slsch->group_destination_id      = ue->destinationL2Id&0xff;
+
+   } // we're in the SCI period
+   else if (ue->sltx_active == 1) { // every 4th subframe, check for new data from RLC
+      // 10 PRBs, mcs 19
+      int TBS = get_TBS_UL(mcs,L_CRBs);
+      int req;
+
+
+      if (TBS <= rlc_status.bytes_in_buffer) req = TBS;
+      else req = rlc_status.bytes_in_buffer;
+
+      if (req>0) {
+         sdu_length = mac_rlc_data_req(module_idP,
+               0x1234,
+               0,
+               frameP,
+               ENB_FLAG_NO,
+               MBMS_FLAG_NO,
+               ue->slsch_lcid,
+               req,
+               (char*)(ue->slsch_pdu.payload + sizeof(SLSCH_SUBHEADER_24_Bit_DST_LONG))
+#ifdef Rel14
+               ,ue->sourceL2Id,
+               ue->destinationL2Id
+#endif
+         );
+
+         // Notes: 1. hard-coded to 24-bit destination format for now
+         if (sdu_length > 0) {
+
+            LOG_I(MAC,"SFN.SF %d.%d : got %d bytes from Sidelink buffer (%d requested)\n",frameP,subframeP,sdu_length,req);
+            LOG_I(MAC,"sourceL2Id: 0x%08x \n",ue->sourceL2Id);
+            LOG_I(MAC,"groupL2Id/destinationL2Id: 0x%08x \n",ue->destinationL2Id);
+
+            slsch->payload = (unsigned char*)ue->slsch_pdu.payload;
+            if (sdu_length < 128) {
+               slsch->payload++;
+               SLSCH_SUBHEADER_24_Bit_DST_SHORT *shorth= (SLSCH_SUBHEADER_24_Bit_DST_SHORT *)slsch->payload;
+               shorth->F = 0;
+               shorth->L = sdu_length;
+               shorth->E = 0;
+               shorth->LCID = ue->slsch_lcid;
+               shorth->SRC07 = (ue->sourceL2Id>>16) & 0x000000ff;
+               shorth->SRC815 = (ue->sourceL2Id>>8) & 0x000000ff;
+               shorth->SRC1623 = ue->sourceL2Id & 0x000000ff;
+               shorth->DST07 = (ue->destinationL2Id >>16) & 0x000000ff;
+               shorth->DST815 = (ue->destinationL2Id >>8) & 0x000000ff;
+               shorth->DST1623 = ue->destinationL2Id & 0x000000ff;
+               shorth->V = 0x1;
+            }
+            else {
+               SLSCH_SUBHEADER_24_Bit_DST_LONG *longh= (SLSCH_SUBHEADER_24_Bit_DST_LONG *)slsch->payload;
+               longh->F = 1;
+               longh->L_LSB = sdu_length&0xff;
+               longh->L_MSB = (sdu_length>>8)&0x7f;
+               longh->E = 0;
+               longh->LCID = ue->slsch_lcid;
+               longh->SRC07 = (ue->sourceL2Id >>16) & 0x000000ff;
+               longh->SRC815 = (ue->sourceL2Id>>8) & 0x000000ff;
+               longh->SRC1623 = ue->sourceL2Id & 0x000000ff;
+               longh->DST07 = (ue->destinationL2Id >>16) & 0x000000ff;
+               longh->DST815 = (ue->destinationL2Id>>8) & 0x000000ff;
+               longh->DST1623 = ue->destinationL2Id & 0x000000ff;
+               longh->V = 0x1;
+            }
+            slsch->payload_length = TBS;
+            // fill in SLSCH configuration
+            return(&ue->slsch);
+         }
+         else return((SLSCH_t*)NULL);
+      }
+
+   }
+
+  return(NULL);
+}
+
