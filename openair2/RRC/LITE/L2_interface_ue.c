@@ -77,12 +77,17 @@ mac_rrc_data_req_ue(
      LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size);
 
    //TTN (for D2D)
-     if (Srb_id  == SL_DISCOVERY && UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size > 0){
-        memcpy(&buffer_pP[0],&UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.Payload[0],UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size);
-        uint8_t Ret_size=UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size;
-        LOG_I(RRC,"[UE %d] Sending SL_Discovery, size %d bytes\n",Mod_idP,Ret_size);
-        UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size = 0;
-        return(Ret_size);
+     //if (Srb_id  == SL_DISCOVERY && UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size > 0){
+     if (Srb_id  == SL_DISCOVERY){
+    	 if (UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size > 0){
+    		 memcpy(&buffer_pP[0],&UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.Payload[0],UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size);
+    		 uint8_t Ret_size=UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size;
+    		 LOG_I(RRC,"[UE %d] Sending SL_Discovery, size %d bytes\n",Mod_idP,Ret_size);
+    		 UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size = 0;
+    		 return(Ret_size);
+    	 }
+    	 else
+    		 return 0;
      }
 #endif
 
