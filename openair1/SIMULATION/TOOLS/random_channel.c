@@ -1259,7 +1259,6 @@ channel_desc_t *new_channel_desc_scm(uint8_t nb_tx,
 }
 
 int random_channel(channel_desc_t *desc, uint8_t abstraction_flag) {
-
   double s;
   int i,k,l,aarx,aatx;
   struct complex anew[NB_ANTENNAS_TX*NB_ANTENNAS_RX],acorr[NB_ANTENNAS_TX*NB_ANTENNAS_RX];
