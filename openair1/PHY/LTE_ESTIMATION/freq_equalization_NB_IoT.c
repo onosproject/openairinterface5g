@@ -282,7 +282,7 @@ int16_t inv_ch_NB_IoT[256*8] = {512,512,512,512,512,512,512,512,
                          2,2,2,2,2,2,2,2,
                         };
 
-void freq_equalization_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
+void freq_equalization_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,
                               int32_t **rxdataF_comp,
                               int32_t **ul_ch_mag,
                               int32_t **ul_ch_magb,

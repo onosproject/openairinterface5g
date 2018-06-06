@@ -45,6 +45,7 @@
 #include "PHY/impl_defs_lte_NB_IoT.h"
 #include "PHY/impl_defs_lte.h"
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
+#include "openair1/PHY/extern_NB_IoT.h"
 
 void dlsch_sib_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
 							                    NB_IoT_DL_eNB_SIB_t    *dlsch,
@@ -103,4 +104,17 @@ void dlsch_sib_scrambling_rar_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
     s = lte_gold_generic_NB_IoT(&x1, &x2, 0);
   }
 
+}
+
+
+void init_unscrambling_lut_NB_IoT() {
+
+  uint32_t s;
+  int i=0,j;
+
+  for (s=0;s<=65535;s++) {
+    for (j=0;j<16;j++) {
+      unscrambling_lut_NB_IoT[i++] = (int16_t)((((s>>j)&1)<<1)-1);
+    }
+  }
 }

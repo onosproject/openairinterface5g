@@ -93,17 +93,18 @@ void rotate_channel_single_carrier_NB_IoT(int16_t *estimated_channel,unsigned ch
 
 } 
 
-int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
-                                         eNB_rxtx_proc_NB_IoT_t   *proc,
+int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB     *eNB,
+                                         eNB_rxtx_proc_t   *proc,
                                          uint8_t                  eNB_id,
                                          uint8_t                  UE_id,
                                          unsigned char            l,
                                          unsigned char            Ns,
+                                         uint8_t                N_sc_RU,
                                          uint8_t                  cooperation_flag)
 {
-
-  NB_IoT_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
-  NB_IoT_eNB_PUSCH *pusch_vars = eNB->pusch_vars[UE_id];
+ 
+  LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
+  LTE_eNB_PUSCH  *pusch_vars = eNB->pusch_vars[UE_id];
   int32_t **ul_ch_estimates=pusch_vars->drs_ch_estimates[eNB_id];
   //int32_t **ul_ch_estimates_time=  pusch_vars->drs_ch_estimates_time[eNB_id];
   //int32_t **ul_ch_estimates_0=  pusch_vars->drs_ch_estimates_0[eNB_id];
@@ -150,7 +151,7 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
   ////// NB-IoT specific ///////////////////////////////////////////////////////////////////////////////////////
 
-  uint32_t I_sc = eNB->ulsch[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
+  uint32_t I_sc = 11; /// eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
   uint16_t ul_sc_start; // subcarrier start index into UL RB 
 
   // 36.211, Section 10.1.4.1.2, Table 10.1.4.1.2-3 
@@ -180,7 +181,7 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
   int16_t *p_alpha_re, *p_alpha_im; // pointers to tables alpha above;                     
   uint8_t threetnecyclicshift=0, sixtonecyclichift=0; // NB-IoT: to be defined from higher layer, see 36.211 Section 10.1.4.1.2
   uint8_t actual_cyclicshift; 
-  uint8_t Nsc_RU = eNB->ulsch[UE_id]->harq_process->N_sc_RU; // Vincent: number of sc 1,3,6,12 
+  //uint8_t Nsc_RU = eNB->ulsch_NB_IoT[UE_id]->harq_process->N_sc_RU; // Vincent: number of sc 1,3,6,12 
   unsigned int index_Nsc_RU=4; // Vincent: index_Nsc_RU 0,1,2,3 ---> number of sc 1,3,6,12 
   int16_t *received_data, *estimated_channel, *pilot_sig; // pointers to 
   uint8_t npusch_format = 1; // NB-IoT: format 1 (data), or 2: ack. Should be defined in higher layer 
@@ -200,7 +201,7 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
   ///////////////////////////////////////////////////////////////////////////////////////
 
-  switch (Nsc_RU){
+  switch (N_sc_RU){
     case 1: 
       index_Nsc_RU = 0;
       break; 
@@ -229,7 +230,8 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
   }
 
   ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
-  u=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.grouphop[n_s][index_Nsc_RU]; // Vincent: may be adapted for Nsc_RU, see 36.211, Section 10.1.4.1.3
+  //u=frame_parms->npusch_config_common.ul_ReferenceSignalsNPUSCH.grouphop[n_s][index_Nsc_RU]; // Vincent: may be adapted for Nsc_RU, see 36.211, Section 10.1.4.1.3
+  u=Ncell_ID%16;
   switch (npusch_format){
   case 1: 
       if (l == pilot_pos1) { // NB-IoT: no extended CP 
@@ -254,41 +256,41 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
                         (int32_t)received_data[k<<1]*(int32_t)pilot_sig[(k<<1)+1])>>15); //imaginary part of estimated channel 
           }
 
-          if (Nsc_RU == 1){ // rotate the estimated channel by pi/2 or pi/4, due to mapping b2c
-            Qm       = get_Qm_ul_NB_IoT(eNB->ulsch[UE_id]->harq_process->mcs,Nsc_RU);
+          if (N_sc_RU == 1){ // rotate the estimated channel by pi/2 or pi/4, due to mapping b2c
+            Qm       = get_Qm_ul_NB_IoT(2,N_sc_RU);   ////eNB->ulsch_NB_IoT[UE_id]->harq_process->mcs,N_sc_RU);
             rotate_channel_single_carrier_NB_IoT(estimated_channel,l,Qm); 
 
           }
 
-          if(Nsc_RU != 1 && Nsc_RU != 12) {
+          if(N_sc_RU != 1 && N_sc_RU != 12) {
             // Compensating for the phase shift introduced at the transmitter
             // In NB-IoT NPUSCH format 1, phase alpha is zero when 1 and 12 subcarriers are allocated
             // else (still format 1), alpha is defined in 36.211, Table 10.1.4.1.2-3
-            if (Nsc_RU == 3){
+            if (N_sc_RU == 3){
               p_alpha_re = alpha3_re; 
               p_alpha_im = alpha3_im; 
-              actual_cyclicshift = threetnecyclicshift;
-            }else if (Nsc_RU == 6){
+              actual_cyclicshift = threetnecyclicshift;    //// should be defined in higher layer
+            }else if (N_sc_RU == 6){
               p_alpha_re = alpha6_re; 
               p_alpha_im = alpha6_im; 
-              actual_cyclicshift = sixtonecyclichift; 
+              actual_cyclicshift = sixtonecyclichift;  //// should be defined in higher layer
             }else{
-              msg("lte_ul_channel_estimation_NB-IoT: wrong Nsc_RU value, Nsc_RU=%d\n",Nsc_RU);
+              msg("lte_ul_channel_estimation_NB-IoT: wrong N_sc_RU value, N_sc_RU=%d\n",N_sc_RU);
               return(-1);
             }
 
-            for(i=symbol_offset+ul_sc_start; i<symbol_offset+ul_sc_start+Nsc_RU; i++) {
+            for(i=symbol_offset+ul_sc_start; i<symbol_offset+ul_sc_start+N_sc_RU; i++) {
               ul_ch_estimates_re = ((int16_t*) ul_ch_estimates[aa])[i<<1];
               ul_ch_estimates_im = ((int16_t*) ul_ch_estimates[aa])[(i<<1)+1];
               //    ((int16_t*) ul_ch_estimates[aa])[i<<1] =  (i%2 == 1? 1:-1) * ul_ch_estimates_re;
               ((int16_t*) ul_ch_estimates[aa])[i<<1] =
-                (int16_t) (((int32_t) (p_alpha_re[actual_cyclicshift*Nsc_RU+i]) * (int32_t) (ul_ch_estimates_re) +
-                            (int32_t) (p_alpha_im[actual_cyclicshift*Nsc_RU+i]) * (int32_t) (ul_ch_estimates_im))>>15); 
+                (int16_t) (((int32_t) (p_alpha_re[actual_cyclicshift*N_sc_RU+i]) * (int32_t) (ul_ch_estimates_re) +
+                            (int32_t) (p_alpha_im[actual_cyclicshift*N_sc_RU+i]) * (int32_t) (ul_ch_estimates_im))>>15); 
 
               //((int16_t*) ul_ch_estimates[aa])[(i<<1)+1] =  (i%2 == 1? 1:-1) * ul_ch_estimates_im;
               ((int16_t*) ul_ch_estimates[aa])[(i<<1)+1] =
-                (int16_t) (((int32_t) (p_alpha_re[actual_cyclicshift*Nsc_RU+i]) * (int32_t) (ul_ch_estimates_im) -
-                            (int32_t) (p_alpha_im[actual_cyclicshift*Nsc_RU+i]) * (int32_t) (ul_ch_estimates_re))>>15); 
+                (int16_t) (((int32_t) (p_alpha_re[actual_cyclicshift*N_sc_RU+i]) * (int32_t) (ul_ch_estimates_im) -
+                            (int32_t) (p_alpha_im[actual_cyclicshift*N_sc_RU+i]) * (int32_t) (ul_ch_estimates_re))>>15); 
 
             }
 

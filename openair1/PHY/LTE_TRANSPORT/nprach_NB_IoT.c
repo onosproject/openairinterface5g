@@ -301,7 +301,7 @@ err
 
 uint16_t subcarrier_estimation(int16_t *input_buffer){
 	
-	uint16_t estimated_sc; 
+	uint16_t estimated_sc=0; 
 	int16_t *s_n_re, *s_n_im; 
 	uint16_t k,m,n; 
 	int64_t max_correl_sc_m = 0; 
@@ -364,7 +364,8 @@ p_output_buffer=output_buffer;
 
 void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t FRAME_LENGTH_COMPLEX_SAMPLESx){
 
-	int n,k; 
+	int n;
+	//int k; 
 	//float f_s_RB22 = 1807.5; 
 	//float f_s = 7680; 
 	//int16_t *signal_compensed_re, *signal_compensed_im; 
@@ -407,17 +408,17 @@ void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t 
 uint32_t RX_NPRACH_NB_IoT(PHY_VARS_eNB *eNB, int frame){ 
 
 
-	uint32_t estimated_TA_coarse=0;  
-	uint32_t estimated_TA;
-	int16_t *Rx_sub_sampled_buffer_128,*Rx_sub_sampled_buffer_16; 
+	//uint32_t estimated_TA_coarse=0;  
+	//uint32_t estimated_TA;
+	int16_t *Rx_sub_sampled_buffer_128; //       *Rx_sub_sampled_buffer_16; 
 	uint16_t sub_sampling_rate; //NB-IoT: to be defined somewhere
 	uint32_t FRAME_LENGTH_COMPLEX_SAMPLESx; // NB-IoT: length of input buffer, to be defined somewhere 
 	uint32_t FRAME_LENGTH_COMPLEX_SUB_SAMPLES; // Length of buffer after sub-sampling
 	uint32_t *length_ouput; // Length of buffer after sub-sampling 
-	uint8_t coarse=1; // flag that indicate the level of TA estimation
+	// uint8_t coarse=1; // flag that indicate the level of TA estimation
 	int16_t *Rx_buffer;
 	//int16_t *filtered_buffer;
-	int n;
+	//int n;
  	
 	//// 1. Coarse TA estimation using sub sampling rate = 128, i.e. fs = 240 kHz  
 
@@ -453,7 +454,7 @@ uint32_t RX_NPRACH_NB_IoT(PHY_VARS_eNB *eNB, int frame){
 		// 2. Fine TA estimation using sub sampling rate = 16, i.e. fs = 1.92 MHz  
 	
 		// Sub-sampling stage /============================================================/
-		/*sub_sampling_rate = FRAME_LENGTH_COMPLEX_SAMPLESx/(2400*8); 
+		//// sub_sampling_rate = FRAME_LENGTH_COMPLEX_SAMPLESx/(2400*8); 
 		Rx_sub_sampled_buffer_16 = sub_sampling_NB_IoT(filtered_buffer,FRAME_LENGTH_COMPLEX_SAMPLESx,length_ouput, sub_sampling_rate); 
 
 
@@ -465,7 +466,7 @@ uint32_t RX_NPRACH_NB_IoT(PHY_VARS_eNB *eNB, int frame){
 											sub_sampling_rate, 
 											FRAME_LENGTH_COMPLEX_SUB_SAMPLES, 
 											estimated_TA_coarse, 
-											coarse); */
+											coarse); //
 		// Needs to be stored in a variable in PHY_VARS_eNB_NB_IoT structure
 
 		//for (n=0;n<FRAME_LENGTH_COMPLEX_SAMPLESx;n++){

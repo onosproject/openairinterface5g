@@ -64,6 +64,181 @@
 */
 #include "UTIL/LOG/vcd_signal_dumper.h"
 //#define DEBUG_ULSCH_DECODING
+
+
+/////////////////////////////////////////////////// NB-IoT testing ////////////////////////////////////////
+void free_eNB_ulsch_NB_IoT(NB_IoT_eNB_NULSCH_t *ulsch)
+{
+
+  int r;
+
+  if (ulsch) {
+    
+      if (ulsch->harq_process) {
+        if (ulsch->harq_process->b) {
+          free16(ulsch->harq_process->b,MAX_ULSCH_PAYLOAD_BYTES);
+          ulsch->harq_process->b = NULL;
+        }
+
+        for (r=0; r<MAX_NUM_ULSCH_SEGMENTS; r++) {
+          free16(ulsch->harq_process->c[r],((r==0)?8:0) + 768);
+          ulsch->harq_process->c[r] = NULL;
+        }
+
+        for (r=0; r<MAX_NUM_ULSCH_SEGMENTS; r++)
+          if (ulsch->harq_process->d[r]) {
+            free16(ulsch->harq_process->d[r],((3*8*6144)+12+96)*sizeof(short));
+            ulsch->harq_process->d[r] = NULL;
+          }
+
+        free16(ulsch->harq_process,sizeof(NB_IoT_UL_eNB_HARQ_t));
+        ulsch->harq_process = NULL;
+      }
+    
+
+    free16(ulsch,sizeof(NB_IoT_eNB_NULSCH_t));
+    ulsch = NULL;
+  }
+}
+
+
+
+NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB_IoT(uint8_t max_turbo_iterations,uint8_t N_RB_UL, uint8_t abstraction_flag)
+{
+
+  NB_IoT_eNB_NULSCH_t *ulsch;
+  uint8_t exit_flag = 0,r;
+  unsigned char bw_scaling =1;
+
+  switch (N_RB_UL) {
+  case 6:
+    bw_scaling =16;
+    break;
+
+  case 25:
+    bw_scaling =4;
+    break;
+
+  case 50:
+    bw_scaling =2;
+    break;
+
+  default:
+    bw_scaling =1;
+    break;
+  }
+
+  ulsch = (NB_IoT_eNB_NULSCH_t *)malloc16(sizeof(NB_IoT_eNB_NULSCH_t));
+
+  if (ulsch) {
+    memset(ulsch,0,sizeof(NB_IoT_eNB_NULSCH_t));
+    ulsch->max_turbo_iterations = max_turbo_iterations;
+    ulsch->Mlimit = 4;
+
+    
+      //      printf("new_ue_ulsch: Harq process %d\n",i);
+      ulsch->harq_process = (NB_IoT_UL_eNB_HARQ_t *)malloc16(sizeof(NB_IoT_UL_eNB_HARQ_t));
+
+      if (ulsch->harq_process) {
+        memset(ulsch->harq_process,0,sizeof(NB_IoT_UL_eNB_HARQ_t));
+        ulsch->harq_process->b = (uint8_t*)malloc16(MAX_ULSCH_PAYLOAD_BYTES/bw_scaling);
+
+        if (ulsch->harq_process->b)
+          memset(ulsch->harq_process->b,0,MAX_ULSCH_PAYLOAD_BYTES/bw_scaling);
+        else
+          exit_flag=3;
+
+        if (abstraction_flag==0) {
+          for (r=0; r<MAX_NUM_ULSCH_SEGMENTS/bw_scaling; r++) {
+            ulsch->harq_process->c[r] = (uint8_t*)malloc16(((r==0)?8:0) + 3+768);
+            if (ulsch->harq_process->c[r])
+              memset(ulsch->harq_process->c[r],0,((r==0)?8:0) + 3+768);
+            else
+              exit_flag=2;
+
+            ulsch->harq_process->d[r] = (short*)malloc16(((3*8*6144)+12+96)*sizeof(short));
+
+            if (ulsch->harq_process->d[r])
+              memset(ulsch->harq_process->d[r],0,((3*8*6144)+12+96)*sizeof(short));
+            else
+              exit_flag=2;
+          }
+
+          ulsch->harq_process->subframe_scheduling_flag = 0;
+        }
+      } else {
+        exit_flag=1;
+      }
+    
+
+    if (exit_flag==0)
+      return(ulsch);
+  }
+
+  LOG_E(PHY,"new_ue_ulsch: exit_flag = %d\n",exit_flag);
+  free_eNB_ulsch_NB_IoT(ulsch);
+
+  return(NULL);
+}
+
+
+
+
+
+
+
+void clean_eNb_ulsch_NB_IoT(NB_IoT_eNB_NULSCH_t *ulsch)
+{
+
+  unsigned char i;
+
+  //ulsch = (LTE_eNB_ULSCH_t *)malloc16(sizeof(LTE_eNB_ULSCH_t));
+  if (ulsch) {
+    ulsch->rnti = 0;
+
+    
+      if (ulsch->harq_process) {
+        //    ulsch->harq_processes[i]->Ndi = 0;
+        ulsch->harq_process->status = 0;
+        ulsch->harq_process->subframe_scheduling_flag = 0;
+        //ulsch->harq_processes[i]->phich_active = 0; //this will be done later after transmission of PHICH
+        ulsch->harq_process->phich_ACK = 0;
+        ulsch->harq_process->round = 0;
+      }
+    
+
+  }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*
 void free_eNB_ulsch(LTE_eNB_ULSCH_t *ulsch)
 {
@@ -746,14 +921,14 @@ int ulsch_decoding_data_2thread(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr
 
 // NB_IoT: functions in ulsch_decoding_data_NB_IoT must be defined
 
-int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,int llr8_flag) {
+int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr8_flag) {
 
   unsigned int r,r_offset=0,Kr,Kr_bytes,iind;
   uint8_t crc_type;
   int offset = 0;
   int ret = 1;
   int16_t dummy_w[MAX_NUM_ULSCH_SEGMENTS_NB_IoT][3*(6144+64)];
-  NB_IoT_eNB_NULSCH_t *ulsch = eNB->ulsch[UE_id];
+  NB_IoT_eNB_NULSCH_t *ulsch = eNB->ulsch_NB_IoT[UE_id];
   // NB_IoT_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_process[harq_pid];
   NB_IoT_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_process;
   //int Q_m = get_Qm_ul(ulsch_harq->mcs);
@@ -768,13 +943,13 @@ int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,i
                 uint8_t,
                 uint8_t,
                 uint8_t,
-                time_stats_t_NB_IoT *,
-                time_stats_t_NB_IoT *,
-                time_stats_t_NB_IoT *,
-                time_stats_t_NB_IoT *,
-                time_stats_t_NB_IoT *,
-                time_stats_t_NB_IoT *,
-                time_stats_t_NB_IoT *);
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *);
 
   if (llr8_flag == 0)
     tc = phy_threegpplte_turbo_decoder16;
@@ -943,8 +1118,8 @@ static inline unsigned int lte_gold_unscram_NB_IoT(unsigned int *x1, unsigned in
 }
 
 
-unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
-                                    eNB_rxtx_proc_NB_IoT_t  *proc,
+unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
+                                    eNB_rxtx_proc_t  *proc,
                                     uint8_t                 UE_id,
                                     uint8_t                 control_only_flag,
                                     uint8_t                 Nbundled,
@@ -953,8 +1128,8 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
   //MAC_xface_NB_IoT *mac_xface_NB_IoT;  //test_xface
 
   int16_t                 *ulsch_llr    = eNB->pusch_vars[UE_id]->llr;
-  NB_IoT_DL_FRAME_PARMS   *frame_parms  = &eNB->frame_parms;
-  NB_IoT_eNB_NULSCH_t     *ulsch        = eNB->ulsch[UE_id];
+  LTE_DL_FRAME_PARMS   *frame_parms  = &eNB->frame_parms;
+  NB_IoT_eNB_NULSCH_t     *ulsch        = eNB->ulsch_NB_IoT[UE_id];
   NB_IoT_UL_eNB_HARQ_t    *ulsch_harq;
 
   uint8_t         harq_pid;

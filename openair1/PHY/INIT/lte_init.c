@@ -1680,7 +1680,7 @@ void phy_init_lte_top_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms)
   //generate_16qam_table();
  // generate_RIV_tables();
 
- // init_unscrambling_lut();
+ init_unscrambling_lut_NB_IoT();
  // init_scrambling_lut();
 
   //set_taus_seed(1328);

@@ -86,7 +86,12 @@ typedef struct {
   int next_subframe_tx_DCI;
 
   uint32_t sheduling_info_rar;
-uint8_t flag_scrambling;
+  uint8_t flag_scrambling;
+
+  uint8_t flag_msg3;
+  uint8_t counter_msg3;
+  uint32_t frame_msg3;
+
   uint8_t remaining_dci;
 
   uint8_t remaining_rar;

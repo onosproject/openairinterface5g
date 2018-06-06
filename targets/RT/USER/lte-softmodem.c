@@ -1282,6 +1282,8 @@ void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
 
         frame_parms[CC_id]->nushift             = 0;
 
+        frame_parms[CC_id]->subcarrier_spacing             = 1;
+
         frame_parms[CC_id]->phich_config_common.phich_resource = oneSixth;
         frame_parms[CC_id]->phich_config_common.phich_duration = normal;
         // UL RS Config

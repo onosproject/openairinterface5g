@@ -87,7 +87,9 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
     
     LOG_I(PHY,"Allocating Transport Channel Buffer for ULSCH, UE %d\n", i);
     PHY_vars_eNB->ulsch[1+i] = new_eNB_ulsch(MAX_TURBO_ITERATIONS,frame_parms->N_RB_UL, abstraction_flag);
-    
+    //////////////// NB-IoT testing ////////////////////////////
+    PHY_vars_eNB->ulsch_NB_IoT[1+i] = new_eNB_ulsch_NB_IoT(MAX_TURBO_ITERATIONS,frame_parms->N_RB_UL, abstraction_flag);
+    //////////////////////////////////////////////////////////////
     if (!PHY_vars_eNB->ulsch[1+i]) {
       LOG_E(PHY,"Can't get eNB ulsch structures\n");
       exit(-1);
@@ -121,8 +123,15 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
   
   // ULSCH for RA
   PHY_vars_eNB->ulsch[0] = new_eNB_ulsch(MAX_TURBO_ITERATIONS, frame_parms->N_RB_UL, abstraction_flag);
+  //////////////// NB-IoT testing ////////////////////////////
+  PHY_vars_eNB->ulsch_NB_IoT[0] = new_eNB_ulsch_NB_IoT(MAX_TURBO_ITERATIONS, frame_parms->N_RB_UL, abstraction_flag);
+  ////////////////////////////////////////////////////////////
   
   if (!PHY_vars_eNB->ulsch[0]) {
+    LOG_E(PHY,"Can't get eNB ulsch structures\n");
+    exit(-1);
+  }
+  if (!PHY_vars_eNB->ulsch_NB_IoT[0]) {
     LOG_E(PHY,"Can't get eNB ulsch structures\n");
     exit(-1);
   }

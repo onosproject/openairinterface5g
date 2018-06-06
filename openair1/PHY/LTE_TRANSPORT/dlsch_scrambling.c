@@ -206,6 +206,7 @@ void init_unscrambling_lut() {
   }
 }
 
+
 void init_scrambling_lut() {
 
   uint32_t s;

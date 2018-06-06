@@ -176,7 +176,7 @@ if(option ==1)
 		npbch_a[i] = a[i];    
 	}
 } else {
-	for (int i=0; i<33; i++) 												
+	for (int i=0; i<6; i++) 												
 	{	
 		npbch_a[i] = a[i];    
 	}

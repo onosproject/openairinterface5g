@@ -1016,7 +1016,7 @@ void initiate_ra_proc_NB_IoT(module_id_t module_idP, int CC_id,frame_t frameP, u
   for (i=0; i<NB_RA_PROC_MAX; i++) {
     if (RA_template[i].RA_active==FALSE &&
         RA_template[i].wait_ack_Msg4 == 0) {
-      int loop = 0;
+     // int loop = 0;
       RA_template[i].RA_active=TRUE;
       RA_template[i].generate_rar=1;
       RA_template[i].generate_Msg4=0;
@@ -1029,12 +1029,12 @@ void initiate_ra_proc_NB_IoT(module_id_t module_idP, int CC_id,frame_t frameP, u
         RA_template[i].rnti = taus();
         loop++;
       } while (loop != 100 &&
-               /* TODO: this is not correct, the rnti may be in use without
-                * being in the MAC yet. To be refined.
-                */
-      /*         !(find_UE_id(module_idP, RA_template[i].rnti) == -1 &&
-                 /* 1024 and 60000 arbirarily chosen, not coming from standard */
-   /*              RA_template[i].rnti >= 1024 && RA_template[i].rnti < 60000));
+               // TODO: this is not correct, the rnti may be in use without
+               // being in the MAC yet. To be refined.
+                //
+      ///         !(find_UE_id(module_idP, RA_template[i].rnti) == -1 &&
+                 // 1024 and 60000 arbirarily chosen, not coming from standard //
+   //              RA_template[i].rnti >= 1024 && RA_template[i].rnti < 60000));
       if (loop == 100) {
        printf("%s:%d:%s: FATAL ERROR! contact the authors\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
 

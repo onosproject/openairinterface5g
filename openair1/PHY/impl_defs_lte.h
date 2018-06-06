@@ -35,6 +35,11 @@
 
 
 #include "types.h"
+
+////////////////// NB-IoT testing //////////////////
+//#include "impl_defs_lte_NB_IoT.h"
+///////////////////////////////////////////////////
+
 //#include "defs.h"
 
 #define LTE_NUMBER_OF_SUBFRAMES_PER_FRAME 10
@@ -62,6 +67,53 @@ typedef enum {TDD=1,FDD=0} lte_frame_type_t;
 typedef enum {EXTENDED=1,NORMAL=0} lte_prefix_type_t;
 
 typedef enum {LOCALIZED=0,DISTRIBUTED=1} vrb_t;
+
+////////////////////////////////////////// NB-IoT testing ///////////////////////////////////////////////////////////////
+typedef struct{
+  /// The base sequence of DMRS sequence in a cell for 3 tones transmission; see TS 36.211 [21, 10.1.4.1.2]. If absent, it is given by NB-IoT CellID mod 12. Value 12 is not used.
+  uint16_t threeTone_BaseSequence;
+  /// Define 3 cyclic shifts for the 3-tone case, see TS 36.211 [21, 10.1.4.1.2].
+  uint16_t threeTone_CyclicShift;
+  /// The base sequence of DMRS sequence in a cell for 6 tones transmission; see TS 36.211 [21, 10.1.4.1.2]. If absent, it is given by NB-IoT CellID mod 14. Value 14 is not used.
+  uint16_t sixTone_BaseSequence;
+  /// Define 4 cyclic shifts for the 6-tone case, see TS 36.211 [21, 10.1.4.1.2].
+  uint16_t sixTone_CyclicShift;
+  /// The base sequence of DMRS sequence in a cell for 12 tones transmission; see TS 36.211 [21, 10.1.4.1.2]. If absent, it is given by NB-IoT CellID mod 30. Value 30 is not used.
+  uint16_t twelveTone_BaseSequence;
+
+}DMRS_CONFIGx_t;
+
+/// UL-ReferenceSignalsNPUSCH from 36.331 RRC spec
+typedef struct {
+  /// Parameter: Group-hopping-enabled, see TS 36.211 (5.5.1.3). \vr{[0..1]}
+  uint8_t groupHoppingEnabled;
+  /// , see TS 36.211 (5.5.1.3). \vr{[0..29]}
+  uint8_t groupAssignmentNPUSCH;
+  /// Parameter: cyclicShift, see TS 36.211 (Table 5.5.2.1.1-2). \vr{[0..7]}
+  uint8_t cyclicShift;
+  /// nPRS for cyclic shift of DRS \note not part of offical UL-ReferenceSignalsPUSCH ASN1 specification.
+  uint8_t nPRS[20];
+  /// group hopping sequence for DMRS, 36.211, Section 10.1.4.1.3. Second index corresponds to the four possible subcarrier configurations
+  uint8_t grouphop[20][4];
+  /// sequence hopping sequence for DRS \note not part of offical UL-ReferenceSignalsPUSCH ASN1 specification.
+  uint8_t seqhop[20];
+} UL_REFERENCE_SIGNALS_NPUSCHx_t;
+
+
+/// PUSCH-ConfigCommon from 36.331 RRC spec.
+typedef struct {
+  /// Number of repetitions for ACK/NACK HARQ response to NPDSCH containing Msg4 per NPRACH resource, see TS 36.213 [23, 16.4.2].
+  uint8_t ack_NACK_NumRepetitions_Msg4[3];
+  /// SRS SubframeConfiguration. See TS 36.211 [21, table 5.5.3.3-1]. Value sc0 corresponds to value 0, sc1 to value 1 and so on.
+  uint8_t srs_SubframeConfig;
+  /// Parameter: \f$N^{HO}_{RB}\f$, see TS 36.211 (5.3.4). \vr{[0..98]}
+  DMRS_CONFIGx_t dmrs_Config;
+  /// Ref signals configuration
+  UL_REFERENCE_SIGNALS_NPUSCHx_t ul_ReferenceSignalsNPUSCH;
+
+} NPUSCH_CONFIG_COMMONx;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Enumeration for parameter PHICH-Duration \ref PHICH_CONFIG_COMMON::phich_duration.
 typedef enum {
@@ -587,6 +639,11 @@ typedef struct {
 
   struct MBSFN_SubframeConfig *mbsfn_SubframeConfig[MAX_MBSFN_AREA];
 
+  ////////////////////////// NB-IoT testing //////////////////////////////
+  uint8_t subcarrier_spacing;
+
+  NPUSCH_CONFIG_COMMONx npusch_config_common;
+  ///////////////////////////////////////////////////////////////////// 
 
 } LTE_DL_FRAME_PARMS;
 

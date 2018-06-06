@@ -26,7 +26,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,
 
   LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->frame_parms;
   uint16_t subframe = Ntti;
-  uint32_t tti,tti_offset,slot_offset,Nsymb,samples_per_symbol;
+  uint32_t tti_offset,slot_offset,Nsymb,samples_per_symbol; // tti,
   uint8_t  first_pilot,second_pilot;
   unsigned short RB_IoT_ID = RB_ID;
   Nsymb        = 14;

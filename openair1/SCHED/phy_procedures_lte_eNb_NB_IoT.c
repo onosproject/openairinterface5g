@@ -1519,10 +1519,10 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 uint32_t nprach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
 
   uint32_t estimated_TA; 
-  int subframe,frame,frame_mod; 
+  int frame,frame_mod;    // subframe,
 
   
-  subframe = eNB->proc.subframe_prach; 
+ // subframe = eNB->proc.subframe_prach; 
   frame = eNB->proc.frame_prach;
 
   //printf("frame = %i \n sf = %i\n",frame,subframe); 

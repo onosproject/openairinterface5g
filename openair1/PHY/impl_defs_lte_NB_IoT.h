@@ -469,7 +469,7 @@ typedef struct {
   /// Ref signals configuration
   UL_REFERENCE_SIGNALS_NPUSCH_t ul_ReferenceSignalsNPUSCH;
 
-} NPUSCH_CONFIG_COMMON;
+} NPUSCH_CONFIG_COMMON; 
 
 
 typedef struct{

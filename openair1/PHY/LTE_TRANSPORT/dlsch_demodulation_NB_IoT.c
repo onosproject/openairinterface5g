@@ -103,7 +103,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
   NB_IoT_UE_PDSCH **pdsch_vars;
   NB_IoT_DL_FRAME_PARMS *frame_parms    = &ue->frame_parms;
   PHY_MEASUREMENTS_NB_IoT *measurements = &ue->measurements;
-  NB_IoT_UE_DLSCH_t   **dlsch;
+  /////////////////////////////////////////////////////////////////NB_IoT_UE_DLSCH_t   **dlsch;
 
   int avg[4];
   // int avg_0[2];
@@ -111,7 +111,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 
   unsigned char aatx,aarx;
 
-  unsigned short nb_rb = 0 , round;
+  unsigned short nb_rb = 0; ////////// round;
   int avgs /*,rb*/;
   NB_IoT_DL_UE_HARQ_t *dlsch0_harq,*dlsch1_harq = 0;
 
@@ -142,7 +142,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 
   // case PDSCH:
     pdsch_vars = ue->pdsch_vars[subframe&0x1];
-    dlsch = ue->dlsch[subframe&0x1][eNB_id];
+   ////////////////////////////////////////////////////////// dlsch = ue->dlsch[subframe&0x1][eNB_id];
     //printf("status TB0 = %d, status TB1 = %d \n", dlsch[0]->harq_processes[harq_pid]->status, dlsch[1]->harq_processes[harq_pid]->status);
 //     LOG_D(PHY,"AbsSubframe %d.%d / Sym %d harq_pid %d,  harq status %d.%d \n",
 //                    frame,subframe,symbol,harq_pid,
@@ -196,8 +196,8 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 //   printf("[DEMOD] cw for TB0 = %d, cw for TB1 = %d\n", codeword_TB0, codeword_TB1);
 // #endif
 
-  DevAssert(dlsch0_harq);
-  round = dlsch0_harq->round;
+  //////////////////////DevAssert(dlsch0_harq);
+  /////////////////////////////////////////   round = dlsch0_harq->round;
   //printf("round = %d\n", round);
 
   // if (eNB_id > 2) {

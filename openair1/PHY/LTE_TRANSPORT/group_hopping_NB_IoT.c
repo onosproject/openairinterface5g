@@ -35,7 +35,7 @@
 
 //#define DEBUG_GROUPHOP 1
 
-void generate_grouphop_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms)
+void generate_grouphop_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms)
 {
 
   uint8_t ns; 
