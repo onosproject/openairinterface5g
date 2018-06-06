@@ -652,10 +652,14 @@ void phy_config_dedicated_eNB(uint8_t Mod_id,
         break;
       case AntennaInfoDedicated__transmissionMode_tm7:
         lte_gold_ue_spec_port5(eNB->lte_gold_uespec_port5_table[0],eNB->frame_parms.Nid_cell,rnti);
-
 	for (i=0;i<eNB->num_RU;i++) eNB->RU_list[i]->do_precoding=1;
-	eNB->transmission_mode[UE_id] = 7;
-	break;
+        eNB->transmission_mode[UE_id] = 7;
+        break;
+      case AntennaInfoDedicated__transmissionMode_tm8_v920:
+        lte_gold_ue_spec(eNB->lte_gold_uespec_table,eNB->frame_parms.Nid_cell,NULL);
+        for (i=0;i<eNB->num_RU;i++) eNB->RU_list[i]->do_precoding=1;
+        eNB->transmission_mode[UE_id] = 8;
+        break;
       default:
         LOG_E(PHY,"Unknown transmission mode!\n");
         break;
@@ -887,6 +891,8 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
   
   eNB->pdsch_config_dedicated->p_a = dB0; //defaul value until overwritten by RRCConnectionReconfiguration
   
+  /*init the ue spec reference sequence for TM8/9*/
+  lte_gold_ue_spec(eNB->lte_gold_uespec_table,eNB->frame_parms.Nid_cell, NULL);
 
   return (0);
 

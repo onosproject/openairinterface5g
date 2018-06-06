@@ -658,7 +658,7 @@ typedef struct {
   uint32_t lte_gold_table[7][20][2][14];
 
   /// UE-specific reference symbols (p=5), TM 7
-  uint32_t lte_gold_uespec_port5_table[20][38];
+  uint32_t lte_gold_uespec_port5_table[20][75];
 
   /// ue-specific reference symbols
   uint32_t lte_gold_uespec_table[2][20][2][21];

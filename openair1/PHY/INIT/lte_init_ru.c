@@ -114,15 +114,15 @@ int phy_init_RU(RU_t *ru) {
     for (i=0; i<RC.nb_L1_inst; i++) {
       for (p=0;p<15;p++) {
         LOG_D(PHY,"[INIT] %s() nb_antenna_ports_eNB:%d \n", __FUNCTION__, ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB);
-	if (p<ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB || p==5) {
+	if (p<ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB || p==5 || i==7 || i==8) {
           LOG_D(PHY,"[INIT] %s() DO BEAM WEIGHTS nb_antenna_ports_eNB:%d nb_tx:%d\n", __FUNCTION__, ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB, ru->nb_tx);
 	  ru->beam_weights[i][p] = (int32_t **)malloc16_clear(ru->nb_tx*sizeof(int32_t*));
 	  for (j=0; j<ru->nb_tx; j++) {
 	    ru->beam_weights[i][p][j] = (int32_t *)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t));
 	    // antenna ports 0-3 are mapped on antennas 0-3
-	    // antenna port 4 is mapped on antenna 0
-	    // antenna ports 5-14 are mapped on all antennas 
-	    if (((p<4) && (p==j)) || ((p==4) && (j==0))) {
+	    // antenna port 4,5,7 is mapped on antenna 0
+	    // antenna ports 8 are mapped on antenna 1 
+	    if (((p<4) && (p==j)) || ((p==4) && (j==0)) || ((p==5) && (j==0)) || ((p==7) && (j==0)) || ((p==8) && (j==1)) ) {
 	      for (re=0; re<fp->ofdm_symbol_size; re++) 
               {
 		ru->beam_weights[i][p][j][re] = 0x00007fff; 
@@ -130,13 +130,15 @@ int phy_init_RU(RU_t *ru) {
                 //LOG_D(PHY,"[INIT] lte_common_vars->beam_weights[%d][%d][%d][%d] = %d\n", i,p,j,re,ru->beam_weights[i][p][j][re]);
               }
 	    }
+	    /*
 	    else if (p>4) {
 	      for (re=0; re<fp->ofdm_symbol_size; re++) 
               {
 		ru->beam_weights[i][p][j][re] = 0x00007fff/ru->nb_tx; 
                 //LOG_D(PHY,"[INIT] lte_common_vars->beam_weights[%d][%d][%d][%d] = %d\n", i,p,j,re,ru->beam_weights[i][p][j][re]);
               }
-	    }  
+	    } 
+	    */ 
 	    //LOG_D(PHY,"[INIT] lte_common_vars->beam_weights[%d][%d] = %p (%lu bytes)\n", i,j,ru->beam_weights[i][p][j], fp->ofdm_symbol_size*sizeof(int32_t)); 
 	  } // for (j=0
 	} // if (p<ru

@@ -220,7 +220,12 @@ assign_rbs_required(module_id_t Mod_id,
 
 	    eNB_UE_stats->dlsch_mcs1 =cmin(cqi_to_mcs[UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id]],
 									   slice_maxmcs[slice_id]);
-
+	    if (get_tmode(Mod_id,CC_id,UE_id)==3)
+	      eNB_UE_stats->dlsch_mcs2 = cmin(cqi_to_mcs[UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id]],slice_maxmcs[slice_id]); //in TM3 there is only one CQI value
+	    else if (get_tmode(Mod_id,CC_id,UE_id)==4)
+	      eNB_UE_stats->dlsch_mcs2 = cqi_to_mcs[eNB_UE_stats->dl_cqi[1]]; 
+	    else
+	      eNB_UE_stats->dlsch_mcs2 = 0;
 	}
 
 	// provide the list of CCs sorted according to MCS

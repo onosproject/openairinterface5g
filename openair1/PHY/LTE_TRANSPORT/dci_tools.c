@@ -229,6 +229,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   uint8_t *dci_pdu = &dci_alloc->dci_pdu[0];
   nfapi_dl_config_dci_dl_pdu_rel8_t *rel8 = &pdu->dci_dl_pdu_rel8;
+  nfapi_dl_config_dci_dl_pdu_rel9_t *rel9 = &pdu->dci_dl_pdu_rel9;
 
   /* check if this is a DCI 1A PDCCH order for RAPROC */
   if (rel8->dci_format == NFAPI_DL_DCI_FORMAT_1A && rel8->rnti_type == 1) {
@@ -794,13 +795,12 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t
         ((DCI2A_20MHz_2A_FDD_t *)dci_pdu)->rv2          = rel8->redundancy_version_2;
         ((DCI2A_20MHz_2A_FDD_t *)dci_pdu)->TPC          = rel8->tpc;
         ((DCI2A_20MHz_2A_FDD_t *)dci_pdu)->harq_pid     = rel8->harq_process;
-	((DCI2A_20MHz_2A_TDD_t *)dci_pdu)->tb_swap      = rel8->transport_block_to_codeword_swap_flag;
-	((DCI2A_20MHz_2A_TDD_t *)dci_pdu)->padding      = 0;
+	((DCI2A_20MHz_2A_FDD_t *)dci_pdu)->tb_swap      = rel8->transport_block_to_codeword_swap_flag;
+	((DCI2A_20MHz_2A_FDD_t *)dci_pdu)->padding      = 0;
       }
       break;
-
     }
-
+  
     AssertFatal(rel8->harq_process<8,"Format 2_2A: harq_pid=%d >= 8\n", rel8->harq_process);
 
 
@@ -1370,6 +1370,285 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t
       dlsch1->rnti = rel8->rnti;
 
     break;
+
+  case NFAPI_DL_DCI_FORMAT_2B:
+
+    dci_alloc->format     = format2B;
+    switch (fp->N_RB_DL) {
+    case 6:
+      if (fp->frame_type == TDD) {
+	dci_alloc->dci_length                         = sizeof_DCI2B_1_5MHz_TDD_t; 
+        ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->mcs1     = rel8->mcs_1;
+        ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->mcs2     = rel8->mcs_2;
+        ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->ndi1     = rel8->new_data_indicator_1;
+        ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->ndi2     = rel8->new_data_indicator_2;
+        ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->rballoc  = rel8->resource_block_coding;
+        ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->rv1      = rel8->redundancy_version_1;
+        ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->rv2      = rel8->redundancy_version_2;
+        ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->TPC      = rel8->tpc;
+        ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->harq_pid = rel8->harq_process;
+        ((DCI2B_1_5MHz_TDD_t *)dci_pdu)->dai      = rel8->downlink_assignment_index;
+	((DCI2B_1_5MHz_TDD_t *)dci_pdu)->scrambling_id = rel9->scrambling_identity;
+	((DCI2B_1_5MHz_TDD_t *)dci_pdu)->padding  = 0;
+      } else {
+	dci_alloc->dci_length                         = sizeof_DCI2B_1_5MHz_FDD_t; 
+        ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->mcs1         = rel8->mcs_1;
+        ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->mcs2         = rel8->mcs_2;
+        ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->ndi1         = rel8->new_data_indicator_1;
+        ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->ndi2         = rel8->new_data_indicator_2;
+        ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->rballoc      = rel8->resource_block_coding;
+        ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->rv1          = rel8->redundancy_version_1;
+        ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->rv2          = rel8->redundancy_version_2;
+        ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->TPC          = rel8->tpc;
+        ((DCI2B_1_5MHz_FDD_t *)dci_pdu)->harq_pid     = rel8->harq_process;
+	((DCI2B_1_5MHz_FDD_t *)dci_pdu)->scrambling_id = rel9->scrambling_identity;
+	((DCI2B_1_5MHz_FDD_t *)dci_pdu)->padding      = 0;
+        //      printf("FDD 1: mcs %d, rballoc %x,rv %d, NPRB %d\n",mcs,rballoc,rv,NPRB);
+      }
+      break;
+    case 25:
+      if (fp->frame_type == TDD) {
+	dci_alloc->dci_length                        = sizeof_DCI2B_5MHz_TDD_t; 
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->mcs1      = rel8->mcs_1;
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->mcs2      = rel8->mcs_2;
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->ndi1      = rel8->new_data_indicator_1;
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->ndi2      = rel8->new_data_indicator_2;
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->rballoc   = rel8->resource_block_coding;
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->rv1       = rel8->redundancy_version_1;
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->rv2       = rel8->redundancy_version_2;
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->TPC       = rel8->tpc;
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->harq_pid  = rel8->harq_process;
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->dai       = rel8->downlink_assignment_index;
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->scrambling_id  = rel9->scrambling_identity;
+        ((DCI2B_5MHz_TDD_t *)dci_pdu)->padding   = 0;
+        //        printf("TDD 1: mcs %d, rballoc %x,rv %d, NPRB %d\n",mcs,rballoc,rv,NPRB);
+      } else {
+	dci_alloc->dci_length                           = sizeof_DCI2B_5MHz_FDD_t; 
+        ((DCI2B_5MHz_FDD_t *)dci_pdu)->mcs1          = rel8->mcs_1;
+        ((DCI2B_5MHz_FDD_t *)dci_pdu)->mcs2          = rel8->mcs_2;
+        ((DCI2B_5MHz_FDD_t *)dci_pdu)->ndi1          = rel8->new_data_indicator_1;
+        ((DCI2B_5MHz_FDD_t *)dci_pdu)->ndi2          = rel8->new_data_indicator_2;
+        ((DCI2B_5MHz_FDD_t *)dci_pdu)->rballoc       = rel8->resource_block_coding;
+        ((DCI2B_5MHz_FDD_t *)dci_pdu)->rv1           = rel8->redundancy_version_1;
+        ((DCI2B_5MHz_FDD_t *)dci_pdu)->rv2           = rel8->redundancy_version_2;
+        ((DCI2B_5MHz_FDD_t *)dci_pdu)->TPC           = rel8->tpc;
+        ((DCI2B_5MHz_FDD_t *)dci_pdu)->harq_pid      = rel8->harq_process;
+        ((DCI2B_5MHz_FDD_t *)dci_pdu)->scrambling_id  = rel9->scrambling_identity;
+	((DCI2B_5MHz_FDD_t *)dci_pdu)->padding       = 0;
+        //      printf("FDD 1: mcs %d, rballoc %x,rv %d, NPRB %d\n",mcs,rballoc,rv,NPRB);
+      }
+      break;
+    case 50:
+      if (fp->frame_type == TDD) {
+	dci_alloc->dci_length                        = sizeof_DCI2B_10MHz_TDD_t; 
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->mcs1     = rel8->mcs_1;
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->mcs2     = rel8->mcs_2;
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->ndi1     = rel8->new_data_indicator_1;
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->ndi2     = rel8->new_data_indicator_2;
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->rballoc  = rel8->resource_block_coding;
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->rv1      = rel8->redundancy_version_1;
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->rv2      = rel8->redundancy_version_2;
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->TPC      = rel8->tpc;
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->harq_pid = rel8->harq_process;
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->dai      = rel8->downlink_assignment_index;
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->scrambling_id  = rel9->scrambling_identity;
+        ((DCI2B_10MHz_TDD_t *)dci_pdu)->padding  = 0;
+        //        printf("TDD 1: mcs %d, rballoc %x,rv %d, NPRB %d\n",mcs,rballoc,rv,NPRB);
+      } else {
+	dci_alloc->dci_length                        = sizeof_DCI2B_10MHz_FDD_t; 
+        ((DCI2B_10MHz_FDD_t *)dci_pdu)->mcs1      = rel8->mcs_1;
+        ((DCI2B_10MHz_FDD_t *)dci_pdu)->mcs2      = rel8->mcs_2;
+        ((DCI2B_10MHz_FDD_t *)dci_pdu)->ndi1      = rel8->new_data_indicator_1;
+        ((DCI2B_10MHz_FDD_t *)dci_pdu)->ndi2      = rel8->new_data_indicator_2;
+        ((DCI2B_10MHz_FDD_t *)dci_pdu)->rballoc   = rel8->resource_block_coding;
+        ((DCI2B_10MHz_FDD_t *)dci_pdu)->rv1       = rel8->redundancy_version_1;
+        ((DCI2B_10MHz_FDD_t *)dci_pdu)->rv2       = rel8->redundancy_version_2;
+        ((DCI2B_10MHz_FDD_t *)dci_pdu)->TPC       = rel8->tpc;
+        ((DCI2B_10MHz_FDD_t *)dci_pdu)->harq_pid  = rel8->harq_process;
+        ((DCI2B_10MHz_FDD_t *)dci_pdu)->scrambling_id  = rel9->scrambling_identity;
+	((DCI2B_10MHz_FDD_t *)dci_pdu)->padding   = 0;
+      }
+      break;
+    case 100:
+      if (fp->frame_type == TDD) {
+	dci_alloc->dci_length                        = sizeof_DCI2B_20MHz_TDD_t; 
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->mcs1      = rel8->mcs_1;
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->mcs2      = rel8->mcs_2;
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->ndi1      = rel8->new_data_indicator_1;
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->ndi2      = rel8->new_data_indicator_2;
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->rballoc   = rel8->resource_block_coding;
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->rv1       = rel8->redundancy_version_1;
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->rv2       = rel8->redundancy_version_2;
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->TPC       = rel8->tpc;
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->harq_pid  = rel8->harq_process;
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->dai       = rel8->downlink_assignment_index;
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->scrambling_id  = rel9->scrambling_identity;
+        ((DCI2B_20MHz_TDD_t *)dci_pdu)->padding   = 0;
+        //        printf("TDD 1: mcs %d, rballoc %x,rv %d, NPRB %d\n",mcs,rballoc,rv,NPRB);
+      } else {
+	dci_alloc->dci_length                           = sizeof_DCI2B_20MHz_FDD_t; 
+        ((DCI2B_20MHz_FDD_t *)dci_pdu)->mcs1         = rel8->mcs_1;
+        ((DCI2B_20MHz_FDD_t *)dci_pdu)->mcs2         = rel8->mcs_2;
+        ((DCI2B_20MHz_FDD_t *)dci_pdu)->ndi1         = rel8->new_data_indicator_1;
+        ((DCI2B_20MHz_FDD_t *)dci_pdu)->ndi2         = rel8->new_data_indicator_2;
+        ((DCI2B_20MHz_FDD_t *)dci_pdu)->rballoc      = rel8->resource_block_coding;
+        ((DCI2B_20MHz_FDD_t *)dci_pdu)->rv1          = rel8->redundancy_version_1;
+        ((DCI2B_20MHz_FDD_t *)dci_pdu)->rv2          = rel8->redundancy_version_2;
+        ((DCI2B_20MHz_FDD_t *)dci_pdu)->TPC          = rel8->tpc;
+        ((DCI2B_20MHz_FDD_t *)dci_pdu)->harq_pid     = rel8->harq_process;
+        ((DCI2B_20MHz_FDD_t *)dci_pdu)->scrambling_id  = rel9->scrambling_identity;
+	((DCI2B_20MHz_FDD_t *)dci_pdu)->padding      = 0;
+      }
+      break;
+
+    }
+
+    AssertFatal(rel8->harq_process>=8, "ERROR: Format 2B: harq_pid=%d >= 8\n", rel8->harq_process);
+
+      /*
+      If both transport blocks are enabled, the number of layers equals two; transport block 1 is mapped to codeword 0; and transport block 2 is mapped to codeword 1. Antenna ports 7 and 8 are used for spatial multiplexing.
+      In case one of the transport blocks is disabled, the number of layers equals one; the active transport block is mapped to codeword 0; and the antenna port for single-antenna port transmission is according to the ndi of the disabled TB (0 -> 7, 1 -> 8)
+      */
+      TB0_active = 1;
+      TB1_active = 1;
+
+      if ((rel8->redundancy_version_1 == 1) && (rel8->mcs_1 == 0)) {
+        TB0_active=0;
+      }
+
+      if ((rel8->redundancy_version_2 == 1) && (rel8->mcs_2 == 0)) {
+        TB1_active=0;
+      }
+
+      if (TB0_active && TB1_active) {
+        dlsch0=eNB->dlsch[UE_id][0];
+        dlsch1=eNB->dlsch[UE_id][1];
+        dlsch0->active = 1;
+        dlsch1->active = 1;
+	dlsch0->harq_mask                         |= (1<<rel8->harq_process);
+	dlsch1->harq_mask                         |= (1<<rel8->harq_process);
+        dlsch0_harq = dlsch0->harq_processes[rel8->harq_process];
+        dlsch1_harq = dlsch1->harq_processes[rel8->harq_process];
+        dlsch0_harq->Qm = get_Qm(rel8->mcs_1);
+        dlsch1_harq->Qm = get_Qm(rel8->mcs_2);
+        dlsch0_harq->rvidx = rel8->redundancy_version_1;
+        dlsch1_harq->rvidx = rel8->redundancy_version_2;
+        dlsch0_harq->status = ACTIVE;
+        dlsch1_harq->status = ACTIVE;
+        dlsch0_harq->codeword=0;
+        dlsch1_harq->codeword=1;
+        dlsch0_harq->first_layer=7;
+        dlsch1_harq->first_layer=8;
+#ifdef DEBUG_HARQ
+        printf("\n ENB: BOTH ACTIVE\n");
+#endif
+      }
+      else if (TB0_active && (TB1_active==0)) {
+        dlsch0=eNB->dlsch[UE_id][0];
+        dlsch0->active = 1;
+	dlsch0->harq_mask                         |= (1<<rel8->harq_process);
+        dlsch0_harq = dlsch0->harq_processes[rel8->harq_process];
+        dlsch0_harq->Qm = get_Qm(rel8->mcs_1);
+        dlsch0_harq->rvidx = rel8->redundancy_version_1;
+        dlsch0_harq->status = ACTIVE;
+        dlsch0_harq->codeword = 0;
+        dlsch0_harq->first_layer = (rel8->new_data_indicator_2==0 ? 7 : 8);
+        dlsch1=NULL;
+        dlsch1_harq = NULL;
+#ifdef DEBUG_HARQ
+        printf("\n ENB: TB1 is deactivated, retransmit TB0 transmit in TM6\n");
+#endif
+      }
+      else if ((TB0_active==0) && TB1_active) {
+        dlsch1=eNB->dlsch[UE_id][1];
+        dlsch1->active = 1;
+	dlsch1->harq_mask                         |= (1<<rel8->harq_process);
+        dlsch1_harq = dlsch1->harq_processes[rel8->harq_process];
+        dlsch1_harq->Qm = get_Qm(rel8->mcs_2);
+        dlsch1_harq->rvidx = rel8->redundancy_version_2;
+        dlsch1_harq->status = ACTIVE;
+        dlsch1_harq->codeword = 0;
+        dlsch1_harq->first_layer = (rel8->new_data_indicator_1==0 ? 7 : 8);
+        dlsch0=NULL;
+        dlsch0_harq = NULL;
+#ifdef DEBUG_HARQ
+        printf("\n ENB: TB0 is deactivated, retransmit TB1 transmit in TM6\n");
+#endif
+      }
+      else {
+        LOG_E(PHY,"should not happen (rv1 %d mcs1 %d TB0_active %d, rv2 %d mcs2 %d TB1_active %d)!\n",rel8->redundancy_version_1,rel8->mcs_1,TB0_active,rel8->redundancy_version_2,rel8->mcs_2,TB1_active);
+	AssertFatal(0,"should not happen\n");
+      }
+
+      if (dlsch0 != NULL) {
+        dlsch0->rnti = rel8->rnti;
+        dlsch0->subframe_tx[subframe] = 1;
+        dlsch0->harq_ids[subframe] = rel8->harq_process;
+      }
+
+      if (dlsch1 != NULL) {
+        dlsch1->rnti = rel8->rnti;
+        dlsch1->subframe_tx[subframe] = 1;
+        dlsch1->harq_ids[subframe] = rel8->harq_process;
+      }
+
+      //    printf("Setting DLSCH harq id %d to subframe %d\n",harq_pid,subframe);
+
+      if (dlsch0 != NULL) {
+        conv_rballoc(rel8->resource_allocation_type,
+                     rel8->resource_block_coding,
+                     fp->N_RB_DL,
+                     dlsch0_harq->rb_alloc);
+
+        dlsch0_harq->nb_rb = conv_nprb(rel8->resource_allocation_type,
+				       rel8->resource_block_coding,
+				       fp->N_RB_DL);
+
+        if (dlsch1!=NULL) {
+          memcpy(dlsch1_harq->rb_alloc,dlsch0_harq->rb_alloc,4*sizeof(uint32_t));
+          dlsch1_harq->nb_rb           = dlsch0_harq->nb_rb;
+        }
+      } else if ((dlsch0 == NULL ) && (dlsch1 != NULL )) {
+        conv_rballoc(rel8->resource_allocation_type,
+                     rel8->resource_block_coding,
+                     fp->N_RB_DL,
+                     dlsch1_harq->rb_alloc);
+        dlsch1_harq->nb_rb = conv_nprb(rel8->resource_allocation_type,
+				       rel8->resource_block_coding,
+				       fp->N_RB_DL);
+      }
+
+      if (dlsch0_harq != NULL) {
+        if (dlsch0_harq->nb_rb > 0) {
+          dlsch0_harq->TBS         = TBStable[get_I_TBS(dlsch0_harq->mcs)][dlsch0_harq->nb_rb-1];
+        } else {
+          dlsch0_harq->TBS = 0;
+        }
+
+        dlsch0_harq->Nl        = 1;
+        dlsch0_harq->dl_power_off = 1;
+        dlsch0_harq->mimo_mode = TM8; //this DCI can only be used in TM8
+        dlsch0_harq->Nlayers = 1;
+	dlsch0_harq->nscid = rel9->scrambling_identity;
+      }
+
+      if (dlsch1_harq != NULL) {
+        if (dlsch1_harq->nb_rb > 0) {
+          dlsch1_harq->TBS         = TBStable[get_I_TBS(dlsch1_harq->mcs)][dlsch1_harq->nb_rb-1];
+        } else {
+          dlsch1_harq->TBS = 0;
+        }
+
+        dlsch1_harq->Nl        = 1;
+        dlsch1_harq->dl_power_off = 1;
+        dlsch1_harq->mimo_mode = TM8; //this DCI can only be used in TM8
+        dlsch1_harq->Nlayers = 1;
+	dlsch1_harq->nscid = rel9->scrambling_identity;
+      }
+
+      break;
+
+ 
   }
 
   if (dlsch0_harq) {

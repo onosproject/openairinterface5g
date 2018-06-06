@@ -203,6 +203,7 @@ int32_t allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
                            int32_t **txdataF,
                            uint32_t *jj,
                            uint32_t *jj2,
+			   uint16_t rb,  
                            uint16_t re_offset,
                            uint32_t symbol_offset,
                            LTE_DL_eNB_HARQ_t *dlsch0_harq,
@@ -219,7 +220,8 @@ int32_t allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
                            uint8_t mprime,
                            uint8_t Ns,
                            int *P1_SHIFT,
-                           int *P2_SHIFT);
+                           int *P2_SHIFT,
+			   uint8_t nscid);
 
 
 /** \fn int32_t dlsch_modulation(int32_t **txdataF,
@@ -590,7 +592,7 @@ void init_unscrambling_lut(void);
 
 uint8_t is_not_pilot(uint8_t pilots, uint8_t re, uint8_t nushift, uint8_t use2ndpilots);
 
-uint8_t is_not_UEspecRS(int8_t lprime, uint8_t re, uint8_t nushift, uint8_t Ncp, uint8_t beamforming_mode);
+uint8_t is_not_UEspecRS(int8_t lprime, uint8_t re, uint8_t nushift, uint8_t Ncp, uint8_t beamforming_mode, uint8_t Ns);
 
 
 

@@ -1876,8 +1876,8 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP, int harq_pidP
     UE_list->UE_sched_ctrl[UE_id].ta_update = 31;
 
     for (j = 0; j < 8; j++) {
-      UE_list->UE_template[cc_idP][UE_id].oldNDI[j] = (j == 0) ? 1 : 0;	// 1 because first transmission is with format1A (Msg4) for harq_pid 0
-      UE_list->UE_template[cc_idP][UE_id].oldNDI_UL[j] = (j == harq_pidP) ? 0 : 1;	// 1st transmission is with Msg3;
+      UE_list->UE_template[cc_idP][UE_id].oldNDI1[j]    = (j==0)?1:0;   // 1 because first transmission is with format1A (Msg4) for harq_pid 0
+      UE_list->UE_template[cc_idP][UE_id].oldNDI2[j]    = 0;   
       UE_list->UE_sched_ctrl[UE_id].round[cc_idP][j] = 8;
       UE_list->UE_sched_ctrl[UE_id].round_UL[cc_idP][j] = 0;
     }

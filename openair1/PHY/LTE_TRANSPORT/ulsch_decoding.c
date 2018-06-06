@@ -1530,6 +1530,8 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
     ulsch_harq->o_RI[0] = ((ulsch_harq->q_RI[0] + ulsch_harq->q_RI[Q_m/2]) > 0) ? 0 : 1;
   }
 
+  LOG_D(PHY,"ulsch_decoding: o_RI=%d\n",ulsch_harq->o_RI[0]);
+
   // CQI
 
   //  printf("before cqi c[%d] = %p\n",0,ulsch_harq->c[0]);

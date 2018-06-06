@@ -147,14 +147,20 @@ void lte_param_init(PHY_VARS_eNB **eNBp,
 
   // DL power control init
   //if (transmission_mode == 1) {
-  UE->pdsch_config_dedicated->p_a  = pa;
-
-  if (transmission_mode == 1 || transmission_mode ==7) {
+  if (N_tx_port_eNB == 1) {
+    eNB->pdsch_config_dedicated->p_a  = dB0; 
     ((eNB->frame_parms).pdsch_config_common).p_b = 0;
+    UE->pdsch_config_dedicated->p_a  = dB0; 
     ((UE->frame_parms).pdsch_config_common).p_b = 0;
-  } else { // rho_a = rhob
+  } else if  (N_tx_port_eNB == 2) { // rho_a = rhob
+    eNB->pdsch_config_dedicated->p_a  = dBm3; 
     ((eNB->frame_parms).pdsch_config_common).p_b = 1;
+    UE->pdsch_config_dedicated->p_a  = dBm3; 
     ((UE->frame_parms).pdsch_config_common).p_b = 1;
+  }
+  else {
+    LOG_E(PHY,"only 1 or 2 cell specific antenna ports supported!\n");
+    exit(-1);
   }
 
   UE->perfect_ce = perfect_ce;

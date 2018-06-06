@@ -663,6 +663,9 @@ typedef struct {
     //  total rb used for retransmission
     uint32_t total_rbs_used_retx;
 
+  /// DL Wideband CQI index (2 TBs)
+  uint8_t dl_cqi[2];
+
     /// TX
     /// Num pkt
     uint32_t num_pdu_tx[NB_RB_MAX];
@@ -778,7 +781,9 @@ typedef struct {
     /// C-RNTI of UE
     rnti_t rnti;
     /// NDI from last scheduling
-    uint8_t oldNDI[8];
+    uint8_t oldNDI1[8];
+    /// NDI from last scheduling
+    uint8_t oldNDI2[8];
     /// mcs1 from last scheduling
     uint8_t oldmcs1[8];
     /// mcs2 from last scheduling
@@ -795,7 +800,7 @@ typedef struct {
     boolean_t configured;
 
     /// MCS from last scheduling
-    uint8_t mcs[8];
+    uint8_t mcs[2][8];
 
     /// TPC from last scheduling
     uint8_t oldTPC[8];
@@ -883,6 +888,9 @@ typedef struct {
 
     /// UE tx power
     int32_t ue_tx_power;
+
+  // active TBs
+  uint8_t TB_active[2][8];
 
     /// stores the frame where the last TPC was transmitted
     uint32_t pusch_tpc_tx_frame;

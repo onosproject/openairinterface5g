@@ -1573,6 +1573,9 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 		case 7:
 		  RRC_CONFIGURATION_REQ (msg_p).ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm7;
 		  break;
+		case 8:
+		  RRC_CONFIGURATION_REQ (msg_p).ue_TransmissionMode[j] = AntennaInfoDedicated__transmissionMode_tm8_v920;
+		break;
 		default:
 		  AssertFatal (0,
 			       "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for ue_TransmissionMode choice: 1,2,3,4,5,6,7",
