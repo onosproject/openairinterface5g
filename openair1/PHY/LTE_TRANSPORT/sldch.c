@@ -401,7 +401,7 @@ void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx)
          (void*)sldch,
          sizeof(SLDCH_t));
 
-  LOG_I(PHY,"SLDCH configuration %lu bytes, TBS payload %d bytes => %lu bytes\n",
+  LOG_D(PHY,"SLDCH configuration %lu bytes, TBS payload %d bytes => %lu bytes\n",
         sizeof(SLDCH_t)-sizeof(uint8_t*),
         sldch->payload_length,
         sldch_header_len+sizeof(SLDCH_t)-sizeof(uint8_t*)+sldch->payload_length);
@@ -591,7 +591,7 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
     if (absSF_modP != ((b_1i*N_TX_SLD)+sldch->j)) return;
     
     nprb = 2*a_ji;
-  LOG_D(PHY,"Generating SLDCH in SFN.SF %d.%d (O %d, P %d, n_psdch %d, Nf %d, Ni %d, j %d, a_ji %d) \n",frame_tx,subframe_tx,O,P,sldch->n_psdch,Nf,Ni,sldch->j,a_ji);
+    LOG_D(PHY,"Generating SLDCH in SFN.SF %d.%d (O %d, P %d, n_psdch %d, Nf %d, Ni %d, j %d, a_ji %d) \n",frame_tx,subframe_tx,O,P,sldch->n_psdch,Nf,Ni,sldch->j,a_ji);
 
   }
   else {
@@ -606,4 +606,6 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   ue->psdch_generated=1;
   sldch->j++;
   sldch->j&=3;
+  if (sldch->j==0) ue->sldch_active=0;
+
 }
