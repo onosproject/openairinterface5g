@@ -3440,9 +3440,11 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 
    if (absSF<O) return((SLSCH_t *)NULL);
 
+   absSF_modP = absSF_offset % P;
+
    LOG_D(MAC,"Checking SLSCH for absSF %d\n",absSF);
 
-   if (absSF_offset == 0) { // this is the first subframe of PSCCH period, check for data and generate SCI
+   if (absSF_modP == 0) { // this is the first subframe of PSCCH period, check for data and generate SCI
       ue->sltx_active = 0;
       for (i = 0; i < MAX_NUM_LCID; i++){
                if (ue->sl_info[i].LCID > 0) {
@@ -3450,6 +3452,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                      if ((ue->sourceL2Id > 0) && (ue->sl_info[i].destinationL2Id >0) ){
                         rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
                               ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].destinationL2Id );
+                        LOG_I(MAC,"absSF_offset %d : Checking status (%d,Dest %d) => LCID %d => %d bytes\n",absSF_offset,ue->sourceL2Id,ue->sl_info[i].destinationL2Id,ue->sl_info[i].LCID,rlc_status.bytes_in_buffer);
                         if (rlc_status.bytes_in_buffer > 2){
                            LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer \n",frameP,subframeP,rlc_status.bytes_in_buffer);
 
@@ -3464,8 +3467,9 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                      }
 
                      if ((ue->sourceL2Id > 0) && (ue->sl_info[i].groupL2Id >0) ){
-                        rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                        rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO, 
                               ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].groupL2Id);
+                        LOG_I(MAC,"Checking status (%d,Group %d) => LCID %d => %d bytes\n",ue->sourceL2Id,ue->sl_info[i].destinationL2Id);
                         if (rlc_status.bytes_in_buffer > 2){
                            LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
                            // Fill in group id for off-network communications
@@ -3494,6 +3498,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
      slsch->timing_advance_indication = 0;
      slsch->group_destination_id      = ue->destinationL2Id&0xff;
 
+     LOG_I(MAC,"Generated SCI with n_pscch %d, RBC %x, TRP %d, mcs %d, groupid %x\n",slsch->n_pscch,slsch->resource_block_coding,slsch->time_resource_pattern,mcs,slsch->group_destination_id);
    } // we're in the SCI period
    else if (ue->sltx_active == 1) { // every 4th subframe, check for new data from RLC
       // 10 PRBs, mcs 19

@@ -5755,6 +5755,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 
 
          //configure MAC with sourceL2Id/groupL2ID
+         LOG_I(PHY,"Configuration MAC for sourceL2Id/GroupL2ID %d/%d\n",sourceL2Id,groupL2Id);
          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
 			       (RadioResourceConfigCommonSIB_t *)NULL,
 			       (struct PhysicalConfigDedicated *)NULL,
@@ -5764,7 +5765,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
 			       (MeasObjectToAddMod_t **)NULL,
 			       (MAC_MainConfig_t *)NULL,
-			       3, //LCID
+			       UE->DRB_config[0][0]->drb_Identity, //LCID
 			       (struct LogicalChannelConfig *)NULL,
 			       (MeasGapConfig_t *)NULL,
 			       (TDD_Config_t *)NULL,
@@ -6049,7 +6050,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
 			       (MeasObjectToAddMod_t **)NULL,
 			       (MAC_MainConfig_t *)NULL,
-			       3, //LCID
+			       UE->DRB_config[0][0]->drb_Identity, //LCID
 			       (struct LogicalChannelConfig *)NULL,
 			       (MeasGapConfig_t *)NULL,
 			       (TDD_Config_t *)NULL,

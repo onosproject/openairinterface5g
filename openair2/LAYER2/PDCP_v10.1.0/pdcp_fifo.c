@@ -760,7 +760,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 
       if (len<=0) {
          // nothing in pdcp NAS socket
-         //LOG_D(PDCP, "[PDCP][NETLINK] Nothing in socket, length %d \n", len);
+         LOG_D(PDCP, "[PDCP][NETLINK] Nothing in socket, length %d \n", len);
       } else {
 
          msg_len = len;

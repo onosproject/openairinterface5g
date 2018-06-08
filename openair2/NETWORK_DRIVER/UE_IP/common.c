@@ -57,7 +57,7 @@
         ntohs((addr)->s6_addr16[7])
 
 
-//#define OAI_DRV_DEBUG_SEND
+#define OAI_DRV_DEBUG_SEND
 //#define OAI_DRV_DEBUG_RECEIVE
 
 void
@@ -297,19 +297,24 @@ ue_ip_common_ip2wireless(
 
   case 4:
      src_addr = (unsigned char *)&((struct iphdr *)&skb_pP->data[hard_header_len])->saddr;
+     dst_addr = (unsigned char *)&((struct iphdr *)&skb_pP->data[hard_header_len])->daddr;
+
+#ifdef OAI_DRV_DEBUG_SEND
     if (src_addr) {
       printk("[UE_IP_DRV][%s] Source %d.%d.%d.%d\n",__FUNCTION__, src_addr[0],src_addr[1],src_addr[2],src_addr[3]);
     }
-    dst_addr = (unsigned char *)&((struct iphdr *)&skb_pP->data[hard_header_len])->daddr;
     if (dst_addr) {
       printk("[UE_IP_DRV][%s] Dest %d.%d.%d.%d\n",__FUNCTION__, dst_addr[0],dst_addr[1],dst_addr[2],dst_addr[3]);
     }
-
+    printk("[UE_IP_DRV][%s] slrb_id %d\n",__FUNCTION__, pdcph.rb_id);
+#endif
     //get Ipv4 address and pass to PCDP header
-    printk("[UE_IP_DRV] source Id: 0x%08x\n",pdcph.sourceL2Id );
-    printk("[UE_IP_DRV] destinationL2Id Id: 0x%08x\n",pdcph.destinationL2Id );
     pdcph.sourceL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->saddr) & 0x00FFFFFF;
     pdcph.destinationL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->daddr) & 0x00FFFFFF;
+#ifdef OAI_DRV_DEBUG_SEND
+    printk("[UE_IP_DRV] source Id: 0x%08x\n",pdcph.sourceL2Id );
+    printk("[UE_IP_DRV] destinationL2Id Id: 0x%08x\n",pdcph.destinationL2Id );
+#endif
     break;
 
   default:

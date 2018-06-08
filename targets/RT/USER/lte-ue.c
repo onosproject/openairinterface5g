@@ -913,6 +913,37 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 
       phy_procedures_UE_SL_RX(UE,proc);
 
+      if (UE->SLonly==1 && 
+          UE->mac_enabled==1) {
+        
+          ret = ue_scheduler(UE->Mod_id,
+                             proc->frame_rx,
+                             proc->subframe_rx,
+                             proc->frame_tx,
+                             proc->subframe_tx,
+                             subframe_select(&UE->frame_parms,proc->subframe_tx),
+                             0,
+                             0/*FIXME CC_id*/);
+          if ( ret != CONNECTION_OK) {
+             char *txt;
+            switch (ret) {
+            case CONNECTION_LOST:
+              txt="RRC Connection lost, returning to PRACH";
+              break;
+            case PHY_RESYNCH:
+              txt="RRC Connection lost, trying to resynch";
+              break;
+            case RESYNCH:
+              txt="return to PRACH and perform a contention-free access";
+              break;
+            default:
+              txt="UNKNOWN RETURN CODE";
+            }
+            LOG_E( PHY, "[UE %"PRIu8"] Frame %"PRIu32", subframe %u %s\n",
+                   UE->Mod_id, proc->frame_rx, proc->subframe_tx,txt );
+          }
+      }
+
       phy_procedures_UE_SL_TX(UE,proc);
 
     }

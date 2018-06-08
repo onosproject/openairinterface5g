@@ -289,7 +289,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
         continue;
       }
 
-      LOG_D(RLC, "Adding DRB %ld, lc_id %d\n",drb_id,lc_id);
+      LOG_I(RLC, "Adding DRB %ld, lc_id %d\n",drb_id,lc_id);
 
       if (drb_toaddmod_p->rlc_Config) {
 
