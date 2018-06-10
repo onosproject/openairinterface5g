@@ -333,20 +333,20 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
   // Offset set to 0 subframes
   preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present             = SL_OffsetIndicator_r12_PR_small_r12;
   preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0;
-  // 40 ms SL Period
+  // 4 ms SL Period
   preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present              = SubframeBitmapSL_r12_PR_bs4_r12;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf         = CALLOC(1,1);
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size        = 1;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = 4;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf         = CALLOC(1,1);
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size        = 1;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.bits_unused = 4;
   // 1st 4 subframes for PSCCH
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[0]      = 0x0F;
+  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[0]      = 0x0F;
   preconfigpool->sc_TxParameters_r12                                              = 0;
 
   //SL Data portion
   // 20 PRBs for SL communications
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12                             = 20;
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_End_r12                             = 44;
+  preconfigpool->data_TF_ResourceConfig_r12.prb_Num_r12                             = 20;
+  preconfigpool->data_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
+  preconfigpool->data_TF_ResourceConfig_r12.prb_End_r12                             = 44;
   preconfigpool->data_CP_Len_r12                                                  = SL_CP_Len_r12_normal;
 
   preconfigpool->dataHoppingConfig_r12.hoppingParameter_r12                         = 0;

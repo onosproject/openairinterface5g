@@ -338,6 +338,10 @@ void idft_slcch(LTE_DL_FRAME_PARMS *frame_parms,int32_t *z,int slot)
 
 void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_t a,int slot) {
 
+  AssertFatal(ue!=NULL,"UE is null\n");
+  AssertFatal(frame_tx>=0 && frame_tx<1024,"frame %d is illegal\n",frame_tx);
+  AssertFatal(subframe_tx>=0 && subframe_tx<10,"subframe %d is illegal\n",subframe_tx);
+  AssertFatal(slot>=0 && slot<2, "slot %d is illegal\n",slot);
   LTE_UE_PSCCH_TX *pscch = ue->pscch_vars_tx;
   SLSCH_t *slsch         = ue->slsch;
   int tx_amp;
@@ -493,7 +497,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
                        NULL,
                        0);
 
-  ue->pscch_generated = 1+slot;
+  ue->pscch_generated |= (1+slot);
   ue->generate_ul_signal[subframe_tx][0] = 0;
 
 
@@ -625,8 +629,6 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
 
 void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,int subframe_tx) {
 
-  LOG_I(PHY,"Checking pssch for SFN/SF %d.%d (slsch_active %d)\n",
-	frame_tx,subframe_tx, ue->slsch_active);
 
   AssertFatal(frame_tx<1024 && frame_tx>=0,"frame %d is illegal\n",frame_tx);
   AssertFatal(subframe_tx<10 && subframe_tx>=0,"subframe %d is illegal\n",subframe_tx);
@@ -649,6 +651,7 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,
 
   absSF_modP = absSF_offset%P;
 
+  LOG_I(PHY,"Checking pssch for absSF_mod P %d, SubframeBitmapSL_length %d\n", absSF_modP, slsch->SubframeBitmapSL_length);
   // This is the condition for short SCCH bitmap (slsch->SubframeBitmapSL_length bits), check that the current subframe is for SLSCH
   if (absSF_modP < slsch->SubframeBitmapSL_length) return;
   
@@ -664,17 +667,13 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,
 	slsch->rvidx);
   // Note : this assumes Ntrp=8 for now
   if (trp8[slsch->time_resource_pattern][absSF_modP&7]==0) return;
+/*
   // we have an opportunity in this subframe
-  if (absSF_modP == 0) slsch->ljmod10 = 0;
+  if (absSF_modP == 10) slsch->ljmod10 = 0;
   else slsch->ljmod10++;
-  if (slsch->ljmod10 == 0) slsch->ljmod10 = 0;
-	 
+*/	 
 
   slsch_codingmodulation(ue,proc,frame_tx,subframe_tx,slsch->ljmod10);
-  if (slsch->rvidx == 0) slsch->rvidx=2;
-  else if (slsch->rvidx == 2) slsch->rvidx=3;
-  else if (slsch->rvidx == 3) slsch->rvidx=1;
-  else slsch->rvidx = 0;
 }
 
 void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
@@ -688,7 +687,8 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t absSF = (frame_tx*10)+subframe_tx;
   uint32_t absSF_offset,absSF_modP;
 
-  if (ue->pscch_generated == 1) return;
+  LOG_D(PHY,"Checking pscch for absSF %d\n",absSF);
+  if (ue->pscch_generated == 3) return;
 
 
   
@@ -704,6 +704,7 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
     ue->pscch_generated=0;
     return;
   }
+  LOG_D(PHY,"Checking pscch for absSF_modP %d (SubframeBitmalSL_length %d,mask %x)\n",absSF_modP,slsch->SubframeBitmapSL_length,slsch->bitmap1);
 
   uint64_t SFpos = ((uint64_t)1) << absSF_modP;
   if ((SFpos & slsch->bitmap1) == 0) return;
@@ -730,8 +731,8 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t b1=slsch->n_pscch%LPSCCH;
   uint32_t b2=(slsch->n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
 
-  LOG_I(PHY,"Checking pscch for absSF %d (LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d) pscch_coded %d\n",
-	absSF, LPSCCH, M_RB_PSCCH_RP,a1,a2,b1,b2,ue->pscch_coded);
+  LOG_I(PHY,"Checking pscch for absSF %d (N_SL_RB_SC %d, LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d) pscch_coded %d\n",
+	absSF, slsch->N_SL_RB_SC,LPSCCH, M_RB_PSCCH_RP,a1,a2,b1,b2,ue->pscch_coded);
 
   ue->slsch_sdu_active = 1;
 
@@ -1472,7 +1473,7 @@ void rx_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
   // we have an opportunity in this subframe
   if (absSF_modP == slsch->SubframeBitmapSL_length) slsch->ljmod10 = 0;
   else slsch->ljmod10++;
-  if (slsch->ljmod10 == 0) slsch->ljmod10 = 0;
+  if (slsch->ljmod10 == 10) slsch->ljmod10 = 0;
 
   if (slsch->rvidx == 0) { // first new transmission in period, get a new packet
     ue->slsch_decoded = 0;

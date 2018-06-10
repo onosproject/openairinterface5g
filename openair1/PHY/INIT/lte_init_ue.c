@@ -634,6 +634,7 @@ int phy_config_SL(int Mod_id,SLDCH_t *sldch_rx,SLSCH_t *slsch_rx) {
    memcpy((void*)&ue->sldch_rx,(void*)sldch_rx,sizeof(SLDCH_t));
    memcpy((void*)&ue->slsch_rx,(void*)slsch_rx,sizeof(SLSCH_t));
 
+   ue->slsch_active = 1;
    return(0);
 }
 

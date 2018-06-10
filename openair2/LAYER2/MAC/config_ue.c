@@ -741,6 +741,16 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
     UE_mac_inst[Mod_idP].slsch.N_SL_RB_data              = preconfigpool->data_TF_ResourceConfig_r12.prb_Num_r12;
     UE_mac_inst[Mod_idP].slsch.prb_Start_data            = preconfigpool->data_TF_ResourceConfig_r12.prb_Start_r12;
     UE_mac_inst[Mod_idP].slsch.prb_End_data              = preconfigpool->data_TF_ResourceConfig_r12.prb_End_r12;
+
+    LOG_I(MAC,"SLCCH Resource pool (%d,%d,%d)\n",
+          UE_mac_inst[Mod_idP].slsch.N_SL_RB_SC,
+          UE_mac_inst[Mod_idP].slsch.prb_Start_SC,
+          UE_mac_inst[Mod_idP].slsch.prb_End_SC);
+    LOG_I(MAC,"SLSCH Resource pool (%d,%d,%d)\n",
+          UE_mac_inst[Mod_idP].slsch.N_SL_RB_data,
+          UE_mac_inst[Mod_idP].slsch.prb_Start_data, 
+          UE_mac_inst[Mod_idP].slsch.prb_End_data);
+
     AssertFatal(preconfigpool->sc_Period_r12<10,"Maximum supported sc_Period is 320ms (sc_Period_r12=%d)\n",
 		SL_PeriodComm_r12_sf320);
     UE_mac_inst[Mod_idP].slsch.SL_SC_Period = SC_Period[preconfigpool->sc_Period_r12];
@@ -752,7 +762,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
     AssertFatal(preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present <= SubframeBitmapSL_r12_PR_bs40_r12 ||
 		preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present > SubframeBitmapSL_r12_PR_NOTHING,
 		"PSCCH bitmap limited to 42 bits\n");
-    UE_mac_inst[Mod_idP].slsch.SubframeBitmapSL_length = SubframeBitmapSL[preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present];
+    UE_mac_inst[Mod_idP].slsch.SubframeBitmapSL_length = SubframeBitmapSL[preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present-1];
     UE_mac_inst[Mod_idP].slsch.bitmap1 = *((uint64_t*)preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf);
 
     AssertFatal(SL_Preconfiguration_r12->ext1!=NULL,"there is no Rel13 extension in SL preconfiguration\n"); 

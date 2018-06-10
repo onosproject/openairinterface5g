@@ -1,4 +1,4 @@
-#define TRP8_MAX 106
+#include "PHY/defs.h"
 const int trp8[TRP8_MAX+1][8] = {{1,0,0,0,0,0,0,0},
 				 {0,1,0,0,0,0,0,0},
 				 {0,0,1,0,0,0,0,0},

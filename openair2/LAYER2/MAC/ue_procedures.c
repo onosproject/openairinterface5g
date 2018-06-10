@@ -3420,6 +3420,8 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 }
 */
 
+extern const int trp8[TRP8_MAX+1][8];
+
 SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframeP) {
 
    mac_rlc_status_resp_t rlc_status, rlc_status_data;
@@ -3430,8 +3432,9 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
    int i = 0;
    int mcs=19;
    int L_CRBs=10;
+   int RB_start=0;
    // Note: this is hard-coded for now for the default SL configuration (4 SF PSCCH, 36 SF PSSCH)
-   SLSCH_t *slsch = &UE_mac_inst[module_idP].slsch;
+   SLSCH_t *slsch = &ue->slsch;
 
    AssertFatal(slsch!=NULL,"SLSCH is null\n");
    uint32_t O = slsch->SL_OffsetIndicator;
@@ -3442,7 +3445,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 
    absSF_modP = absSF_offset % P;
 
-   LOG_D(MAC,"Checking SLSCH for absSF %d\n",absSF);
+   LOG_D(MAC,"Checking SLCCH/SLSCH for absSF %d, ue->sltx_active %d\n",absSF,ue->sltx_active);
 
    if (absSF_modP == 0) { // this is the first subframe of PSCCH period, check for data and generate SCI
       ue->sltx_active = 0;
@@ -3488,23 +3491,54 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
             }
      if (ue->sltx_active == 0) return((SLSCH_t*)NULL);
 
+     slsch->ljmod10 = 0;
+     slsch->rvidx   = 1;
+     slsch->RB_start = RB_start;
+     slsch->L_CRBs   = L_CRBs;
      // fill in SCI fields
      slsch->n_pscch                   = ue->sourceL2Id;  
      slsch->format                    = 0;
      slsch->freq_hopping_flag         = 0;
-     slsch->resource_block_coding     = computeRIV(slsch->N_SL_RB_data,0,L_CRBs);
+     slsch->resource_block_coding     = computeRIV(slsch->N_SL_RB_data,RB_start,L_CRBs);
      slsch->time_resource_pattern     = 106; // all subframes for Nrp=8
      slsch->mcs                       = mcs;
      slsch->timing_advance_indication = 0;
      slsch->group_destination_id      = ue->destinationL2Id&0xff;
 
-     LOG_I(MAC,"Generated SCI with n_pscch %d, RBC %x, TRP %d, mcs %d, groupid %x\n",slsch->n_pscch,slsch->resource_block_coding,slsch->time_resource_pattern,mcs,slsch->group_destination_id);
-   } // we're in the SCI period
-   else if (ue->sltx_active == 1) { // every 4th subframe, check for new data from RLC
+     LOG_I(MAC,"Configured SCI with n_pscch %d, RBC %x, TRP %d, mcs %d, groupid %x\n",slsch->n_pscch,slsch->resource_block_coding,slsch->time_resource_pattern,mcs,slsch->group_destination_id);
+     return(slsch);
+   } // we're in the first subframe of the SCI period
+   else if (ue->sltx_active == 1 &&
+            absSF_modP >= slsch->SubframeBitmapSL_length) { // this is SLSCH period and we have allocated the SL TX
+
+      // check if this is time for a new SDU query
+        AssertFatal(slsch->time_resource_pattern <= TRP8_MAX,
+                    "received Itrp %d: TRP8 is used with Itrp in 0...%d\n",
+                    slsch->time_resource_pattern,TRP8_MAX);
+       // Note : this assumes Ntrp=8 for now
+      if (trp8[slsch->time_resource_pattern][absSF_modP&7]==0) return ((SLSCH_t*)NULL);
+  // we have an opportunity in this subframe
+      if (slsch->ljmod10 == 10) slsch->ljmod10 = 0;
+      else slsch->ljmod10++;
+
+      if (slsch->rvidx==1) slsch->rvidx = 0;
+      else if (slsch->rvidx==0) slsch->rvidx=2; 
+      else if (slsch->rvidx==2) slsch->rvidx=3;
+      else if (slsch->rvidx==3) slsch->rvidx=1;
+    
+      if (slsch->rvidx>0 && slsch->payload_length > 0) {
+         LOG_I(MAC,"absSF %d SLSCH TXoP rvidx %d\n",absSF,slsch->rvidx);
+         return slsch;
+      }
+      else if (slsch->rvidx>0 && slsch->payload_length == 0) return ((SLSCH_t*)NULL);
       // 10 PRBs, mcs 19
+
       int TBS = get_TBS_UL(mcs,L_CRBs);
       int req;
 
+
+      rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                                      ue->slsch_lcid, 0xFFFF, ue->sourceL2Id, ue->destinationL2Id );
 
       if (TBS <= rlc_status.bytes_in_buffer) req = TBS;
       else req = rlc_status.bytes_in_buffer;
@@ -3565,13 +3599,19 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
             }
             slsch->payload_length = TBS;
             // fill in SLSCH configuration
-            return(&ue->slsch);
+            return(slsch);
          }
-         else return((SLSCH_t*)NULL);
+         else {
+            slsch->payload_length = 0;
+            return((SLSCH_t*)NULL);
+         }
       }
 
    }
-
+   else if (ue->sltx_active == 1 && absSF_modP < slsch->SubframeBitmapSL_length) {
+      LOG_I(MAC,"absSF_mod P %d in SLSCH period\n",absSF_modP);
+      return(slsch); // we're in the SCI period
+   }
   return(NULL);
 }
 
