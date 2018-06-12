@@ -313,6 +313,17 @@ void multipath_channel_freq_SSE_float(channel_desc_t *desc,
 		       uint8_t UE_id,
 		       uint8_t CC_id,
 		       uint8_t th_id);
+void multipath_channel_freq_AVX_float(channel_desc_t *desc,
+                       float *tx_sig_re[2],
+                       float *tx_sig_im[2],
+                       float *rx_sig_re[2],
+                       float *rx_sig_im[2],
+                       uint32_t length,
+                       uint8_t keep_channel,
+		       uint8_t eNB_id,
+		       uint8_t UE_id,
+		       uint8_t CC_id,
+		       uint8_t th_id);
 /**\fn void multipath_channel_prach(channel_desc_t *desc,
            double tx_sig_re[2],
            double tx_sig_im[2],
@@ -474,7 +485,9 @@ void table_nor(unsigned long seed);
 double nfix(void);
 __m128 nfix_SSE(__m128i iz);
 __m128 log_ps(__m128 x);
+__m256 log256_ps(__m256 x);
 __m128 exp_ps(__m128 x);
+__m256 exp256_ps(__m256 x);
 double uniformrandom(void);
 void uniformrandomSSE(__m128d *d1,__m128d *d2);
 double ziggurat(double mean, double variance);
@@ -482,14 +495,17 @@ __m128 ziggurat_SSE_float(void);
 void boxmuller_SSE_float(__m128 *data1, __m128 *data2);
 int freq_channel(channel_desc_t *desc,uint16_t nb_rb, int16_t n_samples);
 int freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb, int16_t n_samples);
+int freq_channel_AVX_float(channel_desc_t *desc,uint16_t nb_rb, int16_t n_samples);
 int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
 int freq_channel_prach_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
 int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples);
 int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples);
+int init_freq_channel_AVX_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples);
 int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
 int init_freq_channel_prach_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
 
 void sincos_ps(__m128 x, __m128 *s, __m128 *c);
+void sincos256_ps(__m256 x, __m256 *s, __m256 *c);
 
 uint8_t multipath_channel_nosigconv(channel_desc_t *desc);
 void multipath_tv_channel(channel_desc_t *desc,

@@ -33,7 +33,7 @@
 #ifdef USER_MODE
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdin.h>
+#include <stdint.h>
 #include <math.h>
 #include <time.h>
 #endif

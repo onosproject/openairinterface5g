@@ -154,6 +154,40 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
   int16_t f;
   uint8_t l;
   __m128 cos_lut128,sin_lut128;
+  __m128 x128, log128, exp128;
+  __m256 x256, log256, exp256;
+  x128 = _mm_set_ps(1.0,2.0,3.0,4.0);
+  x256 = _mm256_set_ps(1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0);
+  log128=log_ps(x128);
+  log256=log256_ps(x256);
+  exp128=exp_ps(x128);
+  exp256=exp256_ps(x256);
+  printf("log128 %e,%e,%e,%e\n",log128[0],log128[1],log128[2],log128[3]);
+  printf("log %e,%e,%e,%e\n\n",log(1),log(2),log(3),log(4));
+  printf("exp128 %e,%e,%e,%e\n",exp128[0],exp128[1],exp128[2],exp128[3]);
+  printf("exp %e,%e,%e,%e\n\n",exp(1),exp(2),exp(3),exp(4));
+
+  printf("log256 %e,%e,%e,%e,%e,%e,%e,%e\n",log256[0],log256[1],log256[2],log256[3],log256[4],log256[5],log256[6],log256[7]);
+  printf("log %e,%e,%e,%e,%e,%e,%e,%e\n",log(1),log(2),log(3),log(4),log(5),log(6),log(7),log(8));
+  printf("exp256 %e,%e,%e,%e,%e,%e,%e,%e\n",exp256[0],exp256[1],exp256[2],exp256[3],exp256[4],exp256[5],exp256[6],exp256[7]);
+  printf("exp %e,%e,%e,%e,%e,%e,%e,%e\n",exp(1),exp(2),exp(3),exp(4),exp(5),exp(6),exp(7),exp(8));
+  /*__m256 x256, sin256, cos256;
+  __m128 x128, sin128, cos128;
+  x128 = _mm_set_ps(1.0,2.0,3.0,4.0);
+  x256 = _mm256_set_ps(1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0);*/
+
+	/*printf("sincos in abstraction.c\n");
+	sincos256_ps(x256,&sin256,&cos256);
+	sincos_ps(x128,&sin128,&cos128);
+	printf("sin avx %e,%e,%e,%e,%e,%e,%e,%e\n",sin256[0],sin256[1],sin256[2],sin256[3],sin256[4],sin256[5],sin256[6],sin256[7]);
+	printf("sin %e,%e,%e,%e,%e,%e,%e,%e\n",sin(1.0),sin(2.0),sin(3.0),sin(4.0),sin(5.0),sin(6.0),sin(7.0),sin(8.0));
+	printf("cos avx %e,%e,%e,%e,%e,%e,%e,%e\n",cos256[0],cos256[1],cos256[2],cos256[3],cos256[4],cos256[5],cos256[6],cos256[7]);
+	printf("cos %e,%e,%e,%e,%e,%e,%e,%e\n\n",cos(1.0),cos(2.0),cos(3.0),cos(4.0),cos(5.0),cos(6.0),cos(7.0),cos(8.0));
+
+	printf("sin sse %e,%e,%e,%e\n",sin128[0],sin128[1],sin128[2],sin128[3]);
+	printf("sin %e,%e,%e,%e\n",sin(1.0),sin(2.0),sin(3.0),sin(4.0));
+	printf("cos sse %e,%e,%e,%e\n",cos128[0],cos128[1],cos128[2],cos128[3]);
+	printf("cos %e,%e,%e,%e\n",cos(1.0),cos(2.0),cos(3.0),cos(4.0));*/
 
   if ((n_samples&1)==0) {
     fprintf(stderr, "freq_channel_init: n_samples has to be odd\n");
@@ -181,7 +215,6 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
         delay = desc->delays[l];
       else
         delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
-
         //sincos_ps(_mm_set_ps(twopi*(4*f+3)*delay,twopi*(4*f+2)*delay,twopi*(4*f+1)*delay,twopi*(4*f)*delay), &sin_lut128, &cos_lut128);
         cos_lut128=_mm_set_ps(cos(twopi*(4*f+3)*delay),cos(twopi*(4*f+2)*delay),cos(twopi*(4*f+1)*delay),cos(twopi*(4*f)*delay));
         sin_lut128=_mm_set_ps(sin(twopi*(4*f+3)*delay),sin(twopi*(4*f+2)*delay),sin(twopi*(4*f+1)*delay),sin(twopi*(4*f)*delay));
@@ -209,6 +242,79 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
       sin_lut128=_mm_set_ps(sin(twopi*(4*f)*delay),sin(twopi*(4*f-1)*delay),sin(twopi*(4*f-2)*delay),sin(twopi*(4*f-3)*delay));
       _mm_storeu_ps(&cos_lut_f[l][4*f-3+(n_samples>>1)],cos_lut128);
       _mm_storeu_ps(&sin_lut_f[l][4*f-3+(n_samples>>1)],sin_lut128);
+    }
+  }
+  /*for (f=-(n_samples>>1); f<=(n_samples>>1); f++) {
+    for (l=0; l<(int)desc->nb_taps; l++) {  
+      printf("f %d, l %d (cos,sin) (%e,%e):\n",f,l,cos_lut_f[l][f+(n_samples>>1)],sin_lut_f[l][f+(n_samples>>1)]);
+    }
+  }*/
+  return(0);
+}
+int init_freq_channel_AVX_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
+{
+
+  static int first_run=1;
+  float delta_f,twopi;  // 90 kHz spacing
+  float delay;
+  int16_t f;
+  uint8_t l;
+  __m256 cos_lut256,sin_lut256;
+
+  if ((n_samples&1)==0) {
+    fprintf(stderr, "freq_channel_init: n_samples has to be odd\n");
+    return(-1); 
+  }
+  delta_f = nb_rb*180000/(n_samples-1);
+
+  if (first_run)
+  {
+	cos_lut_f = (float **)malloc16(((int)desc->nb_taps)*sizeof(float*));
+	sin_lut_f = (float **)malloc16(((int)desc->nb_taps)*sizeof(float*));
+	for (f=-(n_samples>>1); f<=(n_samples>>1); f++) {
+	    cos_lut_f[f+(n_samples>>1)] = (float *)malloc16_clear(n_samples*sizeof(float));
+	    sin_lut_f[f+(n_samples>>1)] = (float *)malloc16_clear(n_samples*sizeof(float));
+	}
+	first_run=0;
+  }
+  twopi=2*M_PI*1e-6*delta_f;
+  for (f=-(n_samples>>4); f<0; f++) {
+    //count++;
+    //freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
+    for (l=0; l<(int)desc->nb_taps; l++) {
+
+      if (desc->nb_taps==1)
+        delay = desc->delays[l];
+      else
+        delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
+
+        //sincos_ps(_mm_set_ps(twopi*(4*f+3)*delay,twopi*(4*f+2)*delay,twopi*(4*f+1)*delay,twopi*(4*f)*delay), &sin_lut128, &cos_lut128);
+        cos_lut256=_mm256_set_ps(cos(twopi*(8*f+7)*delay),cos(twopi*(8*f+6)*delay),cos(twopi*(8*f+5)*delay),cos(twopi*(8*f+4)*delay),cos(twopi*(8*f+3)*delay),cos(twopi*(8*f+2)*delay),cos(twopi*(8*f+1)*delay),cos(twopi*(8*f)*delay));
+        sin_lut256=_mm256_set_ps(sin(twopi*(8*f+7)*delay),sin(twopi*(8*f+6)*delay),sin(twopi*(8*f+5)*delay),sin(twopi*(8*f+4)*delay),sin(twopi*(8*f+3)*delay),sin(twopi*(8*f+2)*delay),sin(twopi*(8*f+1)*delay),sin(twopi*(8*f)*delay));
+        _mm256_storeu_ps(&cos_lut_f[l][8*f+(n_samples>>1)],cos_lut256);
+        _mm256_storeu_ps(&sin_lut_f[l][8*f+(n_samples>>1)],sin_lut256);
+
+    }
+  }
+  for (l=0; l<(int)desc->nb_taps; l++) 
+  {
+      cos_lut_f[l][(n_samples>>1)] = 1;
+      sin_lut_f[l][(n_samples>>1)] = 0;
+      //printf("f %d,l %d (cos,sin) (%e,%e):\n",4*f,l,cos_lut_f[(n_samples>>1)][l],sin_lut_f[(n_samples>>1)][l]);
+  }
+
+  for (f=1; f<=(n_samples>>4); f++) {
+    //count++;
+    //freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
+    for (l=0; l<(int)desc->nb_taps; l++) {
+      if (desc->nb_taps==1)
+        delay = desc->delays[l];
+      else
+        delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
+      cos_lut256=_mm256_set_ps(cos(twopi*(4*f)*delay),cos(twopi*(4*f-1)*delay),cos(twopi*(4*f-2)*delay),cos(twopi*(4*f-3)*delay),cos(twopi*(4*f-4)*delay),cos(twopi*(4*f-5)*delay),cos(twopi*(4*f-6)*delay),cos(twopi*(4*f-7)*delay));
+      sin_lut256=_mm256_set_ps(sin(twopi*(4*f)*delay),sin(twopi*(4*f-1)*delay),sin(twopi*(4*f-2)*delay),sin(twopi*(4*f-3)*delay),sin(twopi*(4*f-4)*delay),sin(twopi*(4*f-5)*delay),sin(twopi*(4*f-6)*delay),sin(twopi*(4*f-7)*delay));
+      _mm256_storeu_ps(&cos_lut_f[l][8*f-7+(n_samples>>1)],cos_lut256);
+      _mm256_storeu_ps(&sin_lut_f[l][8*f-7+(n_samples>>1)],sin_lut256);
     }
   }
   /*for (f=-(n_samples>>1); f<=(n_samples>>1); f++) {
@@ -282,7 +388,70 @@ int freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples
   }*/
   return(0);
 }
+int freq_channel_AVX_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples)
+{
+  int16_t f,f2,d;
+  uint8_t aarx,aatx,l;
+  static int freq_channel_init=0;
+  static int n_samples_max=0;
+  __m256 chFx_256,chFy_256;
 
+  // do some error checking
+  // n_samples has to be a odd number because we assume the spectrum is symmetric around the DC and includes the DC
+  if ((n_samples&1)==0) {
+    fprintf(stderr, "freq_channel: n_samples has to be odd\n");
+    return(-1); 
+  }
+
+  // printf("no of taps:%d,",(int)desc->nb_taps);
+
+  if (freq_channel_init == 0) {
+    // we are initializing the lut for the largets possible n_samples=12*nb_rb+1
+    // if called with n_samples<12*nb_rb+1, we decimate the lut
+    n_samples_max=12*nb_rb+1;
+    if (init_freq_channel_AVX_float(desc,nb_rb,n_samples_max)==0)
+      freq_channel_init=1;
+    else
+      return(-1);
+  }
+
+  d=(n_samples_max-1)/(n_samples-1);
+
+  //printf("no_samples=%d, n_samples_max=%d, d=%d\n",n_samples,n_samples_max,d);
+
+  start_meas(&desc->interp_freq);
+
+  for (f=-(n_samples_max>>4),f2=-(n_samples>>4); f<(n_samples_max>>4); f+=d,f2++) {
+    //clut = cos_lut[(n_samples_max>>1)+f];
+    //slut = sin_lut[(n_samples_max>>1)+f];
+    for (aarx=0; aarx<desc->nb_rx; aarx++) {
+      for (aatx=0; aatx<desc->nb_tx; aatx++) {
+	chFx_256=_mm256_setzero_ps();
+	chFy_256=_mm256_setzero_ps();
+        //desc->chF[aarx+(aatx*desc->nb_rx)][(n_samples>>1)+f2].x=0.0;
+        //desc->chF[aarx+(aatx*desc->nb_rx)][(n_samples>>1)+f2].y=0.0;
+        for (l=0; l<(int)desc->nb_taps; l++) {
+          //desc->chF[aarx+(aatx*desc->nb_rx)][(n_samples>>1)+f2].x+=(desc->a[l][aarx+(aatx*desc->nb_rx)].x*clut[l]+
+          //    desc->a[l][aarx+(aatx*desc->nb_rx)].y*slut[l]);
+          //desc->chF[aarx+(aatx*desc->nb_rx)][(n_samples>>1)+f2].y+=(-desc->a[l][aarx+(aatx*desc->nb_rx)].x*slut[l]+
+          //    desc->a[l][aarx+(aatx*desc->nb_rx)].y*clut[l]);
+	  chFx_256=_mm256_add_ps(chFx_256,_mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(desc->a[l][aarx+(aatx*desc->nb_rx)].x),_mm256_loadu_ps(&cos_lut_f[l][(n_samples_max>>1)+8*f])),_mm256_mul_ps(_mm256_set1_ps(desc->a[l][aarx+(aatx*desc->nb_rx)].y),_mm256_loadu_ps(&sin_lut_f[l][(n_samples_max>>1)+8*f]))));  
+	  chFy_256=_mm256_add_ps(chFy_256,_mm256_sub_ps(_mm256_mul_ps(_mm256_set1_ps(desc->a[l][aarx+(aatx*desc->nb_rx)].y),_mm256_loadu_ps(&cos_lut_f[l][(n_samples_max>>1)+8*f])),_mm256_mul_ps(_mm256_set1_ps(desc->a[l][aarx+(aatx*desc->nb_rx)].x),_mm256_loadu_ps(&sin_lut_f[l][(n_samples_max>>1)+8*f]))));  
+        }
+	_mm256_storeu_ps(&desc->chFf[aarx+(aatx*desc->nb_rx)].x[(n_samples>>1)+8*f],chFx_256);
+	_mm256_storeu_ps(&desc->chFf[aarx+(aatx*desc->nb_rx)].y[(n_samples>>1)+8*f],chFy_256);
+	//printf("chFx %e,%e,%e,%e\n",chFx_128[0],chFx_128[1],chFx_128[2],chFx_128[3]);
+	//printf("chFy %e,%e,%e,%e\n",chFy_128[0],chFy_128[1],chFy_128[2],chFy_128[3]);
+      }
+    }
+  }
+  stop_meas(&desc->interp_freq);
+
+  /*for (f=-(n_samples>>1); f<(n_samples>>1); f++) { 
+      printf("f %d, (chF.x,chF.y) (%e,%e):\n",f,desc->chFf[0].x[(n_samples>>1)+f],desc->chFf[0].y[(n_samples>>1)+f]);
+  }*/
+  return(0);
+}
 int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
 {
 
@@ -792,6 +961,102 @@ void sincos_ps(__m128 x, __m128 *s, __m128 *c) {
   *c = _mm_xor_ps(xmm2, sign_bit_cos);
 }
 
+void sincos256_ps(__m256 x, __m256 *s, __m256 *c) {
+  __m256 xmm1, xmm2, xmm3 = _mm256_setzero_ps(), sign_bit_sin, y;
+  __m256i imm0, imm2, imm4;
+  
+  sign_bit_sin = x;
+  /* take the absolute value */
+  x = _mm256_and_ps(x, _mm256_castsi256_ps(_mm256_set1_epi32(~0x80000000)));//_ps_inv_sign_mask
+  /* extract the sign bit (upper one) */
+  sign_bit_sin = _mm256_and_ps(sign_bit_sin, _mm256_castsi256_ps(_mm256_set1_epi32(0x80000000)));//_ps_sign_mask
+  
+  /* scale by 4/Pi */
+  y = _mm256_mul_ps(x, _mm256_set1_ps(1.27323954473516f));
+    
+
+  /* store the integer part of y in imm2 */
+  imm2 = _mm256_cvttps_epi32(y);
+
+  /* j=(j+1) & (~1) (see the cephes sources) */
+  imm2 = _mm256_add_epi32(imm2, _mm256_set1_epi32(1));//_pi32_1
+  imm2 = _mm256_and_si256(imm2, _mm256_set1_epi32(~1));//_pi32_inv1
+  y = _mm256_cvtepi32_ps(imm2);
+
+  imm4 = imm2;
+
+  /* get the swap sign flag for the sine */
+  imm0 = _mm256_and_si256(imm2, _mm256_set1_epi32(4));//_pi32_4
+  imm0 = _mm256_slli_epi32(imm0, 29);
+
+  /* get the polynom selection mask for the sine*/
+  imm2 = _mm256_and_si256(imm2, _mm256_set1_epi32(2));//_pi32_2
+  imm2 = _mm256_cmpeq_epi32(imm2, _mm256_setzero_si256());
+
+  __m256 swap_sign_bit_sin = _mm256_castsi256_ps(imm0);
+  __m256 poly_mask = _mm256_castsi256_ps(imm2);
+
+  /* The magic pass: "Extended precision modular arithmetic" 
+     x = ((x - y * DP1) - y * DP2) - y * DP3; */
+
+  xmm1 = _mm256_set1_ps(-0.78515625f);//_ps_minus_cephes_DP1
+  xmm2 = _mm256_set1_ps(-2.4187564849853515625e-4f);//_ps_minus_cephes_DP2
+  xmm3 = _mm256_set1_ps(-3.77489497744594108e-8f);//_ps_minus_cephes_DP3
+  xmm1 = _mm256_mul_ps(y, xmm1);
+  xmm2 = _mm256_mul_ps(y, xmm2);
+  xmm3 = _mm256_mul_ps(y, xmm3);
+  x = _mm256_add_ps(x, xmm1);
+  x = _mm256_add_ps(x, xmm2);
+  x = _mm256_add_ps(x, xmm3);
+
+
+  imm4 = _mm256_sub_epi32(imm4, _mm256_set1_epi32(2));//_pi32_2
+  imm4 = _mm256_andnot_si256(imm4, _mm256_set1_epi32(4));//_pi32_4
+  imm4 = _mm256_slli_epi32(imm4, 29);
+  __m256 sign_bit_cos = _mm256_castsi256_ps(imm4);
+
+  sign_bit_sin = _mm256_xor_ps(sign_bit_sin, swap_sign_bit_sin);
+
+  
+  /* Evaluate the first polynom  (0 <= x <= Pi/4) */
+  __m256 z = _mm256_mul_ps(x,x);
+  y = _mm256_set1_ps( 2.443315711809948E-005f);//_ps_coscof_p0
+
+  y = _mm256_mul_ps(y, z);
+  y = _mm256_add_ps(y, _mm256_set1_ps(-1.388731625493765E-003f));//_ps_coscof_p1
+  y = _mm256_mul_ps(y, z);
+  y = _mm256_add_ps(y, _mm256_set1_ps( 4.166664568298827E-002f));//_ps_coscof_p2
+  y = _mm256_mul_ps(y, z);
+  y = _mm256_mul_ps(y, z);
+  __m256 tmp = _mm256_mul_ps(z, _mm256_set1_ps(0.5f));//_ps_0p5
+  y = _mm256_sub_ps(y, tmp);
+  y = _mm256_add_ps(y, _mm256_set1_ps(1.f));//_ps_1
+  
+  /* Evaluate the second polynom  (Pi/4 <= x <= 0) */
+
+  __m256 y2 = _mm256_set1_ps(-1.9515295891E-4f);//*(__m128*)_ps_sincof_p0;
+  y2 = _mm256_mul_ps(y2, z);
+  y2 = _mm256_add_ps(y2, _mm256_set1_ps( 8.3321608736E-3f));//*(__m128*)_ps_sincof_p1);
+  y2 = _mm256_mul_ps(y2, z);
+  y2 = _mm256_add_ps(y2, _mm256_set1_ps(-1.6666654611E-1f));//_ps_sincof_p2
+  y2 = _mm256_mul_ps(y2, z);
+  y2 = _mm256_mul_ps(y2, x);
+  y2 = _mm256_add_ps(y2, x);
+
+  /* select the correct result from the two polynoms */  
+  xmm3 = poly_mask;
+  __m256 ysin2 = _mm256_and_ps(xmm3, y2);
+  __m256 ysin1 = _mm256_andnot_ps(xmm3, y);
+  y2 = _mm256_sub_ps(y2,ysin2);
+  y = _mm256_sub_ps(y, ysin1);
+
+  xmm1 = _mm256_add_ps(ysin1,ysin2);
+  xmm2 = _mm256_add_ps(y,y2);
+ 
+  /* update the sign */
+  *s = _mm256_xor_ps(xmm1, sign_bit_sin);
+  *c = _mm256_xor_ps(xmm2, sign_bit_cos);
+}
 
 __m128 log_ps(__m128 x) {
 
@@ -864,6 +1129,77 @@ __m128 log_ps(__m128 x) {
 
   return x;
 }
+__m256 log256_ps(__m256 x) {
+
+  __m256i imm0 __attribute__((aligned(32)));
+  __m256 one __attribute__((aligned(32)))=_mm256_set1_ps(1.f);
+  __m256 invalid_mask __attribute__((aligned(32))) = _mm256_cmp_ps(x, _mm256_setzero_ps(),_CMP_LE_OS);
+
+  x = _mm256_max_ps(x, _mm256_castsi256_ps(_mm256_set1_epi32(0x00800000)));  // cut off denormalized stuff
+  imm0 = _mm256_srli_epi32(_mm256_castps_si256(x), 23);
+
+  // keep only the fractional part 
+  x = _mm256_and_ps(x,_mm256_castsi256_ps(_mm256_set1_epi32(~0x7f800000)));
+  //printf("ln inside x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
+  x = _mm256_or_ps(x, _mm256_set1_ps(0.5f));
+  //printf("ln inside x is %e,%e,%e,%e\n",x[0],x[1],x[2],x[3]);
+
+
+  // now e=mm0:mm1 contain the really base-2 exponent 
+  imm0 = _mm256_sub_epi32(imm0, _mm256_set1_epi32(0x7f));
+  __m256 e = _mm256_cvtepi32_ps(imm0); 
+
+
+  e = _mm256_add_ps(e, one);
+
+
+  __m256 mask = _mm256_cmp_ps(x, _mm256_set1_ps(0.707106781186547524f),_CMP_LT_OS);
+
+  __m256 tmp = _mm256_and_ps(x, mask);
+  x = _mm256_sub_ps(x, one);
+  e = _mm256_sub_ps(e, _mm256_and_ps(one, mask));
+
+  x = _mm256_add_ps(x, tmp);
+
+
+  __m256 z = _mm256_mul_ps(x,x);
+
+  __m256 y = _mm256_set1_ps(7.0376836292E-2f);
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(- 1.1514610310E-1f));
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(1.1676998740E-1f));
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(- 1.2420140846E-1f));
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(1.4249322787E-1f));
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(- 1.6668057665E-1f));
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(2.0000714765E-1f));
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(- 2.4999993993E-1f));
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(3.3333331174E-1f));
+  y = _mm256_mul_ps(y, x);
+
+  y = _mm256_mul_ps(y, z);
+  
+
+  tmp = _mm256_mul_ps(e, _mm256_set1_ps(-2.12194440e-4f));
+  y = _mm256_add_ps(y, tmp);
+
+
+  tmp = _mm256_mul_ps(z, _mm256_set1_ps(0.5f));
+  y = _mm256_sub_ps(y, tmp);
+
+  tmp = _mm256_mul_ps(e, _mm256_set1_ps(0.693359375f));
+  x = _mm256_add_ps(x, y);
+  x = _mm256_add_ps(x, tmp);
+  x = _mm256_or_ps(x, invalid_mask); // negative arg will be NAN
+
+  return x;
+}
 __m128 exp_ps(__m128 x) {
   __m128 tmp = _mm_setzero_ps(), fx;
 
@@ -918,7 +1254,61 @@ __m128 exp_ps(__m128 x) {
   y = _mm_mul_ps(y, pow2n);
   return y;
 }
+__m256 exp256_ps(__m256 x) {
+  __m256 tmp = _mm256_setzero_ps(), fx;
 
+  __m256i imm0;
+
+  __m256 one = _mm256_set1_ps(1.f);
+
+  x = _mm256_min_ps(x, _mm256_set1_ps(88.3762626647949f));
+  x = _mm256_max_ps(x, _mm256_set1_ps(-88.3762626647949f));
+
+  /* express exp(x) as exp(g + n*log(2)) */
+  fx = _mm256_mul_ps(x, _mm256_set1_ps(1.44269504088896341f));
+  fx = _mm256_add_ps(fx, _mm256_set1_ps(0.5f));
+
+  /* how to perform a floorf with SSE: just below */
+
+  /*emm0 = _mm_cvttps_epi32(fx);
+  tmp  = _mm_cvtepi32_ps(emm0);*/
+  tmp = _mm256_floor_ps(fx);
+
+  /* if greater, substract 1 */
+  __m256 mask = _mm256_cmp_ps(tmp, fx, _CMP_GT_OS);    
+  mask = _mm256_and_ps(mask, one);
+  fx = _mm256_sub_ps(tmp, mask);
+
+  tmp = _mm256_mul_ps(fx, _mm256_set1_ps(0.693359375f));
+  __m256 z = _mm256_mul_ps(fx, _mm256_set1_ps(-2.12194440e-4f));
+  x = _mm256_sub_ps(x, tmp);
+  x = _mm256_sub_ps(x, z);
+
+  z = _mm256_mul_ps(x,x);
+  
+  __m256 y = _mm256_set1_ps(1.9875691500E-4f);
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(1.3981999507E-3f));
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(8.3334519073E-3f));
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(4.1665795894E-2f));
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(1.6666665459E-1f));
+  y = _mm256_mul_ps(y, x);
+  y = _mm256_add_ps(y, _mm256_set1_ps(5.0000001201E-1f));
+  y = _mm256_mul_ps(y, z);
+  y = _mm256_add_ps(y, x);
+  y = _mm256_add_ps(y, one);
+
+  /* build 2^n */
+  imm0 = _mm256_cvttps_epi32(fx);
+  imm0 = _mm256_add_epi32(imm0, _mm256_set1_epi32(0x7f));
+  imm0 = _mm256_slli_epi32(imm0, 23);
+  __m256 pow2n = _mm256_castsi256_ps(imm0);
+  y = _mm256_mul_ps(y, pow2n);
+  return y;
+}
 /*#ifdef abstraction_SSE
 int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
 {
