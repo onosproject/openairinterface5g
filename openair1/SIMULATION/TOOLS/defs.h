@@ -371,6 +371,17 @@ void multipath_channel_prach_SSE_float(channel_desc_t *desc,
 		       uint8_t eNB_id,
 		       uint8_t prach_fmt,
 		       uint8_t n_ra_prb);
+void multipath_channel_prach_AVX_float(channel_desc_t *desc,
+                       float *tx_sig_re[2],
+                       float *tx_sig_im[2],
+                       float *rx_sig_re[2],
+                       float *rx_sig_im[2],
+		       LTE_DL_FRAME_PARMS* const fp,
+                       uint32_t length,
+                       uint8_t keep_channel,
+		       uint8_t eNB_id,
+		       uint8_t prach_fmt,
+		       uint8_t n_ra_prb);
 /*
 \fn double compute_pbch_sinr(channel_desc_t *desc,
                              channel_desc_t *desc_i1,

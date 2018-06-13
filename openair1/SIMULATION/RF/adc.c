@@ -125,7 +125,40 @@ void adc_SSE_float(float *r_re[2],
 	    }
   }
 }
-
+void adc_AVX_float(float *r_re[2],
+         float *r_im[2],
+         unsigned int input_offset,
+         unsigned int output_offset,
+         unsigned int **output,
+         unsigned int nb_rx_antennas,
+         unsigned int length,
+         unsigned char B,
+	 unsigned int samples,
+	 unsigned int ofdm_symbol_size)
+{
+  int i;
+  int aa;
+  __m256 r_re256,r_im256,gain256;
+  __m256i r_re256i, r_im256i,output256;
+  float gain = (float)(1<<(B-1));
+  gain256=_mm256_set1_ps(gain);
+  for (i=0; i<(length>>3); i++) 
+  {
+	    for (aa=0; aa<nb_rx_antennas; aa++) 
+	    {
+	      r_re256=_mm256_loadu_ps(&r_re[aa][8*i+input_offset]);
+	      r_im256=_mm256_loadu_ps(&r_im[aa][8*i+input_offset]);
+	      r_re256=_mm256_mul_ps(r_re256,gain256);
+	      r_im256=_mm256_mul_ps(r_im256,gain256);
+	      r_re256i=_mm256_cvtps_epi32(r_re256);
+	      r_im256i=_mm256_cvtps_epi32(r_im256); 
+	      r_re256i=_mm256_packs_epi32(r_re256i,r_re256i);
+	      r_im256i=_mm256_packs_epi32(r_im256i,r_im256i); 
+	      output256=_mm256_unpacklo_epi16(r_re256i,r_im256i);
+	      _mm256_storeu_si256((__m256i *)&output[aa][8*i+output_offset],output256);
+	    }
+  }
+}
 void adc_freq(double *r_re[2],
          double *r_im[2],
          unsigned int input_offset,
@@ -230,7 +263,43 @@ void adc_prach_SSE_float(float *r_re[2],
     //printf("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
   }
 }
+void adc_prach_AVX_float(float *r_re[2],
+         float *r_im[2],
+         unsigned int input_offset,
+         unsigned int output_offset,
+         unsigned int **output,
+         unsigned int nb_rx_antennas,
+         unsigned int length,
+         unsigned char B)
+{
 
+  int i;
+  int aa;
+  __m256 r_re256,r_im256,gain256;
+  __m256i r_re256i, r_im256i,output256;
+  float gain = (double)(1<<(B-1));
+  gain256=_mm256_set1_ps(gain);
+  //double gain = 1.0;
+
+  for (i=0; i<(length>>3); i++) {
+    for (aa=0; aa<nb_rx_antennas; aa++) {
+              //((short *)output[aa])[((i+output_offset/2)<<1)]   = (short)(r_re[aa][i+input_offset]*gain);
+      	      //((short *)output[aa])[1+((i+output_offset/2)<<1)] = (short)(r_im[aa][i+input_offset]*gain);
+	      r_re256=_mm256_loadu_ps(&r_re[aa][8*i+input_offset]);
+	      r_im256=_mm256_loadu_ps(&r_im[aa][8*i+input_offset]);
+	      r_re256=_mm256_mul_ps(r_re256,gain256);
+	      r_im256=_mm256_mul_ps(r_im256,gain256);
+	      r_re256i=_mm256_cvtps_epi32(r_re256);
+	      r_im256i=_mm256_cvtps_epi32(r_im256); 
+	      r_re256i=_mm256_packs_epi32(r_re256i,r_re256i);
+	      r_im256i=_mm256_packs_epi32(r_im256i,r_im256i); 
+	      output256=_mm256_unpacklo_epi16(r_re256i,r_im256i);
+	      _mm256_storeu_si256((__m256i *)&output[aa][8*i+output_offset/2],output256);
+    }
+
+    //printf("Adc outputs %d %e  %d \n",i,((short *)output[0])[((i+output_offset)<<1)], ((i+output_offset)<<1) );
+  }
+}
 /*void adc_freq(double *r_re[2],
          double *r_im[2],
          unsigned int input_offset,

@@ -327,6 +327,7 @@ int32_t signal_energy_nodc(int32_t *,uint32_t);
 */
 double signal_energy_fp(double *s_re[2], double *s_im[2], uint32_t nb_antennas, uint32_t length,uint32_t offset);
 float signal_energy_fp_SSE_float(float *s_re[2], float *s_im[2], uint32_t nb_antennas, uint32_t length,uint32_t offset);
+float signal_energy_fp_AVX_float(float *s_re[2], float *s_im[2], uint32_t nb_antennas, uint32_t length,uint32_t offset);
 /*!\fn double signal_energy_fp2(struct complex *, uint32_t);
 \brief Computes the signal energy per subcarrier
 */

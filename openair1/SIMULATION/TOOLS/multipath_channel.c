@@ -528,14 +528,14 @@ void multipath_channel_freq_SSE_float(channel_desc_t *desc,
   	// do nothing - keep channel
   } else {
         random_channel_freq(desc,0);
-  	freq_channel_SSE_float(desc,nb_rb,n_samples);//Find desc->chF
+  	freq_channel_AVX_float(desc,nb_rb,n_samples);//Find desc->chF
   }
-	for (j=0;j<(symbols_per_tti>>2);j++){
+	/*for (j=0;j<(ofdm_symbol_size>>2);j++){
 		for (ii=0; ii<desc->nb_rx; ii++) {
-			_mm_storeu_ps(&rx_sig_re[ii][4*j*ofdm_symbol_size],_mm_setzero_ps());
-			_mm_storeu_ps(&rx_sig_im[ii][4*j*ofdm_symbol_size],_mm_setzero_ps());
+			_mm_storeu_ps(&rx_sig_re[ii][4*j*symbols_per_tti],_mm_setzero_ps());
+			_mm_storeu_ps(&rx_sig_im[ii][4*j*symbols_per_tti],_mm_setzero_ps());
 		}
-	}
+	}*/
 	for (f=0;f<((ofdm_symbol_size*symbols_per_tti)>>2); f++) {//f2 = 0-1024*14-1 ---- for 10 Mhz BW
 		//printf("f is %d\n",f);
 		for (ii=0; ii<desc->nb_rx; ii++) {
@@ -649,14 +649,14 @@ void multipath_channel_freq_AVX_float(channel_desc_t *desc,
   	// do nothing - keep channel
   } else {
         random_channel_freq(desc,0);
-  	freq_channel_SSE_float(desc,nb_rb,n_samples);//Find desc->chF
+  	freq_channel_AVX_float(desc,nb_rb,n_samples);//Find desc->chF
   }
-	for (j=0;j<(symbols_per_tti>>2);j++){
+	/*for (j=0;j<(symbols_per_tti>>2);j++){
 		for (ii=0; ii<desc->nb_rx; ii++) {
 			_mm256_storeu_ps(&rx_sig_re[ii][4*j*ofdm_symbol_size],_mm256_setzero_ps());
 			_mm256_storeu_ps(&rx_sig_im[ii][4*j*ofdm_symbol_size],_mm256_setzero_ps());
 		}
-	}
+	}*/
 	for (f=0;f<((ofdm_symbol_size*symbols_per_tti)>>3); f++) {//f2 = 0-1024*14-1 ---- for 10 Mhz BW
 		//printf("f is %d\n",f);
 		for (ii=0; ii<desc->nb_rx; ii++) {
@@ -664,16 +664,16 @@ void multipath_channel_freq_AVX_float(channel_desc_t *desc,
 			//rx_tmp.y = 0;
 			rx_tmp256_re_f = _mm256_setzero_ps();
       			rx_tmp256_im_f = _mm256_setzero_ps();
-			if (f%(ofdm_symbol_size>>2)<(n_samples>>2))//1-300
+			if (f%(ofdm_symbol_size>>3)<(n_samples>>3))//1-300
 			{
 				for (j=0; j<desc->nb_tx; j++) {	
 					//first n_samples>>1 samples of each frequency ofdm symbol out of ofdm_symbol_size
 					//RX_RE(k) += TX_RE(k).chF(k).x	- TX_IM(k).chF(k).y	
 					//RX_IM(k) += TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
-					tx256_re = _mm256_loadu_ps(&tx_sig_re[j][(4*f+1)]);
-            				tx256_im = _mm256_loadu_ps(&tx_sig_im[j][(4*f+1)]);
-          				chF256_x = _mm256_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].x[(4*(f%(ofdm_symbol_size>>2)))+(n_samples>>2)]);
-          				chF256_y = _mm256_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].y[(4*(f%(ofdm_symbol_size>>2)))+(n_samples>>2)]);
+					tx256_re = _mm256_loadu_ps(&tx_sig_re[j][(8*f+1)]);
+            				tx256_im = _mm256_loadu_ps(&tx_sig_im[j][(8*f+1)]);
+          				chF256_x = _mm256_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].x[(8*(f%(ofdm_symbol_size>>3)))+(n_samples>>3)]);
+          				chF256_y = _mm256_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].y[(8*(f%(ofdm_symbol_size>>3)))+(n_samples>>3)]);
 					//rx_tmp.x += (tx_sig_re[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f+(n_samples>>1)-1].x)//tx128_re*ch128_x
 					//	     -(tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f+(n_samples>>1)-1].y);//-tx128_im*ch128_y
 					//rx_tmp.y += (tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f+(n_samples>>1)-1].x)//tx128_im*ch128_x
@@ -691,10 +691,10 @@ void multipath_channel_freq_AVX_float(channel_desc_t *desc,
 				//rx_sig_im[ii][f+k*ofdm_symbol_size] =  rx_tmp.y*path_loss;
 				rx_tmp256_re_f = _mm256_mul_ps(rx_tmp256_re_f,pathloss256);
 			        rx_tmp256_im_f = _mm256_mul_ps(rx_tmp256_im_f,pathloss256);
-			        _mm256_storeu_ps(&rx_sig_re[ii][(4*f+1)],rx_tmp256_re_f);
-			        _mm256_storeu_ps(&rx_sig_im[ii][(4*f+1)],rx_tmp256_im_f);
+			        _mm256_storeu_ps(&rx_sig_re[ii][(8*f+1)],rx_tmp256_re_f);
+			        _mm256_storeu_ps(&rx_sig_im[ii][(8*f+1)],rx_tmp256_im_f);
 			}
-			else if (f%(ofdm_symbol_size>>2)>(n_samples>>2) && f%(ofdm_symbol_size>>2)<(ofdm_symbol_size>>2)-(n_samples>>2))
+			else if (f%(ofdm_symbol_size>>3)>(n_samples>>3) && f%(ofdm_symbol_size>>3)<(ofdm_symbol_size>>3)-(n_samples>>3))
 			{
 				//rx_sig_re[ii][f+k*ofdm_symbol_size] =  0;
 				//rx_sig_im[ii][f+k*ofdm_symbol_size] =  0;
@@ -708,10 +708,10 @@ void multipath_channel_freq_AVX_float(channel_desc_t *desc,
 					//last n_samples>>1 samples of each frequency ofdm symbol out of ofdm_symbol_size
 					//RX_RE(k) += TX_RE(k).chF(k).x - TX_IM(k).chF(k).y
 					//RX_IM(k) += TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
-					tx256_re = _mm256_loadu_ps(&tx_sig_re[j][4*f]);
-            				tx256_im = _mm256_loadu_ps(&tx_sig_im[j][4*f]);
-          				chF256_x = _mm256_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].x[4*(f%(ofdm_symbol_size>>2)-((ofdm_symbol_size>>2)-(n_samples>>2)))]);
-          				chF256_y = _mm256_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].y[4*(f%(ofdm_symbol_size>>2)-((ofdm_symbol_size>>2)-(n_samples>>2)))]);
+					tx256_re = _mm256_loadu_ps(&tx_sig_re[j][8*f]);
+            				tx256_im = _mm256_loadu_ps(&tx_sig_im[j][8*f]);
+          				chF256_x = _mm256_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].x[8*(f%(ofdm_symbol_size>>3)-((ofdm_symbol_size>>3)-(n_samples>>3)))]);
+          				chF256_y = _mm256_set1_ps(desc->chFf[ii+(j*desc->nb_rx)].y[8*(f%(ofdm_symbol_size>>3)-((ofdm_symbol_size>>3)-(n_samples>>3)))]);
 					//rx_tmp.x += (tx_sig_re[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].x)
 					//	     -(tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].y);
 					//rx_tmp.y += (tx_sig_im[j][f+k*ofdm_symbol_size] * desc->chF[ii+(j*desc->nb_rx)][f2].x)
@@ -729,8 +729,8 @@ void multipath_channel_freq_AVX_float(channel_desc_t *desc,
 				//rx_sig_im[ii][f+k*ofdm_symbol_size] = rx_tmp.y*path_loss;
 				rx_tmp256_re_f = _mm256_mul_ps(rx_tmp256_re_f,pathloss256);
 			        rx_tmp256_im_f = _mm256_mul_ps(rx_tmp256_im_f,pathloss256);
-			        _mm256_storeu_ps(&rx_sig_re[ii][4*f],rx_tmp256_re_f);
-			        _mm256_storeu_ps(&rx_sig_im[ii][4*f],rx_tmp256_im_f);
+			        _mm256_storeu_ps(&rx_sig_re[ii][8*f],rx_tmp256_re_f);
+			        _mm256_storeu_ps(&rx_sig_im[ii][8*f],rx_tmp256_im_f);
 			}
 		} // ii
 	} // f,f2,f3
@@ -918,6 +918,73 @@ void multipath_channel_prach_SSE_float(channel_desc_t *desc,
 			        rx_tmp128_im_f = _mm_mul_ps(rx_tmp128_im_f,pathloss128);
 			        _mm_storeu_ps(&rx_sig_re[ii][4*f],rx_tmp128_re_f); // max index: length-dd -1 + dd = length -1
 			        _mm_storeu_ps(&rx_sig_im[ii][4*f],rx_tmp128_im_f);	
+				} // ii
+			} // f
+}
+void multipath_channel_prach_AVX_float(channel_desc_t *desc,
+                       float *tx_sig_re[2],
+                       float *tx_sig_im[2],
+                       float *rx_sig_re[2],
+                       float *rx_sig_im[2],
+		       LTE_DL_FRAME_PARMS* const fp,
+		       uint32_t length,
+                       uint8_t keep_channel,
+		       uint8_t eNB_id,
+		       uint8_t prach_fmt,
+		       uint8_t n_ra_prb)
+{
+
+
+  int ii,j,f;
+  __m256 rx_tmp256_re_f,rx_tmp256_im_f,rx_tmp256_re,rx_tmp256_im, rx_tmp256_1,rx_tmp256_2,rx_tmp256_3,rx_tmp256_4,tx256_re,tx256_im,chF256_x,chF256_y,pathloss256;
+  float path_loss = pow(10,desc->path_loss_dB/20);
+  pathloss256 = _mm256_set1_ps(path_loss);
+  int nb_rb, n_samples;
+  
+  nb_rb=fp->N_RB_DL;
+  n_samples=fp->N_RB_DL*12+1;
+
+  #ifdef DEBUG_CH
+  printf("[CHANNEL_PRACH] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, len %d \n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,desc->channel_length);
+#endif		
+   		if (keep_channel) {
+		// do nothing - keep channel
+		} else {
+		random_channel_freq(desc,0);
+		freq_channel_prach_SSE_float(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
+		}	
+			for (f=0;f<(length>>3); f++) {
+				//rx_tmp.x = 0;
+				//rx_tmp.y = 0;
+				rx_tmp256_re_f = _mm256_setzero_ps();
+      				rx_tmp256_im_f = _mm256_setzero_ps();
+				for (ii=0; ii<desc->nb_rx; ii++) {
+					for (j=0; j<desc->nb_tx; j++) {		
+						//RX_RE(k) = TX_RE(k).chF(k).x	- TX_IM(k).chF(k).y
+						//RX_IM(k) = TX_IM(k).chF(k).x + TX_RE(k).chF(k).y
+						tx256_re = _mm256_loadu_ps(&tx_sig_re[j][(8*f)]);
+            					tx256_im = _mm256_loadu_ps(&tx_sig_im[j][(8*f)]);
+          					chF256_x = _mm256_set1_ps(desc->chF_prach[ii+(j*desc->nb_rx)].x[8*f+(prach_fmt<4)?13:3]);
+          					chF256_y = _mm256_set1_ps(desc->chF_prach[ii+(j*desc->nb_rx)].y[8*f+(prach_fmt<4)?13:3]);	
+						//rx_tmp.x += (tx_sig_re[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].x)-(tx_sig_im[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].y);
+						//rx_tmp.y += (tx_sig_im[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].x)+(tx_sig_re[ii][f] * desc->chF_prach[ii+(j*desc->nb_rx)][f+(prach_fmt<4)?13:3].y);
+						rx_tmp256_1    = _mm256_mul_ps(tx256_re,chF256_x);
+						rx_tmp256_2    = _mm256_mul_ps(tx256_im,chF256_y);
+						rx_tmp256_3    = _mm256_mul_ps(tx256_im,chF256_x);
+						rx_tmp256_4    = _mm256_mul_ps(tx256_re,chF256_y);
+						rx_tmp256_re   = _mm256_sub_ps(rx_tmp256_1,rx_tmp256_2);
+						rx_tmp256_im   = _mm256_add_ps(rx_tmp256_3,rx_tmp256_4);
+						rx_tmp256_re_f = _mm256_add_ps(rx_tmp256_re_f,rx_tmp256_re);
+						rx_tmp256_im_f = _mm256_add_ps(rx_tmp256_im_f,rx_tmp256_im);
+
+				         }  // j 
+				//printf("[multipath prach] k: %d\n",k/2);
+				//rx_sig_re[ii][f]  =   rx_tmp.x*path_loss;
+				//rx_sig_im[ii][f]  =   rx_tmp.y*path_loss;
+				rx_tmp256_re_f = _mm256_mul_ps(rx_tmp256_re_f,pathloss256);
+			        rx_tmp256_im_f = _mm256_mul_ps(rx_tmp256_im_f,pathloss256);
+			        _mm256_storeu_ps(&rx_sig_re[ii][8*f],rx_tmp256_re_f); // max index: length-dd -1 + dd = length -1
+			        _mm256_storeu_ps(&rx_sig_im[ii][8*f],rx_tmp256_im_f);	
 				} // ii
 			} // f
 }

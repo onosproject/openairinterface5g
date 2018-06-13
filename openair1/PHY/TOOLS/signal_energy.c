@@ -349,7 +349,24 @@ float signal_energy_fp_SSE_float(float *s_re[2],float *s_im[2],uint32_t nb_anten
   }
   return((V128[0]+V128[1]+V128[2]+V128[3])/length/nb_antennas);
 }
+float signal_energy_fp_AVX_float(float *s_re[2],float *s_im[2],uint32_t nb_antennas,uint32_t length,uint32_t offset)
+{
 
+  int32_t aa,i;
+  __m256 V256, s_re256,s_im256;
+  V256 = _mm256_setzero_ps();
+  for (i=0; i<(length>>3); i++) {
+    for (aa=0; aa<nb_antennas; aa++) {
+     // V= V + (s_re[aa][i+offset]*s_re[aa][i+offset]) + (s_im[aa][i+offset]*s_im[aa][i+offset]);
+      s_re256=_mm256_loadu_ps(&s_re[aa][8*i+offset]);
+      s_im256=_mm256_loadu_ps(&s_im[aa][8*i+offset]);
+      s_re256=_mm256_mul_ps(s_re256,s_re256);
+      s_im256=_mm256_mul_ps(s_im256,s_im256);
+      V256=_mm256_add_ps(V256,_mm256_add_ps(s_re256,s_im256));
+    }
+  }
+  return((V256[0]+V256[1]+V256[2]+V256[3]+V256[4]+V256[5]+V256[6]+V256[7])/length/nb_antennas);
+}
 double signal_energy_fp2(struct complex *s,uint32_t length)
 {
 

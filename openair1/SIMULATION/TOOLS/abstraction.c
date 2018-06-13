@@ -153,7 +153,7 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
   float delay;
   int16_t f;
   uint8_t l;
-  __m128 cos_lut128,sin_lut128;
+  __m128 cos_lut128,sin_lut128;//,cos_lut128_tmp,sin_lut128_tmp;
   /*__m128 x128, log128, exp128;
   __m256 x256, log256, exp256;
   x128 = _mm_set_ps(1.0,2.0,3.0,4.0);
@@ -214,12 +214,15 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
         delay = desc->delays[l];
       else
         delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
-        //sincos_ps(_mm_set_ps(twopi*(4*f+3)*delay,twopi*(4*f+2)*delay,twopi*(4*f+1)*delay,twopi*(4*f)*delay), &sin_lut128, &cos_lut128);
-        cos_lut128=_mm_set_ps(cos(twopi*(4*f+3)*delay),cos(twopi*(4*f+2)*delay),cos(twopi*(4*f+1)*delay),cos(twopi*(4*f)*delay));
-        sin_lut128=_mm_set_ps(sin(twopi*(4*f+3)*delay),sin(twopi*(4*f+2)*delay),sin(twopi*(4*f+1)*delay),sin(twopi*(4*f)*delay));
+        sincos_ps(_mm_set_ps(twopi*(4*f+3)*delay,twopi*(4*f+2)*delay,twopi*(4*f+1)*delay,twopi*(4*f)*delay), &sin_lut128, &cos_lut128);
+        //cos_lut128=_mm_set_ps(cos(twopi*(4*f+3)*delay),cos(twopi*(4*f+2)*delay),cos(twopi*(4*f+1)*delay),cos(twopi*(4*f)*delay));
+        //sin_lut128=_mm_set_ps(sin(twopi*(4*f+3)*delay),sin(twopi*(4*f+2)*delay),sin(twopi*(4*f+1)*delay),sin(twopi*(4*f)*delay));
         _mm_storeu_ps(&cos_lut_f[l][4*f+(n_samples>>1)],cos_lut128);
         _mm_storeu_ps(&sin_lut_f[l][4*f+(n_samples>>1)],sin_lut128);
-
+	/*printf("sin128 %e,%e,%e,%e\n",sin_lut128_tmp[0],sin_lut128_tmp[1],sin_lut128_tmp[2],sin_lut128_tmp[3]);
+	printf("cos128 %e,%e,%e,%e\n",cos_lut128_tmp[0],cos_lut128_tmp[1],cos_lut128_tmp[2],cos_lut128_tmp[3]);
+	printf("sin %e,%e,%e,%e\n",sin_lut128[0],sin_lut128[1],sin_lut128[2],sin_lut128[3]);
+	printf("cos %e,%e,%e,%e\n",cos_lut128[0],cos_lut128[1],cos_lut128[2],cos_lut128[3]);*/
     }
   }
   for (l=0; l<(int)desc->nb_taps; l++) 
@@ -229,7 +232,7 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
       //printf("f %d,l %d (cos,sin) (%e,%e):\n",4*f,l,cos_lut_f[(n_samples>>1)][l],sin_lut_f[(n_samples>>1)][l]);
   }
 
-  for (f=1; f<=(n_samples>>3); f++) {
+  for (f=1; f<=(n_samples>>3)+1; f++) {
     //count++;
     //freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
     for (l=0; l<(int)desc->nb_taps; l++) {
@@ -237,8 +240,9 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
         delay = desc->delays[l];
       else
         delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
-      cos_lut128=_mm_set_ps(cos(twopi*(4*f)*delay),cos(twopi*(4*f-1)*delay),cos(twopi*(4*f-2)*delay),cos(twopi*(4*f-3)*delay));
-      sin_lut128=_mm_set_ps(sin(twopi*(4*f)*delay),sin(twopi*(4*f-1)*delay),sin(twopi*(4*f-2)*delay),sin(twopi*(4*f-3)*delay));
+      sincos_ps(_mm_set_ps(twopi*(4*f)*delay,twopi*(4*f-1)*delay,twopi*(4*f-2)*delay,twopi*(4*f-3)*delay), &sin_lut128, &cos_lut128);
+      //cos_lut128=_mm_set_ps(cos(twopi*(4*f)*delay),cos(twopi*(4*f-1)*delay),cos(twopi*(4*f-2)*delay),cos(twopi*(4*f-3)*delay));
+      //sin_lut128=_mm_set_ps(sin(twopi*(4*f)*delay),sin(twopi*(4*f-1)*delay),sin(twopi*(4*f-2)*delay),sin(twopi*(4*f-3)*delay));
       _mm_storeu_ps(&cos_lut_f[l][4*f-3+(n_samples>>1)],cos_lut128);
       _mm_storeu_ps(&sin_lut_f[l][4*f-3+(n_samples>>1)],sin_lut128);
     }
@@ -287,9 +291,9 @@ int init_freq_channel_AVX_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
       else
         delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
 
-        //sincos_ps(_mm_set_ps(twopi*(4*f+3)*delay,twopi*(4*f+2)*delay,twopi*(4*f+1)*delay,twopi*(4*f)*delay), &sin_lut128, &cos_lut128);
-        cos_lut256=_mm256_set_ps(cos(twopi*(8*f+7)*delay),cos(twopi*(8*f+6)*delay),cos(twopi*(8*f+5)*delay),cos(twopi*(8*f+4)*delay),cos(twopi*(8*f+3)*delay),cos(twopi*(8*f+2)*delay),cos(twopi*(8*f+1)*delay),cos(twopi*(8*f)*delay));
-        sin_lut256=_mm256_set_ps(sin(twopi*(8*f+7)*delay),sin(twopi*(8*f+6)*delay),sin(twopi*(8*f+5)*delay),sin(twopi*(8*f+4)*delay),sin(twopi*(8*f+3)*delay),sin(twopi*(8*f+2)*delay),sin(twopi*(8*f+1)*delay),sin(twopi*(8*f)*delay));
+        sincos256_ps(_mm256_set_ps(twopi*(4*f+7)*delay,twopi*(4*f+6)*delay,twopi*(4*f+5)*delay,twopi*(4*f+4)*delay,twopi*(4*f+3)*delay,twopi*(4*f+2)*delay,twopi*(4*f+1)*delay,twopi*(4*f)*delay), &sin_lut256, &cos_lut256);
+        //cos_lut256=_mm256_set_ps(cos(twopi*(8*f+7)*delay),cos(twopi*(8*f+6)*delay),cos(twopi*(8*f+5)*delay),cos(twopi*(8*f+4)*delay),cos(twopi*(8*f+3)*delay),cos(twopi*(8*f+2)*delay),cos(twopi*(8*f+1)*delay),cos(twopi*(8*f)*delay));
+        //sin_lut256=_mm256_set_ps(sin(twopi*(8*f+7)*delay),sin(twopi*(8*f+6)*delay),sin(twopi*(8*f+5)*delay),sin(twopi*(8*f+4)*delay),sin(twopi*(8*f+3)*delay),sin(twopi*(8*f+2)*delay),sin(twopi*(8*f+1)*delay),sin(twopi*(8*f)*delay));
         _mm256_storeu_ps(&cos_lut_f[l][8*f+(n_samples>>1)],cos_lut256);
         _mm256_storeu_ps(&sin_lut_f[l][8*f+(n_samples>>1)],sin_lut256);
 
@@ -302,7 +306,7 @@ int init_freq_channel_AVX_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
       //printf("f %d,l %d (cos,sin) (%e,%e):\n",4*f,l,cos_lut_f[(n_samples>>1)][l],sin_lut_f[(n_samples>>1)][l]);
   }
 
-  for (f=1; f<=(n_samples>>4); f++) {
+  for (f=1; f<=(n_samples>>4)+1; f++) {
     //count++;
     //freq=delta_f*(double)f*1e-6;// due to the fact that delays is in mus
     for (l=0; l<(int)desc->nb_taps; l++) {
@@ -310,8 +314,9 @@ int init_freq_channel_AVX_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
         delay = desc->delays[l];
       else
         delay = desc->delays[l]+NB_SAMPLES_CHANNEL_OFFSET/desc->sampling_rate;
-      cos_lut256=_mm256_set_ps(cos(twopi*(4*f)*delay),cos(twopi*(4*f-1)*delay),cos(twopi*(4*f-2)*delay),cos(twopi*(4*f-3)*delay),cos(twopi*(4*f-4)*delay),cos(twopi*(4*f-5)*delay),cos(twopi*(4*f-6)*delay),cos(twopi*(4*f-7)*delay));
-      sin_lut256=_mm256_set_ps(sin(twopi*(4*f)*delay),sin(twopi*(4*f-1)*delay),sin(twopi*(4*f-2)*delay),sin(twopi*(4*f-3)*delay),sin(twopi*(4*f-4)*delay),sin(twopi*(4*f-5)*delay),sin(twopi*(4*f-6)*delay),sin(twopi*(4*f-7)*delay));
+        sincos256_ps(_mm256_set_ps(twopi*(4*f)*delay,twopi*(4*f-1)*delay,twopi*(4*f-2)*delay,twopi*(4*f-3)*delay,twopi*(4*f-4)*delay,twopi*(4*f-5)*delay,twopi*(4*f-6)*delay,twopi*(4*f-7)*delay), &sin_lut256, &cos_lut256);
+      //cos_lut256=_mm256_set_ps(cos(twopi*(4*f)*delay),cos(twopi*(4*f-1)*delay),cos(twopi*(4*f-2)*delay),cos(twopi*(4*f-3)*delay),cos(twopi*(4*f-4)*delay),cos(twopi*(4*f-5)*delay),cos(twopi*(4*f-6)*delay),cos(twopi*(4*f-7)*delay));
+      //sin_lut256=_mm256_set_ps(sin(twopi*(4*f)*delay),sin(twopi*(4*f-1)*delay),sin(twopi*(4*f-2)*delay),sin(twopi*(4*f-3)*delay),sin(twopi*(4*f-4)*delay),sin(twopi*(4*f-5)*delay),sin(twopi*(4*f-6)*delay),sin(twopi*(4*f-7)*delay));
       _mm256_storeu_ps(&cos_lut_f[l][8*f-7+(n_samples>>1)],cos_lut256);
       _mm256_storeu_ps(&sin_lut_f[l][8*f-7+(n_samples>>1)],sin_lut256);
     }
