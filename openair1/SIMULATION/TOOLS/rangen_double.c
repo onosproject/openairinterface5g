@@ -126,21 +126,17 @@ double nfix(void)
       }
   }
 }
-
-static uint32_t jsr4[4] __attribute__((aligned(16))) = {123456789,112548569,985584512,452236879};//This initialization depends on the seed for nor_table function in oaisim_functions.c file.
+//This initialization depends on the seed for nor_table function in oaisim_functions.c file.
+static uint32_t jsr4[4] __attribute__((aligned(16))) = {123456789,112548569,985584512,452236879};
+static uint32_t jsr8[8] __attribute__((aligned(32))) = {123456789,112548569,985584512,452236879,536457891,654354657,765645365,254676590};
 static uint32_t iz4[4] __attribute__((aligned(16)));
-static uint32_t iz1[4] __attribute__((aligned(16)));
-static uint32_t iz2[4] __attribute__((aligned(16)));
-//static float out[4] __attribute__((aligned(16)));
-//static int32_t ifabs4[4] __attribute__((aligned(16)));
+static uint32_t iz8[8] __attribute__((aligned(32)));
 static int32_t hz4[4] __attribute__((aligned(16)));
-static int32_t hz1[4] __attribute__((aligned(16)));
-static int32_t hz2[4] __attribute__((aligned(16)));
-static int32_t abshz[4] __attribute__((aligned(16)));
-static int32_t abshz1[4] __attribute__((aligned(16)));
-static int32_t abshz2[4] __attribute__((aligned(16)));
+static int32_t hz8[8] __attribute__((aligned(32)));
 static __m128i jsr_128 __attribute__((aligned(16)));
+static __m256i jsr_256 __attribute__((aligned(32)));
 static __m128i jz_128 __attribute__((aligned(16)));
+static __m256i jz_256 __attribute__((aligned(32)));
 static __m128i hz_128 __attribute__((aligned(16)));
 static __m128i hz1_128 __attribute__((aligned(16)));
 static __m128i hz2_128 __attribute__((aligned(16)));
@@ -158,20 +154,19 @@ static __m128 x __attribute__((aligned(16)));
 
 #define SHR3_SSE (jsr_128=_mm_loadu_si128((__m128i *)jsr4),jz_128=jsr_128, jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,13),jsr_128),jsr_128=_mm_xor_si128(_mm_srli_epi32(jsr_128,17),jsr_128),jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,5),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128),_mm_add_epi32(jz_128,jsr_128))
 #define UNI_SSE (_mm_add_ps(_mm_mul_ps(_mm_set1_ps(0.2328306e-9),_mm_cvtepi32_ps(SHR3_SSE)),_mm_set1_ps(0.5)))
-
 #define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz4,iz_128),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),count99=(count99>99)?0:count99+4,nfix_first_run=(count99>99)?0:1,(_mm_testc_si128(cmplt_option0_128,_mm_setr_epi32(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF)))?_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])):nfix_SSE(iz_128))
 
-//#define NOR1_SSE (hz1_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz1,hz1_128),iz1_128=_mm_and_si128(hz1_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz1,iz1_128),abs_hz1_128=_mm_and_si128(hz1_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz1,abs_hz1_128))
+#define SHR3_AVX (jsr_256=_mm256_loadu_si256((__m256i *)jsr8),jz_256=jsr_256, jsr_256=_mm256_xor_si256(_mm256_slli_epi32(jsr_256,13),jsr_256),jsr_256=_mm256_xor_si256(_mm256_srli_epi32(jsr_256,17),jsr_256),jsr_256=_mm256_xor_si256(_mm256_slli_epi32(jsr_256,5),jsr_256),_mm256_storeu_si256((__m256i *)jsr8,jsr_256),_mm256_add_epi32(jz_256,jsr_256))
 
-//#define NOR2_SSE (hz2_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz2,hz2_128),iz2_128=_mm_and_si128(hz2_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz2,iz2_128),abs_hz2_128=_mm_and_si128(hz2_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz2,abs_hz2_128))
+#define UNI_AVX (_mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.2328306e-9),_mm256_cvtepi32_ps(SHR3_AVX)),_mm256_set1_ps(0.5)))
 
-//#define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz4,iz_128),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz4,abs_hz_128),cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),_mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128),count0=0,(cmplt_option0[0]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[1]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[2]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[3]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[0]==0xFFFFFFFF && cmplt_option0[1]==0xFFFFFFFF && cmplt_option0[2]==0xFFFFFFFF && cmplt_option0[3]==0xFFFFFFFF && count99<95 && count0==4)?_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])):nfix_SSE())
+#define NOR_AVX (hz_256=SHR3_AVX,_mm256_storeu_si256((__m256i *)hz8,hz_256),iz_256=_mm256_and_si128(hz_256,_mm256_set1_epi32(127)),_mm256_storeu_si128((__m256i *)iz8,iz_256),abs_hz_256=_mm_and_si256(hz_256, _mm256_set1_epi32(~0x80000000)),cmplt_option0_256 = _mm256_cmplt_epi32(abs_hz_256,_mm256_setr_epi32(kn[iz8[0]],kn[iz8[1]],kn[iz8[2]],kn[iz8[3]],kn[iz8[4]],kn[iz8[5]],kn[iz8[6]],kn[iz8[7]])),count99=(count99>99)?0:count99+4,nfix_first_run=(count99>99)?0:1,(_mm256_testc_si128(cmplt_option0_256,_mm256_setr_epi32(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF)))?_mm256_mul_ps(_mm256_cvtepi32_ps(hz_256),_mm256_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz8[2]],wn[iz8[3]],wn[iz8[4]],wn[iz8[5]],wn[iz8[6]],wn[iz8[7]])):nfix_AVX(iz_256))
 
-//,ifabs=_mm_cmplt_epi32(_mm_max_epi32(_mm_sub_epi32(_mm_setzero_si128(),hz_128),hz_128),_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),_mm_storeu_si128((__m128i *)ifabs4,ifabs),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz4,abs_hz_128),printf("abs_hz_128 %d,%d,%d,%d\n",abshz4[0],abshz4[1],abshz4[2],abshz4[3]),printf("kn %d,%d,%d,%d\n",kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]]),printf("ifabs %x,%x,%x,%x\n",ifabs4[0],ifabs4[1],ifabs4[2],ifabs4[3]),x128=_mm_and_ps(_mm_cvtepi32_ps(_mm_cmplt_epi32(_mm_max_epi32(_mm_sub_epi32(_mm_setzero_si128(),hz_128),hz_128),_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]]))),_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]]))),printf("x128 %e,%e,%e,%e\n",x128[0],x128[1],x128[2],x128[3]),printf("iz %d,%d,%d,%d\n",iz4[0],iz4[1],iz4[2],iz4[3]),printf("wn*hz %e,%e,%e,%e\n",hz4[0]*wn[iz4[0]],hz4[1]*wn[iz4[1]],hz4[2]*wn[iz4[2]],hz4[3]*wn[iz4[3]]))
 
-//,_mm_storeu_si128(ssh3_sse4,hz_128),printf("ssh3_sse4 %lu,%lu,%lu,%lu\n",ssh3_sse4[0],ssh3_sse4[1],ssh3_sse4[2],ssh3_sse4[3])
-//#define NOR (hz=SHR3, printf("hz %d\n",hz),sign=(hz&128)>>7,printf("sign %s\n",(sign)?"-":"+"),iz=hz&127,printf("iz %d\n",iz), (abs(hz)<kn[iz])? (sign)?(-1)*hz*wn[iz]:hz*wn[iz] : (sign)?(-1)*nfix():nfix())
+__m256 nfix_AVX(__m256i iz)
+{
 
+}
 __m128 nfix_SSE(__m128i iz)
 {
   __m128 y __attribute__((aligned(16)));
@@ -319,6 +314,20 @@ void boxmuller_SSE_float(__m128 *data1, __m128 *data2) {
         sincos_ps(theta, &sintheta, &costheta);
 	*data1=_mm_mul_ps(radius, costheta);
 	*data2=_mm_mul_ps(radius, sintheta);
+}
+
+void boxmuller_AVX_float(__m256 *data1, __m256 *data2) {
+	__m256 twopi = _mm256_set1_ps(2.0f * 3.14159265358979323846f);
+	__m256 minustwo = _mm256_set1_ps(-2.0f);
+	__m256 u1_ps,u2_ps;
+	__m256 radius,theta,sintheta,costheta;
+	u1_ps = UNI_AVX;
+	u2_ps = UNI_AVX;
+	radius = _mm256_sqrt_ps(_mm256_mul_ps(minustwo, log256_ps(u1_ps)));
+	theta = _mm256_mul_ps(twopi, u2_ps);
+        sincos256_ps(theta, &sintheta, &costheta);
+	*data1=_mm256_mul_ps(radius, costheta);
+	*data2=_mm256_mul_ps(radius, sintheta);
 }
 /*
 @defgroup _gaussdouble Gaussian random number generator based on modified Box-Muller transformation.
@@ -807,4 +816,14 @@ __m128 nfix2_SSE(void)
     return _mm_setr_ps(output2[0],output2[1],output2[2],output2[3]);
   }
 }*/
+//#define NOR1_SSE (hz1_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz1,hz1_128),iz1_128=_mm_and_si128(hz1_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz1,iz1_128),abs_hz1_128=_mm_and_si128(hz1_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz1,abs_hz1_128))
+
+//#define NOR2_SSE (hz2_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz2,hz2_128),iz2_128=_mm_and_si128(hz2_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz2,iz2_128),abs_hz2_128=_mm_and_si128(hz2_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz2,abs_hz2_128))
+
+//#define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz4,iz_128),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz4,abs_hz_128),cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),_mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128),count0=0,(cmplt_option0[0]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[1]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[2]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[3]==0xFFFFFFFF)?count99+=count0++:count0,(cmplt_option0[0]==0xFFFFFFFF && cmplt_option0[1]==0xFFFFFFFF && cmplt_option0[2]==0xFFFFFFFF && cmplt_option0[3]==0xFFFFFFFF && count99<95 && count0==4)?_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])):nfix_SSE())
+
+//,ifabs=_mm_cmplt_epi32(_mm_max_epi32(_mm_sub_epi32(_mm_setzero_si128(),hz_128),hz_128),_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),_mm_storeu_si128((__m128i *)ifabs4,ifabs),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),_mm_storeu_si128((__m128i *)abshz4,abs_hz_128),printf("abs_hz_128 %d,%d,%d,%d\n",abshz4[0],abshz4[1],abshz4[2],abshz4[3]),printf("kn %d,%d,%d,%d\n",kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]]),printf("ifabs %x,%x,%x,%x\n",ifabs4[0],ifabs4[1],ifabs4[2],ifabs4[3]),x128=_mm_and_ps(_mm_cvtepi32_ps(_mm_cmplt_epi32(_mm_max_epi32(_mm_sub_epi32(_mm_setzero_si128(),hz_128),hz_128),_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]]))),_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]]))),printf("x128 %e,%e,%e,%e\n",x128[0],x128[1],x128[2],x128[3]),printf("iz %d,%d,%d,%d\n",iz4[0],iz4[1],iz4[2],iz4[3]),printf("wn*hz %e,%e,%e,%e\n",hz4[0]*wn[iz4[0]],hz4[1]*wn[iz4[1]],hz4[2]*wn[iz4[2]],hz4[3]*wn[iz4[3]]))
+
+//,_mm_storeu_si128(ssh3_sse4,hz_128),printf("ssh3_sse4 %lu,%lu,%lu,%lu\n",ssh3_sse4[0],ssh3_sse4[1],ssh3_sse4[2],ssh3_sse4[3])
+//#define NOR (hz=SHR3, printf("hz %d\n",hz),sign=(hz&128)>>7,printf("sign %s\n",(sign)?"-":"+"),iz=hz&127,printf("iz %d\n",iz), (abs(hz)<kn[iz])? (sign)?(-1)*hz*wn[iz]:hz*wn[iz] : (sign)?(-1)*nfix():nfix())
 

@@ -493,6 +493,7 @@ void uniformrandomSSE(__m128d *d1,__m128d *d2);
 double ziggurat(double mean, double variance);
 __m128 ziggurat_SSE_float(void);
 void boxmuller_SSE_float(__m128 *data1, __m128 *data2);
+void boxmuller_AVX_float(__m256 *data1, __m256 *data2);
 int freq_channel(channel_desc_t *desc,uint16_t nb_rb, int16_t n_samples);
 int freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb, int16_t n_samples);
 int freq_channel_AVX_float(channel_desc_t *desc,uint16_t nb_rb, int16_t n_samples);

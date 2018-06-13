@@ -154,7 +154,7 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
   int16_t f;
   uint8_t l;
   __m128 cos_lut128,sin_lut128;
-  __m128 x128, log128, exp128;
+  /*__m128 x128, log128, exp128;
   __m256 x256, log256, exp256;
   x128 = _mm_set_ps(1.0,2.0,3.0,4.0);
   x256 = _mm256_set_ps(1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0);
@@ -170,24 +170,23 @@ int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sa
   printf("log256 %e,%e,%e,%e,%e,%e,%e,%e\n",log256[0],log256[1],log256[2],log256[3],log256[4],log256[5],log256[6],log256[7]);
   printf("log %e,%e,%e,%e,%e,%e,%e,%e\n",log(1),log(2),log(3),log(4),log(5),log(6),log(7),log(8));
   printf("exp256 %e,%e,%e,%e,%e,%e,%e,%e\n",exp256[0],exp256[1],exp256[2],exp256[3],exp256[4],exp256[5],exp256[6],exp256[7]);
-  printf("exp %e,%e,%e,%e,%e,%e,%e,%e\n",exp(1),exp(2),exp(3),exp(4),exp(5),exp(6),exp(7),exp(8));
+  printf("exp %e,%e,%e,%e,%e,%e,%e,%e\n",exp(1),exp(2),exp(3),exp(4),exp(5),exp(6),exp(7),exp(8));*/
   /*__m256 x256, sin256, cos256;
   __m128 x128, sin128, cos128;
   x128 = _mm_set_ps(1.0,2.0,3.0,4.0);
   x256 = _mm256_set_ps(1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0);*/
 
-	/*printf("sincos in abstraction.c\n");
-	sincos256_ps(x256,&sin256,&cos256);
-	sincos_ps(x128,&sin128,&cos128);
-	printf("sin avx %e,%e,%e,%e,%e,%e,%e,%e\n",sin256[0],sin256[1],sin256[2],sin256[3],sin256[4],sin256[5],sin256[6],sin256[7]);
-	printf("sin %e,%e,%e,%e,%e,%e,%e,%e\n",sin(1.0),sin(2.0),sin(3.0),sin(4.0),sin(5.0),sin(6.0),sin(7.0),sin(8.0));
-	printf("cos avx %e,%e,%e,%e,%e,%e,%e,%e\n",cos256[0],cos256[1],cos256[2],cos256[3],cos256[4],cos256[5],cos256[6],cos256[7]);
-	printf("cos %e,%e,%e,%e,%e,%e,%e,%e\n\n",cos(1.0),cos(2.0),cos(3.0),cos(4.0),cos(5.0),cos(6.0),cos(7.0),cos(8.0));
-
-	printf("sin sse %e,%e,%e,%e\n",sin128[0],sin128[1],sin128[2],sin128[3]);
-	printf("sin %e,%e,%e,%e\n",sin(1.0),sin(2.0),sin(3.0),sin(4.0));
-	printf("cos sse %e,%e,%e,%e\n",cos128[0],cos128[1],cos128[2],cos128[3]);
-	printf("cos %e,%e,%e,%e\n",cos(1.0),cos(2.0),cos(3.0),cos(4.0));*/
+  /*printf("sincos in abstraction.c\n");
+  sincos256_ps(x256,&sin256,&cos256);
+  sincos_ps(x128,&sin128,&cos128);
+  printf("sin avx %e,%e,%e,%e,%e,%e,%e,%e\n",sin256[0],sin256[1],sin256[2],sin256[3],sin256[4],sin256[5],sin256[6],sin256[7]);
+  printf("sin %e,%e,%e,%e,%e,%e,%e,%e\n",sin(1.0),sin(2.0),sin(3.0),sin(4.0),sin(5.0),sin(6.0),sin(7.0),sin(8.0));
+  printf("cos avx %e,%e,%e,%e,%e,%e,%e,%e\n",cos256[0],cos256[1],cos256[2],cos256[3],cos256[4],cos256[5],cos256[6],cos256[7]);
+  printf("cos %e,%e,%e,%e,%e,%e,%e,%e\n\n",cos(1.0),cos(2.0),cos(3.0),cos(4.0),cos(5.0),cos(6.0),cos(7.0),cos(8.0));
+  printf("sin sse %e,%e,%e,%e\n",sin128[0],sin128[1],sin128[2],sin128[3]);
+  printf("sin %e,%e,%e,%e\n",sin(1.0),sin(2.0),sin(3.0),sin(4.0));
+  printf("cos sse %e,%e,%e,%e\n",cos128[0],cos128[1],cos128[2],cos128[3]);
+  printf("cos %e,%e,%e,%e\n",cos(1.0),cos(2.0),cos(3.0),cos(4.0));*/
 
   if ((n_samples&1)==0) {
     fprintf(stderr, "freq_channel_init: n_samples has to be odd\n");
