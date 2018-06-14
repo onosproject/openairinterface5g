@@ -1520,14 +1520,34 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 	if (UE2eNB[UE_id][eNB_id][CC_id]->first_run == 1)
 	  UE2eNB[UE_id][eNB_id][CC_id]->first_run = 0;
 	
-	
+	__m256 r_re0_f_prach_256,r_im0_f_prach_256,r_re_UL_f_prach_256,r_im_UL_f_prach_256;
 	pthread_mutex_lock(&UE_output_mutex[eNB_id]);
+#ifdef    SSE_float
+	for (aa=0; aa<nb_antennas_rx; aa++) {
+		for (i=0; i<(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)>>3; i++) {
+		    //r_re_UL_f_prach[eNB_id][aa][i]+=r_re0_f_prach[aa][i];
+		    //r_im_UL_f_prach[eNB_id][aa][i]+=r_im0_f_prach[aa][i];
+
+		    r_re0_f_prach_256 = _mm256_loadu_ps(&r_re0_f_prach[aa][8*i]);
+		    r_im0_f_prach_256 = _mm256_loadu_ps(&r_im0_f_prach[aa][8*i]);
+		    r_re_UL_f_prach_256 = _mm256_loadu_ps(&r_re_UL_f_prach[eNB_id][aa][8*i]);
+		    r_im_UL_f_prach_256 = _mm256_loadu_ps(&r_im_UL_f_prach[eNB_id][aa][8*i]);
+
+		    r_re_UL_f_prach_256 = _mm256_add_ps(r_re_UL_f_prach_256,r_re0_f_prach_256);
+		    r_im_UL_f_prach_256 = _mm256_add_ps(r_im_UL_f_prach_256,r_im0_f_prach_256);
+
+		    _mm256_storeu_ps(&r_re_UL_f_prach[eNB_id][aa][8*i],r_re_UL_f_prach_256);
+		    _mm256_storeu_ps(&r_im_UL_f_prach[eNB_id][aa][8*i],r_im_UL_f_prach_256);
+		}
+	}
+#else
 	for (aa=0; aa<nb_antennas_rx; aa++) {
 		for (i=0; i<frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti; i++) {
 		    r_re_UL_f_prach[eNB_id][aa][i]+=r_re0_f_prach[aa][i];
 		    r_im_UL_f_prach[eNB_id][aa][i]+=r_im0_f_prach[aa][i];
 		}
 	}
+#endif
 	pthread_mutex_unlock(&UE_output_mutex[eNB_id]);
       }
     } //UE_id

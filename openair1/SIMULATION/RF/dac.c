@@ -384,7 +384,7 @@ float dac_fixed_gain_prach_SSE_float(float *s_re[2],
       _mm_storeu_ps(&s_re[aa][4*i],input_re128);
       _mm_storeu_ps(&s_im[aa][4*i],input_im128);
 
-      if (2*i+input_offset==12*2*ofdm_symbol_size)
+      if (4*i+input_offset==12*2*ofdm_symbol_size)
  	i=0;
     }
   }
@@ -449,7 +449,7 @@ float dac_fixed_gain_prach_AVX_float(float *s_re[2],
       _mm256_storeu_ps(&s_re[aa][8*i],input_re256);
       _mm256_storeu_ps(&s_im[aa][8*i],input_im256);
 
-      if (2*i+input_offset==12*2*ofdm_symbol_size)
+      if (8*i+input_offset==12*2*ofdm_symbol_size)
  	i=0;
     }
   }
