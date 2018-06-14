@@ -510,11 +510,13 @@ int freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb, int16_t n_sample
 int freq_channel_AVX_float(channel_desc_t *desc,uint16_t nb_rb, int16_t n_samples);
 int freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
 int freq_channel_prach_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
+int freq_channel_prach_AVX_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
 int init_freq_channel(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples);
 int init_freq_channel_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples);
 int init_freq_channel_AVX_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples);
 int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
 int init_freq_channel_prach_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
+int init_freq_channel_prach_AVX_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb);
 
 void sincos_ps(__m128 x, __m128 *s, __m128 *c);
 void sincos256_ps(__m256 x, __m256 *s, __m256 *c);

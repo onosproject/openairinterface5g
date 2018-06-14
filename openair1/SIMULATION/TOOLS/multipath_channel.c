@@ -951,7 +951,7 @@ void multipath_channel_prach_AVX_float(channel_desc_t *desc,
 		// do nothing - keep channel
 		} else {
 		random_channel_freq(desc,0);
-		freq_channel_prach_SSE_float(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
+		freq_channel_prach_AVX_float(desc,nb_rb,n_samples,prach_fmt,n_ra_prb);//Find desc->chF_prach
 		}	
 			for (f=0;f<(length>>3); f++) {
 				//rx_tmp.x = 0;
