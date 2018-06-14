@@ -1127,9 +1127,9 @@ int main(int argc, char **argv)
   }
 
   if (transmission_mode<7)
-     ru->do_precoding=0;
+    ru->do_precoding=0;
   else
-     ru->do_precoding=1;
+    ru->do_precoding=1;
 
   eNB->mac_enabled=1;
   if (two_thread_flag == 0) {
@@ -1557,7 +1557,7 @@ int main(int argc, char **argv)
 	  //PMI_FEEDBACK:
 
           //  printf("Trial %d : Round %d, pmi_feedback %d \n",trials,round,pmi_feedback);
-          for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++) {
+          for (aa=0; aa<eNB->frame_parms.nb_antenna_ports_eNB; aa++) {
             memset(&eNB->common_vars.txdataF[aa][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(int32_t));
           }
 

@@ -380,7 +380,7 @@ void feptx_prec(RU_t *ru) {
   int32_t ***bw;
   int subframe = ru->proc.subframe_tx;
 
-  if (ru->num_eNB == 1) {
+  if (ru->do_precoding == 0) {
     eNB = eNB_list[0];
     fp  = &eNB->frame_parms;
     
