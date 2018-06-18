@@ -422,7 +422,7 @@ static void trx_usrp_end(openair0_device *device) {
       @param timestamp The timestamp at which the first sample MUST be sent
       @param buff Buffer which holds the samples
       @param nsamps number of samples to be sent
-      @param antenna_id index of the antenna if the device has multiple antennas
+      @param cc number of antennas
       @param flags flags must be set to TRUE if timestamp parameter needs to be applied
 */
 static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps, int cc, int flags) {
@@ -436,14 +436,14 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
 #if defined(__x86_64) || defined(__i386__)
 #ifdef __AVX2__
   nsamps2 = (nsamps+7)>>3;
-  __m256i buff_tx[2][nsamps2];
+  __m256i buff_tx[cc][nsamps2];
 #else
   nsamps2 = (nsamps+3)>>2;
-  __m128i buff_tx[2][nsamps2];
+  __m128i buff_tx[cc][nsamps2];
 #endif
 #elif defined(__arm__)
   nsamps2 = (nsamps+3)>>2;
-  int16x8_t buff_tx[2][nsamps2];
+  int16x8_t buff_tx[cc][nsamps2];
 #endif
   
   // bring RX data into 12 LSBs for softmodem RX
@@ -517,7 +517,7 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
  * \param[out] ptimestamp the time at which the first sample was received.
  * \param[out] buff An array of pointers to buffers for received samples. The buffers must be large enough to hold the number of samples \ref nsamps.
  * \param nsamps Number of samples. One sample is 2 byte I + 2 byte Q => 4 byte.
- * \param antenna_id Index of antenna for which to receive samples
+ * \param cc number of antennas
  * \returns the number of sample read
 */
 static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc) {
@@ -530,14 +530,14 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp
 #if defined(__x86_64) || defined(__i386__)
 #ifdef __AVX2__
     nsamps2 = (nsamps+7)>>3;
-    __m256i buff_tmp[2][nsamps2];
+    __m256i buff_tmp[cc][nsamps2];
 #else
     nsamps2 = (nsamps+3)>>2;
-    __m128i buff_tmp[2][nsamps2];
+    __m128i buff_tmp[cc][nsamps2];
 #endif
 #elif defined(__arm__)
     nsamps2 = (nsamps+3)>>2;
-    int16x8_t buff_tmp[2][nsamps2];
+    int16x8_t buff_tmp[cc][nsamps2];
 #endif
 
     if (device->type == USRP_B200_DEV) {
