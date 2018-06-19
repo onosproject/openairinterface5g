@@ -533,10 +533,11 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
   //////////////////////////////////////////////////////// to uncomment for LTE,      uint8_t *pbch_pdu=&eNB->pbch_pdu[0];
   int subframe = proc->subframe_tx;
   int frame = proc->frame_tx;
+  RA_TEMPLATE *RA_template = (RA_TEMPLATE *)&eNB_mac_inst[eNB->Mod_id].common_channels[eNB->CC_id].RA_template[0];
   //int                     With_NSSS=0;
   /////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////  RX NPUSH  //////////////////////////////////////
-/*
+
   if(subframe>0 && proc->flag_msg3==1 && frame==proc->frame_msg3 &&  proc->counter_msg3>0) ///&& frame == ????
   {
       ///////////////////////////////////////////////////  NPUSH DEMOD ////////////////////////////////////
@@ -566,16 +567,16 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                                           l%(fp->symbols_per_tti/2),
                                           l/(fp->symbols_per_tti/2),
                                           fp);
-          ul_channel_estimation_NB_IoT(eNB,proc,
+         /* ul_channel_estimation_NB_IoT(eNB,proc,
                                        0,
                                        0,
                                        l%(fp->symbols_per_tti/2),
                                        l/(fp->symbols_per_tti/2),
                                        1,  // N_sc_RU
-                                       0);
+                                       0);*/
       }
 
-      for (i=0; i<fp->nb_antennas_rx; i++)
+      /*for (i=0; i<fp->nb_antennas_rx; i++)
       {
           pusch_vars->ulsch_power[i] = signal_energy_nodc(pusch_vars->drs_ch_estimates[0][i], 12);   
       }
@@ -583,16 +584,16 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
       ulsch_channel_level_NB_IoT(pusch_vars->drs_ch_estimates[0],
                                  fp,
                                  avgU,
-                                 nb_rb); 
+                                 nb_rb); */
 
-      avgs = 0;
+      /*avgs = 0;
 
       for (i=0; i<fp->nb_antennas_rx; i++)
       { 
           avgs = cmax(avgs,avgU[(i<<1)]);
       }
 
-      log2_maxh = (log2_approx(avgs)/2)+ log2_approx(fp->nb_antennas_rx-1)+4;
+      log2_maxh = (log2_approx(avgs)/2)+ log2_approx(fp->nb_antennas_rx-1)+4;*/
 
       for (l=0; l<fp->symbols_per_tti; l++) {
 
@@ -601,7 +602,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
               l++;
           }
     
-          ulsch_channel_compensation_NB_IoT(pusch_vars->rxdataF_ext[0],
+         /* ulsch_channel_compensation_NB_IoT(pusch_vars->rxdataF_ext[0],
                                             pusch_vars->drs_ch_estimates[0],
                                             pusch_vars->ul_ch_mag[0],
                                             pusch_vars->ul_ch_magb[0],
@@ -618,7 +619,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                                    pusch_vars->ul_ch_magb[0],
                                    l,
                                    12, //NscRU: keep 12, even if the actual number of sc is not 12
-                                   2); // Qm
+                                   2); // Qm*/
 
           fill_rbs_zeros_NB_IoT(eNB, 
                                 fp, 
@@ -957,14 +958,163 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
           printf("pdu[3] = %d",ulsch_harq->b[3]);
           //printf("pdu[4] = %d",ulsch_harq->b[4]);
 
+          ///////////////////////// scheduling of msg 4 DCI //////////////////////////
+          proc->flag_DCI_msg4=1;
+          proc->counter_DCI_msg4=4;
+          ////////////////////////////////////////////////////////////////////////////
+
       }  // NPUSH decode end 
     proc->counter_msg3--;
 
   }
 
-*/
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
+{
+    
+    if(subframe==9)
+    {
+        proc->subframe_msg4=1;
+        proc->frame_msg4= frame+1;
+
+    } else {
+
+        if(frame == proc->frame_msg4 && subframe == proc->subframe_msg4)
+        {
+                NB_IoT_DL_eNB_RAR_t  *rar  =  &eNB->ndlsch_rar.content_rar;
+                uint8_t   tab_rar[15];
+                //uint8_t   *NAS_tab = &eNB->tab_nas;
+                // avoid subframe 9 and subframe 0 of next frame
+                tab_rar[0]=63;
+                tab_rar[1]=60;
+                tab_rar[2]=0;
+                tab_rar[3]=99;  // NAS part 1 
+                tab_rar[4]=64;  // NAS part 2
+                tab_rar[5]=255; // NAS part 3 
+                tab_rar[6]=242;  // NAS part 4
+                tab_rar[7]=64;   // NAS part 5
+                tab_rar[8]=0;   // NAS part 6
+                tab_rar[9]=30;
+                tab_rar[10]=3;
+                tab_rar[11]=0;
+                tab_rar[12]=18;  
+                tab_rar[13]=91;
+                tab_rar[14]=8;
+
+                if(proc->flag_scrambling ==0)
+                {
+
+                      dlsch_encoding_rar_NB_IoT(tab_rar,
+                                                rar,
+                                                8,                      ///// number_of_subframes_required
+                                                236,
+                                                2);                   //////////// G*2   // option =2 for msg4
+
+
+                       dlsch_sib_scrambling_rar_NB_IoT(fp,
+                                                       rar,
+                                                       236,
+                                                       frame,
+                                                       subframe*2,
+                                                       65522);        //RA_template[0].RA_rnti
+                }
+                proc->flag_scrambling =1;
+                printf("\n RAR sentttttt frame %d, subframe %d", frame, subframe);
+                dlsch_modulation_rar_NB_IoT(txdataF,
+                                            AMP,
+                                            fp,
+                                            3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+                                            rar,
+                                            236,                       // number of bits per subframe
+                                            frame,  // unrequired
+                                            subframe,       
+                                            22);
+
+                 proc->counter_msg4--;
+                 proc->subframe_msg4 =subframe+1;
+
+        }         
+    }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+if(proc->flag_DCI_msg4 ==1 && proc->counter_DCI_msg4>0)
+{ 
+     if(proc->guard>0)
+     {
+        proc->guard--;
+     }
+
+     NB_IoT_eNB_NPDCCH_temp_t   *npdcch_struct_x = &eNB->npdcch_tmp;
+
+     if(proc->SP2 == 1)
+     {
+          if(proc->subframe_DCI_msg4==subframe && frame == proc->frame_DCI_msg4)
+          {
+              printf("\n xxxxxxxxxxxxxxxx DCI 2 for msg4 xxxxxxxxxxxxx frame %d, subframe %d", frame, subframe);
+              dci_modulation_NB_IoT(txdataF,AMP,fp,3,npdcch_struct_x->npdcch_e[0],1,2,22,subframe);
+              proc->counter_DCI_msg4--;
+              if(subframe==9)                             /// tester le cas ou subframe==4 && 5
+              {
+                proc->subframe_DCI_msg4 =1;
+                proc->frame_DCI_msg4=frame+1;
+              } else {
+                proc->subframe_DCI_msg4 =subframe+1;
+              } 
+
+              if(proc->counter_DCI_msg4 == 0)
+              {
+                  proc->flag_msg4=1;
+                  proc->counter_msg4=4;
+                  proc->subframe_msg4= subframe+5;
+                  proc->frame_msg4= frame;
+
+              } 
+          }
+     }
+
+     if(((10*frame +subframe) % 8)==2 && subframe != 0 && subframe != 5 && proc->SP2 !=1 && proc->guard==0)
+     {
+          printf("\n xxxxxxxxxxxxxxxx DCI 1 for msg4 xxxxxxxxxxxxx frame %d, subframe %d", frame, subframe);
+          proc->SP2 =1;
+          proc->flag_scrambling =0;   ///   for msg4 PDU
+          
+             int32_t numbits = 23;
+              uint8_t       RCC;
+              uint16_t npdcch_D  = 16 + 23;
+             uint16_t  npdcch_E  = 236;
+             uint8_t    agr_level = 2;
+           //  uint8_t    dci_number=1; 
+             uint8_t   tab_a[3];
+             tab_a[0]= 128;
+             tab_a[1]= 66;
+             tab_a[2]= 4;
+            // int           RB_ID_IoT=22 ; 
+                 
+              bzero(npdcch_struct_x->npdcch_e[0],npdcch_E);            
+              memset(npdcch_struct_x->npdcch_d[0],LTE_NULL_NB_IoT,96);  
+
+             ccode_encode_NB_IoT(numbits,2,tab_a,npdcch_struct_x->npdcch_d[0]+96,65522);
+             RCC = sub_block_interleaving_cc_NB_IoT(npdcch_D,npdcch_struct_x->npdcch_d[0]+96,npdcch_struct_x->npdcch_w[0]);
+             lte_rate_matching_cc_NB_IoT(RCC,npdcch_E,npdcch_struct_x->npdcch_w[0],npdcch_struct_x->npdcch_e[0]);
+
+             npdcch_scrambling_NB_IoT(fp,npdcch_struct_x->npdcch_e[0],npdcch_E,(uint8_t)subframe*2,1,agr_level);
+            
+             dci_modulation_NB_IoT(txdataF,AMP,fp,3,npdcch_struct_x->npdcch_e[0],1,2,22,subframe);
+
+             proc->counter_DCI_msg4--;
+             ////////////////////////////////////////////if (subframe ==9 )
+             proc->subframe_DCI_msg4 = subframe+1;
+
+             proc->frame_DCI_msg4 = frame;
+          
+
+     } 
+
+}
 
 ///////////////////////////////////////////////////////////////////////////////
   common_signal_procedures_NB_IoT(eNB,proc);
@@ -972,7 +1122,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 /////////////////// NB-IoT broadcast channel //////////////////////////
 //RA_template[i].RA_active=TRUE;
 
-RA_TEMPLATE *RA_template = (RA_TEMPLATE *)&eNB_mac_inst[eNB->Mod_id].common_channels[eNB->CC_id].RA_template[0];
+
  ///if( frame%2 ==0 && subframe ==1)
 
  if(subframe ==7)
@@ -985,10 +1135,24 @@ RA_TEMPLATE *RA_template = (RA_TEMPLATE *)&eNB_mac_inst[eNB->Mod_id].common_chan
         proc->sheduling_info_rar =1;
         proc->rar_to_transmit =0;
         proc->SP =0;
+        proc->SP2 =0;
         proc->flag_msg3=0;
         proc->frame_msg3=0;
         proc->counter_msg3=0;
         proc->flag_scrambling =0;
+        proc->flag_msg4 =0;
+        proc->subframe_SP2 =0;
+        proc->subframe_SP =0;
+        proc->flag_DCI_msg4=0;
+        proc->flag_msg4=0;
+        proc->counter_DCI_msg4=0;
+        proc->counter_msg4=0;
+        proc->frame_DCI_msg4=0;
+        proc->frame_msg4=0;
+        proc->guard=5;
+        proc->subframe_DCI_msg4=0;
+        proc->subframe_msg4=0;
+
         //printf("detection ok in TX !!!!!!!!!!!!!!!!!");
         //RA_template[0].generate_rar = 0;
         //RA_template[0].RA_active = FALSE;
@@ -1039,7 +1203,7 @@ RA_TEMPLATE *RA_template = (RA_TEMPLATE *)&eNB_mac_inst[eNB->Mod_id].common_chan
              proc->remaining_dci--;
 
           } else {
-      proc->subframe_SP =1;
+                     proc->subframe_SP =1;
                      if( ((frame)%2==1) && ((frame)%64<16))
                      {
                          proc->there_is_sib23 =8;
@@ -1131,21 +1295,20 @@ RA_TEMPLATE *RA_template = (RA_TEMPLATE *)&eNB_mac_inst[eNB->Mod_id].common_chan
               proc->rar_to_transmit =1;
               proc->remaining_rar =4;
 
-          //      proc->next_frame_tx=frame+2;
-           //     proc->next_subframe_tx=1;
-    if(((frame+1)%2==1) && ((frame+1)%64<16))
+              //      proc->next_frame_tx=frame+2;
+              //     proc->next_subframe_tx=1;
+              if(((frame+1)%2==1) && ((frame+1)%64<16))
               { 
             
-            proc->next_frame_tx=frame+2;
-                                        proc->next_subframe_tx=1;
-          }else {
-           proc->next_frame_tx=frame+1;
+                  proc->next_frame_tx=frame+2;
+                  proc->next_subframe_tx=1;
+              }else {
+                    proc->next_frame_tx=frame+1;
                         proc->next_subframe_tx=3;
-          }
+              }
 
            }
        } 
-
     }
 
 
@@ -1295,7 +1458,7 @@ if(subframe !=5 && subframe !=0)
  {
     NB_IoT_DL_eNB_RAR_t  *rar          = &eNB->ndlsch_rar.content_rar;
     uint8_t   tab_rar[7];
-// printf("xxxxx index verif %d XXXXXX",RA_template[0].preamble_index);
+    // printf("xxxxx index verif %d XXXXXX",RA_template[0].preamble_index);
       tab_rar[0]=64 + RA_template[0].preamble_index;
       tab_rar[1]=0;
       tab_rar[2]=9;

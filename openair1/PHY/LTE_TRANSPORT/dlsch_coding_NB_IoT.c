@@ -162,8 +162,13 @@ int dlsch_encoding_rar_NB_IoT(unsigned char      			*a,
     uint8_t       npbch_a_crc[10];
 	bzero(npbch_a,7); 
 	bzero(npbch_a_crc,10);
+
+	uint8_t       npbch_a_x[15];
+    uint8_t       npbch_a_crc_x[18];
+	bzero(npbch_a_x,15); 
+	bzero(npbch_a_crc_x,18);
   
-	 A 							 = 56;
+	 
 
 	dlsch->length_e = G;									// G*Nsf (number_of_subframes) = total number of bits to transmit G=236
 
@@ -171,36 +176,65 @@ int dlsch_encoding_rar_NB_IoT(unsigned char      			*a,
 
 if(option ==1)
 {  
+	A 							 = 56;
 	for (int i=0; i<7; i++) 												
 	{	
 		npbch_a[i] = a[i];    
 	}
 } else {
-	for (int i=0; i<6; i++) 												
+	A 							 = 120;
+	for (int i=0; i<15; i++) 												
 	{	
-		npbch_a[i] = a[i];    
+		npbch_a_x[i] = a[i];    
 	}
 }
     
      
-	crc = crc24a_NB_IoT(npbch_a,A)>>8;
+
+
+	if(option==1)
+	{
+		crc = crc24a_NB_IoT(npbch_a,A)>>8;
 	
 
-    for (int j=0; j<7; j++) 												
-	{	
-		npbch_a_crc[j] = npbch_a[j];    
+    	for (int j=0; j<7; j++) 												
+		{	
+			npbch_a_crc[j] = npbch_a[j];    
+		}
+
+	    npbch_a_crc[7] = ((uint8_t*)&crc)[2];
+	    npbch_a_crc[8] = ((uint8_t*)&crc)[1];
+		npbch_a_crc[9] = ((uint8_t*)&crc)[0];
+		
+			dlsch->B = numbits;			// The length of table b in bits
+			//memcpy(dlsch->b,a,numbits/8);        // comment if option 2 
+			memset(dlsch->d,LTE_NULL_NB_IoT,96);
+			ccode_encode_npdsch_NB_IoT(numbits,npbch_a_crc,dlsch->d+96,crc);
+			RCC = sub_block_interleaving_cc_NB_IoT(numbits,dlsch->d+96,dlsch->w);		//   step 2 interleaving
+			lte_rate_matching_cc_NB_IoT(RCC,dlsch->length_e,dlsch->w,dlsch->e);  // step 3 Rate Matching
+
+	} else {
+
+	    crc = crc24a_NB_IoT(npbch_a_x,A)>>8;
+		
+
+	    for (int j=0; j<7; j++) 												
+		{	
+			npbch_a_crc_x[j] = npbch_a_x[j];    
+		}
+
+	    npbch_a_crc_x[7] = ((uint8_t*)&crc)[2];
+	    npbch_a_crc_x[8] = ((uint8_t*)&crc)[1];
+		npbch_a_crc_x[9] = ((uint8_t*)&crc)[0];
+		
+			dlsch->B = numbits;			// The length of table b in bits
+			//memcpy(dlsch->b,a,numbits/8);        // comment if option 2 
+			memset(dlsch->d_x,LTE_NULL_NB_IoT,96);
+			ccode_encode_npdsch_NB_IoT(numbits,npbch_a_crc_x,dlsch->d_x+96,crc);
+			RCC = sub_block_interleaving_cc_NB_IoT(numbits,dlsch->d_x+96,dlsch->w_x);		//   step 2 interleaving
+			lte_rate_matching_cc_NB_IoT(RCC,dlsch->length_e_x,dlsch->w_x,dlsch->e_x);  // step 3 Rate Matching
 	}
 
-    npbch_a_crc[7] = ((uint8_t*)&crc)[2];
-    npbch_a_crc[8] = ((uint8_t*)&crc)[1];
-	npbch_a_crc[9] = ((uint8_t*)&crc)[0];
-	
-		dlsch->B = numbits;			// The length of table b in bits
-		//memcpy(dlsch->b,a,numbits/8);        // comment if option 2 
-		memset(dlsch->d,LTE_NULL_NB_IoT,96);
-		ccode_encode_npdsch_NB_IoT(numbits,npbch_a_crc,dlsch->d+96,crc);
-		RCC = sub_block_interleaving_cc_NB_IoT(numbits,dlsch->d+96,dlsch->w);		//   step 2 interleaving
-		lte_rate_matching_cc_NB_IoT(RCC,dlsch->length_e,dlsch->w,dlsch->e);  // step 3 Rate Matching
 				
   return(0);
 }

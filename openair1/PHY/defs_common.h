@@ -78,9 +78,11 @@ typedef struct {
 
   uint8_t rar_to_transmit;
   uint8_t     subframe_SP;
+  uint8_t     subframe_SP2;
   int next_frame_tx;
   int next_subframe_tx;
   uint8_t SP;
+  uint8_t SP2;
   uint8_t     there_is_sib23;
   int next_frame_tx_DCI;
   int next_subframe_tx_DCI;
@@ -91,6 +93,17 @@ typedef struct {
   uint8_t flag_msg3;
   uint8_t counter_msg3;
   uint32_t frame_msg3;
+
+  uint8_t flag_DCI_msg4;
+  uint8_t flag_msg4;
+  uint8_t counter_DCI_msg4;
+  uint8_t counter_msg4;
+  uint32_t frame_DCI_msg4;
+  uint32_t frame_msg4;
+  uint32_t subframe_DCI_msg4;
+  uint32_t subframe_msg4;
+
+   uint8_t  guard;
 
   uint8_t remaining_dci;
 

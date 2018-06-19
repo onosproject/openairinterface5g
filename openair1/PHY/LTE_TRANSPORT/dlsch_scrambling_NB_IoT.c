@@ -81,7 +81,7 @@ void dlsch_sib_scrambling_rar_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
                                   int                    tot_bits,                // total number of bits to transmit
                                   uint16_t                Nf,              // Nf is the frame number (0..9)
                                   uint8_t                Ns,
-                                  uint16_t               rnti)  
+                                  uint32_t               rnti)  
 {
   int         i,j,k=0;
   uint32_t    x1,x2, s=0;
