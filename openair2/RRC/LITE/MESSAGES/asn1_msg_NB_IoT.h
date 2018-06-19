@@ -164,7 +164,6 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
   int                              CC_id,
   uint8_t*                   const buffer, //carrier[CC_id].Srb0.Tx_buffer.Payload
   const uint8_t                    Transaction_id,
-  const NB_IoT_DL_FRAME_PARMS* const frame_parms, //to be changed but not deleted
   SRB_ToAddModList_NB_r13_t**             SRB_configList_NB_IoT, //in order to be configured--> stanno puntando alla SRB_configlist dell ue_context
   struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB_IoT //in order to be configured--> stanno puntando alla physicalConfigDedicated dell ue_context
 );

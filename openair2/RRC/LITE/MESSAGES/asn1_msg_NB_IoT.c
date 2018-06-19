@@ -937,190 +937,170 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
   return((enc_rval.encoded+7)/8);
 }
 
-/*do_RRCConnectionSetup_NB_IoT--> the aim is to establish SRB1 and SRB1bis(implicitly)*/
+/*do_RRCConnectionSetup_NB_IoT--> the aim is to establish SRB1 and SRB1bis(implicitly), based on configuration setting up Msg 4*/
 uint8_t do_RRCConnectionSetup_NB_IoT(
   const protocol_ctxt_t*     const ctxt_pP,
   rrc_eNB_ue_context_NB_IoT_t*      const ue_context_pP,
   int                              CC_id,
   uint8_t*                   const buffer, //Srb0.Tx_buffer.Payload
   const uint8_t                    Transaction_id,
-  const NB_IoT_DL_FRAME_PARMS* const frame_parms, // maybe not used
   SRB_ToAddModList_NB_r13_t**             SRB_configList_NB_IoT, //for both SRB1bis and SRB1
-  struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB_IoT
-)
-
+  struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB_IoT)
 {
 
- asn_enc_rval_t enc_rval;
- uint8_t ecause=0;
+  asn_enc_rval_t enc_rval;
+  uint8_t ecause=0;
 
- //MP:logical channel group not defined for Nb-IoT
+  long* prioritySRB1 = NULL;
+  long* prioritySRB1bis = NULL;
+  BOOLEAN_t* logicalChannelSR_Prohibit = NULL; //pag 605
+  BOOLEAN_t* npusch_AllSymbols = NULL;
+  long* npusch_repetitions = NULL;
 
- //MP: logical channel priority pag 605 (is 1 for SRB1 and for SRB1bis should be the same)
- long* prioritySRB1 = NULL;
- long* prioritySRB1bis = NULL;
- BOOLEAN_t* logicalChannelSR_Prohibit =NULL; //pag 605
- BOOLEAN_t* npusch_AllSymbols= NULL;
+  // At the first moment of MSG4 testing we set NULL to those optional
 
-// struct SRB_ToAddMod_NB_r13* SRB1_config_NB = NULL;
-// struct SRB_ToAddMod_NB_r13__rlc_Config_r13* SRB1_rlc_config_NB = NULL;
-// struct SRB_ToAddMod_NB_r13__logicalChannelConfig_r13* SRB1_lchan_config_NB = NULL;
+  struct SRB_ToAddMod_NB_r13* SRB1_config_NB_IoT = NULL;
+  struct SRB_ToAddMod_NB_r13__rlc_Config_r13* SRB1_rlc_config_NB_IoT = NULL;
+  struct SRB_ToAddMod_NB_r13__logicalChannelConfig_r13* SRB1_lchan_config_NB_IoT = NULL;
 
- struct SRB_ToAddMod_NB_r13* SRB1bis_config_NB_IoT = NULL;
- struct SRB_ToAddMod_NB_r13__rlc_Config_r13* SRB1bis_rlc_config_NB_IoT = NULL;
- struct SRB_ToAddMod_NB_r13__logicalChannelConfig_r13* SRB1bis_lchan_config_NB_IoT = NULL;
+  struct SRB_ToAddMod_NB_r13* SRB1bis_config_NB_IoT = NULL;
+  struct SRB_ToAddMod_NB_r13__rlc_Config_r13* SRB1bis_rlc_config_NB_IoT = NULL;
+  struct SRB_ToAddMod_NB_r13__logicalChannelConfig_r13* SRB1bis_lchan_config_NB_IoT = NULL;
 
- //No UL_specific parameters for NB-IoT in LogicalChanelConfig-NB
+  PhysicalConfigDedicated_NB_r13_t* physicalConfigDedicated2_NB_IoT = NULL;
+  DL_CCCH_Message_NB_t dl_ccch_msg_NB_IoT;
+  RRCConnectionSetup_NB_t* rrcConnectionSetup_NB_IoT = NULL;
 
- PhysicalConfigDedicated_NB_r13_t* physicalConfigDedicated2_NB_IoT = NULL;
- DL_CCCH_Message_NB_t dl_ccch_msg_NB_IoT;
- RRCConnectionSetup_NB_t* rrcConnectionSetup_NB_IoT = NULL;
-
- memset((void *)&dl_ccch_msg_NB_IoT,0,sizeof(DL_CCCH_Message_NB_t));
- dl_ccch_msg_NB_IoT.message.present = DL_CCCH_MessageType_NB_PR_c1;
- dl_ccch_msg_NB_IoT.message.choice.c1.present = DL_CCCH_MessageType_NB__c1_PR_rrcConnectionSetup_r13;
- rrcConnectionSetup_NB_IoT = &dl_ccch_msg_NB_IoT.message.choice.c1.choice.rrcConnectionSetup_r13;
+  memset((void *)&dl_ccch_msg_NB_IoT,0,sizeof(DL_CCCH_Message_NB_t));
+  dl_ccch_msg_NB_IoT.message.present = DL_CCCH_MessageType_NB_PR_c1;
+  dl_ccch_msg_NB_IoT.message.choice.c1.present = DL_CCCH_MessageType_NB__c1_PR_rrcConnectionSetup_r13;
+  rrcConnectionSetup_NB_IoT = &dl_ccch_msg_NB_IoT.message.choice.c1.choice.rrcConnectionSetup_r13;
 
 
- if (*SRB_configList_NB_IoT) {
+  if (*SRB_configList_NB_IoT)
+  {
    free(*SRB_configList_NB_IoT);
- }
- *SRB_configList_NB_IoT = CALLOC(1,sizeof(SRB_ToAddModList_NB_r13_t));
+  }
+  *SRB_configList_NB_IoT = CALLOC(1,sizeof(SRB_ToAddModList_NB_r13_t));
 
-/// SRB1--------------------
- {
-// SRB1_config_NB = CALLOC(1,sizeof(*SRB1_config_NB));
-//
-// //no srb_Identity in SRB_ToAddMod_NB
-//
-// SRB1_rlc_config_NB = CALLOC(1,sizeof(*SRB1_rlc_config_NB));
-// SRB1_config_NB->rlc_Config_r13   = SRB1_rlc_config_NB;
-//
-// SRB1_rlc_config_NB->present = SRB_ToAddMod_NB_r13__rlc_Config_r13_PR_explicitValue;
-// SRB1_rlc_config_NB->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//the only possible in NB_IoT
-//
-//// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_timer_poll_retransmit_r13;
-//// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_max_retx_threshold_r13;
-//// //(musT be disabled--> SRB1 config pag 640 specs )
-//// SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
-//
-//
-// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
-// SRB1_rlc_config_NB->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
-// //(musT be disabled--> SRB1 config pag 640 specs )
-// SRB1_rlc_config_NB->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = NULL;
-//
-// SRB1_lchan_config_NB = CALLOC(1,sizeof(*SRB1_lchan_config_NB));
-// SRB1_config_NB->logicalChannelConfig_r13  = SRB1_lchan_config_NB;
-//
-// SRB1_lchan_config_NB->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue;
-//
-//
-// prioritySRB1 = CALLOC(1, sizeof(long));
-// *prioritySRB1 = 1;
-// SRB1_lchan_config_NB->choice.explicitValue.priority_r13 = prioritySRB1;
-//
-// logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
-// *logicalChannelSR_Prohibit = 1;
-// //schould be set to TRUE (specs pag 641)
-// SRB1_lchan_config_NB->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
-//
-// //ADD SRB1
-// ASN_SEQUENCE_ADD(&(*SRB_configList_NB_IoT)->list,SRB1_config_NB);
- }
+#if 0
 
-///SRB1bis (The configuration for SRB1 and SRB1bis is the same) the only difference is the logical channel identity = 3 but not set here
+  // SRB1--------------------
+  SRB1_config_NB_IoT = CALLOC(1,sizeof(*SRB1_config_NB_IoT));
+  SRB1_rlc_config_NB_IoT = CALLOC(1,sizeof(*SRB1_rlc_config_NB_IoT));
+  SRB1_config_NB_IoT->rlc_Config_r13   = SRB1_rlc_config_NB_IoT;
 
-		 SRB1bis_config_NB_IoT = CALLOC(1,sizeof(*SRB1bis_config_NB_IoT));
+  SRB1_rlc_config_NB_IoT->present = SRB_ToAddMod_NB_r13__rlc_Config_r13_PR_explicitValue;
+  SRB1_rlc_config_NB_IoT->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//the only possible in NB_IoT
+  
+  // apply the SRB1 configuration from configuration files
+  SRB1_rlc_config_NB_IoT->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_timer_poll_retransmit_r13;
+  SRB1_rlc_config_NB_IoT->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = enb_properties.properties[ctxt_pP->module_id]->srb1_max_retx_threshold_r13;
+  // musT be disabled--> SRB1 config pag 640 specs
+  SRB1_rlc_config_NB_IoT->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
+  SRB1_rlc_config_NB_IoT->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
+  SRB1_rlc_config_NB_IoT->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
+  // musT be disabled--> SRB1 config pag 640 specs
+  SRB1_rlc_config_NB_IoT->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = NULL;
 
-		 //no srb_Identity in SRB_ToAddMod_NB
-		 SRB1bis_rlc_config_NB_IoT = CALLOC(1,sizeof(*SRB1bis_rlc_config_NB_IoT));
-		 SRB1bis_config_NB_IoT->rlc_Config_r13   = SRB1bis_rlc_config_NB_IoT;
+  SRB1_lchan_config_NB_IoT = CALLOC(1,sizeof(*SRB1_lchan_config_NB_IoT));
+  SRB1_config_NB_IoT->logicalChannelConfig_r13  = SRB1_lchan_config_NB_IoT;
+  SRB1_lchan_config_NB_IoT->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue;
 
-		 SRB1bis_rlc_config_NB_IoT->present = SRB_ToAddMod_NB_r13__rlc_Config_r13_PR_explicitValue;
-		 SRB1bis_rlc_config_NB_IoT->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//MP: the only possible RLC config in NB_IoT
+  // logical channel priority pag 605 (is 1 for SRB1 and for SRB1bis should be the same)
+  prioritySRB1 = CALLOC(1, sizeof(long));
+  *prioritySRB1 = 1;
+  SRB1_lchan_config_NB_IoT->choice.explicitValue.priority_r13 = prioritySRB1;
+  
+  logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
+  *logicalChannelSR_Prohibit = 1;
+  // should be set to TRUE (specs pag 641)
+  SRB1_lchan_config_NB_IoT->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
 
-		 SRB1bis_rlc_config_NB_IoT->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
-		 SRB1bis_rlc_config_NB_IoT->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
-		 //(musT be disabled--> SRB1 config pag 640 specs )
-		 SRB1bis_rlc_config_NB_IoT->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
+  // ADD SRB1
+  ASN_SEQUENCE_ADD(&(*SRB_configList_NB_IoT)->list,SRB1_config_NB);
 
-		 SRB1bis_lchan_config_NB_IoT = CALLOC(1,sizeof(*SRB1bis_lchan_config_NB_IoT));
-		 SRB1bis_config_NB_IoT->logicalChannelConfig_r13  = SRB1bis_lchan_config_NB_IoT;
+#endif
 
-		 SRB1bis_lchan_config_NB_IoT->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue;
+#if 1
 
-		 prioritySRB1bis = CALLOC(1, sizeof(long));
-		 *prioritySRB1bis = 1; //same as SRB1?
-		 SRB1bis_lchan_config_NB_IoT->choice.explicitValue.priority_r13 = prioritySRB1bis;
+  // SRB1bis (The configuration for SRB1 and SRB1bis is the same) the only difference is the logical channel identity = 3 but not set here
+	SRB1bis_config_NB_IoT = CALLOC(1,sizeof(*SRB1bis_config_NB_IoT));
+	SRB1bis_rlc_config_NB_IoT = CALLOC(1,sizeof(*SRB1bis_rlc_config_NB_IoT));
+	SRB1bis_config_NB_IoT->rlc_Config_r13   = SRB1bis_rlc_config_NB_IoT;
 
-		 logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
-		 *logicalChannelSR_Prohibit = 1; //schould be set to TRUE (specs pag 641)
-		 SRB1bis_lchan_config_NB_IoT->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
+	SRB1bis_rlc_config_NB_IoT->present = SRB_ToAddMod_NB_r13__rlc_Config_r13_PR_explicitValue;
+	SRB1bis_rlc_config_NB_IoT->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//MP: the only possible RLC config in NB_IoT
 
-		 //ADD SRB1bis
-		 //MP: Actually there is no way to distinguish SRB1 and SRB1bis once put in the list
-		 //MP: SRB_ToAddModList_NB_r13_t size = 1
-		 ASN_SEQUENCE_ADD(&(*SRB_configList_NB_IoT)->list,SRB1bis_config_NB_IoT);
+  // Set from ourself not configuration files
+	SRB1bis_rlc_config_NB_IoT->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
+	SRB1bis_rlc_config_NB_IoT->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
+	//musT be disabled--> SRB1 config pag 640 specs 
+	SRB1bis_rlc_config_NB_IoT->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
 
+	SRB1bis_lchan_config_NB_IoT = CALLOC(1,sizeof(*SRB1bis_lchan_config_NB_IoT));
+	SRB1bis_config_NB_IoT->logicalChannelConfig_r13  = SRB1bis_lchan_config_NB_IoT;
 
- // PhysicalConfigDedicated (NPDCCH, NPUSCH, CarrierConfig, UplinkPowerControl)
+  SRB1bis_lchan_config_NB_IoT->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue;
 
- physicalConfigDedicated2_NB_IoT = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT));
- *physicalConfigDedicated_NB_IoT = physicalConfigDedicated2_NB_IoT;
+	prioritySRB1bis = CALLOC(1, sizeof(long));
+	*prioritySRB1bis = 1; //same as SRB1?
+	SRB1bis_lchan_config_NB_IoT->choice.explicitValue.priority_r13 = prioritySRB1bis;
 
- physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13= CALLOC(1, sizeof(*physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13));
- physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13 = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13));
- physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13 = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13));
- physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13 = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13));
+	logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
+	*logicalChannelSR_Prohibit = 1; //should be set to TRUE (specs pag 641)
+	SRB1bis_lchan_config_NB_IoT->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
 
- //no tpc, no cqi and no pucch, no pdsch, no soundingRS, no AntennaInfo, no scheduling request config
+	//ADD SRB1bis
+	//MP: SRB_ToAddModList_NB_r13_t size = 1
+	ASN_SEQUENCE_ADD(&(*SRB_configList_NB_IoT)->list,SRB1bis_config_NB_IoT);
 
- /*
-  * NB-IoT supports the operation with either one or two antenna ports, AP0 and AP1.
-  * For the latter case, Space Frequency Block Coding (SFBC) is applied.
-  * Once selected, the same transmission scheme applies to NPBCH, NPDCCH, and NPDSCH.
-  * */
+#endif
 
- //FIXME: MP: CarrierConfigDedicated check the set values ----------------------------------------------
+  // start PHY dedicate config
+  physicalConfigDedicated2_NB_IoT = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT));
+  *physicalConfigDedicated_NB_IoT = physicalConfigDedicated2_NB_IoT;
 
-  //DL
+  physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13=NULL;
+  //physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13= CALLOC(1, sizeof(*physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13));
+  physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13 = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13));
+  physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13 = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13));
+  physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13 = NULL;
+  //physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13 = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13));
 
- physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_CarrierFreq_r13.carrierFreq_r13=0;//random value set
- physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.downlinkBitmapNonAnchor_r13= CALLOC(1,sizeof(struct DL_CarrierConfigDedicated_NB_r13__downlinkBitmapNonAnchor_r13));
-		 physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.downlinkBitmapNonAnchor_r13->present=
-				 	 	 	 	 	 	 	 	 DL_CarrierConfigDedicated_NB_r13__downlinkBitmapNonAnchor_r13_PR_useNoBitmap_r13;
-
- physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_GapNonAnchor_r13 = CALLOC(1,sizeof(struct DL_CarrierConfigDedicated_NB_r13__dl_GapNonAnchor_r13));
- physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_GapNonAnchor_r13->present =
-		  	  	  	  	  	  	  	  	  	  	  DL_CarrierConfigDedicated_NB_r13__dl_GapNonAnchor_r13_PR_useNoGap_r13;
-
- physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.inbandCarrierInfo_r13= NULL;
-
-  //UL
- physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->ul_CarrierConfig_r13.ul_CarrierFreq_r13= NULL;
+#if 0  
+  // Carrier config dedicated set to NULL at this moment
+  physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_CarrierFreq_r13.carrierFreq_r13=0;//random value set
+  physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.downlinkBitmapNonAnchor_r13= CALLOC(1,sizeof(struct DL_CarrierConfigDedicated_NB_r13__downlinkBitmapNonAnchor_r13));
+  physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.downlinkBitmapNonAnchor_r13->present=DL_CarrierConfigDedicated_NB_r13__downlinkBitmapNonAnchor_r13_PR_useNoBitmap_r13;
+  physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_GapNonAnchor_r13 = CALLOC(1,sizeof(struct DL_CarrierConfigDedicated_NB_r13__dl_GapNonAnchor_r13));
+  physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.dl_GapNonAnchor_r13->present = DL_CarrierConfigDedicated_NB_r13__dl_GapNonAnchor_r13_PR_useNoGap_r13;
+  physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->dl_CarrierConfig_r13.inbandCarrierInfo_r13= NULL;
+  physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13->ul_CarrierConfig_r13.ul_CarrierFreq_r13= NULL;
+#endif
 
  // NPDCCH
- physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13 =0;
- physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13 =0;
- physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13=0;
+ physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13 =NPDCCH_ConfigDedicated_NB_r13__npdcch_NumRepetitions_r13_r4;
+ physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13 =NPDCCH_ConfigDedicated_NB_r13__npdcch_Offset_USS_r13_zero;
+ physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13=NPDCCH_ConfigDedicated_NB_r13__npdcch_StartSF_USS_r13_v4;
 
- // NPUSCH //(specs TS 36.331 v14.2.1 pag 643) /* OPTIONAL */
+ // NPUSCH
+ npusch_repetitions = CALLOC(1, sizeof(long));
+ *npusch_repetitions = ACK_NACK_NumRepetitions_NB_r13_r2;
  physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13->ack_NACK_NumRepetitions_r13= NULL;
  npusch_AllSymbols= CALLOC(1, sizeof(BOOLEAN_t));
  *npusch_AllSymbols= 1; //TRUE
- physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13->npusch_AllSymbols_r13= npusch_AllSymbols; /* OPTIONAL */
- physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13->groupHoppingDisabled_r13=NULL; /* OPTIONAL */
+ physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13->npusch_AllSymbols_r13= NULL;
+ physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13->groupHoppingDisabled_r13=NULL;
 
  // UplinkPowerControlDedicated
- physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13->p0_UE_NPUSCH_r13 = 0; // 0 dB (specs TS36.331 v14.2.1 pag 643)
-
+ physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13->p0_UE_NPUSCH_r13 = NULL;
 
  //Fill the rrcConnectionSetup-NB message
  rrcConnectionSetup_NB_IoT->rrc_TransactionIdentifier = Transaction_id; //input value
  rrcConnectionSetup_NB_IoT->criticalExtensions.present = RRCConnectionSetup_NB__criticalExtensions_PR_c1;
  rrcConnectionSetup_NB_IoT->criticalExtensions.choice.c1.present =RRCConnectionSetup_NB__criticalExtensions__c1_PR_rrcConnectionSetup_r13 ;
- //MP: carry only SRB1bis at the moment and phyConfigDedicated
+ // carry only the phyiscal dedicate configuration
  rrcConnectionSetup_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.srb_ToAddModList_r13 = *SRB_configList_NB_IoT;
  rrcConnectionSetup_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.drb_ToAddModList_r13 = NULL;
  rrcConnectionSetup_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.drb_ToReleaseList_r13 = NULL;
